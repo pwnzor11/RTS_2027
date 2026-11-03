@@ -87,6 +87,20 @@ def main():
     gd = [[get("die", 0, k) for k in range(nd)]]
     blocks.append(("DIE: 6 frames, one facing (forward fall to the east).  1x then 3x", hcat([grid(gd, 1, nd, 1), grid(gd, 1, nd, 3)], 28)))
 
+    old = os.path.join(C.ROOT, "art", "pilot", "work", "old_pilot_sheet.png")
+    if os.path.exists(old):
+        osh = Image.open(old).convert("RGBA")
+        ofr = C.split_sheet(osh, BI.COLS, osh.height // 32)
+        pr = [(0, "idle"), (2, "idle"), (4, "idle"), (6, "idle")]
+        rows_old = [[ofr[f] for f in (0, 2, 4, 6)] + [ofr[8 + 2 * 6 + 1]] + [ofr[56 + 3 * 2 + 1]]]
+        rows_new = [[get("idle", f) for f in (0, 2, 4, 6)] + [get("walk", 2, 1)] + [get("fire", 3, 1)]]
+        rows_old[0][4] = ofr[8 + 2 * 6 + 1]
+        strips = []
+        for z in (1, 3):
+            strips.append(hcat([grid(rows_old, 1, 6, z), grid(rows_new, 1, 6, z)], 24))
+        blocks.append(("BEFORE (left, old pilot) vs AFTER (right): idle N, E, S, W, walk E, fire SE.  1x then 3x", strips[0]))
+        blocks.append(("BEFORE vs AFTER at 3x (same frames)", strips[1]))
+
     # in-context patches 7x4 cells of 64 px
     cell = 64
     tank = C.split_sheet(Image.open(os.path.join(C.ROOT, "data", "sprites", "vehicles", "tank_v2.png")).convert("RGBA"), 4, 4)
@@ -133,7 +147,10 @@ def main():
     # remap: five riflemen in one cell, each house, at 3x
     R.TOL = 0
     ramp_set = {tuple(c) for c in C.HOUSE}
-    variants = [("original", None)] + list(R.HOUSES.items())
+    HOUSES3 = {"amber #E0A020": C.make_ramp(C.hx("#2E1F04"), C.hx("#E0A020"), C.hx("#FFE9A6")),
+               "red #B02A1A": C.make_ramp(C.hx("#2A0D08"), C.hx("#B02A1A"), C.hx("#F0A090")),
+               "blue #2E5A8B": C.make_ramp(C.hx("#0C1B2E"), C.hx("#2E5A8B"), C.hx("#9CC6EE"))}
+    variants = [("original", None)] + list(HOUSES3.items())
     imgs = []
     picks = [get("idle", 4), get("fire", 3, 1), get("walk", 2, 1), get("idle", 6), get("walk", 5, 4)]
     for name, ramp in variants:
@@ -148,7 +165,7 @@ def main():
                 assert (a0[:, 3] == a1[:, 3]).all()
             cellimg.alpha_composite(g, (sx - ox, sy - oy))
         imgs.append(zoom(cellimg.convert("RGB"), 3))
-    blocks.append(("HOUSE REMAP at 3x, five riflemen per cell: magenta original, Authority green, Directorate rust #8B2E1A, blue ally #2E5A8B", hcat(imgs, 10)))
+    blocks.append(("HOUSE REMAP at 3x, five riflemen per cell: magenta original, amber #E0A020, red #B02A1A, blue #2E5A8B (D-068: no green house)", hcat(imgs, 10)))
 
     W = max(b[1].width for b in blocks) + 20
     total = 10 + sum(b[1].height + 26 for b in blocks)

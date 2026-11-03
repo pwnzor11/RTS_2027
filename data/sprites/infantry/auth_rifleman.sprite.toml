@@ -11,7 +11,7 @@ file = "auth_rifleman.png"
 frame_w = 32
 frame_h = 32
 origin_x = 16
-origin_y = 26
+origin_y = 27
 
 # House paint is the 8-shade magenta ramp, darkest first. Exact RGB matches are house pixels; alpha is always 0 or 255.
 [house]

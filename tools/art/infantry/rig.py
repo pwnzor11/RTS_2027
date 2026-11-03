@@ -7,7 +7,7 @@ import bmesh
 from mathutils import Matrix, Vector
 
 
-SCALE = 0.85   # model units -> world units: a soldier is about 19 px tall at 1x
+SCALE = 1.05   # model units -> world units: a soldier is about 23 px tall at 1x
 
 
 def lin(hexstr):
