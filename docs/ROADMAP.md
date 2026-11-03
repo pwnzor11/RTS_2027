@@ -86,13 +86,13 @@ AI on a Rust Belt map, a 10-minute game with real art for the Authority slice.
 - [x] M2-08 Production sim (queues, prerequisites, drain/stall, placement radius, rally, sell, repair, low power, win rule)
 - [x] M2-09 Authority roster data (D-058) and id migration
 - [x] M2-10 Rust Belt M2 map
-- [ ] M2-11 Sidebar and minimap
-- [ ] M2-12 Recruit-tier AI
-- [ ] M2-13 Art fan-out (12 types)
+- [x] M2-11 Sidebar and minimap
+- [x] M2-12 Recruit-tier AI
+- [ ] M2-13 Art fan-out (12 types) — done: Scraper, Jeep (D-068), Rifleman pilot pass 2 (awaiting owner); waiting: Refinery states (M2-06b), Rocketeer, 7 structures
 - [ ] M2-14 Integration, headless skirmish in CI, balance pass
 - [ ] M2-15 Campaign pilot (D-061)
-- [ ] M2-16 Simultaneous damage resolution (D-065)
-- [ ] M2-17 Buildings and units drawn from sprites, placeholders for missing art
+- [x] M2-16 Simultaneous damage resolution (D-065)
+- [x] M2-17 Buildings and units drawn from sprites, placeholders for missing art
 
 ## M3 · Full skirmish
 Both factions, full tech tree, map editor, real AI with difficulty levels, audio.
