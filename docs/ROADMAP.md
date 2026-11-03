@@ -15,10 +15,11 @@ Milestones in build order. Each ends with something the owner can try. Ids are s
 - [x] M0-09 Design round 2: game design (factions, economy, tech tree shape, map scale)
 - [x] M0-10 Design round 3: setting, campaign structure, tooling, art, LAN scope
 - [x] M0-10b Design docs: `docs/design/02_game_design.md`, `03_setting_and_factions.md` written from D-020..D-034
-- [ ] M0-12 Art pilot: one vehicle three ways (Blender render, AI-assisted frames, hand pixel) at 2 candidate cell sizes + house-colour remap test — user can try: look at a contact sheet and pick
+- [x] M0-12 Art pilot: one vehicle three ways (Blender render, AI-assisted frames, hand pixel) at 2 candidate cell sizes + house-colour remap test — user can try: look at a contact sheet and pick
 - [x] M0-11 Repo skeleton: build system, CI, LICENSE, CLAUDE.md pointing at docs — user can try: clone + build an empty window
 
 ## M1 · Core simulation (no graphics beyond debug view)
+- [ ] M1-ART-01 Tank polish round on the D-039 pipeline: bigger house panel, camera ~40°, more hull/wheel detail; becomes the reference sprite for fan-out — user can try: look at the updated sheet
 _To be detailed after design round 1. Expected shape:_ deterministic tick loop, map grid, pathfinding,
 unit movement, orders/commands queue, combat, fog, replay recording. User can try: headless sim test +
 debug renderer.

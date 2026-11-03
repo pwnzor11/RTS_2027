@@ -5,7 +5,7 @@ lepton/facing math in `Rts.Sim.Numerics`, slot arrays, Step with fixed system or
 commands, xxHash64 state hash, save round-trip, replay), Roslyn determinism rules test, TOML rules
 loader + rules hash, `Tools` CLI (`validate`, `run`), MonoGame grid window on demo data, Windows CI
 (build, test, validate, win-x64 publish) green. M0-12 art pilot contact sheet is on main in
-`art/pilot/`; waiting for the owner's pick (Q-24).
+`art/pilot/`; owner picked arm B at 64 px (D-039).
 
 ## Start here (shown to the user as the plan; nothing starts until they say go)
 1. Ask the user: has he read `docs/design/03_setting_and_factions.md`, and does he want to change any

@@ -263,3 +263,11 @@ able". Q-24 still decided by the pilot.
 `src/Sim/Core/` (EntityId, Command, CellCoord/LeptonCoord, SimRandom = PCG32, SimSnapshot, SimSetup).
 State hash uses `System.IO.Hashing.XxHash64`. Projects for Scripting/AI/Net are added when first needed.
 **Status:** lead decision (easy to reverse)
+
+### D-039 · 2026-11-02 · Sprite style and cell size from the art pilot
+**Decision:** Arm B (Blender pre-render → pixel post-process: fixed palette, 1-px outline, hard alpha)
+at a **64 px cell**. Vehicles render at 4× and downscale; frame canvas 1.5 × cell (96 px); 16 facings,
+frame 0 = north, clockwise; house colour is an 8-shade magenta ramp remapped at runtime (D-032).
+Pipeline scripts in `tools/art/`. Follow-up polish (bigger house panel, lower camera ~40°, more hull
+and wheel detail) is roadmap item M1-ART-01. Q-24.
+**Status:** confirmed (owner's pick)
