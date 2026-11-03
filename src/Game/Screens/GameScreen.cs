@@ -65,6 +65,7 @@ public sealed class GameScreen : IScreen
     private Point? _dragStart;
     private bool _dragging;
     private bool _gameOverShown;
+    private MissionOverlay? _mission;   // campaign mission mode (D-061), null otherwise
 
     private GameScreen(GameServices services, SimSnapshotSource? sim, SkirmishSettings? skirmish, Func<GameScreen> restart,
         bool skirmishMode = false)
@@ -119,6 +120,20 @@ public sealed class GameScreen : IScreen
         return screen;
     }
 
+    /// <summary>
+    /// Creates a campaign mission (D-061): skirmish-style sidebar and fog over the mission's sim, objectives panel and message ticker,
+    /// game over when the script (or a destroyed base) decides the match.
+    /// </summary>
+    public static GameScreen CreateMission(GameServices services, string missionId)
+    {
+        MissionGame game = MissionGame.Create(services.RulesDir, missionId);
+        var sim = new SimSnapshotSource(game);
+        var screen = new GameScreen(services, sim, null, () => CreateMission(services, missionId), skirmishMode: true);
+        screen._mission = new MissionOverlay(game.Host);
+        screen.IsGameOver = () => sim.Sim.GameOver;
+        return screen;
+    }
+
     /// <summary>Creates the --demo screen: fabricated orbiting units, no simulation.</summary>
     public static GameScreen CreateDemo(GameServices services) =>
         new(services, null, null, () => CreateDemo(services));
@@ -160,6 +175,7 @@ public sealed class GameScreen : IScreen
         {
             input.ConsumeMouseOver(_hudRegion);
             input.ConsumeMouseOver(_helpRegion);
+            if (_mission is not null) input.ConsumeMouseOver(_mission.ObjectivesRegion);
         }
 
         if (_console is { } console)
@@ -441,6 +457,7 @@ public sealed class GameScreen : IScreen
         int scale = _s.UiScale;
         List<string> lines = HudLines(_source.Current);
         _hudRegion.Bounds = PanelRect(new Point(8, 8), lines, scale);
+        _mission?.UpdateRegion(lines.Count, scale);
         if (_sim is not null)
         {
             string[] help = _skirmishMode ? SkirmishHelpLines : HelpLines;
@@ -463,13 +480,15 @@ public sealed class GameScreen : IScreen
     private void DrawHud(SpriteBatch sb, SimSnapshot snapshot)
     {
         int scale = _s.UiScale;
-        Hud.Panel(sb, _s.Pixel, new Point(8, 8), HudLines(snapshot), scale);
+        List<string> hud = HudLines(snapshot);
+        Hud.Panel(sb, _s.Pixel, new Point(8, 8), hud, scale);
 
         if (_sim is not null)
         {
             string[] help = _skirmishMode ? SkirmishHelpLines : HelpLines;
             int top = _s.Viewport.Height - Hud.HeightOf(help.Length, scale) - 8;
             Hud.Panel(sb, _s.Pixel, new Point(8, top), help, scale);
+            _mission?.Draw(sb, _s.Pixel, scale, hud.Count, top, snapshot.Tick);
         }
     }
 }

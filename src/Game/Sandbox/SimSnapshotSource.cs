@@ -48,7 +48,7 @@ public sealed class SimSnapshotSource : ISnapshotSource
     private readonly SimHost _host;
     private readonly string? _verifyCommand = VerifyCommand;
     private readonly MapData _map;
-    private readonly ReplayRecording _recording;
+    private readonly ReplayRecording? _recording;   // null for a campaign mission (its script is not part of a replay yet)
     private readonly Stopwatch _clock = Stopwatch.StartNew(); // only for the ISnapshotSource.Update() convenience
     private long _lastUs;
 
@@ -96,6 +96,19 @@ public sealed class SimSnapshotSource : ISnapshotSource
         _verifyCommand = game.Curated
             ? $"dotnet run --project src/Tools -- replay verify {SkirmishReplayPath} --map data/maps/{SkirmishGame.CuratedMapFile}"
             : null;
+        _host.RefreshSnapshots();
+    }
+
+    /// <summary>
+    /// Wraps a campaign mission (<see cref="MissionGame"/>, M2-15): the AI joins the host's tick loop, nothing is recorded (a replay
+    /// cannot rebuild script-driven spawns yet), and the viewer is player 0.
+    /// </summary>
+    /// <param name="game">The mission to host.</param>
+    public SimSnapshotSource(MissionGame game)
+    {
+        _map = game.Map;
+        _verifyCommand = null;
+        _host = new SimHost(game.Sim) { Ai = game.Ai };
         _host.RefreshSnapshots();
     }
 
@@ -248,6 +261,7 @@ public sealed class SimSnapshotSource : ISnapshotSource
     /// <returns>False if the file could not be written.</returns>
     public bool SaveReplay()
     {
+        if (_recording is null) return false;
         bool ok = _recording.Finish();
         if (ok && _verifyCommand is not null) Console.WriteLine($"verify with: {_verifyCommand}");
         return ok;

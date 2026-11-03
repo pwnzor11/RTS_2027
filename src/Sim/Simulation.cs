@@ -65,13 +65,16 @@ public sealed partial class Simulation
         // Parts after vision come from the partial files in canonical order: combat (M1-09) first.
         var extra = CombatParts();
         // M1.5: "players" is appended after the combat parts (append-only order).
-        _parts = new ISimStatePart[9 + extra.Length];
+        int extensionCount = setup.Extensions?.Count ?? 0;   // M2-15: extension parts come last (append-only order)
+        _parts = new ISimStatePart[9 + extra.Length + extensionCount];
         _parts[0] = _map; _parts[1] = _units; _parts[2] = _infantry; _parts[3] = _buildings; _parts[4] = _paths; _parts[5] = _vision;
         for (int e = 0; e < extra.Length; e++) _parts[6 + e] = extra[e];
         _parts[6 + extra.Length] = _players;
         _parts[7 + extra.Length] = _economy;
         _parts[8 + extra.Length] = _production;
+        for (int e = 0; e < extensionCount; e++) _parts[9 + extra.Length + e] = setup.Extensions![e].State;
         MapHash = MapHasher.Compute(setup.Map);
+        for (int e = 0; e < extensionCount; e++) setup.Extensions![e].OnSetup(this);   // after everything exists; also runs before a Load
     }
 
     public SimSetup Setup { get; }
@@ -547,7 +550,13 @@ public sealed partial class Simulation
     // RunEconomy: Simulation.Economy.cs (M2-07)
     private void RunProduction() => RunProductionTick();   // Simulation.Production.cs (M2-08)
     private void RunAiBookkeeping() { /* M1 */ }
-    private void RunTriggers() { /* M1 */ }
+    // M2-15: the single scripting extension point. Extensions run in list order; callbacks run inside the tick.
+    private void RunTriggers()
+    {
+        IReadOnlyList<ISimExtension>? extensions = Setup.Extensions;
+        if (extensions == null) return;
+        for (int e = 0; e < extensions.Count; e++) extensions[e].OnTick(this);
+    }
 
     private void RunCleanup()
     {

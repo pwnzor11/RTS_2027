@@ -7,7 +7,7 @@ using Rts.Game.Input;
 
 namespace Rts.Game.Screens;
 
-/// <summary>The main menu (D-062 (2)): Skirmish, Sandbox, Quit. Esc quits.</summary>
+/// <summary>The main menu (D-062 (2), D-061): Campaign, Skirmish, Sandbox, Quit. Esc quits.</summary>
 public sealed class MainMenuScreen : IScreen
 {
     private readonly GameServices _s;
@@ -20,6 +20,7 @@ public sealed class MainMenuScreen : IScreen
         _s = services;
         _panel = new MenuPanel("RTS_2027", new[]
         {
+            new MenuItem(() => "Campaign", () => _s.Screens.Push(new CampaignScreen(_s))),
             new MenuItem(() => "Skirmish", () => _s.Screens.Push(new SkirmishSetupScreen(_s))),
             new MenuItem(() => "Sandbox", () => _s.Screens.Push(GameScreen.CreateSandbox(_s, _s.LegacyEmptySandbox, null))),
             new MenuItem(() => "Quit", _s.Quit),

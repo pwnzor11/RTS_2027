@@ -15,7 +15,8 @@ public static class Program
     /// battle sandbox (the old behaviour); <c>--empty</c> makes the sandbox use the legacy 3-tank
     /// setup; <c>--demo</c> draws the fabricated demo source instead of the sim; <c>--headless-check &lt;ticks&gt;</c>
     /// runs the scripted sandbox fight with no window, saves the replay and exits; <c>--skirmish-check &lt;ticks&gt;</c> runs the
-    /// menu's skirmish (idle player 0 against the AI) with no window and prints the result. Any unhandled exception writes
+    /// menu's skirmish (idle player 0 against the AI) with no window and prints the result; <c>--mission-check &lt;id&gt; &lt;ticks&gt;</c> does
+    /// the same for a campaign mission (<see cref="MissionCheck"/>). Any unhandled exception writes
     /// <c>logs/crash-*.txt</c> beside the exe and returns exit code 1 (C-6).
     /// </summary>
     /// <param name="args">Command-line arguments.</param>
@@ -29,6 +30,7 @@ public static class Program
         {
             if (args.Contains("--headless-check", StringComparer.Ordinal)) return HeadlessCheck.Run(args);
             if (args.Contains("--skirmish-check", StringComparer.Ordinal)) return SkirmishCheck.Run(args);
+            if (args.Contains("--mission-check", StringComparer.Ordinal)) return MissionCheck.Run(args);
 
             bool demo = args.Contains("--demo", StringComparer.Ordinal);
             bool empty = args.Contains("--empty", StringComparer.Ordinal);

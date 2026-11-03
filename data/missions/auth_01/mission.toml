@@ -1,0 +1,105 @@
+# Authority 01: Survey Convoy (M2-15 pilot, D-061). Escort, survive two raids, plant a refinery on the pit.
+# Zones are inclusive cell rectangles [x0, y0, x1, y1]. Pre-placed actors are placed before tick 0 (setup log).
+
+[mission]
+title = "Survey Convoy"
+map = "rustbelt_m2.map.toml"
+script = "mission.lua"
+briefing = "briefing.md"
+seed = 2027
+
+[[players]]
+slot = 0
+name = "Authority"
+role = "human"
+team = 0
+cash = 3500
+# Only these may be built (production chain prerequisites still apply). The script can Tech.Grant more.
+tech = ["auth_power", "auth_refinery", "auth_barracks", "auth_rifleman", "auth_jeep", "auth_wall"]
+
+[[players]]
+slot = 1
+name = "Directorate raiders"
+role = "ai"
+team = 1
+cash = 1500
+
+[[players]]
+slot = 2
+name = "Civilians"
+role = "neutral"
+team = 255
+cash = 0
+
+[zones.survey]
+rect = [52, 3, 60, 10]
+
+[zones.pit]
+rect = [20, 22, 34, 32]
+
+# The convoy: two scrapers, a jeep and four riflemen.
+[[actors]]
+type = "auth_scraper"
+player = 0
+cell = [6, 8]
+tag = "scraper1"
+
+[[actors]]
+type = "auth_scraper"
+player = 0
+cell = [8, 8]
+tag = "scraper2"
+
+[[actors]]
+type = "auth_jeep"
+player = 0
+cell = [10, 8]
+tag = "jeep"
+
+[[actors]]
+type = "auth_rifleman"
+player = 0
+cell = [6, 10]
+
+[[actors]]
+type = "auth_rifleman"
+player = 0
+cell = [8, 10]
+
+[[actors]]
+type = "auth_rifleman"
+player = 0
+cell = [10, 10]
+
+[[actors]]
+type = "auth_rifleman"
+player = 0
+cell = [12, 10]
+
+# Enemy: a small pre-placed base in the south-east corner.
+[[actors]]
+type = "auth_conyard"
+player = 1
+cell = [58, 58]
+tag = "enemy_yard"
+
+[[actors]]
+type = "auth_power"
+player = 1
+cell = [54, 58]
+
+[[actors]]
+type = "auth_barracks"
+player = 1
+cell = [58, 54]
+
+# Two civilian surveyors waiting at the site.
+[[actors]]
+type = "auth_rifleman"
+player = 2
+cell = [55, 6]
+
+[[actors]]
+type = "auth_rifleman"
+player = 2
+cell = [57, 7]

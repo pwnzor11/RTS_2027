@@ -14,6 +14,7 @@ Facts were taken from the NuGet packages the build restores (licence fields and 
 | MonoGame.Library.OpenAL (`openal.dll`) | OpenAL Soft 1.24.3 | GNU LGPL (version 2, per the DLL's own copyright string); portions BSD-3-Clause | OpenAL Soft authors (see upstream; BSD portions credit Archontis Politis, Anis A. Hireche and Christopher Robinson) | Audio back end (native) | https://github.com/kcat/openal-soft |
 | NVorbis (`NVorbis.dll`) | 0.10.4 | MIT | Andrew Ward | Ogg Vorbis decoding (used by the MonoGame audio stack) | https://github.com/NVorbis/NVorbis |
 | Tomlyn (`Tomlyn.dll`) | 2.10.1 | BSD-2-Clause | Alexandre Mutel | Reads the TOML rule and map files (`src/Data`) | https://xoofx.github.io/Tomlyn/ |
+| MoonSharp (`MoonSharp.Interpreter.dll`) | 2.0.0 (2.0.0.0) | BSD-3-Clause (nuspec lists only the licence URL; text from the upstream `LICENSE`); string library portions based on KopiLua (MIT) | Marco Mastropaolo (2014-2016); KopiLua portions Copyright (c) 2012 LoDC | Embedded Lua interpreter for campaign mission scripts (`src/Scripting`) | https://github.com/moonsharp-devs/moonsharp and http://www.moonsharp.org/ |
 | System.IO.Hashing (`System.IO.Hashing.dll`) | 10.0.14 | MIT | Microsoft Corporation (.NET Foundation and Contributors) | XxHash64 for rules and simulation state hashes (`src/Sim`, `src/Data`) | https://dot.net/ |
 | .NET runtime (`System.*.dll`, `Microsoft.*.dll`, `mscorlib.dll`, `netstandard.dll`, runtime host and native files) | 10.0.14 | MIT (.NET Foundation and Contributors); bundled components keep their own notices, see below | .NET Foundation and Contributors | Runtime, self-contained | https://github.com/dotnet/runtime |
 
@@ -180,6 +181,53 @@ modification, are permitted provided that the following conditions are met:
 2. Redistributions in binary form must reproduce the above copyright notice,
    this list of conditions and the following disclaimer in the documentation
    and/or other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+```
+
+## MoonSharp (BSD-3-Clause)
+
+Source: http://www.moonsharp.org/ (version 2.0.0.0; the NuGet package carries only a licence URL, the text below is the
+`LICENSE` file of the upstream repository https://github.com/xanathar/moonsharp).
+
+```text
+Copyright (c) 2014-2016, Marco Mastropaolo
+All rights reserved.
+
+Parts of the string library are based on the KopiLua project (https://github.com/NLua/KopiLua)
+Copyright (c) 2012 LoDC
+
+Visual Studio Code debugger code is based on code from Microsoft vscode-mono-debug project
+(https://github.com/Microsoft/vscode-mono-debug).
+Copyright (c) Microsoft Corporation - released under MIT license.
+
+Remote Debugger icons are from the Eclipse project (https://www.eclipse.org/).
+Copyright of The Eclipse Foundation
+
+The MoonSharp icon is (c) Isaac, 2014-2015
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+* Redistributions of source code must retain the above copyright notice, this
+  list of conditions and the following disclaimer.
+
+* Redistributions in binary form must reproduce the above copyright notice,
+  this list of conditions and the following disclaimer in the documentation
+  and/or other materials provided with the distribution.
+
+* Neither the name of the {organization} nor the names of its
+  contributors may be used to endorse or promote products derived from
+  this software without specific prior written permission.
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE

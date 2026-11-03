@@ -117,6 +117,7 @@ public class HashCoverageTests
     {
         // Simulation
         ["Simulation._setupLog"] = "construction history for replays (SetupLog), not state: a loaded sim starts with an empty log",
+        ["Simulation.UnlockFilter"] = "delegate a mission extension installs in OnSetup (M2-15): code, not state; the state it reads is the extension's own hashed part",
         ["Simulation.LateCommandCount"] = "diagnostic counter of commands that arrived after their tick; not state, resets on load (M1.5-02)",
         ["Simulation._teamMembers"] = "lazy cache derived from Setup.Teams (hashed via the players part); rebuilt identically after load (M1.5-01)",
         ["Simulation._inStep"] = "true only while Step runs; always false when a hash or save is taken",
