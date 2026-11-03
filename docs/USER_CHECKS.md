@@ -50,8 +50,9 @@ Counts below supersede the M0-11 lines above (the suite grew to 394 tests).
 ## Session 3 · M1.5 hardening (2026-11-03)
 Pull main first. Requires the .NET 10 SDK.
 1. **AI tier matrix:** `dotnet run --project src/Tools -c Release -- ai matrix --ai skirmisher --tiers 1-5 --seeds 2 --ticks 3000`
-   prints a 5×5 "Win %" table and "simulated 178500 ticks in …". Placeholder tiers: higher tiers do NOT win yet (M2 tuning).
-2. **AI vs idle:** `dotnet run --project src/Tools -- ai match --a skirmisher:3 --b idle --seeds 2 --ticks 3000` → A wins 4 of 4.
+   prints a 5×5 "Win %" table and a "simulated … ticks in …" line. Placeholder tiers: higher tiers do NOT win yet (M2 tuning).
+2. **AI vs idle:** `dotnet run --project src/Tools -- ai match --a skirmisher:3 --b idle --seeds 2 --ticks 3000 --start army` → A wins 4 of 4
+   (matches start with an economy by default since M2; the skirmisher only fights, so it needs the army start).
 3. **Debug console:** `dotnet run --project src/Game`, press F1, type `help`; with the mouse over open ground type
    `spawn vehicle test_tank 3` + Enter → three tanks appear (stacked on one cell). Esc closes the console without quitting.
    `reveal` toggles the full-map view; `speed 4` runs four times faster.

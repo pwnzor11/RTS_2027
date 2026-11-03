@@ -1,5 +1,5 @@
 # Handoff: Session 4 — owner play-test, fixes, then M3 planning
-Last commit: 3944725 (2026-11-03) — wrap-up content commit; the handoff commit sits directly on top of it
+Last commit: 3944725 (2026-11-03) — wrap-up content commit; only the handoff commits (docs) sit on top of it
 Where things stand: Session 3 finished M1.5 (hardening from the adversarial review) and all of M2 (M2-01..M2-20). The game
 has a main menu, a playable skirmish vs the Recruit AI on the Rust Belt map (economy, production, sidebar, minimap,
 victory/defeat), Campaign Mission 1 "Survey" (MoonSharp Lua host), real Blender art for all 13 Authority types plus
