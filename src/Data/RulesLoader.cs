@@ -1,4 +1,3 @@
-using Rts.Sim.Core;
 using Rts.Sim.Rules;
 using Tomlyn;
 using Tomlyn.Model;
@@ -6,56 +5,158 @@ using Tomlyn.Model;
 namespace Rts.Data;
 
 /// <summary>
-/// Loads and validates data/rules/game.toml and data/rules/vehicles.toml. Collects every problem before
-/// throwing <see cref="RulesException"/>.
+/// Loads and validates every file in data/rules. Problems are collected across all files before
+/// <see cref="RulesException"/> is thrown. Order: read files, check id uniqueness, resolve <c>base</c>, parse
+/// warheads, weapons, units, structures, effects and terrain (each list sorted by id before anything refers to
+/// it), check name references, then build <see cref="SimRules"/> and its hash.
 /// </summary>
 public static class RulesLoader
 {
-    /// <summary>File name of the global constants.</summary>
+    /// <summary>Global constants.</summary>
     public const string GameFile = "game.toml";
 
-    /// <summary>File name of the vehicle types.</summary>
+    /// <summary>Warhead table (with the armour versus matrix).</summary>
+    public const string WarheadsFile = "warheads.toml";
+
+    /// <summary>Weapon table.</summary>
+    public const string WeaponsFile = "weapons.toml";
+
+    /// <summary>Vehicle table.</summary>
     public const string VehiclesFile = "vehicles.toml";
 
-    private const int MaxMapDimension = SimConstants.MaxMapCells;
+    /// <summary>Infantry table.</summary>
+    public const string InfantryFile = "infantry.toml";
+
+    /// <summary>Building table.</summary>
+    public const string BuildingsFile = "buildings.toml";
+
+    /// <summary>Terrain speed and buildable table.</summary>
+    public const string TerrainFile = "terrain.toml";
+
+    /// <summary>Tech effect list.</summary>
+    public const string TechsFile = "techs.toml";
 
     /// <summary>Loads the rules from <paramref name="rulesDir"/>.</summary>
     /// <exception cref="RulesException">Any file is missing, unparseable or invalid.</exception>
     public static RuleSet Load(string rulesDir)
     {
-        var problems = new List<RulesProblem>();
         if (!Directory.Exists(rulesDir))
         {
             throw new RulesException(rulesDir, "<dir>", "rules directory not found");
         }
 
+        var problems = new List<RulesProblem>();
         TomlTable? gameRoot = ReadFile(rulesDir, GameFile, problems);
-        TomlTable? vehiclesRoot = ReadFile(rulesDir, VehiclesFile, problems);
+        TomlTable? warheadRoot = ReadFile(rulesDir, WarheadsFile, problems);
+        TomlTable? weaponRoot = ReadFile(rulesDir, WeaponsFile, problems);
+        TomlTable? vehicleRoot = ReadFile(rulesDir, VehiclesFile, problems);
+        TomlTable? infantryRoot = ReadFile(rulesDir, InfantryFile, problems);
+        TomlTable? buildingRoot = ReadFile(rulesDir, BuildingsFile, problems);
+        TomlTable? terrainRoot = ReadFile(rulesDir, TerrainFile, problems);
+        TomlTable? techRoot = ReadFile(rulesDir, TechsFile, problems);
 
-        GameRules? game = gameRoot is null ? null : ParseGame(gameRoot, problems);
-        var vehicles = new List<VehicleType>();
-        if (vehiclesRoot is not null)
-        {
-            ParseVehicles(vehiclesRoot, vehicles, problems);
-        }
+        Dictionary<string, string> ids = RegisterTypeIds(problems,
+            (WarheadsFile, warheadRoot), (WeaponsFile, weaponRoot), (VehiclesFile, vehicleRoot),
+            (InfantryFile, infantryRoot), (BuildingsFile, buildingRoot));
+        var refs = new RulesReferences();
 
-        if (problems.Count > 0 || game is null)
+        List<RulesEntry> warheadEntries = Entries(warheadRoot, WarheadsFile, ids, problems);
+        List<RulesEntry> weaponEntries = Entries(weaponRoot, WeaponsFile, ids, problems);
+        List<RulesEntry> vehicleEntries = Entries(vehicleRoot, VehiclesFile, ids, problems);
+        List<RulesEntry> infantryEntries = Entries(infantryRoot, InfantryFile, ids, problems);
+        List<RulesEntry> buildingEntries = Entries(buildingRoot, BuildingsFile, ids, problems);
+
+        List<WarheadType> warheads = ParseAll(warheadEntries, problems, WeaponRulesLoader.ParseWarhead);
+        SortById(warheads, w => w.Id);
+        List<WeaponType> weapons = ParseAll(weaponEntries, problems, f => WeaponRulesLoader.ParseWeapon(f, warheads));
+        SortById(weapons, w => w.Id);
+        List<VehicleType> vehicles = ParseAll(vehicleEntries, problems, f => UnitRulesLoader.ParseVehicle(f, weapons, refs));
+        SortById(vehicles, v => v.Id);
+        List<InfantryType> infantry = ParseAll(infantryEntries, problems, f => UnitRulesLoader.ParseInfantry(f, weapons, refs));
+        SortById(infantry, i => i.Id);
+        List<BuildingType> buildings = ParseAll(buildingEntries, problems, f => StructureRulesLoader.ParseBuilding(f, weapons, refs));
+        SortById(buildings, b => b.Id);
+
+        List<EffectDef> effects = techRoot is null
+            ? new List<EffectDef>()
+            : EffectRulesLoader.Parse(techRoot, TechsFile, ids, refs, problems);
+        SortById(effects, e => e.Id);
+
+        TerrainTable? terrain = terrainRoot is null
+            ? null
+            : TerrainRulesLoader.Parse(terrainRoot, TerrainFile, problems);
+        GameRules? game = gameRoot is null ? null : GameRulesLoader.Parse(gameRoot, GameFile, problems);
+
+        var typeIds = new HashSet<string>(
+            vehicleEntries.Concat(infantryEntries).Concat(buildingEntries).Select(e => e.Id), StringComparer.Ordinal);
+        var provides = new HashSet<string>(buildingEntries.SelectMany(ProvidesOf), StringComparer.Ordinal);
+        refs.Validate(typeIds, provides, problems);
+
+        if (problems.Count > 0 || game is null || terrain is null)
         {
             throw new RulesException(problems);
         }
 
-        vehicles.Sort((x, y) => string.CompareOrdinal(x.Id, y.Id));
-        var sim = new SimRules(
-            vehicles,
-            Array.Empty<InfantryType>(),
-            Array.Empty<BuildingType>(),
-            Array.Empty<WeaponType>(),
-            Array.Empty<WarheadType>(),
-            DefaultTerrain.Create(),
-            Array.Empty<EffectDef>());
-        ulong hash = RulesHash.Compute(game, sim);
-        return new RuleSet(game, sim, hash);
+        var sim = new SimRules(vehicles, infantry, buildings, weapons, warheads, terrain, effects);
+        return new RuleSet(game, sim, RulesHash.Compute(game, sim));
     }
+
+    /// <summary>Maps every type id to the file that defines it. A repeated id is reported at its second definition.</summary>
+    private static Dictionary<string, string> RegisterTypeIds(List<RulesProblem> problems,
+        params (string File, TomlTable? Root)[] files)
+    {
+        var ids = new Dictionary<string, string>(StringComparer.Ordinal);
+        foreach (var (file, root) in files)
+        {
+            if (root is null)
+            {
+                continue;
+            }
+            foreach (var kv in root)
+            {
+                if (kv.Value is not TomlTable)
+                {
+                    continue; // reported as "expected a [table]" when the file is parsed
+                }
+                if (ids.TryGetValue(kv.Key, out string? other))
+                {
+                    problems.Add(new RulesProblem(file, kv.Key, $"duplicate id, already defined in {other}"));
+                }
+                else
+                {
+                    ids[kv.Key] = file;
+                }
+            }
+        }
+        return ids;
+    }
+
+    private static List<RulesEntry> Entries(TomlTable? root, string file, Dictionary<string, string> ids,
+        List<RulesProblem> problems) =>
+        root is null ? new List<RulesEntry>() : RulesInheritance.Resolve(file, root, ids, problems);
+
+    private static List<T> ParseAll<T>(IEnumerable<RulesEntry> entries, List<RulesProblem> problems,
+        Func<RulesFields, T?> parse) where T : class
+    {
+        var list = new List<T>();
+        foreach (RulesEntry entry in entries)
+        {
+            T? item = parse(new RulesFields(entry, problems));
+            if (item is not null)
+            {
+                list.Add(item);
+            }
+        }
+        return list;
+    }
+
+    private static IEnumerable<string> ProvidesOf(RulesEntry entry) =>
+        entry.Values.TryGetValue("provides", out object? raw) && raw is TomlArray array
+            ? array.OfType<string>()
+            : Array.Empty<string>();
+
+    private static void SortById<T>(List<T> list, Func<T, string> idOf) =>
+        list.Sort((a, b) => string.CompareOrdinal(idOf(a), idOf(b)));
 
     private static TomlTable? ReadFile(string dir, string file, List<RulesProblem> problems)
     {
@@ -76,234 +177,4 @@ public static class RulesLoader
             return null;
         }
     }
-
-    private static GameRules? ParseGame(TomlTable root, List<RulesProblem> problems)
-    {
-        foreach (var kv in root)
-        {
-            if (kv.Key != "game")
-            {
-                problems.Add(new RulesProblem(GameFile, kv.Key, "unknown key"));
-            }
-        }
-
-        if (!root.TryGetValue("game", out object? section) || section is null)
-        {
-            problems.Add(new RulesProblem(GameFile, "game", "missing required [game] table"));
-            return null;
-        }
-        if (section is not TomlTable game)
-        {
-            problems.Add(new RulesProblem(GameFile, "game", "expected a [game] table"));
-            return null;
-        }
-
-        foreach (var kv in game)
-        {
-            if (kv.Key is not ("tick_rate" or "default_map_width" or "default_map_height"))
-            {
-                problems.Add(new RulesProblem(GameFile, "game." + kv.Key, "unknown key"));
-            }
-        }
-
-        int? tickRate = ReadInt(game, GameFile, "game", "tick_rate", 1, int.MaxValue, problems);
-        if (tickRate is { } tr && tr != SimConstants.TicksPerSecond)
-        {
-            problems.Add(new RulesProblem(GameFile, "game.tick_rate",
-                $"must be {SimConstants.TicksPerSecond} (the sim tick rate), got {tr}"));
-        }
-        int? width = ReadInt(game, GameFile, "game", "default_map_width", 1, MaxMapDimension, problems);
-        int? height = ReadInt(game, GameFile, "game", "default_map_height", 1, MaxMapDimension, problems);
-
-        if (tickRate is null || width is null || height is null)
-        {
-            return null;
-        }
-        return new GameRules(tickRate.Value, width.Value, height.Value);
-    }
-
-    private static readonly string[] VehicleKeys =
-    [
-        "speed", "max_health", "locomotion", "turn_rate", "armor", "sight", "primary_weapon",
-        "has_turret", "turret_turn_rate", "crusher", "cost", "prerequisites",
-    ];
-
-    private static void ParseVehicles(TomlTable root, List<VehicleType> vehicles, List<RulesProblem> problems)
-    {
-        foreach (var kv in root)
-        {
-            if (kv.Value is not TomlTable t)
-            {
-                problems.Add(new RulesProblem(VehiclesFile, kv.Key, "expected a [table] for each vehicle"));
-                continue;
-            }
-
-            foreach (var field in t)
-            {
-                if (Array.IndexOf(VehicleKeys, field.Key) < 0)
-                {
-                    problems.Add(new RulesProblem(VehiclesFile, $"{kv.Key}.{field.Key}", "unknown key"));
-                }
-            }
-
-            string f = VehiclesFile, id = kv.Key;
-            int? speed = ReadInt(t, f, id, "speed", 1, int.MaxValue, problems);
-            int? maxHealth = ReadInt(t, f, id, "max_health", 1, int.MaxValue, problems);
-            Locomotion? loco = ReadEnum(t, f, id, "locomotion", ParseLocomotion,
-                "foot, wheeled, tracked, hover, air or burrow", problems);
-            int? turnRate = ReadInt(t, f, id, "turn_rate", 0, 255, problems);
-            ArmorClass? armor = ReadEnum(t, f, id, "armor", ParseArmor,
-                "unarmored, light, heavy, structure or fortified", problems);
-            int? sight = ReadInt(t, f, id, "sight", 0, SimConstants.MaxMapCells, problems);
-            string? weapon = ReadString(t, f, id, "primary_weapon", problems);
-            bool? hasTurret = ReadBool(t, f, id, "has_turret", problems);
-            int? turretTurn = ReadInt(t, f, id, "turret_turn_rate", 0, 255, problems);
-            bool? crusher = ReadBool(t, f, id, "crusher", problems);
-            int? cost = ReadInt(t, f, id, "cost", 0, int.MaxValue, problems);
-            List<string>? prereqs = ReadStringList(t, f, id, "prerequisites", problems);
-
-            int weaponIndex = -1;
-            if (!string.IsNullOrEmpty(weapon))
-            {
-                // Weapons are not loaded yet (M1-02); any named weapon is unresolved for now.
-                problems.Add(new RulesProblem(f, $"{id}.primary_weapon", $"unknown weapon '{weapon}'"));
-            }
-
-            if (speed is { } s && maxHealth is { } hp && loco is { } lc && turnRate is { } tr && armor is { } ar
-                && sight is { } si && weapon is not null && hasTurret is { } ht && turretTurn is { } tt
-                && crusher is { } cr && cost is { } co && prereqs is not null)
-            {
-                vehicles.Add(new VehicleType(id, lc, s, tr, hp, ar, si, weaponIndex, ht, tt, cr, co, prereqs));
-            }
-        }
-    }
-
-    private static Locomotion? ParseLocomotion(string v) => v switch
-    {
-        "foot" => Locomotion.Foot,
-        "wheeled" => Locomotion.Wheeled,
-        "tracked" => Locomotion.Tracked,
-        "hover" => Locomotion.Hover,
-        "air" => Locomotion.Air,
-        "burrow" => Locomotion.Burrow,
-        _ => null,
-    };
-
-    private static ArmorClass? ParseArmor(string v) => v switch
-    {
-        "unarmored" => ArmorClass.Unarmored,
-        "light" => ArmorClass.Light,
-        "heavy" => ArmorClass.Heavy,
-        "structure" => ArmorClass.Structure,
-        "fortified" => ArmorClass.Fortified,
-        _ => null,
-    };
-
-    private static T? ReadEnum<T>(TomlTable table, string file, string prefix, string key,
-        Func<string, T?> parse, string allowed, List<RulesProblem> problems)
-        where T : struct
-    {
-        string? text = ReadString(table, file, prefix, key, problems);
-        if (text is null)
-        {
-            return null;
-        }
-        T? value = parse(text);
-        if (value is null)
-        {
-            problems.Add(new RulesProblem(file, prefix + "." + key, $"must be one of {allowed}, got '{text}'"));
-        }
-        return value;
-    }
-
-    private static string? ReadString(TomlTable table, string file, string prefix, string key, List<RulesProblem> problems)
-    {
-        string dotted = prefix + "." + key;
-        if (!table.TryGetValue(key, out object? raw) || raw is null)
-        {
-            problems.Add(new RulesProblem(file, dotted, "missing required key"));
-            return null;
-        }
-        if (raw is not string text)
-        {
-            problems.Add(new RulesProblem(file, dotted, $"expected a string, got {TypeName(raw)}"));
-            return null;
-        }
-        return text;
-    }
-
-    private static bool? ReadBool(TomlTable table, string file, string prefix, string key, List<RulesProblem> problems)
-    {
-        string dotted = prefix + "." + key;
-        if (!table.TryGetValue(key, out object? raw) || raw is null)
-        {
-            problems.Add(new RulesProblem(file, dotted, "missing required key"));
-            return null;
-        }
-        if (raw is not bool value)
-        {
-            problems.Add(new RulesProblem(file, dotted, $"expected a boolean, got {TypeName(raw)}"));
-            return null;
-        }
-        return value;
-    }
-
-    private static List<string>? ReadStringList(TomlTable table, string file, string prefix, string key, List<RulesProblem> problems)
-    {
-        string dotted = prefix + "." + key;
-        if (!table.TryGetValue(key, out object? raw) || raw is null)
-        {
-            problems.Add(new RulesProblem(file, dotted, "missing required key"));
-            return null;
-        }
-        if (raw is not TomlArray array)
-        {
-            problems.Add(new RulesProblem(file, dotted, $"expected an array, got {TypeName(raw)}"));
-            return null;
-        }
-        var list = new List<string>();
-        foreach (object? item in array)
-        {
-            if (item is not string text)
-            {
-                problems.Add(new RulesProblem(file, dotted, "expected an array of strings"));
-                return null;
-            }
-            list.Add(text);
-        }
-        return list;
-    }
-
-    /// <summary>Reads a required integer in [min, max]. Records a problem and returns null otherwise.</summary>
-    private static int? ReadInt(TomlTable table, string file, string prefix, string key,
-        int min, int max, List<RulesProblem> problems)
-    {
-        string dotted = prefix + "." + key;
-        if (!table.TryGetValue(key, out object? raw) || raw is null)
-        {
-            problems.Add(new RulesProblem(file, dotted, "missing required key"));
-            return null;
-        }
-        if (raw is not long value)
-        {
-            problems.Add(new RulesProblem(file, dotted, $"expected an integer, got {TypeName(raw)}"));
-            return null;
-        }
-        if (value < min || value > max)
-        {
-            problems.Add(new RulesProblem(file, dotted, $"must be between {min} and {max}, got {value}"));
-            return null;
-        }
-        return (int)value;
-    }
-
-    private static string TypeName(object value) => value switch
-    {
-        string => "a string",
-        bool => "a boolean",
-        double => "a float",
-        TomlArray => "an array",
-        TomlTable => "a table",
-        _ => value.GetType().Name,
-    };
 }

@@ -1,0 +1,52 @@
+# placeholder fixture, not balance
+# TEST FIXTURE: synthetic values. Keys: footprint_w, footprint_h (cells, 1..6), max_health, armor, sight,
+# primary_weapon ("" = none), cost, power (positive = produces, negative = drains), prerequisites, provides.
+# Optional: base = "<id in this file>" (one level).
+
+[test_hq]
+footprint_w = 3
+footprint_h = 3
+max_health = 1500
+armor = "structure"
+sight = 6
+primary_weapon = ""
+cost = 0
+power = 20
+prerequisites = []
+provides = ["test_hq"]
+
+[test_barracks]
+footprint_w = 2
+footprint_h = 2
+max_health = 600
+armor = "structure"
+sight = 4
+primary_weapon = ""
+cost = 300
+power = -10
+prerequisites = ["test_hq"]
+provides = []
+
+[test_factory]
+footprint_w = 3
+footprint_h = 3
+max_health = 1000
+armor = "structure"
+sight = 4
+primary_weapon = ""
+cost = 1000
+power = -30
+prerequisites = ["test_hq"]
+provides = []
+
+[test_turret]
+footprint_w = 1
+footprint_h = 1
+max_health = 400
+armor = "fortified"
+sight = 7
+primary_weapon = "test_mg"
+cost = 400
+power = -10
+prerequisites = ["test_barracks"]
+provides = []
