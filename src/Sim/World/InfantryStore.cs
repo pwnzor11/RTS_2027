@@ -10,8 +10,15 @@ public sealed class InfantryStore : MobileStore
     private const int Quarter = SimConstants.LeptonsPerCell / 4; // 64
 
     public readonly byte[] SubSlot;
+    /// <summary>The cell whose sub-slot <see cref="SubSlot"/> this soldier holds (its standing cell). It can differ from the
+    /// cell of Position for a moment while the soldier crosses a corner on a diagonal step.</summary>
+    public readonly CellCoord[] SlotCell;
 
-    public InfantryStore(int capacity = DefaultCapacity) : base(capacity) => SubSlot = new byte[capacity];
+    public InfantryStore(int capacity = DefaultCapacity) : base(capacity)
+    {
+        SubSlot = new byte[capacity];
+        SlotCell = new CellCoord[capacity];
+    }
 
     public override string Name => "infantry";
 
@@ -40,10 +47,20 @@ public sealed class InfantryStore : MobileStore
         EntityId id = Slots.Allocate();
         Reset(id.Index, player, typeIndex, pos, health);
         SubSlot[id.Index] = (byte)subSlot;
+        SlotCell[id.Index] = cell;
         return id;
     }
 
-    protected override void ResetExtra(int i) => SubSlot[i] = 0;
-    protected override void WriteExtra(BinaryWriter w, int i) => w.Write(SubSlot[i]);
-    protected override void ReadExtra(BinaryReader r, int i) => SubSlot[i] = r.ReadByte();
+    protected override void ResetExtra(int i) { SubSlot[i] = 0; SlotCell[i] = default; }
+
+    protected override void WriteExtra(BinaryWriter w, int i)
+    {
+        w.Write(SubSlot[i]); w.Write(SlotCell[i].X); w.Write(SlotCell[i].Y);
+    }
+
+    protected override void ReadExtra(BinaryReader r, int i)
+    {
+        SubSlot[i] = r.ReadByte();
+        SlotCell[i] = new CellCoord(r.ReadInt32(), r.ReadInt32());
+    }
 }
