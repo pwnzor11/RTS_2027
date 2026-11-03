@@ -39,11 +39,11 @@ and AI are M2. Planned in session 2; expect two sessions. Lead writes each wave'
   user can try: open the window, move units around
 
 **Wave B — space (parallel, needs A)**
-- [ ] M1-05 Pathfinding: `IPathfinder`, 8-way A* with terrain cost per locomotion, per-tick expansion
+- [x] M1-05 Pathfinding: `IPathfinder`, 8-way A* with terrain cost per locomotion, per-tick expansion
   budget, cache keyed on map version, shared group search — Sonnet
-- [ ] M1-06 Building placement: footprints, buildable check, one-cell gap rule, occupancy, Place/
+- [x] M1-06 Building placement: footprints, buildable check, one-cell gap rule, occupancy, Place/
   Sell commands (no economy yet) — Sonnet
-- [ ] M1-07 Fog and shroud: per-player visibility bits, incremental update, last-seen building
+- [x] M1-07 Fog and shroud: per-player visibility bits, incremental update, last-seen building
   ghosts, snapshot respects the viewing player — Haiku
 
 **Wave C — action (parallel, needs B)**

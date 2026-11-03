@@ -309,3 +309,12 @@ shadow crop on the S facing) go to the M2 art pass.
 - Map generator connectivity uses its own conservative ground rule so generation never depends on rules data.
 - Text data files are LF on every OS (`.gitattributes`); tests normalise line endings.
 **Status:** assumed — confirm
+
+
+### D-045 · 2026-11-03 · M1 wave B details chosen overnight
+**Decision:** Choices made under D-040 while building M1 wave B:
+- M1-05 pathing: group requests not cached, blocked/off-map/out-of-box group starts → NotFound, blocked goal → NotFound for all; single Partial whose closest cell is the start → NotFound; from==to → Found, empty path; start cell passability not checked; cost factor max(1, 10000/speed%) of the entered cell; heuristic octile × min factor; cache cleared at 4096 entries (speed only).
+- M1-07 vision: sight capped 0..64 cells; disc = dx²+dy² ≤ s²+s.
+- M1-06 buildings: no adjacency, prerequisite or cost check on placement in M1 (M2); units on a footprint block placement; the one-cell gap rule counts 4-way components of tracked-passable, building-free cells before and after.
+- Lead integration: state parts are [map, units, infantry, buildings, paths, vision, then combat parts]; vision updates at the end of cleanup every tick; enemy buildings become ghosts when no footprint cell is visible; a ghost is forgotten once its footprint is visible again and no matching building stands there.
+**Status:** assumed — confirm
