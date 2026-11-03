@@ -24,3 +24,25 @@ marked unverified in the files. Several research files run over the word target 
 **User check:** see USER_CHECKS.md, Session 1.
 **Next session should:** 1) ask about the setting doc and D-033; 2) M0-11 repo skeleton; 3) M0-12 art
 pilot; 4) checkpoint.
+
+## Session 2 · 2026-11-02 → 2026-11-03 (overnight)
+**Goal:** M0-11 repo skeleton, M0-12 art pilot, then (owner's call) M1 planning, art polish and all of M1
+in one unattended overnight session.
+**Done:** .NET 10 solution with deterministic `Sim` (Fixed32, facings, slot arrays, Step, xxHash64 state
+hash, save, replay), Roslyn determinism rules test, TOML rules + rules hash, Tools CLI, MonoGame window,
+Windows CI (M0-11). Art pilot: one original tank in three arms at 48/64 px; owner picked arm B at 64 px
+(D-039); v2 polish (M1-ART-01, D-043). M1 planned in four waves and built: map model/files/generator
+(M1-01), rules schema v1 (M1-02), missions + infantry (M1-03), debug view on the real sim (M1-04), path
+service (M1-05), buildings + one-cell gap rule (M1-06), fog + ghosts (M1-07), movement/blocking/crushing
+(M1-08), combat (M1-09), desync tooling + headless match (M1-10), battle sandbox + overlays (M1-11).
+**Commits:** 76b3983..(handoff commit), ids M0-11, M0-12, M1-ART-01, M1-01..M1-11.
+**Decisions:** D-036..D-047. D-043..D-047 are "assumed — confirm" (overnight choices).
+**Helpers:** 18 launches + 1 follow-up: Sonnet 11 (math, sim core, determinism rules, art, A0 migration,
+map, missions, paths, buildings, movement, combat), Haiku 7 (data/CLI, game window + CI, rules schema,
+debug view, fog, desync tooling, sandbox). No failed rounds, no escalations.
+**Problems / notes:** tag pushes blocked by the workspace proxy (restore point is branch `restore/pre-m1`);
+Windows CI caught a line-ending test bug (fixed with `.gitattributes`); a helper scheduled a stray "noop"
+message (harmless, fired once). Headless match on test_64 favours the (4,4) start corner (geometric; mirror
+duels are exactly symmetric) → M2-01.
+**User check:** see USER_CHECKS.md, Session 2 (M1 block).
+**Next session should:** owner tries the sandbox, confirm D-043..D-047, M2-01, plan M2.

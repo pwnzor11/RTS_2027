@@ -55,7 +55,7 @@ and AI are M2. Planned in session 2; expect two sessions. Lead writes each wave'
   headless soak (two scripted armies), hash coverage test that fails if a new sim array is unhashed — Haiku
 
 **Wave D — together**
-- [ ] M1-11 Debug overlays (paths, occupancy, fog, ranges) and a "battle sandbox" map: two armies
+- [x] M1-11 Debug overlays (paths, occupancy, fog, ranges) and a "battle sandbox" map: two armies
   meet in the window, replay saved and verified — Haiku + lead review — user can try: watch a fight,
   then `Tools replay verify` on the saved replay
 - [x] M1-ART-01 Tank polish round on the D-039 pipeline: bigger house panel, camera ~40°, more hull/wheel

@@ -327,3 +327,14 @@ shadow crop on the S facing) go to the M2 art pass.
 - M1-08 movement: a Move takes effect one tick after its command (path request in RunMovement); steps end on cell centres; speed uses the cell being entered; crush on reservation; vehicles never share a cell with live infantry (ally infantry asked to scatter), infantry never enter vehicle cells, enemy/ally infantry may share; idle = no queued mission and Mission None/Sleep/Guard/Stop (attackers are busy, waited for then avoided); blocked by enemy/unshovable: wait 10 ticks → sidestep → repath; head-on allied movers: higher slot yields; give up after 12 stuck expiries → Guard; final cell taken: wait for moving ally, else stop where it is after 10 ticks; destination spreading only for ≥2 same-player Moves to one cell in one tick, by command order.
 - Known issue (for M2): headless match on test_64 favours the (4,4) start corner whichever player has it; mirror duels on flat maps are exactly symmetric, so the cause is geometric (path tie-breaking / map features).
 **Status:** assumed — confirm
+
+
+### D-047 · 2026-11-03 · M1 wave D (sandbox) details chosen overnight
+**Decision:** Choices made under D-040 for the M1-11 battle sandbox: the game starts in sandbox mode on
+test_32 (3 tanks, 2 jeeps, 1 artillery truck, 5 riflemen and a turret per side; player 1 attack-moves at
+tick 40; `--empty` gives the old 3-tank setup, `--demo` the orbit demo); WASD panning is removed because
+S/A/G/X are order keys (arrows and middle-drag still pan); A + right-click on an enemy issues Attack;
+health bars are not drawn on ghosts; the F3 occupancy overlay under a fog viewer shows only cells that
+viewer can see; the replay is written to `replays/sandbox_last.rpl` on exit. CI runs the sandbox
+headless (`--headless-check 1200`), a 1500-tick match, and verifies both replays.
+**Status:** assumed — confirm
