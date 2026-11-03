@@ -32,8 +32,9 @@ public static class BuildingRenderer
     /// <param name="rules">Rules, or null (then no damaged state).</param>
     /// <param name="building">The building to draw.</param>
     /// <param name="camera">View.</param>
+    /// <param name="walls">Wall neighbour cache for this snapshot (D-072), or null to draw every wall as the plain idle state.</param>
     public static void Draw(SpriteBatch batch, Texture2D pixel, SpriteResolver sprites, SpritePainter painter,
-        RenderMemory memory, int tick, SimRules? rules, BuildingView building, Camera camera)
+        RenderMemory memory, int tick, SimRules? rules, BuildingView building, Camera camera, WallTiler? walls = null)
     {
         ResolvedSprite sprite = sprites.ForBuilding(rules, building);
         int maxHealth = rules is not null && (uint)building.TypeIndex < (uint)rules.Buildings.Count
@@ -41,6 +42,12 @@ public static class BuildingRenderer
             : 0;
         int age = memory.BuildingAge(building.Id, tick);
         int frame = SpriteStates.BuildingFrame(sprite.Manifest, age, building.Health, maxHealth, building.Ghost, tick);
+        if (walls is not null && rules is not null && (uint)building.TypeIndex < (uint)rules.Buildings.Count
+            && rules.Buildings[building.TypeIndex].Wall)
+        {
+            frame = WallFrame(sprite.Manifest, walls, building, frame, maxHealth, tick);
+        }
+
         Vector2 origin = SpriteLayout.BuildingOrigin(camera, building.Cell);
         painter.Draw(batch, sprite, frame, origin, PlayerColours.Base(building.Player), camera.Zoom);
         if (!building.Ghost && sprite.Source == SpriteSource.Library && sprite.Library is not null)
@@ -55,5 +62,21 @@ public static class BuildingRenderer
             left + building.FootprintW * Camera.CellPx, top + building.FootprintH * Camera.CellPx);
         Shapes.Fill(batch, pixel, r, Shapes.Alpha(Wash, GhostWashAlpha));
         Shapes.DashedOutline(batch, pixel, r, Shapes.Alpha(Border, 128), BorderPx, DashPx, GapPx);
+    }
+
+    /// <summary>
+    /// Swaps the resting frame of a wall for the variant its neighbours call for. Build frames are left alone, and so
+    /// is a manifest without the variant states.
+    /// </summary>
+    private static int WallFrame(SpriteManifest manifest, WallTiler walls, BuildingView building, int frame, int maxHealth, int tick)
+    {
+        int rest = manifest.FrameIndex(SpriteStates.Idle, 0, Math.Max(0, tick));
+        int hurt = SpriteStates.HasState(manifest, SpriteStates.Damaged)
+            ? manifest.FrameIndex(SpriteStates.Damaged, 0, Math.Max(0, tick))
+            : rest;
+        if (frame != rest && frame != hurt) return frame;
+        bool damaged = !building.Ghost && maxHealth > 0 && building.Health * SpriteStates.DamagedDivisor < maxHealth;
+        int tiled = WallTiling.FrameFor(manifest, walls.Mask(building), damaged, tick);
+        return tiled >= 0 ? tiled : frame;
     }
 }

@@ -21,6 +21,7 @@ public sealed class SceneRenderer : IDisposable
     private readonly SpriteResolver _sprites;
     private readonly SpritePainter _painter = new();
     private readonly RenderMemory _memory = new();
+    private readonly WallTiler _walls = new();
     private readonly List<DrawItem> _items = new();
     private readonly TerrainLook _rustBeltTerrain = new();
     private bool _disposed;
@@ -87,6 +88,8 @@ public sealed class SceneRenderer : IDisposable
     {
         SimSnapshot snapshot = frame.Snapshot;
         _memory.Observe(snapshot);
+        _walls.Observe(snapshot.Tick, snapshot.Buildings,
+            t => frame.Rules is { } r && (uint)t < (uint)r.Buildings.Count && r.Buildings[t].Wall);
 
         _items.Clear();
         for (int i = 0; i < snapshot.Buildings.Count; i++)
@@ -107,7 +110,7 @@ public sealed class SceneRenderer : IDisposable
             if (item.Kind == DrawKind.Building)
             {
                 BuildingRenderer.Draw(batch, pixel, _sprites, _painter, _memory, snapshot.Tick, frame.Rules,
-                    snapshot.Buildings[item.Index], camera);
+                    snapshot.Buildings[item.Index], camera, _walls);
             }
             else
             {
