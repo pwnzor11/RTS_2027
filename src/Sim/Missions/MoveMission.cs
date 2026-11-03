@@ -284,6 +284,18 @@ internal static class MoveMission
             CellCoord pc = pos.ToCell();
             if (nc != pc && nc != rc)
             {
+                // A diagonal step that lands exactly on a cell corner (speeds dividing 256, e.g. 8 or 16): a coordinate that
+                // decreases and sits exactly on a boundary still belongs to the cell it is leaving, while the increasing
+                // one already belongs to the cell it enters, so the position would fall into the third cell. Count the
+                // decreasing axis as entered (1 lepton further) so the vehicle stays within the two cells it holds.
+                int nx = next.X, ny = next.Y;
+                if (nx < pos.X && (nx & 255) == 0 && nx != target.X) nx--;
+                if (ny < pos.Y && (ny & 255) == 0 && ny != target.Y) ny--;
+                next = new LeptonCoord(nx, ny);
+                nc = next.ToCell();
+            }
+            if (nc != pc && nc != rc)
+            {
                 // Cannot happen when steps start on a cell centre; never leave the two cells we hold.
                 Occupancy.DropReservation(sim, kind, store, i);
                 store.PathCells[i] = null;
