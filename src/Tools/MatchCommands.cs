@@ -90,7 +90,11 @@ public static class MatchCommands
             }
             for (int ring = MinInfantryRing; ring <= MaxInfantryRing; ring++)
             {
-                var topLeft = new CellCoord(start.X + dx * ring, start.Y + dy * ring);
+                // Mirror the footprint, not just its anchor: on the far side, anchor from the footprint's far corner.
+                BuildingType hqType = rules.Sim.Buildings[hq];
+                int x0 = dx > 0 ? start.X + ring : start.X - ring - (hqType.FootprintW - 1);
+                int y0 = dy > 0 ? start.Y + ring : start.Y - ring - (hqType.FootprintH - 1);
+                var topLeft = new CellCoord(x0, y0);
                 if (sim.PlaceBuilding(player, hq, topLeft) == EntityId.None) continue;
                 recorder?.RecordSpawn(ActorKind.Building, player, hq, topLeft);
                 break;

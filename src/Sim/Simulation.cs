@@ -377,6 +377,7 @@ public sealed partial class Simulation
     private void RemoveBuilding(EntityId id)
     {
         int i = id.Index;
+        OnCombatActorRemoving(ActorKind.Building, i); // clear attackers' targets (combat, M1-09)
         BuildingType bt = Setup.Rules.Buildings[_buildings.TypeIndex[i]];
         CellCoord tl = _buildings.Cell[i];
         for (int y = 0; y < bt.FootprintH; y++)

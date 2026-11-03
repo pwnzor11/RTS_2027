@@ -21,6 +21,11 @@ public static class Cli
         Usage:
           Tools validate [--rules <dir>]
           Tools run --ticks <n> --seed <s> [--rules <dir>] [--units <k>]
+          Tools map new --size <n> --seed <s> --out <path>
+          Tools map info <path>
+          Tools match [--map <path>] [--ticks <n>] [--seed <s>] [--record <file>]
+          Tools replay verify <file> [--rules <dir>] [--map <path>]
+          Tools replay info <file>
           Tools help
 
         --rules defaults to the nearest data/rules found walking up from the current directory.
