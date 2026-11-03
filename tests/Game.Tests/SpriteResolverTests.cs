@@ -256,8 +256,10 @@ public sealed class SpriteStateTests
     [Fact]
     public void Without_a_damaged_state_or_max_health_the_building_stays_idle()
     {
-        string noDamaged = BuildingText[..BuildingText.IndexOf("[[state]]\nname = \"damaged\"", StringComparison.Ordinal)]
-            + BuildingText[BuildingText.IndexOf("[[state]]\nname = \"build\"", StringComparison.Ordinal)..];
+        // Raw string literals keep the file's line endings (CRLF on a Windows checkout): normalise before searching.
+        string text = BuildingText.Replace("\r\n", "\n", StringComparison.Ordinal);
+        string noDamaged = text[..text.IndexOf("[[state]]\nname = \"damaged\"", StringComparison.Ordinal)]
+            + text[text.IndexOf("[[state]]\nname = \"build\"", StringComparison.Ordinal)..];
         SpriteManifest m = SpriteManifest.Parse(noDamaged, "nd", "test");
         Assert.Equal(0, SpriteStates.BuildingFrame(m, 1000, 1, 100, false, 0));
         Assert.Equal(0, SpriteStates.BuildingFrame(Building, 1000, 1, 0, false, 0));
