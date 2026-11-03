@@ -10,8 +10,8 @@ namespace Rts.Game.Sandbox;
 
 /// <summary>
 /// Spawns the starting armies for the debug view and records each spawn. Sandbox (default): per player, around its
-/// start position, 3 test tanks, 2 test jeeps, 1 test artillery truck, 5 test riflemen in one cell (one per sub-slot)
-/// and one test turret if it can be placed. Empty (<c>--empty</c>): the legacy 3 tanks per player in a row.
+/// start position, 4 Medium Tanks, 2 Jeeps, 1 more Medium Tank, 5 Riflemen in one cell (one per sub-slot)
+/// and one Gun Turret if it can be placed. Empty (<c>--empty</c>): the legacy 3 tanks per player in a row.
 /// Layouts run toward the map centre from each start, so they stay on the map.
 /// </summary>
 public static class SandboxScenario
@@ -19,11 +19,10 @@ public static class SandboxScenario
     /// <summary>Map file name, looked up in data/maps.</summary>
     public const string MapFileName = "test_32.map.toml";
 
-    private const string TankId = "test_tank";
-    private const string JeepId = "test_jeep";
-    private const string ArtilleryId = "test_artillery_truck";
-    private const string RifleId = "test_rifleman";
-    private const string TurretId = "test_turret";
+    private const string TankId = "auth_tank";
+    private const string JeepId = "auth_jeep";
+    private const string RifleId = "auth_rifleman";
+    private const string TurretId = "auth_turret";
     private const int LegacyTanksPerPlayer = 3;
     private const int LegacySpacingCells = 2;
 
@@ -54,7 +53,6 @@ public static class SandboxScenario
     {
         int tank = Required(SimRules.IndexOf(rules.Vehicles, TankId, v => v.Id), TankId);
         int jeep = Required(SimRules.IndexOf(rules.Vehicles, JeepId, v => v.Id), JeepId);
-        int artillery = Required(SimRules.IndexOf(rules.Vehicles, ArtilleryId, v => v.Id), ArtilleryId);
         int rifle = Required(SimRules.IndexOf(rules.Infantry, RifleId, i => i.Id), RifleId);
         int turret = Required(SimRules.IndexOf(rules.Buildings, TurretId, b => b.Id), TurretId);
 
@@ -65,9 +63,9 @@ public static class SandboxScenario
             int dy = start.Y < map.Height / 2 ? 1 : -1;
             CellCoord At(int along, int across) => new(start.X + dx * along, start.Y + dy * across);
 
-            for (int i = 0; i < 3; i++) Vehicle(sim, rec, army, player, tank, At(2 * i, 0));
+            for (int i = 0; i < 4; i++) Vehicle(sim, rec, army, player, tank, At(2 * i, 0));
             for (int i = 0; i < 2; i++) Vehicle(sim, rec, army, player, jeep, At(2 * i, 2));
-            Vehicle(sim, rec, army, player, artillery, At(2, 4)); // (8,8) and (23,23) are cliff: keep vehicles off it
+            Vehicle(sim, rec, army, player, tank, At(2, 4)); // (8,8) and (23,23) are cliff: keep vehicles off it
             for (int slot = 0; slot < InfantryStore.SubSlotCount; slot++) Infantry(sim, rec, army, player, rifle, At(0, 4), slot);
             Building(sim, rec, player, turret, At(6, 2));
         }

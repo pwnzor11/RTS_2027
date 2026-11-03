@@ -7,7 +7,7 @@ namespace AI.Tests;
 
 public class PlayerViewTests
 {
-    private static readonly int Tank = TestWorld.Vehicle("test_tank");
+    private static readonly int Tank = TestWorld.Vehicle("auth_tank");
 
     [Fact]
     public void HidesEnemyInFogAndShowsItInVision()
@@ -65,7 +65,7 @@ public class PlayerViewTests
     {
         var sim = TestWorld.FlatSim();
         sim.SpawnVehicle(0, Tank, new CellCoord(5, 5));
-        int hq = Array.FindIndex(TestWorld.Rules.Sim.Buildings.ToArray(), b => b.Id == "test_hq");
+        int hq = Array.FindIndex(TestWorld.Rules.Sim.Buildings.ToArray(), b => b.Id == "auth_conyard");
         Assert.NotEqual(EntityId.None, sim.PlaceBuilding(1, hq, new CellCoord(50, 50)));
         var known = new List<ViewActor>();
         sim.Step(Array.Empty<Command>());

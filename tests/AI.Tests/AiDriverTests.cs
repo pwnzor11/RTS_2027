@@ -31,7 +31,7 @@ public class AiDriverTests
     public void StampsExecTickSequenceAndArgs()
     {
         var sim = TestWorld.FlatSim();
-        sim.SpawnVehicle(0, TestWorld.Vehicle("test_tank"), new CellCoord(4, 6));
+        sim.SpawnVehicle(0, TestWorld.Vehicle("auth_tank"), new CellCoord(4, 6));
         var ai = new Recorder();
         var driver = new AiDriver(77);
         driver.Add(0, ai, Profile(interval: 1, delay: 3));

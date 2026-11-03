@@ -32,10 +32,10 @@ public static class MatchCommands
 
     // Start force per player: one entry per vehicle, then the infantry and the HQ.
     private static readonly string[] VehicleIds =
-        ["test_tank", "test_tank", "test_tank", "test_tank", "test_jeep", "test_jeep", "test_artillery_truck"];
-    private const string InfantryId = "test_rifleman";
+        ["auth_tank", "auth_tank", "auth_tank", "auth_tank", "auth_tank", "auth_jeep", "auth_jeep"];
+    private const string InfantryId = "auth_rifleman";
     private const int InfantryPerPlayer = 6;
-    private const string HqId = "test_hq";
+    private const string HqId = "auth_conyard";
 
     public static int Run(string[] args)
     {
