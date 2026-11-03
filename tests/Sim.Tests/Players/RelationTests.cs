@@ -60,15 +60,16 @@ public class RelationTests
         var sim = Standard();
         var a = sim.SpawnInfantry(0, Inf("test_rifleman"), new CellCoord(10, 10));
         var ally = sim.SpawnInfantry(1, Inf("test_rifleman"), new CellCoord(11, 10));
+        var self = sim.SpawnInfantry(0, Inf("test_rifleman"), new CellCoord(14, 10));
+        var neutral = sim.SpawnInfantry(3, Inf("test_rifleman"), new CellCoord(10, 12));
         Run(sim, 40, Attack(sim, 0, ActorKind.Infantry, a, ActorKind.Infantry, ally));
         Assert.Equal(50, sim.Infantry.Health[ally.Index]);
         Assert.NotEqual(MissionKind.Attack, sim.Infantry.Mission[a.Index]);
 
-        var self = sim.SpawnInfantry(0, Inf("test_rifleman"), new CellCoord(14, 10));
         Run(sim, 20, Attack(sim, 0, ActorKind.Infantry, a, ActorKind.Infantry, self));
         Assert.Equal(50, sim.Infantry.Health[self.Index]);
+        Assert.Equal(50, sim.Infantry.Health[neutral.Index]);   // neutral is never auto-targeted
 
-        var neutral = sim.SpawnInfantry(3, Inf("test_rifleman"), new CellCoord(10, 12));
         Run(sim, 40, Attack(sim, 0, ActorKind.Infantry, a, ActorKind.Infantry, neutral));
         Assert.True(sim.Infantry.Health[neutral.Index] < 50);
     }

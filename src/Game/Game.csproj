@@ -17,7 +17,7 @@
 
   <!-- Licence and notices travel with every build and publish (E-1, E-7). -->
   <ItemGroup>
-    <None Include="..\..\LICENSE;..\..\NOTICE.md;..\..\THIRD_PARTY_NOTICES.md" Link="%(Filename)%(Extension)"
+    <None Include="..\..\LICENSE;..\..\NOTICE.md;..\..\THIRD_PARTY_NOTICES.md;..\..\THIRD_PARTY_LGPL-2.0.txt" Link="%(Filename)%(Extension)"
           CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 

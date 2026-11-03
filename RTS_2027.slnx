@@ -8,6 +8,7 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/AI.Tests/AI.Tests.csproj" />
+    <Project Path="tests/Game.Tests/Game.Tests.csproj" />
     <Project Path="tests/Sim.Tests/Sim.Tests.csproj" />
   </Folder>
 </Solution>

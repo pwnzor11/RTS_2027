@@ -1,4 +1,4 @@
-namespace Rts.AI;
+namespace Rts.Data;
 
 /// <summary>
 /// One difficulty tier's capability profile, loaded from data/ai/difficulty.toml (design 02 §7). Integers only.

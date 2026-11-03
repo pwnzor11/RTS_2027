@@ -42,7 +42,8 @@ Soft that works with the same interface, and the game will load it.
 
 The source code of OpenAL Soft 1.24.3 is available from its upstream project: https://github.com/kcat/openal-soft
 (release 1.24.3). The MonoGame packaging of this build is at https://github.com/MonoGame/MonoGame .
-The GNU Lesser General Public License version 2 text is at https://www.gnu.org/licenses/old-licenses/lgpl-2.0.html .
+The full GNU Library General Public License version 2 text ships beside the game as `THIRD_PARTY_LGPL-2.0.txt`
+(also at https://www.gnu.org/licenses/old-licenses/lgpl-2.0.html).
 
 Licence notice (as packaged with MonoGame.Library.OpenAL):
 

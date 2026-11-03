@@ -1,3 +1,4 @@
+using Rts.Data;
 namespace Rts.AI;
 
 /// <summary>One side of an AI-vs-AI game: an AI id and the difficulty profile it plays with.</summary>

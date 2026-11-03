@@ -19,7 +19,7 @@ public class PlayerViewTests
         sim.ViewFor(0).CopyVisible(seen);
         Assert.Empty(seen);
 
-        EntityId near = sim.SpawnVehicle(1, Tank, new CellCoord(7, 5));
+        EntityId near = TestWorld.LateVehicle(sim, 1, Tank, new CellCoord(7, 5));
         sim.Step(Array.Empty<Command>());
         sim.ViewFor(0).CopyVisible(seen);
         var actor = Assert.Single(seen);
@@ -70,7 +70,7 @@ public class PlayerViewTests
         sim.ViewFor(0).CopyKnownEnemyBuildings(known);
         Assert.Empty(known);
 
-        Assert.NotEqual(EntityId.None, sim.PlaceBuilding(1, hq, new CellCoord(9, 5)));
+        Assert.NotEqual(EntityId.None, TestWorld.LateBuilding(sim, 1, hq, new CellCoord(9, 5)));
         sim.Step(Array.Empty<Command>());
         sim.ViewFor(0).CopyKnownEnemyBuildings(known);
         var b = Assert.Single(known);
