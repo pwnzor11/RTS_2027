@@ -12,6 +12,8 @@ public enum CommandKind : byte
 /// The only way anything outside Simulation.Step changes sim state. Fixed generic payload for v1:
 /// Subject = the acting entity, Target = target entity, Cell = target cell, Arg = kind-specific int
 /// (type index for Build/Place, stance for SetStance, ...). Step sorts by (Player, Sequence).
+/// For Move and Stop, Arg = (int)<see cref="ActorKind"/> of the Subject (0 = Vehicle, 1 = Infantry), because an
+/// EntityId alone does not say which store it indexes. Move queues a Move mission to Cell; Stop queues Stop.
 /// </summary>
 public readonly record struct Command(
     int ExecTick, byte Player, ushort Sequence, CommandKind Kind,

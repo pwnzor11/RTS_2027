@@ -1,7 +1,7 @@
 using Rts.Sim.Core;
 using Rts.Sim.Map;
 using Rts.Sim.Tests.Determinism;
-using Rts.Sim.World;
+using Rts.Sim.Missions;
 
 namespace Rts.Sim.Tests.World;
 
@@ -16,17 +16,18 @@ public class MovementTests
     }
 
     [Fact]
-    public void Unit_ReachesDestination_InExactTickCount()
+    public void Unit_FacingDestination_ReachesItInExactTickCount()
     {
         var sim = Make(30, out var id);
-        // 5 cells east = 1280 leptons at 30/tick -> ceil(1280/30) = 43 ticks
-        var cmd = new Command(0, 0, 0, CommandKind.Move, id, default, new CellCoord(15, 10), 0);
+        // 5 cells north = 1280 leptons at 30/tick -> ceil(1280/30) = 43 ticks; already facing north, no turn
+        var cmd = new Command(0, 0, 0, CommandKind.Move, id, default, new CellCoord(10, 5), 0);
         sim.Step(new[] { cmd });
         int ticks = 1;
-        while (sim.Units.Mission[id.Index] == UnitMission.Move) { sim.Step(Array.Empty<Command>()); ticks++; }
+        while (sim.Units.Position[id.Index] != LeptonCoord.CenterOf(new CellCoord(10, 5))) { sim.Step(Array.Empty<Command>()); ticks++; }
         Assert.Equal(43, ticks);
-        Assert.Equal(LeptonCoord.CenterOf(new CellCoord(15, 10)), sim.Units.Position[id.Index]);
-        Assert.Equal(UnitMission.Idle, sim.Units.Mission[id.Index]);
+        Assert.Equal(MissionKind.Move, sim.Units.Mission[id.Index]);   // Guard is queued, commences next tick
+        sim.Step(Array.Empty<Command>());
+        Assert.Equal(MissionKind.Guard, sim.Units.Mission[id.Index]);
     }
 
     [Theory]
@@ -36,6 +37,7 @@ public class MovementTests
     {
         var sim = Make(20, out var id);
         sim.Step(new[] { new Command(0, 0, 0, CommandKind.Move, id, default, new CellCoord(cx, cy), 0) });
+        for (int i = 0; i < 40; i++) sim.Step(Array.Empty<Command>());
         Assert.Equal(expected, sim.Units.Facing[id.Index]);
     }
 
@@ -44,6 +46,6 @@ public class MovementTests
     {
         var sim = Make(20, out var id);
         sim.Step(new[] { new Command(0, 1, 0, CommandKind.Move, id, default, new CellCoord(15, 10), 0) });
-        Assert.Equal(UnitMission.Idle, sim.Units.Mission[id.Index]);
+        Assert.Equal(MissionKind.None, sim.Units.Mission[id.Index]);
     }
 }

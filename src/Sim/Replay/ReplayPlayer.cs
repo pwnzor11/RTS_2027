@@ -18,7 +18,11 @@ public static class ReplayPlayer
             throw new InvalidDataException("Replay header does not match setup.");
 
         var sim = new Simulation(setup);
-        foreach (var s in data.Spawns) sim.SpawnVehicle(s.Player, s.Type, s.Cell);
+        foreach (var s in data.Spawns)
+        {
+            if (s.Kind == ActorKind.Infantry) sim.SpawnInfantry(s.Player, s.Type, s.Cell, s.SubSlot);
+            else sim.SpawnVehicle(s.Player, s.Type, s.Cell);
+        }
 
         var commands = new List<Command>();
         foreach (ReplayRecord r in data.Records)
