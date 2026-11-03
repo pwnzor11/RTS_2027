@@ -547,14 +547,9 @@ public sealed partial class Simulation
 
     // ---- hash / snapshot / save --------------------------------------------------------------
 
-    /// <summary>64-bit xxHash64 over all sim state, including RNG and Tick.</summary>
-    public ulong ComputeStateHash()
-    {
-        using var ms = new MemoryStream();
-        using (var w = new BinaryWriter(ms, System.Text.Encoding.UTF8, leaveOpen: true))
-            SimWriter.WriteState(w, Tick, _rng, _parts);
-        return XxHash64.HashToUInt64(ms.GetBuffer().AsSpan(0, (int)ms.Length));
-    }
+    /// <summary>64-bit xxHash64 over all sim state, including RNG and Tick. One streaming pass, no allocation after
+    /// warm-up (see Simulation.Hashing.cs).</summary>
+    public ulong ComputeStateHash() => HashPass(null);
 
     /// <summary>Snapshot for the omniscient debug view. Snapshot(viewer) arrives with fog in M1-07.</summary>
     public SimSnapshot Snapshot() => Snapshot(-1);
@@ -602,17 +597,53 @@ public sealed partial class Simulation
     private bool SeenBy(int viewer, byte owner, LeptonCoord pos) =>
         viewer < 0 || owner == viewer || _vision.IsVisible((byte)viewer, pos.ToCell());
 
-    /// <summary>Versioned binary save of the whole sim state.</summary>
-    public void Save(Stream output) =>
-        SimWriter.WriteSave(output, Setup.RulesHash, MapHash, Tick, _rng, _parts);
+    /// <summary>Versioned binary save of the whole sim state. The header carries the setup (build, seed, players, teams,
+    /// limits, AllowDebug, rules and map identity) and the embedded rules files given here, so the save can be
+    /// loaded without the caller supplying rules (see the Load overload taking a rules delegate).</summary>
+    public void Save(Stream output, string build = "", IReadOnlyList<(string Name, string Text)>? rulesFiles = null) =>
+        SimWriter.WriteSave(output, SetupHeader.From(this, build, rulesFiles ?? Array.Empty<(string, string)>()), Tick, _rng, _parts);
 
-    /// <summary>Restore a game saved with Save. The setup must match (checked via RulesHash and MapHash).</summary>
+    /// <summary>Restore a game saved with Save. The setup must match the save header (rules hash, map hash, player
+    /// count, teams, limits, AllowDebug).</summary>
     public static Simulation Load(Stream input, SimSetup setup)
     {
+        ArgumentNullException.ThrowIfNull(setup);
+        using var r = new BinaryReader(input, System.Text.Encoding.UTF8, leaveOpen: true);
+        SetupHeader header = ReadSaveHeader(r);
         var sim = new Simulation(setup);
-        var state = SimReader.ReadSave(input, setup.RulesHash, sim.MapHash, sim._parts);
-        sim.Tick = state.Tick;
-        sim._rng = state.Rng;
-        return sim;
+        header.CheckMatches(setup, sim.MapHash, "Save", checkSeed: false);
+        return sim.FinishLoad(r);
+    }
+
+    /// <summary>
+    /// Restore a game from a save alone: the setup comes from the save header and the rules from its embedded rules
+    /// files, turned into rules by <paramref name="rulesFromBlob"/> (supplied by the data layer, so the sim does not
+    /// reference it). The map is supplied by the caller and checked against the saved map hash.
+    /// </summary>
+    public static Simulation Load(Stream input,
+        Func<IReadOnlyList<(string Name, string Text)>, (SimRules Rules, ulong Hash)> rulesFromBlob, MapData map)
+    {
+        ArgumentNullException.ThrowIfNull(rulesFromBlob);
+        ArgumentNullException.ThrowIfNull(map);
+        using var r = new BinaryReader(input, System.Text.Encoding.UTF8, leaveOpen: true);
+        SetupHeader header = ReadSaveHeader(r);
+        (SimRules rules, ulong hash) = rulesFromBlob(header.RulesFiles);
+        return new Simulation(header.ToSetup(map, rules, hash)).FinishLoad(r);
+    }
+
+    private static SetupHeader ReadSaveHeader(BinaryReader r)
+    {
+        try { return SimReader.ReadHeader(r); }
+        catch (EndOfStreamException) { throw new InvalidDataException("Truncated save."); }
+    }
+
+    private Simulation FinishLoad(BinaryReader r)
+    {
+        SimReader.State state;
+        try { state = SimReader.ReadState(r, _parts); }
+        catch (EndOfStreamException) { throw new InvalidDataException("Truncated save."); }
+        Tick = state.Tick;
+        _rng = state.Rng;
+        return this;
     }
 }

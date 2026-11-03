@@ -97,4 +97,86 @@ public class SaveTests
         Assert.Equal(new EntityId(3, 2), a);
         Assert.Equal(a, b);
     }
+
+    private static readonly IReadOnlyList<(string Name, string Text)> Files =
+        new[] { ("game.toml", "[game]\ntick_rate = 20\n"), ("vehicles.toml", new string('v', 3000)) };
+
+    private static SimSetup CustomSetup() => ScriptedGame.Setup(9) with
+    {
+        Teams = new byte[] { 1, 1 }, Limits = new SimLimits(300, 200, 100, 64), AllowDebug = true,
+    };
+
+    [Fact]
+    public void LoadWithoutASetup_RebuildsItFromTheSaveAndItsEmbeddedRules()
+    {
+        var setup = CustomSetup();
+        var sim = ScriptedGame.NewSim(setup);
+        var script = ScriptedGame.Script(150);
+        for (int i = 0; i < 100; i++) sim.Step(script);
+        var ms = new MemoryStream(); sim.Save(ms, "9.9.9+abc", Files);
+
+        IReadOnlyList<(string Name, string Text)>? seen = null;
+        var loaded = Simulation.Load(new MemoryStream(ms.ToArray()), files =>
+        {
+            seen = files;
+            return (setup.Rules, setup.RulesHash);
+        }, setup.Map);
+
+        Assert.Equal(Files, seen);
+        Assert.Equal(sim.ComputeStateHash(), loaded.ComputeStateHash());
+        Assert.Equal(setup.Seed, loaded.Setup.Seed);
+        Assert.Equal(setup.PlayerCount, loaded.Setup.PlayerCount);
+        Assert.Equal(setup.Teams, loaded.Setup.Teams);
+        Assert.Equal(setup.Limits, loaded.Setup.Limits);
+        Assert.True(loaded.Setup.AllowDebug);
+        for (int i = 0; i < 50; i++)
+        {
+            sim.Step(script); loaded.Step(script);
+            Assert.Equal(sim.ComputeStateHash(), loaded.ComputeStateHash());
+        }
+    }
+
+    [Fact]
+    public void LoadWithoutASetup_RejectsRulesOrMapThatDoNotMatchTheHeader()
+    {
+        var setup = CustomSetup();
+        var ms = new MemoryStream(); ScriptedGame.NewSim(setup).Save(ms, "b", Files);
+        byte[] bytes = ms.ToArray();
+        Assert.Throws<InvalidDataException>(() =>
+            Simulation.Load(new MemoryStream(bytes), _ => (setup.Rules, setup.RulesHash + 1), setup.Map));
+        Assert.Throws<InvalidDataException>(() =>
+            Simulation.Load(new MemoryStream(bytes), _ => (setup.Rules, setup.RulesHash), MapData.CreateFlat(64, 64, "other")));
+    }
+
+    [Fact]
+    public void Load_RejectsASetupThatDiffersInTeamsLimitsDebugOrPlayers()
+    {
+        var setup = CustomSetup();
+        var ms = new MemoryStream(); ScriptedGame.NewSim(setup).Save(ms);
+        byte[] bytes = ms.ToArray();
+        Assert.NotNull(Simulation.Load(new MemoryStream(bytes), setup));
+        Assert.Throws<InvalidDataException>(() => Simulation.Load(new MemoryStream(bytes), setup with { Teams = null }));
+        Assert.Throws<InvalidDataException>(() => Simulation.Load(new MemoryStream(bytes), setup with { Limits = SimLimits.Default }));
+        Assert.Throws<InvalidDataException>(() => Simulation.Load(new MemoryStream(bytes), setup with { AllowDebug = false }));
+    }
+
+    [Fact]
+    public void OldSaveVersion_IsRejectedWithAClearMessage()
+    {
+        var ms = new MemoryStream(); ScriptedGame.NewSim(ScriptedGame.Setup()).Save(ms);
+        byte[] bytes = ms.ToArray();
+        bytes[4] = 5;
+        var ex = Assert.Throws<InvalidDataException>(() => Simulation.Load(new MemoryStream(bytes), ScriptedGame.Setup()));
+        Assert.Contains("version 5", ex.Message);
+    }
+
+    [Fact]
+    public void TruncatedSave_IsAnInvalidDataError()
+    {
+        var setup = ScriptedGame.Setup();
+        var ms = new MemoryStream(); ScriptedGame.NewSim(setup).Save(ms);
+        byte[] bytes = ms.ToArray();
+        Assert.Throws<InvalidDataException>(() => Simulation.Load(new MemoryStream(bytes[..40]), setup));
+        Assert.Throws<InvalidDataException>(() => Simulation.Load(new MemoryStream(bytes[..^50]), setup));
+    }
 }

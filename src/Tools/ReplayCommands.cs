@@ -12,11 +12,12 @@ namespace Rts.Tools;
 public static class ReplayCommands
 {
     private const string Usage =
-        "usage: replay verify <file> [--rules <dir>] [--map <path>]\n" +
+        "usage: replay verify <file> [--rules-dir <dir>] [--map <path>]\n" +
         "       replay info <file>\n" +
+        "  Rules come from the replay itself (embedded); --rules-dir plays it with the rules in a directory instead.\n" +
         "  --map defaults to data/maps/test_64.map.toml; it must be the map the replay was recorded on.";
 
-    private static readonly string[] VerifyOptions = ["rules", "map"];
+    private static readonly string[] VerifyOptions = ["rules-dir", "rules", "map"];
 
     public static int Run(string[] args)
     {
@@ -35,42 +36,54 @@ public static class ReplayCommands
             return UsageError(error ?? "verify needs exactly one replay file");
         string file = positional[0];
 
-        RuleSet? rules = MatchSetup.LoadRules(flags.TryGetValue("rules", out string? rulesArg) ? rulesArg : null, out string rulesDir);
-        if (rules is null) return 1;
-        string mapPath = flags.TryGetValue("map", out string? mapArg) ? mapArg : MatchSetup.DefaultMapPath(rulesDir);
-        MapData? map = MatchSetup.LoadMap(mapPath);
-        if (map is null) return 1;
-
-        ReplayData header;
+        ReplayData data;
         try
         {
             using var fs = File.OpenRead(file);
-            header = ReplayReader.Read(fs);
+            data = ReplayReader.Read(fs);
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException or InvalidDataException)
         {
             Console.Error.WriteLine($"error: cannot read replay {file}: {e.Message}");
             return 1;
         }
+        if (data.Truncated)
+            Console.Error.WriteLine($"note: {file} has no end record (the game probably crashed); verifying up to its last hash record, tick {data.FinalTick}");
 
-        if (header.RulesHash != rules.RulesHash)
+        string? rulesDirArg = flags.TryGetValue("rules-dir", out string? d) ? d : flags.TryGetValue("rules", out string? d2) ? d2 : null;
+        RuleSet? rules;
+        string rulesSource;
+        if (rulesDirArg is not null)
         {
-            Console.Error.WriteLine($"error: replay was recorded with rules 0x{header.RulesHash:x16}; the rules in {rulesDir} hash to 0x{rules.RulesHash:x16}");
+            rules = MatchSetup.LoadRules(rulesDirArg, out string dir);
+            rulesSource = dir;
+        }
+        else
+        {
+            rules = LoadEmbedded(data, file);
+            rulesSource = "the rules embedded in the replay";
+        }
+        if (rules is null) return 1;
+        if (data.RulesHash != rules.RulesHash)
+        {
+            Console.Error.WriteLine($"error: replay was recorded with rules 0x{data.RulesHash:x16}; {rulesSource} hash to 0x{rules.RulesHash:x16}");
             return 1;
         }
+
+        string mapPath = flags.TryGetValue("map", out string? mapArg) ? mapArg : DefaultMapPath();
+        MapData? map = MatchSetup.LoadMap(mapPath);
+        if (map is null) return 1;
         ulong mapHash = MapHasher.Compute(map);
-        if (header.MapHash != mapHash)
+        if (data.MapHash != mapHash)
         {
-            Console.Error.WriteLine($"error: replay was recorded on map 0x{header.MapHash:x16}; {mapPath} hashes to 0x{mapHash:x16}. Pass the map it was recorded on with --map.");
+            Console.Error.WriteLine($"error: replay was recorded on map '{data.Header.MapName}' 0x{data.MapHash:x16}; {mapPath} hashes to 0x{mapHash:x16}. Pass the map it was recorded on with --map.");
             return 1;
         }
 
-        var setup = MatchSetup.MakeSetup(header.Seed, map, rules, header.PlayerCount);
         ReplayResult result;
         try
         {
-            using var fs = File.OpenRead(file);
-            result = ReplayPlayer.Run(fs, setup);
+            result = ReplayPlayer.Run(data, data.Header.ToSetup(map, rules.Sim, rules.RulesHash));
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException or InvalidDataException)
         {
@@ -86,8 +99,33 @@ public static class ReplayCommands
             Console.WriteLine($"DESYNC at tick {result.FirstMismatchTick} {where}");
             return 1;
         }
-        Console.WriteLine($"OK {result.TicksRun} ticks, final hash 0x{result.FinalHash:x16}");
+        Console.WriteLine($"OK {result.TicksRun} ticks, final hash 0x{result.FinalHash:x16}{(result.Truncated ? " (truncated replay)" : "")}");
         return 0;
+    }
+
+    private static RuleSet? LoadEmbedded(ReplayData data, string file)
+    {
+        if (data.RulesFiles.Count == 0)
+        {
+            Console.Error.WriteLine($"error: {file} has no embedded rules; pass --rules-dir <dir>");
+            return null;
+        }
+        try
+        {
+            return RulesBundle.Load(data.RulesFiles);
+        }
+        catch (RulesException ex)
+        {
+            Console.Error.WriteLine($"error: the rules embedded in {file} do not load:");
+            foreach (RulesProblem p in ex.Problems) Console.Error.WriteLine($"{p.File}: {p.Key}: {p.Message}");
+            return null;
+        }
+    }
+
+    private static string DefaultMapPath()
+    {
+        string? dir = RulesLocator.FindRulesDir(Directory.GetCurrentDirectory());
+        return dir is null ? Path.Combine("data", "maps", MatchSetup.DefaultMapName) : MatchSetup.DefaultMapPath(dir);
     }
 
     private static int Info(string[] args)
@@ -118,7 +156,12 @@ public static class ReplayCommands
             }
         }
 
-        Console.WriteLine($"format version {ReplayWriter.Version}");
+        Console.WriteLine($"format version {data.Version}");
+        Console.WriteLine($"build {data.Build}");
+        Console.WriteLine($"map '{data.Header.MapName}'");
+        Console.WriteLine($"embedded rules files {data.RulesFiles.Count}");
+        Console.WriteLine($"teams {(data.Header.Teams is null ? "none" : string.Join(",", data.Header.Teams))}, allow debug {data.Header.AllowDebug}");
+        Console.WriteLine($"truncated {data.Truncated}");
         Console.WriteLine($"rules hash 0x{data.RulesHash:x16}");
         Console.WriteLine($"map hash 0x{data.MapHash:x16} ({data.MapWidth}x{data.MapHeight})");
         Console.WriteLine($"seed {data.Seed} (0x{data.Seed:x16})");

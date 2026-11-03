@@ -1,3 +1,4 @@
+using Rts.Data;
 using Rts.Sim;
 using Rts.Sim.Core;
 using Rts.Sim.Replay;
@@ -5,51 +6,82 @@ using Rts.Sim.Replay;
 namespace Rts.Game.Sandbox;
 
 /// <summary>
-/// Wraps <see cref="ReplayWriter"/> for one sandbox session: setup spawns, every command the session issues, and a
-/// hash check every <see cref="SimConstants.HashIntervalTicks"/> ticks. Written once by <see cref="Save"/>.
+/// Streams one sandbox session to a replay file: opened at session start (the header is written at once), every
+/// command the session issues and a hash check every <see cref="SimConstants.HashIntervalTicks"/> ticks appended as
+/// they happen, flushed every 64 ticks, so a crash keeps the recording. Setup spawns come from the sim's setup log.
+/// The file of the previous session is kept as the "previous" path. If the file cannot be opened the game still runs
+/// and nothing is recorded.
 /// </summary>
-public sealed class ReplayRecording
+public sealed class ReplayRecording : IDisposable
 {
-    private readonly ReplayWriter _writer;
-    private bool _saved;
+    private readonly ReplayWriter? _writer;
+    private readonly FileStream? _file;
+    private readonly string _path;
+    private bool _finished;
 
-    /// <summary>Starts recording for a sim built from <paramref name="setup"/>.</summary>
-    public ReplayRecording(SimSetup setup)
+    /// <summary>Starts recording <paramref name="sim"/> to <paramref name="path"/> (folders are created; an existing file is
+    /// moved to <paramref name="previousPath"/> first).</summary>
+    public ReplayRecording(Simulation sim, IReadOnlyList<(string Name, string Text)> rulesFiles, string path, string previousPath)
     {
-        _writer = new ReplayWriter(setup);
-    }
-
-    /// <summary>Records a setup spawn. Call in the same order as the spawns, before tick 0.</summary>
-    public void RecordSpawn(ActorKind kind, byte player, int typeIndex, CellCoord cell, int subSlot = 0) =>
-        _writer.RecordSpawn(kind, player, typeIndex, cell, subSlot);
-
-    /// <summary>Records a command at the moment it is queued, so the replay carries exactly what the sim saw.</summary>
-    public void RecordCommand(Command command) => _writer.RecordCommand(command);
-
-    /// <summary>Records the state hash and sub-hashes at the sim's current tick.</summary>
-    public void RecordHash(Simulation sim) => _writer.RecordHash(sim.Tick, sim.ComputeStateHash(), sim.ComputeSubHashes());
-
-    /// <summary>
-    /// Writes the replay to <paramref name="path"/> (folders are created). Returns false and prints the problem if the
-    /// file cannot be written; the game keeps running either way. A second call does nothing.
-    /// </summary>
-    public bool Save(string path, int finalTick)
-    {
-        if (_saved) return true;
+        _path = Path.GetFullPath(path);
         try
         {
-            string full = Path.GetFullPath(path);
-            string? dir = Path.GetDirectoryName(full);
+            string? dir = Path.GetDirectoryName(_path);
             if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
-            using (var stream = File.Create(full)) _writer.Finish(stream, finalTick);
-            _saved = true;
-            Console.WriteLine($"replay saved: {full}");
+            if (File.Exists(_path)) File.Move(_path, Path.GetFullPath(previousPath), overwrite: true);
+            _file = new FileStream(_path, FileMode.Create, FileAccess.Write, FileShare.Read);
+            _writer = new ReplayWriter(_file, sim, BuildInfo.Version, rulesFiles);
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        {
+            Console.Error.WriteLine($"error: replay not recorded: {e.Message}");
+            _file?.Dispose();
+            _file = null;
+            _writer = null;
+        }
+    }
+
+    /// <summary>Records a command at the moment it is queued, so the replay carries exactly what the sim saw.</summary>
+    public void RecordCommand(Command command) => Guard(() => _writer?.RecordCommand(command));
+
+    /// <summary>Records the state hash and sub-hashes at the sim's current tick (one serialisation pass).</summary>
+    public void RecordHash(Simulation sim) => Guard(() => _writer?.RecordHash(sim));
+
+    /// <summary>
+    /// Writes the end record and closes the file. Returns false and prints the problem if the replay could not be
+    /// written (the game keeps running either way). A second call does nothing.
+    /// </summary>
+    public bool Finish()
+    {
+        if (_finished) return _writer is not null;
+        _finished = true;
+        if (_writer is null) return false;
+        try
+        {
+            _writer.Finish();
+            _file!.Dispose();
+            Console.WriteLine($"replay saved: {_path}");
             return true;
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException)
         {
             Console.Error.WriteLine($"error: replay not saved: {e.Message}");
             return false;
+        }
+    }
+
+    /// <summary>Closes the file without an end record (what a crash leaves behind).</summary>
+    public void Dispose() => _file?.Dispose();
+
+    // A full disk or a vanished file must not take the game down.
+    private void Guard(Action write)
+    {
+        if (_writer is null || _finished) return;
+        try { write(); }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        {
+            Console.Error.WriteLine($"error: replay recording stopped: {e.Message}");
+            _finished = true;
         }
     }
 }
