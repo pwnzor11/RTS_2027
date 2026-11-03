@@ -1,37 +1,50 @@
-# Handoff: Session 2 — Design round 1 (technology and sim architecture)
-Last commit: (set at wrap-up)
-Where things stand: Session 1 bootstrapped the docs and produced 19 research files plus a synthesis
-(`docs/research/00_SYNTHESIS.md`). No design decisions beyond D-001..D-008 are made. No game code exists.
-Design round 1 was opened in chat at the end of session 1; the owner may have answered some of it.
+# Handoff: Session 2 — Repo skeleton and art pilot
+Last commit: (set by the wrap-up commit; check `git log -1`)
+Where things stand: Session 1 finished all research (19 files + synthesis) and all three design
+rounds (D-001..D-034). Architecture, game design and setting are written in `docs/design/`. There is
+no code yet. Next is M0-11 (repo skeleton) and M0-12 (art pilot), which are independent and can run
+as parallel waves.
 
 ## Start here (shown to the user as the plan; nothing starts until they say go)
-1. Check the chat tail of session 1 / OPEN_QUESTIONS for any round-1 answers the owner gave; log them
-   as D-009+ before anything else.
-2. Finish design round 1 (Q-01, Q-02, Q-09..Q-18): present each with the research trade-offs, record
-   decisions in DECISIONS.md, write `docs/design/01_architecture.md` from the answers.
-3. If Q-09 = spike: plan the OpenRA spike as its own short milestone. Otherwise move to round 2 (Q-03..05, Q-19..22).
-4. Only after rounds 1–3: M0-11 repo skeleton.
+1. Ask the user: has he read `docs/design/03_setting_and_factions.md`, and does he want to change any
+   faction mechanic before code assumes it (tunnel network, radiation denial, conscript swarm)? —
+   options: **go with the draft, refine during the roster pass** / change X now.
+2. Ask the user: confirm D-033 (asset licence allow-list incl. CC BY-SA 4.0) — **yes** / strict only.
+3. M0-11 Repo skeleton (Opus lead, helpers Sonnet for Sim core, Haiku for tooling/CI):
+   .NET solution per `design/01_architecture.md` §2; `Sim` library with `EntityId`, slot arrays,
+   `SimRandom`, `Fixed32`, lepton/cell/facing math, `Command`, `Sim.Step`, state hash; determinism
+   analyzer test (no float/double/Random/DateTime/Dictionary-iteration in `src/Sim`); TOML loader
+   with rules hash; headless `Tools` CLI; xUnit tests incl. replay determinism and save round-trip;
+   GitHub Actions on windows-latest; MonoGame `Game` project that opens a window and renders a grid
+   from a `SimSnapshot`. User can try: clone, `dotnet build`, `dotnet test`, run and see a window.
+4. M0-12 Art pilot (lead-owned, pilot before fan-out per owner preference): one Authority vehicle
+   three ways (Blender headless render, AI-assisted frames, hand pixel) at two candidate cell sizes
+   (48 px and 64 px), 16 facings, house-colour remap test; deliver a contact sheet. User picks.
+5. Checkpoint after each wave; then M1 planning.
 
 ## Half-finished work
-- Nothing in code. Research files 01, 02, 04, 05, 15, 20, 21, 22 run 5–15% over the 3,500-word target;
-  trim only if the owner finds them long.
+- None. `docs/design/03_setting_and_factions.md` below the "Decided" line is a proposal awaiting the
+  owner's reaction.
 
 ## Waiting on the user
-- Design round 1 answers (see OPEN_QUESTIONS, round 1).
+- Q-25 confirm D-033; reaction to the setting doc.
 
 ## How to run this session
-- Lead: Sonnet is fine for a pure design-discussion session; Opus if it turns into the repo skeleton build.
-- Repo clone: `/home/claude/rts_2027` (push to `origin main` directly; no branch protection).
-- Reference clones (read-only, re-clone if the workspace was reclaimed):
-  `/home/claude/ref/CnC_Remastered_Collection`, `/home/claude/ref/openage`, `/home/claude/ref/freeaoe`,
-  `/home/claude/ref/ageServer`, `/home/claude/ref/AOEMods.Essence`, `/home/claude/ref/aoc-mgz`.
-- Helpers: session 1 used 14 + 5 research helpers (Sonnet for code studies, Haiku for web sweeps).
-  Haiku web-research output was good; several Haiku helpers hit robots.txt/bot walls on Spring, 0 A.D.
-  and OpenRA wiki pages, so those details are marked unverified in the files.
-- A classifier blocked one helper launch whose brief said "run the repo's Python"; read-only briefs pass.
-- The owner's preferences: Opus lead for build sessions, Sonnet for doc/question sessions, Haiku
-  helpers by default, pilot one sample before fanning out subjective work.
-- Don't: start game code before the design rounds; add remotes; use EA names in anything.
+- Lead: Opus (build session). Helpers: Haiku default; Sonnet for `src/Sim` core, the analyzer and
+  anything touching determinism or serialisation.
+- Repo clone: `/home/claude/rts_2027` (push to `origin main` directly; no branch protection as of
+  session 1). Remote may report "moved to RTS_2027.git"; harmless.
+- Reference clones (read-only; re-clone if the workspace was reclaimed): see SESSION_LOG session 1.
+- Commit everything before launching helpers (worktrees can't see uncommitted files). Write
+  `COMMON.md` for code helpers (layout, `dotnet test` commands, forbidden list) before the first wave.
+- Blender for the art pilot: `pip install bpy --break-system-packages` works headless in the cloud
+  workspace (unverified in session 1; try first, fall back to apt/snap or a Blender tarball).
+- Lessons from session 1: Haiku research helpers hit robots.txt walls on Spring/0 A.D./OpenRA wikis;
+  a helper brief that proposes executing third-party repo code gets blocked by the auto-mode
+  classifier, read-only briefs pass; helpers run 5–15% over word targets when tables are involved.
+- Don't: use EA names/assets; put floats in `src/Sim`; start M1 systems before the skeleton's
+  determinism tests are green.
 
 ## If time runs short
-Get Q-01 (language) and Q-02 (EA reuse) decided and logged; everything else can wait a session.
+Land the `Sim` library with its determinism test and CI first; the MonoGame window and the art pilot
+can slip a session.
