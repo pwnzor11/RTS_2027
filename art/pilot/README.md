@@ -123,3 +123,16 @@ Cost log (D-059): about 40 min wall-clock from start to this commit: roughly 12 
    the south plaques are darker. Remap is exact (3771 pixels per colour).
 7. The pad (full 192 px square) makes a pale-ish rectangle on the ash ground; the pad could be drawn by the terrain instead.
 8. Art touches the left/right/bottom canvas edges (pad plus right-falling shadow); build frames 1 and 3 touch the top edge.
+
+## Vehicles (M2-13a)
+Regenerate (one render at a time on this box): `flock /home/claude/wt/blender.lock python3 tools/art/build_vehicle.py auth_scraper`
+(and `auth_jeep`), then `python3 tools/art/vehicle_contact.py` → `art/pilot/vehicles_contact.png`. Models live in
+`tools/art/vehicles/<id>.py`; the builder reuses the tank camera (40°), palette, outline and shadow (`structpost.frame_b`).
+`auth_tank` is a byte copy of the approved `tank_v2`.
+
+- Frames: tank 96 px, scraper 112 px (idle 16×1, harvest 16×4 at 3 ticks/frame), jeep 88 px (idle 16×1). Origin = cell centre.
+- Timings (2 cores, Cycles 24 samples): jeep ≈ 15 min full sheet, scraper ≈ 15 min (80 frames ≈ 12 s each). Post ≈ 3 s.
+- Cost log (D-059): ≈ 40 min design + previews for both vehicles, plus ≈ 30 min renders (queued behind other renders).
+- Honest notes: the scraper reads as a harvester at 1× (blade, conveyor, ash load, beacon); the jeep is small but distinct.
+  House areas are larger than the tank's, but in Authority green they almost vanish on the grey-green hulls (same as the
+  refinery) — a palette question for the owner, not a model fix. Optional "loaded" look skipped.
