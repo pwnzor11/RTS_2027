@@ -7,10 +7,10 @@ namespace Rts.Sim.Tests.Replay;
 
 public class ReplayTests
 {
-    private static byte[] Record(SimSetup setup, int ticks)
+    private static byte[] Record(SimSetup setup, int ticks, bool subHashes = true)
     {
         var script = ScriptedGame.Script(ticks);
-        var rec = new ReplayWriter(setup);
+        var rec = new ReplayWriter(setup) { RecordSubHashes = subHashes };
         foreach (var s in ScriptedGame.Spawns()) rec.RecordSpawn(ActorKind.Vehicle, s.Player, s.Type, s.Cell);
         foreach (var s in ScriptedGame.InfantrySpawns()) rec.RecordSpawn(ActorKind.Infantry, s.Player, s.Type, s.Cell, s.SubSlot);
         foreach (var s in ScriptedGame.BuildingSpawns()) rec.RecordSpawn(ActorKind.Building, s.Player, s.Type, s.Cell);
@@ -19,7 +19,7 @@ public class ReplayTests
         for (int i = 0; i < ticks; i++)
         {
             sim.Step(script);
-            if (sim.Tick % SimConstants.HashIntervalTicks == 0) rec.RecordHash(sim.Tick, sim.ComputeStateHash());
+            if (sim.Tick % SimConstants.HashIntervalTicks == 0) rec.RecordHash(sim.Tick, sim.ComputeStateHash(), sim.ComputeSubHashes());
         }
         var ms = new MemoryStream();
         rec.Finish(ms, sim.Tick);
@@ -33,6 +33,7 @@ public class ReplayTests
         byte[] bytes = Record(setup, 500);
         var result = ReplayPlayer.Run(new MemoryStream(bytes), setup);
         Assert.Equal(-1, result.FirstMismatchTick);
+        Assert.Null(result.FirstMismatchPart);
         Assert.Equal(500, result.TicksRun);
 
         var direct = ScriptedGame.NewSim(setup);
@@ -54,6 +55,16 @@ public class ReplayTests
         Assert.True(result.FirstMismatchTick > 0);
         Assert.True(result.FirstMismatchTick >= rec.Command.ExecTick);
         Assert.Equal(0, result.FirstMismatchTick % 16);
+        Assert.Equal("units", result.FirstMismatchPart);
+    }
+
+    [Fact]
+    public void FormatVersion4_IsRejected()
+    {
+        var setup = ScriptedGame.Setup();
+        byte[] bytes = Record(setup, 32);
+        bytes[4] = 4; // version is a little-endian int32 right after the magic
+        Assert.Throws<InvalidDataException>(() => ReplayReader.Read(new MemoryStream(bytes)));
     }
 
     [Fact]
