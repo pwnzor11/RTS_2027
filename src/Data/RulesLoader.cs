@@ -45,15 +45,23 @@ public static class RulesLoader
             throw new RulesException(rulesDir, "<dir>", "rules directory not found");
         }
 
+        return Load(file => { string path = Path.Combine(rulesDir, file); return File.Exists(path) ? File.ReadAllText(path) : null; });
+    }
+
+    /// <summary>Loads the rules from file text supplied by <paramref name="readText"/> (relative file name to text, or
+    /// null when the file is missing). Used for rules embedded in replays and saves (<see cref="RulesBundle"/>).</summary>
+    /// <exception cref="RulesException">Any file is missing, unparseable or invalid.</exception>
+    public static RuleSet Load(Func<string, string?> readText)
+    {
         var problems = new List<RulesProblem>();
-        TomlTable? gameRoot = ReadFile(rulesDir, GameFile, problems);
-        TomlTable? warheadRoot = ReadFile(rulesDir, WarheadsFile, problems);
-        TomlTable? weaponRoot = ReadFile(rulesDir, WeaponsFile, problems);
-        TomlTable? vehicleRoot = ReadFile(rulesDir, VehiclesFile, problems);
-        TomlTable? infantryRoot = ReadFile(rulesDir, InfantryFile, problems);
-        TomlTable? buildingRoot = ReadFile(rulesDir, BuildingsFile, problems);
-        TomlTable? terrainRoot = ReadFile(rulesDir, TerrainFile, problems);
-        TomlTable? techRoot = ReadFile(rulesDir, TechsFile, problems);
+        TomlTable? gameRoot = ReadFile(readText, GameFile, problems);
+        TomlTable? warheadRoot = ReadFile(readText, WarheadsFile, problems);
+        TomlTable? weaponRoot = ReadFile(readText, WeaponsFile, problems);
+        TomlTable? vehicleRoot = ReadFile(readText, VehiclesFile, problems);
+        TomlTable? infantryRoot = ReadFile(readText, InfantryFile, problems);
+        TomlTable? buildingRoot = ReadFile(readText, BuildingsFile, problems);
+        TomlTable? terrainRoot = ReadFile(readText, TerrainFile, problems);
+        TomlTable? techRoot = ReadFile(readText, TechsFile, problems);
 
         Dictionary<string, string> ids = RegisterTypeIds(problems,
             (WarheadsFile, warheadRoot), (WeaponsFile, weaponRoot), (VehiclesFile, vehicleRoot),
@@ -158,10 +166,10 @@ public static class RulesLoader
     private static void SortById<T>(List<T> list, Func<T, string> idOf) =>
         list.Sort((a, b) => string.CompareOrdinal(idOf(a), idOf(b)));
 
-    private static TomlTable? ReadFile(string dir, string file, List<RulesProblem> problems)
+    private static TomlTable? ReadFile(Func<string, string?> readText, string file, List<RulesProblem> problems)
     {
-        string path = Path.Combine(dir, file);
-        if (!File.Exists(path))
+        string? text = readText(file);
+        if (text is null)
         {
             problems.Add(new RulesProblem(file, "<file>", "file not found"));
             return null;
@@ -169,7 +177,7 @@ public static class RulesLoader
 
         try
         {
-            return TomlSerializer.Deserialize<TomlTable>(File.ReadAllText(path));
+            return TomlSerializer.Deserialize<TomlTable>(text);
         }
         catch (TomlException ex)
         {

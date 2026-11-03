@@ -62,7 +62,24 @@ public static class MatchCommands
 
         SimSetup setup = MatchSetup.MakeSetup(seed, map, rules, MatchSetup.Players);
         var sim = new Simulation(setup);
-        ReplayWriter? recorder = flags.ContainsKey("record") ? new ReplayWriter(setup) : null;
+        FileStream? recordFile = null;
+        ReplayWriter? recorder = null;
+        if (flags.TryGetValue("record", out string? recordPath))
+        {
+            try
+            {
+                string? recordDir = Path.GetDirectoryName(Path.GetFullPath(recordPath));
+                if (!string.IsNullOrEmpty(recordDir)) Directory.CreateDirectory(recordDir);
+                recordFile = File.Create(recordPath);
+                recorder = new ReplayWriter(recordFile, sim, BuildInfo.Version, RulesBundle.ReadDirectory(rulesDir));
+            }
+            catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+            {
+                Console.Error.WriteLine($"error: {e.Message}");
+                return 1;
+            }
+        }
+        using var recordFileScope = recordFile;
 
         var commands = new List<Command>();
         ushort sequence = 0;
@@ -77,7 +94,6 @@ public static class MatchCommands
             {
                 var cell = new CellCoord(start.X + dx * k, start.Y);
                 EntityId id = sim.SpawnVehicle(player, vehicles[k], cell);
-                recorder?.RecordSpawn(ActorKind.Vehicle, player, vehicles[k], cell);
                 Queue(commands, ref sequence, player, ActorKind.Vehicle, id, enemy);
             }
             for (int i = 0; i < InfantryPerPlayer; i++)
@@ -85,7 +101,6 @@ public static class MatchCommands
                 var cell = new CellCoord(start.X + dx * (i / InfantryStore.SubSlotCount), start.Y + 2 * dy);
                 int subSlot = i % InfantryStore.SubSlotCount;
                 EntityId id = sim.SpawnInfantry(player, rifle, cell, subSlot);
-                recorder?.RecordSpawn(ActorKind.Infantry, player, rifle, cell, subSlot);
                 Queue(commands, ref sequence, player, ActorKind.Infantry, id, enemy);
             }
             for (int ring = MinInfantryRing; ring <= MaxInfantryRing; ring++)
@@ -96,7 +111,6 @@ public static class MatchCommands
                 int y0 = dy > 0 ? start.Y + ring : start.Y - ring - (hqType.FootprintH - 1);
                 var topLeft = new CellCoord(x0, y0);
                 if (sim.PlaceBuilding(player, hq, topLeft) == EntityId.None) continue;
-                recorder?.RecordSpawn(ActorKind.Building, player, hq, topLeft);
                 break;
             }
         }
@@ -108,7 +122,7 @@ public static class MatchCommands
         {
             sim.Step(commands);
             if (recorder is not null && sim.Tick % SimConstants.HashIntervalTicks == 0)
-                recorder.RecordHash(sim.Tick, sim.ComputeStateHash(), sim.ComputeSubHashes());
+                recorder.RecordHash(sim);
             if (sim.Tick % ReportIntervalTicks == 0)
                 Console.WriteLine($"tick {sim.Tick} alive p0 {Alive(sim, 0)} p1 {Alive(sim, 1)} hash 0x{sim.ComputeStateHash():x16}");
         }
@@ -120,11 +134,9 @@ public static class MatchCommands
         if (recorder is null) return 0;
         try
         {
-            string path = flags["record"];
-            string? dir = Path.GetDirectoryName(Path.GetFullPath(path));
-            if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
-            using (var fs = File.Create(path)) recorder.Finish(fs, sim.Tick);
-            Console.WriteLine($"recorded {path}");
+            recorder.Finish();
+            recordFile!.Flush();
+            Console.WriteLine($"recorded {recordPath}");
             return 0;
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException)

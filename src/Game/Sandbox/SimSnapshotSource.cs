@@ -27,6 +27,9 @@ public sealed class SimSnapshotSource : ISnapshotSource
     /// <summary>Where the session replay is written, relative to the working directory.</summary>
     public const string ReplayPath = "replays/sandbox_last.rpl";
 
+    /// <summary>The previous session's replay: <see cref="ReplayPath"/> is moved here when a new session starts.</summary>
+    public const string PreviousReplayPath = "replays/sandbox_prev.rpl";
+
     /// <summary>The command that checks the session replay.</summary>
     public const string VerifyCommand =
         "dotnet run --project src/Tools -- replay verify replays/sandbox_last.rpl --map data/maps/test_32.map.toml";
@@ -60,7 +63,7 @@ public sealed class SimSnapshotSource : ISnapshotSource
         _map = MapFile.Load(Path.Combine(rulesDir, "..", "maps", SandboxScenario.MapFileName));
         var setup = new SimSetup(Seed, _map, PlayerCount, rules.Sim, rules.RulesHash) { AllowDebug = true };
         _sim = new Simulation(setup);
-        _recording = new ReplayRecording(setup);
+        _recording = new ReplayRecording(_sim, RulesBundle.ReadDirectory(rulesDir), ReplayPath, PreviousReplayPath);
 
         List<OwnedUnit> army = SandboxScenario.Populate(_sim, _map, rules.Sim, _recording, empty);
         if (!empty)
@@ -250,11 +253,12 @@ public sealed class SimSnapshotSource : ISnapshotSource
         return list;
     }
 
-    /// <summary>Writes the session replay to <see cref="ReplayPath"/> and prints the command that checks it.</summary>
+    /// <summary>Ends the session replay (<see cref="ReplayPath"/> is streamed from the start of the session, so a crash
+    /// keeps it) and prints the command that checks it.</summary>
     /// <returns>False if the file could not be written.</returns>
     public bool SaveReplay()
     {
-        bool ok = _recording.Save(ReplayPath, _sim.Tick);
+        bool ok = _recording.Finish();
         if (ok) Console.WriteLine($"verify with: {VerifyCommand}");
         return ok;
     }

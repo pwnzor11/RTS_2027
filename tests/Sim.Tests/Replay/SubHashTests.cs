@@ -59,11 +59,51 @@ public class SubHashTests
     }
 
     [Fact]
+    public void ComputeHashes_OnePass_AgreesWithTheSeparateCalls()
+    {
+        var sim = Stepped(40);
+        var sub = sim.ComputeHashes(out ulong full);
+        Assert.Equal(sim.ComputeStateHash(), full);
+        Assert.Equal(sim.ComputeSubHashes(), sub);
+        var into = new List<(string Part, ulong Hash)>();
+        Assert.Equal(full, sim.ComputeHashes(into));
+        Assert.Equal(sub, into);
+    }
+
+    [Fact]
+    public void FullHash_KeepsItsDefinition_XxHash64OverTheWrittenState()
+    {
+        var sim = Stepped(40);
+        using var ms = new MemoryStream();
+        using (var w = new BinaryWriter(ms, System.Text.Encoding.UTF8, leaveOpen: true))
+            Rts.Sim.Serialization.SimWriter.WriteState(w, sim.Tick, SimRandomOf(sim), sim.StateParts);
+        Assert.Equal(System.IO.Hashing.XxHash64.HashToUInt64(ms.GetBuffer().AsSpan(0, (int)ms.Length)), sim.ComputeStateHash());
+    }
+
+    // The RNG is private to the sim; a save round trip gives an equal one.
+    private static SimRandom SimRandomOf(Simulation sim)
+    {
+        var field = typeof(Simulation).GetField("_rng", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!;
+        return (SimRandom)field.GetValue(sim)!;
+    }
+
+    [Fact]
+    public void HashingAllocatesNothingPerCallAfterWarmUp()
+    {
+        var sim = Stepped(60);
+        var into = new List<(string Part, ulong Hash)>();
+        for (int i = 0; i < 5; i++) { sim.ComputeStateHash(); sim.ComputeHashes(into); }
+        long before = GC.GetAllocatedBytesForCurrentThread();
+        for (int i = 0; i < 100; i++) { sim.ComputeStateHash(); sim.ComputeHashes(into); }
+        long perCall = (GC.GetAllocatedBytesForCurrentThread() - before) / 200;
+        Assert.True(perCall <= 64, $"{perCall} bytes allocated per hash call");
+    }
+
+    [Fact]
     public void RecordedHashChecks_CarrySubHashesByDefault()
     {
         var setup = ScriptedGame.Setup();
-        var bytes = RecordWith(setup, 64, new ReplayWriter(setup));
-        ReplayData data = ReplayReader.Read(new MemoryStream(bytes));
+        ReplayData data = ReplayReader.Read(new MemoryStream(ReplayTests.Record(setup, 64)));
         var checks = data.Records.Where(r => r.Type == ReplayWriter.TypeHashCheck).ToList();
         Assert.Equal(4, checks.Count);
         foreach (ReplayRecord c in checks)
@@ -77,26 +117,7 @@ public class SubHashTests
     public void RecordSubHashesOff_WritesNoSubHashes()
     {
         var setup = ScriptedGame.Setup();
-        var bytes = RecordWith(setup, 64, new ReplayWriter(setup) { RecordSubHashes = false });
-        ReplayData data = ReplayReader.Read(new MemoryStream(bytes));
+        ReplayData data = ReplayReader.Read(new MemoryStream(ReplayTests.Record(setup, 64, subHashes: false)));
         Assert.All(data.Records.Where(r => r.Type == ReplayWriter.TypeHashCheck), c => Assert.Null(c.SubHashes));
-    }
-
-    private static byte[] RecordWith(SimSetup setup, int ticks, ReplayWriter rec)
-    {
-        var script = ScriptedGame.Script(ticks);
-        foreach (var s in ScriptedGame.Spawns()) rec.RecordSpawn(ActorKind.Vehicle, s.Player, s.Type, s.Cell);
-        foreach (var s in ScriptedGame.InfantrySpawns()) rec.RecordSpawn(ActorKind.Infantry, s.Player, s.Type, s.Cell, s.SubSlot);
-        foreach (var s in ScriptedGame.BuildingSpawns()) rec.RecordSpawn(ActorKind.Building, s.Player, s.Type, s.Cell);
-        foreach (var c in script) rec.RecordCommand(c);
-        var sim = ScriptedGame.NewSim(setup);
-        for (int i = 0; i < ticks; i++)
-        {
-            sim.Step(script);
-            if (sim.Tick % SimConstants.HashIntervalTicks == 0) rec.RecordHash(sim.Tick, sim.ComputeStateHash(), sim.ComputeSubHashes());
-        }
-        var ms = new MemoryStream();
-        rec.Finish(ms, sim.Tick);
-        return ms.ToArray();
     }
 }

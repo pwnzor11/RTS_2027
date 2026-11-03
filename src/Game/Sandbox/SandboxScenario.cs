@@ -74,7 +74,6 @@ public static class SandboxScenario
     private static void Vehicle(Simulation sim, ReplayRecording rec, List<OwnedUnit> army, byte player, int type, CellCoord cell)
     {
         EntityId id = sim.SpawnVehicle(player, type, cell);
-        rec.RecordSpawn(ActorKind.Vehicle, player, type, cell);
         army.Add(new OwnedUnit(new UnitKey(ActorKind.Vehicle, id), player));
     }
 
@@ -82,7 +81,6 @@ public static class SandboxScenario
         CellCoord cell, int subSlot)
     {
         EntityId id = sim.SpawnInfantry(player, type, cell, subSlot);
-        rec.RecordSpawn(ActorKind.Infantry, player, type, cell, subSlot);
         army.Add(new OwnedUnit(new UnitKey(ActorKind.Infantry, id), player));
     }
 
@@ -91,7 +89,6 @@ public static class SandboxScenario
     {
         if (sim.CanPlace(player, type, topLeft) != PlacementResult.Ok) return;
         sim.PlaceBuilding(player, type, topLeft);
-        rec.RecordSpawn(ActorKind.Building, player, type, topLeft);
     }
 
     private static int Required(int index, string id) =>

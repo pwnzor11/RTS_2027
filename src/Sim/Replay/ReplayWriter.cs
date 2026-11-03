@@ -1,82 +1,119 @@
 using Rts.Sim.Core;
-using Rts.Sim.Map;
+using Rts.Sim.Serialization;
 
 namespace Rts.Sim.Replay;
 
 /// <summary>
-/// Records a game. Header + spawn list + records (Command / HashCheck) + end marker. Records are buffered
-/// and the whole file is written by Finish. Format version 5: a hash check carries a flag byte and, when
-/// flagged, the per-part sub-hashes (see <see cref="Simulation.ComputeSubHashes"/>).
+/// Records a game as it is played (format version 6). The header is written when the writer is created: magic,
+/// version, then the <see cref="SetupHeader"/> (build string, seed, player count, teams, limits, AllowDebug, rules
+/// hash, map hash and name, and the rules source files, deflate-compressed). Records are appended as they happen:
+/// spawn (taken from <see cref="Simulation.SetupLog"/>, never re-recorded by callers), command (with Arg2) and
+/// hash check (with optional per-part sub-hashes). The stream is flushed every <see cref="FlushIntervalTicks"/>
+/// ticks and by <see cref="Finish"/>, which appends the end record with the final tick; a replay that lost its end
+/// record to a crash is still readable (<see cref="ReplayData.Truncated"/>).
 /// </summary>
 public sealed class ReplayWriter
 {
     public static readonly byte[] Magic = "RTSR"u8.ToArray();
-    public const int Version = 5;
-    public const byte TypeEnd = 0, TypeCommand = 1, TypeHashCheck = 2;
+    public const int Version = 6;
+    public const byte TypeEnd = 0, TypeCommand = 1, TypeHashCheck = 2, TypeSpawn = 3;
 
-    private readonly SimSetup _setup;
-    private readonly ulong _mapHash;
-    private readonly List<ReplaySpawn> _spawns = new();
-    private readonly MemoryStream _records = new();
-    private readonly BinaryWriter _rw;
+    /// <summary>Ticks between stream flushes.</summary>
+    public const int FlushIntervalTicks = 64;
 
-    public ReplayWriter(SimSetup setup)
+    private readonly Simulation _sim;
+    private readonly BinaryWriter _w;
+    private int _spawnsWritten;
+    private int _lastFlushTick;
+    private bool _finished;
+
+    /// <summary>Starts a replay on <paramref name="output"/> and writes the header immediately. The stream stays
+    /// open and belongs to the caller. <paramref name="build"/> is e.g. BuildInfo.Version; <paramref name="rulesFiles"/>
+    /// are the rules source files (relative name, text) the game was loaded from.</summary>
+    public ReplayWriter(Stream output, Simulation sim, string build, IReadOnlyList<(string Name, string Text)> rulesFiles)
     {
-        _setup = setup;
-        _mapHash = MapHasher.Compute(setup.Map);
-        _rw = new BinaryWriter(_records);
+        ArgumentNullException.ThrowIfNull(output);
+        ArgumentNullException.ThrowIfNull(sim);
+        ArgumentNullException.ThrowIfNull(build);
+        ArgumentNullException.ThrowIfNull(rulesFiles);
+        _sim = sim;
+        _w = new BinaryWriter(output, System.Text.Encoding.UTF8, leaveOpen: true);
+        _w.Write(Magic); _w.Write(Version);
+        SetupHeader.From(sim, build, rulesFiles).Write(_w);
+        _w.Flush();
     }
 
-    /// <summary>When true (the default), <see cref="RecordHash"/> writes the sub-hashes it is given; when false it
-    /// writes only the state hash, which makes a replay smaller but a desync unnamed.</summary>
+    /// <summary>When true (the default), <see cref="RecordHash(Simulation)"/> writes sub-hashes; when false only the
+    /// state hash, which makes a replay smaller but a desync unnamed.</summary>
     public bool RecordSubHashes { get; init; } = true;
 
-    /// <summary>Record an initial spawn (must be called before tick 0, in the same order as the Simulation spawns).
-    /// kind is Vehicle, Infantry or Building (cell = top-left); subSlot applies to infantry only.</summary>
-    public void RecordSpawn(ActorKind kind, byte player, int typeIndex, CellCoord cell, int subSlot = 0)
+    /// <summary>Appends a spawn record for every <see cref="Simulation.SetupLog"/> entry not yet written, stamped with the
+    /// sim's current tick (0 for the usual setup before the first Step). Called by every Record* method, so callers
+    /// need not call it.</summary>
+    public void Sync()
     {
-        if (kind != ActorKind.Vehicle && kind != ActorKind.Infantry && kind != ActorKind.Building) throw new ArgumentOutOfRangeException(nameof(kind));
-        _spawns.Add(new ReplaySpawn(kind, player, typeIndex, cell, subSlot));
+        IReadOnlyList<SetupEntry> log = _sim.SetupLog;
+        for (; _spawnsWritten < log.Count; _spawnsWritten++)
+        {
+            SetupEntry s = log[_spawnsWritten];
+            _w.Write(TypeSpawn); _w.Write(_sim.Tick);
+            _w.Write((byte)s.Kind); _w.Write(s.Player); _w.Write(s.TypeIndex); _w.Write(s.Cell.X); _w.Write(s.Cell.Y); _w.Write((byte)s.SubSlot);
+        }
     }
 
     public void RecordCommand(Command c)
     {
-        _rw.Write(TypeCommand);
-        _rw.Write(c.ExecTick); _rw.Write(c.Player); _rw.Write(c.Sequence); _rw.Write((byte)c.Kind);
-        _rw.Write(c.Subject.Index); _rw.Write(c.Subject.Generation);
-        _rw.Write(c.Target.Index); _rw.Write(c.Target.Generation);
-        _rw.Write(c.Cell.X); _rw.Write(c.Cell.Y); _rw.Write(c.Arg);
+        Sync();
+        _w.Write(TypeCommand);
+        _w.Write(c.ExecTick); _w.Write(c.Player); _w.Write(c.Sequence); _w.Write((byte)c.Kind);
+        _w.Write(c.Subject.Index); _w.Write(c.Subject.Generation);
+        _w.Write(c.Target.Index); _w.Write(c.Target.Generation);
+        _w.Write(c.Cell.X); _w.Write(c.Cell.Y); _w.Write(c.Arg); _w.Write(c.Arg2);
+    }
+
+    /// <summary>Records the state hash (and sub-hashes if <see cref="RecordSubHashes"/>) of the sim at its current tick,
+    /// from one serialisation pass.</summary>
+    public void RecordHash(Simulation sim)
+    {
+        if (!ReferenceEquals(sim, _sim)) throw new ArgumentException("The writer records one simulation.", nameof(sim));
+        if (RecordSubHashes)
+        {
+            var sub = sim.ComputeHashes(out ulong full);
+            RecordHash(sim.Tick, full, sub);
+        }
+        else RecordHash(sim.Tick, sim.ComputeStateHash(), null);
     }
 
     /// <summary>Record the state hash at a tick, with optional per-part sub-hashes (written only when
-    /// <see cref="RecordSubHashes"/> is true).</summary>
+    /// <see cref="RecordSubHashes"/> is true). Flushes the stream every <see cref="FlushIntervalTicks"/> ticks.</summary>
     public void RecordHash(int tick, ulong hash, IReadOnlyList<(string Part, ulong Hash)>? subHashes = null)
     {
-        _rw.Write(TypeHashCheck); _rw.Write(tick); _rw.Write(hash);
+        Sync();
+        _w.Write(TypeHashCheck); _w.Write(tick); _w.Write(hash);
         if (!RecordSubHashes || subHashes is null)
         {
-            _rw.Write((byte)0);
-            return;
+            _w.Write((byte)0);
         }
-        _rw.Write((byte)1);
-        _rw.Write(subHashes.Count);
-        foreach ((string part, ulong h) in subHashes) { _rw.Write(part); _rw.Write(h); }
+        else
+        {
+            _w.Write((byte)1);
+            _w.Write(subHashes.Count);
+            foreach ((string part, ulong h) in subHashes) { _w.Write(part); _w.Write(h); }
+        }
+        if (tick - _lastFlushTick >= FlushIntervalTicks)
+        {
+            _lastFlushTick = tick;
+            _w.Flush();   // BinaryWriter.Flush also flushes the stream
+        }
     }
 
-    /// <summary>Write the complete replay. finalTick is the sim tick when recording stopped.</summary>
-    public void Finish(Stream output, int finalTick)
+    /// <summary>Writes the end record with the sim's current tick and flushes. The stream is left open.</summary>
+    public void Finish()
     {
-        using var w = new BinaryWriter(output, System.Text.Encoding.UTF8, leaveOpen: true);
-        w.Write(Magic); w.Write(Version);
-        w.Write(_setup.RulesHash); w.Write(_mapHash); w.Write(_setup.Seed);
-        w.Write(_setup.Map.Width); w.Write(_setup.Map.Height); w.Write(_setup.PlayerCount);
-        w.Write(_spawns.Count);
-        foreach (var s in _spawns)
-        {
-            w.Write((byte)s.Kind); w.Write(s.Player); w.Write(s.Type); w.Write(s.Cell.X); w.Write(s.Cell.Y); w.Write((byte)s.SubSlot);
-        }
-        _rw.Flush();
-        w.Write(_records.GetBuffer(), 0, (int)_records.Length);
-        w.Write(TypeEnd); w.Write(finalTick);
+        if (_finished) return;
+        _finished = true;
+        Sync();
+        _w.Write(TypeEnd); _w.Write(_sim.Tick);
+        _w.Flush();
     }
 }

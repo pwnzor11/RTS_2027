@@ -6,7 +6,10 @@ namespace Rts.Sim.Serialization;
 public static class SimWriter
 {
     public static readonly byte[] SaveMagic = "RTSS"u8.ToArray();
-    public const int SaveVersion = 5;
+
+    /// <summary>Save format 6 (M1.5): the <see cref="SetupHeader"/> (build, seed, players, teams, limits, AllowDebug,
+    /// rules and map identity, embedded rules) precedes the state body.</summary>
+    public const int SaveVersion = 6;
 
     /// <summary>State body: tick, RNG, then each part's name and data in the given (canonical) order.
     /// Used verbatim by the hash.</summary>
@@ -22,14 +25,13 @@ public static class SimWriter
         }
     }
 
-    public static void WriteSave(Stream output, ulong rulesHash, ulong mapHash, int tick, SimRandom rng,
+    public static void WriteSave(Stream output, SetupHeader header, int tick, SimRandom rng,
         IReadOnlyList<ISimStatePart> parts)
     {
         using var w = new BinaryWriter(output, System.Text.Encoding.UTF8, leaveOpen: true);
         w.Write(SaveMagic);
         w.Write(SaveVersion);
-        w.Write(rulesHash);
-        w.Write(mapHash);
+        header.Write(w);
         WriteState(w, tick, rng, parts);
     }
 }
