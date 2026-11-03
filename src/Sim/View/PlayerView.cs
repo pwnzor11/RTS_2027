@@ -1,0 +1,192 @@
+using Rts.Sim.Core;
+using Rts.Sim.Missions;
+using Rts.Sim.Rules;
+using Rts.Sim.Vision;
+using Rts.Sim.World;
+
+namespace Rts.Sim.View;
+
+/// <summary>
+/// Read-only, fog-honest view of the simulation for one player (D-051). Everything an external command producer
+/// (an AI) may know: the map, the player's own actors and cash, enemy and other actors only while they are inside
+/// the player's current vision, and last-seen ghosts of enemy buildings. It exposes no sim array and has no setter.
+/// A struct holding the simulation reference, so creating one is free. Queries that return lists fill a
+/// caller-supplied list (cleared first), so a steady-state caller allocates nothing. The one exception is
+/// <see cref="CopyKnownEnemyBuildings"/>, which uses the vision part's ghost listing (that API allocates).
+/// Read between Steps only.
+/// </summary>
+public readonly struct PlayerView
+{
+    private readonly Simulation _sim;
+
+    internal PlayerView(Simulation sim, byte player)
+    {
+        _sim = sim;
+        Player = player;
+    }
+
+    /// <summary>The viewing player's slot.</summary>
+    public byte Player { get; }
+
+    /// <summary>Current simulation tick.</summary>
+    public int Tick => _sim.Tick;
+
+    /// <summary>Number of player slots in the game.</summary>
+    public int PlayerCount => _sim.Setup.PlayerCount;
+
+    /// <summary>Team id of the viewing player.</summary>
+    public byte Team => _sim.Players.Team[Player];
+
+    /// <summary>The viewing player's cash.</summary>
+    public int Cash => _sim.Players.Cash[Player];
+
+    /// <summary>The rules tables (type data is public knowledge).</summary>
+    public SimRules Rules => _sim.RulesOf(Player);
+
+    /// <summary>How the viewing player regards <paramref name="other"/>.</summary>
+    public Relation RelationOf(byte other) => _sim.RelationOf(Player, other);
+
+    // ---- map ----------------------------------------------------------------------------------
+
+    /// <summary>Map width in cells.</summary>
+    public int MapWidth => _sim.Setup.Map.Width;
+
+    /// <summary>Map height in cells.</summary>
+    public int MapHeight => _sim.Setup.Map.Height;
+
+    /// <summary>True if the cell is on the map.</summary>
+    public bool InMap(CellCoord c) => _sim.Setup.Map.Contains(c);
+
+    /// <summary>Land type of an on-map cell.</summary>
+    public LandType LandAt(CellCoord c) => _sim.Map.LandAt(c);
+
+    /// <summary>True if the terrain of the cell can be crossed with the given locomotion (terrain only: ignores units and buildings).</summary>
+    public bool IsPassable(CellCoord c, Locomotion loco) =>
+        InMap(c) && _sim.Map.IsPassableTerrain(c, loco, _sim.Setup.Rules.Terrain);
+
+    /// <summary>0 = shroud, 1 = fog, 2 = visible now, for the viewing player.</summary>
+    public byte VisionAt(CellCoord c) => _sim.Vision.VisionAt(Player, c);
+
+    /// <summary>True if the cell is visible to the viewing player right now.</summary>
+    public bool IsVisible(CellCoord c) => _sim.Vision.IsVisible(Player, c);
+
+    // ---- actors -------------------------------------------------------------------------------
+
+    /// <summary>Fills <paramref name="dest"/> (cleared first) with the player's own actors in slot order: vehicles,
+    /// then infantry, then buildings (the latter only when <paramref name="includeBuildings"/>).</summary>
+    public void CopyOwn(List<ViewActor> dest, bool includeBuildings = true)
+    {
+        dest.Clear();
+        AddMobiles(dest, _sim.Units, ActorKind.Vehicle, own: true);
+        AddMobiles(dest, _sim.Infantry, ActorKind.Infantry, own: true);
+        if (includeBuildings) AddBuildings(dest, own: true, enemiesOnly: false);
+    }
+
+    /// <summary>Fills <paramref name="dest"/> (cleared first) with every actor the player does not own that is inside
+    /// current vision (Enemy, Ally and Neutral, tagged by <see cref="ViewActor.Relation"/>): vehicles, infantry, then
+    /// buildings with at least one footprint cell in vision. Unseen actors are never listed.</summary>
+    public void CopyVisible(List<ViewActor> dest)
+    {
+        dest.Clear();
+        AddMobiles(dest, _sim.Units, ActorKind.Vehicle, own: false);
+        AddMobiles(dest, _sim.Infantry, ActorKind.Infantry, own: false);
+        AddBuildings(dest, own: false, enemiesOnly: false);
+    }
+
+    /// <summary>Fills <paramref name="dest"/> (cleared first) with every enemy building the player knows of: those in
+    /// vision now (live) plus last-seen ghosts whose footprint is currently out of vision (<see cref="ViewActor.Ghost"/>).</summary>
+    public void CopyKnownEnemyBuildings(List<ViewActor> dest)
+    {
+        dest.Clear();
+        AddBuildings(dest, own: false, enemiesOnly: true);
+        SimRules rules = Rules;
+        foreach ((int index, BuildingGhost g) in _sim.Vision.GhostsFor(Player))
+        {
+            if (FootprintVisible(g.Cell, g.FootprintW, g.FootprintH)) continue; // the live building is listed above
+            if (RelationOf(g.Player) != Relation.Enemy) continue;
+            int max = g.TypeIndex >= 0 && g.TypeIndex < rules.Buildings.Count ? rules.Buildings[g.TypeIndex].MaxHealth : g.Health;
+            dest.Add(new ViewActor(new EntityId((ushort)index, 0), ActorKind.Building, g.Player, Relation.Enemy, g.TypeIndex,
+                g.Cell, CentreOf(g.Cell, g.FootprintW, g.FootprintH), g.Health, max, MissionKind.None, false, EntityId.None,
+                true, g.FootprintW, g.FootprintH));
+        }
+    }
+
+    /// <summary>Weapon range in leptons of an actor type, 0 when it has no weapon.</summary>
+    public int WeaponRange(ActorKind kind, int typeIndex)
+    {
+        SimRules r = Rules;
+        int weapon = kind switch
+        {
+            ActorKind.Vehicle when typeIndex >= 0 && typeIndex < r.Vehicles.Count => r.Vehicles[typeIndex].PrimaryWeapon,
+            ActorKind.Infantry when typeIndex >= 0 && typeIndex < r.Infantry.Count => r.Infantry[typeIndex].PrimaryWeapon,
+            ActorKind.Building when typeIndex >= 0 && typeIndex < r.Buildings.Count => r.Buildings[typeIndex].PrimaryWeapon,
+            _ => -1,
+        };
+        return weapon >= 0 && weapon < r.Weapons.Count ? r.Weapons[weapon].Range : 0;
+    }
+
+    // ---- internals ----------------------------------------------------------------------------
+
+    private void AddMobiles(List<ViewActor> dest, MobileStore s, ActorKind kind, bool own)
+    {
+        SimRules rules = Rules;
+        for (int i = 1; i < s.Capacity; i++)
+        {
+            if (!s.Slots.IsIndexAlive(i)) continue;
+            byte owner = s.Player[i];
+            if ((owner == Player) != own) continue;
+            CellCoord cell = s.Position[i].ToCell();
+            if (!own && !_sim.Vision.IsVisible(Player, cell)) continue;
+            int type = s.TypeIndex[i];
+            int max = kind == ActorKind.Vehicle ? rules.Vehicles[type].MaxHealth : rules.Infantry[type].MaxHealth;
+            if (own)
+            {
+                MissionKind m = s.Mission[i];
+                bool idle = s.NextMission[i] == MissionKind.None
+                    && (m == MissionKind.None || m == MissionKind.Sleep || m == MissionKind.Guard || m == MissionKind.Stop);
+                dest.Add(new ViewActor(s.Slots.IdOf(i), kind, owner, Relation.Self, type, cell, s.Position[i], s.Health[i],
+                    max, m, idle, s.Target[i], false, 1, 1));
+            }
+            else
+            {
+                dest.Add(new ViewActor(s.Slots.IdOf(i), kind, owner, RelationOf(owner), type, cell, s.Position[i], s.Health[i],
+                    max, MissionKind.None, false, EntityId.None, false, 1, 1));
+            }
+        }
+    }
+
+    private void AddBuildings(List<ViewActor> dest, bool own, bool enemiesOnly)
+    {
+        SimRules rules = Rules;
+        BuildingStore b = _sim.Buildings;
+        for (int i = 1; i < b.Capacity; i++)
+        {
+            if (!b.Slots.IsIndexAlive(i)) continue;
+            byte owner = b.Player[i];
+            if ((owner == Player) != own) continue;
+            BuildingType t = rules.Buildings[b.TypeIndex[i]];
+            CellCoord cell = b.Cell[i];
+            if (!own && !FootprintVisible(cell, t.FootprintW, t.FootprintH)) continue;
+            Relation rel = own ? Relation.Self : RelationOf(owner);
+            if (enemiesOnly && rel != Relation.Enemy) continue;
+            LeptonCoord centre = CentreOf(cell, t.FootprintW, t.FootprintH);
+            dest.Add(own
+                ? new ViewActor(b.Slots.IdOf(i), ActorKind.Building, owner, rel, b.TypeIndex[i], cell, centre, b.Health[i],
+                    t.MaxHealth, b.Mission[i], b.Mission[i] == MissionKind.None, b.Target[i], false, t.FootprintW, t.FootprintH)
+                : new ViewActor(b.Slots.IdOf(i), ActorKind.Building, owner, rel, b.TypeIndex[i], cell, centre, b.Health[i],
+                    t.MaxHealth, MissionKind.None, false, EntityId.None, false, t.FootprintW, t.FootprintH));
+        }
+    }
+
+    private bool FootprintVisible(CellCoord topLeft, int w, int h)
+    {
+        for (int y = 0; y < h; y++)
+            for (int x = 0; x < w; x++)
+                if (_sim.Vision.IsVisible(Player, new CellCoord(topLeft.X + x, topLeft.Y + y))) return true;
+        return false;
+    }
+
+    private static LeptonCoord CentreOf(CellCoord topLeft, int w, int h) =>
+        new((topLeft.X << SimConstants.LeptonShift) + (w * SimConstants.LeptonsPerCell) / 2,
+            (topLeft.Y << SimConstants.LeptonShift) + (h * SimConstants.LeptonsPerCell) / 2);
+}

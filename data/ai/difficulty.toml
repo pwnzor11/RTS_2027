@@ -1,0 +1,80 @@
+# AI difficulty tiers: capability profiles (design 02 section 7).
+# placeholder values -- tune in M2/M3
+#
+# Integers only. Keys per tier table:
+#   tier                    1..5 (must match the table id: recruit 1, regular 2, veteran 3, elite 4, commissar 5)
+#   decision_interval_ticks ticks between AI decisions (smaller = faster reactions)
+#   command_delay_ticks     ticks between an order being issued and executed (>= 1)
+#   scout_info_age_ticks    how long a last-seen enemy position is trusted
+#   attack_threshold        army size at which the skirmisher starts attacking
+#   focus_fire              0/1: explicit Attack orders on the weakest enemy in range
+#   retreat_health_pct      0..100: reserved (not used by the M1 skirmisher)
+#   expansion_tick          0 = never; reserved until the economy lands
+#   superweapons            0/1: reserved
+#   multi_front             0/1: reserved
+#   build_repertoire        unit/building ids the AI may build; reserved (empty while there is no economy)
+
+[recruit]
+tier = 1
+decision_interval_ticks = 60
+command_delay_ticks = 2
+scout_info_age_ticks = 300
+attack_threshold = 13
+focus_fire = 0
+retreat_health_pct = 0
+expansion_tick = 0
+superweapons = 0
+multi_front = 0
+build_repertoire = []
+
+[regular]
+tier = 2
+decision_interval_ticks = 40
+command_delay_ticks = 2
+scout_info_age_ticks = 600
+attack_threshold = 12
+focus_fire = 0
+retreat_health_pct = 0
+expansion_tick = 6000
+superweapons = 0
+multi_front = 0
+build_repertoire = []
+
+[veteran]
+tier = 3
+decision_interval_ticks = 30
+command_delay_ticks = 1
+scout_info_age_ticks = 900
+attack_threshold = 10
+focus_fire = 1
+retreat_health_pct = 20
+expansion_tick = 4800
+superweapons = 0
+multi_front = 0
+build_repertoire = []
+
+[elite]
+tier = 4
+decision_interval_ticks = 20
+command_delay_ticks = 1
+scout_info_age_ticks = 1200
+attack_threshold = 9
+focus_fire = 1
+retreat_health_pct = 30
+expansion_tick = 3600
+superweapons = 1
+multi_front = 0
+build_repertoire = []
+
+[commissar]
+tier = 5
+decision_interval_ticks = 10
+command_delay_ticks = 1
+scout_info_age_ticks = 1800
+attack_threshold = 8
+focus_fire = 1
+retreat_health_pct = 35
+expansion_tick = 2400
+superweapons = 1
+multi_front = 1
+build_repertoire = []
