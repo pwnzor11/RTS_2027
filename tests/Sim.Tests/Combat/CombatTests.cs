@@ -321,6 +321,6 @@ public class CombatTests
     public void CombatParts_AreAppendedInOrder()
     {
         var names = NewSim().StateParts.Select(p => p.Name).ToArray();
-        Assert.Equal(new[] { "combat", "projectiles" }, names[^2..]);
+        Assert.Equal(new[] { "combat", "projectiles" }, names[6..8]);
     }
 }

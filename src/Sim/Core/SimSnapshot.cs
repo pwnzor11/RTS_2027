@@ -25,5 +25,16 @@ public readonly record struct UnitView(EntityId Id, UnitKind Kind, byte Player, 
     byte Facing, int Health);
 
 /// <summary>Everything needed to start a deterministic game. RulesHash covers the rules; the map hash is
-/// computed by the sim from Map.</summary>
-public sealed record SimSetup(ulong Seed, Map.MapData Map, int PlayerCount, SimRules Rules, ulong RulesHash);
+/// computed by the sim from Map. Init-only extras (M1.5): Teams = one team id per player slot (null = every
+/// player on its own team; <see cref="Core.Teams.Neutral"/> marks a neutral slot); Limits = store capacities;
+/// AllowDebug = whether Debug commands take effect. All three are part of the game's identity (saved, hashed
+/// into the "players" part, written to replay headers).</summary>
+public sealed record SimSetup(ulong Seed, Map.MapData Map, int PlayerCount, SimRules Rules, ulong RulesHash)
+{
+    public IReadOnlyList<byte>? Teams { get; init; }
+    public SimLimits Limits { get; init; } = SimLimits.Default;
+    public bool AllowDebug { get; init; }
+
+    /// <summary>Team id of a player slot (the slot index itself when Teams is null).</summary>
+    public byte TeamOf(byte player) => Teams != null && player < Teams.Count ? Teams[player] : player;
+}

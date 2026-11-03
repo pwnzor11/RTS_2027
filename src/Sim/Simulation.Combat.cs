@@ -28,7 +28,7 @@ public sealed partial class Simulation
     private ISimStatePart[] CombatParts()
     {
         _combat = new CombatState(_units.Capacity, _infantry.Capacity, _buildings.Capacity);
-        _projectiles = new ProjectileStore();
+        _projectiles = new ProjectileStore(Setup.Limits.Projectiles);
         return new ISimStatePart[] { _combat, _projectiles };
     }
 

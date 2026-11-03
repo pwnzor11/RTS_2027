@@ -21,6 +21,12 @@ Read this before your package brief. The brief wins if they disagree.
 - Iterate entities by slot index. RNG only via the Simulation's `SimRandom`.
 - Positions in leptons (256 per cell). Facing is a byte 0..255, 0 = north, clockwise.
 
+## M1.5 contracts (do not change signatures)
+`SimSetup.Teams/Limits/AllowDebug/TeamOf`, `SimLimits`, `Relation`, `Teams.Neutral`, `DebugOp`, `SetupEntry`,
+`Command.Arg2`, `PlayerStore` (part "players", last in the part order), `Simulation.Players/SetupLog/InStep`,
+`Simulation.RelationOf/RulesOf` (signatures; M1.5-01 fills the bodies), `Rts.Data.BuildInfo.Version`.
+- Licence: never copy or port EA code (D-050). AI code never runs inside `Step` (D-051).
+
 ## Style
 - File-scoped namespaces, one public type per file, XML doc comment on every public type.
 - Tests: `tests/Sim.Tests/<Area>/<Thing>Tests.cs`, xUnit `[Fact]`/`[Theory]`, no sleeps, no randomness

@@ -16,7 +16,9 @@ public enum CommandKind : byte
 /// EntityId alone does not say which store it indexes. Move queues a Move mission to Cell; Stop queues Stop.
 /// Attack / AttackMove / Guard (M1-09): Arg low byte = subject ActorKind, Arg bits 8..15 = target ActorKind (Attack),
 /// Cell = destination (AttackMove) or guard point (Guard).
+/// Arg2 (M1.5, review B-8) = second kind-specific int, default 0 (Debug: see DebugOp). Sorting is total over
+/// (Player, Sequence, Kind, Subject, Target, Cell, Arg, Arg2), so ties never depend on input order.
 /// </summary>
 public readonly record struct Command(
     int ExecTick, byte Player, ushort Sequence, CommandKind Kind,
-    EntityId Subject, EntityId Target, CellCoord Cell, int Arg);
+    EntityId Subject, EntityId Target, CellCoord Cell, int Arg, int Arg2 = 0);

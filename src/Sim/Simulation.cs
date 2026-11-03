@@ -16,9 +16,12 @@ namespace Rts.Sim;
 /// </summary>
 public sealed partial class Simulation
 {
-    private readonly UnitStore _units = new();
-    private readonly InfantryStore _infantry = new();
-    private readonly BuildingStore _buildings = new();
+    private readonly UnitStore _units;
+    private readonly InfantryStore _infantry;
+    private readonly BuildingStore _buildings;
+    private readonly PlayerStore _players;
+    private readonly List<SetupEntry> _setupLog = new();
+    private bool _inStep;
     private readonly MapState _map;
     private readonly PathService _paths;
     private readonly VisionState _vision;
@@ -36,20 +39,40 @@ public sealed partial class Simulation
         if (setup.Rules == null || setup.Rules.Vehicles == null || setup.Rules.Vehicles.Count < 1)
             throw new ArgumentException("At least one vehicle type required.", nameof(setup));
         if (setup.PlayerCount < 1) throw new ArgumentException("At least one player required.", nameof(setup));
+        if (setup.PlayerCount > byte.MaxValue) throw new ArgumentException("At most 255 players.", nameof(setup));
+        if (setup.Teams != null && setup.Teams.Count != setup.PlayerCount)
+            throw new ArgumentException("Teams must have one entry per player.", nameof(setup));
+        ArgumentNullException.ThrowIfNull(setup.Limits);
         Setup = setup;
         _rng = new SimRandom(setup.Seed);
+        _units = new UnitStore(setup.Limits.Vehicles);
+        _infantry = new InfantryStore(setup.Limits.Infantry);
+        _buildings = new BuildingStore(setup.Limits.Buildings);
+        _players = new PlayerStore(setup);
         _map = new MapState(setup.Map);
         _paths = new PathService(_map, setup.Rules.Terrain);
-        _vision = new VisionState(setup.Map.Width, setup.Map.Height, setup.PlayerCount);
+        _vision = new VisionState(setup.Map.Width, setup.Map.Height, setup.PlayerCount,
+            Math.Max(setup.Limits.Vehicles, setup.Limits.Infantry));
         // Parts after vision come from the partial files in canonical order: combat (M1-09) first.
         var extra = CombatParts();
-        _parts = new ISimStatePart[6 + extra.Length];
+        // M1.5: "players" is appended after the combat parts (append-only order).
+        _parts = new ISimStatePart[7 + extra.Length];
         _parts[0] = _map; _parts[1] = _units; _parts[2] = _infantry; _parts[3] = _buildings; _parts[4] = _paths; _parts[5] = _vision;
         for (int e = 0; e < extra.Length; e++) _parts[6 + e] = extra[e];
+        _parts[6 + extra.Length] = _players;
         MapHash = MapHasher.Compute(setup.Map);
     }
 
     public SimSetup Setup { get; }
+
+    /// <summary>Per-player state (team, cash, power, defeat) — the "players" part (M1.5, D-054).</summary>
+    public PlayerStore Players => _players;
+
+    /// <summary>Out-of-Step spawns and placements in the order they happened (M1.5). Replays read this.</summary>
+    public IReadOnlyList<SetupEntry> SetupLog => _setupLog;
+
+    /// <summary>True while Step is running.</summary>
+    public bool InStep => _inStep;
 
     /// <summary>Identity hash of the starting map, computed once at construction.</summary>
     public ulong MapHash { get; }
@@ -89,6 +112,7 @@ public sealed partial class Simulation
         if (!InMap(cell)) throw new ArgumentOutOfRangeException(nameof(cell));
         EntityId id = _units.Add(player, vehicleTypeIndex, LeptonCoord.CenterOf(cell), vehicles[vehicleTypeIndex].MaxHealth);
         OnActorSpawned(ActorKind.Vehicle, id.Index);
+        if (!_inStep) _setupLog.Add(new SetupEntry(ActorKind.Vehicle, player, vehicleTypeIndex, cell, 0));
         return id;
     }
 
@@ -101,11 +125,19 @@ public sealed partial class Simulation
         if (subSlot < 0 || subSlot >= InfantryStore.SubSlotCount) throw new ArgumentOutOfRangeException(nameof(subSlot));
         EntityId id = _infantry.Add(player, infantryTypeIndex, cell, subSlot, infantry[infantryTypeIndex].MaxHealth);
         OnActorSpawned(ActorKind.Infantry, id.Index);
+        if (!_inStep) _setupLog.Add(new SetupEntry(ActorKind.Infantry, player, infantryTypeIndex, cell, subSlot));
         return id;
     }
 
     /// <summary>Advance exactly one tick, applying commands whose ExecTick == Tick (others are ignored).</summary>
     public void Step(IReadOnlyList<Command> commands)
+    {
+        _inStep = true;
+        try { StepCore(commands); }
+        finally { _inStep = false; }
+    }
+
+    private void StepCore(IReadOnlyList<Command> commands)
     {
         ApplyInput(commands);
         RunMissions();
@@ -371,6 +403,7 @@ public sealed partial class Simulation
         for (int y = 0; y < bt.FootprintH; y++)
             for (int x = 0; x < bt.FootprintW; x++)
                 _map.SetBuilding(new CellCoord(topLeft.X + x, topLeft.Y + y), id);
+        if (!_inStep) _setupLog.Add(new SetupEntry(ActorKind.Building, player, buildingType, topLeft, 0));
         return id;
     }
 
