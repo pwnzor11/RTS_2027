@@ -223,6 +223,7 @@ public class CombatTests
     {
         var sim = NewSim();
         sim.PlaceBuilding(0, Bld("test_turret"), new CellCoord(10, 10));
+        sim.PlaceBuilding(0, Bld("test_power"), new CellCoord(4, 4));   // M2: the turret needs_power; without a plant it holds fire
         var raider = sim.SpawnInfantry(1, Inf("test_rifleman"), new CellCoord(10, 15));
         Run(sim, 300, Move(sim, 1, ActorKind.Infantry, raider, 10, 12));
         Assert.False(sim.Infantry.Slots.IsAlive(raider));
@@ -332,7 +333,7 @@ public class CombatTests
         Assert.Equal(casualtiesA, casualtiesB);
         Assert.True(casualtiesA.Sum() > 0, "the battle should actually kill something");
         Assert.Equal(new[] { 6, 4 }, casualtiesA);                 // exact losses per player for seed 1
-        Assert.Equal(0xCA9565C74EBC933BUL, a[^1]);                  // exact final tick hash for seed 1 (M2-01: new spawn facing, path batching)
+        Assert.Equal(0x8CF6434F42AC5D96UL, a[^1]);                  // exact final tick hash for seed 1 (M2 wave 2: economy, production, spawn facing)
         Assert.NotEqual(a[^1], c[^1]);
     }
 
