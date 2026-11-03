@@ -10,7 +10,7 @@ namespace Rts.AI;
 /// <summary>
 /// Hosts AI players outside the simulation (D-051). The host calls <see cref="Collect"/> once per tick BEFORE
 /// Simulation.Step and feeds the produced commands into the recorded command stream. The driver calls Think every
-/// <see cref="DifficultyProfile.DecisionIntervalTicks"/> (staggered by slot so costs spread), stamps
+/// <see cref="DifficultyProfile.DecisionIntervalTicks"/>, stamps
 /// ExecTick = tick + command delay (mirrors LAN input delay) and a per-player increasing Sequence. AI memory lives in
 /// the AI objects, not in the sim. No wall clock, no unordered iteration: the same seed gives the same commands.
 /// </summary>
@@ -67,7 +67,7 @@ public sealed class AiDriver
         foreach (Slot s in _slots)
         {
             int interval = Math.Max(1, s.Profile.DecisionIntervalTicks);
-            if ((tick + s.Player) % interval != 0) continue;
+            if (tick % interval != 0) continue;   // D-065: all slots think on the same tick (a per-slot stagger biased mirror matches)
             s.Tick = tick;
             s.Delay = Math.Max(1, CommandDelayOverride ?? s.Profile.CommandDelayTicks);
             s.Out = outCommands;

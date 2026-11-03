@@ -52,7 +52,7 @@ public class AiDriverTests
     }
 
     [Fact]
-    public void RespectsIntervalAndStaggersBySlot()
+    public void RespectsIntervalAndThinksOnTheSameTickInEverySlot()
     {
         var sim = TestWorld.FlatSim();
         var a0 = new Recorder();
@@ -67,7 +67,7 @@ public class AiDriverTests
             sim.Step(Array.Empty<Command>());
         }
         Assert.Equal([0, 10, 20], a0.ThinkTicks);
-        Assert.Equal([9, 19, 29], a1.ThinkTicks);   // (tick + slot) % interval == 0
+        Assert.Equal([0, 10, 20], a1.ThinkTicks);   // tick % interval == 0 for every slot (D-065: no per-slot stagger)
     }
 
     [Fact]
