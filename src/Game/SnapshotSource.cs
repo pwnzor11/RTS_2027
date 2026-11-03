@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using Rts.Sim.Core;
+using Rts.Sim.Rules;
 
 namespace Rts.Game;
 
@@ -28,6 +29,7 @@ public sealed class DemoSnapshotSource : ISnapshotSource
     private const int QuarterTurnIndex = 64;
 
     // Units 0-2 belong to player 0 and orbit clockwise; units 3-5 belong to player 1, opposite side, counter-clockwise.
+    private static readonly LandType[] _land = new LandType[MapCells * MapCells]; // all Clear
     private static readonly int[] Phase = { 0, 85, 170, 128, 213, 42 };
 
     private readonly Stopwatch _clock = Stopwatch.StartNew();
@@ -84,6 +86,7 @@ public sealed class DemoSnapshotSource : ISnapshotSource
 
             units[i] = new UnitView(
                 new EntityId((ushort)(i + 1), 1),
+                UnitKind.Vehicle,
                 player,
                 0,
                 new LeptonCoord(x, y),
@@ -91,7 +94,7 @@ public sealed class DemoSnapshotSource : ISnapshotSource
                 100);
         }
 
-        return new SimSnapshot(_tick, MapCells, MapCells, units);
+        return new SimSnapshot(_tick, MapCells, MapCells, units, _land, 0UL);
     }
 
     /// <summary>

@@ -3,7 +3,7 @@ using Rts.Sim.Core;
 namespace Rts.Sim.World;
 
 /// <summary>Struct-of-arrays storage holding all unit components, indexed by slot.</summary>
-public sealed class UnitStore
+public sealed class UnitStore : ISimStatePart
 {
     public const int DefaultCapacity = 2048;
 
@@ -27,6 +27,8 @@ public sealed class UnitStore
         Mission = new UnitMission[capacity];
         Destination = new LeptonCoord[capacity];
     }
+
+    public string Name => "units";
 
     public int Capacity => Slots.Capacity;
 

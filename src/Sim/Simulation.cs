@@ -1,5 +1,6 @@
 using System.IO.Hashing;
 using Rts.Sim.Core;
+using Rts.Sim.Map;
 using Rts.Sim.Serialization;
 using Rts.Sim.World;
 
@@ -12,6 +13,10 @@ namespace Rts.Sim;
 public sealed class Simulation
 {
     private readonly UnitStore _units = new();
+    private readonly MapState _map;
+    // Canonical state-part order: [map, units]. Hash, Save and Load all iterate this array; append new parts
+    // at the end only (changing the order changes every hash and the save format).
+    private readonly ISimStatePart[] _parts;
     private SimRandom _rng;
     private readonly List<(int Tick, ulong Hash)> _recentHashes = new(SimConstants.HashRingSize);
     private Command[] _scratch = new Command[64];
@@ -19,17 +24,24 @@ public sealed class Simulation
     public Simulation(SimSetup setup)
     {
         ArgumentNullException.ThrowIfNull(setup);
-        if (setup.MapWidth < 1 || setup.MapWidth > SimConstants.MaxMapCells
-            || setup.MapHeight < 1 || setup.MapHeight > SimConstants.MaxMapCells)
-            throw new ArgumentException("Map size must be 1..128 cells per axis.", nameof(setup));
+        if (setup.Map == null) throw new ArgumentException("A map is required.", nameof(setup));
+        if (setup.Rules == null || setup.Rules.Vehicles == null || setup.Rules.Vehicles.Count < 1)
+            throw new ArgumentException("At least one vehicle type required.", nameof(setup));
         if (setup.PlayerCount < 1) throw new ArgumentException("At least one player required.", nameof(setup));
-        if (setup.UnitTypes == null || setup.UnitTypes.Count < 1)
-            throw new ArgumentException("At least one unit type required.", nameof(setup));
         Setup = setup;
         _rng = new SimRandom(setup.Seed);
+        _map = new MapState(setup.Map);
+        _parts = new ISimStatePart[] { _map, _units };
+        MapHash = MapHasher.Compute(setup.Map);
     }
 
     public SimSetup Setup { get; }
+
+    /// <summary>Identity hash of the starting map, computed once at construction.</summary>
+    public ulong MapHash { get; }
+
+    /// <summary>State parts in canonical order (map, units).</summary>
+    public IReadOnlyList<ISimStatePart> StateParts => _parts;
 
     /// <summary>The only clock. Starts at 0; Step increments it by one.</summary>
     public int Tick { get; private set; }
@@ -40,12 +52,13 @@ public sealed class Simulation
     /// <summary>Read access to unit state for tests and tools. Never mutate outside Step.</summary>
     public UnitStore Units => _units;
 
-    /// <summary>Setup/scripting entry: place a unit outside Step. Returns its id.</summary>
-    public EntityId SpawnUnit(byte player, int unitTypeIndex, CellCoord cell)
+    /// <summary>Setup/scripting entry: place a vehicle outside Step. Returns its id.</summary>
+    public EntityId SpawnVehicle(byte player, int vehicleTypeIndex, CellCoord cell)
     {
-        if (unitTypeIndex < 0 || unitTypeIndex >= Setup.UnitTypes.Count) throw new ArgumentOutOfRangeException(nameof(unitTypeIndex));
+        var vehicles = Setup.Rules.Vehicles;
+        if (vehicleTypeIndex < 0 || vehicleTypeIndex >= vehicles.Count) throw new ArgumentOutOfRangeException(nameof(vehicleTypeIndex));
         if (!InMap(cell)) throw new ArgumentOutOfRangeException(nameof(cell));
-        return _units.Add(player, unitTypeIndex, LeptonCoord.CenterOf(cell), Setup.UnitTypes[unitTypeIndex].MaxHealth);
+        return _units.Add(player, vehicleTypeIndex, LeptonCoord.CenterOf(cell), vehicles[vehicleTypeIndex].MaxHealth);
     }
 
     /// <summary>Advance exactly one tick, applying commands whose ExecTick == Tick (others are ignored).</summary>
@@ -70,7 +83,7 @@ public sealed class Simulation
 
     // ---- input -------------------------------------------------------------------------------
 
-    private bool InMap(CellCoord c) => c.X >= 0 && c.Y >= 0 && c.X < Setup.MapWidth && c.Y < Setup.MapHeight;
+    private bool InMap(CellCoord c) => Setup.Map.Contains(c);
 
     private void ApplyInput(IReadOnlyList<Command> commands)
     {
@@ -128,7 +141,7 @@ public sealed class Simulation
         for (int i = 1; i < _units.Capacity; i++)
         {
             if (!_units.Slots.IsIndexAlive(i) || _units.Mission[i] != UnitMission.Move) continue;
-            int speed = Setup.UnitTypes[_units.TypeIndex[i]].Speed;
+            int speed = Setup.Rules.Vehicles[_units.TypeIndex[i]].Speed;
             LeptonCoord pos = _units.Position[i], dest = _units.Destination[i];
             int dx = dest.X - pos.X, dy = dest.Y - pos.Y;
             if (dx == 0 && dy == 0) { _units.Mission[i] = UnitMission.Idle; continue; }
@@ -181,7 +194,7 @@ public sealed class Simulation
     {
         using var ms = new MemoryStream();
         using (var w = new BinaryWriter(ms, System.Text.Encoding.UTF8, leaveOpen: true))
-            SimWriter.WriteState(w, Tick, _rng, Setup.MapWidth, Setup.MapHeight, _units);
+            SimWriter.WriteState(w, Tick, _rng, _parts);
         return XxHash64.HashToUInt64(ms.GetBuffer().AsSpan(0, (int)ms.Length));
     }
 
@@ -190,20 +203,21 @@ public sealed class Simulation
         var list = new List<UnitView>(_units.Slots.Count);
         for (int i = 1; i < _units.Capacity; i++)
             if (_units.Slots.IsIndexAlive(i))
-                list.Add(new UnitView(_units.Slots.IdOf(i), _units.Player[i], _units.TypeIndex[i],
+                list.Add(new UnitView(_units.Slots.IdOf(i), UnitKind.Vehicle, _units.Player[i], _units.TypeIndex[i],
                     _units.Position[i], _units.Facing[i], _units.Health[i]));
-        return new SimSnapshot(Tick, Setup.MapWidth, Setup.MapHeight, list);
+        ulong hash = _recentHashes.Count > 0 ? _recentHashes[^1].Hash : 0UL;
+        return new SimSnapshot(Tick, Setup.Map.Width, Setup.Map.Height, list, Setup.Map.Land, hash);
     }
 
     /// <summary>Versioned binary save of the whole sim state.</summary>
     public void Save(Stream output) =>
-        SimWriter.WriteSave(output, Setup.RulesHash, Tick, _rng, Setup.MapWidth, Setup.MapHeight, _units);
+        SimWriter.WriteSave(output, Setup.RulesHash, MapHash, Tick, _rng, _parts);
 
-    /// <summary>Restore a game saved with Save. The setup must match (checked via RulesHash).</summary>
+    /// <summary>Restore a game saved with Save. The setup must match (checked via RulesHash and MapHash).</summary>
     public static Simulation Load(Stream input, SimSetup setup)
     {
         var sim = new Simulation(setup);
-        var state = SimReader.ReadSave(input, setup.RulesHash, setup.MapWidth, setup.MapHeight, sim._units);
+        var state = SimReader.ReadSave(input, setup.RulesHash, sim.MapHash, sim._parts);
         sim.Tick = state.Tick;
         sim._rng = state.Rng;
         return sim;

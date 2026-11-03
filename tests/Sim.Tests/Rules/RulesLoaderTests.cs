@@ -1,5 +1,6 @@
 using Rts.Data;
 using Rts.Sim.Core;
+using Rts.Sim.Rules;
 using Xunit;
 
 namespace Rts.Sim.Tests.Rules;
@@ -10,8 +11,12 @@ public sealed class RulesLoaderTests
     private const string ValidGame =
         "[game]\ntick_rate = 20\ndefault_map_width = 32\ndefault_map_height = 32\n";
 
+    private const string Placeholders =
+        "locomotion = \"tracked\"\nturn_rate = 8\narmor = \"heavy\"\nsight = 5\nprimary_weapon = \"\"\n" +
+        "has_turret = false\nturret_turn_rate = 0\ncrusher = true\ncost = 0\nprerequisites = []\n";
+
     private const string ValidUnits =
-        "[test_crawler]\nspeed = 16\nmax_health = 300\n";
+        "[test_crawler]\nspeed = 16\nmax_health = 300\n" + Placeholders;
 
     private static string RealRulesDir()
     {
@@ -28,8 +33,16 @@ public sealed class RulesLoaderTests
         Assert.Equal(20, rules.Game.TickRate);
         Assert.Equal(32, rules.Game.DefaultMapWidth);
         Assert.Equal(32, rules.Game.DefaultMapHeight);
-        var unit = Assert.Single(rules.Units);
-        Assert.Equal(new UnitTypeDef("test_crawler", 16, 300), unit);
+        var unit = Assert.Single(rules.Sim.Vehicles);
+        Assert.Equal("test_crawler", unit.Id);
+        Assert.Equal(16, unit.Speed);
+        Assert.Equal(300, unit.MaxHealth);
+        Assert.Equal(Locomotion.Tracked, unit.Locomotion);
+        Assert.Equal(-1, unit.PrimaryWeapon);
+        Assert.Empty(rules.Sim.Weapons);
+        Assert.Equal(0, rules.Sim.Terrain.SpeedPercent(LandType.Water, Locomotion.Tracked));
+        Assert.Equal(125, rules.Sim.Terrain.SpeedPercent(LandType.Road, Locomotion.Wheeled));
+        Assert.True(rules.Sim.Terrain.Buildable(LandType.Ash));
         Assert.NotEqual(0UL, rules.RulesHash);
     }
 
@@ -38,7 +51,7 @@ public sealed class RulesLoaderTests
     {
         using var temp = new TempRules(
             game: "# reformatted copy\n[game]\ndefault_map_height = 32   # rows\ndefault_map_width=32\n\n\ntick_rate =   20\n",
-            units: "# comment\n\n[test_crawler]\nmax_health=300\n  speed =   16 # leptons\n");
+            units: "# comment\n\n[test_crawler]\nmax_health=300\n  speed =   16 # leptons\n" + Placeholders);
 
         ulong original = RulesLoader.Load(RealRulesDir()).RulesHash;
         ulong reformatted = RulesLoader.Load(temp.Dir).RulesHash;
@@ -50,24 +63,24 @@ public sealed class RulesLoaderTests
     public void HashChangesWhenSpeedChanges()
     {
         using var baseline = new TempRules(ValidGame, ValidUnits);
-        using var changed = new TempRules(ValidGame, "[test_crawler]\nspeed = 17\nmax_health = 300\n");
+        using var changed = new TempRules(ValidGame, "[test_crawler]\nspeed = 17\nmax_health = 300\n" + Placeholders);
 
         Assert.NotEqual(RulesLoader.Load(baseline.Dir).RulesHash, RulesLoader.Load(changed.Dir).RulesHash);
     }
 
     [Theory]
-    [InlineData("units.toml", "[test_crawler]\nspeed = 16\nmax_health = 300\narmour = 2\n", "test_crawler.armour", "unknown key")]
-    [InlineData("units.toml", "[test_crawler]\nspeed = 16\n", "test_crawler.max_health", "missing required key")]
-    [InlineData("units.toml", "[test_crawler]\nspeed = \"16\"\nmax_health = 300\n", "test_crawler.speed", "expected an integer")]
-    [InlineData("units.toml", "[test_crawler]\nspeed = 0\nmax_health = 300\n", "test_crawler.speed", "must be between")]
-    [InlineData("units.toml", "[test_crawler]\nspeed = 16\nmax_health = -1\n", "test_crawler.max_health", "must be between")]
+    [InlineData("vehicles.toml", "[test_crawler]\nspeed = 16\nmax_health = 300\narmour = 2\n" + Placeholders, "test_crawler.armour", "unknown key")]
+    [InlineData("vehicles.toml", "[test_crawler]\nspeed = 16\n", "test_crawler.max_health", "missing required key")]
+    [InlineData("vehicles.toml", "[test_crawler]\nspeed = \"16\"\nmax_health = 300\n" + Placeholders, "test_crawler.speed", "expected an integer")]
+    [InlineData("vehicles.toml", "[test_crawler]\nspeed = 0\nmax_health = 300\n" + Placeholders, "test_crawler.speed", "must be between")]
+    [InlineData("vehicles.toml", "[test_crawler]\nspeed = 16\nmax_health = -1\n" + Placeholders, "test_crawler.max_health", "must be between")]
     [InlineData("game.toml", "[game]\ntick_rate = 30\ndefault_map_width = 32\ndefault_map_height = 32\n", "game.tick_rate", "must be 20")]
     [InlineData("game.toml", "[game]\ntick_rate = 20\ndefault_map_width = 32\ndefault_map_height = 32\nextra = 1\n", "game.extra", "unknown key")]
     [InlineData("game.toml", "[game]\ntick_rate = 20\ndefault_map_height = 32\n", "game.default_map_width", "missing required key")]
     public void ValidationErrorsReportFileAndKey(string file, string content, string expectedKey, string expectedMessagePart)
     {
         string game = file == "game.toml" ? content : ValidGame;
-        string units = file == "units.toml" ? content : ValidUnits;
+        string units = file == "vehicles.toml" ? content : ValidUnits;
         using var temp = new TempRules(game, units);
 
         var ex = Assert.Throws<RulesException>(() => RulesLoader.Load(temp.Dir));
@@ -88,8 +101,8 @@ public sealed class RulesLoaderTests
 
         Assert.Contains(ex.Problems, p => p.File == "game.toml" && p.Key == "game.tick_rate");
         Assert.Contains(ex.Problems, p => p.File == "game.toml" && p.Key == "game.default_map_height");
-        Assert.Contains(ex.Problems, p => p.File == "units.toml" && p.Key == "test_crawler.speed");
-        Assert.Contains(ex.Problems, p => p.File == "units.toml" && p.Key == "test_crawler.max_health");
+        Assert.Contains(ex.Problems, p => p.File == "vehicles.toml" && p.Key == "test_crawler.speed");
+        Assert.Contains(ex.Problems, p => p.File == "vehicles.toml" && p.Key == "test_crawler.max_health");
     }
 
     [Fact]
@@ -99,7 +112,7 @@ public sealed class RulesLoaderTests
 
         var ex = Assert.Throws<RulesException>(() => RulesLoader.Load(temp.Dir));
 
-        Assert.Contains(ex.Problems, p => p.File == "units.toml" && p.Key == "<file>");
+        Assert.Contains(ex.Problems, p => p.File == "vehicles.toml" && p.Key == "<file>");
     }
 
     /// <summary>A rules directory written under the test output folder, deleted on dispose.</summary>
@@ -112,7 +125,7 @@ public sealed class RulesLoaderTests
             File.WriteAllText(Path.Combine(Dir, RulesLoader.GameFile), game);
             if (units is not null)
             {
-                File.WriteAllText(Path.Combine(Dir, RulesLoader.UnitsFile), units);
+                File.WriteAllText(Path.Combine(Dir, RulesLoader.VehiclesFile), units);
             }
         }
 

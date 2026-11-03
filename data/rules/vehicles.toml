@@ -1,0 +1,15 @@
+# Placeholder for the skeleton. Real rosters come in M1+.
+# TEST FIXTURE: synthetic values, not balance numbers.
+[test_crawler]
+speed = 16        # leptons per tick
+max_health = 300
+locomotion = "tracked"   # placeholder
+turn_rate = 8            # placeholder
+armor = "heavy"          # placeholder
+sight = 5                # placeholder
+primary_weapon = ""      # placeholder ("" = no weapon)
+has_turret = false       # placeholder
+turret_turn_rate = 0     # placeholder
+crusher = true           # placeholder
+cost = 0                 # placeholder
+prerequisites = []       # placeholder

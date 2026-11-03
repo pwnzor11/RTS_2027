@@ -7,7 +7,7 @@ public readonly record struct ReplayRecord(long Offset, byte Type, Command Comma
 
 /// <summary>Parsed replay file.</summary>
 public sealed record ReplayData(
-    ulong RulesHash, ulong Seed, int MapWidth, int MapHeight, int PlayerCount,
+    ulong RulesHash, ulong MapHash, ulong Seed, int MapWidth, int MapHeight, int PlayerCount,
     IReadOnlyList<(byte Player, int Type, CellCoord Cell)> Spawns,
     IReadOnlyList<ReplayRecord> Records, int FinalTick);
 
@@ -20,7 +20,7 @@ public static class ReplayReader
         if (!r.ReadBytes(4).AsSpan().SequenceEqual(ReplayWriter.Magic)) throw new InvalidDataException("Bad replay magic.");
         int version = r.ReadInt32();
         if (version != ReplayWriter.Version) throw new InvalidDataException($"Unsupported replay version {version}.");
-        ulong rules = r.ReadUInt64(), seed = r.ReadUInt64();
+        ulong rules = r.ReadUInt64(), mapHash = r.ReadUInt64(), seed = r.ReadUInt64();
         int w = r.ReadInt32(), h = r.ReadInt32(), players = r.ReadInt32();
         int spawnCount = r.ReadInt32();
         var spawns = new List<(byte, int, CellCoord)>(spawnCount);
@@ -32,7 +32,7 @@ public static class ReplayReader
             long off = r.BaseStream.Position;
             byte type = r.ReadByte();
             if (type == ReplayWriter.TypeEnd)
-                return new ReplayData(rules, seed, w, h, players, spawns, records, r.ReadInt32());
+                return new ReplayData(rules, mapHash, seed, w, h, players, spawns, records, r.ReadInt32());
             if (type == ReplayWriter.TypeCommand)
             {
                 int tick = r.ReadInt32(); byte player = r.ReadByte(); ushort seq = r.ReadUInt16(); var kind = (CommandKind)r.ReadByte();

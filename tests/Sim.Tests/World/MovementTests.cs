@@ -1,4 +1,6 @@
 using Rts.Sim.Core;
+using Rts.Sim.Map;
+using Rts.Sim.Tests.Determinism;
 using Rts.Sim.World;
 
 namespace Rts.Sim.Tests.World;
@@ -7,9 +9,9 @@ public class MovementTests
 {
     private static Simulation Make(int speed, out EntityId id)
     {
-        var setup = new SimSetup(1, 32, 32, 1, new[] { new UnitTypeDef("t", speed, 10) }, 1);
+        var setup = new SimSetup(1, MapData.CreateFlat(32, 32), 1, ScriptedGame.Rules(ScriptedGame.Vehicle("t", speed, 10)), 1);
         var sim = new Simulation(setup);
-        id = sim.SpawnUnit(0, 0, new CellCoord(10, 10));
+        id = sim.SpawnVehicle(0, 0, new CellCoord(10, 10));
         return sim;
     }
 

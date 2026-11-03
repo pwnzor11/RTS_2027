@@ -1,4 +1,5 @@
 using Rts.Sim.Core;
+using Rts.Sim.Map;
 
 namespace Rts.Sim.Replay;
 
@@ -11,12 +12,13 @@ public static class ReplayPlayer
     public static ReplayResult Run(Stream replay, SimSetup setup)
     {
         ReplayData data = ReplayReader.Read(replay);
-        if (data.RulesHash != setup.RulesHash || data.Seed != setup.Seed || data.MapWidth != setup.MapWidth
-            || data.MapHeight != setup.MapHeight || data.PlayerCount != setup.PlayerCount)
+        if (data.RulesHash != setup.RulesHash || data.Seed != setup.Seed || data.MapWidth != setup.Map.Width
+            || data.MapHeight != setup.Map.Height || data.PlayerCount != setup.PlayerCount
+            || data.MapHash != MapHasher.Compute(setup.Map))
             throw new InvalidDataException("Replay header does not match setup.");
 
         var sim = new Simulation(setup);
-        foreach (var s in data.Spawns) sim.SpawnUnit(s.Player, s.Type, s.Cell);
+        foreach (var s in data.Spawns) sim.SpawnVehicle(s.Player, s.Type, s.Cell);
 
         var commands = new List<Command>();
         foreach (ReplayRecord r in data.Records)

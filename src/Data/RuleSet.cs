@@ -1,8 +1,9 @@
-using Rts.Sim.Core;
+using Rts.Sim.Rules;
 
 namespace Rts.Data;
 
 /// <summary>
-/// Parsed rules: game constants, unit types sorted by id (ordinal), and the canonical rules hash.
+/// Parsed rules: game constants, the sim-side type tables (each sorted by id, ordinal) and the canonical
+/// rules hash.
 /// </summary>
-public sealed record RuleSet(GameRules Game, IReadOnlyList<UnitTypeDef> Units, ulong RulesHash);
+public sealed record RuleSet(GameRules Game, SimRules Sim, ulong RulesHash);

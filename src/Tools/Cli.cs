@@ -1,6 +1,7 @@
 using Rts.Data;
 using Rts.Sim;
 using Rts.Sim.Core;
+using Rts.Sim.Map;
 
 namespace Rts.Tools;
 
@@ -117,16 +118,16 @@ public static class Cli
 
         int width = rules.Game.DefaultMapWidth;
         int height = rules.Game.DefaultMapHeight;
-        if (unitsPerPlayer > 0 && rules.Units.Count == 0)
+        if (unitsPerPlayer > 0 && rules.Sim.Vehicles.Count == 0)
         {
-            return UsageError("rules define no unit types; cannot spawn units");
+            return UsageError("rules define no vehicle types; cannot spawn units");
         }
         if (unitsPerPlayer > width - 2 || height < 3)
         {
             return UsageError($"--units {unitsPerPlayer} does not fit a {width}x{height} map (max {Math.Max(0, width - 2)})");
         }
 
-        var setup = new SimSetup(seed, width, height, Players, rules.Units, rules.RulesHash);
+        var setup = new SimSetup(seed, MapData.CreateFlat(width, height), Players, rules.Sim, rules.RulesHash);
         try
         {
             var simulation = new Simulation(setup);
@@ -138,7 +139,7 @@ public static class Cli
                 {
                     // Player 0 starts on the top edge, player 1 on the bottom edge; units fill left to right.
                     var spawnCell = new CellCoord(1 + i, player == 0 ? 1 : height - 2);
-                    EntityId id = simulation.SpawnUnit(player, 0, spawnCell);
+                    EntityId id = simulation.SpawnVehicle(player, 0, spawnCell);
 
                     var target = new CellCoord(width - 2 - i, height / 2);
                     commands.Add(new Command(ExecTick: 0, Player: player, Sequence: sequence++,

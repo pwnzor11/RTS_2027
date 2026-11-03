@@ -1,5 +1,4 @@
 using Rts.Sim.Core;
-using Rts.Sim.World;
 
 namespace Rts.Sim.Serialization;
 
@@ -7,24 +6,30 @@ namespace Rts.Sim.Serialization;
 public static class SimWriter
 {
     public static readonly byte[] SaveMagic = "RTSS"u8.ToArray();
-    public const int SaveVersion = 1;
+    public const int SaveVersion = 2;
 
-    /// <summary>State body: tick, RNG, map size, unit store. Used verbatim by the hash.</summary>
-    public static void WriteState(BinaryWriter w, int tick, SimRandom rng, int mapW, int mapH, UnitStore units)
+    /// <summary>State body: tick, RNG, then each part's name and data in the given (canonical) order.
+    /// Used verbatim by the hash.</summary>
+    public static void WriteState(BinaryWriter w, int tick, SimRandom rng, IReadOnlyList<ISimStatePart> parts)
     {
         w.Write(tick);
         (ulong state, ulong inc) = rng.GetState();
         w.Write(state); w.Write(inc);
-        w.Write(mapW); w.Write(mapH);
-        units.Write(w);
+        for (int i = 0; i < parts.Count; i++)
+        {
+            w.Write(parts[i].Name);
+            parts[i].Write(w);
+        }
     }
 
-    public static void WriteSave(Stream output, ulong rulesHash, int tick, SimRandom rng, int mapW, int mapH, UnitStore units)
+    public static void WriteSave(Stream output, ulong rulesHash, ulong mapHash, int tick, SimRandom rng,
+        IReadOnlyList<ISimStatePart> parts)
     {
         using var w = new BinaryWriter(output, System.Text.Encoding.UTF8, leaveOpen: true);
         w.Write(SaveMagic);
         w.Write(SaveVersion);
         w.Write(rulesHash);
-        WriteState(w, tick, rng, mapW, mapH, units);
+        w.Write(mapHash);
+        WriteState(w, tick, rng, parts);
     }
 }

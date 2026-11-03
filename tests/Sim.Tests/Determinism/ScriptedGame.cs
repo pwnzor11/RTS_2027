@@ -1,12 +1,28 @@
 using Rts.Sim.Core;
+using Rts.Sim.Map;
+using Rts.Sim.Rules;
 
 namespace Rts.Sim.Tests.Determinism;
 
 /// <summary>Shared test fixture: a 2-player, 20-unit game and a seeded random command script.</summary>
 public static class ScriptedGame
 {
-    public static SimSetup Setup(ulong seed = 1) => new(seed, 64, 64, 2,
-        new[] { new UnitTypeDef("fast", 37, 100), new UnitTypeDef("slow", 11, 200) }, 0xABCDUL);
+    public static VehicleType Vehicle(string id, int speed, int maxHealth) =>
+        new(id, Locomotion.Tracked, speed, 8, maxHealth, ArmorClass.Heavy, 5, -1, false, 0, true, 0, Array.Empty<string>());
+
+    public static SimRules Rules(params VehicleType[] vehicles) =>
+        new(vehicles, Array.Empty<InfantryType>(), Array.Empty<BuildingType>(), Array.Empty<WeaponType>(),
+            Array.Empty<WarheadType>(), Flat100(), Array.Empty<EffectDef>());
+
+    private static TerrainTable Flat100()
+    {
+        var speed = new int[RuleCounts.LandTypes * RuleCounts.Locomotions];
+        Array.Fill(speed, 100);
+        return new TerrainTable(speed, new bool[RuleCounts.LandTypes]);
+    }
+
+    public static SimSetup Setup(ulong seed = 1) => new(seed, MapData.CreateFlat(64, 64), 2,
+        Rules(Vehicle("fast", 37, 100), Vehicle("slow", 11, 200)), 0xABCDUL);
 
     public static IEnumerable<(byte Player, int Type, CellCoord Cell)> Spawns()
     {
@@ -17,7 +33,7 @@ public static class ScriptedGame
     public static Simulation NewSim(SimSetup setup)
     {
         var sim = new Simulation(setup);
-        foreach (var s in Spawns()) sim.SpawnUnit(s.Player, s.Type, s.Cell);
+        foreach (var s in Spawns()) sim.SpawnVehicle(s.Player, s.Type, s.Cell);
         return sim;
     }
 

@@ -1,4 +1,5 @@
 using Rts.Sim.Core;
+using Rts.Sim.Map;
 using Rts.Sim.Replay;
 using Rts.Sim.Tests.Determinism;
 
@@ -51,6 +52,15 @@ public class ReplayTests
         Assert.True(result.FirstMismatchTick > 0);
         Assert.True(result.FirstMismatchTick >= rec.Command.ExecTick);
         Assert.Equal(0, result.FirstMismatchTick % 16);
+    }
+
+    [Fact]
+    public void WrongMapHash_Throws()
+    {
+        var setup = ScriptedGame.Setup();
+        byte[] bytes = Record(setup, 32);
+        var other = setup with { Map = MapData.CreateFlat(64, 64, "other") };
+        Assert.Throws<InvalidDataException>(() => ReplayPlayer.Run(new MemoryStream(bytes), other));
     }
 
     [Fact]

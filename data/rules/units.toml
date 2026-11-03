@@ -1,5 +1,0 @@
-# Placeholder for the skeleton. Real rosters come in M1+.
-# TEST FIXTURE: synthetic values, not balance numbers.
-[test_crawler]
-speed = 16        # leptons per tick
-max_health = 300

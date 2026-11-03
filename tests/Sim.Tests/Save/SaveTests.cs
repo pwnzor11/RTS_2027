@@ -1,4 +1,5 @@
 using Rts.Sim.Core;
+using Rts.Sim.Map;
 using Rts.Sim.Tests.Determinism;
 
 namespace Rts.Sim.Tests.Save;
@@ -46,6 +47,24 @@ public class SaveTests
     }
 
     [Fact]
+    public void Load_RejectsWrongMapHash()
+    {
+        var setup = ScriptedGame.Setup();
+        var sim = ScriptedGame.NewSim(setup);
+        var ms = new MemoryStream(); sim.Save(ms);
+        var other = setup with { Map = MapData.CreateFlat(64, 64, "other") };
+        var ex = Assert.Throws<InvalidDataException>(() => Simulation.Load(new MemoryStream(ms.ToArray()), other));
+        Assert.Contains("Map hash", ex.Message);
+    }
+
+    [Fact]
+    public void StateParts_AreInCanonicalOrder()
+    {
+        var sim = ScriptedGame.NewSim(ScriptedGame.Setup());
+        Assert.Equal(new[] { "map", "units" }, sim.StateParts.Select(p => p.Name).ToArray());
+    }
+
+    [Fact]
     public void SaveRoundTrip_PreservesFreeSlotsAndGenerations()
     {
         var setup = ScriptedGame.Setup();
@@ -53,8 +72,8 @@ public class SaveTests
         sim.Units.Remove(new EntityId(3, 1));
         var ms = new MemoryStream(); sim.Save(ms); ms.Position = 0;
         var loaded = Simulation.Load(ms, setup);
-        var a = sim.SpawnUnit(0, 0, new CellCoord(1, 1));
-        var b = loaded.SpawnUnit(0, 0, new CellCoord(1, 1));
+        var a = sim.SpawnVehicle(0, 0, new CellCoord(1, 1));
+        var b = loaded.SpawnVehicle(0, 0, new CellCoord(1, 1));
         Assert.Equal(new EntityId(3, 2), a);
         Assert.Equal(a, b);
     }
