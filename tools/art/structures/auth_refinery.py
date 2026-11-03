@@ -19,6 +19,16 @@ ORIGIN = (0, 32)        # footprint top-left corner inside the frame (32 px of h
 DOCK = (1, 3)           # harvester parks in the cell just below the middle of the footprint
 CAP_MATERIAL = "concrete2"   # material of the faces made by the build-state cut
 STATES = [("idle", 4, 5), ("damaged", 4, 5), ("build", 8, 5)]
+# Effect anchors (D-069), pixels in frame space: the effect's base-centre (explosions: centre) lands here.
+# Derived from the old baked fire positions: px = 96 + x*18.8, py = 128 - y*18.8 - z*14.4 (game units).
+FX = [
+    dict(state="damaged", kind="fire_large", x=163, y=110, phase=0),    # roof breach
+    dict(state="damaged", kind="fire_small", x=171, y=119, phase=3),    # beside it, on the roof edge
+    dict(state="damaged", kind="fire_small", x=157, y=169, phase=5),    # south wall breach
+    dict(state="damaged", kind="fire_small", x=158, y=45, phase=1),     # broken stack
+    dict(state="damaged", kind="smoke_plume", x=165, y=106, phase=0),   # from the roof breach
+    dict(state="damaged", kind="smoke_plume", x=158, y=42, phase=6),    # from the stack
+]
 
 MATERIALS = {
     "pad": ("#686C63", dict(rough=0.95)),
@@ -362,18 +372,7 @@ def build_site(S, i):
 
 
 # ====================================================================================================== damage
-def fire(S, name, x, y, z0, r, h, i, ph0):
-    """Layered flame: red outer, orange middle, yellow-white core; height and sway flicker with the frame."""
-    for t in range(2):
-        f = 0.72 + 0.28 * math.sin(2 * math.pi * (i / 4 + ph0 + t * 0.37))
-        sw = 0.12 * math.sin(2 * math.pi * (i / 4 + ph0 * 1.7 + t * 0.2))
-        xx = x + t * 0.22 * r + sw
-        S.cone(f"{name}r{t}", r * (1.0 - 0.25 * t), 0.05, h * f * (1 - 0.18 * t), (xx, y, z0 + h * f * (1 - 0.18 * t) / 2), "fire3")
-        S.cone(f"{name}o{t}", r * 0.72 * (1.0 - 0.25 * t), 0.04, h * f * 0.8 * (1 - 0.18 * t), (xx, y - 0.02, z0 + 0.02 + h * f * 0.8 * (1 - 0.18 * t) / 2), "fire2")
-        S.cone(f"{name}y{t}", r * 0.5 * (1.0 - 0.25 * t), 0.03, h * f * 0.62 * (1 - 0.18 * t), (xx, y - 0.04, z0 + 0.03 + h * f * 0.62 * (1 - 0.18 * t) / 2), "fire")
-    S.sphere(f"{name}c", r * 0.3, (x, y - 0.06, z0 + 0.12), "fire1", squash=0.8)
-
-
+# Structural damage only (D-069): fire, smoke and embers are separate effects drawn by the game at FX.
 def damaged_roof(S):
     z0, z1 = WALL_H, WALL_H + ROOF_T
     S.bb("roof", -4.35, 2.3, -2.2, 2.4, z0, z1, "roof", 0.06)
@@ -436,35 +435,6 @@ def damaged_wall(S, yw):
     scorch(S, "scT", 3.3, -0.1, WALL_H + ROOF_T + 0.03, 2.4, 1.2, 0.04, plane="T")
     scorch(S, "scT", 0.9, -2.4, WALL_H + ROOF_T + 0.03, 1.5, 0.6, 0.04, plane="T")
     scorch(S, "scP", 3.3, -3.7, 0.16, 2.4, 1.4, 0.03, plane="T")
-
-
-def damage_fx(S, i, yw, zr, stack_top):
-    """Fire (yellow -> orange -> red), smoke plume that drifts and grows, embers. Loops over the 4 frames."""
-    fire(S, "fA", 3.55, -1.8, zr - 0.2, 0.7, 1.8, i, 0.0)
-    fire(S, "fB", 3.95, -2.3, zr - 0.2, 0.5, 1.3, i, 0.35)
-    fire(S, "fC", 3.25, yw - 0.28, 0.95, 0.5, 1.2, i, 0.6)
-    fire(S, "fD", 3.3, 0.7, stack_top - 0.05, 0.28, 0.8, i, 0.15)
-    # main plume from the roof breach: dark at the bottom, greyer and wider further up, drifting east and north
-    n = 10
-    for k in range(n):
-        ph = (k / n + i / 4) % 1.0
-        r = 0.42 + 0.42 * ph
-        r *= 1 - max(0.0, (ph - 0.85) / 0.15) * 0.75
-        jx = 0.3 * math.sin(k * 2.7) * (0.4 + ph)
-        x = 3.7 + 0.35 * ph + jx + 0.12 * math.sin(2 * math.pi * (ph * 1.3 + k * 0.37))
-        y = -1.8 + 1.2 * ph + 0.25 * math.cos(k * 1.9)
-        z = zr + 0.2 + 2.9 * ph
-        S.sphere(f"plume{k}", r, (x, y, z), "soot" if ph < 0.55 else "soot2", squash=0.9)
-    for k in range(3):
-        ph = (k / 3 + 0.1 + i / 4) % 1.0
-        r = (0.28 + 0.3 * ph) * (1 - max(0.0, (ph - 0.8) / 0.2) * 0.7)
-        S.sphere(f"smk{k}", r, (2.7 - 0.45 * ph + 0.1 * math.sin(6 * ph + k), 0.7 + 0.3 * ph, stack_top + 0.9 + 1.0 * ph), "soot2", squash=0.9)
-    # embers: a few bright specks drifting up from the breaches
-    for k in range(6):
-        ph = (k / 6 + i / 4 * 1.0 + 0.07 * k) % 1.0
-        ex = 3.0 + 0.7 * math.sin(k * 2.4 + 1.0) + 0.5 * ph
-        ey = -1.9 + 0.5 * math.cos(k * 1.7)
-        S.bb(f"ember{k}", ex - 0.06, ex + 0.06, ey - 0.05, ey + 0.05, zr + 0.5 + 2.3 * ph, zr + 0.62 + 2.3 * ph, "fire2" if k % 2 else "fire", 0.0, nocast=True)
 
 
 def build(S, state, i, n):
@@ -634,7 +604,6 @@ def build(S, state, i, n):
         # gash in the drum
         S.box("gash", (0.9, 0.1, 0.5), (dx, dy, zb + 1.2), "char", 0.0, wo=(-0.3, -DRUM_R * 0.98), stretch=False, rot=(0, 0, 0))
         S.bb("rubble1", -0.9, -0.3, -4.6, -4.1, 0.14, 0.4, "concrete2", 0.04)
-        damage_fx(S, i, yw, zr, stack_top)
     else:
         if not building or i == 7:
             for k in range(2):

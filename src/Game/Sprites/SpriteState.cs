@@ -11,7 +11,8 @@ namespace Rts.Game.Sprites;
 /// <param name="Frames">Animation frames per facing, at least 1.</param>
 /// <param name="First">Index of the block's first frame in the sheet, row-major from 0.</param>
 /// <param name="TicksPerFrame">Simulation ticks each animation frame is shown for, at least 1.</param>
-public sealed record SpriteState(string Name, int Facings, int Frames, int First, int TicksPerFrame)
+/// <param name="Loop">True (the default) when the animation wraps; false holds the last frame (one-shot effects).</param>
+public sealed record SpriteState(string Name, int Facings, int Frames, int First, int TicksPerFrame, bool Loop = true)
 {
     /// <summary>Number of sheet cells this state occupies.</summary>
     public int CellCount => Facings * Frames;

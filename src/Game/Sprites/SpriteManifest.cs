@@ -21,11 +21,12 @@ namespace Rts.Game.Sprites;
 public sealed class SpriteManifest
 {
     private static readonly int[] AllowedFacings = { 1, 8, 16, 32 };
-    private static readonly string[] TopKeys = { "file", "frame_w", "frame_h", "origin_x", "origin_y", "house", "state" };
-    private static readonly string[] StateKeys = { "name", "facings", "frames", "first", "ticks_per_frame" };
+    private static readonly string[] TopKeys = { "file", "frame_w", "frame_h", "origin_x", "origin_y", "house", "state", "fx" };
+    private static readonly string[] StateKeys = { "name", "facings", "frames", "first", "ticks_per_frame", "loop" };
+    private static readonly string[] FxKeys = { "state", "kind", "x", "y", "phase" };
 
     private SpriteManifest(string id, string sourcePath, string sheetFile, int frameW, int frameH, int originX, int originY,
-        uint[] houseRamp, IReadOnlyList<SpriteState> states)
+        uint[] houseRamp, IReadOnlyList<SpriteState> states, IReadOnlyList<FxAnchor> fx)
     {
         Id = id;
         SourcePath = sourcePath;
@@ -36,6 +37,7 @@ public sealed class SpriteManifest
         OriginY = originY;
         HouseRamp = houseRamp;
         States = states;
+        Fx = fx;
     }
 
     /// <summary>Sprite id, the manifest's file stem.</summary>
@@ -64,6 +66,14 @@ public sealed class SpriteManifest
 
     /// <summary>Animation states in file order.</summary>
     public IReadOnlyList<SpriteState> States { get; }
+
+    /// <summary>Effect anchors from the optional <c>[[fx]]</c> tables, in file order. Empty when there are none.</summary>
+    public IReadOnlyList<FxAnchor> Fx { get; }
+
+    /// <summary>The effect anchors of one state, in file order.</summary>
+    /// <param name="state">State name.</param>
+    public IEnumerable<FxAnchor> FxFor(string state) =>
+        Fx.Where(a => string.Equals(a.State, state, StringComparison.Ordinal));
 
     /// <summary>Reads and parses a manifest file. The id is the file name without <c>.sprite.toml</c>.</summary>
     /// <exception cref="InvalidDataException">The file is missing a field, has a bad value or an unknown key.</exception>
@@ -115,7 +125,9 @@ public sealed class SpriteManifest
         uint[] ramp = ReadHouse(root, sourcePath);
         IReadOnlyList<SpriteState> states = ReadStates(root, sourcePath);
 
-        return new SpriteManifest(id, sourcePath, file, frameW, frameH, originX, originY, ramp, states);
+        IReadOnlyList<FxAnchor> fx = ReadFx(root, states, frameW, frameH, sourcePath);
+
+        return new SpriteManifest(id, sourcePath, file, frameW, frameH, originX, originY, ramp, states, fx);
     }
 
     /// <summary>
@@ -132,7 +144,8 @@ public sealed class SpriteManifest
         if (tick < 0) throw new ArgumentOutOfRangeException(nameof(tick), "Ticks start at 0.");
         SpriteState s = State(state);
         int facingIndex = s.Facings == 1 ? 0 : Facing.ToFacings(facing, s.Facings);
-        int step = (tick / s.TicksPerFrame) % s.Frames;
+        int raw = tick / s.TicksPerFrame;
+        int step = s.Loop ? raw % s.Frames : Math.Min(raw, s.Frames - 1);
         return s.First + facingIndex * s.Frames + step;
     }
 
@@ -214,7 +227,13 @@ public sealed class SpriteManifest
 
             // first defaults to the cell after the previous state, so states pack in file order.
             int first = Optional(block, "first", cursor, sourcePath);
-            var state = new SpriteState(name, facings, frames, first, ticks);
+            bool loop = true;
+            if (block.TryGetValue("loop", out object? loopRaw))
+            {
+                loop = loopRaw as bool? ?? throw new InvalidDataException(
+                    $"{sourcePath}: state '{name}' loop must be true or false, found {loopRaw}");
+            }
+            var state = new SpriteState(name, facings, frames, first, ticks, loop);
             states.Add(state);
             cursor = first + state.CellCount;
         }
@@ -234,6 +253,40 @@ public sealed class SpriteManifest
             }
         }
         return states;
+    }
+
+    private static IReadOnlyList<FxAnchor> ReadFx(TomlTable root, IReadOnlyList<SpriteState> states, int frameW, int frameH,
+        string sourcePath)
+    {
+        if (!root.TryGetValue("fx", out object? raw))
+        {
+            return Array.Empty<FxAnchor>();
+        }
+        if (raw is not TomlTableArray blocks)
+        {
+            throw new InvalidDataException($"{sourcePath}: fx must be written as [[fx]] tables");
+        }
+
+        var list = new List<FxAnchor>(blocks.Count);
+        foreach (TomlTable block in blocks)
+        {
+            RejectUnknown(block, FxKeys, sourcePath, "[[fx]]");
+            string state = Text(block, "state", sourcePath);
+            if (!states.Any(s => string.Equals(s.Name, state, StringComparison.Ordinal)))
+            {
+                throw new InvalidDataException($"{sourcePath}: [[fx]] refers to unknown state '{state}'");
+            }
+            string kind = Text(block, "kind", sourcePath);
+            int x = Int(block, "x", sourcePath);
+            int y = Int(block, "y", sourcePath);
+            if (x > frameW || y > frameH)
+            {
+                throw new InvalidDataException(
+                    $"{sourcePath}: [[fx]] '{kind}' anchor ({x}, {y}) must lie inside the {frameW}x{frameH} frame");
+            }
+            list.Add(new FxAnchor(state, kind, x, y, Optional(block, "phase", 0, sourcePath)));
+        }
+        return list;
     }
 
     private static void RejectUnknown(TomlTable table, string[] allowed, string sourcePath, string where)

@@ -43,6 +43,10 @@ public static class BuildingRenderer
         int frame = SpriteStates.BuildingFrame(sprite.Manifest, age, building.Health, maxHealth, building.Ghost, tick);
         Vector2 origin = SpriteLayout.BuildingOrigin(camera, building.Cell);
         painter.Draw(batch, sprite, frame, origin, PlayerColours.Base(building.Player), camera.Zoom);
+        if (!building.Ghost && sprite.Source == SpriteSource.Library && sprite.Library is not null)
+        {
+            FxPlayer.DrawAnchors(batch, sprite.Library, sprite.Manifest, frame, origin, tick, camera.Zoom);
+        }
 
         if (!building.Ghost) return;
         float left = building.Cell.X * Camera.CellPx;

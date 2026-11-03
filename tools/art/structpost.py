@@ -87,6 +87,9 @@ def write_toml(path, mod, sheet_name):
     for name, n, tpf in mod.STATES:
         lines += ["[[state]]", f'name = "{name}"', "facings = 1", f"frames = {n}", f"first = {first}", f"ticks_per_frame = {tpf}", ""]
         first += n
+    for fx in getattr(mod, "FX", []):   # optional effect anchors (D-069): drawn by the game, not baked
+        lines += ["[[fx]]", f'state = "{fx["state"]}"', f'kind = "{fx["kind"]}"', f'x = {fx["x"]}', f'y = {fx["y"]}',
+                  f'phase = {fx.get("phase", 0)}', ""]
     open(path, "w").write("\n".join(lines))
 
 
