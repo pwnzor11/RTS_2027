@@ -11,7 +11,8 @@ namespace Rts.Game;
 public static class Program
 {
     /// <summary>
-    /// Opens the battle sandbox and runs until the player quits. Options: <c>--empty</c> starts with the legacy 3-tank
+    /// Opens the game at the main menu and runs until the player quits. Options: <c>--sandbox</c> starts directly in the
+    /// battle sandbox (the old behaviour); <c>--empty</c> makes the sandbox use the legacy 3-tank
     /// setup; <c>--demo</c> draws the fabricated demo source instead of the sim; <c>--headless-check &lt;ticks&gt;</c>
     /// runs the scripted sandbox fight with no window, saves the replay and exits. Any unhandled exception writes
     /// <c>logs/crash-*.txt</c> beside the exe and returns exit code 1 (C-6).
@@ -29,7 +30,8 @@ public static class Program
 
             bool demo = args.Contains("--demo", StringComparer.Ordinal);
             bool empty = args.Contains("--empty", StringComparer.Ordinal);
-            using var game = new RtsGame(demo, empty);
+            bool sandbox = args.Contains("--sandbox", StringComparer.Ordinal);
+            using var game = new RtsGame(demo, empty, sandbox);
             game.Run();
             return 0;
         }

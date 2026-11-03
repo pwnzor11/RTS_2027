@@ -2,6 +2,7 @@
 // Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
 using System.Diagnostics;
 using Rts.Data;
+using Rts.Game.Host;
 using Rts.Sim;
 using Rts.Sim.Core;
 using Rts.Sim.Map;
@@ -10,10 +11,9 @@ using Rts.Sim.Rules;
 namespace Rts.Game.Sandbox;
 
 /// <summary>
-/// Runs the real <see cref="Simulation"/> on a fixed 20 Hz accumulator and hands its snapshots to the renderer. Owns
-/// the one order path: every command the debug view issues (or a script issues) goes through <see cref="Enqueue"/>,
-/// which queues it for the sim and records it in the replay. Also owns the fog viewer and pause/step.
-/// The sim is only stepped here; the renderer and the overlays read it between steps.
+/// The sandbox's thin wrapper over <see cref="SimHost"/> (which steps the simulation): builds the sim, replay recording
+/// and scenario, and adds the debug view's order validation. Every command the debug view issues (or a script issues)
+/// goes through <see cref="Enqueue"/>. The renderer and the overlays read it between steps.
 /// </summary>
 public sealed class SimSnapshotSource : ISnapshotSource
 {
@@ -36,38 +36,30 @@ public sealed class SimSnapshotSource : ISnapshotSource
     public const string VerifyCommand =
         "dotnet run --project src/Tools -- replay verify replays/sandbox_last.rpl --map data/maps/test_32.map.toml";
 
-    private const ulong Seed = 2027;
-    private const long TickUs = 1_000_000 / SimConstants.TicksPerSecond; // 50 ms
-    private const long MaxAccumulatedUs = 250_000;                       // avoid a burst after a stall
+    /// <summary>The seed the sandbox has always used.</summary>
+    public const ulong DefaultSeed = 2027;
 
-    private readonly Simulation _sim;
+    private readonly SimHost _host;
     private readonly MapData _map;
     private readonly ReplayRecording _recording;
-    private readonly Stopwatch _clock = Stopwatch.StartNew();
-    private readonly List<Command> _pending = new();
+    private readonly Stopwatch _clock = Stopwatch.StartNew(); // only for the ISnapshotSource.Update() convenience
     private long _lastUs;
-    private long _accumulatedUs;
-    private ushort _sequence;
-    private bool _paused;
-    private int _speedMultiplier = 1;
-    private int _viewer;
-    private SimSnapshot _previous;
-    private SimSnapshot _current;
-    private IReadOnlyList<LeptonCoord> _projectiles = Array.Empty<LeptonCoord>();
 
     /// <summary>Loads the rules and the test map, spawns the chosen setup and starts recording.</summary>
     /// <param name="rulesDir">The data/rules directory.</param>
     /// <param name="empty">True for the legacy 3-tank setup with no scripted attack.</param>
+    /// <param name="seed">The simulation seed.</param>
     /// <exception cref="Rts.Data.RulesException">The rules data is missing or invalid.</exception>
-    public SimSnapshotSource(string rulesDir, bool empty)
+    public SimSnapshotSource(string rulesDir, bool empty, ulong seed = DefaultSeed)
     {
         RuleSet rules = RulesLoader.Load(rulesDir);
         _map = MapFile.Load(Path.Combine(rulesDir, "..", "maps", SandboxScenario.MapFileName));
-        var setup = new SimSetup(Seed, _map, PlayerCount, rules.Sim, rules.RulesHash) { AllowDebug = true };
-        _sim = new Simulation(setup);
-        _recording = new ReplayRecording(_sim, RulesBundle.ReadDirectory(rulesDir), ReplayPath, PreviousReplayPath);
+        var setup = new SimSetup(seed, _map, PlayerCount, rules.Sim, rules.RulesHash) { AllowDebug = true };
+        var sim = new Simulation(setup);
+        _recording = new ReplayRecording(sim, RulesBundle.ReadDirectory(rulesDir), ReplayPath, PreviousReplayPath);
+        _host = new SimHost(sim, _recording);
 
-        List<OwnedUnit> army = SandboxScenario.Populate(_sim, _map, rules.Sim, _recording, empty);
+        List<OwnedUnit> army = SandboxScenario.Populate(sim, _map, rules.Sim, _recording, empty);
         if (!empty)
         {
             CellCoord target = _map.StartPositions[LocalPlayer];
@@ -80,103 +72,80 @@ public sealed class SimSnapshotSource : ISnapshotSource
             }
         }
 
-        _current = _sim.Snapshot(_viewer);
-        _previous = _current;
-        _projectiles = CaptureProjectiles();
+        _host.RefreshSnapshots();
     }
 
+    /// <summary>The host that steps the simulation.</summary>
+    public SimHost Host => _host;
+
     /// <summary>The simulation. Read it between steps only; never mutate it outside <see cref="Enqueue"/>.</summary>
-    public Simulation Sim => _sim;
+    public Simulation Sim => _host.Sim;
 
     /// <summary>The map the sim runs on.</summary>
     public MapData Map => _map;
 
     /// <summary>The rules the sim runs on.</summary>
-    public SimRules Rules => _sim.Setup.Rules;
+    public SimRules Rules => _host.Sim.Setup.Rules;
 
     /// <inheritdoc />
-    public SimSnapshot Current => _current;
+    public SimSnapshot Current => _host.Current;
 
     /// <inheritdoc />
-    public SimSnapshot Previous => _previous;
+    public SimSnapshot Previous => _host.Previous;
 
-    /// <summary>
-    /// 0..1 from <see cref="Previous"/> to <see cref="Current"/>. While paused it is 1, so a single step shows
-    /// its result at once.
-    /// </summary>
-    public float Alpha => _paused ? 1f : _accumulatedUs / (float)TickUs;
+    /// <summary>0..1 from <see cref="Previous"/> to <see cref="Current"/>; 1 while paused.</summary>
+    public float Alpha => _host.Alpha;
 
     /// <summary>Projectile positions in leptons at the current tick (not interpolated).</summary>
-    public IReadOnlyList<LeptonCoord> Projectiles => _projectiles;
+    public IReadOnlyList<LeptonCoord> Projectiles => _host.Projectiles;
 
     /// <summary>Which player's view the snapshot shows: 0, 1, or -1 for the omniscient view.</summary>
-    public int Viewer => _viewer;
+    public int Viewer => _host.Viewer;
 
     /// <summary>True while the simulation is paused. Pausing drops any partly accumulated time.</summary>
     public bool Paused
     {
-        get => _paused;
-        set
-        {
-            _paused = value;
-            if (value) _accumulatedUs = 0;
-        }
+        get => _host.Paused;
+        set => _host.Paused = value;
     }
 
     /// <summary>Ticks run per tick interval while running (1 = normal speed). Front end only; set by the debug console.</summary>
     public int SpeedMultiplier
     {
-        get => _speedMultiplier;
-        set => _speedMultiplier = Math.Max(1, value);
+        get => _host.SpeedMultiplier;
+        set => _host.SpeedMultiplier = value;
     }
 
     /// <summary>Current simulation tick.</summary>
-    public int Tick => _sim.Tick;
+    public int Tick => _host.Tick;
 
-    /// <inheritdoc />
+    /// <summary>Advances by this source's own wall clock (legacy convenience; the game screen calls <see cref="Advance"/>).</summary>
     public void Update()
     {
         long nowUs = _clock.Elapsed.Ticks / 10;
         long elapsedUs = nowUs - _lastUs;
         _lastUs = nowUs;
-
-        if (_paused)
-        {
-            _accumulatedUs = 0;
-            return;
-        }
-
-        _accumulatedUs = Math.Min(_accumulatedUs + elapsedUs, MaxAccumulatedUs);
-        while (_accumulatedUs >= TickUs)
-        {
-            _accumulatedUs -= TickUs;
-            for (int i = 0; i < _speedMultiplier; i++) AdvanceOneTick();
-        }
+        _host.Advance(elapsedUs);
     }
+
+    /// <summary>Advances by caller-supplied elapsed time (see <see cref="SimHost.Advance"/>).</summary>
+    public int Advance(long elapsedMicroseconds) => _host.Advance(elapsedMicroseconds);
 
     /// <summary>While paused, advances the simulation by exactly one tick.</summary>
     public void StepOnce()
     {
-        if (_paused) AdvanceOneTick();
+        if (_host.Paused) _host.StepOnce();
     }
 
     /// <summary>Advances the simulation by exactly <paramref name="count"/> ticks, ignoring the clock (headless runs).</summary>
-    public void StepTicks(int count)
-    {
-        for (int i = 0; i < count; i++) AdvanceOneTick();
-    }
+    public void StepTicks(int count) => _host.StepTicks(count);
 
     /// <summary>Moves to the next fog view: player 0, player 1, omniscient, then player 0 again.</summary>
-    public void CycleViewer()
-    {
-        _viewer = _viewer switch { 0 => 1, 1 => -1, _ => 0 };
-        _current = _sim.Snapshot(_viewer);
-        _previous = _current;
-    }
+    public void CycleViewer() => _host.CycleViewer();
 
     /// <summary>Issues one order for one of the local player's units, to run on the next tick.</summary>
     public void Order(CommandKind kind, UnitKey subject, CellCoord cell = default, ActorRef target = default) =>
-        Enqueue(_sim.Tick + 1, LocalPlayer, kind, subject, cell, target);
+        Enqueue(Tick + SimHost.CommandDelayTicks, LocalPlayer, kind, subject, cell, target);
 
     /// <summary>
     /// The one way orders reach the sim. Queues a command for <paramref name="execTick"/> and records it. Ignored when
@@ -185,13 +154,11 @@ public sealed class SimSnapshotSource : ISnapshotSource
     /// </summary>
     public void Enqueue(int execTick, byte player, CommandKind kind, UnitKey subject, CellCoord cell, ActorRef target)
     {
-        if (execTick <= _sim.Tick || !IsOwnedAlive(subject, player)) return;
+        if (execTick <= Tick || !IsOwnedAlive(subject, player)) return;
         bool needsCell = kind is CommandKind.Move or CommandKind.AttackMove or CommandKind.Guard;
         if (needsCell && !_map.Contains(cell)) return;
 
-        Command command = OrderBuilder.Build(execTick, player, _sequence++, kind, subject, cell, target);
-        _pending.Add(command);
-        _recording.RecordCommand(command);
+        _host.IssueOrder(player, kind, subject, cell, target, execTick);
     }
 
     /// <summary>
@@ -209,19 +176,16 @@ public sealed class SimSnapshotSource : ISnapshotSource
         bool spawns = op is DebugOp.SpawnVehicle or DebugOp.SpawnInfantry;
         if (spawns && !_map.Contains(cell)) return;
 
-        var command = new Command(_sim.Tick + 1, player, _sequence++, CommandKind.Debug, subject, EntityId.None, cell,
-            (int)op, arg2);
-        _pending.Add(command);
-        _recording.RecordCommand(command);
+        _host.Issue(new Command(0, player, 0, CommandKind.Debug, subject, EntityId.None, cell, (int)op, arg2));
     }
 
     /// <summary>True when the key names a live unit owned by <paramref name="player"/>.</summary>
     public bool IsOwnedAlive(UnitKey key, byte player)
     {
         if (key.Kind == ActorKind.Vehicle)
-            return _sim.Units.Slots.IsAlive(key.Id) && _sim.Units.Player[key.Id.Index] == player;
+            return Sim.Units.Slots.IsAlive(key.Id) && Sim.Units.Player[key.Id.Index] == player;
         if (key.Kind == ActorKind.Infantry)
-            return _sim.Infantry.Slots.IsAlive(key.Id) && _sim.Infantry.Player[key.Id.Index] == player;
+            return Sim.Infantry.Slots.IsAlive(key.Id) && Sim.Infantry.Player[key.Id.Index] == player;
         return false;
     }
 
@@ -229,14 +193,14 @@ public sealed class SimSnapshotSource : ISnapshotSource
     public bool TryGetPosition(UnitKey key, out LeptonCoord position)
     {
         position = default;
-        if (key.Kind == ActorKind.Vehicle && _sim.Units.Slots.IsAlive(key.Id))
+        if (key.Kind == ActorKind.Vehicle && Sim.Units.Slots.IsAlive(key.Id))
         {
-            position = _sim.Units.Position[key.Id.Index];
+            position = Sim.Units.Position[key.Id.Index];
             return true;
         }
-        if (key.Kind == ActorKind.Infantry && _sim.Infantry.Slots.IsAlive(key.Id))
+        if (key.Kind == ActorKind.Infantry && Sim.Infantry.Slots.IsAlive(key.Id))
         {
-            position = _sim.Infantry.Position[key.Id.Index];
+            position = Sim.Infantry.Position[key.Id.Index];
             return true;
         }
         return false;
@@ -246,12 +210,12 @@ public sealed class SimSnapshotSource : ISnapshotSource
     public List<UnitKey> AliveUnits(byte player)
     {
         var list = new List<UnitKey>();
-        for (int i = 1; i < _sim.Units.Capacity; i++)
-            if (_sim.Units.Slots.IsIndexAlive(i) && _sim.Units.Player[i] == player)
-                list.Add(new UnitKey(ActorKind.Vehicle, _sim.Units.Slots.IdOf(i)));
-        for (int i = 1; i < _sim.Infantry.Capacity; i++)
-            if (_sim.Infantry.Slots.IsIndexAlive(i) && _sim.Infantry.Player[i] == player)
-                list.Add(new UnitKey(ActorKind.Infantry, _sim.Infantry.Slots.IdOf(i)));
+        for (int i = 1; i < Sim.Units.Capacity; i++)
+            if (Sim.Units.Slots.IsIndexAlive(i) && Sim.Units.Player[i] == player)
+                list.Add(new UnitKey(ActorKind.Vehicle, Sim.Units.Slots.IdOf(i)));
+        for (int i = 1; i < Sim.Infantry.Capacity; i++)
+            if (Sim.Infantry.Slots.IsIndexAlive(i) && Sim.Infantry.Player[i] == player)
+                list.Add(new UnitKey(ActorKind.Infantry, Sim.Infantry.Slots.IdOf(i)));
         return list;
     }
 
@@ -263,26 +227,5 @@ public sealed class SimSnapshotSource : ISnapshotSource
         bool ok = _recording.Finish();
         if (ok) Console.WriteLine($"verify with: {VerifyCommand}");
         return ok;
-    }
-
-    private void AdvanceOneTick()
-    {
-        _previous = _current;
-        int ran = _sim.Tick;
-        _sim.Step(_pending);
-        // Commands for the tick that just ran have been applied (or were never due); drop them.
-        _pending.RemoveAll(c => c.ExecTick <= ran);
-        if (_sim.Tick % SimConstants.HashIntervalTicks == 0) _recording.RecordHash(_sim);
-        _current = _sim.Snapshot(_viewer);
-        _projectiles = CaptureProjectiles();
-    }
-
-    private List<LeptonCoord> CaptureProjectiles()
-    {
-        var list = new List<LeptonCoord>();
-        var store = _sim.Projectiles;
-        for (int i = 1; i < store.Capacity; i++)
-            if (store.Slots.IsIndexAlive(i)) list.Add(store.Position[i]);
-        return list;
     }
 }
