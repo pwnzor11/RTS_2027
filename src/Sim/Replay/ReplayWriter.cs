@@ -5,12 +5,13 @@ namespace Rts.Sim.Replay;
 
 /// <summary>
 /// Records a game. Header + spawn list + records (Command / HashCheck) + end marker. Records are buffered
-/// and the whole file is written by Finish.
+/// and the whole file is written by Finish. Format version 5: a hash check carries a flag byte and, when
+/// flagged, the per-part sub-hashes (see <see cref="Simulation.ComputeSubHashes"/>).
 /// </summary>
 public sealed class ReplayWriter
 {
     public static readonly byte[] Magic = "RTSR"u8.ToArray();
-    public const int Version = 4;
+    public const int Version = 5;
     public const byte TypeEnd = 0, TypeCommand = 1, TypeHashCheck = 2;
 
     private readonly SimSetup _setup;
@@ -25,6 +26,10 @@ public sealed class ReplayWriter
         _mapHash = MapHasher.Compute(setup.Map);
         _rw = new BinaryWriter(_records);
     }
+
+    /// <summary>When true (the default), <see cref="RecordHash"/> writes the sub-hashes it is given; when false it
+    /// writes only the state hash, which makes a replay smaller but a desync unnamed.</summary>
+    public bool RecordSubHashes { get; init; } = true;
 
     /// <summary>Record an initial spawn (must be called before tick 0, in the same order as the Simulation spawns).
     /// kind is Vehicle, Infantry or Building (cell = top-left); subSlot applies to infantry only.</summary>
@@ -43,9 +48,19 @@ public sealed class ReplayWriter
         _rw.Write(c.Cell.X); _rw.Write(c.Cell.Y); _rw.Write(c.Arg);
     }
 
-    public void RecordHash(int tick, ulong hash)
+    /// <summary>Record the state hash at a tick, with optional per-part sub-hashes (written only when
+    /// <see cref="RecordSubHashes"/> is true).</summary>
+    public void RecordHash(int tick, ulong hash, IReadOnlyList<(string Part, ulong Hash)>? subHashes = null)
     {
         _rw.Write(TypeHashCheck); _rw.Write(tick); _rw.Write(hash);
+        if (!RecordSubHashes || subHashes is null)
+        {
+            _rw.Write((byte)0);
+            return;
+        }
+        _rw.Write((byte)1);
+        _rw.Write(subHashes.Count);
+        foreach ((string part, ulong h) in subHashes) { _rw.Write(part); _rw.Write(h); }
     }
 
     /// <summary>Write the complete replay. finalTick is the sim tick when recording stopped.</summary>
