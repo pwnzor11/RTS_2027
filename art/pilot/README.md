@@ -192,6 +192,16 @@ About 0.5 s per frame (colour + mask + shadow at 128 px, 24 samples): full sheet
 Most of the wall-clock was waiting for the shared Blender lock behind vehicle/structure renders. Minutes spent: not tracked
 precisely, roughly 60-70 of work excluding lock waits.
 
+## Second pass (M2-13c, D-068: "a little like a blob")
+Changes: figure scaled 0.85 -> 1.05 (about 23 px tall; frame stays 32x32, origin now (16, 27)); value separation (light coat and
+mantle, dark trousers, dark pack, dark helmet with a wide dark brim, pale face block, near-black boots); thinner arms held away
+from the torso; rifle longer, held diagonally across the body (light wood, dark steel barrel) so it shows on N/S as well; longer
+walk stride (feet visibly apart); bigger muzzle flash. House bands/helmet stripe/pack panel unchanged. contact.py remap row is now
+amber #E0A020 / red #B02A1A / blue #2E5A8B, plus a BEFORE/AFTER strip (old sheet kept in git-ignored art/pilot/work/old_pilot_sheet.png).
+Iterations: 2 renders + 1 tweak (about 25 s each). Minutes spent: roughly 20. The "Honest notes" below are from the first pass;
+notes 1-3 are superseded (now about 23 px, face block visible from the front, N/S legs read apart).
+Open: the helmet/coat contrast is good but the face is still only a few px; W/E rifle tips run near the canvas edge.
+
 ## Honest notes
 1. The soldier is about 17-19 px tall; house colour reads at 1x from all facings (back panel, shoulders, helmet stripe).
 2. Facing reads mostly through the rifle and the lumpy backpack silhouette; the face (goggles, respirator) is only 1-3 px.
