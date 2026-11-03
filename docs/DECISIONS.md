@@ -165,3 +165,27 @@ profile in data). An optional, labelled "cheater" resource bonus toggle may be a
 wants it. Three personalities (rusher, turtle, boomer) selectable or random per game. The top tier is
 tuned as an expert challenge. Q-22.
 **Status:** confirmed
+
+### D-027 · 2026-11-02 · Setting: alt-history atompunk, 1962 war, campaign set c. 2001
+**Decision:** The Cuban Missile Crisis went nuclear in 1962. The game is set about forty years later
+on a scarred Earth where microelectronics never happened: hardened vacuum-tube electronics,
+nuclear-powered vehicles, 1960s design language pushed to extremes. Protagonist faction (working
+name: the Continental Reconstruction Authority) holds and rebuilds the surface with conventional
+heavy forces. Antagonist faction (working name: the Directorate of the Interior) is a paranoid,
+theatrical bunker-state that fights from underground with tunnelling units, radiation weapons and
+mass conscripts, built to be the more fun side. Two theaters: Rust Belt (ruined industrial cities,
+snow) and Glass Coast (fused desert, drowned suburbs). Names are placeholders until round 3 settles them.
+**Why:** Owner's choice among four proposals; "loved C".
+**Alternatives:** The Thaw (Arctic corporate war), Bloom (fungal bio vs machine), Skyfall (orbital collapse).
+**Status:** confirmed
+
+### D-028 · 2026-11-02 · Resource: Ashfall, with pitchblende pits as the rich tier
+**Decision:** The single field resource is **ashfall**: radioactive ash that drifts into fields and
+is scraped up and refined into fissile concentrate (credits). Pitchblende (raw uranium ore) pits are
+the rare high-density tier of the same resource. Ashfall fields can regrow via weather deposition
+(per-map setting, D-021); pitchblende does not regrow. Ashfall is hazardous to unprotected infantry.
+Resolves the resource identity left open in D-021.
+**Why:** Fits the nuclear-powered world ("the war's cause is the war's fuel"), gives regrowth a
+thematic reason, and gives maps fought-over rich spots.
+**Alternatives:** pitchblende only; hot glass crater fields; tar sands; clean soil; salvage.
+**Status:** confirmed
