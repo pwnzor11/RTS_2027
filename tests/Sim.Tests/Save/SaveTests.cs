@@ -61,7 +61,27 @@ public class SaveTests
     public void StateParts_AreInCanonicalOrder()
     {
         var sim = ScriptedGame.NewSim(ScriptedGame.Setup());
-        Assert.Equal(new[] { "map", "units" }, sim.StateParts.Select(p => p.Name).ToArray());
+        Assert.Equal(new[] { "map", "units", "infantry" }, sim.StateParts.Select(p => p.Name).ToArray());
+    }
+
+    [Fact]
+    public void SaveRoundTrip_PreservesInfantry()
+    {
+        var setup = ScriptedGame.Setup();
+        var sim = ScriptedGame.NewSim(setup);
+        var script = ScriptedGame.Script(100);
+        for (int i = 0; i < 60; i++) sim.Step(script);
+        var ms = new MemoryStream(); sim.Save(ms); ms.Position = 0;
+        var loaded = Simulation.Load(ms, setup);
+        for (int i = 1; i <= 10; i++)
+        {
+            Assert.Equal(sim.Infantry.Position[i], loaded.Infantry.Position[i]);
+            Assert.Equal(sim.Infantry.SubSlot[i], loaded.Infantry.SubSlot[i]);
+            Assert.Equal(sim.Infantry.Mission[i], loaded.Infantry.Mission[i]);
+            Assert.Equal(sim.Infantry.WakeTick[i], loaded.Infantry.WakeTick[i]);
+        }
+        Assert.Contains(Enumerable.Range(1, 10), i => sim.Infantry.Mission[i] != Rts.Sim.Missions.MissionKind.None);
+        Assert.Equal(sim.ComputeStateHash(), loaded.ComputeStateHash());
     }
 
     [Fact]

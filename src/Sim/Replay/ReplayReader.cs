@@ -5,10 +5,13 @@ namespace Rts.Sim.Replay;
 /// <summary>One replay record. Offset is the byte position of the record's type byte in the stream.</summary>
 public readonly record struct ReplayRecord(long Offset, byte Type, Command Command, int HashTick, ulong Hash);
 
+/// <summary>One initial spawn (Type indexes the vehicle or infantry list by Kind; SubSlot is infantry only).</summary>
+public readonly record struct ReplaySpawn(ActorKind Kind, byte Player, int Type, CellCoord Cell, int SubSlot);
+
 /// <summary>Parsed replay file.</summary>
 public sealed record ReplayData(
     ulong RulesHash, ulong MapHash, ulong Seed, int MapWidth, int MapHeight, int PlayerCount,
-    IReadOnlyList<(byte Player, int Type, CellCoord Cell)> Spawns,
+    IReadOnlyList<ReplaySpawn> Spawns,
     IReadOnlyList<ReplayRecord> Records, int FinalTick);
 
 /// <summary>Parses replays. Throws InvalidDataException on bad magic or version.</summary>
@@ -23,9 +26,10 @@ public static class ReplayReader
         ulong rules = r.ReadUInt64(), mapHash = r.ReadUInt64(), seed = r.ReadUInt64();
         int w = r.ReadInt32(), h = r.ReadInt32(), players = r.ReadInt32();
         int spawnCount = r.ReadInt32();
-        var spawns = new List<(byte, int, CellCoord)>(spawnCount);
+        var spawns = new List<ReplaySpawn>(spawnCount);
         for (int i = 0; i < spawnCount; i++)
-            spawns.Add((r.ReadByte(), r.ReadInt32(), new CellCoord(r.ReadInt32(), r.ReadInt32())));
+            spawns.Add(new ReplaySpawn((ActorKind)r.ReadByte(), r.ReadByte(), r.ReadInt32(),
+                new CellCoord(r.ReadInt32(), r.ReadInt32()), r.ReadByte()));
         var records = new List<ReplayRecord>();
         while (true)
         {

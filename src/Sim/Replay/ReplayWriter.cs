@@ -10,12 +10,12 @@ namespace Rts.Sim.Replay;
 public sealed class ReplayWriter
 {
     public static readonly byte[] Magic = "RTSR"u8.ToArray();
-    public const int Version = 2;
+    public const int Version = 3;
     public const byte TypeEnd = 0, TypeCommand = 1, TypeHashCheck = 2;
 
     private readonly SimSetup _setup;
     private readonly ulong _mapHash;
-    private readonly List<(byte Player, int Type, CellCoord Cell)> _spawns = new();
+    private readonly List<ReplaySpawn> _spawns = new();
     private readonly MemoryStream _records = new();
     private readonly BinaryWriter _rw;
 
@@ -26,8 +26,13 @@ public sealed class ReplayWriter
         _rw = new BinaryWriter(_records);
     }
 
-    /// <summary>Record an initial spawn (must be called before tick 0, in the same order as the Simulation spawns).</summary>
-    public void RecordSpawn(byte player, int vehicleTypeIndex, CellCoord cell) => _spawns.Add((player, vehicleTypeIndex, cell));
+    /// <summary>Record an initial spawn (must be called before tick 0, in the same order as the Simulation spawns).
+    /// kind is Vehicle or Infantry; subSlot applies to infantry only.</summary>
+    public void RecordSpawn(ActorKind kind, byte player, int typeIndex, CellCoord cell, int subSlot = 0)
+    {
+        if (kind != ActorKind.Vehicle && kind != ActorKind.Infantry) throw new ArgumentOutOfRangeException(nameof(kind));
+        _spawns.Add(new ReplaySpawn(kind, player, typeIndex, cell, subSlot));
+    }
 
     public void RecordCommand(Command c)
     {
@@ -51,7 +56,10 @@ public sealed class ReplayWriter
         w.Write(_setup.RulesHash); w.Write(_mapHash); w.Write(_setup.Seed);
         w.Write(_setup.Map.Width); w.Write(_setup.Map.Height); w.Write(_setup.PlayerCount);
         w.Write(_spawns.Count);
-        foreach (var s in _spawns) { w.Write(s.Player); w.Write(s.Type); w.Write(s.Cell.X); w.Write(s.Cell.Y); }
+        foreach (var s in _spawns)
+        {
+            w.Write((byte)s.Kind); w.Write(s.Player); w.Write(s.Type); w.Write(s.Cell.X); w.Write(s.Cell.Y); w.Write((byte)s.SubSlot);
+        }
         _rw.Flush();
         w.Write(_records.GetBuffer(), 0, (int)_records.Length);
         w.Write(TypeEnd); w.Write(finalTick);

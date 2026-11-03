@@ -11,7 +11,8 @@ public class ReplayTests
     {
         var script = ScriptedGame.Script(ticks);
         var rec = new ReplayWriter(setup);
-        foreach (var s in ScriptedGame.Spawns()) rec.RecordSpawn(s.Player, s.Type, s.Cell);
+        foreach (var s in ScriptedGame.Spawns()) rec.RecordSpawn(ActorKind.Vehicle, s.Player, s.Type, s.Cell);
+        foreach (var s in ScriptedGame.InfantrySpawns()) rec.RecordSpawn(ActorKind.Infantry, s.Player, s.Type, s.Cell, s.SubSlot);
         foreach (var c in script) rec.RecordCommand(c);
         var sim = ScriptedGame.NewSim(setup);
         for (int i = 0; i < ticks; i++)
@@ -45,7 +46,7 @@ public class ReplayTests
         var setup = ScriptedGame.Setup();
         byte[] bytes = Record(setup, 500);
         var data = ReplayReader.Read(new MemoryStream(bytes));
-        var rec = data.Records.First(r => r.Type == ReplayWriter.TypeCommand && r.Command.Kind == CommandKind.Move);
+        var rec = data.Records.First(r => r.Type == ReplayWriter.TypeCommand && ScriptedGame.IsEffectiveVehicleMove(r.Command));
         int cellXOffset = (int)rec.Offset + 1 + 4 + 1 + 2 + 1 + 8;
         bytes[cellXOffset] ^= 0x07;
         var result = ReplayPlayer.Run(new MemoryStream(bytes), setup);

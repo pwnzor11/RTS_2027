@@ -1,6 +1,7 @@
 using System.IO.Hashing;
 using Rts.Sim.Core;
 using Rts.Sim.Map;
+using Rts.Sim.Missions;
 using Rts.Sim.Serialization;
 using Rts.Sim.World;
 
@@ -13,8 +14,9 @@ namespace Rts.Sim;
 public sealed class Simulation
 {
     private readonly UnitStore _units = new();
+    private readonly InfantryStore _infantry = new();
     private readonly MapState _map;
-    // Canonical state-part order: [map, units]. Hash, Save and Load all iterate this array; append new parts
+    // Canonical state-part order: [map, units, infantry]. Hash, Save and Load all iterate this array; append new parts
     // at the end only (changing the order changes every hash and the save format).
     private readonly ISimStatePart[] _parts;
     private SimRandom _rng;
@@ -31,7 +33,7 @@ public sealed class Simulation
         Setup = setup;
         _rng = new SimRandom(setup.Seed);
         _map = new MapState(setup.Map);
-        _parts = new ISimStatePart[] { _map, _units };
+        _parts = new ISimStatePart[] { _map, _units, _infantry };
         MapHash = MapHasher.Compute(setup.Map);
     }
 
@@ -40,7 +42,7 @@ public sealed class Simulation
     /// <summary>Identity hash of the starting map, computed once at construction.</summary>
     public ulong MapHash { get; }
 
-    /// <summary>State parts in canonical order (map, units).</summary>
+    /// <summary>State parts in canonical order (map, units, infantry).</summary>
     public IReadOnlyList<ISimStatePart> StateParts => _parts;
 
     /// <summary>The only clock. Starts at 0; Step increments it by one.</summary>
@@ -52,6 +54,9 @@ public sealed class Simulation
     /// <summary>Read access to unit state for tests and tools. Never mutate outside Step.</summary>
     public UnitStore Units => _units;
 
+    /// <summary>Read access to infantry state for tests and tools. Never mutate outside Step.</summary>
+    public InfantryStore Infantry => _infantry;
+
     /// <summary>Setup/scripting entry: place a vehicle outside Step. Returns its id.</summary>
     public EntityId SpawnVehicle(byte player, int vehicleTypeIndex, CellCoord cell)
     {
@@ -59,6 +64,16 @@ public sealed class Simulation
         if (vehicleTypeIndex < 0 || vehicleTypeIndex >= vehicles.Count) throw new ArgumentOutOfRangeException(nameof(vehicleTypeIndex));
         if (!InMap(cell)) throw new ArgumentOutOfRangeException(nameof(cell));
         return _units.Add(player, vehicleTypeIndex, LeptonCoord.CenterOf(cell), vehicles[vehicleTypeIndex].MaxHealth);
+    }
+
+    /// <summary>Setup/scripting entry: place an infantry soldier at a sub-slot (0 = centre, 1..4 = corners) of a cell.</summary>
+    public EntityId SpawnInfantry(byte player, int infantryTypeIndex, CellCoord cell, int subSlot = 0)
+    {
+        var infantry = Setup.Rules.Infantry;
+        if (infantry == null || infantryTypeIndex < 0 || infantryTypeIndex >= infantry.Count) throw new ArgumentOutOfRangeException(nameof(infantryTypeIndex));
+        if (!InMap(cell)) throw new ArgumentOutOfRangeException(nameof(cell));
+        if (subSlot < 0 || subSlot >= InfantryStore.SubSlotCount) throw new ArgumentOutOfRangeException(nameof(subSlot));
+        return _infantry.Add(player, infantryTypeIndex, cell, subSlot, infantry[infantryTypeIndex].MaxHealth);
     }
 
     /// <summary>Advance exactly one tick, applying commands whose ExecTick == Tick (others are ignored).</summary>
@@ -113,14 +128,11 @@ public sealed class Simulation
         switch (c.Kind)
         {
             case CommandKind.Move:
-                if (Owns(c) && InMap(c.Cell))
-                {
-                    _units.Destination[c.Subject.Index] = LeptonCoord.CenterOf(c.Cell);
-                    _units.Mission[c.Subject.Index] = UnitMission.Move;
-                }
+                if (OwnsSubject(c, out var store) && InMap(c.Cell))
+                    Queue(store!, c.Subject.Index, MissionKind.Move, c.Cell, default);
                 break;
             case CommandKind.Stop:
-                if (Owns(c)) _units.Mission[c.Subject.Index] = UnitMission.Idle;
+                if (OwnsSubject(c, out store)) Queue(store!, c.Subject.Index, MissionKind.Stop, default, default);
                 break;
             case CommandKind.Debug:
                 if (c.Arg == 1) _rng.Next(1000);
@@ -130,49 +142,79 @@ public sealed class Simulation
         }
     }
 
-    private bool Owns(Command c) => _units.Slots.IsAlive(c.Subject) && _units.Player[c.Subject.Index] == c.Player;
+    /// <summary>Subject's store is chosen by Command.Arg (an ActorKind); true if the subject is alive and owned by the player.</summary>
+    private bool OwnsSubject(Command c, out MobileStore? store)
+    {
+        store = c.Arg >= 0 && c.Arg <= byte.MaxValue ? StoreOf((ActorKind)c.Arg) : null;
+        return store != null && store.Slots.IsAlive(c.Subject) && store.Player[c.Subject.Index] == c.Player;
+    }
+
+    private MobileStore? StoreOf(ActorKind kind) => kind switch
+    {
+        ActorKind.Vehicle => _units,
+        ActorKind.Infantry => _infantry,
+        _ => null,
+    };
+
+    /// <summary>True if the actor exists in its store (generation checked).</summary>
+    public bool TryResolve(ActorRef actor) => StoreOf(actor.Kind)?.Slots.IsAlive(actor.Id) ?? false;
+
+    /// <summary>Queue a mission for the actor; it commences at the start of the next RunMissions. False if the actor is gone or not a mission-running kind.</summary>
+    public bool AssignMission(ActorRef actor, MissionKind kind, CellCoord cell = default, EntityId target = default)
+    {
+        var store = StoreOf(actor.Kind);
+        if (store == null || !store.Slots.IsAlive(actor.Id)) return false;
+        Queue(store, actor.Id.Index, kind, cell, target);
+        return true;
+    }
+
+    private static void Queue(MobileStore store, int i, MissionKind kind, CellCoord cell, EntityId target)
+    {
+        store.NextMission[i] = kind; store.NextCell[i] = cell; store.NextTarget[i] = target;
+    }
 
     // ---- systems (fixed order) ---------------------------------------------------------------
 
-    private void RunMissions() { /* M1 */ }
-
-    private void RunMovement()
+    private void RunMissions()
     {
-        for (int i = 1; i < _units.Capacity; i++)
+        // Safe point: promote queued missions, then run handlers. Handlers only queue new missions, so a
+        // mission assigned during a handler takes effect on the next tick.
+        RunMissions(_units, ActorKind.Vehicle);
+        RunMissions(_infantry, ActorKind.Infantry);
+    }
+
+    private void RunMissions(MobileStore store, ActorKind kind)
+    {
+        for (int i = 1; i < store.Capacity; i++)
         {
-            if (!_units.Slots.IsIndexAlive(i) || _units.Mission[i] != UnitMission.Move) continue;
-            int speed = Setup.Rules.Vehicles[_units.TypeIndex[i]].Speed;
-            LeptonCoord pos = _units.Position[i], dest = _units.Destination[i];
-            int dx = dest.X - pos.X, dy = dest.Y - pos.Y;
-            if (dx == 0 && dy == 0) { _units.Mission[i] = UnitMission.Idle; continue; }
-            if (speed <= 0) continue;
-            int ax = Math.Abs(dx), ay = Math.Abs(dy);
-            int major = Math.Max(ax, ay);
-            _units.Facing[i] = EightWayFacing(dx, dy);
-            if (major <= speed)
-            {
-                _units.Position[i] = dest;
-                _units.Mission[i] = UnitMission.Idle;
-                continue;
-            }
-            int sx, sy;
-            if (ax >= ay) { sx = speed; sy = (int)((long)ay * speed / ax); }
-            else { sy = speed; sx = (int)((long)ax * speed / ay); }
-            _units.Position[i] = new LeptonCoord(pos.X + (dx < 0 ? -sx : sx), pos.Y + (dy < 0 ? -sy : sy));
+            if (!store.Slots.IsIndexAlive(i)) continue;
+            if (store.NextMission[i] != MissionKind.None) Commence(store, kind, i);
+        }
+        for (int i = 1; i < store.Capacity; i++)
+        {
+            if (!store.Slots.IsIndexAlive(i) || store.Mission[i] == MissionKind.None || store.WakeTick[i] > Tick) continue;
+            store.WakeTick[i] = Tick + MissionHandlers.Handle(this, store, kind, i);
         }
     }
 
-    // TODO(M1): use Rts.Sim.Numerics.Facing
-    private static byte EightWayFacing(int dx, int dy)
+    private void Commence(MobileStore store, ActorKind kind, int i)
     {
-        int ax = Math.Abs(dx), ay = Math.Abs(dy);
-        bool horizontalOnly = ay * 5 < ax * 2;   // |dy/dx| < 0.4  (~tan 22.5)
-        bool verticalOnly = ax * 5 < ay * 2;
-        if (verticalOnly) return dy < 0 ? (byte)0 : (byte)128;
-        if (horizontalOnly) return dx > 0 ? (byte)64 : (byte)192;
-        if (dx > 0) return dy < 0 ? (byte)32 : (byte)96;
-        return dy < 0 ? (byte)224 : (byte)160;
+        MissionKind m = store.NextMission[i];
+        store.Mission[i] = m;
+        store.Status[i] = MissionStatus.Init;
+        store.WakeTick[i] = 0;
+        store.Target[i] = store.NextTarget[i];
+        if (m == MissionKind.Move)
+            store.Destination[i] = kind == ActorKind.Infantry
+                ? InfantryStore.SlotPosition(store.NextCell[i], _infantry.SubSlot[i])
+                : LeptonCoord.CenterOf(store.NextCell[i]);
+        store.NextMission[i] = MissionKind.None;
+        store.NextCell[i] = default;
+        store.NextTarget[i] = default;
     }
+
+    // Movement is performed by the Move mission handler (D-042); this system is reserved for M1-05+ (blocking, paths).
+    private void RunMovement() { }
 
     private void RunCombat() { /* M1 */ }
     private void RunEconomy() { /* M1 */ }
@@ -185,6 +227,9 @@ public sealed class Simulation
         for (int i = 1; i < _units.Capacity; i++)
             if (_units.Slots.IsIndexAlive(i) && _units.Health[i] <= 0)
                 _units.Remove(_units.Slots.IdOf(i));
+        for (int i = 1; i < _infantry.Capacity; i++)
+            if (_infantry.Slots.IsIndexAlive(i) && _infantry.Health[i] <= 0)
+                _infantry.Remove(_infantry.Slots.IdOf(i));
     }
 
     // ---- hash / snapshot / save --------------------------------------------------------------
@@ -200,11 +245,15 @@ public sealed class Simulation
 
     public SimSnapshot Snapshot()
     {
-        var list = new List<UnitView>(_units.Slots.Count);
+        var list = new List<UnitView>(_units.Slots.Count + _infantry.Slots.Count);
         for (int i = 1; i < _units.Capacity; i++)
             if (_units.Slots.IsIndexAlive(i))
                 list.Add(new UnitView(_units.Slots.IdOf(i), UnitKind.Vehicle, _units.Player[i], _units.TypeIndex[i],
                     _units.Position[i], _units.Facing[i], _units.Health[i]));
+        for (int i = 1; i < _infantry.Capacity; i++)
+            if (_infantry.Slots.IsIndexAlive(i))
+                list.Add(new UnitView(_infantry.Slots.IdOf(i), UnitKind.Infantry, _infantry.Player[i], _infantry.TypeIndex[i],
+                    _infantry.Position[i], _infantry.Facing[i], _infantry.Health[i]));
         ulong hash = _recentHashes.Count > 0 ? _recentHashes[^1].Hash : 0UL;
         return new SimSnapshot(Tick, Setup.Map.Width, Setup.Map.Height, list, Setup.Map.Land, hash);
     }
