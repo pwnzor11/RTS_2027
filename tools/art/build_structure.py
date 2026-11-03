@@ -88,6 +88,7 @@ def render(sid, mod, samples, only, preview):
     for name, spec in mod.MATERIALS.items():
         M[name] = mat(name, *spec[:1], **(spec[1] if len(spec) > 1 else {}))
     M["house"] = mat("house", "#E000E0", 0.75)  # house paint is always magenta; every module gets it
+    M["house2"] = mat("house2", "#9A009A", 0.75)  # darker house paint for big flat up-facing areas (lands on mid ramp shades)
     mask_on, mask_off = emission_mat("m1", 1.0), emission_mat("m0", 0.0)
 
     class Ctx:
@@ -99,8 +100,14 @@ def render(sid, mod, samples, only, preview):
     S.CELL = CELL
     S.objs = []      # (obj, material name, flags)
     S.clip_z = None
+    S.skin = {}                 # material name -> replacement name for this frame (house stays house unless remapped)
+    S.hide = lambda name: False  # predicate on the object name; True = do not create the part
 
     def finish(o, m, nocast, noclip, nomask):
+        m = S.skin.get(m, m)                       # per-frame material swap (primer, soot, ...), set by the module
+        if S.hide(o.name):                         # per-frame part removal (prefix match on the object name)
+            bpy.data.objects.remove(o)
+            return None
         for c in list(o.users_collection):
             c.objects.unlink(o)
         bpy.context.scene.collection.objects.link(o)
@@ -178,6 +185,8 @@ def render(sid, mod, samples, only, preview):
                 bpy.data.meshes.remove(me)
         S.objs.clear()
         S.clip_z = None
+        S.skin.clear()
+        S.hide = lambda name: False
 
     def apply_clip(z):
         """Cut every clippable object at height z (keep below), cap the cut so nothing looks hollow."""
@@ -299,7 +308,7 @@ def render(sid, mod, samples, only, preview):
         if not preview:
             for o, m, _c in S.objs:
                 o.data.materials.clear()
-                o.data.materials.append(mask_on if m == "house" else mask_off)
+                o.data.materials.append(mask_on if m in ("house", "house2") else mask_off)
                 o.data.materials.append(mask_off)
             wbg = w.node_tree.nodes["Background"].inputs[1]
             wbg.default_value = 0.0

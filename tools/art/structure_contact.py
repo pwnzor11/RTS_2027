@@ -25,6 +25,8 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("id")
     ap.add_argument("--out", default="refinery_contact.png")
+    ap.add_argument("--before", default=os.path.join(C.PILOT, "refinery_contact_before_sheet.png"),
+                    help="the pilot (pass 1) sprite sheet, for the before/after block")
     a = ap.parse_args()
     mod = BS.load_module(a.id)
     fw, fh = mod.CANVAS
@@ -39,9 +41,18 @@ def main():
     blocks = []
     blocks.append(("IDLE frame 0: 1x (left), 2x nearest (middle)  |  DAMAGED frame 0 at 2x (right)",
                    hcat([strip([st["idle"][0]], 1), strip([st["idle"][0]], 2), strip([st["damaged"][0]], 2)], 24)))
-    blocks.append(("ANIMATION at 1x, true size: idle frames 0-3 (drum turns, tube lamps alternate, stack puffs)  |  damaged frames 0-3 (flames, smoke)",
+    blocks.append(("ANIMATION at 1x, true size: idle frames 0-3 (drum turns, tube lamps alternate, stack puffs)  |  damaged frames 0-3 (fire, plume, embers)",
                    hcat([strip(st["idle"], 1), strip(st["damaged"], 1)], 24)))
-    blocks.append(("BUILD, 8 frames at 1x (placing: foundation rises to complete)", strip(st["build"], 1)))
+    blocks.append(("BUILD, 8 frames at 1x: 0 surveyed plot, 1 foundation + rebar, 2 first steel, 3 steel frame, 4 trusses + first panels, 5 cladding + half roof, 6 primer + scaffold down, 7 finished",
+                   strip(st["build"], 1)))
+    blocks.append(("BUILD at 2x (frames 0-3)", strip(st["build"][:4], 2)))
+    blocks.append(("BUILD at 2x (frames 4-7)", strip(st["build"][4:], 2)))
+    blocks.append(("DAMAGED at 2x (loops: fire flicker, plume rises and grows)", strip(st["damaged"], 2)))
+    if os.path.exists(a.before):
+        old_fr = C.split_sheet(Image.open(a.before).convert("RGBA"), 4, 4)
+        pair = lambda b_, a_, lab: hcat([strip([b_], 2), strip([a_], 2)], 24)
+        blocks.append(("BEFORE (pilot, left) vs AFTER (this pass, right): BUILD frame 3", pair(old_fr[8 + 3], st["build"][3], "")))
+        blocks.append(("BEFORE (pilot, left) vs AFTER (this pass, right): DAMAGED frame 0", pair(old_fr[4], st["damaged"][0], "")))
     # in-context patch: 10x6 cells at 64 px, footprint top-left at cell (2, 1), dock cell below the middle
     cell = 64
     img = ash_patch(cell, 2027).convert("RGBA")

@@ -117,9 +117,29 @@ Cost log (D-059): about 40 min wall-clock from start to this commit: roughly 12 
 3. Stencils (white bars, plate numerals) are 1-2 px blobs, decoration only. The hazard stripes and yellow gantry read well.
 4. Damaged: scorch and the missing panel read, flames are small yellow blobs, smoke is 2-3 dark puffs per column and only
    partly convincing; smoke near the stack touches the top edge. Damage is hand-placed in code, not a general shader.
-5. Build state: the cut faces quantise to a flat blue-grey slab in frames 0-3, which reads as "poured foundation" but is
-   bland; scaffold poles are 1 px lines. Frame 7 equals idle 0.
-6. House colour: the roof plaque lands on the top ramp shades, so it looks pastel after remap (see the sheet);
+5. (Pilot note, superseded by pass 2) Build state used a clipped model; frame 7 equals idle 0.
+6. House colour: fixed in pass 2 (roof plaque uses the darker `house2` paint -> mid ramp shades). Pilot problem was:
    the south plaques are darker. Remap is exact (3771 pixels per colour).
 7. The pad (full 192 px square) makes a pale-ish rectangle on the ash ground; the pad could be drawn by the terrain instead.
 8. Art touches the left/right/bottom canvas edges (pad plus right-falling shadow); build frames 1 and 3 touch the top edge.
+## Pass 2 (D-064, owner feedback: build "just rises out of the ground", damage "doesn't look like damage")
+Idle is unchanged except that big flat house areas now use mid shades (see 6). Build and damaged were redone from scratch.
+- Build (8 frames, no clipping any more; `build_site()` in the module): 0 surveyed plot (dug pit, spoil heaps, stakes, string lines,
+  crates/pipes/sign/site cabin); 1 poured slab with shuttering, rebar grid and column stubs, mixer; 2 first steel storey, ring posts,
+  scaffold, derrick crane arrives, welding sparks; 3 full steel frame of the hall, drum ring posts, two timber scaffolds, girder on the
+  hook; 4 roof trusses, first primer panels, drum base plated; 5 walls mostly clad, roof half decked, drum half plated, stack base,
+  roof panel on the hook; 6 the finished model in primer grey (no house paint, drum plates missing) with one scaffold left and
+  leftovers on the pad; 7 = idle 0 (verified pixel-identical). New materials (timber, rebar, raw concrete, primer, soil, girder)
+  differ from the finished building so each stage reads at 1x.
+- Damaged (4 frames): collapsed SE roof corner (void, dangling slab, bent girders, rebar), blown-out wall section with black void and
+  bent interior girders, cracked/missing panel pieces, rubble and a fallen girder, scorch radiating from the breaches (wall, roof,
+  pad), stack broken and leaning west, soot-darkened building materials (house colours untouched), layered flames (core, orange, red)
+  that flicker per frame, a dark plume that rises and grows over the 4 frames, embers.
+- Hooks added to `build_structure.py`: `S.skin` (per-frame material swap, used for primer and soot) and `S.hide` (per-frame part
+  removal by name prefix); the mask pass treats `house2` (darker house paint) like `house`. `S.clip_z` is still supported, unused here.
+- Limits: the fixed 24-colour palette has no real red or orange, so fire is yellow plus a brown-orange (b07445) plus rust; a
+  couple of fire ramp colours in `common.PAL` would help (not mine to change). The 4-frame loop makes the plume a chain of blobs
+  at 1x. Damaged frames no longer touch the top edge; idle frames 1 and 3 still do (stack puff, as in the pilot).
+- The before sheet used by the contact sheet is `art/pilot/refinery_contact_before_sheet.png` (the pilot sprite sheet).
+- Cost log (D-059): about 100 min wall-clock, most of it waiting on the shared render lock; 3 full renders (5-7 min each),
+  2 partial renders and 3 preview passes of about 1 min.
