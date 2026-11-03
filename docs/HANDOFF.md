@@ -1,11 +1,8 @@
 # Handoff: Session 2 (in progress) — checkpoint after wave 1
 Last commit: 3df21e8 (2026-11-02) — checkpoint; wrap-up rewrites this file
-Where things stand: M0-11 repo skeleton is done and on main: .NET 10 solution, `Sim` library (Fixed32,
-lepton/facing math in `Rts.Sim.Numerics`, slot arrays, Step with fixed system order, Move/Stop/Debug
-commands, xxHash64 state hash, save round-trip, replay), Roslyn determinism rules test, TOML rules
-loader + rules hash, `Tools` CLI (`validate`, `run`), MonoGame grid window on demo data, Windows CI
-(build, test, validate, win-x64 publish) green. M0-12 art pilot contact sheet is on main in
-`art/pilot/`; owner picked arm B at 64 px (D-039).
+Where things stand: overnight M1 run (D-040) in progress. Wave A (M1-01 map, M1-02 rules schema,
+M1-03 missions + infantry, M1-04 debug view) is on main, CI green. Wave B (M1-05 pathfinding,
+M1-06 buildings, M1-07 fog) is running. Restore point: branch `restore/pre-m1` (3279113).
 
 ## Start here (shown to the user as the plan; nothing starts until they say go)
 1. Ask the user: has he read `docs/design/03_setting_and_factions.md`, and does he want to change any

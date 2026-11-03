@@ -24,17 +24,17 @@ placement, driven by placeholder data, plus a debug view that runs the real sim.
 and AI are M2. Planned in session 2; expect two sessions. Lead writes each wave's contracts first.
 
 **Wave A — foundations (parallel)**
-- [ ] M1-01 Map model: cell layers per design 02 §3 (template, land type, height, overlay resource +
+- [x] M1-01 Map model: cell layers per design 02 §3 (template, land type, height, overlay resource +
   density, smudge, occupancy bits incl. 5 infantry sub-slots), map file (TOML header + packed cell
   data), `terrain.toml` land × locomotion speed %, map hash in replays/saves; Tools `map new` makes
   synthetic test maps — Sonnet — user can try: `Tools map new --size 64` then `Tools map info`
-- [ ] M1-02 Rules schema v1: units, infantry, buildings, weapons, warheads, armour matrix, `base`
+- [x] M1-02 Rules schema v1: units, infantry, buildings, weapons, warheads, armour matrix, `base`
   inheritance, prerequisites/provides, effect lists; placeholder data marked as fixtures; rules hash
   covers all — Haiku — user can try: `Tools validate` lists every type
-- [ ] M1-03 Mission framework: Mission/Status/WakeTick/NextMission per actor, AssignMission →
+- [x] M1-03 Mission framework: Mission/Status/WakeTick/NextMission per actor, AssignMission →
   Commence at the safe point, handlers return sleep ticks; entity kinds Unit, Infantry, Building,
   Projectile in slot arrays — Sonnet — user can try: tests only
-- [ ] M1-04 Debug view on the real sim: Game runs `Simulation` at 20 Hz with interpolation, loads a
+- [x] M1-04 Debug view on the real sim: Game runs `Simulation` at 20 Hz with interpolation, loads a
   map, built-in bitmap font for tick/hash/FPS, click-select and right-click move — Haiku —
   user can try: open the window, move units around
 
