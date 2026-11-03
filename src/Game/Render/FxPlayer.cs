@@ -9,9 +9,8 @@ namespace Rts.Game.Render;
 /// <summary>
 /// Draws effect animations: the ones a building manifest anchors (<see cref="DrawAnchors"/>) and one-shot effects the
 /// game spawns at a world position (<see cref="Spawn"/>, for example explosions). Effects are never house-coloured.
-/// Spawn needs a detonation or death event from the sim snapshot, which it does not carry yet: when it does, call
-/// <c>Spawn("explosion_small", position, tick)</c> for a projectile detonation and <c>"explosion_large"</c> for a
-/// building death (position = the cell centre or the footprint centre in zoom-1 world pixels).
+/// SceneRenderer feeds it the snapshot's FxEvents: a detonation or unit death spawns <c>"explosion_small"</c>, a building death
+/// <c>"explosion_large"</c> (position = the event position in zoom-1 world pixels).
 /// </summary>
 public sealed class FxPlayer
 {

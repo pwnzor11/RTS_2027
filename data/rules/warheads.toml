@@ -8,7 +8,7 @@ splash = 0
 hits_allies = false
 
 [auth_ap]
-versus = [15, 75, 100, 50, 40]
+versus = [25, 75, 100, 50, 40]
 splash = 0
 hits_allies = false
 

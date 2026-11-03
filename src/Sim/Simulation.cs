@@ -180,6 +180,7 @@ public sealed partial class Simulation
 
     private void StepCore(IReadOnlyList<Command> commands)
     {
+        _fx.Clear();
         ApplyInput(commands);
         RunMissions();
         RunMovement();
@@ -568,7 +569,14 @@ public sealed partial class Simulation
             for (int i = 1; i < cap; i++)
             {
                 if (!slots.IsIndexAlive(i) || HealthAt(kind, i) > 0) continue;
-                if (kind == ActorKind.Building) { RemoveBuilding(slots.IdOf(i)); continue; }
+                if (kind == ActorKind.Building)
+                {
+                    BuildingType dbt = BuildingTypeAt(i);
+                    _fx.Add(new FxEvent(FxKind.BuildingDestroyed, BuildingCentre(i), Math.Max(dbt.FootprintW, dbt.FootprintH)));
+                    RemoveBuilding(slots.IdOf(i));
+                    continue;
+                }
+                _fx.Add(new FxEvent(FxKind.UnitDestroyed, PositionAt(kind, i), 1));
                 OnActorRemoving(kind, i);
                 StoreOf(kind)!.Remove(slots.IdOf(i));
             }
@@ -665,9 +673,10 @@ public sealed partial class Simulation
                 blist.Add(new BuildingView(_buildings.Slots.IdOf(i), _buildings.Player[i], _buildings.TypeIndex[i],
                     _buildings.Cell[i], bt.FootprintW, bt.FootprintH, _buildings.Health[i], false));
             }
+        FxEvent[] fx = FxFor(viewer);
         if (viewer < 0)
             return new SimSnapshot(Tick, Setup.Map.Width, Setup.Map.Height, list, Setup.Map.Land, hash,
-                blist, -1, Array.Empty<byte>());
+                blist, -1, Array.Empty<byte>(), fx);
         foreach ((int index, BuildingGhost g) in _vision.GhostsFor((byte)viewer))
         {
             if (FootprintVisible((byte)viewer, g.Cell, g.FootprintW, g.FootprintH)) continue; // live view already shown
@@ -679,7 +688,18 @@ public sealed partial class Simulation
         if (team.Length == 1) _vision.FillVision((byte)viewer, vision);
         else _vision.FillVisionAny(team, vision);   // allies share vision and exploration
         return new SimSnapshot(Tick, Setup.Map.Width, Setup.Map.Height, list, Setup.Map.Land, hash,
-            blist, viewer, vision);
+            blist, viewer, vision, fx);
+    }
+
+    /// <summary>This tick's effects events (a copy), limited to cells the viewer can see when there is a viewer.</summary>
+    private FxEvent[] FxFor(int viewer)
+    {
+        if (_fx.Count == 0) return Array.Empty<FxEvent>();
+        if (viewer < 0) return _fx.ToArray();
+        var list = new List<FxEvent>(_fx.Count);
+        foreach (FxEvent e in _fx)
+            if (IsVisibleTo((byte)viewer, e.Pos.ToCell())) list.Add(e);
+        return list.ToArray();
     }
 
     private bool SeenBy(int viewer, byte owner, LeptonCoord pos) =>

@@ -239,3 +239,18 @@ production x1.5 until it rebuilt.
 | Unit roles | section 3 |
 | Power matters | section 6 |
 | Recruit beats idle | 8 of 8, avg 4,859 ticks (AI tests: 28 of 28 pass) |
+
+## 10. After M2-19 (sim fixes from section 7)
+
+Fixed in the sim: (1) speed 16 harvesting (a diagonal step landing exactly on a cell corner dropped the movement reservation,
+so any speed dividing 256 could freeze a vehicle); (2) the harvester field search now widens ring by ring to the whole map
+(8 rings per tick) when the near search (16 cells) finds nothing, so the Recruit's probe orders are redundant but harmless
+(`src/AI/Recruit/EconomyManager.cs` may drop them); (3) a splash-0 shell hurts one actor of the impact cell (its target if it is
+still there, else the first eligible by slot order); (4) effects events; (5) the stale `EconomyRules` comment.
+
+AP vs Unarmored: `ai duel --a auth_tank:3 --b auth_rifleman:10` took 11 s with 1122/1200 hp left under the old rule (value 15).
+With single-hit shells and value 15: 45 s, 877 hp left. With single-hit shells and the original 25: 31 s, 992 hp left.
+Tanks are not useless against infantry either way, so the compensation was reverted: **`auth_ap` vs Unarmored is 25 again**.
+
+`ai match --a recruit:1 --b recruit:1 --seeds 8 --ticks 30000 --starts alt` (Release): 16 games, A 8 / B 8 / draws 0,
+average end tick 14,829 (was 15,094), longest game 23,224 (seed 7; was 26,520); wins by start corner 6 / 10.

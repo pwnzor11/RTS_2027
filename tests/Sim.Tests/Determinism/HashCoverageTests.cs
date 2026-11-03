@@ -140,6 +140,7 @@ public class HashCoverageTests
         ["Simulation._tickPosVeh"] = "start-of-tick vehicle positions for combat decisions, rewritten at the start of every RunMissions",
         ["Simulation._tickPosInf"] = "start-of-tick infantry positions for combat decisions, rewritten at the start of every RunMissions",
         ["Simulation._useTickPos"] = "true only between RunMissions and the end of RunCombat; false when a hash or save is taken",
+        ["Simulation._fx"] = "this tick's effects events for the renderer (M2-19): cleared at the start of every Step and only read after it; derived output, not state",
         // SlotArray (inside every store)
         ["SlotArray._count"] = "number of set bits in _used: derived, and rebuilt by SetAlive when the used bits are read back",
         // PathService
