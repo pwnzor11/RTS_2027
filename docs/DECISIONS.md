@@ -480,3 +480,34 @@ Finding (not fixed): after contact the player in slot 0 wins about 72% of decisi
 `ai match` therefore trades slots between corners on even seeds (`--starts alt`, default; `slot` = old pairing, `swap`) and
 prints wins by start corner and by slot. A fix needs simultaneous damage resolution, which is a combat-system change.
 **Status:** assumed — confirm
+
+### D-064 · 2026-11-03 · Refinery pilot verdict; 40° camera standard
+**Decision:** The owner approved the Refinery's building design as the template for M2 structures, but not its
+state animations: the `build` frames read as the building rising out of the ground rather than being
+constructed, and the `damaged` frames don't read as damage. Both get another pilot pass (scaffolding,
+framework and staged assembly for construction; structural damage — breaches, collapse, fire and smoke — for
+damage) and the owner approves again before structures fan out. Vehicle fan-out (from the approved tank)
+and an infantry pilot may proceed meanwhile. All sprites use the 40° camera elevation of the approved tank,
+with ground depth stretched so footprints cover their cells exactly.
+**Status:** confirmed (owner, session 3)
+
+### D-065 · 2026-11-03 · Simultaneous damage resolution
+**Decision:** Combat resolves damage simultaneously within a tick: all hits of a tick are collected, then
+applied together, and deaths resolve together, so no player gains from slot order (M2-01 found slot 0
+winning ~72% of decisive mirror games). Acceptance: mirror matches in `ai match --starts slot` are even.
+**Status:** confirmed (owner, session 3)
+
+### D-066 · 2026-11-03 · Sidebar shows every unlocked item
+**Decision:** The sidebar lists every type the player has unlocked; types that can't be queued right now
+(queue full, a structure waiting to be placed, a missing factory) are greyed out with the reason on hover.
+**Status:** confirmed (owner, session 3)
+
+### D-067 · 2026-11-03 · M2 wave 2 details chosen while building
+**Decision:** (1) Outside setup, Place needs a Ready item; with `AllowDebug` a non-Ready Place still works (no
+cost, no radius) so tests and the sandbox can stage bases. (2) A player is defeated only once they have owned a
+non-wall building and then own none (building-less sandboxes never "lose"). (3) Build time = cost-derived ticks ×
+low-power multiplier × 2 / (1 + factories of that category). (4) Harvesters auto-start one tick after spawning;
+a harvester with no refinery idles until ordered. (5) Ashfall regrows only on cells that still hold some ash;
+emptied cells stay empty (seed markers and spreading are a later design question). (6) Storage cap counts the
+Storage of every live own building. (7) Setup spawns face the map centre. (8) Theater id is `rustbelt`.
+**Status:** assumed — confirm
