@@ -29,6 +29,17 @@ jobs:
       - name: Validate data
         run: dotnet run --project src/Tools -c Release --no-build -- validate
 
+      - name: Headless battle sandbox (end to end)
+        run: dotnet run --project src/Game -c Release --no-build -- --headless-check 1200
+
+      - name: Verify the sandbox replay
+        run: dotnet run --project src/Tools -c Release --no-build -- replay verify replays/sandbox_last.rpl --map data/maps/test_32.map.toml
+
+      - name: Headless match and replay verify
+        run: |
+          dotnet run --project src/Tools -c Release --no-build -- match --ticks 1500 --record match.rpl
+          dotnet run --project src/Tools -c Release --no-build -- replay verify match.rpl
+
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
