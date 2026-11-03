@@ -21,7 +21,7 @@ public sealed class SkirmishSetupScreen : IScreen
     private const ulong MaxSeed = 999_999_999;
     private const int SeedRow = 0;
     private const int ColourRow = 3;
-    private static readonly string[] ColourNames = { "Green", "Red", "Blue", "Ochre" };
+    private static IReadOnlyList<string> ColourNames => PlayerColours.Names;
 
     private readonly GameServices _s;
     private readonly MenuPanel _panel;
@@ -100,7 +100,7 @@ public sealed class SkirmishSetupScreen : IScreen
         Rectangle firstButton = _panel.ButtonRect(ColourRow, 0);
         int size = row.Height - 4 * scale;
         var swatch = new Rectangle(firstButton.X - size - 3 * scale, row.Y + (row.Height - size) / 2, size, size);
-        Shapes.Fill(sb, _s.Pixel, swatch, PlayerColours.Base(_colour));
+        Shapes.Fill(sb, _s.Pixel, swatch, PlayerColours.Choice(_colour));
         Shapes.Outline(sb, _s.Pixel, swatch, Color.White);
     }
 

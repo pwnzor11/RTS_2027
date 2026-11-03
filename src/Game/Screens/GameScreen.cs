@@ -136,13 +136,16 @@ public sealed class GameScreen : IScreen
         string spritesRoot = Path.Combine(Path.GetDirectoryName(Path.GetFullPath(_s.RulesDir)) ?? ".", "sprites");
         _cameos = new CameoProvider(_s.Graphics, spritesRoot);
         int colour = Skirmish?.PlayerColour ?? 0;
-        _sidebar = new SidebarPanel(_sim, SimSnapshotSource.LocalPlayer, _selection, _cameos, PlayerColours.Base(colour));
+        // D-068: the local player draws in the chosen colour; the AI takes the next palette entry that differs.
+        PlayerColours.Assign(new[] { colour, colour == 1 ? 0 : 1 });
+        _sidebar = new SidebarPanel(_sim, SimSnapshotSource.LocalPlayer, _selection, _cameos, PlayerColours.Base(SimSnapshotSource.LocalPlayer));
         CentreCameraOnOwnBase();
     }
 
     /// <inheritdoc />
     public void Exit()
     {
+        PlayerColours.ResetAssignment();
         _sidebar?.Dispose();
         _cameos?.Dispose();
         _sim?.SaveReplay();

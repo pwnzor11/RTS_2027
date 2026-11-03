@@ -440,10 +440,16 @@ public sealed class PlayerColoursTests
     }
 
     [Fact]
-    public void Authority_is_green_and_directorate_is_rust_red()
+    public void DefaultSlots_are_amber_then_red_and_assignment_remaps()   // D-068
     {
-        Assert.Equal(new Color(0x4F, 0xA0, 0x4A), PlayerColours.Base(0));
-        Assert.Equal(new Color(0xC0, 0x46, 0x2B), PlayerColours.Base(1));
+        PlayerColours.ResetAssignment();
+        Assert.Equal(new Color(0xE0, 0xA0, 0x20), PlayerColours.Base(0));
+        Assert.Equal(new Color(0xB8, 0x2C, 0x1C), PlayerColours.Base(1));
+        PlayerColours.Assign(new[] { 2, 0 });
+        Assert.Equal(PlayerColours.Choice(2), PlayerColours.Base(0));
+        Assert.Equal(PlayerColours.Choice(0), PlayerColours.Base(1));
+        PlayerColours.ResetAssignment();
+        Assert.DoesNotContain("Green", PlayerColours.Names);
     }
 }
 

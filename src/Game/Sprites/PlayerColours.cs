@@ -18,26 +18,50 @@ public static class PlayerColours
     /// <summary>Number of distinct house colours. Slots 0 to 7 are all distinct; slot 8 and above wrap to slot % 8.</summary>
     public const int Count = 8;
 
+    // House palette (D-068): chosen to contrast faction body paint, so no green (the Authority body is grey-green).
     private static readonly Color[] Bases =
     {
-        new(0x4F, 0xA0, 0x4A), // 0 Authority green
-        new(0xC0, 0x46, 0x2B), // 1 Directorate rust red
+        new(0xE0, 0xA0, 0x20), // 0 amber
+        new(0xB8, 0x2C, 0x1C), // 1 red
         new(0x2F, 0x76, 0xC0), // 2 blue
-        new(0xE3, 0xC2, 0x3A), // 3 yellow
+        new(0xE6, 0xE6, 0xDE), // 3 white
         new(0x93, 0x60, 0xC8), // 4 purple
         new(0x2F, 0xB8, 0xC4), // 5 cyan
-        new(0xE8, 0x82, 0x2A), // 6 orange
-        new(0xD8, 0xD8, 0xD2), // 7 white-grey
+        new(0xE8, 0x6A, 0x1A), // 6 orange
+        new(0xE0, 0x6A, 0xA8), // 7 pink
     };
 
+    /// <summary>Display names of the house colours, in palette order.</summary>
+    public static readonly IReadOnlyList<string> Names =
+        new[] { "Amber", "Red", "Blue", "White", "Purple", "Cyan", "Orange", "Pink" };
+
+    private static int[] _choiceBySlot = { 0, 1, 2, 3, 4, 5, 6, 7 };
+
+    /// <summary>A palette entry by index (0..Count-1), regardless of slot assignment.</summary>
+    public static Color Choice(int index) => Bases[((index % Count) + Count) % Count];
+
     /// <summary>
-    /// The house colour of a player slot. Slots 0 to 7 are distinct. Slots 8 and above wrap around (slot % 8), so
+    /// Assigns palette entries to player slots for the current game (front end only; never sim state): slot s draws with
+    /// palette entry <paramref name="choiceBySlot"/>[s]. Slots not listed keep their default (slot % 8).
+    /// </summary>
+    public static void Assign(IReadOnlyList<int> choiceBySlot)
+    {
+        var map = new int[Count];
+        for (int i = 0; i < Count; i++) map[i] = i < choiceBySlot.Count ? ((choiceBySlot[i] % Count) + Count) % Count : i;
+        _choiceBySlot = map;
+    }
+
+    /// <summary>Restores the default slot → colour assignment.</summary>
+    public static void ResetAssignment() => _choiceBySlot = new[] { 0, 1, 2, 3, 4, 5, 6, 7 };
+
+    /// <summary>
+    /// The house colour of a player slot under the current assignment. Slots 8 and above wrap around (slot % 8), so
     /// a LAN game with nine or more players would share colours; the game does not allow that yet.
     /// </summary>
     /// <param name="player">Player slot, zero based.</param>
     public static Color Base(int player)
     {
         if (player < 0) throw new ArgumentOutOfRangeException(nameof(player), "Player slots start at 0.");
-        return Bases[player % Count];
+        return Bases[_choiceBySlot[player % Count]];
     }
 }
