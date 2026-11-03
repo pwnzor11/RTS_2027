@@ -428,4 +428,30 @@ keep building and he studies code and decisions.
 - Console (M1.5-07): count ≤ 50 per spawn, step ≤ 1000 ticks; Esc closes the console without quitting.
 - Hash allocation bound in tests is ≤ 1 KB per call (constant, not exact): runtimes differ.
 - Git LFS (D-056) is not yet applied: the workspace proxy blocks LFS uploads, so the owner converts from Windows.
-**Status:** assumed — confirm
+**Status:** confirmed (owner, session 3)
+
+### D-058 · 2026-11-03 · M2 Authority roster: the classic minimum
+**Decision:** M2 builds 8 Authority structures — Construction Yard, Power Plant, Refinery (ships with one free
+scraper), Barracks, Vehicle Factory, Silo, Wall, Gun Turret — and 5 units — Scraper (harvester), Rifleman,
+Rocket infantry, Jeep, Medium Tank. Ids and display names are placeholders until the naming pass (design 03).
+**Why:** the smallest set that exercises the full C&C loop (power, economy, storage, production queues, defence).
+**Alternatives:** lean 5+3; classic + artillery and engineer.
+**Status:** confirmed (owner, session 3; answers Q-27)
+
+### D-059 · 2026-11-03 · v1 content budget: fuller
+**Decision:** v1 targets per faction ~12 units and ~16 structures; vehicles 16 facings, infantry 8 (D-032);
+announcer voice lines (commissioned or TTS — source decided under Q-31) and a few original music tracks.
+Real hours per sprite are logged from M2 on so the budget can be checked against reality.
+**Status:** confirmed (owner, session 3; answers Q-28)
+
+### D-060 · 2026-11-03 · Licence version: GPL-3.0-or-later; SPDX headers
+**Decision:** RTS_2027 is licensed GPL v3 or (at your option) any later version, with the §7 MonoGame
+permission (D-055). Every source file carries `// SPDX-License-Identifier: GPL-3.0-or-later` and
+`// Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).`; a test enforces it.
+**Status:** confirmed (owner, session 3; answers Q-33)
+
+### D-061 · 2026-11-03 · Campaign pilot in M2; honest top AI tier
+**Decision:** (1) The last M2 item is a campaign pilot: one scripted Authority mission with a briefing on the M2
+map, with hours logged, to measure mission cost (answers Q-30). (2) The *Commissar* tier gets better decisions
+only — never resource, vision or speed bonuses (answers Q-32).
+**Status:** confirmed (owner, session 3)

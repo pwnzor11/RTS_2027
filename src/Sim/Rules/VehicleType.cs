@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
 namespace Rts.Sim.Rules;
 
 /// <summary>Sim-side vehicle type. Speed leptons/tick; TurnRate facing steps/tick; Sight in cells;

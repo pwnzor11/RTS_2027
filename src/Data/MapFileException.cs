@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
 namespace Rts.Data;
 
 /// <summary>Thrown when a map file cannot be read or fails validation.</summary>

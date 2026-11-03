@@ -71,7 +71,7 @@ published zip starts from any folder; F1 opens a debug console in the sandbox.
 - [x] M1.5-05 Tests: fixtures split from `data/rules`, exact asserts, golden replay with regeneration switch, perf logged not asserted (C-5, C-10)
 - [x] M1.5-06 AI host and AI-vs-AI harness: `src/AI`, fog-filtered `PlayerView`, `IAiPlayer`, `AiDriver`, `data/ai/difficulty.toml` (5 tiers), placeholder skirmisher AI, `Tools ai match` / `Tools ai matrix` (D-051, D-4/D-5)
 - [x] M1.5-07 In-game debug console (F1): spawn, cash, kill, reveal, speed — recorded `Debug` commands (C-11)
-- [ ] M1.5-08 Lead: GPL §7 MonoGame permission (D-055) ✔, golden regeneration ✔, docs ✔; open: SPDX headers (waits on Q-33), Git LFS conversion (owner runs it from Windows — the workspace proxy blocks LFS uploads)
+- [x] M1.5-08 Lead: GPL §7 MonoGame permission (D-055), golden regeneration, docs, SPDX headers + enforcing test (D-060). Git LFS conversion done by the owner from Windows (USER_CHECKS S3 item 7).
 
 ## M2 · Playable skirmish slice
 - [ ] M2-01 Corner advantage on generated maps: headless match on test_64 favours the (4,4) start whichever player has it (mirror duels are symmetric) — find the geometric cause (path tie-breaks, map features) and fix — user can try: `Tools match` both seeds end near-even

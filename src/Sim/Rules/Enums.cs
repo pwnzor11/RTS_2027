@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
 namespace Rts.Sim.Rules;
 
 /// <summary>Movement classes (D-023, D-035). Append only: values are persisted.</summary>

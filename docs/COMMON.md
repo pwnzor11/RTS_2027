@@ -28,6 +28,8 @@ Read this before your package brief. The brief wins if they disagree.
 - Licence: never copy or port EA code (D-050). AI code never runs inside `Step` (D-051).
 
 ## Style
+- Every .cs file starts with the two-line header (D-060):
+  `// SPDX-License-Identifier: GPL-3.0-or-later` / `// Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).`
 - File-scoped namespaces, one public type per file, XML doc comment on every public type.
 - Tests: `tests/Sim.Tests/<Area>/<Thing>Tests.cs`, xUnit `[Fact]`/`[Theory]`, no sleeps, no randomness
   without a fixed seed.

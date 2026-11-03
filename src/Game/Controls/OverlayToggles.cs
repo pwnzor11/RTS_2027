@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
 namespace Rts.Game.Controls;
 
 /// <summary>Which debug overlays are on. Toggled with F3, F4 and F5; the HUD lists the ones that are on.</summary>

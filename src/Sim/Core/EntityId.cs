@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
 namespace Rts.Sim.Core;
 
 /// <summary>Generational handle into a slot array. Index 0 is never allocated, so default == None.</summary>

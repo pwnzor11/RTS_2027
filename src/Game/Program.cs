@@ -1,4 +1,6 @@
-﻿using System.Runtime.InteropServices;
+﻿// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
+using System.Runtime.InteropServices;
 using System.Text;
 using Rts.Data;
 using Rts.Game.Sandbox;

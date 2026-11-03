@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
 namespace Rts.Sim.Core;
 
 /// <summary>How one player regards another (D-054). Self and Ally never auto-target each other; Neutral

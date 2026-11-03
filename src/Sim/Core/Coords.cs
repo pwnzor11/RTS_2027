@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
 namespace Rts.Sim.Core;
 
 /// <summary>A map cell. Contract type — math helpers live in Rts.Sim.Numerics.</summary>

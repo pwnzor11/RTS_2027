@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
 namespace Rts.AI;
 
 /// <summary>Small deterministic generator for AI decisions (splitmix64), seeded from (game seed, slot). Not sim state.</summary>

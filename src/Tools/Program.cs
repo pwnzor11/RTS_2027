@@ -1,4 +1,6 @@
-﻿namespace Rts.Tools;
+﻿// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
+namespace Rts.Tools;
 
 /// <summary>Process entry point. All logic lives in <see cref="Cli"/>.</summary>
 public static class Program

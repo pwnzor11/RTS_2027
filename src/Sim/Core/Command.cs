@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
 namespace Rts.Sim.Core;
 
 /// <summary>v1 command kinds (design/01_architecture.md §4). Append only; values are persisted in replays.</summary>
