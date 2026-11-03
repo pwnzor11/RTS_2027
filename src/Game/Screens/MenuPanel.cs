@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
+using Rts.Game.Ui.Fonts;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -145,7 +146,7 @@ public sealed class MenuPanel : IUiRegion
             bool selected = i == Selected;
             if (selected) Shapes.Fill(sb, pixel, row, SelectedFill);
             string text = (selected ? "> " : "  ") + _items[i].Text();
-            int textY = row.Y + (row.Height - BitmapFont.GlyphHeight * scale) / 2;
+            int textY = row.Y + (row.Height - BitmapFont.LineHeight(scale, FontWeight.Regular)) / 2;
             BitmapFont.Draw(sb, pixel, text, new Vector2(row.X + scale * 2, textY), selected ? SelectedText : TextColour, scale);
 
             for (int b = 0; b < _items[i].Buttons.Count; b++)
@@ -162,7 +163,7 @@ public sealed class MenuPanel : IUiRegion
 
     private static int Pad(int scale) => 4 * scale;
 
-    private static int RowHeight(int scale) => (BitmapFont.GlyphHeight + 5) * scale;
+    private static int RowHeight(int scale) => BitmapFont.LineHeight(scale, FontWeight.Regular) + 5 * scale;
 
     private Layout Measure(Viewport viewport, int scale)
     {

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
+using Rts.Game.Ui.Fonts;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -129,7 +130,7 @@ public sealed class DebugConsole
         if (!IsOpen) return;
 
         int lineCount = VisibleOutputLines + 1;
-        int lineHeight = BitmapFont.GlyphHeight * Scale + LineGapPx;
+        int lineHeight = BitmapFont.LineHeight(Scale, FontWeight.Regular) + LineGapPx;
         int height = lineCount * lineHeight + Pad;
         int top = viewport.Height - height;
         batch.Draw(pixel, new Rectangle(0, top, viewport.Width, height), PanelColour);

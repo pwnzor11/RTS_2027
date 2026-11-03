@@ -19,7 +19,7 @@ namespace Rts.Game;
 /// </summary>
 public sealed class RtsGame : Microsoft.Xna.Framework.Game
 {
-    private const string TankSheetFile = "tank_v2.toml";
+    private const string TankSheetFile = "tank_v2.sprite.toml";
     private static readonly Color BackgroundColour = new(0x14, 0x16, 0x11);
 
     private readonly GraphicsDeviceManager _graphics;

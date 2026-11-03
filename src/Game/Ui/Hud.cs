@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
+using Rts.Game.Ui.Fonts;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -14,14 +15,14 @@ public static class Hud
     private static readonly Color TextColour = new(0xD8, 0xC8, 0x8A);
 
     /// <summary>Height in screen pixels of a panel with <paramref name="lines"/> lines at <paramref name="scale"/>.</summary>
-    public static int HeightOf(int lines, int scale) => BitmapFont.GlyphHeight * scale * lines + LineGapPx * (lines - 1) + Pad;
+    public static int HeightOf(int lines, int scale) => BitmapFont.LineHeight(scale, FontWeight.Regular) * lines + LineGapPx * (lines - 1) + Pad;
 
     /// <summary>Draws the panel with its top-left corner at <paramref name="origin"/>.</summary>
     public static void Panel(SpriteBatch batch, Texture2D pixel, Point origin, IReadOnlyList<string> lines, int scale)
     {
         if (lines.Count == 0) return;
         int textWidth = lines.Max(line => BitmapFont.Measure(line, scale));
-        int lineHeight = BitmapFont.GlyphHeight * scale + LineGapPx;
+        int lineHeight = BitmapFont.LineHeight(scale, FontWeight.Regular) + LineGapPx;
         batch.Draw(pixel, new Rectangle(origin.X, origin.Y, textWidth + 2 * Pad, HeightOf(lines.Count, scale)), PanelColour);
         for (int i = 0; i < lines.Count; i++)
         {
