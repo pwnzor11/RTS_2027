@@ -1,9 +1,11 @@
-# Handoff: Session 2 — Repo skeleton and art pilot
-Last commit: 60cba25 (2026-11-02) — content commit; the handoff commit itself sits directly on top of it
-Where things stand: Session 1 finished all research (19 files + synthesis) and all three design
-rounds (D-001..D-034). Architecture, game design and setting are written in `docs/design/`. There is
-no code yet. Next is M0-11 (repo skeleton) and M0-12 (art pilot), which are independent and can run
-as parallel waves.
+# Handoff: Session 2 (in progress) — checkpoint after wave 1
+Last commit: (set by the checkpoint commit; see `git log -1`) 
+Where things stand: M0-11 repo skeleton is done and on main: .NET 10 solution, `Sim` library (Fixed32,
+lepton/facing math in `Rts.Sim.Numerics`, slot arrays, Step with fixed system order, Move/Stop/Debug
+commands, xxHash64 state hash, save round-trip, replay), Roslyn determinism rules test, TOML rules
+loader + rules hash, `Tools` CLI (`validate`, `run`), MonoGame grid window on demo data, Windows CI
+(build, test, validate, win-x64 publish) green. M0-12 art pilot contact sheet is on main in
+`art/pilot/`; waiting for the owner's pick (Q-24).
 
 ## Start here (shown to the user as the plan; nothing starts until they say go)
 1. Ask the user: has he read `docs/design/03_setting_and_factions.md`, and does he want to change any

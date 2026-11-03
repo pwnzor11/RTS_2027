@@ -4,7 +4,7 @@ Context and trade-offs for every question are in `docs/research/00_SYNTHESIS.md`
 file cited after each question. Recommendations are the lead's, from the research.
 
 ## Open
-- ⚪ **Q-24 · Art pilot results.** Cell pixel size (48/64/96 px) and the Blender-vs-AI-frame split are decided by the pilot in M0-12, not by discussion.
+- 🟡 **Q-24 · Art pilot results.** Contact sheet ready in `art/pilot/contact_sheet.png` (session 2). Cell pixel size (48/64/96 px) and the Blender-vs-AI-frame split are decided by the pilot in M0-12, not by discussion.
 
 ## Answered
 - Q-25 · 2026-11-02 · D-033 confirmed; setting draft accepted → D-036.
