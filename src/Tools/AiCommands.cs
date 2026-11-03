@@ -155,7 +155,7 @@ public static class AiCommands
 
     // ---- playing ------------------------------------------------------------------------------
 
-    private sealed record World(Rts.Sim.Rules.SimRules Rules, ulong RulesHash);
+    private sealed record World(Rts.Sim.Rules.SimRules Rules, ulong RulesHash, string RulesDir);
 
     private sealed class MatchTally
     {
@@ -177,7 +177,8 @@ public static class AiCommands
                 FileStream? replay = recordDir is null ? null
                     : File.Create(Path.Combine(recordDir, $"{a.Label}_vs_{b.Label}_seed{s}_g{g + 1}.rtsreplay".Replace(':', '-')));
                 AiGameResult r;
-                using (replay) r = AiMatchRunner.Play(map, w.Rules, w.RulesHash, (ulong)s, a, b, aInSlot0, ticks, replay);
+                using (replay) r = AiMatchRunner.Play(map, w.Rules, w.RulesHash, (ulong)s, a, b, aInSlot0, ticks, replay,
+                    BuildInfo.Version, replay is null ? null : RulesBundle.ReadDirectory(w.RulesDir));
                 tally.Games++;
                 tally.Ticks += r.EndTick;
                 tally.EndTickSum += r.EndTick;
@@ -212,7 +213,7 @@ public static class AiCommands
             foreach (RulesProblem p in ex.Problems) Console.Error.WriteLine($"{p.File}: {p.Key}: {p.Message}");
             return false;
         }
-        world = new World(rules.Sim, rules.RulesHash);
+        world = new World(rules.Sim, rules.RulesHash, rulesDir);
         return true;
     }
 

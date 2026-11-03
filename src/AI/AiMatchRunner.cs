@@ -25,13 +25,14 @@ public static class AiMatchRunner
     /// <summary>Plays a game. <paramref name="sideA"/> takes slot 0 when <paramref name="aInSlot0"/>, else slot 1
     /// (slot p starts at map start position p). When <paramref name="replay"/> is given, the game is recorded to it.</summary>
     public static AiGameResult Play(MapData map, SimRules rules, ulong rulesHash, ulong seed, AiSide sideA, AiSide sideB,
-        bool aInSlot0, int maxTicks, Stream? replay = null)
+        bool aInSlot0, int maxTicks, Stream? replay = null, string build = "",
+        IReadOnlyList<(string Name, string Text)>? rulesFiles = null)
     {
         if (map.StartPositions.Count < 2) throw new ArgumentException("Map needs two start positions.", nameof(map));
         var setup = new SimSetup(seed, map, 2, rules, rulesHash);
         var sim = new Simulation(setup);
-        ReplayWriter? recorder = replay is null ? null : new ReplayWriter(setup);
-        for (byte p = 0; p < 2; p++) SpawnArmy(sim, recorder, rules, map, p);
+        ReplayWriter? recorder = replay is null ? null : new ReplayWriter(replay, sim, build, rulesFiles ?? Array.Empty<(string, string)>());
+        for (byte p = 0; p < 2; p++) SpawnArmy(sim, rules, map, p);
 
         byte slotA = aInSlot0 ? (byte)0 : (byte)1, slotB = (byte)(1 - slotA);
         var driver = new AiDriver(seed);
@@ -50,7 +51,7 @@ public static class AiMatchRunner
             pending.RemoveAll(c => c.ExecTick < sim.Tick);
             fresh = pending.Count;
             if (recorder is not null && sim.Tick % SimConstants.HashIntervalTicks == 0)
-                recorder.RecordHash(sim.Tick, sim.ComputeStateHash(), sim.ComputeSubHashes());
+                recorder.RecordHash(sim);
             if (sim.Tick % WinCheckInterval != 0) continue;
             bool aliveA = HasAnything(sim, slotA), aliveB = HasAnything(sim, slotB);
             if (aliveA && aliveB) continue;
@@ -58,7 +59,7 @@ public static class AiMatchRunner
             break;
         }
 
-        if (recorder is not null) recorder.Finish(replay!, sim.Tick);
+        if (recorder is not null) recorder.Finish();
         return new AiGameResult(winner, sim.Tick, ValueOf(sim, slotA), ValueOf(sim, slotB), sim.ComputeStateHash());
     }
 
@@ -70,7 +71,7 @@ public static class AiMatchRunner
     }
 
     /// <summary>The `match` start force: vehicles in a row, infantry two cells behind, one HQ on a ring around the start.</summary>
-    private static void SpawnArmy(Simulation sim, ReplayWriter? recorder, SimRules rules, MapData map, byte player)
+    private static void SpawnArmy(Simulation sim, SimRules rules, MapData map, byte player)
     {
         CellCoord start = map.StartPositions[player];
         int dx = start.X < map.Width / 2 ? 1 : -1, dy = start.Y < map.Height / 2 ? 1 : -1;
@@ -79,7 +80,6 @@ public static class AiMatchRunner
             int type = Index(rules.Vehicles, VehicleIds[k], v => v.Id);
             var cell = new CellCoord(start.X + dx * k, start.Y);
             sim.SpawnVehicle(player, type, cell);
-            recorder?.RecordSpawn(ActorKind.Vehicle, player, type, cell);
         }
         int rifle = Index(rules.Infantry, InfantryId, i => i.Id);
         for (int i = 0; i < InfantryPerPlayer; i++)
@@ -87,7 +87,6 @@ public static class AiMatchRunner
             var cell = new CellCoord(start.X + dx * (i / InfantryStore.SubSlotCount), start.Y + 2 * dy);
             int sub = i % InfantryStore.SubSlotCount;
             sim.SpawnInfantry(player, rifle, cell, sub);
-            recorder?.RecordSpawn(ActorKind.Infantry, player, rifle, cell, sub);
         }
         int hq = Index(rules.Buildings, HqId, b => b.Id);
         BuildingType hqType = rules.Buildings[hq];
@@ -96,9 +95,7 @@ public static class AiMatchRunner
             int x0 = dx > 0 ? start.X + ring : start.X - ring - (hqType.FootprintW - 1);
             int y0 = dy > 0 ? start.Y + ring : start.Y - ring - (hqType.FootprintH - 1);
             var topLeft = new CellCoord(x0, y0);
-            if (sim.PlaceBuilding(player, hq, topLeft) == EntityId.None) continue;
-            recorder?.RecordSpawn(ActorKind.Building, player, hq, topLeft);
-            break;
+            if (sim.PlaceBuilding(player, hq, topLeft) != EntityId.None) break;
         }
     }
 
