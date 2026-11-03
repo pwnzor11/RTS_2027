@@ -17,7 +17,9 @@ namespace Rts.Sim.Missions;
 /// last field cell (or the harvester when it has none yet; then around the harvester if that ring search finds nothing), drive
 /// there, load one unit every HarvestTicksPerUnit (density -1, overlay cleared at 0), seek the next cell when it runs out, and
 /// switch to Return when full or when nothing is left in range while carrying cargo (empty and nothing found: retry every
-/// <see cref="RetryTicks"/> ticks, so regrowth is picked up). A harvester with HarvestCapacity > 0 that has never been given a
+/// <see cref="RetryTicks"/> ticks, so regrowth is picked up). When the near search (<see cref="SearchRadius"/>) finds nothing and
+/// the harvester is empty, the search widens ring by ring (<see cref="RingsPerTick"/> rings per tick, cursor in
+/// EconomyState.SearchRing) up to the whole map, so the nearest field by Chebyshev distance wins wherever it is. A harvester with HarvestCapacity > 0 that has never been given a
 /// mission starts Harvest on the tick after it appears (Simulation.RunEconomy, no hook in OnActorSpawned).</para>
 /// <para>Return: pick the nearest own refinery (squared cell distance harvester to dock cell, ties by slot order), drive to within
 /// <see cref="QueueRadius"/> cells of its dock cell, take a queue ticket and wait there until the dock is free and no
@@ -28,8 +30,10 @@ namespace Rts.Sim.Missions;
 /// </summary>
 internal static class HarvestMission
 {
-    /// <summary>Largest ring (Chebyshev radius in cells) searched for resource.</summary>
+    /// <summary>Largest ring (Chebyshev radius in cells) of the near search, done in one tick.</summary>
     public const int SearchRadius = 16;
+    /// <summary>Rings scanned per tick by the widening search that follows an empty near search (up to the whole map).</summary>
+    public const int RingsPerTick = 8;
     /// <summary>Ticks between searches while nothing is left to harvest.</summary>
     public const int RetryTicks = 40;
     /// <summary>Distance (cells) from the dock cell at which a returning harvester joins the queue.</summary>
@@ -53,7 +57,7 @@ internal static class HarvestMission
         {
             store.Status[i] = MissionStatus.Waiting;
             eco.HarvestState[i] = (byte)HarvestStep.Seek;
-            eco.DockState[i] = 0; eco.DockTarget[i] = default; eco.Ticket[i] = 0; eco.Timer[i] = 0; eco.BadCell[i] = default;
+            eco.DockState[i] = 0; eco.DockTarget[i] = default; eco.Ticket[i] = 0; eco.Timer[i] = 0; eco.BadCell[i] = default; eco.SearchRing[i] = 0;
         }
         if (eco.Cargo[i] >= capacity) return Assign(sim, store, kind, i, MissionKind.Return);
 
@@ -66,14 +70,36 @@ internal static class HarvestMission
                 Locomotion loco = rules.Vehicles[store.TypeIndex[i]].Locomotion;
                 CellCoord last = eco.LastFieldCell[i];
                 CellCoord goal;
-                bool found = FindRich(sim, i, me, last != default ? last : cur, loco, out goal)
-                    || (last != default && FindRich(sim, i, me, cur, loco, out goal));
+                int ring = eco.SearchRing[i];
+                bool found;
+                if (ring == 0)
+                {
+                    found = FindRich(sim, i, me, last != default ? last : cur, loco, 0, SearchRadius, out goal)
+                        || (last != default && FindRich(sim, i, me, cur, loco, 0, SearchRadius, out goal));
+                    if (!found && eco.Cargo[i] == 0) ring = SearchRadius + 1;   // nothing near and nothing to deliver: widen
+                }
+                else
+                {
+                    // widening search: a few rings per tick, nearest ring first, resuming next tick
+                    int maxRing = Math.Max(sim.Setup.Map.Width, sim.Setup.Map.Height);
+                    int to = Math.Min(maxRing, ring + RingsPerTick - 1);
+                    found = FindRich(sim, i, me, last != default ? last : cur, loco, ring, to, out goal);
+                    ring = found ? 0 : to + 1;
+                    if (!found && to >= maxRing)
+                    {
+                        eco.SearchRing[i] = 0;      // the whole map is empty: sleep, then start over (regrowth is picked up)
+                        eco.BadCell[i] = default;
+                        return RetryTicks;
+                    }
+                }
+                eco.SearchRing[i] = found ? 0 : ring;
                 if (found)
                 {
                     eco.Goal[i] = goal;
                     eco.HarvestState[i] = (byte)HarvestStep.Go;
                     return 1;
                 }
+                if (ring != 0) return 1;
                 eco.BadCell[i] = default;
                 if (eco.Cargo[i] > 0) return Assign(sim, store, kind, i, MissionKind.Return);
                 return RetryTicks;
@@ -129,17 +155,18 @@ internal static class HarvestMission
 
     private static int UnitValue(EconomyRules er, OverlayKind o) => o == OverlayKind.Pitchblende ? er.CreditsPitchblende : er.CreditsAshfall;
 
-    /// <summary>Nearest ring (0..SearchRadius) around <paramref name="center"/> that has a usable resource cell; the richest
+    /// <summary>Nearest ring (<paramref name="fromRing"/>..<paramref name="toRing"/>) around <paramref name="center"/> that has a usable resource cell; the richest
     /// (density times credits per unit) wins, ties go to the first in row-major scan order.</summary>
-    private static bool FindRich(Simulation sim, int self, EntityId me, CellCoord center, Locomotion loco, out CellCoord best)
+    private static bool FindRich(Simulation sim, int self, EntityId me, CellCoord center, Locomotion loco, int fromRing, int toRing, out CellCoord best)
     {
         best = default;
         EconomyRules er = sim.RulesOf(sim.Units.Player[self]).Economy;
-        for (int r = 0; r <= SearchRadius; r++)
+        for (int r = fromRing; r <= toRing; r++)
         {
             long bestValue = -1;
             for (int y = center.Y - r; y <= center.Y + r; y++)
             {
+                if (y < 0 || y >= sim.Setup.Map.Height) continue;
                 bool edgeRow = y == center.Y - r || y == center.Y + r;
                 int step = edgeRow ? 1 : 2 * r;
                 for (int x = center.X - r; x <= center.X + r; x += step)
