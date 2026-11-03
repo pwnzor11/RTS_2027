@@ -77,7 +77,7 @@ Single player: `ExecTick = Tick + 1`. LAN: `Tick + delay` (2–4).
   as stepping N ticks without the round-trip; this is a permanent test.
 
 ## 6. Data model
-- TOML files in `data/rules/`: `units.toml`, `infantry.toml`, `buildings.toml`, `aircraft.toml`,
+- TOML files in `data/rules/`: `vehicles.toml`, `infantry.toml`, `buildings.toml`, `aircraft.toml`,
   `weapons.toml`, `warheads.toml` (with the warhead × armour matrix), `terrain.toml` (land type ×
   locomotion → speed %, buildable), `factions.toml`, `techs.toml`, `ai_profiles.toml`,
   `difficulty.toml`, `game.toml` (global constants).
