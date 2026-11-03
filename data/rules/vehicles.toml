@@ -1,10 +1,10 @@
-# Authority M2 roster: placeholder balance (tune in M2-14).
+# Authority M2 roster: balance pass in M2-14, see docs/balance/m2_balance.md.
 # Keys: speed (leptons/tick), max_health, locomotion, turn_rate (facing steps/tick), armor, sight (cells),
 # primary_weapon ("" = none), has_turret, turret_turn_rate, crusher, cost, prerequisites.
 # Optional: harvest_capacity (scraper), build_time.
 
 [auth_scraper]
-speed = 14
+speed = 18
 max_health = 350
 locomotion = "tracked"
 turn_rate = 6
@@ -29,7 +29,7 @@ primary_weapon = "auth_jeep_mg"
 has_turret = false
 turret_turn_rate = 0
 crusher = false
-cost = 400
+cost = 350
 prerequisites = ["auth_factory"]
 
 [auth_tank]

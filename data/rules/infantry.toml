@@ -1,9 +1,9 @@
-# Authority M2 roster: placeholder balance (tune in M2-14).
+# Authority M2 roster: balance pass in M2-14, see docs/balance/m2_balance.md.
 # Keys: speed, max_health, armor, sight, primary_weapon ("" = none), cost, prerequisites. Optional: build_time.
 # Infantry have no locomotion key (they move on foot).
 
 [auth_rifleman]
-speed = 10
+speed = 12
 max_health = 50
 armor = "unarmored"
 sight = 4
@@ -12,7 +12,7 @@ cost = 100
 prerequisites = ["auth_barracks"]
 
 [auth_rocketeer]
-speed = 8
+speed = 10
 max_health = 60
 armor = "unarmored"
 sight = 5

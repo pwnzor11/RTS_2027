@@ -8,7 +8,7 @@ namespace Rts.AI;
 
 /// <summary>
 /// "recruit": the tier 1 economy skirmish AI. Honest (sees only its <see cref="PlayerView"/>), slow and simple:
-/// a fixed structure build order, a fixed unit mix, one harvester that is never replaced, no repair, and slow attack
+/// a fixed structure build order, a seeded unit mix, one harvester that is never replaced, no repair, and slow attack
 /// waves (see the manager classes in Rts.AI.Recruit). Deterministic: no state from outside the view, decisions on the
 /// profile's interval.
 /// </summary>
@@ -30,6 +30,9 @@ public sealed class RecruitAi : IAiPlayer
         _military = new MilitaryManager(profile.AttackThreshold);
     }
 
+    /// <summary>Harvest orders to probe cells (a stalled scraper sent to look for a field).</summary>
+    public int Probes => _economy.Probes;
+
     /// <inheritdoc />
     public string Id => AiRegistry.RecruitId;
 
@@ -46,7 +49,12 @@ public sealed class RecruitAi : IAiPlayer
     public int Waves => _military.Waves;
 
     /// <inheritdoc />
-    public void Start(AiContext ctx) => _military.Start(ctx);
+    public void Start(AiContext ctx)
+    {
+        _military.Start(ctx);
+        _economy.Start(ctx);
+        _production.Start(ctx.Rng);
+    }
 
     /// <inheritdoc />
     public void Think(PlayerView view, ICommandSink sink)
