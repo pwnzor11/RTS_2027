@@ -520,3 +520,15 @@ readable rifle, contrast between garment parts) and the owner approves again bef
 red, blue, white, purple, cyan, orange, pink; green is never a house colour on green-bodied factions. Faction
 identity stays in the body paint.
 **Status:** confirmed (owner, session 3)
+
+### D-069 · 2026-11-03 · Construction approved; fire and smoke become separate effects; Rifleman approved
+**Decision:** (1) The Refinery's second-pass construction stages are approved ("construction looks amazing now") and
+are the template for all structures. (2) The baked damage fire was rejected ("that fire looks terrible"; the
+24-colour art palette has no true red/orange). Fire, smoke and explosions become separate, reusable pixel-art
+effect animations with their own fire palette, drawn by the renderer at anchor points listed in each sprite
+manifest (`[[fx]]` tables). Baked `damaged` frames keep only structural damage (breaches, collapse, scorch,
+soot). The owner approves the new fire before it ships. (3) The second-pass Rifleman is approved; the Rocketeer
+is made from it.
+**Why:** effects drawn by the game look consistent on every building, animate independently and cost no
+re-render per building. Lead's call on the approach (reversible).
+**Status:** confirmed (owner verdicts); approach (2) assumed — confirm
