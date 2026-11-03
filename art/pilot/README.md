@@ -141,5 +141,5 @@ Idle is unchanged except that big flat house areas now use mid shades (see 6). B
   couple of fire ramp colours in `common.PAL` would help (not mine to change). The 4-frame loop makes the plume a chain of blobs
   at 1x. Damaged frames no longer touch the top edge; idle frames 1 and 3 still do (stack puff, as in the pilot).
 - The before sheet used by the contact sheet is `art/pilot/refinery_contact_before_sheet.png` (the pilot sprite sheet).
-- Cost log (D-059): about 100 min wall-clock, most of it waiting on the shared render lock; 3 full renders (5-7 min each),
+- Cost log (D-059): about 40 min wall-clock, partly waiting on the shared render lock; 3 full renders (5-7 min each),
   2 partial renders and 3 preview passes of about 1 min.
