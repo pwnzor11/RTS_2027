@@ -1,0 +1,195 @@
+using Rts.Sim.Core;
+using Rts.Sim.Map;
+using Rts.Sim.Rules;
+
+namespace Rts.Data;
+
+/// <summary>
+/// Synthetic skirmish map generator for tests and early playtests. Deterministic for (size, seed), uses only
+/// <see cref="SimRandom"/>, and is two-fold rotationally symmetric (cell i mirrors to Width*Height-1-i).
+/// All numeric parameters below are placeholders pending design sign-off.
+/// </summary>
+public static class MapGenerator
+{
+    /// <summary>Smallest size that fits the starts, the plateau and the features.</summary>
+    public const int MinSize = 24;
+    /// <summary>How many seeds (seed, seed+1, ...) are tried before giving up on connectivity.</summary>
+    public const int MaxAttempts = 10;
+
+    private const int StartInset = 4;      // start position = (4,4) and its mirror
+    private const int StartClearRadius = 3; // Chebyshev radius forced to clear ground
+    private const int StartKeepRadius = 5;  // features keep out of this radius (pits excepted)
+
+    /// <summary>Generates a map. When <paramref name="name"/> is null the name is "synthetic_&lt;size&gt;_&lt;seed&gt;".</summary>
+    public static MapData Generate(int size, ulong seed, string? name = null)
+    {
+        if (size < MinSize || size > SimConstants.MaxMapCells)
+            throw new ArgumentOutOfRangeException(nameof(size), $"Size must be {MinSize}..{SimConstants.MaxMapCells}.");
+        name ??= $"synthetic_{size}_{seed}";
+        for (int attempt = 0; attempt < MaxAttempts; attempt++)
+        {
+            MapData map = Build(size, seed + (ulong)attempt, name);
+            if (IsConnected(map, Locomotion.Tracked)) return map;
+        }
+        throw new InvalidOperationException($"No connected map found for size {size} from seed {seed} in {MaxAttempts} tries.");
+    }
+
+    /// <summary>4-way flood fill from the first start position; true if every start position is reached.</summary>
+    public static bool IsConnected(MapData map, Locomotion loco)
+    {
+        TerrainTable table = DefaultTerrain.Create();
+        int w = map.Width, h = map.Height;
+        var seen = new bool[w * h];
+        var stack = new Stack<int>();
+        CellCoord s0 = map.StartPositions[0];
+        seen[map.IndexOf(s0)] = true;
+        stack.Push(map.IndexOf(s0));
+        while (stack.Count > 0)
+        {
+            int i = stack.Pop();
+            int x = i % w, y = i / w;
+            for (int d = 0; d < 4; d++)
+            {
+                int nx = x + (d == 0 ? 1 : d == 1 ? -1 : 0), ny = y + (d == 2 ? 1 : d == 3 ? -1 : 0);
+                if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
+                int j = ny * w + nx;
+                if (seen[j] || table.SpeedPercent(map.Land[j], loco) <= 0) continue;
+                seen[j] = true;
+                stack.Push(j);
+            }
+        }
+        for (int k = 1; k < map.StartPositions.Count; k++)
+            if (!seen[map.IndexOf(map.StartPositions[k])]) return false;
+        return true;
+    }
+
+    private sealed class Grid
+    {
+        public readonly int N;
+        public readonly LandType[] Land;
+        public readonly byte[] Height;
+        public readonly OverlayKind[] Overlay;
+        public readonly byte[] Density;
+        public readonly bool[] Reserved;
+
+        public Grid(int n)
+        {
+            N = n;
+            Land = new LandType[n * n]; Height = new byte[n * n]; Overlay = new OverlayKind[n * n];
+            Density = new byte[n * n]; Reserved = new bool[n * n];
+        }
+
+        public int Mirror(int i) => N * N - 1 - i;
+        public bool Free(int i) => Land[i] == LandType.Clear && Overlay[i] == OverlayKind.None && !Reserved[i];
+
+        /// <summary>Paints a cell and its mirror if both are free (or both are plain clear when ignoring reservations).</summary>
+        public bool Paint(int x, int y, LandType land, OverlayKind overlay, byte density, bool ignoreReserved = false)
+        {
+            if (x < 0 || y < 0 || x >= N || y >= N) return false;
+            int i = y * N + x, m = Mirror(i);
+            if (!(ignoreReserved ? Plain(i) && Plain(m) : Free(i) && Free(m))) return false;
+            Land[i] = land; Overlay[i] = overlay; Density[i] = density;
+            Land[m] = land; Overlay[m] = overlay; Density[m] = density;
+            return true;
+        }
+
+        private bool Plain(int i) => Land[i] == LandType.Clear && Overlay[i] == OverlayKind.None;
+    }
+
+    private static MapData Build(int n, ulong seed, string name)
+    {
+        var rng = new SimRandom(seed);
+        var g = new Grid(n);
+
+        // Central plateau (height 1) with a one-cell cliff ring and two rotationally paired ramps.
+        int lo = n / 4, hi = n - 1 - lo;
+        for (int y = lo; y <= hi; y++)
+            for (int x = lo; x <= hi; x++)
+            {
+                int i = y * n + x;
+                g.Height[i] = 1;
+                if (x == lo || x == hi || y == lo || y == hi) { g.Land[i] = LandType.Cliff; g.Reserved[i] = true; }
+            }
+        int ry = lo + n / 8;
+        for (int k = 0; k < 3; k++)
+        {
+            int a = (ry + k) * n + lo, b = g.Mirror(a);
+            g.Land[a] = LandType.Clear; g.Land[b] = LandType.Clear;
+        }
+        for (int k = -2; k <= 4; k++)
+            for (int dx = -2; dx <= 2; dx++)
+            {
+                int yy = ry + k, xx = lo + dx;
+                if (yy < 0 || xx < 0 || yy >= n || xx >= n) continue;
+                g.Reserved[yy * n + xx] = true;
+                g.Reserved[g.Mirror(yy * n + xx)] = true;
+            }
+
+        // Starts: opposite corners, clear ground, kept free of features.
+        var starts = new[] { new CellCoord(StartInset, StartInset), new CellCoord(n - 1 - StartInset, n - 1 - StartInset) };
+        foreach (CellCoord s in starts)
+            for (int dy = -StartKeepRadius; dy <= StartKeepRadius; dy++)
+                for (int dx = -StartKeepRadius; dx <= StartKeepRadius; dx++)
+                {
+                    int x = s.X + dx, y = s.Y + dy;
+                    if (x < 0 || y < 0 || x >= n || y >= n) continue;
+                    g.Reserved[y * n + x] = true;
+                }
+
+        // Pitchblende: one 2x2 pit near each start (mirror gives the second), two contested near the middle.
+        Pit(g, rng, StartInset + 4, StartInset + 1);
+        Pit(g, rng, n / 2 - 4, n / 2 - 2);
+
+        // Ashfall fields: 3..5 per half, small blobs on Ash land.
+        int ashFields = rng.Next(3, 6);
+        for (int f = 0; f < ashFields; f++)
+            Blob(g, rng, 1 + rng.Next(2), LandType.Ash, OverlayKind.Ashfall, true);
+        // Water pond: one per half.
+        Blob(g, rng, 2, LandType.Water, OverlayKind.None, false);
+        // Rock outcrops: 2..3 per half.
+        int rocks = rng.Next(2, 4);
+        for (int f = 0; f < rocks; f++) Blob(g, rng, rng.Next(0, 2), LandType.Rock, OverlayKind.None, false);
+        // Rough patches: 3..4 per half.
+        int roughs = rng.Next(3, 5);
+        for (int f = 0; f < roughs; f++) Blob(g, rng, 2, LandType.Rough, OverlayKind.None, false);
+
+        // Final guarantee: clear ground at the start positions themselves.
+        foreach (CellCoord s in starts)
+            for (int dy = -StartClearRadius; dy <= StartClearRadius; dy++)
+                for (int dx = -StartClearRadius; dx <= StartClearRadius; dx++)
+                {
+                    int i = (s.Y + dy) * n + s.X + dx;
+                    g.Land[i] = LandType.Clear; g.Overlay[i] = OverlayKind.None; g.Density[i] = 0;
+                }
+
+        return new MapData(name, "rust_belt", n, n, new ushort[n * n], g.Land, g.Height, g.Overlay, g.Density, starts);
+    }
+
+    private static void Pit(Grid g, SimRandom rng, int x0, int y0)
+    {
+        for (int dy = 0; dy < 2; dy++)
+            for (int dx = 0; dx < 2; dx++)
+                g.Paint(x0 + dx, y0 + dy, LandType.Clear, OverlayKind.Pitchblende, (byte)rng.Next(8, 13), ignoreReserved: true);
+    }
+
+    /// <summary>Paints a diamond blob (Manhattan radius r, ragged rim) at a random spot in the first half.</summary>
+    private static void Blob(Grid g, SimRandom rng, int r, LandType land, OverlayKind overlay, bool withDensity)
+    {
+        int n = g.N;
+        for (int attempt = 0; attempt < 20; attempt++)
+        {
+            int cx = rng.Next(n), cy = rng.Next(n / 2);
+            if (!g.Free(cy * n + cx) || !g.Free(g.Mirror(cy * n + cx))) continue;
+            for (int dy = -r; dy <= r; dy++)
+                for (int dx = -r; dx <= r; dx++)
+                {
+                    int d = System.Math.Abs(dx) + System.Math.Abs(dy);
+                    if (d > r) continue;
+                    if (d == r && r > 0 && rng.Next(3) == 0) continue;
+                    byte density = withDensity ? (byte)rng.Next(3, 13) : (byte)0;
+                    g.Paint(cx + dx, cy + dy, land, overlay, density);
+                }
+            return;
+        }
+    }
+}
