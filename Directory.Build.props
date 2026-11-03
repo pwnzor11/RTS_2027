@@ -8,5 +8,23 @@
     <RootNamespace>Rts.$(MSBuildProjectName)</RootNamespace>
     <Deterministic>true</Deterministic>
     <InvariantGlobalization>true</InvariantGlobalization>
+    <!-- Release version (C-12). The git SHA is added by StampBuildVersion below. -->
+    <Version>0.1.5</Version>
   </PropertyGroup>
+
+  <!--
+    Sets SourceRevisionId to the short git SHA. The SDK then appends it to the informational version
+    ("0.1.5+3f2a9c1"), which the replay headers and crash logs read through BuildInfo. Runs before the SDK
+    reads SourceRevisionId. ContinueOnError and an empty SHA when git is missing (source zip, no .git folder).
+  -->
+  <Target Name="StampBuildVersion" BeforeTargets="InitializeSourceControlInformation;GetAssemblyVersion;CoreGenerateAssemblyInfo">
+    <Exec Command="git rev-parse --short HEAD" WorkingDirectory="$(MSBuildThisFileDirectory)" ConsoleToMSBuild="true"
+          IgnoreExitCode="true" IgnoreStandardErrorWarningFormat="true" StandardErrorImportance="low"
+          ContinueOnError="true">
+      <Output TaskParameter="ConsoleOutput" PropertyName="RtsGitShortSha" />
+    </Exec>
+    <PropertyGroup>
+      <SourceRevisionId Condition="'$(RtsGitShortSha)' != ''">$(RtsGitShortSha)</SourceRevisionId>
+    </PropertyGroup>
+  </Target>
 </Project>
