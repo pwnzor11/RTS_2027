@@ -274,3 +274,24 @@ branch predates FX support, so re-run `python3 tools/art/build_structure.py <id>
 - auth_silo 2x2, canvas 128x152: two domed silos, feed pipe, gauge lamp blinks. Damaged: west silo blown open with spilled ash, east silo cracked.
 Minutes spent (D-059, excluding ~15 min of waiting on the shared render lock per batch): conyard about 45, power about 25, barracks about 25, silo about 20, contact sheet about 10.
 Known: the 4 damaged frames are near-identical (only the conyard cable swings); the barracks DOCK entry is the exit cell, which `buildings.toml` has no field for yet.
+
+## Art polish (M2-20, D-072): roofs, wall variants, Rocketeer flash
+Regenerate inside the lock: `build_structure.py auth_conyard|auth_power|auth_silo|auth_wall`, `build_infantry.py auth_rocketeer`;
+contact sheet `python3 tools/art/polish_contact.py` → `art/pilot/polish_contact.png` (the "before" images are in `art/pilot/before_m2_20/`).
+- Roofs: the roof panels were already `house2`, but the house ramp is calibrated from the brightest 2 % of all house pixels and the big
+  flat roof panel *is* those pixels, so it always landed on the lightest shade (pastel). Fix in the pipeline: a module that sets
+  `HOUSE2_MID = True` gets a red-only mask for `house2` (build_structure) and structpost calibrates the ramp from plain `house` pixels only
+  and pins `house2` to ramp shades 2..4 (mid). Set on conyard, power and silo; other structures are unchanged until re-rendered. The vertical
+  `house` panels now use the full ramp, so they read a little lighter than before. Frame counts and `[[fx]]` tables unchanged (checked).
+- Wall: one sheet, every state facings = 1: `h v end_n end_e end_s end_w corner_ne corner_nw corner_se corner_sw t_n t_e t_s t_w cross post`
+  each with `_damaged`, plus `idle`/`damaged` (= h, kept for the cameo and fallbacks) and the generic `build`. 256x1000 px, 38 frames.
+  Naming: the letters are the directions the wall CONTINUES in (`end_n` = a neighbour to the north only, `corner_se` = south and east,
+  `t_n` = north, east, west; `post` = none). Pieces that are not straight get a corner pillar; arms, caps, bands and trims run to the cell
+  edge, teeth keep the 0.85 pitch (south of east-west arms, east of north-south runs). A north-south piece shows its south end face; the
+  southern neighbour's sprite is drawn after it and covers it.
+- Game: `WallTiling` (mask bits N1 E2 S4 W8 → state name) and `WallTiler` (per-snapshot cache of own-wall cells and masks) in
+  `src/Game/Render`; `BuildingRenderer` swaps the idle/damaged frame of a `wall = true` building for the variant and leaves build frames
+  alone; a manifest without the variant states keeps the plain frame. `SceneRenderer` creates the tiler and passes it in (2 small edits).
+- Rocketeer: the launch flame is a small warm orange cone with a 1-2 px pale core, the backblast a short grey-brown puff (was a large
+  white blob). Known: facing east the tube already reaches the 32 px canvas edge, so most of the flame is cropped there.
+- Minutes (D-059, excluding queueing on the shared Blender lock): about 60 of work; renders: conyard 7, power 4, silo 3, wall 8, Rocketeer 5 + 2 test renders.
