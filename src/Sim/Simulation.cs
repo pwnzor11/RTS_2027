@@ -243,6 +243,7 @@ public sealed class Simulation
         return XxHash64.HashToUInt64(ms.GetBuffer().AsSpan(0, (int)ms.Length));
     }
 
+    /// <summary>Snapshot for the omniscient debug view. Snapshot(viewer) arrives with fog in M1-07.</summary>
     public SimSnapshot Snapshot()
     {
         var list = new List<UnitView>(_units.Slots.Count + _infantry.Slots.Count);
@@ -255,7 +256,8 @@ public sealed class Simulation
                 list.Add(new UnitView(_infantry.Slots.IdOf(i), UnitKind.Infantry, _infantry.Player[i], _infantry.TypeIndex[i],
                     _infantry.Position[i], _infantry.Facing[i], _infantry.Health[i]));
         ulong hash = _recentHashes.Count > 0 ? _recentHashes[^1].Hash : 0UL;
-        return new SimSnapshot(Tick, Setup.Map.Width, Setup.Map.Height, list, Setup.Map.Land, hash);
+        return new SimSnapshot(Tick, Setup.Map.Width, Setup.Map.Height, list, Setup.Map.Land, hash,
+            Array.Empty<BuildingView>(), -1, Array.Empty<byte>());
     }
 
     /// <summary>Versioned binary save of the whole sim state.</summary>

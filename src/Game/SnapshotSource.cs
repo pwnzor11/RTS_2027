@@ -109,7 +109,7 @@ public sealed class DemoSnapshotSource : ISnapshotSource
                 100);
         }
 
-        return new SimSnapshot(_tick, MapCells, MapCells, units, _land, 0UL);
+        return new SimSnapshot(_tick, MapCells, MapCells, units, _land, 0UL, Array.Empty<BuildingView>(), -1, Array.Empty<byte>());
     }
 
     /// <summary>
