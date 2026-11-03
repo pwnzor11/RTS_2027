@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-test:
+    name: Build, test and validate
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Restore
+        run: dotnet restore RTS_2027.slnx
+
+      - name: Build
+        run: dotnet build RTS_2027.slnx -c Release --no-restore
+
+      - name: Test
+        run: dotnet test RTS_2027.slnx -c Release --no-build --logger trx
+
+      - name: Validate data
+        run: dotnet run --project src/Tools -c Release --no-build -- validate
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: "**/TestResults/*.trx"
+          if-no-files-found: warn
+
+  publish-game:
+    name: Publish Windows game
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Publish
+        run: dotnet publish src/Game -c Release -r win-x64 --self-contained -o publish/Game
+
+      - name: Upload game
+        uses: actions/upload-artifact@v4
+        with:
+          name: RTS_2027-win-x64
+          path: publish/Game
