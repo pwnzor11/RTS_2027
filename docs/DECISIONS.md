@@ -289,3 +289,10 @@ remap; infantry and buildings stay as squares until M2. Q-26.
 **Decision:** Classic feel: a tracked or wheeled vehicle rotates in place toward its next waypoint
 (turn rate from data), then moves; only small corrections happen while moving.
 **Status:** confirmed (owner)
+
+### D-043 · 2026-11-02 · Reference tank sprite is v2 without dither
+**Decision:** `art/pilot/B_pixel_64_v2.png` (with `sprite_meta_example.toml`) is the reference
+vehicle sprite for the debug view and future fan-out. The ordered-dither variant is not used (noisy at
+1×). Next polish notes (front house band visible from N/S, smaller reactor drum in N/S silhouette,
+shadow crop on the S facing) go to the M2 art pass.
+**Status:** assumed — confirm (lead's call under D-040)

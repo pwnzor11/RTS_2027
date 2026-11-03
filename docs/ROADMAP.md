@@ -58,7 +58,7 @@ and AI are M2. Planned in session 2; expect two sessions. Lead writes each wave'
 - [ ] M1-11 Debug overlays (paths, occupancy, fog, ranges) and a "battle sandbox" map: two armies
   meet in the window, replay saved and verified — Haiku + lead review — user can try: watch a fight,
   then `Tools replay verify` on the saved replay
-- [ ] M1-ART-01 Tank polish round on the D-039 pipeline: bigger house panel, camera ~40°, more hull/wheel
+- [x] M1-ART-01 Tank polish round on the D-039 pipeline: bigger house panel, camera ~40°, more hull/wheel
   detail; becomes the reference sprite for fan-out — user can try: look at the updated sheet
 
 ## M2 · Playable skirmish slice
