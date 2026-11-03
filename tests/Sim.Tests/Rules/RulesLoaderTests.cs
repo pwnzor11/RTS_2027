@@ -1,142 +1,107 @@
 using Rts.Data;
-using Rts.Sim.Core;
 using Rts.Sim.Rules;
-using Xunit;
 
 namespace Rts.Sim.Tests.Rules;
 
-/// <summary>Tests for the TOML rules loader, its validation and the rules hash.</summary>
+/// <summary>Loads the real data/rules files and checks counts, reference resolution, id order and the rules hash.</summary>
 public sealed class RulesLoaderTests
 {
-    private const string ValidGame =
-        "[game]\ntick_rate = 20\ndefault_map_width = 32\ndefault_map_height = 32\n";
-
-    private const string Placeholders =
-        "locomotion = \"tracked\"\nturn_rate = 8\narmor = \"heavy\"\nsight = 5\nprimary_weapon = \"\"\n" +
-        "has_turret = false\nturret_turn_rate = 0\ncrusher = true\ncost = 0\nprerequisites = []\n";
-
-    private const string ValidUnits =
-        "[test_crawler]\nspeed = 16\nmax_health = 300\n" + Placeholders;
-
-    private static string RealRulesDir()
-    {
-        string? dir = RulesLocator.FindRulesDir(AppContext.BaseDirectory);
-        Assert.NotNull(dir);
-        return dir!;
-    }
+    private static RuleSet LoadReal() => RulesLoader.Load(TempRules.RealDir());
 
     [Fact]
-    public void LoadsRealRulesFiles()
+    public void LoadsRealDataWithExpectedCounts()
     {
-        RuleSet rules = RulesLoader.Load(RealRulesDir());
+        RuleSet rules = LoadReal();
 
         Assert.Equal(20, rules.Game.TickRate);
-        Assert.Equal(32, rules.Game.DefaultMapWidth);
-        Assert.Equal(32, rules.Game.DefaultMapHeight);
-        var unit = Assert.Single(rules.Sim.Vehicles);
-        Assert.Equal("test_crawler", unit.Id);
-        Assert.Equal(16, unit.Speed);
-        Assert.Equal(300, unit.MaxHealth);
-        Assert.Equal(Locomotion.Tracked, unit.Locomotion);
-        Assert.Equal(-1, unit.PrimaryWeapon);
-        Assert.Empty(rules.Sim.Weapons);
-        Assert.Equal(0, rules.Sim.Terrain.SpeedPercent(LandType.Water, Locomotion.Tracked));
-        Assert.Equal(125, rules.Sim.Terrain.SpeedPercent(LandType.Road, Locomotion.Wheeled));
-        Assert.True(rules.Sim.Terrain.Buildable(LandType.Ash));
+        Assert.Equal(4, rules.Sim.Vehicles.Count);
+        Assert.Equal(2, rules.Sim.Infantry.Count);
+        Assert.Equal(4, rules.Sim.Buildings.Count);
+        Assert.Equal(4, rules.Sim.Weapons.Count);
+        Assert.Equal(3, rules.Sim.Warheads.Count);
+        Assert.Equal(2, rules.Sim.Effects.Count);
         Assert.NotEqual(0UL, rules.RulesHash);
     }
 
     [Fact]
-    public void HashIsStableUnderReformatting()
+    public void ResolvesWeaponAndWarheadReferencesToIndexes()
     {
-        using var temp = new TempRules(
-            game: "# reformatted copy\n[game]\ndefault_map_height = 32   # rows\ndefault_map_width=32\n\n\ntick_rate =   20\n",
-            units: "# comment\n\n[test_crawler]\nmax_health=300\n  speed =   16 # leptons\n" + Placeholders);
+        SimRules sim = LoadReal().Sim;
 
-        ulong original = RulesLoader.Load(RealRulesDir()).RulesHash;
-        ulong reformatted = RulesLoader.Load(temp.Dir).RulesHash;
-
-        Assert.Equal(original, reformatted);
+        VehicleType tank = sim.Vehicles.Single(v => v.Id == "test_tank");
+        Assert.Equal(WeaponIndex(sim, "test_cannon"), tank.PrimaryWeapon);
+        Assert.Equal(-1, sim.Vehicles.Single(v => v.Id == "test_crawler").PrimaryWeapon);
+        Assert.Equal(WarheadIndex(sim, "test_ap"), sim.Weapons[tank.PrimaryWeapon].Warhead);
+        Assert.Equal(WarheadIndex(sim, "test_he"), sim.Weapons[WeaponIndex(sim, "test_artillery")].Warhead);
+        Assert.Equal(WeaponIndex(sim, "test_rifle"), sim.Infantry.Single(i => i.Id == "test_rifleman").PrimaryWeapon);
+        Assert.Equal(-1, sim.Infantry.Single(i => i.Id == "test_engineer").PrimaryWeapon);
+        Assert.Equal(WeaponIndex(sim, "test_mg"), sim.Buildings.Single(b => b.Id == "test_turret").PrimaryWeapon);
+        Assert.Equal(new[] { "test_factory" }, tank.Prerequisites.ToArray());
     }
 
     [Fact]
-    public void HashChangesWhenSpeedChanges()
+    public void ReadsTerrainAndBuildableFromTomlValues()
     {
-        using var baseline = new TempRules(ValidGame, ValidUnits);
-        using var changed = new TempRules(ValidGame, "[test_crawler]\nspeed = 17\nmax_health = 300\n" + Placeholders);
+        TerrainTable terrain = LoadReal().Sim.Terrain;
 
-        Assert.NotEqual(RulesLoader.Load(baseline.Dir).RulesHash, RulesLoader.Load(changed.Dir).RulesHash);
+        Assert.Equal(0, terrain.SpeedPercent(LandType.Water, Locomotion.Tracked));
+        Assert.Equal(100, terrain.SpeedPercent(LandType.Water, Locomotion.Hover));
+        Assert.Equal(125, terrain.SpeedPercent(LandType.Road, Locomotion.Wheeled));
+        Assert.Equal(75, terrain.SpeedPercent(LandType.Rough, Locomotion.Foot));
+        Assert.Equal(100, terrain.SpeedPercent(LandType.Cliff, Locomotion.Air));
+        Assert.True(terrain.Buildable(LandType.Ash));
+        Assert.False(terrain.Buildable(LandType.Rough));
+    }
+
+    [Fact]
+    public void EveryListIsSortedByOrdinalId()
+    {
+        SimRules sim = LoadReal().Sim;
+
+        AssertSorted(sim.Vehicles.Select(v => v.Id));
+        AssertSorted(sim.Infantry.Select(i => i.Id));
+        AssertSorted(sim.Buildings.Select(b => b.Id));
+        AssertSorted(sim.Weapons.Select(w => w.Id));
+        AssertSorted(sim.Warheads.Select(w => w.Id));
+        AssertSorted(sim.Effects.Select(e => e.Id));
+    }
+
+    [Fact]
+    public void HashIsStableUnderReformattingAndKeyOrder()
+    {
+        ulong original = LoadReal().RulesHash;
+        using var temp = new TempRules(
+            ("vehicles.toml", "# reformatted\n\n" + TempRules.RealWith("vehicles.toml", "speed = 16\nmax_health = 300", "max_health = 300\nspeed   =   16  # leptons")),
+            ("buildings.toml", "\n\n" + TempRules.Real("buildings.toml").Replace("footprint_w = 3", "footprint_w =   3   # cells")));
+
+        Assert.Equal(original, RulesLoader.Load(temp.Dir).RulesHash);
     }
 
     [Theory]
-    [InlineData("vehicles.toml", "[test_crawler]\nspeed = 16\nmax_health = 300\narmour = 2\n" + Placeholders, "test_crawler.armour", "unknown key")]
-    [InlineData("vehicles.toml", "[test_crawler]\nspeed = 16\n", "test_crawler.max_health", "missing required key")]
-    [InlineData("vehicles.toml", "[test_crawler]\nspeed = \"16\"\nmax_health = 300\n" + Placeholders, "test_crawler.speed", "expected an integer")]
-    [InlineData("vehicles.toml", "[test_crawler]\nspeed = 0\nmax_health = 300\n" + Placeholders, "test_crawler.speed", "must be between")]
-    [InlineData("vehicles.toml", "[test_crawler]\nspeed = 16\nmax_health = -1\n" + Placeholders, "test_crawler.max_health", "must be between")]
-    [InlineData("game.toml", "[game]\ntick_rate = 30\ndefault_map_width = 32\ndefault_map_height = 32\n", "game.tick_rate", "must be 20")]
-    [InlineData("game.toml", "[game]\ntick_rate = 20\ndefault_map_width = 32\ndefault_map_height = 32\nextra = 1\n", "game.extra", "unknown key")]
-    [InlineData("game.toml", "[game]\ntick_rate = 20\ndefault_map_height = 32\n", "game.default_map_width", "missing required key")]
-    public void ValidationErrorsReportFileAndKey(string file, string content, string expectedKey, string expectedMessagePart)
+    [InlineData("weapons.toml", "damage = 40", "damage = 41")]
+    [InlineData("warheads.toml", "versus = [25, 75, 100, 50, 40]", "versus = [25, 75, 100, 50, 41]")]
+    [InlineData("warheads.toml", "splash = 1", "splash = 0")]
+    [InlineData("vehicles.toml", "cost = 800", "cost = 801")]
+    [InlineData("infantry.toml", "max_health = 50", "max_health = 51")]
+    [InlineData("buildings.toml", "power = 20", "power = 21")]
+    [InlineData("terrain.toml", "wheeled = 125", "wheeled = 126")]
+    [InlineData("terrain.toml", "clear = true", "clear = false")]
+    [InlineData("techs.toml", "value = 1100", "value = 1200")]
+    public void HashChangesWhenAnyValueChanges(string file, string old, string @new)
     {
-        string game = file == "game.toml" ? content : ValidGame;
-        string units = file == "vehicles.toml" ? content : ValidUnits;
-        using var temp = new TempRules(game, units);
+        ulong original = LoadReal().RulesHash;
+        using var temp = new TempRules((file, TempRules.RealWith(file, old, @new)));
 
-        var ex = Assert.Throws<RulesException>(() => RulesLoader.Load(temp.Dir));
-
-        RulesProblem problem = Assert.Single(ex.Problems, p => p.Key == expectedKey);
-        Assert.Equal(file, problem.File);
-        Assert.Contains(expectedMessagePart, problem.Message);
+        Assert.NotEqual(original, RulesLoader.Load(temp.Dir).RulesHash);
     }
 
-    [Fact]
-    public void ReportsAllProblemsNotJustTheFirst()
+    private static int WeaponIndex(SimRules sim, string id) => SimRules.IndexOf(sim.Weapons, id, w => w.Id);
+
+    private static int WarheadIndex(SimRules sim, string id) => SimRules.IndexOf(sim.Warheads, id, w => w.Id);
+
+    private static void AssertSorted(IEnumerable<string> ids)
     {
-        using var temp = new TempRules(
-            game: "[game]\ntick_rate = 30\ndefault_map_width = 32\n",
-            units: "[test_crawler]\nspeed = 0\nmax_health = \"x\"\n");
-
-        var ex = Assert.Throws<RulesException>(() => RulesLoader.Load(temp.Dir));
-
-        Assert.Contains(ex.Problems, p => p.File == "game.toml" && p.Key == "game.tick_rate");
-        Assert.Contains(ex.Problems, p => p.File == "game.toml" && p.Key == "game.default_map_height");
-        Assert.Contains(ex.Problems, p => p.File == "vehicles.toml" && p.Key == "test_crawler.speed");
-        Assert.Contains(ex.Problems, p => p.File == "vehicles.toml" && p.Key == "test_crawler.max_health");
-    }
-
-    [Fact]
-    public void MissingFileIsReported()
-    {
-        using var temp = new TempRules(ValidGame, null);
-
-        var ex = Assert.Throws<RulesException>(() => RulesLoader.Load(temp.Dir));
-
-        Assert.Contains(ex.Problems, p => p.File == "vehicles.toml" && p.Key == "<file>");
-    }
-
-    /// <summary>A rules directory written under the test output folder, deleted on dispose.</summary>
-    private sealed class TempRules : IDisposable
-    {
-        public TempRules(string game, string? units)
-        {
-            Dir = Path.Combine(AppContext.BaseDirectory, "rules-tests", Guid.NewGuid().ToString("N"));
-            Directory.CreateDirectory(Dir);
-            File.WriteAllText(Path.Combine(Dir, RulesLoader.GameFile), game);
-            if (units is not null)
-            {
-                File.WriteAllText(Path.Combine(Dir, RulesLoader.VehiclesFile), units);
-            }
-        }
-
-        public string Dir { get; }
-
-        public void Dispose()
-        {
-            if (Directory.Exists(Dir))
-            {
-                Directory.Delete(Dir, recursive: true);
-            }
-        }
+        string[] actual = ids.ToArray();
+        Assert.Equal(actual.OrderBy(s => s, StringComparer.Ordinal).ToArray(), actual);
     }
 }

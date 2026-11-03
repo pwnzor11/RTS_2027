@@ -71,6 +71,10 @@ public static class Cli
         {
             RuleSet rules = RulesLoader.Load(dir!);
             Console.WriteLine($"OK rules hash 0x{rules.RulesHash:x16}");
+            Console.WriteLine(
+                $"vehicles {rules.Sim.Vehicles.Count} · infantry {rules.Sim.Infantry.Count} · " +
+                $"buildings {rules.Sim.Buildings.Count} · weapons {rules.Sim.Weapons.Count} · " +
+                $"warheads {rules.Sim.Warheads.Count} · effects {rules.Sim.Effects.Count}");
             return ExitOk;
         }
         catch (RulesException ex)
