@@ -7,6 +7,7 @@ C&C Remastered source (`/home/claude/ref/CnC_Remastered_Collection`, GPL v3); 10
 
 | File | Topic |
 |---|---|
+| **00_SYNTHESIS.md** | **Start here: consolidated recommendations, consensus vs. open choices, design-round agenda** |
 | 01_cnc_sim_core.md | C&C object model, game loop, map/cell/coordinate system, memory model |
 | 02_cnc_units_combat_production.md | Unit types data, movement, pathfinding, combat, production, tech tree |
 | 03_cnc_networking_determinism.md | Event queue, lockstep, RNG, desync, DLL interface to the remaster |
