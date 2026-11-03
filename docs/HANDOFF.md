@@ -1,5 +1,5 @@
 # Handoff: Session 2 (in progress) — checkpoint after wave 1
-Last commit: 79c26d6 (2026-11-03) — checkpoint after M1 wave A
+Last commit: b597d70 (2026-11-03) — checkpoint after M1 wave B
 Where things stand: overnight M1 run (D-040) in progress. Waves A and B (M1-01..M1-07) are on main,
 CI green. Wave C (M1-08 movement, M1-09 combat, M1-10 desync tooling) is running. Restore point:
 branch `restore/pre-m1` (3279113).
