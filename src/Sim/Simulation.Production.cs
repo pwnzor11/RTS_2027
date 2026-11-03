@@ -90,20 +90,38 @@ public sealed partial class Simulation
     }
 
     /// <summary>
-    /// Whether a Build command for this type would be accepted now: the player can act, the type exists in the category, every
-    /// prerequisite is provided by an alive own building, a factory exists (unit categories), the queue is not full, and (structures
-    /// and defences) no finished item is waiting to be placed.
+    /// True if the type exists in the category and every prerequisite is provided by an alive own building (D-066: the sidebar
+    /// lists every unlocked type). Says nothing about queue room or factories; see <see cref="QueueBlockReason"/>.
     /// </summary>
-    public bool CanBuild(byte player, ProductionCategory category, int typeIndex)
+    public bool IsUnlocked(byte player, ProductionCategory category, int typeIndex)
     {
-        if (player >= _players.Count || _players.IsNeutral(player) || _players.Defeated[player]) return false;
+        if (player >= _players.Count || _players.IsNeutral(player)) return false;
         if (!TryTypeInfo(category, typeIndex, out _, out _, out var prereq)) return false;
-        int lane = ProductionState.Lane(player, category);
-        if (_production.QueueCount[lane] >= _production.MaxQueue || _production.QueueCount[lane] >= Setup.Rules.Economy.MaxQueue) return false;
-        if (!IsUnitCategory(category) && _production.Ready[lane] >= 0) return false;
-        if (IsUnitCategory(category) && CountFactories(player, category) == 0) return false;
         return HasPrerequisites(player, prereq);
     }
+
+    /// <summary>
+    /// Why a Build command for this type would not be queued now, ignoring prerequisites (see <see cref="IsUnlocked"/>): the player is
+    /// defeated, the type does not exist, a unit category has no factory, a finished structure is waiting to be placed, or the queue is
+    /// full; <see cref="QueueBlockReason.None"/> when it would be accepted.
+    /// </summary>
+    public QueueBlockReason QueueBlockReason(byte player, ProductionCategory category, int typeIndex)
+    {
+        if (player >= _players.Count || _players.IsNeutral(player) || _players.Defeated[player]) return Core.QueueBlockReason.Defeated;
+        if (!TryTypeInfo(category, typeIndex, out _, out _, out _)) return Core.QueueBlockReason.NotBuildable;
+        int lane = ProductionState.Lane(player, category);
+        if (IsUnitCategory(category) && CountFactories(player, category) == 0) return Core.QueueBlockReason.NoFactory;
+        if (!IsUnitCategory(category) && _production.Ready[lane] >= 0) return Core.QueueBlockReason.StructureWaiting;
+        if (_production.QueueCount[lane] >= _production.MaxQueue || _production.QueueCount[lane] >= Setup.Rules.Economy.MaxQueue)
+            return Core.QueueBlockReason.QueueFull;
+        return Core.QueueBlockReason.None;
+    }
+
+    /// <summary>
+    /// Whether a Build command for this type would be accepted now: <see cref="IsUnlocked"/> and no <see cref="QueueBlockReason"/>.
+    /// </summary>
+    public bool CanBuild(byte player, ProductionCategory category, int typeIndex) =>
+        IsUnlocked(player, category, typeIndex) && QueueBlockReason(player, category, typeIndex) == Core.QueueBlockReason.None;
 
     // ---- commands --------------------------------------------------------------------------------
 
@@ -462,6 +480,29 @@ public sealed partial class Simulation
             };
             for (int t = 0; t < count; t++)
                 if (CanBuild(player, category, t)) list.Add((category, t));
+        }
+        return list;
+    }
+
+    private IReadOnlyList<BuildOption> BuildOptionList(byte player)
+    {
+        var list = new List<BuildOption>();
+        for (int k = 0; k <= (int)ProductionCategory.Defence; k++)
+        {
+            var category = (ProductionCategory)k;
+            int count = category switch
+            {
+                ProductionCategory.Infantry => Setup.Rules.Infantry?.Count ?? 0,
+                ProductionCategory.Vehicle => Setup.Rules.Vehicles.Count,
+                ProductionCategory.Structure or ProductionCategory.Defence => BuildingTypeCount,
+                _ => 0,
+            };
+            for (int t = 0; t < count; t++)
+            {
+                if (!IsUnlocked(player, category, t)) continue;
+                TryTypeInfo(category, t, out int cost, out _, out _);
+                list.Add(new BuildOption(category, t, true, QueueBlockReason(player, category, t), cost));
+            }
         }
         return list;
     }
