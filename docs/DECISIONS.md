@@ -511,3 +511,12 @@ a harvester with no refinery idles until ordered. (5) Ashfall regrows only on ce
 emptied cells stay empty (seed markers and spreading are a later design question). (6) Storage cap counts the
 Storage of every live own building. (7) Setup spawns face the map centre. (8) Theater id is `rustbelt`.
 **Status:** assumed — confirm
+
+### D-068 · 2026-11-03 · Vehicles accepted; Rifleman needs definition; separate house palette
+**Decision:** (1) The Scraper and Jeep sprites are accepted as they are. (2) The Rifleman pilot "looks decent but a
+little like a blob": it gets another pass for definition (clearer silhouette: head/helmet, separated limbs,
+readable rifle, contrast between garment parts) and the owner approves again before the Rocketeer fans out.
+(3) House colours are a separate palette chosen to contrast faction body paint: default slot order amber/yellow,
+red, blue, white, purple, cyan, orange, pink; green is never a house colour on green-bodied factions. Faction
+identity stays in the body paint.
+**Status:** confirmed (owner, session 3)
