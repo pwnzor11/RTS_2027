@@ -1,7 +1,7 @@
 # User checks
 
 ## Standing smoke test
-1. `git -C <repo> log -1` matches `Last commit:` in docs/HANDOFF.md.
+1. `git -C <repo> log -2 --oneline` shows the `Last commit:` hash from docs/HANDOFF.md as the newest or second-newest commit (the handoff commit may sit on top).
 2. (Once there is a build) build from clean clone, run, main menu appears.
 
 ## 2026-11-02 · Session 1

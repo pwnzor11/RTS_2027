@@ -1,5 +1,5 @@
 # Handoff: Session 2 — Repo skeleton and art pilot
-Last commit: (set by the wrap-up commit; check `git log -1`)
+Last commit: 60cba25 (2026-11-02) — content commit; the handoff commit itself sits directly on top of it
 Where things stand: Session 1 finished all research (19 files + synthesis) and all three design
 rounds (D-001..D-034). Architecture, game design and setting are written in `docs/design/`. There is
 no code yet. Next is M0-11 (repo skeleton) and M0-12 (art pilot), which are independent and can run
