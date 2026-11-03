@@ -90,6 +90,15 @@ def render(sid, mod, samples, only, preview):
     M["house"] = mat("house", "#E000E0", 0.75)  # house paint is always magenta; every module gets it
     M["house2"] = mat("house2", "#9A009A", 0.75)  # darker house paint for big flat up-facing areas (lands on mid ramp shades)
     mask_on, mask_off = emission_mat("m1", 1.0), emission_mat("m0", 0.0)
+    mask_h2 = bpy.data.materials.new("m2h")      # house2 mask: red only, so structpost can tell it from house (white)
+    mask_h2.use_nodes = True
+    _nt = mask_h2.node_tree
+    for _n in list(_nt.nodes):
+        _nt.nodes.remove(_n)
+    _e = _nt.nodes.new("ShaderNodeEmission")
+    _e.inputs["Color"].default_value = (1, 0, 0, 1)
+    _o = _nt.nodes.new("ShaderNodeOutputMaterial")
+    _nt.links.new(_e.outputs[0], _o.inputs[0])
 
     class Ctx:
         """Primitive helpers handed to the structure module. Coordinates: x east, y NORTH (ground units), z up."""
@@ -308,7 +317,7 @@ def render(sid, mod, samples, only, preview):
         if not preview:
             for o, m, _c in S.objs:
                 o.data.materials.clear()
-                o.data.materials.append(mask_on if m in ("house", "house2") else mask_off)
+                o.data.materials.append(mask_on if m == "house" else (mask_h2 if m == "house2" else mask_off))
                 o.data.materials.append(mask_off)
             wbg = w.node_tree.nodes["Background"].inputs[1]
             wbg.default_value = 0.0

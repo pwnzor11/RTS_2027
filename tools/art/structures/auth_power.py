@@ -24,6 +24,7 @@ CANVAS = (128, 176)
 ORIGIN = (0, 48)
 DOCK = (0, 0)           # no dock (not a refinery)
 CAP_MATERIAL = "concrete2"
+HOUSE2_MID = True        # D-072: roof house2 panels pinned to mid ramp shades (structpost)
 STATES = [("idle", 4, 5), ("damaged", 4, 5), ("build", 8, 5)]
 MATERIALS = L.MATERIALS
 SOOT_SKIN = L.SOOT_SKIN
