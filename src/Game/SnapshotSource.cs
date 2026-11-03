@@ -4,19 +4,25 @@ using Rts.Sim.Rules;
 
 namespace Rts.Game;
 
-/// <summary>Supplies the snapshot the renderer draws each frame. The renderer never calls the simulation.</summary>
+/// <summary>Supplies the snapshots the renderer draws each frame. The renderer never calls the simulation.</summary>
 public interface ISnapshotSource
 {
     /// <summary>Latest snapshot. Never null.</summary>
     SimSnapshot Current { get; }
+
+    /// <summary>The snapshot one tick before <see cref="Current"/> (equal to it before the second tick).</summary>
+    SimSnapshot Previous { get; }
+
+    /// <summary>Fraction 0..1 of the way from <see cref="Previous"/> to <see cref="Current"/> at this render moment.</summary>
+    float Alpha { get; }
 
     /// <summary>Advances the source to the current wall-clock time.</summary>
     void Update();
 }
 
 /// <summary>
-/// Fabricated 32x32 two-player map with six units circling the centre. Integer-only movement on a
-/// 20 Hz accumulator; a stand-in until the simulation is wired in.
+/// Fabricated 32x32 two-player map with six units circling the centre, used with --demo. Integer-only movement
+/// on a 20 Hz accumulator; it does not run the simulation.
 /// </summary>
 public sealed class DemoSnapshotSource : ISnapshotSource
 {
@@ -36,16 +42,24 @@ public sealed class DemoSnapshotSource : ISnapshotSource
     private long _lastMs;
     private int _accumulatedMs;
     private int _tick;
+    private SimSnapshot _previous;
     private SimSnapshot _current;
 
     /// <summary>Creates the source with the first snapshot already built at tick 0.</summary>
     public DemoSnapshotSource()
     {
         _current = Build();
+        _previous = _current;
     }
 
     /// <inheritdoc />
     public SimSnapshot Current => _current;
+
+    /// <inheritdoc />
+    public SimSnapshot Previous => _previous;
+
+    /// <inheritdoc />
+    public float Alpha => _accumulatedMs / (float)TickMs;
 
     /// <inheritdoc />
     public void Update()
@@ -64,6 +78,7 @@ public sealed class DemoSnapshotSource : ISnapshotSource
 
         if (advanced)
         {
+            _previous = _current;
             _current = Build();
         }
     }

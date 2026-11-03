@@ -1,0 +1,27 @@
+# Example sprite-sheet description for the Authority medium tank (art/pilot/B_pixel_64_v2.png).
+# Plain data; no code reads it yet.
+
+[sheet]
+file = "tank_v2.png"
+cell_px = 64          # one map cell
+frame_px = 96         # each frame is 1.5 x cell, square
+columns = 4
+rows = 4
+facings = 16
+frame0 = "north"      # frame 0 faces up-screen
+order = "clockwise"   # frame n = n * 22.5 degrees clockwise from north
+hull_turret = "shared"  # one facing for hull and turret in this pilot
+
+[anchor]
+# Pixel of the cell centre (the tank's ground origin) within each 96 px frame, from the frame's top-left.
+x = 48
+y = 64
+
+[house]
+# Pure magenta ramp, dark to light. Remap replaces exactly these RGB values (alpha is always 0 or 255).
+house_ramp = ["#400040", "#5B125B", "#772577", "#923792", "#AD49AD", "#C85BC8", "#E46EE4", "#FF80FF"]
+
+[camera]
+projection = "orthographic"
+elevation_deg = 40
+sun = "upper-left"
