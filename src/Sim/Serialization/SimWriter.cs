@@ -6,7 +6,7 @@ namespace Rts.Sim.Serialization;
 public static class SimWriter
 {
     public static readonly byte[] SaveMagic = "RTSS"u8.ToArray();
-    public const int SaveVersion = 4;
+    public const int SaveVersion = 5;
 
     /// <summary>State body: tick, RNG, then each part's name and data in the given (canonical) order.
     /// Used verbatim by the hash.</summary>

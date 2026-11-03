@@ -2,8 +2,10 @@ using System.IO.Hashing;
 using Rts.Sim.Core;
 using Rts.Sim.Map;
 using Rts.Sim.Missions;
+using Rts.Sim.Pathing;
 using Rts.Sim.Rules;
 using Rts.Sim.Serialization;
+using Rts.Sim.Vision;
 using Rts.Sim.World;
 
 namespace Rts.Sim;
@@ -18,7 +20,9 @@ public sealed class Simulation
     private readonly InfantryStore _infantry = new();
     private readonly BuildingStore _buildings = new();
     private readonly MapState _map;
-    // Canonical state-part order: [map, units, infantry, buildings]. Hash, Save and Load all iterate this array; append new parts
+    private readonly PathService _paths;
+    private readonly VisionState _vision;
+    // Canonical state-part order: [map, units, infantry, buildings, paths, vision]. Hash, Save and Load all iterate this array; append new parts
     // at the end only (changing the order changes every hash and the save format).
     private readonly ISimStatePart[] _parts;
     private SimRandom _rng;
@@ -35,7 +39,9 @@ public sealed class Simulation
         Setup = setup;
         _rng = new SimRandom(setup.Seed);
         _map = new MapState(setup.Map);
-        _parts = new ISimStatePart[] { _map, _units, _infantry, _buildings };
+        _paths = new PathService(_map, setup.Rules.Terrain);
+        _vision = new VisionState(setup.Map.Width, setup.Map.Height, setup.PlayerCount);
+        _parts = new ISimStatePart[] { _map, _units, _infantry, _buildings, _paths, _vision };
         MapHash = MapHasher.Compute(setup.Map);
     }
 
@@ -44,7 +50,13 @@ public sealed class Simulation
     /// <summary>Identity hash of the starting map, computed once at construction.</summary>
     public ulong MapHash { get; }
 
-    /// <summary>State parts in canonical order (map, units, infantry, buildings).</summary>
+    /// <summary>Deterministic path service (M1-05). Movement requests and polls paths; Process runs once per tick.</summary>
+    public PathService Paths => _paths;
+
+    /// <summary>Per-player vision (M1-07), updated at the end of every tick. Read-only use outside Step.</summary>
+    public VisionState Vision => _vision;
+
+    /// <summary>State parts in canonical order (map, units, infantry, buildings, paths, vision).</summary>
     public IReadOnlyList<ISimStatePart> StateParts => _parts;
 
     /// <summary>The only clock. Starts at 0; Step increments it by one.</summary>
@@ -403,7 +415,10 @@ public sealed class Simulation
     }
 
     // Movement is performed by the Move mission handler (D-042); this system is reserved for M1-05+ (blocking, paths).
-    private void RunMovement() { }
+    private void RunMovement()
+    {
+        _paths.Process(); // solve queued path requests within this tick's budget (M1-08 consumes results)
+    }
 
     private void RunCombat() { /* M1 */ }
     private void RunEconomy() { /* M1 */ }
@@ -422,6 +437,68 @@ public sealed class Simulation
         for (int i = 1; i < _buildings.Capacity; i++)
             if (_buildings.Slots.IsIndexAlive(i) && _buildings.Health[i] <= 0)
                 RemoveBuilding(_buildings.Slots.IdOf(i));
+        UpdateVision();
+    }
+
+    // ---- vision (M1-07, wired by the lead) ----------------------------------------------------
+
+    /// <summary>Reveal/conceal for every actor slot in index order, then refresh enemy-building ghosts.
+    /// VisionState.Reveal is incremental, so unchanged actors cost one comparison.</summary>
+    private void UpdateVision()
+    {
+        SimRules r = Setup.Rules;
+        for (int i = 1; i < _units.Capacity; i++)
+            if (_units.Slots.IsIndexAlive(i))
+                _vision.Reveal(_units.Player[i], ActorKind.Vehicle, i, _units.Position[i].ToCell(), r.Vehicles[_units.TypeIndex[i]].Sight);
+            else _vision.Conceal(ActorKind.Vehicle, i);
+        for (int i = 1; i < _infantry.Capacity; i++)
+            if (_infantry.Slots.IsIndexAlive(i))
+                _vision.Reveal(_infantry.Player[i], ActorKind.Infantry, i, _infantry.Position[i].ToCell(), r.Infantry[_infantry.TypeIndex[i]].Sight);
+            else _vision.Conceal(ActorKind.Infantry, i);
+        for (int i = 1; i < _buildings.Capacity; i++)
+            if (_buildings.Slots.IsIndexAlive(i))
+            {
+                BuildingType bt = r.Buildings[_buildings.TypeIndex[i]];
+                CellCoord c = _buildings.Cell[i];
+                _vision.Reveal(_buildings.Player[i], ActorKind.Building, i,
+                    new CellCoord(c.X + bt.FootprintW / 2, c.Y + bt.FootprintH / 2), bt.Sight);
+            }
+            else _vision.Conceal(ActorKind.Building, i);
+
+        for (int p = 0; p < Setup.PlayerCount; p++)
+        {
+            byte viewer = (byte)p;
+            // Forget ghosts whose footprint is visible again and no longer matches a live building.
+            var ghosts = _vision.GhostsFor(viewer);
+            for (int g = ghosts.Count - 1; g >= 0; g--)
+            {
+                (int index, BuildingGhost ghost) = ghosts[g];
+                if (!FootprintVisible(viewer, ghost.Cell, ghost.FootprintW, ghost.FootprintH)) continue;
+                bool same = _buildings.Slots.IsIndexAlive(index) && _buildings.Cell[index] == ghost.Cell
+                    && _buildings.TypeIndex[index] == ghost.TypeIndex;
+                if (!same) _vision.ForgetBuilding(viewer, index);
+            }
+            // Record what the viewer sees of enemy buildings now.
+            for (int i = 1; i < _buildings.Capacity; i++)
+            {
+                if (!_buildings.Slots.IsIndexAlive(i) || _buildings.Player[i] == viewer) continue;
+                BuildingType bt = r.Buildings[_buildings.TypeIndex[i]];
+                if (FootprintVisible(viewer, _buildings.Cell[i], bt.FootprintW, bt.FootprintH))
+                    _vision.RecordBuildingSeen(viewer, i, new BuildingGhost(_buildings.Player[i], _buildings.TypeIndex[i],
+                        _buildings.Cell[i], bt.FootprintW, bt.FootprintH, _buildings.Health[i]));
+            }
+        }
+    }
+
+    private bool FootprintVisible(byte viewer, CellCoord topLeft, int w, int h)
+    {
+        for (int y = 0; y < h; y++)
+            for (int x = 0; x < w; x++)
+            {
+                var c = new CellCoord(topLeft.X + x, topLeft.Y + y);
+                if (_map.Data.Contains(c) && _vision.IsVisible(viewer, c)) return true;
+            }
+        return false;
     }
 
     // ---- hash / snapshot / save --------------------------------------------------------------
@@ -436,15 +513,20 @@ public sealed class Simulation
     }
 
     /// <summary>Snapshot for the omniscient debug view. Snapshot(viewer) arrives with fog in M1-07.</summary>
-    public SimSnapshot Snapshot()
+    public SimSnapshot Snapshot() => Snapshot(-1);
+
+    /// <summary>Snapshot as seen by <paramref name="viewer"/> (-1 = omniscient). With a viewer, enemy units outside
+    /// current vision are omitted, and enemy buildings outside it appear as last-seen ghosts (if ever seen).</summary>
+    public SimSnapshot Snapshot(int viewer)
     {
+        if (viewer >= Setup.PlayerCount) throw new ArgumentOutOfRangeException(nameof(viewer));
         var list = new List<UnitView>(_units.Slots.Count + _infantry.Slots.Count);
         for (int i = 1; i < _units.Capacity; i++)
-            if (_units.Slots.IsIndexAlive(i))
+            if (_units.Slots.IsIndexAlive(i) && SeenBy(viewer, _units.Player[i], _units.Position[i]))
                 list.Add(new UnitView(_units.Slots.IdOf(i), UnitKind.Vehicle, _units.Player[i], _units.TypeIndex[i],
                     _units.Position[i], _units.Facing[i], _units.Health[i]));
         for (int i = 1; i < _infantry.Capacity; i++)
-            if (_infantry.Slots.IsIndexAlive(i))
+            if (_infantry.Slots.IsIndexAlive(i) && SeenBy(viewer, _infantry.Player[i], _infantry.Position[i]))
                 list.Add(new UnitView(_infantry.Slots.IdOf(i), UnitKind.Infantry, _infantry.Player[i], _infantry.TypeIndex[i],
                     _infantry.Position[i], _infantry.Facing[i], _infantry.Health[i]));
         ulong hash = _recentHashes.Count > 0 ? _recentHashes[^1].Hash : 0UL;
@@ -453,13 +535,28 @@ public sealed class Simulation
             if (_buildings.Slots.IsIndexAlive(i))
             {
                 BuildingType bt = Setup.Rules.Buildings[_buildings.TypeIndex[i]];
+                if (viewer >= 0 && _buildings.Player[i] != viewer
+                    && !FootprintVisible((byte)viewer, _buildings.Cell[i], bt.FootprintW, bt.FootprintH)) continue;
                 blist.Add(new BuildingView(_buildings.Slots.IdOf(i), _buildings.Player[i], _buildings.TypeIndex[i],
                     _buildings.Cell[i], bt.FootprintW, bt.FootprintH, _buildings.Health[i], false));
             }
-        // Fog (Viewer, Vision) arrives with M1-07; the lead wires it.
+        if (viewer < 0)
+            return new SimSnapshot(Tick, Setup.Map.Width, Setup.Map.Height, list, Setup.Map.Land, hash,
+                blist, -1, Array.Empty<byte>());
+        foreach ((int index, BuildingGhost g) in _vision.GhostsFor((byte)viewer))
+        {
+            if (FootprintVisible((byte)viewer, g.Cell, g.FootprintW, g.FootprintH)) continue; // live view already shown
+            blist.Add(new BuildingView(new EntityId((ushort)index, 0), g.Player, g.TypeIndex, g.Cell, g.FootprintW,
+                g.FootprintH, g.Health, true));
+        }
+        var vision = new byte[Setup.Map.Width * Setup.Map.Height];
+        _vision.FillVision((byte)viewer, vision);
         return new SimSnapshot(Tick, Setup.Map.Width, Setup.Map.Height, list, Setup.Map.Land, hash,
-            blist, -1, Array.Empty<byte>());
+            blist, viewer, vision);
     }
+
+    private bool SeenBy(int viewer, byte owner, LeptonCoord pos) =>
+        viewer < 0 || owner == viewer || _vision.IsVisible((byte)viewer, pos.ToCell());
 
     /// <summary>Versioned binary save of the whole sim state.</summary>
     public void Save(Stream output) =>

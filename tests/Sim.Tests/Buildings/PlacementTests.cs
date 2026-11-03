@@ -216,9 +216,10 @@ public class PlacementTests
     }
 
     [Fact]
-    public void StateParts_IncludeBuildingsLast()
+    public void StateParts_IncludeBuildingsAfterInfantry()
     {
-        var sim = NewSim(8, 8);
-        Assert.Equal(new[] { "map", "units", "infantry", "buildings" }, sim.StateParts.Select(p => p.Name).ToArray());
+        // The full canonical order is pinned in SaveTests.StateParts_AreInCanonicalOrder; here only buildings' place.
+        var names = NewSim(8, 8).StateParts.Select(p => p.Name).ToList();
+        Assert.Equal(names.IndexOf("infantry") + 1, names.IndexOf("buildings"));
     }
 }

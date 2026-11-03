@@ -88,7 +88,7 @@ public sealed class PathService : ISimStatePart
     public string Name => "paths";
 
     /// <summary>Test hook: when false the cache is bypassed. Results and costs must be identical either way.</summary>
-    public bool CacheEnabled { get; set; } = true;
+    internal bool CacheEnabled { get; set; } = true;
 
     /// <summary>Queues a single path request and returns its id (monotonic).</summary>
     public int Request(CellCoord from, CellCoord to, Locomotion loco)

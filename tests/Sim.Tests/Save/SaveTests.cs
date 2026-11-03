@@ -61,7 +61,7 @@ public class SaveTests
     public void StateParts_AreInCanonicalOrder()
     {
         var sim = ScriptedGame.NewSim(ScriptedGame.Setup());
-        Assert.Equal(new[] { "map", "units", "infantry", "buildings" }, sim.StateParts.Select(p => p.Name).ToArray());
+        Assert.Equal(new[] { "map", "units", "infantry", "buildings", "paths", "vision" }, sim.StateParts.Select(p => p.Name).ToArray());
     }
 
     [Fact]
