@@ -271,3 +271,21 @@ frame 0 = north, clockwise; house colour is an 8-shade magenta ramp remapped at 
 Pipeline scripts in `tools/art/`. Follow-up polish (bigger house panel, lower camera ~40°, more hull
 and wheel detail) is roadmap item M1-ART-01. Q-24.
 **Status:** confirmed (owner's pick)
+
+### D-040 · 2026-11-02 · Overnight M1 run rules
+**Decision:** M1 is built in one unattended session. Small design choices (placeholder speeds, damage,
+footprints, map-format details, test-map layouts) take the lead's recommendation; placeholder numbers
+are marked as fixtures and each choice is logged "assumed — confirm" for the owner's morning review.
+Finished waves land by direct push to main after full build, tests, determinism scan and green
+Windows CI; a restore tag `pre-m1` is set first. Session ends with the wrap-up checklist.
+**Status:** confirmed (owner)
+
+### D-041 · 2026-11-02 · Debug view draws vehicles with the D-039 tank sprite
+**Decision:** The M1 debug view draws every vehicle with the D-039 tank sprite and the house-colour
+remap; infantry and buildings stay as squares until M2. Q-26.
+**Status:** confirmed (owner)
+
+### D-042 · 2026-11-02 · Tracked vehicles turn, then drive
+**Decision:** Classic feel: a tracked or wheeled vehicle rotates in place toward its next waypoint
+(turn rate from data), then moves; only small corrections happen while moving.
+**Status:** confirmed (owner)
