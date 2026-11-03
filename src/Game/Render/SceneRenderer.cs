@@ -2,6 +2,7 @@
 // Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Rts.Game.Sandbox;
 using Rts.Game.Sprites;
 using Rts.Sim.Core;
 using Rts.Sim.Map;
@@ -9,20 +10,40 @@ using Rts.Sim.Map;
 namespace Rts.Game.Render;
 
 /// <summary>
-/// Draws one frame in order: terrain, occupancy (F3), buildings, units, projectiles, fog, path (F4) and range (F5)
-/// overlays, health bars, then the drag box.
+/// Draws one frame in order: terrain, occupancy (F3), then buildings and units in one y-sorted pass
+/// (<see cref="DrawOrder"/>), projectiles, fog, path (F4) and range (F5) overlays, health bars above the sprites, then
+/// the drag box.
 /// </summary>
-public sealed class SceneRenderer
+public sealed class SceneRenderer : IDisposable
 {
     private static readonly Color DragColour = Color.White;
 
-    private readonly UnitRenderer _units;
+    private readonly SpriteResolver _sprites;
+    private readonly SpritePainter _painter = new();
+    private readonly RenderMemory _memory = new();
+    private readonly List<DrawItem> _items = new();
     private readonly TerrainLook _rustBeltTerrain = new();
+    private bool _disposed;
 
-    /// <summary>Creates a renderer that draws vehicles with the given sprite sheet.</summary>
+    /// <summary>
+    /// Creates a renderer that draws every vehicle with one sheet (the debug view's tank) and placeholders for the rest.
+    /// </summary>
+    /// <param name="sheet">Sheet every vehicle is drawn with.</param>
     public SceneRenderer(SpriteSheet sheet)
+        : this(new SpriteResolver(null, sheet))
     {
-        _units = new UnitRenderer(sheet);
+    }
+
+    /// <summary>Creates a renderer that draws library sprites by rules id, with placeholders where a file is missing.</summary>
+    /// <param name="library">Scanned sprite library. Its sheets must be loaded before the first draw.</param>
+    public SceneRenderer(SpriteLibrary library)
+        : this(new SpriteResolver(library))
+    {
+    }
+
+    private SceneRenderer(SpriteResolver resolver)
+    {
+        _sprites = resolver;
     }
 
     /// <summary>Draws the frame. <paramref name="pixel"/> is a 1x1 white texture; the batch is already begun.</summary>
@@ -44,15 +65,57 @@ public sealed class SceneRenderer
             OccupancyOverlay.Draw(batch, pixel, frame.Sim, snapshot, camera, viewport);
         }
 
-        BuildingRenderer.Draw(batch, pixel, snapshot, camera);
-        _units.Draw(batch, pixel, frame, camera);
+        DrawSprites(batch, pixel, frame, camera);
+
         ProjectileRenderer.Draw(batch, pixel, frame.Projectiles, camera);
         FogRenderer.Draw(batch, pixel, snapshot, camera, viewport);
-
         if (frame.Overlays.Paths) PathOverlay.Draw(batch, pixel, frame, camera);
         if (frame.Overlays.Ranges) RangeOverlay.Draw(batch, pixel, frame, camera);
-        HealthBars.Draw(batch, pixel, frame, camera);
-
+        HealthBars.Draw(batch, pixel, frame, camera, _sprites);
         if (frame.DragRect is Rectangle box) Shapes.Outline(batch, pixel, box, DragColour);
+    }
+
+    /// <inheritdoc />
+    public void Dispose()
+    {
+        if (_disposed) return;
+        _disposed = true;
+        _painter.Dispose();
+    }
+
+    private void DrawSprites(SpriteBatch batch, Texture2D pixel, SceneFrame frame, Camera camera)
+    {
+        SimSnapshot snapshot = frame.Snapshot;
+        _memory.Observe(snapshot);
+
+        _items.Clear();
+        for (int i = 0; i < snapshot.Buildings.Count; i++)
+        {
+            BuildingView b = snapshot.Buildings[i];
+            float bottom = (b.Cell.Y + b.FootprintH) * Camera.CellPx;
+            _items.Add(new DrawItem(DrawKind.Building, i, bottom, b.Cell.X * Camera.CellPx));
+        }
+        for (int i = 0; i < frame.Units.Count; i++)
+        {
+            RenderUnit unit = frame.Units[i];
+            _items.Add(new DrawItem(DrawKind.Unit, i, unit.World.Y, unit.World.X));
+        }
+        _items.Sort(DrawOrder.Instance);
+
+        foreach (DrawItem item in _items)
+        {
+            if (item.Kind == DrawKind.Building)
+            {
+                BuildingRenderer.Draw(batch, pixel, _sprites, _painter, _memory, snapshot.Tick, frame.Rules,
+                    snapshot.Buildings[item.Index], camera);
+            }
+            else
+            {
+                RenderUnit unit = frame.Units[item.Index];
+                bool selected = frame.Selection.Contains(UnitKey.Of(unit.View));
+                UnitRenderer.Draw(batch, pixel, _sprites, _painter, _memory, snapshot.Tick, frame.Rules, unit,
+                    selected, camera);
+            }
+        }
     }
 }

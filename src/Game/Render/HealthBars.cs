@@ -8,8 +8,9 @@ using Rts.Sim.Core;
 namespace Rts.Game.Render;
 
 /// <summary>
-/// Health bars above units and buildings. Shown only when the unit is damaged or selected (buildings: only when
-/// damaged). Green above half health, yellow above a quarter, red below. Ghosts have no bar: their health is stale.
+/// Health bars above the sprites. Shown only when the unit is damaged or selected (buildings: only when damaged). The bar
+/// sits above the top edge of the unit's or building's sprite frame, so it clears the artwork. Green above half health,
+/// yellow above a quarter, red below. Ghosts have no bar: their health is stale.
 /// </summary>
 public static class HealthBars
 {
@@ -25,24 +26,27 @@ public static class HealthBars
     private static readonly Color Red = new(0xD0, 0x30, 0x30);
 
     /// <summary>Draws the bars for the frame's units and buildings. Does nothing without rules.</summary>
-    public static void Draw(SpriteBatch batch, Texture2D pixel, SceneFrame frame, Camera camera)
+    /// <param name="batch">Batch in progress.</param>
+    /// <param name="pixel">1x1 white texture.</param>
+    /// <param name="frame">The frame being drawn.</param>
+    /// <param name="camera">View.</param>
+    /// <param name="sprites">Sprite resolver, to find each sprite's frame top.</param>
+    public static void Draw(SpriteBatch batch, Texture2D pixel, SceneFrame frame, Camera camera, SpriteResolver sprites)
     {
         if (frame.Rules is null) return;
         float zoom = camera.Zoom;
         int height = Math.Max(2, (int)MathF.Round(BarHeightPx * zoom));
         int gap = (int)MathF.Round(GapPx * zoom);
-
         foreach (RenderUnit unit in frame.Units)
         {
             UnitView view = unit.View;
             bool vehicle = view.Kind == UnitKind.Vehicle;
             int max = vehicle ? frame.Rules.Vehicles[view.TypeIndex].MaxHealth : frame.Rules.Infantry[view.TypeIndex].MaxHealth;
             if (!frame.Selection.Contains(UnitKey.Of(view)) && view.Health >= max) continue;
-
-            Vector2 centre = camera.ScreenFromWorld(unit.World);
-            int half = (int)MathF.Round((vehicle ? VehicleHalfPx : InfantryHalfPx) * zoom);
+            Vector2 origin = SpriteLayout.UnitOrigin(camera, unit.World);
+            Vector2 top = SpriteLayout.FrameTopLeft(origin, sprites.ForUnit(frame.Rules, view).Manifest, zoom);
             int width = (int)MathF.Round((vehicle ? VehicleWidthPx : InfantryWidthPx) * zoom);
-            var r = new Rectangle((int)MathF.Round(centre.X) - width / 2, (int)MathF.Round(centre.Y) - half - gap - height, width, height);
+            var r = new Rectangle((int)origin.X - width / 2, (int)MathF.Round(top.Y) - gap - height, width, height);
             Bar(batch, pixel, r, view.Health, max);
         }
 
@@ -51,13 +55,14 @@ public static class HealthBars
             if (building.Ghost) continue;
             int max = frame.Rules.Buildings[building.TypeIndex].MaxHealth;
             if (building.Health >= max) continue;
-
             float left = building.Cell.X * Camera.CellPx;
             float top = building.Cell.Y * Camera.CellPx;
             Rectangle foot = camera.ScreenRect(left, top,
                 left + building.FootprintW * Camera.CellPx, top + building.FootprintH * Camera.CellPx);
+            Vector2 frameTop = SpriteLayout.FrameTopLeft(new Vector2(foot.Left, foot.Top),
+                sprites.ForBuilding(frame.Rules, building).Manifest, zoom);
             int width = foot.Width * 3 / 4;
-            var r = new Rectangle(foot.Center.X - width / 2, foot.Top - gap - height, width, height);
+            var r = new Rectangle(foot.Center.X - width / 2, (int)MathF.Round(frameTop.Y) - gap - height, width, height);
             Bar(batch, pixel, r, building.Health, max);
         }
     }
