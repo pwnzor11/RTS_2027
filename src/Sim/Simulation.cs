@@ -509,6 +509,7 @@ public sealed partial class Simulation
     {
         // Safe point: promote queued missions, then run handlers. Handlers only queue new missions, so a
         // mission assigned during a handler takes effect on the next tick.
+        SnapshotTickPositions();   // D-065: combat decisions use start-of-tick positions
         RunMissions(_units, ActorKind.Vehicle);
         RunMissions(_infantry, ActorKind.Infantry);
     }

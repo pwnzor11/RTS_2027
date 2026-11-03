@@ -134,6 +134,11 @@ public class HashCoverageTests
         ["Simulation._members"] = "scratch for one move batch, cleared at the start of every batch",
         ["Simulation._hashSink"] = "reused hashing sink (Simulation.Hashing.cs)",
         ["Simulation._hashWriter"] = "reused hashing writer (Simulation.Hashing.cs)",
+        ["Simulation._pendingDamage"] = "combat hit buffer (D-065): filled by Hurt and emptied by ApplyPendingDamage inside RunCombat, so always empty between ticks",
+        ["Simulation._pendingCount"] = "fill level of _pendingDamage; always 0 between ticks",
+        ["Simulation._tickPosVeh"] = "start-of-tick vehicle positions for combat decisions, rewritten at the start of every RunMissions",
+        ["Simulation._tickPosInf"] = "start-of-tick infantry positions for combat decisions, rewritten at the start of every RunMissions",
+        ["Simulation._useTickPos"] = "true only between RunMissions and the end of RunCombat; false when a hash or save is taken",
         // SlotArray (inside every store)
         ["SlotArray._count"] = "number of set bits in _used: derived, and rebuilt by SetAlive when the used bits are read back",
         // PathService

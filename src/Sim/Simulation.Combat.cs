@@ -10,6 +10,19 @@ using Rts.Sim.World;
 namespace Rts.Sim;
 
 // Combat part of Simulation. OWNER: M1-09 (combat).
+//
+// Per-tick combat phase order (D-065, simultaneous damage):
+//   1. RunMissions: mission handlers in slot order acquire targets, aim and Fire. Acquisition, range and validity checks
+//      read health as it stood at the START of the tick, because nothing changes Health before phase 4.
+//   2. RunMovement.
+//   3. RunCombat: reload countdown, building turrets (acquire, Fire), then projectile stepping and detonation.
+//      Fire (instant weapons) and Detonate (shells, splash) only append (target, amount, source) to the pending-damage
+//      buffer via Hurt; no Health value changes in phases 1-3, so a unit that is killed this tick still fires this tick.
+//   4. ApplyPendingDamage (end of RunCombat): subtracts every queued hit from its target (subtraction commutes, so the
+//      outcome does not depend on which slot hit first), wakes hit guards, and empties the buffer.
+//   5. RunCleanup (later in the tick) removes everything with Health <= 0 and releases attackers' targets
+//      (OnCombatActorRemoving). All deaths of a tick therefore resolve together.
+// The buffer (_pendingDamage) is empty between ticks, so it is not part of the saved or hashed state.
 public sealed partial class Simulation
 {
     /// <summary>Facing error (of 256) within which a weapon mount counts as aimed.</summary>
@@ -19,6 +32,19 @@ public sealed partial class Simulation
 
     private CombatState _combat = null!;
     private ProjectileStore _projectiles = null!;
+
+    // Hits queued by Hurt during a tick and applied together by ApplyPendingDamage; empty between ticks (not state).
+    private PendingHit[] _pendingDamage = new PendingHit[256];
+    private int _pendingCount;
+
+    // Positions of mobile actors as they were when RunMissions began (valid while _useTickPos). Handlers move units as they
+    // run, so without this a later slot would aim at, and range-check against, positions an earlier slot has already
+    // changed this tick: a slot-order bias. Scratch, rewritten every tick, not state.
+    private LeptonCoord[] _tickPosVeh = Array.Empty<LeptonCoord>();
+    private LeptonCoord[] _tickPosInf = Array.Empty<LeptonCoord>();
+    private bool _useTickPos;
+
+    private readonly record struct PendingHit(ActorRef Target, int Amount, int Source);
 
     /// <summary>Per-actor combat data (reload, turret facing, attack target, guard point). Never mutate outside Step.</summary>
     public CombatState CombatData => _combat;
@@ -33,6 +59,22 @@ public sealed partial class Simulation
         _projectiles = new ProjectileStore(Setup.Limits.Projectiles);
         return new ISimStatePart[] { _combat, _projectiles };
     }
+
+    /// <summary>Record start-of-tick positions of vehicles and infantry for combat decisions (called at the start of RunMissions).</summary>
+    private void SnapshotTickPositions()
+    {
+        if (_tickPosVeh.Length != _units.Capacity) _tickPosVeh = new LeptonCoord[_units.Capacity];
+        if (_tickPosInf.Length != _infantry.Capacity) _tickPosInf = new LeptonCoord[_infantry.Capacity];
+        Array.Copy(_units.Position, _tickPosVeh, _tickPosVeh.Length);
+        Array.Copy(_infantry.Position, _tickPosInf, _tickPosInf.Length);
+        _useTickPos = true;
+    }
+
+    // Where combat sees the actor: its start-of-tick position while a tick is running (buildings never move).
+    private LeptonCoord CombatPositionAt(ActorKind kind, int i) =>
+        !_useTickPos ? PositionAt(kind, i)
+        : kind == ActorKind.Vehicle ? _tickPosVeh[i]
+        : kind == ActorKind.Infantry ? _tickPosInf[i] : PositionAt(kind, i);
 
     // ---- lookups ------------------------------------------------------------------------------
 
@@ -72,7 +114,7 @@ public sealed partial class Simulation
     {
         point = default;
         if (!TryGetActorInfo(target, out var info) || info.Health <= 0) return false;
-        if (target.Kind != ActorKind.Building) { point = info.Position; return true; }
+        if (target.Kind != ActorKind.Building) { point = CombatPositionAt(target.Kind, target.Id.Index); return true; }
         int i = target.Id.Index;
         BuildingType bt = BuildingTypeAt(i);
         CellCoord tl = _buildings.Cell[i];
@@ -104,7 +146,7 @@ public sealed partial class Simulation
 
     private bool IsTargetVisible(byte viewer, ActorKind kind, int i)
     {
-        if (kind != ActorKind.Building) return IsVisibleTo(viewer, PositionAt(kind, i).ToCell());
+        if (kind != ActorKind.Building) return IsVisibleTo(viewer, CombatPositionAt(kind, i).ToCell());
         BuildingType bt = BuildingTypeAt(i);
         return FootprintVisible(viewer, _buildings.Cell[i], bt.FootprintW, bt.FootprintH);
     }
@@ -127,7 +169,7 @@ public sealed partial class Simulation
                 if (!slots.IsIndexAlive(i) || RelationOf(player, PlayerAt(kind, i)) != Relation.Enemy || HealthAt(kind, i) <= 0) continue;
                 LeptonCoord pt;
                 if (kind == ActorKind.Building) { if (!TargetPoint(new ActorRef(kind, slots.IdOf(i)), from, out pt)) continue; }
-                else pt = PositionAt(kind, i);
+                else pt = CombatPositionAt(kind, i);
                 long d = LeptonMath.DistanceSquared(from, pt);
                 if (d > bestD || d > maxD2 || d < minD2) continue;
                 // Equal distance: the weaker target (lower health) first, then kind and slot order. Health is the same for a
@@ -197,16 +239,33 @@ public sealed partial class Simulation
         return d < 1 ? 1 : d;
     }
 
-    private void Hurt(ActorKind kind, int i, int damage, WarheadType wh, bool half)
+    // Queue the hit; Health is untouched until ApplyPendingDamage (D-065). source = owner player, for diagnostics.
+    private void Hurt(ActorKind kind, int i, int damage, WarheadType wh, bool half, byte source)
     {
         int d = ComputeDamage(damage, wh, ArmorAt(kind, i));
         if (half) { d /= 2; if (d < 1) d = 1; }
-        switch (kind)
+        if (_pendingCount == _pendingDamage.Length) Array.Resize(ref _pendingDamage, _pendingCount * 2);
+        _pendingDamage[_pendingCount++] = new PendingHit(new ActorRef(kind, IdAt(kind, i)), d, source);
+    }
+
+    /// <summary>Apply every queued hit and empty the buffer. Health only ever decreases by the sum of the hits, so the result
+    /// does not depend on the order they arrived in (slot order of the shooters).</summary>
+    private void ApplyPendingDamage()
+    {
+        for (int n = 0; n < _pendingCount; n++)
         {
-            case ActorKind.Vehicle: _units.Health[i] -= d; WakeOnHit(_units, kind, i); break;
-            case ActorKind.Infantry: _infantry.Health[i] -= d; WakeOnHit(_infantry, kind, i); break;
-            default: _buildings.Health[i] -= d; break;
+            ref readonly PendingHit h = ref _pendingDamage[n];
+            ActorKind kind = h.Target.Kind;
+            int i = h.Target.Id.Index;
+            if (!SlotsOf(kind).IsAlive(h.Target.Id)) continue;
+            switch (kind)
+            {
+                case ActorKind.Vehicle: _units.Health[i] -= h.Amount; WakeOnHit(_units, kind, i); break;
+                case ActorKind.Infantry: _infantry.Health[i] -= h.Amount; WakeOnHit(_infantry, kind, i); break;
+                default: _buildings.Health[i] -= h.Amount; break;
+            }
         }
+        _pendingCount = 0;
     }
 
     // A guard that is hit scans for targets on its next mission tick instead of waiting out its sleep.
@@ -229,7 +288,7 @@ public sealed partial class Simulation
         if (instant && wh.Splash <= 0)
         {
             if (TryGetActorInfo(primary, out var pi) && pi.Health > 0)
-                Hurt(primary.Kind, primary.Id.Index, damage, wh, false);
+                Hurt(primary.Kind, primary.Id.Index, damage, wh, false, owner);
             return;
         }
         int radius = wh.Splash < 0 ? 0 : wh.Splash;
@@ -253,7 +312,7 @@ public sealed partial class Simulation
                     d = Math.Max(dx, dy);
                 }
                 else d = LeptonMath.ChebyshevCells(ic, PositionAt(kind, i).ToCell());
-                if (d <= radius) Hurt(kind, i, damage, wh, d > 0);
+                if (d <= radius) Hurt(kind, i, damage, wh, d > 0, owner);
             }
         }
     }
@@ -308,6 +367,8 @@ public sealed partial class Simulation
         }
         RunBuildingCombat();
         RunProjectiles();
+        ApplyPendingDamage();
+        _useTickPos = false;
     }
 
     private void RunBuildingCombat()
