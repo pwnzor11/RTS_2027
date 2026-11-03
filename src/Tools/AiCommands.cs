@@ -5,7 +5,9 @@ using System.Globalization;
 using System.Text;
 using Rts.AI;
 using Rts.Data;
+using Rts.Sim.Core;
 using Rts.Sim.Map;
+using Rts.Sim.Rules;
 
 namespace Rts.Tools;
 
@@ -17,11 +19,11 @@ public static class AiCommands
 {
     private const int DefaultTier = 2;
     private const string Usage =
-        "usage: ai match --a <aiId>[:<tier>] --b <aiId>[:<tier>] [--seeds 8] [--ticks 6000] [--size 64] [--out file.md] [--record-dir dir]\n" +
+        "usage: ai match --a <aiId>[:<tier>] --b <aiId>[:<tier>] [--seeds 8] [--ticks 6000] [--size 64] [--out file.md] [--record-dir dir] [--flat 1] [--starts alt|slot|swap]\n" +
         "       ai matrix --ai <aiId> [--tiers 1-5] [--seeds 4] [--ticks 6000] [--size 64] [--out file.md]\n" +
         "  <tier> is 1..5 or recruit|regular|veteran|elite|commissar (default regular). Seeds are 1..N.";
 
-    private static readonly string[] MatchOptions = ["a", "b", "seeds", "ticks", "size", "out", "record-dir"];
+    private static readonly string[] MatchOptions = ["a", "b", "seeds", "ticks", "size", "out", "record-dir", "flat", "starts"];
     private static readonly string[] MatrixOptions = ["ai", "tiers", "seeds", "ticks", "size", "out"];
 
     /// <summary>Runs `ai ...` (args exclude the leading "ai").</summary>
@@ -54,7 +56,7 @@ public static class AiCommands
         string? recordDir = flags.TryGetValue("record-dir", out string? rd) ? rd : null;
         var clock = Stopwatch.StartNew();
         MatchTally tally;
-        try { tally = PlayPair(world!, a!, b!, seeds, ticks, size, recordDir, verbose: true); }
+        try { tally = PlayPair(world!, a!, b!, seeds, ticks, size, recordDir, verbose: true, flat: flags.ContainsKey("flat"), startMode: flags.TryGetValue("starts", out string? sm) ? sm : "alt"); }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException or ArgumentException or InvalidOperationException)
         {
             Console.Error.WriteLine($"error: {e.Message}");
@@ -78,6 +80,7 @@ public static class AiCommands
         sb.AppendLine("| Games | A wins | B wins | Draws | Avg end tick | A win % |");
         sb.AppendLine("|---:|---:|---:|---:|---:|---:|");
         sb.AppendLine($"| {t.Games} | {t.AWins} | {t.BWins} | {t.Draws} | {t.AvgEndTick} | {Pct(t.AWins, t.Games)} |");
+        sb.AppendLine().AppendLine($"Wins by start corner: start 0 (4,4) {t.StartWins[0]}, start 1 (mirror) {t.StartWins[1]}. Wins by player slot: slot 0 {t.SlotWins[0]}, slot 1 {t.SlotWins[1]}.");
         if (t.Draws > 0)
             sb.AppendLine().AppendLine($"Draw tiebreak (remaining health): A ahead in {t.DrawsAAhead}, B ahead in {t.DrawsBAhead}, level in {t.Draws - t.DrawsAAhead - t.DrawsBAhead}.");
         return sb.ToString();
@@ -161,29 +164,49 @@ public static class AiCommands
 
     private sealed class MatchTally
     {
+        public int[] StartWins = new int[2];
+        public int[] SlotWins = new int[2];
         public int Games, AWins, BWins, Draws, DrawsAAhead, DrawsBAhead;
         public long Ticks, EndTickSum;
         public long AvgEndTick => Games == 0 ? 0 : EndTickSum / Games;
     }
 
-    private static MatchTally PlayPair(World w, AiSide a, AiSide b, int seeds, int ticks, int size, string? recordDir, bool verbose)
+    /// <summary>Same size and start positions, but all ground clear, flat, no overlays (isolates map features).</summary>
+    private static MapData Flatten(MapData m)
+    {
+        int n = m.Width * m.Height;
+        return new MapData(m.Name + "_flat", m.Theater, m.Width, m.Height, new ushort[n], new LandType[n], new byte[n],
+            new OverlayKind[n], new byte[n], m.StartPositions);
+    }
+
+    private static MatchTally PlayPair(World w, AiSide a, AiSide b, int seeds, int ticks, int size, string? recordDir, bool verbose, bool flat = false, string startMode = "alt")
     {
         var tally = new MatchTally();
         if (recordDir is not null) Directory.CreateDirectory(recordDir);
         for (int s = 1; s <= seeds; s++)
         {
             MapData map = MapGenerator.Generate(size, (ulong)s);
+            if (flat) map = Flatten(map);
             for (int g = 0; g < 2; g++)
             {
                 bool aInSlot0 = g == 0;
+                // Slot order (who acts first in a tick) must not ride along with the start corner: by default the
+                // corners trade slots on even seeds ("alt"); "slot" = corner p for slot p; "swap" = corner 1-p.
+                bool swapSlots = startMode == "swap" || (startMode == "alt" && s % 2 == 0);
                 FileStream? replay = recordDir is null ? null
                     : File.Create(Path.Combine(recordDir, $"{a.Label}_vs_{b.Label}_seed{s}_g{g + 1}.rtsreplay".Replace(':', '-')));
                 AiGameResult r;
                 using (replay) r = AiMatchRunner.Play(map, w.Rules, w.RulesHash, (ulong)s, a, b, aInSlot0, ticks, replay,
-                    BuildInfo.Version, replay is null ? null : RulesBundle.ReadDirectory(w.RulesDir));
+                    BuildInfo.Version, replay is null ? null : RulesBundle.ReadDirectory(w.RulesDir), swapSlots);
                 tally.Games++;
                 tally.Ticks += r.EndTick;
                 tally.EndTickSum += r.EndTick;
+                if (r.Winner >= 0)
+                {
+                    int slot = r.Winner == 0 ? (aInSlot0 ? 0 : 1) : (aInSlot0 ? 1 : 0);
+                    tally.StartWins[swapSlots ? 1 - slot : slot]++;
+                    tally.SlotWins[slot]++;
+                }
                 if (r.Winner == 0) tally.AWins++;
                 else if (r.Winner == 1) tally.BWins++;
                 else
@@ -195,7 +218,7 @@ public static class AiCommands
                 if (verbose)
                 {
                     string result = r.Winner == 0 ? "A wins" : r.Winner == 1 ? "B wins" : "draw";
-                    Console.WriteLine($"seed {s} game {g + 1} (A in slot {(aInSlot0 ? 0 : 1)}): {result} at tick {r.EndTick} (health A {r.ValueA}, B {r.ValueB})");
+                    Console.WriteLine($"seed {s} game {g + 1} (A in slot {(aInSlot0 ? 0 : 1)}, A at start {(aInSlot0 != swapSlots ? 0 : 1)}): {result} at tick {r.EndTick} (health A {r.ValueA}, B {r.ValueB})");
                 }
             }
         }

@@ -125,10 +125,16 @@ public sealed partial class Simulation
         if (!InMap(cell)) throw new ArgumentOutOfRangeException(nameof(cell));
         EntityId id = _units.Add(player, vehicleTypeIndex, LeptonCoord.CenterOf(cell), vehicles[vehicleTypeIndex].MaxHealth);
         if (id.IsNone) return id;
+        _units.Facing[id.Index] = CentreFacing(cell);
         OnActorSpawned(ActorKind.Vehicle, id.Index);
         if (!_inStep) _setupLog.Add(new SetupEntry(ActorKind.Vehicle, player, vehicleTypeIndex, cell, 0));
         return id;
     }
+
+    /// <summary>M2-01: setup-placed actors face the map centre, so a point-mirrored setup is mirrored in facing too
+    /// (a fixed facing 0 left the north-west force turned away from its enemy and the south-east one facing it).</summary>
+    private byte CentreFacing(CellCoord cell) =>
+        Rts.Sim.Numerics.Facing.FromDelta(Setup.Map.Width * 128 - (cell.X * 256 + 128), Setup.Map.Height * 128 - (cell.Y * 256 + 128));
 
     /// <summary>Setup/scripting entry: place an infantry soldier at a sub-slot (0 = centre, 1..4 = corners) of a cell.</summary>
     public EntityId SpawnInfantry(byte player, int infantryTypeIndex, CellCoord cell, int subSlot = 0)
@@ -140,6 +146,7 @@ public sealed partial class Simulation
         if (subSlot < 0 || subSlot >= InfantryStore.SubSlotCount) throw new ArgumentOutOfRangeException(nameof(subSlot));
         EntityId id = _infantry.Add(player, infantryTypeIndex, cell, subSlot, infantry[infantryTypeIndex].MaxHealth);
         if (id.IsNone) return id;
+        _infantry.Facing[id.Index] = CentreFacing(cell);
         OnActorSpawned(ActorKind.Infantry, id.Index);
         if (!_inStep) _setupLog.Add(new SetupEntry(ActorKind.Infantry, player, infantryTypeIndex, cell, subSlot));
         return id;

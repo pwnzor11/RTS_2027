@@ -109,12 +109,13 @@ public sealed partial class Simulation
         return FootprintVisible(viewer, _buildings.Cell[i], bt.FootprintW, bt.FootprintH);
     }
 
-    /// <summary>Nearest visible enemy (vehicles, infantry, then buildings, slot order breaks ties) whose distance from
+    /// <summary>Nearest visible enemy (vehicles, infantry, then buildings; equal distance: lower health, then slot order) whose distance from
     /// <paramref name="from"/> lies in the weapon's [MinRange, Range]. Returns a ref with Id.IsNone if there is none.</summary>
     internal ActorRef AcquireTarget(byte player, LeptonCoord from, WeaponType w)
     {
         ActorRef best = default;
         long bestD = long.MaxValue;
+        int bestHp = int.MaxValue;
         long maxD2 = (long)w.Range * w.Range, minD2 = (long)w.MinRange * w.MinRange;
         for (int k = 0; k < LiveKinds; k++)
         {
@@ -128,8 +129,13 @@ public sealed partial class Simulation
                 if (kind == ActorKind.Building) { if (!TargetPoint(new ActorRef(kind, slots.IdOf(i)), from, out pt)) continue; }
                 else pt = PositionAt(kind, i);
                 long d = LeptonMath.DistanceSquared(from, pt);
-                if (d < bestD && d <= maxD2 && d >= minD2 && IsTargetVisible(player, kind, i))
-                { bestD = d; best = new ActorRef(kind, slots.IdOf(i)); }
+                if (d > bestD || d > maxD2 || d < minD2) continue;
+                // Equal distance: the weaker target (lower health) first, then kind and slot order. Health is the same for a
+                // mirrored pair of targets, slot order is not.
+                int hp = HealthAt(kind, i);
+                if (d == bestD && hp >= bestHp) continue;
+                if (!IsTargetVisible(player, kind, i)) continue;
+                bestD = d; bestHp = hp; best = new ActorRef(kind, slots.IdOf(i));
             }
         }
         return best;

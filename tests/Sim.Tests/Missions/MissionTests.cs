@@ -18,6 +18,7 @@ public class MissionTests
         var sim = new Simulation(new SimSetup(1, MapData.CreateFlat(32, 32), 1, rules, 1));
         veh = sim.SpawnVehicle(0, 0, new CellCoord(10, 10));
         inf = sim.SpawnInfantry(0, 0, new CellCoord(5, 5), 0);
+        sim.Units.Facing[veh.Index] = 0; sim.Infantry.Facing[inf.Index] = 0;   // M2-01: setup spawns face the map centre; these tests start facing north
         return sim;
     }
 

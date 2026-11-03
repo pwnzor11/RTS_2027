@@ -76,7 +76,7 @@ published zip starts from any folder; F1 opens a debug console in the sandbox.
 ## M2 · Playable skirmish slice
 Plan: docs/design/04_m2_plan.md (D-053, D-058, D-059, D-061, D-062). User can try: menu → skirmish vs the Recruit
 AI on a Rust Belt map, a 10-minute game with real art for the Authority slice.
-- [ ] M2-01 Corner advantage on generated maps — user can try: `Tools ai match --a skirmisher --b skirmisher` with swapped starts ends near-even
+- [x] M2-01 Corner advantage on generated maps — user can try: `Tools ai match --a skirmisher --b skirmisher` with swapped starts ends near-even
 - [ ] M2-02 Rules schema v2 + M2 contracts (economy/production fields, parts, commands, HUD)
 - [ ] M2-03 Front-end skeleton: SimHost, screen stack, input router, menus — user can try: main menu → sandbox
 - [ ] M2-04 UI font from an OFL TTF + UI scale

@@ -11,10 +11,10 @@ namespace Rts.Sim.Pathing;
 /// debt, unpolled results and the next request id are saved; the result cache is a pure function of map state
 /// and is not.
 /// <para>Rules: a request is either untouched in the queue or fully solved inside one <see cref="Process"/>.
-/// Process solves queued requests FIFO while budget remains; each solve costs its node-expansion count and
-/// may overdraw, the overdraft is carried as debt into the next tick. A cache hit charges the cost of the
+/// Process, when budget is left, solves every request queued so far (in FIFO order, so one tick's askers are served alike);
+/// each solve costs its node-expansion count and may overdraw, the overdraft is carried as debt into the next tick. A cache hit charges the cost of the
 /// original solve, so timing never depends on cache state.</para>
-/// <para>Search: A* over 8 directions, open set ordered by (f, h, cell index) in a hand-written heap (a total
+/// <para>Search: A* over 8 directions, open set ordered by (f, h, line tie-break, cell index) in a hand-written heap (a total
 /// order). Straight step 10, diagonal 14, times the destination cell factor 10000 / SpeedPercent. Blocked =
 /// outside the map, SpeedPercent 0 or a building. Diagonals may not cut a blocked corner. The start cell is
 /// never checked. Paths exclude the start and include the end; every cell is returned.</para>
@@ -112,18 +112,26 @@ public sealed class PathService : ISimStatePart
         return r.Id;
     }
 
-    /// <summary>Solves queued requests FIFO while budget remains. Call once per tick.</summary>
+    /// <summary>Solves all queued requests if budget remains (see the batch rule inside). Call once per tick.</summary>
     public void Process()
     {
         long budget = (long)_perTick - _debt;
         _debt = 0;
-        while (_queue.Count > 0 && budget > 0)
+        // Batch rule (M2-01): while budget is left, EVERYTHING queued so far is solved in this call, not just the first few
+        // requests. The overdraft becomes debt that delays the next batch. Requests of one tick are therefore all answered
+        // together, whichever player's actors (low or high slot) asked first; a per-request cut-off made the actors with
+        // the lowest slots move several ticks before the rest.
+        if (budget > 0)
         {
-            Req r = _queue[0];
-            _queue.RemoveAt(0);
-            int cost = Solve(r, out Entry[] entries);
-            _results[r.Id] = entries;
-            budget -= cost;
+            int batch = _queue.Count;
+            for (int k = 0; k < batch; k++)
+            {
+                Req r = _queue[k];
+                int cost = Solve(r, out Entry[] entries);
+                _results[r.Id] = entries;
+                budget -= cost;
+            }
+            _queue.RemoveRange(0, batch);
         }
         if (budget < 0) _debt = (int)(-budget);
     }
@@ -235,7 +243,7 @@ public sealed class PathService : ISimStatePart
         int minF = MinFactor(loco);
         long h0 = Heur(from.X, from.Y, to, minF);
         _g[start] = 0; _parent[start] = start; _seen[start] = _stamp;
-        _heap.Push(h0, h0, start);
+        _heap.Push(h0, h0, start, 0);
 
         int expansions = 0;
         int bestCell = start, bestCheb = Cheb(from.X, from.Y, to);
@@ -267,7 +275,7 @@ public sealed class PathService : ISimStatePart
                 if (_seen[n] == _stamp && ng >= _g[n]) continue;
                 _g[n] = ng; _parent[n] = cur; _seen[n] = _stamp;
                 long h = Heur(nx, ny, to, minF);
-                _heap.Push(ng + h, h, n);
+                _heap.Push(ng + h, h, n, LineKey(nx, ny, from.X, from.Y, to.X, to.Y));
             }
         }
 
@@ -276,6 +284,17 @@ public sealed class PathService : ISimStatePart
         status = PathStatus.Partial;
         path = Rebuild(_parent, start, bestCell, w);
         return expansions;
+    }
+
+    /// <summary>
+    /// Orientation-free tie-break key for equal-cost cells: distance from the straight line start-goal (cross product,
+    /// smaller first), then the side of the line (left first). Rotating or mirroring a whole problem by 180 degrees maps
+    /// the key onto itself, so mirrored duels get mirrored routes; a cell-index tie-break would not.
+    /// </summary>
+    private static long LineKey(int x, int y, int sx, int sy, int gx, int gy)
+    {
+        long cross = (long)(x - gx) * (sy - gy) - (long)(y - gy) * (sx - gx);
+        return cross >= 0 ? cross * 2 : -cross * 2 + 1;
     }
 
     private static long Heur(int x, int y, CellCoord to, int minFactor)
@@ -364,15 +383,16 @@ public sealed class PathService : ISimStatePart
         return expansions;
     }
 
-    /// <summary>Follows the settled distance field from a start to the goal; best next cell, lowest index on ties.</summary>
+    /// <summary>Follows the settled distance field from a start to the goal; best next cell; ties go to the cell nearest the straight start-goal line (see LineKey), then the lowest index.</summary>
     private CellCoord[] GroupWalk(int start, int goal, Locomotion loco)
     {
         var list = new List<CellCoord>();
         int cur = start;
+        int sx = start % _w, sy = start / _w, gx = goal % _w, gy = goal / _w;
         while (cur != goal)
         {
             int cx = cur % _w, cy = cur / _w;
-            int bestN = -1; long bestV = 0;
+            int bestN = -1; long bestV = 0, bestK = 0;
             for (int d = 0; d < 8; d++)
             {
                 int nx = cx + Dx[d], ny = cy + Dy[d];
@@ -383,7 +403,8 @@ public sealed class PathService : ISimStatePart
                 int n = ny * _w + nx;
                 if (_closed[n] != _stamp) continue;
                 long v = _g[n] + (diag ? 14L : 10L) * f;
-                if (bestN < 0 || v < bestV || (v == bestV && n < bestN)) { bestN = n; bestV = v; }
+                long k = LineKey(nx, ny, sx, sy, gx, gy);
+                if (bestN < 0 || v < bestV || (v == bestV && (k < bestK || (k == bestK && n < bestN)))) { bestN = n; bestV = v; bestK = k; }
             }
             cur = bestN;
             list.Add(new CellCoord(cur % _w, cur / _w));

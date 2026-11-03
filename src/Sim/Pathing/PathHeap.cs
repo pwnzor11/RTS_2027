@@ -3,8 +3,8 @@
 namespace Rts.Sim.Pathing;
 
 /// <summary>
-/// Hand-written binary min-heap keyed by the total order (F, H, Cell). Because the cell index breaks every
-/// tie, the pop order never depends on insertion history beyond the keys themselves.
+/// Hand-written binary min-heap keyed by the total order (F, H, Tie, Cell). Because the cell index breaks every
+/// remaining tie, the pop order never depends on insertion history beyond the keys themselves.
 /// </summary>
 internal sealed class PathHeap
 {
@@ -12,6 +12,7 @@ internal sealed class PathHeap
     {
         public long F;
         public long H;
+        public long Tie;
         public int Cell;
     }
 
@@ -26,13 +27,14 @@ internal sealed class PathHeap
     {
         if (a.F != b.F) return a.F < b.F;
         if (a.H != b.H) return a.H < b.H;
+        if (a.Tie != b.Tie) return a.Tie < b.Tie;
         return a.Cell < b.Cell;
     }
 
-    public void Push(long f, long h, int cell)
+    public void Push(long f, long h, int cell, long tie = 0)
     {
         if (_count == _items.Length) Array.Resize(ref _items, _count * 2);
-        var e = new Entry { F = f, H = h, Cell = cell };
+        var e = new Entry { F = f, H = h, Tie = tie, Cell = cell };
         int i = _count++;
         while (i > 0)
         {
