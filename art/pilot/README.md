@@ -124,15 +124,43 @@ Cost log (D-059): about 40 min wall-clock from start to this commit: roughly 12 
 7. The pad (full 192 px square) makes a pale-ish rectangle on the ash ground; the pad could be drawn by the terrain instead.
 8. Art touches the left/right/bottom canvas edges (pad plus right-falling shadow); build frames 1 and 3 touch the top edge.
 
-## Vehicles (M2-13a)
-Regenerate (one render at a time on this box): `flock /home/claude/wt/blender.lock python3 tools/art/build_vehicle.py auth_scraper`
-(and `auth_jeep`), then `python3 tools/art/vehicle_contact.py` → `art/pilot/vehicles_contact.png`. Models live in
-`tools/art/vehicles/<id>.py`; the builder reuses the tank camera (40°), palette, outline and shadow (`structpost.frame_b`).
-`auth_tank` is a byte copy of the approved `tank_v2`.
+---
 
-- Frames: tank 96 px, scraper 112 px (idle 16×1, harvest 16×4 at 3 ticks/frame), jeep 88 px (idle 16×1). Origin = cell centre.
-- Timings (2 cores, Cycles 24 samples): jeep ≈ 15 min full sheet, scraper ≈ 15 min (80 frames ≈ 12 s each). Post ≈ 3 s.
-- Cost log (D-059): ≈ 40 min design + previews for both vehicles, plus ≈ 30 min renders (queued behind other renders).
-- Honest notes: the scraper reads as a harvester at 1× (blade, conveyor, ash load, beacon); the jeep is small but distinct.
-  House areas are larger than the tank's, but in Authority green they almost vanish on the grey-green hulls (same as the
-  refinery) — a palette question for the owner, not a model fix. Optional "loaded" look skipped.
+# Vehicles (M2-13a): Authority scraper and jeep
+
+Generic vehicle pipeline plus two roster vehicles. Output in `data/sprites/vehicles/`: `auth_scraper`, `auth_jeep`
+(`.png` + `.sprite.toml`) and `auth_tank` (same pixels as `tank_v2.png`, renamed copy so every roster id has a sprite named
+after it). Owner sheet: `art/pilot/vehicles_contact.png`.
+
+## Regenerate (from the repo root)
+```
+flock /home/claude/wt/blender.lock python3 tools/art/build_vehicle.py auth_jeep      # about 45 s, 16 frames
+flock /home/claude/wt/blender.lock python3 tools/art/build_vehicle.py auth_scraper   # about 15 min, 80 frames
+python3 tools/art/build_vehicle.py auth_scraper --post-only                          # post-process only
+python3 tools/art/build_vehicle.py auth_scraper --preview --states harvest --facings 0 4   # fast half-res colour look
+python3 tools/art/vehicle_contact.py                                                 # vehicles_contact.png (asserts remap touches only ramp pixels)
+```
+A new vehicle = a module `tools/art/vehicles/<id>.py` (contract in the docstring of `auth_jeep.py`: ID, TITLE, CANVAS,
+TARGET, STATES, optional MATERIALS, `build(S, state, k, n)`). Same camera, palette, outline and shadow as the v2 tank
+(64 px per cell; a bigger CANVAS only adds room). The tank itself still uses `build_tank.py` (output unchanged).
+Sheet = 4 columns, frame of facing f, step k = `first + f * frames + k`. Work files: `art/pilot/work/veh_<id>/` (git-ignored).
+
+| id | frame | states | sheet |
+|---|---|---|---|
+| auth_tank | 96 | idle 16x1 | 384x384 |
+| auth_scraper | 112 | idle 16x1, harvest 16x4 (3 ticks/frame) | 448x2240 |
+| auth_jeep | 88 | idle 16x1 | 352x352 |
+
+## Cost log (D-059, 2 cores, Cycles CPU, 24 samples)
+- auth_jeep: about 10 min design/preview, renders 45 s each (two renders, canvas 80 then 88; queued behind other renders it took longer).
+- auth_scraper: about 20 min design/preview (conveyor fix once), full render 907 s; the `loaded` look was skipped.
+- Contact sheet, remap check and README: about 10 min. Total about 45 min of attention plus 17 min of render wait.
+
+## Notes
+1. House colour is much bigger than the tank's stripe: scraper flanks, cab doors, hopper sides and blade plate; jeep bonnet and doors.
+2. Scraper reads at 1x as a boxy hull with a dark ash-filled hopper; the conveyor is clearest from the front/rear and the harvest puff
+   (grey blobs by the blade) and blinking beacon show in the 4-frame loop. From dead north the conveyor is hidden behind the hopper.
+3. Jeep is small (about 1/2 cell) and reads mostly through the bright bonnet panel; the MG and antenna are 1-2 px details.
+4. In 50 of the 80 scraper frames the dithered shadow touches the right canvas edge (art itself never does); at most a few shadow
+   pixels are clipped. Widen CANVAS to 120 and re-render if that ever shows.
+5. In Authority green the house panels almost vanish on the grey-green hulls (same as the refinery): a palette question for the owner, not a model fix.
