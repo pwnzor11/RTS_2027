@@ -81,16 +81,18 @@ AI on a Rust Belt map, a 10-minute game with real art for the Authority slice.
 - [x] M2-03 Front-end skeleton: SimHost, screen stack, input router, menus — user can try: main menu → sandbox
 - [x] M2-04 UI font from an OFL TTF + UI scale
 - [x] M2-05 House colours on the GPU (base + mask layers), sprite manifest
-- [ ] M2-06 Art pilot: Refinery — owner approves before M2-13
-- [ ] M2-07 Economy sim (harvesters, depletion, regrowth, storage, power)
-- [ ] M2-08 Production sim (queues, prerequisites, drain/stall, placement radius, rally, sell, repair, low power, win rule)
-- [ ] M2-09 Authority roster data (D-058) and id migration
-- [ ] M2-10 Rust Belt M2 map
+- [ ] M2-06 Art pilot: Refinery — building approved (D-064); construction/damage states redone in M2-06b, owner approves again
+- [x] M2-07 Economy sim (harvesters, depletion, regrowth, storage, power)
+- [x] M2-08 Production sim (queues, prerequisites, drain/stall, placement radius, rally, sell, repair, low power, win rule)
+- [x] M2-09 Authority roster data (D-058) and id migration
+- [x] M2-10 Rust Belt M2 map
 - [ ] M2-11 Sidebar and minimap
 - [ ] M2-12 Recruit-tier AI
 - [ ] M2-13 Art fan-out (12 types)
 - [ ] M2-14 Integration, headless skirmish in CI, balance pass
 - [ ] M2-15 Campaign pilot (D-061)
+- [ ] M2-16 Simultaneous damage resolution (D-065)
+- [ ] M2-17 Buildings and units drawn from sprites, placeholders for missing art
 
 ## M3 · Full skirmish
 Both factions, full tech tree, map editor, real AI with difficulty levels, audio.
