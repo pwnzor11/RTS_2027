@@ -39,3 +39,39 @@ All post-processing scripts together: under 30 s.
 3. House colour works: the remap is exact in both A and B with no magenta fringe left. House area is thin (stripe 1-2 px); a wider stripe or bigger turret panel would show allegiance better at 1x.
 4. C looks clean and deliberate but flat and "toy-like" next to the rendered arms, and its shading style differs from A/B, so mixing hand and rendered units would show. Per-facing hand cost is high (diagonals still missing).
 5. The reactor housing dominates the silhouette from the front and rear; the model is too boxy and low-detail for 64 px heroes, and the camera feels more top-down than classic 3/4 (47 deg with a short hull). Shadows are noisy-edged at 12 samples (blurred in post).
+
+---
+
+# v2 polish (M1-ART-01), arm B at 64 px cell only
+
+Owner picked arm B at 64 px (D-039). v1 files are kept unchanged. The model in `build_tank.py` is now the v2 model,
+so v1 cannot be re-rendered from the current script (use git history, commit 9700f6a, if ever needed).
+
+What changed: camera elevation 47 to 40 deg; house colour on the full turret side panels and a 3-4 px skirt stripe
+(0.3 world units tall); chamfered hull and turret edges; sloped glacis and rear; six road wheels per side with hubs;
+two hatches and a commander cupola ring; thicker gun with a slotted muzzle brake (gun shortened slightly so the
+muzzle is not cropped when facing east/west); stencil number dropped (it was an unreadable blob at 64 px).
+
+## Regenerate v2 (from the repo root)
+```
+python3 tools/art/build_tank.py --sizes 384 --tag _v2      # about 75 s; writes art/pilot/work/raw_384_v2/
+ART_TAG=_v2 python3 tools/art/pixelize.py v2               # B_pixel_64_v2.png and B_dither_64_v2.png
+python3 tools/art/remap.py v2                              # remap_test_v2.png (asserts only exact ramp pixels change)
+ART_TAG=_v2 python3 tools/art/contact_sheet_v2.py          # contact_sheet_v2.png (v1 vs v2 vs v2-dither)
+```
+`art/pilot/sprite_meta_example.toml` describes the sheet (cell 64, frame 96, 16 facings, north, clockwise,
+house ramp, anchor pixel (48, 64) from the camera set-up).
+
+## B-dither
+Same palette, outline and hard alpha as B. Within each colour family (grey-green, steel, rust, highlight) the pixel is
+dithered between its two neighbouring palette shades with a 4x4 Bayer matrix. House pixels are never dithered, so
+the remap stays exact.
+
+## v2 notes
+1. House colour now reads at 1x from every facing except dead north/south, where only a sliver of the skirt stripe shows.
+2. The 40 deg camera and wheel detail give a much more "tank-like" side view; the road wheels with rust hubs are the
+   best new detail. The plain B shading is cleaner at 1x.
+3. B-dither adds a visible dot texture on flat armour that reads as grit at 3x but is noisy at 1x on large flat
+   faces. I would use it only for ground vehicles that should look worn, or not at all.
+4. The reactor collar reads as a ribbed drum, but at north/south it still dominates the silhouette.
+5. The shadow is a hard dithered blob; it is slightly cropped at the bottom edge on the south facing.
