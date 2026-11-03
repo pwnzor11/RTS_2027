@@ -6,4 +6,11 @@ namespace Rts.Sim.Rules;
 /// weapon fields are indexes into SimRules.Weapons or -1.</summary>
 public sealed record VehicleType(string Id, Locomotion Locomotion, int Speed, int TurnRate, int MaxHealth,
     ArmorClass Armor, int Sight, int PrimaryWeapon, bool HasTurret, int TurretTurnRate, bool Crusher, int Cost,
-    IReadOnlyList<string> Prerequisites);
+    IReadOnlyList<string> Prerequisites)
+{
+    /// <summary>Credits a harvester carries (0 = not a harvester).</summary>
+    public int HarvestCapacity { get; init; }
+
+    /// <summary>Build time in ticks; 0 = derive from cost.</summary>
+    public int BuildTime { get; init; }
+}

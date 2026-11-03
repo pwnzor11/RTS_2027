@@ -3,3 +3,18 @@
 tick_rate = 20
 default_map_width = 32
 default_map_height = 32
+
+[economy]
+starting_cash = 5000
+credits_ashfall = 25
+credits_pitchblende = 60
+harvest_ticks_per_unit = 4
+unload_ticks_per_unit = 2
+regrowth_interval_ticks = 0
+sell_refund_permille = 500
+repair_cost_permille = 500
+repair_hp_per_tick = 2
+build_radius = 2
+max_queue = 5
+build_ticks_per_100_credits = 20
+low_power_slowdown_permille = [1500, 2500, 4000]

@@ -18,6 +18,11 @@ public enum CommandKind : byte
 /// EntityId alone does not say which store it indexes. Move queues a Move mission to Cell; Stop queues Stop.
 /// Attack / AttackMove / Guard (M1-09): Arg low byte = subject ActorKind, Arg bits 8..15 = target ActorKind (Attack),
 /// Cell = destination (AttackMove) or guard point (Guard).
+/// M2 payloads: Build = (Arg = <see cref="Rules.ProductionCategory"/>, Arg2 = type index in that category; queues an item);
+/// Cancel = (Arg = category, Arg2 = queue position); Place = (Arg = building type index, Cell = top-left; only a ready
+/// item outside setup); Rally = (Subject = factory building; sets it as the primary factory and the rally Cell);
+/// Sell = (Subject = building); Repair = (Subject = building; toggles); Harvest = (Subject = vehicle, optional Cell
+/// to harvest near); Return = (Subject = harvester; go dock and unload).
 /// Arg2 (M1.5, review B-8) = second kind-specific int, default 0 (Debug: see DebugOp). Sorting is total over
 /// (Player, Sequence, Kind, Subject, Target, Cell, Arg, Arg2), so ties never depend on input order.
 /// </summary>

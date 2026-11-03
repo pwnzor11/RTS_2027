@@ -84,7 +84,7 @@ public static class RulesLoader
         SortById(vehicles, v => v.Id);
         List<InfantryType> infantry = ParseAll(infantryEntries, problems, f => UnitRulesLoader.ParseInfantry(f, weapons, refs));
         SortById(infantry, i => i.Id);
-        List<BuildingType> buildings = ParseAll(buildingEntries, problems, f => StructureRulesLoader.ParseBuilding(f, weapons, refs));
+        List<BuildingType> buildings = ParseAll(buildingEntries, problems, f => StructureRulesLoader.ParseBuilding(f, weapons, vehicles, refs));
         SortById(buildings, b => b.Id);
 
         List<EffectDef> effects = techRoot is null
@@ -96,18 +96,19 @@ public static class RulesLoader
             ? null
             : TerrainRulesLoader.Parse(terrainRoot, TerrainFile, problems);
         GameRules? game = gameRoot is null ? null : GameRulesLoader.Parse(gameRoot, GameFile, problems);
+        EconomyRules? economy = gameRoot is null ? null : GameRulesLoader.ParseEconomy(gameRoot, GameFile, problems);
 
         var typeIds = new HashSet<string>(
             vehicleEntries.Concat(infantryEntries).Concat(buildingEntries).Select(e => e.Id), StringComparer.Ordinal);
         var provides = new HashSet<string>(buildingEntries.SelectMany(ProvidesOf), StringComparer.Ordinal);
         refs.Validate(typeIds, provides, problems);
 
-        if (problems.Count > 0 || game is null || terrain is null)
+        if (problems.Count > 0 || game is null || terrain is null || economy is null)
         {
             throw new RulesException(problems);
         }
 
-        var sim = new SimRules(vehicles, infantry, buildings, weapons, warheads, terrain, effects);
+        var sim = new SimRules(vehicles, infantry, buildings, weapons, warheads, terrain, effects) { Economy = economy };
         return new RuleSet(game, sim, RulesHash.Compute(game, sim));
     }
 

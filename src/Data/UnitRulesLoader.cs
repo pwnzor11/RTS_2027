@@ -12,10 +12,11 @@ internal static class UnitRulesLoader
     [
         "speed", "max_health", "locomotion", "turn_rate", "armor", "sight", "primary_weapon",
         "has_turret", "turret_turn_rate", "crusher", "cost", "prerequisites",
+        "harvest_capacity", "build_time",
     ];
 
     private static readonly string[] InfantryKeys =
-        ["speed", "max_health", "armor", "sight", "primary_weapon", "cost", "prerequisites"];
+        ["speed", "max_health", "armor", "sight", "primary_weapon", "cost", "prerequisites", "build_time"];
 
     /// <summary>Parses one vehicle. <paramref name="weapons"/> must already be sorted by id.</summary>
     public static VehicleType? ParseVehicle(RulesFields f, IReadOnlyList<WeaponType> weapons, RulesReferences refs)
@@ -33,7 +34,9 @@ internal static class UnitRulesLoader
         bool? crusher = f.Bool("crusher");
         int? cost = f.Int("cost", 0, int.MaxValue);
         List<string>? prerequisites = f.StrList("prerequisites");
-        if (speed is null || maxHealth is null || locomotion is null || turnRate is null || armor is null
+        int? harvestCapacity = f.OptInt("harvest_capacity", 0, 1000, 0);
+        int? buildTime = f.OptInt("build_time", 0, int.MaxValue, 0);
+        if (harvestCapacity is null || buildTime is null || speed is null || maxHealth is null || locomotion is null || turnRate is null || armor is null
             || sight is null || weapon is null || hasTurret is null || turretTurnRate is null || crusher is null
             || cost is null || prerequisites is null)
         {
@@ -41,7 +44,11 @@ internal static class UnitRulesLoader
         }
         refs.AddAll(f, "prerequisites", prerequisites);
         return new VehicleType(f.Id, locomotion.Value, speed.Value, turnRate.Value, maxHealth.Value, armor.Value,
-            sight.Value, weapon.Value, hasTurret.Value, turretTurnRate.Value, crusher.Value, cost.Value, prerequisites);
+            sight.Value, weapon.Value, hasTurret.Value, turretTurnRate.Value, crusher.Value, cost.Value, prerequisites)
+        {
+            HarvestCapacity = harvestCapacity.Value,
+            BuildTime = buildTime.Value,
+        };
     }
 
     /// <summary>Parses one infantry type. <paramref name="weapons"/> must already be sorted by id.</summary>
@@ -55,13 +62,14 @@ internal static class UnitRulesLoader
         int? weapon = f.WeaponIndex(weapons);
         int? cost = f.Int("cost", 0, int.MaxValue);
         List<string>? prerequisites = f.StrList("prerequisites");
-        if (speed is null || maxHealth is null || armor is null || sight is null || weapon is null || cost is null
-            || prerequisites is null)
+        int? buildTime = f.OptInt("build_time", 0, int.MaxValue, 0);
+        if (buildTime is null || speed is null || maxHealth is null || armor is null || sight is null || weapon is null
+            || cost is null || prerequisites is null)
         {
             return null;
         }
         refs.AddAll(f, "prerequisites", prerequisites);
         return new InfantryType(f.Id, speed.Value, maxHealth.Value, armor.Value, sight.Value, weapon.Value,
-            cost.Value, prerequisites);
+            cost.Value, prerequisites) { BuildTime = buildTime.Value };
     }
 }

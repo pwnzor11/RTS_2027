@@ -205,6 +205,23 @@ internal sealed class RulesFields
         return index;
     }
 
+    /// <summary>True if the entry sets <paramref name="key"/> (after inheritance).</summary>
+    public bool Has(string key) => _entry.Values.TryGetValue(key, out object? raw) && raw is not null;
+
+    /// <summary>Reads an optional integer in [min, max]; <paramref name="def"/> when absent. Null only after a recorded problem.</summary>
+    public int? OptInt(string key, int min, int max, int def) => Has(key) ? Int(key, min, max) : def;
+
+    /// <summary>Reads an optional boolean; <paramref name="def"/> when absent. Null only after a recorded problem.</summary>
+    public bool? OptBool(string key, bool def) => Has(key) ? Bool(key) : def;
+
+    /// <summary>Reads an optional string; <paramref name="def"/> when absent. Null only after a recorded problem.</summary>
+    public string? OptStr(string key, string def) => Has(key) ? Str(key) : def;
+
+    /// <summary>Reads an optional integer array of exactly <paramref name="count"/> values; <paramref name="def"/> (may be null) when
+    /// absent. Check <see cref="Has"/> to tell "absent" from "invalid"; invalid records a problem and returns null.</summary>
+    public int[]? OptIntArray(string key, int count, int min, int max, int[]? def) =>
+        Has(key) ? IntArray(key, count, min, max) : def;
+
     private bool TryGet(string key, out object? raw)
     {
         if (!_entry.Values.TryGetValue(key, out raw) || raw is null)
