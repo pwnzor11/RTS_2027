@@ -179,6 +179,24 @@ python3 tools/art/infantry/contact.py                          # infantry_contac
 A new soldier = a new module in `tools/art/infantry/<id>.py` (contract in the docstring of `auth_rifleman.py`);
 `rig.py` gives primitives, a limb helper and two-bone IK, so poses are foot/hand targets, not angles.
 
+## Rocketeer (M2-13d): Authority Rocketeer
+Output: `data/sprites/infantry/auth_rocketeer.png` + `.sprite.toml`; owner sheet `art/pilot/rocketeer_contact.png`
+(`python3 tools/art/infantry/contact.py auth_rocketeer --out rocketeer_contact.png`; render with
+`flock /home/claude/wt/blender.lock python3 tools/art/build_infantry.py auth_rocketeer`).
+Module `tools/art/infantry/auth_rocketeer.py` is the approved Rifleman (same body, scale, value separation, house patches, canvas,
+origin, state layout) with: a thick olive shoulder tube (flared rear, pale marking bands, dark front collar, rust-red warhead nose,
+steel sighting frame) carried high on the right shoulder instead of the rifle; a rocket satchel low on the back with two rocket noses
+sticking up beside the house panel; a heavier gait (shorter stride, more lean, bigger bob). Fire 1 = tube on shoulder aiming;
+fire 2 = launch with a flame cone and flash ahead of the nose plus a backblast puff behind the tube. contact.py got a Rifleman-vs-
+Rocketeer block (idle/fire-2/walk, 1x and 3x) and mixed 3 rocketeer + 2 rifleman cells when the id is not auth_rifleman.
+Read at 1x: the rocketeer is told apart by the thick tube at shoulder height (the rifle is a thin diagonal wood/steel line at the
+waist) and by spikes above the pack; the silhouettes differ on all 8 facings in the comparison block.
+Honest notes: the launch flash/backblast is a large white-yellow blob at 1x (bigger than the rifle flash; may want toning down);
+build_infantry warns that frames 75-77 (die) and some fire-2 frames touch the canvas edge; the in-context captions still say
+"riflemen" (shared labels). Open: no separate rocket-in-flight effect (belongs with the FX pass, D-069).
+Minutes spent: about 25 of work; about 12 of the wall-clock was waiting for the shared Blender lock (one render was lost to the
+self-locking deadlock fixed by the lead in d5f3809).
+
 ## Format
 Same camera, sun, scale and arm-B pipeline as the tank (40 deg, 64 px per cell). Frame canvas 32x32, origin (16, 26) = feet
 on the sub-slot centre; shadow falls right/below. Sheet 192x416, 6 columns, 78 frames; frame = first + facing*frames + step.

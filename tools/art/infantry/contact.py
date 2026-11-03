@@ -76,6 +76,18 @@ def main():
         nf, n, first = S[state]
         return fr[first + (facing if nf > 1 else 0) * n + step]
 
+    rifle = None                                         # a second soldier (the rifleman) for side-by-side / mixed squads
+    if a.id != "auth_rifleman":
+        rmod = BI.load_module("auth_rifleman")
+        rsh = Image.open(os.path.join(C.ROOT, "data", "sprites", "infantry", "auth_rifleman.png")).convert("RGBA")
+        rfr = C.split_sheet(rsh, BI.COLS, rsh.height // rmod.CANVAS[1])
+        _f2, rfirsts = BI.frame_list(rmod)
+        RS = {name: (nf, n, rfirsts[name]) for name, nf, n, _t in rmod.STATES}
+
+        def rifle(state, facing, step=0):
+            nf, n, first = RS[state]
+            return rfr[first + (facing if nf > 1 else 0) * n + step]
+
     blocks = []
     N = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"]
     for state in ("idle", "walk", "fire"):
@@ -87,8 +99,16 @@ def main():
     gd = [[get("die", 0, k) for k in range(nd)]]
     blocks.append(("DIE: 6 frames, one facing (forward fall to the east).  1x then 3x", hcat([grid(gd, 1, nd, 1), grid(gd, 1, nd, 3)], 28)))
 
+    if rifle is not None:
+        for z in (1, 3):
+            rows = [[rifle("idle", f) for f in range(8)], [get("idle", f) for f in range(8)],
+                    [rifle("fire", f, 1) for f in range(8)], [get("fire", f, 1) for f in range(8)],
+                    [rifle("walk", f, 1) for f in range(8)], [get("walk", f, 1) for f in range(8)]]
+            blocks.append((f"RIFLEMAN vs ROCKETEER at {z}x, columns = 8 facings; rows: idle rifle / idle rocket, fire-2 rifle / fire-2 rocket, walk rifle / walk rocket",
+                           grid(rows, 6, 8, z)))
+
     old = os.path.join(C.ROOT, "art", "pilot", "work", "old_pilot_sheet.png")
-    if os.path.exists(old):
+    if os.path.exists(old) and rifle is None:
         osh = Image.open(old).convert("RGBA")
         ofr = C.split_sheet(osh, BI.COLS, osh.height // 32)
         pr = [(0, "idle"), (2, "idle"), (4, "idle"), (6, "idle")]
@@ -100,6 +120,11 @@ def main():
             strips.append(hcat([grid(rows_old, 1, 6, z), grid(rows_new, 1, 6, z)], 24))
         blocks.append(("BEFORE (left, old pilot) vs AFTER (right): idle N, E, S, W, walk E, fire SE.  1x then 3x", strips[0]))
         blocks.append(("BEFORE vs AFTER at 3x (same frames)", strips[1]))
+
+    def mixed():
+        if rifle is None:
+            return [get("idle", 4), get("fire", 3, 1), get("walk", 2, 1), get("idle", 6), get("walk", 5, 4)]
+        return [get("idle", 4), rifle("fire", 3, 1), get("walk", 2, 1), rifle("idle", 6), get("fire", 5, 1)]   # three rocketeers, two riflemen
 
     # in-context patches 7x4 cells of 64 px
     cell = 64
@@ -116,7 +141,7 @@ def main():
             f = f if house is None else R.remap(f, house)[0]
             sprites.append((fy, f, fx - ox, fy - oy))
         cx, cy = 0 * cell, 2 * cell                   # cell (0,2): five riflemen, mixed states and facings
-        picks = [get("idle", 4), get("fire", 3, 1), get("walk", 2, 1), get("idle", 6), get("walk", 5, 4)]
+        picks = mixed()
         for (sx, sy), f in zip(SLOTS, picks):
             put(f, cx + sx, cy + sy)
         for k in range(3):                             # a squad marching east along row 1 (walk frames out of step)
@@ -152,7 +177,7 @@ def main():
                "blue #2E5A8B": C.make_ramp(C.hx("#0C1B2E"), C.hx("#2E5A8B"), C.hx("#9CC6EE"))}
     variants = [("original", None)] + list(HOUSES3.items())
     imgs = []
-    picks = [get("idle", 4), get("fire", 3, 1), get("walk", 2, 1), get("idle", 6), get("walk", 5, 4)]
+    picks = mixed()
     for name, ramp in variants:
         cellimg = Image.new("RGBA", (cell, cell), ASH + (255,))
         for (sx, sy), f in sorted(zip(SLOTS, picks), key=lambda t: t[0][1]):
