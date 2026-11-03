@@ -16,7 +16,7 @@ internal static class CombatFixture
     public static int Bld(string id) => SimRules.IndexOf(Loaded.Sim.Buildings, id, v => v.Id);
 
     public static Simulation NewSim(ulong seed = 1, int size = 32) =>
-        new(new SimSetup(seed, MapData.CreateFlat(size, size), 2, Loaded.Sim, Loaded.RulesHash));
+        new(new SimSetup(seed, MapData.CreateFlat(size, size), 2, Loaded.Sim, Loaded.RulesHash) { AllowDebug = true });
 
     private static ushort _seq;
 

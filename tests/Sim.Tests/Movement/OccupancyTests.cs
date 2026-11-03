@@ -65,7 +65,7 @@ public class OccupancyTests
             for (int s = 0; s < 5; s++) Assert.True(sim.Map.InfantryAt(new CellCoord(x, 3), s).IsNone);
 
         // dying while the path request is still queued
-        var other = sim.SpawnInfantry(0, Rifle, new CellCoord(5, 5), 0);
+        var other = Boundary.LateSpawn.Infantry(sim, 0, Rifle, new CellCoord(5, 5));
         sim.Step(new[] { Move(other, ActorKind.Infantry, 12, 1, sim.Tick) });
         sim.Infantry.Health[other.Index] = 0;
         Run(sim, 5);

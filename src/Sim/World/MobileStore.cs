@@ -97,7 +97,7 @@ public abstract class MobileStore : ISimStatePart
         PathCells[i] = null; PathPos[i] = 0; PathVersion[i] = 0; BlockedTicks[i] = 0; StuckCount[i] = 0;
     }
 
-    public void Remove(EntityId id)
+    internal void Remove(EntityId id)
     {
         if (!Slots.Free(id)) return;
         int i = id.Index;

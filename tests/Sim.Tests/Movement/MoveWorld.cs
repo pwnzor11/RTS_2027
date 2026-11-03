@@ -52,7 +52,7 @@ internal static class MoveWorld
         VehicleType wheeled = tank with { Id = "wheeled", Locomotion = Locomotion.Wheeled };
         var rules = new SimRules(new[] { tank, light, wheeled }, new[] { ScriptedGame.Infantry("rifle", 20, 30) },
             ScriptedGame.Buildings(), Array.Empty<WeaponType>(), Array.Empty<WarheadType>(), Terrain(), Array.Empty<EffectDef>());
-        return new Simulation(new SimSetup(seed, map, players, rules, 1));
+        return new Simulation(new SimSetup(seed, map, players, rules, 1) { AllowDebug = true });
     }
 
     public static Command Move(EntityId id, ActorKind kind, int x, int y, int tick = 0, byte player = 0, ushort seq = 0) =>

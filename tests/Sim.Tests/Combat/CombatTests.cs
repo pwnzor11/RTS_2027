@@ -102,7 +102,7 @@ public class CombatTests
         Assert.Equal(0, sim.Projectiles.Slots.Count);
         Assert.Equal(400, sim.Units.Health[close.Index]);
 
-        var far = sim.SpawnVehicle(1, Veh("test_tank"), new CellCoord(10, 18));
+        var far = Boundary.LateSpawn.Vehicle(sim, 1, Veh("test_tank"), new CellCoord(10, 18));
         Run(sim, 30, Attack(sim, 0, ActorKind.Vehicle, truck, ActorKind.Vehicle, far));   // hull turns ~22 ticks first
         Assert.Equal(1, sim.Projectiles.Slots.Count);
     }
@@ -168,7 +168,7 @@ public class CombatTests
         Assert.Equal(0, sim.Projectiles.Slots.Count);
         Assert.Equal(300, sim.Units.Health[enemy.Index]);
 
-        sim.SpawnInfantry(0, Inf("test_engineer"), new CellCoord(15, 10));   // scout reveals the enemy
+        Boundary.LateSpawn.Infantry(sim, 0, Inf("test_engineer"), new CellCoord(15, 10));   // scout reveals the enemy
         Run(sim, 40);
         Assert.Equal(enemy, sim.CombatData.At(ActorKind.Vehicle, truck.Index).AttackTarget.Id);
         Assert.True(sim.Units.Health[enemy.Index] < 300 || sim.Projectiles.Slots.Count > 0);

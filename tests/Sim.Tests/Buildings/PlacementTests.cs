@@ -177,7 +177,7 @@ public class PlacementTests
         Assert.Equal(PlacementResult.Ok, sim.CanPlace(0, Barracks, new CellCoord(3, 3)));
         Assert.Empty(sim.Snapshot().Buildings);
         // Slot reuse yields a new generation; the old id stays dead.
-        var again = sim.PlaceBuilding(0, Barracks, new CellCoord(3, 3));
+        var again = Boundary.LateSpawn.Building(sim, 0, Barracks, new CellCoord(3, 3));
         Assert.Equal(id.Index, again.Index);
         Assert.NotEqual(id.Generation, again.Generation);
         Assert.False(sim.TryResolve(new ActorRef(ActorKind.Building, id)));

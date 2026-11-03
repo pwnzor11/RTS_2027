@@ -11,10 +11,10 @@ public sealed class UnitStore : MobileStore
 
     public override string Name => "units";
 
-    /// <summary>Allocate a slot and reset every field of it.</summary>
-    public EntityId Add(byte player, int typeIndex, LeptonCoord pos, int health)
+    /// <summary>Allocate a slot and reset every field of it. Returns <see cref="EntityId.None"/> when the store is full.</summary>
+    internal EntityId Add(byte player, int typeIndex, LeptonCoord pos, int health)
     {
-        EntityId id = Slots.Allocate();
+        if (!Slots.TryAllocate(out EntityId id)) return EntityId.None;
         Reset(id.Index, player, typeIndex, pos, health);
         return id;
     }

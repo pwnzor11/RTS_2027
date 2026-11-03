@@ -40,11 +40,11 @@ public sealed class InfantryStore : MobileStore
         return new LeptonCoord(c.X + o.X, c.Y + o.Y);
     }
 
-    /// <summary>Allocate a slot and reset every field of it.</summary>
-    public EntityId Add(byte player, int typeIndex, CellCoord cell, int subSlot, int health)
+    /// <summary>Allocate a slot and reset every field of it. Returns <see cref="EntityId.None"/> when the store is full.</summary>
+    internal EntityId Add(byte player, int typeIndex, CellCoord cell, int subSlot, int health)
     {
         LeptonCoord pos = SlotPosition(cell, subSlot);
-        EntityId id = Slots.Allocate();
+        if (!Slots.TryAllocate(out EntityId id)) return EntityId.None;
         Reset(id.Index, player, typeIndex, pos, health);
         SubSlot[id.Index] = (byte)subSlot;
         SlotCell[id.Index] = cell;
