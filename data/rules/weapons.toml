@@ -1,4 +1,4 @@
-# Authority M2 roster: placeholder balance (tune in M2-14).
+# Authority M2 roster: balance pass in M2-14, see docs/balance/m2_balance.md.
 # Keys: damage, range and min_range (leptons, 256 per cell), rate_of_fire (ticks between shots, > 0),
 # projectile_speed (leptons/tick, 0 = instant hit), warhead (id in warheads.toml).
 
@@ -11,11 +11,11 @@ projectile_speed = 0
 warhead = "auth_small_arms"
 
 [auth_rocket]
-damage = 60
-range = 1024
+damage = 100
+range = 1280
 min_range = 0
-rate_of_fire = 60
-projectile_speed = 64
+rate_of_fire = 75
+projectile_speed = 128
 warhead = "auth_ap"
 
 [auth_jeep_mg]
@@ -27,7 +27,7 @@ projectile_speed = 0
 warhead = "auth_small_arms"
 
 [auth_tank_cannon]
-damage = 40
+damage = 60
 range = 1280
 min_range = 0
 rate_of_fire = 40
@@ -35,8 +35,8 @@ projectile_speed = 64
 warhead = "auth_ap"
 
 [auth_turret_gun]
-damage = 30
-range = 1152
+damage = 20
+range = 1280
 min_range = 0
 rate_of_fire = 30
 projectile_speed = 64

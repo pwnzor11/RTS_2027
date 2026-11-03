@@ -127,6 +127,19 @@ public class RecruitTests
     }
 
     [Fact]
+    public void ScraperWhoseHomeFieldRunsOutIsSentToLookElsewhere()
+    {
+        // seed 8: the only field within 16 cells of the base is small and built over; the next one is 20+ cells away
+        Simulation sim = EconomySim(Rts.Data.MapGenerator.Generate(64, 8), 8);
+        var ai = new RecruitAi(Recruit);
+        var driver = new AiDriver(8);
+        driver.Add(0, ai, Recruit);
+        Run(sim, driver, 6000);
+        Assert.True(ai.Probes >= 1, "the stalled scraper was never sent to a probe cell");
+        Assert.True(ai.UnitsQueued >= 10, $"only {ai.UnitsQueued} units were queued: the economy stayed dead");
+    }
+
+    [Fact]
     public void RecruitBeatsIdleOnAFixedSeed()
     {
         MapData map = Rts.Data.MapGenerator.Generate(64, 1);

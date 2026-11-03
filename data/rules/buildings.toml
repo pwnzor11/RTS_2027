@@ -13,14 +13,14 @@
 #                                    \-> auth_barracks -> auth_turret   (infantry too)
 #   auth_conyard -> auth_wall
 #
-# Placeholder balance (M2-14 tunes it):
+# Balance (tuned in M2-14; docs/balance/m2_balance.md has the reasons):
 #   id              footprint  hp    cost  power  notes
-#   auth_conyard    3x3        1500  0     0      starting building; provides auth_conyard
-#   auth_power      2x2        500   300   +100   root: auth_conyard
-#   auth_refinery   3x3        900   2000  -40    dock [1,3]; ships with one free auth_scraper; storage 1000
-#   auth_barracks   2x2        600   300   -20    produces infantry; root: auth_power
-#   auth_factory    3x3        1000  2000  -30    produces vehicle; root: auth_refinery
-#   auth_silo       2x2        300   150   -10    storage 1500; root: auth_refinery
+#   auth_conyard    3x3        1000  0     0      starting building; provides auth_conyard
+#   auth_power      2x2        400   300   +100   root: auth_conyard
+#   auth_refinery   3x3        700   2000  -40    dock [1,3]; ships with one free auth_scraper; storage 1000
+#   auth_barracks   2x2        450   300   -20    produces infantry; root: auth_power
+#   auth_factory    3x3        800   2000  -30    produces vehicle; root: auth_refinery
+#   auth_silo       2x2        250   150   -10    storage 1500; root: auth_refinery
 #   auth_wall       1x1        200   50    0      defence, wall (1x1 only, no production); root: auth_conyard
 #   auth_turret     1x1        400   400   -20    defence, needs_power; root: auth_barracks
 # Power balance for a full base: +100 - 40 - 20 - 30 - 10 = 0 (turret adds -20 only when it is built).
@@ -28,7 +28,7 @@
 [auth_conyard]
 footprint_w = 3
 footprint_h = 3
-max_health = 1500
+max_health = 1000
 armor = "structure"
 sight = 6
 primary_weapon = ""
@@ -43,7 +43,7 @@ buildable = false
 [auth_power]
 footprint_w = 2
 footprint_h = 2
-max_health = 500
+max_health = 400
 armor = "structure"
 sight = 3
 primary_weapon = ""
@@ -55,7 +55,7 @@ provides = []
 [auth_refinery]
 footprint_w = 3
 footprint_h = 3
-max_health = 900
+max_health = 700
 armor = "structure"
 sight = 4
 primary_weapon = ""
@@ -67,11 +67,12 @@ refinery = true
 storage = 1000
 dock = [1, 3]
 free_unit = "auth_scraper"
+build_time = 400
 
 [auth_barracks]
 footprint_w = 2
 footprint_h = 2
-max_health = 600
+max_health = 450
 armor = "structure"
 sight = 4
 primary_weapon = ""
@@ -84,7 +85,7 @@ produces = "infantry"
 [auth_factory]
 footprint_w = 3
 footprint_h = 3
-max_health = 1000
+max_health = 800
 armor = "structure"
 sight = 4
 primary_weapon = ""
@@ -97,7 +98,7 @@ produces = "vehicle"
 [auth_silo]
 footprint_w = 2
 footprint_h = 2
-max_health = 300
+max_health = 250
 armor = "structure"
 sight = 3
 primary_weapon = ""

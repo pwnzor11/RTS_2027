@@ -5,9 +5,11 @@ using System.Globalization;
 using System.Text;
 using Rts.AI;
 using Rts.Data;
+using Rts.Sim;
 using Rts.Sim.Core;
 using Rts.Sim.Map;
 using Rts.Sim.Rules;
+using Rts.Sim.World;
 
 namespace Rts.Tools;
 
@@ -19,11 +21,15 @@ public static class AiCommands
 {
     private const int DefaultTier = 2;
     private const string Usage =
-        "usage: ai match --a <aiId>[:<tier>] --b <aiId>[:<tier>] [--seeds 8] [--ticks 6000] [--size 64] [--out file.md] [--record-dir dir] [--flat 1] [--starts alt|slot|swap] [--start economy|army]\n" +
+        "usage: ai match --a <aiId>[:<tier>] --b <aiId>[:<tier>] [--seeds 8] [--ticks 6000] [--size 64] [--out file.md] [--record-dir dir] [--flat 1] [--starts alt|slot|swap] [--start economy|army] [--first 1]\n" +
         "       ai matrix --ai <aiId> [--tiers 1-5] [--seeds 4] [--ticks 6000] [--size 64] [--out file.md]\n" +
-        "  <tier> is 1..5 or recruit|regular|veteran|elite|commissar (default regular). Seeds are 1..N.";
+        "       ai timeline --a <aiId>[:<tier>] --b <aiId>[:<tier>] [--seed 1] [--ticks 30000] [--size 64] [--swap 0|1] [--trace N] [--dump 1]\n" +
+        "       ai duel --a <spec> --b <spec> [--count 1] [--count-b N] [--ticks 3000] [--gap 12]   (spec = id[:n][,id[:n]...], e.g. auth_tank:3,auth_turret:1)\n" +
+        "  <tier> is 1..5 or recruit|regular|veteran|elite|commissar (default regular). Seeds are first..first+N-1 (first defaults to 1).";
 
-    private static readonly string[] MatchOptions = ["a", "b", "seeds", "ticks", "size", "out", "record-dir", "flat", "starts", "start"];
+    private static readonly string[] MatchOptions = ["a", "b", "seeds", "ticks", "size", "out", "record-dir", "flat", "starts", "start", "first"];
+    private static readonly string[] TimelineOptions = ["a", "b", "seed", "ticks", "size", "swap", "trace", "dump"];
+    private static readonly string[] DuelOptions = ["a", "b", "count", "count-b", "ticks", "gap"];
     private static readonly string[] MatrixOptions = ["ai", "tiers", "seeds", "ticks", "size", "out"];
 
     /// <summary>Runs `ai ...` (args exclude the leading "ai").</summary>
@@ -35,6 +41,8 @@ public static class AiCommands
         {
             "match" => Match(rest),
             "matrix" => Matrix(rest),
+            "timeline" => Timeline(rest),
+            "duel" => Duel(rest),
             _ => UsageError($"unknown subcommand '{args[0]}'"),
         };
     }
@@ -59,10 +67,11 @@ public static class AiCommands
             if (startArg == "army") army = true;
             else if (startArg != "economy") return UsageError("--start must be economy or army");
         }
+        if (!Int(flags, "first", 1, out int firstSeed) || firstSeed < 1) return UsageError("--first must be a positive integer");
         string? recordDir = flags.TryGetValue("record-dir", out string? rd) ? rd : null;
         var clock = Stopwatch.StartNew();
         MatchTally tally;
-        try { tally = PlayPair(world!, a!, b!, seeds, ticks, size, recordDir, verbose: true, flat: flags.ContainsKey("flat"), startMode: flags.TryGetValue("starts", out string? sm) ? sm : "alt", start: army ? AiStartMode.Army : AiStartMode.Economy); }
+        try { tally = PlayPair(world!, a!, b!, seeds, ticks, size, recordDir, verbose: true, flat: flags.ContainsKey("flat"), startMode: flags.TryGetValue("starts", out string? sm) ? sm : "alt", start: army ? AiStartMode.Army : AiStartMode.Economy, firstSeed: firstSeed); }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException or ArgumentException or InvalidOperationException)
         {
             Console.Error.WriteLine($"error: {e.Message}");
@@ -165,6 +174,274 @@ public static class AiCommands
         }
     }
 
+
+    // ---- ai timeline --------------------------------------------------------------------------
+
+    /// <summary>Plays one game and prints when each side first got income and first owned each type (M2-14 balance pass).</summary>
+    private static int Timeline(string[] args)
+    {
+        if (!MatchSetup.TryParse(args, TimelineOptions, out var flags, out var positional, out string? error) || positional.Count > 0)
+            return UsageError(error ?? $"unexpected argument '{positional[0]}'");
+        if (!Common(flags, 1, out _, out int ticks, out int size, out error)) return UsageError(error!);
+        if (!Int(flags, "seed", 1, out int seed) || seed < 1) return UsageError("--seed must be a positive integer");
+        if (!Int(flags, "swap", 0, out int swap) || swap > 1) return UsageError("--swap must be 0 or 1");
+        bool dump = flags.ContainsKey("dump");
+        if (!Int(flags, "trace", 0, out int trace)) return UsageError("--trace must be a non-negative integer");
+        if (!flags.TryGetValue("a", out string? aArg) || !flags.TryGetValue("b", out string? bArg)) return UsageError("--a and --b are required");
+        if (!LoadData(out var world, out var tiers)) return 1;
+        if (!ParseSide(aArg, tiers!, out AiSide? a, out error) || !ParseSide(bArg, tiers!, out AiSide? b, out error)) return UsageError(error!);
+
+        SimRules rules = world!.Rules;
+        MapData map = MapGenerator.Generate(size, (ulong)seed);
+        if (swap == 1) { var st = new List<CellCoord>(map.StartPositions); st.Reverse(); map = new MapData(map.Name, map.Theater, map.Width, map.Height, map.Template.ToArray(), map.Land.ToArray(), map.HeightLevel.ToArray(), map.Overlay.ToArray(), map.Density.ToArray(), st); }
+        var sim = new Simulation(new SimSetup((ulong)seed, map, 2, rules, world.RulesHash));
+        SkirmishStart.Apply(sim);
+        var driver = new AiDriver((ulong)seed);
+        if (!AiRegistry.TryCreate(a!.AiId, a.Profile, out IAiPlayer? aiA) || !AiRegistry.TryCreate(b!.AiId, b.Profile, out IAiPlayer? aiB)) return UsageError("unknown AI");
+        driver.Add(0, aiA!, a.Profile);
+        driver.Add(1, aiB!, b.Profile);
+
+        var firstOwned = new Dictionary<string, int>[2] { new(), new() };
+        var firstIncome = new[] { -1, -1 };
+        var firstDamage = -1;
+        var health = new Dictionary<ulong, int>();
+        var prevMoney = new[] { sim.Players.Cash[0] + sim.Players.Stored[0], sim.Players.Cash[1] + sim.Players.Stored[1] };
+        var cashLog = new List<string>();
+        var income = new long[2];
+        int startField = FieldUnits(sim);
+        var pending = new List<Command>();
+        int winner = -1;
+        for (int t = 0; t < ticks; t++)
+        {
+            driver.Collect(sim, pending);
+            sim.Step(pending);
+            pending.RemoveAll(c => c.ExecTick < sim.Tick);
+            for (int p = 0; p < 2; p++)
+            {
+                int money = sim.Players.Cash[p] + sim.Players.Stored[p];
+                if (money > prevMoney[p] && firstIncome[p] < 0 && sim.Tick > 2) firstIncome[p] = sim.Tick;
+                if (money > prevMoney[p] && sim.Tick > 2) income[p] += money - prevMoney[p];
+                prevMoney[p] = money;
+            }
+            if (sim.Tick % 1200 == 0)
+                cashLog.Add($"{sim.Tick}: A {sim.Players.Cash[0]}+{sim.Players.Stored[0]} (income {income[0]}) pw {sim.Players.PowerOut[0]}/{sim.Players.PowerUse[0]} | B {sim.Players.Cash[1]}+{sim.Players.Stored[1]} (income {income[1]}) pw {sim.Players.PowerOut[1]}/{sim.Players.PowerUse[1]}");
+            if (trace > 0 && sim.Tick % trace == 0) Console.WriteLine(TraceLine(sim));
+            if (sim.Tick % 4 != 0) continue;
+            ScanFirst(sim, rules, firstOwned, health, ref firstDamage);
+            bool aliveA = !sim.Players.Defeated[0], aliveB = !sim.Players.Defeated[1];
+            if (aliveA && aliveB) continue;
+            winner = aliveA ? 0 : aliveB ? 1 : -1;
+            break;
+        }
+        Console.WriteLine($"# timeline seed {seed}{(swap == 1 ? " (swapped starts)" : "")}: slot 0 = {a.Label}, slot 1 = {b.Label}; 20 ticks = 1 second");
+        Console.WriteLine($"end: tick {sim.Tick} ({sim.Tick / 20}s), winner slot {(winner < 0 ? "none" : winner.ToString())}; first damage anywhere: tick {firstDamage}");
+        for (int p = 0; p < 2; p++)
+        {
+            Console.WriteLine($"slot {p}: first income tick {firstIncome[p]}");
+            var parts = new List<string>();
+            foreach (var kv in firstOwned[p]) parts.Add($"{kv.Key}@{kv.Value}");
+            Console.WriteLine("  first owned: " + string.Join(", ", parts));
+        }
+        foreach (string line in cashLog) Console.WriteLine("  cash " + line);
+        for (int i = 1; i < sim.Units.Capacity; i++)
+            if (sim.Units.Slots.IsIndexAlive(i) && rules.Vehicles[sim.Units.TypeIndex[i]].HarvestCapacity > 0)
+                Console.WriteLine($"  harvester slot {sim.Units.Player[i]}: at {sim.Units.Position[i].X / 256},{sim.Units.Position[i].Y / 256} mission {sim.Units.Mission[i]} step {sim.Economy.HarvestState[i]} goal {sim.Economy.Goal[i].X},{sim.Economy.Goal[i].Y} last {sim.Economy.LastFieldCell[i].X},{sim.Economy.LastFieldCell[i].Y} cargo {sim.Economy.Cargo[i]} hp {sim.Units.Health[i]}");
+        if (dump)
+            for (int p = 0; p < 2; p++)
+            {
+                PlayerHud hud = sim.HudFor((byte)p);
+                var q = new List<string>();
+                foreach (QueueView qv in hud.Queues)
+                    q.Add($"{qv.Category}:[{string.Join(",", qv.Items.Select(i => (qv.Category is ProductionCategory.Vehicle ? rules.Vehicles[i.TypeIndex].Id : qv.Category is ProductionCategory.Infantry ? rules.Infantry[i.TypeIndex].Id : rules.Buildings[i.TypeIndex].Id) + (i.Stalled ? "(stalled)" : "") + i.ProgressPermille))}] ready {qv.ReadyTypeIndex}");
+                Console.WriteLine($"  P{p} hud: cash {hud.Cash}+{hud.Stored} power {hud.PowerOut}/{hud.PowerUse} queues {string.Join(" ", q)}; buildable {hud.Buildable.Count}");
+            }
+        if (dump)
+            for (int y = 0; y < 30; y++)
+            {
+                var row = new StringBuilder();
+                for (int x = 0; x < 40; x++)
+                {
+                    var c = new CellCoord(x, y);
+                    char ch = sim.Map.BuildingAt(c) != EntityId.None ? 'B' : sim.Map.VehicleAt(c) != EntityId.None ? 'V' : sim.Map.InfantryAt(c, 0) != EntityId.None ? 'i' :
+                        sim.Map.OverlayAt(c) != OverlayKind.None ? (char)('0' + Math.Min(9, (int)sim.Map.DensityAt(c))) : sim.Map.LandAt(c) == LandType.Clear ? '.' : '#';
+                    row.Append(ch);
+                }
+                Console.WriteLine(row);
+            }
+        Console.WriteLine($"  field (ashfall+pitchblende density units) at start {startField}, at end {FieldUnits(sim)}");
+        return 0;
+    }
+
+    /// <summary>One line: per slot the mobile actors (infantry+vehicles, harvesters excluded) and their centroid, structures alive.</summary>
+    private static string TraceLine(Simulation sim)
+    {
+        var sb = new StringBuilder($"t{sim.Tick}:");
+        for (int p = 0; p < 2; p++)
+        {
+            int n = 0, hp = 0, b = 0, harvHp = 0; long sx = 0, sy = 0;
+            for (int i = 1; i < sim.Units.Capacity; i++)
+                if (sim.Units.Slots.IsIndexAlive(i) && sim.Units.Player[i] == p)
+                {
+                    if (sim.Setup.Rules.Vehicles[sim.Units.TypeIndex[i]].HarvestCapacity > 0) { harvHp += sim.Units.Health[i]; continue; }
+                    n++; hp += sim.Units.Health[i]; sx += sim.Units.Position[i].X / 256; sy += sim.Units.Position[i].Y / 256;
+                }
+            for (int i = 1; i < sim.Infantry.Capacity; i++)
+                if (sim.Infantry.Slots.IsIndexAlive(i) && sim.Infantry.Player[i] == p)
+                { n++; hp += sim.Infantry.Health[i]; sx += sim.Infantry.Position[i].X / 256; sy += sim.Infantry.Position[i].Y / 256; }
+            for (int i = 1; i < sim.Buildings.Capacity; i++)
+                if (sim.Buildings.Slots.IsIndexAlive(i) && sim.Buildings.Player[i] == p) b++;
+            sb.Append($"  P{p} army {n} hp {hp} at {(n == 0 ? "-" : (sx / n) + "," + (sy / n))} bldg {b} cash {sim.Funds((byte)p)} scraper hp {harvHp};");
+        }
+        return sb.ToString();
+    }
+
+    private static int FieldUnits(Simulation sim)
+    {
+        int n = 0;
+        for (int y = 0; y < sim.Map.Height; y++)
+            for (int x = 0; x < sim.Map.Width; x++)
+                if (sim.Map.OverlayAt(new CellCoord(x, y)) != OverlayKind.None) n += sim.Map.DensityAt(new CellCoord(x, y));
+        return n;
+    }
+
+    private static void ScanFirst(Simulation sim, SimRules rules, Dictionary<string, int>[] first, Dictionary<ulong, int> health, ref int firstDamage)
+    {
+        for (int i = 1; i < sim.Buildings.Capacity; i++)
+            if (sim.Buildings.Slots.IsIndexAlive(i))
+                Note(first, sim.Buildings.Player[i], rules.Buildings[sim.Buildings.TypeIndex[i]].Id, sim.Tick);
+        for (int i = 1; i < sim.Units.Capacity; i++)
+            if (sim.Units.Slots.IsIndexAlive(i))
+            {
+                Note(first, sim.Units.Player[i], rules.Vehicles[sim.Units.TypeIndex[i]].Id, sim.Tick);
+                Damage(health, 2UL << 40 | (ulong)i << 8 | (uint)sim.Units.Slots.GenerationOf(i) & 0xFF, sim.Units.Health[i], sim.Tick, ref firstDamage);
+            }
+        for (int i = 1; i < sim.Infantry.Capacity; i++)
+            if (sim.Infantry.Slots.IsIndexAlive(i))
+            {
+                Note(first, sim.Infantry.Player[i], rules.Infantry[sim.Infantry.TypeIndex[i]].Id, sim.Tick);
+                Damage(health, 3UL << 40 | (ulong)i << 8 | (uint)sim.Infantry.Slots.GenerationOf(i) & 0xFF, sim.Infantry.Health[i], sim.Tick, ref firstDamage);
+            }
+    }
+
+    private static void Note(Dictionary<string, int>[] first, int player, string id, int tick)
+    {
+        if (player < 0 || player > 1) return;
+        first[player].TryAdd(id, tick);
+    }
+
+    private static void Damage(Dictionary<ulong, int> health, ulong key, int hp, int tick, ref int firstDamage)
+    {
+        if (health.TryGetValue(key, out int prev) && hp < prev && firstDamage < 0) firstDamage = tick;
+        health[key] = hp;
+    }
+
+    // ---- ai duel ------------------------------------------------------------------------------
+
+    private static int Duel(string[] args)
+    {
+        if (!MatchSetup.TryParse(args, DuelOptions, out var flags, out var positional, out string? error) || positional.Count > 0)
+            return UsageError(error ?? $"unexpected argument '{positional[0]}'");
+        if (!Int(flags, "count", 1, out int countA) || countA < 1 || countA > 40) return UsageError("--count must be 1..40");
+        if (!Int(flags, "count-b", countA, out int countB) || countB < 1 || countB > 40) return UsageError("--count-b must be 1..40");
+        if (!Int(flags, "ticks", 3000, out int ticks) || ticks < 1) return UsageError("--ticks must be a positive integer");
+        if (!Int(flags, "gap", 12, out int gap) || gap < 2 || gap > 40) return UsageError("--gap must be 2..40 (cells between the two groups)");
+        if (!flags.TryGetValue("a", out string? specA) || !flags.TryGetValue("b", out string? specB)) return UsageError("--a and --b are required");
+        if (!LoadData(out var world, out _)) return 1;
+        SimRules rules = world!.Rules;
+        MapData map = Flatten(MapGenerator.Generate(64, 1));
+        var sim = new Simulation(new SimSetup(1, map, 2, rules, world.RulesHash));
+        int cy = map.Height / 2, cxA = map.Width / 2 - gap / 2, cxB = map.Width / 2 + (gap + 1) / 2;
+        var groupA = SpawnSpec(sim, rules, 0, specA, countA, cxA, cy, -1, out string? errA);
+        var groupB = SpawnSpec(sim, rules, 1, specB, countB, cxB, cy, 1, out string? errB);
+        if (errA is not null || errB is not null) return UsageError(errA ?? errB!);
+        var cmds = new List<Command>();
+        ushort seq = 0;
+        foreach (var (id, kind) in groupA) if (kind != ActorKind.Building) cmds.Add(new Command(0, 0, seq++, CommandKind.AttackMove, id, EntityId.None, new CellCoord(cxB, cy), (int)kind));
+        foreach (var (id, kind) in groupB) if (kind != ActorKind.Building) cmds.Add(new Command(0, 1, seq++, CommandKind.AttackMove, id, EntityId.None, new CellCoord(cxA, cy), (int)kind));
+        int end = ticks;
+        int hpA0 = Health(sim, 0), hpB0 = Health(sim, 1);
+        for (int t = 0; t < ticks; t++)
+        {
+            sim.Step(cmds);
+            cmds.RemoveAll(c => c.ExecTick < sim.Tick);
+            if (sim.Tick % 4 != 0) continue;
+            if (Alive(sim, 0) == 0 || Alive(sim, 1) == 0) { end = sim.Tick; break; }
+        }
+        int aliveA = Alive(sim, 0), aliveB = Alive(sim, 1);
+        string result = aliveA > 0 && aliveB == 0 ? "A wins" : aliveB > 0 && aliveA == 0 ? "B wins" : aliveA == 0 ? "mutual kill" : "no result";
+        Console.WriteLine($"| {specA} x{countA} vs {specB} x{countB} | {result} | tick {end} ({end / 20}s) | A left {aliveA} ({Health(sim, 0)}/{hpA0} hp) | B left {aliveB} ({Health(sim, 1)}/{hpB0} hp) |");
+        return 0;
+    }
+
+    private static bool IsStructure(SimRules rules, string part)
+    {
+        int colon = part.IndexOf(':');
+        return SimRules.IndexOf(rules.Buildings, colon < 0 ? part : part[..colon], t => t.Id) >= 0;
+    }
+
+    /// <summary>Spawns a side from a spec "id[:n][,id[:n]...]" (n defaults to <paramref name="defaultCount"/>); mobile groups stand in
+    /// a 4-row block, a structure stands in front of the block with a power plant behind it.</summary>
+    private static List<(EntityId Id, ActorKind Kind)> SpawnSpec(Simulation sim, SimRules rules, byte player, string spec, int defaultCount,
+        int cx, int cy, int dir, out string? error)
+    {
+        error = null;
+        var all = new List<(EntityId, ActorKind)>();
+        int slot = 0, structures = 0;
+        bool plantPlaced = false;
+        // structures first, so the mobile block cannot sit on their cells
+        var parts = new List<string>(spec.Split(',', StringSplitOptions.RemoveEmptyEntries));
+        parts.Sort((x, y) => IsStructure(rules, y).CompareTo(IsStructure(rules, x)));
+        foreach (string part in parts)
+        {
+            int colon = part.IndexOf(':');
+            string id = colon < 0 ? part : part[..colon];
+            int count = defaultCount;
+            if (colon >= 0 && !int.TryParse(part[(colon + 1)..], NumberStyles.None, CultureInfo.InvariantCulture, out count)) { error = $"bad count in '{part}'"; return all; }
+            int v = SimRules.IndexOf(rules.Vehicles, id, t => t.Id), inf = SimRules.IndexOf(rules.Infantry, id, t => t.Id), b = SimRules.IndexOf(rules.Buildings, id, t => t.Id);
+            if (v < 0 && inf < 0 && b < 0) { error = $"unknown unit or structure '{id}'"; return all; }
+            for (int i = 0; i < count; i++, slot++)
+            {
+                if (b >= 0)
+                {
+                    BuildingType bt = rules.Buildings[b];
+                    EntityId bid = sim.PlaceBuilding(player, b, new CellCoord(cx - dir * 2, cy - 3 + structures++ * (bt.FootprintH + 1)));
+                    if (bid == EntityId.None) { error = $"cannot place '{id}'"; return all; }
+                    all.Add((bid, ActorKind.Building));
+                    int plant = SimRules.IndexOf(rules.Buildings, "auth_power", x => x.Id);
+                    if (!plantPlaced && plant >= 0) { plantPlaced = true; sim.PlaceBuilding(player, plant, new CellCoord(cx + dir * 6, cy - 6)); }
+                }
+                else if (inf >= 0)
+                {
+                    int cell = slot / InfantryStore.SubSlotCount;
+                    all.Add((sim.SpawnInfantry(player, inf, new CellCoord(cx - dir * (cell / 6), cy - 3 + cell % 6), slot % InfantryStore.SubSlotCount), ActorKind.Infantry));
+                }
+                else all.Add((sim.SpawnVehicle(player, v, new CellCoord(cx - dir * (2 + slot / 6), cy - 3 + slot % 6)), ActorKind.Vehicle));
+            }
+        }
+        return all;
+    }
+
+    /// <summary>Mobile actors plus the non-power structures of the side (the duel ends when this is 0).</summary>
+    private static int Alive(Simulation sim, byte player)
+    {
+        int n = 0;
+        for (int i = 1; i < sim.Units.Capacity; i++) if (sim.Units.Slots.IsIndexAlive(i) && sim.Units.Player[i] == player) n++;
+        for (int i = 1; i < sim.Infantry.Capacity; i++) if (sim.Infantry.Slots.IsIndexAlive(i) && sim.Infantry.Player[i] == player) n++;
+        for (int i = 1; i < sim.Buildings.Capacity; i++)
+            if (sim.Buildings.Slots.IsIndexAlive(i) && sim.Buildings.Player[i] == player && sim.Setup.Rules.Buildings[sim.Buildings.TypeIndex[i]].PrimaryWeapon >= 0) n++;
+        return n;
+    }
+
+    private static int Health(Simulation sim, byte player)
+    {
+        long h = 0;
+        for (int i = 1; i < sim.Units.Capacity; i++) if (sim.Units.Slots.IsIndexAlive(i) && sim.Units.Player[i] == player) h += sim.Units.Health[i];
+        for (int i = 1; i < sim.Infantry.Capacity; i++) if (sim.Infantry.Slots.IsIndexAlive(i) && sim.Infantry.Player[i] == player) h += sim.Infantry.Health[i];
+        for (int i = 1; i < sim.Buildings.Capacity; i++)
+            if (sim.Buildings.Slots.IsIndexAlive(i) && sim.Buildings.Player[i] == player && sim.Setup.Rules.Buildings[sim.Buildings.TypeIndex[i]].PrimaryWeapon >= 0) h += sim.Buildings.Health[i];
+        return (int)h;
+    }
+
     // ---- playing ------------------------------------------------------------------------------
 
     private sealed record World(Rts.Sim.Rules.SimRules Rules, ulong RulesHash, string RulesDir);
@@ -186,11 +463,11 @@ public static class AiCommands
             new OverlayKind[n], new byte[n], m.StartPositions);
     }
 
-    private static MatchTally PlayPair(World w, AiSide a, AiSide b, int seeds, int ticks, int size, string? recordDir, bool verbose, bool flat = false, string startMode = "alt", AiStartMode start = AiStartMode.Economy)
+    private static MatchTally PlayPair(World w, AiSide a, AiSide b, int seeds, int ticks, int size, string? recordDir, bool verbose, bool flat = false, string startMode = "alt", AiStartMode start = AiStartMode.Economy, int firstSeed = 1)
     {
         var tally = new MatchTally();
         if (recordDir is not null) Directory.CreateDirectory(recordDir);
-        for (int s = 1; s <= seeds; s++)
+        for (int s = firstSeed; s < firstSeed + seeds; s++)
         {
             MapData map = MapGenerator.Generate(size, (ulong)s);
             if (flat) map = Flatten(map);
