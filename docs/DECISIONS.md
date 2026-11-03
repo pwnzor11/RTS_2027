@@ -532,3 +532,19 @@ is made from it.
 **Why:** effects drawn by the game look consistent on every building, animate independently and cost no
 re-render per building. Lead's call on the approach (reversible).
 **Status:** confirmed (owner approved the effects contact sheet, session 3)
+
+### D-070 · 2026-11-03 · M2 placeholder balance from the AI harness
+**Decision:** The M2 balance numbers set by the harness pass (docs/balance/m2_balance.md: income per ash/pitchblende,
+regrowth on, build time per credit, structure health, unit speeds/costs, rocket/cannon/turret damage and range, AP vs
+unarmoured, Recruit attack threshold) are the working values. Targets met: Recruit-vs-Recruit 94 % decisive, average
+game ≈ 11.5 min, first income ≈ 52 s, first tank ≈ 2.6 min. Recruit gains seeded variation (wave timing, unit bags) so
+mirror games are decisive. These are placeholders for the owner to tune by playing.
+**Status:** assumed — confirm
+
+### D-071 · 2026-11-03 · Lua mission host details (campaign pilot)
+**Decision:** Missions run in MoonSharp inside `Step` through a generic `ISimExtension` (state part "mission", saved and
+hashed). Sandbox: integers only across the API, no os/io/debug/load/require/coroutine/metatables/math.random, ordered
+`pairs`. Scripts use their own seeded RNG (`Random.Next`), not the sim RNG (supersedes D-015's "use SimRandom" detail).
+Trigger callbacks are named top-level functions so they survive save/load. Mission games record no replay yet (script
+spawns aren't in the setup log). Pilot cost estimate: ≈ 10–12 h per future mission of this size (docs/missions/pilot_report.md).
+**Status:** assumed — confirm

@@ -37,6 +37,9 @@ jobs:
       - name: Headless skirmish (economy, production, Recruit AI)
         run: dotnet run --project src/Game -c Release --no-build -- --skirmish-check 6000
 
+      - name: Headless campaign mission (Lua host, auth_01)
+        run: dotnet run --project src/Game -c Release --no-build -- --mission-check auth_01 6000
+
       - name: Verify the sandbox replay
         run: dotnet run --project src/Tools -c Release --no-build -- replay verify replays/sandbox_last.rpl --map data/maps/test_32.map.toml
 

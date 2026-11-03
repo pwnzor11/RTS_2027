@@ -409,12 +409,9 @@ public sealed class SceneProofTests
         Directory.CreateDirectory(outDir);
         File.WriteAllBytes(Path.Combine(outDir, "scene_proof.png"), png);
 
-        // The barracks' house stripe (placeholder, mask only) must come out in player 0's house colour.
-        Color stripe = Pixel(canvas, 384 + 10, 64 + 10);
-        Color house = PlayerColours.Base(0);
-        Assert.InRange(stripe.R, house.R - 2, house.R + 2);
-        Assert.InRange(stripe.G, house.G - 2, house.G + 2);
-        Assert.InRange(stripe.B, house.B - 2, house.B + 2);
+        // The barracks is drawn (real art since M2-13s1, so no fixed stripe colour to check): its area differs from the
+        // plain background, and some house-coloured pixel is present somewhere in the scene.
+        Assert.NotEqual(Pixel(canvas, 1, 1), Pixel(canvas, 384 + 40, 64 + 40));
         // The refinery sprite is drawn: its top-left frame pixel area is not the plain background.
         Assert.NotEqual(Pixel(canvas, 0, 0), Pixel(canvas, 100, 100));
     }

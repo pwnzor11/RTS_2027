@@ -36,3 +36,53 @@ facings = 1
 frames = 4
 first = 16
 ticks_per_frame = 3
+
+[[fx]]
+state = "damaged"
+kind = "fire_large"
+x = 124
+y = 75
+phase = 0
+
+[[fx]]
+state = "damaged"
+kind = "fire_small"
+x = 104
+y = 113
+phase = 3
+
+[[fx]]
+state = "damaged"
+kind = "fire_small"
+x = 152
+y = 162
+phase = 5
+
+[[fx]]
+state = "damaged"
+kind = "fire_small"
+x = 153
+y = 31
+phase = 1
+
+[[fx]]
+state = "damaged"
+kind = "smoke_plume"
+x = 124
+y = 74
+phase = 0
+
+[[fx]]
+state = "damaged"
+kind = "smoke_plume"
+x = 153
+y = 30
+phase = 6
+
+[[fx]]
+state = "damaged"
+kind = "smoke_plume"
+x = 152
+y = 139
+phase = 3
+

@@ -259,3 +259,18 @@ contact sheet `python3 tools/art/structures_contact_b.py` → `art/pilot/structu
   north–south line reads as stacked horizontal blocks.
 - Turret 1×1, rotating head (idle 16, fire 16×2, damaged 16, build 6): ≈ 20 min render; base identical across facings.
 - Cost log (D-059): ≈ 90 min design + iteration for the three, most wall-clock spent queued on the shared render lock.
+
+## Structures fan-out A (M2-13s1): Construction Yard, Power Plant, Barracks, Silo
+Modules `tools/art/structures/auth_{conyard,power,barracks,silo}.py`, sprites `data/sprites/buildings/<id>.png` + `.sprite.toml`,
+owner sheet `art/pilot/structures_a_contact.png` (`python3 tools/art/structures_contact_a.py`; remap amber/red/blue, exact-match asserted).
+Same pipeline and camera as the refinery. `auth_conyard.py` also holds the shared build-site helpers (plot, foundation, steel skeleton,
+scaffold, derrick, and `stages()`): build stages 0-1 are site/foundation, 2-3 steel skeleton + scaffold + derrick, 4-5 the finished model in
+primer cut at a rising height with the skeleton above it (`S.clip_z`), 6 finished in primer with a scaffold tower left, 7 = idle frame 0.
+Damage is structural only (D-069); each module has an `FX = [...]` list (pixel anchors in frame space). The manifest writer in this
+branch predates FX support, so re-run `python3 tools/art/build_structure.py <id> --post-only` after the FX writer lands to get the `[[fx]]` tables.
+- auth_conyard 3x3, canvas 192x248: hangar, open assembly bay, gantry (hook sways), prefab stacks, mast lamp blinks, house flag. Damaged: east roof fallen in, gantry slumped, mast sheared.
+- auth_power 2x2, canvas 128x176: dome, amber tube windows pulse, stack puffs, transformers spark. Damaged: dome breach, stack snapped, annex roof caved, transformer toppled.
+- auth_barracks 2x2, canvas 128x160, exit cell below the footprint middle: quonset, decon arch, sandbags, flag waves. Damaged: north half collapsed, bent ribs.
+- auth_silo 2x2, canvas 128x152: two domed silos, feed pipe, gauge lamp blinks. Damaged: west silo blown open with spilled ash, east silo cracked.
+Minutes spent (D-059, excluding ~15 min of waiting on the shared render lock per batch): conyard about 45, power about 25, barracks about 25, silo about 20, contact sheet about 10.
+Known: the 4 damaged frames are near-identical (only the conyard cable swings); the barracks DOCK entry is the exit cell, which `buildings.toml` has no field for yet.
