@@ -180,8 +180,10 @@ public class PathServiceTests
     private static CellCoord[] Corners() => new[] { new CellCoord(0, 0) };
 
     [Fact]
-    public void SecondBigRequestFinishesNextTick()
+    public void RequestsQueuedTogetherAreSolvedTogether_ThenDebtDelaysTheNextBatch()
     {
+        // M2-01: everything queued when Process runs is solved in that call (so the first and the last asker of a tick
+        // are served alike); the overdraft is carried as debt and delays the NEXT batch.
         var m = Flat(64, 64); var t = Table();
         // A group search to the far corner settles nearly all 4096 cells: more than 2500, less than 5000.
         var s = new PathService(m, t, 2500);
@@ -189,9 +191,13 @@ public class PathServiceTests
         int b = s.RequestGroup(Corners(), new(63, 63), Locomotion.Foot);
         s.Process();
         Assert.Equal(PathStatus.Found, s.Poll(a, 0, out _));
-        Assert.Equal(PathStatus.Pending, s.Poll(b, 0, out _)); // overdraft became debt, budget 2500 - 1596 > 0 next tick
-        s.Process();
         Assert.Equal(PathStatus.Found, s.Poll(b, 0, out _));
+        int c = s.Request(new(0, 0), new(5, 0), Locomotion.Foot);
+        s.Process();   // two searches of ~4000 each against a budget of 2500: debt of about 5500
+        Assert.Equal(PathStatus.Pending, s.Poll(c, 0, out _));
+        int ticks = 1;
+        while (s.Poll(c, 0, out _) == PathStatus.Pending && ticks < 100) { s.Process(); ticks++; }
+        Assert.InRange(ticks, 2, 4);
     }
 
     [Fact]
@@ -200,10 +206,11 @@ public class PathServiceTests
         var m = Flat(64, 64); var t = Table();
         var s = new PathService(m, t, 500);
         int a = s.RequestGroup(Corners(), new(63, 63), Locomotion.Foot);
-        int b = s.Request(new(0, 0), new(5, 0), Locomotion.Foot);
         s.Process();
         Assert.Equal(PathStatus.Found, s.Poll(a, 0, out _));
+        int b = s.Request(new(0, 0), new(5, 0), Locomotion.Foot);
         int ticks = 1;
+        s.Process();
         while (s.Poll(b, 0, out _) == PathStatus.Pending && ticks < 100) { s.Process(); ticks++; }
         Assert.InRange(ticks, 6, 10); // about 4000 cells of debt repaid at 500 per tick
     }

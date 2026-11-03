@@ -14,6 +14,7 @@ public class MovementTests
         var setup = new SimSetup(1, MapData.CreateFlat(32, 32), 1, ScriptedGame.Rules(ScriptedGame.Vehicle("t", speed, 10)), 1);
         var sim = new Simulation(setup);
         id = sim.SpawnVehicle(0, 0, new CellCoord(10, 10));
+        sim.Units.Facing[id.Index] = 0;   // M2-01: setup spawns face the map centre; these tests start facing north
         return sim;
     }
 

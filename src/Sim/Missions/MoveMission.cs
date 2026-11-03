@@ -343,12 +343,34 @@ internal static class MoveMission
         else
         {
             int slot = ((InfantryStore)store).SubSlot[i];
-            if (!sim.Map.InfantryAt(n, slot).IsNone) slot = sim.Map.FreeInfantrySlot(n);
+            if (!sim.Map.InfantryAt(n, slot).IsNone) slot = NearestFreeSlot(sim, store, i, n);
             sim.Map.SetInfantry(n, slot, me);
             store.ReservedSlot[i] = (byte)slot;
         }
         store.NextCellReserved[i] = true;
         store.ReservedCell[i] = n;
+    }
+
+    /// <summary>
+    /// Free sub-slot of cell <paramref name="n"/> nearest to the walker (M2-01). The map's own "first free slot" order is
+    /// not point-symmetric (NW comes before SE), so two mirrored soldiers would take mirrored cells but unmirrored corners.
+    /// Ties (two corners equally near) go to the one on the left of the walking direction; the caller checked one is free.
+    /// </summary>
+    private static int NearestFreeSlot(Simulation sim, MobileStore store, int i, CellCoord n)
+    {
+        LeptonCoord pos = store.Position[i];
+        LeptonCoord c = LeptonCoord.CenterOf(n);
+        int best = -1; long bestD = long.MaxValue; int bestSide = 0;
+        for (int s = 0; s < InfantryStore.SubSlotCount; s++)
+        {
+            if (!sim.Map.InfantryAt(n, s).IsNone) continue;
+            LeptonCoord sp = InfantryStore.SlotPosition(n, s);
+            long dx = sp.X - pos.X, dy = sp.Y - pos.Y, d = dx * dx + dy * dy;
+            long cross = (long)(c.X - pos.X) * (sp.Y - pos.Y) - (long)(c.Y - pos.Y) * (sp.X - pos.X);
+            int side = cross < 0 ? 0 : cross > 0 ? 2 : 1;   // y grows south: cross < 0 is the left-hand side
+            if (d < bestD || (d == bestD && side < bestSide)) { best = s; bestD = d; bestSide = side; }
+        }
+        return best;
     }
 
     // ---- entering a cell ----------------------------------------------------------------------
@@ -482,13 +504,19 @@ internal static class MoveMission
         CellCoord[]? cells = store.PathCells[i];
         int p = store.PathPos[i];
         CellCoord after = cells != null && p + 1 < cells.Length ? cells[p + 1] : goal;
-        int best = -1, bestDist = int.MaxValue;
+        // Ties (equal Chebyshev distance) are broken by orientation-free rules so mirrored situations sidestep to mirrored
+        // cells: smaller squared distance first, then the cell on the left of the heading cur -> after, then scan order.
+        int best = -1, bestDist = int.MaxValue, bestSq = int.MaxValue, bestSide = 0;
         for (int d = 0; d < 8; d++)
         {
             var c = new CellCoord(cur.X + Occupancy.Dx[d], cur.Y + Occupancy.Dy[d]);
             if (c == n || !Occupancy.NeighbourFree(sim, kind, store, i, cur, d)) continue;
             int dist = Occupancy.Chebyshev(c, after);
-            if (dist < bestDist) { best = d; bestDist = dist; }
+            int sq = (c.X - after.X) * (c.X - after.X) + (c.Y - after.Y) * (c.Y - after.Y);
+            long cross = (long)(after.X - cur.X) * (c.Y - cur.Y) - (long)(after.Y - cur.Y) * (c.X - cur.X);
+            int side = cross < 0 ? 0 : cross > 0 ? 2 : 1;   // y grows south, so cross < 0 is the left-hand side
+            if (dist < bestDist || (dist == bestDist && (sq < bestSq || (sq == bestSq && side < bestSide))))
+            { best = d; bestDist = dist; bestSq = sq; bestSide = side; }
         }
         if (best < 0) return false;
         store.PathCells[i] = new[] { new CellCoord(cur.X + Occupancy.Dx[best], cur.Y + Occupancy.Dy[best]) };

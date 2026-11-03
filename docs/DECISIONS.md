@@ -325,7 +325,7 @@ shadow crop on the S facing) go to the M2 art pass.
 - M1-09 combat: instant splash-0 weapons hit only the target; projectile splash-0 hits every eligible actor in the impact cell (no homing, can be dodged); neighbour splash = half damage (min 1); instant splash weapons detonate at the target point. Attack orders: rejected on own/dead targets or weaponless subjects, ignore fog; Guard/AttackMove/building acquisition need vision. AttackMove scans every 5 ticks; after a kill or arrival the unit guards in place. Guard: nearest target within [MinRange, Range], ties by slot order (vehicles, infantry, buildings); chase leash = Sight cells from guard point; target leaving vision is dropped; Guard command walks to its point; being hit wakes a guard. Inside MinRange: no retreat. Full projectile store: weapon doesn't fire. Projectiles round to nearest per axis, detonate when remaining ≤ speed (diagonals may be ±1 tick), move on their firing tick. Reload = exactly RateOfFire ticks.
 - M1-10 tooling: replay format 5 needs --map (default test_64) and checks MapHash; match "alive" counts vehicles+infantry; hash coverage allow-lists vision ghosts (focused test) and path-search scratch arrays.
 - M1-08 movement: a Move takes effect one tick after its command (path request in RunMovement); steps end on cell centres; speed uses the cell being entered; crush on reservation; vehicles never share a cell with live infantry (ally infantry asked to scatter), infantry never enter vehicle cells, enemy/ally infantry may share; idle = no queued mission and Mission None/Sleep/Guard/Stop (attackers are busy, waited for then avoided); blocked by enemy/unshovable: wait 10 ticks → sidestep → repath; head-on allied movers: higher slot yields; give up after 12 stuck expiries → Guard; final cell taken: wait for moving ally, else stop where it is after 10 ticks; destination spreading only for ≥2 same-player Moves to one cell in one tick, by command order.
-- Known issue (for M2): headless match on test_64 favours the (4,4) start corner whichever player has it; mirror duels on flat maps are exactly symmetric, so the cause is geometric (path tie-breaking / map features).
+- Known issue (for M2; causes found and fixed or logged in D-063): headless match on test_64 favours the (4,4) start corner whichever player has it; mirror duels on flat maps are exactly symmetric, so the cause is geometric (path tie-breaking / map features).
 **Status:** assumed — confirm
 
 
@@ -464,3 +464,19 @@ colour) → game; pause menu with Restart / Quit to menu; a game-over screen. (3
 they own no structures; walls don't count. (4) New structures must be placed with their footprint within
 2 cells (Chebyshev) of a structure the player owns; walls don't extend the radius.
 **Status:** confirmed (owner, session 3)
+
+### D-063 · 2026-11-03 · M2-01 corner advantage: causes found, slot-order bias left as a finding
+**Decision:** The D-046 "corner advantage" had five geometric causes, all fixed: (1) setup-spawned actors faced north
+(facing 0), so the north-west force stood turned away from its enemy and the south-east one faced it; they now face the map
+centre (Simulation.SpawnVehicle/SpawnInfantry; tests that assume a north start set facing 0 themselves); (2) the `match`
+army's infantry sub-slots were not point-mirrored; (3) A* ties went to the lower cell index, and group-walk and detour ties to
+scan order (north first), none of them rotation-symmetric: ties now go to the cell nearest the straight start-goal line, then
+the left-hand side; AcquireTarget ties go to the weaker target, then slot order; (4) infantry took "first free" sub-slot
+(NW before SE): now nearest free; (5) PathService.Process stopped mid-queue when the budget ran out, so the lowest slots
+moved several ticks earlier: it now solves everything queued when budget remains and carries the overdraft as debt.
+With these, mirrored armies move as exact mirror images until first contact (about tick 260; test MirrorSymmetryTests).
+Finding (not fixed): after contact the player in slot 0 wins about 72% of decisive `skirmisher:2` mirror games (46 of 62 over
+32 seeds, 64 games, either corner), because all handlers, instant damage and target removal run in slot order within a tick.
+`ai match` therefore trades slots between corners on even seeds (`--starts alt`, default; `slot` = old pairing, `swap`) and
+prints wins by start corner and by slot. A fix needs simultaneous damage resolution, which is a combat-system change.
+**Status:** assumed — confirm

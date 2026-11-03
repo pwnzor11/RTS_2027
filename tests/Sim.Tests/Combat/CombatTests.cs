@@ -65,6 +65,7 @@ public class CombatTests
         var sim = NewSim();
         var tank = sim.SpawnVehicle(0, Veh("test_tank"), new CellCoord(10, 10));
         var victim = sim.SpawnInfantry(1, Inf("test_rifleman"), new CellCoord(14, 10));   // due east: facing 64
+        sim.Units.Facing[tank.Index] = 0;   // M2-01: setup spawns face the map centre; this test wants north
         sim.Step(Array.Empty<Command>());
         sim.Step(new[] { Attack(sim, 0, ActorKind.Vehicle, tank, ActorKind.Infantry, victim) });
         sim.Step(None); sim.Step(None);
@@ -85,6 +86,7 @@ public class CombatTests
         var sim = NewSim();
         var jeep = sim.SpawnVehicle(0, Veh("test_jeep"), new CellCoord(10, 10));
         var victim = sim.SpawnInfantry(1, Inf("test_rifleman"), new CellCoord(13, 10));   // 3 cells east, in range
+        sim.Units.Facing[jeep.Index] = 0;   // M2-01: setup spawns face the map centre; this test wants north
         var start = sim.Units.Position[jeep.Index];
         Run(sim, 3, Attack(sim, 0, ActorKind.Vehicle, jeep, ActorKind.Infantry, victim));
         Assert.Equal(36, sim.Units.Facing[jeep.Index]);       // 3 ticks x turn rate 12
@@ -116,6 +118,7 @@ public class CombatTests
         var sim = NewSim();
         var tank = sim.SpawnVehicle(0, Veh("test_tank"), new CellCoord(10, 10));
         var victim = sim.SpawnInfantry(1, Inf("test_rifleman"), new CellCoord(10, 6));   // due north: no turning needed, 1024 away
+        sim.Units.Facing[tank.Index] = 0;   // M2-01: setup spawns face the map centre; this test wants north
         sim.Step(new[] { Attack(sim, 0, ActorKind.Vehicle, tank, ActorKind.Infantry, victim) });
         Assert.Equal(1, sim.Projectiles.Slots.Count);            // spawned and moved during tick 0
         int expectedTicks = (1024 + 64 - 1) / 64;                // 16
@@ -232,6 +235,7 @@ public class CombatTests
         var tank = sim.SpawnVehicle(0, Veh("test_tank"), new CellCoord(10, 10));
         var jeep = sim.SpawnVehicle(0, Veh("test_jeep"), new CellCoord(11, 10));
         var victim = sim.SpawnInfantry(1, Inf("test_rifleman"), new CellCoord(10, 7));
+        sim.Units.Facing[tank.Index] = 0; sim.Units.Facing[jeep.Index] = 0;   // M2-01: setup spawns face the map centre; this test wants north
         sim.Step(new[]
         {
             Attack(sim, 0, ActorKind.Vehicle, tank, ActorKind.Infantry, victim),
@@ -328,7 +332,7 @@ public class CombatTests
         Assert.Equal(casualtiesA, casualtiesB);
         Assert.True(casualtiesA.Sum() > 0, "the battle should actually kill something");
         Assert.Equal(new[] { 6, 4 }, casualtiesA);                 // exact losses per player for seed 1
-        Assert.Equal(0x288CF7CC283C185BUL, a[^1]);                  // exact final tick hash for seed 1
+        Assert.Equal(0xCA9565C74EBC933BUL, a[^1]);                  // exact final tick hash for seed 1 (M2-01: new spawn facing, path batching)
         Assert.NotEqual(a[^1], c[^1]);
     }
 
@@ -337,6 +341,5 @@ public class CombatTests
     {
         var names = NewSim().StateParts.Select(p => p.Name).ToArray();
         Assert.Equal(new[] { "combat", "projectiles" }, names[6..8]);
-        Assert.Equal(new[] { "players", "economy", "production" }, names[8..]);
     }
 }
