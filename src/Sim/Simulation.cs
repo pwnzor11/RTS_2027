@@ -2,6 +2,7 @@ using System.IO.Hashing;
 using Rts.Sim.Core;
 using Rts.Sim.Map;
 using Rts.Sim.Missions;
+using Rts.Sim.Rules;
 using Rts.Sim.Serialization;
 using Rts.Sim.World;
 
@@ -15,8 +16,9 @@ public sealed class Simulation
 {
     private readonly UnitStore _units = new();
     private readonly InfantryStore _infantry = new();
+    private readonly BuildingStore _buildings = new();
     private readonly MapState _map;
-    // Canonical state-part order: [map, units, infantry]. Hash, Save and Load all iterate this array; append new parts
+    // Canonical state-part order: [map, units, infantry, buildings]. Hash, Save and Load all iterate this array; append new parts
     // at the end only (changing the order changes every hash and the save format).
     private readonly ISimStatePart[] _parts;
     private SimRandom _rng;
@@ -33,7 +35,7 @@ public sealed class Simulation
         Setup = setup;
         _rng = new SimRandom(setup.Seed);
         _map = new MapState(setup.Map);
-        _parts = new ISimStatePart[] { _map, _units, _infantry };
+        _parts = new ISimStatePart[] { _map, _units, _infantry, _buildings };
         MapHash = MapHasher.Compute(setup.Map);
     }
 
@@ -42,7 +44,7 @@ public sealed class Simulation
     /// <summary>Identity hash of the starting map, computed once at construction.</summary>
     public ulong MapHash { get; }
 
-    /// <summary>State parts in canonical order (map, units, infantry).</summary>
+    /// <summary>State parts in canonical order (map, units, infantry, buildings).</summary>
     public IReadOnlyList<ISimStatePart> StateParts => _parts;
 
     /// <summary>The only clock. Starts at 0; Step increments it by one.</summary>
@@ -56,6 +58,12 @@ public sealed class Simulation
 
     /// <summary>Read access to infantry state for tests and tools. Never mutate outside Step.</summary>
     public InfantryStore Infantry => _infantry;
+
+    /// <summary>Read access to building state for tests and tools. Never mutate outside Step.</summary>
+    public BuildingStore Buildings => _buildings;
+
+    /// <summary>Read access to the runtime map (land, overlay, occupancy, Version) for tests and tools. Never mutate outside Step.</summary>
+    public MapState Map => _map;
 
     /// <summary>Setup/scripting entry: place a vehicle outside Step. Returns its id.</summary>
     public EntityId SpawnVehicle(byte player, int vehicleTypeIndex, CellCoord cell)
@@ -134,6 +142,18 @@ public sealed class Simulation
             case CommandKind.Stop:
                 if (OwnsSubject(c, out store)) Queue(store!, c.Subject.Index, MissionKind.Stop, default, default);
                 break;
+            case CommandKind.Place:
+                if (c.Player < Setup.PlayerCount && c.Arg >= 0 && c.Arg < BuildingTypeCount)
+                    PlaceBuilding(c.Player, c.Arg, c.Cell);
+                break;
+            case CommandKind.Sell:
+                if (c.Arg == (int)ActorKind.Building && _buildings.Slots.IsAlive(c.Subject)
+                    && _buildings.Player[c.Subject.Index] == c.Player)
+                {
+                    // M2: refund
+                    RemoveBuilding(c.Subject);
+                }
+                break;
             case CommandKind.Debug:
                 if (c.Arg == 1) _rng.Next(1000);
                 break;
@@ -157,7 +177,8 @@ public sealed class Simulation
     };
 
     /// <summary>True if the actor exists in its store (generation checked).</summary>
-    public bool TryResolve(ActorRef actor) => StoreOf(actor.Kind)?.Slots.IsAlive(actor.Id) ?? false;
+    public bool TryResolve(ActorRef actor) =>
+        actor.Kind == ActorKind.Building ? _buildings.Slots.IsAlive(actor.Id) : StoreOf(actor.Kind)?.Slots.IsAlive(actor.Id) ?? false;
 
     /// <summary>Queue a mission for the actor; it commences at the start of the next RunMissions. False if the actor is gone or not a mission-running kind.</summary>
     public bool AssignMission(ActorRef actor, MissionKind kind, CellCoord cell = default, EntityId target = default)
@@ -171,6 +192,174 @@ public sealed class Simulation
     private static void Queue(MobileStore store, int i, MissionKind kind, CellCoord cell, EntityId target)
     {
         store.NextMission[i] = kind; store.NextCell[i] = cell; store.NextTarget[i] = target;
+    }
+
+    // ---- buildings ---------------------------------------------------------------------------
+
+    private int BuildingTypeCount => Setup.Rules.Buildings?.Count ?? 0;
+
+    // Scratch for the one-cell-gap flood fill. Not sim state: fully rewritten on every call.
+    private bool[]? _open;
+    private int[]? _fillStack;
+    private int[]? _fillMark;
+    private bool[]? _ring;
+    private int _openVersion = -1;
+    private int _fillStamp;
+
+    /// <summary>
+    /// Whether the player may put a building of this type with its top-left at the given cell. Checks the footprint
+    /// is inside the map, buildable and free of units, then the one-cell gap rule (design 02 section 3): the footprint
+    /// must not split any region of Tracked-passable, building-free cells into more pieces than before. No adjacency,
+    /// prerequisite or cost checks in M1.
+    /// </summary>
+    public PlacementResult CanPlace(byte player, int buildingType, CellCoord topLeft)
+    {
+        if (buildingType < 0 || buildingType >= BuildingTypeCount) throw new ArgumentOutOfRangeException(nameof(buildingType));
+        BuildingType bt = Setup.Rules.Buildings[buildingType];
+        int w = bt.FootprintW, h = bt.FootprintH;
+        int x0 = topLeft.X, y0 = topLeft.Y;
+        if (x0 < 0 || y0 < 0 || x0 + w > Setup.Map.Width || y0 + h > Setup.Map.Height) return PlacementResult.OutOfMap;
+        TerrainTable table = Setup.Rules.Terrain;
+        for (int y = y0; y < y0 + h; y++)
+            for (int x = x0; x < x0 + w; x++)
+                if (!_map.IsBuildable(new CellCoord(x, y), table)) return PlacementResult.Blocked;
+        // Map occupancy is not maintained for units yet, so also check unit positions directly.
+        for (int i = 1; i < _units.Capacity; i++)
+            if (_units.Slots.IsIndexAlive(i) && InRect(_units.Position[i].ToCell(), x0, y0, w, h)) return PlacementResult.Blocked;
+        for (int i = 1; i < _infantry.Capacity; i++)
+            if (_infantry.Slots.IsIndexAlive(i) && InRect(_infantry.Position[i].ToCell(), x0, y0, w, h)) return PlacementResult.Blocked;
+        return SealsRegion(x0, y0, w, h) ? PlacementResult.SealsRegion : PlacementResult.Ok;
+    }
+
+    private static bool InRect(CellCoord c, int x0, int y0, int w, int h) =>
+        c.X >= x0 && c.X < x0 + w && c.Y >= y0 && c.Y < y0 + h;
+
+    private bool SealsRegion(int x0, int y0, int w, int h)
+    {
+        int mw = Setup.Map.Width, mh = Setup.Map.Height, n = mw * mh;
+        _open ??= new bool[n];
+        _fillStack ??= new int[n];
+        _fillMark ??= new int[n];
+        _ring ??= new bool[n];
+        if (_openVersion != _map.Version)
+        {
+            TerrainTable table = Setup.Rules.Terrain;
+            for (int y = 0; y < mh; y++)
+                for (int x = 0; x < mw; x++) _open[y * mw + x] = IsOpen(x, y, table);
+            _openVersion = _map.Version;
+        }
+
+        // Fast path: open cells 4-adjacent to the footprint (the "ring"). If, with the footprint closed, a search from
+        // one ring cell reaches every other ring cell, nothing was split and no full count is needed.
+        int ringCount = 0, first = -1;
+        for (int y = y0 - 1; y <= y0 + h; y++)
+            for (int x = x0 - 1; x <= x0 + w; x++)
+            {
+                bool inX = x >= x0 && x < x0 + w, inY = y >= y0 && y < y0 + h;
+                if (inX == inY) continue; // inside the footprint, or a diagonal corner (not 4-adjacent)
+                if (x < 0 || y < 0 || x >= mw || y >= mh) continue;
+                int idx = y * mw + x;
+                if (!_open[idx]) continue;
+                _ring[idx] = true; ringCount++;
+                if (first < 0) first = idx;
+            }
+        for (int y = y0; y < y0 + h; y++)
+            for (int x = x0; x < x0 + w; x++)
+                _open[y * mw + x] = false;
+        bool connected = ringCount <= 1 || ReachesAllRing(first, ringCount, mw, n);
+        for (int y = y0 - 1; y <= y0 + h; y++)
+            for (int x = x0 - 1; x <= x0 + w; x++)
+                if (x >= 0 && y >= 0 && x < mw && y < mh) _ring[y * mw + x] = false;
+        if (connected) { RestoreFootprint(x0, y0, w, h); return false; }
+
+        // Slow path: compare component counts before and after.
+        int after = CountRegions(mw, mh);
+        RestoreFootprint(x0, y0, w, h);
+        int before = CountRegions(mw, mh);
+        return after > before;
+    }
+
+    // _open caches "Tracked-passable and building-free" per cell; it stays valid while MapState.Version is unchanged.
+    private bool IsOpen(int x, int y, TerrainTable table)
+    {
+        var c = new CellCoord(x, y);
+        return _map.BuildingAt(c).IsNone && _map.IsPassableTerrain(c, Locomotion.Tracked, table);
+    }
+
+    private void RestoreFootprint(int x0, int y0, int w, int h)
+    {
+        TerrainTable table = Setup.Rules.Terrain;
+        for (int y = y0; y < y0 + h; y++)
+            for (int x = x0; x < x0 + w; x++)
+                _open![y * Setup.Map.Width + x] = IsOpen(x, y, table);
+    }
+
+    /// <summary>Search from start over open cells; true once every flagged ring cell has been reached.</summary>
+    private bool ReachesAllRing(int start, int ringCount, int mw, int n)
+    {
+        bool[] open = _open!; bool[] ring = _ring!; int[] stack = _fillStack!; int[] mark = _fillMark!;
+        int stamp = ++_fillStamp, sp = 0, found = 1;
+        stack[sp++] = start; mark[start] = stamp;
+        while (sp > 0)
+        {
+            int cur = stack[--sp];
+            int cx = cur % mw;
+            for (int d = 0; d < 4; d++)
+            {
+                int j = d switch { 0 => cx > 0 ? cur - 1 : -1, 1 => cx < mw - 1 ? cur + 1 : -1, 2 => cur >= mw ? cur - mw : -1, _ => cur < n - mw ? cur + mw : -1 };
+                if (j < 0 || !open[j] || mark[j] == stamp) continue;
+                mark[j] = stamp; stack[sp++] = j;
+                if (ring[j] && ++found == ringCount) return true;
+            }
+        }
+        return found == ringCount;
+    }
+
+    /// <summary>Number of 4-connected components of open cells in _open.</summary>
+    private int CountRegions(int mw, int mh)
+    {
+        bool[] open = _open!; int[] stack = _fillStack!; int[] mark = _fillMark!;
+        int stamp = ++_fillStamp, regions = 0, n = mw * mh;
+        for (int start = 0; start < n; start++)
+        {
+            if (!open[start] || mark[start] == stamp) continue;
+            regions++;
+            int sp = 0;
+            stack[sp++] = start; mark[start] = stamp;
+            while (sp > 0)
+            {
+                int cur = stack[--sp];
+                int cx = cur % mw;
+                if (cx > 0 && open[cur - 1] && mark[cur - 1] != stamp) { mark[cur - 1] = stamp; stack[sp++] = cur - 1; }
+                if (cx < mw - 1 && open[cur + 1] && mark[cur + 1] != stamp) { mark[cur + 1] = stamp; stack[sp++] = cur + 1; }
+                if (cur >= mw && open[cur - mw] && mark[cur - mw] != stamp) { mark[cur - mw] = stamp; stack[sp++] = cur - mw; }
+                if (cur < n - mw && open[cur + mw] && mark[cur + mw] != stamp) { mark[cur + mw] = stamp; stack[sp++] = cur + mw; }
+            }
+        }
+        return regions;
+    }
+
+    /// <summary>Setup/scripting entry: place a building if <see cref="CanPlace"/> says Ok; otherwise returns <see cref="EntityId.None"/>.</summary>
+    public EntityId PlaceBuilding(byte player, int buildingType, CellCoord topLeft)
+    {
+        if (CanPlace(player, buildingType, topLeft) != PlacementResult.Ok) return EntityId.None;
+        BuildingType bt = Setup.Rules.Buildings[buildingType];
+        EntityId id = _buildings.Add(player, buildingType, topLeft, bt.MaxHealth);
+        for (int y = 0; y < bt.FootprintH; y++)
+            for (int x = 0; x < bt.FootprintW; x++)
+                _map.SetBuilding(new CellCoord(topLeft.X + x, topLeft.Y + y), id);
+        return id;
+    }
+
+    private void RemoveBuilding(EntityId id)
+    {
+        int i = id.Index;
+        BuildingType bt = Setup.Rules.Buildings[_buildings.TypeIndex[i]];
+        CellCoord tl = _buildings.Cell[i];
+        for (int y = 0; y < bt.FootprintH; y++)
+            for (int x = 0; x < bt.FootprintW; x++)
+                _map.SetBuilding(new CellCoord(tl.X + x, tl.Y + y), EntityId.None);
+        _buildings.Remove(id);
     }
 
     // ---- systems (fixed order) ---------------------------------------------------------------
@@ -230,6 +419,9 @@ public sealed class Simulation
         for (int i = 1; i < _infantry.Capacity; i++)
             if (_infantry.Slots.IsIndexAlive(i) && _infantry.Health[i] <= 0)
                 _infantry.Remove(_infantry.Slots.IdOf(i));
+        for (int i = 1; i < _buildings.Capacity; i++)
+            if (_buildings.Slots.IsIndexAlive(i) && _buildings.Health[i] <= 0)
+                RemoveBuilding(_buildings.Slots.IdOf(i));
     }
 
     // ---- hash / snapshot / save --------------------------------------------------------------
@@ -256,8 +448,17 @@ public sealed class Simulation
                 list.Add(new UnitView(_infantry.Slots.IdOf(i), UnitKind.Infantry, _infantry.Player[i], _infantry.TypeIndex[i],
                     _infantry.Position[i], _infantry.Facing[i], _infantry.Health[i]));
         ulong hash = _recentHashes.Count > 0 ? _recentHashes[^1].Hash : 0UL;
+        var blist = new List<BuildingView>(_buildings.Slots.Count);
+        for (int i = 1; i < _buildings.Capacity; i++)
+            if (_buildings.Slots.IsIndexAlive(i))
+            {
+                BuildingType bt = Setup.Rules.Buildings[_buildings.TypeIndex[i]];
+                blist.Add(new BuildingView(_buildings.Slots.IdOf(i), _buildings.Player[i], _buildings.TypeIndex[i],
+                    _buildings.Cell[i], bt.FootprintW, bt.FootprintH, _buildings.Health[i], false));
+            }
+        // Fog (Viewer, Vision) arrives with M1-07; the lead wires it.
         return new SimSnapshot(Tick, Setup.Map.Width, Setup.Map.Height, list, Setup.Map.Land, hash,
-            Array.Empty<BuildingView>(), -1, Array.Empty<byte>());
+            blist, -1, Array.Empty<byte>());
     }
 
     /// <summary>Versioned binary save of the whole sim state.</summary>

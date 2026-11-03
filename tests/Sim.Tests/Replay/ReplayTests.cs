@@ -13,6 +13,7 @@ public class ReplayTests
         var rec = new ReplayWriter(setup);
         foreach (var s in ScriptedGame.Spawns()) rec.RecordSpawn(ActorKind.Vehicle, s.Player, s.Type, s.Cell);
         foreach (var s in ScriptedGame.InfantrySpawns()) rec.RecordSpawn(ActorKind.Infantry, s.Player, s.Type, s.Cell, s.SubSlot);
+        foreach (var s in ScriptedGame.BuildingSpawns()) rec.RecordSpawn(ActorKind.Building, s.Player, s.Type, s.Cell);
         foreach (var c in script) rec.RecordCommand(c);
         var sim = ScriptedGame.NewSim(setup);
         for (int i = 0; i < ticks; i++)

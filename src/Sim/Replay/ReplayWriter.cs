@@ -10,7 +10,7 @@ namespace Rts.Sim.Replay;
 public sealed class ReplayWriter
 {
     public static readonly byte[] Magic = "RTSR"u8.ToArray();
-    public const int Version = 3;
+    public const int Version = 4;
     public const byte TypeEnd = 0, TypeCommand = 1, TypeHashCheck = 2;
 
     private readonly SimSetup _setup;
@@ -27,10 +27,10 @@ public sealed class ReplayWriter
     }
 
     /// <summary>Record an initial spawn (must be called before tick 0, in the same order as the Simulation spawns).
-    /// kind is Vehicle or Infantry; subSlot applies to infantry only.</summary>
+    /// kind is Vehicle, Infantry or Building (cell = top-left); subSlot applies to infantry only.</summary>
     public void RecordSpawn(ActorKind kind, byte player, int typeIndex, CellCoord cell, int subSlot = 0)
     {
-        if (kind != ActorKind.Vehicle && kind != ActorKind.Infantry) throw new ArgumentOutOfRangeException(nameof(kind));
+        if (kind != ActorKind.Vehicle && kind != ActorKind.Infantry && kind != ActorKind.Building) throw new ArgumentOutOfRangeException(nameof(kind));
         _spawns.Add(new ReplaySpawn(kind, player, typeIndex, cell, subSlot));
     }
 

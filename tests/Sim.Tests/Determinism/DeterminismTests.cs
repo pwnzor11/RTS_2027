@@ -70,4 +70,15 @@ public class DeterminismTests
         Assert.Equal(a.ComputeStateHash(), b.ComputeStateHash());
         Assert.Equal(LeptonCoord.CenterOf(new CellCoord(9, 9)), a.Units.Destination[1]);
     }
+
+    [Fact]
+    public void ScriptedPlaceAndSell_TakeEffect()
+    {
+        var script = ScriptedGame.Script(250);
+        var sim = ScriptedGame.NewSim(ScriptedGame.Setup());
+        for (int i = 0; i < 250; i++) sim.Step(script);
+        // 2 setup + 3 placed (ticks 5, 30, 60) - 1 sold (tick 150) + tick-200 turret on the sold hq's cell; tick-120 overlap rejected.
+        Assert.Equal(5, sim.Buildings.Slots.Count);
+        Assert.False(sim.TryResolve(new ActorRef(ActorKind.Building, new EntityId(1, 1))));
+    }
 }
