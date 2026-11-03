@@ -46,3 +46,21 @@ Counts below supersede the M0-11 lines above (the suite grew to 394 tests).
   on Windows and Linux alike (cross-platform determinism).
 - GitHub → Actions → latest CI on main green, including the steps "Headless battle sandbox (end to
   end)", "Verify the sandbox replay" and "Headless match and replay verify".
+
+## Session 3 · M1.5 hardening (2026-11-03)
+Pull main first. Requires the .NET 10 SDK.
+1. **AI tier matrix:** `dotnet run --project src/Tools -c Release -- ai matrix --ai skirmisher --tiers 1-5 --seeds 2 --ticks 3000`
+   prints a 5×5 "Win %" table and "simulated 178500 ticks in …". Placeholder tiers: higher tiers do NOT win yet (M2 tuning).
+2. **AI vs idle:** `dotnet run --project src/Tools -- ai match --a skirmisher:3 --b idle --seeds 2 --ticks 3000` → A wins 4 of 4.
+3. **Debug console:** `dotnet run --project src/Game`, press F1, type `help`; with the mouse over open ground type
+   `spawn vehicle test_tank 3` + Enter → three tanks appear (stacked on one cell). Esc closes the console without quitting.
+   `reveal` toggles the full-map view; `speed 4` runs four times faster.
+4. **Published zip:** download the CI artifact `RTS_2027-win-x64-<sha>` from the latest main run, unzip anywhere, run `Game.exe`
+   → the sandbox opens. The folder contains `data\`, `LICENSE`, `NOTICE.md`, `THIRD_PARTY_NOTICES.md`.
+5. **Crash dialog:** in that unzipped folder rename `data` to `data_x` and run `Game.exe` → a message box says it crashed and
+   `logs\crash-*.txt` exists. Rename it back.
+6. **Replay survives:** run the sandbox twice → `replays\sandbox_last.rpl` and `replays\sandbox_prev.rpl` both exist;
+   `dotnet run --project src/Tools -- replay info replays/sandbox_last.rpl` shows the build and embedded rules.
+7. **Git LFS (one time, D-056):** in the repo on Windows: `git lfs install`, then
+   `git lfs track "data/sprites/**/*.png" "art/**/*.png"`, `git add .gitattributes`, `git add --renormalize data/sprites art`,
+   `git commit -m "chore(repo): track sprite sheets with Git LFS (D-056)"`, `git push`.

@@ -19,6 +19,10 @@ unless marked otherwise.
   map before M3, to measure mission cost? — **recommendation:** yes, as the last M2 item.
 - ⚪ Q-31 · Audio sourcing (review D-2): music, SFX and announcer — commission, CC0/CC-BY libraries, or
   generated? Needs a short research note. Before M3.
+- 🟡 Q-33 · Licence version for SPDX file headers (review E-3): `GPL-3.0-only` or `GPL-3.0-or-later`?
+  "or later" lets the project move to a future GPL v4 without asking every contributor; "only" keeps
+  it fixed. — **recommendation:** `GPL-3.0-or-later` (the FSF's default wording and what most GPL
+  games use). The headers are a one-line script once decided.
 - ⚪ Q-32 · Top AI tier (research 14 Q2): is *Commissar* allowed any information or economy advantage,
   or strictly better decisions only? — **recommendation:** decisions only (pillar 4: honest AI).
 

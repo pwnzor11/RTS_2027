@@ -1,31 +1,27 @@
 # Handoff: Session 3 — M1 review, then M2 planning
-Last commit: 4f3a287 (2026-11-03) — content commit; the handoff commit sits directly on top of it
-Where things stand: Session 2 built the M0-11 skeleton, the M0-12 art pilot (owner picked arm B at
-64 px, D-039), the v2 tank (M1-ART-01) and all of M1 overnight (M1-01..M1-11) under D-040: map model and
-files, rules schema v1, mission state machine, path service, building placement with the one-cell gap
-rule, fog and ghosts, path-following movement with blocking and crushing, combat with projectiles and
-splash, desync tooling (sub-hashes, `Tools match`, `Tools replay verify`), and a battle sandbox in the
-game window. 394 tests; Windows CI also runs the sandbox headless and verifies replays. Every overnight
-choice is logged as "assumed — confirm" in D-043..D-047.
+Last commit: 8757d63 (2026-11-03) — M1.5 landed via PR #1 (Windows CI green); docs checkpoint sits on top
+Where things stand: Session 3 confirmed D-043..D-047 (D-049), ran a five-lens adversarial review
+(docs/reviews/2026-11-03_adversarial), and built M1.5 hardening in one wave of 7 helpers: relations/teams/neutral +
+team vision + actor view, boundary guards + debug ops, replay/save v6 (streaming, embedded rules, setup header),
+publish with data and notices + crash log + version stamp, test fixtures split + golden replay, AI host + fog-honest
+PlayerView + difficulty.toml + `Tools ai match/matrix`, F1 debug console. 437 sim + 15 AI + 35 game tests. Windows and
+Linux produce identical sandbox hashes. Decisions D-049..D-057 (D-057 "assumed — confirm"). M2 scope fixed in D-053.
 
 ## Start here (shown to the user as the plan; nothing starts until they say go)
-1. Ask the owner to try the sandbox on Windows (USER_CHECKS, Session 2) and report anything that looks
-   wrong: sprite facing, fog, overlays, controls (WASD was removed, D-047).
-2. Walk the owner through the "assumed — confirm" decisions D-043..D-047 as one table (what was chosen
-   | what changing it would mean | recommendation) with "take all" first; log confirmations/reversals.
-3. M2-01: find and fix the corner advantage on generated maps (headless match favours the (4,4) start).
-4. Plan M2 (playable skirmish slice: economy loop harvester → refinery → credits, production queues
-   with prerequisites/cost/power, sidebar UI and minimap, one faction's first real units, one map, a
-   simple AI) the same way M1 was planned: contracts first, waves, owner questions up front.
+1. Owner: run USER_CHECKS "Session 3" (sandbox check from Session 2 is still open too), do the LFS step (item 7).
+2. Confirm D-057 (one table, "take all" first); answer Q-33 (SPDX licence version) → add SPDX headers by script + a
+   test that enforces them + COMMON.md rule.
+3. Answer Q-27 (Authority M2 roster) and Q-28 (content budget); then plan M2 contract-first: economy loop, production
+   with prerequisites/cost/power, SimHost fixed-step driver + screen stack (review C-2/C-3) before the sidebar, palette
+   sprites (C-4), Recruit-tier AI on the new harness (tiers must beat lower tiers in `ai matrix`).
+4. M2-01 corner advantage on generated maps (now measurable with `ai match` seed swaps).
 
 ## Half-finished work
-- None. Leftovers for the owner to delete on GitHub: branch `integ` (merged into main) and branch
-  `restore/pre-m1` (restore point before M1; delete once M1 is accepted).
+- M1.5-08: SPDX headers (waits on Q-33); Git LFS conversion (owner, USER_CHECKS item 7).
+- Leftover branches the owner can delete on GitHub: `integ`, `integ-m15` (merged), `restore/pre-m1`, `restore/pre-m1.5`.
 
 ## Waiting on the user
-- Windows check of the sandbox window (the cloud workspace has no display; only the headless path is
-  verified).
-- Confirmation of D-043..D-047.
+- Windows sandbox check (Session 2) and the Session 3 checks; LFS step; D-057 confirmation; Q-27, Q-28, Q-33.
 
 ## How to run this session
 - Lead: Opus for build sessions; Sonnet for a pure review/question session. Helpers: Haiku default;
@@ -43,6 +39,15 @@ choice is logged as "assumed — confirm" in D-043..D-047.
 - Tests that pin exact lists collide between helpers: pin the full list in one place only.
 - Windows CI catches what Linux doesn't (line endings bit us once; `.gitattributes` now pins TOML to LF).
 - A helper once scheduled a stray message by mistake; scheduling tools stay forbidden in COMMON.md.
+- .NET SDK: `apt-get update` first, then `apt-get install -y dotnet-sdk-10.0` (the index is stale without it).
+- Git LFS uploads are blocked by the workspace proxy (403 on GitHub's storage host); LFS work happens on the owner's PC.
+- `gh pr create` fails (GraphQL blocked): open PRs with `gh api repos/pwnzor11/RTS_2027/pulls -f title=… -f head=… -f base=main`.
+  A PR is the way to run Windows CI before landing; CI also runs `ai matrix` into the job summary.
+- Helpers on this 2-CPU box: build with `-m:1`; 7 parallel helpers worked. Create worktrees under /home/claude/wt yourself.
+- Setup calls (Spawn*/PlaceBuilding/AssignMission) throw after the first Step: tests use Debug/Place commands
+  (tests/Sim.Tests/Boundary/LateSpawn.cs, tests/AI.Tests/TestWorld.cs). New sim fields must be hashed or allow-listed
+  with a reason in HashCoverageTests. Golden: `RTS_UPDATE_GOLDEN=1 dotnet test --filter Golden` when a change is intended.
+- Never copy EA code (D-050). AI never runs inside Step (D-051).
 - Don't: use EA names/assets; put floats in `src/Sim`; iterate dictionaries in the sim; change contracts
   without a DECISIONS entry.
 

@@ -418,3 +418,14 @@ scripts and TOML metadata stay in plain git. The owner runs `git lfs install` on
 checks out with `lfs: true`. The owner declined building an M2 system himself (review D-7); agents
 keep building and he studies code and decisions.
 **Status:** confirmed (owner, session 3)
+
+### D-057 · 2026-11-03 · M1.5 details chosen while building
+**Decision:** choices made by the lead and helpers under D-052:
+- Relations (M1.5-01): Neutral wins over Ally in RelationOf (a neutral slot is neutral to everyone). Vehicles crush Enemy and Neutral infantry, not Ally. Neutral units block movement like enemies. Team vision is an OR over team members at query time; exploration (shroud) is shared too; per-player vision data and hashes are unchanged. Neutral buildings are ghosted like enemy ones.
+- Guards (M1.5-02): store arrays stay public readonly (≈150 read sites), but every mutator (Allocate/Add/Remove) is internal. Commands with an out-of-map cell (Move, AttackMove, Guard) are dropped. Debug spawns have no occupancy check. LateCommandCount is diagnostic, not saved.
+- Replay/save v6 (M1.5-03): spawns are streamed as spawn records stamped with their tick; the full-hash definition is unchanged (no hash moved); maps are not embedded (`replay verify` still needs `--map`); a loaded sim starts with an empty SetupLog.
+- AI (M1.5-06): the AI match runner lives in `src/AI` (start force copied from `match`); `DifficultyProfile` lives in `Rts.Data` (lead fix: Data must not depend on AI); a side without a tier plays *regular*; AI randomness is its own PCG seeded from (game seed, slot).
+- Console (M1.5-07): count ≤ 50 per spawn, step ≤ 1000 ticks; Esc closes the console without quitting.
+- Hash allocation bound in tests is ≤ 1 KB per call (constant, not exact): runtimes differ.
+- Git LFS (D-056) is not yet applied: the workspace proxy blocks LFS uploads, so the owner converts from Windows.
+**Status:** assumed — confirm

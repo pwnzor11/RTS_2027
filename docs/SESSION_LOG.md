@@ -46,3 +46,18 @@ message (harmless, fired once). Headless match on test_64 favours the (4,4) star
 duels are exactly symmetric) → M2-01.
 **User check:** see USER_CHECKS.md, Session 2 (M1 block).
 **Next session should:** owner tries the sandbox, confirm D-043..D-047, M2-01, plan M2.
+
+## Session 3 · 2026-11-03 (in progress — checkpoint after M1.5)
+**Goal:** resume, confirm overnight decisions, adversarial review, M1.5 hardening.
+**Done:** D-043..D-047 confirmed (D-049). Five-lens adversarial review (A determinism, B scale, C front end, D design,
+E licensing) with lead verification; MonoGame licence finding corrected (Ms-PL, GPL-incompatible) → D-050 (never copy
+EA code) and D-055 (GPL §7 linking permission). Owner answers: D-051 (AI external), D-052 (M1.5 first), D-053 (M2:
+Authority, Rust Belt, Recruit AI framework; Directorate tunnel scrapers), D-054 (fixed teams), D-056 (LFS). Q-27..Q-33
+logged. M1.5-01..07 built in one wave and landed via PR #1 after Windows CI.
+**Commits:** f10ac5f..8757d63, ids M1.5-01..M1.5-08.
+**Helpers:** 5 reviewers (Sonnet 2, Haiku 3) + 7 builders (Sonnet 4, Haiku 3). No failed rounds. Lead merge fixes: late
+spawns in two new test files, Data→AI dependency reversed, AI runner ported to v6 replays, two allow-list entries, CI
+allocation bound loosened (Windows 95 B vs bound 64 B).
+**Problems / notes:** LFS uploads blocked by the proxy (reverted; owner converts). AI tiers are placeholders and higher
+tiers do not yet win — tuning is M2 work, now measurable.
+**User check:** USER_CHECKS.md, Session 3.
