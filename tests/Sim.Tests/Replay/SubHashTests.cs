@@ -96,7 +96,9 @@ public class SubHashTests
         long before = GC.GetAllocatedBytesForCurrentThread();
         for (int i = 0; i < 100; i++) { sim.ComputeStateHash(); sim.ComputeHashes(into); }
         long perCall = (GC.GetAllocatedBytesForCurrentThread() - before) / 200;
-        Assert.True(perCall <= 64, $"{perCall} bytes allocated per hash call");
+        // Constant, not proportional to state (a full serialisation was ~MBs). Exact small numbers differ by runtime/OS
+        // (Linux Debug ~40 B, Windows Release ~95 B), so the bound is loose.
+        Assert.True(perCall <= 1024, $"{perCall} bytes allocated per hash call");
     }
 
     [Fact]

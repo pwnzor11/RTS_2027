@@ -52,7 +52,7 @@ jobs:
         if: always()
         run: |
           "### Match throughput" | Add-Content $env:GITHUB_STEP_SUMMARY
-          Select-String -Path match_output.txt -Pattern 'ticks/s' | ForEach-Object { $_.Line } | Add-Content $env:GITHUB_STEP_SUMMARY
+          if (Test-Path match_output.txt) { Select-String -Path match_output.txt -Pattern 'ticks/s' | ForEach-Object { $_.Line } | Add-Content $env:GITHUB_STEP_SUMMARY } else { "match did not run" | Add-Content $env:GITHUB_STEP_SUMMARY }
 
       - name: Upload test results
         if: always()
