@@ -1,5 +1,5 @@
 # Handoff: Session 2 (in progress) — checkpoint after wave 1
-Last commit: 3df21e8 (2026-11-02) — checkpoint; wrap-up rewrites this file
+Last commit: 79c26d6 (2026-11-03) — checkpoint after M1 wave A
 Where things stand: overnight M1 run (D-040) in progress. Wave A (M1-01 map, M1-02 rules schema,
 M1-03 missions + infantry, M1-04 debug view) is on main, CI green. Wave B (M1-05 pathfinding,
 M1-06 buildings, M1-07 fog) is running. Restore point: branch `restore/pre-m1` (3279113).
