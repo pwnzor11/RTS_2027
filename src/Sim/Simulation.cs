@@ -55,6 +55,7 @@ public sealed partial class Simulation
         _infantry = new InfantryStore(setup.Limits.Infantry);
         _buildings = new BuildingStore(setup.Limits.Buildings);
         _players = new PlayerStore(setup);
+        for (int p = 0; p < setup.PlayerCount; p++) if (!_players.IsNeutral((byte)p)) _players.Cash[p] = setup.Rules.Economy.StartingCash;   // M2-07
         _economy = new EconomyState(setup);
         _production = new ProductionState(setup);
         _map = new MapState(setup.Map);
@@ -259,6 +260,10 @@ public sealed partial class Simulation
                     // M2: refund
                     RemoveBuilding(c.Subject);
                 }
+                break;
+            case CommandKind.Harvest:
+            case CommandKind.Return:
+                ApplyEconomyCommand(c);    // Simulation.Economy.cs (M2-07)
                 break;
             case CommandKind.Debug:
                 if (Setup.AllowDebug) ApplyDebug(c);
@@ -544,7 +549,7 @@ public sealed partial class Simulation
         store.NextTarget[i] = default;
     }
 
-    private void RunEconomy() { /* M1 */ }
+    // RunEconomy: Simulation.Economy.cs (M2-07)
     private void RunProduction() { /* M1 */ }
     private void RunAiBookkeeping() { /* M1 */ }
     private void RunTriggers() { /* M1 */ }
