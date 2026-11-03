@@ -119,3 +119,49 @@ Lua script state are serialisable by field with a version number. Q-17.
 no Lua sandbox for untrusted scripts, no content-pack system and no API stability promise. Q-18.
 **Why:** Owner's choice; removes a large amount of tooling and sandboxing work.
 **Status:** confirmed
+
+### D-020 · 2026-11-02 · Two factions, StarCraft-style asymmetry, clear protagonist and antagonist
+**Decision:** Exactly two factions that play deeply differently (distinct mechanics, not re-skins).
+Campaigns are parallel and opposed (both sides of one war). One side is the clear protagonist, the
+other the clear antagonist, and the antagonist is designed to be the more fun side to play. Setting
+is near-future military sci-fi, possibly alt-history; chosen in round 3. Q-03 (partial).
+**Why:** Owner's choice; two factions keeps deep asymmetry affordable.
+**Status:** confirmed
+
+### D-021 · 2026-11-02 · Economy defaults, resource identity deferred to theme
+**Decision:** One harvested field resource, harvester trips, trickle unload, capped storage with silos
+and overflow loss, regrowth on by default as a per-map setting; harder AI gets more harvesters under
+the same rules, never a hidden income bonus. What the resource *is* (and whether the two factions
+harvest it differently) is decided with the setting. Q-04.
+**Status:** confirmed
+
+### D-022 · 2026-11-02 · Map scale 128×128 max, cliffs as walls with ramps, two theaters
+**Decision:** Map format and sim support 128×128; early skirmish maps 64–96. Elevation is discrete
+cliff levels acting as walls, with ramps; no height stat bonuses. Two theaters for v1, each with an
+internally consistent theme and design rules. Q-05.
+**Status:** confirmed
+
+### D-023 · 2026-11-02 · Tech tree: unlocks and stat upgrades; two hard-to-get superweapons per side; no navy in v1
+**Decision:** Techs include both unlocks (building X enables Y) and stat upgrades (research applies
+effects). Each faction has exactly two superweapons that are expensive and deep in the tree. No naval
+units in v1, but locomotion classes (tracked, wheeled, foot, hover, air, and the data slot for naval)
+are first-class in the terrain-cost table from the start. Q-19.
+**Status:** confirmed
+
+### D-024 · 2026-11-02 · Production details
+**Decision:** Cost drains over build time, production stalls when broke; one queue per category
+(infantry, vehicles, aircraft, structures, defences); extra factories speed the queue; five infantry
+per cell; splash damage hits allies. Q-20.
+**Status:** confirmed
+
+### D-025 · 2026-11-02 · Shroud plus true fog of war
+**Decision:** Unexplored shroud, plus true fog: enemy units are hidden when out of sight, buildings
+remain as last-seen ghosts. The AI's world model obeys the same visibility. Q-21.
+**Status:** confirmed
+
+### D-026 · 2026-11-02 · AI difficulty: five fog-honest capability tiers, three personalities, expert top tier
+**Decision:** Five difficulty tiers, none of which cheat; each tier adds real behaviours (capability
+profile in data). An optional, labelled "cheater" resource bonus toggle may be added if playtesting
+wants it. Three personalities (rusher, turtle, boomer) selectable or random per game. The top tier is
+tuned as an expert challenge. Q-22.
+**Status:** confirmed
