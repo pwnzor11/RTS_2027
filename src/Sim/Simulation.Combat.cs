@@ -37,31 +37,11 @@ public sealed partial class Simulation
     /// <summary>Facts about a live actor (vehicle, infantry or building). False if the reference is stale.</summary>
     public bool TryGetActorInfo(ActorRef actor, out ActorInfo info)
     {
-        SimRules r = Setup.Rules;
-        switch (actor.Kind)
-        {
-            case ActorKind.Vehicle when _units.Slots.IsAlive(actor.Id):
-            {
-                int i = actor.Id.Index;
-                info = new ActorInfo(ActorKind.Vehicle, _units.Player[i], _units.Position[i], r.Vehicles[_units.TypeIndex[i]].Armor, _units.Health[i]);
-                return true;
-            }
-            case ActorKind.Infantry when _infantry.Slots.IsAlive(actor.Id):
-            {
-                int i = actor.Id.Index;
-                info = new ActorInfo(ActorKind.Infantry, _infantry.Player[i], _infantry.Position[i], r.Infantry[_infantry.TypeIndex[i]].Armor, _infantry.Health[i]);
-                return true;
-            }
-            case ActorKind.Building when _buildings.Slots.IsAlive(actor.Id):
-            {
-                int i = actor.Id.Index;
-                info = new ActorInfo(ActorKind.Building, _buildings.Player[i], BuildingCentre(i), r.Buildings[_buildings.TypeIndex[i]].Armor, _buildings.Health[i]);
-                return true;
-            }
-            default:
-                info = default;
-                return false;
-        }
+        ActorKind k = actor.Kind;
+        if (k > ActorKind.Building || !SlotsOf(k).IsAlive(actor.Id)) { info = default; return false; }
+        int i = actor.Id.Index;
+        info = new ActorInfo(k, PlayerAt(k, i), PositionAt(k, i), ArmorAt(k, i), HealthAt(k, i));
+        return true;
     }
 
     /// <summary>True if the actor is alive and owned by a different player.</summary>
@@ -77,7 +57,7 @@ public sealed partial class Simulation
 
     private LeptonCoord BuildingCentre(int i)
     {
-        BuildingType bt = Setup.Rules.Buildings[_buildings.TypeIndex[i]];
+        BuildingType bt = BuildingTypeAt(i);
         CellCoord c = _buildings.Cell[i];
         return new LeptonCoord((c.X << SimConstants.LeptonShift) + bt.FootprintW * (SimConstants.LeptonsPerCell / 2),
             (c.Y << SimConstants.LeptonShift) + bt.FootprintH * (SimConstants.LeptonsPerCell / 2));
@@ -91,7 +71,7 @@ public sealed partial class Simulation
         if (!TryGetActorInfo(target, out var info) || info.Health <= 0) return false;
         if (target.Kind != ActorKind.Building) { point = info.Position; return true; }
         int i = target.Id.Index;
-        BuildingType bt = Setup.Rules.Buildings[_buildings.TypeIndex[i]];
+        BuildingType bt = BuildingTypeAt(i);
         CellCoord tl = _buildings.Cell[i];
         long best = long.MaxValue;
         for (int y = 0; y < bt.FootprintH; y++)
@@ -111,45 +91,16 @@ public sealed partial class Simulation
     /// <summary>True if the viewer currently sees the actor's cell (buildings: any footprint cell).</summary>
     internal bool IsTargetVisible(byte viewer, ActorRef target)
     {
-        if (!TryGetActorInfo(target, out var info)) return false;
-        if (target.Kind != ActorKind.Building) return _vision.IsVisible(viewer, info.Position.ToCell());
-        int i = target.Id.Index;
-        BuildingType bt = Setup.Rules.Buildings[_buildings.TypeIndex[i]];
+        if (target.Kind > ActorKind.Building || !SlotsOf(target.Kind).IsAlive(target.Id)) return false;
+        return IsTargetVisible(viewer, target.Kind, target.Id.Index);
+    }
+
+    private bool IsTargetVisible(byte viewer, ActorKind kind, int i)
+    {
+        if (kind != ActorKind.Building) return _vision.IsVisible(viewer, PositionAt(kind, i).ToCell());
+        BuildingType bt = BuildingTypeAt(i);
         return FootprintVisible(viewer, _buildings.Cell[i], bt.FootprintW, bt.FootprintH);
     }
-
-    /// <summary>Primary weapon index of the actor's type, or -1.</summary>
-    internal int WeaponOf(ActorKind kind, int i)
-    {
-        SimRules r = Setup.Rules;
-        int w = kind switch
-        {
-            ActorKind.Vehicle => r.Vehicles[_units.TypeIndex[i]].PrimaryWeapon,
-            ActorKind.Infantry => r.Infantry[_infantry.TypeIndex[i]].PrimaryWeapon,
-            ActorKind.Building => r.Buildings[_buildings.TypeIndex[i]].PrimaryWeapon,
-            _ => -1,
-        };
-        return r.Weapons != null && w >= 0 && w < r.Weapons.Count ? w : -1;
-    }
-
-    /// <summary>Sight radius in cells of a vehicle or infantry slot.</summary>
-    internal int SightOf(ActorKind kind, int i) => kind == ActorKind.Vehicle
-        ? Setup.Rules.Vehicles[_units.TypeIndex[i]].Sight
-        : Setup.Rules.Infantry[_infantry.TypeIndex[i]].Sight;
-
-    private byte PlayerOf(ActorKind kind, int i) => kind switch
-    {
-        ActorKind.Vehicle => _units.Player[i],
-        ActorKind.Infantry => _infantry.Player[i],
-        _ => _buildings.Player[i],
-    };
-
-    private LeptonCoord ShooterPos(ActorKind kind, int i) => kind switch
-    {
-        ActorKind.Vehicle => _units.Position[i],
-        ActorKind.Infantry => _infantry.Position[i],
-        _ => BuildingCentre(i),
-    };
 
     /// <summary>Nearest visible enemy (vehicles, infantry, then buildings, slot order breaks ties) whose distance from
     /// <paramref name="from"/> lies in the weapon's [MinRange, Range]. Returns a ref with Id.IsNone if there is none.</summary>
@@ -158,27 +109,21 @@ public sealed partial class Simulation
         ActorRef best = default;
         long bestD = long.MaxValue;
         long maxD2 = (long)w.Range * w.Range, minD2 = (long)w.MinRange * w.MinRange;
-        for (int i = 1; i < _units.Capacity; i++)
+        for (int k = 0; k < LiveKinds; k++)
         {
-            if (!_units.Slots.IsIndexAlive(i) || _units.Player[i] == player || _units.Health[i] <= 0) continue;
-            long d = LeptonMath.DistanceSquared(from, _units.Position[i]);
-            if (d < bestD && d <= maxD2 && d >= minD2 && _vision.IsVisible(player, _units.Position[i].ToCell()))
-            { bestD = d; best = new ActorRef(ActorKind.Vehicle, _units.Slots.IdOf(i)); }
-        }
-        for (int i = 1; i < _infantry.Capacity; i++)
-        {
-            if (!_infantry.Slots.IsIndexAlive(i) || _infantry.Player[i] == player || _infantry.Health[i] <= 0) continue;
-            long d = LeptonMath.DistanceSquared(from, _infantry.Position[i]);
-            if (d < bestD && d <= maxD2 && d >= minD2 && _vision.IsVisible(player, _infantry.Position[i].ToCell()))
-            { bestD = d; best = new ActorRef(ActorKind.Infantry, _infantry.Slots.IdOf(i)); }
-        }
-        for (int i = 1; i < _buildings.Capacity; i++)
-        {
-            if (!_buildings.Slots.IsIndexAlive(i) || _buildings.Player[i] == player || _buildings.Health[i] <= 0) continue;
-            var cand = new ActorRef(ActorKind.Building, _buildings.Slots.IdOf(i));
-            if (!TargetPoint(cand, from, out LeptonCoord pt)) continue;
-            long d = LeptonMath.DistanceSquared(from, pt);
-            if (d < bestD && d <= maxD2 && d >= minD2 && IsTargetVisible(player, cand)) { bestD = d; best = cand; }
+            var kind = (ActorKind)k;
+            SlotArray slots = SlotsOf(kind);
+            int cap = slots.Capacity;
+            for (int i = 1; i < cap; i++)
+            {
+                if (!slots.IsIndexAlive(i) || PlayerAt(kind, i) == player || HealthAt(kind, i) <= 0) continue;
+                LeptonCoord pt;
+                if (kind == ActorKind.Building) { if (!TargetPoint(new ActorRef(kind, slots.IdOf(i)), from, out pt)) continue; }
+                else pt = PositionAt(kind, i);
+                long d = LeptonMath.DistanceSquared(from, pt);
+                if (d < bestD && d <= maxD2 && d >= minD2 && IsTargetVisible(player, kind, i))
+                { bestD = d; best = new ActorRef(kind, slots.IdOf(i)); }
+            }
         }
         return best;
     }
@@ -195,7 +140,7 @@ public sealed partial class Simulation
         LeptonCoord pos = store.Position[i];
         byte desired = Facing.FromDelta(to.X - pos.X, to.Y - pos.Y);
         if (kind == ActorKind.Infantry) { store.Facing[i] = desired; return true; }
-        VehicleType vt = Setup.Rules.Vehicles[store.TypeIndex[i]];
+        VehicleType vt = RulesOf(store.Player[i]).Vehicles[store.TypeIndex[i]];
         if (vt.HasTurret)
         {
             ref CombatEntry e = ref _combat.At(kind, i);
@@ -216,14 +161,14 @@ public sealed partial class Simulation
     {
         ref CombatEntry e = ref _combat.At(kind, i);
         if (e.ReloadTicks > 0) return false;
-        WeaponType w = Setup.Rules.Weapons[weapon];
-        byte owner = PlayerOf(kind, i);
+        byte owner = PlayerAt(kind, i);
+        WeaponType w = RulesOf(owner).Weapons[weapon];
         if (w.ProjectileSpeed <= 0)
             Detonate(owner, w.Damage, w.Warhead, targetPoint, target, true);
         else
         {
             if (!_projectiles.HasFree) return false;
-            _projectiles.Spawn(ShooterPos(kind, i), target, targetPoint, w.ProjectileSpeed, w.Damage, w.Warhead, owner, weapon);
+            _projectiles.Spawn(PositionAt(kind, i), target, targetPoint, w.ProjectileSpeed, w.Damage, w.Warhead, owner, weapon);
         }
         e.ReloadTicks = w.RateOfFire < 1 ? 1 : w.RateOfFire;
         return true;
@@ -241,15 +186,7 @@ public sealed partial class Simulation
 
     private void Hurt(ActorKind kind, int i, int damage, WarheadType wh, bool half)
     {
-        SimRules r = Setup.Rules;
-        ArmorClass armor;
-        switch (kind)
-        {
-            case ActorKind.Vehicle: armor = r.Vehicles[_units.TypeIndex[i]].Armor; break;
-            case ActorKind.Infantry: armor = r.Infantry[_infantry.TypeIndex[i]].Armor; break;
-            default: armor = r.Buildings[_buildings.TypeIndex[i]].Armor; break;
-        }
-        int d = ComputeDamage(damage, wh, armor);
+        int d = ComputeDamage(damage, wh, ArmorAt(kind, i));
         if (half) { d /= 2; if (d < 1) d = 1; }
         switch (kind)
         {
@@ -275,7 +212,7 @@ public sealed partial class Simulation
     /// </summary>
     internal void Detonate(byte owner, int damage, int warheadIndex, LeptonCoord impact, ActorRef primary, bool instant)
     {
-        WarheadType wh = Setup.Rules.Warheads[warheadIndex];
+        WarheadType wh = RulesOf(owner).Warheads[warheadIndex];
         if (instant && wh.Splash <= 0)
         {
             if (TryGetActorInfo(primary, out var pi) && pi.Health > 0)
@@ -284,30 +221,27 @@ public sealed partial class Simulation
         }
         int radius = wh.Splash < 0 ? 0 : wh.Splash;
         CellCoord ic = impact.ToCell();
-        for (int i = 1; i < _units.Capacity; i++)
+        for (int k = 0; k < LiveKinds; k++)
         {
-            if (!_units.Slots.IsIndexAlive(i) || _units.Health[i] <= 0) continue;
-            if (!wh.HitsAllies && _units.Player[i] == owner) continue;
-            int d = LeptonMath.ChebyshevCells(ic, _units.Position[i].ToCell());
-            if (d <= radius) Hurt(ActorKind.Vehicle, i, damage, wh, d > 0);
-        }
-        for (int i = 1; i < _infantry.Capacity; i++)
-        {
-            if (!_infantry.Slots.IsIndexAlive(i) || _infantry.Health[i] <= 0) continue;
-            if (!wh.HitsAllies && _infantry.Player[i] == owner) continue;
-            int d = LeptonMath.ChebyshevCells(ic, _infantry.Position[i].ToCell());
-            if (d <= radius) Hurt(ActorKind.Infantry, i, damage, wh, d > 0);
-        }
-        for (int i = 1; i < _buildings.Capacity; i++)
-        {
-            if (!_buildings.Slots.IsIndexAlive(i) || _buildings.Health[i] <= 0) continue;
-            if (!wh.HitsAllies && _buildings.Player[i] == owner) continue;
-            BuildingType bt = Setup.Rules.Buildings[_buildings.TypeIndex[i]];
-            CellCoord tl = _buildings.Cell[i];
-            int dx = Math.Max(Math.Max(tl.X - ic.X, ic.X - (tl.X + bt.FootprintW - 1)), 0);
-            int dy = Math.Max(Math.Max(tl.Y - ic.Y, ic.Y - (tl.Y + bt.FootprintH - 1)), 0);
-            int d = Math.Max(dx, dy);
-            if (d <= radius) Hurt(ActorKind.Building, i, damage, wh, d > 0);
+            var kind = (ActorKind)k;
+            SlotArray slots = SlotsOf(kind);
+            int cap = slots.Capacity;
+            for (int i = 1; i < cap; i++)
+            {
+                if (!slots.IsIndexAlive(i) || HealthAt(kind, i) <= 0) continue;
+                if (!wh.HitsAllies && PlayerAt(kind, i) == owner) continue;
+                int d;
+                if (kind == ActorKind.Building)
+                {
+                    BuildingType bt = BuildingTypeAt(i);
+                    CellCoord tl = _buildings.Cell[i];
+                    int dx = Math.Max(Math.Max(tl.X - ic.X, ic.X - (tl.X + bt.FootprintW - 1)), 0);
+                    int dy = Math.Max(Math.Max(tl.Y - ic.Y, ic.Y - (tl.Y + bt.FootprintH - 1)), 0);
+                    d = Math.Max(dx, dy);
+                }
+                else d = LeptonMath.ChebyshevCells(ic, PositionAt(kind, i).ToCell());
+                if (d <= radius) Hurt(kind, i, damage, wh, d > 0);
+            }
         }
     }
 
@@ -349,10 +283,10 @@ public sealed partial class Simulation
     /// mission handlers (CombatMissions) earlier in the tick. Runs once per tick after movement.</summary>
     private void RunCombat()
     {
-        for (int k = 0; k < 3; k++)
+        for (int k = 0; k < LiveKinds; k++)
         {
             var kind = (ActorKind)k;
-            SlotArray slots = kind == ActorKind.Vehicle ? _units.Slots : kind == ActorKind.Infantry ? _infantry.Slots : _buildings.Slots;
+            SlotArray slots = SlotsOf(kind);
             for (int i = 1; i < slots.Capacity; i++)
             {
                 ref CombatEntry e = ref _combat.At(kind, i);
@@ -373,8 +307,8 @@ public sealed partial class Simulation
             if (e.Generation != gen) { e = default; e.Generation = gen; }
             int weapon = WeaponOf(ActorKind.Building, i);
             if (weapon < 0 || _buildings.Health[i] <= 0) continue;
-            WeaponType w = Setup.Rules.Weapons[weapon];
             byte owner = _buildings.Player[i];
+            WeaponType w = RulesOf(owner).Weapons[weapon];
             LeptonCoord from = BuildingCentre(i);
             if (!e.AttackTarget.Id.IsNone)
             {
@@ -421,11 +355,10 @@ public sealed partial class Simulation
     /// <summary>Called before an actor is freed; clear anything targeting it.</summary>
     private void OnCombatActorRemoving(ActorKind kind, int index)
     {
-        SlotArray slots = kind == ActorKind.Vehicle ? _units.Slots : kind == ActorKind.Infantry ? _infantry.Slots : _buildings.Slots;
-        var dead = new ActorRef(kind, slots.IdOf(index));
-        for (int k = 0; k < 3; k++)
+        var dead = new ActorRef(kind, IdAt(kind, index));
+        for (int k = 0; k < LiveKinds; k++)
         {
-            int cap = k == 0 ? _units.Capacity : k == 1 ? _infantry.Capacity : _buildings.Capacity;
+            int cap = CapacityOf((ActorKind)k);
             for (int i = 1; i < cap; i++)
             {
                 ref CombatEntry e = ref _combat.At((ActorKind)k, i);
