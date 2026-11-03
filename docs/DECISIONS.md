@@ -510,7 +510,7 @@ low-power multiplier × 2 / (1 + factories of that category). (4) Harvesters aut
 a harvester with no refinery idles until ordered. (5) Ashfall regrows only on cells that still hold some ash;
 emptied cells stay empty (seed markers and spreading are a later design question). (6) Storage cap counts the
 Storage of every live own building. (7) Setup spawns face the map centre. (8) Theater id is `rustbelt`.
-**Status:** assumed — confirm
+**Status:** confirmed (owner, session 3 wrap-up)
 
 ### D-068 · 2026-11-03 · Vehicles accepted; Rifleman needs definition; separate house palette
 **Decision:** (1) The Scraper and Jeep sprites are accepted as they are. (2) The Rifleman pilot "looks decent but a
@@ -539,7 +539,7 @@ regrowth on, build time per credit, structure health, unit speeds/costs, rocket/
 unarmoured, Recruit attack threshold) are the working values. Targets met: Recruit-vs-Recruit 94 % decisive, average
 game ≈ 11.5 min, first income ≈ 52 s, first tank ≈ 2.6 min. Recruit gains seeded variation (wave timing, unit bags) so
 mirror games are decisive. These are placeholders for the owner to tune by playing.
-**Status:** assumed — confirm
+**Status:** confirmed (owner, session 3 wrap-up)
 
 ### D-071 · 2026-11-03 · Lua mission host details (campaign pilot)
 **Decision:** Missions run in MoonSharp inside `Step` through a generic `ISimExtension` (state part "mission", saved and
@@ -547,7 +547,7 @@ hashed). Sandbox: integers only across the API, no os/io/debug/load/require/coro
 `pairs`. Scripts use their own seeded RNG (`Random.Next`), not the sim RNG (supersedes D-015's "use SimRandom" detail).
 Trigger callbacks are named top-level functions so they survive save/load. Mission games record no replay yet (script
 spawns aren't in the setup log). Pilot cost estimate: ≈ 10–12 h per future mission of this size (docs/missions/pilot_report.md).
-**Status:** assumed — confirm
+**Status:** confirmed (owner, session 3 wrap-up)
 
 ### D-072 · 2026-11-03 · All M2 structures and the Rocketeer approved, with fixes
 **Decision:** The owner approved the remaining seven structures and the Rocketeer with three fixes: large flat

@@ -64,3 +64,21 @@ Pull main first. Requires the .NET 10 SDK.
 7. **Git LFS (one time, D-056):** in the repo on Windows: `git lfs install`, then
    `git lfs track "data/sprites/**/*.png" "art/**/*.png"`, `git add .gitattributes`, `git add --renormalize data/sprites art`,
    `git commit -m "chore(repo): track sprite sheets with Git LFS (D-056)"`, `git push`.
+
+## Session 3 · M2 playable skirmish slice (2026-11-03)
+Pull main. These were verified headless and from contact sheets only — this is the first on-screen check.
+1. **Skirmish:** `dotnet run --project src/Game` → **Skirmish** → `Map seed: 0  (0 = curated)` → **Start**. In the sidebar
+   (Q/W/E/R switch Structures / Defences / Infantry / Vehicles) build a Power Plant, wait for READY, click it and place the
+   green ghost within 2 cells of your yard; then a Refinery (a Scraper drives out and harvests; credits rise), Barracks,
+   Factory and a Tank. Right-click a cameo to cancel. Try Sell and Repair, a factory rally point, and click/drag the
+   minimap. Beat or lose to the Recruit AI → a **Victory** or **Defeat** screen. Esc opens Resume / Restart / Quit to menu.
+2. **Art in game:** every building plays its construction stages when placed; below half health it shows structural
+   damage with animated fire and smoke; tank shells and deaths make explosions; walls join into corners and T pieces.
+3. **Your colour:** pick a different colour on the setup screen → your units and buildings use it in the world.
+4. **Campaign:** **Campaign** → **Mission 1: Survey** → read the briefing → **Start mission**. Escort the convoy north-east,
+   survive two raids, build a refinery in the marked zone → Victory. The objectives panel and message ticker update.
+5. **Debug console:** **Sandbox** → F1 → `help`, `spawn vehicle auth_tank 3`, `reveal`, `speed 4`.
+6. **Headless (optional, any OS):** `dotnet run --project src/Game -- --skirmish-check 6000`,
+   `--mission-check auth_01 6000`; `dotnet run -c Release --project src/Tools -- ai match --a recruit:1 --b recruit:1 --seeds 2 --ticks 30000`.
+7. **Report anything that looks wrong** (font halo or missing anti-aliasing on text, sprite offsets, sidebar scaling at your
+   resolution) — none of it could be seen on a real screen here.

@@ -47,17 +47,23 @@ duels are exactly symmetric) → M2-01.
 **User check:** see USER_CHECKS.md, Session 2 (M1 block).
 **Next session should:** owner tries the sandbox, confirm D-043..D-047, M2-01, plan M2.
 
-## Session 3 · 2026-11-03 (in progress — checkpoint after M1.5)
-**Goal:** resume, confirm overnight decisions, adversarial review, M1.5 hardening.
-**Done:** D-043..D-047 confirmed (D-049). Five-lens adversarial review (A determinism, B scale, C front end, D design,
-E licensing) with lead verification; MonoGame licence finding corrected (Ms-PL, GPL-incompatible) → D-050 (never copy
-EA code) and D-055 (GPL §7 linking permission). Owner answers: D-051 (AI external), D-052 (M1.5 first), D-053 (M2:
-Authority, Rust Belt, Recruit AI framework; Directorate tunnel scrapers), D-054 (fixed teams), D-056 (LFS). Q-27..Q-33
-logged. M1.5-01..07 built in one wave and landed via PR #1 after Windows CI.
-**Commits:** f10ac5f..8757d63, ids M1.5-01..M1.5-08.
-**Helpers:** 5 reviewers (Sonnet 2, Haiku 3) + 7 builders (Sonnet 4, Haiku 3). No failed rounds. Lead merge fixes: late
-spawns in two new test files, Data→AI dependency reversed, AI runner ported to v6 replays, two allow-list entries, CI
-allocation bound loosened (Windows 95 B vs bound 64 B).
-**Problems / notes:** LFS uploads blocked by the proxy (reverted; owner converts). AI tiers are placeholders and higher
-tiers do not yet win — tuning is M2 work, now measurable.
-**User check:** USER_CHECKS.md, Session 3.
+## Session 3 · 2026-11-03
+**Goal:** resume, confirm overnight decisions, adversarial review, M1.5 hardening, then all of M2.
+**Done:** D-043..D-047 confirmed (D-049). Five-lens adversarial review (docs/reviews/2026-11-03_adversarial) with lead
+verification; MonoGame licence finding corrected → D-050 (never copy EA code), D-055 (GPL §7 linking permission), D-060
+(GPL-3.0-or-later, SPDX headers). M1.5 hardening (relations/teams/neutral, player state, actor view, boundary guards,
+replay/save v6, publish + notices, test fixtures + golden, AI host + tier harness, debug console). M2 complete
+(M2-01..M2-20): schema v2, SimHost + screen stack + menus, Noto UI font, GPU house colours, economy, production,
+Authority roster, Rust Belt map, sidebar + minimap + real skirmish, Recruit AI, simultaneous damage, sprite rendering,
+real Blender art for all 13 types with owner-approved pilots (Refinery, Rifleman), pixel-art effects, balance pass,
+campaign pilot (MoonSharp host + "Survey" mission), sim fixes, art polish. Decisions D-049..D-072.
+**Commits:** f10ac5f..(handoff commit); PRs #1..#6 (Windows CI before every landing).
+**Helpers:** ≈ 40 launches (reviewers 5; builders mostly Sonnet, Haiku for data/fonts/console/map/publish). Art helpers
+repeatedly ran out of turns waiting on the shared Blender lock; the lead finished three of them. One self-deadlock on the
+lock (build_infantry re-locking under an outer flock) — fixed. One helper created a stray one-shot scheduled task (fired
+once, harmless).
+**Problems / notes:** LFS uploads blocked by the workspace proxy (owner converts). Windows CRLF broke raw-string tests
+twice (now normalised; whole suite verified with CRLF test files). Mirror AI games were perfectly symmetric after D-065,
+so Recruit gained seeded variation. Pilot cost: ≈ 10–12 h per future mission.
+**User check:** USER_CHECKS.md, "Session 3 · M2 playable skirmish slice".
+**Next session should:** owner play-test report → fixes; plan M3 (Directorate faction needs Q-29 tunnel spec; audio Q-31).
