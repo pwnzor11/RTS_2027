@@ -455,3 +455,12 @@ permission (D-055). Every source file carries `// SPDX-License-Identifier: GPL-3
 map, with hours logged, to measure mission cost (answers Q-30). (2) The *Commissar* tier gets better decisions
 only — never resource, vision or speed bonuses (answers Q-32).
 **Status:** confirmed (owner, session 3)
+
+### D-062 · 2026-11-03 · M2 owner choices: real art, skirmish menu, win rule, build radius
+**Decision:** (1) All 13 M2 types (D-058) get real Blender art at the tank's quality during M2. Hard rule kept:
+one structure (the Refinery) is piloted first and approved by the owner before the other 12 fan out.
+(2) Games start from a simple menu: Main (Skirmish / Sandbox / Quit) → Skirmish setup (map seed, AI tier,
+colour) → game; pause menu with Restart / Quit to menu; a game-over screen. (3) A player is defeated when
+they own no structures; walls don't count. (4) New structures must be placed with their footprint within
+2 cells (Chebyshev) of a structure the player owns; walls don't extend the radius.
+**Status:** confirmed (owner, session 3)

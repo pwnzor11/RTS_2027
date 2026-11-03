@@ -74,12 +74,23 @@ published zip starts from any folder; F1 opens a debug console in the sandbox.
 - [x] M1.5-08 Lead: GPL §7 MonoGame permission (D-055), golden regeneration, docs, SPDX headers + enforcing test (D-060). Git LFS conversion done by the owner from Windows (USER_CHECKS S3 item 7).
 
 ## M2 · Playable skirmish slice
-- [ ] M2-01 Corner advantage on generated maps: headless match on test_64 favours the (4,4) start whichever player has it (mirror duels are symmetric) — find the geometric cause (path tie-breaks, map features) and fix — user can try: `Tools match` both seeds end near-even
-Rendering with placeholder sprites, UI (sidebar, selection, minimap), economy loop (harvester →
-refinery → credits → build), one faction, one map, dumb AI. User can try: a 10-minute game.
-Scope fixed in D-053: Authority faction, Rust Belt map, AI framework with the Recruit tier only.
-Before planning: owner questions on the Authority M2 roster, a content budget (review D-2), and the
-Directorate tunnel spec (D-3) logged in OPEN_QUESTIONS.
+Plan: docs/design/04_m2_plan.md (D-053, D-058, D-059, D-061, D-062). User can try: menu → skirmish vs the Recruit
+AI on a Rust Belt map, a 10-minute game with real art for the Authority slice.
+- [ ] M2-01 Corner advantage on generated maps — user can try: `Tools ai match --a skirmisher --b skirmisher` with swapped starts ends near-even
+- [ ] M2-02 Rules schema v2 + M2 contracts (economy/production fields, parts, commands, HUD)
+- [ ] M2-03 Front-end skeleton: SimHost, screen stack, input router, menus — user can try: main menu → sandbox
+- [ ] M2-04 UI font from an OFL TTF + UI scale
+- [ ] M2-05 House colours on the GPU (base + mask layers), sprite manifest
+- [ ] M2-06 Art pilot: Refinery — owner approves before M2-13
+- [ ] M2-07 Economy sim (harvesters, depletion, regrowth, storage, power)
+- [ ] M2-08 Production sim (queues, prerequisites, drain/stall, placement radius, rally, sell, repair, low power, win rule)
+- [ ] M2-09 Authority roster data (D-058) and id migration
+- [ ] M2-10 Rust Belt M2 map
+- [ ] M2-11 Sidebar and minimap
+- [ ] M2-12 Recruit-tier AI
+- [ ] M2-13 Art fan-out (12 types)
+- [ ] M2-14 Integration, headless skirmish in CI, balance pass
+- [ ] M2-15 Campaign pilot (D-061)
 
 ## M3 · Full skirmish
 Both factions, full tech tree, map editor, real AI with difficulty levels, audio.
