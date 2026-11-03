@@ -548,3 +548,10 @@ hashed). Sandbox: integers only across the API, no os/io/debug/load/require/coro
 Trigger callbacks are named top-level functions so they survive save/load. Mission games record no replay yet (script
 spawns aren't in the setup log). Pilot cost estimate: ≈ 10–12 h per future mission of this size (docs/missions/pilot_report.md).
 **Status:** assumed — confirm
+
+### D-072 · 2026-11-03 · All M2 structures and the Rocketeer approved, with fixes
+**Decision:** The owner approved the remaining seven structures and the Rocketeer with three fixes: large flat
+house-colour roof panels (Construction Yard, Power Plant, Silo) use the darker house shade so they don't go pastel;
+walls get vertical, corner and end variants chosen by neighbours so wall lines connect; the Rocketeer's launch flash
+and backblast are smaller and less white.
+**Status:** confirmed (owner, session 3)
