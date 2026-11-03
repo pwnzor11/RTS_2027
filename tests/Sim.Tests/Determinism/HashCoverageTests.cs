@@ -40,6 +40,8 @@ public class HashCoverageTests
     {
         var sim = ScriptedGame.NewSim(ScriptedGame.Setup());
         for (int i = 0; i < 20; i++) sim.Step(Array.Empty<Command>());
+        // Make slot 1 of the projectile store live: only live slots are serialised (Spawn sets every field, Free clears).
+        sim.Projectiles.Spawn(new LeptonCoord(300, 300), default, new LeptonCoord(900, 900), 10, 5, 0, 0, 0);
 
         var unsupported = new List<string>();
         var unchanged = new List<string>();
@@ -54,6 +56,30 @@ public class HashCoverageTests
                 if (array is null || array.Length <= 1) continue;
 
                 byte[] before = WriteBytes(part);
+                Array target = array;
+                if (target.GetType().GetElementType()!.IsArray)       // jagged (e.g. per-kind tables): use inner [1]
+                    target = (Array?)array.GetValue(1) ?? array;
+                Type elem = target.GetType().GetElementType()!;
+                if (IsPlainStruct(elem) && target.Length > 1 && Next(target.GetValue(1)) is null)
+                {
+                    array = target;
+                    // Struct element (e.g. CombatEntry, ActorRef): every field must reach the bytes on its own.
+                    foreach (FieldInfo sf in elem.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+                    {
+                        object old = array.GetValue(1)!;
+                        object boxed = array.GetValue(1)!;
+                        object? next = Next(sf.GetValue(boxed));
+                        if (next is null) { unsupported.Add($"{key}.{sf.Name} (field {sf.FieldType})"); continue; }
+                        sf.SetValue(boxed, next);
+                        array.SetValue(boxed, 1);
+                        byte[] changed = WriteBytes(part);
+                        array.SetValue(old, 1);
+                        checkedArrays++;
+                        if (before.AsSpan().SequenceEqual(changed)) unchanged.Add($"{key}.{sf.Name}");
+                    }
+                    Assert.Equal(before, WriteBytes(part));
+                    continue;
+                }
                 Outcome outcome = Mutate(array, 1, out Action? restore, out string? elementType);
                 if (outcome == Outcome.Unsupported)
                 {
@@ -74,6 +100,8 @@ public class HashCoverageTests
         Assert.Empty(unsupported);
         Assert.Empty(unchanged);
     }
+
+    private static bool IsPlainStruct(Type t) => t.IsValueType && !t.IsPrimitive && !t.IsEnum;
 
     /// <summary>Fields of array type declared on the type and its base classes (instance fields only).</summary>
     private static IEnumerable<FieldInfo> ArrayFields(Type type)
@@ -127,6 +155,7 @@ public class HashCoverageTests
         CellCoord c => new CellCoord(c.X + 1, c.Y),
         EntityId id => new EntityId(unchecked((ushort)(id.Index + 1)), id.Generation),
         BuildingGhost g => g with { Health = g.Health + 1 },
+        ActorRef r => r with { Id = new EntityId(unchecked((ushort)(r.Id.Index + 1)), r.Id.Generation) },
         _ => null,
     };
 
