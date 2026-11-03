@@ -19,6 +19,9 @@ public sealed class SceneRenderer : IDisposable
     private static readonly Color DragColour = Color.White;
 
     private readonly SpriteResolver _sprites;
+    private readonly SpriteLibrary? _library;
+    private readonly FxPlayer _fx = new();
+    private int _fxTick = -1;
     private readonly SpritePainter _painter = new();
     private readonly RenderMemory _memory = new();
     private readonly List<DrawItem> _items = new();
@@ -39,6 +42,7 @@ public sealed class SceneRenderer : IDisposable
     public SceneRenderer(SpriteLibrary library)
         : this(new SpriteResolver(library))
     {
+        _library = library;
     }
 
     private SceneRenderer(SpriteResolver resolver)
@@ -66,6 +70,7 @@ public sealed class SceneRenderer : IDisposable
         }
 
         DrawSprites(batch, pixel, frame, camera);
+        DrawEffects(batch, snapshot, camera);
 
         ProjectileRenderer.Draw(batch, pixel, frame.Projectiles, camera);
         FogRenderer.Draw(batch, pixel, snapshot, camera, viewport);
@@ -73,6 +78,26 @@ public sealed class SceneRenderer : IDisposable
         if (frame.Overlays.Ranges) RangeOverlay.Draw(batch, pixel, frame, camera);
         HealthBars.Draw(batch, pixel, frame, camera, _sprites);
         if (frame.DragRect is Rectangle box) Shapes.Outline(batch, pixel, box, DragColour);
+    }
+
+    // Explosions (M2-19): the sim's per-tick events of a snapshot are turned into one-shot effects exactly once,
+    // however many frames show that snapshot; the player then animates them until they finish.
+    private void DrawEffects(SpriteBatch batch, SimSnapshot snapshot, Camera camera)
+    {
+        if (_library is null) return;
+        if (snapshot.Tick != _fxTick)
+        {
+            _fxTick = snapshot.Tick;
+            if (snapshot.FxEvents is { Count: > 0 } events)
+            {
+                foreach (FxEvent e in events)
+                {
+                    string kind = e.Kind == FxKind.BuildingDestroyed ? "explosion_large" : "explosion_small";
+                    _fx.Spawn(kind, Camera.WorldFromLepton(e.Pos), snapshot.Tick);
+                }
+            }
+        }
+        _fx.Draw(batch, _library, camera, snapshot.Tick);
     }
 
     /// <inheritdoc />

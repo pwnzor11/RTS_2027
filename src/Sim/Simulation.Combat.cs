@@ -44,6 +44,12 @@ public sealed partial class Simulation
     private LeptonCoord[] _tickPosInf = Array.Empty<LeptonCoord>();
     private bool _useTickPos;
 
+    // This tick's effects events (cleared at the start of every Step); a renderer hint, not state (never hashed or saved).
+    private readonly List<FxEvent> _fx = new();
+
+    /// <summary>Detonations and deaths of the last Step (valid until the next Step). Not state.</summary>
+    public IReadOnlyList<FxEvent> FxEvents => _fx;
+
     private readonly record struct PendingHit(ActorRef Target, int Amount, int Source);
 
     /// <summary>Per-actor combat data (reload, turret facing, attack target, guard point). Never mutate outside Step.</summary>
@@ -293,6 +299,7 @@ public sealed partial class Simulation
             return;
         }
         int radius = wh.Splash < 0 ? 0 : wh.Splash;
+        _fx.Add(new FxEvent(FxKind.Detonation, impact, Math.Max(1, radius)));
         CellCoord ic = impact.ToCell();
         bool single = wh.Splash <= 0;           // M2-19: a splash-0 shell hurts one actor of the impact cell
         ActorRef first = default;

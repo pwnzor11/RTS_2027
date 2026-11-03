@@ -8,10 +8,11 @@ namespace Rts.Sim.Core;
 /// Land is row-major (y * MapWidth + x). StateHash is the latest full hash (0 until the first one).
 /// Viewer = the player whose view this is (-1 = omniscient debug view). Vision is per cell, row-major:
 /// 0 = shroud (never seen), 1 = fog (seen before), 2 = visible now; empty when Viewer = -1.
-/// With a viewer, enemy units outside Vision 2 are omitted and enemy buildings outside it are last-seen ghosts.</summary>
+/// With a viewer, enemy units outside Vision 2 are omitted and enemy buildings outside it are last-seen ghosts.
+/// FxEvents = detonations and deaths of the last Step (null or empty when none; with a viewer only those on visible cells).</summary>
 public sealed record SimSnapshot(int Tick, int MapWidth, int MapHeight, IReadOnlyList<UnitView> Units,
     IReadOnlyList<LandType> Land, ulong StateHash, IReadOnlyList<BuildingView> Buildings, int Viewer,
-    IReadOnlyList<byte> Vision);
+    IReadOnlyList<byte> Vision, IReadOnlyList<FxEvent>? FxEvents = null);
 
 /// <summary>One building as the renderer sees it. Cell = top-left of its footprint. Ghost = last-seen
 /// image of an enemy building now under fog (Health is the last-seen value).</summary>
