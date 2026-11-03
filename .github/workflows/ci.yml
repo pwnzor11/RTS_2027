@@ -12,6 +12,8 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          lfs: true
 
       - uses: actions/setup-dotnet@v4
         with:
@@ -37,8 +39,20 @@ jobs:
 
       - name: Headless match and replay verify
         run: |
-          dotnet run --project src/Tools -c Release --no-build -- match --ticks 1500 --record match.rpl
+          dotnet run --project src/Tools -c Release --no-build -- match --ticks 1500 --record match.rpl | Tee-Object -FilePath match_output.txt
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           dotnet run --project src/Tools -c Release --no-build -- replay verify match.rpl
+
+      - name: AI tier matrix (summary)
+        run: |
+          dotnet run --project src/Tools -c Release --no-build -- ai matrix --ai skirmisher --tiers 1-5 --seeds 2 --ticks 3000 --out ai_matrix.md
+          Get-Content ai_matrix.md | Add-Content $env:GITHUB_STEP_SUMMARY
+
+      - name: Match throughput (summary)
+        if: always()
+        run: |
+          "### Match throughput" | Add-Content $env:GITHUB_STEP_SUMMARY
+          Select-String -Path match_output.txt -Pattern 'ticks/s' | ForEach-Object { $_.Line } | Add-Content $env:GITHUB_STEP_SUMMARY
 
       - name: Upload test results
         if: always()
@@ -54,6 +68,8 @@ jobs:
     needs: build-test
     steps:
       - uses: actions/checkout@v4
+        with:
+          lfs: true
 
       - uses: actions/setup-dotnet@v4
         with:
@@ -62,8 +78,19 @@ jobs:
       - name: Publish
         run: dotnet publish src/Game -c Release -r win-x64 --self-contained -o publish/Game
 
+      - name: Smoke test from an empty folder
+        shell: pwsh
+        run: |
+          $smoke = Join-Path $env:RUNNER_TEMP 'smoke'
+          Remove-Item -Recurse -Force $smoke -ErrorAction SilentlyContinue
+          Copy-Item -Recurse -Force publish/Game $smoke
+          $exe = Join-Path $smoke 'Game.exe'
+          $p = Start-Process -FilePath $exe -ArgumentList '--headless-check', '200' -WorkingDirectory $smoke -Wait -PassThru -NoNewWindow
+          Write-Host "Smoke test exit code: $($p.ExitCode)"
+          if ($p.ExitCode -ne 0) { throw "Published game failed the headless smoke test (exit $($p.ExitCode))." }
+
       - name: Upload game
         uses: actions/upload-artifact@v4
         with:
-          name: RTS_2027-win-x64
+          name: RTS_2027-win-x64-${{ github.sha }}
           path: publish/Game
