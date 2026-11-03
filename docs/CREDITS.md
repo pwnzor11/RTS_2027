@@ -9,6 +9,7 @@ Every third-party asset, library and AI-assisted artwork is listed here (D-032, 
 | MonoGame.Library.OpenAL (OpenAL Soft 1.24.3), `openal.dll` | LGPL 2 (dynamically loaded, replaceable); portions BSD-3-Clause | Native audio back end |
 | NVorbis 0.10.4 | MIT | Ogg Vorbis decoding (via MonoGame audio) |
 | Tomlyn 2.10.1 | BSD-2-Clause | TOML parsing of rules and maps (`src/Data`) |
+| MoonSharp 2.0.0 (2.0.0.0) | BSD-3-Clause (nuspec gives only the licence URL; text is the upstream `LICENSE`, copyright 2014-2016 Marco Mastropaolo; its string library is based on KopiLua, MIT, Copyright 2012 LoDC) | Embedded Lua interpreter for campaign mission scripts (`src/Scripting`, D-015) |
 | System.IO.Hashing 10.0.14 | MIT | XxHash64 for rules and sim state hashes |
 | .NET runtime 10.0.14 (self-contained) | MIT; bundled components keep their own notices | Runtime |
 

@@ -37,6 +37,11 @@ public sealed record SimSetup(ulong Seed, Map.MapData Map, int PlayerCount, SimR
     public SimLimits Limits { get; init; } = SimLimits.Default;
     public bool AllowDebug { get; init; }
 
+    /// <summary>Optional scripting/mission extensions (M2-15, D-061), run in list order from the trigger phase of every Step.
+    /// Their state parts are appended after the built-in parts, so they are saved and hashed. One extension instance
+    /// serves one Simulation: build a fresh list for each Simulation you construct. Not part of the save header.</summary>
+    public IReadOnlyList<ISimExtension>? Extensions { get; init; }
+
     /// <summary>Team id of a player slot (the slot index itself when Teams is null).</summary>
     public byte TeamOf(byte player) => Teams != null && player < Teams.Count ? Teams[player] : player;
 }

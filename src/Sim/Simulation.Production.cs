@@ -97,8 +97,16 @@ public sealed partial class Simulation
     {
         if (player >= _players.Count || _players.IsNeutral(player)) return false;
         if (!TryTypeInfo(category, typeIndex, out _, out _, out var prereq)) return false;
+        if (UnlockFilter != null && !UnlockFilter(player, category, typeIndex)) return false;   // M2-15: mission tech gating
         return HasPrerequisites(player, prereq);
     }
+
+    /// <summary>
+    /// Optional extra gate on <see cref="IsUnlocked"/> (M2-15): when set and it returns false for (player, category, type index) the type
+    /// is locked whatever the prerequisites say. Set by a mission extension in <see cref="ISimExtension.OnSetup"/>; it must read only
+    /// hashed state. Not saved.
+    /// </summary>
+    public Func<byte, ProductionCategory, int, bool>? UnlockFilter { get; set; }
 
     /// <summary>
     /// Why a Build command for this type would not be queued now, ignoring prerequisites (see <see cref="IsUnlocked"/>): the player is
