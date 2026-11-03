@@ -77,10 +77,10 @@ published zip starts from any folder; F1 opens a debug console in the sandbox.
 Plan: docs/design/04_m2_plan.md (D-053, D-058, D-059, D-061, D-062). User can try: menu → skirmish vs the Recruit
 AI on a Rust Belt map, a 10-minute game with real art for the Authority slice.
 - [ ] M2-01 Corner advantage on generated maps — user can try: `Tools ai match --a skirmisher --b skirmisher` with swapped starts ends near-even
-- [ ] M2-02 Rules schema v2 + M2 contracts (economy/production fields, parts, commands, HUD)
-- [ ] M2-03 Front-end skeleton: SimHost, screen stack, input router, menus — user can try: main menu → sandbox
-- [ ] M2-04 UI font from an OFL TTF + UI scale
-- [ ] M2-05 House colours on the GPU (base + mask layers), sprite manifest
+- [x] M2-02 Rules schema v2 + M2 contracts (economy/production fields, parts, commands, HUD)
+- [x] M2-03 Front-end skeleton: SimHost, screen stack, input router, menus — user can try: main menu → sandbox
+- [x] M2-04 UI font from an OFL TTF + UI scale
+- [x] M2-05 House colours on the GPU (base + mask layers), sprite manifest
 - [ ] M2-06 Art pilot: Refinery — owner approves before M2-13
 - [ ] M2-07 Economy sim (harvesters, depletion, regrowth, storage, power)
 - [ ] M2-08 Production sim (queues, prerequisites, drain/stall, placement radius, rally, sell, repair, low power, win rule)
