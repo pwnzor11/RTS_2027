@@ -92,7 +92,7 @@ AI on a Rust Belt map, a 10-minute game with real art for the Authority slice.
 - [x] M2-14 Integration, headless skirmish in CI, balance pass
 - [x] M2-15 Campaign pilot (D-061)
 - [x] M2-16 Simultaneous damage resolution (D-065)
-- [ ] M2-19 Sim fixes from the balance pass: speed-16 scraper never harvests, harvester field search radius, projectile hits a whole infantry cell, explosion events for effects
+- [x] M2-19 Sim fixes from the balance pass: speed-16 scraper never harvests, harvester field search radius, projectile hits a whole infantry cell, explosion events for effects
 - [x] M2-17 Buildings and units drawn from sprites, placeholders for missing art
 
 ## M3 · Full skirmish
