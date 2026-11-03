@@ -39,7 +39,14 @@ public sealed class SimSnapshotSource : ISnapshotSource
     /// <summary>The seed the sandbox has always used.</summary>
     public const ulong DefaultSeed = 2027;
 
+    /// <summary>Where a menu skirmish writes its replay.</summary>
+    public const string SkirmishReplayPath = "replays/skirmish_last.rpl";
+
+    /// <summary>The previous skirmish's replay.</summary>
+    public const string SkirmishPreviousReplayPath = "replays/skirmish_prev.rpl";
+
     private readonly SimHost _host;
+    private readonly string? _verifyCommand = VerifyCommand;
     private readonly MapData _map;
     private readonly ReplayRecording _recording;
     private readonly Stopwatch _clock = Stopwatch.StartNew(); // only for the ISnapshotSource.Update() convenience
@@ -72,6 +79,23 @@ public sealed class SimSnapshotSource : ISnapshotSource
             }
         }
 
+        _host.RefreshSnapshots();
+    }
+
+    /// <summary>
+    /// Wraps a menu skirmish (<see cref="SkirmishGame"/>): the sim is already set up, the AI joins the host's tick loop, and the
+    /// session is recorded to <see cref="SkirmishReplayPath"/>. The viewer is player 0 (fog applies).
+    /// </summary>
+    /// <param name="game">The skirmish to host.</param>
+    /// <param name="rulesDir">The data/rules directory (its files go into the replay header).</param>
+    public SimSnapshotSource(SkirmishGame game, string rulesDir)
+    {
+        _map = game.Map;
+        _recording = new ReplayRecording(game.Sim, RulesBundle.ReadDirectory(rulesDir), SkirmishReplayPath, SkirmishPreviousReplayPath);
+        _host = new SimHost(game.Sim, _recording) { Ai = game.Ai };
+        _verifyCommand = game.Curated
+            ? $"dotnet run --project src/Tools -- replay verify {SkirmishReplayPath} --map data/maps/{SkirmishGame.CuratedMapFile}"
+            : null;
         _host.RefreshSnapshots();
     }
 
@@ -225,7 +249,7 @@ public sealed class SimSnapshotSource : ISnapshotSource
     public bool SaveReplay()
     {
         bool ok = _recording.Finish();
-        if (ok) Console.WriteLine($"verify with: {VerifyCommand}");
+        if (ok && _verifyCommand is not null) Console.WriteLine($"verify with: {_verifyCommand}");
         return ok;
     }
 }

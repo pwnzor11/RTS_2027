@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
+using Rts.AI;
 using Rts.Game.Sandbox;
 using Rts.Sim;
 using Rts.Sim.Core;
@@ -26,6 +27,7 @@ public sealed class SimHost
     private readonly Simulation _sim;
     private readonly ReplayRecording? _recording;
     private readonly List<Command> _pending = new();
+    private readonly List<Command> _aiScratch = new();
     private readonly ushort[] _sequence = new ushort[256]; // one counter per player (Command.Player is a byte)
     private long _accumulatedUs;
     private bool _paused;
@@ -46,6 +48,12 @@ public sealed class SimHost
         _previous = _current;
         _projectiles = CaptureProjectiles();
     }
+
+    /// <summary>
+    /// AI players hosted outside the sim (D-051). When set, <see cref="AiDriver.Collect"/> runs before every Step and its
+    /// commands join the pending list and the replay recording, exactly as if a player had issued them.
+    /// </summary>
+    public AiDriver? Ai { get; set; }
 
     /// <summary>The simulation. Read it between steps only; commands go through <see cref="Issue"/>.</summary>
     public Simulation Sim => _sim;
@@ -170,6 +178,17 @@ public sealed class SimHost
     {
         _previous = _current;
         int ran = _sim.Tick;
+        if (Ai is { } ai)
+        {
+            _aiScratch.Clear();
+            ai.Collect(_sim, _aiScratch);
+            foreach (Command command in _aiScratch)
+            {
+                _pending.Add(command);
+                _recording?.RecordCommand(command);
+            }
+        }
+
         _sim.Step(_pending);
         // Commands for the tick that just ran have been applied (or were never due); drop them.
         _pending.RemoveAll(c => c.ExecTick <= ran);
