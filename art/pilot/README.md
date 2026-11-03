@@ -75,3 +75,51 @@ the remap stays exact.
    faces. I would use it only for ground vehicles that should look worn, or not at all.
 4. The reactor collar reads as a ribbed drum, but at north/south it still dominates the silhouette.
 5. The shadow is a hard dithered blob; it is slightly cropped at the bottom edge on the south facing.
+
+---
+
+# Structures (M2-06): Authority Refinery pilot
+
+Generic building pipeline plus the first building. Output: `data/sprites/buildings/auth_refinery.png` +
+`auth_refinery.sprite.toml`; owner sheet `art/pilot/refinery_contact.png`.
+
+## Regenerate (from the repo root)
+```
+pip install bpy --break-system-packages                 # Blender 5.2 module (got bpy 5.2.3 on Python 3.13)
+python3 tools/art/build_structure.py auth_refinery      # render all 16 frames, then post-process, writes the sheet + manifest
+python3 tools/art/build_structure.py auth_refinery --post-only      # post-process only (about 3 s)
+python3 tools/art/build_structure.py auth_refinery --preview --frames 0 4 11   # fast colour-only look at 2x
+python3 tools/art/structure_contact.py auth_refinery    # refinery_contact.png (asserts the remap touches only ramp pixels)
+```
+A new building = a new module in `tools/art/structures/<id>.py` (contract in the docstring of `auth_refinery.py`:
+FOOTPRINT, CANVAS, ORIGIN, DOCK, STATES, MATERIALS, `build(S, state, i, n)`; primitives box/bb/cyl/cone/sphere;
+`S.clip_z` for the build-up). Work files go to `art/pilot/work/struct_<id>/` (git-ignored).
+
+## Framing
+Same camera as the v2 tank: ortho, elevation 40 deg (not 47, which was the v1 tank), sun upper-left, 64 px per cell
+horizontally. A 3x3 footprint is 192 px wide; canvas 192x224, footprint top-left at origin (0, 32), so 32 px of headroom
+for the drum and stack. The ground is drawn so a cell is 64x64 px: modules author in ground units and the pipeline
+stretches y by 1/sin(40) (radii are never stretched). Dock cell is relative [1,3], the cell just below the south edge
+(not in the frame).
+Sheet: 4 columns x 4 rows, row-major: idle 0-3, damaged 4-7, build 8-15. Manifest format as briefed
+(frame_w, frame_h, origin_x, origin_y, [[state]] name/facings/frames/first/ticks_per_frame); columns = image width / frame_w.
+
+## Timings (2 cores, Cycles CPU, 24 samples, no denoise, 768x896 render)
+About 40-60 s per frame (colour + mask + shadow passes), 10-17 min for all 16 frames depending on load. Post-process 3 s.
+Cost log (D-059): about 40 min wall-clock from start to this commit: roughly 12 min design/coding, 2 full renders
+(about 10 and 17 min) plus several 2x previews, and about 10 min of review/fixes.
+
+## Honest notes
+1. At 1x the drum, stack, tube lamps and the big house plaques on the south face all read; the rotating drum plates
+   show the idle animation clearly, tube lamps blink as 2-3 white pixels.
+2. The roof dominates: the stretched ground plane makes the building look more top-down than the tank. Walls are
+   only about 45 px of 224. Raising the walls further would help but costs headroom for the drum.
+3. Stencils (white bars, plate numerals) are 1-2 px blobs, decoration only. The hazard stripes and yellow gantry read well.
+4. Damaged: scorch and the missing panel read, flames are small yellow blobs, smoke is 2-3 dark puffs per column and only
+   partly convincing; smoke near the stack touches the top edge. Damage is hand-placed in code, not a general shader.
+5. Build state: the cut faces quantise to a flat blue-grey slab in frames 0-3, which reads as "poured foundation" but is
+   bland; scaffold poles are 1 px lines. Frame 7 equals idle 0.
+6. House colour: the roof plaque lands on the top ramp shades, so it looks pastel after remap (see the sheet);
+   the south plaques are darker. Remap is exact (3771 pixels per colour).
+7. The pad (full 192 px square) makes a pale-ish rectangle on the ash ground; the pad could be drawn by the terrain instead.
+8. Art touches the left/right/bottom canvas edges (pad plus right-falling shadow); build frames 1 and 3 touch the top edge.
