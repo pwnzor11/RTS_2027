@@ -1,0 +1,6 @@
+# Normalise text in the repo; keep data files LF on every OS so hashes and tests match.
+* text=auto
+*.toml text eol=lf
+*.lua text eol=lf
+*.cs text
+*.png binary

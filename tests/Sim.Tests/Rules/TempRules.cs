@@ -42,7 +42,8 @@ internal sealed class TempRules : IDisposable
     }
 
     /// <summary>Text of one real rules file.</summary>
-    public static string Real(string file) => File.ReadAllText(Path.Combine(RealDir(), file));
+    /// <remarks>Line endings are normalised to LF so tests behave the same on Windows checkouts.</remarks>
+    public static string Real(string file) => File.ReadAllText(Path.Combine(RealDir(), file)).Replace("\r\n", "\n");
 
     /// <summary>The real file with <paramref name="old"/> replaced by <paramref name="new"/>; asserts that <paramref name="old"/> is present.</summary>
     public static string RealWith(string file, string old, string @new)
