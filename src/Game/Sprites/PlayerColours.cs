@@ -5,44 +5,39 @@ using Microsoft.Xna.Framework;
 namespace Rts.Game.Sprites;
 
 /// <summary>
-/// House colours per player. Each player has one base colour and an 8-step dark-to-light ramp computed from it:
-/// the darkest step is 40 % of the base, the lightest 130 % (clamped to 255), with linear steps between. The ramp
-/// replaces the magenta house ramp of the tank sheet (see <see cref="HouseRemap"/>). Debug-view values, not final art.
+/// House colours by player slot. Sprites carry their house paint as a greyscale mask (see <see cref="HouseSplit"/>),
+/// and the GPU multiplies that mask by the colour returned here, so the lightest shade of paint shows the colour
+/// exactly and darker shades are darker versions of it. Values are mid-bright on purpose: a dark base would make
+/// every shade of the ramp muddy. Debug-view values, not final art.
 /// </summary>
 public static class PlayerColours
 {
-    /// <summary>Number of steps in a house ramp. Must match the sheet's house_ramp length.</summary>
+    /// <summary>Number of steps in a house ramp. Must match the length of a sprite manifest's house ramp.</summary>
     public const int RampSteps = 8;
 
-    /// <summary>Number of player colours defined. Players beyond this wrap around.</summary>
-    public const int Count = 4;
+    /// <summary>Number of distinct house colours. Slots 0 to 7 are all distinct; slot 8 and above wrap to slot % 8.</summary>
+    public const int Count = 8;
 
     private static readonly Color[] Bases =
     {
-        new(0x6F, 0x8A, 0x6A), // 0 Authority: grey-green
-        new(0x8B, 0x2E, 0x1A), // 1 Directorate: rust-red
-        new(0x2E, 0x5A, 0x8B), // 2 blue ally
-        new(0xB8, 0x86, 0x2E), // 3 ochre
+        new(0x4F, 0xA0, 0x4A), // 0 Authority green
+        new(0xC0, 0x46, 0x2B), // 1 Directorate rust red
+        new(0x2F, 0x76, 0xC0), // 2 blue
+        new(0xE3, 0xC2, 0x3A), // 3 yellow
+        new(0x93, 0x60, 0xC8), // 4 purple
+        new(0x2F, 0xB8, 0xC4), // 5 cyan
+        new(0xE8, 0x82, 0x2A), // 6 orange
+        new(0xD8, 0xD8, 0xD2), // 7 white-grey
     };
 
-    /// <summary>Base colour of a player, used for infantry squares and HUD hints.</summary>
-    public static Color Base(int player) => Bases[player % Count];
-
-    /// <summary>The eight ramp colours for a player as 0xRRGGBB, darkest first.</summary>
-    public static uint[] Ramp(int player)
+    /// <summary>
+    /// The house colour of a player slot. Slots 0 to 7 are distinct. Slots 8 and above wrap around (slot % 8), so
+    /// a LAN game with nine or more players would share colours; the game does not allow that yet.
+    /// </summary>
+    /// <param name="player">Player slot, zero based.</param>
+    public static Color Base(int player)
     {
-        Color b = Base(player);
-        var ramp = new uint[RampSteps];
-        for (int i = 0; i < RampSteps; i++)
-        {
-            float t = i / (float)(RampSteps - 1);
-            float r = Lerp(b.R * 0.4f, MathF.Min(255f, b.R * 1.3f), t);
-            float g = Lerp(b.G * 0.4f, MathF.Min(255f, b.G * 1.3f), t);
-            float bl = Lerp(b.B * 0.4f, MathF.Min(255f, b.B * 1.3f), t);
-            ramp[i] = ((uint)MathF.Round(r) << 16) | ((uint)MathF.Round(g) << 8) | (uint)MathF.Round(bl);
-        }
-        return ramp;
+        if (player < 0) throw new ArgumentOutOfRangeException(nameof(player), "Player slots start at 0.");
+        return Bases[player % Count];
     }
-
-    private static float Lerp(float a, float b, float t) => a + (b - a) * t;
 }

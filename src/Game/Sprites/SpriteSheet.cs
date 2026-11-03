@@ -1,77 +1,73 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
-using System.Globalization;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Tomlyn;
-using Tomlyn.Model;
 
 namespace Rts.Game.Sprites;
 
 /// <summary>
-/// A sprite sheet described by a .toml file next to its PNG (format: art/pilot/sprite_meta_example.toml).
-/// At load it makes one house-recoloured copy of the whole sheet per player, so drawing never recolours.
-/// Frames are row-major; frame 0 faces north and facings run clockwise.
+/// A sprite sheet described by a <c>&lt;id&gt;.sprite.toml</c> (see <see cref="SpriteManifest"/>). At load the PNG is
+/// split once into two textures: BASE holds every non-house pixel, and MASK holds the house-paint pixels as
+/// greyscale. <see cref="Draw"/> draws BASE untinted, then MASK tinted with the player's house colour, so the sheet
+/// costs two textures whatever the number of players. Frames are row-major, and facing 0 is north, clockwise.
 /// </summary>
-public sealed class SpriteSheet
+/// <remarks>
+/// Ownership: the sheet owns its GPU textures, so it is <see cref="IDisposable"/>. Dispose it when the game ends.
+/// </remarks>
+public sealed class SpriteSheet : IDisposable
 {
-    private readonly Texture2D[] _textures;
+    private readonly Texture2D _base;
+    private readonly Texture2D? _mask;
+    private bool _disposed;
 
-    private SpriteSheet(Texture2D[] textures, int framePx, int columns, int rows, int facings, Vector2 anchor)
+    private SpriteSheet(SpriteManifest manifest, int columns, int rows, Texture2D baseTexture, Texture2D? mask)
     {
-        _textures = textures;
-        FramePx = framePx;
+        Manifest = manifest;
         Columns = columns;
         Rows = rows;
-        Facings = facings;
-        Anchor = anchor;
+        _base = baseTexture;
+        _mask = mask;
     }
 
-    /// <summary>Width and height of one square frame, in pixels.</summary>
-    public int FramePx { get; }
+    /// <summary>The manifest this sheet was built from.</summary>
+    public SpriteManifest Manifest { get; }
 
-    /// <summary>Frames per row.</summary>
+    /// <summary>Sprite id (the manifest's file stem).</summary>
+    public string Id => Manifest.Id;
+
+    /// <summary>Width of one frame in pixels.</summary>
+    public int FrameW => Manifest.FrameW;
+
+    /// <summary>Height of one frame in pixels.</summary>
+    public int FrameH => Manifest.FrameH;
+
+    /// <summary>Frames per sheet row.</summary>
     public int Columns { get; }
 
-    /// <summary>Frame rows.</summary>
+    /// <summary>Frame rows in the sheet.</summary>
     public int Rows { get; }
 
-    /// <summary>Number of facings in the sheet. Equals the number of frames.</summary>
-    public int Facings { get; }
+    /// <summary>Total number of frame cells in the sheet.</summary>
+    public int FrameCount => Columns * Rows;
 
-    /// <summary>Ground origin inside each frame (the cell centre). Used as the draw origin.</summary>
-    public Vector2 Anchor { get; }
+    /// <summary>Whether the sheet has house-paint pixels. A sheet without a house ramp draws only BASE.</summary>
+    public bool HasHousePaint => _mask != null;
 
-    /// <summary>Loads the .toml description and the PNG it names, then builds the per-player copies.</summary>
+    /// <summary>The origin pixel in each frame. See <see cref="SpriteManifest"/> for what it means per kind of sprite.</summary>
+    public Vector2 Origin => new(Manifest.OriginX, Manifest.OriginY);
+
+    /// <summary>
+    /// Loads a manifest and the PNG it names, then builds the BASE and MASK textures.
+    /// </summary>
     /// <param name="device">Graphics device that owns the textures.</param>
-    /// <param name="metaPath">Full path to the .toml file.</param>
-    /// <exception cref="InvalidDataException">The description or PNG does not match the expected layout.</exception>
-    public static SpriteSheet Load(GraphicsDevice device, string metaPath)
+    /// <param name="manifestPath">Full path to the <c>.sprite.toml</c> file.</param>
+    /// <exception cref="InvalidDataException">The manifest or PNG does not match the layout it describes.</exception>
+    public static SpriteSheet Load(GraphicsDevice device, string manifestPath)
     {
-        TomlTable root = TomlSerializer.Deserialize<TomlTable>(File.ReadAllText(metaPath))
-            ?? throw new InvalidDataException($"{metaPath}: empty sprite description");
+        ArgumentNullException.ThrowIfNull(device);
+        SpriteManifest manifest = SpriteManifest.Load(manifestPath);
 
-        TomlTable sheet = Table(root, "sheet", metaPath);
-        string file = Text(sheet, "file", metaPath);
-        int framePx = Int(sheet, "frame_px", metaPath);
-        int columns = Int(sheet, "columns", metaPath);
-        int rows = Int(sheet, "rows", metaPath);
-        int facings = Int(sheet, "facings", metaPath);
-        if (facings != columns * rows || facings is not (8 or 16 or 32))
-        {
-            throw new InvalidDataException($"{metaPath}: facings must be 8, 16 or 32 and equal columns * rows");
-        }
-
-        TomlTable anchorTable = Table(root, "anchor", metaPath);
-        var anchor = new Vector2(Int(anchorTable, "x", metaPath), Int(anchorTable, "y", metaPath));
-
-        uint[] houseRamp = ReadRamp(Table(root, "house", metaPath), metaPath);
-        if (houseRamp.Length != PlayerColours.RampSteps)
-        {
-            throw new InvalidDataException($"{metaPath}: house_ramp must have {PlayerColours.RampSteps} colours");
-        }
-
-        string pngPath = Path.Combine(Path.GetDirectoryName(metaPath) ?? ".", file);
+        string pngPath = Path.Combine(Path.GetDirectoryName(manifestPath) ?? ".", manifest.SheetFile);
         byte[] pixels;
         int width;
         int height;
@@ -79,79 +75,104 @@ public sealed class SpriteSheet
         {
             width = source.Width;
             height = source.Height;
-            if (width != columns * framePx || height != rows * framePx)
-            {
-                throw new InvalidDataException($"{pngPath}: expected {columns * framePx}x{rows * framePx} px");
-            }
-
             pixels = new byte[width * height * 4];
             source.GetData(pixels);
         }
 
-        var textures = new Texture2D[PlayerColours.Count];
-        for (int player = 0; player < textures.Length; player++)
+        if (width % manifest.FrameW != 0 || height % manifest.FrameH != 0)
         {
-            byte[] copy = (byte[])pixels.Clone();
-            HouseRemap.Remap(copy, houseRamp, PlayerColours.Ramp(player));
-            HouseRemap.Premultiply(copy);
-
-            var texture = new Texture2D(device, width, height);
-            texture.SetData(copy);
-            textures[player] = texture;
+            throw new InvalidDataException(
+                $"{pngPath}: {width}x{height} px is not a whole number of {manifest.FrameW}x{manifest.FrameH} frames");
+        }
+        int columns = width / manifest.FrameW;
+        int rows = height / manifest.FrameH;
+        int cells = columns * rows;
+        foreach (SpriteState state in manifest.States)
+        {
+            if (state.First + state.CellCount > cells)
+            {
+                throw new InvalidDataException(
+                    $"{manifest.SourcePath}: state '{state.Name}' needs cells {state.First}..{state.First + state.CellCount - 1}, "
+                    + $"but {pngPath} has only {cells}");
+            }
         }
 
-        return new SpriteSheet(textures, framePx, columns, rows, facings, anchor);
+        var basePixels = new byte[pixels.Length];
+        byte[]? maskPixels = null;
+        if (manifest.HouseRamp.Count == 0)
+        {
+            Array.Copy(pixels, basePixels, pixels.Length);
+        }
+        else
+        {
+            maskPixels = new byte[pixels.Length];
+            HouseSplit.Split(pixels, manifest.HouseRamp.ToArray(), basePixels, maskPixels);
+            HouseSplit.Premultiply(maskPixels);
+        }
+        HouseSplit.Premultiply(basePixels);
+
+        var baseTexture = new Texture2D(device, width, height);
+        baseTexture.SetData(basePixels);
+        Texture2D? maskTexture = null;
+        if (maskPixels != null)
+        {
+            maskTexture = new Texture2D(device, width, height);
+            maskTexture.SetData(maskPixels);
+        }
+
+        return new SpriteSheet(manifest, columns, rows, baseTexture, maskTexture);
     }
 
-    /// <summary>The recoloured sheet for a player. Players beyond the defined colours wrap around.</summary>
-    public Texture2D Texture(int player) => _textures[player % _textures.Length];
+    /// <summary>Finds a state by name.</summary>
+    /// <exception cref="KeyNotFoundException">The sprite has no state with that name.</exception>
+    public SpriteState State(string name) => Manifest.State(name);
+
+    /// <summary>
+    /// The sheet frame to show for a state, a facing and a simulation tick. See <see cref="SpriteManifest.FrameIndex"/>.
+    /// </summary>
+    public int FrameIndex(string state, byte facing, int tick) => Manifest.FrameIndex(state, facing, tick);
 
     /// <summary>Source rectangle of a frame, given its row-major index.</summary>
-    public Rectangle FrameRect(int frame) =>
-        new((frame % Columns) * FramePx, (frame / Columns) * FramePx, FramePx, FramePx);
+    /// <exception cref="ArgumentOutOfRangeException">The frame index is outside the sheet.</exception>
+    public Rectangle FrameRect(int frame)
+    {
+        if ((uint)frame >= (uint)FrameCount) throw new ArgumentOutOfRangeException(nameof(frame));
+        return new Rectangle((frame % Columns) * FrameW, (frame / Columns) * FrameH, FrameW, FrameH);
+    }
+
+    /// <summary>
+    /// Draws a frame with its origin pixel on <paramref name="position"/>: BASE in white, then MASK tinted with
+    /// <paramref name="house"/>. The caller must have begun the batch with the default alpha blend.
+    /// </summary>
+    /// <param name="batch">Batch in progress.</param>
+    /// <param name="frame">Row-major frame index.</param>
+    /// <param name="position">Screen position of the origin pixel.</param>
+    /// <param name="house">House colour, for example <see cref="PlayerColours.Base"/>.</param>
+    /// <param name="scale">Uniform scale (the camera zoom).</param>
+    public void Draw(SpriteBatch batch, int frame, Vector2 position, Color house, float scale)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        ArgumentNullException.ThrowIfNull(batch);
+        Rectangle rect = FrameRect(frame);
+        batch.Draw(_base, position, rect, Color.White, 0f, Origin, scale, SpriteEffects.None, 0f);
+        if (_mask != null)
+        {
+            batch.Draw(_mask, position, rect, house, 0f, Origin, scale, SpriteEffects.None, 0f);
+        }
+    }
+
+    /// <inheritdoc />
+    public void Dispose()
+    {
+        if (_disposed) return;
+        _disposed = true;
+        _base.Dispose();
+        _mask?.Dispose();
+    }
 
     private static Texture2D ReadPng(GraphicsDevice device, string path)
     {
         using FileStream stream = File.OpenRead(path);
         return Texture2D.FromStream(device, stream);
-    }
-
-    private static uint[] ReadRamp(TomlTable house, string metaPath)
-    {
-        if (!house.TryGetValue("house_ramp", out object? raw) || raw is not TomlArray array)
-        {
-            throw new InvalidDataException($"{metaPath}: [house] needs house_ramp as an array of #RRGGBB strings");
-        }
-
-        var ramp = new uint[array.Count];
-        for (int i = 0; i < array.Count; i++)
-        {
-            if (array[i] is not string hex || hex.Length != 7 || hex[0] != '#'
-                || !uint.TryParse(hex.AsSpan(1), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out uint value))
-            {
-                throw new InvalidDataException($"{metaPath}: house_ramp entries must be #RRGGBB");
-            }
-            ramp[i] = value;
-        }
-        return ramp;
-    }
-
-    private static TomlTable Table(TomlTable parent, string key, string metaPath) =>
-        parent.TryGetValue(key, out object? raw) && raw is TomlTable table
-            ? table
-            : throw new InvalidDataException($"{metaPath}: missing [{key}] table");
-
-    private static string Text(TomlTable table, string key, string metaPath) =>
-        table.TryGetValue(key, out object? raw) && raw is string text
-            ? text
-            : throw new InvalidDataException($"{metaPath}: '{key}' must be a string");
-
-    private static int Int(TomlTable table, string key, string metaPath)
-    {
-        if (table.TryGetValue(key, out object? raw) && raw is long value && value >= 0 && value <= int.MaxValue)
-        {
-            return (int)value;
-        }
-        throw new InvalidDataException($"{metaPath}: '{key}' must be a non-negative integer");
     }
 }
