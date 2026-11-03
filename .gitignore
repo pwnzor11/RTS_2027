@@ -20,3 +20,5 @@ Thumbs.db
 # Replays are generated; test fixtures under tests/ are tracked
 *.rpl
 !tests/**/*.rpl
+__pycache__/
+__pycache__/
