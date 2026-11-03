@@ -240,3 +240,26 @@ skirmish and campaign; the sim and lobby data are shaped for it from the start. 
 **Decision:** The v1 locomotion classes are foot, wheeled, tracked, hover, air, burrow (Directorate
 tunnelers, moves under terrain, surfaces on soft ground), with a naval slot reserved. Extends D-023.
 **Status:** confirmed (follows from D-027's tunnelling faction; owner approved the setting)
+
+### D-036 · 2026-11-02 · D-033 confirmed; setting draft accepted
+**Decision:** The owner confirmed D-033 (asset licence allow-list incl. CC BY-SA 4.0). The owner
+accepted `design/03_setting_and_factions.md` as drafted (tunnel network, radiation denial, conscript
+swarm stay); refinements happen in the roster pass. Q-25.
+**Status:** confirmed
+
+### D-037 · 2026-11-02 · Art pilot arms without an image generator
+**Decision:** No image-generation tool or connector is available to the lead (skills and connector
+registry searched in session 2). The M0-12 pilot therefore compares (a) Blender pre-render,
+(b) the same render with a pixel-art post-process (palette quantise, hard outline, no AA) and
+(c) hand-placed pixel art. AI-generated frames stay allowed by D-032 and can be added if a tool
+becomes available or the owner supplies frames. Owner's instruction: "make the art however you are
+able". Q-24 still decided by the pilot.
+**Status:** confirmed
+
+### D-038 · 2026-11-02 · Skeleton conventions
+**Decision:** Solution file `RTS_2027.slnx` (the .NET 10 default format); namespaces `Rts.<Project>`;
+`Directory.Build.props` sets net10.0, nullable, warnings as errors, invariant globalization;
+`global.json` pins SDK 10.0.100 with latestFeature roll-forward. Contract types live in
+`src/Sim/Core/` (EntityId, Command, CellCoord/LeptonCoord, SimRandom = PCG32, SimSnapshot, SimSetup).
+State hash uses `System.IO.Hashing.XxHash64`. Projects for Scripting/AI/Net are added when first needed.
+**Status:** lead decision (easy to reverse)
