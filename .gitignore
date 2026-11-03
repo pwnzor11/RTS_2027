@@ -7,3 +7,16 @@ TestResults/
 /art/pilot/work/
 /.claude/
 replays/
+# Build and publish output, saves, logs and local machine files (E-4)
+publish/
+saves/
+*.sav
+logs/
+*.log
+*.blend1
+.env
+Thumbs.db
+.DS_Store
+# Replays are generated; test fixtures under tests/ are tracked
+*.rpl
+!tests/**/*.rpl
