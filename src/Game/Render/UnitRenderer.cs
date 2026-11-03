@@ -5,67 +5,51 @@ using Microsoft.Xna.Framework.Graphics;
 using Rts.Game.Sandbox;
 using Rts.Game.Sprites;
 using Rts.Sim.Core;
+using Rts.Sim.Rules;
 
 namespace Rts.Game.Render;
 
 /// <summary>
-/// Vehicles as the tank sprite drawn in the player's house colour (all vehicle types use it for now), infantry as 12 px
-/// squares in the player colour, and white corner brackets around selected units.
+/// One unit: the sprite for its rules type in its house colour (vehicles idle with 16 facings; infantry walk or idle
+/// with 8 facings), plus white corner brackets when selected. Health bars are drawn separately, above the sprites.
 /// </summary>
-public sealed class UnitRenderer
+public static class UnitRenderer
 {
-    private const string VehicleState = "idle";
-    private const int InfantrySidePxAtZoom1 = 12;
     private const int VehicleBracketHalfPxAtZoom1 = 26;
     private const int InfantryBracketHalfPxAtZoom1 = 9;
     private const int BracketLengthPxAtZoom1 = 8;
     private static readonly Color SelectionColour = Color.White;
 
-    private readonly SpriteSheet _sheet;
-
-    /// <summary>Creates a renderer that draws vehicles with the given sprite sheet.</summary>
-    public UnitRenderer(SpriteSheet sheet)
+    /// <summary>Draws one unit at its interpolated position.</summary>
+    /// <param name="batch">Batch in progress.</param>
+    /// <param name="pixel">1x1 white texture.</param>
+    /// <param name="sprites">Sprite resolver.</param>
+    /// <param name="painter">Sprite painter.</param>
+    /// <param name="memory">Renderer memory (walk state).</param>
+    /// <param name="tick">Snapshot tick.</param>
+    /// <param name="rules">Rules, or null.</param>
+    /// <param name="unit">Unit to draw.</param>
+    /// <param name="selected">Whether the unit is selected (adds brackets).</param>
+    /// <param name="camera">View.</param>
+    public static void Draw(SpriteBatch batch, Texture2D pixel, SpriteResolver sprites, SpritePainter painter,
+        RenderMemory memory, int tick, SimRules? rules, RenderUnit unit, bool selected, Camera camera)
     {
-        _sheet = sheet;
-    }
+        UnitView view = unit.View;
+        bool infantry = view.Kind == UnitKind.Infantry;
+        ResolvedSprite sprite = sprites.ForUnit(rules, view);
+        bool moving = memory.IsMoving(UnitKey.Of(view));
+        int frame = SpriteStates.UnitFrame(sprite.Manifest, infantry, moving, view.Facing, tick);
+        Vector2 origin = SpriteLayout.UnitOrigin(camera, unit.World);
+        painter.Draw(batch, sprite, frame, origin, PlayerColours.Base(view.Player), camera.Zoom);
 
-    /// <summary>Draws every unit in the frame at its interpolated position.</summary>
-    public void Draw(SpriteBatch batch, Texture2D pixel, SceneFrame frame, Camera camera)
-    {
-        foreach (RenderUnit unit in frame.Units)
-        {
-            bool selected = frame.Selection.Contains(UnitKey.Of(unit.View));
-            DrawUnit(batch, pixel, unit, selected, camera, frame.Snapshot.Tick);
-        }
-    }
-
-    private void DrawUnit(SpriteBatch batch, Texture2D pixel, RenderUnit unit, bool selected, Camera camera, int tick)
-    {
-        Vector2 screen = camera.ScreenFromWorld(unit.World);
-        int cx = (int)MathF.Round(screen.X);
-        int cy = (int)MathF.Round(screen.Y);
-        int player = unit.View.Player;
-        bool vehicle = unit.View.Kind == UnitKind.Vehicle;
+        if (!selected) return;
         float zoom = camera.Zoom;
-
-        if (vehicle)
-        {
-            int frame = _sheet.FrameIndex(VehicleState, unit.View.Facing, tick);
-            _sheet.Draw(batch, frame, new Vector2(cx, cy), PlayerColours.Base(player), zoom);
-        }
-        else
-        {
-            int side = (int)MathF.Round(InfantrySidePxAtZoom1 * zoom);
-            Shapes.Fill(batch, pixel, new Rectangle(cx - side / 2, cy - side / 2, side, side), PlayerColours.Base(player));
-        }
-
-        if (selected)
-        {
-            int half = (int)MathF.Round((vehicle ? VehicleBracketHalfPxAtZoom1 : InfantryBracketHalfPxAtZoom1) * zoom);
-            int length = Math.Max(3, (int)MathF.Round(BracketLengthPxAtZoom1 * zoom));
-            int thick = zoom < 1f ? 1 : 2;
-            DrawBracket(batch, pixel, cx, cy, half, length, thick);
-        }
+        int cx = (int)origin.X;
+        int cy = (int)origin.Y;
+        int half = (int)MathF.Round((infantry ? InfantryBracketHalfPxAtZoom1 : VehicleBracketHalfPxAtZoom1) * zoom);
+        int length = Math.Max(3, (int)MathF.Round(BracketLengthPxAtZoom1 * zoom));
+        int thick = zoom < 1f ? 1 : 2;
+        DrawBracket(batch, pixel, cx, cy, half, length, thick);
     }
 
     // Four L-shaped corners around (cx, cy).
