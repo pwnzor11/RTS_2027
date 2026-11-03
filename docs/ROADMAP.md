@@ -50,7 +50,7 @@ and AI are M2. Planned in session 2; expect two sessions. Lead writes each wave'
 - [x] M1-08 Movement and locomotion: follow paths, turn rates, blockage tiers (wait / sidestep /
   shove idle allies), infantry sub-cells, crushing — Sonnet
 - [x] M1-09 Combat: weapon → projectile → warhead × armour, range/ROF in leptons/ticks, turret facing,
-  3×3 splash with falloff, Attack / AttackMove / Guard / Stop missions, death and cleanup — Sonnet
+  splash (impact cell full damage, surrounding cells half, radius from the warhead), Attack / AttackMove / Guard / Stop missions, death and cleanup — Sonnet
 - [x] M1-10 Desync tooling: per-subsystem sub-hashes, `Tools replay verify`, `Tools match --ticks N`
   headless soak (two scripted armies), hash coverage test that fails if a new sim array is unhashed — Haiku
 

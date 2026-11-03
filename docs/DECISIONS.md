@@ -338,3 +338,12 @@ health bars are not drawn on ghosts; the F3 occupancy overlay under a fog viewer
 viewer can see; the replay is written to `replays/sandbox_last.rpl` on exit. CI runs the sandbox
 headless (`--headless-check 1200`), a 1500-tick match, and verifies both replays.
 **Status:** assumed — confirm
+
+
+### D-048 · 2026-11-03 · Corrections to D-040 and D-047
+**Decision:** (1) D-040's restore point is the branch `restore/pre-m1` (3279113), not a tag: the workspace
+git proxy blocks tag pushes. (2) D-047's controls, as built: right-click on an enemy issues Attack (with
+or without A); A arms attack-move (a toggle, not held) and the next right-click on ground issues
+AttackMove. (3) Splash, as built: impact cell full damage, every other cell within the warhead's Splash
+radius (Chebyshev) half damage, minimum 1.
+**Status:** confirmed (records what was done; D-047 itself stays "assumed — confirm")
