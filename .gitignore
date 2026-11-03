@@ -21,3 +21,4 @@ Thumbs.db
 *.rpl
 !tests/**/*.rpl
 __pycache__/
+__pycache__/
