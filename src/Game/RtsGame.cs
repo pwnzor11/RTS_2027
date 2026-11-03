@@ -16,6 +16,7 @@ namespace Rts.Game;
 /// through <see cref="SimSnapshotSource"/>. Controls: arrows or middle-drag to pan, wheel to zoom, left-click to select
 /// or drag a box, right-click to move, attack or (after A) attack-move, S stop, G guard, X scatter, F2 fog viewer,
 /// F3 occupancy, F4 paths, F5 ranges, Space pause, '.' step, Esc quit (which saves the replay).
+/// F1 opens the debug console (sandbox only); while it is open, typing goes to it and Esc closes it instead of quitting.
 /// </summary>
 public sealed class RtsGame : Microsoft.Xna.Framework.Game
 {
@@ -30,7 +31,7 @@ public sealed class RtsGame : Microsoft.Xna.Framework.Game
     {
         "arrows / middle-drag pan   wheel zoom   LMB select   RMB move or attack",
         "A then RMB: attack-move   S stop   G guard here   X scatter   Space pause   . step",
-        "F2 fog viewer   F3 occupancy   F4 paths   F5 ranges   Esc quit (saves the replay)",
+        "F1 console   F2 fog viewer   F3 occupancy   F4 paths   F5 ranges   Esc quit (saves the replay)",
     };
 
     private readonly GraphicsDeviceManager _graphics;
@@ -41,6 +42,8 @@ public sealed class RtsGame : Microsoft.Xna.Framework.Game
     private readonly OrderController? _orders; // null with --demo
     private readonly OverlayToggles _overlays = new();
     private readonly Camera _camera = new();
+    private readonly DebugConsole? _console; // null with --demo
+    private bool _escapeClaimed; // Esc closed the console; no quit until Esc is released
     private readonly List<RenderUnit> _renderUnits = new();
     private SpriteBatch _spriteBatch = null!;
     private Texture2D _pixel = null!;
@@ -81,6 +84,7 @@ public sealed class RtsGame : Microsoft.Xna.Framework.Game
             _sim = sim;
             _source = sim;
             _orders = new OrderController(sim, _selection);
+            _console = new DebugConsole(sim, _selection, _camera);
             Exiting += (_, _) => { sim.SaveReplay(); };
         }
     }
@@ -91,6 +95,7 @@ public sealed class RtsGame : Microsoft.Xna.Framework.Game
         Window.Title = "RTS_2027 battle sandbox";
         Window.AllowUserResizing = true;
         IsMouseVisible = true;
+        Window.TextInput += OnTextInput;
 
         IsFixedTimeStep = true;
         TargetElapsedTime = TimeSpan.FromTicks(166_667); // 60 Hz draw
@@ -118,23 +123,34 @@ public sealed class RtsGame : Microsoft.Xna.Framework.Game
         MouseState mouse = Mouse.GetState();
         _mouse = mouse;
 
-        if (keys.IsKeyDown(Keys.Escape))
+        bool escapeUsedByConsole = false;
+        if (_console is { } console)
+        {
+            if (Pressed(keys, Keys.F1)) console.Toggle();
+            else if (console.IsOpen) escapeUsedByConsole = console.Update(keys, _previousKeys, mouse.Position);
+        }
+
+        if (keys.IsKeyUp(Keys.Escape)) _escapeClaimed = false;
+        if (escapeUsedByConsole) _escapeClaimed = true;
+        bool typing = _console is { IsOpen: true };
+
+        if (keys.IsKeyDown(Keys.Escape) && !typing && !_escapeClaimed)
         {
             Exit();
         }
 
-        if (_sim is not null)
+        if (_sim is not null && !typing)
         {
             if (Pressed(keys, Keys.Space)) _sim.Paused = !_sim.Paused;
             if (Pressed(keys, Keys.OemPeriod)) _sim.StepOnce();
             if (Pressed(keys, Keys.F2)) _sim.CycleViewer();
         }
 
-        if (Pressed(keys, Keys.F3)) _overlays.Occupancy = !_overlays.Occupancy;
-        if (Pressed(keys, Keys.F4)) _overlays.Paths = !_overlays.Paths;
-        if (Pressed(keys, Keys.F5)) _overlays.Ranges = !_overlays.Ranges;
+        if (!typing && Pressed(keys, Keys.F3)) _overlays.Occupancy = !_overlays.Occupancy;
+        if (!typing && Pressed(keys, Keys.F4)) _overlays.Paths = !_overlays.Paths;
+        if (!typing && Pressed(keys, Keys.F5)) _overlays.Ranges = !_overlays.Ranges;
 
-        if (_orders is not null)
+        if (_orders is not null && !typing)
         {
             foreach (Keys key in OrderKeys)
             {
@@ -147,7 +163,7 @@ public sealed class RtsGame : Microsoft.Xna.Framework.Game
         if (keys.IsKeyDown(Keys.Right)) keyDirection.X += 1f;
         if (keys.IsKeyDown(Keys.Up)) keyDirection.Y -= 1f;
         if (keys.IsKeyDown(Keys.Down)) keyDirection.Y += 1f;
-        if (keyDirection != Vector2.Zero)
+        if (keyDirection != Vector2.Zero && !typing)
         {
             keyDirection.Normalize();
             float seconds = (float)gameTime.ElapsedGameTime.TotalSeconds;
@@ -200,6 +216,7 @@ public sealed class RtsGame : Microsoft.Xna.Framework.Game
         _spriteBatch.Begin(samplerState: SamplerState.PointClamp);
         _scene.Draw(_spriteBatch, _pixel, frame, _camera, GraphicsDevice.Viewport);
         DrawHud(snapshot);
+        _console?.Draw(_spriteBatch, _pixel, GraphicsDevice.Viewport);
         _spriteBatch.End();
 
         _framesCounted++;
@@ -213,6 +230,9 @@ public sealed class RtsGame : Microsoft.Xna.Framework.Game
 
         base.Draw(gameTime);
     }
+
+    // Text typed in the window goes to the debug console while it is open.
+    private void OnTextInput(object? sender, TextInputEventArgs e) => _console?.OnTextInput(e.Character);
 
     // True only on the frame the key goes down (edge detection against the state saved at the end of the last Update).
     private bool Pressed(KeyboardState keys, Keys key) => keys.IsKeyDown(key) && _previousKeys.IsKeyUp(key);
@@ -251,7 +271,7 @@ public sealed class RtsGame : Microsoft.Xna.Framework.Game
         }
 
         bool rightPressed = mouse.RightButton == ButtonState.Pressed && _previousMouse.RightButton == ButtonState.Released;
-        if (rightPressed && _orders is not null)
+        if (rightPressed && _orders is not null && _console is not { IsOpen: true })
         {
             _orders.RightClick(mouse.Position, _camera, _renderUnits);
         }
