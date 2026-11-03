@@ -232,3 +232,12 @@ Idle is unchanged except that big flat house areas now use mid shades (see 6). B
 - The before sheet used by the contact sheet is `art/pilot/refinery_contact_before_sheet.png` (the pilot sprite sheet).
 - Cost log (D-059): about 40 min wall-clock, partly waiting on the shared render lock; 3 full renders (5-7 min each),
   2 partial renders and 3 preview passes of about 1 min.
+
+### Structures batch B (M2-13s2): Factory, Wall, Turret
+Regenerate inside the lock: `build_structure.py auth_factory` / `auth_wall`, `python3 tools/art/structures/turret_build.py`;
+contact sheet `python3 tools/art/structures_contact_b.py` → `art/pilot/structures_b_contact.png`.
+- Factory 3×3 (idle 4, damaged 4 structural + 7 fx anchors, build 8, active 4): ≈ 15 min render + 7 min partial re-render.
+- Wall 1×1 (idle 1, damaged 1, build 4), tiles horizontally: ≈ 2 min. Known gap: no vertical/corner variants yet, so a
+  north–south line reads as stacked horizontal blocks.
+- Turret 1×1, rotating head (idle 16, fire 16×2, damaged 16, build 6): ≈ 20 min render; base identical across facings.
+- Cost log (D-059): ≈ 90 min design + iteration for the three, most wall-clock spent queued on the shared render lock.
