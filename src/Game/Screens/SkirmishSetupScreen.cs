@@ -6,20 +6,21 @@ using Microsoft.Xna.Framework.Input;
 using Rts.Data;
 using Rts.Game.Input;
 using Rts.Game.Render;
+using Rts.Game.Sandbox;
 using Rts.Game.Sprites;
 
 namespace Rts.Game.Screens;
 
 /// <summary>
-/// Skirmish setup (D-062 (2)): map seed (type digits, Left/Right or the -/+/Rnd buttons), AI tier 1..5 by name,
-/// player colour, Start and Back. For M2 Start opens the sandbox scenario with the chosen seed; tier and colour are kept
-/// in <see cref="SkirmishSettings"/> for the production and AI packages.
+/// Skirmish setup (D-062 (2)): map seed (type digits, Left/Right or the -/+/Rnd buttons; 0 is the curated Rust Belt map, the
+/// row below names which map the seed gives), AI tier 1..5 by name, player colour, Start and Back. Start opens the real
+/// skirmish (<see cref="GameScreen.CreateSkirmish"/>) with the sidebar and the AI.
 /// </summary>
 public sealed class SkirmishSetupScreen : IScreen
 {
     private const ulong MaxSeed = 999_999_999;
     private const int SeedRow = 0;
-    private const int ColourRow = 2;
+    private const int ColourRow = 3;
     private static readonly string[] ColourNames = { "Green", "Red", "Blue", "Ochre" };
 
     private readonly GameServices _s;
@@ -41,9 +42,10 @@ public sealed class SkirmishSetupScreen : IScreen
 
         _panel = new MenuPanel("Skirmish", new[]
         {
-            new MenuItem(() => $"Map seed: {_seed}", null, d => StepSeed(d),
+            new MenuItem(() => $"Map seed: {_seed}  (0 = curated)", null, d => StepSeed(d),
                 new MenuButton("-", () => StepSeed(-1)), new MenuButton("+", () => StepSeed(1)),
                 new MenuButton("Rnd", RandomSeed)),
+            new MenuItem(() => $"Map: {SkirmishGame.DescribeMap(_seed)}"),
             new MenuItem(() => $"AI tier: {_tier} {_tierNames[_tier - 1]}", null, StepTier,
                 new MenuButton("<", () => StepTier(-1)), new MenuButton(">", () => StepTier(1))),
             new MenuItem(() => $"Colour: {ColourNames[_colour]}", null, StepColour,
@@ -142,5 +144,5 @@ public sealed class SkirmishSetupScreen : IScreen
 
     private void StepColour(int delta) => _colour = (_colour + delta + PlayerColours.Count) % PlayerColours.Count;
 
-    private void Start() => _s.Screens.Push(GameScreen.CreateSandbox(_s, false, Current));
+    private void Start() => _s.Screens.Push(GameScreen.CreateSkirmish(_s, Current));
 }

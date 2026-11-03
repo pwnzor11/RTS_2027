@@ -8,8 +8,8 @@ using Rts.Game.Input;
 namespace Rts.Game.Screens;
 
 /// <summary>
-/// Stub game-over menu (Restart / Quit to menu), pushed by <see cref="GameScreen"/> when its
-/// <see cref="GameScreen.IsGameOver"/> check turns true. It does not yet say who won; that arrives with the win rule.
+/// The game-over menu (Restart / Quit to menu), pushed by <see cref="GameScreen"/> when its
+/// <see cref="GameScreen.IsGameOver"/> check turns true. Its title says "Victory" or "Defeat" (see <see cref="Headline"/>).
 /// </summary>
 public sealed class GameOverScreen : IScreen
 {
@@ -18,15 +18,31 @@ public sealed class GameOverScreen : IScreen
     private Point _mouse;
 
     /// <summary>Creates the screen. <paramref name="restart"/> builds a fresh game screen.</summary>
-    public GameOverScreen(GameServices services, Func<IScreen> restart)
+    /// <param name="services">Shared services.</param>
+    /// <param name="restart">Builds a fresh game screen for Restart.</param>
+    /// <param name="headline">The title (see <see cref="Headline"/>); "Game over" when null.</param>
+    public GameOverScreen(GameServices services, Func<IScreen> restart, string? headline = null)
     {
         _s = services;
-        _panel = new MenuPanel("Game over", new[]
+        Title = headline ?? "Game over";
+        _panel = new MenuPanel(Title, new[]
         {
             new MenuItem(() => "Restart", () => GameFlow.Restart(_s, restart)),
             new MenuItem(() => "Quit to menu", () => GameFlow.QuitToMenu(_s)),
         });
     }
+
+    /// <summary>The title shown on the menu.</summary>
+    public string Title { get; }
+
+    /// <summary>
+    /// "Victory" when the local player's team won, otherwise "Defeat" (the local player lost, or everyone was defeated at once).
+    /// </summary>
+    /// <param name="localDefeated">True if the local player has been defeated.</param>
+    /// <param name="winningTeam">The winning team, or -1 for none.</param>
+    /// <param name="localTeam">The local player's team.</param>
+    public static string Headline(bool localDefeated, int winningTeam, int localTeam) =>
+        !localDefeated && winningTeam >= 0 && winningTeam == localTeam ? "Victory" : "Defeat";
 
     /// <inheritdoc />
     public bool BlocksUpdateBelow => true;
