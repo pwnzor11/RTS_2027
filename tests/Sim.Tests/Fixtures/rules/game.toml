@@ -1,0 +1,6 @@
+# Test fixture copy — tests depend on these exact values; game data lives in data/rules.
+# placeholder fixture, not balance
+[game]
+tick_rate = 20
+default_map_width = 32
+default_map_height = 32

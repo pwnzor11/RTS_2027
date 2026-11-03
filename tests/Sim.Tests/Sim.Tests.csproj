@@ -20,6 +20,15 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="Fixtures\rules\*.toml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Fixtures\maps\*.toml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\src\Sim\Sim.csproj" />
     <ProjectReference Include="..\..\src\Data\Data.csproj" />
   </ItemGroup>

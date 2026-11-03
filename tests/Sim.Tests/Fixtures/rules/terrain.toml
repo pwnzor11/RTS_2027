@@ -1,0 +1,69 @@
+# Test fixture copy — tests depend on these exact values; game data lives in data/rules.
+# placeholder fixture, not balance
+# TEST FIXTURE: values equal the former built-in DefaultTerrain table. Speed percent per locomotion
+# (0 = impassable, 0..1000). [buildable] lists the land types a structure may be placed on.
+
+[speed.clear]
+foot = 100
+wheeled = 100
+tracked = 100
+hover = 100
+air = 100
+burrow = 100
+
+[speed.road]
+foot = 110
+wheeled = 125
+tracked = 110
+hover = 110
+air = 100
+burrow = 110
+
+[speed.rough]
+foot = 75
+wheeled = 75
+tracked = 75
+hover = 75
+air = 100
+burrow = 75
+
+[speed.ash]
+foot = 100
+wheeled = 100
+tracked = 100
+hover = 100
+air = 100
+burrow = 100
+
+[speed.water]
+foot = 0
+wheeled = 0
+tracked = 0
+hover = 100
+air = 100
+burrow = 0
+
+[speed.rock]
+foot = 0
+wheeled = 0
+tracked = 0
+hover = 0
+air = 100
+burrow = 0
+
+[speed.cliff]
+foot = 0
+wheeled = 0
+tracked = 0
+hover = 0
+air = 100
+burrow = 0
+
+[buildable]
+clear = true
+road = true
+rough = false
+ash = true
+water = false
+rock = false
+cliff = false

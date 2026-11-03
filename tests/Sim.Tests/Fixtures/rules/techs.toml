@@ -1,0 +1,19 @@
+# Test fixture copy — tests depend on these exact values; game data lives in data/rules.
+# placeholder fixture, not balance
+# TEST FIXTURE: synthetic effects. Each [[effect]] has id (unique across all rules files), op (enable, set,
+# add or mul; mul is per-mille), target (a type id, a provides name, or class:vehicle|infantry|building),
+# attr (may be "" for enable) and value (integer).
+
+[[effect]]
+id = "test_armor_up"
+op = "mul"
+target = "class:vehicle"
+attr = "max_health"
+value = 1100
+
+[[effect]]
+id = "test_unlock_turret"
+op = "enable"
+target = "test_turret"
+attr = ""
+value = 0

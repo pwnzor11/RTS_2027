@@ -8,7 +8,7 @@ namespace Rts.Sim.Tests.Combat;
 /// <summary>Shared helpers for combat tests: the real test rules, a flat map, command builders.</summary>
 internal static class CombatFixture
 {
-    public static readonly RuleSet Loaded = RulesLoader.Load(RulesLocator.FindRulesDir(AppContext.BaseDirectory)!);
+    public static readonly RuleSet Loaded = RulesLoader.Load(TestData.RulesDir);
     public static readonly Command[] None = Array.Empty<Command>();
 
     public static int Veh(string id) => SimRules.IndexOf(Loaded.Sim.Vehicles, id, v => v.Id);

@@ -7,7 +7,7 @@ namespace Rts.Sim.Tests.Map;
 
 public class MapStateTests
 {
-    private static readonly TerrainTable Table = RulesLoader.Load(RulesLocator.FindRulesDir(AppContext.BaseDirectory)!).Sim.Terrain;
+    private static readonly TerrainTable Table = RulesLoader.Load(TestData.RulesDir).Sim.Terrain;
     private static readonly CellCoord C = new(3, 4);
     private static EntityId Id(int i) => new((ushort)i, 1);
 

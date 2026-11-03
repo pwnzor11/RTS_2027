@@ -1,10 +1,12 @@
 using System.Diagnostics;
 using Rts.Sim.Core;
 using Rts.Sim.Vision;
+using Xunit.Abstractions;
 
 namespace Rts.Sim.Tests.Vision;
 
-public class VisionPerformanceTests
+/// <summary>Vision throughput. Timing is logged, never asserted: wall-clock bounds are flaky on CI and say nothing about trends.</summary>
+public class VisionPerformanceTests(ITestOutputHelper output)
 {
     private const int Width = 128;
     private const int Height = 128;
@@ -76,11 +78,12 @@ public class VisionPerformanceTests
     }
 
     [Fact]
-    public void RandomWalk_400ActorsOn128x128For200Steps_UnderTwoSeconds()
+    public void RandomWalk_400ActorsOn128x128For200Steps_LogsTicksPerSecond()
     {
         var sw = Stopwatch.StartNew();
         RandomWalk(12345UL);
         sw.Stop();
-        Assert.True(sw.ElapsedMilliseconds < 2000, $"Random walk took {sw.ElapsedMilliseconds} ms.");
+        double ticksPerSecond = Steps / Math.Max(sw.Elapsed.TotalSeconds, 1e-9);
+        output.WriteLine($"Vision random walk: {ActorCount} actors, {Width}x{Height}, {Steps} ticks in {sw.ElapsedMilliseconds} ms = {ticksPerSecond:F0} ticks/s");
     }
 }

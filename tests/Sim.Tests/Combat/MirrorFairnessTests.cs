@@ -9,7 +9,7 @@ namespace Rts.Sim.Tests.Combat;
 /// <summary>Mirror-symmetric duels on a flat map must end symmetric: no advantage from player number or slot order.</summary>
 public class MirrorFairnessTests(ITestOutputHelper output)
 {
-    private static readonly RuleSet Rules = RulesLoader.Load(RulesLocator.FindRulesDir(AppContext.BaseDirectory)!);
+    private static readonly RuleSet Rules = RulesLoader.Load(TestData.RulesDir);
 
     [Theory]
     [InlineData("test_tank", 3)]

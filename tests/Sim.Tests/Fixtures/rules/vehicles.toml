@@ -1,0 +1,62 @@
+# Test fixture copy — tests depend on these exact values; game data lives in data/rules.
+# placeholder fixture, not balance
+# TEST FIXTURE: synthetic values, not balance numbers. Ids are neutral test ids.
+# Keys: speed (leptons/tick), max_health, locomotion, turn_rate (facing steps/tick), armor, sight (cells),
+# primary_weapon ("" = none), has_turret, turret_turn_rate, crusher, cost, prerequisites.
+# Optional: base = "<id in this file>" (one level) starts from that entry, then overrides keys.
+
+[test_crawler]
+speed = 16
+max_health = 300
+locomotion = "tracked"
+turn_rate = 8
+armor = "heavy"
+sight = 5
+primary_weapon = ""
+has_turret = false
+turret_turn_rate = 0
+crusher = true
+cost = 0
+prerequisites = []
+
+[test_tank]
+speed = 20
+max_health = 400
+locomotion = "tracked"
+turn_rate = 6
+armor = "heavy"
+sight = 5
+primary_weapon = "test_cannon"
+has_turret = true
+turret_turn_rate = 10
+crusher = true
+cost = 800
+prerequisites = ["test_factory"]
+
+[test_jeep]
+speed = 36
+max_health = 150
+locomotion = "wheeled"
+turn_rate = 12
+armor = "light"
+sight = 7
+primary_weapon = "test_mg"
+has_turret = false
+turret_turn_rate = 0
+crusher = false
+cost = 400
+prerequisites = ["test_factory"]
+
+[test_artillery_truck]
+speed = 18
+max_health = 200
+locomotion = "wheeled"
+turn_rate = 6
+armor = "light"
+sight = 6
+primary_weapon = "test_artillery"
+has_turret = false
+turret_turn_rate = 0
+crusher = false
+cost = 900
+prerequisites = ["test_factory"]

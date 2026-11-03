@@ -1,0 +1,22 @@
+# Test fixture copy — tests depend on these exact values; game data lives in data/rules.
+# placeholder fixture, not balance
+# TEST FIXTURE: synthetic values. Keys: speed, max_health, armor, sight, primary_weapon ("" = none), cost,
+# prerequisites. Optional: base = "<id in this file>" (one level).
+
+[test_rifleman]
+speed = 10
+max_health = 50
+armor = "unarmored"
+sight = 4
+primary_weapon = "test_rifle"
+cost = 100
+prerequisites = ["test_barracks"]
+
+[test_engineer]
+speed = 10
+max_health = 40
+armor = "unarmored"
+sight = 4
+primary_weapon = ""
+cost = 500
+prerequisites = ["test_barracks"]

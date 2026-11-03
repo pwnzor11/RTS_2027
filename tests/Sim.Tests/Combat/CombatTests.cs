@@ -73,7 +73,8 @@ public class CombatTests
         Assert.Equal(0, sim.Units.Facing[tank.Index]);
         Assert.Equal(64, sim.CombatData.At(ActorKind.Vehicle, tank.Index).TurretFacing);
         Assert.Equal(new LeptonCoord(10 * 256 + 128, 10 * 256 + 128), sim.Units.Position[tank.Index]);
-        Assert.True(sim.Projectiles.Slots.Count > 0 || sim.Infantry.Health[victim.Index] < 50);
+        Assert.Equal(1, sim.Projectiles.Slots.Count);                                     // shell in flight
+        Assert.Equal(50, sim.Infantry.Health[victim.Index]);                              // not hit yet
     }
 
     [Fact]
@@ -171,7 +172,8 @@ public class CombatTests
         Boundary.LateSpawn.Infantry(sim, 0, Inf("test_engineer"), new CellCoord(15, 10));   // scout reveals the enemy
         Run(sim, 40);
         Assert.Equal(enemy, sim.CombatData.At(ActorKind.Vehicle, truck.Index).AttackTarget.Id);
-        Assert.True(sim.Units.Health[enemy.Index] < 300 || sim.Projectiles.Slots.Count > 0);
+        Assert.Equal(300, sim.Units.Health[enemy.Index]);                                 // shell in flight, not hit yet
+        Assert.Equal(1, sim.Projectiles.Slots.Count);
     }
 
     [Fact]
@@ -276,22 +278,26 @@ public class CombatTests
         Assert.True(sim.Units.Health[target.Index] < 400);
     }
 
-    private static List<ulong> Battle(ulong seed, out int casualties)
+    /// <summary>Runs the scripted battle. Returns the state hash after every tick and the units lost by each player.</summary>
+    private static List<ulong> Battle(ulong seed, out int[] casualtiesByPlayer)
     {
         var sim = NewSim(seed, 48);
         string[] vehicles = { "test_tank", "test_tank", "test_jeep", "test_jeep" };
         var cmds = new List<Command>();
+        var units = new List<(byte Player, EntityId Id, bool Vehicle)>();
         for (byte p = 0; p < 2; p++)
         {
             int x0 = p == 0 ? 6 : 40, dir = p == 0 ? 1 : -1;
             for (int k = 0; k < 4; k++)
             {
                 var id = sim.SpawnVehicle(p, Veh(vehicles[k]), new CellCoord(x0, 20 + k * 2));
+                units.Add((p, id, true));
                 cmds.Add(AttackMove(sim, p, ActorKind.Vehicle, id, x0 + dir * 30, 22));
             }
             for (int k = 0; k < 2; k++)
             {
                 var id = sim.SpawnInfantry(p, Inf("test_rifleman"), new CellCoord(x0 + dir, 21 + k * 3), k);
+                units.Add((p, id, false));
                 cmds.Add(AttackMove(sim, p, ActorKind.Infantry, id, x0 + dir * 30, 22));
             }
         }
@@ -301,19 +307,26 @@ public class CombatTests
             sim.Step(t == 0 ? cmds : None);
             hashes.Add(sim.ComputeStateHash());
         }
-        casualties = 12 - (sim.Units.Slots.Count + sim.Infantry.Slots.Count);
+        casualtiesByPlayer = new int[2];
+        foreach (var (player, id, vehicle) in units)
+        {
+            bool alive = vehicle ? sim.Units.Slots.IsAlive(id) : sim.Infantry.Slots.IsAlive(id);
+            if (!alive) casualtiesByPlayer[player]++;
+        }
         return hashes;
     }
 
     [Fact]
     public void ScriptedBattle_IsDeterministic_AndSeedSensitive()
     {
-        var a = Battle(1, out int casualtiesA);
-        var b = Battle(1, out int casualtiesB);
+        var a = Battle(1, out int[] casualtiesA);
+        var b = Battle(1, out int[] casualtiesB);
         var c = Battle(2, out _);
         Assert.Equal(a, b);
         Assert.Equal(casualtiesA, casualtiesB);
-        Assert.True(casualtiesA > 0, "the battle should actually kill something");
+        Assert.True(casualtiesA.Sum() > 0, "the battle should actually kill something");
+        Assert.Equal(new[] { 6, 4 }, casualtiesA);                 // exact losses per player for seed 1
+        Assert.Equal(0x663785D153DD9341UL, a[^1]);                  // exact final tick hash for seed 1
         Assert.NotEqual(a[^1], c[^1]);
     }
 
