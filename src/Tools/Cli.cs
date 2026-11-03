@@ -26,6 +26,7 @@ public static class Cli
           Tools match [--map <path>] [--ticks <n>] [--seed <s>] [--record <file>]
           Tools replay verify <file> [--rules <dir>] [--map <path>]
           Tools replay info <file>
+          Tools ai match --a <aiId>[:<tier>] --b <aiId>[:<tier>] | ai matrix --ai <aiId> [--tiers 1-5]
           Tools help
 
         --rules defaults to the nearest data/rules found walking up from the current directory.
@@ -54,6 +55,8 @@ public static class Cli
                 return MatchCommands.Run(args[1..]); // owned by M1-10
             case "replay":
                 return ReplayCommands.Run(args[1..]); // owned by M1-10
+            case "ai":
+                return AiCommands.Run(args[1..]); // owned by M1.5-06
             default:
                 Console.Error.WriteLine($"error: unknown command '{args[0]}'");
                 Console.Error.WriteLine(Usage);
