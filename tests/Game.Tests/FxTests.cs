@@ -27,7 +27,9 @@ public sealed class FxTests
         first = 4
         """;
 
-    private static SpriteManifest Parse(string text, string id = "b") => SpriteManifest.Parse(text, id, "test.toml");
+    // Raw string literals keep the file's line endings (CRLF on a Windows checkout); tests search for "\n", so normalise.
+    private static string Lf(string s) => s.Replace("\r\n", "\n", StringComparison.Ordinal);
+    private static SpriteManifest Parse(string text, string id = "b") => SpriteManifest.Parse(Lf(text), id, "test.toml");
 
     private static SpriteManifest Effect(int frames, int tpf, bool loop) => Parse($"""
         file = "e.png"
@@ -150,7 +152,7 @@ public sealed class FxTests
     [Fact]
     public void Loop_must_be_a_boolean_and_one_shot_manifest_holds_the_last_frame()
     {
-        Assert.Throws<InvalidDataException>(() => Parse(Building.Replace("frames = 4\n\n[[state]]", "frames = 4\nloop = 3\n\n[[state]]")));
+        Assert.Throws<InvalidDataException>(() => Parse(Lf(Building).Replace("frames = 4\n\n[[state]]", "frames = 4\nloop = 3\n\n[[state]]")));
         SpriteManifest once = Effect(4, 2, loop: false);
         Assert.False(once.State("play").Loop);
         Assert.Equal(3, once.FrameIndex("play", 0, 500));
