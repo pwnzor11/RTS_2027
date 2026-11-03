@@ -1,5 +1,5 @@
 # Handoff: Session 3 — M1 review, then M2 planning
-Last commit: (set by the handoff commit; see `git log -1`)
+Last commit: 4f3a287 (2026-11-03) — content commit; the handoff commit sits directly on top of it
 Where things stand: Session 2 built the M0-11 skeleton, the M0-12 art pilot (owner picked arm B at
 64 px, D-039), the v2 tank (M1-ART-01) and all of M1 overnight (M1-01..M1-11) under D-040: map model and
 files, rules schema v1, mission state machine, path service, building placement with the one-cell gap
