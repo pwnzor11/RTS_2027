@@ -122,7 +122,6 @@ Cost log (D-059): about 40 min wall-clock from start to this commit: roughly 12 
    the south plaques are darker. Remap is exact (3771 pixels per colour).
 7. The pad (full 192 px square) makes a pale-ish rectangle on the ash ground; the pad could be drawn by the terrain instead.
 8. Art touches the left/right/bottom canvas edges (pad plus right-falling shadow); build frames 1 and 3 touch the top edge.
-<<<<<<< HEAD
 
 ---
 
@@ -211,7 +210,7 @@ Open: the helmet/coat contrast is good but the face is still only a few px; W/E 
 6. Shadow touches the right canvas edge in most frames (art itself stays inside); 11 frames touch the bottom edge.
 7. Remap is exact (asserted); the shade spread inside the house paint is narrow, so rust/blue look flatter than the magenta.
 8. Not tuned after the last render: stride and arm swing may still want a push, and the sheet has not had a second review pass.
-=======
+
 ## Pass 2 (D-064, owner feedback: build "just rises out of the ground", damage "doesn't look like damage")
 Idle is unchanged except that big flat house areas now use mid shades (see 6). Build and damaged were redone from scratch.
 - Build (8 frames, no clipping any more; `build_site()` in the module): 0 surveyed plot (dug pit, spoil heaps, stakes, string lines,
@@ -233,4 +232,3 @@ Idle is unchanged except that big flat house areas now use mid shades (see 6). B
 - The before sheet used by the contact sheet is `art/pilot/refinery_contact_before_sheet.png` (the pilot sprite sheet).
 - Cost log (D-059): about 40 min wall-clock, partly waiting on the shared render lock; 3 full renders (5-7 min each),
   2 partial renders and 3 preview passes of about 1 min.
->>>>>>> wp/m2-06b
