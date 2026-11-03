@@ -11,7 +11,7 @@ Milestones in build order. Each ends with something the owner can try. Ids are s
 - [x] M0-07 Research: RTS AI (skirmish AI, difficulty, campaign scripting) (`docs/research/14_rts_ai.md`)
 - [x] M0-07b Research: other open-source RTS repos (openage, freeaoe, ageServer, AOEMods.Essence, aoc-mgz) (`docs/research/2x_*.md`)
 - [x] M0-07c Research synthesis and design-round agenda (`docs/research/00_SYNTHESIS.md`)
-- [ ] M0-08 Design round 1: technology, engine/language, sim architecture — user can try: nothing yet; produces `docs/design/`
+- [x] M0-08 Design round 1: technology, engine/language, sim architecture — user can try: nothing yet; produces `docs/design/`
 - [ ] M0-09 Design round 2: game design (factions, economy, tech tree shape, map scale)
 - [ ] M0-10 Design round 3: campaign structure and story outline; tooling (map editor) plan
 - [ ] M0-11 Repo skeleton: build system, CI, LICENSE, CLAUDE.md pointing at docs — user can try: clone + build an empty window
