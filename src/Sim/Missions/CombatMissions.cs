@@ -34,10 +34,10 @@ internal static class CombatMissions
         int weapon = sim.WeaponOf(kind, i);
         if (weapon >= 0)
         {
-            WeaponType w = sim.Setup.Rules.Weapons[weapon];
+            WeaponType w = sim.RulesOf(store.Player[i]).Weapons[weapon];
             if (!e.AttackTarget.Id.IsNone)
             {
-                bool keep = sim.IsValidTarget(owner, e.AttackTarget) && sim.IsTargetVisible(owner, e.AttackTarget);
+                bool keep = sim.IsValidAutoTarget(owner, e.AttackTarget) && sim.IsTargetVisible(owner, e.AttackTarget);
                 if (keep && sim.TargetPoint(e.AttackTarget, pos, out LeptonCoord tp))
                 {
                     // Leash: chasing is allowed up to Sight cells from the guard point; a target already in range needs no chase.
@@ -92,11 +92,11 @@ internal static class CombatMissions
         int weapon = sim.WeaponOf(kind, i);
         if (weapon >= 0)
         {
-            if (!e.AttackTarget.Id.IsNone && !(sim.IsValidTarget(owner, e.AttackTarget) && sim.IsTargetVisible(owner, e.AttackTarget)))
+            if (!e.AttackTarget.Id.IsNone && !(sim.IsValidAutoTarget(owner, e.AttackTarget) && sim.IsTargetVisible(owner, e.AttackTarget)))
                 e.AttackTarget = default;
             if (e.AttackTarget.Id.IsNone && sim.Tick >= e.ScanTick)
             {
-                e.AttackTarget = sim.AcquireTarget(owner, store.Position[i], sim.Setup.Rules.Weapons[weapon]);
+                e.AttackTarget = sim.AcquireTarget(owner, store.Position[i], sim.RulesOf(store.Player[i]).Weapons[weapon]);
                 e.ScanTick = sim.Tick + AttackMoveScanTicks;
                 e.RetargetTick = 0;
             }
@@ -122,7 +122,7 @@ internal static class CombatMissions
     /// otherwise aim the mount and fire when ready.</summary>
     private static void Engage(Simulation sim, MobileStore store, ActorKind kind, int i, int weapon, ActorRef target)
     {
-        WeaponType w = sim.Setup.Rules.Weapons[weapon];
+        WeaponType w = sim.RulesOf(store.Player[i]).Weapons[weapon];
         LeptonCoord pos = store.Position[i];
         if (!sim.TargetPoint(target, pos, out LeptonCoord tp)) return;
         ref CombatEntry e = ref sim.CombatData.At(kind, i);

@@ -282,7 +282,8 @@ public sealed partial class Simulation
         return store != null && store.Slots.IsAlive(c.Subject) && store.Player[c.Subject.Index] == c.Player;
     }
 
-    private MobileStore? StoreOf(ActorKind kind) => kind switch
+    /// <summary>The mission-running store of a kind (vehicle, infantry); null for buildings and other kinds. See Simulation.Actors.cs.</summary>
+    internal MobileStore? StoreOf(ActorKind kind) => kind switch
     {
         ActorKind.Vehicle => _units,
         ActorKind.Infantry => _infantry,
@@ -527,48 +528,37 @@ public sealed partial class Simulation
 
     private void RunCleanup()
     {
-        for (int i = 1; i < _units.Capacity; i++)
-            if (_units.Slots.IsIndexAlive(i) && _units.Health[i] <= 0)
+        for (int k = 0; k < LiveKinds; k++)
+        {
+            var kind = (ActorKind)k;
+            SlotArray slots = SlotsOf(kind);
+            int cap = slots.Capacity;
+            for (int i = 1; i < cap; i++)
             {
-                OnActorRemoving(ActorKind.Vehicle, i);
-                _units.Remove(_units.Slots.IdOf(i));
+                if (!slots.IsIndexAlive(i) || HealthAt(kind, i) > 0) continue;
+                if (kind == ActorKind.Building) { RemoveBuilding(slots.IdOf(i)); continue; }
+                OnActorRemoving(kind, i);
+                StoreOf(kind)!.Remove(slots.IdOf(i));
             }
-        for (int i = 1; i < _infantry.Capacity; i++)
-            if (_infantry.Slots.IsIndexAlive(i) && _infantry.Health[i] <= 0)
-            {
-                OnActorRemoving(ActorKind.Infantry, i);
-                _infantry.Remove(_infantry.Slots.IdOf(i));
-            }
-        for (int i = 1; i < _buildings.Capacity; i++)
-            if (_buildings.Slots.IsIndexAlive(i) && _buildings.Health[i] <= 0)
-                RemoveBuilding(_buildings.Slots.IdOf(i));
+        }
         UpdateVision();
     }
 
     // ---- vision (M1-07, wired by the lead) ----------------------------------------------------
 
-    /// <summary>Reveal/conceal for every actor slot in index order, then refresh enemy-building ghosts.
+    /// <summary>Reveal/conceal for every actor slot in index order, then refresh non-allied building ghosts (team vision, D-054).
     /// VisionState.Reveal is incremental, so unchanged actors cost one comparison.</summary>
     private void UpdateVision()
     {
-        SimRules r = Setup.Rules;
-        for (int i = 1; i < _units.Capacity; i++)
-            if (_units.Slots.IsIndexAlive(i))
-                _vision.Reveal(_units.Player[i], ActorKind.Vehicle, i, _units.Position[i].ToCell(), r.Vehicles[_units.TypeIndex[i]].Sight);
-            else _vision.Conceal(ActorKind.Vehicle, i);
-        for (int i = 1; i < _infantry.Capacity; i++)
-            if (_infantry.Slots.IsIndexAlive(i))
-                _vision.Reveal(_infantry.Player[i], ActorKind.Infantry, i, _infantry.Position[i].ToCell(), r.Infantry[_infantry.TypeIndex[i]].Sight);
-            else _vision.Conceal(ActorKind.Infantry, i);
-        for (int i = 1; i < _buildings.Capacity; i++)
-            if (_buildings.Slots.IsIndexAlive(i))
-            {
-                BuildingType bt = r.Buildings[_buildings.TypeIndex[i]];
-                CellCoord c = _buildings.Cell[i];
-                _vision.Reveal(_buildings.Player[i], ActorKind.Building, i,
-                    new CellCoord(c.X + bt.FootprintW / 2, c.Y + bt.FootprintH / 2), bt.Sight);
-            }
-            else _vision.Conceal(ActorKind.Building, i);
+        for (int k = 0; k < LiveKinds; k++)
+        {
+            var kind = (ActorKind)k;
+            SlotArray slots = SlotsOf(kind);
+            int cap = slots.Capacity;
+            for (int i = 1; i < cap; i++)
+                if (slots.IsIndexAlive(i)) _vision.Reveal(PlayerAt(kind, i), kind, i, VisionCellOf(kind, i), SightOf(kind, i));
+                else _vision.Conceal(kind, i);
+        }
 
         for (int p = 0; p < Setup.PlayerCount; p++)
         {
@@ -586,8 +576,8 @@ public sealed partial class Simulation
             // Record what the viewer sees of enemy buildings now.
             for (int i = 1; i < _buildings.Capacity; i++)
             {
-                if (!_buildings.Slots.IsIndexAlive(i) || _buildings.Player[i] == viewer) continue;
-                BuildingType bt = r.Buildings[_buildings.TypeIndex[i]];
+                if (!_buildings.Slots.IsIndexAlive(i) || IsFriendly(viewer, _buildings.Player[i])) continue;
+                BuildingType bt = BuildingTypeAt(i);
                 if (FootprintVisible(viewer, _buildings.Cell[i], bt.FootprintW, bt.FootprintH))
                     _vision.RecordBuildingSeen(viewer, i, new BuildingGhost(_buildings.Player[i], _buildings.TypeIndex[i],
                         _buildings.Cell[i], bt.FootprintW, bt.FootprintH, _buildings.Health[i]));
@@ -601,7 +591,7 @@ public sealed partial class Simulation
             for (int x = 0; x < w; x++)
             {
                 var c = new CellCoord(topLeft.X + x, topLeft.Y + y);
-                if (_map.Data.Contains(c) && _vision.IsVisible(viewer, c)) return true;
+                if (_map.Data.Contains(c) && IsVisibleTo(viewer, c)) return true;
             }
         return false;
     }
@@ -626,21 +616,23 @@ public sealed partial class Simulation
     {
         if (viewer >= Setup.PlayerCount) throw new ArgumentOutOfRangeException(nameof(viewer));
         var list = new List<UnitView>(_units.Slots.Count + _infantry.Slots.Count);
-        for (int i = 1; i < _units.Capacity; i++)
-            if (_units.Slots.IsIndexAlive(i) && SeenBy(viewer, _units.Player[i], _units.Position[i]))
-                list.Add(new UnitView(_units.Slots.IdOf(i), UnitKind.Vehicle, _units.Player[i], _units.TypeIndex[i],
-                    _units.Position[i], _units.Facing[i], _units.Health[i]));
-        for (int i = 1; i < _infantry.Capacity; i++)
-            if (_infantry.Slots.IsIndexAlive(i) && SeenBy(viewer, _infantry.Player[i], _infantry.Position[i]))
-                list.Add(new UnitView(_infantry.Slots.IdOf(i), UnitKind.Infantry, _infantry.Player[i], _infantry.TypeIndex[i],
-                    _infantry.Position[i], _infantry.Facing[i], _infantry.Health[i]));
+        for (int k = 0; k < LiveKinds; k++)
+        {
+            var kind = (ActorKind)k;
+            MobileStore? store = StoreOf(kind);
+            if (store == null) continue;   // buildings are listed below
+            for (int i = 1; i < store.Capacity; i++)
+                if (store.Slots.IsIndexAlive(i) && SeenBy(viewer, store.Player[i], store.Position[i]))
+                    list.Add(new UnitView(store.Slots.IdOf(i), (UnitKind)k, store.Player[i], store.TypeIndex[i],
+                        store.Position[i], store.Facing[i], store.Health[i]));
+        }
         ulong hash = _recentHashes.Count > 0 ? _recentHashes[^1].Hash : 0UL;
         var blist = new List<BuildingView>(_buildings.Slots.Count);
         for (int i = 1; i < _buildings.Capacity; i++)
             if (_buildings.Slots.IsIndexAlive(i))
             {
-                BuildingType bt = Setup.Rules.Buildings[_buildings.TypeIndex[i]];
-                if (viewer >= 0 && _buildings.Player[i] != viewer
+                BuildingType bt = BuildingTypeAt(i);
+                if (viewer >= 0 && !IsFriendly((byte)viewer, _buildings.Player[i])
                     && !FootprintVisible((byte)viewer, _buildings.Cell[i], bt.FootprintW, bt.FootprintH)) continue;
                 blist.Add(new BuildingView(_buildings.Slots.IdOf(i), _buildings.Player[i], _buildings.TypeIndex[i],
                     _buildings.Cell[i], bt.FootprintW, bt.FootprintH, _buildings.Health[i], false));
@@ -655,13 +647,15 @@ public sealed partial class Simulation
                 g.FootprintH, g.Health, true));
         }
         var vision = new byte[Setup.Map.Width * Setup.Map.Height];
-        _vision.FillVision((byte)viewer, vision);
+        ReadOnlySpan<byte> team = TeamMembers((byte)viewer);
+        if (team.Length == 1) _vision.FillVision((byte)viewer, vision);
+        else _vision.FillVisionAny(team, vision);   // allies share vision and exploration
         return new SimSnapshot(Tick, Setup.Map.Width, Setup.Map.Height, list, Setup.Map.Land, hash,
             blist, viewer, vision);
     }
 
     private bool SeenBy(int viewer, byte owner, LeptonCoord pos) =>
-        viewer < 0 || owner == viewer || _vision.IsVisible((byte)viewer, pos.ToCell());
+        viewer < 0 || owner == viewer || IsVisibleTo((byte)viewer, pos.ToCell());
 
     /// <summary>Versioned binary save of the whole sim state.</summary>
     public void Save(Stream output) =>

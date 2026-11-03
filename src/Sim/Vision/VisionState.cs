@@ -151,6 +151,60 @@ public sealed class VisionState : ISimStatePart
         }
     }
 
+    // ---- team queries (D-054) ------------------------------------------------------------------
+    // Allies share vision. The per-player counts and explored bitsets above stay exactly as they were (they are what is
+    // saved and hashed); a team view is computed at query time as the OR over the team's members. Teams hold at most a
+    // handful of players, so this costs a few array reads per query and needs no extra state or hashing. Neutral slots
+    // pass a one-member list and so share with nobody.
+
+    /// <summary>Like <see cref="VisionAt"/> for a team: 2 if any member sees the cell now, else 1 if any member explored it, else 0.</summary>
+    public byte VisionAtAny(ReadOnlySpan<byte> players, CellCoord cell)
+    {
+        if (!InBounds(cell)) return 0;
+        int i = CellIndex(cell.X, cell.Y);
+        byte best = 0;
+        for (int k = 0; k < players.Length; k++)
+        {
+            byte p = players[k];
+            CheckPlayer(p);
+            if (_counts[p][i] > 0) return 2;
+            if (IsExplored(p, i)) best = 1;
+        }
+        return best;
+    }
+
+    /// <summary>True if any of the players currently sees the cell.</summary>
+    public bool IsVisibleToAny(ReadOnlySpan<byte> players, CellCoord cell)
+    {
+        if (!InBounds(cell)) return false;
+        int i = CellIndex(cell.X, cell.Y);
+        for (int k = 0; k < players.Length; k++)
+        {
+            byte p = players[k];
+            CheckPlayer(p);
+            if (_counts[p][i] > 0) return true;
+        }
+        return false;
+    }
+
+    /// <summary>Like <see cref="FillVision"/> for a team (0/1/2 as in <see cref="VisionAtAny"/>).</summary>
+    public void FillVisionAny(ReadOnlySpan<byte> players, byte[] dest)
+    {
+        if (dest.Length < _cells) throw new ArgumentException("Destination is too small.", nameof(dest));
+        for (int i = 0; i < _cells; i++)
+        {
+            byte best = 0;
+            for (int k = 0; k < players.Length && best < 2; k++)
+            {
+                byte p = players[k];
+                CheckPlayer(p);
+                if (_counts[p][i] > 0) best = 2;
+                else if (IsExplored(p, i)) best = 1;
+            }
+            dest[i] = best;
+        }
+    }
+
     /// <summary>Marks every cell explored for the player (debug or campaign reveal). Does not make anything visible.</summary>
     public void ExploreAll(byte player)
     {
