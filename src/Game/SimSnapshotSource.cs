@@ -1,3 +1,4 @@
+using Rts.Sim.Rules;
 using System.Diagnostics;
 using Rts.Data;
 using Rts.Sim;
@@ -19,7 +20,8 @@ public sealed class SimSnapshotSource : ISnapshotSource
     private const int MapCells = 32;
     private const int PlayerCount = 2;
     private const int VehiclesPerPlayer = 3;
-    private const int VehicleTypeIndex = 0;
+    private const string VehicleTypeId = "test_tank";
+    private const string MapFileName = "test_32.map.toml";
     private const int SpawnSpacingCells = 2;
     private const ulong Seed = 2027;
     private const long TickUs = 1_000_000 / SimConstants.TicksPerSecond; // 50 ms
@@ -41,9 +43,11 @@ public sealed class SimSnapshotSource : ISnapshotSource
     public SimSnapshotSource(string rulesDir)
     {
         RuleSet rules = RulesLoader.Load(rulesDir);
-        _map = MapData.CreateFlat(MapCells, MapCells);
+        string mapPath = Path.Combine(rulesDir, "..", "maps", MapFileName);
+        _map = File.Exists(mapPath) ? MapFile.Load(mapPath) : MapData.CreateFlat(MapCells, MapCells);
         var setup = new SimSetup(Seed, _map, PlayerCount, rules.Sim, rules.RulesHash);
         _sim = new Simulation(setup);
+        int vehicleType = Math.Max(0, SimRules.IndexOf(rules.Sim.Vehicles, VehicleTypeId, v => v.Id));
 
         for (int player = 0; player < PlayerCount; player++)
         {
@@ -52,7 +56,7 @@ public sealed class SimSnapshotSource : ISnapshotSource
             for (int i = 0; i < VehiclesPerPlayer; i++)
             {
                 var cell = new CellCoord(start.X + direction * SpawnSpacingCells * i, start.Y);
-                _sim.SpawnVehicle((byte)player, VehicleTypeIndex, cell);
+                _sim.SpawnVehicle((byte)player, vehicleType, cell);
             }
         }
 

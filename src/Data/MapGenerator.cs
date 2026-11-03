@@ -34,10 +34,14 @@ public static class MapGenerator
         throw new InvalidOperationException($"No connected map found for size {size} from seed {seed} in {MaxAttempts} tries.");
     }
 
-    /// <summary>4-way flood fill from the first start position; true if every start position is reached.</summary>
-    public static bool IsConnected(MapData map, Locomotion loco)
+    /// <summary>
+    /// 4-way flood fill from the first start position; true if every start position is reached.
+    /// Uses the generator's own conservative ground rule (Water, Rock and Cliff block every ground
+    /// locomotion; Hover crosses Water; Air crosses everything) so map generation never depends on
+    /// loaded rules data. Pass a TerrainTable to check against real rules instead.
+    /// </summary>
+    public static bool IsConnected(MapData map, Locomotion loco, TerrainTable? table = null)
     {
-        TerrainTable table = DefaultTerrain.Create();
         int w = map.Width, h = map.Height;
         var seen = new bool[w * h];
         var stack = new Stack<int>();
@@ -53,7 +57,7 @@ public static class MapGenerator
                 int nx = x + (d == 0 ? 1 : d == 1 ? -1 : 0), ny = y + (d == 2 ? 1 : d == 3 ? -1 : 0);
                 if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
                 int j = ny * w + nx;
-                if (seen[j] || table.SpeedPercent(map.Land[j], loco) <= 0) continue;
+                if (seen[j] || !Passable(map.Land[j], loco, table)) continue;
                 seen[j] = true;
                 stack.Push(j);
             }
@@ -61,6 +65,14 @@ public static class MapGenerator
         for (int k = 1; k < map.StartPositions.Count; k++)
             if (!seen[map.IndexOf(map.StartPositions[k])]) return false;
         return true;
+    }
+
+    private static bool Passable(LandType land, Locomotion loco, TerrainTable? table)
+    {
+        if (table != null) return table.SpeedPercent(land, loco) > 0;
+        if (loco == Locomotion.Air) return true;
+        if (land == LandType.Water) return loco == Locomotion.Hover;
+        return land != LandType.Rock && land != LandType.Cliff;
     }
 
     private sealed class Grid

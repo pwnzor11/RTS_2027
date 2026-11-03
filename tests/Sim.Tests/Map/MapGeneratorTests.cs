@@ -60,4 +60,13 @@ public class MapGeneratorTests
         Assert.Throws<ArgumentOutOfRangeException>(() => MapGenerator.Generate(8, 1));
         Assert.Throws<ArgumentOutOfRangeException>(() => MapGenerator.Generate(200, 1));
     }
+
+    [Fact]
+    public void GeneratedMaps_AreConnected_UnderRealRulesTerrain()
+    {
+        string dir = RulesLocator.FindRulesDir(AppContext.BaseDirectory)!;
+        var rules = RulesLoader.Load(dir);
+        foreach (ulong seed in new ulong[] { 1, 2, 3, 4, 5 })
+            Assert.True(MapGenerator.IsConnected(MapGenerator.Generate(64, seed), Locomotion.Tracked, rules.Sim.Terrain));
+    }
 }
