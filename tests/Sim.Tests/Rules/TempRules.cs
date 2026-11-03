@@ -1,9 +1,7 @@
-using Rts.Data;
-
 namespace Rts.Sim.Tests.Rules;
 
 /// <summary>
-/// A copy of the real data/rules directory written under the test output folder. Overrides replace a file's
+/// A copy of the fixture rules directory written under the test output folder. Overrides replace a file's
 /// content (or delete it when the content is null). Deleted on dispose.
 /// </summary>
 internal sealed class TempRules : IDisposable
@@ -33,19 +31,14 @@ internal sealed class TempRules : IDisposable
     /// <summary>The temp copy's directory.</summary>
     public string Dir { get; }
 
-    /// <summary>The real data/rules directory, found by walking up from the test binaries.</summary>
-    public static string RealDir()
-    {
-        string? dir = RulesLocator.FindRulesDir(AppContext.BaseDirectory);
-        Assert.NotNull(dir);
-        return dir!;
-    }
+    /// <summary>The fixture rules directory (see <see cref="TestData.RulesDir"/>).</summary>
+    public static string RealDir() => TestData.RulesDir;
 
-    /// <summary>Text of one real rules file.</summary>
+    /// <summary>Text of one fixture rules file.</summary>
     /// <remarks>Line endings are normalised to LF so tests behave the same on Windows checkouts.</remarks>
     public static string Real(string file) => File.ReadAllText(Path.Combine(RealDir(), file)).Replace("\r\n", "\n");
 
-    /// <summary>The real file with <paramref name="old"/> replaced by <paramref name="new"/>; asserts that <paramref name="old"/> is present.</summary>
+    /// <summary>The fixture file with <paramref name="old"/> replaced by <paramref name="new"/>; asserts that <paramref name="old"/> is present.</summary>
     public static string RealWith(string file, string old, string @new)
     {
         string text = Real(file);

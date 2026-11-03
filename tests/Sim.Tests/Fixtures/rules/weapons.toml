@@ -1,0 +1,36 @@
+# Test fixture copy — tests depend on these exact values; game data lives in data/rules.
+# placeholder fixture, not balance
+# TEST FIXTURE: synthetic values. Keys: damage, range and min_range (leptons), rate_of_fire (ticks between
+# shots, > 0), projectile_speed (leptons/tick, 0 = instant hit), warhead (id in warheads.toml).
+
+[test_cannon]
+damage = 40
+range = 1280
+min_range = 0
+rate_of_fire = 40
+projectile_speed = 64
+warhead = "test_ap"
+
+[test_rifle]
+damage = 8
+range = 768
+min_range = 0
+rate_of_fire = 15
+projectile_speed = 0
+warhead = "test_small_arms"
+
+[test_mg]
+damage = 6
+range = 896
+min_range = 0
+rate_of_fire = 8
+projectile_speed = 0
+warhead = "test_small_arms"
+
+[test_artillery]
+damage = 80
+range = 2560
+min_range = 768
+rate_of_fire = 100
+projectile_speed = 48
+warhead = "test_he"

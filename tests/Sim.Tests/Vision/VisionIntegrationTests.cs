@@ -8,7 +8,7 @@ namespace Rts.Sim.Tests.Vision;
 /// <summary>Vision wired into Simulation (lead integration of M1-07): per-viewer snapshots and building ghosts.</summary>
 public class VisionIntegrationTests
 {
-    private static readonly RuleSet Rules = RulesLoader.Load(RulesLocator.FindRulesDir(AppContext.BaseDirectory)!);
+    private static readonly RuleSet Rules = RulesLoader.Load(TestData.RulesDir);
 
     private static Simulation NewSim() =>
         new(new SimSetup(1, MapData.CreateFlat(32, 32), 2, Rules.Sim, Rules.RulesHash));

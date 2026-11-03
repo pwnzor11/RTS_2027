@@ -8,6 +8,28 @@ public sealed class RulesLoaderTests
 {
     private static RuleSet LoadReal() => RulesLoader.Load(TempRules.RealDir());
 
+    /// <summary>
+    /// The shipped game data (<c>data/rules</c>, not the fixtures) must load with no problems and have unique ids.
+    /// Deliberately checks no counts or values: balance and content work must not break this test.
+    /// </summary>
+    [Fact]
+    public void RealGameData_Validates()
+    {
+        string? dir = RulesLocator.FindRulesDir(AppContext.BaseDirectory);
+        Assert.NotNull(dir);
+
+        RuleSet rules = RulesLoader.Load(dir!);   // throws RulesException listing every problem found
+
+        string[] ids = rules.Sim.Vehicles.Select(v => v.Id)
+            .Concat(rules.Sim.Infantry.Select(i => i.Id))
+            .Concat(rules.Sim.Buildings.Select(b => b.Id))
+            .Concat(rules.Sim.Weapons.Select(w => w.Id))
+            .Concat(rules.Sim.Warheads.Select(w => w.Id))
+            .Concat(rules.Sim.Effects.Select(e => e.Id))
+            .ToArray();
+        Assert.Equal(ids.Length, ids.Distinct(StringComparer.Ordinal).Count());
+    }
+
     [Fact]
     public void LoadsRealDataWithExpectedCounts()
     {

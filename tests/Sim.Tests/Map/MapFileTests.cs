@@ -61,10 +61,7 @@ public class MapFileTests
     [Fact]
     public void CommittedMapsLoad()
     {
-        string dir = AppContext.BaseDirectory;
-        while (dir != null && !File.Exists(Path.Combine(dir, "RTS_2027.slnx"))) dir = Path.GetDirectoryName(dir)!;
-        Assert.NotNull(dir);
-        Assert.Equal(32, MapFile.Load(Path.Combine(dir, "data", "maps", "test_32.map.toml")).Width);
-        Assert.Equal(64, MapFile.Load(Path.Combine(dir, "data", "maps", "test_64.map.toml")).Width);
+        Assert.Equal(32, MapFile.Load(Path.Combine(TestData.MapsDir, "test_32.map.toml")).Width);
+        Assert.Equal(64, MapFile.Load(Path.Combine(TestData.MapsDir, "test_64.map.toml")).Width);
     }
 }
