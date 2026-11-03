@@ -189,3 +189,49 @@ Resolves the resource identity left open in D-021.
 thematic reason, and gives maps fought-over rich spots.
 **Alternatives:** pitchblende only; hot glass crater fields; tar sands; clean soil; salvage.
 **Status:** confirmed
+
+### D-029 · 2026-11-02 · Faction names (working, approved)
+**Decision:** Protagonist: the **Continental Reconstruction Authority** ("the Authority", tag CRA).
+Antagonist: the **Directorate of the Interior** ("the Directorate", tag DOI). Owner approved keeping
+them; can be revisited before the first public build without code impact (names live in data).
+**Status:** confirmed
+
+### D-030 · 2026-11-02 · Campaign structure
+**Decision:** 10–12 missions per side plus a short tutorial; one spine per side with 2–3 two-way
+choice points that rejoin the spine; maps reused across the two campaigns with different scripts;
+mix of roughly half build-and-destroy, a quarter defend/escort, a quarter commando/no-base; no unit
+carry-over. Story delivery: text briefings with portraits and music, in-mission radio messages,
+2–3 still-art cutscenes at act breaks; period flavour (teletype briefings, Directorate propaganda
+radio). All text in one locale file so voice can be added later. Q-07.
+**Status:** confirmed
+
+### D-031 · 2026-11-02 · Map editor path
+**Decision:** Tiled for terrain painting with a JSON importer now; triggers and placement in TOML by
+hand; our own C# editor sharing the sim's types once the sim exists. EA's editor is a feature
+checklist only, not forked. Q-06.
+**Status:** confirmed
+
+### D-032 · 2026-11-02 · Art direction and production
+**Decision:** HD look (sprites authored at 2–4× the classic 24-px cell; exact cell pixel size chosen
+in the art pilot), 16 facings for vehicles, 8 for infantry. The lead produces all artwork; the owner
+approves designs. Blender pre-render pipeline for vehicles, aircraft and buildings where possible;
+hand/AI-assisted pixel work for infantry, icons, portraits. **AI generation is permitted for all
+art** (concepts, portraits, briefing art, textures, and sprite frames where consistency allows),
+disclosed in `docs/CREDITS.md`. Rationale: open-source hobby game for private play, not sold. Q-08.
+**Why:** Owner's choice. Note recorded for the owner: AI-generated images have an unsettled copyright
+status; for a GPL project that mostly means they may be effectively public domain, which does not
+restrict distribution. Some open-source communities object to AI art; irrelevant for private play.
+**Status:** confirmed
+
+### D-033 · 2026-11-02 · Licence allow-list for imported assets
+**Decision:** Imported third-party assets must be CC0, MIT, BSD, GPL-2+/GPL-3, OFL, or CC BY-SA 4.0
+(with attribution). CC BY-SA 3.0, unlicensed packs and EA material are excluded. Every import gets a
+line in `docs/CREDITS.md`.
+**Status:** assumed — confirm (owner did not answer this sub-question; this is the research's option (b))
+
+### D-034 · 2026-11-02 · LAN scope for v1
+**Decision:** Host-star topology (clients talk only to the host), 2–4 humans plus AI slots in one
+lobby, UDP broadcast/multicast discovery plus join-by-IP, no host migration (host leaving ends the
+game; protocol leaves room for a manual claim later), build/rules/map hash check on join. Built after
+skirmish and campaign; the sim and lobby data are shaped for it from the start. Q-23.
+**Status:** confirmed
