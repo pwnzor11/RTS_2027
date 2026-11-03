@@ -347,3 +347,11 @@ or without A); A arms attack-move (a toggle, not held) and the next right-click 
 AttackMove. (3) Splash, as built: impact cell full damage, every other cell within the warhead's Splash
 radius (Chebyshev) half damage, minimum 1.
 **Status:** confirmed (records what was done; D-047 itself stays "assumed — confirm")
+
+### D-049 · 2026-11-03 · Owner confirms D-043..D-047
+**Decision:** The owner accepted all five overnight decisions (D-043 reference sprite, D-044 map/rules
+details, D-045 pathing/vision/buildings, D-046 combat/movement/tooling, D-047 sandbox) as recorded,
+with D-048's corrections. Expected to change later and not reopened by this entry: the guard leash and
+stuck-retry numbers (retune in M2), and the sandbox as the default boot mode (replaced in M2).
+**Why:** reviewed in session 3 as one table; the owner took every recommendation.
+**Status:** confirmed
