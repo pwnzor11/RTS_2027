@@ -21,7 +21,7 @@ public class PlacementTests
         var map = new MapData("t", "rust_belt", w, h, new ushort[n], land, new byte[n], overlay, new byte[n],
             new[] { new CellCoord(0, 0) });
         return new Simulation(new SimSetup(1, map, players,
-            ScriptedGame.RulesWith(new[] { ScriptedGame.Vehicle("t", 20, 10) }, new[] { ScriptedGame.Infantry("i", 9, 10) }), 1));
+            ScriptedGame.RulesWith(new[] { ScriptedGame.Vehicle("t", 20, 10) }, new[] { ScriptedGame.Infantry("i", 9, 10) }), 1) { AllowDebug = true });
     }
 
     private static Command Cmd(int tick, CommandKind kind, EntityId subj, CellCoord cell, int arg, ushort seq = 0, byte player = 0) =>
@@ -166,6 +166,7 @@ public class PlacementTests
     {
         var sim = NewSim(16, 16);
         var id = sim.PlaceBuilding(0, Barracks, new CellCoord(3, 3));
+        sim.PlaceBuilding(0, Hq, new CellCoord(10, 10));   // keeps player 0 undefeated (M2-08 win rule) after the sale
         int v = sim.Map.Version;
         // Wrong owner: ignored.
         sim.Step(new[] { Cmd(0, CommandKind.Sell, id, default, (int)ActorKind.Building, player: 1) });
@@ -177,7 +178,7 @@ public class PlacementTests
         for (int y = 3; y < 5; y++)
             for (int x = 3; x < 5; x++) Assert.True(sim.Map.BuildingAt(new CellCoord(x, y)).IsNone);
         Assert.Equal(PlacementResult.Ok, sim.CanPlace(0, Barracks, new CellCoord(3, 3)));
-        Assert.Empty(sim.Snapshot().Buildings);
+        Assert.Single(sim.Snapshot().Buildings);
         // Slot reuse yields a new generation; the old id stays dead.
         var again = Boundary.LateSpawn.Building(sim, 0, Barracks, new CellCoord(3, 3));
         Assert.Equal(id.Index, again.Index);
