@@ -531,4 +531,4 @@ soot). The owner approves the new fire before it ships. (3) The second-pass Rifl
 is made from it.
 **Why:** effects drawn by the game look consistent on every building, animate independently and cost no
 re-render per building. Lead's call on the approach (reversible).
-**Status:** confirmed (owner verdicts); approach (2) assumed — confirm
+**Status:** confirmed (owner approved the effects contact sheet, session 3)
