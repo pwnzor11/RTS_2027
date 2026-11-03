@@ -5,7 +5,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Rts.AI;
 
-/// <summary>Maps AI ids to factories. Ids: "idle" (never acts) and "skirmisher" (M1 placeholder).</summary>
+/// <summary>Maps AI ids to factories. Ids: "idle" (never acts), "skirmisher" (M1 army placeholder) and "recruit" (tier 1 economy AI).</summary>
 public static class AiRegistry
 {
     /// <summary>Id of <see cref="IdleAi"/>.</summary>
@@ -14,11 +14,15 @@ public static class AiRegistry
     /// <summary>Id of <see cref="SkirmisherAi"/>.</summary>
     public const string SkirmisherId = "skirmisher";
 
+    /// <summary>Id of <see cref="RecruitAi"/>.</summary>
+    public const string RecruitId = "recruit";
+
     private static readonly SortedDictionary<string, Func<DifficultyProfile, IAiPlayer>> Factories =
         new(StringComparer.Ordinal)
         {
             [IdleId] = _ => new IdleAi(),
             [SkirmisherId] = p => new SkirmisherAi(p),
+            [RecruitId] = p => new RecruitAi(p),
         };
 
     /// <summary>Registered ids in ordinal order.</summary>

@@ -19,11 +19,11 @@ public static class AiCommands
 {
     private const int DefaultTier = 2;
     private const string Usage =
-        "usage: ai match --a <aiId>[:<tier>] --b <aiId>[:<tier>] [--seeds 8] [--ticks 6000] [--size 64] [--out file.md] [--record-dir dir] [--flat 1] [--starts alt|slot|swap]\n" +
+        "usage: ai match --a <aiId>[:<tier>] --b <aiId>[:<tier>] [--seeds 8] [--ticks 6000] [--size 64] [--out file.md] [--record-dir dir] [--flat 1] [--starts alt|slot|swap] [--start economy|army]\n" +
         "       ai matrix --ai <aiId> [--tiers 1-5] [--seeds 4] [--ticks 6000] [--size 64] [--out file.md]\n" +
         "  <tier> is 1..5 or recruit|regular|veteran|elite|commissar (default regular). Seeds are 1..N.";
 
-    private static readonly string[] MatchOptions = ["a", "b", "seeds", "ticks", "size", "out", "record-dir", "flat", "starts"];
+    private static readonly string[] MatchOptions = ["a", "b", "seeds", "ticks", "size", "out", "record-dir", "flat", "starts", "start"];
     private static readonly string[] MatrixOptions = ["ai", "tiers", "seeds", "ticks", "size", "out"];
 
     /// <summary>Runs `ai ...` (args exclude the leading "ai").</summary>
@@ -53,10 +53,16 @@ public static class AiCommands
         if (!ParseSide(aArg, tiers!, out AiSide? a, out error) || !ParseSide(bArg, tiers!, out AiSide? b, out error))
             return UsageError(error!);
 
+        bool army = false;
+        if (flags.TryGetValue("start", out string? startArg))
+        {
+            if (startArg == "army") army = true;
+            else if (startArg != "economy") return UsageError("--start must be economy or army");
+        }
         string? recordDir = flags.TryGetValue("record-dir", out string? rd) ? rd : null;
         var clock = Stopwatch.StartNew();
         MatchTally tally;
-        try { tally = PlayPair(world!, a!, b!, seeds, ticks, size, recordDir, verbose: true, flat: flags.ContainsKey("flat"), startMode: flags.TryGetValue("starts", out string? sm) ? sm : "alt"); }
+        try { tally = PlayPair(world!, a!, b!, seeds, ticks, size, recordDir, verbose: true, flat: flags.ContainsKey("flat"), startMode: flags.TryGetValue("starts", out string? sm) ? sm : "alt", start: army ? AiStartMode.Army : AiStartMode.Economy); }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException or ArgumentException or InvalidOperationException)
         {
             Console.Error.WriteLine($"error: {e.Message}");
@@ -112,7 +118,8 @@ public static class AiCommands
                 {
                     var sa = new AiSide(aiId, profiles![list[r] - 1]);
                     var sb = new AiSide(aiId, profiles[list[c] - 1]);
-                    MatchTally t = PlayPair(world!, sa, sb, seeds, ticks, size, null, verbose: false);
+                    MatchTally t = PlayPair(world!, sa, sb, seeds, ticks, size, null, verbose: false,
+                        start: aiId == AiRegistry.SkirmisherId ? AiStartMode.Army : AiStartMode.Economy);
                     totalTicks += t.Ticks;
                     games[r, c] = t.Games; draws[r, c] = t.Draws; wins[r, c] = t.AWins;
                     games[c, r] = t.Games; draws[c, r] = t.Draws; wins[c, r] = c == r ? t.AWins : t.BWins;
@@ -179,7 +186,7 @@ public static class AiCommands
             new OverlayKind[n], new byte[n], m.StartPositions);
     }
 
-    private static MatchTally PlayPair(World w, AiSide a, AiSide b, int seeds, int ticks, int size, string? recordDir, bool verbose, bool flat = false, string startMode = "alt")
+    private static MatchTally PlayPair(World w, AiSide a, AiSide b, int seeds, int ticks, int size, string? recordDir, bool verbose, bool flat = false, string startMode = "alt", AiStartMode start = AiStartMode.Economy)
     {
         var tally = new MatchTally();
         if (recordDir is not null) Directory.CreateDirectory(recordDir);
@@ -197,7 +204,7 @@ public static class AiCommands
                     : File.Create(Path.Combine(recordDir, $"{a.Label}_vs_{b.Label}_seed{s}_g{g + 1}.rtsreplay".Replace(':', '-')));
                 AiGameResult r;
                 using (replay) r = AiMatchRunner.Play(map, w.Rules, w.RulesHash, (ulong)s, a, b, aInSlot0, ticks, replay,
-                    BuildInfo.Version, replay is null ? null : RulesBundle.ReadDirectory(w.RulesDir), swapSlots);
+                    BuildInfo.Version, replay is null ? null : RulesBundle.ReadDirectory(w.RulesDir), swapSlots, start);
                 tally.Games++;
                 tally.Ticks += r.EndTick;
                 tally.EndTickSum += r.EndTick;
@@ -219,11 +226,16 @@ public static class AiCommands
                 {
                     string result = r.Winner == 0 ? "A wins" : r.Winner == 1 ? "B wins" : "draw";
                     Console.WriteLine($"seed {s} game {g + 1} (A in slot {(aInSlot0 ? 0 : 1)}, A at start {(aInSlot0 != swapSlots ? 0 : 1)}): {result} at tick {r.EndTick} (health A {r.ValueA}, B {r.ValueB})");
+                    if (start == AiStartMode.Economy)
+                        Console.WriteLine($"    A: {Stats(r.StatsA)} | B: {Stats(r.StatsB)}");
                 }
             }
         }
         return tally;
     }
+
+    private static string Stats(AiSideStats s) =>
+        $"structures {s.Structures}, units {s.Units}, funds min {s.CashMin} max {s.CashMax} end {s.CashEnd}";
 
     // ---- arguments ----------------------------------------------------------------------------
 

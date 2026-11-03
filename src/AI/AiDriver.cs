@@ -3,6 +3,7 @@
 using Rts.Data;
 using Rts.Sim;
 using Rts.Sim.Core;
+using Rts.Sim.Rules;
 using Rts.Sim.View;
 
 namespace Rts.AI;
@@ -33,6 +34,18 @@ public sealed class AiDriver
             if (kind == CommandKind.Attack) arg |= ((int)target.Kind & 0xFF) << 8;
             Out.Add(new Command(Tick + Delay, Player, unchecked(Sequence++), kind, subject, target.Id, cell, arg, arg2));
         }
+
+        public void Build(ProductionCategory category, int typeIndex) =>
+            Out.Add(new Command(Tick + Delay, Player, unchecked(Sequence++), CommandKind.Build, EntityId.None, EntityId.None, default,
+                (int)category, typeIndex));
+
+        public void Place(int buildingType, CellCoord topLeft) =>
+            Out.Add(new Command(Tick + Delay, Player, unchecked(Sequence++), CommandKind.Place, EntityId.None, EntityId.None, topLeft,
+                buildingType));
+
+        public void Rally(EntityId factory, CellCoord cell) =>
+            Out.Add(new Command(Tick + Delay, Player, unchecked(Sequence++), CommandKind.Rally, factory, EntityId.None, cell,
+                (int)ActorKind.Building));
     }
 
     private readonly ulong _seed;

@@ -42,6 +42,13 @@ public readonly struct PlayerView
     /// <summary>The viewing player's cash.</summary>
     public int Cash => _sim.Players.Cash[Player];
 
+    /// <summary>HUD snapshot of the viewing player (cash, power, queues, ready structure, buildable list). Allocates; call once per decision.</summary>
+    public PlayerHud Hud => _sim.HudFor(Player);
+
+    /// <summary>True if the viewing player could place a ready structure of <paramref name="buildingType"/> with its
+    /// top-left at <paramref name="topLeft"/> right now (terrain, occupancy, region sealing and the build radius).</summary>
+    public bool CanPlace(int buildingType, CellCoord topLeft) => _sim.CanPlaceInRadius(Player, buildingType, topLeft);
+
     /// <summary>The rules tables (type data is public knowledge).</summary>
     public SimRules Rules => _sim.RulesOf(Player);
 
