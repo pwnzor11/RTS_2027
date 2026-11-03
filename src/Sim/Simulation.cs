@@ -14,7 +14,7 @@ namespace Rts.Sim;
 /// Public face of the simulation (design/01_architecture.md §3–5). Deterministic: integer math only,
 /// slot-index iteration, RNG only via the owned SimRandom.
 /// </summary>
-public sealed class Simulation
+public sealed partial class Simulation
 {
     private readonly UnitStore _units = new();
     private readonly InfantryStore _infantry = new();
@@ -41,7 +41,11 @@ public sealed class Simulation
         _map = new MapState(setup.Map);
         _paths = new PathService(_map, setup.Rules.Terrain);
         _vision = new VisionState(setup.Map.Width, setup.Map.Height, setup.PlayerCount);
-        _parts = new ISimStatePart[] { _map, _units, _infantry, _buildings, _paths, _vision };
+        // Parts after vision come from the partial files in canonical order: combat (M1-09) first.
+        var extra = CombatParts();
+        _parts = new ISimStatePart[6 + extra.Length];
+        _parts[0] = _map; _parts[1] = _units; _parts[2] = _infantry; _parts[3] = _buildings; _parts[4] = _paths; _parts[5] = _vision;
+        for (int e = 0; e < extra.Length; e++) _parts[6 + e] = extra[e];
         MapHash = MapHasher.Compute(setup.Map);
     }
 
@@ -83,7 +87,9 @@ public sealed class Simulation
         var vehicles = Setup.Rules.Vehicles;
         if (vehicleTypeIndex < 0 || vehicleTypeIndex >= vehicles.Count) throw new ArgumentOutOfRangeException(nameof(vehicleTypeIndex));
         if (!InMap(cell)) throw new ArgumentOutOfRangeException(nameof(cell));
-        return _units.Add(player, vehicleTypeIndex, LeptonCoord.CenterOf(cell), vehicles[vehicleTypeIndex].MaxHealth);
+        EntityId id = _units.Add(player, vehicleTypeIndex, LeptonCoord.CenterOf(cell), vehicles[vehicleTypeIndex].MaxHealth);
+        OnActorSpawned(ActorKind.Vehicle, id.Index);
+        return id;
     }
 
     /// <summary>Setup/scripting entry: place an infantry soldier at a sub-slot (0 = centre, 1..4 = corners) of a cell.</summary>
@@ -93,7 +99,9 @@ public sealed class Simulation
         if (infantry == null || infantryTypeIndex < 0 || infantryTypeIndex >= infantry.Count) throw new ArgumentOutOfRangeException(nameof(infantryTypeIndex));
         if (!InMap(cell)) throw new ArgumentOutOfRangeException(nameof(cell));
         if (subSlot < 0 || subSlot >= InfantryStore.SubSlotCount) throw new ArgumentOutOfRangeException(nameof(subSlot));
-        return _infantry.Add(player, infantryTypeIndex, cell, subSlot, infantry[infantryTypeIndex].MaxHealth);
+        EntityId id = _infantry.Add(player, infantryTypeIndex, cell, subSlot, infantry[infantryTypeIndex].MaxHealth);
+        OnActorSpawned(ActorKind.Infantry, id.Index);
+        return id;
     }
 
     /// <summary>Advance exactly one tick, applying commands whose ExecTick == Tick (others are ignored).</summary>
@@ -148,11 +156,14 @@ public sealed class Simulation
         switch (c.Kind)
         {
             case CommandKind.Move:
-                if (OwnsSubject(c, out var store) && InMap(c.Cell))
-                    Queue(store!, c.Subject.Index, MissionKind.Move, c.Cell, default);
-                break;
             case CommandKind.Stop:
-                if (OwnsSubject(c, out store)) Queue(store!, c.Subject.Index, MissionKind.Stop, default, default);
+            case CommandKind.Scatter:
+                ApplyMovementCommand(c);   // Simulation.Movement.cs (M1-08)
+                break;
+            case CommandKind.Attack:
+            case CommandKind.AttackMove:
+            case CommandKind.Guard:
+                ApplyCombatCommand(c);     // Simulation.Combat.cs (M1-09)
                 break;
             case CommandKind.Place:
                 if (c.Player < Setup.PlayerCount && c.Arg >= 0 && c.Arg < BuildingTypeCount)
@@ -414,13 +425,6 @@ public sealed class Simulation
         store.NextTarget[i] = default;
     }
 
-    // Movement is performed by the Move mission handler (D-042); this system is reserved for M1-05+ (blocking, paths).
-    private void RunMovement()
-    {
-        _paths.Process(); // solve queued path requests within this tick's budget (M1-08 consumes results)
-    }
-
-    private void RunCombat() { /* M1 */ }
     private void RunEconomy() { /* M1 */ }
     private void RunProduction() { /* M1 */ }
     private void RunAiBookkeeping() { /* M1 */ }
@@ -430,10 +434,16 @@ public sealed class Simulation
     {
         for (int i = 1; i < _units.Capacity; i++)
             if (_units.Slots.IsIndexAlive(i) && _units.Health[i] <= 0)
+            {
+                OnActorRemoving(ActorKind.Vehicle, i);
                 _units.Remove(_units.Slots.IdOf(i));
+            }
         for (int i = 1; i < _infantry.Capacity; i++)
             if (_infantry.Slots.IsIndexAlive(i) && _infantry.Health[i] <= 0)
+            {
+                OnActorRemoving(ActorKind.Infantry, i);
                 _infantry.Remove(_infantry.Slots.IdOf(i));
+            }
         for (int i = 1; i < _buildings.Capacity; i++)
             if (_buildings.Slots.IsIndexAlive(i) && _buildings.Health[i] <= 0)
                 RemoveBuilding(_buildings.Slots.IdOf(i));

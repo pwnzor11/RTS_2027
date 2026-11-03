@@ -21,8 +21,11 @@ internal static class MissionHandlers
         var t = new MissionHandler[Enum.GetValues<MissionKind>().Length];
         MissionHandler idle = Idle;
         for (int k = 0; k < t.Length; k++) t[k] = idle;
-        t[(int)MissionKind.Move] = HandleMove;
-        t[(int)MissionKind.Stop] = HandleStop;
+        t[(int)MissionKind.Move] = MoveMission.HandleMove;      // MoveMission.cs (M1-08)
+        t[(int)MissionKind.Stop] = MoveMission.HandleStop;      // MoveMission.cs (M1-08)
+        t[(int)MissionKind.Guard] = CombatMissions.HandleGuard;   // CombatMissions.cs (M1-09)
+        t[(int)MissionKind.Attack] = CombatMissions.HandleAttack; // CombatMissions.cs (M1-09)
+        t[(int)MissionKind.AttackMove] = CombatMissions.HandleAttackMove; // CombatMissions.cs (M1-09)
         return t;
     }
 
@@ -36,67 +39,4 @@ internal static class MissionHandlers
     // Guard/Sleep/None/not-yet-implemented kinds: idle (target acquisition arrives with M1-09).
     private static int Idle(Simulation sim, MobileStore store, ActorKind kind, int i) => GuardSleepTicks;
 
-    private static int HandleStop(Simulation sim, MobileStore store, ActorKind kind, int i)
-    {
-        store.Destination[i] = store.Position[i];
-        store.NextMission[i] = MissionKind.Guard;
-        store.NextCell[i] = default;
-        store.NextTarget[i] = default;
-        return 1;
-    }
-
-    private static int HandleMove(Simulation sim, MobileStore store, ActorKind kind, int i)
-    {
-        LeptonCoord pos = store.Position[i], dest = store.Destination[i];
-        int dx = dest.X - pos.X, dy = dest.Y - pos.Y;
-        if (dx == 0 && dy == 0) return Arrive(store, i);
-
-        byte desired = Facing.FromDelta(dx, dy);
-        int speed;
-        if (kind == ActorKind.Infantry)
-        {
-            speed = sim.Setup.Rules.Infantry[store.TypeIndex[i]].Speed;
-            store.Facing[i] = desired;                       // infantry turn instantly
-            store.Status[i] = MissionStatus.Driving;
-        }
-        else
-        {
-            var type = sim.Setup.Rules.Vehicles[store.TypeIndex[i]];
-            speed = type.Speed;
-            byte cur = store.Facing[i];
-            int diff = Math.Abs(Facing.Difference(cur, desired));
-            // D-042: a large error starts a turn in place that runs until aligned (the aligning tick does not
-            // move); small errors while driving are corrected in stride.
-            if (store.Status[i] == MissionStatus.Turning || diff > TurnThreshold)
-            {
-                byte next = Facing.TurnToward(cur, desired, type.TurnRate);
-                store.Facing[i] = next;
-                store.Status[i] = next == desired ? MissionStatus.Driving : MissionStatus.Turning;
-                return 1;
-            }
-            store.Status[i] = MissionStatus.Driving;
-            if (diff != 0) store.Facing[i] = Facing.TurnToward(cur, desired, type.TurnRate);
-        }
-
-        if (speed <= 0) return 1;
-        int ax = Math.Abs(dx), ay = Math.Abs(dy);
-        if (Math.Max(ax, ay) <= speed)
-        {
-            store.Position[i] = dest;
-            return Arrive(store, i);
-        }
-        int sx, sy;
-        if (ax >= ay) { sx = speed; sy = (int)((long)ay * speed / ax); }
-        else { sy = speed; sx = (int)((long)ax * speed / ay); }
-        store.Position[i] = new LeptonCoord(pos.X + (dx < 0 ? -sx : sx), pos.Y + (dy < 0 ? -sy : sy));
-        return 1;
-    }
-
-    private static int Arrive(MobileStore store, int i)
-    {
-        store.NextMission[i] = MissionKind.Guard;
-        store.NextCell[i] = default;
-        store.NextTarget[i] = default;
-        return 1;
-    }
 }

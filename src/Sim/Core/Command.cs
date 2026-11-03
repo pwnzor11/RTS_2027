@@ -14,6 +14,8 @@ public enum CommandKind : byte
 /// (type index for Build/Place, stance for SetStance, ...). Step sorts by (Player, Sequence).
 /// For Move and Stop, Arg = (int)<see cref="ActorKind"/> of the Subject (0 = Vehicle, 1 = Infantry), because an
 /// EntityId alone does not say which store it indexes. Move queues a Move mission to Cell; Stop queues Stop.
+/// Attack / AttackMove / Guard (M1-09): Arg low byte = subject ActorKind, Arg bits 8..15 = target ActorKind (Attack),
+/// Cell = destination (AttackMove) or guard point (Guard).
 /// </summary>
 public readonly record struct Command(
     int ExecTick, byte Player, ushort Sequence, CommandKind Kind,
