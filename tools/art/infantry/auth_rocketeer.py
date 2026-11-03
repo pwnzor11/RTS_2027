@@ -35,11 +35,12 @@ MATERIALS = {
     "dark": ("#15170F", 0.85, 0.0, None), "steel": ("#2A2E33", 0.4, 0.6, None), "rust": ("#6A4326", 0.95, 0.0, None),
     "wood": ("#C98E4E", 0.7, 0.0, None), "skin": ("#E8C9A0", 0.6, 0.0, None),
     "tube": ("#6F7F3C", 0.7, 0.0, None), "warhead": ("#9A4A2A", 0.6, 0.1, None), "band": ("#D8D2A0", 0.7, 0.0, None),
-    "puff": ("#EDE6D2", 0.9, 0.0, "#D8D0B8"),
-    "lens": ("#FFF0A8", 0.3, 0.0, "#FFE9A0"), "flash": ("#FFE79A", 0.3, 0.0, "#FFE08A"),
+    "puff": ("#8A7A66", 0.95, 0.0, "#6E6050"),          # D-072: grey-brown backblast dust, not white
+    "lens": ("#FFF0A8", 0.3, 0.0, "#FFE9A0"), "flash": ("#FF8A18", 0.3, 0.0, "#FF8A18"),   # warm yellow-orange flame
+    "hot": ("#FFD36A", 0.3, 0.0, "#FFD36A"),
     "house": ("#E000E0", 0.75, 0.0, None),
 }
-EMIT_STRENGTH = {"lens": 3.5, "flash": 8.0, "puff": 1.5}
+EMIT_STRENGTH = {"lens": 3.5, "flash": 6.5, "hot": 7.0, "puff": 0.6}
 
 SHOULDER = (0.245, 0.0, 0.37)   # in upper-body coords (relative to the pelvis), x mirrored
 L_UPPER, L_FORE = 0.25, 0.23
@@ -150,12 +151,12 @@ def build(S, p):
     S.box((0.03, 0.40, 0.025), (0, 0.09, 0.19), "steel", GM)                         # frame rail
     S.box((0.05, 0.05, 0.12), (0, -0.04, -0.12), "dark", GM)                         # trigger grip
     S.box((0.05, 0.05, 0.10), (0, 0.22, -0.11), "dark", GM)                          # front grip
-    if p["flash"]:
-        S.cyl(0.0, 0.40, (0, 1.02, 0), "flash", "Y", GM, verts=8, r2=0.14)           # launch flame ahead of the nose
-        S.sphere((0.12, 0.12, 0.12), (0, 0.86, 0), "flash", GM, seg=8)
-        S.sphere((0.20, 0.30, 0.20), (0, -0.66, 0), "puff", GM, seg=8)               # backblast puff behind the tube
-        S.sphere((0.14, 0.18, 0.14), (0, -0.92, 0.02), "puff", GM, seg=8)
-        S.cyl(0.0, 0.30, (0, -0.58, 0), "flash", "Y", GM, verts=8, r2=0.10)
+    if p["flash"]:      # D-072: smaller, warm flame; a 1-2 px hot core; a short grey-brown backblast puff
+        S.cyl(0.0, 0.42, (0, 0.98, 0), "flash", "Y", GM, verts=8, r2=0.17)           # launch flame ahead of the nose
+        S.sphere((0.10, 0.10, 0.10), (0, 0.86, 0), "flash", GM, seg=8)
+        S.sphere((0.05, 0.05, 0.05), (0, 0.84, 0), "hot", GM, seg=8)              # hot core (small)
+        S.sphere((0.13, 0.20, 0.13), (0, -0.64, 0), "puff", GM, seg=8)               # backblast puff behind the tube
+        S.sphere((0.09, 0.11, 0.09), (0, -0.82, 0.02), "puff", GM, seg=8)
 
     # ---------------- arms: shoulder -> elbow -> wrist; house band on the upper arm
     for side, hand_spec in ((-1, p["hands"][0]), (1, p["hands"][1])):
