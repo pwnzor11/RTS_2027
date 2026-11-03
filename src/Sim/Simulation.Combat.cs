@@ -278,7 +278,8 @@ public sealed partial class Simulation
 
     /// <summary>
     /// Apply a warhead at an impact point. Splash 0: an instant weapon damages only <paramref name="primary"/>; a
-    /// projectile damages every eligible actor in the impact cell. Splash n: every eligible actor within n cells
+    /// projectile damages ONE eligible actor of the impact cell: <paramref name="primary"/> (the shell's target) if it is still
+    /// there, else the first eligible by kind and slot order (M2-19). Splash n: every eligible actor within n cells
     /// (Chebyshev; buildings by nearest footprint cell) takes full damage at distance 0 and half (min 1) otherwise.
     /// Eligible = not owned by <paramref name="owner"/> or its allies, unless the warhead HitsAllies (Neutral actors are always eligible).
     /// </summary>
@@ -293,6 +294,9 @@ public sealed partial class Simulation
         }
         int radius = wh.Splash < 0 ? 0 : wh.Splash;
         CellCoord ic = impact.ToCell();
+        bool single = wh.Splash <= 0;           // M2-19: a splash-0 shell hurts one actor of the impact cell
+        ActorRef first = default;
+        bool havePrimary = false;
         for (int k = 0; k < LiveKinds; k++)
         {
             var kind = (ActorKind)k;
@@ -312,9 +316,16 @@ public sealed partial class Simulation
                     d = Math.Max(dx, dy);
                 }
                 else d = LeptonMath.ChebyshevCells(ic, PositionAt(kind, i).ToCell());
-                if (d <= radius) Hurt(kind, i, damage, wh, d > 0, owner);
+                if (d > radius) continue;
+                if (!single) { Hurt(kind, i, damage, wh, d > 0, owner); continue; }
+                var here = new ActorRef(kind, IdAt(kind, i));
+                if (here == primary) havePrimary = true;
+                if (first.Id.IsNone) first = here;
             }
         }
+        if (!single) return;
+        ActorRef victim = havePrimary ? primary : first;
+        if (!victim.Id.IsNone) Hurt(victim.Kind, victim.Id.Index, damage, wh, false, owner);
     }
 
     // ---- commands -----------------------------------------------------------------------------
@@ -416,8 +427,9 @@ public sealed partial class Simulation
                 EntityId id = p.Slots.IdOf(i);
                 byte owner = p.Owner[i];
                 int damage = p.Damage[i], warhead = p.Warhead[i];
+                ActorRef target = p.Target[i];
                 p.Free(id);   // free first: detonation never sees its own slot
-                Detonate(owner, damage, warhead, dest, default, false);
+                Detonate(owner, damage, warhead, dest, target, false);
                 continue;
             }
             p.Position[i] = new LeptonCoord(pos.X + (int)RoundDiv(dx * speed, remaining), pos.Y + (int)RoundDiv(dy * speed, remaining));

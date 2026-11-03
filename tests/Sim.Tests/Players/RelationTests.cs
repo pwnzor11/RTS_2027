@@ -85,8 +85,12 @@ public class RelationTests
         var own = sim.SpawnInfantry(0, Inf("test_rifleman"), new CellCoord(10, 6), 2);
         var ally = sim.SpawnInfantry(1, Inf("test_rifleman"), new CellCoord(10, 6), 3);
         var neutral = sim.SpawnInfantry(3, Inf("test_rifleman"), new CellCoord(10, 6), 4);
-        Run(sim, 40, Attack(sim, 0, ActorKind.Vehicle, tank, ActorKind.Infantry, enemy));
-        Assert.Equal(40, sim.Infantry.Health[enemy.Index]);
+        // M2-19: a splash-0 shell hurts ONE eligible actor: the target while it is there, else the first eligible one,
+        // which skips own and allied actors but takes a neutral one.
+        sim.Step(new[] { Attack(sim, 0, ActorKind.Vehicle, tank, ActorKind.Infantry, enemy) });
+        for (int t = 0; t < 40 && sim.Projectiles.Slots.Count == 0; t++) sim.Step(None);
+        sim.Infantry.Health[enemy.Index] = 0;               // the target dies before the shell lands
+        for (int t = 0; t < 40 && sim.Projectiles.Slots.Count > 0; t++) sim.Step(None);
         Assert.Equal(50, sim.Infantry.Health[own.Index]);
         Assert.Equal(50, sim.Infantry.Health[ally.Index]);
         Assert.Equal(40, sim.Infantry.Health[neutral.Index]);
