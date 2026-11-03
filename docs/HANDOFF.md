@@ -1,8 +1,8 @@
 # Handoff: Session 2 (in progress) — checkpoint after wave 1
 Last commit: b597d70 (2026-11-03) — checkpoint after M1 wave B
-Where things stand: overnight M1 run (D-040) in progress. Waves A and B (M1-01..M1-07) are on main,
-CI green. Wave C (M1-08 movement, M1-09 combat, M1-10 desync tooling) is running. Restore point:
-branch `restore/pre-m1` (3279113).
+Where things stand: overnight M1 run (D-040) in progress. Waves A–C (M1-01..M1-10) are on main, CI
+green; 394 tests. Wave D (M1-11 battle sandbox and overlays) is running. Restore point: branch
+`restore/pre-m1` (3279113).
 
 ## Start here (shown to the user as the plan; nothing starts until they say go)
 1. Ask the user: has he read `docs/design/03_setting_and_factions.md`, and does he want to change any

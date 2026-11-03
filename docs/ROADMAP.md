@@ -47,11 +47,11 @@ and AI are M2. Planned in session 2; expect two sessions. Lead writes each wave'
   ghosts, snapshot respects the viewing player — Haiku
 
 **Wave C — action (parallel, needs B)**
-- [ ] M1-08 Movement and locomotion: follow paths, turn rates, blockage tiers (wait / sidestep /
+- [x] M1-08 Movement and locomotion: follow paths, turn rates, blockage tiers (wait / sidestep /
   shove idle allies), infantry sub-cells, crushing — Sonnet
-- [ ] M1-09 Combat: weapon → projectile → warhead × armour, range/ROF in leptons/ticks, turret facing,
+- [x] M1-09 Combat: weapon → projectile → warhead × armour, range/ROF in leptons/ticks, turret facing,
   3×3 splash with falloff, Attack / AttackMove / Guard / Stop missions, death and cleanup — Sonnet
-- [ ] M1-10 Desync tooling: per-subsystem sub-hashes, `Tools replay verify`, `Tools match --ticks N`
+- [x] M1-10 Desync tooling: per-subsystem sub-hashes, `Tools replay verify`, `Tools match --ticks N`
   headless soak (two scripted armies), hash coverage test that fails if a new sim array is unhashed — Haiku
 
 **Wave D — together**
@@ -62,6 +62,7 @@ and AI are M2. Planned in session 2; expect two sessions. Lead writes each wave'
   detail; becomes the reference sprite for fan-out — user can try: look at the updated sheet
 
 ## M2 · Playable skirmish slice
+- [ ] M2-01 Corner advantage on generated maps: headless match on test_64 favours the (4,4) start whichever player has it (mirror duels are symmetric) — find the geometric cause (path tie-breaks, map features) and fix — user can try: `Tools match` both seeds end near-even
 Rendering with placeholder sprites, UI (sidebar, selection, minimap), economy loop (harvester →
 refinery → credits → build), one faction, one map, dumb AI. User can try: a 10-minute game.
 
