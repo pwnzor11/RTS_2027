@@ -8,20 +8,24 @@ namespace Rts.Sim;
 public sealed partial class Simulation
 {
     /// <summary>
-    /// HUD snapshot for a player. Cash, stored credits, power and defeat come from the players part; storage cap,
-    /// queues and the buildable list are stubs until the production package fills them.
+    /// HUD snapshot for a player: cash, stored credits, power and defeat from the players part; one queue view per
+    /// category (all five, empty when idle) with the front item's progress and stalled flag and the ready-to-place type;
+    /// and every (category, type) the player could Build right now (see <see cref="CanBuild"/>).
     /// </summary>
     public PlayerHud HudFor(byte player)
     {
         if (player >= _players.Count) throw new ArgumentOutOfRangeException(nameof(player));
-        return new PlayerHud(_players.Cash[player], _players.Stored[player], 0, _players.PowerOut[player],
-            _players.PowerUse[player], Array.Empty<QueueView>(),
-            Array.Empty<(ProductionCategory Category, int TypeIndex)>(), _players.Defeated[player]);
+        int storageCap = 0;
+        return new PlayerHud(_players.Cash[player], _players.Stored[player], storageCap, _players.PowerOut[player],
+            _players.PowerUse[player], BuildQueueViews(player), BuildBuildableList(player), _players.Defeated[player]);
     }
 
-    /// <summary>True once the match is decided. Stub (always false); the win-condition package fills it.</summary>
-    public bool GameOver => false;
+    /// <summary>
+    /// True once the match is decided (D-062): at least one player has been defeated and at most one team still has an
+    /// undefeated non-neutral player.
+    /// </summary>
+    public bool GameOver => ComputeGameOver(out _);
 
-    /// <summary>The winning team once <see cref="GameOver"/>, else -1. Stub; the win-condition package fills it.</summary>
-    public int WinningTeam => -1;
+    /// <summary>The winning team once <see cref="GameOver"/>, else -1 (also -1 if every player was defeated).</summary>
+    public int WinningTeam => ComputeGameOver(out int team) ? team : -1;
 }

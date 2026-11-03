@@ -226,7 +226,7 @@ public sealed partial class Simulation
 
     private void Apply(Command c)
     {
-        if (c.Player >= Setup.PlayerCount) return;
+        if (c.Player >= Setup.PlayerCount || _players.Defeated[c.Player]) return;   // defeated players' commands are ignored (D-062)
         switch (c.Kind)
         {
             case CommandKind.Move:
@@ -241,18 +241,12 @@ public sealed partial class Simulation
                 if (c.Kind != CommandKind.Attack && !InMap(c.Cell)) break;
                 ApplyCombatCommand(c);     // Simulation.Combat.cs (M1-09)
                 break;
-            case CommandKind.Place:
-                if (!_players.IsNeutral(c.Player) && c.Arg >= 0 && c.Arg < BuildingTypeCount)
-                    PlaceBuilding(c.Player, c.Arg, c.Cell);
-                break;
-            case CommandKind.Sell:
-                if (c.Arg == (int)ActorKind.Building && _buildings.Slots.IsAlive(c.Subject)
-                    && _buildings.Player[c.Subject.Index] == c.Player)
-                {
-                    // M2: refund
-                    RemoveBuilding(c.Subject);
-                }
-                break;
+            case CommandKind.Build: ApplyBuild(c); break;       // Simulation.Production.cs (M2-08)
+            case CommandKind.Cancel: ApplyCancel(c); break;
+            case CommandKind.Place: ApplyPlace(c); break;
+            case CommandKind.Rally: ApplyRally(c); break;
+            case CommandKind.Repair: ApplyRepair(c); break;
+            case CommandKind.Sell: ApplySell(c); break;
             case CommandKind.Debug:
                 if (Setup.AllowDebug) ApplyDebug(c);
                 break;
@@ -538,7 +532,7 @@ public sealed partial class Simulation
     }
 
     private void RunEconomy() { /* M1 */ }
-    private void RunProduction() { /* M1 */ }
+    private void RunProduction() => RunProductionTick();   // Simulation.Production.cs (M2-08)
     private void RunAiBookkeeping() { /* M1 */ }
     private void RunTriggers() { /* M1 */ }
 
@@ -557,6 +551,7 @@ public sealed partial class Simulation
                 StoreOf(kind)!.Remove(slots.IdOf(i));
             }
         }
+        UpdateDefeat();   // win rule (M2-08)
         UpdateVision();
     }
 

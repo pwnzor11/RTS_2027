@@ -314,6 +314,7 @@ public sealed partial class Simulation
             if (e.Generation != gen) { e = default; e.Generation = gen; }
             int weapon = WeaponOf(ActorKind.Building, i);
             if (weapon < 0 || _buildings.Health[i] <= 0) continue;
+            if (BuildingTypeAt(i).NeedsPower && PowerBand(_buildings.Player[i]) >= 1) continue;   // M2-08: unpowered defences hold fire
             byte owner = _buildings.Player[i];
             WeaponType w = RulesOf(owner).Weapons[weapon];
             LeptonCoord from = BuildingCentre(i);
