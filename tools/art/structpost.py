@@ -10,16 +10,32 @@ import pixelize as P
 SS = 4
 
 
-def calibrate(wd, nframes):
+def is_h2(m):
+    """house2 mask pixels are pure red (G much lower than R); house mask pixels are white."""
+    return (m[..., 0] > 127) & (m[..., 1] < 0.5 * m[..., 0])
+
+
+def calibrate(wd, nframes, h2_fixed=False):
+    """(lo, hi) luminance range of the house paint. With h2_fixed (module sets HOUSE2_MID = True) the range comes from
+    plain `house` pixels only and a third value, the median luminance of the `house2` pixels, is returned too."""
     p = os.path.join(wd, "house_cal.txt")
-    vals = []
+    vals, v2 = [], []
     for f in range(nframes):
         c = np.asarray(Image.open(os.path.join(wd, f"col_{f:02d}.png")).convert("RGBA"), dtype=float)
         m = np.asarray(Image.open(os.path.join(wd, f"mask_{f:02d}.png")).convert("RGBA"), dtype=float)
         sel = (m[..., 0] > 127) & (c[..., 3] > 250)
+        if h2_fixed:
+            h2 = sel & is_h2(m)
+            sel = sel & ~h2
+            v2.append((c[..., 0][h2] + c[..., 2][h2]) / 2)
         vals.append((c[..., 0][sel] + c[..., 2][sel]) / 2)
     v = np.concatenate(vals)
     lo, hi = np.percentile(v, 2), np.percentile(v, 98)
+    if h2_fixed:
+        v2 = np.concatenate(v2)
+        med = float(np.median(v2)) if len(v2) else (lo + hi) / 2
+        open(p, "w").write(f"{lo} {hi} {med}")
+        return lo, hi, med
     open(p, "w").write(f"{lo} {hi}")
     return lo, hi
 
@@ -30,7 +46,12 @@ def load_layers(wd, f, cal):
     s = np.asarray(Image.open(os.path.join(wd, f"shadow_{f:02d}.png")).convert("RGBA"), dtype=float)
     a = c[..., 3] / 255
     house = (m[..., 0] > 127) & (a > 0.5)
-    idx = C.house_index((c[..., 0] + c[..., 2]) / 2, *cal)
+    v = (c[..., 0] + c[..., 2]) / 2
+    idx = C.house_index(v, cal[0], cal[1])
+    if len(cal) > 2:      # house2 -> pinned to the mid ramp shades (3 or 2..4 with the surface's own shading)
+        h2 = house & is_h2(m)
+        step = (cal[1] - cal[0]) / 7
+        idx = np.where(h2, np.clip(np.rint(3.4 + (v - cal[2]) / (2 * step)), 2, 4).astype(int), idx)
     lum = s[..., :3].mean(axis=2) / 255
     lit = np.percentile(lum, 99.5)
     sh = np.clip(1 - lum / max(lit, 1e-6), 0, 1)
@@ -96,7 +117,7 @@ def write_toml(path, mod, sheet_name):
 def run(sid, mod, wd):
     fw, fh = mod.CANVAS
     n = sum(s[1] for s in mod.STATES)
-    cal = calibrate(wd, n)
+    cal = calibrate(wd, n, getattr(mod, "HOUSE2_MID", False))
     frames = [frame_b(wd, f, cal, fw, fh) for f in range(n)]
     for f, im in enumerate(frames):
         a = np.asarray(im)

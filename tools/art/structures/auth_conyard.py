@@ -32,6 +32,7 @@ CANVAS = (192, 248)
 ORIGIN = (0, 56)
 DOCK = (1, 3)
 CAP_MATERIAL = "concrete2"
+HOUSE2_MID = True        # D-072: roof house2 panels pinned to mid ramp shades (structpost)
 STATES = [("idle", 4, 5), ("damaged", 4, 5), ("build", 8, 5)]
 
 MATERIALS = dict(R.MATERIALS)
