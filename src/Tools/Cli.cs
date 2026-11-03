@@ -43,6 +43,12 @@ public static class Cli
                 return Validate(args);
             case "run":
                 return Run(args, sim: true);
+            case "map":
+                return MapCommands.Run(args[1..]);   // owned by M1-01
+            case "match":
+                return MatchCommands.Run(args[1..]); // owned by M1-10
+            case "replay":
+                return ReplayCommands.Run(args[1..]); // owned by M1-10
             default:
                 Console.Error.WriteLine($"error: unknown command '{args[0]}'");
                 Console.Error.WriteLine(Usage);
