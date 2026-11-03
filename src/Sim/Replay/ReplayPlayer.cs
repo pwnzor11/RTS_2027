@@ -20,7 +20,8 @@ public static class ReplayPlayer
         var sim = new Simulation(setup);
         foreach (var s in data.Spawns)
         {
-            if (s.Kind == ActorKind.Infantry) sim.SpawnInfantry(s.Player, s.Type, s.Cell, s.SubSlot);
+            if (s.Kind == ActorKind.Building) sim.PlaceBuilding(s.Player, s.Type, s.Cell);
+            else if (s.Kind == ActorKind.Infantry) sim.SpawnInfantry(s.Player, s.Type, s.Cell, s.SubSlot);
             else sim.SpawnVehicle(s.Player, s.Type, s.Cell);
         }
 
