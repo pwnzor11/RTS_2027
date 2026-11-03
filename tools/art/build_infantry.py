@@ -2,7 +2,7 @@
 
 Usage:  python3 tools/art/build_infantry.py <id> [--samples 24] [--frames 0 5 ...] [--render-only | --post-only]
 <id> names a module in tools/art/infantry/<id>.py (contract in the docstring of auth_rifleman.py).
-Renders are wrapped in `flock /home/claude/wt/blender.lock` automatically (one Blender render at a time, wave rule).
+Wrap renders in `flock /home/claude/wt/blender.lock` yourself (one Blender render at a time, wave rule); the script does not lock.
 
 Pipeline = tank arm B (D-039/D-043): ortho camera at 40 deg (D-064), sun upper-left, 4x render, box downscale, fixed
 32-colour palette incl. the 8 exact magenta house shades, 1 px outline, dithered hard shadow, alpha always 0 or 255.
@@ -261,9 +261,8 @@ def main():
     a = ap.parse_args()
     mod = load_module(a.id)
     if not a.post_only:
-        if os.environ.get("ART_LOCKED") != "1":      # re-exec under the shared Blender lock
-            os.environ["ART_LOCKED"] = "1"
-            os.execvp("flock", ["flock", LOCK, sys.executable] + sys.argv)
+        # No self-locking: callers wrap renders in `flock /home/claude/wt/blender.lock …` (wave rule). A self re-exec under
+        # the same lock deadlocks when the caller already holds it (flock is not re-entrant across processes).
         render(a.id, mod, a.samples, set(a.frames) if a.frames else None)
     if not a.render_only:
         post(a.id, mod)
