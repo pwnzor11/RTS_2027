@@ -355,3 +355,66 @@ with D-048's corrections. Expected to change later and not reopened by this entr
 stuck-retry numbers (retune in M2), and the sandbox as the default boot mode (replaced in M2).
 **Why:** reviewed in session 3 as one table; the owner took every recommendation.
 **Status:** confirmed
+
+### D-050 · 2026-11-03 · Keep MonoGame; EA source is reference only, never ported
+**Decision:** The renderer stays on MonoGame. Because MonoGame's licence (Ms-PL, MIT for portions)
+is classed as GPL-incompatible, no EA-licensed code is ever copied or ported into this repo. The EA
+source remains a read-only reference for studying mechanics; everything here is written fresh.
+`docs/LICENSING.md`'s register of EA-derived files therefore stays empty by rule.
+**Why:** adversarial review 2026-11-03, finding 1 (E-1 corrected). Switching renderers costs more
+than giving up verbatim reuse, which M1 never needed. Not legal advice.
+**Alternatives:** switch to SDL3/Silk.NET bindings; add a GPL §7 linking permission and port anyway
+(not possible for EA code, which we cannot relicense).
+**Status:** confirmed (owner, session 3)
+
+### D-051 · 2026-11-03 · Skirmish AI is an external command producer
+**Decision:** AI code lives outside the simulation (`src/AI`), reads a fog-filtered read-only player
+view, and issues ordinary `Command`s into the same recorded stream as human input. It never runs
+inside `Step`. AI memory is not part of the sim hash; saves carry it in their own section. In LAN
+one peer (the host or the slot owner) runs each AI. `RunAiBookkeeping` in `Step` is removed from the
+tick order. Lua missions remain the only in-`Step` extension and get their own decision before M4.
+**Why:** replays and determinism then do not depend on AI code; AI can be changed, swapped and
+tested without invalidating recordings (review A-1, B-7). Supersedes architecture §3's "AI runs
+inside Step".
+**Status:** confirmed (owner, session 3)
+
+### D-052 · 2026-11-03 · M1.5 hardening batch before M2
+**Decision:** A hardening milestone (M1.5) runs before M2 planning, built from the 2026-11-03
+adversarial review: player relations (ally/enemy/neutral, teams), per-player state part, actor-store
+abstraction, sim boundary guards, save/replay robustness, publish/licence/notice fixes, test fixture
+split, build stamping, debug console, and a headless AI-vs-AI harness with a difficulty schema.
+**Why:** each item is cheap now and expensive after M2 adds economy, production and AI on top.
+**Status:** confirmed (owner, session 3)
+
+### D-053 · 2026-11-03 · M2 scope choices: Authority first, Rust Belt, Recruit-tier AI
+**Decision:** M2 builds the **Authority** as its faction, on a **Rust Belt** map. The M2 AI is the real
+framework (managers, `difficulty.toml`, fog-filtered player view) with only tier 1 (*Recruit*)
+implemented; it runs in the M1.5 headless harness. The Directorate's harvesting, when it is built, is
+**tunnel-borne scrapers** that surface at a drift and dive back to an entrance that acts as the
+refinery, reusing the harvester loop with burrow locomotion.
+**Why:** the conventional loop is what both factions need and the tunnel spec is not on M2's path;
+Rust Belt matches the Authority campaign opening; building the AI framework once avoids M3 rework.
+**Alternatives:** Directorate first; both minimal; conscript gangs + mobile smelter; scripted waves.
+**Status:** confirmed (owner, session 3)
+
+### D-054 · 2026-11-03 · Fixed teams at setup; neutral is a reserved player slot
+**Decision:** `SimSetup` carries one team id per player slot, hashed. Relation(a,b) is Self, Ally
+(same team), Enemy, or Neutral. Allies share vision and are never auto-targeted; splash still hurts
+them per the warhead's `HitsAllies`. Neutral (civilians, tech buildings) is a reserved player slot
+that nothing targets automatically and that targets nothing. No in-game diplomacy.
+**Why:** classic C&C model; one small table instead of dynamic state (review B-2).
+**Status:** confirmed (owner, session 3)
+
+### D-055 · 2026-11-03 · GPL §7 additional permission for linking MonoGame
+**Decision:** Our LICENSE gains a standard GPL §7 additional permission allowing the program to be
+combined with and distributed alongside MonoGame (and its bundled native libraries) regardless of
+their licences. The permission covers only code we hold copyright on, which under D-050 is all of it.
+Not legal advice; the owner may have the wording checked.
+**Status:** confirmed (owner, session 3)
+
+### D-056 · 2026-11-03 · Git LFS for rendered sprite sheets
+**Decision:** `data/sprites/**/*.png` and `art/**/*.png` are tracked with Git LFS. Blender sources,
+scripts and TOML metadata stay in plain git. The owner runs `git lfs install` once on Windows; CI
+checks out with `lfs: true`. The owner declined building an M2 system himself (review D-7); agents
+keep building and he studies code and decisions.
+**Status:** confirmed (owner, session 3)
