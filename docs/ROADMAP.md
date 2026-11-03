@@ -19,10 +19,47 @@ Milestones in build order. Each ends with something the owner can try. Ids are s
 - [x] M0-11 Repo skeleton: build system, CI, LICENSE, CLAUDE.md pointing at docs — user can try: clone + build an empty window
 
 ## M1 · Core simulation (no graphics beyond debug view)
-- [ ] M1-ART-01 Tank polish round on the D-039 pipeline: bigger house panel, camera ~40°, more hull/wheel detail; becomes the reference sprite for fan-out — user can try: look at the updated sheet
-_To be detailed after design round 1. Expected shape:_ deterministic tick loop, map grid, pathfinding,
-unit movement, orders/commands queue, combat, fog, replay recording. User can try: headless sim test +
-debug renderer.
+Goal: a headless, deterministic sim with terrain, pathfinding, movement, combat, fog and building
+placement, driven by placeholder data, plus a debug view that runs the real sim. Economy, production
+and AI are M2. Planned in session 2; expect two sessions. Lead writes each wave's contracts first.
+
+**Wave A — foundations (parallel)**
+- [ ] M1-01 Map model: cell layers per design 02 §3 (template, land type, height, overlay resource +
+  density, smudge, occupancy bits incl. 5 infantry sub-slots), map file (TOML header + packed cell
+  data), `terrain.toml` land × locomotion speed %, map hash in replays/saves; Tools `map new` makes
+  synthetic test maps — Sonnet — user can try: `Tools map new --size 64` then `Tools map info`
+- [ ] M1-02 Rules schema v1: units, infantry, buildings, weapons, warheads, armour matrix, `base`
+  inheritance, prerequisites/provides, effect lists; placeholder data marked as fixtures; rules hash
+  covers all — Haiku — user can try: `Tools validate` lists every type
+- [ ] M1-03 Mission framework: Mission/Status/WakeTick/NextMission per actor, AssignMission →
+  Commence at the safe point, handlers return sleep ticks; entity kinds Unit, Infantry, Building,
+  Projectile in slot arrays — Sonnet — user can try: tests only
+- [ ] M1-04 Debug view on the real sim: Game runs `Simulation` at 20 Hz with interpolation, loads a
+  map, built-in bitmap font for tick/hash/FPS, click-select and right-click move — Haiku —
+  user can try: open the window, move units around
+
+**Wave B — space (parallel, needs A)**
+- [ ] M1-05 Pathfinding: `IPathfinder`, 8-way A* with terrain cost per locomotion, per-tick expansion
+  budget, cache keyed on map version, shared group search — Sonnet
+- [ ] M1-06 Building placement: footprints, buildable check, one-cell gap rule, occupancy, Place/
+  Sell commands (no economy yet) — Sonnet
+- [ ] M1-07 Fog and shroud: per-player visibility bits, incremental update, last-seen building
+  ghosts, snapshot respects the viewing player — Haiku
+
+**Wave C — action (parallel, needs B)**
+- [ ] M1-08 Movement and locomotion: follow paths, turn rates, blockage tiers (wait / sidestep /
+  shove idle allies), infantry sub-cells, crushing — Sonnet
+- [ ] M1-09 Combat: weapon → projectile → warhead × armour, range/ROF in leptons/ticks, turret facing,
+  3×3 splash with falloff, Attack / AttackMove / Guard / Stop missions, death and cleanup — Sonnet
+- [ ] M1-10 Desync tooling: per-subsystem sub-hashes, `Tools replay verify`, `Tools match --ticks N`
+  headless soak (two scripted armies), hash coverage test that fails if a new sim array is unhashed — Haiku
+
+**Wave D — together**
+- [ ] M1-11 Debug overlays (paths, occupancy, fog, ranges) and a "battle sandbox" map: two armies
+  meet in the window, replay saved and verified — Haiku + lead review — user can try: watch a fight,
+  then `Tools replay verify` on the saved replay
+- [ ] M1-ART-01 Tank polish round on the D-039 pipeline: bigger house panel, camera ~40°, more hull/wheel
+  detail; becomes the reference sprite for fan-out — user can try: look at the updated sheet
 
 ## M2 · Playable skirmish slice
 Rendering with placeholder sprites, UI (sidebar, selection, minimap), economy loop (harvester →

@@ -5,6 +5,8 @@ file cited after each question. Recommendations are the lead's, from the researc
 
 ## Open
 
+- ⚪ **Q-26 · Sprites in the M1 debug view.** Draw vehicles with the D-039 tank sprite (house-coloured) instead of squares once M1-ART-01 lands? Options: **yes, tank sprite for all vehicles, squares for infantry/buildings** (recommended: cheap, tests the sprite metadata and remap shader early) / squares until M2.
+
 ## Answered
 - Q-24 · 2026-11-02 · Art pilot: arm B at 64 px → D-039.
 - Q-25 · 2026-11-02 · D-033 confirmed; setting draft accepted → D-036.
