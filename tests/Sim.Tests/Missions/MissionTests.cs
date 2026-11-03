@@ -38,7 +38,9 @@ public class MissionTests
     public void MissionQueuedByHandler_TakesEffectNextTick()
     {
         var sim = Make(300, out var id, out _);
-        sim.Step(new[] { Move(id, ActorKind.Vehicle, 10, 9) });   // one cell north, arrives in 1 step
+        sim.Step(new[] { Move(id, ActorKind.Vehicle, 10, 9) });   // one cell north; tick 0 only asks for the path
+        Assert.Equal(LeptonCoord.CenterOf(new CellCoord(10, 10)), sim.Units.Position[id.Index]);
+        sim.Step(None);                                           // tick 1: path arrived, drives in one step
         Assert.Equal(LeptonCoord.CenterOf(new CellCoord(10, 9)), sim.Units.Position[id.Index]);
         Assert.Equal(MissionKind.Move, sim.Units.Mission[id.Index]);
         Assert.Equal(MissionKind.Guard, sim.Units.NextMission[id.Index]);
@@ -63,10 +65,11 @@ public class MissionTests
     public void Guard_SleepsFifteenTicks()
     {
         var sim = Make(300, out var id, out _);
-        sim.Step(new[] { Move(id, ActorKind.Vehicle, 10, 9) });
-        sim.Step(None);                                   // Guard commences and runs at tick 1
+        sim.Step(new[] { Move(id, ActorKind.Vehicle, 10, 9) });   // tick 0: path requested
+        sim.Step(None);                                   // tick 1: arrives, Guard queued
+        sim.Step(None);                                   // Guard commences and runs at tick 2
         Assert.Equal(MissionKind.Guard, sim.Units.Mission[id.Index]);
-        Assert.Equal(1 + 15, sim.Units.WakeTick[id.Index]);
+        Assert.Equal(2 + 15, sim.Units.WakeTick[id.Index]);
     }
 
     [Fact]
@@ -75,6 +78,8 @@ public class MissionTests
         var sim = Make(30, out var id, out _);            // TurnRate 8, facing north, order east: diff 64
         sim.Step(new[] { Move(id, ActorKind.Vehicle, 15, 10) });
         var start = LeptonCoord.CenterOf(new CellCoord(10, 10));
+        Assert.Equal(0, sim.Units.Facing[id.Index]);      // tick 0 only asks for the path
+        sim.Step(None);
         int turnTicks = 1;
         Assert.Equal(8, sim.Units.Facing[id.Index]);
         while (sim.Units.Facing[id.Index] != 64) { Assert.Equal(start, sim.Units.Position[id.Index]); sim.Step(None); turnTicks++; }
@@ -90,6 +95,7 @@ public class MissionTests
     {
         var sim = Make(30, out var id, out _);            // north -> south = 128 = 16 ticks at rate 8
         sim.Step(new[] { Move(id, ActorKind.Vehicle, 10, 15) });
+        sim.Step(None);                                   // tick 0 asks for the path, turning starts at tick 1
         int ticks = 1;
         while (sim.Units.Facing[id.Index] != 128) { sim.Step(None); ticks++; }
         Assert.Equal(16, ticks);
@@ -117,6 +123,7 @@ public class MissionTests
     {
         var sim = Make(30, out _, out var id);
         sim.Step(new[] { Move(id, ActorKind.Infantry, 10, 5) });
+        sim.Step(None);                                   // tick 0 asks for the path
         Assert.Equal(64, sim.Infantry.Facing[id.Index]);
         Assert.Equal(LeptonCoord.CenterOf(new CellCoord(5, 5)).X + 20, sim.Infantry.Position[id.Index].X);
     }

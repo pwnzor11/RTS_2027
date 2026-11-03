@@ -19,12 +19,13 @@ public class MovementTests
     public void Unit_FacingDestination_ReachesItInExactTickCount()
     {
         var sim = Make(30, out var id);
-        // 5 cells north = 1280 leptons at 30/tick -> ceil(1280/30) = 43 ticks; already facing north, no turn
+        // 5 cells north, path-following: tick 0 asks for the path, then 5 cell steps of ceil(256/30) = 9 ticks each (a step ends on
+        // the cell centre); already facing north, no turn -> 1 + 45 = 46 ticks
         var cmd = new Command(0, 0, 0, CommandKind.Move, id, default, new CellCoord(10, 5), 0);
         sim.Step(new[] { cmd });
         int ticks = 1;
         while (sim.Units.Position[id.Index] != LeptonCoord.CenterOf(new CellCoord(10, 5))) { sim.Step(Array.Empty<Command>()); ticks++; }
-        Assert.Equal(43, ticks);
+        Assert.Equal(46, ticks);
         Assert.Equal(MissionKind.Move, sim.Units.Mission[id.Index]);   // Guard is queued, commences next tick
         sim.Step(Array.Empty<Command>());
         Assert.Equal(MissionKind.Guard, sim.Units.Mission[id.Index]);

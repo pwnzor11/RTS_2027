@@ -34,7 +34,8 @@ public class DeterminismTests
     {
         var script = ScriptedGame.Script(500);
         var tampered = new List<Command>(script);
-        int i = tampered.FindIndex(c => ScriptedGame.IsEffectiveVehicleMove(c) && c.ExecTick < 100);
+        // A late Move: early ones are overridden by later orders to the same unit before they change anything that survives.
+        int i = tampered.FindLastIndex(c => ScriptedGame.IsEffectiveVehicleMove(c) && c.ExecTick <= 440);
         tampered[i] = tampered[i] with { Cell = new CellCoord((tampered[i].Cell.X + 7) % 64, tampered[i].Cell.Y) };
         Assert.NotEqual(Run(ScriptedGame.Setup(), script, 500)[^1], Run(ScriptedGame.Setup(), tampered, 500)[^1]);
     }
