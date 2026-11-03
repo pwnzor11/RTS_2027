@@ -5,16 +5,16 @@ using Microsoft.Xna.Framework.Graphics;
 using Rts.Game.Sandbox;
 using Rts.Game.Sprites;
 using Rts.Sim.Core;
-using Rts.Sim.Numerics;
 
 namespace Rts.Game.Render;
 
 /// <summary>
-/// Vehicles as the house-recoloured tank sprite (all vehicle types use it for now), infantry as 12 px squares in the
-/// player colour, and white corner brackets around selected units.
+/// Vehicles as the tank sprite drawn in the player's house colour (all vehicle types use it for now), infantry as 12 px
+/// squares in the player colour, and white corner brackets around selected units.
 /// </summary>
 public sealed class UnitRenderer
 {
+    private const string VehicleState = "idle";
     private const int InfantrySidePxAtZoom1 = 12;
     private const int VehicleBracketHalfPxAtZoom1 = 26;
     private const int InfantryBracketHalfPxAtZoom1 = 9;
@@ -35,11 +35,11 @@ public sealed class UnitRenderer
         foreach (RenderUnit unit in frame.Units)
         {
             bool selected = frame.Selection.Contains(UnitKey.Of(unit.View));
-            DrawUnit(batch, pixel, unit, selected, camera);
+            DrawUnit(batch, pixel, unit, selected, camera, frame.Snapshot.Tick);
         }
     }
 
-    private void DrawUnit(SpriteBatch batch, Texture2D pixel, RenderUnit unit, bool selected, Camera camera)
+    private void DrawUnit(SpriteBatch batch, Texture2D pixel, RenderUnit unit, bool selected, Camera camera, int tick)
     {
         Vector2 screen = camera.ScreenFromWorld(unit.World);
         int cx = (int)MathF.Round(screen.X);
@@ -50,9 +50,8 @@ public sealed class UnitRenderer
 
         if (vehicle)
         {
-            int frame = Facing.ToFacings(unit.View.Facing, _sheet.Facings);
-            batch.Draw(_sheet.Texture(player), new Vector2(cx, cy), _sheet.FrameRect(frame), Color.White,
-                0f, _sheet.Anchor, zoom, SpriteEffects.None, 0f);
+            int frame = _sheet.FrameIndex(VehicleState, unit.View.Facing, tick);
+            _sheet.Draw(batch, frame, new Vector2(cx, cy), PlayerColours.Base(player), zoom);
         }
         else
         {
