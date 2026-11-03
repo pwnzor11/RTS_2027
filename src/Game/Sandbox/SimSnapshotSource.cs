@@ -44,6 +44,7 @@ public sealed class SimSnapshotSource : ISnapshotSource
     private long _accumulatedUs;
     private ushort _sequence;
     private bool _paused;
+    private int _speedMultiplier = 1;
     private int _viewer;
     private SimSnapshot _previous;
     private SimSnapshot _current;
@@ -57,7 +58,7 @@ public sealed class SimSnapshotSource : ISnapshotSource
     {
         RuleSet rules = RulesLoader.Load(rulesDir);
         _map = MapFile.Load(Path.Combine(rulesDir, "..", "maps", SandboxScenario.MapFileName));
-        var setup = new SimSetup(Seed, _map, PlayerCount, rules.Sim, rules.RulesHash);
+        var setup = new SimSetup(Seed, _map, PlayerCount, rules.Sim, rules.RulesHash) { AllowDebug = true };
         _sim = new Simulation(setup);
         _recording = new ReplayRecording(setup);
 
@@ -117,6 +118,13 @@ public sealed class SimSnapshotSource : ISnapshotSource
         }
     }
 
+    /// <summary>Ticks run per tick interval while running (1 = normal speed). Front end only; set by the debug console.</summary>
+    public int SpeedMultiplier
+    {
+        get => _speedMultiplier;
+        set => _speedMultiplier = Math.Max(1, value);
+    }
+
     /// <summary>Current simulation tick.</summary>
     public int Tick => _sim.Tick;
 
@@ -137,7 +145,7 @@ public sealed class SimSnapshotSource : ISnapshotSource
         while (_accumulatedUs >= TickUs)
         {
             _accumulatedUs -= TickUs;
-            AdvanceOneTick();
+            for (int i = 0; i < _speedMultiplier; i++) AdvanceOneTick();
         }
     }
 
@@ -177,6 +185,27 @@ public sealed class SimSnapshotSource : ISnapshotSource
         if (needsCell && !_map.Contains(cell)) return;
 
         Command command = OrderBuilder.Build(execTick, player, _sequence++, kind, subject, cell, target);
+        _pending.Add(command);
+        _recording.RecordCommand(command);
+    }
+
+    /// <summary>
+    /// Issues one debug operation (M1.5) to run on the next tick, and records it in the replay. The sim applies it only
+    /// because the sandbox sets <see cref="SimSetup.AllowDebug"/>. Spawn operations need a cell on the map (ignored
+    /// otherwise). <paramref name="arg2"/> and <paramref name="subject"/> carry the rest as <see cref="DebugOp"/> documents.
+    /// </summary>
+    /// <param name="op">The debug operation (Command.Arg).</param>
+    /// <param name="arg2">The operation's second int (Command.Arg2): type index, amount, or ActorKind.</param>
+    /// <param name="cell">The cell for spawn operations.</param>
+    /// <param name="subject">The unit for Kill.</param>
+    /// <param name="player">The player the operation acts for (Command.Player).</param>
+    public void EnqueueDebug(DebugOp op, int arg2, CellCoord cell, EntityId subject = default, byte player = LocalPlayer)
+    {
+        bool spawns = op is DebugOp.SpawnVehicle or DebugOp.SpawnInfantry;
+        if (spawns && !_map.Contains(cell)) return;
+
+        var command = new Command(_sim.Tick + 1, player, _sequence++, CommandKind.Debug, subject, EntityId.None, cell,
+            (int)op, arg2);
         _pending.Add(command);
         _recording.RecordCommand(command);
     }
