@@ -11,7 +11,7 @@ public class AiMatchTests
     private static MapData Map(ulong seed) => Rts.Data.MapGenerator.Generate(32, seed);
 
     private static AiGameResult Play(string a, int ta, string b, int tb, ulong seed, bool aInSlot0, int ticks, Stream? replay = null) =>
-        AiMatchRunner.Play(Map(seed), TestWorld.Rules.Sim, TestWorld.Rules.RulesHash, seed, Side(a, ta), Side(b, tb), aInSlot0, ticks, replay);
+        AiMatchRunner.Play(Map(seed), TestWorld.Rules.Sim, TestWorld.Rules.RulesHash, seed, Side(a, ta), Side(b, tb), aInSlot0, ticks, replay, start: AiStartMode.Army);
 
     [Theory]
     [InlineData(true)]

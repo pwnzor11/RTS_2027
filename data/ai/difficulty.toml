@@ -12,7 +12,7 @@
 #   expansion_tick          0 = never; reserved until the economy lands
 #   superweapons            0/1: reserved
 #   multi_front             0/1: reserved
-#   build_repertoire        unit/building ids the AI may build; reserved (empty while there is no economy)
+#   build_repertoire        structure ids in build order (recruit: its fixed order; empty = the AI's built-in order)
 
 [recruit]
 tier = 1
@@ -25,7 +25,7 @@ retreat_health_pct = 0
 expansion_tick = 0
 superweapons = 0
 multi_front = 0
-build_repertoire = []
+build_repertoire = ["auth_power", "auth_refinery", "auth_barracks", "auth_power", "auth_factory", "auth_silo", "auth_turret"]
 
 [regular]
 tier = 2

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
+using Rts.Data;
 using Rts.Sim;
 using Rts.Sim.Core;
 using Rts.Sim.Map;
@@ -10,8 +11,9 @@ using Rts.Sim.World;
 namespace Rts.AI;
 
 /// <summary>
-/// Plays one headless AI-vs-AI game: two players, a fixed start force each (the `match` army), AIs driven by an
-/// <see cref="AiDriver"/> before every Step. A side wins when the other has no vehicles, infantry or buildings left;
+/// Plays one headless AI-vs-AI game: two players, each starting as <see cref="AiStartMode"/> says (default: the shared
+/// skirmish economy start), AIs driven by an <see cref="AiDriver"/> before every Step. Economy start: a side wins when the
+/// other is Defeated (the sim's win rule); army start: when the other has no vehicles, infantry or buildings left;
 /// otherwise the game is drawn at the tick limit. Deterministic for equal inputs. No wall clock here.
 /// </summary>
 public static class AiMatchRunner
@@ -28,13 +30,16 @@ public static class AiMatchRunner
     /// (slot p starts at map start position p, or 1-p when <paramref name="swapStarts"/>). When <paramref name="replay"/> is given, the game is recorded to it.</summary>
     public static AiGameResult Play(MapData map, SimRules rules, ulong rulesHash, ulong seed, AiSide sideA, AiSide sideB,
         bool aInSlot0, int maxTicks, Stream? replay = null, string build = "",
-        IReadOnlyList<(string Name, string Text)>? rulesFiles = null, bool swapStarts = false)
+        IReadOnlyList<(string Name, string Text)>? rulesFiles = null, bool swapStarts = false, AiStartMode start = AiStartMode.Economy)
     {
         if (map.StartPositions.Count < 2) throw new ArgumentException("Map needs two start positions.", nameof(map));
-        var setup = new SimSetup(seed, map, 2, rules, rulesHash);
+        // Economy start places player p at map start p; swapped starts reverse the list so slots trade corners.
+        MapData playMap = start == AiStartMode.Economy && swapStarts ? SwapStarts(map) : map;
+        var setup = new SimSetup(seed, playMap, 2, rules, rulesHash);
         var sim = new Simulation(setup);
         ReplayWriter? recorder = replay is null ? null : new ReplayWriter(replay, sim, build, rulesFiles ?? Array.Empty<(string, string)>());
-        for (byte p = 0; p < 2; p++) SpawnArmy(sim, rules, map, p, swapStarts ? 1 - p : p);
+        if (start == AiStartMode.Army) for (byte p = 0; p < 2; p++) SpawnArmy(sim, rules, map, p, swapStarts ? 1 - p : p);
+        else SkirmishStart.Apply(sim);
 
         byte slotA = aInSlot0 ? (byte)0 : (byte)1, slotB = (byte)(1 - slotA);
         var driver = new AiDriver(seed);
@@ -44,6 +49,7 @@ public static class AiMatchRunner
         var pending = new List<Command>();
         int fresh = 0;
         int winner = -1;
+        var tracker = new SideTracker();
         for (int t = 0; t < maxTicks; t++)
         {
             driver.Collect(sim, pending);
@@ -55,14 +61,57 @@ public static class AiMatchRunner
             if (recorder is not null && sim.Tick % SimConstants.HashIntervalTicks == 0)
                 recorder.RecordHash(sim);
             if (sim.Tick % WinCheckInterval != 0) continue;
-            bool aliveA = HasAnything(sim, slotA), aliveB = HasAnything(sim, slotB);
+            tracker.Sample(sim);
+            bool aliveA, aliveB;
+            if (start == AiStartMode.Economy)
+            {
+                aliveA = !sim.Players.Defeated[slotA]; aliveB = !sim.Players.Defeated[slotB];
+            }
+            else { aliveA = HasAnything(sim, slotA); aliveB = HasAnything(sim, slotB); }
             if (aliveA && aliveB) continue;
             winner = aliveA ? 0 : aliveB ? 1 : -1;
             break;
         }
 
         if (recorder is not null) recorder.Finish();
-        return new AiGameResult(winner, sim.Tick, ValueOf(sim, slotA), ValueOf(sim, slotB), sim.ComputeStateHash());
+        return new AiGameResult(winner, sim.Tick, ValueOf(sim, slotA), ValueOf(sim, slotB), sim.ComputeStateHash(),
+            tracker.StatsOf(sim, slotA), tracker.StatsOf(sim, slotB));
+    }
+
+    private static MapData SwapStarts(MapData m)
+    {
+        var starts = new List<CellCoord>(m.StartPositions);
+        starts.Reverse();
+        return new MapData(m.Name, m.Theater, m.Width, m.Height, m.Template.ToArray(), m.Land.ToArray(), m.HeightLevel.ToArray(),
+            m.Overlay.ToArray(), m.Density.ToArray(), starts);
+    }
+
+    /// <summary>Counts, per slot, the distinct buildings / mobile actors ever seen alive and the cash range (sampled).</summary>
+    private sealed class SideTracker
+    {
+        private readonly HashSet<ulong>[] _structures = { new(), new() }, _units = { new(), new() };
+        private readonly int[] _min = { int.MaxValue, int.MaxValue }, _max = new int[2];
+
+        public void Sample(Simulation sim)
+        {
+            for (int i = 1; i < sim.Buildings.Capacity; i++)
+                if (sim.Buildings.Slots.IsIndexAlive(i)) _structures[sim.Buildings.Player[i] & 1].Add(Key(i, sim.Buildings.Slots.GenerationOf(i)));
+            for (int i = 1; i < sim.Units.Capacity; i++)
+                if (sim.Units.Slots.IsIndexAlive(i)) _units[sim.Units.Player[i] & 1].Add(Key(i, sim.Units.Slots.GenerationOf(i)));
+            for (int i = 1; i < sim.Infantry.Capacity; i++)
+                if (sim.Infantry.Slots.IsIndexAlive(i)) _units[sim.Infantry.Player[i] & 1].Add(Key(i, sim.Infantry.Slots.GenerationOf(i)) | (1UL << 40));
+            for (int p = 0; p < 2; p++)
+            {
+                int cash = sim.Players.Cash[p] + sim.Players.Stored[p];
+                if (cash < _min[p]) _min[p] = cash;
+                if (cash > _max[p]) _max[p] = cash;
+            }
+        }
+
+        private static ulong Key(int index, int generation) => ((ulong)(uint)index << 16) | (uint)generation;
+
+        public AiSideStats StatsOf(Simulation sim, int p) =>
+            new(_structures[p].Count, _units[p].Count, _min[p] == int.MaxValue ? 0 : _min[p], _max[p], sim.Players.Cash[p] + sim.Players.Stored[p]);
     }
 
     /// <summary>Scripted symmetry probe (no AI): both start forces are placed as exact point mirrors and attack-move

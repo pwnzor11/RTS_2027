@@ -15,7 +15,8 @@ public class DifficultyLoaderTests
         Assert.False(tiers[0].FocusFire);
         Assert.True(tiers[2].FocusFire);
         Assert.True(tiers[4].DecisionIntervalTicks < tiers[0].DecisionIntervalTicks);
-        Assert.All(tiers, t => Assert.Empty(t.BuildRepertoire));
+        Assert.All(tiers.Skip(1), t => Assert.Empty(t.BuildRepertoire));
+        Assert.Equal(7, tiers[0].BuildRepertoire.Count);
     }
 
     private static string Write(string text)
