@@ -13,5 +13,7 @@
 - Open `docs/OPEN_QUESTIONS.md` → only Q-24 and Q-25 are open; rounds 1–3 are under Answered.
 - Open `docs/LICENSING.md` → the EA additional terms are summarised (no trademarks, keep notice, mark
   modifications) and the derived-files register is empty.
-- Search the repo for "Tiberium", "GDI", "Nod", "Command & Conquer" → hits only inside `docs/research/`,
-  `docs/LICENSING.md`, `docs/00_START_HERE.md` and `CLAUDE.md` as references, never as our own names.
+- Search the repo for "Tiberium", "GDI", "Nod", "Westwood" → hits only inside `docs/research/`,
+  `docs/LICENSING.md`, `docs/00_START_HERE.md` and this file, always as references to the EA games,
+  never as names of our own things.
+- Open `docs/DECISIONS.md` → runs D-001 through D-035 (supersedes the D-034 line above).

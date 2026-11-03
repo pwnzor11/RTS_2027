@@ -12,7 +12,7 @@ repos the owner supplied, synthesise, and run the design rounds.
 Setting chosen: alt-history atompunk (1962 exchange, set c. 2001); resource: ashfall + pitchblende;
 factions: Continental Reconstruction Authority vs Directorate of the Interior.
 **Commits:** 083c46c..(wrap-up commit), ids M0-01..M0-10b.
-**Decisions:** D-001..D-034. D-033 is "assumed — confirm". D-006 was lead-proposed and the owner did not
+**Decisions:** D-001..D-035. D-033 is "assumed — confirm". D-006 was lead-proposed and the owner did not
 object when told; treated as confirmed.
 **Helpers:** 14 first wave (6 Sonnet code studies, 7 Haiku web research, 1 Sonnet technology options)
 + 5 second wave (2 Sonnet, 3 Haiku) + 1 Sonnet fact-check at wrap-up. No escalations. One launch

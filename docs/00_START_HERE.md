@@ -53,6 +53,7 @@ Then: session briefing → wait for "go".
 - `docs/research/` — research write-ups (C&C code study, RTS architecture, maps, resources, AI).
 - `docs/design/` — our design decisions once the design rounds produce them.
 - `docs/LICENSING.md` — license, reuse rules, list of files derived from the EA repo.
+- `docs/CREDITS.md` — third-party libraries, imported assets, AI-assisted artwork.
 
 ## How a session runs
 Lead (Opus) + up to 20 helpers (Haiku default; Sonnet/Opus for core sim, netcode, or after a Haiku

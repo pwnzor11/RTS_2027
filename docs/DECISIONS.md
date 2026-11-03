@@ -235,3 +235,8 @@ lobby, UDP broadcast/multicast discovery plus join-by-IP, no host migration (hos
 game; protocol leaves room for a manual claim later), build/rules/map hash check on join. Built after
 skirmish and campaign; the sim and lobby data are shaped for it from the start. Q-23.
 **Status:** confirmed
+
+### D-035 · 2026-11-02 · Locomotion classes include "burrow"
+**Decision:** The v1 locomotion classes are foot, wheeled, tracked, hover, air, burrow (Directorate
+tunnelers, moves under terrain, surfaces on soft ground), with a naval slot reserved. Extends D-023.
+**Status:** confirmed (follows from D-027's tunnelling faction; owner approved the setting)
