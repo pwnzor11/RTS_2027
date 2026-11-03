@@ -14,7 +14,7 @@ Milestones in build order. Each ends with something the owner can try. Ids are s
 - [x] M0-08 Design round 1: technology, engine/language, sim architecture — user can try: nothing yet; produces `docs/design/`
 - [x] M0-09 Design round 2: game design (factions, economy, tech tree shape, map scale)
 - [x] M0-10 Design round 3: setting, campaign structure, tooling, art, LAN scope
-- [ ] M0-10b Design docs: `docs/design/02_game_design.md`, `03_setting_and_factions.md` written from D-020..D-034
+- [x] M0-10b Design docs: `docs/design/02_game_design.md`, `03_setting_and_factions.md` written from D-020..D-034
 - [ ] M0-12 Art pilot: one vehicle three ways (Blender render, AI-assisted frames, hand pixel) at 2 candidate cell sizes + house-colour remap test — user can try: look at a contact sheet and pick
 - [ ] M0-11 Repo skeleton: build system, CI, LICENSE, CLAUDE.md pointing at docs — user can try: clone + build an empty window
 
