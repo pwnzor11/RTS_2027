@@ -27,8 +27,15 @@ public sealed class SlotArray
     /// <summary>Number of alive entities.</summary>
     public int Count => _count;
 
-    /// <summary>Allocate the lowest free index.</summary>
-    public EntityId Allocate()
+    /// <summary>Allocate the lowest free index; throws when full. Simulation code uses <see cref="TryAllocate"/>.</summary>
+    internal EntityId Allocate()
+    {
+        if (!TryAllocate(out EntityId id)) throw new InvalidOperationException("SlotArray is full.");
+        return id;
+    }
+
+    /// <summary>Allocate the lowest free index. Returns false (and <see cref="EntityId.None"/>) when full.</summary>
+    internal bool TryAllocate(out EntityId id)
     {
         for (int w = 0; w < _used.Length; w++)
         {
@@ -41,13 +48,15 @@ public sealed class SlotArray
             if (g == 0) g = 1;
             _generation[idx] = g;
             _count++;
-            return new EntityId((ushort)idx, g);
+            id = new EntityId((ushort)idx, g);
+            return true;
         }
-        throw new InvalidOperationException("SlotArray is full.");
+        id = EntityId.None;
+        return false;
     }
 
     /// <summary>Free a live entity. Returns false if the id is stale.</summary>
-    public bool Free(EntityId id)
+    internal bool Free(EntityId id)
     {
         if (!IsAlive(id)) return false;
         _used[id.Index >> 6] &= ~(1UL << (id.Index & 63));
@@ -72,7 +81,7 @@ public sealed class SlotArray
     }
 
     /// <summary>Restore one slot's state when loading a save.</summary>
-    public void Restore(int index, ushort generation, bool alive)
+    internal void Restore(int index, ushort generation, bool alive)
     {
         if (index <= 0 || index >= Capacity) throw new ArgumentOutOfRangeException(nameof(index));
         bool was = IsIndexAlive(index);

@@ -201,7 +201,7 @@ public class BlockageTests
         Run(sim, 40);
         // turret (1x1) on the route, a few cells ahead
         var cell = new CellCoord(CellOf(sim, id).X + 4, 5);
-        Assert.NotEqual(EntityId.None, sim.PlaceBuilding(0, 2, cell));
+        Assert.NotEqual(EntityId.None, Boundary.LateSpawn.Building(sim, 0, 2, cell));
         RunUntil(sim, () => sim.Units.Mission[id.Index] == MissionKind.Guard, 1500);
         Assert.Equal(new CellCoord(20, 5), CellOf(sim, id));
     }

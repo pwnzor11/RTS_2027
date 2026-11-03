@@ -104,13 +104,25 @@ public sealed partial class Simulation
     /// <summary>Read access to the runtime map (land, overlay, occupancy, Version) for tests and tools. Never mutate outside Step.</summary>
     public MapState Map => _map;
 
-    /// <summary>Setup/scripting entry: place a vehicle outside Step. Returns its id.</summary>
+    /// <summary>Commands whose ExecTick was already past when they reached Step (dropped). Diagnostic only; not hashed.</summary>
+    public long LateCommandCount { get; private set; }
+
+    /// <summary>Setup mutators work inside Step (scripts) or before the first Step; afterwards they must be commands.</summary>
+    private void RequireSetupPhase()
+    {
+        if (!_inStep && Tick > 0)
+            throw new InvalidOperationException("setup calls are only allowed before the first Step; use a command");
+    }
+
+    /// <summary>Setup/scripting entry: place a vehicle outside Step. Returns its id, or <see cref="EntityId.None"/> when the store is full.</summary>
     public EntityId SpawnVehicle(byte player, int vehicleTypeIndex, CellCoord cell)
     {
+        RequireSetupPhase();
         var vehicles = Setup.Rules.Vehicles;
         if (vehicleTypeIndex < 0 || vehicleTypeIndex >= vehicles.Count) throw new ArgumentOutOfRangeException(nameof(vehicleTypeIndex));
         if (!InMap(cell)) throw new ArgumentOutOfRangeException(nameof(cell));
         EntityId id = _units.Add(player, vehicleTypeIndex, LeptonCoord.CenterOf(cell), vehicles[vehicleTypeIndex].MaxHealth);
+        if (id.IsNone) return id;
         OnActorSpawned(ActorKind.Vehicle, id.Index);
         if (!_inStep) _setupLog.Add(new SetupEntry(ActorKind.Vehicle, player, vehicleTypeIndex, cell, 0));
         return id;
@@ -119,11 +131,13 @@ public sealed partial class Simulation
     /// <summary>Setup/scripting entry: place an infantry soldier at a sub-slot (0 = centre, 1..4 = corners) of a cell.</summary>
     public EntityId SpawnInfantry(byte player, int infantryTypeIndex, CellCoord cell, int subSlot = 0)
     {
+        RequireSetupPhase();
         var infantry = Setup.Rules.Infantry;
         if (infantry == null || infantryTypeIndex < 0 || infantryTypeIndex >= infantry.Count) throw new ArgumentOutOfRangeException(nameof(infantryTypeIndex));
         if (!InMap(cell)) throw new ArgumentOutOfRangeException(nameof(cell));
         if (subSlot < 0 || subSlot >= InfantryStore.SubSlotCount) throw new ArgumentOutOfRangeException(nameof(subSlot));
         EntityId id = _infantry.Add(player, infantryTypeIndex, cell, subSlot, infantry[infantryTypeIndex].MaxHealth);
+        if (id.IsNone) return id;
         OnActorSpawned(ActorKind.Infantry, id.Index);
         if (!_inStep) _setupLog.Add(new SetupEntry(ActorKind.Infantry, player, infantryTypeIndex, cell, subSlot));
         return id;
@@ -165,9 +179,10 @@ public sealed partial class Simulation
         int n = 0;
         for (int i = 0; i < commands.Count; i++)
         {
+            if (commands[i].ExecTick < Tick) { LateCommandCount++; continue; }
             if (commands[i].ExecTick != Tick) continue;
             if (n == _scratch.Length) Array.Resize(ref _scratch, n * 2);
-            // stable insertion sort by (Player, Sequence)
+            // insertion sort; Compare is total, so the result does not depend on input order
             Command c = commands[i];
             int j = n;
             while (j > 0 && Compare(_scratch[j - 1], c) > 0) { _scratch[j] = _scratch[j - 1]; j--; }
@@ -180,25 +195,38 @@ public sealed partial class Simulation
     private static int Compare(Command a, Command b)
     {
         int d = a.Player.CompareTo(b.Player);
-        return d != 0 ? d : a.Sequence.CompareTo(b.Sequence);
+        if (d != 0) return d;
+        if ((d = a.Sequence.CompareTo(b.Sequence)) != 0) return d;
+        if ((d = a.Kind.CompareTo(b.Kind)) != 0) return d;
+        if ((d = a.Subject.Index.CompareTo(b.Subject.Index)) != 0) return d;
+        if ((d = a.Subject.Generation.CompareTo(b.Subject.Generation)) != 0) return d;
+        if ((d = a.Target.Index.CompareTo(b.Target.Index)) != 0) return d;
+        if ((d = a.Target.Generation.CompareTo(b.Target.Generation)) != 0) return d;
+        if ((d = a.Cell.Y.CompareTo(b.Cell.Y)) != 0) return d;
+        if ((d = a.Cell.X.CompareTo(b.Cell.X)) != 0) return d;
+        if ((d = a.Arg.CompareTo(b.Arg)) != 0) return d;
+        return a.Arg2.CompareTo(b.Arg2);
     }
 
     private void Apply(Command c)
     {
+        if (c.Player >= Setup.PlayerCount) return;
         switch (c.Kind)
         {
             case CommandKind.Move:
             case CommandKind.Stop:
             case CommandKind.Scatter:
+                if (c.Kind == CommandKind.Move && !InMap(c.Cell)) break;
                 ApplyMovementCommand(c);   // Simulation.Movement.cs (M1-08)
                 break;
             case CommandKind.Attack:
             case CommandKind.AttackMove:
             case CommandKind.Guard:
+                if (c.Kind != CommandKind.Attack && !InMap(c.Cell)) break;
                 ApplyCombatCommand(c);     // Simulation.Combat.cs (M1-09)
                 break;
             case CommandKind.Place:
-                if (c.Player < Setup.PlayerCount && c.Arg >= 0 && c.Arg < BuildingTypeCount)
+                if (!_players.IsNeutral(c.Player) && c.Arg >= 0 && c.Arg < BuildingTypeCount)
                     PlaceBuilding(c.Player, c.Arg, c.Cell);
                 break;
             case CommandKind.Sell:
@@ -210,10 +238,40 @@ public sealed partial class Simulation
                 }
                 break;
             case CommandKind.Debug:
-                if (c.Arg == 1) _rng.Next(1000);
+                if (Setup.AllowDebug) ApplyDebug(c);
                 break;
             default:
                 break; // M1: remaining command kinds
+        }
+    }
+
+    private void ApplyDebug(Command c)
+    {
+        switch ((DebugOp)c.Arg)
+        {
+            case DebugOp.BurnRng:
+                _rng.Next(1000);
+                break;
+            case DebugOp.SpawnVehicle:
+                // No occupancy check exists for spawns; spawns anyway (as the setup entry does).
+                if (c.Arg2 >= 0 && c.Arg2 < Setup.Rules.Vehicles.Count && InMap(c.Cell))
+                    SpawnVehicle(c.Player, c.Arg2, c.Cell);
+                break;
+            case DebugOp.SpawnInfantry:
+                if (Setup.Rules.Infantry != null && c.Arg2 >= 0 && c.Arg2 < Setup.Rules.Infantry.Count && InMap(c.Cell))
+                    SpawnInfantry(c.Player, c.Arg2, c.Cell, 0);
+                break;
+            case DebugOp.SetCash:
+                _players.Cash[c.Player] = Math.Max(0, c.Arg2);
+                break;
+            case DebugOp.Kill:
+                switch ((ActorKind)c.Arg2)
+                {
+                    case ActorKind.Vehicle when _units.Slots.IsAlive(c.Subject): _units.Health[c.Subject.Index] = 0; break;
+                    case ActorKind.Infantry when _infantry.Slots.IsAlive(c.Subject): _infantry.Health[c.Subject.Index] = 0; break;
+                    case ActorKind.Building when _buildings.Slots.IsAlive(c.Subject): _buildings.Health[c.Subject.Index] = 0; break;
+                }
+                break;
         }
     }
 
@@ -238,6 +296,7 @@ public sealed partial class Simulation
     /// <summary>Queue a mission for the actor; it commences at the start of the next RunMissions. False if the actor is gone or not a mission-running kind.</summary>
     public bool AssignMission(ActorRef actor, MissionKind kind, CellCoord cell = default, EntityId target = default)
     {
+        RequireSetupPhase();
         var store = StoreOf(actor.Kind);
         if (store == null || !store.Slots.IsAlive(actor.Id)) return false;
         Queue(store, actor.Id.Index, kind, cell, target);
@@ -397,9 +456,11 @@ public sealed partial class Simulation
     /// <summary>Setup/scripting entry: place a building if <see cref="CanPlace"/> says Ok; otherwise returns <see cref="EntityId.None"/>.</summary>
     public EntityId PlaceBuilding(byte player, int buildingType, CellCoord topLeft)
     {
+        RequireSetupPhase();
         if (CanPlace(player, buildingType, topLeft) != PlacementResult.Ok) return EntityId.None;
         BuildingType bt = Setup.Rules.Buildings[buildingType];
         EntityId id = _buildings.Add(player, buildingType, topLeft, bt.MaxHealth);
+        if (id.IsNone) return id;
         for (int y = 0; y < bt.FootprintH; y++)
             for (int x = 0; x < bt.FootprintW; x++)
                 _map.SetBuilding(new CellCoord(topLeft.X + x, topLeft.Y + y), id);

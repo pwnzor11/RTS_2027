@@ -45,7 +45,7 @@ public class DeterminismTests
     {
         var a = ScriptedGame.NewSim(ScriptedGame.Setup());
         var b = ScriptedGame.NewSim(ScriptedGame.Setup());
-        a.Step(new[] { new Command(0, 0, 0, CommandKind.Debug, default, default, default, 1) });
+        a.Step(new[] { new Command(0, 0, 0, CommandKind.Debug, default, default, default, (int)DebugOp.BurnRng) });
         b.Step(Array.Empty<Command>());
         Assert.NotEqual(a.ComputeStateHash(), b.ComputeStateHash());
     }

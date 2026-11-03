@@ -42,7 +42,7 @@ public static class ScriptedGame
 
     public static SimSetup Setup(ulong seed = 1) => new(seed, MapData.CreateFlat(64, 64), 2,
         RulesWith(new[] { Vehicle("fast", 37, 100), Vehicle("slow", 11, 200) },
-            new[] { Infantry("rifle", 9, 50), Infantry("slowrifle", 5, 60) }), 0xABCDUL);
+            new[] { Infantry("rifle", 9, 50), Infantry("slowrifle", 5, 60) }), 0xABCDUL) { AllowDebug = true };
 
     public static IEnumerable<(byte Player, int Type, CellCoord Cell)> Spawns()
     {

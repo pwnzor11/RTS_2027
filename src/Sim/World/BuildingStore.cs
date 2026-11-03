@@ -39,16 +39,16 @@ public sealed class BuildingStore : ISimStatePart
 
     public int Capacity => Slots.Capacity;
 
-    /// <summary>Allocate a slot and reset every field of it.</summary>
-    public EntityId Add(byte player, int typeIndex, CellCoord topLeft, int health)
+    /// <summary>Allocate a slot and reset every field of it. Returns <see cref="EntityId.None"/> when the store is full.</summary>
+    internal EntityId Add(byte player, int typeIndex, CellCoord topLeft, int health)
     {
-        EntityId id = Slots.Allocate();
+        if (!Slots.TryAllocate(out EntityId id)) return EntityId.None;
         Reset(id.Index, player, typeIndex, topLeft, health);
         return id;
     }
 
     /// <summary>Free the slot and clear its fields. No-op for a stale id.</summary>
-    public void Remove(EntityId id)
+    internal void Remove(EntityId id)
     {
         if (!Slots.Free(id)) return;
         Reset(id.Index, 0, 0, default, 0);
