@@ -485,7 +485,7 @@ public sealed partial class Simulation
 
     // ---- vision (M1-07, wired by the lead) ----------------------------------------------------
 
-    /// <summary>Reveal/conceal for every actor slot in index order, then refresh enemy-building ghosts.
+    /// <summary>Reveal/conceal for every actor slot in index order, then refresh non-allied building ghosts (team vision, D-054).
     /// VisionState.Reveal is incremental, so unchanged actors cost one comparison.</summary>
     private void UpdateVision()
     {
@@ -515,7 +515,7 @@ public sealed partial class Simulation
             // Record what the viewer sees of enemy buildings now.
             for (int i = 1; i < _buildings.Capacity; i++)
             {
-                if (!_buildings.Slots.IsIndexAlive(i) || _buildings.Player[i] == viewer) continue;
+                if (!_buildings.Slots.IsIndexAlive(i) || IsFriendly(viewer, _buildings.Player[i])) continue;
                 BuildingType bt = BuildingTypeAt(i);
                 if (FootprintVisible(viewer, _buildings.Cell[i], bt.FootprintW, bt.FootprintH))
                     _vision.RecordBuildingSeen(viewer, i, new BuildingGhost(_buildings.Player[i], _buildings.TypeIndex[i],
@@ -530,7 +530,7 @@ public sealed partial class Simulation
             for (int x = 0; x < w; x++)
             {
                 var c = new CellCoord(topLeft.X + x, topLeft.Y + y);
-                if (_map.Data.Contains(c) && _vision.IsVisible(viewer, c)) return true;
+                if (_map.Data.Contains(c) && IsVisibleTo(viewer, c)) return true;
             }
         return false;
     }
@@ -571,7 +571,7 @@ public sealed partial class Simulation
             if (_buildings.Slots.IsIndexAlive(i))
             {
                 BuildingType bt = BuildingTypeAt(i);
-                if (viewer >= 0 && _buildings.Player[i] != viewer
+                if (viewer >= 0 && !IsFriendly((byte)viewer, _buildings.Player[i])
                     && !FootprintVisible((byte)viewer, _buildings.Cell[i], bt.FootprintW, bt.FootprintH)) continue;
                 blist.Add(new BuildingView(_buildings.Slots.IdOf(i), _buildings.Player[i], _buildings.TypeIndex[i],
                     _buildings.Cell[i], bt.FootprintW, bt.FootprintH, _buildings.Health[i], false));
@@ -586,13 +586,15 @@ public sealed partial class Simulation
                 g.FootprintH, g.Health, true));
         }
         var vision = new byte[Setup.Map.Width * Setup.Map.Height];
-        _vision.FillVision((byte)viewer, vision);
+        ReadOnlySpan<byte> team = TeamMembers((byte)viewer);
+        if (team.Length == 1) _vision.FillVision((byte)viewer, vision);
+        else _vision.FillVisionAny(team, vision);   // allies share vision and exploration
         return new SimSnapshot(Tick, Setup.Map.Width, Setup.Map.Height, list, Setup.Map.Land, hash,
             blist, viewer, vision);
     }
 
     private bool SeenBy(int viewer, byte owner, LeptonCoord pos) =>
-        viewer < 0 || owner == viewer || _vision.IsVisible((byte)viewer, pos.ToCell());
+        viewer < 0 || owner == viewer || IsVisibleTo((byte)viewer, pos.ToCell());
 
     /// <summary>Versioned binary save of the whole sim state.</summary>
     public void Save(Stream output) =>

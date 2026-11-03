@@ -44,8 +44,9 @@ public sealed partial class Simulation
         return true;
     }
 
-    /// <summary>True if the actor is alive and owned by a different player.</summary>
-    public bool IsEnemy(byte player, ActorRef actor) => TryGetActorInfo(actor, out var info) && info.Owner != player;
+    /// <summary>True if the actor is alive and its owner is an Enemy of <paramref name="player"/> (not Self, Ally or Neutral).</summary>
+    public bool IsEnemy(byte player, ActorRef actor) =>
+        TryGetActorInfo(actor, out var info) && RelationOf(player, info.Owner) == Relation.Enemy;
 
     /// <summary>True if the target (buildings: nearest footprint cell centre) is within [minRange, range] leptons of <paramref name="from"/>.</summary>
     public bool InRange(LeptonCoord from, ActorRef target, int range, int minRange)
@@ -84,9 +85,13 @@ public sealed partial class Simulation
         return true;
     }
 
-    /// <summary>Alive, health &gt; 0 and not owned by <paramref name="player"/>.</summary>
+    /// <summary>Alive, health &gt; 0 and owned by an Enemy or Neutral player: what an explicit Attack order may target (D-054).</summary>
     internal bool IsValidTarget(byte player, ActorRef target) =>
-        !target.Id.IsNone && TryGetActorInfo(target, out var info) && info.Health > 0 && info.Owner != player;
+        !target.Id.IsNone && TryGetActorInfo(target, out var info) && info.Health > 0 && CanAttackOwnedBy(player, info.Owner);
+
+    /// <summary>Alive, health &gt; 0 and owned by an Enemy: what auto-acquisition (Guard, AttackMove, turrets) may keep or pick.</summary>
+    internal bool IsValidAutoTarget(byte player, ActorRef target) =>
+        !target.Id.IsNone && TryGetActorInfo(target, out var info) && info.Health > 0 && RelationOf(player, info.Owner) == Relation.Enemy;
 
     /// <summary>True if the viewer currently sees the actor's cell (buildings: any footprint cell).</summary>
     internal bool IsTargetVisible(byte viewer, ActorRef target)
@@ -97,7 +102,7 @@ public sealed partial class Simulation
 
     private bool IsTargetVisible(byte viewer, ActorKind kind, int i)
     {
-        if (kind != ActorKind.Building) return _vision.IsVisible(viewer, PositionAt(kind, i).ToCell());
+        if (kind != ActorKind.Building) return IsVisibleTo(viewer, PositionAt(kind, i).ToCell());
         BuildingType bt = BuildingTypeAt(i);
         return FootprintVisible(viewer, _buildings.Cell[i], bt.FootprintW, bt.FootprintH);
     }
@@ -116,7 +121,7 @@ public sealed partial class Simulation
             int cap = slots.Capacity;
             for (int i = 1; i < cap; i++)
             {
-                if (!slots.IsIndexAlive(i) || PlayerAt(kind, i) == player || HealthAt(kind, i) <= 0) continue;
+                if (!slots.IsIndexAlive(i) || RelationOf(player, PlayerAt(kind, i)) != Relation.Enemy || HealthAt(kind, i) <= 0) continue;
                 LeptonCoord pt;
                 if (kind == ActorKind.Building) { if (!TargetPoint(new ActorRef(kind, slots.IdOf(i)), from, out pt)) continue; }
                 else pt = PositionAt(kind, i);
@@ -208,7 +213,7 @@ public sealed partial class Simulation
     /// Apply a warhead at an impact point. Splash 0: an instant weapon damages only <paramref name="primary"/>; a
     /// projectile damages every eligible actor in the impact cell. Splash n: every eligible actor within n cells
     /// (Chebyshev; buildings by nearest footprint cell) takes full damage at distance 0 and half (min 1) otherwise.
-    /// Eligible = not owned by <paramref name="owner"/>, unless the warhead HitsAllies.
+    /// Eligible = not owned by <paramref name="owner"/> or its allies, unless the warhead HitsAllies (Neutral actors are always eligible).
     /// </summary>
     internal void Detonate(byte owner, int damage, int warheadIndex, LeptonCoord impact, ActorRef primary, bool instant)
     {
@@ -229,7 +234,7 @@ public sealed partial class Simulation
             for (int i = 1; i < cap; i++)
             {
                 if (!slots.IsIndexAlive(i) || HealthAt(kind, i) <= 0) continue;
-                if (!wh.HitsAllies && PlayerAt(kind, i) == owner) continue;
+                if (!wh.HitsAllies && IsFriendly(owner, PlayerAt(kind, i))) continue;
                 int d;
                 if (kind == ActorKind.Building)
                 {
@@ -312,7 +317,7 @@ public sealed partial class Simulation
             LeptonCoord from = BuildingCentre(i);
             if (!e.AttackTarget.Id.IsNone)
             {
-                bool keep = IsValidTarget(owner, e.AttackTarget) && InRange(from, e.AttackTarget, w.Range, w.MinRange)
+                bool keep = IsValidAutoTarget(owner, e.AttackTarget) && InRange(from, e.AttackTarget, w.Range, w.MinRange)
                     && IsTargetVisible(owner, e.AttackTarget);
                 if (!keep) e.AttackTarget = default;
             }

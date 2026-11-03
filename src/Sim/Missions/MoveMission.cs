@@ -334,7 +334,7 @@ internal static class MoveMission
                 for (int s = 0; s < InfantryStore.SubSlotCount; s++)
                 {
                     EntityId id = sim.Map.InfantryAt(n, s);
-                    if (Occupancy.LiveInfantry(sim, id) && sim.Infantry.Player[id.Index] != store.Player[i]) sim.Infantry.Health[id.Index] = 0;
+                    if (Occupancy.LiveInfantry(sim, id) && sim.CanAttackOwnedBy(store.Player[i], sim.Infantry.Player[id.Index])) sim.Infantry.Health[id.Index] = 0;
                 }
             sim.Map.SetVehicle(n, me);
         }
@@ -385,7 +385,7 @@ internal static class MoveMission
             else
             {
                 blocked = true;
-                if (sim.Units.Player[v.Index] != player) b.EnemyVeh = true;
+                if (!sim.IsFriendly(player, sim.Units.Player[v.Index])) b.EnemyVeh = true;
                 else if (IsIdle(sim.Units, v.Index)) b.AllyIdle = true;
                 else
                 {
@@ -400,7 +400,7 @@ internal static class MoveMission
             if (id.IsNone || (kind == ActorKind.Infantry && id == me)) continue;
             if (!sim.Infantry.Slots.IsAlive(id)) { sim.Map.SetInfantry(n, s, EntityId.None); continue; }
             if (kind == ActorKind.Vehicle && sim.Infantry.Health[id.Index] <= 0) continue;   // dying, cleaned up this tick
-            bool ally = sim.Infantry.Player[id.Index] == player;
+            bool ally = sim.IsFriendly(player, sim.Infantry.Player[id.Index]);
             if (kind == ActorKind.Vehicle && !ally && st.Crusher) { b.Kill = true; continue; }
             if (kind == ActorKind.Vehicle) blocked = true;
             if (!ally) b.EnemyInf = true;
@@ -460,13 +460,13 @@ internal static class MoveMission
         EntityId me = store.Slots.IdOf(i);
         EntityId v = sim.Map.VehicleAt(n);
         if (!v.IsNone && !(kind == ActorKind.Vehicle && v == me) && sim.Units.Slots.IsAlive(v)
-            && sim.Units.Player[v.Index] == player && IsIdle(sim.Units, v.Index))
+            && sim.IsFriendly(player, sim.Units.Player[v.Index]) && IsIdle(sim.Units, v.Index))
             sim.RequestScatter(ActorKind.Vehicle, sim.Units, v.Index);
         for (int s = 0; s < InfantryStore.SubSlotCount; s++)
         {
             EntityId id = sim.Map.InfantryAt(n, s);
             if (id.IsNone || (kind == ActorKind.Infantry && id == me) || !sim.Infantry.Slots.IsAlive(id)) continue;
-            if (sim.Infantry.Player[id.Index] == player && sim.Infantry.Health[id.Index] > 0 && IsIdle(sim.Infantry, id.Index))
+            if (sim.IsFriendly(player, sim.Infantry.Player[id.Index]) && sim.Infantry.Health[id.Index] > 0 && IsIdle(sim.Infantry, id.Index))
                 sim.RequestScatter(ActorKind.Infantry, sim.Infantry, id.Index);
         }
     }
