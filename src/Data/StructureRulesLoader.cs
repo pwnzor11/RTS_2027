@@ -15,7 +15,7 @@ internal static class StructureRulesLoader
     [
         "footprint_w", "footprint_h", "max_health", "armor", "sight", "primary_weapon", "cost", "power",
         "prerequisites", "provides",
-        "category", "produces", "build_time", "storage", "refinery", "dock", "exit", "free_unit", "wall", "needs_power",
+        "category", "produces", "build_time", "storage", "refinery", "dock", "exit", "free_unit", "wall", "needs_power", "buildable",
     ];
 
     private static readonly string[] CategoryNames = ["structure", "defence"];
@@ -55,6 +55,7 @@ internal static class StructureRulesLoader
         int[]? exit = f.OptIntArray("exit", 2, -1, MaxFootprint, null);
         bool? wall = f.OptBool("wall", false);
         bool? needsPower = f.OptBool("needs_power", false);
+        bool? buildable = f.OptBool("buildable", true);
         string? freeName = f.OptStr("free_unit", "");
         int freeUnit = -1;
         if (freeName is { Length: > 0 })
@@ -67,7 +68,7 @@ internal static class StructureRulesLoader
             }
         }
         if (category is null || produces is null || buildTime is null || storage is null || refinery is null
-            || dock is null || wall is null || needsPower is null || freeName is null
+            || dock is null || wall is null || needsPower is null || buildable is null || freeName is null
             || (f.Has("exit") && exit is null))
         {
             return null;
@@ -106,6 +107,7 @@ internal static class StructureRulesLoader
             FreeUnit = freeUnit,
             Wall = wall.Value,
             NeedsPower = needsPower.Value,
+            Buildable = buildable.Value,
         };
         return exit is null ? building : building with { Exit = new CellCoord(exit[0], exit[1]) };
     }

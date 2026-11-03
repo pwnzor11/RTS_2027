@@ -86,8 +86,19 @@ public sealed class RtsGame : Microsoft.Xna.Framework.Game
         _pixel = new Texture2D(GraphicsDevice, 1, 1);
         _pixel.SetData(new[] { Color.White });
 
-        SpriteSheet sheet = SpriteSheet.Load(GraphicsDevice, Path.Combine(_dataDir, "sprites", "vehicles", TankSheetFile));
-        var scene = new SceneRenderer(sheet);
+        // Sprites by rules id from data/sprites (M2-17); fall back to the tank sheet for every vehicle if the library fails.
+        SceneRenderer scene;
+        try
+        {
+            SpriteLibrary library = SpriteLibrary.Scan(Path.Combine(_dataDir, "sprites"));
+            library.LoadAll(GraphicsDevice);
+            scene = new SceneRenderer(library);
+        }
+        catch (Exception ex) when (ex is IOException or InvalidDataException or FormatException or InvalidOperationException)
+        {
+            Console.Error.WriteLine($"sprite library failed, using the legacy tank sheet: {ex.Message}");
+            scene = new SceneRenderer(SpriteSheet.Load(GraphicsDevice, Path.Combine(_dataDir, "sprites", "vehicles", TankSheetFile)));
+        }
         IAudio audio = NullAudio.Instance;
         audio.MusicVolume = _settings.MusicVolume;
         audio.SfxVolume = _settings.SfxVolume;

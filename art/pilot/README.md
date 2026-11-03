@@ -164,3 +164,40 @@ Sheet = 4 columns, frame of facing f, step k = `first + f * frames + k`. Work fi
 4. In 50 of the 80 scraper frames the dithered shadow touches the right canvas edge (art itself never does); at most a few shadow
    pixels are clipped. Widen CANVAS to 120 and re-render if that ever shows.
 5. In Authority green the house panels almost vanish on the grey-green hulls (same as the refinery): a palette question for the owner, not a model fix.
+
+# Infantry (M2-13b): Authority Rifleman pilot
+
+Output: `data/sprites/infantry/auth_rifleman.png` + `.sprite.toml`; owner sheet `art/pilot/infantry_contact.png`.
+Awaiting owner approval before the Rocketeer (and other infantry) fan out.
+
+## Regenerate (from the repo root)
+```
+python3 tools/art/build_infantry.py auth_rifleman              # Blender render (under the shared flock) + post-process
+python3 tools/art/build_infantry.py auth_rifleman --post-only  # post-process only, a few seconds
+python3 tools/art/build_infantry.py auth_rifleman --frames 8 14 --samples 8   # quick partial render (writes a partial sheet!)
+python3 tools/art/infantry/contact.py                          # infantry_contact.png
+```
+A new soldier = a new module in `tools/art/infantry/<id>.py` (contract in the docstring of `auth_rifleman.py`);
+`rig.py` gives primitives, a limb helper and two-bone IK, so poses are foot/hand targets, not angles.
+
+## Format
+Same camera, sun, scale and arm-B pipeline as the tank (40 deg, 64 px per cell). Frame canvas 32x32, origin (16, 26) = feet
+on the sub-slot centre; shadow falls right/below. Sheet 192x416, 6 columns, 78 frames; frame = first + facing*frames + step.
+States: idle (8 facings x1), walk (8x6, 3 ticks), fire (8x2: aim, flash), die (1 facing x6, forward fall drawn facing east).
+Contact-sheet sub-slots in a 64 px cell: (32,36), (15,25), (49,25), (15,53), (49,53). House colour: both upper-arm bands,
+helmet ridge stripe, back panel of the pack; calibrated so the median paint sits on ramp shade 4 (not pastel).
+
+## Timings
+About 0.5 s per frame (colour + mask + shadow at 128 px, 24 samples): full sheet around a minute plus 5 s post-process.
+Most of the wall-clock was waiting for the shared Blender lock behind vehicle/structure renders. Minutes spent: not tracked
+precisely, roughly 60-70 of work excluding lock waits.
+
+## Honest notes
+1. The soldier is about 17-19 px tall; house colour reads at 1x from all facings (back panel, shoulders, helmet stripe).
+2. Facing reads mostly through the rifle and the lumpy backpack silhouette; the face (goggles, respirator) is only 1-3 px.
+3. The walk cycle reads at 1x on the east/west facings; on N/S the leg swing is small and the figure mostly bobs.
+4. Fire frame 2: flash is 3-5 px of yellow-white; the W facing gun runs close to the canvas edge.
+5. Die: forward fall, readable as a body on the ground; the last frames are a green slab with the pack panel on top.
+6. Shadow touches the right canvas edge in most frames (art itself stays inside); 11 frames touch the bottom edge.
+7. Remap is exact (asserted); the shade spread inside the house paint is narrow, so rust/blue look flatter than the magenta.
+8. Not tuned after the last render: stride and arm swing may still want a push, and the sheet has not had a second review pass.

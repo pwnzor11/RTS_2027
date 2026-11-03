@@ -36,7 +36,7 @@ public sealed partial class Simulation
             case ProductionCategory.Defence:
                 if (rules.Buildings == null || typeIndex < 0 || typeIndex >= rules.Buildings.Count) return false;
                 BuildingType bt = rules.Buildings[typeIndex];
-                if (bt.Category != category) return false;
+                if (bt.Category != category || !bt.Buildable) return false;
                 (cost, buildTime, prerequisites) = (bt.Cost, bt.BuildTime, bt.Prerequisites);
                 return true;
             default:

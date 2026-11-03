@@ -21,7 +21,7 @@ namespace Rts.Data;
 /// prerequisites (count, ids), BuildTime.</item>
 /// <item>Buildings: count, then per building in id order: id, FootprintW, FootprintH, MaxHealth, Armor, Sight,
 /// PrimaryWeapon, Cost, Power, prerequisites (count, ids), provides (count, names), Category (byte), Produces (byte, 255 = none), BuildTime,
-/// Storage, Refinery, Dock X/Y, Exit X/Y (resolved), FreeUnit, Wall, NeedsPower.</item>
+/// Storage, Refinery, Dock X/Y, Exit X/Y (resolved), FreeUnit, Wall, NeedsPower, Buildable.</item>
 /// <item>Effects: count, then per effect in id order: id, Op, Target, Attr, Value.</item>
 /// <item>Terrain: speed percent for every land (LandType order) and locomotion (Locomotion order), then the buildable
 /// flag for every land.</item>
@@ -32,7 +32,7 @@ namespace Rts.Data;
 public static class RulesHash
 {
     /// <summary>Canonical layout version. Bump only with a DECISIONS entry.</summary>
-    public const byte FormatVersion = 4;
+    public const byte FormatVersion = 5;
 
     /// <summary>Computes the rules hash over the game constants and every sim type table.</summary>
     public static ulong Compute(GameRules game, SimRules sim)
@@ -143,6 +143,7 @@ public static class RulesHash
                 w.Write(x.FreeUnit);
                 w.Write(x.Wall);
                 w.Write(x.NeedsPower);
+                w.Write(x.Buildable);
             }
 
             w.Write(sim.Effects.Count);

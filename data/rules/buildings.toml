@@ -38,6 +38,7 @@ prerequisites = []
 provides = ["auth_conyard"]
 category = "structure"
 produces = ""
+buildable = false
 
 [auth_power]
 footprint_w = 2

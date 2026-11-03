@@ -52,5 +52,8 @@ public sealed record BuildingType(string Id, int FootprintW, int FootprintH, int
     /// <summary>True if this building stops working on low power (defences).</summary>
     public bool NeedsPower { get; init; }
 
+    /// <summary>False for structures that can't be produced from a queue (e.g. the starting Construction Yard). Default true.</summary>
+    public bool Buildable { get; init; } = true;
+
     private CellCoord DefaultExit() => new(FootprintW / 2, FootprintH);
 }
