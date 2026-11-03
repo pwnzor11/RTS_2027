@@ -1,0 +1,63 @@
+# Rust Belt terrain palette (M2: tinted flat colours plus a light procedural texture; real tiles are M3).
+# Read by src/Game/Render/TerrainPalette.cs (the game) and tools/maps/make_rustbelt_m2.py (proof images).
+# Both must bake the same bytes: see the algorithm notes in src/Game/Render/TerrainBake.cs.
+# Colours are #RRGGBB. Each land type has three shades: dark, base, light (the texture picks one per texel).
+
+format_version = 1
+# Texels per map cell in the baked texture. Linear filtering stretches it over the 64 px cell.
+texel_cells = 8
+
+[land.clear]
+# Frozen dirt, snow-dusted grey-brown. Kept warm so the green-grey tank stands out.
+dark = "#6B6358"
+base = "#7A7266"
+light = "#8D857A"
+
+[land.road]
+# Cracked asphalt.
+dark = "#2F2E2C"
+base = "#3D3C39"
+light = "#4B4A46"
+
+[land.rough]
+# Rubble: broken brick and concrete.
+dark = "#3E3832"
+base = "#544B43"
+light = "#675E54"
+
+[land.ash]
+# Black-grey ash ground.
+dark = "#222325"
+base = "#2E3033"
+light = "#3B3D42"
+
+[land.water]
+# Frozen river: cold dark slate.
+dark = "#1C2832"
+base = "#263642"
+light = "#31495B"
+
+[land.rock]
+# Grey stone outcrops.
+dark = "#4A4D54"
+base = "#5C5F66"
+light = "#71747C"
+
+[land.cliff]
+# Dark rock edge (walls).
+dark = "#1E1D1C"
+base = "#2A2927"
+light = "#383633"
+
+[overlay.ashfall]
+# Ashfall drifts: darker speckle. Texel coverage rises linearly with density (0..255) up to max_coverage_permille.
+speck = "#17171A"
+max_coverage_permille = 450
+
+[overlay.pitchblende]
+# Pitchblende pits: greenish-yellow glinting rock chunks laid over the ground.
+chunk = "#8A9A3C"
+glint = "#D7E26A"
+max_coverage_permille = 600
+# One texel in this many inside a chunk is a bright glint.
+glint_one_in = 7

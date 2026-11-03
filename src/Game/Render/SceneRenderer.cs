@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Rts.Game.Sprites;
 using Rts.Sim.Core;
+using Rts.Sim.Map;
 
 namespace Rts.Game.Render;
 
@@ -16,6 +17,7 @@ public sealed class SceneRenderer
     private static readonly Color DragColour = Color.White;
 
     private readonly UnitRenderer _units;
+    private readonly TerrainLook _rustBeltTerrain = new();
 
     /// <summary>Creates a renderer that draws vehicles with the given sprite sheet.</summary>
     public SceneRenderer(SpriteSheet sheet)
@@ -27,7 +29,16 @@ public sealed class SceneRenderer
     public void Draw(SpriteBatch batch, Texture2D pixel, SceneFrame frame, Camera camera, Viewport viewport)
     {
         SimSnapshot snapshot = frame.Snapshot;
-        TerrainRenderer.Draw(batch, pixel, snapshot, camera, viewport);
+        MapData? map = frame.Sim?.Setup.Map;
+        if (map is not null && TerrainPalette.IsRustBelt(map.Theater))
+        {
+            _rustBeltTerrain.Draw(batch, pixel, map, camera);
+        }
+        else
+        {
+            TerrainRenderer.Draw(batch, pixel, snapshot, camera, viewport);
+        }
+
         if (frame.Overlays.Occupancy && frame.Sim is not null)
         {
             OccupancyOverlay.Draw(batch, pixel, frame.Sim, snapshot, camera, viewport);
