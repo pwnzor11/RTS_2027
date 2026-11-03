@@ -13,6 +13,6 @@ value = 1100
 [[effect]]
 id = "test_unlock_turret"
 op = "enable"
-target = "test_turret"
+target = "auth_turret"
 attr = ""
 value = 0

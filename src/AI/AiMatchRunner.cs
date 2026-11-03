@@ -18,10 +18,10 @@ public static class AiMatchRunner
 {
     private const int WinCheckInterval = 4;
     private static readonly string[] VehicleIds =
-        ["test_tank", "test_tank", "test_tank", "test_tank", "test_jeep", "test_jeep", "test_artillery_truck"];
-    private const string InfantryId = "test_rifleman";
+        ["auth_tank", "auth_tank", "auth_tank", "auth_tank", "auth_tank", "auth_jeep", "auth_jeep"];
+    private const string InfantryId = "auth_rifleman";
     private const int InfantryPerPlayer = 6;
-    private const string HqId = "test_hq";
+    private const string HqId = "auth_conyard";
     private const int MinHqRing = 3, MaxHqRing = 8;
 
     /// <summary>Plays a game. <paramref name="sideA"/> takes slot 0 when <paramref name="aInSlot0"/>, else slot 1

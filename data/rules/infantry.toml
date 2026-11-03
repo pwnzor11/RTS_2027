@@ -1,21 +1,21 @@
-# placeholder fixture, not balance
-# TEST FIXTURE: synthetic values. Keys: speed, max_health, armor, sight, primary_weapon ("" = none), cost,
-# prerequisites. Optional: base = "<id in this file>" (one level).
+# Authority M2 roster: placeholder balance (tune in M2-14).
+# Keys: speed, max_health, armor, sight, primary_weapon ("" = none), cost, prerequisites. Optional: build_time.
+# Infantry have no locomotion key (they move on foot).
 
-[test_rifleman]
+[auth_rifleman]
 speed = 10
 max_health = 50
 armor = "unarmored"
 sight = 4
-primary_weapon = "test_rifle"
+primary_weapon = "auth_rifle"
 cost = 100
-prerequisites = ["test_barracks"]
+prerequisites = ["auth_barracks"]
 
-[test_engineer]
-speed = 10
-max_health = 40
+[auth_rocketeer]
+speed = 8
+max_health = 60
 armor = "unarmored"
-sight = 4
-primary_weapon = ""
-cost = 500
-prerequisites = ["test_barracks"]
+sight = 5
+primary_weapon = "auth_rocket"
+cost = 300
+prerequisites = ["auth_barracks"]

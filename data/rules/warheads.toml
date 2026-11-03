@@ -1,18 +1,18 @@
-# placeholder fixture, not balance
-# TEST FIXTURE: synthetic values. versus = damage percent (0..1000) per armour class, in the order
-# Unarmored, Light, Heavy, Structure, Fortified. splash: 0 = target only, 1 = 3x3 block with falloff.
+# Authority M2 roster: placeholder balance (tune in M2-14).
+# Keys: versus = damage percent (0..1000) per armour class, in the order Unarmored, Light, Heavy, Structure,
+# Fortified. splash: 0 = target only, 1 = 3x3 block with falloff. hits_allies: whether splash hurts allies (D-054).
 
-[test_ap]
-versus = [25, 75, 100, 50, 40]
-splash = 0
-hits_allies = false
-
-[test_small_arms]
+[auth_small_arms]
 versus = [100, 50, 15, 10, 5]
 splash = 0
 hits_allies = false
 
-[test_he]
+[auth_ap]
+versus = [25, 75, 100, 50, 40]
+splash = 0
+hits_allies = false
+
+[auth_he]
 versus = [100, 80, 60, 70, 50]
 splash = 1
 hits_allies = true
