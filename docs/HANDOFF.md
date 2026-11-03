@@ -1,5 +1,5 @@
 # Handoff: Session 2 (in progress) — checkpoint after wave 1
-Last commit: (set by the checkpoint commit; see `git log -1`) 
+Last commit: 3df21e8 (2026-11-02) — checkpoint; wrap-up rewrites this file
 Where things stand: M0-11 repo skeleton is done and on main: .NET 10 solution, `Sim` library (Fixed32,
 lepton/facing math in `Rts.Sim.Numerics`, slot arrays, Step with fixed system order, Move/Stop/Debug
 commands, xxHash64 state hash, save round-trip, replay), Roslyn determinism rules test, TOML rules
