@@ -1,12 +1,139 @@
+using Rts.Sim.Combat;
 using Rts.Sim.Core;
+using Rts.Sim.Numerics;
+using Rts.Sim.Rules;
 using Rts.Sim.World;
 
 namespace Rts.Sim.Missions;
 
-/// <summary>Guard, Attack and AttackMove mission handlers. OWNER: M1-09 (combat). Lead-created stub: idle.</summary>
+/// <summary>
+/// Guard, Attack and AttackMove mission handlers. OWNER: M1-09 (combat).
+/// Per-actor state (attack target, guard point / AttackMove destination, scan and chase timers) lives in
+/// <see cref="CombatState"/>; a mission's first handler call sees <see cref="MissionStatus.Init"/>.
+/// </summary>
 internal static class CombatMissions
 {
-    public static int HandleGuard(Simulation sim, MobileStore store, ActorKind kind, int i) => MissionHandlers.GuardSleepTicks;
-    public static int HandleAttack(Simulation sim, MobileStore store, ActorKind kind, int i) => MissionHandlers.GuardSleepTicks;
-    public static int HandleAttackMove(Simulation sim, MobileStore store, ActorKind kind, int i) => MissionHandlers.GuardSleepTicks;
+    /// <summary>Ticks between target scans of a moving AttackMove unit.</summary>
+    private const int AttackMoveScanTicks = 5;
+    /// <summary>Ticks between re-targeting the chase cell on a moving target.</summary>
+    private const int ChaseRetargetTicks = 10;
+
+    public static int HandleGuard(Simulation sim, MobileStore store, ActorKind kind, int i)
+    {
+        ref CombatEntry e = ref sim.CombatData.At(kind, i);
+        LeptonCoord pos = store.Position[i];
+        if (store.Status[i] == MissionStatus.Init)
+        {
+            store.Status[i] = MissionStatus.Waiting;
+            e.AttackTarget = default; e.RetargetTick = 0; e.ScanTick = 0;
+            if (e.GuardPending) e.GuardPending = false;
+            else e.GuardPoint = pos.ToCell();
+        }
+
+        byte owner = store.Player[i];
+        int weapon = sim.WeaponOf(kind, i);
+        if (weapon >= 0)
+        {
+            WeaponType w = sim.Setup.Rules.Weapons[weapon];
+            if (!e.AttackTarget.Id.IsNone)
+            {
+                bool keep = sim.IsValidTarget(owner, e.AttackTarget) && sim.IsTargetVisible(owner, e.AttackTarget);
+                if (keep && sim.TargetPoint(e.AttackTarget, pos, out LeptonCoord tp))
+                {
+                    // Leash: chasing is allowed up to Sight cells from the guard point; a target already in range needs no chase.
+                    int leash = sim.SightOf(kind, i) * SimConstants.LeptonsPerCell;
+                    if (LeptonMath.Distance(pos, tp) > w.Range && LeptonMath.Distance(pos, LeptonCoord.CenterOf(e.GuardPoint)) > leash)
+                        keep = false;
+                }
+                if (!keep) e.AttackTarget = default;
+            }
+            if (e.AttackTarget.Id.IsNone && sim.Tick >= e.ScanTick)
+            {
+                e.AttackTarget = sim.AcquireTarget(owner, pos, w);
+                e.ScanTick = sim.Tick + Simulation.ScanIntervalTicks;
+                e.RetargetTick = 0;
+            }
+            if (!e.AttackTarget.Id.IsNone)
+            {
+                Engage(sim, store, kind, i, weapon, e.AttackTarget);
+                return 1;
+            }
+        }
+
+        if (pos.ToCell() != e.GuardPoint) return MoveMission.StepToward(sim, store, kind, i, e.GuardPoint);
+        return MissionHandlers.GuardSleepTicks;
+    }
+
+    public static int HandleAttack(Simulation sim, MobileStore store, ActorKind kind, int i)
+    {
+        ref CombatEntry e = ref sim.CombatData.At(kind, i);
+        if (store.Status[i] == MissionStatus.Init) { store.Status[i] = MissionStatus.Waiting; e.RetargetTick = 0; }
+        int weapon = sim.WeaponOf(kind, i);
+        if (weapon < 0 || !sim.IsValidTarget(store.Player[i], e.AttackTarget))
+        {
+            e.AttackTarget = default;
+            ToGuard(sim, store, kind, i);
+            return 1;
+        }
+        Engage(sim, store, kind, i, weapon, e.AttackTarget);
+        return 1;
+    }
+
+    public static int HandleAttackMove(Simulation sim, MobileStore store, ActorKind kind, int i)
+    {
+        ref CombatEntry e = ref sim.CombatData.At(kind, i);
+        if (store.Status[i] == MissionStatus.Init)
+        {
+            store.Status[i] = MissionStatus.Waiting;
+            e.GuardPending = false;                      // GuardPoint holds the destination
+            e.AttackTarget = default; e.RetargetTick = 0; e.ScanTick = 0;
+        }
+        byte owner = store.Player[i];
+        int weapon = sim.WeaponOf(kind, i);
+        if (weapon >= 0)
+        {
+            if (!e.AttackTarget.Id.IsNone && !(sim.IsValidTarget(owner, e.AttackTarget) && sim.IsTargetVisible(owner, e.AttackTarget)))
+                e.AttackTarget = default;
+            if (e.AttackTarget.Id.IsNone && sim.Tick >= e.ScanTick)
+            {
+                e.AttackTarget = sim.AcquireTarget(owner, store.Position[i], sim.Setup.Rules.Weapons[weapon]);
+                e.ScanTick = sim.Tick + AttackMoveScanTicks;
+                e.RetargetTick = 0;
+            }
+            if (!e.AttackTarget.Id.IsNone)
+            {
+                Engage(sim, store, kind, i, weapon, e.AttackTarget);
+                return 1;
+            }
+        }
+        if (store.Position[i].ToCell() == e.GuardPoint)
+        {
+            e.GuardPending = true;                       // guard where we arrived
+            ToGuard(sim, store, kind, i);
+            return 1;
+        }
+        return MoveMission.StepToward(sim, store, kind, i, e.GuardPoint);
+    }
+
+    private static void ToGuard(Simulation sim, MobileStore store, ActorKind kind, int i) =>
+        sim.AssignMission(new ActorRef(kind, store.Slots.IdOf(i)), MissionKind.Guard);
+
+    /// <summary>One tick of fighting <paramref name="target"/>: close in if out of range, hold if inside the minimum range,
+    /// otherwise aim the mount and fire when ready.</summary>
+    private static void Engage(Simulation sim, MobileStore store, ActorKind kind, int i, int weapon, ActorRef target)
+    {
+        WeaponType w = sim.Setup.Rules.Weapons[weapon];
+        LeptonCoord pos = store.Position[i];
+        if (!sim.TargetPoint(target, pos, out LeptonCoord tp)) return;
+        ref CombatEntry e = ref sim.CombatData.At(kind, i);
+        int dist = LeptonMath.Distance(pos, tp);
+        if (dist > w.Range)
+        {
+            if (sim.Tick >= e.RetargetTick) { e.ChaseCell = tp.ToCell(); e.RetargetTick = sim.Tick + ChaseRetargetTicks; }
+            MoveMission.StepToward(sim, store, kind, i, e.ChaseCell);
+            return;
+        }
+        if (dist < w.MinRange) return;
+        if (sim.Aim(store, kind, i, tp) && e.ReloadTicks == 0) sim.Fire(kind, i, weapon, target, tp);
+    }
 }
