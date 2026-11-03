@@ -48,5 +48,31 @@ def main():
         print(arm, "remapped pixels:", remap(img, HOUSES["Blue ally"])[1])
 
 
+def main_v2():
+    """v2: frame 2 of B_pixel_64_v2 and B_dither_64_v2; only exact ramp pixels may change."""
+    global TOL
+    TOL = 0
+    fr = {n: C.split_sheet(Image.open(os.path.join(C.PILOT, fn)).convert("RGBA"), 4, 4)[FRAME]
+          for n, fn in (("B pixel v2", "B_pixel_64_v2.png"), ("B dither v2", "B_dither_64_v2.png"))}
+    cv = 96
+    Z = 3
+    sheet = Image.new("RGBA", (cv * Z * 4, cv * Z * 2), (74, 66, 58, 255))
+    ramp_set = {tuple(c) for c in C.HOUSE}
+    for r, (arm, img) in enumerate(fr.items()):
+        variants = [("original", img)]
+        for n, rp in HOUSES.items():
+            out, cnt = remap(img, rp)
+            a0, a1 = np.asarray(img).reshape(-1, 4), np.asarray(out).reshape(-1, 4)
+            changed = (a0 != a1).any(axis=1)
+            assert all(tuple(p[:3]) in ramp_set for p in a0[changed]), "remap touched a non-ramp pixel"
+            assert (a0[~changed] == a1[~changed]).all() and (a0[:, 3] == a1[:, 3]).all()
+            print(arm, n, "pixels changed:", int(changed.sum()))
+            variants.append((n, out))
+        for c, (n, im) in enumerate(variants):
+            sheet.alpha_composite(im.resize((cv * Z, cv * Z), Image.NEAREST), (c * cv * Z, r * cv * Z))
+    sheet.convert("RGB").save(os.path.join(C.PILOT, "remap_test_v2.png"))
+
+
 if __name__ == "__main__":
-    main()
+    import sys
+    main_v2() if "v2" in sys.argv[1:] else main()

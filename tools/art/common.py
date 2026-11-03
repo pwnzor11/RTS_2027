@@ -43,6 +43,7 @@ def make_ramp(dark, mid, light):
 
 
 CELL_SIZES = (48, 64)
+TAG = os.environ.get("ART_TAG", "")  # "_v2" selects the v2 raw renders
 SS = 4  # supersample factor
 
 
@@ -51,7 +52,7 @@ def canvas(cell):
 
 
 def raw_dir(cell):
-    return os.path.join(WORK, f"raw_{canvas(cell) * SS}")
+    return os.path.join(WORK, f"raw_{canvas(cell) * SS}{TAG}")
 
 
 def house_index(vals, lo, hi):
@@ -60,7 +61,7 @@ def house_index(vals, lo, hi):
 
 def calibration():
     """Luminance range of the magenta house paint across all 4x frames (cached)."""
-    p = os.path.join(WORK, "house_cal.txt")
+    p = os.path.join(WORK, f"house_cal{TAG}.txt")
     if os.path.exists(p):
         lo, hi = open(p).read().split()
         return float(lo), float(hi)
@@ -127,3 +128,13 @@ def pack_sheet(frames, cols, cw, ch, bg=(0, 0, 0, 0)):
 def split_sheet(img, cols, rows):
     cw, ch = img.width // cols, img.height // rows
     return [img.crop(((i % cols) * cw, (i // cols) * ch, (i % cols + 1) * cw, (i // cols + 1) * ch)) for i in range(cols * rows)]
+
+
+def anchor_px(cell=64, elev_deg=40.0, cell_world=3.4, target=(0.0, 0.5, 0.7)):
+    """Pixel of the tank's ground origin (cell centre) within the frame, from the camera set-up in build_tank.py."""
+    import math
+    el = math.radians(elev_deg)
+    rel = (-target[0], -target[1], -target[2])
+    up = rel[1] * math.sin(el) + rel[2] * math.cos(el)
+    cv = canvas(cell)
+    return cv // 2, round(cv / 2 - up / (cell_world * 1.5) * cv)

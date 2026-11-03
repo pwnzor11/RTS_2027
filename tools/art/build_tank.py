@@ -13,7 +13,7 @@ import bpy
 from mathutils import Vector
 
 CELL = 3.4            # world units per cell (tank hull ~ 1 cell long)
-ELEV = 47.0           # camera elevation, degrees
+ELEV = 40.0           # camera elevation, degrees
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 WORK = os.path.join(ROOT, "art", "pilot", "work")
 
@@ -89,7 +89,7 @@ def build():
         if bevel:
             bm = o.modifiers.new("bev", "BEVEL")
             bm.width = bevel
-            bm.segments = 2
+            bm.segments = 1
         return add(o, m)
 
     def cyl(name, r, h, loc, m, axis="Z", verts=24):
@@ -104,68 +104,62 @@ def build():
         bpy.ops.object.shade_smooth()
         return add(o, m)
 
-    # ---- tracks (x = +-1.07), height ~0.8
+    # ---- tracks (x = +-1.07), road wheels with hubs, 3.4 px house stripe on the skirt (v2)
     for s, side in ((-1, "L"), (1, "R")):
         x = s * 1.07
         box("track" + side, (0.62, 2.7, 0.7), (x, 0, 0.4), "track", 0.12)
         cyl("trkF" + side, 0.4, 0.62, (x, 1.35, 0.4), "track", "X")
         cyl("trkR" + side, 0.4, 0.62, (x, -1.35, 0.4), "track", "X")
         for i in range(6):
-            y = -1.2 + i * 0.48
-            cyl(f"wheel{side}{i}", 0.27, 0.1, (x + s * 0.33, y, 0.4), "steel", "X", 16)
+            y = -1.25 + i * 0.5
+            cyl(f"wheel{side}{i}", 0.3, 0.1, (x + s * 0.33, y, 0.38), "steel", "X", 18)
+            cyl(f"hub{side}{i}", 0.12, 0.08, (x + s * 0.39, y, 0.38), "rust", "X", 10)
+            cyl(f"hubc{side}{i}", 0.045, 0.1, (x + s * 0.4, y, 0.38), "dark", "X", 6)
         cyl("sprocket" + side, 0.3, 0.1, (x + s * 0.33, 1.4, 0.45), "rust", "X", 12)
-        # skirt plate over upper track + house stripe
-        box("skirt" + side, (0.08, 2.9, 0.34), (x + s * 0.34, 0.0, 0.78), "hull", 0.02)
-        box("stripe" + side, (0.1, 2.4, 0.12), (x + s * 0.355, 0.0, 0.78), "house", 0.0)
-        box("fender" + side, (0.66, 3.0, 0.07), (x, 0, 0.98), "hull2", 0.02)
-    # ---- hull
-    box("hull", (1.78, 3.0, 0.62), (0, 0, 0.8), "hull", 0.07)
-    box("glacis", (1.78, 0.95, 0.1), (0, 1.52, 1.0), "hull", 0.04, rot=(-24, 0, 0))
+        box("skirt" + side, (0.08, 2.9, 0.44), (x + s * 0.34, 0.0, 0.84), "hull", 0.03)
+        box("stripe" + side, (0.1, 2.6, 0.3), (x + s * 0.355, 0.0, 0.86), "house", 0.0)
+        box("fender" + side, (0.66, 3.0, 0.07), (x, 0, 1.03), "hull2", 0.03)
+    # ---- hull: chamfered, sloped glacis and sloped rear
+    box("hull", (1.78, 3.0, 0.62), (0, 0, 0.82), "hull", 0.1)
+    box("glacis", (1.78, 1.05, 0.13), (0, 1.5, 1.02), "hull", 0.05, rot=(-30, 0, 0))
+    box("nose", (1.78, 0.5, 0.4), (0, 1.62, 0.72), "hull2", 0.06)
+    box("rearslope", (1.7, 0.55, 0.1), (0, -1.5, 1.05), "hull2", 0.04, rot=(22, 0, 0))
     box("rearplate", (1.78, 0.08, 0.5), (0, -1.52, 0.8), "hull2", 0.02)
-    box("deck", (1.7, 2.5, 0.08), (0, -0.2, 1.14), "hull2", 0.03)
+    box("deck", (1.5, 2.2, 0.16), (0, -0.15, 1.2), "hull2", 0.05)
     for i in range(4):
-        box(f"vent{i}", (0.7, 0.07, 0.04), (0, -1.45 + i * 0.12, 1.2), "dark", 0.0)
-    box("toolbox", (0.34, 0.5, 0.18), (-0.62, -0.95, 1.25), "rust", 0.03)
-    box("shovel", (0.16, 0.9, 0.04), (0.65, -0.75, 1.2), "steel", 0.0)
-    # searchlight
-    cyl("slbase", 0.07, 0.15, (0.62, 1.05, 1.24), "dark", "Z", 8)
-    cyl("slbody", 0.12, 0.2, (0.62, 1.12, 1.4), "steel", "Y", 12)
-    cyl("sllens", 0.095, 0.04, (0.62, 1.23, 1.4), "lens", "Y", 12)
+        box(f"vent{i}", (0.6, 0.07, 0.04), (0, -1.38 + i * 0.12, 1.3), "dark", 0.0)
+    box("toolbox", (0.34, 0.5, 0.18), (-0.58, -0.7, 1.37), "rust", 0.03)
+    box("shovel", (0.16, 0.9, 0.04), (0.62, -0.6, 1.32), "steel", 0.0)
+    cyl("slbase", 0.07, 0.15, (0.58, 0.95, 1.38), "dark", "Z", 8)
+    cyl("slbody", 0.13, 0.22, (0.58, 1.02, 1.54), "steel", "Y", 12)
+    cyl("sllens", 0.1, 0.04, (0.58, 1.14, 1.54), "lens", "Y", 12)
     # ---- reactor housing with ribbed heat-sink collar
-    ry = -1.0
-    cyl("react", 0.4, 0.78, (0, ry, 1.5), "light", "Z", 28)
+    ry = -1.15
+    cyl("react", 0.4, 0.78, (0, ry, 1.6), "light", "Z", 28)
     for i in range(5):
-        cyl(f"rib{i}", 0.5, 0.05, (0, ry, 1.38 + i * 0.1), "steel", "Z", 28)
-    cyl("rcap", 0.3, 0.06, (0, ry, 1.92), "dark", "Z", 20)
-    cyl("rpipe", 0.05, 0.3, (0.22, ry, 2.0), "steel", "Z", 8)
-    cyl("rband", 0.42, 0.05, (0, ry, 1.2), "rust", "Z", 28)
-    # ---- turret (low, long gun)
+        cyl(f"rib{i}", 0.5, 0.05, (0, ry, 1.48 + i * 0.1), "steel", "Z", 28)
+    cyl("rcap", 0.3, 0.06, (0, ry, 2.02), "dark", "Z", 20)
+    cyl("rpipe", 0.05, 0.3, (0.22, ry, 2.1), "steel", "Z", 8)
+    cyl("rband", 0.42, 0.05, (0, ry, 1.3), "rust", "Z", 28)
+    # ---- turret: chamfered, full-side house panels, hatches, thick gun with slotted brake
     ty = -0.1
-    box("turret", (1.5, 1.7, 0.5), (0, ty, 1.43), "hull", 0.16)
-    box("turtop", (1.1, 1.2, 0.06), (0, ty - 0.05, 1.7), "hull2", 0.03)
+    box("turret", (1.5, 1.6, 0.5), (0, ty, 1.54), "hull", 0.07)
+    box("turtop", (1.1, 1.1, 0.06), (0, ty - 0.05, 1.8), "hull2", 0.03)
     for s in (-1, 1):
-        box("panel" + ("L" if s < 0 else "R"), (0.05, 1.1, 0.34), (s * 0.755, ty, 1.4), "house", 0.0)
-    box("mantlet", (0.55, 0.34, 0.34), (0, ty + 0.9, 1.5), "steel", 0.06)
-    cyl("gun", 0.085, 1.6, (0, ty + 1.65, 1.5), "dark", "Y", 14)
-    cyl("gunsleeve", 0.12, 0.8, (0, ty + 1.2, 1.5), "steel", "Y", 14)
-    box("brake", (0.24, 0.36, 0.22), (0, ty + 2.52, 1.5), "steel", 0.04)
+        box("panel" + ("L" if s < 0 else "R"), (0.05, 1.32, 0.34), (s * 0.765, ty, 1.53), "house", 0.0)
+    box("mantlet", (0.62, 0.36, 0.38), (0, ty + 0.9, 1.6), "steel", 0.07)
+    cyl("gunsleeve", 0.18, 0.7, (0, ty + 1.3, 1.6), "steel", "Y", 16)
+    cyl("gun", 0.12, 1.2, (0, ty + 1.6, 1.6), "dark", "Y", 16)
+    box("brake", (0.34, 0.5, 0.3), (0, ty + 2.2, 1.6), "steel", 0.05)
     for i in range(3):
-        box(f"slot{i}", (0.26, 0.04, 0.12), (0, ty + 2.42 + i * 0.1, 1.5), "dark", 0.0)
-    cyl("cupola", 0.2, 0.14, (-0.35, ty - 0.45, 1.78), "hull2", "Z", 16)
-    cyl("hatch", 0.16, 0.05, (0.35, ty - 0.2, 1.74), "steel", "Z", 16)
-    # stencilled number on both turret sides
-    for s in (-1, 1):
-        bpy.ops.object.text_add()
-        t = bpy.context.active_object
-        prim_done(t, "num" + str(s))
-        t.data.body = "07"
-        t.data.size = 0.36
-        t.data.extrude = 0.01
-        t.data.align_x = "CENTER"
-        t.data.align_y = "CENTER"
-        t.rotation_euler = (math.radians(90), 0, math.radians(90 if s > 0 else -90))
-        t.location = (s * 0.79, ty, 1.4)
-        add(t, "white")
+        box(f"slot{i}", (0.36, 0.05, 0.16), (0, ty + 2.06 + i * 0.12, 1.6), "dark", 0.0)
+    cyl("cupolaring", 0.23, 0.12, (-0.38, ty - 0.4, 1.88), "hull2", "Z", 16)
+    cyl("cupola", 0.17, 0.06, (-0.38, ty - 0.4, 1.95), "steel", "Z", 16)
+    cyl("cupolahandle", 0.04, 0.12, (-0.38, ty - 0.4, 2.02), "dark", "Z", 6)
+    box("hatchrim", (0.46, 0.46, 0.06), (0.38, ty - 0.15, 1.85), "hull2", 0.02)
+    box("hatch", (0.36, 0.36, 0.05), (0.38, ty - 0.15, 1.89), "steel", 0.02)
+    box("hatchbar", (0.2, 0.05, 0.04), (0.38, ty - 0.15, 1.93), "dark", 0.0)
+    # stencil number dropped in v2 (it was a blob at 64 px)
     return rig, objs, M
 
 
@@ -228,6 +222,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--sizes", type=int, nargs="+", default=[288, 384])
     ap.add_argument("--samples", type=int, default=24)
+    ap.add_argument("--tag", default="", help="suffix for the work dir, e.g. _v2")
     ap.add_argument("--frames", type=int, nargs="*", default=None)
     args = ap.parse_args(sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else sys.argv[1:])
     rig, objs, M = build()
@@ -239,7 +234,7 @@ def main():
     frames = args.frames if args.frames else range(16)
     for size in args.sizes:
         sc.render.resolution_x = sc.render.resolution_y = size
-        out = os.path.join(WORK, f"raw_{size}")
+        out = os.path.join(WORK, f"raw_{size}{args.tag}")
         os.makedirs(out, exist_ok=True)
         for f in frames:
             rig.rotation_euler = (0, 0, -math.radians(22.5 * f))
