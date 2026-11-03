@@ -2,9 +2,11 @@
 // Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
 using System.IO.Hashing;
 using Rts.Sim.Core;
+using Rts.Sim.Economy;
 using Rts.Sim.Map;
 using Rts.Sim.Missions;
 using Rts.Sim.Pathing;
+using Rts.Sim.Production;
 using Rts.Sim.Rules;
 using Rts.Sim.Serialization;
 using Rts.Sim.Vision;
@@ -22,6 +24,8 @@ public sealed partial class Simulation
     private readonly InfantryStore _infantry;
     private readonly BuildingStore _buildings;
     private readonly PlayerStore _players;
+    private readonly EconomyState _economy;
+    private readonly ProductionState _production;
     private readonly List<SetupEntry> _setupLog = new();
     private bool _inStep;
     private readonly MapState _map;
@@ -51,6 +55,8 @@ public sealed partial class Simulation
         _infantry = new InfantryStore(setup.Limits.Infantry);
         _buildings = new BuildingStore(setup.Limits.Buildings);
         _players = new PlayerStore(setup);
+        _economy = new EconomyState(setup);
+        _production = new ProductionState(setup);
         _map = new MapState(setup.Map);
         _paths = new PathService(_map, setup.Rules.Terrain);
         _vision = new VisionState(setup.Map.Width, setup.Map.Height, setup.PlayerCount,
@@ -58,10 +64,12 @@ public sealed partial class Simulation
         // Parts after vision come from the partial files in canonical order: combat (M1-09) first.
         var extra = CombatParts();
         // M1.5: "players" is appended after the combat parts (append-only order).
-        _parts = new ISimStatePart[7 + extra.Length];
+        _parts = new ISimStatePart[9 + extra.Length];
         _parts[0] = _map; _parts[1] = _units; _parts[2] = _infantry; _parts[3] = _buildings; _parts[4] = _paths; _parts[5] = _vision;
         for (int e = 0; e < extra.Length; e++) _parts[6 + e] = extra[e];
         _parts[6 + extra.Length] = _players;
+        _parts[7 + extra.Length] = _economy;
+        _parts[8 + extra.Length] = _production;
         MapHash = MapHasher.Compute(setup.Map);
     }
 
@@ -69,6 +77,12 @@ public sealed partial class Simulation
 
     /// <summary>Per-player state (team, cash, power, defeat) — the "players" part (M1.5, D-054).</summary>
     public PlayerStore Players => _players;
+
+    /// <summary>Economy state — the "economy" part (M2).</summary>
+    public EconomyState Economy => _economy;
+
+    /// <summary>Production state — the "production" part (M2).</summary>
+    public ProductionState Production => _production;
 
     /// <summary>Out-of-Step spawns and placements in the order they happened (M1.5). Replays read this.</summary>
     public IReadOnlyList<SetupEntry> SetupLog => _setupLog;

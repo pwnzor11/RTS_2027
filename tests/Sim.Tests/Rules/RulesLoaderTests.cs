@@ -38,9 +38,9 @@ public sealed class RulesLoaderTests
         RuleSet rules = LoadReal();
 
         Assert.Equal(20, rules.Game.TickRate);
-        Assert.Equal(4, rules.Sim.Vehicles.Count);
+        Assert.Equal(5, rules.Sim.Vehicles.Count);
         Assert.Equal(2, rules.Sim.Infantry.Count);
-        Assert.Equal(4, rules.Sim.Buildings.Count);
+        Assert.Equal(8, rules.Sim.Buildings.Count);
         Assert.Equal(4, rules.Sim.Weapons.Count);
         Assert.Equal(3, rules.Sim.Warheads.Count);
         Assert.Equal(2, rules.Sim.Effects.Count);

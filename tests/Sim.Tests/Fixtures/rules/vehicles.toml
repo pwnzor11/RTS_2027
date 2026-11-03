@@ -60,3 +60,18 @@ turret_turn_rate = 0
 crusher = false
 cost = 900
 prerequisites = ["test_factory"]
+
+[test_harvester]
+speed = 14
+max_health = 350
+locomotion = "tracked"
+turn_rate = 6
+armor = "heavy"
+sight = 4
+primary_weapon = ""
+has_turret = false
+turret_turn_rate = 0
+crusher = false
+cost = 600
+prerequisites = ["test_factory"]
+harvest_capacity = 20

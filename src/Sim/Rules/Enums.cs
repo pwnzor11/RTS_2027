@@ -14,6 +14,9 @@ public enum LandType : byte { Clear = 0, Road = 1, Rough = 2, Ash = 3, Water = 4
 /// <summary>What a map cell's overlay holds. Append only.</summary>
 public enum OverlayKind : byte { None = 0, Ashfall = 1, Pitchblende = 2, Wall = 3 }
 
+/// <summary>What a production queue builds (M2). Append only: values are persisted.</summary>
+public enum ProductionCategory : byte { Infantry = 0, Vehicle = 1, Aircraft = 2, Structure = 3, Defence = 4 }
+
 /// <summary>Counts for sizing tables.</summary>
 public static class RuleCounts
 {

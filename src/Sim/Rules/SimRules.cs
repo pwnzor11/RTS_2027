@@ -16,6 +16,13 @@ public sealed record SimRules(
     TerrainTable Terrain,
     IReadOnlyList<EffectDef> Effects)
 {
+    /// <summary>Economy and production constants (game.toml [economy]).</summary>
+    public EconomyRules Economy { get; init; } = EconomyRules.Default;
+
+    /// <summary>Build time in ticks: <paramref name="buildTime"/> when positive, else derived from cost.</summary>
+    public static int BuildTicks(int cost, int buildTime, EconomyRules e) =>
+        buildTime > 0 ? buildTime : Math.Max(1, cost * e.BuildTicksPer100Credits / 100);
+
     public static int IndexOf<T>(IReadOnlyList<T> list, string id, Func<T, string> idOf)
     {
         int lo = 0, hi = list.Count - 1;

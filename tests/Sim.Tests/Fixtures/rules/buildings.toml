@@ -3,6 +3,8 @@
 # TEST FIXTURE: synthetic values. Keys: footprint_w, footprint_h (cells, 1..6), max_health, armor, sight,
 # primary_weapon ("" = none), cost, power (positive = produces, negative = drains), prerequisites, provides.
 # Optional: base = "<id in this file>" (one level).
+# Optional M2 keys: category ("structure"|"defence"), produces (""|"infantry"|"vehicle"|"aircraft"), build_time,
+# storage, refinery, dock [x,y], exit [x,y], free_unit (vehicle id), wall, needs_power.
 
 [test_hq]
 footprint_w = 3
@@ -27,6 +29,7 @@ cost = 300
 power = -10
 prerequisites = ["test_hq"]
 provides = []
+produces = "infantry"
 
 [test_factory]
 footprint_w = 3
@@ -39,6 +42,7 @@ cost = 1000
 power = -30
 prerequisites = ["test_hq"]
 provides = []
+produces = "vehicle"
 
 [test_turret]
 footprint_w = 1
@@ -51,3 +55,60 @@ cost = 400
 power = -10
 prerequisites = ["test_barracks"]
 provides = []
+category = "defence"
+needs_power = true
+
+[test_power]
+footprint_w = 2
+footprint_h = 2
+max_health = 500
+armor = "structure"
+sight = 3
+primary_weapon = ""
+cost = 300
+power = 100
+prerequisites = ["test_hq"]
+provides = []
+
+[test_refinery]
+footprint_w = 3
+footprint_h = 3
+max_health = 900
+armor = "structure"
+sight = 4
+primary_weapon = ""
+cost = 1000
+power = -20
+prerequisites = ["test_power"]
+provides = []
+refinery = true
+storage = 1000
+dock = [1, 3]
+free_unit = "test_harvester"
+
+[test_silo]
+footprint_w = 2
+footprint_h = 2
+max_health = 300
+armor = "structure"
+sight = 3
+primary_weapon = ""
+cost = 150
+power = -5
+prerequisites = ["test_refinery"]
+provides = []
+storage = 1500
+
+[test_wall]
+footprint_w = 1
+footprint_h = 1
+max_health = 200
+armor = "fortified"
+sight = 1
+primary_weapon = ""
+cost = 50
+power = 0
+prerequisites = ["test_barracks"]
+provides = []
+category = "defence"
+wall = true

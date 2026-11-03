@@ -10,15 +10,18 @@ namespace Rts.Data;
 /// Hash over the parsed rules, not over the file text. All integers are little-endian; strings are a 4-byte length
 /// then UTF-8 bytes; booleans are one byte. Layout, in order:
 /// <list type="number">
-/// <item>Version byte (3), then TickRate, DefaultMapWidth, DefaultMapHeight.</item>
+/// <item>Version byte (4), then TickRate, DefaultMapWidth, DefaultMapHeight, then the economy table: StartingCash, CreditsAshfall,
+/// CreditsPitchblende, HarvestTicksPerUnit, UnloadTicksPerUnit, RegrowthIntervalTicks, SellRefundPermille, RepairCostPermille,
+/// RepairHpPerTick, BuildRadius, MaxQueue, BuildTicksPer100Credits, the three LowPowerSlowdownPermille values.</item>
 /// <item>Weapons: count, then per weapon in id order: id, Damage, Range, MinRange, RateOfFire, ProjectileSpeed, Warhead index.</item>
 /// <item>Warheads: count, then per warhead in id order: id, versus count, versus values, Splash, HitsAllies.</item>
 /// <item>Vehicles: count, then per vehicle in id order: id, Locomotion, Speed, TurnRate, MaxHealth, Armor, Sight,
-/// PrimaryWeapon, HasTurret, TurretTurnRate, Crusher, Cost, prerequisites (count, ids).</item>
+/// PrimaryWeapon, HasTurret, TurretTurnRate, Crusher, Cost, prerequisites (count, ids), HarvestCapacity, BuildTime.</item>
 /// <item>Infantry: count, then per type in id order: id, Speed, MaxHealth, Armor, Sight, PrimaryWeapon, Cost,
-/// prerequisites (count, ids).</item>
+/// prerequisites (count, ids), BuildTime.</item>
 /// <item>Buildings: count, then per building in id order: id, FootprintW, FootprintH, MaxHealth, Armor, Sight,
-/// PrimaryWeapon, Cost, Power, prerequisites (count, ids), provides (count, names).</item>
+/// PrimaryWeapon, Cost, Power, prerequisites (count, ids), provides (count, names), Category (byte), Produces (byte, 255 = none), BuildTime,
+/// Storage, Refinery, Dock X/Y, Exit X/Y (resolved), FreeUnit, Wall, NeedsPower.</item>
 /// <item>Effects: count, then per effect in id order: id, Op, Target, Attr, Value.</item>
 /// <item>Terrain: speed percent for every land (LandType order) and locomotion (Locomotion order), then the buildable
 /// flag for every land.</item>
@@ -29,7 +32,7 @@ namespace Rts.Data;
 public static class RulesHash
 {
     /// <summary>Canonical layout version. Bump only with a DECISIONS entry.</summary>
-    public const byte FormatVersion = 3;
+    public const byte FormatVersion = 4;
 
     /// <summary>Computes the rules hash over the game constants and every sim type table.</summary>
     public static ulong Compute(GameRules game, SimRules sim)
@@ -41,6 +44,22 @@ public static class RulesHash
             w.Write(game.TickRate);
             w.Write(game.DefaultMapWidth);
             w.Write(game.DefaultMapHeight);
+
+            EconomyRules e = sim.Economy;
+            w.Write(e.StartingCash);
+            w.Write(e.CreditsAshfall);
+            w.Write(e.CreditsPitchblende);
+            w.Write(e.HarvestTicksPerUnit);
+            w.Write(e.UnloadTicksPerUnit);
+            w.Write(e.RegrowthIntervalTicks);
+            w.Write(e.SellRefundPermille);
+            w.Write(e.RepairCostPermille);
+            w.Write(e.RepairHpPerTick);
+            w.Write(e.BuildRadius);
+            w.Write(e.MaxQueue);
+            w.Write(e.BuildTicksPer100Credits);
+            w.Write(e.LowPowerSlowdownPermille.Count);
+            foreach (int v in e.LowPowerSlowdownPermille) w.Write(v);
 
             w.Write(sim.Weapons.Count);
             foreach (WeaponType x in sim.Weapons)
@@ -80,6 +99,8 @@ public static class RulesHash
                 w.Write(v.Crusher);
                 w.Write(v.Cost);
                 WriteStrings(w, v.Prerequisites);
+                w.Write(v.HarvestCapacity);
+                w.Write(v.BuildTime);
             }
 
             w.Write(sim.Infantry.Count);
@@ -93,6 +114,7 @@ public static class RulesHash
                 w.Write(x.PrimaryWeapon);
                 w.Write(x.Cost);
                 WriteStrings(w, x.Prerequisites);
+                w.Write(x.BuildTime);
             }
 
             w.Write(sim.Buildings.Count);
@@ -109,6 +131,18 @@ public static class RulesHash
                 w.Write(x.Power);
                 WriteStrings(w, x.Prerequisites);
                 WriteStrings(w, x.Provides);
+                w.Write((byte)x.Category);
+                w.Write(x.Produces.HasValue ? (byte)x.Produces.Value : (byte)255);
+                w.Write(x.BuildTime);
+                w.Write(x.Storage);
+                w.Write(x.Refinery);
+                w.Write(x.Dock.X);
+                w.Write(x.Dock.Y);
+                w.Write(x.Exit.X);
+                w.Write(x.Exit.Y);
+                w.Write(x.FreeUnit);
+                w.Write(x.Wall);
+                w.Write(x.NeedsPower);
             }
 
             w.Write(sim.Effects.Count);

@@ -102,7 +102,7 @@ public sealed class RulesValidationTests
         Assert.Equal(tank.Speed, mk2.Speed);
         Assert.Equal(tank.PrimaryWeapon, mk2.PrimaryWeapon);
         Assert.Equal(tank.Locomotion, mk2.Locomotion);
-        Assert.Equal(5, rules.Sim.Vehicles.Count);
+        Assert.Equal(6, rules.Sim.Vehicles.Count);
     }
 
     [Fact]
