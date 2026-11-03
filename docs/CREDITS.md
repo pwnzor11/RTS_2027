@@ -17,7 +17,7 @@ Full notices, licence texts and the list of native files are in `THIRD_PARTY_NOT
 ## Imported assets
 | Asset | Source | Licence | Use |
 |---|---|---|---|
-| (none yet) | | | |
+| Noto Sans Regular and Bold (`NotoSans-Regular.ttf`, `NotoSans-Bold.ttf`), version 2.004 (font metadata), unmodified. Debian package `fonts-noto-core` 20201225-2; upstream https://github.com/googlei18n/noto-fonts, Copyright 2015 Google LLC. Licence text in `data/fonts/OFL.txt` | Debian `fonts-noto-core` 20201225-2 (`/usr/share/fonts/truetype/noto/`) | OFL-1.1 | UI text: rasterised to atlases `data/fonts/noto-sans-*_<size>.png` and `.font.toml` by `tools/fonts/build_atlas.py` |
 
 ## AI-assisted artwork
 | Asset | Tool | Human work done | Notes |
