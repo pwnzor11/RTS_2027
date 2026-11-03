@@ -149,7 +149,7 @@ public sealed class Simulation
         }
     }
 
-    // TODO(M1): use Rts.Sim.Math.Facing
+    // TODO(M1): use Rts.Sim.Numerics.Facing
     private static byte EightWayFacing(int dx, int dy)
     {
         int ax = Math.Abs(dx), ay = Math.Abs(dy);

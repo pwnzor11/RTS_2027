@@ -1,6 +1,6 @@
 using Rts.Sim.Core;
 
-namespace Rts.Sim.Math;
+namespace Rts.Sim.Numerics;
 
 /// <summary>Integer helpers for lepton / cell coordinates.</summary>
 public static class LeptonMath

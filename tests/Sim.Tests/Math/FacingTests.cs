@@ -1,5 +1,5 @@
 using Rts.Sim.Core;
-using Rts.Sim.Math;
+using Rts.Sim.Numerics;
 
 namespace Rts.Sim.Tests.MathTests;
 

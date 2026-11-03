@@ -40,6 +40,7 @@ jobs:
   publish-game:
     name: Publish Windows game
     runs-on: windows-latest
+    needs: build-test
     steps:
       - uses: actions/checkout@v4
 

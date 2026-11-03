@@ -1,6 +1,6 @@
 namespace Rts.Sim.Core;
 
-/// <summary>A map cell. Contract type — math helpers live in Rts.Sim.Math.</summary>
+/// <summary>A map cell. Contract type — math helpers live in Rts.Sim.Numerics.</summary>
 public readonly record struct CellCoord(int X, int Y);
 
 /// <summary>A position in leptons (256 per cell per axis). Contract type.</summary>

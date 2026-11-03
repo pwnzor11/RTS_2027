@@ -1,4 +1,4 @@
-namespace Rts.Sim.Math;
+namespace Rts.Sim.Numerics;
 
 /// <summary>
 /// 8-bit facing helpers. Convention: 0 = north (-Y), 64 = east (+X), 128 = south, 192 = west;

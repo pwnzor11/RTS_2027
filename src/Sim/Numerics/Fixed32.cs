@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace Rts.Sim.Math;
+namespace Rts.Sim.Numerics;
 
 /// <summary>
 /// Signed 16.16 fixed-point number stored in an int (<see cref="Raw"/>). Integer math only.
