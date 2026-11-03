@@ -328,7 +328,7 @@ public class CombatTests
         Assert.Equal(casualtiesA, casualtiesB);
         Assert.True(casualtiesA.Sum() > 0, "the battle should actually kill something");
         Assert.Equal(new[] { 6, 4 }, casualtiesA);                 // exact losses per player for seed 1
-        Assert.Equal(0x288CF7CC283C185BUL, a[^1]);                  // exact final tick hash for seed 1
+        Assert.Equal(0x9616B6BBC83E6AE2UL, a[^1]);                  // exact final tick hash for seed 1
         Assert.NotEqual(a[^1], c[^1]);
     }
 

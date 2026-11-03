@@ -14,7 +14,7 @@ public sealed partial class Simulation
     public PlayerHud HudFor(byte player)
     {
         if (player >= _players.Count) throw new ArgumentOutOfRangeException(nameof(player));
-        return new PlayerHud(_players.Cash[player], _players.Stored[player], 0, _players.PowerOut[player],
+        return new PlayerHud(_players.Cash[player], _players.Stored[player], StorageCap(player), _players.PowerOut[player],
             _players.PowerUse[player], Array.Empty<QueueView>(),
             Array.Empty<(ProductionCategory Category, int TypeIndex)>(), _players.Defeated[player]);
     }
