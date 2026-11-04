@@ -45,6 +45,8 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
     private readonly CameoProvider? _cameos;
     private readonly Minimap _minimap;
     private readonly List<BuildOption> _visible = new();
+    private IReadOnlyList<TierRow> _rows = Array.Empty<TierRow>();   // M4-09: _visible grouped under tier headings
+    private bool _hasAircraft;
     private IReadOnlyList<UpgradeEntry> _upgrades = Array.Empty<UpgradeEntry>();
     private SidebarLayout _layout = SidebarLayout.Compute(1280, 720, 1f);
     private PlayerHud _hud;
@@ -122,8 +124,10 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
     public void Update(InputFrame input, Camera camera, int windowWidth, int windowHeight)
     {
         _ui = UiScale.FromBackbuffer(windowHeight);
-        _layout = SidebarLayout.Compute(windowWidth, windowHeight, _ui);
         _hud = _source.Sim.HudFor(_player);
+        _hasAircraft = HasAircraft(_hud);
+        if (!_hasAircraft && _tab == SidebarTab.Aircraft) SelectTab(SidebarTab.Structures);
+        _layout = SidebarLayout.Compute(windowWidth, windowHeight, _ui, SidebarTabs.CountFor(_hasAircraft));
         _mouse = input.MousePosition;
         _tooltip = null;
         if (_shownCredits < 0) _shownCredits = _hud.Cash + _hud.Stored;
@@ -141,6 +145,7 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
         if (input.ConsumePressed(Keys.E)) SelectTab(SidebarTab.Infantry);
         if (input.ConsumePressed(Keys.R)) SelectTab(SidebarTab.Vehicles);
         if (input.ConsumePressed(Keys.T)) SelectTab(SidebarTab.Upgrades);
+        if (_hasAircraft && input.ConsumePressed(Keys.Y)) SelectTab(SidebarTab.Aircraft);
 
         if (_minimapDrag)
         {
@@ -204,11 +209,11 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
         DrawPowerBar(batch, pixel, l);
         DrawButton(batch, pixel, l.SellButton, "SELL", Mode == SidebarMode.Sell);
         DrawButton(batch, pixel, l.RepairButton, "REPAIR", Mode == SidebarMode.Repair);
-        for (int i = 0; i < SidebarTabs.Count; i++)
+        for (int i = 0; i < l.Tabs.Count; i++)
         {
             var tab = (SidebarTab)i;
             string caption = SidebarTabs.KeyLetter(tab) + " " + SidebarTabs.Caption(tab);
-            // Five tabs share the width: when the key letter does not fit, the bare caption does.
+            // Five or six tabs share the width: when the key letter does not fit, the bare caption does.
             if (BitmapFont.Measure(caption, _ui * 0.8f, FontWeight.Regular) > l.Tabs[i].Width - 4) caption = SidebarTabs.Caption(tab);
             DrawButton(batch, pixel, l.Tabs[i], caption, tab == _tab, _ui * 0.8f);
         }
@@ -268,11 +273,19 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
                     else if (right && UpgradeList.RightClick(_player, _hud, entry) is Command cancel) _source.Host.Issue(cancel);
                 }
             }
-            else if (slot >= 0 && OptionAtSlot(slot) is BuildOption option)
+            else if (slot >= 0 && EntryAtSlot(slot) is TierEntry entry)
             {
-                _tooltip = TooltipFor(option);
-                if (left) LeftClickCameo(option);
-                else if (right) RightClickCameo(option);
+                if (entry.Locked)
+                {
+                    _tooltip = new List<string> { CameoNames.Display(IdOf(entry.Option)), $"Cost {entry.Option.Cost}", TierGrouping.NeedsText(entry) };
+                }
+                else
+                {
+                    BuildOption option = entry.Option;
+                    _tooltip = TooltipFor(option);
+                    if (left) LeftClickCameo(option);
+                    else if (right) RightClickCameo(option);
+                }
             }
         }
 
@@ -359,7 +372,7 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
 
     private void ScrollGrid(int rows)
     {
-        int total = (ItemCount + _layout.Columns - 1) / Math.Max(1, _layout.Columns);
+        int total = TotalRows;
         int max = Math.Max(0, total - _layout.Rows);
         _scrollRow = Math.Clamp(_scrollRow + rows, 0, max);
     }
@@ -380,6 +393,18 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
 
     private int ItemCount => _tab == SidebarTab.Upgrades ? _upgrades.Count : _visible.Count;
 
+    private static bool HasAircraft(PlayerHud hud)
+    {
+        foreach (BuildOption o in hud.Options)
+            if (o.Category == ProductionCategory.Aircraft) return true;
+        return false;
+    }
+
+    // Grid rows: upgrades are a flat grid; every other tab is tier-grouped rows (headings take a whole row).
+    private int TotalRows => _tab == SidebarTab.Upgrades
+        ? (_upgrades.Count + _layout.Columns - 1) / Math.Max(1, _layout.Columns)
+        : _rows.Count;
+
     private UpgradeEntry? UpgradeAtSlot(int slot)
     {
         int index = _scrollRow * _layout.Columns + slot;
@@ -389,6 +414,8 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
     private List<string> UpgradeTooltip(UpgradeEntry e)
     {
         var lines = new List<string> { CameoNames.Display(e.Id), $"Cost {e.Cost}" };
+        if ((uint)e.Index < (uint)_source.Rules.Upgrades.Count)
+            lines.AddRange(UpgradeEffectText.Lines(_source.Rules, _source.Rules.Upgrades[e.Index]));   // M4-09: what it really does
         lines.Add(e.State switch
         {
             UpgradeState.Owned => "Researched",
@@ -409,6 +436,11 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
             _visible.Add(o);
         }
 
+        int tier = _source.Sim.TierOf(_player);
+        _rows = _tab == SidebarTab.Upgrades
+            ? Array.Empty<TierRow>()
+            : TierGrouping.Rows(TierGrouping.Entries(_source.Rules, _hud.Faction, tier, category, _visible), _layout.Columns);
+
         ScrollGrid(0);
     }
 
@@ -416,10 +448,17 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
     private bool IsHidden(BuildOption o) =>
         o.Category == ProductionCategory.Structure && IdOf(o) == SkirmishStart.StartBuildingId;
 
-    private BuildOption? OptionAtSlot(int slot)
+    private TierEntry? EntryAtSlot(int slot)
     {
-        int index = _scrollRow * _layout.Columns + slot;
-        return index >= 0 && index < _visible.Count ? _visible[index] : null;
+        int row = _scrollRow + slot / Math.Max(1, _layout.Columns), col = slot % Math.Max(1, _layout.Columns);
+        if (row < 0 || row >= _rows.Count || _rows[row].Heading) return null;
+        return col < _rows[row].Cells.Count ? _rows[row].Cells[col] : null;
+    }
+
+    private TierRow? HeadingAtSlot(int slot)
+    {
+        int row = _scrollRow + slot / Math.Max(1, _layout.Columns);
+        return slot % Math.Max(1, _layout.Columns) == 0 && row >= 0 && row < _rows.Count && _rows[row].Heading ? _rows[row] : null;
     }
 
     private string IdOf(BuildOption o)
@@ -428,7 +467,7 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
         return o.Category switch
         {
             ProductionCategory.Infantry => rules.Infantry[o.TypeIndex].Id,
-            ProductionCategory.Vehicle => rules.Vehicles[o.TypeIndex].Id,
+            ProductionCategory.Vehicle or ProductionCategory.Aircraft => rules.Vehicles[o.TypeIndex].Id,
             _ => rules.Buildings[o.TypeIndex].Id,
         };
     }
@@ -561,15 +600,27 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
         for (int slot = 0; slot < l.VisibleSlots; slot++)
         {
             Rectangle r = l.Cameo(slot);
-            if (OptionAtSlot(slot) is not BuildOption o)
+            if (HeadingAtSlot(slot) is TierRow heading)
             {
+                var span = new Rectangle(r.X, r.Y, l.Grid.Width, r.Height);
+                Shapes.Fill(batch, pixel, new Rectangle(span.X, span.Bottom - Math.Max(2, (int)_ui * 2), span.Width, Math.Max(2, (int)_ui * 2)), heading.Locked ? Border : Gold);
+                string text = Fit(TierGrouping.HeadingText(heading), span.Width - 4, _ui * 0.85f);
+                int th = BitmapFont.LineHeight(_ui * 0.85f, FontWeight.Bold);
+                Text(batch, pixel, text, new Vector2(span.X + 2, span.Bottom - th - Math.Max(4, (int)_ui * 4)), heading.Locked ? DimText : Gold, _ui * 0.85f, FontWeight.Bold);
+                continue;
+            }
+
+            if (EntryAtSlot(slot) is not TierEntry tierEntry)
+            {
+                if (_rows.Count == 0 || (_scrollRow + slot / Math.Max(1, l.Columns) < _rows.Count && _rows[_scrollRow + slot / Math.Max(1, l.Columns)].Heading)) continue;
                 Shapes.Outline(batch, pixel, r, new Color(0x26, 0x2A, 0x22));
                 continue;
             }
 
+            BuildOption o = tierEntry.Option;
             string id = IdOf(o);
             bool ready = SidebarCommands.LeftClick(_hud, o) == CameoClick.EnterPlacement;
-            bool blocked = o.Blocked != QueueBlockReason.None && !ready;
+            bool blocked = (o.Blocked != QueueBlockReason.None && !ready) || tierEntry.Locked;
             Shapes.Fill(batch, pixel, r, TileFill);
             var inner = new Rectangle(r.X + 2, r.Y + 2, Math.Max(1, r.Width - 4), Math.Max(1, r.Height - 4));
             if (_cameos is null || !_cameos.TryDraw(batch, id, inner, _houseColour))
@@ -603,6 +654,7 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
             }
 
             if (blocked && count == 0) Shapes.Fill(batch, pixel, r, Veil);
+            if (tierEntry.Locked) CentredText(batch, pixel, "LOCKED", r, DimText, small, FontWeight.Bold);
             if (ready)
             {
                 Shapes.Outline(batch, pixel, r, GoodGreen, 2);

@@ -35,6 +35,10 @@ public sealed class OrderController
     /// <summary>True after D when a selected unit deploys at a chosen cell (a Bore), until the next right-click or D again.</summary>
     public bool DeployArmed { get; private set; }
 
+    /// <summary>M4-09: the building the player has selected (set by the screen each frame; <see cref="EntityId.None"/> = none).
+    /// D on a garrisoned own building then sends Unload.</summary>
+    public EntityId SelectedBuilding { get; set; } = EntityId.None;
+
     /// <summary>Handles a key that went down this frame. Ignores keys that are not orders.</summary>
     public void KeyPressed(Keys key)
     {
@@ -47,7 +51,7 @@ public sealed class OrderController
                 IssueToSelection(CommandKind.Stop);
                 break;
             case Keys.D:
-                Deploy();
+                if (!TryUnloadSelectedBuilding()) Deploy();
                 break;
             case Keys.X:
                 IssueToSelection(CommandKind.Scatter);
@@ -82,19 +86,28 @@ public sealed class OrderController
         (ActorRef Target, int TypeIndex)? own = enemy is null
             ? TargetPicker.PickOwn(units, _source.Current, world, SimSnapshotSource.LocalPlayer, _selection.Contains)
             : null;
+        EntityId buildingId = enemy is { Kind: ActorKind.Building } e ? e.Id : own is { Target.Kind: ActorKind.Building } o ? o.Target.Id : EntityId.None;
+        BuildingView? building = buildingId.IsNone ? null : ViewOf(buildingId);
         foreach (UnitKey unit in _selection.Units.ToList())
         {
-            if (enemy is { Kind: ActorKind.Building } building && EngineerOrderOn(unit, building, ownBuilding: false) != EngineerOrder.None)
+            BuildingClick click = BuildingClick.None;
+            if (building is BuildingView view && _source.TryGetTypeIndex(unit, out int type))
             {
-                _source.Order(CommandKind.Enter, unit, default, building);   // M3-INT: an Engineer captures instead of attacking
+                Relation relation = _source.Sim.RelationOf(SimSnapshotSource.LocalPlayer, view.Player);
+                click = GarrisonOrders.Classify(_source.Rules, unit.Kind, type, view, relation);
             }
-            else if (enemy is ActorRef target)
+
+            if (click is BuildingClick.Capture or BuildingClick.Repair or BuildingClick.EnterTunnel or BuildingClick.Garrison)
             {
-                _source.Order(CommandKind.Attack, unit, default, target);
+                _source.Order(CommandKind.Enter, unit, default, new ActorRef(ActorKind.Building, buildingId));   // M3-INT / M4-09
             }
-            else if (own is { } mine && CanEnter(unit, mine))
+            else if (click == BuildingClick.Attack || (building is null && enemy is not null))
             {
-                _source.Order(CommandKind.Enter, unit, default, mine.Target);
+                _source.Order(CommandKind.Attack, unit, default, enemy!.Value);
+            }
+            else if (own is { Target.Kind: ActorKind.Vehicle } mine && M3Orders.CanBoard(_source.Rules, unit.Kind, mine.TypeIndex))
+            {
+                _source.Order(CommandKind.Enter, unit, default, mine.Target);   // M3: board an own transport
             }
             else if (_source.Map.Contains(cell))
             {
@@ -103,29 +116,20 @@ public sealed class OrderController
         }
     }
 
-    // M3: Board a transport (infantry) or enter an own tunnel entrance (a unit that fits). The sim re-checks both.
-    private bool CanEnter(UnitKey unit, (ActorRef Target, int TypeIndex) target)
+    private BuildingView? ViewOf(EntityId id)
     {
-        if (!_source.TryGetTypeIndex(unit, out int type)) return false;
-        if (target.Target.Kind == ActorKind.Building && EngineerOrderOn(unit, target.Target, ownBuilding: true) == EngineerOrder.Repair) return true;   // M3-INT
-        return target.Target.Kind switch
-        {
-            ActorKind.Vehicle => M3Orders.CanBoard(_source.Rules, unit.Kind, target.TypeIndex),
-            ActorKind.Building => M3Orders.CanEnterTunnel(_source.Rules, unit.Kind, type, target.TypeIndex),
-            _ => false,
-        };
+        foreach (BuildingView view in _source.Current.Buildings)
+            if (view.Id == id) return view;
+        return null;
     }
 
-    // M3-INT: Engineer on a building: capture (not ours) or repair (ours, damaged). Health is read from the snapshot.
-    private EngineerOrder EngineerOrderOn(UnitKey unit, ActorRef building, bool ownBuilding)
+    // M4-09: D on a selected own building that holds soldiers = Unload.
+    private bool TryUnloadSelectedBuilding()
     {
-        if (!_source.TryGetTypeIndex(unit, out int type)) return EngineerOrder.None;
-        foreach (BuildingView view in _source.Current.Buildings)
-        {
-            if (view.Id == building.Id)
-                return M3Orders.EngineerOrderOn(_source.Rules, unit.Kind, type, ownBuilding, view.TypeIndex, view.Health);
-        }
-        return EngineerOrder.None;
+        if (SelectedBuilding.IsNone) return false;
+        if (!GarrisonOrders.CanUnload(ViewOf(SelectedBuilding), SimSnapshotSource.LocalPlayer)) return false;
+        _source.Host.Issue(GarrisonOrders.Unload(SimSnapshotSource.LocalPlayer, SelectedBuilding));
+        return true;
     }
 
     // D: units that deploy or unload where they stand do it now; one that digs at a chosen cell arms the next right-click.
