@@ -257,10 +257,27 @@ public sealed partial class Simulation
     private void Hurt(ActorKind kind, int i, int damage, WarheadType wh, bool half, byte source)
     {
         int d = ComputeDamage(damage, wh, ArmorAt(kind, i));
+        if (kind == ActorKind.Building && wh.BonusVsEntrancePercent != 100 && BuildingTypeAt(i).Entrance != TunnelSize.None)
+            d = Math.Max(1, (int)((long)d * wh.BonusVsEntrancePercent / 100));   // M4-05: bonus vs tunnel entrances
         if (wh.BonusVsIrradiatedPercent != 100 && IsIrradiatedTarget(kind, i)) d = Math.Max(1, (int)((long)d * wh.BonusVsIrradiatedPercent / 100));   // M3-05
         if (half) { d /= 2; if (d < 1) d = 1; }
+        QueueHit(new ActorRef(kind, IdAt(kind, i)), d, source);
+        if (kind == ActorKind.Building && wh.GarrisonDamagePercent > 0 && BuildingTypeAt(i).Garrison > 0)
+        {
+            // M4-05: a % of each hit on a garrisoned building also reaches every occupant (infantry in layer Garrisoned whose carrier
+            // is this building). Slot order; the summed result does not depend on it.
+            EntityId bid = _buildings.Slots.IdOf(i);
+            int share = Math.Max(1, (int)((long)d * wh.GarrisonDamagePercent / 100));
+            for (int s = 1; s < _infantry.Capacity; s++)
+                if (_infantry.Slots.IsIndexAlive(s) && _infantry.Health[s] > 0 && _tunnels.InfantryLayer[s] == ActorLayer.Garrisoned && _tunnels.InfantryCarrier[s] == bid)
+                    QueueHit(new ActorRef(ActorKind.Infantry, _infantry.Slots.IdOf(s)), share, source);
+        }
+    }
+
+    private void QueueHit(ActorRef target, int d, byte source)
+    {
         if (_pendingCount == _pendingDamage.Length) Array.Resize(ref _pendingDamage, _pendingCount * 2);
-        _pendingDamage[_pendingCount++] = new PendingHit(new ActorRef(kind, IdAt(kind, i)), d, source);
+        _pendingDamage[_pendingCount++] = new PendingHit(target, d, source);
     }
 
     /// <summary>Apply every queued hit and empty the buffer. Health only ever decreases by the sum of the hits, so the result
@@ -326,6 +343,14 @@ public sealed partial class Simulation
             for (int i = 1; i < cap; i++)
             {
                 if (!slots.IsIndexAlive(i) || HealthAt(kind, i) <= 0) continue;
+                if (kind != ActorKind.Building)
+                {
+                    // M4-05: garrisoned soldiers are shielded by their building (it passes a share on); burrowed units are only
+                    // hit by warheads with hits_burrowed.
+                    ActorLayer layer = _tunnels.LayerOf(kind, i);
+                    if (layer == ActorLayer.Garrisoned) continue;
+                    if ((layer == ActorLayer.Burrowed || layer == ActorLayer.Surfacing) && !wh.HitsBurrowed) continue;
+                }
                 if (!wh.HitsAllies && IsFriendly(owner, PlayerAt(kind, i))) continue;
                 int d;
                 if (kind == ActorKind.Building)

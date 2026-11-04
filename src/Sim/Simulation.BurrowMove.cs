@@ -120,6 +120,7 @@ public sealed partial class Simulation
     /// <summary>A unit may appear on <paramref name="c"/>: dive-valid, unhardened, passable for burrowers and free of other actors and telegraphs.</summary>
     private bool SurfaceCellOk(CellCoord c, EntityId self, byte owner) =>
         DiveCellOk(c) && !IsHardenedAgainst(owner, c)   // integration (M3-04): only an unfriendly team's grouting blocks
+        && !IsFoamed(c)                   // M4-05: Quick-Set Foam blocks surfacing and Bore break-through (hatch sites use this too)
         && _map.IsPassableTerrain(c, Locomotion.Burrow, Setup.Rules.Terrain)
         && SurfaceAreaFree(c, self);
 
@@ -229,6 +230,7 @@ public sealed partial class Simulation
         if (deploy)
         {
             if (BeginBreakThrough(i, cur)) return 1;
+            if (IsFoamed(cur)) return SurfaceRetryTicks;   // M4-05: Quick-Set Foam overhead: stay down, still a Deploy, and look again
             // No place for a Hatch: surface as a unit instead (and keep retrying that).
             _units.Mission[i] = MissionKind.Surface; _units.Status[i] = MissionStatus.Init;
         }

@@ -18,8 +18,20 @@ public sealed partial class Simulation
     /// cells of <paramref name="centre"/>. Called from Detonate after <see cref="ApplyWarheadGround"/>. M4-05 fills.</summary>
     internal void ApplyWarheadFoam(WarheadType wh, CellCoord centre, int radius)
     {
-        // M4-05 fills
+        if (wh.FoamTicks <= 0) return;
+        for (int y = centre.Y - radius; y <= centre.Y + radius; y++)
+            for (int x = centre.X - radius; x <= centre.X + radius; x++)
+            {
+                var c = new CellCoord(x, y);
+                if (!_ground.Contains(c)) continue;
+                int idx = _ground.IndexOf(c);
+                if (wh.FoamTicks > _ground.Foam[idx]) _ground.Foam[idx] = wh.FoamTicks;   // re-foaming refreshes, never shortens
+            }
     }
+
+    /// <summary>True if Quick-Set Foam covers the cell (M4-05): burrowers cannot surface and Bores cannot break through there,
+    /// and ground units move at <c>[foam] speed_permille</c>.</summary>
+    internal bool IsFoamed(CellCoord c) => _ground.FoamAt(c) > 0;
 
     /// <summary>Apply a warhead's Contaminate / Decontaminate / Blackout to every on-map cell within <paramref name="radius"/>
     /// cells (Chebyshev) of <paramref name="centre"/>. Contaminate runs first, then Decontaminate.</summary>
@@ -89,6 +101,9 @@ public sealed partial class Simulation
     {
         int[] b = _ground.Blackout;
         for (int i = 0; i < b.Length; i++) if (b[i] > 0) b[i]--;
+        // M4-05: Quick-Set Foam counts down one per tick, in the same pass (RunGround lives in Simulation.M3.cs, not owned here).
+        int[] f = _ground.Foam;
+        for (int i = 0; i < f.Length; i++) if (f[i] > 0) f[i]--;
     }
 
     /// <summary>True if a viewer-team actor can see a cell inside a Blackout cloud: any team actor within 1 cell, or a team

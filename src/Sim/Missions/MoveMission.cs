@@ -546,6 +546,7 @@ internal static class MoveMission
     {
         int pct = sim.Map.SpeedPercent(cell, st.Loco, sim.Setup.Rules.Terrain);
         int s = (int)((long)st.Speed * pct / 100);
+        if (st.Loco != Locomotion.Air && sim.IsFoamed(cell)) s = (int)((long)s * sim.Setup.Rules.Foam.SpeedPermille / 1000);   // M4-05: Quick-Set Foam
         return s < 1 ? 1 : s;
     }
 
