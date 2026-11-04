@@ -39,10 +39,10 @@ public sealed class M3ContractTests
     {
         var sim = ScriptedGame.NewSim(ScriptedGame.Setup());
         string[] names = sim.StateParts.Select(p => p.Name).ToArray();
-        Assert.Equal(new[] { "production", "tunnels", "ground", "effects" }, names[^6..^2]);   // M4-01: garrison, stats follow
-        Assert.Same(sim.Tunnels, sim.StateParts[^5]);
-        Assert.Same(sim.Ground, sim.StateParts[^4]);
-        Assert.Same(sim.Effects, sim.StateParts[^3]);
+        Assert.Equal(new[] { "production", "tunnels", "ground", "effects" }, names[^7..^3]);   // M4-01: garrison, stats follow; M5-01: directive
+        Assert.Same(sim.Tunnels, sim.StateParts[^6]);
+        Assert.Same(sim.Ground, sim.StateParts[^5]);
+        Assert.Same(sim.Effects, sim.StateParts[^4]);
     }
 
     [Fact]

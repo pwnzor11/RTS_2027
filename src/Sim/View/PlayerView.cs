@@ -39,6 +39,10 @@ public readonly struct PlayerView
     /// <summary>Team id of the viewing player.</summary>
     public byte Team => _sim.Players.Team[Player];
 
+    /// <summary>M5-01: the viewing player's latest commander directive (<see cref="Core.Directive.None"/> before the first one).
+    /// The tiered AI reads it in Think (M5-02).</summary>
+    public Directive Directive => _sim.DirectiveOf(Player);
+
     /// <summary>The viewing player's cash.</summary>
     public int Cash => _sim.Players.Cash[Player];
 

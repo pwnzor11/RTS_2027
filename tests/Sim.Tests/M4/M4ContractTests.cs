@@ -25,7 +25,7 @@ public sealed class M4ContractTests
     public void SimEnumValues_ArePinned()
     {
         Assert.Equal(22, (int)CommandKind.Unload);
-        Assert.Equal(23, Enum.GetValues<CommandKind>().Length);   // no other new CommandKind in M4
+        Assert.Equal(24, Enum.GetValues<CommandKind>().Length);   // no other new CommandKind in M4; M5-01 added Directive = 23
         Assert.Equal(7, (int)ActorLayer.Garrisoned);
         Assert.Equal(15, (int)MissionKind.Garrisoned);
         Assert.Equal(14, (int)MissionKind.Capture);
@@ -64,16 +64,16 @@ public sealed class M4ContractTests
     {
         var sim = ScriptedGame.NewSim(ScriptedGame.Setup());
         string[] names = sim.StateParts.Select(p => p.Name).ToArray();
-        Assert.Equal(new[] { "tunnels", "ground", "effects", "garrison", "stats" }, names[^5..]);
-        Assert.Same(sim.Garrison, sim.StateParts[^2]);
-        Assert.Same(sim.Stats, sim.StateParts[^1]);
+        Assert.Equal(new[] { "tunnels", "ground", "effects", "garrison", "stats", "directive" }, names[^6..]);   // M5-01 appended "directive"
+        Assert.Same(sim.Garrison, sim.StateParts[^3]);
+        Assert.Same(sim.Stats, sim.StateParts[^2]);
     }
 
     [Fact]
     public void FormatVersions_ArePinned()
     {
         Assert.Equal(7, RulesHash.FormatVersion);
-        Assert.Equal(8, SimWriter.SaveVersion);
+        Assert.Equal(9, SimWriter.SaveVersion);   // M5-01
         Assert.Equal(9, ReplayWriter.Version);            // M3-19 had already taken 8 for the mission block
         Assert.Equal(7, ReplayWriter.OldestReadableVersion);
         Assert.Equal(2, MapFile.FormatVersion);

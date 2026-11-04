@@ -13,6 +13,9 @@ public enum CommandKind : byte
     /// <summary>M4: empty a garrisoned building or a transport. Subject = the building (Arg low byte 2 = Building) or a transport
     /// vehicle (Arg low byte 0 = Vehicle, an alias of Deploy-unload). Cell is ignored in M4 (M7: the shore cell for landing craft).</summary>
     Unload = 22,
+    /// <summary>M5-01: a commander's strategy for the issuing player (docs/design/09_m5_plan.md §3). Arg = <see cref="DirectiveCodec.Pack"/>,
+    /// Cell = focus cell or <see cref="Directive.NoCell"/>; Subject/Target unused. Stored per player, never acted on by the sim.</summary>
+    Directive = 23,
 }
 
 /// <summary>
