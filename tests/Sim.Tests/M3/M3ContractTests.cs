@@ -265,7 +265,7 @@ public sealed class M3ContractTests
     }
 
     [Fact]
-    public void SkirmishStart_DefaultAuthorityKit_IsTheM2Start_AndDirectorateKitFailsLazily()
+    public void SkirmishStart_DefaultAuthorityKit_IsTheM2Start_AndDirectorateKitPlacesTheShaft()
     {
         RuleSet r = RulesLoader.Load(RulesLocator.FindRulesDir(AppContext.BaseDirectory)!);
         MapData map = MapFile.Load(Path.Combine(TestData.MapsDir, "test_32.map.toml"));
@@ -277,8 +277,10 @@ public sealed class M3ContractTests
         Assert.All(placed, id => Assert.Equal(SkirmishStart.StartBuildingId, r.Sim.Buildings[sim.Buildings.TypeIndex[id.Index]].Id));
 
         var dir = new Simulation(new SimSetup(1, map, 2, r.Sim, r.RulesHash) { Factions = new[] { Faction.Authority, Faction.Directorate } });
-        var ex = Assert.Throws<InvalidOperationException>(() => SkirmishStart.Apply(dir));
-        Assert.Contains("dir_shaft", ex.Message);
+        EntityId[] dirPlaced = SkirmishStart.Apply(dir);   // M3-07 data: the Directorate kit now resolves
+        Assert.False(dirPlaced[1].IsNone);
+        Assert.Equal("dir_shaft", r.Sim.Buildings[dir.Buildings.TypeIndex[dirPlaced[1].Index]].Id);
+        Assert.Equal(r.Sim.ResolveStartKit(Faction.Directorate).Item2.Count, dir.Units.Slots.Count + dir.Infantry.Slots.Count);
     }
 
     [Fact]

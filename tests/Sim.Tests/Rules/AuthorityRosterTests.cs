@@ -17,6 +17,7 @@ public sealed class AuthorityRosterTests
     [
         "auth_conyard", "auth_power", "auth_refinery", "auth_barracks", "auth_factory", "auth_silo", "auth_wall", "auth_turret",
         "auth_scraper", "auth_rifleman", "auth_rocketeer", "auth_jeep", "auth_tank",
+        "auth_seismograph", "auth_searchlight", "auth_gate", "auth_engineering", "auth_decon_truck",   // M3 counters (M3-07)
     ];
 
     private static SimRules LoadReal()
@@ -27,7 +28,7 @@ public sealed class AuthorityRosterTests
     }
 
     [Fact]
-    public void RealData_HasExactlyTheThirteenAuthorityIds()
+    public void RealData_HasExactlyTheAuthorityIds()
     {
         SimRules sim = LoadReal();
 
