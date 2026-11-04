@@ -82,6 +82,41 @@ def gantry(S, i, dmg, mode):
         S.cyl("cwheel", 0.2, 0.2, (tx + sx, 1.0, cz - 0.1), "dark", axis="Y", verts=10)
 
 
+def roof_form(S, i, dmg, lit):
+    """Stepped brutalist roof: a low south cornice step, a raised clerestory with a glowing window band and an overhanging cap."""
+    xe = 0.4 if dmg else 4.3                       # damaged: the east half of the upper roof is gone
+    # south cornice step (light top, dark flank, shadow line under the lip)
+    S.bb("stepA", -2.0, xe, -1.06, -0.3, ZR, ZR + 0.3, "concrete2", 0.02)
+    S.bb("stepAt", -2.06, xe + 0.03, -1.1, -0.26, ZR + 0.3, ZR + 0.38, "hull", 0.02)
+    # clerestory block, window band on its south face, projecting cap
+    cx1 = 0.4 if dmg else 2.4
+    S.bb("clere", -2.4, cx1, 0.1, 0.95, ZR, ZR + 0.8, "concrete2", 0.02)
+    S.bb("clerecap", -2.5, cx1 + 0.1, -0.02, 1.05, ZR + 0.8, ZR + 0.92, "hull", 0.02)
+    S.bb("clerecapl", -2.5, cx1 + 0.1, -0.06, -0.02, ZR + 0.8, ZR + 0.86, "concrete", 0.0)
+    S.bb("clerewinbar", -2.3, cx1 - 0.1, 0.04, 0.1, ZR + 0.26, ZR + 0.66, "dark", 0.0, nocast=True)
+    nwin = int((cx1 + 2.3) / 0.8)
+    for q in range(nwin):
+        xa = -2.2 + q * 0.8
+        on = lit and ((q + i) % 3 != 0)
+        S.bb(f"win{q}", xa, xa + 0.55, 0.0, 0.06, ZR + 0.32, ZR + 0.6, "redglow" if on else "oxide2", 0.0, nocast=True)
+        S.bb(f"winf{q}", xa - 0.05, xa + 0.6, 0.02, 0.07, ZR + 0.28, ZR + 0.32, "brass_dim", 0.0, nocast=True)
+    if dmg:
+        S.bb("clerebrk", 0.4, 1.7, 0.2, 0.9, ZR, ZR + 0.3, "concrete_s", 0.0, rot=(0, 0, 8))
+
+
+def roof_plant(S, dmg):
+    """Roof plant: a curbed hatch with a brass lid and two lagged stacks of different heights."""
+    if not dmg:
+        S.bb("hcurb", 2.9, 4.1, 0.3, 1.2, ZR, ZR + 0.2, "concrete2", 0.02)
+        S.bb("hlid", 3.0, 4.0, 0.4, 1.1, ZR + 0.2, ZR + 0.3, "brass_dim", 0.02)
+        S.bb("hlidbar", 3.45, 3.55, 0.4, 1.1, ZR + 0.3, ZR + 0.36, "brass", 0.0)
+    for k, (sx, sy, sh) in enumerate(((-3.7, 1.3, 1.5), (-3.1, 1.7, 1.0))):
+        S.cyl(f"stack{k}", 0.2, sh, (sx, sy, ZR + sh / 2), "hull2", verts=12)
+        S.cyl(f"stackb{k}", 0.24, 0.1, (sx, sy, ZR + sh * 0.5), "steel", verts=12)
+        S.cyl(f"stackc{k}", 0.28, 0.1, (sx, sy, ZR + sh + 0.05), "steel", verts=12)
+        S.cyl(f"stackd{k}", 0.17, 0.05, (sx, sy, ZR + sh + 0.12), "dark", verts=10)
+
+
 def finished(S, i, dmg, mode):
     idle = mode == "idle"
     lit = (idle or mode == "build") and not dmg
@@ -94,9 +129,12 @@ def finished(S, i, dmg, mode):
     S.bb("hall", x0, x1, y0, y1, 0.14, HALL_H, "concrete", 0.05)
     S.bb("hplinth", x0 - 0.1, x1 + 0.1, y0 - 0.1, y1 + 0.1, 0.14, 0.5, "concrete2", 0.04)
     S.bb("hroof", x0 - 0.1, x1 + 0.15, y0 - 0.2, y1 + 0.1, HALL_H, ZR, "roof", 0.05)
-    S.bb("hparS", x0 - 0.1, x1 + 0.15, y0 - 0.2, y0 - 0.06, ZR, ZR + 0.18, "concrete2", 0.02)
-    S.bb("hparW", x0 - 0.1, x0 + 0.06, y0 - 0.2, y1 + 0.1, ZR, ZR + 0.18, "concrete2", 0.02)
-    S.bb("hparE", x1, x1 + 0.15, y0 - 0.2, y1 + 0.1, ZR, ZR + 0.18, "concrete2", 0.02)
+    # parapet lip in lighter concrete with a bone cap so the roof edge catches the light
+    S.bb("hparS", x0 - 0.1, x1 + 0.15, y0 - 0.2, y0 - 0.04, ZR, ZR + 0.24, "hull", 0.02)
+    S.bb("hparSc", x0 - 0.13, x1 + 0.18, y0 - 0.24, y0 - 0.0, ZR + 0.24, ZR + 0.3, "concrete", 0.0)
+    S.bb("hparW", x0 - 0.1, x0 + 0.08, y0 - 0.2, y1 + 0.1, ZR, ZR + 0.24, "hull", 0.02)
+    S.bb("hparE", x1 - 0.02, x1 + 0.15, y0 - 0.2, y1 + 0.1, ZR, ZR + 0.24, "hull", 0.02)
+    roof_form(S, i, dmg, lit)
     D.flank(S, "L", -4.1, TR[0] - 0.3, YD, z1=2.2, stripes=4)
     D.flank(S, "R", TR[1] + 0.3, 4.1, YD, z1=2.2, stripes=4)
     D.hood(S, TR[0] - 0.3, TR[1] + 0.3, YD - 1.2, YD - 0.1, dmg, z0=2.2, z1=2.6, band_z=(2.23, 2.57), collapse=2.2)
@@ -110,6 +148,7 @@ def finished(S, i, dmg, mode):
                 on = lit and ((q + k + i) % 3 != 0)
                 S.bb(f"glow{k}{q}", xa, xa + 0.7, a - 0.04, a, ZR + 0.15, ZR + 0.38, "redglow" if on else "oxide2", 0.0, nocast=True)
     D.roof_vents(S, ZR, ((-3.4, 3.7, 0.8), (3.0, 3.7, 0.8)))
+    roof_plant(S, dmg)
     D.loudspeaker(S, -3.0, -0.2, ZR, dmg, height=1.5)
     gantry(S, i, dmg, mode)
     # parts stacks on the pad (east): hull plates, track drums
