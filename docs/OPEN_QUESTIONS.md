@@ -12,6 +12,17 @@ unless marked otherwise.
 
 - ⚪ Q-34 Review the session 4 assumed values (D-089): radiation damage, Directorate start kit, engineer capture threshold,
   aura stacking, Sunrise numbers and fog, About page placement, sfxr licence. Recommendation: confirm in the M3-14 balance pass.
+- 🟡 Q-35 Rad mortar green: the Directorate palette (PAL_DIR) has no green, so the rad mortar's radiation glow rendered
+  rust-orange. Options: (a) add one radiation-green ramp to PAL_DIR, (b) keep the palette pure and show radiation only as
+  the ground effect. Recommendation: (a), a single green ramp used only for radiation.
+- 🟡 Q-36 Confirm the M4 assumptions (D-095, docs/design/08_m4_plan.md §9 Q-M4-a..j) and the M4-10 theater colours.
+  Recommendation: play a game on each biome, then confirm or list changes.
+- 🟡 Q-37 Neutral faction: `neu_*` types (ruins) default to the Authority faction enum. Options: (a) add Faction.Neutral
+  (append-only enum, rules hash bump), (b) keep Authority and filter by id prefix. Recommendation: (a), in M4-16.
+- 🟡 Q-38 Lore approvals (D-086): [DRAFT] Archive entries for the M4 types, docs/lore/left_behind.md and
+  docs/lore/expedition.md. Recommendation: read and approve or mark up; nothing ships as canon until approved.
+- ⚪ Q-39 M6/M7 design questions listed at the end of docs/design/06_left_behind.md and 07_expedition.md.
+  Recommendation: answer before the M6 contracts session.
 
 ## Answered
 - Q-29 · 2026-11-03 · Tunnel spec → D-074..D-076. Q-31 · 2026-11-03 · Audio sourcing → D-080.

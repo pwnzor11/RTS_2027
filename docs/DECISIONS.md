@@ -701,3 +701,35 @@ Sunrise blast radius 5 cells, 700 damage, enemies are not told a superweapon is 
 **Decision:** Helpers wrap every `dotnet build/test` in `flock /home/claude/wt/dotnet.lock`, like Blender renders.
 **Why:** 8 parallel builds on 2 CPUs / 7 GB would run out of memory. Cost: long queues (full suite ≈ 8 min each).
 **Status:** confirmed (lead)
+
+### D-091 · 2026-11-04 · Session 5 art fan-out reviewed by the lead
+**Decision:** M3-ART follows the D-088 flow: after the owner approved the turret rework and Command Shaft rev 2, the lead fanned out the 14 Directorate structures, 4 Authority structures, the agitprop turret and the Sunrise Device, reviewed each contact sheet itself and logged notes for the owner. The rad mortar's radiation green is lost because PAL_DIR has no green (Q-35).
+**Status:** assumed — confirm (owner morning review)
+
+### D-092 · 2026-11-04 · Mission replays
+**Decision:** Replay format 8 adds the mission id and the script hash; playback re-runs the script. Tools depends on Scripting. **Supersedes** D-071's "mission games record no replay yet".
+**Status:** confirmed (lead)
+
+### D-093 · 2026-11-04 · In-game save/load
+**Decision:** Saves use the RTSG envelope v1 around `Simulation.Save`. AI players restart fresh after a load (no AI save API yet → M3-21). Loaded games are not recorded as replays.
+**Status:** confirmed (lead)
+
+### D-094 · 2026-11-04 · M4 format bumps and rules schema v4
+**Decision:** RulesHash 6→7, SaveVersion 7→8, Replay 8→9 (reads 7..9), MapFile 1→2. Enums: CommandKind.Unload=22, ActorLayer.Garrisoned=7, MissionKind.Garrisoned=15, LandType.Shallow=7 (Coast=8 reserved), FxKind.GarrisonExit=5, DebugOp.GrantUpgrade=6. State parts end "… effects, garrison, stats"; ground part v2 adds Foam. Session-4 saves and replays no longer verify (as D-082).
+**Status:** confirmed (lead)
+
+### D-095 · 2026-11-04 · M4 plan questions Q-M4-a..j
+**Decision:** All lead recommendations in docs/design/08_m4_plan.md §9 were taken, because the owner said "decide, mark assumed — confirm".
+**Status:** assumed — confirm (Q-36)
+
+### D-096 · 2026-11-04 · Build-lock fix
+**Decision:** Use `flock -o` (the lock fd is not inherited) and the /usr/local/bin/dotnet wrapper that disables MSBuild node reuse and the shared compiler. **Why:** VBCSCompiler inherited the D-090 lock fd and starved the queue. Amends D-090.
+**Status:** confirmed (lead)
+
+### D-097 · 2026-11-04 · M3 landed
+**Decision:** M3 landed on main (babbf6b) after Windows CI on PR #7; restore branch `restore/pre-m3-land`. M3-14 balance followed in PR #8 (1a468e9).
+**Status:** confirmed (owner said land when CI is green)
+
+### D-098 · 2026-11-04 · M4 landed
+**Decision:** M4-01..M4-15 except M4-12 landed on main (7696ca2, PR #9; restore `restore/pre-m4-land`). M4-12 AI follows in PR #10.
+**Status:** confirmed (owner said land when CI is green)

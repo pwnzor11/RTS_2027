@@ -106,26 +106,45 @@ Both factions, full tech tree, map editor, real AI with difficulty levels, audio
 - [x] M3-07 Directorate + Authority-counter data
 - [x] M3-08 Game: faction pick and new renderers
 - [x] M3-09 Audio host, SFX generator, music player and brief
-- [ ] M3-ART Art fan-out. Done + owner-approved: conscript, vent, 4 infantry, 9 vehicles. Turret rework done (owner to look). dir_shaft pilot rev 2 (lead-approved). Left: 14 structures, auth_seismograph/searchlight/gate/engineering, agitprop turret conversion, effects
+- [x] M3-ART Art fan-out (session 5, lead-reviewed per D-088/D-091; owner review pending): turret rework + dir_shaft rev 2 owner-approved; 14 Directorate structures, auth_seismograph/searchlight/gate/engineering, agitprop turret, Sunrise, rad mortar rev 2. Art is on local `integ-art` until the owner runs push_art.ps1 (D-084). Effects art not done → M10
 - [x] M3-10 Directorate AI (Recruit tier; 4 test games vs Authority all draws; one racy test skipped → fix in M3-11)
-- [ ] M3-11 AI tiers 2–5
+- [x] M3-11 AI tiers 2–5 (session 5)
 - [x] M3-12 Session 3 follow-ups (mission replays not done → M3-19; wall art 1× and Rocketeer flash crop → M3-ART)
 - [x] M3-13 Superweapon: the Sunrise Device (sim + UI pieces; GameScreen wiring → M3-18)
-- [ ] M3-14 Integration and balance pass
+- [x] M3-14 Integration and balance pass (docs/balance; tunnel time saved 42–46 %; faction/tier targets not met → M4-16)
 - [ ] M3-15 Map editor → moved to M4 (D-087)
 - [x] M3-16 Main menu lobby: illustrated animated background, full menu (Continue, Campaign new/load, Skirmish new/load, Replays, Archive, How to play, Settings, Quit; LAN and Map editor greyed until built)
 - [x] M3-17 Archive: screens, unlock tracking, approved lore in data/archive (wiring into GameScreen/menu → M3-18; Technology entries still stubs)
-- [ ] M3-18 Game wiring left by wave 2: sprite turret/shadow/dive layers in the renderer, Sunrise button + targeting + flash in GameScreen, ArchiveTracker.Observe in GameScreen, a Hatch → Bore Head button (sim ApplyUpgrade exists; no UI issues CommandKind.Upgrade)
-- [ ] M3-20 Menu back-ends: in-game save/load for skirmish and campaign (rebuild AI + script state around a loaded sim) so
+- [x] M3-18 Game wiring left by wave 2: sprite turret/shadow/dive layers in the renderer, Sunrise button + targeting + flash in GameScreen, ArchiveTracker.Observe in GameScreen, a Hatch → Bore Head button (sim ApplyUpgrade exists; no UI issues CommandKind.Upgrade)
+- [x] M3-20 Menu back-ends: in-game save/load for skirmish and campaign (rebuild AI + script state around a loaded sim) so
   Continue/Load work; a replay viewer behind Replays; UI sound ids (ui_move/ui_select/ui_back/ui_deny) in sounds.toml;
   check building manifests' [house] ramps (menu needed HouseRamp.Standard)
-- [ ] M3-19 Mission replays (record mission id + script hash; replay re-runs the script; ReplayPlayer hook for PlaceInitialActors)
+- [x] M3-19 Mission replays (D-092) (record mission id + script hash; replay re-runs the script; ReplayPlayer hook for PlaceInitialActors)
+- [ ] M3-21 Follow-ups found in session 5: turret facing drawn in the view, dive flag in the view, Sunrise blast radius in the view, AI save/restore (AI restarts fresh after load, D-093), gate open/closed state + auth_gate open art, Sunrise ready state
 - [x] M3-INT Wave-1 integration gaps (underground vision, Blackout fog, jam/seismic emitter cache, air vs placement, engineer right-click, audio listener + select sound, CREDITS)
 
 ## M4 · Skirmish depth (D-087)
 Equal priority: procedural maps (Rust Belt ruins, Glass Coast dunes, Mountain passes, Ash plains/rivers; S/M/L), AI-vs-AI
 spectator mode, garrisoning, three-tier tech trees and upgrades for both factions, the map editor (was M3-15), fill out
 the Authority and Directorate rosters creatively (no quota).
+Plan: docs/design/08_m4_plan.md (D-094, D-095). User can try: Skirmish → 4 slots, Biome/Size picker, all-AI slots → Spectate;
+Main menu → Map Editor.
+- [x] M4-01 Contracts: schema v4, enums, state parts, format bumps (D-094)
+- [x] M4-02 Procedural generator: 4 biomes × S/M/L, 2–4 players, `MapValidator`, `map gen` / `map validate`
+- [x] M4-03 Garrison sim
+- [x] M4-04 Per-player rules, tiers, upgrade prerequisites, Aircraft lane
+- [x] M4-05 Warhead mechanics + Quick-Set Foam
+- [x] M4-06 Stats part
+- [x] M4-07 Data: tiers, gate structures, +14 Authority / +7 Directorate types, 13 upgrades, neutral `neu_*`
+- [x] M4-08 Spectator front end
+- [x] M4-09 Garrison + tier UI (manual checks in USER_CHECKS session 5)
+- [x] M4-10 Theaters: Glass Coast, Mountains, Ash Plains palettes (colours ASSUMED)
+- [x] M4-11 Skirmish setup v2
+- [x] M4-12 AI: 2–4 players, tier climbing, garrisons, stall fixes (docs/balance/m4_ai.md; ladder ≥60 % and 4-player fairness NOT met)
+- [x] M4-13 Map editor + main menu entry
+- [x] M4-14 RulesOf sweep
+- [x] M4-15 Neutral map features (ruins)
+- [ ] M4-16 Integration + balance: tier timings (higher tiers still lose to lower), start-0 advantage on 2-player generated maps (2–11×, not an AI effect), 4-player matrix on the real generator, garrison bonus, foam/mortar vs tunnels, 8× spectator performance, Directorate veteran mirror grinding (1/8 decisive), AI use of engineers/transports, neutral faction enum (`neu_*` default to Authority), lore drafts for the new types
 
 ## M5 · LLM commander (D-087)
 Built-in AI does micro; an LLM sets strategy every 10–30 s and talks in character as a faction leader. API key in Settings
@@ -134,10 +153,12 @@ Built-in AI does micro; an LLM sets strategy every 10–30 s and talks in charac
 ## M6 · The Left Behind (D-087)
 Third faction: Glass Coast evacuees abandoned in 1990; nomadic scavengers, mobile crawler-rig bases, salvaged tech, raids.
 Lore (owner approves), roster, art (pilot → fan-out, D-088), AI.
+- [x] M6-01 Design doc + lore draft (docs/design/06_left_behind.md, docs/lore/left_behind.md — DRAFT, owner approves)
 
 ## M7 · The Overseas Expedition (D-087)
 Fourth faction: an old-world remnant (fictionalised; no real people or politics). Naval and air, beachheads. Needs naval
 systems (water locomotion, ships, landings). Lore, roster, art, AI.
+- [x] M7-01 Design doc with naval contract sketch + lore draft (docs/design/07_expedition.md, docs/lore/expedition.md — DRAFT)
 
 ## M8 · Campaign (was M4)
 Mission scripting/trigger system, briefing screens, tech gating, campaign flow; written once with all four factions.

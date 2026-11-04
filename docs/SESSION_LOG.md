@@ -87,3 +87,17 @@ Lead sent M3-08's sprite-layer notes to the audio helper by mistake → M3-18. p
 shell killed the lead's command twice — don't pkill by command line.
 **User check:** USER_CHECKS.md, "Session 4 · M3 so far".
 **Next session should:** see HANDOFF (finish M3, then M4 skirmish depth + new-faction design and lore overnight).
+
+## Session 5 · 2026-11-04 (overnight, unattended)
+**Goal:** land M3, finish M3, M4 skirmish depth, M6/M7 design wave.
+**Done:** M3 landed (PR #7, D-097) and M3-14 balance (PR #8). M3-11, M3-18, M3-19 (D-092), M3-20 (D-093) and M3-ART (lead-reviewed,
+D-091; art on local integ-art) done. M4 plan (08_m4_plan.md) with every Q-M4 answer assumed (D-095); M4-01..M4-15 built and
+landed (PR #9, D-094, D-098); M4-12 AI in PR #10. M6-01/M7-01 design docs + lore drafts. Decisions D-091..D-098.
+**Commits:** 1a468e9..7696ca2 on main + PR #10 (AI) + this handoff; art on local wp/art-* + integ-art (owner pushes).
+**Helpers:** ≈ 30 launches (Opus: M4-02, M4-04, M4-12; Sonnet for most sim/UI/art; Haiku for data/stats).
+**Problems / notes:** the dotnet lock was starved by VBCSCompiler holding the inherited fd → `flock -o` + wrapper (D-096).
+Fresh worktrees had LFS pointer PNGs (Game test DivideByZero) → `git lfs pull` + `git lfs checkout`. A helper duplicated
+the already-merged M3-16 menu (stopped). One helper created a one-shot "check" scheduled task (deletion was blocked; it fired
+once, harmless). M4-12 worked on an older base without the M4-02 generator, so its 4-player numbers used a stand-in map.
+**User check:** USER_CHECKS.md, "Session 5 · M3 finished + M4 skirmish depth".
+**Next session should:** see HANDOFF (owner review + art push, M4-16 balance, M3-21, then M5 LLM commander / M6 contracts).

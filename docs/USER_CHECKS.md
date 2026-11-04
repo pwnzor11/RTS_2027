@@ -108,3 +108,30 @@ rejected (format bump, D-082). Nothing here has been seen on a real screen yet.
    Replays only list files for now (no in-game save or replay viewer yet, M3-20). F9 opens the Sandbox. Open the Archive and read the lore.
 10. **Not wired yet (M3-18):** the Sunrise Device button, turret layers drawn separately in game, the Hatch → Bore Head
    button, Archive unlocks from what you see in games.
+
+## Session 5 · M3 finished + M4 skirmish depth (2026-11-04)
+Pull main first (M3 landed in PR #7/#8, M4 in PR #9, the M4 AI in PR #10). Saves and replays from earlier builds are
+rejected (D-094). Nothing here has been seen on a real screen yet.
+1. **Art push first:** put the three files you were sent (push_art.ps1, rts_art.bundle, art_objects.tar) in a folder
+   `_art_push` inside your RTS_2027 folder and run `powershell -ExecutionPolicy Bypass -File .\_art_push\push_art.ps1`.
+   It should end with "Done. All art branches (incl. integ-art, every structure from session 5) are on GitHub."
+   Then tell Claude "art pushed"; the structures join main through a PR.
+2. **Skirmish setup v2:** Skirmish → up to 4 slots; each cycles Kind / Fac / Tier / Team / Col. Pick a map, or
+   "Generated" with "Biome: …" and Small / Medium / Large. Set every slot to AI: the button reads **Spectate**
+   ("(no Human slot: you will watch)").
+3. **Spectator:** in a Spectate game, cycle viewers and toggle vision; the stats panel and the game-over stats appear.
+   In the Sandbox, F9 starts a spectator game.
+4. **Garrisons:** right-click your own Blockhouse/Redoubt or an empty neutral ruin with infantry → they enter and pips
+   appear; select the building and press **D** to unload; engineers capture instead. Enemy pips show only when visible.
+5. **Tiers:** the sidebar groups items under "Tier 2" / "Tier 3" headings; locked items show "LOCKED". The AIR tab (Y)
+   appears after an Airfield or Mooring. Upgrade tooltips list their effects.
+6. **Foam:** the foam truck's shot leaves a tint on the ground that fades; burrowers can't surface through it.
+7. **Theaters:** generated Glass Coast, Mountains and Ash Plains maps each have their own colours (ASSUMED, Q-36).
+8. **Map editor:** Main menu → **Map Editor** → new map, paint, **Validate** (F5 re-checks), save, then **Play this map**.
+9. **Save/load:** Esc → **Quicksave** or **Save game** → choose a slot; Continue and Load on the main menu bring it back
+   (the AI restarts its plan after a load).
+10. **Replays:** Replays → pick one → it plays back in the viewer.
+11. **Sunrise Device and Archive:** build the Sunrise as Directorate; its button, targeting and flash work in game.
+    The Archive unlocks entries for what you see.
+12. **Headless AI check (optional):** `dotnet run -c Release --project src/Tools -- ai matrix --players 4 --size 64 --seeds 1 --tiers 3 --faction mixed`.
+13. **Look at the art notes** in HANDOFF ("Waiting on the user").
