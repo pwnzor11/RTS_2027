@@ -37,11 +37,12 @@ public static class SpectatorSetup
     /// <param name="rulesDir">The data/rules directory.</param>
     /// <param name="settings">Settings whose slots are all AI or Closed.</param>
     /// <exception cref="InvalidOperationException">A slot is Human, or the settings cannot start a game.</exception>
-    public static SkirmishGame Create(string rulesDir, Screens.SkirmishSettings settings)
+    /// <param name="appSettings">M5: app settings for LLM commanders; null = none.</param>
+    public static SkirmishGame Create(string rulesDir, Screens.SkirmishSettings settings, Settings? appSettings = null)
     {
         ArgumentNullException.ThrowIfNull(settings);
         if (!settings.IsSpectator) throw new InvalidOperationException("A spectator game has no Human slot.");
-        return SkirmishGame.Create(rulesDir, settings);
+        return SkirmishGame.Create(rulesDir, settings, appSettings);
     }
 
     /// <summary>A headless spectator host over <paramref name="game"/>: AIs attached, <see cref="SimHost.Spectator"/> set, full vision.</summary>

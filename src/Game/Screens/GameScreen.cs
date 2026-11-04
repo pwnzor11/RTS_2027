@@ -152,7 +152,7 @@ public sealed class GameScreen : IScreen
     {
         // M4-INT2: the full v2 settings (2 to 4 slots, teams, per-slot AI and faction); no Human slot starts a spectator game.
         if (settings.IsSpectator) return CreateSpectator(services, settings);
-        SimSnapshotSource sim = BuildSkirmishSource(services.RulesDir, settings);
+        SimSnapshotSource sim = BuildSkirmishSource(services.RulesDir, settings, appSettings: services.Settings);
         var screen = new GameScreen(services, sim, settings, () => CreateSkirmish(services, settings), skirmishMode: true);
         screen.IsGameOver = () => sim.Sim.GameOver;
         return screen;
@@ -183,9 +183,12 @@ public sealed class GameScreen : IScreen
     /// <param name="rulesDir">The data/rules directory.</param>
     /// <param name="settings">The setup choices.</param>
     /// <param name="replayPath">Where the replay is recorded (tests); null = the default skirmish replay path.</param>
-    public static SimSnapshotSource BuildSkirmishSource(string rulesDir, SkirmishSettings settings, string? replayPath = null)
+    /// <param name="appSettings">M5: the app settings, for the LLM commanders of slots with Commander set; null = no commanders (tests).</param>
+    public static SimSnapshotSource BuildSkirmishSource(string rulesDir, SkirmishSettings settings, string? replayPath = null,
+        Settings? appSettings = null)
     {
-        SkirmishGame game = settings.IsSpectator ? SpectatorSetup.Create(rulesDir, settings) : SkirmishGame.Create(rulesDir, settings);
+        SkirmishGame game = settings.IsSpectator ? SpectatorSetup.Create(rulesDir, settings, appSettings)
+            : SkirmishGame.Create(rulesDir, settings, appSettings);
         var sim = new SimSnapshotSource(game, rulesDir, replayPath);
         if (!settings.IsSpectator) sim.SaveTemplate = game.SaveTemplate(settings);
         return sim;
@@ -199,7 +202,7 @@ public sealed class GameScreen : IScreen
     /// <param name="settings">Settings with no Human slot.</param>
     public static GameScreen CreateSpectator(GameServices services, SkirmishSettings settings)
     {
-        SimSnapshotSource sim = BuildSkirmishSource(services.RulesDir, settings);
+        SimSnapshotSource sim = BuildSkirmishSource(services.RulesDir, settings, appSettings: services.Settings);
         var screen = new GameScreen(services, sim, settings, () => CreateSpectator(services, settings), skirmishMode: false, spectator: true);
         sim.Host.SetViewer(-1);
         screen.IsGameOver = () => sim.Sim.GameOver;
@@ -286,6 +289,7 @@ public sealed class GameScreen : IScreen
         _sidebar?.Dispose();
         _cameos?.Dispose();
         _sim?.SaveReplay();
+        _sim?.Game?.Dispose();   // M5-05: cancels any LLM call still in flight
     }
 
     /// <inheritdoc />
