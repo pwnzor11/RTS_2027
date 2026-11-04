@@ -16,7 +16,7 @@ expansion plan is D-087 (4 factions, skirmish depth, LLM commander) and the new 
    (resolve tools/art/build_vehicle.py between art-veh1 and art-veh2: keep both feature sets, D-083), update PR #7 or open
    a new PR integ-m3 → main, wait for Windows CI, land.
 3. Finish M3: M3-18 game wiring (turret/shadow/dive layers, Sunrise button + targeting + flash, Archive tracker, Hatch →
-   Bore Head button),
+   Bore Head button), M3-20 menu back-ends (game save/load so Continue/Load work, replay viewer, UI sounds),
    M3-11 AI tiers 2–5 (also fix the skipped InfantryLeavesIrradiatedCells test), M3-19 mission replays, M3-ART (14
    Directorate structures in the dir_shaft style using tools/art/structures/dir_struct_common.py, 4 Authority structures,
    agitprop turret via S.mount), M3-14 integration + balance (tunnel time saved 30–50 %, win rates near 50 %), Q-34.

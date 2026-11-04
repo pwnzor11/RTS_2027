@@ -104,6 +104,7 @@ rejected (format bump, D-082). Nothing here has been seen on a real screen yet.
    docs/audio/music_brief.md for the ACE-Step prompts.
 8. **Engineer:** right-click a damaged own building (repair) or a neutral or badly damaged enemy building (capture).
 9. **Main menu:** launch the game: an animated lobby with Continue, Campaign, Skirmish, Replays, Archive, How to Play,
-   Settings (with Master volume and About) and Quit; LAN Game and Map Editor are greyed. Open the Archive and read the lore.
+   Settings (with Master volume and About) and Quit; LAN Game and Map Editor are greyed. Continue is greyed and Load /
+   Replays only list files for now (no in-game save or replay viewer yet, M3-20). F9 opens the Sandbox. Open the Archive and read the lore.
 10. **Not wired yet (M3-18):** the Sunrise Device button, turret layers drawn separately in game, the Hatch → Bore Head
    button, Archive unlocks from what you see in games.
