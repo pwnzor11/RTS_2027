@@ -1,0 +1,78 @@
+# Archive entries (M3-17). Text is the owner-approved lore from docs/lore/, copied verbatim.
+# Keys: id, category, faction, title, subtitle, field_note (optional), body, sprite (optional),
+# unlock (open | campaign:<mission> | encounter:<rules id> | research:<upgrade id>).
+# Unit, Structure and Upgrade entries use the rules id as their id; their stats are read live from data/rules.
+
+[[entry]]
+id = "auth_rifleman"
+category = "Unit"
+faction = "authority"
+title = "Rifleman"
+subtitle = "Citizen-army infantry"
+field_note = "FIELD MAN 1 // SERVING CITIZEN. HOLDS GROUND. REQUIRES DECON AFTER ASHFALL EXPOSURE. STOP."
+body = '''
+Raised from the barracks by the labour-year draft, the rifleman is a clerk, a lineworker or a farmhand with a service rifle and a month of drill. He is not a hero, and the Authority does not ask him to be one. He is asked to hold a position until the armour arrives, and to stay out of the ash.
+'''
+unlock = "open"
+
+[[entry]]
+id = "auth_rocketeer"
+category = "Unit"
+faction = "authority"
+title = "Rocketeer"
+subtitle = "Anti-armour infantry"
+field_note = "ROCKET SECTION 2 // HEAVY AND SLOW. KEEP BEHIND THE LINE. DO NOT WASTE ROUNDS. STOP."
+body = '''
+Trained at the same barracks as riflemen but on tube-guided launchers that need a steady hand and a clear lane. Each rocket is hand-counted into the inventory and signed for on return. Rocketeers are the Authority's answer to anything armoured that gets too close.
+'''
+unlock = "open"
+
+[[entry]]
+id = "auth_scraper"
+category = "Unit"
+faction = "authority"
+title = "Scraper"
+subtitle = "Armoured ashfall harvester"
+field_note = "SCRAPER 3 // SEALED CAB, FULL HOPPER. RETURN TO REFINERY AT DUSK. STOP."
+body = '''
+A squat armoured crawler built at the Vehicle Factory, with a plough blade, a sealed cab and a lead-lined hopper. Its crew are the most respected workers in a reconstruction town, since every ration depends on how full the hopper comes back. Drivers paint the names of their children on the hull.
+'''
+unlock = "open"
+
+[[entry]]
+id = "auth_jeep"
+category = "Unit"
+faction = "authority"
+title = "Scout Car"
+subtitle = "Light recon vehicle"
+field_note = "LIGHT PATROL CAR 4 // FAST, THIN, USEFUL. REPORT WHAT YOU SEE, NOT WHAT YOU FEAR. STOP."
+body = '''
+A wheeled scout with a pintle-mounted machine gun and a radio rack taller than the driver. Surveyors use them to find the edge of the next good field; the army uses them to find the enemy before the enemy finds the column.
+'''
+unlock = "open"
+
+[[entry]]
+id = "auth_tank"
+category = "Unit"
+faction = "authority"
+title = "Heavy Tank"
+subtitle = "Main battle armour"
+field_note = "ARMOUR 5 // MAIN GUN, TRACKED, REACTOR CORE SEALED. DO NOT FOLLOW IT INTO ITS OWN SMOKE. STOP."
+body = '''
+The backbone of the Authority's armoured columns, a slab-sided tracked tank with a small sealed reactor and a long cannon. They are built slowly, serviced obsessively and rarely lost. Crews say the hull plate is thick because the Administrator is cheap and wants his tanks back.
+'''
+unlock = "open"
+
+[[entry]]
+id = "auth_decon_truck"
+category = "Unit"
+faction = "authority"
+title = "Decontamination Truck"
+subtitle = "Clean-up and ground restoration"
+field_note = "DECON UNIT 6 // SPRAY, FLUSH, REPEAT. ONE CLEAN CELL IS ONE LESS WAY TO LOSE A MAN. STOP."
+body = '''
+A wheeled tanker with spray booms and a neutralising rinse. Decon crews follow the army in blue overalls and are the reason an infantry company can cross poisoned ground. The Authority treats cleaning up after a battle as part of the battle.
+'''
+# ASSUMED (M3-17) TODO (M4): replace TBD with the mission id that releases this entry.
+unlock = "campaign:TBD"
+

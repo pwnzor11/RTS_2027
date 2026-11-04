@@ -1,0 +1,134 @@
+# Archive entries (M3-17). Body text is a placeholder: the approved lore from docs/lore/ is pasted in later.
+# Keys: id, category, faction, title, subtitle, body, sprite (optional), unlock (open | campaign:<mission> | encounter:<rules id> | research:<upgrade id>).
+# Unit, Structure and Upgrade entries use the rules id as their id; their stats are read live from data/rules.
+
+[[entry]]
+id = "tech_ashfall"
+category = "Technology"
+faction = "neutral"
+title = "Ashfall"
+subtitle = "Technology"
+body = "[draft pending]"
+# ASSUMED (M3-17)
+unlock = "open"
+
+[[entry]]
+id = "tech_pitchblende"
+category = "Technology"
+faction = "neutral"
+title = "Pitchblende"
+subtitle = "Technology"
+body = "[draft pending]"
+# ASSUMED (M3-17)
+unlock = "open"
+
+[[entry]]
+id = "tech_vacuum_tubes"
+category = "Technology"
+faction = "neutral"
+title = "Vacuum-Tube Industry"
+subtitle = "Technology"
+body = "[draft pending]"
+# ASSUMED (M3-17)
+unlock = "open"
+
+[[entry]]
+id = "tech_decontamination"
+category = "Technology"
+faction = "authority"
+title = "Decontamination"
+subtitle = "Technology"
+body = "[draft pending]"
+# ASSUMED (M3-17)
+unlock = "open"
+
+[[entry]]
+id = "tech_hardened_ground"
+category = "Technology"
+faction = "authority"
+title = "Grouting and Hardened Ground"
+subtitle = "Technology"
+body = "[draft pending]"
+# ASSUMED (M3-17)
+unlock = "research:auth_grouting"
+
+[[entry]]
+id = "tech_seismic_detection"
+category = "Technology"
+faction = "authority"
+title = "Seismic Detection"
+subtitle = "Technology"
+body = "[draft pending]"
+# ASSUMED (M3-17)
+unlock = "encounter:auth_seismograph"
+
+[[entry]]
+id = "tech_tunnel_network"
+category = "Technology"
+faction = "directorate"
+title = "The Tunnel Network"
+subtitle = "Technology"
+body = "[draft pending]"
+# ASSUMED (M3-17)
+unlock = "encounter:dir_hatch"
+
+[[entry]]
+id = "tech_radiation"
+category = "Technology"
+faction = "directorate"
+title = "Radiation Denial"
+subtitle = "Technology"
+body = "[draft pending]"
+# ASSUMED (M3-17)
+unlock = "encounter:dir_rad_mortar"
+
+[[entry]]
+id = "tech_blackout"
+category = "Technology"
+faction = "directorate"
+title = "Blackout"
+subtitle = "Technology"
+body = "[draft pending]"
+# ASSUMED (M3-17)
+unlock = "encounter:dir_dirigible"
+
+[[entry]]
+id = "tech_static_broadcast"
+category = "Technology"
+faction = "directorate"
+title = "Static Broadcast"
+subtitle = "Technology"
+body = "[draft pending]"
+# ASSUMED (M3-17)
+unlock = "encounter:dir_mast"
+
+[[entry]]
+id = "tech_sunrise_device"
+category = "Technology"
+faction = "directorate"
+title = "The Sunrise Device"
+subtitle = "Technology"
+body = "[draft pending]"
+# ASSUMED (M3-17)
+unlock = "encounter:dir_sunrise"
+
+[[entry]]
+id = "tech_broadcast_surge"
+category = "Technology"
+faction = "directorate"
+title = "Broadcast"
+subtitle = "Technology"
+body = "[draft pending]"
+# ASSUMED (M3-17)
+unlock = "campaign:dir_04"
+
+[[entry]]
+id = "tech_atomic_artillery"
+category = "Technology"
+faction = "authority"
+title = "Atomic Artillery"
+subtitle = "Technology"
+body = "[draft pending]"
+# ASSUMED (M3-17)
+unlock = "campaign:auth_05"
+

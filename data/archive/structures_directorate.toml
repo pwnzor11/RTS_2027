@@ -1,0 +1,204 @@
+# Archive entries (M3-17). Text is the owner-approved lore from docs/lore/, copied verbatim.
+# Keys: id, category, faction, title, subtitle, field_note (optional), body, sprite (optional),
+# unlock (open | campaign:<mission> | encounter:<rules id> | research:<upgrade id>).
+# Unit, Structure and Upgrade entries use the rules id as their id; their stats are read live from data/rules.
+
+[[entry]]
+id = "dir_shaft"
+category = "Structure"
+faction = "directorate"
+title = "Command Shaft"
+subtitle = "Seat of an advance post"
+field_note = "VOICE: \"THE SHAFT IS DEEP, THE DIRECTORATE DEEPER. REPORT BELOW, CITIZEN.\""
+body = '''
+A reinforced shaft head with a lift cage, an antenna mast and a heavy hatch. Above ground there is almost nothing to see; below it, everything. The Directorate treats a shaft the way the Authority treats a flag: a place where the government simply is.
+'''
+unlock = "open"
+
+[[entry]]
+id = "dir_reactor_vent"
+category = "Structure"
+faction = "directorate"
+title = "Reactor Vent"
+subtitle = "Power source"
+field_note = "VOICE: \"THE WARMTH OF THE INTERIOR COMES UP THROUGH THE VENT. STAND NEAR, STAND PROUD.\""
+body = '''
+A cooling stack on top of a buried reactor, pouring a shimmering haze into the cold air. The reactor is deep and unseen; the stack is the only part that can be shot at. It keeps the whole post running and everyone nearby slightly warm.
+'''
+unlock = "open"
+
+[[entry]]
+id = "dir_smelter_vent"
+category = "Structure"
+faction = "directorate"
+title = "Smelter Vent"
+subtitle = "Ashfall processing outlet"
+field_note = "VOICE: \"WHAT THE SURFACE LEAVES BEHIND, THE INTERIOR REFINES. NOTHING IS WASTED.\""
+body = '''
+A hatch-and-chimney complex where burrowing scrapers deliver ash to the smelters below. Fumes rise from the vent day and night, which makes it easy to find and an obvious target.
+'''
+unlock = "open"
+
+[[entry]]
+id = "dir_muster_hatch"
+category = "Structure"
+faction = "directorate"
+title = "Muster Hatch"
+subtitle = "Conscript barracks"
+field_note = "VOICE: \"FORM UP, FORM UP, FORM UP. THE INTERIOR HAS A PLACE FOR EVERY CITIZEN.\""
+body = '''
+A wide steel hatch opening onto a drill hall, where conscripts are issued rifles and a number. Their service credit is stamped on a card and kept in a locked drawer. It is also a tunnel entrance, so reinforcements surface anywhere the network reaches.
+'''
+unlock = "open"
+
+[[entry]]
+id = "dir_assembly_bore"
+category = "Structure"
+faction = "directorate"
+title = "Assembly Bore"
+subtitle = "Vehicle works"
+field_note = "VOICE: \"THE INTERIOR BUILDS WHAT THE SURFACE FORGOT HOW TO BUILD.\""
+body = '''
+A hangar-sized cavern entrance with a gantry and a trolley line. Vehicles are built below and rolled up a ramp. Few in number, large in ambition, and all of them slightly strange.
+'''
+unlock = "open"
+
+[[entry]]
+id = "dir_hatch"
+category = "Structure"
+faction = "directorate"
+title = "Hatch"
+subtitle = "Small tunnel entrance"
+field_note = "VOICE: \"A DOOR IS ONLY A DOOR UNTIL THE INTERIOR OPENS IT.\""
+body = '''
+A reinforced hatch with a lift cage for infantry. Hatches are dug by Bore crews and connect the Directorate's network. They are modest above ground and meaningful below.
+'''
+unlock = "open"
+
+[[entry]]
+id = "dir_bore_head"
+category = "Structure"
+faction = "directorate"
+title = "Bore Head"
+subtitle = "Large tunnel entrance"
+field_note = "VOICE: \"WHEN THE SMALL DOOR IS NOT ENOUGH, THE INTERIOR OPENS A LARGER ONE.\""
+body = '''
+A ramped shaft mouth that takes vehicles as well as infantry. It is the heavy artery of the network, and an important reason the Authority fears an empty field.
+'''
+# ASSUMED (M3-17) TODO (M4): replace TBD with the mission id that releases this entry.
+unlock = "campaign:TBD"
+
+[[entry]]
+id = "dir_cistern"
+category = "Structure"
+faction = "directorate"
+title = "Cistern"
+subtitle = "Concentrate store"
+field_note = "VOICE: \"HELD IN TRUST. EVERY DROP IS COUNTED.\""
+body = '''
+A buried tank with a narrow access hatch, holding refined concentrate. There is little to see on the surface and less to take.
+'''
+unlock = "open"
+
+[[entry]]
+id = "dir_bunker"
+category = "Structure"
+faction = "directorate"
+title = "Bunker Wall"
+subtitle = "Defensive wall piece"
+field_note = "VOICE: \"A WALL IS A PROMISE. THE INTERIOR KEEPS ITS PROMISES.\""
+body = '''
+A low bone-white slab, set into the ground with a red stripe along the top. Cheap to raise, it is the Directorate's way of saying that the ground behind it is spoken for.
+'''
+unlock = "open"
+
+[[entry]]
+id = "dir_pillbox"
+category = "Structure"
+faction = "directorate"
+title = "Pillbox"
+subtitle = "Small defensive gun"
+field_note = "VOICE: \"SEE THE SLIT, CITIZEN? THAT IS THE INTERIOR WATCHING.\""
+body = '''
+A squat concrete turret with a narrow firing slit and a loudspeaker. It is manned by a pair of conscripts who are told never to open the door, and are not allowed to forget it.
+'''
+unlock = "open"
+
+[[entry]]
+id = "dir_rocket_nest"
+category = "Structure"
+faction = "directorate"
+title = "Rocket Nest"
+subtitle = "Anti-aircraft battery"
+field_note = "VOICE: \"THE SKY IS ALSO THE INTERIOR'S. LET NO ONE FORGET IT.\""
+body = '''
+A sandbagged pit with a rack of rockets pointed at the sky. It is a reply to the one thing the Directorate does not have enough of, and a reminder that it too once looked up in fear.
+'''
+# ASSUMED (M3-17) TODO (M4): replace TBD with the mission id that releases this entry.
+unlock = "campaign:TBD"
+
+[[entry]]
+id = "dir_rad_mortar"
+category = "Structure"
+faction = "directorate"
+title = "Radiation Mortar"
+subtitle = "Area denial battery"
+field_note = "VOICE: \"WHAT THE INTERIOR THROWS, THE GROUND KEEPS. LET THE TRESPASSER COUNT THE COST.\""
+body = '''
+A buried mortar tube lobbing shells of irradiated slurry, poisoning the ground where they land. Authority engineers hate it for the clean-up bill, and Directorate crews love it for the same reason.
+'''
+# ASSUMED (M3-17) TODO (M4): replace TBD with the mission id that releases this entry.
+unlock = "campaign:TBD"
+
+[[entry]]
+id = "dir_mast"
+category = "Structure"
+faction = "directorate"
+title = "Broadcast Mast"
+subtitle = "Radar and Static Broadcast tower"
+field_note = "VOICE: \"LISTEN. THE INTERIOR SPEAKS ON EVERY BAND, AND NO OTHER VOICE IS NEEDED.\""
+body = '''
+A tall lattice mast with a rotating dish and a ring of horns. It watches the sky and drowns enemy radio and maps in static. The Voice's lullaby plays from it at lights-out.
+'''
+# ASSUMED (M3-17) TODO (M4): replace TBD with the mission id that releases this entry.
+unlock = "campaign:TBD"
+
+[[entry]]
+id = "dir_isotope_works"
+category = "Structure"
+faction = "directorate"
+title = "Isotope Works"
+subtitle = "Research and weapons laboratory"
+field_note = "VOICE: \"THE LEARNED CITIZENS OF THE INTERIOR SERVE THE FUTURE. BE PATIENT WITH THEM.\""
+body = '''
+A shielded laboratory with a vent and a bank of glowing tubes, the domain of Dr. Lund's staff. Research here is real and dangerous, and almost every new weapon in the Directorate's arsenal began on one of its benches.
+'''
+# ASSUMED (M3-17) TODO (M4): replace TBD with the mission id that releases this entry.
+unlock = "campaign:TBD"
+
+[[entry]]
+id = "dir_mooring"
+category = "Structure"
+faction = "directorate"
+title = "Mooring Tower"
+subtitle = "Dirigible dock"
+field_note = "VOICE: \"THE INTERIOR RISES. WATCH IT RISE.\""
+body = '''
+A steel mooring mast and a hangar at its base, where dirigibles are inflated, serviced and launched. It is the most cheerful building the Directorate owns, and the staff know it.
+'''
+# ASSUMED (M3-17) TODO (M4): replace TBD with the mission id that releases this entry.
+unlock = "campaign:TBD"
+
+[[entry]]
+id = "dir_sunrise"
+category = "Structure"
+faction = "directorate"
+title = "The Sunrise Device"
+subtitle = "Buried warhead"
+field_note = "VOICE: \"AND AT LAST THE DAWN. ALL CITIZENS SHALL SEE IT.\""
+body = '''
+A deep chamber with a surface vent and a launch cradle, built around a recovered warhead that is lowered by tunnel to beneath a chosen target. The Directorate calls it the Sunrise and treats it as holy. The Authority calls it a second Exchange in the making.
+'''
+# ASSUMED (M3-17)
+unlock = "encounter:dir_sunrise"
+
