@@ -60,7 +60,8 @@ def load_layers(wd, f, cal):
     return dict(rgb=c[..., :3], a=a, house=house, idx=idx, shadow=sh)
 
 
-def frame_b(wd, f, cal, w, h):
+def frame_b(wd, f, cal, w, h, pal=None, shadow=True):
+    pal = C.PAL if pal is None else pal
     L = load_layers(wd, f, cal)
     base, A, hfrac, hidx, sh = C.downscale_layers(L, h)   # k = (h*SS)//h = SS
     assert A.shape == (h, w)
@@ -68,12 +69,12 @@ def frame_b(wd, f, cal, w, h):
     solid = A >= 0.5
     out = np.zeros((h, w, 4), dtype=np.uint8)
     ys, xs = np.nonzero(solid)
-    q = P.quantise(base[ys, xs], C.PAL)
+    q = P.quantise(base[ys, xs], pal)
     for y, x, qi in zip(ys, xs, q):
         if hfrac[y, x] >= 0.5:
             out[y, x] = (*C.HOUSE[hidx[y, x]], 255)
         else:
-            out[y, x] = (*C.PAL[qi], 255)
+            out[y, x] = (*pal[qi], 255)
     edge = np.zeros_like(solid)
     edge[1:, :] |= solid[:-1, :]
     edge[:-1, :] |= solid[1:, :]
@@ -83,8 +84,9 @@ def frame_b(wd, f, cal, w, h):
     out[edge] = (*C.OUTLINE, 255)
     yy, xx = np.mgrid[0:h, 0:w]
     chk = ((xx + yy) % 2 == 0)
-    shadow = (~solid) & (~edge) & ((sh > 0.55) | ((sh > 0.25) & chk))
-    out[shadow] = (*C.PAL[1], 255)
+    if shadow:
+        shadowm = (~solid) & (~edge) & ((sh > 0.55) | ((sh > 0.25) & chk))
+        out[shadowm] = (*pal[1], 255)
     return Image.fromarray(out, "RGBA")
 
 
@@ -118,7 +120,7 @@ def run(sid, mod, wd):
     fw, fh = mod.CANVAS
     n = sum(s[1] for s in mod.STATES)
     cal = calibrate(wd, n, getattr(mod, "HOUSE2_MID", False))
-    frames = [frame_b(wd, f, cal, fw, fh) for f in range(n)]
+    frames = [frame_b(wd, f, cal, fw, fh, getattr(mod, "PALETTE", None)) for f in range(n)]
     for f, im in enumerate(frames):
         a = np.asarray(im)
         if a[0, :, 3].any():
