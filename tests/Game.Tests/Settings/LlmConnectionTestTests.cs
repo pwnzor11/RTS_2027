@@ -3,7 +3,7 @@
 using Rts.Game.Ui.Llm;
 using Rts.Llm;
 
-namespace Rts.Game.Tests.Settings;
+namespace Rts.Game.Tests.LlmSettings;
 
 public class LlmConnectionTestTests
 {
