@@ -41,8 +41,8 @@ def main():
         if fr > 1:
             blocks.append((f"state '{name}' at 2x: facings 4 (E) and 12 (W) x frames 0-{fr - 1} (one facing = {fr} frames)",
                            grid([me.frame(name, f, k) for f in (4, 12) for k in range(fr)], 8, 2)))
-            blocks.append((f"state '{name}' at 1x true size: facings 0,2,4..14 x frames 0-{fr - 1}",
-                           grid([me.frame(name, f, k) for f in range(0, 16, 2) for k in range(fr)], 16, 1)))
+            blocks.append((f"state '{name}' at 1x true size: facings 0,4,8,12 x frames 0-{fr - 1}",
+                           grid([me.frame(name, f, k) for f in range(0, 16, 4) for k in range(fr)], 16, 1)))
         else:
             blocks.append((f"state '{name}' at 1x, 16 facings", grid([me.frame(name, f) for f in range(nf)], 16, 1)))
             blocks.append((f"state '{name}' at 2x, 16 facings", grid([me.frame(name, f) for f in range(nf)], 8, 2)))
