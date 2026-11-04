@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
 using Rts.Sim.Core;
+using Rts.Sim.Garrison;
 using Rts.Sim.Missions;
 using Rts.Sim.Production;
 using Rts.Sim.Rules;
@@ -433,8 +434,10 @@ public sealed partial class Simulation
     {
         int n = _players.Count;
         Span<bool> has = n <= 1024 ? stackalloc bool[n] : new bool[n];
+        RevertEmptyRuins();   // M4-15: emptied flipped neutral ruins go back to neutral first
         for (int i = 1; i < _buildings.Capacity; i++)
-            if (_buildings.Slots.IsIndexAlive(i) && !(BuildingTypeAt(i).Wall || BuildingTypeAt(i).Gate)) has[_buildings.Player[i]] = true;
+            if (_buildings.Slots.IsIndexAlive(i) && _garrison.HomeOwner[i] == GarrisonState.NoOwner   // M4-15: a flipped ruin is no base
+                && !(BuildingTypeAt(i).Wall || BuildingTypeAt(i).Gate)) has[_buildings.Player[i]] = true;
         for (int p = 0; p < n; p++)
         {
             if (_players.IsNeutral((byte)p) || _players.Defeated[p]) continue;
