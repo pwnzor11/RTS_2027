@@ -24,7 +24,8 @@ public enum SpriteSource
 public sealed class ResolvedSprite
 {
     internal ResolvedSprite(string id, SpriteKind kind, SpriteSource source, SpriteManifest manifest,
-        SpriteLibrary? library, SpriteSheet? legacy, PlaceholderPixels? placeholder)
+        SpriteLibrary? library, SpriteSheet? legacy, PlaceholderPixels? placeholder,
+        ResolvedSprite? turretSheet = null, ResolvedSprite? shadowSheet = null)
     {
         Id = id;
         Kind = kind;
@@ -33,6 +34,8 @@ public sealed class ResolvedSprite
         Library = library;
         Legacy = legacy;
         Placeholder = placeholder;
+        TurretSheet = turretSheet;
+        ShadowSheet = shadowSheet;
     }
 
     /// <summary>The rules id this sprite was resolved for (or the placeholder's stand-in id).</summary>
@@ -49,6 +52,17 @@ public sealed class ResolvedSprite
 
     /// <summary>True when the sprite is generated placeholder art.</summary>
     public bool IsPlaceholder => Source == SpriteSource.Placeholder;
+
+    /// <summary>
+    /// The companion turret sheet (<c>&lt;id&gt;_turret</c>) drawn over this body, or null when the sprite has none. Its
+    /// <see cref="Manifest"/> has the <c>turret</c> layer and its pivot.
+    /// </summary>
+    public ResolvedSprite? TurretSheet { get; }
+
+    /// <summary>
+    /// The companion shadow sheet (<c>&lt;id&gt;_shadow</c>) drawn under this body, or null when the sprite has none.
+    /// </summary>
+    public ResolvedSprite? ShadowSheet { get; }
 
     internal SpriteLibrary? Library { get; }
 

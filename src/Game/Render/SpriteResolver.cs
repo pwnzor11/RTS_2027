@@ -128,7 +128,17 @@ public sealed class SpriteResolver
     private ResolvedSprite FromLibrary(string id, SpriteKind kind)
     {
         SpriteLibrary library = _library!;
-        return new ResolvedSprite(id, kind, SpriteSource.Library, library.Manifest(id), library, null, null);
+        ResolvedSprite? turret = Companion(library, id, "turret", kind);
+        ResolvedSprite? shadow = Companion(library, id, "shadow", kind);
+        return new ResolvedSprite(id, kind, SpriteSource.Library, library.Manifest(id), library, null, null, turret, shadow);
+    }
+
+    // A companion sheet is a library sprite of the same kind; it has no companions of its own.
+    private static ResolvedSprite? Companion(SpriteLibrary library, string id, string layer, SpriteKind kind)
+    {
+        if (library.Companion(id, layer) is null) return null;
+        string companionId = id + "_" + layer;
+        return new ResolvedSprite(companionId, kind, SpriteSource.Library, library.Manifest(companionId), library, null, null);
     }
 
     private static ResolvedSprite Placeholder(SpriteKind kind, string? id, int fw, int fh)
