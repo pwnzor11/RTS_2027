@@ -42,3 +42,111 @@ min_range = 0
 rate_of_fire = 30
 projectile_speed = 64
 warhead = "auth_he"
+
+# M3-07: Directorate roster (design 05 §5, D-078) and Authority counters (D-079). Numbers not fixed by the design are ASSUMED (M3-07), tune in M3-14.
+
+[dir_rifle]
+damage = 6  # ASSUMED (M3-07)
+range = 640  # ASSUMED (M3-07)
+min_range = 0  # ASSUMED (M3-07)
+rate_of_fire = 16  # ASSUMED (M3-07)
+projectile_speed = 0  # ASSUMED (M3-07)
+warhead = "dir_small_arms"
+
+[dir_ash_spray]
+damage = 10  # ASSUMED (M3-07)
+range = 384  # ASSUMED (M3-07)
+min_range = 0  # ASSUMED (M3-07)
+rate_of_fire = 12  # ASSUMED (M3-07)
+projectile_speed = 0  # ASSUMED (M3-07)
+warhead = "dir_ash"
+
+[dir_collapse_charge]
+damage = 150  # ASSUMED (M3-07)
+range = 256  # ASSUMED (M3-07)
+min_range = 0  # ASSUMED (M3-07)
+rate_of_fire = 60  # ASSUMED (M3-07)
+projectile_speed = 0  # ASSUMED (M3-07)
+warhead = "dir_demolition"
+
+[dir_pistol]
+damage = 5  # ASSUMED (M3-07)
+range = 512  # ASSUMED (M3-07)
+min_range = 0  # ASSUMED (M3-07)
+rate_of_fire = 20  # ASSUMED (M3-07)
+projectile_speed = 0  # ASSUMED (M3-07)
+warhead = "dir_small_arms"
+
+[dir_rad_cannon]
+damage = 40  # ASSUMED (M3-07)
+range = 1024  # ASSUMED (M3-07)
+min_range = 0  # ASSUMED (M3-07)
+rate_of_fire = 40  # ASSUMED (M3-07)
+projectile_speed = 64  # ASSUMED (M3-07)
+warhead = "dir_rad_shell"
+
+[dir_meltdown]
+damage = 300  # ASSUMED (M3-07)
+range = 256  # ASSUMED (M3-07)
+min_range = 0  # ASSUMED (M3-07)
+rate_of_fire = 1  # ASSUMED (M3-07)
+projectile_speed = 0  # ASSUMED (M3-07)
+warhead = "dir_meltdown_blast"
+
+[dir_rocket_salvo]
+damage = 90  # ASSUMED (M3-07)
+range = 2048  # ASSUMED (M3-07)
+min_range = 512  # ASSUMED (M3-07)
+rate_of_fire = 60  # ASSUMED (M3-07)
+projectile_speed = 96  # ASSUMED (M3-07)
+warhead = "dir_rocket"
+targets = "both"
+
+[dir_blackout_drop]
+damage = 0  # ASSUMED (M3-07)
+range = 512  # ASSUMED (M3-07)
+min_range = 0  # ASSUMED (M3-07)
+rate_of_fire = 200  # ASSUMED (M3-07)
+projectile_speed = 0  # ASSUMED (M3-07)
+warhead = "dir_blackout"
+
+[dir_rail_gun]
+damage = 200  # ASSUMED (M3-07)
+range = 2304  # ASSUMED (M3-07)
+min_range = 0  # ASSUMED (M3-07)
+rate_of_fire = 60  # ASSUMED (M3-07)
+projectile_speed = 128  # ASSUMED (M3-07)
+warhead = "dir_slug"
+
+[dir_rocket_nest_gun]
+damage = 120  # ASSUMED (M3-07)
+range = 1536  # ASSUMED (M3-07)
+min_range = 0  # ASSUMED (M3-07)
+rate_of_fire = 50  # ASSUMED (M3-07)
+projectile_speed = 128  # ASSUMED (M3-07)
+warhead = "dir_rocket"
+targets = "air"
+
+[dir_pillbox_gun]
+damage = 14  # ASSUMED (M3-07)
+range = 768  # ASSUMED (M3-07)
+min_range = 0  # ASSUMED (M3-07)
+rate_of_fire = 16  # ASSUMED (M3-07)
+projectile_speed = 0  # ASSUMED (M3-07)
+warhead = "dir_small_arms"
+
+[dir_rad_mortar_shell]
+damage = 20  # ASSUMED (M3-07)
+range = 2304  # ASSUMED (M3-07)
+min_range = 512  # ASSUMED (M3-07)
+rate_of_fire = 90  # ASSUMED (M3-07)
+projectile_speed = 96  # ASSUMED (M3-07)
+warhead = "dir_rad_shell"
+
+[auth_decon_spray]
+damage = 0  # ASSUMED (M3-07)
+range = 384  # ASSUMED (M3-07)
+min_range = 0  # ASSUMED (M3-07)
+rate_of_fire = 20  # ASSUMED (M3-07)
+projectile_speed = 0  # ASSUMED (M3-07)
+warhead = "auth_decon"

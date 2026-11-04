@@ -352,7 +352,7 @@ public sealed class SchemaV3Tests
         Assert.Equal(SkirmishStart.StartBuildingId, r.Sim.Buildings[conyard].Id);
         Assert.Empty(units);
         Assert.Equal("auth_grouting", Assert.Single(r.Sim.Upgrades).Id);
-        Assert.All(r.Sim.Vehicles, v => Assert.Equal(Faction.Authority, v.Faction));
+        Assert.All(r.Sim.Vehicles.Where(v => v.Id.StartsWith("auth_", StringComparison.Ordinal)), v => Assert.Equal(Faction.Authority, v.Faction));   // M3-07 added dir_* vehicles
         Assert.All(r.Sim.Infantry, i => Assert.Equal(TunnelSize.S, i.TunnelSize));
     }
 }

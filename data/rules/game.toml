@@ -42,11 +42,12 @@ no_build_threshold = 64
 delay_ticks = 60
 
 # Skirmish start kit per faction: conyard (building id) and units (vehicle/infantry ids). Validated only when a player of
-# that faction is set up, so the Directorate kit may name types that arrive with M3-07.
+# that faction is set up.
 [faction.authority]
 conyard = "auth_conyard"
 units = []
 
+# Directorate kit (M3-07). The design fixes only the conyard; the four conscripts are ASSUMED (M3-07), confirm in M3-14.
 [faction.directorate]
 conyard = "dir_shaft"
-units = []
+units = ["dir_conscript", "dir_conscript", "dir_conscript", "dir_conscript"]  # ASSUMED (M3-07)

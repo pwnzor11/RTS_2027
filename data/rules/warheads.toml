@@ -18,3 +18,55 @@ hits_allies = false
 versus = [100, 80, 60, 70, 50]
 splash = 1
 hits_allies = true
+
+# M3-07: Directorate roster (design 05 §5, D-078) and Authority counters (D-079). Numbers not fixed by the design are ASSUMED (M3-07), tune in M3-14.
+
+[dir_small_arms]
+versus = [100, 60, 20, 10, 5]  # ASSUMED (M3-07)
+splash = 0  # ASSUMED (M3-07)
+hits_allies = false
+
+[dir_ash]
+versus = [80, 60, 40, 40, 20]  # ASSUMED (M3-07)
+splash = 1  # ASSUMED (M3-07)
+hits_allies = false
+contaminate = 40  # ASSUMED (M3-07)
+
+[dir_demolition]
+versus = [25, 50, 100, 150, 100]  # ASSUMED (M3-07)
+splash = 0  # ASSUMED (M3-07)
+hits_allies = false
+
+[dir_rad_shell]
+versus = [60, 60, 60, 60, 40]  # ASSUMED (M3-07)
+splash = 1  # ASSUMED (M3-07)
+hits_allies = false
+contaminate = 80  # ASSUMED (M3-07)
+
+[dir_rocket]
+versus = [25, 75, 100, 60, 40]  # ASSUMED (M3-07)
+splash = 1  # ASSUMED (M3-07)
+hits_allies = false
+
+[dir_slug]
+versus = [25, 75, 100, 50, 40]  # ASSUMED (M3-07)
+splash = 0  # ASSUMED (M3-07)
+hits_allies = false
+
+[dir_meltdown_blast]
+versus = [100, 100, 100, 100, 100]  # ASSUMED (M3-07)
+splash = 1  # ASSUMED (M3-07)
+hits_allies = true
+contaminate = 200  # ASSUMED (M3-07)
+
+[dir_blackout]
+versus = [0, 0, 0, 0, 0]  # ASSUMED (M3-07)
+splash = 1  # ASSUMED (M3-07)
+hits_allies = false
+blackout_ticks = 200  # ASSUMED (M3-07)
+
+[auth_decon]
+versus = [0, 0, 0, 0, 0]  # ASSUMED (M3-07)
+splash = 1  # ASSUMED (M3-07)
+hits_allies = false
+decontaminate = 40  # ASSUMED (M3-07)

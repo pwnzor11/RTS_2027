@@ -20,3 +20,66 @@ sight = 5
 primary_weapon = "auth_rocket"
 cost = 300
 prerequisites = ["auth_barracks"]
+
+# M3-07: Directorate roster (design 05 §5, D-078) and Authority counters (D-079). Numbers not fixed by the design are ASSUMED (M3-07), tune in M3-14.
+
+[dir_conscript]
+faction = "directorate"
+tunnel_size = "S"
+speed = 14  # ASSUMED (M3-07)
+max_health = 40  # ASSUMED (M3-07)
+armor = "unarmored"
+sight = 4  # ASSUMED (M3-07)
+primary_weapon = "dir_rifle"
+cost = 80  # ASSUMED (M3-07)
+prerequisites = ["dir_muster_hatch"]
+rad_resist_permille = 600
+
+[dir_ashthrower]
+faction = "directorate"
+tunnel_size = "S"
+speed = 12  # ASSUMED (M3-07)
+max_health = 50  # ASSUMED (M3-07)
+armor = "unarmored"
+sight = 4  # ASSUMED (M3-07)
+primary_weapon = "dir_ash_spray"
+cost = 200  # ASSUMED (M3-07)
+prerequisites = ["dir_muster_hatch"]
+rad_resist_permille = 600
+
+[dir_sapper]
+faction = "directorate"
+tunnel_size = "S"
+speed = 12  # ASSUMED (M3-07)
+max_health = 60  # ASSUMED (M3-07)
+armor = "unarmored"
+sight = 4  # ASSUMED (M3-07)
+primary_weapon = "dir_collapse_charge"
+cost = 250  # ASSUMED (M3-07)
+prerequisites = ["dir_muster_hatch"]
+rad_resist_permille = 600
+
+[dir_informant]
+faction = "directorate"
+tunnel_size = "S"
+speed = 13  # ASSUMED (M3-07)
+max_health = 40  # ASSUMED (M3-07)
+armor = "unarmored"
+sight = 5  # ASSUMED (M3-07)
+primary_weapon = ""
+cost = 300  # ASSUMED (M3-07)
+prerequisites = ["dir_muster_hatch"]
+stealth = true
+rad_resist_permille = 600
+
+[dir_commissar]
+faction = "directorate"
+tunnel_size = "S"
+speed = 11  # ASSUMED (M3-07)
+max_health = 90  # ASSUMED (M3-07)
+armor = "light"
+sight = 5  # ASSUMED (M3-07)
+primary_weapon = "dir_pistol"
+cost = 400  # ASSUMED (M3-07)
+prerequisites = ["dir_isotope_works"]
+rad_resist_permille = 600
