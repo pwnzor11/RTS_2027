@@ -21,7 +21,7 @@ low_power_slowdown_permille = [1500, 2500, 4000]
 
 # M3 (design 05). All tables and keys optional; the values below are the design starting values (tune in M3-14).
 [tunnels]
-transit_ticks = 40
+transit_ticks = 100  # (tune) M3-14: 40 -> 100
 network_cap_points = 10
 points_s = 1
 points_m = 3

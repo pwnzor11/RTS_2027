@@ -248,14 +248,14 @@ public sealed class DirectorateDataTests
         BuildingType Get(string id) => s.Buildings.Single(b => b.Id == id);
 
         Assert.Equal(TunnelSize.S, Get("dir_hatch").Entrance);
-        Assert.Equal(20, Get("dir_hatch").TicksPerPoint);           // 1 point per second at 20 Hz
+        Assert.Equal(35, Get("dir_hatch").TicksPerPoint);           // M3-14: 20 -> 35 (tunnel time saved 30-50 %)
         Assert.Equal(TunnelSize.S, Get("dir_muster_hatch").Entrance);
-        Assert.Equal(20, Get("dir_muster_hatch").TicksPerPoint);
+        Assert.Equal(35, Get("dir_muster_hatch").TicksPerPoint);   // M3-14: 20 -> 35
 
         foreach (string id in new[] { "dir_bore_head", "dir_shaft", "dir_assembly_bore", "dir_smelter_vent" })
         {
             Assert.Equal(TunnelSize.M, Get(id).Entrance);
-            Assert.Equal(13, Get(id).TicksPerPoint);                // about 1.5 points per second
+            Assert.Equal(20, Get(id).TicksPerPoint);                // M3-14: 13 -> 20
         }
     }
 

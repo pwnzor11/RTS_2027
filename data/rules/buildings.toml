@@ -156,7 +156,7 @@ category = "structure"
 produces = ""
 buildable = false
 entrance = "M"
-ticks_per_point = 13
+ticks_per_point = 20  # (tune) M3-14: 13 -> 20
 
 [dir_reactor_vent]
 footprint_w = 2  # ASSUMED (M3-07)
@@ -187,7 +187,7 @@ dock = [1, 2]  # cell south of the ramp mouth, matches the approved 3x2 art
 free_unit = "dir_scraper"
 build_time = 400  # ASSUMED (M3-07)
 entrance = "M"
-ticks_per_point = 13
+ticks_per_point = 20  # (tune) M3-14: 13 -> 20
 
 [dir_muster_hatch]
 footprint_w = 2  # ASSUMED (M3-07)
@@ -202,7 +202,7 @@ prerequisites = ["dir_reactor_vent"]
 provides = []
 produces = "infantry"
 entrance = "S"
-ticks_per_point = 20
+ticks_per_point = 35  # (tune) M3-14: 20 -> 35
 
 [dir_assembly_bore]
 footprint_w = 3  # ASSUMED (M3-07)
@@ -217,7 +217,7 @@ prerequisites = ["dir_smelter_vent"]
 provides = []
 produces = "vehicle"
 entrance = "M"
-ticks_per_point = 13
+ticks_per_point = 20  # (tune) M3-14: 13 -> 20
 
 [dir_hatch]
 footprint_w = 1  # ASSUMED (M3-07)
@@ -231,7 +231,7 @@ power = 0  # ASSUMED (M3-07)
 prerequisites = ["dir_reactor_vent"]
 provides = []
 entrance = "S"
-ticks_per_point = 20
+ticks_per_point = 35  # (tune) M3-14: 20 -> 35
 morphs_into = "dir_bore_head"
 
 [dir_bore_head]
@@ -246,7 +246,7 @@ power = 0  # ASSUMED (M3-07)
 prerequisites = ["dir_hatch"]
 provides = []
 entrance = "M"
-ticks_per_point = 13
+ticks_per_point = 20  # (tune) M3-14: 13 -> 20
 
 [dir_cistern]
 footprint_w = 2  # ASSUMED (M3-07)

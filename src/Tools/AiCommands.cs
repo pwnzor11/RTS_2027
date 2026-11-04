@@ -21,13 +21,13 @@ public static class AiCommands
 {
     private const int DefaultTier = 2;
     private const string Usage =
-        "usage: ai match --a <aiId>[:<tier>] --b <aiId>[:<tier>] [--seeds 8] [--ticks 6000] [--size 64] [--out file.md] [--record-dir dir] [--flat 1] [--starts alt|slot|swap] [--start economy|army] [--first 1]\n" +
+        "usage: ai match --a <aiId>[:<tier>] --b <aiId>[:<tier>] [--seeds 8] [--ticks 6000] [--size 64] [--out file.md] [--record-dir dir] [--flat 1] [--starts alt|slot|swap] [--start economy|army] [--first 1] [--faction-a authority|directorate] [--faction-b authority|directorate]\n" +
         "       ai matrix --ai <aiId> [--faction authority|directorate] [--tiers 1-5] [--seeds 4] [--ticks 6000] [--size 64] [--out file.md]\n" +
         "       ai timeline --a <aiId>[:<tier>] --b <aiId>[:<tier>] [--seed 1] [--ticks 30000] [--size 64] [--swap 0|1] [--trace N] [--dump 1]\n" +
         "       ai duel --a <spec> --b <spec> [--count 1] [--count-b N] [--ticks 3000] [--gap 12]   (spec = id[:n][,id[:n]...], e.g. auth_tank:3,auth_turret:1)\n" +
         "  <tier> is 1..5 or recruit|regular|veteran|elite|commissar (default regular). Seeds are first..first+N-1 (first defaults to 1).";
 
-    private static readonly string[] MatchOptions = ["a", "b", "seeds", "ticks", "size", "out", "record-dir", "flat", "starts", "start", "first"];
+    private static readonly string[] MatchOptions = ["a", "b", "seeds", "ticks", "size", "out", "record-dir", "flat", "starts", "start", "first", "faction-a", "faction-b"];
     private static readonly string[] TimelineOptions = ["a", "b", "seed", "ticks", "size", "swap", "trace", "dump"];
     private static readonly string[] DuelOptions = ["a", "b", "count", "count-b", "ticks", "gap"];
     private static readonly string[] MatrixOptions = ["ai", "tiers", "seeds", "ticks", "size", "out", "faction"];
@@ -60,6 +60,11 @@ public static class AiCommands
         if (!LoadData(out var world, out var tiers)) return 1;
         if (!ParseSide(aArg, tiers!, out AiSide? a, out error) || !ParseSide(bArg, tiers!, out AiSide? b, out error))
             return UsageError(error!);
+        // M3-14: cross-faction matches (default authority for both sides).
+        if (flags.TryGetValue("faction-a", out string? fa) && !(Enum.TryParse(fa, true, out Faction facA) && (a = a! with { Faction = facA }) is not null))
+            return UsageError("--faction-a must be authority or directorate");
+        if (flags.TryGetValue("faction-b", out string? fb) && !(Enum.TryParse(fb, true, out Faction facB) && (b = b! with { Faction = facB }) is not null))
+            return UsageError("--faction-b must be authority or directorate");
 
         bool army = false;
         if (flags.TryGetValue("start", out string? startArg))
