@@ -65,6 +65,9 @@ public sealed class MapState : ISimStatePart
         Version++;
     }
 
+    /// <summary>Invalidates cached paths when passability changes without a cell edit (e.g. a gate changes owner). Bumps <see cref="Version"/>.</summary>
+    public void Touch() => Version++;
+
     public byte HeightAt(CellCoord c) => Data.HeightLevel[Idx(c)];
     public OverlayKind OverlayAt(CellCoord c) => _overlay[Idx(c)];
     public byte DensityAt(CellCoord c) => _density[Idx(c)];

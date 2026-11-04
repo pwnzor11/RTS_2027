@@ -206,7 +206,7 @@ public sealed partial class Simulation
         {
             if (!_buildings.Slots.IsIndexAlive(i) || _buildings.Player[i] != player) continue;
             BuildingType other = BuildingTypeAt(i);
-            if (other.Wall) continue;
+            if (other.Wall || other.Gate) continue;   // integration: gates are wall pieces (M3-04)
             CellCoord oc = _buildings.Cell[i];
             int bx1 = oc.X + other.FootprintW - 1, by1 = oc.Y + other.FootprintH - 1;
             int dx = Math.Max(0, Math.Max(ax0 - bx1, oc.X - ax1)), dy = Math.Max(0, Math.Max(ay0 - by1, oc.Y - ay1));
@@ -249,7 +249,7 @@ public sealed partial class Simulation
     {
         // Note who owns a base before cleanup can remove it (a building killed this tick still counts as "ever had one").
         for (int i = 1; i < _buildings.Capacity; i++)
-            if (_buildings.Slots.IsIndexAlive(i) && !BuildingTypeAt(i).Wall) _production.EverHadBase[_buildings.Player[i]] = true;
+            if (_buildings.Slots.IsIndexAlive(i) && !(BuildingTypeAt(i).Wall || BuildingTypeAt(i).Gate)) _production.EverHadBase[_buildings.Player[i]] = true;
         for (int p = 0; p < _players.Count; p++)
         {
             var player = (byte)p;
@@ -429,7 +429,7 @@ public sealed partial class Simulation
         int n = _players.Count;
         Span<bool> has = n <= 1024 ? stackalloc bool[n] : new bool[n];
         for (int i = 1; i < _buildings.Capacity; i++)
-            if (_buildings.Slots.IsIndexAlive(i) && !BuildingTypeAt(i).Wall) has[_buildings.Player[i]] = true;
+            if (_buildings.Slots.IsIndexAlive(i) && !(BuildingTypeAt(i).Wall || BuildingTypeAt(i).Gate)) has[_buildings.Player[i]] = true;
         for (int p = 0; p < n; p++)
         {
             if (_players.IsNeutral((byte)p) || _players.Defeated[p]) continue;

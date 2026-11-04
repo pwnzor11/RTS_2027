@@ -54,7 +54,7 @@ internal sealed class RecruitKnowledge
             if (Rules.Buildings[b.TypeIndex].Id == yardId) { Yard = b.Cell; HaveYard = true; break; }
         if (!HaveYard)
             foreach (ViewActor b in Buildings)
-                if (!Rules.Buildings[b.TypeIndex].Wall) { Yard = b.Cell; HaveYard = true; break; }
+                if (!(Rules.Buildings[b.TypeIndex].Wall || Rules.Buildings[b.TypeIndex].Gate)) { Yard = b.Cell; HaveYard = true; break; }
     }
 
     public bool Buildable(ProductionCategory c, int type)

@@ -203,5 +203,6 @@ public sealed partial class Simulation
         _production.RepairGen[b] = 0; _production.RepairFrac[b] = 0;
         for (int p = 0; p < _players.Count; p++) _vision.ForgetBuilding((byte)p, b);   // no stale ghost of the old owner's building
         _ground.HardeningDirty = true;   // team membership of a seal piece changed
+        if (BuildingTypeAt(b).Gate) _map.Touch();   // integration (M3-04): who may pass the gate changed, so cached paths are stale
     }
 }

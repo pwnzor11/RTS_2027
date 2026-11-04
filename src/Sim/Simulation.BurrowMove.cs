@@ -118,8 +118,8 @@ public sealed partial class Simulation
     }
 
     /// <summary>A unit may appear on <paramref name="c"/>: dive-valid, unhardened, passable for burrowers and free of other actors and telegraphs.</summary>
-    private bool SurfaceCellOk(CellCoord c, EntityId self) =>
-        DiveCellOk(c) && !_ground.IsHardened(c)
+    private bool SurfaceCellOk(CellCoord c, EntityId self, byte owner) =>
+        DiveCellOk(c) && !IsHardenedAgainst(owner, c)   // integration (M3-04): only an unfriendly team's grouting blocks
         && _map.IsPassableTerrain(c, Locomotion.Burrow, Setup.Rules.Terrain)
         && SurfaceAreaFree(c, self);
 
@@ -243,7 +243,7 @@ public sealed partial class Simulation
         CellCoord cell = default;
         bool found = false;
         for (int n = 0; Spiral.Cell(from, n, out CellCoord c); n++)
-            if (SurfaceCellOk(c, self)) { cell = c; found = true; break; }
+            if (SurfaceCellOk(c, self, _units.Player[i])) { cell = c; found = true; break; }
         if (!found) return false;
         _units.Position[i] = LeptonCoord.CenterOf(cell);   // still underground: the hop to the nearest valid cell is unseen
         _units.Destination[i] = _units.Position[i];
@@ -260,7 +260,7 @@ public sealed partial class Simulation
 
     private void FinishSurfacing(int i, CellCoord cell)
     {
-        if (SurfaceCellOk(cell, _units.Slots.IdOf(i)))
+        if (SurfaceCellOk(cell, _units.Slots.IdOf(i), _units.Player[i]))
         {
             _tunnels.VehicleLayer[i] = ActorLayer.Surface;
             _units.Position[i] = LeptonCoord.CenterOf(cell);
@@ -284,7 +284,7 @@ public sealed partial class Simulation
         for (int n = 0; Spiral.Cell(from, n, out CellCoord c); n++)
         {
             var tl = new CellCoord(c.X - (bt.FootprintW - 1) / 2, c.Y - (bt.FootprintH - 1) / 2);
-            if (HatchSiteOk(tl, bt)) { topLeft = tl; found = true; break; }
+            if (HatchSiteOk(tl, bt, _units.Player[i])) { topLeft = tl; found = true; break; }
         }
         if (!found) return false;
         byte owner = _units.Player[i];
@@ -302,13 +302,13 @@ public sealed partial class Simulation
 
     // ASSUMED (M3-03): a new entrance obeys the same rules as a surfacing unit: every footprint cell soft, unhardened, empty, not
     // under another unit telegraph, and the footprint more than SurfacingRing cells from any other structure.
-    private bool HatchSiteOk(CellCoord topLeft, BuildingType bt)
+    private bool HatchSiteOk(CellCoord topLeft, BuildingType bt, byte owner)
     {
         for (int y = topLeft.Y; y < topLeft.Y + bt.FootprintH; y++)
             for (int x = topLeft.X; x < topLeft.X + bt.FootprintW; x++)
             {
                 var c = new CellCoord(x, y);
-                if (!InMap(c) || !SurfaceCellOk(c, EntityId.None)) return false;
+                if (!InMap(c) || !SurfaceCellOk(c, EntityId.None, owner)) return false;
             }
         return true;
     }
