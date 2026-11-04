@@ -5,9 +5,9 @@
 
 file = "dir_shaft.png"
 frame_w = 192
-frame_h = 288
+frame_h = 312
 origin_x = 0
-origin_y = 68
+origin_y = 96
 
 [[state]]
 name = "idle"
@@ -33,41 +33,41 @@ ticks_per_frame = 5
 [[fx]]
 state = "damaged"
 kind = "fire_large"
-x = 152
-y = 93
+x = 102
+y = 94
 phase = 0
 
 [[fx]]
 state = "damaged"
 kind = "fire_small"
 x = 73
-y = 213
+y = 241
 phase = 4
 
 [[fx]]
 state = "damaged"
 kind = "fire_small"
-x = 60
-y = 194
+x = 151
+y = 213
 phase = 2
 
 [[fx]]
 state = "damaged"
 kind = "fire_small"
-x = 175
-y = 49
+x = 166
+y = 95
 phase = 6
 
 [[fx]]
 state = "damaged"
 kind = "smoke_plume"
-x = 152
-y = 89
+x = 102
+y = 92
 phase = 0
 
 [[fx]]
 state = "damaged"
 kind = "smoke_plume"
-x = 175
-y = 47
+x = 166
+y = 94
 phase = 5
