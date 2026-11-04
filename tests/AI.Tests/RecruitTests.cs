@@ -136,7 +136,7 @@ public class RecruitTests
         driver.Add(0, ai, Recruit);
         Run(sim, driver, 6000);
         // M2-19: the sim's own map-wide field search now finds the next field, so the AI's probe orders are no longer
-        // needed (ai.Probes may stay 0); what matters is that the economy does not stay dead.
+        // needed; what matters is that the economy does not stay dead.
         Assert.True(ai.UnitsQueued >= 10, $"only {ai.UnitsQueued} units were queued: the economy stayed dead");
     }
 

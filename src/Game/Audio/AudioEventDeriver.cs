@@ -39,6 +39,7 @@ public sealed class AudioEventDeriver
         {
             foreach (FxEvent e in fx)
             {
+                if (e.Kind == FxKind.InstantHit) continue;   // M3-12: small-arms hits sound as FireBullet below
                 bool large = e.Kind == FxKind.BuildingDestroyed || (e.Kind == FxKind.Detonation && e.Size >= LargeSplashCells);
                 events.Add(new AudioEvent(large ? AudioEventKind.ExplosionLarge : AudioEventKind.ExplosionSmall, e.Pos));
                 if (e.Kind == FxKind.Detonation) detonations.Add(e.Pos);

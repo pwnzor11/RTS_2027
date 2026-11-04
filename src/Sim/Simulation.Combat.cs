@@ -304,6 +304,7 @@ public sealed partial class Simulation
         ApplyWarheadGround(wh, impact.ToCell(), wh.Splash < 0 ? 0 : wh.Splash);   // M3-05: contaminate / decontaminate / Blackout
         if (instant && wh.Splash <= 0)
         {
+            _fx.Add(new FxEvent(FxKind.InstantHit, impact, 1));   // M3-12: a hitscan hit shows its impact, like a shell's landing
             if (TryGetActorInfo(primary, out var pi) && pi.Health > 0)
                 Hurt(primary.Kind, primary.Id.Index, damage, wh, false, owner);
             return;

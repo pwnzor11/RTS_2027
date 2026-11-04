@@ -34,9 +34,6 @@ public sealed class RecruitAi : IAiPlayer
         _military = new MilitaryManager(profile.AttackThreshold);
     }
 
-    /// <summary>Harvest orders to probe cells (a stalled scraper sent to look for a field).</summary>
-    public int Probes => _economy.Probes;
-
     /// <inheritdoc />
     public string Id => AiRegistry.RecruitId;
 
@@ -66,7 +63,6 @@ public sealed class RecruitAi : IAiPlayer
     {
         _ctx = ctx;
         _military.Start(ctx);
-        _economy.Start(ctx);
     }
 
     /// <summary>Creates the faction-dependent managers (once, on the first decision). The seeded generator is consumed in the
