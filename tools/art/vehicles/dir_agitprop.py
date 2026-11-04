@@ -3,8 +3,10 @@
 Small tracked chassis (red oxide, bone stripes, house flank panels) carrying a tall mast with a cluster of big flared
 loudspeaker horns and a hanging house-colour banner.  Turret-layer support (additive, build_vehicle.py): the mast, horn
 cluster and banner are the TURRET; the chassis is the HULL.
-Layers (project turret convention, see build_vehicle.py): body = chassis with the whole unit's shadow, idle 16 facings;
-turret = horn cluster + mast + banner, 16 turret facings, no shadow, pivot-centred (PIVOT), same canvas and origin as the body.
+States: idle  = complete unit, 16 facings (hull and turret turned together, for previews / fallback);
+        hull  = chassis only, 16 facings, with an empty turntable;
+        turret = horn cluster + mast + banner only, 16 facings, no ground shadow, same canvas and origin as hull
+                 (draw hull, then turret, at the unit's world position; turret facing is independent).
 """
 import os, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -14,9 +16,8 @@ ID = "dir_agitprop"
 TITLE = "Directorate agitprop loudspeaker unit"
 CANVAS = 120
 TARGET = (0.0, 0.0, 1.3)
-STATES = [("idle", 16, 1, 1)]
-LAYERS = ["body", "turret"]
-PIVOT = (0.0, 0.05, 1.2)
+STATES = [("idle", 16, 1, 1), ("hull", 16, 1, 1), ("turret", 16, 1, 1)]
+NO_SHADOW_STATES = ("turret",)
 PALETTE = D.PALETTE
 MATERIALS = D.MATERIALS
 
@@ -36,8 +37,9 @@ def horn(S, name, x, y, z, r, depth, yaw, up=0.0):
 
 def build(S, state, k, n):
     box, cyl = S.box, S.cyl
-    S.begin("body")
-    if True:
+    do_hull = state in ("idle", "hull")
+    do_tur = state in ("idle", "turret")
+    if do_hull:
         D.tracks(S, 0.78, 2.5, 0.5, 0.62, y0=0.0, nwheel=4)
         box("hull", (1.4, 2.3, 0.5), (0, 0.0, 0.84), "red", 0.09)
         box("deck", (1.4, 2.3, 0.07), (0, 0.0, 1.12), "conc2", 0.03)
@@ -52,8 +54,7 @@ def build(S, state, k, n):
         box("cab", (0.6, 0.5, 0.3), (0, 0.8, 1.35), "red2", 0.06)
         box("cabslit", (0.46, 0.04, 0.08), (0, 1.06, 1.38), "glass", 0.0)
         cyl("turntable", 0.42, 0.08, (0, 0.05, 1.18), "steel2", "Z", 18)
-    S.begin("turret", PIVOT)
-    if True:
+    if do_tur:
         ty = 0.05
         cyl("mastbase", 0.34, 0.12, (0, ty, 1.26), "conc3", "Z", 16)
         cyl("mast", 0.09, 1.4, (0, ty, 1.95), "steel2", "Z", 10)
