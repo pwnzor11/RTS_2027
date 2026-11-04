@@ -175,7 +175,7 @@ public sealed class AiSaveTests
         GameSaveFile.Write(ms, h, host.Sim, Array.Empty<(string, string)>());
         ms.Position = 0;
         GameSaveHeader back = GameSaveFile.ReadHeader(ms);
-        Assert.Equal(3, back.Version);
+        Assert.Equal(4, back.Version);
         Assert.Equal(new byte[] { 9, 8, 7 }, back.Ai[0].State);
         Assert.Null(back.Ai[1].State);
     }
