@@ -28,6 +28,7 @@ public sealed class AiDriver
         public List<Command> Out = null!;
         public byte[]? Saved;   // M3-21: a state blob from a save, applied once when the driver starts
         public CellCoord? SavedStart;
+        public IDirectiveSource? Directives;   // M5: the LLM commander, polled every tick
 
         public void Issue(CommandKind kind, EntityId subject, ActorKind subjectKind, CellCoord cell = default,
             ActorRef target = default, int arg2 = 0)
@@ -81,6 +82,12 @@ public sealed class AiDriver
         int tick = sim.Tick;
         foreach (Slot s in _slots)
         {
+            if (s.Directives is not null && s.Directives.Poll(sim.ViewFor(s.Player), out int packed, out CellCoord focus))   // M5-05
+            {
+                int delay = Math.Max(1, CommandDelayOverride ?? s.Profile.CommandDelayTicks);
+                outCommands.Add(new Command(tick + delay, s.Player, unchecked(s.Sequence++), CommandKind.Directive, EntityId.None, EntityId.None,
+                    focus, packed));
+            }
             int interval = Math.Max(1, s.Profile.DecisionIntervalTicks);
             if (tick % interval != 0) continue;   // D-065: all slots think on the same tick (a per-slot stagger biased mirror matches)
             s.Tick = tick;
@@ -170,6 +177,15 @@ public sealed class AiDriver
         if (_started || blob is null) return;
         foreach (Slot s in _slots)
             if (s.Player == player && AiSnapshot.TryUnpack(blob, out byte[] payload)) s.Saved = payload;
+    }
+
+    /// <summary>M5: gives slot <paramref name="player"/> a directive source (the LLM commander); null removes it. The slot must already
+    /// have an AI (<see cref="Add"/>). May be called at any time between ticks.</summary>
+    public void SetDirectiveSource(byte player, IDirectiveSource? source)
+    {
+        foreach (Slot s in _slots)
+            if (s.Player == player) { s.Directives = source; return; }
+        throw new ArgumentException($"Slot {player} has no AI.", nameof(player));
     }
 
     /// <summary>M3-21 (diagnostics and tests): the AI playing slot <paramref name="player"/>, or null.</summary>

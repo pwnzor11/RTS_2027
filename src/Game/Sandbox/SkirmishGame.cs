@@ -4,6 +4,7 @@ using Rts.AI;
 using Rts.Data;
 using Rts.Game.Saves;
 using Rts.Game.Screens;
+using Rts.Llm;
 using Rts.Sim;
 using Rts.Sim.Core;
 using Rts.Sim.Map;
@@ -77,6 +78,13 @@ public sealed class SkirmishGame
 
     /// <summary>The driver holding the AI on slot <see cref="AiPlayer"/>; give it to <see cref="Rts.Game.Host.SimHost.Ai"/>.</summary>
     public AiDriver Ai { get; }
+
+    /// <summary>M5: the commander chat shared by every LLM commander in this game (M5-05 writes, the chat panel M5-07 reads).</summary>
+    public CommanderChatLog Chat { get; } = new();
+
+    /// <summary>M5: the LLM commanders of this game, one per slot whose <see cref="SkirmishSlot.Commander"/> is set (M5-05 fills; empty
+    /// otherwise).</summary>
+    public IReadOnlyList<ICommanderChannel> Commanders { get; private set; } = Array.Empty<ICommanderChannel>();
 
     /// <summary>Which map this is, for the setup screen: "Rust Belt (curated)" or "Generated 64x64".</summary>
     public string MapLabel { get; }
