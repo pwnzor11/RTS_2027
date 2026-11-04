@@ -33,13 +33,7 @@ public sealed partial class RulesOfSweepGrepTests
         ("Simulation.Tunnels.cs", "Setup.Rules.Tunnels.TransitTicks"),   // global tunnel block; per-entrance ticks_per_point already via RulesOf
 
         // --- not owned by M4-14: follow-up ---
-        ("Missions/AirMission.cs", "Setup.Rules.Vehicles["),            // owner: Missions/AirMission.cs, follow-up (speed read)
-        ("Missions/MoveMission.cs", "Setup.Rules.Vehicles["),           // owner: Missions/MoveMission.cs, follow-up (speed read)
-        ("Missions/MoveMission.cs", "Setup.Rules.Infantry["),           // owner: Missions/MoveMission.cs, follow-up (speed read)
         ("Missions/MoveMission.cs", "Setup.Rules.Terrain"), ("Missions/MoveMission.cs", "Setup.Rules.Foam.SpeedPermille"),
-        ("Simulation.BurrowMove.cs", "Setup.Rules.Vehicles["),          // owner: Simulation.BurrowMove.cs, follow-up (speed, health)
-        ("Simulation.BurrowMove.cs", "Setup.Rules.Buildings["),         // owner: Simulation.BurrowMove.cs, follow-up
-        ("Simulation.BurrowMove.cs", "Setup.Rules.Buildings.Count"),
         ("Simulation.BurrowMove.cs", "Setup.Rules.Terrain"), ("Simulation.BurrowMove.cs", "Setup.Rules.Terrain.Buildable"),
         ("Simulation.BurrowMove.cs", "Setup.Rules.Terrain.Soft"),
         ("Simulation.BurrowMove.cs", "Setup.Rules.Tunnels.DiveTicks"), ("Simulation.BurrowMove.cs", "Setup.Rules.Tunnels.EmergingHealthPermille"),

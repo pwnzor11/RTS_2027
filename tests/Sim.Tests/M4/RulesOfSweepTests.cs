@@ -2,7 +2,10 @@
 // Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
 using Rts.Sim.Combat;
 using Rts.Sim.Core;
+using Rts.Data;
 using Rts.Sim.Map;
+using Rts.Sim.Rules;
+using Rts.Sim.Tests.Rules;
 using Xunit;
 using static Rts.Sim.Tests.M4.RulesTierFixture;
 
@@ -66,5 +69,52 @@ public sealed class RulesOfSweepTests
         Simulation sim = NewSim();
         EntityId b = Place(sim, 0, "test_lab", 20, 20);
         Assert.Equal(Base.Buildings[Bld("test_lab")].MaxHealth, HealthOfNewest(sim, ActorKind.Building, b.Index));
+    }
+
+    private const string SpeedEffect = """
+
+        [[effect]]
+        id = "sweep_jeep_speed"
+        op = "mul"
+        target = "test_jeep"
+        attr = "speed"
+        value = 1500
+        """;
+
+    private const string SpeedUpgrade = """
+
+        [sweep_up_speed]
+        faction = "authority"
+        cost = 200
+        build_time = 20
+        prerequisites = []
+        effect = ""
+        effects = ["sweep_jeep_speed"]
+        """;
+
+    [Fact]
+    public void SpeedUpgradeMakesVehicleCoverMoreDistance_OtherPlayerUnaffected()
+    {
+        using var temp = new TempRules(
+            ("techs.toml", TempRules.Real("techs.toml") + SpeedEffect),
+            ("upgrades.toml", TempRules.Real("upgrades.toml") + SpeedUpgrade));
+        RuleSet rs = RulesLoader.Load(temp.Dir);
+        var sim = new Simulation(new SimSetup(7, MapData.CreateFlat(40, 40), 2, rs.Sim, rs.RulesHash) { AllowDebug = true });
+        int jeep = SimRules.IndexOf(rs.Sim.Vehicles, "test_jeep", v => v.Id);
+        EntityId a = sim.SpawnVehicle(0, jeep, new CellCoord(5, 5));
+        EntityId b = sim.SpawnVehicle(1, jeep, new CellCoord(5, 20));
+        sim.Units.Facing[a.Index] = 64; sim.Units.Facing[b.Index] = 64;
+        LeptonCoord a0 = sim.Units.Position[a.Index], b0 = sim.Units.Position[b.Index];
+        sim.Step(new[] { Cmd(sim, 0, CommandKind.Debug, default, (int)DebugOp.GrantUpgrade, rs.Sim.UpgradeIndex("sweep_up_speed")) });
+        var moves = new[]
+        {
+            new Command(sim.Tick, 0, 910, CommandKind.Move, a, default, new CellCoord(35, 5), (int)ActorKind.Vehicle),
+            new Command(sim.Tick, 1, 911, CommandKind.Move, b, default, new CellCoord(35, 20), (int)ActorKind.Vehicle),
+        };
+        sim.Step(moves);
+        for (int t = 0; t < 60; t++) sim.Step(None);
+        int da = sim.Units.Position[a.Index].X - a0.X, db = sim.Units.Position[b.Index].X - b0.X;
+        Assert.True(db > 0, "baseline vehicle must move");
+        Assert.True(da > db * 13 / 10, $"upgraded {da} vs base {db}");
     }
 }
