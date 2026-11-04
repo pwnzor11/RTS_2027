@@ -1,0 +1,12 @@
+TIME 01:35 | you are player 0 (Authority), tier 1, cash 1234, power 100/60, map 64x64, 2 players
+Upgrades: none
+YOUR ECONOMY: 1 harvesters, 1 refineries
+YOUR ARMY: infantry 2 (200cr: auth_rifleman x2); vehicles 2 (1600cr: auth_tank x2)
+YOUR BASE: auth_barracks x1, auth_conyard x1, auth_power x1, auth_refinery x1 (around 7,7)
+OTHER PLAYERS (only what you can see or remember):
+PLAYER 1 enemy, faction Directorate: army in view now infantry 1 (80cr: dir_conscript x1) (around 18,8)
+RECENT EVENTS: nothing notable
+YOUR LAST DIRECTIVES:
+- 00:30 posture balanced, focus economy, target auto, mix auto, expand no
+- 01:00 posture aggressive, focus army, target 1, mix vehicles, expand yes, focus cell 20,22
+PLAYER CHAT (to you): "Come and 'get' me, coward!"
