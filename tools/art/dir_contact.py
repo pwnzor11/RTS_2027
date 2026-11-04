@@ -196,9 +196,64 @@ def vent():
     return out, "dir_smelter_vent_contact.png", stack(b2), "dir_smelter_vent_contact_build.png"
 
 
+def shaft():
+    """Command Shaft (3x3) vs Authority construction yard, plus an IN CONTEXT row next to the vent and conscripts (M3-ART)."""
+    return struct_sheet("dir_shaft", "auth_conyard", "Command Shaft", "Authority conyard", "dir_shaft_contact.png")
+
+
+def struct_sheet(sid, aid, dname, aname, out_name):
+    mod, D = struct_states(sid)
+    amod, A = struct_states(aid)
+    vmod, V = struct_states("dir_smelter_vent")
+    blocks = []
+    blocks.append((f"IDLE and DAMAGED frame 0 at 2x.  Directorate {dname} idle, damaged | {aname} idle, damaged",
+                   hcat([strip([D["idle"][0]], 2), strip([D["damaged"][0]], 2), strip([A["idle"][0]], 2), strip([A["damaged"][0]], 2)], 24)))
+    blocks.append((f"IDLE loop, 4 frames at 1x (true size): Directorate (left) | {aname} (right)", hcat([strip(D["idle"], 1), strip(A["idle"], 1)], 40)))
+    blocks.append((f"DAMAGED, 4 frames at 1x: Directorate (left) | {aname} (right)", hcat([strip(D["damaged"], 1), strip(A["damaged"], 1)], 40)))
+    cell = 64
+    W, H = 12 * cell, 6 * cell
+    img = Image.new("RGB", (W, H), ASH)
+    rng = np.random.default_rng(11)
+    arr = np.asarray(img).astype(float) + rng.normal(0, 3, (H, W, 1))
+    img = Image.fromarray(np.clip(arr, 0, 255).astype(np.uint8)).convert("RGBA")
+    # footprints aligned on their bottom row; ground line y = gy
+    gy = 5 * cell
+    placed = [(D["idle"][0], mod, 16, gy), (V["idle"][0], vmod, 16 + 3 * cell + 40, gy), (A["idle"][0], amod, 16 + 6 * cell + 80, gy)]
+    for f, m, x, g in placed:
+        img.alpha_composite(f, (x - m.ORIGIN[0], g - m.FOOTPRINT[1] * cell - m.ORIGIN[1]))
+    imod, DI = inf_frames("dir_conscript")
+    _m, AI = inf_frames("auth_rifleman")
+    ex = 16 + 3 * cell + 40
+    for k, (G, x, y) in enumerate([(DI, 60, gy + 38), (DI, 92, gy + 30), (DI, 124, gy + 40), (DI, ex + 60, gy + 30), (DI, ex + 92, gy + 38),
+                                   (AI, 16 + 6 * cell + 80 + 40, gy + 36), (AI, 16 + 6 * cell + 80 + 72, gy + 28)]):
+        f = G("idle", [4, 0, 2, 4, 0, 6, 4][k])
+        img.alpha_composite(f, (x - imod.ORIGIN[0], y - imod.ORIGIN[1]))
+    d = ImageDraw.Draw(img)
+    for gx in range(0, W, cell):
+        for gyy in range(0, H, cell):
+            d.point((gx, gyy), fill=(100, 94, 88))
+    blocks.append((f"IN CONTEXT 1x on ash: {dname} (3x3) | Smelter Vent (3x2) | {aname}; conscripts and riflemen for scale.  Cell ticks every 64 px", img.convert("RGB")))
+    out = stack(blocks)
+    b2 = [(f"BUILD, 8 frames at 1x: Directorate {dname}", strip(D["build"], 1)),
+          (f"BUILD, 8 frames at 1x: {aname} for comparison", strip(A["build"], 1))]
+    R.TOL = 0
+    ramp_set = {tuple(c) for c in C.HOUSE}
+    base = D["idle"][0]
+    vs = [base]
+    for rp in (C.make_ramp(C.hx("#3A2A06"), C.hx("#E0A020"), C.hx("#FFE9A0")), C.make_ramp(C.hx("#2A0D08"), C.hx("#B02A1A"), C.hx("#F0A090")),
+               C.make_ramp(C.hx("#0C1B2E"), C.hx("#2E5A8B"), C.hx("#9CC6EE"))):
+        o, _c = R.remap(base, rp)
+        a0, a1 = np.asarray(base).reshape(-1, 4), np.asarray(o).reshape(-1, 4)
+        ch = (a0 != a1).any(axis=1)
+        assert all(tuple(p[:3]) in ramp_set for p in a0[ch]), "remap touched a non-ramp pixel"
+        vs.append(o)
+    b2.append(("HOUSE REMAP idle frame 0 at 2x (asserts only ramp pixels change): magenta, amber, red, blue", strip(vs, 2, 8)))
+    return out, out_name, stack(b2), out_name.replace("_contact", "_contact_build")
+
+
 if __name__ == "__main__":
     which = sys.argv[1]
-    res = conscript() if which == "conscript" else vent()
+    res = conscript() if which == "conscript" else (shaft() if which == "shaft" else vent())
     for im, name in zip(res[0::2], res[1::2]):
         p = os.path.join(C.PILOT, name)
         im.save(p, optimize=True)
