@@ -107,6 +107,7 @@ public sealed class GameScreen : IScreen
         else
         {
             _source = sim;
+            GarrisonOverlay.Rules = sim.Rules;   // M4-09: pips show free room
             _spectatorMode = spectator;
             if (_spectatorMode)
             {
@@ -330,6 +331,7 @@ public sealed class GameScreen : IScreen
         if (input.ConsumePressed(Keys.F4)) _overlays.Paths = !_overlays.Paths;
         if (input.ConsumePressed(Keys.F5)) _overlays.Ranges = !_overlays.Ranges;
 
+        if (_orders is not null) _orders.SelectedBuilding = _selectedBuilding;   // M4-09: D unloads a selected garrisoned building
         if (_orders is not null)
         {
             foreach (Keys key in OrderKeys)
