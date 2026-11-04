@@ -28,6 +28,14 @@ public sealed partial class Simulation
     /// </summary>
     public SimRules RulesOf(byte player) => Setup.Rules;
 
+    /// <summary>M4: tech tier of <paramref name="player"/>: 3 if it owns a live tier-3 provider (<see cref="FactionStartKit.Tier3Provides"/>),
+    /// else 2 with a live tier-2 provider, else 1. Derived, not stored. Stub (M4-01): always 1; M4-04 fills.</summary>
+    public int TierOf(byte player)
+    {
+        // M4-04 fills
+        return 1;
+    }
+
     /// <summary>True for Self and Ally: the actor is "ours" for movement, shoving and vision.</summary>
     internal bool IsFriendly(byte a, byte b)
     {

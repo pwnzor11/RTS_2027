@@ -58,6 +58,15 @@ hover = 0
 air = 100
 burrow = 0
 
+# M4-01: fordable shallow water (design 08 §1; Water now means deep). Coast = 8 is reserved for M7.
+[speed.shallow]
+foot = 40
+wheeled = 0
+tracked = 0
+hover = 100
+air = 100
+burrow = 0
+
 [buildable]
 clear = true
 road = true
@@ -66,6 +75,7 @@ ash = true
 water = false
 rock = false
 cliff = false
+shallow = false
 
 # M3: soft ground (burrowers may surface, Bores may break through). Optional; omitted lands keep the default.
 [soft]
@@ -76,3 +86,4 @@ ash = true
 water = false
 rock = false
 cliff = false
+shallow = false

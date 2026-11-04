@@ -10,6 +10,13 @@ namespace Rts.Sim.Rules;
 /// </summary>
 public sealed record FactionStartKit(string Conyard, IReadOnlyList<string> Units)
 {
+    /// <summary>M4: the provides name a type of tier 2 needs (game.toml <c>tier2</c>), or "" for none. The loader appends it to
+    /// the prerequisites of every tier-2 type of the faction (tier sugar, design 08 §4).</summary>
+    public string Tier2Provides { get; init; } = "";
+
+    /// <summary>M4: the provides name a type of tier 3 needs (game.toml <c>tier3</c>), or "" for none.</summary>
+    public string Tier3Provides { get; init; } = "";
+
     /// <summary>The pre-M3 skirmish start: one auth_conyard, no units.</summary>
     public static FactionStartKit AuthorityDefault { get; } = new("auth_conyard", Array.Empty<string>());
 

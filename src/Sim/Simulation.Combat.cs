@@ -273,12 +273,14 @@ public sealed partial class Simulation
             ActorKind kind = h.Target.Kind;
             int i = h.Target.Id.Index;
             if (!SlotsOf(kind).IsAlive(h.Target.Id)) continue;
+            int before = HealthAt(kind, i);
             switch (kind)
             {
                 case ActorKind.Vehicle: _units.Health[i] -= h.Amount; WakeOnHit(_units, kind, i); break;
                 case ActorKind.Infantry: _infantry.Health[i] -= h.Amount; WakeOnHit(_infantry, kind, i); break;
                 default: _buildings.Health[i] -= h.Amount; break;
             }
+            if (before > 0 && HealthAt(kind, i) <= 0) OnLethalHit(h.Target, (byte)h.Source);   // M4-06: kill attribution
         }
         _pendingCount = 0;
     }
@@ -302,6 +304,7 @@ public sealed partial class Simulation
     {
         WarheadType wh = RulesOf(owner).Warheads[warheadIndex];
         ApplyWarheadGround(wh, impact.ToCell(), wh.Splash < 0 ? 0 : wh.Splash);   // M3-05: contaminate / decontaminate / Blackout
+        ApplyWarheadFoam(wh, impact.ToCell(), wh.Splash < 0 ? 0 : wh.Splash);     // M4-05: Quick-Set Foam
         if (instant && wh.Splash <= 0)
         {
             _fx.Add(new FxEvent(FxKind.InstantHit, impact, 1));   // M3-12: a hitscan hit shows its impact, like a shell's landing

@@ -4,6 +4,7 @@ using System.IO.Hashing;
 using Rts.Sim.Core;
 using Rts.Sim.Economy;
 using Rts.Sim.Effects;
+using Rts.Sim.Garrison;
 using Rts.Sim.Ground;
 using Rts.Sim.Map;
 using Rts.Sim.Missions;
@@ -11,6 +12,7 @@ using Rts.Sim.Pathing;
 using Rts.Sim.Production;
 using Rts.Sim.Rules;
 using Rts.Sim.Serialization;
+using Rts.Sim.Stats;
 using Rts.Sim.Tunnels;
 using Rts.Sim.Vision;
 using Rts.Sim.World;
@@ -32,14 +34,16 @@ public sealed partial class Simulation
     private readonly TunnelState _tunnels;       // M3-01
     private readonly GroundState _ground;        // M3-01
     private readonly EffectsState _effects;      // M3-01
+    private readonly GarrisonState _garrison;    // M4-01
+    private readonly StatsState _stats;          // M4-01
     private readonly List<SetupEntry> _setupLog = new();
     private bool _inStep;
     private readonly MapState _map;
     private readonly PathService _paths;
     private readonly VisionState _vision;
     // Canonical state-part order: [map, units, infantry, buildings, paths, vision, combat, projectiles, players, economy, production,
-    // tunnels, ground, effects, then extension parts]. Hash, Save and Load all iterate this array; append new built-in parts after
-    // "effects" only (changing the order changes every hash and the save format).
+    // tunnels, ground, effects, garrison, stats, then extension parts]. Hash, Save and Load all iterate this array; append new built-in
+    // parts after "stats" only (changing the order changes every hash and the save format).
     private readonly ISimStatePart[] _parts;
     private SimRandom _rng;
     private readonly List<(int Tick, ulong Hash)> _recentHashes = new(SimConstants.HashRingSize);
@@ -68,6 +72,8 @@ public sealed partial class Simulation
         _tunnels = new TunnelState(setup);
         _ground = new GroundState(setup.Map.Width, setup.Map.Height);
         _effects = new EffectsState(setup);
+        _garrison = new GarrisonState(setup);   // M4-01
+        _stats = new StatsState(setup);         // M4-01
         _map = new MapState(setup.Map);
         _paths = new PathService(_map, setup.Rules.Terrain);
         _paths.GateOpen = GateOpenFor;   // M3-04: own-team gates are passable (D-076)
@@ -78,7 +84,8 @@ public sealed partial class Simulation
         // M1.5: "players" is appended after the combat parts (append-only order).
         int extensionCount = setup.Extensions?.Count ?? 0;   // M2-15: extension parts come last (append-only order)
         // M3-01: "tunnels", "ground", "effects" follow "production"; extension parts stay last.
-        const int builtInAfterCombat = 6;   // players, economy, production, tunnels, ground, effects
+        // M4-01: "garrison", "stats" follow "effects".
+        const int builtInAfterCombat = 8;   // players, economy, production, tunnels, ground, effects, garrison, stats
         _parts = new ISimStatePart[6 + extra.Length + builtInAfterCombat + extensionCount];
         _parts[0] = _map; _parts[1] = _units; _parts[2] = _infantry; _parts[3] = _buildings; _parts[4] = _paths; _parts[5] = _vision;
         for (int e = 0; e < extra.Length; e++) _parts[6 + e] = extra[e];
@@ -88,7 +95,9 @@ public sealed partial class Simulation
         _parts[9 + extra.Length] = _tunnels;
         _parts[10 + extra.Length] = _ground;
         _parts[11 + extra.Length] = _effects;
-        for (int e = 0; e < extensionCount; e++) _parts[12 + extra.Length + e] = setup.Extensions![e].State;
+        _parts[12 + extra.Length] = _garrison;
+        _parts[13 + extra.Length] = _stats;
+        for (int e = 0; e < extensionCount; e++) _parts[14 + extra.Length + e] = setup.Extensions![e].State;
         MapHash = MapHasher.Compute(setup.Map);
         for (int e = 0; e < extensionCount; e++) setup.Extensions![e].OnSetup(this);   // after everything exists; also runs before a Load
     }
@@ -120,7 +129,7 @@ public sealed partial class Simulation
     public VisionState Vision => _vision;
 
     /// <summary>State parts in canonical order (map, units, infantry, buildings, paths, vision, combat, projectiles, players, economy,
-    /// production, tunnels, ground, effects, then extension parts).</summary>
+    /// production, tunnels, ground, effects, garrison, stats, then extension parts).</summary>
     public IReadOnlyList<ISimStatePart> StateParts => _parts;
 
     /// <summary>The only clock. Starts at 0; Step increments it by one.</summary>
@@ -291,6 +300,7 @@ public sealed partial class Simulation
             case CommandKind.Deploy: ApplyDeploy(c); break;     // M3: Simulation.Transport.cs routes by vehicle type
             case CommandKind.Upgrade: ApplyUpgrade(c); break;   // M3: Simulation.Burrow.cs (building morph, M3-03)
             case CommandKind.Special: ApplySpecial(c); break;   // M3: Simulation.Superweapon.cs (M3-13)
+            case CommandKind.Unload: ApplyUnloadCommand(c); break;   // M4: Simulation.Garrison.cs (M4-03)
             case CommandKind.Debug:
                 if (Setup.AllowDebug) ApplyDebug(c);
                 break;
@@ -325,6 +335,10 @@ public sealed partial class Simulation
                     case ActorKind.Infantry when _infantry.Slots.IsAlive(c.Subject): _infantry.Health[c.Subject.Index] = 0; break;
                     case ActorKind.Building when _buildings.Slots.IsAlive(c.Subject): _buildings.Health[c.Subject.Index] = 0; break;
                 }
+                break;
+            case DebugOp.GrantUpgrade:   // M4-01
+                if (c.Arg2 >= 0 && c.Arg2 < Setup.Rules.Upgrades.Count && c.Arg2 < RuleCounts.MaxUpgrades)
+                    _players.Upgrades[c.Player] |= 1UL << c.Arg2;
                 break;
         }
     }
@@ -614,10 +628,12 @@ public sealed partial class Simulation
                 {
                     BuildingType dbt = BuildingTypeAt(i);
                     _fx.Add(new FxEvent(FxKind.BuildingDestroyed, BuildingCentre(i), Math.Max(dbt.FootprintW, dbt.FootprintH)));
+                    OnStatsLost(_buildings.Player[i], ActorKind.Building);   // M4-06
                     RemoveBuilding(slots.IdOf(i));
                     continue;
                 }
                 _fx.Add(new FxEvent(FxKind.UnitDestroyed, PositionAt(kind, i), 1));
+                OnStatsLost(PlayerAt(kind, i), kind);   // M4-06
                 OnM3MobileDying(kind, i);   // M3: death weapon, passengers (Simulation.M3.cs)
                 OnActorRemoving(kind, i);
                 OnM3MobileRemoving(kind, i);
@@ -727,7 +743,10 @@ public sealed partial class Simulation
                 if (viewer >= 0 && !IsFriendly((byte)viewer, _buildings.Player[i])
                     && !FootprintVisible((byte)viewer, _buildings.Cell[i], bt.FootprintW, bt.FootprintH)) continue;
                 blist.Add(new BuildingView(_buildings.Slots.IdOf(i), _buildings.Player[i], _buildings.TypeIndex[i],
-                    _buildings.Cell[i], bt.FootprintW, bt.FootprintH, _buildings.Health[i], false));
+                    _buildings.Cell[i], bt.FootprintW, bt.FootprintH, _buildings.Health[i], false)
+                {
+                    Occupants = bt.Garrison > 0 ? OccupantsIn(_buildings.Slots.IdOf(i)) : 0,   // M4: listed only when known (own/allied or visible now)
+                });
             }
         FxEvent[] fx = FxFor(viewer);
         var telegraphs = new List<TelegraphView>();

@@ -10,6 +10,9 @@ public enum CommandKind : byte
     SetStance = 16, PowerToggle = 17, Special = 18, Debug = 19, Chat = 20,
     /// <summary>M3: upgrade a building in place (Hatch to Bore Head). Subject = building, Arg = target building type index.</summary>
     Upgrade = 21,
+    /// <summary>M4: empty a garrisoned building or a transport. Subject = the building (Arg low byte 2 = Building) or a transport
+    /// vehicle (Arg low byte 0 = Vehicle, an alias of Deploy-unload). Cell is ignored in M4 (M7: the shore cell for landing craft).</summary>
+    Unload = 22,
 }
 
 /// <summary>

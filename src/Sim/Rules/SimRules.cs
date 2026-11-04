@@ -28,6 +28,12 @@ public sealed record SimRules(
     /// <summary>Stealth constants (game.toml [stealth], M3). Defaults when the table is absent.</summary>
     public StealthRules Stealth { get; init; } = StealthRules.Default;
 
+    /// <summary>Garrison constants (game.toml [garrison], M4). Defaults when the table is absent.</summary>
+    public GarrisonRules Garrison { get; init; } = GarrisonRules.Default;
+
+    /// <summary>Quick-Set Foam constants (game.toml [foam], M4). Defaults when the table is absent.</summary>
+    public FoamRules Foam { get; init; } = FoamRules.Default;
+
     /// <summary>Start kit per faction, indexed by <c>(int)</c><see cref="Faction"/> (game.toml [faction.&lt;name&gt;], M3).
     /// Always <see cref="RuleCounts.Factions"/> entries; ids are validated lazily by <see cref="ResolveStartKit"/>.</summary>
     public IReadOnlyList<FactionStartKit> StartKits { get; init; } =

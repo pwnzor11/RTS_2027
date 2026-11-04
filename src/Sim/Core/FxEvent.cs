@@ -16,6 +16,8 @@ public enum FxKind : byte
     /// <summary>An instant (hitscan) single-target weapon hit its point this tick (M3-12). Kept apart from
     /// <see cref="Detonation"/> so the audio, which counts shells by detonations, does not mistake a rifle hit for one.</summary>
     InstantHit = 4,
+    /// <summary>M4: soldiers left a garrisoned building (Unload, death, sale or capture). Pos = the building centre, Size = soldiers ejected.</summary>
+    GarrisonExit = 5,
 }
 
 /// <summary>

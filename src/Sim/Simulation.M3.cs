@@ -86,9 +86,19 @@ public sealed partial class Simulation
             case ActorKind.Building when _buildings.Slots.IsAlive(c.Target):
                 byte owner = _buildings.Player[c.Target.Index];
                 if (owner == c.Player && BuildingTypeAt(c.Target.Index).Entrance != Rules.TunnelSize.None) ApplyEnterTunnel(c, subject);
+                else if (IsGarrisonable(c.Target.Index) && CanGarrisonIn(c.Player, c.Target.Index)) ApplyGarrison(c, subject);   // M4-03
                 else ApplyEngineer(c, subject);
                 break;
         }
+    }
+
+    /// <summary>M4 routing rule (design 08 §3): a garrisonable building may be entered when it is own, allied, or neutral and
+    /// empty. Anything else (an enemy building, an occupied neutral) falls through to the engineer action.</summary>
+    private bool CanGarrisonIn(byte player, int b)
+    {
+        byte owner = _buildings.Player[b];
+        if (IsFriendly(player, owner)) return true;
+        return _players.IsNeutral(owner) && OccupantsIn(_buildings.Slots.IdOf(b)) == 0;
     }
 
     /// <summary>Deploy (payload in Command.cs): a transport unloads; a vehicle with DeploysInto deploys. Subject = own vehicle.</summary>
@@ -128,6 +138,7 @@ public sealed partial class Simulation
     {
         _tunnels.ClearBuilding(i);
         _effects.ClearBuilding(i);
+        _garrison.ClearBuilding(i);   // M4-01
         if (IsSealPiece(i)) _ground.HardeningDirty = true;
     }
 
@@ -135,9 +146,11 @@ public sealed partial class Simulation
     private void OnM3BuildingRemoving(int i)
     {
         if (BuildingTypeAt(i).Entrance != Rules.TunnelSize.None) OnEntranceRemoving(i);   // M3-02: D2 re-route
+        if (IsGarrisonable(i)) OnGarrisonBuildingRemoving(i);   // M4-03: eject occupants (cells still held)
         if (IsSealPiece(i)) _ground.HardeningDirty = true;
         _tunnels.ClearBuilding(i);
         _effects.ClearBuilding(i);
+        _garrison.ClearBuilding(i);   // M4-01
     }
 
     /// <summary>Walls, gates and structures all count for the enclosure (design 05 §2); every building is a seal piece today.</summary>
@@ -156,7 +169,7 @@ public sealed partial class Simulation
         if (IsFriendly(viewer, owner)) return false;
         ActorLayer layer = _tunnels.LayerOf(kind, i);
         CellCoord cell = PositionAt(kind, i).ToCell();
-        if (layer is ActorLayer.Tunnel or ActorLayer.Passenger) return true;   // inside a network or a transport: never seen
+        if (layer is ActorLayer.Tunnel or ActorLayer.Passenger or ActorLayer.Garrisoned) return true;   // inside a network, a transport or a garrison (M4): never seen
         if (layer is ActorLayer.Burrowed or ActorLayer.Surfacing) return !IsSeismicRevealed(viewer, cell);
         return IsStealthedNow(kind, i) && !IsStealthRevealed(viewer, cell);
     }

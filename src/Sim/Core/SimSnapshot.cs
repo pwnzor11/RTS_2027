@@ -41,7 +41,12 @@ public static class GroundLayers
 /// <summary>One building as the renderer sees it. Cell = top-left of its footprint. Ghost = last-seen
 /// image of an enemy building now under fog (Health is the last-seen value).</summary>
 public readonly record struct BuildingView(EntityId Id, byte Player, int TypeIndex, CellCoord Cell, int FootprintW,
-    int FootprintH, int Health, bool Ghost);
+    int FootprintH, int Health, bool Ghost)
+{
+    /// <summary>M4: soldiers garrisoned inside. Exact for own and allied buildings (and the omniscient view); for an enemy building
+    /// only while it is visible now; always 0 on a ghost.</summary>
+    public int Occupants { get; init; }
+}
 
 /// <summary>What kind of actor a UnitView is.</summary>
 public enum UnitKind : byte { Vehicle = 0, Infantry = 1 }

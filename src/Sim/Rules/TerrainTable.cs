@@ -10,7 +10,7 @@ public sealed class TerrainTable
     private readonly bool[] _buildable;
     private readonly bool[] _soft;
 
-    /// <summary>Soft land by default (design 05 §1): clear, rough and ash; road, water, rock and cliff are hard.</summary>
+    /// <summary>Soft land by default (design 05 §1): clear, rough and ash; road, water, rock, cliff and shallow (M4) are hard.</summary>
     public static bool DefaultSoft(LandType land) => land is LandType.Clear or LandType.Rough or LandType.Ash;
 
     /// <summary>Table with the default soft column (<see cref="DefaultSoft"/>).</summary>

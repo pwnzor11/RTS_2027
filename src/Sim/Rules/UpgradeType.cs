@@ -9,4 +9,12 @@ namespace Rts.Sim.Rules;
 /// Effect is a key the sim interprets (e.g. "grouting" = Foundation Grouting, M3-04). BuildTime 0 = derive from cost.
 /// </summary>
 public sealed record UpgradeType(string Id, Faction Faction, int Cost, int BuildTime, IReadOnlyList<string> Prerequisites,
-    string Effect);
+    string Effect)
+{
+    /// <summary>M4: tech tier 1..3 (TOML <c>tier</c>, default 1). Tier sugar appends the faction's tier provides to the prerequisites.</summary>
+    public int Tier { get; init; } = 1;
+
+    /// <summary>M4: techs.toml <c>[[effect]]</c> ids applied to the owner's rules once researched (TOML <c>effects</c>, default
+    /// empty; M4-04 applies them in list order).</summary>
+    public IReadOnlyList<string> Effects { get; init; } = Array.Empty<string>();
+}

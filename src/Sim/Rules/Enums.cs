@@ -8,8 +8,9 @@ public enum Locomotion : byte { Foot = 0, Wheeled = 1, Tracked = 2, Hover = 3, A
 /// <summary>Five armour classes for the warhead × armour table (design 02 §4). Append only.</summary>
 public enum ArmorClass : byte { Unarmored = 0, Light = 1, Heavy = 2, Structure = 3, Fortified = 4 }
 
-/// <summary>Land types; the terrain table maps land × locomotion to speed %. Append only.</summary>
-public enum LandType : byte { Clear = 0, Road = 1, Rough = 2, Ash = 3, Water = 4, Rock = 5, Cliff = 6 }
+/// <summary>Land types; the terrain table maps land × locomotion to speed %. Append only.
+/// M4: Water now means deep water; Shallow (7) is a fordable shallow (TOML key <c>shallow</c>). Coast = 8 is reserved for M7.</summary>
+public enum LandType : byte { Clear = 0, Road = 1, Rough = 2, Ash = 3, Water = 4, Rock = 5, Cliff = 6, Shallow = 7 }
 
 /// <summary>What a map cell's overlay holds. Append only.</summary>
 public enum OverlayKind : byte { None = 0, Ashfall = 1, Pitchblende = 2, Wall = 3 }
@@ -34,7 +35,7 @@ public static class RuleCounts
 {
     public const int Locomotions = 6;
     public const int ArmorClasses = 5;
-    public const int LandTypes = 7;
+    public const int LandTypes = 8;
     /// <summary>Number of <see cref="ProductionCategory"/> values (M3: Upgrade appended).</summary>
     public const int ProductionCategories = 6;
     /// <summary>Number of <see cref="Faction"/> values.</summary>

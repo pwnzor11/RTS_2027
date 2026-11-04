@@ -13,16 +13,17 @@ namespace Rts.Sim.Ground;
 /// member of the enclosing team). Any bit set = nothing may surface or break through there. Player slots 64 and up cannot
 /// harden (<see cref="MaxHardeningPlayers"/>).</item>
 /// <item><see cref="Blackout"/>: ticks left of a Blackout cloud (0 = none).</item>
+/// <item><see cref="Foam"/>: Quick-Set Foam ticks left per cell (0 = none; M4-05 lays, decays and applies it).</item>
 /// <item><see cref="HardeningDirty"/>: a wall/gate/structure appeared or disappeared since the last enclosure recompute
 /// (set by the building hooks in Simulation.M3.cs; M3-04 recomputes and clears it).</item>
 /// </list>
 /// Layout: version, width, height, flags (bit 0 = dirty, bit 1 = <see cref="GroutedPlayers"/> follows as a ulong; M3-04,
 /// so the bytes are unchanged while nobody has grouting), then (cell + 1, radiation, hardened, blackout) for every non-zero cell,
-/// ended by 0. Sparse, so an untouched map costs a few bytes in every hash.
+/// ended by 0 (version 2, M4-01: each cell entry also carries its foam ticks). Sparse, so an untouched map costs a few bytes in every hash.
 /// </summary>
 public sealed class GroundState : ISimStatePart
 {
-    private const byte Version = 1;
+    private const byte Version = 2;   // 2: Foam (M4-01)
 
     /// <summary>Player slots that can own a hardening bit.</summary>
     public const int MaxHardeningPlayers = 64;
@@ -33,6 +34,8 @@ public sealed class GroundState : ISimStatePart
     public readonly ulong[] Hardened;
     /// <summary>Blackout ticks left per cell.</summary>
     public readonly int[] Blackout;
+    /// <summary>M4: Quick-Set Foam ticks left per cell.</summary>
+    public readonly int[] Foam;
     /// <summary>True when the enclosure must be recomputed.</summary>
     public bool HardeningDirty;
     /// <summary>M3-04: bit p set = player slot p had a "grouting" upgrade at the last enclosure recompute. A change in this mask
@@ -47,6 +50,7 @@ public sealed class GroundState : ISimStatePart
         Radiation = new byte[width * height];
         Hardened = new ulong[width * height];
         Blackout = new int[width * height];
+        Foam = new int[width * height];
     }
 
     /// <inheritdoc />
@@ -77,6 +81,9 @@ public sealed class GroundState : ISimStatePart
     /// <summary>Blackout ticks left on a cell (0 off the map).</summary>
     public int BlackoutAt(CellCoord c) => Contains(c) ? Blackout[IndexOf(c)] : 0;
 
+    /// <summary>Foam ticks left on a cell (0 off the map).</summary>
+    public int FoamAt(CellCoord c) => Contains(c) ? Foam[IndexOf(c)] : 0;
+
     /// <inheritdoc />
     public void Write(BinaryWriter w)
     {
@@ -86,8 +93,8 @@ public sealed class GroundState : ISimStatePart
         if (GroutedPlayers != 0) w.Write(GroutedPlayers);
         for (int i = 0; i < Radiation.Length; i++)
         {
-            if (Radiation[i] == 0 && Hardened[i] == 0 && Blackout[i] == 0) continue;
-            w.Write(i + 1); w.Write(Radiation[i]); w.Write(Hardened[i]); w.Write(Blackout[i]);
+            if (Radiation[i] == 0 && Hardened[i] == 0 && Blackout[i] == 0 && Foam[i] == 0) continue;
+            w.Write(i + 1); w.Write(Radiation[i]); w.Write(Hardened[i]); w.Write(Blackout[i]); w.Write(Foam[i]);
         }
         w.Write(0);
     }
@@ -101,12 +108,12 @@ public sealed class GroundState : ISimStatePart
         if ((flags & ~3) != 0) throw new InvalidDataException("ground flags invalid.");
         HardeningDirty = (flags & 1) != 0;
         GroutedPlayers = (flags & 2) != 0 ? r.ReadUInt64() : 0;
-        Array.Clear(Radiation); Array.Clear(Hardened); Array.Clear(Blackout);
+        Array.Clear(Radiation); Array.Clear(Hardened); Array.Clear(Blackout); Array.Clear(Foam);
         for (int k = r.ReadInt32(); k != 0; k = r.ReadInt32())
         {
             int i = k - 1;
             if (i < 0 || i >= Radiation.Length) throw new InvalidDataException("ground cell out of range.");
-            Radiation[i] = r.ReadByte(); Hardened[i] = r.ReadUInt64(); Blackout[i] = r.ReadInt32();
+            Radiation[i] = r.ReadByte(); Hardened[i] = r.ReadUInt64(); Blackout[i] = r.ReadInt32(); Foam[i] = r.ReadInt32();
         }
     }
 }

@@ -190,6 +190,7 @@ public sealed partial class Simulation
         }
         else return;
         _production.RepairGen[id.Index] = 0; _production.RepairFrac[id.Index] = 0;
+        OnStatsBuilt(c.Player, ActorKind.Building);   // M4-06
         if (bt.FreeUnit >= 0 && bt.FreeUnit < Setup.Rules.Vehicles.Count)
             SpawnProducedVehicle(c.Player, bt.FreeUnit, c.Cell, bt, false, default);
     }
@@ -340,6 +341,7 @@ public sealed partial class Simulation
         if (!FindFreeExitCell(exit, vt.Locomotion, out CellCoord cell)) return false;
         EntityId id = SpawnVehicle(player, type, cell);
         if (id.IsNone) return false;
+        OnStatsBuilt(player, ActorKind.Vehicle);   // M4-06
         if (applyRally && rally is CellCoord rc && vt.HarvestCapacity <= 0 && rc != cell)
             AssignMission(new ActorRef(ActorKind.Vehicle, id), MissionKind.Move, rc);
         return true;
@@ -351,6 +353,7 @@ public sealed partial class Simulation
         if (!FindFreeExitCell(exit, Locomotion.Foot, out CellCoord cell)) return false;
         EntityId id = SpawnInfantry(player, type, cell);
         if (id.IsNone) return false;
+        OnStatsBuilt(player, ActorKind.Infantry);   // M4-06
         if (rally is CellCoord rc && rc != cell) AssignMission(new ActorRef(ActorKind.Infantry, id), MissionKind.Move, rc);
         return true;
     }

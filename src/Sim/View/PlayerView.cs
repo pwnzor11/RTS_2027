@@ -87,6 +87,18 @@ public readonly struct PlayerView
     /// <summary>True if the viewing player has researched upgrade <paramref name="upgradeIndex"/>.</summary>
     public bool HasUpgrade(int upgradeIndex) => _sim.HasUpgrade(Player, upgradeIndex);
 
+    /// <summary>M4: the player's tech tier (1..3, <see cref="Simulation.TierOf"/>).</summary>
+    public int Tier => _sim.TierOf(Player);
+
+    /// <summary>M4: soldiers garrisoned in an own or allied building; -1 for any other building (fog-honest: an AI never learns
+    /// an enemy garrison's size from this).</summary>
+    public int OccupantsOf(EntityId building)
+    {
+        if (!_sim.Buildings.Slots.IsAlive(building)) return -1;
+        Relation r = RelationOf(_sim.Buildings.Player[building.Index]);
+        return r is Relation.Self or Relation.Ally ? _sim.OccupantsIn(building) : -1;
+    }
+
     /// <summary>Fills <paramref name="dest"/> (cleared first) with the telegraphs the player may see.</summary>
     public void CopyTelegraphs(List<TelegraphView> dest) => _sim.CopyTelegraphs(Player, dest);
 

@@ -25,6 +25,7 @@ public sealed partial class Simulation
         _players.Cash[player] -= fromCash;
         int fromStored = Math.Min(amount - fromCash, _players.Stored[player]);
         _players.Stored[player] -= fromStored;
+        OnStatsSpent(player, fromCash + fromStored);   // M4-06
         return fromCash + fromStored;
     }
 

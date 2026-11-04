@@ -50,7 +50,7 @@ public static class ReplayReader
             if (!r.ReadBytes(4).AsSpan().SequenceEqual(ReplayWriter.Magic)) throw new InvalidDataException("Bad replay magic.");
             version = r.ReadInt32();
             if (version < ReplayWriter.OldestReadableVersion || version > ReplayWriter.Version)
-                throw new InvalidDataException($"Unsupported replay format version {version}; this build reads version {ReplayWriter.OldestReadableVersion} or {ReplayWriter.Version}. " +
+                throw new InvalidDataException($"Unsupported replay format version {version}; this build reads versions {ReplayWriter.OldestReadableVersion} to {ReplayWriter.Version}. " +
                     "Replays from other versions cannot be played back; play it with the build that recorded it.");
             header = SetupHeader.Read(r);
             if (version >= 8) mission = ReplayMission.Read(r);

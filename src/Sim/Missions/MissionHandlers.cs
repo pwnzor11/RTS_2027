@@ -36,6 +36,7 @@ internal static class MissionHandlers
         t[(int)MissionKind.EnterTunnel] = TunnelMissions.HandleEnterTunnel; // TunnelMissions.cs (M3-02)
         t[(int)MissionKind.Transit] = TunnelMissions.HandleTransit;         // TunnelMissions.cs (M3-02)
         t[(int)MissionKind.Capture] = CaptureMission.Handle;   // CaptureMission.cs (M3-06)
+        t[(int)MissionKind.Garrisoned] = GarrisonMission.Handle;   // GarrisonMission.cs (M4-03)
         return t;
     }
 

@@ -97,5 +97,19 @@ public sealed record BuildingType(string Id, int FootprintW, int FootprintH, int
     /// <summary>Ticks the in-place upgrade takes (TOML <c>morph_ticks</c>); 0 = derive from the cost difference (M3-03).</summary>
     public int MorphTicks { get; init; }
 
+    // ---- schema v4 (M4-01, design 08 §3–§4). Defaults keep M3 behaviour. ------------------------------
+
+    /// <summary>Tech tier 1..3 (TOML <c>tier</c>, default 1).</summary>
+    public int Tier { get; init; } = 1;
+
+    /// <summary>Soldiers this building can hold (TOML <c>garrison</c> 0..10, default 0 = not garrisonable).</summary>
+    public int Garrison { get; init; }
+
+    /// <summary>Leptons added to an occupant's weapon range (TOML <c>garrison_range_bonus</c>, default 256 = one cell).</summary>
+    public int GarrisonRangeBonus { get; init; } = 256;
+
+    /// <summary>Occupant reload multiplier per mille (TOML <c>garrison_rof_permille</c>, default 750).</summary>
+    public int GarrisonRofPermille { get; init; } = 750;
+
     private CellCoord DefaultExit() => new(FootprintW / 2, FootprintH);
 }

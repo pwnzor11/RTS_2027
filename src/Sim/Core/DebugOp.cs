@@ -19,4 +19,6 @@ public enum DebugOp
     SetCash = 4,
     /// <summary>Kill the Subject; Target.Index low byte unused, the subject's store is Arg2 = (int)ActorKind.</summary>
     Kill = 5,
+    /// <summary>M4: give Command.Player upgrade Arg2 (index in SimRules.Upgrades) without research. Out-of-range indices are ignored.</summary>
+    GrantUpgrade = 6,
 }

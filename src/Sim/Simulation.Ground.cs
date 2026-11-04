@@ -14,6 +14,13 @@ public sealed partial class Simulation
 {
     // ---- warhead ground effects -----------------------------------------------------------------
 
+    /// <summary>M4: lay Quick-Set Foam (<see cref="WarheadType.FoamTicks"/>) on every on-map cell within <paramref name="radius"/>
+    /// cells of <paramref name="centre"/>. Called from Detonate after <see cref="ApplyWarheadGround"/>. M4-05 fills.</summary>
+    internal void ApplyWarheadFoam(WarheadType wh, CellCoord centre, int radius)
+    {
+        // M4-05 fills
+    }
+
     /// <summary>Apply a warhead's Contaminate / Decontaminate / Blackout to every on-map cell within <paramref name="radius"/>
     /// cells (Chebyshev) of <paramref name="centre"/>. Contaminate runs first, then Decontaminate.</summary>
     internal void ApplyWarheadGround(WarheadType wh, CellCoord centre, int radius)
@@ -280,5 +287,6 @@ public sealed partial class Simulation
 
     /// <summary>True if <paramref name="player"/> may not target the actor: underground, or hidden from the player's team.</summary>
     internal bool IsUntargetableBy(byte player, ActorKind kind, int i) =>
-        kind != ActorKind.Building && (IsUnderground(kind, i) || IsHiddenFrom(player, kind, i));
+        kind != ActorKind.Building && (IsUnderground(kind, i) || _tunnels.LayerOf(kind, i) == ActorLayer.Garrisoned   // M4: like Passenger
+            || IsHiddenFrom(player, kind, i));
 }

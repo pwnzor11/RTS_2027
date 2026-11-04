@@ -9,10 +9,10 @@ public static class SimWriter
 {
     public static readonly byte[] SaveMagic = "RTSS"u8.ToArray();
 
-    /// <summary>Save format 7 (M3-01: factions in the header; tunnels/ground/effects parts and the players-part faction and
+    /// <summary>Save format 8 (M4-01: "garrison" and "stats" parts, ground part version 2 with Foam). Format 7 (M3-01: factions in the header; tunnels/ground/effects parts and the players-part faction and
     /// upgrade fields in the body). Format 6 (M1.5): the <see cref="SetupHeader"/> (build, seed, players, teams, limits,
     /// AllowDebug, rules and map identity, embedded rules) precedes the state body.</summary>
-    public const int SaveVersion = 7;
+    public const int SaveVersion = 8;
 
     /// <summary>State body: tick, RNG, then each part's name and data in the given (canonical) order.
     /// Used verbatim by the hash.</summary>

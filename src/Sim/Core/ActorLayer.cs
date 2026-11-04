@@ -9,6 +9,8 @@ namespace Rts.Sim.Core;
 /// dive animation of a burrower. Burrowed = travelling under open ground. Surfacing = behind a surfacing telegraph.
 /// Passenger = inside a transport. Underground (<see cref="ActorLayers.IsUnderground"/>) = Tunnel, Burrowed, Surfacing
 /// or Passenger: such actors cannot attack or be attacked and are hidden from enemies (design 05 §1 "F").
+/// Garrisoned (M4) = inside a building with <c>garrison &gt; 0</c>; <see cref="Tunnels.TunnelState.InfantryCarrier"/> holds the
+/// building id. It is NOT underground: occupants may fire out, but they are hidden from enemies and untargetable like a Passenger.
 /// Append only: values are persisted.
 /// </summary>
-public enum ActorLayer : byte { Surface = 0, Queued = 1, Tunnel = 2, Diving = 3, Burrowed = 4, Surfacing = 5, Passenger = 6 }
+public enum ActorLayer : byte { Surface = 0, Queued = 1, Tunnel = 2, Diving = 3, Burrowed = 4, Surfacing = 5, Passenger = 6, Garrisoned = 7 }

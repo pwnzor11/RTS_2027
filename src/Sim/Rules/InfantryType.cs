@@ -49,4 +49,12 @@ public sealed record InfantryType(string Id, int Speed, int MaxHealth, ArmorClas
 
     /// <summary>Engineer: Enter on an enemy building below half health captures it, on a friendly one repairs it (M3-06).</summary>
     public bool Engineer { get; init; }
+
+    // ---- schema v4 (M4-01, design 08 §3–§4). ---------------------------------------------------------
+
+    /// <summary>Tech tier 1..3 (TOML <c>tier</c>, default 1).</summary>
+    public int Tier { get; init; } = 1;
+
+    /// <summary>May enter a garrisonable building (TOML <c>can_garrison</c>; default true, false for engineers unless set).</summary>
+    public bool CanGarrison { get; init; } = true;
 }

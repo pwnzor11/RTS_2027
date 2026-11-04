@@ -294,6 +294,7 @@ internal static class HarvestMission
                     eco.Cargo[i]--;
                     int space = Math.Max(0, sim.StorageCap(player) - sim.Players.Stored[player]);
                     sim.Players.Stored[player] += Math.Min(pay, space);   // the overflow is lost
+                    sim.OnStatsHarvested(player, Math.Min(pay, space));   // M4-06
                     eco.Timer[i] = sim.Tick + Math.Max(1, er.UnloadTicksPerUnit);
                     if (eco.Cargo[i] > 0) return Math.Max(1, er.UnloadTicksPerUnit);
                 }

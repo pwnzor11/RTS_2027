@@ -58,4 +58,7 @@ public sealed record VehicleType(string Id, Locomotion Locomotion, int Speed, in
 
     /// <summary>Building type index this vehicle deploys into, or -1 (TOML <c>deploys_into</c>, a building id).</summary>
     public int DeploysInto { get; init; } = -1;
+
+    /// <summary>M4: tech tier 1..3 (TOML <c>tier</c>, default 1).</summary>
+    public int Tier { get; init; } = 1;
 }

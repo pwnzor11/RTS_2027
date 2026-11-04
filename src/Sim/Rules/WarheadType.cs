@@ -17,4 +17,18 @@ public sealed record WarheadType(string Id, IReadOnlyList<int> VersusPercent, in
 
     /// <summary>Ticks of Blackout cloud left on every cell in the splash (0 = none).</summary>
     public int BlackoutTicks { get; init; }
+
+    // ---- schema v4 (M4-01, design 08 §3–§4). Defaults keep M3 behaviour; M4-05 implements them. -------
+
+    /// <summary>The splash also hurts Burrowed (underground) units (TOML <c>hits_burrowed</c>, default false).</summary>
+    public bool HitsBurrowed { get; init; }
+
+    /// <summary>Damage percent against tunnel entrance buildings; 100 = no bonus (TOML <c>bonus_vs_entrance_percent</c>).</summary>
+    public int BonusVsEntrancePercent { get; init; } = 100;
+
+    /// <summary>Quick-Set Foam ticks laid on every cell in the splash (TOML <c>foam_ticks</c>, 0 = none).</summary>
+    public int FoamTicks { get; init; }
+
+    /// <summary>Percent of each hit on a garrisoned building passed to every occupant (TOML <c>garrison_damage_percent</c>, 0 = none).</summary>
+    public int GarrisonDamagePercent { get; init; }
 }
