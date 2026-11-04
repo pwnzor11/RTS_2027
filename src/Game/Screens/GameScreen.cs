@@ -148,11 +148,11 @@ public sealed class GameScreen : IScreen
     /// </summary>
     public static GameScreen CreateSkirmish(GameServices services, SkirmishSettings settings)
     {
-        SkirmishGame game = SkirmishGame.Create(services.RulesDir, settings.MapSeed, settings.AiTier, settings.Factions);
-        var sim = new SimSnapshotSource(game, services.RulesDir);
+        // M4-INT2: the full v2 settings (2 to 4 slots, teams, per-slot AI and faction); no Human slot starts a spectator game.
+        if (settings.IsSpectator) return CreateSpectator(services, settings);
+        SimSnapshotSource sim = BuildSkirmishSource(services.RulesDir, settings);
         var screen = new GameScreen(services, sim, settings, () => CreateSkirmish(services, settings), skirmishMode: true);
         screen.IsGameOver = () => sim.Sim.GameOver;
-        sim.SaveTemplate = game.SaveTemplate(settings);
         return screen;
     }
 
@@ -168,6 +168,37 @@ public sealed class GameScreen : IScreen
         SkirmishGame game = SpectatorSetup.Create(services.RulesDir, seed, aiTier);
         var sim = new SimSnapshotSource(game, services.RulesDir);
         var screen = new GameScreen(services, sim, null, () => CreateSpectator(services, seed, aiTier), skirmishMode: false, spectator: true);
+        sim.Host.SetViewer(-1);
+        screen.IsGameOver = () => sim.Sim.GameOver;
+        return screen;
+    }
+
+    /// <summary>
+    /// The simulation source a skirmish screen runs on, built from the full v2 settings (M4-INT2): a Human slot gives the normal skirmish,
+    /// none gives the all-AI spectator game. <see cref="CreateSkirmish"/> and <see cref="CreateSpectator(GameServices, SkirmishSettings)"/> both
+    /// use it, and the headless tests call it, so they start the same game the screen does.
+    /// </summary>
+    /// <param name="rulesDir">The data/rules directory.</param>
+    /// <param name="settings">The setup choices.</param>
+    /// <param name="replayPath">Where the replay is recorded (tests); null = the default skirmish replay path.</param>
+    public static SimSnapshotSource BuildSkirmishSource(string rulesDir, SkirmishSettings settings, string? replayPath = null)
+    {
+        SkirmishGame game = settings.IsSpectator ? SpectatorSetup.Create(rulesDir, settings) : SkirmishGame.Create(rulesDir, settings);
+        var sim = new SimSnapshotSource(game, rulesDir, replayPath);
+        if (!settings.IsSpectator) sim.SaveTemplate = game.SaveTemplate(settings);
+        return sim;
+    }
+
+    /// <summary>
+    /// Creates the AI-only game the setup screen's Spectate starts (M4-INT2): every open slot of <paramref name="settings"/> is an AI
+    /// (2 to 4 of them, with their teams, factions and tiers), full map vision, the spectator panel and no orders.
+    /// </summary>
+    /// <param name="services">Shared services.</param>
+    /// <param name="settings">Settings with no Human slot.</param>
+    public static GameScreen CreateSpectator(GameServices services, SkirmishSettings settings)
+    {
+        SimSnapshotSource sim = BuildSkirmishSource(services.RulesDir, settings);
+        var screen = new GameScreen(services, sim, settings, () => CreateSpectator(services, settings), skirmishMode: false, spectator: true);
         sim.Host.SetViewer(-1);
         screen.IsGameOver = () => sim.Sim.GameOver;
         return screen;
@@ -225,7 +256,7 @@ public sealed class GameScreen : IScreen
     {
         if (_spectatorMode && _sim is not null)
         {
-            PlayerColours.Assign(new[] { 0, 1 });
+            PlayerColours.Assign(Skirmish is { IsSpectator: true } spec ? ColoursOf(spec) : new[] { 0, 1 });
             Vector2 mapCentre = new(_source.Current.MapWidth * Camera.CellPx / 2f, _source.Current.MapHeight * Camera.CellPx / 2f);
             Vector2 half = new Vector2(_s.Viewport.Width, _s.Viewport.Height) / _camera.Zoom / 2f;
             _camera.PanScreen((mapCentre - half - _camera.WorldFromScreen(Point.Zero)) * _camera.Zoom);
@@ -237,11 +268,14 @@ public sealed class GameScreen : IScreen
         _cameos = new CameoProvider(_s.Graphics, spritesRoot);
         int colour = Skirmish?.PlayerColour ?? 0;
         // D-068: the local player draws in the chosen colour; the AI takes the next palette entry that differs.
-        PlayerColours.Assign(new[] { colour, colour == 1 ? 0 : 1 });
+        PlayerColours.Assign(Skirmish is { } sk && sk.PlayerCount >= 2 ? ColoursOf(sk) : new[] { colour, colour == 1 ? 0 : 1 });
         _sidebar = new SidebarPanel(_sim, SimSnapshotSource.LocalPlayer, _selection, _cameos, PlayerColours.Base(SimSnapshotSource.LocalPlayer));
         CentreCameraOnOwnBase();
         _archive = new ArchiveTracker(ArchiveProgress.Load());
     }
+
+    // The colour each sim player draws in: the slots that are not Closed, in player order (Human first).
+    private static int[] ColoursOf(SkirmishSettings settings) => settings.PlayerSlots.Select(i => settings.Slots[i].Colour).ToArray();
 
     /// <inheritdoc />
     public void Exit()

@@ -40,9 +40,7 @@ public sealed class MainMenuScreen : IScreen
             e.Enabled ? () => Activate(e.Action) : null)).ToArray());
     }
 
-    /// <summary>The model's entries with Map Editor switched on (M4-13; <see cref="MainMenuModel"/> still lists it as not built).</summary>
-    private static IReadOnlyList<MainMenuEntry> Entries(bool hasSave) =>
-        MainMenuModel.Build(hasSave).Select(e => e.Action == MenuAction.MapEditor ? e with { Enabled = true, Tooltip = null } : e).ToArray();
+    private static IReadOnlyList<MainMenuEntry> Entries(bool hasSave) => MainMenuModel.Build(hasSave);
 
     /// <inheritdoc />
     public bool BlocksUpdateBelow => true;
@@ -126,7 +124,7 @@ public sealed class MainMenuScreen : IScreen
             case MenuAction.Continue: Continue(); break;
             case MenuAction.Campaign: _s.Screens.Push(new ModeScreen(_s, SaveKind.Campaign)); break;
             case MenuAction.Skirmish: _s.Screens.Push(new ModeScreen(_s, SaveKind.Skirmish)); break;
-            case MenuAction.MapEditor: _s.Screens.Push(new Editor.MapEditorScreen(_s)); break;
+            case MenuAction.MapEditor: _s.Screens.Push(new Editor.MapEditorScreen(_s, path => _s.Screens.Push(new SkirmishSetupScreen(_s, new MapChoice(path, null))))); break;
             case MenuAction.Replays: _s.Screens.Push(LoadGameScreen.CreateReplays(_s)); break;
             case MenuAction.Archive: _s.Screens.Push(new ArchiveScreen(_s)); break;
             case MenuAction.HowToPlay: _s.Screens.Push(new HowToPlayScreen(_s)); break;

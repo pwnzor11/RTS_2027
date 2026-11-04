@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
 using Rts.Data;
+using Rts.Game.Sandbox;
 using Rts.Game.Saves;
 using Rts.Scripting;
 using Rts.Sim;
@@ -27,16 +28,17 @@ public static class ReplayPlaybackLoader
         {
             throw new SaveLoadException("The replay could not be read: " + e.Message, e);
         }
-        return Open(data, rulesDir);
+        return Open(data, rulesDir, path);
     }
 
-    /// <summary>As <see cref="Open(string, string)"/>, from a parsed replay.</summary>
-    public static ReplayPlayback Open(ReplayData data, string rulesDir)
+    /// <summary>As <see cref="Open(string, string)"/>, from a parsed replay. <paramref name="replayPath"/> (when known) lets the map saved
+    /// beside the replay (<c>&lt;replay&gt;.map.toml</c>) be found first.</summary>
+    public static ReplayPlayback Open(ReplayData data, string rulesDir, string? replayPath = null)
     {
         string dataDir = Path.GetFullPath(Path.Combine(rulesDir, ".."));
         try
         {
-            return data.Mission is not null ? OpenMission(data, rulesDir, dataDir) : OpenPlain(data, rulesDir, dataDir);
+            return data.Mission is not null ? OpenMission(data, rulesDir, dataDir) : OpenPlain(data, rulesDir, dataDir, replayPath);
         }
         catch (RulesException e)
         {
@@ -48,13 +50,13 @@ public static class ReplayPlaybackLoader
         }
     }
 
-    private static ReplayPlayback OpenPlain(ReplayData data, string rulesDir, string dataDir)
+    private static ReplayPlayback OpenPlain(ReplayData data, string rulesDir, string dataDir, string? replayPath)
     {
         // The rules the replay was recorded with travel in its header; older files without them use the current rules.
         RuleSet rules = data.RulesFiles.Count > 0 ? RulesBundle.Load(data.RulesFiles) : RulesLoader.Load(rulesDir);
         if (rules.RulesHash != data.RulesHash)
             throw new SaveLoadException(GameLoader.RulesMismatchMessage(data.RulesHash, rules.RulesHash, "replay"));
-        MapData map = FindMap(data, dataDir);
+        MapData map = FindMap(data, dataDir, replayPath);
         SimSetup setup = data.Header.ToSetup(map, rules.Sim, rules.RulesHash);
         return new ReplayPlayback(new Simulation(setup), data);
     }
@@ -79,9 +81,27 @@ public static class ReplayPlaybackLoader
         return new ReplayPlayback(new Simulation(setup), data, host.PlaceInitialActors, host);
     }
 
-    // The map is not named in a replay, only hashed: try the map files, then the generated map of the replay's seed.
-    private static MapData FindMap(ReplayData data, string dataDir)
+    // The map is not named in a replay, only hashed: try the map saved beside the replay, then the map files, then the generated map of the
+    // replay's seed.
+    private static MapData FindMap(ReplayData data, string dataDir, string? replayPath = null)
     {
+        if (replayPath is not null)
+        {
+            string beside = SkirmishGame.MapBesideReplay(replayPath);
+            if (File.Exists(beside))
+            {
+                try
+                {
+                    MapData candidate = MapFile.Load(beside);
+                    if (MapHasher.Compute(candidate) == data.MapHash) return candidate;
+                }
+                catch (Exception e) when (e is InvalidDataException or IOException or MapFileException)
+                {
+                    // A damaged or stale map beside the replay is not the one.
+                }
+            }
+        }
+
         string mapsDir = Path.Combine(dataDir, "maps");
         if (Directory.Exists(mapsDir))
         {

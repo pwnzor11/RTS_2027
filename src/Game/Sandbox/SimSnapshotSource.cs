@@ -56,6 +56,7 @@ public sealed class SimSnapshotSource : ISnapshotSource
     private readonly SimHost _host;
     private readonly string? _verifyCommand = VerifyCommand;
     private readonly MapData _map;
+    private readonly SkirmishGame? _game;   // set for a menu skirmish: its map is saved beside the replay
     private readonly ReplayRecording? _recording;   // null only if it could not be opened
     private readonly Stopwatch _clock = Stopwatch.StartNew(); // only for the ISnapshotSource.Update() convenience
     private long _lastUs;
@@ -96,15 +97,35 @@ public sealed class SimSnapshotSource : ISnapshotSource
     /// </summary>
     /// <param name="game">The skirmish to host.</param>
     /// <param name="rulesDir">The data/rules directory (its files go into the replay header).</param>
-    public SimSnapshotSource(SkirmishGame game, string rulesDir)
+    /// <param name="replayPath">Where to record (tests); null = <see cref="SkirmishReplayPath"/>. The previous file is kept beside it as <c>.prev</c>.</param>
+    public SimSnapshotSource(SkirmishGame game, string rulesDir, string? replayPath = null)
     {
+        string last = replayPath ?? SkirmishReplayPath;
+        string previous = replayPath is null ? SkirmishPreviousReplayPath : replayPath + ".prev";
         _map = game.Map;
-        _recording = new ReplayRecording(game.Sim, RulesBundle.ReadDirectory(rulesDir), SkirmishReplayPath, SkirmishPreviousReplayPath);
+        _game = game;
+        KeepPreviousBesideMap(last, previous);
+        _recording = new ReplayRecording(game.Sim, RulesBundle.ReadDirectory(rulesDir), last, previous);
         _host = new SimHost(game.Sim, _recording) { Ai = game.Ai };
+        // A generated or user map is saved beside the replay when it is finished (SaveReplay), and the check names that copy.
         _verifyCommand = game.Curated
-            ? $"dotnet run --project src/Tools -- replay verify {SkirmishReplayPath} --map data/maps/{SkirmishGame.CuratedMapFile}"
-            : null;
+            ? $"dotnet run --project src/Tools -- replay verify {last} --map data/maps/{SkirmishGame.CuratedMapFile}"
+            : $"dotnet run --project src/Tools -- replay verify {last} --map {SkirmishGame.MapBesideReplay(last)}";
         _host.RefreshSnapshots();
+    }
+
+    // The last skirmish replay becomes the previous one, so its beside-map moves with it.
+    private static void KeepPreviousBesideMap(string lastReplay, string previousReplay)
+    {
+        try
+        {
+            string last = Path.GetFullPath(SkirmishGame.MapBesideReplay(lastReplay));
+            if (File.Exists(last)) File.Move(last, Path.GetFullPath(SkirmishGame.MapBesideReplay(previousReplay)), overwrite: true);
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        {
+            // A stale map beside a replay is ignored when its hash does not match.
+        }
     }
 
     /// <summary>
@@ -137,6 +158,9 @@ public sealed class SimSnapshotSource : ISnapshotSource
         SaveTemplate = loaded.Header;
         _host.RefreshSnapshots();
     }
+
+    /// <summary>The menu skirmish this source wraps, or null for the sandbox, a mission or a loaded game.</summary>
+    public SkirmishGame? Game => _game;
 
     /// <summary>The fixed part of this game's save header, or null when the game cannot be saved (the sandbox).</summary>
     public GameSaveHeader? SaveTemplate { get; set; }
@@ -309,6 +333,15 @@ public sealed class SimSnapshotSource : ISnapshotSource
     {
         if (_recording is null) return false;
         bool ok = _recording.Finish();
+        if (ok && _game is not null)
+        {
+            // M4-INT2: a replay of a generated or user map needs that map to be checked or watched.
+            try { _game.SaveMapBeside(_recording.FilePath); }
+            catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+            {
+                Console.Error.WriteLine($"error: map not saved beside the replay: {e.Message}");
+            }
+        }
         if (ok && _verifyCommand is not null) Console.WriteLine($"verify with: {_verifyCommand}");
         return ok;
     }

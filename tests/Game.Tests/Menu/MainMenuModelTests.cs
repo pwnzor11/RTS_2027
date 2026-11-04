@@ -32,23 +32,32 @@ public sealed class MainMenuModelTests
         Assert.Null(some.Tooltip);
     }
 
-    [Theory]
-    [InlineData(MenuAction.LanGame)]
-    [InlineData(MenuAction.MapEditor)]
-    public void Lan_and_map_editor_are_disabled_with_the_coming_later_tooltip(MenuAction action)
+    [Fact]
+    public void Lan_is_disabled_with_the_coming_later_tooltip()
     {
         foreach (bool hasSave in new[] { false, true })
         {
-            MainMenuEntry entry = MainMenuModel.Build(hasSave).Single(e => e.Action == action);
+            MainMenuEntry entry = MainMenuModel.Build(hasSave).Single(e => e.Action == MenuAction.LanGame);
             Assert.False(entry.Enabled);
             Assert.Equal("Coming in a later update", entry.Tooltip);
         }
     }
 
     [Fact]
+    public void Map_editor_is_enabled_without_a_tooltip()
+    {
+        foreach (bool hasSave in new[] { false, true })
+        {
+            MainMenuEntry entry = MainMenuModel.Build(hasSave).Single(e => e.Action == MenuAction.MapEditor);
+            Assert.True(entry.Enabled);
+            Assert.Null(entry.Tooltip);
+        }
+    }
+
+    [Fact]
     public void Every_other_entry_is_enabled()
     {
-        var alwaysOff = new[] { MenuAction.Continue, MenuAction.LanGame, MenuAction.MapEditor };
+        var alwaysOff = new[] { MenuAction.Continue, MenuAction.LanGame };
         foreach (MainMenuEntry e in MainMenuModel.Build(true).Where(e => !alwaysOff.Contains(e.Action)))
             Assert.True(e.Enabled, e.Label);
         Assert.True(MainMenuModel.Build(true)[0].Enabled);

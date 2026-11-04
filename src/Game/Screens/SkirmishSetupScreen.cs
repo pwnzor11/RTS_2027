@@ -41,15 +41,68 @@ public sealed class SkirmishSetupScreen : IScreen
     {
     }
 
+    /// <summary>Creates the screen with <paramref name="preselect"/> chosen as the map (M4-INT2: the editor's "Play this map"). A map file
+    /// that is not in the list is added to it; generator parameters set the Generated entry's biome, size and seed.</summary>
+    public SkirmishSetupScreen(GameServices services, MapChoice preselect) : this(services, MapPicker.List(services.RulesDir), preselect)
+    {
+    }
+
     /// <summary>Creates the screen over a given map list (tests).</summary>
-    public SkirmishSetupScreen(GameServices services, IReadOnlyList<MapEntry> maps)
+    public SkirmishSetupScreen(GameServices services, IReadOnlyList<MapEntry> maps, MapChoice? preselect = null)
     {
         _s = services;
-        _maps = maps;
+        _maps = preselect is null ? maps : PreselectMap(services.RulesDir, maps, preselect, out _mapIndex);
+        if (preselect?.Generated is { } g)
+        {
+            _biome = g.Biome;
+            _size = g.Size;
+            _seed = g.Seed;
+        }
         _tierNames = LoadTierNames(services.RulesDir);
         _slots = new List<SkirmishSlot>(SkirmishSettings.Default.Slots);
         _panel = BuildPanel();
     }
+
+    /// <summary>The map list with <paramref name="choice"/> selected: its index in <paramref name="index"/>, and the list with the map added
+    /// when it is a file that was not in it (an editor map saved outside the user folder).</summary>
+    public static IReadOnlyList<MapEntry> PreselectMap(string rulesDir, IReadOnlyList<MapEntry> maps, MapChoice choice, out int index)
+    {
+        if (choice.Generated is not null)
+        {
+            index = Math.Max(0, maps.ToList().FindIndex(m => m.IsGenerated));
+            return maps;
+        }
+
+        string? file = choice.File;
+        for (int i = 0; i < maps.Count; i++)
+        {
+            if (maps[i].File is { } f && file is not null && SameFile(rulesDir, f, file))
+            {
+                index = i;
+                return maps;
+            }
+        }
+
+        index = 0;
+        if (file is null) return maps;
+        try
+        {
+            (Rts.Sim.Map.MapData map, MapMeta meta) = MapFile.LoadWithMeta(MapPicker.ResolveFile(rulesDir, file));
+            int max = meta.MaxPlayers > 0 ? Math.Min(meta.MaxPlayers, map.StartPositions.Count) : map.StartPositions.Count;
+            var list = new List<MapEntry>(maps);
+            int at = Math.Max(0, list.FindIndex(m => m.IsGenerated));
+            list.Insert(at, new MapEntry($"{map.Name} {map.Width}x{map.Height}, {max} players (yours)", file, User: true, max));
+            index = at;
+            return list;
+        }
+        catch (MapFileException)
+        {
+            return maps;
+        }
+    }
+
+    private static bool SameFile(string rulesDir, string a, string b) =>
+        string.Equals(Path.GetFullPath(MapPicker.ResolveFile(rulesDir, a)), Path.GetFullPath(MapPicker.ResolveFile(rulesDir, b)), StringComparison.Ordinal);
 
     /// <summary>The choices as they stand now.</summary>
     public SkirmishSettings Current
