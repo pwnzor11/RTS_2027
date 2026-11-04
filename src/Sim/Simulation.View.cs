@@ -93,6 +93,20 @@ public sealed partial class Simulation
         return any;
     }
 
+    /// <summary>M3-INT: a vision value (0/1/2) as the viewer's team may use it: a visible cell (2) inside a Blackout cloud drops to
+    /// fog (1) unless <see cref="CanSeeThroughBlackout"/> applies. Matches <see cref="IsVisibleTo"/>.</summary>
+    internal byte WithBlackout(byte viewer, CellCoord cell, byte value) =>
+        value == 2 && _ground.BlackoutAt(cell) != 0 && !CanSeeThroughBlackout(viewer, cell) ? (byte)1 : value;
+
+    /// <summary>M3-INT: apply <see cref="WithBlackout"/> to a whole row-major vision grid (only cells under a cloud are examined).</summary>
+    internal void ApplyBlackoutToGrid(byte viewer, byte[] grid)
+    {
+        int[] b = _ground.Blackout;
+        int w = Setup.Map.Width;
+        for (int i = 0; i < b.Length && i < grid.Length; i++)
+            if (b[i] != 0 && grid[i] == 2) grid[i] = WithBlackout(viewer, new CellCoord(i % w, i / w), 2);
+    }
+
     /// <summary>True if the player could Place this structure at <paramref name="topLeft"/> now: the terrain/occupancy rules of
     /// <see cref="CanPlace"/> AND the D-062 build radius. Used by <see cref="PlayerView.CanPlace"/> so an AI never duplicates the rules.</summary>
     internal bool CanPlaceInRadius(byte player, int buildingType, CellCoord topLeft)

@@ -199,6 +199,7 @@ public sealed partial class Simulation
     private void CaptureBuilding(int b, byte newOwner)
     {
         _buildings.Player[b] = newOwner;
+        _emittersDirty = true;   // M3-INT
         _combat.At(ActorKind.Building, b) = new Combat.CombatEntry { Generation = _buildings.Slots.GenerationOf(b) };
         _production.RepairGen[b] = 0; _production.RepairFrac[b] = 0;
         for (int p = 0; p < _players.Count; p++) _vision.ForgetBuilding((byte)p, b);   // no stale ghost of the old owner's building

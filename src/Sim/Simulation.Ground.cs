@@ -184,8 +184,59 @@ public sealed partial class Simulation
             : r.Buildings[_buildings.TypeIndex[i]].JamRadius;
     }
 
+    // M3-INT: IsSeismicRevealed / IsJammedFor used to scan every actor per call. They now walk only the "emitters" (actors whose
+    // type has a seismic or jam radius). The list is lazy scratch (not hashed, not saved): it only ever grows between rebuilds,
+    // and each query still re-reads liveness, owner, radius and position, so results are identical to a full scan.
+    // _emittersDirty is raised wherever an actor is added, changes type or changes owner (and on load).
+    private readonly List<(ActorKind Kind, int Index)> _emitters = new();
+    private bool _emittersDirty = true;
+
+    /// <summary>Test hook: when false, <see cref="IsSeismicRevealed"/> and <see cref="IsJammedFor"/> scan every actor (the old behaviour).</summary>
+    internal bool UseEmitterCache { get; set; } = true;
+
+    private void RefreshEmitters()
+    {
+        if (!_emittersDirty) return;
+        _emitters.Clear();
+        for (int k = 0; k < LiveKinds; k++)
+        {
+            var kind = (ActorKind)k;
+            SlotArray slots = SlotsOf(kind);
+            for (int i = 1; i < slots.Capacity; i++)
+                if (slots.IsIndexAlive(i) && (SeismicRadiusOf(kind, i) > 0 || JamRadiusOf(kind, i) > 0)) _emitters.Add((kind, i));
+        }
+        _emittersDirty = false;
+    }
+
     /// <summary>True if a Seismograph of the viewer's team reveals burrowed units and telegraphs on <paramref name="cell"/>.</summary>
     internal bool IsSeismicRevealed(byte viewer, CellCoord cell)
+    {
+        if (!UseEmitterCache) return IsSeismicRevealedScan(viewer, cell);
+        RefreshEmitters();
+        foreach ((ActorKind kind, int i) in _emitters)
+        {
+            if (!SlotsOf(kind).IsIndexAlive(i) || !IsFriendly(viewer, PlayerAt(kind, i))) continue;
+            int rad = SeismicRadiusOf(kind, i);
+            if (rad > 0 && LeptonMath.ChebyshevCells(cell, VisionCellOf(kind, i)) <= rad) return true;
+        }
+        return false;
+    }
+
+    /// <summary>True if <paramref name="cell"/> is inside an enemy jam radius for <paramref name="viewer"/> (minimap only).</summary>
+    internal bool IsJammedFor(byte viewer, CellCoord cell)
+    {
+        if (!UseEmitterCache) return IsJammedForScan(viewer, cell);
+        RefreshEmitters();
+        foreach ((ActorKind kind, int i) in _emitters)
+        {
+            if (!SlotsOf(kind).IsIndexAlive(i) || RelationOf(viewer, PlayerAt(kind, i)) != Relation.Enemy) continue;
+            int rad = JamRadiusOf(kind, i);
+            if (rad > 0 && LeptonMath.ChebyshevCells(cell, VisionCellOf(kind, i)) <= rad) return true;
+        }
+        return false;
+    }
+
+    private bool IsSeismicRevealedScan(byte viewer, CellCoord cell)
     {
         for (int k = 0; k < LiveKinds; k++)
         {
@@ -201,8 +252,7 @@ public sealed partial class Simulation
         return false;
     }
 
-    /// <summary>True if <paramref name="cell"/> is inside an enemy jam radius for <paramref name="viewer"/> (minimap only).</summary>
-    internal bool IsJammedFor(byte viewer, CellCoord cell)
+    private bool IsJammedForScan(byte viewer, CellCoord cell)
     {
         for (int k = 0; k < LiveKinds; k++)
         {

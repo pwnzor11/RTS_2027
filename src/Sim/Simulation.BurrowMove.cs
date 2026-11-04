@@ -335,6 +335,7 @@ public sealed partial class Simulation
                 _map.SetBuilding(new CellCoord(topLeft.X + x, topLeft.Y + y), id);
         _production.RepairGen[id.Index] = 0; _production.RepairFrac[id.Index] = 0;
         OnM3BuildingPlaced(id.Index);
+        _emittersDirty = true;   // M3-INT
         return id;
     }
 

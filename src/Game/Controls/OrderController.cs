@@ -13,7 +13,8 @@ namespace Rts.Game.Controls;
 /// <see cref="SimSnapshotSource.Order"/>, the same path a script uses. Keys: A arms attack-move (the next right-click
 /// on the ground is an attack-move; A again disarms), S stops, G guards at each unit's own cell, X scatters, D deploys (M3: a
 /// land-train or a transport at once; a Bore after D then a right-click on the cell to dig at).
-/// Right-click: an enemy under the cursor is an Attack, an own transport (for infantry) or own tunnel entrance (for units that fit
+/// Right-click: an enemy under the cursor is an Attack (an Engineer on an enemy or neutral building Enters to capture it, and on an own
+/// damaged building Enters to repair it), an own transport (for infantry) or own tunnel entrance (for units that fit
 /// it) is an Enter, the ground is a Move (or an attack-move when armed).
 /// </summary>
 public sealed class OrderController
@@ -83,7 +84,11 @@ public sealed class OrderController
             : null;
         foreach (UnitKey unit in _selection.Units.ToList())
         {
-            if (enemy is ActorRef target)
+            if (enemy is { Kind: ActorKind.Building } building && EngineerOrderOn(unit, building, ownBuilding: false) != EngineerOrder.None)
+            {
+                _source.Order(CommandKind.Enter, unit, default, building);   // M3-INT: an Engineer captures instead of attacking
+            }
+            else if (enemy is ActorRef target)
             {
                 _source.Order(CommandKind.Attack, unit, default, target);
             }
@@ -102,12 +107,25 @@ public sealed class OrderController
     private bool CanEnter(UnitKey unit, (ActorRef Target, int TypeIndex) target)
     {
         if (!_source.TryGetTypeIndex(unit, out int type)) return false;
+        if (target.Target.Kind == ActorKind.Building && EngineerOrderOn(unit, target.Target, ownBuilding: true) == EngineerOrder.Repair) return true;   // M3-INT
         return target.Target.Kind switch
         {
             ActorKind.Vehicle => M3Orders.CanBoard(_source.Rules, unit.Kind, target.TypeIndex),
             ActorKind.Building => M3Orders.CanEnterTunnel(_source.Rules, unit.Kind, type, target.TypeIndex),
             _ => false,
         };
+    }
+
+    // M3-INT: Engineer on a building: capture (not ours) or repair (ours, damaged). Health is read from the snapshot.
+    private EngineerOrder EngineerOrderOn(UnitKey unit, ActorRef building, bool ownBuilding)
+    {
+        if (!_source.TryGetTypeIndex(unit, out int type)) return EngineerOrder.None;
+        foreach (BuildingView view in _source.Current.Buildings)
+        {
+            if (view.Id == building.Id)
+                return M3Orders.EngineerOrderOn(_source.Rules, unit.Kind, type, ownBuilding, view.TypeIndex, view.Health);
+        }
+        return EngineerOrder.None;
     }
 
     // D: units that deploy or unload where they stand do it now; one that digs at a chosen cell arms the next right-click.

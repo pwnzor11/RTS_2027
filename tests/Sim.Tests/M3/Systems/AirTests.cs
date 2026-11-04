@@ -2,6 +2,7 @@
 // Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
 using Rts.Sim.Core;
 using Rts.Sim.Map;
+using Rts.Sim.World;
 using static Rts.Sim.Tests.M3.Systems.SystemsFixture;
 
 namespace Rts.Sim.Tests.M3.Systems;
@@ -45,5 +46,17 @@ public sealed class AirTests
         int x0 = sim.Units.Position[air.Index].X;
         Run(sim, 10);
         Assert.Equal(x0 + 10 * 20, sim.Units.Position[air.Index].X);   // 20 leptons per tick
+    }
+
+    [Fact]
+    public void CanPlace_IgnoresAirUnitsOverTheFootprint_ButNotGroundUnits()
+    {
+        Simulation sim = NewSim();
+        var cell = new CellCoord(12, 10);
+        Assert.Equal(PlacementResult.Ok, sim.CanPlace(0, Hq, cell));
+        sim.SpawnVehicle(1, Air, new CellCoord(12, 10));
+        Assert.Equal(PlacementResult.Ok, sim.CanPlace(0, Hq, cell));
+        sim.SpawnVehicle(1, Grunt, new CellCoord(12, 10));
+        Assert.Equal(PlacementResult.Blocked, sim.CanPlace(0, Hq, cell));
     }
 }
