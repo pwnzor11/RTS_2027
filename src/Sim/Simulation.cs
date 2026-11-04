@@ -732,6 +732,7 @@ public sealed partial class Simulation
                         store.Position[i], store.Facing[i], store.Health[i])
                     {
                         Underground = IsUnderground(kind, i), Stealthed = IsStealthedNow(kind, i),
+                        TurretFacing = TurretFacingOf(kind, i), Diving = IsDiving(kind, i),   // M3-21
                     });
         }
         ulong hash = _recentHashes.Count > 0 ? _recentHashes[^1].Hash : 0UL;
@@ -746,6 +747,7 @@ public sealed partial class Simulation
                     _buildings.Cell[i], bt.FootprintW, bt.FootprintH, _buildings.Health[i], false)
                 {
                     Occupants = bt.Garrison > 0 ? OccupantsIn(_buildings.Slots.IdOf(i)) : 0,   // M4: listed only when known (own/allied or visible now)
+                    GateOpen = bt.Gate && IsGateOpenNow(i, viewer),   // M3-21
                 });
             }
         FxEvent[] fx = FxFor(viewer);
@@ -755,7 +757,7 @@ public sealed partial class Simulation
         IReadOnlyList<byte> ground = FillGroundLayers(viewer, groundLayers) ? groundLayers : Array.Empty<byte>();
         if (viewer < 0)
             return new SimSnapshot(Tick, Setup.Map.Width, Setup.Map.Height, list, Setup.Map.Land, hash,
-                blist, -1, Array.Empty<byte>(), fx) { Telegraphs = telegraphs, Ground = ground };
+                blist, -1, Array.Empty<byte>(), fx) { Telegraphs = telegraphs, Ground = ground, Superweapons = SuperweaponsFor(viewer) };
         foreach ((int index, BuildingGhost g) in _vision.GhostsFor((byte)viewer))
         {
             if (FootprintVisible((byte)viewer, g.Cell, g.FootprintW, g.FootprintH)) continue; // live view already shown
@@ -768,7 +770,7 @@ public sealed partial class Simulation
         else _vision.FillVisionAny(team, vision);   // allies share vision and exploration
         ApplyBlackoutToGrid((byte)viewer, vision);   // M3-INT: Blackout cells are fog unless seen through
         return new SimSnapshot(Tick, Setup.Map.Width, Setup.Map.Height, list, Setup.Map.Land, hash,
-            blist, viewer, vision, fx) { Telegraphs = telegraphs, Ground = ground };
+            blist, viewer, vision, fx) { Telegraphs = telegraphs, Ground = ground, Superweapons = SuperweaponsFor(viewer) };
     }
 
     /// <summary>This tick's effects events (a copy), limited to cells the viewer can see when there is a viewer.</summary>
