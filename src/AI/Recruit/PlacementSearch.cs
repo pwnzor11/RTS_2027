@@ -40,7 +40,7 @@ internal sealed class PlacementSearch
         {
             BuildingType t = rules.Buildings[b.TypeIndex];
             _blocks.Add(new Rect(b.Cell.X, b.Cell.Y, b.Cell.X + t.FootprintW - 1, b.Cell.Y + t.FootprintH - 1));
-            if (HasLane(t)) AddLanes(t, b.Cell, _lanes, view.MapHeight);
+            if (HasLane(t)) AddLanes(t, b.Cell, _lanes);
         }
 
         int w = bt.FootprintW, h = bt.FootprintH;
@@ -54,16 +54,7 @@ internal sealed class PlacementSearch
                 long dx = x * 2L + w - cx2, dy = y * 2L + h - cy2;
                 _cands.Add((dx * dx + dy * dy, x, y));
             }
-        bool fx = k.Yard.X * 2 + 3 > view.MapWidth, fy = k.Yard.Y * 2 + 3 > view.MapHeight;
-        int mw = view.MapWidth, mh = view.MapHeight;
-        _cands.Sort((a, b) =>
-        {
-            if (a.Score != b.Score) return a.Score.CompareTo(b.Score);
-            int ay = fy ? mh - h - a.Y : a.Y, by = fy ? mh - h - b.Y : b.Y;
-            if (ay != by) return ay.CompareTo(by);
-            int ax = fx ? mw - w - a.X : a.X, bx = fx ? mw - w - b.X : b.X;
-            return ax.CompareTo(bx);
-        });
+        _cands.Sort(static (a, b) => a.Score != b.Score ? a.Score.CompareTo(b.Score) : a.Y != b.Y ? a.Y.CompareTo(b.Y) : a.X.CompareTo(b.X));
 
         for (int tier = 0; tier <= 2; tier++)
             foreach (var (_, x, y) in _cands)
@@ -81,16 +72,13 @@ internal sealed class PlacementSearch
 
     private static bool HasLane(BuildingType t) => t.Produces != null || t.Refinery;
 
-    private static void AddLanes(BuildingType t, CellCoord topLeft, List<Rect> into, int mapH)
+    private static void AddLanes(BuildingType t, CellCoord topLeft, List<Rect> into)
     {
-        bool up = topLeft.Y * 2 + t.FootprintH > mapH;
-        CellCoord e = up ? new CellCoord(t.FootprintW - 1 - t.Exit.X, t.FootprintH - 1 - t.Exit.Y) : t.Exit;
-        CellCoord d = up ? new CellCoord(t.FootprintW - 1 - t.Dock.X, t.FootprintH - 1 - t.Dock.Y) : t.Dock;
-        if (t.Produces != null) into.Add(LaneAt(topLeft.X + e.X, topLeft.Y + e.Y, up));
-        if (t.Refinery) into.Add(LaneAt(topLeft.X + d.X, topLeft.Y + d.Y, up));
+        if (t.Produces != null) into.Add(LaneAt(topLeft.X + t.Exit.X, topLeft.Y + t.Exit.Y));
+        if (t.Refinery) into.Add(LaneAt(topLeft.X + t.Dock.X, topLeft.Y + t.Dock.Y));
     }
 
-    private static Rect LaneAt(int x, int y, bool up) => up ? new(x - LaneHalfWidth, y - LaneDepth + 1, x + LaneHalfWidth, y) : new(x - LaneHalfWidth, y, x + LaneHalfWidth, y + LaneDepth - 1);
+    private static Rect LaneAt(int x, int y) => new(x - LaneHalfWidth, y, x + LaneHalfWidth, y + LaneDepth - 1);
 
     private bool GapOk(Rect foot)
     {
@@ -106,10 +94,10 @@ internal sealed class PlacementSearch
             if (foot.Intersects(lane)) return false;
         if (!HasLane(bt)) return true;
         var mine = new List<Rect>(2);
-        AddLanes(bt, new CellCoord(x, y), mine, view.MapHeight);
+        AddLanes(bt, new CellCoord(x, y), mine);
         foreach (Rect lane in mine)
         {
-            int ex = (lane.X0 + lane.X1) / 2, ey = y * 2 + bt.FootprintH > view.MapHeight ? lane.Y1 : lane.Y0;
+            int ex = (lane.X0 + lane.X1) / 2, ey = lane.Y0;
             if (!view.InMap(new CellCoord(ex, ey)) || !view.IsPassable(new CellCoord(ex, ey), Locomotion.Tracked)) return false;
             foreach (Rect b in _blocks)
                 if (lane.Intersects(b)) return false;
