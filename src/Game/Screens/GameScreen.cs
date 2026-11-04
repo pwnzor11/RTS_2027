@@ -247,6 +247,8 @@ public sealed class GameScreen : IScreen
         else _source.Update();
 
         _camera.Clamp(_source.Current.MapWidth, _source.Current.MapHeight, MapViewport());
+        Vector2 view = _camera.WorldFromScreen(new Point(MapViewport().Width / 2, MapViewport().Height / 2));   // M3-INT: positional audio
+        Audio.AudioListener.SetFromWorldPixels(view.X, view.Y, Camera.CellPx);
         UnitInterpolator.Build(_source.Current, _source.Previous, _source.Alpha, _renderUnits);
 
         if (_sim is { } live)
@@ -304,6 +306,7 @@ public sealed class GameScreen : IScreen
                 Vector2 b = _camera.WorldFromScreen(mouse);
                 _selection.Replace(Selection.Inside(_renderUnits, Vector2.Min(a, b), Vector2.Max(a, b), SimSnapshotSource.LocalPlayer));
                 ClearBuildingSelection();
+                if (_selection.Count > 0) Audio.AudioBootstrap.Director?.Notify(Audio.AudioEventKind.UnitSelect);   // M3-INT
             }
             else
             {
@@ -312,6 +315,7 @@ public sealed class GameScreen : IScreen
                 {
                     _selection.Replace(new[] { key });
                     ClearBuildingSelection();
+                    Audio.AudioBootstrap.Director?.Notify(Audio.AudioEventKind.UnitSelect);   // M3-INT
                 }
                 else
                 {

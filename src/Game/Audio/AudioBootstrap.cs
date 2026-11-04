@@ -13,6 +13,9 @@ namespace Rts.Game.Audio;
 /// </summary>
 public static class AudioBootstrap
 {
+    /// <summary>The director built by the last successful <see cref="Create"/>, or null (no audio device, or not created yet). Screens use it to <see cref="AudioDirector.Notify"/> UI sounds.</summary>
+    public static AudioDirector? Director { get; private set; }
+
     /// <summary>
     /// Creates the audio for <paramref name="game"/>. <paramref name="dataDir"/> is the data folder (holding audio/ and music/). Volumes
     /// come from <paramref name="settings"/>. Never throws.
@@ -32,12 +35,14 @@ public static class AudioBootstrap
             var rng = new Random();
             var director = new AudioDirector(bank, audio, rng, music: new MusicPlayer(audio, library, rng));
             game.Components.Add(new AudioComponent(game, director, screens));
+            Director = director;
             return audio;
         }
         catch (Exception e) when (e is IOException or InvalidDataException or InvalidOperationException or UnauthorizedAccessException
                                       or Microsoft.Xna.Framework.Audio.NoAudioHardwareException or DllNotFoundException)
         {
             Console.Error.WriteLine($"audio disabled: {e.Message}");
+            Director = null;
             return NullAudio.Instance;
         }
     }
