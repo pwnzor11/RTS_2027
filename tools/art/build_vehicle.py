@@ -165,9 +165,23 @@ def render(vid, mod, samples, states, facing_sel, preview):
     S = Ctx()
     S.CELL = CELL
 
+    S.pose = None   # optional (pivot, pitch_deg, dz): rigid pose applied to every primitive added while set (S.set_pose)
+
+    def set_pose(pitch=0.0, dz=0.0, pivot=(0.0, 0.0, 0.0)):
+        """Pitch the following primitives about the world X axis through pivot (+deg = nose down), then drop them by dz.
+        set_pose() with no args clears it.  Used for burrow 'dive' states; default pipeline behaviour is unchanged."""
+        S.pose = (pitch, dz, pivot) if (pitch or dz) else None
+
     def finish(o, name, m, nocast):
         for c in list(o.users_collection):
             c.objects.unlink(o)
+        if S.pose is not None:
+            from mathutils import Matrix
+            pitch, dz, pv = S.pose
+            pv = Vector(pv)
+            P = (Matrix.Translation((0, 0, -dz)) @ Matrix.Translation(pv) @ Matrix.Rotation(math.radians(-pitch), 4, "X")
+                 @ Matrix.Translation(-pv))
+            o.matrix_basis = P @ o.matrix_basis
         o.name = name
         sc.collection.objects.link(o)
         o.parent = rig
@@ -212,14 +226,43 @@ def render(vid, mod, samples, states, facing_sel, preview):
         bpy.ops.object.shade_smooth()
         return finish(o, name, m, nocast)
 
-    def cone(name, r1, r2, h, loc, m, verts=16):
+    def cone(name, r1, r2, h, loc, m, verts=16, rot=None):
         bpy.ops.mesh.primitive_cone_add(radius1=r1, radius2=r2, depth=h, vertices=verts)
         o = bpy.context.active_object
         o.location = loc
+        if rot is not None:      # degrees (XYZ euler); rot=(-90,0,0) points the r2 end along +Y, rot=(90,0,0) along -Y
+            o.rotation_euler = [math.radians(r_) for r_ in rot]
         bpy.ops.object.shade_smooth()
         return finish(o, name, m, False)
 
     S.box, S.cyl, S.sphere, S.cone = box, cyl, sphere, cone
+    S.set_pose = set_pose
+    S.clip = False
+
+    def clip_below_ground():
+        """Request that everything below z=0 is cut away (boolean) once the frame is built: burrow 'dive' states."""
+        S.clip = True
+
+    S.clip_below_ground = clip_below_ground
+
+    def apply_clip():
+        from mathutils import Vector as V
+        cut = bpy.data.objects.get("groundcut")
+        if cut is None:
+            bpy.ops.mesh.primitive_cube_add(size=1)
+            cut = bpy.context.active_object
+            cut.name = "groundcut"
+            cut.scale = (60, 60, 20)
+            cut.location = (0, 0, -10)
+            cut.hide_render = True
+            cut.hide_viewport = True
+        for o in objs:
+            zmin = min((o.matrix_basis @ V(c)).z for c in o.bound_box)
+            if zmin < 0.0:
+                bm = o.modifiers.new("clip", "BOOLEAN")
+                bm.operation = "DIFFERENCE"
+                bm.object = cut
+                bm.solver = "EXACT"
 
     def render_to(path):
         sc.render.filepath = path
@@ -236,7 +279,12 @@ def render(vid, mod, samples, states, facing_sel, preview):
             for o in objs:
                 bpy.data.objects.remove(o, do_unlink=True)
             objs.clear()
+            S.pose = None
+            S.clip = False
             mod.build(S, name, k, frames)
+            S.pose = None
+            if S.clip:
+                apply_clip()
             orig = {o: list(o.data.materials) for o in objs}
             for f in (facing_sel if facing_sel else range(facings)):
                 idx = first + f * frames + k
@@ -264,9 +312,15 @@ def render(vid, mod, samples, states, facing_sel, preview):
                 for o in objs:
                     o.visible_camera = False
                 sc.cycles.samples = max(8, samples // 2)
+                noshadow = name in getattr(mod, "NO_SHADOW_STATES", ())   # overlay layers (turret) cast no ground shadow
+                prev_vs = {o: o.visible_shadow for o in objs}
+                if noshadow:
+                    for o in objs:
+                        o.visible_shadow = False
                 render_to(os.path.join(out, f"shadow_{idx:02d}.png"))
                 for o in objs:
                     o.visible_camera = True
+                    o.visible_shadow = prev_vs[o]
             print(f"state {name} frame {k} done  t={time.time() - t0:.1f}s", flush=True)
     print(f"TOTAL_RENDER_SECONDS {time.time() - t0:.1f}")
 
@@ -300,7 +354,7 @@ def post(vid, mod):
     cv = mod.CANVAS
     n = sum(f * fr for _n, _f, f, fr, _t in layout(mod))
     cal = SP.calibrate(wd, n)
-    frames = [SP.frame_b(wd, f, cal, cv, cv) for f in range(n)]
+    frames = [SP.frame_b(wd, f, cal, cv, cv, getattr(mod, "PALETTE", None)) for f in range(n)]
     for f, im in enumerate(frames):
         a = np.asarray(im)
         if a[0, :, 3].any() or a[-1, :, 3].any() or a[:, 0, 3].any() or a[:, -1, 3].any():
