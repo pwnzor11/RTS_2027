@@ -738,7 +738,9 @@ public static class AiCommands
                 FileStream? replay = recordDir is null ? null
                     : File.Create(Path.Combine(recordDir, $"{a.Label}_vs_{b.Label}_seed{s}_g{g + 1}.rtsreplay".Replace(':', '-')));
                 AiGameResult r;
-                using (replay) r = AiMatchRunner.Play(map, w.Rules, w.RulesHash, (ulong)s, a, b, aInSlot0, ticks, replay,
+                // M4-16: each game of the pair gets its own game seed (same map), so the two games are independent samples
+                // rather than one mirrored game counted twice (docs/balance/m4_16_start_bias.md).
+                using (replay) r = AiMatchRunner.Play(map, w.Rules, w.RulesHash, (ulong)(s * 16 + g), a, b, aInSlot0, ticks, replay,
                     BuildInfo.Version, replay is null ? null : RulesBundle.ReadDirectory(w.RulesDir), swapSlots, start);
                 tally.Games++;
                 tally.Ticks += r.EndTick;
