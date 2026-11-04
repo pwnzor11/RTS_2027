@@ -380,7 +380,7 @@ public class TierCapabilityTests(ITestOutputHelper log)
         {
             CellCoord yard = r.Yard(0);
             r.SpawnHarvester(0, f, yard);
-            r.SpawnFoot(0, f, 8, new CellCoord(yard.X + 2, yard.Y + 5));
+            r.SpawnFoot(0, f, 14, new CellCoord(yard.X + 2, yard.Y + 5));   // M4-12: research waits for a 12-unit army
             r.Sim.Players.Cash[0] = 20000;
         });
         rig.Run(5000, () => rig.Ai.UpgradesOrdered >= 1);

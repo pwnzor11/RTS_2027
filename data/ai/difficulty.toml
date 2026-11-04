@@ -28,6 +28,13 @@
 #   use_upgrades            0/1: build the research structure and research upgrades
 #   adapt_build             0/1: extra production structures when cash piles up; defences when the enemy is armour-heavy
 #   harvester_target        1..6: harvesters wanted alive (used with replace_harvesters)
+# M4-12 (no new keys: the loader lives in src/Data; new behaviour rides on existing flags, constants marked (tune) in src/AI/Recruit):
+#   respond_to_attacks      also: defend a harvester under fire, fill the faction's Blockhouse / Redoubt and empty neutral ruins
+#                           near the base with idle infantry, grow the unit bags with tier-2/3 types, reinforce a wave on the
+#                           attack, end a stalled assault, stop stuck units
+#   replace_harvesters      also: the no-income rescue (cancel / sell spare structures for a harvester) and broke mode
+#   use_upgrades            also: tier climbing (tier-2 gate at 3 min, tier-3 gate at 7 min or a 12-unit army) and, at the
+#                           matching tier, the Airfield / Mooring (air) and the superweapon (superweapons)
 
 [recruit]
 tier = 1
@@ -78,6 +85,7 @@ scatter = 1
 enemy_aware_mix = 1
 two_pronged = 1
 counter_defences = 1
+use_upgrades = 1  # (tune) M4-12: tier climbing at tier-3 difficulty (design 08 §8)
 
 [elite]
 tier = 4
