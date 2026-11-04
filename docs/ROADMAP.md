@@ -97,15 +97,15 @@ AI on a Rust Belt map, a 10-minute game with real art for the Authority slice.
 
 ## M3 · Full skirmish
 Both factions, full tech tree, map editor, real AI with difficulty levels, audio. Plan: docs/design/05_m3_plan.md.
-- [ ] M3-01 Contracts: factions, schema v3, enums, state parts, payloads, view/HUD
-- [ ] M3-02 Tunnel network transit
-- [ ] M3-03 Burrow locomotion, surfacing telegraph, Bore/Hatch/Bore Head, land-train deploy
-- [ ] M3-04 Hardening (grouting), gates, team-aware pathing
-- [ ] M3-05 Radiation, decon, Blackout, Seismograph, Searchlight, stealth, jam
-- [ ] M3-06 Upgrades, auras, transports, air, death weapon, engineer
-- [ ] M3-07 Directorate + Authority-counter data
-- [ ] M3-08 Game: faction pick and new renderers
-- [ ] M3-09 Audio host, SFX generator, music player and brief
+- [x] M3-01 Contracts: factions, schema v3, enums, state parts, payloads, view/HUD
+- [x] M3-02 Tunnel network transit
+- [x] M3-03 Burrow locomotion, surfacing telegraph, Bore/Hatch/Bore Head, land-train deploy
+- [x] M3-04 Hardening (grouting), gates, team-aware pathing
+- [x] M3-05 Radiation, decon, Blackout, Seismograph, Searchlight, stealth, jam
+- [x] M3-06 Upgrades, auras, transports, air, death weapon, engineer
+- [x] M3-07 Directorate + Authority-counter data
+- [x] M3-08 Game: faction pick and new renderers
+- [x] M3-09 Audio host, SFX generator, music player and brief
 - [ ] M3-ART Art fan-out (Directorate 29 types, Authority 5, effects)
 - [ ] M3-10 Directorate AI
 - [ ] M3-11 AI tiers 2–5
