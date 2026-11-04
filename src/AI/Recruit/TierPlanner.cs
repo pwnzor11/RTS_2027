@@ -239,6 +239,9 @@ internal sealed class TierPlanner
     /// <summary>M4-12: army size that also brings the tier-3 gate forward (a rich side climbs early).</summary>
     public const int ArmyBeforeTier3 = 12;   // (tune)
 
+    /// <summary>M4-12: army size before the garrisonable defence is added to the build order.</summary>
+    public const int ArmyBeforeGarrison = 16;   // (tune)
+
     /// <summary>M4-12: an enemy aircraft has been seen (anti-air is then wanted).</summary>
     public bool SeenEnemyAir { get; private set; }
 
@@ -257,7 +260,7 @@ internal sealed class TierPlanner
         if (_p.UseUpgrades && _faction.Tier3GateId is string g3 && k.View.Tier >= 2
             && (tick >= Tier3GateTick || k.Army.Count >= ArmyBeforeTier3) && build.StepsOf(g3) < 1) build.Extend(g3);
         // M4-12: a garrisonable defence near the base (flag RespondToAttacks: tier 2+); the garrison manager fills it with idle infantry
-        if (_p.RespondToAttacks && _faction.GarrisonId is string gar && k.Army.Count >= 4 && build.StepsOf(gar) < 1) build.Extend(gar);
+        if (_p.RespondToAttacks && _faction.GarrisonId is string gar && k.Army.Count >= ArmyBeforeGarrison && build.StepsOf(gar) < 1) build.Extend(gar);
         // M4-12: anti-air once enemy aircraft were seen
         if (SeenEnemyAir && _faction.AntiAirId is string aa && build.StepsOf(aa) < 2) build.Extend(aa);
         bool lateOk = k.Army.Count >= ArmyBeforeLateTech;

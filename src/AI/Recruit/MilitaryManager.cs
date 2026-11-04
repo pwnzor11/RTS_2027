@@ -76,8 +76,6 @@ internal sealed class MilitaryManager
 
     /// <summary>M4-12: ticks between re-choosing the enemy player waves go for (design 08 §2: 30 s).</summary>
     public const int TargetReviewTicks = 600;   // (tune)
-    /// <summary>M4-12: idle units waiting at the rally that join a wave already on the attack (rolling reinforcement).</summary>
-    public const int ReinforceGroup = 4;   // (tune)
     /// <summary>M4-12: a wave in Assault that has not destroyed anything for this long is ended (its members then join the next one).</summary>
     public const int StaleAssaultTicks = 2400;   // (tune)
 
@@ -152,7 +150,7 @@ internal sealed class MilitaryManager
     /// <summary>M4-12: the enemy player waves go for (-1 while no enemy building is known).</summary>
     public int TargetPlayer => _targetPlayer;
 
-    /// <summary>M4-12: idle units sent after a wave already on the attack.</summary>
+    /// <summary>M4-12: fresh units that triggered a regroup (a new wave while the old one was still on the attack).</summary>
     public int Reinforcements { get; private set; }
 
     /// <summary>M4-12: waves ended because they stalled (nothing destroyed for <see cref="StaleAssaultTicks"/>).</summary>
@@ -274,7 +272,7 @@ internal sealed class MilitaryManager
                 _progressScore = int.MaxValue; _progressTick = tick;
             }
         }
-        else if (alive < Math.Max(2, _launchSize / 4) && !(Options.Respond && Reinforce(k, sink, rally, force: true)))
+        else if (alive < Math.Max(2, _launchSize / 4))
         {
             _phase = Phase.Gather;
             _roster.Clear();
@@ -289,7 +287,13 @@ internal sealed class MilitaryManager
             _prong = false;
             _lastWave = tick - _nextInterval;   // the timed trigger is due at once
         }
-        else if (Options.Respond && _phase == Phase.Assault) Reinforce(k, sink, rally, force: false);
+        else if (Options.Respond && _phase == Phase.Assault && Regroup(k))
+        {
+            // M4-12: enough fresh units wait at home for a full wave: end this one so the next launches with survivors and fresh units
+            _phase = Phase.Gather;
+            _roster.Clear(); _squadB.Clear();
+            _prong = false;
+        }
 
         if (_phase == Phase.Stage)
         {
@@ -335,26 +339,17 @@ internal sealed class MilitaryManager
     }
 
     /// <summary>
-    /// M4-12 (finishing games): idle units at the rally join the wave on the attack once there are <see cref="ReinforceGroup"/> of them
-    /// (or, with <paramref name="force"/>, any at all when the wave is about to fold). Without this a wave that kept a couple of survivors
-    /// alive at the enemy base held every later unit at home for the rest of the game. True when anyone joined.
+    /// M4-12 (finishing games): true when the idle units at home that are not in the wave reach the next wave's threshold. In M3 a wave
+    /// that kept a few survivors alive at the enemy base never ended, so every later unit waited at the rally for the rest of the game.
+    /// Ending the wave instead of trickling reinforcements in keeps the army massed (a trickle was fed to the defence piecemeal).
     /// </summary>
-    private bool Reinforce(RecruitKnowledge k, ICommandSink sink, CellCoord rally, bool force)
+    private bool Regroup(RecruitKnowledge k)
     {
-        if (_phase != Phase.Assault && !force) return false;
         int waiting = 0;
         foreach (ViewActor a in k.Army)
             if (a.Idle && !_roster.Contains(Key(a)) && !a.Underground) waiting++;
-        if (waiting == 0 || (!force && waiting < Math.Max(ReinforceGroup, _nextThreshold / 2))) return false;
-        if (force && waiting + RosterAlive(k) < Math.Max(2, _launchSize / 4)) return false;
-        foreach (ViewActor a in k.Army)
-        {
-            if (!a.Idle || _roster.Contains(Key(a)) || a.Underground) continue;
-            _roster.Add(Key(a));
-            _launchHealth += a.Health;
-            Reinforcements++;
-        }
-        if (_phase == Phase.Stage) _phase = Phase.Assault;
+        if (waiting < _nextThreshold) return false;
+        Reinforcements += waiting;
         return true;
     }
 

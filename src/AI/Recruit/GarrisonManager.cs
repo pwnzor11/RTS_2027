@@ -18,7 +18,7 @@ internal sealed class GarrisonManager
     /// <summary>Cells from the yard a garrisonable building may be to be filled.</summary>
     public const int RadiusCells = 14;   // (tune)
     /// <summary>Soldiers kept out of garrisons so the army still has a body.</summary>
-    public const int KeepInArmy = 4;   // (tune)
+    public const int KeepInArmy = 12;   // (tune) M4-12: garrisons are a mid-game use of spare infantry, not an opening
     /// <summary>Ticks an Enter order is remembered (a soldier walking in counts toward the building).</summary>
     public const int WalkTicks = 400;
     /// <summary>Most Enter orders per decision.</summary>

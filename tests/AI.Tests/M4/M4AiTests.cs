@@ -107,10 +107,11 @@ public class M4AiTests(ITestOutputHelper log)
     [Theory]
     [InlineData(Faction.Authority)]
     [InlineData(Faction.Directorate)]
-    public void EliteClimbsToTierThreeAndBuildsTierTypes(Faction f)
+    public void VeteranClimbsToTierThreeAndBuildsTierTypes(Faction f)
     {
         // a rich economy so the schedule, not the money, decides: the AI must build both gates and field tier-2/3 units
-        var rig = new TierRig(f, Tier(4) with { ActiveScouting = false, Harass = false, AttackThreshold = 500 }, r =>
+        Assert.True(Tier(3).UseUpgrades, "tier climbing is on at tier-3 difficulty");
+        var rig = new TierRig(f, Tier(3) with { AttackThreshold = 500 }, r =>
         {
             CellCoord yard = r.Yard(0);
             r.SpawnHarvester(0, f, yard);
@@ -129,9 +130,9 @@ public class M4AiTests(ITestOutputHelper log)
     }
 
     [Fact]
-    public void VeteranStaysAtTierOneWithoutTheUpgradeFlag()
+    public void RegularStaysAtTierOneWithoutTheUpgradeFlag()
     {
-        var rig = new TierRig(Faction.Authority, Tier(3) with { AttackThreshold = 500 }, r =>
+        var rig = new TierRig(Faction.Authority, Tier(2) with { AttackThreshold = 500 }, r =>
         {
             r.SpawnHarvester(0, Faction.Authority, r.Yard(0));
             r.Sim.Players.Cash[0] = 40000;
