@@ -16,7 +16,8 @@ CANVAS = 160
 TARGET = (0.0, 0.1, 1.2)
 STATES = [("idle", 16, 1, 1)]
 LAYERS = ["body", "turret"]
-PIVOT = (0.0, 0.95, 2.05)
+PIVOT = (0.0, 0.95, 2.07)     # = top of the mount collar (deck top is 2.02)
+MOUNT = dict(deck_z=2.02, r_lip=0.95, r_well=1.05, r_shadow=1.25, soft_r=1.3, lip="hull", well="dark")
 PALETTE = D.PALETTE
 MATERIALS = D.MATERIALS
 
@@ -70,6 +71,7 @@ def build(S, state, k, n):
     for i in range(7):
         box(f"finT{i}", (0.06, 0.4, 0.7), (-0.9 + i * 0.3, -2.1, 2.5), "steel", 0.0)
     # ---- turret (own layer): squat radiation cannon
+    S.mount(PIVOT, **MOUNT)
     S.begin("turret", PIVOT)
     px, py, pz = PIVOT
     cyl("tbase", 0.85, 0.4, (px, py, pz + 0.2), "hull2", "Z", 10)

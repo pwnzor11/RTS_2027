@@ -16,9 +16,9 @@ GROUND = (74, 66, 58)
 CELLPX, CELLW = 64, 3.4
 
 
-def manifest(name):
+def manifest(name, folder=VEH):
     d = {}
-    for ln in open(os.path.join(VEH, name + ".sprite.toml")):
+    for ln in open(os.path.join(folder, name + ".sprite.toml")):
         ln = ln.strip()
         if "=" in ln and not ln.startswith(("#", "[", "ramp")):
             k, v = [x.strip() for x in ln.split("=", 1)]
@@ -27,11 +27,11 @@ def manifest(name):
 
 
 class Sheet:
-    def __init__(self, name):
-        m = manifest(name)
+    def __init__(self, name, d=VEH):
+        m = manifest(name, d)
         self.fw, self.fh = int(m["frame_w"][0]), int(m["frame_h"][0])
         self.ox, self.oy = int(m["origin_x"][0]), int(m["origin_y"][0])
-        self.img = Image.open(os.path.join(VEH, name + ".png")).convert("RGBA")
+        self.img = Image.open(os.path.join(d, name + ".png")).convert("RGBA")
         self.cols = self.img.width // self.fw
         self.m = m
 
@@ -102,11 +102,31 @@ def main():
     cols = 8 if U.body.fw > 120 else 16
     layers = "body" + (" + turret layer" if U.turret else "") + (" + separate ground-shadow sheet" if U.shadow else "")
     blocks.append((f"{a.id}: all 16 facings at 1x, true size (frame 0 = N, clockwise), {U.body.fw} px frames; {layers}", grid(trim(fr, 1) if U.body.fw > 140 else fr, cols, 1)))
-    blocks.append((f"2x nearest close-up: facings {' | '.join(map(str, a.close))}", hcat([grid([fr[f]], 1, 2) for f in a.close], 8)))
     if U.turret:
         hf = 2
         blocks.append((f"TURRET traverse (hull facing {hf} fixed, turret facings 0,3,6,9,12,15 at 2x)",
                        hcat([grid([U.comp(hf, t)], 1, 2) for t in (0, 3, 6, 9, 12, 15)], 8)))
+    bdir = os.path.join(C.PILOT, "baked")
+    if U.turret and os.path.exists(os.path.join(bdir, a.id + "_baked.png")):
+        B = Sheet(a.id + "_baked", bdir)
+        cells, diffs = [], []
+        for hf in range(16):
+            ref_f = B.frame(hf)
+            if not ref_f.getchannel("A").getbbox():
+                continue
+            cp = U.comp(hf)
+            dm = (np.asarray(cp) != np.asarray(ref_f)).any(axis=2)
+            diffs.append((hf, int(dm.sum()), int((np.asarray(cp)[..., 3] > 0).sum())))
+            cells += [cp, ref_f]
+        tr = trim(cells)
+        pairs = [hcat([_zoom(tr[2 * i]), _zoom(tr[2 * i + 1])], 3) for i in range(len(diffs))]
+        rows = [hcat(pairs[i:i + 2], 14) for i in range(0, len(pairs), 2)]
+        blocks.append(("COMPOSITE vs BAKED at 2x, pairs = hull + turret layers at equal facings (left) | one-pass baked reference (right); differing pixels: "
+                       + "; ".join(f"facing {h}: {n} of {t} ({100.0 * n / t:.1f}%)" for h, n, t in diffs), vcat(rows, 4)))
+        print(a.id, "composite vs baked differing pixels:", [(h, n) for h, n, _t in diffs], "sprite px:", [t for _h, _n, t in diffs])
+        a.close = []
+    if a.close:
+        blocks.append((f"2x nearest close-up: facings {' | '.join(map(str, a.close))}", hcat([grid([fr[f]], 1, 2) for f in a.close], 8)))
     if U.shadow:
         sh = U.shadow.frame(2)
         blocks.append(("AIR layers at 2x, facing 2: shadow sheet alone | body sheet alone (floats above its origin) | composited | origin cross (red = ground origin)",
@@ -163,6 +183,13 @@ def main():
     path = a.out or os.path.join(C.PILOT, f"{a.id}_contact.png")
     out.save(path, optimize=True)
     print("wrote", path, out.size)
+
+
+def _zoom(fm, z=2):
+    im = Image.new("RGB", (fm.width * z, fm.height * z), GROUND)
+    big = fm.resize((fm.width * z, fm.height * z), Image.NEAREST)
+    im.paste(big, (0, 0), big)
+    return im
 
 
 def _cross(U, f):

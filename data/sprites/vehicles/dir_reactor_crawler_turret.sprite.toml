@@ -18,7 +18,7 @@ origin_y = 99
 layer = "turret"
 pivot_x = 0.0000
 pivot_y = 0.2794
-pivot_z = 0.6029
+pivot_z = 0.6088
 
 # House paint is the 8-shade magenta ramp, darkest first. Exact RGB matches are house pixels; alpha is always 0 or 255.
 [house]
