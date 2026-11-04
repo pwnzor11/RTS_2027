@@ -24,6 +24,7 @@ public sealed partial class Simulation
             Faction = _players.Faction[player],
             Upgrades = _players.Upgrades[player],
             BuildableUpgrades = BuildableUpgradeList(player),
+            Superweapons = SuperweaponViews(player),   // M3-13
         };
     }
 

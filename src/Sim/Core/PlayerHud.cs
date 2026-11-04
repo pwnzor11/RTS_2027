@@ -54,4 +54,7 @@ public sealed record PlayerHud(int Cash, int Stored, int StorageCap, int PowerOu
 
     /// <summary>M3: upgrade indices a Build(ProductionCategory.Upgrade, index) would be accepted for now (never null).</summary>
     public IReadOnlyList<int> BuildableUpgrades { get; init; } = Array.Empty<int>();
+
+    /// <summary>M3-13: the player's own superweapon buildings with their charge, in building slot order (never null).</summary>
+    public IReadOnlyList<SuperweaponView> Superweapons { get; init; } = Array.Empty<SuperweaponView>();
 }
