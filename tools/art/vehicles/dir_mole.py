@@ -6,11 +6,11 @@ States: idle (16 x 1) and dive (16 x 4).
 """
 import os, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import dir_common as D
+import dir_dig_common as D
 
 ID = "dir_mole"
 TITLE = "Directorate burrowing troop carrier (mole)"
-CANVAS = 120
+CANVAS = 128
 TARGET = (0.0, 0.3, 0.7)
 STATES = [("idle", 16, 1, 1), ("dive", 16, 4, 3)]
 PALETTE = D.PALETTE
@@ -32,7 +32,9 @@ def build(S, state, k, n):
     box("rearplate", (1.78, 0.1, 0.5), (0, -1.5, 0.82), "conc3", 0.03)
     # five small vision slits across the slope
     for i in range(5):
-        box(f"slit{i}", (0.22, 0.09, 0.09), ((i - 2) * 0.33, 1.3, 1.0), "glass", 0.0, rot=(-22, 0, 0))
+        sx = (i - 2) * 0.33
+        box(f"slitf{i}", (0.29, 0.12, 0.17), (sx, 1.28, 1.0), "bone", 0.0, rot=(-22, 0, 0))
+        box(f"slit{i}", (0.2, 0.14, 0.07), (sx, 1.31, 1.03), "dark", 0.0, rot=(-22, 0, 0))
     # flank panels + bone bands
     for s in (-1, 1):
         box(f"flank{s}", (0.06, 1.2, 0.34), (s * 0.9, -0.5, 0.86), "house", 0.0)
