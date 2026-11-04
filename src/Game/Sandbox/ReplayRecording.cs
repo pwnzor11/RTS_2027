@@ -22,8 +22,9 @@ public sealed class ReplayRecording : IDisposable
     private bool _finished;
 
     /// <summary>Starts recording <paramref name="sim"/> to <paramref name="path"/> (folders are created; an existing file is
-    /// moved to <paramref name="previousPath"/> first).</summary>
-    public ReplayRecording(Simulation sim, IReadOnlyList<(string Name, string Text)> rulesFiles, string path, string previousPath)
+    /// moved to <paramref name="previousPath"/> first). A mission game passes its <paramref name="mission"/> (id + script hash, M3-19).</summary>
+    public ReplayRecording(Simulation sim, IReadOnlyList<(string Name, string Text)> rulesFiles, string path, string previousPath,
+        ReplayMission? mission = null)
     {
         _path = Path.GetFullPath(path);
         try
@@ -32,7 +33,7 @@ public sealed class ReplayRecording : IDisposable
             if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
             if (File.Exists(_path)) File.Move(_path, Path.GetFullPath(previousPath), overwrite: true);
             _file = new FileStream(_path, FileMode.Create, FileAccess.Write, FileShare.Read);
-            _writer = new ReplayWriter(_file, sim, BuildInfo.Version, rulesFiles);
+            _writer = new ReplayWriter(_file, sim, BuildInfo.Version, rulesFiles, mission);
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException)
         {

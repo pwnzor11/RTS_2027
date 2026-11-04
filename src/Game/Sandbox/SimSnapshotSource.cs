@@ -3,6 +3,7 @@
 using System.Diagnostics;
 using Rts.Data;
 using Rts.Game.Host;
+using Rts.Scripting;
 using Rts.Sim;
 using Rts.Sim.Core;
 using Rts.Sim.Map;
@@ -45,10 +46,16 @@ public sealed class SimSnapshotSource : ISnapshotSource
     /// <summary>The previous skirmish's replay.</summary>
     public const string SkirmishPreviousReplayPath = "replays/skirmish_prev.rpl";
 
+    /// <summary>Where a campaign mission writes its replay.</summary>
+    public const string MissionReplayPath = "replays/mission_last.rpl";
+
+    /// <summary>The previous mission's replay.</summary>
+    public const string MissionPreviousReplayPath = "replays/mission_prev.rpl";
+
     private readonly SimHost _host;
     private readonly string? _verifyCommand = VerifyCommand;
     private readonly MapData _map;
-    private readonly ReplayRecording? _recording;   // null for a campaign mission (its script is not part of a replay yet)
+    private readonly ReplayRecording? _recording;   // null only if it could not be opened
     private readonly Stopwatch _clock = Stopwatch.StartNew(); // only for the ISnapshotSource.Update() convenience
     private long _lastUs;
 
@@ -100,15 +107,17 @@ public sealed class SimSnapshotSource : ISnapshotSource
     }
 
     /// <summary>
-    /// Wraps a campaign mission (<see cref="MissionGame"/>, M2-15): the AI joins the host's tick loop, nothing is recorded (a replay
-    /// cannot rebuild script-driven spawns yet), and the viewer is player 0.
+    /// Wraps a campaign mission (<see cref="MissionGame"/>, M2-15): the AI joins the host's tick loop, the session is recorded to
+    /// <see cref="MissionReplayPath"/> with the mission id and script hash (M3-19), and the viewer is player 0.
     /// </summary>
     /// <param name="game">The mission to host.</param>
     public SimSnapshotSource(MissionGame game)
     {
         _map = game.Map;
-        _verifyCommand = null;
-        _host = new SimHost(game.Sim) { Ai = game.Ai };
+        _recording = new ReplayRecording(game.Sim, RulesBundle.ReadDirectory(game.RulesDir), MissionReplayPath, MissionPreviousReplayPath,
+            MissionReplay.RefFor(game.Session));
+        _verifyCommand = $"dotnet run --project src/Tools -- replay play {MissionReplayPath}";
+        _host = new SimHost(game.Sim, _recording) { Ai = game.Ai };
         _host.RefreshSnapshots();
     }
 

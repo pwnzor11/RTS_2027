@@ -4,6 +4,7 @@
     <ProjectReference Include="..\Sim\Sim.csproj" />
     <ProjectReference Include="..\AI\AI.csproj" />
     <ProjectReference Include="..\Data\Data.csproj" />
+    <ProjectReference Include="..\Scripting\Scripting.csproj" />
   </ItemGroup>
 
   <!-- Game data beside the tool exe, so the CLI finds data/rules when run from a copied folder (C-1). -->
