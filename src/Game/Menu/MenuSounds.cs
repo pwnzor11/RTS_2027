@@ -5,9 +5,9 @@ using Rts.Game.Audio;
 namespace Rts.Game.Menu;
 
 /// <summary>
-/// Sound hooks for the menus. They play through <see cref="IAudio.PlaySfx(string)"/> with these ids. data/audio/sounds.toml has no
-/// interface sounds yet, and the audio backend ignores an id it does not know, so the calls are silent until the audio package adds
-/// them (nothing here needs to change then).
+/// Sound hooks for the menus. They play through <see cref="IAudio.PlaySfx(string)"/> with these ids, which data/audio/sounds.toml defines
+/// (M3-20, reusing existing sfx files). The menu screens play Move on selection change, Select on a chosen entry, Back on leaving
+/// and Deny on a greyed-out or empty entry.
 /// </summary>
 public static class MenuSounds
 {

@@ -140,6 +140,28 @@ file = "sfx/upgrade_complete.wav"
 volume = 1.0
 max_voices = 2
 
+# Menu / interface sounds (M3-20). They reuse existing generated sfx files at low volume; played by MenuSounds, not by a game event.
+# ASSUMED (M3-20): file choice and volumes are guesses made without listening.
+[sound.ui_move]
+file = "sfx/select_2.wav"
+volume = 0.35
+max_voices = 2
+
+[sound.ui_select]
+file = "sfx/select_1.wav"
+volume = 0.7
+max_voices = 2
+
+[sound.ui_back]
+file = "sfx/move_ack_2.wav"
+volume = 0.5
+max_voices = 2
+
+[sound.ui_deny]
+file = "sfx/low_funds.wav"
+volume = 0.5
+max_voices = 1
+
 [event.fire_bullet]
 sounds = ["fire_bullet_1", "fire_bullet_2"]
 volume = 0.8
