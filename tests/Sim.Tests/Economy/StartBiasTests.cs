@@ -190,6 +190,25 @@ public class StartBiasTests
         Assert.Equal(new CellCoord(W - 1 - a.X, W - 1 - a.Y), b);
     }
 
+    /// <summary>M4-16: a soldier spawned into a cell whose wanted sub-slot is taken gets the free sub-slot nearest the map centre (it
+    /// used to be the first free one, NW before SE), so point-mirrored spawns take point-mirrored corners.</summary>
+    [Fact]
+    public void CrowdedSpawns_TakeMirroredSubSlots()
+    {
+        var sim = NewSim(MapData.CreateFlat(W, W));
+        int rifle = SimRules.IndexOf(Loaded.Sim.Infantry!, "test_rifleman", t => t.Id);
+        var a = new CellCoord(6, 8);
+        var b = new CellCoord(W - 1 - a.X, W - 1 - a.Y);
+        var ids = new List<(EntityId A, EntityId B)>();
+        for (int k = 0; k < 4; k++) ids.Add((sim.SpawnInfantry(0, rifle, a), sim.SpawnInfantry(1, rifle, b)));
+        int wl = W * 256;
+        foreach (var (ia, ib) in ids)
+        {
+            LeptonCoord pa = sim.Infantry.Position[ia.Index], pb = sim.Infantry.Position[ib.Index];
+            Assert.True(pa.X == wl - pb.X && pa.Y == wl - pb.Y, $"{pa} and {pb} are not mirrored");
+        }
+    }
+
     private static int Near(Simulation sim, CellCoord s)
     {
         int sum = 0;
