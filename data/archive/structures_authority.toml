@@ -160,9 +160,9 @@ title = "Signals Headquarters"
 subtitle = "Tier 3 command and communications centre"
 field_note = "SIGNALS 1 // EVERY MESSAGE LOGGED, EVERY ENEMY MARKED. STOP."
 body = '''
-[DRAFT] A squat concrete building bristling with aerials, where the district's operators relay orders and listen to the wireless bands. It opens the Authority's third tier of equipment and pings the map whenever an enemy is spotted. Its research staff work three shifts.
+A squat concrete building bristling with aerials, where the district's operators relay orders and listen to the wireless bands. It opens the Authority's third tier of equipment and pings the map whenever an enemy is spotted. Its research staff work three shifts.
 '''
-# ASSUMED (M4-INT1) DRAFT for owner approval (D-086): text built from design 08 section 4; replace the open unlock with a mission id when known.
+# Approved by the owner 2026-11-04 (Q-38). Replace the open unlock with a mission id when known.
 unlock = "open"
 
 [[entry]]
@@ -173,9 +173,9 @@ title = "Blockhouse"
 subtitle = "Garrison strongpoint"
 field_note = "BLOCK 2 // FIVE RIFLES BEHIND THE SLITS. NO GUN OF ITS OWN. STOP."
 body = '''
-[DRAFT] A low concrete shell with firing slits and no weapon of its own. It does nothing until riflemen move in, and then it becomes the hardest thing in the street to dislodge. Garrison commanders say the walls do half the fighting.
+A low concrete shell with firing slits and no weapon of its own. It does nothing until riflemen move in, and then it becomes the hardest thing in the street to dislodge. Garrison commanders say the walls do half the fighting.
 '''
-# ASSUMED (M4-INT1) DRAFT for owner approval (D-086): text built from design 08 section 4; replace the open unlock with a mission id when known.
+# Approved by the owner 2026-11-04 (Q-38). Replace the open unlock with a mission id when known.
 unlock = "open"
 
 [[entry]]
@@ -186,9 +186,9 @@ title = "Flak Emplacement"
 subtitle = "Anti-air gun"
 field_note = "FLAK 3 // WATCH THE SKY. THE SKY IS WATCHING BACK. STOP."
 body = '''
-[DRAFT] A sandbagged ring around a quick-firing gun pointed at the sky. It exists because of the Directorate's dirigibles, which the Authority's ground guns could not touch. Crews are sworn to ignore the noise.
+A sandbagged ring around a quick-firing gun pointed at the sky. It exists because of the Directorate's dirigibles, which the Authority's ground guns could not touch. Crews are sworn to ignore the noise.
 '''
-# ASSUMED (M4-INT1) DRAFT for owner approval (D-086): text built from design 08 section 4; replace the open unlock with a mission id when known.
+# Approved by the owner 2026-11-04 (Q-38). Replace the open unlock with a mission id when known.
 unlock = "open"
 
 [[entry]]
@@ -199,9 +199,9 @@ title = "Airfield"
 subtitle = "Aircraft production"
 field_note = "FIELD 4 // STRIP CLEAR. HANGAR OPEN. NO LANDING WITHOUT A SIGNAL. STOP."
 body = '''
-[DRAFT] A long strip, a hangar and a fuel store that together build and launch the Authority's aircraft. It is a tier two investment and a visible one: nothing says reconstruction like a plane overhead. Mechanics keep the strip swept of ash by hand.
+A long strip, a hangar and a fuel store that together build and launch the Authority's aircraft. It is a tier two investment and a visible one: nothing says reconstruction like a plane overhead. Mechanics keep the strip swept of ash by hand.
 '''
-# ASSUMED (M4-INT1) DRAFT for owner approval (D-086): text built from design 08 section 4; replace the open unlock with a mission id when known.
+# Approved by the owner 2026-11-04 (Q-38). Replace the open unlock with a mission id when known.
 unlock = "open"
 
 [[entry]]
@@ -212,9 +212,9 @@ title = "Atomic Artillery Battery"
 subtitle = "Superweapon"
 field_note = "BATTERY 0 // KEY TURNED. THE GRID IS MARKED. WE DO NOT SPEAK OF THE REST. STOP."
 body = '''
-[DRAFT] A guarded battery of gun pits and a control bunker that fires a single atomic shell at a chosen grid once it has charged. The Authority built it as a deterrent and prays it never needs the real thing. The two-key rule was written in the same week the battery was commissioned.
+A guarded battery of gun pits and a control bunker that fires a single atomic shell at a chosen grid once it has charged. The Authority built it as a deterrent and prays it never needs the real thing. The two-key rule was written in the same week the battery was commissioned.
 '''
-# ASSUMED (M4-INT1) DRAFT for owner approval (D-086): text built from design 08 section 4; replace the open unlock with a mission id when known.
+# Approved by the owner 2026-11-04 (Q-38). Replace the open unlock with a mission id when known.
 unlock = "open"
 
 [[entry]]
@@ -225,9 +225,9 @@ title = "Ruined Tenement"
 subtitle = "Abandoned housing block"
 field_note = "SURVEY NOTE // SHELL OF A RESIDENTIAL BLOCK. STRUCTURALLY SOUND ON THE GROUND FLOOR. STOP."
 body = '''
-[DRAFT] A burnt-out apartment block from before the Exchange, its stairwells still standing. Whoever moves in first has a strongpoint, and either side can claim it with an engineer. Nobody remembers who lived there.
+A burnt-out apartment block from before the Exchange, its stairwells still standing. Whoever moves in first has a strongpoint, and either side can claim it with an engineer. Nobody remembers who lived there.
 '''
-# ASSUMED (M4-INT1) DRAFT for owner approval (D-086): text built from design 08 section 4; replace the open unlock with a mission id when known.
+# Approved by the owner 2026-11-04 (Q-38). Replace the open unlock with a mission id when known.
 unlock = "open"
 
 [[entry]]
@@ -238,7 +238,7 @@ title = "Ruined Depot"
 subtitle = "Abandoned storehouse"
 field_note = "SURVEY NOTE // SMALL BRICK DEPOT. ROOF GONE, WALLS STANDING. STOP."
 body = '''
-[DRAFT] A small brick depot whose roof fell in long ago but whose thick walls remain. A handful of soldiers can hold it, and it is worth a fight to whoever reaches it first.
+A small brick depot whose roof fell in long ago but whose thick walls remain. A handful of soldiers can hold it, and it is worth a fight to whoever reaches it first.
 '''
-# ASSUMED (M4-INT1) DRAFT for owner approval (D-086): text built from design 08 section 4; replace the open unlock with a mission id when known.
+# Approved by the owner 2026-11-04 (Q-38). Replace the open unlock with a mission id when known.
 unlock = "open"
