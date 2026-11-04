@@ -156,9 +156,9 @@ public sealed class AiSaveTests
     }
 
     [Fact]
-    public void A_header_with_AI_state_round_trips_and_the_save_version_is_3()
+    public void A_header_with_AI_state_round_trips_and_the_save_version_is_4()
     {
-        Assert.Equal(3, GameSaveHeader.CurrentVersion);
+        Assert.Equal(4, GameSaveHeader.CurrentVersion);
         using var t = new SaveTestSupport();
         (SimHost host, _) = t.NewSkirmish();
         var h = new GameSaveHeader

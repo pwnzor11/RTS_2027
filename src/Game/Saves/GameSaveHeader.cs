@@ -13,8 +13,8 @@ namespace Rts.Game.Saves;
 /// </summary>
 public sealed record GameSaveHeader
 {
-    /// <summary>The header version this build writes and reads. Bump it when the layout changes. Version 1 (two-player skirmish settings) is still read; M4-11 wrote version 2 (map choice, 2 to 4 slots); M3-21 wrote version 3 (appends each AI's saved memory after its slot record; versions 1 and 2 load with the AI starting fresh).</summary>
-    public const int CurrentVersion = 3;
+    /// <summary>The header version this build writes and reads. Bump it when the layout changes. Version 1 (two-player skirmish settings) is still read; M4-11 wrote version 2 (map choice, 2 to 4 slots); M3-21 wrote version 3 (appends each AI's saved memory after its slot record; versions 1 and 2 load with the AI starting fresh); M5-09 wrote version 4 (appends one commander byte, 0 or 1, per skirmish slot at the end; versions 1 to 3 load with no commander).</summary>
+    public const int CurrentVersion = 4;
 
     private const int MaxAiStateBytes = 1 << 22;
 
@@ -119,6 +119,8 @@ public sealed record GameSaveHeader
         }
         w.Write((ushort)Sequences.Count);
         foreach (ushort q in Sequences) w.Write(q);
+        if (Version >= 4 && Skirmish is { } sk)
+            foreach (SkirmishSlot slot in sk.Slots) w.Write((byte)(slot.Commander ? 1 : 0));
     }
 
     /// <summary>Reads a header body written by <see cref="Write"/> for header <paramref name="version"/>.</summary>
@@ -171,6 +173,17 @@ public sealed record GameSaveHeader
         int seqCount = r.ReadUInt16();
         var sequences = new ushort[seqCount];
         for (int i = 0; i < seqCount; i++) sequences[i] = r.ReadUInt16();
+        if (version >= 4 && skirmish is not null)
+        {
+            var withCommanders = new List<SkirmishSlot>(skirmish.Slots.Count);
+            foreach (SkirmishSlot slot in skirmish.Slots)
+            {
+                byte flag = r.ReadByte();
+                if (flag > 1) throw new InvalidDataException($"bad commander flag {flag}");
+                withCommanders.Add(slot with { Commander = flag == 1 });
+            }
+            skirmish = new SkirmishSettings(skirmish.Map, withCommanders, skirmish.SimSeed);
+        }
         return new GameSaveHeader
         {
             Version = version, Mode = mode, MapId = mapId, MapName = mapName, RulesHash = rulesHash, LocalPlayer = local, Tick = tick,
