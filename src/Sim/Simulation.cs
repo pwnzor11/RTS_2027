@@ -394,7 +394,8 @@ public sealed partial class Simulation
                 if (!_map.IsBuildable(new CellCoord(x, y), table)) return PlacementResult.Blocked;
         // Map occupancy is not maintained for units yet, so also check unit positions directly.
         for (int i = 1; i < _units.Capacity; i++)
-            if (_units.Slots.IsIndexAlive(i) && InRect(_units.Position[i].ToCell(), x0, y0, w, h)) return PlacementResult.Blocked;
+            if (_units.Slots.IsIndexAlive(i) && InRect(_units.Position[i].ToCell(), x0, y0, w, h)
+                && !IsAirUnit(ActorKind.Vehicle, i)) return PlacementResult.Blocked;   // M3-INT: air units hold no cell (M3-06)
         for (int i = 1; i < _infantry.Capacity; i++)
             if (_infantry.Slots.IsIndexAlive(i) && InRect(_infantry.Position[i].ToCell(), x0, y0, w, h)) return PlacementResult.Blocked;
         if (bt.Wall || bt.Gate) return PlacementResult.Ok;   // M3-04: wall and gate pieces are exempt from the gap rule (D-076)
