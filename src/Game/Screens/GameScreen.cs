@@ -13,6 +13,7 @@ using Rts.Game.Sandbox;
 using Rts.Game.Sprites;
 using Rts.Game.Ui;
 using Rts.Game.Ui.Sidebar;
+using Rts.Game.Ui.Spectator;
 using Rts.Game.Ui.Superweapon;
 using Rts.Sim.Core;
 
@@ -46,7 +47,13 @@ public sealed class GameScreen : IScreen
     {
         "arrows / middle-drag pan   wheel zoom   LMB select   RMB move or attack",
         "A then RMB: attack-move   S stop   G guard here   X scatter   Space pause   . step",
-        "F1 console   F2 fog viewer   F3 occupancy   F4 paths   F5 ranges   Esc pause menu",
+        "F1 console   F2 fog viewer   F3 occupancy   F4 paths   F5 ranges   F9 AI-vs-AI spectator   Esc pause menu",
+    };
+
+    private static readonly string[] SpectatorHelpLines =
+    {
+        "arrows / middle-drag pan   wheel zoom   click a unit or structure: info (read only)",
+        "V next view   F2 full vision / fog   1 2 3 4 speed 1x 2x 4x 8x   Space pause   Tab detail   Esc pause menu",
     };
 
     private readonly GameServices _s;
@@ -78,9 +85,15 @@ public sealed class GameScreen : IScreen
     private readonly RectRegion _swRegion = new(Rectangle.Empty);
     private ArchiveTracker? _archive;   // M3-18: unlock progress, skirmish and missions only
     private int _archiveTick = -1;
+    private readonly bool _spectatorMode;   // M4-08: AI-vs-AI, no orders, stats strip
+    private readonly SpectatorController? _spec;
+    private readonly SpectatorPanel? _specPanel;
+    private readonly RectRegion _specRegion = new(Rectangle.Empty);
+    private UnitView? _inspectUnit;
+    private BuildingView? _inspectBuilding;
 
     private GameScreen(GameServices services, SimSnapshotSource? sim, SkirmishSettings? skirmish, Func<GameScreen> restart,
-        bool skirmishMode = false)
+        bool skirmishMode = false, bool spectator = false)
     {
         _s = services;
         _sim = sim;
@@ -94,8 +107,17 @@ public sealed class GameScreen : IScreen
         else
         {
             _source = sim;
-            _orders = new OrderController(sim, _selection);
-            if (!_skirmishMode) _console = new DebugConsole(sim, _selection, _camera); // AllowDebug is off in a skirmish
+            _spectatorMode = spectator;
+            if (_spectatorMode)
+            {
+                _spec = new SpectatorController(sim.Host);   // marks the host Spectator: no order can reach the sim
+                _specPanel = new SpectatorPanel(_spec);
+            }
+            else
+            {
+                _orders = new OrderController(sim, _selection);
+                if (!_skirmishMode) _console = new DebugConsole(sim, _selection, _camera); // AllowDebug is off in a skirmish
+            }
         }
     }
 
@@ -130,6 +152,23 @@ public sealed class GameScreen : IScreen
         var screen = new GameScreen(services, sim, settings, () => CreateSkirmish(services, settings), skirmishMode: true);
         screen.IsGameOver = () => sim.Sim.GameOver;
         sim.SaveTemplate = game.SaveTemplate(settings);
+        return screen;
+    }
+
+    /// <summary>
+    /// Creates an AI-vs-AI spectator game (M4-08): two AIs on <see cref="SpectatorSetup.Create"/>'s skirmish, full map vision, the stats
+    /// strip, speed and view keys, and no orders. The setup screen for it is M4-11; until then F9 in the sandbox starts it.
+    /// </summary>
+    /// <param name="services">Shared services.</param>
+    /// <param name="seed">Map and sim seed (0 = the curated map).</param>
+    /// <param name="aiTier">AI tier 1..5 for both sides.</param>
+    public static GameScreen CreateSpectator(GameServices services, ulong seed, int aiTier = SpectatorSetup.DefaultAiTier)
+    {
+        SkirmishGame game = SpectatorSetup.Create(services.RulesDir, seed, aiTier);
+        var sim = new SimSnapshotSource(game, services.RulesDir);
+        var screen = new GameScreen(services, sim, null, () => CreateSpectator(services, seed, aiTier), skirmishMode: false, spectator: true);
+        sim.Host.SetViewer(-1);
+        screen.IsGameOver = () => sim.Sim.GameOver;
         return screen;
     }
 
@@ -183,6 +222,15 @@ public sealed class GameScreen : IScreen
     /// <inheritdoc />
     public void Enter()
     {
+        if (_spectatorMode && _sim is not null)
+        {
+            PlayerColours.Assign(new[] { 0, 1 });
+            Vector2 mapCentre = new(_source.Current.MapWidth * Camera.CellPx / 2f, _source.Current.MapHeight * Camera.CellPx / 2f);
+            Vector2 half = new Vector2(_s.Viewport.Width, _s.Viewport.Height) / _camera.Zoom / 2f;
+            _camera.PanScreen((mapCentre - half - _camera.WorldFromScreen(Point.Zero)) * _camera.Zoom);
+            return;
+        }
+
         if (!_skirmishMode || _sim is null) return;
         string spritesRoot = Path.Combine(Path.GetDirectoryName(Path.GetFullPath(_s.RulesDir)) ?? ".", "sprites");
         _cameos = new CameoProvider(_s.Graphics, spritesRoot);
@@ -218,8 +266,15 @@ public sealed class GameScreen : IScreen
             input.ConsumeLeft();
         }
         if (_superweapon.Buttons.Count > 0 && input.LeftPressed) ClickSuperweaponButton(input);
+        if (_specPanel is not null && _spec is not null && input.LeftPressed)
+        {
+            int row = _specPanel.RowAt(input.MousePosition, _s.UiScale);
+            if (row >= 0) _spec.Pick(row);
+        }
+
         if (_dragStart is null)
         {
+            input.ConsumeMouseOver(_specRegion);
             input.ConsumeMouseOver(_swRegion);
             input.ConsumeMouseOver(_upgradeRegion);
             input.ConsumeMouseOver(_hudRegion);
@@ -257,9 +312,18 @@ public sealed class GameScreen : IScreen
 
         if (_sim is not null)
         {
-            if (input.ConsumePressed(Keys.Space)) _sim.Paused = !_sim.Paused;
+            if (_spec is not null)
+            {
+                _spec.Handle(input);   // V, F2, 1-4, Space, Tab
+            }
+            else
+            {
+                if (input.ConsumePressed(Keys.Space)) _sim.Paused = !_sim.Paused;
+                if (input.ConsumePressed(Keys.F2)) _sim.CycleViewer();
+                if (!_skirmishMode && _console is not { IsOpen: true } && input.ConsumePressed(Keys.F9)) StartSpectatorFromSandbox();
+            }
+
             if (input.ConsumePressed(Keys.OemPeriod)) _sim.StepOnce();
-            if (input.ConsumePressed(Keys.F2)) _sim.CycleViewer();
         }
 
         if (input.ConsumePressed(Keys.F3)) _overlays.Occupancy = !_overlays.Occupancy;
@@ -302,7 +366,12 @@ public sealed class GameScreen : IScreen
         _superweapon.Fx.Observe(_source.Current.Tick, _source.Current.FxEvents);
         ObserveArchive(localHud);
 
-        if (_sim is { } live)
+        _specPanel?.Update(_sim!.Sim);
+        if (_spectatorMode)
+        {
+            PruneInspection();
+        }
+        else if (_sim is { } live)
         {
             _selection.Prune(key => live.IsOwnedAlive(key, SimSnapshotSource.LocalPlayer));
         }
@@ -319,7 +388,8 @@ public sealed class GameScreen : IScreen
         if (!_gameOverShown && IsGameOver())
         {
             _gameOverShown = true;
-            _s.Screens.Push(new GameOverScreen(_s, _restart, GameOverHeadline()));
+            IReadOnlyList<string>? table = _sim is null ? null : SpectatorTable.Final(SpectatorTable.Collect(_sim.Sim));
+            _s.Screens.Push(new GameOverScreen(_s, _restart, GameOverHeadline(), table, _spectatorMode, () => _sim?.SaveReplay()));
         }
     }
 
@@ -337,6 +407,7 @@ public sealed class GameScreen : IScreen
         _sidebar?.Draw(sb, _s.Pixel, snapshot);
         DrawSuperweapon(sb, snapshot.Tick);
         DrawUpgradeButton(sb);
+        DrawSpectator(sb);
         _console?.Draw(sb, _s.Pixel, _s.Viewport);
     }
 
@@ -346,6 +417,12 @@ public sealed class GameScreen : IScreen
 
     private void HandleMouse(InputFrame input)
     {
+        if (_spectatorMode)
+        {
+            HandleInspectClick(input);
+            return;
+        }
+
         Point mouse = input.MousePosition;
         if (input.LeftPressed)
         {
@@ -404,6 +481,56 @@ public sealed class GameScreen : IScreen
                 _orders.RightClick(mouse, _camera, _renderUnits);
             }
         }
+    }
+
+    // ---- Spectator (M4-08) ---------------------------------------------------------------------------
+
+    // F9 in the sandbox: swap this screen for an AI-vs-AI spectator game on a generated map. Posted, so this screen has exited (and saved
+    // its replay) before the new game opens its own.
+    private void StartSpectatorFromSandbox() => _s.Screens.Post(() =>
+    {
+        _s.Screens.Pop();
+        _s.Screens.Push(CreateSpectator(_s, SimSnapshotSource.DefaultSeed));
+    });
+
+    // A left click picks any unit or structure to show its info; it never orders anything.
+    private void HandleInspectClick(InputFrame input)
+    {
+        if (!input.LeftPressed || !MapViewport().Bounds.Contains(input.MousePosition)) return;
+        Vector2 world = _camera.WorldFromScreen(input.MousePosition);
+        _inspectUnit = SpectatorInspect.PickUnit(_renderUnits, world);
+        _inspectBuilding = _inspectUnit is null ? SpectatorInspect.PickBuilding(_source.Current.Buildings, Camera.CellAt(world)) : null;
+    }
+
+    // Follows the picked unit or structure through the latest snapshot; clears the pick when it is gone (dead or out of the viewer's sight).
+    private void PruneInspection()
+    {
+        SimSnapshot snap = _source.Current;
+        if (_inspectUnit is UnitView u)
+        {
+            _inspectUnit = null;
+            foreach (UnitView v in snap.Units)
+                if (v.Id == u.Id && v.Kind == u.Kind) { _inspectUnit = v; break; }
+        }
+
+        if (_inspectBuilding is BuildingView b)
+        {
+            _inspectBuilding = null;
+            foreach (BuildingView v in snap.Buildings)
+                if (v.Id == b.Id) { _inspectBuilding = v; break; }
+        }
+    }
+
+    private void DrawSpectator(SpriteBatch sb)
+    {
+        if (_specPanel is null || _sim is null) return;
+        _specPanel.Draw(sb, _s.Pixel, _s.UiScale);
+        IReadOnlyList<string>? info = _inspectUnit is UnitView u ? SpectatorInspect.Describe(u, _sim.Sim.Setup.Rules)
+            : _inspectBuilding is BuildingView b ? SpectatorInspect.Describe(b, _sim.Sim.Setup.Rules) : null;
+        if (info is null) return;
+        int scale = _s.UiScale;
+        int w = info.Max(line => BitmapFont.Measure(line, scale)) + 16;
+        Hud.Panel(sb, _s.Pixel, new Point(_s.Viewport.Width - w - 8, _s.Viewport.Height - Hud.HeightOf(info.Count, scale) - 8), info, scale);
     }
 
     // ---- Sunrise Device (M3-18) -------------------------------------------------------------------------
@@ -611,6 +738,7 @@ public sealed class GameScreen : IScreen
     private string GameOverHeadline()
     {
         if (_sim is null) return GameOverScreen.Headline(false, -1, 0);
+        if (_spectatorMode) return GameOverScreen.SpectatorHeadline(_sim.Sim.WinningTeam);
         byte local = SimSnapshotSource.LocalPlayer;
         return GameOverScreen.Headline(_sim.Sim.HudFor(local).Defeated, _sim.Sim.WinningTeam, _sim.Sim.Setup.TeamOf(local));
     }
@@ -653,10 +781,15 @@ public sealed class GameScreen : IScreen
         int scale = _s.UiScale;
         List<string> lines = HudLines(_source.Current);
         _hudRegion.Bounds = PanelRect(new Point(8, 8), lines, scale);
+        if (_specPanel is not null)
+        {
+            _specPanel.Origin = new Point(8, 8 + Hud.HeightOf(lines.Count, scale) + 4);
+            _specRegion.Bounds = _specPanel.Bounds(scale);
+        }
         _mission?.UpdateRegion(lines.Count, scale);
         if (_sim is not null)
         {
-            string[] help = _skirmishMode ? SkirmishHelpLines : HelpLines;
+            string[] help = _spectatorMode ? SpectatorHelpLines : _skirmishMode ? SkirmishHelpLines : HelpLines;
             int top = _s.Viewport.Height - Hud.HeightOf(help.Length, scale) - 8;
             _helpRegion.Bounds = PanelRect(new Point(8, top), help, scale);
         }
@@ -681,7 +814,7 @@ public sealed class GameScreen : IScreen
 
         if (_sim is not null)
         {
-            string[] help = _skirmishMode ? SkirmishHelpLines : HelpLines;
+            string[] help = _spectatorMode ? SpectatorHelpLines : _skirmishMode ? SkirmishHelpLines : HelpLines;
             int top = _s.Viewport.Height - Hud.HeightOf(help.Length, scale) - 8;
             Hud.Panel(sb, _s.Pixel, new Point(8, top), help, scale);
             _mission?.Draw(sb, _s.Pixel, scale, hud.Count, top, snapshot.Tick);
