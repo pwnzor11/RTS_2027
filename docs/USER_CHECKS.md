@@ -156,7 +156,7 @@ Pull main (PR #11). Saves from session 5 builds still load; their AI starts fres
    --seeds 8 --ticks 25000 --size 56` prints "Wins by start corner: …" — roughly even is the target.
 
 ## Session 7 · M5 LLM commander (2026-11-04)
-Pull main (PR #12). **Saves from earlier builds no longer load** (sim save format 9), and replays recorded by earlier builds will
+Pull main (PR #12). **Saves from earlier builds no longer load** (sim save format 9), and replays recorded by earlier builds may
 report a desync (the sim state gained a part); record new ones.
 1. **Settings:** Settings > "AI commander (LLM)...": pick Anthropic, paste your key, press "Test connection" → "Connected (Anthropic)." (or a
    short "Failed: ..." line that never shows the key). The default model is claude-haiku-5-5; "Use stronger model" is claude-sonnet-5-5.

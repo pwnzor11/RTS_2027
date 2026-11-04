@@ -4,7 +4,7 @@ Where things stand: M5 is playable end to end: any AI slot can have an LLM comma
 its strategy every 30 s through a recorded directive, talks in character in a chat panel, survives save/load and replays exactly
 with no network. Only M5-10's owner play-test with a real key is open. M4-16 round 2 measured: tier ladder flat or inverted, target
 not met (docs/balance/m4_16_round2.md). Session-5 art is still NOT on GitHub. Full suite 2 096 tests (AI 102, Game 773, Llm 107,
-Scripting 43, Sim 1 071), green on Linux and Windows CI. Decisions D-108..D-112. Save format 9 (older saves no longer load; older replays report a desync).
+Scripting 43, Sim 1 071), green on Linux and Windows CI. Decisions D-108..D-112. Save format 9 (older saves no longer load; older replays may report a desync).
 
 ## Start here (shown to the user as the plan; nothing starts until they say go)
 1. Art: once `integ-art` (or the bundle) is on GitHub, merge it into main through a PR (CI checks sprites), then ART-S6 reworks
