@@ -70,18 +70,17 @@ public sealed class SkirmishFactionTests
     }
 
     [Fact]
-    public void A_Directorate_skirmish_either_starts_with_that_faction_or_names_the_missing_start_kit_type()
+    public void A_Directorate_skirmish_starts_with_that_faction_and_the_dir_shaft_placed()
     {
-        // The Directorate data arrives with M3-07; until it is merged the kit names unknown ids and Create says so.
-        try
-        {
-            SkirmishGame g = SkirmishGame.Create(RulesDir, 0, 1, new[] { Faction.Directorate, Faction.Authority });
-            Assert.Equal(Faction.Directorate, g.Sim.HudFor(0).Faction);
-        }
-        catch (InvalidOperationException e)
-        {
-            Assert.Contains("start kit", e.Message, StringComparison.Ordinal);
-        }
+        SkirmishGame g = SkirmishGame.Create(RulesDir, 0, 1, new[] { Faction.Directorate, Faction.Authority });
+        Assert.Equal(Faction.Directorate, g.Sim.HudFor(0).Faction);
+        int shaft = SimRules.IndexOf(g.Sim.Setup.Rules.Buildings, "dir_shaft", b => b.Id);
+        Assert.True(shaft >= 0, "dir_shaft is not in the rules");
+        var buildings = g.Sim.Buildings;
+        bool placed = false;
+        for (int i = 1; i < buildings.Capacity; i++)
+            placed |= buildings.Slots.IsIndexAlive(i) && buildings.Player[i] == 0 && buildings.TypeIndex[i] == shaft;
+        Assert.True(placed, "the Directorate start kit did not place dir_shaft for player 0");
     }
 
     [Theory]
