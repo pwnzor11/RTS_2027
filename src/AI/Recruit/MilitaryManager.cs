@@ -63,7 +63,7 @@ internal sealed class MilitaryManager
     private int _lastWave, _stageSince, _launchSize;
     private CellCoord _stage, _stageB;
     private readonly HashSet<ulong> _squadB = new();
-    private bool _prong;
+    private bool _prong, _aheadWave;
     private long _launchHealth;
     private int _cooldownUntil;
     // M4-12: target player (2-4 players), re-chosen every TargetReviewTicks; -1 = none known
@@ -78,6 +78,24 @@ internal sealed class MilitaryManager
     public const int TargetReviewTicks = 600;   // (tune)
     /// <summary>M4-12: a wave in Assault that has not destroyed anything for this long is ended (its members then join the next one).</summary>
     public const int StaleAssaultTicks = 2400;   // (tune)
+
+    /// <summary>M4-16: staging distance (cells short of the target) while the army is clearly ahead of the known enemy army.</summary>
+    public const int AheadStageCells = 6;   // (tune) M4-16 (was 16 for every wave)
+    /// <summary>M4-16: longest an ahead wave waits at its staging cell.</summary>
+    public const int AheadStageTimeoutTicks = 600;   // (tune) M4-16 (was 1800)
+    /// <summary>M4-16: map width (cells) from which the regroup threshold is shortened.</summary>
+    public const int LargeMapCells = 80;   // (tune) M4-16
+    /// <summary>M4-16: percent of the next wave's threshold the idle units at home must reach to regroup on a large map.</summary>
+    public const int LargeMapRegroupPct = 60;   // (tune) M4-16
+    /// <summary>M4-16: ticks between target reviews with 3-4 players (after a kill the next victim is chosen sooner).</summary>
+    public const int MultiTargetReviewTicks = 300;   // (tune) M4-16 (was 600)
+    /// <summary>M4-16: weight of a known building in the target score with several candidates (distance cells count 4); weakest-first.</summary>
+    public const int CountWeight = 3;   // (tune) M4-16 (was 1)
+
+    /// <summary>M4-16: set by the AI each decision: our army is clearly bigger than the enemy army seen lately (stage closer, hit production first).</summary>
+    public bool Ahead { get; set; }
+
+    private int _mapWidth, _startCount;
 
     public MilitaryManager(int attackThreshold) => _threshold = Math.Max(1, attackThreshold);
 
@@ -121,6 +139,7 @@ internal sealed class MilitaryManager
         Reroll();
         _player = ctx.Player;
         _home = ctx.StartCell;
+        _mapWidth = ctx.MapWidth; _startCount = ctx.StartPositions.Count;
         _scoutRoute.AddRange(StartRoute.For(ctx));   // M4-12: every other start of a 2-4 player map, nearest first, then centre and corners
     }
 
@@ -178,7 +197,7 @@ internal sealed class MilitaryManager
             long d = Chebyshev(b.Cell, _home);
             if (d < _knownDist[b.Owner]) _knownDist[b.Owner] = d;
         }
-        bool keep = _targetPlayer >= 0 && _knownCount[_targetPlayer] > 0 && tick - _targetSince < TargetReviewTicks;
+        bool keep = _targetPlayer >= 0 && _knownCount[_targetPlayer] > 0 && tick - _targetSince < (_startCount > 2 && Options.Respond ? MultiTargetReviewTicks : TargetReviewTicks);
         if (!keep)
         {
             int best = -1, candidates = 0;
@@ -189,7 +208,7 @@ internal sealed class MilitaryManager
                 if (p == _player || _knownCount[p] == 0) continue;
                 // distance first (cells x 4); fewer known buildings = weaker; with several candidates a seeded 0..7 jitter so equidistant
                 // neighbours are not always resolved by slot order (no number is drawn with one candidate: 2-player games are unchanged)
-                long score = _knownDist[p] * 4 + Math.Min(_knownCount[p], 20) + (candidates > 1 ? _rng?.Next(8) ?? 0 : 0);
+                long score = _knownDist[p] * 4 + Math.Min(_knownCount[p], 20) * (candidates > 1 && Options.Respond ? CountWeight : 1) + (candidates > 1 ? _rng?.Next(8) ?? 0 : 0);
                 if (score < bestScore) { bestScore = score; best = p; }
             }
             if (best != _targetPlayer) _progressScore = int.MaxValue;
@@ -259,12 +278,13 @@ internal sealed class MilitaryManager
                 Waves++;
                 Reroll();
                 CellCoord launchGoal = PickGoal(k, knownEnemyBuildings);
-                _stage = Tactics?.ForwardStage(k, launchGoal) ?? StageCell(k, launchGoal);
+                _aheadWave = Options.Respond && Ahead;
+                _stage = Tactics?.ForwardStage(k, launchGoal) ?? StageCell(k, launchGoal, _aheadWave ? AheadStageCells : StageDistanceCells);
                 if (Tactics != null) _stage = Tactics.SafeCell(k, _stage);
                 _stageB = _stage;
                 if (_prong && Options.MultiFront && second is CellCoord flank)
                 {
-                    _stageB = StageCell(k, flank);   // the second prong approaches from its own side and the two assault together
+                    _stageB = StageCell(k, flank, _aheadWave ? AheadStageCells : StageDistanceCells);   // the second prong approaches from its own side and the two assault together
                     if (Tactics != null) _stageB = Tactics.SafeCell(k, _stageB);
                 }
                 _phase = Phase.Stage;
@@ -310,7 +330,7 @@ internal sealed class MilitaryManager
             int aliveA = alive - aliveB;
             bool ready = there * 100 >= aliveA * 70 && thereB * 100 >= aliveB * 70;
             if (!_prong) ready = (there + thereB) * 100 >= alive * 70;
-            if (ready || tick - _stageSince >= StageTimeoutTicks) _phase = Phase.Assault;
+            if (ready || tick - _stageSince >= (_aheadWave ? AheadStageTimeoutTicks : StageTimeoutTicks)) _phase = Phase.Assault;
         }
 
         if (Options.Respond) Unstick(k, sink);
@@ -348,7 +368,8 @@ internal sealed class MilitaryManager
         int waiting = 0;
         foreach (ViewActor a in k.Army)
             if (a.Idle && !_roster.Contains(Key(a)) && !a.Underground) waiting++;
-        if (waiting < _nextThreshold) return false;
+        int need = _mapWidth >= LargeMapCells ? Math.Max(2, _nextThreshold * LargeMapRegroupPct / 100) : _nextThreshold;   // M4-16
+        if (waiting < need) return false;
         Reinforcements += waiting;
         return true;
     }
@@ -468,13 +489,13 @@ internal sealed class MilitaryManager
     }
 
     /// <summary>A passable cell <see cref="StageDistanceCells"/> short of <paramref name="goal"/> on the line toward our rally.</summary>
-    private CellCoord StageCell(RecruitKnowledge k, CellCoord goal)
+    private CellCoord StageCell(RecruitKnowledge k, CellCoord goal, int distance)
     {
         var view = k.View;
         int hx = k.Yard.X, hy = k.Yard.Y;
         long dx = hx - goal.X, dy = hy - goal.Y;
         long len = Math.Max(1, (long)Rts.Sim.Numerics.LeptonMath.ISqrt((ulong)(dx * dx + dy * dy)));
-        for (int d = StageDistanceCells; d >= 0; d -= 2)
+        for (int d = distance; d >= 0; d -= 2)
         {
             int x = (int)Math.Clamp(goal.X + dx * d / len, 1, view.MapWidth - 2), y = (int)Math.Clamp(goal.Y + dy * d / len, 1, view.MapHeight - 2);
             var c = new CellCoord(x, y);
@@ -492,10 +513,16 @@ internal sealed class MilitaryManager
         CellCoord goal = default;
         bool found = false;
         int tick = k.View.Tick;
-        for (int pass = 0; pass < 2 && !found; pass++)
+        bool priority = Options.Respond && Ahead;
+        for (int pass = priority ? -1 : 0; pass < 2 && !found; pass++)
             foreach (ViewActor b in buildings)
             {
-                if (pass == 0 && _avoid.Count > 0 && Avoided(b.Cell, tick)) continue;   // M4-12: skip goals a stalled wave could not hurt
+                if (pass == -1)   // M4-16: while winning, production and income structures first (the enemy cannot rebuild an army without them)
+                {
+                    BuildingType bt = k.Rules.Buildings[b.TypeIndex];
+                    if (bt.Produces == null && !bt.Refinery) continue;
+                }
+                if (pass <= 0 && _avoid.Count > 0 && Avoided(b.Cell, tick)) continue;   // M4-12: skip goals a stalled wave could not hurt
                 long dx = b.Position.X - centre.X, dy = b.Position.Y - centre.Y, d = dx * dx + dy * dy;
                 if (d >= best) continue;
                 best = d; goal = b.Cell; found = true;
@@ -565,6 +592,7 @@ internal sealed class MilitaryManager
         AiSnapshot.WriteCell(w, _lastGoal);
         AiSnapshot.WriteMap(w, _still, (bw, v) => { AiSnapshot.WriteCell(bw, v.Cell); bw.Write(v.Since); bw.Write(v.Times); });
         w.Write(GroupRetreats); w.Write(Prongs); w.Write(Waves); w.Write(Defences); w.Write(Reinforcements); w.Write(StaleWaves); w.Write(Unstuck);
+        w.Write(_aheadWave);   // M4-16
     }
 
     /// <summary>M3-21: reads what <see cref="Snapshot"/> wrote. Call after Start.</summary>
@@ -587,6 +615,7 @@ internal sealed class MilitaryManager
         AiSnapshot.ReadMap(r, _still, br => (AiSnapshot.ReadCell(br), br.ReadInt32(), br.ReadInt32()));
         GroupRetreats = r.ReadInt32(); Prongs = r.ReadInt32(); Waves = r.ReadInt32(); Defences = r.ReadInt32(); Reinforcements = r.ReadInt32();
         StaleWaves = r.ReadInt32(); Unstuck = r.ReadInt32();
+        _aheadWave = r.ReadBoolean();   // M4-16
         if (_scoutRoute.Count > 0) _scoutIdx = Math.Clamp(_scoutIdx, 0, _scoutRoute.Count - 1);
     }
 }

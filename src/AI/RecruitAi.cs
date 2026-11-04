@@ -117,6 +117,9 @@ public sealed class RecruitAi : IAiPlayer, IAiSnapshotable
     /// <summary>M4-12: structures sold to pay for a harvester after every harvester was lost.</summary>
     public int StructuresSold => _rescue.Sold;
 
+    /// <summary>M4-16: decisions on which tech spending was held because the known enemy army was bigger.</summary>
+    public int TechHolds => _build?.TechSkips ?? 0;
+
     /// <summary>M4-12: the enemy player waves go for (-1 while none is known).</summary>
     public int TargetPlayer => _military.TargetPlayer;
 
@@ -164,6 +167,7 @@ public sealed class RecruitAi : IAiPlayer, IAiSnapshotable
         _build = new BuildOrderManager(_faction.OrderFor(_profile.BuildRepertoire), _faction.PowerId, _faction.YardId)
         { ReserveInProgress = _profile.RespondToAttacks };   // M4-12 (tier 2+)
         _planner = new TierPlanner(_profile, _faction);
+        _build.HoldStep = id => _planner.Behind && _planner.IsTech(id);   // M4-16
         _production = new ProductionManager(_faction, _tactics, _planner);
         _production.Start(_ctx!.Rng);
         _military.Tactics = _tactics;
@@ -201,13 +205,14 @@ public sealed class RecruitAi : IAiPlayer, IAiSnapshotable
         _economy.Think(_k, sink);
         if (_profile.Repair) _repair.Think(_k, sink);
         _production!.Think(_k, sink, _build.PendingCost);
-        if (_profile.UseUpgrades) _upgrades.Think(_k, sink, _build.PendingCost);
+        if (_profile.UseUpgrades) _upgrades.Think(_k, sink, _build.PendingCost, _planner.Behind);   // M4-16: no research while behind
         // squads: pull units out of the wave pool before the military manager counts and orders it
         _retreat.Think(_k, sink, _squads, _production.Rally, _profile.RetreatHealthPct);
         if (_profile.RespondToAttacks) _garrison.Think(_k, sink, AllIn());   // M4-12: before the waves count the army
         if (_profile.ActiveScouting) _scout.Think(_k, sink, _squads);
         if (_profile.Harass) _harass.Think(_k, sink, _squads, _planner, _knownBuildings, _production.Rally, _profile.ScoutInfoAgeTicks);
         _military.Broke = _rescue.Broke;
+        _military.Ahead = _planner.Ahead;   // M4-16
         _military.Think(_k, sink, _production.Rally, _knownBuildings);
         if (_profile.Scatter) _scatter.Think(_k, sink);
         if (_profile.Superweapons) _superweapons.Think(_k, sink, _knownBuildings);
