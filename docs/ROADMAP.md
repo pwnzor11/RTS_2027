@@ -113,6 +113,8 @@ Both factions, full tech tree, map editor, real AI with difficulty levels, audio
 - [ ] M3-13 Superweapon: the Sunrise Device
 - [ ] M3-14 Integration and balance pass
 - [ ] M3-15 Map editor (not planned in session 4)
+- [ ] M3-16 Main menu lobby: illustrated animated background, full menu (Continue, Campaign new/load, Skirmish new/load, Replays, Archive, How to play, Settings, Quit; LAN and Map editor greyed until built)
+- [ ] M3-17 Archive: lore and codex screens with hybrid unlocks (faction history, leaders, units, buildings, tech); lore drafted by lead, approved by owner
 
 ## M4 · Campaign
 Mission scripting/trigger system, briefing screens, tech gating, campaign flow, both campaigns.
