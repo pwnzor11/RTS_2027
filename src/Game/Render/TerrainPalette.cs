@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
 using System.Globalization;
+using Rts.Data;
+using Rts.Sim.Map;
 using Rts.Sim.Rules;
 using Tomlyn;
 using Tomlyn.Model;
@@ -62,8 +64,100 @@ public sealed class TerrainPalette
     /// <summary>True when a map's theater key selects the Rust Belt look.</summary>
     public static bool IsRustBelt(string theater) => string.Equals(theater, RustBeltTheater, StringComparison.Ordinal);
 
-    /// <summary>Loads and parses a palette file.</summary>
-    public static TerrainPalette Load(string path) => FromToml(File.ReadAllText(path));
+    /// <summary>
+    /// Loads a palette. The argument is a theater id (<c>rustbelt</c>, <c>glass_coast</c>, <c>rust_belt</c>, ...) looked up as
+    /// <c>data/theaters/&lt;id&gt;.toml</c>, or a path to a palette file (anything with a directory separator or a <c>.toml</c>
+    /// extension). An unknown theater id falls back to the Rust Belt palette and raises <see cref="Warned"/> once per id.
+    /// </summary>
+    public static TerrainPalette Load(string theaterIdOrPath)
+    {
+        ArgumentNullException.ThrowIfNull(theaterIdOrPath);
+        if (theaterIdOrPath.Contains('/') || theaterIdOrPath.Contains('\\')
+            || theaterIdOrPath.EndsWith(".toml", StringComparison.OrdinalIgnoreCase))
+            return FromToml(File.ReadAllText(theaterIdOrPath));
+
+        string id = NormalizeTheaterId(theaterIdOrPath);
+        lock (Cache)
+        {
+            if (Cache.TryGetValue(id, out TerrainPalette? cached)) return cached;
+            string? file = id.Length == 0 ? null : FindTheaterFile(id);
+            TerrainPalette palette;
+            if (file is null)
+            {
+                if (id != RustBeltTheater) Warn($"unknown theater '{theaterIdOrPath}': using the {RustBeltTheater} palette");
+                palette = id == RustBeltTheater ? throw new FileNotFoundException("data/theaters/rustbelt.toml not found") : Load(RustBeltTheater);
+            }
+            else palette = FromToml(File.ReadAllText(file));
+            Cache[id] = palette;
+            return palette;
+        }
+    }
+
+    /// <summary>Raised (once per unknown theater id) when <see cref="Load"/> falls back to the Rust Belt palette.</summary>
+    public static event Action<string>? Warned;
+
+    /// <summary>
+    /// Folds a theater or biome key to a palette file name: lower case, letters and digits only, so <c>rust_belt</c> is the
+    /// same theater as <c>rustbelt</c>, <c>glass_coast</c> as <c>glasscoast</c>.
+    /// </summary>
+    public static string NormalizeTheaterId(string id)
+    {
+        ArgumentNullException.ThrowIfNull(id);
+        var sb = new System.Text.StringBuilder(id.Length);
+        foreach (char c in id)
+        {
+            if (c is >= 'a' and <= 'z' or >= '0' and <= '9') sb.Append(c);
+            else if (c is >= 'A' and <= 'Z') sb.Append(char.ToLowerInvariant(c));
+        }
+
+        return sb.ToString();
+    }
+
+    /// <summary>
+    /// The theater id a map is drawn with: its biome (when <paramref name="meta"/> names one), otherwise its header theater.
+    /// Maps without metadata are Rust Belt unless their header says otherwise.
+    /// </summary>
+    public static string TheaterIdFor(MapData map, MapMeta? meta)
+    {
+        ArgumentNullException.ThrowIfNull(map);
+        if (meta is not null && !string.IsNullOrEmpty(meta.Biome)) return NormalizeTheaterId(meta.Biome);
+        return string.IsNullOrEmpty(map.Theater) ? RustBeltTheater : map.Theater;
+    }
+
+    /// <summary>The palette a map is drawn with (see <see cref="TheaterIdFor"/>).</summary>
+    public static TerrainPalette ForMap(MapData map, MapMeta? meta = null) => Load(TheaterIdFor(map, meta));
+
+    private static readonly Dictionary<string, TerrainPalette> Cache = new(StringComparer.Ordinal);
+
+    private static void Warn(string message)
+    {
+        Console.Error.WriteLine("warning: " + message);
+        Warned?.Invoke(message);
+    }
+
+    private static string? FindTheaterFile(string id)
+    {
+        // The shipped files are rustbelt.toml, glass_coast.toml, mountains.toml and ash_plains.toml; ids are folded without underscores.
+        string[] names = id switch
+        {
+            "glasscoast" => new[] { "glasscoast", "glass_coast" },
+            "ashplains" => new[] { "ashplains", "ash_plains" },
+            _ => new[] { id },
+        };
+        string? dir = AppContext.BaseDirectory;
+        while (dir is not null)
+        {
+            foreach (string name in names)
+            {
+                string candidate = Path.Combine(dir, "data", "theaters", name + ".toml");
+                if (File.Exists(candidate)) return candidate;
+            }
+
+            dir = Path.GetDirectoryName(dir);
+        }
+
+        return null;
+    }
 
     /// <summary>
     /// Parses palette TOML. Throws <see cref="InvalidDataException"/> when a land type has no colour, a colour is not

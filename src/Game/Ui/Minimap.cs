@@ -11,7 +11,7 @@ using Rts.Sim.Rules;
 namespace Rts.Game.Ui;
 
 /// <summary>
-/// The radar minimap: terrain baked once to one texel per cell (Rust Belt palette when the map uses it), a fog layer rewritten when
+/// The radar minimap: terrain baked once to one texel per cell (the map's theater palette, the same one the terrain bake uses), a fog layer rewritten when
 /// the tick changes (from the snapshot's vision, so the player sees only what the game shows), dots for buildings and units in
 /// own / allied / enemy colours (the snapshot already hides enemies in fog), and the camera's viewport rectangle. Input handling
 /// lives in the sidebar; the transforms are in <see cref="MinimapMath"/>.
@@ -137,17 +137,14 @@ public sealed class Minimap : IDisposable
 
     private Texture2D BakeTerrain(GraphicsDevice device)
     {
-        TerrainPalette? palette = null;
-        if (TerrainPalette.IsRustBelt(_map.Theater))
+        TerrainPalette? palette;
+        try
         {
-            try
-            {
-                palette = TerrainLook.Palette;
-            }
-            catch (Exception e) when (e is IOException or InvalidDataException or InvalidOperationException or TypeInitializationException)
-            {
-                palette = null;
-            }
+            palette = TerrainPalette.ForMap(_map);
+        }
+        catch (Exception e) when (e is IOException or InvalidDataException or InvalidOperationException or TypeInitializationException)
+        {
+            palette = null;
         }
 
         var pixels = new Color[_map.Width * _map.Height];
@@ -158,7 +155,7 @@ public sealed class Minimap : IDisposable
         return texture;
     }
 
-    /// <summary>The minimap colour of a cell. With the Rust Belt palette: the land's base shade, tinted by ashfall or pitchblende.</summary>
+    /// <summary>The minimap colour of a cell. With a theater palette: the land's base shade, tinted by ashfall or pitchblende.</summary>
     public static Color TerrainColour(TerrainPalette? palette, LandType land, OverlayKind overlay, byte density)
     {
         if (overlay == OverlayKind.Wall) return new Color(0x70, 0x70, 0x68);

@@ -1,0 +1,62 @@
+# Mountains terrain palette (M4-10). Grey-brown rock, scree, snow-ash caps. Same format as rustbelt.toml.
+# ASSUMED (M4-10): every colour below is a first guess for the owner to review (tune).
+format_version = 1
+texel_cells = 8
+
+[land.clear]
+# Valley and plateau floor: grey-brown earth.
+dark = "#5E564B"
+base = "#6D6558"
+light = "#7F776A"
+
+[land.road]
+# Beaten gravel pass.
+dark = "#6F6A62"
+base = "#807B72"
+light = "#928D84"
+
+[land.rough]
+# Scree: loose grey-brown stones.
+dark = "#6B6661"
+base = "#7E7872"
+light = "#938D86"
+
+[land.ash]
+# Snow-ash caps: pale grey-white.
+dark = "#B4B6B9"
+base = "#C6C8CB"
+light = "#DADCDE"
+
+[land.water]
+# Cold tarn.
+dark = "#1D2E3A"
+base = "#27404F"
+light = "#335468"
+
+[land.rock]
+# Bare rock spurs.
+dark = "#4A4742"
+base = "#5B5852"
+light = "#6F6C66"
+
+[land.cliff]
+# Dark cliff faces ringing the plateaus.
+dark = "#24211F"
+base = "#322E2B"
+light = "#413C38"
+
+[land.shallow]
+# Stream ford.
+dark = "#3A5362"
+base = "#4A6A7B"
+light = "#5C8196"
+
+[overlay.ashfall]
+speck = "#3A3835"
+max_coverage_permille = 350
+
+[overlay.pitchblende]
+chunk = "#8A9A3C"
+glint = "#D7E26A"
+max_coverage_permille = 600
+glint_one_in = 7

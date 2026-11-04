@@ -1,0 +1,62 @@
+# Glass Coast terrain palette (M4-10). Pale glassy sand, teal shallows, dark ocean. Same format as rustbelt.toml.
+# ASSUMED (M4-10): every colour below is a first guess for the owner to review (tune).
+format_version = 1
+texel_cells = 8
+
+[land.clear]
+# Pale glassy sand.
+dark = "#B9B09A"
+base = "#CFC7AE"
+light = "#E2DCC6"
+
+[land.road]
+# Packed fused-glass track.
+dark = "#8E9A98"
+base = "#A3AFAC"
+light = "#B8C3C0"
+
+[land.rough]
+# Dune ridge: darker wind-pressed sand.
+dark = "#A3977B"
+base = "#B5A98B"
+light = "#C7BC9F"
+
+[land.ash]
+# Grey-tan scorched sand.
+dark = "#7C766B"
+base = "#8D877B"
+light = "#9F998D"
+
+[land.water]
+# Deep ocean.
+dark = "#0B1E2B"
+base = "#102A3B"
+light = "#17384D"
+
+[land.rock]
+# Glass crests: dark bottle-green fused rock.
+dark = "#3B5A55"
+base = "#4C6F69"
+light = "#628983"
+
+[land.cliff]
+# Shattered glass cliff.
+dark = "#2B3B3A"
+base = "#384B49"
+light = "#485E5C"
+
+[land.shallow]
+# Teal lagoon shallows.
+dark = "#2C8C8A"
+base = "#3AA3A0"
+light = "#57BAB5"
+
+[overlay.ashfall]
+speck = "#6A645A"
+max_coverage_permille = 300
+
+[overlay.pitchblende]
+chunk = "#7C9A3C"
+glint = "#D7E26A"
+max_coverage_permille = 600
+glint_one_in = 7

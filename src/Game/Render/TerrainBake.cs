@@ -31,6 +31,9 @@ public static class TerrainBake
     /// <param name="Rgba">The texel bytes.</param>
     public readonly record struct Result(int Width, int Height, byte[] Rgba);
 
+    /// <summary>Bakes the whole map with the palette of its theater (biome from <paramref name="meta"/>; no meta = header theater).</summary>
+    public static Result Bake(MapData map, Rts.Data.MapMeta? meta) => Bake(map, TerrainPalette.ForMap(map, meta));
+
     /// <summary>Bakes the whole map.</summary>
     public static Result Bake(MapData map, TerrainPalette palette)
     {

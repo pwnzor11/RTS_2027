@@ -1,0 +1,62 @@
+# Ash Plains terrain palette (M4-10). Grey ash, dark river water, burnt scrub. Same format as rustbelt.toml.
+# ASSUMED (M4-10): every colour below is a first guess for the owner to review (tune).
+format_version = 1
+texel_cells = 8
+
+[land.clear]
+# Burnt scrub: dull olive-brown over grey.
+dark = "#4C4A3C"
+base = "#5C5A49"
+light = "#6D6B58"
+
+[land.road]
+# Ash-covered causeway and river bridges.
+dark = "#4A4846"
+base = "#5A5855"
+light = "#6C6A67"
+
+[land.rough]
+# Charred brush and cinder.
+dark = "#2F2B28"
+base = "#3E3935"
+light = "#4F4944"
+
+[land.ash]
+# Open grey ash.
+dark = "#6E7073"
+base = "#80838A"
+light = "#959AA1"
+
+[land.water]
+# Dark river water.
+dark = "#0F1519"
+base = "#161E24"
+light = "#202B33"
+
+[land.rock]
+# Slag outcrops.
+dark = "#3B3D42"
+base = "#4A4C52"
+light = "#5D5F66"
+
+[land.cliff]
+# Blackened bluff.
+dark = "#17171A"
+base = "#222225"
+light = "#2F2F33"
+
+[land.shallow]
+# Ford: murky slate.
+dark = "#2B363D"
+base = "#38474F"
+light = "#485A64"
+
+[overlay.ashfall]
+speck = "#2A2B2E"
+max_coverage_permille = 550
+
+[overlay.pitchblende]
+chunk = "#8A9A3C"
+glint = "#D7E26A"
+max_coverage_permille = 600
+glint_one_in = 7

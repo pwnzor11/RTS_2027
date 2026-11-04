@@ -26,7 +26,7 @@ public sealed class SceneRenderer : IDisposable
     private readonly RenderMemory _memory = new();
     private readonly WallTiler _walls = new();
     private readonly List<DrawItem> _items = new();
-    private readonly TerrainLook _rustBeltTerrain = new();
+    private readonly ThemedTerrainLook _terrain = new();
     private bool _disposed;
 
     /// <summary>
@@ -56,9 +56,9 @@ public sealed class SceneRenderer : IDisposable
     {
         SimSnapshot snapshot = frame.Snapshot;
         MapData? map = frame.Sim?.Setup.Map;
-        if (map is not null && TerrainPalette.IsRustBelt(map.Theater))
+        if (map is not null)
         {
-            _rustBeltTerrain.Draw(batch, pixel, map, camera);
+            _terrain.Draw(batch, pixel, map, camera);
         }
         else
         {
@@ -73,8 +73,10 @@ public sealed class SceneRenderer : IDisposable
         // M3: ground layers and surfacing telegraphs sit on the terrain, under buildings and units.
         GroundOverlay.DrawBelowUnits(batch, pixel, snapshot, camera, viewport);
         TelegraphRenderer.Draw(batch, pixel, snapshot.Telegraphs, snapshot.Tick, camera, viewport);
+        if (frame.Sim is not null) FoamOverlay.Draw(batch, frame.Sim, snapshot.Viewer, camera);
 
         DrawSprites(batch, pixel, frame, camera);
+        GarrisonOverlay.Draw(batch, snapshot, camera);
         DrawEffects(batch, snapshot, camera);
 
         ProjectileRenderer.Draw(batch, pixel, frame.Projectiles, camera);
