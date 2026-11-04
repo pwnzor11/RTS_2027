@@ -44,6 +44,13 @@ public static class SpectatorSetup
         return SkirmishGame.Create(rulesDir, settings);
     }
 
+    /// <summary>Per sim player (player order of the settings), true when its slot is an AI slot with the Commander flag.</summary>
+    public static IReadOnlyList<bool> CommandersOf(Screens.SkirmishSettings settings)
+    {
+        ArgumentNullException.ThrowIfNull(settings);
+        return settings.PlayerSlots.Select(i => settings.Slots[i].Kind == Screens.SlotKind.Ai && settings.Slots[i].Commander).ToArray();
+    }
+
     /// <summary>A headless spectator host over <paramref name="game"/>: AIs attached, <see cref="SimHost.Spectator"/> set, full vision.</summary>
     public static SimHost CreateHost(SkirmishGame game)
     {

@@ -11,7 +11,8 @@ public static class SpectatorTable
     /// <summary>One row per non-neutral player, in slot order, read from the sim as it stands.</summary>
     /// <param name="sim">The simulation (read between steps).</param>
     /// <param name="income">Supplies income per minute; null gives 0.</param>
-    public static IReadOnlyList<SpectatorRow> Collect(Simulation sim, IncomeTracker? income = null)
+    /// <param name="commanders">M5: per sim player, true when an LLM commander leads it (null or short = false).</param>
+    public static IReadOnlyList<SpectatorRow> Collect(Simulation sim, IncomeTracker? income = null, IReadOnlyList<bool>? commanders = null)
     {
         int players = sim.Setup.PlayerCount;
         var army = new int[players];
@@ -43,15 +44,17 @@ public static class SpectatorTable
             rows.Add(new SpectatorRow(p, sim.Players.Team[p], sim.Players.Faction[p], sim.TierOf((byte)p), sim.Players.Cash[p],
                 sim.Players.Stored[p], income?.IncomePerMinute(p) ?? 0, army[p], structures[p], sim.Players.PowerOut[p],
                 sim.Players.PowerUse[p], sim.StatsOf((byte)p), System.Numerics.BitOperations.PopCount(sim.Players.Upgrades[p]),
-                sim.Players.Defeated[p]));
+                sim.Players.Defeated[p], commanders is not null && p < commanders.Count && commanders[p]));
         }
 
         return rows;
     }
 
+    private static string Tag(SpectatorRow r) => r.Commander ? " " + Screens.SetupText.SpectatorTag : "";
+
     /// <summary>Compact one-line form for the top strip.</summary>
     public static string Compact(SpectatorRow r) =>
-        $"P{r.Player + 1} {r.Faction} T{r.Tier}  ${r.Cash + r.Stored}  +{r.IncomePerMinute}/m  army {r.ArmyValue}  bld {r.Structures}  K{r.Stats.Kills}/L{r.Stats.UnitsLost}"
+        $"P{r.Player + 1}{Tag(r)} {r.Faction} T{r.Tier}  ${r.Cash + r.Stored}  +{r.IncomePerMinute}/m  army {r.ArmyValue}  bld {r.Structures}  K{r.Stats.Kills}/L{r.Stats.UnitsLost}"
         + (r.Defeated ? "  OUT" : "");
 
     /// <summary>Header for <see cref="Detail"/> and <see cref="Final"/>.</summary>
@@ -59,7 +62,7 @@ public static class SpectatorTable
 
     /// <summary>Detail line (Tab): every column of the design table.</summary>
     public static string Detail(SpectatorRow r) =>
-        $"P{r.Player + 1,-6} {r.Faction,-10} {r.Tier,-5} {r.Cash + r.Stored,-5} {r.IncomePerMinute,-9} {r.ArmyValue,-5} {r.Structures,-7} "
+        $"{"P" + (r.Player + 1) + Tag(r),-7} {r.Faction,-10} {r.Tier,-5} {r.Cash + r.Stored,-5} {r.IncomePerMinute,-9} {r.ArmyValue,-5} {r.Structures,-7} "
         + $"{r.PowerOut}/{r.PowerUse,-4} {r.Stats.UnitsBuilt,-6} {r.Stats.UnitsLost,-5} {r.Stats.Kills,-6} {r.Upgrades}"
         + (r.Defeated ? "  OUT" : "");
 
