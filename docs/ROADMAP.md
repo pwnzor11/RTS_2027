@@ -116,6 +116,9 @@ Both factions, full tech tree, map editor, real AI with difficulty levels, audio
 - [x] M3-16 Main menu lobby: illustrated animated background, full menu (Continue, Campaign new/load, Skirmish new/load, Replays, Archive, How to play, Settings, Quit; LAN and Map editor greyed until built)
 - [x] M3-17 Archive: screens, unlock tracking, approved lore in data/archive (wiring into GameScreen/menu → M3-18; Technology entries still stubs)
 - [ ] M3-18 Game wiring left by wave 2: sprite turret/shadow/dive layers in the renderer, Sunrise button + targeting + flash in GameScreen, ArchiveTracker.Observe in GameScreen, a Hatch → Bore Head button (sim ApplyUpgrade exists; no UI issues CommandKind.Upgrade)
+- [ ] M3-20 Menu back-ends: in-game save/load for skirmish and campaign (rebuild AI + script state around a loaded sim) so
+  Continue/Load work; a replay viewer behind Replays; UI sound ids (ui_move/ui_select/ui_back/ui_deny) in sounds.toml;
+  check building manifests' [house] ramps (menu needed HouseRamp.Standard)
 - [ ] M3-19 Mission replays (record mission id + script hash; replay re-runs the script; ReplayPlayer hook for PlaceInitialActors)
 - [x] M3-INT Wave-1 integration gaps (underground vision, Blackout fog, jam/seismic emitter cache, air vs placement, engineer right-click, audio listener + select sound, CREDITS)
 
