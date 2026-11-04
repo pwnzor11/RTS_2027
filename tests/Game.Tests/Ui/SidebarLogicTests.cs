@@ -31,7 +31,7 @@ public sealed class SidebarLogicTests
         Assert.Equal(ProductionCategory.Vehicle, SidebarTabs.CategoryOf(SidebarTab.Vehicles));
         for (int i = 0; i < SidebarTabs.Count; i++)
             Assert.Equal((SidebarTab)i, SidebarTabs.TabOf(SidebarTabs.CategoryOf((SidebarTab)i)));
-        Assert.Null(SidebarTabs.TabOf(ProductionCategory.Aircraft));
+        Assert.Equal(SidebarTab.Aircraft, SidebarTabs.TabOf(ProductionCategory.Aircraft));   // M4-09: the Aircraft tab exists
         Assert.Equal("QWERT", new string(Enumerable.Range(0, 5).Select(i => SidebarTabs.KeyLetter((SidebarTab)i)).ToArray()));
     }
 

@@ -46,7 +46,7 @@ public sealed class SidebarLayout
     /// <summary>The Repair mode toggle.</summary>
     public Rectangle RepairButton { get; }
 
-    /// <summary>The four tabs, in <see cref="SidebarTab"/> order.</summary>
+    /// <summary>The tabs, in <see cref="SidebarTab"/> order.</summary>
     public IReadOnlyList<Rectangle> Tabs { get; }
 
     /// <summary>The area the cameo buttons fill.</summary>
@@ -103,7 +103,11 @@ public sealed class SidebarLayout
     }
 
     /// <summary>Computes the layout for a window of <paramref name="windowWidth"/> x <paramref name="windowHeight"/> pixels.</summary>
-    public static SidebarLayout Compute(int windowWidth, int windowHeight, float uiScale)
+    /// <param name="windowWidth">Window width in pixels.</param>
+    /// <param name="windowHeight">Window height in pixels.</param>
+    /// <param name="uiScale">UI scale (1, 1.5 or 2).</param>
+    /// <param name="tabCount">Tabs to lay out (M4: 6 while the Aircraft tab is shown).</param>
+    public static SidebarLayout Compute(int windowWidth, int windowHeight, float uiScale, int tabCount = SidebarTabs.Count)
     {
         int pad = Math.Max(2, Px(4, uiScale)), gap = Math.Max(1, Px(3, uiScale));
         int width = WidthFor(windowWidth, uiScale);
@@ -131,7 +135,7 @@ public sealed class SidebarLayout
         var repair = new Rectangle(contentX + half + gap, y, contentW - half - gap, rowH);
         y += rowH + gap;
 
-        var tabs = new Rectangle[SidebarTabs.Count];
+        var tabs = new Rectangle[Math.Clamp(tabCount, 1, SidebarTabs.CountWithAircraft)];
         for (int i = 0; i < tabs.Length; i++)
         {
             int left = contentX + contentW * i / tabs.Length, right = contentX + contentW * (i + 1) / tabs.Length;
