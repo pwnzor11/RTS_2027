@@ -16,3 +16,172 @@ Researched at the Engineering Works, Foundation Grouting fills the soft ground e
 # ASSUMED (M3-17) TODO (M4): replace TBD with the mission id that releases this entry.
 unlock = "campaign:TBD"
 
+
+[[entry]]
+id = "auth_up_flak_vests"
+category = "Upgrade"
+faction = "authority"
+title = "Flak Vests"
+subtitle = "Padded infantry armour"
+field_note = "BULLETIN 14 // WEAR THE VEST. SIGN FOR THE VEST. RETURN THE VEST. STOP."
+body = '''
+[DRAFT] Quilted, steel-plated vests issued to every infantryman of the district. They add a measure of toughness to riflemen and engineers alike. Quartermasters count them in at the end of each shift.
+'''
+# ASSUMED (M4-INT1) DRAFT for owner approval (D-086): text built from design 08 section 4; replace the open unlock with a mission id when known.
+unlock = "open"
+
+[[entry]]
+id = "auth_up_convoy_drill"
+category = "Upgrade"
+faction = "authority"
+title = "Convoy Drill"
+subtitle = "Faster light vehicles"
+field_note = "BULLETIN 15 // KEEP STATION. KEEP SPEED. KEEP THE INTERVAL. STOP."
+body = '''
+[DRAFT] A standard drill that trains drivers to keep a tight interval at speed. Scout cars, scrapers and carriers all move faster. The drill sergeants paint the interval on the road.
+'''
+# ASSUMED (M4-INT1) DRAFT for owner approval (D-086): text built from design 08 section 4; replace the open unlock with a mission id when known.
+unlock = "open"
+
+[[entry]]
+id = "auth_up_composite_armour"
+category = "Upgrade"
+faction = "authority"
+title = "Composite Armour"
+subtitle = "Thicker tank plating"
+field_note = "BULLETIN 21 // LAYERED PLATE, LAYERED TRUST. STOP."
+body = '''
+[DRAFT] Steel, rubber and ceramic bonded together in tank and Bulwark hulls. Machines take more hits before they fall. The foundry works through the night to fit the plates.
+'''
+# ASSUMED (M4-INT1) DRAFT for owner approval (D-086): text built from design 08 section 4; replace the open unlock with a mission id when known.
+unlock = "open"
+
+[[entry]]
+id = "auth_up_sodium_lamps"
+category = "Upgrade"
+faction = "authority"
+title = "Sodium Lamps"
+subtitle = "Brighter searchlight beams"
+field_note = "BULLETIN 22 // ORANGE LIGHT, LONG REACH. STOP."
+body = '''
+[DRAFT] New lamps in the searchlight towers throw an orange beam much farther than the old arc. Towers see further into the dark and the smoke. The lamp operators complain only about the heat.
+'''
+# ASSUMED (M4-INT1) DRAFT for owner approval (D-086): text built from design 08 section 4; replace the open unlock with a mission id when known.
+unlock = "open"
+
+[[entry]]
+id = "auth_up_tungsten_shot"
+category = "Upgrade"
+faction = "authority"
+title = "Tungsten Shot"
+subtitle = "Armour-piercing tank rounds"
+field_note = "BULLETIN 31 // HEAVY SHOT FOR HEAVY TARGETS. COUNT EVERY ROUND. STOP."
+body = '''
+[DRAFT] Dense tungsten-cored shells for the tank cannon, issued from the district's tightest stores. Each round hits harder. Nobody is allowed to waste one on practice.
+'''
+# ASSUMED (M4-INT1) DRAFT for owner approval (D-086): text built from design 08 section 4; replace the open unlock with a mission id when known.
+unlock = "open"
+
+[[entry]]
+id = "auth_up_signals_net"
+category = "Upgrade"
+faction = "authority"
+title = "Signals Net"
+subtitle = "Wider base sight"
+field_note = "BULLETIN 32 // MORE WIRES, MORE EYES. STOP."
+body = '''
+[DRAFT] A network of lines and relays tying every building to the Signals Headquarters. Each structure sees further across the district. Operators note every contact in the log.
+'''
+# ASSUMED (M4-INT1) DRAFT for owner approval (D-086): text built from design 08 section 4; replace the open unlock with a mission id when known.
+unlock = "open"
+
+[[entry]]
+id = "dir_up_mass_conscription"
+category = "Upgrade"
+faction = "directorate"
+title = "Mass Conscription"
+subtitle = "Cheaper, faster conscripts"
+field_note = "VOICE: \"THE ANNEX HAS ALWAYS HAD MANY HANDS. NOW IT WILL USE THEM.\""
+body = '''
+[DRAFT] A Committee decree that widens the draft and shortens the training. Conscripts cost less and come out of the muster hatches faster. The decree is read aloud at every shaft.
+'''
+# ASSUMED (M4-INT1) DRAFT for owner approval (D-086): text built from design 08 section 4; replace the open unlock with a mission id when known.
+unlock = "open"
+
+[[entry]]
+id = "dir_up_tunnel_bracing"
+category = "Upgrade"
+faction = "directorate"
+title = "Tunnel Bracing"
+subtitle = "Faster hatch and bore head work"
+field_note = "VOICE: \"A BRACED TUNNEL IS A PATIENT TUNNEL. LET THEM BE PATIENT.\""
+body = '''
+[DRAFT] Timber and iron props in the tunnel mouths speed up work at hatches and bore heads. Crews dig faster and with less fear of the roof. Shaft foremen are paid by the metre.
+'''
+# ASSUMED (M4-INT1) DRAFT for owner approval (D-086): text built from design 08 section 4; replace the open unlock with a mission id when known.
+unlock = "open"
+
+[[entry]]
+id = "dir_up_hot_cores"
+category = "Upgrade"
+faction = "directorate"
+title = "Hot Cores"
+subtitle = "More radiation per shell"
+field_note = "VOICE: \"A HOTTER CORE GIVES A LONGER MEMORY. LET THE GROUND REMEMBER.\""
+body = '''
+[DRAFT] Reactor slag packed into the crawler's rounds so each shell leaves more radiation behind. The ground stays deadly for longer. Handlers use tongs.
+'''
+# ASSUMED (M4-INT1) DRAFT for owner approval (D-086): text built from design 08 section 4; replace the open unlock with a mission id when known.
+unlock = "open"
+
+[[entry]]
+id = "dir_up_lead_lining"
+category = "Upgrade"
+faction = "directorate"
+title = "Lead Lining"
+subtitle = "Radiation-proof infantry"
+field_note = "VOICE: \"LEAD IS THE ONLY HONEST COAT. WEAR IT AND WALK.\""
+body = '''
+[DRAFT] Sheets of lead sewn into every Directorate uniform make its infantry nearly proof against radiation. They can walk through the glow that stops others. The coats are heavy and the soldiers like them anyway.
+'''
+# ASSUMED (M4-INT1) DRAFT for owner approval (D-086): text built from design 08 section 4; replace the open unlock with a mission id when known.
+unlock = "open"
+
+[[entry]]
+id = "dir_up_blackout_canisters"
+category = "Upgrade"
+faction = "directorate"
+title = "Blackout Canisters"
+subtitle = "Longer Blackout smoke"
+field_note = "VOICE: \"THE DARK IS A GIFT. WE GIVE MORE OF IT.\""
+body = '''
+[DRAFT] Larger canisters in the dirigible's bomb bays stretch the Blackout over a bigger span of time. Enemy sight stays shut for longer. Loaders work by feel.
+'''
+# ASSUMED (M4-INT1) DRAFT for owner approval (D-086): text built from design 08 section 4; replace the open unlock with a mission id when known.
+unlock = "open"
+
+[[entry]]
+id = "dir_up_order_seven"
+category = "Upgrade"
+faction = "directorate"
+title = "Order Seven"
+subtitle = "Faster Sunrise charging"
+field_note = "VOICE: \"ORDER SEVEN WAS SIGNED IN THE NIGHT. THE SUNRISE WILL HURRY.\""
+body = '''
+[DRAFT] A secret Committee order that puts every spare reactor hand onto the Sunrise Device. The device charges much faster. Few outside the Committee have read it.
+'''
+# ASSUMED (M4-INT1) DRAFT for owner approval (D-086): text built from design 08 section 4; replace the open unlock with a mission id when known.
+unlock = "open"
+
+[[entry]]
+id = "dir_up_fervour"
+category = "Upgrade"
+faction = "directorate"
+title = "Fervour"
+subtitle = "Tougher, faster-firing conscripts"
+field_note = "VOICE: \"A CITIZEN WHO BELIEVES IS A CITIZEN WHO HOLDS. FIRE, CITIZENS, FIRE.\""
+body = '''
+[DRAFT] Rallies, songs and extra rations push conscripts to fight harder and shoot faster. They take a few more hits than before. The Commissars say it cannot be trained, only inspired.
+'''
+# ASSUMED (M4-INT1) DRAFT for owner approval (D-086): text built from design 08 section 4; replace the open unlock with a mission id when known.
+unlock = "open"

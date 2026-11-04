@@ -76,3 +76,120 @@ A wheeled tanker with spray booms and a neutralising rinse. Decon crews follow t
 # ASSUMED (M3-17) TODO (M4): replace TBD with the mission id that releases this entry.
 unlock = "campaign:TBD"
 
+
+[[entry]]
+id = "auth_engineer"
+category = "Unit"
+faction = "authority"
+title = "Field Engineer"
+subtitle = "Repair and capture infantry"
+field_note = "FIELD MAN 4 // MENDS, SEALS, SIGNS FOR WHAT HE TAKES. NO WEAPON ISSUED. STOP."
+body = '''
+[DRAFT] The Authority's answer to a broken wall is a clerk with a toolbag and a stamped warrant. The field engineer repairs friendly buildings and, where the district allows, walks into an abandoned or hostile one and claims it for the ledger. He carries no gun and is escorted everywhere he goes.
+'''
+# ASSUMED (M4-INT1) DRAFT for owner approval (D-086): text built from design 08 section 4; replace the open unlock with a mission id when known.
+unlock = "open"
+
+[[entry]]
+id = "auth_marksman"
+category = "Unit"
+faction = "authority"
+title = "Marksman"
+subtitle = "Long-range anti-infantry"
+field_note = "FIELD MAN 7 // ONE ROUND, ONE ENTRY IN THE LOG. HOLD THE WINDOW. STOP."
+body = '''
+[DRAFT] Picked from the rifle ranges for patience rather than courage, the marksman trades speed for reach. Posted at a blockhouse window he is the most feared thing on a street. The Authority issues him few rounds and expects a count at the end of every shift.
+'''
+# ASSUMED (M4-INT1) DRAFT for owner approval (D-086): text built from design 08 section 4; replace the open unlock with a mission id when known.
+unlock = "open"
+
+[[entry]]
+id = "auth_carrier"
+category = "Unit"
+faction = "authority"
+title = "Sealed Carrier"
+subtitle = "Ashfall-proof transport"
+field_note = "CARRIER 5 // FIVE SEATS, ONE DECON HATCH. DO NOT OPEN IN THE ASH. STOP."
+body = '''
+[DRAFT] A boxy, lead-lined troop carrier that moves five riflemen across open ground without a single breath of ashfall reaching them. Crews learn to drive by periscope and to hate the smell of the seals. Every returning carrier goes straight to the decon line.
+'''
+# ASSUMED (M4-INT1) DRAFT for owner approval (D-086): text built from design 08 section 4; replace the open unlock with a mission id when known.
+unlock = "open"
+
+[[entry]]
+id = "auth_seismic_mortar"
+category = "Unit"
+faction = "authority"
+title = "Seismic Mortar"
+subtitle = "Anti-tunnel artillery"
+field_note = "MORTAR 6 // SHELL THE GROUND, NOT THE SKY. LISTEN FOR THE ANSWER. STOP."
+body = '''
+[DRAFT] A tracked mortar whose shells are fused to burst under the surface, where Directorate bores and tunnel heads think they are safe. It was designed in the engineering offices beside the seismograph stations and works best with their readings in hand. Hatches and bore heads are its favourite targets.
+'''
+# ASSUMED (M4-INT1) DRAFT for owner approval (D-086): text built from design 08 section 4; replace the open unlock with a mission id when known.
+unlock = "open"
+
+[[entry]]
+id = "auth_foam_truck"
+category = "Unit"
+faction = "authority"
+title = "Quick-Set Foam Layer"
+subtitle = "Ground-sealing support vehicle"
+field_note = "FOAM 3 // LAY IT, LEAVE IT, LET IT SET. DO NOT STAND IN IT. STOP."
+body = '''
+[DRAFT] A tanker truck with a spray boom that lays quick-setting foam across the ground. Nothing can surface or break through the coated cells, and every unit on foot or wheel crawls through them at half pace. It is the engineers' tidy, portable cousin of Foundation Grouting.
+'''
+# ASSUMED (M4-INT1) DRAFT for owner approval (D-086): text built from design 08 section 4; replace the open unlock with a mission id when known.
+unlock = "open"
+
+[[entry]]
+id = "auth_interceptor"
+category = "Unit"
+faction = "authority"
+title = "Interceptor"
+subtitle = "Prop fighter"
+field_note = "WING 2 // CLEAR THE SKY OVER THE DISTRICT. LAND ON TIME. STOP."
+body = '''
+[DRAFT] A single-seat propeller fighter built at the Airfield for one job, which is to keep the sky empty of Directorate dirigibles. It is fast, lightly armoured and flown by volunteers from the old aero clubs. Ground crews paint a tally on the cowling for every airship brought down.
+'''
+# ASSUMED (M4-INT1) DRAFT for owner approval (D-086): text built from design 08 section 4; replace the open unlock with a mission id when known.
+unlock = "open"
+
+[[entry]]
+id = "auth_bomber"
+category = "Unit"
+faction = "authority"
+title = "Heavy Bomber"
+subtitle = "Four-engine ground-attack aircraft"
+field_note = "WING 9 // BOMBS AWAY ON THE MARKED GRID. RETURN FOR REARMING. STOP."
+body = '''
+[DRAFT] A four-engined bomber that drops a stick of splash bombs on whatever the district marks on the map. It is the Authority's most expensive aircraft and flies only with fighter cover. The crews are decorated before they leave the ground.
+'''
+# ASSUMED (M4-INT1) DRAFT for owner approval (D-086): text built from design 08 section 4; replace the open unlock with a mission id when known.
+unlock = "open"
+
+[[entry]]
+id = "auth_howitzer"
+category = "Unit"
+faction = "authority"
+title = "Field Howitzer"
+subtitle = "Long-range artillery"
+field_note = "GUN 12 // RANGE IS MERCY. FIRE ON THE SIGNAL, NOT BEFORE. STOP."
+body = '''
+[DRAFT] A heavy gun on a tracked carriage that shells targets far beyond its own sight, so it relies on scouts and the signals network to find them. Crews are artillery officers of the old army, who still insist on drill. It is the best late-war gun the Authority can field.
+'''
+# ASSUMED (M4-INT1) DRAFT for owner approval (D-086): text built from design 08 section 4; replace the open unlock with a mission id when known.
+unlock = "open"
+
+[[entry]]
+id = "auth_bulwark"
+category = "Unit"
+faction = "authority"
+title = "Bulwark Heavy Tank"
+subtitle = "Heavy armour"
+field_note = "ARMOUR 8 // SLOW, THICK AND NOT STOPPING. KEEP CLEAR OF THE TRACKS. STOP."
+body = '''
+[DRAFT] A wide, slab-sided tank with armour plated like a bank vault and tracks wide enough to crush light vehicles. It is slow, and the Authority considers that a feature. A line of Bulwarks is how a reconstruction town tells its neighbours that it will not move.
+'''
+# ASSUMED (M4-INT1) DRAFT for owner approval (D-086): text built from design 08 section 4; replace the open unlock with a mission id when known.
+unlock = "open"
