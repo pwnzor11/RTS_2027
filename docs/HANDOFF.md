@@ -29,8 +29,8 @@ expansion plan is D-087 (4 factions, skirmish depth, LLM commander) and the new 
    settings, never logged).
 
 ## Half-finished work
-- M3-16 main menu lobby: merged at wrap-up (42c2482); its scenes have not been seen on a screen (no GPU here) — first look is
-  the owner's. The menu's Archive button opens the real ArchiveScreen (M3-17 kept on merge).
+- M3-16 main menu lobby: merged at wrap-up (42c2482); only headless renders exist (art_out/menu_lobby*.png, menu_scene_1..4.png,
+  sent to the owner) — the first live look is the owner's. The menu's Archive button opens the real ArchiveScreen (M3-17 kept on merge).
 - M3-ART structures: only dir_shaft (rev 2, on wp/art-str1) is done; wp/art-str2 was created but never used.
 - Merge of art branches into code: not done (art is pushed only by the owner script).
 - Leftover branches on GitHub the owner can delete after landing: `wp/m3-*`, `wp/art-*` once merged, older `integ-*`.
