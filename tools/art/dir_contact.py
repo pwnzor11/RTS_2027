@@ -125,6 +125,59 @@ def conscript():
     return out, "dir_conscript_contact.png"
 
 
+def infantry(sid):
+    """Generic Directorate infantry sheet (M3-ART-INF): asset rows above the conscript rows, same layout as conscript()."""
+    mod, D = inf_frames(sid)
+    _m, K = inf_frames("dir_conscript")
+    _m2, A = inf_frames("auth_rifleman")
+    ox, oy = mod.ORIGIN
+    row = lambda G, st, k=0: [G(st, f, k) for f in range(8)]
+    both = lambda st, k=0: [row(D, st, k), row(K, st, k)]
+    blocks = []
+    blocks.append((f"IDLE, 8 facings (N NE E SE S SW W NW).  Rows: {mod.TITLE} / Directorate conscript (scale reference).  Left 1x (true size), right 2x",
+                   hcat([tile(both("idle"), 1), tile(both("idle"), 2)])))
+    blocks.append(("FIRE frame 1 and 2 at 1x then 2x (frame 2 = muzzle flash / shot), 8 facings.  Rows: asset f1, conscript f1, asset f2, conscript f2",
+                   hcat([tile(both("fire", 0) + both("fire", 1), 1), tile(both("fire", 1), 2)])))
+    wk = lambda G: [[G("walk", f, k) for f in range(8)] for k in range(6)]
+    blocks.append(("WALK 6 frames x 8 facings at 1x.  Left this asset, right Directorate conscript",
+                   hcat([tile(wk(D), 1), tile(wk(K), 1)], 40)))
+    w2 = lambda G, f: [[G("walk", f, k) for k in range(6)]]
+    blocks.append(("WALK at 2x, facings E (top) and S (bottom).  Left this asset, right conscript",
+                   hcat([tile(w2(D, 2) + w2(D, 4), 2), tile(w2(K, 2) + w2(K, 4), 2)], 30)))
+    dd = lambda G: [[G("die", 0, k) for k in range(6)]]
+    blocks.append(("DIE 6 frames (fall to the east), 1x and 2x.  This asset then conscript",
+                   hcat([tile(dd(D), 1), tile(dd(D), 2), tile(dd(K), 1), tile(dd(K), 2)], 24)))
+    cell, SL = 64, [(32, 36), (15, 25), (49, 25), (15, 53), (49, 53)]
+    face = [0, 2, 4, 6, 3]
+    img = Image.new("RGB", (cell * 6, cell), ASH)
+    rng = np.random.default_rng(7)
+    arr = np.asarray(img).astype(float) + rng.normal(0, 3, (cell, cell * 6, 1))
+    img = Image.fromarray(np.clip(arr, 0, 255).astype(np.uint8))
+    for k, (sx, sy) in enumerate(SL):
+        for G, cx in ((D, 0), (K, 2), (A, 4)):
+            f = G("idle", face[k])
+            img.paste(f, (cx * cell + sx - ox, sy - oy), f)
+    blocks.append(("IN CONTEXT 1x and 3x: five of this asset (left), five conscripts (middle), five Authority riflemen (right)",
+                   hcat([img, zoom(img, 3).crop((0, 0, cell * 6 * 3 // 2, cell * 3))], 20)))
+    R.TOL = 0
+    ramp_set = {tuple(c) for c in C.HOUSE}
+    base = Image.new("RGBA", (cell, cell), ASH + (255,))
+    for k, (sx, sy) in enumerate(SL):
+        base.alpha_composite(D("idle", face[k]), (sx - ox, sy - oy))
+    vs = [("magenta", base)]
+    for n, rp in (("amber", C.make_ramp(C.hx("#3A2A06"), C.hx("#E0A020"), C.hx("#FFE9A0"))),
+                  ("red", C.make_ramp(C.hx("#2A0D08"), C.hx("#B02A1A"), C.hx("#F0A090"))),
+                  ("blue", C.make_ramp(C.hx("#0C1B2E"), C.hx("#2E5A8B"), C.hx("#9CC6EE")))):
+        out, _c = R.remap(base, rp)
+        a0, a1 = np.asarray(base).reshape(-1, 4), np.asarray(out).reshape(-1, 4)
+        ch = (a0 != a1).any(axis=1)
+        assert all(tuple(p[:3]) in ramp_set for p in a0[ch]), "remap touched a non-ramp pixel"
+        vs.append((n, out))
+    blocks.append(("HOUSE REMAP at 3x (exact-match magenta ramp): magenta, amber, red, blue",
+                   tile([[v for _n, v in vs]], 3, 6)))
+    return stack(blocks), f"{sid}_contact.png"
+
+
 def struct_states(sid):
     mod = BS.load_module(sid)
     sh = Image.open(os.path.join(C.ROOT, "data", "sprites", "buildings", f"{sid}.png")).convert("RGBA")
@@ -253,7 +306,18 @@ def struct_sheet(sid, aid, dname, aname, out_name):
 
 if __name__ == "__main__":
     which = sys.argv[1]
-    res = conscript() if which == "conscript" else (shaft() if which == "shaft" else vent())
+    if which == "conscript":
+        res = conscript()
+    elif which == "shaft":
+        res = shaft()
+    elif which == "vent":
+        res = vent()
+    elif which.startswith("struct:"):
+        # struct:<dir_id>:<auth_id>:<Dir name>:<Auth name>
+        _t, sid, aid, dname, aname = which.split(":")
+        res = struct_sheet(sid, aid, dname, aname, f"{sid}_contact.png")
+    else:
+        res = infantry(which)
     for im, name in zip(res[0::2], res[1::2]):
         p = os.path.join(C.PILOT, name)
         im.save(p, optimize=True)
