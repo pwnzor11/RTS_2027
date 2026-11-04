@@ -62,19 +62,47 @@ def base(S, dmg, H, tr, ytop, bot, nst, mouth_top, hood_z, flank_w):
 
 
 def cage(S, i, dmg, mode, zr):
-    pts = ((-0.5, 0.3), (0.5, 0.3), (-0.5, 1.1), (0.5, 1.1))
+    """Open lift cage: dark girder uprights and bars with light top rails, so the pit, lid and wheel valve show through the gaps."""
     top = zr + (0.55 if dmg else 1.15)
+    mid = zr + (0.3 if dmg else 0.58)
+    # pit mouth + hinged lid + wheel valve first, so they are seen between the bars
+    S.bb("pit", -0.46, 0.46, 0.34, 1.06, zr, zr + 0.03, "dark", 0.0, nocast=True)
+    if dmg:
+        S.bb("lidd", -0.4, 0.4, 0.4, 0.95, zr + 0.03, zr + 0.1, "door", 0.01, rot=(0, 0, 12))
+    else:
+        S.bb("lid", -0.4, 0.4, 0.8, 1.0, zr + 0.03, zr + 0.12, "door", 0.01)
+        S.bb("lidopen", -0.4, 0.4, 0.4, 0.8, zr + 0.03, zr + 0.1, "steel", 0.01)
+        S.bb("lidstripe", -0.4, 0.4, 0.74, 0.8, zr + 0.1, zr + 0.12, "yellow", 0.0, nocast=True)
+        S.cyl("stem", 0.05, 0.5, (0.0, 0.62, zr + 0.3), "steel", verts=8)
+        wz = zr + 0.55
+        S.cyl("carring", 0.23, 0.05, (0.0, 0.62, wz), "brass", verts=14)
+        S.cyl("carhole", 0.15, 0.07, (0.0, 0.62, wz), "dark", verts=12, nocast=True)
+        for k in range(2):
+            S.bb(f"carspoke{k}", -0.22, 0.22, 0.62 - 0.03, 0.62 + 0.03, wz - 0.03, wz + 0.04, "brass", 0.0, rot=(0, 0, k * 90 + (i * 22.5 if mode == "idle" else 0)), nocast=True)
+    pts = ((-0.5, 0.3), (0.5, 0.3), (-0.5, 1.1), (0.5, 1.1))
     for k, (px, py) in enumerate(pts):
         if dmg and k == 1:
-            L.beam(S, "postb", (px, py, zr), (px + 0.5, py - 0.4, zr + 0.3), 0.07, "steel")
+            L.beam(S, "postb", (px, py, zr), (px + 0.5, py - 0.4, zr + 0.3), 0.08, "girder")
             continue
-        S.bb(f"post{k}", px - 0.04, px + 0.04, py - 0.04, py + 0.04, zr, top, "steel", 0.0)
-    for nm, (ax, bx, ay, by) in (("S", (-0.55, 0.55, 0.22, 0.3)), ("N", (-0.55, 0.55, 1.1, 1.18)), ("W", (-0.55, -0.47, 0.22, 1.18)), ("E", (0.47, 0.55, 0.22, 1.18))):
-        S.bb("cagebar" + nm, ax, bx, ay, by, top, top + 0.07, "oxide" if nm == "S" else "hull2", 0.0)
-    if not dmg:
-        bob = (0.0, 0.1, 0.0, -0.1)[i % 4] if mode != "build" else 0.0
-        S.bb("car", -0.38, 0.38, 0.45, 0.95, zr + 0.2 + bob, zr + 0.75 + bob, "oxide", 0.02)
-        S.bb("cardark", -0.3, 0.3, 0.42, 0.45, zr + 0.3 + bob, zr + 0.65 + bob, "dark", 0.0, nocast=True)
+        S.bb(f"post{k}", px - 0.06, px + 0.06, py - 0.06, py + 0.06, zr, top, "girder", 0.0)
+        S.bb(f"postcap{k}", px - 0.08, px + 0.08, py - 0.08, py + 0.08, top, top + 0.06, "primer", 0.0)
+    # infill bars (S and both sides), thin dark verticals with clear gaps between them
+    for bx in (-0.25, 0.0, 0.25):
+        if not (dmg and bx > 0.1):
+            S.bb("cagebarv", bx - 0.025, bx + 0.025, 0.28, 0.32, zr, top, "girder", 0.0)
+    for by in (0.5, 0.7, 0.9):
+        for sx in (-0.5, 0.5):
+            if not dmg:
+                S.bb("cagebarv", sx - 0.025, sx + 0.025, by - 0.025, by + 0.025, zr, top, "girder", 0.0)
+    for nm, (ax, bx, ay, by, zt, m) in (
+            ("S", (-0.56, 0.56, 0.24, 0.36, top, "primer")), ("W", (-0.56, -0.44, 0.24, 1.16, top, "primer")),
+            ("E", (0.44, 0.56, 0.24, 1.16, top, "primer")), ("N", (-0.56, 0.56, 1.04, 1.16, top, "primer"))):
+        if dmg and nm in ("E",):
+            continue
+        S.bb("cagebar" + nm, ax, bx, ay, by, zt, zt + 0.06, m, 0.0)
+    for nm, (ax, bx, ay, by) in (("S", (-0.5, 0.5, 0.27, 0.33)), ("W", (-0.53, -0.47, 0.3, 1.1)), ("E", (0.47, 0.53, 0.3, 1.1))):
+        if not (dmg and nm != "W"):
+            S.bb("cagemid" + nm, ax, bx, ay, by, mid, mid + 0.05, "girder", 0.0)
     S.cyl("vent", 0.13, 0.55, (0.95, 0.9, zr + 0.28), "hull2", verts=10)
     S.cyl("venth", 0.2, 0.08, (0.95, 0.9, zr + 0.58), "steel", verts=10)
 
@@ -110,7 +138,7 @@ SPEC = dict(
     pad=PAD, env=(-1.3, 1.3, -0.25, 1.3), H=1.2, boxes=[(-1.3, 1.3, -0.25, 1.3)], rings=[],
     clips=(0.6, 1.1), scaf=[(-1.5, -1.0, -1.5, -1.0), (0.9, 1.4, -1.5, -1.0)],
     derrick=(1.4, -1.2, 2.0, (1.0, -0.9, 2.2)), sparks=[(-0.8, 0.0, 1.0), (0.5, 0.8, 1.0), (0.0, 1.0, 1.0)],
-    hide=D.HIDE_ANIM + ("hpanel", "car"), clutter=_clutter, left=_left)
+    hide=D.HIDE_ANIM + ("hpanel", "car", "stem"), clutter=_clutter, left=_left)
 
 
 def build(S, state, i, n):
