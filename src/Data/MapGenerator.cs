@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
+using Rts.Data.MapGen;
 using Rts.Sim.Core;
 using Rts.Sim.Map;
 using Rts.Sim.Rules;
@@ -45,15 +46,70 @@ public static class MapGenerator
     }
 
     /// <summary>
-    /// Generates a map from biome, size, players and seed (design 08 §1, M4). OWNER: M4-02. Stub (M4-01): delegates to the legacy
-    /// 2-player generator at <see cref="CellsFor"/>(size) with the same seed; biome and player count are not used yet.
+    /// Generates a map from biome, size, players and seed (design 08 §1, M4-02), with the biome parameters of
+    /// <c>data/mapgen/biomes.toml</c> (<see cref="BiomeCatalog.Default"/>). See <see cref="GenerateWithMeta(MapGenParams, BiomeParams)"/>.
     /// </summary>
-    public static MapData Generate(MapGenParams p)
+    public static MapData Generate(MapGenParams p) => GenerateWithMeta(p).Map;
+
+    /// <summary>As <see cref="Generate(MapGenParams)"/>, plus the map metadata (biome, symmetry, max players, provenance, ruins).</summary>
+    public static (MapData Map, MapMeta Meta) GenerateWithMeta(MapGenParams p)
     {
         ArgumentNullException.ThrowIfNull(p);
+        if (!Enum.IsDefined(p.Biome)) throw new ArgumentOutOfRangeException(nameof(p), "Unknown biome.");
+        return GenerateWithMeta(p, BiomeCatalog.For(p.Biome));
+    }
+
+    /// <summary>
+    /// Generates a map with explicit biome parameters. The output depends only on (params, biome values): <see cref="SimRandom"/>,
+    /// integer maths and cell-index scans. 2 players use the biome's 2-player symmetry; 3 and 4 players use Rot4 (Q-M4-a option A:
+    /// with 3 players one of the four starts, chosen by seed, stays empty and its fields become a contested expansion). Each attempt
+    /// (seed, seed+1, …, up to <see cref="MaxAttempts"/>) must pass the §1 checks on all symmetry starts with the built-in passability
+    /// rule: Foot + Tracked connectivity, ≥ 2 fields within 14 cells of path, exact path equality, a 5×5 buildable start square and
+    /// ≥ 12 cells between starts. Throws <see cref="InvalidOperationException"/> when no attempt passes.
+    /// </summary>
+    public static (MapData Map, MapMeta Meta) GenerateWithMeta(MapGenParams p, BiomeParams biome)
+    {
+        ArgumentNullException.ThrowIfNull(p);
+        ArgumentNullException.ThrowIfNull(biome);
         if (p.Players < 2 || p.Players > 4) throw new ArgumentOutOfRangeException(nameof(p), "Players must be 2..4.");
-        // M4-02 fills
-        return Generate(CellsFor(p.Size), p.Seed, p.Name ?? DefaultName(p));
+        int n = CellsFor(p.Size);
+        string name = p.Name ?? DefaultName(p);
+        MapSymmetry symmetry = p.Players == 2 ? biome.Symmetry2p : biome.Symmetry4p;
+        if (p.Players > 2 && symmetry != MapSymmetry.Rot4) throw new ArgumentException("3 or 4 players need rot4 symmetry_4p", nameof(biome));
+        string? last = null;
+        for (int attempt = 0; attempt < MaxAttempts; attempt++)
+        {
+            ulong seed = p.Seed + (ulong)attempt;
+            var builder = new ProceduralBuilder(biome, n, symmetry, seed);
+            CellCoord[] orbit = builder.OrbitStarts;
+            MapData full = builder.Build(name, orbit);
+            var fullMeta = new MapMeta(biome.Key, symmetry, orbit.Length, null, builder.Features.ToArray());
+            last = FirstFailure(full, fullMeta);
+            if (last is not null) continue;
+
+            CellCoord[] starts = orbit;
+            if (p.Players == 3)
+            {
+                int empty = (int)(p.Seed % 4UL);   // slot-to-start assignment rotated by seed
+                starts = new CellCoord[3];
+                for (int k = 0; k < 3; k++) starts[k] = orbit[(empty + 1 + k) % 4];
+            }
+            var map = new MapData(name, full.Theater, n, n, full.Template.ToArray(), full.Land.ToArray(), full.HeightLevel.ToArray(),
+                full.Overlay.ToArray(), full.Density.ToArray(), starts);
+            var meta = new MapMeta(biome.Key, symmetry, p.Players, p with { Name = null }, builder.Features.ToArray());
+            return (map, meta);
+        }
+        throw new InvalidOperationException(
+            $"No valid {biome.Key} map for size {n}, {p.Players} players from seed {p.Seed} in {MaxAttempts} tries (last: {last}).");
+    }
+
+    /// <summary>The first §1 check an attempt fails (validator errors and warnings, then exact path equality), or null.</summary>
+    private static string? FirstFailure(MapData map, MapMeta meta)
+    {
+        foreach (MapIssue issue in MapValidator.Validate(map, meta, null))
+            return issue.Code + ": " + issue.Message;
+        PathSpread spread = MapAnalysis.Spread(map, map.StartPositions, null, MapAnalysis.FeatureMask(map, meta.Features));
+        return spread.IsExact ? null : $"path_equality: {spread}";
     }
 
     /// <summary>Generates a map. When <paramref name="name"/> is null the name is "synthetic_&lt;size&gt;_&lt;seed&gt;".</summary>
