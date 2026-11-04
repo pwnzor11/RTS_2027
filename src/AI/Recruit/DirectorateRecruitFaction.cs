@@ -29,6 +29,14 @@ internal sealed class DirectorateRecruitFaction : RecruitFaction
     public override string[] VehicleBag { get; } = ["dir_rocket_truck", "dir_rocket_truck", "dir_reactor_crawler", "dir_rocket_truck"];
     public override string FirstVehicle => "dir_rocket_truck";
     public override bool SkipUnbuildable => true;
+    public override string HarvesterId => "dir_scraper";
+    public override string RefineryId => "dir_smelter_vent";
+    public override string BarracksId => "dir_muster_hatch";
+    public override string FactoryId => "dir_assembly_bore";
+    public override string DefenceId => "dir_pillbox";
+    public override string? ResearchId => "dir_isotope_works";
+    public override string? AirProducerId => "dir_mooring";
+    public override string? SuperweaponBuildingId => "dir_sunrise";
 
     /// <summary>A repertoire that names Directorate structures is used as is; Authority ids in a shared profile are ignored.</summary>
     public override string[] OrderFor(IReadOnlyList<string> repertoire)

@@ -67,34 +67,50 @@ public class DirectorateRecruitTests(ITestOutputHelper log)
         Assert.Equal(4, wins + losses + draws);
     }
 
-    [Fact(Skip = "Test setup races the AI rally march; feature verified in real games (M3-10 report). Fix in M3-11.")]
+    [Fact]
     public void InfantryLeavesIrradiatedCells()
     {
         SimRules rules = TestWorld.Rules.Sim;
         var sim = new Simulation(new SimSetup(1, MapData.CreateFlat(48, 48), 2, rules, TestWorld.Rules.RulesHash)
         { Factions = [Faction.Directorate, Faction.Authority] });
         SkirmishStart.Apply(sim);
-        // contaminate a 5x5 patch around the first Directorate infantry
-        int soldier = 1;
-        while (!sim.Infantry.Slots.IsIndexAlive(soldier) || sim.Infantry.Player[soldier] != 0) soldier++;
+        var driver = new AiDriver(1);
+        var ai = new RecruitAi(TestWorld.Tiers[0]);
+        driver.Add(0, ai, TestWorld.Tiers[0]);
+        var pending = new List<Command>();
+        void Run(int ticks, Func<bool>? until = null)
+        {
+            for (int t = 0; t < ticks; t++)
+            {
+                driver.Collect(sim, pending);
+                sim.Step(pending);
+                pending.RemoveAll(c => c.ExecTick < sim.Tick);
+                if (until != null && until()) return;
+            }
+        }
+        // The start soldiers first march to the rally cell (and the AI sends a wave at once while it owns no scraper), and only idle
+        // infantry is moved off a hot cell. So let the AI settle: run until one of its soldiers stands idle, then contaminate its cell.
+        int soldier = -1;
+        Run(2500, () =>
+        {
+            if (sim.Tick < 600) return false;   // before this the soldiers have not yet been given their first order and only look idle
+            var own = new List<Rts.Sim.View.ViewActor>();
+            sim.ViewFor(0).CopyOwn(own, false);
+            foreach (var a in own)
+                if (a.Kind == ActorKind.Infantry && a.Idle) { soldier = a.Id.Index; return true; }
+            return false;
+        });
+        Assert.True(soldier > 0, "a soldier of the AI stood idle at some point");
+        int before = ai.RadiationMoves;
         CellCoord at = sim.Infantry.Position[soldier].ToCell();
         for (int dy = -2; dy <= 2; dy++)
             for (int dx = -2; dx <= 2; dx++)
             {
                 var c = new CellCoord(at.X + dx, at.Y + dy);
-                if (sim.Ground.Contains(c)) sim.Ground.Radiation[sim.Ground.IndexOf(c)] = 90;
+                if (sim.Ground.Contains(c)) sim.Ground.Radiation[sim.Ground.IndexOf(c)] = 250;   // high enough to outlast the decay until the next decision
             }
-        var driver = new AiDriver(1);
-        var ai = new RecruitAi(TestWorld.Tiers[0]);
-        driver.Add(0, ai, TestWorld.Tiers[0]);
-        var pending = new List<Command>();
-        for (int t = 0; t < 600; t++)
-        {
-            driver.Collect(sim, pending);
-            sim.Step(pending);
-            pending.RemoveAll(c => c.ExecTick < sim.Tick);
-        }
-        log.WriteLine($"radiation moves: {ai.RadiationMoves}");
-        Assert.True(ai.RadiationMoves > 0, "idle infantry on a hot cell was ordered to a clean one");
+        Run(300, () => ai.RadiationMoves > before);
+        log.WriteLine($"radiation moves: {ai.RadiationMoves - before}");
+        Assert.True(ai.RadiationMoves > before, "idle infantry on a hot cell was ordered to a clean one");
     }
 }

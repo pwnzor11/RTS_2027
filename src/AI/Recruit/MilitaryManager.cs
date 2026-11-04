@@ -42,6 +42,15 @@ internal sealed class MilitaryManager
 
     private enum Phase { Gather, Stage, Assault }
 
+    /// <summary>Smallest wave that splits into two prongs.</summary>
+    public const int MinProngArmy = 12;
+    /// <summary>Cells apart two targets must be to count as separate prongs.</summary>
+    public const int ProngSeparationCells = 10;
+    /// <summary>Ticks after a called-off wave before the next may start.</summary>
+    public const int RetreatCooldownTicks = 600;
+    /// <summary>A wave is called off when its health is below (retreat percent + this) percent of its health at launch.</summary>
+    public const int GroupRetreatMarginPct = 10;
+
     private readonly int _threshold;
     private AiRandom? _rng;
     private int _nextThreshold, _nextInterval = WaveIntervalTicks, _bias;
@@ -51,9 +60,22 @@ internal sealed class MilitaryManager
     private int _scoutIdx;
     private Phase _phase = Phase.Gather;
     private int _lastWave, _stageSince, _launchSize;
-    private CellCoord _stage;
+    private CellCoord _stage, _stageB;
+    private readonly HashSet<ulong> _squadB = new();
+    private bool _prong;
+    private long _launchHealth;
+    private int _cooldownUntil;
 
     public MilitaryManager(int attackThreshold) => _threshold = Math.Max(1, attackThreshold);
+
+    /// <summary>M3-11 capabilities (from the profile). The default is the original Recruit behaviour: defend, one prong, never retreat.</summary>
+    public MilitaryOptions Options { get; set; } = MilitaryOptions.Recruit;
+
+    /// <summary>Waves called off because they had lost too much strength.</summary>
+    public int GroupRetreats { get; private set; }
+
+    /// <summary>Waves that went out as two prongs.</summary>
+    public int Prongs { get; private set; }
 
     /// <summary>Faction extras (M3-10): forward staging and tunnel transit for the wave. Null for Authority (behaviour unchanged).</summary>
     public IFactionTactics? Tactics { get; set; }
@@ -122,17 +144,39 @@ internal sealed class MilitaryManager
             foreach (ViewActor a in k.Army)
                 if (a.Idle && Chebyshev(a.Cell, spot) > ReissueDistanceCells && !(_phase != Phase.Gather && _roster.Contains(Key(a))))
                     sink.Issue(CommandKind.AttackMove, a.Id, a.Kind, spot);
+            if (Options.Respond)   // M3-11: the improved response also calls the home guard (tier 1 keeps the original rule)
+            foreach (ViewActor a in k.Home)
+                if (a.Idle && Chebyshev(a.Cell, spot) > ReissueDistanceCells)
+                    sink.Issue(CommandKind.AttackMove, a.Id, a.Kind, spot);
             if (_phase == Phase.Gather) return;
+        }
+
+        if (_phase != Phase.Gather && Options.RetreatPct > 0 && _launchHealth > 0 && CallOff(k, sink, rally))
+        {
+            alive = 0;
+            n = k.Army.Count;
         }
 
         if (_phase == Phase.Gather)
         {
             // with no scraper left there is no income to rebuild with: whatever is left goes out as soon as there are a few units
             bool desperate = k.Harvesters.Count == 0 && n >= DesperateWave;
-            if (n >= _nextThreshold || (n >= MinWave && tick - _lastWave >= _nextInterval) || desperate)
+            if (tick >= _cooldownUntil && (n >= _nextThreshold || (n >= MinWave && tick - _lastWave >= _nextInterval) || desperate))
             {
-                _roster.Clear();
-                foreach (ViewActor a in k.Army) _roster.Add(Key(a));
+                _roster.Clear(); _squadB.Clear();
+                long hp = 0;
+                int idx = 0;
+                CellCoord first = PickGoal(k, knownEnemyBuildings);
+                CellCoord? second = Options.TwoPronged && n >= MinProngArmy ? SecondGoal(k, knownEnemyBuildings, first) : null;
+                _prong = second is not null;
+                foreach (ViewActor a in k.Army)
+                {
+                    _roster.Add(Key(a));
+                    hp += a.Health;
+                    if (_prong && (idx++ & 1) == 1) _squadB.Add(Key(a));
+                }
+                if (_prong) Prongs++;
+                _launchHealth = hp;
                 _launchSize = n;
                 _lastWave = tick;
                 _stageSince = tick;
@@ -141,6 +185,12 @@ internal sealed class MilitaryManager
                 CellCoord launchGoal = PickGoal(k, knownEnemyBuildings);
                 _stage = Tactics?.ForwardStage(k, launchGoal) ?? StageCell(k, launchGoal);
                 if (Tactics != null) _stage = Tactics.SafeCell(k, _stage);
+                _stageB = _stage;
+                if (_prong && Options.MultiFront && second is CellCoord flank)
+                {
+                    _stageB = StageCell(k, flank);   // the second prong approaches from its own side and the two assault together
+                    if (Tactics != null) _stageB = Tactics.SafeCell(k, _stageB);
+                }
                 _phase = Phase.Stage;
                 alive = n;
             }
@@ -153,29 +203,78 @@ internal sealed class MilitaryManager
 
         if (_phase == Phase.Stage)
         {
-            int there = 0;
+            int there = 0, thereB = 0, aliveB = 0;
             foreach (ViewActor a in k.Army)
-                if (_roster.Contains(Key(a)) && Chebyshev(a.Cell, _stage) <= StageRadiusCells) there++;
-            if (there * 100 >= alive * 70 || tick - _stageSince >= StageTimeoutTicks) _phase = Phase.Assault;
+            {
+                ulong key = Key(a);
+                if (!_roster.Contains(key)) continue;
+                bool b = _squadB.Contains(key);
+                if (b) aliveB++;
+                if (Chebyshev(a.Cell, b ? _stageB : _stage) > StageRadiusCells) continue;
+                if (b) thereB++; else there++;
+            }
+            int aliveA = alive - aliveB;
+            bool ready = there * 100 >= aliveA * 70 && thereB * 100 >= aliveB * 70;
+            if (!_prong) ready = (there + thereB) * 100 >= alive * 70;
+            if (ready || tick - _stageSince >= StageTimeoutTicks) _phase = Phase.Assault;
         }
 
         CellCoord goal = _phase == Phase.Assault ? PickGoal(k, knownEnemyBuildings) : default;
+        CellCoord goalB = goal;
+        if (_prong && _phase == Phase.Assault) goalB = SecondGoal(k, knownEnemyBuildings, goal) ?? goal;
         foreach (ViewActor a in k.Army)
         {
             if (!a.Idle) continue;
             bool member = _phase != Phase.Gather && _roster.Contains(Key(a));
+            bool prongB = member && _squadB.Contains(Key(a));
             if (member && _phase == Phase.Stage)
             {
-                if (Tactics != null && Tactics.TryEnter(k, sink, a, _stage)) continue;
-                if (Chebyshev(a.Cell, _stage) > ReissueDistanceCells) sink.Issue(CommandKind.AttackMove, a.Id, a.Kind, _stage);
+                CellCoord stage = prongB ? _stageB : _stage;
+                if (Tactics != null && Tactics.TryEnter(k, sink, a, stage)) continue;
+                if (Chebyshev(a.Cell, stage) > ReissueDistanceCells) sink.Issue(CommandKind.AttackMove, a.Id, a.Kind, stage);
             }
             else if (member)
             {
-                if (Chebyshev(a.Cell, goal) > ReissueDistanceCells) sink.Issue(CommandKind.AttackMove, a.Id, a.Kind, goal);
+                CellCoord target = prongB ? goalB : goal;
+                if (Chebyshev(a.Cell, target) > ReissueDistanceCells) sink.Issue(CommandKind.AttackMove, a.Id, a.Kind, target);
             }
             else if (Chebyshev(a.Cell, rally) > HomeRadiusCells)
                 sink.Issue(CommandKind.Move, a.Id, a.Kind, rally);
         }
+    }
+
+    /// <summary>Calls the wave off when its health fell below the retreat line: every roster member walks home. True when it did.</summary>
+    private bool CallOff(RecruitKnowledge k, ICommandSink sink, CellCoord rally)
+    {
+        long now = 0;
+        foreach (ViewActor a in k.Army) if (_roster.Contains(Key(a))) now += a.Health;
+        if (now * 100 >= _launchHealth * (Options.RetreatPct + GroupRetreatMarginPct)) return false;
+        foreach (ViewActor a in k.Army)
+            if (_roster.Contains(Key(a))) sink.Issue(CommandKind.Move, a.Id, a.Kind, rally);
+        _roster.Clear(); _squadB.Clear();
+        _phase = Phase.Gather;
+        _prong = false;
+        _cooldownUntil = k.View.Tick + RetreatCooldownTicks;
+        GroupRetreats++;
+        return true;
+    }
+
+    /// <summary>The known enemy building nearest the army that is at least <see cref="ProngSeparationCells"/> from <paramref name="first"/>, or null.</summary>
+    private CellCoord? SecondGoal(RecruitKnowledge k, List<ViewActor> buildings, CellCoord first)
+    {
+        long cx = 0, cy = 0;
+        foreach (ViewActor a in k.Army) { cx += a.Position.X; cy += a.Position.Y; }
+        var centre = k.Army.Count == 0 ? default : new LeptonCoord((int)(cx / k.Army.Count), (int)(cy / k.Army.Count));
+        long best = long.MaxValue;
+        CellCoord? found = null;
+        foreach (ViewActor b in buildings)
+        {
+            if (Chebyshev(b.Cell, first) < ProngSeparationCells) continue;
+            long dx = b.Position.X - centre.X, dy = b.Position.Y - centre.Y, d = dx * dx + dy * dy;
+            if (d >= best) continue;
+            best = d; found = b.Cell;
+        }
+        return found;
     }
 
     /// <summary>A passable cell <see cref="StageDistanceCells"/> short of <paramref name="goal"/> on the line toward our rally.</summary>
