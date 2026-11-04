@@ -15,7 +15,7 @@ TITLE = "Directorate Sapper"
 CANVAS, ORIGIN, STATES, DIE_FACING = AR.CANVAS, AR.ORIGIN, AR.STATES, AR.DIE_FACING
 PALETTE = C.PAL_DIR
 MATERIALS = dict(DC.MATERIALS)
-MATERIALS["lens"] = ("#C9A640", 0.3, 0.0, None)
+MATERIALS["lens"] = ("#D9B84A", 0.3, 0.0, None)
 EMIT_STRENGTH = DC.EMIT_STRENGTH
 SHOULDER = DC.SHOULDER
 GRIP_R, GRIP_L = (0, -0.08, -0.06), (0, 0.15, -0.05)
@@ -38,37 +38,42 @@ def build(S, p):
     def up(pt):
         return tuple(U @ R.Vector(pt))
 
-    # short coat: stops at the hip
-    S.cyl(0.20, 0.32, (0, 0, 0.21), "coat", "Z", U, verts=8, r2=0.165)
-    S.cyl(0.225, 0.13, (0, 0, -0.01), "coat2", "Z", U, verts=8, r2=0.20)
-    S.cyl(0.23, 0.04, (0, 0, -0.09), "coat3", "Z", U, verts=8)
-    S.cyl(0.233, 0.016, (0, 0, -0.075), "red", "Z", U, verts=8)
-    S.cyl(0.206, 0.04, (0, 0, 0.05), "dark", "Z", U, verts=8)
+    # padded vest (quilted bands) over a dark shirt; no coat skirt, short dark trousers show
+    S.cyl(0.20, 0.32, (0, 0, 0.21), "coat2", "Z", U, verts=8, r2=0.17)
+    for z in (0.12, 0.20, 0.28):
+        S.cyl(0.205 - (z - 0.12) * 0.12, 0.018, (0, 0, z), "coat3", "Z", U, verts=8)      # quilting seams
+    S.cyl(0.206, 0.04, (0, 0, 0.03), "dark", "Z", U, verts=8)                               # belt
+    S.box((0.07, 0.04, 0.05), (0, 0.205, 0.03), "bone", U, bevel=0)
     S.cyl(0.215, 0.07, (0, 0.0, 0.345), "hood", "Z", U, verts=8, r2=0.17)
-    # harness strap (house) shoulder to hip, and a bone strap crossing it
+    # harness strap (house) shoulder to hip, bone strap crossing it
     S.limb(up((-0.09, 0.19, 0.32)), up((0.13, 0.225, -0.02)), 0.09, "house", d=0.04, bevel=0)
     S.limb(up((-0.17, 0.02, 0.32)), up((-0.09, 0.19, 0.32)), 0.09, "house", d=0.04, bevel=0)
     S.limb(up((0.09, 0.19, 0.32)), up((-0.13, 0.225, -0.02)), 0.05, "bone", d=0.035, bevel=0)
-    # satchel charges on the chest: two boxy bone-and-red blocks with dark fuse caps
     for sx in (-1, 1):
         S.box((0.11, 0.09, 0.13), (sx * 0.075, 0.245, 0.20), "bone", U, bevel=0.01)
         S.box((0.115, 0.095, 0.03), (sx * 0.075, 0.245, 0.225), "red", U, bevel=0)
         S.box((0.03, 0.03, 0.04), (sx * 0.075, 0.30, 0.15), "dark", U, bevel=0)
-    # hand drill / auger on the back: case, long shaft rising above the shoulder, cranked handle, flared bit
-    S.box((0.16, 0.12, 0.30), (0.04, -0.26, 0.20), "wood", U, bevel=0.02)
-    S.box((0.12, 0.02, 0.14), (0.04, -0.325, 0.22), "house", U, bevel=0)
-    S.cyl(0.03, 0.55, (0.04, -0.26, 0.55), "steel", "Z", U, verts=6)
-    S.cyl(0.055, 0.12, (0.04, -0.26, 0.86), "steel", "Z", U, verts=6, r2=0.0)
-    S.box((0.20, 0.04, 0.04), (0.04, -0.26, 0.42), "dark", U, bevel=0)
-    # head: hood, bone plate, goggles over the plate, filter dot
+    # big rounded coil drum on the back (mid umber, ~1.5x the old pack width), bone hubs, dark bands
+    S.cyl(0.19, 0.36, (0, -0.30, 0.16), "coat", "X", U, verts=12)
+    S.cyl(0.20, 0.05, (-0.10, -0.30, 0.16), "coat3", "X", U, verts=12)
+    S.cyl(0.20, 0.05, (0.10, -0.30, 0.16), "coat3", "X", U, verts=12)
+    S.cyl(0.07, 0.40, (0, -0.30, 0.16), "dark", "X", U, verts=8)
+    S.box((0.14, 0.02, 0.12), (0, -0.495, 0.16), "house", U, bevel=0)
+    # fat pale-bone drill bit rising diagonally up and out over the right shoulder: tapering segments
+    A0, A1 = R.Vector((0.10, -0.28, 0.30)), R.Vector((0.40, -0.02, 0.86))
+    for t0, t1, w in ((0.0, 0.3, 0.13), (0.3, 0.55, 0.115), (0.55, 0.78, 0.09), (0.78, 1.0, 0.055)):
+        S.limb(up(A0.lerp(A1, t0)), up(A0.lerp(A1, t1)), w, "bone", d=w, bevel=0)
+    for t in (0.18, 0.42, 0.66):
+        S.limb(up(A0.lerp(A1, t - 0.04)), up(A0.lerp(A1, t + 0.04)), 0.16 - 0.1 * t, "coat3", d=0.16 - 0.1 * t, bevel=0)
+    # head: round hood-helmet (no peak), bone plate, goggles, brass headlamp
     S.box((0.08, 0.09, 0.07), (0, 0.07, 0.44), "dark", U)
-    S.sphere((0.13, 0.14, 0.135), (0, 0.10, 0.565), "hood", U)
-    S.box((0.10, 0.22, 0.09), (0, 0.04, 0.69), "hood", U, rot=(-40, 0, 0), bevel=0.02)
+    S.sphere((0.14, 0.15, 0.14), (0, 0.10, 0.565), "hood", U)
     S.box((0.20, 0.09, 0.20), (0, 0.255, 0.49), "bone", U, bevel=0.03)
-    S.box((0.23, 0.05, 0.075), (0, 0.285, 0.545), "dark", U, bevel=0.01)                 # goggle strap / frame
+    S.box((0.23, 0.05, 0.075), (0, 0.285, 0.545), "dark", U, bevel=0.01)
     for sx in (-1, 1):
-        S.box((0.075, 0.04, 0.06), (sx * 0.058, 0.32, 0.545), "lens", U, bevel=0)       # brass lenses
+        S.box((0.075, 0.04, 0.06), (sx * 0.058, 0.32, 0.545), "lens", U, bevel=0)
     S.cyl(0.05, 0.06, (0, 0.31, 0.46), "dark", "Y", U, verts=10)
+    S.box((0.075, 0.05, 0.075), (0, 0.235, 0.655), "lens", U, bevel=0)                     # brass headlamp
     # short carbine
     GM = (U if p["gun_space"] == "u" else Matrix.Identity(4)) @ R.tr(*p["gun"][0]) @ R.rz(p["gun"][1]) @ R.rx(p["gun"][2])
     S.box((0.05, 0.20, 0.09), (0, -0.19, -0.01), "wood", GM, rot=(-6, 0, 0))
@@ -80,8 +85,8 @@ def build(S, p):
         S.cyl(0.07, 0.24, (0, 0.54, 0.01), "flash", "Y", GM, verts=8, r2=0.0)
         S.sphere((0.09, 0.09, 0.09), (0, 0.42, 0.01), "flash", GM, seg=8)
     P.arms(S, p, U, up, GM, SHOULDER, (GRIP_R, GRIP_L), ("coat2", "coat3"))
-    P.legs(S, p, pel)
+    P.legs(S, p, pel, thick=(0.10, 0.085))
     if p["spread"]:
-        S.cyl(0.34, 0.03, (0.0, p["dy"] + 0.12, 0.03), "coat2", "Z", None, verts=8)
+        S.cyl(0.30, 0.03, (0.0, p["dy"] + 0.12, 0.03), "coat2", "Z", None, verts=8)
         S.cyl(0.24, 0.035, (0.05, p["dy"] + 0.12, 0.05), "coat", "Z", None, verts=8)
         S.box((0.5, 0.06, 0.03), (0.0, p["dy"] + 0.52, 0.03), "steel", None, rot=(0, 0, 8))
