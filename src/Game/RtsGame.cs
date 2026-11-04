@@ -99,7 +99,7 @@ public sealed class RtsGame : Microsoft.Xna.Framework.Game
             Console.Error.WriteLine($"sprite library failed, using the legacy tank sheet: {ex.Message}");
             scene = new SceneRenderer(SpriteSheet.Load(GraphicsDevice, Path.Combine(_dataDir, "sprites", "vehicles", TankSheetFile)));
         }
-        IAudio audio = NullAudio.Instance;
+        IAudio audio = AudioBootstrap.Create(this, _dataDir, _settings, _screens);
         audio.MusicVolume = _settings.MusicVolume;
         audio.SfxVolume = _settings.SfxVolume;
         _services = new GameServices(GraphicsDevice, _pixel, scene, _rulesDir, audio, _settings, _screens, Exit)

@@ -1,0 +1,319 @@
+# Presets for tools/audio/sfxr.py (D-080). Regenerate with: python tools/audio/sfxr.py generate
+# Output: data/audio/sfx/<name>.wav, 16-bit mono. Our own sounds, released CC0. See sfxr.py for the keys.
+# ASSUMED (M3-09): every value below is a first guess made without listening; tune by ear and regenerate.
+
+[meta]
+sample_rate = 22050
+
+# --- weapons ---------------------------------------------------------------------------------------------------
+[sound.fire_bullet_1]
+wave = "noise"
+seed = 101
+freq = 3200
+slide = -2.0
+attack = 0.0
+sustain = 0.02
+decay = 0.09
+punch = 0.5
+hpf = 600
+gain = 0.5
+
+[sound.fire_bullet_2]
+wave = "noise"
+seed = 102
+freq = 2600
+slide = -1.6
+sustain = 0.02
+decay = 0.11
+punch = 0.6
+hpf = 500
+gain = 0.5
+
+[sound.fire_cannon_1]
+wave = "square"
+seed = 111
+freq = 190
+slide = -2.2
+duty = 0.4
+noise_mix = 0.45
+sustain = 0.04
+decay = 0.28
+punch = 0.7
+lpf = 2400
+lpf_sweep = 0.2
+gain = 0.55
+
+[sound.fire_cannon_2]
+wave = "saw"
+seed = 112
+freq = 150
+slide = -1.8
+noise_mix = 0.5
+sustain = 0.05
+decay = 0.32
+punch = 0.8
+lpf = 1800
+lpf_sweep = 0.25
+gain = 0.55
+
+[sound.fire_missile]
+wave = "noise"
+seed = 121
+freq = 900
+slide = 0.9
+attack = 0.03
+sustain = 0.2
+decay = 0.3
+lpf = 1400
+lpf_sweep = 2.5
+hpf = 200
+gain = 0.7
+
+# --- explosions ------------------------------------------------------------------------------------------------
+[sound.explosion_small_1]
+wave = "noise"
+seed = 131
+freq = 700
+slide = -1.5
+sustain = 0.06
+decay = 0.35
+punch = 0.8
+lpf = 3000
+lpf_sweep = 0.1
+gain = 0.5
+
+[sound.explosion_small_2]
+wave = "noise"
+seed = 132
+freq = 520
+slide = -1.2
+sustain = 0.05
+decay = 0.4
+punch = 0.7
+lpf = 2400
+lpf_sweep = 0.1
+gain = 0.5
+
+[sound.explosion_large_1]
+wave = "noise"
+seed = 141
+freq = 330
+slide = -0.8
+sustain = 0.15
+decay = 0.8
+punch = 1.0
+lpf = 1800
+lpf_sweep = 0.12
+gain = 0.45
+
+[sound.explosion_large_2]
+wave = "noise"
+seed = 142
+freq = 260
+slide = -0.7
+sustain = 0.18
+decay = 0.9
+punch = 1.0
+lpf = 1500
+lpf_sweep = 0.15
+noise_mix = 0.0
+am_depth = 0.25
+am_rate = 17
+gain = 0.45
+
+# --- interface and orders -------------------------------------------------------------------------------------
+[sound.select_1]
+wave = "square"
+seed = 201
+freq = 660
+duty = 0.3
+sustain = 0.03
+decay = 0.07
+arp_mult = 1.5
+arp_time = 0.035
+gain = 0.45
+
+[sound.select_2]
+wave = "square"
+seed = 202
+freq = 740
+duty = 0.3
+sustain = 0.03
+decay = 0.07
+arp_mult = 1.34
+arp_time = 0.035
+gain = 0.45
+
+[sound.move_ack_1]
+wave = "triangle"
+seed = 211
+freq = 400
+slide = 1.0
+sustain = 0.05
+decay = 0.08
+gain = 0.5
+
+[sound.move_ack_2]
+wave = "triangle"
+seed = 212
+freq = 460
+slide = 0.8
+sustain = 0.05
+decay = 0.08
+gain = 0.5
+
+[sound.building_place]
+wave = "square"
+seed = 221
+freq = 120
+slide = -1.0
+duty = 0.5
+noise_mix = 0.3
+sustain = 0.05
+decay = 0.22
+punch = 0.6
+lpf = 1600
+gain = 0.55
+
+[sound.construction_complete]
+wave = "square"
+seed = 231
+freq = 523
+duty = 0.4
+sustain = 0.12
+decay = 0.3
+arp_mult = 1.5
+arp_time = 0.1
+vib_depth = 0.01
+vib_rate = 6
+gain = 0.5
+
+[sound.unit_ready]
+wave = "square"
+seed = 241
+freq = 440
+duty = 0.25
+sustain = 0.06
+decay = 0.16
+arp_mult = 1.25
+arp_time = 0.07
+gain = 0.5
+
+[sound.upgrade_complete]
+wave = "saw"
+seed = 251
+freq = 392
+slide = 0.5
+sustain = 0.18
+decay = 0.4
+arp_mult = 1.5
+arp_time = 0.12
+lpf = 3500
+gain = 0.55
+
+[sound.sold]
+wave = "square"
+seed = 261
+freq = 880
+slide = -1.4
+duty = 0.5
+sustain = 0.05
+decay = 0.22
+arp_mult = 0.75
+arp_time = 0.08
+gain = 0.5
+
+[sound.harvest_unload]
+wave = "noise"
+seed = 271
+freq = 1400
+sustain = 0.18
+decay = 0.12
+lpf = 2200
+hpf = 500
+am_depth = 0.6
+am_rate = 22
+gain = 0.45
+
+# --- alerts -----------------------------------------------------------------------------------------------------
+[sound.low_power]
+wave = "saw"
+seed = 301
+freq = 330
+slide = -0.9
+sustain = 0.2
+decay = 0.35
+vib_depth = 0.03
+vib_rate = 8
+lpf = 2000
+gain = 0.55
+
+[sound.low_funds]
+wave = "square"
+seed = 311
+freq = 300
+duty = 0.5
+sustain = 0.3
+decay = 0.1
+am_depth = 1.0
+am_rate = 6
+gain = 0.45
+
+[sound.under_attack]
+wave = "square"
+seed = 321
+freq = 520
+duty = 0.35
+sustain = 0.1
+decay = 0.12
+arp_mult = 0.66
+arp_time = 0.1
+gain = 0.6
+
+# --- underground, radiation, Blackout -------------------------------------------------------------------------
+[sound.tunnel_enter]
+wave = "saw"
+seed = 401
+freq = 220
+slide = -1.4
+noise_mix = 0.25
+sustain = 0.1
+decay = 0.4
+lpf = 900
+lpf_sweep = 0.4
+gain = 0.7
+
+[sound.surface_rumble]
+wave = "noise"
+seed = 411
+freq = 70
+sustain = 0.9
+attack = 0.25
+decay = 0.35
+lpf = 220
+am_depth = 0.5
+am_rate = 9
+gain = 0.8
+
+[sound.radiation_crackle]
+wave = "noise"
+seed = 421
+crackle_rate = 38
+crackle_decay = 0.006
+sustain = 0.8
+decay = 0.1
+hpf = 1200
+gain = 0.55
+
+[sound.blackout_hum]
+wave = "saw"
+seed = 431
+freq = 58
+attack = 0.15
+sustain = 0.9
+decay = 0.25
+lpf = 320
+am_depth = 0.3
+am_rate = 3
+noise_mix = 0.08
+gain = 0.55

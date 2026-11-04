@@ -1,0 +1,270 @@
+# Game events -> sounds (D-080). Files are relative to this folder. Generated sounds come from tools/audio/presets.toml.
+# Variants: an event with several sounds picks one at random (game-side RNG, not the sim).
+# max_voices: at most this many copies of ONE sound play at once; extra plays are dropped.
+# cooldown_ms: least time between two plays of one event. positional: volume and pan follow the camera.
+# ASSUMED (M3-09): all numbers here are first guesses made without listening.
+version = 1
+
+[settings]
+default_max_voices = 4
+hearing_radius_cells = 48   # a positional sound is silent beyond this distance from the camera centre
+pan_radius_cells = 24       # horizontal offset that pans fully left or right
+
+[sound.blackout_hum]
+file = "sfx/blackout_hum.wav"
+volume = 1.0
+max_voices = 1
+
+[sound.building_place]
+file = "sfx/building_place.wav"
+volume = 1.0
+max_voices = 2
+
+[sound.construction_complete]
+file = "sfx/construction_complete.wav"
+volume = 1.0
+max_voices = 2
+
+[sound.explosion_large_1]
+file = "sfx/explosion_large_1.wav"
+volume = 1.0
+max_voices = 3
+
+[sound.explosion_large_2]
+file = "sfx/explosion_large_2.wav"
+volume = 1.0
+max_voices = 3
+
+[sound.explosion_small_1]
+file = "sfx/explosion_small_1.wav"
+volume = 1.0
+max_voices = 4
+
+[sound.explosion_small_2]
+file = "sfx/explosion_small_2.wav"
+volume = 1.0
+max_voices = 4
+
+[sound.fire_bullet_1]
+file = "sfx/fire_bullet_1.wav"
+volume = 1.0
+max_voices = 6
+
+[sound.fire_bullet_2]
+file = "sfx/fire_bullet_2.wav"
+volume = 1.0
+max_voices = 6
+
+[sound.fire_cannon_1]
+file = "sfx/fire_cannon_1.wav"
+volume = 1.0
+max_voices = 4
+
+[sound.fire_cannon_2]
+file = "sfx/fire_cannon_2.wav"
+volume = 1.0
+max_voices = 4
+
+[sound.fire_missile]
+file = "sfx/fire_missile.wav"
+volume = 1.0
+max_voices = 3
+
+[sound.harvest_unload]
+file = "sfx/harvest_unload.wav"
+volume = 1.0
+max_voices = 2
+
+[sound.low_funds]
+file = "sfx/low_funds.wav"
+volume = 1.0
+max_voices = 1
+
+[sound.low_power]
+file = "sfx/low_power.wav"
+volume = 1.0
+max_voices = 1
+
+[sound.move_ack_1]
+file = "sfx/move_ack_1.wav"
+volume = 1.0
+max_voices = 2
+
+[sound.move_ack_2]
+file = "sfx/move_ack_2.wav"
+volume = 1.0
+max_voices = 2
+
+[sound.radiation_crackle]
+file = "sfx/radiation_crackle.wav"
+volume = 1.0
+max_voices = 1
+
+[sound.select_1]
+file = "sfx/select_1.wav"
+volume = 1.0
+max_voices = 2
+
+[sound.select_2]
+file = "sfx/select_2.wav"
+volume = 1.0
+max_voices = 2
+
+[sound.sold]
+file = "sfx/sold.wav"
+volume = 1.0
+max_voices = 2
+
+[sound.surface_rumble]
+file = "sfx/surface_rumble.wav"
+volume = 1.0
+max_voices = 2
+
+[sound.tunnel_enter]
+file = "sfx/tunnel_enter.wav"
+volume = 1.0
+max_voices = 2
+
+[sound.under_attack]
+file = "sfx/under_attack.wav"
+volume = 1.0
+max_voices = 1
+
+[sound.unit_ready]
+file = "sfx/unit_ready.wav"
+volume = 1.0
+max_voices = 2
+
+[sound.upgrade_complete]
+file = "sfx/upgrade_complete.wav"
+volume = 1.0
+max_voices = 2
+
+[event.fire_bullet]
+sounds = ["fire_bullet_1", "fire_bullet_2"]
+volume = 0.8
+positional = true
+cooldown_ms = 70
+
+[event.fire_shell]
+sounds = ["fire_cannon_1", "fire_cannon_2"]
+volume = 0.9
+positional = true
+cooldown_ms = 90
+
+[event.fire_missile]
+sounds = ["fire_missile"]
+volume = 0.9
+positional = true
+cooldown_ms = 120
+
+[event.explosion_small]
+sounds = ["explosion_small_1", "explosion_small_2"]
+volume = 0.9
+positional = true
+cooldown_ms = 80
+
+[event.explosion_large]
+sounds = ["explosion_large_1", "explosion_large_2"]
+volume = 1.0
+positional = true
+cooldown_ms = 150
+
+[event.unit_select]
+sounds = ["select_1", "select_2"]
+volume = 0.8
+positional = false
+cooldown_ms = 60
+
+[event.move_ack]
+sounds = ["move_ack_1", "move_ack_2"]
+volume = 0.8
+positional = false
+cooldown_ms = 120
+
+[event.building_placed]
+sounds = ["building_place"]
+volume = 1.0
+positional = false
+cooldown_ms = 200
+
+[event.construction_complete]
+sounds = ["construction_complete"]
+volume = 1.0
+positional = false
+cooldown_ms = 1000
+
+[event.unit_ready]
+sounds = ["unit_ready"]
+volume = 1.0
+positional = false
+cooldown_ms = 600
+
+[event.low_power]
+sounds = ["low_power"]
+volume = 1.0
+positional = false
+cooldown_ms = 20000
+
+[event.sold]
+sounds = ["sold"]
+volume = 1.0
+positional = false
+cooldown_ms = 300
+
+[event.harvester_unload]
+sounds = ["harvest_unload"]
+volume = 0.7
+positional = false
+cooldown_ms = 1500
+
+[event.tunnel_enter]
+sounds = ["tunnel_enter"]
+volume = 0.9
+positional = true
+cooldown_ms = 200
+
+[event.surface_rumble]
+sounds = ["surface_rumble"]
+volume = 1.0
+positional = true
+cooldown_ms = 400
+
+[event.radiation_crackle]
+sounds = ["radiation_crackle"]
+volume = 0.7
+positional = true
+cooldown_ms = 1200
+
+[event.blackout_hum]
+sounds = ["blackout_hum"]
+volume = 0.6
+positional = false
+cooldown_ms = 1200
+
+[event.upgrade_complete]
+sounds = ["upgrade_complete"]
+volume = 1.0
+positional = false
+cooldown_ms = 1000
+
+[event.low_funds]
+sounds = ["low_funds"]
+volume = 1.0
+positional = false
+cooldown_ms = 15000
+
+[event.under_attack]
+sounds = ["under_attack"]
+volume = 1.0
+positional = false
+cooldown_ms = 8000
+
+# Weapon id -> event, for callers that know the weapon (a snapshot diff cannot see it, so the AudioDirector plays
+# the class events fire_bullet / fire_shell instead). Unlisted weapons use the class by projectile speed.
+[weapon]
+auth_rifle = "fire_bullet"
+auth_jeep_mg = "fire_bullet"
+auth_rocket = "fire_missile"
+auth_tank_cannon = "fire_shell"
+auth_turret_gun = "fire_shell"
