@@ -26,9 +26,15 @@ DOCK = (0, 0)
 CAP_MATERIAL = "concrete2"
 HOUSE2_MID = True
 STATES = [("idle", 4, 5), ("damaged", 4, 5), ("build", 8, 5)]
-MATERIALS = L.MATERIALS
-SOOT_SKIN = L.SOOT_SKIN
-PRIMER_SKIN = L.PRIMER_SKIN
+MATERIALS = dict(L.MATERIALS)
+MATERIALS.update({
+    "paper": ("#C2BAA0", dict(rough=0.8)),      # warm cream chart paper (not white, so the shading reads)
+    "steeld": ("#3A3F46", dict(rough=0.4, metal=0.5)),   # dark steel end caps / axle stubs
+})
+SOOT_SKIN = dict(L.SOOT_SKIN)
+SOOT_SKIN.update({"paper": "concrete2_s", "steeld": "dark"})
+PRIMER_SKIN = dict(L.PRIMER_SKIN)
+PRIMER_SKIN.update({"paper": "primer"})
 
 HUT = (-2.9, 0.7, -0.5, 2.8)
 H = 1.8
@@ -88,22 +94,49 @@ def finished(S, i, dmg, mode):
     if dmg:
         for sx in (-0.7, 0.7):
             S.bb("cradle", dx + sx - 0.08, dx + sx + 0.08, dy - 0.4, dy + 0.4, H + 0.2, H + 0.7, "steel", 0.02)
-        S.cyl("drumF", 0.5, 1.4, (dx + 1.9, -2.3, 0.62), "gauge", axis="X", verts=18, rot_z=18)
-        S.cyl("drumFc", 0.52, 0.1, (dx + 1.2, -2.0, 0.62), "steel", axis="X", verts=18, rot_z=18)
+        # the drum thrown off its cradle: cream paper, dark end discs and ink bands still read
+        fx_, fy_, fz_ = dx + 1.9, -2.3, 0.62
+        S.cyl("drumF", 0.5, 1.4, (fx_, fy_, fz_), "paper", axis="X", verts=24)
+        S.cyl("drumFc", 0.61, 0.1, (fx_ + 0.75, fy_, fz_), "steeld", axis="X", verts=24)
+        S.cyl("drumFc", 0.61, 0.1, (fx_ - 0.75, fy_, fz_), "steeld", axis="X", verts=24)
+        S.cyl("drumFa", 0.1, 0.3, (fx_ - 0.95, fy_, fz_), "steel", axis="X", verts=10)
+        for k, bx in enumerate((-0.42, -0.05, 0.38)):
+            S.cyl(f"drumFt{k}", 0.512, 0.08, (fx_ + bx, fy_, fz_), "dark", axis="X", verts=24, nocast=True)
     else:
-        for sx in (-0.8, 0.8):
-            S.bb("cradle", dx + sx - 0.08, dx + sx + 0.08, dy - 0.45, dy + 0.45, H + 0.2, dz - 0.1, "steel", 0.02)
-        S.cyl("drum", 0.5, 1.5, (dx, dy, dz), "gauge", axis="X", verts=20)
-        S.cyl("drumc", 0.54, 0.1, (dx + 0.78, dy, dz), "steel", axis="X", verts=20)
-        S.cyl("drumc", 0.54, 0.1, (dx - 0.78, dy, dz), "steel", axis="X", verts=20)
+        # A-frame cradles (two legs meeting under each axle) carrying a cream paper drum between dark steel end discs
+        zb, za = H + 0.2, dz - 0.05
+        for sx in (-1.0, 1.0):
+            for sy in (-1, 1):
+                L.beam(S, "cradle", (dx + sx, dy + sy * 0.55, zb), (dx + sx, dy + sy * 0.1, za), 0.1, "steel")
+            S.bb("cradleb", dx + sx - 0.07, dx + sx + 0.07, dy - 0.6, dy + 0.6, zb, zb + 0.08, "steel", 0.0)
+        S.cyl("drum", 0.5, 1.5, (dx, dy, dz), "paper", axis="X", verts=28)
+        S.cyl("drumc", 0.61, 0.1, (dx + 0.8, dy, dz), "steeld", axis="X", verts=28)
+        S.cyl("drumc", 0.61, 0.1, (dx - 0.8, dy, dz), "steeld", axis="X", verts=28)
+        S.cyl("axle", 0.1, 0.5, (dx + 0.98, dy, dz), "steel", axis="X", verts=10)
+        S.cyl("axle", 0.1, 0.5, (dx - 0.98, dy, dz), "steel", axis="X", verts=10)
+        # continuous ink bands wrapping the whole circumference (thin rings just proud of the paper)
+        for k, (bx, bw) in enumerate(((-0.5, 0.13), (-0.12, 0.09), (0.3, 0.13))):
+            S.cyl(f"band{k}", 0.512, bw, (dx + bx, dy, dz), "dark", axis="X", verts=28, nocast=True)
+        # wiggly trace + rolling ticks: 12 zig-zag dashes (period 60 deg) and 4 ticks (period 90 deg) that
+        # advance with the frame so the idle loop closes after 4 frames
+        for k in range(12):
+            a = math.radians(k * 30 + (i * 15.0 if idle else 0))
+            off = 0.06 if k % 2 == 0 else -0.06
+            S.bb(f"wig{k}", dx + 0.62 + off - 0.05, dx + 0.62 + off + 0.05, dy + 0.5 * math.cos(a) - 0.05, dy + 0.5 * math.cos(a) + 0.05,
+                 dz + 0.5 * math.sin(a) - 0.04, dz + 0.5 * math.sin(a) + 0.04, "dark", 0.0, nocast=True)
         for k in range(4):
             a = math.radians(k * 90 + (i * 22.5 if idle else 0))
-            for sx in (-0.45, 0.2):
-                S.bb(f"trace{k}", dx + sx, dx + sx + 0.25, dy + 0.5 * math.cos(a) - 0.05, dy + 0.5 * math.cos(a) + 0.05,
-                     dz + 0.5 * math.sin(a) - 0.04, dz + 0.5 * math.sin(a) + 0.04, "dark", 0.0, nocast=True)
+            S.bb(f"tick{k}", dx - 0.36, dx - 0.22, dy + 0.5 * math.cos(a) - 0.05, dy + 0.5 * math.cos(a) + 0.05,
+                 dz + 0.5 * math.sin(a) - 0.04, dz + 0.5 * math.sin(a) + 0.04, "dark", 0.0, nocast=True)
+        # pen carriage: rail on posts above the drum, arm reaching down so the red pen touches the paper
+        zr = dz + 0.95
+        for sx in (-1.0, 1.0):
+            S.bb("railpost", dx + sx - 0.05, dx + sx + 0.05, dy - 0.05, dy + 0.05, za, zr, "steel", 0.0)
+        S.bb("penrail", dx - 1.05, dx + 1.05, dy - 0.04, dy + 0.04, zr, zr + 0.07, "steel", 0.0)
         px = dx + (PEN[i % 4] if idle else 0.0)
-        S.bb("penrail", dx - 0.85, dx + 0.85, dy - 0.04, dy + 0.04, dz + 0.62, dz + 0.68, "steel", 0.0)
-        S.bb("pen", px - 0.07, px + 0.07, dy - 0.07, dy + 0.07, dz + 0.5, dz + 0.64, "red", 0.0)
+        S.bb("penblock", px - 0.1, px + 0.1, dy - 0.08, dy + 0.08, zr - 0.12, zr + 0.07, "steeld", 0.0)
+        S.bb("penarm", px - 0.035, px + 0.035, dy - 0.035, dy + 0.035, dz + 0.55, zr - 0.1, "steel", 0.0)
+        S.bb("pen", px - 0.07, px + 0.07, dy - 0.07, dy + 0.07, dz + 0.46, dz + 0.6, "red", 0.0)
     # ---- bedrock pillar and spike fan
     qx, qy = PILLAR
     S.cyl("pillar", 0.6, 0.5, (qx, qy, 0.4), "concrete2", verts=16)
