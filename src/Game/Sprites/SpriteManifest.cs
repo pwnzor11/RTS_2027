@@ -21,13 +21,15 @@ namespace Rts.Game.Sprites;
 public sealed class SpriteManifest
 {
     private static readonly int[] AllowedFacings = { 1, 8, 16, 32 };
-    private static readonly string[] TopKeys = { "file", "frame_w", "frame_h", "origin_x", "origin_y", "house", "state", "fx" };
+    private static readonly string[] TopKeys = { "file", "frame_w", "frame_h", "origin_x", "origin_y", "house", "state", "fx", "shadow_dx", "shadow_dy" };
     private static readonly string[] StateKeys = { "name", "facings", "frames", "first", "ticks_per_frame", "loop" };
     private static readonly string[] FxKeys = { "state", "kind", "x", "y", "phase" };
 
     private SpriteManifest(string id, string sourcePath, string sheetFile, int frameW, int frameH, int originX, int originY,
-        uint[] houseRamp, IReadOnlyList<SpriteState> states, IReadOnlyList<FxAnchor> fx)
+        uint[] houseRamp, IReadOnlyList<SpriteState> states, IReadOnlyList<FxAnchor> fx, int shadowDx = 0, int shadowDy = 0)
     {
+        ShadowDx = shadowDx;
+        ShadowDy = shadowDy;
         Id = id;
         SourcePath = sourcePath;
         SheetFile = sheetFile;
@@ -39,6 +41,16 @@ public sealed class SpriteManifest
         States = states;
         Fx = fx;
     }
+
+    /// <summary>
+    /// Pixel offset of the optional <c>shadow</c> state layer from the body (manifest keys <c>shadow_dx</c> / <c>shadow_dy</c>,
+    /// may be negative; both default to 0). The turret, shadow and dive layers are ordinary states named <c>turret</c>,
+    /// <c>shadow</c> and <c>dive</c> (M3-18).
+    /// </summary>
+    public int ShadowDx { get; }
+
+    /// <summary>See <see cref="ShadowDx"/>.</summary>
+    public int ShadowDy { get; }
 
     /// <summary>Sprite id, the manifest's file stem.</summary>
     public string Id { get; }
@@ -127,7 +139,9 @@ public sealed class SpriteManifest
 
         IReadOnlyList<FxAnchor> fx = ReadFx(root, states, frameW, frameH, sourcePath);
 
-        return new SpriteManifest(id, sourcePath, file, frameW, frameH, originX, originY, ramp, states, fx);
+        int shadowDx = Signed(root, "shadow_dx", sourcePath);
+        int shadowDy = Signed(root, "shadow_dy", sourcePath);
+        return new SpriteManifest(id, sourcePath, file, frameW, frameH, originX, originY, ramp, states, fx, shadowDx, shadowDy);
     }
 
     /// <summary>
@@ -318,6 +332,13 @@ public sealed class SpriteManifest
         }
         if (raw is long value && value >= 0 && value <= int.MaxValue) return (int)value;
         throw new InvalidDataException($"{sourcePath}: '{key}' must be a whole number of 0 or more, found {raw}");
+    }
+
+    private static int Signed(TomlTable table, string key, string sourcePath)
+    {
+        if (!table.TryGetValue(key, out object? raw)) return 0;
+        if (raw is long value && value >= -1024 && value <= 1024) return (int)value;
+        throw new InvalidDataException($"{sourcePath}: '{key}' must be a whole number between -1024 and 1024, found {raw}");
     }
 
     private static int Positive(TomlTable table, string key, string sourcePath)
