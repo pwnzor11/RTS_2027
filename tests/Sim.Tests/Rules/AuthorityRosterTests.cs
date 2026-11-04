@@ -35,6 +35,7 @@ public sealed class AuthorityRosterTests
         string[] actual = sim.Vehicles.Select(v => v.Id)
             .Concat(sim.Infantry.Select(i => i.Id))
             .Concat(sim.Buildings.Select(b => b.Id))
+            .Where(id => id.StartsWith("auth_", StringComparison.Ordinal))   // M3: the Directorate roster lives alongside
             .OrderBy(id => id, StringComparer.Ordinal)
             .ToArray();
         string[] expected = ExpectedIds.OrderBy(id => id, StringComparer.Ordinal).ToArray();
