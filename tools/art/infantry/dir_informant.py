@@ -17,7 +17,7 @@ CANVAS, ORIGIN, STATES, DIE_FACING = AR.CANVAS, AR.ORIGIN, AR.STATES, AR.DIE_FAC
 PALETTE = C.PAL_DIR
 MATERIALS = {
     "coat": ("#928A7E", 0.9, 0.0, None), "coat2": ("#6E675F", 0.9, 0.0, None), "coat3": ("#3A3531", 0.9, 0.0, None),
-    "hat": ("#3A3531", 0.7, 0.0, None), "pants": ("#2E2824", 0.9, 0.0, None), "dark": ("#15130F", 0.85, 0.0, None),
+    "belt": ("#928A7E", 0.8, 0.0, None), "hl": ("#C9BFA6", 0.8, 0.0, None), "hat": ("#3A3531", 0.7, 0.0, None), "pants": ("#2E2824", 0.9, 0.0, None), "dark": ("#15130F", 0.85, 0.0, None),
     "steel": ("#2F3338", 0.4, 0.6, None), "bone": ("#EDE4CC", 0.8, 0.0, None), "face": ("#E3DAC2", 0.7, 0.0, None),
     "flash": ("#FFE79A", 0.3, 0.0, "#FFE08A"), "house": ("#E000E0", 0.75, 0.0, None),
 }
@@ -67,9 +67,11 @@ def build(S, p):
     S.cyl(0.17, 0.34, (0, 0, 0.21), "coat", "Z", U, verts=8, r2=0.145)
     S.cyl(0.215, 0.40, (0, 0, -0.14), "coat2", "Z", U, verts=8, r2=0.17)
     S.cyl(0.222, 0.04, (0, 0, -0.35), "coat3", "Z", U, verts=8)
-    S.cyl(0.176, 0.045, (0, 0, 0.05), "dark", "Z", U, verts=8)
+    S.cyl(0.185, 0.05, (0, 0, 0.05), "belt", "Z", U, verts=8)                         # light belt line, visible all round
     S.box((0.05, 0.03, 0.045), (0, 0.175, 0.05), "steel", U, bevel=0)
-    S.box((0.02, 0.03, 0.26), (0.0, 0.17, -0.12), "dark", U, bevel=0)                      # coat front seam
+    S.box((0.02, 0.03, 0.26), (0.0, 0.17, -0.12), "dark", U, bevel=0)
+    S.box((0.03, 0.03, 0.40), (0.0, -0.205, -0.15), "dark", U, bevel=0)                    # back vent / coat split
+    S.box((0.11, 0.10, 0.025), (-0.10, 0.0, 0.41), "hl", U, rot=(0, 10, 0), bevel=0)      # lighter shoulder highlight                      # coat front seam
     S.box((0.065, 0.05, 0.15), (-0.06, 0.15, 0.27), "coat3", U, rot=(0, 0, 22), bevel=0)   # lapels
     S.box((0.065, 0.05, 0.15), (0.06, 0.15, 0.27), "coat3", U, rot=(0, 0, -22), bevel=0)
     S.box((0.05, 0.03, 0.05), (0.09, 0.185, 0.29), "house", U, bevel=0)                  # lapel badge (house colour)
@@ -81,7 +83,7 @@ def build(S, p):
     S.box((0.12, 0.04, 0.03), (0, 0.075, 0.545), "dark", U, bevel=0)
     S.cyl(0.235, 0.02, (0, 0.02, 0.60), "hat", "Z", U, verts=12)                          # brim
     S.cyl(0.13, 0.12, (0, 0.02, 0.665), "hat", "Z", U, verts=10, r2=0.12)                  # crown
-    S.cyl(0.138, 0.032, (0, 0.02, 0.632), "house", "Z", U, verts=10)                        # hat band
+    S.cyl(0.138, 0.09, (0, 0.02, 0.655), "house", "Z", U, verts=10)                        # hat band
     # pistol only in the fire frames
     GM = (U if p["gun_space"] == "u" else Matrix.Identity(4)) @ R.tr(*p["gun"][0]) @ R.rz(p["gun"][1]) @ R.rx(p["gun"][2])
     if p["pistol"]:
