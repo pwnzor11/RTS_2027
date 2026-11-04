@@ -16,12 +16,14 @@ public sealed partial class Simulation
 
     // ---- queries ---------------------------------------------------------------------------------
 
-    /// <summary>Cost, build time and prerequisites of a type in a category; false if the category/index is not buildable.</summary>
-    private bool TryTypeInfo(ProductionCategory category, int typeIndex, out int cost, out int buildTime,
+    /// <summary>Cost, build time and prerequisites of a type in a category as <paramref name="player"/> sees it
+    /// (<see cref="RulesOf"/>: cost and build-time upgrades apply); false if the category/index is not buildable. M4-04: Aircraft
+    /// takes a vehicle index whose locomotion is Air, and the Vehicle category refuses Air types.</summary>
+    private bool TryTypeInfo(byte player, ProductionCategory category, int typeIndex, out int cost, out int buildTime,
         out IReadOnlyList<string> prerequisites)
     {
         cost = 0; buildTime = 0; prerequisites = Array.Empty<string>();
-        SimRules rules = Setup.Rules;
+        SimRules rules = RulesOf(player);
         switch (category)
         {
             case ProductionCategory.Infantry:
@@ -29,8 +31,11 @@ public sealed partial class Simulation
                 (cost, buildTime, prerequisites) = (rules.Infantry[typeIndex].Cost, rules.Infantry[typeIndex].BuildTime, rules.Infantry[typeIndex].Prerequisites);
                 return true;
             case ProductionCategory.Vehicle:
+            case ProductionCategory.Aircraft:
                 if (typeIndex < 0 || typeIndex >= rules.Vehicles.Count) return false;
-                (cost, buildTime, prerequisites) = (rules.Vehicles[typeIndex].Cost, rules.Vehicles[typeIndex].BuildTime, rules.Vehicles[typeIndex].Prerequisites);
+                VehicleType vt = rules.Vehicles[typeIndex];
+                if ((vt.Locomotion == Locomotion.Air) != (category == ProductionCategory.Aircraft)) return false;
+                (cost, buildTime, prerequisites) = (vt.Cost, vt.BuildTime, vt.Prerequisites);
                 return true;
             case ProductionCategory.Structure:
             case ProductionCategory.Defence:
@@ -40,7 +45,7 @@ public sealed partial class Simulation
                 (cost, buildTime, prerequisites) = (bt.Cost, bt.BuildTime, bt.Prerequisites);
                 return true;
             default:
-                return false;   // Aircraft: no type list in M2
+                return false;
         }
     }
 
@@ -58,12 +63,9 @@ public sealed partial class Simulation
         return false;
     }
 
-    private bool HasPrerequisites(byte player, IReadOnlyList<string> prerequisites)
-    {
-        for (int k = 0; k < prerequisites.Count; k++)
-            if (!OwnsProvider(player, prerequisites[k])) return false;
-        return true;
-    }
+    /// <summary>Every entry is met: an upgrade id needs that upgrade researched (M4-04), any other entry an alive own building whose
+    /// id or provides list names it. Tier sugar entries are provides names, so losing the gate re-locks the tier (Q-M4-e, option A).</summary>
+    private bool HasPrerequisites(byte player, IReadOnlyList<string> prerequisites) => UpgradePrerequisitesMet(player, prerequisites);
 
     private static bool IsUnitCategory(ProductionCategory c) =>
         c == ProductionCategory.Infantry || c == ProductionCategory.Vehicle || c == ProductionCategory.Aircraft;
@@ -96,7 +98,7 @@ public sealed partial class Simulation
     public bool IsUnlocked(byte player, ProductionCategory category, int typeIndex)
     {
         if (player >= _players.Count || _players.IsNeutral(player)) return false;
-        if (!TryTypeInfo(category, typeIndex, out _, out _, out var prereq)) return false;
+        if (!TryTypeInfo(player, category, typeIndex, out _, out _, out var prereq)) return false;
         if (UnlockFilter != null && !UnlockFilter(player, category, typeIndex)) return false;   // M2-15: mission tech gating
         return HasPrerequisites(player, prereq);
     }
@@ -116,7 +118,7 @@ public sealed partial class Simulation
     public QueueBlockReason QueueBlockReason(byte player, ProductionCategory category, int typeIndex)
     {
         if (player >= _players.Count || _players.IsNeutral(player) || _players.Defeated[player]) return Core.QueueBlockReason.Defeated;
-        if (!TryTypeInfo(category, typeIndex, out _, out _, out _)) return Core.QueueBlockReason.NotBuildable;
+        if (!TryTypeInfo(player, category, typeIndex, out _, out _, out _)) return Core.QueueBlockReason.NotBuildable;
         int lane = ProductionState.Lane(player, category);
         if (IsUnitCategory(category) && CountFactories(player, category) == 0) return Core.QueueBlockReason.NoFactory;
         if (!IsUnitCategory(category) && _production.Ready[lane] >= 0) return Core.QueueBlockReason.StructureWaiting;
@@ -292,7 +294,7 @@ public sealed partial class Simulation
     {
         ProductionState s = _production;
         int type = s.QueueType[lane * s.MaxQueue];
-        if (!TryTypeInfo(category, type, out int cost, out int buildTime, out _)) { PopQueue(lane, 0); return; }
+        if (!TryTypeInfo(player, category, type, out int cost, out int buildTime, out _)) { PopQueue(lane, 0); return; }
         int total = ProductionTotalTicks(player, cost, buildTime, factories);
         if (s.Total[lane] != total)
         {
@@ -329,14 +331,14 @@ public sealed partial class Simulation
         CellCoord? rally = _production.RallySet[lane] ? _production.Rally[lane] : null;
         if (category == ProductionCategory.Infantry)
             return SpawnProducedInfantry(player, type, topLeft, fbt, rally);
-        if (category == ProductionCategory.Vehicle)
+        if (category == ProductionCategory.Vehicle || category == ProductionCategory.Aircraft)   // M4-04: aircraft leave like vehicles
             return SpawnProducedVehicle(player, type, topLeft, fbt, true, rally);
         return false;
     }
 
     private bool SpawnProducedVehicle(byte player, int type, CellCoord factoryTopLeft, BuildingType factory, bool applyRally, CellCoord? rally)
     {
-        VehicleType vt = Setup.Rules.Vehicles[type];
+        VehicleType vt = RulesOf(player).Vehicles[type];
         CellCoord exit = new(factoryTopLeft.X + factory.Exit.X, factoryTopLeft.Y + factory.Exit.Y);
         if (!FindFreeExitCell(exit, vt.Locomotion, out CellCoord cell)) return false;
         EntityId id = SpawnVehicle(player, type, cell);
@@ -487,7 +489,7 @@ public sealed partial class Simulation
             int count = category switch
             {
                 ProductionCategory.Infantry => Setup.Rules.Infantry?.Count ?? 0,
-                ProductionCategory.Vehicle => Setup.Rules.Vehicles.Count,
+                ProductionCategory.Vehicle or ProductionCategory.Aircraft => Setup.Rules.Vehicles.Count,   // M4-04
                 ProductionCategory.Structure or ProductionCategory.Defence => BuildingTypeCount,
                 _ => 0,
             };
@@ -506,14 +508,14 @@ public sealed partial class Simulation
             int count = category switch
             {
                 ProductionCategory.Infantry => Setup.Rules.Infantry?.Count ?? 0,
-                ProductionCategory.Vehicle => Setup.Rules.Vehicles.Count,
+                ProductionCategory.Vehicle or ProductionCategory.Aircraft => Setup.Rules.Vehicles.Count,   // M4-04
                 ProductionCategory.Structure or ProductionCategory.Defence => BuildingTypeCount,
                 _ => 0,
             };
             for (int t = 0; t < count; t++)
             {
                 if (!IsUnlocked(player, category, t)) continue;
-                TryTypeInfo(category, t, out int cost, out _, out _);
+                TryTypeInfo(player, category, t, out int cost, out _, out _);
                 list.Add(new BuildOption(category, t, true, QueueBlockReason(player, category, t), cost));
             }
         }
