@@ -5,6 +5,7 @@
     <ProjectReference Include="..\Data\Data.csproj" />
     <ProjectReference Include="..\AI\AI.csproj" />
     <ProjectReference Include="..\Scripting\Scripting.csproj" />
+    <ProjectReference Include="..\Llm\Llm.csproj" />
   </ItemGroup>
 
   <ItemGroup>
