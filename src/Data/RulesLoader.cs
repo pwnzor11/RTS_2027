@@ -41,6 +41,9 @@ public static class RulesLoader
     /// <summary>Upgrade table (M3). Optional: a rules set without it has no upgrades.</summary>
     public const string UpgradesFile = "upgrades.toml";
 
+    /// <summary>Highest tech tier (schema v4, M4-01): <c>tier</c> is 1..MaxTier.</summary>
+    public const int MaxTier = 3;
+
     /// <summary>Loads the rules from <paramref name="rulesDir"/>.</summary>
     /// <exception cref="RulesException">Any file is missing, unparseable or invalid.</exception>
     public static RuleSet Load(string rulesDir)
@@ -115,23 +118,56 @@ public static class RulesLoader
         RadiationRules? radiation = gameRoot is null ? null : GameRulesLoader.ParseRadiation(gameRoot, GameFile, problems);
         StealthRules? stealth = gameRoot is null ? null : GameRulesLoader.ParseStealth(gameRoot, GameFile, problems);
         IReadOnlyList<FactionStartKit>? kits = gameRoot is null ? null : GameRulesLoader.ParseStartKits(gameRoot, GameFile, problems);
+        GarrisonRules? garrison = gameRoot is null ? null : GameRulesLoader.ParseGarrison(gameRoot, GameFile, problems);   // M4-01
+        FoamRules? foam = gameRoot is null ? null : GameRulesLoader.ParseFoam(gameRoot, GameFile, problems);               // M4-01
 
         var typeIds = new HashSet<string>(
             vehicleEntries.Concat(infantryEntries).Concat(buildingEntries).Concat(upgradeEntries).Select(e => e.Id), StringComparer.Ordinal);
         var provides = new HashSet<string>(buildingEntries.SelectMany(ProvidesOf), StringComparer.Ordinal);
         refs.Validate(typeIds, provides, problems);
+        // Schema v4 (M4-01): effect targets/attributes, upgrade effect ids, tier provides names.
+        var tables = new SimRulesTables(vehicles, infantry, buildings, weapons, warheads);
+        EffectRulesLoader.ValidateTargets(effects, tables, provides, problems);
+        ValidateUpgradeEffects(upgrades, effects, problems);
+        if (kits is not null) ValidateTierProvides(kits, provides, problems);
 
         if (problems.Count > 0 || game is null || terrain is null || economy is null || tunnels is null || radiation is null
-            || stealth is null || kits is null)
+            || stealth is null || kits is null || garrison is null || foam is null)
         {
             throw new RulesException(problems);
         }
 
+        // Tier sugar (M4-01, design 08 §4): after every check, so problems name the prerequisites as written.
+        TierSugar.Apply(kits, vehicles, infantry, buildings, upgrades);
+
         var sim = new SimRules(vehicles, infantry, buildings, weapons, warheads, terrain, effects)
         {
             Economy = economy, Tunnels = tunnels, Radiation = radiation, Stealth = stealth, StartKits = kits, Upgrades = upgrades,
+            Garrison = garrison, Foam = foam,
         };
         return new RuleSet(game, sim, RulesHash.Compute(game, sim));
+    }
+
+    /// <summary>Every id in an upgrade's <c>effects</c> must be a techs.toml effect id (M4-01).</summary>
+    private static void ValidateUpgradeEffects(List<UpgradeType> upgrades, List<EffectDef> effects, List<RulesProblem> problems)
+    {
+        foreach (UpgradeType u in upgrades)
+            foreach (string id in u.Effects)
+                if (SimRules.IndexOf(effects, id, e => e.Id) < 0)
+                    problems.Add(new RulesProblem(UpgradesFile, u.Id + ".effects", $"unknown effect '{id}' (not in {TechsFile})"));
+    }
+
+    /// <summary>A non-empty faction <c>tier2</c> / <c>tier3</c> must be a provides name of some building (M4-01).</summary>
+    private static void ValidateTierProvides(IReadOnlyList<FactionStartKit> kits, IReadOnlySet<string> provides, List<RulesProblem> problems)
+    {
+        for (int k = 0; k < kits.Count; k++)
+        {
+            string key = "faction." + RulesEnums.FactionKeys[k];
+            if (kits[k].Tier2Provides.Length > 0 && !provides.Contains(kits[k].Tier2Provides))
+                problems.Add(new RulesProblem(GameFile, key + ".tier2", $"'{kits[k].Tier2Provides}' is not provided by any building"));
+            if (kits[k].Tier3Provides.Length > 0 && !provides.Contains(kits[k].Tier3Provides))
+                problems.Add(new RulesProblem(GameFile, key + ".tier3", $"'{kits[k].Tier3Provides}' is not provided by any building"));
+        }
     }
 
     /// <summary>Maps every type id to the file that defines it. A repeated id is reported at its second definition.</summary>

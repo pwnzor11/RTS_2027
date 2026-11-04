@@ -35,6 +35,11 @@ namespace Rts.Data;
 /// SeismicRadius, SeesThroughBlackout, JamRadius, Superweapon, SuperweaponChargeTicks, SuperweaponEntranceRange, MorphsInto, MorphTicks; then upgrades
 /// (count, then per upgrade in id order: id, Faction, Cost, BuildTime, prerequisites, Effect). Lists are in the same id order as
 /// above, so the block needs no ids of its own.</item>
+/// <item>Schema v4 block (M4-01, format 7): garrison (EjectDamagePermille, EnterRangeCells); foam SpeedPermille; per start kit
+/// Tier2Provides, Tier3Provides; per warhead HitsBurrowed, BonusVsEntrancePercent, FoamTicks, GarrisonDamagePercent; per vehicle Tier;
+/// per infantry Tier, CanGarrison; per building Tier, Garrison, GarrisonRangeBonus, GarrisonRofPermille; per upgrade Tier, Effects
+/// (count, ids). Prerequisites above are the final lists after tier sugar. The land loops cover every land type, so Shallow (7)
+/// joins the terrain and soft tables.</item>
 /// </list>
 /// Hashed with XxHash64. Whitespace, comments and key order in the TOML do not affect it. The loader sorts each
 /// list by id before this runs.
@@ -42,7 +47,7 @@ namespace Rts.Data;
 public static class RulesHash
 {
     /// <summary>Canonical layout version. Bump only with a DECISIONS entry.</summary>
-    public const byte FormatVersion = 6;   // 6: schema v3 block (M3-01)
+    public const byte FormatVersion = 7;   // 6: schema v3 block (M3-01); 7: schema v4 block + Shallow land (M4-01)
 
     /// <summary>Computes the rules hash over the game constants and every sim type table.</summary>
     public static ulong Compute(GameRules game, SimRules sim)
@@ -178,6 +183,7 @@ public static class RulesHash
                 w.Write(sim.Terrain.Buildable((LandType)land));
             }
             WriteSchemaV3(w, sim);
+            WriteSchemaV4(w, sim);
         }
         return XxHash64.HashToUInt64(ms.GetBuffer().AsSpan(0, (int)ms.Length));
     }
@@ -223,6 +229,24 @@ public static class RulesHash
             WriteString(w, u.Id); w.Write((byte)u.Faction); w.Write(u.Cost); w.Write(u.BuildTime);
             WriteStrings(w, u.Prerequisites); WriteString(w, u.Effect);
         }
+    }
+
+    private static void WriteSchemaV4(BinaryWriter w, SimRules sim)
+    {
+        w.Write(sim.Garrison.EjectDamagePermille); w.Write(sim.Garrison.EnterRangeCells);
+        w.Write(sim.Foam.SpeedPermille);
+        foreach (FactionStartKit k in sim.StartKits) { WriteString(w, k.Tier2Provides); WriteString(w, k.Tier3Provides); }
+        foreach (WarheadType x in sim.Warheads)
+        {
+            w.Write(x.HitsBurrowed); w.Write(x.BonusVsEntrancePercent); w.Write(x.FoamTicks); w.Write(x.GarrisonDamagePercent);
+        }
+        foreach (VehicleType x in sim.Vehicles) w.Write(x.Tier);
+        foreach (InfantryType x in sim.Infantry) { w.Write(x.Tier); w.Write(x.CanGarrison); }
+        foreach (BuildingType x in sim.Buildings)
+        {
+            w.Write(x.Tier); w.Write(x.Garrison); w.Write(x.GarrisonRangeBonus); w.Write(x.GarrisonRofPermille);
+        }
+        foreach (UpgradeType u in sim.Upgrades) { w.Write(u.Tier); WriteStrings(w, u.Effects); }
     }
 
     private static void WriteMobile(BinaryWriter w, Faction faction, TunnelSize size, int auraRadius, int auraRof, int auraSpeed,

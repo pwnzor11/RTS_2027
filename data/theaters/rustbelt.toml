@@ -49,6 +49,12 @@ dark = "#1E1D1C"
 base = "#2A2927"
 light = "#383633"
 
+[land.shallow]
+# M4-01: fordable shallow water (appended after cliff; M4-10 owns the final look). Lighter than the deep river.
+dark = "#2A3A44"
+base = "#34505E"
+light = "#3F6274"
+
 [overlay.ashfall]
 # Ashfall drifts: darker speckle. Texel coverage rises linearly with density (0..255) up to max_coverage_permille.
 speck = "#17171A"

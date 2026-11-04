@@ -22,6 +22,40 @@ public static class MapGenerator
     private const int StartClearRadius = 3; // Chebyshev radius forced to clear ground
     private const int StartKeepRadius = 5;  // features keep out of this radius (pits excepted)
 
+    /// <summary>Cells per side of a generated map size: Small 64, Medium 96, Large 128 (design 08 §1, M4).</summary>
+    public static int CellsFor(MapSize size) => size switch
+    {
+        MapSize.Small => 64,
+        MapSize.Medium => 96,
+        MapSize.Large => SimConstants.MaxMapCells,
+        _ => throw new ArgumentOutOfRangeException(nameof(size)),
+    };
+
+    /// <summary>The default name of a generated map: <c>&lt;biome&gt;_&lt;s|m|l&gt;_&lt;players&gt;p_&lt;seed&gt;</c>, e.g. rust_belt_m_4p_77.</summary>
+    public static string DefaultName(MapGenParams p)
+    {
+        ArgumentNullException.ThrowIfNull(p);
+        string biome = p.Biome switch
+        {
+            Biome.RustBelt => "rust_belt", Biome.GlassCoast => "glass_coast", Biome.Mountains => "mountains", Biome.AshPlains => "ash_plains",
+            _ => throw new ArgumentOutOfRangeException(nameof(p)),
+        };
+        string size = p.Size switch { MapSize.Small => "s", MapSize.Medium => "m", MapSize.Large => "l", _ => throw new ArgumentOutOfRangeException(nameof(p)) };
+        return $"{biome}_{size}_{p.Players}p_{p.Seed}";
+    }
+
+    /// <summary>
+    /// Generates a map from biome, size, players and seed (design 08 §1, M4). OWNER: M4-02. Stub (M4-01): delegates to the legacy
+    /// 2-player generator at <see cref="CellsFor"/>(size) with the same seed; biome and player count are not used yet.
+    /// </summary>
+    public static MapData Generate(MapGenParams p)
+    {
+        ArgumentNullException.ThrowIfNull(p);
+        if (p.Players < 2 || p.Players > 4) throw new ArgumentOutOfRangeException(nameof(p), "Players must be 2..4.");
+        // M4-02 fills
+        return Generate(CellsFor(p.Size), p.Seed, p.Name ?? DefaultName(p));
+    }
+
     /// <summary>Generates a map. When <paramref name="name"/> is null the name is "synthetic_&lt;size&gt;_&lt;seed&gt;".</summary>
     public static MapData Generate(int size, ulong seed, string? name = null)
     {

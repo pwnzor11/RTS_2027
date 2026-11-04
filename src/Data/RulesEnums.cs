@@ -17,7 +17,7 @@ internal static class RulesEnums
     public static readonly string[] ArmorKeys = ["unarmored", "light", "heavy", "structure", "fortified"];
 
     /// <summary>Land type names, in <see cref="LandType"/> order.</summary>
-    public static readonly string[] LandKeys = ["clear", "road", "rough", "ash", "water", "rock", "cliff"];
+    public static readonly string[] LandKeys = ["clear", "road", "rough", "ash", "water", "rock", "cliff", "shallow"];
 
     /// <summary>Faction names, in <see cref="Faction"/> order.</summary>
     public static readonly string[] FactionKeys = ["authority", "directorate"];

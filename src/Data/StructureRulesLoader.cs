@@ -20,7 +20,12 @@ internal static class StructureRulesLoader
         "faction", "entrance", "ticks_per_point", "researches", "gate", "seismic_radius", "sees_through_blackout",
         "jam_radius", "superweapon", "superweapon_charge_ticks", "superweapon_entrance_range",
         "morphs_into", "morph_ticks",
+        // schema v4 (M4-01)
+        "tier", "garrison", "garrison_range_bonus", "garrison_rof_permille",
     ];
+
+    /// <summary>Most soldiers a building may hold (schema v4).</summary>
+    public const int MaxGarrison = 10;
 
     private static readonly string[] CategoryNames = ["structure", "defence"];
     private static readonly string[] ProducesNames = ["", "infantry", "vehicle", "aircraft"];
@@ -74,6 +79,16 @@ internal static class StructureRulesLoader
         int? morphsInto = buildingIds is null
             ? -1 : f.OptIndex("morphs_into", buildingIds, "building");
         int? morphTicks = f.OptInt("morph_ticks", 0, int.MaxValue, 0);
+        int? tier = f.OptInt("tier", 1, RulesLoader.MaxTier, 1);
+        int? garrison = f.OptInt("garrison", 0, MaxGarrison, 0);
+        int? garrisonRange = f.OptInt("garrison_range_bonus", 0, SimConstants.MaxMapCells * SimConstants.LeptonsPerCell, 256);
+        int? garrisonRof = f.OptInt("garrison_rof_permille", 1, 100_000, 750);
+        if (tier is null || garrison is null || garrisonRange is null || garrisonRof is null) return null;
+        if (garrison.Value > 0 && entrance is { } ent && ent != TunnelSize.None)
+        {
+            f.Problem("garrison", "a garrisonable building must not be a tunnel entrance (entrance must be \"none\")");
+            return null;
+        }
         if (morphsInto is null || morphTicks is null || faction is null || entrance is null || ticksPerPoint is null || researches is null || gate is null || seismic is null
             || seesThroughBlackout is null || jam is null || superweapon is null || swCharge is null || swRange is null)
         {
@@ -149,6 +164,10 @@ internal static class StructureRulesLoader
             SuperweaponEntranceRange = swRange.Value,
             MorphsInto = morphsInto.Value,
             MorphTicks = morphTicks.Value,
+            Tier = tier.Value,
+            Garrison = garrison.Value,
+            GarrisonRangeBonus = garrisonRange.Value,
+            GarrisonRofPermille = garrisonRof.Value,
         };
         return exit is null ? building : building with { Exit = new CellCoord(exit[0], exit[1]) };
     }

@@ -13,12 +13,30 @@ namespace Rts.Data;
 /// <summary>
 /// Reads and writes <c>&lt;name&gt;.map.toml</c>. <c>[map]</c> holds metadata; <c>[layers]</c> holds each cell
 /// layer as a base64 string of the packed little-endian array (template = ushort, others = byte).
+/// Format 2 (M4-01, design 08 §1) adds optional <c>[map]</c> keys <c>biome</c>, <c>symmetry</c>, <c>max_players</c>, an optional
+/// <c>[map.generator]</c> table (biome, size s|m|l, players, seed; informational) and an optional <c>[[features]]</c> array
+/// (<c>type</c>, <c>cell = [x, y]</c>). Version 1 files still load, with <see cref="MapMeta.DefaultFor"/>. None of it enters the map hash.
 /// </summary>
 public static class MapFile
 {
-    public const int FormatVersion = 1;
+    public const int FormatVersion = 2;
 
-    public static void Save(MapData map, string path)
+    /// <summary>Oldest format version <see cref="Load"/> still reads.</summary>
+    public const int OldestReadableVersion = 1;
+
+    /// <summary>Symmetry names as written in <c>[map] symmetry</c>, in <see cref="MapSymmetry"/> order.</summary>
+    public static readonly string[] SymmetryKeys = ["none", "rot2", "rot4", "mirror_x", "mirror_y", "mirror_diag"];
+
+    /// <summary>Biome names as written in <c>biome</c> keys, in <see cref="Biome"/> order.</summary>
+    public static readonly string[] BiomeKeys = ["rust_belt", "glass_coast", "mountains", "ash_plains"];
+
+    private static readonly string[] SizeKeys = ["s", "m", "l"];
+
+    /// <summary>Writes the map with no metadata (format 2; loads back with <see cref="MapMeta.DefaultFor"/>).</summary>
+    public static void Save(MapData map, string path) => Save(map, null, path);
+
+    /// <summary>Writes the map and, when given, its metadata (format 2).</summary>
+    public static void Save(MapData map, MapMeta? meta, string path)
     {
         ArgumentNullException.ThrowIfNull(map);
         var sb = new StringBuilder();
@@ -35,7 +53,9 @@ public static class MapFile
             sb.Append('[').Append(map.StartPositions[i].X.ToString(CultureInfo.InvariantCulture)).Append(", ")
               .Append(map.StartPositions[i].Y.ToString(CultureInfo.InvariantCulture)).Append(']');
         }
-        sb.Append("]\n\n[layers]\n");
+        sb.Append("]\n");
+        if (meta is not null) AppendMeta(sb, meta);
+        sb.Append("\n[layers]\n");
 
         int n = map.Template.Count;
         var tpl = new byte[n * 2];
@@ -53,7 +73,11 @@ public static class MapFile
         File.WriteAllText(path, sb.ToString(), new UTF8Encoding(false));
     }
 
-    public static MapData Load(string path)
+    /// <summary>Reads a map file (format 1 or 2); metadata is ignored.</summary>
+    public static MapData Load(string path) => LoadWithMeta(path).Map;
+
+    /// <summary>Reads a map file and its metadata (format 1 or 2; a version-1 file gets <see cref="MapMeta.DefaultFor"/>).</summary>
+    public static (MapData Map, MapMeta Meta) LoadWithMeta(string path)
     {
         string text;
         try { text = File.ReadAllText(path); }
@@ -69,7 +93,7 @@ public static class MapFile
         var l = Section(root, "layers", path);
 
         int version = Int(m, "format_version", path);
-        if (version != FormatVersion) throw new MapFileException(path, $"unsupported format_version {version}");
+        if (version < OldestReadableVersion || version > FormatVersion) throw new MapFileException(path, $"unsupported format_version {version}");
         string name = Str(m, "name", path);
         string theater = Str(m, "theater", path);
         int w = Int(m, "width", path), h = Int(m, "height", path);
@@ -104,8 +128,82 @@ public static class MapFile
             if (ovlB[i] > (byte)OverlayKind.Wall) throw new MapFileException(path, $"layers.overlay: invalid overlay {ovlB[i]} at cell {i}");
             land[i] = (LandType)landB[i]; ovl[i] = (OverlayKind)ovlB[i];
         }
-        return new MapData(name, theater, w, h, tpl, land, hgtB, ovl, denB, starts);
+        var map = new MapData(name, theater, w, h, tpl, land, hgtB, ovl, denB, starts);
+        return (map, version >= 2 ? ReadMeta(root, m, map, path) : MapMeta.DefaultFor(map));
     }
+
+    private static void AppendMeta(StringBuilder sb, MapMeta meta)
+    {
+        sb.Append("biome = ").Append(Quote(meta.Biome)).Append('\n');
+        sb.Append("symmetry = ").Append(Quote(SymmetryKeys[(int)meta.Symmetry])).Append('\n');
+        sb.Append("max_players = ").Append(meta.MaxPlayers.ToString(CultureInfo.InvariantCulture)).Append('\n');
+        if (meta.Generator is { } g)
+        {
+            sb.Append("\n[map.generator]\n");
+            sb.Append("biome = ").Append(Quote(BiomeKeys[(int)g.Biome])).Append('\n');
+            sb.Append("size = ").Append(Quote(SizeKeys[(int)g.Size])).Append('\n');
+            sb.Append("players = ").Append(g.Players.ToString(CultureInfo.InvariantCulture)).Append('\n');
+            // TOML integers are signed 64-bit: a seed above long.MaxValue is written as a decimal string.
+            sb.Append("seed = ").Append(g.Seed <= long.MaxValue ? g.Seed.ToString(CultureInfo.InvariantCulture)
+                : Quote(g.Seed.ToString(CultureInfo.InvariantCulture))).Append('\n');
+        }
+        foreach (MapFeature f in meta.Features)
+        {
+            sb.Append("\n[[features]]\n");
+            sb.Append("type = ").Append(Quote(f.Type)).Append('\n');
+            sb.Append("cell = [").Append(f.Cell.X.ToString(CultureInfo.InvariantCulture)).Append(", ")
+              .Append(f.Cell.Y.ToString(CultureInfo.InvariantCulture)).Append("]\n");
+        }
+    }
+
+    private static MapMeta ReadMeta(TomlTable root, TomlTable m, MapData map, string path)
+    {
+        string biome = m.ContainsKey("biome") ? Str(m, "biome", path) : "";
+        MapSymmetry symmetry = MapSymmetry.None;
+        if (m.ContainsKey("symmetry"))
+        {
+            int s = Array.IndexOf(SymmetryKeys, Str(m, "symmetry", path));
+            if (s < 0) throw new MapFileException(path, $"map.symmetry must be one of {string.Join(", ", SymmetryKeys)}");
+            symmetry = (MapSymmetry)s;
+        }
+        int maxPlayers = m.ContainsKey("max_players") ? Int(m, "max_players", path) : map.StartPositions.Count;
+        if (maxPlayers < 1) throw new MapFileException(path, "map.max_players must be at least 1");
+
+        MapGenParams? generator = null;
+        if (m.TryGetValue("generator", out var gv))
+        {
+            if (gv is not TomlTable g) throw new MapFileException(path, "map.generator must be a table");
+            int b = Array.IndexOf(BiomeKeys, Str(g, "biome", path));
+            int z = Array.IndexOf(SizeKeys, Str(g, "size", path));
+            if (b < 0) throw new MapFileException(path, $"map.generator.biome must be one of {string.Join(", ", BiomeKeys)}");
+            if (z < 0) throw new MapFileException(path, "map.generator.size must be one of s, m, l");
+            int players = Int(g, "players", path);
+            ulong seed = g.TryGetValue("seed", out var sv) && sv is string ss && ulong.TryParse(ss, NumberStyles.None, CultureInfo.InvariantCulture, out ulong big)
+                ? big : (ulong)Int64(g, "seed", path);
+            generator = new MapGenParams((Biome)b, (MapSize)z, players, seed);
+        }
+
+        var features = new List<MapFeature>();
+        if (root.TryGetValue("features", out var fv))
+        {
+            if (fv is not TomlTableArray fa) throw new MapFileException(path, "features must be an array of [[features]] tables");
+            foreach (TomlTable t in fa)
+            {
+                string type = t.TryGetValue("type", out var tv) && tv is string ts && ts.Length > 0
+                    ? ts : throw new MapFileException(path, "features.type missing or empty");
+                if (!t.TryGetValue("cell", out var cv) || cv is not TomlArray pair || pair.Count != 2 || !IsInt(pair[0]) || !IsInt(pair[1]))
+                    throw new MapFileException(path, "features.cell must be [x, y]");
+                int x = (int)Convert.ToInt64(pair[0], CultureInfo.InvariantCulture), y = (int)Convert.ToInt64(pair[1], CultureInfo.InvariantCulture);
+                if (!map.Contains(new CellCoord(x, y))) throw new MapFileException(path, $"feature cell [{x}, {y}] outside map");
+                features.Add(new MapFeature(type, new CellCoord(x, y)));
+            }
+        }
+        return new MapMeta(biome, symmetry, maxPlayers, generator, features);
+    }
+
+    private static long Int64(TomlTable t, string key, string path) =>
+        t.TryGetValue(key, out var v) && IsInt(v) ? Convert.ToInt64(v, CultureInfo.InvariantCulture)
+            : throw new MapFileException(path, $"map.{key} missing or not an integer");
 
     private static TomlTable Section(TomlTable root, string key, string path) =>
         root.TryGetValue(key, out var v) && v is TomlTable t ? t : throw new MapFileException(path, $"missing [{key}] section");

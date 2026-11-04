@@ -11,7 +11,9 @@ internal static class WeaponRulesLoader
     public const int MaxVersusPercent = 1000;
 
     private static readonly string[] WarheadKeys =
-        ["versus", "splash", "hits_allies", "contaminate", "decontaminate", "bonus_vs_irradiated_percent", "blackout_ticks"];
+        ["versus", "splash", "hits_allies", "contaminate", "decontaminate", "bonus_vs_irradiated_percent", "blackout_ticks",
+         // schema v4 (M4-01)
+         "hits_burrowed", "bonus_vs_entrance_percent", "foam_ticks", "garrison_damage_percent"];
     private static readonly string[] WeaponKeys =
         ["damage", "range", "min_range", "rate_of_fire", "projectile_speed", "warhead", "targets"];
 
@@ -26,8 +28,12 @@ internal static class WeaponRulesLoader
         int? decontaminate = f.OptInt("decontaminate", 0, 255, 0);
         int? bonus = f.OptInt("bonus_vs_irradiated_percent", 0, MaxVersusPercent, 100);
         int? blackout = f.OptInt("blackout_ticks", 0, 1_000_000, 0);
+        bool? hitsBurrowed = f.OptBool("hits_burrowed", false);
+        int? bonusEntrance = f.OptInt("bonus_vs_entrance_percent", 0, MaxVersusPercent, 100);
+        int? foam = f.OptInt("foam_ticks", 0, 1_000_000, 0);
+        int? garrisonDamage = f.OptInt("garrison_damage_percent", 0, MaxVersusPercent, 0);
         if (versus is null || splash is null || hitsAllies is null || contaminate is null || decontaminate is null
-            || bonus is null || blackout is null)
+            || bonus is null || blackout is null || hitsBurrowed is null || bonusEntrance is null || foam is null || garrisonDamage is null)
         {
             return null;
         }
@@ -37,6 +43,10 @@ internal static class WeaponRulesLoader
             Decontaminate = decontaminate.Value,
             BonusVsIrradiatedPercent = bonus.Value,
             BlackoutTicks = blackout.Value,
+            HitsBurrowed = hitsBurrowed.Value,
+            BonusVsEntrancePercent = bonusEntrance.Value,
+            FoamTicks = foam.Value,
+            GarrisonDamagePercent = garrisonDamage.Value,
         };
     }
 

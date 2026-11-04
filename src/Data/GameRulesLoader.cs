@@ -15,9 +15,11 @@ internal static class GameRulesLoader
     private const string RadiationSection = "radiation";
     private const string StealthSection = "stealth";
     private const string FactionSection = "faction";
+    private const string GarrisonSection = "garrison";   // M4-01
+    private const string FoamSection = "foam";           // M4-01
 
     private static readonly string[] TopLevel =
-        [Section, EconomySection, TunnelsSection, RadiationSection, StealthSection, FactionSection];
+        [Section, EconomySection, TunnelsSection, RadiationSection, StealthSection, FactionSection, GarrisonSection, FoamSection];
 
     /// <summary>Parses the [game] table. Returns null when any problem was recorded.</summary>
     public static GameRules? Parse(TomlTable root, string file, List<RulesProblem> problems)
@@ -179,6 +181,34 @@ internal static class GameRulesLoader
         return delay is null ? null : new StealthRules(delay.Value);
     }
 
+    /// <summary>Parses the optional [garrison] table (M4); every key optional with the design 08 default. Null after a problem.</summary>
+    public static GarrisonRules? ParseGarrison(TomlTable root, string file, List<RulesProblem> problems)
+    {
+        GarrisonRules d = GarrisonRules.Default;
+        RulesFields? f = OptionalTable(root, GarrisonSection, file, problems);
+        if (f is null)
+        {
+            return root.ContainsKey(GarrisonSection) ? null : d;
+        }
+        f.CheckKeys("eject_damage_permille", "enter_range_cells");
+        int? eject = f.OptInt("eject_damage_permille", 0, 1000, d.EjectDamagePermille);
+        int? range = f.OptInt("enter_range_cells", 0, 16, d.EnterRangeCells);
+        return eject is null || range is null ? null : new GarrisonRules(eject.Value, range.Value);
+    }
+
+    /// <summary>Parses the optional [foam] table (M4); every key optional with the design 08 default. Null after a problem.</summary>
+    public static FoamRules? ParseFoam(TomlTable root, string file, List<RulesProblem> problems)
+    {
+        RulesFields? f = OptionalTable(root, FoamSection, file, problems);
+        if (f is null)
+        {
+            return root.ContainsKey(FoamSection) ? null : FoamRules.Default;
+        }
+        f.CheckKeys("speed_permille");
+        int? speed = f.OptInt("speed_permille", 0, 1000, FoamRules.Default.SpeedPermille);
+        return speed is null ? null : new FoamRules(speed.Value);
+    }
+
     /// <summary>
     /// Parses the optional [faction.authority] / [faction.directorate] start kits (M3): <c>conyard</c> (building id) and
     /// <c>units</c> (vehicle/infantry ids). An absent faction keeps its default kit. Ids are NOT checked here: they are
@@ -214,17 +244,19 @@ internal static class GameRulesLoader
                 continue;
             }
             var f = new RulesFields(RulesEntry.FromTable(key, file, kitTable), problems);
-            f.CheckKeys("conyard", "units");
+            f.CheckKeys("conyard", "units", "tier2", "tier3");
             FactionStartKit d = kits[(int)faction.Value];
             string? conyard = f.OptStr("conyard", d.Conyard);
             List<string>? units = f.Has("units") ? f.StrList("units") : new List<string>(d.Units);
-            if (conyard is null || units is null || conyard.Length == 0)
+            string? tier2 = f.OptStr("tier2", d.Tier2Provides);   // M4-01: provides names, checked by RulesLoader
+            string? tier3 = f.OptStr("tier3", d.Tier3Provides);
+            if (conyard is null || units is null || conyard.Length == 0 || tier2 is null || tier3 is null)
             {
                 if (conyard is { Length: 0 }) f.Problem("conyard", "must not be empty");
                 ok = false;
                 continue;
             }
-            kits[(int)faction.Value] = new FactionStartKit(conyard, units);
+            kits[(int)faction.Value] = new FactionStartKit(conyard, units) { Tier2Provides = tier2, Tier3Provides = tier3 };
         }
         return ok ? kits : null;
     }

@@ -17,6 +17,8 @@ internal static class UnitRulesLoader
         "faction", "tunnel_size", "aura_radius", "aura_rof_permille", "aura_speed_permille", "aura_targets",
         "rad_resist_permille", "irradiated", "stealth", "death_weapon", "jam_radius", "seismic_radius",
         "passengers", "deploys_into",
+        // schema v4 (M4-01)
+        "tier",
     ];
 
     private static readonly string[] InfantryKeys =
@@ -26,6 +28,8 @@ internal static class UnitRulesLoader
         "faction", "tunnel_size", "aura_radius", "aura_rof_permille", "aura_speed_permille", "aura_targets",
         "rad_resist_permille", "irradiated", "stealth", "death_weapon", "jam_radius", "seismic_radius",
         "engineer",
+        // schema v4 (M4-01)
+        "tier", "can_garrison",
     ];
 
     /// <summary>The schema v3 keys vehicles and infantry share (all optional).</summary>
@@ -89,7 +93,8 @@ internal static class UnitRulesLoader
         MobileV3? v3 = ParseMobileV3(f, weapons, refs, TunnelSize.None);
         int? passengers = f.OptInt("passengers", 0, 100, 0);
         int? deploysInto = f.OptIndex("deploys_into", buildingIds, "building");
-        if (v3 is null || passengers is null || deploysInto is null) return null;
+        int? tier = f.OptInt("tier", 1, RulesLoader.MaxTier, 1);
+        if (v3 is null || passengers is null || deploysInto is null || tier is null) return null;
         if (harvestCapacity is null || buildTime is null || speed is null || maxHealth is null || locomotion is null || turnRate is null || armor is null
             || sight is null || weapon is null || hasTurret is null || turretTurnRate is null || crusher is null
             || cost is null || prerequisites is null)
@@ -116,6 +121,7 @@ internal static class UnitRulesLoader
             SeismicRadius = v3.SeismicRadius,
             Passengers = passengers.Value,
             DeploysInto = deploysInto.Value,
+            Tier = tier.Value,
         };
     }
 
@@ -133,7 +139,9 @@ internal static class UnitRulesLoader
         int? buildTime = f.OptInt("build_time", 0, int.MaxValue, 0);
         MobileV3? v3 = ParseMobileV3(f, weapons, refs, TunnelSize.S);
         bool? engineer = f.OptBool("engineer", false);
-        if (v3 is null || engineer is null) return null;
+        int? tier = f.OptInt("tier", 1, RulesLoader.MaxTier, 1);
+        bool? canGarrison = engineer is null ? null : f.OptBool("can_garrison", !engineer.Value);   // engineers stay out unless set
+        if (v3 is null || engineer is null || tier is null || canGarrison is null) return null;
         if (buildTime is null || speed is null || maxHealth is null || armor is null || sight is null || weapon is null
             || cost is null || prerequisites is null)
         {
@@ -157,6 +165,8 @@ internal static class UnitRulesLoader
             JamRadius = v3.JamRadius,
             SeismicRadius = v3.SeismicRadius,
             Engineer = engineer.Value,
+            Tier = tier.Value,
+            CanGarrison = canGarrison.Value,
         };
     }
 }
