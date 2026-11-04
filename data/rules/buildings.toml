@@ -172,7 +172,7 @@ provides = []
 
 [dir_smelter_vent]
 footprint_w = 3  # ASSUMED (M3-07)
-footprint_h = 3  # ASSUMED (M3-07)
+footprint_h = 2  # ASSUMED (M3-07)
 max_health = 700  # ASSUMED (M3-07)
 armor = "structure"
 sight = 4  # ASSUMED (M3-07)
@@ -183,7 +183,7 @@ prerequisites = ["dir_reactor_vent"]
 provides = []
 refinery = true
 storage = 1000  # ASSUMED (M3-07)
-dock = [1, 3]  # ASSUMED (M3-07)
+dock = [1, 2]  # cell south of the ramp mouth, matches the approved 3x2 art
 free_unit = "dir_scraper"
 build_time = 400  # ASSUMED (M3-07)
 entrance = "M"
@@ -235,8 +235,8 @@ ticks_per_point = 20
 morphs_into = "dir_bore_head"
 
 [dir_bore_head]
-footprint_w = 2  # ASSUMED (M3-07)
-footprint_h = 2  # ASSUMED (M3-07)
+footprint_w = 1  # ASSUMED (M3-07)
+footprint_h = 1  # ASSUMED (M3-07)
 max_health = 500  # ASSUMED (M3-07)
 armor = "structure"
 sight = 3  # ASSUMED (M3-07)
