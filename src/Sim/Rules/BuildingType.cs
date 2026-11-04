@@ -90,5 +90,12 @@ public sealed record BuildingType(string Id, int FootprintW, int FootprintH, int
     /// <summary>When positive, firing needs an own finished entrance within this many cells of the target (Sunrise Device: 8).</summary>
     public int SuperweaponEntranceRange { get; init; }
 
+    /// <summary>Building type index this building upgrades in place into with the Upgrade command (TOML <c>morphs_into</c>, a
+    /// building id; Hatch to Bore Head), or -1 for none (M3-03).</summary>
+    public int MorphsInto { get; init; } = -1;
+
+    /// <summary>Ticks the in-place upgrade takes (TOML <c>morph_ticks</c>); 0 = derive from the cost difference (M3-03).</summary>
+    public int MorphTicks { get; init; }
+
     private CellCoord DefaultExit() => new(FootprintW / 2, FootprintH);
 }

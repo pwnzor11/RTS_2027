@@ -223,6 +223,8 @@ public sealed partial class Simulation
     /// aimed at <paramref name="targetPoint"/>. Returns true if a shot was fired.</summary>
     internal bool Fire(ActorKind kind, int i, int weapon, ActorRef target, LeptonCoord targetPoint)
     {
+        ActorLayer layer = _tunnels.LayerOf(kind, i);   // M3-03: diving and underground units cannot fire
+        if (layer == ActorLayer.Diving || ActorLayers.IsUnderground(layer)) return false;
         ref CombatEntry e = ref _combat.At(kind, i);
         if (e.ReloadTicks > 0) return false;
         byte owner = PlayerAt(kind, i);

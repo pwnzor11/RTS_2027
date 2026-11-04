@@ -32,7 +32,7 @@ namespace Rts.Data;
 /// BlackoutTicks; per vehicle the mobile v3 fields (Faction, TunnelSize, AuraRadius, AuraRofPermille, AuraSpeedPermille,
 /// AuraTargets, RadResistPermille, Irradiated, Stealth, DeathWeapon, JamRadius, SeismicRadius) then Passengers, DeploysInto;
 /// per infantry the mobile v3 fields then Engineer; per building Faction, Entrance, TicksPerPoint, Researches, Gate,
-/// SeismicRadius, SeesThroughBlackout, JamRadius, Superweapon, SuperweaponChargeTicks, SuperweaponEntranceRange; then upgrades
+/// SeismicRadius, SeesThroughBlackout, JamRadius, Superweapon, SuperweaponChargeTicks, SuperweaponEntranceRange, MorphsInto, MorphTicks; then upgrades
 /// (count, then per upgrade in id order: id, Faction, Cost, BuildTime, prerequisites, Effect). Lists are in the same id order as
 /// above, so the block needs no ids of its own.</item>
 /// </list>
@@ -215,7 +215,7 @@ public static class RulesHash
         {
             w.Write((byte)x.Faction); w.Write((byte)x.Entrance); w.Write(x.TicksPerPoint); w.Write(x.Researches); w.Write(x.Gate);
             w.Write(x.SeismicRadius); w.Write(x.SeesThroughBlackout); w.Write(x.JamRadius); WriteString(w, x.Superweapon);
-            w.Write(x.SuperweaponChargeTicks); w.Write(x.SuperweaponEntranceRange);
+            w.Write(x.SuperweaponChargeTicks); w.Write(x.SuperweaponEntranceRange); w.Write(x.MorphsInto); w.Write(x.MorphTicks);
         }
         w.Write(sim.Upgrades.Count);
         foreach (UpgradeType u in sim.Upgrades)
