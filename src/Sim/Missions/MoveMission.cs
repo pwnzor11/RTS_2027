@@ -46,9 +46,9 @@ internal static class MoveMission
         if (kind == ActorKind.Vehicle)
         {
             VehicleType t = sim.Setup.Rules.Vehicles[store.TypeIndex[i]];
-            return new Stats(t.Locomotion, t.Speed, t.TurnRate, t.Crusher);
+            return new Stats(t.Locomotion, (int)((long)t.Speed * sim.Effects.SpeedPermille(kind, i) / 1000), t.TurnRate, t.Crusher);   // M3-06: aura speed
         }
-        return new Stats(Locomotion.Foot, sim.Setup.Rules.Infantry[store.TypeIndex[i]].Speed, 0, false);
+        return new Stats(Locomotion.Foot, (int)((long)sim.Setup.Rules.Infantry[store.TypeIndex[i]].Speed * sim.Effects.SpeedPermille(kind, i) / 1000), 0, false);   // M3-06: aura speed
     }
 
     // ---- handlers -----------------------------------------------------------------------------
@@ -67,6 +67,7 @@ internal static class MoveMission
     public static int HandleMove(Simulation sim, MobileStore store, ActorKind kind, int i)
     {
         if (store.Health[i] <= 0) return 1;
+        if (AirMission.IsAir(sim, kind, store, i)) return AirMission.HandleMove(sim, store, i);   // M3-06
         if (store.Status[i] == MissionStatus.Init)
         {
             // A fresh Move forgets the old route (an unfinished step is still completed first). -1: a command waits for its
@@ -107,6 +108,7 @@ internal static class MoveMission
     public static int StepToward(Simulation sim, MobileStore store, ActorKind kind, int i, CellCoord cell)
     {
         if (store.Health[i] <= 0) return 1;
+        if (AirMission.IsAir(sim, kind, store, i)) return AirMission.StepToward(sim, store, i, cell);   // M3-06
         return Follow(sim, store, kind, i, cell, false, out _);
     }
 

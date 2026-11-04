@@ -239,6 +239,7 @@ public sealed partial class Simulation
             _projectiles.Spawn(PositionAt(kind, i), target, targetPoint, w.ProjectileSpeed, w.Damage, w.Warhead, owner, weapon);
         }
         e.ReloadTicks = w.RateOfFire < 1 ? 1 : w.RateOfFire;
+        if (kind != ActorKind.Building) e.ReloadTicks = Math.Max(1, (int)((long)e.ReloadTicks * _effects.RofPermille(kind, i) / 1000));   // M3-06: aura rate of fire
         return true;
     }
 
