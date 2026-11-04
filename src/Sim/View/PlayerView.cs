@@ -74,10 +74,10 @@ public readonly struct PlayerView
         InMap(c) && _sim.Map.IsPassableTerrain(c, loco, _sim.Setup.Rules.Terrain);
 
     /// <summary>0 = shroud, 1 = fog, 2 = visible now, for the viewing player.</summary>
-    public byte VisionAt(CellCoord c) => _sim.Vision.VisionAt(Player, c);
+    public byte VisionAt(CellCoord c) => _sim.WithBlackout(Player, c, _sim.Vision.VisionAt(Player, c));   // M3-INT: Blackout
 
     /// <summary>True if the cell is visible to the viewing player right now.</summary>
-    public bool IsVisible(CellCoord c) => _sim.Vision.IsVisible(Player, c);
+    public bool IsVisible(CellCoord c) => VisionAt(c) == 2;
 
     // ---- M3 layers (fog rules in Simulation.View.cs) ----------------------------------------------
 
@@ -168,7 +168,7 @@ public readonly struct PlayerView
             byte owner = s.Player[i];
             if ((owner == Player) != own) continue;
             CellCoord cell = s.Position[i].ToCell();
-            if (!own && !_sim.Vision.IsVisible(Player, cell)) continue;
+            if (!own && !IsVisible(cell)) continue;
             bool hidden = !own && _sim.IsHiddenFrom(Player, kind, i);   // M3: underground / stealthed enemy not revealed
             if (hidden) continue;
             bool underground = _sim.IsUnderground(kind, i), stealthed = _sim.IsStealthedNow(kind, i);
@@ -222,7 +222,7 @@ public readonly struct PlayerView
     {
         for (int y = 0; y < h; y++)
             for (int x = 0; x < w; x++)
-                if (_sim.Vision.IsVisible(Player, new CellCoord(topLeft.X + x, topLeft.Y + y))) return true;
+                if (IsVisible(new CellCoord(topLeft.X + x, topLeft.Y + y))) return true;
         return false;
     }
 

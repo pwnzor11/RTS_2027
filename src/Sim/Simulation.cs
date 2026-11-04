@@ -743,6 +743,7 @@ public sealed partial class Simulation
         ReadOnlySpan<byte> team = TeamMembers((byte)viewer);
         if (team.Length == 1) _vision.FillVision((byte)viewer, vision);
         else _vision.FillVisionAny(team, vision);   // allies share vision and exploration
+        ApplyBlackoutToGrid((byte)viewer, vision);   // M3-INT: Blackout cells are fog unless seen through
         return new SimSnapshot(Tick, Setup.Map.Width, Setup.Map.Height, list, Setup.Map.Land, hash,
             blist, viewer, vision, fx) { Telegraphs = telegraphs, Ground = ground };
     }
