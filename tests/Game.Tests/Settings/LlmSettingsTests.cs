@@ -178,9 +178,9 @@ public sealed class LlmSettingsTests
     }
 
     [Fact]
-    public async Task Default_hook_returns_not_wired_and_needs_a_provider()
+    public async Task Default_hook_needs_a_provider()
     {
-        Assert.Equal("not wired yet", await LlmHooks.TestConnection(new LlmConfig(LlmProviderKind.None, "", ""), null, default));
+        Assert.Equal("Choose a provider first.", await LlmHooks.TestConnection(new LlmConfig(LlmProviderKind.None, "", ""), null, default));
         var (model, _, _) = Build();
         model.StartTest();
         Assert.Equal("Choose a provider first.", model.TestResult);

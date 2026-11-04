@@ -3,6 +3,7 @@
 using Rts.AI;
 using Rts.Data;
 using Rts.Game.Saves;
+using Rts.Game.Ui.Llm;
 using Rts.Game.Screens;
 using Rts.Llm;
 using Rts.Sim;
@@ -17,7 +18,7 @@ namespace Rts.Game.Sandbox;
 /// 64x64 map for any other seed, <c>AllowDebug</c> off, <see cref="SkirmishStart.Apply"/> for the starting Construction Yards,
 /// and an <see cref="AiDriver"/> on player 1. Shared by the game screen and <c>--skirmish-check</c> so both start identically.
 /// </summary>
-public sealed class SkirmishGame
+public sealed class SkirmishGame : IDisposable
 {
     /// <summary>The human player's slot.</summary>
     public const byte LocalPlayer = 0;
@@ -85,6 +86,32 @@ public sealed class SkirmishGame
     /// <summary>M5: the LLM commanders of this game, one per slot whose <see cref="SkirmishSlot.Commander"/> is set (M5-05 fills; empty
     /// otherwise).</summary>
     public IReadOnlyList<ICommanderChannel> Commanders { get; private set; } = Array.Empty<ICommanderChannel>();
+
+    private readonly List<Commander> _commanders = new();
+
+    /// <summary>Cancels any call the LLM commanders still have in flight (M5-05). Safe to call more than once.</summary>
+    public void Dispose()
+    {
+        foreach (Commander c in _commanders) c.Dispose();
+    }
+
+    private void AttachCommanders(IEnumerable<(byte Player, SkirmishSlot Slot)> slots, Settings app)
+    {
+        LlmConfig cfg = LlmHooks.Defaults.Resolve(app.ProviderKind, app.LlmBaseUrl, app.LlmModel);
+        IReadOnlyList<CommanderPersona>? personas = null;
+        foreach ((byte player, SkirmishSlot slot) in slots)
+        {
+            if (!slot.Commander) continue;
+            IChatProvider? provider = app.ProviderKind == LlmProviderKind.None ? null : ProviderFactory.Create(cfg, LlmHooks.SecretStore.Load());
+            personas ??= PersonaCatalog.Load(Path.Combine(AppContext.BaseDirectory, "data", "llm", "personas.toml"));
+            string faction = slot.Faction.ToString();
+            CommanderPersona persona = PersonaCatalog.Pick(personas, faction, player);
+            var commander = new Commander(player, provider, persona, faction, app.LlmCallCap, app.LlmChatOn, Chat);
+            Ai.SetDirectiveSource(player, commander);
+            _commanders.Add(commander);
+        }
+        Commanders = _commanders.ToArray();
+    }
 
     /// <summary>Which map this is, for the setup screen: "Rust Belt (curated)" or "Generated 64x64".</summary>
     public string MapLabel { get; }
@@ -176,9 +203,10 @@ public sealed class SkirmishGame
     /// </summary>
     /// <param name="rulesDir">The data/rules directory.</param>
     /// <param name="settings">The setup choices; <see cref="SkirmishSettings.Validate"/> must return no errors.</param>
+    /// <param name="appSettings">M5: the app settings (LLM provider, chat, call cap). Null = no LLM commanders even if a slot asks for one.</param>
     /// <exception cref="RulesException">The rules data is missing or invalid.</exception>
     /// <exception cref="InvalidOperationException">The settings are invalid, the map has too few starts or cannot be read, or a faction's start kit names a missing type.</exception>
-    public static SkirmishGame Create(string rulesDir, SkirmishSettings settings)
+    public static SkirmishGame Create(string rulesDir, SkirmishSettings settings, Settings? appSettings = null)
     {
         ArgumentNullException.ThrowIfNull(settings);
         IReadOnlyList<string> errors = settings.Validate();
@@ -212,11 +240,13 @@ public sealed class SkirmishGame
 
         bool curated = settings.Map.File == CuratedMapFile;
         byte? local = settings.IsSpectator ? null : (byte)0;
-        return new SkirmishGame(sim, map, meta, rules, driver, DescribeMap(settings.Map), aiId, curated, local, mapId, saved);
+        var game = new SkirmishGame(sim, map, meta, rules, driver, DescribeMap(settings.Map), aiId, curated, local, mapId, saved);
+        if (appSettings is not null) game.AttachCommanders(settings.AiPlayers, appSettings);
+        return game;
     }
 
     /// <summary>
-    /// The SimSetup of a skirmish (M4-INT2: shared by <see cref="Create(string, SkirmishSettings)"/> and the save loader, so a loaded game has the
+    /// The SimSetup of a skirmish (M4-INT2: shared by <see cref="Create(string, SkirmishSettings, Settings)"/> and the save loader, so a loaded game has the
     /// same players, teams and factions): one sim player per open slot, plus a neutral player on team 255 after them when the map has features.
     /// </summary>
     public static SimSetup MakeSetup(RuleSet rules, SkirmishSettings settings, MapData map, MapMeta meta)
