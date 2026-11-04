@@ -11,6 +11,8 @@ public enum FxKind : byte
     BuildingDestroyed = 1,
     /// <summary>A vehicle or infantry actor was removed this tick with no health left.</summary>
     UnitDestroyed = 2,
+    /// <summary>M3-13: a superweapon went off. Pos = the target point, Size = the blast radius in cells (flash and screen shake).</summary>
+    Superweapon = 3,
 }
 
 /// <summary>
