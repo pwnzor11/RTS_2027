@@ -3,8 +3,9 @@
 Two concrete gate piers (same block, plinth, steel caps and house band as auth_wall, so it joins a wall run east and west)
 with a steel-framed sliding leaf between them: heavy box frame, diagonal bracing, a house-colour panel, a floor track with
 a hazard-striped threshold, a keyed card reader and an amber guard lamp on the east pier that blinks in the idle loop.
-CLOSED STATE ONLY: the game has no gate-open sprite state (src/Game reads none; open/closed is sim-side), so no open
-frames are rendered. Damage is structural only (D-069): the leaf is buckled and has sprung off its track at one end, the
+States idle / damaged / build show the CLOSED gate; since M3-21 the game also plays a manifest state named `open`
+(SpriteStates.Open) for an open gate, so a 4-frame `open` state (appended last, first = 16) shows the leaf slid fully east
+behind the east pier on a rear track, the gap and floor track clear for a unit to pass; posts, lamp blink and reader as idle. Damage is structural only (D-069): the leaf is buckled and has sprung off its track at one end, the
 west pier is chipped and cracked, the lamp is dark; fire / smoke are FX anchors.
 Contract: see auth_refinery.py; materials and helpers from auth_wall.py / auth_conyard.py (read-only).
 Units: 3.4 per cell, x east, y NORTH, z up: x, y in [-1.7, 1.7].
@@ -35,7 +36,7 @@ ORIGIN = (0, 32)
 DOCK = (0, 1)
 CAP_MATERIAL = "concrete2"
 HOUSE2_MID = True
-STATES = [("idle", 4, 5), ("damaged", 4, 5), ("build", 8, 5)]
+STATES = [("idle", 4, 5), ("damaged", 4, 5), ("build", 8, 5), ("open", 4, 5)]
 MATERIALS = dict(W.MATERIALS)
 MATERIALS.update({k: v for k, v in L.MATERIALS.items() if k in ("amber", "amber_dim", "crack", "gauge")})
 SOOT_SKIN = dict(W.SOOT_SKIN)
@@ -69,7 +70,7 @@ def pier(S, sx, dmg):
         S.box("rub", (0.4, 0.32, 0.2), (x0 + 0.3, -0.95, 0.1), "concrete_s", 0.0, rot=(0, 0, 28), stretch=False)
 
 
-def finished(S, i, dmg, mode):
+def finished(S, i, dmg, mode, opened=False):
     idle = mode == "idle"
     if dmg:
         S.skin.update(SOOT_SKIN)
@@ -93,6 +94,11 @@ def finished(S, i, dmg, mode):
             S.bb(f"lcrack{k}", u, u + 0.05, yl - 0.4, yl - 0.36, 0.3, 0.3 + h, "dark", 0.0, nocast=True)
         S.bb("lamp", PIER[0] + 0.28, PIER[0] + 0.52, -WT - 0.1, -WT - 0.02, WZ + 0.3, WZ + 0.55, "dark", 0.0)
     else:
+        if opened:
+            # leaf slid east behind the east pier on a rear track (its top still peeks over the pier cap)
+            sh, yl = 1.06, 0.8
+            S.bb("rtrack", PIER[0], HX - 0.05, yl - 0.1, yl + 0.1, 0.0, 0.1, "steel", 0.0)
+            a, b = a + sh, b + sh
         S.bb("leafg", a, b, yl - 0.1, yl + 0.1, lz0, lz1, "hull2", 0.02)
         for zz in (lz0, lz1 - 0.14):
             S.bb("lfh", a, b, yl - 0.14, yl + 0.14, zz, zz + 0.14, "steel2", 0.02)
@@ -100,7 +106,7 @@ def finished(S, i, dmg, mode):
             S.bb("lfv", xx, xx + 0.14, yl - 0.14, yl + 0.14, lz0, lz1, "steel2", 0.02)
         L.beam(S, "lbr", (a + 0.1, yl - 0.13, lz0 + 0.14), (b - 0.1, yl - 0.13, lz1 - 0.14), 0.07, "steel")
         L.beam(S, "lbr", (b - 0.1, yl - 0.13, lz0 + 0.14), (a + 0.1, yl - 0.13, lz1 - 0.14), 0.07, "steel")
-        S.bb("lpanel", -0.3, 0.3, yl - 0.16, yl - 0.13, 0.7, 1.2, "house", 0.0, nocast=True)
+        S.bb("lpanel", (a + b) / 2 - 0.3, (a + b) / 2 + 0.3, yl - 0.16, yl - 0.13, 0.7, 1.2, "house", 0.0, nocast=True)
         for k in range(4):
             xx = a + 0.2 + k * 0.18
             S.bb(f"lbar{k}", xx, xx + 0.04, yl - 0.125, yl - 0.11, lz0 + 0.16, lz1 - 0.16, "dark", 0.0, nocast=True)
@@ -143,4 +149,7 @@ SPEC = dict(
 
 
 def build(S, state, i, n):
+    if state == "open":
+        finished(S, i, False, "idle", opened=True)
+        return
     L.stages(S, state, i, SPEC, finished)
