@@ -30,9 +30,6 @@ public sealed class RecruitAi : IAiPlayer
         _military = new MilitaryManager(profile.AttackThreshold);
     }
 
-    /// <summary>Harvest orders to probe cells (a stalled scraper sent to look for a field).</summary>
-    public int Probes => _economy.Probes;
-
     /// <inheritdoc />
     public string Id => AiRegistry.RecruitId;
 
@@ -52,7 +49,6 @@ public sealed class RecruitAi : IAiPlayer
     public void Start(AiContext ctx)
     {
         _military.Start(ctx);
-        _economy.Start(ctx);
         _production.Start(ctx.Rng);
     }
 
