@@ -154,7 +154,7 @@ Main menu → Map Editor.
   allocations; walking sub-slot handover and NW-first `Simulation.Spread` (residual asymmetries)
 
 ## M5 · LLM commander (D-087)
-Built-in AI does micro; an LLM sets strategy every 10–30 s and talks in character as a faction leader. API key in Settings
+Built-in AI does micro; an LLM sets strategy every 30 s (D-103) and talks in character as a faction leader. API key in Settings
 (Anthropic or OpenAI-compatible), local only. LLM-vs-LLM spectating. Plan: docs/design/09_m5_plan.md (approved, D-103).
 - [x] M5-00 src/Llm project + contracts (src/Llm/Contracts.cs)
 - [ ] M5-01 Sim contracts: CommandKind.Directive = 23, directive state part + hash, PlayerView.Directive, pack/unpack
