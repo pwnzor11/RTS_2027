@@ -55,6 +55,23 @@ internal sealed class MilitaryManager
 
     public MilitaryManager(int attackThreshold) => _threshold = Math.Max(1, attackThreshold);
 
+    /// <summary>Faction extras (M3-10): forward staging and tunnel transit for the wave. Null for Authority (behaviour unchanged).</summary>
+    public IFactionTactics? Tactics { get; set; }
+
+    /// <summary>Mean position of the wave members alive while a wave is on the march, else null.</summary>
+    public LeptonCoord? WaveCentre(RecruitKnowledge k)
+    {
+        if (_phase == Phase.Gather) return null;
+        long x = 0, y = 0;
+        int n = 0;
+        foreach (ViewActor a in k.Army)
+            if (_roster.Contains(Key(a))) { x += a.Position.X; y += a.Position.Y; n++; }
+        return n == 0 ? null : new LeptonCoord((int)(x / n), (int)(y / n));
+    }
+
+    /// <summary>The cell the army is heading for now (nearest known enemy building, else the scouting route).</summary>
+    public CellCoord Goal(RecruitKnowledge k, List<ViewActor> knownEnemyBuildings) => PickGoal(k, knownEnemyBuildings);
+
     /// <summary>Waves launched so far.</summary>
     public int Waves { get; private set; }
 
@@ -121,7 +138,9 @@ internal sealed class MilitaryManager
                 _stageSince = tick;
                 Waves++;
                 Reroll();
-                _stage = StageCell(k, PickGoal(k, knownEnemyBuildings));
+                CellCoord launchGoal = PickGoal(k, knownEnemyBuildings);
+                _stage = Tactics?.ForwardStage(k, launchGoal) ?? StageCell(k, launchGoal);
+                if (Tactics != null) _stage = Tactics.SafeCell(k, _stage);
                 _phase = Phase.Stage;
                 alive = n;
             }
@@ -147,6 +166,7 @@ internal sealed class MilitaryManager
             bool member = _phase != Phase.Gather && _roster.Contains(Key(a));
             if (member && _phase == Phase.Stage)
             {
+                if (Tactics != null && Tactics.TryEnter(k, sink, a, _stage)) continue;
                 if (Chebyshev(a.Cell, _stage) > ReissueDistanceCells) sink.Issue(CommandKind.AttackMove, a.Id, a.Kind, _stage);
             }
             else if (member)
