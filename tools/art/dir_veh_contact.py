@@ -45,7 +45,6 @@ def main():
                            grid([me.frame(name, f, k) for f in range(0, 16, 4) for k in range(fr)], 16, 1)))
         else:
             blocks.append((f"state '{name}' at 1x, 16 facings", grid([me.frame(name, f) for f in range(nf)], 16, 1)))
-            blocks.append((f"state '{name}' at 2x, 16 facings", grid([me.frame(name, f) for f in range(nf)], 8, 2)))
     if "turret" in me.states:
         comp = []
         for hf, tf in ((0, 0), (0, 4), (4, 12), (8, 2), (12, 12), (3, 9), (6, 6), (10, 15)):
