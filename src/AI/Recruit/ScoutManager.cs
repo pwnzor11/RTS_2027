@@ -14,7 +14,7 @@ namespace Rts.AI.Recruit;
 internal sealed class ScoutManager
 {
     /// <summary>Army size before a scout is detached.</summary>
-    public const int MinArmy = 3;
+    public const int MinArmy = 6;
     /// <summary>Ticks between scouts.</summary>
     public const int RepickTicks = 400;
     private const int ArriveCells = 3;

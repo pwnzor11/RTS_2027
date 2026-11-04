@@ -17,7 +17,7 @@ internal sealed class HarassManager
     /// <summary>Raiders in a party.</summary>
     public const int PartySize = 3;
     /// <summary>Army size before a party is formed (the waves need a body first).</summary>
-    public const int MinArmy = 8;
+    public const int MinArmy = 14;
     /// <summary>Ticks between forming parties.</summary>
     public const int RepickTicks = 600;
 

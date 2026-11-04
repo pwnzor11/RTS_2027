@@ -312,13 +312,13 @@ public class TierCapabilityTests(ITestOutputHelper log)
             rig.Run(6000, () => rig.Ai.Waves >= 1);
             waves = rig.Ai.Waves;
             Assert.True(waves >= 1);
-            // 40 percent health: above the single-unit line (30) so nobody retreats alone, below the group line (30 + 20)
+            // 30 percent health: above the single-unit line (25) so nobody retreats alone, below the group line (25 + 10)
             for (int i = 1; i < rig.Sim.Infantry.Capacity; i++)
                 if (rig.Sim.Infantry.Slots.IsIndexAlive(i) && rig.Sim.Infantry.Player[i] == 0)
-                    rig.Sim.Infantry.Health[i] = Math.Max(1, rig.World.Sim.Infantry[rig.Sim.Infantry.TypeIndex[i]].MaxHealth * 40 / 100);
+                    rig.Sim.Infantry.Health[i] = Math.Max(1, rig.World.Sim.Infantry[rig.Sim.Infantry.TypeIndex[i]].MaxHealth * 30 / 100);
             for (int i = 1; i < rig.Sim.Units.Capacity; i++)
                 if (rig.Sim.Units.Slots.IsIndexAlive(i) && rig.Sim.Units.Player[i] == 0)
-                    rig.Sim.Units.Health[i] = Math.Max(1, rig.World.Sim.Vehicles[rig.Sim.Units.TypeIndex[i]].MaxHealth * 40 / 100);
+                    rig.Sim.Units.Health[i] = Math.Max(1, rig.World.Sim.Vehicles[rig.Sim.Units.TypeIndex[i]].MaxHealth * 30 / 100);
             rig.Run(120);
             log.WriteLine($"{f}: group retreats {rig.Ai.GroupRetreats}, single retreats {rig.Ai.Retreats}");
             Assert.Equal(0, rig.Ai.Retreats);
@@ -360,7 +360,7 @@ public class TierCapabilityTests(ITestOutputHelper log)
         {
             CellCoord yard = r.Yard(0);
             r.SpawnHarvester(0, f, yard);
-            r.SpawnFoot(0, f, 10, new CellCoord(yard.X + 2, yard.Y + 5));
+            r.SpawnFoot(0, f, 16, new CellCoord(yard.X + 2, yard.Y + 5));
             r.Sim.SpawnVehicle(1, r.VehicleType("auth_scraper"), new CellCoord(yard.X + 9, yard.Y + 5));
         });
         rig.Run(900);

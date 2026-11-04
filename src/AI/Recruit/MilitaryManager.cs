@@ -49,7 +49,7 @@ internal sealed class MilitaryManager
     /// <summary>Ticks after a called-off wave before the next may start.</summary>
     public const int RetreatCooldownTicks = 600;
     /// <summary>A wave is called off when its health is below (retreat percent + this) percent of its health at launch.</summary>
-    public const int GroupRetreatMarginPct = 20;
+    public const int GroupRetreatMarginPct = 10;
 
     private readonly int _threshold;
     private AiRandom? _rng;
