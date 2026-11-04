@@ -35,11 +35,11 @@ STATES = [("idle", 4, 5), ("damaged", 4, 5), ("build", 8, 5)]
 
 MATERIALS = dict(L.MATERIALS)
 MATERIALS.update({
-    "pad": ("#6F695F", dict(rough=0.95)), "concrete": ("#A39B8C", dict(rough=0.95)), "concrete2": ("#756D62", dict(rough=0.95)),
-    "roof": ("#625B53", dict(rough=0.9)), "hull": ("#7E766B", dict(rough=0.8)), "hull2": ("#665F55", dict(rough=0.8)),
+    "pad": ("#7A6E5E", dict(rough=0.95)), "concrete": ("#B0A28C", dict(rough=0.95)), "concrete2": ("#7E7262", dict(rough=0.95)),
+    "roof": ("#85735C", dict(rough=0.9)), "hull": ("#8A7C68", dict(rough=0.8)), "hull2": ("#6E6150", dict(rough=0.8)),
     "white": ("#E8DFC8", dict(rough=0.8)), "bone": ("#E8DFC8", dict(rough=0.8)),
     "oxide": ("#A33426", dict(rough=0.8)), "oxide2": ("#5E2018", dict(rough=0.85)),
-    "door": ("#44413E", dict(rough=0.5, metal=0.5)),
+    "door": ("#5A5148", dict(rough=0.6, metal=0.3)), "rampfloor": ("#3A332D", dict(rough=0.9)), "redglow": ("#FF4A2A", dict(rough=0.5, emit="#FF3A20")),
     "smoke": ("#8C857A", dict(rough=1.0)), "smoke2": ("#4F4943", dict(rough=1.0)),
     "concrete_s": ("#7A7367", dict(rough=0.95)), "concrete2_s": ("#544E46", dict(rough=0.95)),
     "roof_s": ("#46413B", dict(rough=0.9)), "hull_s": ("#5F584E", dict(rough=0.8)), "hull2_s": ("#4D473F", dict(rough=0.8)),
@@ -47,15 +47,15 @@ MATERIALS.update({
     "oxide2_s": ("#3E1612", dict(rough=0.85)), "door_s": ("#2B2A29", dict(rough=0.5, metal=0.5)),
 })
 SOOT_SKIN = dict(L.SOOT_SKIN)
-SOOT_SKIN.update({"white": "bone_s", "bone": "bone_s", "oxide": "oxide_s", "oxide2": "oxide2_s", "door": "door_s"})
+SOOT_SKIN.update({"rampfloor": "door_s", "redglow": "oxide2_s", "white": "bone_s", "bone": "bone_s", "oxide": "oxide_s", "oxide2": "oxide2_s", "door": "door_s"})
 PRIMER_SKIN = dict(L.PRIMER_SKIN)
-PRIMER_SKIN.update({"bone": "primer", "white": "primer", "oxide": "primer", "oxide2": "dark", "door": "dark", "lamp": "dark"})
+PRIMER_SKIN.update({"bone": "primer", "white": "primer", "oxide": "primer", "oxide2": "dark", "door": "dark", "lamp": "dark", "redglow": "dark", "rampfloor": "dark"})
 
-HALL = (-4.0, 2.2, -0.9, 2.9)       # x0, x1, y0, y1 of the hall behind the hood
+HALL = (-4.6, 2.2, -0.9, 2.9)       # x0, x1, y0, y1 of the hall behind the ramp mouth
 HALL_H = 2.3
-TR = (-2.3, 0.5)                    # ramp trench x range
-HOOD = (-3.4, 1.6, -2.7, -0.9)      # hood slab x0, x1, y0, y1
-HOOD_Z = (2.2, 2.8)
+TR = (-3.6, 1.6)                    # ramp trench x range: 5.2 wide = just over half the 10.2-wide south face
+HOOD = (-3.7, 1.7, -1.9, -0.9)      # small cantilevered hood over the foot of the ramp: x0, x1, y0, y1
+HOOD_Z = (1.95, 2.3)
 STACK = (3.3, 1.4)
 TR_Y0, TR_Y1, TR_BOT = -3.1, -1.0, -1.15   # ramp runs from the pad (z 0.14) down to z = TR_BOT at the doors
 
@@ -64,18 +64,18 @@ def anchor(x, y, z):
     return L.anchor(FOOTPRINT, ORIGIN, x, y, z)
 
 
+def ramp_z(y):
+    return 0.14 + (TR_BOT - 0.14) * (y - TR_Y0) / (TR_Y1 - TR_Y0)
+
+
 def tilted(S, name, x0, x1, ya, za, yb, zb, th, m, bevel=0.0, nocast=False):
     """Thin slab (x0..x1 wide, th thick) from point a to point b in the y/z plane (game y, stretched here)."""
     YS = S.YS
     dy, dz = (yb - ya) * YS, zb - za
     ln = math.hypot(dy, dz)
-    ang = math.degrees(math.atan2(dz, dy))             # rotation about X: +ve raises the north end
+    ang = math.degrees(math.atan2(dz, dy))
     return S.box(name, (x1 - x0, ln, th), ((x0 + x1) / 2, (ya + yb) / 2 * YS, (za + zb) / 2), m, bevel,
                  rot=(ang, 0, 0), stretch=False, nocast=nocast)
-
-
-def frame_anim(state, i):
-    return i if state != "build" else 0
 
 
 def finished(S, i, dmg, mode):
@@ -89,45 +89,49 @@ def finished(S, i, dmg, mode):
     S.bb("pad", -5.0, TR[0], -3.3, 3.3, 0.0, 0.14, "pad", 0.02)
     S.bb("pad", TR[1], 5.0, -3.3, 3.3, 0.0, 0.14, "pad", 0.02)
     S.bb("pad", TR[0], TR[1], -0.9, 3.3, 0.0, 0.14, "pad", 0.02)
-    S.bb("padlip", -5.0, TR[0], -3.3, -3.2, 0.14, 0.2, "concrete2", 0.0)
-    S.bb("padlip", TR[1], 5.0, -3.3, -3.2, 0.14, 0.2, "concrete2", 0.0)
-    for k in range(16):                                  # red / bone hazard bar along the south edge
-        x0 = -4.8 + k * 0.6
-        if TR[0] - 0.1 < x0 + 0.6 and x0 < TR[1] + 0.1:
-            continue
-        S.bb(f"haz{k}", x0, x0 + 0.6, -3.15, -2.8, 0.14, 0.2, "oxide" if k % 2 == 0 else "bone", 0.0)
-    # trench: concrete cheek walls, ramp floor, dark landing, painted chevrons
-    for xa, xb in ((TR[0] - 0.2, TR[0]), (TR[1], TR[1] + 0.2)):       # stepped cheeks follow the ramp (nothing hangs below the pad edge)
+    S.bb("pad", TR[0], TR[1], -3.3, TR_Y0, 0.0, 0.14, "pad", 0.02)         # pad strip across the mouth's south end
+    S.bb("padlip", -5.0, 5.0, -3.3, -3.2, 0.14, 0.2, "concrete2", 0.0)
+    for k in range(17):                                  # red / bone hazard bar along the south edge
+        x0 = -5.0 + k * 0.6
+        S.bb(f"haz{k}", x0, min(x0 + 0.6, 5.0), -3.15, -2.8, 0.14, 0.2, "oxide" if k % 2 == 0 else "bone", 0.0)
+    # trench cheeks: stepped to follow the ramp so nothing hangs below the pad edge
+    for xa, xb in ((TR[0] - 0.25, TR[0]), (TR[1], TR[1] + 0.25)):
         for k in range(7):
-            ya = TR_Y0 + (TR_Y1 - TR_Y0) * k / 7 - (0.2 if k == 0 else 0.0)
+            ya = TR_Y0 + (TR_Y1 - TR_Y0) * k / 7
             yb = TR_Y0 + (TR_Y1 - TR_Y0) * (k + 1) / 7 + (0.1 if k == 6 else 0.0)
-            zb = 0.14 + (TR_BOT - 0.14) * (k + 1) / 7 - 0.1
+            zb = max(ramp_z(yb) - 0.12, 0.0) if k < 1 else ramp_z(yb) - 0.12
             S.bb("cheek", xa, xb, ya, yb, zb, 0.2, "concrete2", 0.0)
     S.bb("landing", TR[0], TR[1], -1.4, -0.9, -1.6, TR_BOT, "dark", 0.0)
-    tilted(S, "ramp", TR[0], TR[1], TR_Y0, 0.14 - 0.06, TR_Y1, TR_BOT - 0.06, 0.12, "door")
-    for k in range(7):                                   # chevron bars down the ramp (alternate bone / oxide)
-        t = (k + 0.5) / 7
-        ya, yb = TR_Y0 + (TR_Y1 - TR_Y0) * (t - 0.05), TR_Y0 + (TR_Y1 - TR_Y0) * (t + 0.05)
-        za, zb = 0.14 + (TR_BOT - 0.14) * (t - 0.05) + 0.01, 0.14 + (TR_BOT - 0.14) * (t + 0.05) + 0.01
-        tilted(S, f"chev{k}", TR[0] + 0.3, TR[1] - 0.3, ya, za, yb, zb, 0.1, "oxide" if k % 2 == 0 else "bone", nocast=True)
-    for xa in (TR[0] + 0.05, TR[1] - 0.25):               # edge lines
-        tilted(S, "rampline", xa, xa + 0.2, TR_Y0, 0.14 - 0.0, TR_Y1, TR_BOT - 0.0, 0.1, "bone", nocast=True)
-    # ------------------------------------------------------------------ blast doors, set back at the foot of the ramp
+    tilted(S, "ramp", TR[0], TR[1], TR_Y0, 0.14 - 0.06, TR_Y1, TR_BOT - 0.06, 0.12, "rampfloor")
+    # chevron bars across the ramp, alternating red-lit and bone; edge lines
+    for k in range(8):
+        t = (k + 0.5) / 8
+        ya, yb = TR_Y0 + (TR_Y1 - TR_Y0) * (t - 0.055), TR_Y0 + (TR_Y1 - TR_Y0) * (t + 0.055)
+        tilted(S, f"chev{k}", TR[0] + 0.45, TR[1] - 0.45, ya, ramp_z(ya) + 0.005, yb, ramp_z(yb) + 0.005, 0.1,
+               "oxide" if k % 2 == 0 else "bone", nocast=True)
+    for xa in (TR[0] + 0.1, TR[1] - 0.3):
+        tilted(S, "rampline", xa, xa + 0.2, TR_Y0, 0.14, TR_Y1, TR_BOT, 0.1, "bone", nocast=True)
+    # ------------------------------------------------------------------ the mouth: dark recess, red-lit interior, doors swung open to the sides
     ydoor = hy0 + 0.02
-    S.bb("doorframe", TR[0] - 0.05, TR[1] + 0.05, ydoor - 0.12, ydoor, TR_BOT - 0.05, 2.25, "concrete2", 0.0)
-    for k, (xa, xb) in enumerate(((TR[0] + 0.1, -0.9), (-0.9, TR[1] - 0.1))):
+    S.bb("mouth", TR[0], TR[1], ydoor - 0.04, ydoor, TR_BOT - 0.05, 1.95, "dark", 0.0)
+    glow = "oxide2" if dmg else "redglow"
+    for k in range(6):                                   # lit corridor slits on the back wall, heights stepping down toward the middle
+        xk = TR[0] + 0.55 + k * (TR[1] - TR[0] - 1.1) / 5
+        S.bb(f"glowb{k}", xk - 0.2, xk + 0.2, ydoor - 0.1, ydoor - 0.04, TR_BOT + 0.1, 1.15 - 0.12 * abs(k - 2.5), glow, 0.0, nocast=True)
+    S.bb("glowfloor", TR[0] + 0.3, TR[1] - 0.3, ydoor - 0.55, ydoor - 0.1, TR_BOT - 0.0, TR_BOT + 0.06, glow, 0.0, nocast=True)
+    S.bb("mouthlip", TR[0] - 0.1, TR[1] + 0.1, ydoor - 0.06, ydoor, 1.95, 2.1, "concrete2", 0.0)
+    for k, (xa, xb) in enumerate(((TR[0] + 0.02, TR[0] + 0.26), (TR[1] - 0.26, TR[1] - 0.02))):
+        yz0, yz1 = ydoor - 1.9, ydoor - 0.1                # open leaf folded back against the cheek, standing on the landing
         if dmg and k == 1:
-            # east leaf buckled: bent inward and hanging crooked, black gap beside it
-            S.box("doorB", (xb - xa - 0.1, 0.12, 2.2), ((xa + xb) / 2 + 0.2, (ydoor - 0.25) * YS, 0.1), "door", 0.0, rot=(0, 16, 6), stretch=False)
-            S.bb("gap", -0.8, TR[1] - 0.1, ydoor - 0.08, ydoor - 0.04, TR_BOT, 2.0, "dark", 0.0, nocast=True)
+            S.box("doorB", (0.24, 1.7, 2.2), ((xa + xb) / 2 - 0.35, (ydoor - 1.0) * YS, 0.1), "door", 0.0, rot=(0, 0, 24), stretch=False)
             continue
-        S.bb(f"door{k}", xa, xb, ydoor - 0.2, ydoor - 0.1, TR_BOT, 2.1, "door", 0.0)
-        S.bb(f"doorstripe{k}", xa + 0.05, xb - 0.05, ydoor - 0.22, ydoor - 0.2, 0.55, 0.85, "oxide", 0.0, nocast=True)
-        S.bb(f"doorstripe{k}", xa + 0.05, xb - 0.05, ydoor - 0.22, ydoor - 0.2, 1.35, 1.65, "oxide", 0.0, nocast=True)
-        for r in range(3):                               # rivet column
-            S.bb(f"sten{k}{r}", xa + 0.15 + r * 0.3, xa + 0.3 + r * 0.3, ydoor - 0.22, ydoor - 0.2, 0.1, 0.35, "bone", 0.0, nocast=True)
-    S.bb("doorseam", -0.93, -0.87, ydoor - 0.22, ydoor - 0.19, TR_BOT, 2.1, "dark", 0.0, nocast=True)
-    # ------------------------------------------------------------------ hall: concrete mass behind the hood, roof, pilasters
+        for q in range(5):                               # leaf built in steps that follow the ramp (nothing pokes out below it)
+            qa, qb = yz0 + (yz1 - yz0) * q / 5, yz0 + (yz1 - yz0) * (q + 1) / 5
+            S.bb(f"door{k}", xa, xb, qa, qb, ramp_z(qb) - 0.04, 1.15, "door", 0.0)
+        S.bb(f"doorband{k}", xa - 0.01, xb + 0.01, yz0 + 0.1, yz1 - 0.1, 0.62, 0.84, "oxide", 0.0, nocast=True)
+        for r in range(4):
+            S.bb(f"sten{k}{r}", xa - 0.01, xb + 0.01, yz0 + 0.2 + r * 0.42, yz0 + 0.45 + r * 0.42, 0.9, 1.08, "bone", 0.0, nocast=True)
+    # ------------------------------------------------------------------ hall: concrete mass behind the mouth, roof, parapets
     S.bb("hall", hx0, hx1, hy0, hy1, 0.14, HALL_H, "concrete", 0.05)
     S.bb("hplinth", hx0 - 0.1, hx1 + 0.1, hy0 - 0.1, hy1 + 0.1, 0.14, 0.5, "concrete2", 0.04)
     S.bb("hroof", hx0 - 0.2, hx1 + 0.2, hy0 - 0.2, hy1 + 0.2, HALL_H, HALL_H + 0.22, "roof", 0.05)
@@ -135,15 +139,16 @@ def finished(S, i, dmg, mode):
     for sgn in (-1, 1):
         S.bb("hpar", (hx0 - 0.2) if sgn < 0 else hx1 + 0.06, (hx0 - 0.06) if sgn < 0 else hx1 + 0.2, hy0 - 0.2, hy1 + 0.2, zr, zr + 0.18, "concrete2", 0.02)
     S.bb("hparN", hx0 - 0.2, hx1 + 0.2, hy1 + 0.06, hy1 + 0.2, zr, zr + 0.18, "concrete2", 0.02)
-    # house marking on the roof and bone / red banding on the visible hall flanks
-    hx_hi = hx0 + 2.3 if dmg else hx0 + 3.0
-    S.bb("roofhouse", hx0 + 0.5, hx_hi, 0.0, 1.6, zr, zr + 0.04, "house2", 0.0)
-    S.bb("roofframe", hx0 + 0.4, hx_hi + 0.1, -0.1, 1.7, zr, zr + 0.02, "dark", 0.0)
-    for sgn, xa, xb in ((-1, hx0, TR[0] - 0.7), (1, 1.6, hx1)):
-        S.bb(f"flank{sgn}", xa, xb, hy0 - 0.06, hy0, 0.5, 1.9, "concrete2", 0.0)
-        S.bb(f"flankband{sgn}", xa, xb, hy0 - 0.1, hy0 - 0.06, 1.1, 1.35, "oxide", 0.0)
+    hx_hi = hx0 + 2.5 if dmg else hx0 + 3.3
+    S.bb("roofhouse", hx0 + 0.6, hx_hi, 0.1, 1.7, zr, zr + 0.04, "house2", 0.0)
+    S.bb("roofframe", hx0 + 0.5, hx_hi + 0.1, 0.0, 1.8, zr, zr + 0.02, "dark", 0.0)
+    # flanks beside the mouth: bone stencil plate over an oxide band
+    for sgn, xa, xb in ((-1, hx0 + 0.1, TR[0] - 0.3), (1, TR[1] + 0.3, hx1 - 0.05)):
+        S.bb(f"flank{sgn}", xa, xb, hy0 - 0.06, hy0, 0.5, 1.95, "concrete2", 0.0)
+        S.bb(f"flankband{sgn}", xa, xb, hy0 - 0.1, hy0 - 0.06, 0.55, 0.8, "oxide", 0.0)
+        S.bb(f"flankplate{sgn}", xa + 0.05, xb - 0.05, hy0 - 0.1, hy0 - 0.06, 0.95, 1.8, "bone", 0.0)
         for k in range(3):
-            S.bb(f"sten_f{sgn}{k}", xa + 0.1 + k * 0.17, xa + 0.2 + k * 0.17, hy0 - 0.1, hy0 - 0.06, 0.62, 0.95, "bone", 0.0, nocast=True)
+            S.bb(f"sten_f{sgn}{k}", xa + 0.1, xb - 0.1, hy0 - 0.12, hy0 - 0.1, 1.05 + k * 0.25, 1.17 + k * 0.25, "dark", 0.0, nocast=True)
     # roof vents with louvred hoods and the intake block
     for k, (vx, vy, vh) in enumerate(((-3.0, 2.0, 0.9), (-2.1, 2.3, 1.3), (-1.2, 2.0, 0.7))):
         S.cyl(f"vent{k}", 0.26, vh, (vx, vy, zr + vh / 2), "hull2", verts=12)
@@ -152,48 +157,30 @@ def finished(S, i, dmg, mode):
     S.bb("intake", -1.6, 0.2, 1.7, 2.7, zr, zr + 0.5, "concrete2", 0.04)
     for k in range(5):
         S.bb(f"grille{k}", -1.5 + k * 0.33, -1.35 + k * 0.33, 1.65, 2.7, zr + 0.5, zr + 0.57, "dark", 0.0)
-    S.cyl("flue", 0.22, 3.5, (0.6, 1.4, zr + 0.55), "steel", axis="X", verts=12)   # flue pipe hall -> chimney base
+    S.cyl("flue", 0.22, 3.5, (0.6, 1.4, zr + 0.55), "steel", axis="X", verts=12)
     for k, xx in enumerate((-0.6, 0.9)):
         S.cyl(f"flange{k}", 0.3, 0.1, (xx, 1.4, zr + 0.55), "rust", axis="X", verts=12)
-    # ------------------------------------------------------------------ the hood: slab on two piers, banding on its front face
+    # ------------------------------------------------------------------ small hood: a thin cantilevered lintel over the foot of the ramp
     ha, hb, hya, hyb = HOOD
     if dmg:
-        S.bb("hood", ha, -0.4, hya, hyb, HOOD_Z[0], HOOD_Z[1], "concrete", 0.05)             # west part still stands
-        S.bb("hood", -0.4, 0.3, hya, -1.8, HOOD_Z[0], HOOD_Z[1], "concrete", 0.04)           # ragged remainder
-        S.box("hoodslab", (1.5, 1.1, 0.5), (0.55, -1.55 * YS, 1.4), "concrete", 0.02, rot=(24, 0, 12), stretch=False)   # fallen chunk
-        S.box("hoodslab2", (0.8, 0.7, 0.35), (1.3, -2.7 * YS, 0.35), "concrete2", 0.0, rot=(0, 0, -30), stretch=False)
-        S.bb("hoodvoid", -0.4, 1.6, hya, hyb, HOOD_Z[0] - 0.02, HOOD_Z[0] + 0.02, "dark", 0.0, nocast=True)
-        for k, (a, b, c, d) in enumerate(((-0.5, 0.2, -2.6, -2.4), (0.3, 0.9, -1.4, -1.0), (0.9, 1.5, -2.0, -1.5))):
-            L.beam(S, f"rbar{k}", (a, c, 2.25), (b, d, 2.9 + 0.2 * k), 0.05, "rebar")
-        S.bb("pierW", ha, ha + 0.8, -2.6, -1.9, 0.14, HOOD_Z[0], "concrete2", 0.04)
-        S.bb("pierE", TR[1], TR[1] + 0.8, -2.6, -1.9, 0.14, 1.2, "concrete2", 0.04)           # east pier broken off at the knee
-        S.box("pierEj", (0.5, 0.5, 0.4), (TR[1] + 0.5, -2.2 * YS, 1.35), "concrete2", 0.0, rot=(0, 20, 30), stretch=False)
-        for k, (x, y, w, h) in enumerate(((0.8, -3.0, 0.5, 0.35), (1.5, -2.6, 0.4, 0.4), (-0.2, -3.2, 0.35, 0.3), (1.9, -1.8, 0.4, 0.3))):
+        S.bb("hood", ha, -0.9, hya, hyb, HOOD_Z[0], HOOD_Z[1], "concrete2", 0.04)
+        S.box("hoodslab", (1.2, 0.9, 0.35), (0.6, -1.9 * YS, 0.0), "concrete2", 0.02, rot=(0, 0, 14), stretch=False)
+        S.box("hoodslab2", (0.7, 0.6, 0.3), (1.0, -2.6 * YS, 0.35), "concrete2", 0.0, rot=(0, 0, -30), stretch=False)
+        for k, (a_, b_, c_, d_) in enumerate(((-0.9, -0.5, -1.8, -1.4), (-0.8, -0.3, -1.2, -1.0))):
+            L.beam(S, f"rbar{k}", (a_, c_, 2.1), (b_, d_, 2.6 + 0.2 * k), 0.05, "rebar")
+        S.bb("banding", ha + 0.1, -0.95, hya - 0.06, hya - 0.02, 1.98, 2.27, "house", 0.0)
+        for k, (x, y, w, h) in enumerate(((0.3, -3.0, 0.5, 0.35), (-2.7, -2.9, 0.4, 0.4), (1.2, -2.5, 0.4, 0.3))):
             S.box(f"rub{k}", (w, w * 0.8, h), (x, y * YS, 0.14 + h / 2), "concrete_s", 0.0, rot=(0, 0, 33 * k), stretch=False)
-        S.bb("banding", ha + 0.1, -0.5, hya - 0.06, hya - 0.02, 2.3, 2.7, "house", 0.0)         # banding, east end gone
     else:
-        S.bb("hood", ha, hb, hya, hyb, HOOD_Z[0], HOOD_Z[1], "concrete", 0.05)
-        S.bb("pierW", ha, ha + 0.8, -2.6, -1.9, 0.14, HOOD_Z[0], "concrete2", 0.04)
-        S.bb("pierE", TR[1], TR[1] + 0.8, -2.6, -1.9, 0.14, HOOD_Z[0], "concrete2", 0.04)
-        S.bb("banding", ha + 0.1, hb - 0.1, hya - 0.06, hya - 0.02, 2.3, 2.7, "house", 0.0)    # big house band across the hood front
-        # roof lip and dark hood soffit strip over the opening
-        S.bb("hoodlip", ha - 0.05, hb + 0.05, hya - 0.1, hya, HOOD_Z[1], HOOD_Z[1] + 0.16, "concrete2", 0.02)
-    S.bb("soffit", TR[0], TR[1], hya + 0.05, -0.95, HOOD_Z[0] - 0.06, HOOD_Z[0], "dark", 0.0, nocast=True)
-    # stencil panels on the pier fronts: bone plate with dark glyph bars, oxide cap stripe
-    for sx0 in (ha, TR[1]):
-        if dmg and sx0 == TR[1]:
-            continue
-        S.bb("plate", sx0 + 0.1, sx0 + 0.7, -2.64, -2.6, 0.7, 1.7, "bone", 0.0)
-        S.bb("platecap", sx0 + 0.1, sx0 + 0.7, -2.65, -2.6, 1.7, 1.95, "oxide", 0.0)
-        for k in range(3):
-            S.bb(f"sten_p{k}", sx0 + 0.18, sx0 + 0.62, -2.66, -2.64, 0.82 + k * 0.28, 0.98 + k * 0.28, "dark", 0.0, nocast=True)
+        S.bb("hood", ha, hb, hya, hyb, HOOD_Z[0], HOOD_Z[1], "concrete2", 0.04)
+        S.bb("banding", ha + 0.1, hb - 0.1, hya - 0.06, hya - 0.02, 1.98, 2.27, "house", 0.0)   # house colour band across the hood front
     # ------------------------------------------------------------------ furnace block + smelter chimney
     S.bb("furn", 2.35, 4.4, 0.1, 2.7, 0.14, 1.5, "concrete2", 0.04)
     S.bb("furnroof", 2.25, 4.5, 0.0, 2.8, 1.5, 1.65, "roof", 0.04)
     S.bb("furnband", 2.35, 4.4, 0.04, 0.1, 1.2, 1.4, "oxide", 0.0)
-    for k in range(3):                                     # glowing slits flicker in the idle loop
+    for k in range(3):
         lit = (idle or mode == "build") and not dmg and ((k + i) % 3 != 0)
-        S.bb(f"glow{k}", 2.6 + k * 0.55, 2.9 + k * 0.55, 0.0, 0.1, 0.45, 0.9, "lamp" if lit else "oxide2", 0.0, nocast=True)
+        S.bb(f"glow{k}", 2.6 + k * 0.55, 2.9 + k * 0.55, 0.0, 0.1, 0.45, 0.9, "redglow" if lit else "oxide2", 0.0, nocast=True)
     S.bb("chbase", sx_ - 0.7, sx_ + 0.7, sy_ - 0.7, sy_ + 0.7, 1.65, 2.0, "concrete2", 0.03)
     top = 4.0 if dmg else 5.7
     h0 = 1.65
@@ -205,7 +192,7 @@ def finished(S, i, dmg, mode):
         S.cyl("ccollar", 0.55, 0.2, (sx_, sy_, top + 0.1), "steel", verts=16)
         S.cyl("cmouth", 0.4, 0.08, (sx_, sy_, top + 0.21), "dark", verts=12)
         if idle or mode == "build":
-            for k in range(3):                                   # ash puffs, a loop of 4 frames
+            for k in range(3):
                 ph = ((i / 4) + k / 3) % 1
                 r = 0.14 + 0.42 * math.sin(math.pi * ph) ** 0.7
                 S.sphere(f"puff{k}", r, (sx_ + ph * 1.1, sy_, top + 0.45 + ph * 1.9 + r * 0.3), "smoke2" if k != 1 else "smoke", squash=0.85)
@@ -214,34 +201,32 @@ def finished(S, i, dmg, mode):
         S.cyl("cmouthd", 0.32, 0.06, (sx_, sy_, top + 0.15), "dark", verts=10)
         tl = math.radians(-52)
         L_ = 1.6
-        for nm, rr, along, m_ in (("chleanA", 0.46, 0.0, "concrete"),):
-            o = S.cone(nm, 0.5, 0.4, L_, (0, 0, 0), m_, verts=14, nocast=False)
-            o.location = (sx_ - 0.1 + (L_ / 2) * math.sin(tl) * 1.0, sy_ * YS, top + 0.12 + (L_ / 2) * math.cos(tl))
-            o.rotation_euler = (0, tl, 0)
+        o = S.cone("chleanA", 0.5, 0.4, L_, (0, 0, 0), "concrete", verts=14, nocast=False)
+        o.location = (sx_ - 0.1 + (L_ / 2) * math.sin(tl), sy_ * YS, top + 0.12 + (L_ / 2) * math.cos(tl))
+        o.rotation_euler = (0, tl, 0)
     S.bb("cladder", sx_ - 0.7, sx_ - 0.64, sy_ - 0.2, sy_ + 0.2, 2.0, min(top, 4.5) - 0.2, "dark", 0.0, nocast=True)
-    # ------------------------------------------------------------------ loudspeaker pair on a pole, on the hood
-    px_, py_ = -2.9, -2.2
-    pz0 = HOOD_Z[1]
+    # ------------------------------------------------------------------ loudspeaker pair on a pole at the hall's south-west roof corner:
+    # two flared trumpets pointing out to the sides (side-on, so the flare reads), bone rims, dark throats
+    px_, py_ = -2.3, -0.55
     if dmg:
-        S.cyl("hpole", 0.07, 1.3, (px_, py_, pz0 + 0.65), "steel", verts=8)
-        # the upper pole and horns have fallen across the hood
-        S.box("hpoleF", (1.8, 0.08, 0.08), (-2.0, -1.8 * YS, pz0 + 0.12), "steel", 0.0, rot=(0, 0, 20), stretch=False)
-        S.cone("hornF", 0.1, 0.42, 0.8, (-1.3, -1.4, pz0 + 0.4), "steel", verts=10, rot=(0, 90, 20), nocast=False)
+        S.cyl("hpole", 0.07, 1.3, (px_, py_, zr + 0.65), "steel", verts=8)
+        S.box("hpoleF", (1.6, 0.08, 0.08), (-3.2, 0.3 * YS, zr + 0.12), "steel", 0.0, rot=(0, 0, 25), stretch=False)
+        S.cone("hornF", 0.08, 0.3, 0.8, (-2.6, 0.7, zr + 0.3), "door", verts=10, rot=(0, 90, 25), nocast=False)
     else:
-        S.cyl("hpole", 0.07, 3.0, (px_, py_, pz0 + 1.5), "steel", verts=8)
-        S.bb("hpoleb", px_ - 0.2, px_ + 0.2, py_ - 0.2, py_ + 0.2, pz0, pz0 + 0.3, "concrete2", 0.02)
-        S.bb("harm", px_ - 0.55, px_ + 0.55, py_ - 0.05, py_ + 0.05, pz0 + 2.85, pz0 + 2.93, "steel", 0.0)
+        zt = zr + 2.5
+        S.cyl("hpole", 0.07, 2.5, (px_, py_, zr + 1.25), "steel", verts=8)
+        S.bb("hpoleb", px_ - 0.2, px_ + 0.2, py_ - 0.2, py_ + 0.2, zr, zr + 0.3, "concrete2", 0.02)
+        S.bb("harm", px_ - 0.35, px_ + 0.35, py_ - 0.05, py_ + 0.05, zt - 0.05, zt + 0.05, "steel", 0.0)
         for sgn in (-1, 1):
-            S.cone(f"horn{sgn}", 0.1, 0.42, 0.85, (px_ + sgn * 0.42, py_ - 0.35, pz0 + 3.05), "door", verts=12, rot=(90, 0, 0), nocast=False)
-            S.cyl(f"hdrv{sgn}", 0.14, 0.3, (px_ + sgn * 0.42, py_ + 0.28, pz0 + 3.05), "oxide", axis="Y", verts=10)
-            S.cyl(f"hrim{sgn}", 0.45, 0.04, (px_ + sgn * 0.42, py_ - 0.76, pz0 + 3.05), "bone", axis="Y", verts=12)
-    # ------------------------------------------------------------------ rust / ash streaks, ash drift on the pad
-    for k, (rx, rw, rh) in enumerate(((-3.7, 0.16, 0.8), (1.8, 0.14, 0.6), (-1.8, 0.14, 0.5))):
-        S.bb(f"streak{k}", rx, rx + rw, hy0 - 0.12, hy0 - 0.1, 1.9 - rh, 1.9, "concrete2", 0.0, nocast=True)
-    for k, (ax_, ay_, aw) in enumerate(((3.5, -1.5, 1.2), (-4.2, -0.6, 0.9), (4.2, 3.0, 0.8))):
+            S.cyl(f"hdrv{sgn}", 0.13, 0.28, (px_ + sgn * 0.45, py_, zt), "oxide", axis="X", verts=10)
+            S.cone(f"horn{sgn}", 0.07, 0.36, 0.9, (px_ + sgn * 0.98, py_, zt), "door", verts=14, rot=(0, 90 * sgn, 0), nocast=False)
+            S.cyl(f"hrim{sgn}", 0.38, 0.05, (px_ + sgn * 1.45, py_, zt), "bone", axis="X", verts=14)
+            S.cyl(f"hthr{sgn}", 0.29, 0.06, (px_ + sgn * 1.46, py_, zt), "dark", axis="X", verts=12)
+    # ------------------------------------------------------------------ streaks, ash drift on the pad
+    for k, (ax_, ay_, aw) in enumerate(((3.5, -1.5, 1.2), (-4.4, -1.8, 0.9), (4.2, 3.0, 0.8))):
         S.bb(f"ash{k}", ax_ - aw / 2, ax_ + aw / 2, ay_ - 0.3, ay_ + 0.3, 0.14, 0.17, "smoke", 0.0, nocast=True)
     if dmg:
-        L.R.scorch(S, "scH", -1.2, hya - 0.12, 2.5, 1.6, 0.5)
+        L.R.scorch(S, "scH", -0.4, hya - 0.12, 2.1, 1.6, 0.5)
         L.R.scorch(S, "scF", 3.3, 0.06, 0.9, 1.6, 0.6)
 
 
@@ -266,20 +251,20 @@ def _left(S):
 
 
 FX = [
-    dict(state="damaged", kind="fire_large", x=anchor(0.6, -1.6, 2.3)[0], y=anchor(0.6, -1.6, 2.3)[1], phase=0),
-    dict(state="damaged", kind="fire_small", x=anchor(1.4, -2.0, 0.5)[0], y=anchor(1.4, -2.0, 0.5)[1], phase=4),
-    dict(state="damaged", kind="fire_small", x=anchor(-0.4, -1.0, 0.3)[0], y=anchor(-0.4, -1.0, 0.3)[1], phase=2),
+    dict(state="damaged", kind="fire_large", x=anchor(-0.4, -1.7, 2.1)[0], y=anchor(-0.4, -1.7, 2.1)[1], phase=0),
+    dict(state="damaged", kind="fire_small", x=anchor(0.6, -1.9, 0.5)[0], y=anchor(0.6, -1.9, 0.5)[1], phase=4),
+    dict(state="damaged", kind="fire_small", x=anchor(-2.0, -1.2, 0.3)[0], y=anchor(-2.0, -1.2, 0.3)[1], phase=2),
     dict(state="damaged", kind="fire_small", x=anchor(3.3, 1.4, 4.1)[0], y=anchor(3.3, 1.4, 4.1)[1], phase=6),
-    dict(state="damaged", kind="smoke_plume", x=anchor(0.6, -1.6, 2.4)[0], y=anchor(0.6, -1.6, 2.4)[1], phase=0),
+    dict(state="damaged", kind="smoke_plume", x=anchor(-0.4, -1.7, 2.2)[0], y=anchor(-0.4, -1.7, 2.2)[1], phase=0),
     dict(state="damaged", kind="smoke_plume", x=anchor(3.3, 1.4, 4.2)[0], y=anchor(3.3, 1.4, 4.2)[1], phase=5),
 ]
 
 SPEC = dict(
     pad=(-5.0, 5.0, -3.3, 3.3), env=(-4.1, 4.5, -2.8, 2.9), H=3.0,
-    boxes=[(-4.0, 2.2, -0.9, 2.9), (-3.2, 1.4, -2.7, -0.9)], rings=[(STACK[0], STACK[1], 0.7)],
+    boxes=[(-4.6, 2.2, -0.9, 2.9)], rings=[(STACK[0], STACK[1], 0.7)],
     clips=(1.3, 2.5), scaf=[(-4.7, -3.6, -3.1, -2.5), (2.2, 3.4, -3.1, -2.5)],
     derrick=(4.4, -1.2, 4.2, (3.4, -0.4, 4.4)), sparks=[(-2.0, -2.0, 2.3), (2.0, 0.4, 1.5), (-3.0, 1.5, 2.2)],
-    hide=("sten", "glow", "puff", "horn", "hdrv", "hrim", "harm", "hpole"), clutter=_clutter, left=_left)
+    hide=("sten", "glow", "puff", "horn", "hdrv", "hrim", "hthr", "harm", "hpole", "chev"), clutter=_clutter, left=_left)
 
 
 def build(S, state, i, n):
