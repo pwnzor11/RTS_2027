@@ -29,10 +29,10 @@ public sealed class M3OrdersTests
                 v with { Passengers = 0, DeploysInto = 0, Locomotion = Locomotion.Tracked, TunnelSize = TunnelSize.L },     // 2 land-train
                 v with { Passengers = 0, DeploysInto = 0, Locomotion = Locomotion.Burrow, TunnelSize = TunnelSize.M },      // 3 bore
             },
-            Infantry = new[] { i with { TunnelSize = TunnelSize.S }, i with { TunnelSize = TunnelSize.None } },
+            Infantry = new[] { i with { TunnelSize = TunnelSize.S }, i with { TunnelSize = TunnelSize.None }, i with { Engineer = true } },   // 2 engineer
             Buildings = new[]
             {
-                b with { Entrance = TunnelSize.None },   // 0 plain
+                b with { Entrance = TunnelSize.None, MaxHealth = 100 },   // 0 plain
                 b with { Entrance = TunnelSize.S },      // 1 hatch
                 b with { Entrance = TunnelSize.M },      // 2 bore head
             },
@@ -95,5 +95,25 @@ public sealed class M3OrdersTests
         Assert.Equal(new CellCoord(12, 8), c.Cell);
         Assert.Equal((int)ActorKind.Vehicle, c.Arg);
         Assert.True(c.Target.IsNone);
+    }
+
+    [Theory]
+    [InlineData(ActorKind.Infantry, 2, false, 0, 100, EngineerOrder.Capture)]   // engineer on an enemy or neutral building (any health)
+    [InlineData(ActorKind.Infantry, 2, false, 0, 10, EngineerOrder.Capture)]
+    [InlineData(ActorKind.Infantry, 2, true, 0, 60, EngineerOrder.Repair)]      // own damaged building
+    [InlineData(ActorKind.Infantry, 2, true, 0, 100, EngineerOrder.None)]       // own building at full health
+    [InlineData(ActorKind.Infantry, 0, false, 0, 100, EngineerOrder.None)]      // plain infantry
+    [InlineData(ActorKind.Vehicle, 2, false, 0, 100, EngineerOrder.None)]       // a vehicle of the same index is no engineer
+    [InlineData(ActorKind.Infantry, 2, false, 99, 100, EngineerOrder.None)]     // unknown building type
+    public void Engineer_orders_follow_ownership_and_health(ActorKind kind, int unit, bool own, int building, int health, EngineerOrder expected) =>
+        Assert.Equal(expected, M3Orders.EngineerOrderOn(Rules, kind, unit, own, building, health));
+
+    [Fact]
+    public void Engineer_enter_is_encoded_with_infantry_subject_and_building_target()
+    {
+        var engineer = new UnitKey(ActorKind.Infantry, new EntityId(4, 1));
+        var building = new ActorRef(ActorKind.Building, new EntityId(2, 1));
+        Command c = OrderBuilder.Build(5, 0, 0, CommandKind.Enter, engineer, default, building);
+        Assert.Equal((int)ActorKind.Infantry | ((int)ActorKind.Building << 8), c.Arg);   // the sim routes this to ApplyEngineer
     }
 }
