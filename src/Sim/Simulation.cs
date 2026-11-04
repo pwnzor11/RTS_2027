@@ -70,6 +70,7 @@ public sealed partial class Simulation
         _effects = new EffectsState(setup);
         _map = new MapState(setup.Map);
         _paths = new PathService(_map, setup.Rules.Terrain);
+        _paths.GateOpen = GateOpenFor;   // M3-04: own-team gates are passable (D-076)
         _vision = new VisionState(setup.Map.Width, setup.Map.Height, setup.PlayerCount,
             Math.Max(setup.Limits.Vehicles, setup.Limits.Infantry));
         // Parts after vision come from the partial files in canonical order: combat (M1-09) first.
@@ -394,6 +395,7 @@ public sealed partial class Simulation
             if (_units.Slots.IsIndexAlive(i) && InRect(_units.Position[i].ToCell(), x0, y0, w, h)) return PlacementResult.Blocked;
         for (int i = 1; i < _infantry.Capacity; i++)
             if (_infantry.Slots.IsIndexAlive(i) && InRect(_infantry.Position[i].ToCell(), x0, y0, w, h)) return PlacementResult.Blocked;
+        if (bt.Wall || bt.Gate) return PlacementResult.Ok;   // M3-04: wall and gate pieces are exempt from the gap rule (D-076)
         return SealsRegion(x0, y0, w, h) ? PlacementResult.SealsRegion : PlacementResult.Ok;
     }
 
@@ -449,7 +451,11 @@ public sealed partial class Simulation
     private bool IsOpen(int x, int y, TerrainTable table)
     {
         var c = new CellCoord(x, y);
-        return _map.BuildingAt(c).IsNone && _map.IsPassableTerrain(c, Locomotion.Tracked, table);
+        EntityId b = _map.BuildingAt(c);
+        // M3-04: the gap rule does not apply between wall/gate pieces and other buildings (D-076), so walls count as open here.
+        // ASSUMED (M3-04): read as "a structure may also close a gap between wall pieces"; the rule still holds structure-to-structure.
+        bool wallPiece = !b.IsNone && _buildings.Slots.IsAlive(b) && BuildingTypeAt(b.Index) is { } wt && (wt.Wall || wt.Gate);
+        return (b.IsNone || wallPiece) && _map.IsPassableTerrain(c, Locomotion.Tracked, table);
     }
 
     private void RestoreFootprint(int x0, int y0, int w, int h)
