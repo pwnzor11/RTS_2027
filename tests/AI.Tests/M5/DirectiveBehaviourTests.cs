@@ -6,6 +6,7 @@ using Rts.Data;
 using Rts.Sim;
 using Rts.Sim.Core;
 using Rts.Sim.Map;
+using Rts.Sim.Rules;
 using Rts.Sim.View;
 using Xunit.Abstractions;
 
@@ -68,13 +69,13 @@ public class DirectiveBehaviourTests(ITestOutputHelper log)
             if (sim.Buildings.Slots.IsIndexAlive(i) && sim.Buildings.Player[i] == 0)
             {
                 int w = rules.Buildings[sim.Buildings.TypeIndex[i]].PrimaryWeapon;
-                if (w >= 0 && rules.Weapons[w].Targets != Rts.Sim.Rules.WeaponTargets.Ground) n++;
+                if (w >= 0 && rules.Weapons[w].Targets != WeaponTargets.Ground) n++;
             }
         for (int i = 1; i < sim.Units.Capacity; i++)
             if (sim.Units.Slots.IsIndexAlive(i) && sim.Units.Player[i] == 0)
             {
                 int w = rules.Vehicles[sim.Units.TypeIndex[i]].PrimaryWeapon;
-                if (w >= 0 && rules.Weapons[w].Targets != Rts.Sim.Rules.WeaponTargets.Ground) n++;
+                if (w >= 0 && rules.Weapons[w].Targets != WeaponTargets.Ground) n++;
             }
         return n;
     }
