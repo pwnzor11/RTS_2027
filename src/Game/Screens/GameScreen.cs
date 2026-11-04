@@ -115,6 +115,7 @@ public sealed class GameScreen : IScreen
             {
                 _spec = new SpectatorController(sim.Host);   // marks the host Spectator: no order can reach the sim
                 _specPanel = new SpectatorPanel(_spec);
+                if (skirmish is not null) _specPanel.Commanders = SpectatorSetup.CommandersOf(skirmish);   // M5-09: "LLM" tag
             }
             else
             {
