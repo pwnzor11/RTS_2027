@@ -636,7 +636,7 @@ public sealed partial class Simulation
             SlotArray slots = SlotsOf(kind);
             int cap = slots.Capacity;
             for (int i = 1; i < cap; i++)
-                if (slots.IsIndexAlive(i)) _vision.Reveal(PlayerAt(kind, i), kind, i, VisionCellOf(kind, i), SightOf(kind, i));
+                if (slots.IsIndexAlive(i) && !GivesNoVision(kind, i)) _vision.Reveal(PlayerAt(kind, i), kind, i, VisionCellOf(kind, i), SightOf(kind, i));
                 else _vision.Conceal(kind, i);
         }
 
@@ -663,6 +663,15 @@ public sealed partial class Simulation
                         _buildings.Cell[i], bt.FootprintW, bt.FootprintH, _buildings.Health[i]));
             }
         }
+    }
+
+    /// <summary>M3-INT: underground mobiles (tunnel, burrowed, surfacing, passenger) see nothing. ASSUMED (M3-INT): Diving keeps
+    /// its vision (it is still on the surface, visible, for DiveTicks); Surfacing is underground per ActorLayers, so it sees nothing until it is up.</summary>
+    private bool GivesNoVision(ActorKind kind, int i)
+    {
+        if (kind == ActorKind.Building) return false;
+        ActorLayer layer = _tunnels.LayerOf(kind, i);
+        return ActorLayers.IsUnderground(layer);
     }
 
     private bool FootprintVisible(byte viewer, CellCoord topLeft, int w, int h)
