@@ -347,6 +347,7 @@ internal sealed class TierPlanner
         {
             w.Write(s.Key); AiSnapshot.WriteCell(w, s.Cell); w.Write((byte)s.Ref.Kind); AiSnapshot.WriteId(w, s.Ref.Id); w.Write(s.Tick);
         }
+        w.Write(_enemyPeak); w.Write(_enemyPeakTick);   // M4-16
     }
 
     /// <summary>M3-21: reads what <see cref="Snapshot"/> wrote.</summary>
@@ -362,5 +363,6 @@ internal sealed class TierPlanner
         _sightings.Clear();
         for (int i = 0; i < n; i++)
             _sightings.Add((r.ReadUInt64(), AiSnapshot.ReadCell(r), new ActorRef((ActorKind)r.ReadByte(), AiSnapshot.ReadId(r)), r.ReadInt32()));
+        _enemyPeak = r.ReadInt32(); _enemyPeakTick = r.ReadInt32();   // M4-16
     }
 }

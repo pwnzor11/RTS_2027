@@ -592,6 +592,7 @@ internal sealed class MilitaryManager
         AiSnapshot.WriteCell(w, _lastGoal);
         AiSnapshot.WriteMap(w, _still, (bw, v) => { AiSnapshot.WriteCell(bw, v.Cell); bw.Write(v.Since); bw.Write(v.Times); });
         w.Write(GroupRetreats); w.Write(Prongs); w.Write(Waves); w.Write(Defences); w.Write(Reinforcements); w.Write(StaleWaves); w.Write(Unstuck);
+        w.Write(_aheadWave);   // M4-16
     }
 
     /// <summary>M3-21: reads what <see cref="Snapshot"/> wrote. Call after Start.</summary>
@@ -614,6 +615,7 @@ internal sealed class MilitaryManager
         AiSnapshot.ReadMap(r, _still, br => (AiSnapshot.ReadCell(br), br.ReadInt32(), br.ReadInt32()));
         GroupRetreats = r.ReadInt32(); Prongs = r.ReadInt32(); Waves = r.ReadInt32(); Defences = r.ReadInt32(); Reinforcements = r.ReadInt32();
         StaleWaves = r.ReadInt32(); Unstuck = r.ReadInt32();
+        _aheadWave = r.ReadBoolean();   // M4-16
         if (_scoutRoute.Count > 0) _scoutIdx = Math.Clamp(_scoutIdx, 0, _scoutRoute.Count - 1);
     }
 }
