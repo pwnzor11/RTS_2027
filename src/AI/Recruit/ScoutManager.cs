@@ -7,8 +7,8 @@ using Rts.Sim.Rules;
 namespace Rts.AI.Recruit;
 
 /// <summary>
-/// M3-11 (flag ActiveScouting): one fast unit, kept out of the waves, walks a loop of the places an enemy base can be (the mirror of our
-/// start, the centre, the two other corners). A stop is crossed off when the scout is near it or it is in view. What it sees feeds the
+/// M3-11 (flag ActiveScouting): one fast unit, kept out of the waves, walks a loop of the places an enemy base can be (M4-12: every other
+/// start position of the map, nearest first, then the corners and the centre; see <see cref="StartRoute"/>). A stop is crossed off when the scout is near it or it is in view. What it sees feeds the
 /// ordinary last-seen building memory, so waves and superweapons have targets earlier. A lost scout is replaced after <see cref="RepickTicks"/>.
 /// </summary>
 internal sealed class ScoutManager
@@ -31,11 +31,7 @@ internal sealed class ScoutManager
 
     public void Start(AiContext ctx)
     {
-        int w = ctx.MapWidth, h = ctx.MapHeight, sx = ctx.StartCell.X, sy = ctx.StartCell.Y;
-        _route.Add(new CellCoord(w - 1 - sx, h - 1 - sy));
-        _route.Add(new CellCoord(w - 1 - sx, sy));
-        _route.Add(new CellCoord(w / 2, h / 2));
-        _route.Add(new CellCoord(sx, h - 1 - sy));
+        _route.AddRange(StartRoute.For(ctx, centreSecond: false));   // M4-12: every other start of a 2-4 player map first
     }
 
     public void Think(RecruitKnowledge k, ICommandSink sink, Squads squads)

@@ -37,6 +37,13 @@ internal sealed class DirectorateRecruitFaction : RecruitFaction
     public override string? ResearchId => "dir_isotope_works";
     public override string? AirProducerId => "dir_mooring";
     public override string? SuperweaponBuildingId => "dir_sunrise";
+    // M4-12: tier-2/3 roster (design 08 §4). ASSUMED (M4-12) mixes (tune). The Reactor Crawler stays in the base bag (skipped until tier 3).
+    public override string[] InfantryTier2 { get; } = ["dir_sapper", "dir_volunteer", "dir_commissar"];
+    public override string[] VehicleTier2 { get; } = ["dir_delver", "dir_delver", "dir_ash_sower"];
+    public override string[] VehicleTier3 { get; } = ["dir_landtrain", "dir_reactor_crawler"];
+    public override string? Tier2GateId => "dir_isotope_works";
+    public override string? Tier3GateId => "dir_committee_hall";
+    public override string? GarrisonId => "dir_redoubt";
 
     /// <summary>A repertoire that names Directorate structures is used as is; Authority ids in a shared profile are ignored.</summary>
     public override string[] OrderFor(IReadOnlyList<string> repertoire)

@@ -11,7 +11,7 @@ using Rts.Sim.World;
 namespace Rts.AI;
 
 /// <summary>
-/// Plays one headless AI-vs-AI game: two players, each starting as <see cref="AiStartMode"/> says (default: the shared
+/// Plays one headless AI-vs-AI game: two players (M4-12: <see cref="PlayN"/> plays 2-4 sides free-for-all), each starting as <see cref="AiStartMode"/> says (default: the shared
 /// skirmish economy start), AIs driven by an <see cref="AiDriver"/> before every Step. Economy start: a side wins when the
 /// other is Defeated (the sim's win rule); army start: when the other has no vehicles, infantry or buildings left;
 /// otherwise the game is drawn at the tick limit. Deterministic for equal inputs. No wall clock here.
@@ -84,6 +84,67 @@ public static class AiMatchRunner
             tracker.StatsOf(sim, slotA), tracker.StatsOf(sim, slotB));
     }
 
+    /// <summary>
+    /// M4-12: plays one free-for-all game of 2-4 AI sides (every player on its own team). Side i takes slot <c>(i + rotate) % N</c>, and
+    /// slot p starts at map start p, so rotating 0..N-1 over a seed gives every side every start once. The map needs at least N starts.
+    /// A side is out when the sim marks it Defeated; the game ends when at most one side is left, or at <paramref name="maxTicks"/>
+    /// (a draw). Deterministic for equal inputs.
+    /// </summary>
+    public static AiMultiResult PlayN(MapData map, SimRules rules, ulong rulesHash, ulong seed, IReadOnlyList<AiSide> sides, int rotate,
+        int maxTicks, Stream? replay = null, string build = "", IReadOnlyList<(string Name, string Text)>? rulesFiles = null)
+    {
+        int n = sides.Count;
+        if (n < 2 || n > 4) throw new ArgumentException("2-4 sides.", nameof(sides));
+        if (map.StartPositions.Count < n) throw new ArgumentException($"Map needs {n} start positions.", nameof(map));
+        var slotOf = new int[n];
+        var factions = new Faction[n];
+        bool allAuthority = true;
+        for (int i = 0; i < n; i++)
+        {
+            slotOf[i] = ((i + rotate) % n + n) % n;
+            factions[slotOf[i]] = sides[i].Faction;
+            allAuthority &= sides[i].Faction == Faction.Authority;
+        }
+        var sim = new Simulation(new SimSetup(seed, map, n, rules, rulesHash) { Factions = allAuthority ? null : factions });
+        ReplayWriter? recorder = replay is null ? null : new ReplayWriter(replay, sim, build, rulesFiles ?? Array.Empty<(string, string)>());
+        SkirmishStart.Apply(sim);
+        var driver = new AiDriver(seed);
+        for (int i = 0; i < n; i++) driver.Add((byte)slotOf[i], Create(sides[i]), sides[i].Profile);
+
+        var pending = new List<Command>();
+        int fresh = 0;
+        var defeat = new int[n];
+        Array.Fill(defeat, -1);
+        var tracker = new SideTracker(n);
+        for (int t = 0; t < maxTicks; t++)
+        {
+            driver.Collect(sim, pending);
+            if (recorder is not null)
+                for (; fresh < pending.Count; fresh++) recorder.RecordCommand(pending[fresh]);
+            sim.Step(pending);
+            pending.RemoveAll(c => c.ExecTick < sim.Tick);
+            fresh = pending.Count;
+            if (recorder is not null && sim.Tick % SimConstants.HashIntervalTicks == 0) recorder.RecordHash(sim);
+            if (sim.Tick % WinCheckInterval != 0) continue;
+            tracker.Sample(sim);
+            int alive = 0;
+            for (int i = 0; i < n; i++)
+            {
+                if (defeat[i] < 0 && sim.Players.Defeated[slotOf[i]]) defeat[i] = sim.Tick;
+                if (defeat[i] < 0) alive++;
+            }
+            if (alive <= 1) break;
+        }
+        if (recorder is not null) recorder.Finish();
+        int winner = -1, left = 0;
+        for (int i = 0; i < n; i++) if (defeat[i] < 0) { left++; winner = i; }
+        if (left != 1) winner = -1;
+        var value = new int[n];
+        var stats = new AiSideStats[n];
+        for (int i = 0; i < n; i++) { value[i] = ValueOf(sim, (byte)slotOf[i]); stats[i] = tracker.StatsOf(sim, slotOf[i]); }
+        return new AiMultiResult(winner, sim.Tick, defeat, value, slotOf, stats, sim.ComputeStateHash());
+    }
+
     private static MapData SwapStarts(MapData m)
     {
         var starts = new List<CellCoord>(m.StartPositions);
@@ -92,21 +153,32 @@ public static class AiMatchRunner
             m.Overlay.ToArray(), m.Density.ToArray(), starts);
     }
 
-    /// <summary>Counts, per slot, the distinct buildings / mobile actors ever seen alive and the cash range (sampled).</summary>
+    /// <summary>Counts, per slot, the distinct buildings / mobile actors ever seen alive and the cash range (sampled). M4-12: any number
+    /// of slots (actors of a slot outside the range, e.g. a neutral owner, are not counted).</summary>
     private sealed class SideTracker
     {
-        private readonly HashSet<ulong>[] _structures = { new(), new() }, _units = { new(), new() };
-        private readonly int[] _min = { int.MaxValue, int.MaxValue }, _max = new int[2];
+        private readonly HashSet<ulong>[] _structures, _units;
+        private readonly int[] _min, _max;
+        private readonly int _n;
+
+        public SideTracker(int players = 2)
+        {
+            _n = players;
+            _structures = new HashSet<ulong>[players]; _units = new HashSet<ulong>[players];
+            for (int p = 0; p < players; p++) { _structures[p] = new(); _units[p] = new(); }
+            _min = new int[players]; Array.Fill(_min, int.MaxValue);
+            _max = new int[players];
+        }
 
         public void Sample(Simulation sim)
         {
             for (int i = 1; i < sim.Buildings.Capacity; i++)
-                if (sim.Buildings.Slots.IsIndexAlive(i)) _structures[sim.Buildings.Player[i] & 1].Add(Key(i, sim.Buildings.Slots.GenerationOf(i)));
+                if (sim.Buildings.Slots.IsIndexAlive(i) && sim.Buildings.Player[i] < _n) _structures[sim.Buildings.Player[i]].Add(Key(i, sim.Buildings.Slots.GenerationOf(i)));
             for (int i = 1; i < sim.Units.Capacity; i++)
-                if (sim.Units.Slots.IsIndexAlive(i)) _units[sim.Units.Player[i] & 1].Add(Key(i, sim.Units.Slots.GenerationOf(i)));
+                if (sim.Units.Slots.IsIndexAlive(i) && sim.Units.Player[i] < _n) _units[sim.Units.Player[i]].Add(Key(i, sim.Units.Slots.GenerationOf(i)));
             for (int i = 1; i < sim.Infantry.Capacity; i++)
-                if (sim.Infantry.Slots.IsIndexAlive(i)) _units[sim.Infantry.Player[i] & 1].Add(Key(i, sim.Infantry.Slots.GenerationOf(i)) | (1UL << 40));
-            for (int p = 0; p < 2; p++)
+                if (sim.Infantry.Slots.IsIndexAlive(i) && sim.Infantry.Player[i] < _n) _units[sim.Infantry.Player[i]].Add(Key(i, sim.Infantry.Slots.GenerationOf(i)) | (1UL << 40));
+            for (int p = 0; p < _n; p++)
             {
                 int cash = sim.Players.Cash[p] + sim.Players.Stored[p];
                 if (cash < _min[p]) _min[p] = cash;

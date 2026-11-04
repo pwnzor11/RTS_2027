@@ -27,9 +27,13 @@ internal sealed class ProductionManager
 
     private int[] _inf = Array.Empty<int>(), _veh = Array.Empty<int>();
     private int _infIdx, _vehIdx;
+    private int _bagTier = 1;
     private AiRandom? _rng;
     private bool _first = true;
     private readonly HashSet<ulong> _rallied = new();
+
+    /// <summary>M4-12: while true only a wanted harvester is bought (the no-income rescue is saving up).</summary>
+    public bool Hold { get; set; }
 
     /// <summary>Units queued so far (infantry + vehicles).</summary>
     public int Queued { get; private set; }
@@ -50,6 +54,8 @@ internal sealed class ProductionManager
             Shuffle(_inf); Shuffle(_veh);
             _first = true;
         }
+        // M4-12: tier-2/3 types join the bags once the player reaches that tech tier (tier 2+ profiles: the Recruit keeps its M3 mix)
+        if (_tier != null && _tier.Profile.RespondToAttacks && k.View.Tier > _bagTier) GrowBags(k);
         if (!k.HaveYard) return;
         Rally = RallyCell(k);
         if (_tactics != null) Rally = _tactics.SafeCell(k, Rally);   // M3-10: not on an irradiated cell
@@ -80,6 +86,7 @@ internal sealed class ProductionManager
             _tier!.HarvesterOrdered();
         }
         _noIncome = k.Harvesters.Count == 0 && !holdForHarvester;
+        if (Hold) return;   // M4-12: the no-income rescue is saving for a harvester
 
         // Vehicles first; infantry leaves the next vehicle's price in reserve so cheap riflemen cannot starve the factory.
         // No scraper left (it is never replaced): there is no income to wait for, so nothing is held back.
@@ -139,6 +146,21 @@ internal sealed class ProductionManager
             if (idx % mix.Length == 0) Shuffle(mix);
         }
         Queued++;
+    }
+
+    /// <summary>M4-12: rebuilds both bags as the faction's base bag plus the tier lists up to the player's tier now, and reshuffles them.
+    /// The bags only grow: a lost gate re-locks those types and <see cref="SkipUnbuildable"/> passes over them until it is rebuilt.</summary>
+    private void GrowBags(RecruitKnowledge k)
+    {
+        _bagTier = Math.Min(3, k.View.Tier);
+        var inf = new List<string>(_faction.InfantryBag);
+        var veh = new List<string>(_faction.VehicleBag);
+        if (_bagTier >= 2) { inf.AddRange(_faction.InfantryTier2); veh.AddRange(_faction.VehicleTier2); }
+        if (_bagTier >= 3) veh.AddRange(_faction.VehicleTier3);
+        _inf = Resolve(inf.ToArray(), k.Rules.Infantry, i => i.Id);
+        _veh = Resolve(veh.ToArray(), k.Rules.Vehicles, v => v.Id);
+        _infIdx = 0; _vehIdx = 0;
+        Shuffle(_inf); Shuffle(_veh);
     }
 
     /// <summary>The next vehicle to build: a tank first, then the shuffled bag.</summary>

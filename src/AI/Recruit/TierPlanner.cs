@@ -70,6 +70,7 @@ internal sealed class TierPlanner
             ArmorClass ac = e.Kind == ActorKind.Vehicle ? rules.Vehicles[e.TypeIndex].Armor : rules.Infantry[e.TypeIndex].Armor;
             _cur[(int)ac]++;
             seen++;
+            if (e.Kind == ActorKind.Vehicle && rules.Vehicles[e.TypeIndex].Locomotion == Locomotion.Air) SeenEnemyAir = true;
             if (e.Kind == ActorKind.Vehicle && rules.Vehicles[e.TypeIndex].HarvestCapacity > 0) Remember(e, k.View.Tick);
         }
         if (seen > 0)
@@ -150,21 +151,32 @@ internal sealed class TierPlanner
     {
         if (!_p.Air || _faction.AirProducerId is null) return -1;
         SimRules rules = k.Rules;
-        if (_aircraft == -2)
+        // M4-12: the best buildable aircraft of the faction, not just the first: a ground attacker of the highest tier (the bomber, the
+        // Great Dirigible); a pure anti-air fighter only once enemy aircraft were seen
+        _aircraft = -1;
+        int bestTier = -1;
+        for (int i = 0; i < rules.Vehicles.Count; i++)
         {
-            _aircraft = -1;
-            for (int i = 0; i < rules.Vehicles.Count; i++)
-                if (rules.Vehicles[i].Locomotion == Locomotion.Air && rules.Vehicles[i].Faction == _faction.Faction) { _aircraft = i; break; }
+            VehicleType v = rules.Vehicles[i];
+            if (v.Locomotion != Locomotion.Air || !SameFaction(v.Faction) || !k.Buildable(ProductionCategory.Aircraft, i)) continue;
+            int w = v.PrimaryWeapon;
+            bool antiAirOnly = w >= 0 && rules.Weapons[w].Targets == WeaponTargets.Air;
+            bool hurts = w >= 0 && rules.Weapons[w].Damage > 0;
+            int rank = v.Tier * 4 + (hurts ? 2 : 0) + (antiAirOnly ? (SeenEnemyAir ? 3 : -100) : 0);
+            if (rank > bestTier) { bestTier = rank; _aircraft = i; }
         }
-        if (_aircraft < 0 || !k.Buildable(ProductionCategory.Aircraft, _aircraft)) return -1;
+        if (_aircraft < 0) return -1;
         int have = 0;
-        foreach (QueueItemView it in k.Queue(ProductionCategory.Aircraft).Items) if (it.TypeIndex == _aircraft) have++;
+        foreach (QueueItemView it in k.Queue(ProductionCategory.Aircraft).Items) have++;
         foreach (ViewActor a in k.Army) if (a.Kind == ActorKind.Vehicle && rules.Vehicles[a.TypeIndex].Locomotion == Locomotion.Air) have++;
         foreach (ViewActor a in k.Home) if (a.Kind == ActorKind.Vehicle && rules.Vehicles[a.TypeIndex].Locomotion == Locomotion.Air) have++;
         return have < MaxAircraft ? _aircraft : -1;
     }
 
     public void AircraftQueued() => AircraftOrdered++;
+
+    // Authority types carry no faction key in the data (Faction.Authority is the default value)
+    private bool SameFaction(Faction f) => f == _faction.Faction;
 
     // ---- unit choice ------------------------------------------------------------------------------
 
@@ -220,6 +232,16 @@ internal sealed class TierPlanner
 
     // ---- build order growth -------------------------------------------------------------------------
 
+    /// <summary>M4-12 (flag UseUpgrades): tick from which the tier-2 gate is added to the build order.</summary>
+    public const int Tier2GateTick = 3600;   // (tune) 3 min
+    /// <summary>M4-12 (flag UseUpgrades): tick from which the tier-3 gate is added (design 08 §8: tier 3 by 15 min).</summary>
+    public const int Tier3GateTick = 8400;   // (tune) 7 min
+    /// <summary>M4-12: army size that also brings the tier-3 gate forward (a rich side climbs early).</summary>
+    public const int ArmyBeforeTier3 = 12;   // (tune)
+
+    /// <summary>M4-12: an enemy aircraft has been seen (anti-air is then wanted).</summary>
+    public bool SeenEnemyAir { get; private set; }
+
     /// <summary>Appends the structures this tier's capabilities need to the build order (each at most once per count wanted).</summary>
     public void ExtendBuild(RecruitKnowledge k, BuildOrderManager build)
     {
@@ -229,9 +251,20 @@ internal sealed class TierPlanner
             build.Extend(_faction.RefineryId);
         if (_p.UseUpgrades && _faction.ResearchId is string research && build.StepsOf(research) < 1)
             build.Extend(research);
+        // M4-12: tier climbing on a schedule (flag UseUpgrades): the tier-2 gate, then the tier-3 gate. A lost gate is rebuilt (the build
+        // order counts owned structures), so the tier comes back.
+        if (_p.UseUpgrades && _faction.Tier2GateId is string g2 && tick >= Tier2GateTick && build.StepsOf(g2) < 1) build.Extend(g2);
+        if (_p.UseUpgrades && _faction.Tier3GateId is string g3 && k.View.Tier >= 2
+            && (tick >= Tier3GateTick || k.Army.Count >= ArmyBeforeTier3) && build.StepsOf(g3) < 1) build.Extend(g3);
+        // M4-12: a garrisonable defence near the base (flag RespondToAttacks: tier 2+); the garrison manager fills it with idle infantry
+        if (_p.RespondToAttacks && _faction.GarrisonId is string gar && k.Army.Count >= 4 && build.StepsOf(gar) < 1) build.Extend(gar);
+        // M4-12: anti-air once enemy aircraft were seen
+        if (SeenEnemyAir && _faction.AntiAirId is string aa && build.StepsOf(aa) < 2) build.Extend(aa);
         bool lateOk = k.Army.Count >= ArmyBeforeLateTech;
-        if (_p.Air && _faction.AirProducerId is string air && lateOk && build.StepsOf(air) < 1) build.Extend(air);
-        if (_p.Superweapons && _faction.SuperweaponBuildingId is string sw && lateOk && build.StepsOf(sw) < 1) build.Extend(sw);
+        if (_p.Air && _faction.AirProducerId is string air && lateOk && (k.View.Tier >= 2 || !_p.UseUpgrades) && build.StepsOf(air) < 1)
+            build.Extend(air);
+        if (_p.Superweapons && _faction.SuperweaponBuildingId is string sw && lateOk && (k.View.Tier >= 3 || !_p.UseUpgrades)
+            && build.StepsOf(sw) < 1) build.Extend(sw);
         if (!_p.AdaptBuild) return;
         if (funds >= FloatingCash)
         {

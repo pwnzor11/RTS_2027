@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
 using Rts.Sim.Core;
+using Rts.Sim.Missions;
 using Rts.Sim.Rules;
 using Rts.Sim.View;
 
@@ -65,6 +66,20 @@ internal sealed class MilitaryManager
     private bool _prong;
     private long _launchHealth;
     private int _cooldownUntil;
+    // M4-12: target player (2-4 players), re-chosen every TargetReviewTicks; -1 = none known
+    private int _targetPlayer = -1, _targetSince = int.MinValue;
+    private int _player;
+    private CellCoord _home;
+    private readonly List<ViewActor> _targetBuildings = new();
+    private readonly int[] _knownCount = new int[16];
+    private readonly long[] _knownDist = new long[16];
+
+    /// <summary>M4-12: ticks between re-choosing the enemy player waves go for (design 08 §2: 30 s).</summary>
+    public const int TargetReviewTicks = 600;   // (tune)
+    /// <summary>M4-12: idle units waiting at the rally that join a wave already on the attack (rolling reinforcement).</summary>
+    public const int ReinforceGroup = 4;   // (tune)
+    /// <summary>M4-12: a wave in Assault that has not destroyed anything for this long is ended (its members then join the next one).</summary>
+    public const int StaleAssaultTicks = 2400;   // (tune)
 
     public MilitaryManager(int attackThreshold) => _threshold = Math.Max(1, attackThreshold);
 
@@ -92,7 +107,8 @@ internal sealed class MilitaryManager
     }
 
     /// <summary>The cell the army is heading for now (nearest known enemy building, else the scouting route).</summary>
-    public CellCoord Goal(RecruitKnowledge k, List<ViewActor> knownEnemyBuildings) => PickGoal(k, knownEnemyBuildings);
+    public CellCoord Goal(RecruitKnowledge k, List<ViewActor> knownEnemyBuildings) =>
+        PickGoal(k, _targetPlayer >= 0 ? _targetBuildings : knownEnemyBuildings);
 
     /// <summary>Waves launched so far.</summary>
     public int Waves { get; private set; }
@@ -105,11 +121,9 @@ internal sealed class MilitaryManager
         _rng = ctx.Rng;
         _bias = _rng.Next(MaxBias + 1);
         Reroll();
-        int w = ctx.MapWidth, h = ctx.MapHeight, sx = ctx.StartCell.X, sy = ctx.StartCell.Y;
-        _scoutRoute.Add(new CellCoord(w - 1 - sx, h - 1 - sy));   // mirror of our own start
-        _scoutRoute.Add(new CellCoord(w / 2, h / 2));
-        _scoutRoute.Add(new CellCoord(w - 1 - sx, sy));
-        _scoutRoute.Add(new CellCoord(sx, h - 1 - sy));
+        _player = ctx.Player;
+        _home = ctx.StartCell;
+        _scoutRoute.AddRange(StartRoute.For(ctx));   // M4-12: every other start of a 2-4 player map, nearest first, then centre and corners
     }
 
     /// <summary>Roster members still alive (0 while no wave is on); the roster shrinks with deaths.</summary>
@@ -129,14 +143,78 @@ internal sealed class MilitaryManager
 
     private static ulong Key(ViewActor a) => ((ulong)a.Id.Index << 16) | a.Id.Generation | ((ulong)(int)a.Kind << 48);
 
-    public void Think(RecruitKnowledge k, ICommandSink sink, CellCoord rally, List<ViewActor> knownEnemyBuildings)
+    /// <summary>M4-12 (diagnostics): the wave phase (0 gather, 1 stage, 2 assault), the scout-route stop and the last goal picked.</summary>
+    public string Debug => $"{(int)_phase}:{_scoutIdx}/{_scoutRoute.Count}@{(_scoutRoute.Count > 0 ? _scoutRoute[Math.Min(_scoutIdx, _scoutRoute.Count - 1)] : default)} goal {_lastGoal} stage {_stage} roster {_roster.Count}";
+
+    /// <summary>M4-12: set by the AI while its income has stalled (map mined out): waves go out at <see cref="DesperateWave"/> units.</summary>
+    public bool Broke { get; set; }
+
+    /// <summary>M4-12: the enemy player waves go for (-1 while no enemy building is known).</summary>
+    public int TargetPlayer => _targetPlayer;
+
+    /// <summary>M4-12: idle units sent after a wave already on the attack.</summary>
+    public int Reinforcements { get; private set; }
+
+    /// <summary>M4-12: waves ended because they stalled (nothing destroyed for <see cref="StaleAssaultTicks"/>).</summary>
+    public int StaleWaves { get; private set; }
+
+    private int _progressTick, _progressScore = int.MaxValue;
+
+    /// <summary>
+    /// M4-12: keeps <see cref="_targetBuildings"/> = the known buildings of the enemy player waves go for. The player is re-chosen
+    /// every <see cref="TargetReviewTicks"/> (or when nothing of it is known any more): the nearest one to our start (distance to its
+    /// nearest known building), with a player that has fewer known buildings counted nearer (weakest first when distances are close).
+    /// Ties go to the lower slot. Fog-honest: only known (live or ghost) buildings count.
+    /// </summary>
+    private void ChooseTarget(RecruitKnowledge k, List<ViewActor> known)
     {
         int tick = k.View.Tick;
+        Array.Clear(_knownCount);
+        Array.Fill(_knownDist, long.MaxValue);
+        foreach (ViewActor b in known)
+        {
+            if (b.Owner >= _knownCount.Length) continue;
+            BuildingType bt = k.Rules.Buildings[b.TypeIndex];
+            if (bt.Wall || bt.Gate) continue;
+            _knownCount[b.Owner]++;
+            long d = Chebyshev(b.Cell, _home);
+            if (d < _knownDist[b.Owner]) _knownDist[b.Owner] = d;
+        }
+        bool keep = _targetPlayer >= 0 && _knownCount[_targetPlayer] > 0 && tick - _targetSince < TargetReviewTicks;
+        if (!keep)
+        {
+            int best = -1, candidates = 0;
+            long bestScore = long.MaxValue;
+            for (int p = 0; p < _knownCount.Length; p++) if (p != _player && _knownCount[p] > 0) candidates++;
+            for (int p = 0; p < _knownCount.Length; p++)
+            {
+                if (p == _player || _knownCount[p] == 0) continue;
+                // distance first (cells x 4); fewer known buildings = weaker; with several candidates a seeded 0..7 jitter so equidistant
+                // neighbours are not always resolved by slot order (no number is drawn with one candidate: 2-player games are unchanged)
+                long score = _knownDist[p] * 4 + Math.Min(_knownCount[p], 20) + (candidates > 1 ? _rng?.Next(8) ?? 0 : 0);
+                if (score < bestScore) { bestScore = score; best = p; }
+            }
+            if (best != _targetPlayer) _progressScore = int.MaxValue;
+            _targetPlayer = best;
+            _targetSince = tick;
+        }
+        _targetBuildings.Clear();
+        foreach (ViewActor b in known)
+            if (_targetPlayer < 0 || b.Owner == _targetPlayer) _targetBuildings.Add(b);
+    }
+
+    public void Think(RecruitKnowledge k, ICommandSink sink, CellCoord rally, List<ViewActor> allKnownEnemyBuildings)
+    {
+        int tick = k.View.Tick;
+        ChooseTarget(k, allKnownEnemyBuildings);
+        List<ViewActor> knownEnemyBuildings = _targetBuildings;
         ViewActor? attacked = FindAttacked(k);
         int n = k.Army.Count;
 
         int alive = RosterAlive(k);
 
+        // M4-12: a harvester only counts as attacked with a visible enemy near it (radiation also lowers its health)
+        if (attacked is ViewActor hv && hv.Kind != ActorKind.Building && NearestEnemyTo(k, hv) is null) attacked = null;
         if (attacked is ViewActor victim)
         {
             CellCoord spot = NearestEnemyTo(k, victim) ?? victim.Cell;
@@ -160,7 +238,7 @@ internal sealed class MilitaryManager
         if (_phase == Phase.Gather)
         {
             // with no scraper left there is no income to rebuild with: whatever is left goes out as soon as there are a few units
-            bool desperate = k.Harvesters.Count == 0 && n >= DesperateWave;
+            bool desperate = (k.Harvesters.Count == 0 || Broke) && n >= DesperateWave;   // M4-12: also when income has stalled
             if (tick >= _cooldownUntil && (n >= _nextThreshold || (n >= MinWave && tick - _lastWave >= _nextInterval) || desperate))
             {
                 _roster.Clear(); _squadB.Clear();
@@ -193,13 +271,25 @@ internal sealed class MilitaryManager
                 }
                 _phase = Phase.Stage;
                 alive = n;
+                _progressScore = int.MaxValue; _progressTick = tick;
             }
         }
-        else if (alive < Math.Max(2, _launchSize / 4))
+        else if (alive < Math.Max(2, _launchSize / 4) && !(Options.Respond && Reinforce(k, sink, rally, force: true)))
         {
             _phase = Phase.Gather;
             _roster.Clear();
         }
+        else if (Options.Respond && _phase == Phase.Assault && Stalled(k, knownEnemyBuildings))
+        {
+            // M4-12: the wave has destroyed nothing for a long time (a target it cannot kill, a wall, free repairs): end it; every
+            // survivor is counted again for the next wave, which goes out at once when the army is big enough
+            StaleWaves++;
+            _phase = Phase.Gather;
+            _roster.Clear(); _squadB.Clear();
+            _prong = false;
+            _lastWave = tick - _nextInterval;   // the timed trigger is due at once
+        }
+        else if (Options.Respond && _phase == Phase.Assault) Reinforce(k, sink, rally, force: false);
 
         if (_phase == Phase.Stage)
         {
@@ -219,6 +309,7 @@ internal sealed class MilitaryManager
             if (ready || tick - _stageSince >= StageTimeoutTicks) _phase = Phase.Assault;
         }
 
+        if (Options.Respond) Unstick(k, sink);
         CellCoord goal = _phase == Phase.Assault ? PickGoal(k, knownEnemyBuildings) : default;
         CellCoord goalB = goal;
         if (_prong && _phase == Phase.Assault) goalB = SecondGoal(k, knownEnemyBuildings, goal) ?? goal;
@@ -241,6 +332,110 @@ internal sealed class MilitaryManager
             else if (Chebyshev(a.Cell, rally) > HomeRadiusCells)
                 sink.Issue(CommandKind.Move, a.Id, a.Kind, rally);
         }
+    }
+
+    /// <summary>
+    /// M4-12 (finishing games): idle units at the rally join the wave on the attack once there are <see cref="ReinforceGroup"/> of them
+    /// (or, with <paramref name="force"/>, any at all when the wave is about to fold). Without this a wave that kept a couple of survivors
+    /// alive at the enemy base held every later unit at home for the rest of the game. True when anyone joined.
+    /// </summary>
+    private bool Reinforce(RecruitKnowledge k, ICommandSink sink, CellCoord rally, bool force)
+    {
+        if (_phase != Phase.Assault && !force) return false;
+        int waiting = 0;
+        foreach (ViewActor a in k.Army)
+            if (a.Idle && !_roster.Contains(Key(a)) && !a.Underground) waiting++;
+        if (waiting == 0 || (!force && waiting < Math.Max(ReinforceGroup, _nextThreshold / 2))) return false;
+        if (force && waiting + RosterAlive(k) < Math.Max(2, _launchSize / 4)) return false;
+        foreach (ViewActor a in k.Army)
+        {
+            if (!a.Idle || _roster.Contains(Key(a)) || a.Underground) continue;
+            _roster.Add(Key(a));
+            _launchHealth += a.Health;
+            Reinforcements++;
+        }
+        if (_phase == Phase.Stage) _phase = Phase.Assault;
+        return true;
+    }
+
+    /// <summary>M4-12: true when the known buildings of the target have not lost health between two decisions for
+    /// <see cref="StaleAssaultTicks"/> (a target the wave cannot reach or cannot hurt). The goal it was attacking is then avoided for
+    /// <see cref="AvoidTicks"/>.</summary>
+    private bool Stalled(RecruitKnowledge k, List<ViewActor> known)
+    {
+        long score = 0;
+        foreach (ViewActor b in known) score += b.Health + 1;
+        int tick = k.View.Tick;
+        int sc = (int)Math.Min(score, int.MaxValue);
+        bool progress = sc < _progressScore;
+        _progressScore = sc;
+        if (progress) { _progressTick = tick; return false; }
+        if (tick - _progressTick < StaleAssaultTicks) return false;
+        _avoid.Add((_lastGoal, tick + AvoidTicks));
+        return true;
+    }
+
+    /// <summary>M4-12: how long a goal a stalled wave could not hurt is skipped.</summary>
+    public const int AvoidTicks = 6000;   // (tune)
+    private readonly List<(CellCoord Cell, int Until)> _avoid = new();
+    private CellCoord _lastGoal;
+
+    private bool Avoided(CellCoord c, int tick)
+    {
+        for (int i = _avoid.Count - 1; i >= 0; i--)
+        {
+            if (_avoid[i].Until <= tick) { _avoid.RemoveAt(i); continue; }
+            if (_avoid[i].Cell == c) return true;
+        }
+        return false;
+    }
+
+    /// <summary>M4-12: ticks a busy army unit may stand on one cell with no enemy in view near it before it is stopped.</summary>
+    public const int StuckTicks = 400;   // (tune)
+    private const int StuckEnemyCells = 8;
+    private readonly Dictionary<ulong, (CellCoord Cell, int Since, int Times)> _still = new();
+    private readonly List<ulong> _stillDead = new();
+
+    /// <summary>M4-12: units unstuck by the watchdog.</summary>
+    public int Unstuck { get; private set; }
+
+    /// <summary>
+    /// M4-12 (finishing games): an attack-move whose destination cell can never be reached (the footprint of one of our own buildings, a
+    /// cell walled off by our own base) never ends, so the unit is never idle again and no manager re-orders it; whole waves froze like
+    /// that. A busy unit that has not changed cell for <see cref="StuckTicks"/> with no visible enemy near it is stopped (it becomes idle
+    /// and is ordered afresh next decision); a unit stuck twice in a row is first moved to a seeded nearby cell.
+    /// </summary>
+    private void Unstick(RecruitKnowledge k, ICommandSink sink)
+    {
+        int tick = k.View.Tick;
+        _stillDead.Clear();
+        foreach (ulong key in _still.Keys) _stillDead.Add(key);   // order irrelevant: only used to drop dead keys
+        foreach (ViewActor a in k.Army)
+        {
+            ulong key = Key(a);
+            _stillDead.Remove(key);
+            if (a.Idle || a.Underground || a.Mission is MissionKind.EnterTunnel or MissionKind.Capture or MissionKind.Deploy
+                || a.Kind == ActorKind.Vehicle && k.Rules.Vehicles[a.TypeIndex].Locomotion == Locomotion.Air)
+            { _still.Remove(key); continue; }
+            if (!_still.TryGetValue(key, out var st) || st.Cell != a.Cell) { _still[key] = (a.Cell, tick, st.Cell == a.Cell ? st.Times : 0); continue; }
+            if (tick - st.Since < StuckTicks || EnemyNear(k, a.Cell)) continue;
+            Unstuck++;
+            if (st.Times >= 1 && _rng is not null)
+            {
+                var c = new CellCoord(Math.Clamp(a.Cell.X + _rng.Next(7) - 3, 1, k.View.MapWidth - 2), Math.Clamp(a.Cell.Y + _rng.Next(7) - 3, 1, k.View.MapHeight - 2));
+                sink.Issue(CommandKind.Move, a.Id, a.Kind, c);
+            }
+            else sink.Issue(CommandKind.Stop, a.Id, a.Kind);
+            _still[key] = (a.Cell, tick, st.Times + 1);
+        }
+        foreach (ulong key in _stillDead) _still.Remove(key);
+    }
+
+    private static bool EnemyNear(RecruitKnowledge k, CellCoord c)
+    {
+        foreach (ViewActor e in k.Visible)
+            if (e.Relation == Relation.Enemy && Chebyshev(e.Cell, c) <= StuckEnemyCells) return true;
+        return false;
     }
 
     /// <summary>Calls the wave off when its health fell below the retreat line: every roster member walks home. True when it did.</summary>
@@ -301,20 +496,24 @@ internal sealed class MilitaryManager
         long best = long.MaxValue;
         CellCoord goal = default;
         bool found = false;
-        foreach (ViewActor b in buildings)
-        {
-            long dx = b.Position.X - centre.X, dy = b.Position.Y - centre.Y, d = dx * dx + dy * dy;
-            if (d >= best) continue;
-            best = d; goal = b.Cell; found = true;
-        }
-        if (found) return goal;
+        int tick = k.View.Tick;
+        for (int pass = 0; pass < 2 && !found; pass++)
+            foreach (ViewActor b in buildings)
+            {
+                if (pass == 0 && _avoid.Count > 0 && Avoided(b.Cell, tick)) continue;   // M4-12: skip goals a stalled wave could not hurt
+                long dx = b.Position.X - centre.X, dy = b.Position.Y - centre.Y, d = dx * dx + dy * dy;
+                if (d >= best) continue;
+                best = d; goal = b.Cell; found = true;
+            }
+        if (found) { _lastGoal = goal; return goal; }
         // nothing known: look at the route stops in turn; a stop that is in view and shows no building is crossed off
         while (_scoutIdx < _scoutRoute.Count - 1 && k.View.IsVisible(_scoutRoute[_scoutIdx])) _scoutIdx++;
         if (_scoutIdx >= _scoutRoute.Count - 1 && k.View.IsVisible(_scoutRoute[^1])) _scoutIdx = 0;
         return _scoutRoute[_scoutIdx];
     }
 
-    /// <summary>The own building (in slot order) whose health fell since the previous decision, if any.</summary>
+    /// <summary>The own building (in slot order) whose health fell since the previous decision, if any; with the Respond option
+    /// (M4-12) also a harvester that is being shot (losing the only harvester was the most common way games froze).</summary>
     private ViewActor? FindAttacked(RecruitKnowledge k)
     {
         ViewActor? hit = null;
@@ -323,6 +522,13 @@ internal sealed class MilitaryManager
             ulong key = ((ulong)b.Id.Index << 16) | b.Id.Generation;
             if (hit is null && _lastHealth.TryGetValue(key, out int prev) && b.Health < prev) hit = b;
             _lastHealth[key] = b.Health;
+        }
+        if (!Options.Respond) return hit;
+        foreach (ViewActor h in k.Harvesters)
+        {
+            ulong key = RecruitKnowledge.KeyOf(h) | (1UL << 62);   // buildings use (index, generation) with no kind bits: keep apart
+            if (hit is null && !h.Underground && _lastHealth.TryGetValue(key, out int prev) && h.Health < prev) hit = h;
+            _lastHealth[key] = h.Health;
         }
         return hit;
     }

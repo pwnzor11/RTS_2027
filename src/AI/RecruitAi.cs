@@ -2,6 +2,7 @@
 // Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
 using Rts.Data;
 using Rts.AI.Recruit;
+using Rts.Sim.Core;
 using Rts.Sim.Rules;
 using Rts.Sim.View;
 
@@ -36,6 +37,9 @@ public sealed class RecruitAi : IAiPlayer
     private readonly ScoutManager _scout = new();
     private readonly UpgradeManager _upgrades = new();
     private readonly SuperweaponManager _superweapons = new();
+    // M4-12: garrisons and the no-income rescue
+    private readonly GarrisonManager _garrison = new();
+    private readonly EconomyRescue _rescue = new();
     private readonly string _id;
 
     /// <summary>Creates the AI for a tier's profile. The capabilities (repair, harvester replacement, scouting, ...) come from the
@@ -104,6 +108,36 @@ public sealed class RecruitAi : IAiPlayer
     /// <summary>Attack waves launched.</summary>
     public int Waves => _military.Waves;
 
+    /// <summary>M4-12: Enter orders given to fill garrisons.</summary>
+    public int GarrisonOrders => _garrison.Orders;
+
+    /// <summary>M4-12: most own soldiers inside garrisons at once.</summary>
+    public int PeakGarrisoned => _garrison.PeakOccupants;
+
+    /// <summary>M4-12: structures sold to pay for a harvester after every harvester was lost.</summary>
+    public int StructuresSold => _rescue.Sold;
+
+    /// <summary>M4-12: the enemy player waves go for (-1 while none is known).</summary>
+    public int TargetPlayer => _military.TargetPlayer;
+
+    /// <summary>M4-12 (diagnostics): the wave manager's state in one line.</summary>
+    public string MilitaryDebug => _military.Debug;
+
+    /// <summary>M4-12: units sent after a wave already on the attack.</summary>
+    public int Reinforcements => _military.Reinforcements;
+
+    /// <summary>M4-12: waves ended because they destroyed nothing for a long time.</summary>
+    public int StaleWaves => _military.StaleWaves;
+
+    /// <summary>M4-12: highest tech tier the player has reached, and the first tick it reached tier 2 / tier 3 (-1 = never).</summary>
+    public int MaxTier { get; private set; } = 1;
+
+    /// <summary>M4-12: first tick at tech tier 2 (-1 = never).</summary>
+    public int Tier2Tick { get; private set; } = -1;
+
+    /// <summary>M4-12: first tick at tech tier 3 (-1 = never).</summary>
+    public int Tier3Tick { get; private set; } = -1;
+
     /// <summary>Directorate: Bores ordered to deploy into Hatches (0 for Authority).</summary>
     public int HatchesDug => (_tactics as DirectorateTactics)?.Digs ?? 0;
 
@@ -127,12 +161,23 @@ public sealed class RecruitAi : IAiPlayer
     {
         _faction = RecruitFaction.For(faction);
         _tactics = _faction.CreateTactics();
-        _build = new BuildOrderManager(_faction.OrderFor(_profile.BuildRepertoire), _faction.PowerId, _faction.YardId);
+        _build = new BuildOrderManager(_faction.OrderFor(_profile.BuildRepertoire), _faction.PowerId, _faction.YardId)
+        { ReserveInProgress = _profile.RespondToAttacks };   // M4-12 (tier 2+)
         _planner = new TierPlanner(_profile, _faction);
         _production = new ProductionManager(_faction, _tactics, _planner);
         _production.Start(_ctx!.Rng);
         _military.Tactics = _tactics;
         _tactics?.Start(_ctx);
+    }
+
+    /// <summary>M4-12: no harvester alive and the funds do not cover a new one: only an attack can still win the game.</summary>
+    private bool AllIn()
+    {
+        if (_rescue.Broke) return true;   // income stalled (map mined out): the garrison joins the last army
+        if (_k.Harvesters.Count > 0) return false;
+        int harv = SimRules.IndexOf(_k.Rules.Vehicles, _faction!.HarvesterId, v => v.Id);
+        return harv < 0 || _k.Hud.Cash + _k.Hud.Stored < _k.Rules.Vehicles[harv].Cost
+            || !_k.Buildable(ProductionCategory.Vehicle, harv);
     }
 
     /// <inheritdoc />
@@ -141,19 +186,28 @@ public sealed class RecruitAi : IAiPlayer
         if (_faction is null) Init(view.Faction);
         _k.Refresh(view, _faction!.YardId);
         if (_k.Hud.Defeated) return;
+        int tier = view.Tier;
+        if (tier >= 2 && Tier2Tick < 0) Tier2Tick = view.Tick;
+        if (tier >= 3 && Tier3Tick < 0) Tier3Tick = view.Tick;
+        if (tier > MaxTier) MaxTier = tier;
         view.CopyKnownEnemyBuildings(_knownBuildings);
         _squads.Apply(_k);
         _planner!.Observe(_k, _knownBuildings);
         _planner.ExtendBuild(_k, _build!);
-        _build!.Think(_k, sink);
+        if (_profile.ReplaceHarvesters) _rescue.Think(_k, sink, _faction);   // M4-12: no harvester and no money: sell for one
+        _build!.HoldExcept = _rescue.Saving ? _rescue.RefineryType : _rescue.Broke ? -1 : int.MinValue;
+        _production!.Hold = _rescue.Saving;
+        _build.Think(_k, sink);
         _economy.Think(_k, sink);
         if (_profile.Repair) _repair.Think(_k, sink);
         _production!.Think(_k, sink, _build.PendingCost);
         if (_profile.UseUpgrades) _upgrades.Think(_k, sink, _build.PendingCost);
         // squads: pull units out of the wave pool before the military manager counts and orders it
         _retreat.Think(_k, sink, _squads, _production.Rally, _profile.RetreatHealthPct);
+        if (_profile.RespondToAttacks) _garrison.Think(_k, sink, AllIn());   // M4-12: before the waves count the army
         if (_profile.ActiveScouting) _scout.Think(_k, sink, _squads);
         if (_profile.Harass) _harass.Think(_k, sink, _squads, _planner, _knownBuildings, _production.Rally, _profile.ScoutInfoAgeTicks);
+        _military.Broke = _rescue.Broke;
         _military.Think(_k, sink, _production.Rally, _knownBuildings);
         if (_profile.Scatter) _scatter.Think(_k, sink);
         if (_profile.Superweapons) _superweapons.Think(_k, sink, _knownBuildings);

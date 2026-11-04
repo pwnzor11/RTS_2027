@@ -39,6 +39,14 @@ internal sealed class BuildOrderManager
         return n;
     }
 
+    /// <summary>M4-12: while not <see cref="int.MinValue"/>, nothing is started except this structure type (when none is owned or queued);
+    /// -1 holds everything. Set by the no-income rescue.</summary>
+    public int HoldExcept { get; set; } = int.MinValue;
+
+    /// <summary>M4-12: when true (tier 2+), <see cref="PendingCost"/> also counts what the structures in production still have to be paid,
+    /// so units do not starve a 2500-credit tier gate that is already under way (it stalled for whole games).</summary>
+    public bool ReserveInProgress { get; set; }
+
     /// <summary>Credits the next structure (still to be started or being paid for) will need; units keep this in reserve.</summary>
     public int PendingCost { get; private set; }
 
@@ -67,10 +75,15 @@ internal sealed class BuildOrderManager
 
         Array.Clear(_queued);
         bool laneBusy = false;
+        int inProgress = 0;
         foreach (ProductionCategory cat in new[] { ProductionCategory.Structure, ProductionCategory.Defence })
         {
             QueueView q = k.Queue(cat);
-            foreach (QueueItemView it in q.Items) { _queued[it.TypeIndex]++; laneBusy = true; }
+            foreach (QueueItemView it in q.Items)
+            {
+                _queued[it.TypeIndex]++; laneBusy = true;
+                if (ReserveInProgress) inProgress += (int)((long)rules.Buildings[it.TypeIndex].Cost * Math.Max(0, 1000 - it.ProgressPermille) / 1000);
+            }
             if (q.ReadyTypeIndex >= 0)
             {
                 _queued[q.ReadyTypeIndex]++;
@@ -80,7 +93,8 @@ internal sealed class BuildOrderManager
         }
 
         int next = NextType(k);
-        PendingCost = next < 0 ? 0 : rules.Buildings[next].Cost;
+        if (HoldExcept != int.MinValue && next != HoldExcept) next = HoldExcept >= 0 && k.BuildingCount[HoldExcept] + _queued[HoldExcept] == 0 ? HoldExcept : -1;
+        PendingCost = (next < 0 ? 0 : rules.Buildings[next].Cost) + inProgress;
         if (laneBusy || next < 0) return;
         BuildingType bt = rules.Buildings[next];
         if (!k.Buildable(bt.Category, next)) return;

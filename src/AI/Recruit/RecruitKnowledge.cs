@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
 using Rts.Sim.Core;
+using Rts.Sim.Missions;
 using Rts.Sim.Rules;
 using Rts.Sim.View;
 
@@ -26,6 +27,8 @@ internal sealed class RecruitKnowledge
     public readonly List<ViewActor> Home = new();
     /// <summary>M3-11: army units on special duty (scout, raiders); not part of waves. Filled by <see cref="Squads"/>.</summary>
     public readonly List<ViewActor> Detached = new();
+    /// <summary>M4-12: own infantry sitting in a garrison (MissionKind.Garrisoned): never army, never ordered by the wave managers.</summary>
+    public readonly List<ViewActor> Garrisoned = new();
     public int[] BuildingCount = Array.Empty<int>();
     public CellCoord Yard;
     public bool HaveYard;
@@ -37,7 +40,7 @@ internal sealed class RecruitKnowledge
         Rules = view.Rules;
         view.CopyOwn(Own);
         view.CopyVisible(Visible);
-        Buildings.Clear(); Army.Clear(); Harvesters.Clear(); Bores.Clear(); Support.Clear();
+        Buildings.Clear(); Army.Clear(); Harvesters.Clear(); Bores.Clear(); Support.Clear(); Garrisoned.Clear();
         if (BuildingCount.Length != Rules.Buildings.Count) BuildingCount = new int[Rules.Buildings.Count];
         Array.Clear(BuildingCount);
         HaveYard = false;
@@ -57,6 +60,9 @@ internal sealed class RecruitKnowledge
                     break;
                 case ActorKind.Vehicle when Rules.Vehicles[a.TypeIndex].AuraRadius > 0:
                     Support.Add(a);
+                    break;
+                case ActorKind.Infantry when a.Mission == MissionKind.Garrisoned:
+                    Garrisoned.Add(a);
                     break;
                 default:
                     Army.Add(a);

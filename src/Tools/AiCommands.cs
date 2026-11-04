@@ -23,14 +23,15 @@ public static class AiCommands
     private const string Usage =
         "usage: ai match --a <aiId>[:<tier>] --b <aiId>[:<tier>] [--seeds 8] [--ticks 6000] [--size 64] [--out file.md] [--record-dir dir] [--flat 1] [--starts alt|slot|swap] [--start economy|army] [--first 1] [--faction-a authority|directorate] [--faction-b authority|directorate]\n" +
         "       ai matrix --ai <aiId> [--faction authority|directorate] [--tiers 1-5] [--seeds 4] [--ticks 6000] [--size 64] [--out file.md]\n" +
+        "       ai matrix --players 2-4 [--ai tiered] [--tiers 3] [--faction authority|directorate|mixed] [--biome rust_belt|glass_coast|mountains|ash_plains|all] [--size s|m|l|<cells>] [--seeds 2] [--ticks 25000] [--out file.md]\n" +
         "       ai timeline --a <aiId>[:<tier>] --b <aiId>[:<tier>] [--seed 1] [--ticks 30000] [--size 64] [--swap 0|1] [--trace N] [--dump 1]\n" +
         "       ai duel --a <spec> --b <spec> [--count 1] [--count-b N] [--ticks 3000] [--gap 12]   (spec = id[:n][,id[:n]...], e.g. auth_tank:3,auth_turret:1)\n" +
         "  <tier> is 1..5 or recruit|regular|veteran|elite|commissar (default regular). Seeds are first..first+N-1 (first defaults to 1).";
 
     private static readonly string[] MatchOptions = ["a", "b", "seeds", "ticks", "size", "out", "record-dir", "flat", "starts", "start", "first", "faction-a", "faction-b"];
-    private static readonly string[] TimelineOptions = ["a", "b", "seed", "ticks", "size", "swap", "trace", "dump"];
+    private static readonly string[] TimelineOptions = ["a", "b", "seed", "ticks", "size", "swap", "trace", "dump", "faction-a", "faction-b"];
     private static readonly string[] DuelOptions = ["a", "b", "count", "count-b", "ticks", "gap"];
-    private static readonly string[] MatrixOptions = ["ai", "tiers", "seeds", "ticks", "size", "out", "faction"];
+    private static readonly string[] MatrixOptions = ["ai", "tiers", "seeds", "ticks", "size", "out", "faction", "players", "biome"];
 
     /// <summary>Runs `ai ...` (args exclude the leading "ai").</summary>
     public static int Run(string[] args)
@@ -43,6 +44,7 @@ public static class AiCommands
             "matrix" => Matrix(rest),
             "timeline" => Timeline(rest),
             "duel" => Duel(rest),
+            "ffa" => Ffa(rest),
             _ => UsageError($"unknown subcommand '{args[0]}'"),
         };
     }
@@ -112,6 +114,7 @@ public static class AiCommands
     {
         if (!MatchSetup.TryParse(args, MatrixOptions, out var flags, out var positional, out string? error) || positional.Count > 0)
             return UsageError(error ?? $"unexpected argument '{positional[0]}'");
+        if (flags.ContainsKey("players") || flags.ContainsKey("biome")) return MultiMatrix(flags);
         if (!Common(flags, 4, out int seeds, out int ticks, out int size, out error)) return UsageError(error!);
         if (!flags.TryGetValue("ai", out string? aiId)) return UsageError("--ai is required");
         if (!AiRegistry.Contains(aiId)) return UsageError($"unknown AI '{aiId}' (known: {string.Join(", ", AiRegistry.Ids)})");
@@ -168,6 +171,149 @@ public static class AiCommands
         return WriteOut(flags, text);
     }
 
+    // ---- ai matrix --players (M4-12) -------------------------------------------------------------
+
+    private static readonly (string Name, Biome Biome)[] BiomeNames =
+        [("rust_belt", Biome.RustBelt), ("glass_coast", Biome.GlassCoast), ("mountains", Biome.Mountains), ("ash_plains", Biome.AshPlains)];
+
+    /// <summary>
+    /// M4-12: free-for-all games of N equal AIs per biome. Every seed is played N times with the sides rotated over the starts, so each
+    /// side (and each faction, with --faction mixed) plays from every start. Reports per biome: decisive games, draws at the tick limit
+    /// (stalls), the average end tick and, per START, the win share and the outlast share (of all opponent pairs, how often the player
+    /// at that start lasted longer: 50 % is fair for any N).
+    /// </summary>
+    private static int MultiMatrix(Dictionary<string, string> flags)
+    {
+        if (!Int(flags, "players", 2, out int players) || players < 2 || players > 4) return UsageError("--players must be 2..4");
+        if (!Int(flags, "seeds", 2, out int seeds) || seeds < 1) return UsageError("--seeds must be a positive integer");
+        if (!Int(flags, "ticks", 25000, out int ticks) || ticks < 1) return UsageError("--ticks must be a positive integer");
+        string aiId = flags.TryGetValue("ai", out string? ai) ? ai : AiRegistry.TieredId;
+        if (!AiRegistry.Contains(aiId)) return UsageError($"unknown AI '{aiId}'");
+        if (!ParseTiers(flags.TryGetValue("tiers", out string? tierArg) ? tierArg : "3", out List<int>? tierList, out string? error)) return UsageError(error!);
+        string facArg = flags.TryGetValue("faction", out string? fa) ? fa : "authority";
+        if (facArg is not ("authority" or "directorate" or "mixed")) return UsageError("--faction must be authority, directorate or mixed");
+        var biomes = new List<(string Name, Biome Biome)>();
+        string biomeArg = flags.TryGetValue("biome", out string? ba) ? ba : "all";
+        foreach ((string name, Biome b) in BiomeNames) if (biomeArg == "all" || biomeArg == name) biomes.Add((name, b));
+        if (biomes.Count == 0) return UsageError("--biome must be rust_belt, glass_coast, mountains, ash_plains or all");
+        string sizeArg = flags.TryGetValue("size", out string? sa) ? sa : "m";
+        MapSize? sizeClass = sizeArg switch { "s" => MapSize.Small, "m" => MapSize.Medium, "l" => MapSize.Large, _ => null };
+        int cells = 0;
+        if (sizeClass is null && (!int.TryParse(sizeArg, NumberStyles.None, CultureInfo.InvariantCulture, out cells) || cells < MapGenerator.MinSize || cells > SimConstants.MaxMapCells))
+            return UsageError($"--size must be s, m, l or {MapGenerator.MinSize}..{SimConstants.MaxMapCells}");
+        if (!LoadData(out var world, out var profiles)) return 1;
+
+        var md = new StringBuilder();
+        md.AppendLine($"# AI free-for-all: {players} x {aiId} ({facArg})");
+        md.AppendLine();
+        md.AppendLine($"{seeds} seeds x {players} rotations per biome, {ticks} ticks per game, map size {sizeArg}. Win % and outlast % are per start position (outlast: share of opponent pairs the player at that start outlived or, both alive, out-healthed; 50 % is fair).");
+        long totalTicks = 0;
+        var clock = Stopwatch.StartNew();
+        string? mapNote = null;
+        foreach (int tier in tierList!)
+        {
+            DifficultyProfile profile = profiles![tier - 1];
+            md.AppendLine();
+            md.AppendLine($"## Tier {profile.Id}");
+            md.AppendLine();
+            md.Append("| Biome | Games | Decisive | Draws | Avg end tick |");
+            for (int st = 0; st < players; st++) md.Append($" start {st} win / outlast |");
+            md.AppendLine();
+            md.Append("|---|---:|---:|---:|---:|");
+            for (int st = 0; st < players; st++) md.Append("---:|");
+            md.AppendLine();
+            foreach ((string bname, Biome biome) in biomes)
+            {
+                int games = 0, decisive = 0, draws = 0;
+                long endSum = 0;
+                var startWins = new int[players];
+                var outlast = new int[players];
+                var pairs = new int[players];
+                for (int seed = 1; seed <= seeds; seed++)
+                {
+                    MapData map = MultiMap(biome, sizeClass, cells, players, (ulong)seed, out string? note);
+                    mapNote ??= note;
+                    for (int rot = 0; rot < players; rot++)
+                    {
+                        var sides = new List<AiSide>();
+                        for (int i = 0; i < players; i++)
+                        {
+                            Faction f = facArg == "directorate" || (facArg == "mixed" && (i & 1) == 1) ? Faction.Directorate : Faction.Authority;
+                            sides.Add(new AiSide(aiId, profile, f));
+                        }
+                        AiMultiResult r;
+                        // the game seed differs per rotation too: with equal sides a rotation alone would replay the same game
+                        try { r = AiMatchRunner.PlayN(map, world!.Rules, world.RulesHash, (ulong)(seed * 16 + rot), sides, rot, ticks); }
+                        catch (Exception e) when (e is ArgumentException or InvalidOperationException)
+                        {
+                            Console.Error.WriteLine($"error: {e.Message}");
+                            return 1;
+                        }
+                        games++;
+                        totalTicks += r.EndTick;
+                        endSum += r.EndTick;
+                        if (r.Winner >= 0) { decisive++; startWins[r.Start[r.Winner]]++; } else draws++;
+                        for (int a = 0; a < players; a++)
+                            for (int b = 0; b < players; b++)
+                            {
+                                if (a == b) continue;
+                                pairs[r.Start[a]]++;
+                                if (r.Outlasted(a, b)) outlast[r.Start[a]]++;
+                            }
+                        Console.WriteLine($"tier {profile.Id} {bname} seed {seed} rot {rot}: {(r.Winner >= 0 ? $"side {r.Winner} (start {r.Start[r.Winner]}) wins" : "draw")} at tick {r.EndTick}; defeat ticks {string.Join(",", r.DefeatTick)}");
+                    }
+                }
+                md.Append($"| {bname} | {games} | {decisive} | {draws} | {(games == 0 ? 0 : endSum / games)} |");
+                for (int st = 0; st < players; st++) md.Append($" {Pct(startWins[st], games)} / {Pct(outlast[st], pairs[st])} |");
+                md.AppendLine();
+            }
+        }
+        if (mapNote is not null) md.AppendLine().AppendLine(mapNote);
+        clock.Stop();
+        string text = md.ToString();
+        Console.WriteLine(text);
+        PrintSpeed(totalTicks, clock);
+        return WriteOut(flags, text);
+    }
+
+    /// <summary>
+    /// M4-12: the map for an N-player matrix game. Uses <see cref="MapGenerator.Generate(MapGenParams)"/> (biome, size class, players,
+    /// seed). While that generator still returns fewer than N starts (the M4-02 stub returns the 2-player map), a stand-in is built:
+    /// the top-left quadrant of the generated map mirrored into all four quadrants (4-fold symmetric, a start in every corner), checked
+    /// for connectivity, and <paramref name="note"/> says so. An explicit cell size always uses the legacy generator (plus the stand-in).
+    /// </summary>
+    private static MapData MultiMap(Biome biome, MapSize? sizeClass, int cells, int players, ulong seed, out string? note)
+    {
+        note = null;
+        MapData m = sizeClass is MapSize sc ? MapGenerator.Generate(new MapGenParams(biome, sc, players, seed)) : MapGenerator.Generate(cells, seed);
+        if (m.StartPositions.Count >= players) return m;
+        note = $"Note: the map generator returned {m.StartPositions.Count} starts for {players} players (M4-02 not merged yet), so these games used a stand-in: the generated map's top-left quadrant mirrored into all four corners. Biome is not used by the stand-in.";
+        for (ulong attempt = 0; attempt < 10; attempt++)
+        {
+            MapData src = attempt == 0 ? m : sizeClass is MapSize sc2 ? MapGenerator.Generate(new MapGenParams(biome, sc2, players, seed + attempt * 1000)) : MapGenerator.Generate(cells, seed + attempt * 1000);
+            MapData q = QuadMirror(src, players);
+            if (MapGenerator.IsConnected(q, Locomotion.Tracked)) return q;
+        }
+        throw new InvalidOperationException($"no connected {players}-start stand-in map from seed {seed}");
+    }
+
+    /// <summary>Mirrors the top-left quadrant into the other three (x, y and both), so every corner is a copy of the first start's.</summary>
+    private static MapData QuadMirror(MapData m, int players)
+    {
+        int w = m.Width, h = m.Height, n = w * h;
+        var tpl = new ushort[n]; var land = new LandType[n]; var hgt = new byte[n]; var ov = new OverlayKind[n]; var den = new byte[n];
+        for (int y = 0; y < h; y++)
+            for (int x = 0; x < w; x++)
+            {
+                int sx = x < (w + 1) / 2 ? x : w - 1 - x, sy = y < (h + 1) / 2 ? y : h - 1 - y;
+                int d = y * w + x, src = sy * w + sx;
+                tpl[d] = m.Template[src]; land[d] = m.Land[src]; hgt[d] = m.HeightLevel[src]; ov[d] = m.Overlay[src]; den[d] = m.Density[src];
+            }
+        CellCoord s0 = m.StartPositions[0];
+        var corners = new List<CellCoord> { s0, new(w - 1 - s0.X, h - 1 - s0.Y), new(w - 1 - s0.X, s0.Y), new(s0.X, h - 1 - s0.Y) };
+        return new MapData(m.Name + "_quad", m.Theater, w, h, tpl, land, hgt, ov, den, corners.GetRange(0, Math.Max(2, players)));
+    }
+
     private static void WriteMatrix(StringBuilder md, string title, List<int> tiers, IReadOnlyList<DifficultyProfile> profiles,
         Func<int, int, string> cell)
     {
@@ -207,7 +353,12 @@ public static class AiCommands
         SimRules rules = world!.Rules;
         MapData map = MapGenerator.Generate(size, (ulong)seed);
         if (swap == 1) { var st = new List<CellCoord>(map.StartPositions); st.Reverse(); map = new MapData(map.Name, map.Theater, map.Width, map.Height, map.Template.ToArray(), map.Land.ToArray(), map.HeightLevel.ToArray(), map.Overlay.ToArray(), map.Density.ToArray(), st); }
-        var sim = new Simulation(new SimSetup((ulong)seed, map, 2, rules, world.RulesHash));
+        Faction tfa = Faction.Authority, tfb = Faction.Authority;
+        if ((flags.TryGetValue("faction-a", out string? tfaArg) && !Enum.TryParse(tfaArg, true, out tfa))
+            || (flags.TryGetValue("faction-b", out string? tfbArg) && !Enum.TryParse(tfbArg, true, out tfb)))
+            return UsageError("--faction-a / --faction-b must be authority or directorate");
+        var sim = new Simulation(new SimSetup((ulong)seed, map, 2, rules, world.RulesHash)
+        { Factions = tfa == Faction.Authority && tfb == Faction.Authority ? null : [tfa, tfb] });
         SkirmishStart.Apply(sim);
         var driver = new AiDriver((ulong)seed);
         if (!AiRegistry.TryCreate(a!.AiId, a.Profile, out IAiPlayer? aiA) || !AiRegistry.TryCreate(b!.AiId, b.Profile, out IAiPlayer? aiB)) return UsageError("unknown AI");
@@ -238,7 +389,11 @@ public static class AiCommands
             }
             if (sim.Tick % 1200 == 0)
                 cashLog.Add($"{sim.Tick}: A {sim.Players.Cash[0]}+{sim.Players.Stored[0]} (income {income[0]}) pw {sim.Players.PowerOut[0]}/{sim.Players.PowerUse[0]} | B {sim.Players.Cash[1]}+{sim.Players.Stored[1]} (income {income[1]}) pw {sim.Players.PowerOut[1]}/{sim.Players.PowerUse[1]}");
-            if (trace > 0 && sim.Tick % trace == 0) Console.WriteLine(TraceLine(sim));
+            if (trace > 0 && sim.Tick % trace == 0)
+            {
+                Console.WriteLine(TraceLine(sim));
+                Console.WriteLine("      " + AiLine(sim, 0, aiA) + " | " + AiLine(sim, 1, aiB));
+            }
             if (sim.Tick % 4 != 0) continue;
             ScanFirst(sim, rules, firstOwned, health, ref firstDamage);
             bool aliveA = !sim.Players.Defeated[0], aliveB = !sim.Players.Defeated[1];
@@ -268,6 +423,18 @@ public static class AiCommands
                     q.Add($"{qv.Category}:[{string.Join(",", qv.Items.Select(i => (qv.Category is ProductionCategory.Vehicle ? rules.Vehicles[i.TypeIndex].Id : qv.Category is ProductionCategory.Infantry ? rules.Infantry[i.TypeIndex].Id : rules.Buildings[i.TypeIndex].Id) + (i.Stalled ? "(stalled)" : "") + i.ProgressPermille))}] ready {qv.ReadyTypeIndex}");
                 Console.WriteLine($"  P{p} hud: cash {hud.Cash}+{hud.Stored} power {hud.PowerOut}/{hud.PowerUse} queues {string.Join(" ", q)}; buildable {hud.Buildable.Count}");
             }
+        if (dump)
+        {
+            for (int i = 1; i < sim.Units.Capacity; i++)
+                if (sim.Units.Slots.IsIndexAlive(i))
+                    Console.WriteLine($"  unit P{sim.Units.Player[i]} {rules.Vehicles[sim.Units.TypeIndex[i]].Id} at {sim.Units.Position[i].X / 256},{sim.Units.Position[i].Y / 256} mission {sim.Units.Mission[i]} hp {sim.Units.Health[i]} goal {sim.CombatData.At(ActorKind.Vehicle, i).GuardPoint.X},{sim.CombatData.At(ActorKind.Vehicle, i).GuardPoint.Y} tgt {sim.CombatData.At(ActorKind.Vehicle, i).AttackTarget.Kind}:{sim.CombatData.At(ActorKind.Vehicle, i).AttackTarget.Id.Index} chase {sim.CombatData.At(ActorKind.Vehicle, i).ChaseCell.X},{sim.CombatData.At(ActorKind.Vehicle, i).ChaseCell.Y}");
+            for (int i = 1; i < sim.Infantry.Capacity; i++)
+                if (sim.Infantry.Slots.IsIndexAlive(i))
+                    Console.WriteLine($"  inf P{sim.Infantry.Player[i]} {rules.Infantry[sim.Infantry.TypeIndex[i]].Id} at {sim.Infantry.Position[i].X / 256},{sim.Infantry.Position[i].Y / 256} mission {sim.Infantry.Mission[i]} hp {sim.Infantry.Health[i]} goal {sim.CombatData.At(ActorKind.Infantry, i).GuardPoint.X},{sim.CombatData.At(ActorKind.Infantry, i).GuardPoint.Y} tgt {sim.CombatData.At(ActorKind.Infantry, i).AttackTarget.Kind}:{sim.CombatData.At(ActorKind.Infantry, i).AttackTarget.Id.Index}");
+            for (int i = 1; i < sim.Buildings.Capacity; i++)
+                if (sim.Buildings.Slots.IsIndexAlive(i))
+                    Console.WriteLine($"  bldg #{i} P{sim.Buildings.Player[i]} {rules.Buildings[sim.Buildings.TypeIndex[i]].Id} at {sim.Buildings.Cell[i].X},{sim.Buildings.Cell[i].Y} hp {sim.Buildings.Health[i]}");
+        }
         if (dump)
             for (int y = 0; y < 30; y++)
             {
@@ -308,6 +475,17 @@ public static class AiCommands
         return sb.ToString();
     }
 
+    /// <summary>M4-12: the Recruit framework's own counters for one slot (tier, target, waves, garrison, rescue) and the enemy
+    /// buildings its view knows.</summary>
+    private static string AiLine(Simulation sim, byte p, IAiPlayer? ai)
+    {
+        var known = new List<Rts.Sim.View.ViewActor>();
+        sim.ViewFor(p).CopyKnownEnemyBuildings(known);
+        if (ai is not RecruitAi r) return $"P{p} known {known.Count}";
+        return $"P{p} tier {sim.TierOf(p)} known {known.Count} target {r.TargetPlayer} waves {r.Waves} reinf {r.Reinforcements} stale {r.StaleWaves} " +
+               $"garrison {r.PeakGarrisoned}/{r.GarrisonOrders} sold {r.StructuresSold} up {r.UpgradesOrdered} air {r.AircraftOrdered} sw {r.SuperweaponsFired} [{r.MilitaryDebug}]";
+    }
+
     private static int FieldUnits(Simulation sim)
     {
         int n = 0;
@@ -346,6 +524,73 @@ public static class AiCommands
     {
         if (health.TryGetValue(key, out int prev) && hp < prev && firstDamage < 0) firstDamage = tick;
         health[key] = hp;
+    }
+
+    // ---- ai ffa (M4-12) ------------------------------------------------------------------------
+
+    private static readonly string[] FfaOptions = ["players", "tier", "seed", "rot", "ticks", "size", "trace", "faction"];
+
+    /// <summary>M4-12: one traced free-for-all game (the `ai matrix --players` setup for one seed and rotation), to find stalls.</summary>
+    private static int Ffa(string[] args)
+    {
+        if (!MatchSetup.TryParse(args, FfaOptions, out var flags, out var positional, out string? error) || positional.Count > 0)
+            return UsageError(error ?? $"unexpected argument '{positional[0]}'");
+        if (!Int(flags, "players", 4, out int players) || players < 2 || players > 4) return UsageError("--players must be 2..4");
+        if (!Int(flags, "tier", 3, out int tier) || tier < 1 || tier > 5) return UsageError("--tier must be 1..5");
+        if (!Int(flags, "seed", 1, out int seed) || !Int(flags, "rot", 0, out int rot) || !Int(flags, "ticks", 25000, out int ticks)
+            || !Int(flags, "size", 64, out int size) || !Int(flags, "trace", 2500, out int trace) || trace < 1) return UsageError("bad number");
+        string fac = flags.TryGetValue("faction", out string? fa) ? fa : "authority";
+        if (!LoadData(out var world, out var profiles)) return 1;
+        MapData map = MultiMap(Biome.RustBelt, null, size, players, (ulong)seed, out _);
+        int n = players;
+        var slotOf = new int[n];
+        var factions = new Faction[n];
+        var sides = new AiSide[n];
+        for (int i = 0; i < n; i++)
+        {
+            sides[i] = new AiSide(AiRegistry.TieredId, profiles![tier - 1], fac == "directorate" || (fac == "mixed" && (i & 1) == 1) ? Faction.Directorate : Faction.Authority);
+            slotOf[i] = (i + rot) % n;
+            factions[slotOf[i]] = sides[i].Faction;
+        }
+        ulong gameSeed = (ulong)(seed * 16 + rot);
+        var sim = new Simulation(new SimSetup(gameSeed, map, n, world!.Rules, world.RulesHash) { Factions = factions });
+        SkirmishStart.Apply(sim);
+        var driver = new AiDriver(gameSeed);
+        var ais = new IAiPlayer?[n];
+        for (int i = 0; i < n; i++)
+        {
+            AiRegistry.TryCreate(sides[i].AiId, sides[i].Profile, out IAiPlayer? created);
+            ais[slotOf[i]] = created;
+            driver.Add((byte)slotOf[i], created!, sides[i].Profile);
+        }
+        var pending = new List<Command>();
+        for (int t = 0; t < ticks; t++)
+        {
+            driver.Collect(sim, pending);
+            sim.Step(pending);
+            pending.RemoveAll(c => c.ExecTick < sim.Tick);
+            if (sim.Tick % trace != 0) continue;
+            Console.WriteLine($"t{sim.Tick}");
+            for (byte p = 0; p < n; p++)
+            {
+                int army = 0, bldg = 0;
+                for (int i = 1; i < sim.Units.Capacity; i++) if (sim.Units.Slots.IsIndexAlive(i) && sim.Units.Player[i] == p) army++;
+                for (int i = 1; i < sim.Infantry.Capacity; i++) if (sim.Infantry.Slots.IsIndexAlive(i) && sim.Infantry.Player[i] == p) army++;
+                for (int i = 1; i < sim.Buildings.Capacity; i++) if (sim.Buildings.Slots.IsIndexAlive(i) && sim.Buildings.Player[i] == p) bldg++;
+                Console.WriteLine($"   P{p}{(sim.Players.Defeated[p] ? " DEFEATED" : "")} mobiles {army} bldg {bldg} funds {sim.Funds(p)} {AiLine(sim, p, ais[p])}");
+            }
+        }
+        SimRules rules = world.Rules;
+        for (int i = 1; i < sim.Units.Capacity; i++)
+            if (sim.Units.Slots.IsIndexAlive(i))
+                Console.WriteLine($"  unit P{sim.Units.Player[i]} {rules.Vehicles[sim.Units.TypeIndex[i]].Id} at {sim.Units.Position[i].X / 256},{sim.Units.Position[i].Y / 256} {sim.Units.Mission[i]} hp {sim.Units.Health[i]} goal {sim.CombatData.At(ActorKind.Vehicle, i).GuardPoint}");
+        for (int i = 1; i < sim.Infantry.Capacity; i++)
+            if (sim.Infantry.Slots.IsIndexAlive(i))
+                Console.WriteLine($"  inf P{sim.Infantry.Player[i]} {rules.Infantry[sim.Infantry.TypeIndex[i]].Id} at {sim.Infantry.Position[i].X / 256},{sim.Infantry.Position[i].Y / 256} {sim.Infantry.Mission[i]} hp {sim.Infantry.Health[i]}");
+        for (int i = 1; i < sim.Buildings.Capacity; i++)
+            if (sim.Buildings.Slots.IsIndexAlive(i))
+                Console.WriteLine($"  bldg P{sim.Buildings.Player[i]} {rules.Buildings[sim.Buildings.TypeIndex[i]].Id} at {sim.Buildings.Cell[i].X},{sim.Buildings.Cell[i].Y} hp {sim.Buildings.Health[i]}");
+        return 0;
     }
 
     // ---- ai duel ------------------------------------------------------------------------------

@@ -105,6 +105,7 @@ public sealed class AiDriver
             {
                 Player = s.Player, PlayerCount = view.PlayerCount, GameSeed = _seed, Profile = s.Profile,
                 Rng = new AiRandom(_seed, s.Player), MapWidth = view.MapWidth, MapHeight = view.MapHeight, StartCell = start,
+                StartPositions = sim.Setup.Map.StartPositions,   // M4-12: public map data (scouting for 2-4 starts)
             });
         }
     }

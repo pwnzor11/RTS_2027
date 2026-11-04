@@ -32,4 +32,8 @@ public sealed class AiContext
 
     /// <summary>Centre of the player's own actors when the AI started.</summary>
     public required CellCoord StartCell { get; init; }
+
+    /// <summary>M4-12: every start position of the map (public map data, like the map size), in map order. Empty when the host does
+    /// not supply them; the AI then falls back to mirroring its own start.</summary>
+    public IReadOnlyList<CellCoord> StartPositions { get; init; } = Array.Empty<CellCoord>();
 }
