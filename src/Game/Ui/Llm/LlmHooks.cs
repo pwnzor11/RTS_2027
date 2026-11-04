@@ -29,8 +29,8 @@ public static class LlmHooks
         set => _defaults = value;
     }
 
-    /// <summary>Runs "Test connection". Default: returns "not wired yet" and makes no network call.</summary>
-    public static TestConnectionFunc TestConnection { get; set; } = (_, _, _) => Task.FromResult(LlmUiText.NotWired);
+    /// <summary>Runs "Test connection": one small real call through the provider (M5-05). Settable for tests.</summary>
+    public static TestConnectionFunc TestConnection { get; set; } = (config, key, ct) => LlmConnectionTest.RunAsync(config, key, ct);
 
     private static ISecretStore CreateDefaultStore() => OperatingSystem.IsWindows() ? CreateDpapi() : new MemorySecretStore();
 
