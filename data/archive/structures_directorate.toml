@@ -211,9 +211,9 @@ title = "Redoubt"
 subtitle = "Garrison strongpoint"
 field_note = "VOICE: \"THE REDOUBT IS HALF EARTH, HALF PROMISE. FIVE CITIZENS HOLD IT FOREVER.\""
 body = '''
-[DRAFT] A half-buried bunker of earth and shuttering with slits at ground level and no gun of its own. Conscripts crowd inside and fire from the dark, which the Annex finds fitting. The Directorate digs one at every road junction it plans to keep.
+A half-buried bunker of earth and shuttering with slits at ground level and no gun of its own. Conscripts crowd inside and fire from the dark, which the Annex finds fitting. The Directorate digs one at every road junction it plans to keep.
 '''
-# ASSUMED (M4-INT1) DRAFT for owner approval (D-086): text built from design 08 section 4; replace the open unlock with a mission id when known.
+# Approved by the owner 2026-11-04 (Q-38). Replace the open unlock with a mission id when known.
 unlock = "open"
 
 [[entry]]
@@ -224,7 +224,7 @@ title = "Committee Chamber"
 subtitle = "Tier 3 seat of government"
 field_note = "VOICE: \"THE COMMITTEE SITS. THE ANNEX LISTENS. THE THIRD AGE BEGINS.\""
 body = '''
-[DRAFT] A deep council chamber whose long table seats the Committee for its late-night sessions. Its completion opens the third tier of Directorate equipment and powers its research. Delegates are said to vote with their eyes on the door.
+A deep council chamber whose long table seats the Committee for its late-night sessions. Its completion opens the third tier of Directorate equipment and powers its research. Delegates are said to vote with their eyes on the door.
 '''
-# ASSUMED (M4-INT1) DRAFT for owner approval (D-086): text built from design 08 section 4; replace the open unlock with a mission id when known.
+# Approved by the owner 2026-11-04 (Q-38). Replace the open unlock with a mission id when known.
 unlock = "open"
