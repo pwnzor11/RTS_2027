@@ -57,4 +57,19 @@ internal sealed class RepairManager
             sink.Issue(CommandKind.Repair, b.Id, ActorKind.Building);
         }
     }
+    // ---- M3-21: AI save/restore. Appended at the end of the class; the format is private to the matching Restore. ----
+
+    /// <summary>M3-21: writes the repair watch (health and stuck count per unit) and the counter.</summary>
+    internal void Snapshot(BinaryWriter w)
+    {
+        AiSnapshot.WriteMap(w, _on, (bw, v) => { bw.Write(v.Health); bw.Write(v.Stuck); });
+        w.Write(Orders);
+    }
+
+    /// <summary>M3-21: reads what <see cref="Snapshot"/> wrote.</summary>
+    internal void Restore(BinaryReader r)
+    {
+        AiSnapshot.ReadMap(r, _on, br => (br.ReadInt32(), br.ReadInt32()));
+        Orders = r.ReadInt32();
+    }
 }

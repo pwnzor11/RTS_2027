@@ -32,4 +32,11 @@ internal sealed class RetreatManager
     }
 
     private static bool Weak(ViewActor a, int pct) => !a.Underground && a.MaxHealth > 0 && a.Health * 100 < a.MaxHealth * pct;
+    // ---- M3-21: AI save/restore. Appended at the end of the class; the format is private to the matching Restore. ----
+
+    /// <summary>M3-21: writes the counter.</summary>
+    internal void Snapshot(BinaryWriter w) => w.Write(Count);
+
+    /// <summary>M3-21: reads what <see cref="Snapshot"/> wrote.</summary>
+    internal void Restore(BinaryReader r) => Count = r.ReadInt32();
 }

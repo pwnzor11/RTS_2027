@@ -80,4 +80,18 @@ internal sealed class ScoutManager
         }
         return best < 0 ? null : k.Army[best];
     }
+    // ---- M3-21: AI save/restore. Appended at the end of the class; the format is private to the matching Restore. ----
+
+    /// <summary>M3-21: writes the route position, the pick timer and the counters (the route itself is rebuilt by Start).</summary>
+    internal void Snapshot(BinaryWriter w)
+    {
+        w.Write(_idx); w.Write(_nextPick); w.Write(_had); w.Write(Sent); w.Write(Visited);
+    }
+
+    /// <summary>M3-21: reads what <see cref="Snapshot"/> wrote.</summary>
+    internal void Restore(BinaryReader r)
+    {
+        _idx = r.ReadInt32(); _nextPick = r.ReadInt32(); _had = r.ReadBoolean(); Sent = r.ReadInt32(); Visited = r.ReadInt32();
+        if (_route.Count > 0) _idx = Math.Clamp(_idx, 0, _route.Count - 1);
+    }
 }

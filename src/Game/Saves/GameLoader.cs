@@ -13,8 +13,11 @@ namespace Rts.Game.Saves;
 /// <summary>Rebuilds a game around a saved simulation: rules and map are loaded, the sim and script state restored, and the AI attached afresh.</summary>
 public static class GameLoader
 {
-    /// <summary>What the player is told when a game is loaded: the AI's memory is not saved.</summary>
+    /// <summary>What the player is told when an older save is loaded: it holds no AI memory, so the computer players start afresh.</summary>
     public const string AiNote = "The computer players start thinking afresh from the saved position.";
+
+    /// <summary>What the player is told when the save carried the computer players' memory (M3-21).</summary>
+    public const string AiResumedNote = "The computer players carry on from where they were.";
 
     /// <summary>The message shown when the rules changed since a save (<paramref name="what"/> = "save") or replay ("replay") was made.</summary>
     public static string RulesMismatchMessage(ulong saved, ulong current, string what = "save") =>
@@ -62,7 +65,7 @@ public static class GameLoader
         SimSetup setup = SkirmishGame.MakeSetup(rules, settings, map, meta);
         Simulation sim = Simulation.Load(input, setup);
         AiDriver? ai = BuildAi(rulesDir, header.Ai);
-        return new LoadedGame(header, sim, map, ai, null, rulesDir, header.Ai.Count > 0 ? AiNote : "");
+        return new LoadedGame(header, sim, map, ai, null, rulesDir, NoteFor(header));
     }
 
     private static LoadedGame LoadMission(Stream input, GameSaveHeader header, RuleSet rules, string rulesDir, string dataDir)
@@ -78,8 +81,11 @@ public static class GameLoader
         MapData map = MapFile.Load(Path.Combine(dataDir, "maps", def.MapFile));
         Simulation sim = Simulation.Load(input, MissionSession.MakeSetup(def, map, rules, host));
         AiDriver? ai = BuildAi(rulesDir, header.Ai);
-        return new LoadedGame(header, sim, map, ai, host, rulesDir, header.Ai.Count > 0 ? AiNote : "");
+        return new LoadedGame(header, sim, map, ai, host, rulesDir, NoteFor(header));
     }
+
+    private static string NoteFor(GameSaveHeader header) =>
+        header.Ai.Count == 0 ? "" : header.Ai.All(a => a.State is not null) ? AiResumedNote : AiNote;
 
     /// <summary>The map a save names (<c>file:NAME</c> or <c>user:PATH</c>, <c>gen:BIOME:SIZE:PLAYERS:SEED</c>, or the old <c>generated:SIZE:SEED</c>).</summary>
     public static MapData ResolveMap(string mapId, string dataDir) => ResolveMapWithMeta(mapId, dataDir, null).Map;
@@ -147,6 +153,7 @@ public static class GameLoader
             if (!AiRegistry.TryCreate(slot.AiId, profile, out IAiPlayer? ai))
                 throw new SaveLoadException($"This save uses the computer player '{slot.AiId}', which this game does not have.");
             driver.Add(slot.Slot, ai, profile);
+            driver.RestoreState(slot.Slot, slot.State);   // M3-21: older saves carry none and the AI starts fresh
         }
         return driver;
     }

@@ -193,6 +193,40 @@ public static class TelegraphRenderer
         }
     }
 
+    /// <summary>
+    /// M3-21: the Sunrise blast area while the player is aiming (a ground telegraph). The blast reaches <paramref name="blastRadius"/> cells
+    /// from the target in every direction (Chebyshev, so the true area is a square), with full damage out to half that: a circle through
+    /// the edge of the square, an inner circle at half the radius and the square itself, all centred on the target cell.
+    /// </summary>
+    /// <param name="batch">Batch in progress.</param>
+    /// <param name="pixel">1x1 white texture.</param>
+    /// <param name="target">The cell under the cursor.</param>
+    /// <param name="blastRadius">Blast radius in cells (<see cref="Rts.Sim.Core.SuperweaponView.BlastRadius"/>); 0 or less draws nothing.</param>
+    /// <param name="camera">View.</param>
+    /// <param name="tick">Snapshot tick (the outer ring pulses).</param>
+    public static void DrawBlastRadius(SpriteBatch batch, Texture2D pixel, CellCoord target, int blastRadius, Camera camera, int tick)
+    {
+        if (blastRadius <= 0) return;
+        Vector2 centre = camera.ScreenFromWorld(Camera.CentreOf(target));
+        float outer = BlastCircleCells(blastRadius) * Camera.CellPx * camera.Zoom;
+        float inner = BlastCircleCells(blastRadius / 2) * Camera.CellPx * camera.Zoom;
+        int thick = camera.Zoom < 1f ? 1 : 2;
+        byte pulse = (byte)(150 + 80 * Math.Abs((Math.Max(0, tick) % 20) - 10) / 10);
+        float left = (target.X - blastRadius) * Camera.CellPx, top = (target.Y - blastRadius) * Camera.CellPx;
+        float side = (blastRadius * 2 + 1) * Camera.CellPx;
+        Rectangle square = camera.ScreenRect(left, top, left + side, top + side);
+        Shapes.Fill(batch, pixel, square, Shapes.Alpha(BlastColour, 28));
+        Shapes.DashedOutline(batch, pixel, square, Shapes.Alpha(BlastColour, 140), thick, 8, 6);
+        Shapes.Circle(batch, pixel, centre, outer, Shapes.Alpha(BlastColour, pulse), thick, 96);
+        if (blastRadius / 2 > 0) Shapes.Circle(batch, pixel, centre, inner, Shapes.Alpha(BlastCoreColour, 220), thick, 64);
+    }
+
+    /// <summary>Radius in cells of the circle drawn for a blast radius: through the outer edge of the blast's outermost cell (radius + 0.5).</summary>
+    public static float BlastCircleCells(int blastRadius) => blastRadius + 0.5f;
+
+    private static readonly Color BlastColour = new(0xFF, 0x70, 0x30);
+    private static readonly Color BlastCoreColour = new(0xFF, 0xE0, 0x60);
+
     private static void DrawCracks(SpriteBatch batch, Texture2D pixel, TelegraphView t, Vector2 centre, int ring, Camera camera)
     {
         int count = CrackCount(t.Kind, t.TicksLeft);

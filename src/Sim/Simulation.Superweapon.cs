@@ -162,7 +162,8 @@ public sealed partial class Simulation
             int charge = Math.Min(_effects.BuildingCharge[i], bt.SuperweaponChargeTicks);
             bool ready = charge >= bt.SuperweaponChargeTicks;
             (list ??= new List<SuperweaponView>()).Add(new SuperweaponView(_buildings.Slots.IdOf(i), _buildings.TypeIndex[i], bt.Superweapon,
-                charge, bt.SuperweaponChargeTicks, ready, !ready && rate == 0, bt.SuperweaponEntranceRange));
+                charge, bt.SuperweaponChargeTicks, ready, !ready && rate == 0, bt.SuperweaponEntranceRange)
+                { BlastRadius = SuperweaponBlastRadius, Owner = player });
         }
         return list ?? (IReadOnlyList<SuperweaponView>)Array.Empty<SuperweaponView>();
     }

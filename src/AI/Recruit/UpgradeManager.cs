@@ -36,4 +36,11 @@ internal sealed class UpgradeManager
         Ordered++;
         sink.Build(ProductionCategory.Upgrade, best);
     }
+    // ---- M3-21: AI save/restore. Appended at the end of the class; the format is private to the matching Restore. ----
+
+    /// <summary>M3-21: writes the order timer and the counter.</summary>
+    internal void Snapshot(BinaryWriter w) { w.Write(_last); w.Write(Ordered); }
+
+    /// <summary>M3-21: reads what <see cref="Snapshot"/> wrote.</summary>
+    internal void Restore(BinaryReader r) { _last = r.ReadInt32(); Ordered = r.ReadInt32(); }
 }

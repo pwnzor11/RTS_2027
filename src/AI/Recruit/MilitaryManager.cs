@@ -544,4 +544,49 @@ internal sealed class MilitaryManager
     }
 
     private static int Chebyshev(CellCoord a, CellCoord b) => Math.Max(Math.Abs(a.X - b.X), Math.Abs(a.Y - b.Y));
+    // ---- M3-21: AI save/restore. Appended at the end of the class; the format is private to the matching Restore. ----
+
+    /// <summary>M3-21: writes the wave state: phase, target player, roster and squads, staging cells, thresholds, route position, avoid list,
+    /// stuck watchdog and the counters. The scout route and the home cell are rebuilt by Start from the saved start cell.</summary>
+    internal void Snapshot(BinaryWriter w)
+    {
+        w.Write(_nextThreshold); w.Write(_nextInterval); w.Write(_bias);
+        AiSnapshot.WriteMap(w, _lastHealth, (bw, v) => bw.Write(v));
+        AiSnapshot.WriteKeys(w, _roster);
+        w.Write(_scoutIdx); w.Write((byte)_phase);
+        w.Write(_lastWave); w.Write(_stageSince); w.Write(_launchSize);
+        AiSnapshot.WriteCell(w, _stage); AiSnapshot.WriteCell(w, _stageB);
+        AiSnapshot.WriteKeys(w, _squadB);
+        w.Write(_prong); w.Write(_launchHealth); w.Write(_cooldownUntil);
+        w.Write(_targetPlayer); w.Write(_targetSince);
+        w.Write(_progressTick); w.Write(_progressScore);
+        w.Write(_avoid.Count);
+        foreach (var a in _avoid) { AiSnapshot.WriteCell(w, a.Cell); w.Write(a.Until); }
+        AiSnapshot.WriteCell(w, _lastGoal);
+        AiSnapshot.WriteMap(w, _still, (bw, v) => { AiSnapshot.WriteCell(bw, v.Cell); bw.Write(v.Since); bw.Write(v.Times); });
+        w.Write(GroupRetreats); w.Write(Prongs); w.Write(Waves); w.Write(Defences); w.Write(Reinforcements); w.Write(StaleWaves); w.Write(Unstuck);
+    }
+
+    /// <summary>M3-21: reads what <see cref="Snapshot"/> wrote. Call after Start.</summary>
+    internal void Restore(BinaryReader r)
+    {
+        _nextThreshold = r.ReadInt32(); _nextInterval = r.ReadInt32(); _bias = r.ReadInt32();
+        AiSnapshot.ReadMap(r, _lastHealth, br => br.ReadInt32());
+        AiSnapshot.ReadKeys(r, _roster);
+        _scoutIdx = r.ReadInt32(); _phase = (Phase)r.ReadByte();
+        _lastWave = r.ReadInt32(); _stageSince = r.ReadInt32(); _launchSize = r.ReadInt32();
+        _stage = AiSnapshot.ReadCell(r); _stageB = AiSnapshot.ReadCell(r);
+        AiSnapshot.ReadKeys(r, _squadB);
+        _prong = r.ReadBoolean(); _launchHealth = r.ReadInt64(); _cooldownUntil = r.ReadInt32();
+        _targetPlayer = r.ReadInt32(); _targetSince = r.ReadInt32();
+        _progressTick = r.ReadInt32(); _progressScore = r.ReadInt32();
+        int n = AiSnapshot.Count(r);
+        _avoid.Clear();
+        for (int i = 0; i < n; i++) _avoid.Add((AiSnapshot.ReadCell(r), r.ReadInt32()));
+        _lastGoal = AiSnapshot.ReadCell(r);
+        AiSnapshot.ReadMap(r, _still, br => (AiSnapshot.ReadCell(br), br.ReadInt32(), br.ReadInt32()));
+        GroupRetreats = r.ReadInt32(); Prongs = r.ReadInt32(); Waves = r.ReadInt32(); Defences = r.ReadInt32(); Reinforcements = r.ReadInt32();
+        StaleWaves = r.ReadInt32(); Unstuck = r.ReadInt32();
+        if (_scoutRoute.Count > 0) _scoutIdx = Math.Clamp(_scoutIdx, 0, _scoutRoute.Count - 1);
+    }
 }

@@ -115,4 +115,61 @@ public sealed partial class Simulation
         return CanPlace(player, buildingType, topLeft) == PlacementResult.Ok
             && WithinBuildRadius(player, Setup.Rules.Buildings[buildingType], topLeft);
     }
+
+    // ---- M3-21: view data for the renderer (read-only; no sim state, no behaviour change) ----------------------------------------
+    //  - Turret facing and the dive flag belong to units the snapshot already lists, so they follow its fog rule (enemies only while seen).
+    //  - A gate has no stored open/closed state (D-076): it is "open" while a unit of its owner's team stands in its footprint. A unit the
+    //    viewer cannot see (stealthed / burrowed enemy) does not count for a gate the viewer is shown.
+    //  - Superweapons: only the viewer's own buildings (nobody is told that another player's superweapon charges); Viewer -1 lists all.
+
+    /// <summary>Turret facing of a vehicle whose type has a turret (the hull facing until it first aims), else null.</summary>
+    internal byte? TurretFacingOf(ActorKind kind, int i)
+    {
+        if (kind != ActorKind.Vehicle) return null;
+        VehicleType vt = RulesOf(_units.Player[i]).Vehicles[_units.TypeIndex[i]];
+        if (!vt.HasTurret) return null;
+        ref Combat.CombatEntry e = ref _combat.At(kind, i);
+        return e.TurretInit ? e.TurretFacing : _units.Facing[i];
+    }
+
+    /// <summary>True while the actor is in the burrower's dive animation.</summary>
+    internal bool IsDiving(ActorKind kind, int i) => _tunnels.LayerOf(kind, i) == ActorLayer.Diving;
+
+    /// <summary>True if <paramref name="building"/> (a slot index) is a gate with a surface unit of the owner's team in its footprint,
+    /// as <paramref name="viewer"/> (-1 = omniscient) may know it.</summary>
+    internal bool IsGateOpenNow(int building, int viewer)
+    {
+        BuildingType bt = BuildingTypeAt(building);
+        CellCoord tl = _buildings.Cell[building];
+        byte owner = _buildings.Player[building];
+        for (int k = 0; k < LiveKinds; k++)
+        {
+            var kind = (ActorKind)k;
+            MobileStore? store = StoreOf(kind);
+            if (store == null) continue;
+            for (int i = 1; i < store.Capacity; i++)
+            {
+                if (!store.Slots.IsIndexAlive(i) || !IsFriendly(owner, store.Player[i])) continue;
+                CellCoord c = store.Position[i].ToCell();
+                if (c.X < tl.X || c.Y < tl.Y || c.X >= tl.X + bt.FootprintW || c.Y >= tl.Y + bt.FootprintH) continue;
+                if (IsUnderground(kind, i)) continue;
+                if (viewer >= 0 && !IsFriendly((byte)viewer, store.Player[i]) && IsHiddenFrom((byte)viewer, kind, i)) continue;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /// <summary>The superweapon list for a snapshot: the viewer's own, or every player's (in slot order) for the omniscient view.</summary>
+    internal IReadOnlyList<SuperweaponView> SuperweaponsFor(int viewer)
+    {
+        if (viewer >= 0) return SuperweaponViews((byte)viewer);
+        List<SuperweaponView>? all = null;
+        for (int p = 0; p < Setup.PlayerCount; p++)
+        {
+            IReadOnlyList<SuperweaponView> one = SuperweaponViews((byte)p);
+            if (one.Count > 0) (all ??= new List<SuperweaponView>()).AddRange(one);
+        }
+        return all ?? (IReadOnlyList<SuperweaponView>)Array.Empty<SuperweaponView>();
+    }
 }

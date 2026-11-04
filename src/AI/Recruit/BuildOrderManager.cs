@@ -134,4 +134,22 @@ internal sealed class BuildOrderManager
         sink.Place(type, cell);
         Placed++;
     }
+    // ---- M3-21: AI save/restore. Appended at the end of the class; the format is private to the matching Restore. ----
+
+    /// <summary>M3-21: writes the build order (including what the tier planner appended) and the placement counters.</summary>
+    internal void Snapshot(BinaryWriter w)
+    {
+        w.Write(_order.Count);
+        foreach (string s in _order) w.Write(s);
+        w.Write(Placed); w.Write(Unplaceable); w.Write(PendingCost);
+    }
+
+    /// <summary>M3-21: reads what <see cref="Snapshot"/> wrote. Types are resolved again on the next Think.</summary>
+    internal void Restore(BinaryReader r)
+    {
+        int n = AiSnapshot.Count(r);
+        _order.Clear(); _orderTypes.Clear();
+        for (int i = 0; i < n; i++) _order.Add(r.ReadString());
+        Placed = r.ReadInt32(); Unplaceable = r.ReadInt32(); PendingCost = r.ReadInt32();
+    }
 }

@@ -20,6 +20,13 @@ public static class SpriteStates
     /// <summary>Building state shown below half health, when the manifest has one.</summary>
     public const string Damaged = "damaged";
 
+    /// <summary>
+    /// Building state of an open gate (M3-21), when the manifest has one. The art for it is still to come: a gate without this state
+    /// draws its closed sprite with a placeholder overlay (see <see cref="BuildingRenderer"/>), and the day the state appears in the
+    /// manifest the frames are used with no code change.
+    /// </summary>
+    public const string Open = "open";
+
     /// <summary>Infantry state while moving, when the manifest has one.</summary>
     public const string Walk = "walk";
 
@@ -38,8 +45,9 @@ public static class SpriteStates
     /// <param name="maxHealth">Maximum health from the rules. Zero or less disables the damaged state.</param>
     /// <param name="ghost">Whether this is a last-seen ghost.</param>
     /// <param name="tick">Simulation tick, used to loop the resting state.</param>
+    /// <param name="open">M3-21: the building is an open gate. Shows the <c>open</c> state when the manifest has one (after the build window).</param>
     /// <returns>The sheet frame index.</returns>
-    public static int BuildingFrame(SpriteManifest manifest, int ageTicks, int health, int maxHealth, bool ghost, int tick)
+    public static int BuildingFrame(SpriteManifest manifest, int ageTicks, int health, int maxHealth, bool ghost, int tick, bool open = false)
     {
         ArgumentNullException.ThrowIfNull(manifest);
         if (!ghost && HasState(manifest, Build))
@@ -52,6 +60,8 @@ public static class SpriteStates
                 return build.First + step;
             }
         }
+
+        if (open && !ghost && HasState(manifest, Open)) return manifest.FrameIndex(Open, 0, Math.Max(0, tick));
 
         bool damaged = !ghost && maxHealth > 0 && health * DamagedDivisor < maxHealth;
         string state = damaged && HasState(manifest, Damaged) ? Damaged : Idle;

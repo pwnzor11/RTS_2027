@@ -112,4 +112,27 @@ internal sealed class GarrisonManager
     }
 
     private static int Cheb(CellCoord a, CellCoord b) => Math.Max(Math.Abs(a.X - b.X), Math.Abs(a.Y - b.Y));
+    // ---- M3-21: AI save/restore. Appended at the end of the class; the format is private to the matching Restore. ----
+
+    /// <summary>M3-21: writes the walking-in and unloaded memory and the counters.</summary>
+    internal void Snapshot(BinaryWriter w)
+    {
+        w.Write(_walking.Count);
+        foreach (var e in _walking) { w.Write(e.Soldier); AiSnapshot.WriteId(w, e.Building); w.Write(e.Tick); }
+        w.Write(_unloaded.Count);
+        foreach (var e in _unloaded) { AiSnapshot.WriteId(w, e.Building); w.Write(e.Tick); }
+        w.Write(Orders); w.Write(PeakOccupants); w.Write(Unloads);
+    }
+
+    /// <summary>M3-21: reads what <see cref="Snapshot"/> wrote.</summary>
+    internal void Restore(BinaryReader r)
+    {
+        int n = AiSnapshot.Count(r);
+        _walking.Clear();
+        for (int i = 0; i < n; i++) _walking.Add((r.ReadUInt64(), AiSnapshot.ReadId(r), r.ReadInt32()));
+        n = AiSnapshot.Count(r);
+        _unloaded.Clear();
+        for (int i = 0; i < n; i++) _unloaded.Add((AiSnapshot.ReadId(r), r.ReadInt32()));
+        Orders = r.ReadInt32(); PeakOccupants = r.ReadInt32(); Unloads = r.ReadInt32();
+    }
 }

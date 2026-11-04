@@ -280,4 +280,29 @@ internal sealed class DirectorateTactics : IFactionTactics
     private static ulong Key(ViewActor a) => ((ulong)a.Id.Index << 16) | a.Id.Generation | ((ulong)(int)a.Kind << 48);
     private static int Cheb(CellCoord a, CellCoord b) => Math.Max(Math.Abs(a.X - b.X), Math.Abs(a.Y - b.Y));
     private static long Dist(CellCoord a, CellCoord b) => Math.Max(Math.Abs(a.X - b.X), Math.Abs(a.Y - b.Y));
+    // ---- M3-21: AI save/restore. Appended at the end of the class; the format is private to the matching Restore. ----
+
+    /// <summary>M3-21: writes the Bore and field memory, the order memory and the counters.</summary>
+    internal void Snapshot(BinaryWriter w)
+    {
+        w.Write(_dugOrders); w.Write(_boresBought); w.Write(_lastBoreBuy); w.Write(_tick);
+        AiSnapshot.WriteCell(w, _field); w.Write(_haveField);
+        AiSnapshot.WriteMap(w, _stood, (bw, v) => { AiSnapshot.WriteCell(bw, v.Cell); bw.Write(v.Since); });
+        AiSnapshot.WriteMap(w, _entered, (bw, v) => bw.Write(v));
+        AiSnapshot.WriteKeys(w, _deployOrdered);
+        AiSnapshot.WriteId(w, _fwdId); AiSnapshot.WriteCell(w, _fwdExit); w.Write(_fwdType);
+        w.Write(Digs); w.Write(Transits); w.Write(RadiationMoves);
+    }
+
+    /// <summary>M3-21: reads what <see cref="Snapshot"/> wrote.</summary>
+    internal void Restore(BinaryReader r)
+    {
+        _dugOrders = r.ReadInt32(); _boresBought = r.ReadInt32(); _lastBoreBuy = r.ReadInt32(); _tick = r.ReadInt32();
+        _field = AiSnapshot.ReadCell(r); _haveField = r.ReadBoolean();
+        AiSnapshot.ReadMap(r, _stood, br => (AiSnapshot.ReadCell(br), br.ReadInt32()));
+        AiSnapshot.ReadMap(r, _entered, br => br.ReadInt32());
+        AiSnapshot.ReadKeys(r, _deployOrdered);
+        _fwdId = AiSnapshot.ReadId(r); _fwdExit = AiSnapshot.ReadCell(r); _fwdType = r.ReadInt32();
+        Digs = r.ReadInt32(); Transits = r.ReadInt32(); RadiationMoves = r.ReadInt32();
+    }
 }

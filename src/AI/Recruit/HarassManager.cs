@@ -109,4 +109,17 @@ internal sealed class HarassManager
         }
         return found;
     }
+    // ---- M3-21: AI save/restore. Appended at the end of the class; the format is private to the matching Restore. ----
+
+    /// <summary>M3-21: writes the timers and counters.</summary>
+    internal void Snapshot(BinaryWriter w)
+    {
+        w.Write(_nextPick); w.Write(_lastCount); w.Write(Parties); w.Write(Strikes);
+    }
+
+    /// <summary>M3-21: reads what <see cref="Snapshot"/> wrote.</summary>
+    internal void Restore(BinaryReader r)
+    {
+        _nextPick = r.ReadInt32(); _lastCount = r.ReadInt32(); Parties = r.ReadInt32(); Strikes = r.ReadInt32();
+    }
 }
