@@ -6,7 +6,7 @@
 # LAYER turret: the turret only, 16 facings = TURRET facing (independent of the hull). The turret pivot sits at the
 # frame origin: draw this frame with its origin on the ground point under the pivot, i.e. at the hull origin plus
 # the pivot offset rotated by the HULL facing (pivot_x east / pivot_y forward, in cells at hull facing 0; forward
-# is up-screen at 40 deg elevation, so screen dy = -(forward * 64 * sin 40) - height * 64 * cos 40). No shadow here:
+# is up-screen at 40 deg elevation, so screen dy = -(forward * 64 * sin 40); no height term: the turret keeps its height inside the frame, pivot_z is informational). No shadow here:
 # the body sheet's shadow already contains the turret.
 
 file = "dir_agitprop_turret.png"
