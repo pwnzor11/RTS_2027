@@ -35,9 +35,10 @@ PAL_DIR = [OUTLINE] + [hx(c) for c in (
     "#44403B #5C5750 #766F66 #928A7E #ADA597 "      # brutalist concrete, warm greys
     "#C9BFA6 #E3DAC2 #F6F0DE "                      # bone / stencil white
     "#3E1412 #63201A #8E2E22 #B8402F #D9664C "      # oxide red ramp (fixed body red, not house colour)
-    "#3A3F44 #555B61 #737A80 #979EA3 "              # steel (shared with Authority)
-    "#5E3420 #B07445 "                              # rust (shared)
-    "#C9A640 #FFE79A").split()]                     # lamp / brass (shared)
+    "#3A3F44 #555B61 "                              # dark steel (no light steel: it pulled warm greys cold)
+    "#5E3420 "                                      # rust
+    "#4A3829 #6B523B #8F7150 #B39470 "              # dusty umber / ash-brown ramp (conscript coat)
+    "#C9A640").split()]                             # brass / lamp
 assert len(PAL_DIR) == 24
 PALETTE32_DIR = PAL_DIR + HOUSE
 
