@@ -60,7 +60,7 @@ def load_layers(wd, f, cal):
     return dict(rgb=c[..., :3], a=a, house=house, idx=idx, shadow=sh)
 
 
-def frame_b(wd, f, cal, w, h, pal=None):
+def frame_b(wd, f, cal, w, h, pal=None, shadow=True):
     pal = C.PAL if pal is None else pal
     L = load_layers(wd, f, cal)
     base, A, hfrac, hidx, sh = C.downscale_layers(L, h)   # k = (h*SS)//h = SS
@@ -84,8 +84,9 @@ def frame_b(wd, f, cal, w, h, pal=None):
     out[edge] = (*C.OUTLINE, 255)
     yy, xx = np.mgrid[0:h, 0:w]
     chk = ((xx + yy) % 2 == 0)
-    shadow = (~solid) & (~edge) & ((sh > 0.55) | ((sh > 0.25) & chk))
-    out[shadow] = (*pal[1], 255)
+    if shadow:
+        shadowm = (~solid) & (~edge) & ((sh > 0.55) | ((sh > 0.25) & chk))
+        out[shadowm] = (*pal[1], 255)
     return Image.fromarray(out, "RGBA")
 
 
