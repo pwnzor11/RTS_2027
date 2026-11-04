@@ -12,6 +12,7 @@ using Rts.Game.Saves;
 using Rts.Game.Sandbox;
 using Rts.Game.Sprites;
 using Rts.Game.Ui;
+using Rts.Game.Ui.Llm;
 using Rts.Game.Ui.Sidebar;
 using Rts.Game.Ui.Spectator;
 using Rts.Game.Ui.Superweapon;
@@ -73,6 +74,7 @@ public sealed class GameScreen : IScreen
     private readonly OverlayToggles _overlays = new();
     private readonly Camera _camera = new();
     private readonly DebugConsole? _console; // null with --demo
+    private readonly CommanderChatPanel _chat = new(); // M5-07: commander chat (Enter to talk)
     private readonly List<RenderUnit> _renderUnits = new();
     private readonly RectRegion _hudRegion = new(Rectangle.Empty);
     private readonly RectRegion _helpRegion = new(Rectangle.Empty);
@@ -331,6 +333,8 @@ public sealed class GameScreen : IScreen
             }
         }
 
+        bool chatTyping = _chat.Update(input, _sim?.Game, _sim?.Sim.Tick ?? 0, _s.Settings.LlmChatOn, _console is { IsOpen: true });
+        if (chatTyping) input.ConsumeKeyboard();
         bool typing = _console is { IsOpen: true };
         if (typing) input.ConsumeKeyboard();
 
@@ -440,6 +444,8 @@ public sealed class GameScreen : IScreen
         DrawSelectedBuilding(sb, snapshot);
         _sidebar?.DrawMapOverlay(sb, _s.Pixel, _camera, snapshot);
         DrawHud(sb, snapshot);
+        string[] chatHelp = _spectatorMode ? SpectatorHelpLines : _skirmishMode ? SkirmishHelpLines : HelpLines;
+        _chat.Draw(sb, _s.Pixel, _s.UiScale, new Point(8, _s.Viewport.Height - Hud.HeightOf(chatHelp.Length, _s.UiScale) - 12), _s.Viewport.Width - 16);
         _sidebar?.Draw(sb, _s.Pixel, snapshot);
         DrawSuperweapon(sb, snapshot.Tick);
         DrawUpgradeButton(sb);
