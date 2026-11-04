@@ -13,7 +13,7 @@ namespace Rts.Game.Ui.Llm;
 
 /// <summary>
 /// The commander chat panel (M5-07, design 09 §5): bottom-left above the key help. Each commander line is a speaker header in the
-/// player's colour, then the text wrapped to the panel width; lines the player typed read "You → name:"; system notices are dimmed.
+/// player's colour, then the text wrapped to the panel width; lines the player typed read "You -> name:"; system notices are dimmed.
 /// Enter opens the input, Enter sends it through <see cref="ICommanderChannel.Hear"/>, Esc cancels. Hidden with no commanders or
 /// with the chat setting off.
 /// </summary>

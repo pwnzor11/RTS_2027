@@ -12,7 +12,7 @@ public static class CommanderChatText
     public const string OpenHint = "Enter: talk to your commander";
 
     /// <summary>Prefix of a line the player typed (followed by the commander's name).</summary>
-    public const string YouTo = "You → ";
+    public const string YouTo = "You -> ";   // ASCII: the UI font has no arrow glyph
 
     /// <summary>Input prompt.</summary>
     public const string Prompt = "> ";
