@@ -54,7 +54,7 @@ phase = 2
 [[fx]]
 state = "damaged"
 kind = "fire_small"
-x = 171
+x = 160
 y = 133
 phase = 6
 
@@ -68,6 +68,6 @@ phase = 0
 [[fx]]
 state = "damaged"
 kind = "smoke_plume"
-x = 171
+x = 160
 y = 131
 phase = 5

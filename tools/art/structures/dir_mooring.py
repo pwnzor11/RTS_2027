@@ -43,7 +43,7 @@ MAST_R = 0.42
 TOP_Z = 10.2
 RING_Z = 7.8
 RING_R = 1.55
-STACK = (4.0, 3.4)
+STACK = (3.4, 3.4)
 
 
 def anchor(x, y, z):
