@@ -163,6 +163,7 @@ public sealed partial class Simulation
         _units.Facing[id.Index] = CentreFacing(cell);
         OnActorSpawned(ActorKind.Vehicle, id.Index);
         OnM3MobileSpawned(ActorKind.Vehicle, id.Index);
+        _emittersDirty = true;   // M3-INT
         if (!_inStep) _setupLog.Add(new SetupEntry(ActorKind.Vehicle, player, vehicleTypeIndex, cell, 0));
         return id;
     }
@@ -185,6 +186,7 @@ public sealed partial class Simulation
         _infantry.Facing[id.Index] = CentreFacing(cell);
         OnActorSpawned(ActorKind.Infantry, id.Index);
         OnM3MobileSpawned(ActorKind.Infantry, id.Index);
+        _emittersDirty = true;   // M3-INT
         if (!_inStep) _setupLog.Add(new SetupEntry(ActorKind.Infantry, player, infantryTypeIndex, cell, subSlot));
         return id;
     }
@@ -524,6 +526,7 @@ public sealed partial class Simulation
                 _map.SetBuilding(new CellCoord(topLeft.X + x, topLeft.Y + y), id);
         if (!_inStep) _setupLog.Add(new SetupEntry(ActorKind.Building, player, buildingType, topLeft, 0));
         OnM3BuildingPlaced(id.Index);
+        _emittersDirty = true;   // M3-INT
         return id;
     }
 
@@ -809,6 +812,7 @@ public sealed partial class Simulation
         catch (EndOfStreamException) { throw new InvalidDataException("Truncated save."); }
         Tick = state.Tick;
         _rng = state.Rng;
+        _emittersDirty = true;   // M3-INT
         return this;
     }
 }

@@ -79,6 +79,7 @@ public sealed partial class Simulation
             if (target < 0 || target >= types.Count || _buildings.Health[b] <= 0) continue;
             BuildingType from = types[_buildings.TypeIndex[b]], to = types[target];
             _buildings.Health[b] = (int)Math.Max(1L, (long)_buildings.Health[b] * to.MaxHealth / Math.Max(1, from.MaxHealth));
+            _emittersDirty = true;   // M3-INT
             _buildings.TypeIndex[b] = target;   // same footprint (checked by ApplyUpgrade): the map needs no change
         }
     }
