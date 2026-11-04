@@ -88,7 +88,7 @@ public sealed class M4ContractTests
         var script = ScriptedGame.Script(60);
         for (int i = 0; i < 60; i++) sim.Step(script);
         Assert.All(sim.Garrison.HomeOwner, o => Assert.Equal(GarrisonState.NoOwner, o));
-        Assert.Equal(default, sim.StatsOf(0));
+        // Stats are live since M4-06: the scripted Place at tick 5 counts as a structure built, so only the round trip is checked.
         Assert.All(sim.Ground.Foam, v => Assert.Equal(0, v));
 
         sim.Garrison.HomeOwner[3] = 1;
@@ -100,8 +100,10 @@ public sealed class M4ContractTests
         var loaded = Simulation.Load(ms, setup);
         Assert.Equal(sim.ComputeSubHashes(), loaded.ComputeSubHashes());
         Assert.Equal(1, loaded.Garrison.HomeOwner[3]);
-        Assert.Equal(new PlayerStats(0, 0, 0, 0, 0, 0, 1234), loaded.StatsOf(0));
-        Assert.Equal(new PlayerStats(7, 0, 0, 0, 4, 0, 0), loaded.StatsOf(1));
+        Assert.Equal(sim.StatsOf(0), loaded.StatsOf(0));
+        Assert.Equal(sim.StatsOf(1), loaded.StatsOf(1));
+        Assert.Equal(1234, loaded.StatsOf(0).CreditsSpent);
+        Assert.Equal(4, loaded.StatsOf(1).Kills);
         Assert.Equal(99, loaded.Ground.FoamAt(new CellCoord(200 % 64, 200 / 64)));
     }
 

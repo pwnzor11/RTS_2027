@@ -178,9 +178,8 @@ public sealed class GarrisonTests
         Assert.Equal(500, sim.Infantry.Health[civ.Index]);
     }
 
-    // SKIPPED: Simulation.Detonate (Simulation.Combat.cs, owned by M4-05) still hits Garrisoned soldiers because they sit at the building
-    // centre cell. It needs `|| _tunnels.LayerOf(kind, i) == ActorLayer.Garrisoned` in its skip line (like passengers). Remove Skip once added.
-    [Fact(Skip = "needs a one-line skip of Garrisoned actors in Detonate (Simulation.Combat.cs, M4-05)")]
+    // Splash on the building does not reach occupants: Detonate skips the Garrisoned layer (M4-05).
+    [Fact]
     public void Splash_OnTheBuilding_DoesNotHurtOccupants()
     {
         var (sim, bunker) = Scene();
