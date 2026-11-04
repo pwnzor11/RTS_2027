@@ -29,6 +29,7 @@ DOCK = (0, 0)
 CAP_MATERIAL = D.CAP_MATERIAL
 HOUSE2_MID = True
 PALETTE = D.PALETTE
+RAD_MATERIALS = ("sickly", "sickly_dim")   # D-099: only these may use the radiation-green ramp (blue mask channel in build_structure)
 STATES = [("idle", 4, 5), ("damaged", 4, 5), ("build", 8, 5)]
 MATERIALS = DD.MATERIALS
 SOOT_SKIN = DD.SOOT_SKIN

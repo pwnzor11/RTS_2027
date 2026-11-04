@@ -39,8 +39,14 @@ PAL_DIR = [OUTLINE] + [hx(c) for c in (
     "#5E3420 "                                      # rust
     "#4A3829 #6B523B #8F7150 #B39470 "              # dusty umber / ash-brown ramp (conscript coat)
     "#C9A640").split()]                             # brass / lamp
-assert len(PAL_DIR) == 24
-PALETTE32_DIR = PAL_DIR + HOUSE
+# Radiation-green ramp (D-099 / Q-35 option a): RADIATION ONLY.  Dark -> bright sickly yellow-green that glows against warm greys and
+# oxide red.  Ordinary pixels can never land on these: pixelize.quantise() leaves them out unless the caller passes rad=True, and
+# structpost only does that for pixels rendered from a RAD_MATERIALS material of the module (blue channel of the mask layer).
+RAD_GREEN = [hx(c) for c in "#2F4A1C #5E8F2A #9BE04A #D8FF8A".split()]
+RAD_SET = set(RAD_GREEN)
+PAL_DIR = PAL_DIR + RAD_GREEN
+assert len(PAL_DIR) == 28 and len(RAD_SET) == 4 and not (RAD_SET & set(HOUSE)) and len(set(PAL_DIR)) == 28
+PALETTE_DIR_ALL = PAL_DIR + HOUSE       # 28 faction colours + the 8 house shades = 36
 
 # house remap targets: name -> 8-shade ramp (dark -> light)
 

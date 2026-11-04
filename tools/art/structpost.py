@@ -57,7 +57,8 @@ def load_layers(wd, f, cal):
     sh = np.clip(1 - lum / max(lit, 1e-6), 0, 1)
     sh = np.asarray(Image.fromarray((sh * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(SS * 0.8)), dtype=float) / 255
     sh = np.clip((sh - 0.05) / 0.8, 0, 1)
-    return dict(rgb=c[..., :3], a=a, house=house, idx=idx, shadow=sh)
+    rad = (m[..., 2] > 127) & (m[..., 0] < 127) & (a > 0.5)     # radiation material (blue-only mask, D-099)
+    return dict(rgb=c[..., :3], a=a, house=house, idx=idx, shadow=sh, rad=rad & ~house)
 
 
 def frame_b(wd, f, cal, w, h, pal=None, shadow=True):
@@ -65,14 +66,23 @@ def frame_b(wd, f, cal, w, h, pal=None, shadow=True):
     L = load_layers(wd, f, cal)
     base, A, hfrac, hidx, sh = C.downscale_layers(L, h)   # k = (h*SS)//h = SS
     assert A.shape == (h, w)
+    k = L["a"].shape[0] // h
+    wr = L["a"] * L["rad"]
+    Wr = C.block_mean(wr, k)
+    radrgb = C.block_mean(L["rgb"] * wr[..., None], k) / np.maximum(Wr[..., None], 1e-6)
+    radf = Wr / np.maximum(A, 1e-6)       # fraction of the pixel's coverage that is radiation material
+    radrgb = np.clip((radrgb - 128) * 1.12 + 128, 0, 255)
     base = np.clip((base - 128) * 1.12 + 128, 0, 255)
     solid = A >= 0.5
     out = np.zeros((h, w, 4), dtype=np.uint8)
     ys, xs = np.nonzero(solid)
     q = P.quantise(base[ys, xs], pal)
-    for y, x, qi in zip(ys, xs, q):
+    qr = P.quantise(radrgb[ys, xs], pal, rad=True)   # only evaluated for radiation pixels; the green ramp is reachable ONLY here
+    for y, x, qi, qri in zip(ys, xs, q, qr):
         if hfrac[y, x] >= 0.5:
             out[y, x] = (*C.HOUSE[hidx[y, x]], 255)
+        elif radf[y, x] >= 0.5 and any(tuple(c) in C.RAD_SET for c in pal):
+            out[y, x] = (*pal[qri], 255)
         else:
             out[y, x] = (*pal[qi], 255)
     edge = np.zeros_like(solid)
