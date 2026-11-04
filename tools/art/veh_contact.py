@@ -101,7 +101,7 @@ def main():
     fr = [U.comp(f) for f in range(16)]
     cols = 8 if U.body.fw > 120 else 16
     layers = "body" + (" + turret layer" if U.turret else "") + (" + separate ground-shadow sheet" if U.shadow else "")
-    blocks.append((f"{a.id}: all 16 facings at 1x, true size (frame 0 = N, clockwise), {U.body.fw} px frames; {layers}", grid(fr, cols, 1)))
+    blocks.append((f"{a.id}: all 16 facings at 1x, true size (frame 0 = N, clockwise), {U.body.fw} px frames; {layers}", grid(trim(fr, 1) if U.body.fw > 140 else fr, cols, 1)))
     blocks.append((f"2x nearest close-up: facings {' | '.join(map(str, a.close))}", hcat([grid([fr[f]], 1, 2) for f in a.close], 8)))
     if U.turret:
         hf = 2
@@ -113,7 +113,8 @@ def main():
                        hcat([grid([sh], 1, 2), grid([U.body.frame(2)], 1, 2), grid([fr[2]], 1, 2), _cross(U, 2)], 8)))
     # size comparison on the ground: reference at facing 2 and 6, subject at facing 2 and 6, 64 px cell ticks
     cmp_w = 8 * CELLPX
-    img = ash_patch(CELLPX, 2027).crop((0, 0, cmp_w, 4 * CELLPX)).convert("RGBA")
+    air = 1 if U.shadow else 0
+    img = ash_patch(CELLPX, 2027).crop((0, 0, cmp_w, (4 + air) * CELLPX)).convert("RGBA")
     d = ImageDraw.Draw(img)
     for gx in range(0, img.width, CELLPX):
         for gy in range(0, img.height, CELLPX):
@@ -121,8 +122,8 @@ def main():
     def put(u, f, cx, cy):
         fm = u.comp(f)
         img.alpha_composite(fm, (int(cx * CELLPX) - u.body.ox, int(cy * CELLPX) - u.body.oy))
-    put(ref, 2, 1.0, 1.0); put(U, 2, 3.5, 1.0); put(ref, 6, 1.0, 3.0); put(U, 6, 3.5, 3.0)
-    put(ref, 0, 6.0, 1.0); put(U, 0, 7.0, 1.0); put(ref, 4, 6.0, 3.0); put(U, 4, 7.0, 3.0)
+    put(ref, 2, 1.0, 1.0 + air); put(U, 2, 3.5, 1.0 + air); put(ref, 6, 1.0, 3.0 + air); put(U, 6, 3.5, 3.0 + air)
+    put(ref, 0, 6.0, 1.0 + air); put(U, 0, 7.0, 1.0 + air); put(ref, 4, 6.0, 3.0 + air); put(U, 4, 7.0, 3.0 + air)
     blocks.append((f"SIZE vs {a.ref} at 1x on ash (cell ticks every 64 px): {a.ref} left of each pair, {a.id} right; facings 2/6 and 0/4", img.convert("RGB")))
     if a.id == "dir_landtrain":
         cy = Image.open(os.path.join(C.ROOT, "data", "sprites", "buildings", "auth_conyard.png")).convert("RGBA").crop((0, 0, 192, 248))
@@ -172,6 +173,9 @@ def _cross(U, f):
     ox, oy = U.body.ox, U.body.oy
     d.line((ox - 4, oy, ox + 4, oy), fill=(255, 40, 40))
     d.line((ox, oy - 4, ox, oy + 4), fill=(255, 40, 40))
+    al = fm.getchannel("A").getbbox()
+    box = (max(min(al[0], ox - 6) - 2, 0), max(min(al[1], oy - 6) - 2, 0), min(max(al[2], ox + 6) + 2, im.width), min(max(al[3], oy + 6) + 2, im.height))
+    im = im.crop(box)
     return im.resize((im.width * 2, im.height * 2), Image.NEAREST)
 
 
