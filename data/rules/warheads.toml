@@ -70,3 +70,10 @@ versus = [0, 0, 0, 0, 0]  # ASSUMED (M3-07)
 splash = 1  # ASSUMED (M3-07)
 hits_allies = false
 decontaminate = 40  # ASSUMED (M3-07)
+
+[dir_sunrise_blast]
+versus = [100, 100, 100, 100, 100]  # ASSUMED (M3-13)
+splash = 1  # 0/1 flag in the loader; the blast radius (5 cells) is a constant in Simulation.Superweapon.cs
+hits_allies = false
+contaminate = 255  # ASSUMED (M3-13)
+blackout_ticks = 600  # ASSUMED (M3-13)
