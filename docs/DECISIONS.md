@@ -690,7 +690,7 @@ fans out the roster without waiting; the owner reviews everything in the morning
 
 ### D-089 · 2026-11-04 · Session 4 assumed values (review list)
 **Decision:** Every value or behaviour a package had to guess is marked `ASSUMED (M3-xx)` in code or `# ASSUMED` in
-data (about 250 in the Directorate TOML alone). Notable ones: radiation 10 HP/s per full cell, resist-scaled, no damage
+data (about 300 `# ASSUMED` tags across data/rules). Notable ones: radiation 10 HP/s per full cell, resist-scaled, no damage
 to buildings or underground units; Directorate start kit = dir_shaft + 4 conscripts; engineers capture below 50 % HP;
 aura stacking = best single source; one team member's grouting covers the team; land-train deploy is one-way;
 Sunrise blast radius 5 cells, 700 damage, enemies are not told a superweapon is charging; keys T (Upgrades) and D

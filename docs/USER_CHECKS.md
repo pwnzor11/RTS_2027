@@ -94,8 +94,8 @@ rejected (format bump, D-082). Nothing here has been seen on a real screen yet.
    and four conscripts. Units without finished art show labelled placeholder boxes.
 3. **Tunnels:** build a Hatch (or use a production building), select infantry, right-click your own far entrance: they
    queue, vanish, and surface about 5 s later behind a 3 s darkening/cracking telegraph.
-4. **Bore:** select a Bore, press **D**, then right-click soft ground: a 5 s telegraph, then a new Hatch. Hatch → Bore Head
-   is an upgrade on the Hatch.
+4. **Bore:** select a Bore, press **D**, then right-click soft ground: a 5 s telegraph, then a new Hatch. (Upgrading a Hatch to a
+   Bore Head has no button yet — M3-18.)
 5. **Upgrades:** press **T** for the Upgrades tab. As Authority, build the Engineering building and research Foundation
    Grouting; wall a ring with a gate: your tanks drive through the gate, enemies go round.
 6. **Radiation / Blackout:** radiation weapons leave green-tinted ground that hurts infantry; Blackout drops darken
@@ -103,4 +103,7 @@ rejected (format bump, D-082). Nothing here has been seen on a real screen yet.
 7. **Audio:** select a unit (select sound); gunfire pans and fades with the camera. No music ships yet — see
    docs/audio/music_brief.md for the ACE-Step prompts.
 8. **Engineer:** right-click a damaged own building (repair) or a neutral or badly damaged enemy building (capture).
-9. **Not wired yet (M3-18):** the Sunrise Device button, turret layers drawn separately in game, the Archive button.
+9. **Main menu:** launch the game: an animated lobby with Continue, Campaign, Skirmish, Replays, Archive, How to Play,
+   Settings (with Master volume and About) and Quit; LAN Game and Map Editor are greyed. Open the Archive and read the lore.
+10. **Not wired yet (M3-18):** the Sunrise Device button, turret layers drawn separately in game, the Hatch → Bore Head
+   button, Archive unlocks from what you see in games.

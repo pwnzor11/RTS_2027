@@ -113,9 +113,9 @@ Both factions, full tech tree, map editor, real AI with difficulty levels, audio
 - [x] M3-13 Superweapon: the Sunrise Device (sim + UI pieces; GameScreen wiring → M3-18)
 - [ ] M3-14 Integration and balance pass
 - [ ] M3-15 Map editor → moved to M4 (D-087)
-- [ ] M3-16 Main menu lobby: illustrated animated background, full menu (Continue, Campaign new/load, Skirmish new/load, Replays, Archive, How to play, Settings, Quit; LAN and Map editor greyed until built)
+- [x] M3-16 Main menu lobby: illustrated animated background, full menu (Continue, Campaign new/load, Skirmish new/load, Replays, Archive, How to play, Settings, Quit; LAN and Map editor greyed until built)
 - [x] M3-17 Archive: screens, unlock tracking, approved lore in data/archive (wiring into GameScreen/menu → M3-18; Technology entries still stubs)
-- [ ] M3-18 Game wiring left by wave 2: sprite turret/shadow/dive layers in the renderer, Sunrise button + targeting + flash in GameScreen, ArchiveTracker.Observe in GameScreen, Archive button → ArchiveScreen
+- [ ] M3-18 Game wiring left by wave 2: sprite turret/shadow/dive layers in the renderer, Sunrise button + targeting + flash in GameScreen, ArchiveTracker.Observe in GameScreen, a Hatch → Bore Head button (sim ApplyUpgrade exists; no UI issues CommandKind.Upgrade)
 - [ ] M3-19 Mission replays (record mission id + script hash; replay re-runs the script; ReplayPlayer hook for PlaceInitialActors)
 - [x] M3-INT Wave-1 integration gaps (underground vision, Blackout fog, jam/seismic emitter cache, air vs placement, engineer right-click, audio listener + select sound, CREDITS)
 

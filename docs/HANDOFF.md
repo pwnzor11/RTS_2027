@@ -12,10 +12,11 @@ expansion plan is D-087 (4 factions, skirmish depth, LLM commander) and the new 
 ## Start here (shown to the user as the plan; nothing starts until they say go)
 1. Owner: run `_art_push/push_art.ps1` (USER_CHECKS Session 4, item 1); say how the turret rework and the Command
    Shaft look (sheets in art_out were sent in session 4; resend if needed).
-2. Land M3 so far: merge M3-16 (main menu; see Half-finished), bring the art branches into an `integ-art` merge
+2. Land M3 so far: bring the art branches into an `integ-art` merge
    (resolve tools/art/build_vehicle.py between art-veh1 and art-veh2: keep both feature sets, D-083), update PR #7 or open
    a new PR integ-m3 → main, wait for Windows CI, land.
-3. Finish M3: M3-18 game wiring (turret/shadow/dive layers, Sunrise button + targeting + flash, Archive tracker + button),
+3. Finish M3: M3-18 game wiring (turret/shadow/dive layers, Sunrise button + targeting + flash, Archive tracker, Hatch →
+   Bore Head button),
    M3-11 AI tiers 2–5 (also fix the skipped InfantryLeavesIrradiatedCells test), M3-19 mission replays, M3-ART (14
    Directorate structures in the dir_shaft style using tools/art/structures/dir_struct_common.py, 4 Authority structures,
    agitprop turret via S.mount), M3-14 integration + balance (tunnel time saved 30–50 %, win rates near 50 %), Q-34.
@@ -28,8 +29,8 @@ expansion plan is D-087 (4 factions, skirmish depth, LLM commander) and the new 
    settings, never logged).
 
 ## Half-finished work
-- M3-16 main menu lobby: helper was still running at wrap-up on `wp/m3-16` (worktree /home/claude/wt/m3-16 — gone in a
-  new container). If the branch is on GitHub, review and merge it; if not, rerun M3-16 from its brief (ROADMAP line).
+- M3-16 main menu lobby: merged at wrap-up (42c2482); its scenes have not been seen on a screen (no GPU here) — first look is
+  the owner's. The menu's Archive button opens the real ArchiveScreen (M3-17 kept on merge).
 - M3-ART structures: only dir_shaft (rev 2, on wp/art-str1) is done; wp/art-str2 was created but never used.
 - Merge of art branches into code: not done (art is pushed only by the owner script).
 - Leftover branches on GitHub the owner can delete after landing: `wp/m3-*`, `wp/art-*` once merged, older `integ-*`.
