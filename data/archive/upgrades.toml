@@ -1,0 +1,18 @@
+# Archive entries (M3-17). Text is the owner-approved lore from docs/lore/, copied verbatim.
+# Keys: id, category, faction, title, subtitle, field_note (optional), body, sprite (optional),
+# unlock (open | campaign:<mission> | encounter:<rules id> | research:<upgrade id>).
+# Unit, Structure and Upgrade entries use the rules id as their id; their stats are read live from data/rules.
+
+[[entry]]
+id = "auth_grouting"
+category = "Upgrade"
+faction = "authority"
+title = "Foundation Grouting"
+subtitle = "Hardened ground inside the walls"
+field_note = "ENGINEERING BULLETIN 11 // POUR, SET, CURE. IF THE WALL HOLDS, THE FLOOR HOLDS. STOP."
+body = '''
+Researched at the Engineering Works, Foundation Grouting fills the soft ground enclosed by a base's walls, gates and buildings with quick-curing concrete slurry. Nothing can surface or break through there. The Authority thinks of it as the civil engineer's reply to tunnelling: pour the floor and be done with it. A single broken wall panel spoils the seal, which is why work crews inspect the perimeter every morning.
+'''
+# ASSUMED (M3-17) TODO (M4): replace TBD with the mission id that releases this entry.
+unlock = "campaign:TBD"
+

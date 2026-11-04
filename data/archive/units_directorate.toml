@@ -1,0 +1,172 @@
+# Archive entries (M3-17). Text is the owner-approved lore from docs/lore/, copied verbatim.
+# Keys: id, category, faction, title, subtitle, field_note (optional), body, sprite (optional),
+# unlock (open | campaign:<mission> | encounter:<rules id> | research:<upgrade id>).
+# Unit, Structure and Upgrade entries use the rules id as their id; their stats are read live from data/rules.
+
+[[entry]]
+id = "dir_conscript"
+category = "Unit"
+faction = "directorate"
+title = "Conscript"
+subtitle = "Citizen in service"
+field_note = "VOICE: \"CITIZENS IN SERVICE, YOUR SHIFT IS GREAT AND YOUR DEBT IS SMALL. REPORT TO THE HATCH.\""
+body = '''
+Mustered by the hundreds from the lower levels, conscripts carry a stamped rifle, a respirator that is mostly for show and the belief that the surface was stolen from them. They are cheap, quick and numerous, and the Directorate does not pretend otherwise. Most of them have never seen a sunrise and are very curious about it.
+'''
+unlock = "open"
+
+[[entry]]
+id = "dir_ashthrower"
+category = "Unit"
+faction = "directorate"
+title = "Ash Thrower"
+subtitle = "Radiation infantry"
+field_note = "VOICE: \"THE GROUND REMEMBERS OUR DEBTS. LET IT COLLECT.\""
+body = '''
+A conscript with a pressure tank and a lance, throwing concentrated ash across the ground in front of the line. Volunteers are given a hot meal and a longer service credit. They also have a short life expectancy, and the Commissariat is not shy about it.
+'''
+# ASSUMED (M3-17) TODO (M4): replace TBD with the mission id that releases this entry.
+unlock = "campaign:TBD"
+
+[[entry]]
+id = "dir_sapper"
+category = "Unit"
+faction = "directorate"
+title = "Sapper"
+subtitle = "Demolition infantry"
+field_note = "VOICE: \"WALLS ARE ONLY A POLITE REQUEST. THE SAPPER ANSWERS.\""
+body = '''
+Sappers come from the shaft crews who dig and prop the Annex's own tunnels. With a collapse charge on a pole they undermine a wall or gate, and the structure does the rest. The Directorate considers this the most respectable trade below ground.
+'''
+# ASSUMED (M3-17) TODO (M4): replace TBD with the mission id that releases this entry.
+unlock = "campaign:TBD"
+
+[[entry]]
+id = "dir_informant"
+category = "Unit"
+faction = "directorate"
+title = "Informant"
+subtitle = "Stealth observer"
+field_note = "VOICE: \"A GOOD CITIZEN IS ALWAYS PRESENT. A BETTER CITIZEN IS NEVER NOTICED.\""
+body = '''
+Trained by the Commissariat to lie in the ash for hours and report on what they see. They carry no weapon, only a handset and a very quiet disposition. Their reports feed the purges as often as the battle plan, which is why other conscripts are polite to them.
+'''
+# ASSUMED (M3-17) TODO (M4): replace TBD with the mission id that releases this entry.
+unlock = "campaign:TBD"
+
+[[entry]]
+id = "dir_commissar"
+category = "Unit"
+faction = "directorate"
+title = "Commissar"
+subtitle = "Officer of Order"
+field_note = "VOICE: \"THE COMMISSARIAT SEES WHAT YOU WILL DO BEFORE YOU DO IT.\""
+body = '''
+An officer of the Commissariat of Order, in a long coat and a respirator mask. Commissars arrive with the second wave, hold the line by presence and keep a pistol for those who forget they are being watched. The conscripts fight harder near one, and not only out of loyalty.
+'''
+# ASSUMED (M3-17) TODO (M4): replace TBD with the mission id that releases this entry.
+unlock = "campaign:TBD"
+
+[[entry]]
+id = "dir_scraper"
+category = "Unit"
+faction = "directorate"
+title = "Burrowing Scraper"
+subtitle = "Tunnel-borne ashfall harvester"
+field_note = "VOICE: \"THE SURFACE OWES US A HARVEST. COLLECT IT, CITIZEN, AND COME HOME.\""
+body = '''
+Built at the Assembly Bore, this scraper tunnels to a drift, surfaces, gathers ash and returns to the Smelter Vent below. It is cheaper and faster to field than the Authority's version and far easier to kill. The Directorate counts that as a fair trade.
+'''
+unlock = "open"
+
+[[entry]]
+id = "dir_bore"
+category = "Unit"
+faction = "directorate"
+title = "Bore"
+subtitle = "Entrance digger"
+field_note = "VOICE: \"A HATCH WHERE THERE WAS NONE. THE INTERIOR EXTENDS ITS HAND.\""
+body = '''
+A drill-nosed tracked machine that grinds to a chosen spot, then deploys into a new Hatch. Bore crews are the closest thing the Directorate has to explorers, and they talk with a swagger that the Commissariat politely ignores.
+'''
+# ASSUMED (M3-17) TODO (M4): replace TBD with the mission id that releases this entry.
+unlock = "campaign:TBD"
+
+[[entry]]
+id = "dir_mole"
+category = "Unit"
+faction = "directorate"
+title = "Mole"
+subtitle = "Burrowing transport"
+field_note = "VOICE: \"FIVE CITIZENS, ONE FINE DARK ROAD. NOBODY WILL SEE YOU ARRIVE.\""
+body = '''
+An armoured burrowing carrier that takes five conscripts under the ground and puts them out where they are needed. Mole drivers are known for gallows humour and for never arriving where the Authority expects.
+'''
+# ASSUMED (M3-17) TODO (M4): replace TBD with the mission id that releases this entry.
+unlock = "campaign:TBD"
+
+[[entry]]
+id = "dir_agitprop"
+category = "Unit"
+faction = "directorate"
+title = "Agitprop Crawler"
+subtitle = "Loudspeaker support vehicle"
+field_note = "VOICE: \"LISTEN, CITIZENS, AND BE STEADY. THE INTERIOR IS WITH YOU.\""
+body = '''
+A tracked vehicle bristling with horn speakers, carrying the Voice into the field. It steadies and hurries nearby conscripts and floods radio bands so Authority scouts cannot read a map. It is easy to dislike, which is partly the point.
+'''
+# ASSUMED (M3-17) TODO (M4): replace TBD with the mission id that releases this entry.
+unlock = "campaign:TBD"
+
+[[entry]]
+id = "dir_reactor_crawler"
+category = "Unit"
+faction = "directorate"
+title = "Reactor Crawler"
+subtitle = "Heavy radiation vehicle"
+field_note = "VOICE: \"THE BRIGHT SERVANT OF THE INTERIOR. DO NOT STAND CLOSE, CITIZEN. STAND PROUD.\""
+body = '''
+A slow, heavy crawler whose bare reactor core is the weapon. It throws radiation across the ground in front of it and is shielded for its crew only. When destroyed it melts down, and its crews know this. Nobody volunteers to drive one, and nobody who has driven one is ever teased about it.
+'''
+# ASSUMED (M3-17) TODO (M4): replace TBD with the mission id that releases this entry.
+unlock = "campaign:TBD"
+
+[[entry]]
+id = "dir_rocket_truck"
+category = "Unit"
+faction = "directorate"
+title = "Rocket Truck"
+subtitle = "Mobile rocket artillery"
+field_note = "VOICE: \"SKY AND GROUND ALIKE ARE OURS TO RECLAIM. FIRE WHEN THE LAMP TURNS RED.\""
+body = '''
+A fast truck with a rack of unguided rockets that can be aimed at ground or aircraft. Crews chalk a tally of kills on the cab, and the Commissariat does not stop them. The rockets are loaded at the Muster Hatch from a supply that is shorter than the Voice admits.
+'''
+# ASSUMED (M3-17) TODO (M4): replace TBD with the mission id that releases this entry.
+unlock = "campaign:TBD"
+
+[[entry]]
+id = "dir_dirigible"
+category = "Unit"
+faction = "directorate"
+title = "Dirigible"
+subtitle = "Scouting airship"
+field_note = "VOICE: \"THE INTERIOR HAS EYES UPON THE HEAVENS. THE SKY IS NO LONGER A STRANGER.\""
+body = '''
+A slow, fragile envelope hung with a gondola, launched from a Mooring Tower. It sees farther than any ground unit and can drop canisters of Blackout smoke that blind the enemy's own scouts. It is the closest the Directorate has to an air force, and crews who fly it do so mostly to see the sky.
+'''
+# ASSUMED (M3-17) TODO (M4): replace TBD with the mission id that releases this entry.
+unlock = "campaign:TBD"
+
+[[entry]]
+id = "dir_landtrain"
+category = "Unit"
+faction = "directorate"
+title = "Land-Train"
+subtitle = "Mobile command and rail gun"
+field_note = "VOICE: \"THE SEAT OF GOVERNMENT IS WHEREVER THE INTERIOR RIDES. BOW TO IT, OR BE RUN OVER.\""
+body = '''
+A tracked train of linked armoured cars with a rail gun on the lead wagon. When it halts, it deploys into a Command Shaft and the Directorate has a base where there was none. Authority tacticians fear it more than any single weapon, because it makes the Directorate's front line wherever it likes.
+'''
+# ASSUMED (M3-17)
+unlock = "encounter:dir_landtrain"
+

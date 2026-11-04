@@ -1,0 +1,209 @@
+# Archive entries (M3-17). Text is the owner-approved lore from docs/lore/, copied verbatim.
+# Keys: id, category, faction, title, subtitle, field_note (optional), body, sprite (optional),
+# unlock (open | campaign:<mission> | encounter:<rules id> | research:<upgrade id>).
+# Unit, Structure and Upgrade entries use the rules id as their id; their stats are read live from data/rules.
+
+[[entry]]
+id = "leader_auth_wrenfield"
+category = "Leader"
+faction = "authority"
+title = "Brigadier Hester Wrenfield"
+subtitle = "Field commander of the Authority"
+body = '''
+A rail-signals officer who rose in the labour-year militia, Wrenfield speaks to the commander over the field radio in short, dry sentences. She has buried more convoy drivers than she cares to count and plans every operation as if she were paying for it personally.
+
+Motivation: bring the convoys home. She does not hate the Directorate; she wants it to stop costing her people.
+'''
+unlock = "open"
+
+[[entry]]
+id = "leader_auth_wrenfield_secret"
+category = "Leader"
+faction = "authority"
+title = "Brigadier Hester Wrenfield: Classified"
+subtitle = "Classified file"
+body = '''
+Secret: Her own brother was among the Glass Coast evacuees the Authority left behind in 1990, and she has read the decision memo. She follows orders anyway, and has quietly kept a list.
+'''
+# ASSUMED (M3-17) TODO (M4): replace TBD with the mission id that releases this entry.
+unlock = "campaign:TBD"
+
+[[entry]]
+id = "leader_auth_pell"
+category = "Leader"
+faction = "authority"
+title = "Administrator Josiah Pell"
+subtitle = "Civilian administrator of the Authority"
+body = '''
+Pell is a county drainage engineer who became Administrator because no one else would sign the budget. Soft-spoken and exact, he sets the commander's objectives by teletype and refuses to describe any operation as a victory.
+
+Motivation: keep the Charter intact. A war that ends with emergency powers is, to him, a loss.
+'''
+unlock = "open"
+
+[[entry]]
+id = "leader_auth_pell_secret"
+category = "Leader"
+faction = "authority"
+title = "Administrator Josiah Pell: Classified"
+subtitle = "Classified file"
+body = '''
+Secret: His office has held the 1974 "hum" file for decades. He knew the Annex existed and chose not to dig, because digging meant admitting the Authority was not the only government left.
+'''
+# ASSUMED (M3-17) TODO (M4): replace TBD with the mission id that releases this entry.
+unlock = "campaign:TBD"
+
+[[entry]]
+id = "leader_auth_dray"
+category = "Leader"
+faction = "authority"
+title = "Lieutenant Anselm Dray"
+subtitle = "The Directorate defector"
+body = '''
+A conscript-engineer from Shaft Four, Dray crossed the lines carrying a reactor log and a question: why does the Voice read out numbers for a population the Annex no longer has? He is clever, awkward in daylight, and refuses to wear a weapon.
+
+Motivation: to get the people below out before the Annex runs out of air.
+'''
+# ASSUMED (M3-17) TODO (M4): replace TBD with the mission id that releases this entry.
+unlock = "campaign:TBD"
+
+[[entry]]
+id = "leader_auth_dray_secret"
+category = "Leader"
+faction = "authority"
+title = "Lieutenant Anselm Dray: Classified"
+subtitle = "Classified file"
+body = '''
+Secret: He helped design the Sunrise Device's tunnel head. He believes he alone can find where its warheads are buried and he has told no one how he knows.
+'''
+# ASSUMED (M3-17) TODO (M4): replace TBD with the mission id that releases this entry.
+unlock = "campaign:TBD"
+
+[[entry]]
+id = "leader_auth_fenn"
+category = "Leader"
+faction = "authority"
+title = "Chief Surveyor Imogen Fenn"
+subtitle = "Survey and logistics lead"
+body = '''
+Fenn mapped the Glass Coast launch sites on foot in the Great Drift of 1990. She is blunt, tireless and has opinions about everyone's boots.
+
+Motivation: finish the map, so nobody else walks into those sites blind.
+'''
+# ASSUMED (M3-17) TODO (M4): replace TBD with the mission id that releases this entry.
+unlock = "campaign:TBD"
+
+[[entry]]
+id = "leader_auth_fenn_secret"
+category = "Leader"
+faction = "authority"
+title = "Chief Surveyor Imogen Fenn: Classified"
+subtitle = "Classified file"
+body = '''
+Secret: Her survey also found a sealed Authority depot beneath one site, with a stockpile of pre-Exchange weapons that Pell's office ordered to stay unrecorded.
+'''
+# ASSUMED (M3-17) TODO (M4): replace TBD with the mission id that releases this entry.
+unlock = "campaign:TBD"
+
+[[entry]]
+id = "leader_dir_harrowgate"
+category = "Leader"
+faction = "directorate"
+title = "Director Lucan Harrowgate"
+subtitle = "The Director of the Interior"
+body = '''
+The Director is the face on every poster: tall, tired eyes, a hand raised in measured greeting. In the Annex he is described as a man who gave up the sun so that others might keep their lives. His recorded addresses are played at dawn shift in every level.
+
+Motivation, as told: reclaim what was held in trust.
+'''
+unlock = "open"
+
+[[entry]]
+id = "leader_dir_harrowgate_secret"
+category = "Leader"
+faction = "directorate"
+title = "Director Lucan Harrowgate: Classified"
+subtitle = "Classified file"
+body = '''
+Secret: He died in the winter of 1974. The addresses since then have been assembled from his old recordings and rewritten by a committee. The Voice knows. The Commissar chairs it.
+'''
+# ASSUMED (M3-17) TODO (M4): replace TBD with the mission id that releases this entry.
+unlock = "campaign:TBD"
+
+[[entry]]
+id = "leader_dir_larkin"
+category = "Leader"
+faction = "directorate"
+title = "The Voice (Odette Larkin)"
+subtitle = "The Director's announcer"
+body = '''
+Once a morning radio announcer, Larkin has read the Director's orders for thirty years in a voice so reassuring that some conscripts will walk into fire if she says they are loved. Off the air she is wry, careful and afraid.
+
+Motivation: keep the Annex calm, because panic below kills faster than ash above.
+'''
+unlock = "open"
+
+[[entry]]
+id = "leader_dir_larkin_secret"
+category = "Leader"
+faction = "directorate"
+title = "The Voice (Odette Larkin): Classified"
+subtitle = "Classified file"
+body = '''
+Secret: She has been quietly adding true weather reports and small lullabies to the scripts, and she has twice rewritten an order to spare a battalion. If the Commissar finds out, she disappears.
+'''
+# ASSUMED (M3-17) TODO (M4): replace TBD with the mission id that releases this entry.
+unlock = "campaign:TBD"
+
+[[entry]]
+id = "leader_dir_thrall"
+category = "Leader"
+faction = "directorate"
+title = "Commissar Ignatius Thrall"
+subtitle = "Commissar of Order"
+body = '''
+Thrall gives the orders that the Voice announces. Precise, courteous and unhurried, he keeps a notebook of names and has never raised his voice. In the Annex, a visit from the Commissariat is spoken of the way people once spoke of winter.
+
+Motivation: preserve the Annex, at any cost to everyone who lives in it.
+'''
+# ASSUMED (M3-17) TODO (M4): replace TBD with the mission id that releases this entry.
+unlock = "campaign:TBD"
+
+[[entry]]
+id = "leader_dir_thrall_secret"
+category = "Leader"
+faction = "directorate"
+title = "Commissar Ignatius Thrall: Classified"
+subtitle = "Classified file"
+body = '''
+Secret: Thrall has found the Director's standing instruction, Order Seven, written in 1963: if the surface refuses to submit, the warheads under the launch sites are to be detonated. He is the only one who believes the Director would still want it, and he is preparing the Sunrise Device.
+'''
+# ASSUMED (M3-17) TODO (M4): replace TBD with the mission id that releases this entry.
+unlock = "campaign:TBD"
+
+[[entry]]
+id = "leader_dir_lund"
+category = "Leader"
+faction = "directorate"
+title = "Dr. Perpetua Lund"
+subtitle = "Chief of the Isotope Works"
+body = '''
+Lund runs the Directorate's reactors and weapons programme. Intelligent, lonely, impatient with slogans, she is the person who actually keeps the Annex warm. She rarely leaves the lower levels.
+
+Motivation: keep the reactors alive. She will build whatever the Commissar asks as long as it buys fuel.
+'''
+# ASSUMED (M3-17) TODO (M4): replace TBD with the mission id that releases this entry.
+unlock = "campaign:TBD"
+
+[[entry]]
+id = "leader_dir_lund_secret"
+category = "Leader"
+faction = "directorate"
+title = "Dr. Perpetua Lund: Classified"
+subtitle = "Classified file"
+body = '''
+Secret: She has known for years that the Annex cannot survive another decade, and she has been quietly preparing a way up that does not need a war. She needs someone the Commissar cannot see.
+'''
+# ASSUMED (M3-17) TODO (M4): replace TBD with the mission id that releases this entry.
+unlock = "campaign:TBD"
+
