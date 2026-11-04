@@ -1,0 +1,15 @@
+# LLM provider defaults for the AI commander (M5-08). Read by src/Llm/ProviderDefaults.cs.
+# A missing file or key falls back to the same values built into the game.
+# The API key is never stored here; it lives in the encrypted %APPDATA%/RTS_2027/llm.key.
+
+[anthropic]
+base_url = "https://api.anthropic.com"
+# (owner) check current model names before release
+default_model = "claude-haiku-4-5"   # fast and cheap: the default
+# (owner) check current model names before release
+strong_model = "claude-sonnet-4-5"   # stronger, slower, costs more: the "Use stronger model" toggle
+
+[openai]
+base_url = "https://api.openai.com"
+# No default model: the player types the model name their server offers (OpenAI, LM Studio, Ollama, llama.cpp ...).
+default_model = ""
