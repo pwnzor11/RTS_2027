@@ -44,7 +44,7 @@ public sealed partial class Simulation
     internal int RunBurrowMission(int i, bool deploy)
     {
         if (_units.Health[i] <= 0) return 1;
-        VehicleType vt = Setup.Rules.Vehicles[_units.TypeIndex[i]];
+        VehicleType vt = RulesOf(_units.Player[i]).Vehicles[_units.TypeIndex[i]];
         switch (_tunnels.VehicleLayer[i])
         {
             case ActorLayer.Surface: return StartDive(i, vt, deploy);
@@ -156,7 +156,7 @@ public sealed partial class Simulation
     private bool FindDiveCell(CellCoord from, int i, out CellCoord found)
     {
         EntityId self = _units.Slots.IdOf(i);
-        Locomotion loco = Setup.Rules.Vehicles[_units.TypeIndex[i]].Locomotion;
+        Locomotion loco = RulesOf(_units.Player[i]).Vehicles[_units.TypeIndex[i]].Locomotion;
         for (int n = 0; Spiral.Cell(from, n, out CellCoord c); n++)
             if (DiveCellOk(c) && Occupancy.FreeForVehicle(this, c, loco, self)) { found = c; return true; }
         found = from;
@@ -279,8 +279,8 @@ public sealed partial class Simulation
 
     private bool BeginBreakThrough(int i, CellCoord from)
     {
-        VehicleType vt = Setup.Rules.Vehicles[_units.TypeIndex[i]];
-        BuildingType bt = Setup.Rules.Buildings[vt.DeploysInto];
+        VehicleType vt = RulesOf(_units.Player[i]).Vehicles[_units.TypeIndex[i]];
+        BuildingType bt = RulesOf(_units.Player[i]).Buildings[vt.DeploysInto];
         CellCoord topLeft = default;
         bool found = false;
         for (int n = 0; Spiral.Cell(from, n, out CellCoord c); n++)
@@ -329,7 +329,7 @@ public sealed partial class Simulation
     /// <summary>Place a building inside Step without the CanPlace checks (callers did their own) and with the given health.</summary>
     private EntityId PlaceBuildingNow(byte player, int type, CellCoord topLeft, int health)
     {
-        BuildingType bt = Setup.Rules.Buildings[type];
+        BuildingType bt = RulesOf(player).Buildings[type];
         EntityId id = _buildings.Add(player, type, topLeft, health);
         if (id.IsNone) return id;
         for (int y = 0; y < bt.FootprintH; y++)
@@ -345,9 +345,9 @@ public sealed partial class Simulation
     /// when the footprint is off the map, on unbuildable land, holds a building or any other actor.</summary>
     internal bool TryDeployInPlace(int i)
     {
-        VehicleType vt = Setup.Rules.Vehicles[_units.TypeIndex[i]];
-        if (vt.DeploysInto < 0 || vt.DeploysInto >= Setup.Rules.Buildings.Count || _tunnels.VehicleLayer[i] != ActorLayer.Surface) return false;
-        BuildingType bt = Setup.Rules.Buildings[vt.DeploysInto];
+        VehicleType vt = RulesOf(_units.Player[i]).Vehicles[_units.TypeIndex[i]];
+        if (vt.DeploysInto < 0 || vt.DeploysInto >= RulesOf(_units.Player[i]).Buildings.Count || _tunnels.VehicleLayer[i] != ActorLayer.Surface) return false;
+        BuildingType bt = RulesOf(_units.Player[i]).Buildings[vt.DeploysInto];
         CellCoord at = _units.Position[i].ToCell();
         var topLeft = new CellCoord(at.X - (bt.FootprintW - 1) / 2, at.Y - (bt.FootprintH - 1) / 2);
         EntityId self = _units.Slots.IdOf(i);

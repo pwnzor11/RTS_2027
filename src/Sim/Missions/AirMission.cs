@@ -17,7 +17,7 @@ internal static class AirMission
 {
     /// <summary>True if the actor is a vehicle with air locomotion.</summary>
     public static bool IsAir(Simulation sim, ActorKind kind, MobileStore store, int i) =>
-        kind == ActorKind.Vehicle && sim.Setup.Rules.Vehicles[store.TypeIndex[i]].Locomotion == Locomotion.Air;
+        kind == ActorKind.Vehicle && sim.RulesOf(store.Player[i]).Vehicles[store.TypeIndex[i]].Locomotion == Locomotion.Air;
 
     public static int HandleMove(Simulation sim, MobileStore store, int i)
     {
@@ -42,7 +42,7 @@ internal static class AirMission
     /// <summary>One tick of flight toward the point; true once it is reached.</summary>
     private static bool Fly(Simulation sim, MobileStore store, int i, LeptonCoord target)
     {
-        VehicleType t = sim.Setup.Rules.Vehicles[store.TypeIndex[i]];
+        VehicleType t = sim.RulesOf(store.Player[i]).Vehicles[store.TypeIndex[i]];
         LeptonCoord pos = store.Position[i];
         if (pos == target) return true;
         byte desired = Facing.FromDelta(target.X - pos.X, target.Y - pos.Y);

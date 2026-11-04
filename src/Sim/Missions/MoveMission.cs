@@ -45,10 +45,10 @@ internal static class MoveMission
     {
         if (kind == ActorKind.Vehicle)
         {
-            VehicleType t = sim.Setup.Rules.Vehicles[store.TypeIndex[i]];
+            VehicleType t = sim.RulesOf(store.Player[i]).Vehicles[store.TypeIndex[i]];
             return new Stats(t.Locomotion, (int)((long)t.Speed * sim.Effects.SpeedPermille(kind, i) / 1000), t.TurnRate, t.Crusher);   // M3-06: aura speed
         }
-        return new Stats(Locomotion.Foot, (int)((long)sim.Setup.Rules.Infantry[store.TypeIndex[i]].Speed * sim.Effects.SpeedPermille(kind, i) / 1000), 0, false);   // M3-06: aura speed
+        return new Stats(Locomotion.Foot, (int)((long)sim.RulesOf(store.Player[i]).Infantry[store.TypeIndex[i]].Speed * sim.Effects.SpeedPermille(kind, i) / 1000), 0, false);   // M3-06: aura speed
     }
 
     // ---- handlers -----------------------------------------------------------------------------
