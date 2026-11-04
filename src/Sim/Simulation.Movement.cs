@@ -159,7 +159,7 @@ public sealed partial class Simulation
                 int k = group[0];
                 MobileStore s = StoreOf(_members[k].Kind)!;
                 int i = _members[k].Id.Index;
-                s.PathId[i] = _paths.Request(from[k], dest[k], loco);
+                s.PathId[i] = _paths.Request(from[k], dest[k], loco, GatePasser(_members[k].Player));   // M3-04: gates
                 s.PathIndex[i] = 0;
                 s.PathIsGroup[i] = false;
             }
@@ -167,7 +167,7 @@ public sealed partial class Simulation
             {
                 var froms = new CellCoord[group.Count];
                 for (int g = 0; g < froms.Length; g++) froms[g] = from[group[g]];
-                int id = _paths.RequestGroup(froms, target, loco);
+                int id = _paths.RequestGroup(froms, target, loco, GatePasser(_members[m].Player));   // M3-04: one player per batch
                 for (int g = 0; g < froms.Length; g++)
                 {
                     MobileStore s = StoreOf(_members[group[g]].Kind)!;

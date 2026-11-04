@@ -181,7 +181,7 @@ internal static class MoveMission
         {
             if (store.PathId[i] <= 0)
             {
-                store.PathId[i] = sim.Paths.Request(cur, goal, st.Loco);
+                store.PathId[i] = sim.Paths.Request(cur, goal, st.Loco, sim.GatePasser(store.Player[i]));   // M3-04: gates
                 store.PathIndex[i] = 0;
                 store.PathIsGroup[i] = false;
                 store.Status[i] = MissionStatus.Waiting;
@@ -206,7 +206,7 @@ internal static class MoveMission
             }
             else if (wasGroup && status == PathStatus.NotFound)
             {
-                store.PathId[i] = sim.Paths.Request(cur, goal, st.Loco);   // the group search is bounded; try a plain one
+                store.PathId[i] = sim.Paths.Request(cur, goal, st.Loco, sim.GatePasser(store.Player[i]));   // the group search is bounded; try a plain one
                 return 1;
             }
             else
@@ -221,7 +221,7 @@ internal static class MoveMission
         {
             store.PathVersion[i] = map.Version;
             for (int k = store.PathPos[i]; k < cells!.Length; k++)
-                if (!Occupancy.TerrainOk(sim, cells[k], st.Loco)) { store.PathCells[i] = null; return 1; }
+                if (!Occupancy.TerrainOk(sim, cells[k], st.Loco, store.Player[i])) { store.PathCells[i] = null; return 1; }   // M3-04
         }
         CellCoord n = cells![store.PathPos[i]];
         if (Occupancy.Chebyshev(cur, n) != 1) { store.PathCells[i] = null; return 1; }
@@ -264,7 +264,7 @@ internal static class MoveMission
     {
         CellCoord rc = store.ReservedCell[i];
         CellCoord cur = Occupancy.CurCell(kind, store, i);
-        if (cur != rc && !sim.Map.BuildingAt(rc).IsNone)
+        if (cur != rc && !sim.Map.BuildingAt(rc).IsNone && !sim.GateOpenFor(sim.Map.BuildingAt(rc), store.Player[i]))   // M3-04
         {
             // A building was placed on the cell we reserved before we got there: back out and repath.
             Occupancy.DropReservation(sim, kind, store, i);
@@ -402,11 +402,11 @@ internal static class MoveMission
     private static Block Inspect(Simulation sim, MobileStore store, ActorKind kind, int i, Stats st, CellCoord cur, CellCoord n)
     {
         var b = new Block();
-        if (!Occupancy.TerrainOk(sim, n, st.Loco)) { b.Invalid = true; return b; }
+        if (!Occupancy.TerrainOk(sim, n, st.Loco, store.Player[i])) { b.Invalid = true; return b; }   // M3-04: own gates
         for (int d = 0; d < 8; d++)
             if (cur.X + Occupancy.Dx[d] == n.X && cur.Y + Occupancy.Dy[d] == n.Y)
             {
-                if (!Occupancy.CornersOk(sim, cur, d, st.Loco)) b.Invalid = true;
+                if (!Occupancy.CornersOk(sim, cur, d, st.Loco, store.Player[i])) b.Invalid = true;   // M3-04
                 break;
             }
         if (b.Invalid) return b;

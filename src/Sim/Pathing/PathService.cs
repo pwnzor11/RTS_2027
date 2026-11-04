@@ -23,11 +23,17 @@ namespace Rts.Sim.Pathing;
 /// backward Dijkstra from the goal bounded to the bounding box of the starts and goal plus 16 cells; starts that
 /// are blocked, outside the map or not reached inside the box get NotFound, and a blocked goal gives NotFound
 /// for all. Groups are not cached.</para>
+/// <para>Gates (M3-04, D-076): a request may carry a passer (player slot, <see cref="NoPasser"/> = none). A building cell is
+/// passable for it when <see cref="GateOpen"/> says the building is a gate of the passer's team; for everyone else a gate is a
+/// building like any other. The passer is part of the cache key and is saved with a queued request only when set.</para>
 /// </summary>
 public sealed class PathService : ISimStatePart
 {
     private const int GroupMargin = 16;
     private const int CacheLimit = 4096;
+
+    /// <summary>Passer value meaning "no player": every building blocks (M3-04).</summary>
+    public const byte NoPasser = 0xFF;
 
     private static readonly int[] Dx = { 0, 1, 1, 1, 0, -1, -1, -1 };
     private static readonly int[] Dy = { -1, -1, 0, 1, 1, 1, 0, -1 };
@@ -36,6 +42,7 @@ public sealed class PathService : ISimStatePart
     {
         public int Id;
         public Locomotion Loco;
+        public byte Passer = NoPasser;   // M3-04
         public bool Group;
         public CellCoord To;
         public CellCoord[] Froms = Array.Empty<CellCoord>();
@@ -47,7 +54,7 @@ public sealed class PathService : ISimStatePart
         public CellCoord[] Path = Array.Empty<CellCoord>();
     }
 
-    private readonly record struct CacheKey(int From, int To, Locomotion Loco, int Version);
+    private readonly record struct CacheKey(int From, int To, Locomotion Loco, int Version, byte Passer);   // M3-04: + Passer
 
     private sealed class CacheValue
     {
@@ -75,6 +82,7 @@ public sealed class PathService : ISimStatePart
     private readonly int[] _seen;   // == _stamp when g is valid
     private readonly int[] _closed; // == _stamp when expanded
     private int _stamp;
+    private byte _passer = NoPasser;   // M3-04: passer of the request being solved (scratch)
 
     public PathService(MapState map, TerrainTable terrain, int expansionBudgetPerTick = 4000)
     {
@@ -89,25 +97,35 @@ public sealed class PathService : ISimStatePart
 
     public string Name => "paths";
 
+    /// <summary>M3-04: gate rule, (building on the cell, passer) =&gt; true if that building lets the passer through. Set by the
+    /// Simulation; null = no gates (every building blocks). Must be a pure function of sim state.</summary>
+    public Func<EntityId, byte, bool>? GateOpen { get; set; }
+
     /// <summary>Test hook: when false the cache is bypassed. Results and costs must be identical either way.</summary>
     internal bool CacheEnabled { get; set; } = true;
 
     /// <summary>Queues a single path request and returns its id (monotonic).</summary>
-    public int Request(CellCoord from, CellCoord to, Locomotion loco)
+    public int Request(CellCoord from, CellCoord to, Locomotion loco) => Request(from, to, loco, NoPasser);
+
+    /// <summary>As <see cref="Request(CellCoord, CellCoord, Locomotion)"/> for a passer that may go through its team's gates (M3-04).</summary>
+    public int Request(CellCoord from, CellCoord to, Locomotion loco, byte passer)
     {
-        var r = new Req { Id = _nextId++, Loco = loco, To = to, Froms = new[] { from } };
+        var r = new Req { Id = _nextId++, Loco = loco, Passer = passer, To = to, Froms = new[] { from } };
         _queue.Add(r);
         return r.Id;
     }
 
     /// <summary>Queues one backward search giving a path for each start; poll with index i for the i-th start.</summary>
-    public int RequestGroup(IReadOnlyList<CellCoord> froms, CellCoord to, Locomotion loco)
+    public int RequestGroup(IReadOnlyList<CellCoord> froms, CellCoord to, Locomotion loco) => RequestGroup(froms, to, loco, NoPasser);
+
+    /// <summary>As <see cref="RequestGroup(IReadOnlyList{CellCoord}, CellCoord, Locomotion)"/> with a gate passer (M3-04).</summary>
+    public int RequestGroup(IReadOnlyList<CellCoord> froms, CellCoord to, Locomotion loco, byte passer)
     {
         ArgumentNullException.ThrowIfNull(froms);
         if (froms.Count == 0) throw new ArgumentException("A group needs at least one start.", nameof(froms));
         var arr = new CellCoord[froms.Count];
         for (int i = 0; i < arr.Length; i++) arr[i] = froms[i];
-        var r = new Req { Id = _nextId++, Loco = loco, Group = true, To = to, Froms = arr };
+        var r = new Req { Id = _nextId++, Loco = loco, Passer = passer, Group = true, To = to, Froms = arr };
         _queue.Add(r);
         return r.Id;
     }
@@ -169,6 +187,7 @@ public sealed class PathService : ISimStatePart
 
     private int Solve(Req r, out Entry[] entries)
     {
+        _passer = r.Passer;   // M3-04: read by Factor
         if (!r.Group) return SolveSingle(r, out entries);
         return SolveGroup(r, out entries);
     }
@@ -180,7 +199,8 @@ public sealed class PathService : ISimStatePart
     {
         if (!InMap(x, y)) return 0;
         var c = new CellCoord(x, y);
-        if (!_map.BuildingAt(c).IsNone) return 0;
+        EntityId b = _map.BuildingAt(c);
+        if (!b.IsNone && (_passer == NoPasser || GateOpen == null || !GateOpen(b, _passer))) return 0;   // M3-04: own-team gate
         int sp = _map.SpeedPercent(c, loco, _terrain);
         if (sp <= 0) return 0;
         int f = 10000 / sp;
@@ -214,7 +234,7 @@ public sealed class PathService : ISimStatePart
         entries = new[] { new Entry { Status = PathStatus.NotFound } };
         if (!InMap(from.X, from.Y) || !InMap(to.X, to.Y)) return 0;
 
-        var key = new CacheKey(from.Y * _w + from.X, to.Y * _w + to.X, r.Loco, _map.Version);
+        var key = new CacheKey(from.Y * _w + from.X, to.Y * _w + to.X, r.Loco, _map.Version, r.Passer);
         if (CacheEnabled && _cache.TryGetValue(key, out CacheValue? hit))
         {
             entries[0] = new Entry { Status = hit.Status, Path = hit.Path };
@@ -420,7 +440,10 @@ public sealed class PathService : ISimStatePart
         w.Write(_queue.Count);
         foreach (Req r in _queue)
         {
-            w.Write(r.Id); w.Write((byte)r.Loco); w.Write(r.Group); w.Write(r.To.X); w.Write(r.To.Y);
+            w.Write(r.Id);
+            // M3-04: bit 7 of the loco byte = a passer byte follows (unset, the bytes are as before).
+            if (r.Passer == NoPasser) w.Write((byte)r.Loco); else { w.Write((byte)((byte)r.Loco | 0x80)); w.Write(r.Passer); }
+            w.Write(r.Group); w.Write(r.To.X); w.Write(r.To.Y);
             w.Write(r.Froms.Length);
             foreach (CellCoord f in r.Froms) { w.Write(f.X); w.Write(f.Y); }
         }
@@ -443,7 +466,11 @@ public sealed class PathService : ISimStatePart
         int q = r.ReadInt32();
         for (int i = 0; i < q; i++)
         {
-            var req = new Req { Id = r.ReadInt32(), Loco = (Locomotion)r.ReadByte(), Group = r.ReadBoolean() };
+            var req = new Req { Id = r.ReadInt32() };
+            byte loco = r.ReadByte();   // M3-04: bit 7 = passer follows
+            req.Loco = (Locomotion)(loco & 0x7F);
+            if ((loco & 0x80) != 0) req.Passer = r.ReadByte();
+            req.Group = r.ReadBoolean();
             req.To = new CellCoord(r.ReadInt32(), r.ReadInt32());
             req.Froms = new CellCoord[r.ReadInt32()];
             for (int k = 0; k < req.Froms.Length; k++) req.Froms[k] = new CellCoord(r.ReadInt32(), r.ReadInt32());

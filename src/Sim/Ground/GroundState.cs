@@ -16,7 +16,8 @@ namespace Rts.Sim.Ground;
 /// <item><see cref="HardeningDirty"/>: a wall/gate/structure appeared or disappeared since the last enclosure recompute
 /// (set by the building hooks in Simulation.M3.cs; M3-04 recomputes and clears it).</item>
 /// </list>
-/// Layout: version, width, height, dirty flag, then (cell + 1, radiation, hardened, blackout) for every non-zero cell,
+/// Layout: version, width, height, flags (bit 0 = dirty, bit 1 = <see cref="GroutedPlayers"/> follows as a ulong; M3-04,
+/// so the bytes are unchanged while nobody has grouting), then (cell + 1, radiation, hardened, blackout) for every non-zero cell,
 /// ended by 0. Sparse, so an untouched map costs a few bytes in every hash.
 /// </summary>
 public sealed class GroundState : ISimStatePart
@@ -34,6 +35,9 @@ public sealed class GroundState : ISimStatePart
     public readonly int[] Blackout;
     /// <summary>True when the enclosure must be recomputed.</summary>
     public bool HardeningDirty;
+    /// <summary>M3-04: bit p set = player slot p had a "grouting" upgrade at the last enclosure recompute. A change in this mask
+    /// (an upgrade finished) triggers a recompute like <see cref="HardeningDirty"/>.</summary>
+    public ulong GroutedPlayers;
 
     /// <summary>Creates an all-zero part sized by the map.</summary>
     public GroundState(int width, int height)
@@ -78,7 +82,8 @@ public sealed class GroundState : ISimStatePart
     {
         w.Write(Version);
         w.Write(Width); w.Write(Height);
-        w.Write(HardeningDirty);
+        w.Write((byte)((HardeningDirty ? 1 : 0) | (GroutedPlayers != 0 ? 2 : 0)));   // M3-04: flags byte (was a bool)
+        if (GroutedPlayers != 0) w.Write(GroutedPlayers);
         for (int i = 0; i < Radiation.Length; i++)
         {
             if (Radiation[i] == 0 && Hardened[i] == 0 && Blackout[i] == 0) continue;
@@ -92,7 +97,10 @@ public sealed class GroundState : ISimStatePart
     {
         if (r.ReadByte() != Version) throw new InvalidDataException("ground version mismatch.");
         if (r.ReadInt32() != Width || r.ReadInt32() != Height) throw new InvalidDataException("ground size mismatch.");
-        HardeningDirty = r.ReadBoolean();
+        byte flags = r.ReadByte();   // M3-04: flags byte (bit 0 = dirty, bit 1 = grouted mask follows)
+        if ((flags & ~3) != 0) throw new InvalidDataException("ground flags invalid.");
+        HardeningDirty = (flags & 1) != 0;
+        GroutedPlayers = (flags & 2) != 0 ? r.ReadUInt64() : 0;
         Array.Clear(Radiation); Array.Clear(Hardened); Array.Clear(Blackout);
         for (int k = r.ReadInt32(); k != 0; k = r.ReadInt32())
         {

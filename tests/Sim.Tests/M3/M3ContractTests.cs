@@ -212,11 +212,13 @@ public sealed class M3ContractTests
     public void BuildingPlacementAndRemoval_MarkHardeningDirty()
     {
         var sim = ProductionFixture.NewSim(new[] { ("test_hq", 4, 4) });
-        Assert.True(sim.Ground.HardeningDirty);   // stub RunHardening does not clear it yet (M3-04 does)
+        Assert.True(sim.Ground.HardeningDirty);   // set by placement; cleared by the first Step's RunHardening (M3-04)
         sim.Ground.HardeningDirty = false;
         EntityId hq = sim.Buildings.Slots.IdOf(1);
         sim.Step(new[] { new Command(0, 0, 0, CommandKind.Sell, hq, default, default, 0) });
-        Assert.True(sim.Ground.HardeningDirty);
+        // M3-04: the sale (ApplyInput) sets the flag and RunHardening (RunGround, same tick) consumes it, so it is clear again.
+        Assert.False(sim.Buildings.Slots.IsAlive(hq));
+        Assert.False(sim.Ground.HardeningDirty);   // M3-04: cleared by RunHardening (hook coverage: M3/Hardening/HardeningTests)
     }
 
     [Fact]

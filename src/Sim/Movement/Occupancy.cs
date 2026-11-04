@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
 using Rts.Sim.Core;
+using Rts.Sim.Pathing;
 using Rts.Sim.Rules;
 using Rts.Sim.World;
 
@@ -27,18 +28,23 @@ internal static class Occupancy
     public static CellCoord CurCell(ActorKind kind, MobileStore store, int i) =>
         kind == ActorKind.Vehicle ? store.Position[i].ToCell() : ((InfantryStore)store).SlotCell[i];
 
-    /// <summary>Inside the map, passable terrain (walls count) for the locomotion and no building.</summary>
-    public static bool TerrainOk(Simulation sim, CellCoord c, Locomotion loco) =>
-        sim.Setup.Map.Contains(c) && sim.Map.IsPassableTerrain(c, loco, sim.Setup.Rules.Terrain) && sim.Map.BuildingAt(c).IsNone;
+    /// <summary>Inside the map, passable terrain (walls count) for the locomotion and no building — except a gate of
+    /// <paramref name="passer"/>'s team (M3-04, D-076; <see cref="PathService.NoPasser"/> = every building blocks).</summary>
+    public static bool TerrainOk(Simulation sim, CellCoord c, Locomotion loco, byte passer = PathService.NoPasser)
+    {
+        if (!sim.Setup.Map.Contains(c) || !sim.Map.IsPassableTerrain(c, loco, sim.Setup.Rules.Terrain)) return false;
+        EntityId b = sim.Map.BuildingAt(c);
+        return b.IsNone || (passer != PathService.NoPasser && sim.GateOpenFor(b, passer));   // M3-04: own-team gate
+    }
 
     /// <summary>True if the infantry in a slot id is alive with positive health.</summary>
     public static bool LiveInfantry(Simulation sim, EntityId id) =>
         !id.IsNone && sim.Infantry.Slots.IsAlive(id) && sim.Infantry.Health[id.Index] > 0;
 
     /// <summary>A vehicle (other than <paramref name="self"/>) could be placed in the cell right now.</summary>
-    public static bool FreeForVehicle(Simulation sim, CellCoord c, Locomotion loco, EntityId self)
+    public static bool FreeForVehicle(Simulation sim, CellCoord c, Locomotion loco, EntityId self, byte passer = PathService.NoPasser)
     {
-        if (!TerrainOk(sim, c, loco)) return false;
+        if (!TerrainOk(sim, c, loco, passer)) return false;   // M3-04: passer
         EntityId v = sim.Map.VehicleAt(c);
         if (!v.IsNone && v != self) return false;
         for (int s = 0; s < InfantryStore.SubSlotCount; s++)
@@ -47,18 +53,18 @@ internal static class Occupancy
     }
 
     /// <summary>An infantry soldier could enter the cell right now (no vehicle, a free sub-slot).</summary>
-    public static bool FreeForInfantry(Simulation sim, CellCoord c)
+    public static bool FreeForInfantry(Simulation sim, CellCoord c, byte passer = PathService.NoPasser)
     {
-        if (!TerrainOk(sim, c, Locomotion.Foot) || !sim.Map.VehicleAt(c).IsNone) return false;
+        if (!TerrainOk(sim, c, Locomotion.Foot, passer) || !sim.Map.VehicleAt(c).IsNone) return false;   // M3-04: passer
         return sim.Map.FreeInfantrySlot(c) >= 0;
     }
 
     /// <summary>A diagonal step may not cut a corner that is blocked terrain or a building (same rule as the path search).</summary>
-    public static bool CornersOk(Simulation sim, CellCoord from, int dir, Locomotion loco)
+    public static bool CornersOk(Simulation sim, CellCoord from, int dir, Locomotion loco, byte passer = PathService.NoPasser)
     {
         if ((dir & 1) == 0) return true;
-        return TerrainOk(sim, new CellCoord(from.X + Dx[dir], from.Y), loco)
-            && TerrainOk(sim, new CellCoord(from.X, from.Y + Dy[dir]), loco);
+        return TerrainOk(sim, new CellCoord(from.X + Dx[dir], from.Y), loco, passer)   // M3-04: passer
+            && TerrainOk(sim, new CellCoord(from.X, from.Y + Dy[dir]), loco, passer);
     }
 
     public static int Chebyshev(CellCoord a, CellCoord b) => Math.Max(Math.Abs(a.X - b.X), Math.Abs(a.Y - b.Y));
@@ -68,8 +74,9 @@ internal static class Occupancy
     {
         var c = new CellCoord(from.X + Dx[dir], from.Y + Dy[dir]);
         Locomotion loco = LocoOf(sim, kind, store, i);
-        if (!CornersOk(sim, from, dir, loco)) return false;
-        return kind == ActorKind.Vehicle ? FreeForVehicle(sim, c, loco, store.Slots.IdOf(i)) : FreeForInfantry(sim, c);
+        byte passer = store.Player[i];   // M3-04: own-team gates are open to this actor
+        if (!CornersOk(sim, from, dir, loco, passer)) return false;
+        return kind == ActorKind.Vehicle ? FreeForVehicle(sim, c, loco, store.Slots.IdOf(i), passer) : FreeForInfantry(sim, c, passer);
     }
 
     /// <summary>First free adjacent cell in the order N..NW starting at <paramref name="startDir"/>.</summary>
