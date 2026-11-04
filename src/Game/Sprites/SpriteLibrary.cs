@@ -48,7 +48,42 @@ public sealed class SpriteLibrary : IDisposable
             }
             manifests.Add(manifest.Id, manifest);
         }
+        CheckCompanions(manifests);
         return new SpriteLibrary(manifests);
+    }
+
+    // A turret or shadow sheet is only meaningful beside its body sheet, so it must be named <base>_<layer> and <base> must exist.
+    private static void CheckCompanions(SortedDictionary<string, SpriteManifest> manifests)
+    {
+        foreach (SpriteManifest manifest in manifests.Values)
+        {
+            if (manifest.Layer == "body") continue;
+            string suffix = "_" + manifest.Layer;
+            if (!manifest.Id.EndsWith(suffix, StringComparison.Ordinal) || manifest.Id.Length == suffix.Length)
+            {
+                throw new InvalidDataException(
+                    $"{manifest.SourcePath}: a {manifest.Layer} sheet must be named <base>{suffix}");
+            }
+            string baseId = manifest.Id[..^suffix.Length];
+            if (!manifests.ContainsKey(baseId))
+            {
+                throw new InvalidDataException(
+                    $"{manifest.SourcePath}: no body sprite '{baseId}' for this {manifest.Layer} sheet");
+            }
+        }
+    }
+
+    /// <summary>
+    /// The companion sheet of a body sprite: the manifest named <c>&lt;id&gt;_&lt;layer&gt;</c> when it exists and has that layer,
+    /// otherwise null.
+    /// </summary>
+    /// <param name="id">Body sprite id.</param>
+    /// <param name="layer">Companion layer, <c>turret</c> or <c>shadow</c>.</param>
+    public SpriteManifest? Companion(string id, string layer)
+    {
+        ArgumentNullException.ThrowIfNull(id);
+        ArgumentNullException.ThrowIfNull(layer);
+        return _manifests.TryGetValue(id + "_" + layer, out SpriteManifest? manifest) && manifest.Layer == layer ? manifest : null;
     }
 
     /// <summary>The manifest for an id.</summary>

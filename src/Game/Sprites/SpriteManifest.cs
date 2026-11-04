@@ -21,15 +21,25 @@ namespace Rts.Game.Sprites;
 public sealed class SpriteManifest
 {
     private static readonly int[] AllowedFacings = { 1, 8, 16, 32 };
-    private static readonly string[] TopKeys = { "file", "frame_w", "frame_h", "origin_x", "origin_y", "house", "state", "fx", "shadow_dx", "shadow_dy" };
+    private static readonly string[] TopKeys =
+    {
+        "file", "frame_w", "frame_h", "origin_x", "origin_y", "house", "state", "fx", "shadow_dx", "shadow_dy",
+        "layer", "pivot_x", "pivot_y", "pivot_z", "altitude",
+    };
+    private static readonly string[] PivotKeys = { "pivot_x", "pivot_y", "pivot_z" };
+    private static readonly string[] Layers = { "body", "turret", "shadow" };
     private static readonly string[] StateKeys = { "name", "facings", "frames", "first", "ticks_per_frame", "loop" };
     private static readonly string[] FxKeys = { "state", "kind", "x", "y", "phase" };
 
     private SpriteManifest(string id, string sourcePath, string sheetFile, int frameW, int frameH, int originX, int originY,
-        uint[] houseRamp, IReadOnlyList<SpriteState> states, IReadOnlyList<FxAnchor> fx, int shadowDx = 0, int shadowDy = 0)
+        uint[] houseRamp, IReadOnlyList<SpriteState> states, IReadOnlyList<FxAnchor> fx, int shadowDx = 0, int shadowDy = 0,
+        string layer = "body", TurretPivot? pivot = null, double altitude = 0)
     {
         ShadowDx = shadowDx;
         ShadowDy = shadowDy;
+        Layer = layer;
+        Pivot = pivot;
+        Altitude = altitude;
         Id = id;
         SourcePath = sourcePath;
         SheetFile = sheetFile;
@@ -51,6 +61,24 @@ public sealed class SpriteManifest
 
     /// <summary>See <see cref="ShadowDx"/>.</summary>
     public int ShadowDy { get; }
+
+    /// <summary>
+    /// Which layer this sheet is (manifest key <c>layer</c>): <c>body</c> (the default, a full unit or building), or the companion
+    /// sheets <c>turret</c> and <c>shadow</c>, which are drawn with a body sheet named <c>&lt;base&gt;_&lt;layer&gt;</c>.
+    /// </summary>
+    public string Layer { get; }
+
+    /// <summary>
+    /// Turret pivot on the hull, in cells (manifest keys <c>pivot_x</c>, <c>pivot_y</c>, <c>pivot_z</c>). Set on a
+    /// <c>turret</c> layer only, where all three keys are required; null otherwise.
+    /// </summary>
+    public TurretPivot? Pivot { get; }
+
+    /// <summary>
+    /// Height the body is baked at, in world units (manifest key <c>altitude</c>, 0 when absent). Informational: the drawing
+    /// code does not use it.
+    /// </summary>
+    public double Altitude { get; }
 
     /// <summary>Sprite id, the manifest's file stem.</summary>
     public string Id { get; }
@@ -141,7 +169,50 @@ public sealed class SpriteManifest
 
         int shadowDx = Signed(root, "shadow_dx", sourcePath);
         int shadowDy = Signed(root, "shadow_dy", sourcePath);
-        return new SpriteManifest(id, sourcePath, file, frameW, frameH, originX, originY, ramp, states, fx, shadowDx, shadowDy);
+
+        string layer = ReadLayer(root, sourcePath);
+        TurretPivot? pivot = ReadPivot(root, layer, sourcePath);
+        double altitude = Number(root, "altitude", sourcePath) ?? 0;
+        return new SpriteManifest(id, sourcePath, file, frameW, frameH, originX, originY, ramp, states, fx, shadowDx, shadowDy,
+            layer, pivot, altitude);
+    }
+
+    private static string ReadLayer(TomlTable root, string sourcePath)
+    {
+        if (!root.TryGetValue("layer", out object? raw)) return "body";
+        if (raw is string layer && Array.IndexOf(Layers, layer) >= 0) return layer;
+        throw new InvalidDataException(
+            $"{sourcePath}: layer must be \"body\", \"turret\" or \"shadow\", found {raw}");
+    }
+
+    private static TurretPivot? ReadPivot(TomlTable root, string layer, string sourcePath)
+    {
+        bool any = PivotKeys.Any(root.ContainsKey);
+        if (layer != "turret")
+        {
+            if (any) throw new InvalidDataException($"{sourcePath}: pivot_x/pivot_y/pivot_z are only allowed on a turret layer");
+            return null;
+        }
+        foreach (string key in PivotKeys)
+        {
+            if (!root.ContainsKey(key)) throw new InvalidDataException($"{sourcePath}: a turret layer needs '{key}'");
+        }
+        return new TurretPivot(
+            Number(root, "pivot_x", sourcePath)!.Value,
+            Number(root, "pivot_y", sourcePath)!.Value,
+            Number(root, "pivot_z", sourcePath)!.Value);
+    }
+
+    /// <summary>A TOML number (float or integer) as a double, or null when the key is absent.</summary>
+    private static double? Number(TomlTable table, string key, string sourcePath)
+    {
+        if (!table.TryGetValue(key, out object? raw)) return null;
+        return raw switch
+        {
+            double d when double.IsFinite(d) => d,
+            long l => l,
+            _ => throw new InvalidDataException($"{sourcePath}: '{key}' must be a number, found {raw}"),
+        };
     }
 
     /// <summary>
