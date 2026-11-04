@@ -38,11 +38,17 @@ public static class UnitRenderer
         bool infantry = view.Kind == UnitKind.Infantry;
         ResolvedSprite sprite = sprites.ForUnit(rules, view);
         bool moving = memory.IsMoving(UnitKey.Of(view));
-        int frame = SpriteStates.UnitFrame(sprite.Manifest, infantry, moving, view.Facing, tick);
         Vector2 origin = SpriteLayout.UnitOrigin(camera, unit.World);
         Color house = PlayerColours.Base(view.Player);
         if (UnitVisuals.ShowTunnelMarker(view)) DrawTunnelMarker(batch, pixel, origin, infantry, house, camera.Zoom);
-        painter.Draw(batch, sprite, frame, origin, house, camera.Zoom, UnitVisuals.Alpha(view));
+        float alpha = UnitVisuals.Alpha(view);
+        // M3-18: shadow under the body, turret on top (body facing: the snapshot carries no turret facing), dive replaces the body.
+        foreach (UnitLayer layer in UnitLayerPlan.For(sprite.Manifest, infantry, moving, view.Facing, null, false, tick))
+        {
+            Vector2 at = origin + new Vector2(layer.OffsetX, layer.OffsetY) * camera.Zoom;
+            float layerAlpha = layer.Kind == UnitLayerKind.Shadow ? alpha * UnitLayerPlan.ShadowAlpha : alpha;
+            painter.Draw(batch, sprite, layer.Frame, at, house, camera.Zoom, layerAlpha);
+        }
 
         if (!selected) return;
         float zoom = camera.Zoom;
