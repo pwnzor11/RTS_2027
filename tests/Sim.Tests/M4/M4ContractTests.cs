@@ -461,12 +461,12 @@ public sealed class M4ContractTests
     }
 
     [Fact]
-    public void MapFeaturesPlace_StubPlacesNothing()
+    public void MapFeaturesPlace_UnknownTypePlacesNothing()
     {
         var sim = ScriptedGame.NewSim(ScriptedGame.Setup());
         ulong before = sim.ComputeStateHash();
         var meta = new MapMeta("", MapSymmetry.None, 2, null, new[] { new MapFeature("x", new CellCoord(1, 1)) });
-        Assert.Empty(MapFeatures.Place(sim, meta, 1));
+        Assert.True(MapFeatures.Place(sim, meta, 1).Single().IsNone);   // M4-15: unknown type -> None (was: stub returned empty)
         Assert.Equal(before, sim.ComputeStateHash());
     }
 

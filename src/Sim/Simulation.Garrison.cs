@@ -2,6 +2,7 @@
 // Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
 using Rts.Sim.Combat;
 using Rts.Sim.Core;
+using Rts.Sim.Garrison;
 using Rts.Sim.Missions;
 using Rts.Sim.Movement;
 using Rts.Sim.Numerics;
@@ -69,7 +70,41 @@ public sealed partial class Simulation
         _tunnels.InfantryCarrier[infantry] = building;
         _infantry.Position[infantry] = BuildingCentre(building.Index);
         Queue(_infantry, infantry, MissionKind.Garrisoned, default, default);
+        FlipNeutralOnEnter(building.Index, _infantry.Player[infantry]);
         return true;
+    }
+
+    // ---- neutral map features (M4-15, design 08 §3, Q-M4-b) -----------------------------------
+    // ASSUMED (M4-15): "neutral" means the building's owner is a neutral slot (Teams.Neutral), not its type or Faction: neu_* types default to
+    // Faction.Authority in the loader and that is ignored here. A building with HomeOwner != NoOwner is a flipped ruin: it is an ordinary
+    // building of the occupier's for combat and capture, but never counts for defeat (UpdateDefeat) and has no tier/production effect
+    // (neu_* types provide and produce nothing).
+
+    /// <summary>The first soldier into an empty neutral building makes the occupier its owner and remembers the neutral slot.</summary>
+    private void FlipNeutralOnEnter(int b, byte occupier)
+    {
+        byte owner = _buildings.Player[b];
+        if (!_players.IsNeutral(owner) || _players.IsNeutral(occupier) || _garrison.HomeOwner[b] != GarrisonState.NoOwner) return;
+        _garrison.HomeOwner[b] = owner;
+        CaptureBuilding(b, occupier);
+    }
+
+    /// <summary>Gives a flipped building with no occupants back to its home (neutral) owner. True if it reverted.</summary>
+    private bool RevertIfEmpty(int b)
+    {
+        byte home = _garrison.HomeOwner[b];
+        if (home == GarrisonState.NoOwner || !_buildings.Slots.IsIndexAlive(b)) return false;
+        if (OccupantsIn(_buildings.Slots.IdOf(b)) > 0) return false;
+        _garrison.HomeOwner[b] = GarrisonState.NoOwner;
+        CaptureBuilding(b, home);
+        return true;
+    }
+
+    /// <summary>Per tick (from UpdateDefeat): flipped buildings whose occupants all died revert to neutral. Slot order.</summary>
+    private void RevertEmptyRuins()
+    {
+        for (int b = 1; b < _buildings.Capacity; b++)
+            if (_garrison.HomeOwner[b] != GarrisonState.NoOwner) RevertIfEmpty(b);
     }
 
     // ---- firing out ---------------------------------------------------------------------------
@@ -173,12 +208,19 @@ public sealed partial class Simulation
 
     /// <summary>A building is being removed (destroyed or sold), before its cells are freed: eject the occupants with
     /// eject_damage_permille damage; those with no room are lost.</summary>
-    private void OnGarrisonBuildingRemoving(int b) => EjectGarrison(b, true, true);
+    private void OnGarrisonBuildingRemoving(int b) => EjectCore(b, true, true);
 
     /// <summary>Put the occupants of building slot <paramref name="b"/> on free cells in rings 1-2 around the footprint, in infantry slot
     /// order. <paramref name="damage"/>: each takes eject_damage_permille of its max health. <paramref name="loseRest"/>: soldiers with
     /// no room vanish (else they stay inside). Emits FxKind.GarrisonExit with the number ejected. Returns that number.</summary>
     internal int EjectGarrison(int b, bool damage, bool loseRest)
+    {
+        int n = EjectCore(b, damage, loseRest);
+        RevertIfEmpty(b);   // M4-15: an emptied flipped ruin is neutral again (before an engineer captures it)
+        return n;
+    }
+
+    private int EjectCore(int b, bool damage, bool loseRest)
     {
         EntityId building = _buildings.Slots.IdOf(b);
         int ejected = 0;
