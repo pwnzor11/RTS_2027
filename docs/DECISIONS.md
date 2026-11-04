@@ -810,3 +810,18 @@ golden and pinned hashes re-pinned for the new part only. The commander reaches 
 For M5, commander and player chat lines live in the game layer (`CommanderChatLog`) and are not in replays; replays still repeat every
 directive exactly. A replay chat block can be added later (M5-10 or M9 LAN chat).
 **Why:** keeps text out of the deterministic sim; reversible. **Status:** assumed — confirm
+
+### D-111 · 2026-11-04 · M5 setup and chat choices
+**Decision:** Setup screen: each AI slot has a "Cmdr" toggle; a commander slot reads "AI LLM - <tier> ..." and, with provider
+"none" or no stored key, "(no key - plays as standard AI)". Save header version 4 stores the flag per slot (v1–v3 read as off);
+the setup screen keeps no last-used setup, so nothing else persists it. In game, Enter opens the commander chat (Esc cancels, typing
+blocks hotkeys); `/to N text` talks to the commander of player N (1-based as shown), plain text to the first commander. Player
+lines go into the next 30 s decision only (no extra call); they never change the directive (Q-M5-e). Loaded saves rebuild their
+commanders from the app settings (history and call count start fresh). The spectator table tags commander slots "LLM".
+**Status:** assumed — confirm (visible text and keys; owner play-test)
+
+### D-112 · 2026-11-04 · Commander personas
+**Decision:** data/llm/personas.toml holds one voice per leader in docs/lore/leaders.md (4 Authority, 4 Directorate), written from
+each bio and motivation only; nothing from the Secret paragraphs (a test checks). A commander gets its faction's leaders in file
+order, rotated by player slot.
+**Status:** assumed — confirm (owner reads the voices)

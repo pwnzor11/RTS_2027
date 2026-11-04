@@ -158,15 +158,15 @@ Built-in AI does micro; an LLM sets strategy every 30 s (D-103) and talks in cha
 (Anthropic or OpenAI-compatible), local only. LLM-vs-LLM spectating. Plan: docs/design/09_m5_plan.md (approved, D-103).
 - [x] M5-00 src/Llm project + contracts (src/Llm/Contracts.cs)
 - [x] M5-01 Sim contracts: CommandKind.Directive = 23, directive state part + hash, PlayerView.Directive, pack/unpack (session 7; save format 9, D-109)
-- [ ] M5-02 DirectiveBias in the tiered AI
+- [x] M5-02 DirectiveBias in the tiered AI (session 7: all-in first wave 1230 vs 2310 ticks, turtle 3810; plain game unchanged)
 - [x] M5-03 Providers (Anthropic, OpenAI-compatible), fake provider, reply parser
 - [x] M5-04 Fog-honest battlefield summary + SummaryHistory
-- [ ] M5-05 Commander loop: 30 s cadence, apply-at-tick, drop stale, fallback to plain tier; wire LlmHooks.TestConnection
-- [ ] M5-06 Personas from docs/lore/leaders.md (data/llm/*.toml)
-- [ ] M5-07 Chat panel + player→commander chat (talkback, flavour only)
+- [x] M5-05 Commander loop: 30 s cadence, apply-at-tick, drop stale, fallback to plain tier; wire LlmHooks.TestConnection (session 7)
+- [x] M5-06 Personas from docs/lore/leaders.md (data/llm/personas.toml, 8 leaders; voices assumed — confirm, D-112)
+- [x] M5-07 Chat panel + player→commander chat (talkback, flavour only) (session 7; Enter, /to N)
 - [x] M5-08 LLM settings, DPAPI key store, settings page (model names: Q-40 answered session 7, D-108)
-- [ ] M5-09 Setup + spectator: LLM kind per slot, LLM-vs-LLM
-- [ ] M5-10 Replay/save tests with recorded directives; owner play-test
+- [x] M5-09 Setup + spectator: LLM kind per slot, LLM-vs-LLM (session 7; save header v4)
+- [ ] M5-10 Replay/save tests with recorded directives; owner play-test (tests done session 7, loaded saves rebuild commanders; owner play-test with a real key open)
 
 ## M6 · The Left Behind (D-087)
 Third faction: Glass Coast evacuees abandoned in 1990; nomadic scavengers, mobile crawler-rig bases, salvaged tech, raids.
