@@ -12,6 +12,23 @@ Frame 0 faces north (+Y, up-screen); facings run clockwise in 22.5 deg steps. Sh
 4 columns, row-major (so with 4 frames per facing one facing is one sheet row).
 Work files: art/pilot/work/veh_<id>/{col,mask,shadow}_XX.png (git-ignored).  The tank keeps its own script (build_tank.py).
 """
+# TURRET-LAYER RULES (reactor crawler, rocket truck, decon truck; dir_agitprop uses the same convention).  Goal: hull sheet +
+# turret sheet read as ONE object at every hull/turret facing; a baked single-pass render (layer "baked") is the reference.
+#  1. MOUNT (module dict MOUNT, built by S.mount() inside the BODY group, all of it rotationally symmetric about the pivot):
+#     a raised collar ("lip", radius r_lip, top exactly at PIVOT z) wider than the turret's base, around a dark recessed well
+#     (r_well, optional) -- the turret base always sits ON this collar, never floats.  PIVOT z = the collar top, so the turret
+#     parts start at pz with no gap.
+#  2. CONTACT SHADOW: S.mount() also adds an invisible marker disc (radius r_shadow, on the deck plane) that only the mask pass
+#     sees.  post() turns it into a dithered darkening of the hull's deck pixels: solid inside 0.7 r, checker dither out to r,
+#     centre nudged to the lower right (sun is upper left).  Marker pixels hidden behind other geometry are not darkened.
+#  3. OUTLINE: the turret sheet keeps the 1 px dark outline only where its edge is likely to border empty space.  Edge pixels
+#     within soft_r (ground-plane distance from the pivot, world units, 3.4 = 1 cell; = the radius that is always over hull) get a SOFT RIM instead:
+#     the neighbouring turret colour darkened (x0.62, palette-quantised), never the near-black outline.
+#  4. LIGHTING: hull and turret use the same sun/world/materials/frame_b recipe; the house ramp is calibrated on the UNION of
+#     the layers (one lo/hi), the turret layer gets an invisible deck proxy (S.mount) so it sees the same bounce/AO as on the
+#     hull.  Neither layer carries the other's shadow: the hull sheet has the whole vehicle's ground shadow, the turret none.
+#  5. Check: `--layers baked --facings a b c d` renders the whole vehicle in one pass; veh_contact.py compares it with
+#     the composite (hull + turret at equal facings) and prints differing pixels per frame.
 import argparse, importlib.util, math, os, sys, time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -44,8 +61,15 @@ def load_module(vid):
     return m
 
 
-def work_dir(vid):
-    return os.path.join(C.WORK, f"veh_{vid}")
+def work_dir(vid, layer="body"):
+    return os.path.join(C.WORK, f"veh_{vid}" if layer == "body" else f"veh_{vid}_{layer}")
+
+
+def layers_of(mod):
+    """Optional module attribute LAYERS (default ["body"]): "body" (hull; with a "turret" layer the turret parts are left
+    out of it), "turret" (turret parts only, rotated about PIVOT, no shadow) and "shadow" (ground shadow only, for AIR units).
+    Parts are assigned to the turret group by calling S.begin("turret", pivot=(x, y, z)) inside build()."""
+    return list(getattr(mod, "LAYERS", ["body"]))
 
 
 def layout(mod):
@@ -67,7 +91,7 @@ def origin_px(mod):
 
 
 # ----------------------------------------------------------------------------------------------- Blender side
-def render(vid, mod, samples, states, facing_sel, preview):
+def render(vid, mod, samples, states, facing_sel, preview, layer="body"):
     import bpy
     from mathutils import Vector
 
@@ -164,6 +188,10 @@ def render(vid, mod, samples, states, facing_sel, preview):
 
     S = Ctx()
     S.CELL = CELL
+    S.layer = layer
+    S.group, S.pivot = "body", (0.0, 0.0, 0.0)
+    marker_mat = emission_mat("mk", 1.0)
+    marker_mat.node_tree.nodes["Emission"].inputs["Color"].default_value = (0, 0, 1, 1)
 
     S.pose = None   # optional (pivot, pitch_deg, dz): rigid pose applied to every primitive added while set (S.set_pose)
 
@@ -172,7 +200,12 @@ def render(vid, mod, samples, states, facing_sel, preview):
         set_pose() with no args clears it.  Used for burrow 'dive' states; default pipeline behaviour is unchanged."""
         S.pose = (pitch, dz, pivot) if (pitch or dz) else None
 
-    def finish(o, name, m, nocast):
+    def begin(group, pivot=(0.0, 0.0, 0.0)):
+        """Following parts belong to `group` ("body" or "turret"); a turret layer is rendered with `pivot` at the origin."""
+        S.group, S.pivot = group, pivot
+    S.begin = begin
+
+    def finish(o, name, m, nocast, kind="part"):
         for c in list(o.users_collection):
             c.objects.unlink(o)
         if S.pose is not None:
@@ -185,6 +218,12 @@ def render(vid, mod, samples, states, facing_sel, preview):
         o.name = name
         sc.collection.objects.link(o)
         o.parent = rig
+        o["grp"] = S.group
+        o["nocast"] = bool(nocast)
+        o["kind"] = kind
+        if layer == "turret" and S.group == "turret":
+            o.location.x -= S.pivot[0]
+            o.location.y -= S.pivot[1]
         o.data.materials.append(M[m])
         if nocast:
             o.visible_shadow = False
@@ -264,11 +303,33 @@ def render(vid, mod, samples, states, facing_sel, preview):
                 bm.object = cut
                 bm.solver = "EXACT"
 
+    def mount(pivot, deck_z, r_lip, r_shadow, r_well=0.0, lip="hull2", well="dark", proxy_r=1.6, shadow_z=None, verts=24, **_ignored):
+        """Turret mount, call once inside the BODY group (see the TURRET-LAYER RULES at the top of this file).
+        deck_z = height of the hull deck under the pivot; the collar top is at pivot z."""
+        px, py, pz = pivot
+        g = S.group
+        S.group = "body"
+        if r_well > 0:
+            cyl("mountwell", r_well, 0.03, (px, py, deck_z + 0.015), well, "Z", verts)
+        cyl("mountlip", r_lip, pz - deck_z, (px, py, (pz + deck_z) / 2), lip, "Z", verts)
+        mk = cyl("mountshadow", r_shadow, 0.01, (px, py, (deck_z + 0.02) if shadow_z is None else shadow_z), "dark", "Z", verts, nocast=True)   # mask-pass marker
+        mk["kind"] = "marker"
+        S.group = "turret"        # shifted by the pivot in the turret layer, like the turret parts
+        pr = cyl("mountproxy", proxy_r, 0.1, (px, py, pz - 0.05), lip, "Z", verts, nocast=True)
+        pr["kind"] = "proxy"
+        S.group = g
+    S.mount = mount
+
     def render_to(path):
         sc.render.filepath = path
         bpy.ops.render.render(write_still=True)
 
-    out = work_dir(vid)
+    def vis(o):
+        if layer == "baked":
+            return True
+        return (o["grp"] == "turret") if layer == "turret" else (o["grp"] != "turret")
+
+    out = work_dir(vid, layer)
     os.makedirs(out, exist_ok=True)
     wbg = w.node_tree.nodes["Background"].inputs[1]
     t0 = time.time()
@@ -281,6 +342,7 @@ def render(vid, mod, samples, states, facing_sel, preview):
             objs.clear()
             S.pose = None
             S.clip = False
+            S.group, S.pivot = "body", (0.0, 0.0, 0.0)
             mod.build(S, name, k, frames)
             S.pose = None
             if S.clip:
@@ -291,26 +353,44 @@ def render(vid, mod, samples, states, facing_sel, preview):
                 rig.rotation_euler = (0, 0, -math.radians(360.0 / facings * f))
                 bpy.context.view_layer.update()
                 ground.hide_render = True
-                for o in objs:
-                    o.visible_camera = True
-                    o.data.materials.clear()
-                    for m in orig[o]:
-                        o.data.materials.append(m)
-                sc.cycles.samples = 12 if preview else samples
-                render_to(os.path.join(out, f"{'prev' if preview else 'col'}_{idx:02d}.png"))
-                if preview:
+                if layer != "shadow":
+                    for o in objs:
+                        kd = o["kind"]
+                        if kd == "part":
+                            v = vis(o)     # parts of the other layer are fully invisible (no shadow / bounce on this layer's parts)
+                            o.visible_camera = o.visible_diffuse = o.visible_glossy = o.visible_transmission = v
+                            o.visible_shadow = v and not o["nocast"]
+                        else:       # marker: mask pass only; proxy: only seen by the turret layer's bounce rays, never by the camera
+                            o.visible_camera = o.visible_shadow = False
+                            o.visible_diffuse = o.visible_glossy = o.visible_transmission = (kd == "proxy" and layer == "turret")
+                        o.data.materials.clear()
+                        for m in orig[o]:
+                            o.data.materials.append(m)
+                    sc.cycles.samples = 12 if preview else samples
+                    render_to(os.path.join(out, f"{'prev' if preview else 'col'}_{idx:02d}.png"))
+                    if preview:
+                        continue
+                    for o in objs:
+                        o.data.materials.clear()
+                        if o["kind"] == "marker":
+                            o.data.materials.append(marker_mat)
+                            o.visible_camera = layer == "body"
+                        else:
+                            o.data.materials.append(mask_on if orig[o][0] is M["house"] else mask_off)
+                    old = wbg.default_value
+                    wbg.default_value = 0.0
+                    sc.cycles.samples = 1
+                    render_to(os.path.join(out, f"mask_{idx:02d}.png"))
+                    wbg.default_value = old
+                    if layer == "turret":      # turret layer carries no shadow (the body sheet has the whole vehicle's)
+                        continue
+                elif preview:
                     continue
-                for o in objs:
-                    o.data.materials.clear()
-                    o.data.materials.append(mask_on if orig[o][0] is M["house"] else mask_off)
-                old = wbg.default_value
-                wbg.default_value = 0.0
-                sc.cycles.samples = 1
-                render_to(os.path.join(out, f"mask_{idx:02d}.png"))
-                wbg.default_value = old
                 ground.hide_render = False
-                for o in objs:
+                for o in objs:      # shadow pass: everything casts (the body sheet's shadow holds the whole vehicle)
                     o.visible_camera = False
+                    o.visible_diffuse = o.visible_glossy = o.visible_transmission = o["kind"] == "part"
+                    o.visible_shadow = not o["nocast"]
                 sc.cycles.samples = max(8, samples // 2)
                 noshadow = name in getattr(mod, "NO_SHADOW_STATES", ())   # overlay layers (turret) cast no ground shadow
                 prev_vs = {o: o.visible_shadow for o in objs}
@@ -326,7 +406,7 @@ def render(vid, mod, samples, states, facing_sel, preview):
 
 
 # ----------------------------------------------------------------------------------------------- post
-def write_toml(path, mod, sheet_name):
+def write_toml(path, mod, sheet_name, layer="body"):
     ox, oy = origin_px(mod)
     cv = mod.CANVAS
     lines = [
@@ -335,8 +415,33 @@ def write_toml(path, mod, sheet_name):
         "# Frame of facing f, animation step k in a state = first + f * frames + k.",
         "# Origin: pixel on the ground contact point (cell centre), counted from the frame's top-left corner.",
         "# Camera: orthographic, 40 deg elevation, sun upper-left, 64 px per cell (art/pilot/README.md).",
-        "",
-        f'file = "{sheet_name}"', f"frame_w = {cv}", f"frame_h = {cv}", f"origin_x = {ox}", f"origin_y = {oy}", "",
+    ]
+    if layer == "turret":
+        px, py, pz = mod.PIVOT
+        lines += ["# LAYER turret: the turret only, 16 facings = TURRET facing (independent of the hull). The turret pivot sits at the",
+                  "# frame origin: draw this frame with its origin on the ground point under the pivot, i.e. at the hull origin plus",
+                  "# the pivot offset rotated by the HULL facing (pivot_x east / pivot_y forward, in cells at hull facing 0; forward",
+                  "# is up-screen at 40 deg elevation, so screen dy = -(forward * 64 * sin 40) - height * 64 * cos 40). No shadow here:",
+                  "# the body sheet's shadow already contains the turret."]
+    elif layer == "shadow":
+        lines += ["# LAYER shadow: ground shadow only (1-bit, dithered, colour = palette index 1), same frame, origin and facing as the",
+                  "# body sheet. Draw it first, at the unit's ground position; the body sheet (no shadow) is drawn on top. The body is",
+                  f"# baked at altitude {mod.ALT:.2f} world units ({mod.ALT / CELL:.2f} cell), so the body sprite already floats above its",
+                  "# ground origin and the shadow falls to the lower right of it."]
+    elif "turret" in layers_of(mod):
+        lines += ["# LAYER body: hull without the turret (the turret is a separate sheet, <id>_turret.png) but with the whole vehicle's shadow."]
+    elif "shadow" in layers_of(mod):
+        lines += ["# LAYER body: airframe at altitude, no shadow (the shadow is a separate sheet, <id>_shadow.png)."]
+    lines += ["",
+        f'file = "{sheet_name}"', f"frame_w = {cv}", f"frame_h = {cv}", f"origin_x = {ox}", f"origin_y = {oy}", ""]
+    if layer != "body" or len(layers_of(mod)) > 1:
+        lines += [f'layer = "{layer}"']
+        if layer == "turret":
+            lines += [f"pivot_x = {mod.PIVOT[0] / CELL:.4f}", f"pivot_y = {mod.PIVOT[1] / CELL:.4f}", f"pivot_z = {mod.PIVOT[2] / CELL:.4f}"]
+        if layer == "shadow" or "shadow" in layers_of(mod):
+            lines += [f"altitude = {mod.ALT / CELL:.4f}"]
+        lines += [""]
+    lines += [
         "# House paint is the 8-shade magenta ramp, darkest first. Exact RGB matches are house pixels; alpha is always 0 or 255.",
         "[house]",
         "ramp = [" + ", ".join('"#%02X%02X%02X"' % c for c in C.HOUSE) + "]", "",
@@ -347,26 +452,174 @@ def write_toml(path, mod, sheet_name):
     open(path, "w").write("\n".join(lines))
 
 
-def post(vid, mod):
+def shadow_only(wd, f, cv, pal):
+    """Ground-shadow-only frame from shadow_XX.png (same threshold + checker dither as SP.frame_b)."""
+    import numpy as np
+    from PIL import Image, ImageFilter
+    s = np.asarray(Image.open(os.path.join(wd, f"shadow_{f:02d}.png")).convert("RGBA"), dtype=float)
+    lum = s[..., :3].mean(axis=2) / 255
+    lit = np.percentile(lum, 99.5)
+    sh = np.clip(1 - lum / max(lit, 1e-6), 0, 1)
+    sh = np.asarray(Image.fromarray((sh * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(SS * 0.8)), dtype=float) / 255
+    sh = np.clip((sh - 0.05) / 0.8, 0, 1)
+    sh = C.block_mean(sh, SS)
+    yy, xx = np.mgrid[0:cv, 0:cv]
+    on = (sh > 0.55) | ((sh > 0.25) & ((xx + yy) % 2 == 0))
+    out = np.zeros((cv, cv, 4), dtype=np.uint8)
+    out[on] = (*pal[1], 255)
+    return Image.fromarray(out, "RGBA")
+
+
+def union_cal(vid, mod, n):
+    """House-ramp (lo, hi) luminance calibrated on the union of the body and turret layers, so both map to the same ramp."""
+    import numpy as np
+    from PIL import Image
+    vals = []
+    for ly in [x for x in ("body", "turret") if x in layers_of(mod)]:
+        wd = work_dir(vid, ly)
+        for f in range(n):
+            cp, mp = os.path.join(wd, f"col_{f:02d}.png"), os.path.join(wd, f"mask_{f:02d}.png")
+            if not (os.path.exists(cp) and os.path.exists(mp)):
+                continue
+            c = np.asarray(Image.open(cp).convert("RGBA"), dtype=float)
+            m = np.asarray(Image.open(mp).convert("RGBA"), dtype=float)
+            sel = (m[..., 0] > 127) & (c[..., 3] > 250)
+            vals.append((c[..., 0][sel] + c[..., 2][sel]) / 2)
+    v = np.concatenate(vals)
+    return np.percentile(v, 2), np.percentile(v, 98)
+
+
+def pivot_px(mod, hull_facing, z):
+    """Screen position (x, y, float) of the point above the pivot at height z for a hull facing (frame of the body sheet)."""
+    ox, oy = origin_px(mod)
+    th = math.radians(22.5 * hull_facing)
+    x, y = mod.PIVOT[0] / CELL, mod.PIVOT[1] / CELL
+    xr, yr = x * math.cos(th) + y * math.sin(th), -x * math.sin(th) + y * math.cos(th)
+    el = math.radians(ELEV)
+    return ox + xr * 64, oy - yr * 64 * math.sin(el) - (z / CELL) * 64 * math.cos(el)
+
+
+def contact_shadow(img, wd, f, mod, pal):
+    """Dither the deck pixels under the invisible marker disc (rule 2 of the TURRET-LAYER RULES)."""
+    import numpy as np
+    from PIL import Image
+    import pixelize as P
+    mt = mod.MOUNT
+    cv = mod.CANVAS
+    m = np.asarray(Image.open(os.path.join(wd, f"mask_{f:02d}.png")).convert("RGBA"), dtype=float)
+    cov = np.where((m[..., 0] < 60) & (m[..., 1] < 60) & (m[..., 3] > 127), m[..., 2] / 255, 0.0)
+    cov = C.block_mean(cov, SS)
+    cx, cy = pivot_px(mod, f, mt.get("shadow_z", mt["deck_z"] + 0.02))      # one state, one frame per facing: frame index = hull facing
+    sx, sy = 0.18, -0.10                         # shadow centre nudged to the lower right on screen, in ground cells
+    cx += sx * 64
+    cy += -sy * 64 * math.sin(math.radians(ELEV))
+    yy, xx = np.mgrid[0:cv, 0:cv]
+    t = np.hypot((xx + 0.5 - cx) / 64, (yy + 0.5 - cy) / (64 * math.sin(math.radians(ELEV)))) / (mt["r_shadow"] / CELL)
+    g = np.clip((1 - t) / 0.3, 0, 1)
+    s_ = cov * g
+    a = np.asarray(img).copy()
+    house = np.zeros(a.shape[:2], bool)
+    for hc in C.HOUSE:
+        house |= (a[..., :3] == np.array(hc)).all(axis=2)
+    on = (a[..., 3] > 0) & ~house & ((s_ > 0.5) | ((s_ > 0.2) & ((xx + yy) % 2 == 0)))
+    ys, xs = np.nonzero(on)
+    if len(ys):
+        q = P.quantise(a[ys, xs, :3].astype(float) * 0.66, pal)
+        for y, x, qi in zip(ys, xs, q):
+            a[y, x, :3] = pal[qi]
+    return Image.fromarray(a, "RGBA"), int(on.sum())
+
+
+def frame_turret(wd, f, cal, cv, pal, mod):
+    """frame_b without shadow, with the turret outline rule (3): soft rim over the hull, hard outline in open space."""
+    import numpy as np
+    from PIL import Image
+    import structpost as SP
+    import pixelize as P
+    pal = C.PAL if pal is None else pal
+    L = SP.load_layers(wd, f, cal)
+    base, A, hfrac, hidx, _sh = C.downscale_layers(L, cv)
+    base = np.clip((base - 128) * 1.12 + 128, 0, 255)
+    solid = A >= 0.5
+    out = np.zeros((cv, cv, 4), dtype=np.uint8)
+    ys, xs = np.nonzero(solid)
+    q = P.quantise(base[ys, xs], pal)
+    for y, x, qi in zip(ys, xs, q):
+        out[y, x] = (*C.HOUSE[hidx[y, x]], 255) if hfrac[y, x] >= 0.5 else (*pal[qi], 255)
+    edge = np.zeros_like(solid)
+    edge[1:, :] |= solid[:-1, :]
+    edge[:-1, :] |= solid[1:, :]
+    edge[:, 1:] |= solid[:, :-1]
+    edge[:, :-1] |= solid[:, 1:]
+    edge &= ~solid
+    ox, oy = origin_px(mod)
+    el = math.radians(ELEV)
+    cy = oy - (mod.PIVOT[2] / CELL) * 64 * math.cos(el)
+    yy, xx = np.mgrid[0:cv, 0:cv]
+    dyp = yy + 0.5 - cy
+    r = np.hypot((xx + 0.5 - ox) / 64, np.where(dyp > 0, dyp / (64 * math.sin(el)), dyp / (64 * (math.sin(el) + 0.8 * math.cos(el)))))
+    soft = edge & (r < mod.MOUNT["soft_r"] / CELL)
+    hard = edge & ~soft
+    out[hard] = (*C.OUTLINE, 255)
+    for y, x in zip(*np.nonzero(soft)):
+        nb = [out[yy_, xx_, :3] for yy_, xx_ in ((y - 1, x), (y + 1, x), (y, x - 1), (y, x + 1))
+              if 0 <= yy_ < cv and 0 <= xx_ < cv and solid[yy_, xx_]]
+        col = np.mean(nb, axis=0) * 0.62
+        out[y, x] = (*pal[P.quantise(col[None, :], pal)[0]], 255)
+    return Image.fromarray(out, "RGBA")
+
+
+def post(vid, mod, layer="body"):
     import numpy as np
     import structpost as SP
-    wd = work_dir(vid)
+    wd = work_dir(vid, layer)
     cv = mod.CANVAS
+    pal = getattr(mod, "PALETTE", None)
     n = sum(f * fr for _n, _f, f, fr, _t in layout(mod))
-    cal = SP.calibrate(wd, n)
-    frames = [SP.frame_b(wd, f, cal, cv, cv, getattr(mod, "PALETTE", None)) for f in range(n)]
+    if layer == "shadow":
+        frames = [shadow_only(wd, f, cv, C.PAL if pal is None else pal) for f in range(n)]
+    else:
+        if layer == "turret":      # no shadow pass was rendered: a blank (fully lit) stand-in keeps the shared post-process happy
+            from PIL import Image as _I
+            for f in range(n):
+                sp = os.path.join(wd, f"shadow_{f:02d}.png")
+                if not os.path.exists(sp):
+                    _I.new("RGBA", (cv * SS, cv * SS), (255, 255, 255, 255)).save(sp)
+        if hasattr(mod, "MOUNT"):
+            cal = union_cal(vid, mod, n)
+        else:
+            cal = SP.calibrate(wd, n)
+        # no shadow in the sheet when it lives in another layer (turret layer, or the body of an air unit)
+        noshadow = layer == "turret" or "shadow" in layers_of(mod)
+        from PIL import Image as _I
+        frames, cs = [], []
+        for f in range(n):
+            if not os.path.exists(os.path.join(wd, f"col_{f:02d}.png")):      # baked reference: only the facings asked for
+                frames.append(_I.new("RGBA", (cv, cv), (0, 0, 0, 0)))
+                continue
+            if layer == "turret" and hasattr(mod, "MOUNT"):
+                im = frame_turret(wd, f, cal, cv, pal, mod)
+            else:
+                im = SP.frame_b(wd, f, cal, cv, cv, pal, shadow=not noshadow)
+                if layer == "body" and hasattr(mod, "MOUNT"):
+                    im, npx = contact_shadow(im, wd, f, mod, C.PAL if pal is None else pal)
+                    cs.append(npx)
+            frames.append(im)
+        if cs:
+            print("contact-shadow pixels per frame:", cs)
     for f, im in enumerate(frames):
         a = np.asarray(im)
         if a[0, :, 3].any() or a[-1, :, 3].any() or a[:, 0, 3].any() or a[:, -1, 3].any():
-            print(f"WARNING frame {f}: art touches the canvas edge (cropped?)")
+            print(f"WARNING {layer} frame {f}: art touches the canvas edge (cropped?)")
     sheet = C.pack_sheet(frames, COLS, cv, cv)
-    outdir = os.path.join(C.ROOT, "data", "sprites", "vehicles")
+    outdir = os.path.join(C.ROOT, "data", "sprites", "vehicles") if layer != "baked" else os.path.join(C.PILOT, "baked")   # reference only, not a game asset
     os.makedirs(outdir, exist_ok=True)
-    sheet.save(os.path.join(outdir, f"{vid}.png"))
-    write_toml(os.path.join(outdir, f"{vid}.sprite.toml"), mod, f"{vid}.png")
+    name = vid if layer == "body" else f"{vid}_{layer}"
+    sheet.save(os.path.join(outdir, f"{name}.png"))
+    write_toml(os.path.join(outdir, f"{name}.sprite.toml"), mod, f"{name}.png", layer)
     arr = np.asarray(sheet).reshape(-1, 4)
     assert set(np.unique(arr[:, 3])) <= {0, 255}
-    print("wrote", vid, sheet.size, "colours used:", len({tuple(c[:3]) for c in arr if c[3]}))
+    print("wrote", name, sheet.size, "colours used:", len({tuple(c[:3]) for c in arr if c[3]}))
 
 
 def main():
@@ -378,12 +631,14 @@ def main():
     ap.add_argument("--render-only", action="store_true")
     ap.add_argument("--post-only", action="store_true")
     ap.add_argument("--preview", action="store_true", help="colour-only half-res frames to work/veh_<id>/prev_XX.png")
+    ap.add_argument("--layers", nargs="*", default=None, help="only these layers (default: the module's LAYERS, else body)")
     a = ap.parse_args()
     mod = load_module(a.id)
-    if not a.post_only:
-        render(a.id, mod, a.samples, a.states, a.facings, a.preview)
-    if not (a.render_only or a.preview):
-        post(a.id, mod)
+    for layer in (a.layers or layers_of(mod)):
+        if not a.post_only:
+            render(a.id, mod, a.samples, a.states, a.facings, a.preview, layer)
+        if not (a.render_only or a.preview):
+            post(a.id, mod, layer)
 
 
 if __name__ == "__main__":
