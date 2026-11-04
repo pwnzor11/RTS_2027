@@ -71,7 +71,7 @@ public sealed class BoreAndMorphTests
 
         // on hardened ground nothing may break through either
         var sim2 = NewSim();
-        sim2.Ground.Hardened[sim2.Ground.IndexOf(new CellCoord(30, 10))] = 1;
+        sim2.Ground.Hardened[sim2.Ground.IndexOf(new CellCoord(30, 10))] = 1UL << 1;   // hardened by the enemy (player 1): only unfriendly grouting blocks (M3-04)
         EntityId bore2 = sim2.SpawnVehicle(0, Bore, new CellCoord(10, 10));
         Step(sim2, DeployAt(sim2, bore2, 30, 10));
         RunUntil(sim2, () => EntranceTelegraph(sim2) != null);
@@ -83,7 +83,7 @@ public sealed class BoreAndMorphTests
     {
         var sim = NewSim();
         // harden the whole map: nothing can surface or break through anywhere; the Bore keeps waiting underground
-        for (int k = 0; k < sim.Ground.Hardened.Length; k++) sim.Ground.Hardened[k] = 1;
+        for (int k = 0; k < sim.Ground.Hardened.Length; k++) sim.Ground.Hardened[k] = 1UL << 1;   // hardened by the enemy (player 1): only unfriendly grouting blocks (M3-04)
         EntityId bore = sim.SpawnVehicle(0, Bore, new CellCoord(10, 10));
         Step(sim, DeployAt(sim, bore, 20, 10));
         Run(sim, 200);

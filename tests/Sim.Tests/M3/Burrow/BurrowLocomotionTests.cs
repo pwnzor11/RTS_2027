@@ -105,12 +105,24 @@ public sealed class BurrowLocomotionTests
     }
 
     [Fact]
+    public void Surface_OnOwnTeamsGroutedGround_IsAllowed()   // integration: only unfriendly grouting blocks (D-076, M3-04)
+    {
+        var sim = NewSim();
+        EntityId u = sim.SpawnVehicle(0, Burrower, new CellCoord(10, 10));
+        var goal = new CellCoord(30, 10);
+        sim.Ground.Hardened[sim.Ground.IndexOf(goal)] = 1UL << 0;   // hardened by player 0's own enclosure
+        Step(sim, MoveTo(sim, u, goal.X, goal.Y));
+        RunUntil(sim, () => Layer(sim, u) == ActorLayer.Surface && sim.Tick > 5);
+        Assert.Equal(goal, CellOf(sim, u));
+    }
+
+    [Fact]
     public void Surface_SkipsHardenedAndOccupiedCells()
     {
         var sim = NewSim();
         EntityId u = sim.SpawnVehicle(0, Burrower, new CellCoord(10, 10));
         var goal = new CellCoord(30, 10);
-        sim.Ground.Hardened[sim.Ground.IndexOf(goal)] = 1;                     // hardened by someone's wall
+        sim.Ground.Hardened[sim.Ground.IndexOf(goal)] = 1UL << 1;   // hardened by the enemy (player 1): only unfriendly grouting blocks (M3-04)                     // hardened by someone's wall
         sim.SpawnVehicle(1, Enemy, new CellCoord(29, 10));                     // an enemy parked next to it
         Step(sim, MoveTo(sim, u, goal.X, goal.Y));
         RunUntil(sim, () => Layer(sim, u) == ActorLayer.Surface && sim.Tick > 5);
@@ -164,7 +176,7 @@ public sealed class BurrowLocomotionTests
         RunUntil(sim, () => UnitTelegraph(sim) != null);
         CellCoord cell = UnitTelegraph(sim)!.Value.Cell;
         Run(sim, 30);
-        sim.Ground.Hardened[sim.Ground.IndexOf(cell)] = 1;      // an enclosure closes over the cell
+        sim.Ground.Hardened[sim.Ground.IndexOf(cell)] = 1UL << 1;   // hardened by the enemy (player 1): only unfriendly grouting blocks (M3-04)      // an enclosure closes over the cell
         RunUntil(sim, () => Layer(sim, u) == ActorLayer.Surface);
         Assert.NotEqual(cell, CellOf(sim, u));
         Assert.False(sim.Ground.IsHardened(CellOf(sim, u)));
