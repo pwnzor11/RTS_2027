@@ -30,6 +30,7 @@ public sealed partial class Simulation
         switch (c.Kind)
         {
             case CommandKind.Move:
+                if (TryBurrowMove(c)) break;   // M3-03: a Burrow-locomotion vehicle dives instead (Simulation.BurrowMove.cs)
                 if (OwnsSubject(c, out var store) && InMap(c.Cell))
                 {
                     var kind = (ActorKind)c.Arg;

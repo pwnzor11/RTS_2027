@@ -92,7 +92,7 @@ public static class RulesLoader
         SortById(vehicles, v => v.Id);
         List<InfantryType> infantry = ParseAll(infantryEntries, problems, f => UnitRulesLoader.ParseInfantry(f, weapons, refs));
         SortById(infantry, i => i.Id);
-        List<BuildingType> buildings = ParseAll(buildingEntries, problems, f => StructureRulesLoader.ParseBuilding(f, weapons, vehicles, refs));
+        List<BuildingType> buildings = ParseAll(buildingEntries, problems, f => StructureRulesLoader.ParseBuilding(f, weapons, vehicles, refs, buildingIds));
         SortById(buildings, b => b.Id);
         List<UpgradeType> upgrades = ParseAll(upgradeEntries, problems, f => UpgradeRulesLoader.ParseUpgrade(f, refs));
         SortById(upgrades, u => u.Id);

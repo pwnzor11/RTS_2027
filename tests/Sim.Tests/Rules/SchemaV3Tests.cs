@@ -68,6 +68,8 @@ public sealed class SchemaV3Tests
         Assert.Equal("", hq.Superweapon);
         Assert.Equal(0, hq.SuperweaponChargeTicks);
         Assert.Equal(0, hq.SuperweaponEntranceRange);
+        Assert.Equal(-1, hq.MorphsInto);
+        Assert.Equal(0, hq.MorphTicks);
         Assert.All(r.Sim.Weapons, w => Assert.Equal(WeaponTargets.Ground, w.Targets));
         WarheadType ap = r.Sim.Warheads.Single(w => w.Id == "test_ap");
         Assert.Equal(0, ap.Contaminate);
@@ -157,7 +159,7 @@ public sealed class SchemaV3Tests
         RuleSet r = Load(
             ("buildings.toml", TempRules.RealWith("buildings.toml", "[test_hq]", "[test_hq]\nfaction = \"directorate\"\nentrance = \"M\"\n"
                 + "ticks_per_point = 13\nresearches = true\nseismic_radius = 6\nsees_through_blackout = true\njam_radius = 7\n"
-                + "superweapon = \"sunrise\"\nsuperweapon_charge_ticks = 9000\nsuperweapon_entrance_range = 8")
+                + "superweapon = \"sunrise\"\nsuperweapon_charge_ticks = 9000\nsuperweapon_entrance_range = 8\nmorphs_into = \"test_silo\"\nmorph_ticks = 77")
                 .Replace("[test_wall]", "[test_wall]\ngate = true")),
             ("weapons.toml", TempRules.RealWith("weapons.toml", "warhead = \"test_ap\"", "warhead = \"test_ap\"\ntargets = \"both\"")),
             ("warheads.toml", TempRules.RealWith("warheads.toml", "[test_ap]", "[test_ap]\ncontaminate = 40\ndecontaminate = 10\n"
@@ -173,6 +175,8 @@ public sealed class SchemaV3Tests
         Assert.Equal("sunrise", hq.Superweapon);
         Assert.Equal(9000, hq.SuperweaponChargeTicks);
         Assert.Equal(8, hq.SuperweaponEntranceRange);
+        Assert.Equal("test_silo", r.Sim.Buildings[hq.MorphsInto].Id);
+        Assert.Equal(77, hq.MorphTicks);
         BuildingType wall = r.Sim.Buildings.Single(b => b.Id == "test_wall");
         Assert.True(wall.Gate);
         Assert.True(wall.Wall);
@@ -247,6 +251,7 @@ public sealed class SchemaV3Tests
     [InlineData("vehicles.toml", "[test_tank]", "[test_tank]\nfaction = \"nod\"", "test_tank.faction", "must be one of")]
     [InlineData("vehicles.toml", "[test_tank]", "[test_tank]\ndeath_weapon = \"nope\"", "test_tank.death_weapon", "unknown weapon")]
     [InlineData("vehicles.toml", "[test_tank]", "[test_tank]\ndeploys_into = \"nope\"", "test_tank.deploys_into", "unknown building")]
+    [InlineData("buildings.toml", "[test_hq]", "[test_hq]\nmorphs_into = \"nope\"", "test_hq.morphs_into", "unknown building")]
     [InlineData("vehicles.toml", "[test_tank]", "[test_tank]\naura_targets = [\"nope\"]", "test_tank.aura_targets", "unknown type")]
     [InlineData("vehicles.toml", "[test_tank]", "[test_tank]\nrad_resist_permille = 1001", "test_tank.rad_resist_permille", "must be between")]
     [InlineData("vehicles.toml", "[test_tank]", "[test_tank]\nengineer = true", "test_tank.engineer", "unknown key")]
@@ -309,6 +314,8 @@ public sealed class SchemaV3Tests
     [InlineData("buildings.toml", "[test_hq]", "[test_hq]\nsuperweapon = \"x\"")]
     [InlineData("buildings.toml", "[test_hq]", "[test_hq]\nsuperweapon_charge_ticks = 1")]
     [InlineData("buildings.toml", "[test_hq]", "[test_hq]\nsuperweapon_entrance_range = 1")]
+    [InlineData("buildings.toml", "[test_hq]", "[test_hq]\nmorphs_into = \"test_silo\"")]
+    [InlineData("buildings.toml", "[test_hq]", "[test_hq]\nmorph_ticks = 77")]
     [InlineData("weapons.toml", "warhead = \"test_ap\"", "warhead = \"test_ap\"\ntargets = \"air\"")]
     [InlineData("warheads.toml", "[test_ap]", "[test_ap]\ncontaminate = 1")]
     [InlineData("warheads.toml", "[test_ap]", "[test_ap]\ndecontaminate = 1")]

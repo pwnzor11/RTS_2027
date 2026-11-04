@@ -19,6 +19,7 @@ internal static class StructureRulesLoader
         // schema v3 (M3-01)
         "faction", "entrance", "ticks_per_point", "researches", "gate", "seismic_radius", "sees_through_blackout",
         "jam_radius", "superweapon", "superweapon_charge_ticks", "superweapon_entrance_range",
+        "morphs_into", "morph_ticks",
     ];
 
     private static readonly string[] CategoryNames = ["structure", "defence"];
@@ -26,7 +27,7 @@ internal static class StructureRulesLoader
 
     /// <summary>Parses one building. <paramref name="weapons"/> must already be sorted by id.</summary>
     public static BuildingType? ParseBuilding(RulesFields f, IReadOnlyList<WeaponType> weapons,
-        IReadOnlyList<VehicleType> vehicles, RulesReferences refs)
+        IReadOnlyList<VehicleType> vehicles, RulesReferences refs, IReadOnlyList<string>? buildingIds = null)
     {
         f.CheckKeys(BuildingKeys);
         int? width = f.Int("footprint_w", 1, MaxFootprint);
@@ -70,7 +71,10 @@ internal static class StructureRulesLoader
         string? superweapon = f.OptStr("superweapon", "");
         int? swCharge = f.OptInt("superweapon_charge_ticks", 0, int.MaxValue, 0);
         int? swRange = f.OptInt("superweapon_entrance_range", 0, SimConstants.MaxMapCells, 0);
-        if (faction is null || entrance is null || ticksPerPoint is null || researches is null || gate is null || seismic is null
+        int? morphsInto = buildingIds is null
+            ? -1 : f.OptIndex("morphs_into", buildingIds, "building");
+        int? morphTicks = f.OptInt("morph_ticks", 0, int.MaxValue, 0);
+        if (morphsInto is null || morphTicks is null || faction is null || entrance is null || ticksPerPoint is null || researches is null || gate is null || seismic is null
             || seesThroughBlackout is null || jam is null || superweapon is null || swCharge is null || swRange is null)
         {
             return null;
@@ -143,6 +147,8 @@ internal static class StructureRulesLoader
             Superweapon = superweapon,
             SuperweaponChargeTicks = swCharge.Value,
             SuperweaponEntranceRange = swRange.Value,
+            MorphsInto = morphsInto.Value,
+            MorphTicks = morphTicks.Value,
         };
         return exit is null ? building : building with { Exit = new CellCoord(exit[0], exit[1]) };
     }
