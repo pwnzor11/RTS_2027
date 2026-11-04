@@ -121,13 +121,20 @@ public sealed class DirectorateDataTests
     {
         SimRules s = LoadReal();
 
-        Assert.Equal(5, DirectorateInfantry.Length);
-        Assert.Equal(8, DirectorateVehicles.Length);
-        Assert.Equal(16, DirectorateStructures.Length);
-        Assert.Equal(5, s.Infantry.Count(i => i.Id.StartsWith("dir_", StringComparison.Ordinal)));
-        Assert.Equal(8, s.Vehicles.Count(v => v.Id.StartsWith("dir_", StringComparison.Ordinal)));
-        Assert.Equal(16, s.Buildings.Count(b => b.Id.StartsWith("dir_", StringComparison.Ordinal)));
+        // The M3 roster (design 05 §5) plus the M4 additions (design 08 §4): assessor, volunteer; ash_sower, delver, great_dirigible;
+        // redoubt (T1 garrison defence) and committee_hall (T3 gate).
+        string[] infantry = DirectorateInfantry.Concat(["dir_assessor", "dir_volunteer"]).OrderBy(x => x, StringComparer.Ordinal).ToArray();
+        string[] vehicles = DirectorateVehicles.Concat(["dir_ash_sower", "dir_delver", "dir_great_dirigible"]).OrderBy(x => x, StringComparer.Ordinal).ToArray();
+        string[] structures = DirectorateStructures.Concat(["dir_committee_hall", "dir_redoubt"]).OrderBy(x => x, StringComparer.Ordinal).ToArray();
+        Assert.Equal(7, infantry.Length);
+        Assert.Equal(11, vehicles.Length);
+        Assert.Equal(18, structures.Length);
+        Assert.Equal(infantry, s.Infantry.Select(i => i.Id).Where(IsDir).OrderBy(x => x, StringComparer.Ordinal).ToArray());
+        Assert.Equal(vehicles, s.Vehicles.Select(v => v.Id).Where(IsDir).OrderBy(x => x, StringComparer.Ordinal).ToArray());
+        Assert.Equal(structures, s.Buildings.Select(b => b.Id).Where(IsDir).OrderBy(x => x, StringComparer.Ordinal).ToArray());
     }
+
+    private static bool IsDir(string id) => id.StartsWith("dir_", StringComparison.Ordinal);
 
     [Fact]
     public void EveryAuthorityCounter_ExistsWithAuthorityFaction()

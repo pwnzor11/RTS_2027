@@ -57,6 +57,9 @@ public sealed class SidebarPanelTests : IDisposable
         return press;
     }
 
+    // M4: the Structures tab opens with a "Tier 1" heading row (locked tier 2/3 previews exist), so the first cameo is one row down.
+    private Rectangle PowerCameo() => _panel.Layout.Cameo(_panel.Layout.Columns);
+
     private PlayerHud Hud() => _source.Sim.HudFor(0);
 
     private void StepUntil(Func<bool> done, int max = 3000)
@@ -67,7 +70,7 @@ public sealed class SidebarPanelTests : IDisposable
 
     private void BuildPowerPlant()
     {
-        Point cameo = _panel.Layout.Cameo(0).Center;
+        Point cameo = PowerCameo().Center;
         Click(cameo);
         StepUntil(() => SidebarCommands.ReadyType(Hud(), ProductionCategory.Structure) == _power);
     }
@@ -119,7 +122,7 @@ public sealed class SidebarPanelTests : IDisposable
     [Fact]
     public void Left_click_queues_right_click_cancels()
     {
-        Point cameo = _panel.Layout.Cameo(0).Center;
+        Point cameo = PowerCameo().Center;
         InputFrame press = Click(cameo);
         Assert.False(press.LeftPressed);   // consumed: the map never sees it
         _source.StepTicks(2);
@@ -136,7 +139,7 @@ public sealed class SidebarPanelTests : IDisposable
     public void Placement_mode_places_on_a_valid_cell_and_ignores_invalid_ones()
     {
         BuildPowerPlant();
-        Click(_panel.Layout.Cameo(0).Center);
+        Click(PowerCameo().Center);
         Assert.Equal(SidebarMode.Placement, _panel.Mode);
 
         int before = BuildingCount();
@@ -163,13 +166,13 @@ public sealed class SidebarPanelTests : IDisposable
     public void Right_click_leaves_placement_and_keeps_the_finished_item()
     {
         BuildPowerPlant();
-        Click(_panel.Layout.Cameo(0).Center);
+        Click(PowerCameo().Center);
         Assert.Equal(SidebarMode.Placement, _panel.Mode);
         InputFrame rc = Frame(new Point(300, 300), right: true);
         Assert.False(rc.RightPressed);
         Assert.Equal(SidebarMode.None, _panel.Mode);
         Assert.Equal(_power, SidebarCommands.ReadyType(Hud(), ProductionCategory.Structure));
-        Click(_panel.Layout.Cameo(0).Center);
+        Click(PowerCameo().Center);
         Assert.True(_panel.CancelMode());
         Assert.False(_panel.CancelMode());
     }
@@ -179,7 +182,7 @@ public sealed class SidebarPanelTests : IDisposable
     {
         BuildPowerPlant();
         CellCoord tl = FindValidTopLeft();
-        Click(_panel.Layout.Cameo(0).Center);
+        Click(PowerCameo().Center);
         Point at = ScreenOfCell(new CellCoord(tl.X + 1, tl.Y + 1));
         Frame(at, left: true);
         Frame(at);

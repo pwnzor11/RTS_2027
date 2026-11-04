@@ -199,7 +199,7 @@ public sealed class M4ContractTests
     [Fact]
     public void SchemaV4_Defaults_LeaveEveryM3TypeUnchanged()
     {
-        foreach (RuleSet rules in new[] { ProductionFixture.Loaded, RulesLoader.Load(RulesLocator.FindRulesDir(AppContext.BaseDirectory)!) })
+        foreach (RuleSet rules in new[] { ProductionFixture.Loaded })   // the fixture keeps the schema defaults; the shipped data is tiered (next test)
         {
             SimRules r = rules.Sim;
             Assert.All(r.Buildings, b =>
@@ -219,6 +219,35 @@ public sealed class M4ContractTests
             Assert.All(r.StartKits, k => { Assert.Equal("", k.Tier2Provides); Assert.Equal("", k.Tier3Provides); });
             Assert.False(r.Terrain.Buildable(LandType.Shallow));
             Assert.False(r.Terrain.Soft(LandType.Shallow));
+        }
+    }
+
+    [Fact]
+    public void RealData_CarriesTheDesign08Section4Tiers()
+    {
+        SimRules r = RulesLoader.Load(RulesLocator.FindRulesDir(AppContext.BaseDirectory)!).Sim;
+        Assert.All(r.Buildings, b => Assert.InRange(b.Tier, 1, 3));
+        Assert.All(r.Vehicles, v => Assert.InRange(v.Tier, 1, 3));
+        Assert.All(r.Infantry, i => Assert.InRange(i.Tier, 1, 3));
+        Assert.All(r.Upgrades, u => Assert.InRange(u.Tier, 1, 3));
+
+        var expected = new Dictionary<string, int>(StringComparer.Ordinal)
+        {
+            ["auth_conyard"] = 1, ["auth_seismograph"] = 1, ["auth_gate"] = 1, ["auth_blockhouse"] = 1, ["auth_rifleman"] = 1, ["auth_tank"] = 1,
+            ["auth_engineering"] = 2, ["auth_searchlight"] = 2, ["auth_decon_truck"] = 2, ["auth_flak"] = 2, ["auth_airfield"] = 2, ["auth_interceptor"] = 2,
+            ["auth_signals_hq"] = 3, ["auth_bomber"] = 3, ["auth_bulwark"] = 3, ["auth_atomic_battery"] = 3,
+            ["dir_shaft"] = 1, ["dir_conscript"] = 1, ["dir_bore"] = 1, ["dir_redoubt"] = 1,
+            ["dir_isotope_works"] = 2, ["dir_mast"] = 2, ["dir_sapper"] = 2, ["dir_dirigible"] = 2, ["dir_delver"] = 2,
+            ["dir_committee_hall"] = 3, ["dir_sunrise"] = 3, ["dir_reactor_crawler"] = 3, ["dir_landtrain"] = 3, ["dir_great_dirigible"] = 3,
+            ["auth_up_flak_vests"] = 1, ["auth_grouting"] = 2, ["auth_up_tungsten_shot"] = 3, ["dir_up_tunnel_bracing"] = 1, ["dir_up_fervour"] = 3,
+        };
+        foreach ((string id, int tier) in expected)
+        {
+            int actual = r.Buildings.Where(b => b.Id == id).Select(b => b.Tier)
+                .Concat(r.Vehicles.Where(v => v.Id == id).Select(v => v.Tier))
+                .Concat(r.Infantry.Where(i => i.Id == id).Select(i => i.Tier))
+                .Concat(r.Upgrades.Where(u => u.Id == id).Select(u => u.Tier)).Single();
+            Assert.True(tier == actual, $"{id}: design 08 §4 says tier {tier}, rules have {actual}");
         }
     }
 

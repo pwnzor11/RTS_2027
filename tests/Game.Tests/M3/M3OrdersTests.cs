@@ -18,7 +18,7 @@ public sealed class M3OrdersTests
         string dir = RulesLocator.FindRulesDir(AppContext.BaseDirectory) ?? throw new InvalidOperationException("data/rules not found");
         SimRules baseRules = RulesLoader.Load(dir).Sim;
         VehicleType v = baseRules.Vehicles[0];
-        InfantryType i = baseRules.Infantry[0];
+        InfantryType i = baseRules.Infantry.Single(x => x.Id == "auth_rifleman");
         BuildingType b = baseRules.Buildings[0];
         return baseRules with
         {

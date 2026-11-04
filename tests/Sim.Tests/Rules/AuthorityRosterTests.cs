@@ -18,6 +18,10 @@ public sealed class AuthorityRosterTests
         "auth_conyard", "auth_power", "auth_refinery", "auth_barracks", "auth_factory", "auth_silo", "auth_wall", "auth_turret",
         "auth_scraper", "auth_rifleman", "auth_rocketeer", "auth_jeep", "auth_tank",
         "auth_seismograph", "auth_searchlight", "auth_gate", "auth_engineering", "auth_decon_truck",   // M3 counters (M3-07)
+        // M4-07 (design 08 §4): engineer, marksman, carrier, seismic mortar, foam truck, interceptor, bomber, howitzer, bulwark;
+        // signals HQ (T3 gate), blockhouse, flak, airfield, atomic battery.
+        "auth_engineer", "auth_marksman", "auth_carrier", "auth_seismic_mortar", "auth_foam_truck", "auth_interceptor", "auth_bomber",
+        "auth_howitzer", "auth_bulwark", "auth_signals_hq", "auth_blockhouse", "auth_flak", "auth_airfield", "auth_atomic_battery",
     ];
 
     private static SimRules LoadReal()

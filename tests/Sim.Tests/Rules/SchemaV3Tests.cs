@@ -358,7 +358,11 @@ public sealed class SchemaV3Tests
         (int conyard, var units) = r.Sim.ResolveStartKit(Faction.Authority);
         Assert.Equal(SkirmishStart.StartBuildingId, r.Sim.Buildings[conyard].Id);
         Assert.Empty(units);
-        Assert.Equal("auth_grouting", Assert.Single(r.Sim.Upgrades).Id);
+        // M4-07: 13 tiered upgrades joined auth_grouting (design 08 §4: 7 Authority incl. grouting, 7 Directorate).
+        Assert.Equal(14, r.Sim.Upgrades.Count);
+        Assert.Contains(r.Sim.Upgrades, u => u.Id == "auth_grouting");
+        Assert.Equal(7, r.Sim.Upgrades.Count(u => u.Faction == Faction.Authority));
+        Assert.Equal(7, r.Sim.Upgrades.Count(u => u.Faction == Faction.Directorate));
         Assert.All(r.Sim.Vehicles.Where(v => v.Id.StartsWith("auth_", StringComparison.Ordinal)), v => Assert.Equal(Faction.Authority, v.Faction));   // M3-07 added dir_* vehicles
         Assert.All(r.Sim.Infantry, i => Assert.Equal(TunnelSize.S, i.TunnelSize));
     }
