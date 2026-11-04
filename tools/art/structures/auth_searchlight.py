@@ -27,23 +27,48 @@ CAP_MATERIAL = "concrete2"
 HOUSE2_MID = True
 STATES = [("idle", 4, 5), ("damaged", 4, 5), ("build", 8, 5)]
 MATERIALS = dict(L.MATERIALS)
-MATERIALS.update({"steel2": ("#979EA3", dict(rough=0.4, metal=0.5)), "lensbright": ("#FFF6C8", dict(rough=0.3, emit="#FFF2B0"))})
-SOOT_SKIN = L.SOOT_SKIN
+MATERIALS.update({
+    "steel2": ("#979EA3", dict(rough=0.4, metal=0.5)),
+    "lensbright": ("#FFF6C8", dict(rough=0.3, emit="#FFF2B0")),
+    # graded lens (outer to centre): grey-amber rim glass, amber, yellow, warm white core; dark bezel ring and bars
+    "lensrim": ("#8A7448", dict(rough=0.3, emit="#6E5524")),
+    "lensamb": ("#C98F2C", dict(rough=0.3, emit="#B07418")),
+    "lensyel": ("#F2CF5E", dict(rough=0.3, emit="#E0B238")),
+    "bezel": ("#2B2F35", dict(rough=0.5, metal=0.5)),
+})
+SOOT_SKIN = dict(L.SOOT_SKIN)
+SOOT_SKIN.update({"lensrim": "dark", "lensamb": "dark", "lensyel": "dark", "bezel": "dark"})
 PRIMER_SKIN = dict(L.PRIMER_SKIN)
-PRIMER_SKIN.update({"lensbright": "dark", "steel2": "primer"})
+PRIMER_SKIN.update({"lensbright": "dark", "steel2": "primer", "lensrim": "dark", "lensamb": "dark", "lensyel": "dark", "bezel": "primer"})
 
 TOP = 3.9          # lamp deck height
 YAW = [-32.0, 0.0, 32.0, 0.0]
 
 
-def lamp(S, name, x, y, z, yaw, up, r, depth, lens):
+def lamp(S, name, x, y, z, yaw, up, r, depth, lens):  # lens: material of the bright core, or "lamp" (flicker-off) / "dark"
     """Flared reflector, wide mouth toward -Y (south) turned by yaw (deg), tilted up by `up`."""
     ya, ua = math.radians(180 + yaw), math.radians(up)
     u = (-math.sin(ya) * math.cos(ua), math.cos(ya) * math.cos(ua), math.sin(ua))
     rot = (90 + up, 0, 180 + yaw)
     S.cone(name, r, r * 0.45, depth, (x, y, z), "steel2", 18, rot=rot)
     m = depth / 2 + 0.03
-    S.cone(name + "l", r * 0.88, r * 0.88, 0.05, (x + u[0] * m, y + u[1] * m, z + u[2] * m), lens, 16, rot=rot, nocast=False)
+    at = lambda k: (x + u[0] * (m + k), y + u[1] * (m + k), z + u[2] * (m + k))
+    # dark bezel ring just proud of the mouth, then a graded lens: rim glass -> amber -> yellow -> warm white core
+    S.cone(name + "z", r * 1.04, r * 1.04, 0.07, at(-0.01), "bezel", 18, rot=rot, nocast=False)
+    if lens == "lamp":                          # flicker-off frame: dim amber glass, no bright core
+        S.cone(name + "l", r * 0.86, r * 0.86, 0.05, at(0.03), "lensrim", 16, rot=rot, nocast=False)
+        S.cone(name + "m", r * 0.55, r * 0.55, 0.05, at(0.05), "lensamb", 14, rot=rot, nocast=False)
+    elif lens == "dark":
+        S.cone(name + "l", r * 0.86, r * 0.86, 0.05, at(0.03), "dark", 16, rot=rot, nocast=False)
+    else:
+        S.cone(name + "l", r * 0.86, r * 0.86, 0.05, at(0.03), "lensrim", 16, rot=rot, nocast=False)
+        S.cone(name + "m", r * 0.7, r * 0.7, 0.05, at(0.045), "lensamb", 16, rot=rot, nocast=False)
+        S.cone(name + "y", r * 0.5, r * 0.5, 0.05, at(0.06), "lensyel", 14, rot=rot, nocast=False)
+        S.cone(name + "c", r * 0.25, r * 0.25, 0.05, at(0.075), lens, 12, rot=rot, nocast=False)
+    if lens != "dark":                          # cross-bar over the glass
+        for k, sz in enumerate(((r * 1.7, 0.035, 0.04), (0.035, r * 1.7, 0.04))):
+            p = at(0.095)
+            S.box(name + f"x{k}", sz, (p[0], p[1] * S.YS, p[2]), "bezel", 0.0, rot=rot, stretch=False)
     t = depth / 2 + 0.14
     S.cone(name + "b", r * 0.45, r * 0.45, 0.28, (x - u[0] * t, y - u[1] * t, z - u[2] * t), "hull2", 12, rot=rot, nocast=False)
 
