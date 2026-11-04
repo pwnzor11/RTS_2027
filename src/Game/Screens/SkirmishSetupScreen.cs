@@ -13,59 +13,61 @@ using Rts.Sim.Rules;
 namespace Rts.Game.Screens;
 
 /// <summary>
-/// Skirmish setup (D-062 (2)): map seed (type digits, Left/Right or the -/+/Rnd buttons; 0 is the curated Rust Belt map, the
-/// row below names which map the seed gives), AI tier 1..5 by name, player colour, Start and Back. Start opens the real
-/// skirmish (<see cref="GameScreen.CreateSkirmish"/>) with the sidebar and the AI.
+/// Skirmish setup v2 (design 08 §2, M4-11): the map (curated, the player's own, or generated with biome, size and a seed that
+/// can be typed or re-rolled), 2 to 4 slots (Closed, Human or AI, with faction, AI tier, team and colour each), and Start. With no
+/// Human slot the button reads Spectate. Start opens the game through <see cref="GameScreen.CreateSkirmish"/>.
 /// </summary>
 public sealed class SkirmishSetupScreen : IScreen
 {
     private const ulong MaxSeed = 999_999_999;
-    private const int SeedRow = 0;
-    private const int ColourRow = 3;
-    private static IReadOnlyList<string> ColourNames => PlayerColours.Names;
+    private const int DefaultGeneratedSeed = 1;
 
     private readonly GameServices _s;
-    private readonly MenuPanel _panel;
+    private MenuPanel _panel = null!;
     private Point _mouse;
     private readonly string[] _tierNames;
-    private ulong _seed;
-    private int _tier;
-    private int _colour;
-    private Faction _playerFaction = SkirmishSettings.Default.PlayerFaction;
-    private Faction _aiFaction = SkirmishSettings.Default.AiFaction;
+    private readonly IReadOnlyList<MapEntry> _maps;
+    private int _mapIndex;
+    private Biome _biome = Biome.RustBelt;
+    private MapSize _size = MapSize.Small;
+    private ulong _seed = DefaultGeneratedSeed;
+    private readonly List<SkirmishSlot> _slots;
+    private int _seedRow = -1;
+    private int _firstSlotRow;
     private string _error = "";
 
-    /// <summary>Creates the screen with <see cref="SkirmishSettings.Default"/> values.</summary>
-    public SkirmishSetupScreen(GameServices services)
+    /// <summary>Creates the screen with <see cref="SkirmishSettings.Default"/> values (curated map, a human against a Regular AI).</summary>
+    public SkirmishSetupScreen(GameServices services) : this(services, MapPicker.List(services.RulesDir))
+    {
+    }
+
+    /// <summary>Creates the screen over a given map list (tests).</summary>
+    public SkirmishSetupScreen(GameServices services, IReadOnlyList<MapEntry> maps)
     {
         _s = services;
-        _seed = SkirmishSettings.Default.MapSeed;
-        _tier = SkirmishSettings.Default.AiTier;
-        _colour = SkirmishSettings.Default.PlayerColour;
+        _maps = maps;
         _tierNames = LoadTierNames(services.RulesDir);
-
-        _panel = new MenuPanel("Skirmish", new[]
-        {
-            new MenuItem(() => $"Map seed: {_seed}  (0 = curated)", null, d => StepSeed(d),
-                new MenuButton("-", () => StepSeed(-1)), new MenuButton("+", () => StepSeed(1)),
-                new MenuButton("Rnd", RandomSeed)),
-            new MenuItem(() => $"Map: {SkirmishGame.DescribeMap(_seed)}"),
-            new MenuItem(() => $"AI tier: {_tier} {_tierNames[_tier - 1]}", null, StepTier,
-                new MenuButton("<", () => StepTier(-1)), new MenuButton(">", () => StepTier(1))),
-            new MenuItem(() => $"Colour: {ColourNames[_colour]}", null, StepColour,
-                new MenuButton("<", () => StepColour(-1)), new MenuButton(">", () => StepColour(1))),
-            new MenuItem(() => $"Your faction: {FactionName(_playerFaction)}", null, d => StepFaction(ref _playerFaction, d),
-                new MenuButton("<", () => StepFaction(ref _playerFaction, -1)), new MenuButton(">", () => StepFaction(ref _playerFaction, 1))),
-            new MenuItem(() => $"AI faction: {FactionName(_aiFaction)}", null, d => StepFaction(ref _aiFaction, d),
-                new MenuButton("<", () => StepFaction(ref _aiFaction, -1)), new MenuButton(">", () => StepFaction(ref _aiFaction, 1))),
-            new MenuItem(() => _error.Length > 0 ? _error : "(set the factions, then Start)"),
-            new MenuItem(() => "Start", Start),
-            new MenuItem(() => "Back", () => _s.Screens.Pop()),
-        });
+        _slots = new List<SkirmishSlot>(SkirmishSettings.Default.Slots);
+        _panel = BuildPanel();
     }
 
     /// <summary>The choices as they stand now.</summary>
-    public SkirmishSettings Current => new(_seed, _tier, _colour, _playerFaction, _aiFaction);
+    public SkirmishSettings Current
+    {
+        get
+        {
+            MapEntry entry = _maps[_mapIndex];
+            int open = _slots.Count(x => x.Kind != SlotKind.Closed);
+            MapChoice map = entry.IsGenerated
+                ? new MapChoice(null, new MapGenParams(_biome, _size, Math.Clamp(open, SkirmishSettings.MinPlayers, SkirmishSettings.MaxSlots), _seed))
+                : new MapChoice(entry.File, null);
+            ulong simSeed = entry.IsGenerated ? _seed : SkirmishGame.CuratedSimSeed;
+            return new SkirmishSettings(map, _slots.ToArray(), simSeed);
+        }
+    }
+
+    /// <summary>True when no slot is Human, so Start reads Spectate.</summary>
+    public bool IsSpectate => _slots.All(x => x.Kind != SlotKind.Human);
 
     /// <inheritdoc />
     public bool BlocksUpdateBelow => true;
@@ -93,7 +95,7 @@ public sealed class SkirmishSetupScreen : IScreen
             return;
         }
 
-        if (_panel.Selected == SeedRow) TypeSeed(input);
+        if (_seedRow >= 0 && _panel.Selected == _seedRow) TypeSeed(input);
         _panel.Update(input, _s.Viewport, _s.UiScale);
     }
 
@@ -104,13 +106,87 @@ public sealed class SkirmishSetupScreen : IScreen
         int scale = _s.UiScale;
         _panel.Draw(sb, _s.Pixel, _s.Viewport, scale, _mouse);
 
-        // Colour swatch left of the colour row's buttons.
-        Rectangle row = _panel.RowRect(ColourRow);
-        Rectangle firstButton = _panel.ButtonRect(ColourRow, 0);
-        int size = row.Height - 4 * scale;
-        var swatch = new Rectangle(firstButton.X - size - 3 * scale, row.Y + (row.Height - size) / 2, size, size);
-        Shapes.Fill(sb, _s.Pixel, swatch, PlayerColours.Choice(_colour));
-        Shapes.Outline(sb, _s.Pixel, swatch, Color.White);
+        // A colour swatch left of each slot row's buttons.
+        for (int i = 0; i < _slots.Count; i++)
+        {
+            if (_slots[i].Kind == SlotKind.Closed) continue;
+            int row = _firstSlotRow + i;
+            Rectangle r = _panel.RowRect(row);
+            Rectangle firstButton = _panel.ButtonRect(row, 0);
+            int size = r.Height - 4 * scale;
+            var swatch = new Rectangle(firstButton.X - size - 3 * scale, r.Y + (r.Height - size) / 2, size, size);
+            Shapes.Fill(sb, _s.Pixel, swatch, PlayerColours.Choice(_slots[i].Colour));
+            Shapes.Outline(sb, _s.Pixel, swatch, Color.White);
+        }
+    }
+
+    // The rows depend on the map kind and the slot count, so the panel is rebuilt when either changes; the highlighted row is kept.
+    private MenuPanel BuildPanel()
+    {
+        var rows = new List<MenuItem>
+        {
+            new(() => $"Map: {_maps[_mapIndex].Label}", null, StepMap, new MenuButton("<", () => StepMap(-1)), new MenuButton(">", () => StepMap(1))),
+        };
+        _seedRow = -1;
+        if (_maps[_mapIndex].IsGenerated)
+        {
+            rows.Add(new(() => $"Biome: {MapPicker.BiomeName(_biome)}", null, StepBiome,
+                new MenuButton("<", () => StepBiome(-1)), new MenuButton(">", () => StepBiome(1))));
+            rows.Add(new(SizeText, null, StepSize, new MenuButton("<", () => StepSize(-1)), new MenuButton(">", () => StepSize(1))));
+            _seedRow = rows.Count;
+            rows.Add(new(() => $"Seed: {_seed}", null, d => StepSeed(d),
+                new MenuButton("-", () => StepSeed(-1)), new MenuButton("+", () => StepSeed(1)), new MenuButton("Reroll", RerollSeed)));
+        }
+
+        rows.Add(new(() => $"Slots: {_slots.Count}", null, StepSlotCount,
+            new MenuButton("-", () => StepSlotCount(-1)), new MenuButton("+", () => StepSlotCount(1))));
+        _firstSlotRow = rows.Count;
+        for (int i = 0; i < _slots.Count; i++)
+        {
+            int slot = i;
+            rows.Add(new(() => SlotText(slot), null, d => StepKind(slot, d),
+                new MenuButton("Kind", () => StepKind(slot, 1)), new MenuButton("Fac", () => StepSlotFaction(slot)),
+                new MenuButton("Tier", () => StepSlotTier(slot)), new MenuButton("Team", () => StepSlotTeam(slot)),
+                new MenuButton("Col", () => StepSlotColour(slot))));
+        }
+
+        rows.Add(new(() => _error.Length > 0 ? _error : HintText()));
+        rows.Add(new(() => IsSpectate ? "Spectate" : "Start", Start));
+        rows.Add(new(() => "Back", () => _s.Screens.Pop()));
+
+        var panel = new MenuPanel("Skirmish", rows);
+        if (_panel is not null) panel.Selected = Math.Min(_panel.Selected, rows.Count - 1);
+        return panel;
+    }
+
+    private void Rebuild() => _panel = BuildPanel();
+
+    private string SizeText()
+    {
+        int cells = MapGenerator.CellsFor(_size);
+        int open = _slots.Count(x => x.Kind != SlotKind.Closed);
+        string tight = _size == MapSize.Small && open == 4 ? " (tight for 4)" : "";
+        return $"Size: {MapPicker.SizeName(_size)} {cells}x{cells}{tight}";
+    }
+
+    private string HintText() => IsSpectate ? "(no Human slot: you will watch)" : "(Kind Fac Tier Team Col cycle each choice)";
+
+    private string SlotText(int i)
+    {
+        SkirmishSlot x = _slots[i];
+        return SlotLabel(x, i, _tierNames);
+    }
+
+    /// <summary>The row text of a slot: "1 Human Authority T1", "2 AI Directorate tier 3 Veteran T2", "3 Closed".</summary>
+    public static string SlotLabel(SkirmishSlot slot, int index, IReadOnlyList<string> tierNames)
+    {
+        string head = $"{index + 1} ";
+        return slot.Kind switch
+        {
+            SlotKind.Closed => head + "Closed",
+            SlotKind.Human => $"{head}Human {FactionName(slot.Faction)} T{slot.Team + 1}",
+            _ => $"{head}AI {tierNames[Math.Clamp(slot.AiTier, 1, tierNames.Count) - 1]} {FactionName(slot.Faction)} T{slot.Team + 1}",
+        };
     }
 
     private static string[] LoadTierNames(string rulesDir)
@@ -147,14 +223,73 @@ public sealed class SkirmishSetupScreen : IScreen
 
     private void StepSeed(int delta) => _seed = delta < 0 ? (_seed > 0 ? _seed - 1 : 0) : Math.Min(MaxSeed, _seed + 1);
 
-    private void RandomSeed() => _seed = (ulong)Random.Shared.NextInt64(1, (long)MaxSeed + 1);
+    // The seed is a front-end choice (it is shown and saved), so the UI random source is fine here.
+    private void RerollSeed() => _seed = (ulong)Random.Shared.NextInt64(1, (long)MaxSeed + 1);
 
-    private void StepTier(int delta) => _tier = Math.Clamp(_tier + delta, 1, _tierNames.Length);
+    private void StepMap(int delta)
+    {
+        _mapIndex = ((_mapIndex + delta) % _maps.Count + _maps.Count) % _maps.Count;
+        Rebuild();
+    }
 
-    private void StepColour(int delta) => _colour = (_colour + delta + PlayerColours.Count) % PlayerColours.Count;
+    private void StepBiome(int delta) => _biome = (Biome)(((int)_biome + delta + 4) % 4);
 
-    private void StepFaction(ref Faction faction, int delta) =>
-        faction = NextFaction(faction, delta);
+    private void StepSize(int delta) => _size = (MapSize)(((int)_size + delta + 3) % 3);
+
+    private void StepSlotCount(int delta)
+    {
+        int n = Math.Clamp(_slots.Count + delta, SkirmishSettings.MinPlayers, SkirmishSettings.MaxSlots);
+        while (_slots.Count > n) _slots.RemoveAt(_slots.Count - 1);
+        while (_slots.Count < n) _slots.Add(NewSlot(_slots.Count));
+        Rebuild();
+    }
+
+    private SkirmishSlot NewSlot(int index) =>
+        new(SlotKind.Ai, Faction.Authority, SkirmishSettings.DefaultAiTier, FreeColour(index, -1), Math.Min(index, SkirmishSettings.MaxSlots - 1));
+
+    private int FreeColour(int from, int except)
+    {
+        for (int k = 0; k < PlayerColours.Count; k++)
+        {
+            int c = (from + k) % PlayerColours.Count;
+            if (!_slots.Where((x, i) => i != except && x.Kind != SlotKind.Closed).Any(x => x.Colour == c)) return c;
+        }
+        return from % PlayerColours.Count;
+    }
+
+    // Closed -> Human -> AI -> Closed. Only one slot may be Human: choosing Human turns the previous one into an AI.
+    private void StepKind(int i, int delta)
+    {
+        var next = (SlotKind)(((int)_slots[i].Kind + delta + 3) % 3);
+        if (next == SlotKind.Human)
+            for (int k = 0; k < _slots.Count; k++)
+                if (k != i && _slots[k].Kind == SlotKind.Human) _slots[k] = _slots[k] with { Kind = SlotKind.Ai };
+        _slots[i] = _slots[i] with { Kind = next };
+        if (next != SlotKind.Closed && _slots.Where((x, k) => k != i && x.Kind != SlotKind.Closed).Any(x => x.Colour == _slots[i].Colour))
+            _slots[i] = _slots[i] with { Colour = FreeColour(_slots[i].Colour, i) };
+        _error = "";
+    }
+
+    private void StepSlotFaction(int i) => _slots[i] = _slots[i] with { Faction = NextFaction(_slots[i].Faction, 1) };
+
+    private void StepSlotTier(int i)
+    {
+        if (_slots[i].Kind != SlotKind.Ai) return;
+        _slots[i] = _slots[i] with { AiTier = _slots[i].AiTier % _tierNames.Length + 1 };
+    }
+
+    private void StepSlotTeam(int i) => _slots[i] = _slots[i] with { Team = (_slots[i].Team + 1) % SkirmishSettings.MaxSlots };
+
+    private void StepSlotColour(int i)
+    {
+        for (int k = 1; k <= PlayerColours.Count; k++)
+        {
+            int c = (_slots[i].Colour + k) % PlayerColours.Count;
+            if (_slots.Where((x, j) => j != i && x.Kind != SlotKind.Closed).Any(x => x.Colour == c)) continue;
+            _slots[i] = _slots[i] with { Colour = c };
+            return;
+        }
+    }
 
     /// <summary>The faction after <paramref name="faction"/> in the pick list, wrapping round (Authority, Directorate).</summary>
     public static Faction NextFaction(Faction faction, int delta)
@@ -169,13 +304,23 @@ public sealed class SkirmishSetupScreen : IScreen
     /// <summary>Cuts text to at most <paramref name="max"/> characters, ending in "..." when it was cut.</summary>
     public static string Shorten(string text, int max) => text.Length <= max ? text : text[..(max - 3)] + "...";
 
-    // ASSUMED (M3-08): a faction whose start kit names types the rules do not have yet (Directorate data not merged) does not
-    // crash the menu; the setup screen stays open and says why.
+    // ASSUMED (M3-08): a faction whose start kit names types the rules do not have yet does not crash the menu; the setup screen stays
+    // open and says why.
     private void Start()
     {
+        SkirmishSettings settings = Current;
+        IReadOnlyList<string> problems = settings.Validate();
+        if (problems.Count == 0 && !_maps[_mapIndex].IsGenerated && settings.PlayerCount > _maps[_mapIndex].MaxPlayers)
+            problems = new[] { $"This map has room for {_maps[_mapIndex].MaxPlayers} players." };
+        if (problems.Count > 0)
+        {
+            _error = Shorten(problems[0], 56);
+            return;
+        }
+
         try
         {
-            GameScreen screen = GameScreen.CreateSkirmish(_s, Current);
+            GameScreen screen = GameScreen.CreateSkirmish(_s, settings);
             _error = "";
             _s.Screens.Push(screen);
         }

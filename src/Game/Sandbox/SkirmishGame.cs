@@ -36,16 +36,35 @@ public sealed class SkirmishGame
     /// <summary>Id of the Recruit AI, used when the registry knows it.</summary>
     public const string RecruitAiId = "recruit";
 
-    private SkirmishGame(Simulation sim, MapData map, RuleSet rules, AiDriver ai, string mapLabel, string aiId, bool curated)
+    private readonly string _mapId;
+    private readonly IReadOnlyList<SavedAi> _savedAi;
+
+    private SkirmishGame(Simulation sim, MapData map, MapMeta meta, RuleSet rules, AiDriver ai, string mapLabel, string aiId, bool curated,
+        byte? local, string mapId, IReadOnlyList<SavedAi> savedAi)
     {
         Sim = sim;
         Map = map;
+        MapMeta = meta;
         Rules = rules;
         Ai = ai;
         MapLabel = mapLabel;
         AiId = aiId;
         Curated = curated;
+        Local = local;
+        _mapId = mapId;
+        _savedAi = savedAi;
     }
+
+    /// <summary>The local human's player number (always 0: the human comes first), or null in a spectator game.</summary>
+    // ASSUMED (M4-11): the contract names this "byte? SkirmishGame.LocalPlayer", but LocalPlayer is a const byte used by other files
+    // (SpectatorSetup, tests), so the nullable one is Local.
+    public byte? Local { get; }
+
+    /// <summary>Metadata of the map (features, generator provenance); <see cref="MapMeta.DefaultFor"/> for a version-1 file or the legacy path.</summary>
+    public MapMeta MapMeta { get; }
+
+    /// <summary>True when nobody is Human: AI against AI.</summary>
+    public bool IsSpectator => Local is null;
 
     /// <summary>The simulation, set up and ready for its first Step.</summary>
     public Simulation Sim { get; }
@@ -72,13 +91,38 @@ public sealed class SkirmishGame
     public GameSaveHeader SaveTemplate(SkirmishSettings settings) => new()
     {
         Mode = SaveMode.Skirmish,
-        MapId = Curated ? "file:" + CuratedMapFile : $"generated:{GeneratedMapSize}:{settings.MapSeed}",
+        MapId = _mapId,
         MapName = Map.Name,
         RulesHash = Rules.RulesHash,
-        LocalPlayer = LocalPlayer,
+        LocalPlayer = Local ?? 0,
         Skirmish = settings,
-        Ai = new[] { new SavedAi(AiPlayer, AiId, settings.AiTier, settings.AiFaction, Sim.Setup.Seed) },
+        Ai = _savedAi,
     };
+
+    /// <summary>
+    /// Writes the map next to a replay as <c>&lt;replayPath&gt;.map.toml</c> (with its metadata) so the replay can be checked or watched with
+    /// the map it was recorded on. Only maps that are not shipped in data/maps need it: returns null (writes nothing) for the curated map.
+    /// </summary>
+    /// <returns>The path written, or null for the curated map.</returns>
+    public string? SaveMapBeside(string replayPath)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(replayPath);
+        if (Curated) return null;
+        string path = MapBesideReplay(replayPath);
+        MapFile.Save(Map, MapMeta, path);
+        return path;
+    }
+
+    /// <summary>The path <see cref="SaveMapBeside"/> writes for a replay file: the replay path plus <c>.map.toml</c>.</summary>
+    public static string MapBesideReplay(string replayPath) => replayPath + ".map.toml";
+
+    /// <summary>The map description the setup screen shows for a map choice (no files are read).</summary>
+    public static string DescribeMap(MapChoice map)
+    {
+        if (map.Generated is { } g)
+            return $"{MapPicker.BiomeName(g.Biome)} {MapGenerator.CellsFor(g.Size)}x{MapGenerator.CellsFor(g.Size)}, seed {g.Seed}";
+        return map.File == CuratedMapFile ? "Rust Belt (curated)" : MapPicker.LabelOf(map.File ?? "");
+    }
 
     /// <summary>The map description the setup screen shows for a map seed (no files are read).</summary>
     public static string DescribeMap(ulong mapSeed) =>
@@ -112,7 +156,94 @@ public sealed class SkirmishGame
             throw new InvalidOperationException($"AI '{aiId}' is not registered");
         var driver = new AiDriver(simSeed);
         driver.Add(AiPlayer, ai, profile);
-        return new SkirmishGame(sim, map, rules, driver, DescribeMap(mapSeed), aiId, curated);
+        string mapId = curated ? "file:" + CuratedMapFile : $"generated:{GeneratedMapSize}:{mapSeed}";
+        return new SkirmishGame(sim, map, MapMeta.DefaultFor(map), rules, driver, DescribeMap(mapSeed), aiId, curated, LocalPlayer, mapId,
+            new[] { new SavedAi(AiPlayer, aiId, aiTier, factions is { Count: > 1 } ? factions[1] : Faction.Authority, simSeed) });
+    }
+
+    /// <summary>
+    /// Builds the skirmish the setup screen describes (M4-11): 2 to 4 players, a map file or a generated map, a neutral slot when the map
+    /// has features, one AI per AI slot, and no local player when nobody is Human. Closed slots are not players and get no start.
+    /// The curated map with the default settings builds exactly the same game as <see cref="Create(string, ulong, int, IReadOnlyList{Faction})"/>.
+    /// </summary>
+    /// <param name="rulesDir">The data/rules directory.</param>
+    /// <param name="settings">The setup choices; <see cref="SkirmishSettings.Validate"/> must return no errors.</param>
+    /// <exception cref="RulesException">The rules data is missing or invalid.</exception>
+    /// <exception cref="InvalidOperationException">The settings are invalid, the map has too few starts or cannot be read, or a faction's start kit names a missing type.</exception>
+    public static SkirmishGame Create(string rulesDir, SkirmishSettings settings)
+    {
+        ArgumentNullException.ThrowIfNull(settings);
+        IReadOnlyList<string> errors = settings.Validate();
+        if (errors.Count > 0) throw new InvalidOperationException(errors[0]);
+
+        RuleSet rules = RulesLoader.Load(rulesDir);
+        int players = settings.PlayerCount;
+        (MapData map, MapMeta meta, string mapId) = LoadMap(rulesDir, settings, players);
+        if (players > map.StartPositions.Count)
+            throw new InvalidOperationException($"The map '{map.Name}' has {map.StartPositions.Count} start positions; {players} players need {players}.");
+        if (meta.MaxPlayers > 0 && players > meta.MaxPlayers)
+            throw new InvalidOperationException($"The map '{map.Name}' is for at most {meta.MaxPlayers} players.");
+
+        // Neutral features (ruins) need a neutral player after the real ones, on team 255.
+        bool neutral = meta.Features.Count > 0;
+        int total = players + (neutral ? 1 : 0);
+        IReadOnlyList<Faction>? factions = settings.Factions;
+        IReadOnlyList<byte>? teams = settings.Teams;
+        if (neutral)
+        {
+            var f = new Faction[total];
+            for (int i = 0; i < total; i++) f[i] = factions is not null && i < factions.Count ? factions[i] : Faction.Authority;
+            factions = f;
+            var t = new byte[total];
+            for (int i = 0; i < players; i++) t[i] = teams is not null ? teams[i] : (byte)i;
+            t[players] = Teams.Neutral;
+            teams = t;
+        }
+
+        var setup = new SimSetup(settings.SimSeed, map, total, rules.Sim, rules.RulesHash)
+        {
+            AllowDebug = false, Factions = factions, Teams = teams,
+        };
+        var sim = new Simulation(setup);
+        SkirmishStart.Apply(sim, SkirmishStart.ChooseStarts(players, map.StartPositions.Count));
+        if (neutral) MapFeatures.Place(sim, meta, (byte)players);
+
+        string aiId = ChooseAiId();
+        var driver = new AiDriver(settings.SimSeed);
+        var saved = new List<SavedAi>();
+        foreach ((byte player, SkirmishSlot slot) in settings.AiPlayers)
+        {
+            DifficultyProfile profile = LoadProfile(rulesDir, slot.AiTier);
+            if (!AiRegistry.TryCreate(aiId, profile, out IAiPlayer? ai))
+                throw new InvalidOperationException($"AI '{aiId}' is not registered");
+            driver.Add(player, ai, profile);
+            saved.Add(new SavedAi(player, aiId, slot.AiTier, slot.Faction, settings.SimSeed));
+        }
+
+        bool curated = settings.Map.File == CuratedMapFile;
+        byte? local = settings.IsSpectator ? null : (byte)0;
+        return new SkirmishGame(sim, map, meta, rules, driver, DescribeMap(settings.Map), aiId, curated, local, mapId, saved);
+    }
+
+    private static (MapData Map, MapMeta Meta, string MapId) LoadMap(string rulesDir, SkirmishSettings settings, int players)
+    {
+        if (settings.ResolvedGenerator is { } gen)
+        {
+            MapData generated = MapGenerator.Generate(gen);
+            var meta = new MapMeta(MapFile.BiomeKeys[(int)gen.Biome], MapSymmetry.None, players, gen, Array.Empty<MapFeature>());
+            return (generated, meta, $"gen:{MapFile.BiomeKeys[(int)gen.Biome]}:{(int)gen.Size}:{players}:{gen.Seed}");
+        }
+        string file = settings.Map.File!;
+        string path = MapPicker.ResolveFile(rulesDir, file);
+        try
+        {
+            (MapData map, MapMeta meta) = MapFile.LoadWithMeta(path);
+            return (map, meta, (file == CuratedMapFile ? "file:" : "user:") + file);
+        }
+        catch (MapFileException e)
+        {
+            throw new InvalidOperationException("Cannot load the map: " + e.Message, e);
+        }
     }
 
     private static DifficultyProfile LoadProfile(string rulesDir, int tier)

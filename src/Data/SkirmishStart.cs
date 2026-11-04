@@ -22,8 +22,26 @@ public static class SkirmishStart
     /// <summary>Largest ring searched around the start for start units.</summary>
     private const int MaxUnitRing = 8;
 
-    /// <summary>Places each player's start building. Returns the placed ids by player (None if no spot was found).</summary>
-    public static EntityId[] Apply(Simulation sim)
+    /// <summary>Places each player's start building at the map start of the same index. Returns the placed ids by player (None if no spot was found).</summary>
+    public static EntityId[] Apply(Simulation sim) => Apply(sim, null);
+
+    /// <summary>
+    /// Which map start each of <paramref name="players"/> players uses (M4-11): all starts in order when the map has exactly that many,
+    /// the two opposite starts (0 and 2) for two players on a four-start map, else the first <paramref name="players"/> starts. The
+    /// remaining starts stay empty (a Closed slot gets no start).
+    /// </summary>
+    public static int[] ChooseStarts(int players, int starts)
+    {
+        if (players > starts) throw new ArgumentOutOfRangeException(nameof(players), $"The map has {starts} starts for {players} players.");
+        if (players == 2 && starts == 4) return new[] { 0, 2 };
+        var chosen = new int[players];
+        for (int i = 0; i < players; i++) chosen[i] = i;
+        return chosen;
+    }
+
+    /// <summary>As <see cref="Apply(Simulation)"/> with <paramref name="startOf"/> naming the map start (index into the map's start
+    /// positions) of each player; null = player p uses start p. Neutral players and players without a start get no building.</summary>
+    public static EntityId[] Apply(Simulation sim, IReadOnlyList<int>? startOf)
     {
         ArgumentNullException.ThrowIfNull(sim);
         SimRules rules = sim.Setup.Rules;
@@ -32,10 +50,11 @@ public static class SkirmishStart
         for (int p = 0; p < sim.Setup.PlayerCount; p++)
         {
             placed[p] = EntityId.None;
-            if (sim.Players.IsNeutral((byte)p) || p >= map.StartPositions.Count) continue;
+            int startIndex = startOf is null ? p : p < startOf.Count ? startOf[p] : -1;
+            if (sim.Players.IsNeutral((byte)p) || startIndex < 0 || startIndex >= map.StartPositions.Count) continue;
             (int type, IReadOnlyList<(ActorKind Kind, int Type)> units) = rules.ResolveStartKit(sim.Players.Faction[p]);
             BuildingType bt = rules.Buildings[type];
-            CellCoord s = map.StartPositions[p];
+            CellCoord s = map.StartPositions[startIndex];
             // centre the footprint on the start cell, then search rings outward in a fixed order
             int cx = s.X - bt.FootprintW / 2, cy = s.Y - bt.FootprintH / 2;
             for (int r = 0; r <= 8 && placed[p] == EntityId.None; r++)
