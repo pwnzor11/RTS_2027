@@ -130,6 +130,7 @@ public class DirectiveBehaviourTests(ITestOutputHelper log)
     public void ADirectiveThatIsNeverSentChangesNothing()
     {
         Outcome a = Play(Tier(3), null, 4000), b = Play(Tier(3), null, 4000);
-        Assert.Equal(a, b);
+        Assert.Equal((a.FirstWave, a.Tier2Tick, a.Tier3Tick, a.AntiAir, a.Waves, a.MaxTier), (b.FirstWave, b.Tier2Tick, b.Tier3Tick, b.AntiAir, b.Waves, b.MaxTier));
+        Assert.Equal(a.TargetedAt, b.TargetedAt);
     }
 }
