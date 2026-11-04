@@ -149,8 +149,11 @@ public sealed class SimSnapshotSource : ISnapshotSource
     /// recorded: a replay has to start at tick 0, which a loaded game is past.
     /// </summary>
     /// <param name="loaded">The restored game (skirmish or mission).</param>
-    public SimSnapshotSource(LoadedGame loaded)
+    /// <param name="appSettings">M5-10: app settings to bring back the save's LLM commanders; null = none.</param>
+    public SimSnapshotSource(LoadedGame loaded, Settings? appSettings = null)
     {
+        if (appSettings is not null && loaded.Ai is not null && loaded.Header.Skirmish is { } skirmish)
+            _loadedCommanders = CommanderSet.Attach(loaded.Ai, skirmish.AiPlayers, appSettings);
         _map = loaded.Map;
         _verifyCommand = null;
         _host = new SimHost(loaded.Sim) { Ai = loaded.Ai };
@@ -161,6 +164,11 @@ public sealed class SimSnapshotSource : ISnapshotSource
 
     /// <summary>The menu skirmish this source wraps, or null for the sandbox, a mission or a loaded game.</summary>
     public SkirmishGame? Game => _game;
+
+    /// <summary>M5: the LLM commanders and chat of this game (a menu skirmish's, or those rebuilt for a loaded save), or null.</summary>
+    public CommanderSet? Commanders => _game?.CommanderSet ?? _loadedCommanders;
+
+    private readonly CommanderSet? _loadedCommanders;
 
     /// <summary>The fixed part of this game's save header, or null when the game cannot be saved (the sandbox).</summary>
     public GameSaveHeader? SaveTemplate { get; set; }

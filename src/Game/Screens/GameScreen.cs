@@ -230,7 +230,7 @@ public sealed class GameScreen : IScreen
     /// </summary>
     public static GameScreen CreateFromSave(GameServices services, LoadedGame loaded)
     {
-        var sim = new SimSnapshotSource(loaded);
+        var sim = new SimSnapshotSource(loaded, services.Settings);   // M5-10: brings back the save's LLM commanders
         if (loaded.Header.Mode == SaveMode.Mission)
         {
             MissionGame game = MissionGame.FromSave(loaded);
@@ -290,7 +290,7 @@ public sealed class GameScreen : IScreen
         _sidebar?.Dispose();
         _cameos?.Dispose();
         _sim?.SaveReplay();
-        _sim?.Game?.Dispose();   // M5-05: cancels any LLM call still in flight
+        _sim?.Commanders?.Dispose();   // M5-05: cancels any LLM call still in flight
     }
 
     /// <inheritdoc />
@@ -338,7 +338,7 @@ public sealed class GameScreen : IScreen
             }
         }
 
-        bool chatTyping = _chat.Update(input, _sim?.Game, _sim?.Sim.Tick ?? 0, _s.Settings.LlmChatOn, _console is { IsOpen: true });
+        bool chatTyping = _chat.Update(input, _sim?.Commanders, _sim?.Sim.Tick ?? 0, _s.Settings.LlmChatOn, _console is { IsOpen: true });
         if (chatTyping) input.ConsumeKeyboard();
         bool typing = _console is { IsOpen: true };
         if (typing) input.ConsumeKeyboard();

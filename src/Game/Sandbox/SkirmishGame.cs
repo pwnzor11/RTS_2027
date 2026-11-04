@@ -81,37 +81,19 @@ public sealed class SkirmishGame : IDisposable
     public AiDriver Ai { get; }
 
     /// <summary>M5: the commander chat shared by every LLM commander in this game (M5-05 writes, the chat panel M5-07 reads).</summary>
-    public CommanderChatLog Chat { get; } = new();
+    public CommanderChatLog Chat => CommanderSet.Chat;
 
-    /// <summary>M5: the LLM commanders of this game, one per slot whose <see cref="SkirmishSlot.Commander"/> is set (M5-05 fills; empty
-    /// otherwise).</summary>
-    public IReadOnlyList<ICommanderChannel> Commanders { get; private set; } = Array.Empty<ICommanderChannel>();
+    /// <summary>M5: the LLM commanders of this game, one per slot whose <see cref="SkirmishSlot.Commander"/> is set (empty otherwise).</summary>
+    public IReadOnlyList<ICommanderChannel> Commanders => CommanderSet.Commanders;
 
-    private readonly List<Commander> _commanders = new();
+    /// <summary>M5: the commanders and their chat (see <see cref="Sandbox.CommanderSet"/>).</summary>
+    public CommanderSet CommanderSet { get; private set; } = new();
 
     /// <summary>Cancels any call the LLM commanders still have in flight (M5-05). Safe to call more than once.</summary>
-    public void Dispose()
-    {
-        foreach (Commander c in _commanders) c.Dispose();
-    }
+    public void Dispose() => CommanderSet.Dispose();
 
-    private void AttachCommanders(IEnumerable<(byte Player, SkirmishSlot Slot)> slots, Settings app)
-    {
-        LlmConfig cfg = LlmHooks.Defaults.Resolve(app.ProviderKind, app.LlmBaseUrl, app.LlmModel);
-        IReadOnlyList<CommanderPersona>? personas = null;
-        foreach ((byte player, SkirmishSlot slot) in slots)
-        {
-            if (!slot.Commander) continue;
-            IChatProvider? provider = app.ProviderKind == LlmProviderKind.None ? null : ProviderFactory.Create(cfg, LlmHooks.SecretStore.Load());
-            personas ??= PersonaCatalog.Load(Path.Combine(AppContext.BaseDirectory, "data", "llm", "personas.toml"));
-            string faction = slot.Faction.ToString();
-            CommanderPersona persona = PersonaCatalog.Pick(personas, faction, player);
-            var commander = new Commander(player, provider, persona, faction, app.LlmCallCap, app.LlmChatOn, Chat);
-            Ai.SetDirectiveSource(player, commander);
-            _commanders.Add(commander);
-        }
-        Commanders = _commanders.ToArray();
-    }
+    private void AttachCommanders(IEnumerable<(byte Player, SkirmishSlot Slot)> slots, Settings app) =>
+        CommanderSet = CommanderSet.Attach(Ai, slots, app);
 
     /// <summary>Which map this is, for the setup screen: "Rust Belt (curated)" or "Generated 64x64".</summary>
     public string MapLabel { get; }

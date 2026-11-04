@@ -46,11 +46,11 @@ public sealed class CommanderChatPanel
     /// then calls <see cref="InputFrame.ConsumeKeyboard"/> so the hotkeys stay quiet. An open console cancels the input.
     /// </summary>
     /// <param name="input">This frame's input.</param>
-    /// <param name="game">The skirmish, or null for the sandbox and demo.</param>
+    /// <param name="game">The game's commanders and chat, or null for the sandbox, demo and missions.</param>
     /// <param name="tick">The sim tick the send is stamped with.</param>
     /// <param name="chatOn">Settings.LlmChatOn.</param>
     /// <param name="consoleOpen">True while the debug console has the keyboard.</param>
-    public bool Update(InputFrame input, SkirmishGame? game, int tick, bool chatOn, bool consoleOpen)
+    public bool Update(InputFrame input, CommanderSet? game, int tick, bool chatOn, bool consoleOpen)
     {
         ArgumentNullException.ThrowIfNull(input);
         IReadOnlyList<ICommanderChannel> commanders = game is not null && chatOn ? game.Commanders : Array.Empty<ICommanderChannel>();
