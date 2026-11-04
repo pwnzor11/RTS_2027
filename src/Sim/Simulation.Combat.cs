@@ -137,11 +137,13 @@ public sealed partial class Simulation
 
     /// <summary>Alive, health &gt; 0 and owned by an Enemy or Neutral player: what an explicit Attack order may target (D-054).</summary>
     internal bool IsValidTarget(byte player, ActorRef target) =>
-        !target.Id.IsNone && TryGetActorInfo(target, out var info) && info.Health > 0 && CanAttackOwnedBy(player, info.Owner);
+        !target.Id.IsNone && TryGetActorInfo(target, out var info) && info.Health > 0 && CanAttackOwnedBy(player, info.Owner)
+        && !IsUntargetableBy(player, target.Kind, target.Id.Index);   // M3-05: underground / hidden
 
     /// <summary>Alive, health &gt; 0 and owned by an Enemy: what auto-acquisition (Guard, AttackMove, turrets) may keep or pick.</summary>
     internal bool IsValidAutoTarget(byte player, ActorRef target) =>
-        !target.Id.IsNone && TryGetActorInfo(target, out var info) && info.Health > 0 && RelationOf(player, info.Owner) == Relation.Enemy;
+        !target.Id.IsNone && TryGetActorInfo(target, out var info) && info.Health > 0 && RelationOf(player, info.Owner) == Relation.Enemy
+        && !IsUntargetableBy(player, target.Kind, target.Id.Index);   // M3-05: underground / hidden
 
     /// <summary>True if the viewer currently sees the actor's cell (buildings: any footprint cell).</summary>
     internal bool IsTargetVisible(byte viewer, ActorRef target)
@@ -183,6 +185,7 @@ public sealed partial class Simulation
                 int hp = HealthAt(kind, i);
                 if (d == bestD && hp >= bestHp) continue;
                 if (!IsTargetVisible(player, kind, i)) continue;
+                if (IsUntargetableBy(player, kind, i) || !WeaponCanTarget(w, kind, i)) continue;   // M3-05
                 bestD = d; bestHp = hp; best = new ActorRef(kind, slots.IdOf(i));
             }
         }
@@ -224,6 +227,8 @@ public sealed partial class Simulation
         if (e.ReloadTicks > 0) return false;
         byte owner = PlayerAt(kind, i);
         WeaponType w = RulesOf(owner).Weapons[weapon];
+        if (kind != ActorKind.Building && IsUnderground(kind, i)) return false;                       // M3-05: underground cannot fire
+        if (!target.Id.IsNone && target.Kind <= ActorKind.Building && !WeaponCanTarget(w, target.Kind, target.Id.Index)) return false;   // M3-05: air vs ground
         if (w.ProjectileSpeed <= 0)
             Detonate(owner, w.Damage, w.Warhead, targetPoint, target, true);
         else
@@ -249,6 +254,7 @@ public sealed partial class Simulation
     private void Hurt(ActorKind kind, int i, int damage, WarheadType wh, bool half, byte source)
     {
         int d = ComputeDamage(damage, wh, ArmorAt(kind, i));
+        if (wh.BonusVsIrradiatedPercent != 100 && IsIrradiatedTarget(kind, i)) d = Math.Max(1, (int)((long)d * wh.BonusVsIrradiatedPercent / 100));   // M3-05
         if (half) { d /= 2; if (d < 1) d = 1; }
         if (_pendingCount == _pendingDamage.Length) Array.Resize(ref _pendingDamage, _pendingCount * 2);
         _pendingDamage[_pendingCount++] = new PendingHit(new ActorRef(kind, IdAt(kind, i)), d, source);
@@ -292,6 +298,7 @@ public sealed partial class Simulation
     internal void Detonate(byte owner, int damage, int warheadIndex, LeptonCoord impact, ActorRef primary, bool instant)
     {
         WarheadType wh = RulesOf(owner).Warheads[warheadIndex];
+        ApplyWarheadGround(wh, impact.ToCell(), wh.Splash < 0 ? 0 : wh.Splash);   // M3-05: contaminate / decontaminate / Blackout
         if (instant && wh.Splash <= 0)
         {
             if (TryGetActorInfo(primary, out var pi) && pi.Health > 0)
@@ -350,6 +357,7 @@ public sealed partial class Simulation
             {
                 var target = new ActorRef((ActorKind)((c.Arg >> 8) & 0xFF), c.Target);
                 if (WeaponOf(kind, i) < 0 || target.Kind > ActorKind.Building || !IsValidTarget(c.Player, target)) return;
+                if (!WeaponCanTarget(RulesOf(c.Player).Weapons[WeaponOf(kind, i)], target.Kind, target.Id.Index)) return;   // M3-05
                 e.AttackTarget = target;
                 Queue(store!, i, MissionKind.Attack, default, c.Target);
                 break;

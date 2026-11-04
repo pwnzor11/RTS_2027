@@ -68,5 +68,6 @@ public sealed partial class Simulation
     }
 
     /// <summary>True if the viewer or any ally currently sees the cell (team vision).</summary>
-    internal bool IsVisibleTo(byte viewer, CellCoord cell) => _vision.IsVisibleToAny(TeamMembers(viewer), cell);
+    internal bool IsVisibleTo(byte viewer, CellCoord cell) => _vision.IsVisibleToAny(TeamMembers(viewer), cell)
+        && (_ground.BlackoutAt(cell) == 0 || CanSeeThroughBlackout(viewer, cell));   // M3-05: Blackout cloud
 }
