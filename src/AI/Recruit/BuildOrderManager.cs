@@ -7,17 +7,13 @@ namespace Rts.AI.Recruit;
 
 /// <summary>
 /// The fixed structure build order of the Recruit tier (data: the tier's build_repertoire, falling back to
-/// <see cref="DefaultOrder"/>). Step n is satisfied when the AI owns (or has queued / ready) at least as many of that type
+/// the faction's default order, see <see cref="RecruitFaction"/>). Step n is satisfied when the AI owns (or has queued / ready) at least as many of that type
 /// as the order lists up to and including step n, so a destroyed structure is simply built again. Places each Ready
 /// structure via <see cref="PlacementSearch"/>. Inserts a power plant first whenever the next structure would push power use
 /// above output.
 /// </summary>
 internal sealed class BuildOrderManager
 {
-    /// <summary>power, refinery, barracks, power, factory, silo, turret (design 02 section 7, tier 1).</summary>
-    public static readonly string[] DefaultOrder =
-        ["auth_power", "auth_refinery", "auth_barracks", "auth_power", "auth_factory", "auth_silo", "auth_turret"];
-
     private readonly string[] _order;
     private readonly string _powerId, _yardId;
     private readonly PlacementSearch _search = new();
@@ -26,9 +22,9 @@ internal sealed class BuildOrderManager
     private int[] _queued = Array.Empty<int>();
     private int[] _seen = Array.Empty<int>();
 
-    public BuildOrderManager(IReadOnlyList<string> repertoire, string powerId, string yardId)
+    public BuildOrderManager(string[] order, string powerId, string yardId)
     {
-        _order = repertoire.Count > 0 ? repertoire.ToArray() : DefaultOrder;
+        _order = order;
         _powerId = powerId; _yardId = yardId;
     }
 

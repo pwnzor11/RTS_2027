@@ -13,10 +13,15 @@ namespace Rts.AI.Recruit;
 /// </summary>
 internal sealed class ProductionManager
 {
-    // Each lane builds from a bag that is reshuffled (seeded, per slot) whenever it runs out; the vehicle lane opens with a tank.
-    private static readonly string[] InfantryBag = ["auth_rifleman", "auth_rifleman", "auth_rocketeer", "auth_rocketeer"];
-    private static readonly string[] VehicleBag = ["auth_tank", "auth_tank", "auth_tank", "auth_jeep"];
-    private const string FirstVehicle = "auth_tank";
+    // Each lane builds from a bag (the faction's, see RecruitFaction) that is reshuffled (seeded, per slot) whenever it runs out;
+    // the vehicle lane opens with the faction's first vehicle.
+    private readonly RecruitFaction _faction;
+    private readonly IFactionTactics? _tactics;
+
+    public ProductionManager(RecruitFaction faction, IFactionTactics? tactics)
+    {
+        _faction = faction; _tactics = tactics;
+    }
 
     private int[] _inf = Array.Empty<int>(), _veh = Array.Empty<int>();
     private int _infIdx, _vehIdx;
@@ -38,13 +43,19 @@ internal sealed class ProductionManager
         SimRules rules = k.Rules;
         if (_inf.Length == 0)
         {
-            _inf = Resolve(InfantryBag, rules.Infantry, i => i.Id);
-            _veh = Resolve(VehicleBag, rules.Vehicles, v => v.Id);
+            _inf = Resolve(_faction.InfantryBag, rules.Infantry, i => i.Id);
+            _veh = Resolve(_faction.VehicleBag, rules.Vehicles, v => v.Id);
             Shuffle(_inf); Shuffle(_veh);
             _first = true;
         }
         if (!k.HaveYard) return;
         Rally = RallyCell(k);
+        if (_tactics != null) Rally = _tactics.SafeCell(k, Rally);   // M3-10: not on an irradiated cell
+        if (_faction.SkipUnbuildable)
+        {
+            SkipUnbuildable(k, ProductionCategory.Infantry, _inf, ref _infIdx);
+            SkipUnbuildable(k, ProductionCategory.Vehicle, _veh, ref _vehIdx);
+        }
 
         foreach (ViewActor b in k.Buildings)
         {
@@ -68,6 +79,15 @@ internal sealed class ProductionManager
     {
         if (k.Queue(cat).Items.Count > 0) return;
         int type = cat == ProductionCategory.Vehicle ? PeekVehicle(k.Rules) : mix[idx % mix.Length];
+        int wanted = cat == ProductionCategory.Vehicle && _tactics != null ? _tactics.WantedVehicle(k) : -1;
+        if (wanted >= 0)
+        {
+            // M3-10: a special order (a Bore for a new entrance, an Agitprop for the wave) goes ahead of the bag and does not advance it
+            if (!k.Buildable(cat, wanted) || k.Hud.Cash + k.Hud.Stored < cost(wanted)) return;
+            sink.Build(cat, wanted);
+            Queued++;
+            return;
+        }
         if (!k.Buildable(cat, type)) return;
         int funds = k.Hud.Cash + k.Hud.Stored;
         if (k.Harvesters.Count == 0 && funds < cost(type) + reserve)
@@ -94,7 +114,13 @@ internal sealed class ProductionManager
 
     /// <summary>The next vehicle to build: a tank first, then the shuffled bag.</summary>
     private int PeekVehicle(SimRules rules) =>
-        _first ? SimRules.IndexOf(rules.Vehicles, FirstVehicle, v => v.Id) : _veh[_vehIdx % _veh.Length];
+        _first ? SimRules.IndexOf(rules.Vehicles, _faction.FirstVehicle, v => v.Id) : _veh[_vehIdx % _veh.Length];
+
+    /// <summary>Moves a bag index on past items whose tech is not built yet (Directorate: the Reactor Crawler before the Isotope Works).</summary>
+    private static void SkipUnbuildable(RecruitKnowledge k, ProductionCategory cat, int[] mix, ref int idx)
+    {
+        for (int n = 0; n < mix.Length && !k.Buildable(cat, mix[idx % mix.Length]); n++) idx++;
+    }
 
     private void Shuffle(int[] a)
     {

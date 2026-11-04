@@ -17,6 +17,10 @@ internal sealed class RecruitKnowledge
     public readonly List<ViewActor> Buildings = new();
     public readonly List<ViewActor> Army = new();
     public readonly List<ViewActor> Harvesters = new();
+    /// <summary>Burrowing deployers (Bores): not army; the faction tactics deploy them into entrances. Empty for Authority.</summary>
+    public readonly List<ViewActor> Bores = new();
+    /// <summary>Aura carriers (Agitprop): not army; the faction tactics keep them with the wave. Empty for Authority.</summary>
+    public readonly List<ViewActor> Support = new();
     public readonly List<ViewActor> Visible = new();
     public int[] BuildingCount = Array.Empty<int>();
     public CellCoord Yard;
@@ -29,7 +33,7 @@ internal sealed class RecruitKnowledge
         Rules = view.Rules;
         view.CopyOwn(Own);
         view.CopyVisible(Visible);
-        Buildings.Clear(); Army.Clear(); Harvesters.Clear();
+        Buildings.Clear(); Army.Clear(); Harvesters.Clear(); Bores.Clear(); Support.Clear();
         if (BuildingCount.Length != Rules.Buildings.Count) BuildingCount = new int[Rules.Buildings.Count];
         Array.Clear(BuildingCount);
         HaveYard = false;
@@ -43,6 +47,12 @@ internal sealed class RecruitKnowledge
                     break;
                 case ActorKind.Vehicle when Rules.Vehicles[a.TypeIndex].HarvestCapacity > 0:
                     Harvesters.Add(a);
+                    break;
+                case ActorKind.Vehicle when Rules.Vehicles[a.TypeIndex] is { DeploysInto: >= 0, Locomotion: Locomotion.Burrow }:
+                    Bores.Add(a);
+                    break;
+                case ActorKind.Vehicle when Rules.Vehicles[a.TypeIndex].AuraRadius > 0:
+                    Support.Add(a);
                     break;
                 default:
                     Army.Add(a);

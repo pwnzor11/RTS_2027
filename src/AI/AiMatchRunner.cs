@@ -35,13 +35,19 @@ public static class AiMatchRunner
         if (map.StartPositions.Count < 2) throw new ArgumentException("Map needs two start positions.", nameof(map));
         // Economy start places player p at map start p; swapped starts reverse the list so slots trade corners.
         MapData playMap = start == AiStartMode.Economy && swapStarts ? SwapStarts(map) : map;
-        var setup = new SimSetup(seed, playMap, 2, rules, rulesHash);
+        byte slotA = aInSlot0 ? (byte)0 : (byte)1, slotB = (byte)(1 - slotA);
+        var factions = new Faction[2];
+        factions[slotA] = sideA.Faction; factions[slotB] = sideB.Faction;
+        // Authority on both sides keeps the M2 setup exactly (no Factions list), so Authority games are unchanged.
+        var setup = new SimSetup(seed, playMap, 2, rules, rulesHash)
+        {
+            Factions = sideA.Faction == Faction.Authority && sideB.Faction == Faction.Authority ? null : factions,
+        };
         var sim = new Simulation(setup);
         ReplayWriter? recorder = replay is null ? null : new ReplayWriter(replay, sim, build, rulesFiles ?? Array.Empty<(string, string)>());
         if (start == AiStartMode.Army) for (byte p = 0; p < 2; p++) SpawnArmy(sim, rules, map, p, swapStarts ? 1 - p : p);
         else SkirmishStart.Apply(sim);
 
-        byte slotA = aInSlot0 ? (byte)0 : (byte)1, slotB = (byte)(1 - slotA);
         var driver = new AiDriver(seed);
         driver.Add(slotA, Create(sideA), sideA.Profile);
         driver.Add(slotB, Create(sideB), sideB.Profile);

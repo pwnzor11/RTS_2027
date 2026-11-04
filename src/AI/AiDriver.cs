@@ -31,7 +31,7 @@ public sealed class AiDriver
             ActorRef target = default, int arg2 = 0)
         {
             int arg = (int)subjectKind;
-            if (kind == CommandKind.Attack) arg |= ((int)target.Kind & 0xFF) << 8;
+            if (kind is CommandKind.Attack or CommandKind.Enter) arg |= ((int)target.Kind & 0xFF) << 8;
             Out.Add(new Command(Tick + Delay, Player, unchecked(Sequence++), kind, subject, target.Id, cell, arg, arg2));
         }
 
