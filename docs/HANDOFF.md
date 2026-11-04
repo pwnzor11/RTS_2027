@@ -1,31 +1,45 @@
-# Handoff: Session 4 — owner play-test, fixes, then M3 planning
-Last commit: 3944725 (2026-11-03) — wrap-up content commit; only the handoff commits (docs) sit on top of it
-Where things stand: Session 3 finished M1.5 (hardening from the adversarial review) and all of M2 (M2-01..M2-20). The game
-has a main menu, a playable skirmish vs the Recruit AI on the Rust Belt map (economy, production, sidebar, minimap,
-victory/defeat), Campaign Mission 1 "Survey" (MoonSharp Lua host), real Blender art for all 13 Authority types plus
-pixel-art effects, and simultaneous-damage combat. 551 sim + 253 game + 28 AI + 35 scripting tests; Windows CI runs the
-sandbox, skirmish and mission headless and verifies replays. Decisions D-049..D-072; only D-063 (M2-01 findings) is still
-"assumed — confirm". Nothing has been seen on a real screen yet.
+# Handoff: Session 5 — long overnight build: finish M3, start M4 skirmish depth and the new factions
+Last commit: d0eed7e (+ this handoff commit) (2026-11-04) on integ-m3 — see "Where things stand" for what is on main vs integ-m3
+Where things stand: M3 waves 0–2 are merged on `integ-m3` (contracts, tunnels, burrowing, hardening + gates, radiation /
+Blackout / stealth, upgrades / auras / transports / engineers / air, Directorate data, faction UI, audio, Directorate
+AI, Sunrise Device, Archive with owner-approved lore, integration fixes, session 3 follow-ups). PR #7 (wave 1) is open
+for Windows CI; integ-m3 has moved past it, so update or replace the PR before landing. Art lives on local `wp/art-*`
+branches and reaches GitHub only when the owner runs `_art_push/push_art.ps1` (D-084). The owner approved: the
+Directorate palette, conscript, Smelter Vent, 4 infantry, both vehicle batches, the lore. Morning review pending: the
+turret rework sheets (crawler, rocket truck, decon truck) and the dir_shaft pilot rev 2. Decisions D-082..D-090; the
+expansion plan is D-087 (4 factions, skirmish depth, LLM commander) and the new milestone order is in ROADMAP.
 
 ## Start here (shown to the user as the plan; nothing starts until they say go)
-1. Owner: report the Windows play-test (USER_CHECKS "Session 3 · M2 playable skirmish slice") and do the Git LFS step
-   (USER_CHECKS Session 3 · M1.5, item 7) — art volume makes LFS urgent. Fix what the play-test finds first.
-2. Confirm D-063 (corner-advantage causes; slot-order bias later fixed by D-065).
-3. M3 planning, contract-first like M2. Owner questions up front: Q-29 Directorate tunnel spec (blocks the faction),
-   Q-31 audio sourcing (D-059 wants voice + music), the Directorate M3 roster and harvesting (tunnel scrapers, D-053),
-   whether M3 also adds tiers 2–5 of the AI (harness ready: `Tools ai matrix`).
-4. Known follow-ups worth folding into M3 wave 1: remove Recruit's now-redundant scraper probes; explosion size by
-   footprint; hitscan weapons raise no effect events; mission games record no replay (script spawns aren't in the setup
-   log); MoonSharp has no instruction limit; wall art detail at 1×; Rocketeer east-facing flash cropped by its 32 px frame.
+1. Owner: run `_art_push/push_art.ps1` (USER_CHECKS Session 4, item 1); say how the turret rework and the Command
+   Shaft look (sheets in art_out were sent in session 4; resend if needed).
+2. Land M3 so far: merge M3-16 (main menu; see Half-finished), bring the art branches into an `integ-art` merge
+   (resolve tools/art/build_vehicle.py between art-veh1 and art-veh2: keep both feature sets, D-083), update PR #7 or open
+   a new PR integ-m3 → main, wait for Windows CI, land.
+3. Finish M3: M3-18 game wiring (turret/shadow/dive layers, Sunrise button + targeting + flash, Archive tracker + button),
+   M3-11 AI tiers 2–5 (also fix the skipped InfantryLeavesIrradiatedCells test), M3-19 mission replays, M3-ART (14
+   Directorate structures in the dir_shaft style using tools/art/structures/dir_struct_common.py, 4 Authority structures,
+   agitprop turret via S.mount), M3-14 integration + balance (tunnel time saved 30–50 %, win rates near 50 %), Q-34.
+4. M4 skirmish depth, all equal priority (D-087): procedural maps (4 types × S/M/L), AI-vs-AI spectator mode,
+   garrisoning, three-tier tech trees and upgrades for both factions, the map editor. Contract-first, like M3.
+5. Design wave for M6/M7 (overnight-friendly, D-088): new-faction design docs (06_left_behind.md, 07_expedition.md)
+   with roster, mechanics and asymmetry; lore drafts in docs/lore/ in the approved style (owner approves); palette and
+   one pilot unit + building per faction, lead-reviewed, then fan out. Naval systems for the Expedition need their own
+   contract design. M5 LLM commander can start once M4 contracts are in (Anthropic + OpenAI-compatible, key only in local
+   settings, never logged).
 
 ## Half-finished work
-- None in code. Leftover branches on GitHub the owner can delete: all `integ-*` and `wp/*` branches (all merged).
+- M3-16 main menu lobby: helper was still running at wrap-up on `wp/m3-16` (worktree /home/claude/wt/m3-16 — gone in a
+  new container). If the branch is on GitHub, review and merge it; if not, rerun M3-16 from its brief (ROADMAP line).
+- M3-ART structures: only dir_shaft (rev 2, on wp/art-str1) is done; wp/art-str2 was created but never used.
+- Merge of art branches into code: not done (art is pushed only by the owner script).
+- Leftover branches on GitHub the owner can delete after landing: `wp/m3-*`, `wp/art-*` once merged, older `integ-*`.
 
 ## Waiting on the user
-- Windows play-test; Git LFS conversion; D-063; Q-29, Q-31.
+- push_art.ps1; turret rework + Command Shaft review; Q-34 (assumed values, can wait for the balance pass);
+  merge PR(s) after Windows CI if they want to watch it.
 
 ## How to run this session
-- Lead: Opus for build sessions; Sonnet for a pure review/question session. Helpers: Haiku default; Sonnet for sim core,
+- Lead: Opus for build sessions (the owner wants long unattended overnight builds); Sonnet for a pure review/question session. Helpers: Haiku default; Sonnet for sim core,
   determinism, serialisation, movement, combat, AI, scripting, and all Blender art.
 - Repo clone: `/home/claude/rts_2027`; main has no branch protection, but land through a PR so Windows CI runs first
   (`gh pr create` fails — use `gh api repos/pwnzor11/RTS_2027/pulls -f title=… -f head=… -f base=main`); GitHub marks the
@@ -50,6 +64,17 @@ sandbox, skirmish and mission headless and verifies replays. Decisions D-049..D-
   use Debug/Place commands); golden: `RTS_UPDATE_GOLDEN=1 dotnet test tests/Sim.Tests --filter Golden`.
 - Never copy EA code (D-050). AI never runs inside Step (D-051). Lua only via ISimExtension (D-071). No floats or
   dictionary iteration in src/Sim. Scheduling tools stay forbidden for helpers (one created a stray task this session).
+- Session 4 lessons:
+  - .NET builds also share ONE lock: wrap every dotnet build/test in `flock /home/claude/wt/dotnet.lock …` (D-090). Full
+    suite ≈ 8 min; with 8 helpers queued, expect 30–60 min waits. Merge in batches and run one full suite per batch.
+  - Helpers hand back while still queued, or re-send the same report many times: verify with git log, then TaskStop them.
+  - Never `pkill -f` with a pattern that also matches your own shell command (killed the lead twice).
+  - Shared enums are a collision point (two helpers both took FxKind = 3). Pre-assign enum values in briefs.
+  - Art branches cannot be pushed from the cloud (LFS, D-084): keep them as `wp/art-*`, and at wrap-up rebuild
+    `_art_push` in the owner's folder (LFS objects + bundle + push_art.ps1) through the device bridge.
+  - Address SendMessage notes to the right helper id (a sprite note went to the audio helper).
+  - The owner likes to see art: send every finished contact sheet for approval with a 1-line read per asset.
+
 
 ## If time runs short
-Do item 1 (play-test fixes) and item 3's owner questions; M3 building can start next session.
+Do item 2 (land M3 so far) and M3-18 wiring, so the owner can play everything built in session 4.

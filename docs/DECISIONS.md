@@ -623,3 +623,81 @@ GPL repo; ACE-Step has no output terms.
 **Decision:** For the session 4 overnight build, real findings are fixed without asking; every change to numbers or
 visible text is logged as its own decision marked "assumed — confirm".
 **Status:** confirmed (owner, session 4)
+
+### D-082 · 2026-11-04 · M3 format bump: factions in saves, replays and rules
+**Decision:** RulesHash FormatVersion 5→6, SaveVersion 6→7, Replay Version 6→7; the setup header carries each
+player's faction. Older saves and replays are rejected with the existing clear message.
+**Why:** M3-01 adds factions and three state parts (tunnels, ground, effects); old files can't describe them.
+**Status:** confirmed (lead; required by HANDOFF rule that format bumps get an entry)
+
+### D-083 · 2026-11-04 · Directorate art style and sprite-layer conventions
+**Decision:** Directorate art uses palette `PAL_DIR` (tools/art/common.py, 24 colours incl. an umber ramp; no green,
+so radiation glows read brass). Owner-approved references: dir_conscript and dir_smelter_vent (round 3). New
+sprite conventions: (1) turret layer `<id>_turret.png` + `<id>_turret.sprite.toml` (`layer = "turret"`, pivot in
+cells), drawn at hull origin + pivot rotated by the hull facing; the hull bakes a turret collar and contact shadow,
+the turret has a soft rim instead of a hard outline over the hull (owner: turrets looked "superimposed"; fixed);
+(2) air shadow layer `<id>_shadow.png` drawn at the ground position under the body (manifest `altitude`);
+(3) burrowers have a `dive` state (16 facings × 4 frames, 3 ticks each), played in reverse when surfacing.
+**Why:** owner reviews of the pilots and batches in session 4.
+**Status:** confirmed (owner approved vent, infantry, both vehicle batches; turret rework awaits a morning look)
+
+### D-084 · 2026-11-04 · Art reaches GitHub through the owner's PC
+**Decision:** The cloud workspace cannot upload Git LFS objects (proxy blocks the storage host). Art is committed on
+`wp/art-*` branches in the workspace; at wrap-up the lead copies the LFS objects into the owner's local
+`.git/lfs/objects` and a git bundle plus `push_art.ps1` into `_art_push/`; the owner runs the script.
+**Status:** confirmed (owner, session 4)
+
+### D-085 · 2026-11-04 · Main menu lobby (M3-16)
+**Decision:** On launch the game opens a lobby over illustrated, data-driven scenes (game sprites, parallax, ash and
+ember particles, slow cross-fades; not a live battle). Menu: Continue, Campaign (New/Load), Skirmish (New/Load),
+LAN Game and Map Editor (shown greyed: "Coming in a later update"), Replays, Archive, How to Play, Settings, Quit.
+Licence and credits live under Settings → About (assumed — confirm; owner did not pick a Credits button).
+**Status:** confirmed (owner, session 4) except the About placement
+
+### D-086 · 2026-11-04 · The Archive (M3-17) and the approved lore
+**Decision:** In-game Archive with hybrid unlocks: faction history and the basic roster open; leaders' backstories,
+secret tech and late units unlock by campaign progress or first sighting in skirmish (fog-honest). Unit, structure
+and upgrade entries show live stats from the rules. Lore is drafted by the lead and approved by the owner; the first
+draft (docs/lore/) was approved in full. Leader secrets are separate "Classified" entries unlocked by campaign
+missions (ids set in M4). Faction names "Authority" and "Directorate" are used as-is.
+**Canon introduced:** Director Harrowgate died in 1974 and the Voice (Odette Larkin) reads committee scripts; the
+Commissar (Thrall) found "Order Seven" (1963) and drives the Sunrise Device; the Authority knew of the Annex from
+1974 ("the hum") and chose not to dig; Brigadier Wrenfield's brother was left behind on the Glass Coast in 1990;
+the Annex is failing after the 1994 Shaft Seven reactor loss.
+**Status:** confirmed (owner, session 4)
+
+### D-087 · 2026-11-04 · Expansion plan and new milestone order
+**Decision:** After M3: skirmish depth and the new factions come BEFORE the campaign, so the campaign is written once
+with all four factions. New factions: **The Left Behind** (descendants of the Glass Coast evacuees abandoned in
+1990; nomadic ash-scavengers, mobile crawler-rig bases, salvaged tech, raids) and **the Overseas Expedition** (an
+old-world remnant — survivors of a real continent's governments, lightly fictionalised: invented names for all
+leaders and institutions, no real people or politics; naval and air, beachheads, most advanced, far from home).
+Rosters: be creative and build what fits each faction and the game; the "100+ units / 70+ buildings in total" is a
+loose target, not a quota. Skirmish depth (equal priority): procedural maps (Rust Belt ruins, Glass Coast dunes,
+Mountain passes, Ash plains/rivers; small/medium/large), AI-vs-AI spectator mode, garrisoning, three-tier tech
+trees and upgrades, the map editor. LLM opponent: the built-in AI does moment-to-moment control; the LLM sets strategy
+every 10–30 s from a battlefield summary and talks in character as a faction leader; API key in Settings for
+Anthropic (Claude) or any OpenAI-compatible endpoint, stored only in local settings, never logged or committed; its
+orders go through the normal command log so replays and lockstep stay deterministic (D-051). LLM-vs-LLM spectating.
+New-faction lore follows D-086 (lead drafts, owner approves).
+**Supersedes:** the milestone order in ROADMAP (campaign was M4, LAN M5).
+**Status:** confirmed (owner, session 4)
+
+### D-088 · 2026-11-04 · Overnight art approval for new factions
+**Decision:** For the new factions the lead renders one pilot unit and building per faction, reviews them itself, then
+fans out the roster without waiting; the owner reviews everything in the morning.
+**Status:** confirmed (owner, session 4)
+
+### D-089 · 2026-11-04 · Session 4 assumed values (review list)
+**Decision:** Every value or behaviour a package had to guess is marked `ASSUMED (M3-xx)` in code or `# ASSUMED` in
+data (about 250 in the Directorate TOML alone). Notable ones: radiation 10 HP/s per full cell, resist-scaled, no damage
+to buildings or underground units; Directorate start kit = dir_shaft + 4 conscripts; engineers capture below 50 % HP;
+aura stacking = best single source; one team member's grouting covers the team; land-train deploy is one-way;
+Sunrise blast radius 5 cells, 700 damage, enemies are not told a superweapon is charging; keys T (Upgrades) and D
+(Deploy); music folder data/music; sfxr output licensed CC0.
+**Status:** assumed — confirm (balance pass in M3-14; owner review; Q-34)
+
+### D-090 · 2026-11-04 · Shared .NET build lock for helper waves
+**Decision:** Helpers wrap every `dotnet build/test` in `flock /home/claude/wt/dotnet.lock`, like Blender renders.
+**Why:** 8 parallel builds on 2 CPUs / 7 GB would run out of memory. Cost: long queues (full suite ≈ 8 min each).
+**Status:** confirmed (lead)

@@ -83,3 +83,24 @@ Pull main. These were verified headless and from contact sheets only — this is
    `--mission-check auth_01 6000`; `dotnet run -c Release --project src/Tools -- ai match --a recruit:1 --b recruit:1 --seeds 2 --ticks 30000`.
 7. **Report anything that looks wrong** (font halo or missing anti-aliasing on text, sprite offsets, sidebar scaling at your
    resolution) — none of it could be seen on a real screen here.
+
+## Session 4 · M3 so far (2026-11-04)
+Only once PR #7 (or a later M3 PR) is merged into main and you have pulled. Saves and replays from earlier builds are
+rejected (format bump, D-082). Nothing here has been seen on a real screen yet.
+1. **Art push first:** in PowerShell in your RTS_2027 folder run
+   `powershell -ExecutionPolicy Bypass -File .\_art_push\push_art.ps1`. It should end with "Done. All art branches are
+   on GitHub." Then delete the `_art_push` folder.
+2. **Directorate skirmish:** Skirmish → set **Your faction** to Directorate → Start. You start with the Command Shaft
+   and four conscripts. Units without finished art show labelled placeholder boxes.
+3. **Tunnels:** build a Hatch (or use a production building), select infantry, right-click your own far entrance: they
+   queue, vanish, and surface about 5 s later behind a 3 s darkening/cracking telegraph.
+4. **Bore:** select a Bore, press **D**, then right-click soft ground: a 5 s telegraph, then a new Hatch. Hatch → Bore Head
+   is an upgrade on the Hatch.
+5. **Upgrades:** press **T** for the Upgrades tab. As Authority, build the Engineering building and research Foundation
+   Grouting; wall a ring with a gate: your tanks drive through the gate, enemies go round.
+6. **Radiation / Blackout:** radiation weapons leave green-tinted ground that hurts infantry; Blackout drops darken
+   cells and hide what's inside.
+7. **Audio:** select a unit (select sound); gunfire pans and fades with the camera. No music ships yet — see
+   docs/audio/music_brief.md for the ACE-Step prompts.
+8. **Engineer:** right-click a damaged own building (repair) or a neutral or badly damaged enemy building (capture).
+9. **Not wired yet (M3-18):** the Sunrise Device button, turret layers drawn separately in game, the Archive button.

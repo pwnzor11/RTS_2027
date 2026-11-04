@@ -106,21 +106,42 @@ Both factions, full tech tree, map editor, real AI with difficulty levels, audio
 - [x] M3-07 Directorate + Authority-counter data
 - [x] M3-08 Game: faction pick and new renderers
 - [x] M3-09 Audio host, SFX generator, music player and brief
-- [ ] M3-ART Art fan-out (Directorate 29 types, Authority 5, effects)
-- [ ] M3-10 Directorate AI
+- [ ] M3-ART Art fan-out. Done + owner-approved: conscript, vent, 4 infantry, 9 vehicles. Turret rework done (owner to look). dir_shaft pilot rev 2 (lead-approved). Left: 14 structures, auth_seismograph/searchlight/gate/engineering, agitprop turret conversion, effects
+- [x] M3-10 Directorate AI (Recruit tier; 4 test games vs Authority all draws; one racy test skipped → fix in M3-11)
 - [ ] M3-11 AI tiers 2–5
-- [ ] M3-12 Session 3 follow-ups
-- [ ] M3-13 Superweapon: the Sunrise Device
+- [x] M3-12 Session 3 follow-ups (mission replays not done → M3-19; wall art 1× and Rocketeer flash crop → M3-ART)
+- [x] M3-13 Superweapon: the Sunrise Device (sim + UI pieces; GameScreen wiring → M3-18)
 - [ ] M3-14 Integration and balance pass
-- [ ] M3-15 Map editor (not planned in session 4)
+- [ ] M3-15 Map editor → moved to M4 (D-087)
 - [ ] M3-16 Main menu lobby: illustrated animated background, full menu (Continue, Campaign new/load, Skirmish new/load, Replays, Archive, How to play, Settings, Quit; LAN and Map editor greyed until built)
-- [ ] M3-17 Archive: lore and codex screens with hybrid unlocks (faction history, leaders, units, buildings, tech); lore drafted by lead, approved by owner
+- [x] M3-17 Archive: screens, unlock tracking, approved lore in data/archive (wiring into GameScreen/menu → M3-18; Technology entries still stubs)
+- [ ] M3-18 Game wiring left by wave 2: sprite turret/shadow/dive layers in the renderer, Sunrise button + targeting + flash in GameScreen, ArchiveTracker.Observe in GameScreen, Archive button → ArchiveScreen
+- [ ] M3-19 Mission replays (record mission id + script hash; replay re-runs the script; ReplayPlayer hook for PlaceInitialActors)
+- [x] M3-INT Wave-1 integration gaps (underground vision, Blackout fog, jam/seismic emitter cache, air vs placement, engineer right-click, audio listener + select sound, CREDITS)
 
-## M4 · Campaign
-Mission scripting/trigger system, briefing screens, tech gating, campaign flow, both campaigns.
+## M4 · Skirmish depth (D-087)
+Equal priority: procedural maps (Rust Belt ruins, Glass Coast dunes, Mountain passes, Ash plains/rivers; S/M/L), AI-vs-AI
+spectator mode, garrisoning, three-tier tech trees and upgrades for both factions, the map editor (was M3-15), fill out
+the Authority and Directorate rosters creatively (no quota).
 
-## M5 · LAN multiplayer
+## M5 · LLM commander (D-087)
+Built-in AI does micro; an LLM sets strategy every 10–30 s and talks in character as a faction leader. API key in Settings
+(Anthropic or OpenAI-compatible), local only. LLM-vs-LLM spectating.
+
+## M6 · The Left Behind (D-087)
+Third faction: Glass Coast evacuees abandoned in 1990; nomadic scavengers, mobile crawler-rig bases, salvaged tech, raids.
+Lore (owner approves), roster, art (pilot → fan-out, D-088), AI.
+
+## M7 · The Overseas Expedition (D-087)
+Fourth faction: an old-world remnant (fictionalised; no real people or politics). Naval and air, beachheads. Needs naval
+systems (water locomotion, ships, landings). Lore, roster, art, AI.
+
+## M8 · Campaign (was M4)
+Mission scripting/trigger system, briefing screens, tech gating, campaign flow; written once with all four factions.
+Wires Archive campaign unlocks.
+
+## M9 · LAN multiplayer (was M5)
 Lockstep over LAN, lobby, desync detection, replays.
 
-## M6 · Polish
+## M10 · Polish
 Art pass, music/SFX, balance, installer.

@@ -8,7 +8,10 @@ From the 2026-11-03 adversarial review (docs/reviews/2026-11-03_adversarial). Ne
 unless marked otherwise.
 
 
-(none open)
+(none blocking)
+
+- ⚪ Q-34 Review the session 4 assumed values (D-089): radiation damage, Directorate start kit, engineer capture threshold,
+  aura stacking, Sunrise numbers and fog, About page placement, sfxr licence. Recommendation: confirm in the M3-14 balance pass.
 
 ## Answered
 - Q-29 · 2026-11-03 · Tunnel spec → D-074..D-076. Q-31 · 2026-11-03 · Audio sourcing → D-080.

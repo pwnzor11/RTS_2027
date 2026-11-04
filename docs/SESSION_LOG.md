@@ -67,3 +67,23 @@ twice (now normalised; whole suite verified with CRLF test files). Mirror AI gam
 so Recruit gained seeded variation. Pilot cost: ≈ 10–12 h per future mission.
 **User check:** USER_CHECKS.md, "Session 3 · M2 playable skirmish slice".
 **Next session should:** owner play-test report → fixes; plan M3 (Directorate faction needs Q-29 tunnel spec; audio Q-31).
+
+## Session 4 · 2026-11-03 → 2026-11-04 (evening into overnight)
+**Goal:** play-test report, M3 planning with the owner, then a large overnight M3 build.
+**Done:** owner play-test ("looks awesome") and Git LFS conversion; D-063 confirmed; M3 plan (docs/design/05_m3_plan.md)
+with the tunnel spec, hardening + gates, radiation/Blackout, Directorate roster, audio sourcing (D-073..D-081). M3 wave 0
+(contracts) and wave 1 (M3-02..M3-09) merged with lead integration fixes; PR #7 opened for Windows CI. Wave 2: M3-10
+Directorate AI, M3-12 follow-ups (mission replays deferred), M3-13 Sunrise Device, M3-17 Archive with the owner-approved
+lore, M3-INT integration gaps. Art: Directorate palette, pilot (conscript, vent ×3 rounds), 4 infantry, 9 vehicles
+(turret layers reworked after owner feedback), dir_shaft structure pilot rev 2 — all owner-approved except the turret
+rework and the shaft (morning review). New requests logged: main menu lobby (M3-16, running at wrap-up), Archive, and an
+expansion plan — 4 factions, skirmish depth, LLM commander, spectator, procedural maps (D-085..D-088).
+**Commits:** 94a16b9..(handoff commit) on integ-m3; art on wp/art-* (local only until the owner runs push_art.ps1).
+**Helpers:** ≈ 30 launches (Opus 3: contracts, tunnels, hardening; Sonnet ≈ 22; Haiku 2). Lock queues (Blender and the
+new dotnet lock) dominated wall time; several helpers handed back while still queued, and two kept re-sending reports
+until stopped.
+**Problems / notes:** LFS upload blocked → D-084 morning script. Two helpers collided on FxKind = 3 (fixed: InstantHit = 4).
+Lead sent M3-08's sprite-layer notes to the audio helper by mistake → M3-18. pkill with a pattern matching the lead's own
+shell killed the lead's command twice — don't pkill by command line.
+**User check:** USER_CHECKS.md, "Session 4 · M3 so far".
+**Next session should:** see HANDOFF (finish M3, then M4 skirmish depth + new-faction design and lore overnight).
