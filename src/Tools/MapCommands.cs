@@ -8,12 +8,16 @@ using Rts.Sim.Rules;
 
 namespace Rts.Tools;
 
-/// <summary>`Tools map` subcommands: <c>new</c> and <c>info</c>. Exit codes: 0 ok, 1 error, 2 usage.</summary>
+/// <summary>`Tools map` subcommands: <c>new</c>, <c>gen</c>, <c>validate</c>, <c>info</c> and <c>ascii</c>. Exit codes: 0 ok, 1 error
+/// (for <c>validate</c>: the map has errors), 2 usage.</summary>
 public static class MapCommands
 {
     private const string Usage =
         "usage: map new --size <n> --seed <s> --out <path>\n" +
-        "       map info <path>";
+        "       map gen --biome rust_belt|glass_coast|mountains|ash_plains --size s|m|l --players 2|3|4 --seed <s> --out <path> [--ascii]\n" +
+        "       map validate <path> [--rules-dir <dir>]\n" +
+        "       map info <path>\n" +
+        "       map ascii <path>";
 
     public static int Run(string[] args)
     {
@@ -22,6 +26,9 @@ public static class MapCommands
         {
             case "new": return New(args[1..]);
             case "info": return Info(args[1..]);
+            case "gen": return Gen(args[1..]);
+            case "validate": return ValidateMap(args[1..]);
+            case "ascii": return Ascii(args[1..]);
             default:
                 Console.Error.WriteLine($"error: unknown map command '{args[0]}'");
                 Console.Error.WriteLine(Usage);
@@ -69,6 +76,133 @@ public static class MapCommands
             Console.Error.WriteLine($"error: {e.Message}");
             return 1;
         }
+    }
+
+    private static int Gen(string[] args)
+    {
+        Biome? biome = null; MapSize? size = null; int? players = null; ulong? seed = null; string? outPath = null; bool ascii = false;
+        for (int i = 0; i < args.Length; i++)
+        {
+            string a = args[i];
+            if (a == "--ascii") { ascii = true; continue; }
+            if (i + 1 >= args.Length || a is not ("--biome" or "--size" or "--players" or "--seed" or "--out")) { Console.Error.WriteLine(Usage); return 2; }
+            string v = args[++i];
+            switch (a)
+            {
+                case "--biome":
+                    int b = Array.IndexOf(MapFile.BiomeKeys, v);
+                    if (b < 0) { Console.Error.WriteLine($"error: unknown biome '{v}' (one of {string.Join(", ", MapFile.BiomeKeys)})"); return 2; }
+                    biome = (Biome)b; break;
+                case "--size":
+                    size = v switch { "s" or "S" => MapSize.Small, "m" or "M" => MapSize.Medium, "l" or "L" => MapSize.Large, _ => null };
+                    if (size is null) { Console.Error.WriteLine("error: --size must be s, m or l"); return 2; }
+                    break;
+                case "--players":
+                    if (!int.TryParse(v, NumberStyles.None, CultureInfo.InvariantCulture, out int pl) || pl < 2 || pl > 4)
+                    { Console.Error.WriteLine("error: --players must be 2, 3 or 4"); return 2; }
+                    players = pl; break;
+                case "--seed":
+                    if (!ulong.TryParse(v, NumberStyles.None, CultureInfo.InvariantCulture, out ulong sd)) { Console.Error.WriteLine(Usage); return 2; }
+                    seed = sd; break;
+                default: outPath = v; break;
+            }
+        }
+        if (biome is null || size is null || players is null || seed is null || outPath is null) { Console.Error.WriteLine(Usage); return 2; }
+        try
+        {
+            var p = new MapGenParams(biome.Value, size.Value, players.Value, seed.Value);
+            long t0 = System.Diagnostics.Stopwatch.GetTimestamp();
+            (MapData map, MapMeta meta) = MapGenerator.GenerateWithMeta(p);
+            long ms = (long)System.Diagnostics.Stopwatch.GetElapsedTime(t0).TotalMilliseconds;
+            MapFile.Save(map, meta, outPath);
+            Console.WriteLine($"wrote {outPath} {map.Name} {map.Width}x{map.Height} {MapFile.SymmetryKeys[(int)meta.Symmetry]} " +
+                $"{map.StartPositions.Count} starts, {meta.Features.Count} features, map hash 0x{MapHasher.Compute(map):x16} ({ms} ms)");
+            if (ascii) PrintAscii(map, meta);
+            return 0;
+        }
+        catch (Exception e) when (e is ArgumentException or InvalidOperationException or IOException or UnauthorizedAccessException or RulesException)
+        {
+            Console.Error.WriteLine($"error: {e.Message}");
+            return 1;
+        }
+    }
+
+    private static int ValidateMap(string[] args)
+    {
+        string? path = null, rulesDir = null;
+        for (int i = 0; i < args.Length; i++)
+        {
+            if (args[i] is "--rules-dir" or "--rules" && i + 1 < args.Length) { rulesDir = args[++i]; continue; }
+            if (path is not null || args[i].StartsWith("--", StringComparison.Ordinal)) { Console.Error.WriteLine(Usage); return 2; }
+            path = args[i];
+        }
+        if (path is null) { Console.Error.WriteLine(Usage); return 2; }
+        try
+        {
+            (MapData map, MapMeta meta) = MapFile.LoadWithMeta(path);
+            TerrainTable? terrain = rulesDir is null ? null : RulesLoader.Load(rulesDir).Sim.Terrain;
+            IReadOnlyList<MapIssue> issues = MapValidator.Validate(map, meta, terrain);
+            int errors = 0;
+            foreach (MapIssue issue in issues)
+            {
+                if (issue.Severity == MapIssueSeverity.Error) errors++;
+                string at = issue.Cell is { } c ? $" at ({c.X},{c.Y})" : "";
+                Console.WriteLine($"{(issue.Severity == MapIssueSeverity.Error ? "error" : "warning")} {issue.Code}{at}: {issue.Message}");
+            }
+            Console.WriteLine($"{path}: {errors} error(s), {issues.Count - errors} warning(s) ({(terrain is null ? "built-in terrain rule" : "terrain from " + rulesDir)})");
+            return errors > 0 ? 1 : 0;
+        }
+        catch (Exception e) when (e is MapFileException or RulesException)
+        {
+            Console.Error.WriteLine($"error: {e.Message}");
+            return 1;
+        }
+    }
+
+    private static int Ascii(string[] args)
+    {
+        if (args.Length != 1) { Console.Error.WriteLine(Usage); return 2; }
+        try
+        {
+            (MapData map, MapMeta meta) = MapFile.LoadWithMeta(args[0]);
+            PrintAscii(map, meta);
+            return 0;
+        }
+        catch (MapFileException e)
+        {
+            Console.Error.WriteLine($"error: {e.Message}");
+            return 1;
+        }
+    }
+
+    /// <summary>One character per cell: 1-4 starts, F feature, $ Ashfall, P Pitchblende, ~ deep water, , shallow, # rock, X cliff,
+    /// = road, : rough, ^ height 1, A height 2+, . flat ground.</summary>
+    private static void PrintAscii(MapData map, MapMeta meta)
+    {
+        bool[]? features = Rts.Data.MapGen.MapAnalysis.FeatureMask(map, meta.Features);
+        var sb = new System.Text.StringBuilder();
+        for (int y = 0; y < map.Height; y++)
+        {
+            for (int x = 0; x < map.Width; x++)
+            {
+                int i = y * map.Width + x;
+                int start = -1;
+                for (int s = 0; s < map.StartPositions.Count; s++) if (map.StartPositions[s] == new CellCoord(x, y)) start = s;
+                char ch;
+                if (start >= 0) ch = (char)('1' + start);
+                else if (features is not null && features[i]) ch = 'F';
+                else if (map.Overlay[i] == OverlayKind.Ashfall) ch = '$';
+                else if (map.Overlay[i] == OverlayKind.Pitchblende) ch = 'P';
+                else ch = map.Land[i] switch
+                {
+                    LandType.Water => '~', LandType.Shallow => ',', LandType.Rock => '#', LandType.Cliff => 'X', LandType.Road => '=',
+                    LandType.Rough => ':', _ => map.HeightLevel[i] >= 2 ? 'A' : map.HeightLevel[i] == 1 ? '^' : '.',
+                };
+                sb.Append(ch);
+            }
+            sb.Append('\n');
+        }
+        Console.Write(sb.ToString());
     }
 
     private static int Info(string[] args)

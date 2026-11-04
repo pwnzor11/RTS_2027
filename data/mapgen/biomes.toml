@@ -1,0 +1,120 @@
+# Procedural map biomes (design 08 §1, M4-02). NOT sim rules: maps are identified by their map hash, so these values stay
+# out of RulesHash. Every number is a starting value (tune). Keys marked ASSUMED (M4-02) are not in the design table.
+#
+# Permille values are shares of the map area. Counts (plateaus, rivers, fields, ruins) are per symmetry orbit: each one is
+# copied to every image, so a 4-player (rot4) map has four of each.
+#   theater                 palette id (data/theaters/<id>.toml)
+#   base_land               land the map starts as: clear | ash                                   # ASSUMED (M4-02)
+#   symmetry_2p/_4p         rot2 | rot4 | mirror_x | mirror_y | mirror_diag (4p and 3p always need rot4)
+#   water_permille          deep ponds (each gets a Shallow ring)
+#   shallow_permille        Shallow lagoons                                                       # ASSUMED (M4-02)
+#   rock_style              rubble (Rough blocks with Rock cores) | dunes (Rough bands, Rock "glass" crests) |
+#                           spurs (Rock ridges) | blobs                                           # ASSUMED (M4-02)
+#   cliff_plateaus          plateaus (height 1, height 2 inside large ones) ringed by Cliff with 2-4 cell ramps
+#   rivers / river_width    rivers from an edge to the centre; width = radius in cells (1 = 3 wide)   # river_width ASSUMED
+#   river_wander_permille   chance per step to wander sideways; 0 = a straight canal               # ASSUMED (M4-02)
+#   ford_spacing            crossings every ford_spacing..1.5x cells, alternating Road bridge / Shallow ford
+#   road_grid               Road grid pitch in cells, 0 = none
+#   ocean_width             ocean band on all four edges at Medium (scaled with size), 0 = none   # ASSUMED (M4-02)
+#   extra_fields            small Ashfall fields scattered away from the starts                    # ASSUMED (M4-02)
+#   ruins                   neutral neu_ruin_* features (Q-M4-b)
+
+[biome.rust_belt]
+theater = "rustbelt"
+base_land = "clear"
+symmetry_2p = "rot2"
+symmetry_4p = "rot4"
+water_permille = 0
+shallow_permille = 0
+rock_permille = 30
+rough_permille = 70
+rock_style = "rubble"
+cliff_plateaus = 0
+rivers = 1
+river_width = 1
+river_wander_permille = 0
+ford_spacing = 20
+road_grid = 16
+ocean_width = 0
+ash_fields_per_start = 3
+pitch_fields_per_start = 1
+contested_fields = 2
+extra_fields = 2
+field_density_min = 3
+field_density_max = 12
+ruins = 2
+
+[biome.glass_coast]
+theater = "glasscoast"
+base_land = "clear"
+symmetry_2p = "rot2"
+symmetry_4p = "rot4"
+water_permille = 0
+shallow_permille = 25
+rock_permille = 10
+rough_permille = 90
+rock_style = "dunes"
+cliff_plateaus = 0
+rivers = 0
+river_width = 1
+river_wander_permille = 0
+ford_spacing = 20
+road_grid = 0
+ocean_width = 6
+ash_fields_per_start = 2
+pitch_fields_per_start = 1
+contested_fields = 2
+extra_fields = 0
+field_density_min = 3
+field_density_max = 10
+ruins = 0
+
+[biome.mountains]
+theater = "mountains"
+base_land = "clear"
+symmetry_2p = "mirror_x"
+symmetry_4p = "rot4"
+water_permille = 8
+shallow_permille = 0
+rock_permille = 60
+rough_permille = 40
+rock_style = "spurs"
+cliff_plateaus = 2
+rivers = 0
+river_width = 1
+river_wander_permille = 0
+ford_spacing = 20
+road_grid = 0
+ocean_width = 0
+ash_fields_per_start = 3
+pitch_fields_per_start = 1
+contested_fields = 2
+extra_fields = 1
+field_density_min = 3
+field_density_max = 12
+ruins = 0
+
+[biome.ash_plains]
+theater = "ashplains"
+base_land = "ash"
+symmetry_2p = "mirror_y"
+symmetry_4p = "rot4"
+water_permille = 0
+shallow_permille = 0
+rock_permille = 10
+rough_permille = 30
+rock_style = "blobs"
+cliff_plateaus = 0
+rivers = 1
+river_width = 1
+river_wander_permille = 350
+ford_spacing = 20
+road_grid = 0
+ocean_width = 0
+ash_fields_per_start = 4
+pitch_fields_per_start = 1
+contested_fields = 2
+extra_fields = 4
+field_density_min = 5
+field_density_max = 12
+ruins = 1

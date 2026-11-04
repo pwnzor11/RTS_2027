@@ -152,7 +152,7 @@ public sealed class M4ContractTests
         Assert.Equal(-1, sim.ViewFor(1).OccupantsOf(hq));    // an enemy's building: unknown
         Assert.All(sim.Snapshot().Buildings, b => Assert.Equal(0, b.Occupants));
         Assert.Equal(default, sim.StatsOf(200));             // out of range: zeros
-        Assert.Empty(MapValidator.Validate(MapData(), null, null));
+        Assert.DoesNotContain(MapValidator.Validate(Rts.Sim.Map.MapData.CreateFlat(32, 32), null, null), i => i.Severity == MapIssueSeverity.Error); // M4-02 filled
     }
 
     [Fact]
@@ -413,7 +413,7 @@ public sealed class M4ContractTests
         Rts.Sim.Map.MapData map = MapGenerator.Generate(p);
         Assert.Equal("ash_plains_s_2p_77", map.Name);
         Assert.Equal(64, map.Width);
-        Assert.Equal(Rts.Sim.Map.MapHasher.Compute(MapGenerator.Generate(64, 77, "ash_plains_s_2p_77")), Rts.Sim.Map.MapHasher.Compute(map));
+        Assert.Equal(Rts.Sim.Map.MapHasher.Compute(MapGenerator.Generate(p)), Rts.Sim.Map.MapHasher.Compute(map)); // M4-02: procedural, no longer the legacy map
         Assert.Throws<ArgumentOutOfRangeException>(() => MapGenerator.Generate(p with { Players = 5 }));
     }
 
