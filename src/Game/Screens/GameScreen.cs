@@ -3,6 +3,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using Rts.Game.Archive;
 using Rts.Game.Controls;
 using Rts.Game.Input;
 using Rts.Game.Render;
@@ -10,6 +11,7 @@ using Rts.Game.Sandbox;
 using Rts.Game.Sprites;
 using Rts.Game.Ui;
 using Rts.Game.Ui.Sidebar;
+using Rts.Game.Ui.Superweapon;
 using Rts.Sim.Core;
 
 namespace Rts.Game.Screens;
@@ -54,6 +56,9 @@ public sealed class GameScreen : IScreen
     private CameoProvider? _cameos;
     private EntityId _selectedBuilding = EntityId.None;
     private bool _selectedBuildingProduces;
+    private int _selectedBuildingType = -1;
+    private BuildingUpgradeOffer? _upgrade;   // M3-18: Hatch to Bore Head button for the selected building
+    private readonly RectRegion _upgradeRegion = new(Rectangle.Empty);
     private readonly Selection _selection = new();
     private readonly OrderController? _orders; // null with --demo
     private readonly OverlayToggles _overlays = new();
@@ -67,6 +72,10 @@ public sealed class GameScreen : IScreen
     private bool _dragging;
     private bool _gameOverShown;
     private MissionOverlay? _mission;   // campaign mission mode (D-061), null otherwise
+    private readonly SuperweaponController _superweapon = new();   // M3-18: Sunrise Device button, targeting and flash
+    private readonly RectRegion _swRegion = new(Rectangle.Empty);
+    private ArchiveTracker? _archive;   // M3-18: unlock progress, skirmish and missions only
+    private int _archiveTick = -1;
 
     private GameScreen(GameServices services, SimSnapshotSource? sim, SkirmishSettings? skirmish, Func<GameScreen> restart,
         bool skirmishMode = false)
@@ -156,6 +165,7 @@ public sealed class GameScreen : IScreen
         PlayerColours.Assign(new[] { colour, colour == 1 ? 0 : 1 });
         _sidebar = new SidebarPanel(_sim, SimSnapshotSource.LocalPlayer, _selection, _cameos, PlayerColours.Base(SimSnapshotSource.LocalPlayer));
         CentreCameraOnOwnBase();
+        _archive = new ArchiveTracker(ArchiveProgress.Load());
     }
 
     /// <inheritdoc />
@@ -172,8 +182,20 @@ public sealed class GameScreen : IScreen
     {
         _mouse = input.MousePosition;
         UpdateHudRegions();
+        PlayerHud? localHud = _skirmishMode && _sim is not null ? _sim.Sim.HudFor(SimSnapshotSource.LocalPlayer) : null;
+        _superweapon.Update(localHud);
+        UpdateSuperweaponRegion();
+        UpdateUpgradeOffer(localHud);
+        if (_upgrade is { Enabled: true } offer && input.LeftPressed && _upgradeRegion.HitTest(input.MousePosition))
+        {
+            _sim!.Host.Issue(offer.Command(SimSnapshotSource.LocalPlayer, _selectedBuilding));
+            input.ConsumeLeft();
+        }
+        if (_superweapon.Buttons.Count > 0 && input.LeftPressed) ClickSuperweaponButton(input);
         if (_dragStart is null)
         {
+            input.ConsumeMouseOver(_swRegion);
+            input.ConsumeMouseOver(_upgradeRegion);
             input.ConsumeMouseOver(_hudRegion);
             input.ConsumeMouseOver(_helpRegion);
             if (_mission is not null) input.ConsumeMouseOver(_mission.ObjectivesRegion);
@@ -197,6 +219,7 @@ public sealed class GameScreen : IScreen
         if (typing) input.ConsumeKeyboard();
 
         if (_sidebar is { Mode: not SidebarMode.None } && input.ConsumePressed(Keys.Escape)) _sidebar.CancelMode();
+        if (_superweapon.IsArmed && input.ConsumePressed(Keys.Escape)) _superweapon.Cancel();   // Esc leaves targeting first
 
         if (input.ConsumePressed(Keys.Escape))
         {
@@ -250,6 +273,8 @@ public sealed class GameScreen : IScreen
         Vector2 view = _camera.WorldFromScreen(new Point(MapViewport().Width / 2, MapViewport().Height / 2));   // M3-INT: positional audio
         Audio.AudioListener.SetFromWorldPixels(view.X, view.Y, Camera.CellPx);
         UnitInterpolator.Build(_source.Current, _source.Previous, _source.Alpha, _renderUnits);
+        _superweapon.Fx.Observe(_source.Current.Tick, _source.Current.FxEvents);
+        ObserveArchive(localHud);
 
         if (_sim is { } live)
         {
@@ -262,6 +287,7 @@ public sealed class GameScreen : IScreen
         }
 
         PruneBuildingSelection();
+        HandleSuperweaponTargeting(input);
         HandleMouse(input);
 
         if (!_gameOverShown && IsGameOver())
@@ -283,6 +309,8 @@ public sealed class GameScreen : IScreen
         _sidebar?.DrawMapOverlay(sb, _s.Pixel, _camera, snapshot);
         DrawHud(sb, snapshot);
         _sidebar?.Draw(sb, _s.Pixel, snapshot);
+        DrawSuperweapon(sb, snapshot.Tick);
+        DrawUpgradeButton(sb);
         _console?.Draw(sb, _s.Pixel, _s.Viewport);
     }
 
@@ -348,6 +376,135 @@ public sealed class GameScreen : IScreen
         }
     }
 
+    // ---- Sunrise Device (M3-18) -------------------------------------------------------------------------
+
+    private Rectangle SuperweaponButtonRect(int index)
+    {
+        int scale = _s.UiScale;
+        int w = BitmapFont.Measure("SUNRISE  PAUSED", scale) + 16;
+        int h = Hud.HeightOf(1, scale) + 6;
+        return new Rectangle(MapViewport().Width - w - 8, 8 + index * (h + 4), w, h);
+    }
+
+    private void UpdateSuperweaponRegion()
+    {
+        int n = _superweapon.Buttons.Count;
+        _swRegion.Bounds = n == 0 ? Rectangle.Empty : Rectangle.Union(SuperweaponButtonRect(0), SuperweaponButtonRect(n - 1));
+    }
+
+    private void ClickSuperweaponButton(InputFrame input)
+    {
+        for (int i = 0; i < _superweapon.Buttons.Count; i++)
+        {
+            if (!SuperweaponButtonRect(i).Contains(input.MousePosition)) continue;
+            _superweapon.ClickButton(i);
+            input.ConsumeLeft();
+            return;
+        }
+    }
+
+    // Armed: a left click on the map fires (the sim's own range check vetoes a bad cell), a right click cancels.
+    private void HandleSuperweaponTargeting(InputFrame input)
+    {
+        if (!_superweapon.IsArmed || _sim is null) return;
+        if (input.RightPressed)
+        {
+            _superweapon.Cancel();
+            input.ConsumeRight();
+        }
+        else if (input.LeftPressed && MapViewport().Bounds.Contains(input.MousePosition))
+        {
+            byte local = SimSnapshotSource.LocalPlayer;
+            CellCoord cell = Camera.CellAt(_camera.WorldFromScreen(input.MousePosition));
+            Command? command = _superweapon.ClickMap(local, cell, (b, c) => _sim.Sim.CanFireSuperweapon(local, b, c));
+            input.ConsumeLeft();   // never also select or box-drag
+            if (command is Command fire) _sim.Host.Issue(fire);
+        }
+    }
+
+    private void DrawSuperweapon(SpriteBatch sb, int tick)
+    {
+        int scale = _s.UiScale;
+        for (int i = 0; i < _superweapon.Buttons.Count; i++)
+        {
+            SuperweaponButton b = _superweapon.Buttons[i];
+            Rectangle r = SuperweaponButtonRect(i);
+            bool armed = _superweapon.Targeting.Armed == b.Building;
+            Shapes.Fill(sb, _s.Pixel, r, new Color(0, 0, 0, 190));
+            Shapes.Fill(sb, _s.Pixel, new Rectangle(r.X, r.Bottom - 5, r.Width * b.ProgressPermille / 1000, 5),
+                b.State == SuperweaponState.Ready ? new Color(255, 200, 60) : new Color(120, 120, 120));
+            Shapes.Outline(sb, _s.Pixel, r, armed ? Color.Red : b.State == SuperweaponState.Ready ? Color.White : new Color(90, 90, 90), 2);
+            Color text = b.State == SuperweaponState.Ready ? new Color(0xFF, 0xE0, 0x80) : new Color(0xB0, 0xB0, 0xB0);
+            BitmapFont.Draw(sb, _s.Pixel, $"{b.Caption}  {b.Status}", new Vector2(r.X + 8, r.Y + 4), text, scale);
+        }
+
+        if (_superweapon.IsArmed && MapViewport().Bounds.Contains(_mouse))
+        {
+            CellCoord cell = Camera.CellAt(_camera.WorldFromScreen(_mouse));
+            float left = cell.X * Camera.CellPx, top = cell.Y * Camera.CellPx;
+            Shapes.Outline(sb, _s.Pixel, _camera.ScreenRect(left, top, left + Camera.CellPx, top + Camera.CellPx), Color.Red, 2);
+        }
+
+        int flash = _superweapon.Fx.FlashAlpha(tick);
+        if (flash > 0) Shapes.Fill(sb, _s.Pixel, new Rectangle(0, 0, _s.Viewport.Width, _s.Viewport.Height), new Color(255, 255, 255, flash));
+    }
+
+    // ---- Hatch to Bore Head upgrade (M3-18) --------------------------------------------------------------
+
+    private Rectangle UpgradeButtonRect()
+    {
+        int scale = _s.UiScale;
+        int w = BitmapFont.Measure("UPGRADE BORE HEAD $9999", scale) + 16;
+        int h = Hud.HeightOf(1, scale) + 6;
+        Viewport map = MapViewport();
+        return new Rectangle(map.Width - w - 8, map.Height - h - 8, w, h);
+    }
+
+    private void UpdateUpgradeOffer(PlayerHud? hud)
+    {
+        _upgrade = null;
+        if (_sim is null || hud is null || _selectedBuilding.IsNone || _selectedBuildingType < 0)
+        {
+            _upgradeRegion.Bounds = Rectangle.Empty;
+            return;
+        }
+
+        var owned = new List<string>();
+        foreach (BuildingView b in _source.Current.Buildings)
+            if (!b.Ghost && b.Player == SimSnapshotSource.LocalPlayer) owned.Add(_sim.Rules.Buildings[b.TypeIndex].Id);
+        _upgrade = BuildingUpgradeOffer.For(_sim.Rules, _selectedBuildingType, hud.Cash, owned);
+        _upgradeRegion.Bounds = _upgrade is null ? Rectangle.Empty : UpgradeButtonRect();
+    }
+
+    private void DrawUpgradeButton(SpriteBatch sb)
+    {
+        if (_upgrade is not BuildingUpgradeOffer offer) return;
+        int scale = _s.UiScale;
+        Rectangle r = UpgradeButtonRect();
+        Shapes.Fill(sb, _s.Pixel, r, new Color(0, 0, 0, 190));
+        Shapes.Outline(sb, _s.Pixel, r, offer.Enabled ? Color.White : new Color(90, 90, 90), 2);
+        BitmapFont.Draw(sb, _s.Pixel, offer.Caption, new Vector2(r.X + 8, r.Y + 4),
+            offer.Enabled ? new Color(0xFF, 0xE0, 0x80) : new Color(0x90, 0x90, 0x90), scale);
+        if (!offer.Enabled && r.Contains(_mouse))
+        {
+            int w = BitmapFont.Measure(offer.Reason, scale) + 16;
+            Hud.Panel(sb, _s.Pixel, new Point(Math.Max(0, r.Right - w), r.Y - Hud.HeightOf(1, scale) - 4), new[] { offer.Reason }, scale);
+        }
+    }
+
+    // ---- Archive (M3-18) ---------------------------------------------------------------------------------
+
+    // Once per new simulation tick: record what the local player can see, and the upgrades researched.
+    private void ObserveArchive(PlayerHud? hud)
+    {
+        if (_archive is null || _sim is null || hud is null) return;
+        SimSnapshot snapshot = _source.Current;
+        if (snapshot.Tick == _archiveTick) return;
+        _archiveTick = snapshot.Tick;
+        _archive.Observe(snapshot, _sim.Rules);
+        _archive.ObserveResearch(_sim.Rules, hud.Upgrades);
+    }
+
     // ---- buildings: selection for rally points ------------------------------------------------------
 
     private void SelectBuildingAt(CellCoord cell)
@@ -360,6 +517,7 @@ public sealed class GameScreen : IScreen
             if (cell.X < b.Cell.X || cell.X >= b.Cell.X + b.FootprintW || cell.Y < b.Cell.Y || cell.Y >= b.Cell.Y + b.FootprintH) continue;
             _selectedBuilding = b.Id;
             _selectedBuildingProduces = _sim.Rules.Buildings[b.TypeIndex].Produces is not null;
+            _selectedBuildingType = b.TypeIndex;
             return;
         }
     }
@@ -368,6 +526,7 @@ public sealed class GameScreen : IScreen
     {
         _selectedBuilding = EntityId.None;
         _selectedBuildingProduces = false;
+        _selectedBuildingType = -1;
     }
 
     private void PruneBuildingSelection()
