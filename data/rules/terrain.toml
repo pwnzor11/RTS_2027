@@ -66,3 +66,13 @@ ash = true
 water = false
 rock = false
 cliff = false
+
+# M3: soft ground (burrowers may surface, Bores may break through). Optional; omitted lands keep the default.
+[soft]
+clear = true
+road = false
+rough = true
+ash = true
+water = false
+rock = false
+cliff = false

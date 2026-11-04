@@ -19,6 +19,18 @@ public readonly record struct ViewActor(
     /// <summary>The actor as an <see cref="ActorRef"/> (not valid for ghosts).</summary>
     public ActorRef Ref => new(Kind, Id);
 
+    /// <summary>M3: the actor is underground (in a tunnel, burrowed, surfacing or a passenger). Own and allied actors carry it
+    /// always; an enemy actor is listed underground only when a Seismograph reveals it.</summary>
+    public bool Underground { get; init; }
+
+    /// <summary>M3: the actor is currently stealthed (invisible to enemies). Set on own and allied actors; an enemy listed with
+    /// it set is one the viewer's team has revealed.</summary>
+    public bool Stealthed { get; init; }
+
+    /// <summary>M3: an enemy actor that would be hidden (underground or stealthed) but is revealed to the viewer's team
+    /// (Seismograph, Searchlight, proximity). Always false for own and allied actors.</summary>
+    public bool Revealed { get; init; }
+
     /// <summary>True for vehicles and infantry.</summary>
     public bool IsMobile => Kind is ActorKind.Vehicle or ActorKind.Infantry;
 }

@@ -11,13 +11,20 @@ internal static class GameRulesLoader
 {
     private const string Section = "game";
     private const string EconomySection = "economy";
+    private const string TunnelsSection = "tunnels";
+    private const string RadiationSection = "radiation";
+    private const string StealthSection = "stealth";
+    private const string FactionSection = "faction";
+
+    private static readonly string[] TopLevel =
+        [Section, EconomySection, TunnelsSection, RadiationSection, StealthSection, FactionSection];
 
     /// <summary>Parses the [game] table. Returns null when any problem was recorded.</summary>
     public static GameRules? Parse(TomlTable root, string file, List<RulesProblem> problems)
     {
         foreach (var kv in root)
         {
-            if (kv.Key != Section && kv.Key != EconomySection)
+            if (Array.IndexOf(TopLevel, kv.Key) < 0)
             {
                 problems.Add(new RulesProblem(file, kv.Key, "unknown key"));
             }
@@ -92,5 +99,133 @@ internal static class GameRulesLoader
         return new EconomyRules(startingCash.Value, ashfall.Value, pitchblende.Value, harvestTicks.Value,
             unloadTicks.Value, regrowth.Value, sell.Value, repairCost.Value, repairHp.Value, radius.Value,
             maxQueue.Value, ticksPer100.Value, slowdown);
+    }
+
+    /// <summary>Reads an optional sub-table of game.toml as fields; null when absent (or not a table, after a recorded problem).</summary>
+    private static RulesFields? OptionalTable(TomlTable root, string name, string file, List<RulesProblem> problems)
+    {
+        if (!root.TryGetValue(name, out object? section) || section is null)
+        {
+            return null;
+        }
+        if (section is not TomlTable table)
+        {
+            problems.Add(new RulesProblem(file, name, $"expected a [{name}] table"));
+            return null;
+        }
+        return new RulesFields(RulesEntry.FromTable(name, file, table), problems);
+    }
+
+    /// <summary>Parses the optional [tunnels] table (M3); every key optional with the design 05 default. Null after a problem.</summary>
+    public static TunnelRules? ParseTunnels(TomlTable root, string file, List<RulesProblem> problems)
+    {
+        TunnelRules d = TunnelRules.Default;
+        RulesFields? f = OptionalTable(root, TunnelsSection, file, problems);
+        if (f is null)
+        {
+            return root.ContainsKey(TunnelsSection) ? null : d;
+        }
+        f.CheckKeys("transit_ticks", "network_cap_points", "points_s", "points_m", "dive_ticks", "telegraph_ticks",
+            "entrance_telegraph_ticks", "emerging_health_permille", "surfacing_ring");
+        int? transit = f.OptInt("transit_ticks", 0, 100_000, d.TransitTicks);
+        int? cap = f.OptInt("network_cap_points", 1, 10_000, d.NetworkCapPoints);
+        int? ps = f.OptInt("points_s", 1, 1000, d.PointsS);
+        int? pm = f.OptInt("points_m", 1, 1000, d.PointsM);
+        int? dive = f.OptInt("dive_ticks", 0, 100_000, d.DiveTicks);
+        int? tel = f.OptInt("telegraph_ticks", 0, 100_000, d.TelegraphTicks);
+        int? etel = f.OptInt("entrance_telegraph_ticks", 0, 100_000, d.EntranceTelegraphTicks);
+        int? emerge = f.OptInt("emerging_health_permille", 1, 1000, d.EmergingHealthPermille);
+        int? ring = f.OptInt("surfacing_ring", 0, 16, d.SurfacingRing);
+        if (transit is null || cap is null || ps is null || pm is null || dive is null || tel is null || etel is null
+            || emerge is null || ring is null)
+        {
+            return null;
+        }
+        return new TunnelRules(transit.Value, cap.Value, ps.Value, pm.Value, dive.Value, tel.Value, etel.Value, emerge.Value, ring.Value);
+    }
+
+    /// <summary>Parses the optional [radiation] table (M3); every key optional with its default. Null after a problem.</summary>
+    public static RadiationRules? ParseRadiation(TomlTable root, string file, List<RulesProblem> problems)
+    {
+        RadiationRules d = RadiationRules.Default;
+        RulesFields? f = OptionalTable(root, RadiationSection, file, problems);
+        if (f is null)
+        {
+            return root.ContainsKey(RadiationSection) ? null : d;
+        }
+        f.CheckKeys("decay_ticks", "damage_interval_ticks", "damage_threshold", "damage_permille", "no_build_threshold");
+        int? decay = f.OptInt("decay_ticks", 1, 1_000_000, d.DecayTicks);
+        int? interval = f.OptInt("damage_interval_ticks", 1, 1_000_000, d.DamageIntervalTicks);
+        int? threshold = f.OptInt("damage_threshold", 0, 255, d.DamageThreshold);
+        int? permille = f.OptInt("damage_permille", 0, 100_000, d.DamagePermille);
+        int? noBuild = f.OptInt("no_build_threshold", 0, 256, d.NoBuildThreshold);
+        if (decay is null || interval is null || threshold is null || permille is null || noBuild is null)
+        {
+            return null;
+        }
+        return new RadiationRules(decay.Value, interval.Value, threshold.Value, permille.Value, noBuild.Value);
+    }
+
+    /// <summary>Parses the optional [stealth] table (M3). Null after a problem.</summary>
+    public static StealthRules? ParseStealth(TomlTable root, string file, List<RulesProblem> problems)
+    {
+        RulesFields? f = OptionalTable(root, StealthSection, file, problems);
+        if (f is null)
+        {
+            return root.ContainsKey(StealthSection) ? null : StealthRules.Default;
+        }
+        f.CheckKeys("delay_ticks");
+        int? delay = f.OptInt("delay_ticks", 0, 1_000_000, StealthRules.Default.DelayTicks);
+        return delay is null ? null : new StealthRules(delay.Value);
+    }
+
+    /// <summary>
+    /// Parses the optional [faction.authority] / [faction.directorate] start kits (M3): <c>conyard</c> (building id) and
+    /// <c>units</c> (vehicle/infantry ids). An absent faction keeps its default kit. Ids are NOT checked here: they are
+    /// validated when a player of that faction is set up (<see cref="SimRules.ResolveStartKit"/>). Null after a problem.
+    /// </summary>
+    public static IReadOnlyList<FactionStartKit>? ParseStartKits(TomlTable root, string file, List<RulesProblem> problems)
+    {
+        var kits = new FactionStartKit[] { FactionStartKit.AuthorityDefault, FactionStartKit.DirectorateDefault };
+        if (!root.TryGetValue(FactionSection, out object? section) || section is null)
+        {
+            return kits;
+        }
+        if (section is not TomlTable table)
+        {
+            problems.Add(new RulesProblem(file, FactionSection, "expected [faction.<name>] tables"));
+            return null;
+        }
+        bool ok = true;
+        foreach (var kv in table)
+        {
+            string key = FactionSection + "." + kv.Key;
+            Faction? faction = RulesEnums.ParseFaction(kv.Key);
+            if (faction is null)
+            {
+                problems.Add(new RulesProblem(file, key, $"unknown faction; must be one of {RulesEnums.Join(RulesEnums.FactionKeys)}"));
+                ok = false;
+                continue;
+            }
+            if (kv.Value is not TomlTable kitTable)
+            {
+                problems.Add(new RulesProblem(file, key, "expected a table"));
+                ok = false;
+                continue;
+            }
+            var f = new RulesFields(RulesEntry.FromTable(key, file, kitTable), problems);
+            f.CheckKeys("conyard", "units");
+            FactionStartKit d = kits[(int)faction.Value];
+            string? conyard = f.OptStr("conyard", d.Conyard);
+            List<string>? units = f.Has("units") ? f.StrList("units") : new List<string>(d.Units);
+            if (conyard is null || units is null || conyard.Length == 0)
+            {
+                if (conyard is { Length: 0 }) f.Problem("conyard", "must not be empty");
+                ok = false;
+                continue;
+            }
+            kits[(int)faction.Value] = new FactionStartKit(conyard, units);
+        }
+        return ok ? kits : null;
     }
 }

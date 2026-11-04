@@ -1,6 +1,7 @@
 # Authority M2 roster: balance pass in M2-14, see docs/balance/m2_balance.md.
 # Keys: speed, max_health, armor, sight, primary_weapon ("" = none), cost, prerequisites. Optional: build_time.
 # Infantry have no locomotion key (they move on foot).
+# Schema v3 (M3, all optional): as vehicles (tunnel_size defaults to "S") but no passengers/deploys_into; plus engineer.
 
 [auth_rifleman]
 speed = 12

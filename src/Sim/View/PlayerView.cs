@@ -79,6 +79,29 @@ public readonly struct PlayerView
     /// <summary>True if the cell is visible to the viewing player right now.</summary>
     public bool IsVisible(CellCoord c) => _sim.Vision.IsVisible(Player, c);
 
+    // ---- M3 layers (fog rules in Simulation.View.cs) ----------------------------------------------
+
+    /// <summary>The viewing player's faction.</summary>
+    public Faction Faction => _sim.Players.Faction[Player];
+
+    /// <summary>True if the viewing player has researched upgrade <paramref name="upgradeIndex"/>.</summary>
+    public bool HasUpgrade(int upgradeIndex) => _sim.HasUpgrade(Player, upgradeIndex);
+
+    /// <summary>Fills <paramref name="dest"/> (cleared first) with the telegraphs the player may see.</summary>
+    public void CopyTelegraphs(List<TelegraphView> dest) => _sim.CopyTelegraphs(Player, dest);
+
+    /// <summary>Radiation level as the player may know it (cells seen now; 0 elsewhere).</summary>
+    public int RadiationAt(CellCoord c) => _sim.KnownRadiationAt(Player, c);
+
+    /// <summary>True if the player knows of a Blackout cloud on the cell (seen now).</summary>
+    public bool BlackoutAt(CellCoord c) => _sim.KnownBlackoutAt(Player, c);
+
+    /// <summary>True if the player knows the cell is hardened (own team anywhere; others where seen now).</summary>
+    public bool HardenedAt(CellCoord c) => _sim.KnownHardenedAt(Player, c);
+
+    /// <summary>True if the cell is jammed on the player's minimap (enemy Static Broadcast).</summary>
+    public bool JammedAt(CellCoord c) => _sim.IsJammedAt(Player, c);
+
     // ---- actors -------------------------------------------------------------------------------
 
     /// <summary>Fills <paramref name="dest"/> (cleared first) with the player's own actors in slot order: vehicles,
@@ -146,6 +169,10 @@ public readonly struct PlayerView
             if ((owner == Player) != own) continue;
             CellCoord cell = s.Position[i].ToCell();
             if (!own && !_sim.Vision.IsVisible(Player, cell)) continue;
+            bool hidden = !own && _sim.IsHiddenFrom(Player, kind, i);   // M3: underground / stealthed enemy not revealed
+            if (hidden) continue;
+            bool underground = _sim.IsUnderground(kind, i), stealthed = _sim.IsStealthedNow(kind, i);
+            bool friendly = own || RelationOf(owner) == Relation.Ally;
             int type = s.TypeIndex[i];
             int max = kind == ActorKind.Vehicle ? rules.Vehicles[type].MaxHealth : rules.Infantry[type].MaxHealth;
             if (own)
@@ -154,12 +181,16 @@ public readonly struct PlayerView
                 bool idle = s.NextMission[i] == MissionKind.None
                     && (m == MissionKind.None || m == MissionKind.Sleep || m == MissionKind.Guard || m == MissionKind.Stop);
                 dest.Add(new ViewActor(s.Slots.IdOf(i), kind, owner, Relation.Self, type, cell, s.Position[i], s.Health[i],
-                    max, m, idle, s.Target[i], false, 1, 1));
+                    max, m, idle, s.Target[i], false, 1, 1) { Underground = underground, Stealthed = stealthed });
             }
             else
             {
                 dest.Add(new ViewActor(s.Slots.IdOf(i), kind, owner, RelationOf(owner), type, cell, s.Position[i], s.Health[i],
-                    max, MissionKind.None, false, EntityId.None, false, 1, 1));
+                    max, MissionKind.None, false, EntityId.None, false, 1, 1)
+                {
+                    Underground = underground, Stealthed = stealthed,
+                    Revealed = !friendly && (underground || stealthed),   // listed although hidden-capable: revealed
+                });
             }
         }
     }

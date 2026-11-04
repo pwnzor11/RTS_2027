@@ -38,6 +38,9 @@ public static class RulesLoader
     /// <summary>Tech effect list.</summary>
     public const string TechsFile = "techs.toml";
 
+    /// <summary>Upgrade table (M3). Optional: a rules set without it has no upgrades.</summary>
+    public const string UpgradesFile = "upgrades.toml";
+
     /// <summary>Loads the rules from <paramref name="rulesDir"/>.</summary>
     /// <exception cref="RulesException">Any file is missing, unparseable or invalid.</exception>
     public static RuleSet Load(string rulesDir)
@@ -64,10 +67,11 @@ public static class RulesLoader
         TomlTable? buildingRoot = ReadFile(readText, BuildingsFile, problems);
         TomlTable? terrainRoot = ReadFile(readText, TerrainFile, problems);
         TomlTable? techRoot = ReadFile(readText, TechsFile, problems);
+        TomlTable? upgradeRoot = readText(UpgradesFile) is null ? null : ReadFile(readText, UpgradesFile, problems);
 
         Dictionary<string, string> ids = RegisterTypeIds(problems,
             (WarheadsFile, warheadRoot), (WeaponsFile, weaponRoot), (VehiclesFile, vehicleRoot),
-            (InfantryFile, infantryRoot), (BuildingsFile, buildingRoot));
+            (InfantryFile, infantryRoot), (BuildingsFile, buildingRoot), (UpgradesFile, upgradeRoot));
         var refs = new RulesReferences();
 
         List<RulesEntry> warheadEntries = Entries(warheadRoot, WarheadsFile, ids, problems);
@@ -75,17 +79,27 @@ public static class RulesLoader
         List<RulesEntry> vehicleEntries = Entries(vehicleRoot, VehiclesFile, ids, problems);
         List<RulesEntry> infantryEntries = Entries(infantryRoot, InfantryFile, ids, problems);
         List<RulesEntry> buildingEntries = Entries(buildingRoot, BuildingsFile, ids, problems);
+        List<RulesEntry> upgradeEntries = Entries(upgradeRoot, UpgradesFile, ids, problems);
+        // Building ids in final (sorted) order, so vehicles can refer to a building by index (deploys_into) before buildings parse.
+        List<string> buildingIds = buildingEntries.Select(e => e.Id).ToList();
+        buildingIds.Sort(string.CompareOrdinal);
 
         List<WarheadType> warheads = ParseAll(warheadEntries, problems, WeaponRulesLoader.ParseWarhead);
         SortById(warheads, w => w.Id);
         List<WeaponType> weapons = ParseAll(weaponEntries, problems, f => WeaponRulesLoader.ParseWeapon(f, warheads));
         SortById(weapons, w => w.Id);
-        List<VehicleType> vehicles = ParseAll(vehicleEntries, problems, f => UnitRulesLoader.ParseVehicle(f, weapons, refs));
+        List<VehicleType> vehicles = ParseAll(vehicleEntries, problems, f => UnitRulesLoader.ParseVehicle(f, weapons, buildingIds, refs));
         SortById(vehicles, v => v.Id);
         List<InfantryType> infantry = ParseAll(infantryEntries, problems, f => UnitRulesLoader.ParseInfantry(f, weapons, refs));
         SortById(infantry, i => i.Id);
         List<BuildingType> buildings = ParseAll(buildingEntries, problems, f => StructureRulesLoader.ParseBuilding(f, weapons, vehicles, refs));
         SortById(buildings, b => b.Id);
+        List<UpgradeType> upgrades = ParseAll(upgradeEntries, problems, f => UpgradeRulesLoader.ParseUpgrade(f, refs));
+        SortById(upgrades, u => u.Id);
+        if (upgrades.Count > RuleCounts.MaxUpgrades)
+        {
+            problems.Add(new RulesProblem(UpgradesFile, "<file>", $"at most {RuleCounts.MaxUpgrades} upgrades, got {upgrades.Count}"));
+        }
 
         List<EffectDef> effects = techRoot is null
             ? new List<EffectDef>()
@@ -97,18 +111,26 @@ public static class RulesLoader
             : TerrainRulesLoader.Parse(terrainRoot, TerrainFile, problems);
         GameRules? game = gameRoot is null ? null : GameRulesLoader.Parse(gameRoot, GameFile, problems);
         EconomyRules? economy = gameRoot is null ? null : GameRulesLoader.ParseEconomy(gameRoot, GameFile, problems);
+        TunnelRules? tunnels = gameRoot is null ? null : GameRulesLoader.ParseTunnels(gameRoot, GameFile, problems);
+        RadiationRules? radiation = gameRoot is null ? null : GameRulesLoader.ParseRadiation(gameRoot, GameFile, problems);
+        StealthRules? stealth = gameRoot is null ? null : GameRulesLoader.ParseStealth(gameRoot, GameFile, problems);
+        IReadOnlyList<FactionStartKit>? kits = gameRoot is null ? null : GameRulesLoader.ParseStartKits(gameRoot, GameFile, problems);
 
         var typeIds = new HashSet<string>(
-            vehicleEntries.Concat(infantryEntries).Concat(buildingEntries).Select(e => e.Id), StringComparer.Ordinal);
+            vehicleEntries.Concat(infantryEntries).Concat(buildingEntries).Concat(upgradeEntries).Select(e => e.Id), StringComparer.Ordinal);
         var provides = new HashSet<string>(buildingEntries.SelectMany(ProvidesOf), StringComparer.Ordinal);
         refs.Validate(typeIds, provides, problems);
 
-        if (problems.Count > 0 || game is null || terrain is null || economy is null)
+        if (problems.Count > 0 || game is null || terrain is null || economy is null || tunnels is null || radiation is null
+            || stealth is null || kits is null)
         {
             throw new RulesException(problems);
         }
 
-        var sim = new SimRules(vehicles, infantry, buildings, weapons, warheads, terrain, effects) { Economy = economy };
+        var sim = new SimRules(vehicles, infantry, buildings, weapons, warheads, terrain, effects)
+        {
+            Economy = economy, Tunnels = tunnels, Radiation = radiation, Stealth = stealth, StartKits = kits, Upgrades = upgrades,
+        };
         return new RuleSet(game, sim, RulesHash.Compute(game, sim));
     }
 

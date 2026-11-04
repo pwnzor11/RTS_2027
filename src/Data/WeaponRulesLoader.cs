@@ -10,9 +10,10 @@ internal static class WeaponRulesLoader
     /// <summary>Largest allowed damage percent in a warhead's versus table.</summary>
     public const int MaxVersusPercent = 1000;
 
-    private static readonly string[] WarheadKeys = ["versus", "splash", "hits_allies"];
+    private static readonly string[] WarheadKeys =
+        ["versus", "splash", "hits_allies", "contaminate", "decontaminate", "bonus_vs_irradiated_percent", "blackout_ticks"];
     private static readonly string[] WeaponKeys =
-        ["damage", "range", "min_range", "rate_of_fire", "projectile_speed", "warhead"];
+        ["damage", "range", "min_range", "rate_of_fire", "projectile_speed", "warhead", "targets"];
 
     /// <summary>Parses one warhead.</summary>
     public static WarheadType? ParseWarhead(RulesFields f)
@@ -21,11 +22,22 @@ internal static class WeaponRulesLoader
         int[]? versus = f.IntArray("versus", RuleCounts.ArmorClasses, 0, MaxVersusPercent);
         int? splash = f.Int("splash", 0, 1);
         bool? hitsAllies = f.Bool("hits_allies");
-        if (versus is null || splash is null || hitsAllies is null)
+        int? contaminate = f.OptInt("contaminate", 0, 255, 0);
+        int? decontaminate = f.OptInt("decontaminate", 0, 255, 0);
+        int? bonus = f.OptInt("bonus_vs_irradiated_percent", 0, MaxVersusPercent, 100);
+        int? blackout = f.OptInt("blackout_ticks", 0, 1_000_000, 0);
+        if (versus is null || splash is null || hitsAllies is null || contaminate is null || decontaminate is null
+            || bonus is null || blackout is null)
         {
             return null;
         }
-        return new WarheadType(f.Id, versus, splash.Value, hitsAllies.Value);
+        return new WarheadType(f.Id, versus, splash.Value, hitsAllies.Value)
+        {
+            Contaminate = contaminate.Value,
+            Decontaminate = decontaminate.Value,
+            BonusVsIrradiatedPercent = bonus.Value,
+            BlackoutTicks = blackout.Value,
+        };
     }
 
     /// <summary>Parses one weapon. <paramref name="warheads"/> must already be sorted by id.</summary>
@@ -38,6 +50,8 @@ internal static class WeaponRulesLoader
         int? rateOfFire = f.Int("rate_of_fire", 1, int.MaxValue);
         int? projectileSpeed = f.Int("projectile_speed", 0, int.MaxValue);
         string? warhead = f.Str("warhead");
+        WeaponTargets? targets = f.OptChoice("targets", RulesEnums.ParseWeaponTargets, RulesEnums.WeaponTargetKeys, WeaponTargets.Ground);
+        if (targets is null) return null;
         if (damage is null || range is null || minRange is null || rateOfFire is null || projectileSpeed is null
             || warhead is null)
         {
@@ -55,6 +69,6 @@ internal static class WeaponRulesLoader
             return null;
         }
         return new WeaponType(f.Id, damage.Value, range.Value, minRange.Value, rateOfFire.Value,
-            projectileSpeed.Value, warheadIndex);
+            projectileSpeed.Value, warheadIndex) { Targets = targets.Value };
     }
 }

@@ -15,6 +15,7 @@ public static class RulesBundle
     [
         RulesLoader.GameFile, RulesLoader.WarheadsFile, RulesLoader.WeaponsFile, RulesLoader.VehiclesFile,
         RulesLoader.InfantryFile, RulesLoader.BuildingsFile, RulesLoader.TerrainFile, RulesLoader.TechsFile,
+        RulesLoader.UpgradesFile,   // M3, optional
     ];
 
     /// <summary>Reads the rules files from a directory. A missing file is left out (loading then reports it).</summary>

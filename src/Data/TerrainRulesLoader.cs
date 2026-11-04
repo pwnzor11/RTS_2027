@@ -16,6 +16,7 @@ internal static class TerrainRulesLoader
 
     private const string SpeedTable = "speed";
     private const string BuildableTable = "buildable";
+    private const string SoftTable = "soft";
 
     /// <summary>Parses the terrain table. Returns null when any problem was recorded.</summary>
     public static TerrainTable? Parse(TomlTable root, string file, List<RulesProblem> problems)
@@ -29,7 +30,7 @@ internal static class TerrainRulesLoader
 
         foreach (var kv in root)
         {
-            if (kv.Key is not (SpeedTable or BuildableTable))
+            if (kv.Key is not (SpeedTable or BuildableTable or SoftTable))
             {
                 problems.Add(new RulesProblem(file, kv.Key, "unknown key"));
                 ok = false;
@@ -99,6 +100,29 @@ internal static class TerrainRulesLoader
             }
         }
 
+        // [soft] (M3, optional): land -> bool; a land left out keeps TerrainTable.DefaultSoft.
+        var soft = new bool[landCount];
+        for (int l = 0; l < landCount; l++) soft[l] = TerrainTable.DefaultSoft((LandType)l);
+        if (root.TryGetValue(SoftTable, out object? rawSoft) && rawSoft is not null)
+        {
+            if (rawSoft is not TomlTable softRoot)
+            {
+                problems.Add(new RulesProblem(file, SoftTable, "expected a [soft] table"));
+                ok = false;
+            }
+            else
+            {
+                var f = new RulesFields(RulesEntry.FromTable(SoftTable, file, softRoot), problems);
+                f.CheckKeys(RulesEnums.LandKeys);
+                for (int l = 0; l < landCount; l++)
+                {
+                    bool? value = f.OptBool(RulesEnums.LandKeys[l], soft[l]);
+                    if (value is null) ok = false;
+                    else soft[l] = value.Value;
+                }
+            }
+        }
+
         for (int l = 0; l < landCount; l++)
         {
             if (!speedSeen[l])
@@ -108,6 +132,6 @@ internal static class TerrainRulesLoader
             }
         }
 
-        return ok ? new TerrainTable(speed, buildable) : null;
+        return ok ? new TerrainTable(speed, buildable, soft) : null;
     }
 }

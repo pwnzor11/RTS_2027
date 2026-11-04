@@ -6,8 +6,8 @@ namespace Rts.Sim.Serialization;
 
 /// <summary>
 /// The identity of a game, written at the start of every replay and save (M1.5, review A-2/A-3/A-6): build string,
-/// seed, player count, teams, store limits, AllowDebug, rules hash, map hash and name, and the rules source files
-/// (name, text) the game was started with, stored deflate-compressed. Lets a save or replay be understood without
+/// seed, player count, teams, store limits, AllowDebug, rules hash, map hash and name, the rules source files
+/// (name, text) the game was started with, stored deflate-compressed, and (M3-01, format 7) the factions. Lets a save or replay be understood without
 /// the caller supplying the rules, and lets a different build refuse it with a clear message.
 /// </summary>
 public sealed record SetupHeader(
@@ -15,6 +15,9 @@ public sealed record SetupHeader(
     ulong RulesHash, ulong MapHash, int MapWidth, int MapHeight, string MapName,
     IReadOnlyList<(string Name, string Text)> RulesFiles)
 {
+    /// <summary>Faction per player (M3-01); null = all Authority. Written after the rules files.</summary>
+    public IReadOnlyList<Rules.Faction>? Factions { get; init; }
+
     private const int MaxLimit = 1 << 20;
 
     /// <summary>Header for a running game.</summary>
@@ -22,7 +25,7 @@ public sealed record SetupHeader(
     {
         SimSetup s = sim.Setup;
         return new SetupHeader(build, s.Seed, s.PlayerCount, s.Teams, s.Limits, s.AllowDebug, s.RulesHash, sim.MapHash,
-            s.Map.Width, s.Map.Height, s.Map.Name, rulesFiles);
+            s.Map.Width, s.Map.Height, s.Map.Name, rulesFiles) { Factions = s.Factions };
     }
 
     /// <summary>Writes the header fields in their fixed order.</summary>
@@ -45,6 +48,13 @@ public sealed record SetupHeader(
         w.Write(MapWidth); w.Write(MapHeight);
         w.Write(MapName);
         RulesBlob.Write(w, RulesFiles);
+        if (Factions is null) w.Write((byte)0);
+        else
+        {
+            w.Write((byte)1);
+            w.Write(Factions.Count);
+            for (int i = 0; i < Factions.Count; i++) w.Write((byte)Factions[i]);
+        }
     }
 
     /// <summary>Reads what <see cref="Write"/> wrote. Throws InvalidDataException on a malformed or truncated header.</summary>
@@ -75,7 +85,25 @@ public sealed record SetupHeader(
             int w = r.ReadInt32(), h = r.ReadInt32();
             string mapName = r.ReadString();
             var files = RulesBlob.Read(r);
-            return new SetupHeader(build, seed, players, teams, limits, allowDebug, rulesHash, mapHash, w, h, mapName, files);
+            Rules.Faction[]? factions = null;
+            byte hasFactions = r.ReadByte();
+            if (hasFactions == 1)
+            {
+                int n = r.ReadInt32();
+                if (n != players) throw new InvalidDataException("Factions count does not match the player count.");
+                factions = new Rules.Faction[n];
+                for (int i = 0; i < n; i++)
+                {
+                    byte f = r.ReadByte();
+                    if (f >= Rules.RuleCounts.Factions) throw new InvalidDataException($"Bad faction {f}.");
+                    factions[i] = (Rules.Faction)f;
+                }
+            }
+            else if (hasFactions != 0) throw new InvalidDataException($"Bad factions flag {hasFactions}.");
+            return new SetupHeader(build, seed, players, teams, limits, allowDebug, rulesHash, mapHash, w, h, mapName, files)
+            {
+                Factions = factions,
+            };
         }
         catch (EndOfStreamException)
         {
@@ -106,6 +134,9 @@ public sealed record SetupHeader(
             throw new InvalidDataException($"{what} store limits {Limits} do not match setup {setup.Limits}.");
         if (AllowDebug != setup.AllowDebug)
             throw new InvalidDataException($"{what} AllowDebug={AllowDebug} does not match setup AllowDebug={setup.AllowDebug}.");
+        for (int p = 0; p < PlayerCount; p++)
+            if (FactionOf(p) != setup.FactionOf((byte)p))
+                throw new InvalidDataException($"{what} faction of player {p} ({FactionOf(p)}) does not match the setup ({setup.FactionOf((byte)p)}).");
     }
 
     /// <summary>
@@ -119,8 +150,15 @@ public sealed record SetupHeader(
             throw new InvalidDataException($"Rules hash 0x{rulesHash:x16} does not match the recorded 0x{RulesHash:x16}.");
         if (Map.MapHasher.Compute(map) != MapHash)
             throw new InvalidDataException($"Map hash 0x{Map.MapHasher.Compute(map):x16} does not match the recorded 0x{MapHash:x16}.");
-        return new SimSetup(Seed, map, PlayerCount, rules, rulesHash) { Teams = Teams, Limits = Limits, AllowDebug = AllowDebug };
+        return new SimSetup(Seed, map, PlayerCount, rules, rulesHash)
+        {
+            Teams = Teams, Limits = Limits, AllowDebug = AllowDebug, Factions = Factions,
+        };
     }
+
+    /// <summary>Faction of a player slot (Authority when <see cref="Factions"/> is null).</summary>
+    public Rules.Faction FactionOf(int player) =>
+        Factions != null && player < Factions.Count ? Factions[player] : Rules.Faction.Authority;
 
     private static bool TeamsEqual(IReadOnlyList<byte>? a, IReadOnlyList<byte>? b)
     {

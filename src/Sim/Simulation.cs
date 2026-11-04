@@ -3,12 +3,15 @@
 using System.IO.Hashing;
 using Rts.Sim.Core;
 using Rts.Sim.Economy;
+using Rts.Sim.Effects;
+using Rts.Sim.Ground;
 using Rts.Sim.Map;
 using Rts.Sim.Missions;
 using Rts.Sim.Pathing;
 using Rts.Sim.Production;
 using Rts.Sim.Rules;
 using Rts.Sim.Serialization;
+using Rts.Sim.Tunnels;
 using Rts.Sim.Vision;
 using Rts.Sim.World;
 
@@ -26,13 +29,17 @@ public sealed partial class Simulation
     private readonly PlayerStore _players;
     private readonly EconomyState _economy;
     private readonly ProductionState _production;
+    private readonly TunnelState _tunnels;       // M3-01
+    private readonly GroundState _ground;        // M3-01
+    private readonly EffectsState _effects;      // M3-01
     private readonly List<SetupEntry> _setupLog = new();
     private bool _inStep;
     private readonly MapState _map;
     private readonly PathService _paths;
     private readonly VisionState _vision;
-    // Canonical state-part order: [map, units, infantry, buildings, paths, vision]. Hash, Save and Load all iterate this array; append new parts
-    // at the end only (changing the order changes every hash and the save format).
+    // Canonical state-part order: [map, units, infantry, buildings, paths, vision, combat, projectiles, players, economy, production,
+    // tunnels, ground, effects, then extension parts]. Hash, Save and Load all iterate this array; append new built-in parts after
+    // "effects" only (changing the order changes every hash and the save format).
     private readonly ISimStatePart[] _parts;
     private SimRandom _rng;
     private readonly List<(int Tick, ulong Hash)> _recentHashes = new(SimConstants.HashRingSize);
@@ -58,6 +65,9 @@ public sealed partial class Simulation
         for (int p = 0; p < setup.PlayerCount; p++) if (!_players.IsNeutral((byte)p)) _players.Cash[p] = setup.Rules.Economy.StartingCash;   // M2-07
         _economy = new EconomyState(setup);
         _production = new ProductionState(setup);
+        _tunnels = new TunnelState(setup);
+        _ground = new GroundState(setup.Map.Width, setup.Map.Height);
+        _effects = new EffectsState(setup);
         _map = new MapState(setup.Map);
         _paths = new PathService(_map, setup.Rules.Terrain);
         _vision = new VisionState(setup.Map.Width, setup.Map.Height, setup.PlayerCount,
@@ -66,13 +76,18 @@ public sealed partial class Simulation
         var extra = CombatParts();
         // M1.5: "players" is appended after the combat parts (append-only order).
         int extensionCount = setup.Extensions?.Count ?? 0;   // M2-15: extension parts come last (append-only order)
-        _parts = new ISimStatePart[9 + extra.Length + extensionCount];
+        // M3-01: "tunnels", "ground", "effects" follow "production"; extension parts stay last.
+        const int builtInAfterCombat = 6;   // players, economy, production, tunnels, ground, effects
+        _parts = new ISimStatePart[6 + extra.Length + builtInAfterCombat + extensionCount];
         _parts[0] = _map; _parts[1] = _units; _parts[2] = _infantry; _parts[3] = _buildings; _parts[4] = _paths; _parts[5] = _vision;
         for (int e = 0; e < extra.Length; e++) _parts[6 + e] = extra[e];
         _parts[6 + extra.Length] = _players;
         _parts[7 + extra.Length] = _economy;
         _parts[8 + extra.Length] = _production;
-        for (int e = 0; e < extensionCount; e++) _parts[9 + extra.Length + e] = setup.Extensions![e].State;
+        _parts[9 + extra.Length] = _tunnels;
+        _parts[10 + extra.Length] = _ground;
+        _parts[11 + extra.Length] = _effects;
+        for (int e = 0; e < extensionCount; e++) _parts[12 + extra.Length + e] = setup.Extensions![e].State;
         MapHash = MapHasher.Compute(setup.Map);
         for (int e = 0; e < extensionCount; e++) setup.Extensions![e].OnSetup(this);   // after everything exists; also runs before a Load
     }
@@ -103,7 +118,8 @@ public sealed partial class Simulation
     /// <summary>Per-player vision (M1-07), updated at the end of every tick. Read-only use outside Step.</summary>
     public VisionState Vision => _vision;
 
-    /// <summary>State parts in canonical order (map, units, infantry, buildings, paths, vision).</summary>
+    /// <summary>State parts in canonical order (map, units, infantry, buildings, paths, vision, combat, projectiles, players, economy,
+    /// production, tunnels, ground, effects, then extension parts).</summary>
     public IReadOnlyList<ISimStatePart> StateParts => _parts;
 
     /// <summary>The only clock. Starts at 0; Step increments it by one.</summary>
@@ -145,6 +161,7 @@ public sealed partial class Simulation
         if (id.IsNone) return id;
         _units.Facing[id.Index] = CentreFacing(cell);
         OnActorSpawned(ActorKind.Vehicle, id.Index);
+        OnM3MobileSpawned(ActorKind.Vehicle, id.Index);
         if (!_inStep) _setupLog.Add(new SetupEntry(ActorKind.Vehicle, player, vehicleTypeIndex, cell, 0));
         return id;
     }
@@ -166,6 +183,7 @@ public sealed partial class Simulation
         if (id.IsNone) return id;
         _infantry.Facing[id.Index] = CentreFacing(cell);
         OnActorSpawned(ActorKind.Infantry, id.Index);
+        OnM3MobileSpawned(ActorKind.Infantry, id.Index);
         if (!_inStep) _setupLog.Add(new SetupEntry(ActorKind.Infantry, player, infantryTypeIndex, cell, subSlot));
         return id;
     }
@@ -184,9 +202,12 @@ public sealed partial class Simulation
         ApplyInput(commands);
         RunMissions();
         RunMovement();
+        RunTunnels();      // M3: Simulation.Tunnels.cs — queues, transit, surfacing (before combat: underground units are untargetable)
+        RunEffects();      // M3: Simulation.Effects.cs — auras, stealth timers, superweapon charge (before combat reads them)
         RunCombat();
         RunEconomy();
         RunProduction();
+        RunGround();       // M3: Simulation.Ground.cs — radiation decay/damage, Blackout decay, hardening recompute (before cleanup)
         RunAiBookkeeping();
         RunTriggers();
         RunCleanup();
@@ -263,6 +284,10 @@ public sealed partial class Simulation
             case CommandKind.Return:
                 ApplyEconomyCommand(c);    // Simulation.Economy.cs (M2-07)
                 break;
+            case CommandKind.Enter: ApplyEnter(c); break;       // M3: Simulation.Transport.cs routes by target
+            case CommandKind.Deploy: ApplyDeploy(c); break;     // M3: Simulation.Transport.cs routes by vehicle type
+            case CommandKind.Upgrade: ApplyUpgrade(c); break;   // M3: Simulation.Burrow.cs (building morph, M3-03)
+            case CommandKind.Special: ApplySpecial(c); break;   // M3: Simulation.Superweapon.cs (M3-13)
             case CommandKind.Debug:
                 if (Setup.AllowDebug) ApplyDebug(c);
                 break;
@@ -492,6 +517,7 @@ public sealed partial class Simulation
             for (int x = 0; x < bt.FootprintW; x++)
                 _map.SetBuilding(new CellCoord(topLeft.X + x, topLeft.Y + y), id);
         if (!_inStep) _setupLog.Add(new SetupEntry(ActorKind.Building, player, buildingType, topLeft, 0));
+        OnM3BuildingPlaced(id.Index);
         return id;
     }
 
@@ -499,6 +525,7 @@ public sealed partial class Simulation
     {
         int i = id.Index;
         OnCombatActorRemoving(ActorKind.Building, i); // clear attackers' targets (combat, M1-09)
+        OnM3BuildingRemoving(i);                      // M3 hooks (exit lost, hardening) and slot reset
         BuildingType bt = Setup.Rules.Buildings[_buildings.TypeIndex[i]];
         CellCoord tl = _buildings.Cell[i];
         for (int y = 0; y < bt.FootprintH; y++)
@@ -549,7 +576,11 @@ public sealed partial class Simulation
     }
 
     // RunEconomy: Simulation.Economy.cs (M2-07)
-    private void RunProduction() => RunProductionTick();   // Simulation.Production.cs (M2-08)
+    private void RunProduction()
+    {
+        RunProductionTick();     // Simulation.Production.cs (M2-08)
+        RunUpgradeResearch();    // Simulation.Upgrades.cs (M3-06): the ProductionCategory.Upgrade lane
+    }
     private void RunAiBookkeeping() { /* M1 */ }
     // M2-15: the single scripting extension point. Extensions run in list order; callbacks run inside the tick.
     private void RunTriggers()
@@ -577,7 +608,9 @@ public sealed partial class Simulation
                     continue;
                 }
                 _fx.Add(new FxEvent(FxKind.UnitDestroyed, PositionAt(kind, i), 1));
+                OnM3MobileDying(kind, i);   // M3: death weapon, passengers (Simulation.M3.cs)
                 OnActorRemoving(kind, i);
+                OnM3MobileRemoving(kind, i);
                 StoreOf(kind)!.Remove(slots.IdOf(i));
             }
         }
@@ -658,9 +691,13 @@ public sealed partial class Simulation
             MobileStore? store = StoreOf(kind);
             if (store == null) continue;   // buildings are listed below
             for (int i = 1; i < store.Capacity; i++)
-                if (store.Slots.IsIndexAlive(i) && SeenBy(viewer, store.Player[i], store.Position[i]))
+                if (store.Slots.IsIndexAlive(i) && SeenBy(viewer, store.Player[i], store.Position[i])
+                    && (viewer < 0 || !IsHiddenFrom((byte)viewer, kind, i)))   // M3: underground / stealthed enemies
                     list.Add(new UnitView(store.Slots.IdOf(i), (UnitKind)k, store.Player[i], store.TypeIndex[i],
-                        store.Position[i], store.Facing[i], store.Health[i]));
+                        store.Position[i], store.Facing[i], store.Health[i])
+                    {
+                        Underground = IsUnderground(kind, i), Stealthed = IsStealthedNow(kind, i),
+                    });
         }
         ulong hash = _recentHashes.Count > 0 ? _recentHashes[^1].Hash : 0UL;
         var blist = new List<BuildingView>(_buildings.Slots.Count);
@@ -674,9 +711,13 @@ public sealed partial class Simulation
                     _buildings.Cell[i], bt.FootprintW, bt.FootprintH, _buildings.Health[i], false));
             }
         FxEvent[] fx = FxFor(viewer);
+        var telegraphs = new List<TelegraphView>();
+        CopyTelegraphs(viewer, telegraphs);
+        var groundLayers = new byte[Setup.Map.Width * Setup.Map.Height];
+        IReadOnlyList<byte> ground = FillGroundLayers(viewer, groundLayers) ? groundLayers : Array.Empty<byte>();
         if (viewer < 0)
             return new SimSnapshot(Tick, Setup.Map.Width, Setup.Map.Height, list, Setup.Map.Land, hash,
-                blist, -1, Array.Empty<byte>(), fx);
+                blist, -1, Array.Empty<byte>(), fx) { Telegraphs = telegraphs, Ground = ground };
         foreach ((int index, BuildingGhost g) in _vision.GhostsFor((byte)viewer))
         {
             if (FootprintVisible((byte)viewer, g.Cell, g.FootprintW, g.FootprintH)) continue; // live view already shown
@@ -688,7 +729,7 @@ public sealed partial class Simulation
         if (team.Length == 1) _vision.FillVision((byte)viewer, vision);
         else _vision.FillVisionAny(team, vision);   // allies share vision and exploration
         return new SimSnapshot(Tick, Setup.Map.Width, Setup.Map.Height, list, Setup.Map.Land, hash,
-            blist, viewer, vision, fx);
+            blist, viewer, vision, fx) { Telegraphs = telegraphs, Ground = ground };
     }
 
     /// <summary>This tick's effects events (a copy), limited to cells the viewer can see when there is a viewer.</summary>

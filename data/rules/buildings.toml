@@ -3,6 +3,9 @@
 # power (positive = produces, negative = drains), prerequisites, provides.
 # Optional: category ("structure"|"defence"), produces (""|"infantry"|"vehicle"|"aircraft"), build_time, storage,
 # refinery, dock [x,y], exit [x,y], free_unit (vehicle id), wall, needs_power.
+# Schema v3 (M3, all optional): faction ("authority"|"directorate"; default from the id prefix), entrance ("none"|"S"|"M"),
+# ticks_per_point (20), researches, gate (1x1 wall piece), seismic_radius, sees_through_blackout, jam_radius,
+# superweapon (id or ""), superweapon_charge_ticks, superweapon_entrance_range.
 #
 # Starting base and prerequisite chain. Every structure's chain starts at auth_conyard. Prerequisites name a type
 # id or a provides name; auth_conyard provides "auth_conyard", so "owns a building that provides auth_conyard" is

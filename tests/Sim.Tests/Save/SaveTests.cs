@@ -63,7 +63,8 @@ public class SaveTests
     public void StateParts_AreInCanonicalOrder()
     {
         var sim = ScriptedGame.NewSim(ScriptedGame.Setup());
-        Assert.Equal(new[] { "map", "units", "infantry", "buildings", "paths", "vision", "combat", "projectiles", "players", "economy", "production" }, sim.StateParts.Select(p => p.Name).ToArray());
+        Assert.Equal(new[] { "map", "units", "infantry", "buildings", "paths", "vision", "combat", "projectiles", "players", "economy", "production",
+            "tunnels", "ground", "effects" }, sim.StateParts.Select(p => p.Name).ToArray());   // M3-01 appended the last three
     }
 
     [Fact]
@@ -167,9 +168,9 @@ public class SaveTests
     {
         var ms = new MemoryStream(); ScriptedGame.NewSim(ScriptedGame.Setup()).Save(ms);
         byte[] bytes = ms.ToArray();
-        bytes[4] = 5;
+        bytes[4] = 6;   // M3-01 bumped saves to 7
         var ex = Assert.Throws<InvalidDataException>(() => Simulation.Load(new MemoryStream(bytes), ScriptedGame.Setup()));
-        Assert.Contains("version 5", ex.Message);
+        Assert.Contains("version 6", ex.Message);
     }
 
     [Fact]

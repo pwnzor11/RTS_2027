@@ -16,6 +16,9 @@ internal static class StructureRulesLoader
         "footprint_w", "footprint_h", "max_health", "armor", "sight", "primary_weapon", "cost", "power",
         "prerequisites", "provides",
         "category", "produces", "build_time", "storage", "refinery", "dock", "exit", "free_unit", "wall", "needs_power", "buildable",
+        // schema v3 (M3-01)
+        "faction", "entrance", "ticks_per_point", "researches", "gate", "seismic_radius", "sees_through_blackout",
+        "jam_radius", "superweapon", "superweapon_charge_ticks", "superweapon_entrance_range",
     ];
 
     private static readonly string[] CategoryNames = ["structure", "defence"];
@@ -56,6 +59,22 @@ internal static class StructureRulesLoader
         bool? wall = f.OptBool("wall", false);
         bool? needsPower = f.OptBool("needs_power", false);
         bool? buildable = f.OptBool("buildable", true);
+        Faction? faction = f.FactionOrDefault();
+        TunnelSize? entrance = f.OptChoice("entrance", RulesEnums.ParseEntrance, RulesEnums.EntranceKeys, TunnelSize.None);
+        int? ticksPerPoint = f.OptInt("ticks_per_point", 1, 10_000, 20);
+        bool? researches = f.OptBool("researches", false);
+        bool? gate = f.OptBool("gate", false);
+        int? seismic = f.OptInt("seismic_radius", 0, SimConstants.MaxMapCells, 0);
+        bool? seesThroughBlackout = f.OptBool("sees_through_blackout", false);
+        int? jam = f.OptInt("jam_radius", 0, SimConstants.MaxMapCells, 0);
+        string? superweapon = f.OptStr("superweapon", "");
+        int? swCharge = f.OptInt("superweapon_charge_ticks", 0, int.MaxValue, 0);
+        int? swRange = f.OptInt("superweapon_entrance_range", 0, SimConstants.MaxMapCells, 0);
+        if (faction is null || entrance is null || ticksPerPoint is null || researches is null || gate is null || seismic is null
+            || seesThroughBlackout is null || jam is null || superweapon is null || swCharge is null || swRange is null)
+        {
+            return null;
+        }
         string? freeName = f.OptStr("free_unit", "");
         int freeUnit = -1;
         if (freeName is { Length: > 0 })
@@ -71,6 +90,11 @@ internal static class StructureRulesLoader
             || dock is null || wall is null || needsPower is null || buildable is null || freeName is null
             || (f.Has("exit") && exit is null))
         {
+            return null;
+        }
+        if (gate.Value && width is { } gw && height is { } gh && (gw != 1 || gh != 1))
+        {
+            f.Problem("gate", "a gate must have a 1x1 footprint");
             return null;
         }
         if (wall.Value && width is { } ww && height is { } wh && (ww != 1 || wh != 1))
@@ -105,9 +129,20 @@ internal static class StructureRulesLoader
             Refinery = refinery.Value,
             Dock = new CellCoord(dock[0], dock[1]),
             FreeUnit = freeUnit,
-            Wall = wall.Value,
+            Wall = wall.Value || gate.Value,   // a gate is a wall piece (design 05 §2)
             NeedsPower = needsPower.Value,
             Buildable = buildable.Value,
+            Faction = faction.Value,
+            Entrance = entrance.Value,
+            TicksPerPoint = ticksPerPoint.Value,
+            Researches = researches.Value,
+            Gate = gate.Value,
+            SeismicRadius = seismic.Value,
+            SeesThroughBlackout = seesThroughBlackout.Value,
+            JamRadius = jam.Value,
+            Superweapon = superweapon,
+            SuperweaponChargeTicks = swCharge.Value,
+            SuperweaponEntranceRange = swRange.Value,
         };
         return exit is null ? building : building with { Exit = new CellCoord(exit[0], exit[1]) };
     }

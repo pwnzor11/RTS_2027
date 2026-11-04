@@ -18,3 +18,35 @@ build_radius = 2
 max_queue = 5
 build_ticks_per_100_credits = 40
 low_power_slowdown_permille = [1500, 2500, 4000]
+
+# M3 (design 05). All tables and keys optional; the values below are the design starting values (tune in M3-14).
+[tunnels]
+transit_ticks = 40
+network_cap_points = 10
+points_s = 1
+points_m = 3
+dive_ticks = 20
+telegraph_ticks = 60
+entrance_telegraph_ticks = 100
+emerging_health_permille = 250
+surfacing_ring = 1
+
+[radiation]
+decay_ticks = 40
+damage_interval_ticks = 20
+damage_threshold = 32
+damage_permille = 100
+no_build_threshold = 64
+
+[stealth]
+delay_ticks = 60
+
+# Skirmish start kit per faction: conyard (building id) and units (vehicle/infantry ids). Validated only when a player of
+# that faction is set up, so the Directorate kit may name types that arrive with M3-07.
+[faction.authority]
+conyard = "auth_conyard"
+units = []
+
+[faction.directorate]
+conyard = "dir_shaft"
+units = []

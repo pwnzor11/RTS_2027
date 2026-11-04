@@ -55,5 +55,40 @@ public sealed record BuildingType(string Id, int FootprintW, int FootprintH, int
     /// <summary>False for structures that can't be produced from a queue (e.g. the starting Construction Yard). Default true.</summary>
     public bool Buildable { get; init; } = true;
 
+    // ---- schema v3 (M3-01, design 05 §1–§4). Defaults keep pre-M3 behaviour. -------------------------
+
+    /// <summary>Owning faction (TOML <c>faction</c>; default from the id prefix <c>auth_</c>/<c>dir_</c>, else Authority).</summary>
+    public Faction Faction { get; init; }
+
+    /// <summary>Largest tunnel size this building admits as a network entrance (TOML <c>entrance</c> none|S|M); None = not an entrance.</summary>
+    public TunnelSize Entrance { get; init; }
+
+    /// <summary>Ticks to draw in one tunnel point at this entrance (Hatch class 20, Bore Head class 13). Default 20.</summary>
+    public int TicksPerPoint { get; init; } = 20;
+
+    /// <summary>Upgrades (ProductionCategory.Upgrade) are researched here.</summary>
+    public bool Researches { get; init; }
+
+    /// <summary>Gate wall piece (1×1, also a wall): passable for the owner's team, a wall for everyone else; always part of the seal.</summary>
+    public bool Gate { get; init; }
+
+    /// <summary>Seismograph radius in cells: reveals enemy burrowed units and in-progress telegraphs to the owner (0 = none).</summary>
+    public int SeismicRadius { get; init; }
+
+    /// <summary>This building's sight reveals cells inside a Blackout cloud (Searchlight).</summary>
+    public bool SeesThroughBlackout { get; init; }
+
+    /// <summary>Static Broadcast radius in cells: hides those cells on enemy minimaps (view only; 0 = none).</summary>
+    public int JamRadius { get; init; }
+
+    /// <summary>Superweapon id fired with the Special command, or "" for none (M3-13 interprets it).</summary>
+    public string Superweapon { get; init; } = "";
+
+    /// <summary>Ticks for the superweapon to charge (0 with no superweapon).</summary>
+    public int SuperweaponChargeTicks { get; init; }
+
+    /// <summary>When positive, firing needs an own finished entrance within this many cells of the target (Sunrise Device: 8).</summary>
+    public int SuperweaponEntranceRange { get; init; }
+
     private CellCoord DefaultExit() => new(FootprintW / 2, FootprintH);
 }

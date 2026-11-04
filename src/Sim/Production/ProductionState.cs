@@ -16,10 +16,11 @@ namespace Rts.Sim.Production;
 /// </summary>
 public sealed class ProductionState : ISimStatePart
 {
-    private const byte Version = 2;
+    private const byte Version = 3;   // 3: six lanes per player (M3-01 added ProductionCategory.Upgrade)
 
-    /// <summary>Number of <see cref="ProductionCategory"/> values.</summary>
-    public const int Categories = 5;
+    /// <summary>Number of <see cref="ProductionCategory"/> values. The Upgrade lane (5) exists from M3-01 and is driven by M3-06;
+    /// the M2 production loop and HUD queue views still cover Infantry..Defence only.</summary>
+    public const int Categories = RuleCounts.ProductionCategories;
 
     private readonly int _players;
     private readonly int _maxQueue;

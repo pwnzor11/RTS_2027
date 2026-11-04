@@ -1,6 +1,8 @@
 # Authority M2 roster: balance pass in M2-14, see docs/balance/m2_balance.md.
 # Keys: versus = damage percent (0..1000) per armour class, in the order Unarmored, Light, Heavy, Structure,
 # Fortified. splash: 0 = target only, 1 = 3x3 block with falloff. hits_allies: whether splash hurts allies (D-054).
+# Schema v3 (M3, all optional): contaminate, decontaminate (radiation 0..255 in the splash), bonus_vs_irradiated_percent
+# (default 100), blackout_ticks.
 
 [auth_small_arms]
 versus = [100, 50, 15, 10, 5]

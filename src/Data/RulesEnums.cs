@@ -19,6 +19,18 @@ internal static class RulesEnums
     /// <summary>Land type names, in <see cref="LandType"/> order.</summary>
     public static readonly string[] LandKeys = ["clear", "road", "rough", "ash", "water", "rock", "cliff"];
 
+    /// <summary>Faction names, in <see cref="Faction"/> order.</summary>
+    public static readonly string[] FactionKeys = ["authority", "directorate"];
+
+    /// <summary>Tunnel size names, in <see cref="TunnelSize"/> order (design 05 writes them none | S | M | L).</summary>
+    public static readonly string[] TunnelSizeKeys = ["none", "S", "M", "L"];
+
+    /// <summary>Entrance sizes a building may declare: none, S or M (L never uses the network).</summary>
+    public static readonly string[] EntranceKeys = ["none", "S", "M"];
+
+    /// <summary>Weapon target names, in <see cref="WeaponTargets"/> order.</summary>
+    public static readonly string[] WeaponTargetKeys = ["ground", "air", "both"];
+
     /// <summary>Effect operations.</summary>
     public static readonly string[] EffectOps = ["enable", "set", "add", "mul"];
 
@@ -36,6 +48,18 @@ internal static class RulesEnums
 
     /// <summary>Parses a land type name.</summary>
     public static LandType? ParseLand(string v) => Index(LandKeys, v) is int i ? (LandType)i : null;
+
+    /// <summary>Parses a faction name.</summary>
+    public static Faction? ParseFaction(string v) => Index(FactionKeys, v) is int i ? (Faction)i : null;
+
+    /// <summary>Parses a tunnel size name.</summary>
+    public static TunnelSize? ParseTunnelSize(string v) => Index(TunnelSizeKeys, v) is int i ? (TunnelSize)i : null;
+
+    /// <summary>Parses an entrance size name (none, S or M).</summary>
+    public static TunnelSize? ParseEntrance(string v) => Index(EntranceKeys, v) is int i ? (TunnelSize)i : null;
+
+    /// <summary>Parses a weapon target name.</summary>
+    public static WeaponTargets? ParseWeaponTargets(string v) => Index(WeaponTargetKeys, v) is int i ? (WeaponTargets)i : null;
 
     /// <summary>Joins names for a message.</summary>
     public static string Join(string[] names) => string.Join(", ", names);

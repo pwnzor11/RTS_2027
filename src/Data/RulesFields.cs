@@ -217,6 +217,41 @@ internal sealed class RulesFields
     /// <summary>Reads an optional string; <paramref name="def"/> when absent. Null only after a recorded problem.</summary>
     public string? OptStr(string key, string def) => Has(key) ? Str(key) : def;
 
+    /// <summary>Reads an optional array of strings; an empty list when absent. Null only after a recorded problem.</summary>
+    public List<string>? OptStrList(string key) => Has(key) ? StrList(key) : new List<string>();
+
+    /// <summary>Reads an optional enum name (one of <paramref name="names"/>, parsed by <paramref name="parse"/>); <paramref name="def"/>
+    /// when absent. Null only after a recorded problem.</summary>
+    public T? OptChoice<T>(string key, Func<string, T?> parse, string[] names, T def) where T : struct =>
+        Has(key) ? Choice(key, parse, names) : def;
+
+    /// <summary>Reads an optional id naming an entry of <paramref name="sortedIds"/> (sorted ordinal): -1 when absent or "",
+    /// otherwise its index. <paramref name="what"/> names the list in the problem message. Null only after a recorded problem.</summary>
+    public int? OptIndex(string key, IReadOnlyList<string> sortedIds, string what)
+    {
+        string? name = OptStr(key, "");
+        if (name is null)
+        {
+            return null;
+        }
+        if (name.Length == 0)
+        {
+            return -1;
+        }
+        int index = SimRules.IndexOf(sortedIds, name, s => s);
+        if (index < 0)
+        {
+            Problem(key, $"unknown {what} '{name}'");
+            return null;
+        }
+        return index;
+    }
+
+    /// <summary>Reads the optional <c>faction</c> key; when absent, the faction implied by the entry id's prefix
+    /// (<see cref="SimRules.FactionFromId"/>). Null only after a recorded problem.</summary>
+    public Faction? FactionOrDefault() =>
+        OptChoice("faction", RulesEnums.ParseFaction, RulesEnums.FactionKeys, SimRules.FactionFromId(Id));
+
     /// <summary>Reads an optional integer array of exactly <paramref name="count"/> values; <paramref name="def"/> (may be null) when
     /// absent. Check <see cref="Has"/> to tell "absent" from "invalid"; invalid records a problem and returns null.</summary>
     public int[]? OptIntArray(string key, int count, int min, int max, int[]? def) =>

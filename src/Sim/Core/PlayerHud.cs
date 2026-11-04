@@ -45,4 +45,13 @@ public sealed record PlayerHud(int Cash, int Stored, int StorageCap, int PowerOu
 {
     /// <summary>Every unlocked type, in category then type order (never null).</summary>
     public IReadOnlyList<BuildOption> Options { get; init; } = Options ?? Array.Empty<BuildOption>();
+
+    /// <summary>M3: the player's faction.</summary>
+    public Faction Faction { get; init; }
+
+    /// <summary>M3: researched-upgrade mask (bit i = SimRules.Upgrades[i]).</summary>
+    public ulong Upgrades { get; init; }
+
+    /// <summary>M3: upgrade indices a Build(ProductionCategory.Upgrade, index) would be accepted for now (never null).</summary>
+    public IReadOnlyList<int> BuildableUpgrades { get; init; } = Array.Empty<int>();
 }

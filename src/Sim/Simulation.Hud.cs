@@ -19,7 +19,22 @@ public sealed partial class Simulation
         if (player >= _players.Count) throw new ArgumentOutOfRangeException(nameof(player));
         return new PlayerHud(_players.Cash[player], _players.Stored[player], StorageCap(player), _players.PowerOut[player],
             _players.PowerUse[player], BuildQueueViews(player), BuildBuildableList(player), _players.Defeated[player],
-            BuildOptionList(player));
+            BuildOptionList(player))
+        {
+            Faction = _players.Faction[player],
+            Upgrades = _players.Upgrades[player],
+            BuildableUpgrades = BuildableUpgradeList(player),
+        };
+    }
+
+    /// <summary>Upgrade indices <see cref="CanResearch"/> accepts now (M3).</summary>
+    private IReadOnlyList<int> BuildableUpgradeList(byte player)
+    {
+        IReadOnlyList<UpgradeType> upgrades = Setup.Rules.Upgrades;
+        List<int>? list = null;
+        for (int u = 0; u < upgrades.Count; u++)
+            if (CanResearch(player, u)) (list ??= new List<int>()).Add(u);
+        return list ?? (IReadOnlyList<int>)Array.Empty<int>();
     }
 
     /// <summary>

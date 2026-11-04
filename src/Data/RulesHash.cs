@@ -10,7 +10,7 @@ namespace Rts.Data;
 /// Hash over the parsed rules, not over the file text. All integers are little-endian; strings are a 4-byte length
 /// then UTF-8 bytes; booleans are one byte. Layout, in order:
 /// <list type="number">
-/// <item>Version byte (4), then TickRate, DefaultMapWidth, DefaultMapHeight, then the economy table: StartingCash, CreditsAshfall,
+/// <item>Version byte (<see cref="FormatVersion"/>), then TickRate, DefaultMapWidth, DefaultMapHeight, then the economy table: StartingCash, CreditsAshfall,
 /// CreditsPitchblende, HarvestTicksPerUnit, UnloadTicksPerUnit, RegrowthIntervalTicks, SellRefundPermille, RepairCostPermille,
 /// RepairHpPerTick, BuildRadius, MaxQueue, BuildTicksPer100Credits, the three LowPowerSlowdownPermille values.</item>
 /// <item>Weapons: count, then per weapon in id order: id, Damage, Range, MinRange, RateOfFire, ProjectileSpeed, Warhead index.</item>
@@ -25,6 +25,16 @@ namespace Rts.Data;
 /// <item>Effects: count, then per effect in id order: id, Op, Target, Attr, Value.</item>
 /// <item>Terrain: speed percent for every land (LandType order) and locomotion (Locomotion order), then the buildable
 /// flag for every land.</item>
+/// <item>Schema v3 block (M3-01, format 6): the soft flag for every land; tunnels (TransitTicks, NetworkCapPoints, PointsS,
+/// PointsM, DiveTicks, TelegraphTicks, EntranceTelegraphTicks, EmergingHealthPermille, SurfacingRing); radiation (DecayTicks,
+/// DamageIntervalTicks, DamageThreshold, DamagePermille, NoBuildThreshold); stealth DelayTicks; start kits (count, then per
+/// faction: conyard, units); then per weapon Targets (byte); per warhead Contaminate, Decontaminate, BonusVsIrradiatedPercent,
+/// BlackoutTicks; per vehicle the mobile v3 fields (Faction, TunnelSize, AuraRadius, AuraRofPermille, AuraSpeedPermille,
+/// AuraTargets, RadResistPermille, Irradiated, Stealth, DeathWeapon, JamRadius, SeismicRadius) then Passengers, DeploysInto;
+/// per infantry the mobile v3 fields then Engineer; per building Faction, Entrance, TicksPerPoint, Researches, Gate,
+/// SeismicRadius, SeesThroughBlackout, JamRadius, Superweapon, SuperweaponChargeTicks, SuperweaponEntranceRange; then upgrades
+/// (count, then per upgrade in id order: id, Faction, Cost, BuildTime, prerequisites, Effect). Lists are in the same id order as
+/// above, so the block needs no ids of its own.</item>
 /// </list>
 /// Hashed with XxHash64. Whitespace, comments and key order in the TOML do not affect it. The loader sorts each
 /// list by id before this runs.
@@ -32,7 +42,7 @@ namespace Rts.Data;
 public static class RulesHash
 {
     /// <summary>Canonical layout version. Bump only with a DECISIONS entry.</summary>
-    public const byte FormatVersion = 5;
+    public const byte FormatVersion = 6;   // 6: schema v3 block (M3-01)
 
     /// <summary>Computes the rules hash over the game constants and every sim type table.</summary>
     public static ulong Compute(GameRules game, SimRules sim)
@@ -167,8 +177,60 @@ public static class RulesHash
             {
                 w.Write(sim.Terrain.Buildable((LandType)land));
             }
+            WriteSchemaV3(w, sim);
         }
         return XxHash64.HashToUInt64(ms.GetBuffer().AsSpan(0, (int)ms.Length));
+    }
+
+    private static void WriteSchemaV3(BinaryWriter w, SimRules sim)
+    {
+        for (int land = 0; land < RuleCounts.LandTypes; land++) w.Write(sim.Terrain.Soft((LandType)land));
+        TunnelRules t = sim.Tunnels;
+        w.Write(t.TransitTicks); w.Write(t.NetworkCapPoints); w.Write(t.PointsS); w.Write(t.PointsM); w.Write(t.DiveTicks);
+        w.Write(t.TelegraphTicks); w.Write(t.EntranceTelegraphTicks); w.Write(t.EmergingHealthPermille); w.Write(t.SurfacingRing);
+        RadiationRules r = sim.Radiation;
+        w.Write(r.DecayTicks); w.Write(r.DamageIntervalTicks); w.Write(r.DamageThreshold); w.Write(r.DamagePermille); w.Write(r.NoBuildThreshold);
+        w.Write(sim.Stealth.DelayTicks);
+        w.Write(sim.StartKits.Count);
+        foreach (FactionStartKit k in sim.StartKits) { WriteString(w, k.Conyard); WriteStrings(w, k.Units); }
+
+        foreach (WeaponType x in sim.Weapons) w.Write((byte)x.Targets);
+        foreach (WarheadType x in sim.Warheads)
+        {
+            w.Write(x.Contaminate); w.Write(x.Decontaminate); w.Write(x.BonusVsIrradiatedPercent); w.Write(x.BlackoutTicks);
+        }
+        foreach (VehicleType x in sim.Vehicles)
+        {
+            WriteMobile(w, x.Faction, x.TunnelSize, x.AuraRadius, x.AuraRofPermille, x.AuraSpeedPermille, x.AuraTargets,
+                x.RadResistPermille, x.Irradiated, x.Stealth, x.DeathWeapon, x.JamRadius, x.SeismicRadius);
+            w.Write(x.Passengers); w.Write(x.DeploysInto);
+        }
+        foreach (InfantryType x in sim.Infantry)
+        {
+            WriteMobile(w, x.Faction, x.TunnelSize, x.AuraRadius, x.AuraRofPermille, x.AuraSpeedPermille, x.AuraTargets,
+                x.RadResistPermille, x.Irradiated, x.Stealth, x.DeathWeapon, x.JamRadius, x.SeismicRadius);
+            w.Write(x.Engineer);
+        }
+        foreach (BuildingType x in sim.Buildings)
+        {
+            w.Write((byte)x.Faction); w.Write((byte)x.Entrance); w.Write(x.TicksPerPoint); w.Write(x.Researches); w.Write(x.Gate);
+            w.Write(x.SeismicRadius); w.Write(x.SeesThroughBlackout); w.Write(x.JamRadius); WriteString(w, x.Superweapon);
+            w.Write(x.SuperweaponChargeTicks); w.Write(x.SuperweaponEntranceRange);
+        }
+        w.Write(sim.Upgrades.Count);
+        foreach (UpgradeType u in sim.Upgrades)
+        {
+            WriteString(w, u.Id); w.Write((byte)u.Faction); w.Write(u.Cost); w.Write(u.BuildTime);
+            WriteStrings(w, u.Prerequisites); WriteString(w, u.Effect);
+        }
+    }
+
+    private static void WriteMobile(BinaryWriter w, Faction faction, TunnelSize size, int auraRadius, int auraRof, int auraSpeed,
+        IReadOnlyList<string> auraTargets, int radResist, bool irradiated, bool stealth, int deathWeapon, int jam, int seismic)
+    {
+        w.Write((byte)faction); w.Write((byte)size); w.Write(auraRadius); w.Write(auraRof); w.Write(auraSpeed);
+        WriteStrings(w, auraTargets); w.Write(radResist); w.Write(irradiated); w.Write(stealth); w.Write(deathWeapon);
+        w.Write(jam); w.Write(seismic);
     }
 
     private static void WriteStrings(BinaryWriter w, IReadOnlyList<string> values)

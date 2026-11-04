@@ -135,6 +135,7 @@ public sealed partial class Simulation
 
     private void ApplyBuild(Command c)
     {
+        if (c.Arg == (int)ProductionCategory.Upgrade) { ApplyBuildUpgrade(c); return; }   // M3: Simulation.Upgrades.cs
         if (c.Arg < 0 || c.Arg > (int)ProductionCategory.Defence) return;
         var category = (ProductionCategory)c.Arg;
         if (!CanBuild(c.Player, category, c.Arg2)) return;
@@ -146,6 +147,7 @@ public sealed partial class Simulation
 
     private void ApplyCancel(Command c)
     {
+        if (c.Arg == (int)ProductionCategory.Upgrade) { ApplyCancelUpgrade(c); return; }   // M3: Simulation.Upgrades.cs
         if (_players.IsNeutral(c.Player) || c.Arg < 0 || c.Arg > (int)ProductionCategory.Defence) return;
         int lane = ProductionState.Lane(c.Player, (ProductionCategory)c.Arg);
         if (c.Arg2 < 0 || c.Arg2 >= _production.QueueCount[lane]) return;

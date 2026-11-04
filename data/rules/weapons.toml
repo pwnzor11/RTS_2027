@@ -1,6 +1,7 @@
 # Authority M2 roster: balance pass in M2-14, see docs/balance/m2_balance.md.
 # Keys: damage, range and min_range (leptons, 256 per cell), rate_of_fire (ticks between shots, > 0),
 # projectile_speed (leptons/tick, 0 = instant hit), warhead (id in warheads.toml).
+# Schema v3 (M3, optional): targets ("ground"|"air"|"both", default "ground").
 
 [auth_rifle]
 damage = 8

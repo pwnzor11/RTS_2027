@@ -2,6 +2,9 @@
 # Keys: speed (leptons/tick), max_health, locomotion, turn_rate (facing steps/tick), armor, sight (cells),
 # primary_weapon ("" = none), has_turret, turret_turn_rate, crusher, cost, prerequisites.
 # Optional: harvest_capacity (scraper), build_time.
+# Schema v3 (M3, all optional): faction, tunnel_size ("none"|"S"|"M"|"L"; vehicles default none), aura_radius,
+# aura_rof_permille (1000), aura_speed_permille (1000), aura_targets (type ids), rad_resist_permille, irradiated, stealth,
+# death_weapon (weapon id or ""), jam_radius, seismic_radius, passengers, deploys_into (building id or "").
 
 [auth_scraper]
 speed = 18

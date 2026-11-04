@@ -6,7 +6,7 @@ using Rts.Sim.Serialization;
 namespace Rts.Sim.Replay;
 
 /// <summary>
-/// Records a game as it is played (format version 6). The header is written when the writer is created: magic,
+/// Records a game as it is played (format version 7; 7 = M3-01, factions in the header). The header is written when the writer is created: magic,
 /// version, then the <see cref="SetupHeader"/> (build string, seed, player count, teams, limits, AllowDebug, rules
 /// hash, map hash and name, and the rules source files, deflate-compressed). Records are appended as they happen:
 /// spawn (taken from <see cref="Simulation.SetupLog"/>, never re-recorded by callers), command (with Arg2) and
@@ -17,7 +17,7 @@ namespace Rts.Sim.Replay;
 public sealed class ReplayWriter
 {
     public static readonly byte[] Magic = "RTSR"u8.ToArray();
-    public const int Version = 6;
+    public const int Version = 7;
     public const byte TypeEnd = 0, TypeCommand = 1, TypeHashCheck = 2, TypeSpawn = 3;
 
     /// <summary>Ticks between stream flushes.</summary>
