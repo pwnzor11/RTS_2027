@@ -266,7 +266,7 @@ public sealed class DirectorateDataTests
         BuildingType vent = s.Buildings.Single(b => b.Id == "dir_smelter_vent");
 
         Assert.True(vent.Refinery);
-        Assert.Equal(new CellCoord(1, 3), vent.Dock);
+        Assert.Equal(new CellCoord(1, 2), vent.Dock);   // 3x2 footprint: the cell just south of the ramp mouth
         Assert.Equal("dir_scraper", s.Vehicles[vent.FreeUnit].Id);
     }
 
