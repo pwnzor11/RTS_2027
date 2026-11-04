@@ -14,7 +14,8 @@ CANVAS = 112
 TARGET = (0.0, 0.0, 0.9)
 STATES = [("idle", 16, 1, 1)]
 LAYERS = ["body", "turret"]
-PIVOT = (0.0, -0.85, 0.9)
+PIVOT = (0.0, -0.85, 0.92)    # = top of the mount collar (deck top is 0.86)
+MOUNT = dict(deck_z=0.86, r_lip=0.8, r_well=0.0, r_shadow=1.0, soft_r=0.95, lip="hull", well="dark")
 PALETTE = D.PALETTE
 MATERIALS = D.MATERIALS
 TILT = 34.0
@@ -56,6 +57,7 @@ def build(S, state, k, n):
         cyl(f"stack{sx}", 0.07, 0.9, (sx * 0.78, 0.48, 1.5), "steel", "Z", 8)
     box("rearbump", (1.5, 0.12, 0.14), (0, -2.0, 0.72), "oxide", 0.02)
     # ---- turret layer: the tilted rocket rack
+    S.mount(PIVOT, **MOUNT)
     S.begin("turret", PIVOT)
     px, py, pz = PIVOT
     a = math.radians(TILT)
@@ -64,7 +66,7 @@ def build(S, state, k, n):
     def L(lx, ly, lz):
         return (px + lx, py + ly * ca - lz * sa, pz + ly * sa + lz * ca)
 
-    box("cradle", (1.5, 1.5, 0.14), (px, py, pz + 0.08), "hull2", 0.03)
+    cyl("cradle", 0.74, 0.12, (px, py, pz + 0.06), "hull2", "Z", 20)      # round turntable, sits on the mount collar
     box("hinge", (1.5, 0.3, 0.3), L(0, -0.95, 0.15), "dark", 0.03, rot=(TILT, 0, 0))
     box("rack", (1.36, 2.0, 0.84), L(0, 0.05, 0.48), "hull", 0.06, rot=(TILT, 0, 0))
     box("racktop", (1.2, 1.7, 0.05), L(0, 0.05, 0.92), "hull2", 0.0, rot=(TILT, 0, 0))
