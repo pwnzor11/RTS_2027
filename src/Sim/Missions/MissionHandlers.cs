@@ -30,6 +30,7 @@ internal static class MissionHandlers
         t[(int)MissionKind.AttackMove] = CombatMissions.HandleAttackMove; // CombatMissions.cs (M1-09)
         t[(int)MissionKind.Harvest] = HarvestMission.HandleHarvest; // HarvestMission.cs (M2-07)
         t[(int)MissionKind.Return] = HarvestMission.HandleReturn;   // HarvestMission.cs (M2-07)
+        t[(int)MissionKind.Capture] = CaptureMission.Handle;   // CaptureMission.cs (M3-06)
         return t;
     }
 

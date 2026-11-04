@@ -92,6 +92,7 @@ internal static class Occupancy
     {
         CellCoord cell = store.Position[i].ToCell();
         EntityId me = store.Slots.IdOf(i);
+        if (Missions.AirMission.IsAir(sim, kind, store, i)) return;   // M3-06: air units hold no cell
         if (kind == ActorKind.Vehicle)
         {
             if (sim.Map.VehicleAt(cell).IsNone) sim.Map.SetVehicle(cell, me);
