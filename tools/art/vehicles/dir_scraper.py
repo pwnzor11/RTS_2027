@@ -6,11 +6,11 @@ House paint: big flank panels and the hopper sides.  States: idle (16 x 1) and d
 """
 import os, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import dir_common as D
+import dir_dig_common as D
 
 ID = "dir_scraper"
 TITLE = "Directorate burrowing scraper (tunnel-borne harvester)"
-CANVAS = 128
+CANVAS = 144
 TARGET = (0.0, 0.3, 0.9)
 STATES = [("idle", 16, 1, 1), ("dive", 16, 4, 3)]
 PALETTE = D.PALETTE
