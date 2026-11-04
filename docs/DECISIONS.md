@@ -555,3 +555,71 @@ house-colour roof panels (Construction Yard, Power Plant, Silo) use the darker h
 walls get vertical, corner and end variants chosen by neighbours so wall lines connect; the Rocketeer's launch flash
 and backblast are smaller and less white.
 **Status:** confirmed (owner, session 3)
+
+### D-073 · 2026-11-03 · D-063 confirmed
+**Decision:** The owner confirmed D-063 (M2-01 corner-advantage causes and fixes; the slot-order bias was later fixed by D-065).
+**Status:** confirmed (owner, session 4)
+
+### D-074 · 2026-11-03 · Tunnel spec (answers Q-29)
+**Decision:** As written in design 05 §1. Network transit is a per-entrance queue drawn in at a points-per-second rate
+(S = 1 point, M = 3) followed by a flat ~2 s underground, whatever the distance (option A3). Units have a tunnel
+size S/M/L; Hatch-class entrances take S, Bore-Head-class take up to M, L never uses the network. Network-wide cap
+on points in transit. If the exit is lost, units re-route to the nearest surviving entrance (D2); with none left
+they are lost. Free burrowing for Burrow-locomotion units: invisible while burrowed (no trail), cannot attack or be
+attacked, surfaces only on soft, unhardened ground not within 1 cell of any structure, behind a 3 s surfacing
+telegraph (5 s for a new entrance, which emerges with low HP). Soft = clear, rough, ash. Authority Seismograph
+reveals burrowed units in a radius. The AI is fog-honest about all of it. A later Authority weapon targets tunnels
+(Seismic Mortar, M4).
+**Why:** Owner's choices in session 4. Size and throughput limits were the owner's own requirements; the starting
+throughput was lowered after the owner judged 2 infantry/s per Hatch too generous (a barracks makes one every 2 s).
+**Alternatives:** instant transit with a cap (A1); travel time by distance (A2); a ripple trail for burrowed units
+(dropped — the owner judged it unnecessary; the Seismograph is the counter).
+**Status:** confirmed (owner, session 4); numbers are (tune), set by M3-14
+
+### D-075 · 2026-11-03 · Surfacing telegraph look
+**Decision:** The ground darkens, then cracks, with dust and a small one-tile shake; only where the enemy has vision.
+**Status:** confirmed (owner, session 4)
+
+### D-076 · 2026-11-03 · Hardened ground and gates
+**Decision:** Authority upgrade *Foundation Grouting* hardens every soft cell fully enclosed by the team's walls,
+gates and structures (option H2): nothing surfaces there and no Bore breaks through. A *Gate* wall piece lets the
+owner's team through and always counts as part of the seal; enemies must destroy it. Wall and gate pieces are exempt
+from the one-cell gap rule so a base can be closed (supersedes the M2 lead choice in design 04 that walls can't
+seal). Breaking any segment re-opens the area.
+**Why:** The owner wanted a "safe inside the walls" area, with a way for friendly units through that makes sense.
+**Status:** confirmed (owner, session 4)
+
+### D-077 · 2026-11-03 · Faction weapons from ideology
+**Decision:** Authority = order, light, clean-up (Decon Truck, Seismograph, Searchlight Tower, later Seismic Mortar and
+Quick-Set Foam); Directorate = secrecy, paranoia, contamination, the cult (radiation weapons and ground, Blackout
+clouds, Static Broadcast minimap jamming, the Informant, the Collapse Charge, reactor meltdown, Broadcast and the
+Sunrise Device). Pairs: light vs dark, clean vs contaminate, seal vs undermine, seismograph vs invisibility.
+Mechanics in design 05 §3–4.
+**Status:** confirmed (owner, session 4)
+
+### D-078 · 2026-11-03 · Full Directorate roster in M3
+**Decision:** M3 builds the full Directorate roster as drafted in session 4 (design 05 §5): 13 units (including the
+rail-gun HQ re-imagined as a tracked land-train that deploys into the Command Shaft) and 16 structures. Harvesting
+unloads at a dedicated Smelter Vent; production buildings are also tunnel entrances; new entrances are dug by a
+Bore unit. Names are working names.
+**Status:** confirmed (owner, session 4)
+
+### D-079 · 2026-11-03 · Authority counters in M3; AI tiers 2–5 in M3
+**Decision:** M3 adds the Authority's Seismograph, Decon Truck, Searchlight Tower, Gate and the Foundation Grouting
+upgrade (with an engineering structure to research it), and AI tiers 2–5 measured with the tier matrix. The rest of
+the Authority roster (incl. Seismic Mortar, Quick-Set Foam, air) is M4.
+**Status:** confirmed (owner, session 4)
+
+### D-080 · 2026-11-03 · Audio sourcing (answers Q-31)
+**Decision:** Voice is text-only (supersedes the voice-line part of D-059; D-030 already allows text radio).
+Music is generated with ACE-Step (Apache-2.0, local) on the owner's PC from prompts the lead writes; tracks ship
+as CC0 / no rights claimed, with the tool credited (purely AI-generated works carry no US copyright). SFX: CC0
+packs plus our own procedural sfxr-style sounds.
+**Why:** Suno's post-2025 terms grant use rights rather than ownership, awkward for files redistributed in a public
+GPL repo; ACE-Step has no output terms.
+**Status:** confirmed (owner, session 4)
+
+### D-081 · 2026-11-03 · Overnight findings policy
+**Decision:** For the session 4 overnight build, real findings are fixed without asking; every change to numbers or
+visible text is logged as its own decision marked "assumed — confirm".
+**Status:** confirmed (owner, session 4)

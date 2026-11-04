@@ -7,13 +7,11 @@ file cited after each question. Recommendations are the lead's, from the researc
 From the 2026-11-03 adversarial review (docs/reviews/2026-11-03_adversarial). Needed before M2 planning
 unless marked otherwise.
 
-- ⚪ Q-29 · Directorate tunnel spec (review D-3): capacity, cooldown, what the enemy sees of burrowed
-  units and entrances, how the AI reasons about them, which land is "soft". Needed before M3, not M2.
 
-- ⚪ Q-31 · Audio sourcing (review D-2): music, SFX and announcer — commission, CC0/CC-BY libraries, or
-  generated? Needs a short research note. Before M3.
+(none open)
 
 ## Answered
+- Q-29 · 2026-11-03 · Tunnel spec → D-074..D-076. Q-31 · 2026-11-03 · Audio sourcing → D-080.
 - Q-27, Q-28, Q-30, Q-32, Q-33 · 2026-11-03 → D-058..D-061.
 - Q-26 · 2026-11-02 · Tank sprite in the debug view → D-041.
 - Q-24 · 2026-11-02 · Art pilot: arm B at 64 px → D-039.

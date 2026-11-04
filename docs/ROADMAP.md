@@ -96,7 +96,23 @@ AI on a Rust Belt map, a 10-minute game with real art for the Authority slice.
 - [x] M2-17 Buildings and units drawn from sprites, placeholders for missing art
 
 ## M3 · Full skirmish
-Both factions, full tech tree, map editor, real AI with difficulty levels, audio.
+Both factions, full tech tree, map editor, real AI with difficulty levels, audio. Plan: docs/design/05_m3_plan.md.
+- [ ] M3-01 Contracts: factions, schema v3, enums, state parts, payloads, view/HUD
+- [ ] M3-02 Tunnel network transit
+- [ ] M3-03 Burrow locomotion, surfacing telegraph, Bore/Hatch/Bore Head, land-train deploy
+- [ ] M3-04 Hardening (grouting), gates, team-aware pathing
+- [ ] M3-05 Radiation, decon, Blackout, Seismograph, Searchlight, stealth, jam
+- [ ] M3-06 Upgrades, auras, transports, air, death weapon, engineer
+- [ ] M3-07 Directorate + Authority-counter data
+- [ ] M3-08 Game: faction pick and new renderers
+- [ ] M3-09 Audio host, SFX generator, music player and brief
+- [ ] M3-ART Art fan-out (Directorate 29 types, Authority 5, effects)
+- [ ] M3-10 Directorate AI
+- [ ] M3-11 AI tiers 2–5
+- [ ] M3-12 Session 3 follow-ups
+- [ ] M3-13 Superweapon: the Sunrise Device
+- [ ] M3-14 Integration and balance pass
+- [ ] M3-15 Map editor (not planned in session 4)
 
 ## M4 · Campaign
 Mission scripting/trigger system, briefing screens, tech gating, campaign flow, both campaigns.
