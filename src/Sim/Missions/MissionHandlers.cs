@@ -33,6 +33,8 @@ internal static class MissionHandlers
         t[(int)MissionKind.Burrow] = BurrowMissions.HandleBurrow;   // BurrowMissions.cs (M3-03)
         t[(int)MissionKind.Surface] = BurrowMissions.HandleSurface; // BurrowMissions.cs (M3-03)
         t[(int)MissionKind.Deploy] = BurrowMissions.HandleDeploy;   // BurrowMissions.cs (M3-03)
+        t[(int)MissionKind.EnterTunnel] = TunnelMissions.HandleEnterTunnel; // TunnelMissions.cs (M3-02)
+        t[(int)MissionKind.Transit] = TunnelMissions.HandleTransit;         // TunnelMissions.cs (M3-02)
         return t;
     }
 
