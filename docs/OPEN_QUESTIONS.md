@@ -5,8 +5,6 @@ file cited after each question. Recommendations are the lead's, from the researc
 
 ## Open
 
-- 🟡 Q-40 Default LLM model names in data/llm/providers.toml are placeholders (`claude-haiku-4-5` default, `claude-sonnet-4-5`
-  stronger). Recommendation: confirm current model ids before M5 play-test.
 - ⚪ Q-41 Six older lore files still carry a DRAFT banner (docs/lore/world_history, authority, structures, units, directorate,
   upgrades). Their Archive text was approved in session 4. Recommendation: confirm and clear the banners.
 - ⚪ Q-42 Quick-Set Foam covers only 3×3 (the loader caps `splash` to a flag), so it slows a tunnel push but cannot block one.
@@ -15,6 +13,7 @@ file cited after each question. Recommendations are the lead's, from the researc
   measure in the next AI balance round first.
 
 ## Answered
+- Q-40 · 2026-11-04 · Owner: "look up the models" → Haiku 5.5 default, Sonnet 5.5 strong, effort low → D-108.
 - Q-34, Q-36 · 2026-11-04 · Session 4 and M4 assumed values confirmed → D-099.
 - Q-35 · 2026-11-04 · (a) one radiation-green ramp in PAL_DIR → D-099.
 - Q-37 · 2026-11-04 · Faction.Neutral, option A → D-100.

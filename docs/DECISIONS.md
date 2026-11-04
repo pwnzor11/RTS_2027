@@ -788,3 +788,25 @@ key `hud.superweapon.ready` until there is a string table.
 ### D-107 · 2026-11-04 · Session 6 landed
 **Decision:** Session 6 work landed on main (55a3a27) after Windows CI on PR #11; restore branch `restore/pre-session6`.
 **Status:** confirmed (owner said land when CI is green)
+
+### D-108 · 2026-11-04 · Q-40 commander models
+**Decision:** Anthropic defaults are `claude-haiku-5-5` (default) and `claude-sonnet-5-5` (stronger), the current models on
+platform.claude.com/docs/en/models/overview on 2026-11-04. Requests send `output_config.effort = "low"` (new `effort` key in
+data/llm/providers.toml; "" sends nothing, for older models that reject it), and the provider reads the first `text` block because
+current models put thinking blocks first. Commander requests use max_tokens 1200 so thinking cannot crowd out the JSON reply.
+**Why:** owner asked the lead to look up the models (session 7). **Status:** confirmed (owner delegated)
+
+### D-109 · 2026-11-04 · M5-01 directive contract
+**Decision:** `CommandKind.Directive = 23`; Arg packs posture/focus/mix/expand in 4-bit fields and the target in bits 16..23
+(`DirectiveCodec`); Cell = focus cell or (-1,-1). The sim clamps on apply (same defaults as the reply parser: balanced, army, auto,
+any target), drops a focus cell that is off the map or unexplored for the player, ignores directives from neutral slots, and stores the
+latest directive per player in a new "directive" state part after "stats". Save format 9 (format 8 saves are rejected, as at M4-01);
+golden and pinned hashes re-pinned for the new part only. The commander reaches the sim through `IDirectiveSource`, polled by
+`AiDriver` every tick, so a directive gets the slot's command delay and sequence and is recorded like any AI command.
+**Status:** confirmed (lead; implements the approved plan 09_m5_plan.md §2–§3)
+
+### D-110 · 2026-11-04 · Commander chat stays out of the sim
+**Decision:** The plan said commander chat goes through `CommandKind.Chat` with an existing text table, but no chat text table exists.
+For M5, commander and player chat lines live in the game layer (`CommanderChatLog`) and are not in replays; replays still repeat every
+directive exactly. A replay chat block can be added later (M5-10 or M9 LAN chat).
+**Why:** keeps text out of the deterministic sim; reversible. **Status:** assumed — confirm
