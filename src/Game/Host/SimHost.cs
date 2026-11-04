@@ -33,6 +33,7 @@ public sealed class SimHost
     private bool _paused;
     private int _speedMultiplier = 1;
     private int _viewer;
+    private bool _spectator;
     private SimSnapshot _previous;
     private SimSnapshot _current;
     private IReadOnlyList<LeptonCoord> _projectiles = Array.Empty<LeptonCoord>();
@@ -102,8 +103,25 @@ public sealed class SimHost
         for (int i = 0; i < sequences.Count && i < _sequence.Length; i++) _sequence[i] = sequences[i];
     }
 
-    /// <summary>Which player's view the snapshot shows: 0, 1, or -1 for the omniscient view.</summary>
+    /// <summary>Which player's view the snapshot shows: -1 for the omniscient view (full map vision), else the player whose fog applies.</summary>
     public int Viewer => _viewer;
+
+    /// <summary>The speeds a spectator can pick (M4-08): 1x, 2x, 4x, 8x. Keys 1..4 select by index.</summary>
+    public static IReadOnlyList<int> SpeedSteps { get; } = new[] { 1, 2, 4, 8 };
+
+    /// <summary>
+    /// True for an AI-vs-AI game watched from outside (M4-08): <see cref="Issue"/> and <see cref="IssueOrder"/> then refuse every
+    /// command, so no input can reach the sim. AI commands do not pass through them (see <see cref="StepCore"/>), so the AIs
+    /// keep playing and the replay is unchanged.
+    /// </summary>
+    public bool Spectator
+    {
+        get => _spectator;
+        set => _spectator = value;
+    }
+
+    /// <summary>Number of commands <see cref="Issue"/> or <see cref="IssueOrder"/> refused while <see cref="Spectator"/> was set.</summary>
+    public int RefusedCommands { get; private set; }
 
     /// <summary>True while paused. Pausing drops any partly accumulated time.</summary>
     public bool Paused
@@ -164,9 +182,15 @@ public sealed class SimHost
     /// Queues a command and records it in the replay. Stamps the next sequence number of <c>command.Player</c>, and
     /// moves ExecTick up to <c>Tick + CommandDelayTicks</c> if it is earlier (so a default ExecTick of 0 means "as soon as allowed").
     /// </summary>
-    /// <returns>The command as queued.</returns>
+    /// <returns>The command as queued (unchanged and not queued when <see cref="Spectator"/> is set).</returns>
     public Command Issue(Command command)
     {
+        if (_spectator)
+        {
+            RefusedCommands++;
+            return command;   // not queued, not recorded
+        }
+
         int exec = Math.Max(command.ExecTick, _sim.Tick + CommandDelayTicks);
         Command stamped = command with { ExecTick = exec, Sequence = _sequence[command.Player]++ };
         _pending.Add(stamped);
@@ -182,12 +206,32 @@ public sealed class SimHost
         ActorRef target = default, int? execTick = null) =>
         Issue(OrderBuilder.Build(execTick ?? _sim.Tick + CommandDelayTicks, player, 0, kind, subject, cell, target));
 
-    /// <summary>Moves to the next fog view: player 0, player 1, omniscient, then player 0 again.</summary>
+    /// <summary>
+    /// Moves to the next view: player 0, 1, … N-1, then omniscient (-1), then player 0 again (generalises the old 0, 1, -1).
+    /// Neutral slots are skipped. The sim is not touched, so the state hash is unchanged.
+    /// </summary>
     public void CycleViewer()
     {
-        _viewer = _viewer switch { 0 => 1, 1 => -1, _ => 0 };
+        int next = _viewer + 1;
+        while (next < ViewerCount && _sim.Players.IsNeutral((byte)next)) next++;
+        SetViewer(next >= ViewerCount ? -1 : next);
+    }
+
+    /// <summary>Number of player slots a viewer can be (the sim's player count).</summary>
+    public int ViewerCount => _sim.Setup.PlayerCount;
+
+    /// <summary>
+    /// Sets the view: -1 = full map vision, 0..N-1 = that player's fog. Out-of-range values are clamped to that range. Rebuilds
+    /// the snapshots; reading a snapshot never changes the sim, so the hash is the same for every viewer.
+    /// </summary>
+    public void SetViewer(int viewer)
+    {
+        _viewer = Math.Clamp(viewer, -1, ViewerCount - 1);
         RefreshSnapshots();
     }
+
+    /// <summary>Sets <see cref="SpeedMultiplier"/> to <see cref="SpeedSteps"/>[<paramref name="index"/>] (index clamped to 0..3).</summary>
+    public void SetSpeedStep(int index) => SpeedMultiplier = SpeedSteps[Math.Clamp(index, 0, SpeedSteps.Count - 1)];
 
     /// <summary>Rebuilds the snapshots from the sim as it is now (after setup spawns or a viewer change).</summary>
     public void RefreshSnapshots()
