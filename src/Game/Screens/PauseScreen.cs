@@ -26,6 +26,7 @@ public sealed class PauseScreen : IScreen
         _panel = new MenuPanel("Paused", new[]
         {
             new MenuItem(() => "Resume", () => _s.Screens.Pop()),
+            new MenuItem(() => "Archive", () => _s.Screens.Push(new ArchiveScreen(_s))),
             new MenuItem(() => "Restart", () => GameFlow.Restart(_s, restart)),
             new MenuItem(() => "Quit to menu", () => GameFlow.QuitToMenu(_s)),
         });
