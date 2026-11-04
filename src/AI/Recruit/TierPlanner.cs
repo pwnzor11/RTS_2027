@@ -283,4 +283,34 @@ internal sealed class TierPlanner
         int t = SimRules.IndexOf(k.Rules.Buildings, _faction.DefenceId, b => b.Id);
         return t < 0 ? 0 : k.BuildingCount[t];
     }
+    // ---- M3-21: AI save/restore. Appended at the end of the class; the format is private to the matching Restore. ----
+
+    /// <summary>M3-21: writes what the planner remembers of the enemy (armour mix, defences, harvester sightings, flags) and its counters.</summary>
+    internal void Snapshot(BinaryWriter w)
+    {
+        w.Write(_armor.Length); foreach (int v in _armor) w.Write(v);
+        w.Write(_defArmor.Length); foreach (int v in _defArmor) w.Write(v);
+        w.Write(_defRange); w.Write(DefenceCount); w.Write(HeavyShare);
+        w.Write(SeenEnemy); w.Write(SeenEnemyAir); w.Write(HarvestersReplaced); w.Write(AircraftOrdered);
+        w.Write(_sightings.Count);
+        foreach (var s in _sightings)
+        {
+            w.Write(s.Key); AiSnapshot.WriteCell(w, s.Cell); w.Write((byte)s.Ref.Kind); AiSnapshot.WriteId(w, s.Ref.Id); w.Write(s.Tick);
+        }
+    }
+
+    /// <summary>M3-21: reads what <see cref="Snapshot"/> wrote.</summary>
+    internal void Restore(BinaryReader r)
+    {
+        int n = AiSnapshot.Count(r);
+        for (int i = 0; i < n; i++) { int v = r.ReadInt32(); if (i < _armor.Length) _armor[i] = v; }
+        n = AiSnapshot.Count(r);
+        for (int i = 0; i < n; i++) { int v = r.ReadInt32(); if (i < _defArmor.Length) _defArmor[i] = v; }
+        _defRange = r.ReadInt32(); DefenceCount = r.ReadInt32(); HeavyShare = r.ReadInt32();
+        SeenEnemy = r.ReadBoolean(); SeenEnemyAir = r.ReadBoolean(); HarvestersReplaced = r.ReadInt32(); AircraftOrdered = r.ReadInt32();
+        n = AiSnapshot.Count(r);
+        _sightings.Clear();
+        for (int i = 0; i < n; i++)
+            _sightings.Add((r.ReadUInt64(), AiSnapshot.ReadCell(r), new ActorRef((ActorKind)r.ReadByte(), AiSnapshot.ReadId(r)), r.ReadInt32()));
+    }
 }

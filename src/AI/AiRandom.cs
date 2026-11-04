@@ -14,6 +14,9 @@ public sealed class AiRandom
         NextULong();
     }
 
+    /// <summary>M3-21: the generator's whole state, so a save can write it and a load can continue the same sequence.</summary>
+    public ulong State { get => _state; set => _state = value; }
+
     /// <summary>Next 64 random bits.</summary>
     public ulong NextULong()
     {

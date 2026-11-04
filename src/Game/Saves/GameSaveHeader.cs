@@ -13,8 +13,10 @@ namespace Rts.Game.Saves;
 /// </summary>
 public sealed record GameSaveHeader
 {
-    /// <summary>The header version this build writes and reads. Bump it when the layout changes. Version 1 (two-player skirmish settings) is still read; M4-11 wrote version 2 (map choice, 2 to 4 slots).</summary>
-    public const int CurrentVersion = 2;
+    /// <summary>The header version this build writes and reads. Bump it when the layout changes. Version 1 (two-player skirmish settings) is still read; M4-11 wrote version 2 (map choice, 2 to 4 slots); M3-21 wrote version 3 (appends each AI's saved memory after its slot record; versions 1 and 2 load with the AI starting fresh).</summary>
+    public const int CurrentVersion = 3;
+
+    private const int MaxAiStateBytes = 1 << 22;
 
     /// <summary>Header version of this save.</summary>
     public int Version { get; init; } = CurrentVersion;
@@ -93,6 +95,11 @@ public sealed record GameSaveHeader
             w.Write(a.Tier);
             w.Write((byte)a.Faction);
             w.Write(a.Seed);
+            if (Version >= 3)
+            {
+                w.Write(a.State is not null);
+                if (a.State is not null) { w.Write(a.State.Length); w.Write(a.State); }
+            }
         }
         w.Write(Pending.Count);
         foreach (Command c in Pending)
@@ -135,7 +142,18 @@ public sealed record GameSaveHeader
         int aiCount = r.ReadByte();
         var ai = new List<SavedAi>(aiCount);
         for (int i = 0; i < aiCount; i++)
-            ai.Add(new SavedAi(r.ReadByte(), r.ReadString(), r.ReadInt32(), (Faction)r.ReadByte(), r.ReadUInt64()));
+        {
+            var slot = new SavedAi(r.ReadByte(), r.ReadString(), r.ReadInt32(), (Faction)r.ReadByte(), r.ReadUInt64());
+            if (version >= 3 && r.ReadBoolean())
+            {
+                int length = r.ReadInt32();
+                if (length < 0 || length > MaxAiStateBytes) throw new InvalidDataException("bad AI state length");
+                byte[] state = r.ReadBytes(length);
+                if (state.Length != length) throw new EndOfStreamException("AI state ends early");
+                slot = slot with { State = state };
+            }
+            ai.Add(slot);
+        }
         int pendingCount = r.ReadInt32();
         if (pendingCount < 0 || pendingCount > 1 << 20) throw new InvalidDataException("bad pending command count");
         var pending = new List<Command>(pendingCount);

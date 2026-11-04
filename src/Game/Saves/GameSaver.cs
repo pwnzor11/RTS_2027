@@ -21,6 +21,7 @@ public static class GameSaver
             Build = BuildInfo.Version,
             Pending = host.Pending.ToArray(),
             Sequences = host.Sequences,
+            Ai = template.Ai.Select(a => a with { State = host.Ai?.CaptureState(a.Slot) }).ToArray(),   // M3-21: each AI's own memory
         };
 
     /// <summary>

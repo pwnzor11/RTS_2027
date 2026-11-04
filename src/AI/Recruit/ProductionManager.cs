@@ -207,4 +207,26 @@ internal sealed class ProductionManager
         }
         return new CellCoord(cx, cy);
     }
+    // ---- M3-21: AI save/restore. Appended at the end of the class; the format is private to the matching Restore. ----
+
+    /// <summary>M3-21: writes the unit bags (already shuffled) with their positions, the rally cell and the memory of rallied factories.</summary>
+    internal void Snapshot(BinaryWriter w)
+    {
+        w.Write(_noIncome); w.Write(_infIdx); w.Write(_vehIdx); w.Write(_bagTier); w.Write(_first); w.Write(Queued);
+        AiSnapshot.WriteCell(w, Rally);
+        w.Write(_inf.Length); foreach (int t in _inf) w.Write(t);
+        w.Write(_veh.Length); foreach (int t in _veh) w.Write(t);
+        AiSnapshot.WriteKeys(w, _rallied);
+    }
+
+    /// <summary>M3-21: reads what <see cref="Snapshot"/> wrote.</summary>
+    internal void Restore(BinaryReader r)
+    {
+        _noIncome = r.ReadBoolean(); _infIdx = r.ReadInt32(); _vehIdx = r.ReadInt32(); _bagTier = r.ReadInt32(); _first = r.ReadBoolean();
+        Queued = r.ReadInt32();
+        Rally = AiSnapshot.ReadCell(r);
+        _inf = new int[AiSnapshot.Count(r)]; for (int i = 0; i < _inf.Length; i++) _inf[i] = r.ReadInt32();
+        _veh = new int[AiSnapshot.Count(r)]; for (int i = 0; i < _veh.Length; i++) _veh[i] = r.ReadInt32();
+        AiSnapshot.ReadKeys(r, _rallied);
+    }
 }
