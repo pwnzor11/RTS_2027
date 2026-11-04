@@ -12,14 +12,14 @@ public sealed record FeatureType(string Id, int Width, int Height)
     public static IReadOnlyList<FeatureType> Defaults { get; } =
         new[] { new FeatureType("neu_ruin_depot", 2, 2), new FeatureType("neu_ruin_tenement", 3, 2) };
 
-    /// <summary>Every <c>neu_*</c> building of the rules in id order; <see cref="Defaults"/> when the rules cannot be read or have none.</summary>
+    /// <summary>Every Faction.Neutral building of the rules (the <c>neu_*</c> ruins) in id order; <see cref="Defaults"/> when the rules cannot be read or have none.</summary>
     public static IReadOnlyList<FeatureType> FromRules(string rulesDir)
     {
         try
         {
             var rules = Rts.Data.RulesLoader.Load(rulesDir);
             var list = rules.Sim.Buildings
-                .Where(b => b.Id.StartsWith("neu_", StringComparison.Ordinal))
+                .Where(b => b.Faction == Rts.Sim.Rules.Faction.Neutral)   // Q-37: the real faction, not the id prefix
                 .OrderBy(b => b.Id, StringComparer.Ordinal)
                 .Select(b => new FeatureType(b.Id, b.FootprintW, b.FootprintH))
                 .ToArray();

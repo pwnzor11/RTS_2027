@@ -130,6 +130,7 @@ public static class RulesLoader
         EffectRulesLoader.ValidateTargets(effects, tables, provides, problems);
         ValidateUpgradeEffects(upgrades, effects, problems);
         if (kits is not null) ValidateTierProvides(kits, provides, problems);
+        ValidateNeutral(vehicles, infantry, buildings, upgrades, problems);   // Q-37
 
         if (problems.Count > 0 || game is null || terrain is null || economy is null || tunnels is null || radiation is null
             || stealth is null || kits is null || garrison is null || foam is null)
@@ -155,6 +156,29 @@ public static class RulesLoader
             foreach (string id in u.Effects)
                 if (SimRules.IndexOf(effects, id, e => e.Id) < 0)
                     problems.Add(new RulesProblem(UpgradesFile, u.Id + ".effects", $"unknown effect '{id}' (not in {TechsFile})"));
+    }
+
+    /// <summary>Q-37: Faction.Neutral is the passive owner of map features. Only buildings may be neutral, and a neutral building cannot be
+    /// built or produced by players, has no prerequisites, provides nothing, costs nothing and produces nothing.</summary>
+    internal static void ValidateNeutral(IReadOnlyList<VehicleType> vehicles, IReadOnlyList<InfantryType> infantry,
+        IReadOnlyList<BuildingType> buildings, IReadOnlyList<UpgradeType> upgrades, List<RulesProblem> problems)
+    {
+        foreach (VehicleType v in vehicles)
+            if (v.Faction == Faction.Neutral) problems.Add(new RulesProblem(VehiclesFile, v.Id + ".faction", "only buildings may be neutral"));
+        foreach (InfantryType i in infantry)
+            if (i.Faction == Faction.Neutral) problems.Add(new RulesProblem(InfantryFile, i.Id + ".faction", "only buildings may be neutral"));
+        foreach (UpgradeType u in upgrades)
+            if (u.Faction == Faction.Neutral) problems.Add(new RulesProblem(UpgradesFile, u.Id + ".faction", "only buildings may be neutral"));
+        foreach (BuildingType b in buildings)
+        {
+            if (b.Faction != Faction.Neutral) continue;
+            if (b.Buildable) problems.Add(new RulesProblem(BuildingsFile, b.Id + ".buildable", "a neutral building must have buildable = false"));
+            if (b.Prerequisites.Count > 0) problems.Add(new RulesProblem(BuildingsFile, b.Id + ".prerequisites", "a neutral building has no prerequisites"));
+            if (b.Provides.Count > 0) problems.Add(new RulesProblem(BuildingsFile, b.Id + ".provides", "a neutral building provides nothing"));
+            if (b.Produces is not null) problems.Add(new RulesProblem(BuildingsFile, b.Id + ".produces", "a neutral building produces nothing"));
+            if (b.Cost != 0 || b.Power != 0 || b.Storage != 0 || b.Refinery)
+                problems.Add(new RulesProblem(BuildingsFile, b.Id, "a neutral building has no cost, power, storage or refinery"));
+        }
     }
 
     /// <summary>A non-empty faction <c>tier2</c> / <c>tier3</c> must be a provides name of some building (M4-01).</summary>

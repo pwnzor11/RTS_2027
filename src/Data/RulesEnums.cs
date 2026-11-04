@@ -20,7 +20,7 @@ internal static class RulesEnums
     public static readonly string[] LandKeys = ["clear", "road", "rough", "ash", "water", "rock", "cliff", "shallow"];
 
     /// <summary>Faction names, in <see cref="Faction"/> order.</summary>
-    public static readonly string[] FactionKeys = ["authority", "directorate"];
+    public static readonly string[] FactionKeys = ["authority", "directorate", "neutral"];
 
     /// <summary>Tunnel size names, in <see cref="TunnelSize"/> order (design 05 writes them none | S | M | L).</summary>
     public static readonly string[] TunnelSizeKeys = ["none", "S", "M", "L"];
