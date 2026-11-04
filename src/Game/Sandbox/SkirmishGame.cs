@@ -178,32 +178,14 @@ public sealed class SkirmishGame
 
         RuleSet rules = RulesLoader.Load(rulesDir);
         int players = settings.PlayerCount;
-        (MapData map, MapMeta meta, string mapId) = LoadMap(rulesDir, settings, players);
+        (MapData map, MapMeta meta, string mapId) = LoadMap(rulesDir, settings);
         if (players > map.StartPositions.Count)
             throw new InvalidOperationException($"The map '{map.Name}' has {map.StartPositions.Count} start positions; {players} players need {players}.");
         if (meta.MaxPlayers > 0 && players > meta.MaxPlayers)
             throw new InvalidOperationException($"The map '{map.Name}' is for at most {meta.MaxPlayers} players.");
 
-        // Neutral features (ruins) need a neutral player after the real ones, on team 255.
+        SimSetup setup = MakeSetup(rules, settings, map, meta);
         bool neutral = meta.Features.Count > 0;
-        int total = players + (neutral ? 1 : 0);
-        IReadOnlyList<Faction>? factions = settings.Factions;
-        IReadOnlyList<byte>? teams = settings.Teams;
-        if (neutral)
-        {
-            var f = new Faction[total];
-            for (int i = 0; i < total; i++) f[i] = factions is not null && i < factions.Count ? factions[i] : Faction.Authority;
-            factions = f;
-            var t = new byte[total];
-            for (int i = 0; i < players; i++) t[i] = teams is not null ? teams[i] : (byte)i;
-            t[players] = Teams.Neutral;
-            teams = t;
-        }
-
-        var setup = new SimSetup(settings.SimSeed, map, total, rules.Sim, rules.RulesHash)
-        {
-            AllowDebug = false, Factions = factions, Teams = teams,
-        };
         var sim = new Simulation(setup);
         SkirmishStart.Apply(sim, SkirmishStart.ChooseStarts(players, map.StartPositions.Count));
         if (neutral) MapFeatures.Place(sim, meta, (byte)players);
@@ -225,13 +207,42 @@ public sealed class SkirmishGame
         return new SkirmishGame(sim, map, meta, rules, driver, DescribeMap(settings.Map), aiId, curated, local, mapId, saved);
     }
 
-    private static (MapData Map, MapMeta Meta, string MapId) LoadMap(string rulesDir, SkirmishSettings settings, int players)
+    /// <summary>
+    /// The SimSetup of a skirmish (M4-INT2: shared by <see cref="Create(string, SkirmishSettings)"/> and the save loader, so a loaded game has the
+    /// same players, teams and factions): one sim player per open slot, plus a neutral player on team 255 after them when the map has features.
+    /// </summary>
+    public static SimSetup MakeSetup(RuleSet rules, SkirmishSettings settings, MapData map, MapMeta meta)
+    {
+        int players = settings.PlayerCount;
+        bool neutral = meta.Features.Count > 0;
+        int total = players + (neutral ? 1 : 0);
+        IReadOnlyList<Faction>? factions = settings.Factions;
+        IReadOnlyList<byte>? teams = settings.Teams;
+        if (neutral)
+        {
+            var f = new Faction[total];
+            for (int i = 0; i < total; i++) f[i] = factions is not null && i < factions.Count ? factions[i] : Faction.Authority;
+            factions = f;
+            var t = new byte[total];
+            for (int i = 0; i < players; i++) t[i] = teams is not null ? teams[i] : (byte)i;
+            t[players] = Teams.Neutral;
+            teams = t;
+        }
+
+        return new SimSetup(settings.SimSeed, map, total, rules.Sim, rules.RulesHash) { AllowDebug = false, Factions = factions, Teams = teams };
+    }
+
+    /// <summary>The id a save or replay uses for a generated map: <c>gen:BIOME:SIZE:PLAYERS:SEED</c>.</summary>
+    public static string GeneratedMapId(MapGenParams gen) =>
+        $"gen:{MapFile.BiomeKeys[(int)gen.Biome]}:{(int)gen.Size}:{gen.Players}:{gen.Seed}";
+
+    /// <summary>Loads the map the settings name, with its metadata and the id a save records for it.</summary>
+    public static (MapData Map, MapMeta Meta, string MapId) LoadMap(string rulesDir, SkirmishSettings settings)
     {
         if (settings.ResolvedGenerator is { } gen)
         {
-            MapData generated = MapGenerator.Generate(gen);
-            var meta = new MapMeta(MapFile.BiomeKeys[(int)gen.Biome], MapSymmetry.None, players, gen, Array.Empty<MapFeature>());
-            return (generated, meta, $"gen:{MapFile.BiomeKeys[(int)gen.Biome]}:{(int)gen.Size}:{players}:{gen.Seed}");
+            (MapData generated, MapMeta meta) = MapGenerator.GenerateWithMeta(gen);
+            return (generated, meta, GeneratedMapId(gen));
         }
         string file = settings.Map.File!;
         string path = MapPicker.ResolveFile(rulesDir, file);

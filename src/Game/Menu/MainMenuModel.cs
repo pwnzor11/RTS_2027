@@ -13,7 +13,7 @@ public enum MenuAction
     Skirmish,
     /// <summary>LAN game (not built yet).</summary>
     LanGame,
-    /// <summary>Map editor (not built yet).</summary>
+    /// <summary>The map editor.</summary>
     MapEditor,
     /// <summary>List saved replays.</summary>
     Replays,
@@ -50,7 +50,7 @@ public static class MainMenuModel
         new MainMenuEntry(MenuAction.Campaign, "Campaign", true),
         new MainMenuEntry(MenuAction.Skirmish, "Skirmish", true),
         new MainMenuEntry(MenuAction.LanGame, "LAN Game", false, ComingLater),
-        new MainMenuEntry(MenuAction.MapEditor, "Map Editor", false, ComingLater),
+        new MainMenuEntry(MenuAction.MapEditor, "Map Editor", true),
         new MainMenuEntry(MenuAction.Replays, "Replays", true),
         new MainMenuEntry(MenuAction.Archive, "Archive", true),
         new MainMenuEntry(MenuAction.HowToPlay, "How to Play", true),

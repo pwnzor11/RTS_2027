@@ -31,6 +31,19 @@ public static class SpectatorSetup
         return game;
     }
 
+    /// <summary>
+    /// Creates the all-AI game of settings that have no Human slot (M4-INT2): 2 to 4 AIs, each with its slot's tier, faction and team.
+    /// </summary>
+    /// <param name="rulesDir">The data/rules directory.</param>
+    /// <param name="settings">Settings whose slots are all AI or Closed.</param>
+    /// <exception cref="InvalidOperationException">A slot is Human, or the settings cannot start a game.</exception>
+    public static SkirmishGame Create(string rulesDir, Screens.SkirmishSettings settings)
+    {
+        ArgumentNullException.ThrowIfNull(settings);
+        if (!settings.IsSpectator) throw new InvalidOperationException("A spectator game has no Human slot.");
+        return SkirmishGame.Create(rulesDir, settings);
+    }
+
     /// <summary>A headless spectator host over <paramref name="game"/>: AIs attached, <see cref="SimHost.Spectator"/> set, full vision.</summary>
     public static SimHost CreateHost(SkirmishGame game)
     {

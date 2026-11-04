@@ -57,9 +57,9 @@ public static class GameLoader
     private static LoadedGame LoadSkirmish(Stream input, GameSaveHeader header, RuleSet rules, string rulesDir, string dataDir)
     {
         Screens.SkirmishSettings settings = header.Skirmish ?? throw new SaveLoadException("The save is damaged (no skirmish setup).");
-        MapData map = ResolveMap(header.MapId, dataDir);
-        ulong simSeed = settings.MapSeed == 0 ? SkirmishGame.CuratedSimSeed : settings.MapSeed;
-        var setup = new SimSetup(simSeed, map, 2, rules.Sim, rules.RulesHash) { AllowDebug = false, Factions = settings.Factions };
+        (MapData map, MapMeta meta) = ResolveMapWithMeta(header.MapId, dataDir, settings);
+        // The same setup the new game was built with (players, neutral slot, teams, factions), whatever the player count.
+        SimSetup setup = SkirmishGame.MakeSetup(rules, settings, map, meta);
         Simulation sim = Simulation.Load(input, setup);
         AiDriver? ai = BuildAi(rulesDir, header.Ai);
         return new LoadedGame(header, sim, map, ai, null, rulesDir, header.Ai.Count > 0 ? AiNote : "");
@@ -81,8 +81,14 @@ public static class GameLoader
         return new LoadedGame(header, sim, map, ai, host, rulesDir, header.Ai.Count > 0 ? AiNote : "");
     }
 
-    /// <summary>The map a save names (<c>file:NAME</c> under data/maps, or <c>generated:SIZE:SEED</c>).</summary>
-    public static MapData ResolveMap(string mapId, string dataDir)
+    /// <summary>The map a save names (<c>file:NAME</c> or <c>user:PATH</c>, <c>gen:BIOME:SIZE:PLAYERS:SEED</c>, or the old <c>generated:SIZE:SEED</c>).</summary>
+    public static MapData ResolveMap(string mapId, string dataDir) => ResolveMapWithMeta(mapId, dataDir, null).Map;
+
+    /// <summary>
+    /// As <see cref="ResolveMap"/>, with the map's metadata (the generator's for a <c>gen:</c> map). When <paramref name="settings"/> is given
+    /// its generator parameters win over the id for a generated map, so a custom map name is kept.
+    /// </summary>
+    public static (MapData Map, MapMeta Meta) ResolveMapWithMeta(string mapId, string dataDir, Screens.SkirmishSettings? settings)
     {
         if (mapId.StartsWith("file:", StringComparison.Ordinal))
         {
@@ -90,12 +96,45 @@ public static class GameLoader
             if (name.Length == 0 || name != Path.GetFileName(name)) throw new SaveLoadException("The save names an invalid map file.");
             string path = Path.Combine(dataDir, "maps", name);
             if (!File.Exists(path)) throw new SaveLoadException($"The map '{name}' this save was made on is not in this game's data.");
-            return MapFile.Load(path);
+            return LoadFile(path);
+        }
+        if (mapId.StartsWith("user:", StringComparison.Ordinal))
+        {
+            string file = mapId[5..];
+            if (file.Length == 0) throw new SaveLoadException("The save names an invalid map file.");
+            // A rooted path is the player's own map; a bare name is looked for in data/maps.
+            string path = Path.IsPathRooted(file) ? file : Path.Combine(dataDir, "maps", Path.GetFileName(file));
+            if (!File.Exists(path)) throw new SaveLoadException($"The map '{Path.GetFileName(file)}' this save was made on is no longer there.");
+            return LoadFile(path);
         }
         string[] parts = mapId.Split(':');
-        if (parts.Length == 3 && parts[0] == "generated" && int.TryParse(parts[1], out int size) && ulong.TryParse(parts[2], out ulong seed))
-            return MapGenerator.Generate(size, seed);
+        if (parts.Length == 5 && parts[0] == "gen")
+        {
+            int biome = Array.IndexOf(MapFile.BiomeKeys, parts[1]);
+            if (biome >= 0 && int.TryParse(parts[2], out int size) && Enum.IsDefined((MapSize)size) &&
+                int.TryParse(parts[3], out int players) && ulong.TryParse(parts[4], out ulong seed))
+            {
+                var gen = new MapGenParams((Biome)biome, (MapSize)size, players, seed);
+                if (settings?.ResolvedGenerator is { } own && SkirmishGame.GeneratedMapId(own) == mapId) gen = own;
+                try { return MapGenerator.GenerateWithMeta(gen); }
+                catch (Exception e) when (e is InvalidOperationException or ArgumentException)
+                {
+                    throw new SaveLoadException("The generated map of this save could not be rebuilt: " + e.Message, e);
+                }
+            }
+        }
+        if (parts.Length == 3 && parts[0] == "generated" && int.TryParse(parts[1], out int oldSize) && ulong.TryParse(parts[2], out ulong oldSeed))
+        {
+            MapData old = MapGenerator.Generate(oldSize, oldSeed);
+            return (old, MapMeta.DefaultFor(old));
+        }
         throw new SaveLoadException($"The save names a map this game does not know ('{mapId}').");
+    }
+
+    private static (MapData Map, MapMeta Meta) LoadFile(string path)
+    {
+        try { return MapFile.LoadWithMeta(path); }
+        catch (MapFileException e) { throw new SaveLoadException("The map of this save could not be read: " + e.Message, e); }
     }
 
     private static AiDriver? BuildAi(string rulesDir, IReadOnlyList<SavedAi> slots)

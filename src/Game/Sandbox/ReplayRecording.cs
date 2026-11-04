@@ -44,6 +44,9 @@ public sealed class ReplayRecording : IDisposable
         }
     }
 
+    /// <summary>The full path of the replay file this recording writes.</summary>
+    public string FilePath => _path;
+
     /// <summary>Records a command at the moment it is queued, so the replay carries exactly what the sim saw.</summary>
     public void RecordCommand(Command command) => Guard(() => _writer?.RecordCommand(command));
 
