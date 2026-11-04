@@ -146,7 +146,7 @@ Main menu → Map Editor.
 - [x] M4-13 Map editor + main menu entry
 - [x] M4-14 RulesOf sweep
 - [x] M4-15 Neutral map features (ruins)
-- [ ] M4-16 Integration + balance. Session 6 (PR #11): start-bias sim fixes + `ai match` per-game seeds (D-104); AI round 1 (D-105:
+- [ ] M4-16 Integration + balance. Session 7: round-2 re-measure in docs/balance/m4_16_round2.md (ladder flat or inverted, not met). Session 6 (PR #11): start-bias sim fixes + `ai match` per-game seeds (D-104); AI round 1 (D-105:
   finish won games, 4-player targeting; tech hold off); rules garrison counters + Seismic Mortar (D-105); Faction.Neutral (D-100);
   8× spectator benchmark (headless 1 000 ticks/s, fine). **Still open:** re-measure the tier ladder (target ≥ 60 %), cross-faction,
   Directorate veteran mirror and 4-player matrix on the fixed starts; mirror-symmetric AI placement + seeded placement variation
