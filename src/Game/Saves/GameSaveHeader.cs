@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
+using Rts.Data;
 using Rts.Game.Screens;
 using Rts.Sim.Core;
 using Rts.Sim.Rules;
@@ -12,8 +13,8 @@ namespace Rts.Game.Saves;
 /// </summary>
 public sealed record GameSaveHeader
 {
-    /// <summary>The header version this build writes and reads. Bump it when the layout changes; older versions are refused with a clear message.</summary>
-    public const int CurrentVersion = 1;
+    /// <summary>The header version this build writes and reads. Bump it when the layout changes. Version 1 (two-player skirmish settings) is still read; M4-11 wrote version 2 (map choice, 2 to 4 slots).</summary>
+    public const int CurrentVersion = 2;
 
     /// <summary>Header version of this save.</summary>
     public int Version { get; init; } = CurrentVersion;
@@ -82,11 +83,7 @@ public sealed record GameSaveHeader
         w.Write(Skirmish is not null);
         if (Skirmish is { } s)
         {
-            w.Write(s.MapSeed);
-            w.Write(s.AiTier);
-            w.Write(s.PlayerColour);
-            w.Write((byte)s.PlayerFaction);
-            w.Write((byte)s.AiFaction);
+            WriteSettings(w, s);
         }
         w.Write((byte)Ai.Count);
         foreach (SavedAi a in Ai)
@@ -133,12 +130,7 @@ public sealed record GameSaveHeader
         SkirmishSettings? skirmish = null;
         if (r.ReadBoolean())
         {
-            ulong seed = r.ReadUInt64();
-            int tier = r.ReadInt32();
-            int colour = r.ReadInt32();
-            var pf = (Faction)r.ReadByte();
-            var af = (Faction)r.ReadByte();
-            skirmish = new SkirmishSettings(seed, tier, colour, pf, af);
+            skirmish = version >= 2 ? ReadSettings(r) : ReadSettingsV1(r);
         }
         int aiCount = r.ReadByte();
         var ai = new List<SavedAi>(aiCount);
@@ -166,5 +158,70 @@ public sealed record GameSaveHeader
             Version = version, Mode = mode, MapId = mapId, MapName = mapName, RulesHash = rulesHash, LocalPlayer = local, Tick = tick,
             MissionId = missionId, ScriptHash = scriptHash, Build = build, Skirmish = skirmish, Ai = ai, Pending = pending, Sequences = sequences,
         };
+    }
+
+    // Header version 2 skirmish settings: map choice (file or generator parameters), sim seed, then the slots.
+    private static void WriteSettings(BinaryWriter w, SkirmishSettings s)
+    {
+        if (s.Map.File is { } file)
+        {
+            w.Write((byte)0);
+            w.Write(file);
+        }
+        else
+        {
+            MapGenParams g = s.Map.Generated ?? throw new InvalidOperationException("The skirmish settings name no map.");
+            w.Write((byte)1);
+            w.Write((byte)g.Biome);
+            w.Write((byte)g.Size);
+            w.Write(g.Players);
+            w.Write(g.Seed);
+            w.Write(g.Name is not null);
+            if (g.Name is not null) w.Write(g.Name);
+        }
+        w.Write(s.SimSeed);
+        w.Write((byte)s.Slots.Count);
+        foreach (SkirmishSlot slot in s.Slots)
+        {
+            w.Write((byte)slot.Kind);
+            w.Write((byte)slot.Faction);
+            w.Write(slot.AiTier);
+            w.Write(slot.Colour);
+            w.Write(slot.Team);
+        }
+    }
+
+    private static SkirmishSettings ReadSettings(BinaryReader r)
+    {
+        byte mapKind = r.ReadByte();
+        MapChoice map;
+        if (mapKind == 0) map = new MapChoice(r.ReadString(), null);
+        else if (mapKind == 1)
+        {
+            var biome = (Biome)r.ReadByte();
+            var size = (MapSize)r.ReadByte();
+            int players = r.ReadInt32();
+            ulong seed = r.ReadUInt64();
+            string? name = r.ReadBoolean() ? r.ReadString() : null;
+            map = new MapChoice(null, new MapGenParams(biome, size, players, seed, name));
+        }
+        else throw new InvalidDataException($"unknown skirmish map kind {mapKind}");
+        ulong simSeed = r.ReadUInt64();
+        int count = r.ReadByte();
+        if (count < 1 || count > SkirmishSettings.MaxSlots) throw new InvalidDataException($"bad skirmish slot count {count}");
+        var slots = new List<SkirmishSlot>(count);
+        for (int i = 0; i < count; i++)
+            slots.Add(new SkirmishSlot((SlotKind)r.ReadByte(), (Faction)r.ReadByte(), r.ReadInt32(), r.ReadInt32(), r.ReadInt32()));
+        return new SkirmishSettings(map, slots, simSeed);
+    }
+
+    private static SkirmishSettings ReadSettingsV1(BinaryReader r)
+    {
+        ulong seed = r.ReadUInt64();
+        int tier = r.ReadInt32();
+        int colour = r.ReadInt32();
+        var pf = (Faction)r.ReadByte();
+        var af = (Faction)r.ReadByte();
+        return new SkirmishSettings(seed, tier, colour, pf, af);
     }
 }
