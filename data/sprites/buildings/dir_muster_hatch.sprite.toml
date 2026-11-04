@@ -9,6 +9,10 @@ frame_h = 220
 origin_x = 0
 origin_y = 76
 
+# House paint is the 8-shade magenta ramp, darkest first (HouseRamp.Standard). Exact RGB matches are house pixels.
+[house]
+ramp = ["#400040", "#5B125B", "#772577", "#923792", "#AD49AD", "#C85BC8", "#E46EE4", "#FF80FF"]
+
 [[state]]
 name = "idle"
 facings = 1

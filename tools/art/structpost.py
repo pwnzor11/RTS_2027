@@ -105,13 +105,17 @@ def write_toml(path, mod, sheet_name):
         f"origin_x = {ox}",
         f"origin_y = {oy}",
         "",
+        "# House paint is the 8-shade magenta ramp, darkest first (HouseRamp.Standard). Exact RGB matches are house pixels.",
+        "[house]",
+        'ramp = ["#400040", "#5B125B", "#772577", "#923792", "#AD49AD", "#C85BC8", "#E46EE4", "#FF80FF"]',
+        "",
     ]
     first = 0
     for name, n, tpf in mod.STATES:
         lines += ["[[state]]", f'name = "{name}"', "facings = 1", f"frames = {n}", f"first = {first}", f"ticks_per_frame = {tpf}", ""]
         first += n
-    for fx in getattr(mod, "FX", []):   # optional effect anchors (D-069): drawn by the game, not baked
-        lines += ["[[fx]]", f'state = "{fx["state"]}"', f'kind = "{fx["kind"]}"', f'x = {fx["x"]}', f'y = {fx["y"]}',
+    for fx in getattr(mod, "FX", []):   # optional effect anchors (D-069): drawn by the game, not baked; kept inside the frame (the game rejects others)
+        lines += ["[[fx]]", f'state = "{fx["state"]}"', f'kind = "{fx["kind"]}"', f'x = {min(max(fx["x"], 0), fw)}', f'y = {min(max(fx["y"], 0), fh)}',
                   f'phase = {fx.get("phase", 0)}', ""]
     open(path, "w").write("\n".join(lines))
 
