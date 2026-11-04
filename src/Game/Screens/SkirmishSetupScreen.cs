@@ -199,7 +199,8 @@ public sealed class SkirmishSetupScreen : IScreen
             int slot = i;
             rows.Add(new(() => SlotText(slot), null, d => StepKind(slot, d),
                 new MenuButton("Kind", () => StepKind(slot, 1)), new MenuButton("Fac", () => StepSlotFaction(slot)),
-                new MenuButton("Tier", () => StepSlotTier(slot)), new MenuButton("Team", () => StepSlotTeam(slot)),
+                new MenuButton("Tier", () => StepSlotTier(slot)), new MenuButton("Cmdr", () => ToggleSlotCommander(slot)),
+                new MenuButton("Team", () => StepSlotTeam(slot)),
                 new MenuButton("Col", () => StepSlotColour(slot))));
         }
 
@@ -222,23 +223,36 @@ public sealed class SkirmishSetupScreen : IScreen
         return $"Size: {MapPicker.SizeName(_size)} {cells}x{cells}{tight}";
     }
 
-    private string HintText() => IsSpectate ? "(no Human slot: you will watch)" : "(Kind Fac Tier Team Col cycle each choice)";
+    private string HintText() => IsSpectate ? "(no Human slot: you will watch)" : "(Kind Fac Tier Cmdr Team Col cycle each choice)";
 
     private string SlotText(int i)
     {
         SkirmishSlot x = _slots[i];
-        return SlotLabel(x, i, _tierNames);
+        string label = SlotLabel(x, i, _tierNames);
+        return x.Kind == SlotKind.Ai && x.Commander && !HasCommanderKey(_s.Settings) ? label + " " + SetupText.NoKeyHint : label;
     }
+
+    /// <summary>True when an LLM provider is chosen in the settings and a key is stored (<see cref="Rts.Game.Ui.Llm.LlmHooks.SecretStore"/>).</summary>
+    public static bool HasCommanderKey(Settings settings) =>
+        settings.ProviderKind != Rts.Llm.LlmProviderKind.None && !string.IsNullOrEmpty(Rts.Game.Ui.Llm.LlmHooks.SecretStore.Load());
+
+    /// <summary>The slot with its Commander flag flipped; Human and Closed slots come back unchanged.</summary>
+    public static SkirmishSlot ToggleCommander(SkirmishSlot slot) =>
+        slot.Kind == SlotKind.Ai ? slot with { Commander = !slot.Commander } : slot;
+
+    private void ToggleSlotCommander(int i) => _slots[i] = ToggleCommander(_slots[i]);
 
     /// <summary>The row text of a slot: "1 Human Authority T1", "2 AI Directorate tier 3 Veteran T2", "3 Closed".</summary>
     public static string SlotLabel(SkirmishSlot slot, int index, IReadOnlyList<string> tierNames)
     {
         string head = $"{index + 1} ";
+        string tier = tierNames[Math.Clamp(slot.AiTier, 1, tierNames.Count) - 1];
+        if (slot.Commander) tier = SetupText.CommanderLabel + " " + tier;
         return slot.Kind switch
         {
             SlotKind.Closed => head + "Closed",
             SlotKind.Human => $"{head}Human {FactionName(slot.Faction)} T{slot.Team + 1}",
-            _ => $"{head}AI {tierNames[Math.Clamp(slot.AiTier, 1, tierNames.Count) - 1]} {FactionName(slot.Faction)} T{slot.Team + 1}",
+            _ => $"{head}AI {tier} {FactionName(slot.Faction)} T{slot.Team + 1}",
         };
     }
 

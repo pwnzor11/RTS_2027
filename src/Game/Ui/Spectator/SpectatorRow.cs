@@ -20,5 +20,6 @@ namespace Rts.Game.Ui.Spectator;
 /// <param name="Stats">The counters of the "stats" part (<c>Simulation.StatsOf</c>), unchanged.</param>
 /// <param name="Upgrades">Upgrades researched.</param>
 /// <param name="Defeated">True once the player is defeated (drawn greyed out).</param>
+/// <param name="Commander">M5: the player is led by the LLM commander (shown as "LLM" next to the name).</param>
 public sealed record SpectatorRow(int Player, int Team, Faction Faction, int Tier, int Cash, int Stored, int IncomePerMinute,
-    int ArmyValue, int Structures, int PowerOut, int PowerUse, PlayerStats Stats, int Upgrades, bool Defeated);
+    int ArmyValue, int Structures, int PowerOut, int PowerUse, PlayerStats Stats, int Upgrades, bool Defeated, bool Commander = false);

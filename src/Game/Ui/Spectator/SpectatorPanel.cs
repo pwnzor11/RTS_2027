@@ -31,6 +31,9 @@ public sealed class SpectatorPanel
     /// <summary>Top-left corner of the strip in screen pixels; the screen sets it each frame (below its own HUD).</summary>
     public Point Origin { get; set; } = new(8, 8);
 
+    /// <summary>M5: per sim player, true when an LLM commander leads it (see <see cref="SpectatorSetup.CommandersOf"/>); the game screen sets it.</summary>
+    public IReadOnlyList<bool>? Commanders { get; set; }
+
     /// <summary>The rows as of the last <see cref="Update"/>.</summary>
     public IReadOnlyList<SpectatorRow> Rows => _rows;
 
@@ -40,7 +43,7 @@ public sealed class SpectatorPanel
         if (sim.Tick == _rowsTick) return;
         _rowsTick = sim.Tick;
         _income.Observe(sim);
-        _rows = SpectatorTable.Collect(sim, _income);
+        _rows = SpectatorTable.Collect(sim, _income, Commanders);
     }
 
     /// <summary>The screen rectangle of the strip, so clicks on it never reach the map.</summary>
