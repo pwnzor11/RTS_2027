@@ -135,3 +135,22 @@ rejected (D-094). Nothing here has been seen on a real screen yet.
     The Archive unlocks entries for what you see.
 12. **Headless AI check (optional):** `dotnet run -c Release --project src/Tools -- ai matrix --players 4 --size 64 --seeds 1 --tiers 3 --faction mixed`.
 13. **Look at the art notes** in HANDOFF ("Waiting on the user").
+
+## Session 6 · M4-16 round 1, M3-21, Neutral, M5 settings (2026-11-04)
+Pull main (PR #11). Saves from session 5 builds still load; their AI starts fresh.
+1. **AI keeps its memory on load:** play a skirmish against a tier-2+ AI for a few minutes, save, load. The load note reads
+   "The computer players carry on from where they were." and the AI carries on with its build order and waves.
+2. **Turret facing:** fire a turreted tank at something off to its side; the turret turns independently of the hull.
+3. **Dive marker:** order a Directorate burrower across soft ground; a dashed ring closes in on it while it dives.
+4. **Gate open state:** drive one of your units into your own gate: a green wash and opening bar appear (placeholder until the
+   open-gate art, ART-S6).
+5. **Sunrise:** when it finishes charging the HUD shows "<name> READY - click it, then pick a target" and the button pulses
+   gold; click it and move the cursor: the blast circle follows.
+6. **Garrisons:** a filled Blockhouse/Redoubt holds against plain infantry but falls to Sappers, a Seismic Mortar or one tank.
+7. **Neutral ruins:** idle units next to an empty ruin never shoot it; you can still order an attack on it by hand; the setup
+   screen never offers "Neutral" as a faction.
+8. **LLM settings:** Settings → "AI commander (LLM)..." → pick a provider, "Set API key..." (masked) → the page shows
+   "key set"; "Test connection" answers "not wired yet" (wired in M5-05). Close the game: `%APPDATA%\RTS_2027\settings.toml`
+   has `llm_` lines and no key; `llm.key` is binary.
+9. **Start corners (optional, tools):** `Tools ai match --a tiered:3 --b tiered:3 --faction-a authority --faction-b authority
+   --seeds 8 --ticks 25000 --size 56` prints "Wins by start corner: …" — roughly even is the target.

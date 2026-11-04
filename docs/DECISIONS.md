@@ -733,3 +733,58 @@ Sunrise blast radius 5 cells, 700 damage, enemies are not told a superweapon is 
 ### D-098 · 2026-11-04 · M4 landed
 **Decision:** M4-01..M4-15 except M4-12 landed on main (7696ca2, PR #9; restore `restore/pre-m4-land`). M4-12 AI follows in PR #10.
 **Status:** confirmed (owner said land when CI is green)
+
+### D-099 · 2026-11-04 · Session 6 owner confirmations
+**Decision:** D-089 (Q-34) and D-095 (Q-36, M4 plan answers and theater colours) are confirmed. D-091 art is accepted, with the
+lead's reworks to do (Seismograph drum, Searchlight lens, Assembly Bore roof, Hatch cage, auth_gate open state). Q-35: (a) one
+radiation-green ramp in PAL_DIR, used only for radiation.
+**Status:** confirmed (owner, session 6)
+
+### D-100 · 2026-11-04 · Neutral faction (Q-37)
+**Decision:** Option A: `Faction.Neutral = 2` (append-only) is the passive owner of ruins and map features. It is not playable,
+neutral types cannot be built or produced, and nothing auto-targets neutral-owned buildings; the first player to garrison one
+takes it. Manual Attack orders on empty ruins stay allowed (D-054).
+**Status:** confirmed (owner, session 6)
+
+### D-101 · 2026-11-04 · Lore approvals
+**Decision:** Approved: the M4 Archive entries (data/archive), docs/lore/left_behind.md, docs/lore/expedition.md (Q-38) and
+docs/lore/leaders.md (Q-M5-c). world_history, authority, structures, units, directorate and upgrades .md still carry a DRAFT
+banner (Q-41).
+**Status:** confirmed (owner, session 6)
+
+### D-102 · 2026-11-04 · M6 Left Behind design answers (Q-39)
+**Decision:** All recommendations in docs/design/06_left_behind.md §10: a packed rig cannot produce; wrecks last 60 s and are
+visible to all; air roster Rotor + Kite; superweapon The Second Drift; no tunnel interaction; campaign role decided later.
+**Status:** confirmed (owner, session 6)
+
+### D-103 · 2026-11-04 · M5 LLM commander plan
+**Decision:** docs/design/09_m5_plan.md is the plan. Providers: Anthropic and OpenAI-compatible. One strategy decision every
+30 s of game time, delivered as a `Directive` command so replays and lockstep stay deterministic. In-character chat on by default.
+No cheating: the summary uses only PlayerView. Default model cheap/fast, a stronger one selectable. API key in a DPAPI-encrypted
+file `%APPDATA%/RTS_2027/llm.key`, never in settings, logs, saves or replays. Call cap 120 per game. The player may chat to enemy
+commanders; flavour only. Contracts: src/Llm/Contracts.cs.
+**Status:** confirmed (owner, session 6)
+
+### D-104 · 2026-11-04 · Start bias (M4-16)
+**Decision:** The sim's start-0 advantages are fixed: regrowth order, harvest and exit tie-breaks, oriented exits and docks,
+centre-most spawn sub-slots (docs/balance/m4_16_start_bias.md). `ai match` gives each game of a pair its own game seed (the two
+games used to be one mirrored game counted twice). Mirror-symmetric AI building placement was tried and reverted: identical AIs on
+mirror bases stalemate (ADirectorateMirrorAtVeteranDoesNotFreeze); revisit with seeded placement variation.
+**Status:** confirmed (lead)
+
+### D-105 · 2026-11-04 · M4-16 round 1 balance
+**Decision:** AI (tier 2+): finish won games (ahead = ≥ 8 units and ≥ 150 % of the enemy army seen in 1 200 ticks; stage 6 cells,
+timeout 600 ticks, hit production first); 4-player target review 300 ticks, weakest-first weight 3, regroup at 60 % on maps ≥ 80
+cells. Tech hold coded but off (`TierPlanner.TechHoldEnabled`). Rules: garrison_damage_percent 25 → 50 for dir_ash,
+dir_demolition, auth_seismic; Seismic Mortar damage 20 → 28. The tier ladder target is not met yet (docs/balance/m4_16_ai.md).
+**Status:** assumed — confirm (owner play-test; re-measure next session)
+
+### D-106 · 2026-11-04 · M3-21 choices
+**Decision:** A gate counts as open while a unit of its owner's team stands in its footprint (no new sim state, D-076). Saves
+are header v3 with each AI's state; v1/v2 saves still load with a fresh AI. The Sunrise ready message uses the placeholder text
+key `hud.superweapon.ready` until there is a string table.
+**Status:** confirmed (lead)
+
+### D-107 · 2026-11-04 · Session 6 landed
+**Decision:** Session 6 work landed on main (55a3a27) after Windows CI on PR #11; restore branch `restore/pre-session6`.
+**Status:** confirmed (owner said land when CI is green)

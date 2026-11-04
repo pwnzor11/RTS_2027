@@ -106,6 +106,8 @@ Both factions, full tech tree, map editor, real AI with difficulty levels, audio
 - [x] M3-07 Directorate + Authority-counter data
 - [x] M3-08 Game: faction pick and new renderers
 - [x] M3-09 Audio host, SFX generator, music player and brief
+- [ ] ART-S6 Session-5 art to main once the owner pushes the session-5 bundle (D-084); owner reworks (D-099): Seismograph drum,
+  Searchlight lens, Assembly Bore roof, Hatch cage, auth_gate open state; one radiation-green ramp in PAL_DIR for the rad mortar (Q-35)
 - [x] M3-ART Art fan-out (session 5, lead-reviewed per D-088/D-091; owner review pending): turret rework + dir_shaft rev 2 owner-approved; 14 Directorate structures, auth_seismograph/searchlight/gate/engineering, agitprop turret, Sunrise, rad mortar rev 2. Art is on local `integ-art` until the owner runs push_art.ps1 (D-084). Effects art not done → M10
 - [x] M3-10 Directorate AI (Recruit tier; 4 test games vs Authority all draws; one racy test skipped → fix in M3-11)
 - [x] M3-11 AI tiers 2–5 (session 5)
@@ -120,7 +122,7 @@ Both factions, full tech tree, map editor, real AI with difficulty levels, audio
   Continue/Load work; a replay viewer behind Replays; UI sound ids (ui_move/ui_select/ui_back/ui_deny) in sounds.toml;
   check building manifests' [house] ramps (menu needed HouseRamp.Standard)
 - [x] M3-19 Mission replays (D-092) (record mission id + script hash; replay re-runs the script; ReplayPlayer hook for PlaceInitialActors)
-- [ ] M3-21 Follow-ups found in session 5: turret facing drawn in the view, dive flag in the view, Sunrise blast radius in the view, AI save/restore (AI restarts fresh after load, D-093), gate open/closed state + auth_gate open art, Sunrise ready state
+- [x] M3-21 Follow-ups found in session 5 (done session 6, PR #11; open-gate ART still placeholder → ART-S6): turret facing drawn in the view, dive flag in the view, Sunrise blast radius in the view, AI save/restore (AI restarts fresh after load, D-093), gate open/closed state + auth_gate open art, Sunrise ready state
 - [x] M3-INT Wave-1 integration gaps (underground vision, Blackout fog, jam/seismic emitter cache, air vs placement, engineer right-click, audio listener + select sound, CREDITS)
 
 ## M4 · Skirmish depth (D-087)
@@ -144,11 +146,27 @@ Main menu → Map Editor.
 - [x] M4-13 Map editor + main menu entry
 - [x] M4-14 RulesOf sweep
 - [x] M4-15 Neutral map features (ruins)
-- [ ] M4-16 Integration + balance: tier timings (higher tiers still lose to lower), start-0 advantage on 2-player generated maps (2–11×, not an AI effect), 4-player matrix on the real generator, garrison bonus, foam/mortar vs tunnels, 8× spectator performance, Directorate veteran mirror grinding (1/8 decisive), AI use of engineers/transports, neutral faction enum (`neu_*` default to Authority), lore drafts for the new types
+- [ ] M4-16 Integration + balance. Session 6 (PR #11): start-bias sim fixes + `ai match` per-game seeds (D-104); AI round 1 (D-105:
+  finish won games, 4-player targeting; tech hold off); rules garrison counters + Seismic Mortar (D-105); Faction.Neutral (D-100);
+  8× spectator benchmark (headless 1 000 ticks/s, fine). **Still open:** re-measure the tier ladder (target ≥ 60 %), cross-faction,
+  Directorate veteran mirror and 4-player matrix on the fixed starts; mirror-symmetric AI placement + seeded placement variation
+  (reverted, stalemates mirrors); tier-cost proposal (Q-43); foam area (Q-42); AI use of engineers/transports; per-tick snapshot
+  allocations; walking sub-slot handover and NW-first `Simulation.Spread` (residual asymmetries)
 
 ## M5 · LLM commander (D-087)
 Built-in AI does micro; an LLM sets strategy every 10–30 s and talks in character as a faction leader. API key in Settings
-(Anthropic or OpenAI-compatible), local only. LLM-vs-LLM spectating.
+(Anthropic or OpenAI-compatible), local only. LLM-vs-LLM spectating. Plan: docs/design/09_m5_plan.md (approved, D-103).
+- [x] M5-00 src/Llm project + contracts (src/Llm/Contracts.cs)
+- [ ] M5-01 Sim contracts: CommandKind.Directive = 23, directive state part + hash, PlayerView.Directive, pack/unpack
+- [ ] M5-02 DirectiveBias in the tiered AI
+- [x] M5-03 Providers (Anthropic, OpenAI-compatible), fake provider, reply parser
+- [x] M5-04 Fog-honest battlefield summary + SummaryHistory
+- [ ] M5-05 Commander loop: 30 s cadence, apply-at-tick, drop stale, fallback to plain tier; wire LlmHooks.TestConnection
+- [ ] M5-06 Personas from docs/lore/leaders.md (data/llm/*.toml)
+- [ ] M5-07 Chat panel + player→commander chat (talkback, flavour only)
+- [x] M5-08 LLM settings, DPAPI key store, settings page (model names placeholder → Q-40)
+- [ ] M5-09 Setup + spectator: LLM kind per slot, LLM-vs-LLM
+- [ ] M5-10 Replay/save tests with recorded directives; owner play-test
 
 ## M6 · The Left Behind (D-087)
 Third faction: Glass Coast evacuees abandoned in 1990; nomadic scavengers, mobile crawler-rig bases, salvaged tech, raids.

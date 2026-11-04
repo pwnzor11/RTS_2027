@@ -101,3 +101,21 @@ the already-merged M3-16 menu (stopped). One helper created a one-shot "check" s
 once, harmless). M4-12 worked on an older base without the M4-02 generator, so its 4-player numbers used a stand-in map.
 **User check:** USER_CHECKS.md, "Session 5 · M3 finished + M4 skirmish depth".
 **Next session should:** see HANDOFF (owner review + art push, M4-16 balance, M3-21, then M5 LLM commander / M6 contracts).
+
+## Session 6 · 2026-11-04 (attended; owner answering from a phone)
+**Goal:** owner review and art push, M4-16 balance, M3-21 follow-ups, then M5 LLM commander foundations.
+**Done:** owner answered every open question (D-099..D-103). M4-16 round 1: five start-bias sim fixes and per-game seeds in
+`ai match` (D-104), AI finish-won-games + 4-player targeting with the tech hold off, garrison counters 50 % and Seismic Mortar 28
+(D-105), 8× spectator benchmark. M3-21 done (D-106; AI state in saves, header v3). Faction.Neutral (D-100). Lore approvals
+(D-101). M5 plan approved (09_m5_plan.md) and M5-00/03/04/08 built: src/Llm with contracts, providers, reply parser,
+fog-honest summary, LLM settings page and DPAPI key store. Landed on main via PR #11 after Windows CI (D-107).
+**Commits:** 6624e50..55a3a27 on main (PR #11) + this handoff.
+**Helpers:** 11 launches (Opus 1: start bias; Sonnet 9; Haiku 1: lore). Lead finished the M4-16b AI package (committed, added the
+new AI fields to the save snapshot, merged).
+**Problems / notes:** the art is still not on GitHub: the owner re-ran the session-4 `_art_push`; only art_objects.tar (session 5)
+reached the RTS_2027 folder, rts_art.bundle and the session-5 push_art.ps1 are still missing. Remote branch deletion and a
+Downloads folder request were blocked by the session's safety checks (owner deletes old branches on GitHub). Helpers were
+repeatedly cut off mid-task while queued on the dotnet lock; several handed back uncommitted work and needed a resume. The
+mirror-symmetric AI placement patch made AI mirrors stalemate and was reverted (D-104). The full suite moved to 1 997 tests.
+**User check:** USER_CHECKS.md, "Session 6 · M4-16 round 1, M3-21, Neutral, M5 settings".
+**Next session should:** see HANDOFF (art push + reworks, M5-01/02/05 sim wiring, AI re-measure).

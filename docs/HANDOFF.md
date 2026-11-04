@@ -1,37 +1,39 @@
-# Handoff: Session 6 — owner review, art push, M4-16 balance, M3-21 follow-ups, then M5 / M6
-Last commit: 7696ca2 on main (M4); PR #10 (M4-12 AI, integ-m4 5b26fb6) + this handoff commit — see below (2026-11-04)
-Where things stand: M3 is complete and on main (PR #7, #8). M4-01..M4-15 are on main (PR #9): procedural maps (4 biomes ×
-S/M/L, 2–4 players), garrisons, three-tier tech + 13 upgrades, +14 Authority / +7 Directorate types, spectator, setup v2,
-map editor, theaters, neutral ruins. M4-12 (AI for 2–4 players, tier climbing, garrisons, stall fixes) is in PR #10 with
-this handoff, landed if Windows CI was green. Session-5 art (14 Directorate structures, 4 Authority structures, agitprop
-turret, Sunrise, rad mortar rev 2) is on local `integ-art` only; it reaches GitHub when the owner runs push_art.ps1.
-Every guessed value is marked ASSUMED (D-089, D-095). Decisions D-091..D-098.
+# Handoff: Session 7 — art push + reworks, M5 sim wiring (M5-01/02/05), AI re-measure
+Last commit: 55a3a27 on main (PR #11) + this handoff commit (2026-11-04)
+Where things stand: M3 complete; M4-01..M4-15 done; M4-16 round 1 landed (start-bias sim fixes, AI round 1, rules garrison
+counters, Neutral faction, 8× benchmark) but the AI tier ladder is not re-measured on the fixed starts yet. M3-21 done. M5 plan
+approved (D-103) and M5-00/03/04/08 are on main: src/Llm (contracts, providers, reply parser, fog-honest summary), the LLM
+settings page and DPAPI key store; nothing is wired into a game yet. Session-5 art is still NOT on GitHub (see Waiting on the user).
+Full suite 1 997 tests, green on Linux and Windows CI. Decisions D-099..D-107.
 
 ## Start here (shown to the user as the plan; nothing starts until they say go)
-1. Owner: run push_art.ps1 (USER_CHECKS session 5, item 1), then say "art pushed"; lead merges `integ-art` into main
-   through a PR (LFS objects are then on GitHub, so CI can check out sprites).
-2. Owner review: the art notes below, Q-35..Q-39, the USER_CHECKS session 5 list, the [DRAFT] lore.
-3. M4-16 integration + balance (ROADMAP): start-0 advantage on 2-player generated maps (2–11×, check map/sim first),
-   higher tiers losing to lower ones, rerun the 4-player matrix on the real generator, Directorate veteran mirror
-   grinding, garrison bonus, foam vs tunnels, 8× spectator performance, neutral faction (Q-37).
-4. M3-21 follow-ups: turret facing, dive flag and Sunrise blast radius in the view, AI save/restore, gate open state +
-   open-gate art, Sunrise ready state.
-5. Then M5 LLM commander contracts (key only in local settings, never logged) or M6 Left Behind contracts after Q-39.
+1. Art: once the owner has put `rts_art.bundle` + the session-5 `push_art.ps1` in the RTS_2027 folder and run it, check that
+   `integ-art` is on GitHub, merge it into main through a PR (CI checks sprites), then ART-S6: reworks (Seismograph drum,
+   Searchlight lens, Assembly Bore roof, Hatch cage, auth_gate open state) and the PAL_DIR radiation-green ramp for the rad mortar.
+   Pilot one rework as a contact sheet before the rest.
+2. M5-01 sim contracts (Opus): CommandKind.Directive = 23, directive state part + hash, PlayerView.Directive, pack/unpack of
+   DirectiveDraft (src/Llm/Contracts.cs). Then in one wave: M5-02 DirectiveBias in the tiered AI, M5-05 commander loop (30 s,
+   apply-at-tick, stale drop, fallback; wire LlmHooks.TestConnection), M5-06 personas from leaders.md, M5-07 chat panel,
+   M5-09 setup/spectator. M5-10 replay/save tests last. Plan: docs/design/09_m5_plan.md.
+3. M4-16 round 2 (overnight-friendly, long matches): re-measure the tier ladder, cross-faction, Directorate mirror and 4-player
+   matrix with the new per-game seeds; then tune toward ≥ 60 % per tier; try mirror-symmetric placement + seeded placement
+   variation together; measure the Q-43 tier-cost proposal.
+4. Then M6 Left Behind contracts (D-102 answers in place).
 
 ## Half-finished work
-- M4-12 ladder target (≥60 % higher tier wins) and 4-player fairness are not met; see docs/balance/m4_ai.md.
-- M3-14 faction/tier targets not met (most M3 games drew); M4-12 improved decisiveness (Authority games 0–19 % draws).
-- Effects art (explosions etc.) not redone → M10.
+- M4-16: tier ladder target not met; results so far in docs/balance/m4_16_ai.md; tech hold coded but off.
+- Placement symmetry patch (reverted 55a3a27, kept in history as f796142) — needs seeded variation first.
+- Summary can't report enemy superweapon charge (not in PlayerView); small view addition if wanted.
 
 ## Waiting on the user
-- push_art.ps1 (three files sent in session 5: push_art.ps1, rts_art.bundle, art_objects.tar → `_art_push` folder).
-- Art notes from the lead review: Seismograph drum reads like a bag; Searchlight lens is blown out; Assembly Bore roof is
-  flat; Hatch cage reads as a red box; auth_gate only has a closed state; rad mortar lost its green (Q-35).
-- Q-34..Q-39; lore approvals.
-- A stray one-shot scheduled task named "check" was created by a helper; it fired once and does nothing more. Delete it
-  from scheduled tasks if it is still listed.
-- Leftover branches the owner can delete on GitHub: `wp/m3-*`, `wp/m4-*`, `integ-m3`, `integ-m4` (once PR #10 is merged),
-  `restore/*` when no longer needed.
+- Art push: `rts_art.bundle` and the session-5 `push_art.ps1` (from the session-5 chat downloads); `art_objects.tar` is already in
+  `RTS_2027\art\`. The `_art_push` folder holds the session-4 files — do not re-run it.
+- Q-40 model names; Q-41 old lore DRAFT banners; Q-42 foam; Q-43 tier costs (OPEN_QUESTIONS).
+- D-105 balance numbers: confirm after a play-test.
+- Delete old remote branches on GitHub: `wp/m2-*`, `wp/m3-*`, `wp/m4-*`, `integ-m2*`, `integ-m3`, `integ-m4` (keep `wp/art-*`,
+  `restore/*`). New session-6 branches can go too once main is confirmed: `wp/m3-21`, `wp/m4-16*`, `wp/m5-*`, `wp/neutral`,
+  `wp/lore`, `integ-s6`.
+- The stray "check" scheduled task from session 5, if still listed.
 
 ## How to run this session
 - Lead: Opus for build sessions (the owner wants long unattended overnight builds); Sonnet for a pure review/question session. Helpers: Haiku default; Sonnet for sim core,
@@ -76,7 +78,17 @@ Every guessed value is marked ASSUMED (D-089, D-095). Decisions D-091..D-098.
     `_art_push` in the owner's folder (LFS objects + bundle + push_art.ps1) through the device bridge.
   - Address SendMessage notes to the right helper id (a sprite note went to the audio helper).
   - The owner likes to see art: send every finished contact sheet for approval with a 1-line read per asset.
+- Session 6 lessons:
+  - Helpers get cut off mid-task while queued on the dotnet lock and hand back uncommitted work. Brief them to commit after
+    each step, and when one reports "not finished", either resume it once with numbered steps or finish it yourself.
+  - A helper that touches AI managers must also add any new long-lived field to that manager's Snapshot/Restore (M3-21 save
+    format); the AI save→load determinism test catches it only for the paths it plays.
+  - Mirror-symmetric AI placement stalemates identical AIs (D-104). Any symmetry fix in AI code needs the Directorate mirror
+    test (ADirectorateMirrorAtVeteranDoesNotFreeze) and the pinned default-skirmish hash run before merging.
+  - `ai match` now seeds each game of a pair separately; numbers from before session 6 are not comparable.
+  - Remote branch deletion and folder requests outside RTS_2027 are blocked by the session safety checks: ask the owner.
+  - The owner's RTS_2027 folder can be linked through the desktop app (device bridge); read-only checks of it are fine.
 
 
 ## If time runs short
-Do item 2 (land M3 so far) and M3-18 wiring, so the owner can play everything built in session 4.
+Do item 1 (art onto main) and M5-01, so the next session can fan out the rest of M5.
