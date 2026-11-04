@@ -29,6 +29,7 @@
 # Power balance for a full base: +100 - 40 - 20 - 30 - 10 = 0 (turret adds -20 only when it is built).
 
 [auth_conyard]
+tier = 1
 footprint_w = 3
 footprint_h = 3
 max_health = 1000
@@ -44,6 +45,7 @@ produces = ""
 buildable = false
 
 [auth_power]
+tier = 1
 footprint_w = 2
 footprint_h = 2
 max_health = 400
@@ -56,6 +58,7 @@ prerequisites = ["auth_conyard"]
 provides = []
 
 [auth_refinery]
+tier = 1
 footprint_w = 3
 footprint_h = 3
 max_health = 700
@@ -73,6 +76,8 @@ free_unit = "auth_scraper"
 build_time = 400
 
 [auth_barracks]
+researches = true
+tier = 1
 footprint_w = 2
 footprint_h = 2
 max_health = 450
@@ -86,6 +91,8 @@ provides = []
 produces = "infantry"
 
 [auth_factory]
+researches = true
+tier = 1
 footprint_w = 3
 footprint_h = 3
 max_health = 800
@@ -99,6 +106,7 @@ provides = []
 produces = "vehicle"
 
 [auth_silo]
+tier = 1
 footprint_w = 2
 footprint_h = 2
 max_health = 250
@@ -112,6 +120,7 @@ provides = []
 storage = 1500
 
 [auth_wall]
+tier = 1
 footprint_w = 1
 footprint_h = 1
 max_health = 200
@@ -126,6 +135,7 @@ category = "defence"
 wall = true
 
 [auth_turret]
+tier = 1
 footprint_w = 1
 footprint_h = 1
 max_health = 400
@@ -142,6 +152,7 @@ needs_power = true
 # M3-07: Directorate roster (design 05 §5, D-078) and Authority counters (D-079). Numbers not fixed by the design are ASSUMED (M3-07), tune in M3-14.
 
 [dir_shaft]
+tier = 1
 footprint_w = 3  # ASSUMED (M3-07)
 footprint_h = 3  # ASSUMED (M3-07)
 max_health = 1000  # ASSUMED (M3-07)
@@ -159,6 +170,7 @@ entrance = "M"
 ticks_per_point = 13
 
 [dir_reactor_vent]
+tier = 1
 footprint_w = 2  # ASSUMED (M3-07)
 footprint_h = 2  # ASSUMED (M3-07)
 max_health = 400  # ASSUMED (M3-07)
@@ -171,6 +183,7 @@ prerequisites = ["dir_shaft"]
 provides = []
 
 [dir_smelter_vent]
+tier = 1
 footprint_w = 3  # ASSUMED (M3-07)
 footprint_h = 2  # ASSUMED (M3-07)
 max_health = 700  # ASSUMED (M3-07)
@@ -190,6 +203,8 @@ entrance = "M"
 ticks_per_point = 13
 
 [dir_muster_hatch]
+researches = true
+tier = 1
 footprint_w = 2  # ASSUMED (M3-07)
 footprint_h = 2  # ASSUMED (M3-07)
 max_health = 450  # ASSUMED (M3-07)
@@ -205,6 +220,8 @@ entrance = "S"
 ticks_per_point = 20
 
 [dir_assembly_bore]
+researches = true
+tier = 1
 footprint_w = 3  # ASSUMED (M3-07)
 footprint_h = 3  # ASSUMED (M3-07)
 max_health = 800  # ASSUMED (M3-07)
@@ -220,6 +237,7 @@ entrance = "M"
 ticks_per_point = 13
 
 [dir_hatch]
+tier = 1
 footprint_w = 1  # ASSUMED (M3-07)
 footprint_h = 1  # ASSUMED (M3-07)
 max_health = 350  # ASSUMED (M3-07)
@@ -235,6 +253,7 @@ ticks_per_point = 20
 morphs_into = "dir_bore_head"
 
 [dir_bore_head]
+tier = 1
 footprint_w = 1  # ASSUMED (M3-07)
 footprint_h = 1  # ASSUMED (M3-07)
 max_health = 500  # ASSUMED (M3-07)
@@ -249,6 +268,7 @@ entrance = "M"
 ticks_per_point = 13
 
 [dir_cistern]
+tier = 1
 footprint_w = 2  # ASSUMED (M3-07)
 footprint_h = 2  # ASSUMED (M3-07)
 max_health = 250  # ASSUMED (M3-07)
@@ -262,6 +282,7 @@ provides = []
 storage = 1500  # ASSUMED (M3-07)
 
 [dir_bunker]
+tier = 1
 footprint_w = 1  # ASSUMED (M3-07)
 footprint_h = 1  # ASSUMED (M3-07)
 max_health = 200  # ASSUMED (M3-07)
@@ -276,6 +297,7 @@ category = "defence"
 wall = true
 
 [dir_pillbox]
+tier = 1
 footprint_w = 1  # ASSUMED (M3-07)
 footprint_h = 1  # ASSUMED (M3-07)
 max_health = 400  # ASSUMED (M3-07)
@@ -290,6 +312,7 @@ category = "defence"
 needs_power = true
 
 [dir_rocket_nest]
+tier = 1
 footprint_w = 1  # ASSUMED (M3-07)
 footprint_h = 1  # ASSUMED (M3-07)
 max_health = 400  # ASSUMED (M3-07)
@@ -304,6 +327,7 @@ category = "defence"
 needs_power = true
 
 [dir_rad_mortar]
+tier = 2
 footprint_w = 2  # ASSUMED (M3-07)
 footprint_h = 2  # ASSUMED (M3-07)
 max_health = 450  # ASSUMED (M3-07)
@@ -318,6 +342,7 @@ category = "defence"
 needs_power = true
 
 [dir_mast]
+tier = 2
 footprint_w = 2  # ASSUMED (M3-07)
 footprint_h = 2  # ASSUMED (M3-07)
 max_health = 400  # ASSUMED (M3-07)
@@ -332,6 +357,7 @@ jam_radius = 6  # ASSUMED (M3-07)
 needs_power = true
 
 [dir_isotope_works]
+tier = 2
 footprint_w = 2  # ASSUMED (M3-07)
 footprint_h = 2  # ASSUMED (M3-07)
 max_health = 500  # ASSUMED (M3-07)
@@ -340,11 +366,12 @@ sight = 4  # ASSUMED (M3-07)
 primary_weapon = ""
 cost = 800  # ASSUMED (M3-07)
 power = -30  # ASSUMED (M3-07)
-prerequisites = ["dir_smelter_vent"]
-provides = []
+prerequisites = ["dir_smelter_vent", "dir_assembly_bore"]
+provides = ["dir_tier2"]
 researches = true
 
 [dir_mooring]
+tier = 2
 footprint_w = 3  # ASSUMED (M3-07)
 footprint_h = 3  # ASSUMED (M3-07)
 max_health = 700  # ASSUMED (M3-07)
@@ -358,6 +385,7 @@ provides = []
 produces = "aircraft"
 
 [dir_sunrise]
+tier = 3
 footprint_w = 3  # ASSUMED (M3-07)
 footprint_h = 3  # ASSUMED (M3-07)
 max_health = 900  # ASSUMED (M3-07)
@@ -373,6 +401,7 @@ superweapon_charge_ticks = 3000  # ASSUMED (M3-07)
 superweapon_entrance_range = 8  # ASSUMED (M3-07)
 
 [auth_seismograph]
+tier = 1
 footprint_w = 2  # ASSUMED (M3-07)
 footprint_h = 2  # ASSUMED (M3-07)
 max_health = 300  # ASSUMED (M3-07)
@@ -386,6 +415,7 @@ provides = []
 seismic_radius = 8  # ASSUMED (M3-07)
 
 [auth_searchlight]
+tier = 2
 footprint_w = 1  # ASSUMED (M3-07)
 footprint_h = 1  # ASSUMED (M3-07)
 max_health = 400  # ASSUMED (M3-07)
@@ -401,6 +431,7 @@ needs_power = true
 sees_through_blackout = true
 
 [auth_gate]
+tier = 1
 footprint_w = 1  # ASSUMED (M3-07)
 footprint_h = 1  # ASSUMED (M3-07)
 max_health = 200  # ASSUMED (M3-07)
@@ -415,6 +446,7 @@ category = "defence"
 gate = true
 
 [auth_engineering]
+tier = 2
 footprint_w = 2  # ASSUMED (M3-07)
 footprint_h = 2  # ASSUMED (M3-07)
 max_health = 450  # ASSUMED (M3-07)
@@ -423,6 +455,146 @@ sight = 4  # ASSUMED (M3-07)
 primary_weapon = ""
 cost = 500  # ASSUMED (M3-07)
 power = -20  # ASSUMED (M3-07)
-prerequisites = ["auth_power"]
-provides = []
+prerequisites = ["auth_power", "auth_factory"]
+provides = ["auth_tier2"]
 researches = true
+
+# M4-07 (design 08 §3, §4): tier-3 gates, the new Authority and Directorate structures and the neutral ruins.
+# PLACEHOLDER ART (M4-ART): new types have no sprite file yet and draw the generated placeholder until M4-ART-01..n.
+# Numbers marked ASSUMED (M4-07) are copies of the nearest existing type; design 08 §4 gives the rest. Tune in M4-16.
+
+[auth_signals_hq]   # PLACEHOLDER ART (M4-ART); Authority T3 gate (design 08 §4); minimap ping on spotted enemies is a sim concern
+tier = 3
+footprint_w = 3  # (tune) design 08 §4
+footprint_h = 3  # (tune) design 08 §4
+max_health = 900  # ASSUMED (M4-07)
+armor = "structure"
+sight = 4  # ASSUMED (M4-07)
+primary_weapon = ""
+cost = 2500  # (tune) design 08 §4
+power = -60  # (tune) design 08 §4
+prerequisites = ["auth_engineering"]
+provides = ["auth_tier3"]
+researches = true
+
+[auth_blockhouse]   # PLACEHOLDER ART (M4-ART); T1 garrison defence, no gun (design 08 §3, §4)
+tier = 1
+footprint_w = 2  # (tune) design 08 §4
+footprint_h = 2  # (tune) design 08 §4
+max_health = 450  # ASSUMED (M4-07)
+armor = "fortified"
+sight = 4  # ASSUMED (M4-07)
+primary_weapon = ""
+cost = 300  # ASSUMED (M4-07)
+power = 0  # ASSUMED (M4-07)
+prerequisites = ["auth_barracks"]
+provides = []
+category = "defence"
+garrison = 5  # (tune) design 08 §3
+
+[auth_flak]   # PLACEHOLDER ART (M4-ART); T2 anti-air emplacement (design 08 §4)
+tier = 2
+footprint_w = 1  # ASSUMED (M4-07)
+footprint_h = 1  # ASSUMED (M4-07)
+max_health = 400  # ASSUMED (M4-07)
+armor = "fortified"
+sight = 7  # ASSUMED (M4-07)
+primary_weapon = "auth_flak_gun"
+cost = 400  # ASSUMED (M4-07)
+power = -20  # ASSUMED (M4-07)
+prerequisites = ["auth_barracks"]
+provides = []
+category = "defence"
+needs_power = true
+
+[auth_airfield]   # PLACEHOLDER ART (M4-ART); T2 aircraft producer (design 08 §4, Q-M4-c: no fuel or ammo in M4)
+tier = 2
+footprint_w = 3  # ASSUMED (M4-07)
+footprint_h = 3  # ASSUMED (M4-07)
+max_health = 800  # ASSUMED (M4-07)
+armor = "structure"
+sight = 4  # ASSUMED (M4-07)
+primary_weapon = ""
+cost = 2000  # ASSUMED (M4-07)
+power = -30  # ASSUMED (M4-07)
+prerequisites = ["auth_factory"]
+provides = []
+produces = "aircraft"
+
+[auth_atomic_battery]   # PLACEHOLDER ART (M4-ART); T3 superweapon, blast warhead is auth_atomic_blast (design 08 §4)
+tier = 3
+footprint_w = 3  # ASSUMED (M4-07)
+footprint_h = 3  # ASSUMED (M4-07)
+max_health = 900  # ASSUMED (M4-07)
+armor = "structure"
+sight = 4  # ASSUMED (M4-07)
+primary_weapon = ""
+cost = 3000  # ASSUMED (M4-07)
+power = -60  # ASSUMED (M4-07)
+prerequisites = ["auth_factory"]
+provides = []
+superweapon = "auth_atomic"
+superweapon_charge_ticks = 3000  # ASSUMED (M4-07)
+superweapon_entrance_range = 8  # ASSUMED (M4-07)
+
+[dir_redoubt]   # PLACEHOLDER ART (M4-ART); T1 garrison defence, half-buried is flavour only (design 08 §3, §4)
+tier = 1
+footprint_w = 2  # (tune) design 08 §4
+footprint_h = 2  # (tune) design 08 §4
+max_health = 450  # ASSUMED (M4-07)
+armor = "fortified"
+sight = 4  # ASSUMED (M4-07)
+primary_weapon = ""
+cost = 300  # ASSUMED (M4-07)
+power = 0  # ASSUMED (M4-07)
+prerequisites = ["dir_muster_hatch"]
+provides = []
+category = "defence"
+garrison = 5  # (tune) design 08 §3
+
+[dir_committee_hall]   # PLACEHOLDER ART (M4-ART); Directorate T3 gate (design 08 §4)
+tier = 3
+footprint_w = 2  # (tune) design 08 §4
+footprint_h = 3  # (tune) design 08 §4
+max_health = 700  # ASSUMED (M4-07)
+armor = "structure"
+sight = 4  # ASSUMED (M4-07)
+primary_weapon = ""
+cost = 2500  # (tune) design 08 §4
+power = -60  # (tune) design 08 §4
+prerequisites = ["dir_isotope_works"]
+provides = ["dir_tier3"]
+researches = true
+
+# Neutral ruins (design 08 §3, Q-M4-b): map features only, placed at setup and never buildable. They have no faction of their
+# own in the loader, so they default to Authority; that is harmless at tier 1 (no tier provide is appended).
+
+[neu_ruin_tenement]   # PLACEHOLDER ART (M4-ART); neutral garrison ruin, 3x2 (design 08 §3)
+tier = 1
+footprint_w = 3  # (tune) design 08 §3
+footprint_h = 2  # (tune) design 08 §3
+max_health = 600  # ASSUMED (M4-07)
+armor = "structure"
+sight = 3  # ASSUMED (M4-07)
+primary_weapon = ""
+cost = 0
+power = 0
+prerequisites = []
+provides = []
+garrison = 6  # (tune) design 08 §3
+buildable = false
+
+[neu_ruin_depot]   # PLACEHOLDER ART (M4-ART); neutral garrison ruin, 2x2 (design 08 §3)
+tier = 1
+footprint_w = 2  # (tune) design 08 §3
+footprint_h = 2  # (tune) design 08 §3
+max_health = 400  # ASSUMED (M4-07)
+armor = "structure"
+sight = 3  # ASSUMED (M4-07)
+primary_weapon = ""
+cost = 0
+power = 0
+prerequisites = []
+provides = []
+garrison = 4  # (tune) design 08 §3
+buildable = false

@@ -4,6 +4,7 @@
 # Schema v3 (M3, all optional): as vehicles (tunnel_size defaults to "S") but no passengers/deploys_into; plus engineer.
 
 [auth_rifleman]
+tier = 1
 speed = 12
 max_health = 50
 armor = "unarmored"
@@ -13,6 +14,7 @@ cost = 100
 prerequisites = ["auth_barracks"]
 
 [auth_rocketeer]
+tier = 1
 speed = 10
 max_health = 60
 armor = "unarmored"
@@ -24,6 +26,7 @@ prerequisites = ["auth_barracks"]
 # M3-07: Directorate roster (design 05 §5, D-078) and Authority counters (D-079). Numbers not fixed by the design are ASSUMED (M3-07), tune in M3-14.
 
 [dir_conscript]
+tier = 1
 faction = "directorate"
 tunnel_size = "S"
 speed = 14  # ASSUMED (M3-07)
@@ -36,6 +39,7 @@ prerequisites = ["dir_muster_hatch"]
 rad_resist_permille = 600
 
 [dir_ashthrower]
+tier = 1
 faction = "directorate"
 tunnel_size = "S"
 speed = 12  # ASSUMED (M3-07)
@@ -48,6 +52,7 @@ prerequisites = ["dir_muster_hatch"]
 rad_resist_permille = 600
 
 [dir_sapper]
+tier = 2
 faction = "directorate"
 tunnel_size = "S"
 speed = 12  # ASSUMED (M3-07)
@@ -60,6 +65,7 @@ prerequisites = ["dir_muster_hatch"]
 rad_resist_permille = 600
 
 [dir_informant]
+tier = 2
 faction = "directorate"
 tunnel_size = "S"
 speed = 13  # ASSUMED (M3-07)
@@ -73,6 +79,7 @@ stealth = true
 rad_resist_permille = 600
 
 [dir_commissar]
+tier = 2
 faction = "directorate"
 tunnel_size = "S"
 speed = 11  # ASSUMED (M3-07)
@@ -83,3 +90,56 @@ primary_weapon = "dir_pistol"
 cost = 400  # ASSUMED (M3-07)
 prerequisites = ["dir_isotope_works"]
 rad_resist_permille = 600
+
+# M4-07 (design 08 §4): new infantry. PLACEHOLDER ART (M4-ART): no sprite file yet, draws the generated placeholder.
+# Numbers marked ASSUMED (M4-07) copy the nearest existing type. Engineers have no weapon and do not garrison by default.
+
+[auth_engineer]   # PLACEHOLDER ART (M4-ART); Authority engineer (design 08 §4)
+tier = 1
+speed = 12  # ASSUMED (M4-07)
+max_health = 50  # ASSUMED (M4-07)
+armor = "unarmored"
+sight = 4  # ASSUMED (M4-07)
+primary_weapon = ""
+cost = 100  # ASSUMED (M4-07)
+prerequisites = ["auth_barracks"]
+engineer = true
+
+[auth_marksman]   # PLACEHOLDER ART (M4-ART); long-range anti-infantry, strong in garrisons (design 08 §4)
+tier = 2
+speed = 12  # ASSUMED (M4-07)
+max_health = 50  # ASSUMED (M4-07)
+armor = "unarmored"
+sight = 4  # ASSUMED (M4-07)
+primary_weapon = "auth_marksman_rifle"
+cost = 100  # ASSUMED (M4-07)
+prerequisites = ["auth_barracks"]
+
+[dir_assessor]   # PLACEHOLDER ART (M4-ART); Directorate engineer (design 08 §4)
+faction = "directorate"
+tier = 1
+tunnel_size = "S"
+speed = 14  # ASSUMED (M4-07)
+max_health = 40  # ASSUMED (M4-07)
+armor = "unarmored"
+sight = 4  # ASSUMED (M4-07)
+primary_weapon = ""
+cost = 80  # ASSUMED (M4-07)
+prerequisites = ["dir_muster_hatch"]
+rad_resist_permille = 600  # ASSUMED (M4-07)
+engineer = true
+
+[dir_volunteer]   # PLACEHOLDER ART (M4-ART); irradiated runner with a radiation burst on death (design 08 §4)
+faction = "directorate"
+tier = 2
+tunnel_size = "S"
+speed = 12  # ASSUMED (M4-07)
+max_health = 60  # ASSUMED (M4-07)
+armor = "unarmored"
+sight = 4  # ASSUMED (M4-07)
+primary_weapon = "dir_pistol"
+cost = 250  # ASSUMED (M4-07)
+prerequisites = ["dir_muster_hatch"]
+rad_resist_permille = 600  # ASSUMED (M4-07)
+irradiated = true
+death_weapon = "dir_volunteer_burst"

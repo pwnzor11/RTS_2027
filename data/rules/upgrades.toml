@@ -4,8 +4,104 @@
 # auth_grouting is researched at auth_engineering (M3-07; a building with researches = true).
 
 [auth_grouting]
+tier = 2
 faction = "authority"
 cost = 1500
 build_time = 0
 prerequisites = []
 effect = "grouting"
+
+# M4-07 (design 08 §4): tiered upgrades. Each applies its [[effect]] entries in techs.toml in list order (M4-04 RulesDeriver).
+# Costs: T1 800, T2 1500 (copy of auth_grouting), T3 2500, all ASSUMED (M4-07). Tier provides are appended automatically (tier sugar).
+
+[auth_up_flak_vests]
+faction = "authority"
+cost = 800  # ASSUMED (M4-07)
+prerequisites = []
+tier = 1
+effects = ["auth_fx_flak_vests"]
+
+[auth_up_convoy_drill]
+faction = "authority"
+cost = 800  # ASSUMED (M4-07)
+prerequisites = []
+tier = 1
+effects = ["auth_fx_convoy_jeep", "auth_fx_convoy_scraper", "auth_fx_convoy_carrier"]
+
+[auth_up_composite_armour]
+faction = "authority"
+cost = 1500  # ASSUMED (M4-07)
+prerequisites = []
+tier = 2
+effects = ["auth_fx_composite_tank", "auth_fx_composite_bulwark"]
+
+[auth_up_sodium_lamps]
+faction = "authority"
+cost = 1500  # ASSUMED (M4-07)
+prerequisites = []
+tier = 2
+effects = ["auth_fx_sodium_searchlight"]
+
+[auth_up_tungsten_shot]
+faction = "authority"
+cost = 2500  # ASSUMED (M4-07)
+prerequisites = []
+tier = 3
+effects = ["auth_fx_tungsten_shot"]
+
+[auth_up_signals_net]
+faction = "authority"
+cost = 2500  # ASSUMED (M4-07)
+prerequisites = []
+tier = 3
+effects = ["auth_fx_signals_net"]
+
+[dir_up_mass_conscription]
+faction = "directorate"
+cost = 800  # ASSUMED (M4-07)
+prerequisites = []
+tier = 1
+effects = ["dir_fx_conscript_cost", "dir_fx_conscript_build"]
+
+[dir_up_tunnel_bracing]
+faction = "directorate"
+cost = 800  # ASSUMED (M4-07)
+prerequisites = []
+tier = 1
+effects = ["dir_fx_hatch_ticks", "dir_fx_bore_head_ticks"]
+
+[dir_up_hot_cores]
+faction = "directorate"
+cost = 1500  # ASSUMED (M4-07)
+prerequisites = []
+tier = 2
+effects = ["dir_fx_hot_cores"]
+
+[dir_up_lead_lining]
+faction = "directorate"
+cost = 1500  # ASSUMED (M4-07)
+prerequisites = []
+tier = 2
+effects = ["dir_fx_lead_conscript", "dir_fx_lead_ashthrower", "dir_fx_lead_sapper", "dir_fx_lead_informant",
+           "dir_fx_lead_commissar", "dir_fx_lead_assessor", "dir_fx_lead_volunteer"]
+
+[dir_up_blackout_canisters]
+faction = "directorate"
+cost = 1500  # ASSUMED (M4-07)
+prerequisites = []
+tier = 2
+effects = ["dir_fx_blackout"]
+
+[dir_up_order_seven]
+faction = "directorate"
+cost = 2500  # ASSUMED (M4-07)
+prerequisites = []
+tier = 3
+effects = ["dir_fx_order_seven"]
+
+[dir_up_fervour]
+faction = "directorate"
+cost = 2500  # ASSUMED (M4-07)
+prerequisites = []
+tier = 3
+effects = ["dir_fx_fervour_hp", "dir_fx_fervour_rof"]
