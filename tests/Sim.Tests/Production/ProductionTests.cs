@@ -182,8 +182,9 @@ public class ProductionTests
         Step(sim, Build(sim, Infantry, Inf("test_rifleman")));
         RunUntil(sim, () => sim.Infantry.Slots.Count == 1);
         int i = Enumerable.Range(1, sim.Infantry.Capacity - 1).First(sim.Infantry.Slots.IsIndexAlive);
-        // Ring 1 around (9,6), top row first: (8,5) and (9,5) are barracks cells, (10,5) is free.
-        Assert.Equal(new CellCoord(10, 5), sim.Infantry.Position[i].ToCell());
+        // Ring 1 around (9,6); (8,5) and (9,5) are barracks cells. M4-16: within the ring the free cell nearest the map centre wins
+        // (it used to be the top row first, which sent the bottom-right base's units out behind their factory): (10,7).
+        Assert.Equal(new CellCoord(10, 7), sim.Infantry.Position[i].ToCell());
     }
 
     [Fact]

@@ -110,12 +110,33 @@ internal static class Occupancy
         int slot = inf.SubSlot[i];
         if (!sim.Map.InfantryAt(cell, slot).IsNone)
         {
-            slot = sim.Map.FreeInfantrySlot(cell);
+            slot = CentreMostFreeSlot(sim, cell);   // M4-16: not "first free" (centre, NW, NE, SW, SE favoured the top-left start)
             if (slot < 0) return;
             inf.SubSlot[i] = (byte)slot;
             inf.Position[i] = InfantryStore.SlotPosition(cell, slot);
         }
         sim.Map.SetInfantry(cell, slot, me);
+    }
+
+    /// <summary>M4-16: the free infantry sub-slot of <paramref name="cell"/> nearest the map centre (squared, in leptons), the centre
+    /// sub-slot first on ties; -1 if the cell is full. Point-mirrored cells give point-mirrored sub-slots.</summary>
+    internal static int CentreMostFreeSlot(Simulation sim, CellCoord cell)
+    {
+        long mx = sim.Setup.Map.Width * 128L, my = sim.Setup.Map.Height * 128L;   // map centre in leptons
+        LeptonCoord cc = LeptonCoord.CenterOf(cell);
+        int best = -1, bestSide = 0;
+        long bestD = 0;
+        for (int s = 0; s < InfantryStore.SubSlotCount; s++)
+        {
+            if (!sim.Map.InfantryAt(cell, s).IsNone) continue;
+            LeptonCoord p = InfantryStore.SlotPosition(cell, s);
+            long d = (p.X - mx) * (p.X - mx) + (p.Y - my) * (p.Y - my);
+            // equal distance (a cell on a line through the centre): the corner left of the ray centre -> cell first
+            long cross = (cc.X - mx) * (p.Y - my) - (cc.Y - my) * (p.X - mx);
+            int side = cross < 0 ? 0 : cross > 0 ? 2 : 1;
+            if (best < 0 || d < bestD || (d == bestD && side < bestSide)) { best = s; bestD = d; bestSide = side; }
+        }
+        return best;
     }
 
     /// <summary>Release every claim of the actor (standing cell/slot and reservation).</summary>

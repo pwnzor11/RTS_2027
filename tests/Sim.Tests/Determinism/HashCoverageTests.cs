@@ -123,6 +123,7 @@ public class HashCoverageTests
         ["Simulation._inStep"] = "true only while Step runs; always false when a hash or save is taken",
         ["Simulation._recentHashes"] = "ring of already-computed hashes for diagnostics and snapshots; derived from state, not state",
         ["Simulation._scratch"] = "command sort buffer, rewritten on every ApplyInput",
+        ["Simulation._regrowth"] = "M4-16 regrowth visiting order, a pure function of the map size (built lazily), not state",
         ["Simulation.Setup"] = "immutable construction input; its identity is in the save header, the players part and the replay header",
         ["Simulation.MapHash"] = "identity hash of the starting map, computed once at construction; checked by the save header",
         ["Simulation._open"] = "placement flood-fill scratch, rebuilt whenever _openVersion != the map version",
