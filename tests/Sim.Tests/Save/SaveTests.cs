@@ -64,7 +64,7 @@ public class SaveTests
     {
         var sim = ScriptedGame.NewSim(ScriptedGame.Setup());
         Assert.Equal(new[] { "map", "units", "infantry", "buildings", "paths", "vision", "combat", "projectiles", "players", "economy", "production",
-            "tunnels", "ground", "effects" }, sim.StateParts.Select(p => p.Name).ToArray());   // M3-01 appended the last three
+            "tunnels", "ground", "effects", "garrison", "stats" }, sim.StateParts.Select(p => p.Name).ToArray());   // M3-01 appended tunnels..effects, M4-01 garrison and stats
     }
 
     [Fact]

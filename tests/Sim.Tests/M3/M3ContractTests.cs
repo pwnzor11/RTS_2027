@@ -31,7 +31,7 @@ public sealed class M3ContractTests
         Assert.Equal((0, 1, 2), ((int)WeaponTargets.Ground, (int)WeaponTargets.Air, (int)WeaponTargets.Both));
         Assert.Equal(new[] { 9, 10, 11, 12, 13, 14 }, new[] { MissionKind.EnterTunnel, MissionKind.Transit, MissionKind.Burrow,
             MissionKind.Surface, MissionKind.Deploy, MissionKind.Capture }.Select(m => (int)m));
-        Assert.Equal(7, Enum.GetValues<LandType>().Length);   // unchanged
+        Assert.Equal(8, Enum.GetValues<LandType>().Length);   // M4-01 appended Shallow (M4ContractTests pins it)
     }
 
     [Fact]
@@ -39,10 +39,10 @@ public sealed class M3ContractTests
     {
         var sim = ScriptedGame.NewSim(ScriptedGame.Setup());
         string[] names = sim.StateParts.Select(p => p.Name).ToArray();
-        Assert.Equal(new[] { "production", "tunnels", "ground", "effects" }, names[^4..]);
-        Assert.Same(sim.Tunnels, sim.StateParts[^3]);
-        Assert.Same(sim.Ground, sim.StateParts[^2]);
-        Assert.Same(sim.Effects, sim.StateParts[^1]);
+        Assert.Equal(new[] { "production", "tunnels", "ground", "effects" }, names[^6..^2]);   // M4-01: garrison, stats follow
+        Assert.Same(sim.Tunnels, sim.StateParts[^5]);
+        Assert.Same(sim.Ground, sim.StateParts[^4]);
+        Assert.Same(sim.Effects, sim.StateParts[^3]);
     }
 
     [Fact]

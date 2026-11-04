@@ -31,7 +31,7 @@ public class MissionHeaderTests
     {
         var setup = ScriptedGame.Setup();
         var data = ReplayReader.Read(new MemoryStream(Record(setup, 64, new ReplayMission("auth_01", 0xDEADBEEF12345678UL))));
-        Assert.Equal(8, data.Version);
+        Assert.Equal(ReplayWriter.Version, data.Version);   // 8 (M3-19); 9 since M4-01 with the same layout
         Assert.Equal(new ReplayMission("auth_01", 0xDEADBEEF12345678UL), data.Mission);
         Assert.False(data.Truncated);
         Assert.Equal(64, data.FinalTick);
@@ -73,9 +73,9 @@ public class MissionHeaderTests
     public void FutureVersion_IsRejected()
     {
         byte[] bytes = Record(ScriptedGame.Setup(), 32, null);
-        bytes[4] = 9;
+        bytes[4] = 10;   // M4-01 took 9
         var ex = Assert.Throws<InvalidDataException>(() => ReplayReader.Read(new MemoryStream(bytes)));
-        Assert.Contains("version 9", ex.Message);
+        Assert.Contains("version 10", ex.Message);
     }
 
     [Fact]

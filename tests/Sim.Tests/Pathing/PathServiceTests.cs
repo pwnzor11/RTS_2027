@@ -14,7 +14,7 @@ public class PathServiceTests
     /// <summary>Synthetic terrain: water/rock/cliff impassable, rough/ash slower, road fast for wheels.</summary>
     internal static TerrainTable Table()
     {
-        int[] landSpeed = { 100, 100, 50, 80, 0, 0, 0 }; // Clear Road Rough Ash Water Rock Cliff
+        int[] landSpeed = { 100, 100, 50, 80, 0, 0, 0, 0 }; // Clear Road Rough Ash Water Rock Cliff Shallow (M4-01)
         var sp = new int[RuleCounts.LandTypes * RuleCounts.Locomotions];
         for (int l = 0; l < RuleCounts.LandTypes; l++)
             for (int c = 0; c < RuleCounts.Locomotions; c++)
