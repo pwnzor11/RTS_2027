@@ -44,6 +44,7 @@ public sealed class SettingsScreen : IScreen
             Volume("Master volume", s => s.MasterVolume, (s, v) => s with { MasterVolume = v }),
             Volume("Music volume", s => s.MusicVolume, (s, v) => s with { MusicVolume = v }),
             Volume("Effects volume", s => s.SfxVolume, (s, v) => s with { SfxVolume = v }),
+            new MenuItem(() => Rts.Game.Ui.Llm.LlmUiText.SectionRow, () => _s.Screens.Push(new Rts.Game.Ui.Llm.LlmSettingsScreen(_s, _path))),
             new MenuItem(() => "About", () => _s.Screens.Push(new AboutScreen(_s))),
             new MenuItem(() => "Back", Back),
         });

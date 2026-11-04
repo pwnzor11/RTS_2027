@@ -38,7 +38,7 @@ public sealed class SettingsTests
     public void Valid_fields_are_read_and_unknown_keys_ignored()
     {
         Settings s = Settings.Parse("version = 1\nfullscreen = true\nwindow_width = 1920\nwindow_height = 1080\nui_scale = 3\nmusic_volume = 10\nsfx_volume = 20\nfuture_key = 5");
-        Assert.Equal(new Settings(1, true, 1920, 1080, 3, 10, 20), s);
+        Assert.Equal(new Settings(Settings.CurrentVersion, true, 1920, 1080, 3, 10, 20), s);
     }
 
     [Fact]
@@ -66,7 +66,7 @@ public sealed class SettingsTests
         try
         {
             string path = Path.Combine(dir, "sub", "settings.toml");
-            var saved = new Settings(1, true, 1600, 900, 2, 33, 44);
+            var saved = new Settings(Settings.CurrentVersion, true, 1600, 900, 2, 33, 44);
             Assert.True(saved.Save(path));
             Assert.Equal(saved, Settings.Load(path));
         }

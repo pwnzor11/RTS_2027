@@ -12,7 +12,7 @@ namespace Rts.Game;
 /// out-of-range value falls back to (or is clamped toward) its default. A file with a newer <c>version</c> than this
 /// build knows gives the defaults rather than guessing.
 /// </summary>
-/// <param name="Version">File format version (1).</param>
+/// <param name="Version">File format version (2; M5-08 added the llm_* keys, older files get their defaults).</param>
 /// <param name="Fullscreen">Borderless full screen.</param>
 /// <param name="WindowWidth">Window width in pixels (320..16384).</param>
 /// <param name="WindowHeight">Window height in pixels (240..16384).</param>
@@ -20,6 +20,11 @@ namespace Rts.Game;
 /// <param name="MusicVolume">0..100.</param>
 /// <param name="SfxVolume">0..100.</param>
 /// <param name="MasterVolume">0..100, scales sound and music together (M3-16). Files without the key get 100.</param>
+/// <param name="LlmProvider">AI commander backend: none, anthropic or openai (an OpenAI-compatible endpoint). Default none.</param>
+/// <param name="LlmBaseUrl">Endpoint base URL; empty = the provider's default (data/llm/providers.toml).</param>
+/// <param name="LlmModel">Model id; empty = the provider's default.</param>
+/// <param name="LlmChatOn">Whether the commander chat panel is on (default true).</param>
+/// <param name="LlmCallCap">Most LLM calls per game, 0..1000; 0 = no cap (default 120). The API key is never a setting.</param>
 public sealed record Settings(
     int Version = Settings.CurrentVersion,
     bool Fullscreen = false,
@@ -28,10 +33,15 @@ public sealed record Settings(
     int UiScale = 0,
     int MusicVolume = 70,
     int SfxVolume = 100,
-    int MasterVolume = 100)
+    int MasterVolume = 100,
+    string LlmProvider = "none",
+    string LlmBaseUrl = "",
+    string LlmModel = "",
+    bool LlmChatOn = true,
+    int LlmCallCap = 120)
 {
     /// <summary>The file format version this build reads and writes.</summary>
-    public const int CurrentVersion = 1;
+    public const int CurrentVersion = 2;
 
     /// <summary>The default settings.</summary>
     public static Settings Default { get; } = new();
@@ -83,7 +93,12 @@ public sealed record Settings(
             Int(root, "ui_scale", d.UiScale, 0, 8),
             Int(root, "music_volume", d.MusicVolume, 0, 100),
             Int(root, "sfx_volume", d.SfxVolume, 0, 100),
-            Int(root, "master_volume", d.MasterVolume, 0, 100));
+            Int(root, "master_volume", d.MasterVolume, 0, 100),
+            Provider(root.TryGetValue("llm_provider", out object? lp) && lp is string ps ? ps : d.LlmProvider),
+            Text(root, "llm_base_url", d.LlmBaseUrl),
+            Text(root, "llm_model", d.LlmModel),
+            root.TryGetValue("llm_chat_on", out object? lc) && lc is bool cb ? cb : d.LlmChatOn,
+            Int(root, "llm_call_cap", d.LlmCallCap, 0, 1000));
     }
 
     /// <summary>The settings as TOML text.</summary>
@@ -100,8 +115,52 @@ public sealed record Settings(
         sb.AppendLine(FormattableString.Invariant($"music_volume = {MusicVolume}"));
         sb.AppendLine(FormattableString.Invariant($"sfx_volume = {SfxVolume}"));
         sb.AppendLine(FormattableString.Invariant($"master_volume = {MasterVolume}"));
+        sb.AppendLine("# AI commander (LLM). The API key is NOT stored here; it is kept encrypted in llm.key.");
+        sb.AppendLine("# llm_provider: none | anthropic | openai. Empty url / model = the provider default. llm_call_cap 0 = no cap.");
+        sb.AppendLine(FormattableString.Invariant($"llm_provider = {Quote(Provider(LlmProvider))}"));
+        sb.AppendLine(FormattableString.Invariant($"llm_base_url = {Quote(LlmBaseUrl)}"));
+        sb.AppendLine(FormattableString.Invariant($"llm_model = {Quote(LlmModel)}"));
+        sb.AppendLine(FormattableString.Invariant($"llm_chat_on = {(LlmChatOn ? "true" : "false")}"));
+        sb.AppendLine(FormattableString.Invariant($"llm_call_cap = {Math.Clamp(LlmCallCap, 0, 1000)}"));
         return sb.ToString();
     }
+
+    /// <summary>The provider as a <see cref="Rts.Llm.LlmProviderKind"/> (unknown text = none).</summary>
+    public Rts.Llm.LlmProviderKind ProviderKind => Provider(LlmProvider) switch
+    {
+        "anthropic" => Rts.Llm.LlmProviderKind.Anthropic,
+        "openai" => Rts.Llm.LlmProviderKind.OpenAiCompatible,
+        _ => Rts.Llm.LlmProviderKind.None,
+    };
+
+    /// <summary>The settings text for a provider kind.</summary>
+    public static string ProviderName(Rts.Llm.LlmProviderKind kind) => kind switch
+    {
+        Rts.Llm.LlmProviderKind.Anthropic => "anthropic",
+        Rts.Llm.LlmProviderKind.OpenAiCompatible => "openai",
+        _ => "none",
+    };
+
+    private static string Provider(string text)
+    {
+        string t = text.Trim().ToLowerInvariant();
+        return t is "anthropic" or "openai" ? t : "none";
+    }
+
+    // Free text kept short and single-line so a hand-edited file cannot bloat or break the settings.
+    private static string Text(TomlTable table, string key, string fallback) =>
+        table.TryGetValue(key, out object? v) && v is string s ? Clean(s) : fallback;
+
+    private static string Clean(string s)
+    {
+        var sb = new StringBuilder();
+        foreach (char c in s)
+            if (!char.IsControl(c)) sb.Append(c);
+        string t = sb.ToString().Trim();
+        return t.Length > 200 ? t[..200] : t;
+    }
+
+    private static string Quote(string s) => "\"" + Clean(s).Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"";
 
     /// <summary>Writes the settings file (folders are created). Returns false instead of throwing.</summary>
     public bool Save(string? path = null)
