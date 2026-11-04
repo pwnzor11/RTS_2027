@@ -125,9 +125,81 @@ def conscript():
     return out, "dir_conscript_contact.png"
 
 
+def struct_states(sid):
+    mod = BS.load_module(sid)
+    sh = Image.open(os.path.join(C.ROOT, "data", "sprites", "buildings", f"{sid}.png")).convert("RGBA")
+    fr = C.split_sheet(sh, 4, sh.height // mod.CANVAS[1])
+    st, k = {}, 0
+    for name, n, _t in mod.STATES:
+        st[name] = fr[k:k + n]
+        k += n
+    return mod, st
+
+
+def strip(frames, z, gap=4):
+    return tile([frames], z, gap)
+
+
+def vent():
+    mod, D = struct_states("dir_smelter_vent")
+    amod, A = struct_states("auth_refinery")
+    blocks = []
+    blocks.append(("IDLE and DAMAGED frame 0 at 2x.  Left to right: Directorate smelter vent (3x2) idle, damaged | Authority refinery (3x3) idle, damaged",
+                   hcat([strip([D["idle"][0]], 2), strip([D["damaged"][0]], 2), strip([A["idle"][0]], 2), strip([A["damaged"][0]], 2)], 24)))
+    blocks.append(("IDLE loop, 4 frames at 1x (true size): Directorate (left) | Authority (right).  Ash puffs rise, furnace slits flicker",
+                   hcat([strip(D["idle"], 1), strip(A["idle"], 1)], 40)))
+    blocks.append(("DAMAGED, 4 frames at 1x: Directorate (left) | Authority (right).  Structural damage only; fire / smoke are FX anchors in the manifest",
+                   hcat([strip(D["damaged"], 1), strip(A["damaged"], 1)], 40)))
+    # in context on ash with infantry for scale
+    cell = 64
+    img = Image.new("RGB", (10 * cell, 5 * cell), ASH)
+    rng = np.random.default_rng(11)
+    arr = np.asarray(img).astype(float) + rng.normal(0, 3, (5 * cell, 10 * cell, 1))
+    img = Image.fromarray(np.clip(arr, 0, 255).astype(np.uint8)).convert("RGBA")
+    top = 100
+    img.alpha_composite(D["idle"][0], (16 - mod.ORIGIN[0], top - mod.ORIGIN[1]))
+    img.alpha_composite(A["idle"][0], (330 - amod.ORIGIN[0], top - amod.ORIGIN[1]))
+    imod, DI = inf_frames("dir_conscript")
+    _m, AI = inf_frames("auth_rifleman")
+    for k, (G, x, y) in enumerate([(DI, 120, 300), (DI, 152, 292), (DI, 184, 303), (AI, 400, 306), (AI, 432, 297), (AI, 464, 308)]):
+        f = G("idle", [4, 0, 2, 4, 0, 6][k])
+        img.alpha_composite(f, (x - imod.ORIGIN[0], y - imod.ORIGIN[1]))
+    d = ImageDraw.Draw(img)
+    for gx in range(0, img.width, cell):
+        for gy in range(0, img.height, cell):
+            d.point((gx, gy), fill=(100, 94, 88))
+    x0, y0 = 16 + mod.DOCK[0] * cell, top + mod.DOCK[1] * cell
+    for px, py in ((x0, y0), (x0 + cell - 1, y0), (x0, y0 + cell - 1), (x0 + cell - 1, y0 + cell - 1)):
+        d.point((px, py), fill=(230, 200, 60))
+    blocks.append(("IN CONTEXT 1x on ash: vent (3x2, dock cell marked with yellow dots) left, Authority refinery (3x3) right; conscripts and riflemen for scale.  Cell ticks every 64 px",
+                   img.convert("RGB")))
+    out = stack(blocks)
+
+    b2 = []
+    b2.append(("BUILD, 8 frames at 1x: Directorate vent (0 plot, 1 foundation, 2-3 steel, 4-5 clad to a rising height, 6 primer + scaffold, 7 finished)",
+               strip(D["build"], 1)))
+    b2.append(("BUILD, 8 frames at 1x: Authority refinery for comparison", strip(A["build"], 1)))
+    b2.append(("BUILD frames 3, 4, 5, 6 at 2x: Directorate vent", strip([D["build"][k] for k in (3, 4, 5, 6)], 2)))
+    R.TOL = 0
+    ramp_set = {tuple(c) for c in C.HOUSE}
+    base = D["idle"][0]
+    vs = [base]
+    for rp in (C.make_ramp(C.hx("#3A2A06"), C.hx("#E0A020"), C.hx("#FFE9A0")), C.make_ramp(C.hx("#2A0D08"), C.hx("#B02A1A"), C.hx("#F0A090")),
+               C.make_ramp(C.hx("#0C1B2E"), C.hx("#2E5A8B"), C.hx("#9CC6EE"))):
+        o, _c = R.remap(base, rp)
+        a0, a1 = np.asarray(base).reshape(-1, 4), np.asarray(o).reshape(-1, 4)
+        ch = (a0 != a1).any(axis=1)
+        assert all(tuple(p[:3]) in ramp_set for p in a0[ch]), "remap touched a non-ramp pixel"
+        vs.append(o)
+    b2.append(("HOUSE REMAP idle frame 0 at 2x (exact-match magenta ramp; asserts only ramp pixels change): magenta, amber, red, blue",
+               strip(vs, 2, 8)))
+    return out, "dir_smelter_vent_contact.png", stack(b2), "dir_smelter_vent_contact_build.png"
+
+
 if __name__ == "__main__":
     which = sys.argv[1]
-    img, name = {"conscript": conscript}[which]() if which != "vent" else __import__("dir_contact_vent").vent()
-    p = os.path.join(C.PILOT, name)
-    img.save(p, optimize=True)
-    print("wrote", p, img.size)
+    res = conscript() if which == "conscript" else vent()
+    for im, name in zip(res[0::2], res[1::2]):
+        p = os.path.join(C.PILOT, name)
+        im.save(p, optimize=True)
+        print("wrote", p, im.size)
