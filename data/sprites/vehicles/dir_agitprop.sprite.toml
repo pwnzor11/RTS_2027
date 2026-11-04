@@ -3,12 +3,15 @@
 # Frame of facing f, animation step k in a state = first + f * frames + k.
 # Origin: pixel on the ground contact point (cell centre), counted from the frame's top-left corner.
 # Camera: orthographic, 40 deg elevation, sun upper-left, 64 px per cell (art/pilot/README.md).
+# LAYER body: hull without the turret (the turret is a separate sheet, <id>_turret.png) but with the whole vehicle's shadow.
 
 file = "dir_agitprop.png"
 frame_w = 120
 frame_h = 120
 origin_x = 60
 origin_y = 79
+
+layer = "body"
 
 # House paint is the 8-shade magenta ramp, darkest first. Exact RGB matches are house pixels; alpha is always 0 or 255.
 [house]
@@ -19,18 +22,4 @@ name = "idle"
 facings = 16
 frames = 1
 first = 0
-ticks_per_frame = 1
-
-[[state]]
-name = "hull"
-facings = 16
-frames = 1
-first = 16
-ticks_per_frame = 1
-
-[[state]]
-name = "turret"
-facings = 16
-frames = 1
-first = 32
 ticks_per_frame = 1
