@@ -98,8 +98,8 @@ internal sealed class ProductionManager
         int type = cat == ProductionCategory.Vehicle ? PeekVehicle(k.Rules) : mix[idx % mix.Length];
         if (_tier != null && !(cat == ProductionCategory.Vehicle && _first)) type = _tier.PickUnit(k, cat, mix, type, _rng!);   // M3-11
         int wanted = cat == ProductionCategory.Vehicle && _tactics != null ? _tactics.WantedVehicle(k) : -1;
-        // M3-11 (flag Air): the sim has no aircraft lane (an aircraft is a vehicle type with air locomotion built in the vehicle lane), so
-        // the next aircraft is a special order like a Bore: it goes ahead of the bag and does not advance it
+        // M3-11 (flag Air) / M4-04: aircraft are air-locomotion vehicle types built in the Aircraft lane; the next aircraft is a
+        // special order like a Bore: it goes ahead of the vehicle bag and does not advance it
         bool aircraft = false;
         if (wanted < 0 && cat == ProductionCategory.Vehicle && _tier != null)
         {
@@ -109,8 +109,10 @@ internal sealed class ProductionManager
         if (wanted >= 0)
         {
             // M3-10: a special order (a Bore for a new entrance, an Agitprop for the wave) goes ahead of the bag and does not advance it
-            if (!k.Buildable(cat, wanted) || k.Hud.Cash + k.Hud.Stored < cost(wanted)) return;
-            sink.Build(cat, wanted);
+            ProductionCategory lane = aircraft ? ProductionCategory.Aircraft : cat;   // M4-04: aircraft have their own lane
+            if (aircraft && k.Queue(lane).Items.Count > 0) return;
+            if (!k.Buildable(lane, wanted) || k.Hud.Cash + k.Hud.Stored < cost(wanted)) return;
+            sink.Build(lane, wanted);
             if (aircraft) _tier!.AircraftQueued();
             Queued++;
             return;

@@ -145,7 +145,7 @@ internal sealed class TierPlanner
     /// <summary>Notes that the production manager ordered the wanted harvester.</summary>
     public void HarvesterOrdered() => HarvestersReplaced++;
 
-    /// <summary>The aircraft (an air-locomotion vehicle type) to queue now in the vehicle lane (Air flag, unlocked, fewer than <see cref="MaxAircraft"/> flying or queued), or -1.</summary>
+    /// <summary>The aircraft (an air-locomotion vehicle type) to queue now in the Aircraft lane (M4-04) (Air flag, unlocked, fewer than <see cref="MaxAircraft"/> flying or queued), or -1.</summary>
     public int WantedAircraft(RecruitKnowledge k)
     {
         if (!_p.Air || _faction.AirProducerId is null) return -1;
@@ -156,9 +156,9 @@ internal sealed class TierPlanner
             for (int i = 0; i < rules.Vehicles.Count; i++)
                 if (rules.Vehicles[i].Locomotion == Locomotion.Air && rules.Vehicles[i].Faction == _faction.Faction) { _aircraft = i; break; }
         }
-        if (_aircraft < 0 || !k.Buildable(ProductionCategory.Vehicle, _aircraft)) return -1;
+        if (_aircraft < 0 || !k.Buildable(ProductionCategory.Aircraft, _aircraft)) return -1;
         int have = 0;
-        foreach (QueueItemView it in k.Queue(ProductionCategory.Vehicle).Items) if (it.TypeIndex == _aircraft) have++;
+        foreach (QueueItemView it in k.Queue(ProductionCategory.Aircraft).Items) if (it.TypeIndex == _aircraft) have++;
         foreach (ViewActor a in k.Army) if (a.Kind == ActorKind.Vehicle && rules.Vehicles[a.TypeIndex].Locomotion == Locomotion.Air) have++;
         foreach (ViewActor a in k.Home) if (a.Kind == ActorKind.Vehicle && rules.Vehicles[a.TypeIndex].Locomotion == Locomotion.Air) have++;
         return have < MaxAircraft ? _aircraft : -1;
