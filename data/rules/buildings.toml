@@ -138,3 +138,290 @@ prerequisites = ["auth_barracks"]
 provides = []
 category = "defence"
 needs_power = true
+
+# M3-07: Directorate roster (design 05 §5, D-078) and Authority counters (D-079). Numbers not fixed by the design are ASSUMED (M3-07), tune in M3-14.
+
+[dir_shaft]
+footprint_w = 3  # ASSUMED (M3-07)
+footprint_h = 3  # ASSUMED (M3-07)
+max_health = 1000  # ASSUMED (M3-07)
+armor = "structure"
+sight = 6  # ASSUMED (M3-07)
+primary_weapon = ""
+cost = 0  # ASSUMED (M3-07)
+power = 0  # ASSUMED (M3-07)
+prerequisites = []
+provides = ["dir_shaft"]
+category = "structure"
+produces = ""
+buildable = false
+entrance = "M"
+ticks_per_point = 13
+
+[dir_reactor_vent]
+footprint_w = 2  # ASSUMED (M3-07)
+footprint_h = 2  # ASSUMED (M3-07)
+max_health = 400  # ASSUMED (M3-07)
+armor = "structure"
+sight = 3  # ASSUMED (M3-07)
+primary_weapon = ""
+cost = 300  # ASSUMED (M3-07)
+power = 100  # ASSUMED (M3-07)
+prerequisites = ["dir_shaft"]
+provides = []
+
+[dir_smelter_vent]
+footprint_w = 3  # ASSUMED (M3-07)
+footprint_h = 3  # ASSUMED (M3-07)
+max_health = 700  # ASSUMED (M3-07)
+armor = "structure"
+sight = 4  # ASSUMED (M3-07)
+primary_weapon = ""
+cost = 2000  # ASSUMED (M3-07)
+power = -40  # ASSUMED (M3-07)
+prerequisites = ["dir_reactor_vent"]
+provides = []
+refinery = true
+storage = 1000  # ASSUMED (M3-07)
+dock = [1, 3]  # ASSUMED (M3-07)
+free_unit = "dir_scraper"
+build_time = 400  # ASSUMED (M3-07)
+entrance = "M"
+ticks_per_point = 13
+
+[dir_muster_hatch]
+footprint_w = 2  # ASSUMED (M3-07)
+footprint_h = 2  # ASSUMED (M3-07)
+max_health = 450  # ASSUMED (M3-07)
+armor = "structure"
+sight = 4  # ASSUMED (M3-07)
+primary_weapon = ""
+cost = 300  # ASSUMED (M3-07)
+power = -20  # ASSUMED (M3-07)
+prerequisites = ["dir_reactor_vent"]
+provides = []
+produces = "infantry"
+entrance = "S"
+ticks_per_point = 20
+
+[dir_assembly_bore]
+footprint_w = 3  # ASSUMED (M3-07)
+footprint_h = 3  # ASSUMED (M3-07)
+max_health = 800  # ASSUMED (M3-07)
+armor = "structure"
+sight = 4  # ASSUMED (M3-07)
+primary_weapon = ""
+cost = 2000  # ASSUMED (M3-07)
+power = -30  # ASSUMED (M3-07)
+prerequisites = ["dir_smelter_vent"]
+provides = []
+produces = "vehicle"
+entrance = "M"
+ticks_per_point = 13
+
+[dir_hatch]
+footprint_w = 1  # ASSUMED (M3-07)
+footprint_h = 1  # ASSUMED (M3-07)
+max_health = 350  # ASSUMED (M3-07)
+armor = "structure"
+sight = 3  # ASSUMED (M3-07)
+primary_weapon = ""
+cost = 150  # ASSUMED (M3-07)
+power = 0  # ASSUMED (M3-07)
+prerequisites = ["dir_reactor_vent"]
+provides = []
+entrance = "S"
+ticks_per_point = 20
+
+[dir_bore_head]
+footprint_w = 2  # ASSUMED (M3-07)
+footprint_h = 2  # ASSUMED (M3-07)
+max_health = 500  # ASSUMED (M3-07)
+armor = "structure"
+sight = 3  # ASSUMED (M3-07)
+primary_weapon = ""
+cost = 400  # ASSUMED (M3-07)
+power = 0  # ASSUMED (M3-07)
+prerequisites = ["dir_hatch"]
+provides = []
+entrance = "M"
+ticks_per_point = 13
+
+[dir_cistern]
+footprint_w = 2  # ASSUMED (M3-07)
+footprint_h = 2  # ASSUMED (M3-07)
+max_health = 250  # ASSUMED (M3-07)
+armor = "structure"
+sight = 3  # ASSUMED (M3-07)
+primary_weapon = ""
+cost = 150  # ASSUMED (M3-07)
+power = -10  # ASSUMED (M3-07)
+prerequisites = ["dir_smelter_vent"]
+provides = []
+storage = 1500  # ASSUMED (M3-07)
+
+[dir_bunker]
+footprint_w = 1  # ASSUMED (M3-07)
+footprint_h = 1  # ASSUMED (M3-07)
+max_health = 200  # ASSUMED (M3-07)
+armor = "fortified"
+sight = 1  # ASSUMED (M3-07)
+primary_weapon = ""
+cost = 50  # ASSUMED (M3-07)
+power = 0  # ASSUMED (M3-07)
+prerequisites = ["dir_shaft"]
+provides = []
+category = "defence"
+wall = true
+
+[dir_pillbox]
+footprint_w = 1  # ASSUMED (M3-07)
+footprint_h = 1  # ASSUMED (M3-07)
+max_health = 400  # ASSUMED (M3-07)
+armor = "fortified"
+sight = 7  # ASSUMED (M3-07)
+primary_weapon = "dir_pillbox_gun"
+cost = 400  # ASSUMED (M3-07)
+power = -20  # ASSUMED (M3-07)
+prerequisites = ["dir_muster_hatch"]
+provides = []
+category = "defence"
+needs_power = true
+
+[dir_rocket_nest]
+footprint_w = 1  # ASSUMED (M3-07)
+footprint_h = 1  # ASSUMED (M3-07)
+max_health = 400  # ASSUMED (M3-07)
+armor = "fortified"
+sight = 7  # ASSUMED (M3-07)
+primary_weapon = "dir_rocket_nest_gun"
+cost = 450  # ASSUMED (M3-07)
+power = -20  # ASSUMED (M3-07)
+prerequisites = ["dir_muster_hatch"]
+provides = []
+category = "defence"
+needs_power = true
+
+[dir_rad_mortar]
+footprint_w = 2  # ASSUMED (M3-07)
+footprint_h = 2  # ASSUMED (M3-07)
+max_health = 450  # ASSUMED (M3-07)
+armor = "fortified"
+sight = 8  # ASSUMED (M3-07)
+primary_weapon = "dir_rad_mortar_shell"
+cost = 700  # ASSUMED (M3-07)
+power = -40  # ASSUMED (M3-07)
+prerequisites = ["dir_isotope_works"]
+provides = []
+category = "defence"
+needs_power = true
+
+[dir_mast]
+footprint_w = 2  # ASSUMED (M3-07)
+footprint_h = 2  # ASSUMED (M3-07)
+max_health = 400  # ASSUMED (M3-07)
+armor = "structure"
+sight = 8  # ASSUMED (M3-07)
+primary_weapon = ""
+cost = 400  # ASSUMED (M3-07)
+power = -20  # ASSUMED (M3-07)
+prerequisites = ["dir_reactor_vent"]
+provides = []
+jam_radius = 6  # ASSUMED (M3-07)
+needs_power = true
+
+[dir_isotope_works]
+footprint_w = 2  # ASSUMED (M3-07)
+footprint_h = 2  # ASSUMED (M3-07)
+max_health = 500  # ASSUMED (M3-07)
+armor = "structure"
+sight = 4  # ASSUMED (M3-07)
+primary_weapon = ""
+cost = 800  # ASSUMED (M3-07)
+power = -30  # ASSUMED (M3-07)
+prerequisites = ["dir_smelter_vent"]
+provides = []
+researches = true
+
+[dir_mooring]
+footprint_w = 3  # ASSUMED (M3-07)
+footprint_h = 3  # ASSUMED (M3-07)
+max_health = 700  # ASSUMED (M3-07)
+armor = "structure"
+sight = 4  # ASSUMED (M3-07)
+primary_weapon = ""
+cost = 1200  # ASSUMED (M3-07)
+power = -30  # ASSUMED (M3-07)
+prerequisites = ["dir_isotope_works"]
+provides = []
+produces = "aircraft"
+
+[dir_sunrise]
+footprint_w = 3  # ASSUMED (M3-07)
+footprint_h = 3  # ASSUMED (M3-07)
+max_health = 900  # ASSUMED (M3-07)
+armor = "structure"
+sight = 4  # ASSUMED (M3-07)
+primary_weapon = ""
+cost = 3000  # ASSUMED (M3-07)
+power = -60  # ASSUMED (M3-07)
+prerequisites = ["dir_isotope_works"]
+provides = []
+superweapon = "dir_sunrise"
+superweapon_charge_ticks = 3000  # ASSUMED (M3-07)
+superweapon_entrance_range = 8  # ASSUMED (M3-07)
+
+[auth_seismograph]
+footprint_w = 2  # ASSUMED (M3-07)
+footprint_h = 2  # ASSUMED (M3-07)
+max_health = 300  # ASSUMED (M3-07)
+armor = "structure"
+sight = 6  # ASSUMED (M3-07)
+primary_weapon = ""
+cost = 250  # ASSUMED (M3-07)
+power = -10  # ASSUMED (M3-07)
+prerequisites = ["auth_power"]
+provides = []
+seismic_radius = 8  # ASSUMED (M3-07)
+
+[auth_searchlight]
+footprint_w = 1  # ASSUMED (M3-07)
+footprint_h = 1  # ASSUMED (M3-07)
+max_health = 400  # ASSUMED (M3-07)
+armor = "fortified"
+sight = 8  # ASSUMED (M3-07)
+primary_weapon = ""
+cost = 300  # ASSUMED (M3-07)
+power = -20  # ASSUMED (M3-07)
+prerequisites = ["auth_barracks"]
+provides = []
+category = "defence"
+needs_power = true
+sees_through_blackout = true
+
+[auth_gate]
+footprint_w = 1  # ASSUMED (M3-07)
+footprint_h = 1  # ASSUMED (M3-07)
+max_health = 200  # ASSUMED (M3-07)
+armor = "fortified"
+sight = 1  # ASSUMED (M3-07)
+primary_weapon = ""
+cost = 60  # ASSUMED (M3-07)
+power = 0  # ASSUMED (M3-07)
+prerequisites = ["auth_conyard"]
+provides = []
+category = "defence"
+gate = true
+
+[auth_engineering]
+footprint_w = 2  # ASSUMED (M3-07)
+footprint_h = 2  # ASSUMED (M3-07)
+max_health = 450  # ASSUMED (M3-07)
+armor = "structure"
+sight = 4  # ASSUMED (M3-07)
+primary_weapon = ""
+cost = 500  # ASSUMED (M3-07)
+power = -20  # ASSUMED (M3-07)
+prerequisites = ["auth_power"]
+provides = []
+researches = true

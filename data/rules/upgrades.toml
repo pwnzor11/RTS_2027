@@ -1,7 +1,7 @@
 # Upgrades (M3, design 05 §4). Keys: faction (default from the id prefix), cost, build_time (optional, 0 = from cost),
 # prerequisites (type ids, provides names or upgrade ids), effect (string key the sim interprets).
 # The index of an upgrade (entries sorted by id) is its bit in the player's upgrade mask; at most 64 upgrades.
-# auth_grouting's research building (auth_engineering) arrives with M3-07; until then no building researches it.
+# auth_grouting is researched at auth_engineering (M3-07; a building with researches = true).
 
 [auth_grouting]
 faction = "authority"
