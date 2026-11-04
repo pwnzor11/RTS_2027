@@ -23,16 +23,28 @@ public sealed partial class Simulation
     }
 
     /// <summary>
-    /// The type tables as <paramref name="player"/> sees them. Every sim type lookup goes through this so
-    /// upgrades (design 02 §5) can later give each player its own modified copy. Today: the shared rules.
+    /// The type tables as <paramref name="player"/> sees them (M4-04, design 08 §4): the base rules with the effects of every
+    /// upgrade the player has researched applied (<see cref="RulesDeriver"/>). Derived from the hashed upgrade mask and memoised
+    /// per mask, so it is not state and a loaded sim derives the same tables. A slot outside the player range gets the base rules.
     /// </summary>
-    public SimRules RulesOf(byte player) => Setup.Rules;
+    public SimRules RulesOf(byte player)
+    {
+        ulong[] masks = _players.Upgrades;
+        if (player >= masks.Length || masks[player] == 0) return Setup.Rules;
+        return RulesDeriver.Cached(Setup.Rules, masks[player]);
+    }
 
     /// <summary>M4: tech tier of <paramref name="player"/>: 3 if it owns a live tier-3 provider (<see cref="FactionStartKit.Tier3Provides"/>),
-    /// else 2 with a live tier-2 provider, else 1. Derived, not stored. Stub (M4-01): always 1; M4-04 fills.</summary>
+    /// else 2 with a live tier-2 provider, else 1. Derived, not stored. A neutral or unknown slot is tier 1.</summary>
     public int TierOf(byte player)
     {
-        // M4-04 fills
+        if (player >= _players.Count || _players.IsNeutral(player)) return 1;
+        int f = (int)_players.Faction[player];
+        IReadOnlyList<FactionStartKit> kits = Setup.Rules.StartKits;
+        if (f >= kits.Count) return 1;
+        FactionStartKit kit = kits[f];
+        if (kit.Tier3Provides.Length > 0 && OwnsProvider(player, kit.Tier3Provides)) return 3;
+        if (kit.Tier2Provides.Length > 0 && OwnsProvider(player, kit.Tier2Provides)) return 2;
         return 1;
     }
 
