@@ -24,10 +24,10 @@ internal sealed class UpgradeManager
     /// <summary>Upgrades ordered.</summary>
     public int Ordered { get; private set; }
 
-    public void Think(RecruitKnowledge k, ICommandSink sink, int reserve)
+    public void Think(RecruitKnowledge k, ICommandSink sink, int reserve, bool hold = false)
     {
         int tick = k.View.Tick;
-        if (tick - _last < GapTicks || k.Army.Count < MinArmy || k.Hud.BuildableUpgrades.Count == 0) return;
+        if (hold || tick - _last < GapTicks || k.Army.Count < MinArmy || k.Hud.BuildableUpgrades.Count == 0) return;
         int best = -1;
         foreach (int u in k.Hud.BuildableUpgrades)
             if (best < 0 || k.Rules.Upgrades[u].Cost < k.Rules.Upgrades[best].Cost) best = u;

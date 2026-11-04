@@ -47,6 +47,12 @@ internal sealed class BuildOrderManager
     /// so units do not starve a 2500-credit tier gate that is already under way (it stalled for whole games).</summary>
     public bool ReserveInProgress { get; set; }
 
+    /// <summary>M4-16: when set and true for a structure id, that order step is skipped for now (tech held while the enemy army is bigger).</summary>
+    public Func<string, bool>? HoldStep { get; set; }
+
+    /// <summary>M4-16: decisions on which a tech step was skipped.</summary>
+    public int TechSkips { get; private set; }
+
     /// <summary>Credits the next structure (still to be started or being paid for) will need; units keep this in reserve.</summary>
     public int PendingCost { get; private set; }
 
@@ -109,12 +115,14 @@ internal sealed class BuildOrderManager
         Array.Clear(_seen);
         int[] seen = _seen;
         int target = -1;
-        foreach (int t in _orderTypes)
+        for (int i = 0; i < _orderTypes.Count; i++)
         {
+            int t = _orderTypes[i];
             seen[t]++;
             if (k.BuildingCount[t] + _queued[t] >= seen[t]) continue;
             BuildingType bt = rules.Buildings[t];
             if (!k.Buildable(bt.Category, t)) continue;
+            if (HoldStep != null && HoldStep(_order[i])) { TechSkips++; continue; }
             target = t;
             break;
         }

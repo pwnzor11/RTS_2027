@@ -58,10 +58,49 @@ internal sealed class TierPlanner
     /// <summary>Aircraft ordered.</summary>
     public int AircraftOrdered { get; private set; }
 
+    /// <summary>M4-16 (flag UseUpgrades): percent by which the known enemy army value must exceed ours before tech spending stops.</summary>
+    public const int BehindMarginPct = 20;   // (tune) M4-16
+    /// <summary>M4-16: percent by which our army value must exceed the known enemy army value to count as clearly ahead.</summary>
+    public const int AheadMarginPct = 50;   // (tune) M4-16
+    /// <summary>M4-16: fewest army units that can count as ahead.</summary>
+    public const int AheadMinUnits = 8;   // (tune) M4-16
+
+    /// <summary>M4-16: master switch of the tech hold (no research, tier gates, air tech or superweapon while behind).</summary>
+    public const bool TechHoldEnabled = false;   // (tune) M4-16, off pending measurement
+
+    /// <summary>M4-16: ticks a sighting of the enemy army is trusted for (peak value seen in this window).</summary>
+    public const int EnemyValueMemoryTicks = 1200;   // (tune) M4-16
+
+    private int _enemyPeak, _enemyPeakTick = int.MinValue;
+
+    /// <summary>M4-16: credit value of our mobile army (units, not harvesters), this decision.</summary>
+    public int OwnArmyValue { get; private set; }
+
+    /// <summary>M4-16: credit value of the enemy army seen in the last <see cref="EnemyValueMemoryTicks"/> ticks (peak of what was in view at once).</summary>
+    public int EnemyArmyValue { get; private set; }
+
+    /// <summary>M4-16: our army is worth at least (100 + <see cref="AheadMarginPct"/>) percent of the enemy army seen lately and has <see cref="AheadMinUnits"/> units.</summary>
+    public bool Ahead { get; private set; }
+
+    /// <summary>M4-16: the known enemy army is worth more than ours by <see cref="BehindMarginPct"/>: tech, research and tier gates wait (flag UseUpgrades).</summary>
+    public bool Behind { get; private set; }
+
     /// <summary>Records what is in view this decision.</summary>
     public void Observe(RecruitKnowledge k, List<ViewActor> knownEnemyBuildings)
     {
         SimRules rules = k.Rules;
+        {
+            int own = 0, enemy = 0;
+            foreach (ViewActor a in k.Own)
+                if (a.IsMobile && !IsHarvester(rules, a)) own += UnitCost(rules, a);
+            foreach (ViewActor e in k.Visible)
+                if (e.Relation == Relation.Enemy && e.IsMobile && !IsHarvester(rules, e)) enemy += UnitCost(rules, e);
+            int now = k.View.Tick;
+            if (enemy >= _enemyPeak || now - _enemyPeakTick > EnemyValueMemoryTicks) { _enemyPeak = enemy; _enemyPeakTick = now; }
+            OwnArmyValue = own; EnemyArmyValue = _enemyPeak;
+            Ahead = k.Army.Count >= AheadMinUnits && (long)own * 100 >= (long)_enemyPeak * (100 + AheadMarginPct);
+            Behind = TechHoldEnabled && _p.UseUpgrades && (long)_enemyPeak * 100 > (long)own * (100 + BehindMarginPct);
+        }
         Array.Clear(_cur);
         int seen = 0;
         foreach (ViewActor e in k.Visible)
@@ -97,6 +136,17 @@ internal sealed class TierPlanner
             _defRange = Math.Max(_defRange, rules.Weapons[bt.PrimaryWeapon].Range);
         }
     }
+
+    /// <summary>M4-16: true for the structures that are tech spending (research, tier gates, air tech, superweapon): the build order
+    /// skips them while <see cref="Behind"/>. Economy, production and defence structures are never held.</summary>
+    public bool IsTech(string id) =>
+        id == _faction.ResearchId || id == _faction.Tier2GateId || id == _faction.Tier3GateId || id == _faction.AirProducerId
+        || id == _faction.SuperweaponBuildingId;
+
+    private static bool IsHarvester(SimRules rules, ViewActor a) => a.Kind == ActorKind.Vehicle && rules.Vehicles[a.TypeIndex].HarvestCapacity > 0;
+
+    private static int UnitCost(SimRules rules, ViewActor a) =>
+        a.Kind == ActorKind.Vehicle ? rules.Vehicles[a.TypeIndex].Cost : a.Kind == ActorKind.Infantry ? rules.Infantry[a.TypeIndex].Cost : 0;
 
     private void Remember(ViewActor e, int tick)
     {
