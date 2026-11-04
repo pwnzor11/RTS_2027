@@ -5,6 +5,7 @@ using Rts.Data;
 using Rts.Sim;
 using Rts.Sim.Core;
 using Rts.Sim.Map;
+using Rts.Sim.Rules;
 
 namespace Rts.Game.Sandbox;
 
@@ -76,8 +77,10 @@ public sealed class SkirmishGame
     /// <param name="rulesDir">The data/rules directory.</param>
     /// <param name="mapSeed">0 = curated Rust Belt map; anything else seeds a generated map and the simulation.</param>
     /// <param name="aiTier">AI difficulty tier 1..5.</param>
+    /// <param name="factions">Faction per player slot for <see cref="SimSetup.Factions"/> (M3); null = all Authority.</param>
     /// <exception cref="RulesException">The rules data is missing or invalid.</exception>
-    public static SkirmishGame Create(string rulesDir, ulong mapSeed, int aiTier)
+    /// <exception cref="InvalidOperationException">A chosen faction's start kit names a type the rules do not have yet.</exception>
+    public static SkirmishGame Create(string rulesDir, ulong mapSeed, int aiTier, IReadOnlyList<Faction>? factions = null)
     {
         RuleSet rules = RulesLoader.Load(rulesDir);
         bool curated = mapSeed == 0;
@@ -85,7 +88,7 @@ public sealed class SkirmishGame
             ? MapFile.Load(Path.Combine(rulesDir, "..", "maps", CuratedMapFile))
             : MapGenerator.Generate(GeneratedMapSize, mapSeed);
         ulong simSeed = curated ? CuratedSimSeed : mapSeed;
-        var setup = new SimSetup(simSeed, map, 2, rules.Sim, rules.RulesHash) { AllowDebug = false };
+        var setup = new SimSetup(simSeed, map, 2, rules.Sim, rules.RulesHash) { AllowDebug = false, Factions = factions };
         var sim = new Simulation(setup);
         SkirmishStart.Apply(sim);
 

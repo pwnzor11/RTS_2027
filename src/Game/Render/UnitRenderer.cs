@@ -40,7 +40,9 @@ public static class UnitRenderer
         bool moving = memory.IsMoving(UnitKey.Of(view));
         int frame = SpriteStates.UnitFrame(sprite.Manifest, infantry, moving, view.Facing, tick);
         Vector2 origin = SpriteLayout.UnitOrigin(camera, unit.World);
-        painter.Draw(batch, sprite, frame, origin, PlayerColours.Base(view.Player), camera.Zoom);
+        Color house = PlayerColours.Base(view.Player);
+        if (UnitVisuals.ShowTunnelMarker(view)) DrawTunnelMarker(batch, pixel, origin, infantry, house, camera.Zoom);
+        painter.Draw(batch, sprite, frame, origin, house, camera.Zoom, UnitVisuals.Alpha(view));
 
         if (!selected) return;
         float zoom = camera.Zoom;
@@ -50,6 +52,16 @@ public static class UnitRenderer
         int length = Math.Max(3, (int)MathF.Round(BracketLengthPxAtZoom1 * zoom));
         int thick = zoom < 1f ? 1 : 2;
         DrawBracket(batch, pixel, cx, cy, half, length, thick);
+    }
+
+    // Underground: a dashed square ring in the house colour, so the ghost reads as "in a tunnel".
+    private static void DrawTunnelMarker(SpriteBatch batch, Texture2D pixel, Vector2 origin, bool infantry, Color house,
+        float zoom)
+    {
+        int half = (int)MathF.Round((infantry ? 10 : 22) * zoom);
+        var box = new Rectangle((int)origin.X - half, (int)origin.Y - half, half * 2, half * 2);
+        int dash = Math.Max(2, (int)MathF.Round(4 * zoom));
+        Shapes.DashedOutline(batch, pixel, box, Shapes.Alpha(house, 150), zoom < 1f ? 1 : 2, dash, dash);
     }
 
     // Four L-shaped corners around (cx, cy).

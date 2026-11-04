@@ -178,11 +178,13 @@ public static class PlaceholderArt
         int radius = infantry ? 11 : 20;
         int arrowBlock = infantry ? 1 : 2;
         int facings = infantry ? InfantryFacings : VehicleFacings;
+        // M3-08: the id's short name is printed on the disc, so any Directorate or new Authority type without art is recognisable.
+        string label = ShortName(id);
 
         var frames = new List<Canvas>();
         for (int f = 0; f < facings; f++)
         {
-            frames.Add(PaintUnit(px, radius, arrowBlock, f, facings, bob: 0));
+            frames.Add(PaintUnit(px, radius, arrowBlock, f, facings, bob: 0, label));
         }
         string text;
         if (infantry)
@@ -191,7 +193,7 @@ public static class PlaceholderArt
             {
                 for (int k = 0; k < WalkFrames; k++)
                 {
-                    frames.Add(PaintUnit(px, radius, arrowBlock, f, facings, bob: k == 0 ? 0 : 1));
+                    frames.Add(PaintUnit(px, radius, arrowBlock, f, facings, bob: k == 0 ? 0 : 1, label));
                 }
             }
             text = $"""
@@ -311,7 +313,7 @@ public static class PlaceholderArt
         return c;
     }
 
-    private static Canvas PaintUnit(int px, int radius, int arrowBlock, int facingIndex, int facings, int bob)
+    private static Canvas PaintUnit(int px, int radius, int arrowBlock, int facingIndex, int facings, int bob, string label)
     {
         var c = new Canvas(px, px);
         int centre = px / 2;
@@ -347,6 +349,12 @@ public static class PlaceholderArt
                 for (int ox = 0; ox < arrowBlock; ox++) c.Set(ax + ox, ay + oy, Arrow);
             }
         }
+
+        // Label last so it stays readable over the arrow: scale 1 on infantry (up to 3 letters), scale 2 on vehicles (4 letters).
+        bool small = radius < 15;
+        string text = small && label.Length > 3 ? label[..3] : label;
+        int scale = small ? 1 : 2;
+        DrawText(c, text, centre, cy - (5 * scale) / 2, scale, Label);
         return c;
     }
 

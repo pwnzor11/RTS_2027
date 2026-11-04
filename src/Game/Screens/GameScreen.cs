@@ -29,11 +29,12 @@ public sealed class GameScreen : IScreen
 {
     private const float PanScreenPixelsPerSecond = 320f;
     private const float DragThresholdPx = 4f;
-    private static readonly Keys[] OrderKeys = { Keys.A, Keys.S, Keys.G, Keys.X };
+    private static readonly Keys[] OrderKeys = { Keys.A, Keys.S, Keys.G, Keys.X, Keys.D };
     private static readonly string[] SkirmishHelpLines =
     {
         "arrows / middle-drag pan   wheel zoom   LMB select   RMB move, attack or rally",
-        "Q W E R sidebar tabs   A attack-move   S stop   G guard   X scatter   Space pause",
+        "Q W E R T sidebar tabs   A attack-move   S stop   G guard   X scatter   D deploy   Space pause",
+        "RMB on a Hatch or transport: enter it   T tab: upgrades",
         "Esc leaves placement / sell / repair, then opens the pause menu",
     };
 
@@ -113,7 +114,7 @@ public sealed class GameScreen : IScreen
     /// </summary>
     public static GameScreen CreateSkirmish(GameServices services, SkirmishSettings settings)
     {
-        SkirmishGame game = SkirmishGame.Create(services.RulesDir, settings.MapSeed, settings.AiTier);
+        SkirmishGame game = SkirmishGame.Create(services.RulesDir, settings.MapSeed, settings.AiTier, settings.Factions);
         var sim = new SimSnapshotSource(game, services.RulesDir);
         var screen = new GameScreen(services, sim, settings, () => CreateSkirmish(services, settings), skirmishMode: true);
         screen.IsGameOver = () => sim.Sim.GameOver;
@@ -438,6 +439,8 @@ public sealed class GameScreen : IScreen
             $"tick {snapshot.Tick}  hash {snapshot.StateHash:x16}  fps {_s.Fps}  zoom {_camera.ZoomLabel}"
                 + (_sim is { Paused: true } ? "  PAUSED (. = step)" : ""),
         };
+
+        if (_orders is { DeployArmed: true }) lines.Add("DEPLOY: right-click the cell to dig at (D cancels)");
 
         if (_sim is not null && _orders is not null && !_skirmishMode) // unit counts of both sides would show the fogged enemy
         {

@@ -40,7 +40,8 @@ public sealed class PlaceholderSheet : IDisposable
     /// <param name="position">Screen position of the origin pixel.</param>
     /// <param name="house">House colour.</param>
     /// <param name="scale">Uniform scale (the camera zoom).</param>
-    public void Draw(SpriteBatch batch, int frame, Vector2 position, Color house, float scale)
+    /// <param name="alpha">Opacity 0..1 (the textures are premultiplied, so this scales every channel).</param>
+    public void Draw(SpriteBatch batch, int frame, Vector2 position, Color house, float scale, float alpha = 1f)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
         ArgumentNullException.ThrowIfNull(batch);
@@ -48,8 +49,8 @@ public sealed class PlaceholderSheet : IDisposable
         int fw = _pixels.Manifest.FrameW;
         var rect = new Rectangle(frame * fw, 0, fw, _pixels.Height);
         var origin = new Vector2(_pixels.Manifest.OriginX, _pixels.Manifest.OriginY);
-        batch.Draw(_base, position, rect, Color.White, 0f, origin, scale, SpriteEffects.None, 0f);
-        batch.Draw(_mask, position, rect, house, 0f, origin, scale, SpriteEffects.None, 0f);
+        batch.Draw(_base, position, rect, alpha >= 1f ? Color.White : Color.White * alpha, 0f, origin, scale, SpriteEffects.None, 0f);
+        batch.Draw(_mask, position, rect, alpha >= 1f ? house : house * alpha, 0f, origin, scale, SpriteEffects.None, 0f);
     }
 
     /// <inheritdoc />

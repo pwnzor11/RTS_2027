@@ -10,7 +10,7 @@ using Rts.Sim.Map;
 namespace Rts.Game.Render;
 
 /// <summary>
-/// Draws one frame in order: terrain, occupancy (F3), then buildings and units in one y-sorted pass
+/// Draws one frame in order: terrain, occupancy (F3), M3 ground layers and telegraphs, then buildings and units in one y-sorted pass
 /// (<see cref="DrawOrder"/>), projectiles, fog, path (F4) and range (F5) overlays, health bars above the sprites, then
 /// the drag box.
 /// </summary>
@@ -70,10 +70,15 @@ public sealed class SceneRenderer : IDisposable
             OccupancyOverlay.Draw(batch, pixel, frame.Sim, snapshot, camera, viewport);
         }
 
+        // M3: ground layers and surfacing telegraphs sit on the terrain, under buildings and units.
+        GroundOverlay.DrawBelowUnits(batch, pixel, snapshot, camera, viewport);
+        TelegraphRenderer.Draw(batch, pixel, snapshot.Telegraphs, snapshot.Tick, camera, viewport);
+
         DrawSprites(batch, pixel, frame, camera);
         DrawEffects(batch, snapshot, camera);
 
         ProjectileRenderer.Draw(batch, pixel, frame.Projectiles, camera);
+        GroundOverlay.DrawBlackout(batch, pixel, snapshot, camera, viewport);
         FogRenderer.Draw(batch, pixel, snapshot, camera, viewport);
         if (frame.Overlays.Paths) PathOverlay.Draw(batch, pixel, frame, camera);
         if (frame.Overlays.Ranges) RangeOverlay.Draw(batch, pixel, frame, camera);

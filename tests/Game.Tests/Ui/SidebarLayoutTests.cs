@@ -52,10 +52,10 @@ public sealed class SidebarLayoutTests
         SidebarLayout l = SidebarLayout.Compute(w, h, ui);
         Assert.Equal(l.Minimap.Width, l.Minimap.Height);
         Assert.True(l.Minimap.Height <= h * 0.4f + 1);
-        Assert.Equal(4, l.Tabs.Count);
-        for (int i = 1; i < 4; i++) Assert.Equal(l.Tabs[i - 1].Right, l.Tabs[i].X);
+        Assert.Equal(5, l.Tabs.Count);   // M3-08: the Upgrades tab is the fifth
+        for (int i = 1; i < 5; i++) Assert.Equal(l.Tabs[i - 1].Right, l.Tabs[i].X);
         Assert.Equal(l.SellButton.X, l.Tabs[0].X);
-        Assert.Equal(l.RepairButton.Right, l.Tabs[3].Right);
+        Assert.Equal(l.RepairButton.Right, l.Tabs[4].Right);
     }
 
     [Theory]
@@ -83,7 +83,7 @@ public sealed class SidebarLayoutTests
         Assert.Equal(l.VisibleSlots - 1, l.SlotAt(l.Cameo(l.VisibleSlots - 1).Center));
         Assert.Equal(-1, l.SlotAt(new Point(0, 0)));
         Assert.Equal(-1, l.SlotAt(new Point(l.Cameo(0).Right + 1, l.Cameo(0).Y + 1)));   // in the gap
-        for (int i = 0; i < 4; i++) Assert.Equal(i, l.TabAt(l.Tabs[i].Center));
+        for (int i = 0; i < 5; i++) Assert.Equal(i, l.TabAt(l.Tabs[i].Center));
         Assert.Equal(-1, l.TabAt(l.Grid.Center));
     }
 

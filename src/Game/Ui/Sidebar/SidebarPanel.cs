@@ -16,7 +16,8 @@ using Rts.Sim.Rules;
 namespace Rts.Game.Ui.Sidebar;
 
 /// <summary>
-/// The classic right-hand sidebar (D-066): credits and power bar, Sell and Repair modes, four tabs (Q W E R), a grid of cameo
+/// The classic right-hand sidebar (D-066): credits and power bar, Sell and Repair modes, five tabs (Q W E R, and T for the M3
+/// Upgrades tab: a left click researches an available upgrade, a right click cancels a queued one), a grid of cameo
 /// buttons for every unlocked type of the tab (greyed with the reason on hover when it cannot be queued), the minimap, and the
 /// placement ghost. It only reads the sim (<see cref="PlayerHud"/>, <c>CanPlaceReady</c>) and issues commands through
 /// <see cref="SimHost"/>; no rule is duplicated here. While the cursor is over the panel it consumes the mouse, so clicks never
@@ -44,6 +45,7 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
     private readonly CameoProvider? _cameos;
     private readonly Minimap _minimap;
     private readonly List<BuildOption> _visible = new();
+    private IReadOnlyList<UpgradeEntry> _upgrades = Array.Empty<UpgradeEntry>();
     private SidebarLayout _layout = SidebarLayout.Compute(1280, 720, 1f);
     private PlayerHud _hud;
     private float _ui = 1f;
@@ -138,6 +140,7 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
         if (input.ConsumePressed(Keys.W)) SelectTab(SidebarTab.Defences);
         if (input.ConsumePressed(Keys.E)) SelectTab(SidebarTab.Infantry);
         if (input.ConsumePressed(Keys.R)) SelectTab(SidebarTab.Vehicles);
+        if (input.ConsumePressed(Keys.T)) SelectTab(SidebarTab.Upgrades);
 
         if (_minimapDrag)
         {
@@ -205,6 +208,8 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
         {
             var tab = (SidebarTab)i;
             string caption = SidebarTabs.KeyLetter(tab) + " " + SidebarTabs.Caption(tab);
+            // Five tabs share the width: when the key letter does not fit, the bare caption does.
+            if (BitmapFont.Measure(caption, _ui * 0.8f, FontWeight.Regular) > l.Tabs[i].Width - 4) caption = SidebarTabs.Caption(tab);
             DrawButton(batch, pixel, l.Tabs[i], caption, tab == _tab, _ui * 0.8f);
         }
 
@@ -254,7 +259,16 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
             int wheel = input.WheelDelta;
             if (wheel != 0) ScrollGrid(wheel > 0 ? -1 : 1);
             int slot = l.SlotAt(_mouse);
-            if (slot >= 0 && OptionAtSlot(slot) is BuildOption option)
+            if (_tab == SidebarTab.Upgrades)
+            {
+                if (slot >= 0 && UpgradeAtSlot(slot) is UpgradeEntry entry)
+                {
+                    _tooltip = UpgradeTooltip(entry);
+                    if (left && UpgradeList.LeftClick(_player, entry) is Command research) _source.Host.Issue(research);
+                    else if (right && UpgradeList.RightClick(_player, _hud, entry) is Command cancel) _source.Host.Issue(cancel);
+                }
+            }
+            else if (slot >= 0 && OptionAtSlot(slot) is BuildOption option)
             {
                 _tooltip = TooltipFor(option);
                 if (left) LeftClickCameo(option);
@@ -345,7 +359,7 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
 
     private void ScrollGrid(int rows)
     {
-        int total = (_visible.Count + _layout.Columns - 1) / Math.Max(1, _layout.Columns);
+        int total = (ItemCount + _layout.Columns - 1) / Math.Max(1, _layout.Columns);
         int max = Math.Max(0, total - _layout.Rows);
         _scrollRow = Math.Clamp(_scrollRow + rows, 0, max);
     }
@@ -364,11 +378,32 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
 
     // ---- data -----------------------------------------------------------------------------------
 
+    private int ItemCount => _tab == SidebarTab.Upgrades ? _upgrades.Count : _visible.Count;
+
+    private UpgradeEntry? UpgradeAtSlot(int slot)
+    {
+        int index = _scrollRow * _layout.Columns + slot;
+        return index >= 0 && index < _upgrades.Count ? _upgrades[index] : null;
+    }
+
+    private List<string> UpgradeTooltip(UpgradeEntry e)
+    {
+        var lines = new List<string> { CameoNames.Display(e.Id), $"Cost {e.Cost}" };
+        lines.Add(e.State switch
+        {
+            UpgradeState.Owned => "Researched",
+            UpgradeState.Researching => "Researching   Right click: cancel",
+            _ => "Left click: research",
+        });
+        return lines;
+    }
+
     private void BuildVisibleList()
     {
         _visible.Clear();
+        _upgrades = _tab == SidebarTab.Upgrades ? UpgradeList.Entries(_hud, _source.Rules.Upgrades) : Array.Empty<UpgradeEntry>();
         ProductionCategory category = SidebarTabs.CategoryOf(_tab);
-        foreach (BuildOption o in _hud.Options)
+        foreach (BuildOption o in _tab == SidebarTab.Upgrades ? Array.Empty<BuildOption>() : _hud.Options)
         {
             if (o.Category != category || IsHidden(o)) continue;
             _visible.Add(o);
@@ -467,8 +502,60 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
         Text(batch, pixel, fitted, new Vector2(r.X + (r.Width - w) / 2f, r.Y + (r.Height - h) / 2f), active ? Color.White : TextColour, scale, FontWeight.Regular);
     }
 
+    private void DrawUpgradeGrid(SpriteBatch batch, Texture2D pixel, SidebarLayout l)
+    {
+        float small = _ui * 0.75f;
+        int lh = BitmapFont.LineHeight(small, FontWeight.Regular);
+        for (int slot = 0; slot < l.VisibleSlots; slot++)
+        {
+            Rectangle r = l.Cameo(slot);
+            if (UpgradeAtSlot(slot) is not UpgradeEntry e)
+            {
+                Shapes.Outline(batch, pixel, r, new Color(0x26, 0x2A, 0x22));
+                continue;
+            }
+
+            Shapes.Fill(batch, pixel, r, TileFill);
+            var inner = new Rectangle(r.X + 2, r.Y + 2, Math.Max(1, r.Width - 4), Math.Max(1, r.Height - 4));
+            if (_cameos is null || !_cameos.TryDraw(batch, e.Id, inner, _houseColour))
+            {
+                Shapes.Fill(batch, pixel, inner, new Color(0x32, 0x3A, 0x2E));
+                Shapes.Outline(batch, pixel, inner, new Color(0x4A, 0x54, 0x44));
+                CentredText(batch, pixel, PlaceholderArt.ShortName(e.Id), inner, TextColour, _ui, FontWeight.Bold);
+            }
+
+            string name = Fit(CameoNames.Display(e.Id), r.Width - 4, small);
+            Shapes.Fill(batch, pixel, new Rectangle(r.X + 1, r.Bottom - lh - 2, r.Width - 2, lh + 1), new Color(0, 0, 0, 170));
+            Text(batch, pixel, name, new Vector2(r.X + 3, r.Bottom - lh - 2), e.State == UpgradeState.Owned ? DimText : TextColour, small, FontWeight.Regular);
+
+            switch (e.State)
+            {
+                case UpgradeState.Researching:
+                    int done = r.Height * e.ProgressPermille / 1000;
+                    Shapes.Fill(batch, pixel, new Rectangle(r.X, r.Y, r.Width, r.Height - done), new Color(0, 0, 0, 120));
+                    Shapes.Fill(batch, pixel, new Rectangle(r.X, r.Bottom - 2, r.Width * e.ProgressPermille / 1000, 2), GoodGreen);
+                    Shapes.Outline(batch, pixel, r, Gold);
+                    break;
+                case UpgradeState.Owned:
+                    Shapes.Fill(batch, pixel, r, Veil);
+                    CentredText(batch, pixel, "OWNED", r, GoodGreen, small, FontWeight.Bold);
+                    Shapes.Outline(batch, pixel, r, Border);
+                    break;
+                default:
+                    Shapes.Outline(batch, pixel, r, r.Contains(_mouse) ? Gold : Border);
+                    break;
+            }
+        }
+    }
+
     private void DrawGrid(SpriteBatch batch, Texture2D pixel, SidebarLayout l)
     {
+        if (_tab == SidebarTab.Upgrades)
+        {
+            DrawUpgradeGrid(batch, pixel, l);
+            return;
+        }
+
         QueueView? queue = QueueOf(SidebarTabs.CategoryOf(_tab));
         float small = _ui * 0.75f;
         for (int slot = 0; slot < l.VisibleSlots; slot++)
@@ -489,6 +576,7 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
             {
                 Shapes.Fill(batch, pixel, inner, new Color(0x32, 0x3A, 0x2E));
                 Shapes.Outline(batch, pixel, inner, new Color(0x4A, 0x54, 0x44));
+                CentredText(batch, pixel, PlaceholderArt.ShortName(id), inner, TextColour, _ui, FontWeight.Bold);
             }
 
             // Name strip along the bottom.

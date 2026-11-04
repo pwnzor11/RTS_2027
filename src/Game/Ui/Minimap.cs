@@ -31,6 +31,10 @@ public sealed class Minimap : IDisposable
     private Texture2D? _fog;
     private int _fogTick = -1;
     private readonly Color[] _fogPixels;
+    private readonly Color[] _jamPixels;
+    private Texture2D? _jam;
+    private int _jamKey = -1;
+    private bool _jamAny;
 
     /// <summary>Creates the minimap for a map. <paramref name="sim"/> supplies relations (own / allied / enemy); null draws everyone as enemy.</summary>
     public Minimap(MapData map, Simulation? sim, byte localPlayer)
@@ -39,6 +43,7 @@ public sealed class Minimap : IDisposable
         _sim = sim;
         _local = localPlayer;
         _fogPixels = new Color[map.Width * map.Height];
+        _jamPixels = new Color[map.Width * map.Height];
     }
 
     /// <summary>Draws the minimap into <paramref name="area"/>.</summary>
@@ -75,6 +80,7 @@ public sealed class Minimap : IDisposable
         }
 
         DrawFog(batch, device, m.Image, snapshot);
+        DrawJam(batch, device, m.Image, snapshot);
         Rectangle view = Rectangle.Intersect(m.ViewportRect(cameraTopLeftWorld, viewSizeWorld), m.Image);
         if (!view.IsEmpty) Shapes.Outline(batch, pixel, view, ViewColour);
         Shapes.Outline(batch, pixel, area, FrameColour);
@@ -108,6 +114,25 @@ public sealed class Minimap : IDisposable
         }
 
         batch.Draw(_fog, image, Color.White);
+    }
+
+    // M3: Static Broadcast. Jammed cells (per viewer, from the snapshot) are covered with flickering static.
+    private void DrawJam(SpriteBatch batch, GraphicsDevice device, Rectangle image, SimSnapshot snapshot)
+    {
+        if (snapshot.Ground.Count != _map.Width * _map.Height) return;
+        int key = snapshot.Tick / MinimapJam.FlickerTicks;
+        if (_jamKey != key)
+        {
+            _jamKey = key;
+            _jamAny = MinimapJam.Fill(_jamPixels, snapshot);
+            if (_jamAny)
+            {
+                _jam ??= new Texture2D(device, _map.Width, _map.Height);
+                _jam.SetData(_jamPixels);
+            }
+        }
+
+        if (_jamAny && _jam is not null) batch.Draw(_jam, image, Color.White);
     }
 
     private Texture2D BakeTerrain(GraphicsDevice device)
@@ -170,5 +195,6 @@ public sealed class Minimap : IDisposable
     {
         _terrain?.Dispose();
         _fog?.Dispose();
+        _jam?.Dispose();
     }
 }

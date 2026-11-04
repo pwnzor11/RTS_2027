@@ -243,6 +243,23 @@ public sealed class SimSnapshotSource : ISnapshotSource
         return false;
     }
 
+    /// <summary>Rules type index of a live vehicle or infantry unit (read from the sim, like <see cref="TryGetPosition"/>).</summary>
+    public bool TryGetTypeIndex(UnitKey key, out int typeIndex)
+    {
+        typeIndex = -1;
+        if (key.Kind == ActorKind.Vehicle && Sim.Units.Slots.IsAlive(key.Id))
+        {
+            typeIndex = Sim.Units.TypeIndex[key.Id.Index];
+            return true;
+        }
+        if (key.Kind == ActorKind.Infantry && Sim.Infantry.Slots.IsAlive(key.Id))
+        {
+            typeIndex = Sim.Infantry.TypeIndex[key.Id.Index];
+            return true;
+        }
+        return false;
+    }
+
     /// <summary>Every live vehicle and infantry unit of a player, in slot order.</summary>
     public List<UnitKey> AliveUnits(byte player)
     {

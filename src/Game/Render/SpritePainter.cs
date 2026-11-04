@@ -25,7 +25,8 @@ public sealed class SpritePainter : IDisposable
     /// <param name="origin">Screen position of the origin pixel.</param>
     /// <param name="house">House colour.</param>
     /// <param name="zoom">Camera zoom.</param>
-    public void Draw(SpriteBatch batch, ResolvedSprite sprite, int frame, Vector2 origin, Color house, float zoom)
+    /// <param name="alpha">Opacity 0..1; 1 draws exactly as before M3.</param>
+    public void Draw(SpriteBatch batch, ResolvedSprite sprite, int frame, Vector2 origin, Color house, float zoom, float alpha = 1f)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
         ArgumentNullException.ThrowIfNull(batch);
@@ -33,10 +34,10 @@ public sealed class SpritePainter : IDisposable
         switch (sprite.Source)
         {
             case SpriteSource.Library:
-                sprite.Library!.Sheet(sprite.Id).Draw(batch, frame, origin, house, zoom);
+                sprite.Library!.Sheet(sprite.Id).Draw(batch, frame, origin, house, zoom, alpha);
                 break;
             case SpriteSource.Legacy:
-                sprite.Legacy!.Draw(batch, frame, origin, house, zoom);
+                sprite.Legacy!.Draw(batch, frame, origin, house, zoom, alpha);
                 break;
             default:
                 if (!_placeholders.TryGetValue(sprite, out PlaceholderSheet? sheet))
@@ -44,7 +45,7 @@ public sealed class SpritePainter : IDisposable
                     sheet = new PlaceholderSheet(batch.GraphicsDevice, sprite.Placeholder!);
                     _placeholders.Add(sprite, sheet);
                 }
-                sheet.Draw(batch, frame, origin, house, zoom);
+                sheet.Draw(batch, frame, origin, house, zoom, alpha);
                 break;
         }
     }
