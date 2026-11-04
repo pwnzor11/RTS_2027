@@ -40,6 +40,8 @@ internal readonly record struct DirectiveBias
     public bool ForceTech { get; init; }
     /// <summary>The air tech / superweapon do not wait for an army of <see cref="TierPlanner.ArmyBeforeLateTech"/> units.</summary>
     public bool EarlyLateTech { get; init; }
+    /// <summary>Aircraft kept flying or queued at once.</summary>
+    public int AircraftCap { get; init; }
     /// <summary>Build the second refinery and want the extra harvester at once; garrison neutral ruins further out.</summary>
     public bool Expand { get; init; }
     /// <summary>Infantry kept out of garrisons (garrisons fill with the surplus).</summary>
@@ -63,7 +65,7 @@ internal readonly record struct DirectiveBias
     {
         Set = false, WavePermille = 1000, HomeGuard = 0, RetreatPermille = 1000, TargetPlayer = -1, Mix = DirectiveCodec.MixAuto, MixPermille = 0,
         UnitReserve = 0, UpgradeMinArmy = UpgradeManager.MinArmy, UpgradeCushion = UpgradeManager.Cushion, GatePermille = 1000,
-        Tier3ArmyPermille = 1000, ForceTech = false, EarlyLateTech = false, Expand = false,
+        Tier3ArmyPermille = 1000, ForceTech = false, EarlyLateTech = false, AircraftCap = TierPlanner.MaxAircraft, Expand = false,
         GarrisonKeep = GarrisonManager.KeepInArmy, GarrisonRadius = GarrisonManager.RadiusCells,
         AttackCell = Directive.NoCell, RallyCell = Directive.NoCell,
     };
@@ -97,7 +99,7 @@ internal readonly record struct DirectiveBias
                 b = b with { UnitReserve = 200, GatePermille = 300, Tier3ArmyPermille = 500, ForceTech = true, UpgradeMinArmy = 6, UpgradeCushion = 150 };
                 break;
             case DirectiveCodec.FocusAir:
-                b = b with { UnitReserve = 150, GatePermille = 600, EarlyLateTech = true };
+                b = b with { UnitReserve = 150, GatePermille = 600, EarlyLateTech = true, AircraftCap = TierPlanner.MaxAircraft + 2 };
                 break;
             case DirectiveCodec.FocusSuperweapon:
                 b = b with { UnitReserve = 200, GatePermille = 400, Tier3ArmyPermille = 500, ForceTech = true, EarlyLateTech = true };

@@ -35,6 +35,9 @@ internal sealed class ProductionManager
     /// <summary>M4-12: while true only a wanted harvester is bought (the no-income rescue is saving up).</summary>
     public bool Hold { get; set; }
 
+    /// <summary>M5-02: the commander's directive as knob values, set by the AI each decision (<see cref="DirectiveBias.Plain"/> = none).</summary>
+    public DirectiveBias Bias { get; set; } = DirectiveBias.Plain;
+
     /// <summary>Units queued so far (infantry + vehicles).</summary>
     public int Queued { get; private set; }
 
@@ -58,6 +61,7 @@ internal sealed class ProductionManager
         if (_tier != null && _tier.Profile.RespondToAttacks && k.View.Tier > _bagTier) GrowBags(k);
         if (!k.HaveYard) return;
         Rally = RallyCell(k);
+        if (Bias.HasRallyCell && k.View.IsPassable(Bias.RallyCell, Locomotion.Tracked)) Rally = Bias.RallyCell;   // M5-02: a turtle defends where the commander says
         if (_tactics != null) Rally = _tactics.SafeCell(k, Rally);   // M3-10: not on an irradiated cell
         if (_faction.SkipUnbuildable)
         {
@@ -91,10 +95,13 @@ internal sealed class ProductionManager
         // Vehicles first; infantry leaves the next vehicle's price in reserve so cheap riflemen cannot starve the factory.
         // No scraper left (it is never replaced): there is no income to wait for, so nothing is held back.
         if (_noIncome) reserve = 0;
+        else reserve += Bias.UnitReserve;   // M5-02: economy / tech first (the rescue above is never held back)
         if (holdForHarvester) reserve += rules.Vehicles[harv].Cost;
-        else Lane(k, sink, reserve, ProductionCategory.Vehicle, _veh, ref _vehIdx, t => rules.Vehicles[t].Cost);
+        else Lane(k, sink, reserve + (Bias.Mix == DirectiveCodec.MixInfantry ? MixLaneHold : 0), ProductionCategory.Vehicle, _veh, ref _vehIdx, t => rules.Vehicles[t].Cost);
         int vehicleReserve = holdForHarvester || _noIncome ? 0 : k.Queue(ProductionCategory.Vehicle).Items.Count == 0 && k.Buildable(ProductionCategory.Vehicle, PeekVehicle(rules))
             ? rules.Vehicles[PeekVehicle(rules)].Cost : 0;
+        if (Bias.Mix == DirectiveCodec.MixInfantry) vehicleReserve = 0;   // M5-02: infantry first
+        else if (Bias.Mix == DirectiveCodec.MixVehicles) vehicleReserve += MixLaneHold;
         Lane(k, sink, reserve + vehicleReserve, ProductionCategory.Infantry, _inf, ref _infIdx, t => rules.Infantry[t].Cost);
     }
 
@@ -124,6 +131,7 @@ internal sealed class ProductionManager
             Queued++;
             return;
         }
+        if (Bias.MixPermille > 0 && !(cat == ProductionCategory.Vehicle && _first)) type = PreferMix(k, cat, mix, type);   // M5-02
         if (!k.Buildable(cat, type)) return;
         int funds = k.Hud.Cash + k.Hud.Stored;
         if (_noIncome && funds < cost(type) + reserve)
@@ -146,6 +154,48 @@ internal sealed class ProductionManager
             if (idx % mix.Length == 0) Shuffle(mix);
         }
         Queued++;
+    }
+
+    /// <summary>M5-02: credits the less wanted lane leaves in hand when the commander prefers infantry or vehicles.</summary>
+    public const int MixLaneHold = 150;   // (tune)
+
+    /// <summary>
+    /// M5-02: with a unit-mix preference, a build takes the best buildable unit of the preferred kind (bag first, then every unit of the
+    /// faction) in <see cref="DirectiveBias.MixPermille"/> of the cases, else the bag's choice. Anti-air: a gun that can hit aircraft;
+    /// anti-structure: the most structure damage per squared credit. Infantry / vehicles act on the lane money instead.
+    /// </summary>
+    private int PreferMix(RecruitKnowledge k, ProductionCategory cat, int[] bag, int bagChoice)
+    {
+        if (Bias.Mix != DirectiveCodec.MixAntiAir && Bias.Mix != DirectiveCodec.MixAntiStructure) return bagChoice;
+        if (_rng!.Next(1000) >= Bias.MixPermille) return bagChoice;
+        SimRules rules = k.Rules;
+        int best = -1;
+        long bestScore = 0;
+        int count = cat == ProductionCategory.Infantry ? rules.Infantry.Count : rules.Vehicles.Count;
+        // the bag first (so a tie keeps the faction's own taste), then the rest of the roster in rule order
+        for (int pass = 0; pass < 2; pass++)
+            for (int i = 0; i < (pass == 0 ? bag.Length : count); i++)
+            {
+                int t = pass == 0 ? bag[i] : i;
+                if (!k.Buildable(cat, t)) continue;
+                long s = MixScore(rules, cat, t);
+                if (s > bestScore) { bestScore = s; best = t; }
+            }
+        return best < 0 ? bagChoice : best;
+    }
+
+    private long MixScore(SimRules rules, ProductionCategory cat, int t)
+    {
+        int weaponIdx, cost;
+        if (cat == ProductionCategory.Infantry) { InfantryType u = rules.Infantry[t]; weaponIdx = u.PrimaryWeapon; cost = u.Cost; if (u.Faction != _faction.Faction) return 0; }
+        else { VehicleType u = rules.Vehicles[t]; weaponIdx = u.PrimaryWeapon; cost = u.Cost; if (u.Faction != _faction.Faction || u.Locomotion == Locomotion.Air || u.HarvestCapacity > 0) return 0; }
+        if (weaponIdx < 0 || cost <= 0) return 0;
+        WeaponType w = rules.Weapons[weaponIdx];
+        if (w.Damage <= 0) return 0;
+        if (Bias.Mix == DirectiveCodec.MixAntiAir) return w.Targets == WeaponTargets.Ground ? 0 : 1_000_000 / cost;
+        WarheadType wh = rules.Warheads[w.Warhead];
+        long dmg = (long)w.Damage * wh.VersusPercent[(int)ArmorClass.Structure] * (wh.Splash > 0 ? 12 : 10);
+        return dmg * 1_000_000L / ((long)Math.Max(1, w.RateOfFire) * cost);
     }
 
     /// <summary>M4-12: rebuilds both bags as the faction's base bag plus the tier lists up to the player's tier now, and reshuffles them.
