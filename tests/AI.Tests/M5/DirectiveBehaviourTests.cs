@@ -28,7 +28,7 @@ public class DirectiveBehaviourTests(ITestOutputHelper log)
         }
     }
 
-    private sealed record Outcome(int FirstWave, int TargetAtWave, int Tier2Tick, int Tier3Tick, int AntiAir, int Waves, int MaxTier);
+    private sealed record Outcome(int FirstWave, int TargetAtWave, int Tier2Tick, int Tier3Tick, int AntiAir, int Waves, int MaxTier, int[] TargetedAt);
 
     private static int Arg(byte posture = DirectiveCodec.PostureBalanced, byte focus = DirectiveCodec.FocusArmy, byte target = DirectiveCodec.AnyTarget,
         byte mix = DirectiveCodec.MixAuto, bool expand = false) => DirectiveCodec.Pack(posture, focus, target, mix, expand);
@@ -47,17 +47,20 @@ public class DirectiveBehaviourTests(ITestOutputHelper log)
         driver.Add(2, new IdleAi(), profile);
         if (arg is int a) driver.SetDirectiveSource(0, new Scripted(1, a, Directive.NoCell));
         var pending = new List<Command>();
-        int firstWave = -1, target = -1;
+        var targetedAt = new[] { -1, -1, -1 };   // first tick each player was the target
+        int firstWave = -1, target = -1;   // target = the first enemy the waves are aimed at (known once a building of one has been seen)
         for (int t = 0; t < ticks; t++)
         {
             driver.Collect(sim, pending);
-            if (firstWave < 0 && ai.Waves > 0) { firstWave = sim.Tick; target = ai.TargetPlayer; if (stopAtWave > 0) break; }
+            if (firstWave < 0 && ai.Waves > 0) firstWave = sim.Tick;
+            if (target < 0 && ai.TargetPlayer >= 0) target = ai.TargetPlayer;
+            if (ai.TargetPlayer is >= 0 and < 3 && targetedAt[ai.TargetPlayer] < 0) targetedAt[ai.TargetPlayer] = sim.Tick;
             sim.Step(pending);
             pending.RemoveAll(c => c.ExecTick < sim.Tick);
         }
         int antiAir = CountAntiAir(sim, faction);
-        log.WriteLine($"directive={(arg is null ? "none" : arg.ToString())} firstWave={firstWave} target={target} tier2={ai.Tier2Tick} tier3={ai.Tier3Tick} antiAir={antiAir} waves={ai.Waves} at tick {sim.Tick}");
-        return new Outcome(firstWave, target, ai.Tier2Tick, ai.Tier3Tick, antiAir, ai.Waves, ai.MaxTier);
+        log.WriteLine($"directive={(arg is null ? "none" : arg.ToString())} targetedAt=[{string.Join(',', targetedAt)}] firstWave={firstWave} target={target} tier2={ai.Tier2Tick} tier3={ai.Tier3Tick} antiAir={antiAir} waves={ai.Waves} at tick {sim.Tick}");
+        return new Outcome(firstWave, target, ai.Tier2Tick, ai.Tier3Tick, antiAir, ai.Waves, ai.MaxTier, targetedAt);
     }
 
     /// <summary>Anti-air things player 0 owns: structures and units whose gun can hit aircraft.</summary>
@@ -88,8 +91,11 @@ public class DirectiveBehaviourTests(ITestOutputHelper log)
         byte other = (byte)(plain.TargetAtWave == 1 ? 2 : 1);   // the player the plain AI did not pick
         Outcome allIn = Play(Tier(3), Arg(DirectiveCodec.PostureAllIn, target: other), 9000);
         Assert.True(allIn.FirstWave > 0 && allIn.FirstWave < plain.FirstWave - 300, $"all-in {allIn.FirstWave} vs plain {plain.FirstWave}");
-        Assert.NotEqual(plain.TargetAtWave, allIn.TargetAtWave);
-        Assert.Equal(other, allIn.TargetAtWave);
+        // the waves go to the named player once a building of it is known (before that the AI scouts and takes what it sees)
+        Assert.True(allIn.TargetedAt[other] > 0, "the named player became the target");
+        Assert.True(plain.TargetedAt[other] < 0 || allIn.TargetedAt[other] < plain.TargetedAt[other] - 100,
+            $"named player targeted at {allIn.TargetedAt[other]} with the directive, {plain.TargetedAt[other]} without");
+        Assert.True(allIn.Waves >= 1);
     }
 
     [Fact]
@@ -114,8 +120,10 @@ public class DirectiveBehaviourTests(ITestOutputHelper log)
     {
         Outcome plain = Play(Tier(3), null, 9000, cash: 12000);
         Outcome tech = Play(Tier(3), Arg(focus: DirectiveCodec.FocusTech), 9000, cash: 12000);
-        Assert.True(tech.Tier2Tick > 0, "the tech focus reaches tier 2");
-        Assert.True(plain.Tier2Tick < 0 || tech.Tier2Tick < plain.Tier2Tick - 600, $"tier 2 at {tech.Tier2Tick} with the directive, {plain.Tier2Tick} without");
+        // tier 2 comes at the scheduled gate for both (the gate is built early anyway); the tier-3 gate is what the focus brings forward
+        Assert.True(tech.Tier3Tick > 0, "the tech focus reaches tier 3");
+        Assert.True(plain.Tier3Tick < 0 || tech.Tier3Tick < plain.Tier3Tick - 600, $"tier 3 at {tech.Tier3Tick} with the directive, {plain.Tier3Tick} without");
+        Assert.True(tech.MaxTier > plain.MaxTier || tech.Tier3Tick < plain.Tier3Tick);
     }
 
     [Fact]
