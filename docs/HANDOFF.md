@@ -1,39 +1,36 @@
-# Handoff: Session 7 — art push + reworks, M5 sim wiring (M5-01/02/05), AI re-measure
-Last commit: 55a3a27 on main (PR #11) + this handoff commit (2026-11-04)
-Where things stand: M3 complete; M4-01..M4-15 done; M4-16 round 1 landed (start-bias sim fixes, AI round 1, rules garrison
-counters, Neutral faction, 8× benchmark) but the AI tier ladder is not re-measured on the fixed starts yet. M3-21 done. M5 plan
-approved (D-103) and M5-00/03/04/08 are on main: src/Llm (contracts, providers, reply parser, fog-honest summary), the LLM
-settings page and DPAPI key store; nothing is wired into a game yet. Session-5 art is still NOT on GitHub (see Waiting on the user).
-Full suite 1 997 tests, green on Linux and Windows CI. Decisions D-099..D-107.
+# Handoff: Session 8 — art push + reworks, owner LLM play-test, M4-16 diagnosis, M6 contracts
+Last commit: 679c511 on main (PR #12) + this handoff commit (2026-11-04)
+Where things stand: M5 is playable end to end: any AI slot can have an LLM commander (Anthropic or OpenAI-compatible) that sets
+its strategy every 30 s through a recorded directive, talks in character in a chat panel, survives save/load and replays exactly
+with no network. Only M5-10's owner play-test with a real key is open. M4-16 round 2 measured: tier ladder flat or inverted, target
+not met (docs/balance/m4_16_round2.md). Session-5 art is still NOT on GitHub. Full suite 2 096 tests (AI 102, Game 773, Llm 107,
+Scripting 43, Sim 1 071), green on Linux and Windows CI. Decisions D-108..D-112. Save format 9 (older saves no longer load).
 
 ## Start here (shown to the user as the plan; nothing starts until they say go)
-1. Art: once the owner has put `rts_art.bundle` + the session-5 `push_art.ps1` in the RTS_2027 folder and run it, check that
-   `integ-art` is on GitHub, merge it into main through a PR (CI checks sprites), then ART-S6: reworks (Seismograph drum,
-   Searchlight lens, Assembly Bore roof, Hatch cage, auth_gate open state) and the PAL_DIR radiation-green ramp for the rad mortar.
-   Pilot one rework as a contact sheet before the rest.
-2. M5-01 sim contracts (Opus): CommandKind.Directive = 23, directive state part + hash, PlayerView.Directive, pack/unpack of
-   DirectiveDraft (src/Llm/Contracts.cs). Then in one wave: M5-02 DirectiveBias in the tiered AI, M5-05 commander loop (30 s,
-   apply-at-tick, stale drop, fallback; wire LlmHooks.TestConnection), M5-06 personas from leaders.md, M5-07 chat panel,
-   M5-09 setup/spectator. M5-10 replay/save tests last. Plan: docs/design/09_m5_plan.md.
-3. M4-16 round 2 (overnight-friendly, long matches): re-measure the tier ladder, cross-faction, Directorate mirror and 4-player
-   matrix with the new per-game seeds; then tune toward ≥ 60 % per tier; try mirror-symmetric placement + seeded placement
-   variation together; measure the Q-43 tier-cost proposal.
-4. Then M6 Left Behind contracts (D-102 answers in place).
+1. Art: once `integ-art` (or the bundle) is on GitHub, merge it into main through a PR (CI checks sprites), then ART-S6 reworks
+   (Seismograph drum, Searchlight lens, Assembly Bore roof, Hatch cage, auth_gate open state) and the PAL_DIR radiation-green ramp.
+   Pilot one rework as a contact sheet first.
+2. Owner LLM play-test (USER_CHECKS session 7): confirm D-110 (chat not in replays), D-111 (Cmdr toggle, Enter, /to N), D-112
+   (persona voices). Fix whatever the play-test finds (prompt wording, cadence feel, chat panel size).
+3. M4-16 diagnosis: why higher Authority tiers lose (timeline traces of lost 3 v 2 seeds), then one change at a time: tech hold on,
+   Q-43 tier costs, placement symmetry + seeded variation; re-run the 4-player matrix. Target >= 60 % per ladder cell.
+4. M6 Left Behind contracts (D-102 answers in place; design docs/design/06_left_behind.md).
 
 ## Half-finished work
-- M4-16: tier ladder target not met; results so far in docs/balance/m4_16_ai.md; tech hold coded but off.
-- Placement symmetry patch (reverted 55a3a27, kept in history as f796142) — needs seeded variation first.
-- Summary can't report enemy superweapon charge (not in PlayerView); small view addition if wanted.
+- M4-16: ladder not met; round-2 numbers in docs/balance/m4_16_round2.md; tech hold coded but off; placement symmetry patch parked
+  (f796142, reverted in 55a3a27).
+- M5: a loaded game's commanders restart their history and call count; the summary still cannot report enemy superweapon charge.
+- Commander chat is game-layer only (no replay chat block) pending D-110.
 
 ## Waiting on the user
-- Art push: `rts_art.bundle` and the session-5 `push_art.ps1` (from the session-5 chat downloads); `art_objects.tar` is already in
-  `RTS_2027\art\`. The `_art_push` folder holds the session-4 files — do not re-run it.
-- Q-40 model names; Q-41 old lore DRAFT banners; Q-42 foam; Q-43 tier costs (OPEN_QUESTIONS).
-- D-105 balance numbers: confirm after a play-test.
-- Delete old remote branches on GitHub: `wp/m2-*`, `wp/m3-*`, `wp/m4-*`, `integ-m2*`, `integ-m3`, `integ-m4` (keep `wp/art-*`,
-  `restore/*`). New session-6 branches can go too once main is confirmed: `wp/m3-21`, `wp/m4-16*`, `wp/m5-*`, `wp/neutral`,
-  `wp/lore`, `integ-s6`.
-- The stray "check" scheduled task from session 5, if still listed.
+- Art push: `rts_art.bundle` + the session-5 `push_art.ps1` into the RTS_2027 folder, then run it (owner said: after this session).
+- Play-test the LLM commander with a real key (Settings > "AI commander (LLM)...").
+- Q-41 old lore DRAFT banners; Q-42 foam; Q-43 tier costs. D-105 balance numbers still "assumed — confirm".
+- Delete old remote branches: `wp/m2-*`, `wp/m3-*`, `wp/m4-*`, `integ-m2*`, `integ-m3`, `integ-m4`, `integ-s6`, `wp/m3-21`,
+  `wp/m4-16*`, `wp/m5-03`, `wp/m5-04`, `wp/m5-08`, `wp/neutral`, `wp/lore`, and this session's `wp/m5-02`, `wp/m5-05`, `wp/m5-06`,
+  `wp/m5-07`, `wp/m5-09`, `integ-s7` (keep `wp/art-*`, `restore/*`).
+- Scheduled tasks: several one-shot "placeholder"/"check"/"noop"/"unused" reminders from helpers in this and earlier sessions are
+  listed (all fired and disabled); the owner can delete them in the scheduled-tasks list.
 
 ## How to run this session
 - Lead: Opus for build sessions (the owner wants long unattended overnight builds); Sonnet for a pure review/question session. Helpers: Haiku default; Sonnet for sim core,
@@ -88,7 +85,19 @@ Full suite 1 997 tests, green on Linux and Windows CI. Decisions D-099..D-107.
   - `ai match` now seeds each game of a pair separately; numbers from before session 6 are not comparable.
   - Remote branch deletion and folder requests outside RTS_2027 are blocked by the session safety checks: ask the owner.
   - The owner's RTS_2027 folder can be linked through the desktop app (device bridge); read-only checks of it are fine.
-
+- Session 7 lessons:
+  - Every helper test command gets a hang guard: `flock /home/claude/wt/dotnet.lock timeout 580 dotnet test ... --blame-hang-timeout 5m`.
+    One deadlocked test (an awaited hand-made Task) held the shared lock and stalled the whole wave; kill only that testhost by pid.
+  - Helpers that queue on the lock hand back early or reach for scheduling tools (three created "placeholder" reminders even
+    though the brief forbade it). Brief them: run builds as FOREGROUND calls with a 600 000 ms tool timeout, rerun if still queued,
+    never hand back while queued, no monitors, no scheduling, no mcp__remote-devices__* tools.
+  - Haiku managed well-bounded packages (personas, chat panel) but gave up on the setup/save package while queued; Sonnet finished it.
+  - After cloning, run `git lfs install` BEFORE `git lfs pull`; check `git lfs ls-files` shows `*` (not `-`) or the scene/menu proof
+    tests fail with DivideByZero.
+  - A worktree for measurements: `git worktree add --detach /home/claude/wt/measure <branch>`, Release build of src/Tools; each
+    16-game `ai match` cell takes 1–2.5 min, the whole M4-16 set about 15 min with two lanes.
+  - New sim state parts move the golden hashes, SkirmishDefaultHashTests and CombatTests' final hash; re-pin those only, and only
+    after checking that the part sub-hashes other than the new one are unchanged.
 
 ## If time runs short
-Do item 1 (art onto main) and M5-01, so the next session can fan out the rest of M5.
+Do item 1 (art onto main) and item 2 (play-test fixes); M4-16 and M6 can each fill a later overnight session.

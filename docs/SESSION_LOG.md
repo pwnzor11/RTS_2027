@@ -119,3 +119,20 @@ repeatedly cut off mid-task while queued on the dotnet lock; several handed back
 mirror-symmetric AI placement patch made AI mirrors stalemate and was reverted (D-104). The full suite moved to 1 997 tests.
 **User check:** USER_CHECKS.md, "Session 6 · M4-16 round 1, M3-21, Neutral, M5 settings".
 **Next session should:** see HANDOFF (art push + reworks, M5-01/02/05 sim wiring, AI re-measure).
+
+## Session 7 · 2026-11-04 (owner at work; said "do as much as you can, you decide the order")
+**Goal:** M5 sim wiring and as much of the LLM commander as possible; Q-40 model lookup; AI re-measure. Art push waits on the owner.
+**Done:** Q-40 answered from the live docs: Haiku 5.5 default, Sonnet 5.5 strong, effort low, first text block after thinking (D-108).
+M5-01 directive command + "directive" state part, save format 9 (D-109). IDirectiveSource on AiDriver. M5-02 DirectiveBias in the
+tiered AI (all-in first wave tick 1230 vs 2310, turtle 3810; plain games unchanged). M5-05 commander loop + real Test connection;
+M5-06 eight leader personas; M5-07 chat panel (Enter, /to N); M5-09 Cmdr toggle, save header v4, spectator "LLM" tag; M5-10 replay
+and save tests, loaded saves rebuild commanders (CommanderSet). Chat lines stay out of the sim/replays (D-110, assumed). M4-16 round 2
+re-measured: tier ladder flat or inverted, target not met (docs/balance/m4_16_round2.md). Landed via PR #12 after Windows CI.
+**Helpers:** 6 launches (Sonnet 3: M5-02, M5-05, M5-09 retry; Haiku 3: M5-06, M5-07, M5-09). The Haiku M5-09 gave up while queued and
+was replaced by Sonnet. Three helpers created one-shot "placeholder" reminders against the rules (all fired harmlessly); one tried a
+device call on the owner's laptop (refused before running: no folder linked).
+**Problems / notes:** an M5-05 test deadlocked while holding the shared dotnet lock and stalled every helper for ~10 min (lead killed
+the testhost); LFS images were pointer files until a second `git lfs pull` (scene/menu proof tests failed until then). Two pinned
+hashes and the goldens moved for the new state part only. Art still not on GitHub.
+**User check:** USER_CHECKS.md, "Session 7 · M5 LLM commander".
+**Next session should:** see HANDOFF (art push + reworks, owner LLM play-test, M4-16 diagnosis, M6 contracts).
