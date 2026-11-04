@@ -167,7 +167,7 @@ public sealed partial class Simulation
         var vehicles = Setup.Rules.Vehicles;
         if (vehicleTypeIndex < 0 || vehicleTypeIndex >= vehicles.Count) throw new ArgumentOutOfRangeException(nameof(vehicleTypeIndex));
         if (!InMap(cell)) throw new ArgumentOutOfRangeException(nameof(cell));
-        EntityId id = _units.Add(player, vehicleTypeIndex, LeptonCoord.CenterOf(cell), vehicles[vehicleTypeIndex].MaxHealth);
+        EntityId id = _units.Add(player, vehicleTypeIndex, LeptonCoord.CenterOf(cell), RulesOf(player).Vehicles[vehicleTypeIndex].MaxHealth);   // M4-14: owner's upgrades
         if (id.IsNone) return id;
         _units.Facing[id.Index] = CentreFacing(cell);
         OnActorSpawned(ActorKind.Vehicle, id.Index);
@@ -190,7 +190,7 @@ public sealed partial class Simulation
         if (infantry == null || infantryTypeIndex < 0 || infantryTypeIndex >= infantry.Count) throw new ArgumentOutOfRangeException(nameof(infantryTypeIndex));
         if (!InMap(cell)) throw new ArgumentOutOfRangeException(nameof(cell));
         if (subSlot < 0 || subSlot >= InfantryStore.SubSlotCount) throw new ArgumentOutOfRangeException(nameof(subSlot));
-        EntityId id = _infantry.Add(player, infantryTypeIndex, cell, subSlot, infantry[infantryTypeIndex].MaxHealth);
+        EntityId id = _infantry.Add(player, infantryTypeIndex, cell, subSlot, RulesOf(player).Infantry![infantryTypeIndex].MaxHealth);   // M4-14: owner's upgrades
         if (id.IsNone) return id;
         _infantry.Facing[id.Index] = CentreFacing(cell);
         OnActorSpawned(ActorKind.Infantry, id.Index);
@@ -534,7 +534,7 @@ public sealed partial class Simulation
         RequireSetupPhase();
         if (CanPlace(player, buildingType, topLeft) != PlacementResult.Ok) return EntityId.None;
         BuildingType bt = Setup.Rules.Buildings[buildingType];
-        EntityId id = _buildings.Add(player, buildingType, topLeft, bt.MaxHealth);
+        EntityId id = _buildings.Add(player, buildingType, topLeft, RulesOf(player).Buildings[buildingType].MaxHealth);   // M4-14
         if (id.IsNone) return id;
         for (int y = 0; y < bt.FootprintH; y++)
             for (int x = 0; x < bt.FootprintW; x++)
