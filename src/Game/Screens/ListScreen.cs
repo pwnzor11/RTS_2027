@@ -44,7 +44,7 @@ public sealed class ListScreen : IScreen
         for (int slot = 0; slot < slots; slot++)
         {
             int captured = slot;
-            items.Add(new MenuItem(() => RowAt(captured)?.Label ?? "", () => RowAt(captured)?.Activate?.Invoke()));
+            items.Add(new MenuItem(() => RowAt(captured)?.Label ?? "", () => ActivateRow(RowAt(captured))));
         }
         if (rows.Count == 0) items.Add(new MenuItem(() => emptyText));
         else items.Add(new MenuItem(() => SelectedDetail()));
@@ -102,6 +102,13 @@ public sealed class ListScreen : IScreen
     {
         int index = _page * PageSize + slot;
         return index < _rows.Count ? _rows[index] : null;
+    }
+
+    // The select sound for a row that does something, the deny sound for one that does not.
+    private void ActivateRow(ListRow? row)
+    {
+        MenuSounds.Play(_s.Audio, row?.Activate is null ? MenuSounds.Deny : MenuSounds.Select);
+        row?.Activate?.Invoke();
     }
 
     private string SelectedDetail() =>

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
-using Rts.Sim.Serialization;
+using Rts.Game.Saves;
 
 namespace Rts.Game.Menu;
 
@@ -23,21 +23,15 @@ public enum SaveKind
 public sealed record SaveEntry(SaveKind Kind, string Path, string Name, DateTime Modified, string Summary, bool Readable);
 
 /// <summary>
-/// Finds saved games without inventing a format: it lists the files the simulation's own save writer produces
-/// (<c>Simulation.Save</c>, magic <c>RTSS</c>) in <c>saves/campaign</c> and <c>saves/skirmish</c> under the settings folder and reads each
-/// header with <c>SimReader.ReadHeader</c>. The game does not write such files yet and cannot restore one (see
-/// <see cref="CannotResumeReason"/>), so in practice the list is empty and Continue is disabled.
+/// Finds saved games: it lists the files <see cref="GameSaver"/> writes (<c>.rtss</c>, envelope magic <c>RTSG</c>) in <c>saves/campaign</c>
+/// and <c>saves/skirmish</c> under the settings folder and reads each game header with <see cref="GameSaveFile.ReadHeader"/>.
 /// </summary>
 public sealed class SaveCatalog
 {
     /// <summary>Extension of save files.</summary>
     public const string Extension = ".rtss";
 
-    /// <summary>Why a chosen save cannot be started yet. Shown to the player instead of failing silently.</summary>
-    public const string CannotResumeReason =
-        "Loading saved games is not wired into the game yet (no in-game Save, and no way to rebuild a skirmish or mission around a loaded simulation).";
-
-    // ASSUMED (M3-16): saves are kept as saves/campaign/*.rtss and saves/skirmish/*.rtss beside settings.toml. The game writes none yet.
+    // Saves are kept as saves/campaign/*.rtss and saves/skirmish/*.rtss beside settings.toml (written by GameSaver, M3-20).
     private readonly string _root;
 
     /// <summary>Creates a catalog over <paramref name="root"/> (the folder that holds the campaign and skirmish sub-folders).</summary>
@@ -80,9 +74,12 @@ public sealed class SaveCatalog
         try
         {
             using var stream = File.OpenRead(file);
-            using var r = new BinaryReader(stream);
-            Rts.Sim.Serialization.SetupHeader h = SimReader.ReadHeader(r);
-            return ($"{h.MapName}, {h.PlayerCount} players, build {h.Build}", true);
+            GameSaveHeader h = GameSaveFile.ReadHeader(stream);
+            return (h.Describe(), true);
+        }
+        catch (SaveLoadException e)
+        {
+            return (e.Message, false);
         }
         catch (Exception e) when (e is InvalidDataException or EndOfStreamException or IOException or UnauthorizedAccessException)
         {

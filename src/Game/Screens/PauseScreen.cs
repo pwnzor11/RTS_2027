@@ -4,6 +4,8 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Rts.Game.Input;
+using Rts.Game.Menu;
+using Rts.Game.Saves;
 
 namespace Rts.Game.Screens;
 
@@ -20,16 +22,52 @@ public sealed class PauseScreen : IScreen
     /// <summary>Creates the pause menu.</summary>
     /// <param name="services">Shared services.</param>
     /// <param name="restart">Builds a fresh game screen for Restart.</param>
-    public PauseScreen(GameServices services, Func<IScreen> restart)
+    /// <param name="save">What Save game writes to, or null when this game cannot be saved (the sandbox).</param>
+    public PauseScreen(GameServices services, Func<IScreen> restart, GameSaveTarget? save = null)
     {
         _s = services;
-        _panel = new MenuPanel("Paused", new[]
+        var items = new List<MenuItem> { new(() => "Resume", () => Choose(() => _s.Screens.Pop())) };
+        if (save is not null)
         {
-            new MenuItem(() => "Resume", () => _s.Screens.Pop()),
-            new MenuItem(() => "Archive", () => _s.Screens.Push(new ArchiveScreen(_s))),
-            new MenuItem(() => "Restart", () => GameFlow.Restart(_s, restart)),
-            new MenuItem(() => "Quit to menu", () => GameFlow.QuitToMenu(_s)),
-        });
+            items.Add(new MenuItem(() => "Quicksave", () => Choose(() => Saved(save.Save(SaveSlots.Quick), SaveSlots.Quick))));
+            items.Add(new MenuItem(() => "Save game", () => Choose(() => _s.Screens.Push(SaveListScreen(save)))));
+        }
+        items.Add(new MenuItem(() => "Archive", () => Choose(() => _s.Screens.Push(new ArchiveScreen(_s)))));
+        items.Add(new MenuItem(() => "Restart", () => Choose(() => GameFlow.Restart(_s, restart))));
+        items.Add(new MenuItem(() => "Quit to menu", () => Choose(() => GameFlow.QuitToMenu(_s))));
+        _panel = new MenuPanel("Paused", items);
+    }
+
+    // The slots to save into: a new numbered one first, then the quicksave slot, then every existing save of this kind (overwrite).
+    private IScreen SaveListScreen(GameSaveTarget save)
+    {
+        var rows = new List<ListRow>();
+        string next = save.NextName();
+        rows.Add(new ListRow("New save: " + next, "Writes a new save slot.", () => SaveAndClose(save, next)));
+        rows.Add(new ListRow("Quicksave slot", "Overwrites the quicksave.", () => SaveAndClose(save, SaveSlots.Quick)));
+        foreach (SaveEntry e in save.Existing())
+        {
+            if (e.Name == SaveSlots.Quick) continue;
+            string name = e.Name;
+            rows.Add(new ListRow("Overwrite: " + name, e.Summary, () => SaveAndClose(save, name)));
+        }
+        return new ListScreen(_s, "Save game", rows, "", "Choose a slot.");
+    }
+
+    private void SaveAndClose(GameSaveTarget save, string slot)
+    {
+        string? error = save.Save(slot);
+        _s.Screens.Pop();   // the slot list
+        Saved(error, slot);
+    }
+
+    private void Saved(string? error, string slot) =>
+        _s.Screens.Push(new NoticeScreen(_s, error is null ? "Saved" : "Not saved", error ?? $"Game saved to \"{slot}\"."));
+
+    private void Choose(Action action)
+    {
+        MenuSounds.Play(_s.Audio, MenuSounds.Select);
+        action();
     }
 
     /// <inheritdoc />
@@ -54,6 +92,7 @@ public sealed class PauseScreen : IScreen
         _mouse = input.MousePosition;
         if (input.ConsumePressed(Keys.Escape))
         {
+            MenuSounds.Play(_s.Audio, MenuSounds.Back);
             _s.Screens.Pop();
             return;
         }

@@ -3,6 +3,7 @@
 using System.Diagnostics;
 using Rts.Data;
 using Rts.Game.Host;
+using Rts.Game.Saves;
 using Rts.Scripting;
 using Rts.Sim;
 using Rts.Sim.Core;
@@ -115,11 +116,30 @@ public sealed class SimSnapshotSource : ISnapshotSource
     {
         _map = game.Map;
         _recording = new ReplayRecording(game.Sim, RulesBundle.ReadDirectory(game.RulesDir), MissionReplayPath, MissionPreviousReplayPath,
-            MissionReplay.RefFor(game.Session));
+            game.ReplayRef);
         _verifyCommand = $"dotnet run --project src/Tools -- replay play {MissionReplayPath}";
         _host = new SimHost(game.Sim, _recording) { Ai = game.Ai };
+        SaveTemplate = game.SaveTemplate();
         _host.RefreshSnapshots();
     }
+
+    /// <summary>
+    /// Wraps a game restored from a save (M3-20). The AI joins the host's tick loop and the command queue is put back. Nothing is
+    /// recorded: a replay has to start at tick 0, which a loaded game is past.
+    /// </summary>
+    /// <param name="loaded">The restored game (skirmish or mission).</param>
+    public SimSnapshotSource(LoadedGame loaded)
+    {
+        _map = loaded.Map;
+        _verifyCommand = null;
+        _host = new SimHost(loaded.Sim) { Ai = loaded.Ai };
+        _host.RestoreQueue(loaded.Header.Pending, loaded.Header.Sequences);
+        SaveTemplate = loaded.Header;
+        _host.RefreshSnapshots();
+    }
+
+    /// <summary>The fixed part of this game's save header, or null when the game cannot be saved (the sandbox).</summary>
+    public GameSaveHeader? SaveTemplate { get; set; }
 
     /// <summary>The host that steps the simulation.</summary>
     public SimHost Host => _host;

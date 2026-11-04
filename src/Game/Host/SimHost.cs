@@ -79,6 +79,29 @@ public sealed class SimHost
     /// <summary>Commands queued and not yet run, in issue order (the sim sorts them per tick).</summary>
     public IReadOnlyList<Command> Pending => _pending;
 
+    /// <summary>Next command sequence number of each player, trimmed after the last player that issued anything (saved with a game).</summary>
+    public ushort[] Sequences
+    {
+        get
+        {
+            int n = _sequence.Length;
+            while (n > 0 && _sequence[n - 1] == 0) n--;
+            return _sequence[..n];
+        }
+    }
+
+    /// <summary>
+    /// Puts back the command queue of a saved game: the commands queued and not yet run, and the per-player sequence counters. Call
+    /// right after loading, before the first step. The commands go in as they are (nothing is stamped or recorded again).
+    /// </summary>
+    public void RestoreQueue(IEnumerable<Command> pending, IReadOnlyList<ushort> sequences)
+    {
+        _pending.Clear();
+        _pending.AddRange(pending);
+        Array.Clear(_sequence);
+        for (int i = 0; i < sequences.Count && i < _sequence.Length; i++) _sequence[i] = sequences[i];
+    }
+
     /// <summary>Which player's view the snapshot shows: 0, 1, or -1 for the omniscient view.</summary>
     public int Viewer => _viewer;
 

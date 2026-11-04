@@ -130,11 +130,16 @@ public sealed class MainMenuScreen : IScreen
         }
     }
 
-    // Resume the newest save. The game cannot restore one yet, so say so rather than doing nothing.
+    // Resume the newest save; a save that cannot be loaded says why in a notice.
     private void Continue()
     {
         SaveEntry? save = _saves.Newest();
-        string text = save is null ? SaveCatalog.CannotResumeReason : $"Most recent save: {save.Name} ({save.Summary}).\n\n{SaveCatalog.CannotResumeReason}";
-        _s.Screens.Push(new NoticeScreen(_s, "Continue", text));
+        if (save is null)
+        {
+            _s.Screens.Push(new NoticeScreen(_s, "Continue", MainMenuModel.NoSaves));
+            return;
+        }
+
+        LoadGameScreen.Start(_s, save);
     }
 }

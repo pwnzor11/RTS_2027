@@ -6,7 +6,9 @@ using Microsoft.Xna.Framework.Input;
 using Rts.Game.Archive;
 using Rts.Game.Controls;
 using Rts.Game.Input;
+using Rts.Game.Menu;
 using Rts.Game.Render;
+using Rts.Game.Saves;
 using Rts.Game.Sandbox;
 using Rts.Game.Sprites;
 using Rts.Game.Ui;
@@ -127,6 +129,7 @@ public sealed class GameScreen : IScreen
         var sim = new SimSnapshotSource(game, services.RulesDir);
         var screen = new GameScreen(services, sim, settings, () => CreateSkirmish(services, settings), skirmishMode: true);
         screen.IsGameOver = () => sim.Sim.GameOver;
+        sim.SaveTemplate = game.SaveTemplate(settings);
         return screen;
     }
 
@@ -140,6 +143,29 @@ public sealed class GameScreen : IScreen
         var sim = new SimSnapshotSource(game);
         var screen = new GameScreen(services, sim, null, () => CreateMission(services, missionId), skirmishMode: true);
         screen._mission = new MissionOverlay(game.Host);
+        screen.IsGameOver = () => sim.Sim.GameOver;
+        return screen;
+    }
+
+    /// <summary>
+    /// Creates the game screen around a game restored from a save (M3-20): the same screen a new skirmish or mission gets, over the loaded
+    /// simulation, with the AI re-attached and (mission) the script host restored. Restart starts the same skirmish or mission afresh.
+    /// </summary>
+    public static GameScreen CreateFromSave(GameServices services, LoadedGame loaded)
+    {
+        var sim = new SimSnapshotSource(loaded);
+        if (loaded.Header.Mode == SaveMode.Mission)
+        {
+            MissionGame game = MissionGame.FromSave(loaded);
+            string id = loaded.Header.MissionId;
+            var mission = new GameScreen(services, sim, null, () => CreateMission(services, id), skirmishMode: true);
+            mission._mission = new MissionOverlay(game.Host);
+            mission.IsGameOver = () => sim.Sim.GameOver;
+            return mission;
+        }
+
+        SkirmishSettings settings = loaded.Header.Skirmish ?? SkirmishSettings.Default;
+        var screen = new GameScreen(services, sim, settings, () => CreateSkirmish(services, settings), skirmishMode: true);
         screen.IsGameOver = () => sim.Sim.GameOver;
         return screen;
     }
@@ -223,7 +249,7 @@ public sealed class GameScreen : IScreen
 
         if (input.ConsumePressed(Keys.Escape))
         {
-            _s.Screens.Push(new PauseScreen(_s, _restart));
+            _s.Screens.Push(new PauseScreen(_s, _restart, SaveTarget()));
             return;
         }
 
@@ -313,6 +339,10 @@ public sealed class GameScreen : IScreen
         DrawUpgradeButton(sb);
         _console?.Draw(sb, _s.Pixel, _s.Viewport);
     }
+
+    // What Save game writes to: only a skirmish or mission (the sandbox has no save header).
+    private GameSaveTarget? SaveTarget() =>
+        _sim is { SaveTemplate: { } template } ? new GameSaveTarget(new SaveCatalog(SaveCatalog.DefaultRoot), template, _sim.Host, _s.RulesDir) : null;
 
     private void HandleMouse(InputFrame input)
     {

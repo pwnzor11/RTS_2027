@@ -2,6 +2,8 @@
 // Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
 using Rts.AI;
 using Rts.Data;
+using Rts.Game.Saves;
+using Rts.Game.Screens;
 using Rts.Sim;
 using Rts.Sim.Core;
 using Rts.Sim.Map;
@@ -65,6 +67,18 @@ public sealed class SkirmishGame
 
     /// <summary>True when the curated map was used (map seed 0).</summary>
     public bool Curated { get; }
+
+    /// <summary>The fixed part of a save header for this game (see <see cref="GameSaver.Capture"/>), given the setup choices it was started with.</summary>
+    public GameSaveHeader SaveTemplate(SkirmishSettings settings) => new()
+    {
+        Mode = SaveMode.Skirmish,
+        MapId = Curated ? "file:" + CuratedMapFile : $"generated:{GeneratedMapSize}:{settings.MapSeed}",
+        MapName = Map.Name,
+        RulesHash = Rules.RulesHash,
+        LocalPlayer = LocalPlayer,
+        Skirmish = settings,
+        Ai = new[] { new SavedAi(AiPlayer, AiId, settings.AiTier, settings.AiFaction, Sim.Setup.Seed) },
+    };
 
     /// <summary>The map description the setup screen shows for a map seed (no files are read).</summary>
     public static string DescribeMap(ulong mapSeed) =>
