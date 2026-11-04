@@ -340,7 +340,8 @@ public sealed partial class Simulation
     private bool SpawnProducedVehicle(byte player, int type, CellCoord factoryTopLeft, BuildingType factory, bool applyRally, CellCoord? rally)
     {
         VehicleType vt = RulesOf(player).Vehicles[type];
-        CellCoord exit = new(factoryTopLeft.X + factory.Exit.X, factoryTopLeft.Y + factory.Exit.Y);
+        CellCoord exitRel = OrientedOffset(factory.Exit, factory.FootprintW, factory.FootprintH, factoryTopLeft);   // M4-16
+        CellCoord exit = new(factoryTopLeft.X + exitRel.X, factoryTopLeft.Y + exitRel.Y);
         if (!FindFreeExitCell(exit, vt.Locomotion, out CellCoord cell)) return false;
         EntityId id = SpawnVehicle(player, type, cell);
         if (id.IsNone) return false;
@@ -352,7 +353,8 @@ public sealed partial class Simulation
 
     private bool SpawnProducedInfantry(byte player, int type, CellCoord factoryTopLeft, BuildingType factory, CellCoord? rally)
     {
-        CellCoord exit = new(factoryTopLeft.X + factory.Exit.X, factoryTopLeft.Y + factory.Exit.Y);
+        CellCoord exitRelInf = OrientedOffset(factory.Exit, factory.FootprintW, factory.FootprintH, factoryTopLeft);   // M4-16
+        CellCoord exit = new(factoryTopLeft.X + exitRelInf.X, factoryTopLeft.Y + exitRelInf.Y);
         if (!FindFreeExitCell(exit, Locomotion.Foot, out CellCoord cell)) return false;
         EntityId id = SpawnInfantry(player, type, cell);
         if (id.IsNone) return false;
@@ -362,12 +364,32 @@ public sealed partial class Simulation
     }
 
     /// <summary>
-    /// The exit cell if free, else the nearest free passable cell: rings of growing Chebyshev radius around the exit, each ring scanned
-    /// top row to bottom row, left to right. Free = in the map, passable for the locomotion, no building, no vehicle, no infantry.
+    /// M4-16: a footprint-relative cell (a factory exit or a refinery dock, authored for a building facing south, i.e. toward the
+    /// map centre from the north half) as it applies to a building at <paramref name="topLeft"/>: unchanged when the footprint's centre
+    /// lies in the north half of the map (or on the middle row), turned by 180 degrees inside the footprint when it lies in the south
+    /// half. A base and its point mirror thus have mirrored exits and docks: before, the south-east base's units and harvesters left and
+    /// entered on the side facing away from the enemy and the centre. Map-dependent geometry only; no state.
+    /// </summary>
+    internal CellCoord OrientedOffset(CellCoord rel, int footprintW, int footprintH, CellCoord topLeft)
+    {
+        if (topLeft.Y * 2 + footprintH <= Setup.Map.Height) return rel;
+        return new CellCoord(footprintW - 1 - rel.X, footprintH - 1 - rel.Y);
+    }
+
+    /// <summary>
+    /// The exit cell if free, else the nearest free passable cell: rings of growing Chebyshev radius around the exit. Free = in the map,
+    /// passable for the locomotion, no building, no vehicle, no infantry. M4-16: within a ring the cell nearest the map centre wins
+    /// (squared, in half cells), then the one nearest the line exit -> centre, left side first (as PathService.LineKey), then scan order;
+    /// a plain top-row-first scan sent units of the bottom-right base out behind their factory (start-0 bias).
     /// </summary>
     private bool FindFreeExitCell(CellCoord exit, Locomotion loco, out CellCoord found)
     {
+        int cx2 = Setup.Map.Width - 1, cy2 = Setup.Map.Height - 1;   // map centre in half cells
         for (int r = 0; r <= MaxExitSearchRing; r++)
+        {
+            bool any = false;
+            long bestD = 0, bestK = 0;
+            found = default;
             for (int dy = -r; dy <= r; dy++)
                 for (int dx = -r; dx <= r; dx++)
                 {
@@ -375,9 +397,16 @@ public sealed partial class Simulation
                     var c = new CellCoord(exit.X + dx, exit.Y + dy);
                     if (!InMap(c) || !_map.IsPassableTerrain(c, loco, Setup.Rules.Terrain)) continue;
                     if (!_map.BuildingAt(c).IsNone || !_map.VehicleAt(c).IsNone || ActorStandsOn(c)) continue;
-                    found = c;
-                    return true;
+                    long ox = c.X * 2L - cx2, oy = c.Y * 2L - cy2;
+                    long d = ox * ox + oy * oy;
+                    long ex = exit.X * 2L - cx2, ey = exit.Y * 2L - cy2;
+                    long cross = (c.X * 2L - exit.X * 2L) * (-ey) - (c.Y * 2L - exit.Y * 2L) * (-ex);
+                    long k = cross >= 0 ? cross * 2 : -cross * 2 + 1;
+                    if (any && (d > bestD || (d == bestD && k >= bestK))) continue;
+                    any = true; bestD = d; bestK = k; found = c;
                 }
+            if (any) return true;
+        }
         found = default;
         return false;
     }

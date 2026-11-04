@@ -156,14 +156,17 @@ internal static class HarvestMission
     private static int UnitValue(EconomyRules er, OverlayKind o) => o == OverlayKind.Pitchblende ? er.CreditsPitchblende : er.CreditsAshfall;
 
     /// <summary>Nearest ring (<paramref name="fromRing"/>..<paramref name="toRing"/>) around <paramref name="center"/> that has a usable resource cell; the richest
-    /// (density times credits per unit) wins, ties go to the first in row-major scan order.</summary>
+    /// (density times credits per unit) wins. M4-16: ties are broken without a preferred direction, so point-mirrored harvesters pick
+    /// mirrored cells: nearer to the centre (squared), then nearer to the harvester (squared), then <see cref="TieKey"/>, then scan order
+    /// (only left for cells the key cannot tell apart; a row-major first-found tie-break favoured the top-left start).</summary>
     private static bool FindRich(Simulation sim, int self, EntityId me, CellCoord center, Locomotion loco, int fromRing, int toRing, out CellCoord best)
     {
         best = default;
         EconomyRules er = sim.RulesOf(sim.Units.Player[self]).Economy;
+        CellCoord at = sim.Units.Position[self].ToCell();
         for (int r = fromRing; r <= toRing; r++)
         {
-            long bestValue = -1;
+            long bestValue = -1, bestD2c = 0, bestD2h = 0, bestKey = 0;
             for (int y = center.Y - r; y <= center.Y + r; y++)
             {
                 if (y < 0 || y >= sim.Setup.Map.Height) continue;
@@ -174,16 +177,39 @@ internal static class HarvestMission
                     var c = new CellCoord(x, y);
                     if (!IsResource(sim, c) || c == sim.Economy.BadCell[self]) continue;
                     long value = (long)sim.Map.DensityAt(c) * UnitValue(er, sim.Map.OverlayAt(c));
-                    if (value <= bestValue || !Occupancy.TerrainOk(sim, c, loco)) continue;
+                    if (value < bestValue) continue;
+                    long d2c = Sq(c.X - center.X) + Sq(c.Y - center.Y), d2h = Sq(c.X - at.X) + Sq(c.Y - at.Y);
+                    long key = TieKey(c, center, at, sim.Units.Facing[self]);
+                    if (value == bestValue && (d2c > bestD2c || (d2c == bestD2c && (d2h > bestD2h || (d2h == bestD2h && key >= bestKey)))))
+                        continue;   // not better on the tie-break (equal keys keep the first: only reachable for the same cell offset)
+                    if (!Occupancy.TerrainOk(sim, c, loco)) continue;
                     EntityId held = sim.Map.VehicleAt(c);
                     if (!held.IsNone && held != me) continue;
                     if (ClaimedByOther(sim, self, c)) continue;
-                    bestValue = value; best = c;
+                    bestValue = value; best = c; bestD2c = d2c; bestD2h = d2h; bestKey = key;
                 }
             }
             if (bestValue >= 0) return true;
         }
         return false;
+    }
+
+    private static long Sq(int v) => (long)v * v;
+
+    /// <summary>M4-16: orientation-free tie key for equal-value cells (like PathService.LineKey). Reference direction: centre -> harvester,
+    /// or the harvester's facing when it stands on the centre. Key = distance of <paramref name="c"/> from that line (cross product,
+    /// smaller first), then the side (left first), then ahead before behind. Rotating or mirroring the whole situation (facing included)
+    /// maps the key onto itself.</summary>
+    private static long TieKey(CellCoord c, CellCoord center, CellCoord at, byte facing)
+    {
+        long rx, ry;
+        if (at == center) { rx = Facing.Sin(facing); ry = -Facing.Cos(facing); }
+        else { rx = (at.X - center.X) * 256L; ry = (at.Y - center.Y) * 256L; }
+        long ox = c.X - center.X, oy = c.Y - center.Y;
+        long cross = ox * ry - oy * rx, dot = ox * rx + oy * ry;
+        long line = cross >= 0 ? cross * 2 : -cross * 2 + 1;
+        // |dot| <= 2 * 128 * 256 * 128 < 2^24 for any map; ahead (dot > 0) sorts first
+        return (line << 26) + ((1L << 25) - dot);
     }
 
     private static bool ClaimedByOther(Simulation sim, int self, CellCoord c)
@@ -313,7 +339,8 @@ internal static class HarvestMission
     private static CellCoord DockCell(Simulation sim, EntityId rid)
     {
         CellCoord tl = sim.Buildings.Cell[rid.Index];
-        CellCoord d = sim.RulesOf(sim.Buildings.Player[rid.Index]).Buildings[sim.Buildings.TypeIndex[rid.Index]].Dock;
+        BuildingType bt = sim.RulesOf(sim.Buildings.Player[rid.Index]).Buildings[sim.Buildings.TypeIndex[rid.Index]];
+        CellCoord d = sim.OrientedOffset(bt.Dock, bt.FootprintW, bt.FootprintH, tl);   // M4-16: mirrored for south-half refineries
         return new CellCoord(tl.X + d.X, tl.Y + d.Y);
     }
 

@@ -123,15 +123,19 @@ public sealed partial class Simulation
         Regrow();
     }
 
-    // Ashfall regrowth: tick t handles the cells [phase*N/interval, (phase+1)*N/interval) with phase = t mod interval, so every
-    // cell is visited exactly once per interval and no cursor needs saving. Pitchblende and empty cells never grow.
+    // Ashfall regrowth: tick t handles the cells whose orbit key (RegrowthSchedule) lies in [phase*N/interval, (phase+1)*N/interval)
+    // with phase = t mod interval, so every cell is visited exactly once per interval and no cursor needs saving. Pitchblende and
+    // empty cells never grow.
+    private RegrowthSchedule? _regrowth;   // M4-16: derived from the map size only, not state (nothing to save or hash)
+
     private void Regrow()
     {
         int interval = Setup.Rules.Economy.RegrowthIntervalTicks;
         if (interval <= 0) return;
-        int w = Setup.Map.Width, cells = w * Setup.Map.Height, phase = Tick % interval;
-        int from = (int)((long)phase * cells / interval), to = (int)((long)(phase + 1) * cells / interval);
-        for (int k = from; k < to; k++)
+        int w = Setup.Map.Width, phase = Tick % interval;
+        // M4-16: symmetric order (a cell and its mirror images regrow on the same tick); a row-major sweep favoured start 0
+        _regrowth ??= new RegrowthSchedule(w, Setup.Map.Height);
+        foreach (int k in _regrowth.Slice(phase, interval))
         {
             var c = new CellCoord(k % w, k / w);
             if (_map.OverlayAt(c) != OverlayKind.Ashfall) continue;
