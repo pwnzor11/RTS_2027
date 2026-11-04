@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
 using Rts.Game.Sprites;
+using Rts.Sim.Numerics;
 
 namespace Rts.Game.Render;
 
@@ -17,13 +18,25 @@ public enum UnitLayerKind
     Dive,
 }
 
-/// <summary>One sheet frame to draw, with its pixel offset from the unit's origin (zoom 1).</summary>
-public readonly record struct UnitLayer(UnitLayerKind Kind, int Frame, int OffsetX, int OffsetY);
+/// <summary>Which sprite sheet a layer's frame is taken from.</summary>
+public enum UnitLayerSheet
+{
+    /// <summary>The unit's own sheet (the body sheet, which may carry its shadow and turret as states).</summary>
+    Own,
+    /// <summary>The companion turret sheet (<c>&lt;id&gt;_turret</c>).</summary>
+    TurretCompanion,
+    /// <summary>The companion shadow sheet (<c>&lt;id&gt;_shadow</c>).</summary>
+    ShadowCompanion,
+}
+
+/// <summary>One sheet frame to draw, with its pixel offset from the unit's origin (zoom 1) and the sheet it comes from.</summary>
+public readonly record struct UnitLayer(UnitLayerKind Kind, int Frame, int OffsetX, int OffsetY, UnitLayerSheet Sheet = UnitLayerSheet.Own);
 
 /// <summary>
 /// Which layers a unit sprite is drawn with, back to front (M3-18). The extra layers are manifest states named
 /// <c>shadow</c>, <c>turret</c> and <c>dive</c>; a manifest without them yields exactly one Body layer, the frame the renderer
-/// has always used. Pure, so it is tested without a GPU.
+/// has always used. A body without a turret or shadow state may instead get them from companion sheets (<c>&lt;id&gt;_turret</c>,
+/// <c>&lt;id&gt;_shadow</c>): the turret is placed at its hull pivot, rotated by the hull facing. Pure, so it is tested without a GPU.
 /// </summary>
 public static class UnitLayerPlan
 {
@@ -44,20 +57,63 @@ public static class UnitLayerPlan
     /// <param name="turretFacing">Turret facing byte, or null to use the body facing.</param>
     /// <param name="diving">True while an aircraft dives or attacks (uses the dive layer when the manifest has it).</param>
     /// <param name="tick">Simulation tick.</param>
+    /// <param name="turretSheet">Companion turret sheet (a <c>turret</c> layer with a pivot), used when the body has no turret state; or null.</param>
+    /// <param name="shadowSheet">Companion shadow sheet, used when the body has no shadow state; or null.</param>
     public static IReadOnlyList<UnitLayer> For(SpriteManifest manifest, bool infantry, bool moving, byte facing, byte? turretFacing,
-        bool diving, int tick)
+        bool diving, int tick, SpriteManifest? turretSheet = null, SpriteManifest? shadowSheet = null)
     {
         ArgumentNullException.ThrowIfNull(manifest);
         int t = Math.Max(0, tick);
         var layers = new List<UnitLayer>(3);
         if (SpriteStates.HasState(manifest, Shadow))
+        {
             layers.Add(new UnitLayer(UnitLayerKind.Shadow, manifest.FrameIndex(Shadow, facing, t), manifest.ShadowDx, manifest.ShadowDy));
+        }
+        else if (shadowSheet is not null)
+        {
+            layers.Add(new UnitLayer(UnitLayerKind.Shadow, shadowSheet.FrameIndex(shadowSheet.States[0].Name, facing, t), 0, 0,
+                UnitLayerSheet.ShadowCompanion));
+        }
+
         if (diving && SpriteStates.HasState(manifest, Dive))
             layers.Add(new UnitLayer(UnitLayerKind.Dive, manifest.FrameIndex(Dive, facing, t), 0, 0));
         else
             layers.Add(new UnitLayer(UnitLayerKind.Body, SpriteStates.UnitFrame(manifest, infantry, moving, facing, tick), 0, 0));
+
         if (SpriteStates.HasState(manifest, Turret))
+        {
             layers.Add(new UnitLayer(UnitLayerKind.Turret, manifest.FrameIndex(Turret, turretFacing ?? facing, t), 0, 0));
+        }
+        else if (turretSheet?.Pivot is { } pivot)
+        {
+            int hullFacings = manifest.States[0].Facings;
+            double hullAngle = hullFacings == 1 ? 0 : 360.0 * Facing.ToFacings(facing, hullFacings) / hullFacings;
+            (int dx, int dy) = PivotOffset(pivot, hullAngle);
+            layers.Add(new UnitLayer(UnitLayerKind.Turret, turretSheet.FrameIndex(turretSheet.States[0].Name, turretFacing ?? facing, t),
+                dx, dy, UnitLayerSheet.TurretCompanion));
+        }
         return layers;
+    }
+
+    /// <summary>
+    /// Pixel offset (zoom 1) from a unit's origin to a turret's origin, for a hull at <paramref name="hullAngleDeg"/>. The pivot is
+    /// in cells at hull facing 0 (east and forward); it is rotated by the hull angle (0 = north, clockwise). Screen y falls with
+    /// forward distance by the 40 degree elevation. Height is not used: the turret sheet's origin is already the ground point under
+    /// the pivot.
+    /// </summary>
+    /// <param name="pivot">Turret pivot in cells.</param>
+    /// <param name="hullAngleDeg">Hull facing in degrees, 0 = north, clockwise.</param>
+    public static (int Dx, int Dy) PivotOffset(TurretPivot pivot, double hullAngleDeg)
+    {
+        const double PxPerCell = 64;
+        double theta = hullAngleDeg * Math.PI / 180.0;
+        double sin = Math.Sin(theta);
+        double cos = Math.Cos(theta);
+        double east = pivot.X * cos + pivot.Y * sin;
+        double north = -pivot.X * sin + pivot.Y * cos;
+        double sinElevation = Math.Sin(40 * Math.PI / 180.0);
+        int dx = (int)Math.Round(PxPerCell * east, MidpointRounding.AwayFromZero);
+        int dy = (int)Math.Round(-PxPerCell * sinElevation * north, MidpointRounding.AwayFromZero);
+        return (dx, dy);
     }
 }
