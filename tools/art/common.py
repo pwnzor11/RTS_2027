@@ -27,6 +27,20 @@ PAL = [OUTLINE] + [hx(c) for c in (
 assert len(PAL) == 24
 PALETTE32 = PAL + HOUSE
 
+# Directorate palette (M3-ART-PILOT): 24 faction colours + the same 8 house shades. The Authority palette has no red and
+# no bone tones, so the Directorate selects this one by setting PALETTE = C.PAL_DIR in its module.  Authority output is
+# untouched (frame_b defaults to PAL).  Index 0 outline and index 1 (shadow colour) keep their roles.
+PAL_DIR = [OUTLINE] + [hx(c) for c in (
+    "#1F1B19 #2E2926 "                              # warm ash darks (index 1 = shadow)
+    "#44403B #5C5750 #766F66 #928A7E #ADA597 "      # brutalist concrete, warm greys
+    "#C9BFA6 #E3DAC2 #F6F0DE "                      # bone / stencil white
+    "#3E1412 #63201A #8E2E22 #B8402F #D9664C "      # oxide red ramp (fixed body red, not house colour)
+    "#3A3F44 #555B61 #737A80 #979EA3 "              # steel (shared with Authority)
+    "#5E3420 #B07445 "                              # rust (shared)
+    "#C9A640 #FFE79A").split()]                     # lamp / brass (shared)
+assert len(PAL_DIR) == 24
+PALETTE32_DIR = PAL_DIR + HOUSE
+
 # house remap targets: name -> 8-shade ramp (dark -> light)
 
 

@@ -202,7 +202,7 @@ def post(sid, mod):
     imgs = []
     for i in range(total):
         if i in have:
-            imgs.append(SP.frame_b(wd, i, cal, w, h))
+            imgs.append(SP.frame_b(wd, i, cal, w, h, getattr(mod, "PALETTE", None)))
         else:
             imgs.append(Image.new("RGBA", (w, h), (0, 0, 0, 0)))
     for i in have:
