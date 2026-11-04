@@ -5,13 +5,10 @@ using Rts.Sim.World;
 
 namespace Rts.Sim.Missions;
 
-/// <summary>MissionKind.Garrisoned (M4): a soldier inside a building acquires targets and fires out. OWNER: M4-03 (stub by M4-01:
-/// idles like Guard).</summary>
+/// <summary>MissionKind.Garrisoned (M4): a soldier inside a building acquires targets and fires out with the building's range bonus
+/// and rate-of-fire factor. OWNER: M4-03. The logic lives in <c>Simulation.RunGarrisoned</c> (Simulation.Garrison.cs).</summary>
 internal static class GarrisonMission
 {
-    public static int Handle(Simulation sim, MobileStore store, ActorKind kind, int i)
-    {
-        // M4-03 fills
-        return MissionHandlers.GuardSleepTicks;
-    }
+    public static int Handle(Simulation sim, MobileStore store, ActorKind kind, int i) =>
+        kind == ActorKind.Infantry ? sim.RunGarrisoned(store, i) : MissionHandlers.GuardSleepTicks;
 }
