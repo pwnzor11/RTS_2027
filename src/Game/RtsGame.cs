@@ -6,6 +6,7 @@ using Microsoft.Xna.Framework.Input;
 using Rts.Data;
 using Rts.Game.Audio;
 using Rts.Game.Input;
+using Rts.Game.Menu;
 using Rts.Game.Render;
 using Rts.Game.Screens;
 using Rts.Game.Sprites;
@@ -88,10 +89,12 @@ public sealed class RtsGame : Microsoft.Xna.Framework.Game
 
         // Sprites by rules id from data/sprites (M2-17); fall back to the tank sheet for every vehicle if the library fails.
         SceneRenderer scene;
+        SpriteLibrary? spriteLibrary = null;
         try
         {
             SpriteLibrary library = SpriteLibrary.Scan(Path.Combine(_dataDir, "sprites"));
             library.LoadAll(GraphicsDevice);
+            spriteLibrary = library;
             scene = new SceneRenderer(library);
         }
         catch (Exception ex) when (ex is IOException or InvalidDataException or FormatException or InvalidOperationException)
@@ -100,16 +103,35 @@ public sealed class RtsGame : Microsoft.Xna.Framework.Game
             scene = new SceneRenderer(SpriteSheet.Load(GraphicsDevice, Path.Combine(_dataDir, "sprites", "vehicles", TankSheetFile)));
         }
         IAudio audio = AudioBootstrap.Create(this, _dataDir, _settings, _screens);
-        audio.MusicVolume = _settings.MusicVolume;
-        audio.SfxVolume = _settings.SfxVolume;
+        AudioSettings.Apply(audio, _settings);
         _services = new GameServices(GraphicsDevice, _pixel, scene, _rulesDir, audio, _settings, _screens, Exit)
         {
             LegacyEmptySandbox = _empty,
+            Sprites = spriteLibrary,
+            ApplyDisplay = ApplyDisplay,
         };
+        // The animated menu background (M3-16). It is optional: if it cannot be built the menus use a plain colour.
+        try
+        {
+            _services.Background = new MenuBackground(GraphicsDevice, _pixel, spriteLibrary, _dataDir);
+        }
+        catch (Exception ex) when (ex is IOException or InvalidDataException or InvalidOperationException)
+        {
+            Console.Error.WriteLine($"menu background disabled: {ex.Message}");
+        }
 
         if (_demo) _screens.Push(GameScreen.CreateDemo(_services));
         else if (_direct) _screens.Push(GameScreen.CreateSandbox(_services, _empty, null));
         else _screens.Push(new MainMenuScreen(_services));
+    }
+
+    // Settings > Full screen / Window size: apply to the live window.
+    private void ApplyDisplay(Settings settings)
+    {
+        _graphics.IsFullScreen = settings.Fullscreen;
+        _graphics.PreferredBackBufferWidth = settings.WindowWidth;
+        _graphics.PreferredBackBufferHeight = settings.WindowHeight;
+        _graphics.ApplyChanges();
     }
 
     /// <inheritdoc />

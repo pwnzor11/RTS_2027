@@ -2,7 +2,9 @@
 // Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
 using Microsoft.Xna.Framework.Graphics;
 using Rts.Game.Audio;
+using Rts.Game.Menu;
 using Rts.Game.Render;
+using Rts.Game.Sprites;
 
 namespace Rts.Game.Screens;
 
@@ -46,6 +48,15 @@ public sealed class GameServices
 
     /// <summary>Asks the shell to close the window.</summary>
     public Action Quit { get; }
+
+    /// <summary>The animated menu background, or null in headless runs (menu screens then fill a plain colour).</summary>
+    public MenuBackground? Background { get; set; }
+
+    /// <summary>The loaded sprite library (the How to Play illustrations draw from it), or null.</summary>
+    public SpriteLibrary? Sprites { get; set; }
+
+    /// <summary>Asks the shell to apply window settings (full screen, window size) now. Null when there is no window to change.</summary>
+    public Action<Settings>? ApplyDisplay { get; set; }
 
     /// <summary>True when the program was started with --empty: the Sandbox menu entry then uses the legacy 3-tank setup.</summary>
     public bool LegacyEmptySandbox { get; set; }

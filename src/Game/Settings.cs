@@ -19,6 +19,7 @@ namespace Rts.Game;
 /// <param name="UiScale">Integer UI scale 1..8, or 0 for automatic from the window height.</param>
 /// <param name="MusicVolume">0..100.</param>
 /// <param name="SfxVolume">0..100.</param>
+/// <param name="MasterVolume">0..100, scales sound and music together (M3-16). Files without the key get 100.</param>
 public sealed record Settings(
     int Version = Settings.CurrentVersion,
     bool Fullscreen = false,
@@ -26,7 +27,8 @@ public sealed record Settings(
     int WindowHeight = 720,
     int UiScale = 0,
     int MusicVolume = 70,
-    int SfxVolume = 100)
+    int SfxVolume = 100,
+    int MasterVolume = 100)
 {
     /// <summary>The file format version this build reads and writes.</summary>
     public const int CurrentVersion = 1;
@@ -80,7 +82,8 @@ public sealed record Settings(
             Int(root, "window_height", d.WindowHeight, 240, 16384),
             Int(root, "ui_scale", d.UiScale, 0, 8),
             Int(root, "music_volume", d.MusicVolume, 0, 100),
-            Int(root, "sfx_volume", d.SfxVolume, 0, 100));
+            Int(root, "sfx_volume", d.SfxVolume, 0, 100),
+            Int(root, "master_volume", d.MasterVolume, 0, 100));
     }
 
     /// <summary>The settings as TOML text.</summary>
@@ -96,6 +99,7 @@ public sealed record Settings(
         sb.AppendLine(FormattableString.Invariant($"ui_scale = {UiScale}"));
         sb.AppendLine(FormattableString.Invariant($"music_volume = {MusicVolume}"));
         sb.AppendLine(FormattableString.Invariant($"sfx_volume = {SfxVolume}"));
+        sb.AppendLine(FormattableString.Invariant($"master_volume = {MasterVolume}"));
         return sb.ToString();
     }
 

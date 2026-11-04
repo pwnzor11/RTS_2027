@@ -1,0 +1,904 @@
+# Menu background scenes (M3-16). The main menu and every menu screen draw these, one after another, cross-fading.
+#
+# Canvas: every position is on a 1920 x 1080 canvas, scaled to cover the window. y grows downward.
+# Colours: "#RRGGBB" or "#RRGGBBAA" (the last pair is opacity).
+# Layers are drawn first to last (back to front). Kinds:
+#   gradient   y0, y1, color (top), color2 (bottom)               sky, haze (give both colours an alpha for haze)
+#   glow       x, y, radius, color, intensity, flicker, flicker_hz, additive
+#   skyline    style = ruins | stacks | ridge | pylons, y (base line), min_height, max_height, period (repeat width),
+#              seed, color (top), color2 (bottom), rim (lit edge), lit (windows / furnaces)
+#   ground     y, roughness, color (top), color2 (bottom)
+#   sprites    [[scene.layer.item]] tables: sprite (id under data/sprites), x, y, scale, facing (0 north, 64 east, 192 west),
+#              state, anchor ("origin" = ground point for units, "bottom" = middle of the bottom edge for buildings),
+#              house (0..7 paint colour), speed (px/s sideways), loop_width, ticks_per_second (animation), alpha, shadow,
+#              shade (0 = as drawn, 1 = black), fallback_w / fallback_h / fallback_color / fallback_shape ("block" | "blimp")
+#              for art that does not exist yet
+#   particles  particle = ash | ember | snow, count, vel_x, vel_y, size_min, size_max, sway, color, rim (ember core), seed
+# Every layer has parallax: 0 = fixed sky, 1 = the ground plane, above 1 = close foreground.
+# A sprite id that is not in data/sprites yet is not an error: its place is kept and a dark silhouette is drawn instead
+# (this is how the Directorate scene works until that art lands). New scene = new [[scene]] block; nothing else to change.
+#
+# Scene fields: id, caption (bottom-left of the menu), duration (seconds on screen, 20-30 is calm), drift_x / drift_y /
+# drift_period (the slow camera sway), grade (a colour wash over the whole scene; the last two hex digits are the strength,
+# e.g. "#1E2E4838"; a plain #RRGGBB gets a light default strength).
+
+[menu]
+fade_seconds = 3.0
+
+
+
+# ---------------------------------------------------------------------------------------------------------------------
+[[scene]]
+id = "authority_convoy"
+caption = "Rust Belt - an Authority survey convoy"
+duration = 26
+drift_x = 110
+drift_y = 8
+drift_period = 70
+grade = "#1E2E4830"
+
+  [[scene.layer]]
+  kind = "gradient"
+  y0 = 0
+  y1 = 760
+  color = "#1C2A44"
+  color2 = "#C09670"
+
+  [[scene.layer]]
+  kind = "glow"
+  parallax = 0.0
+  x = 1380
+  y = 640
+  radius = 900
+  color = "#FFA050"
+  intensity = 0.85
+
+  [[scene.layer]]
+  kind = "skyline"
+  style = "ruins"
+  parallax = 0.1
+  y = 680
+  min_height = 60
+  max_height = 220
+  period = 2200
+  seed = 3
+  color = "#6A6F78"
+  color2 = "#4C525A"
+  rim = "#E0C090B0"
+
+  [[scene.layer]]
+  kind = "gradient"
+  y0 = 420
+  y1 = 700
+  color = "#D0A47800"
+  color2 = "#D0A478A0"
+
+  [[scene.layer]]
+  kind = "skyline"
+  style = "ruins"
+  parallax = 0.25
+  y = 750
+  min_height = 120
+  max_height = 400
+  period = 2600
+  seed = 11
+  color = "#3A3E46"
+  color2 = "#272A31"
+  rim = "#E8BC80C8"
+  lit = "#FFC060D8"
+
+  [[scene.layer]]
+  kind = "gradient"
+  y0 = 540
+  y1 = 790
+  color = "#B0806000"
+  color2 = "#B0806078"
+
+  [[scene.layer]]
+  kind = "skyline"
+  style = "ruins"
+  parallax = 0.45
+  y = 815
+  min_height = 150
+  max_height = 430
+  period = 2900
+  seed = 21
+  color = "#1F2125"
+  color2 = "#131417"
+  rim = "#D8AE78A0"
+  lit = "#FFB050E8"
+
+  [[scene.layer]]
+  kind = "ground"
+  parallax = 0.8
+  y = 828
+  roughness = 12
+  color = "#46413A"
+  color2 = "#1E1C16"
+  seed = 4
+
+  # A burned-out refinery by the road, still smoking.
+  [[scene.layer]]
+  kind = "sprites"
+  parallax = 0.85
+    [[scene.layer.item]]
+    sprite = "auth_refinery"
+    state = "damaged"
+    anchor = "bottom"
+    x = 1500
+    y = 905
+    scale = 1.8
+    ticks_per_second = 4
+    house = 3
+    [[scene.layer.item]]
+    sprite = "fire_large"
+    state = "play"
+    x = 1623
+    y = 722
+    scale = 3.4
+    ticks_per_second = 14
+    shadow = false
+    [[scene.layer.item]]
+    sprite = "smoke_plume"
+    state = "play"
+    x = 1623
+    y = 690
+    scale = 7.5
+    alpha = 0.6
+    ticks_per_second = 5
+    shadow = false
+    [[scene.layer.item]]
+    sprite = "auth_power"
+    state = "damaged"
+    anchor = "bottom"
+    x = 560
+    y = 890
+    scale = 1.7
+    house = 3
+
+  # The road and the convoy.
+  [[scene.layer]]
+  kind = "gradient"
+  parallax = 1.0
+  y0 = 880
+  y1 = 1080
+  color = "#3E3A32"
+  color2 = "#1E1D18"
+
+  [[scene.layer]]
+  kind = "gradient"
+  parallax = 1.0
+  y0 = 968
+  y1 = 974
+  color = "#5A564800"
+  color2 = "#5A564898"
+
+  [[scene.layer]]
+  kind = "sprites"
+  parallax = 1.0
+    [[scene.layer.item]]
+    sprite = "auth_jeep"
+    x = 340
+    y = 930
+    scale = 2.5
+    facing = 64
+    house = 3
+    speed = 42
+    loop_width = 2400
+    [[scene.layer.item]]
+    sprite = "auth_scraper"
+    x = 700
+    y = 934
+    scale = 2.2
+    facing = 64
+    house = 3
+    speed = 42
+    loop_width = 2400
+    [[scene.layer.item]]
+    sprite = "auth_tank"
+    x = 1090
+    y = 934
+    scale = 2.7
+    facing = 64
+    house = 3
+    speed = 42
+    loop_width = 2400
+    [[scene.layer.item]]
+    sprite = "auth_tank"
+    x = 1480
+    y = 934
+    scale = 2.7
+    facing = 64
+    house = 3
+    speed = 42
+    loop_width = 2400
+    [[scene.layer.item]]
+    sprite = "auth_rifleman"
+    state = "walk"
+    x = 560
+    y = 1000
+    scale = 3.0
+    facing = 64
+    house = 3
+    speed = 42
+    loop_width = 2400
+    ticks_per_second = 9
+    [[scene.layer.item]]
+    sprite = "auth_rifleman"
+    state = "walk"
+    x = 640
+    y = 1018
+    scale = 3.0
+    facing = 64
+    house = 3
+    speed = 42
+    loop_width = 2400
+    ticks_per_second = 9
+    [[scene.layer.item]]
+    sprite = "auth_rocketeer"
+    state = "walk"
+    x = 1250
+    y = 1004
+    scale = 3.0
+    facing = 64
+    house = 3
+    speed = 42
+    loop_width = 2400
+    ticks_per_second = 9
+
+  [[scene.layer]]
+  kind = "skyline"
+  style = "ridge"
+  parallax = 1.0
+  y = 1040
+  min_height = 6
+  max_height = 34
+  period = 1500
+  seed = 33
+  color = "#100F0D"
+  color2 = "#0A0908"
+
+  [[scene.layer]]
+  kind = "particles"
+  particle = "snow"
+  parallax = 0.6
+  count = 170
+  vel_x = -22
+  vel_y = 36
+  size_min = 2
+  size_max = 4.5
+  sway = 24
+  color = "#ECEAE0D0"
+  seed = 5
+
+  [[scene.layer]]
+  kind = "skyline"
+  style = "pylons"
+  parallax = 1.5
+  y = 1130
+  max_height = 900
+  period = 3600
+  seed = 8
+  color = "#06070A"
+  color2 = "#030405"
+
+  [[scene.layer]]
+  kind = "particles"
+  particle = "ash"
+  parallax = 1.5
+  count = 36
+  vel_x = -48
+  vel_y = 60
+  size_min = 5
+  size_max = 10
+  sway = 40
+  color = "#D8D4C8B0"
+  seed = 6
+
+# ---------------------------------------------------------------------------------------------------------------------
+[[scene]]
+id = "directorate_smelters"
+caption = "The Directorate - smelter stacks under black ash"
+duration = 26
+drift_x = 100
+drift_y = 6
+drift_period = 64
+grade = "#3A0C0430"
+
+  [[scene.layer]]
+  kind = "gradient"
+  y0 = 0
+  y1 = 800
+  color = "#0A0709"
+  color2 = "#4A180C"
+
+  [[scene.layer]]
+  kind = "glow"
+  parallax = 0.0
+  x = 940
+  y = 720
+  radius = 1100
+  color = "#FF5A1E"
+  intensity = 0.75
+  flicker = 0.12
+  flicker_hz = 0.4
+
+  [[scene.layer]]
+  kind = "skyline"
+  style = "ridge"
+  parallax = 0.08
+  y = 720
+  min_height = 60
+  max_height = 190
+  period = 2000
+  seed = 2
+  color = "#3A1810"
+  color2 = "#220E0A"
+
+  [[scene.layer]]
+  kind = "skyline"
+  style = "stacks"
+  parallax = 0.2
+  y = 790
+  min_height = 90
+  max_height = 520
+  period = 2800
+  seed = 14
+  color = "#22100E"
+  color2 = "#150A09"
+  rim = "#FF783CA0"
+  lit = "#FF8438E8"
+
+  [[scene.layer]]
+  kind = "gradient"
+  y0 = 520
+  y1 = 870
+  color = "#8A2C1000"
+  color2 = "#8A2C1090"
+
+  [[scene.layer]]
+  kind = "skyline"
+  style = "stacks"
+  parallax = 0.45
+  y = 858
+  min_height = 130
+  max_height = 660
+  period = 3300
+  seed = 29
+  color = "#0F0809"
+  color2 = "#080405"
+  rim = "#FF8C48B0"
+  lit = "#FFA048F8"
+
+  # Airships drift through the smog (a soft stand-in until dir_dirigible exists).
+  [[scene.layer]]
+  kind = "sprites"
+  parallax = 0.3
+    [[scene.layer.item]]
+    sprite = "dir_dirigible"
+    x = 360
+    y = 330
+    scale = 3.0
+    speed = 7
+    loop_width = 2600
+    shadow = false
+    alpha = 0.85
+    fallback_w = 330
+    fallback_h = 110
+    fallback_shape = "blimp"
+    fallback_color = "#1C0C0A"
+    shade = 0.2
+    [[scene.layer.item]]
+    sprite = "dir_dirigible"
+    x = 1500
+    y = 250
+    scale = 2.0
+    speed = 5
+    loop_width = 2600
+    shadow = false
+    alpha = 0.7
+    fallback_w = 330
+    fallback_h = 110
+    fallback_shape = "blimp"
+    fallback_color = "#241210"
+    shade = 0.1
+
+  [[scene.layer]]
+  kind = "ground"
+  parallax = 0.9
+  y = 880
+  roughness = 18
+  color = "#2A1612"
+  color2 = "#0E0706"
+  seed = 9
+
+  [[scene.layer]]
+  kind = "glow"
+  parallax = 0.9
+  x = 1180
+  y = 900
+  radius = 620
+  color = "#FF6A28"
+  intensity = 0.5
+  flicker = 0.3
+  flicker_hz = 0.9
+
+  # The work column. Directorate art is still arriving; these fall back to silhouettes until it lands.
+  [[scene.layer]]
+  kind = "sprites"
+  parallax = 1.0
+    [[scene.layer.item]]
+    sprite = "dir_landtrain"
+    x = 420
+    y = 940
+    scale = 2.5
+    speed = 24
+    loop_width = 2400
+    fallback_w = 300
+    fallback_h = 120
+    fallback_color = "#241210"
+    [[scene.layer.item]]
+    sprite = "dir_scraper"
+    x = 1000
+    y = 948
+    scale = 2.3
+    speed = 24
+    loop_width = 2400
+    fallback_w = 170
+    fallback_h = 90
+    fallback_color = "#241210"
+    [[scene.layer.item]]
+    sprite = "dir_landtrain"
+    x = 1700
+    y = 942
+    scale = 2.5
+    speed = 24
+    loop_width = 2400
+    fallback_w = 300
+    fallback_h = 120
+    fallback_color = "#241210"
+    [[scene.layer.item]]
+    sprite = "dir_sapper"
+    x = 760
+    y = 1010
+    scale = 2.9
+    speed = 30
+    loop_width = 2400
+    fallback_w = 30
+    fallback_h = 62
+    fallback_color = "#241210"
+    [[scene.layer.item]]
+    sprite = "dir_sapper"
+    x = 830
+    y = 1028
+    scale = 2.9
+    speed = 30
+    loop_width = 2400
+    fallback_w = 30
+    fallback_h = 62
+    fallback_color = "#241210"
+    [[scene.layer.item]]
+    sprite = "dir_sapper"
+    x = 1330
+    y = 1018
+    scale = 2.9
+    speed = 30
+    loop_width = 2400
+    fallback_w = 30
+    fallback_h = 62
+    fallback_color = "#241210"
+
+  [[scene.layer]]
+  kind = "particles"
+  particle = "ash"
+  parallax = 0.7
+  count = 190
+  vel_x = -14
+  vel_y = 46
+  size_min = 2
+  size_max = 5
+  sway = 22
+  color = "#A09C96C0"
+  seed = 31
+
+  [[scene.layer]]
+  kind = "particles"
+  particle = "ember"
+  parallax = 0.9
+  count = 80
+  vel_x = 12
+  vel_y = -52
+  size_min = 2
+  size_max = 4.2
+  sway = 30
+  color = "#FF7A28F0"
+  rim = "#FFE8B0"
+  seed = 37
+
+  [[scene.layer]]
+  kind = "skyline"
+  style = "pylons"
+  parallax = 1.5
+  y = 1130
+  max_height = 880
+  period = 3900
+  seed = 19
+  color = "#030203"
+  color2 = "#020102"
+
+  [[scene.layer]]
+  kind = "particles"
+  particle = "ash"
+  parallax = 1.5
+  count = 32
+  vel_x = -30
+  vel_y = 70
+  size_min = 5
+  size_max = 11
+  sway = 34
+  color = "#7E7A76B0"
+  seed = 41
+
+# ---------------------------------------------------------------------------------------------------------------------
+[[scene]]
+id = "authority_dawn_base"
+caption = "Rust Belt - an Authority forward base at dawn"
+duration = 24
+drift_x = 100
+drift_y = 6
+drift_period = 66
+grade = "#FFB06020"
+
+  [[scene.layer]]
+  kind = "gradient"
+  y0 = 0
+  y1 = 800
+  color = "#2C4668"
+  color2 = "#E8B080"
+
+  [[scene.layer]]
+  kind = "glow"
+  parallax = 0.0
+  x = 520
+  y = 650
+  radius = 950
+  color = "#FFE0A0"
+  intensity = 0.9
+
+  [[scene.layer]]
+  kind = "skyline"
+  style = "ruins"
+  parallax = 0.1
+  y = 700
+  min_height = 50
+  max_height = 190
+  period = 2300
+  seed = 51
+  color = "#9A8C86"
+  color2 = "#7A6E6A"
+  rim = "#FFE8B0C8"
+
+  [[scene.layer]]
+  kind = "gradient"
+  y0 = 460
+  y1 = 780
+  color = "#F4CCA000"
+  color2 = "#F4CCA0A0"
+
+  [[scene.layer]]
+  kind = "skyline"
+  style = "ruins"
+  parallax = 0.3
+  y = 790
+  min_height = 110
+  max_height = 380
+  period = 2700
+  seed = 57
+  color = "#554E52"
+  color2 = "#352F34"
+  rim = "#FFD890D8"
+  lit = "#FFC870D0"
+
+  [[scene.layer]]
+  kind = "ground"
+  parallax = 0.8
+  y = 830
+  roughness = 10
+  color = "#5A4F3E"
+  color2 = "#241F17"
+  seed = 12
+
+  [[scene.layer]]
+  kind = "sprites"
+  parallax = 0.9
+    [[scene.layer.item]]
+    sprite = "auth_silo"
+    anchor = "bottom"
+    x = 230
+    y = 905
+    scale = 1.7
+    house = 0
+    [[scene.layer.item]]
+    sprite = "auth_conyard"
+    anchor = "bottom"
+    x = 570
+    y = 925
+    scale = 1.75
+    house = 0
+    [[scene.layer.item]]
+    sprite = "auth_power"
+    anchor = "bottom"
+    x = 900
+    y = 900
+    scale = 1.7
+    house = 0
+    [[scene.layer.item]]
+    sprite = "smoke_plume"
+    state = "play"
+    x = 925
+    y = 790
+    scale = 6.0
+    alpha = 0.55
+    ticks_per_second = 5
+    shadow = false
+    [[scene.layer.item]]
+    sprite = "auth_refinery"
+    anchor = "bottom"
+    x = 1260
+    y = 930
+    scale = 1.75
+    house = 0
+    [[scene.layer.item]]
+    sprite = "auth_factory"
+    anchor = "bottom"
+    x = 1650
+    y = 905
+    scale = 1.7
+    house = 0
+    state = "active"
+    ticks_per_second = 5
+
+  [[scene.layer]]
+  kind = "gradient"
+  parallax = 1.0
+  y0 = 915
+  y1 = 1080
+  color = "#4A4132"
+  color2 = "#201C14"
+
+  [[scene.layer]]
+  kind = "sprites"
+  parallax = 1.0
+    [[scene.layer.item]]
+    sprite = "auth_scraper"
+    state = "harvest"
+    x = 330
+    y = 990
+    scale = 2.3
+    facing = 64
+    house = 0
+    speed = 12
+    loop_width = 2400
+    ticks_per_second = 8
+    [[scene.layer.item]]
+    sprite = "auth_turret"
+    anchor = "bottom"
+    x = 840
+    y = 1030
+    scale = 2.2
+    facing = 64
+    house = 0
+    [[scene.layer.item]]
+    sprite = "auth_tank"
+    x = 1130
+    y = 1000
+    scale = 2.7
+    facing = 100
+    house = 0
+    [[scene.layer.item]]
+    sprite = "auth_tank"
+    x = 1560
+    y = 1020
+    scale = 2.7
+    facing = 128
+    house = 0
+    [[scene.layer.item]]
+    sprite = "auth_rifleman"
+    x = 690
+    y = 1030
+    scale = 3.1
+    facing = 90
+    house = 0
+    [[scene.layer.item]]
+    sprite = "auth_rifleman"
+    x = 750
+    y = 1048
+    scale = 3.1
+    facing = 110
+    house = 0
+
+  [[scene.layer]]
+  kind = "particles"
+  particle = "ash"
+  parallax = 0.7
+  count = 110
+  vel_x = -18
+  vel_y = 28
+  size_min = 2
+  size_max = 4.5
+  sway = 20
+  color = "#8A7C72B8"
+  seed = 61
+
+  [[scene.layer]]
+  kind = "skyline"
+  style = "pylons"
+  parallax = 1.5
+  y = 1130
+  max_height = 850
+  period = 3400
+  seed = 63
+  color = "#0A0908"
+  color2 = "#050403"
+
+# ---------------------------------------------------------------------------------------------------------------------
+[[scene]]
+id = "glass_coast_dunes"
+caption = "Glass Coast - grey ash dunes, fused sand and drowned streets"
+duration = 25
+drift_x = 120
+drift_y = 8
+drift_period = 72
+grade = "#C8B07820"
+
+  [[scene.layer]]
+  kind = "gradient"
+  y0 = 0
+  y1 = 760
+  color = "#56687C"
+  color2 = "#D0C8B2"
+
+  [[scene.layer]]
+  kind = "glow"
+  parallax = 0.0
+  x = 1500
+  y = 400
+  radius = 720
+  color = "#FFF4D8"
+  intensity = 0.75
+
+  [[scene.layer]]
+  kind = "skyline"
+  style = "ridge"
+  parallax = 0.1
+  y = 700
+  min_height = 40
+  max_height = 150
+  period = 2400
+  seed = 71
+  color = "#A4A49A"
+  color2 = "#8C8C82"
+
+  # Drowned suburb: flat roofs standing out of grey water.
+  [[scene.layer]]
+  kind = "skyline"
+  style = "ruins"
+  parallax = 0.25
+  y = 760
+  min_height = 40
+  max_height = 150
+  period = 2500
+  seed = 77
+  color = "#646A70"
+  color2 = "#4A5056"
+  rim = "#F0ECD8B0"
+  lit = "#FFE8A890"
+
+  [[scene.layer]]
+  kind = "gradient"
+  y0 = 760
+  y1 = 860
+  parallax = 0.3
+  color = "#8498A0E8"
+  color2 = "#52646C"
+
+  [[scene.layer]]
+  kind = "skyline"
+  style = "ridge"
+  parallax = 0.5
+  y = 880
+  min_height = 50
+  max_height = 190
+  period = 3000
+  seed = 83
+  color = "#88867C"
+  color2 = "#66645A"
+  rim = "#F0ECD8B0"
+
+  [[scene.layer]]
+  kind = "ground"
+  parallax = 1.0
+  y = 900
+  roughness = 14
+  color = "#625F55"
+  color2 = "#2C2B26"
+  seed = 20
+
+  # A tank column heads west along the beach.
+  [[scene.layer]]
+  kind = "sprites"
+  parallax = 1.0
+    [[scene.layer.item]]
+    sprite = "auth_tank"
+    x = 1500
+    y = 950
+    scale = 2.7
+    facing = 192
+    house = 2
+    speed = -34
+    loop_width = 2400
+    [[scene.layer.item]]
+    sprite = "auth_jeep"
+    x = 1060
+    y = 958
+    scale = 2.5
+    facing = 192
+    house = 2
+    speed = -34
+    loop_width = 2400
+    [[scene.layer.item]]
+    sprite = "auth_tank"
+    x = 640
+    y = 950
+    scale = 2.7
+    facing = 192
+    house = 2
+    speed = -34
+    loop_width = 2400
+    [[scene.layer.item]]
+    sprite = "auth_scraper"
+    x = 220
+    y = 954
+    scale = 2.3
+    facing = 192
+    house = 2
+    speed = -34
+    loop_width = 2400
+
+  [[scene.layer]]
+  kind = "particles"
+  particle = "ash"
+  parallax = 0.8
+  count = 170
+  vel_x = -90
+  vel_y = 16
+  size_min = 2
+  size_max = 4.5
+  sway = 14
+  color = "#807E74C0"
+  seed = 91
+
+  [[scene.layer]]
+  kind = "skyline"
+  style = "pylons"
+  parallax = 1.5
+  y = 1130
+  max_height = 800
+  period = 4200
+  seed = 93
+  color = "#12110F"
+  color2 = "#0A0A08"
+
+  [[scene.layer]]
+  kind = "particles"
+  particle = "ash"
+  parallax = 1.5
+  count = 30
+  vel_x = -150
+  vel_y = 26
+  size_min = 5
+  size_max = 11
+  sway = 20
+  color = "#68665EA8"
+  seed = 97
+
