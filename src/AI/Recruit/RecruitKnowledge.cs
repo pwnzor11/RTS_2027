@@ -22,6 +22,10 @@ internal sealed class RecruitKnowledge
     /// <summary>Aura carriers (Agitprop): not army; the faction tactics keep them with the wave. Empty for Authority.</summary>
     public readonly List<ViewActor> Support = new();
     public readonly List<ViewActor> Visible = new();
+    /// <summary>M3-11: army units that retreated and guard the base (not part of waves). Filled by <see cref="Squads"/>.</summary>
+    public readonly List<ViewActor> Home = new();
+    /// <summary>M3-11: army units on special duty (scout, raiders); not part of waves. Filled by <see cref="Squads"/>.</summary>
+    public readonly List<ViewActor> Detached = new();
     public int[] BuildingCount = Array.Empty<int>();
     public CellCoord Yard;
     public bool HaveYard;
@@ -66,6 +70,9 @@ internal sealed class RecruitKnowledge
             foreach (ViewActor b in Buildings)
                 if (!(Rules.Buildings[b.TypeIndex].Wall || Rules.Buildings[b.TypeIndex].Gate)) { Yard = b.Cell; HaveYard = true; break; }
     }
+
+    /// <summary>Stable key of an actor (slot, generation, kind).</summary>
+    public static ulong KeyOf(ViewActor a) => ((ulong)a.Id.Index << 16) | a.Id.Generation | ((ulong)(int)a.Kind << 48);
 
     public bool Buildable(ProductionCategory c, int type)
     {

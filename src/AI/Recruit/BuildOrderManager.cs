@@ -14,18 +14,29 @@ namespace Rts.AI.Recruit;
 /// </summary>
 internal sealed class BuildOrderManager
 {
-    private readonly string[] _order;
+    private readonly List<string> _order;
     private readonly string _powerId, _yardId;
     private readonly PlacementSearch _search = new();
-    private int[] _orderTypes = Array.Empty<int>();
+    private readonly List<int> _orderTypes = new();
     private int _powerType = -1;
     private int[] _queued = Array.Empty<int>();
     private int[] _seen = Array.Empty<int>();
 
     public BuildOrderManager(string[] order, string powerId, string yardId)
     {
-        _order = order;
+        _order = new List<string>(order);
         _powerId = powerId; _yardId = yardId;
+    }
+
+    /// <summary>M3-11: appends a structure to the end of the order (a tier capability: expansion refinery, research, production). Resolved on the next Think.</summary>
+    public void Extend(string id) => _order.Add(id);
+
+    /// <summary>How many times the order lists <paramref name="id"/> (so a caller can append only the missing copies).</summary>
+    public int StepsOf(string id)
+    {
+        int n = 0;
+        foreach (string s in _order) if (s == id) n++;
+        return n;
     }
 
     /// <summary>Credits the next structure (still to be started or being paid for) will need; units keep this in reserve.</summary>
@@ -40,13 +51,13 @@ internal sealed class BuildOrderManager
     public void Think(RecruitKnowledge k, ICommandSink sink)
     {
         SimRules rules = k.Rules;
-        if (_orderTypes.Length == 0)
+        if (_orderTypes.Count < _order.Count || _queued.Length == 0)
         {
-            _orderTypes = new int[_order.Length];
-            for (int i = 0; i < _order.Length; i++)
+            for (int i = _orderTypes.Count; i < _order.Count; i++)
             {
-                _orderTypes[i] = SimRules.IndexOf(rules.Buildings, _order[i], b => b.Id);
-                if (_orderTypes[i] < 0) throw new InvalidOperationException("build order names unknown structure '" + _order[i] + "'");
+                int t = SimRules.IndexOf(rules.Buildings, _order[i], b => b.Id);
+                if (t < 0) throw new InvalidOperationException("build order names unknown structure '" + _order[i] + "'");
+                _orderTypes.Add(t);
             }
             _powerType = SimRules.IndexOf(rules.Buildings, _powerId, b => b.Id);
             _queued = new int[rules.Buildings.Count];

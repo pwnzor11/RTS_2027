@@ -26,16 +26,71 @@ public sealed class RecruitAi : IAiPlayer
     private BuildOrderManager? _build;
     private ProductionManager? _production;
     private IFactionTactics? _tactics;
+    // M3-11: tier capabilities, each gated on a profile flag (see data/ai/difficulty.toml)
+    private TierPlanner? _planner;
+    private readonly Squads _squads = new();
+    private readonly RepairManager _repair = new();
+    private readonly ScatterManager _scatter = new();
+    private readonly RetreatManager _retreat = new();
+    private readonly HarassManager _harass = new();
+    private readonly ScoutManager _scout = new();
+    private readonly UpgradeManager _upgrades = new();
+    private readonly SuperweaponManager _superweapons = new();
+    private readonly string _id;
 
-    /// <summary>Creates the AI for a tier's profile.</summary>
-    public RecruitAi(DifficultyProfile profile)
+    /// <summary>Creates the AI for a tier's profile. The capabilities (repair, harvester replacement, scouting, ...) come from the
+    /// profile's flags; a profile with none set is the tier 1 Recruit.</summary>
+    public RecruitAi(DifficultyProfile profile) : this(profile, AiRegistry.RecruitId) { }
+
+    /// <summary>Creates the AI under a registry id (the same AI is registered as "recruit" and as "tiered").</summary>
+    public RecruitAi(DifficultyProfile profile, string id)
     {
         _profile = profile;
-        _military = new MilitaryManager(profile.AttackThreshold);
+        _id = id;
+        _military = new MilitaryManager(profile.AttackThreshold) { Options = MilitaryOptions.From(profile) };
     }
 
     /// <inheritdoc />
-    public string Id => AiRegistry.RecruitId;
+    public string Id => _id;
+
+    /// <summary>Harvesters built to replace lost ones.</summary>
+    public int HarvestersReplaced => _planner?.HarvestersReplaced ?? 0;
+
+    /// <summary>Repair orders given.</summary>
+    public int Repairs => _repair.Orders;
+
+    /// <summary>Scatter orders given.</summary>
+    public int Scatters => _scatter.Orders;
+
+    /// <summary>Units sent home by the retreat rule.</summary>
+    public int Retreats => _retreat.Count;
+
+    /// <summary>Waves called off for losing too much strength.</summary>
+    public int GroupRetreats => _military.GroupRetreats;
+
+    /// <summary>Waves launched as two prongs.</summary>
+    public int Prongs => _military.Prongs;
+
+    /// <summary>Raiding parties formed.</summary>
+    public int RaidParties => _harass.Parties;
+
+    /// <summary>Attack orders given by raiders.</summary>
+    public int RaidStrikes => _harass.Strikes;
+
+    /// <summary>Scouts sent.</summary>
+    public int Scouts => _scout.Sent;
+
+    /// <summary>Upgrades ordered.</summary>
+    public int UpgradesOrdered => _upgrades.Ordered;
+
+    /// <summary>Special (superweapon) commands issued.</summary>
+    public int SuperweaponsFired => _superweapons.Fired;
+
+    /// <summary>Aircraft queued.</summary>
+    public int AircraftOrdered => _planner?.AircraftOrdered ?? 0;
+
+    /// <summary>Percent of seen enemy units that are heavily armoured (the mix input).</summary>
+    public int EnemyHeavyShare => _planner?.HeavyShare ?? 0;
 
     /// <summary>Structures placed.</summary>
     public int StructuresPlaced => _build?.Placed ?? 0;
@@ -63,6 +118,7 @@ public sealed class RecruitAi : IAiPlayer
     {
         _ctx = ctx;
         _military.Start(ctx);
+        _scout.Start(ctx);
     }
 
     /// <summary>Creates the faction-dependent managers (once, on the first decision). The seeded generator is consumed in the
@@ -72,7 +128,8 @@ public sealed class RecruitAi : IAiPlayer
         _faction = RecruitFaction.For(faction);
         _tactics = _faction.CreateTactics();
         _build = new BuildOrderManager(_faction.OrderFor(_profile.BuildRepertoire), _faction.PowerId, _faction.YardId);
-        _production = new ProductionManager(_faction, _tactics);
+        _planner = new TierPlanner(_profile, _faction);
+        _production = new ProductionManager(_faction, _tactics, _planner);
         _production.Start(_ctx!.Rng);
         _military.Tactics = _tactics;
         _tactics?.Start(_ctx);
@@ -85,10 +142,21 @@ public sealed class RecruitAi : IAiPlayer
         _k.Refresh(view, _faction!.YardId);
         if (_k.Hud.Defeated) return;
         view.CopyKnownEnemyBuildings(_knownBuildings);
+        _squads.Apply(_k);
+        _planner!.Observe(_k, _knownBuildings);
+        _planner.ExtendBuild(_k, _build!);
         _build!.Think(_k, sink);
         _economy.Think(_k, sink);
+        if (_profile.Repair) _repair.Think(_k, sink);
         _production!.Think(_k, sink, _build.PendingCost);
+        if (_profile.UseUpgrades) _upgrades.Think(_k, sink, _build.PendingCost);
+        // squads: pull units out of the wave pool before the military manager counts and orders it
+        _retreat.Think(_k, sink, _squads, _production.Rally, _profile.RetreatHealthPct);
+        if (_profile.ActiveScouting) _scout.Think(_k, sink, _squads);
+        if (_profile.Harass) _harass.Think(_k, sink, _squads, _planner, _knownBuildings, _production.Rally, _profile.ScoutInfoAgeTicks);
         _military.Think(_k, sink, _production.Rally, _knownBuildings);
+        if (_profile.Scatter) _scatter.Think(_k, sink);
+        if (_profile.Superweapons) _superweapons.Think(_k, sink, _knownBuildings);
         _tactics?.Think(_k, sink, _military.Goal(_k, _knownBuildings), _production.Rally, _military.WaveCentre(_k));
     }
 }

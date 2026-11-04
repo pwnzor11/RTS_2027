@@ -22,6 +22,9 @@ public static class DifficultyLoader
     [
         "tier", "decision_interval_ticks", "command_delay_ticks", "scout_info_age_ticks", "attack_threshold",
         "focus_fire", "retreat_health_pct", "expansion_tick", "superweapons", "multi_front", "build_repertoire",
+        // M3-11 capability flags and numbers (optional)
+        "repair", "replace_harvesters", "respond_to_attacks", "scatter", "enemy_aware_mix", "two_pronged", "counter_defences",
+        "air", "scouting", "harass", "use_upgrades", "adapt_build", "harvester_target",
     ];
 
     /// <summary>The data/ai/difficulty.toml beside the nearest data/rules above <paramref name="startDirectory"/>, or null.</summary>
@@ -88,11 +91,33 @@ public static class DifficultyLoader
         int? supers = Int(table, id, "superweapons", 0, 1, file, problems);
         int? multi = Int(table, id, "multi_front", 0, 1, file, problems);
         List<string>? repertoire = StrList(table, id, "build_repertoire", file, problems);
+        int? repair = Opt(table, id, "repair", 0, 1, 0, file, problems);
+        int? replace = Opt(table, id, "replace_harvesters", 0, 1, 0, file, problems);
+        int? respond = Opt(table, id, "respond_to_attacks", 0, 1, 0, file, problems);
+        int? scatter = Opt(table, id, "scatter", 0, 1, 0, file, problems);
+        int? aware = Opt(table, id, "enemy_aware_mix", 0, 1, 0, file, problems);
+        int? twoPronged = Opt(table, id, "two_pronged", 0, 1, 0, file, problems);
+        int? counter = Opt(table, id, "counter_defences", 0, 1, 0, file, problems);
+        int? air = Opt(table, id, "air", 0, 1, 0, file, problems);
+        int? scouting = Opt(table, id, "scouting", 0, 1, 0, file, problems);
+        int? harass = Opt(table, id, "harass", 0, 1, 0, file, problems);
+        int? upgrades = Opt(table, id, "use_upgrades", 0, 1, 0, file, problems);
+        int? adapt = Opt(table, id, "adapt_build", 0, 1, 0, file, problems);
+        int? harvesters = Opt(table, id, "harvester_target", 1, 6, 1, file, problems);
 
         if (problems.Count > before) return null;
         return new DifficultyProfile(id, tier!.Value, interval!.Value, delay!.Value, infoAge!.Value, threshold!.Value,
-            focus!.Value == 1, retreat!.Value, expansion!.Value, supers!.Value == 1, multi!.Value == 1, repertoire!);
+            focus!.Value == 1, retreat!.Value, expansion!.Value, supers!.Value == 1, multi!.Value == 1, repertoire!)
+        {
+            Repair = repair == 1, ReplaceHarvesters = replace == 1, RespondToAttacks = respond == 1, Scatter = scatter == 1,
+            EnemyAwareMix = aware == 1, TwoPronged = twoPronged == 1, CounterDefences = counter == 1, Air = air == 1,
+            ActiveScouting = scouting == 1, Harass = harass == 1, UseUpgrades = upgrades == 1, AdaptBuild = adapt == 1,
+            HarvesterTarget = harvesters!.Value,
+        };
     }
+
+    private static int? Opt(TomlTable t, string id, string key, int min, int max, int fallback, string file, List<RulesProblem> problems) =>
+        t.ContainsKey(key) ? Int(t, id, key, min, max, file, problems) : fallback;
 
     private static int? Int(TomlTable t, string id, string key, int min, int max, string file, List<RulesProblem> problems)
     {

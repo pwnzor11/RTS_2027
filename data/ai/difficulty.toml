@@ -1,18 +1,33 @@
 # AI difficulty tiers: capability profiles (design 02 section 7).
-# placeholder values -- tune in M2/M3
+# M3-11: tiers 2-5 are built on the Recruit framework; every capability is gated on a flag below, never on the tier number.
 #
-# Integers only. Keys per tier table:
+# Integers only (flags are 0/1). Keys per tier table:
 #   tier                    1..5 (must match the table id: recruit 1, regular 2, veteran 3, elite 4, commissar 5)
 #   decision_interval_ticks ticks between AI decisions (smaller = faster reactions)
 #   command_delay_ticks     ticks between an order being issued and executed (>= 1)
-#   scout_info_age_ticks    how long a last-seen enemy position is trusted
-#   attack_threshold        army size at which the skirmisher starts attacking
-#   focus_fire              0/1: explicit Attack orders on the weakest enemy in range
-#   retreat_health_pct      0..100: reserved (not used by the M1 skirmisher)
-#   expansion_tick          0 = never; reserved until the economy lands
-#   superweapons            0/1: reserved
-#   multi_front             0/1: reserved
-#   build_repertoire        structure ids in build order (recruit: its fixed order; empty = the AI's built-in order)
+#   scout_info_age_ticks    how long a last-seen enemy position (harvester, building) is trusted
+#   attack_threshold        army size at which the AI starts a wave
+#   focus_fire              0/1: explicit Attack orders on the weakest enemy in range (skirmisher AI)
+#   retreat_health_pct      0..100: units below this health percent leave the fight and guard home (0 = never); a wave whose
+#                           total health falls below (this + 20) percent of its launch health is called off
+#   expansion_tick          0 = never; from this tick the build order adds a second refinery and one more harvester is wanted
+#   superweapons            0/1: build a superweapon structure (if the faction has one) and fire it when ready
+#   multi_front             0/1: two squads stage on opposite flanks and assault together (needs two_pronged)
+#   build_repertoire        structure ids in build order (recruit: its fixed order; empty = the faction's built-in order)
+# Capability flags added in M3-11 (all optional, default 0; harvester_target default 1):
+#   repair                  0/1: repair damaged structures
+#   replace_harvesters      0/1: rebuild a harvester that was lost (up to harvester_target, +1 after expansion_tick)
+#   respond_to_attacks      0/1: idle units rush to a structure that is under attack
+#   scatter                 0/1: units standing in splash fire move out of it (Scatter command)
+#   enemy_aware_mix         0/1: unit choice follows damage-per-credit against the armour classes the enemy has been seen with
+#   two_pronged             0/1: a large wave splits into two squads that hit two different targets
+#   counter_defences        0/1: with several enemy defences known, favour long-range units
+#   air                     0/1: build the faction's air tech and aircraft (Directorate only; Authority has none)
+#   scouting                0/1: one cheap unit scouts the likely enemy positions
+#   harass                  0/1: a small party raids remembered enemy harvesters and power structures
+#   use_upgrades            0/1: build the research structure and research upgrades
+#   adapt_build             0/1: extra production structures when cash piles up; defences when the enemy is armour-heavy
+#   harvester_target        1..6: harvesters wanted alive (used with replace_harvesters)
 
 [recruit]
 tier = 1
@@ -35,10 +50,14 @@ scout_info_age_ticks = 600
 attack_threshold = 12
 focus_fire = 0
 retreat_health_pct = 0
-expansion_tick = 6000
+expansion_tick = 0
 superweapons = 0
 multi_front = 0
 build_repertoire = []
+repair = 1
+replace_harvesters = 1
+respond_to_attacks = 1
+scatter = 1
 
 [veteran]
 tier = 3
@@ -47,11 +66,18 @@ command_delay_ticks = 1
 scout_info_age_ticks = 900
 attack_threshold = 10
 focus_fire = 1
-retreat_health_pct = 20
+retreat_health_pct = 0
 expansion_tick = 4800
 superweapons = 0
 multi_front = 0
 build_repertoire = []
+repair = 1
+replace_harvesters = 1
+respond_to_attacks = 1
+scatter = 1
+enemy_aware_mix = 1
+two_pronged = 1
+counter_defences = 1
 
 [elite]
 tier = 4
@@ -65,6 +91,17 @@ expansion_tick = 3600
 superweapons = 1
 multi_front = 0
 build_repertoire = []
+repair = 1
+replace_harvesters = 1
+respond_to_attacks = 1
+scatter = 1
+enemy_aware_mix = 1
+two_pronged = 1
+counter_defences = 1
+air = 1
+scouting = 1
+harass = 1
+use_upgrades = 1
 
 [commissar]
 tier = 5
@@ -78,3 +115,15 @@ expansion_tick = 2400
 superweapons = 1
 multi_front = 1
 build_repertoire = []
+repair = 1
+replace_harvesters = 1
+respond_to_attacks = 1
+scatter = 1
+enemy_aware_mix = 1
+two_pronged = 1
+counter_defences = 1
+air = 1
+scouting = 1
+harass = 1
+use_upgrades = 1
+adapt_build = 1

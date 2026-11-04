@@ -17,10 +17,12 @@ internal sealed class ProductionManager
     // the vehicle lane opens with the faction's first vehicle.
     private readonly RecruitFaction _faction;
     private readonly IFactionTactics? _tactics;
+    private readonly TierPlanner? _tier;
+    private bool _noIncome;
 
-    public ProductionManager(RecruitFaction faction, IFactionTactics? tactics)
+    public ProductionManager(RecruitFaction faction, IFactionTactics? tactics, TierPlanner? tier = null)
     {
-        _faction = faction; _tactics = tactics;
+        _faction = faction; _tactics = tactics; _tier = tier;
     }
 
     private int[] _inf = Array.Empty<int>(), _veh = Array.Empty<int>();
@@ -65,11 +67,26 @@ internal sealed class ProductionManager
             sink.Rally(b.Id, Rally);
         }
 
+        // M3-11: a lost harvester is replaced before anything else is bought (flag ReplaceHarvesters). While the money for it is short the
+        // other lanes hold back; with no harvester and no money for a new one the AI falls back to the Recruit "spend what is left" rule.
+        int harv = _tier?.WantedHarvester(k) ?? -1;
+        int funds0 = k.Hud.Cash + k.Hud.Stored;
+        bool holdForHarvester = harv >= 0 && (k.Harvesters.Count > 0 || funds0 >= rules.Vehicles[harv].Cost);
+        if (holdForHarvester && k.Queue(ProductionCategory.Vehicle).Items.Count == 0 && k.Buildable(ProductionCategory.Vehicle, harv)
+            && funds0 >= rules.Vehicles[harv].Cost)
+        {
+            sink.Build(ProductionCategory.Vehicle, harv);
+            Queued++;
+            _tier!.HarvesterOrdered();
+        }
+        _noIncome = k.Harvesters.Count == 0 && !holdForHarvester;
+
         // Vehicles first; infantry leaves the next vehicle's price in reserve so cheap riflemen cannot starve the factory.
         // No scraper left (it is never replaced): there is no income to wait for, so nothing is held back.
-        if (k.Harvesters.Count == 0) reserve = 0;
-        Lane(k, sink, reserve, ProductionCategory.Vehicle, _veh, ref _vehIdx, t => rules.Vehicles[t].Cost);
-        int vehicleReserve = k.Harvesters.Count == 0 ? 0 : k.Queue(ProductionCategory.Vehicle).Items.Count == 0 && k.Buildable(ProductionCategory.Vehicle, PeekVehicle(rules))
+        if (_noIncome) reserve = 0;
+        if (holdForHarvester) reserve += rules.Vehicles[harv].Cost;
+        else Lane(k, sink, reserve, ProductionCategory.Vehicle, _veh, ref _vehIdx, t => rules.Vehicles[t].Cost);
+        int vehicleReserve = holdForHarvester || _noIncome ? 0 : k.Queue(ProductionCategory.Vehicle).Items.Count == 0 && k.Buildable(ProductionCategory.Vehicle, PeekVehicle(rules))
             ? rules.Vehicles[PeekVehicle(rules)].Cost : 0;
         Lane(k, sink, reserve + vehicleReserve, ProductionCategory.Infantry, _inf, ref _infIdx, t => rules.Infantry[t].Cost);
     }
@@ -79,18 +96,28 @@ internal sealed class ProductionManager
     {
         if (k.Queue(cat).Items.Count > 0) return;
         int type = cat == ProductionCategory.Vehicle ? PeekVehicle(k.Rules) : mix[idx % mix.Length];
+        if (_tier != null && !(cat == ProductionCategory.Vehicle && _first)) type = _tier.PickUnit(k, cat, mix, type, _rng!);   // M3-11
         int wanted = cat == ProductionCategory.Vehicle && _tactics != null ? _tactics.WantedVehicle(k) : -1;
+        // M3-11 (flag Air): the sim has no aircraft lane (an aircraft is a vehicle type with air locomotion built in the vehicle lane), so
+        // the next aircraft is a special order like a Bore: it goes ahead of the bag and does not advance it
+        bool aircraft = false;
+        if (wanted < 0 && cat == ProductionCategory.Vehicle && _tier != null)
+        {
+            wanted = _tier.WantedAircraft(k);
+            aircraft = wanted >= 0;
+        }
         if (wanted >= 0)
         {
             // M3-10: a special order (a Bore for a new entrance, an Agitprop for the wave) goes ahead of the bag and does not advance it
             if (!k.Buildable(cat, wanted) || k.Hud.Cash + k.Hud.Stored < cost(wanted)) return;
             sink.Build(cat, wanted);
+            if (aircraft) _tier!.AircraftQueued();
             Queued++;
             return;
         }
         if (!k.Buildable(cat, type)) return;
         int funds = k.Hud.Cash + k.Hud.Stored;
-        if (k.Harvesters.Count == 0 && funds < cost(type) + reserve)
+        if (_noIncome && funds < cost(type) + reserve)
         {
             // no income left: take the dearest bag item the money still covers instead of waiting for the planned one
             int best = -1;
