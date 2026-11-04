@@ -34,7 +34,10 @@ def main():
     blocks.append(("SCALE at 1x, origins aligned: Authority tank | scraper | jeep | NEW (facing 2), then the same at facing 6", sc))
     idle16 = [me.frame("idle", f) for f in range(16)]
     blocks.append((f"{a.id} idle, 16 facings at 1x (frame 0 = N, clockwise 22.5 deg), {me.fw} px frames", grid(idle16, 16, 1)))
-    blocks.append(("idle, 16 facings at 2x", grid(idle16, 8, 2)))
+    if me.fw >= 140:    # keep the sheet under ~1600 px tall: every second facing at 2x
+        blocks.append(("idle at 2x: facings 0,2,4..14", grid(idle16[::2], 8, 2)))
+    else:
+        blocks.append(("idle, 16 facings at 2x", grid(idle16, 8, 2)))
     for name, (nf, fr, first) in me.states.items():
         if name == "idle":
             continue

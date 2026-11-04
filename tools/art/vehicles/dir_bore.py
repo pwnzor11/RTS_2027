@@ -6,11 +6,11 @@ States: idle (16 x 1) and dive (16 x 4).
 """
 import math, os, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import dir_common as D
+import dir_dig_common as D
 
 ID = "dir_bore"
 TITLE = "Directorate boring machine (Hatch tunneller)"
-CANVAS = 144
+CANVAS = 160
 TARGET = (0.0, 0.3, 1.0)
 STATES = [("idle", 16, 1, 1), ("dive", 16, 4, 3)]
 PALETTE = D.PALETTE
