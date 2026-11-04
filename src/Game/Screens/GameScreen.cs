@@ -292,7 +292,7 @@ public sealed class GameScreen : IScreen
         _mouse = input.MousePosition;
         UpdateHudRegions();
         PlayerHud? localHud = _skirmishMode && _sim is not null ? _sim.Sim.HudFor(SimSnapshotSource.LocalPlayer) : null;
-        _superweapon.Update(localHud);
+        _superweapon.Update(localHud, _sim?.Sim.Tick ?? 0);
         UpdateSuperweaponRegion();
         UpdateUpgradeOffer(localHud);
         if (_upgrade is { Enabled: true } offer && input.LeftPressed && _upgradeRegion.HitTest(input.MousePosition))
@@ -626,6 +626,8 @@ public sealed class GameScreen : IScreen
             Shapes.Fill(sb, _s.Pixel, r, new Color(0, 0, 0, 190));
             Shapes.Fill(sb, _s.Pixel, new Rectangle(r.X, r.Bottom - 5, r.Width * b.ProgressPermille / 1000, 5),
                 b.State == SuperweaponState.Ready ? new Color(255, 200, 60) : new Color(120, 120, 120));
+            if (b.State == SuperweaponState.Ready && !armed)   // M3-21: a READY button pulses gold
+                Shapes.Fill(sb, _s.Pixel, r, new Color(255, 200, 60, (int)SuperweaponButtons.ReadyPulse(tick)));
             Shapes.Outline(sb, _s.Pixel, r, armed ? Color.Red : b.State == SuperweaponState.Ready ? Color.White : new Color(90, 90, 90), 2);
             Color text = b.State == SuperweaponState.Ready ? new Color(0xFF, 0xE0, 0x80) : new Color(0xB0, 0xB0, 0xB0);
             BitmapFont.Draw(sb, _s.Pixel, $"{b.Caption}  {b.Status}", new Vector2(r.X + 8, r.Y + 4), text, scale);
@@ -636,6 +638,13 @@ public sealed class GameScreen : IScreen
             CellCoord cell = Camera.CellAt(_camera.WorldFromScreen(_mouse));
             float left = cell.X * Camera.CellPx, top = cell.Y * Camera.CellPx;
             Shapes.Outline(sb, _s.Pixel, _camera.ScreenRect(left, top, left + Camera.CellPx, top + Camera.CellPx), Color.Red, 2);
+            TelegraphRenderer.DrawBlastRadius(sb, _s.Pixel, cell, _superweapon.ArmedBlastRadius, _camera, tick);   // M3-21
+        }
+
+        if (_superweapon.MessageText(tick) is { } ready)   // M3-21: short "ready" HUD message (placeholder text key, see SuperweaponText)
+        {
+            int w = BitmapFont.Measure(ready, scale) + 16;
+            Hud.Panel(sb, _s.Pixel, new Point(Math.Max(0, (_s.Viewport.Width - w) / 2), 8), new[] { ready }, scale);
         }
 
         int flash = _superweapon.Fx.FlashAlpha(tick);

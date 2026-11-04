@@ -86,6 +86,18 @@ public sealed class SpriteResolver
         return Resolve(unit.Kind == UnitKind.Vehicle ? SpriteKind.Vehicle : SpriteKind.Infantry, id);
     }
 
+    /// <summary>
+    /// M3-21: whether a resolved building sprite has art for the open-gate state (<see cref="SpriteStates.Open"/>). Placeholders and library
+    /// files without that state answer false, and the building renderer then draws its stand-in overlay. This is the one slot the open art
+    /// drops into: add an <c>open</c> state to the gate's sprite manifest.
+    /// </summary>
+    /// <param name="sprite">The sprite from <see cref="ForBuilding"/>.</param>
+    public static bool HasOpenArt(ResolvedSprite sprite)
+    {
+        ArgumentNullException.ThrowIfNull(sprite);
+        return SpriteStates.HasState(sprite.Manifest, SpriteStates.Open);
+    }
+
     /// <summary>Whether the library holds a sprite file with this id.</summary>
     public bool LibraryHas(string id) => _library is not null && _library.Ids.Contains(id, StringComparer.Ordinal);
 

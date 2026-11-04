@@ -21,6 +21,7 @@ public static class BuildingRenderer
     private const byte GhostWashAlpha = 120;
     private static readonly Color Border = new(0x10, 0x10, 0x10);
     private static readonly Color Wash = new(0, 0, 0);
+    private static readonly Color OpenWash = new(0x40, 0xE0, 0x70);
 
     /// <summary>Draws one building or ghost.</summary>
     /// <param name="batch">Batch in progress.</param>
@@ -41,7 +42,8 @@ public static class BuildingRenderer
             ? rules.Buildings[building.TypeIndex].MaxHealth
             : 0;
         int age = memory.BuildingAge(building.Id, tick);
-        int frame = SpriteStates.BuildingFrame(sprite.Manifest, age, building.Health, maxHealth, building.Ghost, tick);
+        bool open = building.GateOpen && !building.Ghost;   // M3-21
+        int frame = SpriteStates.BuildingFrame(sprite.Manifest, age, building.Health, maxHealth, building.Ghost, tick, open);
         if (walls is not null && rules is not null && (uint)building.TypeIndex < (uint)rules.Buildings.Count
             && rules.Buildings[building.TypeIndex].Wall)
         {
@@ -55,6 +57,7 @@ public static class BuildingRenderer
             FxPlayer.DrawAnchors(batch, sprite.Library, sprite.Manifest, frame, origin, tick, camera.Zoom);
         }
 
+        if (open && !SpriteResolver.HasOpenArt(sprite)) DrawOpenPlaceholder(batch, pixel, building, camera);
         if (!building.Ghost) return;
         float left = building.Cell.X * Camera.CellPx;
         float top = building.Cell.Y * Camera.CellPx;
@@ -62,6 +65,27 @@ public static class BuildingRenderer
             left + building.FootprintW * Camera.CellPx, top + building.FootprintH * Camera.CellPx);
         Shapes.Fill(batch, pixel, r, Shapes.Alpha(Wash, GhostWashAlpha));
         Shapes.DashedOutline(batch, pixel, r, Shapes.Alpha(Border, 128), BorderPx, DashPx, GapPx);
+    }
+
+    /// <summary>
+    /// Stand-in for the open-gate art that does not exist yet (M3-21): a green wash over the footprint with a dashed outline and a bright
+    /// opening bar across the middle, so an open gate reads clearly on any sprite. Not drawn once the sprite has an <c>open</c> state.
+    /// </summary>
+    private static void DrawOpenPlaceholder(SpriteBatch batch, Texture2D pixel, BuildingView building, Camera camera)
+    {
+        float left = building.Cell.X * Camera.CellPx;
+        float top = building.Cell.Y * Camera.CellPx;
+        float right = left + building.FootprintW * Camera.CellPx;
+        float bottom = top + building.FootprintH * Camera.CellPx;
+        Rectangle r = camera.ScreenRect(left, top, right, bottom);
+        Shapes.Fill(batch, pixel, r, Shapes.Alpha(OpenWash, 90));
+        Shapes.DashedOutline(batch, pixel, r, Shapes.Alpha(OpenWash, 230), camera.Zoom < 1f ? 1 : 2, DashPx, GapPx);
+        // the opening runs across the narrow side of the footprint
+        bool wide = building.FootprintW >= building.FootprintH;
+        Rectangle gap = wide
+            ? new Rectangle(r.X + r.Width / 4, r.Y + r.Height / 2 - 2, r.Width / 2, 4)
+            : new Rectangle(r.X + r.Width / 2 - 2, r.Y + r.Height / 4, 4, r.Height / 2);
+        Shapes.Fill(batch, pixel, gap, Shapes.Alpha(OpenWash, 255));
     }
 
     /// <summary>
