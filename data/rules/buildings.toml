@@ -232,6 +232,7 @@ prerequisites = ["dir_reactor_vent"]
 provides = []
 entrance = "S"
 ticks_per_point = 20
+morphs_into = "dir_bore_head"
 
 [dir_bore_head]
 footprint_w = 2  # ASSUMED (M3-07)
