@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
+using System.Diagnostics;
 using Rts.AI;
 using Rts.Game.Sandbox;
 using Rts.Sim;
@@ -55,6 +56,9 @@ public sealed class SimHost
     /// commands join the pending list and the replay recording, exactly as if a player had issued them.
     /// </summary>
     public AiDriver? Ai { get; set; }
+
+    /// <summary>Optional timing sink for the perf benchmark (M4-16); null in the game, so the clock is never read.</summary>
+    public HostProfile? Profile { get; set; }
 
     /// <summary>The simulation. Read it between steps only; commands go through <see cref="Issue"/>.</summary>
     public Simulation Sim => _sim;
@@ -245,6 +249,8 @@ public sealed class SimHost
     {
         _previous = _current;
         int ran = _sim.Tick;
+        HostProfile? prof = Profile;
+        long t0 = prof is null ? 0 : Stopwatch.GetTimestamp();
         if (Ai is { } ai)
         {
             _aiScratch.Clear();
@@ -256,12 +262,23 @@ public sealed class SimHost
             }
         }
 
+        long t1 = prof is null ? 0 : Stopwatch.GetTimestamp();
         _sim.Step(_pending);
         // Commands for the tick that just ran have been applied (or were never due); drop them.
         _pending.RemoveAll(c => c.ExecTick <= ran);
         if (_sim.Tick % SimConstants.HashIntervalTicks == 0) _recording?.RecordHash(_sim);
+        long t2 = prof is null ? 0 : Stopwatch.GetTimestamp();
         _current = _sim.Snapshot(_viewer);
         _projectiles = CaptureProjectiles();
+        if (prof is not null)
+        {
+            long t3 = Stopwatch.GetTimestamp();
+            prof.AiTicks += t1 - t0;
+            prof.StepTicks += t2 - t1;
+            prof.SnapshotTicks += t3 - t2;
+            prof.Steps++;
+            prof.Snapshots++;
+        }
     }
 
     private List<LeptonCoord> CaptureProjectiles()
