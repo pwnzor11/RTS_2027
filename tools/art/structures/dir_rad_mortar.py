@@ -59,13 +59,16 @@ def tube(S, i, dmg, idle):
     # trunnion yoke
     for sx in (-0.65, 0.65):
         S.bb(f"yoke", PC[0] + sx - 0.12, PC[0] + sx + 0.12, PC[1] - 0.3, PC[1] + 0.3, 0.55, 1.15, "steel", 0.03)
-    p3(S, "tube", (0.78, 2.5, 0.78), PIV, (0.0, 1.0, 0.0), "bone", PITCH, 0.0, 0.08)
-    p3(S, "tubeb1", (0.84, 0.16, 0.84), PIV, (0.0, 0.5, 0.0), "oxide", PITCH, 0.0, 0.0, nocast=True)
-    p3(S, "tubeb2", (0.84, 0.16, 0.84), PIV, (0.0, 1.5, 0.0), "oxide", PITCH, 0.0, 0.0, nocast=True)
-    p3(S, "tubeh", (0.9, 0.3, 0.9), PIV, (0.0, 2.3, 0.0), "steel", PITCH, 0.0, 0.05)
-    p3(S, "mouthrim", (0.8, 0.06, 0.8), PIV, (0.0, 2.46, 0.0), "dark", PITCH, 0.0, 0.0, nocast=True)
+    p3(S, "tube", (0.78, 2.5, 0.78), PIV, (0.0, 1.0, 0.0), "oxide2", PITCH, 0.0, 0.08)
+    p3(S, "tubeb1", (0.84, 0.2, 0.84), PIV, (0.0, 0.5, 0.0), "dark", PITCH, 0.0, 0.0, nocast=True)
+    p3(S, "tubeb2", (0.84, 0.2, 0.84), PIV, (0.0, 1.35, 0.0), "dark", PITCH, 0.0, 0.0, nocast=True)
+    p3(S, "tubeh", (0.96, 0.34, 0.96), PIV, (0.0, 2.25, 0.0), "steel", PITCH, 0.0, 0.05)
+    p3(S, "mring1", (1.02, 0.12, 1.02), PIV, (0.0, 2.05, 0.0), "bone", PITCH, 0.0, 0.0, nocast=True)
+    p3(S, "mring2", (1.02, 0.12, 1.02), PIV, (0.0, 2.42, 0.0), "bone", PITCH, 0.0, 0.0, nocast=True)
+    p3(S, "mouthrim", (0.8, 0.06, 0.8), PIV, (0.0, 2.49, 0.0), "dark", PITCH, 0.0, 0.0, nocast=True)
     on = idle and (i % 2 == 0)
-    p3(S, "glowm", (0.4, 0.05, 0.4), PIV, (0.0, 2.5, 0.0), "sickly" if on else "sickly_dim", PITCH, 0.0, 0.0, nocast=True)
+    p3(S, "glowm", (0.56, 0.06, 0.56), PIV, (0.0, 2.53, 0.0), "redglow" if (idle and i % 4 < 3) else "oxide2", PITCH, 0.0, 0.0, nocast=True)
+    p3(S, "glowg", (0.3, 0.07, 0.3), PIV, (0.0, 2.55, 0.0), "sickly" if on else "sickly_dim", PITCH, 0.0, 0.0, nocast=True)
     p3(S, "breech", (0.9, 0.35, 0.9), PIV, (0.0, -0.1, 0.0), "gunmetal", PITCH, 0.0, 0.05)
 
 
@@ -120,13 +123,13 @@ def finished(S, i, dmg, mode):
         S.cyl(f"drumr{k}", 0.52, 0.14, (dx, dy, 0.45), "oxide" if k == 0 else "bone", verts=14)
         S.cyl(f"drumr2{k}", 0.52, 0.14, (dx, dy, 0.95), "bone" if k == 0 else "oxide", verts=14)
         S.cyl(f"drumc{k}", 0.4, 0.06, (dx, dy, 1.17), "steel", verts=12)
-        S.bb(f"glass{k}", dx - 0.1, dx + 0.1, dy - 0.54, dy - 0.48, 0.62, 0.8, "sickly" if (idle and (i + k) % 2 == 1) else "sickly_dim", 0.0, nocast=True)
+        S.bb(f"glass{k}", dx - 0.22, dx + 0.22, dy - 0.56, dy - 0.48, 0.55, 0.92, "sickly" if (idle and (i + k) % 2 == 1) else "sickly", 0.0, nocast=True)
     # shell rack: three upright shells in a frame, west of the pit
     sx0 = -2.9
     for k in range(3):
         S.cyl(f"shell{k}", 0.18, 0.7, (sx0 + 0.4 * k, 2.4, 0.5), "bone", verts=10)
         S.cyl(f"shellb{k}", 0.19, 0.1, (sx0 + 0.4 * k, 2.4, 0.7), "oxide", verts=10)
-        S.cyl(f"shelln{k}", 0.12, 0.2, (sx0 + 0.4 * k, 2.4, 0.94), "dark", verts=10)
+        S.cyl(f"shelln{k}", 0.16, 0.26, (sx0 + 0.4 * k, 2.4, 0.97), "sickly", verts=10)
     S.bb("rackf", sx0 - 0.3, sx0 + 1.1, 2.1, 2.7, 0.14, 0.3, "steel", 0.02)
     # ash vent stub (breathes ash)
     vx, vy = 2.8, 2.3
