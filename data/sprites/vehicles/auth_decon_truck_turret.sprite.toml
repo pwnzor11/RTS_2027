@@ -13,12 +13,12 @@ file = "auth_decon_truck_turret.png"
 frame_w = 112
 frame_h = 112
 origin_x = 56
-origin_y = 69
+origin_y = 78
 
 layer = "turret"
 pivot_x = 0.0000
 pivot_y = -0.2206
-pivot_z = 0.5588
+pivot_z = 0.6000
 
 # House paint is the 8-shade magenta ramp, darkest first. Exact RGB matches are house pixels; alpha is always 0 or 255.
 [house]

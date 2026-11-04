@@ -10,10 +10,11 @@ import math
 ID = "auth_decon_truck"
 TITLE = "Authority decontamination truck"
 CANVAS = 112
-TARGET = (0.0, 0.0, 0.9)
+TARGET = (0.0, 0.0, 1.5)     # raised: the spray boom at facing 0 needs headroom in the turret frame
 STATES = [("idle", 16, 1, 1)]
 LAYERS = ["body", "turret"]
-PIVOT = (0.0, -0.75, 1.9)
+PIVOT = (0.0, -0.75, 2.04)    # = top of the pedestal collar = top of the tank at the pivot
+MOUNT = dict(deck_z=1.8, r_lip=0.5, r_well=0.0, r_shadow=0.58, shadow_z=2.05, soft_r=0.55, lip="hull")
 
 
 def build(S, state, k, n):
@@ -64,6 +65,7 @@ def build(S, state, k, n):
         box(f"sidehaz2{sx}", (0.06, 0.16, 0.16), (sx * 0.76, -1.0, 0.98), "dark", 0.0)
         box(f"sidehaz3{sx}", (0.06, 0.16, 0.16), (sx * 0.76, -1.4, 0.98), "dark", 0.0)
     # ---- turret layer: spray boom
+    S.mount(PIVOT, **MOUNT)
     S.begin("turret", PIVOT)
     px, py, pz = PIVOT
     cyl("swivel", 0.3, 0.14, (px, py, pz + 0.07), "steel", "Z", 12)

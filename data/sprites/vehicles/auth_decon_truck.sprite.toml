@@ -9,7 +9,7 @@ file = "auth_decon_truck.png"
 frame_w = 112
 frame_h = 112
 origin_x = 56
-origin_y = 69
+origin_y = 78
 
 layer = "body"
 
