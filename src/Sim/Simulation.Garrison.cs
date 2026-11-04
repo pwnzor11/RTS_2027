@@ -75,10 +75,10 @@ public sealed partial class Simulation
     }
 
     // ---- neutral map features (M4-15, design 08 §3, Q-M4-b) -----------------------------------
-    // ASSUMED (M4-15): "neutral" means the building's owner is a neutral slot (Teams.Neutral), not its type or Faction: neu_* types default to
-    // Faction.Authority in the loader and that is ignored here. A building with HomeOwner != NoOwner is a flipped ruin: it is an ordinary
-    // building of the occupier's for combat and capture, but never counts for defeat (UpdateDefeat) and has no tier/production effect
-    // (neu_* types provide and produce nothing).
+    // Q-37: neutral features are buildings of Faction.Neutral (neu_* types, rules-validated to provide, produce and cost nothing) that start
+    // owned by a neutral slot (Teams.Neutral). Ownership at runtime is by the owner slot, not the type faction: a building with
+    // HomeOwner != NoOwner is a flipped ruin: an ordinary building of the occupier's for combat and capture, but never counts for
+    // defeat (UpdateDefeat) and has no tier/production effect. Nobody targets a neutral-owned building (CanAttackOwnedBy / auto-target).
 
     /// <summary>The first soldier into an empty neutral building makes the occupier its owner and remembers the neutral slot.</summary>
     private void FlipNeutralOnEnter(int b, byte occupier)

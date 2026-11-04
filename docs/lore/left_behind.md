@@ -1,6 +1,6 @@
-# DRAFT — awaiting owner approval (D-086)
+# The Left Behind
 
-# The Left Behind (DRAFT for owner review)
+Status: approved by the owner 2026-11-04 (Q-38)
 
 Entry ids use the prefix `faction_lb_` for faction pages and `lb_` for unit and structure pages. Format per entry:
 `title:`, `subtitle:`, `unlock:`, optional `field_note:`, body. Leader names are invented. Nothing here contradicts

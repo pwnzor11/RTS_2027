@@ -42,8 +42,9 @@ public static class UnitRenderer
         Color house = PlayerColours.Base(view.Player);
         if (UnitVisuals.ShowTunnelMarker(view)) DrawTunnelMarker(batch, pixel, origin, infantry, house, camera.Zoom);
         float alpha = UnitVisuals.Alpha(view);
-        // M3-18: shadow under the body, turret on top (body facing: the snapshot carries no turret facing), dive replaces the body.
-        foreach (UnitLayer layer in UnitLayerPlan.For(sprite.Manifest, infantry, moving, view.Facing, null, false, tick))
+        if (UnitVisuals.ShowDiveMarker(view)) DrawDiveMarker(batch, pixel, origin, house, tick, camera.Zoom);
+        // M3-18: shadow under the body, turret on top, dive replaces the body. M3-21: the snapshot carries the turret facing and the dive flag.
+        foreach (UnitLayer layer in UnitLayerPlan.For(sprite.Manifest, infantry, moving, view.Facing, UnitVisuals.TurretFacing(view), view.Diving, tick))
         {
             Vector2 at = origin + new Vector2(layer.OffsetX, layer.OffsetY) * camera.Zoom;
             float layerAlpha = layer.Kind == UnitLayerKind.Shadow ? alpha * UnitLayerPlan.ShadowAlpha : alpha;
@@ -69,6 +70,18 @@ public static class UnitRenderer
         int dash = Math.Max(2, (int)MathF.Round(4 * zoom));
         Shapes.DashedOutline(batch, pixel, box, Shapes.Alpha(house, 150), zoom < 1f ? 1 : 2, dash, dash);
     }
+
+    // Diving: a dashed ring in the house colour that closes in over a short loop, so "going under" reads even without dive art.
+    private static void DrawDiveMarker(SpriteBatch batch, Texture2D pixel, Vector2 origin, Color house, int tick, float zoom)
+    {
+        int phase = Math.Max(0, tick) % DiveLoopTicks;
+        int half = (int)MathF.Round((26 - 14 * phase / (float)DiveLoopTicks) * zoom);
+        var box = new Rectangle((int)origin.X - half, (int)origin.Y - half, half * 2, half * 2);
+        int dash = Math.Max(2, (int)MathF.Round(4 * zoom));
+        Shapes.DashedOutline(batch, pixel, box, Shapes.Alpha(house, 200), zoom < 1f ? 1 : 2, dash, dash);
+    }
+
+    private const int DiveLoopTicks = 20;
 
     // Four L-shaped corners around (cx, cy).
     private static void DrawBracket(SpriteBatch batch, Texture2D pixel, int cx, int cy, int half, int length, int thick)

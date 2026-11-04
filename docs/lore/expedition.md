@@ -1,6 +1,6 @@
-DRAFT — awaiting owner approval (D-086)
+# The Overseas Expedition
 
-# The Overseas Expedition (DRAFT for owner review)
+Status: approved by the owner 2026-11-04 (Q-38)
 
 Entry ids use the prefix `faction_exp_`, `leader_exp_` and `exp_`. Format per entry: `title:`, `subtitle:`, `unlock:`, `field_note:`
 (units and structures), body. Expedition field notes read as typed telex from the fleet. Every leader and institution

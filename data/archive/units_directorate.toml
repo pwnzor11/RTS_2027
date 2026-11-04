@@ -179,9 +179,9 @@ title = "Assessor"
 subtitle = "Engineer infantry"
 field_note = "VOICE: \"EVERY WALL HAS A VALUE. THE ASSESSOR WRITES IT DOWN, AND THEN COLLECTS.\""
 body = '''
-[DRAFT] Assessors are clerks of the Committee who inspect, repair and requisition. When they walk into an abandoned building, it is theirs by the end of the afternoon. They carry no weapon but a ledger, and nobody has ever dared to refuse them.
+Assessors are clerks of the Committee who inspect, repair and requisition. When they walk into an abandoned building, it is theirs by the end of the afternoon. They carry no weapon but a ledger, and nobody has ever dared to refuse them.
 '''
-# ASSUMED (M4-INT1) DRAFT for owner approval (D-086): text built from design 08 section 4; replace the open unlock with a mission id when known.
+# Approved by the owner 2026-11-04 (Q-38). Replace the open unlock with a mission id when known.
 unlock = "open"
 
 [[entry]]
@@ -192,9 +192,9 @@ title = "Volunteer"
 subtitle = "Irradiated runner"
 field_note = "VOICE: \"THE VOLUNTEER GIVES WHAT THE ANNEX ASKED FOR. THE REST IS A GIFT.\""
 body = '''
-[DRAFT] A runner who has stood too long beside the reactor vents and now carries the glow in his blood. He charges the enemy line and, when he falls, bursts into a cloud of radiation. The Directorate calls it a gift, since he was always going to die anyway.
+A runner who has stood too long beside the reactor vents and now carries the glow in his blood. He charges the enemy line and, when he falls, bursts into a cloud of radiation. The Directorate calls it a gift, since he was always going to die anyway.
 '''
-# ASSUMED (M4-INT1) DRAFT for owner approval (D-086): text built from design 08 section 4; replace the open unlock with a mission id when known.
+# Approved by the owner 2026-11-04 (Q-38). Replace the open unlock with a mission id when known.
 unlock = "open"
 
 [[entry]]
@@ -205,9 +205,9 @@ title = "Ash Sower"
 subtitle = "Radiation-laying vehicle"
 field_note = "VOICE: \"WHERE THE SOWER PASSES, NOTHING GROWS. THIS IS THE POINT.\""
 body = '''
-[DRAFT] A tracked vehicle with a hopper of reactor slag and a spray bar. It harms no one directly, but leaves a field of lingering radiation that does the work for it. Drivers wear lead aprons and are paid in sealed rations.
+A tracked vehicle with a hopper of reactor slag and a spray bar. It harms no one directly, but leaves a field of lingering radiation that does the work for it. Drivers wear lead aprons and are paid in sealed rations.
 '''
-# ASSUMED (M4-INT1) DRAFT for owner approval (D-086): text built from design 08 section 4; replace the open unlock with a mission id when known.
+# Approved by the owner 2026-11-04 (Q-38). Replace the open unlock with a mission id when known.
 unlock = "open"
 
 [[entry]]
@@ -218,9 +218,9 @@ title = "Delver"
 subtitle = "Armed burrower"
 field_note = "VOICE: \"THE DELVER IS A SHAFT THAT HAS LEARNED TO SHOOT.\""
 body = '''
-[DRAFT] A burrowing machine with a short-barrelled gun mounted on the boring head. It tunnels beneath the enemy line and surfaces among its guns for an ambush. Drivers say the dark is safer than the sky.
+A burrowing machine with a short-barrelled gun mounted on the boring head. It tunnels beneath the enemy line and surfaces among its guns for an ambush. Drivers say the dark is safer than the sky.
 '''
-# ASSUMED (M4-INT1) DRAFT for owner approval (D-086): text built from design 08 section 4; replace the open unlock with a mission id when known.
+# Approved by the owner 2026-11-04 (Q-38). Replace the open unlock with a mission id when known.
 unlock = "open"
 
 [[entry]]
@@ -231,7 +231,7 @@ title = "Great Dirigible"
 subtitle = "Heavy radiation bomber"
 field_note = "VOICE: \"LET THE GREAT DIRIGIBLE RISE. THE CITIZENS BELOW WILL UNDERSTAND.\""
 body = '''
-[DRAFT] A vast airship of patched canvas and reactor-warmed gas that drifts over the enemy base and drops radiation bombs. It carries a crew of dozens and is crewed entirely by volunteers. It is slow, and the Directorate counts on nobody being able to catch it.
+A vast airship of patched canvas and reactor-warmed gas that drifts over the enemy base and drops radiation bombs. It carries a crew of dozens and is crewed entirely by volunteers. It is slow, and the Directorate counts on nobody being able to catch it.
 '''
-# ASSUMED (M4-INT1) DRAFT for owner approval (D-086): text built from design 08 section 4; replace the open unlock with a mission id when known.
+# Approved by the owner 2026-11-04 (Q-38). Replace the open unlock with a mission id when known.
 unlock = "open"

@@ -231,6 +231,12 @@ internal static class GameRulesLoader
         {
             string key = FactionSection + "." + kv.Key;
             Faction? faction = RulesEnums.ParseFaction(kv.Key);
+            if (faction == Faction.Neutral)
+            {
+                problems.Add(new RulesProblem(file, key, "neutral has no start kit"));
+                ok = false;
+                continue;
+            }
             if (faction is null)
             {
                 problems.Add(new RulesProblem(file, key, $"unknown faction; must be one of {RulesEnums.Join(RulesEnums.FactionKeys)}"));

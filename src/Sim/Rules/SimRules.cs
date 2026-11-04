@@ -57,6 +57,7 @@ public sealed record SimRules(
     /// </summary>
     public (int Conyard, IReadOnlyList<(Core.ActorKind Kind, int Type)> Units) ResolveStartKit(Faction faction)
     {
+        if ((int)faction >= StartKits.Count) throw new InvalidOperationException($"{faction} has no start kit");
         FactionStartKit kit = StartKits[(int)faction];
         int conyard = IndexOf(Buildings, kit.Conyard, b => b.Id);
         if (conyard < 0) throw new InvalidOperationException($"start kit of {faction}: unknown building '{kit.Conyard}'");

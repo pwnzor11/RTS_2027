@@ -22,4 +22,11 @@ public static class UnitVisuals
 
     /// <summary>Whether to draw the small dashed tunnel marker under the unit.</summary>
     public static bool ShowTunnelMarker(UnitView view) => view.Underground;
+
+    /// <summary>M3-21: whether to draw the dive marker (a dashed ring that closes in) under a burrower in its dive animation. Drawn in
+    /// addition to the <c>dive</c> sprite layer when the manifest has one, so a dive reads even on placeholder art.</summary>
+    public static bool ShowDiveMarker(UnitView view) => view.Diving && !view.Underground;
+
+    /// <summary>M3-21: turret facing to draw: the snapshot's, else the body facing (<see cref="UnitLayerPlan"/> then uses the body).</summary>
+    public static byte? TurretFacing(UnitView view) => view.Kind == UnitKind.Vehicle ? view.TurretFacing : null;
 }

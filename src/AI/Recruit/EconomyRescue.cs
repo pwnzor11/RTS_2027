@@ -135,4 +135,21 @@ internal sealed class EconomyRescue
         sink.Issue(CommandKind.Sell, sell.Id, ActorKind.Building);
         return true;
     }
+    // ---- M3-21: AI save/restore. Appended at the end of the class; the format is private to the matching Restore. ----
+
+    /// <summary>M3-21: writes the sale timer, the income watchdog and the counters.</summary>
+    internal void Snapshot(BinaryWriter w)
+    {
+        w.Write(_last); w.Write(_harv); w.Write(_refinery); w.Write(_hadHarvester); w.Write(_lastUnload);
+        AiSnapshot.WriteMap(w, _harvMission, (bw, m) => bw.Write((byte)m));
+        w.Write(Cancelled); w.Write(Sold); w.Write(Saving); w.Write(Broke);
+    }
+
+    /// <summary>M3-21: reads what <see cref="Snapshot"/> wrote.</summary>
+    internal void Restore(BinaryReader r)
+    {
+        _last = r.ReadInt32(); _harv = r.ReadInt32(); _refinery = r.ReadInt32(); _hadHarvester = r.ReadBoolean(); _lastUnload = r.ReadInt32();
+        AiSnapshot.ReadMap(r, _harvMission, br => (MissionKind)br.ReadByte());
+        Cancelled = r.ReadInt32(); Sold = r.ReadInt32(); Saving = r.ReadBoolean(); Broke = r.ReadBoolean();
+    }
 }

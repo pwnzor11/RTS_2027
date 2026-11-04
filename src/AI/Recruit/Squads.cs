@@ -76,4 +76,19 @@ internal sealed class Squads
         }
         foreach (ulong key in _dead) set.Remove(key);
     }
+    // ---- M3-21: AI save/restore. Appended at the end of the class; the format is private to the matching Restore. ----
+
+    /// <summary>M3-21: writes the three squads (sorted keys) and the retreat counter.</summary>
+    internal void Snapshot(BinaryWriter w)
+    {
+        AiSnapshot.WriteKeys(w, _home); AiSnapshot.WriteKeys(w, _scout); AiSnapshot.WriteKeys(w, _raiders);
+        w.Write(Retreated);
+    }
+
+    /// <summary>M3-21: reads what <see cref="Snapshot"/> wrote.</summary>
+    internal void Restore(BinaryReader r)
+    {
+        AiSnapshot.ReadKeys(r, _home); AiSnapshot.ReadKeys(r, _scout); AiSnapshot.ReadKeys(r, _raiders);
+        Retreated = r.ReadInt32();
+    }
 }

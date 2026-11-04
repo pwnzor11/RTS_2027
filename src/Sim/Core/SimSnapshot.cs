@@ -20,6 +20,10 @@ public sealed record SimSnapshot(int Tick, int MapWidth, int MapHeight, IReadOnl
     /// <summary>M3: per-cell ground layers (row-major, <see cref="GroundLayers"/>) as the viewer may know them; empty when the
     /// whole map is clear. See <see cref="Simulation.FillGroundLayers"/> for the fog rules.</summary>
     public IReadOnlyList<byte> Ground { get; init; } = Array.Empty<byte>();
+
+    /// <summary>M3-21: superweapon buildings the viewer may know the charge of: its own (undefeated owner, live), with charge, ready
+    /// flag and blast radius; all players' when Viewer = -1. Nobody else's charge is told (fog rule of Simulation.Superweapon.cs). Never null.</summary>
+    public IReadOnlyList<SuperweaponView> Superweapons { get; init; } = Array.Empty<SuperweaponView>();
 }
 
 /// <summary>
@@ -46,6 +50,10 @@ public readonly record struct BuildingView(EntityId Id, byte Player, int TypeInd
     /// <summary>M4: soldiers garrisoned inside. Exact for own and allied buildings (and the omniscient view); for an enemy building
     /// only while it is visible now; always 0 on a ghost.</summary>
     public int Occupants { get; init; }
+
+    /// <summary>M3-21: a gate that is open right now: a unit of the owner's team stands in its footprint (the sim has no stored
+    /// open/closed state; D-076 gates are passable for the owner's team and a wall for everyone else). False for any non-gate and on ghosts.</summary>
+    public bool GateOpen { get; init; }
 }
 
 /// <summary>What kind of actor a UnitView is.</summary>
@@ -61,6 +69,14 @@ public readonly record struct UnitView(EntityId Id, UnitKind Kind, byte Player, 
 
     /// <summary>M3: stealthed (draw translucent for the owner; enemies see it only when revealed).</summary>
     public bool Stealthed { get; init; }
+
+    /// <summary>M3-21: facing of the turret (0..255, 0 = north, clockwise) for a vehicle type that has a turret, else null (draw the body
+    /// facing). A turret that has not aimed yet reads the hull facing.</summary>
+    public byte? TurretFacing { get; init; }
+
+    /// <summary>M3-21: the unit is in the dive animation of a burrower (<see cref="ActorLayer.Diving"/>: going under or still on the
+    /// surface). It is on the surface, so enemies see it like any visible unit.</summary>
+    public bool Diving { get; init; }
 }
 
 /// <summary>Everything needed to start a deterministic game. RulesHash covers the rules; the map hash is

@@ -51,4 +51,21 @@ internal sealed class ScatterManager
             sink.Issue(CommandKind.Scatter, a.Id, a.Kind);
         }
     }
+    // ---- M3-21: AI save/restore. Appended at the end of the class; the format is private to the matching Restore. ----
+
+    /// <summary>M3-21: writes the health memory and the cooldowns.</summary>
+    internal void Snapshot(BinaryWriter w)
+    {
+        AiSnapshot.WriteMap(w, _health, (bw, v) => bw.Write(v));
+        AiSnapshot.WriteMap(w, _last, (bw, v) => bw.Write(v));
+        w.Write(Orders);
+    }
+
+    /// <summary>M3-21: reads what <see cref="Snapshot"/> wrote.</summary>
+    internal void Restore(BinaryReader r)
+    {
+        AiSnapshot.ReadMap(r, _health, br => br.ReadInt32());
+        AiSnapshot.ReadMap(r, _last, br => br.ReadInt32());
+        Orders = r.ReadInt32();
+    }
 }

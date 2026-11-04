@@ -8,4 +8,11 @@ namespace Rts.Sim.Core;
 /// low power stops the charge. <see cref="Range"/> is the entrance range in cells (0 = no entrance needed).
 /// </summary>
 public readonly record struct SuperweaponView(EntityId Building, int TypeIndex, string Superweapon, int Charge, int Total,
-    bool Ready, bool Paused, int Range);
+    bool Ready, bool Paused, int Range)
+{
+    /// <summary>M3-21: blast radius in cells (Chebyshev), for the targeting circle. Rules constant of the sim (<c>SuperweaponBlastRadius</c>).</summary>
+    public int BlastRadius { get; init; }
+
+    /// <summary>M3-21: the player slot that owns the building (the HUD list is the viewer's own, the snapshot list can hold several players).</summary>
+    public byte Owner { get; init; }
+}

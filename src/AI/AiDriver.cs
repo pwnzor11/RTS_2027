@@ -26,6 +26,8 @@ public sealed class AiDriver
         public int Delay;
         public int Tick;
         public List<Command> Out = null!;
+        public byte[]? Saved;   // M3-21: a state blob from a save, applied once when the driver starts
+        public CellCoord? SavedStart;
 
         public void Issue(CommandKind kind, EntityId subject, ActorKind subjectKind, CellCoord cell = default,
             ActorRef target = default, int arg2 = 0)
@@ -101,12 +103,90 @@ public sealed class AiDriver
             foreach (ViewActor a in own) { sx += a.Cell.X; sy += a.Cell.Y; }
             var start = own.Count == 0 ? new CellCoord(view.MapWidth / 2, view.MapHeight / 2)
                 : new CellCoord((int)(sx / own.Count), (int)(sy / own.Count));
+            if (s.Saved is not null && TryReadSaved(s.Saved, out ushort savedSeq, out CellCoord savedStart, out byte[] aiBytes))
+            {
+                s.Sequence = savedSeq;
+                start = savedStart;   // the AI's home / scout route came from the first-ever start cell, not from where its units are now
+                s.Saved = aiBytes;
+            }
+            else s.Saved = null;
+            s.SavedStart = start;   // M3-21: a later save writes it back
             s.Ai.Start(new AiContext
             {
                 Player = s.Player, PlayerCount = view.PlayerCount, GameSeed = _seed, Profile = s.Profile,
                 Rng = new AiRandom(_seed, s.Player), MapWidth = view.MapWidth, MapHeight = view.MapHeight, StartCell = start,
                 StartPositions = sim.Setup.Map.StartPositions,   // M4-12: public map data (scouting for 2-4 starts)
             });
+            if (s.Saved is { Length: > 0 } && s.Ai is IAiSnapshotable restorable)
+            {
+                try { using var br = new BinaryReader(new MemoryStream(s.Saved)); restorable.LoadState(br); }
+                catch (Exception e) when (e is EndOfStreamException or InvalidDataException or InvalidOperationException or IOException)
+                {
+                    Restored = false;   // a half-read AI is not trusted: the caller can see it and tell the player
+                }
+            }
+            s.Saved = null;
         }
+    }
+
+    // ---- M3-21: AI save / restore --------------------------------------------------------------------------------------
+
+    /// <summary>M3-21: false when a saved AI state was found unreadable while starting (that AI then runs on partly restored state; see
+    /// <see cref="AiSnapshot"/>). Stays true otherwise, also when nothing was restored.</summary>
+    public bool Restored { get; private set; } = true;
+
+    /// <summary>
+    /// M3-21: the AI memory of slot <paramref name="player"/> as bytes for a save, or null when the slot has no AI or its AI keeps nothing
+    /// (it then restarts fresh). Holds the slot's command sequence, its start cell and the AI's own state (<see cref="IAiSnapshotable"/>).
+    /// Call between ticks; before the first Collect there is nothing to save.
+    /// </summary>
+    public byte[]? CaptureState(byte player)
+    {
+        foreach (Slot s in _slots)
+        {
+            if (s.Player != player) continue;
+            if (!_started) return s.Saved is null ? null : AiSnapshot.Pack(s.Saved);   // loaded and saved again before the first tick: hand it on
+            if (s.Ai is not IAiSnapshotable snap) return null;
+            using var ms = new MemoryStream();
+            using (var w = new BinaryWriter(ms, System.Text.Encoding.UTF8, leaveOpen: true))
+            {
+                w.Write(s.Sequence);
+                CellCoord start = s.SavedStart ?? default;
+                w.Write(start.X); w.Write(start.Y);
+                snap.SaveState(w);
+            }
+            return AiSnapshot.Pack(ms.ToArray());
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// M3-21: hands a blob from <see cref="CaptureState"/> to slot <paramref name="player"/>; it is applied when the driver starts (the first
+    /// Collect), after the AI's Start. A damaged blob, one of another format version or one for an unknown slot is ignored (the AI starts fresh).
+    /// Call before the first Collect.
+    /// </summary>
+    public void RestoreState(byte player, byte[]? blob)
+    {
+        if (_started || blob is null) return;
+        foreach (Slot s in _slots)
+            if (s.Player == player && AiSnapshot.TryUnpack(blob, out byte[] payload)) s.Saved = payload;
+    }
+
+    /// <summary>M3-21 (diagnostics and tests): the AI playing slot <paramref name="player"/>, or null.</summary>
+    public IAiPlayer? AiOf(byte player)
+    {
+        foreach (Slot s in _slots) if (s.Player == player) return s.Ai;
+        return null;
+    }
+
+    private static bool TryReadSaved(byte[] payload, out ushort sequence, out CellCoord start, out byte[] aiBytes)
+    {
+        sequence = 0; start = default; aiBytes = Array.Empty<byte>();
+        if (payload.Length < 10) return false;
+        using var r = new BinaryReader(new MemoryStream(payload));
+        sequence = r.ReadUInt16();
+        start = new CellCoord(r.ReadInt32(), r.ReadInt32());
+        aiBytes = r.ReadBytes(payload.Length - 10);
+        return true;
     }
 }

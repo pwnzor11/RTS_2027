@@ -14,7 +14,7 @@ namespace Rts.AI;
 /// waves (see the manager classes in Rts.AI.Recruit). Deterministic: no state from outside the view, decisions on the
 /// profile's interval.
 /// </summary>
-public sealed class RecruitAi : IAiPlayer
+public sealed class RecruitAi : IAiPlayer, IAiSnapshotable
 {
     private readonly DifficultyProfile _profile;
     private readonly RecruitKnowledge _k = new();
@@ -217,5 +217,66 @@ public sealed class RecruitAi : IAiPlayer
         if (_profile.Scatter) _scatter.Think(_k, sink);
         if (_profile.Superweapons) _superweapons.Think(_k, sink, _knownBuildings);
         _tactics?.Think(_k, sink, _military.Goal(_k, _knownBuildings), _production.Rally, _military.WaveCentre(_k));
+    }
+
+    // ---- M3-21: save / restore (appended; the managers hold their own Snapshot / Restore at the end of their classes) ----
+
+    /// <summary>Layout version of <see cref="SaveState"/>; a blob of another version is not read.</summary>
+    private const int StateVersion = 1;
+
+    /// <inheritdoc />
+    public void SaveState(BinaryWriter w)
+    {
+        w.Write(StateVersion);
+        w.Write(_id);
+        bool thinking = _faction is not null && _build is not null && _production is not null && _planner is not null && _ctx is not null;
+        w.Write(thinking);
+        if (!thinking) return;   // never decided anything: a fresh AI is the same AI
+        w.Write((byte)_faction!.Faction);
+        w.Write(_ctx!.Rng.State);
+        w.Write(MaxTier); w.Write(Tier2Tick); w.Write(Tier3Tick);
+        _build!.Snapshot(w);
+        _planner!.Snapshot(w);
+        _production!.Snapshot(w);
+        _military.Snapshot(w);
+        _squads.Snapshot(w);
+        _scout.Snapshot(w);
+        _harass.Snapshot(w);
+        _upgrades.Snapshot(w);
+        _rescue.Snapshot(w);
+        _garrison.Snapshot(w);
+        _repair.Snapshot(w);
+        _scatter.Snapshot(w);
+        _retreat.Snapshot(w);
+        _superweapons.Snapshot(w);
+        w.Write(_tactics is DirectorateTactics);
+        if (_tactics is DirectorateTactics d) d.Snapshot(w);
+    }
+
+    /// <inheritdoc />
+    public void LoadState(BinaryReader r)
+    {
+        if (_ctx is null) throw new InvalidOperationException("LoadState needs Start first.");
+        if (r.ReadInt32() != StateVersion) throw new InvalidDataException("AI state of another layout");
+        if (r.ReadString() != _id) throw new InvalidDataException("AI state of another AI");
+        if (!r.ReadBoolean()) return;
+        Init((Faction)r.ReadByte());   // builds the faction-dependent managers exactly as the first decision does
+        _ctx.Rng.State = r.ReadUInt64();
+        MaxTier = r.ReadInt32(); Tier2Tick = r.ReadInt32(); Tier3Tick = r.ReadInt32();
+        _build!.Restore(r);
+        _planner!.Restore(r);
+        _production!.Restore(r);
+        _military.Restore(r);
+        _squads.Restore(r);
+        _scout.Restore(r);
+        _harass.Restore(r);
+        _upgrades.Restore(r);
+        _rescue.Restore(r);
+        _garrison.Restore(r);
+        _repair.Restore(r);
+        _scatter.Restore(r);
+        _retreat.Restore(r);
+        _superweapons.Restore(r);
+        if (r.ReadBoolean() && _tactics is DirectorateTactics d) d.Restore(r);
     }
 }
