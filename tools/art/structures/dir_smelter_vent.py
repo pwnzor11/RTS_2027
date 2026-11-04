@@ -103,34 +103,32 @@ def finished(S, i, dmg, mode):
             S.bb("cheek", xa, xb, ya, yb, zb, 0.2, "concrete2", 0.0)
     S.bb("landing", TR[0], TR[1], -1.4, -0.9, -1.6, TR_BOT, "dark", 0.0)
     tilted(S, "ramp", TR[0], TR[1], TR_Y0, 0.14 - 0.06, TR_Y1, TR_BOT - 0.06, 0.12, "rampfloor")
-    # chevron bars across the ramp, alternating red-lit and bone; edge lines
-    for k in range(8):
-        t = (k + 0.5) / 8
-        ya, yb = TR_Y0 + (TR_Y1 - TR_Y0) * (t - 0.055), TR_Y0 + (TR_Y1 - TR_Y0) * (t + 0.055)
-        tilted(S, f"chev{k}", TR[0] + 0.45, TR[1] - 0.45, ya, ramp_z(ya) + 0.005, yb, ramp_z(yb) + 0.005, 0.1,
-               "oxide" if k % 2 == 0 else "bone", nocast=True)
+    # stepped treads across the ramp: flat, alternating light / dark concrete, lit toward the top, dimming as it descends
+    NST = 7
+    for k in range(NST):
+        ya, yb = TR_Y0 + (TR_Y1 - TR_Y0) * k / NST, TR_Y0 + (TR_Y1 - TR_Y0) * (k + 1) / NST - 0.07
+        zt_ = ramp_z(ya + (yb - ya) / 2) + 0.03
+        m = ("white", "hull", "concrete", "concrete2", "hull2", "rampfloor", "rampfloor")[k] if k % 2 == 0 else ("concrete2", "hull2", "rampfloor", "dark", "dark", "dark", "dark")[k]
+        S.bb(f"tread{k}", TR[0] + 0.15, TR[1] - 0.15, ya, yb, zt_ - 0.2, zt_, m, 0.0)
     for xa in (TR[0] + 0.1, TR[1] - 0.3):
-        tilted(S, "rampline", xa, xa + 0.2, TR_Y0, 0.14, TR_Y1, TR_BOT, 0.1, "bone", nocast=True)
+        tilted(S, "rampline", xa, xa + 0.2, TR_Y0, 0.14, TR_Y1, TR_BOT, 0.1, "hull", nocast=True)
     # ------------------------------------------------------------------ the mouth: dark recess, red-lit interior, doors swung open to the sides
     ydoor = hy0 + 0.02
     S.bb("mouth", TR[0], TR[1], ydoor - 0.04, ydoor, TR_BOT - 0.05, 1.95, "dark", 0.0)
     glow = "oxide2" if dmg else "redglow"
-    for k in range(6):                                   # lit corridor slits on the back wall, heights stepping down toward the middle
-        xk = TR[0] + 0.55 + k * (TR[1] - TR[0] - 1.1) / 5
-        S.bb(f"glowb{k}", xk - 0.2, xk + 0.2, ydoor - 0.1, ydoor - 0.04, TR_BOT + 0.1, 1.15 - 0.12 * abs(k - 2.5), glow, 0.0, nocast=True)
-    S.bb("glowfloor", TR[0] + 0.3, TR[1] - 0.3, ydoor - 0.55, ydoor - 0.1, TR_BOT - 0.0, TR_BOT + 0.06, glow, 0.0, nocast=True)
+    # warm glow only deep at the far bottom of the ramp: a small patch low on the back wall + a sliver of floor
+    S.bb("glowb", TR[0] + 2.0, TR[1] - 2.0, ydoor - 0.1, ydoor - 0.04, TR_BOT + 0.02, TR_BOT + 0.4, glow, 0.0, nocast=True)
+    S.bb("glowfloor", TR[0] + 2.0, TR[1] - 2.0, ydoor - 0.3, ydoor - 0.1, TR_BOT + 0.0, TR_BOT + 0.04, glow, 0.0, nocast=True)
     S.bb("mouthlip", TR[0] - 0.1, TR[1] + 0.1, ydoor - 0.06, ydoor, 1.95, 2.1, "concrete2", 0.0)
-    for k, (xa, xb) in enumerate(((TR[0] + 0.02, TR[0] + 0.26), (TR[1] - 0.26, TR[1] - 0.02))):
-        yz0, yz1 = ydoor - 1.9, ydoor - 0.1                # open leaf folded back against the cheek, standing on the landing
+    for k, (xa, xb) in enumerate(((TR[0], TR[0] + 0.1), (TR[1] - 0.1, TR[1]))):
+        yz0, yz1 = ydoor - 1.9, ydoor - 0.1                # leaf folded flat against the cheek (thin slab, flush)
         if dmg and k == 1:
-            S.box("doorB", (0.24, 1.7, 2.2), ((xa + xb) / 2 - 0.35, (ydoor - 1.0) * YS, 0.1), "door", 0.0, rot=(0, 0, 24), stretch=False)
+            S.box("doorB", (0.1, 1.2, 0.8), (xb - 0.25, (ydoor - 0.9) * YS, TR_BOT + 0.5), "door", 0.0, rot=(0, 0, 18), stretch=False)
             continue
-        for q in range(5):                               # leaf built in steps that follow the ramp (nothing pokes out below it)
+        for q in range(5):                               # follows the ramp so nothing pokes out below it
             qa, qb = yz0 + (yz1 - yz0) * q / 5, yz0 + (yz1 - yz0) * (q + 1) / 5
-            S.bb(f"door{k}", xa, xb, qa, qb, ramp_z(qb) - 0.04, 1.15, "door", 0.0)
-        S.bb(f"doorband{k}", xa - 0.01, xb + 0.01, yz0 + 0.1, yz1 - 0.1, 0.62, 0.84, "oxide", 0.0, nocast=True)
-        for r in range(4):
-            S.bb(f"sten{k}{r}", xa - 0.01, xb + 0.01, yz0 + 0.2 + r * 0.42, yz0 + 0.45 + r * 0.42, 0.9, 1.08, "bone", 0.0, nocast=True)
+            S.bb(f"door{k}", xa, xb, qa, qb, ramp_z(qb) - 0.04, ramp_z(qa) + 0.85, "door", 0.0)
+        S.bb(f"doorband{k}", xa - 0.01 if k == 0 else xa, xb if k == 0 else xb + 0.01, yz0 + 0.1, yz1 - 0.1, TR_BOT + 0.45, TR_BOT + 0.6, "oxide", 0.0, nocast=True)
     # ------------------------------------------------------------------ hall: concrete mass behind the mouth, roof, parapets
     S.bb("hall", hx0, hx1, hy0, hy1, 0.14, HALL_H, "concrete", 0.05)
     S.bb("hplinth", hx0 - 0.1, hx1 + 0.1, hy0 - 0.1, hy1 + 0.1, 0.14, 0.5, "concrete2", 0.04)
@@ -164,13 +162,14 @@ def finished(S, i, dmg, mode):
     ha, hb, hya, hyb = HOOD
     if dmg:
         S.bb("hood", ha, -0.9, hya, hyb, HOOD_Z[0], HOOD_Z[1], "concrete2", 0.04)
-        S.box("hoodslab", (1.2, 0.9, 0.35), (0.6, -1.9 * YS, 0.0), "concrete2", 0.02, rot=(0, 0, 14), stretch=False)
-        S.box("hoodslab2", (0.7, 0.6, 0.3), (1.0, -2.6 * YS, 0.35), "concrete2", 0.0, rot=(0, 0, -30), stretch=False)
+        S.box("hoodslab", (1.2, 0.9, 0.35), (2.1, -1.9 * YS, 0.0), "concrete2", 0.02, rot=(0, 0, 14), stretch=False)
+        S.box("hoodslab2", (0.7, 0.6, 0.3), (2.3, -2.5 * YS, 0.35), "concrete2", 0.0, rot=(0, 0, -30), stretch=False)
         for k, (a_, b_, c_, d_) in enumerate(((-0.9, -0.5, -1.8, -1.4), (-0.8, -0.3, -1.2, -1.0))):
             L.beam(S, f"rbar{k}", (a_, c_, 2.1), (b_, d_, 2.6 + 0.2 * k), 0.05, "rebar")
         S.bb("banding", ha + 0.1, -0.95, hya - 0.06, hya - 0.02, 1.98, 2.27, "house", 0.0)
-        for k, (x, y, w, h) in enumerate(((0.3, -3.0, 0.5, 0.35), (-2.7, -2.9, 0.4, 0.4), (1.2, -2.5, 0.4, 0.3))):
-            S.box(f"rub{k}", (w, w * 0.8, h), (x, y * YS, 0.14 + h / 2), "concrete_s", 0.0, rot=(0, 0, 33 * k), stretch=False)
+        for k, (x, y, w, h) in enumerate(((-3.0, -2.2, 0.4, 0.3), (1.2, -2.0, 0.35, 0.28), (-3.1, -1.6, 0.3, 0.25), (1.3, -1.5, 0.3, 0.22),
+                                           (0.3, -3.0, 0.5, 0.35), (-2.7, -2.9, 0.4, 0.4), (-0.5, -1.6, 0.28, 0.2), (2.2, -2.9, 0.5, 0.3))):
+            S.box(f"rub{k}", (w, w * 0.8, h), (x, y * YS, (ramp_z(y) if TR[0] < x < TR[1] and TR_Y0 < y < TR_Y1 else 0.14) + h / 2), "concrete_s", 0.0, rot=(0, 0, 33 * k), stretch=False)
     else:
         S.bb("hood", ha, hb, hya, hyb, HOOD_Z[0], HOOD_Z[1], "concrete2", 0.04)
         S.bb("banding", ha + 0.1, hb - 0.1, hya - 0.06, hya - 0.02, 1.98, 2.27, "house", 0.0)   # house colour band across the hood front
@@ -207,15 +206,15 @@ def finished(S, i, dmg, mode):
     S.bb("cladder", sx_ - 0.7, sx_ - 0.64, sy_ - 0.2, sy_ + 0.2, 2.0, min(top, 4.5) - 0.2, "dark", 0.0, nocast=True)
     # ------------------------------------------------------------------ loudspeaker pair on a pole at the hall's south-west roof corner:
     # two flared trumpets pointing out to the sides (side-on, so the flare reads), bone rims, dark throats
-    px_, py_ = -2.3, -0.55
+    px_, py_, zb_ = 1.55, -0.45, HALL_H + 0.22   # hall roof SE corner, between the magenta panel and the chimney
     if dmg:
-        S.cyl("hpole", 0.07, 1.3, (px_, py_, zr + 0.65), "steel", verts=8)
-        S.box("hpoleF", (1.6, 0.08, 0.08), (-3.2, 0.3 * YS, zr + 0.12), "steel", 0.0, rot=(0, 0, 25), stretch=False)
-        S.cone("hornF", 0.08, 0.3, 0.8, (-2.6, 0.7, zr + 0.3), "door", verts=10, rot=(0, 90, 25), nocast=False)
+        S.cyl("hpole", 0.07, 1.3, (px_, py_, zb_ + 0.65), "steel", verts=8)
+        S.box("hpoleF", (1.6, 0.08, 0.08), (px_ - 0.9, (py_ + 0.5) * YS, zb_ + 0.12), "steel", 0.0, rot=(0, 0, 25), stretch=False)
+        S.cone("hornF", 0.08, 0.3, 0.8, (px_ - 0.3, py_ + 0.9, zb_ + 0.3), "door", verts=10, rot=(0, 90, 25), nocast=False)
     else:
-        zt = zr + 2.5
-        S.cyl("hpole", 0.07, 2.5, (px_, py_, zr + 1.25), "steel", verts=8)
-        S.bb("hpoleb", px_ - 0.2, px_ + 0.2, py_ - 0.2, py_ + 0.2, zr, zr + 0.3, "concrete2", 0.02)
+        zt = zb_ + 2.3
+        S.cyl("hpole", 0.07, 2.3, (px_, py_, zb_ + 1.15), "steel", verts=8)
+        S.bb("hpoleb", px_ - 0.2, px_ + 0.2, py_ - 0.2, py_ + 0.2, zb_, zb_ + 0.3, "concrete2", 0.02)
         S.bb("harm", px_ - 0.35, px_ + 0.35, py_ - 0.05, py_ + 0.05, zt - 0.05, zt + 0.05, "steel", 0.0)
         for sgn in (-1, 1):
             S.cyl(f"hdrv{sgn}", 0.13, 0.28, (px_ + sgn * 0.45, py_, zt), "oxide", axis="X", verts=10)
