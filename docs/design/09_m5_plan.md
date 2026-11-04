@@ -1,6 +1,6 @@
 # M5 plan · LLM commander (D-087)
 
-Status: draft for the owner (session 6). Owner answers already in: Anthropic **and** OpenAI-compatible providers; one
+Status: approved by the owner (session 6); §9 answered 2026-11-04. Owner answers already in: Anthropic **and** OpenAI-compatible providers; one
 strategy decision every **30 s** of game time; in-character chat **on** by default; **no cheating** — the LLM sees only
 what its player can see. Open points are in §9.
 
@@ -85,12 +85,9 @@ button in Settings. Tests use a fake provider; CI never needs a key.
 - Fog test: a summary never mentions an enemy actor the player hasn't seen.
 - A recorded "all-in vs player 2" directive measurably changes the AI's wave timing and target in a scripted test.
 
-## 9 · Open questions for the owner
-- Q-M5-a Default models: Anthropic → a fast, cheap model (e.g. Haiku-class) by default with Sonnet-class selectable; OpenAI-
-  compatible → user types the model name. **Rec:** yes.
-- Q-M5-b Key storage: DPAPI-encrypted file (rec) vs plain text in settings.toml (simpler, visible to anything on the PC).
-- Q-M5-c Personas: leaders.md is still a DRAFT. Approve it (or mark up) before M5-06; until then a neutral "commander"
-  voice per faction.
-- Q-M5-d Call cap per game: 120 calls (rec) / none / user-set.
-- Q-M5-e Talkback: may the player chat to enemy commanders (taunts, ceasefire banter)? **Rec:** yes, flavour only — chat
-  never changes the directive unless it is that commander's own decision.
+## 9 · Owner answers (2026-11-04)
+- Q-M5-a Default models: yes — a fast, cheap model by default, a stronger one selectable; OpenAI-compatible: user types the model.
+- Q-M5-b Key storage: DPAPI-encrypted file `%APPDATA%/RTS_2027/llm.key`.
+- Q-M5-c Personas: docs/lore/leaders.md approved; personas come from it.
+- Q-M5-d Call cap: 120 calls per game.
+- Q-M5-e Talkback: yes, the player may chat to enemy commanders; flavour only, chat never changes their directive.

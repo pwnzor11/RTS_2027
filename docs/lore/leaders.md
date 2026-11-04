@@ -1,4 +1,6 @@
-# Leaders (DRAFT for owner review)
+# Leaders
+
+Status: approved by the owner 2026-11-04 (Q-M5-c)
 
 Entry ids use the prefix `leader_`. Each entry: `title:` (name), `subtitle:` (role), `unlock:`, then bio, motivation, and
 a `secret:` paragraph that the Archive reveals later (suggest unlock on the named mission; here marked `unlock: campaign`
