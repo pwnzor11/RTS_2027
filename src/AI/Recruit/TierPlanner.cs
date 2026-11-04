@@ -258,7 +258,7 @@ internal sealed class TierPlanner
         // order counts owned structures), so the tier comes back.
         if (_p.UseUpgrades && _faction.Tier2GateId is string g2 && tick >= Tier2GateTick && build.StepsOf(g2) < 1) build.Extend(g2);
         if (_p.UseUpgrades && _faction.Tier3GateId is string g3 && k.View.Tier >= 2
-            && (tick >= Tier3GateTick || k.Army.Count >= ArmyBeforeTier3) && build.StepsOf(g3) < 1) build.Extend(g3);
+            && tick >= Tier3GateTick && k.Army.Count >= ArmyBeforeTier3 && build.StepsOf(g3) < 1) build.Extend(g3);   // (tune) M4-12 round 2: time AND army
         // M4-12: a garrisonable defence near the base (flag RespondToAttacks: tier 2+); the garrison manager fills it with idle infantry
         if (_p.RespondToAttacks && _faction.GarrisonId is string gar && k.Army.Count >= ArmyBeforeGarrison && build.StepsOf(gar) < 1) build.Extend(gar);
         // M4-12: anti-air once enemy aircraft were seen

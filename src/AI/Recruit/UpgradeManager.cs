@@ -13,7 +13,7 @@ namespace Rts.AI.Recruit;
 internal sealed class UpgradeManager
 {
     /// <summary>Army size before research is bought.</summary>
-    public const int MinArmy = 6;
+    public const int MinArmy = 12;   // (tune) M4-12: 6 -> 12, research drained the army of tier-3+ AIs
     /// <summary>Credits left in hand after paying for an upgrade.</summary>
     public const int Cushion = 300;
     /// <summary>Ticks between research orders.</summary>

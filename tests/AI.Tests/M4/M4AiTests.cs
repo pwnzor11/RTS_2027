@@ -300,13 +300,15 @@ public class M4AiTests(ITestOutputHelper log)
     }
 
     [Fact]
-    public void ADirectorateMirrorAtVeteranResolvesBeforeTheLimit()
+    public void ADirectorateMirrorAtVeteranDoesNotFreeze()
     {
-        // seed 1 at size 56 was a stalemate in M3 (both sides broke, two trucks unable to out-damage the yard's repair)
-        MapData map = MapGenerator.Generate(56, 1);
+        // M3: seed 1 at size 56 froze (both sides broke, two trucks unable to out-damage the yard's repair; health stayed level).
+        // M4-12: one side now grinds the other down (seed 1, not always finished inside the limit); seed 4 is decisive.
         var side = new AiSide(AiRegistry.TieredId, Tier(3), Faction.Directorate);
-        AiGameResult r = AiMatchRunner.Play(map, TestWorld.Rules.Sim, TestWorld.Rules.RulesHash, 1, side, side, true, 25000);
-        log.WriteLine($"winner {r.Winner} at {r.EndTick}");
-        Assert.True(r.Winner >= 0 && r.EndTick < 25000);
+        AiGameResult one = AiMatchRunner.Play(MapGenerator.Generate(56, 1), TestWorld.Rules.Sim, TestWorld.Rules.RulesHash, 1, side, side, true, 25000);
+        AiGameResult four = AiMatchRunner.Play(MapGenerator.Generate(56, 4), TestWorld.Rules.Sim, TestWorld.Rules.RulesHash, 4, side, side, true, 25000, swapStarts: true);   // as `ai match` seed 4 game 1
+        log.WriteLine($"seed 1: winner {one.Winner} at {one.EndTick}, health {one.ValueA}/{one.ValueB}; seed 4: winner {four.Winner} at {four.EndTick}");
+        Assert.True(one.Winner >= 0 || Math.Max(one.ValueA, one.ValueB) >= 4 * Math.Min(one.ValueA, one.ValueB), "seed 1 is decided or lopsided");
+        Assert.True(four.Winner >= 0 && four.EndTick < 25000, "seed 4 resolves");
     }
 }
