@@ -347,12 +347,12 @@ public sealed class SkirmishSetupScreen : IScreen
     /// <summary>The faction after <paramref name="faction"/> in the pick list, wrapping round (Authority, Directorate).</summary>
     public static Faction NextFaction(Faction faction, int delta)
     {
-        int n = RuleCounts.Factions;
+        int n = RuleCounts.PlayableFactions;   // Neutral is never offered (Q-37)
         return (Faction)((((int)faction + delta) % n + n) % n);
     }
 
     /// <summary>The name shown for a faction on the setup screen.</summary>
-    public static string FactionName(Faction faction) => faction == Faction.Directorate ? "Directorate" : "Authority";
+    public static string FactionName(Faction faction) => faction switch { Faction.Directorate => "Directorate", Faction.Neutral => "Neutral", _ => "Authority" };
 
     /// <summary>Cuts text to at most <paramref name="max"/> characters, ending in "..." when it was cut.</summary>
     public static string Shorten(string text, int max) => text.Length <= max ? text : text[..(max - 3)] + "...";

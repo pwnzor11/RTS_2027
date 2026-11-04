@@ -566,10 +566,11 @@ prerequisites = ["dir_isotope_works"]
 provides = ["dir_tier3"]
 researches = true
 
-# Neutral ruins (design 08 §3, Q-M4-b): map features only, placed at setup and never buildable. They have no faction of their
-# own in the loader, so they default to Authority; that is harmless at tier 1 (no tier provide is appended).
+# Neutral ruins (design 08 §3, Q-M4-b, Q-37): map features only, placed at setup and never buildable. Faction "neutral" (passive
+# owner; nobody targets them; the first garrison takes one, an empty one reverts).
 
 [neu_ruin_tenement]   # PLACEHOLDER ART (M4-ART); neutral garrison ruin, 3x2 (design 08 §3)
+faction = "neutral"
 tier = 1
 footprint_w = 3  # (tune) design 08 §3
 footprint_h = 2  # (tune) design 08 §3
@@ -585,6 +586,7 @@ garrison = 6  # (tune) design 08 §3
 buildable = false
 
 [neu_ruin_depot]   # PLACEHOLDER ART (M4-ART); neutral garrison ruin, 2x2 (design 08 §3)
+faction = "neutral"
 tier = 1
 footprint_w = 2  # (tune) design 08 §3
 footprint_h = 2  # (tune) design 08 §3
