@@ -6,7 +6,7 @@ using Rts.Sim.Serialization;
 namespace Rts.Sim.Replay;
 
 /// <summary>
-/// Records a game as it is played (format version 7; 7 = M3-01, factions in the header). The header is written when the writer is created: magic,
+/// Records a game as it is played (format version 8; 7 = M3-01, factions in the header; 8 = M3-19, optional mission id + script hash after the header). The header is written when the writer is created: magic,
 /// version, then the <see cref="SetupHeader"/> (build string, seed, player count, teams, limits, AllowDebug, rules
 /// hash, map hash and name, and the rules source files, deflate-compressed). Records are appended as they happen:
 /// spawn (taken from <see cref="Simulation.SetupLog"/>, never re-recorded by callers), command (with Arg2) and
@@ -17,7 +17,10 @@ namespace Rts.Sim.Replay;
 public sealed class ReplayWriter
 {
     public static readonly byte[] Magic = "RTSR"u8.ToArray();
-    public const int Version = 7;
+    public const int Version = 8;
+
+    /// <summary>Oldest format version <see cref="ReplayReader"/> still reads (7 has no mission block).</summary>
+    public const int OldestReadableVersion = 7;
     public const byte TypeEnd = 0, TypeCommand = 1, TypeHashCheck = 2, TypeSpawn = 3;
 
     /// <summary>Ticks between stream flushes.</summary>
@@ -31,8 +34,9 @@ public sealed class ReplayWriter
 
     /// <summary>Starts a replay on <paramref name="output"/> and writes the header immediately. The stream stays
     /// open and belongs to the caller. <paramref name="build"/> is e.g. BuildInfo.Version; <paramref name="rulesFiles"/>
-    /// are the rules source files (relative name, text) the game was loaded from.</summary>
-    public ReplayWriter(Stream output, Simulation sim, string build, IReadOnlyList<(string Name, string Text)> rulesFiles)
+    /// are the rules source files (relative name, text) the game was loaded from. <paramref name="mission"/> is set for a
+    /// scripted mission: its id and script hash go in the header so the replay can be re-run through the script (M3-19).</summary>
+    public ReplayWriter(Stream output, Simulation sim, string build, IReadOnlyList<(string Name, string Text)> rulesFiles, ReplayMission? mission = null)
     {
         ArgumentNullException.ThrowIfNull(output);
         ArgumentNullException.ThrowIfNull(sim);
@@ -42,6 +46,8 @@ public sealed class ReplayWriter
         _w = new BinaryWriter(output, System.Text.Encoding.UTF8, leaveOpen: true);
         _w.Write(Magic); _w.Write(Version);
         SetupHeader.From(sim, build, rulesFiles).Write(_w);
+        ReplayMission.Write(_w, mission);
+        Sync();   // setup already in the log (a mission's pre-placed actors) is stamped with the creation tick, not the first record's
         _w.Flush();
     }
 

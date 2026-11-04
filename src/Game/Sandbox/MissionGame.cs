@@ -17,11 +17,15 @@ public sealed class MissionGame
     /// <summary>The human player's slot.</summary>
     public const byte LocalPlayer = 0;
 
-    private MissionGame(MissionSession session, AiDriver? ai)
+    private MissionGame(MissionSession session, AiDriver? ai, string rulesDir)
     {
+        RulesDir = rulesDir;
         Session = session;
         Ai = ai;
     }
+
+    /// <summary>The data/rules directory the mission was built from (its files go into a replay header).</summary>
+    public string RulesDir { get; }
 
     /// <summary>The loaded mission.</summary>
     public MissionSession Session { get; }
@@ -57,7 +61,7 @@ public sealed class MissionGame
             driver.Add(slot, ai, profile);
         }
 
-        return new MissionGame(session, driver);
+        return new MissionGame(session, driver, rulesDir);
     }
 
     private static DifficultyProfile LoadProfile(string rulesDir, int tier)

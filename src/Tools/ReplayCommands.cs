@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
 using Rts.Data;
+using Rts.Scripting;
 using Rts.Sim.Map;
 using Rts.Sim.Replay;
 
@@ -15,8 +16,10 @@ public static class ReplayCommands
 {
     private const string Usage =
         "usage: replay verify <file> [--rules-dir <dir>] [--map <path>]\n" +
+        "       replay play <file> [--rules-dir <dir>]      (same as verify; mission replays re-run their script)\n" +
         "       replay info <file>\n" +
         "  Rules come from the replay itself (embedded); --rules-dir plays it with the rules in a directory instead.\n" +
+        "  A mission replay (recorded on a campaign mission) is played from data/missions/<id>; it fails if the script changed.\n" +
         "  --map defaults to data/maps/test_64.map.toml; it must be the map the replay was recorded on.";
 
     private static readonly string[] VerifyOptions = ["rules-dir", "rules", "map"];
@@ -26,7 +29,7 @@ public static class ReplayCommands
         if (args.Length == 0) return UsageError("missing subcommand");
         return args[0] switch
         {
-            "verify" => Verify(args[1..]),
+            "verify" or "play" => Verify(args[1..]),
             "info" => Info(args[1..]),
             _ => UsageError($"unknown replay command '{args[0]}'"),
         };
@@ -53,6 +56,7 @@ public static class ReplayCommands
             Console.Error.WriteLine($"note: {file} has no end record (the game probably crashed); verifying up to its last hash record, tick {data.FinalTick}");
 
         string? rulesDirArg = flags.TryGetValue("rules-dir", out string? d) ? d : flags.TryGetValue("rules", out string? d2) ? d2 : null;
+        if (data.Mission is not null) return PlayMission(data, file, rulesDirArg);
         RuleSet? rules;
         string rulesSource;
         if (rulesDirArg is not null)
@@ -102,6 +106,37 @@ public static class ReplayCommands
             return 1;
         }
         Console.WriteLine($"OK {result.TicksRun} ticks, final hash 0x{result.FinalHash:x16}{(result.Truncated ? " (truncated replay)" : "")}");
+        return 0;
+    }
+
+    // A mission replay: the script is part of the game, so it is re-created from data/missions (M3-19), never from the replay alone.
+    private static int PlayMission(ReplayData data, string file, string? rulesDirArg)
+    {
+        string? rulesDir = rulesDirArg ?? RulesLocator.FindRulesDir(Directory.GetCurrentDirectory());
+        if (rulesDir is null)
+        {
+            Console.Error.WriteLine("error: data/rules not found; run from the repository or pass --rules-dir <dir>");
+            return 1;
+        }
+        string dataDir = Path.GetFullPath(Path.Combine(rulesDir, ".."));
+        ReplayResult result;
+        MissionHost host;
+        try
+        {
+            result = MissionReplay.Play(data, dataDir, out host);
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException or InvalidDataException or RulesException)
+        {
+            Console.Error.WriteLine($"error: mission replay {file} cannot be played back: {e.Message}");
+            return 1;
+        }
+        if (result.FirstMismatchTick >= 0)
+        {
+            string where = result.FirstMismatchPart is { } part ? $"in part {part}" : "(replay has no sub-hashes)";
+            Console.WriteLine($"DESYNC at tick {result.FirstMismatchTick} {where}");
+            return 1;
+        }
+        Console.WriteLine($"OK mission '{data.Mission!.Id}' {result.TicksRun} ticks, outcome {host.Outcome}, final hash 0x{result.FinalHash:x16}{(result.Truncated ? " (truncated replay)" : "")}");
         return 0;
     }
 
@@ -161,6 +196,7 @@ public static class ReplayCommands
         Console.WriteLine($"format version {data.Version}");
         Console.WriteLine($"build {data.Build}");
         Console.WriteLine($"map '{data.Header.MapName}'");
+        Console.WriteLine(data.Mission is { } m ? $"mission '{m.Id}', script hash 0x{m.ScriptHash:x16}" : "mission none");
         Console.WriteLine($"embedded rules files {data.RulesFiles.Count}");
         Console.WriteLine($"teams {(data.Header.Teams is null ? "none" : string.Join(",", data.Header.Teams))}, allow debug {data.Header.AllowDebug}");
         Console.WriteLine($"truncated {data.Truncated}");

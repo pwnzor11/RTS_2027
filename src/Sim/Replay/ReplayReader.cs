@@ -22,6 +22,9 @@ public sealed record ReplayData(
     int Version, SetupHeader Header, IReadOnlyList<ReplaySpawn> Spawns,
     IReadOnlyList<ReplayRecord> Records, int FinalTick, bool Truncated)
 {
+    /// <summary>The scripted mission this replay was recorded on (id and script hash), or null (formats before 8, and every non-mission game).</summary>
+    public ReplayMission? Mission { get; init; }
+
     public string Build => Header.Build;
     public ulong RulesHash => Header.RulesHash;
     public ulong MapHash => Header.MapHash;
@@ -40,15 +43,17 @@ public static class ReplayReader
     {
         using var r = new BinaryReader(input, System.Text.Encoding.UTF8, leaveOpen: true);
         SetupHeader header;
+        ReplayMission? mission = null;
         int version;
         try
         {
             if (!r.ReadBytes(4).AsSpan().SequenceEqual(ReplayWriter.Magic)) throw new InvalidDataException("Bad replay magic.");
             version = r.ReadInt32();
-            if (version != ReplayWriter.Version)
-                throw new InvalidDataException($"Unsupported replay format version {version}; this build reads version {ReplayWriter.Version}. " +
+            if (version < ReplayWriter.OldestReadableVersion || version > ReplayWriter.Version)
+                throw new InvalidDataException($"Unsupported replay format version {version}; this build reads version {ReplayWriter.OldestReadableVersion} or {ReplayWriter.Version}. " +
                     "Replays from other versions cannot be played back; play it with the build that recorded it.");
             header = SetupHeader.Read(r);
+            if (version >= 8) mission = ReplayMission.Read(r);
         }
         catch (EndOfStreamException)
         {
@@ -122,6 +127,6 @@ public static class ReplayReader
                 break;
             }
         }
-        return new ReplayData(version, header, spawns, records, truncated ? lastHashTick : finalTick, truncated);
+        return new ReplayData(version, header, spawns, records, truncated ? lastHashTick : finalTick, truncated) { Mission = mission };
     }
 }
