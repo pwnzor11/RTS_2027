@@ -27,14 +27,14 @@ splash = 0  # ASSUMED (M3-07)
 hits_allies = false
 
 [dir_ash]
-garrison_damage_percent = 25  # ASSUMED (M4-07), (tune) Q-M4-f: the warhead passes part of each hit to garrisons
+garrison_damage_percent = 50  # (tune) M4-16: 25 -> 50, counters must clear a garrison at ~1.25x cost
 versus = [80, 60, 40, 40, 20]  # ASSUMED (M3-07)
 splash = 1  # ASSUMED (M3-07)
 hits_allies = false
 contaminate = 40  # ASSUMED (M3-07)
 
 [dir_demolition]
-garrison_damage_percent = 25  # ASSUMED (M4-07), (tune) Q-M4-f: the warhead passes part of each hit to garrisons
+garrison_damage_percent = 50  # (tune) M4-16: 25 -> 50, counters must clear a garrison at ~1.25x cost
 versus = [25, 50, 100, 150, 100]  # ASSUMED (M3-07)
 splash = 0  # ASSUMED (M3-07)
 hits_allies = false
@@ -90,7 +90,7 @@ splash = 1  # ASSUMED (M4-07)
 hits_allies = true  # ASSUMED (M4-07)
 hits_burrowed = true
 bonus_vs_entrance_percent = 200
-garrison_damage_percent = 25  # ASSUMED (M4-07), (tune) Q-M4-f
+garrison_damage_percent = 50  # (tune) M4-16: 25 -> 50, counters must clear a garrison at ~1.25x cost
 
 [auth_foam]   # Quick-Set Foam: 400 ticks of foam cells (D-077), no direct damage
 versus = [0, 0, 0, 0, 0]  # ASSUMED (M4-07): copy of auth_decon
