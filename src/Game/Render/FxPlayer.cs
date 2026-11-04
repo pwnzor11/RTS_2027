@@ -14,7 +14,7 @@ namespace Rts.Game.Render;
 /// </summary>
 public sealed class FxPlayer
 {
-    private readonly record struct Active(string Kind, Vector2 World, int SpawnTick);
+    private readonly record struct Active(string Kind, Vector2 World, int SpawnTick, float Scale);
 
     private readonly List<Active> _active = new();
 
@@ -25,10 +25,11 @@ public sealed class FxPlayer
     /// <param name="kind">Effect sprite id, for example "explosion_small".</param>
     /// <param name="worldPos">Zoom-1 world position of the effect's origin pixel.</param>
     /// <param name="tick">Tick it starts on.</param>
-    public void Spawn(string kind, Vector2 worldPos, int tick)
+    /// <param name="scale">Size multiplier on top of the camera zoom (1 = as drawn).</param>
+    public void Spawn(string kind, Vector2 worldPos, int tick, float scale = 1f)
     {
         ArgumentException.ThrowIfNullOrEmpty(kind);
-        _active.Add(new Active(kind, worldPos, tick));
+        _active.Add(new Active(kind, worldPos, tick, scale));
     }
 
     /// <summary>Draws the spawned effects (dropping finished ones). Kinds missing from the library are dropped.</summary>
@@ -54,7 +55,7 @@ public sealed class FxPlayer
                 continue;
             }
             Vector2 screen = SpriteLayout.UnitOrigin(camera, a.World);
-            library.Sheet(a.Kind).Draw(batch, frame, screen, Color.White, camera.Zoom);
+            library.Sheet(a.Kind).Draw(batch, frame, screen, Color.White, camera.Zoom * a.Scale);
         }
     }
 

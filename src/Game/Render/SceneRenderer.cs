@@ -98,8 +98,9 @@ public sealed class SceneRenderer : IDisposable
             {
                 foreach (FxEvent e in events)
                 {
-                    string kind = e.Kind == FxKind.BuildingDestroyed ? "explosion_large" : "explosion_small";
-                    _fx.Spawn(kind, Camera.WorldFromLepton(e.Pos), snapshot.Tick);
+                    Vector2 centre = Camera.WorldFromLepton(e.Pos);
+                    foreach (ExplosionSpot s in ExplosionPlan.For(e))
+                        _fx.Spawn(s.Kind, centre + new Vector2(s.DxCells, s.DyCells) * Camera.CellPx, snapshot.Tick, s.Scale);
                 }
             }
         }
