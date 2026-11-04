@@ -46,8 +46,12 @@ delay_ticks = 60
 [faction.authority]
 conyard = "auth_conyard"
 units = []
+tier2 = "auth_tier2"
+tier3 = "auth_tier3"
 
 # Directorate kit (M3-07). The design fixes only the conyard; the four conscripts are ASSUMED (M3-07), confirm in M3-14.
 [faction.directorate]
 conyard = "dir_shaft"
 units = ["dir_conscript", "dir_conscript", "dir_conscript", "dir_conscript"]  # ASSUMED (M3-07)
+tier2 = "dir_tier2"  # M4-07 (design 08 §4)
+tier3 = "dir_tier3"  # M4-07 (design 08 §4)

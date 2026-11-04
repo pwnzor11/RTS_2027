@@ -16,3 +16,182 @@ op = "enable"
 target = "auth_turret"
 attr = ""
 value = 0
+
+# M4-07 (design 08 §4): upgrade effects. op set/add/mul; mul and the per-mille values are as in the loader (1000 = unchanged).
+# Targets: a type id, class:building / class:infantry / class:vehicle, or weapon:<id> / warhead:<id>. ASSUMED (M4-07) values, tune in M4-16.
+
+[[effect]]
+id = "auth_fx_flak_vests"
+op = "mul"
+target = "class:infantry"
+attr = "max_health"
+value = 1150
+
+[[effect]]
+id = "auth_fx_convoy_jeep"
+op = "mul"
+target = "auth_jeep"
+attr = "speed"
+value = 1100
+
+[[effect]]
+id = "auth_fx_convoy_scraper"
+op = "mul"
+target = "auth_scraper"
+attr = "speed"
+value = 1100
+
+[[effect]]
+id = "auth_fx_convoy_carrier"
+op = "mul"
+target = "auth_carrier"
+attr = "speed"
+value = 1100
+
+[[effect]]
+id = "auth_fx_composite_tank"
+op = "mul"
+target = "auth_tank"
+attr = "max_health"
+value = 1200
+
+[[effect]]
+id = "auth_fx_composite_bulwark"
+op = "mul"
+target = "auth_bulwark"
+attr = "max_health"
+value = 1200
+
+[[effect]]
+id = "auth_fx_sodium_searchlight"
+op = "add"
+target = "auth_searchlight"
+attr = "sight"
+value = 2
+
+[[effect]]
+id = "auth_fx_tungsten_shot"
+op = "mul"
+target = "weapon:auth_tank_cannon"
+attr = "damage"
+value = 1250
+
+[[effect]]
+id = "auth_fx_signals_net"
+op = "add"
+target = "class:building"
+attr = "sight"
+value = 2
+
+[[effect]]
+id = "dir_fx_conscript_cost"
+op = "mul"
+target = "dir_conscript"
+attr = "cost"
+value = 800
+
+[[effect]]
+id = "dir_fx_conscript_build"
+op = "mul"
+target = "dir_conscript"
+attr = "build_time"
+value = 800
+
+[[effect]]
+id = "dir_fx_hatch_ticks"
+op = "mul"
+target = "dir_hatch"
+attr = "ticks_per_point"
+value = 750
+
+[[effect]]
+id = "dir_fx_bore_head_ticks"
+op = "mul"
+target = "dir_bore_head"
+attr = "ticks_per_point"
+value = 750
+
+[[effect]]
+id = "dir_fx_hot_cores"
+op = "add"
+target = "warhead:dir_rad_shell"
+attr = "contaminate"
+value = 40
+
+[[effect]]
+id = "dir_fx_lead_conscript"
+op = "set"
+target = "dir_conscript"
+attr = "rad_resist_permille"
+value = 900
+
+[[effect]]
+id = "dir_fx_lead_ashthrower"
+op = "set"
+target = "dir_ashthrower"
+attr = "rad_resist_permille"
+value = 900
+
+[[effect]]
+id = "dir_fx_lead_sapper"
+op = "set"
+target = "dir_sapper"
+attr = "rad_resist_permille"
+value = 900
+
+[[effect]]
+id = "dir_fx_lead_informant"
+op = "set"
+target = "dir_informant"
+attr = "rad_resist_permille"
+value = 900
+
+[[effect]]
+id = "dir_fx_lead_commissar"
+op = "set"
+target = "dir_commissar"
+attr = "rad_resist_permille"
+value = 900
+
+[[effect]]
+id = "dir_fx_lead_assessor"
+op = "set"
+target = "dir_assessor"
+attr = "rad_resist_permille"
+value = 900
+
+[[effect]]
+id = "dir_fx_lead_volunteer"
+op = "set"
+target = "dir_volunteer"
+attr = "rad_resist_permille"
+value = 900
+
+[[effect]]
+id = "dir_fx_blackout"
+op = "mul"
+target = "warhead:dir_blackout"
+attr = "blackout_ticks"
+value = 1500
+
+[[effect]]
+id = "dir_fx_order_seven"
+op = "mul"
+target = "dir_sunrise"
+attr = "superweapon_charge_ticks"
+value = 750
+
+[[effect]]
+id = "dir_fx_fervour_hp"
+op = "add"
+target = "dir_conscript"
+attr = "max_health"
+value = 10
+
+[[effect]]
+id = "dir_fx_fervour_rof"
+op = "mul"
+target = "weapon:dir_rifle"
+attr = "rate_of_fire"
+value = 900
+

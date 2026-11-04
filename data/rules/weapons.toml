@@ -150,3 +150,96 @@ min_range = 0  # ASSUMED (M3-07)
 rate_of_fire = 20  # ASSUMED (M3-07)
 projectile_speed = 0  # ASSUMED (M3-07)
 warhead = "auth_decon"
+
+# M4-07 (design 08 §4): weapons for the new units. Numbers marked ASSUMED (M4-07) copy the nearest existing weapon.
+# Weapons on units with no design-given gun are copies; targets = "air" marks anti-air guns.
+
+[auth_marksman_rifle]   # long-range rifle for the Marksman (design 08 §4)
+damage = 8  # ASSUMED (M4-07)
+range = 1024  # ASSUMED (M4-07): longer than auth_rifle, the role is long range
+min_range = 0
+rate_of_fire = 15  # ASSUMED (M4-07)
+projectile_speed = 0
+warhead = "auth_small_arms"
+
+[auth_seismic_mortar_gun]   # PLACEHOLDER ART (M4-ART) on the carrier; artillery, copy of dir_rad_mortar_shell
+damage = 20  # ASSUMED (M4-07)
+range = 2304  # ASSUMED (M4-07)
+min_range = 512  # ASSUMED (M4-07)
+rate_of_fire = 90  # ASSUMED (M4-07)
+projectile_speed = 96  # ASSUMED (M4-07)
+warhead = "auth_seismic"
+
+[auth_foam_spray]   # Quick-Set Foam Layer nozzle, copy of auth_decon_spray (design 08 §4, D-077)
+damage = 0  # ASSUMED (M4-07)
+range = 384  # ASSUMED (M4-07)
+min_range = 0
+rate_of_fire = 20  # ASSUMED (M4-07)
+projectile_speed = 0
+warhead = "auth_foam"
+
+[auth_flak_gun]   # Flak Emplacement, anti-air only, copy of auth_turret_gun (design 08 §4)
+damage = 20  # ASSUMED (M4-07)
+range = 1280  # ASSUMED (M4-07)
+min_range = 0
+rate_of_fire = 30  # ASSUMED (M4-07)
+projectile_speed = 64  # ASSUMED (M4-07)
+warhead = "auth_he"
+targets = "air"
+
+[auth_interceptor_gun]   # Interceptor, anti-air, copy of auth_rocket (design 08 §4)
+damage = 100  # ASSUMED (M4-07)
+range = 1280  # ASSUMED (M4-07)
+min_range = 0
+rate_of_fire = 75  # ASSUMED (M4-07)
+projectile_speed = 128  # ASSUMED (M4-07)
+warhead = "auth_ap"
+targets = "air"
+
+[auth_howitzer_gun]   # Field Howitzer, long-range artillery (design 08 §4)
+damage = 20  # ASSUMED (M4-07)
+range = 2560  # ASSUMED (M4-07): longer than the Seismic Mortar, the role is long range
+min_range = 512  # ASSUMED (M4-07)
+rate_of_fire = 90  # ASSUMED (M4-07)
+projectile_speed = 96  # ASSUMED (M4-07)
+warhead = "auth_he"
+
+[auth_bomb]   # Heavy Bomber splash bombs against ground (design 08 §4)
+damage = 120  # ASSUMED (M4-07)
+range = 512  # ASSUMED (M4-07)
+min_range = 0
+rate_of_fire = 60  # ASSUMED (M4-07)
+projectile_speed = 0
+warhead = "auth_he"
+
+[dir_ash_sow]   # Ash Sower, contaminate only, copy of auth_decon_spray (design 08 §4)
+damage = 0  # ASSUMED (M4-07)
+range = 384  # ASSUMED (M4-07)
+min_range = 0
+rate_of_fire = 20  # ASSUMED (M4-07)
+projectile_speed = 0
+warhead = "dir_sow"
+
+[dir_volunteer_burst]   # Volunteer death weapon, radiation burst (design 08 §4)
+damage = 20  # ASSUMED (M4-07)
+range = 256  # ASSUMED (M4-07)
+min_range = 0
+rate_of_fire = 1  # ASSUMED (M4-07)
+projectile_speed = 0
+warhead = "dir_rad_shell"
+
+[dir_delver_gun]   # Delver ambush gun, copy of dir_rad_cannon with the slug warhead (design 08 §4)
+damage = 40  # ASSUMED (M4-07)
+range = 1024  # ASSUMED (M4-07)
+min_range = 0
+rate_of_fire = 40  # ASSUMED (M4-07)
+projectile_speed = 64  # ASSUMED (M4-07)
+warhead = "dir_slug"
+
+[dir_rad_bomb]   # Great Dirigible radiation bomb (design 08 §4)
+damage = 80  # ASSUMED (M4-07)
+range = 512  # ASSUMED (M4-07)
+min_range = 0
+rate_of_fire = 60  # ASSUMED (M4-07)
+projectile_speed = 0
+warhead = "dir_rad_shell"

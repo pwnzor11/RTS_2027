@@ -27,12 +27,14 @@ splash = 0  # ASSUMED (M3-07)
 hits_allies = false
 
 [dir_ash]
+garrison_damage_percent = 25  # ASSUMED (M4-07), (tune) Q-M4-f: the warhead passes part of each hit to garrisons
 versus = [80, 60, 40, 40, 20]  # ASSUMED (M3-07)
 splash = 1  # ASSUMED (M3-07)
 hits_allies = false
 contaminate = 40  # ASSUMED (M3-07)
 
 [dir_demolition]
+garrison_damage_percent = 25  # ASSUMED (M4-07), (tune) Q-M4-f: the warhead passes part of each hit to garrisons
 versus = [25, 50, 100, 150, 100]  # ASSUMED (M3-07)
 splash = 0  # ASSUMED (M3-07)
 hits_allies = false
@@ -77,3 +79,34 @@ splash = 1  # 0/1 flag in the loader; the blast radius (5 cells) is a constant i
 hits_allies = false
 contaminate = 255  # ASSUMED (M3-13)
 blackout_ticks = 600  # ASSUMED (M3-13)
+
+# M4-07 (design 08 §3, §4): warheads for the Seismic Mortar, Quick-Set Foam, the Authority superweapon and the Ash Sower.
+# Numbers marked ASSUMED (M4-07) copy the nearest existing warhead; hits_burrowed, bonus_vs_entrance_percent, foam_ticks and
+# garrison_damage_percent are design 08 §6 keys. M4-05 implements them.
+
+[auth_seismic]   # Seismic Mortar: hits Burrowed units, 2x vs entrances (D-074), passes part of the hit to garrisons (Q-M4-f)
+versus = [100, 80, 60, 70, 50]  # ASSUMED (M4-07): copy of auth_he
+splash = 1  # ASSUMED (M4-07)
+hits_allies = true  # ASSUMED (M4-07)
+hits_burrowed = true
+bonus_vs_entrance_percent = 200
+garrison_damage_percent = 25  # ASSUMED (M4-07), (tune) Q-M4-f
+
+[auth_foam]   # Quick-Set Foam: 400 ticks of foam cells (D-077), no direct damage
+versus = [0, 0, 0, 0, 0]  # ASSUMED (M4-07): copy of auth_decon
+splash = 1  # ASSUMED (M4-07)
+hits_allies = false  # ASSUMED (M4-07)
+foam_ticks = 400
+
+[auth_atomic_blast]   # Authority superweapon blast, read as "<superweapon>_blast" (superweapon = "auth_atomic")
+versus = [100, 100, 100, 100, 100]  # ASSUMED (M4-07): copy of dir_sunrise_blast
+splash = 1  # ASSUMED (M4-07)
+hits_allies = false  # ASSUMED (M4-07)
+contaminate = 255  # ASSUMED (M4-07)
+blackout_ticks = 600  # ASSUMED (M4-07)
+
+[dir_sow]   # Ash Sower: radiation only, no damage
+versus = [0, 0, 0, 0, 0]  # ASSUMED (M4-07)
+splash = 1  # ASSUMED (M4-07)
+hits_allies = false  # ASSUMED (M4-07)
+contaminate = 60  # ASSUMED (M4-07)
