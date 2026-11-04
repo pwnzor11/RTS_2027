@@ -60,6 +60,30 @@ public static class SidebarCommands
         return null;
     }
 
+    /// <summary>
+    /// The Build command that researches upgrade <paramref name="upgradeIndex"/> (index in <c>SimRules.Upgrades</c>): the Upgrade
+    /// category in Arg and the index in Arg2 (see <see cref="Command"/>). The sim picks the researching building.
+    /// </summary>
+    public static Command BuildUpgrade(byte player, int upgradeIndex) =>
+        new(0, player, 0, CommandKind.Build, EntityId.None, EntityId.None, default, (int)ProductionCategory.Upgrade, upgradeIndex);
+
+    /// <summary>
+    /// The Cancel command for a queued upgrade: the Upgrade category in Arg and the item's position in the Upgrade queue in Arg2, or
+    /// null when that upgrade is not queued.
+    /// </summary>
+    public static Command? CancelUpgrade(byte player, PlayerHud hud, int upgradeIndex)
+    {
+        foreach (QueueView q in hud.Queues)
+        {
+            if (q.Category != ProductionCategory.Upgrade) continue;
+            for (int i = 0; i < q.Items.Count; i++)
+                if (q.Items[i].TypeIndex == upgradeIndex)
+                    return new Command(0, player, 0, CommandKind.Cancel, EntityId.None, EntityId.None, default, (int)ProductionCategory.Upgrade, i);
+        }
+
+        return null;
+    }
+
     /// <summary>Place the finished structure of building type <paramref name="buildingType"/> with its top-left at <paramref name="topLeft"/>.</summary>
     public static Command Place(byte player, int buildingType, CellCoord topLeft) =>
         new(0, player, 0, CommandKind.Place, EntityId.None, EntityId.None, topLeft, buildingType);

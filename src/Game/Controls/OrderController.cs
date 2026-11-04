@@ -11,8 +11,10 @@ namespace Rts.Game.Controls;
 /// <summary>
 /// Turns keys and right-clicks into orders for the selected units. Every order goes through
 /// <see cref="SimSnapshotSource.Order"/>, the same path a script uses. Keys: A arms attack-move (the next right-click
-/// on the ground is an attack-move; A again disarms), S stops, G guards at each unit's own cell, X scatters.
-/// Right-click: an enemy under the cursor is an Attack, the ground is a Move (or an attack-move when armed).
+/// on the ground is an attack-move; A again disarms), S stops, G guards at each unit's own cell, X scatters, D deploys (M3: a
+/// land-train or a transport at once; a Bore after D then a right-click on the cell to dig at).
+/// Right-click: an enemy under the cursor is an Attack, an own transport (for infantry) or own tunnel entrance (for units that fit
+/// it) is an Enter, the ground is a Move (or an attack-move when armed).
 /// </summary>
 public sealed class OrderController
 {
@@ -29,6 +31,9 @@ public sealed class OrderController
     /// <summary>True after A, until the next right-click or A again.</summary>
     public bool AttackMoveArmed { get; private set; }
 
+    /// <summary>True after D when a selected unit deploys at a chosen cell (a Bore), until the next right-click or D again.</summary>
+    public bool DeployArmed { get; private set; }
+
     /// <summary>Handles a key that went down this frame. Ignores keys that are not orders.</summary>
     public void KeyPressed(Keys key)
     {
@@ -39,6 +44,9 @@ public sealed class OrderController
                 break;
             case Keys.S:
                 IssueToSelection(CommandKind.Stop);
+                break;
+            case Keys.D:
+                Deploy();
                 break;
             case Keys.X:
                 IssueToSelection(CommandKind.Scatter);
@@ -56,21 +64,84 @@ public sealed class OrderController
     public void RightClick(Point screen, Camera camera, IReadOnlyList<RenderUnit> units)
     {
         bool armed = AttackMoveArmed;
+        bool deployArmed = DeployArmed;
         AttackMoveArmed = false;
+        DeployArmed = false;
         if (_selection.Count == 0) return;
 
         Vector2 world = camera.WorldFromScreen(screen);
         CellCoord cell = Camera.CellAt(world);
+        if (deployArmed)
+        {
+            DeployAt(cell);
+            return;
+        }
+
         ActorRef? enemy = TargetPicker.Pick(units, _source.Current, world, SimSnapshotSource.LocalPlayer);
+        (ActorRef Target, int TypeIndex)? own = enemy is null
+            ? TargetPicker.PickOwn(units, _source.Current, world, SimSnapshotSource.LocalPlayer, _selection.Contains)
+            : null;
         foreach (UnitKey unit in _selection.Units.ToList())
         {
             if (enemy is ActorRef target)
             {
                 _source.Order(CommandKind.Attack, unit, default, target);
             }
+            else if (own is { } mine && CanEnter(unit, mine))
+            {
+                _source.Order(CommandKind.Enter, unit, default, mine.Target);
+            }
             else if (_source.Map.Contains(cell))
             {
                 _source.Order(armed ? CommandKind.AttackMove : CommandKind.Move, unit, cell);
+            }
+        }
+    }
+
+    // M3: Board a transport (infantry) or enter an own tunnel entrance (a unit that fits). The sim re-checks both.
+    private bool CanEnter(UnitKey unit, (ActorRef Target, int TypeIndex) target)
+    {
+        if (!_source.TryGetTypeIndex(unit, out int type)) return false;
+        return target.Target.Kind switch
+        {
+            ActorKind.Vehicle => M3Orders.CanBoard(_source.Rules, unit.Kind, target.TypeIndex),
+            ActorKind.Building => M3Orders.CanEnterTunnel(_source.Rules, unit.Kind, type, target.TypeIndex),
+            _ => false,
+        };
+    }
+
+    // D: units that deploy or unload where they stand do it now; one that digs at a chosen cell arms the next right-click.
+    private void Deploy()
+    {
+        if (DeployArmed)
+        {
+            DeployArmed = false;
+            return;
+        }
+
+        foreach (UnitKey unit in _selection.Units.ToList())
+        {
+            if (!_source.TryGetTypeIndex(unit, out int type)) continue;
+            switch (M3Orders.DeployModeOf(_source.Rules, unit.Kind, type))
+            {
+                case DeployMode.InPlace:
+                    if (_source.TryGetPosition(unit, out LeptonCoord at)) _source.Order(CommandKind.Deploy, unit, at.ToCell());
+                    break;
+                case DeployMode.AtCell:
+                    DeployArmed = true;
+                    break;
+            }
+        }
+    }
+
+    private void DeployAt(CellCoord cell)
+    {
+        if (!_source.Map.Contains(cell)) return;
+        foreach (UnitKey unit in _selection.Units.ToList())
+        {
+            if (_source.TryGetTypeIndex(unit, out int type) && M3Orders.DeployModeOf(_source.Rules, unit.Kind, type) == DeployMode.AtCell)
+            {
+                _source.Order(CommandKind.Deploy, unit, cell);
             }
         }
     }

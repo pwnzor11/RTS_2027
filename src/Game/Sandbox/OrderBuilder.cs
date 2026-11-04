@@ -7,7 +7,8 @@ namespace Rts.Game.Sandbox;
 /// <summary>
 /// Builds one sim <see cref="Command"/> for one subject, encoding Arg as the sim expects (see the Command doc):
 /// Move, Stop and Scatter carry the subject kind; AttackMove and Guard carry the subject kind; Attack carries the
-/// subject kind in the low byte and the target kind in bits 8..15.
+/// subject kind in the low byte and the target kind in bits 8..15 (as does the M3 Enter: board a transport or enter a tunnel
+/// entrance); Deploy carries the subject kind and the target Cell (ignored unless the deployer burrows).
 /// </summary>
 public static class OrderBuilder
 {
@@ -18,7 +19,7 @@ public static class OrderBuilder
         int subjectKind = (int)subject.Kind;
         return kind switch
         {
-            CommandKind.Attack => new Command(execTick, player, sequence, kind, subject.Id, target.Id, default,
+            CommandKind.Attack or CommandKind.Enter => new Command(execTick, player, sequence, kind, subject.Id, target.Id, default,
                 subjectKind | ((int)target.Kind << 8)),
             _ => new Command(execTick, player, sequence, kind, subject.Id, EntityId.None, cell, subjectKind),
         };

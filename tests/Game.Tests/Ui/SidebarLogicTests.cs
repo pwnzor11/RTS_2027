@@ -32,7 +32,7 @@ public sealed class SidebarLogicTests
         for (int i = 0; i < SidebarTabs.Count; i++)
             Assert.Equal((SidebarTab)i, SidebarTabs.TabOf(SidebarTabs.CategoryOf((SidebarTab)i)));
         Assert.Null(SidebarTabs.TabOf(ProductionCategory.Aircraft));
-        Assert.Equal("QWER", new string(Enumerable.Range(0, 4).Select(i => SidebarTabs.KeyLetter((SidebarTab)i)).ToArray()));
+        Assert.Equal("QWERT", new string(Enumerable.Range(0, 5).Select(i => SidebarTabs.KeyLetter((SidebarTab)i)).ToArray()));
     }
 
     [Fact]

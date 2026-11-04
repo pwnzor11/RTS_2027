@@ -8,6 +8,7 @@ using Rts.Game.Input;
 using Rts.Game.Render;
 using Rts.Game.Sandbox;
 using Rts.Game.Sprites;
+using Rts.Sim.Rules;
 
 namespace Rts.Game.Screens;
 
@@ -30,6 +31,9 @@ public sealed class SkirmishSetupScreen : IScreen
     private ulong _seed;
     private int _tier;
     private int _colour;
+    private Faction _playerFaction = SkirmishSettings.Default.PlayerFaction;
+    private Faction _aiFaction = SkirmishSettings.Default.AiFaction;
+    private string _error = "";
 
     /// <summary>Creates the screen with <see cref="SkirmishSettings.Default"/> values.</summary>
     public SkirmishSetupScreen(GameServices services)
@@ -50,13 +54,18 @@ public sealed class SkirmishSetupScreen : IScreen
                 new MenuButton("<", () => StepTier(-1)), new MenuButton(">", () => StepTier(1))),
             new MenuItem(() => $"Colour: {ColourNames[_colour]}", null, StepColour,
                 new MenuButton("<", () => StepColour(-1)), new MenuButton(">", () => StepColour(1))),
+            new MenuItem(() => $"Your faction: {FactionName(_playerFaction)}", null, d => StepFaction(ref _playerFaction, d),
+                new MenuButton("<", () => StepFaction(ref _playerFaction, -1)), new MenuButton(">", () => StepFaction(ref _playerFaction, 1))),
+            new MenuItem(() => $"AI faction: {FactionName(_aiFaction)}", null, d => StepFaction(ref _aiFaction, d),
+                new MenuButton("<", () => StepFaction(ref _aiFaction, -1)), new MenuButton(">", () => StepFaction(ref _aiFaction, 1))),
+            new MenuItem(() => _error.Length > 0 ? _error : "(set the factions, then Start)"),
             new MenuItem(() => "Start", Start),
             new MenuItem(() => "Back", () => _s.Screens.Pop()),
         });
     }
 
     /// <summary>The choices as they stand now.</summary>
-    public SkirmishSettings Current => new(_seed, _tier, _colour);
+    public SkirmishSettings Current => new(_seed, _tier, _colour, _playerFaction, _aiFaction);
 
     /// <inheritdoc />
     public bool BlocksUpdateBelow => true;
@@ -144,5 +153,35 @@ public sealed class SkirmishSetupScreen : IScreen
 
     private void StepColour(int delta) => _colour = (_colour + delta + PlayerColours.Count) % PlayerColours.Count;
 
-    private void Start() => _s.Screens.Push(GameScreen.CreateSkirmish(_s, Current));
+    private void StepFaction(ref Faction faction, int delta) =>
+        faction = NextFaction(faction, delta);
+
+    /// <summary>The faction after <paramref name="faction"/> in the pick list, wrapping round (Authority, Directorate).</summary>
+    public static Faction NextFaction(Faction faction, int delta)
+    {
+        int n = RuleCounts.Factions;
+        return (Faction)((((int)faction + delta) % n + n) % n);
+    }
+
+    /// <summary>The name shown for a faction on the setup screen.</summary>
+    public static string FactionName(Faction faction) => faction == Faction.Directorate ? "Directorate" : "Authority";
+
+    /// <summary>Cuts text to at most <paramref name="max"/> characters, ending in "..." when it was cut.</summary>
+    public static string Shorten(string text, int max) => text.Length <= max ? text : text[..(max - 3)] + "...";
+
+    // ASSUMED (M3-08): a faction whose start kit names types the rules do not have yet (Directorate data not merged) does not
+    // crash the menu; the setup screen stays open and says why.
+    private void Start()
+    {
+        try
+        {
+            GameScreen screen = GameScreen.CreateSkirmish(_s, Current);
+            _error = "";
+            _s.Screens.Push(screen);
+        }
+        catch (Exception e) when (e is InvalidOperationException or RulesException)
+        {
+            _error = Shorten("Cannot start: " + e.Message, 56);
+        }
+    }
 }
