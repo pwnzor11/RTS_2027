@@ -1,4 +1,11 @@
 # Handoff: Session 5 — long overnight build: finish M3, start M4 skirmish depth and the new factions
+> **Session 5 checkpoint (in progress, 2026-11-04 ~09:30 UTC).** M3 landed on main (babbf6b, PR #7 green). Balance pass
+> M3-14 on integ-m3, PR #8 open. M4 contracts + wave 1 merged on `integ-m4` (all but M4-02 generator, still running);
+> wave 2 running: M4-11 setup, M4-12 AI, M4-13 editor, M4-14 RulesOf sweep (M4-15 after M4-02). All session-5 art on
+> local wp/art-* + integ-art; the owner got push_art.ps1 + rts_art.bundle + art_objects.tar to put in _art_push.
+> Decisions scratch: /home/claude/wt/DECISIONS_S5.md (lead folds into DECISIONS at wrap-up). Lessons: `flock -o`;
+> /usr/local/bin/dotnet wrapper disables build servers; `git lfs pull` after cloning (sprites were pointers).
+
 Last commit: d0eed7e (+ this handoff commit) (2026-11-04) on integ-m3 — see "Where things stand" for what is on main vs integ-m3
 Where things stand: M3 waves 0–2 are merged on `integ-m3` (contracts, tunnels, burrowing, hardening + gates, radiation /
 Blackout / stealth, upgrades / auras / transports / engineers / air, Directorate data, faction UI, audio, Directorate
