@@ -68,7 +68,7 @@ single page of rules: restore power, restore roads, count the living, and give u
 is done. They called it the Continental Reconstruction Authority because nobody could think of a more boring name,
 and boring seemed safe.
 
-The final clause, that the Authority must one day dissolve itself, is still read aloud at every swearing-in. Sixty
+The final clause, that the Authority must one day dissolve itself, is still read aloud at every swearing-in. Thirty-eight
 years on, no one has found a day when the work was done.
 
 ### history_the_annex
