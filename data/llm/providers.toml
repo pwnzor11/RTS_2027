@@ -4,10 +4,12 @@
 
 [anthropic]
 base_url = "https://api.anthropic.com"
-# (owner) check current model names before release
-default_model = "claude-haiku-4-5"   # fast and cheap: the default
-# (owner) check current model names before release
-strong_model = "claude-sonnet-4-5"   # stronger, slower, costs more: the "Use stronger model" toggle
+# Current models as of 2026-11-04 (Q-40, platform.claude.com/docs/en/models/overview).
+default_model = "claude-haiku-5-5"   # fast and cheap: the default
+strong_model = "claude-sonnet-5-5"   # stronger, slower, costs more: the "Use stronger model" toggle
+# output_config.effort sent with every request; "low" keeps the model's thinking short so decisions come back quickly.
+# Set to "" when pointing default_model at an older model that rejects the field (e.g. the 4.5 generation).
+effort = "low"
 
 [openai]
 base_url = "https://api.openai.com"

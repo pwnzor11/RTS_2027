@@ -31,8 +31,9 @@ public interface IChatProvider
 /// <summary>Provider kinds the settings can name.</summary>
 public enum LlmProviderKind : byte { None = 0, Anthropic = 1, OpenAiCompatible = 2 }
 
-/// <summary>Everything needed to build a provider, except the key.</summary>
-public sealed record LlmConfig(LlmProviderKind Provider, string BaseUrl, string Model, int TimeoutSeconds = 20);
+/// <summary>Everything needed to build a provider, except the key. <paramref name="Effort"/> (Anthropic only) is sent as
+/// <c>output_config.effort</c> when not empty; "" sends nothing (older models reject the field).</summary>
+public sealed record LlmConfig(LlmProviderKind Provider, string BaseUrl, string Model, int TimeoutSeconds = 20, string Effort = "");
 
 /// <summary>Where the API key lives. Implementations never log, print or serialise the key anywhere else.</summary>
 public interface ISecretStore

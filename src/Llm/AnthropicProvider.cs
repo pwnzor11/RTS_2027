@@ -39,6 +39,12 @@ public sealed class AnthropicProvider : IChatProvider
                 w.WriteStartObject();
                 w.WriteString("model", _cfg.Model);
                 w.WriteNumber("max_tokens", request.MaxTokens);
+                if (!string.IsNullOrWhiteSpace(_cfg.Effort))
+                {
+                    w.WriteStartObject("output_config");
+                    w.WriteString("effort", _cfg.Effort.Trim());
+                    w.WriteEndObject();
+                }
                 if (request.System.Length > 0) w.WriteString("system", request.System);
                 w.WriteStartArray("messages");
                 foreach (var m in request.Messages)
@@ -57,14 +63,19 @@ public sealed class AnthropicProvider : IChatProvider
 
     private static ChatResult Parse(JsonElement root)
     {
+        // Current models think first: thinking / redacted_thinking blocks come before the text, so take the first "text" block.
         if (root.ValueKind == JsonValueKind.Object && root.TryGetProperty("content", out var content)
-            && content.ValueKind == JsonValueKind.Array && content.GetArrayLength() > 0
-            && content[0].ValueKind == JsonValueKind.Object && content[0].TryGetProperty("text", out var t)
-            && t.ValueKind == JsonValueKind.String)
+            && content.ValueKind == JsonValueKind.Array)
         {
-            root.TryGetProperty("usage", out var usage);
-            return new ChatResult(true, t.GetString() ?? "", null,
-                ProviderHttp.Tokens(usage, "input_tokens"), ProviderHttp.Tokens(usage, "output_tokens"));
+            foreach (JsonElement block in content.EnumerateArray())
+            {
+                if (block.ValueKind != JsonValueKind.Object) continue;
+                if (block.TryGetProperty("type", out var type) && type.ValueKind == JsonValueKind.String && type.GetString() != "text") continue;
+                if (!block.TryGetProperty("text", out var t) || t.ValueKind != JsonValueKind.String) continue;
+                root.TryGetProperty("usage", out var usage);
+                return new ChatResult(true, t.GetString() ?? "", null,
+                    ProviderHttp.Tokens(usage, "input_tokens"), ProviderHttp.Tokens(usage, "output_tokens"));
+            }
         }
         return ProviderHttp.Fail("bad response");
     }

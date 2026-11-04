@@ -17,9 +17,12 @@ public sealed record ProviderDefaults(
     string OpenAiModel)
 {
     /// <summary>The built-in defaults, used when the data file is missing.</summary>
-    // (owner) check current model names before release
+    // Q-40 (session 7): current Anthropic models from platform.claude.com/docs/en/models/overview (2026-11-04).
     public static ProviderDefaults Builtin { get; } = new(
-        "https://api.anthropic.com", "claude-haiku-4-5", "claude-sonnet-4-5", "https://api.openai.com", "");
+        "https://api.anthropic.com", "claude-haiku-5-5", "claude-sonnet-5-5", "https://api.openai.com", "");
+
+    /// <summary>Anthropic <c>output_config.effort</c> ("low" keeps thinking short so a decision comes back fast; "" = do not send).</summary>
+    public string AnthropicEffort { get; init; } = "low";
 
     /// <summary>Loads <paramref name="path"/>; never throws.</summary>
     public static ProviderDefaults Load(string path)
@@ -55,7 +58,7 @@ public sealed record ProviderDefaults(
             Str(a, "default_model", d.AnthropicModel),
             Str(a, "strong_model", d.AnthropicStrongModel),
             Str(o, "base_url", d.OpenAiBaseUrl),
-            Str(o, "default_model", d.OpenAiModel));
+            Str(o, "default_model", d.OpenAiModel)) { AnthropicEffort = Str(a, "effort", d.AnthropicEffort) };
     }
 
     /// <summary>The base URL a provider uses when the settings leave it empty ("" for <see cref="LlmProviderKind.None"/>).</summary>
@@ -78,7 +81,8 @@ public sealed record ProviderDefaults(
     public LlmConfig Resolve(LlmProviderKind kind, string baseUrl, string model) =>
         new(kind,
             string.IsNullOrWhiteSpace(baseUrl) ? BaseUrlFor(kind) : baseUrl.Trim(),
-            string.IsNullOrWhiteSpace(model) ? ModelFor(kind) : model.Trim());
+            string.IsNullOrWhiteSpace(model) ? ModelFor(kind) : model.Trim(),
+            Effort: kind == LlmProviderKind.Anthropic ? AnthropicEffort : "");
 
     private static TomlTable Table(TomlTable root, string key) =>
         root.TryGetValue(key, out object? v) && v is TomlTable t ? t : new TomlTable();
