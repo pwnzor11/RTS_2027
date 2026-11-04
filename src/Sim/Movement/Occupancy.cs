@@ -123,14 +123,18 @@ internal static class Occupancy
     internal static int CentreMostFreeSlot(Simulation sim, CellCoord cell)
     {
         long mx = sim.Setup.Map.Width * 128L, my = sim.Setup.Map.Height * 128L;   // map centre in leptons
-        int best = -1;
+        LeptonCoord cc = LeptonCoord.CenterOf(cell);
+        int best = -1, bestSide = 0;
         long bestD = 0;
         for (int s = 0; s < InfantryStore.SubSlotCount; s++)
         {
             if (!sim.Map.InfantryAt(cell, s).IsNone) continue;
             LeptonCoord p = InfantryStore.SlotPosition(cell, s);
             long d = (p.X - mx) * (p.X - mx) + (p.Y - my) * (p.Y - my);
-            if (best < 0 || d < bestD) { best = s; bestD = d; }
+            // equal distance (a cell on a line through the centre): the corner left of the ray centre -> cell first
+            long cross = (cc.X - mx) * (p.Y - my) - (cc.Y - my) * (p.X - mx);
+            int side = cross < 0 ? 0 : cross > 0 ? 2 : 1;
+            if (best < 0 || d < bestD || (d == bestD && side < bestSide)) { best = s; bestD = d; bestSide = side; }
         }
         return best;
     }

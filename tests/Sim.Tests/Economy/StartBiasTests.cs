@@ -197,10 +197,12 @@ public class StartBiasTests
     {
         var sim = NewSim(MapData.CreateFlat(W, W));
         int rifle = SimRules.IndexOf(Loaded.Sim.Infantry!, "test_rifleman", t => t.Id);
-        var a = new CellCoord(6, 8);
-        var b = new CellCoord(W - 1 - a.X, W - 1 - a.Y);
         var ids = new List<(EntityId A, EntityId B)>();
-        for (int k = 0; k < 4; k++) ids.Add((sim.SpawnInfantry(0, rifle, a), sim.SpawnInfantry(1, rifle, b)));
+        foreach (var a in new[] { new CellCoord(6, 8), new CellCoord(9, 9) })   // (9,9) lies on the diagonal: equally near corners
+        {
+            var b = new CellCoord(W - 1 - a.X, W - 1 - a.Y);
+            for (int k = 0; k < 4; k++) ids.Add((sim.SpawnInfantry(0, rifle, a), sim.SpawnInfantry(1, rifle, b)));
+        }
         int wl = W * 256;
         foreach (var (ia, ib) in ids)
         {
