@@ -29,6 +29,7 @@ DOCK = (0, 0)
 CAP_MATERIAL = D.CAP_MATERIAL
 HOUSE2_MID = True
 PALETTE = D.PALETTE
+RAD_MATERIALS = ("sickly", "sickly_dim")   # D-099: only these may use the radiation-green ramp (blue mask channel in build_structure)
 STATES = [("idle", 4, 5), ("damaged", 4, 5), ("build", 8, 5)]
 MATERIALS = DD.MATERIALS
 SOOT_SKIN = DD.SOOT_SKIN
@@ -68,7 +69,7 @@ def tube(S, i, dmg, idle):
     p3(S, "mouthrim", (0.8, 0.06, 0.8), PIV, (0.0, 2.49, 0.0), "dark", PITCH, 0.0, 0.0, nocast=True)
     on = idle and (i % 2 == 0)
     p3(S, "glowm", (0.56, 0.06, 0.56), PIV, (0.0, 2.53, 0.0), "redglow" if (idle and i % 4 < 3) else "oxide2", PITCH, 0.0, 0.0, nocast=True)
-    p3(S, "glowg", (0.3, 0.07, 0.3), PIV, (0.0, 2.55, 0.0), "sickly" if on else "sickly_dim", PITCH, 0.0, 0.0, nocast=True)
+    p3(S, "glowg", (0.36, 0.07, 0.36), PIV, (0.0, 2.62, 0.0), "sickly" if on else "sickly_dim", PITCH, 0.0, 0.0, nocast=True)
     p3(S, "breech", (0.9, 0.35, 0.9), PIV, (0.0, -0.1, 0.0), "gunmetal", PITCH, 0.0, 0.05)
 
 
@@ -129,7 +130,7 @@ def finished(S, i, dmg, mode):
     for k in range(3):
         S.cyl(f"shell{k}", 0.18, 0.7, (sx0 + 0.4 * k, 2.4, 0.5), "bone", verts=10)
         S.cyl(f"shellb{k}", 0.19, 0.1, (sx0 + 0.4 * k, 2.4, 0.7), "oxide", verts=10)
-        S.cyl(f"shelln{k}", 0.16, 0.26, (sx0 + 0.4 * k, 2.4, 0.97), "sickly", verts=10)
+        S.cyl(f"shelln{k}", 0.16, 0.26, (sx0 + 0.4 * k, 2.4, 0.97), "bone", verts=10)
     S.bb("rackf", sx0 - 0.3, sx0 + 1.1, 2.1, 2.7, 0.14, 0.3, "steel", 0.02)
     # ash vent stub (breathes ash)
     vx, vy = 2.8, 2.3

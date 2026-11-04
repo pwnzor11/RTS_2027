@@ -100,6 +100,10 @@ def render(sid, mod, samples, only, preview):
     _o = _nt.nodes.new("ShaderNodeOutputMaterial")
     _nt.links.new(_e.outputs[0], _o.inputs[0])
 
+    mask_rad = emission_mat("mr", 0.0)           # radiation mask (D-099): pure blue, so house (R>127) and house2 are unaffected
+    mask_rad.node_tree.nodes["Emission"].inputs["Color"].default_value = (0, 0, 1, 1)
+    rad_mats = set(getattr(mod, "RAD_MATERIALS", ()))
+
     class Ctx:
         """Primitive helpers handed to the structure module. Coordinates: x east, y NORTH (ground units), z up."""
         pass
@@ -317,7 +321,7 @@ def render(sid, mod, samples, only, preview):
         if not preview:
             for o, m, _c in S.objs:
                 o.data.materials.clear()
-                o.data.materials.append(mask_on if m == "house" else (mask_h2 if m == "house2" else mask_off))
+                o.data.materials.append(mask_on if m == "house" else (mask_h2 if m == "house2" else (mask_rad if m in rad_mats else mask_off)))
                 o.data.materials.append(mask_off)
             wbg = w.node_tree.nodes["Background"].inputs[1]
             wbg.default_value = 0.0

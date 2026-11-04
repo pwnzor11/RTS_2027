@@ -9,9 +9,13 @@ import common as C
 W = np.array([2.0, 3.0, 1.0])  # rough perceptual weights (R,G,B)
 
 
-def quantise(rgb, pal):
+def quantise(rgb, pal, rad=False):
+    """Nearest palette index.  The radiation-green entries (C.RAD_SET, D-099) are excluded unless rad=True, and then ONLY they are
+    considered, so a non-radiation pixel can never come out green and a radiation pixel can never come out anything else."""
     p = np.array(pal, dtype=float)
     d = (((rgb[:, None, :] - p[None, :, :]) ** 2) * W).sum(axis=2)
+    is_rad = np.array([tuple(c) in C.RAD_SET for c in pal])
+    d[:, is_rad != rad] = np.inf
     return d.argmin(axis=1)
 
 
