@@ -32,6 +32,30 @@ internal abstract class RecruitFaction
     /// <summary>First vehicle built.</summary>
     public abstract string FirstVehicle { get; }
 
+    /// <summary>M3-11: the harvester vehicle (replaced when lost).</summary>
+    public abstract string HarvesterId { get; }
+
+    /// <summary>M3-11: the refinery / smelter structure (a second one is the expansion).</summary>
+    public abstract string RefineryId { get; }
+
+    /// <summary>M3-11: infantry production structure.</summary>
+    public abstract string BarracksId { get; }
+
+    /// <summary>M3-11: vehicle production structure.</summary>
+    public abstract string FactoryId { get; }
+
+    /// <summary>M3-11: a ground defence structure for the Adapt build capability.</summary>
+    public abstract string DefenceId { get; }
+
+    /// <summary>M3-11: the research structure id (upgrades), or null when the faction has none.</summary>
+    public abstract string? ResearchId { get; }
+
+    /// <summary>M3-11: the structure that produces aircraft, or null (Authority has none).</summary>
+    public virtual string? AirProducerId => null;
+
+    /// <summary>M3-11: the superweapon structure, or null (Authority has none).</summary>
+    public virtual string? SuperweaponBuildingId => null;
+
     /// <summary>True when a bag item that is not buildable yet (tech missing) is skipped instead of waited for.</summary>
     public virtual bool SkipUnbuildable => false;
 

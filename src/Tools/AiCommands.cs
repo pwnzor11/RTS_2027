@@ -22,7 +22,7 @@ public static class AiCommands
     private const int DefaultTier = 2;
     private const string Usage =
         "usage: ai match --a <aiId>[:<tier>] --b <aiId>[:<tier>] [--seeds 8] [--ticks 6000] [--size 64] [--out file.md] [--record-dir dir] [--flat 1] [--starts alt|slot|swap] [--start economy|army] [--first 1]\n" +
-        "       ai matrix --ai <aiId> [--tiers 1-5] [--seeds 4] [--ticks 6000] [--size 64] [--out file.md]\n" +
+        "       ai matrix --ai <aiId> [--faction authority|directorate] [--tiers 1-5] [--seeds 4] [--ticks 6000] [--size 64] [--out file.md]\n" +
         "       ai timeline --a <aiId>[:<tier>] --b <aiId>[:<tier>] [--seed 1] [--ticks 30000] [--size 64] [--swap 0|1] [--trace N] [--dump 1]\n" +
         "       ai duel --a <spec> --b <spec> [--count 1] [--count-b N] [--ticks 3000] [--gap 12]   (spec = id[:n][,id[:n]...], e.g. auth_tank:3,auth_turret:1)\n" +
         "  <tier> is 1..5 or recruit|regular|veteran|elite|commissar (default regular). Seeds are first..first+N-1 (first defaults to 1).";
@@ -30,7 +30,7 @@ public static class AiCommands
     private static readonly string[] MatchOptions = ["a", "b", "seeds", "ticks", "size", "out", "record-dir", "flat", "starts", "start", "first"];
     private static readonly string[] TimelineOptions = ["a", "b", "seed", "ticks", "size", "swap", "trace", "dump"];
     private static readonly string[] DuelOptions = ["a", "b", "count", "count-b", "ticks", "gap"];
-    private static readonly string[] MatrixOptions = ["ai", "tiers", "seeds", "ticks", "size", "out"];
+    private static readonly string[] MatrixOptions = ["ai", "tiers", "seeds", "ticks", "size", "out", "faction"];
 
     /// <summary>Runs `ai ...` (args exclude the leading "ai").</summary>
     public static int Run(string[] args)
@@ -113,10 +113,14 @@ public static class AiCommands
         if (!ParseTiers(flags.TryGetValue("tiers", out string? tierArg) ? tierArg : "1-5", out List<int>? list, out error))
             return UsageError(error!);
 
+        Faction faction = Faction.Authority;
+        if (flags.TryGetValue("faction", out string? facArg) && !Enum.TryParse(facArg, true, out faction))
+            return UsageError("--faction must be authority or directorate");
         if (!LoadData(out var world, out var profiles)) return 1;
         int n = list!.Count;
         var wins = new int[n, n];    // wins of row tier over column tier
         var draws = new int[n, n];
+        var ahead = new int[n, n];   // draws in which the row tier has more remaining health
         var games = new int[n, n];
         long totalTicks = 0;
         var clock = Stopwatch.StartNew();
@@ -125,13 +129,13 @@ public static class AiCommands
             for (int r = 0; r < n; r++)
                 for (int c = r; c < n; c++)
                 {
-                    var sa = new AiSide(aiId, profiles![list[r] - 1]);
-                    var sb = new AiSide(aiId, profiles[list[c] - 1]);
+                    var sa = new AiSide(aiId, profiles![list[r] - 1], faction);
+                    var sb = new AiSide(aiId, profiles[list[c] - 1], faction);
                     MatchTally t = PlayPair(world!, sa, sb, seeds, ticks, size, null, verbose: false,
                         start: aiId == AiRegistry.SkirmisherId ? AiStartMode.Army : AiStartMode.Economy);
                     totalTicks += t.Ticks;
-                    games[r, c] = t.Games; draws[r, c] = t.Draws; wins[r, c] = t.AWins;
-                    games[c, r] = t.Games; draws[c, r] = t.Draws; wins[c, r] = c == r ? t.AWins : t.BWins;
+                    games[r, c] = t.Games; draws[r, c] = t.Draws; wins[r, c] = t.AWins; ahead[r, c] = t.DrawsAAhead;
+                    games[c, r] = t.Games; draws[c, r] = t.Draws; ahead[c, r] = c == r ? t.DrawsAAhead : t.DrawsBAhead; wins[c, r] = c == r ? t.AWins : t.BWins;
                 }
         }
         catch (Exception e) when (e is ArgumentException or InvalidOperationException)
@@ -142,13 +146,17 @@ public static class AiCommands
         clock.Stop();
 
         var md = new StringBuilder();
-        md.AppendLine($"# AI tier matrix: {aiId}");
+        md.AppendLine($"# AI tier matrix: {aiId} ({faction})");
         md.AppendLine();
         md.AppendLine($"Row tier's win % against the column tier. {seeds} seeds x 2 sides per cell, {ticks} ticks per game, map size {size}. Draws count as non-wins.");
         md.AppendLine();
         WriteMatrix(md, "Win %", list, profiles!, (r, c) => Pct(wins[r, c], games[r, c]));
         md.AppendLine();
         WriteMatrix(md, "Draw %", list, profiles!, (r, c) => Pct(draws[r, c], games[r, c]));
+        md.AppendLine();
+        md.AppendLine("Draws are decided by remaining health (both sides alive at the tick limit); the table below counts a win plus every draw in which the row tier is ahead.");
+        md.AppendLine();
+        WriteMatrix(md, "Win % incl. draws ahead on health", list, profiles!, (r, c) => Pct(wins[r, c] + ahead[r, c], games[r, c]));
         string text = md.ToString();
         Console.WriteLine(text);
         PrintSpeed(totalTicks, clock);

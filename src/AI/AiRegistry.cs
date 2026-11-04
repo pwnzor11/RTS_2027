@@ -5,7 +5,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Rts.AI;
 
-/// <summary>Maps AI ids to factories. Ids: "idle" (never acts), "skirmisher" (M1 army placeholder) and "recruit" (tier 1 economy AI).</summary>
+/// <summary>Maps AI ids to factories. Ids: "idle" (never acts), "skirmisher" (M1 army placeholder) and "recruit" and "tiered" (the economy AI of the Recruit framework; tiers 1-5 are its profiles, M3-11).</summary>
 public static class AiRegistry
 {
     /// <summary>Id of <see cref="IdleAi"/>.</summary>
@@ -17,12 +17,16 @@ public static class AiRegistry
     /// <summary>Id of <see cref="RecruitAi"/>.</summary>
     public const string RecruitId = "recruit";
 
+    /// <summary>Id of the tier-aware Recruit framework AI; identical to "recruit" (the profile's flags decide the capabilities).</summary>
+    public const string TieredId = "tiered";
+
     private static readonly SortedDictionary<string, Func<DifficultyProfile, IAiPlayer>> Factories =
         new(StringComparer.Ordinal)
         {
             [IdleId] = _ => new IdleAi(),
             [SkirmisherId] = p => new SkirmisherAi(p),
             [RecruitId] = p => new RecruitAi(p),
+            [TieredId] = p => new RecruitAi(p, TieredId),
         };
 
     /// <summary>Registered ids in ordinal order.</summary>
