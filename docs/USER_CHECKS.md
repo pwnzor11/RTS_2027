@@ -156,8 +156,9 @@ Pull main (PR #11). Saves from session 5 builds still load; their AI starts fres
    --seeds 8 --ticks 25000 --size 56` prints "Wins by start corner: …" — roughly even is the target.
 
 ## Session 7 · M5 LLM commander (2026-11-04)
-Pull main (PR #12). **Saves from earlier builds no longer load** (sim save format 9); replays from earlier builds still play.
-1. **Settings:** Settings > "AI commander (LLM)...": pick Anthropic, paste your key, press "Test connection" → "Connected" (or a
+Pull main (PR #12). **Saves from earlier builds no longer load** (sim save format 9), and replays recorded by earlier builds will
+report a desync (the sim state gained a part); record new ones.
+1. **Settings:** Settings > "AI commander (LLM)...": pick Anthropic, paste your key, press "Test connection" → "Connected (Anthropic)." (or a
    short "Failed: ..." line that never shows the key). The default model is claude-haiku-5-5; "Use stronger model" is claude-sonnet-5-5.
 2. **Setup:** Skirmish setup, press "Cmdr" on an AI slot: the row reads "AI LLM - <tier> ...". With no key it adds
    "(no key - plays as standard AI)".
@@ -168,5 +169,5 @@ Pull main (PR #12). **Saves from earlier builds no longer load** (sim save forma
 5. **No key:** a commander slot without a key shows "<name> is offline — playing the standard AI." once and plays like a normal AI.
 6. **Replay:** finish or quit a commander game, open its replay: it plays to the end with no desync and makes no network call
    (works with the network off).
-7. **Save/load:** save mid-game and load: the commander comes back (its first decision after the load is about 30 s later).
+7. **Save/load:** save mid-game and load: the commander comes back and makes its next decision straight away (once past 30 s of game time).
 8. **Spectate:** set every slot to AI with "Cmdr" on and Spectate: the spectator table shows "LLM" on those rows.

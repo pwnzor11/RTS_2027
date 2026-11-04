@@ -158,7 +158,7 @@ Built-in AI does micro; an LLM sets strategy every 30 s (D-103) and talks in cha
 (Anthropic or OpenAI-compatible), local only. LLM-vs-LLM spectating. Plan: docs/design/09_m5_plan.md (approved, D-103).
 - [x] M5-00 src/Llm project + contracts (src/Llm/Contracts.cs)
 - [x] M5-01 Sim contracts: CommandKind.Directive = 23, directive state part + hash, PlayerView.Directive, pack/unpack (session 7; save format 9, D-109)
-- [x] M5-02 DirectiveBias in the tiered AI (session 7: all-in first wave 1230 vs 2310 ticks, turtle 3810; plain game unchanged)
+- [x] M5-02 DirectiveBias in the tiered AI (session 7: behaviour tests show each field changes play; plain game unchanged)
 - [x] M5-03 Providers (Anthropic, OpenAI-compatible), fake provider, reply parser
 - [x] M5-04 Fog-honest battlefield summary + SummaryHistory
 - [x] M5-05 Commander loop: 30 s cadence, apply-at-tick, drop stale, fallback to plain tier; wire LlmHooks.TestConnection (session 7)

@@ -42,5 +42,5 @@ Mirror (tier 3 v 3): 5 / 8 / 3 draws — no freeze (session 6 was 5 / 5 / 6). St
    ticks 5 000 / 10 000).
 2. Then measure, one change at a time: tech hold ON; the Q-43 tier-cost cut (2 500 → 2 000); mirror-symmetric placement together with
    seeded placement variation (start bias).
-3. Draws: Directorate cells end in draws 40–55 % of the time at 25 000 ticks; check whether waves stall against Directorate defences.
+3. Draws: Directorate ladder cells end in draws 38–56 % of the time at 25 000 ticks; check whether waves stall against Directorate defences.
 4. The 4-player matrix was not re-run this session.
