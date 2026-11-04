@@ -22,6 +22,9 @@ namespace Rts.Scripting;
 /// </summary>
 public sealed partial class MissionHost : ISimExtension
 {
+    // ASSUMED (M3-12): one script callback (or the main chunk) may run at most this many Lua instructions; past that it is a script error.
+    /// <summary>Lua instructions one script callback may run before it is stopped with an error (M3-12).</summary>
+    public const int CallbackInstructionLimit = 200_000;
     private const int MaxMessages = 32;
     private const int MaxErrors = 50;
     private const int FormatVersion = 1;
@@ -29,6 +32,7 @@ public sealed partial class MissionHost : ISimExtension
     private readonly string _source;
     private readonly Script _script;
     private readonly MissionStatePart _part;
+    private readonly InstructionBudget _budget = new(CallbackInstructionLimit);
     private Simulation? _sim;
     private int _callbackDepth;
     private int _callbacksThisTick;
@@ -76,6 +80,7 @@ public sealed partial class MissionHost : ISimExtension
         }
 
         _script = Sandbox.Create(this, _printLog);
+        _script.AttachDebugger(_budget);
     }
 
     /// <summary>The mission definition.</summary>
@@ -131,6 +136,7 @@ public sealed partial class MissionHost : ISimExtension
         _rng = sim.Setup.Seed ^ 0xD1B54A32D192ED03UL;
         sim.UnlockFilter = IsTypeAllowed;
         _callbackDepth = 0;   // the main chunk runs with the API locked
+        _budget.Reset();
         try { _script.DoString(_source, null, Def.Id + "/" + Def.ScriptFile); }
         catch (InterpreterException e) { throw new InvalidOperationException("mission script failed to load: " + (e.DecoratedMessage ?? e.Message), e); }
     }
@@ -186,6 +192,7 @@ public sealed partial class MissionHost : ISimExtension
     {
         _callbackDepth++;
         _callbacksThisTick++;
+        _budget.Reset();
         try
         {
             if (fn.Type != DataType.Function) throw new ScriptRuntimeException("callback '" + name + "' is not a global function");
