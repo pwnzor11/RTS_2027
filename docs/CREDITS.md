@@ -20,6 +20,13 @@ Full notices, licence texts and the list of native files are in `THIRD_PARTY_NOT
 |---|---|---|---|
 | Noto Sans Regular and Bold (`NotoSans-Regular.ttf`, `NotoSans-Bold.ttf`), version 2.004 (font metadata), unmodified. Debian package `fonts-noto-core` 20201225-2; upstream https://github.com/googlei18n/noto-fonts, Copyright 2015 Google LLC. Licence text in `data/fonts/OFL.txt` | Debian `fonts-noto-core` 20201225-2 (`/usr/share/fonts/truetype/noto/`) | OFL-1.1 | UI text: rasterised to atlases `data/fonts/noto-sans-*_<size>.png` and `.font.toml` by `tools/fonts/build_atlas.py` |
 
+## Audio
+| Asset | Source | Licence | Use |
+|---|---|---|---|
+| Generated sound effects (`data/audio/sfx/`) | `tools/audio/sfxr.py` (this repository) | GPL-3.0-or-later (code); output released CC0 (ASSUMED, M3-INT: owner to confirm) | Sound effects |
+| Real sound recordings | none yet; add each one here with its download page. CC0 only: Kenney (kenney.nl), OpenGameArt, Freesound (CC0 filter), BigSoundBank (`docs/audio/music_brief.md`) | CC0 | Sound effects |
+| Music tracks (`data/music/*.ogg`) | Music generated with ACE-Step (Apache-2.0). Released CC0 / no rights claimed (D-080) | CC0 | Menu and in-game music |
+
 ## AI-assisted artwork
 | Asset | Tool | Human work done | Notes |
 |---|---|---|---|
