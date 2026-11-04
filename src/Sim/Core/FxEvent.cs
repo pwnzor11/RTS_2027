@@ -5,12 +5,15 @@ namespace Rts.Sim.Core;
 /// <summary>What an <see cref="FxEvent"/> reports.</summary>
 public enum FxKind : byte
 {
-    /// <summary>A shell or splash weapon went off (instant single-target weapons such as rifles raise none).</summary>
+    /// <summary>A shell or splash weapon went off (a projectile or an instant splash weapon's blast).</summary>
     Detonation = 0,
     /// <summary>A building was removed this tick with no health left.</summary>
     BuildingDestroyed = 1,
     /// <summary>A vehicle or infantry actor was removed this tick with no health left.</summary>
     UnitDestroyed = 2,
+    /// <summary>An instant (hitscan) single-target weapon hit its point this tick (M3-12). Kept apart from
+    /// <see cref="Detonation"/> so the audio, which counts shells by detonations, does not mistake a rifle hit for one.</summary>
+    InstantHit = 3,
 }
 
 /// <summary>
