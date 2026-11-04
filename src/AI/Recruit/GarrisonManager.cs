@@ -24,6 +24,9 @@ internal sealed class GarrisonManager
     /// <summary>Most Enter orders per decision.</summary>
     public const int PerDecision = 2;
 
+    /// <summary>M5-02: the commander's directive as knob values (soldiers kept in the army, how far from the yard garrisons are filled).</summary>
+    public DirectiveBias Bias { get; set; } = DirectiveBias.Plain;
+
     private readonly List<(ulong Soldier, EntityId Building, int Tick)> _walking = new();
 
     /// <summary>Enter orders given to fill a garrison.</summary>
@@ -74,14 +77,14 @@ internal sealed class GarrisonManager
                 if (b.Kind != ActorKind.Building) continue;
                 if (pass == 1 && b.Relation != Relation.Neutral) continue;
                 BuildingType bt = k.Rules.Buildings[b.TypeIndex];
-                if (bt.Garrison <= 0 || Cheb(b.Cell, k.Yard) > RadiusCells) continue;
+                if (bt.Garrison <= 0 || Cheb(b.Cell, k.Yard) > Bias.GarrisonRadius) continue;
                 int inside = pass == 0 ? Math.Max(0, k.View.OccupantsOf(b.Id)) : 0;
                 int coming = 0;
                 foreach (var w in _walking) if (w.Building == b.Id) coming++;
                 int room = bt.Garrison - inside - coming;
-                while (room > 0 && budget > 0 && infantry > KeepInArmy)
+                while (room > 0 && budget > 0 && infantry > Bias.GarrisonKeep)
                 {
-                    int pick = Nearest(k, b);
+                    int pick = Nearest(k, b, Bias.GarrisonRadius);
                     if (pick < 0) return;
                     ViewActor s = k.Army[pick];
                     sink.Issue(CommandKind.Enter, s.Id, s.Kind, default, new ActorRef(ActorKind.Building, b.Id));
@@ -95,7 +98,7 @@ internal sealed class GarrisonManager
     }
 
     /// <summary>Index in the army of the idle armed soldier (able to garrison) nearest the building, or -1.</summary>
-    private static int Nearest(RecruitKnowledge k, ViewActor b)
+    private static int Nearest(RecruitKnowledge k, ViewActor b, int radius)
     {
         int best = -1, bestD = int.MaxValue;
         for (int i = 0; i < k.Army.Count; i++)
@@ -105,7 +108,7 @@ internal sealed class GarrisonManager
             InfantryType it = k.Rules.Infantry[a.TypeIndex];
             if (!it.CanGarrison || it.PrimaryWeapon < 0) continue;
             int d = Cheb(a.Cell, b.Cell);
-            if (d > RadiusCells + 4 || d >= bestD) continue;
+            if (d > radius + 4 || d >= bestD) continue;
             bestD = d; best = i;
         }
         return best;

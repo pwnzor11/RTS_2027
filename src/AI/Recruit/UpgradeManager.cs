@@ -21,17 +21,20 @@ internal sealed class UpgradeManager
 
     private int _last = -GapTicks;
 
+    /// <summary>M5-02: the commander's directive as knob values (army size before research, credits kept after it).</summary>
+    public DirectiveBias Bias { get; set; } = DirectiveBias.Plain;
+
     /// <summary>Upgrades ordered.</summary>
     public int Ordered { get; private set; }
 
     public void Think(RecruitKnowledge k, ICommandSink sink, int reserve, bool hold = false)
     {
         int tick = k.View.Tick;
-        if (hold || tick - _last < GapTicks || k.Army.Count < MinArmy || k.Hud.BuildableUpgrades.Count == 0) return;
+        if (hold || tick - _last < GapTicks || k.Army.Count < Bias.UpgradeMinArmy || k.Hud.BuildableUpgrades.Count == 0) return;
         int best = -1;
         foreach (int u in k.Hud.BuildableUpgrades)
             if (best < 0 || k.Rules.Upgrades[u].Cost < k.Rules.Upgrades[best].Cost) best = u;
-        if (best < 0 || k.Hud.Cash + k.Hud.Stored < k.Rules.Upgrades[best].Cost + Cushion + reserve) return;
+        if (best < 0 || k.Hud.Cash + k.Hud.Stored < k.Rules.Upgrades[best].Cost + Bias.UpgradeCushion + reserve) return;
         _last = tick;
         Ordered++;
         sink.Build(ProductionCategory.Upgrade, best);

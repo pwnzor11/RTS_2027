@@ -92,6 +92,9 @@ internal sealed class MilitaryManager
     /// <summary>M4-16: weight of a known building in the target score with several candidates (distance cells count 4); weakest-first.</summary>
     public const int CountWeight = 3;   // (tune) M4-16 (was 1)
 
+    /// <summary>M5-02: the commander's directive as knob values, set by the AI each decision (<see cref="DirectiveBias.Plain"/> = no directive).</summary>
+    public DirectiveBias Bias { get; set; } = DirectiveBias.Plain;
+
     /// <summary>M4-16: set by the AI each decision: our army is clearly bigger than the enemy army seen lately (stage closer, hit production first).</summary>
     public bool Ahead { get; set; }
 
@@ -197,8 +200,15 @@ internal sealed class MilitaryManager
             long d = Chebyshev(b.Cell, _home);
             if (d < _knownDist[b.Owner]) _knownDist[b.Owner] = d;
         }
+        // M5-02: the commander's target, when it is another player and the view knows a building of it; else the AI chooses
+        int forced = Bias.TargetPlayer;
+        if (forced < 0 || forced >= _knownCount.Length || forced == _player || _knownCount[forced] == 0) forced = -1;
         bool keep = _targetPlayer >= 0 && _knownCount[_targetPlayer] > 0 && tick - _targetSince < (_startCount > 2 && Options.Respond ? MultiTargetReviewTicks : TargetReviewTicks);
-        if (!keep)
+        if (forced >= 0)
+        {
+            if (forced != _targetPlayer) { _progressScore = int.MaxValue; _targetPlayer = forced; _targetSince = tick; }
+        }
+        else if (!keep)
         {
             int best = -1, candidates = 0;
             long bestScore = long.MaxValue;
@@ -246,7 +256,8 @@ internal sealed class MilitaryManager
             if (_phase == Phase.Gather) return;
         }
 
-        if (_phase != Phase.Gather && Options.RetreatPct > 0 && _launchHealth > 0 && CallOff(k, sink, rally))
+        int retreatPct = Bias.RetreatPct(Options.RetreatPct);   // M5-02
+        if (_phase != Phase.Gather && retreatPct > 0 && _launchHealth > 0 && CallOff(k, sink, rally, retreatPct))
         {
             alive = 0;
             n = k.Army.Count;
@@ -256,7 +267,9 @@ internal sealed class MilitaryManager
         {
             // with no scraper left there is no income to rebuild with: whatever is left goes out as soon as there are a few units
             bool desperate = (k.Harvesters.Count == 0 || Broke) && n >= DesperateWave;   // M4-12: also when income has stalled
-            if (tick >= _cooldownUntil && (n >= _nextThreshold || (n >= MinWave && tick - _lastWave >= _nextInterval) || desperate))
+            int guard = Bias.HomeGuard;   // M5-02: units that stay home (the wave waits for them too)
+            if (tick >= _cooldownUntil && (n >= Bias.Wave(_nextThreshold, 2) + guard
+                || (n >= Bias.Wave(MinWave, 2) + guard && tick - _lastWave >= Bias.Wave(_nextInterval, 600)) || desperate))
             {
                 _roster.Clear(); _squadB.Clear();
                 long hp = 0;
@@ -264,15 +277,17 @@ internal sealed class MilitaryManager
                 CellCoord first = PickGoal(k, knownEnemyBuildings);
                 CellCoord? second = Options.TwoPronged && n >= MinProngArmy ? SecondGoal(k, knownEnemyBuildings, first) : null;
                 _prong = second is not null;
+                int take = desperate ? n : Math.Max(1, n - guard), seen = 0;
                 foreach (ViewActor a in k.Army)
                 {
+                    if (seen++ >= take) break;
                     _roster.Add(Key(a));
                     hp += a.Health;
                     if (_prong && (idx++ & 1) == 1) _squadB.Add(Key(a));
                 }
                 if (_prong) Prongs++;
                 _launchHealth = hp;
-                _launchSize = n;
+                _launchSize = take;
                 _lastWave = tick;
                 _stageSince = tick;
                 Waves++;
@@ -288,7 +303,7 @@ internal sealed class MilitaryManager
                     if (Tactics != null) _stageB = Tactics.SafeCell(k, _stageB);
                 }
                 _phase = Phase.Stage;
-                alive = n;
+                alive = take;
                 _progressScore = int.MaxValue; _progressTick = tick;
             }
         }
@@ -368,7 +383,8 @@ internal sealed class MilitaryManager
         int waiting = 0;
         foreach (ViewActor a in k.Army)
             if (a.Idle && !_roster.Contains(Key(a)) && !a.Underground) waiting++;
-        int need = _mapWidth >= LargeMapCells ? Math.Max(2, _nextThreshold * LargeMapRegroupPct / 100) : _nextThreshold;   // M4-16
+        int threshold = Bias.Wave(_nextThreshold, 2);   // M5-02
+        int need = (_mapWidth >= LargeMapCells ? Math.Max(2, threshold * LargeMapRegroupPct / 100) : threshold) + Bias.HomeGuard;   // M4-16
         if (waiting < need) return false;
         Reinforcements += waiting;
         return true;
@@ -390,6 +406,9 @@ internal sealed class MilitaryManager
         _avoid.Add((_lastGoal, tick + AvoidTicks));
         return true;
     }
+
+    /// <summary>M5-02: cells from the commander's attack point at which the army counts as arrived.</summary>
+    public const int FocusArrivedCells = 6;
 
     /// <summary>M4-12: how long a goal a stalled wave could not hurt is skipped.</summary>
     public const int AvoidTicks = 6000;   // (tune)
@@ -455,11 +474,11 @@ internal sealed class MilitaryManager
     }
 
     /// <summary>Calls the wave off when its health fell below the retreat line: every roster member walks home. True when it did.</summary>
-    private bool CallOff(RecruitKnowledge k, ICommandSink sink, CellCoord rally)
+    private bool CallOff(RecruitKnowledge k, ICommandSink sink, CellCoord rally, int retreatPct)
     {
         long now = 0;
         foreach (ViewActor a in k.Army) if (_roster.Contains(Key(a))) now += a.Health;
-        if (now * 100 >= _launchHealth * (Options.RetreatPct + GroupRetreatMarginPct)) return false;
+        if (now * 100 >= _launchHealth * (retreatPct + GroupRetreatMarginPct)) return false;
         foreach (ViewActor a in k.Army)
             if (_roster.Contains(Key(a))) sink.Issue(CommandKind.Move, a.Id, a.Kind, rally);
         _roster.Clear(); _squadB.Clear();
@@ -509,6 +528,10 @@ internal sealed class MilitaryManager
         long cx = 0, cy = 0;
         foreach (ViewActor a in k.Army) { cx += a.Position.X; cy += a.Position.Y; }
         var centre = k.Army.Count == 0 ? default : new LeptonCoord((int)(cx / k.Army.Count), (int)(cy / k.Army.Count));
+        // M5-02: the commander's attack point comes first until the army stands near it (or a wave there stalled), then the usual goals
+        if (Bias.HasAttackCell && k.Army.Count > 0 && !Avoided(Bias.AttackCell, k.View.Tick)
+            && Chebyshev(new CellCoord(centre.X / 256, centre.Y / 256), Bias.AttackCell) > FocusArrivedCells)
+        { _lastGoal = Bias.AttackCell; return Bias.AttackCell; }
         long best = long.MaxValue;
         CellCoord goal = default;
         bool found = false;

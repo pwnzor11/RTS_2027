@@ -196,7 +196,10 @@ public sealed class RecruitAi : IAiPlayer, IAiSnapshotable
         if (tier > MaxTier) MaxTier = tier;
         view.CopyKnownEnemyBuildings(_knownBuildings);
         _squads.Apply(_k);
-        _planner!.Observe(_k, _knownBuildings);
+        // M5-02: the commander's directive, as knob values for this decision (Directive.None gives the values the managers always used)
+        DirectiveBias bias = DirectiveBias.For(view.Directive);
+        _military.Bias = bias; _production!.Bias = bias; _planner!.Bias = bias; _upgrades.Bias = bias; _garrison.Bias = bias;
+        _planner.Observe(_k, _knownBuildings);
         _planner.ExtendBuild(_k, _build!);
         if (_profile.ReplaceHarvesters) _rescue.Think(_k, sink, _faction);   // M4-12: no harvester and no money: sell for one
         _build!.HoldExcept = _rescue.Saving ? _rescue.RefineryType : _rescue.Broke ? -1 : int.MinValue;
@@ -207,7 +210,7 @@ public sealed class RecruitAi : IAiPlayer, IAiSnapshotable
         _production!.Think(_k, sink, _build.PendingCost);
         if (_profile.UseUpgrades) _upgrades.Think(_k, sink, _build.PendingCost, _planner.Behind);   // M4-16: no research while behind
         // squads: pull units out of the wave pool before the military manager counts and orders it
-        _retreat.Think(_k, sink, _squads, _production.Rally, _profile.RetreatHealthPct);
+        _retreat.Think(_k, sink, _squads, _production.Rally, bias.RetreatPct(_profile.RetreatHealthPct));
         if (_profile.RespondToAttacks) _garrison.Think(_k, sink, AllIn());   // M4-12: before the waves count the army
         if (_profile.ActiveScouting) _scout.Think(_k, sink, _squads);
         if (_profile.Harass) _harass.Think(_k, sink, _squads, _planner, _knownBuildings, _production.Rally, _profile.ScoutInfoAgeTicks);

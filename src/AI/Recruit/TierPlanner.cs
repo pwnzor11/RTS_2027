@@ -177,7 +177,7 @@ internal sealed class TierPlanner
     public int HarvestersWanted(RecruitKnowledge k)
     {
         int refinery = SimRules.IndexOf(k.Rules.Buildings, _faction.RefineryId, b => b.Id);
-        bool expanded = _p.ExpansionTick > 0 && refinery >= 0 && k.BuildingCount[refinery] >= 2;
+        bool expanded = (_p.ExpansionTick > 0 || Bias.Expand) && refinery >= 0 && k.BuildingCount[refinery] >= 2;
         return _p.HarvesterTarget + (expanded ? 1 : 0);
     }
 
@@ -212,7 +212,7 @@ internal sealed class TierPlanner
             int w = v.PrimaryWeapon;
             bool antiAirOnly = w >= 0 && rules.Weapons[w].Targets == WeaponTargets.Air;
             bool hurts = w >= 0 && rules.Weapons[w].Damage > 0;
-            int rank = v.Tier * 4 + (hurts ? 2 : 0) + (antiAirOnly ? (SeenEnemyAir ? 3 : -100) : 0);
+            int rank = v.Tier * 4 + (hurts ? 2 : 0) + (antiAirOnly ? (SeenEnemyAir || Bias.WantsAntiAir ? 3 : -100) : 0);
             if (rank > bestTier) { bestTier = rank; _aircraft = i; }
         }
         if (_aircraft < 0) return -1;
@@ -220,7 +220,7 @@ internal sealed class TierPlanner
         foreach (QueueItemView it in k.Queue(ProductionCategory.Aircraft).Items) have++;
         foreach (ViewActor a in k.Army) if (a.Kind == ActorKind.Vehicle && rules.Vehicles[a.TypeIndex].Locomotion == Locomotion.Air) have++;
         foreach (ViewActor a in k.Home) if (a.Kind == ActorKind.Vehicle && rules.Vehicles[a.TypeIndex].Locomotion == Locomotion.Air) have++;
-        return have < MaxAircraft ? _aircraft : -1;
+        return have < Bias.AircraftCap ? _aircraft : -1;
     }
 
     public void AircraftQueued() => AircraftOrdered++;
@@ -292,6 +292,9 @@ internal sealed class TierPlanner
     /// <summary>M4-12: army size before the garrisonable defence is added to the build order.</summary>
     public const int ArmyBeforeGarrison = 16;   // (tune)
 
+    /// <summary>M5-02: the commander's directive as knob values, set by the AI each decision (<see cref="DirectiveBias.Plain"/> = none).</summary>
+    public DirectiveBias Bias { get; set; } = DirectiveBias.Plain;
+
     /// <summary>M4-12: an enemy aircraft has been seen (anti-air is then wanted).</summary>
     public bool SeenEnemyAir { get; private set; }
 
@@ -300,23 +303,24 @@ internal sealed class TierPlanner
     {
         int tick = k.View.Tick;
         int funds = k.Hud.Cash + k.Hud.Stored;
-        if (_p.ExpansionTick > 0 && tick >= _p.ExpansionTick && build.StepsOf(_faction.RefineryId) < 2)
+        bool up = _p.UseUpgrades || Bias.ForceTech;   // M5-02: a tech focus climbs even on a profile without research
+        if (((_p.ExpansionTick > 0 && tick >= _p.ExpansionTick) || Bias.Expand) && build.StepsOf(_faction.RefineryId) < 2)
             build.Extend(_faction.RefineryId);
-        if (_p.UseUpgrades && _faction.ResearchId is string research && build.StepsOf(research) < 1)
+        if (up && _faction.ResearchId is string research && build.StepsOf(research) < 1)
             build.Extend(research);
         // M4-12: tier climbing on a schedule (flag UseUpgrades): the tier-2 gate, then the tier-3 gate. A lost gate is rebuilt (the build
         // order counts owned structures), so the tier comes back.
-        if (_p.UseUpgrades && _faction.Tier2GateId is string g2 && tick >= Tier2GateTick && build.StepsOf(g2) < 1) build.Extend(g2);
-        if (_p.UseUpgrades && _faction.Tier3GateId is string g3 && k.View.Tier >= 2
-            && tick >= Tier3GateTick && k.Army.Count >= ArmyBeforeTier3 && build.StepsOf(g3) < 1) build.Extend(g3);   // (tune) M4-12 round 2: time AND army
+        if (up && _faction.Tier2GateId is string g2 && tick >= Tier2GateTick * Bias.GatePermille / 1000 && build.StepsOf(g2) < 1) build.Extend(g2);
+        if (up && _faction.Tier3GateId is string g3 && k.View.Tier >= 2
+            && tick >= Tier3GateTick * Bias.GatePermille / 1000 && k.Army.Count >= ArmyBeforeTier3 * Bias.Tier3ArmyPermille / 1000 && build.StepsOf(g3) < 1) build.Extend(g3);   // (tune) M4-12 round 2: time AND army
         // M4-12: a garrisonable defence near the base (flag RespondToAttacks: tier 2+); the garrison manager fills it with idle infantry
         if (_p.RespondToAttacks && _faction.GarrisonId is string gar && k.Army.Count >= ArmyBeforeGarrison && build.StepsOf(gar) < 1) build.Extend(gar);
         // M4-12: anti-air once enemy aircraft were seen
-        if (SeenEnemyAir && _faction.AntiAirId is string aa && build.StepsOf(aa) < 2) build.Extend(aa);
-        bool lateOk = k.Army.Count >= ArmyBeforeLateTech;
-        if (_p.Air && _faction.AirProducerId is string air && lateOk && (k.View.Tier >= 2 || !_p.UseUpgrades) && build.StepsOf(air) < 1)
+        if ((SeenEnemyAir || Bias.WantsAntiAir) && _faction.AntiAirId is string aa && build.StepsOf(aa) < 2) build.Extend(aa);
+        bool lateOk = k.Army.Count >= ArmyBeforeLateTech || Bias.EarlyLateTech;
+        if (_p.Air && _faction.AirProducerId is string air && lateOk && (k.View.Tier >= 2 || !up) && build.StepsOf(air) < 1)
             build.Extend(air);
-        if (_p.Superweapons && _faction.SuperweaponBuildingId is string sw && lateOk && (k.View.Tier >= 3 || !_p.UseUpgrades)
+        if (_p.Superweapons && _faction.SuperweaponBuildingId is string sw && lateOk && (k.View.Tier >= 3 || !up)
             && build.StepsOf(sw) < 1) build.Extend(sw);
         if (!_p.AdaptBuild) return;
         if (funds >= FloatingCash)
