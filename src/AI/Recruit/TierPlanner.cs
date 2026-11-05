@@ -220,7 +220,8 @@ internal sealed class TierPlanner
             int w = v.PrimaryWeapon;
             bool antiAirOnly = w >= 0 && rules.Weapons[w].Targets == WeaponTargets.Air;
             bool hurts = w >= 0 && rules.Weapons[w].Damage > 0;
-            int rank = v.Tier * 4 + (hurts ? 2 : 0) + (antiAirOnly ? (SeenEnemyAir || Bias.WantsAntiAir ? 3 : -100) : 0);
+            int rank = v.Tier * 4 + (hurts ? 2 : 0) + (antiAirOnly ? (SeenEnemyAir || Bias.WantsAntiAir ? 3 : -100) : 0)
+                + (v.Id == _faction.PreferredAircraftId ? 1 : 0);   // M6-10: the faction's favourite wins a tie
             if (rank > bestTier) { bestTier = rank; _aircraft = i; }
         }
         if (_aircraft < 0) return -1;

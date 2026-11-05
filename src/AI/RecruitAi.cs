@@ -150,6 +150,24 @@ public sealed class RecruitAi : IAiPlayer, IAiSnapshotable
     /// <summary>Directorate: Move orders that took infantry off irradiated cells (0 for Authority).</summary>
     public int RadiationMoves => (_tactics as DirectorateTactics)?.RadiationMoves ?? 0;
 
+    /// <summary>M6-10: Left Behind unpack orders (0 for other factions).</summary>
+    public int Unpacks => (_tactics as LeftBehindTactics)?.Unpacks ?? 0;
+
+    /// <summary>M6-10: Left Behind raid orders.</summary>
+    public int RaidOrders => (_tactics as LeftBehindTactics)?.RaidOrders ?? 0;
+
+    /// <summary>M6-10: Left Behind salvage orders.</summary>
+    public int SalvageOrders => (_tactics as LeftBehindTactics)?.SalvageOrders ?? 0;
+
+    /// <summary>M6-10: Left Behind relocations started / finished.</summary>
+    public int Relocations => (_tactics as LeftBehindTactics)?.Relocations ?? 0;
+
+    /// <summary>M6-10: Left Behind relocations that finished.</summary>
+    public int RelocationsDone => (_tactics as LeftBehindTactics)?.RelocationsDone ?? 0;
+
+    /// <summary>M6-10: Second Drift orders.</summary>
+    public int StormOrders => (_tactics as LeftBehindTactics)?.StormOrders ?? 0;
+
     /// <inheritdoc />
     public void Start(AiContext ctx)
     {
@@ -163,7 +181,7 @@ public sealed class RecruitAi : IAiPlayer, IAiSnapshotable
     private void Init(Faction faction)
     {
         _faction = RecruitFaction.For(faction);
-        _tactics = _faction.CreateTactics();
+        _tactics = _faction.CreateTactics(_profile);
         _build = new BuildOrderManager(_faction.OrderFor(_profile.BuildRepertoire), _faction.PowerId, _faction.YardId)
         { ReserveInProgress = _profile.RespondToAttacks };   // M4-12 (tier 2+)
         _planner = new TierPlanner(_profile, _faction);
@@ -172,6 +190,7 @@ public sealed class RecruitAi : IAiPlayer, IAiSnapshotable
         _production.Start(_ctx!.Rng);
         _military.Tactics = _tactics;
         _tactics?.Start(_ctx);
+        if (_tactics is LeftBehindTactics lb) lb.Attach(_squads);   // M6-10
     }
 
     /// <summary>M4-12: no harvester alive and the funds do not cover a new one: only an attack can still win the game.</summary>
@@ -212,14 +231,15 @@ public sealed class RecruitAi : IAiPlayer, IAiSnapshotable
         // squads: pull units out of the wave pool before the military manager counts and orders it
         _retreat.Think(_k, sink, _squads, _production.Rally, bias.RetreatPct(_profile.RetreatHealthPct));
         if (_profile.RespondToAttacks) _garrison.Think(_k, sink, AllIn());   // M4-12: before the waves count the army
+        (_tactics as LeftBehindTactics)?.Early(_k, sink, _production.Rally, _knownBuildings, _planner);   // M6-10: unpack, salvage, raids
         if (_profile.ActiveScouting) _scout.Think(_k, sink, _squads);
-        if (_profile.Harass) _harass.Think(_k, sink, _squads, _planner, _knownBuildings, _production.Rally, _profile.ScoutInfoAgeTicks);
+        if (_profile.Harass && _tactics is not LeftBehindTactics) _harass.Think(_k, sink, _squads, _planner, _knownBuildings, _production.Rally, _profile.ScoutInfoAgeTicks);
         _military.Broke = _rescue.Broke;
         _military.Ahead = _planner.Ahead;   // M4-16
         _military.OwnValue = _planner.OwnArmyValue; _military.EnemyValueSeen = _planner.EnemyArmyLong;
         _military.Think(_k, sink, _production.Rally, _knownBuildings);
         if (_profile.Scatter) _scatter.Think(_k, sink);
-        if (_profile.Superweapons) _superweapons.Think(_k, sink, _knownBuildings);
+        if (_profile.Superweapons && _tactics is not LeftBehindTactics) _superweapons.Think(_k, sink, _knownBuildings);
         _tactics?.Think(_k, sink, _military.Goal(_k, _knownBuildings), _production.Rally, _military.WaveCentre(_k));
     }
 
@@ -255,6 +275,7 @@ public sealed class RecruitAi : IAiPlayer, IAiSnapshotable
         _superweapons.Snapshot(w);
         w.Write(_tactics is DirectorateTactics);
         if (_tactics is DirectorateTactics d) d.Snapshot(w);
+        if (_tactics is LeftBehindTactics lb) lb.Snapshot(w);   // M6-10: only a Left Behind side writes (older blobs are unchanged)
     }
 
     /// <inheritdoc />
@@ -282,5 +303,6 @@ public sealed class RecruitAi : IAiPlayer, IAiSnapshotable
         _retreat.Restore(r);
         _superweapons.Restore(r);
         if (r.ReadBoolean() && _tactics is DirectorateTactics d) d.Restore(r);
+        if (_tactics is LeftBehindTactics lb) lb.Restore(r);
     }
 }
