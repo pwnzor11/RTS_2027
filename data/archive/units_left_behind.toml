@@ -1,0 +1,237 @@
+# Archive entries (S9, M6-ARCH) for the Left Behind units (infantry and vehicles). Text is the lore from docs/lore/left_behind.md, copied verbatim.
+# Entries marked ASSUMED (S9) had no approved text and were drafted for the owner to confirm.
+# Faction is "neutral": the loader has no Left Behind faction yet (see the session report).
+# Keys: id, category, faction, title, subtitle, field_note (optional), body, sprite (optional),
+# unlock (open | campaign:<mission> | encounter:<rules id> | research:<upgrade id>).
+# Unit, Structure and Upgrade entries use the rules id as their id; their stats are read live from data/rules.
+
+[[entry]]
+id = "lb_scavenger"
+category = "Unit"
+faction = "neutral"
+title = "Scavenger"
+subtitle = "Caravan rifleman"
+field_note = "CHALK BOARD // SCAV CREW, FIVE ABOARD. BRING BACK THE PIPE, LEAVE THE BODY. WE KEEP LISTS."
+body = '''
+Every child on the Drift is taught to pick through a wreck before they are taught to read. A Scavenger carries a scrap
+rifle, a coil of rope and a spare filter tin. They are cheerful, grimy and very hard to surprise, and they treat every
+fight as a chance to restock.
+'''
+unlock = "open"
+
+[[entry]]
+id = "lb_hook_runner"
+category = "Unit"
+faction = "neutral"
+title = "Hook Runner"
+subtitle = "Raider on a line"
+field_note = "RIG RADIO // HOOK ONE. IN AND OUT BEFORE THE ALARM FINISHES. DON'T TELL MA."
+body = '''
+The best climbers on the Drift. A Hook Runner throws a weighted line over a wall or a silo rim, goes up, takes what
+he can carry and drops back down before the first shot. The caravans call them "the quick hands", and every
+rig keeps a bed for one.
+'''
+unlock = "open"
+
+[[entry]]
+id = "lb_slinger"
+category = "Unit"
+faction = "neutral"
+title = "Slinger"
+subtitle = "Shaped-charge thrower"
+field_note = "CHALK BOARD // SLING TEAM. TWO CHARGES EACH, EVERY CHARGE NAMED. WASTE ONE AND YOU PAINT THE NEXT."
+body = '''
+Armed with a sling-arm and a bagful of hand-packed charges cast in tin cans, the Slinger answers armour the way the
+caravans answer everything: with whatever is left over. They are brave in a quiet way and rarely stand still.
+'''
+# ASSUMED (S9) TODO: lore says campaign; replace TBD with the mission id that releases this entry.
+unlock = "campaign:TBD"
+
+[[entry]]
+id = "lb_tinker"
+category = "Unit"
+faction = "neutral"
+title = "Tinker"
+subtitle = "Field mechanic"
+field_note = "RIG RADIO // TINKER ON DECK. KEEP HER ALIVE, SHE KEEPS EVERYTHING ELSE ALIVE."
+body = '''
+Every rig has a Tinker, and every Tinker has a bag of odd tools. They patch plates, rewire valves, and bargain over the
+price of a tube. The Left Behind will follow a Tinker into a fight they would otherwise avoid, because they know who
+is going to fix them afterwards.
+'''
+unlock = "open"
+
+[[entry]]
+id = "lb_veilwalker"
+category = "Unit"
+faction = "neutral"
+title = "Veilwalker"
+subtitle = "Dust scout"
+field_note = "RIG RADIO // WALKER LOST IN THE GREY. SHE KNOWS WHERE SHE IS. WE DON'T. THAT IS THE POINT."
+body = '''
+The Veilwalkers move in the ash, wrapped in sail-cloth the colour of the drifts. They are rarely seen, never
+photographed, and are reported by the Authority as "environmental interference". The caravans simply call them the
+quiet ones.
+'''
+# ASSUMED (S9) TODO: lore says campaign; replace TBD with the mission id that releases this entry.
+unlock = "campaign:TBD"
+
+# ASSUMED (S9): drafted this session, confirm with the owner (docs/lore/left_behind.md).
+[[entry]]
+id = "lb_drifter_brute"
+category = "Unit"
+faction = "neutral"
+title = "Drifter Brute"
+subtitle = "Dust-tank infantry"
+field_note = "RIG RADIO // BRUTE ON THE LINE. HE IS NOT A SOLDIER. HE IS A WALL THAT WALKS. STAY BEHIND HIM."
+body = '''
+A big figure in welded plate, carrying a flame-hammer on a tank of dust-oil strapped to the back. The Drifter Brute walks into the enemy line and burns a path through it, then keeps walking. They handle armour badly and know it, so they are kept on the flanks where the fire is thickest. Veterans say a good Brute is worth a squad of anyone else in the open, and a bad one is always the last thing you see.
+'''
+unlock = "encounter:lb_drifter_brute"
+
+[[entry]]
+id = "lb_gleaner"
+category = "Unit"
+faction = "neutral"
+title = "Gleaner"
+subtitle = "Ash harvester"
+field_note = "CHALK BOARD // GLEANER 3. HOPPER IS HALF FULL AND THE WIND IS TURNING. COME HOME."
+body = '''
+A scrap-built scoop on a bus chassis. The Gleaner is slower, lighter and less respected than the Authority's Scraper,
+and its drivers pay for it by being very good at running. A well-run caravan keeps three at the field and one at the
+camp for spare parts.
+'''
+unlock = "open"
+
+# ASSUMED (S9): drafted this session, confirm with the owner (docs/lore/left_behind.md).
+[[entry]]
+id = "lb_hauler"
+category = "Unit"
+faction = "neutral"
+title = "Salvage Hauler"
+subtitle = "Wreck collector"
+field_note = "CHALK BOARD // HAULER ON THE ROAD. TWO WRECKS IN THE BED, ONE MORE BEHIND. DON'T WAIT FOR US."
+body = '''
+A long-bed truck with a winch at the back and a cage of hooks along the sides. The Hauler goes after the wrecks the Gleaners cannot reach and drags them home, one dead car at a time. Each rig counts its salvage by the weight in the bed, and the drivers keep the tally on the tailgate in chalk. Most of the Drift's spare parts have passed through one.
+'''
+unlock = "open"
+
+# ASSUMED (S9): drafted this session, confirm with the owner (docs/lore/left_behind.md).
+[[entry]]
+id = "lb_buggy"
+category = "Unit"
+faction = "neutral"
+title = "Dune Buggy"
+subtitle = "Fast scout"
+field_note = "RIG RADIO // BUGGY OUT ON THE FLATS. SHE HAS SEEN THE SMOKE. SHE IS NOT STOPPING TO COUNT IT."
+body = '''
+An open frame on four salvaged wheels, a light gun on a swivel and a driver who never looks comfortable. The buggy runs ahead of the rigs to find water, wrecks and trouble, then reports back by flag or radio. It is too light to stand a fight for long. The caravans send it anyway, because it is the only thing on the Drift that can outrun a patrol and still come home.
+'''
+unlock = "open"
+
+[[entry]]
+id = "lb_harpoon_wagon"
+category = "Unit"
+faction = "neutral"
+title = "Harpoon Wagon"
+subtitle = "Tethering anti-armour"
+field_note = "CHALK BOARD // HARPOON TWO. HOLD HER STEADY. WE ARE NOT GOING TO PULL HIM OFF HIS TRACKS. WE ARE GOING TO TURN HIM."
+body = '''
+A flatbed fitted with an old whaling gun and a drum of cable, bought from a coastal wreck and rebuilt a dozen times.
+The harpoon hooks a hull and drags it off course. Enemy crews hate it most for the noise.
+'''
+# ASSUMED (S9) TODO: lore says campaign; replace TBD with the mission id that releases this entry.
+unlock = "campaign:TBD"
+
+# ASSUMED (S9): drafted this session, confirm with the owner (docs/lore/left_behind.md).
+[[entry]]
+id = "lb_organ"
+category = "Unit"
+faction = "neutral"
+title = "Organ"
+subtitle = "Rocket-rack artillery"
+field_note = "CHALK BOARD // ORGAN READY. AIM IS A RUMOUR. AIM AT THE BIG ONES AND HOPE."
+body = '''
+Eight rocket tubes bolted to a flatbed, each one a different pattern, fired in a rolling volley. The Organ is never accurate and everyone who fires it knows it. What it lacks in aim it makes up in noise and area, and a column of Authority crawlers under an Organ volley will scatter. The gunners call the rack the choir and tune its tubes by ear before every run.
+'''
+unlock = "encounter:lb_organ"
+
+# ASSUMED (S9): drafted this session, confirm with the owner (docs/lore/left_behind.md).
+[[entry]]
+id = "lb_tow"
+category = "Unit"
+faction = "neutral"
+title = "Tow Truck"
+subtitle = "Transport and rig-tow"
+field_note = "RIG RADIO // TOW IS HOOKED ON. SIX ABOARD AND ONE SULKING MOTHER RIG. HOLD THE LINE."
+body = '''
+A heavy bus chassis with a rear troop bay for six and a tow-arm that lifts a packed rig onto its bed. The Tow Truck is the caravan's ferry: it carries the families who cannot walk, the spares that cannot be lost, and the rigs that must move in a hurry. Its drivers are the only people on the Drift trusted with everyone's children at once, and they say so with a straight face.
+'''
+unlock = "encounter:lb_tow"
+
+# ASSUMED (S9): drafted this session, confirm with the owner (docs/lore/left_behind.md).
+[[entry]]
+id = "lb_dust_sail"
+category = "Unit"
+faction = "neutral"
+title = "Dust Sail"
+subtitle = "Wind-rigged screen"
+field_note = "CHALK BOARD // SAIL UP ON THE RIDGE. WIND IS OURS. KEEP THE GREY BETWEEN US AND THEM."
+body = '''
+A great sheet of sail-cloth stretched over a frame and mounted on a flatbed, angled to the wind. When the ash runs thick, the Dust Sail raises a grey wall that blinds the enemy's sight. It cannot shoot, and it cannot protect a crew from artillery. It only makes the field harder to see across, which is usually enough for the Veilwalkers to do their work.
+'''
+unlock = "encounter:lb_dust_sail"
+
+[[entry]]
+id = "lb_rolling_fort"
+category = "Unit"
+faction = "neutral"
+title = "Rolling Fort"
+subtitle = "The caravans' heavy"
+field_note = "RIG RADIO // FORT ON THE RIDGE. EVERYONE LOOK BUSY. LET THEM COME TO US."
+body = '''
+Built from three wrecked buses, a bridge girder and an engine nobody can identify, the Fort is the biggest thing the
+caravans can make that still moves. It is not fast and it is not pretty. It is, however, almost impossible to bring down
+quickly, because every plate is a different age and every weak point is somewhere new.
+'''
+# ASSUMED (S9) TODO: lore says campaign; replace TBD with the mission id that releases this entry.
+unlock = "campaign:TBD"
+
+# ASSUMED (S9): drafted this session, confirm with the owner (docs/lore/left_behind.md).
+[[entry]]
+id = "lb_mother_rig_packed"
+category = "Unit"
+faction = "neutral"
+title = "Packed Rig"
+subtitle = "A rig in transit"
+field_note = "RIG RADIO // PACKING. DON'T TOUCH THE FLAG. IT IS HALF FULL AND THEY ARE ALL IN IT."
+body = '''
+Any rig folded for the road: a single flatbed with its walls, towers and workshops folded into its own frame and lashed under a tarpaulin. A packed rig cannot fire and cannot repair. It moves quickly and hides in any convoy, which is why raiders go for it first. Unpacking one takes most of an hour, and the families inside spend that hour arguing about where the stove should go.
+'''
+unlock = "encounter:lb_mother_rig_packed"
+
+# ASSUMED (S9): drafted this session, confirm with the owner (docs/lore/left_behind.md).
+[[entry]]
+id = "lb_rotor"
+category = "Unit"
+faction = "neutral"
+title = "Rotor"
+subtitle = "Autogyro gunship"
+field_note = "RIG RADIO // ROTOR UP. LOW AND SLOW. IF YOU HEAR THE HUM, GET UNDER A ROOF."
+body = '''
+A two-seat autogyro with a machine gun in a pod and a rotor made from three wind-turbine blades. It flies low over the dunes, where the pilots can see the ground and where the flak is least likely to reach them. The Rotor hunts infantry and harvesters across the flats. Its pilots say the Authority never learned to fly, which is not quite true, but they enjoy saying it.
+'''
+unlock = "encounter:lb_rotor"
+
+# ASSUMED (S9): drafted this session, confirm with the owner (docs/lore/left_behind.md).
+[[entry]]
+id = "lb_kite"
+category = "Unit"
+faction = "neutral"
+title = "Kite"
+subtitle = "One-use glider bomber"
+field_note = "CHALK BOARD // KITE FLYING. ONE WAY. TELL THE KIDS IT WAS A FINE FLIGHT."
+body = '''
+A glider of sail-cloth and a salvaged fuselage, loaded with a charge and released from the top of a ridge. It cannot come home. The Kite is cheap to build and simple to fly, which makes it the caravan's answer to big targets it cannot otherwise reach. Its pilots are volunteers, and the Speaker has never refused one. Each pilot is named on the flag of the rig that flew them.
+'''
+unlock = "encounter:lb_kite"
