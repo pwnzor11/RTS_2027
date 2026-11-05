@@ -297,7 +297,11 @@ public sealed partial class Simulation
                 case ActorKind.Infantry: _infantry.Health[i] -= h.Amount; WakeOnHit(_infantry, kind, i); break;
                 default: _buildings.Health[i] -= h.Amount; break;
             }
-            if (before > 0 && HealthAt(kind, i) <= 0) OnLethalHit(h.Target, (byte)h.Source);   // M4-06: kill attribution
+            if (before > 0 && HealthAt(kind, i) <= 0)
+            {
+                OnLethalHit(h.Target, (byte)h.Source);   // M4-06: kill attribution
+                OnSpoilsLethalHit(h.Target, (byte)h.Source);   // M6-05: Simulation.Raid.cs
+            }
         }
         _pendingCount = 0;
     }
