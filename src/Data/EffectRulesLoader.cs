@@ -82,10 +82,17 @@ internal static class EffectRulesLoader
 
     /// <summary>Attributes an effect may change on a vehicle or infantry type (design 08 §4).</summary>
     public static readonly string[] UnitAttrs = ["max_health", "speed", "sight", "cost", "build_time", "rad_resist_permille",
-        "vet_threshold_permille"];
+        "vet_threshold_permille", "harvest_capacity"];
 
     /// <summary>Attributes an effect may change on a building type.</summary>
     public static readonly string[] BuildingAttrs = ["max_health", "sight", "power", "cost", "ticks_per_point", "superweapon_charge_ticks"];
+
+    /// <summary>Target of a player-level effect (the upgrade's owner), simfu-3.</summary>
+    public const string PlayerTarget = "class:player";
+
+    /// <summary>Attributes an effect may change on the owning player (target <see cref="PlayerTarget"/>): <c>shipment_interval</c> scales
+    /// or sets the <c>[shipments]</c> interval_ticks for that player (mul is per mille: 850 = 15 % shorter).</summary>
+    public static readonly string[] PlayerAttrs = ["shipment_interval"];
 
     /// <summary>Attributes an effect may change on a weapon.</summary>
     public static readonly string[] WeaponAttrs = ["damage", "range", "rate_of_fire"];
@@ -124,6 +131,10 @@ internal static class EffectRulesLoader
                     continue;
                 }
                 allowed = WarheadAttrs;
+            }
+            else if (e.Target == PlayerTarget)
+            {
+                allowed = PlayerAttrs;
             }
             else if (e.Target == RulesEnums.ClassPrefix + "building" || provides.Contains(e.Target)
                 || Rts.Sim.Rules.SimRules.IndexOf(t.Buildings, e.Target, b => b.Id) >= 0)

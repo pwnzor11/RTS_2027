@@ -151,4 +151,8 @@ public sealed record BuildingType(string Id, int FootprintW, int FootprintH, int
     /// <summary>M7-06: receives home shipments (an Anchorage): supply tenders sail to it and pay out on arrival (TOML <c>shipment_dock</c>,
     /// default false; needs <see cref="WaterBuilding"/>).</summary>
     public bool ShipmentDock { get; init; }
+
+    /// <summary>Simfu-4: radius in cells in which this building detects submerged vessels for its team (TOML <c>sonar_radius</c>,
+    /// default 0 = none), like <see cref="VehicleType.SonarRadius"/>.</summary>
+    public int SonarRadius { get; init; }
 }

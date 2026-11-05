@@ -70,7 +70,7 @@ public sealed record SimRules(
     {
         if ((int)faction >= StartKits.Count) throw new InvalidOperationException($"{faction} has no start kit");
         FactionStartKit kit = StartKits[(int)faction];
-        // M6-08: an empty conyard (-1) is legal when a start unit is a packed rig vehicle (it unpacks into the base)
+        // M6-08: an empty conyard (-1) is legal when a start unit is a packed rig vehicle (it unpacks into the base); M7-14: a kit vehicle that deploys into a building (the Expedition Command Ship) counts too
         int conyard = kit.Conyard.Length == 0 ? -1 : IndexOf(Buildings, kit.Conyard, b => b.Id);
         if (conyard < 0 && kit.Conyard.Length > 0) throw new InvalidOperationException($"start kit of {faction}: unknown building '{kit.Conyard}'");
         var units = new List<(Core.ActorKind, int)>(kit.Units.Count);
@@ -83,9 +83,9 @@ public sealed record SimRules(
             throw new InvalidOperationException($"start kit of {faction}: unknown unit '{id}'");
         }
         bool hasPackedRig = false;
-        foreach ((Core.ActorKind k, int t) in units) if (k == Core.ActorKind.Vehicle && Vehicles[t].UnpacksInto >= 0) hasPackedRig = true;
+        foreach ((Core.ActorKind k, int t) in units) if (k == Core.ActorKind.Vehicle && (Vehicles[t].UnpacksInto >= 0 || Vehicles[t].DeploysInto >= 0)) hasPackedRig = true;
         if (conyard < 0 && !hasPackedRig)
-            throw new InvalidOperationException($"start kit of {faction}: no conyard and no packed rig among the start units");
+            throw new InvalidOperationException($"start kit of {faction}: no conyard and no packed rig or deployable builder among the start units");
         return (conyard, units);
     }
 

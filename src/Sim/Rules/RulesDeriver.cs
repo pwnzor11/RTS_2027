@@ -77,6 +77,7 @@ public static class RulesDeriver
         public readonly BuildingType[] Buildings;
         public readonly WeaponType[] Weapons;
         public readonly WarheadType[] Warheads;
+        public ShipmentRules Shipments;
 
         public Tables(SimRules r)
         {
@@ -85,6 +86,7 @@ public static class RulesDeriver
             Buildings = r.Buildings == null ? Array.Empty<BuildingType>() : r.Buildings.ToArray();
             Weapons = r.Weapons == null ? Array.Empty<WeaponType>() : r.Weapons.ToArray();
             Warheads = r.Warheads == null ? Array.Empty<WarheadType>() : r.Warheads.ToArray();
+            Shipments = r.Shipments;
         }
 
         public SimRules Build(SimRules r) => r with
@@ -94,6 +96,7 @@ public static class RulesDeriver
             Buildings = r.Buildings == null ? null! : Buildings,
             Weapons = r.Weapons == null ? null! : Weapons,
             Warheads = r.Warheads == null ? null! : Warheads,
+            Shipments = Shipments,
         };
     }
 
@@ -120,6 +123,9 @@ public static class RulesDeriver
                 return;
             case "class:infantry":
                 for (int i = 0; i < t.Infantry.Length; i++) t.Infantry[i] = ApplyInfantry(t.Infantry[i], e);
+                return;
+            case "class:player":   // simfu-3: player-level attributes
+                if (e.Attr == "shipment_interval") t.Shipments = t.Shipments with { IntervalTicks = Op(e, t.Shipments.IntervalTicks, 1) };
                 return;
             case "class:building":
                 for (int i = 0; i < t.Buildings.Length; i++) t.Buildings[i] = ApplyBuilding(t.Buildings[i], e);
@@ -164,6 +170,7 @@ public static class RulesDeriver
         "build_time" => x with { BuildTime = Op(e, x.BuildTime) },
         "rad_resist_permille" => x with { RadResistPermille = Op(e, x.RadResistPermille, 0, 1000) },
         "vet_threshold_permille" => x with { VetThresholdPermille = Op(e, x.VetThresholdPermille, 1, 100_000) },   // VET-1
+        "harvest_capacity" => x with { HarvestCapacity = Op(e, x.HarvestCapacity, x.HarvestCapacity > 0 ? 1 : 0, 1000) },   // simfu-3: never turns a harvester off or a fighter into one
         _ => x,
     };
 
