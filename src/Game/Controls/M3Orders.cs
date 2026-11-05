@@ -38,10 +38,15 @@ public static class M3Orders
     {
         if (kind != ActorKind.Vehicle || (uint)typeIndex >= (uint)rules.Vehicles.Count) return DeployMode.None;
         VehicleType v = rules.Vehicles[typeIndex];
+        if (v.Submerges) return DeployMode.InPlace;   // M7-14: Deploy toggles dive and surface (D-143); the sim checks submerges first
         if (v.Passengers > 0) return DeployMode.InPlace;
         if (v.DeploysInto < 0) return DeployMode.None;
         return v.Locomotion == Locomotion.Burrow ? DeployMode.AtCell : DeployMode.InPlace;
     }
+
+    /// <summary>M7-14: true if the vehicle type can dive (<c>submerges</c>), so Deploy is its Dive/Surface toggle.</summary>
+    public static bool IsDiver(SimRules rules, ActorKind kind, int typeIndex) =>
+        kind == ActorKind.Vehicle && (uint)typeIndex < (uint)rules.Vehicles.Count && rules.Vehicles[typeIndex].Submerges;
 
     /// <summary>The tunnel size of a unit type (None for Authority units and unknown types).</summary>
     public static TunnelSize TunnelSizeOf(SimRules rules, ActorKind kind, int typeIndex)

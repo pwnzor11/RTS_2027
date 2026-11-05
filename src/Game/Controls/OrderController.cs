@@ -123,6 +123,11 @@ public sealed class OrderController
             {
                 _source.Order(CommandKind.Harvest, unit, cell);   // M6-09: the order carries the unit kind, as SalvageMission expects
             }
+            else if (!armed && unit.Kind == ActorKind.Vehicle && _source.TryGetTypeIndex(unit, out int carrier)
+                && LandingOrders.ShouldUnload(_source.Rules, _source.Map, unit.Kind, carrier, _source.Sim.PassengersIn(unit.Id), cell))
+            {
+                _source.Order(CommandKind.Unload, unit, cell);   // M7-14: a landing craft or Skyhook with passengers puts them ashore at the cell
+            }
             else if (_source.Map.Contains(cell))
             {
                 _source.Order(armed ? CommandKind.AttackMove : CommandKind.Move, unit, cell);
