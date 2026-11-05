@@ -119,7 +119,7 @@ public static class WreckStormOverlay
             if (w.Alpha == 0) continue;
             float left = w.Cell.X * Camera.CellPx, top = w.Cell.Y * Camera.CellPx;
             Shapes.Fill(batch, pixel, camera.ScreenRect(left + 2, top + 2, left + Camera.CellPx - 2, top + Camera.CellPx - 2),
-                Shapes.Alpha(DebrisDark, w.Alpha / 2));
+                Shapes.Alpha(DebrisDark, (byte)(w.Alpha / 2)));
             foreach (Rectangle r in Shards(w.Seed))
                 Shapes.Fill(batch, pixel, camera.ScreenRect(left + r.X, top + r.Y, left + r.Right, top + r.Bottom), Shapes.Alpha(Debris, w.Alpha));
         }
@@ -132,7 +132,7 @@ public static class WreckStormOverlay
         {
             Rectangle r = camera.ScreenRect(s.Min.X * Camera.CellPx, s.Min.Y * Camera.CellPx, (s.Max.X + 1) * Camera.CellPx, (s.Max.Y + 1) * Camera.CellPx);
             Shapes.Fill(batch, pixel, r, Shapes.Alpha(Dust, s.Alpha));
-            Shapes.Outline(batch, pixel, r, Shapes.Alpha(Dust, Math.Min(255, s.Alpha * 2)), 2);
+            Shapes.Outline(batch, pixel, r, Shapes.Alpha(Dust, (byte)Math.Min(255, s.Alpha * 2)), 2);
         }
     }
 }

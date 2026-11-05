@@ -17,6 +17,7 @@ using Rts.Game.Ui.Sidebar;
 using Rts.Game.Ui.Spectator;
 using Rts.Game.Ui.Superweapon;
 using Rts.Sim.Core;
+using Rts.Sim.Rules;
 using Rts.Sim.View;
 
 namespace Rts.Game.Screens;
