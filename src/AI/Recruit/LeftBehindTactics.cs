@@ -328,14 +328,28 @@ internal sealed class LeftBehindTactics : IFactionTactics
                     _cands.Add((score, x, y));
                 }
             _cands.Sort(static (a, b) => a.Score != b.Score ? a.Score.CompareTo(b.Score) : a.Y != b.Y ? a.Y.CompareTo(b.Y) : a.X.CompareTo(b.X));
-            foreach (var (_, x, y) in _cands)
-            {
-                if (Reserved(x, y, w, h)) continue;
-                var tl = new CellCoord(x, y);
-                if (!view.CanUnpackAt(rig.Id, tl)) continue;
-                site = tl;
-                return true;
-            }
+            for (int pass = 0; pass < 2; pass++)   // pass 0 keeps two cells clear of enemy gunmen in view; pass 1 takes any legal site
+                foreach (var (_, x, y) in _cands)
+                {
+                    if (Reserved(x, y, w, h)) continue;
+                    var tl = new CellCoord(x, y);
+                    if (pass == 0 && EnemyNear(k, x, y, w, h)) continue;
+                    if (!view.CanUnpackAt(rig.Id, tl)) continue;
+                    site = tl;
+                    return true;
+                }
+        }
+        return false;
+    }
+
+    /// <summary>True when a visible enemy mobile unit stands within two cells of the footprint: an unpack order there tends to end at
+    /// once (infantry in the footprint refuse the site), which left a packed rig idle for 900+ ticks in the tier-5 soak.</summary>
+    private static bool EnemyNear(RecruitKnowledge k, int x, int y, int w, int h)
+    {
+        foreach (ViewActor e in k.Visible)
+        {
+            if (e.Relation != Relation.Enemy || !e.IsMobile) continue;
+            if (e.Cell.X >= x - 2 && e.Cell.X < x + w + 2 && e.Cell.Y >= y - 2 && e.Cell.Y < y + h + 2) return true;
         }
         return false;
     }
