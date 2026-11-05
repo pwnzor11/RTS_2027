@@ -76,7 +76,8 @@ public sealed partial class Simulation
     {
         int n = 0;
         for (int i = 1; i < _buildings.Capacity; i++)
-            if (_buildings.Slots.IsIndexAlive(i) && _buildings.Player[i] == player && BuildingTypeAt(i).Produces == category) n++;
+            if (_buildings.Slots.IsIndexAlive(i) && _buildings.Player[i] == player && BuildingTypeAt(i).Produces == category
+                && _rigs.PackTicksLeft[i] == 0) n++;   // M6-03: a packing rig does not produce
         return n;
     }
 
@@ -85,9 +86,10 @@ public sealed partial class Simulation
     {
         EntityId chosen = _production.Primary[ProductionState.Lane(player, category)];
         if (!chosen.IsNone && _buildings.Slots.IsAlive(chosen) && _buildings.Player[chosen.Index] == player
-            && BuildingTypeAt(chosen.Index).Produces == category) return chosen;
+            && BuildingTypeAt(chosen.Index).Produces == category && _rigs.PackTicksLeft[chosen.Index] == 0) return chosen;   // M6-03
         for (int i = 1; i < _buildings.Capacity; i++)
-            if (_buildings.Slots.IsIndexAlive(i) && _buildings.Player[i] == player && BuildingTypeAt(i).Produces == category)
+            if (_buildings.Slots.IsIndexAlive(i) && _buildings.Player[i] == player && BuildingTypeAt(i).Produces == category
+                && _rigs.PackTicksLeft[i] == 0)   // M6-03
                 return _buildings.Slots.IdOf(i);
         return EntityId.None;
     }
@@ -264,6 +266,7 @@ public sealed partial class Simulation
                 int lane = ProductionState.Lane(p, category);
                 if (_production.QueueCount[lane] == 0) continue;
                 if (!IsUnitCategory(category) && _production.Ready[lane] >= 0) continue;   // wait for the placement
+                if (!IsUnitCategory(category) && RigLanePaused(player, category)) continue;   // M6-03: rig packing or packed
                 int factories = 1;
                 if (IsUnitCategory(category))
                 {
