@@ -196,6 +196,12 @@ systems (water locomotion, ships, landings). Lore, roster, art, AI.
 - [x] M7-03 Naval locomotion, sea regions, unreachable-goal refusal, draw scale (session 10, D-138)
 - [x] M7-06 Home shipments: tenders, decay, charter, stats (session 10, D-139; off until Expedition data)
 - [x] M7-07 Beachhead zone, water-building placement (session 10, D-140; zone overlay not drawn yet)
+- [x] M7-04 Landing and unload, Skyhook (session 10, D-144; vehicle passengers open)
+- [x] M7-05 Submerge and sonar (session 10, D-143; building sonar open)
+- [x] M7-08 Expedition data (session 10, D-145; numbers to the owner: docs/balance/m7_08_expedition_data.md)
+- [x] M7-12 Salvo Array (session 10, D-142)
+- [x] M7-13 Ocean-edge generator, naval map checks (session 10, D-145; skirmish option and save header open)
+- [ ] M7-09 Carrier and air · [ ] M7-10 AI Expedition · [ ] M7-11 Art (owner PC, D-084) · [ ] M7-14 Game layer + acceptance
 
 ## M8 · Campaign (was M4)
 - [x] M8-01 Campaign plan (docs/design/12_m8_plan.md, plan only; story questions open) (session 9)

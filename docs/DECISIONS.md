@@ -1041,3 +1041,45 @@ no Return orders to a harvesting Hauler. M6-12 accepted on stability (216 games,
 Balance gaps go to the owner as Q-52..Q-54; no number changes landed.
 **Why:** salvage almost never ran (the Hauler never looked idle); the balance numbers need the owner.
 **Status:** assumed — confirm (AI thresholds are `(tune)`)
+
+### D-142 · 2026-11-05 · M7-12 Salvo Array choices
+**Decision:** the "<superweapon>_blast" warhead gains salvo fields (missiles, ticks, radius, damage, warn ticks, splash; all off by
+default). Missiles scatter uniformly over the square radius (seeded RNG), deal full damage in the impact cell and half within the
+splash, may target any cell including sea, keep flying if the Array dies, and spare dived submarines. Four salvos can fly at once
+(a fifth replaces the one furthest along). Data `(tune)`: charge 7 200 ticks, 12 missiles over 120 ticks after an 80-tick warning,
+radius 4, 150 damage. The effects part writes its salvo table (version 3) only while a salvo flies, so old games hash the same.
+**Why:** design 07 gives the numbers but not the scatter, sea or overlap rules.
+**Status:** assumed — confirm
+
+### D-143 · 2026-11-05 · M7-05 submerge choices
+**Decision:** a submersible ship dives or surfaces at once on Deploy (no auto-dive). A dived ship is hidden from and untargetable by
+enemies unless one of their sonar vehicles covers its cell; it can still fire. Splash spares a dived ship unless it is the shot's
+own target. Weapon target classes: Ground, Air, Both (never dived ships), Naval (surface ships), Submerged, NavalAndSubmerged.
+Only vehicles carry sonar for now (buildings have no sonar field).
+**Why:** 07 §6.4 does not say whether a dived sub may fire or dive automatically.
+**Status:** assumed — confirm
+
+### D-144 · 2026-11-05 · M7-04 landing choices
+**Decision:** `Unload` on a craft with `unload_ticks > 0` (or an aircraft) sails or flies to the shore and puts one passenger ashore
+every `unload_ticks`, starting on the ordered cell. A shore cell is any cell infantry can stand on. With no reachable sea cell beside
+the shore the order is ignored. Exit cells at factories, tunnels and rig packing use the unit's move class, so ships leave onto
+water and deep ships never onto shallows. Not built: vehicles as passengers (the landing craft's two vehicle slots), beached craft.
+**Why:** 07 §6.3; the transport code carries infantry only.
+**Status:** assumed — confirm
+
+### D-145 · 2026-11-05 · M7-13 map choices and M7-08 Expedition data
+**Decision:** (1) Ocean edges are opt-in (`map gen --ocean nesw`): 2 shallow and 2 coast rings, a convoy cell every 8th border water
+cell, one landing marker per start; new validator errors `convoy_lake`, `convoy_no_coast`, `landing_unreachable`. Maps without the
+option are byte-identical. Not in skirmish setup yet (saves would not carry it). (2) The Expedition roster, 20 structures and 8
+upgrades are in data/rules, every number `(tune)`, balance sheet docs/balance/m7_08_expedition_data.md; Skyfreighter and Airhead
+dropped; Gyro Scout at tier 2 (aircraft come from the tier-2 Flight Deck). The faction stays unplayable. Adding naval types makes
+every game write its sea labels, so SkirmishDefaultHashTests was re-pinned (only the "naval" sub-hash moved).
+**Why:** data needed for M7-09/M7-10; the hash move was checked part by part.
+**Status:** assumed — confirm (all numbers)
+
+### D-146 · 2026-11-05 · Session 10 fixes
+**Decision:** replay file names use a sanitised AI label; the tier planner uses rank-aware army value (finishes D-136 item 2);
+the commander replay test waits on the request instead of a time budget; Left Behind relocation prefers unpack sites with no visible
+enemy within 2 cells (mitigation for rigs idling under raids).
+**Why:** bugs found by the M6-12 soak and two flaky runs.
+**Status:** done
