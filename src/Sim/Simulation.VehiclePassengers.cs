@@ -94,6 +94,7 @@ public sealed partial class Simulation
         {
             if (!_units.Slots.IsIndexAlive(v) || _tunnels.VehicleLayer[v] != ActorLayer.Passenger) continue;
             EntityId carrier = _tunnels.VehicleCarrier[v];
+            if (carrier.IsNone) continue;   // the layer was forced without boarding (tests): nothing to ride
             if (!_units.Slots.IsAlive(carrier)) { RemoveMobileQuietly(ActorKind.Vehicle, v); continue; }   // cannot happen: OnTransportDying removes them
             Occupancy.Release(this, ActorKind.Vehicle, _units, v);   // a stray order may have reserved a cell
             ParkVehiclePassenger(v, carrier);

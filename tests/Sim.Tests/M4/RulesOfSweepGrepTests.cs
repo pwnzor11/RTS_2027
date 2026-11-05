@@ -60,7 +60,8 @@ public sealed partial class RulesOfSweepGrepTests
         ("View/PlayerView.cs", "Setup.Rules.Terrain"),
         // M7-06: the [shipments] block is global (not upgradable); the tender type index and naval terrain are table lookups
         ("Simulation.Shipments.cs", "Setup.Rules.Shipments"), ("Simulation.Shipments.cs", "Setup.Rules.Vehicles"),
-        ("Simulation.Shipments.cs", "Setup.Rules.Terrain"), ("View/PlayerView.cs", "Setup.Rules.Shipments.Enabled"),
+        ("Simulation.Shipments.cs", "Setup.Rules.Terrain"), ("Simulation.VehiclePassengers.cs", "Setup.Rules.Terrain"), ("Simulation.VehiclePassengers.cs", "Setup.Rules.Terrain.Landing"),   // M7-04b: terrain is not upgradable
+         ("View/PlayerView.cs", "Setup.Rules.Shipments.Enabled"),
         ("Simulation.Landing.cs", "Setup.Rules.Terrain"),   // M7-04: terrain table lookups, not upgradable
     };
 
