@@ -60,6 +60,10 @@ public sealed class AudioComponent : GameComponent
     private int _lastTick = -1;
     private IReadOnlyList<LeptonCoord> _previousProjectiles = Array.Empty<LeptonCoord>();
     private PlayerHud? _previousHud;
+    private Rts.Game.Veterancy.PromotionTracker _promotions = new();   // VET-5: rank rises for the Promotion sound
+    private readonly List<Rts.Sim.View.ViewActor> _rankScratch = new();
+    private readonly List<(Rts.Game.Veterancy.RankKey Key, int Rank)> _ranks = new();
+    private readonly List<Rts.Game.Veterancy.RankKey> _promoted = new();
 
     /// <summary>Creates the component.</summary>
     public AudioComponent(Microsoft.Xna.Framework.Game game, AudioDirector director, ScreenStack screens)
@@ -82,6 +86,7 @@ public sealed class AudioComponent : GameComponent
         {
             _source = source;
             _lastTick = -1;
+            _promotions = new Rts.Game.Veterancy.PromotionTracker();   // VET-5: a new game starts with no remembered ranks
             _previousHud = null;
             _previousProjectiles = Array.Empty<LeptonCoord>();
         }
@@ -94,6 +99,9 @@ public sealed class AudioComponent : GameComponent
             GameResult result = hud.Defeated ? GameResult.Lost
                 : winner >= 0 && winner == source.Sim.Setup.TeamOf(local) ? GameResult.Won
                 : GameResult.Running;
+            // VET-5: rank rises at this tick (the view is read between Steps, as the renderer does).
+            Rts.Game.Veterancy.RankLookup.Fill(source.Sim.ViewFor(local), _rankScratch, _ranks);
+            _promotions.Update(source.Current.Tick, _ranks, _promoted);
             if (_lastTick >= 0 || source.Current.Tick == source.Previous.Tick)
             {
                 _director.Process(new AudioFrame(source.Previous, source.Current, local)
@@ -104,6 +112,7 @@ public sealed class AudioComponent : GameComponent
                     PreviousProjectiles = _previousProjectiles,
                     Projectiles = source.Projectiles,
                     Result = result,
+                    Promotions = _promoted,
                 });
             }
 

@@ -45,6 +45,8 @@ public enum AudioEventKind
     LowFunds,
     /// <summary>One of the player's actors was hit.</summary>
     UnderAttack,
+    /// <summary>A vehicle or soldier rose in veterancy rank (VET-5). The client detects it from the views; the sim sends no event.</summary>
+    Promotion,
 }
 
 /// <summary>Event names used in data/audio/sounds.toml.</summary>
