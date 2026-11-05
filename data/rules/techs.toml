@@ -303,3 +303,272 @@ op = "set"
 target = "lb_drifter_brute"
 attr = "rad_resist_permille"
 value = 900
+
+# M7-08: Expedition upgrade effects (design 07 §5 Upgrades). Every value is (tune), assumed -- confirm. mul is per-mille (1000 = unchanged);
+# a lower rate_of_fire or vet threshold is better.
+
+[[effect]]
+id = "exp_fx_hardened_hulls_launch"
+op = "mul"
+target = "exp_launch"
+attr = "max_health"
+value = 1150
+
+[[effect]]
+id = "exp_fx_hardened_hulls_landing_craft"
+op = "mul"
+target = "exp_landing_craft"
+attr = "max_health"
+value = 1150
+
+[[effect]]
+id = "exp_fx_hardened_hulls_destroyer"
+op = "mul"
+target = "exp_destroyer"
+attr = "max_health"
+value = 1150
+
+[[effect]]
+id = "exp_fx_hardened_hulls_missile_sub"
+op = "mul"
+target = "exp_missile_sub"
+attr = "max_health"
+value = 1150
+
+[[effect]]
+id = "exp_fx_hardened_hulls_cruiser"
+op = "mul"
+target = "exp_cruiser"
+attr = "max_health"
+value = 1150
+
+[[effect]]
+id = "exp_fx_hardened_hulls_carrier"
+op = "mul"
+target = "exp_carrier"
+attr = "max_health"
+value = 1150
+
+[[effect]]
+id = "exp_fx_hardened_hulls_minelayer"
+op = "mul"
+target = "exp_minelayer"
+attr = "max_health"
+value = 1150
+
+[[effect]]
+id = "exp_fx_hardened_hulls_supply_tender"
+op = "mul"
+target = "exp_supply_tender"
+attr = "max_health"
+value = 1150
+
+[[effect]]
+id = "exp_fx_hardened_hulls_command_ship"
+op = "mul"
+target = "exp_command_ship"
+attr = "max_health"
+value = 1150
+
+[[effect]]
+id = "exp_fx_vacuum_cores_glide_cannon"
+op = "mul"
+target = "weapon:exp_glide_cannon"
+attr = "rate_of_fire"
+value = 850
+
+[[effect]]
+id = "exp_fx_vacuum_cores_barrage_rockets"
+op = "mul"
+target = "weapon:exp_barrage_rockets"
+attr = "rate_of_fire"
+value = 850
+
+[[effect]]
+id = "exp_fx_vacuum_cores_gunship_rockets"
+op = "mul"
+target = "weapon:exp_gunship_rockets"
+attr = "rate_of_fire"
+value = 850
+
+[[effect]]
+id = "exp_fx_composite_skimmer"
+op = "mul"
+target = "exp_skimmer"
+attr = "max_health"
+value = 1150
+
+[[effect]]
+id = "exp_fx_composite_hoverlander"
+op = "mul"
+target = "exp_hoverlander"
+attr = "max_health"
+value = 1150
+
+[[effect]]
+id = "exp_fx_composite_glide_tank"
+op = "mul"
+target = "exp_glide_tank"
+attr = "max_health"
+value = 1150
+
+[[effect]]
+id = "exp_fx_composite_sparker"
+op = "mul"
+target = "exp_sparker"
+attr = "max_health"
+value = 1150
+
+[[effect]]
+id = "exp_fx_composite_repair_hover"
+op = "mul"
+target = "exp_repair_hover"
+attr = "max_health"
+value = 1150
+
+[[effect]]
+id = "exp_fx_composite_survey_hover"
+op = "mul"
+target = "exp_survey_hover"
+attr = "max_health"
+value = 1150
+
+[[effect]]
+id = "exp_fx_composite_barrage_lander"
+op = "mul"
+target = "exp_barrage_lander"
+attr = "max_health"
+value = 1150
+
+[[effect]]
+id = "exp_fx_composite_marine"
+op = "mul"
+target = "exp_marine"
+attr = "max_health"
+value = 1150
+
+[[effect]]
+id = "exp_fx_composite_pioneer"
+op = "mul"
+target = "exp_pioneer"
+attr = "max_health"
+value = 1150
+
+[[effect]]
+id = "exp_fx_composite_diver"
+op = "mul"
+target = "exp_diver"
+attr = "max_health"
+value = 1150
+
+[[effect]]
+id = "exp_fx_composite_pathfinder"
+op = "mul"
+target = "exp_pathfinder"
+attr = "max_health"
+value = 1150
+
+[[effect]]
+id = "exp_fx_composite_ironbound"
+op = "mul"
+target = "exp_ironbound"
+attr = "max_health"
+value = 1150
+
+[[effect]]
+id = "exp_fx_guided_cruiser_gun_damage"
+op = "mul"
+target = "weapon:exp_cruiser_gun"
+attr = "damage"
+value = 1150
+
+[[effect]]
+id = "exp_fx_guided_cruiser_gun_range"
+op = "mul"
+target = "weapon:exp_cruiser_gun"
+attr = "range"
+value = 1100
+
+[[effect]]
+id = "exp_fx_guided_destroyer_gun_damage"
+op = "mul"
+target = "weapon:exp_destroyer_gun"
+attr = "damage"
+value = 1150
+
+[[effect]]
+id = "exp_fx_guided_barrage_rockets_damage"
+op = "mul"
+target = "weapon:exp_barrage_rockets"
+attr = "damage"
+value = 1150
+
+[[effect]]
+id = "exp_fx_guided_sub_missile_damage"
+op = "mul"
+target = "weapon:exp_sub_missile"
+attr = "damage"
+value = 1150
+
+[[effect]]
+id = "exp_fx_sonar_nets_picket"
+op = "mul"
+target = "exp_picket"
+attr = "sight"
+value = 1300
+
+[[effect]]
+id = "exp_fx_veteran_drill_marine"
+op = "mul"
+target = "exp_marine"
+attr = "vet_threshold_permille"
+value = 800
+
+[[effect]]
+id = "exp_fx_veteran_drill_ironbound"
+op = "mul"
+target = "exp_ironbound"
+attr = "vet_threshold_permille"
+value = 800
+
+[[effect]]
+id = "exp_fx_veteran_drill_glide_tank"
+op = "mul"
+target = "exp_glide_tank"
+attr = "vet_threshold_permille"
+value = 800
+
+[[effect]]
+id = "exp_fx_veteran_drill_destroyer"
+op = "mul"
+target = "exp_destroyer"
+attr = "vet_threshold_permille"
+value = 800
+
+[[effect]]
+id = "exp_fx_veteran_drill_cruiser"
+op = "mul"
+target = "exp_cruiser"
+attr = "vet_threshold_permille"
+value = 800
+
+[[effect]]
+id = "exp_fx_veteran_drill_jet"
+op = "mul"
+target = "exp_jet"
+attr = "vet_threshold_permille"
+value = 800
+
+[[effect]]
+id = "exp_fx_veteran_drill_bomber"
+op = "mul"
+target = "exp_bomber"
+attr = "vet_threshold_permille"
+value = 800
+
+[[effect]]
+id = "exp_fx_veteran_drill_missile_sub"
+op = "mul"
+target = "exp_missile_sub"
+attr = "vet_threshold_permille"
+value = 800

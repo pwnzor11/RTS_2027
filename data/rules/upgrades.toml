@@ -155,3 +155,73 @@ build_time = 150  # (tune)
 prerequisites = []
 tier = 3
 repairs_vehicles_at_range = true
+
+# M7-08: Expedition upgrades (design 07 §5), researched at exp_plotting_room (tier 2) and exp_core_hall (tier 3). Costs and effects are (tune),
+# assumed -- confirm. Tier provides are appended by tier sugar.
+
+[exp_up_sonar_nets]   # Sonar Nets: picket reach +30 % (sight stands in for sonar)
+faction = "expedition"
+cost = 800  # (tune)
+build_time = 100  # (tune)
+prerequisites = []
+tier = 2
+effects = ["exp_fx_sonar_nets_picket"]
+# TODO M7-05: picket sonar radius +, submarines revealed to the team
+
+[exp_up_hardened_hulls]   # Hardened Hulls: ships +15 % health
+faction = "expedition"
+cost = 1000  # (tune)
+build_time = 120  # (tune)
+prerequisites = []
+tier = 2
+effects = ["exp_fx_hardened_hulls_launch", "exp_fx_hardened_hulls_landing_craft", "exp_fx_hardened_hulls_destroyer", "exp_fx_hardened_hulls_missile_sub", "exp_fx_hardened_hulls_cruiser", "exp_fx_hardened_hulls_carrier", "exp_fx_hardened_hulls_minelayer", "exp_fx_hardened_hulls_supply_tender", "exp_fx_hardened_hulls_command_ship"]
+
+[exp_up_vacuum_cores]   # Vacuum Cores: faster fire for hover and rocket guns
+faction = "expedition"
+cost = 1500  # (tune)
+build_time = 150  # (tune)
+prerequisites = []
+tier = 3
+effects = ["exp_fx_vacuum_cores_glide_cannon", "exp_fx_vacuum_cores_barrage_rockets", "exp_fx_vacuum_cores_gunship_rockets"]
+
+[exp_up_composite_armour]   # Composite Armour: hover and infantry +15 % health
+faction = "expedition"
+cost = 1500  # (tune)
+build_time = 150  # (tune)
+prerequisites = []
+tier = 3
+effects = ["exp_fx_composite_skimmer", "exp_fx_composite_hoverlander", "exp_fx_composite_glide_tank", "exp_fx_composite_sparker", "exp_fx_composite_repair_hover", "exp_fx_composite_survey_hover", "exp_fx_composite_barrage_lander", "exp_fx_composite_marine", "exp_fx_composite_pioneer", "exp_fx_composite_diver", "exp_fx_composite_pathfinder", "exp_fx_composite_ironbound"]
+
+[exp_up_guided_shells]   # Guided Shells: heavier, longer guns
+faction = "expedition"
+cost = 1500  # (tune)
+build_time = 150  # (tune)
+prerequisites = []
+tier = 3
+effects = ["exp_fx_guided_cruiser_gun_damage", "exp_fx_guided_cruiser_gun_range", "exp_fx_guided_destroyer_gun_damage", "exp_fx_guided_barrage_rockets_damage", "exp_fx_guided_sub_missile_damage"]
+
+[exp_up_fast_charging]   # Fast Charging: shipment interval -15 %
+faction = "expedition"
+cost = 1200  # (tune)
+build_time = 120  # (tune)
+prerequisites = []
+tier = 3
+effects = []
+# TODO M7-06: no effect attribute for [shipments] interval_ticks yet; needs a player-level effect
+
+[exp_up_deep_survey]   # Deep Survey: skimmer capacity +
+faction = "expedition"
+cost = 800  # (tune)
+build_time = 100  # (tune)
+prerequisites = []
+tier = 2
+effects = []
+# TODO M7-14: effect attribute harvest_capacity does not exist (UnitAttrs); empty until the lead adds it
+
+[exp_up_veteran_drill]   # Veteran Drill: promotion thresholds -20 % on the main fighting types
+faction = "expedition"
+cost = 1200  # (tune)
+build_time = 120  # (tune)
+prerequisites = []
+tier = 3
+effects = ["exp_fx_veteran_drill_marine", "exp_fx_veteran_drill_ironbound", "exp_fx_veteran_drill_glide_tank", "exp_fx_veteran_drill_destroyer", "exp_fx_veteran_drill_cruiser", "exp_fx_veteran_drill_jet", "exp_fx_veteran_drill_bomber", "exp_fx_veteran_drill_missile_sub"]

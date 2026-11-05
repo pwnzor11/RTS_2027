@@ -164,3 +164,63 @@ storm_ticks = 800   # (tune) 40 s at 20 ticks/s
 storm_contaminate_step = 4   # (tune) low steps, never above the cap
 storm_contaminate_cap = 64   # design 06 §6: denies building but does not kill
 storm_speed_permille = 600   # (tune) enemy vehicles slowed to 60 percent
+
+# M7-08: Expedition warheads (design 07 §6.4). versus order: Unarmored, Light, Heavy, Structure, Fortified, ShipLight, ShipHeavy, Submerged.
+# Only warheads that can reach a submerged vessel (depth charge, via a targets = "naval_submerged" weapon) carry a real Submerged column;
+# the rest are 0 there (they cannot be fired at a submerged target anyway). All numbers (tune), assumed -- confirm.
+
+[exp_small_arms]   # (tune) marine, pathfinder, launch/pillbox rifles: good vs infantry, light vs hulls
+versus = [100, 60, 20, 10, 5, 70, 30, 0]
+splash = 0
+hits_allies = false
+
+[exp_guided_ap]   # (tune) Glide Tank cannon, Ironbound pod: anti-armour, decent vs ships
+versus = [25, 85, 100, 60, 40, 90, 70, 0]
+splash = 0
+hits_allies = false
+
+[exp_aa_missile]   # (tune) Sparker, SAM, jet missiles, Carrier AA: against aircraft
+versus = [60, 100, 80, 40, 40, 80, 60, 0]
+splash = 0
+hits_allies = false
+
+[exp_naval_shell]   # (tune) Destroyer and Gun Battery guns: all-round, strong vs ships
+versus = [80, 90, 80, 100, 70, 100, 90, 0]
+splash = 0
+hits_allies = false
+
+[exp_naval_shell_he]   # (tune) Cruiser bombardment: area, strong vs structures
+versus = [100, 85, 70, 130, 90, 100, 100, 0]
+splash = 1
+hits_allies = true
+
+[exp_missile_strike]   # (tune) Missile Submarine: guided anti-ship and land strike
+versus = [50, 80, 100, 120, 80, 110, 130, 0]
+splash = 0
+hits_allies = false
+
+[exp_rocket_salvo]   # (tune) Barrage Lander and Gunship rockets: area vs ground
+versus = [100, 80, 60, 70, 50, 80, 60, 0]
+splash = 1
+hits_allies = true
+
+[exp_bomb]   # (tune) Bomber: heavy vs buildings and ships
+versus = [60, 70, 90, 160, 120, 100, 150, 0]
+splash = 1
+hits_allies = true
+
+[exp_charge]   # (tune) Combat Diver: shaped charge on hulls and quays
+versus = [0, 0, 0, 150, 100, 150, 150, 0]
+splash = 0
+hits_allies = false
+
+[exp_depth_charge]   # (tune) Patrol Launch: only a submerged vessel feels it fully
+versus = [0, 0, 0, 0, 0, 40, 30, 100]
+splash = 1
+hits_allies = false
+
+[exp_salvo_array_blast]   # (tune) Salvo Array (superweapon "exp_salvo_array" reads "<superweapon>_blast"): flat damage in the splash
+versus = [100, 100, 100, 100, 100, 100, 100, 100]
+splash = 1
+hits_allies = false
+# TODO M7-12: 12 missiles over 6 s with a 4 s launch warning; the blast here is one flat hit

@@ -359,7 +359,7 @@ public sealed class SchemaV3Tests
         Assert.Equal(SkirmishStart.StartBuildingId, r.Sim.Buildings[conyard].Id);
         Assert.Empty(units);
         // M4-07: 13 tiered upgrades joined auth_grouting (design 08 §4: 7 Authority incl. grouting, 7 Directorate); M6-08 adds 6 Left Behind.
-        Assert.Equal(20, r.Sim.Upgrades.Count);
+        Assert.Equal(20 + 8, r.Sim.Upgrades.Count);   // M7-08 adds 8 Expedition upgrades
         Assert.Contains(r.Sim.Upgrades, u => u.Id == "auth_grouting");
         Assert.Equal(7, r.Sim.Upgrades.Count(u => u.Faction == Faction.Authority));
         Assert.Equal(7, r.Sim.Upgrades.Count(u => u.Faction == Faction.Directorate));

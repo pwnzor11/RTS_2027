@@ -578,3 +578,384 @@ crusher = false
 cost = 500  # (tune)
 prerequisites = ["lb_rotor_pad"]
 death_weapon = "lb_kite_bomb"
+
+# M7-08: Expedition vehicles, hovercraft, ships and aircraft (docs/design/07_expedition.md §5, 11_m7_plan §3, D-087, D-124..D-127). PLACEHOLDER ART:
+# no sprite manifests yet, the generated placeholder is drawn. The faction is NOT playable yet (RuleCounts.PlayableFactions stays 3).
+# Every number below is (tune) and assumed -- confirm (owner review: docs/balance/m7_08_expedition_data.md). Only fields the loader has
+# today are used; mechanics still being built carry a "TODO M7-0X" line. Dropped on purpose (landlocked rule, 11 §2.5): exp_skyfreighter.
+# Ship armour: ship_light for small hulls, ship_heavy for the destroyer and up, "submerged" for the submarine (single armour field).
+# Supply follows the cost bands (13 §2.1) unless a `supply` override is given. Ships are built at exp_quay / exp_shipyard, air at exp_flight_deck.
+# TODO M7-04: ships are produced from the shared "vehicle" lane (hover yard, quay, shipyard); the exit cell of a water yard must be water
+#   (D-138 follow-up) -- until then a ship built while a hover yard is the primary factory would leave on land.
+
+[exp_skimmer]   # PLACEHOLDER ART; hover harvester, amphibious, low capacity (income model: docs/balance/m7_08_expedition_data.md)
+faction = "expedition"
+tier = 1
+speed = 26  # (tune)
+max_health = 220  # (tune)
+locomotion = "hover"
+turn_rate = 12  # (tune)
+armor = "light"
+sight = 5  # (tune)
+primary_weapon = ""
+has_turret = false
+turret_turn_rate = 0
+crusher = false
+cost = 500  # (tune)
+prerequisites = ["exp_dredge_works"]
+harvest_capacity = 5  # (tune) a quarter of a Scraper (20); fast, so the round trip is short
+supply = 1  # (tune) harvesters cost 1 supply (design 13 §2.1)
+# TODO M7-04: harvesting ash in shallow water needs the sim to let a hover harvester work Shallow cells (not data)
+
+[exp_hoverlander]   # PLACEHOLDER ART; amphibious APC
+faction = "expedition"
+tier = 1
+speed = 34  # (tune)
+max_health = 260  # (tune)
+locomotion = "hover"
+turn_rate = 12  # (tune)
+armor = "light"
+sight = 4  # (tune)
+primary_weapon = ""
+has_turret = false
+turret_turn_rate = 0
+crusher = false
+cost = 450  # (tune)
+prerequisites = ["exp_hover_yard"]
+passengers = 5  # design 07 §5
+
+[exp_survey_hover]   # PLACEHOLDER ART; scout hover
+faction = "expedition"
+tier = 1
+speed = 44  # (tune)
+max_health = 100  # (tune)
+locomotion = "hover"
+turn_rate = 16  # (tune)
+armor = "light"
+sight = 9  # (tune)
+primary_weapon = ""
+has_turret = false
+turret_turn_rate = 0
+crusher = false
+cost = 250  # (tune)
+prerequisites = ["exp_hover_yard"]
+# TODO M7-14: "reveals ash richness" is a view/UI feature, no rules field
+
+[exp_glide_tank]   # PLACEHOLDER ART; fast hover medium tank, guided cannon (pilot unit for art, M7-11)
+faction = "expedition"
+tier = 2
+speed = 32  # (tune)
+max_health = 380  # (tune)
+locomotion = "hover"
+turn_rate = 10  # (tune)
+armor = "light"
+sight = 6  # (tune)
+primary_weapon = "exp_glide_cannon"
+has_turret = true
+turret_turn_rate = 14  # (tune)
+crusher = false
+cost = 900  # (tune)
+prerequisites = ["exp_hover_yard"]
+
+[exp_sparker]   # PLACEHOLDER ART; hover anti-air, guided missile
+faction = "expedition"
+tier = 2
+speed = 30  # (tune)
+max_health = 220  # (tune)
+locomotion = "hover"
+turn_rate = 10  # (tune)
+armor = "light"
+sight = 7  # (tune)
+primary_weapon = "exp_sparker_missile"
+has_turret = true
+turret_turn_rate = 14  # (tune)
+crusher = false
+cost = 600  # (tune)
+prerequisites = ["exp_hover_yard"]
+
+[exp_repair_hover]   # PLACEHOLDER ART; Mender: repair aura for hovercraft and ships
+faction = "expedition"
+tier = 2
+speed = 30  # (tune)
+max_health = 200  # (tune)
+locomotion = "hover"
+turn_rate = 10  # (tune)
+armor = "light"
+sight = 4  # (tune)
+primary_weapon = ""
+has_turret = false
+turret_turn_rate = 0
+crusher = false
+cost = 550  # (tune)
+prerequisites = ["exp_hover_yard"]
+aura_radius = 3  # (tune)
+aura_repair_permille = 10  # (tune) permille of max HP per 10 ticks
+aura_targets = ["exp_skimmer", "exp_hoverlander", "exp_survey_hover", "exp_glide_tank", "exp_sparker", "exp_repair_hover", "exp_barrage_lander", "exp_launch", "exp_landing_craft", "exp_destroyer", "exp_missile_sub", "exp_cruiser", "exp_carrier", "exp_minelayer", "exp_command_ship"]
+# TODO M7-09: bay_repair (units inside a landing craft or Skyhook heal slowly) has no rules field yet
+
+[exp_barrage_lander]   # PLACEHOLDER ART; tracked rocket artillery, loads onto a landing craft
+faction = "expedition"
+tier = 3
+speed = 14  # (tune)
+max_health = 300  # (tune)
+locomotion = "tracked"
+turn_rate = 6  # (tune)
+armor = "heavy"
+sight = 5  # (tune)
+primary_weapon = "exp_barrage_rockets"
+has_turret = true
+turret_turn_rate = 8  # (tune)
+crusher = false
+cost = 1100  # (tune)
+prerequisites = ["exp_hover_yard"]
+
+# Ships
+[exp_launch]   # PLACEHOLDER ART; Patrol Launch: cheap fast scout and depth-charge boat
+faction = "expedition"
+tier = 1
+speed = 40  # (tune)
+max_health = 160  # (tune)
+locomotion = "naval"
+turn_rate = 14  # (tune)
+armor = "ship_light"
+sight = 8  # (tune)
+primary_weapon = "exp_launch_charge"
+has_turret = false
+turret_turn_rate = 0
+crusher = false
+cost = 300  # (tune)
+prerequisites = ["exp_quay"]
+# TODO M7-05: a second (gun) weapon slot for the Launch does not exist; only the depth charge is wired
+
+[exp_landing_craft]   # PLACEHOLDER ART; transport, beachable
+faction = "expedition"
+tier = 1
+speed = 24  # (tune)
+max_health = 300  # (tune)
+locomotion = "naval"
+turn_rate = 8  # (tune)
+armor = "ship_light"
+sight = 5  # (tune)
+primary_weapon = ""
+has_turret = false
+turret_turn_rate = 0
+crusher = false
+cost = 500  # (tune)
+prerequisites = ["exp_quay"]
+passengers = 8  # design 07 §5 (8 infantry)
+unload_ticks = 10  # (tune) one passenger onto the shore every half second
+# TODO M7-04: "or 2 vehicles (4 slots)" and landing only on `landing` cells need the landing mechanic; passengers is a flat count today
+
+[exp_supply_tender]   # PLACEHOLDER ART; convoy ship spawned by [shipments]; unarmed. Not meant to be built: gated behind the Anchorage at a prohibitive cost
+faction = "expedition"
+tier = 1
+speed = 16  # (tune)
+max_health = 250  # (tune)
+locomotion = "naval"
+turn_rate = 6  # (tune)
+armor = "ship_heavy"
+sight = 5  # (tune)
+primary_weapon = ""
+has_turret = false
+turret_turn_rate = 0
+crusher = false
+cost = 6000  # (tune)
+prerequisites = ["exp_anchorage"]
+supply = 0  # (tune) spawned by the home supply line, never counts against the cap
+
+[exp_destroyer]   # PLACEHOLDER ART; all-round warship
+faction = "expedition"
+tier = 2
+speed = 28  # (tune)
+max_health = 450  # (tune)
+locomotion = "naval"
+turn_rate = 7  # (tune)
+armor = "ship_heavy"
+sight = 7  # (tune)
+primary_weapon = "exp_destroyer_gun"
+has_turret = true
+turret_turn_rate = 10  # (tune)
+crusher = false
+cost = 900  # (tune)
+prerequisites = ["exp_shipyard"]
+sonar_radius = 6  # (tune) detects submerged vessels (M7-05 machinery)
+# TODO M7-05: depth charge and AA secondary weapons (design 07 §5) need a second weapon slot
+
+[exp_missile_sub]   # PLACEHOLDER ART; Missile Submarine, dive toggle via Deploy
+faction = "expedition"
+tier = 2
+speed = 22  # (tune)
+max_health = 320  # (tune)
+locomotion = "naval"
+turn_rate = 6  # (tune)
+armor = "submerged"
+sight = 5  # (tune)
+primary_weapon = "exp_sub_missile"
+has_turret = false
+turret_turn_rate = 0
+crusher = false
+cost = 1100  # (tune)
+prerequisites = ["exp_shipyard"]
+deep_only = true
+submerges = true
+# TODO M7-05: surfaced vs submerged armour class (one `armor` field only), dive timing, torpedoes
+
+[exp_minelayer]   # PLACEHOLDER ART; lays sea mines (optional, cut last, D-124)
+faction = "expedition"
+tier = 2
+speed = 24  # (tune)
+max_health = 220  # (tune)
+locomotion = "naval"
+turn_rate = 8  # (tune)
+armor = "ship_light"
+sight = 5  # (tune)
+primary_weapon = ""
+has_turret = false
+turret_turn_rate = 0
+crusher = false
+cost = 500  # (tune)
+prerequisites = ["exp_shipyard"]
+# TODO M7-05: sea-mine laying and sweeping have no rules fields; unarmed until the mine mechanic exists
+
+[exp_cruiser]   # PLACEHOLDER ART; large ship, shore bombardment, 1-cell body drawn 2x
+faction = "expedition"
+tier = 3
+speed = 16  # (tune)
+max_health = 1200  # (tune)
+locomotion = "naval"
+turn_rate = 4  # (tune)
+armor = "ship_heavy"
+sight = 8  # (tune)
+primary_weapon = "exp_cruiser_gun"
+has_turret = true
+turret_turn_rate = 6  # (tune)
+crusher = false
+cost = 1700  # (tune)
+prerequisites = ["exp_drydock"]
+draw_scale_permille = 2000  # (tune) D-124
+deep_only = true
+
+[exp_carrier]   # PLACEHOLDER ART; produces and recovers four aircraft at sea
+faction = "expedition"
+tier = 3
+speed = 12  # (tune)
+max_health = 1500  # (tune)
+locomotion = "naval"
+turn_rate = 3  # (tune)
+armor = "ship_heavy"
+sight = 8  # (tune)
+primary_weapon = "exp_carrier_aa"
+has_turret = true
+turret_turn_rate = 8  # (tune)
+crusher = false
+cost = 2200  # (tune)
+prerequisites = ["exp_drydock"]
+draw_scale_permille = 2400  # (tune) D-124
+deep_only = true
+aircraft_slots = 4  # design 07 §5
+sortie_ticks = 200  # (tune)
+# TODO M7-09: which aircraft fit the hangar, build-in-hangar and return/repair missions
+
+[exp_command_ship]   # PLACEHOLDER ART; start unit, Deploy ashore turns it into the Landing Depot. Not meant to be built: gated behind the Drydock at a prohibitive cost
+faction = "expedition"
+tier = 1
+speed = 14  # (tune)
+max_health = 1000  # (tune)
+locomotion = "naval"
+turn_rate = 4  # (tune)
+armor = "ship_heavy"
+sight = 7  # (tune)
+primary_weapon = ""
+has_turret = false
+turret_turn_rate = 0
+crusher = false
+cost = 6000  # (tune)
+prerequisites = ["exp_drydock"]
+draw_scale_permille = 1800  # (tune) D-124
+deploys_into = "exp_landing_depot"
+supply = 0  # (tune) the base amount comes from the depot (design 13 §2.4)
+# TODO M7-04: Deploy only on a landing-coast cell (shore cell next to shallow water); not enforced by data
+
+# Aircraft: built at exp_flight_deck (tier 2), so the T1 scout of the design (Gyro) is tier 2 here.
+[exp_gyro]   # PLACEHOLDER ART; rotary scout and designator
+faction = "expedition"
+tier = 2
+speed = 30  # (tune)
+max_health = 100  # (tune)
+locomotion = "air"
+turn_rate = 10  # (tune)
+armor = "light"
+sight = 10  # (tune)
+primary_weapon = ""
+has_turret = false
+turret_turn_rate = 0
+crusher = false
+cost = 350  # (tune)
+prerequisites = ["exp_flight_deck"]
+# TODO M7-14: designating a ground cell for naval gunfire uses Attack on a cell (no rules field)
+
+[exp_skyhook]   # PLACEHOLDER ART; VTOL transport
+faction = "expedition"
+tier = 2
+speed = 34  # (tune)
+max_health = 220  # (tune)
+locomotion = "air"
+turn_rate = 10  # (tune)
+armor = "light"
+sight = 5  # (tune)
+primary_weapon = ""
+has_turret = false
+turret_turn_rate = 0
+crusher = false
+cost = 700  # (tune)
+prerequisites = ["exp_flight_deck"]
+passengers = 6  # design 07 §5
+# TODO M7-04: airlift of 2 light vehicles and beacon delivery
+
+[exp_jet]   # PLACEHOLDER ART; air-superiority fighter
+faction = "expedition"
+tier = 2
+speed = 60  # (tune)
+max_health = 160  # (tune)
+locomotion = "air"
+turn_rate = 12  # (tune)
+armor = "light"
+sight = 8  # (tune)
+primary_weapon = "exp_jet_missile"
+has_turret = false
+turret_turn_rate = 0
+crusher = false
+cost = 1000  # (tune)
+prerequisites = ["exp_flight_deck"]
+
+[exp_gunship]   # PLACEHOLDER ART; rotary ground attack
+faction = "expedition"
+tier = 2
+speed = 30  # (tune)
+max_health = 260  # (tune)
+locomotion = "air"
+turn_rate = 8  # (tune)
+armor = "light"
+sight = 7  # (tune)
+primary_weapon = "exp_gunship_rockets"
+has_turret = false
+turret_turn_rate = 0
+crusher = false
+cost = 900  # (tune)
+prerequisites = ["exp_flight_deck"]
+
+[exp_bomber]   # PLACEHOLDER ART; heavy bombs against buildings and ships
+faction = "expedition"
+tier = 3
+speed = 44  # (tune)
+max_health = 200  # (tune)
+locomotion = "air"
+turn_rate = 6  # (tune)
+armor = "light"
+sight = 6  # (tune)
+primary_weapon = "exp_bomb_run"
+has_turret = false
+turret_turn_rate = 0
+crusher = false
+cost = 1100  # (tune)
+prerequisites = ["exp_flight_deck"]
