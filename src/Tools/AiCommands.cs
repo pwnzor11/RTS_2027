@@ -28,7 +28,7 @@ public static class AiCommands
         "       ai duel --a <spec> --b <spec> [--count 1] [--count-b N] [--ticks 3000] [--gap 12]   (spec = id[:n][,id[:n]...], e.g. auth_tank:3,auth_turret:1)\n" +
         "  <tier> is 1..5 or recruit|regular|veteran|elite|commissar (default regular). Seeds are first..first+N-1 (first defaults to 1).";
 
-    private static readonly string[] MatchOptions = ["a", "b", "seeds", "ticks", "size", "out", "record-dir", "flat", "starts", "start", "first", "faction-a", "faction-b", "trace", "game"];
+    private static readonly string[] MatchOptions = ["a", "b", "seeds", "ticks", "size", "out", "record-dir", "flat", "starts", "start", "first", "faction-a", "faction-b", "trace", "game", "extras"];
     private static readonly string[] TimelineOptions = ["a", "b", "seed", "ticks", "size", "swap", "trace", "dump", "faction-a", "faction-b"];
     private static readonly string[] DuelOptions = ["a", "b", "count", "count-b", "ticks", "gap"];
     private static readonly string[] MatrixOptions = ["ai", "tiers", "seeds", "ticks", "size", "out", "faction", "players", "biome"];
@@ -78,6 +78,8 @@ public static class AiCommands
         string? recordDir = flags.TryGetValue("record-dir", out string? rd) ? rd : null;
         // M4-16 round 3: --trace N --game G (with --first S --seeds 1) prints a per-side diagnostic line every N ticks for game G of the pair only
         if (!Int(flags, "trace", 0, out _traceEvery) || !Int(flags, "game", 0, out _traceGame)) return UsageError("--trace and --game must be integers");
+        _extras = flags.ContainsKey("extras");
+        _extraSum = new long[2, 4];
         var clock = Stopwatch.StartNew();
         MatchTally tally;
         try { tally = PlayPair(world!, a!, b!, seeds, ticks, size, recordDir, verbose: true, flat: flags.ContainsKey("flat"), startMode: flags.TryGetValue("starts", out string? sm) ? sm : "alt", start: army ? AiStartMode.Army : AiStartMode.Economy, firstSeed: firstSeed); }
@@ -90,6 +92,9 @@ public static class AiCommands
 
         string table = MatchTable(a!, b!, tally, seeds, ticks, size);
         Console.WriteLine(table);
+        if (_extras)
+            for (int side = 0; side < 2; side++)
+                Console.WriteLine($"Left Behind extras, side {(side == 0 ? "A" : "B")}: games with a Hauler {_extraSum[side, 0]}/{tally.Games}, salvage orders {_extraSum[side, 1]}, ash drained from wrecks {_extraSum[side, 2]}, Second Drift orders {_extraSum[side, 3]}");
         PrintSpeed(tally.Ticks, clock);
         return WriteOut(flags, table);
     }
@@ -741,11 +746,16 @@ public static class AiCommands
                 FileStream? replay = recordDir is null ? null
                     : File.Create(Path.Combine(recordDir, $"{a.Label}_vs_{b.Label}_seed{s}_g{g + 1}.rtsreplay".Replace(':', '-')));
                 AiGameResult r;
+                var lbx = _extras ? new LeftBehindExtras(w.Rules) : null;
+                MatchTrace? trace = _traceEvery > 0 ? new MatchTrace(w.Rules, _traceEvery) : null;
+                Action<Simulation, IAiPlayer, IAiPlayer, byte, byte>? obs = null;
+                if (trace is not null || lbx is not null)
+                    obs = (sim, x, y, sa, sb) => { trace?.Observe(sim, x, y, sa, sb); lbx?.Observe(sim, x, y, sa, sb); };
                 // M4-16: each game of the pair gets its own game seed (same map), so the two games are independent samples
                 // rather than one mirrored game counted twice (docs/balance/m4_16_start_bias.md).
                 using (replay) r = AiMatchRunner.Play(map, w.Rules, w.RulesHash, (ulong)(s * 16 + g), a, b, aInSlot0, ticks, replay,
                     BuildInfo.Version, replay is null ? null : RulesBundle.ReadDirectory(w.RulesDir), swapSlots, start,
-                    _traceEvery > 0 ? new MatchTrace(w.Rules, _traceEvery).Observe : null);
+                    obs);
                 tally.Games++;
                 tally.Ticks += r.EndTick;
                 tally.EndTickSum += r.EndTick;
@@ -763,12 +773,21 @@ public static class AiCommands
                     if (r.ValueA > r.ValueB) tally.DrawsAAhead++;
                     else if (r.ValueB > r.ValueA) tally.DrawsBAhead++;
                 }
+                int slotOfA = aInSlot0 ? 0 : 1;
+                if (lbx is not null)
+                    for (int side = 0; side < 2; side++)
+                    {
+                        var e = lbx.Of(side == 0 ? slotOfA : 1 - slotOfA);
+                        _extraSum[side, 0] += e.Hauler ? 1 : 0; _extraSum[side, 1] += e.Orders; _extraSum[side, 2] += e.Drained; _extraSum[side, 3] += e.Storms;
+                    }
                 if (verbose)
                 {
                     string result = r.Winner == 0 ? "A wins" : r.Winner == 1 ? "B wins" : "draw";
                     Console.WriteLine($"seed {s} game {g + 1} (A in slot {(aInSlot0 ? 0 : 1)}, A at start {(aInSlot0 != swapSlots ? 0 : 1)}): {result} at tick {r.EndTick} (health A {r.ValueA}, B {r.ValueB})");
                     if (start == AiStartMode.Economy)
                         Console.WriteLine($"    A: {Stats(r.StatsA)} | B: {Stats(r.StatsB)}");
+                    if (lbx is not null)
+                        Console.WriteLine($"    LB extras A: {lbx.Line(slotOfA)} | B: {lbx.Line(1 - slotOfA)}");
                 }
             }
         }
@@ -776,6 +795,8 @@ public static class AiCommands
     }
 
     private static int _traceEvery, _traceGame;
+    private static bool _extras;
+    private static long[,] _extraSum = new long[2, 4];
 
     /// <summary>M4-16 round 3: per-side diagnostic lines for one game (tier, army count and value, scrapers, cash, income, structures, waves).</summary>
     private sealed class MatchTrace(SimRules rules, int every)
