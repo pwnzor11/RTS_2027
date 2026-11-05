@@ -334,6 +334,7 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
             BuildingType bt = _source.Rules.Buildings[_placementType];
             _ghostTopLeft = SidebarCommands.TopLeftFor(cell, bt.FootprintW, bt.FootprintH);
             _ghostValid = _source.Sim.CanPlaceReady(_player, _placementType, _ghostTopLeft);
+            // M7-07: CanPlace also refuses a footprint outside an Expedition player's beachhead zone, so the ghost turns red there.
             _hasGhost = true;
             if (input.LeftPressed)
             {
