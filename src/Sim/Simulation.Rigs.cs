@@ -150,7 +150,7 @@ public sealed partial class Simulation
         RemoveBuilding(id);
         CellCoord centre = FootprintCentre(tl, bt);
         VehicleType vt = rules.Vehicles[bt.PacksInto];
-        if (!FindFreeExitCell(centre, vt.Locomotion, out CellCoord cell)) cell = centre;
+        if (!FindFreeExitCell(centre, Pathing.MoveClass.Of(vt), out CellCoord cell)) cell = centre;
         EntityId vid = SpawnVehicle(owner, bt.PacksInto, cell);
         if (vid.IsNone)
         {   // vehicle store full: put the building back and retry next tick

@@ -201,7 +201,11 @@ public sealed partial class Simulation
                 break;
             case ActorKind.Vehicle:
                 if (_units.Slots.IsAlive(c.Subject) && _units.Player[c.Subject.Index] == c.Player
-                    && RulesOf(c.Player).Vehicles[_units.TypeIndex[c.Subject.Index]].Passengers > 0) ApplyUnload(c);
+                    && RulesOf(c.Player).Vehicles[_units.TypeIndex[c.Subject.Index]].Passengers > 0)
+                {
+                    VehicleType lvt = RulesOf(c.Player).Vehicles[_units.TypeIndex[c.Subject.Index]];   // M7-04
+                    if (IsLandingTransport(lvt)) ApplyLandingUnload(c, lvt); else ApplyUnload(c);
+                }
                 break;
         }
     }

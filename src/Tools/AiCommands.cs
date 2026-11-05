@@ -744,7 +744,7 @@ public static class AiCommands
                 // corners trade slots on even seeds ("alt"); "slot" = corner p for slot p; "swap" = corner 1-p.
                 bool swapSlots = startMode == "swap" || (startMode == "alt" && s % 2 == 0);
                 FileStream? replay = recordDir is null ? null
-                    : File.Create(Path.Combine(recordDir, $"{a.Label}_vs_{b.Label}_seed{s}_g{g + 1}.rtsreplay".Replace(':', '-')));
+                    : File.Create(Path.Combine(recordDir, $"{a.FileLabel}_vs_{b.FileLabel}_seed{s}_g{g + 1}.rtsreplay"));
                 AiGameResult r;
                 var lbx = _extras ? new LeftBehindExtras(w.Rules) : null;
                 MatchTrace? trace = _traceEvery > 0 ? new MatchTrace(w.Rules, _traceEvery) : null;

@@ -134,6 +134,14 @@ public static class MapFile
         return (map, version >= 2 ? ReadMeta(root, m, map, version, path) : MapMeta.DefaultFor(map));
     }
 
+    /// <summary>The letters n, e, s, w (in that order) of the edges set in <paramref name="edges"/>, e.g. "ns".</summary>
+    public static string OceanEdgeKeys(OceanEdges edges)
+    {
+        var sb = new StringBuilder();
+        for (int b = 0; b < 4; b++) if (((int)edges & (1 << b)) != 0) sb.Append("nesw"[b]);
+        return sb.ToString();
+    }
+
     private static void AppendMeta(StringBuilder sb, MapMeta meta)
     {
         sb.Append("biome = ").Append(Quote(meta.Biome)).Append('\n');
@@ -150,6 +158,7 @@ public static class MapFile
             // TOML integers are signed 64-bit: a seed above long.MaxValue is written as a decimal string.
             sb.Append("seed = ").Append(g.Seed <= long.MaxValue ? g.Seed.ToString(CultureInfo.InvariantCulture)
                 : Quote(g.Seed.ToString(CultureInfo.InvariantCulture))).Append('\n');
+            if (g.OceanEdges != OceanEdges.None) sb.Append("ocean_edges = ").Append(Quote(OceanEdgeKeys(g.OceanEdges))).Append('\n');   // M7-13, only when on
         }
         foreach (MapFeature f in meta.Features)
         {
@@ -213,7 +222,17 @@ public static class MapFile
             int players = Int(g, "players", path);
             ulong seed = g.TryGetValue("seed", out var sv) && sv is string ss && ulong.TryParse(ss, NumberStyles.None, CultureInfo.InvariantCulture, out ulong big)
                 ? big : (ulong)Int64(g, "seed", path);
-            generator = new MapGenParams((Biome)b, (MapSize)z, players, seed);
+            OceanEdges ocean = OceanEdges.None;
+            if (g.ContainsKey("ocean_edges"))
+            {
+                foreach (char ch in Str(g, "ocean_edges", path))
+                {
+                    int bit = "nesw".IndexOf(ch);
+                    if (bit < 0) throw new MapFileException(path, "map.generator.ocean_edges must use only the letters n, e, s, w");
+                    ocean |= (OceanEdges)(1 << bit);
+                }
+            }
+            generator = new MapGenParams((Biome)b, (MapSize)z, players, seed, null, ocean);
         }
 
         var features = new List<MapFeature>();

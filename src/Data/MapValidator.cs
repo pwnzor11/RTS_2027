@@ -75,8 +75,89 @@ public static class MapValidator
             }
         }
 
+        if (meta is not null && (meta.ConvoyEdge.Count > 0 || meta.Landing.Count > 0)) NavalChecks(map, meta, terrain, blocked, issues);
+
         if (meta is not null && meta.Symmetry != MapSymmetry.None) SymmetryCheck(map, meta.Symmetry, issues);
         return issues;
+    }
+
+    /// <summary>Naval maps (M7-13), checked only when the map declares <c>convoy_edge</c> or <c>landing</c> cells, so every older map is
+    /// unaffected. Sea = cells <see cref="Locomotion.Naval"/> may enter, 4-connected. Errors: <c>convoy_lake</c> (a convoy cell that is not
+    /// sea, or whose sea touches no map border: an isolated lake), <c>convoy_no_coast</c> (a convoy sea with no Coast cell beside it),
+    /// <c>landing_unreachable</c> (a landing marker that is not a Coast cell beside a convoy sea, or, when convoy cells are declared, a
+    /// start that cannot walk to a sea-facing Coast cell).</summary>
+    private static void NavalChecks(MapData map, MapMeta meta, TerrainTable? terrain, bool[]? blocked, List<MapIssue> issues)
+    {
+        int w = map.Width, h = map.Height;
+        // Label the sea components (cell-index order) and note which touch the border.
+        var comp = new int[w * h];
+        Array.Fill(comp, -1);
+        var touchesBorder = new List<bool>();
+        var queue = new int[w * h];
+        for (int s = 0; s < w * h; s++)
+        {
+            if (comp[s] >= 0 || !MapAnalysis.Passable(map.Land[s], Locomotion.Naval, terrain)) continue;
+            int id = touchesBorder.Count, head = 0, tail = 0;
+            bool border = false;
+            comp[s] = id; queue[tail++] = s;
+            while (head < tail)
+            {
+                int i = queue[head++];
+                int x = i % w, y = i / w;
+                if (x == 0 || y == 0 || x == w - 1 || y == h - 1) border = true;
+                for (int d = 0; d < 4; d++)
+                {
+                    int nx = x + (d == 0 ? 1 : d == 1 ? -1 : 0), ny = y + (d == 2 ? 1 : d == 3 ? -1 : 0);
+                    if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
+                    int j = ny * w + nx;
+                    if (comp[j] < 0 && MapAnalysis.Passable(map.Land[j], Locomotion.Naval, terrain)) { comp[j] = id; queue[tail++] = j; }
+                }
+            }
+            touchesBorder.Add(border);
+        }
+
+        var convoySea = new bool[touchesBorder.Count];   // components holding a valid convoy cell
+        var firstCell = new CellCoord?[touchesBorder.Count];
+        foreach (CellCoord c in meta.ConvoyEdge)
+        {
+            if (!map.Contains(c)) { issues.Add(Error("convoy_lake", c, $"convoy cell ({c.X},{c.Y}) is off the map")); continue; }
+            int id = comp[map.IndexOf(c)];
+            if (id < 0) issues.Add(Error("convoy_lake", c, $"convoy cell ({c.X},{c.Y}) is {map.Land[map.IndexOf(c)]}, not sea"));
+            else if (!touchesBorder[id]) issues.Add(Error("convoy_lake", c, $"convoy cell ({c.X},{c.Y}) lies in an isolated lake that never reaches the map edge"));
+            else { convoySea[id] = true; firstCell[id] ??= c; }
+        }
+
+        // Coast cells beside a convoy sea.
+        var beach = new bool[w * h];
+        var seaWithCoast = new bool[touchesBorder.Count];
+        for (int i = 0; i < w * h; i++)
+        {
+            if (map.Land[i] != LandType.Coast) continue;
+            int x = i % w, y = i / w;
+            for (int d = 0; d < 4; d++)
+            {
+                int nx = x + (d == 0 ? 1 : d == 1 ? -1 : 0), ny = y + (d == 2 ? 1 : d == 3 ? -1 : 0);
+                if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
+                int id = comp[ny * w + nx];
+                if (id >= 0 && convoySea[id]) { beach[i] = true; seaWithCoast[id] = true; }
+            }
+        }
+        for (int id = 0; id < convoySea.Length; id++)
+            if (convoySea[id] && !seaWithCoast[id])
+                issues.Add(Error("convoy_no_coast", firstCell[id], "the sea at this convoy cell reaches no Coast cell: ships have nowhere to land troops"));
+
+        foreach (CellCoord c in meta.Landing)
+            if (!map.Contains(c) || !beach[map.IndexOf(c)])
+                issues.Add(Error("landing_unreachable", c, $"landing cell ({c.X},{c.Y}) is not a Coast cell beside a sea the convoy edge reaches"));
+
+        if (meta.ConvoyEdge.Count == 0) return;
+        for (int s = 0; s < map.StartPositions.Count; s++)
+        {
+            int[] dist = MapAnalysis.Distances(map, map.StartPositions[s], Locomotion.Foot, terrain, blocked);
+            bool reach = false;
+            for (int i = 0; i < w * h && !reach; i++) reach = beach[i] && dist[i] != MapAnalysis.Unreachable;
+            if (!reach) issues.Add(Error("landing_unreachable", map.StartPositions[s], $"start {s + 1} cannot walk to a Coast cell that ships can reach"));
+        }
     }
 
     private static string? StartSquareProblem(MapData map, CellCoord s, TerrainTable? terrain, bool[]? blocked)

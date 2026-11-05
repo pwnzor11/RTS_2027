@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
 using Rts.Sim.Core;
+using Rts.Sim.Effects;
 using Rts.Sim.Numerics;
 using Rts.Sim.Rules;
 using Rts.Sim.World;
@@ -22,6 +23,13 @@ namespace Rts.Sim;
 //    warhead "<superweapon>_blast" (else "dir_meltdown_blast", else a flat 100 % table), half beyond BlastRadius/2; underground
 //    actors are spared. Every cell in the radius gets +RadiationLevel radiation (cap 255) and Blackout for BlackoutTicks. Values come
 //    from the warhead when it sets Contaminate / BlackoutTicks, else the constants below. The charge then resets to 0.
+//  * SALVO (M7-12, Salvo Array): when the "<superweapon>_blast" warhead sets SalvoMissiles > 0 the Special command instead starts a salvo
+//    (Effects.Salvo* slots). SalvoWarnTicks after the order the first of SalvoMissiles missiles lands; the rest follow evenly over
+//    SalvoTicks. Each missile lands on a cell drawn from SimRandom inside SalvoRadius of the target (two draws per missile, in order;
+//    cells off the map are lost) and hurts every non-friendly surface actor and building within SalvoSplash cells for SalvoDamage
+//    (half beyond the impact cell). No radiation or blackout. Any on-map cell may be targeted, sea included. The charge resets at the
+//    order and the salvo flies on if the Array dies. FX: Superweapon at the target at the order (the visible launch warning) and a
+//    Detonation per impact.
 //  * FOG (ASSUMED M3-13): nobody is told that a superweapon is charging; the flash (FxKind.Superweapon) reaches viewers who can see the
 //    target cell. The owner sees charge and readiness in PlayerHud.Superweapons.
 public sealed partial class Simulation
@@ -47,6 +55,13 @@ public sealed partial class Simulation
         {   // M6-07: a ground-effect storm instead of the blast damage path
             StartStorm(c.Player, c.Cell, wh);
             _fx.Add(new FxEvent(FxKind.Superweapon, impact, wh.StormRadius));
+            _effects.BuildingCharge[b] = 0;
+            return;
+        }
+        if (wh.SalvoMissiles > 0 && wh.SalvoDamage > 0)
+        {   // M7-12
+            StartSalvo(c.Player, b, c.Cell);
+            _fx.Add(new FxEvent(FxKind.Superweapon, impact, wh.SalvoRadius));
             _effects.BuildingCharge[b] = 0;
             return;
         }
@@ -83,6 +98,71 @@ public sealed partial class Simulation
         _fx.Add(new FxEvent(FxKind.Detonation, impact, radius));
         _fx.Add(new FxEvent(FxKind.Superweapon, impact, radius));
         _effects.BuildingCharge[b] = 0;
+    }
+
+    private void StartSalvo(byte owner, int building, CellCoord target)
+    {
+        int slot = -1;
+        for (int s = 0; s < EffectsState.MaxSalvos && slot < 0; s++) if (_effects.SalvoType[s] == 0) slot = s;
+        if (slot < 0)
+        {   // all busy: replace the salvo furthest along (lowest slot on ties)
+            slot = 0;
+            for (int s = 1; s < EffectsState.MaxSalvos; s++) if (_effects.SalvoElapsed[s] > _effects.SalvoElapsed[slot]) slot = s;
+        }
+        _effects.SalvoX[slot] = target.X; _effects.SalvoY[slot] = target.Y; _effects.SalvoOwner[slot] = owner;
+        _effects.SalvoType[slot] = _buildings.TypeIndex[building] + 1; _effects.SalvoElapsed[slot] = 0;
+    }
+
+    /// <summary>Per tick: advance every salvo in flight and land the missiles due this tick.</summary>
+    private void RunSalvos()
+    {
+        if (!_effects.AnySalvo) return;
+        bool hurt = false;
+        for (int s = 0; s < EffectsState.MaxSalvos; s++)
+        {
+            if (_effects.SalvoType[s] == 0) continue;
+            byte owner = _effects.SalvoOwner[s];
+            BuildingType bt = RulesOf(owner).Buildings[_effects.SalvoType[s] - 1];
+            WarheadType wh = SuperweaponWarhead(owner, bt);
+            int n = wh.SalvoMissiles;
+            int e = ++_effects.SalvoElapsed[s];
+            for (int k = 0; k < n; k++)
+            {
+                if (Math.Max(1, wh.SalvoWarnTicks + (int)((long)k * wh.SalvoTicks / n)) != e) continue;
+                int r = wh.SalvoRadius;
+                int dx = _rng.Next(2 * r + 1) - r, dy = _rng.Next(2 * r + 1) - r;
+                var cell = new CellCoord(_effects.SalvoX[s] + dx, _effects.SalvoY[s] + dy);
+                if (!_ground.Contains(cell)) continue;
+                SalvoImpact(owner, cell, wh);
+                hurt = true;
+            }
+            if (e >= Math.Max(1, wh.SalvoWarnTicks + wh.SalvoTicks))
+            {   // the last missile has landed (all impact ticks are <= warn + ticks): free the slot
+                _effects.SalvoX[s] = 0; _effects.SalvoY[s] = 0; _effects.SalvoOwner[s] = 0; _effects.SalvoType[s] = 0; _effects.SalvoElapsed[s] = 0;
+            }
+        }
+        if (hurt) ApplyPendingDamage();
+    }
+
+    private void SalvoImpact(byte owner, CellCoord cell, WarheadType wh)
+    {
+        int splash = wh.SalvoSplash;
+        for (int k = 0; k < LiveKinds; k++)
+        {
+            var kind = (ActorKind)k;
+            SlotArray slots = SlotsOf(kind);
+            for (int i = 1; i < slots.Capacity; i++)
+            {
+                if (!slots.IsIndexAlive(i) || HealthAt(kind, i) <= 0) continue;
+                if (IsFriendly(owner, PlayerAt(kind, i))) continue;
+                if (kind != ActorKind.Building && IsUnderground(kind, i)) continue;
+                if (IsSubmergedShip(kind, i)) continue;   // M7-05/M7-12: a dived submarine is spared, like splash (D-142)
+                int d = kind == ActorKind.Building ? FootprintDistance(i, cell) : LeptonMath.ChebyshevCells(cell, PositionAt(kind, i).ToCell());
+                if (d > splash) continue;
+                Hurt(kind, i, wh.SalvoDamage, wh, d > 0, owner);
+            }
+        }
+        _fx.Add(new FxEvent(FxKind.Detonation, CellCentre(cell), splash));
     }
 
     /// <summary>
@@ -122,6 +202,12 @@ public sealed partial class Simulation
             if ((long)(Tick + 1) * rate / 1000 == (long)Tick * rate / 1000) continue;
             if (_effects.BuildingCharge[i] < bt.SuperweaponChargeTicks) _effects.BuildingCharge[i]++;
         }
+    }
+
+    private int SalvoRadiusOf(BuildingType bt, byte player)
+    {
+        WarheadType wh = SuperweaponWarhead(player, bt);
+        return wh.SalvoMissiles > 0 && wh.SalvoDamage > 0 ? wh.SalvoRadius : SuperweaponBlastRadius;
     }
 
     private static bool IsSuperweapon(BuildingType bt) => bt.Superweapon.Length > 0 && bt.SuperweaponChargeTicks > 0;
@@ -170,7 +256,7 @@ public sealed partial class Simulation
             bool ready = charge >= bt.SuperweaponChargeTicks;
             (list ??= new List<SuperweaponView>()).Add(new SuperweaponView(_buildings.Slots.IdOf(i), _buildings.TypeIndex[i], bt.Superweapon,
                 charge, bt.SuperweaponChargeTicks, ready, !ready && rate == 0, bt.SuperweaponEntranceRange)
-                { BlastRadius = SuperweaponBlastRadius, Owner = player });
+                { BlastRadius = SalvoRadiusOf(bt, player), Owner = player });
         }
         return list ?? (IReadOnlyList<SuperweaponView>)Array.Empty<SuperweaponView>();
     }

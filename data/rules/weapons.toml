@@ -357,3 +357,156 @@ rate_of_fire = 30  # (tune)
 projectile_speed = 128
 warhead = "lb_he"
 targets = "air"
+
+# M7-08: Expedition weapons (design 07 §5). Every number is (tune), assumed -- confirm. Ranges in leptons (256 per cell).
+# targets: default "ground" means land AND surface ships (D-124); "submerged" is the depth charge; "air" / "both" as before.
+
+[exp_marine_rifle]   # Marine
+damage = 10  # (tune)
+range = 832  # (tune)
+min_range = 0
+rate_of_fire = 14  # (tune)
+projectile_speed = 0
+warhead = "exp_small_arms"
+
+[exp_diver_charge]   # Combat Diver: contact charge
+damage = 120  # (tune)
+range = 256  # (tune)
+min_range = 0
+rate_of_fire = 60  # (tune)
+projectile_speed = 0
+warhead = "exp_charge"
+
+[exp_pathfinder_rifle]   # Pathfinder: long-range rifle
+damage = 40  # (tune)
+range = 1536  # (tune)
+min_range = 0
+rate_of_fire = 70  # (tune)
+projectile_speed = 0
+warhead = "exp_small_arms"
+
+[exp_ironbound_pod]   # Ironbound Trooper: missile pod, ground and air
+damage = 30  # (tune)
+range = 1280  # (tune)
+min_range = 0
+rate_of_fire = 30  # (tune)
+projectile_speed = 96
+warhead = "exp_guided_ap"
+targets = "both"
+
+[exp_glide_cannon]   # Glide Tank: guided cannon
+damage = 65  # (tune)
+range = 1408  # (tune)
+min_range = 0
+rate_of_fire = 38  # (tune)
+projectile_speed = 96
+warhead = "exp_guided_ap"
+
+[exp_sparker_missile]   # Sparker: hover anti-air
+damage = 40  # (tune)
+range = 1536  # (tune)
+min_range = 0
+rate_of_fire = 30  # (tune)
+projectile_speed = 128
+warhead = "exp_aa_missile"
+targets = "air"
+
+[exp_barrage_rockets]   # Barrage Lander: rocket artillery
+damage = 40  # (tune)
+range = 2304  # (tune)
+min_range = 512  # (tune)
+rate_of_fire = 80  # (tune)
+projectile_speed = 64
+warhead = "exp_rocket_salvo"
+
+[exp_launch_charge]   # Patrol Launch: depth charge, submerged vessels only
+damage = 60  # (tune)
+range = 768  # (tune)
+min_range = 0
+rate_of_fire = 40  # (tune)
+projectile_speed = 48
+warhead = "exp_depth_charge"
+targets = "submerged"
+
+[exp_destroyer_gun]   # Destroyer
+damage = 30  # (tune)
+range = 1408  # (tune)
+min_range = 0
+rate_of_fire = 30  # (tune)
+projectile_speed = 80
+warhead = "exp_naval_shell"
+
+[exp_sub_missile]   # Missile Submarine: guided strike on ships and land
+damage = 110  # (tune)
+range = 2304  # (tune)
+min_range = 0
+rate_of_fire = 90  # (tune)
+projectile_speed = 96
+warhead = "exp_missile_strike"
+
+[exp_cruiser_gun]   # Cruiser: shore bombardment
+damage = 90  # (tune)
+range = 3072  # (tune)
+min_range = 768  # (tune)
+rate_of_fire = 70  # (tune)
+projectile_speed = 80
+warhead = "exp_naval_shell_he"
+
+[exp_carrier_aa]   # Carrier: close anti-air
+damage = 20  # (tune)
+range = 1280  # (tune)
+min_range = 0
+rate_of_fire = 24  # (tune)
+projectile_speed = 128
+warhead = "exp_aa_missile"
+targets = "air"
+
+[exp_jet_missile]   # Jet Fighter: air superiority, ground and air
+damage = 35  # (tune)
+range = 1536  # (tune)
+min_range = 0
+rate_of_fire = 24  # (tune)
+projectile_speed = 128
+warhead = "exp_aa_missile"
+targets = "both"
+
+[exp_gunship_rockets]   # Gunship: rotary ground attack
+damage = 25  # (tune)
+range = 1152  # (tune)
+min_range = 0
+rate_of_fire = 16  # (tune)
+projectile_speed = 96
+warhead = "exp_rocket_salvo"
+
+[exp_bomb_run]   # Bomber: heavy bomb
+damage = 200  # (tune)
+range = 256  # (tune)
+min_range = 0
+rate_of_fire = 120  # (tune)
+projectile_speed = 0
+warhead = "exp_bomb"
+
+[exp_pillbox_gun]   # Seawall Emplacement
+damage = 12  # (tune)
+range = 960  # (tune)
+min_range = 0
+rate_of_fire = 12  # (tune)
+projectile_speed = 0
+warhead = "exp_small_arms"
+
+[exp_battery_gun]   # Gun Battery: coastal defence vs ships and ground
+damage = 60  # (tune)
+range = 2048  # (tune)
+min_range = 0
+rate_of_fire = 50  # (tune)
+projectile_speed = 80
+warhead = "exp_naval_shell"
+
+[exp_sam_missile]   # SAM Mount
+damage = 45  # (tune)
+range = 1536  # (tune)
+min_range = 0
+rate_of_fire = 30  # (tune)
+projectile_speed = 128
+warhead = "exp_aa_missile"
+targets = "air"

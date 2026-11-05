@@ -333,7 +333,7 @@ public sealed partial class Simulation
 
     /// <summary>True if the weapon's Targets allows the actor (air vs ground).</summary>
     internal bool WeaponCanTarget(WeaponType w, ActorKind kind, int i) =>
-        w.Targets == WeaponTargets.Both || (w.Targets == WeaponTargets.Air) == IsAirUnit(kind, i);
+        WeaponTargetsActor(w, kind, i);   // M7-05: Simulation.Submerge.cs
 
     /// <summary>True if <paramref name="player"/> may not target the actor: underground, or hidden from the player's team.</summary>
     internal bool IsUntargetableBy(byte player, ActorKind kind, int i) =>
