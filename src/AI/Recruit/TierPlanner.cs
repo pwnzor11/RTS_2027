@@ -71,7 +71,13 @@ internal sealed class TierPlanner
     /// <summary>M4-16: ticks a sighting of the enemy army is trusted for (peak value seen in this window).</summary>
     public const int EnemyValueMemoryTicks = 1200;   // (tune) M4-16
 
-    private int _enemyPeak, _enemyPeakTick = int.MinValue;
+    /// <summary>M4-16 round 4: ticks the wave strength gate trusts the biggest enemy army seen at once.</summary>
+    public const int WaveGateMemoryTicks = 3600;   // (tune) M4-16 r4
+
+    private int _enemyPeak, _enemyPeakTick = int.MinValue, _longPeak, _longPeakTick = int.MinValue;
+
+    /// <summary>M4-16 round 4: peak enemy army value seen at once in the last longer window (the wave strength gate).</summary>
+    public int EnemyArmyLong { get; private set; }
 
     /// <summary>M4-16: credit value of our mobile army (units, not harvesters), this decision.</summary>
     public int OwnArmyValue { get; private set; }
@@ -98,6 +104,8 @@ internal sealed class TierPlanner
             int now = k.View.Tick;
             if (enemy >= _enemyPeak || now - _enemyPeakTick > EnemyValueMemoryTicks) { _enemyPeak = enemy; _enemyPeakTick = now; }
             OwnArmyValue = own; EnemyArmyValue = _enemyPeak;
+            if (enemy >= _longPeak || now - _longPeakTick > WaveGateMemoryTicks) { _longPeak = enemy; _longPeakTick = now; }
+            EnemyArmyLong = _longPeak;
             Ahead = k.Army.Count >= AheadMinUnits && (long)own * 100 >= (long)_enemyPeak * (100 + AheadMarginPct);
             Behind = TechHoldEnabled && _p.UseUpgrades && (long)_enemyPeak * 100 > (long)own * (100 + BehindMarginPct);
         }
@@ -352,6 +360,7 @@ internal sealed class TierPlanner
             w.Write(s.Key); AiSnapshot.WriteCell(w, s.Cell); w.Write((byte)s.Ref.Kind); AiSnapshot.WriteId(w, s.Ref.Id); w.Write(s.Tick);
         }
         w.Write(_enemyPeak); w.Write(_enemyPeakTick);   // M4-16
+        w.Write(_longPeak); w.Write(_longPeakTick);   // M4-16 r4
     }
 
     /// <summary>M3-21: reads what <see cref="Snapshot"/> wrote.</summary>
@@ -368,5 +377,6 @@ internal sealed class TierPlanner
         for (int i = 0; i < n; i++)
             _sightings.Add((r.ReadUInt64(), AiSnapshot.ReadCell(r), new ActorRef((ActorKind)r.ReadByte(), AiSnapshot.ReadId(r)), r.ReadInt32()));
         _enemyPeak = r.ReadInt32(); _enemyPeakTick = r.ReadInt32();   // M4-16
+        _longPeak = r.ReadInt32(); _longPeakTick = r.ReadInt32();   // M4-16 r4
     }
 }

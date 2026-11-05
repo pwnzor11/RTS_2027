@@ -98,7 +98,18 @@ internal sealed class MilitaryManager
     /// <summary>M4-16: set by the AI each decision: our army is clearly bigger than the enemy army seen lately (stage closer, hit production first).</summary>
     public bool Ahead { get; set; }
 
+    /// <summary>M4-16 round 4: credit value of our army and of the biggest enemy army seen lately (set by the AI each decision).</summary>
+    public int OwnValue { get; set; }
+    public int EnemyValueSeen { get; set; }
+
     private int _mapWidth, _startCount;
+    private int _launchValue, _required;
+
+    /// <summary>M4-16 round 4: a wave that lost most of its roster raises the army value the next one waits for.</summary>
+    private void WaveFailed()
+    {
+        _required = WaveGate.Escalate(Options.Respond, _required, _launchValue);
+    }
 
     public MilitaryManager(int attackThreshold) => _threshold = Math.Max(1, attackThreshold);
 
@@ -268,7 +279,8 @@ internal sealed class MilitaryManager
             // with no scraper left there is no income to rebuild with: whatever is left goes out as soon as there are a few units
             bool desperate = (k.Harvesters.Count == 0 || Broke) && n >= DesperateWave;   // M4-12: also when income has stalled
             int guard = Bias.HomeGuard;   // M5-02: units that stay home (the wave waits for them too)
-            if (tick >= _cooldownUntil && (n >= Bias.Wave(_nextThreshold, 2) + guard
+            bool strong = WaveGate.Strong(Options.Respond, OwnValue, EnemyValueSeen, _required, n, tick, _lastWave);   // M4-16 r4: no wave into a clearly bigger army
+            if (tick >= _cooldownUntil && (strong || desperate) && (n >= Bias.Wave(_nextThreshold, 2) + guard
                 || (n >= Bias.Wave(MinWave, 2) + guard && tick - _lastWave >= Bias.Wave(_nextInterval, 600)) || desperate))
             {
                 _roster.Clear(); _squadB.Clear();
@@ -288,6 +300,7 @@ internal sealed class MilitaryManager
                 if (_prong) Prongs++;
                 _launchHealth = hp;
                 _launchSize = take;
+                _launchValue = OwnValue;
                 _lastWave = tick;
                 _stageSince = tick;
                 Waves++;
@@ -309,6 +322,7 @@ internal sealed class MilitaryManager
         }
         else if (alive < Math.Max(2, _launchSize / 4))
         {
+            WaveFailed();
             _phase = Phase.Gather;
             _roster.Clear();
         }
@@ -317,6 +331,7 @@ internal sealed class MilitaryManager
             // M4-12: the wave has destroyed nothing for a long time (a target it cannot kill, a wall, free repairs): end it; every
             // survivor is counted again for the next wave, which goes out at once when the army is big enough
             StaleWaves++;
+            _required = 0;
             _phase = Phase.Gather;
             _roster.Clear(); _squadB.Clear();
             _prong = false;
@@ -482,6 +497,7 @@ internal sealed class MilitaryManager
         foreach (ViewActor a in k.Army)
             if (_roster.Contains(Key(a))) sink.Issue(CommandKind.Move, a.Id, a.Kind, rally);
         _roster.Clear(); _squadB.Clear();
+        WaveFailed();
         _phase = Phase.Gather;
         _prong = false;
         _cooldownUntil = k.View.Tick + RetreatCooldownTicks;
@@ -616,6 +632,7 @@ internal sealed class MilitaryManager
         AiSnapshot.WriteMap(w, _still, (bw, v) => { AiSnapshot.WriteCell(bw, v.Cell); bw.Write(v.Since); bw.Write(v.Times); });
         w.Write(GroupRetreats); w.Write(Prongs); w.Write(Waves); w.Write(Defences); w.Write(Reinforcements); w.Write(StaleWaves); w.Write(Unstuck);
         w.Write(_aheadWave);   // M4-16
+        w.Write(_launchValue); w.Write(_required);   // M4-16 r4
     }
 
     /// <summary>M3-21: reads what <see cref="Snapshot"/> wrote. Call after Start.</summary>
@@ -639,6 +656,7 @@ internal sealed class MilitaryManager
         GroupRetreats = r.ReadInt32(); Prongs = r.ReadInt32(); Waves = r.ReadInt32(); Defences = r.ReadInt32(); Reinforcements = r.ReadInt32();
         StaleWaves = r.ReadInt32(); Unstuck = r.ReadInt32();
         _aheadWave = r.ReadBoolean();   // M4-16
+        _launchValue = r.ReadInt32(); _required = r.ReadInt32();   // M4-16 r4
         if (_scoutRoute.Count > 0) _scoutIdx = Math.Clamp(_scoutIdx, 0, _scoutRoute.Count - 1);
     }
 }
