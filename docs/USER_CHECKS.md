@@ -184,3 +184,23 @@ builds may report a desync; record new ones. Run `git lfs pull` after pulling so
 3. **Turrets on vehicles:** the Decon Truck, Agitprop, Reactor Crawler and Rocket Truck turn their turret separately from the hull
    and the turret stays seated on the hull at every facing; the Dirigible draws a shadow on the ground below it.
 4. **Nothing else changes:** M6 (Left Behind) is groundwork only; the faction is not in skirmish setup yet.
+
+## Session 9 · Left Behind playable, veterancy, supply cap (2026-11-05)
+Pull main. **Saves from earlier builds no longer load** (sim save format 11) and older replays may report a desync; record new ones.
+Run `git lfs pull` after pulling. The Left Behind art reaches main only after you run `_art_push\push_art_s9.ps1` (see HANDOFF);
+until then the Left Behind shows placeholder boxes.
+1. **Left Behind setup:** Skirmish setup lists "Left Behind" as a faction. Start as Left Behind: the sidebar says "Unpack the Mother
+   Rig to build". Select the Mother Rig, press K ("UNPACK RIG (K)"), click a clear site: it unpacks and the build tabs fill.
+2. **Pack and move:** select an unpacked rig and press K ("PACK RIG (K)"): it packs into a vehicle; drive it and unpack elsewhere.
+   While it is packed its production lane pauses, then carries on after unpacking.
+3. **Salvage and raids:** destroy enemy vehicles; wrecks stay on the ground for about a minute; a Hauler or Tinker collects them for
+   cash. Send raiders into an enemy building: they take cash.
+4. **The Second Drift:** build it (after the Rotor Pad); once charged, fire it anywhere: a storm slows enemies inside it and hides your
+   own infantry like ash.
+5. **Veterancy:** units that kill earn pips ("Veteran", "Elite", "Hero"); a promotion flashes and plays a short cue. Higher ranks
+   hit harder, take less damage and fire faster.
+6. **Supply cap (on by default):** queue many riflemen; once supply runs out the next one is refused with "Supply cap reached: build a
+   supply structure". Build an Authority Ration Hall (Directorate: Bunk Gallery; Left Behind: Still Rig) and the queue goes on. The
+   AI builds these too. There is no supply counter on screen yet (SUP-4).
+7. **AI as Left Behind:** set an AI slot to Left Behind at Veteran: it unpacks, builds, raids and attacks; it may pack and move its
+   base when hard pressed.
