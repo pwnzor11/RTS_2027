@@ -83,7 +83,7 @@ public class ReplayTests
             Teams = new byte[] { 0, 0 }, Limits = new SimLimits(300, 200, 100, 64), AllowDebug = true,
         };
         var data = ReplayReader.Read(new MemoryStream(Record(setup, 40)));
-        Assert.Equal(11, data.Version);
+        Assert.Equal(12, data.Version);
         Assert.Null(data.Mission);
         Assert.Equal("test-build", data.Build);
         Assert.Equal(setup.Seed, data.Seed);

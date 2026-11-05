@@ -18,9 +18,9 @@ namespace Rts.Sim.Replay;
 public sealed class ReplayWriter
 {
     public static readonly byte[] Magic = "RTSR"u8.ToArray();
-    public const int Version = 11;   // M6-02: new state parts change the hashes recorded in the replay; VET-1: "veterancy" part
+    public const int Version = 12;   // M6-02: new state parts change the hashes recorded in the replay; VET-1: "veterancy" part; M7-02: "shipments", "beachhead", "naval" parts
 
-    /// <summary>Oldest format version <see cref="ReplayReader"/> still reads (7 has no mission block; 8, 9, 10 and 11 share a layout).</summary>
+    /// <summary>Oldest format version <see cref="ReplayReader"/> still reads (7 has no mission block; 8, 9, 10, 11 and 12 share a layout).</summary>
     public const int OldestReadableVersion = 7;
     public const byte TypeEnd = 0, TypeCommand = 1, TypeHashCheck = 2, TypeSpawn = 3;
 

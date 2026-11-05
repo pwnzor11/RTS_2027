@@ -1,8 +1,13 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
 using Rts.Data;
+using Rts.Sim.Core;
 using Rts.Sim.Missions;
+using Rts.Sim.Replay;
 using Rts.Sim.Rules;
+using Rts.Sim.Serialization;
+using Rts.Sim.Shipments;
+using Rts.Sim.Tests.Determinism;
 using Rts.Sim.Tests.Rules;
 
 namespace Rts.Sim.Tests.M7;
@@ -293,5 +298,103 @@ public sealed class M7ContractTests
         RuleSet noLanding = Load(("terrain.toml", terrain.Replace("[landing]\ncoast = true", "")));
         Assert.False(noLanding.Sim.Terrain.Landing(LandType.Coast));
         Assert.Throws<RulesException>(() => Load(("terrain.toml", terrain.Replace("coast = true\n\n# M3", "\n# M3"))));   // [buildable] needs coast
+    }
+
+    // ---- state parts and formats -----------------------------------------------------------------------------
+
+    private static byte[] Bytes(ISimStatePart p)
+    {
+        var ms = new MemoryStream();
+        using (var w = new BinaryWriter(ms, System.Text.Encoding.UTF8, leaveOpen: true)) p.Write(w);
+        return ms.ToArray();
+    }
+
+    [Fact]
+    public void Formats_AndPartOrder_ArePinned()
+    {
+        Assert.Equal(12, SimWriter.SaveVersion);
+        Assert.Equal(12, ReplayWriter.Version);
+        Assert.Equal(7, ReplayWriter.OldestReadableVersion);
+        var sim = ScriptedGame.NewSim(ScriptedGame.Setup());
+        string[] names = sim.StateParts.Select(p => p.Name).ToArray();
+        Assert.Equal(new[] { "salvage", "veterancy", "shipments", "beachhead", "naval" }, names[^5..]);
+        Assert.Same(sim.Shipments, sim.StateParts[^3]);
+        Assert.Same(sim.Beachhead, sim.StateParts[^2]);
+        Assert.Same(sim.Naval, sim.StateParts[^1]);
+    }
+
+    [Fact]
+    public void NewParts_AreEmptyByDefault_AndRoundTripWhenFilled()
+    {
+        var setup = ScriptedGame.Setup();
+        var sim = ScriptedGame.NewSim(setup);
+        Assert.Empty(sim.Shipments.Tenders);
+        Assert.All(sim.Shipments.NextShipmentTick, x => Assert.Equal(0, x));
+        Assert.All(sim.Beachhead.Zone, row => Assert.All(row, x => Assert.Equal(0UL, x)));
+        Assert.All(sim.Naval.NavalRegion, x => Assert.Equal(0, x));
+
+        ulong empty = sim.ComputeStateHash();
+        sim.Shipments.NextShipmentTick[1] = 1800; sim.Shipments.DecayStep[1] = 2; sim.Shipments.CharterProgress[1] = 77;
+        sim.Shipments.Tenders.Add(new Tender(sim.Shipments.NextTenderId++, 1, 3, 4, 1440));
+        sim.Beachhead.Zone[1][2] = 0xF0F0UL;
+        sim.Naval.NavalRegion[5] = 3;
+        sim.Naval.UnloadTicksLeft[1] = 6; sim.Naval.UnloadX[1] = 9; sim.Naval.UnloadY[1] = 8; sim.Naval.Submerged[2] = true;
+        Assert.NotEqual(empty, sim.ComputeStateHash());
+
+        var ms = new MemoryStream();
+        sim.Save(ms);
+        Simulation loaded = Simulation.Load(new MemoryStream(ms.ToArray()), setup);
+        Assert.Equal(sim.ComputeStateHash(), loaded.ComputeStateHash());
+        Assert.Equal(new Tender(0, 1, 3, 4, 1440), Assert.Single(loaded.Shipments.Tenders));
+        Assert.Equal(1, loaded.Shipments.NextTenderId);
+        Assert.Equal((1800, 2, 77), (loaded.Shipments.NextShipmentTick[1], loaded.Shipments.DecayStep[1], loaded.Shipments.CharterProgress[1]));
+        Assert.True(loaded.Beachhead.Contains(1, 2 * 64 + 4));
+        Assert.False(loaded.Beachhead.Contains(0, 2 * 64 + 4));
+        Assert.Equal(3, loaded.Naval.NavalRegion[5]);
+        Assert.Equal((6, 9, 8, true), (loaded.Naval.UnloadTicksLeft[1], loaded.Naval.UnloadX[1], loaded.Naval.UnloadY[1], loaded.Naval.Submerged[2]));
+        foreach (ISimStatePart p in new ISimStatePart[] { loaded.Shipments, loaded.Beachhead, loaded.Naval })
+            Assert.Equal(Bytes(p), Bytes(sim.StateParts.Single(q => q.Name == p.Name)));
+    }
+
+    [Fact]
+    public void NavalVehicleSlots_AreClearedOnSpawn()
+    {
+        var sim = ScriptedGame.NewSim(ScriptedGame.Setup());
+        sim.Naval.Submerged[1] = true; sim.Naval.UnloadTicksLeft[1] = 4;
+        sim.SpawnVehicle(0, 0, new CellCoord(10, 10));
+        Assert.False(sim.Naval.Submerged[1]);
+        Assert.Equal(0, sim.Naval.UnloadTicksLeft[1]);
+    }
+
+    [Fact]
+    public void Format11Save_IsRejectedAndFormat11ReplayStillReads()
+    {
+        var setup = ScriptedGame.Setup();
+        var ms = new MemoryStream(); ScriptedGame.NewSim(setup).Save(ms);
+        byte[] bytes = ms.ToArray();
+        bytes[4] = 11;
+        var ex = Assert.Throws<InvalidDataException>(() => Simulation.Load(new MemoryStream(bytes), setup));
+        Assert.Contains("version 11", ex.Message);
+
+        var sim = ScriptedGame.NewSim(setup);
+        var rep = new MemoryStream();
+        new ReplayWriter(rep, sim, "b", Array.Empty<(string, string)>()).Finish();
+        byte[] r = rep.ToArray();
+        Assert.Equal(12, ReplayReader.Read(new MemoryStream(r)).Version);
+        r[ReplayWriter.Magic.Length] = 11;   // the version byte follows the magic
+        Assert.Equal(11, ReplayReader.Read(new MemoryStream(r)).Version);
+    }
+
+    [Fact]
+    public void ExpeditionPlayer_SetsUpAndSurvivesSaveAndReplayHeader()
+    {
+        var setup = ScriptedGame.Setup() with { Factions = new[] { Faction.Expedition, Faction.Authority } };
+        var sim = ScriptedGame.NewSim(setup);
+        var ms = new MemoryStream();
+        sim.Save(ms);
+        Assert.Equal(Faction.Expedition, Simulation.Load(new MemoryStream(ms.ToArray()), setup).Players.Faction[0]);
+        var rep = new MemoryStream();
+        new ReplayWriter(rep, sim, "b", Array.Empty<(string, string)>()).Finish();
+        Assert.Equal(new[] { Faction.Expedition, Faction.Authority }, ReplayReader.Read(new MemoryStream(rep.ToArray())).Header.Factions);
     }
 }

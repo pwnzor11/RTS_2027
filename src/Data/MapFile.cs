@@ -16,10 +16,12 @@ namespace Rts.Data;
 /// Format 2 (M4-01, design 08 §1) adds optional <c>[map]</c> keys <c>biome</c>, <c>symmetry</c>, <c>max_players</c>, an optional
 /// <c>[map.generator]</c> table (biome, size s|m|l, players, seed; informational) and an optional <c>[[features]]</c> array
 /// (<c>type</c>, <c>cell = [x, y]</c>). Version 1 files still load, with <see cref="MapMeta.DefaultFor"/>. None of it enters the map hash.
+/// Format 3 (M7-02, docs/design/11_m7_plan.md §2.2) allows <see cref="LandType.Coast"/> (value 8) in the land layer and adds optional
+/// <c>[map]</c> keys <c>convoy_edge</c> and <c>landing</c> (lists of <c>[x, y]</c> marker cells; see <see cref="MapMeta"/>). Versions 1 and 2 still load.
 /// </summary>
 public static class MapFile
 {
-    public const int FormatVersion = 2;
+    public const int FormatVersion = 3;
 
     /// <summary>Oldest format version <see cref="Load"/> still reads.</summary>
     public const int OldestReadableVersion = 1;
@@ -32,10 +34,10 @@ public static class MapFile
 
     private static readonly string[] SizeKeys = ["s", "m", "l"];
 
-    /// <summary>Writes the map with no metadata (format 2; loads back with <see cref="MapMeta.DefaultFor"/>).</summary>
+    /// <summary>Writes the map with no metadata (format 3; loads back with <see cref="MapMeta.DefaultFor"/>).</summary>
     public static void Save(MapData map, string path) => Save(map, null, path);
 
-    /// <summary>Writes the map and, when given, its metadata (format 2).</summary>
+    /// <summary>Writes the map and, when given, its metadata (format 3).</summary>
     public static void Save(MapData map, MapMeta? meta, string path)
     {
         ArgumentNullException.ThrowIfNull(map);
@@ -73,10 +75,10 @@ public static class MapFile
         File.WriteAllText(path, sb.ToString(), new UTF8Encoding(false));
     }
 
-    /// <summary>Reads a map file (format 1 or 2); metadata is ignored.</summary>
+    /// <summary>Reads a map file (format 1 to 3); metadata is ignored.</summary>
     public static MapData Load(string path) => LoadWithMeta(path).Map;
 
-    /// <summary>Reads a map file and its metadata (format 1 or 2; a version-1 file gets <see cref="MapMeta.DefaultFor"/>).</summary>
+    /// <summary>Reads a map file and its metadata (format 1 to 3; a version-1 file gets <see cref="MapMeta.DefaultFor"/>).</summary>
     public static (MapData Map, MapMeta Meta) LoadWithMeta(string path)
     {
         string text;
@@ -129,7 +131,7 @@ public static class MapFile
             land[i] = (LandType)landB[i]; ovl[i] = (OverlayKind)ovlB[i];
         }
         var map = new MapData(name, theater, w, h, tpl, land, hgtB, ovl, denB, starts);
-        return (map, version >= 2 ? ReadMeta(root, m, map, path) : MapMeta.DefaultFor(map));
+        return (map, version >= 2 ? ReadMeta(root, m, map, version, path) : MapMeta.DefaultFor(map));
     }
 
     private static void AppendMeta(StringBuilder sb, MapMeta meta)
@@ -137,6 +139,8 @@ public static class MapFile
         sb.Append("biome = ").Append(Quote(meta.Biome)).Append('\n');
         sb.Append("symmetry = ").Append(Quote(SymmetryKeys[(int)meta.Symmetry])).Append('\n');
         sb.Append("max_players = ").Append(meta.MaxPlayers.ToString(CultureInfo.InvariantCulture)).Append('\n');
+        AppendCells(sb, "convoy_edge", meta.ConvoyEdge);
+        AppendCells(sb, "landing", meta.Landing);
         if (meta.Generator is { } g)
         {
             sb.Append("\n[map.generator]\n");
@@ -156,7 +160,36 @@ public static class MapFile
         }
     }
 
-    private static MapMeta ReadMeta(TomlTable root, TomlTable m, MapData map, string path)
+    private static void AppendCells(StringBuilder sb, string key, IReadOnlyList<CellCoord> cells)
+    {
+        if (cells.Count == 0) return;
+        sb.Append(key).Append(" = [");
+        for (int i = 0; i < cells.Count; i++)
+        {
+            if (i > 0) sb.Append(", ");
+            sb.Append('[').Append(cells[i].X.ToString(CultureInfo.InvariantCulture)).Append(", ")
+              .Append(cells[i].Y.ToString(CultureInfo.InvariantCulture)).Append(']');
+        }
+        sb.Append("]\n");
+    }
+
+    private static List<CellCoord> ReadCells(TomlTable m, string key, MapData map, string path)
+    {
+        var cells = new List<CellCoord>();
+        if (!m.TryGetValue(key, out var v)) return cells;
+        if (v is not TomlArray list) throw new MapFileException(path, $"map.{key} must be a list of [x, y]");
+        foreach (var item in list)
+        {
+            if (item is not TomlArray pair || pair.Count != 2 || !IsInt(pair[0]) || !IsInt(pair[1]))
+                throw new MapFileException(path, $"map.{key} entries must be [x, y]");
+            int x = (int)Convert.ToInt64(pair[0], CultureInfo.InvariantCulture), y = (int)Convert.ToInt64(pair[1], CultureInfo.InvariantCulture);
+            if (!map.Contains(new CellCoord(x, y))) throw new MapFileException(path, $"map.{key} cell [{x}, {y}] outside map");
+            cells.Add(new CellCoord(x, y));
+        }
+        return cells;
+    }
+
+    private static MapMeta ReadMeta(TomlTable root, TomlTable m, MapData map, int version, string path)
     {
         string biome = m.ContainsKey("biome") ? Str(m, "biome", path) : "";
         MapSymmetry symmetry = MapSymmetry.None;
@@ -198,7 +231,11 @@ public static class MapFile
                 features.Add(new MapFeature(type, new CellCoord(x, y)));
             }
         }
-        return new MapMeta(biome, symmetry, maxPlayers, generator, features);
+        return new MapMeta(biome, symmetry, maxPlayers, generator, features)
+        {
+            ConvoyEdge = version >= 3 ? ReadCells(m, "convoy_edge", map, path) : new List<CellCoord>(),
+            Landing = version >= 3 ? ReadCells(m, "landing", map, path) : new List<CellCoord>(),
+        };
     }
 
     private static long Int64(TomlTable t, string key, string path) =>
