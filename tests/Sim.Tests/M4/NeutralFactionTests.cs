@@ -27,7 +27,7 @@ public sealed class NeutralFactionTests
         Assert.Equal(2, (int)Faction.Neutral);
         Assert.Equal(RuleCounts.Factions, Enum.GetValues<Faction>().Length);
         Assert.Equal(3, RuleCounts.PlayableFactions);   // M6-09: Left Behind is offered; Neutral never is
-        var kits = RulesLoader.Load(TestData.RulesDir).Sim.StartKits;
+        var kits = RulesLoader.Load(RulesLocator.FindRulesDir(AppContext.BaseDirectory)!).Sim.StartKits;   // shipped data: the fixture set has no Left Behind kit
         foreach (Faction f in RuleCounts.PlayableOrder)
         {
             Assert.True((int)f < kits.Count, $"{f} has a start kit slot");
