@@ -25,7 +25,7 @@ public sealed class CommanderReplayAndSaveTests
     }
 
     [Fact]
-    public void A_commander_game_replays_to_the_same_state_and_directive_without_any_provider()
+    public async Task A_commander_game_replays_to_the_same_state_and_directive_without_any_provider()
     {
         using var t = new SaveTestSupport();
         using SkirmishGame game = SkirmishGame.Create(t.RulesDir, SkirmishSettings.Default);
@@ -38,12 +38,11 @@ public sealed class CommanderReplayAndSaveTests
         var rec = new ReplayRecording(game.Sim, RulesBundle.ReadDirectory(t.RulesDir), path, Path.Combine(t.Folder, "prev.rpl"), null);
         var host = new SimHost(game.Sim, rec) { Ai = game.Ai };
         host.StepTicks(Commander.CadenceTicks + 1);
-        // The reply arrives on the thread pool in wall time; keep ticking (bounded) until the directive reaches the sim.
-        for (int i = 0; i < 3000 && !game.Sim.ViewFor(1).Directive.Set; i++)
-        {
-            Thread.Sleep(1);
-            host.StepTicks(1);
-        }
+        // The request runs on the thread pool: wait for that task itself (not a wall-clock budget), so the reply is always read within
+        // its own cadence window (a late poll would drop it as stale). Then a few ticks carry the directive command into the sim.
+        Assert.NotNull(commander.LastCall);
+        await commander.LastCall!.WaitAsync(TimeSpan.FromSeconds(60));
+        for (int i = 0; i < 50 && !game.Sim.ViewFor(1).Directive.Set; i++) host.StepTicks(1);
         Directive live = game.Sim.ViewFor(1).Directive;
         Assert.True(live.Set);
         Assert.Equal(DirectiveCodec.PostureAllIn, live.Posture);
