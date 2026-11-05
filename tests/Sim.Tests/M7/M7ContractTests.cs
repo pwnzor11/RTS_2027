@@ -91,7 +91,7 @@ public sealed class M7ContractTests
     {
         ShipmentRules s = RulesLoader.Load(RulesLocator.FindRulesDir(AppContext.BaseDirectory)!).Sim.Shipments;
         Assert.False(s.Enabled);
-        Assert.Equal(ShipmentRules.Default with { Enabled = false }, s);
+        Assert.Equal(ShipmentRules.Default with { Enabled = false, TenderType = "exp_supply_tender" }, s);   // M7-08 names the convoy ship
     }
 
     [Fact]

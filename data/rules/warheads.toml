@@ -215,7 +215,7 @@ splash = 0
 hits_allies = false
 
 [exp_depth_charge]   # (tune) Patrol Launch: only a submerged vessel feels it fully
-versus = [0, 0, 0, 0, 0, 40, 30, 200]
+versus = [0, 0, 0, 0, 0, 40, 30, 100]
 splash = 1
 hits_allies = false
 

@@ -420,7 +420,7 @@ projectile_speed = 64
 warhead = "exp_rocket_salvo"
 
 [exp_launch_charge]   # Patrol Launch: depth charge, submerged vessels only
-damage = 40  # (tune)
+damage = 60  # (tune)
 range = 768  # (tune)
 min_range = 0
 rate_of_fire = 40  # (tune)
