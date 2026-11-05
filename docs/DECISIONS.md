@@ -931,3 +931,12 @@ all four factions, plan only). It also writes Expedition Archive entries and 2�
 behaviour only, D-113); this unblocks M6-10. (2) The supply cap (D-125) is on by default in skirmish once it lands. (3) Art is staged
 into the owner's `_art_push` folder overnight and pushed by the owner with push_art.ps1 (the PC shell has no GitHub sign-in; D-084).
 **Status:** confirmed (owner, session 9 kickoff)
+
+### D-130 · 2026-11-05 · Supply cap, veterancy and M7 plan designs
+**Decision:** docs/design/13_supply_cap.md, 14_veterancy.md and 11_m7_plan.md are the designs for D-125, D-127 and M7. Lead picks
+where the docs left options: supply buildings are new `auth_ration_hall`, `dir_bunk_gallery`, `lb_still_rig` (a rig) and
+`exp_provision_store`; harvesters cost 1 supply, the packed Mother Rig 0; supply is derived each tick (no state part) behind
+`[supply] enabled`; Expedition stores give full supply only while shipments keep arriving (option A). Veterancy ranks Veteran /
+Elite / Hero, kill value stored in a new "veterancy" part (format 11), rank 3 ≈ 2× combat value plus self-heal; the Expedition
+gets no faster gain (only its `exp_veteran_drill` upgrade). M7 contracts follow at format 12.
+**Status:** assumed — confirm (owner reads 13 §2.3 and 14 §2.3 first)
