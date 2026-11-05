@@ -28,8 +28,8 @@ def pack(S, U, R):
     S.box((0.30, 0.16, 0.34), (0.0, -0.27, 0.22), "rust", U, bevel=0.02)             # toolbox
     S.box((0.32, 0.03, 0.08), (0.0, -0.27, 0.40), "steel", U, bevel=0)
     S.box((0.10, 0.03, 0.10), (0.0, -0.355, 0.22), "hazard", U, bevel=0)
-    S.cyl(0.025, 0.95, (0.10, -0.30, 0.68), "wood", "Z", U, verts=6)                 # mast
-    S.box((0.03, 0.26, 0.17), (0.10, -0.44, 1.05), "house", U, bevel=0)              # pennant
+    S.cyl(0.025, 0.62, (0.10, -0.30, 0.55), "wood", "Z", U, verts=6)                 # mast
+    S.box((0.03, 0.26, 0.17), (0.10, -0.44, 0.78), "house", U, bevel=0)              # pennant
 
 
 def weapon(S, GM, p, R):
