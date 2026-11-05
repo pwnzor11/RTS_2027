@@ -10,6 +10,7 @@ using Rts.Game.Render;
 using Rts.Game.Sandbox;
 using Rts.Game.Sprites;
 using Rts.Game.Ui.Fonts;
+using Rts.Game.Veterancy;
 using Rts.Sim.Core;
 using Rts.Sim.Rules;
 
@@ -224,6 +225,7 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
 
         DrawGrid(batch, pixel, l);
         if (LeftBehindText.ShowUnpackHint(_hud, snapshot, _player)) DrawUnpackHint(batch, pixel, l);   // M6-09
+        DrawUnitInfo(batch, pixel, snapshot);   // VET-5
         _minimap.Draw(batch, pixel, l.Minimap, snapshot, _cameraTopLeft, _viewSizeWorld);
         DrawTooltip(batch, pixel);
     }
@@ -573,6 +575,39 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
             Text(batch, pixel, line, new Vector2(r.X + (r.Width - w) / 2f, y), Gold, scale, FontWeight.Regular);
             y += lh;
         }
+    }
+
+    // VET-5: the info panel for exactly one selected own unit, top left of the map view.
+    private void DrawUnitInfo(SpriteBatch batch, Texture2D pixel, SimSnapshot snapshot)
+    {
+        if (_selection.Count != 1) return;
+        UnitKey key = _selection.Units[0];
+        UnitView? found = null;
+        foreach (UnitView u in snapshot.Units)
+            if (u.Player == _player && UnitKey.Of(u) == key) { found = u; break; }
+        if (found is not UnitView unit) return;
+
+        SimRules r = _source.Rules;
+        bool vet = r.Veterancy.Enabled;
+        string name;
+        int max, scale;
+        bool canRank;
+        if (unit.Kind == UnitKind.Vehicle)
+        {
+            VehicleType t = r.Vehicles[unit.TypeIndex];
+            name = CameoNames.Display(t.Id); max = t.MaxHealth; scale = t.VetThresholdPermille; canRank = t.CanRank;
+        }
+        else
+        {
+            InfantryType t = r.Infantry[unit.TypeIndex];
+            name = CameoNames.Display(t.Id); max = t.MaxHealth; scale = t.VetThresholdPermille; canRank = t.CanRank;
+        }
+
+        int rank = vet ? _source.Sim.RankOf(key.Kind, key.Id.Index) : 0;
+        int kill = vet ? _source.Sim.KillValueOf(key.Kind, key.Id.Index) : 0;
+        int next = vet ? VeterancyText.NextThreshold(r.Veterancy.Thresholds, rank, scale, canRank) : 0;
+        IReadOnlyList<string> lines = UnitInfoPanel.Lines(name, unit.Health, max, vet, rank, kill, next);
+        UnitInfoPanel.Draw(batch, pixel, new Point(_layout.MapView.X + 8, _layout.MapView.Y + 8), lines, _ui);
     }
 
     private void DrawPowerBar(SpriteBatch batch, Texture2D pixel, SidebarLayout l)
