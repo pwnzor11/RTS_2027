@@ -167,6 +167,7 @@ cost = 800  # ASSUMED (M3-07)
 prerequisites = ["dir_assembly_bore"]
 
 [dir_dirigible]
+veteran = false  # VET-4: its weapon deals no damage (it lays foam/ash/blackout/decon), so it never earns kills; an armed type would default to ranking
 tier = 2
 faction = "directorate"
 tunnel_size = "none"
@@ -202,6 +203,7 @@ prerequisites = ["dir_isotope_works"]
 deploys_into = "dir_shaft"
 
 [auth_decon_truck]
+veteran = false  # VET-4: its weapon deals no damage (it lays foam/ash/blackout/decon), so it never earns kills; an armed type would default to ranking
 tier = 2
 tunnel_size = "none"
 speed = 24  # ASSUMED (M3-07)
@@ -253,6 +255,7 @@ cost = 800  # ASSUMED (M4-07)
 prerequisites = ["auth_factory"]
 
 [auth_foam_truck]   # PLACEHOLDER ART (M4-ART); Quick-Set Foam Layer (design 08 §4, D-077)
+veteran = false  # VET-4: its weapon deals no damage (it lays foam/ash/blackout/decon), so it never earns kills; an armed type would default to ranking
 tier = 2
 locomotion = "wheeled"
 speed = 24  # ASSUMED (M4-07)
@@ -328,6 +331,7 @@ cost = 800  # ASSUMED (M4-07)
 prerequisites = ["auth_factory"]
 
 [dir_ash_sower]   # PLACEHOLDER ART (M4-ART); lays radiation with a contaminate-only weapon (design 08 §4)
+veteran = false  # VET-4: its weapon deals no damage (it lays foam/ash/blackout/decon), so it never earns kills; an armed type would default to ranking
 faction = "directorate"
 tier = 2
 tunnel_size = "M"
@@ -486,6 +490,7 @@ aura_targets = ["lb_mother_rig_packed"]
 tow_bonus_permille = 1000  # (tune) packed rigs keep full speed when towed
 
 [lb_dust_sail]   # PLACEHOLDER ART; wind-rigged Blackout layer
+veteran = false  # VET-4: its weapon deals no damage (it lays foam/ash/blackout/decon), so it never earns kills; an armed type would default to ranking
 faction = "left_behind"
 tier = 2
 speed = 22  # (tune)
