@@ -232,9 +232,9 @@ public sealed partial class Simulation
         if (kind != ActorKind.Building && IsUnderground(kind, i)) return false;                       // M3-05: underground cannot fire
         if (!target.Id.IsNone && target.Kind <= ActorKind.Building && !WeaponCanTarget(w, target.Kind, target.Id.Index)) return false;   // M3-05: air vs ground
         // VET-2: the shooter rides along with the shot so the kill can be credited (mobile actors only: buildings never rank; none when veterancy is off)
-        ActorRef shooter = kind != ActorKind.Building && Setup.Rules.Veterancy.Enabled ? new ActorRef(kind, IdAt(kind, i)) : default;
+        ActorRef shooter = kind != ActorKind.Building && VetRules.Enabled ? new ActorRef(kind, IdAt(kind, i)) : default;
         int rank = shooter.Id.IsNone ? 0 : RankOf(kind, i);   // VET-3: the shooter's rank at the moment of firing
-        int damage = rank == 0 ? w.Damage : ScaleByRank(Setup.Rules.Veterancy.DamagePermille, rank, w.Damage);
+        int damage = rank == 0 ? w.Damage : ScaleByRank(VetRules.DamagePermille, rank, w.Damage);
         if (w.ProjectileSpeed <= 0)
             Detonate(owner, damage, w.Warhead, targetPoint, target, true, shooter);
         else
@@ -244,7 +244,7 @@ public sealed partial class Simulation
         }
         e.ReloadTicks = w.RateOfFire < 1 ? 1 : w.RateOfFire;
         if (kind != ActorKind.Building) e.ReloadTicks = Math.Max(1, (int)((long)e.ReloadTicks * _effects.RofPermille(kind, i) / 1000));   // M3-06: aura rate of fire
-        if (rank > 0) e.ReloadTicks = Math.Max(1, ScaleByRank(Setup.Rules.Veterancy.ReloadPermille, rank, e.ReloadTicks));   // VET-3: faster reload
+        if (rank > 0) e.ReloadTicks = Math.Max(1, ScaleByRank(VetRules.ReloadPermille, rank, e.ReloadTicks));   // VET-3: faster reload
         if (!shooter.Id.IsNone) MarkCombat(kind, i);   // VET-3: self-heal waits after a shot
         return true;
     }
@@ -270,7 +270,7 @@ public sealed partial class Simulation
         if (kind != ActorKind.Building)
         {
             int rank = RankOf(kind, i);   // VET-3: a ranked target takes less damage
-            if (rank > 0) d = Math.Max(1, ScaleByRank(Setup.Rules.Veterancy.TakenPermille, rank, d));
+            if (rank > 0) d = Math.Max(1, ScaleByRank(VetRules.TakenPermille, rank, d));
         }
         QueueHit(new ActorRef(kind, IdAt(kind, i)), d, source, shooter);
         if (kind == ActorKind.Building && wh.GarrisonDamagePercent > 0 && BuildingTypeAt(i).Garrison > 0)

@@ -12,6 +12,9 @@ namespace Rts.Sim;
 // bonuses.
 public sealed partial class Simulation
 {
+    /// <summary>The [veterancy] constants. A global block (no upgrade changes it), read from the base rules in this one place.</summary>
+    internal VeterancyRules VetRules => Setup.Rules.Veterancy;
+
     /// <summary>The "veterancy" part (VET-1): kill value and last-combat tick per vehicle and infantry slot.</summary>
     public VeterancyState Veterancy => _veterancy;
 
@@ -20,12 +23,11 @@ public sealed partial class Simulation
     /// lethal hit earns the victim's cost x kill permille / 1000 as kill value when: veterancy is enabled, the shooter is a live vehicle or
     /// infantry soldier that is still the same actor (its slot and generation match: no credit once the slot was freed or reused), its
     /// type can rank, and the victim belongs to an Enemy of the hit's owner (the test OnLethalHit uses). Hits without a shooter (death
-    /// weapons, superweapons, radiation, storms) never credit. The cost is the victim type's cost in the base rules (not an upgrade-changed
-    /// or discounted price). Garrisoned soldiers fire through Fire like any other, so they earn their own value.
+    /// weapons, superweapons, radiation, storms) never credit. The cost is the victim type's rules cost in its owner's table (not the discounted price paid). Garrisoned soldiers fire through Fire like any other, so they earn their own value.
     /// </summary>
     private void OnVeterancyKill(ActorRef shooter, ActorRef victim, byte source)
     {
-        VeterancyRules vr = Setup.Rules.Veterancy;
+        VeterancyRules vr = VetRules;
         if (!vr.Enabled || shooter.Id.IsNone || shooter.Kind > ActorKind.Infantry) return;
         if (!SlotsOf(shooter.Kind).IsAlive(shooter.Id)) return;
         byte victimOwner = PlayerAt(victim.Kind, victim.Id.Index);
@@ -33,11 +35,12 @@ public sealed partial class Simulation
         int s = shooter.Id.Index;
         if (!CanRankAt(shooter.Kind, s)) return;
         int vi = victim.Id.Index;
+        SimRules vrules = RulesOf(victimOwner);   // the victim owner's table: a cost upgrade changes what the kill is worth
         long add = victim.Kind switch
         {
-            ActorKind.Vehicle => (long)Setup.Rules.Vehicles[_units.TypeIndex[vi]].Cost * vr.KillPermilleUnit / 1000,
-            ActorKind.Infantry => (long)Setup.Rules.Infantry[_infantry.TypeIndex[vi]].Cost * vr.KillPermilleUnit / 1000,
-            ActorKind.Building => (long)Setup.Rules.Buildings[_buildings.TypeIndex[vi]].Cost * vr.KillPermilleBuilding / 1000,
+            ActorKind.Vehicle => (long)vrules.Vehicles[_units.TypeIndex[vi]].Cost * vr.KillPermilleUnit / 1000,
+            ActorKind.Infantry => (long)vrules.Infantry[_infantry.TypeIndex[vi]].Cost * vr.KillPermilleUnit / 1000,
+            ActorKind.Building => (long)vrules.Buildings[_buildings.TypeIndex[vi]].Cost * vr.KillPermilleBuilding / 1000,
             _ => 0,
         };
         if (add <= 0) return;
@@ -54,7 +57,7 @@ public sealed partial class Simulation
     /// </summary>
     public int RankOf(ActorKind kind, int i)
     {
-        VeterancyRules vr = Setup.Rules.Veterancy;
+        VeterancyRules vr = VetRules;
         if (!vr.Enabled || kind > ActorKind.Infantry || !SlotsOf(kind).IsIndexAlive(i)) return 0;
         int kv = kind == ActorKind.Vehicle ? _veterancy.VehicleKillValue[i] : _veterancy.InfantryKillValue[i];
         if (kv <= 0) return 0;
@@ -86,7 +89,7 @@ public sealed partial class Simulation
     /// the part stays untouched (and hashes as before) in games that do not use it.</summary>
     private void MarkCombat(ActorKind kind, int i)
     {
-        if (!Setup.Rules.Veterancy.Enabled) return;
+        if (!VetRules.Enabled) return;
         if (kind == ActorKind.Vehicle) _veterancy.VehicleLastCombat[i] = Tick + 1;   // stored as tick + 1 so 0 can mean "never"
         else if (kind == ActorKind.Infantry) _veterancy.InfantryLastCombat[i] = Tick + 1;
     }
@@ -97,7 +100,7 @@ public sealed partial class Simulation
     {
         int aura = _effects.SpeedPermille(kind, i);
         int rank = RankOf(kind, i);
-        return rank == 0 ? aura : ScaleByRank(Setup.Rules.Veterancy.SpeedPermille, rank, aura);
+        return rank == 0 ? aura : ScaleByRank(VetRules.SpeedPermille, rank, aura);
     }
 
     /// <summary>
@@ -107,7 +110,7 @@ public sealed partial class Simulation
     /// </summary>
     private void RunVeterancy()
     {
-        VeterancyRules vr = Setup.Rules.Veterancy;
+        VeterancyRules vr = VetRules;
         if (!vr.Enabled) return;
         for (int k = 0; k <= (int)ActorKind.Infantry; k++)
         {
