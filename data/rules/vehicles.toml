@@ -744,7 +744,7 @@ cost = 500  # (tune)
 prerequisites = ["exp_quay"]
 passengers = 8  # design 07 §5 (8 infantry)
 unload_ticks = 10  # (tune) one passenger onto the shore every half second
-# TODO M7-04: "or 2 vehicles (4 slots)" and landing only on `landing` cells need the landing mechanic; passengers is a flat count today
+vehicle_slots = 2  # design 07 §6.3: carries 2 vehicles beside the infantry; vehicles land only on `landing` (Coast) cells
 
 [exp_supply_tender]   # PLACEHOLDER ART; convoy ship spawned by [shipments]; unarmed. Not meant to be built: gated behind the Anchorage at a prohibitive cost
 faction = "expedition"

@@ -20,10 +20,14 @@ namespace Rts.Sim.Tunnels;
 /// </list>
 /// Layout: version, capacities, NextTicket, sparse (slot, layer) runs for vehicles then infantry (0-terminated), sparse
 /// (slot, carrier) for infantry, sparse (slot, morph type, ticks) for buildings, then each list as count + entries.
+/// <see cref="VehicleCarrier"/> (M7-04b) is the transport a vehicle passenger rides in; saved after the telegraphs, only in version 2.
 /// </summary>
 public sealed class TunnelState : ISimStatePart
 {
     private const byte Version = 1;
+    /// <summary>Written instead of <see cref="Version"/> only while some vehicle rides in a transport (M7-04b): the vehicle carriers
+    /// follow the telegraphs. Keeping version 1 otherwise leaves every game without vehicle passengers byte-identical.</summary>
+    private const byte VersionWithVehicleCarriers = 2;
 
     /// <summary>Layer of each vehicle slot.</summary>
     public readonly ActorLayer[] VehicleLayer;
@@ -31,6 +35,8 @@ public sealed class TunnelState : ISimStatePart
     public readonly ActorLayer[] InfantryLayer;
     /// <summary>Transport (vehicle id) each infantry slot rides in, or none.</summary>
     public readonly EntityId[] InfantryCarrier;
+    /// <summary>Transport (vehicle id) each vehicle slot rides in (Layer = Passenger), or none (M7-04b).</summary>
+    public readonly EntityId[] VehicleCarrier;
     /// <summary>Per building slot: building type index + 1 this building is morphing into (0 = none).</summary>
     public readonly int[] BuildingMorphType;
     /// <summary>Per building slot: ticks left of the morph.</summary>
@@ -51,6 +57,7 @@ public sealed class TunnelState : ISimStatePart
         VehicleLayer = new ActorLayer[setup.Limits.Vehicles];
         InfantryLayer = new ActorLayer[setup.Limits.Infantry];
         InfantryCarrier = new EntityId[setup.Limits.Infantry];
+        VehicleCarrier = new EntityId[setup.Limits.Vehicles];
         BuildingMorphType = new int[setup.Limits.Buildings];
         BuildingMorphTicks = new int[setup.Limits.Buildings];
     }
@@ -69,7 +76,7 @@ public sealed class TunnelState : ISimStatePart
     /// <summary>Reset a mobile slot's tunnel data (spawn / removal).</summary>
     public void ClearMobile(ActorKind kind, int i)
     {
-        if (kind == ActorKind.Vehicle) VehicleLayer[i] = ActorLayer.Surface;
+        if (kind == ActorKind.Vehicle) { VehicleLayer[i] = ActorLayer.Surface; VehicleCarrier[i] = default; }
         else if (kind == ActorKind.Infantry) { InfantryLayer[i] = ActorLayer.Surface; InfantryCarrier[i] = default; }
     }
 
@@ -79,7 +86,9 @@ public sealed class TunnelState : ISimStatePart
     /// <inheritdoc />
     public void Write(BinaryWriter w)
     {
-        w.Write(Version);
+        bool vehicleCarriers = false;
+        for (int i = 1; i < VehicleCarrier.Length && !vehicleCarriers; i++) vehicleCarriers = !VehicleCarrier[i].IsNone;
+        w.Write(vehicleCarriers ? VersionWithVehicleCarriers : Version);
         w.Write(VehicleLayer.Length); w.Write(InfantryLayer.Length); w.Write(BuildingMorphType.Length);
         w.Write(NextTicket);
         for (int i = 1; i < VehicleLayer.Length; i++) if (VehicleLayer[i] != 0) { w.Write(i); w.Write((byte)VehicleLayer[i]); }
@@ -106,16 +115,20 @@ public sealed class TunnelState : ISimStatePart
         {
             StateIo.WriteCell(w, g.Cell); w.Write(g.Owner); w.Write(g.TicksLeft); w.Write((byte)g.Kind); StateIo.WriteRef(w, g.Subject);
         }
+        if (!vehicleCarriers) return;
+        for (int i = 1; i < VehicleCarrier.Length; i++) if (!VehicleCarrier[i].IsNone) { w.Write(i); StateIo.WriteId(w, VehicleCarrier[i]); }
+        w.Write(0);
     }
 
     /// <inheritdoc />
     public void Read(BinaryReader r)
     {
-        if (r.ReadByte() != Version) throw new InvalidDataException("tunnels version mismatch.");
+        byte version = r.ReadByte();
+        if (version != Version && version != VersionWithVehicleCarriers) throw new InvalidDataException("tunnels version mismatch.");
         if (r.ReadInt32() != VehicleLayer.Length || r.ReadInt32() != InfantryLayer.Length || r.ReadInt32() != BuildingMorphType.Length)
             throw new InvalidDataException("tunnels capacity mismatch.");
         NextTicket = r.ReadInt32();
-        Array.Clear(VehicleLayer); Array.Clear(InfantryLayer); Array.Clear(InfantryCarrier);
+        Array.Clear(VehicleLayer); Array.Clear(InfantryLayer); Array.Clear(InfantryCarrier); Array.Clear(VehicleCarrier);
         Array.Clear(BuildingMorphType); Array.Clear(BuildingMorphTicks);
         for (int i = r.ReadInt32(); i != 0; i = r.ReadInt32()) VehicleLayer[StateIo.Slot(i, VehicleLayer.Length, Name)] = (ActorLayer)r.ReadByte();
         for (int i = r.ReadInt32(); i != 0; i = r.ReadInt32()) InfantryLayer[StateIo.Slot(i, InfantryLayer.Length, Name)] = (ActorLayer)r.ReadByte();
@@ -134,5 +147,7 @@ public sealed class TunnelState : ISimStatePart
         Telegraphs.Clear();
         for (int n = StateIo.Count(r, Name); n > 0; n--)
             Telegraphs.Add(new Telegraph { Cell = StateIo.ReadCell(r), Owner = r.ReadByte(), TicksLeft = r.ReadInt32(), Kind = (TelegraphKind)r.ReadByte(), Subject = StateIo.ReadRef(r) });
+        if (version == VersionWithVehicleCarriers)
+            for (int i = r.ReadInt32(); i != 0; i = r.ReadInt32()) VehicleCarrier[StateIo.Slot(i, VehicleCarrier.Length, Name)] = StateIo.ReadId(r);
     }
 }
