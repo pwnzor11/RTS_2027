@@ -15,6 +15,7 @@ internal static class CaptureMission
 {
     public static int Handle(Simulation sim, MobileStore store, ActorKind kind, int i)
     {
+        if (IsRaid(sim, store, kind, i)) return Raid(sim, store, kind, i);   // M6-05
         if (kind != ActorKind.Infantry) { End(sim, store, kind, i); return 1; }
         EntityId target = store.Target[i];
         bool engineer = sim.RulesOf(store.Player[i]).Infantry[store.TypeIndex[i]].Engineer;
@@ -63,6 +64,29 @@ internal static class CaptureMission
         }
         var bt = sim.RulesOf(sim.Buildings.Player[b]).Buildings[sim.Buildings.TypeIndex[b]];
         CellCoord tl = sim.Buildings.Cell[b];
+        CellCoord goal = new(Math.Clamp(cur.X, tl.X, tl.X + bt.FootprintW - 1), Math.Clamp(cur.Y, tl.Y, tl.Y + bt.FootprintH - 1));
+        return MoveMission.StepToward(sim, store, kind, i, goal);
+    }
+
+    // M6-05: a raider walking to an enemy silo/refinery (marked by AttackTarget = the building); plunders on arrival.
+    private static bool IsRaid(Simulation sim, MobileStore store, ActorKind kind, int i) =>
+        sim.CombatData.At(kind, i).AttackTarget is { Kind: ActorKind.Building } && sim.IsRaiderUnit(kind, i)
+        && sim.Buildings.Slots.IsAlive(store.Target[i]) && sim.IsPlunderTarget(store.Player[i], store.Target[i].Index);
+
+    private static int Raid(Simulation sim, MobileStore store, ActorKind kind, int i)
+    {
+        EntityId target = store.Target[i];
+        int b = target.Index;
+        CellCoord cur = store.Position[i].ToCell();
+        CellCoord tl = sim.Buildings.Cell[b];
+        var bt = sim.RulesOf(sim.Buildings.Player[b]).Buildings[sim.Buildings.TypeIndex[b]];
+        int dx = Math.Max(Math.Max(tl.X - cur.X, cur.X - (tl.X + bt.FootprintW - 1)), 0);
+        int dy = Math.Max(Math.Max(tl.Y - cur.Y, cur.Y - (tl.Y + bt.FootprintH - 1)), 0);
+        if (Math.Max(dx, dy) <= 1)
+        {
+            if (!sim.PlunderNow(kind, i, target)) End(sim, store, kind, i);
+            return 1;
+        }
         CellCoord goal = new(Math.Clamp(cur.X, tl.X, tl.X + bt.FootprintW - 1), Math.Clamp(cur.Y, tl.Y, tl.Y + bt.FootprintH - 1));
         return MoveMission.StepToward(sim, store, kind, i, goal);
     }
