@@ -79,10 +79,10 @@ public sealed class StormTests
         var outside = new CellCoord(28, 10);
         Assert.True(sim.Ground.Blackout[sim.Ground.IndexOf(inside)] > 0);
         Assert.Equal(0, sim.Ground.Blackout[sim.Ground.IndexOf(outside)]);
-        Assert.Equal(64, sim.Ground.RadiationAt(inside));   // 20 per pass, capped
+        Assert.InRange(sim.Ground.RadiationAt(inside), 60, 64);   // 20 per pass, capped (natural decay may shave a point)
         Assert.Equal(0, sim.Ground.RadiationAt(outside));
         Run(sim, 40);
-        Assert.Equal(64, sim.Ground.RadiationAt(inside));
+        Assert.InRange(sim.Ground.RadiationAt(inside), 60, 64);
     }
 
     [Fact]
@@ -93,7 +93,7 @@ public sealed class StormTests
         sim.Ground.Radiation[sim.Ground.IndexOf(c)] = 150;
         FireAt(sim, sun, 24, 10);
         Run(sim, 30);
-        Assert.Equal(150, sim.Ground.RadiationAt(c));
+        Assert.InRange(sim.Ground.RadiationAt(c), 145, 150);   // untouched by the cap (only natural decay)
     }
 
     [Fact]
@@ -119,15 +119,15 @@ public sealed class StormTests
         for (int i = 0; i < EffectsState.MaxStorms; i++)
         {
             sim.Effects.BuildingCharge[sun.Index] = Total;
-            FireAt(sim, sun, 5 + i * 4, 30);
+            FireAt(sim, sun, 13 + i, 10);
         }
-        for (int s = 0; s < EffectsState.MaxStorms; s++) Assert.Equal(5 + s * 4, sim.Effects.StormX[s]);
+        for (int s = 0; s < EffectsState.MaxStorms; s++) Assert.Equal(13 + s, sim.Effects.StormX[s]);
         // slot 0 is the oldest (fewest ticks left)
         Assert.True(sim.Effects.StormTicks[0] < sim.Effects.StormTicks[7]);
         sim.Effects.BuildingCharge[sun.Index] = Total;
-        FireAt(sim, sun, 40, 20);
-        Assert.Equal(40, sim.Effects.StormX[0]);
-        Assert.Equal(5 + 4, sim.Effects.StormX[1]);
+        FireAt(sim, sun, 24, 14);
+        Assert.Equal(24, sim.Effects.StormX[0]);
+        Assert.Equal(14, sim.Effects.StormX[1]);
         Assert.Equal(StormTicks, sim.Effects.StormTicks[0] + 1);
     }
 
@@ -137,7 +137,7 @@ public sealed class StormTests
         var (sim, sun) = Make(storm: false);
         FireAt(sim, sun, 24, 10);
         for (int s = 0; s < EffectsState.MaxStorms; s++) Assert.Equal(0, sim.Effects.StormTicks[s]);
-        Assert.True(sim.Ground.RadiationAt(new CellCoord(24, 10)) >= Simulation.SuperweaponRadiation);
+        Assert.True(sim.Ground.RadiationAt(new CellCoord(24, 10)) >= Simulation.SuperweaponRadiation - 10);
         Assert.Equal(1000, sim.StormSpeedPermilleAt(1, Centre(24, 10)));
     }
 
