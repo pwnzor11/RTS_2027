@@ -13,6 +13,8 @@ namespace Rts.Sim;
 // ASSUMED (M3-06): research speed does not scale with the number of research buildings (one lane, factories = 1); low power slows it
 // like any other production.
 // ASSUMED (M3-06): an upgrade already in the queue cannot be queued again.
+// M6-06: UpgradeType.RepairsVehiclesAtRange needs no write at completion: the mask bit is read by the aura recompute (Simulation.Effects.cs,
+// HasUpgradeFlag) every 10 ticks, so it applies to units already built and to later ones alike.
 public sealed partial class Simulation
 {
     /// <summary>Build with Arg = ProductionCategory.Upgrade (Arg2 = upgrade index).</summary>
