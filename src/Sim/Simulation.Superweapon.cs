@@ -43,6 +43,13 @@ public sealed partial class Simulation
         BuildingType bt = BuildingTypeAt(b);
         LeptonCoord impact = CellCentre(c.Cell);
         WarheadType wh = SuperweaponWarhead(c.Player, bt);
+        if (wh.StormTicks > 0 && wh.StormRadius > 0)
+        {   // M6-07: a ground-effect storm instead of the blast damage path
+            StartStorm(c.Player, c.Cell, wh);
+            _fx.Add(new FxEvent(FxKind.Superweapon, impact, wh.StormRadius));
+            _effects.BuildingCharge[b] = 0;
+            return;
+        }
         int radius = SuperweaponBlastRadius;
         int contaminate = wh.Contaminate > 0 ? wh.Contaminate : SuperweaponRadiation;
         int blackout = wh.BlackoutTicks > 0 ? wh.BlackoutTicks : SuperweaponBlackoutTicks;
