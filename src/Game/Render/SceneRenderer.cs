@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Rts.Game.Sandbox;
 using Rts.Game.Sprites;
+using Rts.Game.Veterancy;
 using Rts.Sim.Core;
 using Rts.Sim.Map;
 using Rts.Sim.View;
@@ -33,6 +34,11 @@ public sealed class SceneRenderer : IDisposable
     private readonly List<StormView> _stormViews = new();
     private readonly List<StormDraw> _storms = new();
     private bool _disposed;
+    private readonly List<ViewActor> _rankScratch = new();                 // VET-5: veterancy ranks and promotion flashes
+    private readonly List<(RankKey Key, int Rank)> _ranks = new();
+    private readonly Dictionary<RankKey, int> _rankMap = new();
+    private readonly List<RankKey> _promoted = new();
+    private readonly PromotionTracker _promotions = new();
 
     /// <summary>
     /// Creates a renderer that draws every vehicle with one sheet (the debug view's tank) and placeholders for the rest.
@@ -101,7 +107,14 @@ public sealed class SceneRenderer : IDisposable
         FogRenderer.Draw(batch, pixel, snapshot, camera, viewport);
         if (frame.Overlays.Paths) PathOverlay.Draw(batch, pixel, frame, camera);
         if (frame.Overlays.Ranges) RangeOverlay.Draw(batch, pixel, frame, camera);
-        HealthBars.Draw(batch, pixel, frame, camera, _sprites);
+        // VET-5: ranks come from the viewer's view only (fog-honest); the flash comes from the client-side tracker.
+        if (frame.Sim is not null) RankLookup.Fill(frame.Sim.ViewFor((byte)Math.Max(0, snapshot.Viewer)), _rankScratch, _ranks);
+        else _ranks.Clear();
+        _rankMap.Clear();
+        foreach ((RankKey key, int rank) in _ranks) _rankMap[key] = rank;
+        _promotions.Update(snapshot.Tick, _ranks, _promoted);
+        PromotionFlash.Draw(batch, pixel, frame.Units, camera, _promotions, snapshot.Tick);
+        HealthBars.Draw(batch, pixel, frame, camera, _sprites, _rankMap);
         if (frame.DragRect is Rectangle box) Shapes.Outline(batch, pixel, box, DragColour);
     }
 
