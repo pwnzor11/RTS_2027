@@ -9,4 +9,8 @@ public sealed record AiSide(string AiId, DifficultyProfile Profile, Faction Fact
 {
     /// <summary>Label such as "skirmisher:veteran".</summary>
     public string Label => AiId + ":" + Profile.Id + (Faction == Faction.Authority ? "" : "/" + Faction.ToString().ToLowerInvariant());
+
+    /// <summary>The label for a file name: every character that is unsafe in a file name (<c>/ \ : * ? " &lt; &gt; |</c> and control
+    /// characters) becomes '_'. Only for file names; <see cref="Label"/> is what gets printed.</summary>
+    public string FileLabel => string.Concat(Label.Select(c => "/\\:*?\"<>|".Contains(c) || char.IsControl(c) ? '_' : c));
 }
