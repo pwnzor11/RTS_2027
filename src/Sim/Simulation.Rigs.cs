@@ -39,6 +39,7 @@ public sealed partial class Simulation
             BuildingType bt = rules.Buildings[_buildings.TypeIndex[b]];
             if (bt.PacksInto < 0 || bt.PacksInto >= rules.Vehicles.Count || _tunnels.BuildingMorphType[b] != 0) return;
             _rigs.PackTicksLeft[b] = ScaledPackTicks(c.Player, bt.PackTicks);
+            SupplyChanged();   // SUP-1: a packing rig stops counting at once
             return;
         }
         if (!_units.Slots.IsAlive(c.Subject)) return;
@@ -154,7 +155,7 @@ public sealed partial class Simulation
         if (vid.IsNone)
         {   // vehicle store full: put the building back and retry next tick
             EntityId back = PlaceBuildingNow(owner, btype, tl, health);
-            if (!back.IsNone) _rigs.PackTicksLeft[back.Index] = 1;
+            if (!back.IsNone) { _rigs.PackTicksLeft[back.Index] = 1; SupplyChanged(); }   // SUP-1
             return;
         }
         int v = vid.Index;

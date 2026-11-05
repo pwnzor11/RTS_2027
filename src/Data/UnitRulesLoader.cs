@@ -24,6 +24,8 @@ internal static class UnitRulesLoader
         "tow_bonus_permille",
         // schema v6 (VET-1)
         "veteran",
+        // schema v7 (SUP-1)
+        "supply",
     ];
 
     private static readonly string[] InfantryKeys =
@@ -39,6 +41,8 @@ internal static class UnitRulesLoader
         "salvage_rate", "raider", "raider_one_use", "ash_stealth_delay_ticks", "ash_stealth_threshold", "aura_repair_permille",
         // schema v6 (VET-1)
         "veteran",
+        // schema v7 (SUP-1)
+        "supply",
     ];
 
     /// <summary>The schema v3 keys vehicles and infantry share (all optional).</summary>
@@ -113,7 +117,8 @@ internal static class UnitRulesLoader
         int? towBonus = f.OptInt("tow_bonus_permille", 0, 100_000, 0);
         bool hasVeteran = f.Has("veteran");   // VET-1: absent = armed types rank
         bool? veteran = hasVeteran ? f.Bool("veteran") : false;
-        if (veteran is null) return null;
+        int? supply = f.OptInt("supply", -1, 1000, -1);   // SUP-1: -1 = cost bands
+        if (veteran is null || supply is null) return null;
         if (unpacksInto is null || packTicks is null || salvageRate is null || raider is null || raiderOneUse is null
             || dropsBlackout is null || auraRepair is null || towBonus is null) return null;
         if (v3 is null || passengers is null || deploysInto is null || tier is null) return null;
@@ -153,6 +158,7 @@ internal static class UnitRulesLoader
             AuraRepairPermille = auraRepair.Value,
             TowBonusPermille = towBonus.Value,
             Veteran = hasVeteran ? veteran.Value : null,
+            Supply = supply.Value,
         };
     }
 
@@ -180,7 +186,8 @@ internal static class UnitRulesLoader
         int? auraRepair = f.OptInt("aura_repair_permille", 0, 1000, 0);
         bool hasVeteran = f.Has("veteran");   // VET-1: absent = armed types rank
         bool? veteran = hasVeteran ? f.Bool("veteran") : false;
-        if (veteran is null) return null;
+        int? supply = f.OptInt("supply", -1, 1000, -1);   // SUP-1: -1 = cost bands
+        if (veteran is null || supply is null) return null;
         if (salvageRate is null || raider is null || raiderOneUse is null || ashDelay is null || ashThreshold is null || auraRepair is null)
             return null;
         if (v3 is null || engineer is null || tier is null || canGarrison is null) return null;
@@ -216,6 +223,7 @@ internal static class UnitRulesLoader
             AshStealthThreshold = ashThreshold.Value,
             AuraRepairPermille = auraRepair.Value,
             Veteran = hasVeteran ? veteran.Value : null,
+            Supply = supply.Value,
         };
     }
 }

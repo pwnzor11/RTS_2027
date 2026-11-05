@@ -121,6 +121,7 @@ public static class RulesLoader
         GarrisonRules? garrison = gameRoot is null ? null : GameRulesLoader.ParseGarrison(gameRoot, GameFile, problems);   // M4-01
         FoamRules? foam = gameRoot is null ? null : GameRulesLoader.ParseFoam(gameRoot, GameFile, problems);               // M4-01
         VeterancyRules? veterancy = gameRoot is null ? null : GameRulesLoader.ParseVeterancy(gameRoot, GameFile, problems);   // VET-1
+        SupplyRules? supply = gameRoot is null ? null : GameRulesLoader.ParseSupply(gameRoot, GameFile, problems);            // SUP-1
 
         var typeIds = new HashSet<string>(
             vehicleEntries.Concat(infantryEntries).Concat(buildingEntries).Concat(upgradeEntries).Select(e => e.Id), StringComparer.Ordinal);
@@ -134,7 +135,7 @@ public static class RulesLoader
         ValidateNeutral(vehicles, infantry, buildings, upgrades, problems);   // Q-37
 
         if (problems.Count > 0 || game is null || terrain is null || economy is null || tunnels is null || radiation is null
-            || stealth is null || kits is null || garrison is null || foam is null || veterancy is null)
+            || stealth is null || kits is null || garrison is null || foam is null || veterancy is null || supply is null)
         {
             throw new RulesException(problems);
         }
@@ -145,7 +146,7 @@ public static class RulesLoader
         var sim = new SimRules(vehicles, infantry, buildings, weapons, warheads, terrain, effects)
         {
             Economy = economy, Tunnels = tunnels, Radiation = radiation, Stealth = stealth, StartKits = kits, Upgrades = upgrades,
-            Garrison = garrison, Foam = foam, Veterancy = veterancy,
+            Garrison = garrison, Foam = foam, Veterancy = veterancy, Supply = supply,
         };
         return new RuleSet(game, sim, RulesHash.Compute(game, sim));
     }

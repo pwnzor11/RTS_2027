@@ -24,6 +24,8 @@ internal static class StructureRulesLoader
         "tier", "garrison", "garrison_range_bonus", "garrison_rof_permille",
         // schema v5 (M6-02)
         "packs_into", "pack_ticks",
+        // schema v7 (SUP-1)
+        "supply_provided", "supply_unstocked",
     ];
 
     /// <summary>Most soldiers a building may hold (schema v4).</summary>
@@ -86,6 +88,9 @@ internal static class StructureRulesLoader
         int? garrisonRange = f.OptInt("garrison_range_bonus", 0, SimConstants.MaxMapCells * SimConstants.LeptonsPerCell, 256);
         int? garrisonRof = f.OptInt("garrison_rof_permille", 1, 100_000, 750);
         int? packTicks = f.OptInt("pack_ticks", 0, 1_000_000, 0);   // M6-02
+        int? supplyProvided = f.OptInt("supply_provided", 0, 1000, 0);   // SUP-1
+        int? supplyUnstocked = f.OptInt("supply_unstocked", -1, 1000, -1);
+        if (supplyProvided is null || supplyUnstocked is null) return null;
         string? packsName = f.OptStr("packs_into", "");
         int packsInto = -1;
         if (packsName is { Length: > 0 })
@@ -185,6 +190,8 @@ internal static class StructureRulesLoader
             GarrisonRofPermille = garrisonRof.Value,
             PacksInto = packsInto,
             PackTicks = packTicks.Value,
+            SupplyProvided = supplyProvided.Value,
+            SupplyUnstocked = supplyUnstocked.Value,
         };
         return exit is null ? building : building with { Exit = new CellCoord(exit[0], exit[1]) };
     }
