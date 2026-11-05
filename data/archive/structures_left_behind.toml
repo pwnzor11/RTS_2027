@@ -189,3 +189,15 @@ smile when it is used.
 '''
 # ASSUMED (S9) TODO: lore says campaign; replace TBD with the mission id that releases this entry.
 unlock = "campaign:TBD"
+
+# session 9: assumed — confirm
+[[entry]]
+id = "lb_still_rig"
+category = "Structure"
+faction = "left_behind"
+title = "Still Rig"
+subtitle = "Water still on a wagon frame"
+body = '''
+A copper still, a condenser coil and a rain-catch awning bolted to one wide chassis. It turns brackish runoff into water a caravan can drink, and a camp forms around it within the hour. The Still Rig packs down like every rig the caravans own, and the people follow it.
+'''
+unlock = "open"

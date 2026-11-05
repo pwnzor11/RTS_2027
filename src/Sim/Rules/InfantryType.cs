@@ -88,4 +88,9 @@ public sealed record InfantryType(string Id, int Speed, int MaxHealth, ArmorClas
 
     /// <summary>Scales the veterancy thresholds of this type, permille (effect attribute <c>vet_threshold_permille</c>; 1000 = unchanged).</summary>
     public int VetThresholdPermille { get; init; } = 1000;
+
+    // ---- schema v7 (SUP-1, docs/design/13_supply_cap.md §4). ---------------------------------------------
+
+    /// <summary>Supply this unit costs (TOML <c>supply</c>); -1 = derive from the cost bands.</summary>
+    public int Supply { get; init; } = -1;
 }

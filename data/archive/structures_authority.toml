@@ -242,3 +242,15 @@ A small brick depot whose roof fell in long ago but whose thick walls remain. A 
 '''
 # Approved by the owner 2026-11-04 (Q-38). Replace the open unlock with a mission id when known.
 unlock = "open"
+
+# session 9: assumed — confirm
+[[entry]]
+id = "auth_ration_hall"
+category = "Structure"
+faction = "authority"
+title = "Ration Hall"
+subtitle = "Everyone counted, everyone fed"
+body = '''
+A long brick hall with a ledger window on every wall, where each worker, soldier and clerk of the district is entered, counted and issued a ration. The line outside never shortens and nobody is seen to complain about it. An Authority commander knows a district by the number on the hall door.
+'''
+unlock = "open"

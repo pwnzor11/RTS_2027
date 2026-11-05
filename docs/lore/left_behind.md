@@ -292,6 +292,14 @@ field_note: RIG RADIO // DYNAMO HUMMING. LIGHTS ON IN THE KITCHEN. DON'T ASK WHE
 
 A generator built from a bus engine, a line of belts and a flywheel the size of a cartwheel. It lights the cook tent, charges the radios and hums through the night. The Dynamo Rig is loud, smelly and never quite trusted, but no camp on the Drift has ever gone dark while one was running. Its operators keep a spare belt in every pocket.
 
+<!-- session 9: assumed — confirm -->
+### lb_still_rig
+title: Still Rig
+subtitle: Water still on a wagon frame
+unlock: open
+
+A copper still, a condenser coil and a rain-catch awning bolted to one wide chassis. It turns brackish runoff into water a caravan can drink, and a camp forms around it within the hour. The Still Rig packs down like every rig the caravans own, and the people follow it.
+
 ### lb_muster_rig
 title: Muster Rig
 subtitle: Infantry production

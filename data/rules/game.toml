@@ -58,6 +58,17 @@ heal_interval_ticks = 20  # (tune) 1 s
 heal_permille = [0, 0, 10]  # (tune) Hero recovers 1 % of max health per interval when quiet
 heal_quiet_ticks = 100  # (tune) 5 s without firing or being hit
 
+# Supply cap (SUP-1, D-125, design 13). On by default in skirmish per D-129. Unit supply = band of its cost (cost <= band1_max: first
+# value, <= band2_max: second, above: third) unless the type sets `supply`; the cap is the sum of supply_provided over completed,
+# unpacked, alive own buildings, at most `ceiling`. stock_intervals is parsed for the Expedition store only (no behaviour yet).
+[supply]
+enabled = true  # (tune) D-129
+ceiling = 200  # (tune)
+band1_max = 400  # (tune)
+band2_max = 900  # (tune)
+band_values = [1, 2, 3]  # (tune)
+stock_intervals = 3  # (tune)
+
 # Skirmish start kit per faction: conyard (building id) and units (vehicle/infantry ids). Validated only when a player of
 # that faction is set up.
 [faction.authority]

@@ -48,6 +48,8 @@ namespace Rts.Data;
 /// <item>Schema v6 block (VET-1, format 9): Veterancy Enabled, Thresholds, KillPermilleUnit, KillPermilleBuilding, DamagePermille,
 /// TakenPermille, ReloadPermille, SpeedPermille, HealIntervalTicks, HealPermille, HealQuietTicks; per vehicle and infantry CanRank
 /// (the resolved <c>veteran</c> flag) and VetThresholdPermille.</item>
+/// <item>Schema v7 block (SUP-1, format 10): Supply Enabled, Ceiling, Band1Max, Band2Max, BandValues, StockIntervals; per vehicle and
+/// infantry Supply; per building SupplyProvided and SupplyUnstocked.</item>
 /// </list>
 /// Hashed with XxHash64. Whitespace, comments and key order in the TOML do not affect it. The loader sorts each
 /// list by id before this runs.
@@ -55,7 +57,7 @@ namespace Rts.Data;
 public static class RulesHash
 {
     /// <summary>Canonical layout version. Bump only with a DECISIONS entry.</summary>
-    public const byte FormatVersion = 9;   // 9: schema v6 block (VET-1); 6: schema v3 block (M3-01); 7: schema v4 block + Shallow land (M4-01); 8: schema v5 block (M6-02)
+    public const byte FormatVersion = 10;   // 10: schema v7 block (SUP-1); 9: schema v6 block (VET-1); 6: schema v3 block (M3-01); 7: schema v4 block + Shallow land (M4-01); 8: schema v5 block (M6-02)
 
     /// <summary>Computes the rules hash over the game constants and every sim type table.</summary>
     public static ulong Compute(GameRules game, SimRules sim)
@@ -194,6 +196,7 @@ public static class RulesHash
             WriteSchemaV4(w, sim);
             WriteSchemaV5(w, sim);
             WriteSchemaV6(w, sim);
+            WriteSchemaV7(w, sim);
         }
         return XxHash64.HashToUInt64(ms.GetBuffer().AsSpan(0, (int)ms.Length));
     }
@@ -271,6 +274,17 @@ public static class RulesHash
         w.Write(v.HealQuietTicks);
         foreach (VehicleType x in sim.Vehicles) { w.Write(x.CanRank); w.Write(x.VetThresholdPermille); }
         foreach (InfantryType x in sim.Infantry) { w.Write(x.CanRank); w.Write(x.VetThresholdPermille); }
+    }
+
+    private static void WriteSchemaV7(BinaryWriter w, SimRules sim)
+    {
+        SupplyRules s = sim.Supply;
+        w.Write(s.Enabled); w.Write(s.Ceiling); w.Write(s.Band1Max); w.Write(s.Band2Max);
+        WriteInts(w, s.BandValues);
+        w.Write(s.StockIntervals);
+        foreach (VehicleType x in sim.Vehicles) w.Write(x.Supply);
+        foreach (InfantryType x in sim.Infantry) w.Write(x.Supply);
+        foreach (BuildingType x in sim.Buildings) { w.Write(x.SupplyProvided); w.Write(x.SupplyUnstocked); }
     }
 
     private static void WriteInts(BinaryWriter w, IReadOnlyList<int> values)

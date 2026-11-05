@@ -18,9 +18,10 @@ internal static class GameRulesLoader
     private const string GarrisonSection = "garrison";   // M4-01
     private const string FoamSection = "foam";           // M4-01
     private const string VeterancySection = "veterancy"; // VET-1
+    private const string SupplySection = "supply";       // SUP-1
 
     private static readonly string[] TopLevel =
-        [Section, EconomySection, TunnelsSection, RadiationSection, StealthSection, FactionSection, GarrisonSection, FoamSection, VeterancySection];
+        [Section, EconomySection, TunnelsSection, RadiationSection, StealthSection, FactionSection, GarrisonSection, FoamSection, VeterancySection, SupplySection];
 
     /// <summary>Parses the [game] table. Returns null when any problem was recorded.</summary>
     public static GameRules? Parse(TomlTable root, string file, List<RulesProblem> problems)
@@ -271,6 +272,36 @@ internal static class GameRulesLoader
             Enabled = enabled.Value, Thresholds = thresholds, KillPermilleUnit = killUnit.Value, KillPermilleBuilding = killBuilding.Value,
             DamagePermille = damage, TakenPermille = taken, ReloadPermille = reload, SpeedPermille = speed,
             HealIntervalTicks = healInterval.Value, HealPermille = heal, HealQuietTicks = healQuiet.Value,
+        };
+    }
+
+    /// <summary>Parses the optional [supply] table (SUP-1, docs/design/13_supply_cap.md §4); every key optional with the design default,
+    /// <c>enabled</c> defaulting to false. Null after a problem.</summary>
+    public static SupplyRules? ParseSupply(TomlTable root, string file, List<RulesProblem> problems)
+    {
+        SupplyRules d = SupplyRules.Default;
+        RulesFields? f = OptionalTable(root, SupplySection, file, problems);
+        if (f is null)
+        {
+            return root.ContainsKey(SupplySection) ? null : d;
+        }
+        f.CheckKeys("enabled", "ceiling", "band1_max", "band2_max", "band_values", "stock_intervals");
+        bool? enabled = f.OptBool("enabled", d.Enabled);
+        int? ceiling = f.OptInt("ceiling", 0, 100_000, d.Ceiling);
+        int? band1 = f.OptInt("band1_max", 0, int.MaxValue, d.Band1Max);
+        int? band2 = f.OptInt("band2_max", 0, int.MaxValue, d.Band2Max);
+        int[]? values = f.OptIntArray("band_values", 3, 0, 1000, d.BandValues.ToArray());
+        int? stock = f.OptInt("stock_intervals", 1, 1000, d.StockIntervals);
+        if (enabled is null || ceiling is null || band1 is null || band2 is null || values is null || stock is null) return null;
+        if (band1.Value > band2.Value)
+        {
+            f.Problem("band1_max", "must not exceed band2_max");
+            return null;
+        }
+        return new SupplyRules
+        {
+            Enabled = enabled.Value, Ceiling = ceiling.Value, Band1Max = band1.Value, Band2Max = band2.Value,
+            BandValues = values, StockIntervals = stock.Value,
         };
     }
 

@@ -43,7 +43,7 @@ public sealed class M6ContractTests
     {
         Assert.Equal(11, SimWriter.SaveVersion);   // VET-1 took 11
         Assert.Equal(11, ReplayWriter.Version);
-        Assert.Equal(9, RulesHash.FormatVersion);
+        Assert.Equal(10, RulesHash.FormatVersion);
     }
 
     [Fact]

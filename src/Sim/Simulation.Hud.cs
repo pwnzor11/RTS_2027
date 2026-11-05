@@ -25,6 +25,7 @@ public sealed partial class Simulation
             Upgrades = _players.Upgrades[player],
             BuildableUpgrades = BuildableUpgradeList(player),
             Superweapons = SuperweaponViews(player),   // M3-13
+            Supply = SupplyViewFor(player),            // SUP-1
         };
     }
 

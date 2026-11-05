@@ -862,6 +862,7 @@ public sealed partial class Simulation
         Tick = state.Tick;
         _rng = state.Rng;
         _emittersDirty = true;   // M3-INT
+        SupplyChanged();         // SUP-1
         return this;
     }
 }

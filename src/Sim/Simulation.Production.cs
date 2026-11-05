@@ -127,6 +127,7 @@ public sealed partial class Simulation
         if (!IsUnitCategory(category) && _production.Ready[lane] >= 0) return Core.QueueBlockReason.StructureWaiting;
         if (_production.QueueCount[lane] >= _production.MaxQueue || _production.QueueCount[lane] >= Setup.Rules.Economy.MaxQueue)
             return Core.QueueBlockReason.QueueFull;
+        if (SupplyBlocksEnqueue(player, category, typeIndex)) return Core.QueueBlockReason.SupplyCap;   // SUP-1
         return Core.QueueBlockReason.None;
     }
 
@@ -299,6 +300,9 @@ public sealed partial class Simulation
         ProductionState s = _production;
         int type = s.QueueType[lane * s.MaxQueue];
         if (!TryTypeInfo(player, category, type, out int cost, out int buildTime, out _)) { PopQueue(lane, 0); return; }
+        // SUP-1: a unit that does not fit under the supply cap pauses the lane: no spending, no progress, no refund; a finished unit
+        // waits here until it fits (the same lane position as a blocked exit).
+        if (IsUnitCategory(category) && SupplyEnabled && !SupplyFits(player, SupplyOfType(category, type))) return;
         int total = ProductionTotalTicks(player, cost, buildTime, factories);
         if (s.Total[lane] != total)
         {
