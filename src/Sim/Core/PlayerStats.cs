@@ -3,6 +3,6 @@
 namespace Rts.Sim.Core;
 
 /// <summary>M4: one player's counters from the "stats" state part (<see cref="Simulation.StatsOf"/>). Units = vehicles and
-/// infantry; Kills = enemy actors whose lethal hit this player owned; credits are totals since tick 0.</summary>
+/// infantry; Kills = enemy actors whose lethal hit this player owned; credits are totals since tick 0. M7-06: ShipmentIncome = credits that home shipments delivered.</summary>
 public readonly record struct PlayerStats(int UnitsBuilt, int UnitsLost, int StructuresBuilt, int StructuresLost, int Kills,
-    int CreditsHarvested, int CreditsSpent);
+    int CreditsHarvested, int CreditsSpent, int ShipmentIncome = 0);

@@ -242,6 +242,7 @@ public sealed partial class Simulation
     {
         _fx.Clear();
         ApplyInput(commands);
+        RunShipments();    // M7-06: Simulation.Shipments.cs — home supply line (its Move orders are resolved by RunMovement this tick)
         RunMissions();
         RunMovement();
         RunTunnels();      // M3: Simulation.Tunnels.cs — queues, transit, surfacing (before combat: underground units are untargetable)

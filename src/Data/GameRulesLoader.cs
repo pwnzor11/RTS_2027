@@ -317,7 +317,8 @@ internal static class GameRulesLoader
             return root.ContainsKey(ShipmentsSection) ? null : d;
         }
         f.CheckKeys("enabled", "interval_ticks", "value", "decay_permille", "floor_permille", "charter_ticks", "tenders_max",
-            "local_ash_bonus_permille");
+            "local_ash_bonus_permille", "tender_type");
+        string? tenderType = f.OptStr("tender_type", d.TenderType);   // M7-06
         bool? enabled = f.OptBool("enabled", d.Enabled);
         int? interval = f.OptInt("interval_ticks", 1, 10_000_000, d.IntervalTicks);
         int? value = f.OptInt("value", 0, 100_000_000, d.Value);
@@ -327,11 +328,12 @@ internal static class GameRulesLoader
         int? tenders = f.OptInt("tenders_max", 0, 32, d.TendersMax);
         int? ashBonus = f.OptInt("local_ash_bonus_permille", 0, 100_000, d.LocalAshBonusPermille);
         if (enabled is null || interval is null || value is null || decay is null || floor is null || charter is null || tenders is null
-            || ashBonus is null) return null;
+            || ashBonus is null || tenderType is null) return null;
         return new ShipmentRules
         {
             Enabled = enabled.Value, IntervalTicks = interval.Value, Value = value.Value, DecayPermille = decay.Value,
             FloorPermille = floor.Value, CharterTicks = charter.Value, TendersMax = tenders.Value, LocalAshBonusPermille = ashBonus.Value,
+            TenderType = tenderType,
         };
     }
 

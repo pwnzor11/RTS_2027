@@ -51,8 +51,8 @@ namespace Rts.Data;
 /// <item>Schema v7 block (SUP-1, format 10): Supply Enabled, Ceiling, Band1Max, Band2Max, BandValues, StockIntervals; per vehicle and
 /// infantry Supply; per building SupplyProvided and SupplyUnstocked.</item>
 /// <item>Schema v8 block (M7-02, format 11): per land type Landing; Shipments Enabled, IntervalTicks, Value, DecayPermille, FloorPermille,
-/// CharterTicks, TendersMax, LocalAshBonusPermille; per vehicle DrawScalePermille, DeepOnly, Submerges, SonarRadius, AircraftSlots,
-/// SortieTicks, UnloadTicks; per building WaterBuilding, WaterMask (count, then cells), BeachheadSource, BeachheadRadius. The terrain
+/// CharterTicks, TendersMax, LocalAshBonusPermille, TenderType (M7-06); per vehicle DrawScalePermille, DeepOnly, Submerges, SonarRadius, AircraftSlots,
+/// SortieTicks, UnloadTicks; per building WaterBuilding, WaterMask (count, then cells), BeachheadSource, BeachheadRadius, ShipmentDock (M7-06). The terrain
 /// table above grows with the land and locomotion counts (Coast, Naval).</item>
 /// </list>
 /// Hashed with XxHash64. Whitespace, comments and key order in the TOML do not affect it. The loader sorts each
@@ -297,7 +297,7 @@ public static class RulesHash
         for (int land = 0; land < RuleCounts.LandTypes; land++) w.Write(sim.Terrain.Landing((LandType)land));
         ShipmentRules s = sim.Shipments;
         w.Write(s.Enabled); w.Write(s.IntervalTicks); w.Write(s.Value); w.Write(s.DecayPermille); w.Write(s.FloorPermille);
-        w.Write(s.CharterTicks); w.Write(s.TendersMax); w.Write(s.LocalAshBonusPermille);
+        w.Write(s.CharterTicks); w.Write(s.TendersMax); w.Write(s.LocalAshBonusPermille); w.Write(s.TenderType);   // M7-06: tender type
         foreach (VehicleType x in sim.Vehicles)
         {
             w.Write(x.DrawScalePermille); w.Write(x.DeepOnly); w.Write(x.Submerges); w.Write(x.SonarRadius);
@@ -308,7 +308,7 @@ public static class RulesHash
             w.Write(x.WaterBuilding);
             w.Write(x.WaterMask.Count);
             foreach (bool b in x.WaterMask) w.Write(b);
-            w.Write(x.BeachheadSource); w.Write(x.BeachheadRadius);
+            w.Write(x.BeachheadSource); w.Write(x.BeachheadRadius); w.Write(x.ShipmentDock);   // M7-06
         }
     }
 

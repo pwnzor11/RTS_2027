@@ -6,7 +6,7 @@ namespace Rts.Sim.Rules;
 /// Home shipment constants (game.toml <c>[shipments]</c>, docs/design/11_m7_plan.md §2.3 and docs/design/07_expedition.md §2.2, D-126).
 /// A shipment of <see cref="Value"/> credits sails in every <see cref="IntervalTicks"/>; each shipment pays
 /// <c>Value x (1000 - decay) / 1000</c> and never less than <see cref="FloorPermille"/> of the base value. <see cref="Enabled"/> defaults to
-/// false, so rules sets without a <c>[shipments]</c> table behave exactly as before. Parsed only: the behaviour arrives with M7-06.
+/// false, so rules sets without a <c>[shipments]</c> table behave exactly as before. Behaviour in Simulation.Shipments.cs (M7-06); it also needs a <see cref="TenderType"/>.
 /// </summary>
 public sealed record ShipmentRules
 {
@@ -33,6 +33,10 @@ public sealed record ShipmentRules
 
     /// <summary>Balance knob: extra permille on local ash income for the faction (TOML <c>local_ash_bonus_permille</c>, default 0).</summary>
     public int LocalAshBonusPermille { get; init; }
+
+    /// <summary>Id of the unarmed naval vehicle that carries a shipment (TOML <c>tender_type</c>, default empty = no shipments even when
+    /// <see cref="Enabled"/>). Validated against the vehicle table when rules load (M7-06).</summary>
+    public string TenderType { get; init; } = "";
 
     /// <summary>The defaults: disabled, design values.</summary>
     public static ShipmentRules Default { get; } = new();

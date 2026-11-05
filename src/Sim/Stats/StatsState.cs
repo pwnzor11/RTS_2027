@@ -14,6 +14,7 @@ namespace Rts.Sim.Stats;
 public sealed class StatsState : ISimStatePart
 {
     private const byte Version = 1;
+    private const byte VersionWithShipments = 2;
 
     /// <summary>Vehicles and infantry produced or spawned, per player.</summary>
     public readonly int[] UnitsBuilt;
@@ -30,12 +31,17 @@ public sealed class StatsState : ISimStatePart
     /// <summary>Credits spent, per player.</summary>
     public readonly int[] CreditsSpent;
 
+    /// <summary>M7-06: credits delivered by home shipments (tenders that reached their dock), per player. Appended; serialised (part version 2)
+    /// only once any player has a non-zero value, so a game without shipments hashes as before.</summary>
+    public readonly int[] ShipmentIncome;
+
     /// <summary>Creates an all-zero part sized by the setup's player count.</summary>
     public StatsState(SimSetup setup)
     {
         ArgumentNullException.ThrowIfNull(setup);
         int n = setup.PlayerCount;
         UnitsBuilt = new int[n]; UnitsLost = new int[n]; StructuresBuilt = new int[n]; StructuresLost = new int[n];
+        ShipmentIncome = new int[n];
         Kills = new int[n]; CreditsHarvested = new int[n]; CreditsSpent = new int[n];
     }
 
@@ -48,23 +54,27 @@ public sealed class StatsState : ISimStatePart
     /// <summary>The counters of one player as a value (zeros for an out-of-range slot).</summary>
     public PlayerStats Of(byte player) => player >= Count ? default
         : new PlayerStats(UnitsBuilt[player], UnitsLost[player], StructuresBuilt[player], StructuresLost[player], Kills[player],
-            CreditsHarvested[player], CreditsSpent[player]);
+            CreditsHarvested[player], CreditsSpent[player], ShipmentIncome[player]);
 
     private int[][] All => new[] { UnitsBuilt, UnitsLost, StructuresBuilt, StructuresLost, Kills, CreditsHarvested, CreditsSpent };
 
     /// <inheritdoc />
     public void Write(BinaryWriter w)
     {
-        w.Write(Version);
+        bool ship = Array.Exists(ShipmentIncome, x => x != 0);
+        w.Write(ship ? VersionWithShipments : Version);
         w.Write(Count);
         foreach (int[] a in All) for (int p = 0; p < a.Length; p++) w.Write(a[p]);
+        if (ship) for (int p = 0; p < ShipmentIncome.Length; p++) w.Write(ShipmentIncome[p]);
     }
 
     /// <inheritdoc />
     public void Read(BinaryReader r)
     {
-        if (r.ReadByte() != Version) throw new InvalidDataException("stats version mismatch.");
+        byte version = r.ReadByte();
+        if (version != Version && version != VersionWithShipments) throw new InvalidDataException("stats version mismatch.");
         if (r.ReadInt32() != Count) throw new InvalidDataException("stats player count mismatch.");
         foreach (int[] a in All) for (int p = 0; p < a.Length; p++) a[p] = r.ReadInt32();
+        for (int p = 0; p < ShipmentIncome.Length; p++) ShipmentIncome[p] = version == VersionWithShipments ? r.ReadInt32() : 0;
     }
 }
