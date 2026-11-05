@@ -515,12 +515,15 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
         return null;
     }
 
+    // SUP-4: the display name of this player's faction supply building, for the cap tooltip.
+    private string? SupplyBuildingName() => SupplyBuildingLookup.NameOf(_source.Rules, _hud.Faction);
+
     private List<string> TooltipFor(BuildOption o)
     {
         var lines = new List<string> { CameoNames.Display(IdOf(o)), $"Cost {o.Cost}" };
         bool ready = SidebarCommands.LeftClick(_hud, o) == CameoClick.EnterPlacement;
         if (ready) lines.Add("Ready: click to place");
-        else if (o.Blocked != QueueBlockReason.None) lines.Add(BlockReasonText.Of(o.Blocked));
+        else if (o.Blocked != QueueBlockReason.None) lines.Add(BlockReasonText.Of(o.Blocked, SupplyBuildingName()));
         else lines.Add("Left click: build   Right click: cancel");
         return lines;
     }
