@@ -20,6 +20,12 @@ public static class UnitVisuals
     /// <summary>Opacity 0..1 to draw a unit's sprite with. Underground wins over stealth.</summary>
     public static float Alpha(UnitView view) => view.Underground ? UndergroundAlpha : view.Stealthed ? StealthAlpha : 1f;
 
+    /// <summary>M7-14: opacity of a dived ship the viewer may see (own, allied, or an enemy found by sonar).</summary>
+    public const float SubmergedAlpha = 0.45f;
+
+    /// <summary>Opacity 0..1 as <see cref="Alpha(UnitView)"/>, with a dived ship (<paramref name="submerged"/>) semi-transparent. The faintest state wins.</summary>
+    public static float Alpha(UnitView view, bool submerged) => submerged ? Math.Min(Alpha(view), SubmergedAlpha) : Alpha(view);
+
     /// <summary>Whether to draw the small dashed tunnel marker under the unit.</summary>
     public static bool ShowTunnelMarker(UnitView view) => view.Underground;
 

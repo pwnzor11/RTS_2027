@@ -22,10 +22,10 @@ public sealed class SidebarLayout
     private const int MinCameoWidthUnits = 56;
     private const int MaxColumns = 3;
 
-    private SidebarLayout(Rectangle panel, Rectangle mapView, Rectangle credits, Rectangle supplyRow, Rectangle powerBar, Rectangle sell,
+    private SidebarLayout(Rectangle panel, Rectangle mapView, Rectangle credits, Rectangle supplyRow, Rectangle shipmentRow, Rectangle powerBar, Rectangle sell,
         Rectangle repair, Rectangle[] tabs, Rectangle grid, Rectangle minimap, int columns, int rows, Point cameoSize, int gap)
     {
-        Panel = panel; MapView = mapView; Credits = credits; SupplyRow = supplyRow; PowerBar = powerBar; SellButton = sell;
+        Panel = panel; MapView = mapView; Credits = credits; SupplyRow = supplyRow; ShipmentRow = shipmentRow; PowerBar = powerBar; SellButton = sell;
         RepairButton = repair; Tabs = tabs; Grid = grid; Minimap = minimap; Columns = columns; Rows = rows; CameoSize = cameoSize; Gap = gap;
     }
 
@@ -40,6 +40,9 @@ public sealed class SidebarLayout
 
     /// <summary>SUP-4: the supply counter row under the credits; empty when the counter is not shown.</summary>
     public Rectangle SupplyRow { get; }
+
+    /// <summary>M7-14: the shipment timer row under the supply row (empty when the player has no shipments).</summary>
+    public Rectangle ShipmentRow { get; }
 
     /// <summary>The vertical power bar.</summary>
     public Rectangle PowerBar { get; }
@@ -112,8 +115,9 @@ public sealed class SidebarLayout
     /// <param name="uiScale">UI scale (1, 1.5 or 2).</param>
     /// <param name="tabCount">Tabs to lay out (M4: 6 while the Aircraft tab is shown).</param>
     /// <param name="supplyRow">SUP-4: reserve a row for the supply counter under the credits (empty rectangle when false).</param>
+    /// <param name="shipmentRow">M7-14: reserve a row for the shipment timer under the supply row (empty rectangle when false).</param>
     public static SidebarLayout Compute(int windowWidth, int windowHeight, float uiScale, int tabCount = SidebarTabs.Count,
-        bool supplyRow = false)
+        bool supplyRow = false, bool shipmentRow = false)
     {
         int pad = Math.Max(2, Px(4, uiScale)), gap = Math.Max(1, Px(3, uiScale));
         int width = WidthFor(windowWidth, uiScale);
@@ -131,6 +135,13 @@ public sealed class SidebarLayout
         {
             supply = new Rectangle(innerLeft, y, innerW, Px(SupplyRowUnits, uiScale));
             y = supply.Bottom + gap;
+        }
+
+        var shipment = Rectangle.Empty;
+        if (shipmentRow)
+        {
+            shipment = new Rectangle(innerLeft, y, innerW, Px(SupplyRowUnits, uiScale));
+            y = shipment.Bottom + gap;
         }
 
         // Minimap: square at the bottom, no taller than 40% of the window.
@@ -161,7 +172,7 @@ public sealed class SidebarLayout
         int gridH = Math.Max(0, belowTop - y);
         int rows = Math.Max(0, (gridH + gap) / (cameoH + gap));
         var grid = new Rectangle(contentX, y, contentW, gridH);
-        return new SidebarLayout(panel, mapView, credits, supply, powerBar, sell, repair, tabs, grid, minimap, columns, rows,
+        return new SidebarLayout(panel, mapView, credits, supply, shipment, powerBar, sell, repair, tabs, grid, minimap, columns, rows,
             new Point(cameoW, cameoH), gap);
     }
 

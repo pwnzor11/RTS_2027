@@ -34,6 +34,8 @@ public sealed class SceneRenderer : IDisposable
     private readonly List<StormView> _stormViews = new();
     private readonly List<StormDraw> _storms = new();
     private bool _disposed;
+    private readonly HashSet<EntityId> _submerged = new();                    // M7-14: dived ships the viewer can see
+    private readonly List<ViewActor> _subScratch = new();
     private readonly List<ViewActor> _rankScratch = new();                 // VET-5: veterancy ranks and promotion flashes
     private readonly List<(RankKey Key, int Rank)> _ranks = new();
     private readonly Dictionary<RankKey, int> _rankMap = new();
@@ -154,6 +156,16 @@ public sealed class SceneRenderer : IDisposable
         _walls.Observe(snapshot.Tick, snapshot.Buildings,
             t => frame.Rules is { } r && (uint)t < (uint)r.Buildings.Count && r.Buildings[t].Wall);
 
+        _submerged.Clear();
+        if (frame.Sim is not null)
+        {
+            PlayerView sees = frame.Sim.ViewFor((byte)Math.Max(0, snapshot.Viewer));
+            sees.CopyOwn(_subScratch, includeBuildings: false);
+            foreach (ViewActor a in _subScratch) if (a.Submerged) _submerged.Add(a.Id);
+            sees.CopyVisible(_subScratch);   // allies, and enemies found by sonar
+            foreach (ViewActor a in _subScratch) if (a.Submerged && a.Kind == ActorKind.Vehicle) _submerged.Add(a.Id);
+        }
+
         _items.Clear();
         for (int i = 0; i < snapshot.Buildings.Count; i++)
         {
@@ -180,7 +192,7 @@ public sealed class SceneRenderer : IDisposable
                 RenderUnit unit = frame.Units[item.Index];
                 bool selected = frame.Selection.Contains(UnitKey.Of(unit.View));
                 UnitRenderer.Draw(batch, pixel, _sprites, _painter, _memory, snapshot.Tick, frame.Rules, unit,
-                    selected, camera);
+                    selected, camera, unit.View.Kind == UnitKind.Vehicle && _submerged.Contains(unit.View.Id));
             }
         }
     }
