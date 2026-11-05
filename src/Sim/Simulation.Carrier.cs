@@ -75,6 +75,7 @@ public sealed partial class Simulation
             if (h == 0 && _naval.AirState[i] == 0) continue;
             if (!_units.Slots.IsIndexAlive(i)) continue;
             byte owner = _units.Player[i];
+            if (h > 0 && h < _units.Capacity && _units.Slots.IsIndexAlive(h) && _units.Health[h] <= 0) continue;   // dying: RunCleanup's OnCarrierDying decides
             if (h == 0 || !CarrierUsable(h, owner)) { Orphan(i); continue; }
             switch (_naval.AirState[i])
             {
@@ -170,7 +171,11 @@ public sealed partial class Simulation
         if (_units.Player[h] != c.Player || !IsCarrierType(RulesOf(c.Player).Vehicles[_units.TypeIndex[h]])) return false;
         VehicleType vt = RulesOf(c.Player).Vehicles[_units.TypeIndex[j]];
         if (!FitsHangar(vt) || _units.Health[j] <= 0 || !CarrierUsable(h, c.Player)) return true;
-        if (_naval.HangarOf[j] == h && _naval.AirState[j] != 0) return true;   // already has a place there
+        if (_naval.HangarOf[j] == h && _naval.AirState[j] != 0)   // already has a place there: Enter recalls a flying one
+        {
+            if (_naval.AirState[j] == NavalState.AirOnSortie) Recall(j);
+            return true;
+        }
         if (HangarUsed(h, j) >= RulesOf(c.Player).Vehicles[_units.TypeIndex[h]].AircraftSlots) return true;   // hangar full
         MoveMission.DropRequest(this, _units, j);
         _naval.HangarOf[j] = h; _naval.AirState[j] = NavalState.AirReturning; _naval.SortieLeft[j] = 0;
