@@ -28,6 +28,8 @@ internal static class UnitRulesLoader
         "supply",
         // schema v8 (M7-02)
         "draw_scale_permille", "deep_only", "submerges", "sonar_radius", "aircraft_slots", "sortie_ticks", "unload_ticks",
+        // schema v8 (M7-04b)
+        "vehicle_slots",
     ];
 
     private static readonly string[] InfantryKeys =
@@ -127,8 +129,9 @@ internal static class UnitRulesLoader
         int? aircraftSlots = f.OptInt("aircraft_slots", 0, 32, 0);
         int? sortieTicks = f.OptInt("sortie_ticks", 0, 1_000_000, 0);
         int? unloadTicks = f.OptInt("unload_ticks", 0, 1_000_000, 0);
+        int? vehicleSlots = f.OptInt("vehicle_slots", 0, 16, 0);
         if (drawScale is null || deepOnly is null || submerges is null || sonar is null || aircraftSlots is null || sortieTicks is null
-            || unloadTicks is null) return null;
+            || unloadTicks is null || vehicleSlots is null) return null;
         if (veteran is null || supply is null) return null;
         if (locomotion is { } loco0 && loco0 != Locomotion.Naval)
         {
@@ -183,6 +186,7 @@ internal static class UnitRulesLoader
             AircraftSlots = aircraftSlots.Value,
             SortieTicks = sortieTicks.Value,
             UnloadTicks = unloadTicks.Value,
+            VehicleSlots = vehicleSlots.Value,
         };
     }
 

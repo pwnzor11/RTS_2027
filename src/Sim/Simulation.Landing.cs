@@ -16,14 +16,14 @@ namespace Rts.Sim;
 //   locomotion (Skyhook) queues MissionKind.Unload. The craft sails to a water cell next to the shore cell (the Skyhook flies over it),
 //   then puts one passenger ashore every unload_ticks onto the nearest free foot-passable cells (shore cell first, then rings 1-2).
 //   State: NavalState.UnloadX/UnloadY (shore cell) and UnloadTicksLeft (ticks to the next passenger, 0 = not yet arrived).
-// ASSUMED (M7-04): only infantry ride (the transport code has no vehicle passengers), so "vehicles land only on landing cells" has
-// nothing to enforce yet; hover and Skyhook bypass it anyway. — confirm (M7-04)
+// M7-04b: vehicle passengers (vehicle_slots, Simulation.VehiclePassengers.cs) leave after the soldiers, one per unload_ticks, and a ship
+// puts them only on a Coast (terrain `landing`) cell; the soldiers' rule below is unchanged.
 // ASSUMED (M7-04): a shore cell is accepted when foot can stand on it (Coast, Clear, shallow wading; not Cliff, Rock or deep water). — confirm (M7-04)
 // ASSUMED (M7-04): a Skyhook with unload_ticks = 0 puts one passenger down per tick; when no free cell remains the unload ends and
 // the rest stay aboard. — confirm (M7-04)
 public sealed partial class Simulation
 {
-    private bool IsLandingTransport(VehicleType vt) => vt.Passengers > 0 && (vt.UnloadTicks > 0 || vt.Locomotion == Locomotion.Air);
+    private bool IsLandingTransport(VehicleType vt) => (vt.Passengers > 0 || vt.VehicleSlots > 0) && (vt.UnloadTicks > 0 || vt.Locomotion == Locomotion.Air);
 
     /// <summary>CommandKind.Unload on a landing transport with Cell = the shore cell. Refused (ignored) when the cell is not standable,
     /// nobody is aboard, or a ship has no sea cell next to the shore it can reach.</summary>
@@ -83,13 +83,15 @@ public sealed partial class Simulation
         int per = Math.Max(1, vt.UnloadTicks);
         if (_naval.UnloadTicksLeft[i] <= 0) { _naval.UnloadTicksLeft[i] = per; return 1; }   // arrived: the first passenger leaves after one interval
         if (--_naval.UnloadTicksLeft[i] > 0) return 1;
-        for (int p = 1; p < _infantry.Capacity; p++)
+        bool landed = false;
+        for (int p = 1; p < _infantry.Capacity && !landed; p++)
         {
             if (!_infantry.Slots.IsIndexAlive(p) || _tunnels.InfantryLayer[p] != ActorLayer.Passenger || _tunnels.InfantryCarrier[p] != self) continue;
             if (!FindUnloadCell(shore, out CellCoord cell, out int slot, 0)) return EndUnload(i);   // no room: the rest stay aboard
             PutAshore(p, cell, slot);
-            break;
+            landed = true;
         }
+        if (!landed && !LandNextVehicle(self, shore)) return EndUnload(i);   // M7-04b: soldiers first, then vehicles; none can land
         if (PassengerCount(self) == 0) return EndUnload(i);
         _naval.UnloadTicksLeft[i] = per;
         return 1;

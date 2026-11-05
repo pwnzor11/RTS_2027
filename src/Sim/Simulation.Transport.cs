@@ -23,7 +23,10 @@ public sealed partial class Simulation
 
     // ---- queries ------------------------------------------------------------------------------
 
-    private int PassengerCount(EntityId transport)
+    /// <summary>Everything aboard: soldiers plus (M7-04b) vehicle passengers.</summary>
+    private int PassengerCount(EntityId transport) => InfantryAboard(transport) + VehiclesAboard(transport);
+
+    private int InfantryAboard(EntityId transport)
     {
         int n = 0;
         for (int i = 1; i < _infantry.Capacity; i++)
@@ -41,6 +44,7 @@ public sealed partial class Simulation
     /// <summary>Enter with Target = own/allied vehicle: board it if it has room (VehicleType.Passengers).</summary>
     private void ApplyBoard(Command c, ActorRef unit)
     {
+        if (unit.Kind == ActorKind.Vehicle) { ApplyBoardVehicle(c, unit); return; }   // M7-04b
         if (unit.Kind != ActorKind.Infantry || !CanBoard(unit.Id.Index, c.Target)) return;
         int i = unit.Id.Index;
         if (CellDistance(_infantry.SlotCell[i], _units.Position[c.Target.Index].ToCell()) <= 1) BoardNow(i, c.Target);
@@ -53,7 +57,7 @@ public sealed partial class Simulation
         if (!_units.Slots.IsAlive(transport) || _units.Health[transport.Index] <= 0 || _tunnels.VehicleLayer[transport.Index] != ActorLayer.Surface) return false;
         if (!IsFriendly(_infantry.Player[infantry], _units.Player[transport.Index])) return false;
         int cap = RulesOf(_units.Player[transport.Index]).Vehicles[_units.TypeIndex[transport.Index]].Passengers;
-        return cap > 0 && PassengerCount(transport) < cap;
+        return cap > 0 && InfantryAboard(transport) < cap;
     }
 
     internal bool BoardNow(int infantry, EntityId transport)
@@ -80,6 +84,7 @@ public sealed partial class Simulation
     /// gone (should not happen: <see cref="OnTransportDying"/> removes them) is dropped on the surface where it is.</summary>
     private void SyncPassengers()
     {
+        SyncVehiclePassengers();   // M7-04b
         for (int i = 1; i < _infantry.Capacity; i++)
         {
             if (!_infantry.Slots.IsIndexAlive(i) || _tunnels.InfantryLayer[i] != ActorLayer.Passenger) continue;
@@ -111,6 +116,7 @@ public sealed partial class Simulation
             _map.SetInfantry(cell, slot, _infantry.Slots.IdOf(i));
             Queue(_infantry, i, MissionKind.Guard, default, default);
         }
+        UnloadVehiclePassengers(c.Subject, at);   // M7-04b
     }
 
     /// <summary>First free cell around the transport: ring 1 then ring 2, N..NW order; a cell with no soldier is preferred over one that
@@ -143,6 +149,7 @@ public sealed partial class Simulation
             if (!_infantry.Slots.IsIndexAlive(i) || _tunnels.InfantryLayer[i] != ActorLayer.Passenger || _tunnels.InfantryCarrier[i] != transport) continue;
             RemoveMobileQuietly(ActorKind.Infantry, i);
         }
+        LoseVehiclePassengers(transport);   // M7-04b
     }
 
     /// <summary>Free a vehicle/infantry slot outside RunCleanup's death path (no death weapon, no destruction effect).</summary>

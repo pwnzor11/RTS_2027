@@ -108,7 +108,7 @@ public sealed partial class Simulation
         if (!_units.Slots.IsAlive(c.Subject) || _units.Player[c.Subject.Index] != c.Player) return;
         Rules.VehicleType vt = RulesOf(c.Player).Vehicles[_units.TypeIndex[c.Subject.Index]];
         if (vt.Submerges) { ApplySubmerge(c); return; }   // M7-05
-        if (vt.Passengers > 0) ApplyUnload(c);
+        if (vt.Passengers > 0 || vt.VehicleSlots > 0) ApplyUnload(c);   // M7-04b: vehicle_slots
         else if (vt.DeploysInto >= 0) ApplyDeployInto(c);
     }
 

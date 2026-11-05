@@ -126,4 +126,7 @@ public sealed record VehicleType(string Id, Locomotion Locomotion, int Speed, in
 
     /// <summary>Landing craft: ticks per passenger put ashore (TOML <c>unload_ticks</c>, 0 = off).</summary>
     public int UnloadTicks { get; init; }
+
+    /// <summary>Own ground vehicles this transport can carry beside its infantry (TOML <c>vehicle_slots</c>, 0 = none; M7-04b).</summary>
+    public int VehicleSlots { get; init; }
 }
