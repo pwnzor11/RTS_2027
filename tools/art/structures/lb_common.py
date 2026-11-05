@@ -14,7 +14,7 @@ import common as C
 PALETTE = C.PAL_LB
 
 MATERIALS = {
-    "dust": ("#7A6040", dict(rough=1.0)), "dust2": ("#58452B", dict(rough=1.0)),
+    "dust": ("#54402A", dict(rough=1.0)), "dust2": ("#3D2E1D", dict(rough=1.0)),
     "canvas": ("#D6C8A2", dict(rough=1.0)), "canvas2": ("#B5A57C", dict(rough=1.0)),
     "ochre": ("#B38A44", dict(rough=0.9)), "rust": ("#8A3E24", dict(rough=0.95)), "rust2": ("#5A2A1A", dict(rough=0.95)),
     "teal": ("#4F746E", dict(rough=0.8)), "teal2": ("#34524E", dict(rough=0.8)),

@@ -52,8 +52,8 @@ FX = [
 ]
 
 MATERIALS = {
-    "dust": ("#B08B52", dict(rough=1.0)),
-    "dust2": ("#8C6C3C", dict(rough=1.0)),
+    "dust": ("#54402A", dict(rough=1.0)),
+    "dust2": ("#3D2E1D", dict(rough=1.0)),
     "canvas": ("#D6C8A2", dict(rough=1.0)),
     "canvas2": ("#B5A57C", dict(rough=1.0)),
     "ochre": ("#B38A44", dict(rough=0.9)),
@@ -68,7 +68,7 @@ MATERIALS = {
     "dark": ("#1A140E", dict(rough=0.9)),
     "rubber": ("#2A2320", dict(rough=0.95)),
     "steel": ("#8E8A82", dict(rough=0.5, metal=0.5)),
-    "wood": ("#8A6A3E", dict(rough=0.95)),
+    "wood": ("#6B5232", dict(rough=0.95)),
     "rope": ("#C8B88A", dict(rough=1.0)),
     "glass": ("#2F4A47", dict(rough=0.25, metal=0.3)),
     "lamp": ("#FFE08A", dict(rough=0.3, emit="#FFE08A")),
@@ -355,7 +355,9 @@ def antennas(S, dmg, anim, lvl):
         S.bb(f"mastx{k}", mx - 0.14, mx + 0.14, my - 0.14, my + 0.14, 3.9 + k * 0.4, 3.94 + k * 0.4, "steel", 0.0, nocast=True)
     # dish
     if not dmg:
-        S.cyl("dish", 0.55, 0.07, (mx + 0.1, my - 0.15, 6.35), "bone", verts=16, rot_z=0)
+        S.cyl("dish", 0.42, 0.07, (mx + 0.1, my - 0.15, 6.35), "canvas2", verts=16, rot_z=0)
+        S.cyl("dishrim", 0.46, 0.05, (mx + 0.1, my - 0.15, 6.3), "rust2", verts=16, rot_z=0)
+        S.cyl("dishfeed", 0.05, 0.4, (mx + 0.1, my - 0.15, 6.6), "dark", verts=6)
     else:
         S.cyl("dish", 0.5, 0.07, (mx + 0.9, my - 0.4, 3.85), "bone", verts=14)
     # guy wires down to the lean-to
