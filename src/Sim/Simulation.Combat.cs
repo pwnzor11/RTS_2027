@@ -50,7 +50,7 @@ public sealed partial class Simulation
     /// <summary>Detonations and deaths of the last Step (valid until the next Step). Not state.</summary>
     public IReadOnlyList<FxEvent> FxEvents => _fx;
 
-    private readonly record struct PendingHit(ActorRef Target, int Amount, int Source);
+    private readonly record struct PendingHit(ActorRef Target, int Amount, int Source, ActorRef Shooter);   // VET-2: Shooter = the actor that fired (none for death weapons, superweapons, radiation, storms)
 
     /// <summary>Per-actor combat data (reload, turret facing, attack target, guard point). Never mutate outside Step.</summary>
     public CombatState CombatData => _combat;
@@ -231,12 +231,14 @@ public sealed partial class Simulation
         WeaponType w = RulesOf(owner).Weapons[weapon];
         if (kind != ActorKind.Building && IsUnderground(kind, i)) return false;                       // M3-05: underground cannot fire
         if (!target.Id.IsNone && target.Kind <= ActorKind.Building && !WeaponCanTarget(w, target.Kind, target.Id.Index)) return false;   // M3-05: air vs ground
+        // VET-2: the shooter rides along with the shot so the kill can be credited (mobile actors only: buildings never rank; none when veterancy is off)
+        ActorRef shooter = kind != ActorKind.Building && Setup.Rules.Veterancy.Enabled ? new ActorRef(kind, IdAt(kind, i)) : default;
         if (w.ProjectileSpeed <= 0)
-            Detonate(owner, w.Damage, w.Warhead, targetPoint, target, true);
+            Detonate(owner, w.Damage, w.Warhead, targetPoint, target, true, shooter);
         else
         {
             if (!_projectiles.HasFree) return false;
-            _projectiles.Spawn(PositionAt(kind, i), target, targetPoint, w.ProjectileSpeed, w.Damage, w.Warhead, owner, weapon);
+            _projectiles.Spawn(PositionAt(kind, i), target, targetPoint, w.ProjectileSpeed, w.Damage, w.Warhead, owner, weapon, shooter);
         }
         e.ReloadTicks = w.RateOfFire < 1 ? 1 : w.RateOfFire;
         if (kind != ActorKind.Building) e.ReloadTicks = Math.Max(1, (int)((long)e.ReloadTicks * _effects.RofPermille(kind, i) / 1000));   // M3-06: aura rate of fire
@@ -254,14 +256,14 @@ public sealed partial class Simulation
     }
 
     // Queue the hit; Health is untouched until ApplyPendingDamage (D-065). source = owner player, for diagnostics.
-    private void Hurt(ActorKind kind, int i, int damage, WarheadType wh, bool half, byte source)
+    private void Hurt(ActorKind kind, int i, int damage, WarheadType wh, bool half, byte source, ActorRef shooter = default)
     {
         int d = ComputeDamage(damage, wh, ArmorAt(kind, i));
         if (kind == ActorKind.Building && wh.BonusVsEntrancePercent != 100 && BuildingTypeAt(i).Entrance != TunnelSize.None)
             d = Math.Max(1, (int)((long)d * wh.BonusVsEntrancePercent / 100));   // M4-05: bonus vs tunnel entrances
         if (wh.BonusVsIrradiatedPercent != 100 && IsIrradiatedTarget(kind, i)) d = Math.Max(1, (int)((long)d * wh.BonusVsIrradiatedPercent / 100));   // M3-05
         if (half) { d /= 2; if (d < 1) d = 1; }
-        QueueHit(new ActorRef(kind, IdAt(kind, i)), d, source);
+        QueueHit(new ActorRef(kind, IdAt(kind, i)), d, source, shooter);
         if (kind == ActorKind.Building && wh.GarrisonDamagePercent > 0 && BuildingTypeAt(i).Garrison > 0)
         {
             // M4-05: a % of each hit on a garrisoned building also reaches every occupant (infantry in layer Garrisoned whose carrier
@@ -270,14 +272,14 @@ public sealed partial class Simulation
             int share = Math.Max(1, (int)((long)d * wh.GarrisonDamagePercent / 100));
             for (int s = 1; s < _infantry.Capacity; s++)
                 if (_infantry.Slots.IsIndexAlive(s) && _infantry.Health[s] > 0 && _tunnels.InfantryLayer[s] == ActorLayer.Garrisoned && _tunnels.InfantryCarrier[s] == bid)
-                    QueueHit(new ActorRef(ActorKind.Infantry, _infantry.Slots.IdOf(s)), share, source);
+                    QueueHit(new ActorRef(ActorKind.Infantry, _infantry.Slots.IdOf(s)), share, source, shooter);
         }
     }
 
-    private void QueueHit(ActorRef target, int d, byte source)
+    private void QueueHit(ActorRef target, int d, byte source, ActorRef shooter)
     {
         if (_pendingCount == _pendingDamage.Length) Array.Resize(ref _pendingDamage, _pendingCount * 2);
-        _pendingDamage[_pendingCount++] = new PendingHit(target, d, source);
+        _pendingDamage[_pendingCount++] = new PendingHit(target, d, source, shooter);
     }
 
     /// <summary>Apply every queued hit and empty the buffer. Health only ever decreases by the sum of the hits, so the result
@@ -301,6 +303,7 @@ public sealed partial class Simulation
             {
                 OnLethalHit(h.Target, (byte)h.Source);   // M4-06: kill attribution
                 OnSpoilsLethalHit(h.Target, (byte)h.Source);   // M6-05: Simulation.Raid.cs
+                OnVeterancyKill(h.Shooter, h.Target, (byte)h.Source);   // VET-2: Simulation.Veterancy.cs
             }
         }
         _pendingCount = 0;
@@ -321,7 +324,7 @@ public sealed partial class Simulation
     /// (Chebyshev; buildings by nearest footprint cell) takes full damage at distance 0 and half (min 1) otherwise.
     /// Eligible = not owned by <paramref name="owner"/> or its allies, unless the warhead HitsAllies (Neutral actors are always eligible).
     /// </summary>
-    internal void Detonate(byte owner, int damage, int warheadIndex, LeptonCoord impact, ActorRef primary, bool instant)
+    internal void Detonate(byte owner, int damage, int warheadIndex, LeptonCoord impact, ActorRef primary, bool instant, ActorRef shooter = default)
     {
         WarheadType wh = RulesOf(owner).Warheads[warheadIndex];
         ApplyWarheadGround(wh, impact.ToCell(), wh.Splash < 0 ? 0 : wh.Splash);   // M3-05: contaminate / decontaminate / Blackout
@@ -330,7 +333,7 @@ public sealed partial class Simulation
         {
             _fx.Add(new FxEvent(FxKind.InstantHit, impact, 1));   // M3-12: a hitscan hit shows its impact, like a shell's landing
             if (TryGetActorInfo(primary, out var pi) && pi.Health > 0)
-                Hurt(primary.Kind, primary.Id.Index, damage, wh, false, owner);
+                Hurt(primary.Kind, primary.Id.Index, damage, wh, false, owner, shooter);
             return;
         }
         int radius = wh.Splash < 0 ? 0 : wh.Splash;
@@ -367,7 +370,7 @@ public sealed partial class Simulation
                 }
                 else d = LeptonMath.ChebyshevCells(ic, PositionAt(kind, i).ToCell());
                 if (d > radius) continue;
-                if (!single) { Hurt(kind, i, damage, wh, d > 0, owner); continue; }
+                if (!single) { Hurt(kind, i, damage, wh, d > 0, owner, shooter); continue; }
                 var here = new ActorRef(kind, IdAt(kind, i));
                 if (here == primary) havePrimary = true;
                 if (first.Id.IsNone) first = here;
@@ -375,7 +378,7 @@ public sealed partial class Simulation
         }
         if (!single) return;
         ActorRef victim = havePrimary ? primary : first;
-        if (!victim.Id.IsNone) Hurt(victim.Kind, victim.Id.Index, damage, wh, false, owner);
+        if (!victim.Id.IsNone) Hurt(victim.Kind, victim.Id.Index, damage, wh, false, owner, shooter);
     }
 
     // ---- commands -----------------------------------------------------------------------------
@@ -478,9 +481,9 @@ public sealed partial class Simulation
                 EntityId id = p.Slots.IdOf(i);
                 byte owner = p.Owner[i];
                 int damage = p.Damage[i], warhead = p.Warhead[i];
-                ActorRef target = p.Target[i];
+                ActorRef target = p.Target[i], shooter = p.Shooter[i];
                 p.Free(id);   // free first: detonation never sees its own slot
-                Detonate(owner, damage, warhead, dest, target, false);
+                Detonate(owner, damage, warhead, dest, target, false, shooter);
                 continue;
             }
             p.Position[i] = new LeptonCoord(pos.X + (int)RoundDiv(dx * speed, remaining), pos.Y + (int)RoundDiv(dy * speed, remaining));
