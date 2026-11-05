@@ -105,6 +105,36 @@ internal sealed class MilitaryManager
     private int _mapWidth, _startCount;
     private int _launchValue, _required;
 
+    // VET-6: rank-aware army values (design 14 section 6a). Peaks of the enemy army value seen at once, short and long window, with the
+    // part that came from rank (bonus). While no rank is involved (veterancy off: bonus 0) the values the AI passes in are used unchanged.
+    private int _eShortVal, _eShortBonus, _eShortTick = int.MinValue, _eLongVal, _eLongBonus, _eLongTick = int.MinValue;
+
+    /// <summary>
+    /// VET-6: adds the veterancy bonus (cost x 250 x rank / 1000 per unit) to <see cref="OwnValue"/>, <see cref="EnemyValueSeen"/> and
+    /// <see cref="Ahead"/>. Does nothing while no ranked unit is in view, so rank 0 everywhere changes no decision.
+    /// </summary>
+    private void ApplyRankValues(RecruitKnowledge k)
+    {
+        var rules = k.Rules;
+        int ownBase = 0, own = 0, enBase = 0, en = 0;
+        foreach (ViewActor a in k.Own)
+            if (a.IsMobile && !(a.Kind == ActorKind.Vehicle && rules.Vehicles[a.TypeIndex].HarvestCapacity > 0))
+            { own += VeterancyValue.Of(rules, a); ownBase += VeterancyValue.Of(rules, a with { Rank = 0 }); }
+        foreach (ViewActor e in k.Visible)
+            if (e.Relation == Relation.Enemy && e.IsMobile && !(e.Kind == ActorKind.Vehicle && rules.Vehicles[e.TypeIndex].HarvestCapacity > 0))
+            { en += VeterancyValue.Of(rules, e); enBase += VeterancyValue.Of(rules, e with { Rank = 0 }); }
+        int now = k.View.Tick;
+        int enBonus = en - enBase;
+        if (en >= _eShortVal || now - _eShortTick > TierPlanner.EnemyValueMemoryTicks) { _eShortVal = en; _eShortBonus = enBonus; _eShortTick = now; }
+        if (en >= _eLongVal || now - _eLongTick > TierPlanner.WaveGateMemoryTicks) { _eLongVal = en; _eLongBonus = enBonus; _eLongTick = now; }
+        int ownBonus = own - ownBase;
+        if (ownBonus == 0 && _eShortBonus == 0 && _eLongBonus == 0) return;
+        OwnValue += ownBonus;
+        EnemyValueSeen += _eLongBonus;
+        // the planner's Ahead used unranked values: with ranks in play, decide it again from the ranked ones
+        Ahead = k.Army.Count >= TierPlanner.AheadMinUnits && (long)(ownBase + ownBonus) * 100 >= (long)_eShortVal * (100 + TierPlanner.AheadMarginPct);
+    }
+
     /// <summary>M4-16 round 4: a wave that lost most of its roster raises the army value the next one waits for.</summary>
     private void WaveFailed()
     {
@@ -244,6 +274,7 @@ internal sealed class MilitaryManager
     public void Think(RecruitKnowledge k, ICommandSink sink, CellCoord rally, List<ViewActor> allKnownEnemyBuildings)
     {
         int tick = k.View.Tick;
+        ApplyRankValues(k);   // VET-6
         ChooseTarget(k, allKnownEnemyBuildings);
         List<ViewActor> knownEnemyBuildings = _targetBuildings;
         ViewActor? attacked = FindAttacked(k);
@@ -295,7 +326,7 @@ internal sealed class MilitaryManager
                     if (seen++ >= take) break;
                     _roster.Add(Key(a));
                     hp += a.Health;
-                    if (_prong && (idx++ & 1) == 1) _squadB.Add(Key(a));
+                    if (_prong && InSquadB(a, ref idx)) _squadB.Add(Key(a));
                 }
                 if (_prong) Prongs++;
                 _launchHealth = hp;
@@ -367,6 +398,14 @@ internal sealed class MilitaryManager
         CellCoord goal = _phase == Phase.Assault ? PickGoal(k, knownEnemyBuildings) : default;
         CellCoord goalB = goal;
         if (_prong && _phase == Phase.Assault) goalB = SecondGoal(k, knownEnemyBuildings, goal) ?? goal;
+        // VET-6: below the defence response, an assaulting wave concentrates on a visible rank-3 enemy
+        if (_phase == Phase.Assault && attacked is null && AnyRank3(k))
+            foreach (ViewActor a in k.Army)
+            {
+                if (a.Underground || !_roster.Contains(Key(a))) continue;
+                if (PickFocus(k.Visible, a.Cell, k.Rules) is ViewActor f && a.Target != f.Id)
+                    sink.Issue(CommandKind.Attack, a.Id, a.Kind, default, f.Ref);
+            }
         foreach (ViewActor a in k.Army)
         {
             if (!a.Idle) continue;
@@ -594,19 +633,60 @@ internal sealed class MilitaryManager
         return hit;
     }
 
-    private static CellCoord? NearestEnemyTo(RecruitKnowledge k, ViewActor victim)
+    /// <summary>VET-6: the second prong takes every other unit, but a unit of rank <see cref="RankedTogether"/> or more always stays in prong A.
+    /// <paramref name="idx"/> only advances for the other units, so without ranks the split is the same alternation as before.</summary>
+    internal static bool InSquadB(ViewActor a, ref int idx) => a.Rank < RankedTogether && (idx++ & 1) == 1;
+
+    internal static CellCoord? NearestEnemyTo(RecruitKnowledge k, ViewActor victim)
     {
         long best = (long)DefendRadiusCells * DefendRadiusCells;
         CellCoord? found = null;
+        bool foundR3 = false;   // VET-6: a visible rank-3 enemy in range beats any nearer lower-rank one (the defence itself stays first)
         foreach (ViewActor e in k.Visible)
         {
             if (e.Relation != Relation.Enemy) continue;
             long dx = e.Cell.X - victim.Cell.X, dy = e.Cell.Y - victim.Cell.Y, d = dx * dx + dy * dy;
+            if (d > (long)DefendRadiusCells * DefendRadiusCells) continue;
+            bool r3 = e.Rank >= VeterancyValue.MaxRank;
+            if (foundR3 && !r3) continue;
+            if (r3 && !foundR3) { best = d; found = e.Cell; foundR3 = true; continue; }
             if (d > best) continue;
             if (found is not null && d == best) continue;
             best = d; found = e.Cell;
         }
         return found;
+    }
+
+    /// <summary>VET-6: units of this rank or higher are never split across squads (prongs, raiding party).</summary>
+    public const int RankedTogether = 2;
+
+    /// <summary>VET-6 focus fire: cells (Chebyshev radius) within which an assaulting unit is told to shoot a visible rank-3 enemy.</summary>
+    public const int FocusRank3Cells = 10;   // (tune)
+
+    /// <summary>
+    /// VET-6: the visible enemy rank-3 ground unit nearest to <paramref name="from"/> within <see cref="FocusRank3Cells"/>, or null. Equal
+    /// distance keeps the first in list order. Rank 0-2 units are never returned (they stay with the normal attack-move targeting).
+    /// </summary>
+    internal static ViewActor? PickFocus(IReadOnlyList<ViewActor> visible, CellCoord from, Rts.Sim.Rules.SimRules rules)
+    {
+        long best = long.MaxValue;
+        ViewActor? pick = null;
+        foreach (ViewActor e in visible)
+        {
+            if (e.Relation != Relation.Enemy || !e.IsMobile || e.Rank < VeterancyValue.MaxRank || e.Ghost) continue;
+            if (e.Kind == ActorKind.Vehicle && rules.Vehicles[e.TypeIndex].Locomotion == Locomotion.Air) continue;
+            if (Chebyshev(e.Cell, from) > FocusRank3Cells) continue;
+            long dx = e.Cell.X - from.X, dy = e.Cell.Y - from.Y, d = dx * dx + dy * dy;
+            if (d >= best) continue;
+            best = d; pick = e;
+        }
+        return pick;
+    }
+
+    private bool AnyRank3(RecruitKnowledge k)
+    {
+        foreach (ViewActor e in k.Visible) if (e.Relation == Relation.Enemy && e.Rank >= VeterancyValue.MaxRank) return true;
+        return false;
     }
 
     private static int Chebyshev(CellCoord a, CellCoord b) => Math.Max(Math.Abs(a.X - b.X), Math.Abs(a.Y - b.Y));
@@ -633,6 +713,7 @@ internal sealed class MilitaryManager
         w.Write(GroupRetreats); w.Write(Prongs); w.Write(Waves); w.Write(Defences); w.Write(Reinforcements); w.Write(StaleWaves); w.Write(Unstuck);
         w.Write(_aheadWave);   // M4-16
         w.Write(_launchValue); w.Write(_required);   // M4-16 r4
+        w.Write(_eShortVal); w.Write(_eShortBonus); w.Write(_eShortTick); w.Write(_eLongVal); w.Write(_eLongBonus); w.Write(_eLongTick);   // VET-6
     }
 
     /// <summary>M3-21: reads what <see cref="Snapshot"/> wrote. Call after Start.</summary>
@@ -657,6 +738,7 @@ internal sealed class MilitaryManager
         StaleWaves = r.ReadInt32(); Unstuck = r.ReadInt32();
         _aheadWave = r.ReadBoolean();   // M4-16
         _launchValue = r.ReadInt32(); _required = r.ReadInt32();   // M4-16 r4
+        _eShortVal = r.ReadInt32(); _eShortBonus = r.ReadInt32(); _eShortTick = r.ReadInt32(); _eLongVal = r.ReadInt32(); _eLongBonus = r.ReadInt32(); _eLongTick = r.ReadInt32();   // VET-6
         if (_scoutRoute.Count > 0) _scoutIdx = Math.Clamp(_scoutIdx, 0, _scoutRoute.Count - 1);
     }
 }
