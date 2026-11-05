@@ -19,7 +19,12 @@ public sealed class SfxrTests
                     RedirectStandardError = true,
                 };
                 using Process? p = Process.Start(psi);
-                p!.WaitForExit(20000);
+                if (!p!.WaitForExit(20000))
+                {
+                    // A slow or hanging launcher (e.g. a Windows Store stub on a busy CI runner): treat as "not available".
+                    try { p.Kill(true); } catch (InvalidOperationException) { }
+                    continue;
+                }
                 if (p.ExitCode == 0) return exe;
             }
             catch (System.ComponentModel.Win32Exception)
