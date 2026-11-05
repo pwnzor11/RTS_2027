@@ -36,6 +36,9 @@ public sealed record AudioFrame(SimSnapshot Previous, SimSnapshot Current, byte 
     /// <summary>Projectile positions at <see cref="Current"/>.</summary>
     public IReadOnlyList<LeptonCoord> Projectiles { get; init; } = Array.Empty<LeptonCoord>();
 
+    /// <summary>VET-5: vehicles and soldiers whose veterancy rank rose at <see cref="Current"/> (empty when none).</summary>
+    public IReadOnlyList<Rts.Game.Veterancy.RankKey> Promotions { get; init; } = Array.Empty<Rts.Game.Veterancy.RankKey>();
+
     /// <summary>Whether the local player has won or lost.</summary>
     public GameResult Result { get; init; }
 }
