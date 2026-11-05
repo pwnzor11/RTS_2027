@@ -9,9 +9,12 @@ public class PersonaCatalogTests
     {
         "leader_auth_wrenfield", "leader_auth_pell", "leader_auth_dray", "leader_auth_fenn",
         "leader_dir_harrowgate", "leader_dir_larkin", "leader_dir_thrall", "leader_dir_lund",
+        "leader_exp_aldersey", "leader_exp_strand", "leader_exp_roque", "leader_exp_kell",
+        "leader_lb_tindall", "leader_lb_calloway_ross", "leader_lb_vane",
     };
 
-    // Words from each leader's "Secret" paragraph in docs/lore/leaders.md. None may appear in that leader's voice.
+    // Words from each leader's "Secret" paragraph (docs/lore/leaders.md, docs/lore/expedition.md). None may appear in that leader's voice.
+    // Left Behind leaders have no secret paragraph yet, so their lists are empty.
     private static readonly Dictionary<string, string[]> SecretWords = new()
     {
         ["leader_auth_wrenfield"] = new[] { "brother", "evacuees", "memo" },
@@ -22,6 +25,13 @@ public class PersonaCatalogTests
         ["leader_dir_larkin"] = new[] { "lullabies", "battalion", "disappear" },
         ["leader_dir_thrall"] = new[] { "Order Seven", "Sunrise", "detonated" },
         ["leader_dir_lund"] = new[] { "decade", "way up", "without a war" },
+        ["leader_exp_aldersey"] = new[] { "signal log", "south coast" },
+        ["leader_exp_strand"] = new[] { "unsent orders", "recall" },
+        ["leader_exp_roque"] = new[] { "degrade faster", "scrap within three years" },
+        ["leader_exp_kell"] = new[] { "Glass Coast", "against orders" },
+        ["leader_lb_tindall"] = Array.Empty<string>(),
+        ["leader_lb_calloway_ross"] = Array.Empty<string>(),
+        ["leader_lb_vane"] = Array.Empty<string>(),
     };
 
     private static string ShippedFile()
@@ -40,7 +50,7 @@ public class PersonaCatalogTests
     private static IReadOnlyList<CommanderPersona> Shipped() => PersonaCatalog.Load(ShippedFile());
 
     [Fact]
-    public void Shipped_file_gives_eight_personas_in_file_order_with_unique_ids()
+    public void Shipped_file_gives_fifteen_personas_in_file_order_with_unique_ids()
     {
         IReadOnlyList<CommanderPersona> all = Shipped();
         Assert.Equal(ExpectedIds, all.Select(p => p.Id).ToArray());

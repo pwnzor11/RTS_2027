@@ -105,3 +105,53 @@ cost = 2500  # ASSUMED (M4-07)
 prerequisites = []
 tier = 3
 effects = ["dir_fx_fervour_hp", "dir_fx_fervour_rof"]
+
+# M6-08: Left Behind upgrades (design 06 §5, D-102). All researched at lb_bench; cheap, and about half the build time of the Authority
+# ones (explicit build_time). Costs and times are (tune).
+[lb_up_scrap_plate]
+faction = "left_behind"
+cost = 500  # (tune)
+build_time = 100  # (tune)
+prerequisites = []
+tier = 2
+effects = ["lb_fx_scrap_plate_gleaner", "lb_fx_scrap_plate_hauler", "lb_fx_scrap_plate_buggy", "lb_fx_scrap_plate_harpoon_wagon", "lb_fx_scrap_plate_organ", "lb_fx_scrap_plate_tow", "lb_fx_scrap_plate_dust_sail", "lb_fx_scrap_plate_rolling_fort", "lb_fx_scrap_plate_mother_rig_packed"]
+
+[lb_up_ash_wraps]
+faction = "left_behind"
+cost = 500  # (tune)
+build_time = 100  # (tune)
+prerequisites = []
+tier = 2
+effects = ["lb_fx_ash_wraps_scavenger", "lb_fx_ash_wraps_hook_runner", "lb_fx_ash_wraps_slinger", "lb_fx_ash_wraps_tinker", "lb_fx_ash_wraps_veilwalker", "lb_fx_ash_wraps_drifter_brute"]
+
+[lb_up_quick_pack]
+faction = "left_behind"
+cost = 500  # (tune)
+build_time = 100  # (tune)
+prerequisites = []
+tier = 2
+pack_ticks_permille = 600  # (tune) rig pack time -40 percent
+
+[lb_up_grapple]
+faction = "left_behind"
+cost = 800  # (tune)
+build_time = 150  # (tune)
+prerequisites = []
+tier = 3
+plunder_permille = 1500  # (tune) Hook Runner steals more (the brief wall-breaking is a later sim hook)
+
+[lb_up_salvage_rights]
+faction = "left_behind"
+cost = 800  # (tune)
+build_time = 150  # (tune)
+prerequisites = []
+tier = 3
+salvage_permille = 1500  # (tune) wreck value x1.5
+
+[lb_up_patchwork]
+faction = "left_behind"
+cost = 800  # (tune)
+build_time = 150  # (tune)
+prerequisites = []
+tier = 3
+repairs_vehicles_at_range = true

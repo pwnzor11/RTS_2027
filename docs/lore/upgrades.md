@@ -1,4 +1,4 @@
-# Upgrades (DRAFT for owner review)
+# Upgrades
 
 One entry per rules id. Only `auth_grouting` exists in data/rules/upgrades.toml today; Directorate upgrades are M4. If the
 lead adds Directorate upgrade ids, extend this file in the same format.

@@ -159,6 +159,21 @@ public readonly struct PlayerView
         }
     }
 
+    /// <summary>M6: fills <paramref name="dest"/> (cleared first) with every wreck on the map in slot order. Wrecks are public (D-102).</summary>
+    public void CopyWrecks(List<WreckView> dest)
+    {
+        dest.Clear();
+        Salvage.SalvageState w = _sim.Salvage;
+        for (int i = 1; i <= w.Capacity; i++)
+            if (w.TicksLeft[i] > 0) dest.Add(new WreckView(i, new CellCoord(w.CellX[i], w.CellY[i]), w.Value[i], w.TicksLeft[i]));
+    }
+
+    /// <summary>M6: true if the vehicle is a packed rig (its type shows it anyway, so this is not hidden information).</summary>
+    public bool IsPackedRig(EntityId vehicle) => _sim.Units.Slots.IsAlive(vehicle) && _sim.Rigs.IsPackedRig(vehicle.Index);
+
+    /// <summary>M6: pack/unpack progress of an own actor in permille (0 = idle, not a rig, or not own).</summary>
+    public int PackProgressPermille(ActorRef own) => _sim.PackProgressOf(Player, own);
+
     /// <summary>Weapon range in leptons of an actor type, 0 when it has no weapon.</summary>
     public int WeaponRange(ActorKind kind, int typeIndex)
     {

@@ -861,3 +861,82 @@ field, so the header layout is unchanged); extra keys `wreck_min_value` 25 / `wr
 (wrecks off until data sets 1200); storm fields live on the superweapon's `_blast` warhead; Left Behind is not playable until
 M6-08 adds its start kit and M6-09 raises PlayableFactions.
 **Status:** assumed — confirm (owner reads the plan)
+
+### D-119 · 2026-11-05 · Older lore files approved (Q-41)
+**Decision:** The six older lore files (docs/lore/world_history, authority, structures, units, directorate, upgrades) are approved;
+their DRAFT banners are removed.
+**Status:** confirmed (owner, pre-session 9)
+
+### D-120 · 2026-11-05 · Quick-Set Foam stays 3×3 (Q-42)
+**Decision:** Option (a): foam keeps its 3×3 footprint; it slows a tunnel push but cannot block one. Revisit after a play-test.
+**Status:** confirmed (owner, pre-session 9)
+
+### D-121 · 2026-11-05 · Tier-3 cost cut is measured, not landed (Q-43)
+**Decision:** Measure the tier-3 gate and tier-3 upgrade cut 2 500 → 2 000 with `ai match` and bring the owner a table. The data
+files keep 2 500 until the owner chooses (D-113).
+**Status:** confirmed (owner, pre-session 9)
+
+### D-122 · 2026-11-05 · Earlier assumed decisions confirmed
+**Decision:** D-105 (M4-16 round 1 balance), D-110 (commander chat outside the sim), D-111 (M5 setup and chat choices), D-112
+(commander personas) and D-118 (M6 plan and contracts, save/replay format 10) are confirmed.
+**Status:** confirmed (owner, pre-session 9)
+
+### D-123 · 2026-11-05 · Session 9 working rules
+**Decision:** (1) New M6/M7 numbers marked `(tune)` land, logged "assumed — confirm" with their balance tables; rules numbers that
+change existing play (Q-43, D-105 values) still go to the owner first (D-113). (2) Art: the lead builds and reworks art freely and
+reviews it; a lead-reviewed pilot still comes before each fan-out, but no owner approval is needed. A dedicated art pass follows once
+the game is built. (3) Helpers start on Sonnet; Opus helpers sparingly; Haiku for docs and bulk edits.
+**Status:** confirmed (owner, pre-session 9)
+
+### D-124 · 2026-11-05 · Expedition answers (07_expedition.md §10 items 1–3, 6, 8–10)
+**Decision:**
+- Landlocked maps: the generator guarantees a coast for an Expedition player; on a hand-made map without a landing coast the
+  Expedition cannot be picked (no air-supply fallback).
+- Shallows: land vehicles cannot cross; infantry move at 40 %; hover moves freely.
+- Ship size: one-cell occupancy; larger ships are drawn bigger than their cell. The approach is studied in the GPL reference
+  source and written from scratch (never copied, D-050).
+- Superweapon: Salvo Array now; The Long Tide postponed (needs terrain mutation).
+- Old maps: `water` is an alias for deep water; no migration.
+- Weapons vs ships: default target mask `Ground|Naval`, so existing weapons hit boats.
+- Submarines: keep both the missile sub and the minelayer.
+**Status:** confirmed (owner, pre-session 9)
+
+### D-125 · 2026-11-05 · Supply cap replaces the flat unit cap (all four factions)
+**Decision:** Every unit costs supply; each faction's supply buildings (and its main base building) raise the cap up to a hard
+ceiling. The sidebar shows used/cap and production stops at the cap with a clear message. Each faction's supply building comes
+from its lore (prefer an existing building): Authority housing/ration blocks, Directorate air scrubbers or bunk galleries, Left
+Behind water stills or cook-fires that pack with the rigs, Expedition a small cheap land building placeable anywhere in the
+beachhead zone (not quays), stocked from the shipments. It replaces the Expedition's flat 40-unit soft cap. The AI builds supply
+before it reaches the cap at every tier. Design in docs/design; numbers `(tune)`.
+**Status:** mechanic confirmed (owner, pre-session 9); buildings and numbers assumed — confirm
+
+### D-126 · 2026-11-05 · Home shipments and the early-game income target
+**Decision:** Expedition home shipments shrink over time so the faction must build a local economy, and they can be raided at
+sea. Shipments and local ash are tuned so that the Expedition's income per minute over the first 3, 5 and 10 minutes (AI vs AI,
+every map size) is neither starved nor ahead of the other three factions; the curves go in the balance table.
+**Status:** assumed — confirm (owner likes the mechanic; numbers to be measured)
+
+### D-127 · 2026-11-05 · Generic veterancy
+**Decision:** All factions get the same 3-rank veterancy (save/replay-safe). Rank 3 must make a real difference, as in Red Alert.
+Thresholds and bonuses `(tune)`.
+**Status:** mechanic confirmed (owner, pre-session 9); numbers assumed — confirm
+
+### D-128 · 2026-11-05 · Session 9 extra scope
+**Decision:** Besides M6, session 9 starts M7, builds generic veterancy and writes the M8 campaign plan (docs/design/12_m8_plan.md,
+all four factions, plan only). It also writes Expedition Archive entries and 2–4 Expedition leader personas.
+**Status:** scope confirmed (owner, pre-session 9); lore and personas assumed — confirm
+
+### D-129 · 2026-11-05 · Session 9 kickoff answers
+**Decision:** (1) The M4-16 wave strength gate + escalation is made real code in session 9 and lands if the ladder improves (AI
+behaviour only, D-113); this unblocks M6-10. (2) The supply cap (D-125) is on by default in skirmish once it lands. (3) Art is staged
+into the owner's `_art_push` folder overnight and pushed by the owner with push_art.ps1 (the PC shell has no GitHub sign-in; D-084).
+**Status:** confirmed (owner, session 9 kickoff)
+
+### D-130 · 2026-11-05 · Supply cap, veterancy and M7 plan designs
+**Decision:** docs/design/13_supply_cap.md, 14_veterancy.md and 11_m7_plan.md are the designs for D-125, D-127 and M7. Lead picks
+where the docs left options: supply buildings are new `auth_ration_hall`, `dir_bunk_gallery`, `lb_still_rig` (a rig) and
+`exp_provision_store`; harvesters cost 1 supply, the packed Mother Rig 0; supply is derived each tick (no state part) behind
+`[supply] enabled`; Expedition stores give full supply only while shipments keep arriving (option A). Veterancy ranks Veteran /
+Elite / Hero, kill value stored in a new "veterancy" part (format 11), rank 3 ≈ 2× combat value plus self-heal; the Expedition
+gets no faster gain (only its `exp_veteran_drill` upgrade). M7 contracts follow at format 12.
+**Status:** assumed — confirm (owner reads 13 §2.3 and 14 §2.3 first)

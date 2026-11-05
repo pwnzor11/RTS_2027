@@ -1,4 +1,4 @@
-# The Continental Reconstruction Authority (DRAFT for owner review)
+# The Continental Reconstruction Authority
 
 Entry ids use the prefix `faction_auth_`. Format per entry: `title:`, `subtitle:`, `unlock:`, body.
 

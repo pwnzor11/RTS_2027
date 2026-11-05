@@ -5,14 +5,12 @@ file cited after each question. Recommendations are the lead's, from the researc
 
 ## Open
 
-- ⚪ Q-41 Six older lore files still carry a DRAFT banner (docs/lore/world_history, authority, structures, units, directorate,
-  upgrades). Their Archive text was approved in session 4. Recommendation: confirm and clear the banners.
-- ⚪ Q-42 Quick-Set Foam covers only 3×3 (the loader caps `splash` to a flag), so it slows a tunnel push but cannot block one.
-  Options: (a) keep, (b) widen foam (sim/loader change). Recommendation: (a) until a play-test says otherwise.
-- ⚪ Q-43 Tier costs: cut the tier-3 gate and tier-3 upgrades 2 500 → 2 000 (docs/balance/m4_16_rules.md §4)? Recommendation:
-  measure in the next AI balance round first.
+- ⚪ Q-43 (measuring) Tier-3 cut 2 500 → 2 000: owner asked for a measured table before choosing (D-121). Table: see
+  docs/balance (session 9). Data stays at 2 500 until the owner picks.
 
 ## Answered
+- Q-41, Q-42 · 2026-11-05 · Lore banners cleared → D-119; foam stays 3×3 → D-120. Q-43 → measure only (D-121).
+- 07_expedition.md §10 (M7 items 1–10) · 2026-11-05 · owner answers → D-124..D-127.
 - Q-40 · 2026-11-04 · Owner: "look up the models" → Haiku 5.5 default, Sonnet 5.5 strong, effort low → D-108.
 - Q-34, Q-36 · 2026-11-04 · Session 4 and M4 assumed values confirmed → D-099.
 - Q-35 · 2026-11-04 · (a) one radiation-green ramp in PAL_DIR → D-099.

@@ -131,7 +131,7 @@ public sealed partial class Simulation
     /// <summary>Per tick (in RunEffects): advance/reset stealth timers (Effects.VehicleStill / InfantryStill).</summary>
     private void RunStealth()
     {
-        int delay = Setup.Rules.Stealth.DelayTicks;
+        int delay = Setup.Rules.Stealth.DelayTicks;   // the still counter caps here; readers compare with StealthDelayFor
         for (int k = 0; k < 2; k++)
         {
             var kind = (ActorKind)k;
@@ -153,6 +153,41 @@ public sealed partial class Simulation
                 else if (still[i] < delay) still[i]++;
             }
         }
+        LayBlackoutTrails();
+    }
+
+    /// <summary>M6-06: stealth delay for one actor. Infantry with AshStealthDelayTicks &gt; 0 standing on an Ashfall cell whose density is
+    /// above AshStealthThreshold use that delay when it is shorter than the global one (read-only map lookup). The still counter is
+    /// capped at the global delay, so a reading against the shorter delay is consistent.</summary>
+    private int StealthDelayFor(ActorKind kind, int i)
+    {
+        int delay = Setup.Rules.Stealth.DelayTicks;
+        if (kind != ActorKind.Infantry) return delay;
+        InfantryType t = RulesOf(_infantry.Player[i]).Infantry[_infantry.TypeIndex[i]];
+        if (t.AshStealthDelayTicks <= 0 || t.AshStealthDelayTicks >= delay) return delay;
+        CellCoord c = _infantry.Position[i].ToCell();
+        bool ashy = _map.OverlayAt(c) == OverlayKind.Ashfall && _map.DensityAt(c) > t.AshStealthThreshold;
+        if (!ashy && !InFriendlyStorm(_infantry.Player[i], c)) return delay;   // M6-07: a friendly storm counts as ash (design 06 §6)
+        return t.AshStealthDelayTicks;
+    }
+
+    /// <summary>M6-06: a moving surface vehicle with DropsBlackoutTicks lays Blackout on its current cell (max with what is there) on
+    /// the tick it enters a new cell and every 10th tick otherwise. Runs in slot order inside RunStealth, where the start-of-tick
+    /// positions are still valid; the cell timers are decremented later in RunBlackout.</summary>
+    private void LayBlackoutTrails()
+    {
+        if (!_useTickPos) return;
+        for (int i = 1; i < _units.Capacity; i++)
+        {
+            if (!_units.Slots.IsIndexAlive(i) || _units.Health[i] <= 0 || i >= _tickPosVeh.Length || _units.Position[i] == _tickPosVeh[i]) continue;
+            int ticks = RulesOf(_units.Player[i]).Vehicles[_units.TypeIndex[i]].DropsBlackoutTicks;
+            if (ticks <= 0 || _tunnels.LayerOf(ActorKind.Vehicle, i) != ActorLayer.Surface) continue;
+            CellCoord cell = _units.Position[i].ToCell();
+            if (Tick % AuraIntervalTicks != 0 && cell == _tickPosVeh[i].ToCell()) continue;
+            if (!_ground.Contains(cell)) continue;
+            int idx = _ground.IndexOf(cell);
+            if (ticks > _ground.Blackout[idx]) _ground.Blackout[idx] = ticks;
+        }
     }
 
     private bool IsStealthType(ActorKind kind, int i)
@@ -167,7 +202,7 @@ public sealed partial class Simulation
     {
         if (kind == ActorKind.Building || !IsStealthType(kind, i)) return false;
         int still = kind == ActorKind.Vehicle ? _effects.VehicleStill[i] : _effects.InfantryStill[i];
-        return still >= Setup.Rules.Stealth.DelayTicks;
+        return still >= StealthDelayFor(kind, i);
     }
 
     /// <summary>True if the viewer's team reveals stealthed actors on <paramref name="cell"/> (within 1 cell, Searchlight sight).</summary>

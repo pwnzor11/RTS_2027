@@ -78,6 +78,7 @@ public sealed partial class Simulation
         var targetKind = (ActorKind)((c.Arg >> 8) & 0xFF);
         Core.ActorRef subject = new(subjectKind, c.Subject);
         if (StoreOf(subjectKind) is not { } store || !store.Slots.IsAlive(c.Subject) || store.Player[c.Subject.Index] != c.Player) return;
+        if (TryApplyRaid(c, subject)) return;   // M6-05: Simulation.Raid.cs
         switch (targetKind)
         {
             case ActorKind.Vehicle when _units.Slots.IsAlive(c.Target):

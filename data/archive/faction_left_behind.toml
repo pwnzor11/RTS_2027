@@ -1,0 +1,105 @@
+# Archive faction pages (S9, M6-ARCH) for the Left Behind. Text is the approved lore from docs/lore/left_behind.md, copied verbatim.
+# Keys: id, category, faction, title, subtitle, field_note (optional), body, sprite (optional),
+# unlock (open | campaign:<mission> | encounter:<rules id> | research:<upgrade id>).
+# ASSUMED (S9): unlock is "open" for all seven pages. The lore marks leaders, authority and directorate as campaign.
+
+[[entry]]
+id = "faction_lb_abandonment"
+category = "Faction"
+faction = "left_behind"
+title = "The Last Train"
+subtitle = "The abandonment, 1990"
+body = '''
+In the winter of 1990 the ash came down so thickly that it buried the coast road in a night. The Authority's convoy
+masters called the evacuation; the trains were loaded in order of rank, then of clerkship, then of luck. When the
+ash closed the road, there were four thousand people left at the Tern Point railhead with eleven working trucks and a
+telegraph line that went dead on the third morning.
+
+There was no letter, no official regret, and no search party. The people at Tern Point do not say they were
+betrayed. They say they were counted, and that the count stopped. They kept the list they had made while they waited,
+and every child of the camp is named on it.
+'''
+unlock = "open"
+
+[[entry]]
+id = "faction_lb_first_rigs"
+category = "Faction"
+faction = "left_behind"
+title = "The First Rigs"
+subtitle = "How the camp learned to move, 1990 to 1994"
+body = '''
+The stranded trains became the first homes. A boiler car was a kitchen; a flatbed was a market; a locomotive with its
+reactor core gone cold was a workshop and a warning. By the second winter someone had bolted a cab and a pair of
+tracks to a flatbed and driven it ten metres without it falling over. By the fourth, the whole camp could move.
+
+The first caravan left Tern Point in 1994. The railhead was not abandoned a second time: the rigs were built so that
+nothing, ever again, had to be left behind. Every rig carries a flag with the names of the people on it.
+'''
+unlock = "open"
+
+[[entry]]
+id = "faction_lb_culture"
+category = "Faction"
+faction = "left_behind"
+title = "Caravan Custom"
+subtitle = "How the Left Behind live"
+body = '''
+A rig is a family, a trade and a town. Rigs are named for what they carry or what they lost: *Second Chance*, *Kettle*,
+*Nobody's Daughter*. Status is how long a rig has stayed afloat and how many strangers it has fed. Work is shared by
+skill, not rank. Disputes are settled at the Gathering, which is held wherever the wind is kindest.
+
+The caravans keep three habits with great discipline: they bury nobody they have not salvaged from, they never leave
+a wreck without looking inside it, and they never say "goodbye" to someone leaving a rig, only "see you at the next
+fire". Clothes are layered cloth over sheet metal; goggles are family heirlooms.
+'''
+unlock = "open"
+
+[[entry]]
+id = "faction_lb_leaders"
+category = "Faction"
+faction = "left_behind"
+title = "The Speakers"
+subtitle = "Leaders of the caravans"
+body = '''
+The caravans have no president. At each Gathering they choose a **Speaker**, who carries messages between rigs and
+holds the ledger of debts. The present Speaker is **Marrow Tindall**, a former railhead telegraphist who still taps
+her thumb in code when she thinks. She is patient, dry and exact, and she has not lost an argument she cared about.
+
+Her war-captain is **Jessup Calloway-Ross**, the rig-master of *Kettle* and the best driver on the Drift. He is loud
+where she is quiet, and the two have not agreed on anything in six years except that the Authority should be asked
+first. The third voice is **Old Ottoline Vane**, the oldest woman on the Drift, who remembers the last train and has never
+told anyone what she saw from the platform.
+'''
+# ASSUMED (session 9): the lore marks this page "campaign"; mission id set in M8.
+unlock = "campaign:TBD"
+
+[[entry]]
+id = "faction_lb_authority"
+category = "Faction"
+faction = "left_behind"
+title = "What the Left Behind Think of the Authority"
+subtitle = "A long memory"
+body = '''
+The caravans do not hate the Authority; they simply remember the exact day the lists stopped. Some think the order to close the
+road was a mistake. Others think it was arithmetic. Marrow Tindall holds that it makes no difference to the people on the
+platform. When Authority survey cars appear on the dunes, the rigs offer water and a fair price for fuel, and do not offer a name.
+
+An Authority officer, Brigadier Wrenfield, is known to the Drift. His brother was among those on the platform in 1990 and has
+not been seen since; the caravans have a name for him, and the Brigadier has not yet asked for it.
+'''
+# ASSUMED (session 9): the lore marks this page "campaign"; mission id set in M8.
+unlock = "campaign:TBD"
+
+[[entry]]
+id = "faction_lb_directorate"
+category = "Faction"
+faction = "left_behind"
+title = "What the Left Behind Think of the Directorate"
+subtitle = "Strangers with loudspeakers"
+body = '''
+The Directorate is a rumour that arrived as a voice. The first Directorate broadcast the caravans heard told them to
+register for service. The caravans' reply was to retune the loudspeaker on the *Kettle* and play it back with a slightly
+different wording. They do not fear the Voice, but they do not like what it does to the dunes at night.
+'''
+# ASSUMED (session 9): the lore marks this page "campaign"; mission id set in M8.
+unlock = "campaign:TBD"

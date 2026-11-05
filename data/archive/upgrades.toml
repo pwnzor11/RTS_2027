@@ -185,3 +185,83 @@ Rallies, songs and extra rations push conscripts to fight harder and shoot faste
 '''
 # Approved by the owner 2026-11-04 (Q-38). Replace the open unlock with a mission id when known.
 unlock = "open"
+
+# Left Behind upgrades (S9, M6-ARCH). Text from docs/lore/left_behind.md; the ones marked ASSUMED (S9) are drafts.
+
+# ASSUMED (S9): drafted this session, confirm with the owner (docs/lore/left_behind.md).
+[[entry]]
+id = "lb_up_scrap_plate"
+category = "Upgrade"
+faction = "left_behind"
+title = "Scrap Plate"
+subtitle = "Armour from the wreck yard"
+field_note = "CHALK BOARD // PLATE ON. IT RATTLES. IT STAYS ON."
+body = '''
+Rolled sheets from a dozen wrecks, each a different thickness, welded over the vehicle's weak points. The plate adds to the armour of every vehicle in the camp. It makes the machine heavier and noisier, and drivers complain they can hear themselves coming. The Speaker says a noisy vehicle is a vehicle that lives, and she has not yet been wrong about it.
+'''
+unlock = "research:lb_up_scrap_plate"
+
+# ASSUMED (S9): drafted this session, confirm with the owner (docs/lore/left_behind.md).
+[[entry]]
+id = "lb_up_ash_wraps"
+category = "Upgrade"
+faction = "left_behind"
+title = "Ash Wraps"
+subtitle = "Sail-cloth against the glow"
+field_note = "RIG RADIO // WRAPS ON. KEEP THE HOOD UP. MA SAYS THE GLOW IS NOT A COLOUR."
+body = '''
+Layers of sail-cloth stitched with lead thread and dipped in grey resin, worn over the chest and shoulders. Ash Wraps reduce the radiation that rises from the glowing drifts, so infantry can stay in the open longer and push further without falling back. They are heavy, hot and smell of resin. Every Veilwalker wears a set, and most Tinkers wear them under their coats.
+'''
+unlock = "research:lb_up_ash_wraps"
+
+# ASSUMED (S9): drafted this session, confirm with the owner (docs/lore/left_behind.md).
+[[entry]]
+id = "lb_up_quick_pack"
+category = "Upgrade"
+faction = "left_behind"
+title = "Quick Pack"
+subtitle = "Faster folding"
+field_note = "CHALK BOARD // PACK IN SIXTEEN. PACK IN SIXTEEN OR SLEEP IN THE ASH."
+body = '''
+A set of cable pulleys, spring latches and a foot pedal that lets a crew fold a rig in well under the usual time. Every crew agrees it saves lives during a raid. Before Quick Pack, a camp had to be packed in a quiet hour. After it, a camp can leave as soon as the first flare goes up over the ridge.
+'''
+unlock = "research:lb_up_quick_pack"
+
+# ASSUMED (S9): drafted this session, confirm with the owner (docs/lore/left_behind.md).
+[[entry]]
+id = "lb_up_grapple"
+category = "Upgrade"
+faction = "left_behind"
+title = "Grapple Hooks"
+subtitle = "Heavier hooks, looser walls"
+field_note = "RIG RADIO // HOOKS READY. HE WILL NOT KNOW WHAT HIT HIM. NEITHER WILL THE WALL."
+body = '''
+Stronger hooks, a longer line and a steel spike on the end of each throw. Hook Runners with grapples take more from a silo before the alarm, and they can tear a gap through a wall for a few seconds before it knits back. The younger runners call Grapple Hooks the best thing the Bench has produced since the Patchwork.
+'''
+unlock = "research:lb_up_grapple"
+
+# ASSUMED (S9): drafted this session, confirm with the owner (docs/lore/left_behind.md).
+[[entry]]
+id = "lb_up_salvage_rights"
+category = "Upgrade"
+faction = "left_behind"
+title = "Salvage Rights"
+subtitle = "Every wreck counts"
+field_note = "CHALK BOARD // SALVAGE RIGHTS SIGNED. EVERY WRECK IS OURS. EVERY ONE."
+body = '''
+A written claim, signed at the Gathering, that the caravan has first right to every wreck on the Drift. In practice it means better paperwork for the crews who find the wrecks, faster hauling with the Salvage Hauler, and more value for every scrap that comes home. Three other camps dispute the claim. The caravans have never bothered to answer them, because the wrecks keep coming home.
+'''
+unlock = "research:lb_up_salvage_rights"
+
+# ASSUMED (S9): drafted this session, confirm with the owner (docs/lore/left_behind.md).
+[[entry]]
+id = "lb_up_patchwork"
+category = "Upgrade"
+faction = "left_behind"
+title = "Patchwork"
+subtitle = "Repairs at a distance"
+field_note = "RIG RADIO // PATCH KIT LIVE. TINKER ON THE HILL, TANK IN THE SAND. DON'T MOVE, WE ARE COMING."
+body = '''
+A long-range repair kit rigged from a welder, a radio and a spare set of fittings, carried by Tinkers who can now mend vehicles from across a field. Patchwork lets a Tinker keep a convoy running under fire. It is the thing Tinkers most want to do and the thing they are most often told to stop. The result is a fighting rig that never quite matches the one it started as, which is the caravan's whole philosophy in one machine.
+'''
+unlock = "research:lb_up_patchwork"

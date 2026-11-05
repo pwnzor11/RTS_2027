@@ -184,6 +184,8 @@ public sealed partial class Simulation
         _units.Facing[id.Index] = CentreFacing(cell);
         OnActorSpawned(ActorKind.Vehicle, id.Index);
         OnM3MobileSpawned(ActorKind.Vehicle, id.Index);
+        int unpacks = RulesOf(player).Vehicles[vehicleTypeIndex].UnpacksInto;   // M6-03: a placed packed rig (start kit) is a packed rig
+        if (unpacks >= 0 && _rigs.PackedFrom[id.Index] == 0) { _rigs.PackedFrom[id.Index] = unpacks + 1; _rigs.HpPermille[id.Index] = 1000; }
         _emittersDirty = true;   // M3-INT
         if (!_inStep) _setupLog.Add(new SetupEntry(ActorKind.Vehicle, player, vehicleTypeIndex, cell, 0));
         return id;
@@ -228,9 +230,12 @@ public sealed partial class Simulation
         RunMovement();
         RunTunnels();      // M3: Simulation.Tunnels.cs — queues, transit, surfacing (before combat: underground units are untargetable)
         RunEffects();      // M3: Simulation.Effects.cs — auras, stealth timers, superweapon charge (before combat reads them)
+        RunStorms();       // M6-07: Simulation.Storm.cs — The Second Drift (before combat)
         RunCombat();
         RunEconomy();
+        RunSalvage();      // M6-04: Simulation.Salvage.cs — wreck decay
         RunProduction();
+        RunRigs();         // M6-03: Simulation.Rigs.cs — pack/unpack timers
         RunGround();       // M3: Simulation.Ground.cs — radiation decay/damage, Blackout decay, hardening recompute (before cleanup)
         RunAiBookkeeping();
         RunTriggers();
@@ -306,6 +311,7 @@ public sealed partial class Simulation
             case CommandKind.Sell: ApplySell(c); break;
             case CommandKind.Harvest:
             case CommandKind.Return:
+                if (TryApplySalvageCommand(c)) break;   // M6-04: Simulation.Salvage.cs
                 ApplyEconomyCommand(c);    // Simulation.Economy.cs (M2-07)
                 break;
             case CommandKind.Enter: ApplyEnter(c); break;       // M3: Simulation.Transport.cs routes by target
@@ -314,7 +320,7 @@ public sealed partial class Simulation
             case CommandKind.Special: ApplySpecial(c); break;   // M3: Simulation.Superweapon.cs (M3-13)
             case CommandKind.Unload: ApplyUnloadCommand(c); break;   // M4: Simulation.Garrison.cs (M4-03)
             case CommandKind.Directive: ApplyDirective(c); break;    // M5-01: Simulation.M5.cs
-            case CommandKind.Pack: break;                           // M6-02: accepted and ignored until M6-03 (Simulation.Rigs.cs)
+            case CommandKind.Pack: ApplyPack(c); break;             // M6-03: Simulation.Rigs.cs
             case CommandKind.Debug:
                 if (Setup.AllowDebug) ApplyDebug(c);
                 break;
@@ -643,11 +649,13 @@ public sealed partial class Simulation
                     BuildingType dbt = BuildingTypeAt(i);
                     _fx.Add(new FxEvent(FxKind.BuildingDestroyed, BuildingCentre(i), Math.Max(dbt.FootprintW, dbt.FootprintH)));
                     OnStatsLost(_buildings.Player[i], ActorKind.Building);   // M4-06
+                    SpawnWreckFor(ActorKind.Building, i);   // M6-04
                     RemoveBuilding(slots.IdOf(i));
                     continue;
                 }
                 _fx.Add(new FxEvent(FxKind.UnitDestroyed, PositionAt(kind, i), 1));
                 OnStatsLost(PlayerAt(kind, i), kind);   // M4-06
+                if (kind == ActorKind.Vehicle) SpawnWreckFor(kind, i);   // M6-04 (infantry leave no wreck)
                 OnM3MobileDying(kind, i);   // M3: death weapon, passengers (Simulation.M3.cs)
                 OnActorRemoving(kind, i);
                 OnM3MobileRemoving(kind, i);

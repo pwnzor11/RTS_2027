@@ -600,3 +600,242 @@ prerequisites = []
 provides = []
 garrison = 4  # (tune) design 08 §3
 buildable = false
+
+# M6-08: Left Behind structures and rigs (design 06 §4-6, D-102). PLACEHOLDER ART: no sprite manifests yet, the generated
+# placeholder is drawn. Every number is (tune). Tier gates: lb_lookout provides lb_tier2 (needs the Garage Rig), lb_rotor_pad
+# provides lb_tier3 (needs the Tinker's Bench). Packable rigs pack into the generic lb_mother_rig_packed.
+
+[lb_mother_rig]   # PLACEHOLDER ART; conyard that packs (no conyard building in the kit)
+faction = "left_behind"
+tier = 1
+footprint_w = 3
+footprint_h = 3
+max_health = 900  # (tune)
+armor = "structure"
+sight = 6  # (tune)
+primary_weapon = ""
+cost = 0  # (tune)
+power = 0  # (tune)
+prerequisites = []
+provides = ["lb_mother_rig"]
+category = "structure"
+produces = ""
+buildable = false
+packs_into = "lb_mother_rig_packed"
+pack_ticks = 200  # (tune)
+
+[lb_yard]   # PLACEHOLDER ART; fixed cheap refinery and silo
+faction = "left_behind"
+tier = 1
+footprint_w = 2
+footprint_h = 2
+max_health = 500  # (tune)
+armor = "structure"
+sight = 4  # (tune)
+primary_weapon = ""
+cost = 600  # (tune)
+power = -10  # (tune)
+prerequisites = ["lb_mother_rig"]
+provides = []
+refinery = true
+storage = 1000  # (tune)
+dock = [1, 2]
+free_unit = "lb_gleaner"
+build_time = 200  # (tune)
+
+[lb_refinery_rig]   # PLACEHOLDER ART; mobile refinery
+faction = "left_behind"
+tier = 1
+footprint_w = 2
+footprint_h = 2
+max_health = 500  # (tune)
+armor = "structure"
+sight = 4  # (tune)
+primary_weapon = ""
+cost = 900  # (tune)
+power = -20  # (tune)
+prerequisites = ["lb_mother_rig"]
+provides = []
+refinery = true
+storage = 600  # (tune)
+dock = [1, 2]
+build_time = 300  # (tune)
+packs_into = "lb_mother_rig_packed"
+pack_ticks = 200  # (tune)
+
+[lb_dynamo_rig]   # PLACEHOLDER ART; cheap small power
+faction = "left_behind"
+tier = 1
+footprint_w = 2
+footprint_h = 2
+max_health = 300  # (tune)
+armor = "structure"
+sight = 3  # (tune)
+primary_weapon = ""
+cost = 200  # (tune)
+power = 60  # (tune)
+prerequisites = ["lb_mother_rig"]
+provides = []
+packs_into = "lb_mother_rig_packed"
+pack_ticks = 200  # (tune)
+
+[lb_muster_rig]   # PLACEHOLDER ART; infantry production
+faction = "left_behind"
+tier = 1
+footprint_w = 2
+footprint_h = 2
+max_health = 350  # (tune)
+armor = "structure"
+sight = 4  # (tune)
+primary_weapon = ""
+cost = 250  # (tune)
+power = -10  # (tune)
+prerequisites = ["lb_mother_rig"]
+provides = []
+produces = "infantry"
+packs_into = "lb_mother_rig_packed"
+pack_ticks = 200  # (tune)
+
+[lb_garage_rig]   # PLACEHOLDER ART; vehicle production
+faction = "left_behind"
+tier = 1
+footprint_w = 3
+footprint_h = 3
+max_health = 600  # (tune)
+armor = "structure"
+sight = 4  # (tune)
+primary_weapon = ""
+cost = 900  # (tune)
+power = -20  # (tune)
+prerequisites = ["lb_dynamo_rig"]
+provides = []
+produces = "vehicle"
+packs_into = "lb_mother_rig_packed"
+pack_ticks = 200  # (tune)
+
+[lb_lookout]   # PLACEHOLDER ART; radar + minimap jam; T2 gate
+faction = "left_behind"
+tier = 2
+footprint_w = 1
+footprint_h = 1
+max_health = 250  # (tune)
+armor = "structure"
+sight = 9  # (tune)
+primary_weapon = ""
+cost = 400  # (tune)
+power = -10  # (tune)
+prerequisites = ["lb_garage_rig"]
+provides = ["lb_tier2"]
+jam_radius = 6  # (tune)
+packs_into = "lb_mother_rig_packed"
+pack_ticks = 200  # (tune)
+
+[lb_bench]   # PLACEHOLDER ART; Tinker's Bench: tech, researches upgrades
+faction = "left_behind"
+tier = 2
+footprint_w = 2
+footprint_h = 2
+max_health = 400  # (tune)
+armor = "structure"
+sight = 4  # (tune)
+primary_weapon = ""
+cost = 800  # (tune)
+power = -20  # (tune)
+prerequisites = ["lb_lookout"]
+provides = []
+researches = true
+
+[lb_rotor_pad]   # PLACEHOLDER ART; aircraft production; T3 gate
+faction = "left_behind"
+tier = 3
+footprint_w = 2
+footprint_h = 2
+max_health = 450  # (tune)
+armor = "structure"
+sight = 4  # (tune)
+primary_weapon = ""
+cost = 1000  # (tune)
+power = -20  # (tune)
+prerequisites = ["lb_bench"]
+provides = ["lb_tier3"]
+produces = "aircraft"
+
+[lb_spike_nest]   # PLACEHOLDER ART; basic defence
+faction = "left_behind"
+tier = 1
+footprint_w = 1
+footprint_h = 1
+max_health = 300  # (tune)
+armor = "fortified"
+sight = 5  # (tune)
+primary_weapon = "lb_spike_gun"
+cost = 200  # (tune)
+power = 0  # (tune)
+prerequisites = ["lb_mother_rig"]
+provides = []
+category = "defence"
+
+[lb_harpoon_post]   # PLACEHOLDER ART; anti-armour defence
+faction = "left_behind"
+tier = 2
+footprint_w = 1
+footprint_h = 1
+max_health = 350  # (tune)
+armor = "fortified"
+sight = 6  # (tune)
+primary_weapon = "lb_harpoon_gun"
+cost = 400  # (tune)
+power = -10  # (tune)
+prerequisites = ["lb_mother_rig"]
+provides = []
+category = "defence"
+needs_power = true
+
+[lb_flak_net]   # PLACEHOLDER ART; anti-air defence
+faction = "left_behind"
+tier = 2
+footprint_w = 1
+footprint_h = 1
+max_health = 300  # (tune)
+armor = "fortified"
+sight = 7  # (tune)
+primary_weapon = "lb_flak_gun"
+cost = 350  # (tune)
+power = -10  # (tune)
+prerequisites = ["lb_mother_rig"]
+provides = []
+category = "defence"
+needs_power = true
+
+[lb_scrap_wall]   # PLACEHOLDER ART; cheap wall piece
+faction = "left_behind"
+tier = 1
+footprint_w = 1
+footprint_h = 1
+max_health = 150  # (tune)
+armor = "fortified"
+sight = 1  # (tune)
+primary_weapon = ""
+cost = 30  # (tune)
+power = 0  # (tune)
+prerequisites = ["lb_mother_rig"]
+provides = []
+category = "defence"
+wall = true
+
+[lb_second_drift]   # PLACEHOLDER ART; The Second Drift superweapon (ground-effect storm, design 06 §6)
+faction = "left_behind"
+tier = 3
+footprint_w = 3
+footprint_h = 3
+max_health = 700  # (tune)
+armor = "structure"
+sight = 4  # (tune)
+primary_weapon = ""
+cost = 2500  # (tune)
+power = -40  # (tune)
+prerequisites = ["lb_rotor_pad"]
+provides = []
+superweapon = "lb_second_drift"
+superweapon_charge_ticks = 4800  # (tune)
+superweapon_entrance_range = 8  # (tune)

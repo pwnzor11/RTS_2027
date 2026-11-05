@@ -6,6 +6,11 @@ replay format 10 — no gameplay yet. M4-16 round 3 found the cause of the inver
 are only partly measured and live as scratch knobs on `wp/m4-16r3-wip`. Full suite 2 134 tests (AI 102, Game 789, Llm 107, Scripting 43, Sim 1 093), green
 on Linux and Windows CI. Decisions D-113..D-118.
 
+> **Session 9 checkpoint (in progress, 2026-11-05):** M6-03..08 + Left Behind Archive/personas, M7/M8 plans, supply and veterancy
+> designs are merged on `integ-m6` (all suites green: Sim 1167, Game 789, AI 102, Llm 107, Scripting 43) and go to main via PR. Running:
+> M6-09 game layer, veterancy VET-1..4, M4-16 round 4, Left Behind art (structures + units). If this session died, resume from
+> `integ-m6` and the `wp/*` branches listed by `git branch -r`. The rest of this file is still the session-8 handoff.
+
 ## Start here (shown to the user as the plan; nothing starts until they say go)
 1. M4-16 fixes: read docs/balance/m4_16_round3.md ("Status at stop"), take the untested knobs on `wp/m4-16r3-wip` (src/AI/Recruit/Exp.cs
    is scratch — never commit it). Measured in session 8 (64 games): tech hold has no effect (leave off); the wave strength gate +

@@ -195,3 +195,111 @@ target = "weapon:dir_rifle"
 attr = "rate_of_fire"
 value = 900
 
+
+# M6-08: Left Behind upgrade effects (design 06 §5). (tune) values. Quick Pack, Grapple Hooks, Salvage Rights and Patchwork act through
+# the schema v5 upgrade fields in upgrades.toml, not through effects.
+
+[[effect]]
+id = "lb_fx_scrap_plate_gleaner"
+op = "mul"
+target = "lb_gleaner"
+attr = "max_health"
+value = 1200
+
+[[effect]]
+id = "lb_fx_scrap_plate_hauler"
+op = "mul"
+target = "lb_hauler"
+attr = "max_health"
+value = 1200
+
+[[effect]]
+id = "lb_fx_scrap_plate_buggy"
+op = "mul"
+target = "lb_buggy"
+attr = "max_health"
+value = 1200
+
+[[effect]]
+id = "lb_fx_scrap_plate_harpoon_wagon"
+op = "mul"
+target = "lb_harpoon_wagon"
+attr = "max_health"
+value = 1200
+
+[[effect]]
+id = "lb_fx_scrap_plate_organ"
+op = "mul"
+target = "lb_organ"
+attr = "max_health"
+value = 1200
+
+[[effect]]
+id = "lb_fx_scrap_plate_tow"
+op = "mul"
+target = "lb_tow"
+attr = "max_health"
+value = 1200
+
+[[effect]]
+id = "lb_fx_scrap_plate_dust_sail"
+op = "mul"
+target = "lb_dust_sail"
+attr = "max_health"
+value = 1200
+
+[[effect]]
+id = "lb_fx_scrap_plate_rolling_fort"
+op = "mul"
+target = "lb_rolling_fort"
+attr = "max_health"
+value = 1200
+
+[[effect]]
+id = "lb_fx_scrap_plate_mother_rig_packed"
+op = "mul"
+target = "lb_mother_rig_packed"
+attr = "max_health"
+value = 1200
+
+[[effect]]
+id = "lb_fx_ash_wraps_scavenger"
+op = "set"
+target = "lb_scavenger"
+attr = "rad_resist_permille"
+value = 900
+
+[[effect]]
+id = "lb_fx_ash_wraps_hook_runner"
+op = "set"
+target = "lb_hook_runner"
+attr = "rad_resist_permille"
+value = 900
+
+[[effect]]
+id = "lb_fx_ash_wraps_slinger"
+op = "set"
+target = "lb_slinger"
+attr = "rad_resist_permille"
+value = 900
+
+[[effect]]
+id = "lb_fx_ash_wraps_tinker"
+op = "set"
+target = "lb_tinker"
+attr = "rad_resist_permille"
+value = 900
+
+[[effect]]
+id = "lb_fx_ash_wraps_veilwalker"
+op = "set"
+target = "lb_veilwalker"
+attr = "rad_resist_permille"
+value = 900
+
+[[effect]]
+id = "lb_fx_ash_wraps_drifter_brute"
+op = "set"
+target = "lb_drifter_brute"
+attr = "rad_resist_permille"
+value = 900

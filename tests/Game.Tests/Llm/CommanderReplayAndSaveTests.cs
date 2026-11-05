@@ -60,7 +60,9 @@ public sealed class CommanderReplayAndSaveTests
         Assert.Equal(finalHash, play.Sim.ComputeStateHash());
         Assert.Equal(-1, play.DesyncTick);
         Assert.Equal(live, play.Sim.ViewFor(1).Directive);
-        Assert.Single(fake.Requests);
+        // The reply arrives in wall time: on a slow runner the wait loop can pass another cadence boundary and the commander asks
+        // again (CI failure, session 9). The replay still needs no provider; at least one request must have been made.
+        Assert.NotEmpty(fake.Requests);
     }
 
     [Fact]
