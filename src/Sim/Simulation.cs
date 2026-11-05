@@ -440,9 +440,8 @@ public sealed partial class Simulation
         int x0 = topLeft.X, y0 = topLeft.Y;
         if (x0 < 0 || y0 < 0 || x0 + w > Setup.Map.Width || y0 + h > Setup.Map.Height) return PlacementResult.OutOfMap;
         TerrainTable table = Setup.Rules.Terrain;
-        for (int y = y0; y < y0 + h; y++)
-            for (int x = x0; x < x0 + w; x++)
-                if (!_map.IsBuildable(new CellCoord(x, y), table)) return PlacementResult.Blocked;
+        PlacementResult m7 = CheckBeachheadAndWater(player, bt, x0, y0);   // M7-07: terrain per cell (water buildings) and the beachhead zone
+        if (m7 != PlacementResult.Ok) return m7;
         // Map occupancy is not maintained for units yet, so also check unit positions directly.
         for (int i = 1; i < _units.Capacity; i++)
             if (_units.Slots.IsIndexAlive(i) && InRect(_units.Position[i].ToCell(), x0, y0, w, h)

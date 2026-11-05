@@ -115,6 +115,13 @@ public readonly struct PlayerView
     /// <summary>True if the player knows the cell is hardened (own team anywhere; others where seen now).</summary>
     public bool HardenedAt(CellCoord c) => _sim.KnownHardenedAt(Player, c);
 
+    /// <summary>M7-07: True if the cell is inside the player's own beachhead zone (always false for a faction without one). Off-map: false.</summary>
+    public bool InBeachhead(CellCoord c) => _sim.Setup.Map.Width > c.X && _sim.Setup.Map.Height > c.Y && c.X >= 0 && c.Y >= 0
+        && _sim.InBeachhead(Player, c.Y * _sim.Setup.Map.Width + c.X);
+
+    /// <summary>M7-07: the player's own beachhead mask, bit <c>cell % 64</c> of word <c>cell / 64</c> (cell = y * width + x), read-only.</summary>
+    public ReadOnlySpan<ulong> BeachheadMask => Player < _sim.Beachhead.Zone.Length ? _sim.Beachhead.Zone[Player] : ReadOnlySpan<ulong>.Empty;
+
     /// <summary>True if the cell is jammed on the player's minimap (enemy Static Broadcast).</summary>
     public bool JammedAt(CellCoord c) => _sim.IsJammedAt(Player, c);
 
