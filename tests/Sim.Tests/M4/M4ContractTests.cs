@@ -76,7 +76,7 @@ public sealed class M4ContractTests
         Assert.Equal(12, SimWriter.SaveVersion);   // M5-01 took 9, M6-02 10, VET-1 11, M7-02 12
         Assert.Equal(12, ReplayWriter.Version);           // M3-19 had already taken 8 for the mission block, M6-02 took 10, VET-1 11, M7-02 12
         Assert.Equal(7, ReplayWriter.OldestReadableVersion);
-        Assert.Equal(2, MapFile.FormatVersion);
+        Assert.Equal(3, MapFile.FormatVersion);   // M7-02: format 3 (Coast, convoy_edge, landing)
         Assert.Equal(1, MapFile.OldestReadableVersion);
     }
 
@@ -425,7 +425,7 @@ public sealed class M4ContractTests
             new[] { new MapFeature("neu_ruin_depot", new CellCoord(10, 11)), new MapFeature("neu_ruin_tenement", new CellCoord(20, 3)) });
         string path = Temp("v2.map.toml");
         MapFile.Save(map, meta, path);
-        Assert.Contains("format_version = 2", File.ReadAllText(path));
+        Assert.Contains("format_version = 3", File.ReadAllText(path));   // M4-01 wrote 2, M7-02 3 (MapFormat3Tests covers a real version-2 file)
         (Rts.Sim.Map.MapData back, MapMeta backMeta) = MapFile.LoadWithMeta(path);
         Assert.Equal(Rts.Sim.Map.MapHasher.Compute(map), Rts.Sim.Map.MapHasher.Compute(back));
         Assert.Equal(meta.Biome, backMeta.Biome);
@@ -444,8 +444,8 @@ public sealed class M4ContractTests
         Assert.Equal(MapMeta.DefaultFor(map) with { Features = meta.Features }, meta);
         Assert.Empty(meta.Features);
         Assert.Equal(map.StartPositions.Count, meta.MaxPlayers);
-        string v3 = Temp("v3.map.toml");
-        File.WriteAllText(v3, File.ReadAllText(path).Replace("format_version = 1", "format_version = 3"));
+        string v3 = Temp("v4.map.toml");   // a future version
+        File.WriteAllText(v3, File.ReadAllText(path).Replace("format_version = 1", "format_version = 4"));
         Assert.Throws<MapFileException>(() => MapFile.Load(v3));
     }
 

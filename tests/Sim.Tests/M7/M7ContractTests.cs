@@ -360,10 +360,12 @@ public sealed class M7ContractTests
     public void NavalVehicleSlots_AreClearedOnSpawn()
     {
         var sim = ScriptedGame.NewSim(ScriptedGame.Setup());
-        sim.Naval.Submerged[1] = true; sim.Naval.UnloadTicksLeft[1] = 4;
-        sim.SpawnVehicle(0, 0, new CellCoord(10, 10));
-        Assert.False(sim.Naval.Submerged[1]);
-        Assert.Equal(0, sim.Naval.UnloadTicksLeft[1]);
+        for (int i = 1; i < sim.Naval.Submerged.Length; i++) { sim.Naval.Submerged[i] = true; sim.Naval.UnloadTicksLeft[i] = 4; }
+        EntityId id = sim.SpawnVehicle(0, 0, new CellCoord(10, 10));
+        Assert.False(id.IsNone);
+        int slot = id.Index;
+        Assert.False(sim.Naval.Submerged[slot]);
+        Assert.Equal(0, sim.Naval.UnloadTicksLeft[slot]);
     }
 
     [Fact]

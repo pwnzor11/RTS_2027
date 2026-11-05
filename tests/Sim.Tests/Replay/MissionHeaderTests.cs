@@ -73,9 +73,9 @@ public class MissionHeaderTests
     public void FutureVersion_IsRejected()
     {
         byte[] bytes = Record(ScriptedGame.Setup(), 32, null);
-        bytes[4] = 12;   // M4-01 took 9, M6-02 took 10, VET-1 took 11
+        bytes[4] = 13;   // M4-01 took 9, M6-02 took 10, VET-1 took 11, M7-02 took 12
         var ex = Assert.Throws<InvalidDataException>(() => ReplayReader.Read(new MemoryStream(bytes)));
-        Assert.Contains("version 12", ex.Message);
+        Assert.Contains("version 13", ex.Message);
     }
 
     [Fact]

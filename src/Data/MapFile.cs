@@ -173,7 +173,7 @@ public static class MapFile
         sb.Append("]\n");
     }
 
-    private static List<CellCoord> ReadCells(TomlTable m, string key, MapData map, string path)
+    private static IReadOnlyList<CellCoord> ReadCells(TomlTable m, string key, MapData map, string path)
     {
         var cells = new List<CellCoord>();
         if (!m.TryGetValue(key, out var v)) return cells;
@@ -186,7 +186,7 @@ public static class MapFile
             if (!map.Contains(new CellCoord(x, y))) throw new MapFileException(path, $"map.{key} cell [{x}, {y}] outside map");
             cells.Add(new CellCoord(x, y));
         }
-        return cells;
+        return cells.Count == 0 ? Array.Empty<CellCoord>() : cells;
     }
 
     private static MapMeta ReadMeta(TomlTable root, TomlTable m, MapData map, int version, string path)
@@ -233,8 +233,8 @@ public static class MapFile
         }
         return new MapMeta(biome, symmetry, maxPlayers, generator, features)
         {
-            ConvoyEdge = version >= 3 ? ReadCells(m, "convoy_edge", map, path) : new List<CellCoord>(),
-            Landing = version >= 3 ? ReadCells(m, "landing", map, path) : new List<CellCoord>(),
+            ConvoyEdge = version >= 3 ? ReadCells(m, "convoy_edge", map, path) : Array.Empty<CellCoord>(),
+            Landing = version >= 3 ? ReadCells(m, "landing", map, path) : Array.Empty<CellCoord>(),
         };
     }
 
