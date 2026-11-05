@@ -13,4 +13,7 @@ public enum ArchiveFaction
 
     /// <summary>The Directorate of the Interior.</summary>
     Directorate,
+
+    /// <summary>The Left Behind, the caravans of the Glass Coast.</summary>
+    LeftBehind,
 }

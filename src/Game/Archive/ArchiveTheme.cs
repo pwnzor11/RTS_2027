@@ -35,11 +35,20 @@ public sealed record ArchiveTheme(Color Panel, Color Border, Color Accent, Color
         new Color(0x4A, 0x52, 0x40), new Color(0xD8, 0xC8, 0x8A), new Color(0xE2, 0xE4, 0xD8), new Color(0x90, 0x94, 0x86),
         new Color(0xF0, 0xE0, 0x9A), false, 2);
 
+    /// <summary>
+    /// Warm dust palette from PAL_LB (tools/art/common.py): dust ochre, canvas, rust red and faded teal. ASSUMED (S9): the
+    /// colour roles are a first pass; the owner confirms them.
+    /// </summary>
+    public static ArchiveTheme LeftBehind { get; } = new(new Color(0x2A, 0x20, 0x18), new Color(0xB3, 0x8A, 0x44),
+        new Color(0xA0, 0x4A, 0x2C), new Color(0xD1, 0xA6, 0x59), new Color(0xDA, 0xCB, 0x9E), new Color(0xB5, 0xB0, 0xA6),
+        new Color(0x78, 0x98, 0x8F), false, 3);
+
     /// <summary>The theme of a faction.</summary>
     public static ArchiveTheme For(ArchiveFaction faction) => faction switch
     {
         ArchiveFaction.Authority => Authority,
         ArchiveFaction.Directorate => Directorate,
+        ArchiveFaction.LeftBehind => LeftBehind,
         _ => Neutral,
     };
 }

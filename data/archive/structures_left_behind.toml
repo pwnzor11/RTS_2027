@@ -1,0 +1,191 @@
+# Archive entries (S9, M6-ARCH) for the Left Behind structures and rigs. Text is the lore from docs/lore/left_behind.md, copied verbatim.
+# Entries marked ASSUMED (S9) had no approved text and were drafted for the owner to confirm.
+# Keys: id, category, faction, title, subtitle, field_note (optional), body, sprite (optional),
+# unlock (open | campaign:<mission> | encounter:<rules id> | research:<upgrade id>).
+# Unit, Structure and Upgrade entries use the rules id as their id; their stats are read live from data/rules.
+
+[[entry]]
+id = "lb_mother_rig"
+category = "Structure"
+faction = "left_behind"
+title = "Mother Rig"
+subtitle = "The caravan's home and workshop"
+field_note = "CHALK BOARD // MOTHER RIG UP. THE KETTLE IS ON. ALL RIGS REPORT."
+body = '''
+The oldest rig in any caravan and the one that never gets rebuilt in the same shape twice. A Mother Rig packs down to a
+single flatbed with four hundred names on its flag, and unpacks into a street. Everything that matters on the Drift
+starts here, including the arguments.
+'''
+unlock = "open"
+
+# ASSUMED (S9): drafted this session, confirm with the owner (docs/lore/left_behind.md).
+[[entry]]
+id = "lb_yard"
+category = "Structure"
+faction = "left_behind"
+title = "Salvage Yard"
+subtitle = "Fixed refinery and silo"
+field_note = "CHALK BOARD // YARD OPEN. SCRAP IN THE NORTH GATE, PIPE IN THE SOUTH. NO BODIES IN THE HOPPER."
+body = '''
+A walled lot of rusted sheds, a squat smelter and a silo that never gets emptied. The Salvage Yard does the work of a refinery without moving an inch, which suits a camp that stays put for a season. It is cheap to raise and cheap to lose, and the families who run it are the ones who remember every wreck that ever came in through its gate.
+'''
+unlock = "open"
+
+# ASSUMED (S9): drafted this session, confirm with the owner (docs/lore/left_behind.md).
+[[entry]]
+id = "lb_refinery_rig"
+category = "Structure"
+faction = "left_behind"
+title = "Refinery Rig"
+subtitle = "Mobile ash refinery"
+field_note = "CHALK BOARD // REFINERY ROLLING. HOLD TANK FULL. DON'T LET THE FIRE GO OUT."
+body = '''
+A rig that carries its own furnace, hopper and filter bank on one wide chassis. Ash and scrap go in at the back, and clean feedstock comes out of a spout at the front, ready for the workshop. The Refinery Rig packs down for travel like everything else the caravans own. That is useful, because the Drift does not keep anything in one place for long.
+'''
+unlock = "encounter:lb_refinery_rig"
+
+# ASSUMED (S9): drafted this session, confirm with the owner (docs/lore/left_behind.md).
+[[entry]]
+id = "lb_dynamo_rig"
+category = "Structure"
+faction = "left_behind"
+title = "Dynamo Rig"
+subtitle = "Cheap small power"
+field_note = "RIG RADIO // DYNAMO HUMMING. LIGHTS ON IN THE KITCHEN. DON'T ASK WHERE THE BELT CAME FROM."
+body = '''
+A generator built from a bus engine, a line of belts and a flywheel the size of a cartwheel. It lights the cook tent, charges the radios and hums through the night. The Dynamo Rig is loud, smelly and never quite trusted, but no camp on the Drift has ever gone dark while one was running. Its operators keep a spare belt in every pocket.
+'''
+unlock = "open"
+
+# ASSUMED (S9): drafted this session, confirm with the owner (docs/lore/left_behind.md).
+[[entry]]
+id = "lb_muster_rig"
+category = "Structure"
+faction = "left_behind"
+title = "Muster Rig"
+subtitle = "Infantry production"
+field_note = "CHALK BOARD // MUSTER CALL. EVERY HAND ON DECK, EVERY NAME ON THE LIST. NOBODY IS COUNTED OUT."
+body = '''
+A rig with a canteen, a barracks car and a board where the names of new recruits are chalked up. Every caravan fighter starts here, usually as a child who was told to carry water and kept carrying it. The Muster Rig is where the Left Behind take in strangers, feed them and give them a place on the flag. Recruits are not drafted. They are asked, and most say yes.
+'''
+unlock = "open"
+
+# ASSUMED (S9): drafted this session, confirm with the owner (docs/lore/left_behind.md).
+[[entry]]
+id = "lb_garage_rig"
+category = "Structure"
+faction = "left_behind"
+title = "Garage Rig"
+subtitle = "Vehicle workshop"
+field_note = "CHALK BOARD // GARAGE OPEN. BRING ME YOUR BROKEN THINGS AND I WILL MAKE THEM WORSE."
+body = '''
+A rig that unfolds into a bay with hydraulic lifts, a forge and a row of hanging chains. Every vehicle the caravan builds is finished here, and every vehicle it has lost is brought here to be patched. The Garage Rig is the reason the Left Behind can field a Rolling Fort at all. Its crew are proud of their mess, and they will tell you the gear that works best is the gear that looks worst.
+'''
+unlock = "encounter:lb_garage_rig"
+
+# ASSUMED (S9): drafted this session, confirm with the owner (docs/lore/left_behind.md).
+[[entry]]
+id = "lb_lookout"
+category = "Structure"
+faction = "left_behind"
+title = "Lookout Mast"
+subtitle = "Radar and jamming"
+field_note = "RIG RADIO // MAST UP. WE CAN SEE THEM. THEY CANNOT SEE US. THAT IS THE WHOLE TRICK."
+body = '''
+A tall lattice mast with a dish, a receiver and a bank of noise generators at its foot. The Lookout Mast listens for the Authority's survey signals and drowns them in static, so the caravan sees the enemy on its own screen while the enemy sees only grey. It is the caravan's eyes, and the first thing a raider tries to pull down. Its operators are called listeners, and every rig respects them.
+'''
+unlock = "encounter:lb_lookout"
+
+# ASSUMED (S9): drafted this session, confirm with the owner (docs/lore/left_behind.md).
+[[entry]]
+id = "lb_bench"
+category = "Structure"
+faction = "left_behind"
+title = "Tinker's Bench"
+subtitle = "Workshop and research"
+field_note = "CHALK BOARD // BENCH LIT. ANYTHING YOU WANT TO KNOW IS ON THE BOARD BY MORNING."
+body = '''
+A long workbench under a tin roof, lined with jars of valves, coils and salvaged gauges. It is where the Tinkers test the ideas every rig will later use: the plate that rattles less, the pack that folds faster, the hook that holds. Nothing new reaches the Drift without passing this bench. The Speaker's rule is that a good idea is only good once it has been bent and broken here at least twice.
+'''
+unlock = "encounter:lb_bench"
+
+# ASSUMED (S9): drafted this session, confirm with the owner (docs/lore/left_behind.md).
+[[entry]]
+id = "lb_rotor_pad"
+category = "Structure"
+faction = "left_behind"
+title = "Rotor Pad"
+subtitle = "Autogyro landing and fuel"
+field_note = "RIG RADIO // PAD CLEAR. WIND FROM THE NORTH. WHO LEFT THE FUEL CAN ON THE PAD?"
+body = '''
+A flat steel platform on a rig's roof, with a fuel tank, a tie-down cage and a windsock cut from an old banner. The Rotor Pad lets the caravan's autogyros take off and land without leaving the moving camp. Pilots rotate between pad and field, and the crew who keep the pad clean are the first to be blamed when the fuel runs short.
+'''
+unlock = "encounter:lb_rotor_pad"
+
+# ASSUMED (S9): drafted this session, confirm with the owner (docs/lore/left_behind.md).
+[[entry]]
+id = "lb_spike_nest"
+category = "Structure"
+faction = "left_behind"
+title = "Spike Nest"
+subtitle = "Basic defence"
+field_note = "CHALK BOARD // NEST FORMED. SPIKES IN THE SAND, SPIKES IN THE WALL. THEY CAN WALK INTO THEM OR GO AROUND."
+body = '''
+A ring of sharpened rebar set in a mound of packed ash, with a lookout slot in the middle and a chain of cans to warn of approach. It costs almost nothing and stops a crew being run down on the flats. The Spike Nest is the first thing a new camp builds, usually before the first wall. Children learn to make them from old fence posts.
+'''
+unlock = "open"
+
+# ASSUMED (S9): drafted this session, confirm with the owner (docs/lore/left_behind.md).
+[[entry]]
+id = "lb_harpoon_post"
+category = "Structure"
+faction = "left_behind"
+title = "Harpoon Post"
+subtitle = "Anti-armour emplacement"
+field_note = "RIG RADIO // POST ARMED. ONE HARPOON, ONE CABLE, ONE CHANCE. DON'T WASTE THE CABLE."
+body = '''
+A fixed whaling gun on a concrete post, with a drum of steel cable beside it. The Harpoon Post is the static cousin of the Harpoon Wagon: it hooks a passing hull and drags it sideways into the ash, where the crew can finish it. It is slow to reload and very hard to move, which the caravans count as its best feature. Gunners carry a knife for the moment the cable snaps.
+'''
+unlock = "encounter:lb_harpoon_post"
+
+# ASSUMED (S9): drafted this session, confirm with the owner (docs/lore/left_behind.md).
+[[entry]]
+id = "lb_flak_net"
+category = "Structure"
+faction = "left_behind"
+title = "Flak Net"
+subtitle = "Anti-air emplacement"
+field_note = "CHALK BOARD // NET UP. LET THEM FLY INTO THE WEB. THE WEB DOES NOT CARE WHICH SIDE THEY ARE ON."
+body = '''
+A cluster of light guns strung across a net of cable and tin cans, which rings like a bell when anything brushes it. The Flak Net is a trap for aircraft as much as a gun. Its crew sets it at the low passes where the Rotors come in, and the noise alone turns many pilots away. The net needs two people to string and one to listen, and the caravans teach the listener first.
+'''
+unlock = "encounter:lb_flak_net"
+
+# ASSUMED (S9): drafted this session, confirm with the owner (docs/lore/left_behind.md).
+[[entry]]
+id = "lb_scrap_wall"
+category = "Structure"
+faction = "left_behind"
+title = "Scrap Wall"
+subtitle = "Cheap barrier"
+field_note = "CHALK BOARD // WALL UP. WHO PUT THE DOOR ON THE WRONG SIDE? NOT ME."
+body = '''
+A run of bolted panels, bus doors, fence wire and bricks, stacked high enough to stop a truck. The Scrap Wall costs almost nothing and is easy to repair from what lies around the camp. It will not hold long against heavy fire, but it does not need to. Every rig keeps spare panels, because the wall is always the first thing rebuilt after a raid.
+'''
+unlock = "open"
+
+[[entry]]
+id = "lb_second_drift"
+category = "Structure"
+faction = "left_behind"
+title = "The Second Drift"
+subtitle = "Superweapon"
+field_note = "RIG RADIO // SPEAKER TO ALL RIGS. THE WIND IS OURS TODAY. KEEP YOUR MASKS ON."
+body = '''
+The caravans do not have a bomb. What they have is thirty years of knowing how the ash moves. Using stolen anemometers,
+a salvaged rocket pod and the memory of the winter that buried the coast, a rig-master can shape a storm that
+buries a battlefield. It is the closest the Left Behind come to revenge, and the Speaker has never been seen to
+smile when it is used.
+'''
+# ASSUMED (S9) TODO: lore says campaign; replace TBD with the mission id that releases this entry.
+unlock = "campaign:TBD"

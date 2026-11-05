@@ -94,6 +94,7 @@ public sealed class ArchiveCatalog
         {
             "authority" => ArchiveFaction.Authority,
             "directorate" => ArchiveFaction.Directorate,
+            "left_behind" => ArchiveFaction.LeftBehind,
             "neutral" or "" => ArchiveFaction.Neutral,
             var other => throw new InvalidDataException($"{where}: unknown faction '{other}'"),
         };
