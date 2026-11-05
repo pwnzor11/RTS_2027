@@ -188,7 +188,7 @@ unlock = "open"
 
 # Left Behind upgrades (S9, M6-ARCH). Text from docs/lore/left_behind.md; the ones marked ASSUMED (S9) are drafts.
 
-# ASSUMED (S9): drafted this session, confirm with the owner (docs/lore/left_behind.md).
+# S9 draft, approved by the owner (D-134) (docs/lore/left_behind.md).
 [[entry]]
 id = "lb_up_scrap_plate"
 category = "Upgrade"
@@ -201,7 +201,7 @@ Rolled sheets from a dozen wrecks, each a different thickness, welded over the v
 '''
 unlock = "research:lb_up_scrap_plate"
 
-# ASSUMED (S9): drafted this session, confirm with the owner (docs/lore/left_behind.md).
+# S9 draft, approved by the owner (D-134) (docs/lore/left_behind.md).
 [[entry]]
 id = "lb_up_ash_wraps"
 category = "Upgrade"
@@ -214,7 +214,7 @@ Layers of sail-cloth stitched with lead thread and dipped in grey resin, worn ov
 '''
 unlock = "research:lb_up_ash_wraps"
 
-# ASSUMED (S9): drafted this session, confirm with the owner (docs/lore/left_behind.md).
+# S9 draft, approved by the owner (D-134) (docs/lore/left_behind.md).
 [[entry]]
 id = "lb_up_quick_pack"
 category = "Upgrade"
@@ -227,7 +227,7 @@ A set of cable pulleys, spring latches and a foot pedal that lets a crew fold a 
 '''
 unlock = "research:lb_up_quick_pack"
 
-# ASSUMED (S9): drafted this session, confirm with the owner (docs/lore/left_behind.md).
+# S9 draft, approved by the owner (D-134) (docs/lore/left_behind.md).
 [[entry]]
 id = "lb_up_grapple"
 category = "Upgrade"
@@ -240,7 +240,7 @@ Stronger hooks, a longer line and a steel spike on the end of each throw. Hook R
 '''
 unlock = "research:lb_up_grapple"
 
-# ASSUMED (S9): drafted this session, confirm with the owner (docs/lore/left_behind.md).
+# S9 draft, approved by the owner (D-134) (docs/lore/left_behind.md).
 [[entry]]
 id = "lb_up_salvage_rights"
 category = "Upgrade"
@@ -253,7 +253,7 @@ A written claim, signed at the Gathering, that the caravan has first right to ev
 '''
 unlock = "research:lb_up_salvage_rights"
 
-# ASSUMED (S9): drafted this session, confirm with the owner (docs/lore/left_behind.md).
+# S9 draft, approved by the owner (D-134) (docs/lore/left_behind.md).
 [[entry]]
 id = "lb_up_patchwork"
 category = "Upgrade"

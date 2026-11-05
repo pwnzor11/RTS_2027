@@ -75,7 +75,7 @@ internal sealed class HarassManager
             for (int i = 0; i < k.Army.Count; i++)
             {
                 ViewActor a = k.Army[i];
-                if (!a.Idle || a.Underground) continue;
+                if (!a.Idle || a.Underground || a.Rank >= MilitaryManager.RankedTogether) continue;   // VET-6: ranked units stay with the main army
                 int speed;
                 if (a.Kind == ActorKind.Vehicle)
                 {

@@ -19,9 +19,10 @@ internal static class GameRulesLoader
     private const string FoamSection = "foam";           // M4-01
     private const string VeterancySection = "veterancy"; // VET-1
     private const string SupplySection = "supply";       // SUP-1
+    private const string ShipmentsSection = "shipments"; // M7-02
 
     private static readonly string[] TopLevel =
-        [Section, EconomySection, TunnelsSection, RadiationSection, StealthSection, FactionSection, GarrisonSection, FoamSection, VeterancySection, SupplySection];
+        [Section, EconomySection, TunnelsSection, RadiationSection, StealthSection, FactionSection, GarrisonSection, FoamSection, VeterancySection, SupplySection, ShipmentsSection];
 
     /// <summary>Parses the [game] table. Returns null when any problem was recorded.</summary>
     public static GameRules? Parse(TomlTable root, string file, List<RulesProblem> problems)
@@ -305,6 +306,35 @@ internal static class GameRulesLoader
         };
     }
 
+    /// <summary>Parses the optional [shipments] table (M7-02, docs/design/11_m7_plan.md §2.3); every key optional with the design default,
+    /// <c>enabled</c> defaulting to false. Null after a problem.</summary>
+    public static ShipmentRules? ParseShipments(TomlTable root, string file, List<RulesProblem> problems)
+    {
+        ShipmentRules d = ShipmentRules.Default;
+        RulesFields? f = OptionalTable(root, ShipmentsSection, file, problems);
+        if (f is null)
+        {
+            return root.ContainsKey(ShipmentsSection) ? null : d;
+        }
+        f.CheckKeys("enabled", "interval_ticks", "value", "decay_permille", "floor_permille", "charter_ticks", "tenders_max",
+            "local_ash_bonus_permille");
+        bool? enabled = f.OptBool("enabled", d.Enabled);
+        int? interval = f.OptInt("interval_ticks", 1, 10_000_000, d.IntervalTicks);
+        int? value = f.OptInt("value", 0, 100_000_000, d.Value);
+        int? decay = f.OptInt("decay_permille", 0, 1000, d.DecayPermille);
+        int? floor = f.OptInt("floor_permille", 0, 1000, d.FloorPermille);
+        int? charter = f.OptInt("charter_ticks", 0, 10_000_000, d.CharterTicks);
+        int? tenders = f.OptInt("tenders_max", 0, 32, d.TendersMax);
+        int? ashBonus = f.OptInt("local_ash_bonus_permille", 0, 100_000, d.LocalAshBonusPermille);
+        if (enabled is null || interval is null || value is null || decay is null || floor is null || charter is null || tenders is null
+            || ashBonus is null) return null;
+        return new ShipmentRules
+        {
+            Enabled = enabled.Value, IntervalTicks = interval.Value, Value = value.Value, DecayPermille = decay.Value,
+            FloorPermille = floor.Value, CharterTicks = charter.Value, TendersMax = tenders.Value, LocalAshBonusPermille = ashBonus.Value,
+        };
+    }
+
     /// <summary>
     /// Parses the optional [faction.authority] / [faction.directorate] start kits (M3): <c>conyard</c> (building id) and
     /// <c>units</c> (vehicle/infantry ids). An absent faction keeps its default kit. Ids are NOT checked here: they are
@@ -315,7 +345,11 @@ internal static class GameRulesLoader
         // M6-08: the table grows to RuleCounts.Factions entries (neutral placeholder at 2) only when a [faction.left_behind] kit is given,
         // so rules sets without that faction keep exactly the two-kit table (and their hashes).
         bool withLb = root.TryGetValue(FactionSection, out object? sec0) && sec0 is TomlTable t0 && t0.ContainsKey("left_behind");
-        FactionStartKit[] kits = withLb
+        bool withExp = root.TryGetValue(FactionSection, out object? sec1) && sec1 is TomlTable t1 && t1.ContainsKey("expedition");   // M7-02
+        FactionStartKit[] kits = withExp
+            ? new[] { FactionStartKit.AuthorityDefault, FactionStartKit.DirectorateDefault, FactionStartKit.NeutralNone,
+                withLb ? FactionStartKit.LeftBehindDefault : FactionStartKit.NeutralNone, FactionStartKit.ExpeditionNone }
+            : withLb
             ? new[] { FactionStartKit.AuthorityDefault, FactionStartKit.DirectorateDefault, FactionStartKit.NeutralNone, FactionStartKit.LeftBehindDefault }
             : new[] { FactionStartKit.AuthorityDefault, FactionStartKit.DirectorateDefault };
         if (!root.TryGetValue(FactionSection, out object? section) || section is null)

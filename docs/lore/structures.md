@@ -24,7 +24,7 @@ field_note: POWER 2 // KEEP THE ROD FREE, THE FLOOR DRY, THE DIAL ABOVE ZERO. ST
 A small sealed reactor feeding a turbine and a bank of vacuum-tube regulators. Operators sit on shifts behind a glass
 window, watching needle gauges and talking to nobody. When the dial drops, the whole base notices.
 
-<!-- session 9: assumed — confirm -->
+<!-- session 9: approved by the owner (D-134) -->
 ### auth_ration_hall
 title: Ration Hall
 subtitle: Everyone counted, everyone fed
@@ -203,7 +203,7 @@ field_note: VOICE: "HELD IN TRUST. EVERY DROP IS COUNTED."
 A buried tank with a narrow access hatch, holding refined concentrate. There is little to see on the surface and
 less to take.
 
-<!-- session 9: assumed — confirm -->
+<!-- session 9: approved by the owner (D-134) -->
 ### dir_bunk_gallery
 title: Bunk Gallery
 subtitle: Tiers of cots behind blast doors

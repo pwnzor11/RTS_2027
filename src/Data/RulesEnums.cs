@@ -11,16 +11,16 @@ namespace Rts.Data;
 internal static class RulesEnums
 {
     /// <summary>Locomotion names, in <see cref="Locomotion"/> order.</summary>
-    public static readonly string[] LocomotionKeys = ["foot", "wheeled", "tracked", "hover", "air", "burrow"];
+    public static readonly string[] LocomotionKeys = ["foot", "wheeled", "tracked", "hover", "air", "burrow", "naval"];
 
     /// <summary>Armour class names, in <see cref="ArmorClass"/> order.</summary>
-    public static readonly string[] ArmorKeys = ["unarmored", "light", "heavy", "structure", "fortified"];
+    public static readonly string[] ArmorKeys = ["unarmored", "light", "heavy", "structure", "fortified", "ship_light", "ship_heavy", "submerged"];
 
     /// <summary>Land type names, in <see cref="LandType"/> order.</summary>
-    public static readonly string[] LandKeys = ["clear", "road", "rough", "ash", "water", "rock", "cliff", "shallow"];
+    public static readonly string[] LandKeys = ["clear", "road", "rough", "ash", "water", "rock", "cliff", "shallow", "coast"];
 
     /// <summary>Faction names, in <see cref="Faction"/> order.</summary>
-    public static readonly string[] FactionKeys = ["authority", "directorate", "neutral", "left_behind"];
+    public static readonly string[] FactionKeys = ["authority", "directorate", "neutral", "left_behind", "expedition"];
 
     /// <summary>Tunnel size names, in <see cref="TunnelSize"/> order (design 05 writes them none | S | M | L).</summary>
     public static readonly string[] TunnelSizeKeys = ["none", "S", "M", "L"];
@@ -29,7 +29,7 @@ internal static class RulesEnums
     public static readonly string[] EntranceKeys = ["none", "S", "M"];
 
     /// <summary>Weapon target names, in <see cref="WeaponTargets"/> order.</summary>
-    public static readonly string[] WeaponTargetKeys = ["ground", "air", "both"];
+    public static readonly string[] WeaponTargetKeys = ["ground", "air", "both", "naval", "submerged", "naval_submerged"];
 
     /// <summary>Effect operations.</summary>
     public static readonly string[] EffectOps = ["enable", "set", "add", "mul"];

@@ -62,6 +62,9 @@ internal sealed class RulesFields
         return (int)value;
     }
 
+    /// <summary>Length of the array under <paramref name="key"/>, or -1 when the key is absent or not an array (no problem is recorded).</summary>
+    public int ArrayLength(string key) => _entry.Values.TryGetValue(key, out object? raw) && raw is TomlArray a ? a.Count : -1;
+
     /// <summary>Reads a required array of exactly <paramref name="count"/> integers, each in [min, max].</summary>
     public int[]? IntArray(string key, int count, int min, int max)
     {

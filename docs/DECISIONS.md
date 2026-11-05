@@ -970,3 +970,40 @@ stands idle for 30 s (seed 4). All pass with supply off. Per the session's guard
 the next session's AI tuning.
 **Alternatives:** land it on and weaken the three tests (rejected: it would hide a real AI slowdown).
 **Status:** assumed — confirm (owner can play-test supply now by setting `enabled = true`)
+
+### D-134 · 2026-11-05 · Owner confirms the session-9 assumptions and play-test (session 10 kickoff)
+**Decision:** the owner wrote "all assumptions and play test from last time look great". Confirmed: D-123..D-133, the session-9
+numbers in docs/balance/s9_tables.md (Q-44) and the session-9 lore, Archive entries and personas (Q-50). The lead took the
+recommended option, reported to the owner at kickoff, for: Q-43 keep the tier-3 cost at 2 500; Q-45 keep the Left Behind vehicle
+scale; Q-46 add the own-unit info panel with VET-6; Q-47 keep the quieter unit_ready cue for promotion; Q-48 the Left Behind AI keeps
+Rotors; Q-51 turn supply on once the AI fix passes (D-133 lifted then).
+**Why:** owner's message at the start of session 10; the recommendations were listed back to him in the session briefing.
+**Status:** confirmed (owner, session 10) for D-123..D-133, Q-44, Q-50; the recommended options for Q-43, Q-45..Q-48, Q-51 are
+confirmed by the owner's "all assumptions look great", stated back to him at kickoff.
+
+### D-135 · 2026-11-05 · Supply cap on by default (lifts D-133; SUP-5 follow-up)
+**Decision:** `[supply] enabled = true` in data/rules/game.toml. The AI now measures its margin from used + queued unit supply, by
+tier 1..5 = 4, 5, 8, 10, 12 `(tune)` (design 13 §6 said 6 at tier 2; 6 failed the Authority/Directorate tests). A supply building
+that cannot start yet no longer reserves its cost; when none is buildable the AI builds the first missing prerequisite (the
+Ration Hall needs auth_power). Left Behind: no supply structure is queued while any rig is packed; a relocation never packs the
+still while near the cap; an unreachable unpack site is banned for 1 200 ticks and re-picked. No supply numbers or costs changed.
+Measured (SupplyAiTests, first 15 minutes): worst capped time 29 s (Directorate tier 1), limit 60 s.
+**Why:** D-129 wants supply on; the three AI tests that held it off (D-133) now pass with it on.
+**Status:** assumed — confirm (the tier-2 margin of 5 and the Left Behind rules); supply on itself is the owner's (D-129, Q-51)
+
+### D-136 · 2026-11-05 · VET-6 details the design left open
+**Decision:** (1) No unit-repair building exists, so a retreated rank-3 unit goes to the nearest own repair-aura vehicle, else the
+rally cell, and rejoins at 90 % health or after 3 600 ticks. (2) Rank-aware army value is used by the wave gate and the "ahead"
+test; the tier planner's build/tech gates still use plain cost (to be unified later). (3) Focus fire: wave members attack the
+nearest visible rank-3 ground enemy within 10 cells `(tune)` when no defence response is active; the defence spot prefers a rank-3
+attacker. (4) Rank ≥ 2 units stay in the main prong and are never picked as raiders.
+**Why:** design 14 §6 assumed a unit repair path and a target priority list that the code does not have.
+**Status:** assumed — confirm
+
+### D-137 · 2026-11-05 · M7-02 contract choices
+**Decision:** footprint `water` mask is a row-major 0/1 array (1 = water); `beachhead_source` and `beachhead_radius` come together;
+coast speeds equal clear for foot/wheeled/tracked, hover 80, naval 0; `draw_scale_permille` 100..10 000; a carrier needs
+`sortie_ticks > 0`; the "naval" state part is versioned (version byte 1). Saves older than format 12 are refused (as at format 11);
+replays 7-11 still play. Expedition is a Faction value but not playable (PlayableFactions stays 3) until M7-08/M7-14.
+**Why:** 11_m7_plan §2 left these to the implementer; each is the plainest reading and reversible before M7 data lands.
+**Status:** assumed — confirm (only coast speeds and the save cut-off are visible to the owner)

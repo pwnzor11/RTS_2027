@@ -1,5 +1,5 @@
 # Archive entries (S9, M6-ARCH) for the Left Behind units (infantry and vehicles). Text is the lore from docs/lore/left_behind.md, copied verbatim.
-# Entries marked ASSUMED (S9) had no approved text and were drafted for the owner to confirm.
+# Entries marked "S9 draft" were written in session 9 and approved by the owner (D-134).
 # Keys: id, category, faction, title, subtitle, field_note (optional), body, sprite (optional),
 # unlock (open | campaign:<mission> | encounter:<rules id> | research:<upgrade id>).
 # Unit, Structure and Upgrade entries use the rules id as their id; their stats are read live from data/rules.
@@ -75,7 +75,7 @@ quiet ones.
 # ASSUMED (S9) TODO: lore says campaign; replace TBD with the mission id that releases this entry.
 unlock = "campaign:TBD"
 
-# ASSUMED (S9): drafted this session, confirm with the owner (docs/lore/left_behind.md).
+# S9 draft, approved by the owner (D-134) (docs/lore/left_behind.md).
 [[entry]]
 id = "lb_drifter_brute"
 category = "Unit"
@@ -102,7 +102,7 @@ camp for spare parts.
 '''
 unlock = "open"
 
-# ASSUMED (S9): drafted this session, confirm with the owner (docs/lore/left_behind.md).
+# S9 draft, approved by the owner (D-134) (docs/lore/left_behind.md).
 [[entry]]
 id = "lb_hauler"
 category = "Unit"
@@ -115,7 +115,7 @@ A long-bed truck with a winch at the back and a cage of hooks along the sides. T
 '''
 unlock = "open"
 
-# ASSUMED (S9): drafted this session, confirm with the owner (docs/lore/left_behind.md).
+# S9 draft, approved by the owner (D-134) (docs/lore/left_behind.md).
 [[entry]]
 id = "lb_buggy"
 category = "Unit"
@@ -142,7 +142,7 @@ The harpoon hooks a hull and drags it off course. Enemy crews hate it most for t
 # ASSUMED (S9) TODO: lore says campaign; replace TBD with the mission id that releases this entry.
 unlock = "campaign:TBD"
 
-# ASSUMED (S9): drafted this session, confirm with the owner (docs/lore/left_behind.md).
+# S9 draft, approved by the owner (D-134) (docs/lore/left_behind.md).
 [[entry]]
 id = "lb_organ"
 category = "Unit"
@@ -155,7 +155,7 @@ Eight rocket tubes bolted to a flatbed, each one a different pattern, fired in a
 '''
 unlock = "encounter:lb_organ"
 
-# ASSUMED (S9): drafted this session, confirm with the owner (docs/lore/left_behind.md).
+# S9 draft, approved by the owner (D-134) (docs/lore/left_behind.md).
 [[entry]]
 id = "lb_tow"
 category = "Unit"
@@ -168,7 +168,7 @@ A heavy bus chassis with a rear troop bay for six and a tow-arm that lifts a pac
 '''
 unlock = "encounter:lb_tow"
 
-# ASSUMED (S9): drafted this session, confirm with the owner (docs/lore/left_behind.md).
+# S9 draft, approved by the owner (D-134) (docs/lore/left_behind.md).
 [[entry]]
 id = "lb_dust_sail"
 category = "Unit"
@@ -196,7 +196,7 @@ quickly, because every plate is a different age and every weak point is somewher
 # ASSUMED (S9) TODO: lore says campaign; replace TBD with the mission id that releases this entry.
 unlock = "campaign:TBD"
 
-# ASSUMED (S9): drafted this session, confirm with the owner (docs/lore/left_behind.md).
+# S9 draft, approved by the owner (D-134) (docs/lore/left_behind.md).
 [[entry]]
 id = "lb_mother_rig_packed"
 category = "Unit"
@@ -209,7 +209,7 @@ Any rig folded for the road: a single flatbed with its walls, towers and worksho
 '''
 unlock = "encounter:lb_mother_rig_packed"
 
-# ASSUMED (S9): drafted this session, confirm with the owner (docs/lore/left_behind.md).
+# S9 draft, approved by the owner (D-134) (docs/lore/left_behind.md).
 [[entry]]
 id = "lb_rotor"
 category = "Unit"
@@ -222,7 +222,7 @@ A two-seat autogyro with a machine gun in a pod and a rotor made from three wind
 '''
 unlock = "encounter:lb_rotor"
 
-# ASSUMED (S9): drafted this session, confirm with the owner (docs/lore/left_behind.md).
+# S9 draft, approved by the owner (D-134) (docs/lore/left_behind.md).
 [[entry]]
 id = "lb_kite"
 category = "Unit"

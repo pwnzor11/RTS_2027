@@ -103,4 +103,27 @@ public sealed record VehicleType(string Id, Locomotion Locomotion, int Speed, in
 
     /// <summary>Supply this unit costs (TOML <c>supply</c>); -1 = derive from the cost bands.</summary>
     public int Supply { get; init; } = -1;
+
+    // ---- schema v8 (M7-02, docs/design/11_m7_plan.md §2.3). Every default is "off". ----------------------
+
+    /// <summary>How big the one-cell body is drawn, permille of a cell (TOML <c>draw_scale_permille</c>, default 1000; D-124 ships).</summary>
+    public int DrawScalePermille { get; init; } = 1000;
+
+    /// <summary>Large ship: cannot enter <see cref="LandType.Shallow"/> (TOML <c>deep_only</c>, naval only).</summary>
+    public bool DeepOnly { get; init; }
+
+    /// <summary>Submarine: can dive out of sight (TOML <c>submerges</c>, naval only).</summary>
+    public bool Submerges { get; init; }
+
+    /// <summary>Radius in cells in which this ship detects submerged vessels (TOML <c>sonar_radius</c>, 0 = none).</summary>
+    public int SonarRadius { get; init; }
+
+    /// <summary>Carrier hangar: aircraft it can hold (TOML <c>aircraft_slots</c>, 0 = none).</summary>
+    public int AircraftSlots { get; init; }
+
+    /// <summary>Carrier: ticks to launch or recover one aircraft (TOML <c>sortie_ticks</c>, 0 = off).</summary>
+    public int SortieTicks { get; init; }
+
+    /// <summary>Landing craft: ticks per passenger put ashore (TOML <c>unload_ticks</c>, 0 = off).</summary>
+    public int UnloadTicks { get; init; }
 }

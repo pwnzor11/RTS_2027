@@ -40,6 +40,9 @@ public sealed record SimRules(
     /// <summary>Supply cap constants (game.toml [supply], SUP-1). Disabled and design defaults when the table is absent.</summary>
     public SupplyRules Supply { get; init; } = SupplyRules.Default;
 
+    /// <summary>Home shipment constants (game.toml [shipments], M7-02). Disabled and design defaults when the table is absent.</summary>
+    public ShipmentRules Shipments { get; init; } = ShipmentRules.Default;
+
     /// <summary>Start kit per faction, indexed by <c>(int)</c><see cref="Faction"/> (game.toml [faction.&lt;name&gt;], M3).
     /// Always <see cref="RuleCounts.Factions"/> entries; ids are validated lazily by <see cref="ResolveStartKit"/>.</summary>
     public IReadOnlyList<FactionStartKit> StartKits { get; init; } =
@@ -49,10 +52,11 @@ public sealed record SimRules(
     /// At most <see cref="RuleCounts.MaxUpgrades"/>. Empty when the file is absent.</summary>
     public IReadOnlyList<UpgradeType> Upgrades { get; init; } = Array.Empty<UpgradeType>();
 
-    /// <summary>Faction implied by a type id's prefix: <c>dir_</c> = Directorate, <c>lb_</c> = Left Behind (M6-02), anything else (incl. <c>auth_</c>) = Authority.</summary>
+    /// <summary>Faction implied by a type id's prefix: <c>dir_</c> = Directorate, <c>lb_</c> = Left Behind (M6-02), <c>exp_</c> = Expedition (M7-02), anything else (incl. <c>auth_</c>) = Authority.</summary>
     public static Faction FactionFromId(string id) =>
         id.StartsWith("dir_", StringComparison.Ordinal) ? Faction.Directorate
-        : id.StartsWith("lb_", StringComparison.Ordinal) ? Faction.LeftBehind : Faction.Authority;
+        : id.StartsWith("lb_", StringComparison.Ordinal) ? Faction.LeftBehind
+        : id.StartsWith("exp_", StringComparison.Ordinal) ? Faction.Expedition : Faction.Authority;
 
     /// <summary>Index of an upgrade by id, or -1.</summary>
     public int UpgradeIndex(string id) => IndexOf(Upgrades, id, u => u.Id);

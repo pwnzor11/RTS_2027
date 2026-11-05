@@ -120,6 +120,7 @@ public sealed partial class Simulation
         _effects.ClearMobile(kind, i);
         if (kind == ActorKind.Vehicle) _rigs.ClearVehicle(i);   // M6-02
         _veterancy.ClearMobile(kind, i);                        // VET-1
+        if (kind == ActorKind.Vehicle) _naval.ClearVehicle(i);   // M7-02
         SupplyChanged();                                        // SUP-1
     }
 
@@ -137,6 +138,7 @@ public sealed partial class Simulation
         _effects.ClearMobile(kind, i);
         if (kind == ActorKind.Vehicle) _rigs.ClearVehicle(i);   // M6-02
         _veterancy.ClearMobile(kind, i);                        // VET-1
+        if (kind == ActorKind.Vehicle) _naval.ClearVehicle(i);   // M7-02
         SupplyChanged();                                        // SUP-1
     }
 

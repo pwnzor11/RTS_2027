@@ -8,8 +8,12 @@ namespace Rts.Sim.Missions;
 /// Capture = engineer walking to its target building (M3-06). Until filled they run the idle handler.
 /// M4: Garrisoned = inside a building, acquire and fire out (M4-03; walking in reuses Capture).
 /// M6-02 (docs/design/10_m6_plan.md §3.1; handlers arrive with M6-03..05, until then they run the idle handler): Salvage = drain a wreck,
-/// Pack = packing or unpacking a rig in progress, Withdraw = a raider leaving after a plunder.</summary>
+/// Pack = packing or unpacking a rig in progress, Withdraw = a raider leaving after a plunder.
+/// M7-02 (docs/design/11_m7_plan.md §2.2; handlers arrive with M7-03..09, until then they run the idle handler): Unload = a landing craft
+/// putting passengers ashore, Submerge = a submarine diving or surfacing, Sortie = a carrier launching or recovering aircraft,
+/// ConvoySail = a supply tender sailing in. Embark reuses Enter.</summary>
 public enum MissionKind : byte { None = 0, Sleep = 1, Guard = 2, Move = 3, Attack = 4, AttackMove = 5, Stop = 6,
     Harvest = 7, Return = 8, EnterTunnel = 9, Transit = 10, Burrow = 11, Surface = 12, Deploy = 13, Capture = 14,
     Garrisoned = 15,
-    Salvage = 16, Pack = 17, Withdraw = 18 }
+    Salvage = 16, Pack = 17, Withdraw = 18,
+    Unload = 19, Submerge = 20, Sortie = 21, ConvoySail = 22 }

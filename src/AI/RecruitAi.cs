@@ -189,7 +189,7 @@ public sealed class RecruitAi : IAiPlayer, IAiSnapshotable
         _faction = RecruitFaction.For(faction);
         _tactics = _faction.CreateTactics(_profile);
         _build = new BuildOrderManager(_faction.OrderFor(_profile.BuildRepertoire), _faction.PowerId, _faction.YardId)
-        { ReserveInProgress = _profile.RespondToAttacks };   // M4-12 (tier 2+)
+        { ReserveInProgress = _profile.RespondToAttacks, SupplyMargin = BuildOrderManager.MarginForTier(_profile.Tier) };   // M4-12 (tier 2+); SUP-5 margin by tier
         _planner = new TierPlanner(_profile, _faction);
         _build.HoldStep = id => _planner.Behind && _planner.IsTech(id);   // M4-16
         _production = new ProductionManager(_faction, _tactics, _planner);

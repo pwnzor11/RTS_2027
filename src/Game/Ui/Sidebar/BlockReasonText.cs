@@ -7,8 +7,13 @@ namespace Rts.Game.Ui.Sidebar;
 /// <summary>The words shown on a greyed cameo's tooltip (D-066).</summary>
 public static class BlockReasonText
 {
-    /// <summary>Tooltip text for a block reason; empty for <see cref="QueueBlockReason.None"/>.</summary>
-    public static string Of(QueueBlockReason reason) => reason switch
+    /// <summary>
+    /// Tooltip text for a block reason; empty for <see cref="QueueBlockReason.None"/>. The supply cap names the faction's supply building
+    /// (<paramref name="supplyBuilding"/>, a display name); with none known the plain line is used.
+    /// </summary>
+    /// <param name="reason">Why the cameo is greyed.</param>
+    /// <param name="supplyBuilding">Display name of the faction's supply building, or null when the faction has none.</param>
+    public static string Of(QueueBlockReason reason, string? supplyBuilding = null) => reason switch
     {
         QueueBlockReason.None => "",
         QueueBlockReason.QueueFull => "Queue is full",
@@ -16,7 +21,9 @@ public static class BlockReasonText
         QueueBlockReason.NoFactory => "Needs a factory",
         QueueBlockReason.Defeated => "You are defeated",
         QueueBlockReason.NotBuildable => "Not available",
-        QueueBlockReason.SupplyCap => "Supply cap reached: build a supply structure",
+        QueueBlockReason.SupplyCap => string.IsNullOrEmpty(supplyBuilding)
+            ? UiText.Get(UiText.SupplyCapReachedPlain)
+            : UiText.Format(UiText.SupplyCapReached, "supplyBuilding", supplyBuilding),
         _ => "Not available",
     };
 }

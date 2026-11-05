@@ -95,7 +95,8 @@ public sealed record SetupHeader(
                 for (int i = 0; i < n; i++)
                 {
                     byte f = r.ReadByte();
-                    if (!Rules.RuleCounts.IsPlayable((Rules.Faction)f)) throw new InvalidDataException($"Bad faction {f}.");
+                    // M7-02: Expedition is a valid owner before the setup offers it
+                    if (f >= Rules.RuleCounts.Factions || (Rules.Faction)f == Rules.Faction.Neutral) throw new InvalidDataException($"Bad faction {f}.");
                     factions[i] = (Rules.Faction)f;
                 }
             }

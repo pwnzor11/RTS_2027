@@ -177,6 +177,11 @@ public sealed class TerrainPalette
         var shades = new LandShades[RuleCounts.LandTypes];
         foreach (LandType type in Enum.GetValues<LandType>())
         {
+            if (type == LandType.Coast && !land.ContainsKey("coast"))   // M7-02: older palettes have no beach; draw it like clear ground
+            {
+                shades[(int)type] = shades[(int)LandType.Clear];
+                continue;
+            }
             TomlTable t = Table(land, type.ToString().ToLowerInvariant());
             shades[(int)type] = new LandShades(Colour(t, "dark"), Colour(t, "base"), Colour(t, "light"));
         }

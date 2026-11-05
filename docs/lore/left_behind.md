@@ -194,7 +194,7 @@ smile when it is used.
 
 ---
 
-<!-- session 9 entries: assumed — confirm -->
+<!-- session 9 entries: approved by the owner (D-134) -->
 
 ### lb_drifter_brute
 title: Drifter Brute
@@ -292,7 +292,7 @@ field_note: RIG RADIO // DYNAMO HUMMING. LIGHTS ON IN THE KITCHEN. DON'T ASK WHE
 
 A generator built from a bus engine, a line of belts and a flywheel the size of a cartwheel. It lights the cook tent, charges the radios and hums through the night. The Dynamo Rig is loud, smelly and never quite trusted, but no camp on the Drift has ever gone dark while one was running. Its operators keep a spare belt in every pocket.
 
-<!-- session 9: assumed — confirm -->
+<!-- session 9: approved by the owner (D-134) -->
 ### lb_still_rig
 title: Still Rig
 subtitle: Water still on a wagon frame

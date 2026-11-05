@@ -129,4 +129,22 @@ public sealed record BuildingType(string Id, int FootprintW, int FootprintH, int
     /// <summary>Cap contribution of an unstocked Expedition store (TOML <c>supply_unstocked</c>); -1 = same as <see cref="SupplyProvided"/>.
     /// Parsed only: no behaviour until the Expedition lands.</summary>
     public int SupplyUnstocked { get; init; } = -1;
+
+    // ---- schema v8 (M7-02, docs/design/11_m7_plan.md §2.3). Every default is "off". ----------------------
+
+    /// <summary>Quay, shipyard, anchorage or drydock: stands on the shoreline, so some footprint cells must be water (TOML <c>water_building</c>).
+    /// Every other structure may not stand on Water or Shallow.</summary>
+    public bool WaterBuilding { get; init; }
+
+    /// <summary>Row-major footprint mask, <c>FootprintW * FootprintH</c> entries, true = this cell must be water (deep or shallow) and false =
+    /// it must be land (TOML <c>water</c>, 0/1 per cell). Empty when the building has no mask: a <see cref="WaterBuilding"/> then needs every
+    /// cell on water.</summary>
+    public IReadOnlyList<bool> WaterMask { get; init; } = Array.Empty<bool>();
+
+    /// <summary>Counts as a beachhead source: Expedition structures may be placed within <see cref="BeachheadRadius"/> cells of a live one
+    /// (TOML <c>beachhead_source</c>).</summary>
+    public bool BeachheadSource { get; init; }
+
+    /// <summary>Beachhead zone radius in cells (TOML <c>beachhead_radius</c>, 0 = none; needs <see cref="BeachheadSource"/>).</summary>
+    public int BeachheadRadius { get; init; }
 }

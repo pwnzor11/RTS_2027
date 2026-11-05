@@ -19,6 +19,7 @@ exists; `Coast = 8` is reserved (Enums.cs:12-13), so the "water alias, no migrat
 are in data/rules/terrain.toml (foot 40, vehicles 0, hover 100). `CommandKind.Unload = 22` exists and its comment reserves the shore
 cell for M7 (Command.cs:13-15), so **no new CommandKind is needed**. `Faction` ends at LeftBehind = 3 (Enums.cs:24); `PlayableFactions`
 is 2 (Enums.cs:47, M6-09 raises it). `WeaponTargets` is Ground / Air / Both (Enums.cs:32). Map file format is 2 (MapFile.cs:22).
+M7-02 landed (session 10): enums (Faction.Expedition 4, Naval, Coast, ship armour classes, naval targets, 4 mission kinds), rules schema v8 (rules hash 11) with all fields off and `[shipments]` disabled, empty parts "shipments"/"beachhead"/"naval", save/replay format 12, map format 3 (convoy_edge, landing); Expedition not playable yet.
 
 ### 2.2 Enums and format (append only)
 | Enum | New value |
