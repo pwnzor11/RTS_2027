@@ -28,7 +28,7 @@ public static class AiCommands
         "       ai duel --a <spec> --b <spec> [--count 1] [--count-b N] [--ticks 3000] [--gap 12]   (spec = id[:n][,id[:n]...], e.g. auth_tank:3,auth_turret:1)\n" +
         "  <tier> is 1..5 or recruit|regular|veteran|elite|commissar (default regular). Seeds are first..first+N-1 (first defaults to 1).";
 
-    private static readonly string[] MatchOptions = ["a", "b", "seeds", "ticks", "size", "out", "record-dir", "flat", "starts", "start", "first", "faction-a", "faction-b"];
+    private static readonly string[] MatchOptions = ["a", "b", "seeds", "ticks", "size", "out", "record-dir", "flat", "starts", "start", "first", "faction-a", "faction-b", "trace", "game"];
     private static readonly string[] TimelineOptions = ["a", "b", "seed", "ticks", "size", "swap", "trace", "dump", "faction-a", "faction-b"];
     private static readonly string[] DuelOptions = ["a", "b", "count", "count-b", "ticks", "gap"];
     private static readonly string[] MatrixOptions = ["ai", "tiers", "seeds", "ticks", "size", "out", "faction", "players", "biome"];
@@ -76,6 +76,8 @@ public static class AiCommands
         }
         if (!Int(flags, "first", 1, out int firstSeed) || firstSeed < 1) return UsageError("--first must be a positive integer");
         string? recordDir = flags.TryGetValue("record-dir", out string? rd) ? rd : null;
+        // M4-16 round 3: --trace N --game G (with --first S --seeds 1) prints a per-side diagnostic line every N ticks for game G of the pair only
+        if (!Int(flags, "trace", 0, out _traceEvery) || !Int(flags, "game", 0, out _traceGame)) return UsageError("--trace and --game must be integers");
         var clock = Stopwatch.StartNew();
         MatchTally tally;
         try { tally = PlayPair(world!, a!, b!, seeds, ticks, size, recordDir, verbose: true, flat: flags.ContainsKey("flat"), startMode: flags.TryGetValue("starts", out string? sm) ? sm : "alt", start: army ? AiStartMode.Army : AiStartMode.Economy, firstSeed: firstSeed); }
@@ -731,6 +733,7 @@ public static class AiCommands
             if (flat) map = Flatten(map);
             for (int g = 0; g < 2; g++)
             {
+                if (_traceEvery > 0 && _traceGame > 0 && g + 1 != _traceGame) continue;
                 bool aInSlot0 = g == 0;
                 // Slot order (who acts first in a tick) must not ride along with the start corner: by default the
                 // corners trade slots on even seeds ("alt"); "slot" = corner p for slot p; "swap" = corner 1-p.
@@ -741,7 +744,8 @@ public static class AiCommands
                 // M4-16: each game of the pair gets its own game seed (same map), so the two games are independent samples
                 // rather than one mirrored game counted twice (docs/balance/m4_16_start_bias.md).
                 using (replay) r = AiMatchRunner.Play(map, w.Rules, w.RulesHash, (ulong)(s * 16 + g), a, b, aInSlot0, ticks, replay,
-                    BuildInfo.Version, replay is null ? null : RulesBundle.ReadDirectory(w.RulesDir), swapSlots, start);
+                    BuildInfo.Version, replay is null ? null : RulesBundle.ReadDirectory(w.RulesDir), swapSlots, start,
+                    _traceEvery > 0 ? new MatchTrace(w.Rules, _traceEvery).Observe : null);
                 tally.Games++;
                 tally.Ticks += r.EndTick;
                 tally.EndTickSum += r.EndTick;
@@ -769,6 +773,65 @@ public static class AiCommands
             }
         }
         return tally;
+    }
+
+    private static int _traceEvery, _traceGame;
+
+    /// <summary>M4-16 round 3: per-side diagnostic lines for one game (tier, army count and value, scrapers, cash, income, structures, waves).</summary>
+    private sealed class MatchTrace(SimRules rules, int every)
+    {
+        private readonly long[] _income = new long[2];
+        private readonly int[] _prev = new int[2], _waves = new int[2], _tier = new int[2];
+        private readonly HashSet<string>[] _seen = [new(), new()];
+        private bool _init;
+
+        public void Observe(Simulation sim, IAiPlayer ai0, IAiPlayer ai1, byte slotA, byte slotB)
+        {
+            if (!_init) { _init = true; _prev[0] = sim.Funds(0); _prev[1] = sim.Funds(1); }
+            var ais = new IAiPlayer[2];
+            ais[slotA] = ai0; ais[slotB] = ai1;
+            for (int p = 0; p < 2; p++)
+            {
+                int f = sim.Funds((byte)p);
+                if (f > _prev[p]) _income[p] += f - _prev[p];
+                _prev[p] = f;
+                if (ais[p] is RecruitAi r && r.Waves != _waves[p])
+                {
+                    _waves[p] = r.Waves;
+                    Console.WriteLine($"  t{sim.Tick} P{p}{(p == slotA ? "(A)" : "(B)")} WAVE #{r.Waves}: army {ArmyOf(sim, p, out int val)} units value {val}; enemy army {ArmyOf(sim, 1 - p, out int ev)} value {ev}");
+                }
+                if (sim.TierOf((byte)p) != _tier[p]) { _tier[p] = sim.TierOf((byte)p); Console.WriteLine($"  t{sim.Tick} P{p}{(p == slotA ? "(A)" : "(B)")} reaches tier {_tier[p]} (cash {f})"); }
+                for (int i = 1; i < sim.Buildings.Capacity; i++)
+                    if (sim.Buildings.Slots.IsIndexAlive(i) && sim.Buildings.Player[i] == p && _seen[p].Add(rules.Buildings[sim.Buildings.TypeIndex[i]].Id))
+                        Console.WriteLine($"  t{sim.Tick} P{p}{(p == slotA ? "(A)" : "(B)")} first {rules.Buildings[sim.Buildings.TypeIndex[i]].Id} (cost {rules.Buildings[sim.Buildings.TypeIndex[i]].Cost}, cash {f})");
+            }
+            if (sim.Tick % every != 0) return;
+            for (int p = 0; p < 2; p++)
+            {
+                int n = ArmyOf(sim, p, out int val), harv = 0, b = 0;
+                for (int i = 1; i < sim.Units.Capacity; i++)
+                    if (sim.Units.Slots.IsIndexAlive(i) && sim.Units.Player[i] == p && rules.Vehicles[sim.Units.TypeIndex[i]].HarvestCapacity > 0) harv++;
+                for (int i = 1; i < sim.Buildings.Capacity; i++)
+                    if (sim.Buildings.Slots.IsIndexAlive(i) && sim.Buildings.Player[i] == p) b++;
+                string ai = ais[p] is RecruitAi r ? $"waves {r.Waves} up {r.UpgradesOrdered} sold {r.StructuresSold} [{r.MilitaryDebug}]" : "";
+                Console.WriteLine($"t{sim.Tick} P{p}{(p == slotA ? "(A)" : "(B)")} tier {sim.TierOf((byte)p)} army {n} value {val} scrapers {harv} cash {sim.Funds((byte)p)} income {_income[p]} bldg {b} {ai}");
+            }
+        }
+
+        private int ArmyOf(Simulation sim, int p, out int value)
+        {
+            int n = 0; value = 0;
+            for (int i = 1; i < sim.Units.Capacity; i++)
+                if (sim.Units.Slots.IsIndexAlive(i) && sim.Units.Player[i] == p)
+                {
+                    VehicleType v = rules.Vehicles[sim.Units.TypeIndex[i]];
+                    if (v.HarvestCapacity > 0) continue;
+                    n++; value += v.Cost;
+                }
+            for (int i = 1; i < sim.Infantry.Capacity; i++)
+                if (sim.Infantry.Slots.IsIndexAlive(i) && sim.Infantry.Player[i] == p) { n++; value += rules.Infantry[sim.Infantry.TypeIndex[i]].Cost; }
+            return n;
+        }
     }
 
     private static string Stats(AiSideStats s) =>

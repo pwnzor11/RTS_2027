@@ -30,7 +30,8 @@ public static class AiMatchRunner
     /// (slot p starts at map start position p, or 1-p when <paramref name="swapStarts"/>). When <paramref name="replay"/> is given, the game is recorded to it.</summary>
     public static AiGameResult Play(MapData map, SimRules rules, ulong rulesHash, ulong seed, AiSide sideA, AiSide sideB,
         bool aInSlot0, int maxTicks, Stream? replay = null, string build = "",
-        IReadOnlyList<(string Name, string Text)>? rulesFiles = null, bool swapStarts = false, AiStartMode start = AiStartMode.Economy)
+        IReadOnlyList<(string Name, string Text)>? rulesFiles = null, bool swapStarts = false, AiStartMode start = AiStartMode.Economy,
+        Action<Simulation, IAiPlayer, IAiPlayer, byte, byte>? observe = null)
     {
         if (map.StartPositions.Count < 2) throw new ArgumentException("Map needs two start positions.", nameof(map));
         // Economy start places player p at map start p; swapped starts reverse the list so slots trade corners.
@@ -49,8 +50,9 @@ public static class AiMatchRunner
         else SkirmishStart.Apply(sim);
 
         var driver = new AiDriver(seed);
-        driver.Add(slotA, Create(sideA), sideA.Profile);
-        driver.Add(slotB, Create(sideB), sideB.Profile);
+        IAiPlayer aiA = Create(sideA), aiB = Create(sideB);
+        driver.Add(slotA, aiA, sideA.Profile);
+        driver.Add(slotB, aiB, sideB.Profile);
 
         var pending = new List<Command>();
         int fresh = 0;
@@ -64,6 +66,7 @@ public static class AiMatchRunner
             sim.Step(pending);
             pending.RemoveAll(c => c.ExecTick < sim.Tick);
             fresh = pending.Count;
+            observe?.Invoke(sim, aiA, aiB, slotA, slotB);
             if (recorder is not null && sim.Tick % SimConstants.HashIntervalTicks == 0)
                 recorder.RecordHash(sim);
             if (sim.Tick % WinCheckInterval != 0) continue;
