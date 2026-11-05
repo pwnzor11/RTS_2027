@@ -30,8 +30,8 @@ public sealed class M4ContractTests
         Assert.Equal(15, (int)MissionKind.Garrisoned);
         Assert.Equal(14, (int)MissionKind.Capture);
         Assert.Equal(7, (int)LandType.Shallow);
-        Assert.Equal(8, RuleCounts.LandTypes);
-        Assert.Equal(RuleCounts.LandTypes, Enum.GetValues<LandType>().Length);   // Coast = 8 is reserved for M7, not added
+        Assert.Equal(9, RuleCounts.LandTypes);   // M7-02 appended Coast = 8
+        Assert.Equal(RuleCounts.LandTypes, Enum.GetValues<LandType>().Length);
         Assert.Equal(5, (int)FxKind.GarrisonExit);
         Assert.Equal(6, (int)DebugOp.GrantUpgrade);
     }
@@ -255,7 +255,7 @@ public sealed class M4ContractTests
     public void Shallow_TerrainRow_IsLoaded()
     {
         TerrainTable t = ProductionFixture.Loaded.Sim.Terrain;
-        Assert.Equal(new[] { 40, 0, 0, 100, 100, 0 }, Enum.GetValues<Locomotion>().Select(l => t.SpeedPercent(LandType.Shallow, l)));
+        Assert.Equal(new[] { 40, 0, 0, 100, 100, 0, 100 }, Enum.GetValues<Locomotion>().Select(l => t.SpeedPercent(LandType.Shallow, l)));
     }
 
     [Fact]

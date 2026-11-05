@@ -9,6 +9,7 @@ tracked = 100
 hover = 100
 air = 100
 burrow = 100
+naval = 0
 
 [speed.road]
 foot = 110
@@ -17,6 +18,7 @@ tracked = 110
 hover = 110
 air = 100
 burrow = 110
+naval = 0
 
 [speed.rough]
 foot = 75
@@ -25,6 +27,7 @@ tracked = 75
 hover = 75
 air = 100
 burrow = 75
+naval = 0
 
 [speed.ash]
 foot = 100
@@ -33,6 +36,7 @@ tracked = 100
 hover = 100
 air = 100
 burrow = 100
+naval = 0
 
 [speed.water]
 foot = 0
@@ -41,6 +45,7 @@ tracked = 0
 hover = 100
 air = 100
 burrow = 0
+naval = 100
 
 [speed.rock]
 foot = 0
@@ -49,6 +54,7 @@ tracked = 0
 hover = 0
 air = 100
 burrow = 0
+naval = 0
 
 [speed.cliff]
 foot = 0
@@ -57,8 +63,9 @@ tracked = 0
 hover = 0
 air = 100
 burrow = 0
+naval = 0
 
-# M4-01: fordable shallow water (design 08 §1; Water now means deep). Coast = 8 is reserved for M7.
+# M4-01: fordable shallow water (design 08 §1; Water now means deep). M7-02: Coast = 8 is the beach.
 [speed.shallow]
 foot = 40
 wheeled = 0
@@ -66,6 +73,17 @@ tracked = 0
 hover = 100
 air = 100
 burrow = 0
+naval = 100
+
+# M7-02: the beach (docs/design/07_expedition.md §6). Land units walk it like clear ground; hover 80 %; ships never enter it.
+[speed.coast]
+foot = 100
+wheeled = 100
+tracked = 100
+hover = 80
+air = 100
+burrow = 100
+naval = 0
 
 [buildable]
 clear = true
@@ -76,6 +94,7 @@ water = false
 rock = false
 cliff = false
 shallow = false
+coast = true
 
 # M3: soft ground (burrowers may surface, Bores may break through). Optional; omitted lands keep the default.
 [soft]
@@ -87,3 +106,8 @@ water = false
 rock = false
 cliff = false
 shallow = false
+coast = false
+
+# M7-02: lands where landing craft may unload vehicles (optional; a land left out is not a landing land).
+[landing]
+coast = true

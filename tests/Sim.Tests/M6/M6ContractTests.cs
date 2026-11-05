@@ -24,7 +24,7 @@ public sealed class M6ContractTests
     public void EnumValues_ArePinned()
     {
         Assert.Equal((0, 1, 2, 3), ((int)Faction.Authority, (int)Faction.Directorate, (int)Faction.Neutral, (int)Faction.LeftBehind));
-        Assert.Equal(4, RuleCounts.Factions);
+        Assert.Equal(5, RuleCounts.Factions);   // M7-02 appended Expedition = 4
         Assert.Equal(RuleCounts.Factions, Enum.GetValues<Faction>().Length);
         Assert.Equal(3, RuleCounts.PlayableFactions);   // M6-09: the skirmish UI offers Authority, Directorate, Left Behind
         Assert.Equal(RuleCounts.PlayableFactions, RuleCounts.PlayableOrder.Count);
@@ -34,7 +34,7 @@ public sealed class M6ContractTests
         Assert.Equal(24, (int)CommandKind.Pack);
         Assert.Equal(25, Enum.GetValues<CommandKind>().Length);
         Assert.Equal((16, 17, 18), ((int)MissionKind.Salvage, (int)MissionKind.Pack, (int)MissionKind.Withdraw));
-        Assert.Equal(19, Enum.GetValues<MissionKind>().Length);
+        Assert.Equal(23, Enum.GetValues<MissionKind>().Length);   // M7-02 appended Unload..ConvoySail
         Assert.Equal(Faction.LeftBehind, SimRules.FactionFromId("lb_mother_rig"));
     }
 

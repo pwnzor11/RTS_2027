@@ -31,7 +31,7 @@ public sealed class M3ContractTests
         Assert.Equal((0, 1, 2), ((int)WeaponTargets.Ground, (int)WeaponTargets.Air, (int)WeaponTargets.Both));
         Assert.Equal(new[] { 9, 10, 11, 12, 13, 14 }, new[] { MissionKind.EnterTunnel, MissionKind.Transit, MissionKind.Burrow,
             MissionKind.Surface, MissionKind.Deploy, MissionKind.Capture }.Select(m => (int)m));
-        Assert.Equal(8, Enum.GetValues<LandType>().Length);   // M4-01 appended Shallow (M4ContractTests pins it)
+        Assert.Equal(9, Enum.GetValues<LandType>().Length);   // M4-01 appended Shallow, M7-02 Coast (M4ContractTests pins it)
     }
 
     [Fact]

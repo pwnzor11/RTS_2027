@@ -22,7 +22,7 @@ public sealed class RulesValidationTests
     [InlineData("weapons.toml", "warhead = \"test_he\"", "warhead = \"test_nope\"", "test_artillery.warhead", "unknown warhead")]
     [InlineData("weapons.toml", "range = 2560", "range = 768", "test_artillery.range", "must be greater than min_range")]
     [InlineData("weapons.toml", "rate_of_fire = 8", "rate_of_fire = 0", "test_mg.rate_of_fire", "must be between")]
-    [InlineData("warheads.toml", "versus = [25, 75, 100, 50, 40]", "versus = [25, 75, 100, 50]", "test_ap.versus", "expected 5 values")]
+    [InlineData("warheads.toml", "versus = [25, 75, 100, 50, 40]", "versus = [25, 75, 100, 50]", "test_ap.versus", "expected 8 values")]
     [InlineData("warheads.toml", "versus = [100, 50, 15, 10, 5]", "versus = [100, 50, 15, 10, 1001]", "test_small_arms.versus", "must be between")]
     [InlineData("warheads.toml", "splash = 1", "splash = 2", "test_he.splash", "must be between 0 and 1")]
     [InlineData("techs.toml", "target = \"test_turret\"", "target = \"class:tank\"", "test_unlock_turret.target", "unknown class 'tank'")]
