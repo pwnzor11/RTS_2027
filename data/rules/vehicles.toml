@@ -377,3 +377,194 @@ turret_turn_rate = 0
 crusher = false
 cost = 600  # ASSUMED (M4-07)
 prerequisites = ["dir_mooring"]
+
+# M6-08: Left Behind vehicles and aircraft (design 06 §5, D-102). PLACEHOLDER ART: no sprite manifests yet, the generated
+# placeholder is drawn (as the M4-ART types). Every number is (tune).
+
+[lb_gleaner]   # PLACEHOLDER ART; ash harvester, light hopper
+faction = "left_behind"
+tier = 1
+speed = 16  # (tune)
+max_health = 260  # (tune)
+locomotion = "tracked"
+turn_rate = 8  # (tune)
+armor = "heavy"
+sight = 4  # (tune)
+primary_weapon = ""
+has_turret = false
+turret_turn_rate = 0
+crusher = false
+cost = 600  # (tune)
+prerequisites = ["lb_garage_rig"]
+harvest_capacity = 12  # (tune) 60 percent of a Scraper (20)
+
+[lb_hauler]   # PLACEHOLDER ART; wreck collector
+faction = "left_behind"
+tier = 1
+speed = 18  # (tune)
+max_health = 260  # (tune)
+locomotion = "wheeled"
+turn_rate = 8  # (tune)
+armor = "light"
+sight = 4  # (tune)
+primary_weapon = ""
+has_turret = false
+turret_turn_rate = 0
+crusher = false
+cost = 500  # (tune)
+prerequisites = ["lb_garage_rig"]
+salvage_rate = 12  # (tune) drains wrecks into the hopper
+harvest_capacity = 10  # (tune)
+
+[lb_buggy]   # PLACEHOLDER ART; fast raider scout
+faction = "left_behind"
+tier = 1
+speed = 40  # (tune)
+max_health = 120  # (tune)
+locomotion = "wheeled"
+turn_rate = 14  # (tune)
+armor = "light"
+sight = 7  # (tune)
+primary_weapon = "lb_buggy_gun"
+has_turret = false
+turret_turn_rate = 0
+crusher = false
+cost = 300  # (tune)
+prerequisites = ["lb_garage_rig"]
+raider = true
+
+[lb_harpoon_wagon]   # PLACEHOLDER ART; anti-armour, tethers (slow is a later sim hook)
+faction = "left_behind"
+tier = 2
+speed = 20  # (tune)
+max_health = 260  # (tune)
+locomotion = "wheeled"
+turn_rate = 8  # (tune)
+armor = "light"
+sight = 5  # (tune)
+primary_weapon = "lb_harpoon_gun"
+has_turret = true
+turret_turn_rate = 10
+crusher = false
+cost = 700  # (tune)
+prerequisites = ["lb_garage_rig"]
+
+[lb_organ]   # PLACEHOLDER ART; rocket-rack artillery
+faction = "left_behind"
+tier = 2
+speed = 16  # (tune)
+max_health = 250  # (tune)
+locomotion = "tracked"
+turn_rate = 6  # (tune)
+armor = "light"
+sight = 5  # (tune)
+primary_weapon = "lb_organ_rack"
+has_turret = true
+turret_turn_rate = 10
+crusher = false
+cost = 800  # (tune)
+prerequisites = ["lb_garage_rig"]
+
+[lb_tow]   # PLACEHOLDER ART; transport (6) + tows packed rigs
+faction = "left_behind"
+tier = 2
+speed = 24  # (tune)
+max_health = 300  # (tune)
+locomotion = "wheeled"
+turn_rate = 10  # (tune)
+armor = "light"
+sight = 4  # (tune)
+primary_weapon = ""
+has_turret = false
+turret_turn_rate = 0
+crusher = false
+cost = 600  # (tune)
+prerequisites = ["lb_garage_rig"]
+passengers = 6
+aura_radius = 2  # (tune)
+aura_targets = ["lb_mother_rig_packed"]
+tow_bonus_permille = 1000  # (tune) packed rigs keep full speed when towed
+
+[lb_dust_sail]   # PLACEHOLDER ART; wind-rigged Blackout layer
+faction = "left_behind"
+tier = 2
+speed = 22  # (tune)
+max_health = 200  # (tune)
+locomotion = "wheeled"
+turn_rate = 8  # (tune)
+armor = "light"
+sight = 6  # (tune)
+primary_weapon = "lb_dust_drop"
+has_turret = false
+turret_turn_rate = 0
+crusher = false
+cost = 600  # (tune)
+prerequisites = ["lb_garage_rig"]
+drops_blackout_ticks = 200  # (tune)
+
+[lb_rolling_fort]   # PLACEHOLDER ART; heavy patchwork tank
+faction = "left_behind"
+tier = 3
+speed = 14  # (tune)
+max_health = 700  # (tune)
+locomotion = "tracked"
+turn_rate = 5  # (tune)
+armor = "heavy"
+sight = 5  # (tune)
+primary_weapon = "lb_fort_cannon"
+has_turret = true
+turret_turn_rate = 10
+crusher = false
+cost = 1400  # (tune)
+prerequisites = ["lb_garage_rig"]
+
+[lb_mother_rig_packed]   # PLACEHOLDER ART; packed rig (start-kit unit, generic form of every rig). Not meant to be built: gated behind the Bench at a prohibitive cost
+faction = "left_behind"
+tier = 1
+speed = 10  # (tune)
+max_health = 1000  # (tune)
+locomotion = "tracked"
+turn_rate = 5  # (tune)
+armor = "heavy"
+sight = 5  # (tune)
+primary_weapon = ""
+has_turret = false
+turret_turn_rate = 0
+crusher = false
+cost = 4000  # (tune)
+prerequisites = ["lb_bench"]
+unpacks_into = "lb_mother_rig"
+pack_ticks = 200  # (tune)
+
+[lb_rotor]   # PLACEHOLDER ART; autogyro light gunship (aircraft)
+faction = "left_behind"
+tier = 3
+speed = 30  # (tune)
+max_health = 180  # (tune)
+locomotion = "air"
+turn_rate = 8  # (tune)
+armor = "light"
+sight = 7  # (tune)
+primary_weapon = "lb_rotor_gun"
+has_turret = false
+turret_turn_rate = 0
+crusher = false
+cost = 1000  # (tune)
+prerequisites = ["lb_rotor_pad"]
+
+[lb_kite]   # PLACEHOLDER ART; one-use glider bomber, death weapon on impact
+faction = "left_behind"
+tier = 3
+speed = 36  # (tune)
+max_health = 60  # (tune)
+locomotion = "air"
+turn_rate = 6  # (tune)
+armor = "light"
+sight = 5  # (tune)
+primary_weapon = "lb_kite_bomb"
+has_turret = false
+turret_turn_rate = 0
+crusher = false
+cost = 500  # (tune)
+prerequisites = ["lb_rotor_pad"]
+death_weapon = "lb_kite_bomb"

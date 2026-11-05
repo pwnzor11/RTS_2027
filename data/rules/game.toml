@@ -18,6 +18,7 @@ build_radius = 2
 max_queue = 5
 build_ticks_per_100_credits = 40
 low_power_slowdown_permille = [1500, 2500, 4000]
+wreck_ticks = 1200  # M6-08: turns wrecks on for every faction (design 10 §3.2)
 
 # M3 (design 05). All tables and keys optional; the values below are the design starting values (tune in M3-14).
 [tunnels]
@@ -55,3 +56,11 @@ conyard = "dir_shaft"
 units = ["dir_conscript", "dir_conscript", "dir_conscript", "dir_conscript"]  # ASSUMED (M3-07)
 tier2 = "dir_tier2"  # M4-07 (design 08 §4)
 tier3 = "dir_tier3"  # M4-07 (design 08 §4)
+
+# Left Behind kit (M6-08, D-102): no construction-yard building. A packed Mother Rig vehicle (unpacks into lb_mother_rig) + 2 Scavengers
+# + 1 Gleaner. conyard = "" is legal only because the units list holds a packed rig. T2 gate lb_lookout, T3 gate lb_rotor_pad.
+[faction.left_behind]
+conyard = ""
+units = ["lb_mother_rig_packed", "lb_scavenger", "lb_scavenger", "lb_gleaner"]
+tier2 = "lb_tier2"
+tier3 = "lb_tier3"
