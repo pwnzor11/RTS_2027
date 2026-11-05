@@ -115,10 +115,10 @@ public sealed partial class Simulation
 
     /// <summary>First free cell around the transport: ring 1 then ring 2, N..NW order; a cell with no soldier is preferred over one that
     /// only has a free sub-slot.</summary>
-    private bool FindUnloadCell(CellCoord at, out CellCoord cell, out int slot)
+    private bool FindUnloadCell(CellCoord at, out CellCoord cell, out int slot, int minRing = 1)
     {
         for (int pass = 0; pass < 2; pass++)
-            for (int r = 1; r <= 2; r++)
+            for (int r = minRing; r <= 2; r++)
                 for (int dy = -r; dy <= r; dy++)
                     for (int dx = -r; dx <= r; dx++)
                     {

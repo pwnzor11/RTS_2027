@@ -3,6 +3,7 @@
 using Rts.Sim.Core;
 using Rts.Sim.Garrison;
 using Rts.Sim.Missions;
+using Rts.Sim.Pathing;
 using Rts.Sim.Production;
 using Rts.Sim.Rules;
 using Rts.Sim.World;
@@ -349,7 +350,7 @@ public sealed partial class Simulation
         VehicleType vt = RulesOf(player).Vehicles[type];
         CellCoord exitRel = OrientedOffset(factory.Exit, factory.FootprintW, factory.FootprintH, factoryTopLeft);   // M4-16
         CellCoord exit = new(factoryTopLeft.X + exitRel.X, factoryTopLeft.Y + exitRel.Y);
-        if (!FindFreeExitCell(exit, vt.Locomotion, out CellCoord cell)) return false;
+        if (!FindFreeExitCell(exit, MoveClass.Of(vt), out CellCoord cell)) return false;
         EntityId id = SpawnVehicle(player, type, cell);
         if (id.IsNone) return false;
         OnStatsBuilt(player, ActorKind.Vehicle);   // M4-06

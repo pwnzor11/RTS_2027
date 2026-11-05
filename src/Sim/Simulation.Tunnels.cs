@@ -304,7 +304,7 @@ public sealed partial class Simulation
         BuildingType bt = BuildingTypeAt(d);
         CellCoord tl = _buildings.Cell[d];
         var exit = new CellCoord(tl.X + bt.Exit.X, tl.Y + bt.Exit.Y);
-        Locomotion loco = t.Unit.Kind == ActorKind.Vehicle ? RulesOf(store.Player[i]).Vehicles[store.TypeIndex[i]].Locomotion : Locomotion.Foot;
+        Locomotion loco = (t.Unit.Kind == ActorKind.Vehicle ? RulesOf(store.Player[i]).Vehicles[store.TypeIndex[i]] : null) is VehicleType tvt ? Pathing.MoveClass.Of(tvt) : Locomotion.Foot;
         if (!FindFreeExitCell(exit, loco, out CellCoord cell)) return false;
         if (t.Unit.Kind == ActorKind.Infantry)
         {
