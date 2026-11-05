@@ -127,11 +127,9 @@ def lean_patch(S, name, x0, x1, y0, y1, m, lift=0.06):
 
 def site(S, lvl):
     """Dust pad, trampled strips, stakes and clutter."""
-    S.bb("pad", -5.0, 5.0, -4.9, 4.6, 0.0, 0.1, "dust", 0.03)
-    S.bb("padn", -4.2, 3.8, 4.6, 5.0, 0.0, 0.08, "dust", 0.03)
-    S.bb("pade", 5.0, 5.1, -3.4, 2.6, 0.0, 0.07, "dust", 0.0)
-    S.bb("padw", -5.1, -5.0, -3.0, 3.0, 0.0, 0.07, "dust", 0.0)
-    for k, (x0, x1, y0, y1) in enumerate(((-4.6, -1.0, -4.8, -4.3), (1.4, 4.4, -4.7, -4.4), (-4.9, -4.5, -2.0, 2.0), (2.0, 4.8, 3.6, 4.2))):
+    S.bb("pad", -4.9, 4.9, -4.7, 4.6, 0.0, 0.1, "dust", 0.03)
+    S.bb("padn", -4.2, 3.8, 4.6, 4.85, 0.0, 0.08, "dust", 0.03)
+    for k, (x0, x1, y0, y1) in enumerate(((-4.6, -1.0, -4.6, -4.2), (1.4, 4.4, -4.6, -4.3), (-4.9, -4.5, -2.0, 2.0), (2.0, 4.8, 3.6, 4.2))):
         S.bb(f"scuff{k}", x0, x1, y0, y1, 0.1, 0.13, "dust2", 0.0, nocast=True)
     if lvl == 0:
         for (sx, sy) in ((-4.7, -3.8), (4.5, -3.8), (-4.7, 3.6), (4.5, 3.6)):
@@ -174,8 +172,8 @@ def chassis(S, dmg):
     S.bb("railN", -4.9, 4.7, 3.1, 3.5, 0.62, 1.25, "ash2", 0.04)
     S.bb("deck", -4.9, 4.7, -3.55, 3.55, 1.25, 1.45, "wood", 0.03)
     S.bb("deckplate", -2.0, 0.6, -3.58, -3.3, 1.3, 1.5, "ash", 0.02)
-    S.bb("bump", -4.95, -4.75, -3.0, 3.0, 0.7, 1.1, "hazard", 0.02)       # hazard bumper
-    S.bb("hitch", 4.7, 5.0, -0.5, 0.5, 0.8, 1.1, "dark", 0.02)
+    S.bb("bump", -4.9, -4.75, -3.0, 3.0, 0.7, 1.1, "hazard", 0.02)       # hazard bumper
+    S.bb("hitch", 4.7, 4.85, -0.5, 0.5, 0.8, 1.1, "dark", 0.02)
     for k in range(6):                                                    # hazard tags on the south rail
         S.bb(f"tag{k}", -4.3 + k * 1.6, -3.9 + k * 1.6, -3.52, -3.48, 0.7, 1.15, "hazard" if k % 3 == 0 else "ash", 0.0, nocast=True)
     wheels(S, dmg)
@@ -184,14 +182,17 @@ def chassis(S, dmg):
 def bus(S, dmg, anim):
     # truck cab bolted to the west end (lower, rust red)
     S.bb("cab", -4.8, -3.85, -2.4, 0.9, 1.45, 3.05, "rust", 0.08)
-    S.bb("cabroof", -4.9, -3.75, -2.5, 1.0, 3.05, 3.2, "ash2", 0.04)
+    S.bb("cabroof", -4.85, -3.75, -2.5, 1.0, 3.05, 3.2, "ash2", 0.04)
     S.bb("cabwin", -4.85, -4.5, -2.45, -0.9, 2.2, 2.85, "glass", 0.0)
     S.bb("cabwin2", -4.6, -3.85, -2.43, -2.38, 2.2, 2.85, "glass", 0.0)
-    S.bb("cabhood", -5.0, -4.3, -1.8, 0.4, 1.45, 2.0, "rust2", 0.06)
+    S.bb("cabhood", -4.9, -4.3, -1.8, 0.4, 1.45, 2.0, "rust2", 0.06)
     S.cyl("headlamp", 0.18, 0.1, (-4.95, -1.2, 1.7), "lamp" if (anim % 2 == 0 and not dmg) else "lamp_off", axis="X", verts=10)
     # the bus body (faded teal), taller and further east
     S.bb("bus", -3.8, 0.9, -2.5, 1.6, 1.45, 3.55, "teal", 0.07)
-    S.bb("busroof", -3.9, 1.0, -2.6, 1.7, 3.55, 3.7, "ash", 0.04)
+    S.bb("busroof", -3.9, 1.0, -2.6, 1.7, 3.55, 3.7, "rust2", 0.04)
+    S.bb("roofpatch1", -3.6, -2.0, 0.9, 1.6, 3.7, 3.74, "teal2", 0.0, nocast=True)
+    S.bb("roofpatch2", -1.9, 0.6, -2.4, -1.7, 3.7, 3.74, "ochre", 0.0, nocast=True)
+    S.bb("roofpatch3", -3.8, -3.0, -2.4, -0.8, 3.7, 3.74, "ash", 0.0, nocast=True)
     S.bb("busstripe", -3.8, 0.9, -2.55, -2.45, 2.25, 2.4, "bone", 0.0)
     S.bb("busstripe2", -3.8, 0.9, -2.54, -2.46, 1.5, 1.62, "ochre", 0.0)
     # windows, some boarded or sheeted
@@ -208,8 +209,8 @@ def bus(S, dmg, anim):
         for rv in (x0 + 0.06, x1 - 0.06):
             S.bb(f"rivet{k}", rv - 0.03, rv + 0.03, -2.6, -2.57, z0 + 0.08, z0 + 0.14, "dark", 0.0, nocast=True)
     # big hand-painted house panel on the bus side (a white-ringed canvas sheet nailed up)
-    S.bb("panelbed", -2.3, -0.2, -2.6, -2.55, 1.62, 2.22, "canvas", 0.0)
-    S.bb("panel", -2.15, -0.35, -2.64, -2.6, 1.68, 2.16, "house", 0.0)
+    S.bb("panelbed", -1.2, 0.85, -2.6, -2.55, 1.58, 2.22, "canvas", 0.0)
+    S.bb("panel", -1.05, 0.7, -2.64, -2.6, 1.68, 2.16, "house", 0.0)
     # west end of the bus roof: water tank and rack
     S.cyl("tank", 0.55, 2.0, (-2.5, 0.0, 4.35), "ochre", axis="X", verts=16)
     for k, x in enumerate((-3.2, -1.8)):
@@ -260,24 +261,22 @@ def awning(S, dmg, anim):
     zm = AWN_Z0 - rise / 2
     zm_off = zm
     deg = math.degrees(ang)
-    xs = (-3.7, -2.45, -1.2, 0.05, 1.3)
+    xs = (-3.7, -2.45)
     for k, x0 in enumerate(xs):
-        m = ("canvas", "teal", "canvas", "rust", "canvas")[k] if not dmg else ("canvas_s", "teal_s", "canvas_s", "rust_s", "canvas_s")[k]
-        w = 1.25 if k < 4 else 0.6
-        if dmg and k == 3:
-            continue          # a strip is gone
+        m = ("canvas2", "teal")[k] if not dmg else ("canvas2_s", "teal_s")[k]
+        w = 1.25
         S.box(f"awn{k}", (w, ln, 0.07), (x0 + w / 2, ym, zm_off), m, 0.0, rot=(deg, 0, 0))
     # fringe along the far edge, hanging
     zf = AWN_Z0 - rise
-    for k in range(10):
+    for k in range(5):
         x = -3.6 + k * 0.52
-        if dmg and k in (3, 4, 7):
+        if dmg and k in (1, 3):
             continue
         sway = 0.04 * math.sin((anim + k) * 1.7)
         hz = 0.32 if not dmg else 0.15
-        S.bb(f"fringe{k}", x, x + 0.34, AWN_Y1 - 0.06 + sway, AWN_Y1 + 0.0 + sway, zf - hz, zf, "house" if k in (2, 7) else ("canvas2" if k % 2 else "rust"), 0.0, nocast=True)
+        S.bb(f"fringe{k}", x, x + 0.34, AWN_Y1 - 0.06 + sway, AWN_Y1 + 0.0 + sway, zf - hz, zf, "house" if k == 2 else ("canvas2" if k % 2 else "rust"), 0.0, nocast=True)
     # poles
-    for px_ in (-3.55, 1.55):
+    for px_ in (-3.55, -1.1):
         if dmg and px_ > 0:
             beam(S, "awnpole", (px_, AWN_Y1 + 0.1, 0.1), (px_ - 0.4, AWN_Y1 + 1.3, 1.6), 0.1, "wood")
         else:
@@ -290,7 +289,7 @@ def lean_to(S, dmg, lvl):
     ang = LEAN_ANG
     xm = (LEAN_X0 + LEAN_X1) / 2
     ln = (LEAN_X1 - LEAN_X0) / math.cos(math.radians(ang))
-    y0, y1 = -3.3, 2.9
+    y0, y1 = -3.0, 2.6
     if dmg:
         # west half still up, east half has collapsed to a steeper slope with a hole between
         S.box("lean", (ln * 0.55, y1 - y0, 0.08), (LEAN_X0 + (LEAN_X1 - LEAN_X0) * 0.27, (y0 + y1) / 2, lean_z(LEAN_X0 + (LEAN_X1 - LEAN_X0) * 0.27)),
@@ -300,7 +299,7 @@ def lean_to(S, dmg, lvl):
         post(S, "lpost", 4.4, -3.0, 1.45, 1.6, 0.14, "wood")
         beam(S, "lpostB", (4.4, 2.6, 1.45), (4.1, 2.6, 2.55), 0.14, "wood")
     else:
-        S.box("lean", (ln, y1 - y0, 0.08), (xm, (y0 + y1) / 2, lean_z(xm)), "canvas", 0.0, rot=(0, ang, 0))
+        S.box("lean", (ln, y1 - y0, 0.08), (xm, (y0 + y1) / 2, lean_z(xm)), "canvas2", 0.0, rot=(0, ang, 0))
         for px_, py_ in ((4.4, -3.0), (4.4, 2.6)):
             post(S, "lpost", px_, py_, 1.45, lean_z(4.45) - 0.03, 0.14, "wood")
         beam(S, "lbrace", (4.4, -3.0, 1.9), (3.4, -3.0, 2.7), 0.08, "wood")
