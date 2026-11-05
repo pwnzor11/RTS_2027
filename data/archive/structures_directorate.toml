@@ -228,3 +228,16 @@ A deep council chamber whose long table seats the Committee for its late-night s
 '''
 # Approved by the owner 2026-11-04 (Q-38). Replace the open unlock with a mission id when known.
 unlock = "open"
+
+# session 9: assumed — confirm
+[[entry]]
+id = "dir_bunk_gallery"
+category = "Structure"
+faction = "directorate"
+title = "Bunk Gallery"
+subtitle = "Tiers of cots behind blast doors"
+field_note = "VOICE: \"BEHIND THE DOOR, SLEEP. WE WILL WAKE YOU.\""
+body = '''
+A buried gallery of stacked cots, each tier closed off behind its own blast door. The Directorate sleeps in shifts, so the lamps are never fully out. Crews say a gallery is the only place underground where it is quiet.
+'''
+unlock = "open"

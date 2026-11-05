@@ -25,7 +25,13 @@ public enum QueueBlockReason : byte
     StructureWaiting = 4,
     /// <summary>The category's queue is at its limit.</summary>
     QueueFull = 5,
+    /// <summary>Supply cap (SUP-1, D-125): used + queued supply + this unit would exceed the cap. Units only.</summary>
+    SupplyCap = 6,
 }
+
+/// <summary>A player's supply (SUP-1): units' supply in use, the cap from buildings (at most <see cref="Ceiling"/>) and the hard ceiling.
+/// All three are 0 while the supply rule is switched off.</summary>
+public readonly record struct SupplyView(int Used, int Cap, int Ceiling);
 
 /// <summary>
 /// One sidebar entry (D-066): a type the player has unlocked, with the reason it cannot be queued right now
@@ -54,6 +60,9 @@ public sealed record PlayerHud(int Cash, int Stored, int StorageCap, int PowerOu
 
     /// <summary>M3: upgrade indices a Build(ProductionCategory.Upgrade, index) would be accepted for now (never null).</summary>
     public IReadOnlyList<int> BuildableUpgrades { get; init; } = Array.Empty<int>();
+
+    /// <summary>SUP-1: used / cap / ceiling supply; all zero while the supply rule is off.</summary>
+    public SupplyView Supply { get; init; }
 
     /// <summary>M3-13: the player's own superweapon buildings with their charge, in building slot order (never null).</summary>
     public IReadOnlyList<SuperweaponView> Superweapons { get; init; } = Array.Empty<SuperweaponView>();

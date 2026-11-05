@@ -63,10 +63,10 @@ public static class AiCommands
         if (!ParseSide(aArg, tiers!, out AiSide? a, out error) || !ParseSide(bArg, tiers!, out AiSide? b, out error))
             return UsageError(error!);
         // M3-14: cross-faction matches (default authority for both sides).
-        if (flags.TryGetValue("faction-a", out string? fa) && !(Enum.TryParse(fa, true, out Faction facA) && (a = a! with { Faction = facA }) is not null))
-            return UsageError("--faction-a must be authority or directorate");
-        if (flags.TryGetValue("faction-b", out string? fb) && !(Enum.TryParse(fb, true, out Faction facB) && (b = b! with { Faction = facB }) is not null))
-            return UsageError("--faction-b must be authority or directorate");
+        if (flags.TryGetValue("faction-a", out string? fa) && !(Enum.TryParse(fa.Replace("_", ""), true, out Faction facA) && (a = a! with { Faction = facA }) is not null))
+            return UsageError("--faction-a must be authority, directorate or left_behind");
+        if (flags.TryGetValue("faction-b", out string? fb) && !(Enum.TryParse(fb.Replace("_", ""), true, out Faction facB) && (b = b! with { Faction = facB }) is not null))
+            return UsageError("--faction-b must be authority, directorate or left_behind");
 
         bool army = false;
         if (flags.TryGetValue("start", out string? startArg))

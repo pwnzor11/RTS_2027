@@ -16,6 +16,7 @@ public static class BlockReasonText
         QueueBlockReason.NoFactory => "Needs a factory",
         QueueBlockReason.Defeated => "You are defeated",
         QueueBlockReason.NotBuildable => "Not available",
+        QueueBlockReason.SupplyCap => "Supply cap reached: build a supply structure",
         _ => "Not available",
     };
 }

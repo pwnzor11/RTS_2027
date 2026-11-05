@@ -949,3 +949,24 @@ share drops (54 % -> 41 %). The >= 60 % target is still unmet above 2v1; the top
 Directorate games). "Scouting + harass off for elite" was tried and rejected (it breaks Directorate elite). Q-43: the 2 500 -> 2 000
 tier-3 cut moves every cell only within noise; the lead recommends keeping 2 500 (owner decides, D-121).
 **Status:** gate confirmed (owner, D-129: lands if the ladder improves); Q-43 recommendation waiting on the owner
+
+### D-132 · 2026-11-05 · Late session-9 calls: supply AI, Left Behind AI, Second Drift, art scale
+**Decision:** (1) SUP-5: the AI starts the cheapest buildable supply structure (not the yard) when free supply drops below 6 and the
+cap is below the ceiling; a power plant first if that structure would brown out. Data-driven, so no per-faction id. (Supply itself is held
+off for now, D-133.) (2) SUP-1 rules as built: a unit's supply uses its base cost (not upgrade-discounted); supply-0 units
+are never blocked; harvesters (auth_scraper, dir_scraper, lb_gleaner, lb_hauler) cost 1; Ration Hall 200 / power -10 / 300 HP, Bunk
+Gallery 150 / -10 / 250 HP, Still Rig 200 / 0 / 300 HP, each +10 supply. (3) M6-10: the Left Behind AI prefers the Rotor over Kites
+(Kites cost tier 4 about 20 points of win rate); fixed structures are sold and rebuilt on relocation. (4) `lb_second_drift`
+`superweapon_entrance_range` 8 → 0: Left Behind has no entrance building, so the storm could never fire. (5) Left Behind art: the
+vehicles are drawn about 1.5× the Directorate's size to match the rig; kept for now, owner to judge in game.
+**Why:** each was the recommended option for an unattended night; all are reversible data or AI behaviour.
+**Status:** assumed — confirm (tables in docs/balance/s9_tables.md and docs/balance/m6_10_ai.md)
+
+### D-133 · 2026-11-05 · Supply cap held off by default for now (supersedes the default in D-129)
+**Decision:** `[supply] enabled = false` in data/rules/game.toml for now. The sim, data, supply buildings, block text and the AI's
+supply rule (SUP-5) are all in; turning supply on is one line. With it on, three AI tests fail even with SUP-5: the Authority
+Regular garrison fills 2 of 3 in time, the Authority Veteran misses tier 3 within 15 minutes, and a tier-5 Left Behind packed rig
+stands idle for 30 s (seed 4). All pass with supply off. Per the session's guard rail (one honest try, then park), supply waits for
+the next session's AI tuning.
+**Alternatives:** land it on and weaken the three tests (rejected: it would hide a real AI slowdown).
+**Status:** assumed — confirm (owner can play-test supply now by setting `enabled = true`)

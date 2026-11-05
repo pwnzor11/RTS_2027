@@ -141,6 +141,38 @@ public readonly struct PlayerView
         AddBuildings(dest, own: false, enemiesOnly: false);
     }
 
+    /// <summary>
+    /// VET-5: veterancy of one of the viewing player's own vehicles or soldiers: its rank (0..3), its kill value and the kill value
+    /// the next rank needs (0 at the top rank). (0, 0, 0) for any other actor, a stale reference, a building, a type that cannot
+    /// rank, or when veterancy is off. Read-only; reads own actors only, so it never leaks an enemy's kill count.
+    /// </summary>
+    public (int Rank, int KillValue, int NextThreshold) VeterancyOf(ActorRef own)
+    {
+        if (own.Id.IsNone || own.Kind > ActorKind.Infantry) return (0, 0, 0);
+        int i = own.Id.Index;
+        if (!_sim.IsLive(own.Kind, i) || _sim.IdAt(own.Kind, i) != own.Id || _sim.PlayerAt(own.Kind, i) != Player) return (0, 0, 0);
+        VeterancyRules vr = _sim.VetRules;
+        if (!vr.Enabled) return (0, 0, 0);
+        SimRules rules = Rules;
+        bool canRank;
+        int scale;
+        if (own.Kind == ActorKind.Vehicle)
+        {
+            VehicleType t = rules.Vehicles[_sim.Units.TypeIndex[i]];
+            (canRank, scale) = (t.CanRank, t.VetThresholdPermille);
+        }
+        else
+        {
+            InfantryType t = rules.Infantry[_sim.Infantry.TypeIndex[i]];
+            (canRank, scale) = (t.CanRank, t.VetThresholdPermille);
+        }
+
+        if (!canRank) return (0, 0, 0);
+        int rank = _sim.RankOf(own.Kind, i);
+        int next = rank >= VeterancyRules.Ranks ? 0 : (int)Math.Max(1L, Math.Min(int.MaxValue, (long)vr.Thresholds[rank] * scale / 1000));
+        return (rank, _sim.Veterancy.KillValue(own.Kind, i), next);
+    }
+
     /// <summary>Fills <paramref name="dest"/> (cleared first) with every enemy building the player knows of: those in
     /// vision now (live) plus last-seen ghosts whose footprint is currently out of vision (<see cref="ViewActor.Ghost"/>).</summary>
     public void CopyKnownEnemyBuildings(List<ViewActor> dest)
@@ -236,14 +268,14 @@ public readonly struct PlayerView
                 bool idle = s.NextMission[i] == MissionKind.None
                     && (m == MissionKind.None || m == MissionKind.Sleep || m == MissionKind.Guard || m == MissionKind.Stop);
                 dest.Add(new ViewActor(s.Slots.IdOf(i), kind, owner, Relation.Self, type, cell, s.Position[i], s.Health[i],
-                    max, m, idle, s.Target[i], false, 1, 1) { Underground = underground, Stealthed = stealthed });
+                    max, m, idle, s.Target[i], false, 1, 1) { Underground = underground, Stealthed = stealthed, Rank = _sim.RankOf(kind, i) });
             }
             else
             {
                 dest.Add(new ViewActor(s.Slots.IdOf(i), kind, owner, RelationOf(owner), type, cell, s.Position[i], s.Health[i],
                     max, MissionKind.None, false, EntityId.None, false, 1, 1)
                 {
-                    Underground = underground, Stealthed = stealthed,
+                    Underground = underground, Stealthed = stealthed, Rank = _sim.RankOf(kind, i),
                     Revealed = !friendly && (underground || stealthed),   // listed although hidden-capable: revealed
                 });
             }

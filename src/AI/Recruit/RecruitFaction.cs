@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
+using Rts.Data;
 using Rts.Sim.Rules;
 
 namespace Rts.AI.Recruit;
@@ -86,6 +87,18 @@ internal abstract class RecruitFaction
     /// <summary>Faction extras (tunnels, radiation, auras), or null when the faction needs none.</summary>
     public virtual IFactionTactics? CreateTactics() => null;
 
+    /// <summary>M6-10: faction extras that depend on the tier's profile (Left Behind: relocation from tier 3, Dust Sails at the top). The
+    /// default ignores the profile.</summary>
+    public virtual IFactionTactics? CreateTactics(DifficultyProfile profile) => CreateTactics();
+
+    /// <summary>M6-10: the aircraft type id the faction prefers when several are buildable (Left Behind: the Kite), or null.</summary>
+    public virtual string? PreferredAircraftId => null;
+
     /// <summary>Knowledge for a faction.</summary>
-    public static RecruitFaction For(Faction faction) => faction == Faction.Directorate ? new DirectorateRecruitFaction() : new AuthorityRecruitFaction();
+    public static RecruitFaction For(Faction faction) => faction switch
+    {
+        Faction.Directorate => new DirectorateRecruitFaction(),
+        Faction.LeftBehind => new LeftBehindRecruitFaction(),   // M6-10
+        _ => new AuthorityRecruitFaction(),
+    };
 }

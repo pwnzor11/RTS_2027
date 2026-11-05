@@ -43,6 +43,7 @@ provides = ["auth_conyard"]
 category = "structure"
 produces = ""
 buildable = false
+supply_provided = 20  # (tune) SUP-2: main base building (design 13 §2.2)
 
 [auth_power]
 tier = 1
@@ -56,6 +57,21 @@ cost = 300
 power = 100
 prerequisites = ["auth_conyard"]
 provides = []
+
+[auth_ration_hall]   # PLACEHOLDER ART; supply building (SUP-2, design 13 §2.3): everyone is counted and owed a ration
+faction = "authority"
+tier = 1
+footprint_w = 2
+footprint_h = 2
+max_health = 300  # (tune)
+armor = "structure"
+sight = 3  # (tune)
+primary_weapon = ""
+cost = 200  # (tune)
+power = -10  # (tune)
+prerequisites = ["auth_power"]
+provides = []
+supply_provided = 10  # (tune)
 
 [auth_refinery]
 tier = 1
@@ -168,6 +184,7 @@ produces = ""
 buildable = false
 entrance = "M"
 ticks_per_point = 20  # (tune) M3-14: 13 -> 20
+supply_provided = 20  # (tune) SUP-2
 
 [dir_reactor_vent]
 tier = 1
@@ -280,6 +297,21 @@ power = -10  # ASSUMED (M3-07)
 prerequisites = ["dir_smelter_vent"]
 provides = []
 storage = 1500  # ASSUMED (M3-07)
+
+[dir_bunk_gallery]   # PLACEHOLDER ART; supply building (SUP-2, design 13 §2.3): they sleep behind blast doors
+faction = "directorate"
+tier = 1
+footprint_w = 2
+footprint_h = 2
+max_health = 250  # (tune)
+armor = "structure"
+sight = 3  # (tune)
+primary_weapon = ""
+cost = 150  # (tune)
+power = -10  # (tune)
+prerequisites = ["dir_smelter_vent"]
+provides = []
+supply_provided = 10  # (tune)
 
 [dir_bunker]
 tier = 1
@@ -623,6 +655,7 @@ produces = ""
 buildable = false
 packs_into = "lb_mother_rig_packed"
 pack_ticks = 200  # (tune)
+supply_provided = 20  # (tune) SUP-3
 
 [lb_yard]   # PLACEHOLDER ART; fixed cheap refinery and silo
 faction = "left_behind"
@@ -678,6 +711,23 @@ prerequisites = ["lb_mother_rig"]
 provides = []
 packs_into = "lb_mother_rig_packed"
 pack_ticks = 200  # (tune)
+
+[lb_still_rig]   # PLACEHOLDER ART; Water Still Rig, supply building (SUP-3, design 13 §2.3); a packed still gives 0
+faction = "left_behind"
+tier = 1
+footprint_w = 2
+footprint_h = 2
+max_health = 300  # (tune)
+armor = "structure"
+sight = 3  # (tune)
+primary_weapon = ""
+cost = 200  # (tune)
+power = 0  # (tune)
+prerequisites = ["lb_mother_rig"]
+provides = []
+packs_into = "lb_mother_rig_packed"
+pack_ticks = 200  # (tune)
+supply_provided = 10  # (tune)
 
 [lb_muster_rig]   # PLACEHOLDER ART; infantry production
 faction = "left_behind"
@@ -838,4 +888,4 @@ prerequisites = ["lb_rotor_pad"]
 provides = []
 superweapon = "lb_second_drift"
 superweapon_charge_ticks = 4800  # (tune)
-superweapon_entrance_range = 8  # (tune)
+superweapon_entrance_range = 0  # session 9: Left Behind has no entrance building, so 0 = fire anywhere (assumed — confirm)

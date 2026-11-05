@@ -87,6 +87,7 @@ public sealed class AudioEventDeriver
         }
 
         if (attacked) events.Add(new AudioEvent(AudioEventKind.UnderAttack));
+        if (f.Promotions.Count > 0) events.Add(new AudioEvent(AudioEventKind.Promotion));   // VET-5
 
         // Own units and buildings that appeared; own buildings that went away without being destroyed.
         if (stepped)

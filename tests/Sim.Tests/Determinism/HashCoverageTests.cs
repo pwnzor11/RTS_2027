@@ -152,6 +152,10 @@ public class HashCoverageTests
         ["Simulation._pendingCount"] = "fill level of _pendingDamage; always 0 between ticks",
         ["Simulation._tickPosVeh"] = "start-of-tick vehicle positions for combat decisions, rewritten at the start of every RunMissions",
         ["Simulation._tickPosInf"] = "start-of-tick infantry positions for combat decisions, rewritten at the start of every RunMissions",
+        ["Simulation._supplyUsed"] = "SUP-1 per-player supply in use: a pure function of the units/infantry parts, rewritten by EnsureSupply (tick-stamped scratch cache)",
+        ["Simulation._supplyCap"] = "SUP-1 per-player supply cap: a pure function of the buildings and rigs parts and the rules, rewritten by EnsureSupply",
+        ["Simulation._supplyStamp"] = "SUP-1 tick the supply cache was computed on; only decides whether to recompute",
+        ["Simulation._supplyDirty"] = "SUP-1 invalidation flag for the supply cache; only decides whether to recompute",
         ["Simulation._useTickPos"] = "true only between RunMissions and the end of RunCombat; false when a hash or save is taken",
         ["Simulation._fx"] = "this tick's effects events for the renderer (M2-19): cleared at the start of every Step and only read after it; derived output, not state",
         // SlotArray (inside every store)

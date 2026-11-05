@@ -81,7 +81,8 @@ internal static class EffectRulesLoader
     public const string WarheadPrefix = "warhead:";
 
     /// <summary>Attributes an effect may change on a vehicle or infantry type (design 08 §4).</summary>
-    public static readonly string[] UnitAttrs = ["max_health", "speed", "sight", "cost", "build_time", "rad_resist_permille"];
+    public static readonly string[] UnitAttrs = ["max_health", "speed", "sight", "cost", "build_time", "rad_resist_permille",
+        "vet_threshold_permille"];
 
     /// <summary>Attributes an effect may change on a building type.</summary>
     public static readonly string[] BuildingAttrs = ["max_health", "sight", "power", "cost", "ticks_per_point", "superweapon_charge_ticks"];

@@ -222,6 +222,13 @@ volume = 1.0
 positional = false
 cooldown_ms = 600
 
+# Session 9 (VET-5): a unit gains a veterancy rank. Reuses the unit_ready cue, quieter (assumed — a dedicated cue can come in the art/audio pass).
+[event.promotion]
+sounds = ["unit_ready"]
+volume = 0.6
+positional = false
+cooldown_ms = 300
+
 [event.low_power]
 sounds = ["low_power"]
 volume = 1.0

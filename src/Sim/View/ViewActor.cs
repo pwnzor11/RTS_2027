@@ -31,6 +31,10 @@ public readonly record struct ViewActor(
     /// (Seismograph, Searchlight, proximity). Always false for own and allied actors.</summary>
     public bool Revealed { get; init; }
 
+    /// <summary>VET-3: veterancy rank 0..3 of a listed vehicle or soldier (0 for buildings, ghosts and when veterancy is off). Only actors in
+    /// the list carry it, so it is as fog-honest as the list itself: an enemy's rank is known exactly while it is visible.</summary>
+    public int Rank { get; init; }
+
     /// <summary>True for vehicles and infantry.</summary>
     public bool IsMobile => Kind is ActorKind.Vehicle or ActorKind.Infantry;
 }

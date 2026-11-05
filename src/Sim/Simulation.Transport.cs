@@ -199,6 +199,7 @@ public sealed partial class Simulation
     private void CaptureBuilding(int b, byte newOwner)
     {
         _buildings.Player[b] = newOwner;
+        SupplyChanged();   // SUP-1
         _emittersDirty = true;   // M3-INT
         _combat.At(ActorKind.Building, b) = new Combat.CombatEntry { Generation = _buildings.Slots.GenerationOf(b) };
         _production.RepairGen[b] = 0; _production.RepairFrac[b] = 0;

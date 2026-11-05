@@ -120,4 +120,13 @@ public sealed record BuildingType(string Id, int FootprintW, int FootprintH, int
 
     /// <summary>Ticks the packing takes (TOML <c>pack_ticks</c>, 0 = off).</summary>
     public int PackTicks { get; init; }
+
+    // ---- schema v7 (SUP-1, docs/design/13_supply_cap.md §4). ---------------------------------------------
+
+    /// <summary>Supply cap this building adds while completed, unpacked and alive (TOML <c>supply_provided</c>, default 0).</summary>
+    public int SupplyProvided { get; init; }
+
+    /// <summary>Cap contribution of an unstocked Expedition store (TOML <c>supply_unstocked</c>); -1 = same as <see cref="SupplyProvided"/>.
+    /// Parsed only: no behaviour until the Expedition lands.</summary>
+    public int SupplyUnstocked { get; init; } = -1;
 }

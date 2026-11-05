@@ -17,9 +17,11 @@ internal static class GameRulesLoader
     private const string FactionSection = "faction";
     private const string GarrisonSection = "garrison";   // M4-01
     private const string FoamSection = "foam";           // M4-01
+    private const string VeterancySection = "veterancy"; // VET-1
+    private const string SupplySection = "supply";       // SUP-1
 
     private static readonly string[] TopLevel =
-        [Section, EconomySection, TunnelsSection, RadiationSection, StealthSection, FactionSection, GarrisonSection, FoamSection];
+        [Section, EconomySection, TunnelsSection, RadiationSection, StealthSection, FactionSection, GarrisonSection, FoamSection, VeterancySection, SupplySection];
 
     /// <summary>Parses the [game] table. Returns null when any problem was recorded.</summary>
     public static GameRules? Parse(TomlTable root, string file, List<RulesProblem> problems)
@@ -229,6 +231,78 @@ internal static class GameRulesLoader
         f.CheckKeys("speed_permille");
         int? speed = f.OptInt("speed_permille", 0, 1000, FoamRules.Default.SpeedPermille);
         return speed is null ? null : new FoamRules(speed.Value);
+    }
+
+    /// <summary>Parses the optional [veterancy] table (VET-1, docs/design/14_veterancy.md §3); every key optional with the design default,
+    /// <c>enabled</c> defaulting to false. Null after a problem.</summary>
+    public static VeterancyRules? ParseVeterancy(TomlTable root, string file, List<RulesProblem> problems)
+    {
+        VeterancyRules d = VeterancyRules.Default;
+        RulesFields? f = OptionalTable(root, VeterancySection, file, problems);
+        if (f is null)
+        {
+            return root.ContainsKey(VeterancySection) ? null : d;
+        }
+        f.CheckKeys("enabled", "thresholds", "kill_permille_unit", "kill_permille_building", "damage_permille", "taken_permille",
+            "reload_permille", "speed_permille", "heal_interval_ticks", "heal_permille", "heal_quiet_ticks");
+        const int n = VeterancyRules.Ranks;
+        bool? enabled = f.OptBool("enabled", d.Enabled);
+        int[]? thresholds = f.OptIntArray("thresholds", n, 1, 100_000_000, d.Thresholds.ToArray());
+        int? killUnit = f.OptInt("kill_permille_unit", 0, 100_000, d.KillPermilleUnit);
+        int? killBuilding = f.OptInt("kill_permille_building", 0, 100_000, d.KillPermilleBuilding);
+        int[]? damage = f.OptIntArray("damage_permille", n, 1, 100_000, d.DamagePermille.ToArray());
+        int[]? taken = f.OptIntArray("taken_permille", n, 1, 100_000, d.TakenPermille.ToArray());
+        int[]? reload = f.OptIntArray("reload_permille", n, 1, 100_000, d.ReloadPermille.ToArray());
+        int[]? speed = f.OptIntArray("speed_permille", n, 1, 100_000, d.SpeedPermille.ToArray());
+        int? healInterval = f.OptInt("heal_interval_ticks", 1, 1_000_000, d.HealIntervalTicks);
+        int[]? heal = f.OptIntArray("heal_permille", n, 0, 1000, d.HealPermille.ToArray());
+        int? healQuiet = f.OptInt("heal_quiet_ticks", 0, 1_000_000, d.HealQuietTicks);
+        if (enabled is null || thresholds is null || killUnit is null || killBuilding is null || damage is null || taken is null
+            || reload is null || speed is null || healInterval is null || heal is null || healQuiet is null)
+        {
+            return null;
+        }
+        if (thresholds[0] > thresholds[1] || thresholds[1] > thresholds[2])
+        {
+            f.Problem("thresholds", "must be ascending (rank 1 <= rank 2 <= rank 3)");
+            return null;
+        }
+        return new VeterancyRules
+        {
+            Enabled = enabled.Value, Thresholds = thresholds, KillPermilleUnit = killUnit.Value, KillPermilleBuilding = killBuilding.Value,
+            DamagePermille = damage, TakenPermille = taken, ReloadPermille = reload, SpeedPermille = speed,
+            HealIntervalTicks = healInterval.Value, HealPermille = heal, HealQuietTicks = healQuiet.Value,
+        };
+    }
+
+    /// <summary>Parses the optional [supply] table (SUP-1, docs/design/13_supply_cap.md §4); every key optional with the design default,
+    /// <c>enabled</c> defaulting to false. Null after a problem.</summary>
+    public static SupplyRules? ParseSupply(TomlTable root, string file, List<RulesProblem> problems)
+    {
+        SupplyRules d = SupplyRules.Default;
+        RulesFields? f = OptionalTable(root, SupplySection, file, problems);
+        if (f is null)
+        {
+            return root.ContainsKey(SupplySection) ? null : d;
+        }
+        f.CheckKeys("enabled", "ceiling", "band1_max", "band2_max", "band_values", "stock_intervals");
+        bool? enabled = f.OptBool("enabled", d.Enabled);
+        int? ceiling = f.OptInt("ceiling", 0, 100_000, d.Ceiling);
+        int? band1 = f.OptInt("band1_max", 0, int.MaxValue, d.Band1Max);
+        int? band2 = f.OptInt("band2_max", 0, int.MaxValue, d.Band2Max);
+        int[]? values = f.OptIntArray("band_values", 3, 0, 1000, d.BandValues.ToArray());
+        int? stock = f.OptInt("stock_intervals", 1, 1000, d.StockIntervals);
+        if (enabled is null || ceiling is null || band1 is null || band2 is null || values is null || stock is null) return null;
+        if (band1.Value > band2.Value)
+        {
+            f.Problem("band1_max", "must not exceed band2_max");
+            return null;
+        }
+        return new SupplyRules
+        {
+            Enabled = enabled.Value, Ceiling = ceiling.Value, Band1Max = band1.Value, Band2Max = band2.Value,
+            BandValues = values, StockIntervals = stock.Value,
+        };
     }
 
     /// <summary>

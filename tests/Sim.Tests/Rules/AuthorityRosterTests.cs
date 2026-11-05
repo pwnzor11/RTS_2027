@@ -15,7 +15,7 @@ public sealed class AuthorityRosterTests
 
     private static readonly string[] ExpectedIds =
     [
-        "auth_conyard", "auth_power", "auth_refinery", "auth_barracks", "auth_factory", "auth_silo", "auth_wall", "auth_turret",
+        "auth_conyard", "auth_power", "auth_ration_hall", "auth_refinery", "auth_barracks", "auth_factory", "auth_silo", "auth_wall", "auth_turret",
         "auth_scraper", "auth_rifleman", "auth_rocketeer", "auth_jeep", "auth_tank",
         "auth_seismograph", "auth_searchlight", "auth_gate", "auth_engineering", "auth_decon_truck",   // M3 counters (M3-07)
         // M4-07 (design 08 §4): engineer, marksman, carrier, seismic mortar, foam truck, interceptor, bomber, howitzer, bulwark;

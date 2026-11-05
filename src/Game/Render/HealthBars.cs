@@ -3,6 +3,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Rts.Game.Sandbox;
+using Rts.Game.Veterancy;
 using Rts.Sim.Core;
 
 namespace Rts.Game.Render;
@@ -31,7 +32,8 @@ public static class HealthBars
     /// <param name="frame">The frame being drawn.</param>
     /// <param name="camera">View.</param>
     /// <param name="sprites">Sprite resolver, to find each sprite's frame top.</param>
-    public static void Draw(SpriteBatch batch, Texture2D pixel, SceneFrame frame, Camera camera, SpriteResolver sprites)
+    /// <param name="ranks">VET-5: veterancy rank per listed unit (null = none). Ranked units get their pips beside the bar, even when the bar is hidden.</param>
+    public static void Draw(SpriteBatch batch, Texture2D pixel, SceneFrame frame, Camera camera, SpriteResolver sprites, IReadOnlyDictionary<RankKey, int>? ranks = null)
     {
         if (frame.Rules is null) return;
         float zoom = camera.Zoom;
@@ -42,12 +44,15 @@ public static class HealthBars
             UnitView view = unit.View;
             bool vehicle = view.Kind == UnitKind.Vehicle;
             int max = vehicle ? frame.Rules.Vehicles[view.TypeIndex].MaxHealth : frame.Rules.Infantry[view.TypeIndex].MaxHealth;
-            if (!frame.Selection.Contains(UnitKey.Of(view)) && view.Health >= max) continue;
+            bool showBar = frame.Selection.Contains(UnitKey.Of(view)) || view.Health < max;
+            int rank = ranks is not null && ranks.TryGetValue(new RankKey(view.Kind, view.Id), out int found) ? found : 0;
+            if (!showBar && rank == 0) continue;
             Vector2 origin = SpriteLayout.UnitOrigin(camera, unit.World);
             Vector2 top = SpriteLayout.FrameTopLeft(origin, sprites.ForUnit(frame.Rules, view).Manifest, zoom);
             int width = (int)MathF.Round((vehicle ? VehicleWidthPx : InfantryWidthPx) * zoom);
             var r = new Rectangle((int)origin.X - width / 2, (int)MathF.Round(top.Y) - gap - height, width, height);
-            Bar(batch, pixel, r, view.Health, max);
+            if (showBar) Bar(batch, pixel, r, view.Health, max);
+            RankPips.Draw(batch, pixel, r, rank, zoom);
         }
 
         foreach (BuildingView building in frame.Snapshot.Buildings)

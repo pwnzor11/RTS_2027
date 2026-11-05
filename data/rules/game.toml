@@ -42,6 +42,33 @@ no_build_threshold = 64
 [stealth]
 delay_ticks = 60
 
+# Generic veterancy (VET-4, D-127, design 14). Three ranks for every faction: Veteran / Elite / Hero. Kill value = victim cost x permille;
+# thresholds, bonuses and heal are the design 14 §2 table, all (tune) until the balance run (VET-7). A rank-3 unit is worth about two
+# of its type. Armour is a damage-taken factor, so a promotion never needs a health fix-up. `veteran = false` on a type opts it out.
+[veterancy]
+enabled = true
+thresholds = [600, 1600, 3200]  # (tune) kill value for Veteran / Elite / Hero
+kill_permille_unit = 1000  # (tune)
+kill_permille_building = 500  # (tune)
+damage_permille = [1100, 1200, 1300]  # (tune) damage dealt
+taken_permille = [950, 900, 800]  # (tune) damage taken, lower is tougher
+reload_permille = [950, 900, 800]  # (tune) reload time, lower is faster
+speed_permille = [1000, 1050, 1100]  # (tune)
+heal_interval_ticks = 20  # (tune) 1 s
+heal_permille = [0, 0, 10]  # (tune) Hero recovers 1 % of max health per interval when quiet
+heal_quiet_ticks = 100  # (tune) 5 s without firing or being hit
+
+# Supply cap (SUP-1, D-125, design 13). On by default in skirmish per D-129. Unit supply = band of its cost (cost <= band1_max: first
+# value, <= band2_max: second, above: third) unless the type sets `supply`; the cap is the sum of supply_provided over completed,
+# unpacked, alive own buildings, at most `ceiling`. stock_intervals is parsed for the Expedition store only (no behaviour yet).
+[supply]
+enabled = false  # (tune) D-129 wants it on; held off by D-133 until the AI tests pass with it on (next session)
+ceiling = 200  # (tune)
+band1_max = 400  # (tune)
+band2_max = 900  # (tune)
+band_values = [1, 2, 3]  # (tune)
+stock_intervals = 3  # (tune)
+
 # Skirmish start kit per faction: conyard (building id) and units (vehicle/infantry ids). Validated only when a player of
 # that faction is set up.
 [faction.authority]

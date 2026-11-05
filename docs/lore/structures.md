@@ -24,6 +24,17 @@ field_note: POWER 2 // KEEP THE ROD FREE, THE FLOOR DRY, THE DIAL ABOVE ZERO. ST
 A small sealed reactor feeding a turbine and a bank of vacuum-tube regulators. Operators sit on shifts behind a glass
 window, watching needle gauges and talking to nobody. When the dial drops, the whole base notices.
 
+<!-- session 9: assumed — confirm -->
+### auth_ration_hall
+title: Ration Hall
+subtitle: Everyone counted, everyone fed
+unlock: open
+field_note: RATIONS 4 // ONE LINE, ONE LEDGER, ONE LOAF PER NAME. STOP.
+
+A long brick hall with a ledger window on every wall, where each worker, soldier and clerk of the district is entered,
+counted and issued a ration. The line outside never shortens and nobody is seen to complain about it. An Authority
+commander knows a district by the number on the hall door.
+
 ### auth_refinery
 title: Ashfall Refinery
 subtitle: Centrifuge plant
@@ -191,6 +202,16 @@ field_note: VOICE: "HELD IN TRUST. EVERY DROP IS COUNTED."
 
 A buried tank with a narrow access hatch, holding refined concentrate. There is little to see on the surface and
 less to take.
+
+<!-- session 9: assumed — confirm -->
+### dir_bunk_gallery
+title: Bunk Gallery
+subtitle: Tiers of cots behind blast doors
+unlock: open
+field_note: VOICE: "BEHIND THE DOOR, SLEEP. WE WILL WAKE YOU."
+
+A buried gallery of stacked cots, each tier closed off behind its own blast door. The Directorate sleeps in shifts, so
+the lamps are never fully out. Crews say a gallery is the only place underground where it is quiet.
 
 ### dir_bunker
 title: Bunker Wall

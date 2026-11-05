@@ -53,6 +53,8 @@ public sealed partial class RulesOfSweepGrepTests
         ("Simulation.Superweapon.cs", "Setup.Rules.Economy.LowPowerSlowdownPermille"),
         ("Simulation.Upgrades.cs", "Setup.Rules.Economy.MaxQueue"), ("Simulation.Upgrades.cs", "Setup.Rules.UpgradeIndex"),   // owner: Simulation.Upgrades.cs, follow-up
         ("Simulation.Upgrades.cs", "Setup.Rules.Upgrades"),
+        ("Simulation.Veterancy.cs", "Setup.Rules.Veterancy"),   // VET-1: the [veterancy] block is global; one accessor (VetRules) reads it
+        ("Simulation.Supply.cs", "Setup.Rules.Supply"),   // SUP-1: the [supply] block is global; one accessor (SupplyRulesOf) reads it
         ("Simulation.View.cs", "Setup.Rules.Buildings["),   // owner: Simulation.View.cs, follow-up
         ("View/PlayerView.cs", "Setup.Rules.Terrain"),
     };

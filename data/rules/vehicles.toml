@@ -21,6 +21,7 @@ crusher = false
 cost = 700
 prerequisites = ["auth_factory"]
 harvest_capacity = 20
+supply = 1  # (tune) SUP-2: harvesters cost 1 supply (design 13 §2.1)
 
 [auth_jeep]
 tier = 1
@@ -71,6 +72,7 @@ crusher = false
 cost = 600  # ASSUMED (M3-07)
 prerequisites = ["dir_assembly_bore"]
 harvest_capacity = 20  # ASSUMED (M3-07)
+supply = 1  # (tune) SUP-2: harvesters cost 1 supply (design 13 §2.1)
 
 [dir_bore]
 tier = 1
@@ -167,6 +169,7 @@ cost = 800  # ASSUMED (M3-07)
 prerequisites = ["dir_assembly_bore"]
 
 [dir_dirigible]
+veteran = false  # VET-4: its weapon deals no damage (it lays foam/ash/blackout/decon), so it never earns kills; an armed type would default to ranking
 tier = 2
 faction = "directorate"
 tunnel_size = "none"
@@ -202,6 +205,7 @@ prerequisites = ["dir_isotope_works"]
 deploys_into = "dir_shaft"
 
 [auth_decon_truck]
+veteran = false  # VET-4: its weapon deals no damage (it lays foam/ash/blackout/decon), so it never earns kills; an armed type would default to ranking
 tier = 2
 tunnel_size = "none"
 speed = 24  # ASSUMED (M3-07)
@@ -253,6 +257,7 @@ cost = 800  # ASSUMED (M4-07)
 prerequisites = ["auth_factory"]
 
 [auth_foam_truck]   # PLACEHOLDER ART (M4-ART); Quick-Set Foam Layer (design 08 §4, D-077)
+veteran = false  # VET-4: its weapon deals no damage (it lays foam/ash/blackout/decon), so it never earns kills; an armed type would default to ranking
 tier = 2
 locomotion = "wheeled"
 speed = 24  # ASSUMED (M4-07)
@@ -328,6 +333,7 @@ cost = 800  # ASSUMED (M4-07)
 prerequisites = ["auth_factory"]
 
 [dir_ash_sower]   # PLACEHOLDER ART (M4-ART); lays radiation with a contaminate-only weapon (design 08 §4)
+veteran = false  # VET-4: its weapon deals no damage (it lays foam/ash/blackout/decon), so it never earns kills; an armed type would default to ranking
 faction = "directorate"
 tier = 2
 tunnel_size = "M"
@@ -397,6 +403,7 @@ crusher = false
 cost = 600  # (tune)
 prerequisites = ["lb_garage_rig"]
 harvest_capacity = 12  # (tune) 60 percent of a Scraper (20)
+supply = 1  # (tune) SUP-2: harvesters cost 1 supply (design 13 §2.1)
 
 [lb_hauler]   # PLACEHOLDER ART; wreck collector
 faction = "left_behind"
@@ -415,6 +422,7 @@ cost = 500  # (tune)
 prerequisites = ["lb_garage_rig"]
 salvage_rate = 12  # (tune) drains wrecks into the hopper
 harvest_capacity = 10  # (tune)
+supply = 1  # (tune) SUP-2: harvesters cost 1 supply (design 13 §2.1)
 
 [lb_buggy]   # PLACEHOLDER ART; fast raider scout
 faction = "left_behind"
@@ -486,6 +494,7 @@ aura_targets = ["lb_mother_rig_packed"]
 tow_bonus_permille = 1000  # (tune) packed rigs keep full speed when towed
 
 [lb_dust_sail]   # PLACEHOLDER ART; wind-rigged Blackout layer
+veteran = false  # VET-4: its weapon deals no damage (it lays foam/ash/blackout/decon), so it never earns kills; an armed type would default to ranking
 faction = "left_behind"
 tier = 2
 speed = 22  # (tune)
@@ -535,6 +544,7 @@ cost = 4000  # (tune)
 prerequisites = ["lb_bench"]
 unpacks_into = "lb_mother_rig"
 pack_ticks = 200  # (tune)
+supply = 0  # (tune) SUP-3: the base amount comes from the unpacked building (design 13 §2.4)
 
 [lb_rotor]   # PLACEHOLDER ART; autogyro light gunship (aircraft)
 faction = "left_behind"
