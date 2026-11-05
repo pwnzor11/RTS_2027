@@ -41,10 +41,13 @@ public static class RuleCounts
     public const int ProductionCategories = 6;
     /// <summary>Number of <see cref="Faction"/> values.</summary>
     public const int Factions = 4;
-    /// <summary>Factions the skirmish setup cycles through (Authority, Directorate): everything below <see cref="Faction.Neutral"/>. Start kits exist
-    /// only for these. M6-02: <see cref="Faction.LeftBehind"/> is a valid player faction in a setup (<see cref="IsPlayable"/>) but is not offered in the
-    /// skirmish UI until M6-09, so this stays 2 and the UI cycle is unchanged.</summary>
-    public const int PlayableFactions = 2;
+    /// <summary>How many factions the skirmish setup offers (M6-09: Authority, Directorate, Left Behind). A COUNT, not a bound on the enum:
+    /// <see cref="Faction.Neutral"/> sits between Directorate and Left Behind, so test a faction with <see cref="IsPlayable"/> and walk
+    /// <see cref="PlayableOrder"/>, never <c>(int)f &lt; PlayableFactions</c>.</summary>
+    public const int PlayableFactions = 3;
+
+    /// <summary>The factions a player slot may hold, in the order the skirmish setup cycles them (M6-09).</summary>
+    public static readonly IReadOnlyList<Faction> PlayableOrder = new[] { Faction.Authority, Faction.Directorate, Faction.LeftBehind };
 
     /// <summary>True for every faction a player slot may hold: all except <see cref="Faction.Neutral"/> (M6-02).</summary>
     public static bool IsPlayable(Faction f) => f != Faction.Neutral && (int)f < Factions;

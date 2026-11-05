@@ -358,15 +358,19 @@ public sealed class SkirmishSetupScreen : IScreen
         }
     }
 
-    /// <summary>The faction after <paramref name="faction"/> in the pick list, wrapping round (Authority, Directorate).</summary>
+    /// <summary>The faction after <paramref name="faction"/> in the pick list, wrapping round (Authority, Directorate, Left Behind; Neutral is
+    /// never offered, Q-37). A faction that is not in the list steps from the start of it.</summary>
     public static Faction NextFaction(Faction faction, int delta)
     {
-        int n = RuleCounts.PlayableFactions;   // Neutral is never offered (Q-37)
-        return (Faction)((((int)faction + delta) % n + n) % n);
+        IReadOnlyList<Faction> order = RuleCounts.PlayableOrder;
+        int n = order.Count;
+        int at = 0;
+        for (int i = 0; i < n; i++) if (order[i] == faction) at = i;
+        return order[((at + delta) % n + n) % n];
     }
 
     /// <summary>The name shown for a faction on the setup screen.</summary>
-    public static string FactionName(Faction faction) => faction switch { Faction.Directorate => "Directorate", Faction.Neutral => "Neutral", _ => "Authority" };
+    public static string FactionName(Faction faction) => faction switch { Faction.Directorate => "Directorate", Faction.LeftBehind => "Left Behind", Faction.Neutral => "Neutral", _ => "Authority" };
 
     /// <summary>Cuts text to at most <paramref name="max"/> characters, ending in "..." when it was cut.</summary>
     public static string Shorten(string text, int max) => text.Length <= max ? text : text[..(max - 3)] + "...";

@@ -216,6 +216,7 @@ public sealed class RecruitAi : IAiPlayer, IAiSnapshotable
         if (_profile.Harass) _harass.Think(_k, sink, _squads, _planner, _knownBuildings, _production.Rally, _profile.ScoutInfoAgeTicks);
         _military.Broke = _rescue.Broke;
         _military.Ahead = _planner.Ahead;   // M4-16
+        _military.OwnValue = _planner.OwnArmyValue; _military.EnemyValueSeen = _planner.EnemyArmyLong;
         _military.Think(_k, sink, _production.Rally, _knownBuildings);
         if (_profile.Scatter) _scatter.Think(_k, sink);
         if (_profile.Superweapons) _superweapons.Think(_k, sink, _knownBuildings);
