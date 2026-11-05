@@ -14,7 +14,7 @@ public static class MapCommands
 {
     private const string Usage =
         "usage: map new --size <n> --seed <s> --out <path>\n" +
-        "       map gen --biome rust_belt|glass_coast|mountains|ash_plains --size s|m|l --players 2|3|4 --seed <s> --out <path> [--ascii]\n" +
+        "       map gen --biome rust_belt|glass_coast|mountains|ash_plains --size s|m|l --players 2|3|4 --seed <s> --out <path> [--ocean n|e|s|w letters, e.g. ns] [--ascii]\n" +
         "       map validate <path> [--rules-dir <dir>]\n" +
         "       map info <path>\n" +
         "       map ascii <path>";
@@ -81,11 +81,12 @@ public static class MapCommands
     private static int Gen(string[] args)
     {
         Biome? biome = null; MapSize? size = null; int? players = null; ulong? seed = null; string? outPath = null; bool ascii = false;
+        OceanEdges ocean = OceanEdges.None;   // M7-13: --ocean ns turns the north and south edges (and their symmetry images) into sea
         for (int i = 0; i < args.Length; i++)
         {
             string a = args[i];
             if (a == "--ascii") { ascii = true; continue; }
-            if (i + 1 >= args.Length || a is not ("--biome" or "--size" or "--players" or "--seed" or "--out")) { Console.Error.WriteLine(Usage); return 2; }
+            if (i + 1 >= args.Length || a is not ("--biome" or "--size" or "--players" or "--seed" or "--out" or "--ocean")) { Console.Error.WriteLine(Usage); return 2; }
             string v = args[++i];
             switch (a)
             {
@@ -104,19 +105,27 @@ public static class MapCommands
                 case "--seed":
                     if (!ulong.TryParse(v, NumberStyles.None, CultureInfo.InvariantCulture, out ulong sd)) { Console.Error.WriteLine(Usage); return 2; }
                     seed = sd; break;
+                case "--ocean":
+                    foreach (char ch in v)
+                    {
+                        int bit = "nesw".IndexOf(char.ToLowerInvariant(ch));
+                        if (bit < 0) { Console.Error.WriteLine("error: --ocean takes the letters n, e, s, w"); return 2; }
+                        ocean |= (OceanEdges)(1 << bit);
+                    }
+                    break;
                 default: outPath = v; break;
             }
         }
         if (biome is null || size is null || players is null || seed is null || outPath is null) { Console.Error.WriteLine(Usage); return 2; }
         try
         {
-            var p = new MapGenParams(biome.Value, size.Value, players.Value, seed.Value);
+            var p = new MapGenParams(biome.Value, size.Value, players.Value, seed.Value, null, ocean);
             long t0 = System.Diagnostics.Stopwatch.GetTimestamp();
             (MapData map, MapMeta meta) = MapGenerator.GenerateWithMeta(p);
             long ms = (long)System.Diagnostics.Stopwatch.GetElapsedTime(t0).TotalMilliseconds;
             MapFile.Save(map, meta, outPath);
             Console.WriteLine($"wrote {outPath} {map.Name} {map.Width}x{map.Height} {MapFile.SymmetryKeys[(int)meta.Symmetry]} " +
-                $"{map.StartPositions.Count} starts, {meta.Features.Count} features, map hash 0x{MapHasher.Compute(map):x16} ({ms} ms)");
+                $"{map.StartPositions.Count} starts, {meta.Features.Count} features, {meta.ConvoyEdge.Count} convoy cells, {meta.Landing.Count} landings, map hash 0x{MapHasher.Compute(map):x16} ({ms} ms)");
             if (ascii) PrintAscii(map, meta);
             return 0;
         }

@@ -3,5 +3,7 @@
 namespace Rts.Data;
 
 /// <summary>Inputs of <see cref="MapGenerator.Generate(MapGenParams)"/> (M4). The map depends only on these; Name null = the default
-/// name <c>&lt;biome&gt;_&lt;s|m|l&gt;_&lt;players&gt;p_&lt;seed&gt;</c> (<see cref="MapGenerator.DefaultName"/>).</summary>
-public sealed record MapGenParams(Biome Biome, MapSize Size, int Players, ulong Seed, string? Name = null);
+/// name <c>&lt;biome&gt;_&lt;s|m|l&gt;_&lt;players&gt;p_&lt;seed&gt;</c> (<see cref="MapGenerator.DefaultName"/>). <paramref name="OceanEdges"/>
+/// (M7-13, default none) makes those edges sea with a Coast band and fills <c>convoy_edge</c> and <c>landing</c> in the metadata; with
+/// none set the output is byte-identical to the pre-M7 generator.</summary>
+public sealed record MapGenParams(Biome Biome, MapSize Size, int Players, ulong Seed, string? Name = null, OceanEdges OceanEdges = OceanEdges.None);

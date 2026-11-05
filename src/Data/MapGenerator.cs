@@ -80,10 +80,11 @@ public static class MapGenerator
         for (int attempt = 0; attempt < MaxAttempts; attempt++)
         {
             ulong seed = p.Seed + (ulong)attempt;
-            var builder = new ProceduralBuilder(biome, n, symmetry, seed);
+            var builder = new ProceduralBuilder(biome, n, symmetry, seed, p.OceanEdges);
             CellCoord[] orbit = builder.OrbitStarts;
             MapData full = builder.Build(name, orbit);
-            var fullMeta = new MapMeta(biome.Key, symmetry, orbit.Length, null, builder.Features.ToArray());
+            var fullMeta = new MapMeta(biome.Key, symmetry, orbit.Length, null, builder.Features.ToArray())
+                { ConvoyEdge = builder.ConvoyEdge, Landing = builder.Landing };
             last = FirstFailure(full, fullMeta);
             if (last is not null) continue;
 
@@ -96,7 +97,8 @@ public static class MapGenerator
             }
             var map = new MapData(name, full.Theater, n, n, full.Template.ToArray(), full.Land.ToArray(), full.HeightLevel.ToArray(),
                 full.Overlay.ToArray(), full.Density.ToArray(), starts);
-            var meta = new MapMeta(biome.Key, symmetry, p.Players, p with { Name = null }, builder.Features.ToArray());
+            var meta = new MapMeta(biome.Key, symmetry, p.Players, p with { Name = null }, builder.Features.ToArray())
+                { ConvoyEdge = builder.ConvoyEdge, Landing = builder.Landing };
             return (map, meta);
         }
         throw new InvalidOperationException(
