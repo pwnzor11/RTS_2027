@@ -38,8 +38,10 @@ internal sealed class LeftBehindTactics : IFactionTactics
     public const int TinkerReach = 12;   // (tune) M6-10
     /// <summary>Wrecks within this many cells of a seen enemy gun are not salvaged.</summary>
     public const int WreckDangerCells = 8;   // (tune) M6-10
-    /// <summary>Total wreck value in reach before a Hauler is bought.</summary>
-    public const int WreckValueForHauler = 150;   // (tune) M6-10
+    /// <summary>Total wreck value in view before a second Hauler (tier 3+) or an early one is bought.</summary>
+    public const int WreckValueForHauler = 60;   // (tune) session 10 (was 150)
+    /// <summary>Own army size at which the first Hauler is bought even before any wreck lies about (it then waits for the first fight).</summary>
+    public const int ArmyForFirstHauler = 5;   // (tune) session 10
     /// <summary>Ticks between Return orders to an idle Hauler that found no wreck.</summary>
     public const int ReturnGapTicks = 400;   // (tune) M6-10
 
@@ -196,11 +198,14 @@ internal sealed class LeftBehindTactics : IFactionTactics
         if (!k.HaveYard) return -1;
         QueueView q = k.Queue(ProductionCategory.Vehicle);
         // a Hauler once wrecks lie about (and an income to wait for)
-        if (_hauler >= 0 && _wreckValueNow >= WreckValueForHauler && k.Harvesters.Count > 0 && k.Buildable(ProductionCategory.Vehicle, _hauler))
+        if (_hauler >= 0 && k.Harvesters.Count > 0 && k.Buildable(ProductionCategory.Vehicle, _hauler))
         {
             int have = k.Salvagers.Count, cap = Tier >= 3 ? 2 : 1;
             foreach (QueueItemView it in q.Items) if (it.TypeIndex == _hauler) have++;
-            if (have < cap) return _hauler;
+            // session 10: one Hauler early (once a small army stands and the first harvester works), so it is at hand when the first
+            // wrecks fall; the second (tier 3+) waits for wrecks to lie about
+            bool early = have == 0 && k.Army.Count >= ArmyForFirstHauler;
+            if (have < cap && (early || _wreckValueNow >= WreckValueForHauler)) return _hauler;
         }
         // Dust Sails with the army at the top tiers
         if (_sail >= 0 && _profile is { Air: true } && k.Army.Count >= ArmyBeforeSail && k.Buildable(ProductionCategory.Vehicle, _sail))
@@ -369,7 +374,8 @@ internal sealed class LeftBehindTactics : IFactionTactics
             {
                 bool tinker = pass == 1;
                 if (tinker && !(a.Kind == ActorKind.Infantry && rules.Infantry[a.TypeIndex] is { Engineer: true, SalvageRate: > 0 })) continue;
-                if (!a.Idle || a.Underground) continue;
+                // a Hauler also works the ash fields on its own (mission Harvest): that is when it is taken for a wreck
+                if (a.Underground || !(a.Idle || (!tinker && a.Mission == MissionKind.Harvest))) continue;
                 int reach = tinker ? TinkerReach : SalvageReach;
                 int best = -1;
                 long bestScore = long.MinValue;
@@ -403,8 +409,17 @@ internal sealed class LeftBehindTactics : IFactionTactics
     private bool Dangerous(RecruitKnowledge k, List<ViewActor> knownEnemy, CellCoord cell)
     {
         SimRules rules = k.Rules;
+        // session 10: enemy gunmen near the wreck make it unsafe only when our own army there is worth less than they are (a won fight
+        // leaves wrecks next to the winners, and that is exactly when the Hauler should go)
+        int foe = 0, own = 0;
         foreach (ViewActor e in k.Visible)
-            if (e.Relation == Relation.Enemy && Armed(rules, e) && Cheb(e.Cell, cell) <= WreckDangerCells) return true;
+            if (e.Relation == Relation.Enemy && Armed(rules, e) && Cheb(e.Cell, cell) <= WreckDangerCells) foe += Cost(rules, e);
+        if (foe > 0)
+        {
+            foreach (ViewActor a in k.Army)
+                if (Armed(rules, a) && Cheb(a.Cell, cell) <= WreckDangerCells) own += Cost(rules, a);
+            if (own < foe) return true;
+        }
         foreach (ViewActor b in knownEnemy)
             if (rules.Buildings[b.TypeIndex].PrimaryWeapon >= 0 && Cheb(b.Cell, cell) <= WreckDangerCells + 2) return true;
         return false;
