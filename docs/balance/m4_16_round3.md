@@ -59,3 +59,9 @@ Conclusion: the dominant cause is **wave policy, not tech spending**: higher tie
 28-90 % of what is defending, repeatedly, and feed the enemy; the lower tier wins by massing at home and counter-attacking when the
 attacker is dead. Tech spending (3v2 and up) is a secondary drain. Fix order below: (a) tech hold as asked, then (b) a strength gate on
 wave launches.
+
+## 3. Noise warning (measured)
+
+A 16-game cell resolves only about +-12 points. Authority 2 v 1 on seeds 1-8 gives 5 / 11 / 0 (31 %), on seeds 9-16 8 / 4 / 4 (50 %), and
+on 32 seeds (64 games) 32 / 27 / 5 (**50 %**). So round 2's "inverted ladder" at 2 v 1 was largely sampling noise; 3 v 2 on 32 seeds is
+22 / 33 / 9 (34 %), a real deficit. Decisions below use 32 seeds x 2 sides (64 games) per cell.
