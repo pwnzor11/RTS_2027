@@ -970,3 +970,13 @@ stands idle for 30 s (seed 4). All pass with supply off. Per the session's guard
 the next session's AI tuning.
 **Alternatives:** land it on and weaken the three tests (rejected: it would hide a real AI slowdown).
 **Status:** assumed — confirm (owner can play-test supply now by setting `enabled = true`)
+
+### D-134 · 2026-11-05 · Owner confirms the session-9 assumptions and play-test (session 10 kickoff)
+**Decision:** the owner wrote "all assumptions and play test from last time look great". Confirmed: D-123..D-133, the session-9
+numbers in docs/balance/s9_tables.md (Q-44) and the session-9 lore, Archive entries and personas (Q-50). The lead took the
+recommended option, reported to the owner at kickoff, for: Q-43 keep the tier-3 cost at 2 500; Q-45 keep the Left Behind vehicle
+scale; Q-46 add the own-unit info panel with VET-6; Q-47 keep the quieter unit_ready cue for promotion; Q-48 the Left Behind AI keeps
+Rotors; Q-51 turn supply on once the AI fix passes (D-133 lifted then).
+**Why:** owner's message at the start of session 10; the recommendations were listed back to him in the session briefing.
+**Status:** confirmed (owner, session 10) for D-123..D-133, Q-44, Q-50; the recommended options for Q-43, Q-45..Q-48, Q-51 are
+confirmed by the owner's "all assumptions look great", stated back to him at kickoff.

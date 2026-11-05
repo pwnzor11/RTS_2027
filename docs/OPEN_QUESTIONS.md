@@ -5,23 +5,11 @@ file cited after each question. Recommendations are the lead's, from the researc
 
 ## Open
 
-- 🟡 Q-43 Tier-3 cut 2 500 → 2 000: measured (docs/balance/m4_16_round4.md); every cell moves only within noise. **Keep 2 500**
-  (recommended) / cut to 2 000. Data stays at 2 500 until the owner picks.
-- 🟡 Q-44 Session-9 numbers, all "assumed — confirm": supply, veterancy and Left Behind tables in docs/balance/s9_tables.md
-  (D-125, D-127, D-130, D-132). **Confirm all** (recommended) / mark rows to change.
-- 🟡 Q-45 Left Behind vehicle scale: drawn about 1.5× the Directorate's (to match the rig). **Keep and judge in game** (recommended)
-  / shrink to Directorate scale (re-render, about 2 hours of art time).
-- 🟡 Q-51 Supply default: held off (D-133) until the AI copes. **Turn on after next session's AI fix** (recommended) / on now
-  (AI slower) / leave off.
-- ⚪ Q-46 Veterancy own-unit info panel (rank name, kills) has no screen yet: **add it with VET-6** (recommended) / skip; pips only.
-- ⚪ Q-47 Promotion sound reuses the unit_ready cue, quieter: **keep until a real cue is sourced** (recommended) / source one now (D-080).
-- ⚪ Q-48 Left Behind AI uses Rotors instead of Kites (Kites lost ~20 points): **keep** (recommended) / make Kites usable first.
 - ⚪ Q-49 M8 story questions Q-A..Q-I in docs/design/12_m8_plan.md: answer before M8 starts (not needed for M7).
-- ⚪ Q-50 Lore, Archive entries and personas written this session (27 Left Behind, 40 Expedition, 3 supply buildings, 7 personas)
-  are drafts: **approve as written** (recommended) / list changes. Archive pages for leaders/authority/directorate unlock at
-  `campaign:TBD`.
 
 ## Answered
+- Q-43..Q-48, Q-50, Q-51 · 2026-11-05 · Owner: "all assumptions look great" → D-134 (keep 2 500; confirm session-9 numbers;
+  keep LB vehicle scale; info panel with VET-6; keep promotion cue; keep Rotors; approve lore drafts; supply on after the AI fix).
 - Q-41, Q-42 · 2026-11-05 · Lore banners cleared → D-119; foam stays 3×3 → D-120. Q-43 → measure only (D-121).
 - 07_expedition.md §10 (M7 items 1–10) · 2026-11-05 · owner answers → D-124..D-127.
 - Q-40 · 2026-11-04 · Owner: "look up the models" → Haiku 5.5 default, Sonnet 5.5 strong, effort low → D-108.
