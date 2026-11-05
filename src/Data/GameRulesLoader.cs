@@ -238,7 +238,12 @@ internal static class GameRulesLoader
     /// </summary>
     public static IReadOnlyList<FactionStartKit>? ParseStartKits(TomlTable root, string file, List<RulesProblem> problems)
     {
-        var kits = new FactionStartKit[] { FactionStartKit.AuthorityDefault, FactionStartKit.DirectorateDefault, FactionStartKit.NeutralNone, FactionStartKit.LeftBehindDefault };
+        // M6-08: the table grows to RuleCounts.Factions entries (neutral placeholder at 2) only when a [faction.left_behind] kit is given,
+        // so rules sets without that faction keep exactly the two-kit table (and their hashes).
+        bool withLb = root.TryGetValue(FactionSection, out object? sec0) && sec0 is TomlTable t0 && t0.ContainsKey("left_behind");
+        FactionStartKit[] kits = withLb
+            ? new[] { FactionStartKit.AuthorityDefault, FactionStartKit.DirectorateDefault, FactionStartKit.NeutralNone, FactionStartKit.LeftBehindDefault }
+            : new[] { FactionStartKit.AuthorityDefault, FactionStartKit.DirectorateDefault };
         if (!root.TryGetValue(FactionSection, out object? section) || section is null)
         {
             return kits;
