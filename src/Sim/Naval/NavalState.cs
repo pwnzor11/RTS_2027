@@ -33,6 +33,9 @@ public sealed class NavalState : ISimStatePart
     /// <summary>True while a submarine is dived, per vehicle slot.</summary>
     public readonly bool[] Submerged;
 
+    /// <summary>Counts loads of this part; the region cache recomputes when it changes (not saved).</summary>
+    internal int LoadEpoch { get; private set; }
+
     /// <summary>Creates an all-zero part sized by the setup's map and store limits.</summary>
     public NavalState(SimSetup setup)
     {
@@ -72,6 +75,7 @@ public sealed class NavalState : ISimStatePart
     public void Read(BinaryReader r)
     {
         if (r.ReadByte() != Version) throw new InvalidDataException("naval version mismatch.");
+        LoadEpoch++;
         if (r.ReadInt32() != NavalRegion.Length || r.ReadInt32() != UnloadTicksLeft.Length) throw new InvalidDataException("naval capacity mismatch.");
         Array.Clear(NavalRegion);
         int n = StateIo.Count(r, Name);

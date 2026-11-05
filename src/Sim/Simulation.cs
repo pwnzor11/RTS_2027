@@ -50,6 +50,7 @@ public sealed partial class Simulation
     private readonly ShipmentState _shipments;   // M7-02
     private readonly BeachheadState _beachhead;  // M7-02
     private readonly NavalState _naval;          // M7-02
+    private readonly Pathing.RegionCache _regions;   // M7-03: derived region labels (cache)
     private readonly List<SetupEntry> _setupLog = new();
     private bool _inStep;
     private readonly MapState _map;
@@ -97,6 +98,7 @@ public sealed partial class Simulation
         _naval = new NavalState(setup);            // M7-02
         _map = new MapState(setup.Map);
         _paths = new PathService(_map, setup.Rules.Terrain);
+        _regions = new Pathing.RegionCache(_map, setup.Rules.Terrain);   // M7-03
         _paths.GateOpen = GateOpenFor;   // M3-04: own-team gates are passable (D-076)
         _vision = new VisionState(setup.Map.Width, setup.Map.Height, setup.PlayerCount,
             Math.Max(setup.Limits.Vehicles, setup.Limits.Infantry));
@@ -242,6 +244,7 @@ public sealed partial class Simulation
     {
         _fx.Clear();
         ApplyInput(commands);
+        RunShipments();    // M7-06: Simulation.Shipments.cs — home supply line (its Move orders are resolved by RunMovement this tick)
         RunMissions();
         RunMovement();
         RunTunnels();      // M3: Simulation.Tunnels.cs — queues, transit, surfacing (before combat: underground units are untargetable)
@@ -440,9 +443,8 @@ public sealed partial class Simulation
         int x0 = topLeft.X, y0 = topLeft.Y;
         if (x0 < 0 || y0 < 0 || x0 + w > Setup.Map.Width || y0 + h > Setup.Map.Height) return PlacementResult.OutOfMap;
         TerrainTable table = Setup.Rules.Terrain;
-        for (int y = y0; y < y0 + h; y++)
-            for (int x = x0; x < x0 + w; x++)
-                if (!_map.IsBuildable(new CellCoord(x, y), table)) return PlacementResult.Blocked;
+        PlacementResult m7 = CheckBeachheadAndWater(player, bt, x0, y0, table);   // M7-07: terrain per cell (water buildings) and the beachhead zone
+        if (m7 != PlacementResult.Ok) return m7;
         // Map occupancy is not maintained for units yet, so also check unit positions directly.
         for (int i = 1; i < _units.Capacity; i++)
             if (_units.Slots.IsIndexAlive(i) && InRect(_units.Position[i].ToCell(), x0, y0, w, h)

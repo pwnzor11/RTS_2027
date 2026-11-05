@@ -182,7 +182,7 @@ Lore (owner approves), roster, art (pilot → fan-out, D-088), AI.
 - [x] M6-09 Game layer (faction pick, sidebar, Pack button, wreck/storm rendering)
 - [x] M6-10 AI Raider Warlord (docs/balance/m6_10_ai.md; Second Drift use and Kites not measured)
 - [x] M6-11 Art: pilot + fan-out, 14 structures + 16 units (on `wp/art-lb*`, reaches main after the owner pushes it, D-084)
-- [ ] M6-12 Acceptance (soak, golden replays, balance table to the owner) — tables done (docs/balance/s9_tables.md); soak and LB golden replays open
+- [x] M6-12 Acceptance (soak, golden replays, balance table to the owner) — session 10: 216-game soak 0 desyncs, LB golden replay, income tables (docs/balance/m6_12_acceptance.md); LB balance → Q-52
 
 ## M7 · The Overseas Expedition (D-087)
 Fourth faction: an old-world remnant (fictionalised; no real people or politics). Naval and air, beachheads. Needs naval
@@ -190,9 +190,12 @@ systems (water locomotion, ships, landings). Lore, roster, art, AI.
 - [x] M7-01 Design doc with naval contract sketch + lore draft (docs/design/07_expedition.md, docs/lore/expedition.md — DRAFT)
 - [x] M7-PLAN M7 plan (docs/design/11_m7_plan.md), supply-cap design (13_supply_cap.md), veterancy design (14_veterancy.md) (D-130, session 9)
 - [x] M7-LORE Archive entries for the whole Expedition roster (session 9, assumed — confirm)
-- [ ] M7-VET Generic veterancy (all factions; VET-1..4 sim+data, VET-5 game, VET-6 AI) — VET-1..5 done; VET-6 AI and the info panel open
-- [ ] M7-SUP Supply cap (all factions; SUP-1..6) — SUP-1, 2, 3, 5 done; held off by default (D-133) until three AI tests pass with it on; SUP-4 has the block text only (counter open); SUP-6 open
-- [ ] M7-02 Naval contracts (11_m7_plan.md)
+- [x] M7-VET Generic veterancy (all factions; VET-1..4 sim+data, VET-5 game, VET-6 AI) — VET-1..7 done (session 10; VET-7 table docs/balance/s10_tables.md, rank-3 reach → Q-53)
+- [x] M7-SUP Supply cap (all factions; SUP-1..6) — SUP-1..6 done, supply ON by default (D-135; SUP-6 table docs/balance/s10_tables.md, spread → Q-54)
+- [x] M7-02 Naval contracts (11_m7_plan.md) — session 10, PR #21 (D-137)
+- [x] M7-03 Naval locomotion, sea regions, unreachable-goal refusal, draw scale (session 10, D-138)
+- [x] M7-06 Home shipments: tenders, decay, charter, stats (session 10, D-139; off until Expedition data)
+- [x] M7-07 Beachhead zone, water-building placement (session 10, D-140; zone overlay not drawn yet)
 
 ## M8 · Campaign (was M4)
 - [x] M8-01 Campaign plan (docs/design/12_m8_plan.md, plan only; story questions open) (session 9)

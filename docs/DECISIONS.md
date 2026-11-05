@@ -1007,3 +1007,37 @@ coast speeds equal clear for foot/wheeled/tracked, hover 80, naval 0; `draw_scal
 replays 7-11 still play. Expedition is a Faction value but not playable (PlayableFactions stays 3) until M7-08/M7-14.
 **Why:** 11_m7_plan §2 left these to the implementer; each is the plainest reading and reversible before M7 data lands.
 **Status:** assumed — confirm (only coast speeds and the save cut-off are visible to the owner)
+
+### D-138 · 2026-11-05 · M7-03 naval movement choices
+**Decision:** `deep_only` ships use a private movement class (NavalDeep) that closes Shallow; it is not a Locomotion value and not in
+the rules hash. A ship's Move is dropped when the goal is not sea or lies in another sea; a ground unit's Move is dropped only when
+the goal is water it cannot enter (other unreachable goals keep the old partial approach, so goldens do not move). Sea labels are
+terrain-only, 4-connected; the saved mirror is written only when the rules contain a naval type. Draw scale applies to body, shadow,
+turret and selection bracket, not health bars. Follow-up: exit-cell search at a shipyard must use the move class (M7-04/M7-09).
+**Why:** 11_m7_plan §3 left these open; the narrow refusal keeps current play identical.
+**Status:** assumed — confirm
+
+### D-139 · 2026-11-05 · M7-06 home shipments choices
+**Decision:** new building flag `shipment_dock` (requires `water_building`); `[shipments] tender_type` names an unarmed naval vehicle,
+empty = shipments off. A field is "held" while an own refinery has an own harvester harvesting or returning within 16 cells (checked
+every 10 ticks; leaving resets charter progress). The decay step stops where the payload reaches the floor. No dock = no timer; a
+shipment that cannot launch (tender limit or no free edge water) is skipped and does not advance decay. Shipment income is a stats
+counter (stats part version 2 only once it is non-zero, so old games hash the same).
+**Why:** the sim has no field ownership; this is the cheapest honest stand-in. All numbers `(tune)`.
+**Status:** assumed — confirm
+
+### D-140 · 2026-11-05 · M7-07 beachhead choices
+**Decision:** the zone is every cell within the source's radius by the D-062 build-radius metric (Chebyshev from the nearest
+footprint cell). Only Expedition players are gated; outside the zone placement returns the new `OutsideBeachhead`. An Expedition
+player that owns no building may place anywhere (so the first landing depot can go down). Non-water structures refuse Water and
+Shallow; water buildings follow their mask. The zone is rebuilt at once when a source is placed, lost or captured.
+**Why:** 07_expedition §2.1 did not say how the first depot is placed or which distance is used.
+**Status:** assumed — confirm (the bootstrap rule is the visible one)
+
+### D-141 · 2026-11-05 · Left Behind AI salvage fix and session-10 acceptance
+**Decision:** AI only, no rules numbers: a Hauler that is auto-harvesting ash counts as free for a wreck; the first Hauler is bought
+at 5 army units with a Gleaner working; wreck gate 60 (was 150); a lost Hauler is not rebought for 3 600 ticks or below 900 funds;
+no Return orders to a harvesting Hauler. M6-12 accepted on stability (216 games, 0 desyncs, 0 exceptions, LB golden replay).
+Balance gaps go to the owner as Q-52..Q-54; no number changes landed.
+**Why:** salvage almost never ran (the Hauler never looked idle); the balance numbers need the owner.
+**Status:** assumed — confirm (AI thresholds are `(tune)`)

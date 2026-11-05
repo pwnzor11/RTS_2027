@@ -27,6 +27,7 @@ public sealed partial class RulesOfSweepGrepTests
         ("Movement/Occupancy.cs", "Setup.Rules.Vehicles["),   // locomotion
         ("Movement/Occupancy.cs", "Setup.Rules.Terrain"),
         ("Simulation.Movement.cs", "Setup.Rules.Vehicles["),   // locomotion
+        ("Simulation.Naval.cs", "Setup.Rules.Vehicles"), ("Simulation.Naval.cs", "Setup.Rules.Vehicles["), ("Simulation.Naval.cs", "Setup.Rules.Terrain"),   // M7-03: locomotion and terrain, not upgradable
         ("Simulation.Economy.cs", "Setup.Rules.Economy.RegrowthIntervalTicks"),   // global, not an effect attr
         ("Simulation.Tunnels.cs", "Setup.Rules.Tunnels"), ("Simulation.Tunnels.cs", "Setup.Rules.Tunnels.NetworkCapPoints"),
         ("Simulation.Tunnels.cs", "Setup.Rules.Tunnels.PointsOf"), ("Simulation.Tunnels.cs", "Setup.Rules.Tunnels.TelegraphTicks"),
@@ -57,6 +58,9 @@ public sealed partial class RulesOfSweepGrepTests
         ("Simulation.Supply.cs", "Setup.Rules.Supply"),   // SUP-1: the [supply] block is global; one accessor (SupplyRulesOf) reads it
         ("Simulation.View.cs", "Setup.Rules.Buildings["),   // owner: Simulation.View.cs, follow-up
         ("View/PlayerView.cs", "Setup.Rules.Terrain"),
+        // M7-06: the [shipments] block is global (not upgradable); the tender type index and naval terrain are table lookups
+        ("Simulation.Shipments.cs", "Setup.Rules.Shipments"), ("Simulation.Shipments.cs", "Setup.Rules.Vehicles"),
+        ("Simulation.Shipments.cs", "Setup.Rules.Terrain"), ("View/PlayerView.cs", "Setup.Rules.Shipments.Enabled"),
     };
 
     private static string SimDir()

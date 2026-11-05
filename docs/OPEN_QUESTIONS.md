@@ -6,6 +6,15 @@ file cited after each question. Recommendations are the lead's, from the researc
 ## Open
 
 - ⚪ Q-49 M8 story questions Q-A..Q-I in docs/design/12_m8_plan.md: answer before M8 starts (not needed for M7).
+- 🟡 Q-52 Left Behind balance (docs/balance/m6_12_acceptance.md, m6_10_ai.md "Session 10 re-measure"): early income is 20-31 %
+  under the other two factions on every map size (band ±20 %), LB tier 3 beats Authority tier 3 in ~12 % of games, and LB tier 4 loses
+  to LB tier 3 (21 %). The salvage AI fix did not close it. Options: (a) raise Gleaner/ash yield (rules change, table to you first),
+  (b) cheaper early Hauler, (c) leave for now and re-measure after M7. Recommendation: (c), then (a) with a table.
+- 🟡 Q-53 Veterancy reach (docs/balance/s10_tables.md, VET-7): rank 3 shows up in most games after minute 15 only for the Directorate
+  (57 %); Authority 9 %, Left Behind 0 %. Options: (a) lower the kill thresholds for ranks 2-3, (b) leave (rank 3 stays rare by
+  design). Recommendation: (b) until the 20 % draw rate and LB income are fixed, since both cut kill counts.
+- 🟡 Q-54 Supply win-rate spread (SUP-6): 7.8 points off → 14.1 on, inside the noise (±9). Re-measure with 64 games per pair?
+  Recommendation: yes, next session, no number change now.
 
 ## Answered
 - Q-43..Q-48, Q-50, Q-51 · 2026-11-05 · Owner: "all assumptions look great" → D-134 (keep 2 500; confirm session-9 numbers;

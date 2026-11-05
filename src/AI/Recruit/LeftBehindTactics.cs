@@ -38,8 +38,14 @@ internal sealed class LeftBehindTactics : IFactionTactics
     public const int TinkerReach = 12;   // (tune) M6-10
     /// <summary>Wrecks within this many cells of a seen enemy gun are not salvaged.</summary>
     public const int WreckDangerCells = 8;   // (tune) M6-10
-    /// <summary>Total wreck value in reach before a Hauler is bought.</summary>
-    public const int WreckValueForHauler = 150;   // (tune) M6-10
+    /// <summary>Total wreck value in view before a second Hauler (tier 3+) or an early one is bought.</summary>
+    public const int WreckValueForHauler = 60;   // (tune) session 10 (was 150)
+    /// <summary>Own army size at which the first Hauler is bought even before any wreck lies about (it then waits for the first fight).</summary>
+    public const int ArmyForFirstHauler = 5;   // (tune) session 10
+    /// <summary>Ticks after the last Hauler died before another is bought.</summary>
+    public const int HaulerRebuildTicks = 3600;   // (tune) session 10
+    /// <summary>Funds that must be on hand (on top of the 500 price) before a Hauler is bought.</summary>
+    public const int HaulerCushion = 900;   // (tune) session 10
     /// <summary>Ticks between Return orders to an idle Hauler that found no wreck.</summary>
     public const int ReturnGapTicks = 400;   // (tune) M6-10
 
@@ -93,6 +99,7 @@ internal sealed class LeftBehindTactics : IFactionTactics
     private readonly List<WreckView> _wrecks = new();
     private readonly List<StormView> _storms = new();
     private int _wreckValueNow;
+    private int _haulerSeen = -100000;   // last tick a Hauler was alive or queued
 
     /// <summary>SUP-5: packed rigs that were given an unpack order, with the tick of the order. One still standing idle 60 ticks after its
     /// order means the order ended at once (unreachable site): the next order unpacks it near where it stands.</summary>
@@ -196,11 +203,19 @@ internal sealed class LeftBehindTactics : IFactionTactics
         if (!k.HaveYard) return -1;
         QueueView q = k.Queue(ProductionCategory.Vehicle);
         // a Hauler once wrecks lie about (and an income to wait for)
-        if (_hauler >= 0 && _wreckValueNow >= WreckValueForHauler && k.Harvesters.Count > 0 && k.Buildable(ProductionCategory.Vehicle, _hauler))
+        if (_hauler >= 0 && k.Harvesters.Count > 0 && k.Buildable(ProductionCategory.Vehicle, _hauler))
         {
             int have = k.Salvagers.Count, cap = Tier >= 3 ? 2 : 1;
             foreach (QueueItemView it in q.Items) if (it.TypeIndex == _hauler) have++;
-            if (have < cap) return _hauler;
+            // session 10: one Hauler early (once a small army stands and the first harvester works), so it is at hand when the first
+            // wrecks fall; the second (tier 3+) waits for wrecks to lie about
+            // a Hauler costs 500 and dies when it works near the fighting: a lost one is not replaced at once, and none is bought when poor
+            int now = k.View.Tick;
+            if (have > 0) _haulerSeen = now;
+            bool lostRecently = have == 0 && now - _haulerSeen < HaulerRebuildTicks;
+            bool rich = k.Hud.Cash + k.Hud.Stored >= HaulerCushion;
+            bool early = have == 0 && k.Army.Count >= ArmyForFirstHauler;
+            if (have < cap && !lostRecently && rich && (early || _wreckValueNow >= WreckValueForHauler)) return _hauler;
         }
         // Dust Sails with the army at the top tiers
         if (_sail >= 0 && _profile is { Air: true } && k.Army.Count >= ArmyBeforeSail && k.Buildable(ProductionCategory.Vehicle, _sail))
@@ -369,7 +384,8 @@ internal sealed class LeftBehindTactics : IFactionTactics
             {
                 bool tinker = pass == 1;
                 if (tinker && !(a.Kind == ActorKind.Infantry && rules.Infantry[a.TypeIndex] is { Engineer: true, SalvageRate: > 0 })) continue;
-                if (!a.Idle || a.Underground) continue;
+                // a Hauler also works the ash fields on its own (mission Harvest): that is when it is taken for a wreck
+                if (a.Underground || !(a.Idle || (!tinker && a.Mission == MissionKind.Harvest))) continue;
                 int reach = tinker ? TinkerReach : SalvageReach;
                 int best = -1;
                 long bestScore = long.MinValue;
@@ -389,7 +405,7 @@ internal sealed class LeftBehindTactics : IFactionTactics
                     SalvageOrders++;
                     sink.Issue(CommandKind.Harvest, a.Id, a.Kind, _wrecks[best].Cell);
                 }
-                else if (!tinker)
+                else if (!tinker && a.Mission != MissionKind.Harvest)   // session 10: not while it works the ash field (a Return every 400 ticks cost 20 points)
                 {   // nothing to salvage: unload what the hopper holds
                     ulong key = RecruitKnowledge.KeyOf(a);
                     if (_lastReturn.TryGetValue(key, out int last) && tick - last < ReturnGapTicks) continue;
@@ -403,8 +419,17 @@ internal sealed class LeftBehindTactics : IFactionTactics
     private bool Dangerous(RecruitKnowledge k, List<ViewActor> knownEnemy, CellCoord cell)
     {
         SimRules rules = k.Rules;
+        // session 10: enemy gunmen near the wreck make it unsafe only when our own army there is worth less than they are (a won fight
+        // leaves wrecks next to the winners, and that is exactly when the Hauler should go)
+        int foe = 0, own = 0;
         foreach (ViewActor e in k.Visible)
-            if (e.Relation == Relation.Enemy && Armed(rules, e) && Cheb(e.Cell, cell) <= WreckDangerCells) return true;
+            if (e.Relation == Relation.Enemy && Armed(rules, e) && Cheb(e.Cell, cell) <= WreckDangerCells) foe += Cost(rules, e);
+        if (foe > 0)
+        {
+            foreach (ViewActor a in k.Army)
+                if (Armed(rules, a) && Cheb(a.Cell, cell) <= WreckDangerCells) own += Cost(rules, a);
+            if (own < foe) return true;
+        }
         foreach (ViewActor b in knownEnemy)
             if (rules.Buildings[b.TypeIndex].PrimaryWeapon >= 0 && Cheb(b.Cell, cell) <= WreckDangerCells + 2) return true;
         return false;
@@ -740,7 +765,7 @@ internal sealed class LeftBehindTactics : IFactionTactics
         AiSnapshot.WriteMap(w, _lastReturn, (bw, v) => bw.Write(v));
         w.Write(Unpacks); w.Write(RaidParties); w.Write(RaidOrders); w.Write(SalvageOrders);
         w.Write(Relocations); w.Write(RelocationsDone); w.Write(RelocationsAborted); w.Write(Sold); w.Write(StormOrders);
-        w.Write(_wreckValueNow);
+        w.Write(_wreckValueNow); w.Write(_haulerSeen);
         w.Write(_ordered.Count);
         foreach (var o in _ordered) { w.Write(o.Key); w.Write(o.Tick); w.Write(o.X); w.Write(o.Y); }
         w.Write(_bad.Count);
@@ -758,7 +783,7 @@ internal sealed class LeftBehindTactics : IFactionTactics
         AiSnapshot.ReadMap(r, _lastReturn, br => br.ReadInt32());
         Unpacks = r.ReadInt32(); RaidParties = r.ReadInt32(); RaidOrders = r.ReadInt32(); SalvageOrders = r.ReadInt32();
         Relocations = r.ReadInt32(); RelocationsDone = r.ReadInt32(); RelocationsAborted = r.ReadInt32(); Sold = r.ReadInt32(); StormOrders = r.ReadInt32();
-        _wreckValueNow = r.ReadInt32();
+        _wreckValueNow = r.ReadInt32(); _haulerSeen = r.ReadInt32();
         int n = AiSnapshot.Count(r);
         _ordered.Clear();
         for (int i = 0; i < n; i++) _ordered.Add((r.ReadUInt64(), r.ReadInt32(), r.ReadInt32(), r.ReadInt32()));

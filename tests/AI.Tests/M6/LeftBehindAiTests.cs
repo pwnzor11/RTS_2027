@@ -77,6 +77,64 @@ public sealed class LeftBehindAiTests(ITestOutputHelper log)
         Assert.True(after < before, "ash was drained from the wreck");
     }
 
+    /// <summary>Session 10: the AI buys its first Hauler without waiting for wrecks, and sends it to a fresh wreck even while it
+    /// is out on the ash field.</summary>
+    [Fact]
+    public void ATierTwoAiBuysAnEarlyHaulerAndSalvagesAFreshWreck()
+    {
+        var rig = new TierRig(Faction.LeftBehind, Tier(2) with { AttackThreshold = 5000 });
+        rig.Run(6000, () => Own(rig, 0, "lb_hauler") >= 1);
+        Assert.True(Own(rig, 0, "lb_hauler") >= 1, "a Hauler was built with no wreck about");
+        CellCoord a = Anchor(rig, 0);
+        EntityId victim = TestWorld.LateVehicle(rig.Sim, 1, rig.VehicleType("auth_tank"), new CellCoord(a.X + 8, a.Y + 8));
+        Assert.False(victim.IsNone);
+        rig.Kill(victim, ActorKind.Vehicle);
+        rig.Run(3);
+        var wrecks = new List<Rts.Sim.View.WreckView>();
+        rig.Sim.ViewFor(0).CopyWrecks(wrecks);
+        int before = wrecks.Sum(w => w.Value), orders = rig.Ai.SalvageOrders;
+        rig.Run(1000);
+        rig.Sim.ViewFor(0).CopyWrecks(wrecks);
+        log.WriteLine($"salvage orders {orders} -> {rig.Ai.SalvageOrders}, wreck value {before} -> {wrecks.Sum(w => w.Value)}, harvested {rig.Sim.StatsOf(0).CreditsHarvested}");
+        Assert.True(rig.Ai.SalvageOrders > orders, "the Hauler was sent to the wreck");
+        Assert.True(wrecks.Sum(w => w.Value) < before, "ash was drained from the wreck");
+    }
+
+    private sealed class Fired : Exception;
+
+    /// <summary>Session 10: in real matches (tier 4 against a tier 3 Left Behind on the maps of the `ai match` tool) the AI builds the
+    /// Second Drift, waits for the charge and fires it; before the session-9 entrance fix it never could. The game is stopped at the first
+    /// storm; up to six seeds are tried because a match can end before the weapon charges.</summary>
+    [Fact]
+    public void TheSecondDriftIsFiredInARealMatch()
+    {
+        var a = new AiSide(AiRegistry.TieredId, Tier(4), Faction.LeftBehind);
+        var b = new AiSide(AiRegistry.TieredId, Tier(3), Faction.LeftBehind);
+        int fired = 0;
+        var storms = new List<Rts.Sim.View.StormView>();
+        for (ulong seed = 1; seed <= 6 && fired == 0; seed++)
+        {
+            MapData map = MapGenerator.Generate(56, seed);
+            try
+            {
+                AiGameResult r = AiMatchRunner.Play(map, TestWorld.Rules.Sim, TestWorld.Rules.RulesHash, seed * 16, a, b, aInSlot0: true, maxTicks: 22000,
+                    observe: (sim, ai0, ai1, slotA, slotB) =>
+                    {
+                        if (((RecruitAi)ai0).StormOrders < 1) return;
+                        sim.ViewFor(slotA).CopyStorms(storms);
+                        if (storms.Count > 0) throw new Fired();   // the order took effect: a storm stands on the map
+                    });
+                log.WriteLine($"seed {seed}: no storm, ended at {r.EndTick}");
+            }
+            catch (Fired)
+            {
+                fired++;
+                log.WriteLine($"seed {seed}: the Second Drift was ordered and a storm stands");
+            }
+        }
+        Assert.True(fired >= 1, "the Second Drift was fired in a match");
+    }
+
     [Fact]
     public void RaidersGoForAnEnemySilo()
     {

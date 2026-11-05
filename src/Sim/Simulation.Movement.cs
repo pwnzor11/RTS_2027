@@ -34,6 +34,7 @@ public sealed partial class Simulation
                 if (OwnsSubject(c, out var store) && InMap(c.Cell))
                 {
                     var kind = (ActorKind)c.Arg;
+                    if (MoveGoalRefused(kind, store!, c.Subject.Index, c.Cell)) break;   // M7-03: unreachable goal (water / other sea)
                     int i = c.Subject.Index;
                     // The path request is made in RunMovement so Moves to one cell in one tick share one group search.
                     // PathId -1 = "request pending"; a repeated Move of the same actor in the tick replaces the earlier one.
@@ -83,6 +84,7 @@ public sealed partial class Simulation
     /// <summary>Movement system: runs once per tick after missions. Path requests are made and solved here.</summary>
     private void RunMovement()
     {
+        EnsureNavalRegions();   // M7-03: keep the saved ship region labels current (a no-op unless the rules have ships)
         if (_pendingMoves.Count > 0)
         {
             StartPendingMoves();
@@ -182,7 +184,7 @@ public sealed partial class Simulation
     }
 
     private Locomotion LocoOf(PendingMove pm) =>
-        pm.Kind == ActorKind.Vehicle ? Setup.Rules.Vehicles[_units.TypeIndex[pm.Id.Index]].Locomotion : Locomotion.Foot;
+        pm.Kind == ActorKind.Vehicle ? Pathing.MoveClass.Of(Setup.Rules.Vehicles[_units.TypeIndex[pm.Id.Index]]) : Locomotion.Foot;   // M7-03: large ships
 
     // Spiral spreading: members in command order each take the first spiral cell that is walkable for them and not yet used
     // (a vehicle needs a cell nobody else was given, infantry share a cell up to 5 and never with a vehicle). A cell held by a

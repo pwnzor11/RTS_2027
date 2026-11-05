@@ -147,4 +147,8 @@ public sealed record BuildingType(string Id, int FootprintW, int FootprintH, int
 
     /// <summary>Beachhead zone radius in cells (TOML <c>beachhead_radius</c>, 0 = none; needs <see cref="BeachheadSource"/>).</summary>
     public int BeachheadRadius { get; init; }
+
+    /// <summary>M7-06: receives home shipments (an Anchorage): supply tenders sail to it and pay out on arrival (TOML <c>shipment_dock</c>,
+    /// default false; needs <see cref="WaterBuilding"/>).</summary>
+    public bool ShipmentDock { get; init; }
 }

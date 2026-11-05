@@ -121,6 +121,7 @@ public sealed class MapState : ISimStatePart
     {
         if (!In(c)) return 0;
         if (loco != Locomotion.Air && _overlay[Idx(c)] == OverlayKind.Wall) return 0;
+        if (loco == Pathing.MoveClass.NavalDeep) return _land[Idx(c)] == LandType.Shallow ? 0 : table.SpeedPercent(_land[Idx(c)], Locomotion.Naval);   // M7-03: large ships
         return table.SpeedPercent(_land[Idx(c)], loco);
     }
 

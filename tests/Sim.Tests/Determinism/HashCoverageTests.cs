@@ -116,6 +116,8 @@ public class HashCoverageTests
     private static readonly Dictionary<string, string> NotHashed = new(StringComparer.Ordinal)
     {
         // Simulation
+        ["NavalState.LoadEpoch"] = "M7-03: counts loads so the derived region cache recomputes; not state",
+        ["Simulation._regions"] = "M7-03: derived region-label cache, a pure function of the land types; the ship labels are saved in the naval part",
         ["Simulation._setupLog"] = "construction history for replays (SetupLog), not state: a loaded sim starts with an empty log",
         ["Simulation.UnlockFilter"] = "delegate a mission extension installs in OnSetup (M2-15): code, not state; the state it reads is the extension's own hashed part",
         ["Simulation.LateCommandCount"] = "diagnostic counter of commands that arrived after their tick; not state, resets on load (M1.5-02)",

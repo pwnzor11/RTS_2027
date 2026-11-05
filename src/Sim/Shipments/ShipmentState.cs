@@ -10,7 +10,8 @@ namespace Rts.Sim.Shipments;
 /// <param name="CellX">Cell X.</param>
 /// <param name="CellY">Cell Y.</param>
 /// <param name="Payload">Credits aboard (the shipment value after decay).</param>
-public readonly record struct Tender(int Id, byte Player, int CellX, int CellY, int Payload);
+/// <param name="Vehicle">M7-06: the tender's vehicle entity, packed as <c>Index &lt;&lt; 16 | Generation</c> (0 = none, e.g. a hand-made test entry).</param>
+public readonly record struct Tender(int Id, byte Player, int CellX, int CellY, int Payload, int Vehicle = 0);
 
 /// <summary>
 /// The "shipments" state part (M7-02 skeleton, docs/design/11_m7_plan.md §2.4; filled by M7-06). Appended after "veterancy". Per player
@@ -19,7 +20,7 @@ public readonly record struct Tender(int Id, byte Player, int CellX, int CellY, 
 /// creation order. The spawn cell of a tender is a deterministic index into the map's ocean-edge cells (no SimRandom). Named
 /// "shipments" so it is not confused with the supply cap, which has no state (13 §3). All zero and empty by default.
 /// Layout: version, player count, then (nextShipmentTick, decayStep, charterProgress) per player, nextTenderId, tender count and
-/// (id, player, cellX, cellY, payload) per tender.
+/// (id, player, cellX, cellY, payload, vehicle) per tender.
 /// </summary>
 public sealed class ShipmentState : ISimStatePart
 {
@@ -56,7 +57,7 @@ public sealed class ShipmentState : ISimStatePart
         for (int p = 0; p < NextShipmentTick.Length; p++) { w.Write(NextShipmentTick[p]); w.Write(DecayStep[p]); w.Write(CharterProgress[p]); }
         w.Write(NextTenderId);
         w.Write(Tenders.Count);
-        foreach (Tender t in Tenders) { w.Write(t.Id); w.Write(t.Player); w.Write(t.CellX); w.Write(t.CellY); w.Write(t.Payload); }
+        foreach (Tender t in Tenders) { w.Write(t.Id); w.Write(t.Player); w.Write(t.CellX); w.Write(t.CellY); w.Write(t.Payload); w.Write(t.Vehicle); }
     }
 
     /// <inheritdoc />
@@ -70,7 +71,7 @@ public sealed class ShipmentState : ISimStatePart
         Tenders.Clear();
         for (int i = 0; i < n; i++)
         {
-            var t = new Tender(r.ReadInt32(), r.ReadByte(), r.ReadInt32(), r.ReadInt32(), r.ReadInt32());
+            var t = new Tender(r.ReadInt32(), r.ReadByte(), r.ReadInt32(), r.ReadInt32(), r.ReadInt32(), r.ReadInt32());
             if (t.Player >= NextShipmentTick.Length) throw new InvalidDataException("shipments tender owner out of range.");
             Tenders.Add(t);
         }

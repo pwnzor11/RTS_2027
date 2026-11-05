@@ -77,6 +77,14 @@ public readonly struct PlayerView
     public bool IsPassable(CellCoord c, Locomotion loco) =>
         InMap(c) && _sim.Map.IsPassableTerrain(c, loco, _sim.Setup.Rules.Terrain);
 
+    /// <summary>M7-03: sea region of a cell for ships, 0 = not navigable. With <paramref name="deepOnly"/> the shallows count as land (large ships).
+    /// Terrain only, so it reveals nothing the fog hides; equal non-zero labels mean "a ship can sail between them" (ignoring units and buildings).</summary>
+    public int NavalRegionAt(CellCoord c, bool deepOnly = false) => _sim.NavalRegionAt(c, deepOnly);
+
+    /// <summary>M7-03: true if the viewing player's own ship can reach <paramref name="target"/> by sea. False for a ship that is not
+    /// the player's own, is not a ship, or is dead.</summary>
+    public bool CanOwnShipReach(EntityId ship, CellCoord target) => _sim.OwnShipCanReach(Player, ship, target);
+
     /// <summary>0 = shroud, 1 = fog, 2 = visible now, for the viewing player.</summary>
     public byte VisionAt(CellCoord c) => _sim.WithBlackout(Player, c, _sim.Vision.VisionAt(Player, c));   // M3-INT: Blackout
 
@@ -114,6 +122,13 @@ public readonly struct PlayerView
 
     /// <summary>True if the player knows the cell is hardened (own team anywhere; others where seen now).</summary>
     public bool HardenedAt(CellCoord c) => _sim.KnownHardenedAt(Player, c);
+
+    /// <summary>M7-07: True if the cell is inside the player's own beachhead zone (always false for a faction without one). Off-map: false.</summary>
+    public bool InBeachhead(CellCoord c) => _sim.Setup.Map.Width > c.X && _sim.Setup.Map.Height > c.Y && c.X >= 0 && c.Y >= 0
+        && _sim.InBeachhead(Player, c.Y * _sim.Setup.Map.Width + c.X);
+
+    /// <summary>M7-07: the player's own beachhead mask, bit <c>cell % 64</c> of word <c>cell / 64</c> (cell = y * width + x), read-only.</summary>
+    public ReadOnlySpan<ulong> BeachheadMask => Player < _sim.Beachhead.Zone.Length ? _sim.Beachhead.Zone[Player] : ReadOnlySpan<ulong>.Empty;
 
     /// <summary>True if the cell is jammed on the player's minimap (enemy Static Broadcast).</summary>
     public bool JammedAt(CellCoord c) => _sim.IsJammedAt(Player, c);
@@ -189,6 +204,33 @@ public readonly struct PlayerView
                 g.Cell, CentreOf(g.Cell, g.FootprintW, g.FootprintH), g.Health, max, MissionKind.None, false, EntityId.None,
                 true, g.FootprintW, g.FootprintH));
         }
+    }
+
+    // ---- M7-06 home shipments (own state only) -------------------------------------------------
+
+    /// <summary>M7-06: ticks until the viewing player's next shipment sails; -1 when none is scheduled (shipments off, or no dock).</summary>
+    public int ShipmentEtaTicks
+    {
+        get
+        {
+            int next = _sim.Shipments.NextShipmentTick[Player];
+            return next == 0 ? -1 : Math.Max(0, next - _sim.Tick);
+        }
+    }
+
+    /// <summary>M7-06: decay steps the viewing player's shipments have taken (each shrinks the payload by <c>decay_permille</c>).</summary>
+    public int ShipmentDecayStep => _sim.Shipments.DecayStep[Player];
+
+    /// <summary>M7-06: credits the viewing player's next shipment would carry (0 when shipments are off).</summary>
+    public int NextShipmentPayload => _sim.Setup.Rules.Shipments.Enabled ? _sim.ShipmentPayload(Player) : 0;
+
+    /// <summary>M7-06: fills <paramref name="dest"/> (cleared first) with the viewing player's own tenders in flight, in creation order.</summary>
+    public void CopyOwnTenders(List<TenderView> dest)
+    {
+        dest.Clear();
+        foreach (Shipments.Tender t in _sim.Shipments.Tenders)
+            if (t.Player == Player)
+                dest.Add(new TenderView(t.Id, new EntityId((ushort)((uint)t.Vehicle >> 16), (ushort)(t.Vehicle & 0xFFFF)), new CellCoord(t.CellX, t.CellY), t.Payload));
     }
 
     /// <summary>M6: fills <paramref name="dest"/> (cleared first) with every wreck on the map in slot order. Wrecks are public (D-102).</summary>

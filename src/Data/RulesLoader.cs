@@ -133,6 +133,13 @@ public static class RulesLoader
         EffectRulesLoader.ValidateTargets(effects, tables, provides, problems);
         ValidateUpgradeEffects(upgrades, effects, problems);
         if (kits is not null) ValidateTierProvides(kits, provides, problems);
+        if (shipments is { TenderType.Length: > 0 })   // M7-06: the tender is an unarmed naval vehicle
+        {
+            int ti = SimRules.IndexOf(vehicles, shipments.TenderType, v => v.Id);
+            if (ti < 0) problems.Add(new RulesProblem(GameFile, "shipments.tender_type", $"unknown vehicle '{shipments.TenderType}'"));
+            else if (vehicles[ti].Locomotion != Locomotion.Naval || vehicles[ti].PrimaryWeapon >= 0)
+                problems.Add(new RulesProblem(GameFile, "shipments.tender_type", $"'{shipments.TenderType}' must be an unarmed naval vehicle"));
+        }
         ValidateNeutral(vehicles, infantry, buildings, upgrades, problems);   // Q-37
 
         if (problems.Count > 0 || game is null || terrain is null || economy is null || tunnels is null || radiation is null

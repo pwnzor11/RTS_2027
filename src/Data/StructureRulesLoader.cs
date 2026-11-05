@@ -28,6 +28,8 @@ internal static class StructureRulesLoader
         "supply_provided", "supply_unstocked",
         // schema v8 (M7-02)
         "water_building", "water", "beachhead_source", "beachhead_radius",
+        // M7-06
+        "shipment_dock",
     ];
 
     /// <summary>Most soldiers a building may hold (schema v4).</summary>
@@ -96,7 +98,9 @@ internal static class StructureRulesLoader
         bool? waterBuilding = f.OptBool("water_building", false);   // M7-02
         bool? beachheadSource = f.OptBool("beachhead_source", false);
         int? beachheadRadius = f.OptInt("beachhead_radius", 0, SimConstants.MaxMapCells, 0);
-        if (waterBuilding is null || beachheadSource is null || beachheadRadius is null) return null;
+        bool? shipmentDock = f.OptBool("shipment_dock", false);   // M7-06
+        if (waterBuilding is null || beachheadSource is null || beachheadRadius is null || shipmentDock is null) return null;
+        if (shipmentDock.Value && !waterBuilding.Value) { f.Problem("shipment_dock", "a shipment dock needs water_building = true"); return null; }
         bool[] waterMask = Array.Empty<bool>();
         if (f.Has("water"))
         {
@@ -217,6 +221,7 @@ internal static class StructureRulesLoader
             WaterMask = waterMask,
             BeachheadSource = beachheadSource.Value,
             BeachheadRadius = beachheadRadius.Value,
+            ShipmentDock = shipmentDock.Value,
         };
         return exit is null ? building : building with { Exit = new CellCoord(exit[0], exit[1]) };
     }
