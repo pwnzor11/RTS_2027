@@ -327,6 +327,7 @@ internal static class HarvestMission
                 eco.CargoValue[i] = 0;
                 ReleaseDock(eco, rid, me);
                 eco.DockTarget[i] = default; eco.Ticket[i] = 0; eco.DockState[i] = 0;
+                if (SalvageMission.TryResume(sim, store, kind, i)) return 1;   // M6-04: a salvager goes back to the nearest wreck
                 return Assign(sim, store, kind, i, MissionKind.Harvest);
             }
         }
