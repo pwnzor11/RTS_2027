@@ -173,12 +173,12 @@ Third faction: Glass Coast evacuees abandoned in 1990; nomadic scavengers, mobil
 Lore (owner approves), roster, art (pilot → fan-out, D-088), AI.
 - [x] M6-01 Design doc + lore draft (docs/design/06_left_behind.md, docs/lore/left_behind.md — DRAFT, owner approves)
 - [x] M6-02 Plan (docs/design/10_m6_plan.md) + contracts: Faction.LeftBehind, CommandKind.Pack, missions, rules fields (off), "rigs" and "salvage" parts, effects v2, save/replay format 10 (D-118; PR #15)
-- [ ] M6-03 Rig pack/unpack
-- [ ] M6-04 Wrecks and salvage
-- [ ] M6-05 Raiders (plunder, withdraw, spoils)
-- [ ] M6-06 Ash stealth, Blackout trail, repair and tow auras, upgrade hooks
-- [ ] M6-07 The Second Drift storm
-- [ ] M6-08 Faction data (roster, structures, upgrades, tiers, start kit)
+- [x] M6-03 Rig pack/unpack (session 9; one generic packed vehicle, unpack via PackedFrom)
+- [x] M6-04 Wrecks and salvage (session 9)
+- [x] M6-05 Raiders (plunder, withdraw, spoils) (session 9)
+- [x] M6-06 Ash stealth, Blackout trail, repair and tow auras, upgrade hooks (session 9)
+- [x] M6-07 The Second Drift storm (session 9)
+- [x] M6-08 Faction data (roster, structures, upgrades, tiers, start kit) + Archive entries and personas (session 9)
 - [ ] M6-09 Game layer (faction pick, sidebar, Pack button, wreck/storm rendering)
 - [ ] M6-10 AI Raider Warlord (after M4-16 lands)
 - [ ] M6-11 Art pilot (Mother Rig packed/unpacked) → owner approval → fan-out
@@ -188,8 +188,14 @@ Lore (owner approves), roster, art (pilot → fan-out, D-088), AI.
 Fourth faction: an old-world remnant (fictionalised; no real people or politics). Naval and air, beachheads. Needs naval
 systems (water locomotion, ships, landings). Lore, roster, art, AI.
 - [x] M7-01 Design doc with naval contract sketch + lore draft (docs/design/07_expedition.md, docs/lore/expedition.md — DRAFT)
+- [x] M7-PLAN M7 plan (docs/design/11_m7_plan.md), supply-cap design (13_supply_cap.md), veterancy design (14_veterancy.md) (D-130, session 9)
+- [x] M7-LORE Archive entries for the whole Expedition roster (session 9, assumed — confirm)
+- [ ] M7-VET Generic veterancy (all factions; VET-1..4 sim+data, VET-5 game, VET-6 AI)
+- [ ] M7-SUP Supply cap (all factions; SUP-1..6)
+- [ ] M7-02 Naval contracts (11_m7_plan.md)
 
 ## M8 · Campaign (was M4)
+- [x] M8-01 Campaign plan (docs/design/12_m8_plan.md, plan only; story questions open) (session 9)
 Mission scripting/trigger system, briefing screens, tech gating, campaign flow; written once with all four factions.
 Wires Archive campaign unlocks.
 
