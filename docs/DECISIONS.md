@@ -940,3 +940,12 @@ where the docs left options: supply buildings are new `auth_ration_hall`, `dir_b
 Elite / Hero, kill value stored in a new "veterancy" part (format 11), rank 3 ≈ 2× combat value plus self-heal; the Expedition
 gets no faster gain (only its `exp_veteran_drill` upgrade). M7 contracts follow at format 12.
 **Status:** assumed — confirm (owner reads 13 §2.3 and 14 §2.3 first)
+
+### D-131 · 2026-11-05 · AI wave strength gate lands; Q-43 measured
+**Decision:** The M4-16 wave strength gate (100 % of the biggest enemy army seen in the last 3 600 ticks; lifts at 24 units or 6 000
+ticks) and escalation after a failed wave (200 %, cap 12 000) land as AI behaviour for tier 2+ (src/AI/Recruit/WaveGate.cs, `(tune)`).
+Measured in docs/balance/m4_16_round4.md: the Authority ladder improves at 2v1/3v2/4v3; the Directorate 4v3 improves, its 5v4 decisive
+share drops (54 % -> 41 %). The >= 60 % target is still unmet above 2v1; the top rungs need another round (draws are 40-60 % of
+Directorate games). "Scouting + harass off for elite" was tried and rejected (it breaks Directorate elite). Q-43: the 2 500 -> 2 000
+tier-3 cut moves every cell only within noise; the lead recommends keeping 2 500 (owner decides, D-121).
+**Status:** gate confirmed (owner, D-129: lands if the ladder improves); Q-43 recommendation waiting on the owner
