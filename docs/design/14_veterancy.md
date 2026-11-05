@@ -71,7 +71,7 @@ no faster gain for the Expedition; only the `exp_veteran_drill` upgrade lowers i
 The rules hash gains a schema block for these keys (src/Data/RulesHash.cs).
 
 ## 4 · Determinism, state and format
-- **New state part `"veterancy"`, appended after `"salvage"`** (Simulation.cs ~line 99-112: parts end with rigs, salvage; the
+- **New state part `"veterancy"`, appended after `"salvage"`** (Simulation.cs:95-113: parts end with rigs, salvage; the
   array sizes `builtInAfterCombat = 11` become 12). Content: `int killValue` per vehicle slot and per infantry slot, a `lastCombatTick`
   per slot (for heal-quiet). Rank is derived, so there is no stored rank to drift from the table.
 - Why a part and not fields in MobileStore: MobileStore is shared by units and infantry and every older part keeps its layout;
@@ -83,7 +83,7 @@ The rules hash gains a schema block for these keys (src/Data/RulesHash.cs).
 - Hash coverage: both arrays are written and so enter `ComputeStateHash` (Simulation.cs:726); HashCoverageTests.cs:190 passes
   without allow-list entries. No float, no randomness.
 - **Save and replay format 11** (SimWriter.cs:15 SaveVersion 10 -> 11; ReplayWriter.cs:21 Version 10 -> 11; OldestReadableVersion stays
-  7 unless the lead decides otherwise). Format 11 is shared with the M7 parts (11_m7_plan §3); only one bump lands.
+  7 unless the lead decides otherwise). Veterancy lands first as 11; the M7 contracts bump to 12 (11_m7_plan §2.2).
 
 ## 5 · View and UI
 `PlayerView` actor records gain `Rank` (0-3) for any actor the viewer can see (fog-honest: only if visible now). The game layer draws

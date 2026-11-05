@@ -35,8 +35,8 @@ reactor crawler 1 500 and land train 2 000 = 3 (data/rules/vehicles.toml, infant
 
 No existing building fits without a gameplay clash, so each faction gets one new cheap building. Cost and footprint are `(tune)`.
 **Expedition stocking** (assumed — confirm): a store gives +10 while "stocked", +5 when not. It is stocked if a shipment arrived in
-the last 3 shipment intervals. So raiding the convoy (D-126) shrinks the cap slowly. Derived from the "supply" state part's
-last-arrival tick (11_m7_plan §3.3); no extra state. Option B: flat +10, no link. Recommendation: A.
+the last 3 shipment intervals. So raiding the convoy (D-126) shrinks the cap slowly. Derived from the "shipments" state part's
+last-arrival tick (11_m7_plan §2.4); no extra state. Option B: flat +10, no link. Recommendation: A.
 
 ### 2.4 Rules when over the cap
 - No unit ever dies or is refused by the cap. Losing a supply building only blocks production until `used <= cap` again.
