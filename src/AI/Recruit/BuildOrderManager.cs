@@ -130,7 +130,41 @@ internal sealed class BuildOrderManager
         bool powerInFlight = _queued[_powerType] > 0;
         if (powerShort && !powerInFlight && (target < 0 || rules.Buildings[target].Power <= 0) && k.Buildable(ProductionCategory.Structure, _powerType))
             return _powerType;
+        // SUP-5: a supply structure next when the cap is nearly reached (and the ceiling is not), power first if it would brown out.
+        int supply = SupplyShort(k) ? SupplyType(k) : -1;
+        if (supply >= 0 && _queued[supply] == 0)
+        {
+            if (!powerInFlight && EconomyManager.PowerShort(k, -rules.Buildings[supply].Power) && k.Buildable(ProductionCategory.Structure, _powerType))
+                return _powerType;
+            return supply;
+        }
         return target;
+    }
+
+    /// <summary>SUP-5: free supply below which the AI starts a supply structure (units cost 1 to 3).</summary>
+    internal const int SupplyHeadroom = 6;
+
+    /// <summary>SUP-5: true when supply is on, the cap is below the ceiling and free supply is under <see cref="SupplyHeadroom"/>.</summary>
+    internal static bool SupplyShort(RecruitKnowledge k)
+    {
+        SupplyView s = k.Hud.Supply;
+        return s.Ceiling > 0 && s.Cap > 0 && s.Cap < s.Ceiling && s.Cap - s.Used < SupplyHeadroom;
+    }
+
+    /// <summary>SUP-5: the cheapest buildable structure that provides supply, other than the yard; -1 when none. Data-driven, so every
+    /// faction (Authority Ration Hall, Directorate Bunk Gallery, Left Behind Still Rig) is covered without a per-faction id.</summary>
+    private int SupplyType(RecruitKnowledge k)
+    {
+        SimRules rules = k.Rules;
+        int best = -1;
+        for (int t = 0; t < rules.Buildings.Count; t++)
+        {
+            BuildingType bt = rules.Buildings[t];
+            if (bt.SupplyProvided <= 0 || bt.Id == _yardId || bt.Category != ProductionCategory.Structure) continue;
+            if (!k.Buildable(ProductionCategory.Structure, t)) continue;
+            if (best < 0 || bt.Cost < rules.Buildings[best].Cost) best = t;
+        }
+        return best;
     }
 
     private void TryPlace(RecruitKnowledge k, ICommandSink sink, int type)
