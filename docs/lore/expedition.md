@@ -129,6 +129,7 @@ Secret: She has already taken personal command of a rescue flight into the Glass
 people living there who were never on any manifest.
 
 ## Units
+<!-- session 9 entries: assumed — confirm -->
 
 ### exp_marine
 title: Marine
@@ -221,7 +222,150 @@ field_note: HEAVY LANDING 9 // SLOW, ARMOURED, NOT EXPENDABLE. DO NOT LEAVE IT B
 A volunteer in a valve-driven powered suit, with shoulder-mounted anti-air missiles and hydraulic gauntlets. There are
 only a few suits, and each carries the name of the engineer who built it stencilled inside the helmet.
 
+### exp_pioneer
+title: Pioneer
+subtitle: Field engineer
+unlock: open
+field_note: PIONEER 1 // TAKE THE PUMP HOUSE, MEND THE VALVES, RAISE THE BEACON. KEEP OUT OF THE FRONT. TELEX ENDS.
+
+A dockyard fitter turned field engineer, with a welding torch on one hip and a crate of spare valves on the other. The Pioneer walks into abandoned pumping stations and coaxes them back to life one bolt at a time. Wherever a Pioneer has knelt to mend something, the fleet has a little more ground to stand on.
+
+He is not built for fighting and says so often, usually while holding a spanner he would rather not swing.
+
+### exp_diver
+title: Combat Diver
+subtitle: Underwater saboteur
+unlock: campaign
+field_note: DIVER 2 // SWIM IN QUIET, PLANT THE CHARGE, SWIM OUT. THE HULL DOES NOT FORGIVE NOISE. TELEX ENDS.
+
+Trained in cold tanks beneath the harbour wall, the Combat Diver moves through the deep water that ships cannot cross. A rebreather, a sealed watch and a pouch of limpet charges are all he carries. He plants them on quays and keels and drifts away before the sonar realises anyone was there.
+
+The divers have a saying that a good swim is one nobody remembers, and a bad one is always found.
+
+### exp_hoverlander
+title: Hoverlander
+subtitle: Amphibious personnel carrier
+unlock: open
+field_note: HOVERLANDER 5 // FIVE PASSENGERS, ONE DOOR, NO BRAKES ON WATER. KEEP THE SKIRT CLEAR OF WIRE. TELEX ENDS.
+
+A boxy skirted carrier with room for five soldiers, a roof hatch for a light gun and a loud fan that can be heard two miles off. It crosses marsh, mud and surf without slowing down, which is the only thing its crews ever say in its favour. It is slow to repair and easy to hear, yet it has delivered more men to the beach than any other vehicle in the fleet.
+
+### exp_sparker
+title: Sparker
+subtitle: Hover anti-air carrier
+unlock: campaign
+field_note: SPARKER 3 // GUIDED MISSILES, DEADLY AT HEIGHT. NO GUN FOR THE GROUND, SO KEEP IT BEHIND THE LINE. TELEX ENDS.
+
+A hover platform carrying four guided missiles on a rotating rack, built to keep the air arm honest over the shore. Its operators are known for steady nerves and terrible singing. The Sparker cannot strike ground targets, so its crew hopes the enemy will keep sending aircraft and never notice how thin the screen really is.
+
+### exp_barrage_lander
+title: Barrage Lander
+subtitle: Tracked rocket artillery
+unlock: campaign
+field_note: LANDER ARTY 2 // FIRE ON THE SPOTTER'S MARK, THEN LOAD AND RUN. NO DEFENCE AT CLOSE RANGE. TELEX ENDS.
+
+A tracked rocket carrier that can climb a landing craft's ramp, drive ashore and open fire from the dunes. Its rack of unguided rockets is ugly, loud and indiscriminate, and the gunners say they would rather be feared than accurate. When it stops to fire it becomes a fixed target for anything that reaches it, so the crews keep a second Lander close by to cover the first.
+
+### exp_repair_hover
+title: Mender
+subtitle: Field repair hover
+unlock: campaign
+field_note: MENDER 1 // HOLD STILL AND LET THE CREW WORK. ONE SHELL AND THE TOOLS ARE GONE. TELEX ENDS.
+
+A skirted workshop with a crane arm, a welding bay and a cabinet of spare plates, sent out to follow the line. Its crew works quickly and talks constantly, mostly to the vehicles they are patching. A Mender can bring a damaged skimmer or boat back into service within minutes, provided nobody shoots at it while it works. It is the most valued and least armoured vehicle in the fleet.
+
+### exp_survey_hover
+title: Survey Hover
+subtitle: Fast reconnaissance craft
+unlock: open
+field_note: SURVEY 4 // FIND THE RICH ASH, DRAW THE LINE, COME BACK. DO NOT STOP TO ADMIRE THE VIEW. TELEX ENDS.
+
+A light hover with a mast of sensors, a chart table and a crew of two who are never sure which of them is the navigator. It skims over ash fields and measures how thick the grey lies beneath the surface. Its readings decide where the skimmers go. The Survey Hover is cheap and quick, and it is the first thing to die when anything goes wrong.
+
+### exp_launch
+title: Patrol Launch
+subtitle: Light scout boat
+unlock: open
+field_note: LAUNCH 6 // FAST, CHEAP, NOSY. SEE EVERYTHING, SURVIVE SOME OF IT. TELEX ENDS.
+
+A small diesel boat with a twin machine gun, a searchlight and a radio that works when it feels like it. Patrol Launches are the eyes of the fleet at the edge of the shallows. Their crews are young, quick and rude to the officers who sent them. They are fragile, but there are always more in the yard, and the Admiral prefers that to losing a destroyer.
+
+### exp_supply_tender
+title: Supply Tender
+subtitle: Convoy freighter
+unlock: open
+field_note: TENDER 9 // SHIPMENT ABOARD. NO GUNS, NO EXCUSES. ESCORT ME. TELEX ENDS.
+
+An unarmed cargo ship with a deep hold, a derrick and a crew who know the name of every crate they carry. The Supply Tender is the link between the home ports and the beachhead, and every shipment the fleet depends on arrives in one. It cannot fight back, so it sails in the middle of the convoy and sails very carefully.
+
+### exp_command_ship
+title: Command Ship
+subtitle: Expedition flagship
+unlock: open
+field_note: COMMAND 1 // UNFOLD ON THE BEACH. THE FLAG GOES UP BEFORE THE FIRST WALL. TELEX ENDS.
+
+The great ship that brought the fleet across the ocean, with a hull that folds open into a landing depot when it reaches the shore. Her bridge is the Admiral's domain and her holds still carry the first crates of the expedition. A Command Ship cannot be replaced once it is spent, so every commander is taught to keep her out of the surf and away from the guns.
+
+### exp_minelayer
+title: Minelayer
+subtitle: Sea mine layer
+unlock: campaign
+field_note: MINE 2 // LAY THE FIELD BY NIGHT. KEEP A CHART OF EVERY MINE. TELEX ENDS.
+
+A slow, deep-bellied ship with a stern ramp that drops sea mines in neat rows across a channel. Its crews are proud of the tidy grid they leave behind, and they hate the thought of their own charts falling into enemy hands. Minelayers are most useful when the enemy is in a hurry and least useful when the fleet is.
+
+Their crews sleep little on the run home, since any mine they laid could be the one that sinks their own convoy.
+
+### exp_gyro
+title: Gyro Scout
+subtitle: Rotary spotter
+unlock: open
+field_note: GYRO 1 // FLY LOW, MARK THE TARGET, GO HOME. THE LAMP WILL BE SEEN. TELEX ENDS.
+
+A small rotary aircraft with a bubble canopy, a designator lamp and a pilot who talks to it like a dog. The Gyro Scout is the fleet's eyes in the air, marking targets for the guns on the water and the Pathfinders in the dunes. It cannot survive a fighter that finds it, so its pilots learn to hug the coastline and wait for the cloud.
+
+### exp_skyhook
+title: Skyhook
+subtitle: VTOL troop transport
+unlock: campaign
+field_note: SKYHOOK 6 // SIX SOULS OR TWO LIGHT VEHICLES. HOOK UP AND DROP THEM WHERE THE SHORE IS NOT. TELEX ENDS.
+
+A squat vertical-lift transport with a cargo cradle slung beneath its belly and room for six infantry or two light vehicles. Crews call it the Hook, and they swear it has pulled men out of worse places than any landing craft ever reached. It is loud, slow to climb and vulnerable to anything that carries a gun, but when a beach is too hot to land on, the Skyhook still gets through.
+
+### exp_jet
+title: Jet Fighter
+subtitle: Air superiority fighter
+unlock: campaign
+field_note: JET 3 // HOLD THE SKY, DO NOT CHASE. TELEX ENDS.
+
+A swept-wing jet with a cannon, a pair of air-to-air rockets and a cockpit that smells of hot oil. Pilots regard it as a fine machine and a difficult one, forever tempted to chase an enemy into the flak. The Jet exists to keep the sky clear for the slower aircraft below, and the best pilots know the sky stays clear only while they are above it.
+
+### exp_gunship
+title: Gunship
+subtitle: Rotary ground attack
+unlock: campaign
+field_note: GUNSHIP 2 // BURN THE GUN POSITIONS, THEN CLIMB OUT. TELEX ENDS.
+
+A heavy rotary aircraft with a chin turret, rocket pods on both wings and a crew of three who swear it is the only machine that answers when they call. It hunts gun positions and armoured columns from low altitude, firing as it turns. The Gunship is armoured where it counts, but a jet or a fast missile will still bring it down, and its crew listens for that sound all the time.
+
+### exp_bomber
+title: Bomber
+subtitle: Heavy strategic bomber
+unlock: campaign
+field_note: BOMBER 1 // ONE RUN, ONE BIG LOAD OF BOMBS. SHE WILL NOT COME BACK FOR A SECOND. TELEX ENDS.
+
+A long, four-engined aircraft with a bomb bay large enough to hold a small house, built to put heavy weight on buildings and ships. Its crews are older than most of the fleet and quieter than most of the pilots. A Bomber is the most expensive aircraft the air arm flies, and its losses are read out at the Admiral's table like a roll of names. It is never sent without a fighter screen.
+
+### exp_skyfreighter
+title: Skyfreighter
+subtitle: Heavy air-supply transport
+unlock: campaign
+field_note: FREIGHT 1 // SHIPMENT IN THE AIR. DO NOT LET THE GROUND CROWD THE RAMP. TELEX ENDS.
+
+A huge four-engined transport with a rear ramp, built to carry supplies over water and mountains to landlocked positions. Its crews call it the Long Load and say it sounds like a church organ when it climbs. The Skyfreighter is the only way the fleet reaches inland garrisons that the convoys cannot. It is worth its weight in fuel, and every crate it carries is counted at both ends.
+
 ## Structures
+<!-- session 9 entries: assumed — confirm -->
 
 ### exp_landing_depot
 title: Landing Depot
@@ -267,3 +411,182 @@ field_note: SALVO 1 // TWELVE MISSILES, ONE AIM POINT. IT CANNOT BE RECALLED. TE
 
 A pier of launch rails and control gantries that links the fleet's missile ships into a single barrage. The Concordat
 built it as a deterrent for a war that never came to its own coast.
+
+### exp_pile_house
+title: Pile House
+subtitle: Power station
+unlock: open
+field_note: PILE 1 // THE LIGHTS STAY ON WHILE THE PILE IS HOT. TELEX ENDS.
+
+A squat concrete house on wooden piles, sheltering a small reactor and the generators that light the beachhead. Its operators like to say the fleet runs on hope and uranium in roughly equal parts. A Pile House must stand on firm ground, and the first engineers ashore always chose its site before the walls went up.
+
+### exp_dredge_works
+title: Dredge Works
+subtitle: Ash refinery
+unlock: open
+field_note: DREDGE 3 // FEED IT ASH, GET FUEL AND GREY CAKE. THE SMELL IS YOUR OWN FAULT. TELEX ENDS.
+
+A low, clanking refinery that takes the grey ash scooped by skimmers and separates out the fuel and the heavy metals. The works smell of sulphur and burnt tea, and its foremen read the colour of the sludge like a weather report. Its output is the fleet's only steady income, which is why the Commissioner visits the sheds more often than she admits.
+
+### exp_tank_farm
+title: Tank Farm
+subtitle: Fuel storage
+unlock: open
+field_note: TANK 1 // FULL TANKS, EMPTY WORRIES. KEEP THE FARM AWAY FROM THE FIRE. TELEX ENDS.
+
+A row of painted cylinders behind a berm of sandbags, storing the refined fuel that every vehicle, boat and aircraft in the fleet depends on. Its tanks are numbered in the order they were bought, and the oldest are known by the names of the crews who first filled them. A Tank Farm is a fine target, so its guards are chosen for patience and for a reluctance to smoke.
+
+### exp_billet
+title: Billet
+subtitle: Crew barracks
+unlock: open
+field_note: BILLET 2 // BEDS, BOOTS, SOUP AT SIX. NO ONE SLEEPS ON THE RAMP. TELEX ENDS.
+
+A low prefabricated hut with bunks for two platoons, a stove that smokes and a noticeboard covered in letters from home. The Billet is where the infantry recover between landings and where new drafts learn the rules of the beach. Officers are discouraged from calling after lights out, which only makes the sergeants more nervous about what they are hiding.
+
+### exp_hover_yard
+title: Hover Yard
+subtitle: Hovercraft factory
+unlock: open
+field_note: YARD 1 // SKIRTS, FANS, HULLS. ONE SKIMMER A SHIFT IF THE FANS HOLD. TELEX ENDS.
+
+A wide shed with a sloping slipway and a gantry for lifting skirts into place, where the fleet's hovercraft are built and repaired. The yard's workers are the most cheerful in the fleet and the least patient with anyone who calls a skimmer a boat. Each new hull leaves with a painted ribbon of home colours, and the foremen insist every one is a little faster than the last.
+
+### exp_quay
+title: Quay
+subtitle: Small naval yard
+unlock: open
+field_note: QUAY 2 // SMALL HULLS ONLY. WATER MUST TOUCH THE SLIP. TELEX ENDS.
+
+A short concrete wharf with a slipway, a crane and a small workshop for launches and tenders. It can only be built where the sea meets the land, and it is the first naval building most commanders ask for. The Quay turns out patrol boats and small craft quickly and cheaply. Anything larger must wait for a Shipyard raised along the same shore.
+
+### exp_plotting_room
+title: Plotting Room
+subtitle: Radar and designation centre
+unlock: campaign
+field_note: PLOT 4 // SCREENS ON, TARGETS MARKED, SPOTTERS CALLED. TELEX ENDS.
+
+A windowless room of chart tables, radar scopes and a teleprinter that never stops, where the fleet's targets are plotted and assigned. Its officers are quiet, precise and thoroughly unpopular with the gunners, who resent being told when to fire. The Plotting Room is the gate to the second tier of the fleet's technology, and the first building the enemy learns to look for.
+
+### exp_shipyard
+title: Shipyard
+subtitle: Warship yard
+unlock: campaign
+field_note: YARD 2 // DESTROYERS, SUBMARINES, THE GREAT GUNS. WATER ON ONE SIDE, ALWAYS. TELEX ENDS.
+
+A tall covered slipway with a travelling crane and a gantry wide enough for a destroyer's hull. Here the fleet's warships are laid down, launched and fitted out under engineers who remember the last generation of warships fondly. The foreman keeps a photograph of every hull that has left his slipway, in a drawer, because he does not like to look at them.
+
+### exp_flight_deck
+title: Flight Deck
+subtitle: Airfield and pads
+unlock: campaign
+field_note: DECK 2 // THREE PADS, ONE RUNWAY, NO SPARE SPACE. CALL THEM IN. TELEX ENDS.
+
+A level concrete apron with painted landing pads, a fuel line and a control tower no taller than a lighthouse. Here the air arm's jets, gunships and scouts are prepared between sorties. The ground crews take pride in turning an aircraft around in minutes, and they resent the Admiral's habit of asking why it took five. Pilots say their goodbyes here too.
+
+### exp_airhead
+title: Air Head
+subtitle: Air freight receiver
+unlock: campaign
+field_note: AIRHEAD 1 // INBOUND FREIGHT ONLY. KEEP THE RUNWAY CLEAR OF SALVAGE. TELEX ENDS.
+
+A cleared plateau with a mooring mast, a landing strip of steel mesh and a receiving shed for air freight. Skyfreighters land here, unload and climb away before the ground crews have finished counting the crates. The Air Head is the fleet's only way to bring supplies into the interior when the convoys cannot reach. Its manager is said to know every crate by its shape and its smell.
+
+### exp_gun_battery
+title: Gun Battery
+subtitle: Coastal artillery
+unlock: campaign
+field_note: BATTERY 2 // TWO GUNS, ONE CLEAR FIELD OF FIRE, NO TIME TO SLEEP. TELEX ENDS.
+
+A pair of heavy guns in concrete emplacements, sited to cover the beach and the approach channel. The gunners are proud of their accuracy and suspicious of anyone who calls the guns obsolete. A Gun Battery is the best answer the fleet has to ships that come too close, and the reason the Concordat insisted on these emplacements before anything else. Its crew rarely leaves.
+
+### exp_picket
+title: Sonar Picket
+subtitle: Submarine detection post
+unlock: campaign
+field_note: PICKET 1 // LISTEN FOR THE HUM. THE SEA IS NOT EMPTY. TELEX ENDS.
+
+A buoy anchored offshore with a sonar array, a cable to the shore and a crew of two who take turns listening. The Picket hears submerged boats far beyond the range of any ship's own equipment, and sends their positions home in a flat, unsentimental voice. Its operators are the most anxious people in the fleet, which is why they are also the most reliable.
+
+### exp_sam
+title: SAM Mount
+subtitle: Surface-to-air battery
+unlock: campaign
+field_note: SAM 3 // ONE MISSILE, ONE TARGET, ONE CHANCE. DO NOT GIVE IT AWAY. TELEX ENDS.
+
+A small launch pad of guided missiles on a rotating mount, sited wherever the air arm expects trouble. Its crews live by a simple rule: never fire until the enemy has been seen twice. The SAM Mount answers the fleet's losses over the shore, and it has saved more aircraft than any other single building in the beachhead, though nobody has ever counted them.
+
+### exp_pillbox
+title: Seawall Emplacement
+subtitle: Cheap shore turret
+unlock: open
+field_note: WALL 1 // ONE GUN, ONE SANDBAG, ONE SHIFT. TELEX ENDS.
+
+A low concrete turret set into the seawall, with a single machine gun and a view along the beach. It costs little, goes up quickly, and can hold a line long enough for the rest of the fleet to arrive. The Seawall Emplacement is the first defence most beachheads receive and the last one anyone thinks to repaint. Its gunners are usually young and always cold.
+
+### exp_drydock
+title: Drydock
+subtitle: Heavy ship repair
+unlock: campaign
+field_note: DOCK 1 // ONE HULL AT A TIME, AND EVERY HULL IS PRECIOUS. TELEX ENDS.
+
+A deep concrete basin with gates at one end, large enough to take in the fleet's heaviest ships and pump out the water beneath them. Inside, welders and fitters work through the night on hulls scarred by ocean and shore. Drydock crews take pride in returning a cruiser to service within weeks, though the wait is always longer than the Admiral would like.
+
+## Upgrades
+<!-- session 9 entries: assumed — confirm -->
+
+### exp_sonar_nets
+title: Sonar Nets
+subtitle: Wider picket listening
+unlock: campaign
+
+Cable nets lowered between the Pickets and the shore, which extend the range of each listening post and reveal submerged boats to the whole team for a short time after they are heard. The nets are heavy to lay and cheap to keep, and the sailors who lay them say the sea sounds different once they are in.
+
+### exp_hardened_hulls
+title: Hardened Hulls
+subtitle: Heavier ship armour
+unlock: campaign
+
+A programme of extra steel plating welded over the original hull seams in the drydocks of the home ports. Every warship in the fleet gains armour from it, though each new plate adds weight, and the engineers argue constantly about how much weight a hull can carry before it stops being fast. The Admiral has ruled that the answer is always more.
+
+### exp_vacuum_cores
+title: Vacuum Cores
+subtitle: Faster vehicle reloads
+unlock: campaign
+
+Improved valve tubes that run cooler under load, so the guns of every fleet vehicle can fire more often. Crews notice at once, since the new tubes glow a fainter colour and need less attention between engagements. The engineers at Carrow Down remain modest about the work, though privately they believe these are the finest tubes they have ever built.
+
+### exp_composite_armour
+title: Composite Armour
+subtitle: Hover and infantry armour
+unlock: campaign
+
+Layered plates of ceramic and resin fitted to hovercraft skirts, troop carriers and the chest plates of infantry. It stops small arms and splinters that once went straight through, and it weighs less than the steel it replaces. Veterans complain that it smells of a laboratory, though they rarely complain about the first round that bounces away from them.
+
+### exp_guided_shells
+title: Guided Shells
+subtitle: Better artillery accuracy
+unlock: campaign
+
+Shells fitted with small steering vanes and a simple radio receiver, which let the fleet's artillery correct its fall of shot in flight. Spotters are delighted, gunners are sceptical, and the Admiral is pleased, because fewer shells are wasted on empty ground. The vanes are fragile and must be fitted by hand, so the armourers keep a stool beside every crate.
+
+### exp_fast_charging
+title: Fast Charging
+subtitle: Shorter shipment intervals
+unlock: campaign
+
+A revised loading system for the supply tenders and quays, with extra cranes, faster winches and better-lit night shifts. Shipments reach the beachhead about fifteen per cent sooner than before. The Commissioner approved the programme at once, and was the first to point out that every saved minute is one the fleet does not have to sit waiting for its bills.
+
+### exp_deep_survey
+title: Deep Survey
+subtitle: Larger skimmer loads
+unlock: campaign
+
+A survey package fitted to the skimmers that improves their sensors and deepens the hoppers, so each harvest run carries more ash before returning. Operators say the extra load makes the hulls sit lower in the water and the coffee taste worse, since the crew now spends longer on the surface. The Hydrographic Office calls the package a triumph and the skimmer crews call it a burden.
+
+### exp_veteran_drill
+title: Veteran Drill
+subtitle: Earlier veteran status
+unlock: campaign
+
+A rigorous training regime drawn up by the fleet's old sergeants and given a new name by the Office of Return, which spent a great deal of money on it. Units that complete the drill earn veteran status after fewer engagements, and they tend to keep their nerve longer under fire. The sergeants say the drill is simple, and then make the recruit do it twice.
