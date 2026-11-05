@@ -70,7 +70,8 @@ where she is quiet, and the two have not agreed on anything in six years except 
 first. The third voice is **Old Ottoline Vane**, the oldest woman on the Drift, who remembers the last train and has never
 told anyone what she saw from the platform.
 '''
-unlock = "open"
+# ASSUMED (session 9): the lore marks this page "campaign"; mission id set in M8.
+unlock = "campaign:TBD"
 
 [[entry]]
 id = "faction_lb_authority"
@@ -86,7 +87,8 @@ platform. When Authority survey cars appear on the dunes, the rigs offer water a
 An Authority officer, Brigadier Wrenfield, is known to the Drift. His brother was among those on the platform in 1990 and has
 not been seen since; the caravans have a name for him, and the Brigadier has not yet asked for it.
 '''
-unlock = "open"
+# ASSUMED (session 9): the lore marks this page "campaign"; mission id set in M8.
+unlock = "campaign:TBD"
 
 [[entry]]
 id = "faction_lb_directorate"
@@ -99,4 +101,5 @@ The Directorate is a rumour that arrived as a voice. The first Directorate broad
 register for service. The caravans' reply was to retune the loudspeaker on the *Kettle* and play it back with a slightly
 different wording. They do not fear the Voice, but they do not like what it does to the dunes at night.
 '''
-unlock = "open"
+# ASSUMED (session 9): the lore marks this page "campaign"; mission id set in M8.
+unlock = "campaign:TBD"
