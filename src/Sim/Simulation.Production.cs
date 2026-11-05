@@ -470,6 +470,8 @@ public sealed partial class Simulation
         for (int i = 1; i < _buildings.Capacity; i++)
             if (_buildings.Slots.IsIndexAlive(i) && _garrison.HomeOwner[i] == GarrisonState.NoOwner   // M4-15: a flipped ruin is no base
                 && !(BuildingTypeAt(i).Wall || BuildingTypeAt(i).Gate)) has[_buildings.Player[i]] = true;
+        for (int v = 1; v < _units.Capacity; v++)   // M6-03: a packed rig is a base in transit, not a lost one
+            if (_units.Slots.IsIndexAlive(v) && _rigs.IsPackedRig(v) && _units.Health[v] > 0) has[_units.Player[v]] = true;
         for (int p = 0; p < n; p++)
         {
             if (_players.IsNeutral((byte)p) || _players.Defeated[p]) continue;

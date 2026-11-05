@@ -4,6 +4,7 @@ using Rts.Sim.Core;
 using Rts.Sim.Missions;
 using Rts.Sim.Production;
 using Rts.Sim.Rules;
+using Rts.Sim.World;
 
 namespace Rts.Sim;
 
@@ -28,7 +29,9 @@ public sealed partial class Simulation
     private void ApplyPack(Command c)
     {
         if (_players.IsNeutral(c.Player)) return;
-        if (_buildings.Slots.IsAlive(c.Subject))
+        // An EntityId does not say which store it indexes: a packed rig of the player wins over a building with the same slot and generation.
+        bool unpack = _units.Slots.IsAlive(c.Subject) && _units.Player[c.Subject.Index] == c.Player && _rigs.IsPackedRig(c.Subject.Index);
+        if (!unpack && _buildings.Slots.IsAlive(c.Subject))
         {
             int b = c.Subject.Index;
             if (_buildings.Player[b] != c.Player || _buildings.Health[b] <= 0 || _rigs.PackTicksLeft[b] != 0) return;
@@ -62,7 +65,14 @@ public sealed partial class Simulation
         TerrainTable table = Setup.Rules.Terrain;
         for (int y = y0; y < y0 + h; y++)
             for (int x = x0; x < x0 + w; x++)
-                if (!_map.IsBuildable(new CellCoord(x, y), table)) return false;
+            {
+                var c = new CellCoord(x, y);
+                if (!table.Buildable(_map.LandAt(c)) || _map.OverlayAt(c) != OverlayKind.None || !_map.BuildingAt(c).IsNone) return false;
+                EntityId occ = _map.VehicleAt(c);
+                if (!occ.IsNone && occ.Index != self) return false;   // MapState.IsBuildable would also refuse the rig's own cell
+                for (int sub = 0; sub < InfantryStore.SubSlotCount; sub++)
+                    if (!_map.InfantryAt(c, sub).IsNone) return false;
+            }
         for (int v = 1; v < _units.Capacity; v++)
             if (v != self && _units.Slots.IsIndexAlive(v) && InRect(_units.Position[v].ToCell(), x0, y0, w, h) && !IsAirUnit(ActorKind.Vehicle, v)) return false;
         for (int n = 1; n < _infantry.Capacity; n++)
