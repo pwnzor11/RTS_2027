@@ -36,7 +36,7 @@ def weapon(S, GM, p, R):
 
 SPEC = dict(shoulder=(0.15, 0.02, 0.36), grips=((0, -0.04, 0.0), (0, 0.02, 0.0)), bulk=0.85,
             coat=("wrapD", "wrapB", "ashB", "wrapA"), hem_z=-0.02, cape=None, scarf="house",
-            hood=("wrapA", 0.36, 0.16), pack=pack, weapon=weapon, sleeves=("wrapD", "wrapB", "rope"),
+            hood=("wrapA", 0.26, 0.12), pack=pack, weapon=weapon, sleeves=("wrapD", "wrapB", "rope"),
             legs=("pants", 0.09, (0.085, 0.075)))
 
 
