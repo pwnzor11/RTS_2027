@@ -212,14 +212,14 @@ public readonly struct PlayerView
                 bool idle = s.NextMission[i] == MissionKind.None
                     && (m == MissionKind.None || m == MissionKind.Sleep || m == MissionKind.Guard || m == MissionKind.Stop);
                 dest.Add(new ViewActor(s.Slots.IdOf(i), kind, owner, Relation.Self, type, cell, s.Position[i], s.Health[i],
-                    max, m, idle, s.Target[i], false, 1, 1) { Underground = underground, Stealthed = stealthed });
+                    max, m, idle, s.Target[i], false, 1, 1) { Underground = underground, Stealthed = stealthed, Rank = _sim.RankOf(kind, i) });
             }
             else
             {
                 dest.Add(new ViewActor(s.Slots.IdOf(i), kind, owner, RelationOf(owner), type, cell, s.Position[i], s.Health[i],
                     max, MissionKind.None, false, EntityId.None, false, 1, 1)
                 {
-                    Underground = underground, Stealthed = stealthed,
+                    Underground = underground, Stealthed = stealthed, Rank = _sim.RankOf(kind, i),
                     Revealed = !friendly && (underground || stealthed),   // listed although hidden-capable: revealed
                 });
             }

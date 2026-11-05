@@ -243,6 +243,7 @@ public sealed partial class Simulation
         RunGround();       // M3: Simulation.Ground.cs — radiation decay/damage, Blackout decay, hardening recompute (before cleanup)
         RunAiBookkeeping();
         RunTriggers();
+        RunVeterancy();    // VET-3: Simulation.Veterancy.cs — rank-3 self-heal (before cleanup)
         RunCleanup();
         Tick++;
         if (Tick % SimConstants.HashIntervalTicks == 0)

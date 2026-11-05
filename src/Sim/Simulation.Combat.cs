@@ -233,15 +233,19 @@ public sealed partial class Simulation
         if (!target.Id.IsNone && target.Kind <= ActorKind.Building && !WeaponCanTarget(w, target.Kind, target.Id.Index)) return false;   // M3-05: air vs ground
         // VET-2: the shooter rides along with the shot so the kill can be credited (mobile actors only: buildings never rank; none when veterancy is off)
         ActorRef shooter = kind != ActorKind.Building && Setup.Rules.Veterancy.Enabled ? new ActorRef(kind, IdAt(kind, i)) : default;
+        int rank = shooter.Id.IsNone ? 0 : RankOf(kind, i);   // VET-3: the shooter's rank at the moment of firing
+        int damage = rank == 0 ? w.Damage : ScaleByRank(Setup.Rules.Veterancy.DamagePermille, rank, w.Damage);
         if (w.ProjectileSpeed <= 0)
-            Detonate(owner, w.Damage, w.Warhead, targetPoint, target, true, shooter);
+            Detonate(owner, damage, w.Warhead, targetPoint, target, true, shooter);
         else
         {
             if (!_projectiles.HasFree) return false;
-            _projectiles.Spawn(PositionAt(kind, i), target, targetPoint, w.ProjectileSpeed, w.Damage, w.Warhead, owner, weapon, shooter);
+            _projectiles.Spawn(PositionAt(kind, i), target, targetPoint, w.ProjectileSpeed, damage, w.Warhead, owner, weapon, shooter);
         }
         e.ReloadTicks = w.RateOfFire < 1 ? 1 : w.RateOfFire;
         if (kind != ActorKind.Building) e.ReloadTicks = Math.Max(1, (int)((long)e.ReloadTicks * _effects.RofPermille(kind, i) / 1000));   // M3-06: aura rate of fire
+        if (rank > 0) e.ReloadTicks = Math.Max(1, ScaleByRank(Setup.Rules.Veterancy.ReloadPermille, rank, e.ReloadTicks));   // VET-3: faster reload
+        if (!shooter.Id.IsNone) MarkCombat(kind, i);   // VET-3: self-heal waits after a shot
         return true;
     }
 
@@ -263,6 +267,11 @@ public sealed partial class Simulation
             d = Math.Max(1, (int)((long)d * wh.BonusVsEntrancePercent / 100));   // M4-05: bonus vs tunnel entrances
         if (wh.BonusVsIrradiatedPercent != 100 && IsIrradiatedTarget(kind, i)) d = Math.Max(1, (int)((long)d * wh.BonusVsIrradiatedPercent / 100));   // M3-05
         if (half) { d /= 2; if (d < 1) d = 1; }
+        if (kind != ActorKind.Building)
+        {
+            int rank = RankOf(kind, i);   // VET-3: a ranked target takes less damage
+            if (rank > 0) d = Math.Max(1, ScaleByRank(Setup.Rules.Veterancy.TakenPermille, rank, d));
+        }
         QueueHit(new ActorRef(kind, IdAt(kind, i)), d, source, shooter);
         if (kind == ActorKind.Building && wh.GarrisonDamagePercent > 0 && BuildingTypeAt(i).Garrison > 0)
         {
@@ -295,8 +304,8 @@ public sealed partial class Simulation
             int before = HealthAt(kind, i);
             switch (kind)
             {
-                case ActorKind.Vehicle: _units.Health[i] -= h.Amount; WakeOnHit(_units, kind, i); break;
-                case ActorKind.Infantry: _infantry.Health[i] -= h.Amount; WakeOnHit(_infantry, kind, i); break;
+                case ActorKind.Vehicle: _units.Health[i] -= h.Amount; WakeOnHit(_units, kind, i); MarkCombat(kind, i); break;   // VET-3: MarkCombat
+                case ActorKind.Infantry: _infantry.Health[i] -= h.Amount; WakeOnHit(_infantry, kind, i); MarkCombat(kind, i); break;
                 default: _buildings.Health[i] -= h.Amount; break;
             }
             if (before > 0 && HealthAt(kind, i) <= 0)

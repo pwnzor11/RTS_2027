@@ -3,6 +3,7 @@
 using Rts.Sim.Core;
 using Rts.Sim.Rules;
 using Rts.Sim.Veterancy;
+using Rts.Sim.World;
 
 namespace Rts.Sim;
 
@@ -42,6 +43,94 @@ public sealed partial class Simulation
         if (add <= 0) return;
         int[] kills = shooter.Kind == ActorKind.Vehicle ? _veterancy.VehicleKillValue : _veterancy.InfantryKillValue;
         kills[s] = (int)Math.Min((long)int.MaxValue, kills[s] + add);
+    }
+
+    // ---- rank and bonuses (VET-3) -------------------------------------------------------------------------------
+
+    /// <summary>
+    /// Veterancy rank of a vehicle or infantry slot: 0 (recruit) to 3 (hero), derived from the stored kill value and the rules table
+    /// (thresholds scaled by the owner's type <see cref="VehicleType.VetThresholdPermille"/>, so a lower threshold only ever raises the
+    /// rank). 0 when veterancy is disabled, for other kinds, for a free slot, and for types that cannot rank.
+    /// </summary>
+    public int RankOf(ActorKind kind, int i)
+    {
+        VeterancyRules vr = Setup.Rules.Veterancy;
+        if (!vr.Enabled || kind > ActorKind.Infantry || !SlotsOf(kind).IsIndexAlive(i)) return 0;
+        int kv = kind == ActorKind.Vehicle ? _veterancy.VehicleKillValue[i] : _veterancy.InfantryKillValue[i];
+        if (kv <= 0) return 0;
+        SimRules r = RulesOf(PlayerAt(kind, i));
+        int scale;
+        if (kind == ActorKind.Vehicle)
+        {
+            VehicleType t = r.Vehicles[_units.TypeIndex[i]];
+            if (!t.CanRank) return 0;
+            scale = t.VetThresholdPermille;
+        }
+        else
+        {
+            InfantryType t = r.Infantry[_infantry.TypeIndex[i]];
+            if (!t.CanRank) return 0;
+            scale = t.VetThresholdPermille;
+        }
+        int rank = 0;
+        for (int k = 0; k < VeterancyRules.Ranks; k++)
+            if (kv >= Math.Max(1L, (long)vr.Thresholds[k] * scale / 1000)) rank = k + 1;
+        return rank;
+    }
+
+    /// <summary>Applies a per-rank permille factor (<paramref name="table"/> entry rank - 1) to <paramref name="value"/>; unchanged at rank 0.</summary>
+    private static int ScaleByRank(IReadOnlyList<int> table, int rank, int value) =>
+        rank <= 0 ? value : (int)((long)value * table[rank - 1] / 1000);
+
+    /// <summary>Records that the vehicle or soldier fired or was hit now (the self-heal quiet timer). A no-op while veterancy is off, so
+    /// the part stays untouched (and hashes as before) in games that do not use it.</summary>
+    private void MarkCombat(ActorKind kind, int i)
+    {
+        if (!Setup.Rules.Veterancy.Enabled) return;
+        if (kind == ActorKind.Vehicle) _veterancy.VehicleLastCombat[i] = Tick + 1;   // stored as tick + 1 so 0 can mean "never"
+        else if (kind == ActorKind.Infantry) _veterancy.InfantryLastCombat[i] = Tick + 1;
+    }
+
+    /// <summary>Movement speed factor in permille: the aura speed composed with the rank's speed bonus (identical to
+    /// <c>Effects.SpeedPermille</c> at rank 0 or with veterancy off). Used by the move and air missions.</summary>
+    internal int MoveSpeedPermille(ActorKind kind, int i)
+    {
+        int aura = _effects.SpeedPermille(kind, i);
+        int rank = RankOf(kind, i);
+        return rank == 0 ? aura : ScaleByRank(Setup.Rules.Veterancy.SpeedPermille, rank, aura);
+    }
+
+    /// <summary>
+    /// Per tick (before RunCleanup): rank-3 self-heal. A ranked soldier or vehicle with a non-zero heal for its rank recovers
+    /// <c>heal_permille</c> of its max health (at least 1) whenever <c>(Tick + slot) % heal_interval_ticks == 0</c> and it neither fired nor
+    /// was hit for <c>heal_quiet_ticks</c>. No stored timer beyond the last-combat tick; slot order; integers only.
+    /// </summary>
+    private void RunVeterancy()
+    {
+        VeterancyRules vr = Setup.Rules.Veterancy;
+        if (!vr.Enabled) return;
+        for (int k = 0; k <= (int)ActorKind.Infantry; k++)
+        {
+            var kind = (ActorKind)k;
+            SlotArray slots = SlotsOf(kind);
+            for (int i = 1; i < slots.Capacity; i++)
+            {
+                if ((Tick + i) % vr.HealIntervalTicks != 0 || !slots.IsIndexAlive(i)) continue;
+                int hp = HealthAt(kind, i);
+                if (hp <= 0) continue;
+                int rank = RankOf(kind, i);
+                int permille = rank == 0 ? 0 : vr.HealPermille[rank - 1];
+                if (permille <= 0) continue;
+                int last = _veterancy.LastCombat(kind, i);
+                if (last != 0 && Tick - (last - 1) < vr.HealQuietTicks) continue;
+                SimRules r = RulesOf(PlayerAt(kind, i));
+                int max = kind == ActorKind.Vehicle ? r.Vehicles[_units.TypeIndex[i]].MaxHealth : r.Infantry[_infantry.TypeIndex[i]].MaxHealth;
+                if (hp >= max) continue;
+                int heal = Math.Max(1, (int)((long)max * permille / 1000));
+                int next = Math.Min(max, hp + heal);
+                if (kind == ActorKind.Vehicle) _units.Health[i] = next; else _infantry.Health[i] = next;
+            }
+        }
     }
 
     /// <summary>True if the vehicle or soldier in slot <paramref name="i"/> is of a type that earns ranks (the <c>veteran</c> flag; default: armed).</summary>

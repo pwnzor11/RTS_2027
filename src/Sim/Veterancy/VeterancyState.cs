@@ -6,8 +6,8 @@ namespace Rts.Sim.Veterancy;
 
 /// <summary>
 /// The "veterancy" state part (VET-1, docs/design/14_veterancy.md §4, D-127). Appended after "salvage". Per vehicle slot and per infantry
-/// slot: the accumulated <c>kill value</c> (credits of enemy victims killed, scaled by the kill permille) and the tick of the last combat
-/// (the actor fired, or was hit). The rank is derived from the kill value and the rules table and is never stored. Slot 0 of each array
+/// slot: the accumulated <c>kill value</c> (credits of enemy victims killed, scaled by the kill permille) and the last combat as tick + 1
+/// (0 = never; the actor fired, or was hit). The rank is derived from the kill value and the rules table and is never stored. Slot 0 of each array
 /// is the reserved "none" slot. A slot is cleared when an actor spawns into it or is removed (Simulation.M3.cs hooks), so a reused slot
 /// starts at 0. Layout: version, vehicle capacity, infantry capacity, then (slot, killValue, lastCombatTick) for every vehicle slot with
 /// a non-zero field, 0-terminated, then the same for infantry.
@@ -18,11 +18,11 @@ public sealed class VeterancyState : ISimStatePart
 
     /// <summary>Kill value per vehicle slot.</summary>
     public readonly int[] VehicleKillValue;
-    /// <summary>Tick of the last shot fired or hit taken per vehicle slot (0 = never).</summary>
+    /// <summary>Last shot fired or hit taken per vehicle slot, as tick + 1 (0 = never).</summary>
     public readonly int[] VehicleLastCombat;
     /// <summary>Kill value per infantry slot.</summary>
     public readonly int[] InfantryKillValue;
-    /// <summary>Tick of the last shot fired or hit taken per infantry slot (0 = never).</summary>
+    /// <summary>Last shot fired or hit taken per infantry slot, as tick + 1 (0 = never).</summary>
     public readonly int[] InfantryLastCombat;
 
     /// <summary>Creates an all-zero part sized by the setup's store limits.</summary>
@@ -41,7 +41,7 @@ public sealed class VeterancyState : ISimStatePart
     public int KillValue(ActorKind kind, int i) =>
         kind == ActorKind.Vehicle ? VehicleKillValue[i] : kind == ActorKind.Infantry ? InfantryKillValue[i] : 0;
 
-    /// <summary>Last combat tick of a mobile slot (0 for other kinds).</summary>
+    /// <summary>Last combat of a mobile slot as tick + 1 (0 = never, and for other kinds).</summary>
     public int LastCombat(ActorKind kind, int i) =>
         kind == ActorKind.Vehicle ? VehicleLastCombat[i] : kind == ActorKind.Infantry ? InfantryLastCombat[i] : 0;
 
