@@ -420,11 +420,11 @@ public sealed class M6ContractTests
     }
 
     [Fact]
-    public void EffectsVersion3_IsRejected()
+    public void EffectsVersion4_IsRejected()
     {
         var sim = ScriptedGame.NewSim(ScriptedGame.Setup());
         byte[] bytes = Bytes(sim.Effects);
-        bytes[0] = 3;
+        bytes[0] = 4;   // M7-12: version 3 (salvos) now exists
         Assert.Throws<InvalidDataException>(() => ReadBack(sim.Effects, bytes));
     }
 
