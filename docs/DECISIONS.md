@@ -856,4 +856,8 @@ Searchlight and Assembly Bore reworked as in PR #14.
 ### D-118 · 2026-11-04 · M6 plan and contracts
 **Decision:** docs/design/10_m6_plan.md is the M6 plan: Faction.LeftBehind = 3, CommandKind.Pack = 24, MissionKind Salvage 16 /
 Pack 17 / Withdraw 18, new state parts "rigs" and "salvage" after "directive", effects layout v2, save/replay format 10.
+M6-02 as built: rules-hash format 8 (schema v5 block for the new keys); wreck table capacity is a constant 256 (not a SimLimits
+field, so the header layout is unchanged); extra keys `wreck_min_value` 25 / `wreck_max_value` 1000; `wreck_ticks` defaults to 0
+(wrecks off until data sets 1200); storm fields live on the superweapon's `_blast` warhead; Left Behind is not playable until
+M6-08 adds its start kit and M6-09 raises PlayableFactions.
 **Status:** assumed — confirm (owner reads the plan)
