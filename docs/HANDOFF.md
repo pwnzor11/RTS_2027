@@ -128,7 +128,7 @@ pieces. Full suite 2 634 tests (Sim 1 439, Game 881, AI 162, Llm 109, Scripting 
   - Lead-only small packages (one function, <100 lines) are faster than briefing a helper and waiting on the build lock.
 
 ## If time runs short
-Do items 0-2 (art PR, supply on, M6-12); M7-02 fills a second overnight session.
+Do items 1-3 (owner answers, M7-10 Expedition AI, faction pick); art and acceptance fill a second overnight session.
 
 - Session 10 lessons:
   - Four waves of 4-7 Sonnet helpers each ran 1-3.5 h on the 2-CPU box; merging one by one as reports arrive, then a scoped
