@@ -150,11 +150,13 @@ internal sealed class BuildOrderManager
         return target;
     }
 
-    /// <summary>SUP-5: the supply margin of this AI (tiers 1..5 = 2, 4, 6, 8, 10; design 13 §6 proposed 4..12, tuned down); higher tiers build earlier. Set by the AI from its profile.</summary>
+    /// <summary>SUP-5: the supply margin of this AI (tiers 1..5 = 4, 5, 8, 10, 12); higher tiers build earlier. Set by the AI from its profile.</summary>
     public int SupplyMargin { get; set; } = 6;
 
     /// <summary>The supply margin for a difficulty tier 1..5.</summary>
-    public static int MarginForTier(int tier) => 2 * Math.Clamp(tier, 1, 5);
+    public static int MarginForTier(int tier) => Margins[Math.Clamp(tier, 1, 5) - 1];
+
+    private static readonly int[] Margins = [4, 5, 8, 10, 12];   // (tune) design 13 §6 says 4, 6, 8, 10, 12; tier 2 is 5 so the garrison fill is not late
 
     private int _supplyPick = -1;
 
