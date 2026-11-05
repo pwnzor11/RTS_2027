@@ -21,7 +21,8 @@ public static class VeterancyText
     /// <summary>Rank 3 name (key).</summary>
     public const string HeroKey = "hud.vet.rank_hero";
 
-    /// <summary>Info line: kill value and the threshold of the next rank. Arguments 0 = kill value, 1 = threshold (key).</summary>
+    /// <summary>Info line: kill value, the threshold of the next rank and that rank's name. Arguments 0 = kill value, 1 = threshold,
+    /// 2 = next rank name (key).</summary>
     public const string NextRankKey = "hud.vet.next_rank";
 
     /// <summary>Info line at the top rank (key).</summary>
@@ -31,15 +32,31 @@ public static class VeterancyText
     /// <param name="key">One of the constants above.</param>
     /// <param name="kill">Kill value (for <see cref="NextRankKey"/>).</param>
     /// <param name="threshold">Threshold of the next rank (for <see cref="NextRankKey"/>).</param>
-    public static string Placeholder(string key, int kill = 0, int threshold = 0) => key switch
+    /// <param name="nextRank">The rank being worked towards, 1..3 (for <see cref="NextRankKey"/>).</param>
+    public static string Placeholder(string key, int kill = 0, int threshold = 0, int nextRank = 1) => key switch
     {
         VeteranKey => "Veteran",
         EliteKey => "Elite",
         HeroKey => "Hero",
-        NextRankKey => "Next rank: " + kill.ToString(CultureInfo.InvariantCulture) + "/" + threshold.ToString(CultureInfo.InvariantCulture),
+        NextRankKey => "Kills " + kill.ToString(CultureInfo.InvariantCulture) + " / " + threshold.ToString(CultureInfo.InvariantCulture)
+            + " to " + Placeholder(RankNameKey(nextRank) ?? VeteranKey),
         MaxRankKey => "Max rank",
         _ => key,
     };
+
+    /// <summary>
+    /// The kill value a unit needs for its next rank (VET-5), from the rules' thresholds scaled like <c>Simulation.RankOf</c>
+    /// (<c>max(1, threshold x scale / 1000)</c>). 0 at the top rank, for an out-of-range rank, or when the unit cannot rank.
+    /// </summary>
+    /// <param name="thresholds">The [veterancy] thresholds, one per rank 1..3.</param>
+    /// <param name="rank">The unit's current rank.</param>
+    /// <param name="scalePermille">The unit type's veterancy threshold scale (1000 = none).</param>
+    /// <param name="canRank">Whether the unit type earns ranks.</param>
+    public static int NextThreshold(IReadOnlyList<int> thresholds, int rank, int scalePermille, bool canRank)
+    {
+        if (!canRank || rank < 0 || rank >= thresholds.Count) return 0;
+        return (int)Math.Max(1L, (long)thresholds[rank] * scalePermille / 1000);
+    }
 
     /// <summary>The key of a rank's name, or null for recruits (rank 0) and out-of-range ranks.</summary>
     public static string? RankNameKey(int rank) => rank switch
@@ -65,7 +82,7 @@ public static class VeterancyText
         string? name = RankNameKey(rank);
         if (name is not null) lines.Add(Placeholder(name));
         if (rank >= VeterancyRules.Ranks) lines.Add(Placeholder(MaxRankKey));
-        else if (nextThreshold > 0) lines.Add(Placeholder(NextRankKey, kill, nextThreshold));
+        else if (nextThreshold > 0) lines.Add(Placeholder(NextRankKey, kill, nextThreshold, rank + 1));
         return lines;
     }
 }

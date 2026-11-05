@@ -111,7 +111,7 @@ public sealed class SidebarLogicTests
     {
         Assert.Equal("", BlockReasonText.Of(QueueBlockReason.None));
         var reasons = Enum.GetValues<QueueBlockReason>().Where(r => r != QueueBlockReason.None).ToList();
-        var texts = reasons.Select(BlockReasonText.Of).ToList();
+        var texts = reasons.Select(r => BlockReasonText.Of(r)).ToList();
         Assert.All(texts, t => Assert.False(string.IsNullOrWhiteSpace(t)));
         Assert.Equal(texts.Count, texts.Distinct().Count());
         Assert.Contains("full", BlockReasonText.Of(QueueBlockReason.QueueFull), StringComparison.OrdinalIgnoreCase);

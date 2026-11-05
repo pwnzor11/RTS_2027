@@ -10,6 +10,7 @@ using Rts.Game.Render;
 using Rts.Game.Sandbox;
 using Rts.Game.Sprites;
 using Rts.Game.Ui.Fonts;
+using Rts.Game.Veterancy;
 using Rts.Sim.Core;
 using Rts.Sim.Rules;
 
@@ -36,6 +37,7 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
     private static readonly Color ActiveFill = new(0x58, 0x6E, 0x50);
     private static readonly Color GoodGreen = new(0x5E, 0xD0, 0x5A);
     private static readonly Color BadRed = new(0xE0, 0x4A, 0x32);
+    private static readonly Color AmberText = new(0xE8, 0xA8, 0x30);
     private static readonly Color TileFill = new(0x24, 0x2A, 0x22);
     private static readonly Color Veil = new(0, 0, 0, 150);
 
@@ -55,6 +57,7 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
     private int _scrollRow;
     private int _shownCredits = -1;
     private bool _minimapDrag;
+    private bool _supplyShown;   // SUP-4: the supply counter row is laid out and drawn
     private int _placementType = -1;
     private CellCoord _ghostTopLeft;
     private bool _ghostValid;
@@ -127,7 +130,8 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
         _hud = _source.Sim.HudFor(_player);
         _hasAircraft = HasAircraft(_hud);
         if (!_hasAircraft && _tab == SidebarTab.Aircraft) SelectTab(SidebarTab.Structures);
-        _layout = SidebarLayout.Compute(windowWidth, windowHeight, _ui, SidebarTabs.CountFor(_hasAircraft));
+        _supplyShown = SupplyReadout.Shown(_source.Rules.Supply.Enabled, _hud.Supply);   // SUP-4
+        _layout = SidebarLayout.Compute(windowWidth, windowHeight, _ui, SidebarTabs.CountFor(_hasAircraft), _supplyShown);
         _mouse = input.MousePosition;
         _tooltip = null;
         if (_shownCredits < 0) _shownCredits = _hud.Cash + _hud.Stored;
@@ -206,6 +210,7 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
         Shapes.Outline(batch, pixel, l.Panel, Border);
 
         DrawCredits(batch, pixel, l);
+        if (_supplyShown) DrawSupply(batch, pixel, l);
         DrawPowerBar(batch, pixel, l);
         DrawButton(batch, pixel, l.SellButton, "SELL", Mode == SidebarMode.Sell);
         DrawButton(batch, pixel, l.RepairButton, "REPAIR", Mode == SidebarMode.Repair);
@@ -220,6 +225,7 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
 
         DrawGrid(batch, pixel, l);
         if (LeftBehindText.ShowUnpackHint(_hud, snapshot, _player)) DrawUnpackHint(batch, pixel, l);   // M6-09
+        DrawUnitInfo(batch, pixel, snapshot);   // VET-5
         _minimap.Draw(batch, pixel, l.Minimap, snapshot, _cameraTopLeft, _viewSizeWorld);
         DrawTooltip(batch, pixel);
     }
@@ -252,6 +258,7 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
         bool left = input.LeftPressed, right = input.RightPressed;
 
         if (l.Credits.Contains(_mouse)) _tooltip = new List<string> { "Credits", $"Cash {_hud.Cash}   Stored {_hud.Stored}", $"Storage {_hud.StorageCap}" };
+        if (_supplyShown && l.SupplyRow.Contains(_mouse)) _tooltip = new List<string> { UiText.Get(UiText.SupplyLabel), $"Used {_hud.Supply.Used}   Cap {_hud.Supply.Cap}" };
         if (l.PowerBar.Contains(_mouse)) _tooltip = new List<string> { "Power", $"Output {_hud.PowerOut}   Use {_hud.PowerUse}", _hud.PowerUse > _hud.PowerOut ? "Low power: production is slower" : "Power is fine" };
 
         if (l.SellButton.Contains(_mouse))
@@ -510,12 +517,15 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
         return null;
     }
 
+    // SUP-4: the display name of this player's faction supply building, for the cap tooltip.
+    private string? SupplyBuildingName() => SupplyBuildingLookup.NameOf(_source.Rules, _hud.Faction);
+
     private List<string> TooltipFor(BuildOption o)
     {
         var lines = new List<string> { CameoNames.Display(IdOf(o)), $"Cost {o.Cost}" };
         bool ready = SidebarCommands.LeftClick(_hud, o) == CameoClick.EnterPlacement;
         if (ready) lines.Add("Ready: click to place");
-        else if (o.Blocked != QueueBlockReason.None) lines.Add(BlockReasonText.Of(o.Blocked));
+        else if (o.Blocked != QueueBlockReason.None) lines.Add(BlockReasonText.Of(o.Blocked, SupplyBuildingName()));
         else lines.Add("Left click: build   Right click: cancel");
         return lines;
     }
@@ -529,6 +539,75 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
         string text = "$ " + _shownCredits;
         int w = BitmapFont.Measure(text, _ui, FontWeight.Bold), h = BitmapFont.LineHeight(_ui, FontWeight.Bold);
         Text(batch, pixel, text, new Vector2(l.Credits.Right - w - 4 * _ui, l.Credits.Y + (l.Credits.Height - h) / 2f), Gold, _ui, FontWeight.Bold);
+    }
+
+    private void DrawSupply(SpriteBatch batch, Texture2D pixel, SidebarLayout l)
+    {
+        Rectangle r = l.SupplyRow;
+        if (r.Height <= 0) return;
+        Shapes.Fill(batch, pixel, r, ButtonFill);
+        Shapes.Outline(batch, pixel, r, Border);
+        string text = UiText.Get(UiText.SupplyLabel) + " " + SupplyReadout.Text(_hud.Supply);
+        Color colour = SupplyReadout.ToneOf(_hud.Supply.Used, _hud.Supply.Cap) switch
+        {
+            SupplyTone.Red => BadRed,
+            SupplyTone.Amber => AmberText,
+            _ => TextColour,
+        };
+        int w = BitmapFont.Measure(text, _ui, FontWeight.Regular), h = BitmapFont.LineHeight(_ui, FontWeight.Regular);
+        Text(batch, pixel, text, new Vector2(r.Right - w - 4 * _ui, r.Y + (r.Height - h) / 2f), colour, _ui, FontWeight.Regular);
+    }
+
+    // SUP-4: the lane head is paused because it does not fit under the cap (the sim pauses the lane without a Stalled flag).
+    private bool SupplyWaits(ProductionCategory category, int typeIndex) =>
+        SupplyReadout.HeadWaitsForSupply(_source.Rules.Supply.Enabled, _hud.Supply.Used, _hud.Supply.Cap,
+            _source.Sim.SupplyOfType(category, typeIndex));
+
+    private void DrawWaitingForSupply(SpriteBatch batch, Texture2D pixel, Rectangle r, float scale)
+    {
+        string text = UiText.Get(UiText.SupplyWaiting);
+        List<string> lines = Rts.Game.Menu.TextWrap.Wrap(text, Math.Max(8, r.Width - 6), s => BitmapFont.Measure(s, scale, FontWeight.Regular));
+        int lh = BitmapFont.LineHeight(scale, FontWeight.Regular);
+        int y = r.Y + (r.Height - lines.Count * lh) / 2;
+        foreach (string line in lines)
+        {
+            int w = BitmapFont.Measure(line, scale, FontWeight.Regular);
+            Text(batch, pixel, line, new Vector2(r.X + (r.Width - w) / 2f, y), Gold, scale, FontWeight.Regular);
+            y += lh;
+        }
+    }
+
+    // VET-5: the info panel for exactly one selected own unit, top left of the map view.
+    private void DrawUnitInfo(SpriteBatch batch, Texture2D pixel, SimSnapshot snapshot)
+    {
+        if (_selection.Count != 1) return;
+        UnitKey key = _selection.Units[0];
+        UnitView? found = null;
+        foreach (UnitView u in snapshot.Units)
+            if (u.Player == _player && UnitKey.Of(u) == key) { found = u; break; }
+        if (found is not UnitView unit) return;
+
+        SimRules r = _source.Rules;
+        bool vet = r.Veterancy.Enabled;
+        string name;
+        int max, scale;
+        bool canRank;
+        if (unit.Kind == UnitKind.Vehicle)
+        {
+            VehicleType t = r.Vehicles[unit.TypeIndex];
+            name = CameoNames.Display(t.Id); max = t.MaxHealth; scale = t.VetThresholdPermille; canRank = t.CanRank;
+        }
+        else
+        {
+            InfantryType t = r.Infantry[unit.TypeIndex];
+            name = CameoNames.Display(t.Id); max = t.MaxHealth; scale = t.VetThresholdPermille; canRank = t.CanRank;
+        }
+
+        int rank = vet ? _source.Sim.RankOf(key.Kind, key.Id.Index) : 0;
+        int kill = vet ? _source.Sim.KillValueOf(key.Kind, key.Id.Index) : 0;
+        int next = vet ? VeterancyText.NextThreshold(r.Veterancy.Thresholds, rank, scale, canRank) : 0;
+        IReadOnlyList<string> lines = UnitInfoPanel.Lines(name, unit.Health, max, vet, rank, kill, next);
+        UnitInfoPanel.Draw(batch, pixel, new Point(_layout.MapView.X + 8, _layout.MapView.Y + 8), lines, _ui);
     }
 
     private void DrawPowerBar(SpriteBatch batch, Texture2D pixel, SidebarLayout l)
@@ -661,8 +740,10 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
                     if (i != 0) continue;
                     int done = r.Height * q.Items[0].ProgressPermille / 1000;
                     Shapes.Fill(batch, pixel, new Rectangle(r.X, r.Y, r.Width, r.Height - done), new Color(0, 0, 0, 120));
-                    Shapes.Fill(batch, pixel, new Rectangle(r.X, r.Bottom - Math.Max(2, (int)_ui * 2), r.Width * q.Items[0].ProgressPermille / 1000, Math.Max(2, (int)_ui * 2)), q.Items[0].Stalled ? Gold : GoodGreen);
-                    if (q.Items[0].Stalled)
+                    bool waitingForSupply = SupplyWaits(q.Category, q.Items[0].TypeIndex);   // SUP-4
+                    Shapes.Fill(batch, pixel, new Rectangle(r.X, r.Bottom - Math.Max(2, (int)_ui * 2), r.Width * q.Items[0].ProgressPermille / 1000, Math.Max(2, (int)_ui * 2)), q.Items[0].Stalled || waitingForSupply ? Gold : GoodGreen);
+                    if (waitingForSupply) DrawWaitingForSupply(batch, pixel, r, small);
+                    else if (q.Items[0].Stalled)
                         CentredText(batch, pixel, "WAIT", r, Gold, small);
                 }
             }

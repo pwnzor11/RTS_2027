@@ -81,6 +81,16 @@ public sealed partial class Simulation
         return rank;
     }
 
+    /// <summary>
+    /// Kill value of a vehicle or infantry slot (VET-5, read-only): the stored total the rank is derived from. 0 when veterancy is disabled,
+    /// for other kinds and for a free slot.
+    /// </summary>
+    public int KillValueOf(ActorKind kind, int i)
+    {
+        if (!VetRules.Enabled || kind > ActorKind.Infantry || !SlotsOf(kind).IsIndexAlive(i)) return 0;
+        return kind == ActorKind.Vehicle ? _veterancy.VehicleKillValue[i] : _veterancy.InfantryKillValue[i];
+    }
+
     /// <summary>Applies a per-rank permille factor (<paramref name="table"/> entry rank - 1) to <paramref name="value"/>; unchanged at rank 0.</summary>
     private static int ScaleByRank(IReadOnlyList<int> table, int rank, int value) =>
         rank <= 0 ? value : (int)((long)value * table[rank - 1] / 1000);
