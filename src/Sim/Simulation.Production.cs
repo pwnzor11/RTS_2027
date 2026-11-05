@@ -338,6 +338,7 @@ public sealed partial class Simulation
         CellCoord topLeft = _buildings.Cell[factory.Index];
         int lane = ProductionState.Lane(player, category);
         CellCoord? rally = _production.RallySet[lane] ? _production.Rally[lane] : null;
+        if (category == ProductionCategory.Aircraft && TryBuildIntoHangar(player, type, rally)) return true;   // M7-09
         if (category == ProductionCategory.Infantry)
             return SpawnProducedInfantry(player, type, topLeft, fbt, rally);
         if (category == ProductionCategory.Vehicle || category == ProductionCategory.Aircraft)   // M4-04: aircraft leave like vehicles

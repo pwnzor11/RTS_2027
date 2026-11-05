@@ -41,6 +41,7 @@ internal static class MissionHandlers
         t[(int)MissionKind.Pack] = RigMission.Handle;          // RigMission.cs (M6-03)
         t[(int)MissionKind.Withdraw] = WithdrawMission.Handle; // WithdrawMission.cs (M6-05)
         t[(int)MissionKind.Unload] = UnloadMission.Handle;     // UnloadMission.cs (M7-04)
+        t[(int)MissionKind.Sortie] = (sim, store, kind, i) => kind == ActorKind.Vehicle ? sim.RunSortieMission(i) : GuardSleepTicks;   // M7-09
         return t;
     }
 
