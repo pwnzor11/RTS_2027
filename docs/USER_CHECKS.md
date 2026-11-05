@@ -205,3 +205,22 @@ until then the Left Behind shows placeholder boxes.
    screen yet (SUP-4).
 7. **AI as Left Behind:** set an AI slot to Left Behind at Veteran: it unpacks, builds, raids and attacks; it may pack and move its
    base when hard pressed.
+
+## Session 10 · Supply on, veterancy AI, naval groundwork, ocean maps (2026-11-05)
+Pull main and run `git lfs pull`. **Saves from session 9 builds no longer load** (sim save format 12); replays from older builds
+still play. The Expedition is in the data but cannot be picked yet; its ships, landings, submarines, carrier and Salvo Array are
+covered by tests only.
+1. **Supply counter:** start a skirmish. The sidebar shows "Supply used/cap"; it turns amber when you are 4 from the cap and red at
+   the cap. Supply is on by default now (`[supply] enabled = true` in data/rules/game.toml).
+2. **At the cap:** queue riflemen until the cap. Hover a greyed infantry cameo: "Supply cap reached. Build more <building>." (the
+   Authority names the Ration Hall). A queued unit that no longer fits shows "Waiting for supply" until you build one.
+3. **Unit info panel:** select one of your own units: the top-left of the map shows its name, health, rank and "Kills k / t to
+   <next rank>".
+4. **AI and veterancy:** play a Veteran AI for 15+ minutes. Its ranked units pull back earlier when hurt and its waves go after your
+   rank-3 units first.
+5. **Left Behind salvage:** play as or against a Left Behind AI. Early on it builds a Hauler, and after fights the Hauler drives to
+   the wrecks to collect them.
+6. **Ocean maps:** in skirmish setup pick a generated map; a new row reads "Ocean: None". Change it to "Ocean: North and South" and
+   start: those edges are sea with shallows and a beach. Save, quit and load the save: the sea is still there.
+7. **Map tool:** `dotnet run --project src/Tools -- map gen --biome rust_belt --size s --players 2 --seed 4 --ocean n --out o.map.toml --ascii`
+   prints a map with a northern sea and its convoy and landing counts; `map validate o.map.toml` reports no issues.

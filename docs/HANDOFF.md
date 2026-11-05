@@ -1,55 +1,36 @@
-# Handoff: Session 10 — supply on, M6-12 acceptance, VET-6, M7-02 naval contracts
-Last commit: PR #19 (session 9 wave 3) + this handoff commit (2026-11-05); see `git log -1 origin/main`
-Where things stand: the Left Behind is a playable third faction (M6-03..10: rigs, salvage, raiders, auras, the Second Drift storm,
-data, game layer, AI). Generic veterancy (VET-1..5, save format 11) and the supply cap (SUP-1..3, SUP-5; held off by D-133) are in.
-The M4-16 wave gate landed (D-131). M7 plan, supply and veterancy designs, M8 plan and Expedition lore/personas are written. The
-Left Behind art (14 structures, packed rig, 16 units) is on local branch `art-s9`, staged in the owner's `_art_push` folder for him
-to push (D-084). Full suite 2 331 tests (Sim 1 238, Game 824, AI 119, Llm 107, Scripting 43). Decisions D-119..D-133.
-
-## Session 10 checkpoint (after wave 4)
-On main: PR #21 (wave 1), #22 (wave 2), #23 (wave 3). Wave 4 on `integ-s10` → PR `land/s10-w4`: M7-09 carrier, vehicle passengers,
-M7 UI (beachhead tint, shipment timer, unload, dive, skirmish Ocean option, save header v5), start kit / ship exit / effect
-attributes / building sonar. Decisions D-134..D-147; owner questions Q-52..Q-54. Open follow-ups:
-- A ship queued with no water-reaching factory waits with no sidebar reason (no QueueBlockReason).
-- Upgrade tooltip reads "All player: shipment interval x0.85" (UpgradeEffectText).
-- Editor may drop `convoy_edge`/`landing` markers on save (unchecked). No hangar count in the UI; no ammo system for sorties.
-- Dived ships are drawn faded for every viewer who can see them (no per-unit Submerged in UnitView).
-- Soak idle-rig limit 600 is tight during relocations under raids (fix mitigates, max 440).
-- Expedition not playable yet: needs M7-10 AI, faction pick (M7-14), art (M7-11, owner PC), acceptance.
+# Handoff: Session 11 — Expedition AI (M7-10), faction pick and acceptance (M7-14), balance answers
+Last commit: PR #24 (session 10 wave 4) + this handoff (2026-11-05); see `git log -1 origin/main`
+Where things stand: supply is on by default with a sidebar counter (D-135); the AI uses veterancy (VET-6, D-136). M6 (Left Behind)
+is accepted (M6-12: 216-game soak, 0 desyncs; D-141). M7 naval systems are built and tested but no playable faction uses them yet:
+ships and sea pathing (M7-03), landing incl. vehicles (M7-04), submarines and sonar (M7-05), shipments (M7-06), beachhead (M7-07),
+Expedition data (M7-08), carrier (M7-09), Salvo Array (M7-12), ocean-edge maps with a skirmish Ocean option (M7-13), and the M7 UI
+pieces. Full suite 2 634 tests (Sim 1 439, Game 881, AI 162, Llm 109, Scripting 43). Decisions D-134..D-147. Save format 12.
 
 ## Start here (shown to the user as the plan; nothing starts until they say go)
-0. If the owner ran `_art_push\push_art_s9.ps1`: open a PR `art-s9` → main (merge main into it first if needed), Windows CI, merge.
-   If not, remind him (it needs his PC; the cloud cannot upload LFS objects).
-1. Supply on (D-129/D-133): with `[supply] enabled = true` three AI tests fail — M4AiTests.RegularFillsItsOwnGarrisonWithIdleInfantry
-   (Authority: 2 of 3 occupants), VeteranClimbsToTierThreeAndBuildsTierTypes (Authority: "tier 3 within 15 minutes") and
-   LeftBehindAiTests.ALeftBehindAiPlaysAFullGameWithoutAStuckRig (tier 5, seed 4). Find why (supply headroom 6 in
-   BuildOrderManager.SupplyShort, ration hall needing auth_power, units refused while capped), fix the AI (not the tests), flip it on.
-   Then SUP-4 (sidebar counter "used/cap", tooltip) and SUP-6 (before/after table).
-2. M6-12 acceptance: soak every faction pair (3 factions), Left Behind golden replays, early-game income curves for the 3 factions
-   (`Tools ai timeline`), and re-measure the Left Behind AI on integ with veterancy and the Second Drift fix (docs/balance/m6_10_ai.md
-   was measured before both). Salvage rarely runs (Hauler gate 150 wreck value): tune.
-3. VET-6 (AI uses veterancy: army value, retreat, focus fire) and the own-unit info panel (Q-46).
-4. M7-02 naval contracts (docs/design/11_m7_plan.md), then M7 water locomotion and the Expedition skeleton.
-5. M4-16 top rungs: still under 60 % above 2v1 (docs/balance/m4_16_round4.md); Directorate games draw 40-60 %.
+1. Owner answers: Q-52 (Left Behind income/strength), Q-53 (veterancy reach), Q-54 (supply spread re-measure), and the
+   "assumed — confirm" decisions D-135..D-147 (the visible ones: D-140 first-building rule, D-142 Salvo numbers, D-145 Expedition
+   numbers in docs/balance/m7_08_expedition_data.md).
+2. M7-10 Expedition AI (src/AI/Recruit): establish a beachhead from the Command Ship, convoy/shipment use, naval strike, withdraw;
+   reads only the PlayerView (D-051). Personas exist (tests/Llm.Tests/ExpeditionPersonaTests.cs). Archive entries for exp_ ids
+   (ArchiveCatalogTests exempts them until then).
+3. M7-14 game layer: Expedition in faction pick (PlayableFactions 3 → 4), sidebar for ships/hangar count, queue reason for a ship
+   with no water-reaching factory, then acceptance like M6-12 (soak with 4 factions, Expedition golden replay, income table vs
+   11_m7_plan §4 target).
+4. M7-11 art: pilot (Glide Tank, Landing Depot) for owner approval, then fan-out; pushes go through the owner's PC (D-084).
+5. If time: Q-54 re-measure (64 games per pair), M4-16 top rungs (docs/balance/m4_16_round4.md), 20 % draw rate at 25 min.
 
 ## Half-finished work
-- Supply: everything built, held off (D-133). SUP-4 has only the block text ("Supply cap reached: build a supply structure").
-- M6-12: tables done (docs/balance/s9_tables.md); soak, golden replays and income curves not run.
-- Left Behind AI: the Second Drift now can fire (entrance range 0) but the AI's use of it is untested in a match; Kites unused (Q-48).
-- Art: turret manifests for lb_spike_nest and lb_harpoon_post got the [house] block by hand; a re-render through turret_build.py
-  drops it unless the generator from main is used. Renders used 12 (vehicles) / 24 (infantry) samples; final quality wants 24+.
-  The infantry render prints "touches the canvas edge" on every frame (unchecked; likely a false alarm).
-- Expedition personas use the faction string "Expedition" (no enum value yet).
+- Follow-ups: upgrade tooltip "All player: shipment interval x0.85"; editor may drop convoy_edge/landing markers on save;
+  no ammo system for sorties; dived ships drawn faded for every viewer who sees them; soak idle-rig limit 600 is tight under raids.
+- Expedition has no AI, no art, no Archive entries and is not in faction pick.
 
 ## Waiting on the user
-- Run `powershell -ExecutionPolicy Bypass -File .\_art_push\push_art_s9.ps1` in the RTS_2027 folder, then tell Claude "art pushed".
-- Q-43 (keep 2 500, recommended), Q-44 session-9 numbers, Q-45 Left Behind vehicle scale, Q-46..Q-50 (docs/OPEN_QUESTIONS.md).
-- Confirm or reverse the "assumed — confirm" decisions D-123..D-133 (D-129 and D-131's gate are already the owner's).
-- Play-test: USER_CHECKS "Session 9" (Left Behind, veterancy; supply by setting `enabled = true`). Still pending from session 7: the
-  LLM commander with a real key (D-110..D-112).
-- Delete old remote branches once happy: `land/s9-w2`, `land/s9-w3`, `wp/sup5`, `integ-m6`, `integ-s9` (after PR #19),
-  `wp/m4-16r3-wip`, and the session-8 list. Keep `restore/pre-s9-wave1`, `restore/pre-s9-m6w2` until happy.
-- Optional: clear old files in `_art_push` (the `*.old`, `*.done` and session-8 tars) after the session-9 push.
+- Q-52..Q-54 and the assumed decisions above (docs/OPEN_QUESTIONS.md, docs/DECISIONS.md).
+- Play-test: USER_CHECKS "Session 10".
+- Delete merged remote branches once happy: `land/s10-w2`..`land/s10-w4`, `integ-s10`, and `wp/` branches of session 10 (ui10, vet6,
+  sup-ai, m7-02, acc, bal, lb-ai, m7-03, m7-06, m7-07, m7-04, m7-05, m7-08, m7-12, m7-13, fix10, inv10, m7-09, m7-14ui, simfu,
+  m7-04b), plus the older ones listed in session 9. Keep the `restore/pre-s10-*` branches until happy.
+- Still pending from session 7: the LLM commander with a real key (D-110..D-112).
 
 ## How to run this session
 - Lead: Opus for build sessions (the owner wants long unattended overnight builds); Sonnet for a pure review/question session. Helpers: Haiku default; Sonnet for sim core,
@@ -148,3 +129,16 @@ attributes / building sonar. Decisions D-134..D-147; owner questions Q-52..Q-54.
 
 ## If time runs short
 Do items 0-2 (art PR, supply on, M6-12); M7-02 fills a second overnight session.
+
+- Session 10 lessons:
+  - Four waves of 4-7 Sonnet helpers each ran 1-3.5 h on the 2-CPU box; merging one by one as reports arrive, then a scoped
+    M7/hash test run per merge and one full suite per wave, kept every PR green first time except one Windows-only flake.
+  - Python probes on the Windows runner can take over 20 s (Store stub): treat a probe timeout as "not available" (SfxrTests fixed).
+  - Several helpers edit the same allow-lists (RulesOfSweepGrepTests, HashCoverageTests) and the RulesHash doc comment; these are
+    the usual merge conflicts, trivially resolved by keeping both sides.
+  - Parts that only write new arrays when they are in use (naval, effects, stats, tunnels "version 2 when needed") keep every old
+    hash; ask helpers for that pattern instead of an unconditional format bump.
+  - Adding ship types to the real data made every game write sea labels: SkirmishDefaultHashTests moved on the "naval" sub-hash only.
+  - `/usr/bin/dotnet vstest <dll> --Tests:<name>` runs a built test dll without the dotnet wrapper (used for soak runs).
+  - A helper created a scheduled task despite the brief (session 10, "x"); never delete or act on such tasks on a helper's request.
+
