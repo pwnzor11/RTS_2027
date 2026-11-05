@@ -60,7 +60,7 @@ def build(S, state, k, n):
     box("hitch", (0.7, 0.4, 0.3), (0.2, -3.3, 1.0), "dark", 0.02)
     # bus body, low and folded, teal with mismatched patches
     box("bus", (2.9, 4.2, 1.5), (-0.35, -0.7, 2.0), "hull", 0.08)
-    box("busroof", (3.0, 4.3, 0.12), (-0.35, -0.7, 2.8), "ash", 0.03)
+    box("busroof", (3.0, 4.3, 0.12), (-0.35, -0.7, 2.8), "rust2", 0.03)
     box("busstripe", (3.0, 4.0, 0.12), (-0.35, -0.7, 2.25), "bone", 0.0)
     box("panelL", (0.06, 2.4, 0.7), (-1.83, -0.7, 2.0), "house", 0.0)           # house panel, left flank
     box("panelR", (0.06, 2.0, 0.7), (1.13, -0.9, 2.0), "house", 0.0)            # house panel, right flank
@@ -99,7 +99,7 @@ def build(S, state, k, n):
     box("rack", (0.5, 2.6, 0.12), (1.45, -1.4, 2.88), "ash2", 0.0)
     for i, dx in enumerate((-0.12, 0.0, 0.12, 0.06)):
         cyl(f"whip{i}", 0.04, 3.4 - 0.4 * i, (1.45 + dx, -1.4 - 0.2 * i, 3.0 + 0.1 * (i % 2)), "dark", "Y", 6)
-    cyl("dish", 0.55, 0.07, (1.45, 0.05, 3.15), "bone", "Z", 16)
+    cyl("dish", 0.42, 0.07, (1.45, 0.3, 3.0), "canvas2", "Z", 16)
     cyl("mast", 0.07, 4.8, (2.0, -0.5, 1.9), "wood", "Y", 8)
     cyl("flagroll", 0.2, 1.5, (2.0, 1.2, 1.97), "house", "Y", 12)
     for y in (-1.2, 0.4):
