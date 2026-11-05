@@ -91,7 +91,7 @@ public sealed partial class Simulation
 
     /// <summary>A hit from <paramref name="source"/> killed <paramref name="target"/>: pay spoils when the killer is a raider type and
     /// the victim a harvester. ASSUMED (PendingHit carries only the player): the source player's faction has any raider type.</summary>
-    private void OnSpoilsLethalHit(ActorRef target, byte source)
+    internal void OnSpoilsLethalHit(ActorRef target, byte source)
     {
         if (target.Kind != ActorKind.Vehicle || source >= _players.Count || _players.IsNeutral(source)) return;
         int v = target.Id.Index;
