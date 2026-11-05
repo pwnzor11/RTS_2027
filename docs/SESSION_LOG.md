@@ -136,3 +136,24 @@ the testhost); LFS images were pointer files until a second `git lfs pull` (scen
 hashes and the goldens moved for the new state part only. Art still not on GitHub.
 **User check:** USER_CHECKS.md, "Session 7 · M5 LLM commander".
 **Next session should:** see HANDOFF (art push + reworks, owner LLM play-test, M4-16 diagnosis, M6 contracts).
+
+## Session 8 · 2026-11-04 (art push, reworks, M4-16 round 3, M6 contracts)
+**Goal:** get the session-4/5 art onto GitHub and main, the ART-S6 reworks, M4-16 diagnosis, M6 contracts.
+**Done:** the owner pushed the art from the PC; six lost first-draft LFS images blocked the push (GitHub GH008), so the two draft
+commits were rewritten to the current images (D-115). Art merged to main via PR #13 with renderer support for the session-4
+companion turret/shadow sheets (D-114) and [house] blocks on 20 manifests. ART-S6 reworks piloted (Seismograph, owner approved)
+then fanned out: Searchlight, Gate open state, Assembly Bore, Hatch cage, Rad Mortar with the radiation green (D-116, D-117);
+PR #14. M4-16 round 3 diagnosis (docs/balance/m4_16_round3.md): higher tiers lose by sending small timed waves into a bigger home
+army; tech spending second; round 2's 2 v 1 inversion was noise. The owner set the tuning rule (D-113). Tech hold measured: no effect.
+A wave strength gate + escalation helps (Authority 2v1 50 -> 62 %, 3v2 34 -> 45 %, 4v3 26 -> 32 %, 5v4 not improved); the owner
+asked to wrap up before it was made real code, so it is saved as scratch knobs on `wp/m4-16r3-wip` (untested, not on main). M6 plan
+(docs/design/10_m6_plan.md) and M6-02 contracts landed via PR #15 (D-118, save format 10).
+**Commits:** ed79d8c (PR #13), dfd2bc7 (PR #14), 6da7931 (PR #15), plus this handoff (which also carries the M4-16 round-3 docs and
+`ai match --trace`).
+**Helpers:** about 9 launches (Sonnet: companion-sheet renderer, three art rework lanes, M4-16 round 3, M6-02; pilot by the lead).
+**Problems / notes:** the cloud cannot upload LFS objects (D-084), so art went through the owner's PC twice; `lfs.allowincompletepush`
+was a wrong suggestion (GitHub checks server-side). A container restart killed one art helper after its render finished (lead
+committed it). CommanderReplayAndSaveTests failed once under load and passed 3/3 alone (flaky under CPU pressure). `gh pr checks`
+uses GraphQL, which is blocked: use `gh api repos/pwnzor11/RTS_2027/commits/<sha>/check-runs`.
+**User check:** USER_CHECKS.md, "Session 8 · Art on main, reworks, M6 contracts".
+**Next session should:** see HANDOFF (M4-16 fixes, M6 wave 2, owner LLM play-test).

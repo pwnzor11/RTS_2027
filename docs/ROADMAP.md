@@ -106,7 +106,7 @@ Both factions, full tech tree, map editor, real AI with difficulty levels, audio
 - [x] M3-07 Directorate + Authority-counter data
 - [x] M3-08 Game: faction pick and new renderers
 - [x] M3-09 Audio host, SFX generator, music player and brief
-- [ ] ART-S6 Session-5 art to main once the owner pushes the session-5 bundle (D-084); owner reworks (D-099): Seismograph drum,
+- [x] ART-S6 (done session 8: session-4/5 art on main via PR #13 with companion turret/shadow sheets D-114; reworks via PR #14, D-116/D-117) Session-5 art to main once the owner pushes the session-5 bundle (D-084); owner reworks (D-099): Seismograph drum,
   Searchlight lens, Assembly Bore roof, Hatch cage, auth_gate open state; one radiation-green ramp in PAL_DIR for the rad mortar (Q-35)
 - [x] M3-ART Art fan-out (session 5, lead-reviewed per D-088/D-091; owner review pending): turret rework + dir_shaft rev 2 owner-approved; 14 Directorate structures, auth_seismograph/searchlight/gate/engineering, agitprop turret, Sunrise, rad mortar rev 2. Art is on local `integ-art` until the owner runs push_art.ps1 (D-084). Effects art not done → M10
 - [x] M3-10 Directorate AI (Recruit tier; 4 test games vs Authority all draws; one racy test skipped → fix in M3-11)
@@ -146,7 +146,7 @@ Main menu → Map Editor.
 - [x] M4-13 Map editor + main menu entry
 - [x] M4-14 RulesOf sweep
 - [x] M4-15 Neutral map features (ruins)
-- [ ] M4-16 Integration + balance. Session 7: round-2 re-measure in docs/balance/m4_16_round2.md (ladder flat or inverted, not met). Session 6 (PR #11): start-bias sim fixes + `ai match` per-game seeds (D-104); AI round 1 (D-105:
+- [ ] M4-16 Integration + balance. Session 8: round-3 diagnosis in docs/balance/m4_16_round3.md (main cause: higher tiers launch small waves on a timer into a bigger home army; tech spending second; round-2 2 v 1 inversion was sampling noise; 64 games per cell from now on); fixes in progress on `wp/m4-16r3-wip`, not landed. Session 7: round-2 re-measure in docs/balance/m4_16_round2.md (ladder flat or inverted, not met). Session 6 (PR #11): start-bias sim fixes + `ai match` per-game seeds (D-104); AI round 1 (D-105:
   finish won games, 4-player targeting; tech hold off); rules garrison counters + Seismic Mortar (D-105); Faction.Neutral (D-100);
   8× spectator benchmark (headless 1 000 ticks/s, fine). **Still open:** re-measure the tier ladder (target ≥ 60 %), cross-faction,
   Directorate veteran mirror and 4-player matrix on the fixed starts; mirror-symmetric AI placement + seeded placement variation
@@ -172,6 +172,17 @@ Built-in AI does micro; an LLM sets strategy every 30 s (D-103) and talks in cha
 Third faction: Glass Coast evacuees abandoned in 1990; nomadic scavengers, mobile crawler-rig bases, salvaged tech, raids.
 Lore (owner approves), roster, art (pilot → fan-out, D-088), AI.
 - [x] M6-01 Design doc + lore draft (docs/design/06_left_behind.md, docs/lore/left_behind.md — DRAFT, owner approves)
+- [x] M6-02 Plan (docs/design/10_m6_plan.md) + contracts: Faction.LeftBehind, CommandKind.Pack, missions, rules fields (off), "rigs" and "salvage" parts, effects v2, save/replay format 10 (D-118; PR #15)
+- [ ] M6-03 Rig pack/unpack
+- [ ] M6-04 Wrecks and salvage
+- [ ] M6-05 Raiders (plunder, withdraw, spoils)
+- [ ] M6-06 Ash stealth, Blackout trail, repair and tow auras, upgrade hooks
+- [ ] M6-07 The Second Drift storm
+- [ ] M6-08 Faction data (roster, structures, upgrades, tiers, start kit)
+- [ ] M6-09 Game layer (faction pick, sidebar, Pack button, wreck/storm rendering)
+- [ ] M6-10 AI Raider Warlord (after M4-16 lands)
+- [ ] M6-11 Art pilot (Mother Rig packed/unpacked) → owner approval → fan-out
+- [ ] M6-12 Acceptance (soak, golden replays, balance table to the owner)
 
 ## M7 · The Overseas Expedition (D-087)
 Fourth faction: an old-world remnant (fictionalised; no real people or politics). Naval and air, beachheads. Needs naval

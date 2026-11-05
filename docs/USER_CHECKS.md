@@ -171,3 +171,16 @@ report a desync (the sim state gained a part); record new ones.
    (works with the network off).
 7. **Save/load:** save mid-game and load: the commander comes back and makes its next decision straight away (once past 30 s of game time).
 8. **Spectate:** set every slot to AI with "Cmdr" on and Spectate: the spectator table shows "LLM" on those rows.
+
+## Session 8 · Art on main, reworks, M6 contracts (2026-11-04)
+Pull main (PRs #13, #14, #15). **Saves from earlier builds no longer load** (sim save format 10), and replays recorded by earlier
+builds may report a desync; record new ones. Run `git lfs pull` after pulling so the new sprites are real images.
+1. **Directorate art:** start a skirmish as the Directorate. The structures from session 5 (Assembly Bore, Bore Head, Bunker,
+   Cistern, Hatch, Isotope Works, Mast, Mooring, Muster Hatch, Pillbox, Rad Mortar, Reactor Vent, Rocket Nest, Shaft, Smelter
+   Vent, Sunrise) show real art in your house colour, not placeholders. The Hatch has a bar cage (no lift car); the Assembly Bore has a
+   cornice, clerestory and stacks; the Rad Mortar carries a sickly green glow.
+2. **Authority art:** as the Authority, the Seismograph shows a paper drum with ink rings and a pen arm; the Searchlight has a
+   glass lens with a cross-bar; the Gate plays an opening animation when your own unit passes; Engineering shows real art.
+3. **Turrets on vehicles:** the Decon Truck, Agitprop, Reactor Crawler and Rocket Truck turn their turret separately from the hull
+   and the turret stays seated on the hull at every facing; the Dirigible draws a shadow on the ground below it.
+4. **Nothing else changes:** M6 (Left Behind) is groundwork only; the faction is not in skirmish setup yet.

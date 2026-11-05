@@ -1,36 +1,40 @@
-# Handoff: Session 8 — art push + reworks, owner LLM play-test, M4-16 diagnosis, M6 contracts
-Last commit: 679c511 on main (PR #12) + this handoff commit (2026-11-04)
-Where things stand: M5 is playable end to end: any AI slot can have an LLM commander (Anthropic or OpenAI-compatible) that sets
-its strategy every 30 s through a recorded directive, talks in character in a chat panel, survives save/load and replays exactly
-with no network. Only M5-10's owner play-test with a real key is open. M4-16 round 2 measured: tier ladder flat or inverted, target
-not met (docs/balance/m4_16_round2.md). Session-5 art is still NOT on GitHub. Full suite 2 096 tests (AI 102, Game 773, Llm 107,
-Scripting 43, Sim 1 071), green on Linux and Windows CI. Decisions D-108..D-112. Save format 9 (older saves no longer load; older replays may report a desync).
+# Handoff: Session 9 — M4-16 fixes, M6 wave 2 (rigs, salvage, raiders, effects, storm, data), owner LLM play-test
+Last commit: 6da7931 on main (PR #15) + this handoff commit (2026-11-04)
+Where things stand: all session-4/5 art and the ART-S6 reworks are on main (PRs #13, #14). M6 has its plan
+(docs/design/10_m6_plan.md) and contracts (PR #15): enums, rules fields (all off), "rigs" and "salvage" parts, effects v2, save and
+replay format 10 — no gameplay yet. M4-16 round 3 found the cause of the inverted ladder (docs/balance/m4_16_round3.md) but its fixes
+are only partly measured and live as scratch knobs on `wp/m4-16r3-wip`. Full suite 2 134 tests (AI 102, Game 789, Llm 107, Scripting 43, Sim 1 093), green
+on Linux and Windows CI. Decisions D-113..D-118.
 
 ## Start here (shown to the user as the plan; nothing starts until they say go)
-1. Art: once `integ-art` (or the bundle) is on GitHub, merge it into main through a PR (CI checks sprites), then ART-S6 reworks
-   (Seismograph drum, Searchlight lens, Assembly Bore roof, Hatch cage, auth_gate open state) and the PAL_DIR radiation-green ramp.
-   Pilot one rework as a contact sheet first.
-2. Owner LLM play-test (USER_CHECKS session 7): confirm D-110 (chat not in replays), D-111 (Cmdr toggle, Enter, /to N), D-112
-   (persona voices). Fix whatever the play-test finds (prompt wording, cadence feel, chat panel size).
-3. M4-16 diagnosis: why higher Authority tiers lose (timeline traces of lost 3 v 2 seeds), then one change at a time: tech hold on,
-   Q-43 tier costs, placement symmetry + seeded variation; re-run the 4-player matrix. Target >= 60 % per ladder cell.
-4. M6 Left Behind contracts (D-102 answers in place; design docs/design/06_left_behind.md).
+1. M4-16 fixes: read docs/balance/m4_16_round3.md ("Status at stop"), take the untested knobs on `wp/m4-16r3-wip` (src/AI/Recruit/Exp.cs
+   is scratch — never commit it). Measured in session 8 (64 games): tech hold has no effect (leave off); the wave strength gate +
+   escalation helps (Authority 2v1 50 -> 62 %, 3v2 34 -> 45 %, 4v3 26 -> 32 %, 5v4 34 -> 28 %). Make the gate + escalation a real
+   feature (tier 2+, constants `(tune)`, new fields in MilitaryManager/TierPlanner Snapshot/Restore), run AI and Game tests, then
+   measure the Directorate ladder, cross and mirror cells, try scouting+harass off for elite (4v3 40 %), then the Q-43 table. Measure 64
+   games per cell (32 seeds x 2 sides). AI behaviour may change freely; any rules number players see comes to the owner as a table first
+   (D-113). Land via PR. Target >= 60 % per ladder cell.
+2. M6 wave 2 from `integ-m6` (= main after PR #15): M6-03 rigs, M6-04 salvage, M6-05 raiders, M6-06 effects/auras, M6-07 storm,
+   M6-08 faction data, in parallel worktrees (plan §4; contracts §3; D-118 as-built notes). M6-08 must add the start kit and set
+   `wreck_ticks = 1200`; M6-04 must not spawn wrecks while `WreckTicks` is 0. Art pilot (Mother Rig) can follow M6-08.
+3. Owner LLM play-test (USER_CHECKS session 7) if the owner has a key handy: confirm D-110, D-111, D-112.
 
 ## Half-finished work
-- M4-16: ladder not met; round-2 numbers in docs/balance/m4_16_round2.md; tech hold coded but off; placement symmetry patch parked
-  (f796142, reverted in 55a3a27).
+- M4-16: diagnosis done; the wave gate + escalation is measured on Authority only, as env-var knobs on `wp/m4-16r3-wip` (not for main
+  as is); 60 % reached only at 2v1. Tech hold still off on main. Q-43 table not run.
 - M5: a loaded game's commanders restart their history and call count; the summary still cannot report enemy superweapon charge.
 - Commander chat is game-layer only (no replay chat block) pending D-110.
+- M6: Left Behind cannot be set up yet (no start kit; PlayableFactions = 2).
 
 ## Waiting on the user
-- Art push: `rts_art.bundle` + the session-5 `push_art.ps1` into the RTS_2027 folder, then run it (owner said: after this session).
+- Read the M6 plan and confirm D-118 (docs/design/10_m6_plan.md).
 - Play-test the LLM commander with a real key (Settings > "AI commander (LLM)...").
 - Q-41 old lore DRAFT banners; Q-42 foam; Q-43 tier costs. D-105 balance numbers still "assumed — confirm".
-- Delete old remote branches: `wp/m2-*`, `wp/m3-*`, `wp/m4-*`, `integ-m2*`, `integ-m3`, `integ-m4`, `integ-s6`, `wp/m3-21`,
-  `wp/m4-16*`, `wp/m5-03`, `wp/m5-04`, `wp/m5-08`, `wp/neutral`, `wp/lore`, and this session's `wp/m5-02`, `wp/m5-05`, `wp/m5-06`,
-  `wp/m5-07`, `wp/m5-09`, `integ-s7` (keep `wp/art-*`, `restore/*`).
-- Scheduled tasks: several one-shot "placeholder"/"check"/"noop"/"unused" reminders from helpers in this and earlier sessions are
-  listed (all fired and disabled); the owner can delete them in the scheduled-tasks list.
+- Delete old remote branches: `wp/m2-*`, `wp/m3-*`, `wp/m4-*`, `integ-m2*`, `integ-m3`, `integ-m4`, `integ-s6`, `integ-s7`, `wp/m3-21`,
+  `wp/m5-*`, `wp/neutral`, `wp/lore`, `wp/art-*`, `integ-art`, `art-land`, `wp/m6-plan`, `wp/m6-02`, `wp/s8-handoff`; keep `restore/*`
+  until the owner is happy (restore/pre-art-land, restore/pre-art-s6, restore/pre-m6-02), `integ-m6`, `wp/m4-16r3*`.
+- Optional: delete the `_art_push` folder contents in the RTS_2027 folder (the art is on GitHub now).
+- Scheduled tasks: old one-shot helper reminders (all fired and disabled) can be deleted in the scheduled-tasks list.
 
 ## How to run this session
 - Lead: Opus for build sessions (the owner wants long unattended overnight builds); Sonnet for a pure review/question session. Helpers: Haiku default; Sonnet for sim core,
@@ -99,5 +103,20 @@ Scripting 43, Sim 1 071), green on Linux and Windows CI. Decisions D-108..D-112.
   - New sim state parts move the golden hashes, SkirmishDefaultHashTests and CombatTests' final hash; re-pin those only, and only
     after checking that the part sub-hashes other than the new one are unchanged.
 
+- Session 8 lessons:
+  - `gh pr checks` uses GraphQL, which is blocked: poll `gh api repos/pwnzor11/RTS_2027/commits/<sha>/check-runs` instead (a watcher
+    on `gh pr checks` silently waits forever).
+  - GitHub's GH008 hook rejects a push that references any LFS object it lacks anywhere in history; `lfs.allowincompletepush` does not
+    help. Rewrite the offending commits (filter-branch index-filter to existing blobs) and check objects with the LFS batch API
+    ("download", real sizes, at most 100 objects per request).
+  - Building sprite manifests need a [house] block (HouseRamp.Standard) and fx anchors inside the frame, or Game tests fail.
+  - `ai match` cells need 64 games (32 seeds x 2 sides): a 16-game cell resolves only about +-12 points; a 32-seed cell takes 8-10 min.
+  - Background runs must use run_in_background directly; a trailing `&` inside the command is killed.
+  - `ai match --trace N --game G` prints per-side army, income, tier and wave lines for one game (M4-16 diagnosis).
+  - Fetch refspec for integration branches: `+refs/heads/integ-*:refs/remotes/origin/integ-*`.
+  - When checking on a helper, cd back to your own worktree afterwards: the stop hook checks the current folder and will flag the
+    helper's uncommitted work.
+  - CommanderReplayAndSaveTests can time out under heavy CPU load (passed 3/3 alone).
+
 ## If time runs short
-Do item 1 (art onto main) and item 2 (play-test fixes); M4-16 and M6 can each fill a later overnight session.
+Do item 1 (M4-16 fixes) or start M6 wave 2 with M6-03/04/08; both fill an overnight session.
