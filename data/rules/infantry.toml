@@ -143,3 +143,88 @@ prerequisites = ["dir_muster_hatch"]
 rad_resist_permille = 600  # ASSUMED (M4-07)
 irradiated = true
 death_weapon = "dir_volunteer_burst"
+
+# M6-08: Left Behind infantry (design 06 §5, D-102). PLACEHOLDER ART (M4-ART style): no sprite manifests yet, the generated
+# placeholder is drawn. Every number is (tune). Ash Wraps (upgrade) raises rad_resist_permille.
+
+[lb_scavenger]   # PLACEHOLDER ART; cheap rifle infantry, slow salvage of wrecks
+faction = "left_behind"
+tier = 1
+speed = 12  # (tune)
+max_health = 45  # (tune)
+armor = "unarmored"
+sight = 4  # (tune)
+primary_weapon = "lb_rifle"
+cost = 60  # (tune)
+prerequisites = ["lb_muster_rig"]
+rad_resist_permille = 300  # (tune)
+salvage_rate = 4  # (tune) ash per 10 ticks
+
+[lb_hook_runner]   # PLACEHOLDER ART; fast raider, withdraws after a plunder
+faction = "left_behind"
+tier = 1
+speed = 18  # (tune)
+max_health = 40  # (tune)
+armor = "unarmored"
+sight = 5  # (tune)
+primary_weapon = "lb_hook_pistol"
+cost = 120  # (tune)
+prerequisites = ["lb_muster_rig"]
+rad_resist_permille = 300  # (tune)
+raider = true
+
+[lb_slinger]   # PLACEHOLDER ART; anti-armour thrown charge
+faction = "left_behind"
+tier = 2
+speed = 12  # (tune)
+max_health = 45  # (tune)
+armor = "unarmored"
+sight = 4  # (tune)
+primary_weapon = "lb_sling_charge"
+cost = 200  # (tune)
+prerequisites = ["lb_muster_rig"]
+rad_resist_permille = 300  # (tune)
+
+[lb_tinker]   # PLACEHOLDER ART; engineer + repair aura + salvage
+faction = "left_behind"
+tier = 2
+speed = 12  # (tune)
+max_health = 40  # (tune)
+armor = "unarmored"
+sight = 4  # (tune)
+primary_weapon = ""
+cost = 150  # (tune)
+prerequisites = ["lb_muster_rig"]
+rad_resist_permille = 300  # (tune)
+engineer = true
+salvage_rate = 6  # (tune)
+aura_radius = 3  # (tune)
+aura_repair_permille = 10  # (tune) permille of max HP per 10 ticks
+aura_targets = ["lb_gleaner", "lb_hauler", "lb_buggy", "lb_harpoon_wagon", "lb_organ", "lb_tow", "lb_dust_sail", "lb_rolling_fort", "lb_mother_rig_packed"]
+
+[lb_veilwalker]   # PLACEHOLDER ART; stealth scout and sniper, stealthier in ash
+faction = "left_behind"
+tier = 3
+speed = 12  # (tune)
+max_health = 40  # (tune)
+armor = "unarmored"
+sight = 7  # (tune)
+primary_weapon = "lb_veil_rifle"
+cost = 400  # (tune)
+prerequisites = ["lb_muster_rig"]
+rad_resist_permille = 300  # (tune)
+stealth = true
+ash_stealth_delay_ticks = 20  # (tune) shorter than [stealth] delay_ticks on ash cells
+ash_stealth_threshold = 16  # (tune)
+
+[lb_drifter_brute]   # PLACEHOLDER ART; heavy flame-hammer infantry that tanks the dust
+faction = "left_behind"
+tier = 2
+speed = 10  # (tune)
+max_health = 140  # (tune)
+armor = "unarmored"
+sight = 4  # (tune)
+primary_weapon = "lb_flame_hammer"
+cost = 300  # (tune)
+prerequisites = ["lb_muster_rig"]
+rad_resist_permille = 700  # (tune)

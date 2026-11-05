@@ -110,3 +110,56 @@ versus = [0, 0, 0, 0, 0]  # ASSUMED (M4-07)
 splash = 1  # ASSUMED (M4-07)
 hits_allies = false  # ASSUMED (M4-07)
 contaminate = 60  # ASSUMED (M4-07)
+
+# M6-08: Left Behind warheads (design 06 §5-6). All numbers (tune); reuse of Directorate/Authority shapes where the design says so.
+[lb_small_arms]   # (tune) copy of dir_small_arms
+versus = [100, 60, 20, 10, 5]
+splash = 0
+hits_allies = false
+
+[lb_ap]   # (tune) copy of auth_ap
+versus = [25, 75, 100, 50, 40]
+splash = 0
+hits_allies = false
+
+[lb_he]   # (tune) copy of auth_he
+versus = [100, 80, 60, 70, 50]
+splash = 1
+hits_allies = true
+
+[lb_flame]   # (tune) flame-hammer: strong vs infantry, weak vs structures
+versus = [100, 70, 30, 40, 20]
+splash = 1
+hits_allies = false
+
+[lb_harpoon]   # (tune) tether: the slow is a later sim hook, the hit is anti-armour
+versus = [25, 75, 100, 50, 40]
+splash = 0
+hits_allies = false
+
+[lb_rocket]   # (tune) Organ rocket rack: area, good vs structures
+versus = [100, 80, 50, 100, 60]
+splash = 1
+hits_allies = true
+
+[lb_blackout]   # (tune) Dust Sail: no damage, Blackout on the area (reuses the Blackout mechanic)
+versus = [0, 0, 0, 0, 0]
+splash = 1
+hits_allies = false
+blackout_ticks = 200
+
+[lb_kite_blast]   # (tune) Kite death weapon on impact
+versus = [100, 100, 80, 120, 80]
+splash = 1
+hits_allies = true
+
+[lb_second_drift_blast]   # (tune) The Second Drift (superweapon "lb_second_drift" reads "<superweapon>_blast"): a 40 s ground-effect storm
+versus = [0, 0, 0, 0, 0]
+splash = 0
+hits_allies = false
+blackout_ticks = 200
+storm_radius = 6   # (tune) cells
+storm_ticks = 800   # (tune) 40 s at 20 ticks/s
+storm_contaminate_step = 4   # (tune) low steps, never above the cap
+storm_contaminate_cap = 64   # design 06 §6: denies building but does not kill
+storm_speed_permille = 600   # (tune) enemy vehicles slowed to 60 percent

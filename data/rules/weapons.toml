@@ -243,3 +243,117 @@ min_range = 0
 rate_of_fire = 60  # ASSUMED (M4-07)
 projectile_speed = 0
 warhead = "dir_rad_shell"
+
+# M6-08: Left Behind weapons (design 06 §5). All numbers (tune).
+[lb_rifle]
+damage = 7  # (tune)
+range = 704  # (tune)
+min_range = 0
+rate_of_fire = 15  # (tune)
+projectile_speed = 0
+warhead = "lb_small_arms"
+
+[lb_sling_charge]   # Slinger: thrown shaped charge, anti-armour
+damage = 70  # (tune)
+range = 768  # (tune)
+min_range = 0
+rate_of_fire = 60  # (tune)
+projectile_speed = 64
+warhead = "lb_ap"
+
+[lb_flame_hammer]   # Drifter Brute
+damage = 20  # (tune)
+range = 384  # (tune)
+min_range = 0
+rate_of_fire = 20  # (tune)
+projectile_speed = 0
+warhead = "lb_flame"
+
+[lb_veil_rifle]   # Veilwalker: long-range sniper
+damage = 45  # (tune)
+range = 1536  # (tune)
+min_range = 0
+rate_of_fire = 80  # (tune)
+projectile_speed = 0
+warhead = "lb_small_arms"
+
+[lb_hook_pistol]   # Hook Runner
+damage = 5  # (tune)
+range = 512  # (tune)
+min_range = 0
+rate_of_fire = 15  # (tune)
+projectile_speed = 0
+warhead = "lb_small_arms"
+
+[lb_buggy_gun]
+damage = 6  # (tune)
+range = 832  # (tune)
+min_range = 0
+rate_of_fire = 8  # (tune)
+projectile_speed = 0
+warhead = "lb_small_arms"
+
+[lb_harpoon_gun]   # Harpoon Wagon, Harpoon Post
+damage = 55  # (tune)
+range = 1280  # (tune)
+min_range = 0
+rate_of_fire = 45  # (tune)
+projectile_speed = 80
+warhead = "lb_harpoon"
+
+[lb_organ_rack]   # Organ: inaccurate area artillery
+damage = 35  # (tune)
+range = 1792  # (tune)
+min_range = 512  # (tune)
+rate_of_fire = 60  # (tune)
+projectile_speed = 48
+warhead = "lb_rocket"
+
+[lb_dust_drop]   # Dust Sail: lays Blackout on the target area
+damage = 0  # (tune)
+range = 512  # (tune)
+min_range = 0
+rate_of_fire = 200  # (tune)
+projectile_speed = 0
+warhead = "lb_blackout"
+
+[lb_fort_cannon]   # Rolling Fort
+damage = 55  # (tune)
+range = 1280  # (tune)
+min_range = 0
+rate_of_fire = 40  # (tune)
+projectile_speed = 64
+warhead = "lb_ap"
+
+[lb_rotor_gun]   # Rotor: light gunship
+damage = 7  # (tune)
+range = 768  # (tune)
+min_range = 0
+rate_of_fire = 8  # (tune)
+projectile_speed = 0
+warhead = "lb_small_arms"
+
+[lb_kite_bomb]   # Kite: one-use bomber; the bomb is the death weapon
+damage = 120  # (tune)
+range = 256  # (tune)
+min_range = 0
+rate_of_fire = 1
+projectile_speed = 0
+warhead = "lb_kite_blast"
+
+[lb_spike_gun]   # Spike Nest
+damage = 12  # (tune)
+range = 768  # (tune)
+min_range = 0
+rate_of_fire = 20  # (tune)
+projectile_speed = 0
+warhead = "lb_small_arms"
+
+[lb_flak_gun]   # Flak Net
+damage = 18  # (tune)
+range = 1280  # (tune)
+min_range = 0
+rate_of_fire = 30  # (tune)
+projectile_speed = 128
+warhead = "lb_he"
+targets = "air"

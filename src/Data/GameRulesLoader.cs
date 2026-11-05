@@ -238,7 +238,7 @@ internal static class GameRulesLoader
     /// </summary>
     public static IReadOnlyList<FactionStartKit>? ParseStartKits(TomlTable root, string file, List<RulesProblem> problems)
     {
-        var kits = new FactionStartKit[] { FactionStartKit.AuthorityDefault, FactionStartKit.DirectorateDefault };
+        var kits = new FactionStartKit[] { FactionStartKit.AuthorityDefault, FactionStartKit.DirectorateDefault, FactionStartKit.NeutralNone, FactionStartKit.LeftBehindDefault };
         if (!root.TryGetValue(FactionSection, out object? section) || section is null)
         {
             return kits;
@@ -278,9 +278,9 @@ internal static class GameRulesLoader
             List<string>? units = f.Has("units") ? f.StrList("units") : new List<string>(d.Units);
             string? tier2 = f.OptStr("tier2", d.Tier2Provides);   // M4-01: provides names, checked by RulesLoader
             string? tier3 = f.OptStr("tier3", d.Tier3Provides);
-            if (conyard is null || units is null || conyard.Length == 0 || tier2 is null || tier3 is null)
+            // M6-08: an empty conyard is legal for a kit that starts with a packed rig vehicle (checked when a player of the faction is set up)
+            if (conyard is null || units is null || tier2 is null || tier3 is null)
             {
-                if (conyard is { Length: 0 }) f.Problem("conyard", "must not be empty");
                 ok = false;
                 continue;
             }

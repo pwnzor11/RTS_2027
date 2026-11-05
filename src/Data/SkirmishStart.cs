@@ -53,8 +53,14 @@ public static class SkirmishStart
             int startIndex = startOf is null ? p : p < startOf.Count ? startOf[p] : -1;
             if (sim.Players.IsNeutral((byte)p) || startIndex < 0 || startIndex >= map.StartPositions.Count) continue;
             (int type, IReadOnlyList<(ActorKind Kind, int Type)> units) = rules.ResolveStartKit(sim.Players.Faction[p]);
-            BuildingType bt = rules.Buildings[type];
             CellCoord s = map.StartPositions[startIndex];
+            if (type < 0)
+            {
+                // M6-08: no conyard building (Left Behind): the packed rig is the first start unit and stands in for it
+                placed[p] = SpawnUnits(sim, (byte)p, s, units);
+                continue;
+            }
+            BuildingType bt = rules.Buildings[type];
             // centre the footprint on the start cell, then search rings outward in a fixed order
             int cx = s.X - bt.FootprintW / 2, cy = s.Y - bt.FootprintH / 2;
             for (int r = 0; r <= 8 && placed[p] == EntityId.None; r++)
@@ -73,9 +79,10 @@ public static class SkirmishStart
 
     /// <summary>Spawns each start unit on the next free cell of a ring search around <paramref name="start"/> (rings outward,
     /// rows then columns, as the conyard search): on the map, no building, passable for the unit, not already used.</summary>
-    private static void SpawnUnits(Simulation sim, byte player, CellCoord start, IReadOnlyList<(ActorKind Kind, int Type)> units)
+    private static EntityId SpawnUnits(Simulation sim, byte player, CellCoord start, IReadOnlyList<(ActorKind Kind, int Type)> units)
     {
-        if (units.Count == 0) return;
+        EntityId first = EntityId.None;
+        if (units.Count == 0) return first;
         SimRules rules = sim.Setup.Rules;
         var used = new List<CellCoord>();
         int next = 0;
@@ -89,10 +96,11 @@ public static class SkirmishStart
                     (ActorKind kind, int type) = units[next];
                     Locomotion loco = kind == ActorKind.Vehicle ? rules.Vehicles[type].Locomotion : Locomotion.Foot;
                     if (!sim.Map.IsPassableTerrain(c, loco, rules.Terrain)) continue;
-                    if (kind == ActorKind.Vehicle) sim.SpawnVehicle(player, type, c);
-                    else sim.SpawnInfantry(player, type, c);
+                    EntityId spawned = kind == ActorKind.Vehicle ? sim.SpawnVehicle(player, type, c) : sim.SpawnInfantry(player, type, c);
+                    if (first == EntityId.None) first = spawned;
                     used.Add(c);
                     next++;
                 }
+        return first;
     }
 }
