@@ -156,6 +156,7 @@ public sealed partial class Simulation
                 if (!slots.IsIndexAlive(i) || HealthAt(kind, i) <= 0) continue;
                 if (IsFriendly(owner, PlayerAt(kind, i))) continue;
                 if (kind != ActorKind.Building && IsUnderground(kind, i)) continue;
+                if (IsSubmergedShip(kind, i)) continue;   // M7-05/M7-12: a dived submarine is spared, like splash (D-142)
                 int d = kind == ActorKind.Building ? FootprintDistance(i, cell) : LeptonMath.ChebyshevCells(cell, PositionAt(kind, i).ToCell());
                 if (d > splash) continue;
                 Hurt(kind, i, wh.SalvoDamage, wh, d > 0, owner);

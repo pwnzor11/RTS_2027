@@ -148,6 +148,8 @@ public sealed class ExpeditionDataTests
         Assert.Equal(Locomotion.Hover, s.Vehicles.Single(v => v.Id == "exp_skimmer").Locomotion);
         Assert.Equal("exp_landing_depot", s.Buildings[s.Vehicles.Single(v => v.Id == "exp_command_ship").DeploysInto].Id);
         Assert.Equal("exp_salvo_array", s.Buildings.Single(b => b.Id == "exp_salvo_array").Superweapon);
-        Assert.Contains(s.Warheads, w => w.Id == "exp_salvo_array_blast");
+        WarheadType salvo = s.Warheads.Single(w => w.Id == "exp_salvo_array_blast");
+        Assert.Equal(12, salvo.SalvoMissiles);   // D-142: the Array fires a salvo, not one flat blast
+        Assert.True(salvo.SalvoDamage > 0 && salvo.SalvoRadius > 0 && salvo.SalvoWarnTicks > 0);
     }
 }

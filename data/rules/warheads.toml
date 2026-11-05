@@ -219,8 +219,13 @@ versus = [0, 0, 0, 0, 0, 40, 30, 100]
 splash = 1
 hits_allies = false
 
-[exp_salvo_array_blast]   # (tune) Salvo Array (superweapon "exp_salvo_array" reads "<superweapon>_blast"): flat damage in the splash
-versus = [100, 100, 100, 100, 100, 100, 100, 100]
+[exp_salvo_array_blast]   # (tune) Salvo Array (superweapon "exp_salvo_array" reads "<superweapon>_blast"): a cruise-missile salvo (M7-12, D-142)
+versus = [100, 100, 100, 100, 100, 100, 100, 0]   # dived submarines are spared
 splash = 1
 hits_allies = false
-# TODO M7-12: 12 missiles over 6 s with a 4 s launch warning; the blast here is one flat hit
+salvo_missiles = 12     # (tune) 12 missiles over 6 s (design 07 superweapon)
+salvo_ticks = 120       # (tune) spread of the impacts after the warning
+salvo_radius = 4        # (tune) scatter radius around the target cell
+salvo_damage = 150      # (tune) per missile, half beyond the impact cell
+salvo_warn_ticks = 80   # (tune) 4 s launch warning before the first impact
+salvo_splash = 1
