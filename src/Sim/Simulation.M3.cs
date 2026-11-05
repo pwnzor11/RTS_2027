@@ -107,6 +107,7 @@ public sealed partial class Simulation
     {
         if (!_units.Slots.IsAlive(c.Subject) || _units.Player[c.Subject.Index] != c.Player) return;
         Rules.VehicleType vt = RulesOf(c.Player).Vehicles[_units.TypeIndex[c.Subject.Index]];
+        if (vt.Submerges) { ApplySubmerge(c); return; }   // M7-05
         if (vt.Passengers > 0) ApplyUnload(c);
         else if (vt.DeploysInto >= 0) ApplyDeployInto(c);
     }
@@ -186,6 +187,7 @@ public sealed partial class Simulation
         CellCoord cell = PositionAt(kind, i).ToCell();
         if (layer is ActorLayer.Tunnel or ActorLayer.Passenger or ActorLayer.Garrisoned) return true;   // inside a network, a transport or a garrison (M4): never seen
         if (layer is ActorLayer.Burrowed or ActorLayer.Surfacing) return !IsSeismicRevealed(viewer, cell);
+        if (IsSubmergedShip(kind, i)) return !IsSonarRevealed(viewer, cell);   // M7-05
         return IsStealthedNow(kind, i) && !IsStealthRevealed(viewer, cell);
     }
 }
