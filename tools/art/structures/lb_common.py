@@ -237,3 +237,40 @@ def cpart(S, name, r, h, c, m, th, axis="Z", verts=16):
     if axis == "Y" and o is not None:
         o.rotation_euler = (math.radians(90), 0, -t)
     return o
+
+
+def turret_build(S, state, i, base, head, site_fn, hide_prefixes=()):
+    """Frame driver for rotating-head defences (same sheet layout as auth_turret / dir_pillbox):
+    idle 16 facings x 1, fire 16 x 2 (k0 flash + recoil, k1 dying), damaged 16 x 1, build 1 x 6 (stage 5 = idle facing 0)."""
+    if state == "idle":
+        base(S, False)
+        head(S, i * 22.5, False, 0)
+    elif state == "fire":
+        f, k = divmod(i, 2)
+        base(S, False)
+        head(S, f * 22.5, False, 1 + k)
+    elif state == "damaged":
+        S.skin.update(SOOT_SKIN)
+        base(S, True)
+        head(S, i * 22.5, True, 0)
+    else:
+        if i == 0:
+            site_fn(S)
+            return
+        if i == 1:
+            base(S, False)
+            return
+        if i == 2:
+            base(S, False)
+            head(S, 0.0, False, 0)
+            S.hide = lambda nm: not nm.startswith(("pad", "ring", "tyre", "base", "step", "turn", "collar", "col", "post", "ty", "plank", "deck", "sb", "d0", "d1"))
+            return
+        if i == 3 or i == 4:
+            if i == 3:
+                S.skin.update(PRIMER_SKIN)
+                S.hide = lambda nm: nm.startswith(hide_prefixes)
+            base(S, False)
+            head(S, 0.0, False, 0)
+            return
+        base(S, False)
+        head(S, 0.0, False, 0)
