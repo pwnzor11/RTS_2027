@@ -15,7 +15,7 @@ namespace Rts.Sim;
 //
 // Rules chosen here (documented for the design notes):
 //  * Wreck value = cost x salvage_percent / 100, raised to wreck_min_value, then capped at wreck_max_value (the cap wins if min > max).
-//    Wreck parameters (ticks, percent, floor, cap) come from Setup.Rules.Economy; the cost from the dying actor's owner rules.
+//    Wreck parameters (ticks, percent, floor, cap) come from the owner's rules Economy; the cost from the dying actor's owner rules.
 //  * Decay: each tick TicksLeft--, then Value = min(Value, ValueStart x TicksLeft / wreck_ticks). Salvaging only lowers Value, so the
 //    wreck is never worth more than what salvagers left, and ValueStart keeps the original line (no state is added).
 //  * Hopper units (vehicles with HarvestCapacity > 0): a drained amount d fills ceil(d / credits_ashfall) hopper units and adds d to
@@ -67,7 +67,7 @@ public sealed partial class Simulation
     private void RunSalvage()
     {
         SalvageState w = _salvage;
-        int ticks = Setup.Rules.Economy.WreckTicks;
+        int ticks = RulesOf(0).Economy.WreckTicks;   // economy constants are the same for every player
         for (int s = 1; s < w.TicksLeft.Length; s++)
         {
             if (w.TicksLeft[s] <= 0) continue;
@@ -81,8 +81,9 @@ public sealed partial class Simulation
     /// <summary>RunCleanup, for a dying vehicle or building (any team) before it is removed: add a wreck when wreck_ticks &gt; 0.</summary>
     private void SpawnWreckFor(ActorKind kind, int i)
     {
-        Rules.EconomyRules er = Setup.Rules.Economy;
-        if (er.WreckTicks <= 0 || (kind != ActorKind.Vehicle && kind != ActorKind.Building)) return;
+        if (kind != ActorKind.Vehicle && kind != ActorKind.Building) return;
+        Rules.EconomyRules er = RulesOf(PlayerAt(kind, i)).Economy;
+        if (er.WreckTicks <= 0) return;
         int cost; CellCoord cell;
         if (kind == ActorKind.Vehicle)
         {
