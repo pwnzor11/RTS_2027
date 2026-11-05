@@ -191,6 +191,33 @@ public readonly struct PlayerView
         }
     }
 
+    // ---- M7-06 home shipments (own state only) -------------------------------------------------
+
+    /// <summary>M7-06: ticks until the viewing player's next shipment sails; -1 when none is scheduled (shipments off, or no dock).</summary>
+    public int ShipmentEtaTicks
+    {
+        get
+        {
+            int next = _sim.Shipments.NextShipmentTick[Player];
+            return next == 0 ? -1 : Math.Max(0, next - _sim.Tick);
+        }
+    }
+
+    /// <summary>M7-06: decay steps the viewing player's shipments have taken (each shrinks the payload by <c>decay_permille</c>).</summary>
+    public int ShipmentDecayStep => _sim.Shipments.DecayStep[Player];
+
+    /// <summary>M7-06: credits the viewing player's next shipment would carry (0 when shipments are off).</summary>
+    public int NextShipmentPayload => _sim.Setup.Rules.Shipments.Enabled ? _sim.ShipmentPayload(Player) : 0;
+
+    /// <summary>M7-06: fills <paramref name="dest"/> (cleared first) with the viewing player's own tenders in flight, in creation order.</summary>
+    public void CopyOwnTenders(List<TenderView> dest)
+    {
+        dest.Clear();
+        foreach (Shipments.Tender t in _sim.Shipments.Tenders)
+            if (t.Player == Player)
+                dest.Add(new TenderView(t.Id, new EntityId((ushort)((uint)t.Vehicle >> 16), (ushort)(t.Vehicle & 0xFFFF)), new CellCoord(t.CellX, t.CellY), t.Payload));
+    }
+
     /// <summary>M6: fills <paramref name="dest"/> (cleared first) with every wreck on the map in slot order. Wrecks are public (D-102).</summary>
     public void CopyWrecks(List<WreckView> dest)
     {

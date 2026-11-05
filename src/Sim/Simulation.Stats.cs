@@ -52,4 +52,11 @@ public sealed partial class Simulation
         if (credits <= 0 || p >= _stats.Count) return;
         _stats.CreditsSpent[p] += credits;
     }
+
+    /// <summary>M7-06: a tender delivered <paramref name="credits"/> of home shipment to player <paramref name="p"/>.</summary>
+    private void OnStatsShipment(byte p, int credits)
+    {
+        if (credits <= 0 || p >= _stats.Count) return;
+        _stats.ShipmentIncome[p] += credits;
+    }
 }
