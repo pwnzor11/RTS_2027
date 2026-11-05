@@ -100,6 +100,21 @@ public sealed class LeftBehindAiTests(ITestOutputHelper log)
         Assert.True(wrecks.Sum(w => w.Value) < before, "ash was drained from the wreck");
     }
 
+    /// <summary>Session 10: in a real match (tier 4 against a tier 1 Left Behind, seed 1 as the `ai match` tool plays it) the AI builds
+    /// the Second Drift, waits for the charge and fires it; the storm was never seen in a match before the session-9 entrance fix.</summary>
+    [Fact]
+    public void TheSecondDriftIsFiredInARealMatch()
+    {
+        MapData map = MapGenerator.Generate(56, 1);
+        var a = new AiSide(AiRegistry.TieredId, Tier(4), Faction.LeftBehind);
+        var b = new AiSide(AiRegistry.TieredId, Tier(1), Faction.LeftBehind);
+        int storms = 0;
+        AiGameResult r = AiMatchRunner.Play(map, TestWorld.Rules.Sim, TestWorld.Rules.RulesHash, 16, a, b, aInSlot0: true, maxTicks: 16000,
+            observe: (sim, ai0, ai1, slotA, slotB) => storms = ((RecruitAi)ai0).StormOrders);
+        log.WriteLine($"end tick {r.EndTick}, winner {r.Winner}, Second Drift orders {storms}");
+        Assert.True(storms >= 1, "the Second Drift was fired in the match");
+    }
+
     [Fact]
     public void RaidersGoForAnEnemySilo()
     {
