@@ -250,6 +250,7 @@ public sealed partial class Simulation
         RunTunnels();      // M3: Simulation.Tunnels.cs — queues, transit, surfacing (before combat: underground units are untargetable)
         RunEffects();      // M3: Simulation.Effects.cs — auras, stealth timers, superweapon charge (before combat reads them)
         RunStorms();       // M6-07: Simulation.Storm.cs — The Second Drift (before combat)
+        RunSalvos();       // M7-12: Simulation.Superweapon.cs — Salvo Array missiles landing
         RunCombat();
         RunEconomy();
         RunSalvage();      // M6-04: Simulation.Salvage.cs — wreck decay

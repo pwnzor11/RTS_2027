@@ -16,7 +16,9 @@ internal static class WeaponRulesLoader
          // schema v4 (M4-01)
          "hits_burrowed", "bonus_vs_entrance_percent", "foam_ticks", "garrison_damage_percent",
          // schema v5 (M6-02)
-         "storm_radius", "storm_ticks", "storm_contaminate_step", "storm_contaminate_cap", "storm_speed_permille"];
+         "storm_radius", "storm_ticks", "storm_contaminate_step", "storm_contaminate_cap", "storm_speed_permille",
+         // schema v8 (M7-12)
+         "salvo_missiles", "salvo_ticks", "salvo_radius", "salvo_damage", "salvo_warn_ticks", "salvo_splash"];
     private static readonly string[] WeaponKeys =
         ["damage", "range", "min_range", "rate_of_fire", "projectile_speed", "warhead", "targets"];
 
@@ -57,6 +59,13 @@ internal static class WeaponRulesLoader
         int? stormStep = f.OptInt("storm_contaminate_step", 0, 255, 0);
         int? stormCap = f.OptInt("storm_contaminate_cap", 0, 255, 64);
         int? stormSpeed = f.OptInt("storm_speed_permille", 0, 1000, 0);
+        int? salvoMissiles = f.OptInt("salvo_missiles", 0, 1000, 0);   // M7-12
+        int? salvoTicks = f.OptInt("salvo_ticks", 0, 1_000_000, 0);
+        int? salvoRadius = f.OptInt("salvo_radius", 0, SimConstants.MaxMapCells, 0);
+        int? salvoDamage = f.OptInt("salvo_damage", 0, int.MaxValue, 0);
+        int? salvoWarn = f.OptInt("salvo_warn_ticks", 0, 1_000_000, 0);
+        int? salvoSplash = f.OptInt("salvo_splash", 0, SimConstants.MaxMapCells, 1);
+        if (salvoMissiles is null || salvoTicks is null || salvoRadius is null || salvoDamage is null || salvoWarn is null || salvoSplash is null) return null;
         if (stormRadius is null || stormTicks is null || stormStep is null || stormCap is null || stormSpeed is null) return null;
         if (versus is null || splash is null || hitsAllies is null || contaminate is null || decontaminate is null
             || bonus is null || blackout is null || hitsBurrowed is null || bonusEntrance is null || foam is null || garrisonDamage is null)
@@ -78,6 +87,12 @@ internal static class WeaponRulesLoader
             StormContaminateStep = stormStep.Value,
             StormContaminateCap = stormCap.Value,
             StormSpeedPermille = stormSpeed.Value,
+            SalvoMissiles = salvoMissiles.Value,
+            SalvoTicks = salvoTicks.Value,
+            SalvoRadius = salvoRadius.Value,
+            SalvoDamage = salvoDamage.Value,
+            SalvoWarnTicks = salvoWarn.Value,
+            SalvoSplash = salvoSplash.Value,
         };
     }
 
