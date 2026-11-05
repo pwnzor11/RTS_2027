@@ -100,7 +100,8 @@ internal sealed class BuildOrderManager
 
         int next = NextType(k);
         if (HoldExcept != int.MinValue && next != HoldExcept) next = HoldExcept >= 0 && k.BuildingCount[HoldExcept] + _queued[HoldExcept] == 0 ? HoldExcept : -1;
-        PendingCost = (next < 0 ? 0 : rules.Buildings[next].Cost) + inProgress;
+        // SUP-5: a supply structure that cannot start yet (the lane is busy) does not hold units back: it is cheap, and a tier gate under way is reserved already
+        PendingCost = (next < 0 || (next == _supplyPick && laneBusy) ? 0 : rules.Buildings[next].Cost) + inProgress;
         if (laneBusy || next < 0) return;
         BuildingType bt = rules.Buildings[next];
         if (!k.Buildable(bt.Category, next)) return;
@@ -130,25 +131,62 @@ internal sealed class BuildOrderManager
         bool powerInFlight = _queued[_powerType] > 0;
         if (powerShort && !powerInFlight && (target < 0 || rules.Buildings[target].Power <= 0) && k.Buildable(ProductionCategory.Structure, _powerType))
             return _powerType;
-        // SUP-5: a supply structure next when the cap is nearly reached (and the ceiling is not), power first if it would brown out.
-        int supply = SupplyShort(k) ? SupplyType(k) : -1;
-        if (supply >= 0 && _queued[supply] == 0)
+        // SUP-5 (design 13 §6): a supply structure next when used + queued supply reaches cap - margin (and the ceiling is not reached), above
+        // the build order. If its prerequisite is missing, that prerequisite comes first; power first if it would brown out.
+        _supplyPick = -1;
+        if (k.PackedRigs.Count == 0 && SupplyShort(k, SupplyMargin) && !SupplyInFlight(k))   // packed rigs: the cap is low only until they unpack
         {
-            if (!powerInFlight && EconomyManager.PowerShort(k, -rules.Buildings[supply].Power) && k.Buildable(ProductionCategory.Structure, _powerType))
-                return _powerType;
-            return supply;
+            int supply = SupplyType(k);
+            if (supply >= 0)
+            {
+                _supplyPick = supply;
+                if (!powerInFlight && EconomyManager.PowerShort(k, -rules.Buildings[supply].Power) && k.Buildable(ProductionCategory.Structure, _powerType))
+                    return _powerType;
+                return supply;
+            }
+            int pre = SupplyPrerequisite(k);
+            if (pre >= 0 && _queued[pre] == 0) { _supplyPick = pre; return pre; }
         }
         return target;
     }
 
-    /// <summary>SUP-5: free supply below which the AI starts a supply structure (units cost 1 to 3).</summary>
-    internal const int SupplyHeadroom = 6;
+    /// <summary>SUP-5: the supply margin of this AI (tiers 1..5 = 2, 4, 6, 8, 10; design 13 §6 proposed 4..12, tuned down); higher tiers build earlier. Set by the AI from its profile.</summary>
+    public int SupplyMargin { get; set; } = 6;
 
-    /// <summary>SUP-5: true when supply is on, the cap is below the ceiling and free supply is under <see cref="SupplyHeadroom"/>.</summary>
-    internal static bool SupplyShort(RecruitKnowledge k)
+    /// <summary>The supply margin for a difficulty tier 1..5.</summary>
+    public static int MarginForTier(int tier) => 2 * Math.Clamp(tier, 1, 5);
+
+    private int _supplyPick = -1;
+
+    /// <summary>SUP-5: supply of the units waiting in the unit queues (the front item included).</summary>
+    internal static int QueuedSupply(RecruitKnowledge k)
+    {
+        int total = 0;
+        foreach (QueueView q in k.Hud.Queues)
+        {
+            if (q.Category is not (ProductionCategory.Infantry or ProductionCategory.Vehicle or ProductionCategory.Aircraft)) continue;
+            foreach (QueueItemView it in q.Items) total += k.Rules.Supply.SupplyOf(UnitCost(k, q.Category, it.TypeIndex), UnitSupply(k, q.Category, it.TypeIndex));
+        }
+        return total;
+    }
+
+    private static int UnitCost(RecruitKnowledge k, ProductionCategory c, int t) => c == ProductionCategory.Infantry ? k.Rules.Infantry[t].Cost : k.Rules.Vehicles[t].Cost;
+    private static int UnitSupply(RecruitKnowledge k, ProductionCategory c, int t) => c == ProductionCategory.Infantry ? k.Rules.Infantry[t].Supply : k.Rules.Vehicles[t].Supply;
+
+    /// <summary>SUP-5: true when supply is on, the cap is below the ceiling and used + queued supply is within <paramref name="margin"/> of the cap.</summary>
+    internal static bool SupplyShort(RecruitKnowledge k, int margin)
     {
         SupplyView s = k.Hud.Supply;
-        return s.Ceiling > 0 && s.Cap > 0 && s.Cap < s.Ceiling && s.Cap - s.Used < SupplyHeadroom;
+        return s.Ceiling > 0 && s.Cap > 0 && s.Cap < s.Ceiling && s.Used + QueuedSupply(k) >= s.Cap - margin;
+    }
+
+    /// <summary>SUP-5: true when a structure that provides supply is already queued, ready to place or waiting in the lane.</summary>
+    private bool SupplyInFlight(RecruitKnowledge k)
+    {
+        SimRules rules = k.Rules;
+        for (int t = 0; t < _queued.Length; t++)
+            if (_queued[t] > 0 && rules.Buildings[t].SupplyProvided > 0 && rules.Buildings[t].Id != _yardId) return true;
+        return false;
     }
 
     /// <summary>SUP-5: the cheapest buildable structure that provides supply, other than the yard; -1 when none. Data-driven, so every
@@ -165,6 +203,30 @@ internal sealed class BuildOrderManager
             if (best < 0 || bt.Cost < rules.Buildings[best].Cost) best = t;
         }
         return best;
+    }
+
+    /// <summary>SUP-5: when no supply structure is buildable yet, the first missing prerequisite (buildable now, not owned) of the cheapest
+    /// own-faction supply structure; -1 when there is none.</summary>
+    private int SupplyPrerequisite(RecruitKnowledge k)
+    {
+        SimRules rules = k.Rules;
+        int yard = SimRules.IndexOf(rules.Buildings, _yardId, b => b.Id);
+        if (yard < 0) return -1;
+        int target = -1;
+        for (int t = 0; t < rules.Buildings.Count; t++)
+        {
+            BuildingType bt = rules.Buildings[t];
+            if (bt.SupplyProvided <= 0 || bt.Id == _yardId || bt.Category != ProductionCategory.Structure || bt.Faction != rules.Buildings[yard].Faction) continue;
+            if (target < 0 || bt.Cost < rules.Buildings[target].Cost) target = t;
+        }
+        if (target < 0) return -1;
+        foreach (string id in rules.Buildings[target].Prerequisites)
+        {
+            int p = SimRules.IndexOf(rules.Buildings, id, b => b.Id);
+            if (p < 0 || k.BuildingCount[p] > 0) continue;
+            if (k.Buildable(rules.Buildings[p].Category, p)) return p;
+        }
+        return -1;
     }
 
     private void TryPlace(RecruitKnowledge k, ICommandSink sink, int type)

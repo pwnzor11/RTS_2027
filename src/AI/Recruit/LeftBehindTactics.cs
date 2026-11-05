@@ -94,6 +94,13 @@ internal sealed class LeftBehindTactics : IFactionTactics
     private readonly List<StormView> _storms = new();
     private int _wreckValueNow;
 
+    /// <summary>SUP-5: packed rigs that were given an unpack order, with the tick of the order. One still standing idle 60 ticks after its
+    /// order means the order ended at once (unreachable site): the next order unpacks it near where it stands.</summary>
+    private readonly List<(ulong Key, int Tick, int X, int Y)> _ordered = new();
+    /// <summary>SUP-5: unpack sites whose order ended at once (top-left, expiry tick); not chosen again until they expire.</summary>
+    private readonly List<(int X, int Y, int Until)> _bad = new();
+    private const int OrderWaitTicks = 60;
+
     // relocation
     private Reloc _reloc;
     private int _relocStart, _relocCooldownUntil;
@@ -241,11 +248,39 @@ internal sealed class LeftBehindTactics : IFactionTactics
         foreach (ViewActor r in k.PackedRigs)
         {
             if (!r.Idle || k.View.PackProgressPermille(r.Ref) > 0) continue;
+            OrderFailed(r, k.View.Tick, out bool wait0);
+            if (wait0) continue;
             if (!FindSite(k, r, r.Cell, 13, out CellCoord site)) continue;
             Reserve(k, r, site);
+            NoteOrder(r, k.View.Tick, site);
             Unpacks++;
             sink.Issue(CommandKind.Pack, r.Id, ActorKind.Vehicle, site);
         }
+    }
+
+    /// <summary>SUP-5: true when an unpack order given to the rig long enough ago has left it standing idle (the order ended at once);
+    /// false while a recent order may still be on its way. Refreshes the order memory.</summary>
+    private bool OrderFailed(ViewActor r, int tick, out bool waiting)
+    {
+        ulong key = RecruitKnowledge.KeyOf(r);
+        waiting = false;
+        for (int i = 0; i < _ordered.Count; i++)
+        {
+            if (_ordered[i].Key != key) continue;
+            if (tick - _ordered[i].Tick < OrderWaitTicks) { waiting = true; return false; }
+            _bad.Add((_ordered[i].X, _ordered[i].Y, tick + 1200));
+            _ordered.RemoveAt(i);
+            return true;
+        }
+        return false;
+    }
+
+    private void NoteOrder(ViewActor r, int tick, CellCoord site)
+    {
+        _bad.RemoveAll(b => b.Until < tick);
+        ulong key = RecruitKnowledge.KeyOf(r);
+        _ordered.RemoveAll(o => o.Key == key || tick - o.Tick > 2400);
+        _ordered.Add((key, tick, site.X, site.Y));
     }
 
     private void Reserve(RecruitKnowledge k, ViewActor rig, CellCoord site)
@@ -292,6 +327,8 @@ internal sealed class LeftBehindTactics : IFactionTactics
 
     private bool Reserved(int x, int y, int w, int h)
     {
+        foreach (var b in _bad)
+            if (Math.Abs(b.X - x) <= 1 && Math.Abs(b.Y - y) <= 1) return true;
         foreach (var r in _reserved)
             if (x <= r.X1 && r.X0 <= x + w - 1 && y <= r.Y1 && r.Y0 <= y + h - 1) return true;
         return false;
@@ -505,8 +542,10 @@ internal sealed class LeftBehindTactics : IFactionTactics
             // pack the Mother Rig first, then the other rigs in slot order
             foreach (ViewActor b in k.Buildings)
                 if (rules.Buildings[b.TypeIndex].PacksInto >= 0 && b.TypeIndex == _mother) sink.Issue(CommandKind.Pack, b.Id, ActorKind.Building);
+            bool capNear = BuildOrderManager.SupplyShort(k, BuildOrderManager.MarginForTier(Tier));   // SUP-5: a still is not packed while the cap is near
             foreach (ViewActor b in k.Buildings)
-                if (rules.Buildings[b.TypeIndex].PacksInto >= 0 && b.TypeIndex != _mother) sink.Issue(CommandKind.Pack, b.Id, ActorKind.Building);
+                if (rules.Buildings[b.TypeIndex].PacksInto >= 0 && b.TypeIndex != _mother && !(capNear && rules.Buildings[b.TypeIndex].SupplyProvided > 0))
+                    sink.Issue(CommandKind.Pack, b.Id, ActorKind.Building);
             return;
         }
 
@@ -516,11 +555,14 @@ internal sealed class LeftBehindTactics : IFactionTactics
         foreach (ViewActor r in k.PackedRigs)
         {
             if (!r.Idle || view.PackProgressPermille(r.Ref) > 0) continue;
-            // no room beside the fallback (or it is taking too long): unpack where the rig stands
+            // no room beside the fallback (or it is taking too long, or the last order ended at once): unpack where the rig stands
+            bool failed = OrderFailed(r, tick, out bool waiting);
+            if (waiting) continue;
             CellCoord site = default;
-            bool found = tick - _relocStart < 1200 && FindSite(k, r, _dest, 13, out site);
+            bool found = !failed && tick - _relocStart < 1200 && FindSite(k, r, _dest, 13, out site);
             if (!found && !FindSite(k, r, r.Cell, 13, out site)) continue;
             Reserve(k, r, site);
+            NoteOrder(r, tick, site);
             sink.Issue(CommandKind.Pack, r.Id, ActorKind.Vehicle, site);
         }
         bool packing = false;
@@ -699,6 +741,10 @@ internal sealed class LeftBehindTactics : IFactionTactics
         w.Write(Unpacks); w.Write(RaidParties); w.Write(RaidOrders); w.Write(SalvageOrders);
         w.Write(Relocations); w.Write(RelocationsDone); w.Write(RelocationsAborted); w.Write(Sold); w.Write(StormOrders);
         w.Write(_wreckValueNow);
+        w.Write(_ordered.Count);
+        foreach (var o in _ordered) { w.Write(o.Key); w.Write(o.Tick); w.Write(o.X); w.Write(o.Y); }
+        w.Write(_bad.Count);
+        foreach (var b in _bad) { w.Write(b.X); w.Write(b.Y); w.Write(b.Until); }
     }
 
     /// <summary>Reads what <see cref="Snapshot"/> wrote.</summary>
@@ -713,5 +759,11 @@ internal sealed class LeftBehindTactics : IFactionTactics
         Unpacks = r.ReadInt32(); RaidParties = r.ReadInt32(); RaidOrders = r.ReadInt32(); SalvageOrders = r.ReadInt32();
         Relocations = r.ReadInt32(); RelocationsDone = r.ReadInt32(); RelocationsAborted = r.ReadInt32(); Sold = r.ReadInt32(); StormOrders = r.ReadInt32();
         _wreckValueNow = r.ReadInt32();
+        int n = AiSnapshot.Count(r);
+        _ordered.Clear();
+        for (int i = 0; i < n; i++) _ordered.Add((r.ReadUInt64(), r.ReadInt32(), r.ReadInt32(), r.ReadInt32()));
+        n = AiSnapshot.Count(r);
+        _bad.Clear();
+        for (int i = 0; i < n; i++) _bad.Add((r.ReadInt32(), r.ReadInt32(), r.ReadInt32()));
     }
 }
