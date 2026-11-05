@@ -56,4 +56,13 @@ public sealed class SupplyCounterTests
         Assert.True(with.SellButton.Y >= with.SupplyRow.Bottom);
         Assert.True(with.PowerBar.Y > without.PowerBar.Y);
     }
+
+    [Theory]
+    [InlineData(true, 50, 60, 11, true)]
+    [InlineData(true, 50, 60, 10, false)]
+    [InlineData(true, 60, 60, 1, true)]
+    [InlineData(true, 50, 60, 0, false)]
+    [InlineData(false, 50, 60, 11, false)]
+    public void HeadWaitsOnlyWhenItDoesNotFit(bool enabled, int used, int cap, int head, bool waits) =>
+        Assert.Equal(waits, SupplyReadout.HeadWaitsForSupply(enabled, used, cap, head));
 }

@@ -44,4 +44,15 @@ public static class SupplyReadout
     /// <summary>The counter text, "used/cap" (for example "34/60").</summary>
     public static string Text(SupplyView supply) =>
         supply.Used.ToString(CultureInfo.InvariantCulture) + "/" + supply.Cap.ToString(CultureInfo.InvariantCulture);
+
+    /// <summary>
+    /// True when the head of a unit lane is paused for supply (SUP-4): the rule is on, the unit costs supply and used + its supply is over
+    /// the cap. Mirrors the sim's lane pause (queued items do not count against the cap; only used does).
+    /// </summary>
+    /// <param name="rulesEnabled">The game's <c>[supply] enabled</c> switch.</param>
+    /// <param name="used">Supply in use (HUD).</param>
+    /// <param name="cap">Supply cap (HUD).</param>
+    /// <param name="headSupply">What the head unit costs in supply (<c>Simulation.SupplyOfType</c>), 0 for free units.</param>
+    public static bool HeadWaitsForSupply(bool rulesEnabled, int used, int cap, int headSupply) =>
+        rulesEnabled && headSupply > 0 && used + headSupply > cap;
 }

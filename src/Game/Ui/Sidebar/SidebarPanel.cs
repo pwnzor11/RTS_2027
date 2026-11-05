@@ -556,6 +556,25 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
         Text(batch, pixel, text, new Vector2(r.Right - w - 4 * _ui, r.Y + (r.Height - h) / 2f), colour, _ui, FontWeight.Regular);
     }
 
+    // SUP-4: the lane head is paused because it does not fit under the cap (the sim pauses the lane without a Stalled flag).
+    private bool SupplyWaits(ProductionCategory category, int typeIndex) =>
+        SupplyReadout.HeadWaitsForSupply(_source.Rules.Supply.Enabled, _hud.Supply.Used, _hud.Supply.Cap,
+            _source.Sim.SupplyOfType(category, typeIndex));
+
+    private void DrawWaitingForSupply(SpriteBatch batch, Texture2D pixel, Rectangle r, float scale)
+    {
+        string text = UiText.Get(UiText.SupplyWaiting);
+        List<string> lines = Rts.Game.Menu.TextWrap.Wrap(text, Math.Max(8, r.Width - 6), s => BitmapFont.Measure(s, scale, FontWeight.Regular));
+        int lh = BitmapFont.LineHeight(scale, FontWeight.Regular);
+        int y = r.Y + (r.Height - lines.Count * lh) / 2;
+        foreach (string line in lines)
+        {
+            int w = BitmapFont.Measure(line, scale, FontWeight.Regular);
+            Text(batch, pixel, line, new Vector2(r.X + (r.Width - w) / 2f, y), Gold, scale, FontWeight.Regular);
+            y += lh;
+        }
+    }
+
     private void DrawPowerBar(SpriteBatch batch, Texture2D pixel, SidebarLayout l)
     {
         Rectangle r = l.PowerBar;
@@ -686,8 +705,10 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
                     if (i != 0) continue;
                     int done = r.Height * q.Items[0].ProgressPermille / 1000;
                     Shapes.Fill(batch, pixel, new Rectangle(r.X, r.Y, r.Width, r.Height - done), new Color(0, 0, 0, 120));
-                    Shapes.Fill(batch, pixel, new Rectangle(r.X, r.Bottom - Math.Max(2, (int)_ui * 2), r.Width * q.Items[0].ProgressPermille / 1000, Math.Max(2, (int)_ui * 2)), q.Items[0].Stalled ? Gold : GoodGreen);
-                    if (q.Items[0].Stalled)
+                    bool waitingForSupply = SupplyWaits(q.Category, q.Items[0].TypeIndex);   // SUP-4
+                    Shapes.Fill(batch, pixel, new Rectangle(r.X, r.Bottom - Math.Max(2, (int)_ui * 2), r.Width * q.Items[0].ProgressPermille / 1000, Math.Max(2, (int)_ui * 2)), q.Items[0].Stalled || waitingForSupply ? Gold : GoodGreen);
+                    if (waitingForSupply) DrawWaitingForSupply(batch, pixel, r, small);
+                    else if (q.Items[0].Stalled)
                         CentredText(batch, pixel, "WAIT", r, Gold, small);
                 }
             }
