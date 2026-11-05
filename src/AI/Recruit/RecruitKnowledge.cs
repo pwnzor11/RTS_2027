@@ -22,6 +22,10 @@ internal sealed class RecruitKnowledge
     public readonly List<ViewActor> Bores = new();
     /// <summary>Aura carriers (Agitprop): not army; the faction tactics keep them with the wave. Empty for Authority.</summary>
     public readonly List<ViewActor> Support = new();
+    /// <summary>M6-10: own packed rigs (vehicles that unpack into a building): not army, never sent on waves. Empty for Authority / Directorate.</summary>
+    public readonly List<ViewActor> PackedRigs = new();
+    /// <summary>M6-10: own wreck-salvaging vehicles (Haulers): not harvesters, not army; the Left Behind tactics send them to wrecks.</summary>
+    public readonly List<ViewActor> Salvagers = new();
     public readonly List<ViewActor> Visible = new();
     /// <summary>M3-11: army units that retreated and guard the base (not part of waves). Filled by <see cref="Squads"/>.</summary>
     public readonly List<ViewActor> Home = new();
@@ -40,7 +44,7 @@ internal sealed class RecruitKnowledge
         Rules = view.Rules;
         view.CopyOwn(Own);
         view.CopyVisible(Visible);
-        Buildings.Clear(); Army.Clear(); Harvesters.Clear(); Bores.Clear(); Support.Clear(); Garrisoned.Clear();
+        Buildings.Clear(); Army.Clear(); Harvesters.Clear(); Bores.Clear(); Support.Clear(); Garrisoned.Clear(); PackedRigs.Clear(); Salvagers.Clear();
         if (BuildingCount.Length != Rules.Buildings.Count) BuildingCount = new int[Rules.Buildings.Count];
         Array.Clear(BuildingCount);
         HaveYard = false;
@@ -51,6 +55,12 @@ internal sealed class RecruitKnowledge
                 case ActorKind.Building:
                     Buildings.Add(a);
                     BuildingCount[a.TypeIndex]++;
+                    break;
+                case ActorKind.Vehicle when Rules.Vehicles[a.TypeIndex] is { UnpacksInto: >= 0, Locomotion: not Locomotion.Burrow }:
+                    PackedRigs.Add(a);   // M6-10
+                    break;
+                case ActorKind.Vehicle when Rules.Vehicles[a.TypeIndex].SalvageRate > 0:
+                    Salvagers.Add(a);   // M6-10
                     break;
                 case ActorKind.Vehicle when Rules.Vehicles[a.TypeIndex].HarvestCapacity > 0:
                     Harvesters.Add(a);

@@ -15,8 +15,10 @@ namespace AI.Tests.Tiers;
 internal sealed class TierRig
 {
     /// <summary>Counts what an AI issued, by command kind (Build / Place / Rally included).</summary>
-    private sealed class Recorder(IAiPlayer inner, Dictionary<CommandKind, int> counts) : IAiPlayer
+    private sealed class Recorder(IAiPlayer inner, Dictionary<CommandKind, int> counts) : IAiPlayer, IAiSnapshotable
     {
+        public void SaveState(BinaryWriter w) => ((IAiSnapshotable)inner).SaveState(w);
+        public void LoadState(BinaryReader r) => ((IAiSnapshotable)inner).LoadState(r);
         public string Id => inner.Id;
         public void Start(AiContext ctx) => inner.Start(ctx);
         public void Think(PlayerView view, ICommandSink sink) => inner.Think(view, new Sink(counts, sink));
@@ -34,10 +36,11 @@ internal sealed class TierRig
 
     private static ushort _seq = 50000;
     private readonly List<Command> _pending = new();
-    private readonly AiDriver _driver;
+    private AiDriver _driver;
+    private readonly DifficultyProfile _profile;
 
     public Simulation Sim { get; }
-    public RecruitAi Ai { get; }
+    public RecruitAi Ai { get; private set; }
     public Dictionary<CommandKind, int> Issued { get; } = new();
     public RuleSet World => TestWorld.Rules;
 
@@ -47,9 +50,24 @@ internal sealed class TierRig
         { Factions = [faction, enemy], AllowDebug = true });
         SkirmishStart.Apply(Sim);
         setup?.Invoke(this);
+        _profile = profile;
         _driver = new AiDriver(seed);
         Ai = new RecruitAi(profile);
         _driver.Add(0, new Recorder(Ai, Issued), profile);
+    }
+
+    /// <summary>M6-10: the AI memory of slot 0 as a save would hold it.</summary>
+    public byte[]? CaptureAi() => _driver.CaptureState(0);
+
+    /// <summary>M6-10: replaces the AI by a fresh one that starts from <paramref name="blob"/> (the sim keeps running), runs <paramref name="ticks"/> more and returns the state hash.</summary>
+    public ulong ResumeWithBlob(byte[] blob, int ticks)
+    {
+        _driver = new AiDriver(Sim.Setup.Seed);
+        Ai = new RecruitAi(_profile);
+        _driver.Add(0, new Recorder(Ai, Issued), _profile);
+        _driver.RestoreState(0, blob);
+        Run(ticks);
+        return Sim.ComputeStateHash();
     }
 
     public int Issue(CommandKind k) => Issued.GetValueOrDefault(k);

@@ -220,7 +220,8 @@ internal sealed class TierPlanner
             int w = v.PrimaryWeapon;
             bool antiAirOnly = w >= 0 && rules.Weapons[w].Targets == WeaponTargets.Air;
             bool hurts = w >= 0 && rules.Weapons[w].Damage > 0;
-            int rank = v.Tier * 4 + (hurts ? 2 : 0) + (antiAirOnly ? (SeenEnemyAir || Bias.WantsAntiAir ? 3 : -100) : 0);
+            int rank = v.Tier * 4 + (hurts ? 2 : 0) + (antiAirOnly ? (SeenEnemyAir || Bias.WantsAntiAir ? 3 : -100) : 0)
+                + (v.Id == _faction.PreferredAircraftId ? 1 : 0);   // M6-10: the faction's favourite wins a tie
             if (rank > bestTier) { bestTier = rank; _aircraft = i; }
         }
         if (_aircraft < 0) return -1;
@@ -328,7 +329,7 @@ internal sealed class TierPlanner
         bool lateOk = k.Army.Count >= ArmyBeforeLateTech || Bias.EarlyLateTech;
         if (_p.Air && _faction.AirProducerId is string air && lateOk && (k.View.Tier >= 2 || !up) && build.StepsOf(air) < 1)
             build.Extend(air);
-        if (_p.Superweapons && _faction.SuperweaponBuildingId is string sw && lateOk && (k.View.Tier >= 3 || !up)
+        if (_p.Superweapons && _faction.SuperweaponBuildingId is string sw && SuperweaponUsable(k.Rules, sw) && lateOk && (k.View.Tier >= 3 || !up)
             && build.StepsOf(sw) < 1) build.Extend(sw);
         if (!_p.AdaptBuild) return;
         if (funds >= FloatingCash)
@@ -338,6 +339,17 @@ internal sealed class TierPlanner
         }
         if (SeenEnemy && HeavyShare >= 50 && build.StepsOf(_faction.DefenceId) < 3 && build.StepsOf(_faction.DefenceId) <= DefenceTotalBuilt(k))
             build.Extend(_faction.DefenceId);
+    }
+
+    /// <summary>M6-10: false when the superweapon needs a tunnel entrance in range and the faction has no entrance building at all (the
+    /// Second Drift's data says so, see the M6-10 notes): the structure would never fire, so it is not built.</summary>
+    private bool SuperweaponUsable(SimRules rules, string id)
+    {
+        int t = SimRules.IndexOf(rules.Buildings, id, b => b.Id);
+        if (t < 0 || rules.Buildings[t].SuperweaponEntranceRange <= 0) return true;
+        foreach (BuildingType b in rules.Buildings)
+            if (b.Faction == _faction.Faction && b.Entrance != TunnelSize.None) return true;
+        return false;
     }
 
     private int DefenceTotalBuilt(RecruitKnowledge k)
