@@ -191,7 +191,7 @@ systems (water locomotion, ships, landings). Lore, roster, art, AI.
 - [x] M7-PLAN M7 plan (docs/design/11_m7_plan.md), supply-cap design (13_supply_cap.md), veterancy design (14_veterancy.md) (D-130, session 9)
 - [x] M7-LORE Archive entries for the whole Expedition roster (session 9, assumed — confirm)
 - [ ] M7-VET Generic veterancy (all factions; VET-1..4 sim+data, VET-5 game, VET-6 AI) — VET-1..5 done; VET-6 AI and the info panel open
-- [ ] M7-SUP Supply cap (all factions; SUP-1..6) — SUP-1, 2, 3, 5 done (on by default); SUP-4 has the block text only (counter open); SUP-6 open
+- [ ] M7-SUP Supply cap (all factions; SUP-1..6) — SUP-1, 2, 3, 5 done; held off by default (D-133) until three AI tests pass with it on; SUP-4 has the block text only (counter open); SUP-6 open
 - [ ] M7-02 Naval contracts (11_m7_plan.md)
 
 ## M8 · Campaign (was M4)

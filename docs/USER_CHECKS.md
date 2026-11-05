@@ -199,8 +199,9 @@ until then the Left Behind shows placeholder boxes.
    own infantry like ash.
 5. **Veterancy:** units that kill earn pips ("Veteran", "Elite", "Hero"); a promotion flashes and plays a short cue. Higher ranks
    hit harder, take less damage and fire faster.
-6. **Supply cap (on by default):** queue many riflemen; once supply runs out the next one is refused with "Supply cap reached: build a
-   supply structure". Build an Authority Ration Hall (Directorate: Bunk Gallery; Left Behind: Still Rig) and the queue goes on. The
-   AI builds these too. There is no supply counter on screen yet (SUP-4).
+6. **Supply cap (off by default for now, D-133):** set `enabled = true` under `[supply]` in data/rules/game.toml. Queue many riflemen;
+   once supply runs out the next one is refused with "Supply cap reached: build a supply structure". Build an Authority Ration Hall
+   (Directorate: Bunk Gallery; Left Behind: Still Rig) and the queue goes on. The AI builds these too. There is no supply counter on
+   screen yet (SUP-4).
 7. **AI as Left Behind:** set an AI slot to Left Behind at Veteran: it unpacks, builds, raids and attacks; it may pack and move its
    base when hard pressed.
