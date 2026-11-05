@@ -121,7 +121,8 @@ public sealed record VehicleType(string Id, Locomotion Locomotion, int Speed, in
     /// <summary>Carrier hangar: aircraft it can hold (TOML <c>aircraft_slots</c>, 0 = none).</summary>
     public int AircraftSlots { get; init; }
 
-    /// <summary>Carrier: ticks to launch or recover one aircraft (TOML <c>sortie_ticks</c>, 0 = off).</summary>
+    /// <summary>Carrier: flight time of one sortie before its aircraft fly home, and the time a docked aircraft takes to repair fully
+    /// (TOML <c>sortie_ticks</c>, 0 = off; M7-09, D-147).</summary>
     public int SortieTicks { get; init; }
 
     /// <summary>Landing craft: ticks per passenger put ashore (TOML <c>unload_ticks</c>, 0 = off).</summary>
