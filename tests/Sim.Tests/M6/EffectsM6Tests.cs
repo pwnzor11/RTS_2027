@@ -90,7 +90,7 @@ public sealed class EffectsM6Tests
     {
         Simulation sim = NewSim();
         EntityId inStorm = sim.SpawnInfantry(0, Sneak, new CellCoord(20, 20));
-        EntityId outside = sim.SpawnInfantry(0, Sneak, new CellCoord(40, 20));
+        EntityId outside = sim.SpawnInfantry(0, Sneak, new CellCoord(30, 20));
         sim.Effects.StormX[0] = 20; sim.Effects.StormY[0] = 20; sim.Effects.StormRadius[0] = 3;
         sim.Effects.StormTicks[0] = 1000; sim.Effects.StormOwner[0] = 0;   // a live storm of player 0 (lead wiring, session 9)
         Run(sim, 6);   // 6 ticks > the 5-tick ash delay, well below the global 60

@@ -44,11 +44,19 @@ public sealed partial class Simulation
         if (!_units.Slots.IsAlive(c.Subject)) return;
         int i = c.Subject.Index;
         if (_units.Player[i] != c.Player || _units.Health[i] <= 0 || !_rigs.IsPackedRig(i) || _rigs.UnpackTicksLeft[i] != 0) return;
-        VehicleType vt = RulesOf(c.Player).Vehicles[_units.TypeIndex[i]];
-        if (vt.UnpacksInto < 0 || vt.UnpacksInto >= RulesOf(c.Player).Buildings.Count || !InMap(c.Cell)) return;
-        if (!UnpackSiteOk(c.Player, vt.UnpacksInto, c.Cell, i)) return;
+        int into = UnpackTypeOf(i);
+        if (into < 0 || into >= RulesOf(c.Player).Buildings.Count || !InMap(c.Cell)) return;
+        if (!UnpackSiteOk(c.Player, into, c.Cell, i)) return;
         _rigs.UnpackX[i] = c.Cell.X; _rigs.UnpackY[i] = c.Cell.Y;
         Queue(_units, i, MissionKind.Pack, c.Cell, default);
+    }
+
+    /// <summary>Building type a packed rig unpacks into: the type it was packed from (RigState.PackedFrom), so one generic packed
+    /// vehicle (lb_mother_rig_packed) serves every rig; else the vehicle's unpacks_into (start-kit rigs). Lead fix, session 9.</summary>
+    internal int UnpackTypeOf(int v)
+    {
+        int from = _rigs.PackedFrom[v] - 1;
+        return from >= 0 ? from : RulesOf(_units.Player[v]).Vehicles[_units.TypeIndex[v]].UnpacksInto;
     }
 
     /// <summary>pack_ticks scaled by the owner's Quick Pack upgrades (min 1).</summary>
@@ -162,17 +170,18 @@ public sealed partial class Simulation
     {
         byte owner = _units.Player[v];
         SimRules rules = RulesOf(owner);
-        VehicleType vt = rules.Vehicles[_units.TypeIndex[v]];
+        int into = UnpackTypeOf(v);
         var tl = new CellCoord(_rigs.UnpackX[v], _rigs.UnpackY[v]);
-        if (!UnpackSiteOk(owner, vt.UnpacksInto, tl, v))
+        if (into < 0 || into >= rules.Buildings.Count || !UnpackSiteOk(owner, into, tl, v))
         {   // blocked now: stay packed
             _rigs.UnpackTicksLeft[v] = 0;
             QueueGuard(v);
             return;
         }
-        BuildingType bt = rules.Buildings[vt.UnpacksInto];
-        int health = (int)Math.Max(1L, (long)bt.MaxHealth * _rigs.HpPermille[v] / 1000);
-        EntityId b = PlaceBuildingNow(owner, vt.UnpacksInto, tl, health);
+        BuildingType bt = rules.Buildings[into];
+        int vmax = Math.Max(1, rules.Vehicles[_units.TypeIndex[v]].MaxHealth);   // HP ratio of the packed rig now (damage while packed counts)
+        int health = (int)Math.Max(1L, (long)bt.MaxHealth * Math.Min(1000L, (long)_units.Health[v] * 1000 / vmax) / 1000);
+        EntityId b = PlaceBuildingNow(owner, into, tl, health);
         if (b.IsNone) { _rigs.UnpackTicksLeft[v] = 0; QueueGuard(v); return; }   // building store full
         RemoveVehicleForDeploy(v);   // clears the rig slot; the lane's queue resumes because no rig is packed any more
     }

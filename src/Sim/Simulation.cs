@@ -184,6 +184,8 @@ public sealed partial class Simulation
         _units.Facing[id.Index] = CentreFacing(cell);
         OnActorSpawned(ActorKind.Vehicle, id.Index);
         OnM3MobileSpawned(ActorKind.Vehicle, id.Index);
+        int unpacks = RulesOf(player).Vehicles[vehicleTypeIndex].UnpacksInto;   // M6-03: a placed packed rig (start kit) is a packed rig
+        if (unpacks >= 0 && _rigs.PackedFrom[id.Index] == 0) { _rigs.PackedFrom[id.Index] = unpacks + 1; _rigs.HpPermille[id.Index] = 1000; }
         _emittersDirty = true;   // M3-INT
         if (!_inStep) _setupLog.Add(new SetupEntry(ActorKind.Vehicle, player, vehicleTypeIndex, cell, 0));
         return id;

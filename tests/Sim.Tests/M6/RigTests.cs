@@ -183,6 +183,29 @@ public sealed class RigTests
     }
 
     [Fact]
+    public void PlacedPackedRig_IsAPackedRig_WithFullHealthRatio()
+    {
+        var s = new Simulation(MakeSetup());
+        EntityId rig = s.SpawnVehicle(0, Rig, new CellCoord(30, 30));   // as the start kit places it (lead fix, session 9)
+        Assert.True(s.Rigs.IsPackedRig(rig.Index));
+        Assert.Equal((Base + 1, 1000), (s.Rigs.PackedFrom[rig.Index], s.Rigs.HpPermille[rig.Index]));
+    }
+
+    [Fact]
+    public void GenericPackedVehicle_UnpacksIntoTheTypeItWasPackedFrom_AtItsCurrentHealth()
+    {
+        var s = Packed(MakeSetup(), out EntityId rig);
+        s.Rigs.PackedFrom[rig.Index] = Turret + 1;   // one packed vehicle type serves every rig (lb_mother_rig_packed)
+        s.Units.Health[rig.Index] = 100;             // damaged to half while packed
+        s.Step(new[] { Cmd(s, CommandKind.Pack, rig, new CellCoord(36, 30)) });
+        int guard = 0;
+        while (s.Units.Slots.IsAlive(rig) && guard++ < 900) Run(s, 1);
+        Assert.False(s.Units.Slots.IsAlive(rig));
+        Assert.Equal(Turret, s.Buildings.TypeIndex[1]);
+        Assert.Equal(s.Setup.Rules.Buildings[Turret].MaxHealth / 2, s.Buildings.Health[1]);
+    }
+
+    [Fact]
     public void Upgrade_HalvesPackTime()
     {
         var s = new Simulation(MakeSetup(quickPack: true));
