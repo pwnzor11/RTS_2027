@@ -43,10 +43,10 @@ last-arrival tick (11_m7_plan §3.3); no extra state. Option B: flat +10, no lin
 - **Enqueue:** a Build for a unit is rejected (new `QueueBlockReason.SupplyCap = 6`, appended after QueueFull = 5,
   PlayerHud.cs:14-28) when `used + supply of every queued unit + this unit > cap`. Structures and upgrades are never blocked.
 - **Queued items:** if the cap drops, the front item pauses: no spending, no progress, no refund. The item resumes when
-  `used + its supply <= cap`. A finished unit waits in the lane (like a blocked exit, Stalled, Simulation.Production.cs:~297) until it fits.
+  `used + its supply <= cap`. A finished unit waits in the lane (like a blocked exit, Stalled, Simulation.Production.cs:318) until it fits.
 - **Counts:** all live infantry and vehicle actors of the owner, including passengers (layer Passenger), garrisoned
   (Garrisoned), underground (Tunnel/Burrowed), diving and packed rigs (they are vehicles). Layers: src/Sim/Core/ActorLayer.cs:16.
-- **Not blocked:** start kit, `FreeUnit` spawns (Simulation.Production.cs ApplyPlace), mission and debug spawns, unpack/deploy.
+- **Not blocked:** start kit, `FreeUnit` spawns (Simulation.Production.cs:197), mission and debug spawns, unpack/deploy.
   They count but may push `used` over the cap.
 - Packing: a rig that starts packing stops giving supply at once (see 10_m6_plan §3.3); the packed vehicle counts its own `supply`
   (`lb_mother_rig` = 0 `(tune)`, since the base amount comes from the unpacked building).
