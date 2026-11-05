@@ -107,8 +107,8 @@ resets, which this estimate does not count (+); small maps raise everybody's num
 | exp_up_vacuum_cores | 1500 | 3 | 3 | - |
 | exp_up_composite_armour | 1500 | 3 | 12 | - |
 | exp_up_guided_shells | 1500 | 3 | 5 | - |
-| exp_up_fast_charging | 1200 | 3 | 0 | stand-in or empty: see TODO in upgrades.toml |
-| exp_up_deep_survey | 800 | 2 | 0 | stand-in or empty: see TODO in upgrades.toml |
+| exp_up_fast_charging | 1200 | 3 | 1 | class:player shipment_interval mul 850 (simfu-3) |
+| exp_up_deep_survey | 800 | 2 | 1 | exp_skimmer harvest_capacity add 2 (5 to 7; simfu-3) |
 | exp_up_veteran_drill | 1200 | 3 | 8 | - |
 
 ## Weapons
