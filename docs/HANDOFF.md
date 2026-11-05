@@ -6,6 +6,11 @@ The M4-16 wave gate landed (D-131). M7 plan, supply and veterancy designs, M8 pl
 Left Behind art (14 structures, packed rig, 16 units) is on local branch `art-s9`, staged in the owner's `_art_push` folder for him
 to push (D-084). Full suite 2 331 tests (Sim 1 238, Game 824, AI 119, Llm 107, Scripting 43). Decisions D-119..D-133.
 
+## Session 10 checkpoint (after wave 1)
+PR #20 (Left Behind art) and PR #21 (supply on, SUP-4, VET-6, info panel, M7-02) are on main; 2 460 tests. Wave 2 running on
+`integ-s10`: acc (M6-12 soak, LB goldens, income curves), bal (SUP-6, VET-7), lb-ai (salvage, Second Drift, re-measure), M7-03, M7-06,
+M7-07. Decisions D-134..D-137.
+
 ## Start here (shown to the user as the plan; nothing starts until they say go)
 0. If the owner ran `_art_push\push_art_s9.ps1`: open a PR `art-s9` → main (merge main into it first if needed), Windows CI, merge.
    If not, remind him (it needs his PC; the cloud cannot upload LFS objects).
