@@ -62,7 +62,7 @@ heal_quiet_ticks = 100  # (tune) 5 s without firing or being hit
 # value, <= band2_max: second, above: third) unless the type sets `supply`; the cap is the sum of supply_provided over completed,
 # unpacked, alive own buildings, at most `ceiling`. stock_intervals is parsed for the Expedition store only (no behaviour yet).
 [supply]
-enabled = true  # (tune) D-129
+enabled = false  # (tune) D-129 wants this on; it flips to true when the AI builds supply (SUP-5)
 ceiling = 200  # (tune)
 band1_max = 400  # (tune)
 band2_max = 900  # (tune)
