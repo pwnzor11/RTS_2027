@@ -76,10 +76,9 @@ public sealed partial class Simulation
     /// follow their <c>water</c> mask, every other structure refuses Water and Shallow) and, for an Expedition player, the beachhead
     /// zone. Returns <see cref="PlacementResult.Ok"/> if this part has no objection (the generic occupancy checks still follow).
     /// </summary>
-    private PlacementResult CheckBeachheadAndWater(byte player, BuildingType bt, int x0, int y0)
+    private PlacementResult CheckBeachheadAndWater(byte player, BuildingType bt, int x0, int y0, TerrainTable table)
     {
         int w = bt.FootprintW, h = bt.FootprintH;
-        TerrainTable table = Setup.Rules.Terrain;
         bool mask = bt.WaterBuilding && bt.WaterMask.Count == w * h;
         for (int dy = 0; dy < h; dy++)
             for (int dx = 0; dx < w; dx++)
