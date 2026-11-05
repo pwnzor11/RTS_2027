@@ -24,6 +24,9 @@ public sealed class ProjectileStore : ISimStatePart
     public readonly int[] Warhead;
     public readonly byte[] Owner;
     public readonly int[] Source;
+    /// <summary>The mobile actor that fired the shell (VET-2: kill credit); none for buildings, other sources, or when veterancy is off. It is
+    /// a plain reference: the credit is dropped when the slot has been reused (generation mismatch).</summary>
+    public readonly ActorRef[] Shooter;
 
     public ProjectileStore(int capacity = DefaultCapacity)
     {
@@ -36,6 +39,7 @@ public sealed class ProjectileStore : ISimStatePart
         Warhead = new int[capacity];
         Owner = new byte[capacity];
         Source = new int[capacity];
+        Shooter = new ActorRef[capacity];
     }
 
     public string Name => "projectiles";
@@ -50,12 +54,12 @@ public sealed class ProjectileStore : ISimStatePart
 
     /// <summary>Allocate and fill a projectile slot (caller checks <see cref="HasFree"/>).</summary>
     public EntityId Spawn(LeptonCoord from, ActorRef target, LeptonCoord targetPos, int speed, int damage, int warhead,
-        byte owner, int weapon)
+        byte owner, int weapon, ActorRef shooter = default)
     {
         EntityId id = Slots.Allocate();
         int i = id.Index;
         Position[i] = from; Target[i] = target; TargetPos[i] = targetPos; Speed[i] = speed; Damage[i] = damage;
-        Warhead[i] = warhead; Owner[i] = owner; Source[i] = weapon;
+        Warhead[i] = warhead; Owner[i] = owner; Source[i] = weapon; Shooter[i] = shooter;
         return id;
     }
 
@@ -69,7 +73,7 @@ public sealed class ProjectileStore : ISimStatePart
     private void Clear(int i)
     {
         Position[i] = default; Target[i] = default; TargetPos[i] = default; Speed[i] = 0; Damage[i] = 0;
-        Warhead[i] = 0; Owner[i] = 0; Source[i] = 0;
+        Warhead[i] = 0; Owner[i] = 0; Source[i] = 0; Shooter[i] = default;
     }
 
     public void Write(BinaryWriter w)
@@ -85,6 +89,7 @@ public sealed class ProjectileStore : ISimStatePart
             w.Write((byte)Target[i].Kind); w.Write(Target[i].Id.Index); w.Write(Target[i].Id.Generation);
             w.Write(TargetPos[i].X); w.Write(TargetPos[i].Y);
             w.Write(Speed[i]); w.Write(Damage[i]); w.Write(Warhead[i]); w.Write(Owner[i]); w.Write(Source[i]);
+            w.Write((byte)Shooter[i].Kind); w.Write(Shooter[i].Id.Index); w.Write(Shooter[i].Id.Generation);   // VET-2 (format 11)
         }
     }
 
@@ -103,6 +108,8 @@ public sealed class ProjectileStore : ISimStatePart
             TargetPos[i] = new LeptonCoord(r.ReadInt32(), r.ReadInt32());
             Speed[i] = r.ReadInt32(); Damage[i] = r.ReadInt32(); Warhead[i] = r.ReadInt32();
             Owner[i] = r.ReadByte(); Source[i] = r.ReadInt32();
+            var shooterKind = (ActorKind)r.ReadByte();
+            Shooter[i] = new ActorRef(shooterKind, new EntityId(r.ReadUInt16(), r.ReadUInt16()));
         }
     }
 }

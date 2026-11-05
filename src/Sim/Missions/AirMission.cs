@@ -48,7 +48,7 @@ internal static class AirMission
         byte desired = Facing.FromDelta(target.X - pos.X, target.Y - pos.Y);
         store.Facing[i] = t.TurnRate > 0 ? Facing.TurnToward(store.Facing[i], desired, t.TurnRate) : desired;
         store.Status[i] = MissionStatus.Driving;
-        int speed = Math.Max(1, (int)((long)t.Speed * sim.Effects.SpeedPermille(ActorKind.Vehicle, i) / 1000));
+        int speed = Math.Max(1, (int)((long)t.Speed * sim.MoveSpeedPermille(ActorKind.Vehicle, i) / 1000));
         int dx = target.X - pos.X, dy = target.Y - pos.Y, ax = Math.Abs(dx), ay = Math.Abs(dy);
         if (Math.Max(ax, ay) <= speed) store.Position[i] = target;
         else

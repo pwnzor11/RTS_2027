@@ -77,4 +77,15 @@ public sealed record InfantryType(string Id, int Speed, int MaxHealth, ArmorClas
 
     /// <summary>Repair aura: permille of max HP per 10 ticks on own vehicles and rigs within <see cref="AuraRadius"/> (TOML <c>aura_repair_permille</c>, 0 = off).</summary>
     public int AuraRepairPermille { get; init; }
+
+    // ---- schema v6 (VET-1, docs/design/14_veterancy.md §3). ---------------------------------------------
+
+    /// <summary>Explicit TOML <c>veteran</c> flag; null = not set (then armed types rank, unarmed ones do not).</summary>
+    public bool? Veteran { get; init; }
+
+    /// <summary>True if this type earns veterancy ranks: the <c>veteran</c> flag, else whether it has a primary weapon.</summary>
+    public bool CanRank => Veteran ?? PrimaryWeapon >= 0;
+
+    /// <summary>Scales the veterancy thresholds of this type, permille (effect attribute <c>vet_threshold_permille</c>; 1000 = unchanged).</summary>
+    public int VetThresholdPermille { get; init; } = 1000;
 }

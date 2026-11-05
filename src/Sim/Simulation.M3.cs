@@ -119,6 +119,7 @@ public sealed partial class Simulation
         _tunnels.ClearMobile(kind, i);
         _effects.ClearMobile(kind, i);
         if (kind == ActorKind.Vehicle) _rigs.ClearVehicle(i);   // M6-02
+        _veterancy.ClearMobile(kind, i);                        // VET-1
     }
 
     /// <summary>A vehicle/infantry with health &lt;= 0 is about to be removed (RunCleanup): death weapon, passengers.</summary>
@@ -134,6 +135,7 @@ public sealed partial class Simulation
         _tunnels.ClearMobile(kind, i);
         _effects.ClearMobile(kind, i);
         if (kind == ActorKind.Vehicle) _rigs.ClearVehicle(i);   // M6-02
+        _veterancy.ClearMobile(kind, i);                        // VET-1
     }
 
     /// <summary>A building was just placed (setup, Place command or deploy).</summary>

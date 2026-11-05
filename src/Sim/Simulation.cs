@@ -4,6 +4,7 @@ using System.IO.Hashing;
 using Rts.Sim.Core;
 using Rts.Sim.Directives;
 using Rts.Sim.Rigs;
+using Rts.Sim.Veterancy;
 using Rts.Sim.Salvage;
 using Rts.Sim.Economy;
 using Rts.Sim.Effects;
@@ -42,6 +43,7 @@ public sealed partial class Simulation
     private readonly DirectiveState _directives; // M5-01
     private readonly RigState _rigs;             // M6-02
     private readonly SalvageState _salvage;      // M6-02
+    private readonly VeterancyState _veterancy;  // VET-1
     private readonly List<SetupEntry> _setupLog = new();
     private bool _inStep;
     private readonly MapState _map;
@@ -83,6 +85,7 @@ public sealed partial class Simulation
         _directives = new DirectiveState(setup);   // M5-01
         _rigs = new RigState(setup);               // M6-02
         _salvage = new SalvageState(setup);        // M6-02
+        _veterancy = new VeterancyState(setup);    // VET-1
         _map = new MapState(setup.Map);
         _paths = new PathService(_map, setup.Rules.Terrain);
         _paths.GateOpen = GateOpenFor;   // M3-04: own-team gates are passable (D-076)
@@ -93,8 +96,8 @@ public sealed partial class Simulation
         // M1.5: "players" is appended after the combat parts (append-only order).
         int extensionCount = setup.Extensions?.Count ?? 0;   // M2-15: extension parts come last (append-only order)
         // M3-01: "tunnels", "ground", "effects" follow "production"; extension parts stay last.
-        // M4-01: "garrison", "stats" follow "effects". M5-01: "directive" follows "stats". M6-02: "rigs", "salvage" follow "directive".
-        const int builtInAfterCombat = 11;   // players, economy, production, tunnels, ground, effects, garrison, stats, directive, rigs, salvage
+        // M4-01: "garrison", "stats" follow "effects". M5-01: "directive" follows "stats". M6-02: "rigs", "salvage" follow "directive". VET-1: "veterancy" follows "salvage".
+        const int builtInAfterCombat = 12;   // players, economy, production, tunnels, ground, effects, garrison, stats, directive, rigs, salvage, veterancy
         _parts = new ISimStatePart[6 + extra.Length + builtInAfterCombat + extensionCount];
         _parts[0] = _map; _parts[1] = _units; _parts[2] = _infantry; _parts[3] = _buildings; _parts[4] = _paths; _parts[5] = _vision;
         for (int e = 0; e < extra.Length; e++) _parts[6 + e] = extra[e];
@@ -109,7 +112,8 @@ public sealed partial class Simulation
         _parts[14 + extra.Length] = _directives;
         _parts[15 + extra.Length] = _rigs;
         _parts[16 + extra.Length] = _salvage;
-        for (int e = 0; e < extensionCount; e++) _parts[17 + extra.Length + e] = setup.Extensions![e].State;
+        _parts[17 + extra.Length] = _veterancy;
+        for (int e = 0; e < extensionCount; e++) _parts[18 + extra.Length + e] = setup.Extensions![e].State;
         MapHash = MapHasher.Compute(setup.Map);
         for (int e = 0; e < extensionCount; e++) setup.Extensions![e].OnSetup(this);   // after everything exists; also runs before a Load
     }
@@ -141,7 +145,7 @@ public sealed partial class Simulation
     public VisionState Vision => _vision;
 
     /// <summary>State parts in canonical order (map, units, infantry, buildings, paths, vision, combat, projectiles, players, economy,
-    /// production, tunnels, ground, effects, garrison, stats, directive, rigs, salvage, then extension parts).</summary>
+    /// production, tunnels, ground, effects, garrison, stats, directive, rigs, salvage, veterancy, then extension parts).</summary>
     public IReadOnlyList<ISimStatePart> StateParts => _parts;
 
     /// <summary>The only clock. Starts at 0; Step increments it by one.</summary>
@@ -239,6 +243,7 @@ public sealed partial class Simulation
         RunGround();       // M3: Simulation.Ground.cs — radiation decay/damage, Blackout decay, hardening recompute (before cleanup)
         RunAiBookkeeping();
         RunTriggers();
+        RunVeterancy();    // VET-3: Simulation.Veterancy.cs — rank-3 self-heal (before cleanup)
         RunCleanup();
         Tick++;
         if (Tick % SimConstants.HashIntervalTicks == 0)
