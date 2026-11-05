@@ -215,7 +215,7 @@ prerequisites = ["lb_muster_rig"]
 rad_resist_permille = 300  # (tune)
 stealth = true
 ash_stealth_delay_ticks = 20  # (tune) shorter than [stealth] delay_ticks on ash cells
-ash_stealth_threshold = 16  # (tune)
+ash_stealth_threshold = 4  # (tune) Ashfall overlay density scale 0..12 (lead note, M6-06)
 
 [lb_drifter_brute]   # PLACEHOLDER ART; heavy flame-hammer infantry that tanks the dust
 faction = "left_behind"

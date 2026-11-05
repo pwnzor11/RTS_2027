@@ -184,6 +184,15 @@ public sealed class LeftBehindDataTests
     }
 
     [Fact]
+    public void OnlyOneStormWarhead_AndAshThresholdIsOnTheOverlayScale()
+    {
+        SimRules s = LoadReal();
+
+        Assert.Single(s.Warheads.Where(w => w.StormTicks > 0));   // M6-07 reads the first storm warhead
+        Assert.InRange(Inf(s, "lb_veilwalker").AshStealthThreshold, 1, 12);   // Ashfall overlay density is 0..12 (M6-06)
+    }
+
+    [Fact]
     public void RigsPack_AndThePackedRigUnpacks()
     {
         SimRules s = LoadReal();
