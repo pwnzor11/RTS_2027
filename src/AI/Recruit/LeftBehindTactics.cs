@@ -39,7 +39,7 @@ internal sealed class LeftBehindTactics : IFactionTactics
     /// <summary>Wrecks within this many cells of a seen enemy gun are not salvaged.</summary>
     public const int WreckDangerCells = 8;   // (tune) M6-10
     /// <summary>Total wreck value in reach before a Hauler is bought.</summary>
-    public const int WreckValueForHauler = 250;   // (tune) M6-10
+    public const int WreckValueForHauler = 150;   // (tune) M6-10
     /// <summary>Ticks between Return orders to an idle Hauler that found no wreck.</summary>
     public const int ReturnGapTicks = 400;   // (tune) M6-10
 
@@ -516,7 +516,10 @@ internal sealed class LeftBehindTactics : IFactionTactics
         foreach (ViewActor r in k.PackedRigs)
         {
             if (!r.Idle || view.PackProgressPermille(r.Ref) > 0) continue;
-            if (!FindSite(k, r, _dest, 13, out CellCoord site)) continue;
+            // no room beside the fallback (or it is taking too long): unpack where the rig stands
+            CellCoord site = default;
+            bool found = tick - _relocStart < 1200 && FindSite(k, r, _dest, 13, out site);
+            if (!found && !FindSite(k, r, r.Cell, 13, out site)) continue;
             Reserve(k, r, site);
             sink.Issue(CommandKind.Pack, r.Id, ActorKind.Vehicle, site);
         }

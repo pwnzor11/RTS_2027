@@ -38,7 +38,7 @@ internal sealed class LeftBehindRecruitFaction : RecruitFaction
     public override string? ResearchId => "lb_bench";
     public override string? AirProducerId => "lb_rotor_pad";
     public override string? SuperweaponBuildingId => "lb_second_drift";
-    public override string? PreferredAircraftId => "lb_kite";
+    public override string? PreferredAircraftId => "lb_rotor";
 
     // (tune) M6-10: tier-2/3 roster (design 06 §5): the push units join at tier 2, the Rolling Fort at tier 3.
     public override string[] InfantryTier2 { get; } = ["lb_slinger", "lb_slinger", "lb_drifter_brute", "lb_tinker"];

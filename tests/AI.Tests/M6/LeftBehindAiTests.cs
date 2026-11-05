@@ -8,6 +8,7 @@ using Rts.Sim.Core;
 using Rts.Sim.Map;
 using Rts.Sim.Rules;
 using Xunit.Abstractions;
+using Rts.AI.Recruit;
 
 namespace AI.Tests.M6;
 
@@ -142,5 +143,52 @@ public sealed class LeftBehindAiTests(ITestOutputHelper log)
             resumed = h;
         }
         Assert.Equal(Straight(), resumed);
+    }
+
+    /// <summary>Plays Left Behind (slot 0) against a tiered Authority and reports what the faction extras did; no rig may end the game packed and idle.</summary>
+    [Theory]
+    [InlineData(3, 1)]
+    [InlineData(3, 2)]
+    [InlineData(4, 3)]
+    [InlineData(5, 4)]
+    public void ALeftBehindAiPlaysAFullGameWithoutAStuckRig(int tier, ulong seed)
+    {
+        SimRules rules = TestWorld.Rules.Sim;
+        MapData map = MapGenerator.Generate(56, seed);
+        var sim = new Simulation(new SimSetup(seed, map, 2, rules, TestWorld.Rules.RulesHash) { Factions = [Faction.LeftBehind, Faction.Authority] });
+        SkirmishStart.Apply(sim);
+        var driver = new AiDriver(seed);
+        var lb = new RecruitAi(Tier(tier));
+        driver.Add(0, lb, Tier(tier));
+        AiRegistry.TryCreate(AiRegistry.TieredId, Tier(3), out IAiPlayer? foe);
+        driver.Add(1, foe!, Tier(3));
+        var pending = new List<Command>();
+        int idlePacked = 0, worst = 0;
+        for (int t = 0; t < 14000 && !sim.Players.Defeated[0] && !sim.Players.Defeated[1]; t++)
+        {
+            driver.Collect(sim, pending);
+            sim.Step(pending);
+            pending.RemoveAll(c => c.ExecTick < sim.Tick);
+            if (sim.Tick % 20 != 0) continue;
+            var view = sim.ViewFor(0);
+            var own = new List<Rts.Sim.View.ViewActor>();
+            view.CopyOwn(own);
+            bool anyIdlePacked = false;
+            foreach (var a in own)
+                if (a.Kind == ActorKind.Vehicle && view.IsPackedRig(a.Id) && a.Idle && view.PackProgressPermille(a.Ref) == 0) anyIdlePacked = true;
+            idlePacked = anyIdlePacked ? idlePacked + 20 : 0;
+            worst = Math.Max(worst, idlePacked);
+        }
+        log.WriteLine($"tier {tier} seed {seed}: end {sim.Tick}, defeated {sim.Players.Defeated[0]}/{sim.Players.Defeated[1]}, unpacks {lb.Unpacks}, raids {lb.RaidOrders}, salvage {lb.SalvageOrders}, reloc {lb.Relocations}/{lb.RelocationsDone}/{lb.RelocationsAborted}, storms {lb.StormOrders}, placed {lb.StructuresPlaced}, worst idle-packed {worst}");
+        {
+            var view = sim.ViewFor(0);
+            var own = new List<Rts.Sim.View.ViewActor>();
+            view.CopyOwn(own);
+            foreach (var a in own)
+                if (a.Kind == ActorKind.Vehicle && view.IsPackedRig(a.Id))
+                    log.WriteLine($"  packed rig -> {(view.UnpackTypeOf(a.Id) >= 0 ? rules.Buildings[view.UnpackTypeOf(a.Id)].Id : "?")} at {a.Cell} idle {a.Idle} mission {a.Mission} hp {a.Health}");
+        }
+        Assert.True(worst < 600, "a packed rig never stands idle for 30 seconds");
+        Assert.True(lb.Unpacks >= 1);
     }
 }
