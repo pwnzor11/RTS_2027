@@ -1,46 +1,44 @@
-# Handoff: Session 9 — M4-16 fixes, M6 wave 2 (rigs, salvage, raiders, effects, storm, data), owner LLM play-test
-Last commit: 6da7931 on main (PR #15) + this handoff commit (2026-11-04)
-Where things stand: all session-4/5 art and the ART-S6 reworks are on main (PRs #13, #14). M6 has its plan
-(docs/design/10_m6_plan.md) and contracts (PR #15): enums, rules fields (all off), "rigs" and "salvage" parts, effects v2, save and
-replay format 10 — no gameplay yet. M4-16 round 3 found the cause of the inverted ladder (docs/balance/m4_16_round3.md) but its fixes
-are only partly measured and live as scratch knobs on `wp/m4-16r3-wip`. Full suite 2 134 tests (AI 102, Game 789, Llm 107, Scripting 43, Sim 1 093), green
-on Linux and Windows CI. Decisions D-113..D-118.
-
-> **Session 9 checkpoint (in progress, 2026-11-05):** M6-03..08 + Left Behind Archive/personas, M7/M8 plans, supply and veterancy
-> designs are merged on `integ-m6` (all suites green: Sim 1167, Game 789, AI 102, Llm 107, Scripting 43) and go to main via PR. Running:
-> M6-09 game layer, veterancy VET-1..4, M4-16 round 4, Left Behind art (structures + units). If this session died, resume from
-> `integ-m6` and the `wp/*` branches listed by `git branch -r`. The rest of this file is still the session-8 handoff.
+# Handoff: Session 10 — supply on, M6-12 acceptance, VET-6, M7-02 naval contracts
+Last commit: PR #19 (session 9 wave 3) + this handoff commit (2026-11-05); see `git log -1 origin/main`
+Where things stand: the Left Behind is a playable third faction (M6-03..10: rigs, salvage, raiders, auras, the Second Drift storm,
+data, game layer, AI). Generic veterancy (VET-1..5, save format 11) and the supply cap (SUP-1..3, SUP-5; held off by D-133) are in.
+The M4-16 wave gate landed (D-131). M7 plan, supply and veterancy designs, M8 plan and Expedition lore/personas are written. The
+Left Behind art (14 structures, packed rig, 16 units) is on local branch `art-s9`, staged in the owner's `_art_push` folder for him
+to push (D-084). Full suite 2 331 tests (Sim 1 238, Game 824, AI 119, Llm 107, Scripting 43). Decisions D-119..D-133.
 
 ## Start here (shown to the user as the plan; nothing starts until they say go)
-1. M4-16 fixes: read docs/balance/m4_16_round3.md ("Status at stop"), take the untested knobs on `wp/m4-16r3-wip` (src/AI/Recruit/Exp.cs
-   is scratch — never commit it). Measured in session 8 (64 games): tech hold has no effect (leave off); the wave strength gate +
-   escalation helps (Authority 2v1 50 -> 62 %, 3v2 34 -> 45 %, 4v3 26 -> 32 %, 5v4 34 -> 28 %). Make the gate + escalation a real
-   feature (tier 2+, constants `(tune)`, new fields in MilitaryManager/TierPlanner Snapshot/Restore), run AI and Game tests, then
-   measure the Directorate ladder, cross and mirror cells, try scouting+harass off for elite (4v3 40 %), then the Q-43 table. Measure 64
-   games per cell (32 seeds x 2 sides). AI behaviour may change freely; any rules number players see comes to the owner as a table first
-   (D-113). Land via PR. Target >= 60 % per ladder cell.
-2. M6 wave 2 from `integ-m6` (= main after PR #15): M6-03 rigs, M6-04 salvage, M6-05 raiders, M6-06 effects/auras, M6-07 storm,
-   M6-08 faction data, in parallel worktrees (plan §4; contracts §3; D-118 as-built notes). M6-08 must add the start kit and set
-   `wreck_ticks = 1200`; M6-04 must not spawn wrecks while `WreckTicks` is 0. Art pilot (Mother Rig) can follow M6-08.
-3. Owner LLM play-test (USER_CHECKS session 7) if the owner has a key handy: confirm D-110, D-111, D-112.
+0. If the owner ran `_art_push\push_art_s9.ps1`: open a PR `art-s9` → main (merge main into it first if needed), Windows CI, merge.
+   If not, remind him (it needs his PC; the cloud cannot upload LFS objects).
+1. Supply on (D-129/D-133): with `[supply] enabled = true` three AI tests fail — M4AiTests.RegularFillsItsOwnGarrisonWithIdleInfantry
+   (Authority: 2 of 3 occupants), VeteranClimbsToTierThreeAndBuildsTierTypes (Authority: "tier 3 within 15 minutes") and
+   LeftBehindAiTests.ALeftBehindAiPlaysAFullGameWithoutAStuckRig (tier 5, seed 4). Find why (supply headroom 6 in
+   BuildOrderManager.SupplyShort, ration hall needing auth_power, units refused while capped), fix the AI (not the tests), flip it on.
+   Then SUP-4 (sidebar counter "used/cap", tooltip) and SUP-6 (before/after table).
+2. M6-12 acceptance: soak every faction pair (3 factions), Left Behind golden replays, early-game income curves for the 3 factions
+   (`Tools ai timeline`), and re-measure the Left Behind AI on integ with veterancy and the Second Drift fix (docs/balance/m6_10_ai.md
+   was measured before both). Salvage rarely runs (Hauler gate 150 wreck value): tune.
+3. VET-6 (AI uses veterancy: army value, retreat, focus fire) and the own-unit info panel (Q-46).
+4. M7-02 naval contracts (docs/design/11_m7_plan.md), then M7 water locomotion and the Expedition skeleton.
+5. M4-16 top rungs: still under 60 % above 2v1 (docs/balance/m4_16_round4.md); Directorate games draw 40-60 %.
 
 ## Half-finished work
-- M4-16: diagnosis done; the wave gate + escalation is measured on Authority only, as env-var knobs on `wp/m4-16r3-wip` (not for main
-  as is); 60 % reached only at 2v1. Tech hold still off on main. Q-43 table not run.
-- M5: a loaded game's commanders restart their history and call count; the summary still cannot report enemy superweapon charge.
-- Commander chat is game-layer only (no replay chat block) pending D-110.
-- M6: Left Behind cannot be set up yet (no start kit; PlayableFactions = 2).
+- Supply: everything built, held off (D-133). SUP-4 has only the block text ("Supply cap reached: build a supply structure").
+- M6-12: tables done (docs/balance/s9_tables.md); soak, golden replays and income curves not run.
+- Left Behind AI: the Second Drift now can fire (entrance range 0) but the AI's use of it is untested in a match; Kites unused (Q-48).
+- Art: turret manifests for lb_spike_nest and lb_harpoon_post got the [house] block by hand; a re-render through turret_build.py
+  drops it unless the generator from main is used. Renders used 12 (vehicles) / 24 (infantry) samples; final quality wants 24+.
+  The infantry render prints "touches the canvas edge" on every frame (unchecked; likely a false alarm).
+- Expedition personas use the faction string "Expedition" (no enum value yet).
 
 ## Waiting on the user
-- Read the M6 plan and confirm D-118 (docs/design/10_m6_plan.md).
-- Play-test the LLM commander with a real key (Settings > "AI commander (LLM)...").
-- Q-41 old lore DRAFT banners; Q-42 foam; Q-43 tier costs. D-105 balance numbers still "assumed — confirm".
-- Delete old remote branches: the exact `git push origin --delete ...` list was given to the owner in session 8 (every branch already
-  on main). Keep `main`, `integ-m6`, `wp/m4-16r3-wip` (next session's AI fix), and `restore/pre-art-land`, `restore/pre-art-s6`,
-  `restore/pre-m6-02` until the owner is happy; `wp/s8-handoff` and `wp/m4-16r3` can go once PR #16 is merged.
-- tools/art/structures/dir_hatch.py docstring still describes the old lift car (the code hides it, D-117): fix in passing.
-- Optional: delete the `_art_push` folder contents in the RTS_2027 folder (the art is on GitHub now).
-- Scheduled tasks: old one-shot helper reminders (all fired and disabled) can be deleted in the scheduled-tasks list.
+- Run `powershell -ExecutionPolicy Bypass -File .\_art_push\push_art_s9.ps1` in the RTS_2027 folder, then tell Claude "art pushed".
+- Q-43 (keep 2 500, recommended), Q-44 session-9 numbers, Q-45 Left Behind vehicle scale, Q-46..Q-50 (docs/OPEN_QUESTIONS.md).
+- Confirm or reverse the "assumed — confirm" decisions D-123..D-133 (D-129 and D-131's gate are already the owner's).
+- Play-test: USER_CHECKS "Session 9" (Left Behind, veterancy; supply by setting `enabled = true`). Still pending from session 7: the
+  LLM commander with a real key (D-110..D-112).
+- Delete old remote branches once happy: `land/s9-w2`, `land/s9-w3`, `wp/sup5`, `integ-m6`, `integ-s9` (after PR #19),
+  `wp/m4-16r3-wip`, and the session-8 list. Keep `restore/pre-s9-wave1`, `restore/pre-s9-m6w2` until happy.
+- Optional: clear old files in `_art_push` (the `*.old`, `*.done` and session-8 tars) after the session-9 push.
 
 ## How to run this session
 - Lead: Opus for build sessions (the owner wants long unattended overnight builds); Sonnet for a pure review/question session. Helpers: Haiku default; Sonnet for sim core,
@@ -124,5 +122,18 @@ on Linux and Windows CI. Decisions D-113..D-118.
     helper's uncommitted work.
   - CommanderReplayAndSaveTests can time out under heavy CPU load (passed 3/3 alone).
 
+- Session 9 lessons:
+  - Direct pushes to main are refused by the session safety check even as a fast-forward: land with
+    `gh api -X PUT repos/pwnzor11/RTS_2027/pulls/<n>/merge -f merge_method=merge -f sha=<head>` after CI is green.
+  - Pattern: integration branch `integ-s<N>`, snapshot it to `land/s<N>-w<k>` for each PR so later merges do not move the PR head.
+  - Test summary: `--logger "console;verbosity=normal"` and grep `Total tests|Passed:|Failed:|^\s+Failed ` ("Passed!" never prints).
+  - bpy through the proxy stalls: download the wheel with a resumable `curl -C - --max-time 120` loop, then pip install the file.
+  - xUnit analyzer errors (xUnit2031 etc.) fail the whole test project build: build tests before handing a package back.
+  - The Monitor tool expires after 5 minutes: poll CI with a run_in_background loop instead.
+  - CommanderReplayAndSaveTests asserted one request; a slow Windows runner sends two. Now `Assert.NotEmpty` (fixed).
+  - The shell's cwd drifts into worktrees after `cd`: put `cd <dir> &&` at the start of every command.
+  - A/B a failing AI test with one data flag (supply on/off) before reading code: it splits "caused by the feature" from "already red".
+  - Lead-only small packages (one function, <100 lines) are faster than briefing a helper and waiting on the build lock.
+
 ## If time runs short
-Do item 1 (M4-16 fixes) or start M6 wave 2 with M6-03/04/08; both fill an overnight session.
+Do items 0-2 (art PR, supply on, M6-12); M7-02 fills a second overnight session.
