@@ -1083,3 +1083,17 @@ the commander replay test waits on the request instead of a time budget; Left Be
 enemy within 2 cells (mitigation for rigs idling under raids).
 **Why:** bugs found by the M6-12 soak and two flaky runs.
 **Status:** done
+
+### D-147 · 2026-11-05 · Session 10 wave 4: carrier, vehicle passengers, M7 UI, follow-ups
+**Decision:** (1) Carrier (M7-09): any armed aircraft without passengers takes one hangar place; it docks via Enter (also recalls a
+flying one); Attack on a carrier launches every docked aircraft that can hit the target; a sortie ends after `sortie_ticks` or when
+the attack ends, then the aircraft fly home, dock and repair fully over `sortie_ticks`. Aircraft built with the rally point within 2
+cells of an own carrier with room go straight into its hangar. A dying carrier loses docked aircraft (counted lost); airborne ones
+fly on. No ammo system. (2) Landing craft carry `vehicle_slots` vehicles (data: 2); a ship's vehicles land only on `landing` (Coast)
+cells, soldiers first; no nesting; a sunk craft loses its vehicles. (3) Game: save header v5 carries ocean edges for generated maps;
+skirmish Ocean option (none, one edge, two opposite edges); beachhead tint while placing; shipment countdown; right-click unload;
+D or a Dive button dives a submarine; dived ships drawn faded. (4) The Expedition kit may use a deployable vehicle as its base
+builder; ships leave only from a factory that reaches water (else they wait); new effect attributes `shipment_interval` (per mille,
+Fast Charging 850) and `harvest_capacity` (Deep Survey +2 on the Skimmer); buildings may carry `sonar_radius` (picket 9).
+**Why:** design 07 §6 and 11_m7_plan §3; each choice is the plainest reading and is behind data that no current faction uses.
+**Status:** assumed — confirm
