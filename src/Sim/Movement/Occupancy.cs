@@ -22,7 +22,7 @@ internal static class Occupancy
     public static readonly int[] Dy = { -1, -1, 0, 1, 1, 1, 0, -1 };
 
     public static Locomotion LocoOf(Simulation sim, ActorKind kind, MobileStore store, int i) =>
-        kind == ActorKind.Vehicle ? sim.Setup.Rules.Vehicles[store.TypeIndex[i]].Locomotion : Locomotion.Foot;
+        kind == ActorKind.Vehicle ? MoveClass.Of(sim.Setup.Rules.Vehicles[store.TypeIndex[i]]) : Locomotion.Foot;   // M7-03: large ships
 
     /// <summary>The cell the actor currently stands in: Position's cell for vehicles, the held sub-slot's cell for infantry.</summary>
     public static CellCoord CurCell(ActorKind kind, MobileStore store, int i) =>

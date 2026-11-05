@@ -50,6 +50,7 @@ public sealed partial class Simulation
     private readonly ShipmentState _shipments;   // M7-02
     private readonly BeachheadState _beachhead;  // M7-02
     private readonly NavalState _naval;          // M7-02
+    private readonly Pathing.RegionCache _regions;   // M7-03: derived region labels (cache)
     private readonly List<SetupEntry> _setupLog = new();
     private bool _inStep;
     private readonly MapState _map;
@@ -97,6 +98,7 @@ public sealed partial class Simulation
         _naval = new NavalState(setup);            // M7-02
         _map = new MapState(setup.Map);
         _paths = new PathService(_map, setup.Rules.Terrain);
+        _regions = new Pathing.RegionCache(_map, setup.Rules.Terrain);   // M7-03
         _paths.GateOpen = GateOpenFor;   // M3-04: own-team gates are passable (D-076)
         _vision = new VisionState(setup.Map.Width, setup.Map.Height, setup.PlayerCount,
             Math.Max(setup.Limits.Vehicles, setup.Limits.Infantry));

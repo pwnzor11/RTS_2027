@@ -40,6 +40,7 @@ public static class UnitRenderer
         bool moving = memory.IsMoving(UnitKey.Of(view));
         Vector2 origin = SpriteLayout.UnitOrigin(camera, unit.World);
         Color house = PlayerColours.Base(view.Player);
+        float drawScale = DrawScale(rules, view);   // M7-03: big ships are one cell but drawn larger (D-124)
         if (UnitVisuals.ShowTunnelMarker(view)) DrawTunnelMarker(batch, pixel, origin, infantry, house, camera.Zoom);
         float alpha = UnitVisuals.Alpha(view);
         if (UnitVisuals.ShowDiveMarker(view)) DrawDiveMarker(batch, pixel, origin, house, tick, camera.Zoom);
@@ -49,7 +50,7 @@ public static class UnitRenderer
             view.Diving, tick, sprite.TurretSheet?.Manifest, sprite.ShadowSheet?.Manifest);
         foreach (UnitLayer layer in layers)
         {
-            Vector2 at = origin + new Vector2(layer.OffsetX, layer.OffsetY) * camera.Zoom;
+            Vector2 at = origin + new Vector2(layer.OffsetX, layer.OffsetY) * (camera.Zoom * drawScale);
             float layerAlpha = layer.Kind == UnitLayerKind.Shadow ? alpha * UnitLayerPlan.ShadowAlpha : alpha;
             ResolvedSprite layerSprite = layer.Sheet switch
             {
@@ -57,17 +58,24 @@ public static class UnitRenderer
                 UnitLayerSheet.ShadowCompanion => sprite.ShadowSheet!,
                 _ => sprite,
             };
-            painter.Draw(batch, layerSprite, layer.Frame, at, house, camera.Zoom, layerAlpha);
+            painter.Draw(batch, layerSprite, layer.Frame, at, house, camera.Zoom * drawScale, layerAlpha);
         }
 
         if (!selected) return;
         float zoom = camera.Zoom;
         int cx = (int)origin.X;
         int cy = (int)origin.Y;
-        int half = (int)MathF.Round((infantry ? InfantryBracketHalfPxAtZoom1 : VehicleBracketHalfPxAtZoom1) * zoom);
+        int half = (int)MathF.Round((infantry ? InfantryBracketHalfPxAtZoom1 : VehicleBracketHalfPxAtZoom1) * zoom * Math.Max(1f, drawScale));
         int length = Math.Max(3, (int)MathF.Round(BracketLengthPxAtZoom1 * zoom));
         int thick = zoom < 1f ? 1 : 2;
         DrawBracket(batch, pixel, cx, cy, half, length, thick);
+    }
+
+    /// <summary>Sprite scale of a unit: the vehicle type's <c>draw_scale_permille</c> / 1000 (1 for infantry and unknown types). Game layer only: float is fine here.</summary>
+    public static float DrawScale(SimRules? rules, UnitView view)
+    {
+        if (view.Kind != UnitKind.Vehicle || rules is null || (uint)view.TypeIndex >= (uint)rules.Vehicles.Count) return 1f;
+        return rules.Vehicles[view.TypeIndex].DrawScalePermille / 1000f;
     }
 
     // Underground: a dashed square ring in the house colour, so the ghost reads as "in a tunnel".

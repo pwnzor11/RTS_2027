@@ -77,6 +77,14 @@ public readonly struct PlayerView
     public bool IsPassable(CellCoord c, Locomotion loco) =>
         InMap(c) && _sim.Map.IsPassableTerrain(c, loco, _sim.Setup.Rules.Terrain);
 
+    /// <summary>M7-03: sea region of a cell for ships, 0 = not navigable. With <paramref name="deepOnly"/> the shallows count as land (large ships).
+    /// Terrain only, so it reveals nothing the fog hides; equal non-zero labels mean "a ship can sail between them" (ignoring units and buildings).</summary>
+    public int NavalRegionAt(CellCoord c, bool deepOnly = false) => _sim.NavalRegionAt(c, deepOnly);
+
+    /// <summary>M7-03: true if the viewing player's own ship can reach <paramref name="target"/> by sea. False for a ship that is not
+    /// the player's own, is not a ship, or is dead.</summary>
+    public bool CanOwnShipReach(EntityId ship, CellCoord target) => _sim.OwnShipCanReach(Player, ship, target);
+
     /// <summary>0 = shroud, 1 = fog, 2 = visible now, for the viewing player.</summary>
     public byte VisionAt(CellCoord c) => _sim.WithBlackout(Player, c, _sim.Vision.VisionAt(Player, c));   // M3-INT: Blackout
 
