@@ -198,6 +198,7 @@ public sealed partial class Simulation
 
     private void CaptureBuilding(int b, byte newOwner)
     {
+        byte oldOwner = _buildings.Player[b];   // M7-07
         _buildings.Player[b] = newOwner;
         SupplyChanged();   // SUP-1
         _emittersDirty = true;   // M3-INT
@@ -205,6 +206,7 @@ public sealed partial class Simulation
         _production.RepairGen[b] = 0; _production.RepairFrac[b] = 0;
         for (int p = 0; p < _players.Count; p++) _vision.ForgetBuilding((byte)p, b);   // no stale ghost of the old owner's building
         _ground.HardeningDirty = true;   // team membership of a seal piece changed
+        BeachheadOnCaptured(b, oldOwner);   // M7-07
         if (BuildingTypeAt(b).Gate) _map.Touch();   // integration (M3-04): who may pass the gate changed, so cached paths are stale
     }
 }

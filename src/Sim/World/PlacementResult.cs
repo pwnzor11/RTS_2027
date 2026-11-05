@@ -13,4 +13,6 @@ public enum PlacementResult : byte
     Blocked = 2,
     /// <summary>Placing it would split a region of passable cells (one-cell gap rule).</summary>
     SealsRegion = 3,
+    /// <summary>M7-07: an Expedition structure's footprint is not wholly inside the player's beachhead zone.</summary>
+    OutsideBeachhead = 4,
 }

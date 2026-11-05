@@ -151,6 +151,7 @@ public sealed partial class Simulation
         _rigs.ClearBuilding(i);       // M6-02
         SupplyChanged();              // SUP-1
         if (IsSealPiece(i)) _ground.HardeningDirty = true;
+        BeachheadOnPlaced(i);         // M7-07
     }
 
     /// <summary>A building is being removed (destroyed or sold): exit-lost handling, hardening, slot reset.</summary>
@@ -159,6 +160,7 @@ public sealed partial class Simulation
         if (BuildingTypeAt(i).Entrance != Rules.TunnelSize.None) OnEntranceRemoving(i);   // M3-02: D2 re-route
         if (IsGarrisonable(i)) OnGarrisonBuildingRemoving(i);   // M4-03: eject occupants (cells still held)
         if (IsSealPiece(i)) _ground.HardeningDirty = true;
+        BeachheadOnRemoving(i);       // M7-07
         _tunnels.ClearBuilding(i);
         _effects.ClearBuilding(i);
         _garrison.ClearBuilding(i);   // M4-01
