@@ -364,7 +364,7 @@ public sealed partial class Simulation
                     // M4-05: garrisoned soldiers are shielded by their building (it passes a share on); burrowed units are only
                     // hit by warheads with hits_burrowed.
                     ActorLayer layer = _tunnels.LayerOf(kind, i);
-                    if (layer == ActorLayer.Garrisoned) continue;
+                    if (layer == ActorLayer.Garrisoned || SplashSparesSubmerged(kind, i, primary)) continue;   // M7-05
                     if ((layer == ActorLayer.Burrowed || layer == ActorLayer.Surfacing) && !wh.HitsBurrowed) continue;
                 }
                 if (!wh.HitsAllies && IsFriendly(owner, PlayerAt(kind, i))) continue;
