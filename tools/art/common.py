@@ -48,6 +48,21 @@ PAL_DIR = PAL_DIR + RAD_GREEN
 assert len(PAL_DIR) == 28 and len(RAD_SET) == 4 and not (RAD_SET & set(HOUSE)) and len(set(PAL_DIR)) == 28
 PALETTE_DIR_ALL = PAL_DIR + HOUSE       # 28 faction colours + the 8 house shades = 36
 
+# Left Behind palette (M6-11 art pilot): 24 faction colours + the same 8 house shades.  Dust ochre, sun-bleached canvas, rust red, faded
+# teal paint, ash grey, bone and a little hazard yellow (design 06 sec. 9).  A LB module selects it with PALETTE = C.PAL_LB.
+# Index 0 outline and index 1 (shadow colour) keep their roles.  Warm throughout: no cold green-grey (Authority), no oxide red (Directorate).
+PAL_LB = [OUTLINE] + [hx(c) for c in (
+    "#2A2018 #40311F "                               # warm dark browns (index 1 = shadow)
+    "#4A4743 #6B6762 #918D86 #B5B0A6 "               # ash grey
+    "#D8CFB4 #F0E8D2 "                               # bone / chalk
+    "#C2B28A #DACB9E "                               # sun-bleached canvas
+    "#8C6A33 #B38A44 #D1A659 "                       # dust ochre
+    "#4E2216 #7A3320 #A04A2C #C0663E "               # rust red
+    "#1F3331 #2F4A47 #4B6F69 #78988F "               # faded teal paint
+    "#D9B72E #F2D45C").split()]                      # hazard yellow
+assert len(PAL_LB) == 24 and len(set(PAL_LB)) == 24 and not (set(PAL_LB) & set(HOUSE))
+PALETTE_LB_ALL = PAL_LB + HOUSE         # 24 + 8 = 32
+
 # house remap targets: name -> 8-shade ramp (dark -> light)
 
 
