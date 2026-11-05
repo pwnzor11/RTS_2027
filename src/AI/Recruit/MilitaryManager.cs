@@ -326,7 +326,7 @@ internal sealed class MilitaryManager
                     if (seen++ >= take) break;
                     _roster.Add(Key(a));
                     hp += a.Health;
-                    if (_prong && (idx++ & 1) == 1) _squadB.Add(Key(a));
+                    if (_prong && InSquadB(a, ref idx)) _squadB.Add(Key(a));
                 }
                 if (_prong) Prongs++;
                 _launchHealth = hp;
@@ -398,6 +398,14 @@ internal sealed class MilitaryManager
         CellCoord goal = _phase == Phase.Assault ? PickGoal(k, knownEnemyBuildings) : default;
         CellCoord goalB = goal;
         if (_prong && _phase == Phase.Assault) goalB = SecondGoal(k, knownEnemyBuildings, goal) ?? goal;
+        // VET-6: below the defence response, an assaulting wave concentrates on a visible rank-3 enemy
+        if (_phase == Phase.Assault && attacked is null && AnyRank3(k))
+            foreach (ViewActor a in k.Army)
+            {
+                if (a.Underground || !_roster.Contains(Key(a))) continue;
+                if (PickFocus(k.Visible, a.Cell, k.Rules) is ViewActor f && a.Target != f.Id)
+                    sink.Issue(CommandKind.Attack, a.Id, a.Kind, default, f.Ref);
+            }
         foreach (ViewActor a in k.Army)
         {
             if (!a.Idle) continue;
@@ -625,19 +633,60 @@ internal sealed class MilitaryManager
         return hit;
     }
 
-    private static CellCoord? NearestEnemyTo(RecruitKnowledge k, ViewActor victim)
+    /// <summary>VET-6: the second prong takes every other unit, but a unit of rank <see cref="RankedTogether"/> or more always stays in prong A.
+    /// <paramref name="idx"/> only advances for the other units, so without ranks the split is the same alternation as before.</summary>
+    internal static bool InSquadB(ViewActor a, ref int idx) => a.Rank < RankedTogether && (idx++ & 1) == 1;
+
+    internal static CellCoord? NearestEnemyTo(RecruitKnowledge k, ViewActor victim)
     {
         long best = (long)DefendRadiusCells * DefendRadiusCells;
         CellCoord? found = null;
+        bool foundR3 = false;   // VET-6: a visible rank-3 enemy in range beats any nearer lower-rank one (the defence itself stays first)
         foreach (ViewActor e in k.Visible)
         {
             if (e.Relation != Relation.Enemy) continue;
             long dx = e.Cell.X - victim.Cell.X, dy = e.Cell.Y - victim.Cell.Y, d = dx * dx + dy * dy;
+            if (d > (long)DefendRadiusCells * DefendRadiusCells) continue;
+            bool r3 = e.Rank >= VeterancyValue.MaxRank;
+            if (foundR3 && !r3) continue;
+            if (r3 && !foundR3) { best = d; found = e.Cell; foundR3 = true; continue; }
             if (d > best) continue;
             if (found is not null && d == best) continue;
             best = d; found = e.Cell;
         }
         return found;
+    }
+
+    /// <summary>VET-6: units of this rank or higher are never split across squads (prongs, raiding party).</summary>
+    public const int RankedTogether = 2;
+
+    /// <summary>VET-6 focus fire: cells (Chebyshev radius) within which an assaulting unit is told to shoot a visible rank-3 enemy.</summary>
+    public const int FocusRank3Cells = 10;   // (tune)
+
+    /// <summary>
+    /// VET-6: the visible enemy rank-3 ground unit nearest to <paramref name="from"/> within <see cref="FocusRank3Cells"/>, or null. Equal
+    /// distance keeps the first in list order. Rank 0-2 units are never returned (they stay with the normal attack-move targeting).
+    /// </summary>
+    internal static ViewActor? PickFocus(IReadOnlyList<ViewActor> visible, CellCoord from, Rts.Sim.Rules.SimRules rules)
+    {
+        long best = long.MaxValue;
+        ViewActor? pick = null;
+        foreach (ViewActor e in visible)
+        {
+            if (e.Relation != Relation.Enemy || !e.IsMobile || e.Rank < VeterancyValue.MaxRank || e.Ghost) continue;
+            if (e.Kind == ActorKind.Vehicle && rules.Vehicles[e.TypeIndex].Locomotion == Locomotion.Air) continue;
+            if (Chebyshev(e.Cell, from) > FocusRank3Cells) continue;
+            long dx = e.Cell.X - from.X, dy = e.Cell.Y - from.Y, d = dx * dx + dy * dy;
+            if (d >= best) continue;
+            best = d; pick = e;
+        }
+        return pick;
+    }
+
+    private bool AnyRank3(RecruitKnowledge k)
+    {
+        foreach (ViewActor e in k.Visible) if (e.Relation == Relation.Enemy && e.Rank >= VeterancyValue.MaxRank) return true;
+        return false;
     }
 
     private static int Chebyshev(CellCoord a, CellCoord b) => Math.Max(Math.Abs(a.X - b.X), Math.Abs(a.Y - b.Y));
