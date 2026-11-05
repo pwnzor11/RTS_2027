@@ -19,10 +19,10 @@ public sealed partial class Simulation
     private bool _supplyDirty = true;
 
     /// <summary>The [supply] constants (game.toml). A global block, read from the base rules.</summary>
-    internal SupplyRules SupplyRulesOf => Setup.Rules.Supply;
+    internal SupplyRules SupplyRulesOf => Setup.Rules.Supply;   // the only read of Setup.Rules.Supply (RulesOfSweepGrepTests)
 
     /// <summary>True when the supply cap is switched on for this game (game.toml <c>[supply] enabled</c>).</summary>
-    public bool SupplyEnabled => Setup.Rules.Supply.Enabled;
+    public bool SupplyEnabled => SupplyRulesOf.Enabled;
 
     /// <summary>Drops the per-tick supply cache. Called by the lifecycle hooks that change who owns what.</summary>
     private void SupplyChanged() => _supplyDirty = true;
@@ -51,12 +51,12 @@ public sealed partial class Simulation
 
     /// <summary>The HUD view of the player's supply; all zero while supply is disabled.</summary>
     public SupplyView SupplyViewFor(byte player) =>
-        SupplyEnabled ? new SupplyView(SupplyUsed(player), SupplyCap(player), Setup.Rules.Supply.Ceiling) : default;
+        SupplyEnabled ? new SupplyView(SupplyUsed(player), SupplyCap(player), SupplyRulesOf.Ceiling) : default;
 
     /// <summary>Supply one unit of the category and type index costs (0 for structures, or while supply is disabled).</summary>
     public int SupplyOfType(ProductionCategory category, int typeIndex)
     {
-        SupplyRules sr = Setup.Rules.Supply;
+        SupplyRules sr = SupplyRulesOf;
         if (!sr.Enabled) return 0;
         SimRules rules = Setup.Rules;
         switch (category)
@@ -80,7 +80,7 @@ public sealed partial class Simulation
         if (_supplyUsed.Length != n) { _supplyUsed = new int[n]; _supplyCap = new int[n]; }
         Array.Clear(_supplyUsed); Array.Clear(_supplyCap);
         SimRules rules = Setup.Rules;
-        SupplyRules sr = rules.Supply;
+        SupplyRules sr = SupplyRulesOf;
         for (int i = 1; i < _units.Capacity; i++)
         {
             if (!_units.Slots.IsIndexAlive(i)) continue;

@@ -22,7 +22,7 @@ public sealed class DirectorateDataTests
 
     private static readonly string[] DirectorateStructures =
     [
-        "dir_assembly_bore", "dir_bore_head", "dir_bunker", "dir_cistern", "dir_hatch", "dir_isotope_works", "dir_mast",
+        "dir_assembly_bore", "dir_bore_head", "dir_bunk_gallery", "dir_bunker", "dir_cistern", "dir_hatch", "dir_isotope_works", "dir_mast",
         "dir_mooring", "dir_muster_hatch", "dir_pillbox", "dir_rad_mortar", "dir_reactor_vent", "dir_rocket_nest", "dir_shaft",
         "dir_smelter_vent", "dir_sunrise",
     ];
@@ -128,7 +128,7 @@ public sealed class DirectorateDataTests
         string[] structures = DirectorateStructures.Concat(["dir_committee_hall", "dir_redoubt"]).OrderBy(x => x, StringComparer.Ordinal).ToArray();
         Assert.Equal(7, infantry.Length);
         Assert.Equal(11, vehicles.Length);
-        Assert.Equal(18, structures.Length);
+        Assert.Equal(19, structures.Length);   // SUP-2: + dir_bunk_gallery
         Assert.Equal(infantry, s.Infantry.Select(i => i.Id).Where(IsDir).OrderBy(x => x, StringComparer.Ordinal).ToArray());
         Assert.Equal(vehicles, s.Vehicles.Select(v => v.Id).Where(IsDir).OrderBy(x => x, StringComparer.Ordinal).ToArray());
         Assert.Equal(structures, s.Buildings.Select(b => b.Id).Where(IsDir).OrderBy(x => x, StringComparer.Ordinal).ToArray());

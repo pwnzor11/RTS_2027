@@ -25,7 +25,7 @@ public sealed class LeftBehindDataTests
     private static readonly string[] Structures =
     [
         "lb_bench", "lb_dynamo_rig", "lb_flak_net", "lb_garage_rig", "lb_harpoon_post", "lb_lookout", "lb_mother_rig", "lb_muster_rig",
-        "lb_refinery_rig", "lb_rotor_pad", "lb_scrap_wall", "lb_spike_nest", "lb_yard",
+        "lb_refinery_rig", "lb_rotor_pad", "lb_scrap_wall", "lb_spike_nest", "lb_still_rig", "lb_yard",
     ];
 
     private static readonly string[] Upgrades =
@@ -63,7 +63,7 @@ public sealed class LeftBehindDataTests
         Assert.Equal(6, s.Infantry.Count(i => i.Faction == Faction.LeftBehind));
         Assert.Equal(9, s.Vehicles.Count(v => v.Faction == Faction.LeftBehind && !IsAir(v)));
         Assert.Equal(2, s.Vehicles.Count(v => v.Faction == Faction.LeftBehind && IsAir(v)));
-        Assert.Equal(13 + 1, s.Buildings.Count(b => b.Faction == Faction.LeftBehind));   // design 06 §5 lists 13 structures plus the superweapon (the brief's "12" miscounts)
+        Assert.Equal(13 + 1 + 1, s.Buildings.Count(b => b.Faction == Faction.LeftBehind));   // design 06 §5 lists 13 structures plus the superweapon (the brief's "12" miscounts), plus the SUP-3 still rig
         Assert.Equal(1, s.Buildings.Count(b => b.Faction == Faction.LeftBehind && b.Superweapon.Length > 0));
         Assert.Equal(6, s.Upgrades.Count(u => u.Faction == Faction.LeftBehind));
     }
