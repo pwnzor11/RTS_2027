@@ -5,7 +5,7 @@ flanks and the roof), the rust-red truck cab has swung round to the front right,
 the left of the roof, the awning is rolled across the nose of the bus, the stovepipes are lowered and lashed along the roof, the
 antenna bundle lies in a rack on the left with its dish folded flat, the mast and its flag (house colour, furled) are strapped to
 the right flank, and the barrels and crates ride at the back.  The tracks are mismatched: the right one is longer and set forward.
-Footprint: 6.6 world units long and 4.0 wide (1.9 x 1.2 cells); at any of the 16 facings it fits a 3x3-cell box; frame 176 px.
+Footprint: 6.6 world units long and 4.0 wide (1.9 x 1.2 cells); at any of the 16 facings it fits a 3x3-cell box; frame 192 px.
 House paint: both flank panels, the roof panel, the furled flag and a stripe on the rear crate.
 """
 import math
@@ -17,13 +17,13 @@ import common as C
 
 ID = "lb_mother_rig_packed"
 TITLE = "Left Behind Mother Rig (packed)"
-CANVAS = 176
+CANVAS = 192
 TARGET = (0.0, 0.0, 1.4)
 STATES = [("idle", 16, 1, 1)]
 PALETTE = C.PAL_LB
 MATERIALS = {
     "hull": ("#4F746E", dict(rough=0.8)), "hull2": ("#34524E", dict(rough=0.8)),
-    "dust": ("#B08B52", dict(rough=1.0)), "canvas": ("#D6C8A2", dict(rough=1.0)), "canvas2": ("#B5A57C", dict(rough=1.0)),
+    "dust": ("#54402A", dict(rough=1.0)), "canvas": ("#D6C8A2", dict(rough=1.0)), "canvas2": ("#B5A57C", dict(rough=1.0)),
     "ochre": ("#B38A44", dict(rough=0.9)), "rust": ("#8A3E24", dict(rough=0.95)), "rust2": ("#5A2A1A", dict(rough=0.95)),
     "ash": ("#7A766F", dict(rough=0.8)), "ash2": ("#55524D", dict(rough=0.8)), "bone": ("#E6DDC4", dict(rough=0.85)),
     "hazard": ("#DDB93A", dict(rough=0.8)), "yellow": ("#DDB93A", dict(rough=0.8)), "dark": ("#1A140E", dict(rough=0.9)),
