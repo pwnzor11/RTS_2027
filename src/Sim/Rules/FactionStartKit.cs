@@ -26,6 +26,9 @@ public sealed record FactionStartKit(string Conyard, IReadOnlyList<string> Units
     /// <summary>Placeholder for <see cref="Faction.Neutral"/> (index 2): neutral has no start kit and never resolves.</summary>
     public static FactionStartKit NeutralNone { get; } = new("", Array.Empty<string>());
 
+    /// <summary>Placeholder for <see cref="Faction.Expedition"/> (index 4, M7-02): no kit until M7-08 supplies the real one.</summary>
+    public static FactionStartKit ExpeditionNone { get; } = new("", Array.Empty<string>());
+
     /// <summary>The Left Behind start (M6-08): no conyard building, a packed Mother Rig vehicle, two Scavengers and a Gleaner.</summary>
     public static FactionStartKit LeftBehindDefault { get; } =
         new("", new[] { "lb_mother_rig_packed", "lb_scavenger", "lb_scavenger", "lb_gleaner" });

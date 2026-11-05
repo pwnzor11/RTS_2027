@@ -86,6 +86,10 @@ air = 100
 burrow = 100
 naval = 0
 
+# M7-02: lands where landing craft may unload vehicles (optional; a land left out is not a landing land).
+[landing]
+coast = true
+
 [buildable]
 clear = true
 road = true
@@ -108,7 +112,3 @@ rock = false
 cliff = false
 shallow = false
 coast = false
-
-# M7-02: lands where landing craft may unload vehicles (optional; a land left out is not a landing land).
-[landing]
-coast = true

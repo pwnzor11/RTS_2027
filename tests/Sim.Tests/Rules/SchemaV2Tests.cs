@@ -137,5 +137,5 @@ public sealed class SchemaV2Tests
     }
 
     [Fact]
-    public void HashFormatVersionIs10() => Assert.Equal(10, RulesHash.FormatVersion);   // v5: BuildingType.Buildable; v6: schema v3 (M3-01); v7: schema v4 (M4-01); v8: schema v5 (M6-02); v9: schema v6 (VET-1); v10: schema v7 (SUP-1)
+    public void HashFormatVersionIs11() => Assert.Equal(11, RulesHash.FormatVersion);   // v5: BuildingType.Buildable; v6: schema v3 (M3-01); v7: schema v4 (M4-01); v8: schema v5 (M6-02); v9: schema v6 (VET-1); v10: schema v7 (SUP-1); v11: schema v8 (M7-02); v10: schema v7 (SUP-1)
 }
