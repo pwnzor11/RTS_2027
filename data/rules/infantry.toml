@@ -228,3 +228,66 @@ primary_weapon = "lb_flame_hammer"
 cost = 300  # (tune)
 prerequisites = ["lb_muster_rig"]
 rad_resist_permille = 700  # (tune)
+
+# M7-08: Expedition infantry (docs/design/07_expedition.md §5, D-087, D-124). PLACEHOLDER ART. The faction is NOT playable yet. Every number is
+# (tune), assumed -- confirm (docs/balance/m7_08_expedition_data.md). Few, elite: more health and range per cost than the other factions.
+# Infantry cross Shallow at foot speed 40 % (terrain.toml), so every marine is "amphibious" without a field.
+
+[exp_marine]   # PLACEHOLDER ART; all-round rifle
+faction = "expedition"
+tier = 1
+speed = 14  # (tune)
+max_health = 70  # (tune)
+armor = "unarmored"
+sight = 5  # (tune)
+primary_weapon = "exp_marine_rifle"
+cost = 150  # (tune)
+prerequisites = ["exp_billet"]
+
+[exp_pioneer]   # PLACEHOLDER ART; engineer: capture and repair
+faction = "expedition"
+tier = 1
+speed = 12  # (tune)
+max_health = 45  # (tune)
+armor = "unarmored"
+sight = 4  # (tune)
+primary_weapon = ""
+cost = 200  # (tune)
+prerequisites = ["exp_billet"]
+engineer = true
+# TODO M7-04: builds a Landing Beacon on soft land (design 07 §2.1); beacons are placed from the structure queue today
+
+[exp_diver]   # PLACEHOLDER ART; combat diver, plants charges on ships and quays
+faction = "expedition"
+tier = 1
+speed = 10  # (tune)
+max_health = 50  # (tune)
+armor = "unarmored"
+sight = 4  # (tune)
+primary_weapon = "exp_diver_charge"
+cost = 250  # (tune)
+prerequisites = ["exp_billet"]
+# TODO M7-05: swimming in deep water (foot units cannot enter Water today) and the sonar-picket counter
+
+[exp_pathfinder]   # PLACEHOLDER ART; spotter and long-range rifle, stealthy
+faction = "expedition"
+tier = 2
+speed = 12  # (tune)
+max_health = 50  # (tune)
+armor = "unarmored"
+sight = 9  # (tune)
+primary_weapon = "exp_pathfinder_rifle"
+cost = 350  # (tune)
+prerequisites = ["exp_billet"]
+stealth = true
+
+[exp_ironbound]   # PLACEHOLDER ART; powered-suit heavy with an anti-air missile pod
+faction = "expedition"
+tier = 3
+speed = 9  # (tune)
+max_health = 220  # (tune)
+armor = "unarmored"
+sight = 5  # (tune)
+primary_weapon = "exp_ironbound_pod"
+cost = 900  # (tune)
+prerequisites = ["exp_billet"]

@@ -889,3 +889,342 @@ provides = []
 superweapon = "lb_second_drift"
 superweapon_charge_ticks = 4800  # (tune)
 superweapon_entrance_range = 0  # session 9: Left Behind has no entrance building, so 0 = fire anywhere (assumed — confirm)
+
+# M7-08: Expedition structures (docs/design/07_expedition.md §4-5, 13_supply_cap §2.3, 11_m7_plan §2.3, D-087, D-124, D-140). PLACEHOLDER ART:
+# no sprite manifests yet. The faction is NOT playable yet. Every number is (tune), assumed -- confirm (docs/balance/m7_08_expedition_data.md).
+# Tier gates: exp_plotting_room provides exp_tier2 (needs the Hover Yard), exp_core_hall provides exp_tier3 (needs the Plotting Room).
+# Water buildings (quay, anchorage, shipyard, drydock) carry a row-major footprint `water` mask (1 = water cell) so they straddle the shore.
+# Dropped on purpose (landlocked rule, 11 §2.5): exp_airhead. Beachhead sources: depot 10, quay and shipyard 8, beacon 6 cells.
+# TODO M7-04: ships are produced from the shared "vehicle" lane (hover yard, quay, shipyard); see the note at the top of the Expedition block in vehicles.toml.
+
+[exp_landing_depot]   # PLACEHOLDER ART; conyard: the deployed Command Ship. Not buildable
+faction = "expedition"
+tier = 1
+footprint_w = 3
+footprint_h = 3
+max_health = 1000  # (tune)
+armor = "structure"
+sight = 7  # (tune)
+primary_weapon = ""
+cost = 0  # (tune)
+power = 0  # (tune)
+prerequisites = []
+provides = ["exp_landing_depot"]
+category = "structure"
+produces = ""
+buildable = false
+supply_provided = 20  # (tune) SUP-3: main base building (design 13 §2.2)
+beachhead_source = true
+beachhead_radius = 10  # (tune) design 11 §2.3
+
+[exp_pile_house]   # PLACEHOLDER ART; power: lower output than the Authority plant, cheaper
+faction = "expedition"
+tier = 1
+footprint_w = 2
+footprint_h = 2
+max_health = 350  # (tune)
+armor = "structure"
+sight = 3  # (tune)
+primary_weapon = ""
+cost = 250  # (tune)
+power = 80  # (tune)
+prerequisites = ["exp_landing_depot"]
+provides = []
+
+[exp_dredge_works]   # PLACEHOLDER ART; refinery; ships with one free Skimmer
+faction = "expedition"
+tier = 1
+footprint_w = 3
+footprint_h = 2
+max_health = 650  # (tune)
+armor = "structure"
+sight = 4  # (tune)
+primary_weapon = ""
+cost = 1800  # (tune)
+power = -30  # (tune)
+prerequisites = ["exp_pile_house"]
+provides = []
+refinery = true
+storage = 800  # (tune)
+dock = [1, 2]  # cell south of the footprint, as dir_smelter_vent (3x2)
+free_unit = "exp_skimmer"
+build_time = 300  # (tune)
+
+[exp_tank_farm]   # PLACEHOLDER ART; silo
+faction = "expedition"
+tier = 1
+footprint_w = 1
+footprint_h = 2
+max_health = 250  # (tune)
+armor = "structure"
+sight = 3  # (tune)
+primary_weapon = ""
+cost = 150  # (tune)
+power = -10  # (tune)
+prerequisites = ["exp_dredge_works"]
+provides = []
+storage = 1200  # (tune)
+
+[exp_provision_store]   # PLACEHOLDER ART; supply building (SUP-3, design 13 §2.3); +10 stocked, +5 unstocked
+faction = "expedition"
+tier = 1
+footprint_w = 1
+footprint_h = 2
+max_health = 250  # (tune)
+armor = "structure"
+sight = 3  # (tune)
+primary_weapon = ""
+cost = 150  # (tune)
+power = 0  # (tune)
+prerequisites = ["exp_landing_depot"]
+provides = []
+supply_provided = 10  # (tune) stocked: a shipment arrived in the last stock_intervals
+supply_unstocked = 5  # (tune)
+# TODO M7-06: the stocked test (last shipment arrival within stock_intervals) is read from the shipments state by SUP-3/M7-06 code
+
+[exp_billet]   # PLACEHOLDER ART; infantry production
+faction = "expedition"
+tier = 1
+footprint_w = 2
+footprint_h = 2
+max_health = 400  # (tune)
+armor = "structure"
+sight = 4  # (tune)
+primary_weapon = ""
+cost = 250  # (tune)
+power = -10  # (tune)
+prerequisites = ["exp_pile_house"]
+provides = []
+produces = "infantry"
+
+[exp_hover_yard]   # PLACEHOLDER ART; hovercraft and tracked vehicle production
+faction = "expedition"
+tier = 1
+footprint_w = 3
+footprint_h = 2
+max_health = 600  # (tune)
+armor = "structure"
+sight = 4  # (tune)
+primary_weapon = ""
+cost = 1000  # (tune)
+power = -30  # (tune)
+prerequisites = ["exp_dredge_works"]
+provides = []
+produces = "vehicle"
+
+[exp_quay]   # PLACEHOLDER ART; small naval yard: patrol launches and landing craft; straddles the shoreline (row 0 land, row 1 water)
+faction = "expedition"
+tier = 1
+footprint_w = 3
+footprint_h = 2
+max_health = 500  # (tune)
+armor = "structure"
+sight = 4  # (tune)
+primary_weapon = ""
+cost = 600  # (tune)
+power = -20  # (tune)
+prerequisites = ["exp_pile_house"]
+provides = []
+produces = "vehicle"
+water_building = true
+water = [0, 0, 0, 1, 1, 1]
+beachhead_source = true
+beachhead_radius = 8  # (tune) design 11 §2.3
+# TODO M7-04: exit cell on the water side (D-138 follow-up); no `exit` until the yard exit uses the move class
+
+[exp_anchorage]   # PLACEHOLDER ART; shipment receiver; straddles the shoreline
+faction = "expedition"
+tier = 1
+footprint_w = 2
+footprint_h = 2
+max_health = 350  # (tune)
+armor = "structure"
+sight = 5  # (tune)
+primary_weapon = ""
+cost = 400  # (tune)
+power = -10  # (tune)
+prerequisites = ["exp_pile_house"]
+provides = []
+water_building = true
+water = [0, 0, 1, 1]
+shipment_dock = true
+
+[exp_beacon]   # PLACEHOLDER ART; Landing Beacon: extends the build zone, fragile
+faction = "expedition"
+tier = 1
+footprint_w = 1
+footprint_h = 1
+max_health = 120  # (tune)
+armor = "structure"
+sight = 4  # (tune)
+primary_weapon = ""
+cost = 100  # (tune)
+power = 0  # (tune)
+prerequisites = ["exp_landing_depot"]
+provides = []
+build_time = 200  # (tune) 10 s
+beachhead_source = true
+beachhead_radius = 6  # (tune) design 11 §2.3
+# TODO M7-04: delivery by landing craft or Skyhook to any soft land cell is not in data; placed from the structure queue
+
+[exp_pillbox]   # PLACEHOLDER ART; Seawall Emplacement: cheap turret
+faction = "expedition"
+tier = 1
+footprint_w = 1
+footprint_h = 1
+max_health = 300  # (tune)
+armor = "fortified"
+sight = 5  # (tune)
+primary_weapon = "exp_pillbox_gun"
+cost = 200  # (tune)
+power = 0  # (tune)
+prerequisites = ["exp_billet"]
+provides = []
+category = "defence"
+
+[exp_plotting_room]   # PLACEHOLDER ART; radar and tier-2 gate; researches the first upgrades
+faction = "expedition"
+tier = 2
+footprint_w = 2
+footprint_h = 2
+max_health = 400  # (tune)
+armor = "structure"
+sight = 10  # (tune)
+primary_weapon = ""
+cost = 700  # (tune)
+power = -30  # (tune)
+prerequisites = ["exp_hover_yard"]
+provides = ["exp_tier2"]
+researches = true
+
+[exp_shipyard]   # PLACEHOLDER ART; warships; straddles the shoreline (bottom row water)
+faction = "expedition"
+tier = 2
+footprint_w = 3
+footprint_h = 3
+max_health = 800  # (tune)
+armor = "structure"
+sight = 4  # (tune)
+primary_weapon = ""
+cost = 1500  # (tune)
+power = -40  # (tune)
+prerequisites = ["exp_quay"]
+provides = []
+produces = "vehicle"
+water_building = true
+water = [0, 0, 0, 0, 0, 0, 1, 1, 1]
+beachhead_source = true
+beachhead_radius = 8  # (tune) design 11 §2.3
+# TODO M7-04: exit cell on the water side (see exp_quay)
+
+[exp_flight_deck]   # PLACEHOLDER ART; aircraft production
+faction = "expedition"
+tier = 2
+footprint_w = 3
+footprint_h = 3
+max_health = 700  # (tune)
+armor = "structure"
+sight = 4  # (tune)
+primary_weapon = ""
+cost = 1200  # (tune)
+power = -40  # (tune)
+prerequisites = ["exp_hover_yard"]
+provides = []
+produces = "aircraft"
+
+[exp_gun_battery]   # PLACEHOLDER ART; coastal defence vs ships and ground
+faction = "expedition"
+tier = 2
+footprint_w = 2
+footprint_h = 2
+max_health = 500  # (tune)
+armor = "fortified"
+sight = 8  # (tune)
+primary_weapon = "exp_battery_gun"
+cost = 700  # (tune)
+power = -20  # (tune)
+prerequisites = ["exp_billet"]
+provides = []
+category = "defence"
+needs_power = true
+
+[exp_picket]   # PLACEHOLDER ART; Sonar Picket: reveals the sea; unarmed
+faction = "expedition"
+tier = 2
+footprint_w = 1
+footprint_h = 1
+max_health = 200  # (tune)
+armor = "fortified"
+sight = 9  # (tune)
+primary_weapon = ""
+cost = 300  # (tune)
+power = -10  # (tune)
+prerequisites = ["exp_billet"]
+provides = []
+category = "defence"
+# TODO M7-05: building sonar_radius (detects submerged) has no building field yet; vehicles only. Sight stands in until then.
+
+[exp_sam]   # PLACEHOLDER ART; SAM Mount: anti-air
+faction = "expedition"
+tier = 2
+footprint_w = 1
+footprint_h = 1
+max_health = 300  # (tune)
+armor = "fortified"
+sight = 7  # (tune)
+primary_weapon = "exp_sam_missile"
+cost = 350  # (tune)
+power = -10  # (tune)
+prerequisites = ["exp_billet"]
+provides = []
+category = "defence"
+needs_power = true
+
+[exp_core_hall]   # PLACEHOLDER ART; tech: researches the later upgrades; tier-3 gate
+faction = "expedition"
+tier = 3
+footprint_w = 3
+footprint_h = 3
+max_health = 700  # (tune)
+armor = "structure"
+sight = 4  # (tune)
+primary_weapon = ""
+cost = 1500  # (tune)
+power = -60  # (tune)
+prerequisites = ["exp_plotting_room"]
+provides = ["exp_tier3"]
+researches = true
+
+[exp_drydock]   # PLACEHOLDER ART; heavy ships and repairs; straddles the shoreline (bottom row water)
+faction = "expedition"
+tier = 3
+footprint_w = 4
+footprint_h = 3
+max_health = 900  # (tune)
+armor = "structure"
+sight = 4  # (tune)
+primary_weapon = ""
+cost = 2000  # (tune)
+power = -50  # (tune)
+prerequisites = ["exp_shipyard"]
+provides = []
+water_building = true
+water = [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1]
+
+[exp_salvo_array]   # PLACEHOLDER ART; Salvo Array superweapon (cruise-missile barrage)
+faction = "expedition"
+tier = 3
+footprint_w = 3
+footprint_h = 3
+max_health = 700  # (tune)
+armor = "structure"
+sight = 4  # (tune)
+primary_weapon = ""
+cost = 2500  # (tune)
+power = -80  # (tune)
+prerequisites = ["exp_core_hall"]
+provides = []
+superweapon = "exp_salvo_array"
+superweapon_charge_ticks = 7200  # (tune) 6 min
+superweapon_entrance_range = 0  # fire anywhere (no entrance building)
+# TODO M7-12: 12 missiles over 6 s in radius 4 cells and a 4 s warning; the blast warhead is a single flat hit today
