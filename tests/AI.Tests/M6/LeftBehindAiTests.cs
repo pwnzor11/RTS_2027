@@ -100,19 +100,39 @@ public sealed class LeftBehindAiTests(ITestOutputHelper log)
         Assert.True(wrecks.Sum(w => w.Value) < before, "ash was drained from the wreck");
     }
 
-    /// <summary>Session 10: in a real match (tier 4 against a tier 1 Left Behind, seed 1 as the `ai match` tool plays it) the AI builds
-    /// the Second Drift, waits for the charge and fires it; the storm was never seen in a match before the session-9 entrance fix.</summary>
+    private sealed class Fired : Exception;
+
+    /// <summary>Session 10: in real matches (tier 4 against a tier 3 Left Behind on the maps of the `ai match` tool) the AI builds the
+    /// Second Drift, waits for the charge and fires it; before the session-9 entrance fix it never could. The game is stopped at the first
+    /// storm; up to six seeds are tried because a match can end before the weapon charges.</summary>
     [Fact]
     public void TheSecondDriftIsFiredInARealMatch()
     {
-        MapData map = MapGenerator.Generate(56, 1);
         var a = new AiSide(AiRegistry.TieredId, Tier(4), Faction.LeftBehind);
-        var b = new AiSide(AiRegistry.TieredId, Tier(1), Faction.LeftBehind);
-        int storms = 0;
-        AiGameResult r = AiMatchRunner.Play(map, TestWorld.Rules.Sim, TestWorld.Rules.RulesHash, 16, a, b, aInSlot0: true, maxTicks: 16000,
-            observe: (sim, ai0, ai1, slotA, slotB) => storms = ((RecruitAi)ai0).StormOrders);
-        log.WriteLine($"end tick {r.EndTick}, winner {r.Winner}, Second Drift orders {storms}");
-        Assert.True(storms >= 1, "the Second Drift was fired in the match");
+        var b = new AiSide(AiRegistry.TieredId, Tier(3), Faction.LeftBehind);
+        int fired = 0;
+        var storms = new List<Rts.Sim.View.StormView>();
+        for (ulong seed = 1; seed <= 6 && fired == 0; seed++)
+        {
+            MapData map = MapGenerator.Generate(56, seed);
+            try
+            {
+                AiGameResult r = AiMatchRunner.Play(map, TestWorld.Rules.Sim, TestWorld.Rules.RulesHash, seed * 16, a, b, aInSlot0: true, maxTicks: 22000,
+                    observe: (sim, ai0, ai1, slotA, slotB) =>
+                    {
+                        if (((RecruitAi)ai0).StormOrders < 1) return;
+                        sim.ViewFor(slotA).CopyStorms(storms);
+                        if (storms.Count > 0) throw new Fired();   // the order took effect: a storm stands on the map
+                    });
+                log.WriteLine($"seed {seed}: no storm, ended at {r.EndTick}");
+            }
+            catch (Fired)
+            {
+                fired++;
+                log.WriteLine($"seed {seed}: the Second Drift was ordered and a storm stands");
+            }
+        }
+        Assert.True(fired >= 1, "the Second Drift was fired in a match");
     }
 
     [Fact]
