@@ -888,4 +888,4 @@ prerequisites = ["lb_rotor_pad"]
 provides = []
 superweapon = "lb_second_drift"
 superweapon_charge_ticks = 4800  # (tune)
-superweapon_entrance_range = 8  # (tune)
+superweapon_entrance_range = 0  # session 9: Left Behind has no entrance building, so 0 = fire anywhere (assumed — confirm)

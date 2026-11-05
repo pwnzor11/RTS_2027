@@ -9,7 +9,7 @@ Design context: `docs/design/13_supply_cap.md`, `docs/design/14_veterancy.md`. W
 
 | Key | Value | Source | Note |
 |---|---|---|---|
-| `enabled` | false | game.toml `[supply]` | Will be flipped on (D-129) when the AI builds supply (SUP-5). |
+| `enabled` | true | game.toml `[supply]` | On by default (D-129); the AI builds supply structures (SUP-5). |
 | `ceiling` | 200 | `[supply]` | Hard cap. |
 | `band1_max` | 400 | `[supply]` | Cost <= 400 gives band 1. |
 | `band2_max` | 900 | `[supply]` | Cost <= 900 gives band 2; above gives band 3. |
@@ -206,7 +206,7 @@ Raiders (flag only, no numeric raid key in these files): `lb_hook_runner` (infan
 
 ## Doc vs data notes
 
-- Design 13 section 4 lists `[supply] enabled` with data value "true". The data has `false` until SUP-5. The tables follow the data.
+- Design 13 section 4 lists `[supply] enabled = true`; the data agrees (on since SUP-5 landed).
 - Design 13 section 2.1 lists scrapers in band 2, but the data overrides `auth_scraper` and `dir_scraper` to 1 (the harvester rule in the same section).
 - Design 13 sections 2.2 and 4 name the packed rig `lb_mother_rig` with supply 0. The data's packed unit is `lb_mother_rig_packed` (supply 0). The unpacked `lb_mother_rig` gives 20.
 - Design 13 names an Expedition store (`exp_provision_store`) and a "depot" main base. Neither appears in the data files read here, so neither is in the tables.
