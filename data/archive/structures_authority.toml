@@ -250,6 +250,7 @@ category = "Structure"
 faction = "authority"
 title = "Ration Hall"
 subtitle = "Everyone counted, everyone fed"
+field_note = "RATIONS 4 // ONE LINE, ONE LEDGER, ONE LOAF PER NAME. STOP."
 body = '''
 A long brick hall with a ledger window on every wall, where each worker, soldier and clerk of the district is entered, counted and issued a ration. The line outside never shortens and nobody is seen to complain about it. An Authority commander knows a district by the number on the hall door.
 '''

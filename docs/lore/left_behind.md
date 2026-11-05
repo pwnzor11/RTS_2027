@@ -297,6 +297,7 @@ A generator built from a bus engine, a line of belts and a flywheel the size of 
 title: Still Rig
 subtitle: Water still on a wagon frame
 unlock: open
+field_note: RIG RADIO // STILL RUNNING. DRINK FROM THE LEFT TAP ONLY.
 
 A copper still, a condenser coil and a rain-catch awning bolted to one wide chassis. It turns brackish runoff into water a caravan can drink, and a camp forms around it within the hour. The Still Rig packs down like every rig the caravans own, and the people follow it.
 

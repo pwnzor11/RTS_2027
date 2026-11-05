@@ -29,6 +29,7 @@ window, watching needle gauges and talking to nobody. When the dial drops, the w
 title: Ration Hall
 subtitle: Everyone counted, everyone fed
 unlock: open
+field_note: RATIONS 4 // ONE LINE, ONE LEDGER, ONE LOAF PER NAME. STOP.
 
 A long brick hall with a ledger window on every wall, where each worker, soldier and clerk of the district is entered,
 counted and issued a ration. The line outside never shortens and nobody is seen to complain about it. An Authority
@@ -207,6 +208,7 @@ less to take.
 title: Bunk Gallery
 subtitle: Tiers of cots behind blast doors
 unlock: open
+field_note: VOICE: "BEHIND THE DOOR, SLEEP. WE WILL WAKE YOU."
 
 A buried gallery of stacked cots, each tier closed off behind its own blast door. The Directorate sleeps in shifts, so
 the lamps are never fully out. Crews say a gallery is the only place underground where it is quiet.

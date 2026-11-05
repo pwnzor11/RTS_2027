@@ -197,6 +197,7 @@ category = "Structure"
 faction = "left_behind"
 title = "Still Rig"
 subtitle = "Water still on a wagon frame"
+field_note = "RIG RADIO // STILL RUNNING. DRINK FROM THE LEFT TAP ONLY."
 body = '''
 A copper still, a condenser coil and a rain-catch awning bolted to one wide chassis. It turns brackish runoff into water a caravan can drink, and a camp forms around it within the hour. The Still Rig packs down like every rig the caravans own, and the people follow it.
 '''
