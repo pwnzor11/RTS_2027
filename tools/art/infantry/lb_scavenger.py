@@ -37,7 +37,7 @@ def weapon(S, GM, p, R):
 
 SPEC = dict(shoulder=(0.18, 0.02, 0.36), grips=((0, -0.10, -0.06), (0, 0.22, -0.045)), bulk=1.0,
             coat=("wrapA", "wrapB", "wrapE", "wrapC"), hem_z=-0.20, cape="wrapA", scarf="house",
-            hood=("wrapA", 0.30, 0.10), pack=pack, weapon=weapon, sleeves=("wrapB", "wrapA", "rope"))
+            hood=("wrapA", 0.22, 0.08), pack=pack, weapon=weapon, sleeves=("wrapB", "wrapA", "rope"))
 
 
 def build(S, p):
