@@ -165,6 +165,12 @@ public sealed class RecruitAi : IAiPlayer, IAiSnapshotable
     /// <summary>M6-10: Left Behind relocations that finished.</summary>
     public int RelocationsDone => (_tactics as LeftBehindTactics)?.RelocationsDone ?? 0;
 
+    /// <summary>M6-10 (diagnostics): the Left Behind threat reading.</summary>
+    public string LeftBehindDebug => (_tactics as LeftBehindTactics)?.Debug ?? "";
+
+    /// <summary>M6-10: Left Behind relocations abandoned on the timeout.</summary>
+    public int RelocationsAborted => (_tactics as LeftBehindTactics)?.RelocationsAborted ?? 0;
+
     /// <summary>M6-10: Second Drift orders.</summary>
     public int StormOrders => (_tactics as LeftBehindTactics)?.StormOrders ?? 0;
 

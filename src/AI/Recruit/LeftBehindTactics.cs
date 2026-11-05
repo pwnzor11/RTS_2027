@@ -105,7 +105,6 @@ internal sealed class LeftBehindTactics : IFactionTactics
     private int _lastFire = -FireGapTicks;
     private CellCoord _chain;
     private int _chainUntil = -1;
-    private bool _armedSeen;
 
     private readonly Dictionary<ulong, int> _lastReturn = new();
     private readonly List<ulong> _drop = new();
@@ -117,6 +116,8 @@ internal sealed class LeftBehindTactics : IFactionTactics
 
     private int Tier => _profile?.Tier ?? 1;
 
+    /// <summary>Diagnostics: the last threat reading.</summary>
+    public string Debug { get; private set; } = "";
     /// <summary>Unpack orders given.</summary>
     public int Unpacks { get; private set; }
     /// <summary>Raid parties sent (a group of idle raiders given a target).</summary>
@@ -488,6 +489,7 @@ internal sealed class LeftBehindTactics : IFactionTactics
             int own = 0;
             foreach (ViewActor a in k.Army) if (Cheb(a.Cell, k.Yard) <= ThreatCells + 4) own += Cost(rules, a);
             foreach (ViewActor a in k.Home) if (Cheb(a.Cell, k.Yard) <= ThreatCells + 4) own += Cost(rules, a);
+            Debug = $"enemy {enemy} own {own} streak {_threatStreak} laststand {LastStand(k)} cooldown {_relocCooldownUntil}";
             bool heavy = enemy >= HeavyThreat && (long)enemy * 100 >= (long)own * ThreatOverArmyPct;
             _threatStreak = heavy ? _threatStreak + 1 : 0;
             if (_threatStreak < ThreatStreakNeeded) return;
@@ -589,15 +591,22 @@ internal sealed class LeftBehindTactics : IFactionTactics
             if (s.Owner == view.Player && s.TicksLeft > 200)
                 Consider(new CellCoord(s.Centre.X, s.Centre.Y + s.Radius + 2), 400);   // beside the drift, not under it
         if (found) return best;
-        // straight away from the threat
-        int dx = Math.Sign(k.Yard.X - enemyCentre.X), dy = Math.Sign(k.Yard.Y - enemyCentre.Y);
-        if (dx == 0 && dy == 0) { dx = k.Yard.X < view.MapWidth / 2 ? -1 : 1; dy = 0; }
-        for (int d = RelocateAwayCells; d >= RelocateMinCells; d--)
-        {
-            var c = new CellCoord(Math.Clamp(k.Yard.X + dx * d, 3, view.MapWidth - 4), Math.Clamp(k.Yard.Y + dy * d, 3, view.MapHeight - 4));
-            if (view.IsPassable(c, Locomotion.Tracked)) return c;
-        }
-        return k.Yard;
+        // no wreck field or drift: the passable cell, eight directions at three distances, that lies farthest from the threat
+        CellCoord pick = k.Yard;
+        long pickD = -1;
+        for (int dy = -1; dy <= 1; dy++)
+            for (int dx = -1; dx <= 1; dx++)
+            {
+                if (dx == 0 && dy == 0) continue;
+                for (int d = RelocateAwayCells; d >= RelocateMinCells; d -= 4)
+                {
+                    var c = new CellCoord(Math.Clamp(k.Yard.X + dx * d, 3, view.MapWidth - 4), Math.Clamp(k.Yard.Y + dy * d, 3, view.MapHeight - 4));
+                    if (Cheb(c, k.Yard) < RelocateMinCells || !view.IsPassable(c, Locomotion.Tracked)) continue;
+                    long dist = Dist2(c, enemyCentre);
+                    if (dist > pickD) { pickD = dist; pick = c; }
+                }
+            }
+        return pick;
     }
 
     /// <summary>After the move: the fixed structures left at the old site are sold (the build order rebuilds them beside the new rig).</summary>
