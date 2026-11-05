@@ -1,5 +1,5 @@
 # Archive entries (S9, M6-ARCH) for the Left Behind structures and rigs. Text is the lore from docs/lore/left_behind.md, copied verbatim.
-# Entries marked ASSUMED (S9) had no approved text and were drafted for the owner to confirm.
+# Entries marked "S9 draft" were written in session 9 and approved by the owner (D-134).
 # Keys: id, category, faction, title, subtitle, field_note (optional), body, sprite (optional),
 # unlock (open | campaign:<mission> | encounter:<rules id> | research:<upgrade id>).
 # Unit, Structure and Upgrade entries use the rules id as their id; their stats are read live from data/rules.
@@ -18,7 +18,7 @@ starts here, including the arguments.
 '''
 unlock = "open"
 
-# ASSUMED (S9): drafted this session, confirm with the owner (docs/lore/left_behind.md).
+# S9 draft, approved by the owner (D-134) (docs/lore/left_behind.md).
 [[entry]]
 id = "lb_yard"
 category = "Structure"
@@ -31,7 +31,7 @@ A walled lot of rusted sheds, a squat smelter and a silo that never gets emptied
 '''
 unlock = "open"
 
-# ASSUMED (S9): drafted this session, confirm with the owner (docs/lore/left_behind.md).
+# S9 draft, approved by the owner (D-134) (docs/lore/left_behind.md).
 [[entry]]
 id = "lb_refinery_rig"
 category = "Structure"
@@ -44,7 +44,7 @@ A rig that carries its own furnace, hopper and filter bank on one wide chassis. 
 '''
 unlock = "encounter:lb_refinery_rig"
 
-# ASSUMED (S9): drafted this session, confirm with the owner (docs/lore/left_behind.md).
+# S9 draft, approved by the owner (D-134) (docs/lore/left_behind.md).
 [[entry]]
 id = "lb_dynamo_rig"
 category = "Structure"
@@ -57,7 +57,7 @@ A generator built from a bus engine, a line of belts and a flywheel the size of 
 '''
 unlock = "open"
 
-# ASSUMED (S9): drafted this session, confirm with the owner (docs/lore/left_behind.md).
+# S9 draft, approved by the owner (D-134) (docs/lore/left_behind.md).
 [[entry]]
 id = "lb_muster_rig"
 category = "Structure"
@@ -70,7 +70,7 @@ A rig with a canteen, a barracks car and a board where the names of new recruits
 '''
 unlock = "open"
 
-# ASSUMED (S9): drafted this session, confirm with the owner (docs/lore/left_behind.md).
+# S9 draft, approved by the owner (D-134) (docs/lore/left_behind.md).
 [[entry]]
 id = "lb_garage_rig"
 category = "Structure"
@@ -83,7 +83,7 @@ A rig that unfolds into a bay with hydraulic lifts, a forge and a row of hanging
 '''
 unlock = "encounter:lb_garage_rig"
 
-# ASSUMED (S9): drafted this session, confirm with the owner (docs/lore/left_behind.md).
+# S9 draft, approved by the owner (D-134) (docs/lore/left_behind.md).
 [[entry]]
 id = "lb_lookout"
 category = "Structure"
@@ -96,7 +96,7 @@ A tall lattice mast with a dish, a receiver and a bank of noise generators at it
 '''
 unlock = "encounter:lb_lookout"
 
-# ASSUMED (S9): drafted this session, confirm with the owner (docs/lore/left_behind.md).
+# S9 draft, approved by the owner (D-134) (docs/lore/left_behind.md).
 [[entry]]
 id = "lb_bench"
 category = "Structure"
@@ -109,7 +109,7 @@ A long workbench under a tin roof, lined with jars of valves, coils and salvaged
 '''
 unlock = "encounter:lb_bench"
 
-# ASSUMED (S9): drafted this session, confirm with the owner (docs/lore/left_behind.md).
+# S9 draft, approved by the owner (D-134) (docs/lore/left_behind.md).
 [[entry]]
 id = "lb_rotor_pad"
 category = "Structure"
@@ -122,7 +122,7 @@ A flat steel platform on a rig's roof, with a fuel tank, a tie-down cage and a w
 '''
 unlock = "encounter:lb_rotor_pad"
 
-# ASSUMED (S9): drafted this session, confirm with the owner (docs/lore/left_behind.md).
+# S9 draft, approved by the owner (D-134) (docs/lore/left_behind.md).
 [[entry]]
 id = "lb_spike_nest"
 category = "Structure"
@@ -135,7 +135,7 @@ A ring of sharpened rebar set in a mound of packed ash, with a lookout slot in t
 '''
 unlock = "open"
 
-# ASSUMED (S9): drafted this session, confirm with the owner (docs/lore/left_behind.md).
+# S9 draft, approved by the owner (D-134) (docs/lore/left_behind.md).
 [[entry]]
 id = "lb_harpoon_post"
 category = "Structure"
@@ -148,7 +148,7 @@ A fixed whaling gun on a concrete post, with a drum of steel cable beside it. Th
 '''
 unlock = "encounter:lb_harpoon_post"
 
-# ASSUMED (S9): drafted this session, confirm with the owner (docs/lore/left_behind.md).
+# S9 draft, approved by the owner (D-134) (docs/lore/left_behind.md).
 [[entry]]
 id = "lb_flak_net"
 category = "Structure"
@@ -161,7 +161,7 @@ A cluster of light guns strung across a net of cable and tin cans, which rings l
 '''
 unlock = "encounter:lb_flak_net"
 
-# ASSUMED (S9): drafted this session, confirm with the owner (docs/lore/left_behind.md).
+# S9 draft, approved by the owner (D-134) (docs/lore/left_behind.md).
 [[entry]]
 id = "lb_scrap_wall"
 category = "Structure"

@@ -129,7 +129,7 @@ Secret: She has already taken personal command of a rescue flight into the Glass
 people living there who were never on any manifest.
 
 ## Units
-<!-- session 9 entries: assumed — confirm -->
+<!-- session 9 entries: approved by the owner (D-134) -->
 
 ### exp_marine
 title: Marine
@@ -365,7 +365,7 @@ field_note: FREIGHT 1 // SHIPMENT IN THE AIR. DO NOT LET THE GROUND CROWD THE RA
 A huge four-engined transport with a rear ramp, built to carry supplies over water and mountains to landlocked positions. Its crews call it the Long Load and say it sounds like a church organ when it climbs. The Skyfreighter is the only way the fleet reaches inland garrisons that the convoys cannot. It is worth its weight in fuel, and every crate it carries is counted at both ends.
 
 ## Structures
-<!-- session 9 entries: assumed — confirm -->
+<!-- session 9 entries: approved by the owner (D-134) -->
 
 ### exp_landing_depot
 title: Landing Depot
@@ -533,7 +533,7 @@ field_note: DOCK 1 // ONE HULL AT A TIME, AND EVERY HULL IS PRECIOUS. TELEX ENDS
 A deep concrete basin with gates at one end, large enough to take in the fleet's heaviest ships and pump out the water beneath them. Inside, welders and fitters work through the night on hulls scarred by ocean and shore. Drydock crews take pride in returning a cruiser to service within weeks, though the wait is always longer than the Admiral would like.
 
 ## Upgrades
-<!-- session 9 entries: assumed — confirm -->
+<!-- session 9 entries: approved by the owner (D-134) -->
 
 ### exp_sonar_nets
 title: Sonar Nets
