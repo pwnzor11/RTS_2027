@@ -166,7 +166,8 @@ public sealed partial class Simulation
         InfantryType t = RulesOf(_infantry.Player[i]).Infantry[_infantry.TypeIndex[i]];
         if (t.AshStealthDelayTicks <= 0 || t.AshStealthDelayTicks >= delay) return delay;
         CellCoord c = _infantry.Position[i].ToCell();
-        if (_map.OverlayAt(c) != OverlayKind.Ashfall || _map.DensityAt(c) <= t.AshStealthThreshold) return delay;
+        bool ashy = _map.OverlayAt(c) == OverlayKind.Ashfall && _map.DensityAt(c) > t.AshStealthThreshold;
+        if (!ashy && !InFriendlyStorm(_infantry.Player[i], c)) return delay;   // M6-07: a friendly storm counts as ash (design 06 §6)
         return t.AshStealthDelayTicks;
     }
 
