@@ -9,10 +9,10 @@ public static class SimWriter
 {
     public static readonly byte[] SaveMagic = "RTSS"u8.ToArray();
 
-    /// <summary>Save format 11 (VET-1: "veterancy" part after "salvage", shooter column in the projectiles part). Format 10 (M6-02: "rigs" and "salvage" parts after "directive", effects part version 2 with storms and withdraw flags). Format 9 (M5-01: "directive" part after "stats"). Format 8 (M4-01: "garrison" and "stats" parts, ground part version 2 with Foam). Format 7 (M3-01: factions in the header; tunnels/ground/effects parts and the players-part faction and
+    /// <summary>Save format 12 (M7-02: "shipments", "beachhead" and "naval" parts after "veterancy"). Format 11 (VET-1: "veterancy" part after "salvage", shooter column in the projectiles part). Format 10 (M6-02: "rigs" and "salvage" parts after "directive", effects part version 2 with storms and withdraw flags). Format 9 (M5-01: "directive" part after "stats"). Format 8 (M4-01: "garrison" and "stats" parts, ground part version 2 with Foam). Format 7 (M3-01: factions in the header; tunnels/ground/effects parts and the players-part faction and
     /// upgrade fields in the body). Format 6 (M1.5): the <see cref="SetupHeader"/> (build, seed, players, teams, limits,
     /// AllowDebug, rules and map identity, embedded rules) precedes the state body.</summary>
-    public const int SaveVersion = 11;
+    public const int SaveVersion = 12;
 
     /// <summary>State body: tick, RNG, then each part's name and data in the given (canonical) order.
     /// Used verbatim by the hash.</summary>

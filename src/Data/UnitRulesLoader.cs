@@ -26,6 +26,8 @@ internal static class UnitRulesLoader
         "veteran",
         // schema v7 (SUP-1)
         "supply",
+        // schema v8 (M7-02)
+        "draw_scale_permille", "deep_only", "submerges", "sonar_radius", "aircraft_slots", "sortie_ticks", "unload_ticks",
     ];
 
     private static readonly string[] InfantryKeys =
@@ -118,7 +120,22 @@ internal static class UnitRulesLoader
         bool hasVeteran = f.Has("veteran");   // VET-1: absent = armed types rank
         bool? veteran = hasVeteran ? f.Bool("veteran") : false;
         int? supply = f.OptInt("supply", -1, 1000, -1);   // SUP-1: -1 = cost bands
+        int? drawScale = f.OptInt("draw_scale_permille", 100, 10_000, 1000);   // M7-02
+        bool? deepOnly = f.OptBool("deep_only", false);
+        bool? submerges = f.OptBool("submerges", false);
+        int? sonar = f.OptInt("sonar_radius", 0, SimConstants.MaxMapCells, 0);
+        int? aircraftSlots = f.OptInt("aircraft_slots", 0, 32, 0);
+        int? sortieTicks = f.OptInt("sortie_ticks", 0, 1_000_000, 0);
+        int? unloadTicks = f.OptInt("unload_ticks", 0, 1_000_000, 0);
+        if (drawScale is null || deepOnly is null || submerges is null || sonar is null || aircraftSlots is null || sortieTicks is null
+            || unloadTicks is null) return null;
         if (veteran is null || supply is null) return null;
+        if (locomotion is { } loco0 && loco0 != Locomotion.Naval)
+        {
+            if (deepOnly.Value) { f.Problem("deep_only", "only a naval vehicle can be deep_only"); return null; }
+            if (submerges.Value) { f.Problem("submerges", "only a naval vehicle can submerge"); return null; }
+        }
+        if (aircraftSlots.Value > 0 && sortieTicks.Value == 0) { f.Problem("sortie_ticks", "a carrier (aircraft_slots > 0) needs sortie_ticks > 0"); return null; }
         if (unpacksInto is null || packTicks is null || salvageRate is null || raider is null || raiderOneUse is null
             || dropsBlackout is null || auraRepair is null || towBonus is null) return null;
         if (v3 is null || passengers is null || deploysInto is null || tier is null) return null;
@@ -159,6 +176,13 @@ internal static class UnitRulesLoader
             TowBonusPermille = towBonus.Value,
             Veteran = hasVeteran ? veteran.Value : null,
             Supply = supply.Value,
+            DrawScalePermille = drawScale.Value,
+            DeepOnly = deepOnly.Value,
+            Submerges = submerges.Value,
+            SonarRadius = sonar.Value,
+            AircraftSlots = aircraftSlots.Value,
+            SortieTicks = sortieTicks.Value,
+            UnloadTicks = unloadTicks.Value,
         };
     }
 

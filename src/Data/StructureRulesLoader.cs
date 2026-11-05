@@ -26,6 +26,8 @@ internal static class StructureRulesLoader
         "packs_into", "pack_ticks",
         // schema v7 (SUP-1)
         "supply_provided", "supply_unstocked",
+        // schema v8 (M7-02)
+        "water_building", "water", "beachhead_source", "beachhead_radius",
     ];
 
     /// <summary>Most soldiers a building may hold (schema v4).</summary>
@@ -91,6 +93,25 @@ internal static class StructureRulesLoader
         int? supplyProvided = f.OptInt("supply_provided", 0, 1000, 0);   // SUP-1
         int? supplyUnstocked = f.OptInt("supply_unstocked", -1, 1000, -1);
         if (supplyProvided is null || supplyUnstocked is null) return null;
+        bool? waterBuilding = f.OptBool("water_building", false);   // M7-02
+        bool? beachheadSource = f.OptBool("beachhead_source", false);
+        int? beachheadRadius = f.OptInt("beachhead_radius", 0, SimConstants.MaxMapCells, 0);
+        if (waterBuilding is null || beachheadSource is null || beachheadRadius is null) return null;
+        bool[] waterMask = Array.Empty<bool>();
+        if (f.Has("water"))
+        {
+            if (!waterBuilding.Value) { f.Problem("water", "a footprint water mask needs water_building = true"); return null; }
+            if (width is null || height is null) return null;
+            int[]? cells = f.OptIntArray("water", width.Value * height.Value, 0, 1, null);
+            if (cells is null) return null;
+            if (!cells.Contains(1)) { f.Problem("water", "the mask must mark at least one water cell (1)"); return null; }
+            waterMask = cells.Select(c => c == 1).ToArray();
+        }
+        if (beachheadSource.Value != beachheadRadius.Value > 0)
+        {
+            f.Problem("beachhead_radius", "beachhead_source = true needs beachhead_radius > 0 and a radius needs beachhead_source = true");
+            return null;
+        }
         string? packsName = f.OptStr("packs_into", "");
         int packsInto = -1;
         if (packsName is { Length: > 0 })
@@ -192,6 +213,10 @@ internal static class StructureRulesLoader
             PackTicks = packTicks.Value,
             SupplyProvided = supplyProvided.Value,
             SupplyUnstocked = supplyUnstocked.Value,
+            WaterBuilding = waterBuilding.Value,
+            WaterMask = waterMask,
+            BeachheadSource = beachheadSource.Value,
+            BeachheadRadius = beachheadRadius.Value,
         };
         return exit is null ? building : building with { Exit = new CellCoord(exit[0], exit[1]) };
     }

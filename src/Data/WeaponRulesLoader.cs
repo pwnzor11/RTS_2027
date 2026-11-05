@@ -20,11 +20,28 @@ internal static class WeaponRulesLoader
     private static readonly string[] WeaponKeys =
         ["damage", "range", "min_range", "rate_of_fire", "projectile_speed", "warhead", "targets"];
 
+    /// <summary>The armour classes that existed before M7-02 (unarmored..fortified); a shorter <c>versus</c> list of at least this length is padded.</summary>
+    private const int LegacyArmorClasses = 5;
+
+    /// <summary>Reads <c>versus</c>: <see cref="RuleCounts.ArmorClasses"/> entries, or 5 to 7 entries with the missing (ship and submerged)
+    /// classes padded with 100 percent (M7-02).</summary>
+    private static int[]? ParseVersus(RulesFields f)
+    {
+        int len = f.ArrayLength("versus");
+        if (len < LegacyArmorClasses || len >= RuleCounts.ArmorClasses) return f.IntArray("versus", RuleCounts.ArmorClasses, 0, MaxVersusPercent);
+        int[]? old = f.IntArray("versus", len, 0, MaxVersusPercent);
+        if (old is null) return null;
+        var full = new int[RuleCounts.ArmorClasses];
+        Array.Fill(full, 100);
+        old.CopyTo(full, 0);
+        return full;
+    }
+
     /// <summary>Parses one warhead.</summary>
     public static WarheadType? ParseWarhead(RulesFields f)
     {
         f.CheckKeys(WarheadKeys);
-        int[]? versus = f.IntArray("versus", RuleCounts.ArmorClasses, 0, MaxVersusPercent);
+        int[]? versus = ParseVersus(f);
         int? splash = f.Int("splash", 0, 1);
         bool? hitsAllies = f.Bool("hits_allies");
         int? contaminate = f.OptInt("contaminate", 0, 255, 0);

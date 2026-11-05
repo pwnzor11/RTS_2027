@@ -384,7 +384,7 @@ public sealed class SupplyTests
     [Fact]
     public void RulesHash_CoversTheSupplyKeys()
     {
-        Assert.Equal(10, RulesHash.FormatVersion);
+        Assert.Equal(11, RulesHash.FormatVersion);
         ulong baseline = Rules().RulesHash;
         Assert.NotEqual(baseline, Rules("enabled = true\nceiling = 199").RulesHash);
         Assert.NotEqual(baseline, Rules("enabled = true\nband_values = [1, 2, 4]").RulesHash);

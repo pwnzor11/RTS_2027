@@ -30,8 +30,8 @@ public sealed class M4ContractTests
         Assert.Equal(15, (int)MissionKind.Garrisoned);
         Assert.Equal(14, (int)MissionKind.Capture);
         Assert.Equal(7, (int)LandType.Shallow);
-        Assert.Equal(8, RuleCounts.LandTypes);
-        Assert.Equal(RuleCounts.LandTypes, Enum.GetValues<LandType>().Length);   // Coast = 8 is reserved for M7, not added
+        Assert.Equal(9, RuleCounts.LandTypes);   // M7-02 appended Coast = 8
+        Assert.Equal(RuleCounts.LandTypes, Enum.GetValues<LandType>().Length);
         Assert.Equal(5, (int)FxKind.GarrisonExit);
         Assert.Equal(6, (int)DebugOp.GrantUpgrade);
     }
@@ -64,19 +64,19 @@ public sealed class M4ContractTests
     {
         var sim = ScriptedGame.NewSim(ScriptedGame.Setup());
         string[] names = sim.StateParts.Select(p => p.Name).ToArray();
-        Assert.Equal(new[] { "tunnels", "ground", "effects", "garrison", "stats", "directive", "rigs", "salvage", "veterancy" }, names[^9..]);   // M5-01 appended "directive", M6-02 "rigs" and "salvage"
-        Assert.Same(sim.Garrison, sim.StateParts[^6]);
-        Assert.Same(sim.Stats, sim.StateParts[^5]);
+        Assert.Equal(new[] { "tunnels", "ground", "effects", "garrison", "stats", "directive", "rigs", "salvage", "veterancy", "shipments", "beachhead", "naval" }, names[^12..]);   // M5-01 appended "directive", M6-02 "rigs" and "salvage"
+        Assert.Same(sim.Garrison, sim.StateParts[^9]);
+        Assert.Same(sim.Stats, sim.StateParts[^8]);
     }
 
     [Fact]
     public void FormatVersions_ArePinned()
     {
-        Assert.Equal(10, RulesHash.FormatVersion);   // M6-02 took 8, VET-1 9, SUP-1 10
-        Assert.Equal(11, SimWriter.SaveVersion);   // M5-01 took 9, M6-02 10, VET-1 11
-        Assert.Equal(11, ReplayWriter.Version);           // M3-19 had already taken 8 for the mission block, M6-02 took 10, VET-1 11
+        Assert.Equal(11, RulesHash.FormatVersion);   // M6-02 took 8, VET-1 9, SUP-1 10, M7-02 11
+        Assert.Equal(12, SimWriter.SaveVersion);   // M5-01 took 9, M6-02 10, VET-1 11, M7-02 12
+        Assert.Equal(12, ReplayWriter.Version);           // M3-19 had already taken 8 for the mission block, M6-02 took 10, VET-1 11, M7-02 12
         Assert.Equal(7, ReplayWriter.OldestReadableVersion);
-        Assert.Equal(2, MapFile.FormatVersion);
+        Assert.Equal(3, MapFile.FormatVersion);   // M7-02: format 3 (Coast, convoy_edge, landing)
         Assert.Equal(1, MapFile.OldestReadableVersion);
     }
 
@@ -255,7 +255,7 @@ public sealed class M4ContractTests
     public void Shallow_TerrainRow_IsLoaded()
     {
         TerrainTable t = ProductionFixture.Loaded.Sim.Terrain;
-        Assert.Equal(new[] { 40, 0, 0, 100, 100, 0 }, Enum.GetValues<Locomotion>().Select(l => t.SpeedPercent(LandType.Shallow, l)));
+        Assert.Equal(new[] { 40, 0, 0, 100, 100, 0, 100 }, Enum.GetValues<Locomotion>().Select(l => t.SpeedPercent(LandType.Shallow, l)));
     }
 
     [Fact]
@@ -425,7 +425,7 @@ public sealed class M4ContractTests
             new[] { new MapFeature("neu_ruin_depot", new CellCoord(10, 11)), new MapFeature("neu_ruin_tenement", new CellCoord(20, 3)) });
         string path = Temp("v2.map.toml");
         MapFile.Save(map, meta, path);
-        Assert.Contains("format_version = 2", File.ReadAllText(path));
+        Assert.Contains("format_version = 3", File.ReadAllText(path));   // M4-01 wrote 2, M7-02 3 (MapFormat3Tests covers a real version-2 file)
         (Rts.Sim.Map.MapData back, MapMeta backMeta) = MapFile.LoadWithMeta(path);
         Assert.Equal(Rts.Sim.Map.MapHasher.Compute(map), Rts.Sim.Map.MapHasher.Compute(back));
         Assert.Equal(meta.Biome, backMeta.Biome);
@@ -444,8 +444,8 @@ public sealed class M4ContractTests
         Assert.Equal(MapMeta.DefaultFor(map) with { Features = meta.Features }, meta);
         Assert.Empty(meta.Features);
         Assert.Equal(map.StartPositions.Count, meta.MaxPlayers);
-        string v3 = Temp("v3.map.toml");
-        File.WriteAllText(v3, File.ReadAllText(path).Replace("format_version = 1", "format_version = 3"));
+        string v3 = Temp("v4.map.toml");   // a future version
+        File.WriteAllText(v3, File.ReadAllText(path).Replace("format_version = 1", "format_version = 4"));
         Assert.Throws<MapFileException>(() => MapFile.Load(v3));
     }
 

@@ -1,80 +1,81 @@
 # Authority M2 roster: balance pass in M2-14, see docs/balance/m2_balance.md.
 # Keys: versus = damage percent (0..1000) per armour class, in the order Unarmored, Light, Heavy, Structure,
-# Fortified. splash: 0 = target only, 1 = 3x3 block with falloff. hits_allies: whether splash hurts allies (D-054).
+# Fortified, ShipLight, ShipHeavy, Submerged (M7-02: the last three are padded with 100, or 0 for the all-zero warheads; a shorter
+# five-entry list is padded with 100 by the loader). splash: 0 = target only, 1 = 3x3 block with falloff. hits_allies: whether splash hurts allies (D-054).
 # Schema v3 (M3, all optional): contaminate, decontaminate (radiation 0..255 in the splash), bonus_vs_irradiated_percent
 # (default 100), blackout_ticks.
 
 [auth_small_arms]
-versus = [100, 50, 15, 10, 5]
+versus = [100, 50, 15, 10, 5, 100, 100, 100]
 splash = 0
 hits_allies = false
 
 [auth_ap]
-versus = [25, 75, 100, 50, 40]
+versus = [25, 75, 100, 50, 40, 100, 100, 100]
 splash = 0
 hits_allies = false
 
 [auth_he]
-versus = [100, 80, 60, 70, 50]
+versus = [100, 80, 60, 70, 50, 100, 100, 100]
 splash = 1
 hits_allies = true
 
 # M3-07: Directorate roster (design 05 §5, D-078) and Authority counters (D-079). Numbers not fixed by the design are ASSUMED (M3-07), tune in M3-14.
 
 [dir_small_arms]
-versus = [100, 60, 20, 10, 5]  # ASSUMED (M3-07)
+versus = [100, 60, 20, 10, 5, 100, 100, 100]  # ASSUMED (M3-07)
 splash = 0  # ASSUMED (M3-07)
 hits_allies = false
 
 [dir_ash]
 garrison_damage_percent = 50  # (tune) M4-16: 25 -> 50, counters must clear a garrison at ~1.25x cost
-versus = [80, 60, 40, 40, 20]  # ASSUMED (M3-07)
+versus = [80, 60, 40, 40, 20, 100, 100, 100]  # ASSUMED (M3-07)
 splash = 1  # ASSUMED (M3-07)
 hits_allies = false
 contaminate = 40  # ASSUMED (M3-07)
 
 [dir_demolition]
 garrison_damage_percent = 50  # (tune) M4-16: 25 -> 50, counters must clear a garrison at ~1.25x cost
-versus = [25, 50, 100, 150, 100]  # ASSUMED (M3-07)
+versus = [25, 50, 100, 150, 100, 100, 100, 100]  # ASSUMED (M3-07)
 splash = 0  # ASSUMED (M3-07)
 hits_allies = false
 
 [dir_rad_shell]
-versus = [60, 60, 60, 60, 40]  # ASSUMED (M3-07)
+versus = [60, 60, 60, 60, 40, 100, 100, 100]  # ASSUMED (M3-07)
 splash = 1  # ASSUMED (M3-07)
 hits_allies = false
 contaminate = 80  # ASSUMED (M3-07)
 
 [dir_rocket]
-versus = [25, 75, 100, 60, 40]  # ASSUMED (M3-07)
+versus = [25, 75, 100, 60, 40, 100, 100, 100]  # ASSUMED (M3-07)
 splash = 1  # ASSUMED (M3-07)
 hits_allies = false
 
 [dir_slug]
-versus = [25, 75, 100, 50, 40]  # ASSUMED (M3-07)
+versus = [25, 75, 100, 50, 40, 100, 100, 100]  # ASSUMED (M3-07)
 splash = 0  # ASSUMED (M3-07)
 hits_allies = false
 
 [dir_meltdown_blast]
-versus = [100, 100, 100, 100, 100]  # ASSUMED (M3-07)
+versus = [100, 100, 100, 100, 100, 100, 100, 100]  # ASSUMED (M3-07)
 splash = 1  # ASSUMED (M3-07)
 hits_allies = true
 contaminate = 200  # ASSUMED (M3-07)
 
 [dir_blackout]
-versus = [0, 0, 0, 0, 0]  # ASSUMED (M3-07)
+versus = [0, 0, 0, 0, 0, 0, 0, 0]  # ASSUMED (M3-07)
 splash = 1  # ASSUMED (M3-07)
 hits_allies = false
 blackout_ticks = 200  # ASSUMED (M3-07)
 
 [auth_decon]
-versus = [0, 0, 0, 0, 0]  # ASSUMED (M3-07)
+versus = [0, 0, 0, 0, 0, 0, 0, 0]  # ASSUMED (M3-07)
 splash = 1  # ASSUMED (M3-07)
 hits_allies = false
 decontaminate = 40  # ASSUMED (M3-07)
 
 [dir_sunrise_blast]
-versus = [100, 100, 100, 100, 100]  # ASSUMED (M3-13)
+versus = [100, 100, 100, 100, 100, 100, 100, 100]  # ASSUMED (M3-13)
 splash = 1  # 0/1 flag in the loader; the blast radius (5 cells) is a constant in Simulation.Superweapon.cs
 hits_allies = false
 contaminate = 255  # ASSUMED (M3-13)
@@ -85,7 +86,7 @@ blackout_ticks = 600  # ASSUMED (M3-13)
 # garrison_damage_percent are design 08 §6 keys. M4-05 implements them.
 
 [auth_seismic]   # Seismic Mortar: hits Burrowed units, 2x vs entrances (D-074), passes part of the hit to garrisons (Q-M4-f)
-versus = [100, 80, 60, 70, 50]  # ASSUMED (M4-07): copy of auth_he
+versus = [100, 80, 60, 70, 50, 100, 100, 100]  # ASSUMED (M4-07): copy of auth_he
 splash = 1  # ASSUMED (M4-07)
 hits_allies = true  # ASSUMED (M4-07)
 hits_burrowed = true
@@ -93,68 +94,68 @@ bonus_vs_entrance_percent = 200
 garrison_damage_percent = 50  # (tune) M4-16: 25 -> 50, counters must clear a garrison at ~1.25x cost
 
 [auth_foam]   # Quick-Set Foam: 400 ticks of foam cells (D-077), no direct damage
-versus = [0, 0, 0, 0, 0]  # ASSUMED (M4-07): copy of auth_decon
+versus = [0, 0, 0, 0, 0, 0, 0, 0]  # ASSUMED (M4-07): copy of auth_decon
 splash = 1  # ASSUMED (M4-07)
 hits_allies = false  # ASSUMED (M4-07)
 foam_ticks = 400
 
 [auth_atomic_blast]   # Authority superweapon blast, read as "<superweapon>_blast" (superweapon = "auth_atomic")
-versus = [100, 100, 100, 100, 100]  # ASSUMED (M4-07): copy of dir_sunrise_blast
+versus = [100, 100, 100, 100, 100, 100, 100, 100]  # ASSUMED (M4-07): copy of dir_sunrise_blast
 splash = 1  # ASSUMED (M4-07)
 hits_allies = false  # ASSUMED (M4-07)
 contaminate = 255  # ASSUMED (M4-07)
 blackout_ticks = 600  # ASSUMED (M4-07)
 
 [dir_sow]   # Ash Sower: radiation only, no damage
-versus = [0, 0, 0, 0, 0]  # ASSUMED (M4-07)
+versus = [0, 0, 0, 0, 0, 0, 0, 0]  # ASSUMED (M4-07)
 splash = 1  # ASSUMED (M4-07)
 hits_allies = false  # ASSUMED (M4-07)
 contaminate = 60  # ASSUMED (M4-07)
 
 # M6-08: Left Behind warheads (design 06 §5-6). All numbers (tune); reuse of Directorate/Authority shapes where the design says so.
 [lb_small_arms]   # (tune) copy of dir_small_arms
-versus = [100, 60, 20, 10, 5]
+versus = [100, 60, 20, 10, 5, 100, 100, 100]
 splash = 0
 hits_allies = false
 
 [lb_ap]   # (tune) copy of auth_ap
-versus = [25, 75, 100, 50, 40]
+versus = [25, 75, 100, 50, 40, 100, 100, 100]
 splash = 0
 hits_allies = false
 
 [lb_he]   # (tune) copy of auth_he
-versus = [100, 80, 60, 70, 50]
+versus = [100, 80, 60, 70, 50, 100, 100, 100]
 splash = 1
 hits_allies = true
 
 [lb_flame]   # (tune) flame-hammer: strong vs infantry, weak vs structures
-versus = [100, 70, 30, 40, 20]
+versus = [100, 70, 30, 40, 20, 100, 100, 100]
 splash = 1
 hits_allies = false
 
 [lb_harpoon]   # (tune) tether: the slow is a later sim hook, the hit is anti-armour
-versus = [25, 75, 100, 50, 40]
+versus = [25, 75, 100, 50, 40, 100, 100, 100]
 splash = 0
 hits_allies = false
 
 [lb_rocket]   # (tune) Organ rocket rack: area, good vs structures
-versus = [100, 80, 50, 100, 60]
+versus = [100, 80, 50, 100, 60, 100, 100, 100]
 splash = 1
 hits_allies = true
 
 [lb_blackout]   # (tune) Dust Sail: no damage, Blackout on the area (reuses the Blackout mechanic)
-versus = [0, 0, 0, 0, 0]
+versus = [0, 0, 0, 0, 0, 0, 0, 0]
 splash = 1
 hits_allies = false
 blackout_ticks = 200
 
 [lb_kite_blast]   # (tune) Kite death weapon on impact
-versus = [100, 100, 80, 120, 80]
+versus = [100, 100, 80, 120, 80, 100, 100, 100]
 splash = 1
 hits_allies = true
 
 [lb_second_drift_blast]   # (tune) The Second Drift (superweapon "lb_second_drift" reads "<superweapon>_blast"): a 40 s ground-effect storm
-versus = [0, 0, 0, 0, 0]
+versus = [0, 0, 0, 0, 0, 0, 0, 0]
 splash = 0
 hits_allies = false
 blackout_ticks = 200

@@ -91,3 +91,15 @@ conyard = ""
 units = ["lb_mother_rig_packed", "lb_scavenger", "lb_scavenger", "lb_gleaner"]
 tier2 = "lb_tier2"
 tier3 = "lb_tier3"
+
+# M7-02: Expedition home shipments (docs/design/07_expedition.md §2.2, docs/design/11_m7_plan.md §2.3, D-126). Parsed and hashed only:
+# the behaviour arrives with M7-06, so nothing is switched on. Every number is (tune); the balance pass is docs/design/11 §4.
+[shipments]
+enabled = false  # master switch; M7-06 reads it, M7-14 turns it on with the faction
+interval_ticks = 1800  # (tune)
+value = 1500  # (tune)
+decay_permille = 40  # (tune)
+floor_permille = 350  # (tune)
+charter_ticks = 1200  # (tune)
+tenders_max = 3  # (tune)
+local_ash_bonus_permille = 0  # (tune) balance knob, see 11 section 4
