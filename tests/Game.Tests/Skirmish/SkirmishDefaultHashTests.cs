@@ -12,7 +12,7 @@ public sealed class SkirmishDefaultHashTests
     // Pinned from the pre-M4-11 code (SkirmishGame.Create(rules, 0, 2), 1200 ticks). If this changes, a default skirmish changed.
     private const ulong DefaultMapHash = 0x3db1bf31e751d224;
     // M4-16: re-pinned (symmetric regrowth order, oriented exits/docks and the start-bias tie-breaks change a default skirmish).
-    private const ulong DefaultStateHashAt1200 = 0xe9f0bdbe725d22f7;   // M5-01: re-pinned for the appended "directive" part (no behaviour change)
+    private const ulong DefaultStateHashAt1200 = 0xba7eaf0f6e1f63e0;   // M6-02: re-pinned for the appended "rigs"/"salvage" parts and effects v2 (no behaviour change); M5-01: "directive" part
 
     private static string RulesDir => RulesLocator.FindRulesDir(AppContext.BaseDirectory)
         ?? throw new InvalidOperationException("data/rules not found");

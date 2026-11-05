@@ -22,6 +22,8 @@ internal static class StructureRulesLoader
         "morphs_into", "morph_ticks",
         // schema v4 (M4-01)
         "tier", "garrison", "garrison_range_bonus", "garrison_rof_permille",
+        // schema v5 (M6-02)
+        "packs_into", "pack_ticks",
     ];
 
     /// <summary>Most soldiers a building may hold (schema v4).</summary>
@@ -83,6 +85,19 @@ internal static class StructureRulesLoader
         int? garrison = f.OptInt("garrison", 0, MaxGarrison, 0);
         int? garrisonRange = f.OptInt("garrison_range_bonus", 0, SimConstants.MaxMapCells * SimConstants.LeptonsPerCell, 256);
         int? garrisonRof = f.OptInt("garrison_rof_permille", 1, 100_000, 750);
+        int? packTicks = f.OptInt("pack_ticks", 0, 1_000_000, 0);   // M6-02
+        string? packsName = f.OptStr("packs_into", "");
+        int packsInto = -1;
+        if (packsName is { Length: > 0 })
+        {
+            packsInto = SimRules.IndexOf(vehicles, packsName, v => v.Id);
+            if (packsInto < 0)
+            {
+                f.Problem("packs_into", $"unknown vehicle '{packsName}'");
+                packsName = null;
+            }
+        }
+        if (packTicks is null || packsName is null) return null;
         if (tier is null || garrison is null || garrisonRange is null || garrisonRof is null) return null;
         if (garrison.Value > 0 && entrance is { } ent && ent != TunnelSize.None)
         {
@@ -168,6 +183,8 @@ internal static class StructureRulesLoader
             Garrison = garrison.Value,
             GarrisonRangeBonus = garrisonRange.Value,
             GarrisonRofPermille = garrisonRof.Value,
+            PacksInto = packsInto,
+            PackTicks = packTicks.Value,
         };
         return exit is null ? building : building with { Exit = new CellCoord(exit[0], exit[1]) };
     }

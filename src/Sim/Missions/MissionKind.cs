@@ -6,7 +6,10 @@ namespace Rts.Sim.Missions;
 /// M3 (design 05): EnterTunnel = walk to an entrance and queue (M3-02); Transit = inside the network (M3-02); Burrow = dive and
 /// travel underground (M3-03); Surface = surfacing telegraph (M3-03); Deploy = go to the deploy cell and deploy (M3-03);
 /// Capture = engineer walking to its target building (M3-06). Until filled they run the idle handler.
-/// M4: Garrisoned = inside a building, acquire and fire out (M4-03; walking in reuses Capture).</summary>
+/// M4: Garrisoned = inside a building, acquire and fire out (M4-03; walking in reuses Capture).
+/// M6-02 (docs/design/10_m6_plan.md §3.1; handlers arrive with M6-03..05, until then they run the idle handler): Salvage = drain a wreck,
+/// Pack = packing or unpacking a rig in progress, Withdraw = a raider leaving after a plunder.</summary>
 public enum MissionKind : byte { None = 0, Sleep = 1, Guard = 2, Move = 3, Attack = 4, AttackMove = 5, Stop = 6,
     Harvest = 7, Return = 8, EnterTunnel = 9, Transit = 10, Burrow = 11, Surface = 12, Deploy = 13, Capture = 14,
-    Garrisoned = 15 }
+    Garrisoned = 15,
+    Salvage = 16, Pack = 17, Withdraw = 18 }

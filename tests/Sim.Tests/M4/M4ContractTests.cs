@@ -25,7 +25,7 @@ public sealed class M4ContractTests
     public void SimEnumValues_ArePinned()
     {
         Assert.Equal(22, (int)CommandKind.Unload);
-        Assert.Equal(24, Enum.GetValues<CommandKind>().Length);   // no other new CommandKind in M4; M5-01 added Directive = 23
+        Assert.Equal(25, Enum.GetValues<CommandKind>().Length);   // no other new CommandKind in M4; M5-01 added Directive = 23, M6-02 Pack = 24
         Assert.Equal(7, (int)ActorLayer.Garrisoned);
         Assert.Equal(15, (int)MissionKind.Garrisoned);
         Assert.Equal(14, (int)MissionKind.Capture);
@@ -64,17 +64,17 @@ public sealed class M4ContractTests
     {
         var sim = ScriptedGame.NewSim(ScriptedGame.Setup());
         string[] names = sim.StateParts.Select(p => p.Name).ToArray();
-        Assert.Equal(new[] { "tunnels", "ground", "effects", "garrison", "stats", "directive" }, names[^6..]);   // M5-01 appended "directive"
-        Assert.Same(sim.Garrison, sim.StateParts[^3]);
-        Assert.Same(sim.Stats, sim.StateParts[^2]);
+        Assert.Equal(new[] { "tunnels", "ground", "effects", "garrison", "stats", "directive", "rigs", "salvage" }, names[^8..]);   // M5-01 appended "directive", M6-02 "rigs" and "salvage"
+        Assert.Same(sim.Garrison, sim.StateParts[^5]);
+        Assert.Same(sim.Stats, sim.StateParts[^4]);
     }
 
     [Fact]
     public void FormatVersions_ArePinned()
     {
-        Assert.Equal(7, RulesHash.FormatVersion);
-        Assert.Equal(9, SimWriter.SaveVersion);   // M5-01
-        Assert.Equal(9, ReplayWriter.Version);            // M3-19 had already taken 8 for the mission block
+        Assert.Equal(8, RulesHash.FormatVersion);   // M6-02
+        Assert.Equal(10, SimWriter.SaveVersion);   // M5-01 took 9, M6-02 10
+        Assert.Equal(10, ReplayWriter.Version);           // M3-19 had already taken 8 for the mission block, M6-02 took 10
         Assert.Equal(7, ReplayWriter.OldestReadableVersion);
         Assert.Equal(2, MapFile.FormatVersion);
         Assert.Equal(1, MapFile.OldestReadableVersion);

@@ -19,9 +19,9 @@ public enum OverlayKind : byte { None = 0, Ashfall = 1, Pitchblende = 2, Wall = 
 public enum ProductionCategory : byte { Infantry = 0, Vehicle = 1, Aircraft = 2, Structure = 3, Defence = 4, Upgrade = 5 }
 
 /// <summary>The factions (design 05 §4, M3; Neutral Q-37). Every type has one (default from its id prefix); every player has one
-/// (<see cref="Core.SimSetup.Factions"/>). Neutral is the passive owner of ruins and map features: never a playable faction
+/// (<see cref="Core.SimSetup.Factions"/>). M6-02: LeftBehind = 3 is appended after Neutral (Neutral keeps 2). Neutral is the passive owner of ruins and map features: never a playable faction
 /// (<see cref="RuleCounts.PlayableFactions"/>), no start kit, no AI. Append only: values are persisted.</summary>
-public enum Faction : byte { Authority = 0, Directorate = 1, Neutral = 2 }
+public enum Faction : byte { Authority = 0, Directorate = 1, Neutral = 2, LeftBehind = 3 }
 
 /// <summary>Tunnel size class of a mobile type, or the largest size a building entrance admits (design 05 §1).
 /// S costs <see cref="TunnelRules.PointsS"/>, M <see cref="TunnelRules.PointsM"/>; L never uses the network.
@@ -40,9 +40,14 @@ public static class RuleCounts
     /// <summary>Number of <see cref="ProductionCategory"/> values (M3: Upgrade appended).</summary>
     public const int ProductionCategories = 6;
     /// <summary>Number of <see cref="Faction"/> values.</summary>
-    public const int Factions = 3;
-    /// <summary>Factions a player may pick (Authority, Directorate): everything below <see cref="Faction.Neutral"/>. Start kits exist only for these.</summary>
+    public const int Factions = 4;
+    /// <summary>Factions the skirmish setup cycles through (Authority, Directorate): everything below <see cref="Faction.Neutral"/>. Start kits exist
+    /// only for these. M6-02: <see cref="Faction.LeftBehind"/> is a valid player faction in a setup (<see cref="IsPlayable"/>) but is not offered in the
+    /// skirmish UI until M6-09, so this stays 2 and the UI cycle is unchanged.</summary>
     public const int PlayableFactions = 2;
+
+    /// <summary>True for every faction a player slot may hold: all except <see cref="Faction.Neutral"/> (M6-02).</summary>
+    public static bool IsPlayable(Faction f) => f != Faction.Neutral && (int)f < Factions;
     /// <summary>Number of <see cref="TunnelSize"/> values.</summary>
     public const int TunnelSizes = 4;
     /// <summary>Most upgrades a rules set may define: the per-player mask is a <c>ulong</c>.</summary>

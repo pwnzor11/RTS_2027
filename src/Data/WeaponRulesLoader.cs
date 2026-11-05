@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
+using Rts.Sim.Core;
 using Rts.Sim.Rules;
 
 namespace Rts.Data;
@@ -13,7 +14,9 @@ internal static class WeaponRulesLoader
     private static readonly string[] WarheadKeys =
         ["versus", "splash", "hits_allies", "contaminate", "decontaminate", "bonus_vs_irradiated_percent", "blackout_ticks",
          // schema v4 (M4-01)
-         "hits_burrowed", "bonus_vs_entrance_percent", "foam_ticks", "garrison_damage_percent"];
+         "hits_burrowed", "bonus_vs_entrance_percent", "foam_ticks", "garrison_damage_percent",
+         // schema v5 (M6-02)
+         "storm_radius", "storm_ticks", "storm_contaminate_step", "storm_contaminate_cap", "storm_speed_permille"];
     private static readonly string[] WeaponKeys =
         ["damage", "range", "min_range", "rate_of_fire", "projectile_speed", "warhead", "targets"];
 
@@ -32,6 +35,12 @@ internal static class WeaponRulesLoader
         int? bonusEntrance = f.OptInt("bonus_vs_entrance_percent", 0, MaxVersusPercent, 100);
         int? foam = f.OptInt("foam_ticks", 0, 1_000_000, 0);
         int? garrisonDamage = f.OptInt("garrison_damage_percent", 0, MaxVersusPercent, 0);
+        int? stormRadius = f.OptInt("storm_radius", 0, SimConstants.MaxMapCells, 0);   // M6-02
+        int? stormTicks = f.OptInt("storm_ticks", 0, 1_000_000, 0);
+        int? stormStep = f.OptInt("storm_contaminate_step", 0, 255, 0);
+        int? stormCap = f.OptInt("storm_contaminate_cap", 0, 255, 64);
+        int? stormSpeed = f.OptInt("storm_speed_permille", 0, 1000, 0);
+        if (stormRadius is null || stormTicks is null || stormStep is null || stormCap is null || stormSpeed is null) return null;
         if (versus is null || splash is null || hitsAllies is null || contaminate is null || decontaminate is null
             || bonus is null || blackout is null || hitsBurrowed is null || bonusEntrance is null || foam is null || garrisonDamage is null)
         {
@@ -47,6 +56,11 @@ internal static class WeaponRulesLoader
             BonusVsEntrancePercent = bonusEntrance.Value,
             FoamTicks = foam.Value,
             GarrisonDamagePercent = garrisonDamage.Value,
+            StormRadius = stormRadius.Value,
+            StormTicks = stormTicks.Value,
+            StormContaminateStep = stormStep.Value,
+            StormContaminateCap = stormCap.Value,
+            StormSpeedPermille = stormSpeed.Value,
         };
     }
 

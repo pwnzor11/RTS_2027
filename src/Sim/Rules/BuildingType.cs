@@ -112,4 +112,12 @@ public sealed record BuildingType(string Id, int FootprintW, int FootprintH, int
     public int GarrisonRofPermille { get; init; } = 750;
 
     private CellCoord DefaultExit() => new(FootprintW / 2, FootprintH);
+
+    // ---- schema v5 (M6-02, docs/design/10_m6_plan.md §3.2). Every default is "off". -------------------
+
+    /// <summary>Rig: vehicle type index the Pack command turns this building into, or -1 (TOML <c>packs_into</c>, a vehicle id).</summary>
+    public int PacksInto { get; init; } = -1;
+
+    /// <summary>Ticks the packing takes (TOML <c>pack_ticks</c>, 0 = off).</summary>
+    public int PackTicks { get; init; }
 }

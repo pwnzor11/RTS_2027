@@ -11,7 +11,9 @@ internal static class UpgradeRulesLoader
 {
     private static readonly string[] UpgradeKeys = ["faction", "cost", "build_time", "prerequisites", "effect",
         // schema v4 (M4-01)
-        "tier", "effects"];
+        "tier", "effects",
+        // schema v5 (M6-02)
+        "pack_ticks_permille", "salvage_permille", "plunder_permille", "repairs_vehicles_at_range"];
 
     /// <summary>Parses one upgrade.</summary>
     public static UpgradeType? ParseUpgrade(RulesFields f, RulesReferences refs)
@@ -24,11 +26,19 @@ internal static class UpgradeRulesLoader
         string? effect = f.OptStr("effect", "");
         int? tier = f.OptInt("tier", 1, RulesLoader.MaxTier, 1);
         List<string>? effects = f.OptStrList("effects");   // techs.toml [[effect]] ids; checked by RulesLoader once effects are parsed
-        if (faction is null || cost is null || buildTime is null || prerequisites is null || effect is null || tier is null || effects is null)
+        int? packPermille = f.OptInt("pack_ticks_permille", 0, 100_000, 0);   // M6-02
+        int? salvagePermille = f.OptInt("salvage_permille", 0, 100_000, 0);
+        int? plunderPermille = f.OptInt("plunder_permille", 0, 100_000, 0);
+        bool? repairsAtRange = f.OptBool("repairs_vehicles_at_range", false);
+        if (faction is null || cost is null || buildTime is null || prerequisites is null || effect is null || tier is null || effects is null
+            || packPermille is null || salvagePermille is null || plunderPermille is null || repairsAtRange is null)
         {
             return null;
         }
         refs.AddAll(f, "prerequisites", prerequisites);
-        return new UpgradeType(f.Id, faction.Value, cost.Value, buildTime.Value, prerequisites, effect) { Tier = tier.Value, Effects = effects };
+        return new UpgradeType(f.Id, faction.Value, cost.Value, buildTime.Value, prerequisites, effect) {
+            Tier = tier.Value, Effects = effects, PackTicksPermille = packPermille.Value, SalvagePermille = salvagePermille.Value,
+            PlunderPermille = plunderPermille.Value, RepairsVehiclesAtRange = repairsAtRange.Value,
+        };
     }
 }

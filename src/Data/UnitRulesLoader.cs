@@ -19,6 +19,9 @@ internal static class UnitRulesLoader
         "passengers", "deploys_into",
         // schema v4 (M4-01)
         "tier",
+        // schema v5 (M6-02)
+        "unpacks_into", "pack_ticks", "salvage_rate", "raider", "raider_one_use", "drops_blackout_ticks", "aura_repair_permille",
+        "tow_bonus_permille",
     ];
 
     private static readonly string[] InfantryKeys =
@@ -30,6 +33,8 @@ internal static class UnitRulesLoader
         "engineer",
         // schema v4 (M4-01)
         "tier", "can_garrison",
+        // schema v5 (M6-02)
+        "salvage_rate", "raider", "raider_one_use", "ash_stealth_delay_ticks", "ash_stealth_threshold", "aura_repair_permille",
     ];
 
     /// <summary>The schema v3 keys vehicles and infantry share (all optional).</summary>
@@ -94,6 +99,16 @@ internal static class UnitRulesLoader
         int? passengers = f.OptInt("passengers", 0, 100, 0);
         int? deploysInto = f.OptIndex("deploys_into", buildingIds, "building");
         int? tier = f.OptInt("tier", 1, RulesLoader.MaxTier, 1);
+        int? unpacksInto = f.OptIndex("unpacks_into", buildingIds, "building");   // M6-02
+        int? packTicks = f.OptInt("pack_ticks", 0, 1_000_000, 0);
+        int? salvageRate = f.OptInt("salvage_rate", 0, 10_000, 0);
+        bool? raider = f.OptBool("raider", false);
+        bool? raiderOneUse = f.OptBool("raider_one_use", false);
+        int? dropsBlackout = f.OptInt("drops_blackout_ticks", 0, 1_000_000, 0);
+        int? auraRepair = f.OptInt("aura_repair_permille", 0, 1000, 0);
+        int? towBonus = f.OptInt("tow_bonus_permille", 0, 100_000, 0);
+        if (unpacksInto is null || packTicks is null || salvageRate is null || raider is null || raiderOneUse is null
+            || dropsBlackout is null || auraRepair is null || towBonus is null) return null;
         if (v3 is null || passengers is null || deploysInto is null || tier is null) return null;
         if (harvestCapacity is null || buildTime is null || speed is null || maxHealth is null || locomotion is null || turnRate is null || armor is null
             || sight is null || weapon is null || hasTurret is null || turretTurnRate is null || crusher is null
@@ -122,6 +137,14 @@ internal static class UnitRulesLoader
             Passengers = passengers.Value,
             DeploysInto = deploysInto.Value,
             Tier = tier.Value,
+            UnpacksInto = unpacksInto.Value,
+            PackTicks = packTicks.Value,
+            SalvageRate = salvageRate.Value,
+            Raider = raider.Value,
+            RaiderOneUse = raiderOneUse.Value,
+            DropsBlackoutTicks = dropsBlackout.Value,
+            AuraRepairPermille = auraRepair.Value,
+            TowBonusPermille = towBonus.Value,
         };
     }
 
@@ -141,6 +164,14 @@ internal static class UnitRulesLoader
         bool? engineer = f.OptBool("engineer", false);
         int? tier = f.OptInt("tier", 1, RulesLoader.MaxTier, 1);
         bool? canGarrison = engineer is null ? null : f.OptBool("can_garrison", !engineer.Value);   // engineers stay out unless set
+        int? salvageRate = f.OptInt("salvage_rate", 0, 10_000, 0);   // M6-02
+        bool? raider = f.OptBool("raider", false);
+        bool? raiderOneUse = f.OptBool("raider_one_use", false);
+        int? ashDelay = f.OptInt("ash_stealth_delay_ticks", 0, 1_000_000, 0);
+        int? ashThreshold = f.OptInt("ash_stealth_threshold", 0, 255, 0);
+        int? auraRepair = f.OptInt("aura_repair_permille", 0, 1000, 0);
+        if (salvageRate is null || raider is null || raiderOneUse is null || ashDelay is null || ashThreshold is null || auraRepair is null)
+            return null;
         if (v3 is null || engineer is null || tier is null || canGarrison is null) return null;
         if (buildTime is null || speed is null || maxHealth is null || armor is null || sight is null || weapon is null
             || cost is null || prerequisites is null)
@@ -167,6 +198,12 @@ internal static class UnitRulesLoader
             Engineer = engineer.Value,
             Tier = tier.Value,
             CanGarrison = canGarrison.Value,
+            SalvageRate = salvageRate.Value,
+            Raider = raider.Value,
+            RaiderOneUse = raiderOneUse.Value,
+            AshStealthDelayTicks = ashDelay.Value,
+            AshStealthThreshold = ashThreshold.Value,
+            AuraRepairPermille = auraRepair.Value,
         };
     }
 }

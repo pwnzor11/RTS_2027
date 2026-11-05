@@ -95,7 +95,7 @@ public sealed record SetupHeader(
                 for (int i = 0; i < n; i++)
                 {
                     byte f = r.ReadByte();
-                    if (f >= Rules.RuleCounts.PlayableFactions) throw new InvalidDataException($"Bad faction {f}.");
+                    if (!Rules.RuleCounts.IsPlayable((Rules.Faction)f)) throw new InvalidDataException($"Bad faction {f}.");
                     factions[i] = (Rules.Faction)f;
                 }
             }

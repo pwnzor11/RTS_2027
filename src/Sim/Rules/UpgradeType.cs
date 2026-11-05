@@ -17,4 +17,18 @@ public sealed record UpgradeType(string Id, Faction Faction, int Cost, int Build
     /// <summary>M4: techs.toml <c>[[effect]]</c> ids applied to the owner's rules once researched (TOML <c>effects</c>, default
     /// empty; M4-04 applies them in list order).</summary>
     public IReadOnlyList<string> Effects { get; init; } = Array.Empty<string>();
+
+    // ---- schema v5 (M6-02, docs/design/10_m6_plan.md §3.2). Every default is "off". -------------------
+
+    /// <summary>Added to the owner's rig pack/unpack speed, permille (TOML <c>pack_ticks_permille</c>, 0 = none).</summary>
+    public int PackTicksPermille { get; init; }
+
+    /// <summary>Added to the owner's salvage rate, permille (TOML <c>salvage_permille</c>, 0 = none).</summary>
+    public int SalvagePermille { get; init; }
+
+    /// <summary>Added to the owner's plunder yield, permille (TOML <c>plunder_permille</c>, 0 = none).</summary>
+    public int PlunderPermille { get; init; }
+
+    /// <summary>Repair auras of the owner's units also reach vehicles beyond their usual radius (TOML <c>repairs_vehicles_at_range</c>).</summary>
+    public bool RepairsVehiclesAtRange { get; init; }
 }

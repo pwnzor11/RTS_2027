@@ -43,9 +43,10 @@ public sealed record SimRules(
     /// At most <see cref="RuleCounts.MaxUpgrades"/>. Empty when the file is absent.</summary>
     public IReadOnlyList<UpgradeType> Upgrades { get; init; } = Array.Empty<UpgradeType>();
 
-    /// <summary>Faction implied by a type id's prefix: <c>dir_</c> = Directorate, anything else (incl. <c>auth_</c>) = Authority.</summary>
+    /// <summary>Faction implied by a type id's prefix: <c>dir_</c> = Directorate, <c>lb_</c> = Left Behind (M6-02), anything else (incl. <c>auth_</c>) = Authority.</summary>
     public static Faction FactionFromId(string id) =>
-        id.StartsWith("dir_", StringComparison.Ordinal) ? Faction.Directorate : Faction.Authority;
+        id.StartsWith("dir_", StringComparison.Ordinal) ? Faction.Directorate
+        : id.StartsWith("lb_", StringComparison.Ordinal) ? Faction.LeftBehind : Faction.Authority;
 
     /// <summary>Index of an upgrade by id, or -1.</summary>
     public int UpgradeIndex(string id) => IndexOf(Upgrades, id, u => u.Id);

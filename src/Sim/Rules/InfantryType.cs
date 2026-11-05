@@ -57,4 +57,24 @@ public sealed record InfantryType(string Id, int Speed, int MaxHealth, ArmorClas
 
     /// <summary>May enter a garrisonable building (TOML <c>can_garrison</c>; default true, false for engineers unless set).</summary>
     public bool CanGarrison { get; init; } = true;
+
+    // ---- schema v5 (M6-02, docs/design/10_m6_plan.md §3.2). Every default is "off". -------------------
+
+    /// <summary>Ash drained from a wreck per 10 ticks (TOML <c>salvage_rate</c>, 0 = cannot salvage).</summary>
+    public int SalvageRate { get; init; }
+
+    /// <summary>Raider: Enter on an enemy Silo/Refinery steals ash; kills of harvesters pay spoils (TOML <c>raider</c>).</summary>
+    public bool Raider { get; init; }
+
+    /// <summary>Raider consumed by a successful plunder instead of withdrawing (TOML <c>raider_one_use</c>, default false).</summary>
+    public bool RaiderOneUse { get; init; }
+
+    /// <summary>Stealth delay in ticks on cells whose ash is above <see cref="AshStealthThreshold"/> (TOML <c>ash_stealth_delay_ticks</c>, 0 = off).</summary>
+    public int AshStealthDelayTicks { get; init; }
+
+    /// <summary>Ash level (0..255) above which <see cref="AshStealthDelayTicks"/> applies (TOML <c>ash_stealth_threshold</c>).</summary>
+    public int AshStealthThreshold { get; init; }
+
+    /// <summary>Repair aura: permille of max HP per 10 ticks on own vehicles and rigs within <see cref="AuraRadius"/> (TOML <c>aura_repair_permille</c>, 0 = off).</summary>
+    public int AuraRepairPermille { get; init; }
 }

@@ -16,6 +16,11 @@ public enum CommandKind : byte
     /// <summary>M5-01: a commander's strategy for the issuing player (docs/design/09_m5_plan.md §3). Arg = <see cref="DirectiveCodec.Pack"/>,
     /// Cell = focus cell or <see cref="Directive.NoCell"/>; Subject/Target unused. Stored per player, never acted on by the sim.</summary>
     Directive = 23,
+    /// <summary>M6-02: pack or unpack a Left Behind rig (docs/design/10_m6_plan.md §3.1). Subject = a rig building (starts packing into its
+    /// <see cref="Rules.BuildingType.PacksInto"/> vehicle) or a packed rig vehicle (starts unpacking into its
+    /// <see cref="Rules.VehicleType.UnpacksInto"/> building with Cell = the top-left cell of the target footprint). Arg, Target unused.
+    /// Behaviour arrives with M6-03; until then the sim ignores the command.</summary>
+    Pack = 24,
 }
 
 /// <summary>

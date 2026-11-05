@@ -61,4 +61,30 @@ public sealed record VehicleType(string Id, Locomotion Locomotion, int Speed, in
 
     /// <summary>M4: tech tier 1..3 (TOML <c>tier</c>, default 1).</summary>
     public int Tier { get; init; } = 1;
+
+    // ---- schema v5 (M6-02, docs/design/10_m6_plan.md §3.2). Every default is "off". -------------------
+
+    /// <summary>Packed rig: building type index it unpacks into on a free footprint, or -1 (TOML <c>unpacks_into</c>, a building id).</summary>
+    public int UnpacksInto { get; init; } = -1;
+
+    /// <summary>Ticks the unpacking takes (TOML <c>pack_ticks</c>, 0 = off).</summary>
+    public int PackTicks { get; init; }
+
+    /// <summary>Ash drained from a wreck per 10 ticks (TOML <c>salvage_rate</c>, 0 = cannot salvage).</summary>
+    public int SalvageRate { get; init; }
+
+    /// <summary>Raider: Enter on an enemy Silo/Refinery steals ash; kills of harvesters pay spoils (TOML <c>raider</c>).</summary>
+    public bool Raider { get; init; }
+
+    /// <summary>Raider consumed by a successful plunder instead of withdrawing (TOML <c>raider_one_use</c>, default false).</summary>
+    public bool RaiderOneUse { get; init; }
+
+    /// <summary>Blackout ticks laid on its own cell while moving (TOML <c>drops_blackout_ticks</c>, 0 = off; Dust Sail).</summary>
+    public int DropsBlackoutTicks { get; init; }
+
+    /// <summary>Repair aura: permille of max HP per 10 ticks on own vehicles and rigs within <see cref="AuraRadius"/> (TOML <c>aura_repair_permille</c>, 0 = off).</summary>
+    public int AuraRepairPermille { get; init; }
+
+    /// <summary>Speed aura applying only to packed rigs, permille bonus (TOML <c>tow_bonus_permille</c>, 0 = off; Tow Truck).</summary>
+    public int TowBonusPermille { get; init; }
 }

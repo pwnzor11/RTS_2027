@@ -6,7 +6,7 @@ namespace Rts.Sim.Effects;
 
 /// <summary>
 /// The "effects" state part (M3-01 skeleton; filled by M3-06 auras, M3-05 stealth, M3-13 superweapon charge). Appended after
-/// "ground". All zero by default; slot 0 of each array is the reserved "none" slot.
+/// "ground". All zero by default (M6-02: layout version 2 adds withdraw flags and storms, see below); slot 0 of each array is the reserved "none" slot.
 /// <list type="bullet">
 /// <item><see cref="VehicleRofPermille"/> / <see cref="InfantryRofPermille"/>: aura rate-of-fire multiplier on reload time, per
 /// mille; 0 = no aura (treat as 1000). Recomputed every 10 ticks by M3-06.</item>
@@ -18,10 +18,18 @@ namespace Rts.Sim.Effects;
 /// Every mobile slot is cleared when an actor spawns or is removed, every building slot when a building is removed
 /// (Simulation.M3.cs). Layout: version, capacities, then (slot, rof, speed, still) runs for vehicles and infantry and (slot,
 /// charge) for buildings, each run 0-terminated and listing only non-zero slots.
+/// <para>Version 2 (M6-02, docs/design/10_m6_plan.md §3.3) appends, after the version-1 body: (slot, flag) runs for
+/// <see cref="VehicleWithdraw"/> and <see cref="InfantryWithdraw"/> (raider leaving after a plunder), then the storm table
+/// (<see cref="MaxStorms"/> fixed slots, written as (slot + 1, centre x, centre y, radius, ticks left, owner) for every slot with any
+/// non-zero field, 0-terminated). A storm is live while <see cref="StormTicks"/> &gt; 0. Version 1 data still reads: the new fields come
+/// back empty.</para>
 /// </summary>
 public sealed class EffectsState : ISimStatePart
 {
-    private const byte Version = 1;
+    private const byte Version = 2;
+
+    /// <summary>Fixed storm capacity (The Second Drift, M6-07).</summary>
+    public const int MaxStorms = 8;
 
     /// <summary>Aura RoF multiplier per vehicle slot (0 = none).</summary>
     public readonly int[] VehicleRofPermille;
@@ -37,6 +45,20 @@ public sealed class EffectsState : ISimStatePart
     public readonly int[] InfantryStill;
     /// <summary>Superweapon charge per building slot.</summary>
     public readonly int[] BuildingCharge;
+    /// <summary>1 while a raider vehicle is withdrawing, per vehicle slot (v2; M6-05).</summary>
+    public readonly byte[] VehicleWithdraw;
+    /// <summary>1 while a raider soldier is withdrawing, per infantry slot (v2; M6-05).</summary>
+    public readonly byte[] InfantryWithdraw;
+    /// <summary>Storm centre cell X per storm slot (v2; M6-07).</summary>
+    public readonly int[] StormX = new int[MaxStorms];
+    /// <summary>Storm centre cell Y per storm slot.</summary>
+    public readonly int[] StormY = new int[MaxStorms];
+    /// <summary>Storm radius in cells per storm slot.</summary>
+    public readonly int[] StormRadius = new int[MaxStorms];
+    /// <summary>Ticks left per storm slot (0 = the slot is free).</summary>
+    public readonly int[] StormTicks = new int[MaxStorms];
+    /// <summary>Owning player per storm slot.</summary>
+    public readonly byte[] StormOwner = new byte[MaxStorms];
 
     /// <summary>Creates an all-zero part sized by the setup's store limits.</summary>
     public EffectsState(SimSetup setup)
@@ -46,6 +68,7 @@ public sealed class EffectsState : ISimStatePart
         VehicleRofPermille = new int[v]; VehicleSpeedPermille = new int[v]; VehicleStill = new int[v];
         InfantryRofPermille = new int[n]; InfantrySpeedPermille = new int[n]; InfantryStill = new int[n];
         BuildingCharge = new int[setup.Limits.Buildings];
+        VehicleWithdraw = new byte[v]; InfantryWithdraw = new byte[n];
     }
 
     /// <inheritdoc />
@@ -72,8 +95,8 @@ public sealed class EffectsState : ISimStatePart
     /// <summary>Reset a mobile slot (spawn / removal).</summary>
     public void ClearMobile(ActorKind kind, int i)
     {
-        if (kind == ActorKind.Vehicle) { VehicleRofPermille[i] = 0; VehicleSpeedPermille[i] = 0; VehicleStill[i] = 0; }
-        else if (kind == ActorKind.Infantry) { InfantryRofPermille[i] = 0; InfantrySpeedPermille[i] = 0; InfantryStill[i] = 0; }
+        if (kind == ActorKind.Vehicle) { VehicleRofPermille[i] = 0; VehicleSpeedPermille[i] = 0; VehicleStill[i] = 0; VehicleWithdraw[i] = 0; }
+        else if (kind == ActorKind.Infantry) { InfantryRofPermille[i] = 0; InfantrySpeedPermille[i] = 0; InfantryStill[i] = 0; InfantryWithdraw[i] = 0; }
     }
 
     /// <summary>Reset a building slot (removal).</summary>
@@ -88,18 +111,52 @@ public sealed class EffectsState : ISimStatePart
         WriteMobiles(w, InfantryRofPermille, InfantrySpeedPermille, InfantryStill);
         for (int i = 1; i < BuildingCharge.Length; i++) if (BuildingCharge[i] != 0) { w.Write(i); w.Write(BuildingCharge[i]); }
         w.Write(0);
+        // version 2 (M6-02)
+        WriteFlags(w, VehicleWithdraw);
+        WriteFlags(w, InfantryWithdraw);
+        for (int s = 0; s < MaxStorms; s++)
+        {
+            if (StormX[s] == 0 && StormY[s] == 0 && StormRadius[s] == 0 && StormTicks[s] == 0 && StormOwner[s] == 0) continue;
+            w.Write(s + 1); w.Write(StormX[s]); w.Write(StormY[s]); w.Write(StormRadius[s]); w.Write(StormTicks[s]); w.Write(StormOwner[s]);
+        }
+        w.Write(0);
+    }
+
+    private static void WriteFlags(BinaryWriter w, byte[] flags)
+    {
+        for (int i = 1; i < flags.Length; i++) if (flags[i] != 0) { w.Write(i); w.Write(flags[i]); }
+        w.Write(0);
+    }
+
+    private void ReadFlags(BinaryReader r, byte[] flags)
+    {
+        Array.Clear(flags);
+        for (int i = r.ReadInt32(); i != 0; i = r.ReadInt32()) flags[StateIo.Slot(i, flags.Length, Name)] = r.ReadByte();
     }
 
     /// <inheritdoc />
     public void Read(BinaryReader r)
     {
-        if (r.ReadByte() != Version) throw new InvalidDataException("effects version mismatch.");
+        byte version = r.ReadByte();
+        if (version != 1 && version != Version) throw new InvalidDataException("effects version mismatch.");
         if (r.ReadInt32() != VehicleStill.Length || r.ReadInt32() != InfantryStill.Length || r.ReadInt32() != BuildingCharge.Length)
             throw new InvalidDataException("effects capacity mismatch.");
         ReadMobiles(r, VehicleRofPermille, VehicleSpeedPermille, VehicleStill);
         ReadMobiles(r, InfantryRofPermille, InfantrySpeedPermille, InfantryStill);
         Array.Clear(BuildingCharge);
         for (int i = r.ReadInt32(); i != 0; i = r.ReadInt32()) BuildingCharge[StateIo.Slot(i, BuildingCharge.Length, Name)] = r.ReadInt32();
+        Array.Clear(VehicleWithdraw); Array.Clear(InfantryWithdraw);
+        Array.Clear(StormX); Array.Clear(StormY); Array.Clear(StormRadius); Array.Clear(StormTicks); Array.Clear(StormOwner);
+        if (version == 1) return;   // M6-02: version-1 data has no raiders and no storms
+        ReadFlags(r, VehicleWithdraw);
+        ReadFlags(r, InfantryWithdraw);
+        for (int i = r.ReadInt32(); i != 0; i = r.ReadInt32())
+        {
+            if (i > MaxStorms) throw new InvalidDataException("effects storm slot out of range.");
+            int s = i - 1;
+            StormX[s] = r.ReadInt32(); StormY[s] = r.ReadInt32(); StormRadius[s] = r.ReadInt32(); StormTicks[s] = r.ReadInt32();
+            StormOwner[s] = r.ReadByte();
+        }
     }
 
     private static void WriteMobiles(BinaryWriter w, int[] rof, int[] speed, int[] still)

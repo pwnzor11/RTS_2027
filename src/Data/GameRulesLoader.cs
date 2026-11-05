@@ -78,7 +78,17 @@ internal static class GameRulesLoader
         f.CheckKeys("starting_cash", "credits_ashfall", "credits_pitchblende", "harvest_ticks_per_unit",
             "unload_ticks_per_unit", "regrowth_interval_ticks", "sell_refund_permille", "repair_cost_permille",
             "repair_hp_per_tick", "build_radius", "max_queue", "build_ticks_per_100_credits",
-            "low_power_slowdown_permille");
+            "low_power_slowdown_permille",
+            // schema v5 (M6-02)
+            "wreck_ticks", "salvage_percent", "wreck_min_value", "wreck_max_value", "plunder_percent", "plunder_cap", "spoils_permille");
+        EconomyRules d = EconomyRules.Default;
+        int? wreckTicks = f.OptInt("wreck_ticks", 0, 1_000_000, d.WreckTicks);
+        int? salvagePercent = f.OptInt("salvage_percent", 0, 1000, d.SalvagePercent);
+        int? wreckMin = f.OptInt("wreck_min_value", 0, 1_000_000, d.WreckMinValue);
+        int? wreckMax = f.OptInt("wreck_max_value", 0, 1_000_000, d.WreckMaxValue);
+        int? plunderPercent = f.OptInt("plunder_percent", 0, 100, d.PlunderPercent);
+        int? plunderCap = f.OptInt("plunder_cap", 0, 10_000_000, d.PlunderCap);
+        int? spoils = f.OptInt("spoils_permille", 0, 1000, d.SpoilsPermille);
         int? startingCash = f.Int("starting_cash", 0, 10_000_000);
         int? ashfall = f.Int("credits_ashfall", 0, 100_000);
         int? pitchblende = f.Int("credits_pitchblende", 0, 100_000);
@@ -94,13 +104,25 @@ internal static class GameRulesLoader
         int[]? slowdown = f.IntArray("low_power_slowdown_permille", 3, 1000, 100_000);
         if (startingCash is null || ashfall is null || pitchblende is null || harvestTicks is null
             || unloadTicks is null || regrowth is null || sell is null || repairCost is null || repairHp is null
-            || radius is null || maxQueue is null || ticksPer100 is null || slowdown is null)
+            || radius is null || maxQueue is null || ticksPer100 is null || slowdown is null
+            || wreckTicks is null || salvagePercent is null || wreckMin is null || wreckMax is null || plunderPercent is null
+            || plunderCap is null || spoils is null)
         {
+            return null;
+        }
+        if (wreckMin.Value > wreckMax.Value)
+        {
+            f.Problem("wreck_min_value", $"must not exceed wreck_max_value ({wreckMax.Value}), got {wreckMin.Value}");
             return null;
         }
         return new EconomyRules(startingCash.Value, ashfall.Value, pitchblende.Value, harvestTicks.Value,
             unloadTicks.Value, regrowth.Value, sell.Value, repairCost.Value, repairHp.Value, radius.Value,
-            maxQueue.Value, ticksPer100.Value, slowdown);
+            maxQueue.Value, ticksPer100.Value, slowdown)
+        {
+            WreckTicks = wreckTicks.Value, SalvagePercent = salvagePercent.Value, WreckMinValue = wreckMin.Value,
+            WreckMaxValue = wreckMax.Value, PlunderPercent = plunderPercent.Value, PlunderCap = plunderCap.Value,
+            SpoilsPermille = spoils.Value,
+        };
     }
 
     /// <summary>Reads an optional sub-table of game.toml as fields; null when absent (or not a table, after a recorded problem).</summary>

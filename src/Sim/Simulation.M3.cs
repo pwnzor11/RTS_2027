@@ -117,6 +117,7 @@ public sealed partial class Simulation
     {
         _tunnels.ClearMobile(kind, i);
         _effects.ClearMobile(kind, i);
+        if (kind == ActorKind.Vehicle) _rigs.ClearVehicle(i);   // M6-02
     }
 
     /// <summary>A vehicle/infantry with health &lt;= 0 is about to be removed (RunCleanup): death weapon, passengers.</summary>
@@ -131,6 +132,7 @@ public sealed partial class Simulation
     {
         _tunnels.ClearMobile(kind, i);
         _effects.ClearMobile(kind, i);
+        if (kind == ActorKind.Vehicle) _rigs.ClearVehicle(i);   // M6-02
     }
 
     /// <summary>A building was just placed (setup, Place command or deploy).</summary>
@@ -139,6 +141,7 @@ public sealed partial class Simulation
         _tunnels.ClearBuilding(i);
         _effects.ClearBuilding(i);
         _garrison.ClearBuilding(i);   // M4-01
+        _rigs.ClearBuilding(i);       // M6-02
         if (IsSealPiece(i)) _ground.HardeningDirty = true;
     }
 
@@ -151,6 +154,7 @@ public sealed partial class Simulation
         _tunnels.ClearBuilding(i);
         _effects.ClearBuilding(i);
         _garrison.ClearBuilding(i);   // M4-01
+        _rigs.ClearBuilding(i);       // M6-02
     }
 
     /// <summary>Walls, gates and structures all count for the enclosure (design 05 §2); every building is a seal piece today.</summary>

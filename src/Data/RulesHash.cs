@@ -40,6 +40,11 @@ namespace Rts.Data;
 /// per infantry Tier, CanGarrison; per building Tier, Garrison, GarrisonRangeBonus, GarrisonRofPermille; per upgrade Tier, Effects
 /// (count, ids). Prerequisites above are the final lists after tier sugar. The land loops cover every land type, so Shallow (7)
 /// joins the terrain and soft tables.</item>
+/// <item>Schema v5 block (M6-02, format 8): economy WreckTicks, SalvagePercent, WreckMinValue, WreckMaxValue, PlunderPercent, PlunderCap,
+/// SpoilsPermille; per warhead StormRadius, StormTicks, StormContaminateStep, StormContaminateCap, StormSpeedPermille; per vehicle
+/// UnpacksInto, PackTicks, SalvageRate, Raider, RaiderOneUse, DropsBlackoutTicks, AuraRepairPermille, TowBonusPermille; per infantry
+/// SalvageRate, Raider, RaiderOneUse, AshStealthDelayTicks, AshStealthThreshold, AuraRepairPermille; per building PacksInto, PackTicks;
+/// per upgrade PackTicksPermille, SalvagePermille, PlunderPermille, RepairsVehiclesAtRange.</item>
 /// </list>
 /// Hashed with XxHash64. Whitespace, comments and key order in the TOML do not affect it. The loader sorts each
 /// list by id before this runs.
@@ -47,7 +52,7 @@ namespace Rts.Data;
 public static class RulesHash
 {
     /// <summary>Canonical layout version. Bump only with a DECISIONS entry.</summary>
-    public const byte FormatVersion = 7;   // 6: schema v3 block (M3-01); 7: schema v4 block + Shallow land (M4-01)
+    public const byte FormatVersion = 8;   // 6: schema v3 block (M3-01); 7: schema v4 block + Shallow land (M4-01); 8: schema v5 block (M6-02)
 
     /// <summary>Computes the rules hash over the game constants and every sim type table.</summary>
     public static ulong Compute(GameRules game, SimRules sim)
@@ -184,6 +189,7 @@ public static class RulesHash
             }
             WriteSchemaV3(w, sim);
             WriteSchemaV4(w, sim);
+            WriteSchemaV5(w, sim);
         }
         return XxHash64.HashToUInt64(ms.GetBuffer().AsSpan(0, (int)ms.Length));
     }
@@ -247,6 +253,33 @@ public static class RulesHash
             w.Write(x.Tier); w.Write(x.Garrison); w.Write(x.GarrisonRangeBonus); w.Write(x.GarrisonRofPermille);
         }
         foreach (UpgradeType u in sim.Upgrades) { w.Write(u.Tier); WriteStrings(w, u.Effects); }
+    }
+
+    private static void WriteSchemaV5(BinaryWriter w, SimRules sim)
+    {
+        EconomyRules e = sim.Economy;
+        w.Write(e.WreckTicks); w.Write(e.SalvagePercent); w.Write(e.WreckMinValue); w.Write(e.WreckMaxValue);
+        w.Write(e.PlunderPercent); w.Write(e.PlunderCap); w.Write(e.SpoilsPermille);
+        foreach (WarheadType x in sim.Warheads)
+        {
+            w.Write(x.StormRadius); w.Write(x.StormTicks); w.Write(x.StormContaminateStep); w.Write(x.StormContaminateCap);
+            w.Write(x.StormSpeedPermille);
+        }
+        foreach (VehicleType x in sim.Vehicles)
+        {
+            w.Write(x.UnpacksInto); w.Write(x.PackTicks); w.Write(x.SalvageRate); w.Write(x.Raider); w.Write(x.RaiderOneUse);
+            w.Write(x.DropsBlackoutTicks); w.Write(x.AuraRepairPermille); w.Write(x.TowBonusPermille);
+        }
+        foreach (InfantryType x in sim.Infantry)
+        {
+            w.Write(x.SalvageRate); w.Write(x.Raider); w.Write(x.RaiderOneUse); w.Write(x.AshStealthDelayTicks);
+            w.Write(x.AshStealthThreshold); w.Write(x.AuraRepairPermille);
+        }
+        foreach (BuildingType x in sim.Buildings) { w.Write(x.PacksInto); w.Write(x.PackTicks); }
+        foreach (UpgradeType u in sim.Upgrades)
+        {
+            w.Write(u.PackTicksPermille); w.Write(u.SalvagePermille); w.Write(u.PlunderPermille); w.Write(u.RepairsVehiclesAtRange);
+        }
     }
 
     private static void WriteMobile(BinaryWriter w, Faction faction, TunnelSize size, int auraRadius, int auraRof, int auraSpeed,
