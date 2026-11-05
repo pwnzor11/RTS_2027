@@ -1,4 +1,4 @@
-# World history (DRAFT for owner review)
+# World history
 
 Entry ids use the prefix `history_`. Format per entry: `title:`, `subtitle:`, `unlock:`, body. Nothing here contradicts
 design 03 "Decided". Real-world events beyond the October 1962 break are deliberately not named.

@@ -1,4 +1,4 @@
-# The Directorate of the Interior (DRAFT for owner review)
+# The Directorate of the Interior
 
 Entry ids use the prefix `faction_dir_`. Format per entry: `title:`, `subtitle:`, `unlock:`, body.
 

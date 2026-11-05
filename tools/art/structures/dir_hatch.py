@@ -1,10 +1,10 @@
 """Directorate Hatch: small tunnel entrance (1x1 cell, size-S entrance on the south face).  Original design.
 
 A squat reinforced umber concrete collar block with a narrow stair mouth under a small magenta-banded hood, a bone stencil flank and a
-magenta house panel, and on the roof a four-post LIFT CAGE with a hanging oxide car and a short vent pipe.  Hazard bar on the south edge.
+magenta house panel, and on the roof an open four-post bar cage over the pit, lid and wheel valve (no lift car, D-117), and a short vent pipe.  Hazard bar on the south edge.
 This module also holds the shared BASE (pad, collar block, hazard bar, hood, flanks, house panel) that dir_bore_head reuses with a
 taller collar, a wider mouth and a bigger head, so the Bore Head reads as the upgrade of the Hatch.
-Idle loop: the cage car bobs, ember glow flickers, vent puffs.  Damage is structural only (D-069): hood end fallen, cage bent.
+Idle loop: ember glow flickers, vent puffs.  Damage is structural only (D-069): hood end fallen, cage bent.
 Contract: see auth_refinery.py.  Units: 3.4 per cell, x east, y NORTH, z up, footprint x, y in [-1.7, 1.7].
 """
 import os

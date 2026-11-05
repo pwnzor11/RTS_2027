@@ -1,4 +1,4 @@
-# Structures (DRAFT for owner review)
+# Structures
 
 One entry per rules id (28). Format: `title:`, `subtitle:`, `unlock:`, `field_note:`, body. Authority notes read as teletype;
 Directorate notes as Voice broadcast. Names are working names.

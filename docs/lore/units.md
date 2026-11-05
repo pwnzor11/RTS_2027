@@ -1,4 +1,4 @@
-# Units (DRAFT for owner review)
+# Units
 
 One entry per rules id (19). Format: `title:`, `subtitle:`, `unlock:`, `field_note:`, body. Authority field notes read as
 teletype; Directorate field notes as Voice broadcast. Names are working names (design 05 section 5).
