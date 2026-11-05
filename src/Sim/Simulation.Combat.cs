@@ -404,6 +404,7 @@ public sealed partial class Simulation
             case CommandKind.Attack:
             {
                 var target = new ActorRef((ActorKind)((c.Arg >> 8) & 0xFF), c.Target);
+                if (kind == ActorKind.Vehicle) TryCarrierLaunch(c.Player, i, target);   // M7-09: Simulation.Carrier.cs
                 if (WeaponOf(kind, i) < 0 || target.Kind > ActorKind.Building || !IsValidTarget(c.Player, target)) return;
                 if (!WeaponCanTarget(RulesOf(c.Player).Weapons[WeaponOf(kind, i)], target.Kind, target.Id.Index)) return;   // M3-05
                 e.AttackTarget = target;
