@@ -19,7 +19,7 @@ public sealed partial class Simulation
     /// <summary>True while the actor is a submarine that is dived.</summary>
     internal bool IsSubmergedShip(ActorKind kind, int i) => kind == ActorKind.Vehicle && _naval.Submerged[i];
 
-    /// <summary>True if a ship of the viewer's team with a sonar radius covers <paramref name="cell"/> (Chebyshev, like the Seismograph).</summary>
+    /// <summary>True if a ship or building of the viewer's team with a sonar radius covers <paramref name="cell"/> (Chebyshev, like the Seismograph).</summary>
     internal bool IsSonarRevealed(byte viewer, CellCoord cell)
     {
         for (int i = 1; i < _units.Capacity; i++)
@@ -27,6 +27,17 @@ public sealed partial class Simulation
             if (!_units.Slots.IsIndexAlive(i) || _units.Health[i] <= 0 || !IsFriendly(viewer, _units.Player[i])) continue;
             int rad = RulesOf(_units.Player[i]).Vehicles[_units.TypeIndex[i]].SonarRadius;   // assumed — confirm (M7-05): only vehicles carry sonar
             if (rad > 0 && LeptonMath.ChebyshevCells(cell, _units.Position[i].ToCell()) <= rad) return true;
+        }
+        for (int i = 1; i < _buildings.Capacity; i++)   // simfu-4: a building with sonar_radius (the Expedition picket)
+        {
+            if (!_buildings.Slots.IsIndexAlive(i) || _buildings.Health[i] <= 0 || !IsFriendly(viewer, _buildings.Player[i])) continue;
+            BuildingType bt = RulesOf(_buildings.Player[i]).Buildings[_buildings.TypeIndex[i]];
+            if (bt.SonarRadius <= 0) continue;
+            CellCoord tl = _buildings.Cell[i];
+            // Chebyshev distance from the cell to the footprint rectangle
+            int dx = Math.Max(0, Math.Max(tl.X - cell.X, cell.X - (tl.X + bt.FootprintW - 1)));
+            int dy = Math.Max(0, Math.Max(tl.Y - cell.Y, cell.Y - (tl.Y + bt.FootprintH - 1)));
+            if (Math.Max(dx, dy) <= bt.SonarRadius) return true;
         }
         return false;
     }

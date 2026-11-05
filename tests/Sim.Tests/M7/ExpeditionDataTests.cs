@@ -49,6 +49,14 @@ public sealed class ExpeditionDataTests
     }
 
     [Fact]
+    public void Picket_HasSonar_AndOtherBuildingsDoNot()
+    {
+        SimRules s = LoadReal().Sim;
+        Assert.True(s.Buildings.First(b => b.Id == "exp_picket").SonarRadius > 0);
+        Assert.All(s.Buildings.Where(b => b.Id != "exp_picket"), b => Assert.Equal(0, b.SonarRadius));
+    }
+
+    [Fact]
     public void StaysUnplayable()
     {
         Assert.Equal(3, RuleCounts.PlayableFactions);

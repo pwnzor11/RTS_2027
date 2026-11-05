@@ -131,6 +131,23 @@ public sealed class SubmergeTests
     }
 
     [Fact]
+    public void BuildingSonar_RevealsSubmerged_ForItsTeamWithinRadiusOfTheFootprint()
+    {
+        SimSetup setup = Setup();
+        BuildingType[] buildings = ScriptedGame.Buildings();
+        buildings[2] = buildings[2] with { SonarRadius = 8 };   // the 1x1 turret stands in for the picket
+        setup = setup with { Rules = setup.Rules with { Buildings = buildings } };
+        var s = new Simulation(setup);
+        Assert.False(s.PlaceBuilding(1, 2, new CellCoord(30, 10)).IsNone);
+        EntityId near = s.SpawnVehicle(0, Sub, new CellCoord(23, 10)), far = s.SpawnVehicle(0, Sub, new CellCoord(10, 10));
+        s.Step(new[] { Dive(s, near), Dive(s, far) });
+        Assert.True(Down(s, near) && Down(s, far));
+        Assert.False(s.IsUntargetableBy(1, ActorKind.Vehicle, near.Index), "7 cells from the building: inside radius 8");
+        Assert.True(s.IsUntargetableBy(1, ActorKind.Vehicle, far.Index), "20 cells away");
+        Assert.False(s.IsSonarRevealed(0, new CellCoord(23, 10)), "the building belongs to the other team");
+    }
+
+    [Fact]
     public void Sonar_OutOfRange_DoesNotReveal()
     {
         var (s, sub, _) = Duel(Hunter, new CellCoord(14, 25));   // 15 cells away: outside the radius
