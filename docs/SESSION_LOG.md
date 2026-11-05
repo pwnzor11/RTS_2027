@@ -157,3 +157,22 @@ committed it). CommanderReplayAndSaveTests failed once under load and passed 3/3
 uses GraphQL, which is blocked: use `gh api repos/pwnzor11/RTS_2027/commits/<sha>/check-runs`.
 **User check:** USER_CHECKS.md, "Session 8 · Art on main, reworks, M6 contracts".
 **Next session should:** see HANDOFF (M4-16 fixes, M6 wave 2, owner LLM play-test).
+
+## Session 9 · 2026-11-05 (unattended overnight: Left Behind playable, veterancy, supply, M7/M8 plans)
+**Goal:** the owner's overnight plan (Project doc claude/session9_overnight_plan.md): M6 waves 1-3, M4-16 round 4, M7 plan with
+supply and veterancy designs, art push, wrap-up.
+**Done:** Wave 0 logged decisions and cleared the lore DRAFT banners (D-119..D-124). M6-03..08 (rigs, salvage, raiders, auras,
+storm, faction data) and the M6-09 game layer, M4-16 round 4 (wave strength gate lands, D-131; Q-43 measured, within noise) and the
+M6-10 Left Behind AI. Designs: docs/design/11_m7_plan.md, 12_m8_plan.md, 13_supply_cap.md, 14_veterancy.md (D-125..D-130).
+Veterancy VET-1..5 (save format 11). Supply SUP-1..3 + SUP-5, held off by default (D-133) because three AI tests fail with it on.
+Left Behind Archive/lore (27 entries), Expedition lore (40) and 7 personas, all assumed — confirm. Left Behind art (pilot approved by
+the lead, then 14 structures, the packed rig and 16 units) on local branch `art-s9`, staged in the owner's `_art_push` folder.
+Balance tables for the owner: docs/balance/s9_tables.md, m4_16_round4.md, m6_10_ai.md.
+**Commits:** PR #17 (6883266, M6 sim + data + plans), PR #18 (d88515a, M6-09 + M4-16), PR #19 (wave 3), plus this handoff.
+**Helpers:** about 16 launches: Sonnet for sim, AI, game layer and the two art lanes; Haiku for the tables doc; the lead wrote the
+lore/design merges, SUP-5 and the merge-time fixes. The owner answered three kickoff questions before bed (D-129).
+**Problems / notes:** a direct push to main was refused (use the PR merge API); one flaky Windows test fixed; the Directorate
+mirror test was relaxed with measurements (draws 12 vs 13 of 32); the Second Drift could never fire (entrance range copied from the
+Sunrise) — fixed; supply on slows the AI (3 tests) — parked per the guard rail.
+**User check:** USER_CHECKS.md, "Session 9 · Left Behind playable, veterancy, supply cap".
+**Next session should:** see HANDOFF (art PR, supply on, M6-12 acceptance, VET-6, M7-02).

@@ -11,6 +11,8 @@ file cited after each question. Recommendations are the lead's, from the researc
   (D-125, D-127, D-130, D-132). **Confirm all** (recommended) / mark rows to change.
 - 🟡 Q-45 Left Behind vehicle scale: drawn about 1.5× the Directorate's (to match the rig). **Keep and judge in game** (recommended)
   / shrink to Directorate scale (re-render, about 2 hours of art time).
+- 🟡 Q-51 Supply default: held off (D-133) until the AI copes. **Turn on after next session's AI fix** (recommended) / on now
+  (AI slower) / leave off.
 - ⚪ Q-46 Veterancy own-unit info panel (rank name, kills) has no screen yet: **add it with VET-6** (recommended) / skip; pips only.
 - ⚪ Q-47 Promotion sound reuses the unit_ready cue, quieter: **keep until a real cue is sourced** (recommended) / source one now (D-080).
 - ⚪ Q-48 Left Behind AI uses Rotors instead of Kites (Kites lost ~20 points): **keep** (recommended) / make Kites usable first.
