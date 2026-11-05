@@ -78,7 +78,9 @@ public sealed class EffectsState : ISimStatePart
     public readonly int[] SalvoElapsed = new int[MaxSalvos];
 
     /// <summary>True while any salvo is in flight.</summary>
-    public bool AnySalvo { get { for (int s = 0; s < MaxSalvos; s++) if (SalvoType[s] != 0) return true; return false; } }
+    public bool AnySalvo { get { for (int s = 0; s < MaxSalvos; s++) if (SalvoUsed(s)) return true; return false; } }
+
+    private bool SalvoUsed(int s) => SalvoType[s] != 0 || SalvoX[s] != 0 || SalvoY[s] != 0 || SalvoOwner[s] != 0 || SalvoElapsed[s] != 0;
 
     /// <summary>Creates an all-zero part sized by the setup's store limits.</summary>
     public EffectsState(SimSetup setup)
@@ -144,7 +146,7 @@ public sealed class EffectsState : ISimStatePart
         if (!salvo) return;
         for (int s = 0; s < MaxSalvos; s++)
         {
-            if (SalvoType[s] == 0) continue;
+            if (!SalvoUsed(s)) continue;
             w.Write(s + 1); w.Write(SalvoX[s]); w.Write(SalvoY[s]); w.Write(SalvoOwner[s]); w.Write(SalvoType[s]); w.Write(SalvoElapsed[s]);
         }
         w.Write(0);
