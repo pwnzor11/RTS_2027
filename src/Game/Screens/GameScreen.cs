@@ -17,6 +17,8 @@ using Rts.Game.Ui.Sidebar;
 using Rts.Game.Ui.Spectator;
 using Rts.Game.Ui.Superweapon;
 using Rts.Sim.Core;
+using Rts.Sim.Rules;
+using Rts.Sim.View;
 
 namespace Rts.Game.Screens;
 
@@ -40,7 +42,7 @@ public sealed class GameScreen : IScreen
     {
         "arrows / middle-drag pan   wheel zoom   LMB select   RMB move, attack or rally",
         "Q W E R T sidebar tabs   A attack-move   S stop   G guard   X scatter   D deploy   Space pause",
-        "RMB on a Hatch or transport: enter it   T tab: upgrades",
+        "RMB on a Hatch or transport: enter it   T tab: upgrades   K pack / unpack a rig   RMB on a wreck: salvage",
         "Esc leaves placement / sell / repair, then opens the pause menu",
     };
 
@@ -69,6 +71,10 @@ public sealed class GameScreen : IScreen
     private int _selectedBuildingType = -1;
     private BuildingUpgradeOffer? _upgrade;   // M3-18: Hatch to Bore Head button for the selected building
     private readonly RectRegion _upgradeRegion = new(Rectangle.Empty);
+    private PackOffer? _pack;                 // M6-09: Pack / Unpack button for the selected rig
+    private EntityId _packSubject = EntityId.None;
+    private readonly RectRegion _packRegion = new(Rectangle.Empty);
+    private UnpackPlacement? _unpack;         // M6-09: the unpack footprint follows the cursor
     private readonly Selection _selection = new();
     private readonly OrderController? _orders; // null with --demo
     private readonly OverlayToggles _overlays = new();
@@ -307,6 +313,12 @@ public sealed class GameScreen : IScreen
             _sim!.Host.Issue(offer.Command(SimSnapshotSource.LocalPlayer, _selectedBuilding));
             input.ConsumeLeft();
         }
+        UpdatePackOffer();
+        if (_pack is { } packOffer && input.LeftPressed && _packRegion.HitTest(input.MousePosition))
+        {
+            ActivatePack(packOffer);
+            input.ConsumeLeft();
+        }
         if (_superweapon.Buttons.Count > 0 && input.LeftPressed) ClickSuperweaponButton(input);
         if (_specPanel is not null && _spec is not null && input.LeftPressed)
         {
@@ -319,6 +331,7 @@ public sealed class GameScreen : IScreen
             input.ConsumeMouseOver(_specRegion);
             input.ConsumeMouseOver(_swRegion);
             input.ConsumeMouseOver(_upgradeRegion);
+            input.ConsumeMouseOver(_packRegion);
             input.ConsumeMouseOver(_hudRegion);
             input.ConsumeMouseOver(_helpRegion);
             if (_mission is not null) input.ConsumeMouseOver(_mission.ObjectivesRegion);
@@ -345,6 +358,7 @@ public sealed class GameScreen : IScreen
 
         if (_sidebar is { Mode: not SidebarMode.None } && input.ConsumePressed(Keys.Escape)) _sidebar.CancelMode();
         if (_superweapon.IsArmed && input.ConsumePressed(Keys.Escape)) _superweapon.Cancel();   // Esc leaves targeting first
+        if (_unpack is not null && input.ConsumePressed(Keys.Escape)) _unpack = null;            // M6-09: ... and unpack placement
 
         if (input.ConsumePressed(Keys.Escape))
         {
@@ -353,6 +367,7 @@ public sealed class GameScreen : IScreen
         }
 
         _sidebar?.Update(input, _camera, _s.Viewport.Width, _s.Viewport.Height);
+        HandlePackKeyAndPlacement(input);   // M6-09: K, and the unpack footprint on the map
 
         if (_sim is not null)
         {
@@ -447,6 +462,8 @@ public sealed class GameScreen : IScreen
 
         _s.Scene.Draw(sb, _s.Pixel, frame, _camera, _s.Viewport);
         DrawSelectedBuilding(sb, snapshot);
+        DrawPackProgress(sb, snapshot);
+        DrawUnpackGhost(sb);
         _sidebar?.DrawMapOverlay(sb, _s.Pixel, _camera, snapshot);
         DrawHud(sb, snapshot);
         string[] chatHelp = _spectatorMode ? SpectatorHelpLines : _skirmishMode ? SkirmishHelpLines : HelpLines;
@@ -454,6 +471,7 @@ public sealed class GameScreen : IScreen
         _sidebar?.Draw(sb, _s.Pixel, snapshot);
         DrawSuperweapon(sb, snapshot.Tick);
         DrawUpgradeButton(sb);
+        DrawPackButton(sb);
         DrawSpectator(sb);
         _console?.Draw(sb, _s.Pixel, _s.Viewport);
     }
@@ -705,6 +723,162 @@ public sealed class GameScreen : IScreen
         }
     }
 
+    // ---- Pack / unpack a Mother Rig (M6-09) ------------------------------------------------------------
+
+    private Rectangle PackButtonRect()
+    {
+        int scale = _s.UiScale;
+        int w = BitmapFont.Measure(LeftBehindText.Placeholder(LeftBehindText.UnpackKey), scale) + 16;
+        int h = Hud.HeightOf(1, scale) + 6;
+        Viewport map = MapViewport();
+        return new Rectangle(map.Width - w - 8, map.Height - 2 * h - 12, w, h);   // stacked above the upgrade button
+    }
+
+    // The button follows the selection: a selected own rig building packs, a selected own packed rig unpacks.
+    private void UpdatePackOffer()
+    {
+        _pack = null;
+        _packSubject = EntityId.None;
+        if (_sim is null || _orders is null || !_skirmishMode)
+        {
+            _packRegion.Bounds = Rectangle.Empty;
+            return;
+        }
+
+        PlayerView view = _sim.Sim.ViewFor(SimSnapshotSource.LocalPlayer);
+        if (!_selectedBuilding.IsNone && _selectedBuildingType >= 0)
+        {
+            int progress = view.PackProgressPermille(new ActorRef(ActorKind.Building, _selectedBuilding));
+            _pack = PackOffer.ForBuilding(_sim.Rules, _selectedBuildingType, progress);
+            if (_pack is not null) _packSubject = _selectedBuilding;
+        }
+        else
+        {
+            foreach (UnitKey key in _selection.Units)
+            {
+                if (key.Kind != ActorKind.Vehicle) continue;
+                int into = view.UnpackTypeOf(key.Id);
+                if (into < 0) continue;
+                _pack = PackOffer.ForPackedRig(_sim.Rules, into, view.PackProgressPermille(new ActorRef(ActorKind.Vehicle, key.Id)));
+                if (_pack is not null) _packSubject = key.Id;
+                break;
+            }
+        }
+
+        _packRegion.Bounds = _pack is null ? Rectangle.Empty : PackButtonRect();
+    }
+
+    private void ActivatePack(PackOffer offer)
+    {
+        if (_sim is null || !offer.Enabled || _packSubject.IsNone) return;
+        byte local = SimSnapshotSource.LocalPlayer;
+        if (offer.Action == PackAction.Pack)
+        {
+            _sim.Host.Issue(PackOffer.PackCommand(local, _packSubject));
+            return;
+        }
+
+        EntityId rig = _packSubject;
+        BuildingType into = _sim.Rules.Buildings[offer.UnpackType];
+        _sidebar?.CancelMode();
+        _unpack = new UnpackPlacement(rig, offer.UnpackType, into.FootprintW, into.FootprintH,
+            topLeft => _sim.Sim.ViewFor(local).CanUnpackAt(rig, topLeft));
+    }
+
+    // K packs or unpacks (or leaves unpack placement); in placement the footprint follows the cursor, a left click on a valid site
+    // sends the rig, a right click leaves.
+    private void HandlePackKeyAndPlacement(InputFrame input)
+    {
+        if (_sim is null || _orders is null) return;
+        if (input.ConsumePressed(Keys.K))
+        {
+            if (_unpack is not null) _unpack = null;
+            else if (_pack is { } offer) ActivatePack(offer);
+        }
+
+        if (_unpack is not { } placing) return;
+        if (_sim.Sim.ViewFor(SimSnapshotSource.LocalPlayer).UnpackTypeOf(placing.Rig) < 0)
+        {
+            _unpack = null;   // the rig died, or is no longer packed
+            return;
+        }
+
+        if (!MapViewport().Bounds.Contains(input.MousePosition)) return;
+        placing.Hover(Camera.CellAt(_camera.WorldFromScreen(input.MousePosition)));
+        if (input.RightPressed)
+        {
+            _unpack = null;
+            input.ConsumeRight();
+        }
+        else if (input.LeftPressed)
+        {
+            if (placing.Click(SimSnapshotSource.LocalPlayer) is Command unpack)
+            {
+                _sim.Host.Issue(unpack);
+                _unpack = null;
+            }
+
+            input.ConsumeLeft();   // never also select or box-drag
+        }
+    }
+
+    private void DrawPackButton(SpriteBatch sb)
+    {
+        if (_pack is not PackOffer offer) return;
+        int scale = _s.UiScale;
+        Rectangle r = PackButtonRect();
+        Shapes.Fill(sb, _s.Pixel, r, new Color(0, 0, 0, 190));
+        Shapes.Outline(sb, _s.Pixel, r, _unpack is not null ? Color.Red : offer.Enabled ? Color.White : new Color(90, 90, 90), 2);
+        BitmapFont.Draw(sb, _s.Pixel, offer.Caption, new Vector2(r.X + 8, r.Y + 4),
+            offer.Enabled ? new Color(0xFF, 0xE0, 0x80) : new Color(0x90, 0x90, 0x90), scale);
+        if (!offer.Enabled && r.Contains(_mouse))
+        {
+            int w = BitmapFont.Measure(offer.Reason, scale) + 16;
+            Hud.Panel(sb, _s.Pixel, new Point(Math.Max(0, r.Right - w), r.Y - Hud.HeightOf(1, scale) - 4), new[] { offer.Reason }, scale);
+        }
+    }
+
+    // The unpack footprint: green where the sim would accept it, red elsewhere.
+    private void DrawUnpackGhost(SpriteBatch sb)
+    {
+        if (_unpack is not { HasGhost: true } p) return;
+        float left = p.TopLeft.X * Camera.CellPx, top = p.TopLeft.Y * Camera.CellPx;
+        Rectangle r = _camera.ScreenRect(left, top, left + p.FootprintW * Camera.CellPx, top + p.FootprintH * Camera.CellPx);
+        Color c = p.Valid ? new Color(0x5E, 0xD0, 0x5A) : new Color(0xE0, 0x4A, 0x32);
+        Shapes.Fill(sb, _s.Pixel, r, Shapes.Alpha(c, 90));
+        Shapes.Outline(sb, _s.Pixel, r, c, 2);
+    }
+
+    // Pack / unpack progress of the local player's rigs, as a gold bar like the build progress bar.
+    private void DrawPackProgress(SpriteBatch sb, SimSnapshot snapshot)
+    {
+        if (_sim is null || !_skirmishMode) return;
+        byte local = SimSnapshotSource.LocalPlayer;
+        PlayerView view = _sim.Sim.ViewFor(local);
+        foreach (BuildingView b in snapshot.Buildings)
+        {
+            if (b.Ghost || b.Player != local) continue;
+            int permille = view.PackProgressPermille(new ActorRef(ActorKind.Building, b.Id));
+            if (permille <= 0) continue;
+            float left = b.Cell.X * Camera.CellPx, top = b.Cell.Y * Camera.CellPx;
+            DrawProgressBar(sb, _camera.ScreenRect(left + 4, top + 4, left + b.FootprintW * Camera.CellPx - 4, top + 12), permille);
+        }
+
+        foreach (RenderUnit u in _renderUnits)
+        {
+            if (u.View.Player != local || u.View.Kind != UnitKind.Vehicle) continue;
+            int permille = view.PackProgressPermille(new ActorRef(ActorKind.Vehicle, u.View.Id));
+            if (permille > 0) DrawProgressBar(sb, _camera.ScreenRect(u.World.X - 24, u.World.Y - 38, u.World.X + 24, u.World.Y - 30), permille);
+        }
+    }
+
+    private void DrawProgressBar(SpriteBatch sb, Rectangle r, int permille)
+    {
+        Shapes.Fill(sb, _s.Pixel, r, new Color(0, 0, 0, 190));
+        Shapes.Fill(sb, _s.Pixel, new Rectangle(r.X, r.Y, PackOffer.BarFill(permille, r.Width), r.Height), new Color(255, 200, 60));
+        Shapes.Outline(sb, _s.Pixel, r, new Color(90, 90, 90));
+    }
+
     // ---- Archive (M3-18) ---------------------------------------------------------------------------------
 
     // Once per new simulation tick: record what the local player can see, and the upgrades researched.
@@ -818,6 +992,7 @@ public sealed class GameScreen : IScreen
         };
 
         if (_orders is { DeployArmed: true }) lines.Add("DEPLOY: right-click the cell to dig at (D cancels)");
+        if (_unpack is not null) lines.Add(LeftBehindText.Placeholder(LeftBehindText.UnpackPlacementKey));
 
         if (_sim is not null && _orders is not null && !_skirmishMode) // unit counts of both sides would show the fogged enemy
         {

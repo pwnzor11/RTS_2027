@@ -6,6 +6,7 @@ using Rts.Game.Sandbox;
 using Rts.Game.Sprites;
 using Rts.Sim.Core;
 using Rts.Sim.Map;
+using Rts.Sim.View;
 
 namespace Rts.Game.Render;
 
@@ -27,6 +28,10 @@ public sealed class SceneRenderer : IDisposable
     private readonly WallTiler _walls = new();
     private readonly List<DrawItem> _items = new();
     private readonly ThemedTerrainLook _terrain = new();
+    private readonly List<WreckView> _wreckViews = new();      // M6-09: wreck and storm layers
+    private readonly List<WreckDraw> _wrecks = new();
+    private readonly List<StormView> _stormViews = new();
+    private readonly List<StormDraw> _storms = new();
     private bool _disposed;
 
     /// <summary>
@@ -75,12 +80,24 @@ public sealed class SceneRenderer : IDisposable
         TelegraphRenderer.Draw(batch, pixel, snapshot.Telegraphs, snapshot.Tick, camera, viewport);
         if (frame.Sim is not null) FoamOverlay.Draw(batch, frame.Sim, snapshot.Viewer, camera);
 
+        if (frame.Sim is not null && frame.Rules is not null)   // M6-09: wrecks lie on the ground, under buildings and units
+        {
+            WreckStormOverlay.PlanWrecks(frame.Sim.ViewFor(0), frame.Rules.Economy.WreckTicks, _wreckViews, _wrecks);
+            WreckStormOverlay.DrawWrecks(batch, pixel, _wrecks, camera);
+        }
+
         DrawSprites(batch, pixel, frame, camera);
         GarrisonOverlay.Draw(batch, snapshot, camera);
         DrawEffects(batch, snapshot, camera);
 
         ProjectileRenderer.Draw(batch, pixel, frame.Projectiles, camera);
         GroundOverlay.DrawBlackout(batch, pixel, snapshot, camera, viewport);
+        if (frame.Sim is not null)   // M6-09: ash storms over the sprites, under the fog
+        {
+            WreckStormOverlay.PlanStorms(frame.Sim.ViewFor(0), snapshot.Tick, snapshot.MapWidth, snapshot.MapHeight, _stormViews, _storms);
+            WreckStormOverlay.DrawStorms(batch, pixel, _storms, camera);
+        }
+
         FogRenderer.Draw(batch, pixel, snapshot, camera, viewport);
         if (frame.Overlays.Paths) PathOverlay.Draw(batch, pixel, frame, camera);
         if (frame.Overlays.Ranges) RangeOverlay.Draw(batch, pixel, frame, camera);

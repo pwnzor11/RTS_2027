@@ -152,7 +152,7 @@ public sealed record SkirmishSettings(MapChoice Map, IReadOnlyList<SkirmishSlot>
             else if (!colours.Add(s.Colour)) errors.Add($"Slot {i + 1}: colour is used by another slot.");
             if (s.Team < 0 || s.Team >= MaxSlots) errors.Add($"Slot {i + 1}: team must be 1 to {MaxSlots}.");
             teams.Add(s.Team);
-            if (!Enum.IsDefined(s.Faction) || (int)s.Faction >= RuleCounts.PlayableFactions) errors.Add($"Slot {i + 1}: unknown faction.");
+            if (!Enum.IsDefined(s.Faction) || !RuleCounts.IsPlayable(s.Faction)) errors.Add($"Slot {i + 1}: unknown faction.");
         }
         if (open < MinPlayers) errors.Add("At least two slots must be open.");
         if (humans > 1) errors.Add("Only one slot can be Human.");
