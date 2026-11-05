@@ -825,3 +825,35 @@ commanders from the app settings (history and call count start fresh). The spect
 each bio and motivation only; nothing from the Secret paragraphs (a test checks). A commander gets its faction's leaders in file
 order, rotated by player slot.
 **Status:** assumed — confirm (owner reads the voices)
+
+### D-113 · 2026-11-04 · M4-16 tuning rule
+**Decision:** AI behaviour may change freely while tuning the tier ladder. Rules numbers players see (Q-43 tier costs, unit costs,
+the D-105 values) are measured and brought to the owner as a table before they land.
+**Status:** confirmed (owner, session 8)
+
+### D-114 · 2026-11-04 · Companion turret and shadow sheets
+**Decision:** Besides the M3-18 in-sheet layers, a unit may have companion sprite sheets `<id>_turret` and `<id>_shadow` with
+`layer`, `pivot_x/y/z` and `altitude`. The renderer offsets the turret by the pivot rotated with the hull facing, with no height
+term (pivot_z is informational; the turret keeps its height inside its frame), matching tools/art/build_vehicle.py.
+**Status:** confirmed (owner chose option 1, session 8)
+
+### D-115 · 2026-11-04 · Rewritten art draft commits
+**Decision:** Six first-draft sprite images (Rad Mortar and Mooring contact sheets) were lost before upload, and GitHub rejects
+pushes that reference unknown LFS objects anywhere in history. The draft commits on the session-5 art branches were rewritten to
+point at the current images; the tip trees are identical. Art still reaches GitHub only through the owner's PC (D-084).
+**Status:** confirmed (owner ran the push, session 8)
+
+### D-116 · 2026-11-04 · Radiation green (D-099 implemented)
+**Decision:** RAD_GREEN (#2F4A1C #5E8F2A #9BE04A #D8FF8A) is in PAL_DIR (28 colours + 8 house shades). It is reachable only
+through a radiation mask from a model's RAD_MATERIALS, so no other surface can quantise to it. First user: the Rad Mortar.
+**Status:** confirmed (owner approved the reworks, session 8)
+
+### D-117 · 2026-11-04 · ART-S6 rework choices
+**Decision:** Hatch shows a bar cage and no lift car; auth_gate gains an `open` state (4 frames, first frame 16); Seismograph,
+Searchlight and Assembly Bore reworked as in PR #14.
+**Status:** confirmed (owner approved the pilot and the reworks, session 8)
+
+### D-118 · 2026-11-04 · M6 plan and contracts
+**Decision:** docs/design/10_m6_plan.md is the M6 plan: Faction.LeftBehind = 3, CommandKind.Pack = 24, MissionKind Salvage 16 /
+Pack 17 / Withdraw 18, new state parts "rigs" and "salvage" after "directive", effects layout v2, save/replay format 10.
+**Status:** assumed — confirm (owner reads the plan)
