@@ -26,7 +26,9 @@ public sealed class M6ContractTests
         Assert.Equal((0, 1, 2, 3), ((int)Faction.Authority, (int)Faction.Directorate, (int)Faction.Neutral, (int)Faction.LeftBehind));
         Assert.Equal(4, RuleCounts.Factions);
         Assert.Equal(RuleCounts.Factions, Enum.GetValues<Faction>().Length);
-        Assert.Equal(2, RuleCounts.PlayableFactions);   // the skirmish UI cycle stays Authority/Directorate until M6-09
+        Assert.Equal(3, RuleCounts.PlayableFactions);   // M6-09: the skirmish UI offers Authority, Directorate, Left Behind
+        Assert.Equal(RuleCounts.PlayableFactions, RuleCounts.PlayableOrder.Count);
+        Assert.All(RuleCounts.PlayableOrder, f => Assert.True(RuleCounts.IsPlayable(f)));
         Assert.True(RuleCounts.IsPlayable(Faction.LeftBehind));
         Assert.False(RuleCounts.IsPlayable(Faction.Neutral));
         Assert.Equal(24, (int)CommandKind.Pack);

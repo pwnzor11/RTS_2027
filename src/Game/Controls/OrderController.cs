@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework.Input;
 using Rts.Game.Render;
 using Rts.Game.Sandbox;
 using Rts.Sim.Core;
+using Rts.Sim.View;
 
 namespace Rts.Game.Controls;
 
@@ -15,12 +16,14 @@ namespace Rts.Game.Controls;
 /// land-train or a transport at once; a Bore after D then a right-click on the cell to dig at).
 /// Right-click: an enemy under the cursor is an Attack (an Engineer on an enemy or neutral building Enters to capture it, and on an own
 /// damaged building Enters to repair it), an own transport (for infantry) or own tunnel entrance (for units that fit
-/// it) is an Enter, the ground is a Move (or an attack-move when armed).
+/// it) is an Enter, the ground is a Move (or an attack-move when armed). M6-09: a unit that salvages (a Hauler or Tinker) right-clicking a wreck
+/// is a Harvest on that cell.
 /// </summary>
 public sealed class OrderController
 {
     private readonly SimSnapshotSource _source;
     private readonly Selection _selection;
+    private readonly List<WreckView> _wrecks = new();   // M6-09: refreshed on each right click
 
     /// <summary>Creates the controller for the local player's selection.</summary>
     public OrderController(SimSnapshotSource source, Selection selection)
@@ -88,6 +91,13 @@ public sealed class OrderController
             : null;
         EntityId buildingId = enemy is { Kind: ActorKind.Building } e ? e.Id : own is { Target.Kind: ActorKind.Building } o ? o.Target.Id : EntityId.None;
         BuildingView? building = buildingId.IsNone ? null : ViewOf(buildingId);
+        bool wreckHere = false;
+        if (!armed && _source.Map.Contains(cell))
+        {
+            _source.Sim.ViewFor(SimSnapshotSource.LocalPlayer).CopyWrecks(_wrecks);
+            wreckHere = SalvageOrders.WreckAt(_wrecks, cell);
+        }
+
         foreach (UnitKey unit in _selection.Units.ToList())
         {
             BuildingClick click = BuildingClick.None;
@@ -108,6 +118,10 @@ public sealed class OrderController
             else if (own is { Target.Kind: ActorKind.Vehicle } mine && M3Orders.CanBoard(_source.Rules, unit.Kind, mine.TypeIndex))
             {
                 _source.Order(CommandKind.Enter, unit, default, mine.Target);   // M3: board an own transport
+            }
+            else if (wreckHere && _source.TryGetTypeIndex(unit, out int salvager) && SalvageOrders.CanSalvage(_source.Rules, unit.Kind, salvager))
+            {
+                _source.Order(CommandKind.Harvest, unit, cell);   // M6-09: the order carries the unit kind, as SalvageMission expects
             }
             else if (_source.Map.Contains(cell))
             {

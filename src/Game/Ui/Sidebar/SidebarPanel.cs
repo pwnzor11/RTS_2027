@@ -219,6 +219,7 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
         }
 
         DrawGrid(batch, pixel, l);
+        if (LeftBehindText.ShowUnpackHint(_hud, snapshot, _player)) DrawUnpackHint(batch, pixel, l);   // M6-09
         _minimap.Draw(batch, pixel, l.Minimap, snapshot, _cameraTopLeft, _viewSizeWorld);
         DrawTooltip(batch, pixel);
     }
@@ -228,6 +229,19 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
     {
         _minimap.Dispose();
         ResetCursor();
+    }
+
+    // M6-09: a Left Behind player starts with one packed rig and nothing to build; say so in the empty grid.
+    private void DrawUnpackHint(SpriteBatch batch, Texture2D pixel, SidebarLayout l)
+    {
+        string text = LeftBehindText.Placeholder(LeftBehindText.UnpackHintKey);
+        float scale = _ui * 0.85f;
+        int y = l.Grid.Y + (int)(_ui * 6);
+        foreach (string line in Rts.Game.Menu.TextWrap.Wrap(text, Math.Max(8, l.Grid.Width - 8), s => BitmapFont.Measure(s, scale, FontWeight.Regular)))
+        {
+            Text(batch, pixel, line, new Vector2(l.Grid.X + 4, y), Gold, scale, FontWeight.Regular);
+            y += BitmapFont.LineHeight(scale, FontWeight.Regular) + 2;
+        }
     }
 
     // ---- input ----------------------------------------------------------------------------------

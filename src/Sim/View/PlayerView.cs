@@ -174,6 +174,30 @@ public readonly struct PlayerView
     /// <summary>M6: pack/unpack progress of an own actor in permille (0 = idle, not a rig, or not own).</summary>
     public int PackProgressPermille(ActorRef own) => _sim.PackProgressOf(Player, own);
 
+    /// <summary>M6-09: index (in <see cref="Rules"/>.Buildings) of the building an own packed rig vehicle unpacks into, or -1 when the
+    /// vehicle is not an own packed rig. One generic packed vehicle serves every rig, so this is the type it was packed from.</summary>
+    public int UnpackTypeOf(EntityId vehicle) =>
+        _sim.Units.Slots.IsAlive(vehicle) && _sim.Units.Player[vehicle.Index] == Player && _sim.Rigs.IsPackedRig(vehicle.Index)
+            ? _sim.UnpackTypeOf(vehicle.Index) : -1;
+
+    /// <summary>M6-09: true if the own packed rig <paramref name="vehicle"/> could start unpacking with the footprint's top-left at
+    /// <paramref name="topLeft"/> now (the same site test the Pack command applies; no build radius). False for anything else.</summary>
+    public bool CanUnpackAt(EntityId vehicle, CellCoord topLeft)
+    {
+        int into = UnpackTypeOf(vehicle);
+        return into >= 0 && into < Rules.Buildings.Count && _sim.UnpackSiteOk(Player, into, topLeft, vehicle.Index);
+    }
+
+    /// <summary>M6-09: fills <paramref name="dest"/> (cleared first) with every live ash storm on the map in slot order. Storms are public
+    /// (the cloud is on the ground for everyone to see; fog still hides it from the player's screen).</summary>
+    public void CopyStorms(List<StormView> dest)
+    {
+        dest.Clear();
+        Rts.Sim.Effects.EffectsState e = _sim.Effects;
+        for (int s = 0; s < Rts.Sim.Effects.EffectsState.MaxStorms; s++)
+            if (e.StormTicks[s] > 0) dest.Add(new StormView(s, new CellCoord(e.StormX[s], e.StormY[s]), e.StormRadius[s], e.StormTicks[s], e.StormOwner[s]));
+    }
+
     /// <summary>Weapon range in leptons of an actor type, 0 when it has no weapon.</summary>
     public int WeaponRange(ActorKind kind, int typeIndex)
     {
