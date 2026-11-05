@@ -26,16 +26,29 @@ internal sealed class ProceduralBuilder
     private readonly int _n;
     private readonly int _scale;   // map size relative to Medium, in percent
     private readonly List<MapFeature> _features = new();
+    private readonly OceanEdgePass? _ocean;   // M7-13: null unless the ocean edge option is on
 
     /// <summary>All starts of the symmetry orbit (4 for Rot4, 2 otherwise), start 0 first.</summary>
     public CellCoord[] OrbitStarts { get; }
 
-    public ProceduralBuilder(BiomeParams biome, int n, MapSymmetry symmetry, ulong seed)
+    /// <summary>Convoy spawn cells (<c>convoy_edge</c>) of the ocean edge option, filled by <see cref="Build"/>; empty when it is off.</summary>
+    public IReadOnlyList<CellCoord> ConvoyEdge { get; private set; } = Array.Empty<CellCoord>();
+
+    /// <summary>Landing beach markers (<c>landing</c>) of the ocean edge option, filled by <see cref="Build"/>; empty when it is off.</summary>
+    public IReadOnlyList<CellCoord> Landing { get; private set; } = Array.Empty<CellCoord>();
+
+    public ProceduralBuilder(BiomeParams biome, int n, MapSymmetry symmetry, ulong seed, OceanEdges oceanEdges = OceanEdges.None)
     {
         _b = biome; _n = n; _scale = n * 100 / 96;
         _g = new GenGrid(n, symmetry, biome.BaseLand);
         _rng = new SimRandom(seed);
         int inset = biome.OceanWidth > 0 ? OceanWidth() + 7 : PlainInset;
+        if (oceanEdges != OceanEdges.None)
+        {
+            // The sea, its shallows and the beach sit between the edge and the start squares.
+            _ocean = new OceanEdgePass(_g, _rng, oceanEdges, EdgeDeepWidth());
+            inset = Math.Max(inset, OceanEdgePass.MaxBand(EdgeDeepWidth()) + 3);
+        }
         (int sx, int sy) = symmetry switch
         {
             MapSymmetry.MirrorX => (inset, n / 2 - 1),
@@ -53,6 +66,7 @@ internal sealed class ProceduralBuilder
     {
         Reserve();
         if (_b.OceanWidth > 0) Ocean();
+        _ocean?.Paint();
         for (int i = 0; i < _b.CliffPlateaus; i++) Plateau();
         for (int i = 0; i < _b.Rivers; i++) River(i);
         if (_b.RoadGrid > 0) Roads();
@@ -65,10 +79,18 @@ internal sealed class ProceduralBuilder
         StartSquares();
         ShoreRings();
         int c = _n * _n;
-        return new MapData(name, _b.Theater, _n, _n, new ushort[c], _g.Land, _g.Height, _g.Overlay, _g.Density, starts);
+        var map = new MapData(name, _b.Theater, _n, _n, new ushort[c], _g.Land, _g.Height, _g.Overlay, _g.Density, starts);
+        if (_ocean is not null)
+        {
+            _ocean.PaintCoast();   // the arrays are shared with the map, so the beach shows in it
+            (List<CellCoord> convoy, List<CellCoord> landing) = _ocean.Markers(map, starts, MapAnalysis.FeatureMask(map, _features));
+            ConvoyEdge = convoy; Landing = landing;
+        }
+        return map;
     }
 
     private int Scaled(int v) => v * _scale / 100;
+    private int EdgeDeepWidth() => Math.Max(3, Scaled(4));
     private int OceanWidth() => Math.Max(3, Scaled(_b.OceanWidth));
     private static int Cheb(int ax, int ay, int bx, int by) => Math.Max(Math.Abs(ax - bx), Math.Abs(ay - by));
 

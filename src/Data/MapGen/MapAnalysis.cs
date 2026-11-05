@@ -21,6 +21,7 @@ public static class MapAnalysis
     public static bool BuiltInPassable(LandType land, Locomotion loco)
     {
         if (loco == Locomotion.Air) return true;
+        if (loco == Locomotion.Naval) return land is LandType.Water or LandType.Shallow;   // M7-13: ships never touch land
         return land switch
         {
             LandType.Rock or LandType.Cliff => false,
