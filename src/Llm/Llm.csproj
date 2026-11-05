@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="Llm.Tests" />
+    <InternalsVisibleTo Include="Game.Tests" />
   </ItemGroup>
 
   <PropertyGroup>
