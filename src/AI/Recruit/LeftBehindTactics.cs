@@ -42,6 +42,10 @@ internal sealed class LeftBehindTactics : IFactionTactics
     public const int WreckValueForHauler = 60;   // (tune) session 10 (was 150)
     /// <summary>Own army size at which the first Hauler is bought even before any wreck lies about (it then waits for the first fight).</summary>
     public const int ArmyForFirstHauler = 5;   // (tune) session 10
+    /// <summary>Ticks after the last Hauler died before another is bought.</summary>
+    public const int HaulerRebuildTicks = 3600;   // (tune) session 10
+    /// <summary>Funds that must be on hand (on top of the 500 price) before a Hauler is bought.</summary>
+    public const int HaulerCushion = 900;   // (tune) session 10
     /// <summary>Ticks between Return orders to an idle Hauler that found no wreck.</summary>
     public const int ReturnGapTicks = 400;   // (tune) M6-10
 
@@ -95,6 +99,7 @@ internal sealed class LeftBehindTactics : IFactionTactics
     private readonly List<WreckView> _wrecks = new();
     private readonly List<StormView> _storms = new();
     private int _wreckValueNow;
+    private int _haulerSeen = -100000;   // last tick a Hauler was alive or queued
 
     /// <summary>SUP-5: packed rigs that were given an unpack order, with the tick of the order. One still standing idle 60 ticks after its
     /// order means the order ended at once (unreachable site): the next order unpacks it near where it stands.</summary>
@@ -204,8 +209,13 @@ internal sealed class LeftBehindTactics : IFactionTactics
             foreach (QueueItemView it in q.Items) if (it.TypeIndex == _hauler) have++;
             // session 10: one Hauler early (once a small army stands and the first harvester works), so it is at hand when the first
             // wrecks fall; the second (tier 3+) waits for wrecks to lie about
+            // a Hauler costs 500 and dies when it works near the fighting: a lost one is not replaced at once, and none is bought when poor
+            int now = k.View.Tick;
+            if (have > 0) _haulerSeen = now;
+            bool lostRecently = have == 0 && now - _haulerSeen < HaulerRebuildTicks;
+            bool rich = k.Hud.Cash + k.Hud.Stored >= HaulerCushion;
             bool early = have == 0 && k.Army.Count >= ArmyForFirstHauler;
-            if (have < cap && (early || _wreckValueNow >= WreckValueForHauler)) return _hauler;
+            if (have < cap && !lostRecently && rich && (early || _wreckValueNow >= WreckValueForHauler)) return _hauler;
         }
         // Dust Sails with the army at the top tiers
         if (_sail >= 0 && _profile is { Air: true } && k.Army.Count >= ArmyBeforeSail && k.Buildable(ProductionCategory.Vehicle, _sail))
@@ -395,7 +405,7 @@ internal sealed class LeftBehindTactics : IFactionTactics
                     SalvageOrders++;
                     sink.Issue(CommandKind.Harvest, a.Id, a.Kind, _wrecks[best].Cell);
                 }
-                else if (!tinker)
+                else if (!tinker && a.Mission != MissionKind.Harvest)   // session 10: not while it works the ash field (a Return every 400 ticks cost 20 points)
                 {   // nothing to salvage: unload what the hopper holds
                     ulong key = RecruitKnowledge.KeyOf(a);
                     if (_lastReturn.TryGetValue(key, out int last) && tick - last < ReturnGapTicks) continue;
@@ -755,7 +765,7 @@ internal sealed class LeftBehindTactics : IFactionTactics
         AiSnapshot.WriteMap(w, _lastReturn, (bw, v) => bw.Write(v));
         w.Write(Unpacks); w.Write(RaidParties); w.Write(RaidOrders); w.Write(SalvageOrders);
         w.Write(Relocations); w.Write(RelocationsDone); w.Write(RelocationsAborted); w.Write(Sold); w.Write(StormOrders);
-        w.Write(_wreckValueNow);
+        w.Write(_wreckValueNow); w.Write(_haulerSeen);
         w.Write(_ordered.Count);
         foreach (var o in _ordered) { w.Write(o.Key); w.Write(o.Tick); w.Write(o.X); w.Write(o.Y); }
         w.Write(_bad.Count);
@@ -773,7 +783,7 @@ internal sealed class LeftBehindTactics : IFactionTactics
         AiSnapshot.ReadMap(r, _lastReturn, br => br.ReadInt32());
         Unpacks = r.ReadInt32(); RaidParties = r.ReadInt32(); RaidOrders = r.ReadInt32(); SalvageOrders = r.ReadInt32();
         Relocations = r.ReadInt32(); RelocationsDone = r.ReadInt32(); RelocationsAborted = r.ReadInt32(); Sold = r.ReadInt32(); StormOrders = r.ReadInt32();
-        _wreckValueNow = r.ReadInt32();
+        _wreckValueNow = r.ReadInt32(); _haulerSeen = r.ReadInt32();
         int n = AiSnapshot.Count(r);
         _ordered.Clear();
         for (int i = 0; i < n; i++) _ordered.Add((r.ReadUInt64(), r.ReadInt32(), r.ReadInt32(), r.ReadInt32()));
