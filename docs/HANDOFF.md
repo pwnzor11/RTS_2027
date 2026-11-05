@@ -30,9 +30,10 @@ on Linux and Windows CI. Decisions D-113..D-118.
 - Read the M6 plan and confirm D-118 (docs/design/10_m6_plan.md).
 - Play-test the LLM commander with a real key (Settings > "AI commander (LLM)...").
 - Q-41 old lore DRAFT banners; Q-42 foam; Q-43 tier costs. D-105 balance numbers still "assumed — confirm".
-- Delete old remote branches: `wp/m2-*`, `wp/m3-*`, `wp/m4-*`, `integ-m2*`, `integ-m3`, `integ-m4`, `integ-s6`, `integ-s7`, `wp/m3-21`,
-  `wp/m5-*`, `wp/neutral`, `wp/lore`, `wp/art-*`, `integ-art`, `art-land`, `wp/m6-plan`, `wp/m6-02`, `wp/s8-handoff`; keep `restore/*`
-  until the owner is happy (restore/pre-art-land, restore/pre-art-s6, restore/pre-m6-02), `integ-m6`, `wp/m4-16r3*`.
+- Delete old remote branches: the exact `git push origin --delete ...` list was given to the owner in session 8 (every branch already
+  on main). Keep `main`, `integ-m6`, `wp/m4-16r3-wip` (next session's AI fix), and `restore/pre-art-land`, `restore/pre-art-s6`,
+  `restore/pre-m6-02` until the owner is happy; `wp/s8-handoff` and `wp/m4-16r3` can go once PR #16 is merged.
+- tools/art/structures/dir_hatch.py docstring still describes the old lift car (the code hides it, D-117): fix in passing.
 - Optional: delete the `_art_push` folder contents in the RTS_2027 folder (the art is on GitHub now).
 - Scheduled tasks: old one-shot helper reminders (all fired and disabled) can be deleted in the scheduled-tasks list.
 
