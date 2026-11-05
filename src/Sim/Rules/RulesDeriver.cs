@@ -163,6 +163,7 @@ public static class RulesDeriver
         "cost" => x with { Cost = Op(e, x.Cost) },
         "build_time" => x with { BuildTime = Op(e, x.BuildTime) },
         "rad_resist_permille" => x with { RadResistPermille = Op(e, x.RadResistPermille, 0, 1000) },
+        "vet_threshold_permille" => x with { VetThresholdPermille = Op(e, x.VetThresholdPermille, 1, 100_000) },   // VET-1
         _ => x,
     };
 
@@ -174,6 +175,7 @@ public static class RulesDeriver
         "cost" => x with { Cost = Op(e, x.Cost) },
         "build_time" => x with { BuildTime = Op(e, x.BuildTime) },
         "rad_resist_permille" => x with { RadResistPermille = Op(e, x.RadResistPermille, 0, 1000) },
+        "vet_threshold_permille" => x with { VetThresholdPermille = Op(e, x.VetThresholdPermille, 1, 100_000) },   // VET-1
         _ => x,
     };
 

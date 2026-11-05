@@ -34,6 +34,9 @@ public sealed record SimRules(
     /// <summary>Quick-Set Foam constants (game.toml [foam], M4). Defaults when the table is absent.</summary>
     public FoamRules Foam { get; init; } = FoamRules.Default;
 
+    /// <summary>Generic veterancy constants (game.toml [veterancy], VET-1). Disabled and design defaults when the table is absent.</summary>
+    public VeterancyRules Veterancy { get; init; } = VeterancyRules.Default;
+
     /// <summary>Start kit per faction, indexed by <c>(int)</c><see cref="Faction"/> (game.toml [faction.&lt;name&gt;], M3).
     /// Always <see cref="RuleCounts.Factions"/> entries; ids are validated lazily by <see cref="ResolveStartKit"/>.</summary>
     public IReadOnlyList<FactionStartKit> StartKits { get; init; } =

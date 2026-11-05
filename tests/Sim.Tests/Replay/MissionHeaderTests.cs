@@ -31,7 +31,7 @@ public class MissionHeaderTests
     {
         var setup = ScriptedGame.Setup();
         var data = ReplayReader.Read(new MemoryStream(Record(setup, 64, new ReplayMission("auth_01", 0xDEADBEEF12345678UL))));
-        Assert.Equal(ReplayWriter.Version, data.Version);   // 8 (M3-19); 9 since M4-01, 10 since M6-02, same layout
+        Assert.Equal(ReplayWriter.Version, data.Version);   // 8 (M3-19); 9 since M4-01, 10 since M6-02, 11 since VET-1, same layout
         Assert.Equal(new ReplayMission("auth_01", 0xDEADBEEF12345678UL), data.Mission);
         Assert.False(data.Truncated);
         Assert.Equal(64, data.FinalTick);
