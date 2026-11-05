@@ -194,9 +194,9 @@ until then the Left Behind shows placeholder boxes.
 2. **Pack and move:** select an unpacked rig and press K ("PACK RIG (K)"): it packs into a vehicle; drive it and unpack elsewhere.
    While it is packed its production lane pauses, then carries on after unpacking.
 3. **Salvage and raids:** destroy enemy vehicles; wrecks stay on the ground for about a minute; a Hauler or Tinker collects them for
-   cash. Send raiders into an enemy building: they take cash.
-4. **The Second Drift:** build it (after the Rotor Pad); once charged, fire it anywhere: a storm slows enemies inside it and hides your
-   own infantry like ash.
+   cash. Send raiders into an enemy refinery or silo: they take cash from its stored ash.
+4. **The Second Drift:** build it (after the Rotor Pad); once charged, fire it anywhere: a storm slows enemy vehicles inside it (Left
+   Behind units are never slowed) and hides your Veilwalkers as ash does.
 5. **Veterancy:** units that kill earn pips ("Veteran", "Elite", "Hero"); a promotion flashes and plays a short cue. Higher ranks
    hit harder, take less damage and fire faster.
 6. **Supply cap (off by default for now, D-133):** set `enabled = true` under `[supply]` in data/rules/game.toml. Queue many riflemen;
