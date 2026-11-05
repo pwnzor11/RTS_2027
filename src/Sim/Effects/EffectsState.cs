@@ -23,10 +23,16 @@ namespace Rts.Sim.Effects;
 /// (<see cref="MaxStorms"/> fixed slots, written as (slot + 1, centre x, centre y, radius, ticks left, owner) for every slot with any
 /// non-zero field, 0-terminated). A storm is live while <see cref="StormTicks"/> &gt; 0. Version 1 data still reads: the new fields come
 /// back empty.</para>
+/// <para>Version 3 (M7-12, Salvo Array) is written only while a salvo is in flight (so every other game saves and hashes as version 2):
+/// after the version-2 body, the salvo table (<see cref="MaxSalvos"/> fixed slots, written as (slot + 1, x, y, owner, building type + 1,
+/// ticks elapsed) for every live slot, 0-terminated). Versions 1 and 2 read with no salvos.</para>
 /// </summary>
 public sealed class EffectsState : ISimStatePart
 {
-    private const byte Version = 2;
+    private const byte Version = 3;
+
+    /// <summary>Fixed salvo capacity (Salvo Array, M7-12).</summary>
+    public const int MaxSalvos = 4;
 
     /// <summary>Fixed storm capacity (The Second Drift, M6-07).</summary>
     public const int MaxStorms = 8;
@@ -59,6 +65,20 @@ public sealed class EffectsState : ISimStatePart
     public readonly int[] StormTicks = new int[MaxStorms];
     /// <summary>Owning player per storm slot.</summary>
     public readonly byte[] StormOwner = new byte[MaxStorms];
+
+    /// <summary>Target cell X per salvo slot (v3; M7-12).</summary>
+    public readonly int[] SalvoX = new int[MaxSalvos];
+    /// <summary>Target cell Y per salvo slot.</summary>
+    public readonly int[] SalvoY = new int[MaxSalvos];
+    /// <summary>Owning player per salvo slot.</summary>
+    public readonly byte[] SalvoOwner = new byte[MaxSalvos];
+    /// <summary>Building type index + 1 of the firing superweapon per salvo slot (0 = the slot is free).</summary>
+    public readonly int[] SalvoType = new int[MaxSalvos];
+    /// <summary>Ticks since the salvo was ordered, per slot.</summary>
+    public readonly int[] SalvoElapsed = new int[MaxSalvos];
+
+    /// <summary>True while any salvo is in flight.</summary>
+    public bool AnySalvo { get { for (int s = 0; s < MaxSalvos; s++) if (SalvoType[s] != 0) return true; return false; } }
 
     /// <summary>Creates an all-zero part sized by the setup's store limits.</summary>
     public EffectsState(SimSetup setup)
@@ -105,7 +125,8 @@ public sealed class EffectsState : ISimStatePart
     /// <inheritdoc />
     public void Write(BinaryWriter w)
     {
-        w.Write(Version);
+        bool salvo = AnySalvo;
+        w.Write(salvo ? Version : (byte)2);
         w.Write(VehicleStill.Length); w.Write(InfantryStill.Length); w.Write(BuildingCharge.Length);
         WriteMobiles(w, VehicleRofPermille, VehicleSpeedPermille, VehicleStill);
         WriteMobiles(w, InfantryRofPermille, InfantrySpeedPermille, InfantryStill);
@@ -118,6 +139,13 @@ public sealed class EffectsState : ISimStatePart
         {
             if (StormX[s] == 0 && StormY[s] == 0 && StormRadius[s] == 0 && StormTicks[s] == 0 && StormOwner[s] == 0) continue;
             w.Write(s + 1); w.Write(StormX[s]); w.Write(StormY[s]); w.Write(StormRadius[s]); w.Write(StormTicks[s]); w.Write(StormOwner[s]);
+        }
+        w.Write(0);
+        if (!salvo) return;
+        for (int s = 0; s < MaxSalvos; s++)
+        {
+            if (SalvoType[s] == 0) continue;
+            w.Write(s + 1); w.Write(SalvoX[s]); w.Write(SalvoY[s]); w.Write(SalvoOwner[s]); w.Write(SalvoType[s]); w.Write(SalvoElapsed[s]);
         }
         w.Write(0);
     }
@@ -138,7 +166,7 @@ public sealed class EffectsState : ISimStatePart
     public void Read(BinaryReader r)
     {
         byte version = r.ReadByte();
-        if (version != 1 && version != Version) throw new InvalidDataException("effects version mismatch.");
+        if (version < 1 || version > Version) throw new InvalidDataException("effects version mismatch.");
         if (r.ReadInt32() != VehicleStill.Length || r.ReadInt32() != InfantryStill.Length || r.ReadInt32() != BuildingCharge.Length)
             throw new InvalidDataException("effects capacity mismatch.");
         ReadMobiles(r, VehicleRofPermille, VehicleSpeedPermille, VehicleStill);
@@ -146,6 +174,7 @@ public sealed class EffectsState : ISimStatePart
         Array.Clear(BuildingCharge);
         for (int i = r.ReadInt32(); i != 0; i = r.ReadInt32()) BuildingCharge[StateIo.Slot(i, BuildingCharge.Length, Name)] = r.ReadInt32();
         Array.Clear(VehicleWithdraw); Array.Clear(InfantryWithdraw);
+        Array.Clear(SalvoX); Array.Clear(SalvoY); Array.Clear(SalvoOwner); Array.Clear(SalvoType); Array.Clear(SalvoElapsed);
         Array.Clear(StormX); Array.Clear(StormY); Array.Clear(StormRadius); Array.Clear(StormTicks); Array.Clear(StormOwner);
         if (version == 1) return;   // M6-02: version-1 data has no raiders and no storms
         ReadFlags(r, VehicleWithdraw);
@@ -156,6 +185,13 @@ public sealed class EffectsState : ISimStatePart
             int s = i - 1;
             StormX[s] = r.ReadInt32(); StormY[s] = r.ReadInt32(); StormRadius[s] = r.ReadInt32(); StormTicks[s] = r.ReadInt32();
             StormOwner[s] = r.ReadByte();
+        }
+        if (version < 3) return;
+        for (int i = r.ReadInt32(); i != 0; i = r.ReadInt32())
+        {
+            if (i > MaxSalvos) throw new InvalidDataException("effects salvo slot out of range.");
+            int s = i - 1;
+            SalvoX[s] = r.ReadInt32(); SalvoY[s] = r.ReadInt32(); SalvoOwner[s] = r.ReadByte(); SalvoType[s] = r.ReadInt32(); SalvoElapsed[s] = r.ReadInt32();
         }
     }
 
