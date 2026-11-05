@@ -105,6 +105,36 @@ internal sealed class MilitaryManager
     private int _mapWidth, _startCount;
     private int _launchValue, _required;
 
+    // VET-6: rank-aware army values (design 14 section 6a). Peaks of the enemy army value seen at once, short and long window, with the
+    // part that came from rank (bonus). While no rank is involved (veterancy off: bonus 0) the values the AI passes in are used unchanged.
+    private int _eShortVal, _eShortBonus, _eShortTick = int.MinValue, _eLongVal, _eLongBonus, _eLongTick = int.MinValue;
+
+    /// <summary>
+    /// VET-6: adds the veterancy bonus (cost x 250 x rank / 1000 per unit) to <see cref="OwnValue"/>, <see cref="EnemyValueSeen"/> and
+    /// <see cref="Ahead"/>. Does nothing while no ranked unit is in view, so rank 0 everywhere changes no decision.
+    /// </summary>
+    private void ApplyRankValues(RecruitKnowledge k)
+    {
+        var rules = k.Rules;
+        int ownBase = 0, own = 0, enBase = 0, en = 0;
+        foreach (ViewActor a in k.Own)
+            if (a.IsMobile && !(a.Kind == ActorKind.Vehicle && rules.Vehicles[a.TypeIndex].HarvestCapacity > 0))
+            { own += VeterancyValue.Of(rules, a); ownBase += VeterancyValue.Of(rules, a with { Rank = 0 }); }
+        foreach (ViewActor e in k.Visible)
+            if (e.Relation == Relation.Enemy && e.IsMobile && !(e.Kind == ActorKind.Vehicle && rules.Vehicles[e.TypeIndex].HarvestCapacity > 0))
+            { en += VeterancyValue.Of(rules, e); enBase += VeterancyValue.Of(rules, e with { Rank = 0 }); }
+        int now = k.View.Tick;
+        int enBonus = en - enBase;
+        if (en >= _eShortVal || now - _eShortTick > TierPlanner.EnemyValueMemoryTicks) { _eShortVal = en; _eShortBonus = enBonus; _eShortTick = now; }
+        if (en >= _eLongVal || now - _eLongTick > TierPlanner.WaveGateMemoryTicks) { _eLongVal = en; _eLongBonus = enBonus; _eLongTick = now; }
+        int ownBonus = own - ownBase;
+        if (ownBonus == 0 && _eShortBonus == 0 && _eLongBonus == 0) return;
+        OwnValue += ownBonus;
+        EnemyValueSeen += _eLongBonus;
+        // the planner's Ahead used unranked values: with ranks in play, decide it again from the ranked ones
+        Ahead = k.Army.Count >= TierPlanner.AheadMinUnits && (long)(ownBase + ownBonus) * 100 >= (long)_eShortVal * (100 + TierPlanner.AheadMarginPct);
+    }
+
     /// <summary>M4-16 round 4: a wave that lost most of its roster raises the army value the next one waits for.</summary>
     private void WaveFailed()
     {
@@ -244,6 +274,7 @@ internal sealed class MilitaryManager
     public void Think(RecruitKnowledge k, ICommandSink sink, CellCoord rally, List<ViewActor> allKnownEnemyBuildings)
     {
         int tick = k.View.Tick;
+        ApplyRankValues(k);   // VET-6
         ChooseTarget(k, allKnownEnemyBuildings);
         List<ViewActor> knownEnemyBuildings = _targetBuildings;
         ViewActor? attacked = FindAttacked(k);
@@ -633,6 +664,7 @@ internal sealed class MilitaryManager
         w.Write(GroupRetreats); w.Write(Prongs); w.Write(Waves); w.Write(Defences); w.Write(Reinforcements); w.Write(StaleWaves); w.Write(Unstuck);
         w.Write(_aheadWave);   // M4-16
         w.Write(_launchValue); w.Write(_required);   // M4-16 r4
+        w.Write(_eShortVal); w.Write(_eShortBonus); w.Write(_eShortTick); w.Write(_eLongVal); w.Write(_eLongBonus); w.Write(_eLongTick);   // VET-6
     }
 
     /// <summary>M3-21: reads what <see cref="Snapshot"/> wrote. Call after Start.</summary>
@@ -657,6 +689,7 @@ internal sealed class MilitaryManager
         StaleWaves = r.ReadInt32(); Unstuck = r.ReadInt32();
         _aheadWave = r.ReadBoolean();   // M4-16
         _launchValue = r.ReadInt32(); _required = r.ReadInt32();   // M4-16 r4
+        _eShortVal = r.ReadInt32(); _eShortBonus = r.ReadInt32(); _eShortTick = r.ReadInt32(); _eLongVal = r.ReadInt32(); _eLongBonus = r.ReadInt32(); _eLongTick = r.ReadInt32();   // VET-6
         if (_scoutRoute.Count > 0) _scoutIdx = Math.Clamp(_scoutIdx, 0, _scoutRoute.Count - 1);
     }
 }
