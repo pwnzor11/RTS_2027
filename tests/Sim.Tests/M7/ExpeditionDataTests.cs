@@ -37,6 +37,18 @@ public sealed class ExpeditionDataTests
     }
 
     [Fact]
+    public void StartKit_ResolvesWithTheDeployableCommandShip()
+    {
+        SimRules s = LoadReal().Sim;
+
+        (int conyard, var units) = s.ResolveStartKit(Faction.Expedition);
+
+        Assert.Equal(-1, conyard);
+        Assert.Contains(units, u => u.Kind == Rts.Sim.Core.ActorKind.Vehicle && s.Vehicles[u.Type].Id == "exp_command_ship" && s.Vehicles[u.Type].DeploysInto >= 0);
+        foreach (Faction f in RuleCounts.PlayableOrder) Assert.NotNull(s.ResolveStartKit(f).Units);   // the other factions resolve as before
+    }
+
+    [Fact]
     public void StaysUnplayable()
     {
         Assert.Equal(3, RuleCounts.PlayableFactions);
