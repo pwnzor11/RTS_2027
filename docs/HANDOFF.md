@@ -28,7 +28,7 @@ re-measured (supply spread 14.1 → 13.3, no change). Art: pilot approved (D-149
 - Run `push_art.ps1` (USER_CHECKS "Session 11" step 8). Q-55. Confirm D-150..D-152. Play-test USER_CHECKS "Session 11".
 - Archive placeholders "PENDING owner text": 8 Expedition upgrade field notes and the Provision Store entry (no lore yet).
 - Delete merged remote branches once happy: `land/s11-w1`, `land/s11-w2`, `integ-s11`, `wp/m7-arch` (stale first version), `wp/m7-llm`,
-  `wp/m7-10ai`, `wp/m7-14ui-s11`, `wp/m7-bal-s11`, `wp/m7-acc-s11`, plus the session-10 list. Keep `restore/pre-s11` until happy.
+  `wp/m7-10ai`, `wp/m7-14ui-s11`, `wp/m7-bal-s11`, `wp/m7-acc-s11` (pushed at wrap-up), plus the session-10 list. Keep `restore/pre-s11` until happy.
 - Still pending from session 7: the LLM commander with a real key (D-110..D-112).
 
 ## How to run this session

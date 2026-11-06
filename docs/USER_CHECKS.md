@@ -237,7 +237,7 @@ step 8). Saves from session 10 builds still load (format 12).
 3. **Shipments:** build an Anchorage on a south-facing shore (land above, sea below). The sidebar shows the shipment countdown; a
    tender sails in from the map edge every 30 s and pays 2 000, shrinking 6 % each time (D-152). Sink an enemy tender to stop it.
 4. **Ships:** with no Shipyard on water, hovering a ship cameo says "Needs a shipyard on water". Select a Carrier: the panel shows
-   "Hangar d/s". Select a Missile Sub and press D to dive.
+   "Hangar 2/4" (docked / places). Select a Missile Sub and press D to dive.
 5. **Expedition AI:** play against an Expedition AI (tier 2) on a map with an ocean. It lands, builds an Anchorage, gets shipments and
    sends small naval strikes at your coast.
 6. **Archive:** Archive → Leaders shows Aldersey, Strand, Roque and Kell; their "Classified" entries stay locked (campaign).

@@ -25,7 +25,7 @@ Status: every changed number is `(tune)` and **assumed — confirm** (D-145/D-14
 | src/AI ExpeditionRecruitFaction | build order | ...hover_yard, pile_house, plotting_room, beacon, quay, shipyard, beacon, flight_deck | ...hover_yard, plotting_room, quay, shipyard, pile_house, beacon, beacon, flight_deck |
 Not changed: `floor_permille` (350), `charter_ticks`, `tenders_max`, `local_ash_bonus_permille` (0), Skimmer capacity/speed, start cash. Trial runs (8 medium games vs Directorate): value 1800 / cap 5 gave -10 / -1 / -3 %,
 value 2000 / cap 8 gave -4 / +5 / +4 %, value 2000 / cap 5 (landed) -3 / +6 / +2 %, so the Skimmer knob was not needed. Higher value/interval (3000 / 700 / decay 100) overshot (+7 / +10 / +7 % but heavier shipment dependence).
-The decay step at 10 min reaches 8-9 (floor) because shipments are 3x as frequent; the payout sits on the 35 % floor (700 per shipment) at 10 min, i.e. the income curve is front-loaded by design here. The owner may prefer a lower decay with a lower value.
+The decay step at 10 min reaches 8-9 because shipments are 3x as frequent; the payload then is 46-52 % of value (920-1040 per shipment, linear decay value x (1000 - step x 60) / 1000), still above the 35 % floor (700, step 11+), i.e. the income curve is front-loaded by design here (lead correction, S11 fact-check). The owner may prefer a lower decay with a lower value.
 
 ## Naval strike (M7-10, S11)
 - Quay/Shipyard/Flight Deck no longer wait for 2 Glide Tanks (1), warships are bought from 2 army units, fleet 3/4/5 by tier, and the build order puts Plotting Room, Quay, Shipyard before the second Pile House and Beacons (first Shipyard ~tick 4700, first warship ~5700).

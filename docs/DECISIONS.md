@@ -1138,7 +1138,7 @@ The real fix is Q-55.
 
 ### D-152 · 2026-11-06 · Expedition early income tuned (11 §4) and naval strikes
 **Decision:** Expedition-only numbers (D-113 untouched for the other three): `[shipments] interval_ticks` 1800 → 600, `value` 1500 → 2000,
-`decay_permille` 40 → 60 (decay reaches the floor by minute 10). AI: Quay and Shipyard come before the second Pile House; strike groups
+`decay_permille` 40 → 60 (by minute 10 the decay step is 8-9, so a shipment pays about half its value; the 35 % floor comes at step 11). AI: Quay and Shipyard come before the second Pile House; strike groups
 from one ship; a probe sail to the sea cell nearest the enemy start when no target is in range (terrain only); ReserveMin 4. Result
 (docs/balance/m7_income.md, tier 2, 20 games per cell): medium −6/+6/+8 %, large −9/+11/−7 % (all six inside ±10 %); small +12/+16/+22 %
 (outside, because Left Behind's low income pulls the comparison mean down — Q-52). 8-game tier-2 matches on medium: 5-3 vs Authority,
