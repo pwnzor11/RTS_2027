@@ -1218,3 +1218,18 @@ code change.
 **Why:** owner's 32-game strength test (docs/balance/s12_commander.md): a run of 3+ turtle decisions after fighting began appears in 0 of
 16 commander wins and 10 of 16 losses/draws; no strength gain overall.
 **Status:** confirmed (owner asked for it, session 12); effect to be measured by re-running Test 1
+
+### D-157 · 2026-11-06 · Left Behind storage; AI never builds on a dock or exit cell
+**Decision:** (1) lb_yard storage 1000 → 3000 (Left Behind only; they have no Silo, so deliveries past 1000 were thrown away). Early
+income is now within ±10 % of the Authority/Directorate mean at 5 min on all maps (docs/balance/s12_lb_income.md). (2) AI placement
+(PlacementSearch, all factions, all tiers) never covers a building's dock cell or factory exit cell; before, a tier-2+ AI could park a
+building on its own refinery dock and stop its income. No sim change; no pinned hash moved. The Expedition's small-map income lead
+(+11..+16 %) fell to +0..+3 %, because it came from the Left Behind pulling the mean down.
+**Why:** M7-19 follow-up diagnosis; the dock queue was a symptom.
+**Status:** (1) assumed — confirm (owner approved Left Behind income tuning, D-153 (3)); (2) bug fix
+
+### D-161 · 2026-11-06 · LLM commander: keep the posture-guide prompt; stronger directives are a later design item
+**Decision:** Keep the D-160 prompt. After four 16-32-game tests (docs/balance/s12_commander.md) the commander is reliable flavour but not
+a strength lever at tier 3, with either model or prompt. Making directives matter is recorded as a design note
+(docs/design/15_commander_directives.md) for a later milestone; no more API tests now.
+**Status:** confirmed (owner, session 12)

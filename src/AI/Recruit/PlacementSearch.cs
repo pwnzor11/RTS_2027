@@ -27,6 +27,7 @@ internal sealed class PlacementSearch
 
     private readonly List<Rect> _blocks = new();
     private readonly List<Rect> _lanes = new();
+    private readonly List<Rect> _mouths = new();   // D-157: the single dock / exit cells themselves; no tier may build on them
     private readonly List<(long Score, int X, int Y)> _cands = new();
 
     /// <summary>Finds a legal top-left for <paramref name="type"/> near the yard, or false if none exists.</summary>
@@ -35,12 +36,14 @@ internal sealed class PlacementSearch
         PlayerView view = k.View;
         SimRules rules = k.Rules;
         BuildingType bt = rules.Buildings[type];
-        _blocks.Clear(); _lanes.Clear();
+        _blocks.Clear(); _lanes.Clear(); _mouths.Clear();
         foreach (ViewActor b in k.Buildings)
         {
             BuildingType t = rules.Buildings[b.TypeIndex];
             _blocks.Add(new Rect(b.Cell.X, b.Cell.Y, b.Cell.X + t.FootprintW - 1, b.Cell.Y + t.FootprintH - 1));
             if (HasLane(t)) AddLanes(t, b.Cell, _lanes);
+            if (t.Produces != null) _mouths.Add(new Rect(b.Cell.X + t.Exit.X, b.Cell.Y + t.Exit.Y, b.Cell.X + t.Exit.X, b.Cell.Y + t.Exit.Y));
+            if (t.Refinery) _mouths.Add(new Rect(b.Cell.X + t.Dock.X, b.Cell.Y + t.Dock.Y, b.Cell.X + t.Dock.X, b.Cell.Y + t.Dock.Y));
         }
 
         int w = bt.FootprintW, h = bt.FootprintH;
@@ -60,6 +63,7 @@ internal sealed class PlacementSearch
             foreach (var (_, x, y) in _cands)
             {
                 var foot = new Rect(x, y, x + w - 1, y + h - 1);
+                if (OnMouth(foot)) continue;   // D-157: a structure on a refinery dock cell or factory exit starves the economy for good
                 if (tier <= 1 && !LanesOk(view, bt, foot, x, y)) continue;
                 if (tier == 0 && !GapOk(foot)) continue;
                 if (!view.CanPlace(type, new CellCoord(x, y))) continue;
@@ -67,6 +71,13 @@ internal sealed class PlacementSearch
                 return true;
             }
         cell = default;
+        return false;
+    }
+
+    private bool OnMouth(Rect foot)
+    {
+        foreach (Rect m in _mouths)
+            if (foot.Intersects(m)) return true;
         return false;
     }
 
