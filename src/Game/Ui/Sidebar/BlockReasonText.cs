@@ -7,6 +7,9 @@ namespace Rts.Game.Ui.Sidebar;
 /// <summary>The words shown on a greyed cameo's tooltip (D-066).</summary>
 public static class BlockReasonText
 {
+    /// <summary>M7-14: the tooltip line of a ship whose factories cannot reach water (see <see cref="ShipyardReach"/>).</summary>
+    public const string NeedsShipyardOnWater = "Needs a shipyard on water";
+
     /// <summary>
     /// Tooltip text for a block reason; empty for <see cref="QueueBlockReason.None"/>. The supply cap names the faction's supply building
     /// (<paramref name="supplyBuilding"/>, a display name); with none known the plain line is used.

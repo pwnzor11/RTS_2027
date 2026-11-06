@@ -19,7 +19,7 @@ public enum OverlayKind : byte { None = 0, Ashfall = 1, Pitchblende = 2, Wall = 
 public enum ProductionCategory : byte { Infantry = 0, Vehicle = 1, Aircraft = 2, Structure = 3, Defence = 4, Upgrade = 5 }
 
 /// <summary>The factions (design 05 §4, M3; Neutral Q-37). Every type has one (default from its id prefix); every player has one
-/// (<see cref="Core.SimSetup.Factions"/>). M6-02: LeftBehind = 3 is appended after Neutral (Neutral keeps 2). M7-02: Expedition = 4 (The Overseas Expedition) exists as a value only: it is not in <see cref="RuleCounts.PlayableOrder"/> until M7-08/M7-14. Neutral is the passive owner of ruins and map features: never a playable faction
+/// (<see cref="Core.SimSetup.Factions"/>). M6-02: LeftBehind = 3 is appended after Neutral (Neutral keeps 2). M7-14: Expedition = 4 (The Overseas Expedition) is playable and in <see cref="RuleCounts.PlayableOrder"/>. Neutral is the passive owner of ruins and map features: never a playable faction
 /// (<see cref="RuleCounts.PlayableFactions"/>), no start kit, no AI. Append only: values are persisted.</summary>
 public enum Faction : byte { Authority = 0, Directorate = 1, Neutral = 2, LeftBehind = 3, Expedition = 4 }
 
@@ -46,13 +46,13 @@ public static class RuleCounts
     /// <summary>How many factions the skirmish setup offers (M6-09: Authority, Directorate, Left Behind). A COUNT, not a bound on the enum:
     /// <see cref="Faction.Neutral"/> sits between Directorate and Left Behind, so test a faction with <see cref="IsPlayable"/> and walk
     /// <see cref="PlayableOrder"/>, never <c>(int)f &lt; PlayableFactions</c>.</summary>
-    public const int PlayableFactions = 3;
+    public const int PlayableFactions = 4;   // M7-14: Expedition joins Authority, Directorate, Left Behind
 
     /// <summary>The factions a player slot may hold, in the order the skirmish setup cycles them (M6-09).</summary>
-    public static readonly IReadOnlyList<Faction> PlayableOrder = new[] { Faction.Authority, Faction.Directorate, Faction.LeftBehind };
+    public static readonly IReadOnlyList<Faction> PlayableOrder = new[] { Faction.Authority, Faction.Directorate, Faction.LeftBehind, Faction.Expedition };
 
-    /// <summary>True for every faction a player slot may hold: all except <see cref="Faction.Neutral"/> (M6-02) and, until M7-08/M7-14, <see cref="Faction.Expedition"/>.</summary>
-    public static bool IsPlayable(Faction f) => f != Faction.Neutral && (int)f < Factions && f != Faction.Expedition;   // M7-02: Expedition is not offered until M7-08/M7-14
+    /// <summary>True for every faction a player slot may hold: all except <see cref="Faction.Neutral"/> (M6-02). M7-14: Expedition is playable.</summary>
+    public static bool IsPlayable(Faction f) => f != Faction.Neutral && (int)f < Factions;
     /// <summary>Number of <see cref="TunnelSize"/> values.</summary>
     public const int TunnelSizes = 4;
     /// <summary>Most upgrades a rules set may define: the per-player mask is a <c>ulong</c>.</summary>

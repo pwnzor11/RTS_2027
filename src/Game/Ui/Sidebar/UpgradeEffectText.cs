@@ -54,7 +54,7 @@ public static class UpgradeEffectText
     private static string TargetText(string target)
     {
         if (target.StartsWith("class:", StringComparison.Ordinal))
-            return target[6..] switch { "infantry" => "All infantry", "vehicle" => "All vehicles", "building" => "All buildings", var c => "All " + c };
+            return target[6..] switch { "infantry" => "All infantry", "vehicle" => "All vehicles", "building" => "All buildings", "player" => "All players", var c => "All " + c };
         if (target.StartsWith("weapon:", StringComparison.Ordinal)) return CameoNames.Display(target[7..]) + " weapon";
         if (target.StartsWith("warhead:", StringComparison.Ordinal)) return CameoNames.Display(target[8..]) + " warhead";
         return CameoNames.Display(target);

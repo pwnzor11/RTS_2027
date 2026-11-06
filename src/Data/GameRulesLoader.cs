@@ -350,7 +350,7 @@ internal static class GameRulesLoader
         bool withExp = root.TryGetValue(FactionSection, out object? sec1) && sec1 is TomlTable t1 && t1.ContainsKey("expedition");   // M7-02
         FactionStartKit[] kits = withExp
             ? new[] { FactionStartKit.AuthorityDefault, FactionStartKit.DirectorateDefault, FactionStartKit.NeutralNone,
-                withLb ? FactionStartKit.LeftBehindDefault : FactionStartKit.NeutralNone, FactionStartKit.ExpeditionNone }
+                withLb ? FactionStartKit.LeftBehindDefault : FactionStartKit.NeutralNone, FactionStartKit.ExpeditionDefault }
             : withLb
             ? new[] { FactionStartKit.AuthorityDefault, FactionStartKit.DirectorateDefault, FactionStartKit.NeutralNone, FactionStartKit.LeftBehindDefault }
             : new[] { FactionStartKit.AuthorityDefault, FactionStartKit.DirectorateDefault };

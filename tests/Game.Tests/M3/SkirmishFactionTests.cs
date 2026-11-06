@@ -86,9 +86,11 @@ public sealed class SkirmishFactionTests
     [Theory]
     [InlineData(Faction.Authority, 1, Faction.Directorate)]
     [InlineData(Faction.Directorate, 1, Faction.LeftBehind)]
-    [InlineData(Faction.LeftBehind, 1, Faction.Authority)]
-    [InlineData(Faction.Authority, -1, Faction.LeftBehind)]
+    [InlineData(Faction.LeftBehind, 1, Faction.Expedition)]   // M7-14: the Overseas Expedition follows Left Behind
+    [InlineData(Faction.Expedition, 1, Faction.Authority)]
+    [InlineData(Faction.Authority, -1, Faction.Expedition)]
     [InlineData(Faction.Directorate, -1, Faction.Authority)]
+    [InlineData(Faction.Expedition, -1, Faction.LeftBehind)]
     public void The_faction_pick_wraps_round(Faction from, int delta, Faction expected) =>
         Assert.Equal(expected, SkirmishSetupScreen.NextFaction(from, delta));
 

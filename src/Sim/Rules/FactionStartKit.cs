@@ -26,8 +26,11 @@ public sealed record FactionStartKit(string Conyard, IReadOnlyList<string> Units
     /// <summary>Placeholder for <see cref="Faction.Neutral"/> (index 2): neutral has no start kit and never resolves.</summary>
     public static FactionStartKit NeutralNone { get; } = new("", Array.Empty<string>());
 
-    /// <summary>Placeholder for <see cref="Faction.Expedition"/> (index 4, M7-02): no kit until M7-08 supplies the real one.</summary>
-    public static FactionStartKit ExpeditionNone { get; } = new("", Array.Empty<string>());
+    /// <summary>The Overseas Expedition start (index 4; M7-08 data, M7-14 playable): no conyard, a Command Ship that Deploys into
+    /// exp_landing_depot on a landing coast, a Landing Craft, three Marines and a Skimmer. Mirrors game.toml <c>[faction.expedition]</c>.</summary>
+    public static FactionStartKit ExpeditionDefault { get; } =
+        new("", new[] { "exp_command_ship", "exp_landing_craft", "exp_marine", "exp_marine", "exp_marine", "exp_skimmer" })
+        { Tier2Provides = "exp_tier2", Tier3Provides = "exp_tier3" };
 
     /// <summary>The Left Behind start (M6-08): no conyard building, a packed Mother Rig vehicle, two Scavengers and a Gleaner.</summary>
     public static FactionStartKit LeftBehindDefault { get; } =

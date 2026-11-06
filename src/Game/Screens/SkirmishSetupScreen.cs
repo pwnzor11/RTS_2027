@@ -114,7 +114,7 @@ public sealed class SkirmishSetupScreen : IScreen
             MapEntry entry = _maps[_mapIndex];
             int open = _slots.Count(x => x.Kind != SlotKind.Closed);
             MapChoice map = entry.IsGenerated
-                ? new MapChoice(null, new MapGenParams(_biome, _size, Math.Clamp(open, SkirmishSettings.MinPlayers, SkirmishSettings.MaxSlots), _seed, null, _ocean))
+                ? new MapChoice(null, new MapGenParams(_biome, _size, Math.Clamp(open, SkirmishSettings.MinPlayers, SkirmishSettings.MaxSlots), _seed, null, ResolvedOcean(out _)))
                 : new MapChoice(entry.File, null);
             ulong simSeed = entry.IsGenerated ? _seed : SkirmishGame.CuratedSimSeed;
             return new SkirmishSettings(map, _slots.ToArray(), simSeed);
@@ -208,7 +208,7 @@ public sealed class SkirmishSetupScreen : IScreen
                 new MenuButton("Col", () => StepSlotColour(slot))));
         }
 
-        rows.Add(new(() => _error.Length > 0 ? _error : HintText()));
+        rows.Add(new(() => _error.Length > 0 ? _error : NoteText() ?? HintText()));
         rows.Add(new(() => IsSpectate ? "Spectate" : "Start", Start));
         rows.Add(new(() => "Back", () => _s.Screens.Pop()));
 
@@ -226,6 +226,17 @@ public sealed class SkirmishSetupScreen : IScreen
         string tight = _size == MapSize.Small && open == 4 ? " (tight for 4)" : "";
         return $"Size: {MapPicker.SizeName(_size)} {cells}x{cells}{tight}";
     }
+
+    /// <summary>M7-14: the one-line note about the Expedition's ocean edge, or null.</summary>
+    private string? NoteText()
+    {
+        ResolvedOcean(out string? note);
+        return note;
+    }
+
+    /// <summary>M7-14: the ocean choice the generated map gets (an Expedition slot forces one edge), with its note.</summary>
+    private OceanEdges ResolvedOcean(out string? note) =>
+        ExpeditionSetup.ResolveOcean(_ocean, _maps[_mapIndex].IsGenerated && ExpeditionSetup.HasExpedition(_slots), out note);
 
     private string HintText() => IsSpectate ? "(no Human slot: you will watch)" : "(Kind Fac Tier Cmdr Team Col cycle each choice)";
 
@@ -374,7 +385,7 @@ public sealed class SkirmishSetupScreen : IScreen
     }
 
     /// <summary>The name shown for a faction on the setup screen.</summary>
-    public static string FactionName(Faction faction) => faction switch { Faction.Directorate => "Directorate", Faction.LeftBehind => "Left Behind", Faction.Neutral => "Neutral", _ => "Authority" };
+    public static string FactionName(Faction faction) => faction switch { Faction.Directorate => "Directorate", Faction.LeftBehind => "Left Behind", Faction.Expedition => "Overseas Expedition", Faction.Neutral => "Neutral", _ => "Authority" };
 
     /// <summary>Cuts text to at most <paramref name="max"/> characters, ending in "..." when it was cut.</summary>
     public static string Shorten(string text, int max) => text.Length <= max ? text : text[..(max - 3)] + "...";
@@ -387,6 +398,9 @@ public sealed class SkirmishSetupScreen : IScreen
         IReadOnlyList<string> problems = settings.Validate();
         if (problems.Count == 0 && !_maps[_mapIndex].IsGenerated && settings.PlayerCount > _maps[_mapIndex].MaxPlayers)
             problems = new[] { $"This map has room for {_maps[_mapIndex].MaxPlayers} players." };
+        // M7-14: an Expedition slot needs a hand-made map with a landing coast (D-127)
+        if (problems.Count == 0 && settings.Map.File is { } mapFile && ExpeditionSetup.LandingProblem(settings, ExpeditionSetup.ReadMeta(_s.RulesDir, mapFile)) is { } landing)
+            problems = new[] { landing };
         if (problems.Count > 0)
         {
             _error = Shorten(problems[0], 56);
