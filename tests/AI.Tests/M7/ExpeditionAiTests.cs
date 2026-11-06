@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
 using Rts.AI;
+using Rts.AI.Recruit;
 using Rts.Data;
 using Rts.Sim.Map;
 using Rts.Sim.Rules;
@@ -113,6 +114,20 @@ public sealed class ExpeditionAiTests(ITestOutputHelper log)
         Assert.True(rig.Ai.FleetStrikes >= 1, "a naval strike target was chosen");
         Assert.True(rig.ShipAttackMoves >= 1, "a strike group got an AttackMove to its firing position");
         Assert.True(rig.Sim.Tick <= 18000);
+    }
+
+    [Fact]
+    public void ARecruitTierExpeditionEscortsConvoysAndStrikesFromTheSea()
+    {
+        // S12 (M7-18): the lowest tier is not passive. Its plan has one escort and no sub hunters; the escort takes station at the dock and the
+        // other ships go out on a strike, all gated by the Expedition plan flags rather than the tier number.
+        ExpeditionPlan plan = ExpeditionPlan.For(1);
+        Assert.True(plan.Escorts >= 1 && plan.Fleet >= 3);
+        var rig = new ExpeditionRig(Tier(1), Faction.Directorate);
+        rig.Run(12000, () => rig.Ai.EscortOrders >= 1 && rig.Ai.FleetStrikes >= 1);
+        log.WriteLine($"tick {rig.Sim.Tick}: escorts {rig.Ai.EscortOrders}, strikes {rig.Ai.FleetStrikes}, attack-moves {rig.ShipAttackMoves} :: {rig.Ai.ExpeditionDebug}");
+        Assert.True(rig.Ai.EscortOrders >= 1, "an escort was sent to the dock or a tender");
+        Assert.True(rig.Ai.FleetStrikes >= 1, "a strike target was chosen");
     }
 
     [Fact]

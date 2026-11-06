@@ -20,7 +20,7 @@ internal readonly record struct ExpeditionPlan(int Fleet, int Cruisers, int Carr
     [
         new(Fleet: 3, Cruisers: 0, Carriers: 0, Escorts: 1, SubHunt: false, SortieBuildings: false, WaveBonus: 2),   // tier 1
         new(Fleet: 3, Cruisers: 0, Carriers: 0, Escorts: 1, SubHunt: true, SortieBuildings: false, WaveBonus: 2),    // tier 2
-        new(Fleet: 4, Cruisers: 1, Carriers: 0, Escorts: 2, SubHunt: true, SortieBuildings: false, WaveBonus: 2),    // tier 3
+        new(Fleet: 3, Cruisers: 0, Carriers: 0, Escorts: 1, SubHunt: true, SortieBuildings: false, WaveBonus: 2),    // tier 3
         new(Fleet: 5, Cruisers: 1, Carriers: 1, Escorts: 2, SubHunt: true, SortieBuildings: true, WaveBonus: 2),     // tier 4
         new(Fleet: 5, Cruisers: 2, Carriers: 1, Escorts: 2, SubHunt: true, SortieBuildings: true, WaveBonus: 2),     // tier 5
     ];
