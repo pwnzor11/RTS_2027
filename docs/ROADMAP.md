@@ -146,7 +146,7 @@ Main menu → Map Editor.
 - [x] M4-13 Map editor + main menu entry
 - [x] M4-14 RulesOf sweep
 - [x] M4-15 Neutral map features (ruins)
-- [ ] M4-16 Integration + balance. Session 8: round-3 diagnosis in docs/balance/m4_16_round3.md (main cause: higher tiers launch small waves on a timer into a bigger home army; tech spending second; round-2 2 v 1 inversion was sampling noise; 64 games per cell from now on); fixes in progress on `wp/m4-16r3-wip`, not landed. Session 7: round-2 re-measure in docs/balance/m4_16_round2.md (ladder flat or inverted, not met). Session 6 (PR #11): start-bias sim fixes + `ai match` per-game seeds (D-104); AI round 1 (D-105:
+- [ ] M4-16 Integration + balance. Session 12: research how the reference repos tier their AI (docs/research/25_ai_difficulty.md). Session 8: round-3 diagnosis in docs/balance/m4_16_round3.md (main cause: higher tiers launch small waves on a timer into a bigger home army; tech spending second; round-2 2 v 1 inversion was sampling noise; 64 games per cell from now on); fixes in progress on `wp/m4-16r3-wip`, not landed. Session 7: round-2 re-measure in docs/balance/m4_16_round2.md (ladder flat or inverted, not met). Session 6 (PR #11): start-bias sim fixes + `ai match` per-game seeds (D-104); AI round 1 (D-105:
   finish won games, 4-player targeting; tech hold off); rules garrison counters + Seismic Mortar (D-105); Faction.Neutral (D-100);
   8× spectator benchmark (headless 1 000 ticks/s, fine). **Still open:** re-measure the tier ladder (target ≥ 60 %), cross-faction,
   Directorate veteran mirror and 4-player matrix on the fixed starts; mirror-symmetric AI placement + seeded placement variation
@@ -167,6 +167,7 @@ Built-in AI does micro; an LLM sets strategy every 30 s (D-103) and talks in cha
 - [x] M5-08 LLM settings, DPAPI key store, settings page (model names: Q-40 answered session 7, D-108)
 - [x] M5-09 Setup + spectator: LLM kind per slot, LLM-vs-LLM (session 7; save header v4)
 - [ ] M5-10 Replay/save tests with recorded directives; owner play-test (tests done session 7, loaded saves rebuild commanders; owner play-test with a real key open)
+- [ ] M5-11 Headless commander match (`ai match` with an LLM commander slot, key from an environment variable) for the owner's OpenAI test (D-153 (12))
 
 ## M6 · The Left Behind (D-087)
 Third faction: Glass Coast evacuees abandoned in 1990; nomadic scavengers, mobile crawler-rig bases, salvaged tech, raids.
@@ -206,7 +207,15 @@ systems (water locomotion, ships, landings). Lore, roster, art, AI.
 - [ ] M7-11 Art (owner PC, D-084) — pilot approved (variant A, D-149); all 46 sprites drawn on local `wp/art-exp-all` (session 11), waiting for the owner's push; exp_anchorage/exp_quay stand-ins until Q-55
 - [ ] M7-14 Game layer + acceptance — game layer done (PR #26); income tuned (D-152, docs/balance/m7_income.md: medium/large pass, small +12..22 %); golden replay + 210-game soak 0 desyncs (docs/balance/m7_14_acceptance.md); open: §6 bullet 1 (win vs every tier), Q-55 docks, owner play-test
 
+- [ ] M7-15 Floating docks (Q-55 (a), D-153, D-156): wholly-on-water docks touching the shore, AI siting, drop the South stop-gap; redraw the four dock sprites (pilot first)
+- [ ] M7-16 Aircraft ammo (D-156): 4-5 rounds, rearm at the carrier, carrier balance table
+- [ ] M7-17 Submarine dived frames drawn; dived look only for owner and allies
+- [ ] M7-18 Expedition AI per tier (§6 bullet 1) and M7 acceptance close-out
+- [ ] M7-19 Left Behind early income (Q-52, D-153) and Expedition small-map re-measure
+- [ ] M7-20 Archive drafts (8 upgrade notes, Provision Store) and Left Behind lore revision (D-155)
+
 ## M8 · Campaign (was M4)
+- [x] M8-02a Plan update with the owner's story answers (D-154/D-155), Fallout-style endings, voice slot; voice tool guide (docs/audio/voice_setup.md) (session 12)
 - [x] M8-01 Campaign plan (docs/design/12_m8_plan.md, plan only; story questions open) (session 9)
 Mission scripting/trigger system, briefing screens, tech gating, campaign flow; written once with all four factions.
 Wires Archive campaign unlocks.

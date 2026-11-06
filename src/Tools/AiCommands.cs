@@ -26,6 +26,7 @@ public static class AiCommands
         "       ai matrix --ai <aiId> [--faction authority|directorate] [--tiers 1-5] [--seeds 4] [--ticks 6000] [--size 64] [--out file.md]\n" +
         "       ai matrix --players 2-4 [--ai tiered] [--tiers 3] [--faction authority|directorate|mixed] [--biome rust_belt|glass_coast|mountains|ash_plains|all] [--size s|m|l|<cells>] [--seeds 2] [--ticks 25000] [--out file.md]\n" +
         "       ai timeline --a <aiId>[:<tier>] --b <aiId>[:<tier>] [--seed 1] [--ticks 30000] [--size 64] [--swap 0|1] [--trace N] [--dump 1]\n" +
+        "       ai commander --a <aiId>[:<tier>] --b <aiId>[:<tier>] --provider openai|anthropic [--model <name>] [--seed 1] [--ticks 30000] [--size 64] [--out dir]   (side A = LLM commander; key from OPENAI_API_KEY or ANTHROPIC_API_KEY)\n" +
         "       ai duel --a <spec> --b <spec> [--count 1] [--count-b N] [--ticks 3000] [--gap 12]   (spec = id[:n][,id[:n]...], e.g. auth_tank:3,auth_turret:1)\n" +
         "  <tier> is 1..5 or recruit|regular|veteran|elite|commissar (default regular). Seeds are first..first+N-1 (first defaults to 1).";
 
@@ -44,6 +45,7 @@ public static class AiCommands
             "match" => Match(rest),
             "matrix" => Matrix(rest),
             "timeline" => Timeline(rest),
+            "commander" => CommanderMatchCommand.Run(rest),
             "duel" => Duel(rest),
             "ffa" => Ffa(rest),
             _ => UsageError($"unknown subcommand '{args[0]}'"),
@@ -752,8 +754,6 @@ public static class AiCommands
                 // Slot order (who acts first in a tick) must not ride along with the start corner: by default the
                 // corners trade slots on even seeds ("alt"); "slot" = corner p for slot p; "swap" = corner 1-p.
                 bool swapSlots = startMode == "swap" || (startMode == "alt" && s % 2 == 0);
-                // M7-10: the Expedition always takes the south start (its dock masks need the sea to the south of the shore)
-                if (landing is not null) { int expoSlot = (a.Faction == Faction.Expedition) == aInSlot0 ? 0 : 1; swapSlots = expoSlot == 0; }
                 FileStream? replay = recordDir is null ? null
                     : File.Create(Path.Combine(recordDir, $"{a.FileLabel}_vs_{b.FileLabel}_seed{s}_g{g + 1}.rtsreplay"));
                 AiGameResult r;

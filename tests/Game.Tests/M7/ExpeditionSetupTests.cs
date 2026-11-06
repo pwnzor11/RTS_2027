@@ -32,7 +32,7 @@ public sealed class ExpeditionSetupTests
     public void GeneratedMap_WithExpedition_AndNoOcean_GetsOneNorthEdgeAndANote()
     {
         OceanEdges edges = ExpeditionSetup.ResolveOcean(OceanEdges.None, expeditionOnGeneratedMap: true, out string? note);
-        Assert.Equal(OceanEdges.South, edges);
+        Assert.Equal(OceanEdges.North, edges);
         Assert.Equal("The Expedition needs a coast: one ocean edge added.", note);
     }
 

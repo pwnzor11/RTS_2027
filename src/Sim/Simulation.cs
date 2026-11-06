@@ -245,6 +245,7 @@ public sealed partial class Simulation
         _fx.Clear();
         ApplyInput(commands);
         RunCarriers();     // M7-09: Simulation.Carrier.cs — hangar rides, sortie timers (before missions)
+        RunAircraftAmmo(); // D-156: Simulation.Carrier.cs — dry aircraft without a hangar place go home; hover rearm
         RunShipments();    // M7-06: Simulation.Shipments.cs — home supply line (its Move orders are resolved by RunMovement this tick)
         RunMissions();
         RunMovement();

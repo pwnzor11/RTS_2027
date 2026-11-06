@@ -31,9 +31,11 @@ public static class UnitRenderer
     /// <param name="unit">Unit to draw.</param>
     /// <param name="selected">Whether the unit is selected (adds brackets).</param>
     /// <param name="camera">View.</param>
-    /// <param name="submerged">M7-14: the ship is dived (draw it semi-transparent).</param>
+    /// <param name="submerged">M7-14: the ship is dived. Its dived body frames are drawn (M7-17).</param>
+    /// <param name="ownOrAllied">M7-17: the viewer owns or is allied with the ship; only then is a dived ship drawn semi-transparent.</param>
     public static void Draw(SpriteBatch batch, Texture2D pixel, SpriteResolver sprites, SpritePainter painter,
-        RenderMemory memory, int tick, SimRules? rules, RenderUnit unit, bool selected, Camera camera, bool submerged = false)
+        RenderMemory memory, int tick, SimRules? rules, RenderUnit unit, bool selected, Camera camera, bool submerged = false,
+        bool ownOrAllied = false)
     {
         UnitView view = unit.View;
         bool infantry = view.Kind == UnitKind.Infantry;
@@ -43,14 +45,16 @@ public static class UnitRenderer
         Color house = PlayerColours.Base(view.Player);
         float drawScale = DrawScale(rules, view);   // M7-03: big ships are one cell but drawn larger (D-124)
         if (UnitVisuals.ShowTunnelMarker(view)) DrawTunnelMarker(batch, pixel, origin, infantry, house, camera.Zoom);
-        float alpha = UnitVisuals.Alpha(view, submerged);   // M7-14: a dived ship is drawn semi-transparent
+        float alpha = UnitVisuals.Alpha(view, submerged, ownOrAllied);   // M7-14/M7-17: faded only for own and allied dived ships
+        int divedFrame = UnitVisuals.DivedBodyFrame(sprite.Manifest, view.Facing, tick, submerged);   // M7-17: dived body frame, or -1
         if (UnitVisuals.ShowDiveMarker(view)) DrawDiveMarker(batch, pixel, origin, house, tick, camera.Zoom);
         // M3-18: shadow under the body, turret on top, dive replaces the body. M3-21: the snapshot carries the turret facing and the dive flag.
         // Companion sheets (<id>_turret, <id>_shadow) supply a layer when the body sheet has no such state.
         IReadOnlyList<UnitLayer> layers = UnitLayerPlan.For(sprite.Manifest, infantry, moving, view.Facing, UnitVisuals.TurretFacing(view),
             view.Diving, tick, sprite.TurretSheet?.Manifest, sprite.ShadowSheet?.Manifest);
-        foreach (UnitLayer layer in layers)
+        foreach (UnitLayer planned in layers)
         {
+            UnitLayer layer = divedFrame >= 0 && planned.Kind == UnitLayerKind.Body ? planned with { Frame = divedFrame } : planned;
             Vector2 at = origin + new Vector2(layer.OffsetX, layer.OffsetY) * (camera.Zoom * drawScale);
             float layerAlpha = layer.Kind == UnitLayerKind.Shadow ? alpha * UnitLayerPlan.ShadowAlpha : alpha;
             ResolvedSprite layerSprite = layer.Sheet switch

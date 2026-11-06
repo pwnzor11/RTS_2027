@@ -132,7 +132,7 @@ public sealed class ExpeditionDataTests
     }
 
     [Fact]
-    public void WaterBuildings_HaveMasks_AndTheAnchorageIsTheShipmentDock()
+    public void WaterBuildings_HaveNoMasks_AndTheAnchorageIsTheShipmentDock()
     {
         SimRules s = LoadReal().Sim;
         string[] water = ["exp_quay", "exp_anchorage", "exp_shipyard", "exp_drydock"];
@@ -140,9 +140,7 @@ public sealed class ExpeditionDataTests
         {
             if (!water.Contains(b.Id)) { Assert.False(b.WaterBuilding, b.Id); continue; }
             Assert.True(b.WaterBuilding, b.Id);
-            Assert.Equal(b.FootprintW * b.FootprintH, b.WaterMask.Count);
-            Assert.Contains(true, b.WaterMask);
-            Assert.Contains(false, b.WaterMask);   // straddles the shoreline: some land too
+            Assert.Empty(b.WaterMask);   // D-156 (1): floating docks, all water, touching the shore
         }
         Assert.Equal(new[] { "exp_anchorage" }, s.Buildings.Where(b => b.ShipmentDock).Select(b => b.Id).ToArray());
         Assert.Equal("exp_supply_tender", LoadReal().Sim.Shipments.TenderType);

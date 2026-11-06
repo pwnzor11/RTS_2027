@@ -1027,7 +1027,6 @@ prerequisites = ["exp_pile_house"]
 provides = []
 produces = "vehicle"
 water_building = true
-water = [0, 0, 0, 1, 1, 1]
 beachhead_source = true
 beachhead_radius = 8  # (tune) design 11 §2.3
 # TODO M7-04: exit cell on the water side (D-138 follow-up); no `exit` until the yard exit uses the move class
@@ -1046,7 +1045,6 @@ power = -10  # (tune)
 prerequisites = ["exp_pile_house"]
 provides = []
 water_building = true
-water = [0, 0, 1, 1]
 shipment_dock = true
 
 [exp_beacon]   # PLACEHOLDER ART; Landing Beacon: extends the build zone, fragile
@@ -1112,7 +1110,6 @@ prerequisites = ["exp_quay"]
 provides = []
 produces = "vehicle"
 water_building = true
-water = [0, 0, 0, 0, 0, 0, 1, 1, 1]
 beachhead_source = true
 beachhead_radius = 8  # (tune) design 11 §2.3
 # TODO M7-04: exit cell on the water side (see exp_quay)
@@ -1209,7 +1206,6 @@ power = -50  # (tune)
 prerequisites = ["exp_shipyard"]
 provides = []
 water_building = true
-water = [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1]
 
 [exp_salvo_array]   # PLACEHOLDER ART; Salvo Array superweapon (cruise-missile barrage)
 faction = "expedition"

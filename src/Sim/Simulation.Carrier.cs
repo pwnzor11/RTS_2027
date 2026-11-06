@@ -20,7 +20,14 @@ namespace Rts.Sim;
 // cells of an own carrier with a free slot is built straight into the hangar.
 // A sortie ends after sortie_ticks of flight or as soon as its Attack mission has ended (target dead or hidden), then the aircraft returns.
 // If the carrier dies, docked aircraft are lost with it and airborne ones become ordinary aircraft (HangarOf cleared).
-// ASSUMED (M7-09): the sim has no ammunition, so "out of ammo" does not exist; a sortie ends by time or by its target going away. — confirm (M7-09)
+// D-156 (M7-16): ammunition. A type with ammo > 0 holds that many rounds (NavalState.AmmoLeft, full at spawn); each primary-weapon shot uses one
+// and at 0 the aircraft cannot attack (WeaponOf says -1). A sortie also ends when the aircraft runs dry; docked aircraft rearm
+// (RearmTicks for empty to full, one round per RearmTicks/Ammo) alongside the repair. A dry aircraft with no carrier (RunAircraftAmmo) flies to the
+// nearest own carrier with a free slot and takes a hangar place, else hovers over the nearest own aircraft-producing building and rearms
+// there, else stays where it is without ammunition.
+// ASSUMED (D-156): a launch order sends any docked aircraft with at least one round; a partly rearmed aircraft may leave. — confirm (M7-16)
+// ASSUMED (D-156): the hover-rearm fallback only runs for a dry aircraft that is idle or fighting; an explicit Move order is obeyed until it ends. — confirm (M7-16)
+// ASSUMED (M7-09): a sortie ends by time, by running out of rounds, or by its target going away. — confirm (M7-09)
 // ASSUMED (M7-09): sortie_ticks is the flight time of one sortie (the brief), not a launch interval; launching takes no time. — confirm (M7-09)
 // ASSUMED (M7-09): any air type that carries no passengers fits a hangar (a Skyhook does not); one place per aircraft. — confirm (M7-09)
 // ASSUMED (M7-09): a docked aircraft regains full health in sortie_ticks ticks (max health / sortie_ticks per tick, at least 1). — confirm (M7-09)
@@ -82,7 +89,8 @@ public sealed partial class Simulation
                 case NavalState.AirDocked: RideAndRepair(i, h); break;
                 case NavalState.AirOnSortie:
                     bool flying = _units.Mission[i] == MissionKind.Attack || _units.NextMission[i] == MissionKind.Attack;
-                    if (--_naval.SortieLeft[i] <= 0 || !flying) Recall(i);
+                    bool dry = RulesOf(owner).Vehicles[_units.TypeIndex[i]].Ammo > 0 && _naval.AmmoLeft[i] <= 0;   // D-156
+                    if (--_naval.SortieLeft[i] <= 0 || !flying || dry) Recall(i);
                     break;
             }
         }
@@ -98,10 +106,95 @@ public sealed partial class Simulation
         _units.PathActive[i] = false; _units.PathCells[i] = null; _units.PathPos[i] = 0;
         _combat.At(ActorKind.Vehicle, i).AttackTarget = default;
         byte owner = _units.Player[i];
+        Rearm(i);
         int max = RulesOf(owner).Vehicles[_units.TypeIndex[i]].MaxHealth;
         if (_units.Health[i] <= 0 || _units.Health[i] >= max) return;
         int ticks = Math.Max(1, RulesOf(owner).Vehicles[_units.TypeIndex[carrier]].SortieTicks);
         _units.Health[i] = Math.Min(max, _units.Health[i] + Math.Max(1, max / ticks));
+    }
+
+    /// <summary>One tick of rearming: Ammo progress per tick, one round back every RearmTicks of progress (empty to full takes RearmTicks).</summary>
+    private void Rearm(int i)
+    {
+        VehicleType vt = RulesOf(_units.Player[i]).Vehicles[_units.TypeIndex[i]];
+        if (vt.Ammo <= 0) return;
+        if (_naval.AmmoLeft[i] >= vt.Ammo) { _naval.AmmoLeft[i] = vt.Ammo; _naval.RearmProgress[i] = 0; return; }
+        _naval.RearmProgress[i] += vt.Ammo;
+        while (_naval.RearmProgress[i] >= vt.RearmTicks && _naval.AmmoLeft[i] < vt.Ammo) { _naval.RearmProgress[i] -= vt.RearmTicks; _naval.AmmoLeft[i]++; }
+        if (_naval.AmmoLeft[i] >= vt.Ammo) _naval.RearmProgress[i] = 0;
+    }
+
+    /// <summary>Once per tick for aircraft with ammo that hold no hangar place: rearm while hovering over an own aircraft-producing building,
+    /// and send a dry one to a free carrier slot or to such a building.</summary>
+    private void RunAircraftAmmo()
+    {
+        for (int i = 1; i < _units.Capacity; i++)
+        {
+            if (!_units.Slots.IsIndexAlive(i) || _naval.HangarOf[i] != 0 || _naval.AirState[i] != 0 || _units.Health[i] <= 0) continue;
+            byte owner = _units.Player[i];
+            VehicleType vt = RulesOf(owner).Vehicles[_units.TypeIndex[i]];
+            if (vt.Ammo <= 0 || vt.Locomotion != Locomotion.Air || _tunnels.VehicleLayer[i] != ActorLayer.Surface) continue;
+            CellCoord cell = _units.Position[i].ToCell();
+            if (OverAircraftBuilding(i, owner, cell)) { Rearm(i); continue; }
+            if (_naval.AmmoLeft[i] > 0) continue;
+            MissionKind m = _units.Mission[i], n = _units.NextMission[i];
+            if (m == MissionKind.Move || n == MissionKind.Move || m == MissionKind.Sortie || n == MissionKind.Sortie) continue;
+            int carrier = NearestFreeCarrier(owner, cell);
+            if (carrier > 0)
+            {
+                MoveMission.DropRequest(this, _units, i);
+                _naval.HangarOf[i] = carrier; _naval.AirState[i] = NavalState.AirReturning; _naval.SortieLeft[i] = 0;
+                _combat.At(ActorKind.Vehicle, i).AttackTarget = default;
+                Queue(_units, i, MissionKind.Sortie, default, default);
+                continue;
+            }
+            int b = NearestAircraftBuilding(owner, cell);
+            if (b <= 0) continue;
+            BuildingType bt = RulesOf(owner).Buildings[_buildings.TypeIndex[b]];
+            CellCoord tl = _buildings.Cell[b];
+            _combat.At(ActorKind.Vehicle, i).AttackTarget = default;
+            Queue(_units, i, MissionKind.Move, new CellCoord(tl.X + bt.FootprintW / 2, tl.Y + bt.FootprintH / 2), default);
+        }
+    }
+
+    private bool IsAircraftBuilding(int b, byte owner) =>
+        _buildings.Slots.IsIndexAlive(b) && _buildings.Player[b] == owner && _buildings.Health[b] > 0
+        && RulesOf(owner).Buildings[_buildings.TypeIndex[b]].Produces == ProductionCategory.Aircraft;
+
+    private bool OverAircraftBuilding(int i, byte owner, CellCoord cell)
+    {
+        for (int b = 1; b < _buildings.Capacity; b++)
+        {
+            if (!IsAircraftBuilding(b, owner)) continue;
+            BuildingType bt = RulesOf(owner).Buildings[_buildings.TypeIndex[b]];
+            CellCoord tl = _buildings.Cell[b];
+            if (cell.X >= tl.X && cell.X < tl.X + bt.FootprintW && cell.Y >= tl.Y && cell.Y < tl.Y + bt.FootprintH) return true;
+        }
+        return false;
+    }
+
+    private int NearestAircraftBuilding(byte owner, CellCoord from)
+    {
+        int best = 0, bestD = int.MaxValue;
+        for (int b = 1; b < _buildings.Capacity; b++)
+        {
+            if (!IsAircraftBuilding(b, owner)) continue;
+            int d = CellDistance(from, _buildings.Cell[b]);
+            if (d < bestD) { bestD = d; best = b; }
+        }
+        return best;
+    }
+
+    private int NearestFreeCarrier(byte owner, CellCoord from)
+    {
+        int best = 0, bestD = int.MaxValue;
+        for (int h = 1; h < _units.Capacity; h++)
+        {
+            if (!CarrierUsable(h, owner) || HangarUsed(h) >= RulesOf(owner).Vehicles[_units.TypeIndex[h]].AircraftSlots) continue;
+            int d = CellDistance(from, _units.Position[h].ToCell());
+            if (d < bestD) { bestD = d; best = h; }
+        }
+        return best;
     }
 
     /// <summary>End a sortie: forget the target and fly home.</summary>

@@ -469,7 +469,7 @@ internal sealed class ExpeditionTactics : IFactionTactics
         return true;
     }
 
-    /// <summary>True when a water structure of this type (its mask: water where 1, buildable land where 0) fits within
+    /// <summary>True when a water structure of this type (its mask: water where 1, buildable land where 0; with no mask all water and touching the shore) fits within
     /// <see cref="AnchorageReach"/> cells of a depot whose top-left is <paramref name="depotTl"/>.</summary>
     private static bool DockFits(PlayerView v, SimRules rules, BuildingType dock, BuildingType depot, CellCoord depotTl)
     {
@@ -482,6 +482,7 @@ internal sealed class ExpeditionTactics : IFactionTactics
                 int gy = Math.Max(0, Math.Max(depotTl.Y - (ty + h - 1), ty - (depotTl.Y + depot.FootprintH - 1)));
                 if (Math.Max(gx, gy) > AnchorageReach || (gx == 0 && gy == 0)) continue;
                 bool ok = true;
+                bool touches = mask;   // D-156 (1): an unmasked dock is all water and must touch the shore
                 for (int dy = 0; dy < h && ok; dy++)
                     for (int dx = 0; dx < w && ok; dx++)
                     {
@@ -492,7 +493,21 @@ internal sealed class ExpeditionTactics : IFactionTactics
                         bool want = !mask || dock.WaterMask[dy * w + dx];
                         ok = want ? water : !water && rules.Terrain.Buildable(land) && v.OverlayAt(c) == OverlayKind.None;
                     }
-                if (ok) return true;
+                if (ok && !touches) touches = DockTouchesLand(v, tx, ty, w, h);
+                if (ok && touches) return true;
+            }
+        return false;
+    }
+
+    /// <summary>True if a cell orthogonally next to the footprint (outside it, on the map) is land (not Water or Shallow).</summary>
+    private static bool DockTouchesLand(PlayerView v, int x0, int y0, int w, int h)
+    {
+        for (int dy = -1; dy <= h; dy++)
+            for (int dx = -1; dx <= w; dx++)
+            {
+                if ((dx >= 0 && dx < w) == (dy >= 0 && dy < h)) continue;
+                var c = new CellCoord(x0 + dx, y0 + dy);
+                if (v.InMap(c) && v.LandAt(c) is not (LandType.Water or LandType.Shallow)) return true;
             }
         return false;
     }

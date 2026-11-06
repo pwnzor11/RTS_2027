@@ -39,6 +39,10 @@ public readonly record struct ViewActor(
     /// the list carry it, so it is as fog-honest as the list itself: an enemy's rank is known exactly while it is visible.</summary>
     public int Rank { get; init; }
 
+    /// <summary>D-156: an own vehicle whose type holds ammunition and has none left (cannot attack until it rearms). Always false for
+    /// other players' actors, types without ammo, and ghosts.</summary>
+    public bool OutOfAmmo { get; init; }
+
     /// <summary>True for vehicles and infantry.</summary>
     public bool IsMobile => Kind is ActorKind.Vehicle or ActorKind.Infantry;
 }

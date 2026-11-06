@@ -1145,3 +1145,56 @@ from one ship; a probe sail to the sea cell nearest the enemy start when no targ
 4-1-3 vs Directorate, 8-0 vs Left Behind (was 0/8, 0/8, 1/8).
 **Why:** before the change the Expedition earned 32-56 % of the others in the first 10 minutes and lost almost every game.
 **Status:** assumed — confirm (all numbers; the owner may prefer a gentler curve: decay 40 with value 2400 was the alternative)
+
+### D-153 · 2026-11-06 · Session 12 kickoff: owner answers and confirmations
+**Decision:** The owner answered the session-12 list:
+(1) Q-55 → (a): the four shoreline buildings (exp_quay, exp_anchorage, exp_shipyard, exp_drydock) stand wholly on water and must touch the
+shore; any coast works; the four sprites are redrawn as floating docks (pilot first). The South-coast stop-gap of D-151 (4) goes.
+(2) D-150, D-151 (1)-(3) and D-152 confirmed; D-152 numbers kept.
+(3) Small-map Expedition income: tune the Left Behind first (Q-52), then re-measure. Left Behind income tuning lands as "assumed — confirm"
+with a before/after table (replaces D-148's "table first").
+(4) Expedition AI per tier is a main package. M4-16 continues, informed by how the reference repos handle difficulty tiers.
+(5) Aircraft ammo: 4-5 shots per sortie, then back to the carrier to rearm; balanced against other units' damage; the carrier stays strong.
+(6) Submarines: draw the dived frames, and the faded look only for the owner and allies.
+(7) Draws at the tick limit: a longer limit for measurement runs only (the normal game has no limit).
+(8) Archive "PENDING owner text" entries: the lead drafts them from the lore, "assumed — confirm".
+(9) Every decision still marked "assumed — confirm" up to D-152 is confirmed (this includes D-044..D-047, D-063, D-085, D-089, D-110..D-112).
+(10) Session-10/11 remote branches deleted by the owner; the owner's play-tests of sessions 10-11 look good.
+(11) Order: finish M7, then start M8.
+(12) LLM commander test: the owner will run it with an OpenAI key on his PC; the key never enters chat or the repo. A headless
+`ai match` commander option reads the key from an environment variable.
+**Status:** confirmed (owner, session 12)
+
+### D-154 · 2026-11-06 · M8 story answers (Q-A..Q-I)
+**Decision:** Q-A one shared 2001 told four ways. Q-B each campaign has its own hero. Q-C each campaign ends with that faction's victory over
+the others, followed by a Fallout-style ending: a sequence of captioned slides on what became of the campaign's major characters after the
+last battle and how it shaped the wider world (each campaign's ending is "its" version; no canon winner across campaigns). Q-D no choice
+points in the first slice. Q-E the Left Behind are hostile to everyone (see D-155). Q-F the Expedition's stance: Commissioner Strand decides
+(the recommendation; the owner's "see above" referred to the Left Behind only) — assumed — confirm. Q-G existing leaders only. Q-H text now,
+every line keyed in a locale file with an optional voice-file slot; the lead researches a local voice generator and writes the owner a
+setup guide. Q-I reuse the five skirmish tiers (no resource cheats, D-061).
+**Status:** confirmed (owner, session 12) except Q-F (assumed — confirm)
+
+### D-155 · 2026-11-06 · The Left Behind: hostile survivors (lore change)
+**Decision:** The Left Behind are no longer neutral. They asked the Authority for help and were refused; that refusal is their grievance.
+Their history has years of infighting between bands; by the time the player meets them (2001) the clans have become loosely allied under a
+warlord. They are hostile to every other faction. In their campaign they fight the Authority first (the refusal), then the Directorate (the
+people who hid underground), then the Expedition (outsiders who came for the fuel); their victory is taking over. Tone: sympathetic but
+ruthless — they have resigned themselves to ruthlessness because of how they were forced to survive. docs/lore/left_behind.md and the Left
+Behind Archive entries are revised to match.
+**Status:** confirmed (owner, session 12); revised lore text assumed — confirm (owner reads it)
+
+### D-156 · 2026-11-06 · Session 12 contracts: floating docks and aircraft ammo (lead)
+**Decision:** (1) Floating docks (Q-55 (a), D-153): a `water_building` with no `water` mask needs every footprint cell on water (deep or
+shallow; existing rule) **and** at least one footprint cell orthogonally next to a land cell (not Water/Shallow) — "touches the shore";
+otherwise placement fails with `PlacementResult.Blocked`. The four Expedition docks drop their `water` masks and keep their footprint sizes
+(quay 3x2, anchorage 2x2, shipyard 3x3, drydock 4x3). The beachhead rule is unchanged (every footprint cell inside the zone). The masked
+path stays in the code for future data. (2) Aircraft ammo: `VehicleType.Ammo` (TOML `ammo`, 0 = unlimited, the default) and
+`VehicleType.RearmTicks` (TOML `rearm_ticks`, time for an empty aircraft to rearm fully). Each shot fired by the primary weapon uses one round;
+an aircraft with 0 rounds cannot attack. On a carrier sortie, running dry ends the sortie (it returns and docks); docked aircraft rearm
+alongside the existing repair. An aircraft with ammo and no carrier returns to the nearest own carrier with a free slot, else hovers over the
+nearest own building that produces aircraft and rearms there. Only Expedition aircraft get ammo in this session (4-5 rounds, `(tune)`); other
+factions keep unlimited ammo until the owner sees a table. Per-unit ammo is saved and hashed, written only when some type has ammo > 0 (old
+hashes keep).
+**Why:** owner answers D-153 (1) and (5); smallest rules that match Red Alert's behaviour.
+**Status:** assumed — confirm (the shore-touch rule and the rearm-at-building fallback are visible to a player)
