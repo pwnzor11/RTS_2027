@@ -2,6 +2,7 @@
 // Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Rts.Game.Audio;
 using Rts.Game.Input;
 using Rts.Game.Ui;
 using Rts.Scripting;
@@ -10,7 +11,8 @@ namespace Rts.Game.Screens;
 
 /// <summary>
 /// Mission mode HUD (D-061): the objectives panel under the tick panel at the top left, and the message ticker (Media.Message lines
-/// younger than <see cref="MessageShowTicks"/>) above the key help at the bottom left. Reads the <see cref="MissionHost"/> only.
+/// younger than <see cref="MessageShowTicks"/>) above the key help at the bottom left. Dialogue (M8-05) shows one line above the ticker.
+/// Reads the <see cref="MissionHost"/> only.
 /// </summary>
 internal sealed class MissionOverlay
 {
@@ -22,8 +24,32 @@ internal sealed class MissionOverlay
     private const int GapPx = 6;
 
     private readonly MissionHost _host;
+    private readonly MissionDialoguePresenter _dialogue = new();
+    private readonly MissionCameraCue _cameraCue = new();
 
     public MissionOverlay(MissionHost host) => _host = host;
+
+    /// <summary>The dialogue line on screen, or null (M8-05).</summary>
+    public MissionDialogue? CurrentDialogue => _dialogue.Current;
+
+    /// <summary>
+    /// Called once per frame with the sim tick: moves the dialogue on, plays the voice of a line that just started when its file exists, and
+    /// returns the cell the camera should centre on, when the script's camera hint is new (M8-05). Null otherwise.
+    /// </summary>
+    public Rts.Sim.Core.CellCoord? Advance(int tick, IAudio audio)
+    {
+        _dialogue.Advance(_host.Dialogue, tick);
+        if (_dialogue.Started && _dialogue.Current is { } line && MissionDialoguePresenter.VoiceToPlay(line, audio.HasVoice) is { } voice)
+            audio.PlayVoice(voice);
+        return _cameraCue.Take(_host.CameraHint, tick);
+    }
+
+    /// <summary>The dialogue line as HUD text: "SPEAKER: text", wrapped (empty when no line is up).</summary>
+    public List<string> DialogueLines()
+    {
+        MissionDialogue? line = _dialogue.Current;
+        return line is null ? new List<string>() : Wrap(line.Speaker.ToUpperInvariant() + ": " + line.Text, WrapChars);
+    }
 
     /// <summary>The objectives panel, so clicks on it never reach the map.</summary>
     public RectRegion ObjectivesRegion { get; } = new(Rectangle.Empty);
@@ -65,12 +91,23 @@ internal sealed class MissionOverlay
         ObjectivesRegion.Bounds = new Rectangle(o.X, o.Y, lines.Max(l => BitmapFont.Measure(l, scale)) + 16, Hud.HeightOf(lines.Count, scale));
     }
 
-    /// <summary>Draws both panels. <paramref name="helpTop"/> is the y of the key help panel; the ticker sits above it.</summary>
+    /// <summary>
+    /// Draws the panels. <paramref name="helpTop"/> is the y of the key help panel; the ticker sits above it and the dialogue line above the ticker.
+    /// </summary>
     public void Draw(SpriteBatch sb, Texture2D pixel, int scale, int hudLines, int helpTop, int tick)
     {
         Hud.Panel(sb, pixel, ObjectivesOrigin(hudLines, scale), ObjectiveLines(), scale);
+        int bottom = helpTop - GapPx;
         List<string> ticker = TickerLines(tick);
-        if (ticker.Count > 0) Hud.Panel(sb, pixel, new Point(8, helpTop - GapPx - Hud.HeightOf(ticker.Count, scale)), ticker, scale);
+        if (ticker.Count > 0)
+        {
+            bottom = helpTop - GapPx - Hud.HeightOf(ticker.Count, scale);
+            Hud.Panel(sb, pixel, new Point(8, bottom), ticker, scale);
+            bottom -= GapPx;
+        }
+
+        List<string> dialogue = DialogueLines();
+        if (dialogue.Count > 0) Hud.Panel(sb, pixel, new Point(8, bottom - Hud.HeightOf(dialogue.Count, scale)), dialogue, scale);
     }
 
     /// <summary>Greedy word wrap to at most <paramref name="width"/> characters per line (a longer word gets its own line).</summary>

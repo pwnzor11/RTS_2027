@@ -41,13 +41,13 @@ public static class MissionApiContract
             "Reinforce.Edge", "Objective.Add", "Objective.Complete", "Objective.Fail",
             "Tech.Grant", "Tech.Revoke", "Tech.Has", "Media.Message", "Player.Cash", "Player.AddCash",
             "Map.Zone", "Map.Center", "Map.Width", "Map.Height", "Mission.Win", "Mission.Lose", "Mission.Tick", "Random.Next");
-        Add(ApiStatus.Throws, "M8-03",
+        Add(ApiStatus.Implemented, "M8-03",
             "Trigger.OnLeave", "Trigger.OnHold", "Trigger.OnSeen", "Trigger.OnIdle",
             "Objective.AddHidden", "Objective.Reveal", "Objective.Status",
             "Mission.Timer", "Mission.TimerCancel", "Mission.TimerLeft", "Mission.AllPrimaryDone", "Mission.AnyPrimaryFailed", "Mission.Difficulty",
             "Tech.GrantMany", "Tech.List");
         Add(ApiStatus.Throws, "M8-04", "Reinforce.Zone", "Reinforce.Transport", "Reinforce.Delayed", "Reinforce.Naval", "Reinforce.Rig", "Actor.CreateGroup");
-        Add(ApiStatus.NoOp, "M8-05", "Dialogue.Say", "Dialogue.Clear", "Camera.Focus", "Media.MessageKey");
+        Add(ApiStatus.Implemented, "M8-05", "Dialogue.Say", "Dialogue.Clear", "Camera.Focus", "Media.MessageKey");
         Add(ApiStatus.Implemented, "M8-06", "AI.Attack", "AI.Defend", "AI.SetTier", "AI.Wave", "AI.Clear");
         return l;
     }

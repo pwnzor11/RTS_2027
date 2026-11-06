@@ -166,8 +166,8 @@ Built-in AI does micro; an LLM sets strategy every 30 s (D-103) and talks in cha
 - [x] M5-07 Chat panel + player→commander chat (talkback, flavour only) (session 7; Enter, /to N)
 - [x] M5-08 LLM settings, DPAPI key store, settings page (model names: Q-40 answered session 7, D-108)
 - [x] M5-09 Setup + spectator: LLM kind per slot, LLM-vs-LLM (session 7; save header v4)
-- [ ] M5-10 Replay/save tests with recorded directives; owner play-test (tests done session 7, loaded saves rebuild commanders; owner play-test with a real key open)
-- [ ] M5-11 Headless commander match (`ai match` with an LLM commander slot, key from an environment variable) for the owner's OpenAI test (D-153 (12))
+- [x] M5-10 Replay/save tests with recorded directives; owner play-test (tests done session 7, loaded saves rebuild commanders; owner play-test with a real key open) — owner ran it with gpt-5.4-mini in session 12: 21/21 directives ok
+- [x] M5-11 Headless commander match (`ai match` with an LLM commander slot, key from an environment variable) for the owner's OpenAI test (D-153 (12))
 
 ## M6 · The Left Behind (D-087)
 Third faction: Glass Coast evacuees abandoned in 1990; nomadic scavengers, mobile crawler-rig bases, salvaged tech, raids.

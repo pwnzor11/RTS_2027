@@ -20,12 +20,12 @@ public static class MissionLoader
         TomlTable root;
         try { root = TomlSerializer.Deserialize<TomlTable>(File.ReadAllText(path)) ?? throw new InvalidDataException("empty file"); }
         catch (Exception e) when (e is not InvalidDataException) { throw new InvalidDataException($"{path}: {e.Message}", e); }
-        try { return Parse(root, Path.GetFileName(folder)); }
+        try { return Parse(root, Path.GetFileName(folder), folder); }
         catch (Exception e) when (e is InvalidDataException or InvalidCastException or KeyNotFoundException or FormatException or OverflowException)
         { throw new InvalidDataException($"{path}: {e.Message}", e); }
     }
 
-    private static MissionDef Parse(TomlTable root, string id)
+    private static MissionDef Parse(TomlTable root, string id, string folder)
     {
         TomlTable m = Table(root, "mission");
         int schema = m.ContainsKey("schema") ? Int(m, "schema") : 1;
@@ -85,6 +85,7 @@ public static class MissionLoader
             Faction = schema >= 2 && m.ContainsKey("faction") ? Faction(m) : "",
             Next = schema >= 2 && m.ContainsKey("next") ? NextIds(m) : System.Array.Empty<string>(),
             LocaleFile = schema >= 2 && m.ContainsKey("locale") ? Str(m, "locale") : "",
+            Locale = schema >= 2 && m.ContainsKey("locale") ? LoadLocale(folder, Str(m, "locale")) : MissionLocale.Empty,
             StartsWith = schema >= 2 ? TechList(root, "starts_with") : System.Array.Empty<string>(),
             UnlocksOnWin = schema >= 2 ? TechList(root, "unlocks_on_win") : System.Array.Empty<string>(),
         };
@@ -97,6 +98,14 @@ public static class MissionLoader
     public static readonly IReadOnlyList<string> Factions = new[] { "authority", "directorate", "left_behind", "expedition" };
 
     private static readonly string[] SchemaTwoKeys = { "act", "faction", "next", "locale" };
+
+    /// <summary>The <c>locale</c> key: a plain file name beside mission.toml. Missing or bad lines are warnings (plan 3.2).</summary>
+    private static MissionLocale LoadLocale(string folder, string name)
+    {
+        if (name.Length == 0 || name != Path.GetFileName(name) || name.Contains("..", StringComparison.Ordinal))
+            throw new InvalidDataException($"'locale' must be a file name beside mission.toml, got '{name}'");
+        return MissionLocale.Load(Path.Combine(folder, name));
+    }
 
     private static string Faction(TomlTable m)
     {

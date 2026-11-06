@@ -72,6 +72,9 @@ public sealed class MissionDef
     /// <summary>Schema 2: locale file beside mission.toml (text by key, plan 3.2), or empty.</summary>
     public string LocaleFile { get; init; } = "";
 
+    /// <summary>Schema 2: the mission's text by locale key (locale.toml, plan 3.2); empty when the mission has none.</summary>
+    public MissionLocale Locale { get; init; } = MissionLocale.Empty;
+
     /// <summary>Schema 2: type ids always available in this mission (<c>[starts_with] tech</c>); the allow-list is these plus the campaign tech set (plan 3.3).</summary>
     public IReadOnlyList<string> StartsWith { get; init; } = Array.Empty<string>();
 
