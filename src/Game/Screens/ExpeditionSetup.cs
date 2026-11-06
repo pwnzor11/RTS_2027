@@ -18,18 +18,18 @@ public static class ExpeditionSetup
     public static bool HasExpedition(IEnumerable<SkirmishSlot> slots) =>
         slots.Any(s => s.Kind != SlotKind.Closed && s.Faction == Faction.Expedition);
 
-    /// <summary>The ocean choice the generated map really gets: when an Expedition slot needs a coast and none was chosen, one edge (South)
+    /// <summary>The ocean choice the generated map really gets: when an Expedition slot needs a coast and none was chosen, one edge (North)
     /// is added and <paramref name="note"/> says so; otherwise <paramref name="chosen"/> stands.</summary>
     /// <param name="chosen">The ocean choice in the setup row.</param>
     /// <param name="expeditionOnGeneratedMap">True when an open slot is the Expedition and the map is generated.</param>
     /// <param name="note">The note to show, or null.</param>
     public static OceanEdges ResolveOcean(OceanEdges chosen, bool expeditionOnGeneratedMap, out string? note)
     {
-        // assumed — confirm (D-151): South, because the shoreline buildings' water masks face south (sea below land) until Q-55 is answered
+        // assumed — confirm: the plainest fix is one North edge (floating docks work on any coast, D-156)
         if (expeditionOnGeneratedMap && chosen == OceanEdges.None)
         {
             note = OceanNote;
-            return OceanEdges.South;
+            return OceanEdges.North;
         }
         note = null;
         return chosen;

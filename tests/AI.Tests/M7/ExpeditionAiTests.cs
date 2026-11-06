@@ -2,6 +2,7 @@
 // Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
 using Rts.AI;
 using Rts.Data;
+using Rts.Sim.Map;
 using Rts.Sim.Rules;
 using Xunit.Abstractions;
 
@@ -33,6 +34,19 @@ public sealed class ExpeditionAiTests(ITestOutputHelper log)
         rig.Run(3600);
         log.WriteLine($"shipment income {rig.Sim.StatsOf(0).ShipmentIncome} eta {rig.Sim.ViewFor(0).ShipmentEtaTicks}");
         Assert.True(rig.Sim.StatsOf(0).ShipmentIncome > 0, "a shipment arrived by minute 9");
+    }
+
+    [Theory]
+    [InlineData(OceanEdges.North)]
+    [InlineData(OceanEdges.East)]
+    public void ItDocksOnAnyCoastAndReceivesShipments(OceanEdges coast)
+    {
+        var rig = new ExpeditionRig(Tier(2), enemyAi: false, edges: coast);
+        int built = 0;   // the Anchorage may fall to a strike later: remember that it stood
+        for (int i = 0; i < 54; i++) { rig.Run(200); built = Math.Max(built, rig.Count(0, "exp_anchorage")); }
+        log.WriteLine($"{coast}: built {built} anchorages {rig.Count(0, "exp_anchorage")} income {rig.Sim.StatsOf(0).ShipmentIncome} :: {rig.Ai.ExpeditionDebug}");
+        Assert.True(built >= 1, "an Anchorage was built");
+        Assert.True(rig.Sim.StatsOf(0).ShipmentIncome > 0, "a shipment arrived");
     }
 
     [Fact]

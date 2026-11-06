@@ -95,6 +95,8 @@ public sealed partial class Simulation
                 }
                 else if (isWater || !_map.IsBuildable(c, table)) return PlacementResult.Blocked;
             }
+        // D-156 (1): a water building without a mask is an all-water floating dock and must touch the shore.
+        if (bt.WaterBuilding && !mask && !FootprintTouchesLand(x0, y0, w, h)) return PlacementResult.Blocked;
         if (!IsExpedition(player) || player >= _beachhead.Zone.Length) return PlacementResult.Ok;
         // Bootstrap: a player with no building yet (the setup-phase depot) has no zone to be inside.
         if (!OwnsAnyBuilding(player)) return PlacementResult.Ok;
@@ -103,5 +105,20 @@ public sealed partial class Simulation
             for (int dx = 0; dx < w; dx++)
                 if (!_beachhead.Contains(player, (y0 + dy) * mw + x0 + dx)) return PlacementResult.OutsideBeachhead;
         return PlacementResult.Ok;
+    }
+
+    /// <summary>True if some cell orthogonally next to the footprint (outside it, on the map) is land (not Water or Shallow).</summary>
+    private bool FootprintTouchesLand(int x0, int y0, int w, int h)
+    {
+        for (int dy = -1; dy <= h; dy++)
+            for (int dx = -1; dx <= w; dx++)
+            {
+                bool inX = dx >= 0 && dx < w, inY = dy >= 0 && dy < h;
+                if (inX == inY) continue;   // inside the footprint, or a diagonal corner
+                var c = new CellCoord(x0 + dx, y0 + dy);
+                if (!InMap(c)) continue;
+                if (_map.LandAt(c) is not (LandType.Water or LandType.Shallow)) return true;
+            }
+        return false;
     }
 }

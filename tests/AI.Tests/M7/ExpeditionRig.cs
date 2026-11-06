@@ -53,20 +53,13 @@ internal sealed class ExpeditionRig
     public int? FirstAttackMoveTick;
     public MapMeta Meta { get; }
 
-    public static (MapData Map, MapMeta Meta) OceanMap(ulong seed = 3, MapSize size = MapSize.Medium) =>
-        MapGenerator.GenerateWithMeta(new MapGenParams(Biome.RustBelt, size, 2, seed, null, OceanEdges.North | OceanEdges.South));
+    public static (MapData Map, MapMeta Meta) OceanMap(ulong seed = 3, MapSize size = MapSize.Medium, OceanEdges edges = OceanEdges.North | OceanEdges.South) =>
+        MapGenerator.GenerateWithMeta(new MapGenParams(Biome.RustBelt, size, 2, seed, null, edges));
 
-    public ExpeditionRig(DifficultyProfile profile, Faction enemy = Faction.Authority, bool enemyAi = true, ulong seed = 1, MapSize size = MapSize.Medium, DifficultyProfile? enemyProfile = null, bool northStart = false, ulong? mapSeed = null)
+    public ExpeditionRig(DifficultyProfile profile, Faction enemy = Faction.Authority, bool enemyAi = true, ulong seed = 1, MapSize size = MapSize.Medium, DifficultyProfile? enemyProfile = null, ulong? mapSeed = null, OceanEdges edges = OceanEdges.North | OceanEdges.South)
     {
-        (MapData map, MapMeta meta) = OceanMap(mapSeed ?? seed + 2, size);
+        (MapData map, MapMeta meta) = OceanMap(mapSeed ?? seed + 2, size, edges);
         Meta = meta;
-        if (!northStart)   // the Expedition takes the south start: the Anchorage and Quay masks (water below land) only fit a coast with the sea to the south
-        {
-            var starts = new List<CellCoord>(map.StartPositions);
-            starts.Reverse();
-            map = new MapData(map.Name, map.Theater, map.Width, map.Height, map.Template.ToArray(), map.Land.ToArray(), map.HeightLevel.ToArray(),
-                map.Overlay.ToArray(), map.Density.ToArray(), starts);
-        }
         Sim = new Simulation(new SimSetup(seed, map, 2, TestWorld.Rules.Sim, TestWorld.Rules.RulesHash) { Factions = [Faction.Expedition, enemy], AllowDebug = true, LandingMarkers = meta.Landing });
         SkirmishStart.Apply(Sim);
         _profile = profile;
