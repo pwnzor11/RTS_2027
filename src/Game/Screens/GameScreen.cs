@@ -91,6 +91,7 @@ public sealed class GameScreen : IScreen
     private Point? _dragStart;
     private bool _dragging;
     private bool _gameOverShown;
+    private Func<IScreen?>? _gameOverOverride;   // M8-08: campaign missions show a debrief on a win
     private MissionOverlay? _mission;   // campaign mission mode (D-061), null otherwise
     private readonly SuperweaponController _superweapon = new();   // M3-18: Sunrise Device button, targeting and flash
     private readonly RectRegion _swRegion = new(Rectangle.Empty);
@@ -230,6 +231,20 @@ public sealed class GameScreen : IScreen
         var screen = new GameScreen(services, sim, null, () => CreateMission(services, missionId), skirmishMode: true);
         screen._mission = new MissionOverlay(game.Host);
         screen.IsGameOver = () => sim.Sim.GameOver;
+        return screen;
+    }
+
+    /// <summary>
+    /// Creates a campaign mission screen (M8-08) around a game that <see cref="Rts.Game.Campaign.CampaignService.Start"/> set up. When the game ends,
+    /// <paramref name="gameOver"/> may return the screen to show instead of the normal game-over menu (null = the normal menu).
+    /// </summary>
+    public static GameScreen CreateCampaignMission(GameServices services, MissionGame game, Func<GameScreen> restart, Func<IScreen?> gameOver)
+    {
+        var sim = new SimSnapshotSource(game);
+        var screen = new GameScreen(services, sim, null, restart, skirmishMode: true);
+        screen._mission = new MissionOverlay(game.Host);
+        screen.IsGameOver = () => sim.Sim.GameOver;
+        screen._gameOverOverride = gameOver;
         return screen;
     }
 
@@ -459,6 +474,7 @@ public sealed class GameScreen : IScreen
         if (!_gameOverShown && IsGameOver())
         {
             _gameOverShown = true;
+            if (_gameOverOverride?.Invoke() is { } replacement) { _s.Screens.Push(replacement); return; }
             IReadOnlyList<string>? table = _sim is null ? null : SpectatorTable.Final(SpectatorTable.Collect(_sim.Sim));
             _s.Screens.Push(new GameOverScreen(_s, _restart, GameOverHeadline(), table, _spectatorMode, () => _sim?.SaveReplay()));
         }
