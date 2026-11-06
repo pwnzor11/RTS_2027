@@ -1107,3 +1107,11 @@ the Directorate. Q-54: re-measure supply on/off with 64 games per pair; no numbe
 runs unattended except that the Expedition art pilot (Glide Tank, Landing Depot) waits for the owner's approval before any fan-out.
 **Why:** owner's reply to the session-11 briefing ("take all your recommendations; render now for approval; unattended except for the art approval").
 **Status:** confirmed (owner, session 11)
+
+### D-149 · 2026-11-05 · Expedition art pilot: variant A for both pilots
+**Decision:** the owner picked variant A for the Glide Tank (low, wide navy hover hull, twin canted fins, rear turbines, flat wedge
+turret) and the Landing Depot (beached navy hull, white liner bridge, funnel, crane, ramp). A becomes the style target for the
+M7-11 fan-out. Lead fixes on A before fan-out: rubber hover skirt instead of a tread-like base, visible lift and spray ring on water,
+and a size close to the Authority tank (+15 % at most).
+**Why:** owner's reply to the pilot contact sheets ("A for both options").
+**Status:** confirmed (owner, session 11); the skirt/scale fixes are the lead's and are shown on the next sheet
