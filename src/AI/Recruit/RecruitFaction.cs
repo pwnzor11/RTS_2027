@@ -99,6 +99,7 @@ internal abstract class RecruitFaction
     {
         Faction.Directorate => new DirectorateRecruitFaction(),
         Faction.LeftBehind => new LeftBehindRecruitFaction(),   // M6-10
+        Faction.Expedition => new ExpeditionRecruitFaction(),   // M7-10
         _ => new AuthorityRecruitFaction(),
     };
 }

@@ -74,7 +74,7 @@ internal sealed class ProductionManager
             if (rules.Buildings[b.TypeIndex].Produces == null) continue;
             ulong key = ((ulong)b.Id.Index << 16) | b.Id.Generation;
             if (!_rallied.Add(key)) continue;
-            sink.Rally(b.Id, Rally);
+            sink.Rally(b.Id, _tactics?.RallyFor(k, b) ?? Rally);
         }
 
         // M3-11: a lost harvester is replaced before anything else is bought (flag ReplaceHarvesters). While the money for it is short the

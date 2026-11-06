@@ -174,6 +174,21 @@ public sealed class RecruitAi : IAiPlayer, IAiSnapshotable
     /// <summary>M6-10: Second Drift orders.</summary>
     public int StormOrders => (_tactics as LeftBehindTactics)?.StormOrders ?? 0;
 
+    /// <summary>M7-10: Expedition Command Ship Deploy orders (0 for other factions).</summary>
+    public int Deploys => (_tactics as ExpeditionTactics)?.Deploys ?? 0;
+    /// <summary>M7-10: ship strike targets chosen.</summary>
+    public int FleetStrikes => (_tactics as ExpeditionTactics)?.Strikes ?? 0;
+    /// <summary>M7-10: orders that sent convoy escorts.</summary>
+    public int EscortOrders => (_tactics as ExpeditionTactics)?.EscortOrders ?? 0;
+    /// <summary>M7-10: Expedition withdraws started.</summary>
+    public int Withdrawals => (_tactics as ExpeditionTactics)?.Withdrawals ?? 0;
+    /// <summary>M7-10: ship orders skipped because the goal was not in the ship's sea.</summary>
+    public int DroppedShipOrders => (_tactics as ExpeditionTactics)?.Dropped ?? 0;
+    /// <summary>M7-10: carrier sorties ordered.</summary>
+    public int Sorties => (_tactics as ExpeditionTactics)?.Sorties ?? 0;
+    /// <summary>M7-10 (diagnostics): the Expedition landing-site line.</summary>
+    public string ExpeditionDebug => (_tactics as ExpeditionTactics)?.Debug ?? "";
+
     /// <inheritdoc />
     public void Start(AiContext ctx)
     {
@@ -197,7 +212,21 @@ public sealed class RecruitAi : IAiPlayer, IAiSnapshotable
         _military.Tactics = _tactics;
         _tactics?.Start(_ctx);
         if (_tactics is LeftBehindTactics lb) lb.Attach(_squads);   // M6-10
+        if (_tactics is ExpeditionTactics ex)   // M7-10
+        {
+            ex.Attach(_squads, _military);
+            _build.Placer = ex.PlaceBeacon;
+            Func<string, bool> tech = _build.HoldStep!;
+            _build.HoldStep = id => tech(id) || ex.NoSite(_k, id);
+            _retreat.RepairAll = true;
+            _military.ThresholdBonus = ExpeditionTactics.WaveBonus;
+            _military.RerollNow();
+            _military.Options = _military.Options with { RetreatPct = Math.Max(_military.Options.RetreatPct, ExpeditionTactics.RetreatPct) };
+        }
     }
+
+    /// <summary>The retreat health percent in force (the Expedition never fights below <see cref="ExpeditionTactics.RetreatPct"/>).</summary>
+    private int RetreatBase => _tactics is ExpeditionTactics ? Math.Max(_profile.RetreatHealthPct, ExpeditionTactics.RetreatPct) : _profile.RetreatHealthPct;
 
     /// <summary>M4-12: no harvester alive and the funds do not cover a new one: only an attack can still win the game.</summary>
     private bool AllIn()
@@ -235,8 +264,9 @@ public sealed class RecruitAi : IAiPlayer, IAiSnapshotable
         _production!.Think(_k, sink, _build.PendingCost);
         if (_profile.UseUpgrades) _upgrades.Think(_k, sink, _build.PendingCost, _planner.Behind);   // M4-16: no research while behind
         // squads: pull units out of the wave pool before the military manager counts and orders it
-        _retreat.Think(_k, sink, _squads, _production.Rally, bias.RetreatPct(_profile.RetreatHealthPct));
+        _retreat.Think(_k, sink, _squads, _production.Rally, bias.RetreatPct(RetreatBase));
         if (_profile.RespondToAttacks) _garrison.Think(_k, sink, AllIn());   // M4-12: before the waves count the army
+        (_tactics as ExpeditionTactics)?.Early(_k, sink, _production.Rally, _knownBuildings, _planner);   // M7-10: establish, convoy, fleet
         (_tactics as LeftBehindTactics)?.Early(_k, sink, _production.Rally, _knownBuildings, _planner);   // M6-10: unpack, salvage, raids
         if (_profile.ActiveScouting) _scout.Think(_k, sink, _squads);
         if (_profile.Harass && _tactics is not LeftBehindTactics) _harass.Think(_k, sink, _squads, _planner, _knownBuildings, _production.Rally, _profile.ScoutInfoAgeTicks);
@@ -282,6 +312,7 @@ public sealed class RecruitAi : IAiPlayer, IAiSnapshotable
         w.Write(_tactics is DirectorateTactics);
         if (_tactics is DirectorateTactics d) d.Snapshot(w);
         if (_tactics is LeftBehindTactics lb) lb.Snapshot(w);   // M6-10: only a Left Behind side writes (older blobs are unchanged)
+        if (_tactics is ExpeditionTactics ex) ex.Snapshot(w);   // M7-10: likewise only an Expedition side
     }
 
     /// <inheritdoc />
@@ -310,5 +341,6 @@ public sealed class RecruitAi : IAiPlayer, IAiSnapshotable
         _superweapons.Restore(r);
         if (r.ReadBoolean() && _tactics is DirectorateTactics d) d.Restore(r);
         if (_tactics is LeftBehindTactics lb) lb.Restore(r);
+        if (_tactics is ExpeditionTactics ex) ex.Restore(r);
     }
 }

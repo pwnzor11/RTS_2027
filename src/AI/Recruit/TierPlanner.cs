@@ -98,9 +98,9 @@ internal sealed class TierPlanner
         {
             int own = 0, enemy = 0;
             foreach (ViewActor a in k.Own)
-                if (a.IsMobile && !IsHarvester(rules, a)) own += UnitValue(rules, a);
+                if (a.IsMobile && !IsHarvester(rules, a) && !IsUtility(rules, a)) own += UnitValue(rules, a);
             foreach (ViewActor e in k.Visible)
-                if (e.Relation == Relation.Enemy && e.IsMobile && !IsHarvester(rules, e)) enemy += UnitValue(rules, e);
+                if (e.Relation == Relation.Enemy && e.IsMobile && !IsHarvester(rules, e) && !IsUtility(rules, e)) enemy += UnitValue(rules, e);
             int now = k.View.Tick;
             if (enemy >= _enemyPeak || now - _enemyPeakTick > EnemyValueMemoryTicks) { _enemyPeak = enemy; _enemyPeakTick = now; }
             OwnArmyValue = own; EnemyArmyValue = _enemyPeak;
@@ -150,6 +150,10 @@ internal sealed class TierPlanner
     public bool IsTech(string id) =>
         id == _faction.ResearchId || id == _faction.Tier2GateId || id == _faction.Tier3GateId || id == _faction.AirProducerId
         || id == _faction.SuperweaponBuildingId;
+
+    /// <summary>M7-10: an unarmed Expedition vehicle (Command Ship, Landing Craft, Supply Tender ...) is not army value.</summary>
+    private static bool IsUtility(SimRules rules, ViewActor a) =>
+        a.Kind == ActorKind.Vehicle && rules.Vehicles[a.TypeIndex] is { Faction: Faction.Expedition, PrimaryWeapon: < 0 };
 
     private static bool IsHarvester(SimRules rules, ViewActor a) => a.Kind == ActorKind.Vehicle && rules.Vehicles[a.TypeIndex].HarvestCapacity > 0;
 

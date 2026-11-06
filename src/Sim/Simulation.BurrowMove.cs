@@ -349,8 +349,35 @@ public sealed partial class Simulation
         if (vt.DeploysInto < 0 || vt.DeploysInto >= RulesOf(_units.Player[i]).Buildings.Count || _tunnels.VehicleLayer[i] != ActorLayer.Surface) return false;
         BuildingType bt = RulesOf(_units.Player[i]).Buildings[vt.DeploysInto];
         CellCoord at = _units.Position[i].ToCell();
-        var topLeft = new CellCoord(at.X - (bt.FootprintW - 1) / 2, at.Y - (bt.FootprintH - 1) / 2);
         EntityId self = _units.Slots.IdOf(i);
+        CellCoord topLeft;
+        if (vt.Locomotion == Locomotion.Naval)
+        {
+            // M7-10 (D-149): a ship sits on water, which is not buildable, so the footprint cannot be centred on it. It goes ashore instead:
+            // the first top-left (rows, then columns) whose footprint is buildable and touches the ship's cell (within one cell of it).
+            bool found = false;
+            topLeft = default;
+            for (int ty = at.Y - bt.FootprintH; ty <= at.Y + 1 && !found; ty++)
+                for (int tx = at.X - bt.FootprintW; tx <= at.X + 1 && !found; tx++)
+                    if (DeployFootprintFree(new CellCoord(tx, ty), bt, self)) { topLeft = new CellCoord(tx, ty); found = true; }
+            if (!found) return false;
+        }
+        else
+        {
+            topLeft = new CellCoord(at.X - (bt.FootprintW - 1) / 2, at.Y - (bt.FootprintH - 1) / 2);
+            if (!DeployFootprintFree(topLeft, bt, self)) return false;
+        }
+        byte owner = _units.Player[i];
+        // ASSUMED (M3-03): the building keeps the vehicle's health fraction.
+        int health = (int)Math.Max(1L, (long)bt.MaxHealth * _units.Health[i] / Math.Max(1, vt.MaxHealth));
+        RemoveVehicleForDeploy(i);
+        PlaceBuildingNow(owner, vt.DeploysInto, topLeft, health);
+        return true;
+    }
+
+    /// <summary>True when every footprint cell is on the map, buildable, free of overlay and buildings, and holds no actor other than <paramref name="self"/>.</summary>
+    private bool DeployFootprintFree(CellCoord topLeft, BuildingType bt, EntityId self)
+    {
         for (int y = topLeft.Y; y < topLeft.Y + bt.FootprintH; y++)
             for (int x = topLeft.X; x < topLeft.X + bt.FootprintW; x++)
             {
@@ -361,11 +388,6 @@ public sealed partial class Simulation
                 for (int s = 0; s < InfantryStore.SubSlotCount; s++)
                     if (!_map.InfantryAt(c, s).IsNone) return false;
             }
-        byte owner = _units.Player[i];
-        // ASSUMED (M3-03): the building keeps the vehicle's health fraction.
-        int health = (int)Math.Max(1L, (long)bt.MaxHealth * _units.Health[i] / Math.Max(1, vt.MaxHealth));
-        RemoveVehicleForDeploy(i);
-        PlaceBuildingNow(owner, vt.DeploysInto, topLeft, health);
         return true;
     }
 }

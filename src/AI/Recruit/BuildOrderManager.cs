@@ -56,6 +56,9 @@ internal sealed class BuildOrderManager
     /// <summary>Credits the next structure (still to be started or being paid for) will need; units keep this in reserve.</summary>
     public int PendingCost { get; private set; }
 
+    /// <summary>M7-10: a faction hook that may choose the cell of a ready structure itself (Expedition: beacons at the frontier); null or false = the shared search.</summary>
+    public Func<RecruitKnowledge, int, (bool Ok, CellCoord Cell)>? Placer { get; set; }
+
     /// <summary>Number of structures placed so far by this AI.</summary>
     public int Placed { get; private set; }
 
@@ -235,7 +238,9 @@ internal sealed class BuildOrderManager
     {
         BuildingType bt = k.Rules.Buildings[type];
         bool front = bt.Category == ProductionCategory.Defence && bt.PrimaryWeapon >= 0;
-        if (!_search.Find(k, type, front, out CellCoord cell)) return;
+        CellCoord cell;
+        if (Placer is not null && Placer(k, type) is { Ok: true } chosen) cell = chosen.Cell;
+        else if (!_search.Find(k, type, front, out cell)) return;
         if (!k.View.CanPlace(type, cell)) { Unplaceable++; return; }
         sink.Place(type, cell);
         Placed++;
