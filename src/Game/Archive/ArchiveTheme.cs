@@ -43,12 +43,21 @@ public sealed record ArchiveTheme(Color Panel, Color Border, Color Accent, Color
         new Color(0xA0, 0x4A, 0x2C), new Color(0xD1, 0xA6, 0x59), new Color(0xDA, 0xCB, 0x9E), new Color(0xB5, 0xB0, 0xA6),
         new Color(0x78, 0x98, 0x8F), false, 3);
 
+    /// <summary>
+    /// Deep navy, lagoon white and brushed chrome with copper trim and signal orange (design 07 §8). ASSUMED (M7-10): the
+    /// exact values are a first pass for the art pass to confirm.
+    /// </summary>
+    public static ArchiveTheme Expedition { get; } = new(new Color(0x0E, 0x1A, 0x2B), new Color(0xA9, 0xB4, 0xBC),
+        new Color(0xB8, 0x73, 0x3A), new Color(0xEE, 0xF5, 0xF3), new Color(0xC9, 0xD3, 0xDA), new Color(0x7F, 0x8F, 0x9C),
+        new Color(0xF2, 0x8C, 0x28), false, 5);
+
     /// <summary>The theme of a faction.</summary>
     public static ArchiveTheme For(ArchiveFaction faction) => faction switch
     {
         ArchiveFaction.Authority => Authority,
         ArchiveFaction.Directorate => Directorate,
         ArchiveFaction.LeftBehind => LeftBehind,
+        ArchiveFaction.Expedition => Expedition,
         _ => Neutral,
     };
 }

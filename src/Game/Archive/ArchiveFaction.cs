@@ -16,4 +16,7 @@ public enum ArchiveFaction
 
     /// <summary>The Left Behind, the caravans of the Glass Coast.</summary>
     LeftBehind,
+
+    /// <summary>The Overseas Expedition, the Tidewater Concordat's fleet.</summary>
+    Expedition,
 }
