@@ -31,7 +31,7 @@ public static class AiMatchRunner
     public static AiGameResult Play(MapData map, SimRules rules, ulong rulesHash, ulong seed, AiSide sideA, AiSide sideB,
         bool aInSlot0, int maxTicks, Stream? replay = null, string build = "",
         IReadOnlyList<(string Name, string Text)>? rulesFiles = null, bool swapStarts = false, AiStartMode start = AiStartMode.Economy,
-        Action<Simulation, IAiPlayer, IAiPlayer, byte, byte>? observe = null)
+        Action<Simulation, IAiPlayer, IAiPlayer, byte, byte>? observe = null, IReadOnlyList<CellCoord>? landing = null)
     {
         if (map.StartPositions.Count < 2) throw new ArgumentException("Map needs two start positions.", nameof(map));
         // Economy start places player p at map start p; swapped starts reverse the list so slots trade corners.
@@ -43,6 +43,7 @@ public static class AiMatchRunner
         var setup = new SimSetup(seed, playMap, 2, rules, rulesHash)
         {
             Factions = sideA.Faction == Faction.Authority && sideB.Faction == Faction.Authority ? null : factions,
+            LandingMarkers = landing ?? Array.Empty<CellCoord>(),   // M7-10: public map data for the Expedition AI
         };
         var sim = new Simulation(setup);
         ReplayWriter? recorder = replay is null ? null : new ReplayWriter(replay, sim, build, rulesFiles ?? Array.Empty<(string, string)>());

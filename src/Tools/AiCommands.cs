@@ -736,9 +736,14 @@ public static class AiCommands
         for (int s = firstSeed; s < firstSeed + seeds; s++)
         {
             // M7-10: an Expedition side needs sea: ocean north + south edges (size class by cells: below 80 small, below 112 medium, else large)
-            MapData map = a.Faction == Faction.Expedition || b.Faction == Faction.Expedition
-                ? MapGenerator.Generate(new MapGenParams(Biome.RustBelt, size < 80 ? MapSize.Small : size < 112 ? MapSize.Medium : MapSize.Large, 2, (ulong)s, null, OceanEdges.North | OceanEdges.South))
-                : MapGenerator.Generate(size, (ulong)s);
+            IReadOnlyList<CellCoord>? landing = null;
+            MapData map;
+            if (a.Faction == Faction.Expedition || b.Faction == Faction.Expedition)
+            {
+                var gen = MapGenerator.GenerateWithMeta(new MapGenParams(Biome.RustBelt, size < 80 ? MapSize.Small : size < 112 ? MapSize.Medium : MapSize.Large, 2, (ulong)s, null, OceanEdges.North | OceanEdges.South));
+                map = gen.Map; landing = gen.Meta.Landing;
+            }
+            else map = MapGenerator.Generate(size, (ulong)s);
             if (flat) map = Flatten(map);
             for (int g = 0; g < 2; g++)
             {
@@ -747,6 +752,8 @@ public static class AiCommands
                 // Slot order (who acts first in a tick) must not ride along with the start corner: by default the
                 // corners trade slots on even seeds ("alt"); "slot" = corner p for slot p; "swap" = corner 1-p.
                 bool swapSlots = startMode == "swap" || (startMode == "alt" && s % 2 == 0);
+                // M7-10: the Expedition always takes the south start (its dock masks need the sea to the south of the shore)
+                if (landing is not null) { int expoSlot = (a.Faction == Faction.Expedition) == aInSlot0 ? 0 : 1; swapSlots = expoSlot == 0; }
                 FileStream? replay = recordDir is null ? null
                     : File.Create(Path.Combine(recordDir, $"{a.FileLabel}_vs_{b.FileLabel}_seed{s}_g{g + 1}.rtsreplay"));
                 AiGameResult r;
@@ -766,7 +773,7 @@ public static class AiCommands
                 // rather than one mirrored game counted twice (docs/balance/m4_16_start_bias.md).
                 using (replay) r = AiMatchRunner.Play(map, w.Rules, w.RulesHash, (ulong)(s * 16 + g), a, b, aInSlot0, ticks, replay,
                     BuildInfo.Version, replay is null ? null : RulesBundle.ReadDirectory(w.RulesDir), swapSlots, start,
-                    obs);
+                    obs, landing);
                 tally.Games++;
                 tally.Ticks += r.EndTick;
                 tally.EndTickSum += r.EndTick;

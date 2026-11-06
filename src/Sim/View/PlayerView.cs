@@ -73,9 +73,31 @@ public readonly struct PlayerView
     /// <summary>Land type of an on-map cell.</summary>
     public LandType LandAt(CellCoord c) => _sim.Map.LandAt(c);
 
+    /// <summary>M7-10: overlay of an on-map cell (ashfall, pitchblende, wall). Map data the human sees on screen; ash and pits block building and the naval Deploy.</summary>
+    public OverlayKind OverlayAt(CellCoord c) => _sim.Map.OverlayAt(c);
+
     /// <summary>True if the terrain of the cell can be crossed with the given locomotion (terrain only: ignores units and buildings).</summary>
     public bool IsPassable(CellCoord c, Locomotion loco) =>
         InMap(c) && _sim.Map.IsPassableTerrain(c, loco, _sim.Setup.Rules.Terrain);
+
+    /// <summary>M7-10: the map's landing markers (one per start, shore cells next to shallow water), public map data; empty when the host gave none.
+    /// The sim never reads them.</summary>
+    public IReadOnlyList<CellCoord> LandingMarkers => _sim.Setup.LandingMarkers;
+
+    /// <summary>M7-10: fills <paramref name="dest"/> (cleared first) with the map's convoy edge: the navigable border cells where tenders appear, in cell-index order
+    /// (the same derivation the shipment code uses; terrain only).</summary>
+    public void CopyConvoyEdge(List<CellCoord> dest)
+    {
+        dest.Clear();
+        int w = MapWidth, h = MapHeight;
+        for (int y = 0; y < h; y++)
+            for (int x = 0; x < w; x++)
+            {
+                if (y != 0 && y != h - 1 && x != 0 && x != w - 1) { x = w - 2; continue; }
+                var c = new CellCoord(x, y);
+                if (NavalRegionAt(c) > 0) dest.Add(c);
+            }
+    }
 
     /// <summary>M7-03: sea region of a cell for ships, 0 = not navigable. With <paramref name="deepOnly"/> the shallows count as land (large ships).
     /// Terrain only, so it reveals nothing the fog hides; equal non-zero labels mean "a ship can sail between them" (ignoring units and buildings).</summary>

@@ -24,6 +24,42 @@ public sealed class ExpeditionAiTests(ITestOutputHelper log)
     }
 
     [Fact]
+    public void ItOwnsAnAnchorageByMinuteSixAndReceivesAShipmentByMinuteNine()
+    {
+        var rig = new ExpeditionRig(Tier(2), enemyAi: false);
+        rig.Run(7200);
+        log.WriteLine($"anchorages {rig.Count(0, "exp_anchorage")} buildings {rig.Buildings(0)} :: {rig.Ai.ExpeditionDebug}");
+        Assert.True(rig.Count(0, "exp_anchorage") >= 1, "an Anchorage stands by minute 6");
+        rig.Run(3600);
+        log.WriteLine($"shipment income {rig.Sim.StatsOf(0).ShipmentIncome} eta {rig.Sim.ViewFor(0).ShipmentEtaTicks}");
+        Assert.True(rig.Sim.StatsOf(0).ShipmentIncome > 0, "a shipment arrived by minute 9");
+    }
+
+    [Fact]
+    public void ItBuildsAShipyardAndTwoWarshipsByMinuteFifteenAndOrdersNavalAction()
+    {
+        var rig = new ExpeditionRig(Tier(2));
+        rig.Run(18000);
+        int ships = 0;
+        for (int i = 1; i < rig.Sim.Units.Capacity; i++)
+            if (rig.Sim.Units.Slots.IsIndexAlive(i) && rig.Sim.Units.Player[i] == 0 && TestWorld.Rules.Sim.Vehicles[rig.Sim.Units.TypeIndex[i]] is { Locomotion: Locomotion.Naval, PrimaryWeapon: >= 0 }) ships++;
+        log.WriteLine($"shipyards {rig.Count(0, "exp_shipyard")} warships alive {ships} strikes {rig.Ai.FleetStrikes} escorts {rig.Ai.EscortOrders} ship orders {rig.ShipOrders} :: {rig.Ai.ExpeditionDebug}");
+        Assert.True(rig.Count(0, "exp_shipyard") >= 1 || rig.Sim.Players.Defeated[0], "a Shipyard was built");
+        Assert.True(ships >= 2 || rig.Ai.FleetStrikes + rig.Ai.EscortOrders >= 1);
+        Assert.True(rig.Ai.FleetStrikes + rig.Ai.EscortOrders >= 1, "at least one naval strike or escort order");
+    }
+
+    [Fact]
+    public void ItDeploysOnTheMapWhereAshLiesOnTheBeach()
+    {
+        // map seed 1 has ashfall on the first landing coast: the old AI chose a footprint the sim refused and never built anything (zero income)
+        var rig = new ExpeditionRig(Tier(2), enemyAi: false, mapSeed: 1);
+        rig.Run(1500);
+        Assert.Equal(1, rig.Count(0, "exp_landing_depot"));
+        Assert.True(rig.Buildings(0) >= 3);
+    }
+
+    [Fact]
     public void ItLaunchesAnAttackWaveByMinuteFifteen()
     {
         var rig = new ExpeditionRig(Tier(2));

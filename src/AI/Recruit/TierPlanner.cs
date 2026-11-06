@@ -190,7 +190,7 @@ internal sealed class TierPlanner
     {
         int refinery = SimRules.IndexOf(k.Rules.Buildings, _faction.RefineryId, b => b.Id);
         bool expanded = (_p.ExpansionTick > 0 || Bias.Expand) && refinery >= 0 && k.BuildingCount[refinery] >= 2;
-        return _p.HarvesterTarget + (expanded ? 1 : 0);
+        return _p.HarvesterTarget + _faction.ExtraHarvesters + (expanded ? 1 : 0);
     }
 
     /// <summary>The harvester vehicle type to build now, or -1 (flag off, enough alive / queued).</summary>

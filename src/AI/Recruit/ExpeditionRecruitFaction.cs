@@ -22,8 +22,8 @@ internal sealed class ExpeditionRecruitFaction : RecruitFaction
     // a beacon to grow the zone, the Quay (ships), then the tier-2 gate and the fleet and air tech.
     public override string[] DefaultOrder { get; } =
     [
-        "exp_pile_house", "exp_dredge_works", "exp_anchorage", "exp_billet", "exp_hover_yard", "exp_pile_house", "exp_beacon",
-        "exp_quay", "exp_plotting_room", "exp_beacon", "exp_shipyard", "exp_flight_deck",
+        "exp_pile_house", "exp_dredge_works", "exp_anchorage", "exp_billet", "exp_hover_yard", "exp_pile_house", "exp_plotting_room",
+        "exp_beacon", "exp_quay", "exp_shipyard", "exp_beacon", "exp_flight_deck",
     ];
 
     // (tune) M7-10: Marines are the only soldier available at tier 1.
@@ -34,6 +34,7 @@ internal sealed class ExpeditionRecruitFaction : RecruitFaction
     public override string FirstVehicle => "exp_glide_tank";
     public override bool SkipUnbuildable => true;
     public override string HarvesterId => "exp_skimmer";
+    public override int ExtraHarvesters => 2;   // (tune) M7-10
     public override string RefineryId => "exp_dredge_works";
     public override string BarracksId => "exp_billet";
     public override string FactoryId => "exp_hover_yard";

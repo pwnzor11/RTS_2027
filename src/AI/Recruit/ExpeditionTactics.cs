@@ -29,7 +29,9 @@ internal sealed class ExpeditionTactics : IFactionTactics
     // ---- thresholds: every (tune) number of the Expedition AI lives here ----
 
     /// <summary>Extra units every wave waits for (few, dear units).</summary>
-    public const int WaveBonus = 4;   // (tune) M7-10
+    public const int WaveBonus = 2;   // (tune) M7-10
+    /// <summary>Soldiers kept alive at once; the infantry lane stops there and the money goes to hulls.</summary>
+    public const int InfantryCap = 6;   // (tune) M7-10
     /// <summary>A unit below this health percent leaves the fight and repairs (design 07 §7).</summary>
     public const int RetreatPct = 40;   // (tune) M7-10
     /// <summary>A repaired ship rejoins at this health percent.</summary>
@@ -44,6 +46,8 @@ internal sealed class ExpeditionTactics : IFactionTactics
     public const int ArmyBeforeShips = 3;   // (tune) M7-10
     /// <summary>Own units (all kinds) before a Mender is bought.</summary>
     public const int ArmyBeforeMender = 4;   // (tune) M7-10
+    /// <summary>Armed land vehicles that must stand before the Quay, Shipyard and Flight Deck are started (the money goes to Glide Tanks first).</summary>
+    public const int TanksBeforeNavy = 2;   // (tune) M7-10
 
     /// <summary>Ticks to the next shipment at which the escorts take station.</summary>
     public const int EscortEtaTicks = 1500;   // (tune) M7-10
@@ -64,7 +68,9 @@ internal sealed class ExpeditionTactics : IFactionTactics
     /// <summary>Cells scanned for a landing site around the Command Ship, and how many nearest sites are tried for an Anchorage fit.</summary>
     public const int SiteRadius = 40, SiteFitScan = 600;   // (tune) M7-10
     /// <summary>Cells from the depot within which an Anchorage footprint must fit for a site to be preferred.</summary>
-    public const int AnchorageReach = 5;   // (tune) M7-10
+    public const int AnchorageReach = 8;   // (tune) M7-10 (inside the depot's beachhead radius of 10 with room for the footprint)
+    /// <summary>Cells from the depot within which a map landing marker makes a site preferred.</summary>
+    public const int MarkerCells = 8;   // (tune) M7-10
     /// <summary>Ticks to wait for a Deploy, or for the ship to reach its site, before the site is given up.</summary>
     public const int DeployWaitTicks = 180, SiteWaitTicks = 2400;   // (tune) M7-10
     /// <summary>Ticks between Move orders to an idle ship that is not yet where it should be.</summary>
@@ -213,6 +219,14 @@ internal sealed class ExpeditionTactics : IFactionTactics
     public bool TryEnter(RecruitKnowledge k, ICommandSink sink, ViewActor a, CellCoord stage) => false;
 
     /// <inheritdoc />
+    public bool HoldInfantry(RecruitKnowledge k)
+    {
+        int n = 0;
+        foreach (ViewActor a in k.Own) if (a.Kind == ActorKind.Infantry) n++;
+        return n >= InfantryCap;
+    }
+
+    /// <inheritdoc />
     public CellCoord? RallyFor(RecruitKnowledge k, ViewActor factory)
     {
         BuildingType bt = k.Rules.Buildings[factory.TypeIndex];
@@ -234,7 +248,7 @@ internal sealed class ExpeditionTactics : IFactionTactics
         // Sparkers once enemy aircraft were seen
         if (_sparker >= 0 && _planner is { SeenEnemyAir: true } && k.Buildable(ProductionCategory.Vehicle, _sparker) && Count(k, q, _sparker) < SparkersWanted) return _sparker;
         // one Mender to repair the dear units
-        if (_mender >= 0 && k.Buildable(ProductionCategory.Vehicle, _mender) && ground + k.Fleet.Count >= ArmyBeforeMender && Count(k, q, _mender) < 1)
+        if (_mender >= 0 && k.Buildable(ProductionCategory.Vehicle, _mender) && ArmedVehicles(k) >= TanksBeforeNavy && ground + k.Fleet.Count >= ArmyBeforeMender && Count(k, q, _mender) < 1)
             return _mender;
         // the fleet: destroyers first, a cruiser and a carrier at the higher tiers
         if (ground >= ArmyBeforeShips && k.Harvesters.Count > 0)
@@ -252,6 +266,14 @@ internal sealed class ExpeditionTactics : IFactionTactics
         return -1;
     }
 
+    private static int ArmedVehicles(RecruitKnowledge k)
+    {
+        int n = 0;
+        foreach (ViewActor a in k.Army) if (a.Kind == ActorKind.Vehicle) n++;
+        foreach (ViewActor a in k.Home) if (a.Kind == ActorKind.Vehicle) n++;
+        return n;
+    }
+
     private static int Count(RecruitKnowledge k, QueueView q, int type)
     {
         int n = 0;
@@ -267,6 +289,8 @@ internal sealed class ExpeditionTactics : IFactionTactics
     public bool NoSite(RecruitKnowledge k, string id)
     {
         if (!k.HaveYard) return false;
+        // the navy waits for an army: Glide Tanks first (the Plotting Room opens them), then the yards
+        if (id is "exp_quay" or "exp_shipyard" or "exp_flight_deck" && ArmedVehicles(k) < TanksBeforeNavy) return true;
         int t = SimRules.IndexOf(k.Rules.Buildings, id, b => b.Id);
         if (t < 0 || !k.Rules.Buildings[t].WaterBuilding) return false;
         PlayerView v = k.View;
@@ -384,27 +408,39 @@ internal sealed class ExpeditionTactics : IFactionTactics
             }
         if (_cands.Count == 0) return false;
         _cands.Sort(static (a, b) => a.Score != b.Score ? a.Score.CompareTo(b.Score) : a.Y != b.Y ? a.Y.CompareTo(b.Y) : a.X.CompareTo(b.X));
-        int pick = 0;
-        if (_anchorage >= 0)
+        // tier 0: the Anchorage's water mask fits inside the future beachhead and a landing marker lies near the depot; tier 1: it fits; tier 2: neither
+        // (the nearest sea cell with a depot spot; the Anchorage can then never be placed). Ties by distance to the ship.
+        int scan = Math.Min(_cands.Count, SiteFitScan);
+        int bestTier = 3, pick = -1;
+        for (int i = 0; i < scan && bestTier > 0; i++)
         {
-            BuildingType dock = rules.Buildings[_anchorage];
-            for (int i = 0; i < _cands.Count && i < SiteFitScan; i++)
-                if (DockFits(v, rules, dock, depot, new CellCoord(_cands[i].Tx, _cands[i].Ty))) { pick = i; break; }
-        }
-        // a sea cell the ship can really sail to (the region label ignores units and buildings)
-        for (int i = pick; i < _cands.Count; i++)
-        {
+            var tl = new CellCoord(_cands[i].Tx, _cands[i].Ty);
+            int tier = _anchorage >= 0 && DockFits(v, rules, rules.Buildings[_anchorage], depot, tl) ? (MarkerNear(v, tl, depot) ? 0 : 1) : 2;
+            if (tier >= bestTier) continue;
             var c = new CellCoord(_cands[i].X, _cands[i].Y);
             if (c != ship.Cell && !v.CanOwnShipReach(ship.Id, c)) continue;
-            _siteCell = c; _siteSet = true; _siteSince = v.Tick; _deployTries = 0; _deployTick = -100000; _moveTick = -100000;
-            Debug = $"site {c} depot {_cands[i].Tx},{_cands[i].Ty} fit {i == pick && pick > 0 || DockFitsAt(v, rules, depot, _cands[i])}";
-            return true;
+            bestTier = tier; pick = i;
+        }
+        if (pick < 0)
+            for (int i = 0; i < _cands.Count && pick < 0; i++)
+                if (new CellCoord(_cands[i].X, _cands[i].Y) == ship.Cell || v.CanOwnShipReach(ship.Id, new CellCoord(_cands[i].X, _cands[i].Y))) { pick = i; bestTier = 2; }
+        if (pick < 0) return false;
+        _siteCell = new CellCoord(_cands[pick].X, _cands[pick].Y); _siteSet = true; _siteSince = v.Tick; _deployTries = 0; _deployTick = -100000; _moveTick = -100000;
+        Debug = $"site {_siteCell} depot {_cands[pick].Tx},{_cands[pick].Ty} tier {bestTier} markers {v.LandingMarkers.Count}";
+        return true;
+    }
+
+    /// <summary>True when a map landing marker lies within <see cref="MarkerCells"/> cells of the depot footprint.</summary>
+    private static bool MarkerNear(PlayerView v, CellCoord depotTl, BuildingType depot)
+    {
+        foreach (CellCoord m in v.LandingMarkers)
+        {
+            int dx = Math.Max(0, Math.Max(depotTl.X - m.X, m.X - (depotTl.X + depot.FootprintW - 1)));
+            int dy = Math.Max(0, Math.Max(depotTl.Y - m.Y, m.Y - (depotTl.Y + depot.FootprintH - 1)));
+            if (Math.Max(dx, dy) <= MarkerCells) return true;
         }
         return false;
     }
-
-    private bool DockFitsAt(PlayerView v, SimRules rules, BuildingType depot, (long Score, int X, int Y, int Tx, int Ty) c) =>
-        _anchorage >= 0 && DockFits(v, rules, rules.Buildings[_anchorage], depot, new CellCoord(c.Tx, c.Ty));
 
     private bool IsBad(CellCoord c)
     {
@@ -428,7 +464,7 @@ internal sealed class ExpeditionTactics : IFactionTactics
             for (int x = x0; x < x0 + w; x++)
             {
                 var c = new CellCoord(x, y);
-                if (!v.InMap(c) || !rules.Terrain.Buildable(v.LandAt(c))) return false;
+                if (!v.InMap(c) || !rules.Terrain.Buildable(v.LandAt(c)) || v.OverlayAt(c) != OverlayKind.None) return false;
             }
         return true;
     }
@@ -454,7 +490,7 @@ internal sealed class ExpeditionTactics : IFactionTactics
                         LandType land = v.LandAt(c);
                         bool water = land is LandType.Water or LandType.Shallow;
                         bool want = !mask || dock.WaterMask[dy * w + dx];
-                        ok = want ? water : !water && rules.Terrain.Buildable(land);
+                        ok = want ? water : !water && rules.Terrain.Buildable(land) && v.OverlayAt(c) == OverlayKind.None;
                     }
                 if (ok) return true;
             }
