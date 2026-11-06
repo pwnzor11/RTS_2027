@@ -17,7 +17,7 @@ public sealed class MissionStateContractTests
     private static readonly string[] Hashed =
     {
         "_initDone", "_halted", "_outcome", "_rng", "_counter", "_messageSeq", "_tags", "_triggers", "_objectives", "_messages",
-        "_restricted", "_granted", "_timers", "_aiHooks",
+        "_restricted", "_granted", "_timers", "_aiHooks", "_difficulty",
     };
 
     /// <summary>Instance fields that are deliberately not state, each with the reason.</summary>
@@ -110,5 +110,29 @@ public sealed class MissionStateContractTests
         Assert.Equal(3, loadedHost.TriggerStore[0].Counter);
         Assert.Equal(host2.AiHookOf(1), loadedHost.AiHookOf(1));
         Assert.Equal(1, loadedHost.AiHookOf(1).WaveSeq);
+    }
+
+    [Fact]
+    public void Difficulty_tier_is_written_only_when_set_and_survives_a_save()
+    {
+        const string Lua = "function OnInit() state.d = Mission.Difficulty() end";
+        var (simA, hostA) = TestData.Tiny(Lua);
+        TestData.Run(simA, 2);
+        Assert.Equal(1, BitConverter.ToInt32(Bytes(hostA.State), 0));   // default tier: old layout
+        Assert.Equal("3", TestAccess.StateValue(hostA, "d"));
+
+        var (sim, host) = TestData.Tiny(Lua);
+        host.SetDifficulty(5);
+        TestData.Run(sim, 2);
+        Assert.Equal(3, BitConverter.ToInt32(Bytes(host.State), 0));
+        Assert.Equal("5", TestAccess.StateValue(host, "d"));
+        Assert.NotEqual(simA.ComputeStateHash(), sim.ComputeStateHash());
+
+        var loadedHost = new MissionHost(host.Def, Lua);
+        var loaded = M8_03.SaveLoad.Reload(sim, host.Def, Lua, loadedHost);
+        Assert.Equal(5, loadedHost.DifficultyTier);
+        Assert.Equal(sim.ComputeStateHash(), loaded.ComputeStateHash());
+        Assert.Throws<ArgumentOutOfRangeException>(() => host.SetDifficulty(0));
+        Assert.Throws<ArgumentOutOfRangeException>(() => host.SetDifficulty(6));
     }
 }

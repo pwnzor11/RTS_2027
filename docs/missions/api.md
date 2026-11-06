@@ -26,27 +26,29 @@ Binding for M8-03..M8-06. Source of truth for the function list is `MissionApiCo
 ## New functions
 Common argument kinds: `id` = 1-64 characters, no spaces. `fn` = global function name or top-level function value.
 
-### Objectives, timers, area triggers, win/lose helpers, tech helpers (M8-03, file MissionHost.Objectives.cs; all throw until M8-03)
+### Objectives, timers, area triggers, win/lose helpers, tech helpers (M8-03, file MissionHost.Objectives.cs)
 | Function | Arguments | Returns | Checks | Status |
 |---|---|---|---|---|
-| `Trigger.OnLeave(zone, player, fn)` | zone name, slot, callback | nil | zone known, player valid, fn global | throws M8-03 |
-| `Trigger.OnHold(zone, player, ticks, fn)` | as above plus ticks 1..1e9 | nil | as above; fires once when a mobile unit of player has been in the zone `ticks` in a row | throws M8-03 |
-| `Trigger.OnSeen(zoneOrTag, player, fn)` | zone name or actor tag, slot, fn | nil | target is a zone or a known tag | throws M8-03 |
-| `Trigger.OnIdle(tag, ticks, fn)` | actor tag, ticks 1..1e9, fn | nil | tag known | throws M8-03 |
-| `Objective.AddHidden(id, text, primary)` | id, text, boolean | nil | primary must be a boolean; id unused | throws M8-03 |
-| `Objective.Reveal(id)` | id | nil | objective exists | throws M8-03 |
-| `Objective.Status(id)` | id | "active"/"completed"/"failed" | objective exists | throws M8-03 |
-| `Mission.Timer(id, ticks, fn[, label])` | id, ticks 1..1e9, fn, optional HUD text | nil | fn global; label a string if given | throws M8-03 |
-| `Mission.TimerCancel(id)` | id | nil | id well-formed | throws M8-03 |
-| `Mission.TimerLeft(id)` | id | ticks left, or nil | id well-formed | throws M8-03 |
-| `Mission.AllPrimaryDone()` | none | boolean | none | throws M8-03 |
-| `Mission.AnyPrimaryFailed()` | none | boolean | none | throws M8-03 |
-| `Mission.Difficulty()` | none | tier 1..5 chosen for this run (value supplied by M8-07 at mission start) | none | throws M8-03 |
-| `Tech.GrantMany(player, {types})` | slot, 1..64 type ids | nil | every id is a known rules type | throws M8-03 |
-| `Tech.List(player)` | slot | list of granted ids (sorted) | player valid | throws M8-03 |
+| `Trigger.OnLeave(zone, player, fn)` | zone name, slot, callback | nil | zone known, player valid, fn global; fires once, the first time the zone is empty of the player's mobile units after one was inside (never just because it started empty) | implemented (M8-03) |
+| `Trigger.OnHold(zone, player, ticks, fn)` | as above plus ticks 1..1e9 | nil | as above; fires once when a mobile unit of player has been in the zone `ticks` ticks in a row (counter resets when the zone empties; counting starts the tick the trigger is made) | implemented (M8-03) |
+| `Trigger.OnSeen(zoneOrTag, player, fn)` | zone name or actor tag, slot, fn | nil | target is a zone or a known tag; fires once when any cell of the zone (or the tagged actor's cell) is visible to the player or a teammate; a tag whose actor died unseen is dropped | implemented (M8-03) |
+| `Trigger.OnIdle(tag, ticks, fn)` | actor tag, ticks 1..1e9, fn | nil | tag known; fires once after the actor has had no mission (none, guard, sleep) and nothing queued for `ticks` ticks in a row; dropped if the actor dies | implemented (M8-03) |
+| `Objective.AddHidden(id, text, primary)` | id, text, boolean | nil | primary must be a boolean; id unused | implemented (M8-03) |
+| `Objective.Reveal(id)` | id | nil | objective exists | implemented (M8-03) |
+| `Objective.Status(id)` | id | "active"/"completed"/"failed" | objective exists | implemented (M8-03) |
+| `Mission.Timer(id, ticks, fn[, label])` | id, ticks 1..1e9, fn, optional HUD text | nil | fn global; label a string if given; the same id restarts the timer; expiry in creation order, once | implemented (M8-03) |
+| `Mission.TimerCancel(id)` | id | nil | id well-formed | implemented (M8-03) |
+| `Mission.TimerLeft(id)` | id | ticks left, or nil (unknown or already fired) | id well-formed | implemented (M8-03) |
+| `Mission.AllPrimaryDone()` | none | boolean | none | implemented (M8-03) |
+| `Mission.AnyPrimaryFailed()` | none | boolean | none | implemented (M8-03) |
+| `Mission.Difficulty()` | none | tier 1..5 chosen for this run (default 3; M8-07 calls `MissionHost.SetDifficulty(int)` before the first Step; saved with the mission part as format 3, written only when not 3) | none | implemented (M8-03) |
+| `Tech.GrantMany(player, {types})` | slot, 1..64 type ids | nil | every id is a known rules type | implemented (M8-03) |
+| `Tech.List(player)` | slot | list of granted ids (sorted) | player valid | implemented (M8-03) |
 
 Hidden objectives (`Objective.AddHidden`, later `Reveal`) set `MissionObjective.Hidden`; the HUD lists `MissionHost.VisibleObjectives`.
 Timers live in `MissionHost.Timers` (shown by the HUD). Both are saved in the version-2 tail of the "mission" part.
+
+Hidden objectives (`AddHidden`) are saved in the version-2 tail; the difficulty tier is a version-3 tail field. Trigger counters (`TriggerRecord.Counter`; Leave uses 1 = armed) are saved so a mid-hold save reproduces the same hash.
 
 ### Reinforcements and spawn groups (M8-04, file MissionHost.Reinforce.cs; all throw until M8-04)
 | Function | Arguments | Returns | Checks | Status |

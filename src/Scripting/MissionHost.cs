@@ -34,6 +34,8 @@ public sealed partial class MissionHost : ISimExtension
     /// </summary>
     private const int FormatVersion = 2;
     private const int BaseFormatVersion = 1;
+    /// <summary>M8-03: version 2 plus the difficulty tier after the AI hook flags. Written only when the tier is not the default.</summary>
+    private const int TierFormatVersion = 3;
 
     private readonly string _source;
     private readonly Script _script;
@@ -59,6 +61,8 @@ public sealed partial class MissionHost : ISimExtension
     // M8-02 additions (the version-2 tail of the part).
     private readonly List<MissionTimer> _timers = new();
     private readonly AiHookState[] _aiHooks;
+    // M8-03 addition (version-3 tail): difficulty tier 1..5 for Mission.Difficulty().
+    private int _difficulty = DefaultDifficulty;
 
     // Outputs for the game layer: not state, not hashed, not saved (plan 3.7).
     private readonly List<MissionDialogue> _dialogue = new();
@@ -197,6 +201,7 @@ public sealed partial class MissionHost : ISimExtension
         }
 
         _triggers.RemoveAll(static t => t.Done);
+        RunTimers(tick);   // M8-03
         if (_callbacksThisTick > 0 && !_halted) ValidateState();
     }
 
@@ -214,7 +219,7 @@ public sealed partial class MissionHost : ISimExtension
             case TriggerKind.AllDestroyed:
                 return CountAlive(sim, (byte)t.A, -1, null) == 0;
             default:
-                return false;
+                return ShouldFireArea(t, sim);   // M8-03: Leave, Hold, Seen, Idle
         }
     }
 
@@ -286,8 +291,9 @@ public sealed partial class MissionHost : ISimExtension
 
     internal void WriteState(BinaryWriter w)
     {
-        bool v2 = HasVersion2State();
-        w.Write(v2 ? FormatVersion : BaseFormatVersion);
+        bool v3 = _difficulty != DefaultDifficulty;
+        bool v2 = v3 || HasVersion2State();
+        w.Write(v3 ? TierFormatVersion : v2 ? FormatVersion : BaseFormatVersion);
         w.Write(SourceHash);
         w.Write(_initDone); w.Write(_halted); w.Write((byte)_outcome);
         w.Write(_rng); w.Write(_counter); w.Write(_messageSeq);
@@ -322,6 +328,7 @@ public sealed partial class MissionHost : ISimExtension
         foreach (MissionObjective o in _objectives) w.Write(o.Hidden);          // count known from the objectives above
         foreach (TriggerRecord t in _triggers) { w.Write(t.B); w.Write(t.Counter); }   // count known from the triggers above
         foreach (AiHookState h in _aiHooks) { w.Write(h.AttackZone); w.Write(h.DefendZone); w.Write(h.Tier); w.Write(h.WaveSeq); w.Write(h.WaveId); w.Write(h.WaveZone); }
+        if (v3) w.Write(_difficulty);   // ---- version 3 tail (M8-03) ----
     }
 
     private bool HasVersion2State()
@@ -336,7 +343,7 @@ public sealed partial class MissionHost : ISimExtension
     internal void ReadState(BinaryReader r)
     {
         int version = r.ReadInt32();
-        if (version != BaseFormatVersion && version != FormatVersion) throw new InvalidDataException("mission state: unsupported version");
+        if (version != BaseFormatVersion && version != FormatVersion && version != TierFormatVersion) throw new InvalidDataException("mission state: unsupported version");
         if (r.ReadUInt64() != SourceHash) throw new InvalidDataException("mission state: the save was made with a different mission script");
         _initDone = r.ReadBoolean(); _halted = r.ReadBoolean(); _outcome = (MissionOutcome)r.ReadByte();
         _rng = r.ReadUInt64(); _counter = r.ReadInt32(); _messageSeq = r.ReadInt32();
@@ -372,10 +379,12 @@ public sealed partial class MissionHost : ISimExtension
 
         _timers.Clear();
         Array.Fill(_aiHooks, AiHookState.None);
+        _difficulty = DefaultDifficulty;
         if (version < FormatVersion) return;
         for (int n = r.ReadInt32(), i = 0; i < n; i++) _timers.Add(new MissionTimer(r.ReadString(), r.ReadString(), r.ReadInt32(), r.ReadString(), r.ReadBoolean()));
         for (int i = 0; i < _objectives.Count; i++) _objectives[i] = _objectives[i] with { Hidden = r.ReadBoolean() };
         foreach (TriggerRecord t in _triggers) { t.B = r.ReadInt32(); t.Counter = r.ReadInt32(); }
         for (int p = 0; p < _aiHooks.Length; p++) _aiHooks[p] = new AiHookState(r.ReadString(), r.ReadString(), r.ReadInt32(), r.ReadInt32(), r.ReadString(), r.ReadString());
+        if (version >= TierFormatVersion) _difficulty = r.ReadInt32();
     }
 }

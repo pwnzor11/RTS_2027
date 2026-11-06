@@ -41,7 +41,7 @@ public static class MissionApiContract
             "Reinforce.Edge", "Objective.Add", "Objective.Complete", "Objective.Fail",
             "Tech.Grant", "Tech.Revoke", "Tech.Has", "Media.Message", "Player.Cash", "Player.AddCash",
             "Map.Zone", "Map.Center", "Map.Width", "Map.Height", "Mission.Win", "Mission.Lose", "Mission.Tick", "Random.Next");
-        Add(ApiStatus.Throws, "M8-03",
+        Add(ApiStatus.Implemented, "M8-03",
             "Trigger.OnLeave", "Trigger.OnHold", "Trigger.OnSeen", "Trigger.OnIdle",
             "Objective.AddHidden", "Objective.Reveal", "Objective.Status",
             "Mission.Timer", "Mission.TimerCancel", "Mission.TimerLeft", "Mission.AllPrimaryDone", "Mission.AnyPrimaryFailed", "Mission.Difficulty",
