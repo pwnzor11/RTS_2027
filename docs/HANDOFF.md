@@ -6,18 +6,16 @@ The M4-16 wave gate landed (D-131). M7 plan, supply and veterancy designs, M8 pl
 Left Behind art (14 structures, packed rig, 16 units) is on local branch `art-s9`, staged in the owner's `_art_push` folder for him
 to push (D-084). Full suite 2 331 tests (Sim 1 238, Game 824, AI 119, Llm 107, Scripting 43). Decisions D-119..D-133.
 
-## Session 10 checkpoint (after wave 3)
-On main: PR #21 (wave 1), PR #22 (wave 2: M7-03, M7-06, M7-07, M6-12 acceptance, LB salvage AI, SUP-6/VET-7 tables). Wave 3 in PR #23
-(`land/s10-w3`: M7-04, M7-05, M7-08 Expedition data, M7-12 Salvo Array, M7-13 ocean maps, fixes). Full suite 2 577. Decisions
-D-134..D-146; owner questions Q-52..Q-54 (balance). Follow-ups found this session:
-- SimRules.ResolveStartKit rejects the Expedition kit (conyard "", Command Ship `deploys_into`): accept DeploysInto >= 0 (M7-14).
-- Ships share the "vehicle" lane with the Hover Yard: a ship could exit on land if a land factory is primary (M7-09/M7-14).
-- Transports carry infantry only: landing craft vehicle slots not enforced (M7-04 follow-up).
-- Save header and GameLoader rebuild MapGenParams without `ocean_edges`: add it before the skirmish setup offers ocean maps.
-- Editor may drop `convoy_edge`/`landing` markers on save (unchecked). No beachhead overlay or shipment timer in the HUD yet.
-- exp_up_fast_charging and exp_up_deep_survey have no effects (no effect attributes for shipment interval / harvest capacity).
-- Buildings have no sonar field (sonar picket uses sight as a stand-in).
+## Session 10 checkpoint (after wave 4)
+On main: PR #21 (wave 1), #22 (wave 2), #23 (wave 3). Wave 4 on `integ-s10` → PR `land/s10-w4`: M7-09 carrier, vehicle passengers,
+M7 UI (beachhead tint, shipment timer, unload, dive, skirmish Ocean option, save header v5), start kit / ship exit / effect
+attributes / building sonar. Decisions D-134..D-147; owner questions Q-52..Q-54. Open follow-ups:
+- A ship queued with no water-reaching factory waits with no sidebar reason (no QueueBlockReason).
+- Upgrade tooltip reads "All player: shipment interval x0.85" (UpgradeEffectText).
+- Editor may drop `convoy_edge`/`landing` markers on save (unchecked). No hangar count in the UI; no ammo system for sorties.
+- Dived ships are drawn faded for every viewer who can see them (no per-unit Submerged in UnitView).
 - Soak idle-rig limit 600 is tight during relocations under raids (fix mitigates, max 440).
+- Expedition not playable yet: needs M7-10 AI, faction pick (M7-14), art (M7-11, owner PC), acceptance.
 
 ## Start here (shown to the user as the plan; nothing starts until they say go)
 0. If the owner ran `_art_push\push_art_s9.ps1`: open a PR `art-s9` → main (merge main into it first if needed), Windows CI, merge.

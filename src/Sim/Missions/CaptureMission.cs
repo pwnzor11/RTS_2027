@@ -16,6 +16,7 @@ internal static class CaptureMission
     public static int Handle(Simulation sim, MobileStore store, ActorKind kind, int i)
     {
         if (IsRaid(sim, store, kind, i)) return Raid(sim, store, kind, i);   // M6-05
+        if (kind == ActorKind.Vehicle) return sim.RunVehicleBoard(i);   // M7-04b: a vehicle driving onto a transport
         if (kind != ActorKind.Infantry) { End(sim, store, kind, i); return 1; }
         EntityId target = store.Target[i];
         bool engineer = sim.RulesOf(store.Player[i]).Infantry[store.TypeIndex[i]].Engineer;

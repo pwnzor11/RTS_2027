@@ -31,8 +31,9 @@ public static class UnitRenderer
     /// <param name="unit">Unit to draw.</param>
     /// <param name="selected">Whether the unit is selected (adds brackets).</param>
     /// <param name="camera">View.</param>
+    /// <param name="submerged">M7-14: the ship is dived (draw it semi-transparent).</param>
     public static void Draw(SpriteBatch batch, Texture2D pixel, SpriteResolver sprites, SpritePainter painter,
-        RenderMemory memory, int tick, SimRules? rules, RenderUnit unit, bool selected, Camera camera)
+        RenderMemory memory, int tick, SimRules? rules, RenderUnit unit, bool selected, Camera camera, bool submerged = false)
     {
         UnitView view = unit.View;
         bool infantry = view.Kind == UnitKind.Infantry;
@@ -42,7 +43,7 @@ public static class UnitRenderer
         Color house = PlayerColours.Base(view.Player);
         float drawScale = DrawScale(rules, view);   // M7-03: big ships are one cell but drawn larger (D-124)
         if (UnitVisuals.ShowTunnelMarker(view)) DrawTunnelMarker(batch, pixel, origin, infantry, house, camera.Zoom);
-        float alpha = UnitVisuals.Alpha(view);
+        float alpha = UnitVisuals.Alpha(view, submerged);   // M7-14: a dived ship is drawn semi-transparent
         if (UnitVisuals.ShowDiveMarker(view)) DrawDiveMarker(batch, pixel, origin, house, tick, camera.Zoom);
         // M3-18: shadow under the body, turret on top, dive replaces the body. M3-21: the snapshot carries the turret facing and the dive flag.
         // Companion sheets (<id>_turret, <id>_shadow) supply a layer when the body sheet has no such state.

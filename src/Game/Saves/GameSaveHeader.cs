@@ -13,8 +13,8 @@ namespace Rts.Game.Saves;
 /// </summary>
 public sealed record GameSaveHeader
 {
-    /// <summary>The header version this build writes and reads. Bump it when the layout changes. Version 1 (two-player skirmish settings) is still read; M4-11 wrote version 2 (map choice, 2 to 4 slots); M3-21 wrote version 3 (appends each AI's saved memory after its slot record; versions 1 and 2 load with the AI starting fresh); M5-09 wrote version 4 (appends one commander byte, 0 or 1, per skirmish slot at the end; versions 1 to 3 load with no commander).</summary>
-    public const int CurrentVersion = 4;
+    /// <summary>The header version this build writes and reads. Bump it when the layout changes. Version 1 (two-player skirmish settings) is still read; M4-11 wrote version 2 (map choice, 2 to 4 slots); M3-21 wrote version 3 (appends each AI's saved memory after its slot record; versions 1 and 2 load with the AI starting fresh); M5-09 wrote version 4 (appends one commander byte, 0 or 1, per skirmish slot at the end; versions 1 to 3 load with no commander); M7-14 wrote version 5 (appends one ocean-edge flags byte after the commander bytes when the skirmish map is generated; versions 1 to 4 load with no ocean).</summary>
+    public const int CurrentVersion = 5;
 
     private const int MaxAiStateBytes = 1 << 22;
 
@@ -121,6 +121,7 @@ public sealed record GameSaveHeader
         foreach (ushort q in Sequences) w.Write(q);
         if (Version >= 4 && Skirmish is { } sk)
             foreach (SkirmishSlot slot in sk.Slots) w.Write((byte)(slot.Commander ? 1 : 0));
+        if (Version >= 5 && Skirmish?.Map.Generated is { } gen) w.Write((byte)gen.OceanEdges);   // M7-14
     }
 
     /// <summary>Reads a header body written by <see cref="Write"/> for header <paramref name="version"/>.</summary>
@@ -183,6 +184,12 @@ public sealed record GameSaveHeader
                 withCommanders.Add(slot with { Commander = flag == 1 });
             }
             skirmish = new SkirmishSettings(skirmish.Map, withCommanders, skirmish.SimSeed);
+        }
+        if (version >= 5 && skirmish?.Map.Generated is { } generated)   // M7-14: a missing field (older save) leaves OceanEdges.None
+        {
+            byte edges = r.ReadByte();
+            if (edges > 15) throw new InvalidDataException($"bad ocean edge flags {edges}");
+            skirmish = new SkirmishSettings(new MapChoice(null, generated with { OceanEdges = (OceanEdges)edges }), skirmish.Slots, skirmish.SimSeed);
         }
         return new GameSaveHeader
         {

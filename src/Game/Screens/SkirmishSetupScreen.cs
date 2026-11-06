@@ -31,6 +31,7 @@ public sealed class SkirmishSetupScreen : IScreen
     private Biome _biome = Biome.RustBelt;
     private MapSize _size = MapSize.Small;
     private ulong _seed = DefaultGeneratedSeed;
+    private OceanEdges _ocean = OceanEdges.None;   // M7-14
     private readonly List<SkirmishSlot> _slots;
     private int _seedRow = -1;
     private int _firstSlotRow;
@@ -57,6 +58,7 @@ public sealed class SkirmishSetupScreen : IScreen
             _biome = g.Biome;
             _size = g.Size;
             _seed = g.Seed;
+            _ocean = g.OceanEdges;
         }
         _tierNames = LoadTierNames(services.RulesDir);
         _slots = new List<SkirmishSlot>(SkirmishSettings.Default.Slots);
@@ -112,7 +114,7 @@ public sealed class SkirmishSetupScreen : IScreen
             MapEntry entry = _maps[_mapIndex];
             int open = _slots.Count(x => x.Kind != SlotKind.Closed);
             MapChoice map = entry.IsGenerated
-                ? new MapChoice(null, new MapGenParams(_biome, _size, Math.Clamp(open, SkirmishSettings.MinPlayers, SkirmishSettings.MaxSlots), _seed))
+                ? new MapChoice(null, new MapGenParams(_biome, _size, Math.Clamp(open, SkirmishSettings.MinPlayers, SkirmishSettings.MaxSlots), _seed, null, _ocean))
                 : new MapChoice(entry.File, null);
             ulong simSeed = entry.IsGenerated ? _seed : SkirmishGame.CuratedSimSeed;
             return new SkirmishSettings(map, _slots.ToArray(), simSeed);
@@ -186,6 +188,8 @@ public sealed class SkirmishSetupScreen : IScreen
             rows.Add(new(() => $"Biome: {MapPicker.BiomeName(_biome)}", null, StepBiome,
                 new MenuButton("<", () => StepBiome(-1)), new MenuButton(">", () => StepBiome(1))));
             rows.Add(new(SizeText, null, StepSize, new MenuButton("<", () => StepSize(-1)), new MenuButton(">", () => StepSize(1))));
+            rows.Add(new(() => OceanChoices.Label(_ocean), null, d => _ocean = OceanChoices.Step(_ocean, d),
+                new MenuButton("<", () => _ocean = OceanChoices.Step(_ocean, -1)), new MenuButton(">", () => _ocean = OceanChoices.Step(_ocean, 1))));
             _seedRow = rows.Count;
             rows.Add(new(() => $"Seed: {_seed}", null, d => StepSeed(d),
                 new MenuButton("-", () => StepSeed(-1)), new MenuButton("+", () => StepSeed(1)), new MenuButton("Reroll", RerollSeed)));

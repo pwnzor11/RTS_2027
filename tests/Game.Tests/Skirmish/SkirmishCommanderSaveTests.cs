@@ -45,9 +45,9 @@ public sealed class SkirmishCommanderSaveTests
     }
 
     [Fact]
-    public void Current_header_version_is_four()
+    public void Current_header_version_is_five()
     {
-        Assert.Equal(4, GameSaveHeader.CurrentVersion);
+        Assert.Equal(5, GameSaveHeader.CurrentVersion);   // M7-14 added the ocean byte; version 4 is still read
     }
 
     [Fact]
@@ -55,7 +55,7 @@ public sealed class SkirmishCommanderSaveTests
     {
         SkirmishSettings s = FourSlot();
         GameSaveHeader back = Read(Bytes(WithSettings(s)), GameSaveHeader.CurrentVersion);
-        Assert.Equal(4, back.Version);
+        Assert.Equal(5, back.Version);
         Assert.Equal(s, back.Skirmish);
         Assert.False(back.Skirmish!.Slots[0].Commander);
         Assert.True(back.Skirmish.Slots[1].Commander);
@@ -97,7 +97,7 @@ public sealed class SkirmishCommanderSaveTests
     [Fact]
     public void A_bad_commander_byte_is_refused()
     {
-        byte[] bytes = Bytes(WithSettings(FourSlot()));
+        byte[] bytes = Bytes(WithSettings(FourSlot(), version: 4));
         bytes[^1] = 7;
         Assert.Throws<InvalidDataException>(() => Read(bytes, 4));
     }

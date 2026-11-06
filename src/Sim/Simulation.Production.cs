@@ -332,16 +332,50 @@ public sealed partial class Simulation
     private bool CompleteItem(byte player, ProductionCategory category, int type)
     {
         if (!IsUnitCategory(category)) return true;
-        EntityId factory = PrimaryFactoryOf(player, category);
+        EntityId factory = category == ProductionCategory.Vehicle && IsNavalVehicle(player, type)
+            ? ShipFactoryOf(player, type) : PrimaryFactoryOf(player, category);
         if (factory.IsNone) return false;
         BuildingType fbt = BuildingTypeAt(factory.Index);
         CellCoord topLeft = _buildings.Cell[factory.Index];
         int lane = ProductionState.Lane(player, category);
         CellCoord? rally = _production.RallySet[lane] ? _production.Rally[lane] : null;
+        if (category == ProductionCategory.Aircraft && TryBuildIntoHangar(player, type, rally)) return true;   // M7-09
         if (category == ProductionCategory.Infantry)
             return SpawnProducedInfantry(player, type, topLeft, fbt, rally);
         if (category == ProductionCategory.Vehicle || category == ProductionCategory.Aircraft)   // M4-04: aircraft leave like vehicles
             return SpawnProducedVehicle(player, type, topLeft, fbt, true, rally);
+        return false;
+    }
+
+    private bool IsNavalVehicle(byte player, int type) => MoveClass.IsNaval(MoveClass.Of(RulesOf(player).Vehicles[type]));
+
+    /// <summary>
+    /// Simfu-2: ships share the "vehicle" lane with land factories, so a ship leaves only from a factory whose exit cell or footprint
+    /// holds a cell of its move class (a Shipyard or Hover Yard on the shore): the lane's primary if eligible, else the lowest-slot
+    /// eligible factory. None when no factory qualifies (the item waits). Land units never come here and pick the primary as before.
+    /// </summary>
+    private EntityId ShipFactoryOf(byte player, int type)
+    {
+        Locomotion cls = MoveClass.Of(RulesOf(player).Vehicles[type]);
+        EntityId primary = PrimaryFactoryOf(player, ProductionCategory.Vehicle);
+        if (!primary.IsNone && FactoryReaches(primary.Index, cls)) return primary;
+        for (int i = 1; i < _buildings.Capacity; i++)
+            if (_buildings.Slots.IsIndexAlive(i) && _buildings.Player[i] == player && BuildingTypeAt(i).Produces == ProductionCategory.Vehicle
+                && _rigs.PackTicksLeft[i] == 0 && FactoryReaches(i, cls))
+                return _buildings.Slots.IdOf(i);
+        return EntityId.None;
+    }
+
+    private bool FactoryReaches(int slot, Locomotion cls)
+    {
+        BuildingType fb = BuildingTypeAt(slot);
+        CellCoord tl = _buildings.Cell[slot];
+        CellCoord rel = OrientedOffset(fb.Exit, fb.FootprintW, fb.FootprintH, tl);
+        CellCoord ex = new(tl.X + rel.X, tl.Y + rel.Y);
+        if (InMap(ex) && _map.IsPassableTerrain(ex, cls, Setup.Rules.Terrain)) return true;
+        for (int dy = 0; dy < fb.FootprintH; dy++)
+            for (int dx = 0; dx < fb.FootprintW; dx++)
+                if (InMap(new CellCoord(tl.X + dx, tl.Y + dy)) && _map.IsPassableTerrain(new CellCoord(tl.X + dx, tl.Y + dy), cls, Setup.Rules.Terrain)) return true;
         return false;
     }
 

@@ -35,7 +35,7 @@ internal static class RulesEnums
     public static readonly string[] EffectOps = ["enable", "set", "add", "mul"];
 
     /// <summary>Class names accepted after the <c>class:</c> prefix in prerequisites and effect targets.</summary>
-    public static readonly string[] ClassNames = ["vehicle", "infantry", "building"];
+    public static readonly string[] ClassNames = ["vehicle", "infantry", "building", "player"];
 
     /// <summary>Prefix of a class reference.</summary>
     public const string ClassPrefix = "class:";

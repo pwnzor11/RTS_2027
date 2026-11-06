@@ -82,6 +82,7 @@ public sealed partial class Simulation
         switch (targetKind)
         {
             case ActorKind.Vehicle when _units.Slots.IsAlive(c.Target):
+                if (subjectKind == ActorKind.Vehicle && TryApplyDock(c)) break;   // M7-09
                 if (IsFriendly(c.Player, _units.Player[c.Target.Index])) ApplyBoard(c, subject);
                 break;
             case ActorKind.Building when _buildings.Slots.IsAlive(c.Target):
@@ -108,7 +109,7 @@ public sealed partial class Simulation
         if (!_units.Slots.IsAlive(c.Subject) || _units.Player[c.Subject.Index] != c.Player) return;
         Rules.VehicleType vt = RulesOf(c.Player).Vehicles[_units.TypeIndex[c.Subject.Index]];
         if (vt.Submerges) { ApplySubmerge(c); return; }   // M7-05
-        if (vt.Passengers > 0) ApplyUnload(c);
+        if (vt.Passengers > 0 || vt.VehicleSlots > 0) ApplyUnload(c);   // M7-04b: vehicle_slots
         else if (vt.DeploysInto >= 0) ApplyDeployInto(c);
     }
 
@@ -129,6 +130,7 @@ public sealed partial class Simulation
     private void OnM3MobileDying(ActorKind kind, int i)
     {
         OnDeathWeapon(kind, i);                               // M3-06
+        if (kind == ActorKind.Vehicle && IsCarrierType(RulesOf(_units.Player[i]).Vehicles[_units.TypeIndex[i]])) OnCarrierDying(i);   // M7-09
         if (kind == ActorKind.Vehicle) OnTransportDying(i);   // M3-06: passengers are lost
     }
 

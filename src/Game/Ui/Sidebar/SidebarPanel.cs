@@ -57,6 +57,8 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
     private int _scrollRow;
     private int _shownCredits = -1;
     private bool _minimapDrag;
+    private int _shipmentEta = -1, _shipmentPayload, _shipmentDecay;   // M7-14
+    private bool _shipmentShown;
     private bool _supplyShown;   // SUP-4: the supply counter row is laid out and drawn
     private int _placementType = -1;
     private CellCoord _ghostTopLeft;
@@ -131,7 +133,10 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
         _hasAircraft = HasAircraft(_hud);
         if (!_hasAircraft && _tab == SidebarTab.Aircraft) SelectTab(SidebarTab.Structures);
         _supplyShown = SupplyReadout.Shown(_source.Rules.Supply.Enabled, _hud.Supply);   // SUP-4
-        _layout = SidebarLayout.Compute(windowWidth, windowHeight, _ui, SidebarTabs.CountFor(_hasAircraft), _supplyShown);
+        Rts.Sim.View.PlayerView pv = _source.Sim.ViewFor(_player);   // M7-14: shipment timer, own state only
+        _shipmentEta = pv.ShipmentEtaTicks; _shipmentPayload = pv.NextShipmentPayload; _shipmentDecay = pv.ShipmentDecayStep;
+        _shipmentShown = ShipmentReadout.Shown(_shipmentEta, _shipmentPayload);
+        _layout = SidebarLayout.Compute(windowWidth, windowHeight, _ui, SidebarTabs.CountFor(_hasAircraft), _supplyShown, _shipmentShown);
         _mouse = input.MousePosition;
         _tooltip = null;
         if (_shownCredits < 0) _shownCredits = _hud.Cash + _hud.Stored;
@@ -180,6 +185,7 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
     {
         if (Mode == SidebarMode.Placement && _hasGhost && _placementType >= 0)
         {
+            DrawBeachhead(batch, pixel, camera);   // M7-14
             BuildingType bt = _source.Rules.Buildings[_placementType];
             float left = _ghostTopLeft.X * Camera.CellPx, top = _ghostTopLeft.Y * Camera.CellPx;
             Rectangle r = camera.ScreenRect(left, top, left + bt.FootprintW * Camera.CellPx, top + bt.FootprintH * Camera.CellPx);
@@ -202,6 +208,25 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
         }
     }
 
+    // M7-14: while placing, tint the visible cells of the player's beachhead zone (Expedition only; the mask is empty for others).
+    private void DrawBeachhead(SpriteBatch batch, Texture2D pixel, Camera camera)
+    {
+        Rts.Sim.View.PlayerView pv = _source.Sim.ViewFor(_player);
+        if (pv.BeachheadMask.IsEmpty) return;
+        int mw = _source.Map.Width, mh = _source.Map.Height;
+        Vector2 a = camera.WorldFromScreen(new Point(_layout.MapView.Left, _layout.MapView.Top));
+        Vector2 b = camera.WorldFromScreen(new Point(_layout.MapView.Right, _layout.MapView.Bottom));
+        int x0 = Math.Max(0, (int)MathF.Floor(a.X / Camera.CellPx)), y0 = Math.Max(0, (int)MathF.Floor(a.Y / Camera.CellPx));
+        int x1 = Math.Min(mw - 1, (int)MathF.Floor(b.X / Camera.CellPx)), y1 = Math.Min(mh - 1, (int)MathF.Floor(b.Y / Camera.CellPx));
+        for (int y = y0; y <= y1; y++)
+            for (int x = x0; x <= x1; x++)
+            {
+                if (!BeachheadOverlay.Contains(pv.BeachheadMask, mw, x, y)) continue;
+                Shapes.Fill(batch, pixel, camera.ScreenRect(x * Camera.CellPx, y * Camera.CellPx, (x + 1) * Camera.CellPx, (y + 1) * Camera.CellPx),
+                    Shapes.Alpha(BeachheadOverlay.Tint, BeachheadOverlay.TintAlpha));
+            }
+    }
+
     /// <summary>Draws the panel, the minimap and the tooltip.</summary>
     public void Draw(SpriteBatch batch, Texture2D pixel, SimSnapshot snapshot)
     {
@@ -211,6 +236,7 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
 
         DrawCredits(batch, pixel, l);
         if (_supplyShown) DrawSupply(batch, pixel, l);
+        if (_shipmentShown) DrawShipment(batch, pixel, l);
         DrawPowerBar(batch, pixel, l);
         DrawButton(batch, pixel, l.SellButton, "SELL", Mode == SidebarMode.Sell);
         DrawButton(batch, pixel, l.RepairButton, "REPAIR", Mode == SidebarMode.Repair);
@@ -555,6 +581,18 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
             SupplyTone.Amber => AmberText,
             _ => TextColour,
         };
+        int w = BitmapFont.Measure(text, _ui, FontWeight.Regular), h = BitmapFont.LineHeight(_ui, FontWeight.Regular);
+        Text(batch, pixel, text, new Vector2(r.Right - w - 4 * _ui, r.Y + (r.Height - h) / 2f), colour, _ui, FontWeight.Regular);
+    }
+
+    private void DrawShipment(SpriteBatch batch, Texture2D pixel, SidebarLayout l)
+    {
+        Rectangle r = l.ShipmentRow;
+        if (r.Height <= 0) return;
+        Shapes.Fill(batch, pixel, r, ButtonFill);
+        Shapes.Outline(batch, pixel, r, Border);
+        string text = ShipmentReadout.Text(_shipmentEta, _shipmentPayload);
+        Color colour = ShipmentReadout.Decayed(_shipmentDecay) ? AmberText : TextColour;
         int w = BitmapFont.Measure(text, _ui, FontWeight.Regular), h = BitmapFont.LineHeight(_ui, FontWeight.Regular);
         Text(batch, pixel, text, new Vector2(r.Right - w - 4 * _ui, r.Y + (r.Height - h) / 2f), colour, _ui, FontWeight.Regular);
     }

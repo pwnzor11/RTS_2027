@@ -74,9 +74,9 @@ public sealed partial class Simulation
         {
             if (docks[p] == 0) { _shipments.NextShipmentTick[p] = 0; _shipments.CharterProgress[p] = 0; continue; }   // no dock: no schedule
             if (Tick % CharterCheckTicks == 0) RunCharter((byte)p, sr);
-            if (_shipments.NextShipmentTick[p] == 0) { _shipments.NextShipmentTick[p] = Tick + sr.IntervalTicks; continue; }
+            if (_shipments.NextShipmentTick[p] == 0) { _shipments.NextShipmentTick[p] = Tick + RulesOf((byte)p).Shipments.IntervalTicks; continue; }
             if (Tick < _shipments.NextShipmentTick[p]) continue;
-            _shipments.NextShipmentTick[p] = Tick + sr.IntervalTicks;
+            _shipments.NextShipmentTick[p] = Tick + RulesOf((byte)p).Shipments.IntervalTicks;   // simfu-3: Fast Charging
             int inFlight = 0;
             foreach (Tender t in _shipments.Tenders) if (t.Player == p) inFlight++;
             if (inFlight >= sr.TendersMax) continue;   // sea lane full: this shipment is skipped

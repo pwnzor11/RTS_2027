@@ -572,3 +572,18 @@ op = "mul"
 target = "exp_missile_sub"
 attr = "vet_threshold_permille"
 value = 800
+
+# simfu-3: Fast Charging (shipment interval -15 %, player-level target) and Deep Survey (Skimmer hopper 5 -> 7). (tune)
+[[effect]]
+id = "exp_fx_fast_charging_interval"
+op = "mul"
+target = "class:player"
+attr = "shipment_interval"
+value = 850
+
+[[effect]]
+id = "exp_fx_deep_survey_skimmer"
+op = "add"
+target = "exp_skimmer"
+attr = "harvest_capacity"
+value = 2

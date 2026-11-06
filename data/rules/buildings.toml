@@ -1162,7 +1162,7 @@ power = -10  # (tune)
 prerequisites = ["exp_billet"]
 provides = []
 category = "defence"
-# TODO M7-05: building sonar_radius (detects submerged) has no building field yet; vehicles only. Sight stands in until then.
+sonar_radius = 9  # (tune) detects submerged ships for the team (simfu-4); sight 9 still lets it see the surface
 
 [exp_sam]   # PLACEHOLDER ART; SAM Mount: anti-air
 faction = "expedition"

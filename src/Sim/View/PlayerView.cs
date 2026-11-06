@@ -85,6 +85,10 @@ public readonly struct PlayerView
     /// the player's own, is not a ship, or is dead.</summary>
     public bool CanOwnShipReach(EntityId ship, CellCoord target) => _sim.OwnShipCanReach(Player, ship, target);
 
+    /// <summary>M7-09: the viewing player's own carrier: aircraft docked in the hangar and the number of places. False for anything that is
+    /// not an own live carrier (an enemy carrier's hangar is never shown).</summary>
+    public bool OwnCarrierHangar(EntityId carrier, out int docked, out int slots) => _sim.OwnCarrierHangar(Player, carrier, out docked, out slots);
+
     /// <summary>0 = shroud, 1 = fog, 2 = visible now, for the viewing player.</summary>
     public byte VisionAt(CellCoord c) => _sim.WithBlackout(Player, c, _sim.Vision.VisionAt(Player, c));   // M3-INT: Blackout
 

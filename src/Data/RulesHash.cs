@@ -52,7 +52,7 @@ namespace Rts.Data;
 /// infantry Supply; per building SupplyProvided and SupplyUnstocked.</item>
 /// <item>Schema v8 block (M7-02, format 11): per land type Landing; Shipments Enabled, IntervalTicks, Value, DecayPermille, FloorPermille,
 /// CharterTicks, TendersMax, LocalAshBonusPermille, TenderType (M7-06); per vehicle DrawScalePermille, DeepOnly, Submerges, SonarRadius, AircraftSlots,
-/// SortieTicks, UnloadTicks; per building WaterBuilding, WaterMask (count, then cells), BeachheadSource, BeachheadRadius, ShipmentDock (M7-06); then per warhead SalvoMissiles, SalvoTicks, SalvoRadius, SalvoDamage, SalvoWarnTicks, SalvoSplash (M7-12). The terrain
+/// SortieTicks, UnloadTicks, VehicleSlots (M7-04b); per building WaterBuilding, WaterMask (count, then cells), BeachheadSource, BeachheadRadius, ShipmentDock (M7-06), SonarRadius (simfu-4); then per warhead SalvoMissiles, SalvoTicks, SalvoRadius, SalvoDamage, SalvoWarnTicks, SalvoSplash (M7-12). The terrain
 /// table above grows with the land and locomotion counts (Coast, Naval).</item>
 /// </list>
 /// Hashed with XxHash64. Whitespace, comments and key order in the TOML do not affect it. The loader sorts each
@@ -301,7 +301,7 @@ public static class RulesHash
         foreach (VehicleType x in sim.Vehicles)
         {
             w.Write(x.DrawScalePermille); w.Write(x.DeepOnly); w.Write(x.Submerges); w.Write(x.SonarRadius);
-            w.Write(x.AircraftSlots); w.Write(x.SortieTicks); w.Write(x.UnloadTicks);
+            w.Write(x.AircraftSlots); w.Write(x.SortieTicks); w.Write(x.UnloadTicks); w.Write(x.VehicleSlots);
         }
         foreach (BuildingType x in sim.Buildings)
         {
@@ -309,6 +309,7 @@ public static class RulesHash
             w.Write(x.WaterMask.Count);
             foreach (bool b in x.WaterMask) w.Write(b);
             w.Write(x.BeachheadSource); w.Write(x.BeachheadRadius); w.Write(x.ShipmentDock);   // M7-06
+            w.Write(x.SonarRadius);   // simfu-4
         }
         foreach (WarheadType x in sim.Warheads)   // M7-12: Salvo Array
         {

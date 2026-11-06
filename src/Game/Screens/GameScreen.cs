@@ -74,6 +74,9 @@ public sealed class GameScreen : IScreen
     private PackOffer? _pack;                 // M6-09: Pack / Unpack button for the selected rig
     private EntityId _packSubject = EntityId.None;
     private readonly RectRegion _packRegion = new(Rectangle.Empty);
+    private bool _diveShown;                  // M7-14: Dive/Surface button for a selected own submarine
+    private bool _diveSubmerged;
+    private readonly RectRegion _diveRegion = new(Rectangle.Empty);
     private UnpackPlacement? _unpack;         // M6-09: the unpack footprint follows the cursor
     private readonly Selection _selection = new();
     private readonly OrderController? _orders; // null with --demo
@@ -319,6 +322,12 @@ public sealed class GameScreen : IScreen
             ActivatePack(packOffer);
             input.ConsumeLeft();
         }
+        UpdateDiveButton();
+        if (_diveShown && input.LeftPressed && _diveRegion.HitTest(input.MousePosition))
+        {
+            IssueDive();
+            input.ConsumeLeft();
+        }
         if (_superweapon.Buttons.Count > 0 && input.LeftPressed) ClickSuperweaponButton(input);
         if (_specPanel is not null && _spec is not null && input.LeftPressed)
         {
@@ -332,6 +341,7 @@ public sealed class GameScreen : IScreen
             input.ConsumeMouseOver(_swRegion);
             input.ConsumeMouseOver(_upgradeRegion);
             input.ConsumeMouseOver(_packRegion);
+            input.ConsumeMouseOver(_diveRegion);
             input.ConsumeMouseOver(_hudRegion);
             input.ConsumeMouseOver(_helpRegion);
             if (_mission is not null) input.ConsumeMouseOver(_mission.ObjectivesRegion);
@@ -472,6 +482,7 @@ public sealed class GameScreen : IScreen
         DrawSuperweapon(sb, snapshot.Tick);
         DrawUpgradeButton(sb);
         DrawPackButton(sb);
+        DrawDiveButton(sb);
         DrawSpectator(sb);
         _console?.Draw(sb, _s.Pixel, _s.Viewport);
     }
@@ -721,6 +732,60 @@ public sealed class GameScreen : IScreen
             int w = BitmapFont.Measure(offer.Reason, scale) + 16;
             Hud.Panel(sb, _s.Pixel, new Point(Math.Max(0, r.Right - w), r.Y - Hud.HeightOf(1, scale) - 4), new[] { offer.Reason }, scale);
         }
+    }
+
+    // ---- Dive / Surface a submarine (M7-14, D-143: Deploy toggles) ----------------------------------------------
+
+    private Rectangle DiveButtonRect()
+    {
+        int scale = _s.UiScale;
+        int w = Math.Max(BitmapFont.Measure(DiveOffer.Caption(false), scale), BitmapFont.Measure(DiveOffer.Caption(true), scale)) + 16;
+        int h = Hud.HeightOf(1, scale) + 6;
+        Viewport map = MapViewport();
+        return new Rectangle(map.Width - w - 8, map.Height - 3 * h - 16, w, h);   // stacked above the pack button
+    }
+
+    // The button follows the selection: shown while an own ship with submerges is selected; the caption shows the toggle's next state.
+    private void UpdateDiveButton()
+    {
+        _diveShown = false;
+        if (_sim is null || !_skirmishMode)
+        {
+            _diveRegion.Bounds = Rectangle.Empty;
+            return;
+        }
+
+        List<ViewActor> own = _diveScratch;
+        _sim.Sim.ViewFor(SimSnapshotSource.LocalPlayer).CopyOwn(own, includeBuildings: false);
+        foreach (UnitKey key in _selection.Units)
+        {
+            if (!_sim.TryGetTypeIndex(key, out int type) || !M3Orders.IsDiver(_sim.Rules, key.Kind, type)) continue;
+            _diveShown = true;
+            _diveSubmerged = false;
+            foreach (ViewActor a in own) if (a.Kind == ActorKind.Vehicle && a.Id == key.Id) { _diveSubmerged = a.Submerged; break; }
+            break;
+        }
+
+        _diveRegion.Bounds = _diveShown ? DiveButtonRect() : Rectangle.Empty;
+    }
+
+    private readonly List<ViewActor> _diveScratch = new();
+
+    // One Deploy per selected diver: the sim toggles each ship on its own.
+    private void IssueDive()
+    {
+        foreach (UnitKey key in _selection.Units.ToList())
+            if (_sim!.TryGetTypeIndex(key, out int type) && M3Orders.IsDiver(_sim.Rules, key.Kind, type) && _sim.TryGetPosition(key, out LeptonCoord at))
+                _sim.Order(CommandKind.Deploy, key, at.ToCell());
+    }
+
+    private void DrawDiveButton(SpriteBatch sb)
+    {
+        if (!_diveShown) return;
+        Rectangle r = DiveButtonRect();
+        Shapes.Fill(sb, _s.Pixel, r, new Color(0, 0, 0, 190));
+        Shapes.Outline(sb, _s.Pixel, r, Color.White, 2);
+        BitmapFont.Draw(sb, _s.Pixel, DiveOffer.Caption(_diveSubmerged), new Vector2(r.X + 8, r.Y + 4), new Color(0xFF, 0xE0, 0x80), _s.UiScale);
     }
 
     // ---- Pack / unpack a Mother Rig (M6-09) ------------------------------------------------------------
