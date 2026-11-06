@@ -110,6 +110,7 @@ public sealed partial class Simulation
             ActorKind.Building => r.Buildings[_buildings.TypeIndex[i]].PrimaryWeapon,
             _ => -1,
         };
+        if (kind == ActorKind.Vehicle && w >= 0 && r.Vehicles[_units.TypeIndex[i]].Ammo > 0 && _naval.AmmoLeft[i] <= 0) return -1;   // D-156: out of rounds, cannot attack
         return r.Weapons != null && w >= 0 && w < r.Weapons.Count ? w : -1;
     }
 

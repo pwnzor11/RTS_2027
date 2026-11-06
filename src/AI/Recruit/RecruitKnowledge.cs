@@ -86,6 +86,8 @@ internal sealed class RecruitKnowledge
                 case ActorKind.Vehicle when a.Underground && Rules.Vehicles[a.TypeIndex] is { Locomotion: Locomotion.Air, Faction: Faction.Expedition }:
                     Hangar.Add(a);   // M7-10
                     break;
+                case ActorKind.Vehicle when a.OutOfAmmo:
+                    break;   // D-156: a spent aircraft is never ordered to attack; the sim sends it to a carrier or a flight deck to rearm
                 case ActorKind.Infantry when a.Mission == MissionKind.Garrisoned:
                     Garrisoned.Add(a);
                     break;

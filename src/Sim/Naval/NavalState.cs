@@ -21,11 +21,14 @@ namespace Rts.Sim.Naval;
 /// the non-zero region labels as a count and (cell, label) pairs in cell order, then (slot, unloadTicksLeft, unloadX, unloadY, submerged)
 /// for every vehicle slot with any non-zero field, 0-terminated. Version 2 (written only while some aircraft holds a hangar place, so games
 /// without carriers hash as before) appends (slot, hangarOf, airState, sortieLeft) for every slot with any non-zero hangar field, 0-terminated.
+/// Version 3 (written only while some slot has ammo or rearm progress, D-156) writes the hangar list (possibly empty) and then appends
+/// (slot, ammoLeft, rearmProgress) for every slot with either non-zero, 0-terminated.
 /// </summary>
 public sealed class NavalState : ISimStatePart
 {
     private const byte Version = 1;
     private const byte VersionHangar = 2;
+    private const byte VersionAmmo = 3;
 
     /// <summary><see cref="AirState"/>: the aircraft sits in its carrier's hangar (layer Passenger, rearming and repairing).</summary>
     public const byte AirDocked = 1;
@@ -51,6 +54,11 @@ public sealed class NavalState : ISimStatePart
     /// <summary>Ticks of flight left on the aircraft's current sortie, per vehicle slot.</summary>
     public readonly int[] SortieLeft;
 
+    /// <summary>Rounds left in the primary weapon, per vehicle slot; only meaningful for a type with <c>Ammo &gt; 0</c> (D-156).</summary>
+    public readonly int[] AmmoLeft;
+    /// <summary>Rearm progress per vehicle slot: grows by the type's Ammo each tick while rearming; a round returns at RearmTicks (D-156).</summary>
+    public readonly int[] RearmProgress;
+
     /// <summary>Counts loads of this part; the region cache recomputes when it changes (not saved).</summary>
     internal int LoadEpoch { get; private set; }
 
@@ -62,6 +70,7 @@ public sealed class NavalState : ISimStatePart
         int v = setup.Limits.Vehicles;
         UnloadTicksLeft = new int[v]; UnloadX = new int[v]; UnloadY = new int[v]; Submerged = new bool[v];
         HangarOf = new int[v]; AirState = new byte[v]; SortieLeft = new int[v];
+        AmmoLeft = new int[v]; RearmProgress = new int[v];
     }
 
     /// <inheritdoc />
@@ -72,16 +81,21 @@ public sealed class NavalState : ISimStatePart
     {
         UnloadTicksLeft[i] = 0; UnloadX[i] = 0; UnloadY[i] = 0; Submerged[i] = false;
         HangarOf[i] = 0; AirState[i] = 0; SortieLeft[i] = 0;
+        AmmoLeft[i] = 0; RearmProgress[i] = 0;
     }
 
     private bool HasHangarData(int i) => HangarOf[i] != 0 || AirState[i] != 0 || SortieLeft[i] != 0;
+
+    private bool HasAmmoData(int i) => AmmoLeft[i] != 0 || RearmProgress[i] != 0;
 
     /// <inheritdoc />
     public void Write(BinaryWriter w)
     {
         bool hangar = false;
         for (int i = 1; i < HangarOf.Length && !hangar; i++) hangar = HasHangarData(i);
-        w.Write(hangar ? VersionHangar : Version);
+        bool ammo = false;
+        for (int i = 1; i < AmmoLeft.Length && !ammo; i++) ammo = HasAmmoData(i);
+        w.Write(ammo ? VersionAmmo : hangar ? VersionHangar : Version);
         w.Write(NavalRegion.Length); w.Write(UnloadTicksLeft.Length);
         int n = 0;
         foreach (ushort x in NavalRegion) if (x != 0) n++;
@@ -93,11 +107,18 @@ public sealed class NavalState : ISimStatePart
             w.Write(i); w.Write(UnloadTicksLeft[i]); w.Write(UnloadX[i]); w.Write(UnloadY[i]); w.Write(Submerged[i]);
         }
         w.Write(0);
-        if (!hangar) return;
+        if (!hangar && !ammo) return;
         for (int i = 1; i < HangarOf.Length; i++)
         {
             if (!HasHangarData(i)) continue;
             w.Write(i); w.Write(HangarOf[i]); w.Write(AirState[i]); w.Write(SortieLeft[i]);
+        }
+        w.Write(0);
+        if (!ammo) return;
+        for (int i = 1; i < AmmoLeft.Length; i++)
+        {
+            if (!HasAmmoData(i)) continue;
+            w.Write(i); w.Write(AmmoLeft[i]); w.Write(RearmProgress[i]);
         }
         w.Write(0);
     }
@@ -106,7 +127,7 @@ public sealed class NavalState : ISimStatePart
     public void Read(BinaryReader r)
     {
         byte version = r.ReadByte();
-        if (version != Version && version != VersionHangar) throw new InvalidDataException("naval version mismatch.");
+        if (version != Version && version != VersionHangar && version != VersionAmmo) throw new InvalidDataException("naval version mismatch.");
         LoadEpoch++;
         if (r.ReadInt32() != NavalRegion.Length || r.ReadInt32() != UnloadTicksLeft.Length) throw new InvalidDataException("naval capacity mismatch.");
         Array.Clear(NavalRegion);
@@ -131,6 +152,13 @@ public sealed class NavalState : ISimStatePart
             int h = r.ReadInt32();
             if (h < 0 || h >= HangarOf.Length) throw new InvalidDataException("naval hangar slot out of range.");
             HangarOf[s] = h; AirState[s] = r.ReadByte(); SortieLeft[s] = r.ReadInt32();
+        }
+        Array.Clear(AmmoLeft); Array.Clear(RearmProgress);
+        if (version < VersionAmmo) return;
+        for (int i = r.ReadInt32(); i != 0; i = r.ReadInt32())
+        {
+            int s = StateIo.Slot(i, AmmoLeft.Length, Name);
+            AmmoLeft[s] = r.ReadInt32(); RearmProgress[s] = r.ReadInt32();
         }
     }
 }

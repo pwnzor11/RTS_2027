@@ -125,6 +125,12 @@ public sealed record VehicleType(string Id, Locomotion Locomotion, int Speed, in
     /// (TOML <c>sortie_ticks</c>, 0 = off; M7-09, D-147).</summary>
     public int SortieTicks { get; init; }
 
+    /// <summary>Rounds the primary weapon holds (TOML <c>ammo</c>, 0 = unlimited; D-156). At 0 rounds the unit cannot attack.</summary>
+    public int Ammo { get; init; }
+
+    /// <summary>Ticks an empty aircraft needs to rearm fully in a hangar or over an aircraft-producing building (TOML <c>rearm_ticks</c>; D-156).</summary>
+    public int RearmTicks { get; init; }
+
     /// <summary>Landing craft: ticks per passenger put ashore (TOML <c>unload_ticks</c>, 0 = off).</summary>
     public int UnloadTicks { get; init; }
 
