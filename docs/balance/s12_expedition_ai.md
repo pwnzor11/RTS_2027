@@ -37,3 +37,15 @@ Tiers 1 and 2 vs Authority and Directorate did not change in code (the plan for 
 
 ## Tests
 `tests/AI.Tests/M7/ExpeditionHangarTests.cs` (full-hangar rule with two docked jets; view fields own-units-only) and `ExpeditionAiTests.ARecruitTierExpeditionEscortsConvoysAndStrikesFromTheSea` (tier 1 vs Directorate: escort orders and a strike target by tick 12000).
+
+## Re-measure after the tier 5 fix (PR #36, ArmyBeforeTech/Adapt = 30)
+Same method, 32 games per cell (16 seeds x 2), Expedition W-L-D (decisive %). Left Behind cells not re-run (exempt from the fix).
+
+| Tier | vs Authority | vs Directorate |
+|---|---|---|
+| 3 | 11-12-9 (48 %) | 0-8-24 (0 %) |
+| 4 | 8-12-12 (40 %) | 7-5-20 (58 %) |
+| 5 | 3-9-20 (25 %) | 4-4-24 (50 %) |
+
+- Draw tiebreak (remaining health at tick 18000): the Expedition is ahead in most draws (t3 Dir 17 of 24, t4 Dir 18 of 20, t5 Auth 18 of 20, t5 Dir 22 of 24).
+- Tier 3 vs Directorate is still far off and needs rules numbers (owner decision, D-152).
