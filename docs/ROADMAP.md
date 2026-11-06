@@ -208,12 +208,12 @@ systems (water locomotion, ships, landings). Lore, roster, art, AI.
 - [ ] M7-11 Art (owner PC, D-084) — pilot approved (variant A, D-149); all 46 sprites drawn on local `wp/art-exp-all` (session 11), waiting for the owner's push; exp_anchorage/exp_quay stand-ins until Q-55
 - [ ] M7-14 Game layer + acceptance — game layer done (PR #26); income tuned (D-152, docs/balance/m7_income.md: medium/large pass, small +12..22 %); golden replay + 210-game soak 0 desyncs (docs/balance/m7_14_acceptance.md); open: §6 bullet 1 (win vs every tier), Q-55 docks, owner play-test
 
-- [ ] M7-15 Floating docks (Q-55 (a), D-153, D-156): wholly-on-water docks touching the shore, AI siting, drop the South stop-gap; redraw the four dock sprites (pilot first)
-- [ ] M7-16 Aircraft ammo (D-156): 4-5 rounds, rearm at the carrier, carrier balance table
-- [ ] M7-17 Submarine dived frames drawn; dived look only for owner and allies
+- [x] M7-15 Floating docks (Q-55 (a), D-153, D-156): wholly-on-water docks touching the shore, AI siting, drop the South stop-gap; redraw the four dock sprites (pilot first)
+- [x] M7-16 Aircraft ammo (D-156): 4-5 rounds, rearm at the carrier, carrier balance table
+- [x] M7-17 Submarine dived frames drawn; dived look only for owner and allies
 - [ ] M7-18 Expedition AI per tier (§6 bullet 1) and M7 acceptance close-out
 - [x] M7-19 Left Behind early income (Q-52, D-153) and Expedition small-map re-measure
-- [ ] M7-20 Archive drafts (8 upgrade notes, Provision Store) and Left Behind lore revision (D-155)
+- [x] M7-20 Archive drafts (8 upgrade notes, Provision Store) and Left Behind lore revision (D-155)
 
 ## M8 · Campaign (was M4)
 - [x] M8-02 Contracts: mission API stubs (docs/missions/api.md), schema v2, campaign progress/list/ending files, mission part v2 (session 12)
