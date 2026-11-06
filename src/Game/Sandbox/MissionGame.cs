@@ -35,6 +35,7 @@ public sealed class MissionGame
         Ai = ai;
         _rulesHash = rulesHash;
         _aiTier = aiTier;
+        ai?.SetMissionHooks(new MissionAiHooks(host, MissionAiHooks.LoadTiers(rulesDir)));   // M8-06: AI.* script hooks (read-only, D-051)
     }
 
     private readonly ulong _rulesHash;

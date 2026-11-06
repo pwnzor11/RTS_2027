@@ -22,6 +22,7 @@ public sealed class AiDriver
         public required byte Player;
         public required IAiPlayer Ai;
         public required DifficultyProfile Profile;
+        public DifficultyProfile? BaseProfile;   // M8-06: the profile the slot was added with (Profile follows AI.SetTier)
         public ushort Sequence;
         public int Delay;
         public int Tick;
@@ -54,6 +55,7 @@ public sealed class AiDriver
     private readonly ulong _seed;
     private readonly List<Slot> _slots = new();
     private bool _started;
+    private IMissionAiHooks? _hooks;
 
     /// <summary>Creates a driver for a game with the given seed (AI generators derive from it).</summary>
     public AiDriver(ulong gameSeed) => _seed = gameSeed;
@@ -82,6 +84,13 @@ public sealed class AiDriver
         int tick = sim.Tick;
         foreach (Slot s in _slots)
         {
+            AiHooks hooks = AiHooks.None;
+            if (_hooks is not null)   // M8-06: the mission script's AI.* flags, read outside Step
+            {
+                hooks = _hooks.Read(s.Player);
+                s.BaseProfile ??= s.Profile;
+                s.Profile = (hooks.Tier > 0 ? _hooks.ProfileForTier(hooks.Tier) : null) ?? s.BaseProfile;
+            }
             if (s.Directives is not null && s.Directives.Poll(sim.ViewFor(s.Player), out int packed, out CellCoord focus))   // M5-05
             {
                 int delay = Math.Max(1, CommandDelayOverride ?? s.Profile.CommandDelayTicks);
@@ -93,6 +102,7 @@ public sealed class AiDriver
             s.Tick = tick;
             s.Delay = Math.Max(1, CommandDelayOverride ?? s.Profile.CommandDelayTicks);
             s.Out = outCommands;
+            if (_hooks is not null && s.Ai is IHookableAi hookable) hookable.ApplyHooks(hooks, s.Profile);
             s.Ai.Think(sim.ViewFor(s.Player), s);
             s.Out = null!;
         }
@@ -187,6 +197,10 @@ public sealed class AiDriver
             if (s.Player == player) { s.Directives = source; return; }
         throw new ArgumentException($"Slot {player} has no AI.", nameof(player));
     }
+
+    /// <summary>M8-06: sets the mission script hook source (null removes it). May be called at any time between ticks. With none set the
+    /// driver behaves exactly as before.</summary>
+    public void SetMissionHooks(IMissionAiHooks? hooks) => _hooks = hooks;
 
     /// <summary>M3-21 (diagnostics and tests): the AI playing slot <paramref name="player"/>, or null.</summary>
     public IAiPlayer? AiOf(byte player)

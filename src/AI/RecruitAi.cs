@@ -14,9 +14,11 @@ namespace Rts.AI;
 /// waves (see the manager classes in Rts.AI.Recruit). Deterministic: no state from outside the view, decisions on the
 /// profile's interval.
 /// </summary>
-public sealed class RecruitAi : IAiPlayer, IAiSnapshotable
+public sealed class RecruitAi : IAiPlayer, IAiSnapshotable, IHookableAi
 {
-    private readonly DifficultyProfile _profile;
+    private DifficultyProfile _profile;
+    private readonly DifficultyProfile _baseProfile;   // M8-06: the profile the AI was created with; Init builds from it so a restored AI rebuilds identically
+    private int _servedWaveSeq;   // M8-06: last AI.Wave sequence number served (saved)
     private readonly RecruitKnowledge _k = new();
     private readonly EconomyManager _economy = new();
     private readonly MilitaryManager _military;
@@ -49,7 +51,7 @@ public sealed class RecruitAi : IAiPlayer, IAiSnapshotable
     /// <summary>Creates the AI under a registry id (the same AI is registered as "recruit" and as "tiered").</summary>
     public RecruitAi(DifficultyProfile profile, string id)
     {
-        _profile = profile;
+        _profile = _baseProfile = profile;
         _id = id;
         _military = new MilitaryManager(profile.AttackThreshold) { Options = MilitaryOptions.From(profile) };
     }
@@ -189,6 +191,37 @@ public sealed class RecruitAi : IAiPlayer, IAiSnapshotable
     /// <summary>M7-10 (diagnostics): the Expedition landing-site line.</summary>
     public string ExpeditionDebug => (_tactics as ExpeditionTactics)?.Debug ?? "";
 
+    /// <summary>
+    /// M8-06 (D-051): the mission script's AI.* flags for this decision, read by the driver outside Step just before Think. Priority over an LLM
+    /// directive: AI.Attack replaces the directive's attack cell, AI.Defend replaces its rally cell; everything else of a directive still applies.
+    /// AI.SetTier swaps the profile: flags and numbers read from it (repair, upgrades, retreat percent, wave threshold of the next reroll,
+    /// decision interval and command delay in the driver, planner/tactics gates read from the profile) follow the new tier; all state carries
+    /// over (build order list, supply margin and faction tactics chosen at init from the AI's own profile, drawn wave trigger, roster, timers, squads, scout route, RNG).
+    /// </summary>
+    public void ApplyHooks(AiHooks hooks, DifficultyProfile profile)
+    {
+        if (!ReferenceEquals(profile, _profile))
+        {
+            _profile = profile;
+            _planner?.SetProfile(profile);
+            _military.Retune(profile, _tactics is ExpeditionTactics, ExpeditionTactics.RetreatPct);
+        }
+        _hookAttack = hooks.AttackCell; _hookDefend = hooks.DefendCell;
+        if (hooks.WaveSeq > _servedWaveSeq)
+        {
+            _servedWaveSeq = hooks.WaveSeq;
+            if (hooks.WaveCell is CellCoord wc) _military.RequestWave(wc);   // without a usable zone the sequence is still served
+        }
+    }
+
+    private CellCoord? _hookAttack, _hookDefend;
+
+    /// <summary>M8-06 (diagnostics and tests): the tier of the profile in force (follows AI.SetTier).</summary>
+    public int ActiveTier => _profile.Tier;
+
+    /// <summary>M8-06: last AI.Wave sequence number served.</summary>
+    public int ServedWaveSeq => _servedWaveSeq;
+
     /// <inheritdoc />
     public void Start(AiContext ctx)
     {
@@ -202,13 +235,14 @@ public sealed class RecruitAi : IAiPlayer, IAiSnapshotable
     private void Init(Faction faction)
     {
         _faction = RecruitFaction.For(faction);
-        _tactics = _faction.CreateTactics(_profile);
-        _build = new BuildOrderManager(_faction.OrderFor(_profile.BuildRepertoire), _faction.PowerId, _faction.YardId)
-        { ReserveInProgress = _profile.RespondToAttacks, SupplyMargin = BuildOrderManager.MarginForTier(_profile.Tier) };   // M4-12 (tier 2+); SUP-5 margin by tier
-        _planner = new TierPlanner(_profile, _faction);
+        _tactics = _faction.CreateTactics(_baseProfile);
+        _build = new BuildOrderManager(_faction.OrderFor(_baseProfile.BuildRepertoire), _faction.PowerId, _faction.YardId)
+        { ReserveInProgress = _baseProfile.RespondToAttacks, SupplyMargin = BuildOrderManager.MarginForTier(_baseProfile.Tier) };   // M4-12 (tier 2+); SUP-5 margin by tier
+        _planner = new TierPlanner(_baseProfile, _faction);
         _build.HoldStep = id => _planner.Behind && _planner.IsTech(id);   // M4-16
         _production = new ProductionManager(_faction, _tactics, _planner);
         _production.Start(_ctx!.Rng);
+        if (!ReferenceEquals(_profile, _baseProfile)) _planner.SetProfile(_profile);   // M8-06: a tier forced before the first decision
         _military.Tactics = _tactics;
         _tactics?.Start(_ctx);
         if (_tactics is LeftBehindTactics lb) lb.Attach(_squads);   // M6-10
@@ -252,6 +286,10 @@ public sealed class RecruitAi : IAiPlayer, IAiSnapshotable
         _squads.Apply(_k);
         // M5-02: the commander's directive, as knob values for this decision (Directive.None gives the values the managers always used)
         DirectiveBias bias = DirectiveBias.For(view.Directive);
+        if (_hookAttack is CellCoord hookAttack) bias = bias with { AttackCell = hookAttack };   // M8-06: script hooks beat the directive
+        if (_hookDefend is CellCoord hookDefend) bias = bias with { RallyCell = hookDefend };
+        _military.HookAttack = _hookAttack;
+        _military.HookHold = _hookDefend is not null && _hookAttack is null;   // Defend holds waves; an Attack hook (also set) wins
         _military.Bias = bias; _production!.Bias = bias; _planner!.Bias = bias; _upgrades.Bias = bias; _garrison.Bias = bias;
         _planner.Observe(_k, _knownBuildings);
         _planner.ExtendBuild(_k, _build!);
@@ -283,13 +321,16 @@ public sealed class RecruitAi : IAiPlayer, IAiSnapshotable
 
     /// <summary>Layout version of <see cref="SaveState"/>; a blob of another version is not read.</summary>
     private const int StateVersion = 1;
+    /// <summary>M8-06: layout with the script-hook memory appended; written only once a hook was served, so other games save as before.</summary>
+    private const int HookStateVersion = 2;
 
     /// <inheritdoc />
     public void SaveState(BinaryWriter w)
     {
-        w.Write(StateVersion);
-        w.Write(_id);
         bool thinking = _faction is not null && _build is not null && _production is not null && _planner is not null && _ctx is not null;
+        bool hooked = thinking && (_servedWaveSeq != 0 || _military.HookDirty);
+        w.Write(hooked ? HookStateVersion : StateVersion);
+        w.Write(_id);
         w.Write(thinking);
         if (!thinking) return;   // never decided anything: a fresh AI is the same AI
         w.Write((byte)_faction!.Faction);
@@ -313,13 +354,15 @@ public sealed class RecruitAi : IAiPlayer, IAiSnapshotable
         if (_tactics is DirectorateTactics d) d.Snapshot(w);
         if (_tactics is LeftBehindTactics lb) lb.Snapshot(w);   // M6-10: only a Left Behind side writes (older blobs are unchanged)
         if (_tactics is ExpeditionTactics ex) ex.Snapshot(w);   // M7-10: likewise only an Expedition side
+        if (hooked) { w.Write(_servedWaveSeq); _military.SnapshotHooks(w); }   // M8-06
     }
 
     /// <inheritdoc />
     public void LoadState(BinaryReader r)
     {
         if (_ctx is null) throw new InvalidOperationException("LoadState needs Start first.");
-        if (r.ReadInt32() != StateVersion) throw new InvalidDataException("AI state of another layout");
+        int version = r.ReadInt32();
+        if (version != StateVersion && version != HookStateVersion) throw new InvalidDataException("AI state of another layout");
         if (r.ReadString() != _id) throw new InvalidDataException("AI state of another AI");
         if (!r.ReadBoolean()) return;
         Init((Faction)r.ReadByte());   // builds the faction-dependent managers exactly as the first decision does
@@ -342,5 +385,6 @@ public sealed class RecruitAi : IAiPlayer, IAiSnapshotable
         if (r.ReadBoolean() && _tactics is DirectorateTactics d) d.Restore(r);
         if (_tactics is LeftBehindTactics lb) lb.Restore(r);
         if (_tactics is ExpeditionTactics ex) ex.Restore(r);
+        if (version == HookStateVersion) { _servedWaveSeq = r.ReadInt32(); _military.RestoreHooks(r); }   // M8-06
     }
 }

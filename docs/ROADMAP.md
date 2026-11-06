@@ -205,19 +205,28 @@ systems (water locomotion, ships, landings). Lore, roster, art, AI.
 - [x] M7-13 Ocean-edge generator, naval map checks, skirmish Ocean option (session 10, D-145, D-147)
 - [x] M7-09 Carrier and air (session 10, D-147; no ammo system, no hangar UI)
 - [x] M7-10 AI Expedition (session 11, PR #26: establish, convoy escorts, strikes, withdraw; naval deploy + tender lane fixes D-150/D-151; Archive entries; LLM naval fields) — naval strikes and income tuning continue in M7-14
-- [ ] M7-11 Art (owner PC, D-084) — pilot approved (variant A, D-149); all 46 sprites drawn on local `wp/art-exp-all` (session 11), waiting for the owner's push; exp_anchorage/exp_quay stand-ins until Q-55
+- [x] M7-11 Art (owner PC, D-084): all 46 Expedition sprites (PR #28, variant A, D-149) and the four floating docks (PR #34, variant C, D-158)
 - [ ] M7-14 Game layer + acceptance — game layer done (PR #26); income tuned (D-152, docs/balance/m7_income.md: medium/large pass, small +12..22 %); golden replay + 210-game soak 0 desyncs (docs/balance/m7_14_acceptance.md); open: §6 bullet 1 (win vs every tier), Q-55 docks, owner play-test
 
-- [ ] M7-15 Floating docks (Q-55 (a), D-153, D-156): wholly-on-water docks touching the shore, AI siting, drop the South stop-gap; redraw the four dock sprites (pilot first)
-- [ ] M7-16 Aircraft ammo (D-156): 4-5 rounds, rearm at the carrier, carrier balance table
-- [ ] M7-17 Submarine dived frames drawn; dived look only for owner and allies
+- [x] M7-15 Floating docks (Q-55 (a), D-153, D-156): wholly-on-water docks touching the shore, AI siting, drop the South stop-gap; redraw the four dock sprites (pilot first)
+- [x] M7-16 Aircraft ammo (D-156): 4-5 rounds, rearm at the carrier, carrier balance table
+- [x] M7-17 Submarine dived frames drawn; dived look only for owner and allies
 - [ ] M7-18 Expedition AI per tier (§6 bullet 1) and M7 acceptance close-out
 - [x] M7-19 Left Behind early income (Q-52, D-153) and Expedition small-map re-measure
-- [ ] M7-20 Archive drafts (8 upgrade notes, Provision Store) and Left Behind lore revision (D-155)
+- [x] M7-20 Archive drafts (8 upgrade notes, Provision Store) and Left Behind lore revision (D-155)
 
 ## M8 · Campaign (was M4)
 - [x] M8-02 Contracts: mission API stubs (docs/missions/api.md), schema v2, campaign progress/list/ending files, mission part v2 (session 12)
 - [x] M8-02a Plan update with the owner's story answers (D-154/D-155), Fallout-style endings, voice slot; voice tool guide (docs/audio/voice_setup.md) (session 12)
+- [x] M8-03 Objectives (primary/hidden), timers, area triggers (leave/hold/seen/idle), win/lose and tech helpers, Mission.Difficulty (session 12)
+- [x] M8-04 Reinforcements: zone, transport, delayed, naval (Expedition), rig arrival (Left Behind), spawn groups with rank (session 12)
+- [x] M8-05 Dialogue (speaker, portrait, locale key, optional voice), camera hints, locale loader (session 12)
+- [x] M8-06 AI script hooks drive the AI: attack/defend zone, set tier, scripted wave (session 12)
+- [x] M8-07 Campaign progress, tech carry-over, faction unlock order (assumed — confirm), Archive wiring (session 12)
+- [x] M8-08 Game UI: faction pick, mission select, briefing v2 with difficulty, debrief, ending sequence (M8-16; images in data/images/endings/) (session 12)
+- [ ] M8-09 Tutorial mission + mission-check and bot test template
+- [ ] M8-10 Pilot missions, one per faction (A1 port, D1, L1, E1) — then owner review (M8-11)
+- [ ] M8-12 Fan-out missions; M8-13 Archive campaign entries; M8-14 act-break stills; M8-15 acceptance; M8-16 ending sequence screen
 - [x] M8-01 Campaign plan (docs/design/12_m8_plan.md, plan only; story questions open) (session 9)
 Mission scripting/trigger system, briefing screens, tech gating, campaign flow; written once with all four factions.
 Wires Archive campaign unlocks.

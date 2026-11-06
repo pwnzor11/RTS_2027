@@ -27,7 +27,7 @@ internal sealed class TierPlanner
     /// <summary>Army size before the superweapon / air tech is added to the build order.</summary>
     public const int ArmyBeforeLateTech = 8;
 
-    private readonly DifficultyProfile _p;
+    private DifficultyProfile _p;
     private readonly RecruitFaction _faction;
     private readonly int[] _armor = new int[RuleCounts.ArmorClasses];
     private readonly int[] _defArmor = new int[RuleCounts.ArmorClasses];
@@ -42,6 +42,9 @@ internal sealed class TierPlanner
     }
 
     public DifficultyProfile Profile => _p;
+
+    /// <summary>M8-06: switches to another tier's profile (AI.SetTier); all state is kept, only the flags and numbers read from the profile change.</summary>
+    public void SetProfile(DifficultyProfile p) => _p = p;
 
     /// <summary>Enemy defensive structures known (live or last seen).</summary>
     public int DefenceCount { get; private set; }

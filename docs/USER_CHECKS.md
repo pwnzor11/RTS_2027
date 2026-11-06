@@ -256,3 +256,11 @@ This plays one AI-vs-AI game where side A is commanded by a language model. It n
 3. Output lands in the `commander_run` folder: `summary.md` (winner, ticks, number of calls, errors), `directives.log` (one line per decision: tick, directive, latency in ms, ok or error) and a `commander_seedN.rtsreplay` replay file.
 4. If the key is missing, the command prints which variable to set and stops without creating the folder.
 5. Send Claude `summary.md` and `directives.log`, never the key.
+
+## Campaign menu (M8-08, M8-16)
+1. **Faction pick:** Main menu → Campaign. Four factions show; Authority and Directorate are open, Left Behind and Overseas Expedition say "(locked)" and, when highlighted, "opens after act 2 (act 3) of the Authority or Directorate campaign". "Load game" there still lists campaign saves.
+2. **Mission select:** pick Authority. "Survey Convoy [next]" starts; placeholder missions of other factions read "[not written yet]" and do nothing on Enter.
+3. **Briefing:** the text types out (Space shows it all), the objectives follow, then a Difficulty row (Left/Right or the -/+ buttons, five tier names) and Start mission. `[[archive_id]]` links in a briefing appear as the entry title, with "(locked)" added while locked (plain text, not greyed).
+4. **Win and debrief:** win the mission: a debrief shows time, objectives done, new tech and new Archive entries; Continue returns to the mission select with the mission marked "[completed]". Because Survey Convoy is the only Authority mission so far, the ending follows: 2 slides with "PENDING owner text" captions on dark panels (put `data/images/endings/<image id>.png` to show a still). Click/Enter = next, Esc = skip.
+5. **Loss:** lose the mission: the Defeat menu offers Restart (same difficulty) or Quit to menu; nothing is saved.
+6. Progress files are `campaign_<faction>.toml` beside settings.toml; delete one to restart that campaign.
