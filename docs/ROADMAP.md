@@ -211,7 +211,7 @@ systems (water locomotion, ships, landings). Lore, roster, art, AI.
 - [ ] M7-16 Aircraft ammo (D-156): 4-5 rounds, rearm at the carrier, carrier balance table
 - [ ] M7-17 Submarine dived frames drawn; dived look only for owner and allies
 - [ ] M7-18 Expedition AI per tier (§6 bullet 1) and M7 acceptance close-out
-- [ ] M7-19 Left Behind early income (Q-52, D-153) and Expedition small-map re-measure
+- [x] M7-19 Left Behind early income (Q-52, D-153) and Expedition small-map re-measure
 - [ ] M7-20 Archive drafts (8 upgrade notes, Provision Store) and Left Behind lore revision (D-155)
 
 ## M8 · Campaign (was M4)
