@@ -38,26 +38,26 @@ ticks_per_frame = 5
 state = "damaged"
 kind = "fire_large"
 x = 128
-y = 136
+y = 140
 phase = 0
 
 [[fx]]
 state = "damaged"
 kind = "fire_small"
-x = 220
-y = 149
+x = 207
+y = 191
 phase = 4
 
 [[fx]]
 state = "damaged"
 kind = "smoke_plume"
 x = 128
-y = 131
+y = 135
 phase = 0
 
 [[fx]]
 state = "damaged"
 kind = "smoke_plume"
-x = 30
-y = 94
+x = 49
+y = 112
 phase = 5
