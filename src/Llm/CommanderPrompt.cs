@@ -22,7 +22,12 @@ public static class CommanderPrompt
         "strategy; a built-in AI carries it out (building, training, attacking). You choose: posture (turtle = defend and build up, " +
         "balanced, aggressive = press attacks, allin = commit everything), focus (what to invest in), target (which enemy player to " +
         "hit, 255 = let the AI choose), mix (unit types to favour), expand (build more bases) and an optional focus_cell to attack or " +
-        "defend (only a cell you have seen).";
+        "defend (only a cell you have seen).\n\n" +
+        "Posture guide: turtle does NOT build faster. It keeps the army at home and only attacks with a much larger army, so it gives " +
+        "the enemy time. Use turtle for at most two decisions in a row, to protect a lead or to rebuild right after a lost fight, and " +
+        "then return to balanced. When the enemy is pressing your base, prefer balanced with focus army and focus_cell set to a cell in " +
+        "your own base (that is where your army defends) instead of turtle. When you are behind, more turtle makes it worse: rebuild " +
+        "with focus army and pick a fight you can win.";
 
     /// <summary>The system prompt: rules, schema, persona voice and the knowledge limit.</summary>
     public static string System(CommanderPersona persona, string faction)
