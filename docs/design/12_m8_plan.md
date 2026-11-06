@@ -12,7 +12,7 @@ Every number is `(tune)`. Sections 1-2 are the story plan, 3 the systems, 4-6 th
 - First slice at the end of M8 (recommended): **3-4 missions per faction, 14 in all** `(tune)`, plus one shared tutorial. The full
   10-12 per faction of D-030 is a later expansion (M8b) once the slice has measured the real cost (§5).
 
-## 2 · Campaign structure (all story assumed — confirm)
+## 2 · Campaign structure (owner answers D-154, D-155; remaining story assumed — confirm)
 ### 2.1 What is fixed
 - D-087: one campaign written once for four factions. D-030: one spine per side, 2-3 two-way choice points that rejoin, maps reused with
   different scripts, no unit carry-over, text briefings, radio messages, 2-3 stills at act breaks. D-020 (two-faction era): parallel and
@@ -20,16 +20,18 @@ Every number is `(tune)`. Sections 1-2 are the story plan, 3 the systems, 4-6 th
 - Timeline from docs/lore/world_history.md: war begins 2001 after the Spring 2000 convoy loss and the surfacing; the Left Behind are
   watching the Glass Coast (left_behind.md timeline, 2001); the Second Relief Fleet sailed spring 2000 (expedition.md, faction_exp_reason).
 
-### 2.2 Proposed arc: one shared year, 2001 (assumed — confirm)
+### 2.2 Arc: one shared year, 2001, told four ways (Q-A, D-154)
 Missions are told from each side as a *parallel* war (the D-020 pattern), not a branching plot. Four acts, each faction gets one
 mission per act in the slice:
 | Act | Shared events (all from existing lore) | Authority | Directorate | Left Behind | Expedition |
 |---|---|---|---|---|---|
-| 1 Surfacing | Directorate surfaces openly; Authority mobilises | A1 Survey Convoy (exists: auth_01) | D1 first hatch opened | L1 the caravans watch both | E1 first landing, a beach |
-| 2 Rust Belt | Convoy Roads fight; the Glass Coast is eyed by both | A2 hold a road junction | D2 raid the roads | L2 salvage the battlefield | E2 beachhead, supply line |
-| 3 Glass Coast | Both big powers send forces into the dunes | A3 escort to the coast | D3 take the launch sites | L3 defend Tern Point railhead | E3 fleet reaches the coast |
-| 4 Reckoning | Sunrise Device (Order Seven, D-086 canon) and Salvo Array come into play | A4 stop the device | D4 fire the device | L4 choose a side or none | E4 the ash fields or the fuel decision |
-Cells are working titles only. The 4th mission of each faction is the slice's finale; its ending text is a **proposal** (open Q-C below).
+| 1 Surfacing | Directorate surfaces openly; Authority mobilises | A1 Survey Convoy (exists: auth_01) | D1 first hatch opened | L1 the refused: raid an Authority convoy | E1 first landing, a beach |
+| 2 Rust Belt | Convoy Roads fight; the Glass Coast is eyed by both | A2 hold a road junction | D2 raid the roads | L2 strip the Authority road posts | E2 beachhead, supply line |
+| 3 Glass Coast | Both big powers send forces into the dunes | A3 escort to the coast | D3 take the launch sites | L3 break into a Directorate hatch field | E3 fleet reaches the coast |
+| 4 Reckoning | Sunrise Device (Order Seven, D-086 canon) and Salvo Array come into play | A4 stop the device | D4 fire the device | L4 drive the Expedition off the coast; the warlord takes over | E4 the ash fields or the fuel decision |
+Cells are working titles only. The Left Behind are hostile to everyone (D-155): Authority first (the refusal), then the Directorate, then
+the Expedition; their victory is taking over. The 4th mission of each faction is the slice's finale; it ends in that faction's victory
+and the ending sequence in 3.8 (Q-C, D-154).
 
 ### 2.3 Where the stories cross (assumed — confirm)
 - **Same map, different eyes (D-030 map reuse):** each act uses one map; each faction plays it with its own script (e.g. act 2 Rust Belt
@@ -46,18 +48,18 @@ after act 2 of either** original faction; **Expedition unlocks after act 3 of ei
 enter the war late in the lore (2001 caravans notice; the fleet is far away) so the order matches the story. Option B: all four open at
 once (simplest, no spoilers protected). Option C: strict linear order, rejected (hides content from a returning player).
 
-### 2.5 Open story questions for the owner (options + recommendation)
-| Id | Question | Options | Recommendation |
-|---|---|---|---|
-| Q-A | Canon: one shared 2001 told four ways, or four separate stories? | (1) shared year, parallel (above) (2) separate non-overlapping (3) one faction's ending changes the others' | (1); cheapest and uses the Archive crossings |
-| Q-B | Who is protagonist? D-020 said one clear hero; there are now four | (1) none: all sides sympathetic (2) Authority hero, Directorate villain, others third parties (3) per-campaign hero | (3); each campaign has its own protagonist, no global one |
-| Q-C | How do the campaigns end? | (1) each ends on its own battle with no canon winner (2) one shared canon ending the others contradict (3) each ending shown as "their version" | (1) for the slice; decide again at M8b |
-| Q-D | Choice points: the slice has none, add later? | (1) none in slice (2) one two-way choice in act 3 per faction | (1); the choice machinery is in §3.6 but unused |
-| Q-E | Does the Left Behind side fight Authority, Directorate, or pick? | (1) always a pick in L4 (2) Authority first, Directorate later (3) always both | (1) matches the lore (neutral, "asked the Authority first") |
-| Q-F | Is the Expedition hostile to the old powers or only to the Directorate? | (1) hostile to all (fuel) (2) allies of the Authority (3) their commissioner decides | (3); Commissioner Strand makes the call (leaders exist) |
-| Q-G | Which leaders speak in briefings? | existing leaders only vs. new officers | existing only; no new names without approval |
-| Q-H | Voice or text? | text now, voice later (research 16 Q4) | text with a locale file; voice later |
-| Q-I | Difficulty names for campaign | Easy/Normal/Hard vs lore names | reuse the five skirmish tiers (D-061: no resource cheats) |
+### 2.5 Story answers (D-154, D-155)
+| Id | Answer |
+|---|---|
+| Q-A | One shared 2001 told four ways (2.2). |
+| Q-B | Each campaign has its own hero. |
+| Q-C | Each campaign ends with its faction's victory over the others, then a Fallout-style ending (3.8). Each ending is that faction's version; no canon winner. |
+| Q-D | No choice points in the first slice (3.6 stays unused). |
+| Q-E | The Left Behind are hostile to every faction: refused by the Authority, years of infighting, now loosely allied clans under a warlord; sympathetic but ruthless (docs/lore/left_behind.md, D-155). |
+| Q-F | Commissioner Strand decides the Expedition's stance (assumed — confirm, Q-56). |
+| Q-G | Existing leaders only; no new names without approval. |
+| Q-H | Text now; every line keyed in a locale file with an optional voice file (3.2); setup guide for a local voice generator in docs/audio/voice_setup.md. |
+| Q-I | Campaign difficulty reuses the five skirmish tiers, no resource cheats (D-061). |
 
 ## 3 · Systems
 ### 3.1 What exists and what is missing
@@ -98,7 +100,8 @@ Missing (this is the M8 work; none exists today):
 Screen: reuse `BriefingScreen`, add portrait, faction theme, map thumbnail, objectives preview and a Start button.
 Text in `data/missions/<id>/briefing.md` plus a per-mission locale file keyed by string id (D-030: all text in one locale file) so voice
 can be added later. Archive links: a briefing may name Archive ids (`[[leader_auth_wrenfield]]`); the link opens the entry if unlocked,
-greyed otherwise. Radio messages (3.1 dialogue) use the same locale keys. Voice: later, out of M8 (Q-H).
+greyed otherwise. Radio messages (3.1 dialogue) use the same locale keys. Voice slot (Q-H, D-154): each locale entry may name an optional
+`voice = "voice/<leader_id>/<key>.ogg"`; the game plays it when the file exists, else shows text only. No voice files are required for M8.
 
 ### 3.3 Tech gating and campaign carry-over (D-005, D-030)
 - Keep one skirmish tech tree. A mission has `[players].tech` (existing allow-list) and the script's `Tech.Grant`. Both **only restrict
@@ -132,6 +135,14 @@ lists mission ids in order with unlock rules. The script hash goes in the replay
 - Mission replays: playback re-runs the script (D-092). Open gap from the pilot: script-driven spawns must replay. Acceptance (§6) checks it.
 - Campaign progress file is separate, versioned, human-readable TOML; losing it never corrupts a sim save.
 
+### 3.8 Ending sequence (Q-C, D-154)
+After a faction's final mission: a short victory debrief, then 6-10 captioned slides in the Fallout manner, each a still (or a reused
+map view) with 2-4 sentences: what became of each major character of that campaign (its leaders, the rival leaders it met), and how the
+victory shaped the wider world (the Authority's towns, the tunnels, the wastes, the coast, the fleet's homeland). Slides may vary on
+mission facts the progress file records (e.g. difficulty, optional objectives completed). Data: `data/campaigns/<faction>_ending.toml`
+(ordered slides, each: image id, locale key, optional condition), text in the faction's locale file, voice slot as in 3.2. Screen:
+`EndingScreen` (game layer only, no sim impact). Package M8-16 (screen + data format), slides written per faction with M8-12; owner reviews.
+
 ## 4 · Contracts
 - **API additions (lead, M8-02):** the table in 3.1 as Lua function signatures with argument checks; every new function listed in
   `docs/missions/api.md` with an example. Removing or changing an existing pilot function is not allowed (auth_01 must still pass).
@@ -156,6 +167,7 @@ lists mission ids in order with unlock rules. The script hash goes in the replay
 | M8-12 | Fan-out: remaining missions per faction (2-4 each), 1 helper per faction in own worktree | data/missions/<faction>_02..04 | M8-11 |
 | M8-13 | Archive campaign unlock ids, classified leader entries | data/archive | M8-07 |
 | M8-14 | Stills at act breaks (2-3 per faction), art pilot then fan-out | tools/art | owner approval |
+| M8-16 | Ending sequence: EndingScreen, `<faction>_ending.toml`, conditions from the progress file | src/Game/Screens, data/campaigns | M8-07 |
 | M8-15 | Acceptance: bot play-through of every mission, mission replays, balance table | tests, docs/balance | all |
 
 Mission-authoring workflow (D-039 pilot rule): (1) paper design (beats, archetype, tech granted, map use, difficulty) one page,
