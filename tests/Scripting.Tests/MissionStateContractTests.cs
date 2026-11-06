@@ -33,6 +33,7 @@ public sealed class MissionStateContractTests
         ["_errors"] = "diagnostics (deterministic but not state)",
         ["_printLog"] = "diagnostics",
         ["_fn"] = "name of the API function being called, for error text",
+        ["_outputSeq"] = "M8-05 sequence number for game-layer outputs only; never saved, hashed or read by the sim",
         ["_dialogue"] = "M8-05 output for the game layer (plan 3.7): never read by the sim",
         ["_cameraHint"] = "M8-05 output for the game layer (plan 3.7): never read by the sim",
     };
