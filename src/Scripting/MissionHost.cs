@@ -33,6 +33,8 @@ public sealed partial class MissionHost : ISimExtension
     /// hashes. Both versions are read. New fields are appended to the version-2 tail only.
     /// </summary>
     private const int FormatVersion = 2;
+    /// <summary>Part format written while reinforcement arrivals are queued (M8-04): the version-2 bytes plus an appended arrivals section.</summary>
+    private const int ArrivalsFormatVersion = 3;
     private const int BaseFormatVersion = 1;
 
     private readonly string _source;
@@ -186,6 +188,8 @@ public sealed partial class MissionHost : ISimExtension
             if (init.Type == DataType.Function) Invoke("OnInit", init);
         }
 
+        RunArrivals(sim);   // M8-04: queued Reinforce.Delayed / Reinforce.Transport work
+
         int count = _triggers.Count;   // triggers added by callbacks start next tick
         for (int i = 0; i < count && !_halted; i++)
         {
@@ -286,8 +290,9 @@ public sealed partial class MissionHost : ISimExtension
 
     internal void WriteState(BinaryWriter w)
     {
-        bool v2 = HasVersion2State();
-        w.Write(v2 ? FormatVersion : BaseFormatVersion);
+        bool arrivals = _arrivals.Count > 0;   // M8-04: version 3 = the version-2 bytes + the arrivals section
+        bool v2 = arrivals || HasVersion2State();
+        w.Write(arrivals ? ArrivalsFormatVersion : v2 ? FormatVersion : BaseFormatVersion);
         w.Write(SourceHash);
         w.Write(_initDone); w.Write(_halted); w.Write((byte)_outcome);
         w.Write(_rng); w.Write(_counter); w.Write(_messageSeq);
@@ -322,6 +327,7 @@ public sealed partial class MissionHost : ISimExtension
         foreach (MissionObjective o in _objectives) w.Write(o.Hidden);          // count known from the objectives above
         foreach (TriggerRecord t in _triggers) { w.Write(t.B); w.Write(t.Counter); }   // count known from the triggers above
         foreach (AiHookState h in _aiHooks) { w.Write(h.AttackZone); w.Write(h.DefendZone); w.Write(h.Tier); w.Write(h.WaveSeq); w.Write(h.WaveId); w.Write(h.WaveZone); }
+        if (arrivals) WriteArrivals(w);   // version 3 (M8-04)
     }
 
     private bool HasVersion2State()
@@ -336,7 +342,7 @@ public sealed partial class MissionHost : ISimExtension
     internal void ReadState(BinaryReader r)
     {
         int version = r.ReadInt32();
-        if (version != BaseFormatVersion && version != FormatVersion) throw new InvalidDataException("mission state: unsupported version");
+        if (version != BaseFormatVersion && version != FormatVersion && version != ArrivalsFormatVersion) throw new InvalidDataException("mission state: unsupported version");
         if (r.ReadUInt64() != SourceHash) throw new InvalidDataException("mission state: the save was made with a different mission script");
         _initDone = r.ReadBoolean(); _halted = r.ReadBoolean(); _outcome = (MissionOutcome)r.ReadByte();
         _rng = r.ReadUInt64(); _counter = r.ReadInt32(); _messageSeq = r.ReadInt32();
@@ -371,11 +377,13 @@ public sealed partial class MissionHost : ISimExtension
         _script.Globals.Set("state", DynValue.NewTable(LuaStateCodec.Read(r, _script)));
 
         _timers.Clear();
+        _arrivals.Clear();
         Array.Fill(_aiHooks, AiHookState.None);
         if (version < FormatVersion) return;
         for (int n = r.ReadInt32(), i = 0; i < n; i++) _timers.Add(new MissionTimer(r.ReadString(), r.ReadString(), r.ReadInt32(), r.ReadString(), r.ReadBoolean()));
         for (int i = 0; i < _objectives.Count; i++) _objectives[i] = _objectives[i] with { Hidden = r.ReadBoolean() };
         foreach (TriggerRecord t in _triggers) { t.B = r.ReadInt32(); t.Counter = r.ReadInt32(); }
         for (int p = 0; p < _aiHooks.Length; p++) _aiHooks[p] = new AiHookState(r.ReadString(), r.ReadString(), r.ReadInt32(), r.ReadInt32(), r.ReadString(), r.ReadString());
+        if (version >= ArrivalsFormatVersion) ReadArrivals(r);   // M8-04
     }
 }

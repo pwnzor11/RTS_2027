@@ -48,16 +48,44 @@ Common argument kinds: `id` = 1-64 characters, no spaces. `fn` = global function
 Hidden objectives (`Objective.AddHidden`, later `Reveal`) set `MissionObjective.Hidden`; the HUD lists `MissionHost.VisibleObjectives`.
 Timers live in `MissionHost.Timers` (shown by the HUD). Both are saved in the version-2 tail of the "mission" part.
 
-### Reinforcements and spawn groups (M8-04, file MissionHost.Reinforce.cs; all throw until M8-04)
+### Reinforcements and spawn groups (M8-04, file MissionHost.Reinforce.cs; implemented)
 | Function | Arguments | Returns | Checks | Status |
 |---|---|---|---|---|
-| `Reinforce.Zone(player, {types}, zone, destCell)` | slot, 1..32 type ids, spawn zone, cell | list of tags | types known, zone known, cell in map | throws M8-04 |
-| `Reinforce.Transport(player, {types}, edgeCell, destCell)` | as Edge; arrives by a transport | list of tags | edge cell on the map edge | throws M8-04 |
-| `Reinforce.Delayed(ticks, player, {types}, edgeCell, destCell)` | ticks 1..1e9, then as Edge | nil | as Edge | throws M8-04 |
-| `Reinforce.Naval(player, {types}, edgeCell, destCell)` | Expedition ships arrive from the sea edge | list of tags | edge cell on the map edge | throws M8-04 |
-| `Reinforce.Rig(player, edgeCell, destCell)` | Left Behind rig arrives and may deploy | tag | edge cell on the map edge | throws M8-04 |
-| `Actor.CreateGroup({types}, player, cell[, opts])` | opts `{formation="line"\|"column"\|"box"\|"scatter", rank=0..3, tagPrefix="x"}` | list of tags | opts keys validated | throws M8-04 |
+| `Reinforce.Zone(player, {types}, zone, destCell)` | slot, 1..32 type ids, spawn zone, cell | list of tags | types known, zone known, cell in map | implemented |
+| `Reinforce.Transport(player, {types}, edgeCell, destCell)` | as Edge; arrives by a transport | list of tags | edge cell on the map edge | implemented |
+| `Reinforce.Delayed(ticks, player, {types}, edgeCell, destCell)` | ticks 1..1e9, then as Edge | nil | as Edge | implemented |
+| `Reinforce.Naval(player, {types}, edgeCell, destCell)` | Expedition ships arrive from the sea edge | list of tags | edge cell on the map edge | implemented |
+| `Reinforce.Rig(player, edgeCell, destCell)` | Left Behind rig arrives and may deploy | tag | edge cell on the map edge | implemented |
+| `Actor.CreateGroup({types}, player, cell[, opts])` | opts `{formation="line"\|"column"\|"box"\|"scatter", rank=0..3, tagPrefix="x"}` | list of tags | opts keys validated | implemented |
 
+Behaviour (M8-04). Every spawn uses the pilot path (`Simulation.SpawnVehicle` / `SpawnInfantry`) plus the scripting orders the pilot uses; the
+few extra operations (board, unload, unpack, rank) are the public wrappers in `src/Sim/Simulation.MissionSpawns.cs`, which run the rules a
+player command runs. No new sim command and no new sim state. Reinforcements are units: a building type is a script error. Every spawn takes
+the free cell nearest the wanted one (right terrain, no building, no vehicle, no soldier; search radius 10), so nothing is stacked; if none
+is free the call is a script error and the units spawned before it stay.
+- `Reinforce.Zone`: units appear on free cells of the zone, nearest its centre first, then attack-move to `destCell`. Tags come back in list order.
+- `Reinforce.Delayed`: queued; `ticks` after the call the units appear exactly as `Reinforce.Edge` places them (block just inside the edge,
+  attack-move to `destCell`). Errors at arrival time (no room) are collected in `Errors`, not thrown at the call. No tags are returned.
+- `Reinforce.Transport`: soldiers in the list ride; any other type drives in by itself like `Edge`. The transport is the smallest ground type
+  of the units' faction that has passenger seats (and no `unload_ticks`), the largest if none fits all; more soldiers than seats means more
+  transports. The transport spawns on the edge cell, soldiers aboard, and moves to `destCell`; it unloads (the transport Deploy rules) once
+  within 1 cell of `destCell`, or after 3000 ticks wherever it is. The returned list holds one tag per listed type, in order; the transport
+  itself is not tagged.
+- `Reinforce.Naval`: ships in the list (naval locomotion) spawn on the water at or nearest `edgeCell`; every other entry must fit aboard a
+  ship of the list (soldiers use `passengers`, ground vehicles `vehicle_slots`, else a script error and nothing spawns) and starts aboard.
+  A ship with cargo sails to a water cell beside `destCell` and lands its cargo on it (the landing-craft Unload order, `destCell` is the shore
+  cell); an empty ship, or one whose landing order is refused, sails to the water cell nearest `destCell`. Works for any faction that owns
+  such types; air and burrowing types are rejected.
+- `Reinforce.Rig`: spawns the faction's packed rig (the packed rig of the Left Behind start kit) on the edge. If `destCell` is a legal unpack
+  site now it drives there and unpacks (a normal Pack order, so the unpack timer and site rules apply); otherwise it only moves to `destCell`
+  and stays packed for the script to deal with. Returns the rig's tag.
+- `Actor.CreateGroup`: formations around `cell`: `line` along x, `column` along y (each alternating right/left or down/up of the centre), `box`
+  a square filling row by row, `scatter` a random offset of -3..3 per axis from the script's own generator (`Random.Next`'s stream, so it is
+  saved and replays). `box` is the default. `rank` raises every member's veterancy to that level (0..3) the way kills would (it needs
+  `[veterancy] enabled`, a type that can rank, and is ignored for buildings). `tagPrefix` names the members `prefix1`, `prefix2` ... and an
+  already used tag is an error before anything spawns; without it tags are generated. Building types are placed at the wanted cell.
+- Save format: queued `Delayed` arrivals and transports still driving are the version-3 tail of the "mission" part (`PendingArrival`), written
+  only while at least one is queued (with the version-2 bytes in front of it); with none queued the part is byte-for-byte what it was.
 ### Dialogue, camera, locale (M8-05, file MissionHost.Media.cs; no-ops until M8-05)
 | Function | Arguments | Returns | Checks | Status |
 |---|---|---|---|---|

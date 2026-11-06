@@ -17,7 +17,7 @@ public sealed class MissionStateContractTests
     private static readonly string[] Hashed =
     {
         "_initDone", "_halted", "_outcome", "_rng", "_counter", "_messageSeq", "_tags", "_triggers", "_objectives", "_messages",
-        "_restricted", "_granted", "_timers", "_aiHooks",
+        "_restricted", "_granted", "_timers", "_aiHooks", "_arrivals",
     };
 
     /// <summary>Instance fields that are deliberately not state, each with the reason.</summary>
@@ -110,5 +110,29 @@ public sealed class MissionStateContractTests
         Assert.Equal(3, loadedHost.TriggerStore[0].Counter);
         Assert.Equal(host2.AiHookOf(1), loadedHost.AiHookOf(1));
         Assert.Equal(1, loadedHost.AiHookOf(1).WaveSeq);
+    }
+
+    [Fact]
+    public void Queued_reinforcements_write_a_version_three_tail_that_changes_the_bytes_and_leaves_the_old_prefix_alone()
+    {
+        const string Lua = "function OnInit() Reinforce.Delayed(500, 1, { 'auth_jeep' }, { x = 39, y = 15 }, { x = 20, y = 15 }) end";
+        var (sim, host, _) = Rts.Scripting.Tests.M8_04.World.Build(Lua);
+        TestData.Run(sim, 2);
+        byte[] withQueue = Bytes(host.State);
+        Assert.Equal(3, BitConverter.ToInt32(withQueue, 0));
+
+        var (sim2, host2, _) = Rts.Scripting.Tests.M8_04.World.Build("function OnInit() end");
+        TestData.Run(sim2, 2);
+        byte[] none = Bytes(host2.State);
+        Assert.Equal(1, BitConverter.ToInt32(none, 0));   // no queue: the M3-M7 layout, byte for byte
+
+        // The queue is hashed: another delay gives other bytes.
+        var (sim3, host3, _) = Rts.Scripting.Tests.M8_04.World.Build(Lua.Replace("500", "501"));
+        TestData.Run(sim3, 2);
+        Assert.False(withQueue.AsSpan().SequenceEqual(Bytes(host3.State)));
+        // After the arrival the part is back to the version-1 layout.
+        TestData.Run(sim, 600);
+        Assert.Equal(0, host.PendingArrivalCount);
+        Assert.Equal(1, BitConverter.ToInt32(Bytes(host.State), 0));
     }
 }
