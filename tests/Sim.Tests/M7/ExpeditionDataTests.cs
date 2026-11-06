@@ -57,11 +57,11 @@ public sealed class ExpeditionDataTests
     }
 
     [Fact]
-    public void StaysUnplayable()
+    public void IsPlayable_AndOfferedInSetup()
     {
-        Assert.Equal(3, RuleCounts.PlayableFactions);
-        Assert.False(RuleCounts.IsPlayable(Faction.Expedition));
-        Assert.DoesNotContain(Faction.Expedition, RuleCounts.PlayableOrder);
+        Assert.Equal(4, RuleCounts.PlayableFactions);
+        Assert.True(RuleCounts.IsPlayable(Faction.Expedition));
+        Assert.Contains(Faction.Expedition, RuleCounts.PlayableOrder);
     }
 
     [Fact]
@@ -146,7 +146,7 @@ public sealed class ExpeditionDataTests
         }
         Assert.Equal(new[] { "exp_anchorage" }, s.Buildings.Where(b => b.ShipmentDock).Select(b => b.Id).ToArray());
         Assert.Equal("exp_supply_tender", LoadReal().Sim.Shipments.TenderType);
-        Assert.False(s.Shipments.Enabled);
+        Assert.True(s.Shipments.Enabled);   // M7-10: on; inert without an exp_anchorage dock
     }
 
     [Fact]

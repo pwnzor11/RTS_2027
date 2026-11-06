@@ -41,7 +41,6 @@ public sealed class ArchiveCatalogTests : IDisposable
 
         void Check(string id, ArchiveCategory category)
         {
-            if (id.StartsWith("exp_", StringComparison.Ordinal)) return;   // M7-08: Expedition Archive entries arrive with M7-10 (faction not playable yet)
             ArchiveEntry? e = catalog.Find(id);
             Assert.True(e is not null, $"no archive entry for rules id {id}");
             Assert.Equal(category, e!.Category);
@@ -51,6 +50,23 @@ public sealed class ArchiveCatalogTests : IDisposable
         foreach (var i in rules.Infantry) Check(i.Id, ArchiveCategory.Unit);
         foreach (var b in rules.Buildings) Check(b.Id, ArchiveCategory.Structure);
         foreach (var u in rules.Upgrades) Check(u.Id, ArchiveCategory.Upgrade);
+    }
+
+    [Fact]
+    public void Every_expedition_rules_type_has_an_archive_entry()
+    {
+        ArchiveCatalog catalog = ArchiveTestData.Catalog();
+        var rules = ArchiveTestData.Rules();
+        var ids = rules.Vehicles.Select(v => v.Id)
+            .Concat(rules.Infantry.Select(i => i.Id))
+            .Concat(rules.Buildings.Select(b => b.Id))
+            .Concat(rules.Upgrades.Select(u => u.Id))
+            .Where(id => id.StartsWith("exp_", StringComparison.Ordinal))
+            .ToArray();
+
+        Assert.NotEmpty(ids);
+        Assert.All(ids, id => Assert.True(catalog.Find(id) is not null, $"no archive entry for expedition rules id {id}"));
+        Assert.All(ids, id => Assert.Equal(ArchiveFaction.Expedition, catalog.Find(id)!.Faction));
     }
 
     [Fact]
@@ -84,7 +100,7 @@ public sealed class ArchiveCatalogTests : IDisposable
         ArchiveCatalog catalog = ArchiveTestData.Catalog();
         ArchiveEntry[] secrets = catalog.InCategory(ArchiveCategory.Leader).Where(e => e.Id.EndsWith("_secret", StringComparison.Ordinal)).ToArray();
 
-        Assert.Equal(8, secrets.Length);
+        Assert.Equal(12, secrets.Length);   // 8 Authority and Directorate secrets, plus 4 Expedition (M7-10)
         foreach (ArchiveEntry secret in secrets)
         {
             ArchiveEntry open = catalog.Find(secret.Id[..^"_secret".Length])!;

@@ -21,7 +21,8 @@ public static class AiCommands
 {
     private const int DefaultTier = 2;
     private const string Usage =
-        "usage: ai match --a <aiId>[:<tier>] --b <aiId>[:<tier>] [--seeds 8] [--ticks 6000] [--size 64] [--out file.md] [--record-dir dir] [--flat 1] [--starts alt|slot|swap] [--start economy|army] [--first 1] [--faction-a authority|directorate] [--faction-b authority|directorate]\n" +
+        "usage: ai match --a <aiId>[:<tier>] --b <aiId>[:<tier>] [--seeds 8] [--ticks 6000] [--size 64] [--out file.md] [--record-dir dir] [--flat 1] [--starts alt|slot|swap] [--start economy|army] [--first 1] [--faction-a authority|directorate|left_behind|expedition] [--faction-b ...]\n" +
+        "         example (M7-10): ai match --a tiered:2 --b tiered:2 --faction-a expedition --faction-b authority --size 96 --seeds 4   (an Expedition side gets ocean north+south edges; 96 = medium)\n" +
         "       ai matrix --ai <aiId> [--faction authority|directorate] [--tiers 1-5] [--seeds 4] [--ticks 6000] [--size 64] [--out file.md]\n" +
         "       ai matrix --players 2-4 [--ai tiered] [--tiers 3] [--faction authority|directorate|mixed] [--biome rust_belt|glass_coast|mountains|ash_plains|all] [--size s|m|l|<cells>] [--seeds 2] [--ticks 25000] [--out file.md]\n" +
         "       ai timeline --a <aiId>[:<tier>] --b <aiId>[:<tier>] [--seed 1] [--ticks 30000] [--size 64] [--swap 0|1] [--trace N] [--dump 1]\n" +
@@ -64,9 +65,9 @@ public static class AiCommands
             return UsageError(error!);
         // M3-14: cross-faction matches (default authority for both sides).
         if (flags.TryGetValue("faction-a", out string? fa) && !(Enum.TryParse(fa.Replace("_", ""), true, out Faction facA) && (a = a! with { Faction = facA }) is not null))
-            return UsageError("--faction-a must be authority, directorate or left_behind");
+            return UsageError("--faction-a must be authority, directorate, left_behind or expedition");
         if (flags.TryGetValue("faction-b", out string? fb) && !(Enum.TryParse(fb.Replace("_", ""), true, out Faction facB) && (b = b! with { Faction = facB }) is not null))
-            return UsageError("--faction-b must be authority, directorate or left_behind");
+            return UsageError("--faction-b must be authority, directorate, left_behind or expedition");
 
         bool army = false;
         if (flags.TryGetValue("start", out string? startArg))
@@ -734,7 +735,15 @@ public static class AiCommands
         if (recordDir is not null) Directory.CreateDirectory(recordDir);
         for (int s = firstSeed; s < firstSeed + seeds; s++)
         {
-            MapData map = MapGenerator.Generate(size, (ulong)s);
+            // M7-10: an Expedition side needs sea: ocean north + south edges (size class by cells: below 80 small, below 112 medium, else large)
+            IReadOnlyList<CellCoord>? landing = null;
+            MapData map;
+            if (a.Faction == Faction.Expedition || b.Faction == Faction.Expedition)
+            {
+                var gen = MapGenerator.GenerateWithMeta(new MapGenParams(Biome.RustBelt, size < 80 ? MapSize.Small : size < 112 ? MapSize.Medium : MapSize.Large, 2, (ulong)s, null, OceanEdges.North | OceanEdges.South));
+                map = gen.Map; landing = gen.Meta.Landing;
+            }
+            else map = MapGenerator.Generate(size, (ulong)s);
             if (flat) map = Flatten(map);
             for (int g = 0; g < 2; g++)
             {
@@ -743,19 +752,28 @@ public static class AiCommands
                 // Slot order (who acts first in a tick) must not ride along with the start corner: by default the
                 // corners trade slots on even seeds ("alt"); "slot" = corner p for slot p; "swap" = corner 1-p.
                 bool swapSlots = startMode == "swap" || (startMode == "alt" && s % 2 == 0);
+                // M7-10: the Expedition always takes the south start (its dock masks need the sea to the south of the shore)
+                if (landing is not null) { int expoSlot = (a.Faction == Faction.Expedition) == aInSlot0 ? 0 : 1; swapSlots = expoSlot == 0; }
                 FileStream? replay = recordDir is null ? null
                     : File.Create(Path.Combine(recordDir, $"{a.FileLabel}_vs_{b.FileLabel}_seed{s}_g{g + 1}.rtsreplay"));
                 AiGameResult r;
                 var lbx = _extras ? new LeftBehindExtras(w.Rules) : null;
                 MatchTrace? trace = _traceEvery > 0 ? new MatchTrace(w.Rules, _traceEvery) : null;
                 Action<Simulation, IAiPlayer, IAiPlayer, byte, byte>? obs = null;
-                if (trace is not null || lbx is not null)
-                    obs = (sim, x, y, sa, sb) => { trace?.Observe(sim, x, y, sa, sb); lbx?.Observe(sim, x, y, sa, sb); };
+                var marks = new int[2, 3];
+                bool expo = a.Faction == Faction.Expedition || b.Faction == Faction.Expedition;
+                if (trace is not null || lbx is not null || expo)
+                    obs = (sim, x, y, sa, sb) =>
+                    {
+                        trace?.Observe(sim, x, y, sa, sb); lbx?.Observe(sim, x, y, sa, sb);
+                        int m = sim.Tick == 3600 ? 0 : sim.Tick == 6000 ? 1 : sim.Tick == 12000 ? 2 : -1;
+                        if (m >= 0) for (int q = 0; q < 2; q++) { PlayerStats ps = sim.StatsOf((byte)(q == 0 ? sa : sb)); marks[q, m] = ps.CreditsHarvested + ps.ShipmentIncome; }
+                    };
                 // M4-16: each game of the pair gets its own game seed (same map), so the two games are independent samples
                 // rather than one mirrored game counted twice (docs/balance/m4_16_start_bias.md).
                 using (replay) r = AiMatchRunner.Play(map, w.Rules, w.RulesHash, (ulong)(s * 16 + g), a, b, aInSlot0, ticks, replay,
                     BuildInfo.Version, replay is null ? null : RulesBundle.ReadDirectory(w.RulesDir), swapSlots, start,
-                    obs);
+                    obs, landing);
                 tally.Games++;
                 tally.Ticks += r.EndTick;
                 tally.EndTickSum += r.EndTick;
@@ -786,6 +804,8 @@ public static class AiCommands
                     Console.WriteLine($"seed {s} game {g + 1} (A in slot {(aInSlot0 ? 0 : 1)}, A at start {(aInSlot0 != swapSlots ? 0 : 1)}): {result} at tick {r.EndTick} (health A {r.ValueA}, B {r.ValueB})");
                     if (start == AiStartMode.Economy)
                         Console.WriteLine($"    A: {Stats(r.StatsA)} | B: {Stats(r.StatsB)}");
+                    if (expo)
+                        Console.WriteLine($"    income at 3/5/10 min (harvested + shipments): A {marks[0, 0]}/{marks[0, 1]}/{marks[0, 2]} | B {marks[1, 0]}/{marks[1, 1]}/{marks[1, 2]}");
                     if (lbx is not null)
                         Console.WriteLine($"    LB extras A: {lbx.Line(slotOfA)} | B: {lbx.Line(1 - slotOfA)}");
                 }

@@ -53,6 +53,9 @@ internal sealed class MilitaryManager
     public const int GroupRetreatMarginPct = 10;
 
     private readonly int _threshold;
+
+    /// <summary>M7-10: extra units every army-size trigger waits for (the Expedition has few, dear units and must not trade them freely).</summary>
+    public int ThresholdBonus { get; set; }
     private AiRandom? _rng;
     private int _nextThreshold, _nextInterval = WaveIntervalTicks, _bias;
     private readonly Dictionary<ulong, int> _lastHealth = new();
@@ -94,6 +97,22 @@ internal sealed class MilitaryManager
 
     /// <summary>M5-02: the commander's directive as knob values, set by the AI each decision (<see cref="DirectiveBias.Plain"/> = no directive).</summary>
     public DirectiveBias Bias { get; set; } = DirectiveBias.Plain;
+
+    /// <summary>M7-10: while true no new wave launches (the Expedition's withdraw: the army stays at the beachhead).</summary>
+    public bool Hold { get; set; }
+
+    /// <summary>M7-10: calls off the wave on the march at once (every member goes to <paramref name="rally"/>) and starts the retreat cooldown. False when no wave was out.</summary>
+    public bool AbortWave(RecruitKnowledge k, ICommandSink sink, CellCoord rally)
+    {
+        if (_phase == Phase.Gather) return false;
+        foreach (ViewActor a in k.Army)
+            if (_roster.Contains(Key(a))) sink.Issue(CommandKind.Move, a.Id, a.Kind, rally);
+        _roster.Clear(); _squadB.Clear();
+        _phase = Phase.Gather;
+        _prong = false;
+        _cooldownUntil = k.View.Tick + RetreatCooldownTicks;
+        return true;
+    }
 
     /// <summary>M4-16: set by the AI each decision: our army is clearly bigger than the enemy army seen lately (stage closer, hit production first).</summary>
     public bool Ahead { get; set; }
@@ -196,9 +215,12 @@ internal sealed class MilitaryManager
         return alive;
     }
 
+    /// <summary>M7-10: draws the next wave trigger again (after <see cref="ThresholdBonus"/> was set). Draws random numbers: call at the same point on a fresh and on a restored AI is not needed, the state is saved.</summary>
+    internal void RerollNow() => _nextThreshold += ThresholdBonus;
+
     private void Reroll()
     {
-        _nextThreshold = Math.Max(2, _threshold + _bias + (_rng?.Next(ThresholdJitter) ?? 0) - 1);
+        _nextThreshold = Math.Max(2, _threshold + ThresholdBonus + _bias + (_rng?.Next(ThresholdJitter) ?? 0) - 1);
         _nextInterval = WaveIntervalTicks + _bias * 200 + (_rng?.Next(IntervalJitter) ?? 0);
     }
 
@@ -311,7 +333,7 @@ internal sealed class MilitaryManager
             bool desperate = (k.Harvesters.Count == 0 || Broke) && n >= DesperateWave;   // M4-12: also when income has stalled
             int guard = Bias.HomeGuard;   // M5-02: units that stay home (the wave waits for them too)
             bool strong = WaveGate.Strong(Options.Respond, OwnValue, EnemyValueSeen, _required, n, tick, _lastWave);   // M4-16 r4: no wave into a clearly bigger army
-            if (tick >= _cooldownUntil && (strong || desperate) && (n >= Bias.Wave(_nextThreshold, 2) + guard
+            if (tick >= _cooldownUntil && !Hold && (strong || desperate) && (n >= Bias.Wave(_nextThreshold, 2) + guard
                 || (n >= Bias.Wave(MinWave, 2) + guard && tick - _lastWave >= Bias.Wave(_nextInterval, 600)) || desperate))
             {
                 _roster.Clear(); _squadB.Clear();

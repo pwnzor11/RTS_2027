@@ -9,14 +9,14 @@ namespace Rts.Game.Tests.M3;
 public sealed class NeutralNotPlayableTests
 {
     [Fact]
-    public void Faction_pick_list_cycles_the_three_playable_factions_only()
+    public void Faction_pick_list_cycles_the_four_playable_factions_only()
     {
         var seen = new HashSet<Faction>();
         Faction f = Faction.Authority;
-        for (int i = 0; i < 6; i++) { seen.Add(f); f = SkirmishSetupScreen.NextFaction(f, 1); }
-        Assert.Equal(new[] { Faction.Authority, Faction.Directorate, Faction.LeftBehind }, seen.OrderBy(x => x));
+        for (int i = 0; i < 8; i++) { seen.Add(f); f = SkirmishSetupScreen.NextFaction(f, 1); }
+        Assert.Equal(new[] { Faction.Authority, Faction.Directorate, Faction.LeftBehind, Faction.Expedition }, seen.OrderBy(x => x));   // M7-14
         Assert.Equal(Faction.LeftBehind, SkirmishSetupScreen.NextFaction(Faction.Directorate, 1));
-        Assert.Equal(Faction.LeftBehind, SkirmishSetupScreen.NextFaction(Faction.Authority, -1));
+        Assert.Equal(Faction.Expedition, SkirmishSetupScreen.NextFaction(Faction.Authority, -1));
     }
 
     [Fact]

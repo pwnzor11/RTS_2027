@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
+using System.Numerics;
 using System.Text;
 using Rts.Sim.Core;
 using Rts.Sim.Rules;
@@ -24,6 +25,7 @@ public static class BattlefieldSummary
     private const int TicksPerSecond = 20;
     private const int DamagedBelowPct = 75;
     private const int MaxDamagedListed = 6;
+    private const int TenderDangerCells = 8;
 
     private enum Role { Harvester, Infantry, Vehicle, Air, Support }
     private static readonly string[] RoleNames = { "harvesters", "infantry", "vehicles", "air", "support" };
@@ -51,9 +53,12 @@ public static class BattlefieldSummary
             Header(view, rules),
             Army(view, rules, own),
             Base(rules, own),
-            Others(view, rules, visible, known, history),
-            Events(view, rules, history),
         };
+        if (view.Faction == Faction.Expedition) sections.Add(Expedition(view, visible));
+        sections.Add(Others(view, rules, visible, known, history));
+        string naval = NavalThreat(view, rules, visible);
+        if (naval.Length > 0) sections.Add(naval);
+        sections.Add(Events(view, rules, history));
         if (!string.IsNullOrWhiteSpace(playerChat))
             sections.Add("PLAYER CHAT (to you): \"" + Clean(playerChat!, MaxChatChars) + "\"");
         return Fit(sections);
@@ -124,6 +129,52 @@ public static class BattlefieldSummary
             if (damaged.Count > MaxDamagedListed) sb.Append(" +").Append(damaged.Count - MaxDamagedListed).Append(" more");
         }
         return sb.ToString();
+    }
+
+    /// <summary>M7-10: the Expedition section (only for an Expedition player): the home shipment timer, the next payload, the beachhead
+    /// size (set cells of the own zone mask) and whether an own tender has a visible enemy within <see cref="TenderDangerCells"/>.
+    /// Own state plus visible actors only.</summary>
+    private static string Expedition(PlayerView view, List<ViewActor> visible)
+    {
+        int eta = view.ShipmentEtaTicks;
+        int cells = 0;
+        foreach (ulong word in view.BeachheadMask) cells += BitOperations.PopCount(word);
+        var tenders = new List<TenderView>();
+        view.CopyOwnTenders(tenders);
+        bool danger = false;
+        foreach (TenderView t in tenders)
+        {
+            foreach (ViewActor v in visible)
+            {
+                if (view.RelationOf(v.Owner) != Relation.Enemy) continue;
+                if (Math.Max(Math.Abs(v.Cell.X - t.Cell.X), Math.Abs(v.Cell.Y - t.Cell.Y)) <= TenderDangerCells) { danger = true; break; }
+            }
+            if (danger) break;
+        }
+        return "EXPEDITION:\n"
+            + "shipment_eta: " + (eta < 0 ? "none" : (eta / TicksPerSecond) + "s") + "\n"
+            + "shipment_payload: " + view.NextShipmentPayload + "cr\n"
+            + "beachhead_cells: " + cells + "\n"
+            + "convoy_in_danger: " + (danger ? "true" : "false");
+    }
+
+    /// <summary>M7-10: visible enemy ships (surface, and dived submarines the viewer's team detects) as one line, or "" when there are none.
+    /// Strength is the sum of the ships' credit costs, rounded to 100 so it reads as a rough figure.</summary>
+    private static string NavalThreat(PlayerView view, SimRules rules, List<ViewActor> visible)
+    {
+        int surface = 0, dived = 0, strength = 0;
+        foreach (ViewActor a in visible)
+        {
+            if (a.Kind != ActorKind.Vehicle || view.RelationOf(a.Owner) != Relation.Enemy) continue;
+            VehicleType v = rules.Vehicles[a.TypeIndex];
+            if (v.Locomotion != Locomotion.Naval) continue;
+            if (a.Submerged) dived++; else surface++;
+            strength += v.Cost;
+        }
+        int count = surface + dived;
+        if (count == 0) return "";
+        int rough = (strength + 50) / 100 * 100;
+        return "naval_threat: " + count + " (" + surface + " surface, " + dived + " dived), strength ~" + rough + "cr";
     }
 
     private static string Others(PlayerView view, SimRules rules, List<ViewActor> visible, List<ViewActor> known, SummaryHistory history)

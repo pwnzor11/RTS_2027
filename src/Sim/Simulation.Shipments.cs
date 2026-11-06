@@ -217,6 +217,27 @@ public sealed partial class Simulation
                 if (_map.IsPassableTerrain(c, Locomotion.Naval, Setup.Rules.Terrain)) edge.Add(c);
             }
         if (edge.Count == 0) return;   // no edge water (Expedition cannot be picked there, D-124): no shipment
+        // M7-10: a tender must be able to sail to its dock, so only edge cells in a sea region that touches an own dock are used (on a map with
+        // two unconnected oceans the first cells of the edge list lay in the other one and the tender sat there for ever, filling the lane).
+        // When no edge cell shares a region with a dock the whole edge is kept (the old behaviour).
+        var docked = new List<int>();
+        for (int b = 1; b < _buildings.Capacity; b++)
+        {
+            if (!IsDock(b) || _buildings.Player[b] != p) continue;
+            BuildingType dt = RulesOf(p).Buildings[_buildings.TypeIndex[b]];
+            CellCoord dtl = _buildings.Cell[b];
+            for (int y = dtl.Y - 1; y <= dtl.Y + dt.FootprintH; y++)
+                for (int x = dtl.X - 1; x <= dtl.X + dt.FootprintW; x++)
+                {
+                    int r = NavalRegionAt(new CellCoord(x, y), false);
+                    if (r > 0 && !docked.Contains(r)) docked.Add(r);
+                }
+        }
+        if (docked.Count > 0)
+        {
+            var near = edge.FindAll(e => docked.Contains(NavalRegionAt(e, false)));
+            if (near.Count > 0) edge = near;
+        }
         int start = (int)((uint)_shipments.NextTenderId % (uint)edge.Count);
         for (int k = 0; k < edge.Count; k++)
         {

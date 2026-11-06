@@ -1,0 +1,87 @@
+# Archive entries (S11, M7-10) for the Overseas Expedition faction pages. Text copied verbatim from docs/lore/expedition.md
+# (owner-approved lore, D-128/D-148). Keys: id, category, faction, title, subtitle, field_note (optional), body, sprite (optional),
+# unlock (open | campaign:<mission> | encounter:<rules id> | research:<upgrade id>).
+# ASSUMED (M7-10): unlock is "open" for all pages, as for the other factions' skirmish entries.
+
+[[entry]]
+id = "faction_exp_origin"
+category = "Faction"
+faction = "expedition"
+title = "The Far Shore"
+subtitle = "Where the Expedition comes from"
+body = '''
+Across the ocean there is another continent that also burned in October 1962, and that burned a little less. Its
+cities were struck, but its mountain governments held their doors open a few hours longer, and its prevailing winds
+carried the ash out to sea instead of down onto its fields. The survivors there rebuilt around ports, shipyards and
+the research institutes that had been dug into the rock.
+
+They call what remains the Tidewater Concordat: a council of surviving ministries, each with its own office, seal and
+quarrel. The Concordat is old, tired and very good at engineering. It still builds sealed-core ships, hover skiffs and
+jet aircraft, because it never stopped teaching the people who know how.
+'''
+unlock = "open"
+
+[[entry]]
+id = "faction_exp_reason"
+category = "Faction"
+faction = "expedition"
+title = "Why They Came"
+subtitle = "The Second Relief Fleet"
+body = '''
+For thirty years the Concordat believed no one was left on the far side of the ocean. In 1996 a faint carrier signal
+from the north-west reached a listening post, and a Hydrographic Office team traced it to a continent that still had
+reactors burning on its coasts. A first relief fleet sailed in 1997 and was never heard from again.
+
+The Second Relief Fleet sailed in the spring of 2000: forty-one ships, a hundred aircraft and eleven thousand people
+who volunteered. The official reason was rescue. The unofficial reason, which every officer knows, is fuel. The
+Concordat's own fissile stocks are running down, and the richest ash fields on earth lie across the water.
+'''
+unlock = "open"
+
+[[entry]]
+id = "faction_exp_government"
+category = "Faction"
+faction = "expedition"
+title = "The Concordat of Surviving Ministries"
+subtitle = "How the Expedition is governed"
+body = '''
+The Expedition has no throne and no party. It is governed by the same ministries that sent it: the Ministry of
+Passage, which owns the ships; the Hydrographic Office, which owns the charts and the sonar; the Institute of Applied
+Valve Physics at Carrow Down, which owns the technology; and the Office of Return, which owns the purse and the
+patience. The fleet answers to all four and takes orders from none of them in a hurry.
+
+At sea the fleet is run by its Admiral. Ashore the Commissioner for the Return speaks for the home government. When
+the two disagree, as they usually do, a telex goes home and a month passes.
+'''
+unlock = "open"
+
+[[entry]]
+id = "faction_exp_culture"
+category = "Faction"
+faction = "expedition"
+title = "A Navy That Remembers Peace"
+subtitle = "Culture of the Expedition"
+body = '''
+Expedition crews are the children of harbours. They are proud of clean decks, hand-painted hull numbers and a
+handshake that outlasts a signature. They have seen sunlight in their lifetimes, and a field of ash looks to them like
+a sickness rather than a home. Their jokes are about weather and wages, and their prayers are mostly about parts.
+
+They are also fewer than they look. Every crew member has a name on a roster in a port they may never see again, and
+every lost hull is a month of home production. The fleet fights carefully, expensively and well.
+'''
+unlock = "campaign:TBD"
+
+[[entry]]
+id = "faction_exp_symbols"
+category = "Faction"
+faction = "expedition"
+title = "Marks and Colours"
+subtitle = "Symbols of the Expedition"
+body = '''
+The mark of the fleet is an anchor crossed with a compass needle inside a ring of eight stars, one for each founding
+ministry. Its colours are deep navy, lagoon white and polished copper, with signal orange for anything that lands or
+lifts. Hulls carry a number, a name and a thin ribbon of the home port's colour that no one has seen in years.
+
+Its signal flag is a white pennant. Its slogan, the opening line of every fleet telex, is: RETURN WITH THE TIDE.
+'''
+unlock = "open"

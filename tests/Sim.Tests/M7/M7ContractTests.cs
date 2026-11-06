@@ -22,9 +22,9 @@ public sealed class M7ContractTests
         Assert.Equal(4, (int)Faction.Expedition);
         Assert.Equal(5, RuleCounts.Factions);
         Assert.Equal(RuleCounts.Factions, Enum.GetValues<Faction>().Length);
-        Assert.Equal(3, RuleCounts.PlayableFactions);   // the Expedition stays out of setup until M7-08/M7-14
-        Assert.DoesNotContain(Faction.Expedition, RuleCounts.PlayableOrder);
-        Assert.False(RuleCounts.IsPlayable(Faction.Expedition));
+        Assert.Equal(4, RuleCounts.PlayableFactions);   // M7-14: the Expedition is offered in setup
+        Assert.Contains(Faction.Expedition, RuleCounts.PlayableOrder);
+        Assert.True(RuleCounts.IsPlayable(Faction.Expedition));
         Assert.Equal(6, (int)Locomotion.Naval);
         Assert.Equal(7, RuleCounts.Locomotions);
         Assert.Equal(RuleCounts.Locomotions, Enum.GetValues<Locomotion>().Length);
@@ -87,11 +87,11 @@ public sealed class M7ContractTests
     }
 
     [Fact]
-    public void ShippedGameToml_HasTheShipmentsBlock_Disabled()
+    public void ShippedGameToml_HasTheShipmentsBlock_Enabled()
     {
         ShipmentRules s = RulesLoader.Load(RulesLocator.FindRulesDir(AppContext.BaseDirectory)!).Sim.Shipments;
-        Assert.False(s.Enabled);
-        Assert.Equal(ShipmentRules.Default with { Enabled = false, TenderType = "exp_supply_tender" }, s);   // M7-08 names the convoy ship
+        Assert.True(s.Enabled);   // M7-10: switched on (only games with an exp_anchorage dock are affected)
+        Assert.Equal(ShipmentRules.Default with { Enabled = true, TenderType = "exp_supply_tender" }, s);   // M7-08 names the convoy ship
     }
 
     [Fact]
@@ -242,15 +242,17 @@ public sealed class M7ContractTests
     public void BadBuildingFields_AreRejected(string body) => Assert.Throws<RulesException>(() => Load(Bld(body)));
 
     [Fact]
-    public void ExpeditionKit_IsAPlaceholderUntilM708()
+    public void ExpeditionKit_IsTheShippedDataKit()
     {
-        // No [faction.expedition] table: the table keeps its old size and an Expedition start is refused clearly.
+        // The fixture set has no [faction.expedition] table: an Expedition start is refused clearly.
         RuleSet none = Load();
         Assert.Throws<InvalidOperationException>(() => none.Sim.ResolveStartKit(Faction.Expedition));
-        string game = TempRules.Real("game.toml") + "\n[faction.expedition]\nconyard = \"\"\nunits = []\n";
-        RuleSet r = Load(("game.toml", game));
-        Assert.Equal(RuleCounts.Factions, r.Sim.StartKits.Count);
-        Assert.Equal("", r.Sim.StartKits[(int)Faction.Expedition].Conyard);
+        // M7-14: the shipped [faction.expedition] table resolves to the data kit (a Command Ship that deploys, six units), not the placeholder.
+        RuleSet shipped = RulesLoader.Load(RulesLocator.FindRulesDir(AppContext.BaseDirectory)!);
+        (int conyard, var units) = shipped.Sim.ResolveStartKit(Faction.Expedition);
+        Assert.Equal(-1, conyard);
+        Assert.Equal(6, units.Count);
+        Assert.Equal(RuleCounts.Factions, shipped.Sim.StartKits.Count);
         Assert.Equal(Faction.Expedition, SimRules.FactionFromId("exp_marine"));
         Assert.Equal(Faction.Authority, SimRules.FactionFromId("auth_marine"));
     }

@@ -27,6 +27,12 @@ internal interface IFactionTactics
     /// <summary>The staging cell for a wave heading to <paramref name="goal"/> when a forward entrance exists, else null.</summary>
     CellCoord? ForwardStage(RecruitKnowledge k, CellCoord goal);
 
+    /// <summary>M7-10: true while the infantry lane should build nothing (the Expedition keeps few, dear soldiers and spends on hulls).</summary>
+    bool HoldInfantry(RecruitKnowledge k) => false;
+
+    /// <summary>M7-10: the rally cell of production building <paramref name="factory"/> when it differs from the shared one (a naval yard rallies on water), else null.</summary>
+    CellCoord? RallyFor(RecruitKnowledge k, ViewActor factory) => null;
+
     /// <summary>Sends wave member <paramref name="a"/> through the tunnel network to the forward entrance. True when it was ordered
     /// (the caller then issues no other order this decision).</summary>
     bool TryEnter(RecruitKnowledge k, ICommandSink sink, ViewActor a, CellCoord stage);

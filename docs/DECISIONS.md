@@ -1098,3 +1098,40 @@ Fast Charging 850) and `harvest_capacity` (Deep Survey +2 on the Skimmer); build
 **Why:** design 07 §6 and 11_m7_plan §3; each choice is the plainest reading and is behind data that no current faction uses.
 Supersedes the "not built: vehicles as passengers" part of D-144 and the "not in skirmish setup yet" part of D-145.
 **Status:** assumed — confirm
+
+### D-148 · 2026-11-05 · Session 11 kickoff: owner answers Q-52..Q-54 and confirms the session-10 assumptions
+**Decision:** the owner took every recommendation from the session-11 briefing. Q-52 (c): leave Left Behind income for now,
+re-measure after M7 and bring a yield table before any change. Q-53 (b): leave the veterancy thresholds; rank 3 stays rare outside
+the Directorate. Q-54: re-measure supply on/off with 64 games per pair; no number change. Confirmed: D-135..D-145 and D-147
+(incl. the D-140 first-building rule, the D-142 Salvo numbers, the D-145 Expedition numbers, no ammo system for sorties). Session 11
+runs unattended except that the Expedition art pilot (Glide Tank, Landing Depot) waits for the owner's approval before any fan-out.
+**Why:** owner's reply to the session-11 briefing ("take all your recommendations; render now for approval; unattended except for the art approval").
+**Status:** confirmed (owner, session 11)
+
+### D-149 · 2026-11-05 · Expedition art pilot: variant A for both pilots
+**Decision:** the owner picked variant A for the Glide Tank (low, wide navy hover hull, twin canted fins, rear turbines, flat wedge
+turret) and the Landing Depot (beached navy hull, white liner bridge, funnel, crane, ramp). A becomes the style target for the
+M7-11 fan-out. Lead fixes on A before fan-out: rubber hover skirt instead of a tread-like base, visible lift and spray ring on water,
+and a size close to the Authority tank (+15 % at most).
+**Why:** owner's reply to the pilot contact sheets ("A for both options").
+**Status:** confirmed (owner, session 11); the skirt/scale fixes are the lead's and are shown on the next sheet
+
+### D-150 · 2026-11-05 · Shipments on; a ship that deploys places its building on the nearest buildable footprint
+**Decision:** (1) `[shipments] enabled = true` in data/rules/game.toml (only games with an exp_anchorage dock are affected; no pinned
+hash moved). (2) A naval deployer (the Expedition Command Ship, D-147 item 4) cannot place its building on its own water cell: Deploy
+places it on the nearest buildable footprint that touches the ship's cell; with none, the order is ignored. Found by M7-10: the
+Command Ship's Deploy did nothing on water. No existing game deploys a ship, so no pinned hash moved.
+**Why:** the Expedition could not establish at all without (2); (1) was planned for M7-14 with the faction.
+**Status:** assumed — confirm (the nearest-footprint rule is visible to a human Expedition player)
+
+### D-151 · 2026-11-05 · M7-10 round 2: tender lane, landing markers in the view, south coast default
+**Decision:** (1) A home-shipment tender launches only from a convoy edge cell whose sea region touches one of the player's docks (the
+old first-edge-cell rule is the fallback); before this a tender could sail in an unconnected ocean and block the lane. No pinned hash
+moved. (2) `SimSetup.LandingMarkers` (not hashed, not saved) and `PlayerView.LandingMarkers` / `CopyConvoyEdge` / `OverlayAt` give the AI
+the map's landing markers (map data a human sees too); the skirmish host does not pass them yet, so the AI falls back to its own coast
+scan there. (3) The Expedition AI refuses depot sites on ashfall (Deploy refuses overlay cells). (4) The shoreline buildings' water masks
+(exp_anchorage, exp_quay, exp_shipyard, exp_drydock) put the sea below the land, so they fit only on south-facing coasts: the skirmish
+setup now adds a South edge (not North) when an Expedition slot needs a coast, and `ai match` puts the Expedition on the south start.
+The real fix is Q-55.
+**Why:** M7-10 round 2 found the Expedition earning nothing on maps with two oceans or ash on the beach.
+**Status:** assumed — confirm ((1)-(3) are fixes; (4) is a stop-gap until Q-55)

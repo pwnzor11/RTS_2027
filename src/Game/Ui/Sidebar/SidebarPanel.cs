@@ -547,12 +547,23 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
     // SUP-4: the display name of this player's faction supply building, for the cap tooltip.
     private string? SupplyBuildingName() => SupplyBuildingLookup.NameOf(_source.Rules, _hud.Faction);
 
+    // M7-14: a ship in the vehicle lane that no own factory can launch from (the sim queues it and it waits; see ShipyardReach).
+    private bool ShipWithoutShipyard(BuildOption o)
+    {
+        if (o.Category != ProductionCategory.Vehicle) return false;
+        Rts.Sim.View.PlayerView pv = _source.Sim.ViewFor(_player);
+        var own = new List<Rts.Sim.View.ViewActor>();
+        pv.CopyOwn(own);
+        return ShipyardReach.NeedsShipyard(_source.Rules, o.TypeIndex, own, c => pv.IsPassable(c, Locomotion.Naval));
+    }
+
     private List<string> TooltipFor(BuildOption o)
     {
         var lines = new List<string> { CameoNames.Display(IdOf(o)), $"Cost {o.Cost}" };
         bool ready = SidebarCommands.LeftClick(_hud, o) == CameoClick.EnterPlacement;
         if (ready) lines.Add("Ready: click to place");
         else if (o.Blocked != QueueBlockReason.None) lines.Add(BlockReasonText.Of(o.Blocked, SupplyBuildingName()));
+        else if (ShipWithoutShipyard(o)) lines.Add(BlockReasonText.NeedsShipyardOnWater);   // M7-14: the ship would wait at the dock
         else lines.Add("Left click: build   Right click: cancel");
         return lines;
     }
@@ -645,7 +656,11 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
         int rank = vet ? _source.Sim.RankOf(key.Kind, key.Id.Index) : 0;
         int kill = vet ? _source.Sim.KillValueOf(key.Kind, key.Id.Index) : 0;
         int next = vet ? VeterancyText.NextThreshold(r.Veterancy.Thresholds, rank, scale, canRank) : 0;
-        IReadOnlyList<string> lines = UnitInfoPanel.Lines(name, unit.Health, max, vet, rank, kill, next);
+        var lines = new List<string>(UnitInfoPanel.Lines(name, unit.Health, max, vet, rank, kill, next));
+        // M7-14: a selected own carrier shows its hangar (docked over slots)
+        if (unit.Kind == UnitKind.Vehicle && r.Vehicles[unit.TypeIndex].AircraftSlots > 0
+            && _source.Sim.ViewFor(_player).OwnCarrierHangar(key.Id, out int docked, out int slots))
+            lines.Add(CarrierReadout.Text(docked, slots));
         UnitInfoPanel.Draw(batch, pixel, new Point(_layout.MapView.X + 8, _layout.MapView.Y + 8), lines, _ui);
     }
 

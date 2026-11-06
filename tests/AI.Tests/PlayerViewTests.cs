@@ -36,6 +36,26 @@ public class PlayerViewTests
     }
 
     [Fact]
+    public void LandingMarkersAndTheConvoyEdgeAreReadOnlyMapData()
+    {
+        var (map, meta) = AI.Tests.M7.ExpeditionRig.OceanMap();
+        var sim = new Rts.Sim.Simulation(new Rts.Sim.Core.SimSetup(1, map, 2, TestWorld.Rules.Sim, TestWorld.Rules.RulesHash) { LandingMarkers = meta.Landing });
+        PlayerView v = sim.ViewFor(0);
+        Assert.NotEmpty(meta.Landing);
+        Assert.Equal(meta.Landing, v.LandingMarkers);
+        Assert.Empty(TestWorld.FlatSim().ViewFor(0).LandingMarkers);   // a host without map metadata gives none
+        var edge = new List<CellCoord>();
+        v.CopyConvoyEdge(edge);
+        Assert.NotEmpty(edge);
+        foreach (CellCoord c in edge)
+        {
+            Assert.True(c.X == 0 || c.Y == 0 || c.X == map.Width - 1 || c.Y == map.Height - 1);
+            Assert.True(v.NavalRegionAt(c) > 0);
+        }
+        foreach (CellCoord c in meta.ConvoyEdge) Assert.Contains(c, edge);   // every generated convoy cell is on the derived edge
+    }
+
+    [Fact]
     public void OwnActorsCashAndMapQueries()
     {
         var sim = TestWorld.FlatSim();

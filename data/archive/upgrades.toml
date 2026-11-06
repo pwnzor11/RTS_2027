@@ -265,3 +265,103 @@ body = '''
 A long-range repair kit rigged from a welder, a radio and a spare set of fittings, carried by Tinkers who can now mend vehicles from across a field. Patchwork lets a Tinker keep a convoy running under fire. It is the thing Tinkers most want to do and the thing they are most often told to stop. The result is a fighting rig that never quite matches the one it started as, which is the caravan's whole philosophy in one machine.
 '''
 unlock = "research:lb_up_patchwork"
+
+# Expedition upgrades (S11, M7-10). Text copied verbatim from docs/lore/expedition.md (owner-approved lore, D-128/D-148).
+# The lore gives no field notes for upgrades yet: field_note is a PENDING placeholder.
+
+[[entry]]
+id = "exp_up_sonar_nets"
+category = "Upgrade"
+faction = "expedition"
+title = "Sonar Nets"
+subtitle = "Wider picket listening"
+field_note = "PENDING owner text"
+body = '''
+Cable nets lowered between the Pickets and the shore, which extend the range of each listening post and reveal submerged boats to the whole team for a short time after they are heard. The nets are heavy to lay and cheap to keep, and the sailors who lay them say the sea sounds different once they are in.
+'''
+unlock = "campaign:TBD"
+
+[[entry]]
+id = "exp_up_hardened_hulls"
+category = "Upgrade"
+faction = "expedition"
+title = "Hardened Hulls"
+subtitle = "Heavier ship armour"
+field_note = "PENDING owner text"
+body = '''
+A programme of extra steel plating welded over the original hull seams in the drydocks of the home ports. Every warship in the fleet gains armour from it, though each new plate adds weight, and the engineers argue constantly about how much weight a hull can carry before it stops being fast. The Admiral has ruled that the answer is always more.
+'''
+unlock = "campaign:TBD"
+
+[[entry]]
+id = "exp_up_vacuum_cores"
+category = "Upgrade"
+faction = "expedition"
+title = "Vacuum Cores"
+subtitle = "Faster vehicle reloads"
+field_note = "PENDING owner text"
+body = '''
+Improved valve tubes that run cooler under load, so the guns of every fleet vehicle can fire more often. Crews notice at once, since the new tubes glow a fainter colour and need less attention between engagements. The engineers at Carrow Down remain modest about the work, though privately they believe these are the finest tubes they have ever built.
+'''
+unlock = "campaign:TBD"
+
+[[entry]]
+id = "exp_up_composite_armour"
+category = "Upgrade"
+faction = "expedition"
+title = "Composite Armour"
+subtitle = "Hover and infantry armour"
+field_note = "PENDING owner text"
+body = '''
+Layered plates of ceramic and resin fitted to hovercraft skirts, troop carriers and the chest plates of infantry. It stops small arms and splinters that once went straight through, and it weighs less than the steel it replaces. Veterans complain that it smells of a laboratory, though they rarely complain about the first round that bounces away from them.
+'''
+unlock = "campaign:TBD"
+
+[[entry]]
+id = "exp_up_guided_shells"
+category = "Upgrade"
+faction = "expedition"
+title = "Guided Shells"
+subtitle = "Better artillery accuracy"
+field_note = "PENDING owner text"
+body = '''
+Shells fitted with small steering vanes and a simple radio receiver, which let the fleet's artillery correct its fall of shot in flight. Spotters are delighted, gunners are sceptical, and the Admiral is pleased, because fewer shells are wasted on empty ground. The vanes are fragile and must be fitted by hand, so the armourers keep a stool beside every crate.
+'''
+unlock = "campaign:TBD"
+
+[[entry]]
+id = "exp_up_fast_charging"
+category = "Upgrade"
+faction = "expedition"
+title = "Fast Charging"
+subtitle = "Shorter shipment intervals"
+field_note = "PENDING owner text"
+body = '''
+A revised loading system for the supply tenders and quays, with extra cranes, faster winches and better-lit night shifts. Shipments reach the beachhead about fifteen per cent sooner than before. The Commissioner approved the programme at once, and was the first to point out that every saved minute is one the fleet does not have to sit waiting for its bills.
+'''
+unlock = "campaign:TBD"
+
+[[entry]]
+id = "exp_up_deep_survey"
+category = "Upgrade"
+faction = "expedition"
+title = "Deep Survey"
+subtitle = "Larger skimmer loads"
+field_note = "PENDING owner text"
+body = '''
+A survey package fitted to the skimmers that improves their sensors and deepens the hoppers, so each harvest run carries more ash before returning. Operators say the extra load makes the hulls sit lower in the water and the coffee taste worse, since the crew now spends longer on the surface. The Hydrographic Office calls the package a triumph and the skimmer crews call it a burden.
+'''
+unlock = "campaign:TBD"
+
+[[entry]]
+id = "exp_up_veteran_drill"
+category = "Upgrade"
+faction = "expedition"
+title = "Veteran Drill"
+subtitle = "Earlier veteran status"
+field_note = "PENDING owner text"
+body = '''
+A rigorous training regime drawn up by the fleet's old sergeants and given a new name by the Office of Return, which spent a great deal of money on it. Units that complete the drill earn veteran status after fewer engagements, and they tend to keep their nerve longer under fire. The sergeants say the drill is simple, and then make the recruit do it twice.
+'''
+unlock = "campaign:TBD"
+

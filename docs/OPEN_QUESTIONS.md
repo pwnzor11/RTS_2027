@@ -5,18 +5,16 @@ file cited after each question. Recommendations are the lead's, from the researc
 
 ## Open
 
+- 🟡 Q-55 Shoreline buildings only face south (D-151): exp_anchorage, exp_quay, exp_shipyard and exp_drydock have a fixed water mask
+  (land on top, sea below), so an Expedition player on a north, east or west coast cannot build a dock, a shipyard or receive shipments.
+  Options: (a) Red Alert style: docks sit wholly on water, touching the shore — any coast works, the four buildings are redrawn as
+  floating docks; (b) each shoreline building gets four facings (placement picks the one that fits; four times the art for these four);
+  (c) keep south-only and make maps always give the Expedition a south coast. Recommendation: (a) — simplest rule, one sprite each.
 - ⚪ Q-49 M8 story questions Q-A..Q-I in docs/design/12_m8_plan.md: answer before M8 starts (not needed for M7).
-- 🟡 Q-52 Left Behind balance (docs/balance/m6_12_acceptance.md, m6_10_ai.md "Session 10 re-measure"): early income is 20-31 %
-  under the other two factions on every map size (band ±20 %), LB tier 3 beats Authority tier 3 in ~12 % of games, and LB tier 4 loses
-  to LB tier 3 (21 %). The salvage AI fix did not close it. Options: (a) raise Gleaner/ash yield (rules change, table to you first),
-  (b) cheaper early Hauler, (c) leave for now and re-measure after M7. Recommendation: (c), then (a) with a table.
-- 🟡 Q-53 Veterancy reach (docs/balance/s10_tables.md, VET-7): rank 3 shows up in most games after minute 15 only for the Directorate
-  (57 %); Authority 9 %, Left Behind 0 %. Options: (a) lower the kill thresholds for ranks 2-3, (b) leave (rank 3 stays rare by
-  design). Recommendation: (b) until the 20 % draw rate and LB income are fixed, since both cut kill counts.
-- 🟡 Q-54 Supply win-rate spread (SUP-6): 7.8 points off → 14.1 on, inside the noise (±9). Re-measure with 64 games per pair?
-  Recommendation: yes, next session, no number change now.
 
 ## Answered
+- Q-52, Q-53, Q-54 · 2026-11-05 · Owner took the recommendations → D-148 (LB income: re-measure after M7, table first; veterancy
+  thresholds unchanged; supply spread re-measured with 64 games per pair in session 11).
 - Q-43..Q-48, Q-50, Q-51 · 2026-11-05 · Owner: "all assumptions look great" → D-134 (keep 2 500; confirm session-9 numbers;
   keep LB vehicle scale; info panel with VET-6; keep promotion cue; keep Rotors; approve lore drafts; supply on after the AI fix).
 - Q-41, Q-42 · 2026-11-05 · Lore banners cleared → D-119; foam stays 3×3 → D-120. Q-43 → measure only (D-121).

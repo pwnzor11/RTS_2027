@@ -207,3 +207,112 @@ Secret: She has known for years that the Annex cannot survive another decade, an
 # ASSUMED (M3-17) TODO (M4): replace TBD with the mission id that releases this entry.
 unlock = "campaign:TBD"
 
+
+# Expedition leaders (S11, M7-10). Text copied verbatim from docs/lore/expedition.md (owner-approved lore, D-128/D-148).
+
+[[entry]]
+id = "leader_exp_aldersey"
+category = "Leader"
+faction = "expedition"
+title = "Fleet Admiral Corvin Aldersey"
+subtitle = "Commander of the Second Relief Fleet"
+body = '''
+A career convoy officer, Aldersey speaks to the commander over the fleet circuit in unhurried, formal sentences. He
+learned his craft escorting grain ships through winters nobody else wanted to sail, and he treats every sailor as an
+irreplaceable tool. He has never won a decisive battle and has never lost a convoy.
+
+Motivation: bring as many ships home as he took out, and turn the fleet's one-way ticket into a round trip.
+'''
+unlock = "open"
+
+[[entry]]
+id = "leader_exp_aldersey_secret"
+category = "Leader"
+faction = "expedition"
+title = "Fleet Admiral Corvin Aldersey: Classified"
+subtitle = "Classified file"
+body = '''
+Secret: He has read the signal log of the first relief fleet. It did not vanish; it was last heard asking for rescue
+from the south coast, and the Concordat chose not to send help. Aldersey follows his orders and keeps the log in his
+safe.
+'''
+unlock = "campaign:TBD"
+
+[[entry]]
+id = "leader_exp_strand"
+category = "Leader"
+faction = "expedition"
+title = "Commissioner Imelda Strand"
+subtitle = "Commissioner for the Return"
+body = '''
+Strand is the Office of Return's voice ashore: a former harbour auditor who counts tonnage, ration and goodwill in
+the same ledger. She sets the commander's objectives by telex, always in the form of a polite request, and never
+describes a landing as a conquest. She is the reason the fleet pays its bills.
+
+Motivation: make the expedition worth what it cost, so that the Concordat will send another.
+'''
+unlock = "open"
+
+[[entry]]
+id = "leader_exp_strand_secret"
+category = "Leader"
+faction = "expedition"
+title = "Commissioner Imelda Strand: Classified"
+subtitle = "Classified file"
+body = '''
+Secret: There will not be another. The Concordat's council is fracturing at home, and Strand has received three
+unsent orders to recall the fleet. She has quietly kept the shipments flowing with her own signature.
+'''
+unlock = "campaign:TBD"
+
+[[entry]]
+id = "leader_exp_roque"
+category = "Leader"
+faction = "expedition"
+title = "Dr. Anselm Roque"
+subtitle = "Chief Engineer of the Expedition"
+body = '''
+Roque runs the fleet's shipboard institute out of a converted cargo hold. He is a gentle, distracted man who talks to
+valves and apologises to machines. Everything that makes the fleet advanced was drawn on his drafting tables.
+
+Motivation: keep the fleet's technology alive long enough for the Concordat to relearn how to build it.
+'''
+unlock = "open"
+
+[[entry]]
+id = "leader_exp_roque_secret"
+category = "Leader"
+faction = "expedition"
+title = "Dr. Anselm Roque: Classified"
+subtitle = "Classified file"
+body = '''
+Secret: The sealed cores degrade faster than the specifications admit. Without spare parts that only the home
+institute can make, most of the fleet will be scrap within three years, and Roque knows which hulls will fail first.
+'''
+unlock = "campaign:TBD"
+
+[[entry]]
+id = "leader_exp_kell"
+category = "Leader"
+faction = "expedition"
+title = "Air Marshal Perpetua Kell"
+subtitle = "Commander of the fleet air arm"
+body = '''
+Kell flew rescue sorties in the last hard winters at home and never lost the habit of counting heads on the way back.
+She runs the carrier decks like a ward, loudly and with affection, and treats every sortie as a promise.
+
+Motivation: land every airman where they took off. She is willing to lose a campaign to keep that promise.
+'''
+unlock = "campaign:TBD"
+
+[[entry]]
+id = "leader_exp_kell_secret"
+category = "Leader"
+faction = "expedition"
+title = "Air Marshal Perpetua Kell: Classified"
+subtitle = "Classified file"
+body = '''
+Secret: She has already taken personal command of a rescue flight into the Glass Coast against orders, and found
+people living there who were never on any manifest.
+'''
+unlock = "campaign:TBD"

@@ -26,6 +26,9 @@ internal sealed class RetreatManager
     /// <summary>VET-6: a repairing unit rejoins after this many ticks whatever its health (no waiting for ever).</summary>
     public const int RepairMaxTicks = 3600;   // (tune)
 
+    /// <summary>M7-10: every retreating unit goes to repair (a Mender) and rejoins when healed, not only rank-3 ones (Expedition: few, dear units).</summary>
+    public bool RepairAll { get; set; }
+
     public void Think(RecruitKnowledge k, ICommandSink sink, Squads squads, CellCoord rally, int pct)
     {
         if (pct <= 0) return;
@@ -39,7 +42,7 @@ internal sealed class RetreatManager
         foreach (ViewActor a in _tmp)
         {
             Count++;
-            if (a.Rank >= VeterancyValue.MaxRank)
+            if (a.Rank >= VeterancyValue.MaxRank || RepairAll)
             {
                 squads.SendRepair(k, a, tick);
                 sink.Issue(CommandKind.Move, a.Id, a.Kind, RepairSpot(k, a, rally));
