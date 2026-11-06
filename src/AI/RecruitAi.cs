@@ -17,6 +17,7 @@ namespace Rts.AI;
 public sealed class RecruitAi : IAiPlayer, IAiSnapshotable, IHookableAi
 {
     private DifficultyProfile _profile;
+    private readonly DifficultyProfile _baseProfile;   // M8-06: the profile the AI was created with; Init builds from it so a restored AI rebuilds identically
     private int _servedWaveSeq;   // M8-06: last AI.Wave sequence number served (saved)
     private readonly RecruitKnowledge _k = new();
     private readonly EconomyManager _economy = new();
@@ -50,7 +51,7 @@ public sealed class RecruitAi : IAiPlayer, IAiSnapshotable, IHookableAi
     /// <summary>Creates the AI under a registry id (the same AI is registered as "recruit" and as "tiered").</summary>
     public RecruitAi(DifficultyProfile profile, string id)
     {
-        _profile = profile;
+        _profile = _baseProfile = profile;
         _id = id;
         _military = new MilitaryManager(profile.AttackThreshold) { Options = MilitaryOptions.From(profile) };
     }
@@ -195,7 +196,7 @@ public sealed class RecruitAi : IAiPlayer, IAiSnapshotable, IHookableAi
     /// directive: AI.Attack replaces the directive's attack cell, AI.Defend replaces its rally cell; everything else of a directive still applies.
     /// AI.SetTier swaps the profile: flags and numbers read from it (repair, upgrades, retreat percent, wave threshold of the next reroll,
     /// decision interval and command delay in the driver, planner/tactics gates read from the profile) follow the new tier; all state carries
-    /// over (build order list and supply margin chosen at init, drawn wave trigger, roster, timers, squads, scout route, RNG).
+    /// over (build order list, supply margin and faction tactics chosen at init from the AI's own profile, drawn wave trigger, roster, timers, squads, scout route, RNG).
     /// </summary>
     public void ApplyHooks(AiHooks hooks, DifficultyProfile profile)
     {
@@ -215,6 +216,12 @@ public sealed class RecruitAi : IAiPlayer, IAiSnapshotable, IHookableAi
 
     private CellCoord? _hookAttack, _hookDefend;
 
+    /// <summary>M8-06 (diagnostics and tests): the tier of the profile in force (follows AI.SetTier).</summary>
+    public int ActiveTier => _profile.Tier;
+
+    /// <summary>M8-06: last AI.Wave sequence number served.</summary>
+    public int ServedWaveSeq => _servedWaveSeq;
+
     /// <inheritdoc />
     public void Start(AiContext ctx)
     {
@@ -228,13 +235,14 @@ public sealed class RecruitAi : IAiPlayer, IAiSnapshotable, IHookableAi
     private void Init(Faction faction)
     {
         _faction = RecruitFaction.For(faction);
-        _tactics = _faction.CreateTactics(_profile);
-        _build = new BuildOrderManager(_faction.OrderFor(_profile.BuildRepertoire), _faction.PowerId, _faction.YardId)
-        { ReserveInProgress = _profile.RespondToAttacks, SupplyMargin = BuildOrderManager.MarginForTier(_profile.Tier) };   // M4-12 (tier 2+); SUP-5 margin by tier
-        _planner = new TierPlanner(_profile, _faction);
+        _tactics = _faction.CreateTactics(_baseProfile);
+        _build = new BuildOrderManager(_faction.OrderFor(_baseProfile.BuildRepertoire), _faction.PowerId, _faction.YardId)
+        { ReserveInProgress = _baseProfile.RespondToAttacks, SupplyMargin = BuildOrderManager.MarginForTier(_baseProfile.Tier) };   // M4-12 (tier 2+); SUP-5 margin by tier
+        _planner = new TierPlanner(_baseProfile, _faction);
         _build.HoldStep = id => _planner.Behind && _planner.IsTech(id);   // M4-16
         _production = new ProductionManager(_faction, _tactics, _planner);
         _production.Start(_ctx!.Rng);
+        if (!ReferenceEquals(_profile, _baseProfile)) _planner.SetProfile(_profile);   // M8-06: a tier forced before the first decision
         _military.Tactics = _tactics;
         _tactics?.Start(_ctx);
         if (_tactics is LeftBehindTactics lb) lb.Attach(_squads);   // M6-10
