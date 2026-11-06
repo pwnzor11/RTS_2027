@@ -73,4 +73,20 @@ public class CommanderMatchCommandTests
         }
         finally { if (Directory.Exists(dir)) Directory.Delete(dir, true); }
     }
+
+    [Fact]
+    public void Swap_puts_the_commander_at_the_other_start_and_says_so()
+    {
+        string dir = FreshDir();
+        try
+        {
+            var args = new List<string>(Args(dir, 300)) { "--swap", "1" };
+            int code = CommanderMatchCommand.RunWith(args.ToArray(), name => name == "OPENAI_API_KEY" ? "k" : null, (_, _) => new FakeChatProvider());
+            Assert.Equal(0, code);
+            Assert.Contains("swapped (commander at start 1)", File.ReadAllText(Path.Combine(dir, "summary.md")));
+            Assert.NotEmpty(Directory.GetFiles(dir, "*_swap.rtsreplay"));
+            Assert.Equal(2, CommanderMatchCommand.RunWith(new[] { "--a", "x", "--b", "x", "--provider", "openai", "--swap", "2" }, _ => "k", (_, _) => null));
+        }
+        finally { if (Directory.Exists(dir)) Directory.Delete(dir, true); }
+    }
 }

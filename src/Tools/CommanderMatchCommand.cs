@@ -27,7 +27,7 @@ public static class CommanderMatchCommand
         "usage: ai commander --a <aiId>[:<tier>] --b <aiId>[:<tier>] --provider openai|anthropic [--model <name>] [--seed 1] [--ticks 30000] [--size 64] [--out ./commander_run]\n" +
         "       the key is read from OPENAI_API_KEY (openai) or ANTHROPIC_API_KEY (anthropic), never from a flag. --model defaults to the provider's default model.";
 
-    private static readonly string[] Options = ["a", "b", "provider", "model", "seed", "ticks", "size", "out"];
+    private static readonly string[] Options = ["a", "b", "provider", "model", "seed", "ticks", "size", "out", "swap"];
     private const int DefaultTier = 2;
     private const int WinCheckInterval = 4;
 
@@ -58,6 +58,7 @@ public static class CommanderMatchCommand
         }
         if (!Int(flags, "seed", 1, out int seed) || seed < 1) return UsageError("--seed must be a positive integer");
         if (!Int(flags, "ticks", 30000, out int ticks) || ticks < 1) return UsageError("--ticks must be a positive integer");
+        if (!Int(flags, "swap", 0, out int swap) || swap > 1) return UsageError("--swap must be 0 or 1");
         if (!Int(flags, "size", 64, out int size) || size < MapGenerator.MinSize || size > SimConstants.MaxMapCells)
             return UsageError($"--size must be {MapGenerator.MinSize}..{SimConstants.MaxMapCells}");
         string outDir = flags.TryGetValue("out", out string? outArg) ? outArg : "commander_run";
@@ -112,12 +113,12 @@ public static class CommanderMatchCommand
             return 1;
         }
 
-        string replayName = $"commander_seed{seed}.rtsreplay";
+        string replayName = $"commander_seed{seed}{(swap == 1 ? "_swap" : "")}.rtsreplay";
         try
         {
             using var replayStream = File.Create(Path.Combine(fullOut, replayName));
             using var log = new StreamWriter(Path.Combine(fullOut, "directives.log"), false, new UTF8Encoding(false)) { AutoFlush = true };
-            return Play(new PlayPlan(a!, b!, seed, ticks, size, rules, rulesDir, cfg, providerArg.Trim(), model, fullOut, replayName),
+            return Play(new PlayPlan(a!, b!, seed, ticks, size, rules, rulesDir, cfg, providerArg.Trim(), model, fullOut, replayName, swap == 1),
                 commander, recorder, replayStream, log, key);
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException)
@@ -128,7 +129,7 @@ public static class CommanderMatchCommand
     }
 
     private sealed record PlayPlan(AiSide A, AiSide B, int Seed, int Ticks, int Size, RuleSet Rules, string RulesDir, LlmConfig Config,
-        string Provider, string Model, string OutDir, string ReplayName);
+        string Provider, string Model, string OutDir, string ReplayName, bool Swap);
 
     private static int Play(PlayPlan p, Commander commander, CallRecorder recorder, Stream replayStream, StreamWriter log, string key)
     {
@@ -136,6 +137,12 @@ public static class CommanderMatchCommand
         string Redact(string s) => key.Length == 0 ? s : s.Replace(key, "[redacted]", StringComparison.Ordinal);
 
         MapData map = MapGenerator.Generate(p.Size, (ulong)p.Seed);
+        if (p.Swap)   // the commander side (slot 0) starts at the other corner, as `ai timeline --swap 1` does
+        {
+            var st = new List<CellCoord>(map.StartPositions); st.Reverse();
+            map = new MapData(map.Name, map.Theater, map.Width, map.Height, map.Template.ToArray(), map.Land.ToArray(), map.HeightLevel.ToArray(),
+                map.Overlay.ToArray(), map.Density.ToArray(), st);
+        }
         var sim = new Simulation(MatchSetup.MakeSetup((ulong)p.Seed, map, p.Rules, MatchSetup.Players));
         SkirmishStart.Apply(sim);
 
@@ -195,7 +202,7 @@ public static class CommanderMatchCommand
         md.AppendLine($"- Side A (LLM commander {commander.Speaker}): {p.A.Label}");
         md.AppendLine($"- Side B (standard AI): {p.B.Label}");
         md.AppendLine($"- Provider: {p.Provider}, model: {p.Model}");
-        md.AppendLine($"- Seed {p.Seed}, map {p.Size} cells, tick limit {p.Ticks}");
+        md.AppendLine($"- Seed {p.Seed}, map {p.Size} cells, tick limit {p.Ticks}, starts {(p.Swap ? "swapped (commander at start 1)" : "normal (commander at start 0)")}");
         md.AppendLine($"- Winner: {winnerText}");
         md.AppendLine($"- Ended at tick {sim.Tick} ({sim.Tick / 20} s of game time)");
         md.AppendLine($"- LLM calls: {callsSeen}; replies with a directive: {withDirective}; errors: {errors}");
