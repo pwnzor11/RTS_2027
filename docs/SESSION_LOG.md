@@ -195,3 +195,21 @@ Windows-only SfxrTests flake (Python probe timeout) failed PR #23 once, fixed; C
 within noise (Q-54); rank 3 rare outside the Directorate (Q-53).
 **User check:** USER_CHECKS.md, "Session 10 · Supply on, veterancy AI, naval groundwork, ocean maps".
 **Next session should:** see HANDOFF (owner answers, M7-10 Expedition AI, M7-14 faction pick and acceptance, M7-11 art pilot).
+
+## Session 11 · 2026-11-05/06 (Expedition playable: AI, faction pick, income, acceptance; Expedition art)
+**Goal:** HANDOFF "Start here": owner answers, M7-10 Expedition AI, M7-14 faction pick and acceptance, M7-11 art pilot. Unattended
+except for the art approval.
+**Done:** owner took every recommendation (D-148; Q-52..Q-54 answered). Wave 1 (PR #26): Expedition Recruit AI with naval deploy and
+tender-lane fixes (D-150, D-151), Expedition in skirmish setup with coast rules, ship/hangar sidebar, tooltip and editor-marker fixes,
+Archive entries (campaign-gated secrets), LLM summary naval fields. Art pilot: owner picked variant A for both (D-149); hover-skirt and
+scale fix; fan-out of all 44 remaining sprites by five helpers, lead-reviewed with fix rounds (ships), combined on `wp/art-exp-all`.
+Wave 2 (PR #27): Expedition income tuned (D-152) and naval strikes; Expedition golden replay with save/load; 210-game soak with
+Expedition (0 desyncs, 0 exceptions, 0 stuck ships); Q-54 re-measure (spread 14.1 off / 13.3 on, no change).
+**Commits:** PR #26 (c32b6ab), PR #27 (this handoff), art bundle `rts2027_art_push_s11.zip` for the owner.
+**Helpers:** 12 launches (Sonnet: AI, art ×6, balance, acceptance; Haiku: game layer, Archive, LLM); fix rounds for the AI (×1),
+Archive (×1), Glide Tank (×1), warships (×2).
+**Problems / notes:** shoreline buildings fit only south coasts → Q-55 (stop-gap: South default); a stale session-10 branch name
+collided (`wp/m7-14ui`); force-push refused (stale `wp/m7-arch`); device bridge disconnected, so the art goes to the owner as a zip.
+§6 bullet 1 (Expedition beats every tier) is not shown yet.
+**User check:** USER_CHECKS.md, "Session 11 · The Overseas Expedition is playable".
+**Next session should:** see HANDOFF (art PR, Q-55, Expedition per-tier AI).

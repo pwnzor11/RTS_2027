@@ -1135,3 +1135,13 @@ setup now adds a South edge (not North) when an Expedition slot needs a coast, a
 The real fix is Q-55.
 **Why:** M7-10 round 2 found the Expedition earning nothing on maps with two oceans or ash on the beach.
 **Status:** assumed — confirm ((1)-(3) are fixes; (4) is a stop-gap until Q-55)
+
+### D-152 · 2026-11-06 · Expedition early income tuned (11 §4) and naval strikes
+**Decision:** Expedition-only numbers (D-113 untouched for the other three): `[shipments] interval_ticks` 1800 → 600, `value` 1500 → 2000,
+`decay_permille` 40 → 60 (by minute 10 the decay step is 8-9, so a shipment pays about half its value; the 35 % floor comes at step 11). AI: Quay and Shipyard come before the second Pile House; strike groups
+from one ship; a probe sail to the sea cell nearest the enemy start when no target is in range (terrain only); ReserveMin 4. Result
+(docs/balance/m7_income.md, tier 2, 20 games per cell): medium −6/+6/+8 %, large −9/+11/−7 % (all six inside ±10 %); small +12/+16/+22 %
+(outside, because Left Behind's low income pulls the comparison mean down — Q-52). 8-game tier-2 matches on medium: 5-3 vs Authority,
+4-1-3 vs Directorate, 8-0 vs Left Behind (was 0/8, 0/8, 1/8).
+**Why:** before the change the Expedition earned 32-56 % of the others in the first 10 minutes and lost almost every game.
+**Status:** assumed — confirm (all numbers; the owner may prefer a gentler curve: decay 40 with value 2400 was the alternative)
