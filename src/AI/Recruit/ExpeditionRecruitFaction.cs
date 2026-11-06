@@ -18,12 +18,13 @@ internal sealed class ExpeditionRecruitFaction : RecruitFaction
     public override string YardId => "exp_landing_depot";
     public override string PowerId => "exp_pile_house";
 
-    // (tune) M7-10: power, then the refinery (a free Skimmer), the shipment dock early (the first tender sails at once), the producers,
+    // (tune) M7-10 / S11 (naval strike): the Plotting Room, Quay and Shipyard come before the second Pile House and the Beacons.
+    // Power, then the refinery (a free Skimmer), the shipment dock early (the first tender sails at once), the producers,
     // a beacon to grow the zone, the Quay (ships), then the tier-2 gate and the fleet and air tech.
     public override string[] DefaultOrder { get; } =
     [
-        "exp_pile_house", "exp_dredge_works", "exp_anchorage", "exp_billet", "exp_hover_yard", "exp_pile_house", "exp_plotting_room",
-        "exp_beacon", "exp_quay", "exp_shipyard", "exp_beacon", "exp_flight_deck",
+        "exp_pile_house", "exp_dredge_works", "exp_anchorage", "exp_billet", "exp_hover_yard", "exp_plotting_room", "exp_quay", "exp_shipyard",
+        "exp_pile_house", "exp_beacon", "exp_beacon", "exp_flight_deck",
     ];
 
     // (tune) M7-10: Marines are the only soldier available at tier 1.
