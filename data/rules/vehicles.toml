@@ -927,6 +927,8 @@ turret_turn_rate = 0
 crusher = false
 cost = 1000  # (tune)
 prerequisites = ["exp_flight_deck"]
+ammo = 5  # (tune) D-156
+rearm_ticks = 150  # (tune) D-156
 
 [exp_gunship]   # PLACEHOLDER ART; rotary ground attack
 faction = "expedition"
@@ -943,6 +945,8 @@ turret_turn_rate = 0
 crusher = false
 cost = 900  # (tune)
 prerequisites = ["exp_flight_deck"]
+ammo = 5  # (tune) D-156
+rearm_ticks = 150  # (tune) D-156
 
 [exp_bomber]   # PLACEHOLDER ART; heavy bombs against buildings and ships
 faction = "expedition"
@@ -959,3 +963,5 @@ turret_turn_rate = 0
 crusher = false
 cost = 1100  # (tune)
 prerequisites = ["exp_flight_deck"]
+ammo = 4  # (tune) D-156
+rearm_ticks = 200  # (tune) D-156

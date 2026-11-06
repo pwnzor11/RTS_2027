@@ -122,7 +122,7 @@ public sealed partial class Simulation
         _effects.ClearMobile(kind, i);
         if (kind == ActorKind.Vehicle) _rigs.ClearVehicle(i);   // M6-02
         _veterancy.ClearMobile(kind, i);                        // VET-1
-        if (kind == ActorKind.Vehicle) _naval.ClearVehicle(i);   // M7-02
+        if (kind == ActorKind.Vehicle) { _naval.ClearVehicle(i); _naval.AmmoLeft[i] = RulesOf(_units.Player[i]).Vehicles[_units.TypeIndex[i]].Ammo; }   // M7-02, D-156: starts full
         SupplyChanged();                                        // SUP-1
     }
 

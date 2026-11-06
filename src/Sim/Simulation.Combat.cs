@@ -229,6 +229,8 @@ public sealed partial class Simulation
         if (e.ReloadTicks > 0) return false;
         byte owner = PlayerAt(kind, i);
         WeaponType w = RulesOf(owner).Weapons[weapon];
+        bool ammoBound = kind == ActorKind.Vehicle && RulesOf(owner).Vehicles[_units.TypeIndex[i]].Ammo > 0;   // D-156
+        if (ammoBound && _naval.AmmoLeft[i] <= 0) return false;
         if (kind != ActorKind.Building && IsUnderground(kind, i)) return false;                       // M3-05: underground cannot fire
         if (!target.Id.IsNone && target.Kind <= ActorKind.Building && !WeaponCanTarget(w, target.Kind, target.Id.Index)) return false;   // M3-05: air vs ground
         // VET-2: the shooter rides along with the shot so the kill can be credited (mobile actors only: buildings never rank; none when veterancy is off)
@@ -242,6 +244,7 @@ public sealed partial class Simulation
             if (!_projectiles.HasFree) return false;
             _projectiles.Spawn(PositionAt(kind, i), target, targetPoint, w.ProjectileSpeed, damage, w.Warhead, owner, weapon, shooter);
         }
+        if (ammoBound) _naval.AmmoLeft[i]--;   // D-156: one round per shot
         e.ReloadTicks = w.RateOfFire < 1 ? 1 : w.RateOfFire;
         if (kind != ActorKind.Building) e.ReloadTicks = Math.Max(1, (int)((long)e.ReloadTicks * _effects.RofPermille(kind, i) / 1000));   // M3-06: aura rate of fire
         if (rank > 0) e.ReloadTicks = Math.Max(1, ScaleByRank(VetRules.ReloadPermille, rank, e.ReloadTicks));   // VET-3: faster reload
