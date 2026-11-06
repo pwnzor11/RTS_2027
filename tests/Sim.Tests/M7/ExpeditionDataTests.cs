@@ -146,7 +146,7 @@ public sealed class ExpeditionDataTests
         }
         Assert.Equal(new[] { "exp_anchorage" }, s.Buildings.Where(b => b.ShipmentDock).Select(b => b.Id).ToArray());
         Assert.Equal("exp_supply_tender", LoadReal().Sim.Shipments.TenderType);
-        Assert.False(s.Shipments.Enabled);
+        Assert.True(s.Shipments.Enabled);   // M7-10: on; inert without an exp_anchorage dock
     }
 
     [Fact]
