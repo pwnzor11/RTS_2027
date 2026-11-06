@@ -1096,4 +1096,5 @@ D or a Dive button dives a submarine; dived ships drawn faded. (4) The Expeditio
 builder; ships leave only from a factory that reaches water (else they wait); new effect attributes `shipment_interval` (per mille,
 Fast Charging 850) and `harvest_capacity` (Deep Survey +2 on the Skimmer); buildings may carry `sonar_radius` (picket 9).
 **Why:** design 07 §6 and 11_m7_plan §3; each choice is the plainest reading and is behind data that no current faction uses.
+Supersedes the "not built: vehicles as passengers" part of D-144 and the "not in skirmish setup yet" part of D-145.
 **Status:** assumed — confirm

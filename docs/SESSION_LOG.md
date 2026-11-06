@@ -176,3 +176,22 @@ mirror test was relaxed with measurements (draws 12 vs 13 of 32); the Second Dri
 Sunrise) — fixed; supply on slows the AI (3 tests) — parked per the guard rail.
 **User check:** USER_CHECKS.md, "Session 9 · Left Behind playable, veterancy, supply cap".
 **Next session should:** see HANDOFF (art PR, supply on, M6-12 acceptance, VET-6, M7-02).
+
+## Session 10 · 2026-11-05 (supply on, veterancy AI, M6-12 acceptance, M7 naval systems)
+**Goal:** HANDOFF "Start here": art PR, supply on (SUP-4/6), M6-12 acceptance, VET-6 + info panel, M7-02 contracts, then M7 water
+locomotion and the Expedition skeleton. The owner confirmed every session-9 assumption and the play-test (D-134).
+**Done:** Left Behind art PR #20. Wave 1 (PR #21): SUP-4 sidebar, supply on by default (D-135), VET-6 AI and the info panel (D-136),
+M7-02 contracts (D-137, save format 12). Wave 2 (PR #22): M7-03 ships, M7-06 shipments, M7-07 beachhead (D-138..D-140), M6-12
+acceptance (216-game soak, 0 desyncs, Left Behind golden replay), Left Behind salvage AI fix (D-141), SUP-6/VET-7 tables. Wave 3
+(PR #23): M7-04 landing, M7-05 submarines, M7-08 Expedition data, M7-12 Salvo Array, M7-13 ocean maps (D-142..D-145), fixes (D-146).
+Wave 4 (PR #24): M7-09 carrier, vehicle passengers, M7 UI, skirmish Ocean option, start kit/ship exit/effects/building sonar (D-147).
+Owner questions Q-52..Q-54 (balance); no rules numbers of existing factions changed.
+**Commits:** PR #20, #21 (8621f5d), #22 (9cae9e1), #23 (d8cc460), #24, plus this handoff.
+**Helpers:** about 24 launches, all Sonnet except fix10 (Haiku); the lead merged, resolved two trivial conflicts, filled the Salvo
+data and wrote the docs.
+**Problems / notes:** one helper created a stray scheduled task ("x") despite the brief (refused to act on it for the helper); a
+Windows-only SfxrTests flake (Python probe timeout) failed PR #23 once, fixed; CommanderReplayAndSaveTests flake fixed for good
+(waits on the request task). Balance: Left Behind early income 20-31 % under the others (Q-52); supply win-rate spread unresolved
+within noise (Q-54); rank 3 rare outside the Directorate (Q-53).
+**User check:** USER_CHECKS.md, "Session 10 · Supply on, veterancy AI, naval groundwork, ocean maps".
+**Next session should:** see HANDOFF (owner answers, M7-10 Expedition AI, M7-14 faction pick and acceptance, M7-11 art pilot).
