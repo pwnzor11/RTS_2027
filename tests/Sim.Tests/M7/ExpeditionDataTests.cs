@@ -57,11 +57,11 @@ public sealed class ExpeditionDataTests
     }
 
     [Fact]
-    public void StaysUnplayable()
+    public void IsPlayable_AndOfferedInSetup()
     {
-        Assert.Equal(3, RuleCounts.PlayableFactions);
-        Assert.False(RuleCounts.IsPlayable(Faction.Expedition));
-        Assert.DoesNotContain(Faction.Expedition, RuleCounts.PlayableOrder);
+        Assert.Equal(4, RuleCounts.PlayableFactions);
+        Assert.True(RuleCounts.IsPlayable(Faction.Expedition));
+        Assert.Contains(Faction.Expedition, RuleCounts.PlayableOrder);
     }
 
     [Fact]

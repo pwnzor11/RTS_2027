@@ -26,10 +26,11 @@ public sealed class M6ContractTests
         Assert.Equal((0, 1, 2, 3), ((int)Faction.Authority, (int)Faction.Directorate, (int)Faction.Neutral, (int)Faction.LeftBehind));
         Assert.Equal(5, RuleCounts.Factions);   // M7-02 appended Expedition = 4
         Assert.Equal(RuleCounts.Factions, Enum.GetValues<Faction>().Length);
-        Assert.Equal(3, RuleCounts.PlayableFactions);   // M6-09: the skirmish UI offers Authority, Directorate, Left Behind
+        Assert.Equal(4, RuleCounts.PlayableFactions);   // M6-09: Authority, Directorate, Left Behind; M7-14 adds the Overseas Expedition
         Assert.Equal(RuleCounts.PlayableFactions, RuleCounts.PlayableOrder.Count);
         Assert.All(RuleCounts.PlayableOrder, f => Assert.True(RuleCounts.IsPlayable(f)));
         Assert.True(RuleCounts.IsPlayable(Faction.LeftBehind));
+        Assert.True(RuleCounts.IsPlayable(Faction.Expedition));   // M7-14
         Assert.False(RuleCounts.IsPlayable(Faction.Neutral));
         Assert.Equal(24, (int)CommandKind.Pack);
         Assert.Equal(25, Enum.GetValues<CommandKind>().Length);

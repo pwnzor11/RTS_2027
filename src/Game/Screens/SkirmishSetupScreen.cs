@@ -374,7 +374,7 @@ public sealed class SkirmishSetupScreen : IScreen
     }
 
     /// <summary>The name shown for a faction on the setup screen.</summary>
-    public static string FactionName(Faction faction) => faction switch { Faction.Directorate => "Directorate", Faction.LeftBehind => "Left Behind", Faction.Neutral => "Neutral", _ => "Authority" };
+    public static string FactionName(Faction faction) => faction switch { Faction.Directorate => "Directorate", Faction.LeftBehind => "Left Behind", Faction.Expedition => "Overseas Expedition", Faction.Neutral => "Neutral", _ => "Authority" };
 
     /// <summary>Cuts text to at most <paramref name="max"/> characters, ending in "..." when it was cut.</summary>
     public static string Shorten(string text, int max) => text.Length <= max ? text : text[..(max - 3)] + "...";

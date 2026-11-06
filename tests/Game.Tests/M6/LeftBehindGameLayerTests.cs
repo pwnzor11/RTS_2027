@@ -28,14 +28,15 @@ public sealed class LeftBehindGameLayerTests
     // ---- faction pick and validation ----------------------------------------------------------
 
     [Fact]
-    public void The_faction_cycle_offers_three_factions_and_never_neutral()
+    public void The_faction_cycle_offers_the_playable_factions_and_never_neutral()
     {
         var seen = new List<Faction>();
         Faction f = Faction.Authority;
         for (int i = 0; i < RuleCounts.PlayableFactions; i++) { seen.Add(f); f = SkirmishSetupScreen.NextFaction(f, 1); }
-        Assert.Equal(new[] { Faction.Authority, Faction.Directorate, Faction.LeftBehind }, seen);
+        Assert.Equal(new[] { Faction.Authority, Faction.Directorate, Faction.LeftBehind, Faction.Expedition }, seen);   // M7-14: the Expedition is offered last
         Assert.Equal(Faction.Authority, f);
         Assert.Equal("Left Behind", SkirmishSetupScreen.FactionName(Faction.LeftBehind));
+        Assert.Equal("Overseas Expedition", SkirmishSetupScreen.FactionName(Faction.Expedition));
     }
 
     [Fact]
