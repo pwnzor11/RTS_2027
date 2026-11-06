@@ -1,3 +1,6 @@
+> **Checkpoint (session 11, wave 1 landed as PR #26):** Expedition AI, faction pick, Archive, LLM naval fields on main; wave 2
+> (income tuning, acceptance, Q-54) and the art fan-out are running. D-148..D-151, Q-55 open. This file is rewritten at wrap-up.
+
 # Handoff: Session 11 — Expedition AI (M7-10), faction pick and acceptance (M7-14), balance answers
 Last commit: PR #24 (session 10 wave 4) + this handoff (2026-11-05); see `git log -1 origin/main`
 Where things stand: supply is on by default with a sidebar counter (D-135); the AI uses veterancy (VET-6, D-136). M6 (Left Behind)
