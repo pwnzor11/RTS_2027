@@ -21,6 +21,14 @@ public interface IAudio
     /// <summary>Plays a one-shot sound effect scaled by <paramref name="gain"/> (0..1) and panned (-1 left .. 1 right).</summary>
     void PlaySfx(string id, float gain, float pan) => PlaySfx(id);
 
+    /// <summary>True when the backend can play the voice file at <paramref name="relativePath"/> (under the audio folder, e.g. "voice/strand/m1.warning.ogg").</summary>
+    bool HasVoice(string relativePath) => false;
+
+    /// <summary>Plays a voice file (M8-05 dialogue) by path under the audio folder. Only called after <see cref="HasVoice"/> said yes.</summary>
+    void PlayVoice(string relativePath)
+    {
+    }
+
     /// <summary>Starts a music track, replacing the current one.</summary>
     void PlayMusic(string id);
 
