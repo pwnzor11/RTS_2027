@@ -87,6 +87,8 @@ internal sealed class ExpeditionTactics : IFactionTactics
 
     /// <summary>Carrier: enemies within this many cells of the carrier are worth a sortie; ticks between sorties of one carrier.</summary>
     public const int SortieCells = 14, SortieGapTicks = 600;   // (tune) M7-10
+    /// <summary>S12: cells from the carrier within which a known enemy building is a sortie target when no enemy is near.</summary>
+    public const int SortieBuildingCells = 60;   // (tune) S12
     /// <summary>Launches wanted when an enemy submarine was seen.</summary>
     public const int SubHuntersWanted = 2;   // (tune) M7-10
     /// <summary>Sparkers wanted once enemy aircraft were seen.</summary>
@@ -135,6 +137,10 @@ internal sealed class ExpeditionTactics : IFactionTactics
     public ExpeditionTactics(DifficultyProfile? profile) => _profile = profile;
 
     private int Tier => _profile?.Tier ?? 1;
+
+    /// <summary>S12: the per-tier Expedition flags (see <see cref="ExpeditionPlan"/>); every tier-dependent choice below reads this, never the tier number.</summary>
+    private ExpeditionPlan Plan => ExpeditionPlan.For(Tier);
+    private List<ViewActor> _known = new();
 
     /// <summary>Diagnostics: the last site / state line.</summary>
     public string Debug { get; private set; } = "";
@@ -255,11 +261,11 @@ internal sealed class ExpeditionTactics : IFactionTactics
         {
             int fleet = k.Fleet.Count;
             foreach (QueueItemView it in q.Items) if (rules.Vehicles[it.TypeIndex].Locomotion == Locomotion.Naval) fleet++;
-            int want = Tier >= 4 ? FleetTop : Tier >= 3 ? FleetMid : FleetLow;
-            if (fleet < want)
+            ExpeditionPlan plan = Plan;
+            if (fleet < plan.Fleet)
             {
-                if (Tier >= 4 && _carrier >= 0 && k.Buildable(ProductionCategory.Vehicle, _carrier) && Count(k, q, _carrier) < 1) return _carrier;
-                if (Tier >= 3 && _cruiser >= 0 && k.Buildable(ProductionCategory.Vehicle, _cruiser) && Count(k, q, _cruiser) < 1 + (Tier >= 5 ? 1 : 0)) return _cruiser;
+                if (plan.Carriers > 0 && _carrier >= 0 && k.Buildable(ProductionCategory.Vehicle, _carrier) && Count(k, q, _carrier) < plan.Carriers) return _carrier;
+                if (plan.Cruisers > 0 && _cruiser >= 0 && k.Buildable(ProductionCategory.Vehicle, _cruiser) && Count(k, q, _cruiser) < plan.Cruisers) return _cruiser;
                 if (_destroyer >= 0 && k.Buildable(ProductionCategory.Vehicle, _destroyer)) return _destroyer;
             }
         }
@@ -354,6 +360,8 @@ internal sealed class ExpeditionTactics : IFactionTactics
         PlayerView v = k.View;
         v.CopyOwnTenders(_tenders);
         foreach (ViewActor e in k.Visible) if (e.Relation == Relation.Enemy && e.Submerged) _enemySubSeen = true;
+        _known = knownEnemy;
+        if (_military is not null) _military.ThresholdBonus = Plan.WaveBonus;
         EvaluateWithdraw(k, sink, rally, planner);
         Fleet(k, sink, knownEnemy);
     }
@@ -653,7 +661,7 @@ internal sealed class ExpeditionTactics : IFactionTactics
             if (hurt || threat) { alert = t.Cell; ConvoyAlerts++; break; }
         }
 
-        int wanted = Tier >= 3 ? 2 : 1;
+        int wanted = Plan.Escorts;
         // keep the escorts that are alive, add the nearest free ships until the count is met
         while (_escort.Count < wanted)
         {
@@ -814,7 +822,7 @@ internal sealed class ExpeditionTactics : IFactionTactics
 
     private void SubHunt(RecruitKnowledge k, ICommandSink sink)
     {
-        if (Tier < 2) return;
+        if (!Plan.SubHunt) return;
         ViewActor? sub = null;
         long best = long.MaxValue;
         foreach (ViewActor e in k.Visible)
@@ -836,6 +844,35 @@ internal sealed class ExpeditionTactics : IFactionTactics
         }
     }
 
+    /// <summary>S12: the known enemy building nearest to <paramref name="carrier"/> within <see cref="SortieBuildingCells"/> that is worth a sortie (walls and gates are not);
+    /// aircraft fly over land, so the building need not stand on the coast. Remembered (ghost) buildings are valid targets for an Attack order.</summary>
+    private ViewActor? SortieBuilding(RecruitKnowledge k, ViewActor carrier)
+    {
+        ViewActor? pick = null;
+        long best = long.MaxValue;
+        foreach (ViewActor b in _known)
+        {
+            BuildingType bt = k.Rules.Buildings[b.TypeIndex];
+            if (bt.Wall || bt.Gate || Cheb(b.Cell, carrier.Cell) > SortieBuildingCells) continue;
+            long d = Dist2(b.Cell, carrier.Cell);
+            if (d < best) { best = d; pick = b; }
+        }
+        return pick;
+    }
+
+    /// <summary>S12: true when every aircraft docked in <paramref name="carrier"/> holds full ammunition (own units only; an empty hangar is not full).</summary>
+    internal static bool HangarFull(RecruitKnowledge k, ViewActor carrier)
+    {
+        int n = 0;
+        foreach (ViewActor a in k.Own)
+        {
+            if (a.Kind != ActorKind.Vehicle || a.DockedIn != carrier.Id) continue;
+            if (!a.AmmoFull) return false;
+            n++;
+        }
+        return n > 0;
+    }
+
     private void Carriers(RecruitKnowledge k, ICommandSink sink)
     {
         PlayerView v = k.View;
@@ -848,6 +885,7 @@ internal sealed class ExpeditionTactics : IFactionTactics
             if (docked < slots && carrierFree is null) carrierFree = c;
             ulong key = RecruitKnowledge.KeyOf(c);
             if (docked <= 0 || _hurt.Contains(key) || _withdraw) continue;
+            if (!HangarFull(k, c)) continue;   // S12 (D-156): wait until every docked aircraft has rearmed
             if (_lastSortie.TryGetValue(key, out int last) && tick - last < SortieGapTicks) continue;
             // nearest visible enemy (not air) near the carrier, else the strike building when it is in reach
             ViewActor? foe = null;
@@ -859,6 +897,7 @@ internal sealed class ExpeditionTactics : IFactionTactics
                 long d = Dist2(e.Cell, c.Cell);
                 if (d < best && Cheb(e.Cell, c.Cell) <= SortieCells) { best = d; foe = e; }
             }
+            if (foe is null && Plan.SortieBuildings) foe = SortieBuilding(k, c);
             if (foe is not ViewActor target) continue;
             _lastSortie[key] = tick; Sorties++;
             sink.Issue(CommandKind.Attack, c.Id, ActorKind.Vehicle, default, target.Ref);

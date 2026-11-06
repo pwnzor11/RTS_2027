@@ -264,6 +264,7 @@ public class CommanderTests
         Assert.Contains("You are gruff.", sys);
         Assert.Contains("allin", sys);
         Assert.Contains("You only know what the summary says", sys);
+        Assert.Contains("at most two decisions in a row", sys);   // session 12 posture guide (D-160)
         Assert.Contains("\"focus_cell\"", sys);
     }
 

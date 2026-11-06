@@ -249,7 +249,7 @@ public sealed class SkirmishGame : IDisposable
             teams = t;
         }
 
-        return new SimSetup(settings.SimSeed, map, total, rules.Sim, rules.RulesHash) { AllowDebug = false, Factions = factions, Teams = teams };
+        return new SimSetup(settings.SimSeed, map, total, rules.Sim, rules.RulesHash) { AllowDebug = false, Factions = factions, Teams = teams, LandingMarkers = meta.Landing };   // S12: landing markers are public map data (D-151 (2))
     }
 
     /// <summary>The id a save or replay uses for a generated map: <c>gen:BIOME:SIZE:PLAYERS:SEED</c>.</summary>

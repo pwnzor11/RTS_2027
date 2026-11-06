@@ -1198,3 +1198,23 @@ factions keep unlimited ammo until the owner sees a table. Per-unit ammo is save
 hashes keep).
 **Why:** owner answers D-153 (1) and (5); smallest rules that match Red Alert's behaviour.
 **Status:** assumed — confirm (the shore-touch rule and the rearm-at-building fallback are visible to a player)
+
+### D-158 · 2026-11-06 · Floating-dock art: variant C approved
+**Decision:** The owner picked variant C (twin white float tubes with orange bands, davit crane, telex mast) for exp_anchorage; exp_quay,
+exp_shipyard and exp_drydock were redrawn in the same style (session 12, branch wp/s12-dockart, art reaches GitHub via the owner's PC, D-084).
+**Status:** confirmed (owner, session 12)
+
+### D-159 · 2026-11-06 · The repository is public
+**Decision:** GitHub Actions minutes for the private repo ran out (Windows runners, Free plan). The owner made pwnzor11/RTS_2027 public;
+standard runners are free for public repos. A scan before the switch found no keys or tokens in the code or its history; 18 owner commits
+carry his personal email, which he accepted. Rules unchanged: no secrets or personal data in commits, docs or fixtures.
+**Status:** confirmed (owner, session 12)
+
+### D-160 · 2026-11-06 · Commander prompt: posture guide
+**Decision:** The LLM commander's system prompt gains a posture guide: turtle does not build faster, it holds attacks until the army is
+much larger; use it at most two decisions in a row (to protect a lead or rebuild after a lost fight); when the enemy presses the base,
+prefer balanced + focus army + a focus_cell in the own base; when behind, rebuild with focus army instead of turtling. No rules or AI
+code change.
+**Why:** owner's 32-game strength test (docs/balance/s12_commander.md): a run of 3+ turtle decisions after fighting began appears in 0 of
+16 commander wins and 10 of 16 losses/draws; no strength gain overall.
+**Status:** confirmed (owner asked for it, session 12); effect to be measured by re-running Test 1
