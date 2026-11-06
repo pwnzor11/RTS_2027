@@ -107,8 +107,8 @@ public sealed class M7UiTests
     public void A_dived_ship_is_drawn_semi_transparent()
     {
         var view = new UnitView(new EntityId(0, 0), UnitKind.Vehicle, 0, 4, default, 0, 100);
-        Assert.Equal(1f, UnitVisuals.Alpha(view, false));
-        Assert.Equal(UnitVisuals.SubmergedAlpha, UnitVisuals.Alpha(view, true));
+        Assert.Equal(1f, UnitVisuals.Alpha(view, false, false));
+        Assert.Equal(UnitVisuals.SubmergedAlpha, UnitVisuals.Alpha(view, true, true));
         Assert.InRange(UnitVisuals.SubmergedAlpha, 0.1f, 0.9f);
     }
 
