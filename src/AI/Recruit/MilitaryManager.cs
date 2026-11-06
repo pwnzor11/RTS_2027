@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
+using Rts.Data;
 using Rts.Sim.Core;
 using Rts.Sim.Missions;
 using Rts.Sim.Rules;
@@ -52,7 +53,7 @@ internal sealed class MilitaryManager
     /// <summary>A wave is called off when its health is below (retreat percent + this) percent of its health at launch.</summary>
     public const int GroupRetreatMarginPct = 10;
 
-    private readonly int _threshold;
+    private int _threshold;
 
     /// <summary>M7-10: extra units every army-size trigger waits for (the Expedition has few, dear units and must not trade them freely).</summary>
     public int ThresholdBonus { get; set; }
@@ -97,6 +98,22 @@ internal sealed class MilitaryManager
 
     /// <summary>M5-02: the commander's directive as knob values, set by the AI each decision (<see cref="DirectiveBias.Plain"/> = no directive).</summary>
     public DirectiveBias Bias { get; set; } = DirectiveBias.Plain;
+
+    /// <summary>M8-06 (AI.Attack): every wave goes to this cell until cleared (null = the usual goals). Set by the AI each decision.</summary>
+    public CellCoord? HookAttack { get; set; }
+
+    /// <summary>M8-06 (AI.Defend): while true no new wave launches (the army stays home to defend). Set by the AI each decision.</summary>
+    public bool HookHold { get; set; }
+
+    private bool _hookForce, _hookWaveActive;
+    private CellCoord _hookForceCell, _hookWaveCell;
+
+    /// <summary>M8-06 (AI.Wave): asks for one wave at <paramref name="cell"/>, launched at the next Gather decision with whatever army exists,
+    /// ignoring the strength gate, thresholds, timers, cooldown, home guard and holds once. A request made while a wave is out waits for it to end.</summary>
+    public void RequestWave(CellCoord cell) { _hookForce = true; _hookForceCell = cell; }
+
+    /// <summary>True when hook memory differs from a fresh manager (decides whether a save carries it).</summary>
+    internal bool HookDirty => _hookForce || _hookWaveActive;
 
     /// <summary>M7-10: while true no new wave launches (the Expedition's withdraw: the army stays at the beachhead).</summary>
     public bool Hold { get; set; }
@@ -333,13 +350,16 @@ internal sealed class MilitaryManager
             n = k.Army.Count;
         }
 
+        if (_phase == Phase.Gather) _hookWaveActive = false;   // M8-06: a scripted wave's goal lasts only for that wave
         if (_phase == Phase.Gather)
         {
             // with no scraper left there is no income to rebuild with: whatever is left goes out as soon as there are a few units
             bool desperate = (k.Harvesters.Count == 0 || Broke) && n >= DesperateWave;   // M4-12: also when income has stalled
-            int guard = Bias.HomeGuard;   // M5-02: units that stay home (the wave waits for them too)
+            int guard = _hookForce ? 0 : Bias.HomeGuard;   // M5-02 (M8-06: a scripted wave takes everything): units that stay home (the wave waits for them too)
             bool strong = WaveGate.Strong(Options.Respond, OwnValue, EnemyValueSeen, _required, n, tick, _lastWave, Options.AttackRatioPct);   // M4-16 r4: no wave into a clearly bigger army
-            if (tick >= _cooldownUntil && !Hold && (strong || desperate) && (n >= Bias.Wave(_nextThreshold, 2) + guard
+            bool hookWave = _hookForce && n >= 1;   // M8-06: AI.Wave, once
+            if (hookWave) { _hookForce = false; _hookWaveActive = true; _hookWaveCell = _hookForceCell; desperate = true; }
+            if (hookWave || tick >= _cooldownUntil && !Hold && !HookHold && (strong || desperate) && (n >= Bias.Wave(_nextThreshold, 2) + guard
                 || (n >= Bias.Wave(MinWave, 2) + guard && tick - _lastWave >= Bias.Wave(_nextInterval, 600)) || desperate))
             {
                 _roster.Clear(); _squadB.Clear();
@@ -640,6 +660,9 @@ internal sealed class MilitaryManager
         long cx = 0, cy = 0;
         foreach (ViewActor a in k.Army) { cx += a.Position.X; cy += a.Position.Y; }
         var centre = k.Army.Count == 0 ? default : new LeptonCoord((int)(cx / k.Army.Count), (int)(cy / k.Army.Count));
+        // M8-06: scripted wave goal, then AI.Attack: both beat the commander and the usual goals, and (unlike a directive) do not lapse on arrival
+        if (_hookWaveActive) { _lastGoal = _hookWaveCell; return _hookWaveCell; }
+        if (HookAttack is CellCoord ha) { _lastGoal = ha; return ha; }
         // M5-02: the commander's attack point comes first until the army stands near it (or a wave there stalled), then the usual goals
         if (Bias.HasAttackCell && k.Army.Count > 0 && !Avoided(Bias.AttackCell, k.View.Tick)
             && Chebyshev(new CellCoord(centre.X / 256, centre.Y / 256), Bias.AttackCell) > FocusArrivedCells)
@@ -771,6 +794,29 @@ internal sealed class MilitaryManager
         w.Write(_aheadWave);   // M4-16
         w.Write(_launchValue); w.Write(_required);   // M4-16 r4
         w.Write(_eShortVal); w.Write(_eShortBonus); w.Write(_eShortTick); w.Write(_eLongVal); w.Write(_eLongBonus); w.Write(_eLongTick);   // VET-6
+    }
+
+    /// <summary>M8-06: writes the scripted-wave memory (only called when <see cref="HookDirty"/>).</summary>
+    internal void SnapshotHooks(BinaryWriter w)
+    {
+        w.Write(_hookForce); w.Write(_hookWaveActive);
+        AiSnapshot.WriteCell(w, _hookForceCell); AiSnapshot.WriteCell(w, _hookWaveCell);
+    }
+
+    /// <summary>M8-06: reads what <see cref="SnapshotHooks"/> wrote.</summary>
+    internal void RestoreHooks(BinaryReader r)
+    {
+        _hookForce = r.ReadBoolean(); _hookWaveActive = r.ReadBoolean();
+        _hookForceCell = AiSnapshot.ReadCell(r); _hookWaveCell = AiSnapshot.ReadCell(r);
+    }
+
+    /// <summary>M8-06: switches to another tier's profile (AI.SetTier): the wave threshold used for the NEXT reroll and the option flags change;
+    /// the drawn <c>_nextThreshold</c>, phase, roster, gate state and timers are kept.</summary>
+    internal void Retune(DifficultyProfile p, bool keepRetreatFloor, int floor)
+    {
+        _threshold = Math.Max(1, p.AttackThreshold);
+        var o = MilitaryOptions.From(p);
+        Options = keepRetreatFloor ? o with { RetreatPct = Math.Max(o.RetreatPct, floor) } : o;
     }
 
     /// <summary>M3-21: reads what <see cref="Snapshot"/> wrote. Call after Start.</summary>
