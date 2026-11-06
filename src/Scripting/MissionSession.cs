@@ -58,10 +58,14 @@ public sealed class MissionSession
     /// <summary>Loads <c>data/missions/&lt;missionId&gt;</c> under <paramref name="dataDir"/> (the folder holding rules, maps and missions) and builds a new game.</summary>
     /// <exception cref="InvalidDataException">The mission files are invalid.</exception>
     /// <exception cref="RulesException">The rules data is missing or invalid.</exception>
-    public static MissionSession Create(string dataDir, string missionId)
+    /// <param name="dataDir">The folder holding rules, maps and missions.</param>
+    /// <param name="missionId">Folder name under data/missions.</param>
+    /// <param name="adjustDef">Optional hook that returns the mission definition to run (M8-07: the campaign swaps in the computed tech allow-list); null = as loaded.</param>
+    public static MissionSession Create(string dataDir, string missionId, Func<MissionDef, MissionDef>? adjustDef = null)
     {
         string folder = MissionLoader.FolderOf(dataDir, missionId);
         MissionDef def = MissionLoader.Load(folder);
+        if (adjustDef != null) def = adjustDef(def);
         string script = File.ReadAllText(Path.Combine(folder, def.ScriptFile));
         string briefing = File.ReadAllText(Path.Combine(folder, def.BriefingFile));
         RuleSet rules = RulesLoader.Load(Path.Combine(dataDir, "rules"));
