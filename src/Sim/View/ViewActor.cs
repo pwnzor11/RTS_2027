@@ -43,6 +43,13 @@ public readonly record struct ViewActor(
     /// other players' actors, types without ammo, and ghosts.</summary>
     public bool OutOfAmmo { get; init; }
 
+    /// <summary>S12: an own vehicle that holds its full ammunition (types without ammo: always true). Always true for other players' actors, so
+    /// it reveals nothing about them. The Expedition AI launches a carrier only when every docked aircraft is full.</summary>
+    public bool AmmoFull { get; init; } = true;
+
+    /// <summary>S12: for an own aircraft docked in a carrier's hangar, the carrier; <see cref="EntityId.None"/> otherwise and for other players' actors.</summary>
+    public EntityId DockedIn { get; init; }
+
     /// <summary>True for vehicles and infantry.</summary>
     public bool IsMobile => Kind is ActorKind.Vehicle or ActorKind.Infantry;
 }

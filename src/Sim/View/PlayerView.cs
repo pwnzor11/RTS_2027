@@ -2,6 +2,7 @@
 // Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
 using Rts.Sim.Core;
 using Rts.Sim.Missions;
+using Rts.Sim.Naval;
 using Rts.Sim.Rules;
 using Rts.Sim.Vision;
 using Rts.Sim.World;
@@ -337,7 +338,9 @@ public readonly struct PlayerView
                     && (m == MissionKind.None || m == MissionKind.Sleep || m == MissionKind.Guard || m == MissionKind.Stop);
                 dest.Add(new ViewActor(s.Slots.IdOf(i), kind, owner, Relation.Self, type, cell, s.Position[i], s.Health[i],
                     max, m, idle, s.Target[i], false, 1, 1) { Underground = underground, Stealthed = stealthed, Rank = _sim.RankOf(kind, i), Submerged = _sim.IsSubmergedShip(kind, i),
-                    OutOfAmmo = kind == ActorKind.Vehicle && rules.Vehicles[type].Ammo > 0 && _sim.Naval.AmmoLeft[i] <= 0 });
+                    OutOfAmmo = kind == ActorKind.Vehicle && rules.Vehicles[type].Ammo > 0 && _sim.Naval.AmmoLeft[i] <= 0,
+                    AmmoFull = kind != ActorKind.Vehicle || rules.Vehicles[type].Ammo <= 0 || _sim.Naval.AmmoLeft[i] >= rules.Vehicles[type].Ammo,
+                    DockedIn = kind == ActorKind.Vehicle && _sim.Naval.AirState[i] == NavalState.AirDocked && _sim.Naval.HangarOf[i] > 0 ? s.Slots.IdOf(_sim.Naval.HangarOf[i]) : EntityId.None });
             }
             else
             {
