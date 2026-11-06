@@ -60,3 +60,18 @@ Six of the 16 outcomes changed: four losses became wins, two wins became draws (
 The bigger model turtles even more (turtle is 34-71 % of its decisions in its losses and draws, runs of 9-20 in a row) but wins faster
 when it wins (average end tick 11 000 vs 15 700 for its losses). Every loss and draw has a long turtle run, so the posture guide (D-160)
 matters for both models. Next: Test 1b (mini, new prompt), then optionally gpt-5.4 with the new prompt.
+
+## Test 1b (mini, posture guide D-160) — 2026-11-06
+Same 32 games as Test 1 with the new prompt.
+
+| | Test 1 (old prompt) | Test 1b (posture guide) |
+|---|---|---|
+| Start 0 | 11-5-0 | 9-7-0 |
+| Start 1 | 5-9-2 | 8-6-2 |
+| Total | 16-14-2 (53 % decisive) | 17-13-2 (57 % decisive) |
+| Postures chosen | turtle 16 %, balanced 52 %, aggressive 30 % | balanced 94 %, aggressive 5 %, turtle 0 % |
+
+15 of 32 outcomes changed (8 better, 7 worse): noise. Calls 901, errors 0, latency median 0.86 s. The guide removed turtle completely
+but mini now says "balanced" almost every time and rarely presses (aggressive 30 % → 5 %), so it adds little over the built-in AI.
+Reading: with gpt-5.4-mini the commander is reliable flavour (persona lines, sensible targets), not a strength gain; the bigger model
+showed a hint of real gain (Test 3). Next if wanted: gpt-5.4 with the new prompt (16 games).
