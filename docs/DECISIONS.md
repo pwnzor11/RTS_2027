@@ -1098,3 +1098,12 @@ Fast Charging 850) and `harvest_capacity` (Deep Survey +2 on the Skimmer); build
 **Why:** design 07 §6 and 11_m7_plan §3; each choice is the plainest reading and is behind data that no current faction uses.
 Supersedes the "not built: vehicles as passengers" part of D-144 and the "not in skirmish setup yet" part of D-145.
 **Status:** assumed — confirm
+
+### D-148 · 2026-11-05 · Session 11 kickoff: owner answers Q-52..Q-54 and confirms the session-10 assumptions
+**Decision:** the owner took every recommendation from the session-11 briefing. Q-52 (c): leave Left Behind income for now,
+re-measure after M7 and bring a yield table before any change. Q-53 (b): leave the veterancy thresholds; rank 3 stays rare outside
+the Directorate. Q-54: re-measure supply on/off with 64 games per pair; no number change. Confirmed: D-135..D-145 and D-147
+(incl. the D-140 first-building rule, the D-142 Salvo numbers, the D-145 Expedition numbers, no ammo system for sorties). Session 11
+runs unattended except that the Expedition art pilot (Glide Tank, Landing Depot) waits for the owner's approval before any fan-out.
+**Why:** owner's reply to the session-11 briefing ("take all your recommendations; render now for approval; unattended except for the art approval").
+**Status:** confirmed (owner, session 11)
