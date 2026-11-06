@@ -122,7 +122,7 @@ public sealed class CampaignService
         MissionDef def = MissionLoader.Load(MissionLoader.FolderOf(_dataDir, missionId));
         IReadOnlyList<string> allow = AllowListFor(def, progress);
         MissionGame game = MissionGame.Create(rulesDir, missionId, difficulty, d => WithAllowList(d, allow));
-        // M8-03 wires SetDifficulty here (the host's Mission.Difficulty() value); not called yet because the setter does not exist on this branch.
+        game.Host.SetDifficulty(Math.Clamp(difficulty, 1, 5));   // M8-03: the script's Mission.Difficulty(); set before the first Step (OnInit runs on tick 1)
         return new CampaignStart(game, faction, allow, difficulty);
     }
 
