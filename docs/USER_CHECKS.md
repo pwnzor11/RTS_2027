@@ -251,7 +251,7 @@ This plays one AI-vs-AI game where side A is commanded by a language model. It n
 1. In the PowerShell window you will use, set the key for this window only (it is not saved anywhere, and closing the window removes it):
    `$env:OPENAI_API_KEY = "<your key>"`
 2. From the RTS_2027 folder, run (replace `<model>` with any chat model your account has):
-   `dotnet run --project src/Tools -c Release -- ai commander --a skirmisher --b skirmisher --provider openai --model <model> --seed 1 --ticks 30000 --out commander_run`
+   `dotnet run --project src/Tools -c Release -- ai commander --a tiered:3 --b tiered:3 --provider openai --model <model> --seed 1 --ticks 30000 --out commander_run`
    The game waits for each model reply before it goes on, so one game can take several minutes.
 3. Output lands in the `commander_run` folder: `summary.md` (winner, ticks, number of calls, errors), `directives.log` (one line per decision: tick, directive, latency in ms, ok or error) and a `commander_seedN.rtsreplay` replay file.
 4. If the key is missing, the command prints which variable to set and stops without creating the folder.
