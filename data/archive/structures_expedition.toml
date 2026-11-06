@@ -236,14 +236,15 @@ A deep concrete basin with gates at one end, large enough to take in the fleet's
 '''
 unlock = "campaign:TBD"
 
+# DRAFT (lead, session 12) — assumed — confirm (owner reads)
 [[entry]]
 id = "exp_provision_store"
 category = "Structure"
 faction = "expedition"
 title = "Provision Store"
-subtitle = "PENDING owner text"
-field_note = "PENDING owner text"
+subtitle = "Tinned rations from the shipments"
+field_note = "QUARTERMASTER 2 // CRATES STACKED TO THE ROOF. ONE TIN PER HAND, COUNT THE STACKS. TELEX ENDS."
 body = '''
-PENDING owner text
+A tent of sealed crates stacked with tinned rations unloaded from the home shipments, set down anywhere on the beachhead where the fleet has room to eat. The quartermasters can tell from the stacks alone how long it has been since the last tender came in. A full store keeps the crews fed through a bad week, and an empty one is the first thing anyone notices.
 '''
 unlock = "open"
