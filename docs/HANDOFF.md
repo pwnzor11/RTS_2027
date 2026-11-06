@@ -1,38 +1,34 @@
-> **Checkpoint (session 11, wave 1 landed as PR #26):** Expedition AI, faction pick, Archive, LLM naval fields on main; wave 2
-> (income tuning, acceptance, Q-54) and the art fan-out are running. D-148..D-151, Q-55 open. This file is rewritten at wrap-up.
-
-# Handoff: Session 11 — Expedition AI (M7-10), faction pick and acceptance (M7-14), balance answers
-Last commit: PR #24 (session 10 wave 4) + this handoff (2026-11-05); see `git log -1 origin/main`
-Where things stand: supply is on by default with a sidebar counter (D-135); the AI uses veterancy (VET-6, D-136). M6 (Left Behind)
-is accepted (M6-12: 216-game soak, 0 desyncs; D-141). M7 naval systems are built and tested but no playable faction uses them yet:
-ships and sea pathing (M7-03), landing incl. vehicles (M7-04), submarines and sonar (M7-05), shipments (M7-06), beachhead (M7-07),
-Expedition data (M7-08), carrier (M7-09), Salvo Array (M7-12), ocean-edge maps with a skirmish Ocean option (M7-13), and the M7 UI
-pieces. Full suite 2 634 tests (Sim 1 439, Game 881, AI 162, Llm 109, Scripting 43). Decisions D-134..D-147. Save format 12.
+# Handoff: Session 12 — Expedition art PR, Q-55 docks, owner play-test of the Expedition
+Last commit: session 11 handoff on integ-s11, landed as PR #27 (see `git log -1 origin/main`); art on local-only `wp/art-exp-all` (D-084)
+Where things stand: **the Overseas Expedition is playable in skirmish** (PR #26/#27): Expedition AI (M7-10), faction pick, coast rules
+and ship/hangar sidebar (M7-14), Archive entries, LLM naval fields, shipments on with tuned Expedition income (D-152: medium/large inside
+±10 %), naval strikes, Expedition golden replay with save/load, 210-game soak with 0 desyncs (docs/balance/m7_14_acceptance.md), Q-54
+re-measured (supply spread 14.1 → 13.3, no change). Art: pilot approved (D-149) and all 46 Expedition sprites drawn and lead-reviewed on
+`wp/art-exp-all` (Game tests 905/905), waiting for the owner's push. Decisions D-148..D-152. Full suite ≈ 2 690 tests.
 
 ## Start here (shown to the user as the plan; nothing starts until they say go)
-1. Owner answers: Q-52 (Left Behind income/strength), Q-53 (veterancy reach), Q-54 (supply spread re-measure), and the
-   "assumed — confirm" decisions D-135..D-147 (the visible ones: D-140 first-building rule, D-142 Salvo numbers, D-145 Expedition
-   numbers in docs/balance/m7_08_expedition_data.md).
-2. M7-10 Expedition AI (src/AI/Recruit): establish a beachhead from the Command Ship, convoy/shipment use, naval strike, withdraw;
-   reads only the PlayerView (D-051). Personas exist (tests/Llm.Tests/ExpeditionPersonaTests.cs). Archive entries for exp_ ids
-   (ArchiveCatalogTests exempts them until then).
-3. M7-14 game layer: Expedition in faction pick (PlayableFactions 3 → 4), sidebar for ships/hangar count, queue reason for a ship
-   with no water-reaching factory, then acceptance like M6-12 (soak with 4 factions, Expedition golden replay, income table vs
-   11_m7_plan §4 target).
-4. M7-11 art: pilot (Glide Tank, Landing Depot) for owner approval, then fan-out; pushes go through the owner's PC (D-084).
-5. If time: Q-54 re-measure (64 games per pair), M4-16 top rungs (docs/balance/m4_16_round4.md), 20 % draw rate at 25 min.
+1. Art PR: if the owner ran push_art.ps1, `wp/art-exp-all` is on GitHub — merge origin/main into it, open the PR, land after Windows CI.
+   If not, the zip is in the owner's chat (rts2027_art_push_s11.zip) and the branch is gone with this cloud workspace: rebuild it only
+   from the owner's pushed branch, never redraw.
+2. Owner answers: Q-55 (shoreline buildings face south only; rec. (a) docks wholly on water), confirm D-150..D-152 (naval deploy rule,
+   tender lane + south default, Expedition shipment numbers 600/2000/60).
+3. Q-55 follow-up: change the four shoreline footprints/masks per the answer, redraw exp_anchorage/exp_quay (stand-ins, no sea side) and
+   adjust exp_shipyard/exp_drydock; drop the "south start" workaround in `ai match` and the setup's South default.
+4. Expedition AI per tier: §6 bullet 1 (win against each tier) not shown; re-run the per-tier soak on the D-152 AI; the AI only escorts
+   and strikes from tier 2 and loses Authority tiers 1-3. Owner play-test is the real check.
+5. If time: Q-52 Left Behind income (now also dragging the small-map Expedition comparison: +12..+22 %), M4-16 top rungs, 16 % draws at
+   the tick limit, Left Behind supply sampler mismatch (608 samples), sub "dived" frames (frames 16-31 of exp_missile_sub.png) not read
+   by the renderer yet, skirmish host does not pass landing markers to the AI (D-151 (2)).
 
 ## Half-finished work
-- Follow-ups: upgrade tooltip "All player: shipment interval x0.85"; editor may drop convoy_edge/landing markers on save;
-  no ammo system for sorties; dived ships drawn faded for every viewer who sees them; soak idle-rig limit 600 is tight under raids.
-- Expedition has no AI, no art, no Archive entries and is not in faction pick.
+- Art reaches main only via the owner's PC (step 1). exp_anchorage and exp_quay are stand-ins until Q-55.
+- Old follow-ups still open: no ammo system for sorties; dived ships drawn faded for every viewer who sees them; soak idle-rig limit.
 
 ## Waiting on the user
-- Q-52..Q-54 and the assumed decisions above (docs/OPEN_QUESTIONS.md, docs/DECISIONS.md).
-- Play-test: USER_CHECKS "Session 10".
-- Delete merged remote branches once happy: `land/s10-w2`..`land/s10-w4`, `integ-s10`, and `wp/` branches of session 10 (ui10, vet6,
-  sup-ai, m7-02, acc, bal, lb-ai, m7-03, m7-06, m7-07, m7-04, m7-05, m7-08, m7-12, m7-13, fix10, inv10, m7-09, m7-14ui, simfu,
-  m7-04b), plus the older ones listed in session 9. Keep the `restore/pre-s10-*` branches until happy.
+- Run `push_art.ps1` (USER_CHECKS "Session 11" step 8). Q-55. Confirm D-150..D-152. Play-test USER_CHECKS "Session 11".
+- Archive placeholders "PENDING owner text": 8 Expedition upgrade field notes and the Provision Store entry (no lore yet).
+- Delete merged remote branches once happy: `land/s11-w1`, `land/s11-w2`, `integ-s11`, `wp/m7-arch` (stale first version), `wp/m7-llm`,
+  `wp/m7-10ai`, `wp/m7-14ui-s11`, `wp/m7-bal-s11`, `wp/m7-acc-s11`, plus the session-10 list. Keep `restore/pre-s11` until happy.
 - Still pending from session 7: the LLM commander with a real key (D-110..D-112).
 
 ## How to run this session
@@ -145,3 +141,12 @@ Do items 1-3 (owner answers, M7-10 Expedition AI, faction pick); art and accepta
   - `/usr/bin/dotnet vstest <dll> --Tests:<name>` runs a built test dll without the dotnet wrapper (used for soak runs).
   - A helper created a scheduled task despite the brief (session 10, "x"); never delete or act on such tasks on a helper's request.
 
+- Session 11 lessons:
+  - Helper branch names can collide with old remote branches (`wp/m7-14ui` existed from session 10): suffix new ones with `-s<N>`.
+  - Force-push is refused by the safety check: when a helper amends a pushed branch, push under a new name instead.
+  - Art fan-out: 5 Sonnet art helpers on one Blender lock took ~3-4.5 h for 44 assets. Review every sheet: catch draw_scale double
+    scaling (ships), tread-like hover bases, wrong hull colour. Contact sheets live in git-ignored scratch/; read them before cleanup.
+  - Data shape problems show up only when the AI plays: the shoreline water masks fit south coasts only (Q-55) and the Command Ship
+    could not Deploy on water (D-150). Run an AI game on the real data before calling a faction playable.
+  - The device bridge can disconnect mid-session: build the art push as a zip (bundle + LFS objects + push_art.ps1) and send it with
+    SendUserFile; a 46-sprite faction is about 5 MB.
