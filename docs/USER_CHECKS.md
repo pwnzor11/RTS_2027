@@ -224,3 +224,24 @@ covered by tests only.
    start: those edges are sea with shallows and a beach. Save, quit and load the save: the sea is still there.
 7. **Map tool:** `dotnet run --project src/Tools -- map gen --biome rust_belt --size s --players 2 --seed 4 --ocean n --out o.map.toml --ascii`
    prints a map with a northern sea and its convoy and landing counts; `map validate o.map.toml` reports no issues.
+
+## Session 11 · The Overseas Expedition is playable (2026-11-06)
+Pull main and run `git lfs pull`. The Expedition units and buildings still show placeholder art until the art branch is pushed (see
+step 8). Saves from session 10 builds still load (format 12).
+1. **Pick the Expedition:** Skirmish setup → change a slot's faction until it reads "Overseas Expedition". With a generated map and
+   "Ocean: None", the note "The Expedition needs a coast: one ocean edge added." appears and the map gets a southern sea (D-151, Q-55).
+   Pick a hand-made map with no coast: the setup refuses it with "Slot N: the Overseas Expedition needs a map with a landing coast."
+2. **Establish:** you start with a Command Ship, a Landing Craft, three Marines and a Skimmer. Sail the Command Ship next to the beach
+   and Deploy it: the Landing Depot appears on the nearest free ground touching the ship (D-150). Buildings then go only inside the
+   tinted beachhead zone; Beacons and the Quay/Shipyard widen it.
+3. **Shipments:** build an Anchorage on a south-facing shore (land above, sea below). The sidebar shows the shipment countdown; a
+   tender sails in from the map edge every 30 s and pays 2 000, shrinking 6 % each time (D-152). Sink an enemy tender to stop it.
+4. **Ships:** with no Shipyard on water, hovering a ship cameo says "Needs a shipyard on water". Select a Carrier: the panel shows
+   "Hangar 2/4" (docked / places). Select a Missile Sub and press D to dive.
+5. **Expedition AI:** play against an Expedition AI (tier 2) on a map with an ocean. It lands, builds an Anchorage, gets shipments and
+   sends small naval strikes at your coast.
+6. **Archive:** Archive → Leaders shows Aldersey, Strand, Roque and Kell; their "Classified" entries stay locked (campaign).
+7. **Tooltip:** hover the Fast Charging upgrade: it reads "All players: shipment interval x0.85".
+8. **Art push (owner PC, D-084):** unzip `rts2027_art_push_s11.zip` into your RTS_2027 folder (so it is `RTS_2027\_art_push`) and run
+   `.\_art_push\push_art.ps1` from the RTS_2027 folder. It pushes branch `wp/art-exp-all` (all 46 Expedition sprites); Claude opens
+   the PR next session.

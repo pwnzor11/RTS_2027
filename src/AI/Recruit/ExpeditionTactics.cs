@@ -37,17 +37,17 @@ internal sealed class ExpeditionTactics : IFactionTactics
     /// <summary>A repaired ship rejoins at this health percent.</summary>
     public const int RepairDonePct = 90;   // (tune) M7-10
     /// <summary>Smallest ship group that goes on a strike.</summary>
-    public const int StrikeMin = 2;   // (tune) M7-10
+    public const int StrikeMin = 1;   // (tune) M7-10
     /// <summary>Ships kept at home out of strikes: none below 3 ships, 1 from 3, 2 from 5.</summary>
-    public const int ReserveFrom3 = 1, ReserveFrom5 = 2;   // (tune) M7-10
+    public const int ReserveFrom3 = 1, ReserveFrom5 = 2, ReserveMin = 4;   // (tune) M7-10
     /// <summary>Fleet size wanted (ships alive and queued) by profile tier (1-2, 3, 4-5).</summary>
-    public const int FleetLow = 2, FleetMid = 3, FleetTop = 4;   // (tune) M7-10
+    public const int FleetLow = 3, FleetMid = 4, FleetTop = 5;   // (tune) M7-10
     /// <summary>Own land and air units that must stand before the first ship is bought.</summary>
-    public const int ArmyBeforeShips = 3;   // (tune) M7-10
+    public const int ArmyBeforeShips = 2;   // (tune) M7-10
     /// <summary>Own units (all kinds) before a Mender is bought.</summary>
     public const int ArmyBeforeMender = 4;   // (tune) M7-10
     /// <summary>Armed land vehicles that must stand before the Quay, Shipyard and Flight Deck are started (the money goes to Glide Tanks first).</summary>
-    public const int TanksBeforeNavy = 2;   // (tune) M7-10
+    public const int TanksBeforeNavy = 1;   // (tune) M7-10
 
     /// <summary>Ticks to the next shipment at which the escorts take station.</summary>
     public const int EscortEtaTicks = 1500;   // (tune) M7-10
@@ -114,7 +114,7 @@ internal sealed class ExpeditionTactics : IFactionTactics
     // convoy / fleet memory (keys only, never sim state)
     private readonly HashSet<ulong> _escort = new(), _hurt = new();
     private int _lastConvoyTick = -100000;
-    private bool _strikeSet;
+    private bool _strikeSet, _probe;
     private CellCoord _strikeCell, _strikeBuilding;
     private int _strikeSince;
     private readonly Dictionary<ulong, int> _lastSortie = new(), _deckRally = new();
@@ -560,7 +560,7 @@ internal sealed class ExpeditionTactics : IFactionTactics
             if (_hurt.Contains(key) || _escort.Contains(key) || IsCarrier(rules, s)) continue;
             _pool.Add(s);
         }
-        int reserve = _pool.Count >= 5 ? ReserveFrom5 : _pool.Count >= 3 ? ReserveFrom3 : 0;
+        int reserve = _pool.Count >= 5 ? ReserveFrom5 : _pool.Count >= ReserveMin ? ReserveFrom3 : 0;
         _group.Clear(); _free.Clear();
         for (int i = 0; i < _pool.Count; i++) (i < reserve ? _free : _group).Add(_pool[i]);
         foreach (ViewActor s in k.Fleet) if (IsCarrier(rules, s) && !_hurt.Contains(RecruitKnowledge.KeyOf(s))) _free.Add(s);   // carriers stay behind their sorties
@@ -569,6 +569,7 @@ internal sealed class ExpeditionTactics : IFactionTactics
             if (s.Idle && Cheb(s.Cell, hw) > 6) MoveShip(k, sink, s, hw);
 
         SubHunt(k, sink);
+        Debug = $"fleet {k.Fleet.Count} pool {_pool.Count} group {_group.Count} escort {_escort.Count} hurt {_hurt.Count} withdraw {_withdraw} strike {_strikeSet}/{_probe} strikes {Strikes} withdrawals {Withdrawals}";
         if (_withdraw || _group.Count < StrikeMin)
         {
             _strikeSet = false;
@@ -690,8 +691,11 @@ internal sealed class ExpeditionTactics : IFactionTactics
         // keep the target while it is known and the review time has not passed
         bool keep = false;
         if (_strikeSet && tick - _strikeSince < StrikeReviewTicks)
-            foreach (ViewActor b in knownEnemy) if (b.Cell == _strikeBuilding) { keep = true; break; }
-        if (!keep && !ChooseStrike(k, knownEnemy, centre, range, deep))
+        {
+            if (_probe) keep = true;
+            else foreach (ViewActor b in knownEnemy) if (b.Cell == _strikeBuilding) { keep = true; break; }
+        }
+        if (!keep && !ChooseStrike(k, knownEnemy, centre, range, deep) && !ChooseProbe(k, centre, deep))
         {
             _strikeSet = false;
             foreach (ViewActor s in _group) if (s.Idle && Cheb(s.Cell, homeSea) > 6) MoveShip(k, sink, s, homeSea);
@@ -700,7 +704,8 @@ internal sealed class ExpeditionTactics : IFactionTactics
 
         // the live building (for an explicit Attack) when it is in view
         ViewActor? target = null;
-        foreach (ViewActor b in knownEnemy) if (b.Cell == _strikeBuilding && !b.Ghost) { target = b; break; }
+        if (!_probe)
+            foreach (ViewActor b in knownEnemy) if (b.Cell == _strikeBuilding && !b.Ghost) { target = b; break; }
         bool focus = _profile is { FocusFire: true };
         foreach (ViewActor s in _group)
         {
@@ -760,8 +765,33 @@ internal sealed class ExpeditionTactics : IFactionTactics
                 }
         }
         if (bestScore == long.MaxValue) return false;
-        if (!_strikeSet || _strikeBuilding != bestBuilding) Strikes++;
+        if (!_strikeSet || _probe || _strikeBuilding != bestBuilding) Strikes++;
+        _probe = false;
         _strikeSet = true; _strikeCell = bestCell; _strikeBuilding = bestBuilding; _strikeSince = v.Tick;
+        return true;
+    }
+
+    /// <summary>S11: no enemy building is known (or none lies within gun range of the group's sea): the group sails to the sea cell nearest to the enemy
+    /// start (<see cref="_front"/>) in its own sea and attack-moves there. It sees what lies on the coast on the way, fires at it, and the next review
+    /// picks a real building target. Only the terrain (public) is read.</summary>
+    private bool ChooseProbe(RecruitKnowledge k, CellCoord centre, bool deep)
+    {
+        PlayerView v = k.View;
+        int region = v.NavalRegionAt(centre, deep);
+        if (region <= 0) return false;
+        long best = long.MaxValue;
+        CellCoord pick = default;
+        for (int y = 0; y < _mapH; y++)
+            for (int x = 0; x < _mapW; x++)
+            {
+                var c = new CellCoord(x, y);
+                if (v.NavalRegionAt(c, deep) != region) continue;
+                long d = Dist2(c, _front);
+                if (d < best) { best = d; pick = c; }
+            }
+        if (best == long.MaxValue) return false;
+        if (!_strikeSet || !_probe || _strikeCell != pick) Strikes++;
+        _probe = true; _strikeSet = true; _strikeCell = pick; _strikeBuilding = default; _strikeSince = v.Tick;
         return true;
     }
 
@@ -882,7 +912,7 @@ internal sealed class ExpeditionTactics : IFactionTactics
         w.Write(_siteSince); w.Write(_deployTick); w.Write(_moveTick); w.Write(_deployTries);
         w.Write(_bad.Count); foreach (CellCoord c in _bad) AiSnapshot.WriteCell(w, c);
         AiSnapshot.WriteKeys(w, _escort); AiSnapshot.WriteKeys(w, _hurt);
-        w.Write(_lastConvoyTick); w.Write(_strikeSet); AiSnapshot.WriteCell(w, _strikeCell); AiSnapshot.WriteCell(w, _strikeBuilding); w.Write(_strikeSince);
+        w.Write(_lastConvoyTick); w.Write(_strikeSet); w.Write(_probe); AiSnapshot.WriteCell(w, _strikeCell); AiSnapshot.WriteCell(w, _strikeBuilding); w.Write(_strikeSince);
         AiSnapshot.WriteMap(w, _lastSortie, (bw, x) => bw.Write(x));
         AiSnapshot.WriteMap(w, _deckRally, (bw, x) => bw.Write(x));
         AiSnapshot.WriteMap(w, _deckCell, (bw, x) => AiSnapshot.WriteCell(bw, x));
@@ -899,7 +929,7 @@ internal sealed class ExpeditionTactics : IFactionTactics
         int n = AiSnapshot.Count(r);
         _bad.Clear(); for (int i = 0; i < n; i++) _bad.Add(AiSnapshot.ReadCell(r));
         AiSnapshot.ReadKeys(r, _escort); AiSnapshot.ReadKeys(r, _hurt);
-        _lastConvoyTick = r.ReadInt32(); _strikeSet = r.ReadBoolean(); _strikeCell = AiSnapshot.ReadCell(r); _strikeBuilding = AiSnapshot.ReadCell(r); _strikeSince = r.ReadInt32();
+        _lastConvoyTick = r.ReadInt32(); _strikeSet = r.ReadBoolean(); _probe = r.ReadBoolean(); _strikeCell = AiSnapshot.ReadCell(r); _strikeBuilding = AiSnapshot.ReadCell(r); _strikeSince = r.ReadInt32();
         AiSnapshot.ReadMap(r, _lastSortie, br => br.ReadInt32());
         AiSnapshot.ReadMap(r, _deckRally, br => br.ReadInt32());
         AiSnapshot.ReadMap(r, _deckCell, br => AiSnapshot.ReadCell(br));

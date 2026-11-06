@@ -29,6 +29,7 @@ internal sealed class ExpeditionRig
                 if (kind is CommandKind.Move or CommandKind.AttackMove && subjectKind == ActorKind.Vehicle && rig.IsShip(subject))
                 {
                     rig.ShipOrders++;
+                    if (kind == CommandKind.AttackMove) { rig.ShipAttackMoves++; rig.FirstAttackMoveTick ??= view.Tick; }
                     if (view.NavalRegionAt(cell) <= 0) rig.ShipOrdersToLand++;
                 }
                 if (kind == CommandKind.Attack) rig.Attacks++;
@@ -48,7 +49,8 @@ internal sealed class ExpeditionRig
     public Simulation Sim { get; }
     public RecruitAi Ai { get; private set; }
     public RecruitAi? Enemy { get; private set; }
-    public int ShipOrders, ShipOrdersToLand, Attacks;
+    public int ShipOrders, ShipOrdersToLand, Attacks, ShipAttackMoves;
+    public int? FirstAttackMoveTick;
     public MapMeta Meta { get; }
 
     public static (MapData Map, MapMeta Meta) OceanMap(ulong seed = 3, MapSize size = MapSize.Medium) =>
