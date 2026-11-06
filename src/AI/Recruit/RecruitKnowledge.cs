@@ -33,6 +33,12 @@ internal sealed class RecruitKnowledge
     public readonly List<ViewActor> Detached = new();
     /// <summary>M4-12: own infantry sitting in a garrison (MissionKind.Garrisoned): never army, never ordered by the wave managers.</summary>
     public readonly List<ViewActor> Garrisoned = new();
+    /// <summary>M7-10: own armed ships. Never army (a wave cannot sail over land); the Expedition tactics steer them. Empty for other factions.</summary>
+    public readonly List<ViewActor> Fleet = new();
+    /// <summary>M7-10: own Expedition vehicles that carry no gun or carry passengers (Command Ship, Landing Craft, Supply Tender, Skyhook ...): not army.</summary>
+    public readonly List<ViewActor> Utility = new();
+    /// <summary>M7-10: own aircraft docked in a carrier's hangar (hidden, cannot be ordered like army). Empty for other factions.</summary>
+    public readonly List<ViewActor> Hangar = new();
     public int[] BuildingCount = Array.Empty<int>();
     public CellCoord Yard;
     public bool HaveYard;
@@ -44,7 +50,7 @@ internal sealed class RecruitKnowledge
         Rules = view.Rules;
         view.CopyOwn(Own);
         view.CopyVisible(Visible);
-        Buildings.Clear(); Army.Clear(); Harvesters.Clear(); Bores.Clear(); Support.Clear(); Garrisoned.Clear(); PackedRigs.Clear(); Salvagers.Clear();
+        Buildings.Clear(); Army.Clear(); Harvesters.Clear(); Bores.Clear(); Support.Clear(); Garrisoned.Clear(); PackedRigs.Clear(); Salvagers.Clear(); Fleet.Clear(); Utility.Clear(); Hangar.Clear();
         if (BuildingCount.Length != Rules.Buildings.Count) BuildingCount = new int[Rules.Buildings.Count];
         Array.Clear(BuildingCount);
         HaveYard = false;
@@ -70,6 +76,15 @@ internal sealed class RecruitKnowledge
                     break;
                 case ActorKind.Vehicle when Rules.Vehicles[a.TypeIndex].AuraRadius > 0:
                     Support.Add(a);
+                    break;
+                case ActorKind.Vehicle when Rules.Vehicles[a.TypeIndex] is { Faction: Faction.Expedition } && (Rules.Vehicles[a.TypeIndex].PrimaryWeapon < 0 || Rules.Vehicles[a.TypeIndex].Passengers > 0):
+                    Utility.Add(a);   // M7-10
+                    break;
+                case ActorKind.Vehicle when Rules.Vehicles[a.TypeIndex] is { Locomotion: Locomotion.Naval }:
+                    Fleet.Add(a);   // M7-10
+                    break;
+                case ActorKind.Vehicle when a.Underground && Rules.Vehicles[a.TypeIndex] is { Locomotion: Locomotion.Air, Faction: Faction.Expedition }:
+                    Hangar.Add(a);   // M7-10
                     break;
                 case ActorKind.Infantry when a.Mission == MissionKind.Garrisoned:
                     Garrisoned.Add(a);

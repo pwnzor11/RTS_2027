@@ -36,6 +36,9 @@ internal abstract class RecruitFaction
     /// <summary>M3-11: the harvester vehicle (replaced when lost).</summary>
     public abstract string HarvesterId { get; }
 
+    /// <summary>M7-10: harvesters wanted on top of the profile's target (a Skimmer carries 5 where a Scraper carries 20, so the Expedition wants more of them).</summary>
+    public virtual int ExtraHarvesters => 0;
+
     /// <summary>M3-11: the refinery / smelter structure (a second one is the expansion).</summary>
     public abstract string RefineryId { get; }
 
@@ -99,6 +102,7 @@ internal abstract class RecruitFaction
     {
         Faction.Directorate => new DirectorateRecruitFaction(),
         Faction.LeftBehind => new LeftBehindRecruitFaction(),   // M6-10
+        Faction.Expedition => new ExpeditionRecruitFaction(),   // M7-10
         _ => new AuthorityRecruitFaction(),
     };
 }

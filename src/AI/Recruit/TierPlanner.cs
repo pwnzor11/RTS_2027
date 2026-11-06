@@ -98,9 +98,9 @@ internal sealed class TierPlanner
         {
             int own = 0, enemy = 0;
             foreach (ViewActor a in k.Own)
-                if (a.IsMobile && !IsHarvester(rules, a)) own += UnitValue(rules, a);
+                if (a.IsMobile && !IsHarvester(rules, a) && !IsUtility(rules, a)) own += UnitValue(rules, a);
             foreach (ViewActor e in k.Visible)
-                if (e.Relation == Relation.Enemy && e.IsMobile && !IsHarvester(rules, e)) enemy += UnitValue(rules, e);
+                if (e.Relation == Relation.Enemy && e.IsMobile && !IsHarvester(rules, e) && !IsUtility(rules, e)) enemy += UnitValue(rules, e);
             int now = k.View.Tick;
             if (enemy >= _enemyPeak || now - _enemyPeakTick > EnemyValueMemoryTicks) { _enemyPeak = enemy; _enemyPeakTick = now; }
             OwnArmyValue = own; EnemyArmyValue = _enemyPeak;
@@ -151,6 +151,10 @@ internal sealed class TierPlanner
         id == _faction.ResearchId || id == _faction.Tier2GateId || id == _faction.Tier3GateId || id == _faction.AirProducerId
         || id == _faction.SuperweaponBuildingId;
 
+    /// <summary>M7-10: an unarmed Expedition vehicle (Command Ship, Landing Craft, Supply Tender ...) is not army value.</summary>
+    private static bool IsUtility(SimRules rules, ViewActor a) =>
+        a.Kind == ActorKind.Vehicle && rules.Vehicles[a.TypeIndex] is { Faction: Faction.Expedition, PrimaryWeapon: < 0 };
+
     private static bool IsHarvester(SimRules rules, ViewActor a) => a.Kind == ActorKind.Vehicle && rules.Vehicles[a.TypeIndex].HarvestCapacity > 0;
 
     /// <summary>Army value of a unit: its cost with the veterancy rank counted (VET-6, same as MilitaryManager). Rank 0 is the plain cost.</summary>
@@ -186,7 +190,7 @@ internal sealed class TierPlanner
     {
         int refinery = SimRules.IndexOf(k.Rules.Buildings, _faction.RefineryId, b => b.Id);
         bool expanded = (_p.ExpansionTick > 0 || Bias.Expand) && refinery >= 0 && k.BuildingCount[refinery] >= 2;
-        return _p.HarvesterTarget + (expanded ? 1 : 0);
+        return _p.HarvesterTarget + _faction.ExtraHarvesters + (expanded ? 1 : 0);
     }
 
     /// <summary>The harvester vehicle type to build now, or -1 (flag off, enough alive / queued).</summary>

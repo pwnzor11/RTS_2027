@@ -87,11 +87,11 @@ public sealed class M7ContractTests
     }
 
     [Fact]
-    public void ShippedGameToml_HasTheShipmentsBlock_Disabled()
+    public void ShippedGameToml_HasTheShipmentsBlock_Enabled()
     {
         ShipmentRules s = RulesLoader.Load(RulesLocator.FindRulesDir(AppContext.BaseDirectory)!).Sim.Shipments;
-        Assert.False(s.Enabled);
-        Assert.Equal(ShipmentRules.Default with { Enabled = false, TenderType = "exp_supply_tender" }, s);   // M7-08 names the convoy ship
+        Assert.True(s.Enabled);   // M7-10: switched on (only games with an exp_anchorage dock are affected)
+        Assert.Equal(ShipmentRules.Default with { Enabled = true, TenderType = "exp_supply_tender" }, s);   // M7-08 names the convoy ship
     }
 
     [Fact]

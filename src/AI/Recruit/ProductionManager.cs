@@ -74,7 +74,7 @@ internal sealed class ProductionManager
             if (rules.Buildings[b.TypeIndex].Produces == null) continue;
             ulong key = ((ulong)b.Id.Index << 16) | b.Id.Generation;
             if (!_rallied.Add(key)) continue;
-            sink.Rally(b.Id, Rally);
+            sink.Rally(b.Id, _tactics?.RallyFor(k, b) ?? Rally);
         }
 
         // M3-11: a lost harvester is replaced before anything else is bought (flag ReplaceHarvesters). While the money for it is short the
@@ -109,6 +109,7 @@ internal sealed class ProductionManager
         Func<int, int> cost)
     {
         if (k.Queue(cat).Items.Count > 0) return;
+        if (cat == ProductionCategory.Infantry && _tactics != null && _tactics.HoldInfantry(k)) return;   // M7-10
         int type = cat == ProductionCategory.Vehicle ? PeekVehicle(k.Rules) : mix[idx % mix.Length];
         if (_tier != null && !(cat == ProductionCategory.Vehicle && _first)) type = _tier.PickUnit(k, cat, mix, type, _rng!);   // M3-11
         int wanted = cat == ProductionCategory.Vehicle && _tactics != null ? _tactics.WantedVehicle(k) : -1;

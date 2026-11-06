@@ -97,6 +97,10 @@ public sealed record SimSetup(ulong Seed, Map.MapData Map, int PlayerCount, SimR
     public SimLimits Limits { get; init; } = SimLimits.Default;
     public bool AllowDebug { get; init; }
 
+    /// <summary>M7-10: the map's landing markers (public map data, MapMeta.Landing), read-only for the AI through <c>PlayerView.LandingMarkers</c>.
+    /// Not part of the game's identity (not saved, not hashed): the sim never reads it. Empty when the host has no map metadata.</summary>
+    public IReadOnlyList<CellCoord> LandingMarkers { get; init; } = Array.Empty<CellCoord>();
+
     /// <summary>Optional scripting/mission extensions (M2-15, D-061), run in list order from the trigger phase of every Step.
     /// Their state parts are appended after the built-in parts, so they are saved and hashed. One extension instance
     /// serves one Simulation: build a fresh list for each Simulation you construct. Not part of the save header.</summary>
