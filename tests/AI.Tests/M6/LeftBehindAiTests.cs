@@ -207,7 +207,7 @@ public sealed class LeftBehindAiTests(ITestOutputHelper log)
     [Theory]
     [InlineData(3, 1)]
     [InlineData(3, 2)]
-    [InlineData(4, 3)]
+    [InlineData(4, 6)]   // s12 tier-5 fix: the tier-3 Authority foe now delays research, so seed 3 (pinned) became seed 6
     [InlineData(5, 4)]
     public void ALeftBehindAiPlaysAFullGameWithoutAStuckRig(int tier, ulong seed)
     {

@@ -326,7 +326,8 @@ internal sealed class TierPlanner
         bool up = _p.UseUpgrades || Bias.ForceTech;   // M5-02: a tech focus climbs even on a profile without research
         if (((_p.ExpansionTick > 0 && tick >= _p.ExpansionTick) || Bias.Expand) && build.StepsOf(_faction.RefineryId) < 2)
             build.Extend(_faction.RefineryId);
-        bool techArmy = k.Army.Count >= ArmyBeforeTech || Bias.ForceTech;   // s12: no tech spending before there is an army
+        bool armyWait = _faction.Faction != Faction.LeftBehind;   // LeftBehind's supply chain needs the tech structures early (SupplyAiTests)
+        bool techArmy = !armyWait || k.Army.Count >= ArmyBeforeTech || Bias.ForceTech;   // s12: no tech spending before there is an army
         if (up && techArmy && _faction.ResearchId is string research && build.StepsOf(research) < 1)
             build.Extend(research);
         // M4-12: tier climbing on a schedule (flag UseUpgrades): the tier-2 gate, then the tier-3 gate. A lost gate is rebuilt (the build
@@ -343,7 +344,7 @@ internal sealed class TierPlanner
             build.Extend(air);
         if (_p.Superweapons && _faction.SuperweaponBuildingId is string sw && SuperweaponUsable(k.Rules, sw) && lateOk && (k.View.Tier >= 3 || !up)
             && build.StepsOf(sw) < 1) build.Extend(sw);
-        if (!_p.AdaptBuild || k.Army.Count < ArmyBeforeAdapt) return;
+        if (!_p.AdaptBuild || (armyWait && k.Army.Count < ArmyBeforeAdapt)) return;
         if (funds >= FloatingCash)
         {
             if (build.StepsOf(_faction.BarracksId) < 2) build.Extend(_faction.BarracksId);

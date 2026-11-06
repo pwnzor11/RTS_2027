@@ -41,3 +41,33 @@ Reading so far (to be confirmed by cells below):
 Reading: waves, superweapon, scouting and harassment are not the cause. The two capabilities that spend credits on things other than army,
 `use_upgrades` (tier gates, research, airfield) and `adapt_build` (extra production and defence structures when cash piles up), each cost the commissar
 about 4 wins when on. The recruit, which builds nothing but a fixed order, ends with 10 structures against the commissar's 21 (trace, seeds 2/4/6).
+
+## Step 3: combinations (Authority, commissar vs recruit, 16 seeds x 2)
+
+| Variant (commissar) | A / B / draw |
+|---|---|
+| use_upgrades 0 + adapt_build 0 | 19 / 12 / 1 |
+| ... + air 0 | 19 / 12 / 1 (air is never reached) |
+| ... + retreat_health_pct 0 | 20 / 10 / 2 |
+| ... + expansion_tick 1800 | 18 / 12 / 2 |
+| use_upgrades 0 + adapt_build 0, 5 v 4 | 23 / 4 / 5 (base 5 v 4 at 16 seeds: 8 / 20 / 4) |
+| elite use_upgrades 0, 4 v 3 | 15 / 12 / 5 (base 4 v 3: 12 / 14 / 6) |
+
+## Diagnosis: the biggest cause
+
+The tier-5 (and tier-4) loss is the tech and base spending done before there is an army: from 3 minutes the build order adds the research structure and the tier-2 gate
+(`use_upgrades`), and with 1500 cash it adds production and defence structures (`adapt_build`). The commissar has 21 structures at t10000 against the recruit's 10,
+and 4-15 units at the 4800-tick mark against the recruit's 17-24 (seeds 1, 2, 4, 6 traces above). The first wave and the base then fall to the recruit's mass of cheap units.
+Turning both off lifts 5 v 1 from 11 / 20 to 19 / 12 and 5 v 4 from 8 / 20 to 23 / 4 (32 games). Waves, threshold, superweapon, scouting, harassment are not the cause.
+But turning the flags off removes late-game tech for good, so the fix is a condition, not a removal.
+
+## Fix (src/AI/Recruit/TierPlanner.cs, ExtendBuild)
+
+- `ArmyBeforeTech = 30`: with `use_upgrades`, the research structure and the tier-2 gate wait for a 30-unit army (the tier-3 gate already waits for 12 and the tier-2 gate).
+- `ArmyBeforeAdapt = 30`: with `adapt_build`, extra production and defences wait for a 30-unit army.
+- Not applied to LeftBehind (its supply chain needs the tech structures early: `TheAiNeverSitsCappedForMoreThanAMinuteInTheFirstFifteen(LeftBehind, 5)` fails otherwise).
+- The thresholds apply wherever the flags are on (tiers 3-5 for upgrades, tier 5 for adapt), they are not keyed on a tier number. Screens (Authority 5 v 1, 32 games, A / B / draw): 12 units 8 / 14 / 10, 20 units 11 / 14 / 7, 30 units 16 / 14 / 2.
+
+## Step 4: before -> after, 64 games (32 seeds x 2), 30 000 ticks, A / B / draw
+
+See the table in the final report; raw lines are in the commit message of the doc commit.
