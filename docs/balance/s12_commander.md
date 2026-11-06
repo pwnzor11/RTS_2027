@@ -75,3 +75,18 @@ Same 32 games as Test 1 with the new prompt.
 but mini now says "balanced" almost every time and rarely presses (aggressive 30 % → 5 %), so it adds little over the built-in AI.
 Reading: with gpt-5.4-mini the commander is reliable flavour (persona lines, sensible targets), not a strength gain; the bigger model
 showed a hint of real gain (Test 3). Next if wanted: gpt-5.4 with the new prompt (16 games).
+
+## Test 3b (gpt-5.4, posture guide) and summary — 2026-11-06
+Seeds 1-8, both corners (16 games each), commander side wins-losses-draws:
+
+| Run | Model | Prompt | Result | Postures |
+|---|---|---|---|---|
+| Test 1 (seeds 1-8) | gpt-5.4-mini | old | 7-9-0 | turtle 16 %, balanced 52 %, aggressive 30 % (all 32 games) |
+| Test 1b (seeds 1-8) | gpt-5.4-mini | D-160 | 9-5-2 | balanced 94 %, aggressive 5 % |
+| Test 3 | gpt-5.4 | old | 9-5-2 | heavy turtle in losses |
+| Test 3b | gpt-5.4 | D-160 | 6-10-0 | balanced 90 %, aggressive 9 % |
+
+All four sit between 6 and 9 wins of 16, inside the noise of a 16-game cell (about ±12 points). Calls 379, errors 0, latency median
+1.4 s. **Conclusion:** at tier 3 neither model nor prompt makes a measurable difference; the directive levers (posture, focus, mix,
+target, cell) move the built-in AI too little for an LLM to win or lose games with them. The commander is reliable flavour (persona
+voice, chat, sensible targets). Making it a strength lever is a design question (stronger directive effects), not a prompt one.
