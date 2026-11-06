@@ -754,8 +754,6 @@ public static class AiCommands
                 // Slot order (who acts first in a tick) must not ride along with the start corner: by default the
                 // corners trade slots on even seeds ("alt"); "slot" = corner p for slot p; "swap" = corner 1-p.
                 bool swapSlots = startMode == "swap" || (startMode == "alt" && s % 2 == 0);
-                // M7-10: the Expedition always takes the south start (its dock masks need the sea to the south of the shore)
-                if (landing is not null) { int expoSlot = (a.Faction == Faction.Expedition) == aInSlot0 ? 0 : 1; swapSlots = expoSlot == 0; }
                 FileStream? replay = recordDir is null ? null
                     : File.Create(Path.Combine(recordDir, $"{a.FileLabel}_vs_{b.FileLabel}_seed{s}_g{g + 1}.rtsreplay"));
                 AiGameResult r;
