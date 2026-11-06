@@ -123,3 +123,59 @@ units, longer games). Rank-3 reach is uneven between factions: Authority and Lef
 - The draw rate (about 20 %) at 25 min and the swapped-start design mean win rates are of "wins plus half of draws"; counting draws as zero would lower every
   figure and widen the Authority lead.
 - `--trace` was not needed: all metrics come from the sampler. Medians come from per-game rows kept in the TSV files (not committed; reproducible with the commands above).
+
+## Session 11 Q-54 re-measure (supply on vs off, 64 games per pair)
+
+Q-54 answered by D-148: re-measure supply on/off with 64 games per pair; no number changes (report only). Branch `wp/m7-acc-s11` on `integ-s11` (Expedition
+and shipments present in the rules, but the three original factions only). Same method and tool as SUP-6 (above): `BalProbe`, tier-3 AI both sides, medium 96x96, 30000
+ticks, `--first 1 --seeds 32` per pair = seeds 1..32, each played twice with starts and slots swapped = 64 games per pair per setting (run as four chunks of 8 seeds with
+`tools/measure/bal_run.sh`), same `bal_agg.py` columns. "Off" = `[supply] enabled = false` in a copy of `data/`; "On" = unchanged `data/`. Resolution: 128 games per
+faction (pooled over two pairs) = +-4.4 points; 64 games per pair = +-6; a before/after difference of two 128-game cells about +-6.3.
+
+### Per faction (128 games each)
+
+| Faction | Supply | Win % (+-4.4) | Capped, min 5-15 | Games over 10 % capped | Army supply @5 min | Army supply @10 min | Supply bldgs / game | Credits harvested @10 min | Cap @10 min | Used @10 min |
+|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| Authority | off | 58.2 | 57.4 % (would-be) | 101 / 128 | 13.0 | 23 | 0 | 27660 | 20 (would-be) | 25 |
+| Authority | on | 57.4 | 0.1 % | 0 / 128 | 13.0 | 25.0 | 3.82 | 27049 | 50 | 27.0 |
+| Directorate | off | 44.1 | 32.3 % (would-be) | 74 / 128 | 8.0 | 13.0 | 0 | 21927 | 20 (would-be) | 15.0 |
+| Directorate | on | 48.4 | 0.1 % | 1 / 128 | 8.0 | 12.0 | 2.88 | 21663 | 40 | 14.0 |
+| Left Behind | off | 47.7 | 68.6 % (would-be) | 100 / 128 | 21.0 | 33 | 0 | 24220 | 20 (would-be) | 38 |
+| Left Behind | on | 44.1 | 0.7 % | 3 / 128 | 20.0 | 29.5 | 6.54 | 24999 | 70 | 34.0 |
+
+Credits harvested in minutes 8-10 (median): Authority 5977 off / 6397 on; Directorate 4979 / 5552; Left Behind 5333 / 5482.
+Games still running at minute 10 (of 128): Authority 101 off / 108 on, Directorate 108 / 108, Left Behind 93 / 94.
+
+Per pair (64 games each, +-6; win rate of the first-named faction, draws as half):
+
+| Pair | Supply off | Supply on |
+|---|---:|---:|
+| Authority vs Directorate | 49.2 | 43.0 |
+| Authority vs Left Behind | 67.2 | 71.9 |
+| Directorate vs Left Behind | 37.5 | 39.8 |
+
+Mean game length (ticks): Auth-Dir 21880 off / 23201 on; Auth-LB 15565 / 17440; Dir-LB 19596 / 18382.
+
+### Same targets as SUP-6 (13 section 7)
+
+| Target | Result | Verdict |
+|---|---|---|
+| No faction capped more than 10 % of minutes 5-15 | Authority 0.1 %, Directorate 0.1 %, Left Behind 0.7 %; games above 10 %: 0, 1 and 3 of 128 | PASS |
+| Win-rate spread (best minus worst faction) unchanged within 5 points | off: 58.2 - 44.1 = 14.1; on: 57.4 - 44.1 = 13.3; change -0.8 | PASS (inside the 5 points; also inside the noise) |
+
+Reading: with twice the games, supply on does not change any faction's win rate by more than the noise (Authority -0.8, Directorate +4.3, Left Behind -3.6 points, each +-6.3).
+The session-10 reading that the cap is never binding for the tier-3 AI once supply is on holds (worst faction 0.7 % of minutes 5-15). The spread, which was unresolved
+in session 10 (6.3 points change on 64 games), is now 14.1 off / 13.3 on. The overall faction order (Authority > Directorate ~ Left Behind) is the same on and off. The Left Behind army at
+10 minutes is 33 supply off and 29.5 on (session 10: 42 and 26).
+
+### Veterancy (supply on, veterancy on, same runs)
+
+Per game, games still running at the minute; rank 1/2/3 units reached. Minute 10: Authority 4.69/0.73/0.10 (n 108), Directorate 3.06/1.49/0.39 (n 108), Left Behind 4.14/0.37/0.03 (n 94).
+Minute 20: Authority 9.59/1.98/0.32 (n 41), Directorate 6.64/3.30/1.20 (n 44), Left Behind 7.70/1.17/0.13 (n 23). Games with a rank-3 unit by minute 15: Authority 13/74, Directorate 38/79, Left Behind 2/57.
+Veterancy was not switched off in this re-measure (it is a supply measurement); the off-veterancy comparison of VET-7 stands as written above.
+
+### Caveats (Q-54 run)
+
+- Left Behind, supply on: the sampler's supply used/cap disagreed with `Simulation.SupplyUsed/SupplyCap` in 608 samples (session 10: 282-320 over 64 games), Authority and Directorate 0. Same unexplained
+  cause as above; the Left Behind capped-time figure is approximate.
+- "Cap @10 min" with supply off is a computation, not a sim value (as above). Tools build and the four-chunk run were done outside the dotnet lock; the box was shared with the soak, so durations are not comparable with session 10.
