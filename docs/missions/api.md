@@ -102,17 +102,22 @@ Output only. `Dialogue.Say` appends a `MissionDialogue` (speaker, portrait, key,
 
 Locale: `locale = "locale.toml"` in `[mission]` (schema 2) loads `data/missions/<id>/locale.toml`: flat `key = "text"` lines (dotted keys quoted), plus `[voice]` lines `key = "voice/<leader_id>/<key>.ogg"`. An unknown key resolves to `[key]`; bad lines and a missing file are listed in `MissionLocale.Warnings`. The game shows a dialogue line for 120 ticks and honours a camera hint once, and plays a voice file only when it exists under `data/audio`.
 
-### AI hooks (M8-06, file MissionHost.Ai.cs; implemented as flag setters now)
-| Function | Arguments | Returns | Checks | Status |
+### AI hooks (M8-06, file MissionHost.Ai.cs; the AI side is live)
+| Function | Arguments | Returns | Checks | What the AI does |
 |---|---|---|---|---|
-| `AI.Attack(player, zone)` | AI slot, zone | nil | player's role is "ai"; zone known | implemented |
-| `AI.Defend(player, zone)` | AI slot, zone | nil | as above | implemented |
-| `AI.SetTier(player, tier)` | AI slot, tier 1..5 | nil | as above | implemented |
-| `AI.Wave(player, waveId, zone)` | AI slot, id, zone | nil | as above; bumps `WaveSeq` | implemented |
-| `AI.Clear(player)` | AI slot | nil | as above; clears attack, defend, tier, wave id (keeps `WaveSeq`) | implemented |
+| `AI.Attack(player, zone)` | AI slot, zone | nil | player's role is "ai"; zone known | Every wave goes to the zone's centre cell until cleared (staging first, then attack-move to the centre). Unlike an LLM attack focus it does not lapse when the army arrives. |
+| `AI.Defend(player, zone)` | AI slot, zone | nil | as above | The rally / defend point becomes the zone centre (if passable) and no new wave launches: the army stays to defend. Waves already out finish. If `Attack` is also set, `Attack` wins the wave hold (waves go to the attack zone); the rally point still moves. |
+| `AI.SetTier(player, tier)` | AI slot, tier 1..5 | nil | as above | At its next decision the AI (and the driver's decision interval / command delay) use tier n's profile from data/ai/difficulty.toml. Carries over unchanged: all state (build progress, drawn wave trigger, roster, timers, squads, scout route, RNG). Follows the new profile: capability flags (repair, upgrades, scatter, harass, scouting, ...), retreat percent, wave-gate options, the attack threshold used for the NEXT wave trigger. Fixed at AI creation from its own profile: build-order list and supply margin, faction tactics. |
+| `AI.Wave(player, waveId, zone)` | AI slot, id, zone | nil | as above; bumps `WaveSeq` | When `WaveSeq` rises above the last one the AI served, it launches ONE wave with the whole army it has (min 1 unit), ignoring its strength gate, thresholds, timers, retreat cooldown, home guard, `Defend` hold and directive guard, and sends it to the zone centre; then resumes normal rules. The wave id is informational (waves use the army that exists, no composition). A request made while a wave is out waits until it ends; with no army the request stays pending. |
+| `AI.Clear(player)` | AI slot | nil | as above; clears attack, defend, tier, wave id (keeps `WaveSeq`) | Back to normal: own goals, own rally, own profile. A pending scripted wave still launches. |
 
-D-051: these never run AI code inside `Step`. They write `AiHookState` (hashed mission state); the AI reads `MissionHost.AiHookOf(slot)` on
-its next decision, outside Step. M8-06 owns the reader in src/AI and any extra hook kinds (append to the version-2 tail).
+D-051: these never run AI code inside `Step`. They write `AiHookState` (hashed mission state). The game layer adapts it (`Rts.Game.Sandbox.MissionAiHooks`,
+implementing `Rts.AI.IMissionAiHooks`, zones resolved to centre cells) and `AiDriver` reads it once per tick per slot, outside Step, and hands it to
+`RecruitAi` (`IHookableAi`) before each decision. Only the Recruit-framework AI ("recruit"/"tiered") reacts; other AIs ignore hooks.
+**Priority vs LLM directives:** a hook beats a directive where both set the same thing (Attack over the directive's attack cell, Defend over its rally
+cell); all other directive knobs still apply. **Save:** the AI's last served `WaveSeq` and a pending/active scripted wave are in the AI snapshot
+(state version 2, written only once a hook was served; games without hooks save byte-identically). Attack/Defend/Tier are re-read from the mission state
+on the next decision, so a load mid-hook continues identically.
 
 ## Examples
 ```lua
