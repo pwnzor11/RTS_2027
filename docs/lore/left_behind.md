@@ -1,5 +1,15 @@
 # The Left Behind
 
+## Revision (session 12, D-155)
+
+- The Left Behind are hostile to every other faction. They are no longer neutral, and they are not friendly with the Authority.
+- Their grievance is the 1999 refusal of their envoys' request for help (Timeline; The Speakers; the Authority page).
+- Years of infighting between bands (Timeline, 1996-2000). By 2001 the clans are loosely allied under a warlord.
+  Calloway-Ross is that warlord; no new names were added (Q-G).
+- Tone: sympathetic but ruthless. New Caravan Custom sentences on mercy and survival; the Directorate page now reads as hostile.
+- Unchanged: units, structures, upgrades, field notes, places and the leader names.
+- Assumed, owner to confirm: the 1999 date, the warlord role, and the grievance wording.
+
 Status: approved by the owner 2026-11-04 (Q-38)
 
 Entry ids use the prefix `faction_lb_` for faction pages and `lb_` for unit and structure pages. Format per entry:
@@ -14,8 +24,12 @@ Field notes read as caravan chalk-board messages and rig-radio chatter.
 - **Spring 1990.** About four thousand people remain at the Tern Point railhead. The final convoy does not return.
 - **1990-91.** The railhead families strip the stranded trains and build the first crawler-rigs.
 - **1994.** The first caravan crosses the Drift to the dune sea. They are known to nobody and trade with no one.
+- **1996-2000.** The bands fight each other over wrecks, wells and the last of the scrap. No Speaker keeps the peace for long.
 - **1997.** Rig-masters hold the first Gathering at Kettle Flat. They choose a Speaker.
-- **2001.** The Authority and Directorate meet openly. The caravans notice that both are looking at the Glass Coast.
+- **1999.** The Gathering sends envoys to the Authority asking for fuel, water and a list of the names. The Authority refuses by
+  letter. The refusal goes into the ledger as the first debt the Authority will be made to pay.
+- **2001.** The clans are loosely allied under a warlord, the war-captain Jessup Calloway-Ross. The Authority and Directorate
+  meet openly. The caravans notice that both are looking at the Glass Coast, and they have decided the Authority answers first.
 
 ---
 
@@ -52,7 +66,9 @@ unlock: open
 
 A rig is a family, a trade and a town. Rigs are named for what they carry or what they lost: *Second Chance*, *Kettle*,
 *Nobody's Daughter*. Status is how long a rig has stayed afloat and how many strangers it has fed. Work is shared by
-skill, not rank. Disputes are settled at the Gathering, which is held wherever the wind is kindest.
+skill, not rank. Disputes are settled at the Gathering, which is held wherever the wind is kindest. They stopped pretending
+that mercy and survival are the same thing after the first winter on the flats. A rig that cannot keep up is cut loose at
+the next fire, and nobody says goodbye to it.
 
 The caravans keep three habits with great discipline: they bury nobody they have not salvaged from, they never leave
 a wreck without looking inside it, and they never say "goodbye" to someone leaving a rig, only "see you at the next
@@ -65,33 +81,40 @@ unlock: campaign
 
 The caravans have no president. At each Gathering they choose a **Speaker**, who carries messages between rigs and
 holds the ledger of debts. The present Speaker is **Marrow Tindall**, a former railhead telegraphist who still taps
-her thumb in code when she thinks. She is patient, dry and exact, and she has not lost an argument she cared about.
+her thumb in code when she thinks. She is patient, dry and exact, and she has not lost an argument she cared about
+until the Authority's letter came back.
 
 Her war-captain is **Jessup Calloway-Ross**, the rig-master of *Kettle* and the best driver on the Drift. He is loud
-where she is quiet, and the two have not agreed on anything in six years except that the Authority should be asked
-first. The third voice is **Old Ottoline Vane**, the oldest woman on the Drift, who remembers the last train and has never
-told anyone what she saw from the platform.
+where she is quiet. Since the refusal he has bound the rigs into a loose alliance under his own banner, and the Drift has
+started calling him the warlord. The two agreed for six years on one thing, that the Authority should be asked first. The
+Authority said no, and they have not agreed on anything since. The third voice is **Old Ottoline Vane**, the oldest woman
+on the Drift, who remembers the last train and has never told anyone what she saw from the platform.
 
 ### faction_lb_authority
 title: What the Left Behind Think of the Authority
 subtitle: A long memory
 unlock: campaign
 
-The caravans do not hate the Authority; they simply remember the exact day the lists stopped. Some think the order to close the
-road was a mistake. Others think it was arithmetic. Marrow Tindall holds that it makes no difference to the people on the
-platform. When Authority survey cars appear on the dunes, the rigs offer water and a fair price for fuel, and do not offer a name.
+The caravans hate the Authority in the plain way of people who asked and were refused. They remember the exact day the
+lists stopped, and the letter that came back in 1999 when they asked for help. Some think the order to close the road was a
+mistake. Others think it was arithmetic. Marrow Tindall holds that it makes no difference to the people on the platform,
+and she no longer argues it. When Authority survey cars appear on the dunes, the rigs no longer offer water. They take the
+cars and the fuel, and they keep the crews' names on the flag, which is not a kindness.
 
 An Authority officer, Brigadier Wrenfield, is known to the Drift. His brother was among those on the platform in 1990 and has
-not been seen since; the caravans have a name for him, and the Brigadier has not yet asked for it.
+not been seen since; the caravans have a name for him, and the Brigadier has not yet asked for it. The Authority is the
+first enemy the Left Behind will fight, because the refusal was made in its offices.
 
 ### faction_lb_directorate
 title: What the Left Behind Think of the Directorate
 subtitle: Strangers with loudspeakers
 unlock: campaign
 
-The Directorate is a rumour that arrived as a voice. The first Directorate broadcast the caravans heard told them to
+The Directorate is a rumour that arrived as a voice. The Directorate stayed underground while the caravans stayed on the
+dunes, and the caravans have not forgotten who had a roof. The first Directorate broadcast the caravans heard told them to
 register for service. The caravans' reply was to retune the loudspeaker on the *Kettle* and play it back with a slightly
-different wording. They do not fear the Voice, but they do not like what it does to the dunes at night.
+different wording, and then to hunt the next loudspeaker crawler that surfaced in the ash. They do not fear the Voice.
+They do not forgive it either, and they do not like what it does to the dunes at night.
 
 ### lb_scavenger
 title: Scavenger
