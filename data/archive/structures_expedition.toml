@@ -1,0 +1,249 @@
+# Archive entries (S11, M7-10) for the Overseas Expedition structures (yards, depots and defences). Text copied verbatim from docs/lore/expedition.md
+# (owner-approved lore, D-128/D-148). Keys: id, category, faction, title, subtitle, field_note (optional), body, sprite (optional),
+# unlock (open | campaign:<mission> | encounter:<rules id> | research:<upgrade id>).
+# Unit, Structure and Upgrade entries use the rules id as their id; their stats are read live from data/rules.
+
+[[entry]]
+id = "exp_landing_depot"
+category = "Structure"
+faction = "expedition"
+title = "Landing Depot"
+subtitle = "Expedition construction yard"
+field_note = "DEPOT 1 // UNPACK THE COMMAND SHIP. STAKE THE BEACH. HANG THE FLAG. TELEX ENDS."
+body = '''
+When the Command Ship reaches the beach her hull folds open and becomes a base: cranes, a telex room, and a flagpole that
+is raised before the first wall. The depot is only as safe as the beaches it can hold.
+'''
+unlock = "open"
+
+[[entry]]
+id = "exp_beacon"
+category = "Structure"
+faction = "expedition"
+title = "Landing Beacon"
+subtitle = "Forward beachhead marker"
+field_note = "BEACON 2 // LIGHT THE LAMP, CLAIM THE SHORE. IT WILL NOT SURVIVE A NIGHT ALONE. TELEX ENDS."
+body = '''
+A tripod lamp, an aerial and a tent of sealed crates, set down by landing craft or airlift. Wherever it burns the fleet
+can raise buildings, and wherever it goes dark the fleet must carry its own tools.
+'''
+unlock = "open"
+
+[[entry]]
+id = "exp_anchorage"
+category = "Structure"
+faction = "expedition"
+title = "Anchorage"
+subtitle = "Shipment quay"
+field_note = "QUAY 4 // THE FLEET'S ONE LINE HOME. KEEP IT OPEN. TELEX ENDS."
+body = '''
+A concrete pier with a tide gauge, a crane and a telex mast. Every few minutes a convoy of supply tenders arrives with
+parts, rations and the occasional letter. The Commissioner reads the shipment manifest before the Admiral does.
+'''
+unlock = "open"
+
+[[entry]]
+id = "exp_core_hall"
+category = "Structure"
+faction = "expedition"
+title = "Core Hall"
+subtitle = "Valve-computer research hall"
+field_note = "HALL 3 // THE FLEET'S ONLY MEMORY. DO NOT SWITCH OFF THE COOLING. TELEX ENDS."
+body = '''
+A long room of glass-fronted racks and humming valve banks, kept at the temperature of a cellar. Dr. Roque sleeps here
+more than he admits, and the staff have learned to walk quietly past his cot.
+'''
+unlock = "campaign:TBD"
+
+[[entry]]
+id = "exp_salvo_array"
+category = "Structure"
+faction = "expedition"
+title = "Salvo Array"
+subtitle = "Fleet missile barrage"
+field_note = "SALVO 1 // TWELVE MISSILES, ONE AIM POINT. IT CANNOT BE RECALLED. TELEX ENDS."
+body = '''
+A pier of launch rails and control gantries that links the fleet's missile ships into a single barrage. The Concordat
+built it as a deterrent for a war that never came to its own coast.
+'''
+unlock = "campaign:TBD"
+
+[[entry]]
+id = "exp_pile_house"
+category = "Structure"
+faction = "expedition"
+title = "Pile House"
+subtitle = "Power station"
+field_note = "PILE 1 // THE LIGHTS STAY ON WHILE THE PILE IS HOT. TELEX ENDS."
+body = '''
+A squat concrete house on wooden piles, sheltering a small reactor and the generators that light the beachhead. Its operators like to say the fleet runs on hope and uranium in roughly equal parts. A Pile House must stand on firm ground, and the first engineers ashore always chose its site before the walls went up.
+'''
+unlock = "open"
+
+[[entry]]
+id = "exp_dredge_works"
+category = "Structure"
+faction = "expedition"
+title = "Dredge Works"
+subtitle = "Ash refinery"
+field_note = "DREDGE 3 // FEED IT ASH, GET FUEL AND GREY CAKE. THE SMELL IS YOUR OWN FAULT. TELEX ENDS."
+body = '''
+A low, clanking refinery that takes the grey ash scooped by skimmers and separates out the fuel and the heavy metals. The works smell of sulphur and burnt tea, and its foremen read the colour of the sludge like a weather report. Its output is the fleet's only steady income, which is why the Commissioner visits the sheds more often than she admits.
+'''
+unlock = "open"
+
+[[entry]]
+id = "exp_tank_farm"
+category = "Structure"
+faction = "expedition"
+title = "Tank Farm"
+subtitle = "Fuel storage"
+field_note = "TANK 1 // FULL TANKS, EMPTY WORRIES. KEEP THE FARM AWAY FROM THE FIRE. TELEX ENDS."
+body = '''
+A row of painted cylinders behind a berm of sandbags, storing the refined fuel that every vehicle, boat and aircraft in the fleet depends on. Its tanks are numbered in the order they were bought, and the oldest are known by the names of the crews who first filled them. A Tank Farm is a fine target, so its guards are chosen for patience and for a reluctance to smoke.
+'''
+unlock = "open"
+
+[[entry]]
+id = "exp_billet"
+category = "Structure"
+faction = "expedition"
+title = "Billet"
+subtitle = "Crew barracks"
+field_note = "BILLET 2 // BEDS, BOOTS, SOUP AT SIX. NO ONE SLEEPS ON THE RAMP. TELEX ENDS."
+body = '''
+A low prefabricated hut with bunks for two platoons, a stove that smokes and a noticeboard covered in letters from home. The Billet is where the infantry recover between landings and where new drafts learn the rules of the beach. Officers are discouraged from calling after lights out, which only makes the sergeants more nervous about what they are hiding.
+'''
+unlock = "open"
+
+[[entry]]
+id = "exp_hover_yard"
+category = "Structure"
+faction = "expedition"
+title = "Hover Yard"
+subtitle = "Hovercraft factory"
+field_note = "YARD 1 // SKIRTS, FANS, HULLS. ONE SKIMMER A SHIFT IF THE FANS HOLD. TELEX ENDS."
+body = '''
+A wide shed with a sloping slipway and a gantry for lifting skirts into place, where the fleet's hovercraft are built and repaired. The yard's workers are the most cheerful in the fleet and the least patient with anyone who calls a skimmer a boat. Each new hull leaves with a painted ribbon of home colours, and the foremen insist every one is a little faster than the last.
+'''
+unlock = "open"
+
+[[entry]]
+id = "exp_quay"
+category = "Structure"
+faction = "expedition"
+title = "Quay"
+subtitle = "Small naval yard"
+field_note = "QUAY 2 // SMALL HULLS ONLY. WATER MUST TOUCH THE SLIP. TELEX ENDS."
+body = '''
+A short concrete wharf with a slipway, a crane and a small workshop for launches and tenders. It can only be built where the sea meets the land, and it is the first naval building most commanders ask for. The Quay turns out patrol boats and small craft quickly and cheaply. Anything larger must wait for a Shipyard raised along the same shore.
+'''
+unlock = "open"
+
+[[entry]]
+id = "exp_plotting_room"
+category = "Structure"
+faction = "expedition"
+title = "Plotting Room"
+subtitle = "Radar and designation centre"
+field_note = "PLOT 4 // SCREENS ON, TARGETS MARKED, SPOTTERS CALLED. TELEX ENDS."
+body = '''
+A windowless room of chart tables, radar scopes and a teleprinter that never stops, where the fleet's targets are plotted and assigned. Its officers are quiet, precise and thoroughly unpopular with the gunners, who resent being told when to fire. The Plotting Room is the gate to the second tier of the fleet's technology, and the first building the enemy learns to look for.
+'''
+unlock = "campaign:TBD"
+
+[[entry]]
+id = "exp_shipyard"
+category = "Structure"
+faction = "expedition"
+title = "Shipyard"
+subtitle = "Warship yard"
+field_note = "YARD 2 // DESTROYERS, SUBMARINES, THE GREAT GUNS. WATER ON ONE SIDE, ALWAYS. TELEX ENDS."
+body = '''
+A tall covered slipway with a travelling crane and a gantry wide enough for a destroyer's hull. Here the fleet's warships are laid down, launched and fitted out under engineers who remember the last generation of warships fondly. The foreman keeps a photograph of every hull that has left his slipway, in a drawer, because he does not like to look at them.
+'''
+unlock = "campaign:TBD"
+
+[[entry]]
+id = "exp_flight_deck"
+category = "Structure"
+faction = "expedition"
+title = "Flight Deck"
+subtitle = "Airfield and pads"
+field_note = "DECK 2 // THREE PADS, ONE RUNWAY, NO SPARE SPACE. CALL THEM IN. TELEX ENDS."
+body = '''
+A level concrete apron with painted landing pads, a fuel line and a control tower no taller than a lighthouse. Here the air arm's jets, gunships and scouts are prepared between sorties. The ground crews take pride in turning an aircraft around in minutes, and they resent the Admiral's habit of asking why it took five. Pilots say their goodbyes here too.
+'''
+unlock = "campaign:TBD"
+
+[[entry]]
+id = "exp_gun_battery"
+category = "Structure"
+faction = "expedition"
+title = "Gun Battery"
+subtitle = "Coastal artillery"
+field_note = "BATTERY 2 // TWO GUNS, ONE CLEAR FIELD OF FIRE, NO TIME TO SLEEP. TELEX ENDS."
+body = '''
+A pair of heavy guns in concrete emplacements, sited to cover the beach and the approach channel. The gunners are proud of their accuracy and suspicious of anyone who calls the guns obsolete. A Gun Battery is the best answer the fleet has to ships that come too close, and the reason the Concordat insisted on these emplacements before anything else. Its crew rarely leaves.
+'''
+unlock = "campaign:TBD"
+
+[[entry]]
+id = "exp_picket"
+category = "Structure"
+faction = "expedition"
+title = "Sonar Picket"
+subtitle = "Submarine detection post"
+field_note = "PICKET 1 // LISTEN FOR THE HUM. THE SEA IS NOT EMPTY. TELEX ENDS."
+body = '''
+A buoy anchored offshore with a sonar array, a cable to the shore and a crew of two who take turns listening. The Picket hears submerged boats far beyond the range of any ship's own equipment, and sends their positions home in a flat, unsentimental voice. Its operators are the most anxious people in the fleet, which is why they are also the most reliable.
+'''
+unlock = "campaign:TBD"
+
+[[entry]]
+id = "exp_sam"
+category = "Structure"
+faction = "expedition"
+title = "SAM Mount"
+subtitle = "Surface-to-air battery"
+field_note = "SAM 3 // ONE MISSILE, ONE TARGET, ONE CHANCE. DO NOT GIVE IT AWAY. TELEX ENDS."
+body = '''
+A small launch pad of guided missiles on a rotating mount, sited wherever the air arm expects trouble. Its crews live by a simple rule: never fire until the enemy has been seen twice. The SAM Mount answers the fleet's losses over the shore, and it has saved more aircraft than any other single building in the beachhead, though nobody has ever counted them.
+'''
+unlock = "campaign:TBD"
+
+[[entry]]
+id = "exp_pillbox"
+category = "Structure"
+faction = "expedition"
+title = "Seawall Emplacement"
+subtitle = "Cheap shore turret"
+field_note = "WALL 1 // ONE GUN, ONE SANDBAG, ONE SHIFT. TELEX ENDS."
+body = '''
+A low concrete turret set into the seawall, with a single machine gun and a view along the beach. It costs little, goes up quickly, and can hold a line long enough for the rest of the fleet to arrive. The Seawall Emplacement is the first defence most beachheads receive and the last one anyone thinks to repaint. Its gunners are usually young and always cold.
+'''
+unlock = "open"
+
+[[entry]]
+id = "exp_drydock"
+category = "Structure"
+faction = "expedition"
+title = "Drydock"
+subtitle = "Heavy ship repair"
+field_note = "DOCK 1 // ONE HULL AT A TIME, AND EVERY HULL IS PRECIOUS. TELEX ENDS."
+body = '''
+A deep concrete basin with gates at one end, large enough to take in the fleet's heaviest ships and pump out the water beneath them. Inside, welders and fitters work through the night on hulls scarred by ocean and shore. Drydock crews take pride in returning a cruiser to service within weeks, though the wait is always longer than the Admiral would like.
+'''
+unlock = "campaign:TBD"
+
+[[entry]]
+id = "exp_provision_store"
+category = "Structure"
+faction = "expedition"
+title = "Provision Store"
+subtitle = "PENDING owner text"
+field_note = "PENDING owner text"
+body = '''
+PENDING owner text
+'''
+unlock = "open"
