@@ -47,3 +47,16 @@ Reliability: 893 calls, 893 directives, 0 errors; latency median 0.9 s, 95th per
 about 15 points would not show at 32 games). Pattern worth acting on: a run of 3+ "turtle" decisions after the commander has started
 fighting appears in 0 of its 16 wins and in 10 of its 16 losses/draws (cause or symptom unclear: it may turtle because it is already
 losing). The candidate prompt change from seed 4 (turtle is for holding a lead; defend at home with a cell instead) is the next test.
+
+## Test 3 (bigger model, old prompt) — 2026-11-06
+Same as Test 1 but `--model gpt-5.4`, seeds 1-8, both corners (16 games); compared with the same 16 games of Test 1 (gpt-5.4-mini).
+
+| Model | Wins-losses-draws | Decisive win rate | Latency median / p95 | Calls, errors |
+|---|---|---:|---|---|
+| gpt-5.4-mini | 7-9-0 | 44 % | 0.9 s / 1.2 s | 405, 0 |
+| gpt-5.4 | 9-5-2 | 64 % | 1.5 s / 1.9 s | 387, 0 |
+
+Six of the 16 outcomes changed: four losses became wins, two wins became draws (tick limit). Suggestive, not conclusive at 16 games.
+The bigger model turtles even more (turtle is 34-71 % of its decisions in its losses and draws, runs of 9-20 in a row) but wins faster
+when it wins (average end tick 11 000 vs 15 700 for its losses). Every loss and draw has a long turtle run, so the posture guide (D-160)
+matters for both models. Next: Test 1b (mini, new prompt), then optionally gpt-5.4 with the new prompt.
