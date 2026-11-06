@@ -38,14 +38,21 @@ public sealed class ExpeditionAiTests(ITestOutputHelper log)
     [Fact]
     public void ItBuildsAShipyardAndTwoWarshipsByMinuteFifteenAndOrdersNavalAction()
     {
-        var rig = new ExpeditionRig(Tier(2));
-        rig.Run(18000);
-        int ships = 0;
-        for (int i = 1; i < rig.Sim.Units.Capacity; i++)
-            if (rig.Sim.Units.Slots.IsIndexAlive(i) && rig.Sim.Units.Player[i] == 0 && TestWorld.Rules.Sim.Vehicles[rig.Sim.Units.TypeIndex[i]] is { Locomotion: Locomotion.Naval, PrimaryWeapon: >= 0 }) ships++;
-        log.WriteLine($"shipyards {rig.Count(0, "exp_shipyard")} warships alive {ships} strikes {rig.Ai.FleetStrikes} escorts {rig.Ai.EscortOrders} ship orders {rig.ShipOrders} :: {rig.Ai.ExpeditionDebug}");
-        Assert.True(rig.Count(0, "exp_shipyard") >= 1 || rig.Sim.Players.Defeated[0], "a Shipyard was built");
-        Assert.True(ships >= 2 || rig.Ai.FleetStrikes + rig.Ai.EscortOrders >= 1);
+        // no enemy AI: the fleet's own economy and orders are measured (peaks, so a later loss does not hide them)
+        var rig = new ExpeditionRig(Tier(2), enemyAi: false);
+        int peakShips = 0, peakYards = 0;
+        rig.Run(18000, () =>
+        {
+            if (rig.Sim.Tick % 100 != 0) return false;
+            int ships = 0;
+            for (int i = 1; i < rig.Sim.Units.Capacity; i++)
+                if (rig.Sim.Units.Slots.IsIndexAlive(i) && rig.Sim.Units.Player[i] == 0 && TestWorld.Rules.Sim.Vehicles[rig.Sim.Units.TypeIndex[i]] is { Locomotion: Locomotion.Naval, PrimaryWeapon: >= 0 }) ships++;
+            peakShips = Math.Max(peakShips, ships); peakYards = Math.Max(peakYards, rig.Count(0, "exp_shipyard"));
+            return false;
+        });
+        log.WriteLine($"peak shipyards {peakYards} peak warships {peakShips} strikes {rig.Ai.FleetStrikes} escorts {rig.Ai.EscortOrders} ship orders {rig.ShipOrders} :: {rig.Ai.ExpeditionDebug}");
+        Assert.True(peakYards >= 1, "a Shipyard was built");
+        Assert.True(peakShips >= 2, "two warships sailed");
         Assert.True(rig.Ai.FleetStrikes + rig.Ai.EscortOrders >= 1, "at least one naval strike or escort order");
     }
 
