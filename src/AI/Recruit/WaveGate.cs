@@ -24,12 +24,28 @@ internal static class WaveGate
     public const int EscalateCap = 12000;   // (tune) M4-16 r4
 
     /// <summary>True when a wave may leave now. Always true without the gate (tier 1: <paramref name="respond"/> false).</summary>
-    public static bool Strong(bool respond, int ownValue, int enemySeen, int required, int units, int tick, int lastWave)
+    public static bool Strong(bool respond, int ownValue, int enemySeen, int required, int units, int tick, int lastWave, int ratioPct = 0)
     {
         if (!respond) return true;
         if (units >= GateCapUnits || tick - lastWave >= GateWaitTicks) return true;
-        bool notOutgunned = enemySeen <= 0 || (long)ownValue * 100 >= (long)enemySeen * GatePct;
+        bool notOutgunned = enemySeen <= 0 || (long)ownValue * 100 >= (long)enemySeen * (ratioPct > 0 ? ratioPct : GatePct);
         return notOutgunned && ownValue >= required;
+    }
+
+    /// <summary>M4-16 s12: default percent for the predicted-loss retreat: the wave turns back when its local value is below this percent of the visible enemy value near it.</summary>
+    public const int RetreatRatioDefaultPct = 70;   // (tune) s12
+
+    /// <summary>M4-16 s12: the local fight is only judged when the visible enemy value near the wave is at least this many credits (no retreat from a skirmish with a scout).</summary>
+    public const int RetreatMinEnemy = 600;   // (tune) s12
+
+    /// <summary>M4-16 s12: cells around the wave centre that count as "the local fight".</summary>
+    public const int LocalRadiusCells = 9;   // (tune) s12
+
+    /// <summary>True when the local fight is clearly lost: <paramref name="own"/> credits against <paramref name="enemy"/> credits near the wave. Integer maths.</summary>
+    public static bool Losing(int own, int enemy, int ratioPct)
+    {
+        if (enemy < RetreatMinEnemy) return false;
+        return (long)own * 100 < (long)enemy * (ratioPct > 0 ? ratioPct : RetreatRatioDefaultPct);
     }
 
     /// <summary>The army value the next wave waits for after a failed wave launched with <paramref name="launchValue"/>.</summary>

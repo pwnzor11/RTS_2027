@@ -193,6 +193,17 @@ public sealed class LeftBehindDataTests
     }
 
     [Fact]
+    public void LeftBehindStorage_IsNotBelowTheOtherFactionsEarlyStorage()
+    {
+        // D-157 (M7-19): the Left Behind has no separate silo in its early order, so the Yard alone must hold what the other factions'
+        // refinery plus first silo hold, or the harvesters' deliveries overflow (credits lost) and early income falls 15-45 percent short.
+        SimRules s = LoadReal();
+        int yard = s.Buildings.Single(b => b.Id == "lb_yard").Storage;
+        int auth = s.Buildings.Single(b => b.Id == "auth_refinery").Storage + s.Buildings.Single(b => b.Id == "auth_silo").Storage;
+        Assert.True(yard >= auth, $"lb_yard storage {yard} < Authority refinery + silo {auth}");
+    }
+
+    [Fact]
     public void RigsPack_AndThePackedRigUnpacks()
     {
         SimRules s = LoadReal();

@@ -53,6 +53,15 @@ public sealed record DifficultyProfile(
     /// <summary>Add production structures when cash piles up and defences when the enemy is armour-heavy.</summary>
     public bool AdaptBuild { get; init; }
 
+    /// <summary>M4-16 s12: a wave leaves only when our army value is at least this percent of the biggest enemy army seen lately (0 = the default 100).</summary>
+    public int AttackRatioPct { get; init; }
+
+    /// <summary>M4-16 s12: a wave on the march turns back when the visible local fight is clearly lost (integer value comparison).</summary>
+    public bool PredictedRetreat { get; init; }
+
+    /// <summary>M4-16 s12: with <see cref="PredictedRetreat"/>, the wave turns back when its value is below this percent of the visible enemy value near it (0 = 70).</summary>
+    public int RetreatRatioPct { get; init; }
+
     /// <summary>Harvesters wanted alive (1..6). With <see cref="ReplaceHarvesters"/> missing ones are built; expansion adds one.</summary>
     public int HarvesterTarget { get; init; } = 1;
 }

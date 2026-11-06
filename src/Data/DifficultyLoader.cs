@@ -25,6 +25,8 @@ public static class DifficultyLoader
         // M3-11 capability flags and numbers (optional)
         "repair", "replace_harvesters", "respond_to_attacks", "scatter", "enemy_aware_mix", "two_pronged", "counter_defences",
         "air", "scouting", "harass", "use_upgrades", "adapt_build", "harvester_target",
+        // M4-16 s12 ladder
+        "attack_ratio_pct", "predicted_retreat", "retreat_ratio_pct",
     ];
 
     /// <summary>The data/ai/difficulty.toml beside the nearest data/rules above <paramref name="startDirectory"/>, or null.</summary>
@@ -104,6 +106,9 @@ public static class DifficultyLoader
         int? upgrades = Opt(table, id, "use_upgrades", 0, 1, 0, file, problems);
         int? adapt = Opt(table, id, "adapt_build", 0, 1, 0, file, problems);
         int? harvesters = Opt(table, id, "harvester_target", 1, 6, 1, file, problems);
+        int? ratio = Opt(table, id, "attack_ratio_pct", 0, 1000, 0, file, problems);
+        int? predicted = Opt(table, id, "predicted_retreat", 0, 1, 0, file, problems);
+        int? retreatRatio = Opt(table, id, "retreat_ratio_pct", 0, 1000, 0, file, problems);
 
         if (problems.Count > before) return null;
         return new DifficultyProfile(id, tier!.Value, interval!.Value, delay!.Value, infoAge!.Value, threshold!.Value,
@@ -113,6 +118,7 @@ public static class DifficultyLoader
             EnemyAwareMix = aware == 1, TwoPronged = twoPronged == 1, CounterDefences = counter == 1, Air = air == 1,
             ActiveScouting = scouting == 1, Harass = harass == 1, UseUpgrades = upgrades == 1, AdaptBuild = adapt == 1,
             HarvesterTarget = harvesters!.Value,
+            AttackRatioPct = ratio!.Value, PredictedRetreat = predicted == 1, RetreatRatioPct = retreatRatio!.Value,
         };
     }
 

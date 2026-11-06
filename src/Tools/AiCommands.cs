@@ -21,9 +21,9 @@ public static class AiCommands
 {
     private const int DefaultTier = 2;
     private const string Usage =
-        "usage: ai match --a <aiId>[:<tier>] --b <aiId>[:<tier>] [--seeds 8] [--ticks 6000] [--size 64] [--out file.md] [--record-dir dir] [--flat 1] [--starts alt|slot|swap] [--start economy|army] [--first 1] [--faction-a authority|directorate|left_behind|expedition] [--faction-b ...]\n" +
+        "usage: ai match --a <aiId>[:<tier>] --b <aiId>[:<tier>] [--seeds 8] [--ticks 30000] [--size 64] [--out file.md] [--record-dir dir] [--flat 1] [--starts alt|slot|swap] [--start economy|army] [--first 1] [--faction-a authority|directorate|left_behind|expedition] [--faction-b ...]\n" +
         "         example (M7-10): ai match --a tiered:2 --b tiered:2 --faction-a expedition --faction-b authority --size 96 --seeds 4   (an Expedition side gets ocean north+south edges; 96 = medium)\n" +
-        "       ai matrix --ai <aiId> [--faction authority|directorate] [--tiers 1-5] [--seeds 4] [--ticks 6000] [--size 64] [--out file.md]\n" +
+        "       ai matrix --ai <aiId> [--faction authority|directorate] [--tiers 1-5] [--seeds 4] [--ticks 30000] [--size 64] [--out file.md]\n" +
         "       ai matrix --players 2-4 [--ai tiered] [--tiers 3] [--faction authority|directorate|mixed] [--biome rust_belt|glass_coast|mountains|ash_plains|all] [--size s|m|l|<cells>] [--seeds 2] [--ticks 25000] [--out file.md]\n" +
         "       ai timeline --a <aiId>[:<tier>] --b <aiId>[:<tier>] [--seed 1] [--ticks 30000] [--size 64] [--swap 0|1] [--trace N] [--dump 1]\n" +
         "       ai commander --a <aiId>[:<tier>] --b <aiId>[:<tier>] --provider openai|anthropic [--model <name>] [--seed 1] [--ticks 30000] [--size 64] [--swap 0|1] [--out dir]   (side A = LLM commander; key from OPENAI_API_KEY or ANTHROPIC_API_KEY)\n" +
@@ -921,9 +921,9 @@ public static class AiCommands
 
     private static bool Common(Dictionary<string, string> flags, int defaultSeeds, out int seeds, out int ticks, out int size, out string? error)
     {
-        error = null; ticks = 6000; size = 64;
+        error = null; ticks = 30000; size = 64;
         if (!Int(flags, "seeds", defaultSeeds, out seeds) || seeds < 1) { error = "--seeds must be a positive integer"; return false; }
-        if (!Int(flags, "ticks", 6000, out ticks) || ticks < 1) { error = "--ticks must be a positive integer"; return false; }
+        if (!Int(flags, "ticks", 30000, out ticks) || ticks < 1) { error = "--ticks must be a positive integer"; return false; }
         if (!Int(flags, "size", 64, out size) || size < MapGenerator.MinSize || size > Rts.Sim.Core.SimConstants.MaxMapCells)
         { error = $"--size must be {MapGenerator.MinSize}..{Rts.Sim.Core.SimConstants.MaxMapCells}"; return false; }
         return true;

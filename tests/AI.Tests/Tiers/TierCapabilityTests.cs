@@ -35,7 +35,7 @@ public class TierCapabilityTests(ITestOutputHelper log)
         Assert.False(Tier(1).Repair || Tier(1).ReplaceHarvesters || Tier(1).RespondToAttacks || Tier(1).Scatter);
         Assert.True(Tier(2).Repair && Tier(2).ReplaceHarvesters && Tier(2).RespondToAttacks && Tier(2).Scatter);
         Assert.True(Tier(3).EnemyAwareMix && Tier(3).TwoPronged && Tier(3).CounterDefences && Tier(3).ExpansionTick > 0);
-        Assert.True(Tier(4).Air && Tier(4).Superweapons && Tier(4).ActiveScouting && Tier(4).Harass && Tier(4).UseUpgrades && Tier(4).RetreatHealthPct > 0);
+        Assert.True(Tier(4).Air && Tier(4).Superweapons && Tier(4).ActiveScouting && Tier(4).Harass && Tier(4).UseUpgrades && Tier(4).PredictedRetreat);
         Assert.True(Tier(5).MultiFront && Tier(5).AdaptBuild && Tier(5).DecisionIntervalTicks < Tier(4).DecisionIntervalTicks);
     }
 
@@ -324,7 +324,7 @@ public class TierCapabilityTests(ITestOutputHelper log)
             Assert.Equal(0, rig.Ai.Retreats);
             return rig.Ai.GroupRetreats;
         }
-        Assert.True(Retreats(Tier(4), out _) >= 1);
+        Assert.True(Retreats(Tier(4) with { RetreatHealthPct = 25 }, out _) >= 1);   // s12: the shipped elite profile has the health retreat off (measured), the capability is still gated on the flag
         Assert.Equal(0, Retreats(Tier(3), out _));
     }
 
@@ -333,7 +333,7 @@ public class TierCapabilityTests(ITestOutputHelper log)
     [InlineData(Faction.Directorate)]
     public void EliteSendsAUnitThatIsNearlyDeadHome(Faction f)
     {
-        var rig = new TierRig(f, Tier(4) with { ActiveScouting = false, Harass = false }, r =>
+        var rig = new TierRig(f, Tier(4) with { ActiveScouting = false, Harass = false, RetreatHealthPct = 25 }, r =>
         {
             CellCoord yard = r.Yard(0);
             r.SpawnHarvester(0, f, yard);
