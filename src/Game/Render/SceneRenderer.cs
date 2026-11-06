@@ -35,6 +35,7 @@ public sealed class SceneRenderer : IDisposable
     private readonly List<StormDraw> _storms = new();
     private bool _disposed;
     private readonly HashSet<EntityId> _submerged = new();                    // M7-14: dived ships the viewer can see
+    private readonly HashSet<EntityId> _ownOrAllied = new();                  // M7-17: dived ships the viewer owns or is allied with
     private readonly List<ViewActor> _subScratch = new();
     private readonly List<ViewActor> _rankScratch = new();                 // VET-5: veterancy ranks and promotion flashes
     private readonly List<(RankKey Key, int Rank)> _ranks = new();
@@ -157,13 +158,18 @@ public sealed class SceneRenderer : IDisposable
             t => frame.Rules is { } r && (uint)t < (uint)r.Buildings.Count && r.Buildings[t].Wall);
 
         _submerged.Clear();
+        _ownOrAllied.Clear();
         if (frame.Sim is not null)
         {
             PlayerView sees = frame.Sim.ViewFor((byte)Math.Max(0, snapshot.Viewer));
             sees.CopyOwn(_subScratch, includeBuildings: false);
-            foreach (ViewActor a in _subScratch) if (a.Submerged) _submerged.Add(a.Id);
+            foreach (ViewActor a in _subScratch) if (a.Submerged) { _submerged.Add(a.Id); _ownOrAllied.Add(a.Id); }
             sees.CopyVisible(_subScratch);   // allies, and enemies found by sonar
-            foreach (ViewActor a in _subScratch) if (a.Submerged && a.Kind == ActorKind.Vehicle) _submerged.Add(a.Id);
+            foreach (ViewActor a in _subScratch) if (a.Submerged && a.Kind == ActorKind.Vehicle)
+            {
+                _submerged.Add(a.Id);
+                if (a.Relation == Relation.Ally) _ownOrAllied.Add(a.Id);   // M7-17: only own and allied dived ships are faded
+            }
         }
 
         _items.Clear();
@@ -192,7 +198,8 @@ public sealed class SceneRenderer : IDisposable
                 RenderUnit unit = frame.Units[item.Index];
                 bool selected = frame.Selection.Contains(UnitKey.Of(unit.View));
                 UnitRenderer.Draw(batch, pixel, _sprites, _painter, _memory, snapshot.Tick, frame.Rules, unit,
-                    selected, camera, unit.View.Kind == UnitKind.Vehicle && _submerged.Contains(unit.View.Id));
+                    selected, camera, unit.View.Kind == UnitKind.Vehicle && _submerged.Contains(unit.View.Id),
+                    _ownOrAllied.Contains(unit.View.Id));
             }
         }
     }
