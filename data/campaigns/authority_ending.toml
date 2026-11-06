@@ -1,0 +1,17 @@
+# Authority ending slides (plan 3.8, M8-02 sample). Two placeholder slides; the real text is the owner's (D-086).
+# condition (optional): { kind = "completed", mission = "<id>" } or { kind = "difficulty_min", mission = "<id>", value = 1..5 }
+[ending]
+faction = "authority"
+
+[[slides]]
+image = "ending_authority_01"
+key = "ending.authority.01"
+
+[[slides]]
+image = "ending_authority_02"
+key = "ending.authority.02"
+condition = { kind = "completed", mission = "auth_01" }
+
+[text]
+"ending.authority.01" = "PENDING owner text"
+"ending.authority.02" = "PENDING owner text"

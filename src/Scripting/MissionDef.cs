@@ -57,6 +57,27 @@ public sealed class MissionDef
     /// <summary>Pre-placed actors in file order.</summary>
     public required IReadOnlyList<MissionActor> Actors { get; init; }
 
+    /// <summary>Mission file schema: 1 (pilot, auth_01) or 2 (M8, plan 3.5).</summary>
+    public int Schema { get; init; } = 1;
+
+    /// <summary>Schema 2: campaign act 1..4 (0 = none).</summary>
+    public int Act { get; init; }
+
+    /// <summary>Schema 2: faction id ("authority", "directorate", "left_behind", "expedition"), or empty.</summary>
+    public string Faction { get; init; } = "";
+
+    /// <summary>Schema 2: successor mission ids (empty = last mission; two entries = a choice point, plan 3.6).</summary>
+    public IReadOnlyList<string> Next { get; init; } = Array.Empty<string>();
+
+    /// <summary>Schema 2: locale file beside mission.toml (text by key, plan 3.2), or empty.</summary>
+    public string LocaleFile { get; init; } = "";
+
+    /// <summary>Schema 2: type ids always available in this mission (<c>[starts_with] tech</c>); the allow-list is these plus the campaign tech set (plan 3.3).</summary>
+    public IReadOnlyList<string> StartsWith { get; init; } = Array.Empty<string>();
+
+    /// <summary>Schema 2: type ids added to the campaign tech set when the mission is won (<c>[unlocks_on_win] tech</c>).</summary>
+    public IReadOnlyList<string> UnlocksOnWin { get; init; } = Array.Empty<string>();
+
     /// <summary>The zone with this name, or null.</summary>
     public MissionZone? ZoneNamed(string name)
     {

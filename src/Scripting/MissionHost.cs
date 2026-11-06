@@ -27,7 +27,13 @@ public sealed partial class MissionHost : ISimExtension
     public const int CallbackInstructionLimit = 200_000;
     private const int MaxMessages = 32;
     private const int MaxErrors = 50;
-    private const int FormatVersion = 1;
+    /// <summary>
+    /// Part format written when any M8-02 field (timers, hidden objectives, trigger extras, AI hook flags) is non-default. A game that
+    /// uses none of them still writes <see cref="BaseFormatVersion"/> with the exact bytes of M3-M7, so schema-1 missions keep their
+    /// hashes. Both versions are read. New fields are appended to the version-2 tail only.
+    /// </summary>
+    private const int FormatVersion = 2;
+    private const int BaseFormatVersion = 1;
 
     private readonly string _source;
     private readonly Script _script;
@@ -50,6 +56,13 @@ public sealed partial class MissionHost : ISimExtension
     private readonly List<MissionMessage> _messages = new();
     private readonly bool[] _restricted;
     private readonly SortedSet<string>[] _granted;
+    // M8-02 additions (the version-2 tail of the part).
+    private readonly List<MissionTimer> _timers = new();
+    private readonly AiHookState[] _aiHooks;
+
+    // Outputs for the game layer: not state, not hashed, not saved (plan 3.7).
+    private readonly List<MissionDialogue> _dialogue = new();
+    private MissionCameraHint _cameraHint = default;
 
     // Diagnostics, not state.
     private readonly List<string> _errors = new();
@@ -69,6 +82,8 @@ public sealed partial class MissionHost : ISimExtension
         int n = def.Players.Count;
         _restricted = new bool[n];
         _granted = new SortedSet<string>[n];
+        _aiHooks = new AiHookState[n];
+        Array.Fill(_aiHooks, AiHookState.None);
         for (int p = 0; p < n; p++)
         {
             _granted[p] = new SortedSet<string>(StringComparer.Ordinal);
@@ -100,6 +115,21 @@ public sealed partial class MissionHost : ISimExtension
 
     /// <summary>The most recent Media.Message lines (oldest first, at most 32).</summary>
     public IReadOnlyList<MissionMessage> Messages => _messages;
+
+    /// <summary>Visible countdown timers (M8-03), in creation order.</summary>
+    public IReadOnlyList<MissionTimer> Timers => _timers;
+
+    /// <summary>Dialogue lines queued by the script, oldest first (output, M8-05).</summary>
+    public IReadOnlyList<MissionDialogue> Dialogue => _dialogue;
+
+    /// <summary>The latest camera hint (output, M8-05); <see cref="MissionCameraHint.Seq"/> 0 = none.</summary>
+    public MissionCameraHint CameraHint => _cameraHint;
+
+    /// <summary>What the script asked the built-in AI of this player to do (D-051: read by the AI on its next decision, never written by it).</summary>
+    public AiHookState AiHookOf(int player) => player >= 0 && player < _aiHooks.Length ? _aiHooks[player] : AiHookState.None;
+
+    /// <summary>The objectives the HUD should list (hidden ones left out).</summary>
+    public IEnumerable<MissionObjective> VisibleObjectives => _objectives.Where(static o => !o.Hidden);
 
     /// <summary>Whether the script has called Mission.Win or Mission.Lose.</summary>
     public MissionOutcome Outcome => _outcome;
@@ -256,7 +286,8 @@ public sealed partial class MissionHost : ISimExtension
 
     internal void WriteState(BinaryWriter w)
     {
-        w.Write(FormatVersion);
+        bool v2 = HasVersion2State();
+        w.Write(v2 ? FormatVersion : BaseFormatVersion);
         w.Write(SourceHash);
         w.Write(_initDone); w.Write(_halted); w.Write((byte)_outcome);
         w.Write(_rng); w.Write(_counter); w.Write(_messageSeq);
@@ -283,11 +314,29 @@ public sealed partial class MissionHost : ISimExtension
 
         DynValue state = _script.Globals.Get("state");
         LuaStateCodec.Write(w, state.Type == DataType.Table ? state.Table : new Table(_script), strict: false);
+
+        if (!v2) return;
+        // ---- version 2 tail (M8-02); append only ----
+        w.Write(_timers.Count);
+        foreach (MissionTimer t in _timers) { w.Write(t.Id); w.Write(t.Text); w.Write(t.EndTick); w.Write(t.Fn); w.Write(t.Paused); }
+        foreach (MissionObjective o in _objectives) w.Write(o.Hidden);          // count known from the objectives above
+        foreach (TriggerRecord t in _triggers) { w.Write(t.B); w.Write(t.Counter); }   // count known from the triggers above
+        foreach (AiHookState h in _aiHooks) { w.Write(h.AttackZone); w.Write(h.DefendZone); w.Write(h.Tier); w.Write(h.WaveSeq); w.Write(h.WaveId); w.Write(h.WaveZone); }
+    }
+
+    private bool HasVersion2State()
+    {
+        if (_timers.Count > 0) return true;
+        foreach (MissionObjective o in _objectives) if (o.Hidden) return true;
+        foreach (TriggerRecord t in _triggers) if (t.B != 0 || t.Counter != 0) return true;
+        foreach (AiHookState h in _aiHooks) if (h != AiHookState.None) return true;
+        return false;
     }
 
     internal void ReadState(BinaryReader r)
     {
-        if (r.ReadInt32() != FormatVersion) throw new InvalidDataException("mission state: unsupported version");
+        int version = r.ReadInt32();
+        if (version != BaseFormatVersion && version != FormatVersion) throw new InvalidDataException("mission state: unsupported version");
         if (r.ReadUInt64() != SourceHash) throw new InvalidDataException("mission state: the save was made with a different mission script");
         _initDone = r.ReadBoolean(); _halted = r.ReadBoolean(); _outcome = (MissionOutcome)r.ReadByte();
         _rng = r.ReadUInt64(); _counter = r.ReadInt32(); _messageSeq = r.ReadInt32();
@@ -320,5 +369,13 @@ public sealed partial class MissionHost : ISimExtension
         }
 
         _script.Globals.Set("state", DynValue.NewTable(LuaStateCodec.Read(r, _script)));
+
+        _timers.Clear();
+        Array.Fill(_aiHooks, AiHookState.None);
+        if (version < FormatVersion) return;
+        for (int n = r.ReadInt32(), i = 0; i < n; i++) _timers.Add(new MissionTimer(r.ReadString(), r.ReadString(), r.ReadInt32(), r.ReadString(), r.ReadBoolean()));
+        for (int i = 0; i < _objectives.Count; i++) _objectives[i] = _objectives[i] with { Hidden = r.ReadBoolean() };
+        foreach (TriggerRecord t in _triggers) { t.B = r.ReadInt32(); t.Counter = r.ReadInt32(); }
+        for (int p = 0; p < _aiHooks.Length; p++) _aiHooks[p] = new AiHookState(r.ReadString(), r.ReadString(), r.ReadInt32(), r.ReadInt32(), r.ReadString(), r.ReadString());
     }
 }
