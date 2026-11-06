@@ -1198,3 +1198,14 @@ factions keep unlimited ammo until the owner sees a table. Per-unit ammo is save
 hashes keep).
 **Why:** owner answers D-153 (1) and (5); smallest rules that match Red Alert's behaviour.
 **Status:** assumed — confirm (the shore-touch rule and the rearm-at-building fallback are visible to a player)
+
+### D-158 · 2026-11-06 · Floating-dock art: variant C approved
+**Decision:** The owner picked variant C (twin white float tubes with orange bands, davit crane, telex mast) for exp_anchorage; exp_quay,
+exp_shipyard and exp_drydock were redrawn in the same style (session 12, branch wp/s12-dockart, art reaches GitHub via the owner's PC, D-084).
+**Status:** confirmed (owner, session 12)
+
+### D-159 · 2026-11-06 · The repository is public
+**Decision:** GitHub Actions minutes for the private repo ran out (Windows runners, Free plan). The owner made pwnzor11/RTS_2027 public;
+standard runners are free for public repos. A scan before the switch found no keys or tokens in the code or its history; 18 owner commits
+carry his personal email, which he accepted. Rules unchanged: no secrets or personal data in commits, docs or fixtures.
+**Status:** confirmed (owner, session 12)
