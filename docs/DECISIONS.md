@@ -1123,3 +1123,15 @@ places it on the nearest buildable footprint that touches the ship's cell; with 
 Command Ship's Deploy did nothing on water. No existing game deploys a ship, so no pinned hash moved.
 **Why:** the Expedition could not establish at all without (2); (1) was planned for M7-14 with the faction.
 **Status:** assumed — confirm (the nearest-footprint rule is visible to a human Expedition player)
+
+### D-151 · 2026-11-05 · M7-10 round 2: tender lane, landing markers in the view, south coast default
+**Decision:** (1) A home-shipment tender launches only from a convoy edge cell whose sea region touches one of the player's docks (the
+old first-edge-cell rule is the fallback); before this a tender could sail in an unconnected ocean and block the lane. No pinned hash
+moved. (2) `SimSetup.LandingMarkers` (not hashed, not saved) and `PlayerView.LandingMarkers` / `CopyConvoyEdge` / `OverlayAt` give the AI
+the map's landing markers (map data a human sees too); the skirmish host does not pass them yet, so the AI falls back to its own coast
+scan there. (3) The Expedition AI refuses depot sites on ashfall (Deploy refuses overlay cells). (4) The shoreline buildings' water masks
+(exp_anchorage, exp_quay, exp_shipyard, exp_drydock) put the sea below the land, so they fit only on south-facing coasts: the skirmish
+setup now adds a South edge (not North) when an Expedition slot needs a coast, and `ai match` puts the Expedition on the south start.
+The real fix is Q-55.
+**Why:** M7-10 round 2 found the Expedition earning nothing on maps with two oceans or ash on the beach.
+**Status:** assumed — confirm ((1)-(3) are fixes; (4) is a stop-gap until Q-55)

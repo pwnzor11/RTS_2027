@@ -5,6 +5,11 @@ file cited after each question. Recommendations are the lead's, from the researc
 
 ## Open
 
+- 🟡 Q-55 Shoreline buildings only face south (D-151): exp_anchorage, exp_quay, exp_shipyard and exp_drydock have a fixed water mask
+  (land on top, sea below), so an Expedition player on a north, east or west coast cannot build a dock, a shipyard or receive shipments.
+  Options: (a) Red Alert style: docks sit wholly on water, touching the shore — any coast works, the four buildings are redrawn as
+  floating docks; (b) each shoreline building gets four facings (placement picks the one that fits; four times the art for these four);
+  (c) keep south-only and make maps always give the Expedition a south coast. Recommendation: (a) — simplest rule, one sprite each.
 - ⚪ Q-49 M8 story questions Q-A..Q-I in docs/design/12_m8_plan.md: answer before M8 starts (not needed for M7).
 
 ## Answered
