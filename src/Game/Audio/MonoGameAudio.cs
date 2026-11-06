@@ -102,6 +102,28 @@ public sealed class MonoGameAudio : IAudio
     }
 
     /// <inheritdoc />
+    public bool HasVoice(string relativePath) => !_broken && File.Exists(Path.Combine(_audioDir, relativePath));
+
+    /// <inheritdoc />
+    public void PlayVoice(string relativePath)
+    {
+        if (_broken || _sfxVolume == 0 || _masterVolume == 0 || !HasVoice(relativePath)) return;
+        try
+        {
+            using FileStream stream = File.OpenRead(Path.Combine(_audioDir, relativePath));
+            SoundEffectInstance voice = SoundEffect.FromStream(stream).CreateInstance();
+            voice.Volume = Math.Clamp(_sfxVolume / 100f * (_masterVolume / 100f), 0f, 1f);
+            voice.Play();
+            _active.Add(voice);
+        }
+        catch (Exception e) when (e is IOException or InvalidOperationException or ArgumentException or NotSupportedException)
+        {
+            // A voice file the backend cannot decode is text-only, not a broken audio device.
+            Console.Error.WriteLine($"audio: cannot play voice {relativePath}: {e.Message}");
+        }
+    }
+
+    /// <inheritdoc />
     public void PlayMusic(string id) => PlayMusic(id, true);
 
     /// <inheritdoc />

@@ -58,15 +58,17 @@ Timers live in `MissionHost.Timers` (shown by the HUD). Both are saved in the ve
 | `Reinforce.Rig(player, edgeCell, destCell)` | Left Behind rig arrives and may deploy | tag | edge cell on the map edge | throws M8-04 |
 | `Actor.CreateGroup({types}, player, cell[, opts])` | opts `{formation="line"\|"column"\|"box"\|"scatter", rank=0..3, tagPrefix="x"}` | list of tags | opts keys validated | throws M8-04 |
 
-### Dialogue, camera, locale (M8-05, file MissionHost.Media.cs; no-ops until M8-05)
+### Dialogue, camera, locale (M8-05, file MissionHost.Media.cs; implemented)
 | Function | Arguments | Returns | Checks | Status |
 |---|---|---|---|---|
-| `Dialogue.Say(speaker, portrait, key[, voice])` | ids; voice = `"voice/<speaker>/<key>.ogg"` (D-154) | nil | ids well-formed; voice path shape | no-op (M8-05) |
-| `Dialogue.Clear()` | none | nil | none | no-op (M8-05) |
-| `Camera.Focus(zoneOrTag, ticks)` | zone name or tag, ticks 1..100000 | nil | target exists | no-op (M8-05) |
-| `Media.MessageKey(key)` | locale key | nil | id well-formed | no-op (M8-05) |
+| `Dialogue.Say(speaker, portrait, key[, voice])` | ids; voice = `"voice/<speaker>/<key>.ogg"` (D-154); without it the locale's voice for the key | nil | ids well-formed; voice path shape | implemented (M8-05) |
+| `Dialogue.Clear()` | none | nil | none | implemented (M8-05) |
+| `Camera.Focus(zoneOrTag, ticks)` | zone name or tag, ticks 1..100000 | nil | target exists | implemented (M8-05) |
+| `Media.MessageKey(key)` | locale key | nil | id well-formed | implemented (M8-05) |
 
-Output only. M8-05 appends `MissionDialogue` records to `MissionHost.Dialogue` and sets `MissionHost.CameraHint`; neither is saved or hashed.
+Output only. `Dialogue.Say` appends a `MissionDialogue` (speaker, portrait, key, resolved text, voice) to `MissionHost.Dialogue`, a FIFO queue of at most `MissionHost.MaxDialogueQueue` (16) lines: a full queue drops the oldest line; `Dialogue.Clear` empties it. `Camera.Focus` sets `MissionHost.CameraHint` (target name, centre cell, `UntilTick`); the latest call wins. Neither is saved or hashed, and the sim never reads them. `Media.MessageKey` is the exception: it appends to the hashed message list, like `Media.Message`, so its text is part of the hash.
+
+Locale: `locale = "locale.toml"` in `[mission]` (schema 2) loads `data/missions/<id>/locale.toml`: flat `key = "text"` lines (dotted keys quoted), plus `[voice]` lines `key = "voice/<leader_id>/<key>.ogg"`. An unknown key resolves to `[key]`; bad lines and a missing file are listed in `MissionLocale.Warnings`. The game shows a dialogue line for 120 ticks and honours a camera hint once, and plays a voice file only when it exists under `data/audio`.
 
 ### AI hooks (M8-06, file MissionHost.Ai.cs; implemented as flag setters now)
 | Function | Arguments | Returns | Checks | Status |

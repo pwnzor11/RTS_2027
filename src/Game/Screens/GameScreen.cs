@@ -428,6 +428,7 @@ public sealed class GameScreen : IScreen
 
         if (_sim is not null) _sim.Advance(t.ElapsedGameTime.Ticks / 10); // ticks are 100 ns; microseconds = ticks / 10
         else _source.Update();
+        if (_mission is not null && _sim is not null && _mission.Advance(_sim.Sim.Tick, _s.Audio) is { } hint) CentreCameraOn(Camera.CentreOf(hint));   // M8-05: camera hint, once
 
         _camera.Clamp(_source.Current.MapWidth, _source.Current.MapHeight, MapViewport());
         Vector2 view = _camera.WorldFromScreen(new Point(MapViewport().Width / 2, MapViewport().Height / 2));   // M3-INT: positional audio
@@ -1023,9 +1024,15 @@ public sealed class GameScreen : IScreen
         }
 
         centre ??= Camera.CentreOf(_sim.Map.StartPositions[SimSnapshotSource.LocalPlayer]);
+        CentreCameraOn(centre.Value);
+    }
+
+    /// <summary>Centres the map view on a world point, clamped to the map (the same move as the start view).</summary>
+    private void CentreCameraOn(Vector2 centre)
+    {
         int mapWidth = _s.Viewport.Width - SidebarLayout.WidthFor(_s.Viewport.Width, Rts.Game.Ui.UiScale.FromBackbuffer(_s.Viewport.Height));
         Vector2 size = new Vector2(Math.Max(1, mapWidth), _s.Viewport.Height) / _camera.Zoom;
-        Vector2 target = centre.Value - size / 2f;
+        Vector2 target = centre - size / 2f;
         _camera.PanScreen((target - _camera.WorldFromScreen(Point.Zero)) * _camera.Zoom);
         _camera.Clamp(_source.Current.MapWidth, _source.Current.MapHeight, new Viewport(0, 0, Math.Max(1, mapWidth), _s.Viewport.Height));
     }
