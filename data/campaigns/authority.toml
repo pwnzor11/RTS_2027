@@ -1,0 +1,8 @@
+# Authority campaign (plan 3.5, M8-02 sample). Missions in play order; the Authority is open from the start (plan 2.4).
+[campaign]
+faction = "authority"
+title_key = "campaign.authority.title"
+ending = "authority_ending"
+
+[[missions]]
+id = "auth_01"

@@ -14,7 +14,8 @@ public sealed partial class MissionHost
 {
     private Table NewApiTable(Script s, string name, params (string Fn, Func<CallbackArguments, DynValue> Body)[] fns)
     {
-        var t = new Table(s);
+        // Several partial files add functions to the same table (Trigger, Objective, Mission, ...): reuse it when it exists.
+        Table t = s.Globals.Get(name) is { Type: DataType.Table } existing ? existing.Table : new Table(s);
         foreach ((string fn, Func<CallbackArguments, DynValue> body) in fns)
         {
             string full = name + "." + fn;
@@ -100,6 +101,12 @@ public sealed partial class MissionHost
                 int n = Int(a, 0, 1, 1_000_000_000);
                 return Num((int)(NextRandom() >> 33) % n);
             }));
+
+        // M8-02 contracts: one partial file per owning package.
+        RegisterObjectivesApi(s);
+        RegisterReinforceApi(s);
+        RegisterMediaApi(s);
+        RegisterAiApi(s);
     }
 
     // ---- argument helpers ----

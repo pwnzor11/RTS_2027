@@ -28,6 +28,15 @@ public static class MissionLoader
     private static MissionDef Parse(TomlTable root, string id)
     {
         TomlTable m = Table(root, "mission");
+        int schema = m.ContainsKey("schema") ? Int(m, "schema") : 1;
+        if (schema is < 1 or > MaxSchema) throw new InvalidDataException($"unsupported mission schema {schema} (this build reads 1 and {MaxSchema})");
+        if (schema == 1)
+        {
+            foreach (string key in SchemaTwoKeys)
+                if (m.ContainsKey(key)) throw new InvalidDataException($"'{key}' needs schema = 2 in [mission]");
+            foreach (string table in new[] { "starts_with", "unlocks_on_win" })
+                if (root.ContainsKey(table)) throw new InvalidDataException($"[{table}] needs schema = 2 in [mission]");
+        }
         var players = new List<MissionPlayer>();
         foreach (object? item in Array(root, "players"))
         {
@@ -71,7 +80,53 @@ public static class MissionLoader
         {
             Id = id, Title = Str(m, "title"), MapFile = Str(m, "map"), ScriptFile = Str(m, "script"), BriefingFile = Str(m, "briefing"),
             Seed = (ulong)Int(m, "seed"), Players = players, Zones = zones, Actors = actors,
+            Schema = schema,
+            Act = schema >= 2 && m.ContainsKey("act") ? IntIn(m, "act", 1, 4) : 0,
+            Faction = schema >= 2 && m.ContainsKey("faction") ? Faction(m) : "",
+            Next = schema >= 2 && m.ContainsKey("next") ? NextIds(m) : System.Array.Empty<string>(),
+            LocaleFile = schema >= 2 && m.ContainsKey("locale") ? Str(m, "locale") : "",
+            StartsWith = schema >= 2 ? TechList(root, "starts_with") : System.Array.Empty<string>(),
+            UnlocksOnWin = schema >= 2 ? TechList(root, "unlocks_on_win") : System.Array.Empty<string>(),
         };
+    }
+
+    /// <summary>The highest mission schema this build reads.</summary>
+    public const int MaxSchema = 2;
+
+    /// <summary>The faction ids a schema-2 mission may name.</summary>
+    public static readonly IReadOnlyList<string> Factions = new[] { "authority", "directorate", "left_behind", "expedition" };
+
+    private static readonly string[] SchemaTwoKeys = { "act", "faction", "next", "locale" };
+
+    private static string Faction(TomlTable m)
+    {
+        string f = Str(m, "faction");
+        return Factions.Contains(f) ? f : throw new InvalidDataException($"faction '{f}' must be one of {string.Join(", ", Factions)}");
+    }
+
+    /// <summary><c>next</c> is one id or a list of one or two ids (two = choice point).</summary>
+    private static IReadOnlyList<string> NextIds(TomlTable m)
+    {
+        object? v = m["next"];
+        if (v is string one) return one.Length > 0 ? new[] { one } : throw new InvalidDataException("'next' must not be empty");
+        if (v is TomlArray a && a.Count is 1 or 2 && a.All(x => x is string { Length: > 0 })) return a.Select(x => (string)x!).ToList();
+        throw new InvalidDataException("'next' must be a mission id or a list of one or two ids");
+    }
+
+    /// <summary><c>[table] tech = [ids]</c>; an absent table or key is an empty list.</summary>
+    private static IReadOnlyList<string> TechList(TomlTable root, string table)
+    {
+        if (!root.TryGetValue(table, out object? o)) return System.Array.Empty<string>();
+        if (o is not TomlTable t) throw new InvalidDataException($"[{table}] must be a table");
+        if (!t.TryGetValue("tech", out object? v)) return System.Array.Empty<string>();
+        if (v is not TomlArray a || !a.All(x => x is string { Length: > 0 })) throw new InvalidDataException($"[{table}] tech must be a list of type ids");
+        return a.Select(x => (string)x!).ToList();
+    }
+
+    private static int IntIn(TomlTable t, string key, int min, int max)
+    {
+        int v = Int(t, key);
+        return v >= min && v <= max ? v : throw new InvalidDataException($"'{key}' must be between {min} and {max}, got {v}");
     }
 
     private static TomlTable Table(TomlTable t, string key) =>
