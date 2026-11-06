@@ -1115,3 +1115,11 @@ M7-11 fan-out. Lead fixes on A before fan-out: rubber hover skirt instead of a t
 and a size close to the Authority tank (+15 % at most).
 **Why:** owner's reply to the pilot contact sheets ("A for both options").
 **Status:** confirmed (owner, session 11); the skirt/scale fixes are the lead's and are shown on the next sheet
+
+### D-150 · 2026-11-05 · Shipments on; a ship that deploys places its building on the nearest buildable footprint
+**Decision:** (1) `[shipments] enabled = true` in data/rules/game.toml (only games with an exp_anchorage dock are affected; no pinned
+hash moved). (2) A naval deployer (the Expedition Command Ship, D-147 item 4) cannot place its building on its own water cell: Deploy
+places it on the nearest buildable footprint that touches the ship's cell; with none, the order is ignored. Found by M7-10: the
+Command Ship's Deploy did nothing on water. No existing game deploys a ship, so no pinned hash moved.
+**Why:** the Expedition could not establish at all without (2); (1) was planned for M7-14 with the faction.
+**Status:** assumed — confirm (the nearest-footprint rule is visible to a human Expedition player)
