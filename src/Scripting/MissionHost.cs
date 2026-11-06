@@ -36,6 +36,8 @@ public sealed partial class MissionHost : ISimExtension
     private const int BaseFormatVersion = 1;
     /// <summary>M8-03: version 2 plus the difficulty tier after the AI hook flags. Written only when the tier is not the default.</summary>
     private const int TierFormatVersion = 3;
+    /// <summary>M8-04: version 3 plus the queued reinforcement arrivals. Written only while an arrival is queued.</summary>
+    private const int ArrivalsFormatVersion = 4;
 
     private readonly string _source;
     private readonly Script _script;
@@ -190,6 +192,8 @@ public sealed partial class MissionHost : ISimExtension
             if (init.Type == DataType.Function) Invoke("OnInit", init);
         }
 
+        RunArrivals(sim);   // M8-04: queued Reinforce.Delayed / Reinforce.Transport work
+
         int count = _triggers.Count;   // triggers added by callbacks start next tick
         for (int i = 0; i < count && !_halted; i++)
         {
@@ -291,9 +295,11 @@ public sealed partial class MissionHost : ISimExtension
 
     internal void WriteState(BinaryWriter w)
     {
-        bool v3 = _difficulty != DefaultDifficulty;
+        // Each version appends to the one before, and each is written only when its state is in use, so older layouts keep their bytes.
+        bool v4 = _arrivals.Count > 0;                          // M8-04 arrivals
+        bool v3 = v4 || _difficulty != DefaultDifficulty;       // M8-03 difficulty tier
         bool v2 = v3 || HasVersion2State();
-        w.Write(v3 ? TierFormatVersion : v2 ? FormatVersion : BaseFormatVersion);
+        w.Write(v4 ? ArrivalsFormatVersion : v3 ? TierFormatVersion : v2 ? FormatVersion : BaseFormatVersion);
         w.Write(SourceHash);
         w.Write(_initDone); w.Write(_halted); w.Write((byte)_outcome);
         w.Write(_rng); w.Write(_counter); w.Write(_messageSeq);
@@ -329,6 +335,7 @@ public sealed partial class MissionHost : ISimExtension
         foreach (TriggerRecord t in _triggers) { w.Write(t.B); w.Write(t.Counter); }   // count known from the triggers above
         foreach (AiHookState h in _aiHooks) { w.Write(h.AttackZone); w.Write(h.DefendZone); w.Write(h.Tier); w.Write(h.WaveSeq); w.Write(h.WaveId); w.Write(h.WaveZone); }
         if (v3) w.Write(_difficulty);   // ---- version 3 tail (M8-03) ----
+        if (v4) WriteArrivals(w);       // ---- version 4 tail (M8-04) ----
     }
 
     private bool HasVersion2State()
@@ -343,7 +350,7 @@ public sealed partial class MissionHost : ISimExtension
     internal void ReadState(BinaryReader r)
     {
         int version = r.ReadInt32();
-        if (version != BaseFormatVersion && version != FormatVersion && version != TierFormatVersion) throw new InvalidDataException("mission state: unsupported version");
+        if (version is not (BaseFormatVersion or FormatVersion or TierFormatVersion or ArrivalsFormatVersion)) throw new InvalidDataException("mission state: unsupported version");
         if (r.ReadUInt64() != SourceHash) throw new InvalidDataException("mission state: the save was made with a different mission script");
         _initDone = r.ReadBoolean(); _halted = r.ReadBoolean(); _outcome = (MissionOutcome)r.ReadByte();
         _rng = r.ReadUInt64(); _counter = r.ReadInt32(); _messageSeq = r.ReadInt32();
@@ -378,6 +385,7 @@ public sealed partial class MissionHost : ISimExtension
         _script.Globals.Set("state", DynValue.NewTable(LuaStateCodec.Read(r, _script)));
 
         _timers.Clear();
+        _arrivals.Clear();
         Array.Fill(_aiHooks, AiHookState.None);
         _difficulty = DefaultDifficulty;
         if (version < FormatVersion) return;
@@ -386,5 +394,6 @@ public sealed partial class MissionHost : ISimExtension
         foreach (TriggerRecord t in _triggers) { t.B = r.ReadInt32(); t.Counter = r.ReadInt32(); }
         for (int p = 0; p < _aiHooks.Length; p++) _aiHooks[p] = new AiHookState(r.ReadString(), r.ReadString(), r.ReadInt32(), r.ReadInt32(), r.ReadString(), r.ReadString());
         if (version >= TierFormatVersion) _difficulty = r.ReadInt32();
+        if (version >= ArrivalsFormatVersion) ReadArrivals(r);   // M8-04
     }
 }

@@ -46,7 +46,7 @@ public static class MissionApiContract
             "Objective.AddHidden", "Objective.Reveal", "Objective.Status",
             "Mission.Timer", "Mission.TimerCancel", "Mission.TimerLeft", "Mission.AllPrimaryDone", "Mission.AnyPrimaryFailed", "Mission.Difficulty",
             "Tech.GrantMany", "Tech.List");
-        Add(ApiStatus.Throws, "M8-04", "Reinforce.Zone", "Reinforce.Transport", "Reinforce.Delayed", "Reinforce.Naval", "Reinforce.Rig", "Actor.CreateGroup");
+        Add(ApiStatus.Implemented, "M8-04", "Reinforce.Zone", "Reinforce.Transport", "Reinforce.Delayed", "Reinforce.Naval", "Reinforce.Rig", "Actor.CreateGroup");
         Add(ApiStatus.Implemented, "M8-05", "Dialogue.Say", "Dialogue.Clear", "Camera.Focus", "Media.MessageKey");
         Add(ApiStatus.Implemented, "M8-06", "AI.Attack", "AI.Defend", "AI.SetTier", "AI.Wave", "AI.Clear");
         return l;
