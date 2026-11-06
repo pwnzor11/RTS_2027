@@ -77,7 +77,7 @@ Verified in code (worktree wp/s9-m8):
 - **Replays:** replay header carries mission id and script hash; playback re-runs the script (D-092; tests/Sim.Tests/Replay/MissionHeaderTests.cs:11-35).
 - **Game side:** menu has a Campaign entry (src/Game/Menu/MainMenuModel.cs:50), `BriefingScreen`, objectives HUD and ticker (pilot report).
   Archive has `ArchiveUnlockKind.Campaign` keyed by mission id (src/Game/Archive/ArchiveUnlockKind.cs, ArchiveProgress.cs:36-58).
-- **Save version:** `SimWriter.SaveVersion = 10` here (src/Sim/Serialization/SimWriter.cs:15); M7 plans 12. M8 takes the next free number.
+- **Save version:** `SimWriter.SaveVersion` is 12 after M7. M8-02 (session 12) kept it: the "mission" part went to its own version 2 and writes the old bytes unless new state is set.
 - **Tech:** per-type `Prerequisites` plus faction tier names appended by `TierSugar` (src/Data/TierSugar.cs:8-12). data/rules/techs.toml is
   currently a **test fixture** of effects, not a campaign unlock list.
 
@@ -131,7 +131,7 @@ lists mission ids in order with unlock rules. The script hash goes in the replay
   All new API stays sandboxed; camera/dialogue/timer HUD data is *outputs* read by the game layer after the tick, never fed back into the sim.
 - New script state goes through the existing Lua state codec; new fields (timers, hidden objectives, AI hook flags) are added to the
   "mission" part version and listed in HashCoverageTests. No new sim parts are expected; if AI hooks need one it is appended last.
-- Save and replay format bump by one (next free number after M7's 12; assumed 13). Older saves refuse as before.
+- No global save or replay bump (M8-02): the mission part carries its own version.
 - Mission replays: playback re-runs the script (D-092). Open gap from the pilot: script-driven spawns must replay. Acceptance (§6) checks it.
 - Campaign progress file is separate, versioned, human-readable TOML; losing it never corrupts a sim save.
 

@@ -215,6 +215,7 @@ systems (water locomotion, ships, landings). Lore, roster, art, AI.
 - [ ] M7-20 Archive drafts (8 upgrade notes, Provision Store) and Left Behind lore revision (D-155)
 
 ## M8 · Campaign (was M4)
+- [x] M8-02 Contracts: mission API stubs (docs/missions/api.md), schema v2, campaign progress/list/ending files, mission part v2 (session 12)
 - [x] M8-02a Plan update with the owner's story answers (D-154/D-155), Fallout-style endings, voice slot; voice tool guide (docs/audio/voice_setup.md) (session 12)
 - [x] M8-01 Campaign plan (docs/design/12_m8_plan.md, plan only; story questions open) (session 9)
 Mission scripting/trigger system, briefing screens, tech gating, campaign flow; written once with all four factions.

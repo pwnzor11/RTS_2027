@@ -36,6 +36,27 @@ public class OpenAiCompatibleProviderTests
         Assert.Equal("user", msgs[1].GetProperty("role").GetString());
     }
 
+    [Fact]
+    public async Task Official_api_sends_max_completion_tokens_with_headroom()
+    {
+        var h = StubHandler.Json(Ok);
+        await new OpenAiCompatibleProvider(Cfg("https://api.openai.com"), Key, h).CompleteAsync(Req, CancellationToken.None);
+        using var doc = JsonDocument.Parse(h.Body!);
+        Assert.False(doc.RootElement.TryGetProperty("max_tokens", out _));
+        Assert.Equal(50 + OpenAiCompatibleProvider.ReasoningHeadroomTokens, doc.RootElement.GetProperty("max_completion_tokens").GetInt32());
+    }
+
+    [Fact]
+    public async Task Bad_request_reports_the_api_message_but_401_does_not()
+    {
+        var bad = StubHandler.Json("{\"error\":{\"message\":\"Unsupported parameter: 'max_tokens'.\",\"type\":\"invalid_request_error\"}}", HttpStatusCode.BadRequest);
+        var r = await new OpenAiCompatibleProvider(Cfg("http://x.test"), Key, bad).CompleteAsync(Req, CancellationToken.None);
+        Assert.Equal("HTTP 400: Unsupported parameter: 'max_tokens'.", r.Error);
+        var auth = StubHandler.Json("{\"error\":{\"message\":\"Incorrect API key provided: sk-OP***-9\"}}", HttpStatusCode.Unauthorized);
+        var r2 = await new OpenAiCompatibleProvider(Cfg("http://x.test"), Key, auth).CompleteAsync(Req, CancellationToken.None);
+        Assert.Equal("HTTP 401", r2.Error);
+    }
+
     [Theory]
     [InlineData("http://localhost:1234/v1", "http://localhost:1234/v1/chat/completions")]
     [InlineData("http://localhost:1234/v1/", "http://localhost:1234/v1/chat/completions")]
