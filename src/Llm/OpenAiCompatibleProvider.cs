@@ -32,6 +32,13 @@ public sealed class OpenAiCompatibleProvider : IChatProvider
         return b.EndsWith("/v1", StringComparison.OrdinalIgnoreCase) ? b + "/chat/completions" : b + "/v1/chat/completions";
     }
 
+    /// <summary>Extra completion tokens allowed on api.openai.com for a reasoning model's hidden reasoning.</summary>
+    internal const int ReasoningHeadroomTokens = 4000;
+
+    /// <summary>True when the endpoint is OpenAI's own API (host api.openai.com).</summary>
+    internal static bool IsOfficialOpenAi(string url) =>
+        Uri.TryCreate(url, UriKind.Absolute, out var u) && u.Host.Equals("api.openai.com", StringComparison.OrdinalIgnoreCase);
+
     /// <inheritdoc />
     public Task<ChatResult> CompleteAsync(ChatRequest request, CancellationToken ct)
     {
@@ -44,7 +51,10 @@ public sealed class OpenAiCompatibleProvider : IChatProvider
             {
                 w.WriteStartObject();
                 w.WriteString("model", _cfg.Model);
-                w.WriteNumber("max_tokens", request.MaxTokens);
+                // api.openai.com rejects max_tokens for newer models (HTTP 400) and wants max_completion_tokens, which also
+                // counts hidden reasoning tokens, so it gets headroom on top of the reply budget. Local servers keep max_tokens.
+                if (IsOfficialOpenAi(url)) w.WriteNumber("max_completion_tokens", request.MaxTokens + ReasoningHeadroomTokens);
+                else w.WriteNumber("max_tokens", request.MaxTokens);
                 w.WriteStartArray("messages");
                 w.WriteStartObject();
                 w.WriteString("role", "system");

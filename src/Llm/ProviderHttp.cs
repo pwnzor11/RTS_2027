@@ -7,7 +7,9 @@ using System.Text.Json;
 namespace Rts.Llm;
 
 /// <summary>Shared HTTP plumbing for the providers. Failure reasons are fixed short strings: never exception
-/// messages, URLs, headers or keys.</summary>
+/// messages, URLs, headers or keys. One exception: a 400/404/422 reply appends the API's own <c>error.message</c>
+/// (one line, at most 200 characters), because those name the bad request field; 401/403 messages can quote part of a
+/// key, so they are never appended.</summary>
 internal static class ProviderHttp
 {
     internal const int DefaultTimeoutSeconds = 20;
@@ -31,7 +33,16 @@ internal static class ProviderHttp
             using HttpRequestMessage req = build();
             using HttpResponseMessage resp = await http.SendAsync(req, cts.Token).ConfigureAwait(false);
             if (!resp.IsSuccessStatusCode)
-                return Fail("HTTP " + (int)resp.StatusCode);
+            {
+                int code = (int)resp.StatusCode;
+                if (code is 400 or 404 or 422)
+                {
+                    string err = await resp.Content.ReadAsStringAsync(cts.Token).ConfigureAwait(false);
+                    string? detail = ErrorMessage(err);
+                    if (detail is not null) return Fail("HTTP " + code + ": " + detail);
+                }
+                return Fail("HTTP " + code);
+            }
             string body = await resp.Content.ReadAsStringAsync(cts.Token).ConfigureAwait(false);
             using JsonDocument doc = JsonDocument.Parse(body);
             return parse(doc.RootElement);
@@ -44,6 +55,24 @@ internal static class ProviderHttp
         catch (JsonException) { return Fail("bad response"); }
         catch (HttpRequestException) { return Fail("network error"); }
         catch (Exception) { return Fail("request failed"); }
+    }
+
+    /// <summary>The <c>error.message</c> (or string <c>error</c>) of an API error body, one line, at most 200 chars; null if absent.</summary>
+    internal static string? ErrorMessage(string body)
+    {
+        try
+        {
+            using JsonDocument doc = JsonDocument.Parse(body);
+            JsonElement root = doc.RootElement;
+            if (root.ValueKind != JsonValueKind.Object || !root.TryGetProperty("error", out var e)) return null;
+            string? m = e.ValueKind == JsonValueKind.String ? e.GetString()
+                : e.ValueKind == JsonValueKind.Object && e.TryGetProperty("message", out var mm) && mm.ValueKind == JsonValueKind.String ? mm.GetString()
+                : null;
+            if (string.IsNullOrWhiteSpace(m)) return null;
+            m = m.ReplaceLineEndings(" ").Trim();
+            return m.Length > 200 ? m[..200] : m;
+        }
+        catch (JsonException) { return null; }
     }
 
     internal static StringContent Json(Action<Utf8JsonWriter> write)
