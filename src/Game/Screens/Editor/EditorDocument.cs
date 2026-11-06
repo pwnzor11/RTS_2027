@@ -65,6 +65,12 @@ public sealed class EditorDocument
     /// <summary>Neutral features in placement order.</summary>
     public List<MapFeature> Features { get; private set; } = new();
 
+    /// <summary>M7-14: Expedition convoy edge cells, kept as loaded so a save does not drop them.</summary>
+    public List<CellCoord> ConvoyEdge { get; private set; } = new();
+
+    /// <summary>M7-14: Expedition landing marker cells, kept as loaded so a save does not drop them.</summary>
+    public List<CellCoord> Landing { get; private set; } = new();
+
     /// <summary>Index of a cell.</summary>
     public int IndexOf(int x, int y) => y * Width + x;
 
@@ -93,6 +99,8 @@ public sealed class EditorDocument
         }
         d.Starts = new List<CellCoord>(map.StartPositions);
         d.Features = new List<MapFeature>(meta.Features);
+        d.ConvoyEdge = new List<CellCoord>(meta.ConvoyEdge);
+        d.Landing = new List<CellCoord>(meta.Landing);
         return d;
     }
 
@@ -102,7 +110,11 @@ public sealed class EditorDocument
         (byte[])Density.Clone(), Starts.ToArray());
 
     /// <summary>Builds the metadata for saving and validating.</summary>
-    public MapMeta ToMeta() => new(Biome, Symmetry, Math.Max(1, Starts.Count), Generator, Features.ToArray());
+    public MapMeta ToMeta() => new(Biome, Symmetry, Math.Max(1, Starts.Count), Generator, Features.ToArray())
+    {
+        ConvoyEdge = ConvoyEdge.ToArray(),
+        Landing = Landing.ToArray(),
+    };
 
     internal void SetStarts(IEnumerable<CellCoord> starts) => Starts = new List<CellCoord>(starts);
 
