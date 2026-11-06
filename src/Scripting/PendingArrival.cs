@@ -14,7 +14,7 @@ internal enum ArrivalKind : byte
     TransportDrop = 1,
 }
 
-/// <summary>One queued reinforcement step, saved in the version-3 tail of the "mission" part (M8-04).</summary>
+/// <summary>One queued reinforcement step, saved in the version-4 tail of the "mission" part (M8-04).</summary>
 internal sealed class PendingArrival
 {
     /// <summary>What to do.</summary>

@@ -18,7 +18,7 @@ namespace Rts.Scripting;
 //    the public wrappers of Simulation.MissionSpawns.cs, which run the rules a player command would run.
 //  * Free cells: new spawns look for an empty cell of the right terrain, nearest first (rings, row-major inside a ring); nothing is placed
 //    on an occupied cell. When no cell is free within the search radius the call is a script error.
-//  * Delayed and Transport arrivals are queued state (PendingArrival) in the version-3 tail of the "mission" part.
+//  * Delayed and Transport arrivals are queued state (PendingArrival) in the version-4 tail of the "mission" part.
 public sealed partial class MissionHost
 {
     private static readonly string[] Formations = { "line", "column", "box", "scatter" };
@@ -29,7 +29,7 @@ public sealed partial class MissionHost
     /// <summary>Ticks a transport may drive before it unloads wherever it is (it normally unloads on reaching the destination).</summary>
     private const int TransportDeadlineTicks = 3000;
 
-    // Queued reinforcement work (M8-04), saved in the version-3 tail.
+    // Queued reinforcement work (M8-04), saved in the version-4 tail.
     private readonly List<PendingArrival> _arrivals = new();
 
     /// <summary>Number of queued arrivals (Reinforce.Delayed timers and transports still driving to their drop point); for tests and tools.</summary>
