@@ -1227,3 +1227,9 @@ building on its own refinery dock and stop its income. No sim change; no pinned 
 (+11..+16 %) fell to +0..+3 %, because it came from the Left Behind pulling the mean down.
 **Why:** M7-19 follow-up diagnosis; the dock queue was a symptom.
 **Status:** (1) assumed — confirm (owner approved Left Behind income tuning, D-153 (3)); (2) bug fix
+
+### D-161 · 2026-11-06 · LLM commander: keep the posture-guide prompt; stronger directives are a later design item
+**Decision:** Keep the D-160 prompt. After four 16-32-game tests (docs/balance/s12_commander.md) the commander is reliable flavour but not
+a strength lever at tier 3, with either model or prompt. Making directives matter is recorded as a design note
+(docs/design/15_commander_directives.md) for a later milestone; no more API tests now.
+**Status:** confirmed (owner, session 12)
