@@ -5,6 +5,11 @@
     <ProjectReference Include="..\AI\AI.csproj" />
     <ProjectReference Include="..\Data\Data.csproj" />
     <ProjectReference Include="..\Scripting\Scripting.csproj" />
+    <ProjectReference Include="..\Llm\Llm.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Tools.Tests" />
   </ItemGroup>
 
   <!-- Game data beside the tool exe, so the CLI finds data/rules when run from a copied folder (C-1). -->

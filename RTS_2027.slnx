@@ -14,5 +14,6 @@
     <Project Path="tests/Llm.Tests/Llm.Tests.csproj" />
     <Project Path="tests/Scripting.Tests/Scripting.Tests.csproj" />
     <Project Path="tests/Sim.Tests/Sim.Tests.csproj" />
+    <Project Path="tests/Tools.Tests/Tools.Tests.csproj" />
   </Folder>
 </Solution>

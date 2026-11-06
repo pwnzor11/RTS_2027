@@ -245,3 +245,14 @@ step 8). Saves from session 10 builds still load (format 12).
 8. **Art push (owner PC, D-084):** unzip `rts2027_art_push_s11.zip` into your RTS_2027 folder (so it is `RTS_2027\_art_push`) and run
    `.\_art_push\push_art.ps1` from the RTS_2027 folder. It pushes branch `wp/art-exp-all` (all 46 Expedition sprites); Claude opens
    the PR next session.
+
+## Testing the LLM commander with your own key (PowerShell)
+This plays one AI-vs-AI game where side A is commanded by a language model. It needs your own OpenAI key and internet access.
+1. In the PowerShell window you will use, set the key for this window only (it is not saved anywhere, and closing the window removes it):
+   `$env:OPENAI_API_KEY = "<your key>"`
+2. From the RTS_2027 folder, run (replace `<model>` with any chat model your account has):
+   `dotnet run --project src/Tools -c Release -- ai commander --a tiered:3 --b tiered:3 --provider openai --model <model> --seed 1 --ticks 30000 --out commander_run`
+   The game waits for each model reply before it goes on, so one game can take several minutes.
+3. Output lands in the `commander_run` folder: `summary.md` (winner, ticks, number of calls, errors), `directives.log` (one line per decision: tick, directive, latency in ms, ok or error) and a `commander_seedN.rtsreplay` replay file.
+4. If the key is missing, the command prints which variable to set and stops without creating the folder.
+5. Send Claude `summary.md` and `directives.log`, never the key.
