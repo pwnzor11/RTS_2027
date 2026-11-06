@@ -1,0 +1,20 @@
+# Directorate campaign (plan 2.2, 2.4, M8-07). Open from the start.
+# PLACEHOLDER mission ids (M8-12): none of dir_01..dir_04 exists yet.
+[campaign]
+faction = "directorate"
+title_key = "campaign.directorate.title"
+
+[[missions]]
+id = "dir_01"
+
+[[missions]]
+id = "dir_02"
+requires = ["dir_01"]
+
+[[missions]]
+id = "dir_03"
+requires = ["dir_02"]
+
+[[missions]]
+id = "dir_04"
+requires = ["dir_03"]

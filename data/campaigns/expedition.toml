@@ -1,0 +1,21 @@
+# Expedition campaign (plan 2.2, 2.4, M8-07). Opens after act 3 of either original faction.
+# PLACEHOLDER mission ids (M8-12): none of exp_01..exp_04 exists yet; auth_03 / dir_03 are the act-3 missions of the other campaigns.
+[campaign]
+faction = "expedition"
+title_key = "campaign.expedition.title"
+open_after = ["auth_03", "dir_03"]
+
+[[missions]]
+id = "exp_01"
+
+[[missions]]
+id = "exp_02"
+requires = ["exp_01"]
+
+[[missions]]
+id = "exp_03"
+requires = ["exp_02"]
+
+[[missions]]
+id = "exp_04"
+requires = ["exp_03"]

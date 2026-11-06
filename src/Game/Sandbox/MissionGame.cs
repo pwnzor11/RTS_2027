@@ -96,10 +96,11 @@ public sealed class MissionGame
     /// <param name="rulesDir">The data/rules directory.</param>
     /// <param name="missionId">Folder name under data/missions.</param>
     /// <param name="aiTier">AI difficulty tier 1..5 for the AI slots.</param>
-    public static MissionGame Create(string rulesDir, string missionId, int aiTier = 1)
+    /// <param name="adjustDef">Optional hook returning the mission definition to run (M8-07: campaign tech allow-list); null = as loaded.</param>
+    public static MissionGame Create(string rulesDir, string missionId, int aiTier = 1, Func<MissionDef, MissionDef>? adjustDef = null)
     {
         string dataDir = Path.GetFullPath(Path.Combine(rulesDir, ".."));
-        MissionSession session = MissionSession.Create(dataDir, missionId);
+        MissionSession session = MissionSession.Create(dataDir, missionId, adjustDef);
         AiDriver? driver = null;
         foreach (byte slot in session.AiSlots)
         {
