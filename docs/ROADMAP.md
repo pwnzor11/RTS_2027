@@ -218,6 +218,15 @@ systems (water locomotion, ships, landings). Lore, roster, art, AI.
 ## M8 · Campaign (was M4)
 - [x] M8-02 Contracts: mission API stubs (docs/missions/api.md), schema v2, campaign progress/list/ending files, mission part v2 (session 12)
 - [x] M8-02a Plan update with the owner's story answers (D-154/D-155), Fallout-style endings, voice slot; voice tool guide (docs/audio/voice_setup.md) (session 12)
+- [x] M8-03 Objectives (primary/hidden), timers, area triggers (leave/hold/seen/idle), win/lose and tech helpers, Mission.Difficulty (session 12)
+- [x] M8-04 Reinforcements: zone, transport, delayed, naval (Expedition), rig arrival (Left Behind), spawn groups with rank (session 12)
+- [x] M8-05 Dialogue (speaker, portrait, locale key, optional voice), camera hints, locale loader (session 12)
+- [x] M8-06 AI script hooks drive the AI: attack/defend zone, set tier, scripted wave (session 12)
+- [x] M8-07 Campaign progress, tech carry-over, faction unlock order (assumed — confirm), Archive wiring (session 12)
+- [ ] M8-08 Game UI: faction pick, mission select, briefing v2, debrief, difficulty
+- [ ] M8-09 Tutorial mission + mission-check and bot test template
+- [ ] M8-10 Pilot missions, one per faction (A1 port, D1, L1, E1) — then owner review (M8-11)
+- [ ] M8-12 Fan-out missions; M8-13 Archive campaign entries; M8-14 act-break stills; M8-15 acceptance; M8-16 ending sequence screen
 - [x] M8-01 Campaign plan (docs/design/12_m8_plan.md, plan only; story questions open) (session 9)
 Mission scripting/trigger system, briefing screens, tech gating, campaign flow; written once with all four factions.
 Wires Archive campaign unlocks.
