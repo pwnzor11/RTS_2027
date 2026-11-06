@@ -327,12 +327,18 @@ internal sealed class MilitaryManager
             n = k.Army.Count;
         }
 
+        if (_phase == Phase.Assault && Options.PredictedRetreat && _launchHealth > 0 && PredictedLoss(k, sink, rally))
+        {
+            alive = 0;
+            n = k.Army.Count;
+        }
+
         if (_phase == Phase.Gather)
         {
             // with no scraper left there is no income to rebuild with: whatever is left goes out as soon as there are a few units
             bool desperate = (k.Harvesters.Count == 0 || Broke) && n >= DesperateWave;   // M4-12: also when income has stalled
             int guard = Bias.HomeGuard;   // M5-02: units that stay home (the wave waits for them too)
-            bool strong = WaveGate.Strong(Options.Respond, OwnValue, EnemyValueSeen, _required, n, tick, _lastWave);   // M4-16 r4: no wave into a clearly bigger army
+            bool strong = WaveGate.Strong(Options.Respond, OwnValue, EnemyValueSeen, _required, n, tick, _lastWave, Options.AttackRatioPct);   // M4-16 r4: no wave into a clearly bigger army
             if (tick >= _cooldownUntil && !Hold && (strong || desperate) && (n >= Bias.Wave(_nextThreshold, 2) + guard
                 || (n >= Bias.Wave(MinWave, 2) + guard && tick - _lastWave >= Bias.Wave(_nextInterval, 600)) || desperate))
             {
@@ -547,6 +553,35 @@ internal sealed class MilitaryManager
         foreach (ViewActor e in k.Visible)
             if (e.Relation == Relation.Enemy && Chebyshev(e.Cell, c) <= StuckEnemyCells) return true;
         return false;
+    }
+
+    /// <summary>M4-16 s12 (flag predicted_retreat): compares the credit value of the wave members near its centre with the visible enemy units and armed
+    /// structures near it; when the fight is clearly lost the wave walks home (same effects as <see cref="CallOff"/>). True when it did.</summary>
+    private bool PredictedLoss(RecruitKnowledge k, ICommandSink sink, CellCoord rally)
+    {
+        LeptonCoord? c = WaveCentre(k);
+        if (c is not LeptonCoord centre) return false;
+        var cc = new CellCoord(centre.X / 256, centre.Y / 256);
+        SimRules rules = k.Rules;
+        int own = 0, enemy = 0;
+        foreach (ViewActor a in k.Army)
+            if (_roster.Contains(Key(a)) && Chebyshev(a.Cell, cc) <= WaveGate.LocalRadiusCells) own += VeterancyValue.Of(rules, a);
+        foreach (ViewActor e in k.Visible)
+        {
+            if (e.Relation != Relation.Enemy || Chebyshev(e.Cell, cc) > WaveGate.LocalRadiusCells + 2) continue;
+            if (e.IsMobile) { if (!(e.Kind == ActorKind.Vehicle && rules.Vehicles[e.TypeIndex].HarvestCapacity > 0)) enemy += VeterancyValue.Of(rules, e); }
+            else if (e.Kind == ActorKind.Building && rules.Buildings[e.TypeIndex].PrimaryWeapon >= 0) enemy += rules.Buildings[e.TypeIndex].Cost;
+        }
+        if (!WaveGate.Losing(own, enemy, Options.RetreatRatioPct)) return false;
+        foreach (ViewActor a in k.Army)
+            if (_roster.Contains(Key(a))) sink.Issue(CommandKind.Move, a.Id, a.Kind, rally);
+        _roster.Clear(); _squadB.Clear();
+        WaveFailed();
+        _phase = Phase.Gather;
+        _prong = false;
+        _cooldownUntil = k.View.Tick + RetreatCooldownTicks;
+        GroupRetreats++;
+        return true;
     }
 
     /// <summary>Calls the wave off when its health fell below the retreat line: every roster member walks home. True when it did.</summary>
