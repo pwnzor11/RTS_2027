@@ -761,13 +761,34 @@ public static class AiCommands
                 MatchTrace? trace = _traceEvery > 0 ? new MatchTrace(w.Rules, _traceEvery) : null;
                 Action<Simulation, IAiPlayer, IAiPlayer, byte, byte>? obs = null;
                 var marks = new int[2, 3];
+                var firstRefinery = new[] { -1, -1 };      // M7-14: first tick the side owns a live refinery
+                var tendersSunk = new int[2];              // M7-14: tenders that left the lane without paying
+                var decayAt10 = new int[2];                // M7-14: shipment decay step at 10 minutes
+                var tenderPrev = new List<(int Player, long Veh)>();
+                var incomePrev = new int[2];
+                var shipMarks = new int[2, 3];             // M7-14: shipment credits paid by 3/5/10 min
                 bool expo = a.Faction == Faction.Expedition || b.Faction == Faction.Expedition;
                 if (trace is not null || lbx is not null || expo)
                     obs = (sim, x, y, sa, sb) =>
                     {
                         trace?.Observe(sim, x, y, sa, sb); lbx?.Observe(sim, x, y, sa, sb);
+                        for (int q = 0; q < 2; q++)
+                        {
+                            byte pl = q == 0 ? sa : sb;
+                            if (firstRefinery[q] < 0 && sim.Tick % 20 == 0)
+                                for (int bi = 1; bi < sim.Buildings.Capacity; bi++)
+                                    if (sim.Buildings.Slots.IsIndexAlive(bi) && sim.Buildings.Player[bi] == pl && sim.Buildings.Health[bi] > 0 && sim.Setup.Rules.Buildings[sim.Buildings.TypeIndex[bi]].Refinery) { firstRefinery[q] = sim.Tick; break; }
+                            int inc = sim.StatsOf(pl).ShipmentIncome;
+                            // a tender that was in the lane last tick and is gone now, with no payment this tick, was sunk
+                            foreach (var (tp, tv) in tenderPrev)
+                                if (tp == pl && inc == incomePrev[q] && !sim.Shipments.Tenders.Exists(t => t.Vehicle == tv)) tendersSunk[q]++;
+                            incomePrev[q] = inc;
+                        }
+                        tenderPrev.Clear();
+                        foreach (var t in sim.Shipments.Tenders) tenderPrev.Add((t.Player, t.Vehicle));
+                        if (sim.Tick == 12000) for (int q = 0; q < 2; q++) decayAt10[q] = sim.Shipments.DecayStep[q == 0 ? sa : sb];
                         int m = sim.Tick == 3600 ? 0 : sim.Tick == 6000 ? 1 : sim.Tick == 12000 ? 2 : -1;
-                        if (m >= 0) for (int q = 0; q < 2; q++) { PlayerStats ps = sim.StatsOf((byte)(q == 0 ? sa : sb)); marks[q, m] = ps.CreditsHarvested + ps.ShipmentIncome; }
+                        if (m >= 0) for (int q = 0; q < 2; q++) { PlayerStats ps = sim.StatsOf((byte)(q == 0 ? sa : sb)); marks[q, m] = ps.CreditsHarvested + ps.ShipmentIncome; shipMarks[q, m] = ps.ShipmentIncome; }
                     };
                 // M4-16: each game of the pair gets its own game seed (same map), so the two games are independent samples
                 // rather than one mirrored game counted twice (docs/balance/m4_16_start_bias.md).
@@ -805,7 +826,10 @@ public static class AiCommands
                     if (start == AiStartMode.Economy)
                         Console.WriteLine($"    A: {Stats(r.StatsA)} | B: {Stats(r.StatsB)}");
                     if (expo)
+                    {
                         Console.WriteLine($"    income at 3/5/10 min (harvested + shipments): A {marks[0, 0]}/{marks[0, 1]}/{marks[0, 2]} | B {marks[1, 0]}/{marks[1, 1]}/{marks[1, 2]}");
+                        Console.WriteLine($"    econ: first refinery tick A {firstRefinery[0]} B {firstRefinery[1]} | tenders sunk A {tendersSunk[0]} B {tendersSunk[1]} | decay step at 10 min A {decayAt10[0]} B {decayAt10[1]} | shipments 3/5/10 A {shipMarks[0, 0]}/{shipMarks[0, 1]}/{shipMarks[0, 2]} B {shipMarks[1, 0]}/{shipMarks[1, 1]}/{shipMarks[1, 2]}");
+                    }
                     if (lbx is not null)
                         Console.WriteLine($"    LB extras A: {lbx.Line(slotOfA)} | B: {lbx.Line(1 - slotOfA)}");
                 }

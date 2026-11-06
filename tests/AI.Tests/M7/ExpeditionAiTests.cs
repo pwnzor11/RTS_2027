@@ -76,6 +76,38 @@ public sealed class ExpeditionAiTests(ITestOutputHelper log)
     }
 
     [Fact]
+    public void ItSendsANavalStrikeAgainstAnAuthorityCoastByMinuteFifteen()
+    {
+        // M7-10 (S11): the fleet is not only an escort. A group of warships (escort and reserve left out) sails to a firing position at a visible
+        // coastal enemy building and fires (an AttackMove to the firing cell, then Attack on the building).
+        var rig = new ExpeditionRig(Tier(2), Faction.Authority, enemyProfile: Tier(1));   // a Recruit-tier Authority
+        int peakShips = 0, firstYard = -1, firstShip = -1;
+        rig.Run(18000, () =>
+        {
+            if (rig.Sim.Tick % 100 == 0)
+            {
+                int ships = 0;
+                for (int i = 1; i < rig.Sim.Units.Capacity; i++)
+                    if (rig.Sim.Units.Slots.IsIndexAlive(i) && rig.Sim.Units.Player[i] == 0 && TestWorld.Rules.Sim.Vehicles[rig.Sim.Units.TypeIndex[i]] is { Locomotion: Locomotion.Naval, PrimaryWeapon: >= 0 }) ships++;
+                peakShips = Math.Max(peakShips, ships);
+                if (firstYard < 0 && rig.Count(0, "exp_shipyard") > 0) firstYard = rig.Sim.Tick;
+                if (firstShip < 0 && ships > 0) firstShip = rig.Sim.Tick;
+            }
+            return rig.Ai.FleetStrikes >= 1 && rig.ShipAttackMoves >= 1;
+        });
+        log.WriteLine($"tick {rig.Sim.Tick}: shipyard at {firstYard}, first warship at {firstShip}, peak warships {peakShips}, strikes {rig.Ai.FleetStrikes}, attack-moves {rig.ShipAttackMoves} (first at {rig.FirstAttackMoveTick}), escorts {rig.Ai.EscortOrders} :: {rig.Ai.ExpeditionDebug}");
+        Assert.True(rig.Ai.FleetStrikes >= 1, "a naval strike target was chosen");
+        Assert.True(rig.ShipAttackMoves >= 1, "a strike group got an AttackMove to its firing position");
+        Assert.True(rig.Sim.Tick <= 18000);
+    }
+
+    [Fact]
+    public void ShipsRetreatAtFortyPercent()
+    {
+        Assert.Equal(40, Rts.AI.Recruit.ExpeditionTactics.RetreatPct);
+    }
+
+    [Fact]
     public void SavingAndLoadingMidGameKeepsDecisionsIdentical()
     {
         var a = new ExpeditionRig(Tier(2));
