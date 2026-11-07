@@ -1,0 +1,32 @@
+# Left Behind 01 "The Refused" locale. Speaker: Jessup Calloway-Ross (leader_lb_calloway_ross), war-captain of the caravans.
+"lb1.start" = "The Mother Rig is on the Drift road. Unpack it on clear ground."
+"lb1.radio.start" = "Commander, Calloway-Ross. The rig is yours. Find clear ground and unpack her."
+"lb1.deployed" = "Mother Rig unpacked. Raise power and a Muster Rig."
+"lb1.radio.deployed" = "Good. Power first, then a Muster Rig, then hands. They leave the depot soon."
+"lb1.radio.depart" = "Convoy is rolling out of the depot. Take them on the road, Commander."
+"lb1.depart" = "The Authority convoy has left the depot."
+"lb1.radio.moveon" = "They are moving on. Do not let them clear the crossing."
+"lb1.radio.hint" = "Scouts say a scraper was left in the south-west gully. Nobody has gone to look."
+"lb1.radio.contact" = "That is the first of them. Keep at the scrapers."
+"lb1.radio.relief" = "Authority relief on the north road. They came. Of course they came."
+"lb1.relief" = "An Authority relief patrol is coming down from the north."
+"lb1.scrapers.down" = "Both scrapers are down."
+"lb1.radio.scrapers" = "Both scrapers burning. Now finish the escort."
+"lb1.cache" = "The gully scraper is ours, and the fuel with it."
+"lb1.radio.cache" = "A scraper and a drum or two. Good eyes, Commander."
+"lb1.lost.rig" = "The Mother Rig is lost. The caravan scatters."
+"lb1.lost.site" = "A scraper has reached the survey ground. The Authority has its foothold."
+"lb1.win" = "The road is ours. The ledger is a line shorter."
+"lb1.radio.win" = "Write it in the ledger. And write it small. We are not done."
+
+# Objective and timer labels (the HUD shows the locale text when a label is a key)
+"lb1.obj.deploy" = "Unpack the Mother Rig on clear ground and raise a camp"
+"lb1.obj.scrapers" = "Destroy both Authority scrapers before they reach the survey ground"
+"lb1.obj.escort" = "Break the convoy's escort and its relief"
+"lb1.obj.cache" = "Find the scraper abandoned in the south-west gully"
+"lb1.timer.convoy" = "Convoy leaves the depot"
+
+[voice]
+"lb1.radio.start" = "voice/leader_lb_calloway_ross/lb1.radio.start.ogg"
+"lb1.radio.depart" = "voice/leader_lb_calloway_ross/lb1.radio.depart.ogg"
+"lb1.radio.win" = "voice/leader_lb_calloway_ross/lb1.radio.win.ogg"
