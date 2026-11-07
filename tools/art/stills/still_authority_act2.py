@@ -166,9 +166,14 @@ def render(style, samples):
         im = ImageEnhance.Color(im).enhance(1.5)
         im = ImageEnhance.Contrast(im).enhance(1.15)
         im = im.quantize(colors=18, method=Image.Quantize.MEDIANCUT, dither=Image.Dither.NONE).convert("RGB")
-    if style == "mix" and not preview:
-        pass
     im.save(final)
+    if style == "mix" and not preview:
+        # the shipped campaign still (plain PNG, optimised, kept under 2.5 MB)
+        out = os.path.join(ROOT, "data", "images", "stills", "still_authority_act2.png")
+        os.makedirs(os.path.dirname(out), exist_ok=True)
+        im.save(out, optimize=True)
+        if os.path.getsize(out) > 2_400_000:
+            im.quantize(colors=256, method=Image.Quantize.MEDIANCUT, dither=Image.Dither.FLOYDSTEINBERG).save(out, optimize=True)
     os.remove(raw)
     print(f"RENDER {style}: {dt:.0f}s -> {final}")
     return final

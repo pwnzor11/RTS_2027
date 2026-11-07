@@ -834,8 +834,8 @@ def fire(loc, size=3.0, rng=None, light=True):
         cyl("flame", (x + rng.uniform(-size, size) * 0.6, y + rng.uniform(-size, size) * 0.3, r * 0.9), r, r * 2.2,
             mat("yellow", k[0], emit=k[0], estr=k[1]), verts=7, r2=0.02)
     if light:
-        point_light((x, y - size, size * 1.5), 8.0e4 * (size / 3.0) ** 2, (1.0, 0.45, 0.16), size)
-    embers((x, y, 0), n=int(12 + size * 2), spread=(size * 2, size * 1.5, size * 5), r=size * 0.075, rng=rng)
+        point_light((x, y - size, size * 1.5), 1.6e4 * (size / 3.0) ** 2, (1.0, 0.45, 0.16), size)
+    embers((x, y, 0), n=int(12 + size * 2), spread=(size * 2, size * 1.5, size * 5), r=size * 0.05, rng=rng)
 
 
 # ------------------------------------------------------------------------------------------------ atmosphere
