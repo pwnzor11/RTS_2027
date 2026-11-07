@@ -5,10 +5,14 @@
 --
 -- Steps: 1 move, 2 attack, 3 power, 4 barracks, 5 train, 6 harvest, 7 fight.
 
+-- Funds the harvest lesson needs to see rise. A full Scraper load is worth harvest_capacity 20 x credits_pitchblende 300 = 6000, but a
+-- lone Refinery stores only 1000 (the rest of a load is lost), so 1000 is the most one delivery can add. Re-check if those change.
+function LoadSize() return 1000 end
+
 function OnInit()
   state.step = 1
   state.riflemen = 0
-  state.loading = false
+  state.low = nil
 
   Objective.Add("move", "Select your riflemen and move them to the marked ground", true)
   Objective.AddHidden("attack", "Attack the enemy power plant", true)
@@ -22,6 +26,7 @@ function OnInit()
   Say("step.move")
   Camera.Focus("rally", 200)
 
+  Trigger.OnAllDestroyed(1, FoesGone)
   Trigger.Every(20, Poll)
   Trigger.Every(1800, Hint)
 end
@@ -82,7 +87,6 @@ function Poll()
   elseif n == 4 then CheckBarracks()
   elseif n == 5 then CheckTrain()
   elseif n == 6 then CheckHarvest()
-  elseif n == 7 then CheckFight()
   end
 end
 
@@ -111,20 +115,23 @@ function CheckTrain()
   if Actor.Count(0, "auth_rifleman") > state.riflemen then Advance() end
 end
 
--- 6. Refinery up, then the free Scraper works the pitchblende patch and drives out of it again (it only leaves when its hold is
--- full and it heads for the refinery). The script cannot read stored credits, so the Scraper's trip is the signal.
+-- 6. Refinery up, then the free Scraper works the pitchblende patch and delivers: the player's Funds (cash + stored) must rise by at
+-- least one Scraper load (LoadSize credits) above their lowest level since the refinery went up. Tracking the low-water mark means
+-- spending money on other things in the meantime (more soldiers, say) does not hide the income.
 function CheckHarvest()
   if Actor.Count(0, "auth_refinery") < 1 then return end
-  if Actor.CountInZone("pit", 0, "auth_scraper") >= 1 then
-    state.loading = true
-  elseif state.loading and Actor.Count(0, "auth_scraper") >= 1 then
-    Advance()
-  end
+  local funds = Player.Funds(0)
+  if state.low == nil or funds < state.low then state.low = funds end
+  if funds - state.low >= LoadSize() then Advance() end
 end
 
--- 7. The camp is gone: its three riflemen and its power plant. (The far south-east outpost "reserve" stays standing on purpose,
--- so the enemy is never wiped out and the sim never ends the game before the last lesson is done.)
-function CheckFight()
-  if Actor.Alive("foe1") or Actor.Alive("foe2") or Actor.Alive("foe3") or Actor.Alive("camp_power") then return end
-  Advance()
+-- 7. The camp is gone: its three riflemen and its power plant. Nothing keeps the enemy alive any more, so the sim ends the game the
+-- tick the last of them dies (and the practice plant is long gone). A Poll could miss that tick, so FoesGone is an OnAllDestroyed
+-- trigger: it runs in the same tick, before the sim's game-over check, and the script's Mission.Win decides the outcome.
+function FoesGone()
+  if state.step == 7 then
+    Advance()
+  else
+    Mission.Win(0)   -- the player wiped the enemy early: the tutorial simply ends in a win
+  end
 end

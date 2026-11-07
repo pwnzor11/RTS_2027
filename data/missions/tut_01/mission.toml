@@ -101,11 +101,3 @@ type = "auth_rifleman"
 player = 1
 cell = [27, 2]
 tag = "foe3"
-
-# Keeps the enemy team alive until the script says the lesson is over (a team with nothing left ends the game at once).
-# Far from everything the lessons ask for; the script never counts it.
-[[actors]]
-type = "auth_power"
-player = 1
-cell = [28, 28]
-tag = "reserve"

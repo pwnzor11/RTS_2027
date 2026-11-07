@@ -223,12 +223,29 @@ public sealed partial class MissionHost : ISimExtension
             case TriggerKind.Enter:
                 return Def.ZoneNamed(t.Name) is { } z && AnyMobileInZone(sim, (byte)t.A, z);
             case TriggerKind.Destroyed:
-                return !(TryTag(t.Name, out ActorRef r) && sim.TryResolve(r));
+                return !(TryTag(t.Name, out ActorRef r) && IsStanding(sim, r));
             case TriggerKind.AllDestroyed:
                 return CountAlive(sim, (byte)t.A, -1, null) == 0;
             default:
                 return ShouldFireArea(t, sim);   // M8-03: Leave, Hold, Seen, Idle
         }
+    }
+
+    /// <summary>
+    /// M8-17: an actor that is resolvable and still has health. The sim removes a dead actor (and may end the game) in RunCleanup, AFTER
+    /// the trigger phase of the tick it died on; counting health 0 as gone lets OnDestroyed fire on that same tick, like OnAllDestroyed.
+    /// </summary>
+    private static bool IsStanding(Simulation sim, ActorRef r)
+    {
+        if (!sim.TryResolve(r)) return false;
+        int i = r.Id.Index;
+        return r.Kind switch
+        {
+            ActorKind.Vehicle => sim.Units.Health[i] > 0,
+            ActorKind.Infantry => sim.Infantry.Health[i] > 0,
+            ActorKind.Building => sim.Buildings.Health[i] > 0,
+            _ => true,
+        };
     }
 
     private void Invoke(string name, DynValue fn)
