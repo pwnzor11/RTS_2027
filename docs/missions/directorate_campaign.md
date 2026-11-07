@@ -27,5 +27,5 @@ All four missions: schema 2, 2-3 primary objectives, one hidden bonus, visible t
 ## Open questions
 1. Are the pre-placed bases in dir_02..04 (shaft, vents, hatch, bore) the right start, or should the player rebuild from the shaft each act (like dir_01)?
 2. dir_04: the Authority base to the south only builds and sends waves (`AI.Defend`); should the player be able to destroy it for a bonus? Win is firing the Sunrise (Order Seven, D-086).
-3. Ending text is DRAFT for owner review (D-086), including the Dray/Fenn/Left Behind/Expedition lines.
+3. Ending text is owner-approved (D-164), including the Dray/Fenn/Left Behind/Expedition lines.
 4. Voice lines for the new keys are listed in each `[voice]` table but no audio exists.

@@ -1,4 +1,4 @@
-# DRAFT for owner review (D-086). Expedition ending slides (plan 3.8, M8-12): the Second Relief Fleet's version of the year, in the telex voice of the fleet.
+# Owner-approved text (D-164, session 13; was DRAFT under D-086). Expedition ending slides (plan 3.8, M8-12): the Second Relief Fleet's version of the year, in the telex voice of the fleet.
 # Written from existing lore only (docs/lore/expedition.md): no new named characters. The Strand and Aldersey secrets are hinted, not stated.
 # condition (optional): { kind = "completed", mission = "<id>" } or { kind = "difficulty_min", mission = "<id>", value = 1..5 }
 [ending]

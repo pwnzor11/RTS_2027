@@ -25,5 +25,5 @@ Hero on the radio: Brigadier Wrenfield (`leader_auth_wrenfield`), as in auth_01.
 ## Open questions
 1. auth_04 unlocks `auth_atomic_battery` (the Authority superweapon) as the finale reward. Fine for a faction whose lore calls the Sunrise "a second Exchange"? Alternative: no unlock.
 2. The pre-placed `dir_sunrise` is a real superweapon, so the built-in AI may fire it (3000-tick charge) before the 16000-tick timer; intended as a visible threat, confirm.
-3. The ending (DRAFT, D-086) hints at Wrenfield's list and at the Tern Point names; her brother is not named (classified entry).
+3. The ending (owner-approved, D-164) hints at Wrenfield's list and at the Tern Point names; her brother is not named (classified entry).
 4. Wave sizes were tuned with MissionBot only; a human playtest of tiers 1 and 5 is needed.
