@@ -236,8 +236,22 @@ systems (water locomotion, ships, landings). Lore, roster, art, AI.
 Mission scripting/trigger system, briefing screens, tech gating, campaign flow; written once with all four factions.
 Wires Archive campaign unlocks.
 
+## M11 · UI and input overhaul (owner feedback 2026-11-07; build order vs M9 to confirm)
+Source: docs/reviews/2026-11-07_owner_campaign_feedback.md. Audit: docs/reviews/2026-11-07_ui_input_audit.md (s14).
+- [ ] M11-01 Adversarial UI and input audit, with layout options for the owner (s14)
+- [ ] M11-02 Edge scrolling (mouse at the screen edge pans the view)
+- [ ] M11-03 Control hints off the HUD; Controls page in Settings
+- [ ] M11-04 Selection panel for single-unit info on the right, build menu shrinks while a unit is selected
+- [ ] M11-05 Objective guidance (where to go: map markers, minimap pings, camera jump)
+- [ ] M11-06 Unit scale / zoom
+- [ ] M11-07 Terrain readability (paths, water, cliffs distinguishable)
+- [ ] M11-08 Resource field readability
+- [ ] M11-09 Building animation speed calmer
+- [ ] M11-10 Fixes from the M11-01 audit (ids added after the owner picks)
+
 ## M9 · LAN multiplayer (was M5)
 Lockstep over LAN, lobby, desync detection, replays.
 
 ## M10 · Polish
+- [ ] M10-xx Building art: less flat, more depth (owner 2026-11-07, later polish run)
 Art pass, music/SFX, balance, installer.
