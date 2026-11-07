@@ -1,0 +1,35 @@
+# DRAFT for owner review (D-086). Left Behind ending slides (plan 3.8, M8-12). Sympathetic but ruthless; the warlord takes over.
+# condition (optional): { kind = "completed", mission = "<id>" } or { kind = "difficulty_min", mission = "<id>", value = 1..5 }
+[ending]
+faction = "left_behind"
+
+[[slides]]
+image = "ending_left_behind_01"
+key = "ending.left_behind.01"
+
+[[slides]]
+image = "ending_left_behind_02"
+key = "ending.left_behind.02"
+
+[[slides]]
+image = "ending_left_behind_03"
+key = "ending.left_behind.03"
+condition = { kind = "completed", mission = "lb_03" }
+
+[[slides]]
+image = "ending_left_behind_04"
+key = "ending.left_behind.04"
+
+[[slides]]
+image = "ending_left_behind_05"
+key = "ending.left_behind.05"
+condition = { kind = "difficulty_min", mission = "lb_04", value = 4 }
+
+[text]
+"ending.left_behind.01" = "The Expedition's depot burned for three days. The fleet took its wounded off the sand and did not come back for the dead. Jessup Calloway-Ross kept the banner. Nobody on the Drift asked him to give it back, and nobody dared to say that the winter was over."
+"ending.left_behind.02" = "Marrow Tindall wrote the last debt into the ledger by hand: the Authority's letter of 1999, answered. She stopped tapping her thumb in code that spring. She was still the Speaker. She no longer spoke for the rigs, and she knew it, and she kept the books anyway."
+"ending.left_behind.03" = "The Directorate's hatches on the Glass Coast stayed shut. Commissar Thrall's notebook was found in the ash, with the caravans' names in it, spelled right. The Voice went off the air on the coast and the dunes went quiet at night, which the rigs did not trust."
+"ending.left_behind.04" = "Brigadier Wrenfield never asked for the name of his brother, and the Drift never offered it. The Authority kept its posts out of the Belt and its letters in a drawer. The Directorate went back underground. The Air Marshal counted her airmen twice and found the number was not the one she carried home."
+"ending.left_behind.05" = "The Second Drift buried the south beach for forty seconds, and the ships that had waited off it sailed. The rigs took the coast road they had been refused and called it theirs. Nobody was left behind that winter. Anyone who stood in the way was."
+
+# Text drafted by the mission helper (M8-12); the owner rewrites freely (D-086).

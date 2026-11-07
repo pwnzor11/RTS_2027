@@ -1,0 +1,177 @@
+# Left Behind 04: The Banner (M8-12, D-163). Act 4, Reckoning, Ash Plains: drive the Expedition off the coast (finale; the warlord takes over).
+# Zones are inclusive cell rectangles [x0, y0, x1, y1]. Pre-placed actors are placed before tick 0 (setup log).
+# Map: ash_reckoning (96x96, mirror_y). Sea at the north and south edges; the Drift camp is in the north, the Expedition beachhead on the south shore.
+
+[mission]
+title = "The Banner"
+map = "ash_reckoning.map.toml"
+script = "mission.lua"
+briefing = "briefing.md"
+seed = 2027
+schema = 2
+act = 4
+faction = "left_behind"
+locale = "locale.toml"
+
+# lb_03 kit + what lb_03 unlocked (rotor pad, rolling fort, veilwalker, organ, harpoon post) + the finale's gifts: rotors, kites, flak and the Second Drift.
+[starts_with]
+tech = ["lb_mother_rig", "lb_dynamo_rig", "lb_muster_rig", "lb_yard", "lb_scavenger", "lb_hook_runner", "lb_slinger", "lb_spike_nest", "lb_garage_rig", "lb_buggy", "lb_gleaner", "lb_lookout", "lb_bench", "lb_harpoon_wagon", "lb_tinker", "lb_drifter_brute", "lb_rotor_pad", "lb_rolling_fort", "lb_veilwalker", "lb_organ", "lb_harpoon_post", "lb_rotor", "lb_kite", "lb_flak_net", "lb_second_drift"]
+
+[[players]]
+slot = 0
+name = "The Drift"
+role = "human"
+team = 0
+cash = 3000
+tech = ["lb_mother_rig", "lb_dynamo_rig", "lb_muster_rig", "lb_yard", "lb_scavenger", "lb_hook_runner", "lb_slinger", "lb_spike_nest", "lb_garage_rig", "lb_buggy", "lb_gleaner", "lb_lookout", "lb_bench", "lb_harpoon_wagon", "lb_tinker", "lb_drifter_brute", "lb_rotor_pad", "lb_rolling_fort", "lb_veilwalker", "lb_organ", "lb_harpoon_post", "lb_rotor", "lb_kite", "lb_flak_net", "lb_second_drift"]
+
+# The Expedition plays by its own rules (faction key): the built-in AI holds the beachhead; the script sends the counter-landing.
+[[players]]
+slot = 1
+name = "Second Relief Fleet"
+role = "ai"
+team = 1
+cash = 800
+faction = "expedition"
+
+[[players]]
+slot = 2
+name = "Civilians"
+role = "neutral"
+team = 255
+cash = 0
+
+[zones.camp]
+rect = [38, 10, 56, 26]
+
+[zones.landing]
+rect = [44, 60, 50, 62]
+
+[zones.beach]
+rect = [36, 74, 58, 87]
+
+[zones.flank]
+rect = [68, 70, 76, 80]
+
+[zones.wreck]
+rect = [78, 46, 84, 52]
+
+# The camp: Mother Rig down with power, a yard, a Muster Rig, a Garage Rig, a Lookout, the Bench and a Rotor Pad.
+[[actors]]
+type = "lb_mother_rig"
+player = 0
+cell = [44, 13]
+tag = "rig"
+
+[[actors]]
+type = "lb_dynamo_rig"
+player = 0
+cell = [48, 13]
+
+[[actors]]
+type = "lb_yard"
+player = 0
+cell = [48, 16]
+
+[[actors]]
+type = "lb_muster_rig"
+player = 0
+cell = [40, 18]
+
+[[actors]]
+type = "lb_garage_rig"
+player = 0
+cell = [50, 19]
+
+[[actors]]
+type = "lb_lookout"
+player = 0
+cell = [46, 19]
+
+[[actors]]
+type = "lb_bench"
+player = 0
+cell = [53, 16]
+
+[[actors]]
+type = "lb_rotor_pad"
+player = 0
+cell = [56, 17]
+
+# The Expedition beachhead: a Landing Depot with its houses, billet and hover yard, two gun batteries on the north face
+# (range eight cells, powered) and the two Pile Houses that feed them far to the east, out of the batteries' reach.
+[[actors]]
+type = "exp_landing_depot"
+player = 1
+cell = [46, 81]
+tag = "depot"
+
+# Two beacons (beachhead sources) stretch the beachhead zone east so the houses can stand out of the batteries' reach.
+[[actors]]
+type = "exp_beacon"
+player = 1
+cell = [55, 84]
+
+[[actors]]
+type = "exp_beacon"
+player = 1
+cell = [60, 84]
+
+[[actors]]
+type = "exp_pile_house"
+player = 1
+cell = [62, 82]
+tag = "pile1"
+
+[[actors]]
+type = "exp_pile_house"
+player = 1
+cell = [65, 82]
+tag = "pile2"
+
+[[actors]]
+type = "exp_billet"
+player = 1
+cell = [42, 84]
+
+[[actors]]
+type = "exp_hover_yard"
+player = 1
+cell = [50, 84]
+
+[[actors]]
+type = "exp_gun_battery"
+player = 1
+cell = [40, 77]
+tag = "battery1"
+
+[[actors]]
+type = "exp_gun_battery"
+player = 1
+cell = [53, 77]
+tag = "battery2"
+
+[[actors]]
+type = "exp_pillbox"
+player = 1
+cell = [45, 78]
+
+[[actors]]
+type = "exp_pillbox"
+player = 1
+cell = [49, 78]
+
+[[actors]]
+type = "exp_marine"
+player = 1
+cell = [44, 79]
+
+[[actors]]
+type = "exp_marine"
+player = 1
+cell = [47, 79]
+
+[[actors]]
+type = "exp_marine"
+player = 1
+cell = [50, 79]
