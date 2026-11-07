@@ -221,13 +221,27 @@ public sealed class SpriteStateTests
     [Fact]
     public void Build_window_plays_each_frame_once_then_holds_on_the_last()
     {
-        // 4 frames at 10 ticks: frames at ages 0, 10, 20, 30 (first = 3).
+        // 4 frames spread over SpriteStates.BuildAnimationTicks (70): frames change at ages 0, 17, 35, 52 (first = 3).
         Assert.Equal(3, SpriteStates.BuildingFrame(Building, 0, 100, 100, false, 0));
-        Assert.Equal(4, SpriteStates.BuildingFrame(Building, 10, 100, 100, false, 10));
-        Assert.Equal(5, SpriteStates.BuildingFrame(Building, 25, 100, 100, false, 25));
-        Assert.Equal(6, SpriteStates.BuildingFrame(Building, 39, 100, 100, false, 39));
-        // After the window (40 ticks) the building is idle, looping.
-        Assert.Equal(0, SpriteStates.BuildingFrame(Building, 40, 100, 100, false, 40));
+        Assert.Equal(3, SpriteStates.BuildingFrame(Building, 17, 100, 100, false, 17));
+        Assert.Equal(4, SpriteStates.BuildingFrame(Building, 18, 100, 100, false, 18));
+        Assert.Equal(5, SpriteStates.BuildingFrame(Building, 40, 100, 100, false, 40));
+        Assert.Equal(6, SpriteStates.BuildingFrame(Building, 69, 100, 100, false, 69));
+        // After the window the building is idle, looping.
+        Assert.Equal(0, SpriteStates.BuildingFrame(Building, SpriteStates.BuildAnimationTicks, 100, 100, false, 70));
+    }
+
+    [Fact]
+    public void Build_animation_lasts_three_to_four_seconds_and_idle_is_slowed()
+    {
+        const int ticksPerSecond = 20;
+        Assert.InRange(SpriteStates.BuildAnimationTicks, 3 * ticksPerSecond, 4 * ticksPerSecond);
+        Assert.Equal(-1, SpriteStates.BuildStep(SpriteStates.BuildAnimationTicks, 8));
+        Assert.Equal(7, SpriteStates.BuildStep(SpriteStates.BuildAnimationTicks - 1, 8));
+        // Damaged art: 2 frames at 5 ticks per frame in the manifest; now each frame lasts 4x longer.
+        Assert.Equal(1, SpriteStates.BuildingFrame(Building, 1000, 49, 100, false, 0));
+        Assert.Equal(1, SpriteStates.BuildingFrame(Building, 1000, 49, 100, false, 19));
+        Assert.Equal(2, SpriteStates.BuildingFrame(Building, 1000, 49, 100, false, 20));
     }
 
     [Fact]
@@ -241,10 +255,10 @@ public sealed class SpriteStateTests
     [Fact]
     public void Damaged_below_half_health_uses_the_damaged_state_looping_by_tick()
     {
-        // health 49 of 100 is below half: damaged frames 1 and 2, 5 ticks each.
+        // health 49 of 100 is below half: damaged frames 1 and 2, 5 manifest ticks each = 20 ticks with the R3 slowdown.
         Assert.Equal(1, SpriteStates.BuildingFrame(Building, 1000, 49, 100, false, 0));
-        Assert.Equal(2, SpriteStates.BuildingFrame(Building, 1000, 49, 100, false, 5));
-        Assert.Equal(1, SpriteStates.BuildingFrame(Building, 1000, 49, 100, false, 10));
+        Assert.Equal(2, SpriteStates.BuildingFrame(Building, 1000, 49, 100, false, 20));
+        Assert.Equal(1, SpriteStates.BuildingFrame(Building, 1000, 49, 100, false, 40));
     }
 
     [Fact]
