@@ -102,16 +102,16 @@ def build():
     # light: moonless; the device is the sun.  Cool rim from the sky behind the camera, warm light from ahead.
     sunv = Vector((0.06, 1.0, 0.06))
     X.sky_grad(sunv, [(0.0, "#9A3414"), (0.04, "#5E2418"), (0.14, "#34222A"), (0.35, "#1A1A26"), (0.7, "#0D0F18"), (1.0, "#06070D")],
-               strength=1.0, glow="#FF8A38", glow_pow=(5.0, 40.0), glow_k=(2.2, 2.4),
+               strength=0.55, glow="#FF8A38", glow_pow=(5.0, 40.0), glow_k=(2.2, 2.4),
                cloud_cols=("#FF6A28", "#8A3A30", "#2A2030"), cloud_range=(0.44, 0.62), cloud_scale=2.4,
                cloud_win=(0.02, 0.1, 0.38, 0.65), cloud_gain=1.5, cloud_stretch=6.0, cloud_alpha=0.9)
-    moon = K.sun((0, 0, 0), 1.6, colour=(0.55, 0.62, 1.0), angle=4.0)
+    moon = K.sun((0, 0, 0), 0.9, colour=(0.55, 0.62, 1.0), angle=4.0)
     mv = Vector((-0.5, -0.9, 0.45)).normalized()
     moon.rotation_euler = (-mv).to_track_quat("-Z", "Y").to_euler()
-    K.area_light((0, -40, 25), (0, 20, 2), 80, 9000.0, (0.45, 0.5, 0.9))
-    K.point_light((0, 60, 30), 4.0e6, (1.0, 0.5, 0.25), 20.0)        # the burning sky over the river
-    K.haze(0.0026, colour="#6A5450", aniso=0.35, top=80.0)
-    K.camera((-3.0, -26.0, 1.5), (5.0, 110.0, 13.0), lens=24)
+    K.area_light((0, -40, 25), (0, 20, 2), 80, 2500.0, (0.45, 0.5, 0.9))
+    K.point_light((0, 60, 30), 1.5e5, (1.0, 0.5, 0.25), 20.0)        # the burning sky over the river
+    K.haze(0.0016, colour="#4A3A3A", aniso=0.35, top=80.0)
+    K.camera((-3.0, -26.0, 2.3), (5.0, 110.0, 9.0), lens=24)
 
 
 if __name__ == "__main__":
