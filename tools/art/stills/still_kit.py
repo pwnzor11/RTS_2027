@@ -16,6 +16,12 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."
 import common as C  # noqa: E402  (house palette; sprite kit)
 
 STYLE = "game"
+NOLINES = []   # objects kept out of the Freestyle outlines (decals, haze, wires, grass, far ridges)
+
+
+def nolines(o):
+    NOLINES.append(o)
+    return o
 
 
 def hexs(*names):
@@ -341,6 +347,107 @@ def sky_world(top, horizon, sun_glow=None, strength=1.0, sun_dir=(-0.75, 0.55)):
     nt.links.new(bg.outputs[0], out.inputs[0])
 
 
+def sky_dawn(sun_vec, strength=1.8):
+    """Dawn sky for Cycles: deep blue-violet zenith -> violet -> rose -> orange horizon, a hot sun glow towards
+    sun_vec (direction TO the sun), and layered cloud bands lit from below.  Also lights the scene (blue fill)."""
+    w = bpy.data.worlds.new("sky")
+    bpy.context.scene.world = w
+    w.use_nodes = True
+    nt = w.node_tree
+    for n in list(nt.nodes):
+        nt.nodes.remove(n)
+    N = nt.nodes.new
+    L = nt.links.new
+    tc = N("ShaderNodeTexCoord")
+    sub = N("ShaderNodeVectorMath"); sub.operation = "SUBTRACT"; sub.inputs[1].default_value = (0.5, 0.5, 0.5)
+    sc2 = N("ShaderNodeVectorMath"); sc2.operation = "SCALE"; sc2.inputs[3].default_value = 2.0
+    nrm = N("ShaderNodeVectorMath"); nrm.operation = "NORMALIZE"
+    L(tc.outputs["Generated"], sub.inputs[0]); L(sub.outputs[0], sc2.inputs[0]); L(sc2.outputs[0], nrm.inputs[0])
+    sep = N("ShaderNodeSeparateXYZ"); L(nrm.outputs[0], sep.inputs[0])
+    el = N("ShaderNodeMapRange"); el.inputs[1].default_value = 0.0; el.inputs[2].default_value = 1.0; el.clamp = True
+    L(sep.outputs["Z"], el.inputs[0])
+    ramp = N("ShaderNodeValToRGB"); L(el.outputs[0], ramp.inputs[0])
+    cr = ramp.color_ramp
+    stops = [(0.0, "#FFA25A"), (0.045, "#F58A5E"), (0.13, "#D96C88"), (0.30, "#8A5FA0"), (0.58, "#3F4C92"), (1.0, "#16215A")]
+    cr.elements[0].position, cr.elements[0].color = stops[0][0], lin(stops[0][1])
+    cr.elements[1].position, cr.elements[1].color = stops[-1][0], lin(stops[-1][1])
+    for pos, col in stops[1:-1]:
+        e = cr.elements.new(pos); e.color = lin(col)
+    # sun glow
+    sv = Vector(sun_vec).normalized()
+    dot = N("ShaderNodeVectorMath"); dot.operation = "DOT_PRODUCT"; dot.inputs[1].default_value = tuple(sv)
+    L(nrm.outputs[0], dot.inputs[0])
+    mx = N("ShaderNodeMath"); mx.operation = "MAXIMUM"; mx.inputs[1].default_value = 0.0; L(dot.outputs["Value"], mx.inputs[0])
+    g1 = N("ShaderNodeMath"); g1.operation = "POWER"; g1.inputs[1].default_value = 14.0; L(mx.outputs[0], g1.inputs[0])
+    g2 = N("ShaderNodeMath"); g2.operation = "POWER"; g2.inputs[1].default_value = 220.0; L(mx.outputs[0], g2.inputs[0])
+    gs = N("ShaderNodeMath"); gs.operation = "MULTIPLY_ADD"; gs.inputs[1].default_value = 1.4; L(g1.outputs[0], gs.inputs[0])
+    L(g2.outputs[0], gs.inputs[2])
+    gcol = N("ShaderNodeVectorMath"); gcol.operation = "SCALE"; gcol.inputs[0].default_value = tuple(lin("#FFC98A")[:3])
+    L(gs.outputs[0], gcol.inputs[3])
+    add = N("ShaderNodeMix"); add.data_type = "RGBA"; add.blend_type = "ADD"; add.inputs[0].default_value = 1.0
+    L(ramp.outputs[0], add.inputs[6]); L(gcol.outputs[0], add.inputs[7])
+    # cloud bands: noise stretched along the horizon
+    mp = N("ShaderNodeMapping"); mp.inputs["Scale"].default_value = (1.0, 1.0, 5.5)
+    L(nrm.outputs[0], mp.inputs[0])
+    nz = N("ShaderNodeTexNoise"); nz.inputs["Scale"].default_value = 2.6; nz.inputs["Detail"].default_value = 5.0
+    nz.inputs["Roughness"].default_value = 0.55
+    L(mp.outputs[0], nz.inputs["Vector"])
+    cm = N("ShaderNodeMapRange"); cm.inputs[1].default_value = 0.47; cm.inputs[2].default_value = 0.66; cm.clamp = True
+    L(nz.outputs["Fac"], cm.inputs[0])
+    w1 = N("ShaderNodeMapRange"); w1.inputs[1].default_value = 0.025; w1.inputs[2].default_value = 0.11; w1.clamp = True
+    L(sep.outputs["Z"], w1.inputs[0])
+    w2 = N("ShaderNodeMapRange"); w2.inputs[1].default_value = 0.30; w2.inputs[2].default_value = 0.52
+    w2.inputs[3].default_value = 1.0; w2.inputs[4].default_value = 0.0; w2.clamp = True
+    L(sep.outputs["Z"], w2.inputs[0])
+    wm = N("ShaderNodeMath"); wm.operation = "MULTIPLY"; L(w1.outputs[0], wm.inputs[0]); L(w2.outputs[0], wm.inputs[1])
+    mk = N("ShaderNodeMath"); mk.operation = "MULTIPLY"; mk.inputs[1].default_value = 0.92
+    cmk = N("ShaderNodeMath"); cmk.operation = "MULTIPLY"; L(cm.outputs[0], cmk.inputs[0]); L(wm.outputs[0], cmk.inputs[1])
+    L(cmk.outputs[0], mk.inputs[0])
+    cramp = N("ShaderNodeValToRGB"); L(el.outputs[0], cramp.inputs[0])
+    cc = cramp.color_ramp
+    cc.elements[0].position, cc.elements[0].color = 0.04, lin("#FFB66E")
+    cc.elements[1].position, cc.elements[1].color = 0.40, lin("#B0628E")
+    e = cc.elements.new(0.16); e.color = lin("#F08A82")
+    cb = N("ShaderNodeVectorMath"); cb.operation = "SCALE"; cb.inputs[3].default_value = 1.9
+    L(cramp.outputs[0], cb.inputs[0])
+    fin = N("ShaderNodeMix"); fin.data_type = "RGBA"; fin.inputs[0].default_value = 1.0
+    L(mk.outputs[0], fin.inputs[0]); L(add.outputs[2], fin.inputs[6]); L(cb.outputs[0], fin.inputs[7])
+    bg = N("ShaderNodeBackground"); bg.inputs["Strength"].default_value = strength
+    out = N("ShaderNodeOutputWorld")
+    L(fin.outputs[2], bg.inputs[0]); L(bg.outputs[0], out.inputs[0])
+    return w
+
+
+def haze(density=0.0045, colour="#C8D0F5", aniso=0.45):
+    """Scene-wide aerial perspective (Cycles world volume): distance goes lighter and bluer, sun shafts through it."""
+    nt = bpy.context.scene.world.node_tree
+    v = nt.nodes.new("ShaderNodeVolumeScatter")
+    v.inputs["Density"].default_value = density
+    v.inputs["Color"].default_value = lin(colour)
+    v.inputs["Anisotropy"].default_value = aniso
+    out = [n for n in nt.nodes if n.bl_idname == "ShaderNodeOutputWorld"][0]
+    nt.links.new(v.outputs[0], out.inputs["Volume"])
+
+
+def area_light(loc, look_at, size, energy, colour):
+    bpy.ops.object.light_add(type="AREA", location=loc)
+    o = bpy.context.active_object
+    o.data.size = size
+    o.data.energy = energy
+    o.data.color = colour
+    o.rotation_euler = (Vector(look_at) - Vector(loc)).to_track_quat("-Z", "Y").to_euler()
+    return o
+
+
+def point_light(loc, energy, colour, radius=1.0):
+    bpy.ops.object.light_add(type="POINT", location=loc)
+    o = bpy.context.active_object
+    o.data.energy = energy
+    o.data.color = colour
+    o.data.shadow_soft_size = radius
+    return o
+
+
 def sun(rot_deg, energy, colour=(1.0, 0.72, 0.5), angle=3.0):
     bpy.ops.object.light_add(type="SUN")
     o = bpy.context.active_object
@@ -369,6 +476,7 @@ def fog(density=0.004, colour=(0.80, 0.62, 0.50)):
     nt.links.new(v.outputs[0], out.inputs["Volume"])
     o.data.materials.append(m)
     o.display_type = "WIRE"
+    nolines(o)
     return o
 
 
@@ -385,20 +493,42 @@ def camera(loc, look_at, lens=28):
 
 def setup_render(path, style, samples=48, res=(1280, 720)):
     sc = bpy.context.scene
-    for eng in ("BLENDER_EEVEE", "BLENDER_EEVEE_NEXT"):
+    cycles = style == "mix" and os.environ.get("STILL_ENGINE", "cycles") == "cycles"
+    if cycles:
+        sc.render.engine = "CYCLES"
+        cy = sc.cycles
+        cy.device = "CPU"
+        cy.samples = samples
+        cy.use_adaptive_sampling = True
+        cy.adaptive_threshold = 0.02
+        cy.use_denoising = True
         try:
-            sc.render.engine = eng
-            break
+            cy.denoiser = "OPENIMAGEDENOISE"
         except TypeError:
-            continue
+            pass
+        cy.max_bounces = 5
+        cy.diffuse_bounces = 3
+        cy.glossy_bounces = 3
+        cy.transmission_bounces = 2
+        cy.volume_bounces = 1
+        cy.volume_step_rate = 2.0
+        cy.volume_max_steps = 256
+        cy.sample_clamp_indirect = 8.0
+    else:
+        for eng in ("BLENDER_EEVEE", "BLENDER_EEVEE_NEXT"):
+            try:
+                sc.render.engine = eng
+                break
+            except TypeError:
+                continue
+        try:
+            sc.eevee.taa_render_samples = samples
+        except Exception:
+            pass
     sc.render.resolution_x, sc.render.resolution_y = res
     sc.render.resolution_percentage = 100
     sc.render.filepath = path
     sc.render.image_settings.file_format = "PNG"
-    try:
-        sc.eevee.taa_render_samples = samples
-    except Exception:
-        pass
     if style in ("poster", "mix"):
         if style == "poster":
             sc.view_settings.view_transform = "Standard"
@@ -409,27 +539,52 @@ def setup_render(path, style, samples=48, res=(1280, 720)):
                 pass
             sc.view_settings.look = "AgX - Medium High Contrast"
         sc.render.use_freestyle = True
-        sc.render.line_thickness = 1.6
-        ls = sc.view_layers[0].freestyle_settings.linesets
-        ls = ls[0] if len(ls) else sc.view_layers[0].freestyle_settings.linesets.new("outline")
+        sc.render.line_thickness = 1.6 * (res[0] / 1280.0 if style == "mix" else 1.0)
+        fs = sc.view_layers[0].freestyle_settings
+        ls = fs.linesets
+        ls = ls[0] if len(ls) else fs.linesets.new("outline")
         if ls.linestyle is None:
             ls.linestyle = bpy.data.linestyles.new('outline')
-        fogo = bpy.data.objects.get("fog")
-        if fogo is not None:
-            # the haze volume is a box: keep its edges out of the outlines
-            fc = bpy.data.collections.new("fog_nolines")
+        objs = []
+        for o in NOLINES:
+            try:
+                if o.name in bpy.data.objects and o not in objs:
+                    objs.append(o)
+            except ReferenceError:
+                pass
+        if objs:
+            # decals, haze box, wires, grass, far ridges: no outlines
+            fc = bpy.data.collections.new("nolines")
             sc.collection.children.link(fc)
-            for c in list(fogo.users_collection):
-                c.objects.unlink(fogo)
-            fc.objects.link(fogo)
+            for o in objs:
+                for c in list(o.users_collection):
+                    c.objects.unlink(o)
+                fc.objects.link(o)
             ls.select_by_collection = True
             ls.collection = fc
             ls.collection_negation = "EXCLUSIVE"
         ls.select_silhouette = True
         ls.select_border = True
         ls.select_crease = True
-        ls.linestyle.color = lin(P["outline"])[:3]
-        ls.linestyle.thickness = 2.2 if style == "poster" else 1.1
+        lsty = ls.linestyle
+        lsty.color = lin(P["outline"])[:3]
+        lsty.thickness = 2.2 if style == "poster" else 1.1
+        if style == "mix":
+            # lines recede with the scene: thinner, lighter, hazier with distance
+            try:
+                t = lsty.thickness_modifiers.new(name="dist", type="DISTANCE_FROM_CAMERA")
+                t.range_min, t.range_max = 12.0, 260.0
+                t.value_min, t.value_max = 0.45, 1.5
+                t.invert = True
+                a = lsty.alpha_modifiers.new(name="dist", type="DISTANCE_FROM_CAMERA")
+                a.range_min, a.range_max = 60.0, 420.0
+                a.invert = True
+                c = lsty.color_modifiers.new(name="dist", type="DISTANCE_FROM_CAMERA")
+                c.range_min, c.range_max = 15.0, 300.0
+                c.color_ramp.elements[0].color = (*lin("#120E0C")[:3], 1)
+                c.color_ramp.elements[1].color = (*lin("#6E5A78")[:3], 1)
+            except Exception as ex:  # keep rendering with plain lines
+                print("line modifiers skipped:", ex)
     else:
         try:
             sc.view_settings.view_transform = "AgX"
@@ -442,3 +597,4 @@ def setup_render(path, style, samples=48, res=(1280, 720)):
 def clear():
     bpy.ops.wm.read_factory_settings(use_empty=True)
     _mats.clear()
+    del NOLINES[:]
