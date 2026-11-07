@@ -229,7 +229,7 @@ systems (water locomotion, ships, landings). Lore, roster, art, AI.
 - [x] M8-13 Archive campaign unlock ids (s12; docs/archive/m8_13_unlocks.md)
 - [x] M8-17 Mission API follow-ups from the tutorial (s12): `Player.Funds` (Cash + Stored) for income checks; a script Win on the same tick as elimination must still run (check MissionCheck and the game loop stop at GameOver); tut_01 keeps a hidden reserve power plant so the enemy team survives until the script wins
 - [x] M8-12 Fan-out: acts 2-4 for all four factions plus DRAFT ending slides (s12; owner review list docs/missions/s12_owner_review.md)
-- [ ] M8-14 act-break stills (s13: briefing hook and 12 still ids, D-165; pilot in two styles, fan-out waits for Q-59) (M8-16 ending screen done with M8-08)
+- [x] M8-14 act-break stills (s13 hook + pilot; s14: style C mix v2/v3, D-169; all 12 stills rendered, tools/art/stills/)
 - [x] M8-15 Acceptance (s13): owner play-through ("everything looked great", D-164); bot play-through of all 16 missions in one run; mid-mission save/load for every mission; tier table docs/balance/m8_15_acceptance.md (all won; tier tuning → Q-62); bot-found balance table docs/balance/s13_campaign_balance.md (Q-60)
 - [ ] M8-18 Voiced radio lines (s14): Wyoming Piper batch tool (tools/voice/wyoming_batch.py, owner runs it on the NAS; its commit says M8-16 by mistake); voices chosen by the owner, licence checked per voice, credits in CREDITS.md; game must play the OGG voice files
 - [x] M8-01 Campaign plan (docs/design/12_m8_plan.md, plan only; story questions open) (session 9)
