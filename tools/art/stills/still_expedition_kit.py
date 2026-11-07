@@ -120,29 +120,51 @@ def sea(y0, y1=900.0, x0=-700.0, x1=700.0, z=0.05, **kw):
     return K.nolines(o)
 
 
+def foam_mat(col="#F4F8F4", alpha=0.85, scale=0.8, lo=0.36, hi=0.64):
+    """Soft, noise-masked, semi-transparent strip: fades out across its width (Generated Y) and breaks up along it."""
+    mt, nt, out = K._new_mat("foam_" + col + str(alpha))
+    N, L = K._nodes(nt)
+    tc = N("ShaderNodeTexCoord")
+    sep = N("ShaderNodeSeparateXYZ"); L(tc.outputs["Generated"], sep.inputs[0])
+    t = N("ShaderNodeMath"); t.operation = "MULTIPLY_ADD"; t.inputs[1].default_value = 2.0; t.inputs[2].default_value = -1.0
+    L(sep.outputs["Y"], t.inputs[0])
+    ab = N("ShaderNodeMath"); ab.operation = "ABSOLUTE"; L(t.outputs[0], ab.inputs[0])
+    edge = N("ShaderNodeMath"); edge.operation = "MULTIPLY_ADD"; edge.inputs[1].default_value = -1.0; edge.inputs[2].default_value = 1.0
+    L(ab.outputs[0], edge.inputs[0])
+    pos = N("ShaderNodeNewGeometry").outputs["Position"]
+    nz = K._ramp(nt, K._noise(nt, pos, scale, 4).outputs["Fac"], [(lo, (0, 0, 0, 1)), (hi, (1, 1, 1, 1))])
+    mk = N("ShaderNodeMath"); mk.operation = "MULTIPLY"; L(edge.outputs[0], mk.inputs[0]); L(nz.outputs[0], mk.inputs[1])
+    al = N("ShaderNodeMath"); al.operation = "MULTIPLY"; al.inputs[1].default_value = alpha; L(mk.outputs[0], al.inputs[0])
+    b = N("ShaderNodeBsdfPrincipled"); b.inputs["Base Color"].default_value = K.lin(col); b.inputs["Roughness"].default_value = 1.0
+    L(al.outputs[0], b.inputs["Alpha"]); L(b.outputs[0], out.inputs["Surface"])
+    return mt
+
+
+def _strip(p0, p1, width, z, mt):
+    d = Vector((p1[0] - p0[0], p1[1] - p0[1], 0))
+    ang = math.atan2(d.y, d.x)
+    bpy.ops.mesh.primitive_plane_add(size=1, location=((p0[0] + p1[0]) / 2, (p0[1] + p1[1]) / 2, z))
+    o = bpy.context.active_object
+    o.name = "foam"
+    o.scale = (d.length * 1.03, width, 1.0)
+    o.rotation_euler = (0, 0, ang)
+    o.data.materials.append(mt)
+    return K.nolines(o)
+
+
 def foam_line(pts, width=1.2, z=0.08, rng=None, col="#F2F6F2"):
-    """Broken white surf along a polyline of (x,y)."""
-    rng = rng or random.Random(3)
-    for (x0, y0), (x1, y1) in zip(pts[:-1], pts[1:]):
-        d = Vector((x1 - x0, y1 - y0, 0))
-        ang = math.atan2(d.y, d.x)
-        k = max(1, int(d.length / 3.0))
-        for i in range(k):
-            if rng.random() < 0.3:
-                continue
-            t = (i + rng.uniform(0.2, 0.8)) / k
-            w = width * rng.uniform(0.4, 1.8)
-            o = K.box("foam", (x0 + d.x * t, y0 + d.y * t + rng.uniform(-0.9, 0.9), z), (d.length / k * rng.uniform(0.3, 1.1), w, 0.02),
-                      m(col, 1.0), rot=(0, 0, ang))
-            K.nolines(o)
+    """Soft surf along a polyline of (x,y): a wide faint wash plus a narrower brighter streaky edge."""
+    wash = foam_mat(col, 0.55, 0.45, 0.30, 0.70)
+    edge = foam_mat(col, 0.95, 1.1, 0.42, 0.62)
+    for p0, p1 in zip(pts[:-1], pts[1:]):
+        _strip(p0, p1, width * 5.0, z, wash)
+        _strip(p0, p1, width * 2.0, z + 0.01, edge)
 
 
 def wet_sand(pts, width=6.0, z=0.035):
-    for (x0, y0), (x1, y1) in zip(pts[:-1], pts[1:]):
-        d = Vector((x1 - x0, y1 - y0, 0))
-        ang = math.atan2(d.y, d.x)
-        o = K.box("wet", ((x0 + x1) / 2, (y0 + y1) / 2, z), (d.length * 1.05, width, 0.015), m("#6D5F4C", 0.35), rot=(0, 0, ang))
-        K.nolines(o)
+    mt = foam_mat("#3F362B", 0.55, 0.3, 0.2, 0.8)
+    for p0, p1 in zip(pts[:-1], pts[1:]):
+        _strip(p0, p1, width, z, mt)
 
 
 def wake(loc, yaw, length=24.0, width=5.0, z=0.09):
@@ -221,7 +243,7 @@ def carrier(loc, yaw=0.0, s=1.0, wake_on=True, jets=5):
         wake(loc, yaw, length=L * 0.8, width=B * 0.9)
 
 
-def command_ship(loc, yaw=0.0, s=1.0, wake_on=True, bow_down=False):
+def command_ship(loc, yaw=0.0, s=1.0, wake_on=True, bow_down=False, cranes=True):
     """Command Ship: broad bluff hull, tall white bridge block, cranes, cargo hatches in copper and a flagpole with the white pennant."""
     f = Frame((loc[0], loc[1], 0), yaw)
     L, B, H = 62 * s, 14 * s, 6.0 * s
@@ -240,7 +262,7 @@ def command_ship(loc, yaw=0.0, s=1.0, wake_on=True, bow_down=False):
     for k, fo in enumerate((L * 0.12, L * 0.28, -L * 0.34)):
         col = (COPPER, "#D9D9CE", COPPER_D)[k]
         f.box("hatch", fo, 0, zt + 0.5 * s, (B * 0.6, L * 0.1, 1.0 * s), col, 0.6)
-    for fo in (L * 0.2, -L * 0.24):
+    for fo in ((L * 0.2, -L * 0.24) if cranes else ()):
         for side in (-1, 1):
             f.cyl("crane", fo, side * B * 0.32, zt + 4.5 * s, 0.2 * s, 9 * s, ORANGE, verts=6)
             f.cyl("boom", fo + 3 * s, side * B * 0.32, zt + 8.6 * s, 0.14 * s, 8 * s, ORANGE, verts=5, axis="f")
@@ -697,6 +719,26 @@ def ships_far(rng, n, xr, y, scale=(0.8, 1.1), kinds=("destroyer", "tender"), wa
         k = rng.choice(kinds)
         fn = {"destroyer": destroyer, "tender": tender, "carrier": carrier, "command": command_ship}[k]
         fn((x, y + rng.uniform(-14, 14)), rng.uniform(*yaw) + math.pi / 2 * 0, rng.uniform(*scale), wake_on=wake_on)
+
+
+def light_shaft(base, top, r_base=14.0, col="#FFE9B8", alpha=0.10, emit=1.6):
+    """Faint translucent cone of light falling from a gap in the clouds (apex at top)."""
+    base, top = Vector(base), Vector(top)
+    d = top - base
+    bpy.ops.mesh.primitive_cone_add(vertices=24, radius1=r_base, radius2=0.5, depth=d.length, location=(base + top) / 2)
+    o = bpy.context.active_object
+    o.name = "shaft"
+    o.rotation_euler = d.to_track_quat("Z", "Y").to_euler()
+    mt, nt, out = K._new_mat("shaft")
+    b = nt.nodes.new("ShaderNodeBsdfPrincipled")
+    b.inputs["Base Color"].default_value = K.lin(col)
+    b.inputs["Emission Color"].default_value = K.lin(col)
+    b.inputs["Emission Strength"].default_value = emit
+    b.inputs["Alpha"].default_value = alpha
+    nt.links.new(b.outputs[0], out.inputs["Surface"])
+    o.data.materials.append(mt)
+    o.visible_shadow = False
+    return K.nolines(o)
 
 
 # ------------------------------------------------------------------------------------------------ render harness

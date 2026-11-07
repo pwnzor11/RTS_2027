@@ -88,7 +88,7 @@ def build():
     E.carrier((170, -120), 0.15, 1.2, wake_on=False, jets=3)
 
     # foreground right: the Command Ship's bow run up on the shore, ramp down
-    E.command_ship((15.5, -28), 0.0, 0.85, wake_on=False, bow_down=True)
+    E.command_ship((15.5, -28), 0.0, 0.85, wake_on=False, bow_down=True, cranes=False)
     # foreground left: beached landing craft and crew filing onto the ash
     E.landing_craft((-17, -1), 0.25, 1.15, ramp_down=True, rng=R)
     for i, (x, y) in enumerate(((-12.5, 8.0), (-10.0, 12.0), (-13.5, 12.5), (-6.0, 5.0), (-3.0, 9.0), (-8.0, 17.0))):
@@ -99,6 +99,18 @@ def build():
     K.barrel_drum((-8.2, -1.8), E.m("#C26A1E"))
     K.rubble_pile((-5.0, -1.2), r=1.2, n=12, rng=R, h=0.6)
     E.tent((-27, 20), 0.3, 1.1, col="#BDB8AA")
+    # foreground: puddles mirroring the red sky, supplies and crew coming up the beach
+    for (px, py, rx, ry, rt) in ((-4.5, -18.0, 3.2, 1.5, 0.2), (0.0, -11.0, 2.4, 1.1, -0.1), (-9.5, -9.0, 2.0, 0.9, 0.3), (-1.0, -3.0, 2.8, 1.2, 0.0)):
+        K.puddle((px, py), rx, ry, rt)
+    E.crate_stack_x((-10.5, -21.0), 0.4, rng=R, n=6)
+    E.crate_stack_x((1.8, -23.0), -0.2, rng=R, n=4, s=0.9)
+    for p, y, kn in (((-6.5, -14.0), 0.1, False), ((-8.5, -16.0), 0.2, True), ((-1.5, -17.0), -0.1, False)):
+        E.xfigure(p, y, kneel=kn, hold="crate" if kn else "rifle")
+    K.barrel_drum((-13.0, -14.0), E.m("#C26A1E"))
+    K.barrel_drum((-12.2, -14.5), E.m("#C26A1E"))
+    K.rubble_pile((-2.5, -26.0), r=1.3, n=12, rng=R, h=0.7)
+    K.rubble_pile((-12.0, -26.0), r=1.0, n=9, rng=R, h=0.5)
+    K.tire_tracks([(-5.0, -28), (-4.6, -20), (-4.2, -12), (-3.6, -4)], col="#1E1815")
 
     # midground: Dredge Works going up on the ash, survey hovers skimming ahead
     E.dredge_works((-16, 70), 0.28, 1.35)
