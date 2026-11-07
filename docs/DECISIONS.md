@@ -1233,3 +1233,9 @@ building on its own refinery dock and stop its income. No sim change; no pinned 
 a strength lever at tier 3, with either model or prompt. Making directives matter is recorded as a design note
 (docs/design/15_commander_directives.md) for a later milestone; no more API tests now.
 **Status:** confirmed (owner, session 12)
+
+### D-162 · 2026-11-07 · Expedition AI balance is judged on 20-minute games; no rules-number change
+**Decision:** Expedition per-tier balance (M7-18) is measured at `--ticks 24000` (20 min). At that length every re-measured cell is within
+40-60 % decisive except tier 5 vs Directorate (80 %), so no rules numbers change. The Marine cost 150 → 110 variant was within noise and is
+not adopted. Evidence: docs/balance/s12_expedition_numbers.md.
+**Status:** confirmed (owner, session 12)

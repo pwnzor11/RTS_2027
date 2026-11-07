@@ -211,7 +211,7 @@ systems (water locomotion, ships, landings). Lore, roster, art, AI.
 - [x] M7-15 Floating docks (Q-55 (a), D-153, D-156): wholly-on-water docks touching the shore, AI siting, drop the South stop-gap; redraw the four dock sprites (pilot first)
 - [x] M7-16 Aircraft ammo (D-156): 4-5 rounds, rearm at the carrier, carrier balance table
 - [x] M7-17 Submarine dived frames drawn; dived look only for owner and allies
-- [ ] M7-18 Expedition AI per tier (§6 bullet 1) and M7 acceptance close-out
+- [x] M7-18 Expedition AI per tier (§6 bullet 1): accepted at 20-min games (D-162); tier 5 vs Directorate 80 % noted. M7 acceptance close-out still open with M7-14
 - [x] M7-19 Left Behind early income (Q-52, D-153) and Expedition small-map re-measure
 - [x] M7-20 Archive drafts (8 upgrade notes, Provision Store) and Left Behind lore revision (D-155)
 
