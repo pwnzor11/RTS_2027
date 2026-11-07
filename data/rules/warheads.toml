@@ -32,7 +32,7 @@ garrison_damage_percent = 50  # (tune) M4-16: 25 -> 50, counters must clear a ga
 versus = [80, 60, 40, 40, 20, 100, 100, 100]  # ASSUMED (M3-07)
 splash = 1  # ASSUMED (M3-07)
 hits_allies = false
-contaminate = 40  # ASSUMED (M3-07)
+contaminate = 20  # (tune) D-166: 40 -> 20, owner Q-60
 
 [dir_demolition]
 garrison_damage_percent = 50  # (tune) M4-16: 25 -> 50, counters must clear a garrison at ~1.25x cost
