@@ -43,11 +43,11 @@ public static class UnitRenderer
         bool moving = memory.IsMoving(UnitKey.Of(view));
         Vector2 origin = SpriteLayout.UnitOrigin(camera, unit.World);
         Color house = PlayerColours.Base(view.Player);
-        float drawScale = DrawScale(rules, view);   // M7-03: big ships are one cell but drawn larger (D-124)
-        if (UnitVisuals.ShowTunnelMarker(view)) DrawTunnelMarker(batch, pixel, origin, infantry, house, camera.Zoom);
+        float drawScale = DrawScale(rules, view) * SpriteLayout.UnitDrawScale;   // M7-03: big ships are one cell but drawn larger (D-124); M11-06/D-172: all units x1.25
+        if (UnitVisuals.ShowTunnelMarker(view)) DrawTunnelMarker(batch, pixel, origin, infantry, house, camera.Zoom * SpriteLayout.UnitDrawScale);
         float alpha = UnitVisuals.Alpha(view, submerged, ownOrAllied);   // M7-14/M7-17: faded only for own and allied dived ships
         int divedFrame = UnitVisuals.DivedBodyFrame(sprite.Manifest, view.Facing, tick, submerged);   // M7-17: dived body frame, or -1
-        if (UnitVisuals.ShowDiveMarker(view)) DrawDiveMarker(batch, pixel, origin, house, tick, camera.Zoom);
+        if (UnitVisuals.ShowDiveMarker(view)) DrawDiveMarker(batch, pixel, origin, house, tick, camera.Zoom * SpriteLayout.UnitDrawScale);
         // M3-18: shadow under the body, turret on top, dive replaces the body. M3-21: the snapshot carries the turret facing and the dive flag.
         // Companion sheets (<id>_turret, <id>_shadow) supply a layer when the body sheet has no such state.
         IReadOnlyList<UnitLayer> layers = UnitLayerPlan.For(sprite.Manifest, infantry, moving, view.Facing, UnitVisuals.TurretFacing(view),
@@ -70,13 +70,13 @@ public static class UnitRenderer
         float zoom = camera.Zoom;
         int cx = (int)origin.X;
         int cy = (int)origin.Y;
-        int half = (int)MathF.Round((infantry ? InfantryBracketHalfPxAtZoom1 : VehicleBracketHalfPxAtZoom1) * zoom * Math.Max(1f, drawScale));
+        int half = (int)MathF.Round((infantry ? InfantryBracketHalfPxAtZoom1 : VehicleBracketHalfPxAtZoom1) * zoom * Math.Max(SpriteLayout.UnitDrawScale, drawScale));
         int length = Math.Max(3, (int)MathF.Round(BracketLengthPxAtZoom1 * zoom));
         int thick = zoom < 1f ? 1 : 2;
         DrawBracket(batch, pixel, cx, cy, half, length, thick);
     }
 
-    /// <summary>Sprite scale of a unit: the vehicle type's <c>draw_scale_permille</c> / 1000 (1 for infantry and unknown types). Game layer only: float is fine here.</summary>
+    /// <summary>Type-only sprite scale of a unit (before <see cref="SpriteLayout.UnitDrawScale"/>): the vehicle type's <c>draw_scale_permille</c> / 1000 (1 for infantry and unknown types). Game layer only: float is fine here.</summary>
     public static float DrawScale(SimRules? rules, UnitView view)
     {
         if (view.Kind != UnitKind.Vehicle || rules is null || (uint)view.TypeIndex >= (uint)rules.Vehicles.Count) return 1f;

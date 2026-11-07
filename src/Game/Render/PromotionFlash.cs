@@ -27,7 +27,7 @@ public static class PromotionFlash
             if (!tracker.IsFlashing(key, tick)) continue;
             Vector2 centre = SpriteLayout.UnitOrigin(camera, unit.World);
             float zoom = camera.Zoom;
-            int half = (int)MathF.Round(HalfPx * zoom);
+            int half = (int)MathF.Round(HalfPx * zoom * SpriteLayout.UnitDrawScale);
             var box = new Rectangle((int)centre.X - half, (int)centre.Y - half, half * 2, half * 2);
             Shapes.Outline(batch, pixel, box, Gold, Math.Max(1, (int)MathF.Round(ThicknessPx * zoom)));
         }
