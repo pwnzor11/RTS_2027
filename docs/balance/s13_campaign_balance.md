@@ -60,4 +60,10 @@ hits to kill a Rifleman.
 Note: in the 25 v 20 style fights marked "undecided", both sides still had survivors at tick 4000 (the units stop
 fighting once out of each other's range), so I count them by who has more left.
 
+## Lead's note (session 13)
+- Ash: immunity (1000) also makes Directorate Conscripts and Ashthrowers immune to every other radiation source (an enemy
+  Directorate's rad mortar or ash in a mirror match, Sunrise fallout). If that matters, contaminate 40 -> 20 is the safer change.
+- Bomber: the shipped exp_03/exp_04 bases do place an `exp_pile_house`; the bot's run most likely lost power (a pile house destroyed
+  or too many power users). Recommendation: no rules change; check the low-power warning is visible to the player.
+
 Owner decides (D-152).
