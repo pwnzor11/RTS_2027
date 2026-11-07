@@ -13,6 +13,7 @@ function OnInit()
   state.phase = "ashore"
   state.fuel = false
   state.waves = 0
+  state.finale = false
   state.waveTags = {}
 
   Objective.Add("fuel", "e4.obj.fuel", true)
@@ -28,9 +29,9 @@ function OnInit()
   AI.Defend(1, "redoubt")
 
   Trigger.AfterDelay(500, ShipOne)
-  Mission.Timer("col1", 2400, ColumnOne, "e4.timer.col1")
-  Trigger.AfterDelay(5200, ColumnTwo)
-  Trigger.AfterDelay(8400, ColumnThree)
+  Mission.Timer("col1", Pick({ 2600, 2500, 2400, 2200, 2000 }), ColumnOne, "e4.timer.col1")
+  Trigger.AfterDelay(Pick({ 5400, 5300, 5200, 4700, 4200 }), ColumnTwo)
+  Trigger.AfterDelay(Pick({ 8800, 8600, 8400, 7600, 6800 }), ColumnThree)
   Trigger.AfterDelay(9000, ShipTwo)
   -- Callbacks run before the sim's own defeat check, so the last blow on the redoubt is seen on the tick it lands.
   Trigger.OnDestroyed("shaft", BaseBlow)
@@ -40,6 +41,7 @@ end
 
 function BaseBlow()
   if state.phase == "done" then return end
+  Finale()
   CheckHeld()
   CheckBase()
   CheckWin()
@@ -108,7 +110,11 @@ end
 function Column(size, extra, minTier, zone)
   local types = {}
   for i = 1, size do types[i] = "dir_conscript" end
-  if Mission.Difficulty() >= minTier then types[#types + 1] = extra end
+  local d = Mission.Difficulty()
+  if d >= minTier then types[#types + 1] = extra end
+  -- the heavier tiers send a second and third special unit
+  if d >= 4 then types[#types + 1] = extra end
+  if d >= 5 then types[#types + 1] = extra end
   local tags = Reinforce.Zone(1, types, zone, HOLD)
   for i, tag in pairs(tags) do
     state.waveTags[#state.waveTags + 1] = tag
@@ -121,21 +127,21 @@ function ColumnOne()
   Media.MessageKey("e4.col1")
   Dialogue.Say("leader_dir_larkin", "leader_dir_larkin", "e4.radio.larkin")
   Camera.Focus("gate", 120)
-  Column(Pick({ 6, 6, 8, 10, 12 }), "dir_ashthrower", 3, "gate")
+  Column(Pick({ 7, 8, 10, 12, 14 }), "dir_ashthrower", 1, "gate")
 end
 
 function ColumnTwo()
   if state.phase == "done" then return end
   Media.MessageKey("e4.col2")
   Camera.Focus("flank", 100)
-  Column(Pick({ 6, 7, 9, 11, 14 }), "dir_sapper", 4, "flank")
+  Column(Pick({ 7, 9, 11, 13, 16 }), "dir_sapper", 2, "flank")
 end
 
 function ColumnThree()
   if state.phase == "done" then return end
   Media.MessageKey("e4.col3")
   Dialogue.Say(SPEAKER, SPEAKER, "e4.radio.col3")
-  Column(Pick({ 8, 9, 11, 14, 18 }), "dir_ashthrower", 2, "gate")
+  Column(Pick({ 9, 11, 13, 16, 20 }), "dir_ashthrower", 1, "gate")
 end
 
 function WavesDown()
@@ -143,6 +149,24 @@ function WavesDown()
     if Actor.Alive(tag) then return false end
   end
   return true
+end
+
+-- The finale: the first blow on the redoubt (Shaft or Device) brings out its last guard. It marches on the player's army
+-- from the gate, and the mission is not won until it is down.
+function Finale()
+  if state.finale then return end
+  if Actor.Alive("shaft") and Actor.Alive("device") then return end
+  state.finale = true
+  local types = {}
+  for i = 1, Pick({ 10, 12, 14, 18, 22 }) do types[#types + 1] = "dir_conscript" end
+  for i = 1, Pick({ 3, 4, 5, 7, 9 }) do types[#types + 1] = "dir_ashthrower" end
+  for i = 1, Pick({ 2, 2, 3, 4, 6 }) do types[#types + 1] = "dir_sapper" end
+  for i = 1, Pick({ 0, 0, 1, 2, 3 }) do types[#types + 1] = "dir_rocket_truck" end
+  local tags = Reinforce.Zone(1, types, "gate", Map.Center("redoubt"))
+  for i, tag in pairs(tags) do
+    state.waveTags[#state.waveTags + 1] = tag
+  end
+  Camera.Focus("gate", 120)
 end
 
 function CheckHeld()
@@ -164,6 +188,7 @@ end
 
 function CheckWin()
   if not Mission.AllPrimaryDone() then return end
+  if not state.finale or not WavesDown() then return end
   state.phase = "done"
   if Objective.Status("ash") == "active" then Objective.Complete("ash") end
   AI.Clear(1)
