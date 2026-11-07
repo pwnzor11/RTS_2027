@@ -9,6 +9,9 @@ public sealed class MissionLoaderLocaleTests
     private static string Folder(string extraMissionKeys, string? locale)
     {
         string source = File.ReadAllText(Path.Combine(MissionLoader.FolderOf(TestData.DataDir, "auth_01"), "mission.toml"));
+        // auth_01 is schema 2 since M8-10: drop its v2 keys and tables so the cases below add their own.
+        source = System.Text.RegularExpressions.Regex.Replace(source, @"^(schema|act|faction|next|locale) = .*\r?\n", "", System.Text.RegularExpressions.RegexOptions.Multiline);
+        source = System.Text.RegularExpressions.Regex.Replace(source, @"\[(starts_with|unlocks_on_win)\]\r?\ntech = .*\r?\n\r?\n", "");
         string toml = source.Replace("seed = 2027", "seed = 2027\n" + extraMissionKeys, StringComparison.Ordinal);
         string folder = Path.Combine(Path.GetTempPath(), "rts_m805_" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(folder);

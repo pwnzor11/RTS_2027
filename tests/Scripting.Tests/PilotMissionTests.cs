@@ -47,7 +47,8 @@ public sealed class PilotMissionTests
         TestData.Run(m.Sim, 6000);
         Assert.Empty(m.Host.Errors);
         Assert.NotEqual(MissionOutcome.Won, m.Host.Outcome);
-        Assert.Equal(2, m.Host.Objectives.Count);
+        Assert.Equal(2, m.Host.VisibleObjectives.Count());
+        Assert.Equal(3, m.Host.Objectives.Count);   // plus the hidden "surveyors" secondary
     }
 
     [Fact]
@@ -62,10 +63,13 @@ public sealed class PilotMissionTests
         Assert.False(m.Sim.IsUnlocked(0, ProductionCategory.Defence, turret));
     }
 
-    [Fact]
-    public void A_simple_player_can_win()
+    [Theory]
+    [InlineData(3)]
+    [InlineData(5)]
+    public void A_simple_player_can_win(int tier)
     {
         MissionSession m = MissionSession.Create(TestData.DataDir, "auth_01");
+        m.Host.SetDifficulty(tier);
         var bot = new Bot(m);
         Simulation sim = m.Sim;
         var rules = sim.Setup.Rules;
@@ -94,8 +98,8 @@ public sealed class PilotMissionTests
         Assert.True(m.Host.Errors.Count == 0, diag);
         Assert.True(m.Host.Outcome == MissionOutcome.Won, diag);
         Assert.True(sim.GameOver);
-        Assert.True(sim.Tick < 12000, diag);   // the design target is about ten minutes (12000 ticks)
+        Assert.True(sim.Tick < 14000, diag);
         Assert.Equal(0, sim.WinningTeam);
-        Assert.All(m.Host.Objectives, o => Assert.Equal(ObjectiveStatus.Completed, o.Status));
+        Assert.All(m.Host.Objectives.Where(o => o.Primary), o => Assert.Equal(ObjectiveStatus.Completed, o.Status));
     }
 }

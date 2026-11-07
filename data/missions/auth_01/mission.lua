@@ -1,38 +1,58 @@
--- Authority 01: Survey Convoy (pilot, D-061).
--- Rules of this sandbox: integers only, no pairs on hash tables, callbacks are TOP-LEVEL named functions,
--- every piece of script data lives in the global `state` table (saved and hashed with the game).
+-- Authority 01: Survey Convoy (schema 2, M8-10 pilot). Hero on the radio: Brigadier Wrenfield.
+-- Rules of this sandbox: integers only, callbacks are TOP-LEVEL named functions, script data lives in the global `state`.
+-- Text: radio and messages come from locale.toml. Objective and timer texts are plain strings (the API does not resolve keys there).
+
+local SPEAKER = "leader_auth_wrenfield"
 
 function OnInit()
   state.phase = "convoy"
   state.raids = 0
   state.raidTags = {}
+  state.surveyors = 2
 
   Objective.Add("reach", "Escort the scraper convoy to the survey site in the north-east", true)
   Objective.Add("scrapers", "Keep at least one scraper alive", true)
-  Media.Message("Convoy is rolling. Get the scrapers to the survey site.")
+  Objective.AddHidden("surveyors", "Bring both civilian surveyors through alive", false)
+  Media.MessageKey("a1.start")
+  Dialogue.Say(SPEAKER, SPEAKER, "a1.radio.start")
+  Camera.Focus("jeep", 120)
 
   Trigger.Every(20, CheckConvoy)
   Trigger.OnDestroyed("scraper1", ScraperLost)
   Trigger.OnDestroyed("scraper2", ScraperLost)
+  Trigger.OnDestroyed("svy1", SurveyorLost)
+  Trigger.OnDestroyed("svy2", SurveyorLost)
   Trigger.OnEnter("survey", 0, ScoutArrived)
   Trigger.AfterDelay(400, ConvoyRadio)
 end
 
 function ConvoyRadio()
   if state.phase == "convoy" then
-    Media.Message("Command: Directorate chatter on the band. Keep the convoy tight.")
+    Dialogue.Say(SPEAKER, SPEAKER, "a1.radio.chatter")
   end
 end
 
 function ScoutArrived()
-  Media.Message("Scouts report the site is clear. Bring the scrapers up.")
+  Media.MessageKey("a1.site.clear")
+  if state.phase ~= "done" then
+    Objective.Reveal("surveyors")
+    Dialogue.Say(SPEAKER, SPEAKER, "a1.radio.civilians")
+  end
+end
+
+function SurveyorLost()
+  if state.surveyors > 0 then state.surveyors = state.surveyors - 1 end
+  if Objective.Status("surveyors") == "active" then
+    Objective.Fail("surveyors")
+    Dialogue.Say(SPEAKER, SPEAKER, "a1.radio.civilians_lost")
+  end
 end
 
 function ScraperLost()
   if state.phase == "done" then return end
   if not Actor.Alive("scraper1") and not Actor.Alive("scraper2") then
     Objective.Fail("scrapers")
-    Media.Message("Both scrapers are lost. The survey is over.")
+    Media.MessageKey("a1.lost")
     Mission.Lose(0)
   end
 end
@@ -44,10 +64,22 @@ function CheckConvoy()
     state.phase = "survey"
     Objective.Complete("reach")
     Objective.Add("hold", "Hold the survey site until the raiders are beaten", true)
-    Media.Message("Survey gear is down. Expect company: two raids inbound.")
+    Dialogue.Say(SPEAKER, SPEAKER, "a1.radio.down")
+    Camera.Focus("survey", 120)
     Trigger.AfterDelay(300, RaidOne)
-    Trigger.AfterDelay(1500, RaidTwo)
+    Mission.Timer("raid2", 1500, RaidTwo, "Second raid")
   end
+end
+
+-- Raid strength follows the difficulty tier (1..5); tier 3 is the original raid. Never cash or vision (D-061).
+function RaidOneSize()
+  local sizes = { 2, 2, 3, 4, 5 }
+  return sizes[Mission.Difficulty()]
+end
+
+function RaidTwoSize()
+  local sizes = { 3, 3, 4, 5, 6 }
+  return sizes[Mission.Difficulty()]
 end
 
 function Raid(types, edge)
@@ -59,13 +91,18 @@ function Raid(types, edge)
 end
 
 function RaidOne()
-  Media.Message("Raiders from the east road!")
-  Raid({ "auth_rifleman", "auth_rifleman", "auth_rifleman" }, { x = 63, y = 8 + Random.Next(6) })
+  Media.MessageKey("a1.raid1")
+  local types = {}
+  for i = 1, RaidOneSize() do types[i] = "auth_rifleman" end
+  Raid(types, { x = 63, y = 8 + Random.Next(6) })
 end
 
 function RaidTwo()
-  Media.Message("Second wave from the north!")
-  Raid({ "auth_rifleman", "auth_rifleman", "auth_rifleman", "auth_rifleman", "auth_jeep" }, { x = 44 + Random.Next(4), y = 0 })
+  Media.MessageKey("a1.raid2")
+  local types = {}
+  for i = 1, RaidTwoSize() do types[i] = "auth_rifleman" end
+  if Mission.Difficulty() >= 3 then types[#types + 1] = "auth_jeep" end
+  Raid(types, { x = 44 + Random.Next(4), y = 0 })
   Trigger.Every(40, CheckRaids)
 end
 
@@ -79,7 +116,9 @@ function CheckRaids()
   Actor.Create("auth_conyard", 0, { x = 23, y = 25 }, "yard")
   Player.AddCash(0, 1000)
   Objective.Add("refinery", "Build a Refinery beside the pitchblende pit", true)
-  Media.Message("Raiders beaten. A forward Construction Yard has been airlifted to the pit. Power first, then the Refinery.")
+  Media.MessageKey("a1.raiders.beaten")
+  Dialogue.Say(SPEAKER, SPEAKER, "a1.radio.build")
+  Camera.Focus("yard", 120)
   Trigger.Every(40, CheckRefinery)
 end
 
@@ -89,7 +128,9 @@ function CheckRefinery()
     state.phase = "done"
     Objective.Complete("refinery")
     Objective.Complete("scrapers")
-    Media.Message("Refinery online. Pitchblende is ours. Well done, Commander.")
+    if Objective.Status("surveyors") == "active" then Objective.Complete("surveyors") end
+    Media.MessageKey("a1.win")
+    Dialogue.Say(SPEAKER, SPEAKER, "a1.radio.win")
     Mission.Win(0)
   end
 end
