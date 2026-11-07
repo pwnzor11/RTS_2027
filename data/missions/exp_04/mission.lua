@@ -171,11 +171,25 @@ function Finale()
   for i = 1, Pick({ 2, 2, 3, 6, 10 }) do types[#types + 1] = "dir_sapper" end
   for i = 1, Pick({ 1, 1, 2, 4, 6 }) do types[#types + 1] = "dir_rocket_truck" end
   for i = 1, Pick({ 1, 1, 2, 3, 4 }) do types[#types + 1] = "dir_reactor_crawler" end
-  local tags = Reinforce.Zone(1, types, "gate", Map.Center("redoubt"))
+  -- The guard marches out in groups of 12, a second apart, so the gate has room to hold each group.
+  state.finaleTypes = types
+  state.finaleAt = 1
+  FinaleGroup()
+  Camera.Focus("gate", 120)
+end
+
+function FinaleGroup()
+  local types = state.finaleTypes
+  local last = state.finaleAt + 11
+  if last > #types then last = #types end
+  local group = {}
+  for i = state.finaleAt, last do group[#group + 1] = types[i] end
+  local tags = Reinforce.Zone(1, group, "gate", Map.Center("redoubt"))
   for i, tag in pairs(tags) do
     state.waveTags[#state.waveTags + 1] = tag
   end
-  Camera.Focus("gate", 120)
+  state.finaleAt = last + 1
+  if state.finaleAt <= #types then Trigger.AfterDelay(20, FinaleGroup) end
 end
 
 function CheckHeld()
@@ -197,7 +211,7 @@ end
 
 function CheckWin()
   if not Mission.AllPrimaryDone() then return end
-  if not state.finale or not WavesDown() then return end
+  if not state.finale or state.finaleAt <= #state.finaleTypes or not WavesDown() then return end
   state.phase = "done"
   if Objective.Status("ash") == "active" then Objective.Complete("ash") end
   AI.Clear(1)
