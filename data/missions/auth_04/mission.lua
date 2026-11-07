@@ -28,8 +28,9 @@ function OnInit()
   AI.Defend(1, "device_site")
 
   Mission.Timer("sunrise", 16000, SunriseFires, "a4.timer.sunrise")
-  Trigger.AfterDelay(3000, HomeRaidOne)
-  Trigger.AfterDelay(6500, HomeRaidTwo)
+  Trigger.AfterDelay(Pick({ 3600, 3300, 3000, 2400, 1800 }), HomeRaidOne)
+  Trigger.AfterDelay(Pick({ 7000, 6800, 6500, 4000, 3200 }), HomeRaidTwo)
+  AddDefenders()
   Trigger.Every(20, CheckCrossing)
   Trigger.OnSeen("device", 0, DeviceSeen)
   Trigger.OnDestroyed("device", DeviceDown)
@@ -39,6 +40,14 @@ end
 
 function Pick(sizes)
   return sizes[Mission.Difficulty()]
+end
+
+-- Tougher defenders at the device on the high tiers (unit counts only, D-061).
+function AddDefenders()
+  local d = Mission.Difficulty()
+  if d < 4 then return end
+  local types = Squad(Pick({ 0, 0, 0, 5, 8 }), Pick({ 0, 0, 0, 2, 4 }), Pick({ 0, 0, 0, 0, 2 }))
+  Reinforce.Zone(1, types, "device_site", Map.Center("device_site"))
 end
 
 function Squad(conscripts, ashthrowers, sappers)
