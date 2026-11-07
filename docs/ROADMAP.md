@@ -113,7 +113,7 @@ Both factions, full tech tree, map editor, real AI with difficulty levels, audio
 - [x] M3-11 AI tiers 2–5 (session 5)
 - [x] M3-12 Session 3 follow-ups (mission replays not done → M3-19; wall art 1× and Rocketeer flash crop → M3-ART)
 - [x] M3-13 Superweapon: the Sunrise Device (sim + UI pieces; GameScreen wiring → M3-18)
-- [x] M3-14 Integration and balance pass (docs/balance; tunnel time saved 42–46 %; faction/tier targets not met → M4-16)
+- [x] M3-14 Integration and balance pass (docs/balance; tunnel time saved 42–46 %; faction/tier targets not met → M4-16) s14: per-faction raid key (D-167); mop-up measured and shipped off; draws are base stalemates (Q-64).
 - [ ] M3-15 Map editor → moved to M4 (D-087)
 - [x] M3-16 Main menu lobby: illustrated animated background, full menu (Continue, Campaign new/load, Skirmish new/load, Replays, Archive, How to play, Settings, Quit; LAN and Map editor greyed until built)
 - [x] M3-17 Archive: screens, unlock tracking, approved lore in data/archive (wiring into GameScreen/menu → M3-18; Technology entries still stubs)
