@@ -11,7 +11,9 @@ namespace Rts.Scripting;
 /// <param name="Team">Team id (255 = neutral).</param>
 /// <param name="Cash">Starting cash.</param>
 /// <param name="Tech">Allowed type ids, or null when the player is not tech-restricted.</param>
-public sealed record MissionPlayer(int Slot, string Name, string Role, byte Team, int Cash, IReadOnlyList<string>? Tech);
+/// <param name="Faction">The player's faction id (s12, optional <c>faction</c> key on <c>[[players]]</c>); "" = the mission's faction for a human
+/// player, Authority otherwise. Passed to the sim so faction rules (Expedition beachhead, Left Behind supply) apply in missions.</param>
+public sealed record MissionPlayer(int Slot, string Name, string Role, byte Team, int Cash, IReadOnlyList<string>? Tech, string Faction = "");
 
 /// <summary>A pre-placed actor (from <c>[[actors]]</c>): placed at setup, so replays see it in the setup log.</summary>
 /// <param name="Type">Type id (vehicle, infantry or building).</param>

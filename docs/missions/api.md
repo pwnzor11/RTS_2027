@@ -152,6 +152,7 @@ AI.SetTier(1, 3); AI.Defend(1, "enemy_base"); AI.Attack(1, "junction"); AI.Wave(
 ## Data formats (M8-02)
 - **Mission schema 2** (`[mission] schema = 2`; schema 1 / no key = pilot, unchanged): extra `[mission]` keys `act` (1..4), `faction`
   (authority, directorate, left_behind, expedition), `next` (id or list of 1-2 ids), `locale` (file name); tables `[starts_with] tech = [...]`
+- `[[players]]` may set `faction = "authority|directorate|left_behind|expedition"` (s12). Without it the human player plays the mission's `faction` and every other player is Authority. The factions go to the sim, so faction rules apply in missions (Expedition beachhead build zone, Left Behind supply); an all-Authority mission keeps the old setup and hashes.
   and `[unlocks_on_win] tech = [...]`. Schema-2 keys in a schema-1 file are an error. Loader: `MissionLoader`, record: `MissionDef`.
 - **Campaign list** `data/campaigns/<faction>.toml`, **progress file** `campaign_<faction>.toml` beside settings.toml, **ending file**
   `data/campaigns/<faction>_ending.toml`: types in src/Game/Campaign (`CampaignDef`, `CampaignProgress`, `EndingDef`); samples in data/campaigns.
