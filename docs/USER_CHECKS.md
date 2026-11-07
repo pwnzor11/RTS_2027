@@ -284,3 +284,6 @@ techSet = []
 1. **Directorate 1 (dir_01):** Larkin on the radio. Raise a Reactor Vent, then open a Hatch in the marked site; hold two Authority waves (the second on a "Second response" timer). Bonus: destroy the Authority picket in the north-east.
 2. **Left Behind 1 (lb_01):** Calloway-Ross on the radio. The Mother Rig arrives packed: unpack it, raise power and a Muster Rig, ambush the Authority convoy at the crossing and beat off its relief. Bonus: an abandoned scraper in the south-west gully. Tell me if the convoy's halt at the crossing feels contrived.
 3. **Expedition 1 (exp_01):** Strand on the radio, new coastal map. Deploy the Command Ship on the beach, build only inside the beachhead zone, hold three Authority waves while two shipments land. Bonus: lose no landing craft.
+
+## Full campaign, all four factions (M8-12, session 12)
+Every faction now has four missions and an ending. Play each campaign start to finish on tier 3 (tier 1 for a quick pass). After act 2 of Authority or Directorate, Left Behind opens; after act 3, Expedition opens. Win act 4 to see the ending slides (DRAFT text). The questions the writers left for you are in docs/missions/s12_owner_review.md.

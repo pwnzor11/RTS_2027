@@ -202,12 +202,25 @@ public sealed class CampaignScreensTests : IDisposable
     [Fact]
     public void Ending_slides_follow_file_order_and_the_progress_conditions()
     {
-        EndingDef def = EndingDef.Load(EndingDef.PathOf(DataDir, "authority"));
+        EndingDef def = EndingDef.Parse("""
+            [ending]
+            faction = "authority"
+            [[slides]]
+            image = "ending_authority_01"
+            key = "k1"
+            [[slides]]
+            image = "ending_authority_02"
+            key = "k2"
+            condition = { kind = "completed", mission = "auth_01" }
+            [text]
+            "k1" = "first"
+            "k2" = "second"
+            """);
         var empty = new EndingModel(def, CampaignProgress.New("authority"));
         Assert.Single(empty.Frames);
         var full = new EndingModel(def, CampaignProgress.New("authority").WithWin("auth_01", 3, Array.Empty<string>()));
         Assert.Equal(new[] { "ending_authority_01", "ending_authority_02" }, full.Frames.Select(f => f.Image));
-        Assert.Equal("PENDING owner text", full.Current!.Caption);
+        Assert.Equal("first", full.Current!.Caption);
         Assert.Equal(0, full.Index);
         full.Next();
         Assert.Equal("ending_authority_02", full.Current!.Image);

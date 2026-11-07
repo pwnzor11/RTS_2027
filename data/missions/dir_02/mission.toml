@@ -1,0 +1,158 @@
+# Directorate 02: The Convoy Roads (M8-12 D2). Raid the Authority road posts and the convoys that feed them, then withdraw below.
+# Zones are inclusive cell rectangles [x0, y0, x1, y1]. Pre-placed actors are placed before tick 0 (setup log).
+
+[mission]
+title = "The Convoy Roads"
+map = "rustbelt_m2.map.toml"
+script = "mission.lua"
+briefing = "briefing.md"
+seed = 2028
+schema = 2
+act = 2
+faction = "directorate"
+next = "dir_03"
+locale = "locale.toml"
+
+[starts_with]
+tech = ["dir_reactor_vent", "dir_muster_hatch", "dir_hatch", "dir_pillbox", "dir_conscript", "dir_ashthrower", "dir_sapper", "dir_smelter_vent", "dir_assembly_bore", "dir_scraper", "dir_rocket_truck"]
+
+[unlocks_on_win]
+tech = ["dir_isotope_works", "dir_mole", "dir_rocket_nest"]
+
+[[players]]
+slot = 0
+name = "Directorate"
+role = "human"
+team = 0
+cash = 6000
+tech = ["dir_reactor_vent", "dir_muster_hatch", "dir_hatch", "dir_pillbox", "dir_conscript", "dir_ashthrower", "dir_sapper", "dir_smelter_vent", "dir_assembly_bore", "dir_scraper", "dir_rocket_truck"]
+
+[[players]]
+slot = 1
+name = "Authority"
+role = "ai"
+team = 1
+cash = 1500
+
+[zones.site]
+rect = [20, 22, 32, 32]
+
+[zones.north_post]
+rect = [34, 6, 42, 16]
+
+[zones.west_post]
+rect = [5, 32, 13, 40]
+
+[zones.east_post]
+rect = [50, 26, 58, 34]
+
+[zones.depot]
+rect = [26, 46, 34, 54]
+
+[zones.home]
+rect = [52, 52, 62, 62]
+
+# The forward shift: the shaft from the First Hatch, now a small working base.
+[[actors]]
+type = "dir_shaft"
+player = 0
+cell = [23, 25]
+tag = "shaft"
+
+[[actors]]
+type = "dir_reactor_vent"
+player = 0
+cell = [20, 25]
+
+[[actors]]
+type = "dir_muster_hatch"
+player = 0
+cell = [23, 29]
+
+[[actors]]
+type = "dir_smelter_vent"
+player = 0
+cell = [26, 29]
+
+[[actors]]
+type = "dir_assembly_bore"
+player = 0
+cell = [19, 29]
+
+[[actors]]
+type = "dir_conscript"
+player = 0
+cell = [27, 24]
+
+[[actors]]
+type = "dir_conscript"
+player = 0
+cell = [28, 26]
+
+[[actors]]
+type = "dir_bunk_gallery"
+player = 0
+cell = [16, 22]
+
+[[actors]]
+type = "dir_bunk_gallery"
+player = 0
+cell = [16, 25]
+
+# Authority home base in the south-east, kept alive as the anchor of the enemy team.
+[[actors]]
+type = "auth_conyard"
+player = 1
+cell = [58, 58]
+tag = "enemy_yard"
+
+[[actors]]
+type = "auth_power"
+player = 1
+cell = [54, 58]
+
+[[actors]]
+type = "auth_barracks"
+player = 1
+cell = [58, 54]
+
+# Three road posts: a searchlight mast and a rifleman each (more riflemen by tier, added by the script).
+[[actors]]
+type = "auth_searchlight"
+player = 1
+cell = [38, 10]
+tag = "post_n"
+
+[[actors]]
+type = "auth_rifleman"
+player = 1
+cell = [37, 12]
+
+[[actors]]
+type = "auth_searchlight"
+player = 1
+cell = [9, 36]
+tag = "post_w"
+
+[[actors]]
+type = "auth_rifleman"
+player = 1
+cell = [10, 38]
+
+[[actors]]
+type = "auth_searchlight"
+player = 1
+cell = [54, 30]
+tag = "post_e"
+
+[[actors]]
+type = "auth_rifleman"
+player = 1
+cell = [53, 32]
+
+# Road depot (hidden bonus).
+[[actors]]
+type = "auth_silo"
+player = 1
+cell = [29, 49]
+tag = "depot_silo"

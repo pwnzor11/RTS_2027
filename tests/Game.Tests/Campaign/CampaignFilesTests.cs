@@ -129,15 +129,18 @@ public sealed class CampaignFilesTests : IDisposable
     public void Bad_campaign_files_are_rejected(string text) => Assert.Throws<InvalidDataException>(() => CampaignDef.Parse(text));
 
     [Fact]
-    public void Sample_ending_has_two_placeholder_slides_and_one_is_conditional()
+    public void Every_faction_ending_file_loads_with_text_for_every_slide()
     {
-        EndingDef e = EndingDef.Load(EndingDef.PathOf(DataDir, "authority"));
-        Assert.Equal("authority", e.Faction);
-        Assert.Equal(2, e.Slides.Count);
-        Assert.All(e.Slides, s => Assert.Equal("PENDING owner text", e.Text[s.Key]));
-        Assert.Equal(new[] { "ending_authority_01", "ending_authority_02" }, e.Slides.Select(s => s.Image));
-        Assert.Single(e.SlidesFor(CampaignProgress.New("authority")));
-        Assert.Equal(2, e.SlidesFor(CampaignProgress.New("authority").WithWin("auth_01", 1, Array.Empty<string>())).Count);
+        string[] files = Directory.GetFiles(Path.Combine(DataDir, "campaigns"), "*_ending.toml");
+        Assert.NotEmpty(files);
+        foreach (string f in files)
+        {
+            EndingDef e = EndingDef.Load(f);
+            Assert.InRange(e.Slides.Count, 2, 6);
+            Assert.All(e.Slides, sl => Assert.False(string.IsNullOrWhiteSpace(e.Text[sl.Key])));
+            Assert.DoesNotContain(e.Slides, sl => e.Text[sl.Key] == "PENDING owner text");
+            Assert.NotEmpty(e.SlidesFor(CampaignProgress.New(e.Faction)));   // at least one unconditional slide
+        }
     }
 
     [Fact]

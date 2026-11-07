@@ -1,0 +1,29 @@
+# DRAFT for owner review (D-086)
+# Directorate ending slides (plan 3.8, M8-12). Written as the Directorate's own version of events; no canon winner (Q-C).
+# condition (optional): { kind = "completed", mission = "<id>" } or { kind = "difficulty_min", mission = "<id>", value = 1..5 }
+[ending]
+faction = "directorate"
+
+[[slides]]
+image = "ending_directorate_01"
+key = "ending.directorate.01"
+
+[[slides]]
+image = "ending_directorate_02"
+key = "ending.directorate.02"
+
+[[slides]]
+image = "ending_directorate_03"
+key = "ending.directorate.03"
+condition = { kind = "completed", mission = "dir_03" }
+
+[[slides]]
+image = "ending_directorate_04"
+key = "ending.directorate.04"
+condition = { kind = "difficulty_min", mission = "dir_04", value = 4 }
+
+[text]
+"ending.directorate.01" = "The Sunrise fired at dusk on a clear day in 2001. The Ash Ridge command was gone before its operators finished the word. The Voice read the news below in the usual warm tone, and the Annex cheered, and some of the cheering was real. The Authority kept its towns, but never again sent a convoy down the old roads without an escort of its own conscience."
+"ending.directorate.02" = "Commissar Thrall had the Director's Order Seven filed as complete, in a notebook that already held a great many names. Dr. Lund kept the reactors burning and asked for no medals. Odette Larkin went back on the air the next morning and read the weather, which was true, and a lullaby, which she said was a bulletin. Nobody stopped her. The Director's addresses continued, as they had for thirty years."
+"ending.directorate.03" = "The Glass Coast launch sites became Directorate ground. Chief Surveyor Fenn walked out of her survey camp with her maps under her arm and was not stopped. Lieutenant Dray, who had left the Annex to ask a question, heard the answer on a borrowed radio. In the dunes the Left Behind moved their caravans inland without a word, and out on the water the Expedition's ships turned their lights off one by one."
+"ending.directorate.04" = "The surface was never reclaimed, only renamed. The reactors still aged, the shafts still flooded, and the people below still wanted the sky. The Directorate had won everything it asked for. What it did with the sky after that was the question the Voice avoided, every night, in the voice that made people believe her."

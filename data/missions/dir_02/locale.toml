@@ -1,0 +1,30 @@
+# Directorate 02 "The Convoy Roads" locale. Speaker: the Voice (leader_dir_larkin).
+"d2.start" = "Three road posts and two convoys feed the tenancy. Cut them."
+"d2.radio.start" = "Commander, this is the Voice. The tenancy feeds its posts by road. Visit the posts, and the convoys, in that order or any other."
+"d2.radio.roads" = "A searchlight mast and a rifleman or two at each post, Commander. Sappers are for searchlights. Citizens are for numbers."
+"d2.radio.post1" = "One post silent. The tenancy will hear of it. Be ready."
+"d2.posts.down" = "All three road posts are down."
+"d2.convoy1" = "A convoy comes down from the north!"
+"d2.radio.convoy1" = "The first convoy is on the north road. Stop it before it reaches the post."
+"d2.convoy2" = "A second convoy comes in from the east!"
+"d2.convoys.down" = "Both convoys are destroyed."
+"d2.radio.convoys" = "Both convoys burn. The tenancy will eat cold rations this winter."
+"d2.reserve" = "The road reserve is coming from the east!"
+"d2.radio.reserve" = "The tenancy sends its reserve down the east road. Hold the shaft, Commander."
+"d2.radio.depot" = "A road depot. Not required, Commander. Not forbidden either."
+"d2.depot.down" = "The road depot is destroyed."
+"d2.lost" = "The shaft is lost. The raid fails."
+"d2.win" = "The roads are cut. The shift withdraws below."
+"d2.radio.win" = "Well done, Commander. The Director is pleased. I am pleased. It is raining on the surface tonight, and no one is out in it."
+
+# Objective and timer labels (the HUD shows the locale text when a label is a key)
+"d2.obj.posts" = "Destroy the three Authority road posts (north, west, east)"
+"d2.obj.convoy" = "Destroy both Authority supply convoys"
+"d2.obj.depot" = "Destroy the Authority road depot to the south"
+"d2.timer.convoy1" = "First convoy"
+"d2.timer.convoy2" = "Second convoy"
+
+[voice]
+"d2.radio.start" = "voice/leader_dir_larkin/d2.radio.start.ogg"
+"d2.radio.reserve" = "voice/leader_dir_larkin/d2.radio.reserve.ogg"
+"d2.radio.win" = "voice/leader_dir_larkin/d2.radio.win.ogg"

@@ -1,0 +1,328 @@
+# Authority 04: The Sunrise Device (M8-12, D-163). Finale. Cross the river, break the Directorate base, destroy the Sunrise Device (Order Seven, D-086) before it fires.
+# Zones are inclusive cell rectangles [x0, y0, x1, y1]. Pre-placed actors are placed before tick 0 (setup log).
+# The map is ringed by sea in the south; every reinforcement uses a land zone (Reinforce.Zone), never an edge cell.
+
+[mission]
+title = "The Sunrise Device"
+map = "ash_reckoning.map.toml"
+script = "mission.lua"
+briefing = "briefing.md"
+seed = 2027
+schema = 2
+act = 4
+faction = "authority"
+locale = "locale.toml"
+
+[starts_with]
+tech = ["auth_power", "auth_refinery", "auth_barracks", "auth_rifleman", "auth_jeep", "auth_wall", "auth_turret", "auth_factory", "auth_tank", "auth_engineer", "auth_ration_hall", "auth_engineering", "auth_searchlight", "auth_decon_truck", "auth_marksman", "auth_carrier", "auth_signals_hq", "auth_howitzer", "auth_bulwark", "auth_gate", "auth_flak", "auth_airfield"]
+
+[unlocks_on_win]
+tech = ["auth_atomic_battery"]
+
+[[players]]
+slot = 0
+name = "Authority"
+role = "human"
+team = 0
+cash = 8000
+# Only these may be built (production chain prerequisites still apply). The script can Tech.Grant more.
+tech = ["auth_power", "auth_refinery", "auth_barracks", "auth_rifleman", "auth_jeep", "auth_wall", "auth_turret", "auth_factory", "auth_tank", "auth_engineer", "auth_ration_hall", "auth_engineering", "auth_searchlight", "auth_decon_truck", "auth_marksman", "auth_carrier", "auth_signals_hq", "auth_howitzer", "auth_bulwark", "auth_gate", "auth_flak", "auth_airfield"]
+
+[[players]]
+slot = 1
+name = "Directorate"
+role = "ai"
+team = 1
+cash = 3000
+faction = "directorate"
+
+[zones.home]
+rect = [40, 8, 56, 20]
+
+[zones.spawn_w]
+rect = [6, 20, 16, 30]
+
+[zones.south_bank]
+rect = [30, 58, 64, 68]
+
+[zones.ford]
+rect = [44, 40, 60, 58]
+
+[zones.enemy_base]
+rect = [38, 76, 58, 90]
+
+[zones.device_site]
+rect = [44, 83, 52, 89]
+
+[zones.outer]
+rect = [40, 74, 54, 80]
+
+# The forward base on the north bank, with the assault force.
+
+[[actors]]
+type = "auth_conyard"
+player = 0
+cell = [46, 10]
+tag = "yard"
+
+[[actors]]
+type = "auth_power"
+player = 0
+cell = [42, 10]
+
+[[actors]]
+type = "auth_power"
+player = 0
+cell = [42, 12]
+
+[[actors]]
+type = "auth_power"
+player = 0
+cell = [50, 10]
+
+[[actors]]
+type = "auth_ration_hall"
+player = 0
+cell = [50, 12]
+
+[[actors]]
+type = "auth_ration_hall"
+player = 0
+cell = [44, 14]
+
+[[actors]]
+type = "auth_ration_hall"
+player = 0
+cell = [44, 16]
+
+[[actors]]
+type = "auth_barracks"
+player = 0
+cell = [46, 14]
+
+[[actors]]
+type = "auth_factory"
+player = 0
+cell = [49, 14]
+
+[[actors]]
+type = "auth_tank"
+player = 0
+cell = [44, 19]
+
+[[actors]]
+type = "auth_tank"
+player = 0
+cell = [46, 19]
+
+[[actors]]
+type = "auth_tank"
+player = 0
+cell = [48, 19]
+
+[[actors]]
+type = "auth_tank"
+player = 0
+cell = [50, 19]
+
+[[actors]]
+type = "auth_bulwark"
+player = 0
+cell = [45, 21]
+
+[[actors]]
+type = "auth_bulwark"
+player = 0
+cell = [49, 21]
+
+[[actors]]
+type = "auth_howitzer"
+player = 0
+cell = [47, 23]
+
+[[actors]]
+type = "auth_howitzer"
+player = 0
+cell = [48, 23]
+
+[[actors]]
+type = "auth_rifleman"
+player = 0
+cell = [43, 25]
+
+[[actors]]
+type = "auth_rifleman"
+player = 0
+cell = [44, 25]
+
+[[actors]]
+type = "auth_rifleman"
+player = 0
+cell = [45, 25]
+
+[[actors]]
+type = "auth_rifleman"
+player = 0
+cell = [46, 25]
+
+[[actors]]
+type = "auth_rifleman"
+player = 0
+cell = [47, 25]
+
+[[actors]]
+type = "auth_rifleman"
+player = 0
+cell = [48, 25]
+
+[[actors]]
+type = "auth_rifleman"
+player = 0
+cell = [49, 25]
+
+[[actors]]
+type = "auth_rifleman"
+player = 0
+cell = [50, 25]
+
+# Enemy: the built-up Directorate base around the Sunrise Device.
+
+[[actors]]
+type = "dir_shaft"
+player = 1
+cell = [46, 80]
+tag = "enemy_shaft"
+
+[[actors]]
+type = "dir_reactor_vent"
+player = 1
+cell = [43, 79]
+
+[[actors]]
+type = "dir_reactor_vent"
+player = 1
+cell = [43, 83]
+
+[[actors]]
+type = "dir_reactor_vent"
+player = 1
+cell = [51, 84]
+tag = "vent"
+
+[[actors]]
+type = "dir_muster_hatch"
+player = 1
+cell = [50, 80]
+
+[[actors]]
+type = "dir_isotope_works"
+player = 1
+cell = [56, 84]
+
+[[actors]]
+type = "dir_sunrise"
+player = 1
+cell = [46, 84]
+tag = "device"
+
+[[actors]]
+type = "dir_pillbox"
+player = 1
+cell = [43, 77]
+tag = "d1"
+
+[[actors]]
+type = "dir_pillbox"
+player = 1
+cell = [50, 77]
+tag = "d2"
+
+[[actors]]
+type = "dir_pillbox"
+player = 1
+cell = [47, 76]
+tag = "d3"
+
+[[actors]]
+type = "dir_rocket_nest"
+player = 1
+cell = [45, 78]
+tag = "d4"
+
+[[actors]]
+type = "dir_rocket_nest"
+player = 1
+cell = [49, 78]
+tag = "d5"
+
+[[actors]]
+type = "dir_rocket_nest"
+player = 1
+cell = [42, 85]
+tag = "d6"
+
+[[actors]]
+type = "dir_rocket_nest"
+player = 1
+cell = [53, 81]
+tag = "d7"
+
+[[actors]]
+type = "dir_pillbox"
+player = 1
+cell = [44, 86]
+
+[[actors]]
+type = "dir_pillbox"
+player = 1
+cell = [50, 87]
+
+[[actors]]
+type = "dir_conscript"
+player = 1
+cell = [44, 79]
+
+[[actors]]
+type = "dir_conscript"
+player = 1
+cell = [46, 79]
+
+[[actors]]
+type = "dir_conscript"
+player = 1
+cell = [48, 79]
+
+[[actors]]
+type = "dir_conscript"
+player = 1
+cell = [50, 79]
+
+[[actors]]
+type = "dir_conscript"
+player = 1
+cell = [52, 79]
+
+[[actors]]
+type = "dir_ashthrower"
+player = 1
+cell = [45, 81]
+
+[[actors]]
+type = "dir_ashthrower"
+player = 1
+cell = [49, 81]
+
+[[actors]]
+type = "dir_ashthrower"
+player = 1
+cell = [47, 81]
+
+[[actors]]
+type = "dir_sapper"
+player = 1
+cell = [43, 82]
+
+[[actors]]
+type = "dir_sapper"
+player = 1
+cell = [51, 82]

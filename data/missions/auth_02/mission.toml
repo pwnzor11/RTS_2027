@@ -1,0 +1,145 @@
+# Authority 02: The Junction (M8-12, D-163). Hold a road junction on the Rust Belt for a relief column while the Directorate raids it.
+# Zones are inclusive cell rectangles [x0, y0, x1, y1]. Pre-placed actors are placed before tick 0 (setup log).
+
+[mission]
+title = "The Junction"
+map = "rustbelt_m2.map.toml"
+script = "mission.lua"
+briefing = "briefing.md"
+seed = 2027
+schema = 2
+act = 2
+faction = "authority"
+next = "auth_03"
+locale = "locale.toml"
+
+[starts_with]
+tech = ["auth_power", "auth_refinery", "auth_barracks", "auth_rifleman", "auth_jeep", "auth_wall", "auth_turret", "auth_factory", "auth_tank", "auth_engineer", "auth_ration_hall"]
+
+[unlocks_on_win]
+tech = ["auth_engineering", "auth_searchlight", "auth_decon_truck", "auth_marksman", "auth_carrier"]
+
+[[players]]
+slot = 0
+name = "Authority"
+role = "human"
+team = 0
+cash = 4000
+# Only these may be built (production chain prerequisites still apply). The script can Tech.Grant more.
+tech = ["auth_power", "auth_refinery", "auth_barracks", "auth_rifleman", "auth_jeep", "auth_wall", "auth_turret", "auth_factory", "auth_tank", "auth_engineer", "auth_ration_hall"]
+
+[[players]]
+slot = 1
+name = "Directorate"
+role = "ai"
+team = 1
+cash = 1500
+faction = "directorate"
+
+[[players]]
+slot = 2
+name = "Civilians"
+role = "neutral"
+team = 255
+cash = 0
+
+[zones.junction]
+rect = [35, 13, 44, 23]
+
+[zones.enemy_base]
+rect = [52, 52, 62, 62]
+
+# The forward post at the junction: a yard, two power plants, a barracks and a factory, with a squad.
+[[actors]]
+type = "auth_conyard"
+player = 0
+cell = [30, 16]
+tag = "yard"
+
+[[actors]]
+type = "auth_power"
+player = 0
+cell = [30, 20]
+
+[[actors]]
+type = "auth_power"
+player = 0
+cell = [30, 22]
+
+[[actors]]
+type = "auth_ration_hall"
+player = 0
+cell = [27, 18]
+
+[[actors]]
+type = "auth_barracks"
+player = 0
+cell = [34, 16]
+
+[[actors]]
+type = "auth_factory"
+player = 0
+cell = [33, 19]
+
+[[actors]]
+type = "auth_rifleman"
+player = 0
+cell = [37, 15]
+
+[[actors]]
+type = "auth_rifleman"
+player = 0
+cell = [38, 15]
+
+[[actors]]
+type = "auth_rifleman"
+player = 0
+cell = [37, 21]
+
+[[actors]]
+type = "auth_rifleman"
+player = 0
+cell = [38, 21]
+
+[[actors]]
+type = "auth_rifleman"
+player = 0
+cell = [39, 18]
+
+[[actors]]
+type = "auth_rifleman"
+player = 0
+cell = [40, 18]
+
+[[actors]]
+type = "auth_jeep"
+player = 0
+cell = [36, 18]
+
+[[actors]]
+type = "auth_jeep"
+player = 0
+cell = [36, 19]
+
+# Enemy: a small Directorate base in the south-east corner (the anchor that keeps the team alive) and a listening mast on the ridge.
+[[actors]]
+type = "dir_shaft"
+player = 1
+cell = [58, 58]
+tag = "enemy_shaft"
+
+[[actors]]
+type = "dir_reactor_vent"
+player = 1
+cell = [54, 58]
+
+[[actors]]
+type = "dir_muster_hatch"
+player = 1
+cell = [58, 54]
+
+[[actors]]
+type = "dir_mast"
+player = 1
+cell = [46, 12]
+tag = "mast"

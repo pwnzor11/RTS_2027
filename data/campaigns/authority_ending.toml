@@ -1,4 +1,5 @@
-# Authority ending slides (plan 3.8, M8-02 sample). Two placeholder slides; the real text is the owner's (D-086).
+# DRAFT for owner review (D-086). Authority ending slides (plan 3.8): what happened after the victory. Written in the Authority's own voice (Q-C: no canon winner).
+# Slides 1-4 are drafted from auth_01..auth_04 and lore only (docs/lore/authority.md, leaders.md); no new named characters.
 # condition (optional): { kind = "completed", mission = "<id>" } or { kind = "difficulty_min", mission = "<id>", value = 1..5 }
 [ending]
 faction = "authority"
@@ -10,8 +11,20 @@ key = "ending.authority.01"
 [[slides]]
 image = "ending_authority_02"
 key = "ending.authority.02"
-condition = { kind = "completed", mission = "auth_01" }
+condition = { kind = "completed", mission = "auth_03" }
+
+[[slides]]
+image = "ending_authority_03"
+key = "ending.authority.03"
+condition = { kind = "completed", mission = "auth_04" }
+
+[[slides]]
+image = "ending_authority_04"
+key = "ending.authority.04"
+condition = { kind = "difficulty_min", mission = "auth_04", value = 4 }
 
 [text]
-"ending.authority.01" = "PENDING owner text"
-"ending.authority.02" = "PENDING owner text"
+"ending.authority.01" = "The Sunrise Device was destroyed in its chamber, and the Directorate's holy morning never came. Administrator Pell would not call it a victory. He filed it as a closed ledger, under the heading Maintenance, and went back to the drainage budget. The grain moved over the junction all that winter."
+"ending.authority.02" = "Chief Surveyor Fenn finished her map of the Glass Coast, every launch site and every buried depot, and nobody has walked into one blind since. Brigadier Wrenfield read the old evacuation lists aloud at the Reconstruction Board, all four thousand names. She has stopped keeping her own list a secret. The convoys went to the coast. They did not come back with everyone."
+"ending.authority.03" = "Lieutenant Dray walked unarmed into Shaft Four behind the decon crews and carried out the first people to see daylight in thirty years. The Voice was still reading numbers for a population that was no longer there. What the Commissar did when the device went dark, no teletype in the Authority will say. The Annex is failing, and the Authority has begun to send water down."
+"ending.authority.04" = "It was close, and the Authority knew it. The labour year was extended by a second year, then a third, and the Charter clause that would dissolve the Authority when its work is done has not been read aloud since. In the dune sea the caravans still keep their own ledger, and the Authority still owes them an answer. Far offshore, the fleet waits for a letter nobody has written."

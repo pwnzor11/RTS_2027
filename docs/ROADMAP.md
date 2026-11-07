@@ -225,10 +225,11 @@ systems (water locomotion, ships, landings). Lore, roster, art, AI.
 - [x] M8-07 Campaign progress, tech carry-over, faction unlock order (assumed — confirm), Archive wiring (session 12)
 - [x] M8-08 Game UI: faction pick, mission select, briefing v2 with difficulty, debrief, ending sequence (M8-16; images in data/images/endings/) (session 12)
 - [x] M8-09 Tutorial mission + mission-check and bot test template (tut_01, MissionBot, Campaign → Tutorial)
-- [ ] M8-10 Pilot missions, one per faction (A1 port done s12; D1, L1, E1 after owner review of A1) — then owner review (M8-11)
+- [x] M8-10 Pilot missions, one per faction (A1 port, D1, L1, E1; s12, D-163) — then owner review (M8-11)
 - [x] M8-13 Archive campaign unlock ids (s12; docs/archive/m8_13_unlocks.md)
-- [ ] M8-17 Mission API follow-ups from the tutorial (s12): `Player.Funds` (Cash + Stored) for income checks; a script Win on the same tick as elimination must still run (check MissionCheck and the game loop stop at GameOver); tut_01 keeps a hidden reserve power plant so the enemy team survives until the script wins
-- [ ] M8-12 Fan-out missions; M8-14 act-break stills; M8-15 acceptance; M8-16 ending sequence screen
+- [x] M8-17 Mission API follow-ups from the tutorial (s12): `Player.Funds` (Cash + Stored) for income checks; a script Win on the same tick as elimination must still run (check MissionCheck and the game loop stop at GameOver); tut_01 keeps a hidden reserve power plant so the enemy team survives until the script wins
+- [x] M8-12 Fan-out: acts 2-4 for all four factions plus DRAFT ending slides (s12; owner review list docs/missions/s12_owner_review.md)
+- [ ] M8-14 act-break stills; M8-15 acceptance; M8-16 ending sequence screen
 - [x] M8-01 Campaign plan (docs/design/12_m8_plan.md, plan only; story questions open) (session 9)
 Mission scripting/trigger system, briefing screens, tech gating, campaign flow; written once with all four factions.
 Wires Archive campaign unlocks.

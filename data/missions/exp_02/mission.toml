@@ -1,0 +1,176 @@
+# Expedition 02: The Supply Line (M8-12, act 2). A second landing on the north shore: raise the Anchorage so home shipments can reach the fleet, hold the beachhead and break the Authority coast road garrison.
+# Zones are inclusive cell rectangles [x0, y0, x1, y1]. Pre-placed actors are placed before tick 0 (setup log).
+# Map: glass_coast_e1 (the act 3 map, D-030). The Rust Belt map has no sea, so act 2 uses the Glass Coast at a different landing: the NW corner, north shore (y 7-9 shallows, open sea beyond y 6).
+# Act 1 landed on the south-east beach; this landing is across the map from it.
+
+[mission]
+title = "The Supply Line"
+map = "glass_coast_e1.map.toml"
+script = "mission.lua"
+briefing = "briefing.md"
+seed = 2027
+schema = 2
+act = 2
+faction = "expedition"
+next = "exp_03"
+locale = "locale.toml"
+
+[starts_with]
+tech = ["exp_pile_house", "exp_billet", "exp_marine", "exp_pillbox", "exp_beacon", "exp_anchorage", "exp_dredge_works", "exp_skimmer", "exp_hover_yard", "exp_hoverlander", "exp_provision_store", "exp_plotting_room", "exp_glide_tank", "exp_gun_battery"]
+
+[unlocks_on_win]
+tech = ["exp_quay", "exp_landing_craft", "exp_launch", "exp_shipyard", "exp_destroyer", "exp_sparker"]
+
+[[players]]
+slot = 0
+name = "Second Relief Fleet"
+role = "human"
+team = 0
+cash = 4000
+tech = ["exp_pile_house", "exp_billet", "exp_marine", "exp_pillbox", "exp_beacon", "exp_anchorage", "exp_dredge_works", "exp_skimmer", "exp_hover_yard", "exp_hoverlander", "exp_provision_store", "exp_plotting_room", "exp_glide_tank", "exp_gun_battery"]
+
+[[players]]
+slot = 1
+name = "Authority coast road garrison"
+role = "ai"
+team = 1
+cash = 1200
+
+# The landing: the depot and the beachhead go here (depot beachhead radius 10).
+[zones.landing]
+rect = [8, 7, 26, 20]
+
+# Where a floating dock can sit: the shallows of the north shore.
+[zones.shore]
+rect = [9, 7, 24, 9]
+
+# Authority columns come from the north-east road, then the south-west track, then the road again.
+[zones.coast_road]
+rect = [36, 10, 42, 14]
+
+[zones.south_track]
+rect = [14, 36, 20, 40]
+
+# The garrison that holds the coast road.
+[zones.garrison]
+rect = [34, 19, 47, 30]
+
+# The landing party: the depot is already ashore (the advance party of the fleet) with power, a billet, a Dredge Works, a Hover Yard and a Plotting Room.
+[[actors]]
+type = "exp_landing_depot"
+player = 0
+cell = [12, 11]
+tag = "depot"
+
+[[actors]]
+type = "exp_pile_house"
+player = 0
+cell = [16, 11]
+
+[[actors]]
+type = "exp_billet"
+player = 0
+cell = [16, 14]
+
+[[actors]]
+type = "exp_dredge_works"
+player = 0
+cell = [20, 14]
+
+[[actors]]
+type = "exp_hover_yard"
+player = 0
+cell = [12, 16]
+
+[[actors]]
+type = "exp_plotting_room"
+player = 0
+cell = [11, 19]
+
+[[actors]]
+type = "exp_marine"
+player = 0
+cell = [14, 15]
+
+[[actors]]
+type = "exp_marine"
+player = 0
+cell = [15, 17]
+
+[[actors]]
+type = "exp_marine"
+player = 0
+cell = [17, 17]
+
+[[actors]]
+type = "exp_marine"
+player = 0
+cell = [19, 15]
+
+# Authority: the garrison on the coast road.
+[[actors]]
+type = "auth_power"
+player = 1
+cell = [38, 22]
+tag = "g_power1"
+
+[[actors]]
+type = "auth_power"
+player = 1
+cell = [41, 22]
+tag = "g_power2"
+
+[[actors]]
+type = "auth_barracks"
+player = 1
+cell = [39, 25]
+tag = "g_barracks"
+
+[[actors]]
+type = "auth_turret"
+player = 1
+cell = [37, 27]
+tag = "g_turret1"
+
+[[actors]]
+type = "auth_turret"
+player = 1
+cell = [43, 26]
+tag = "g_turret2"
+
+[[actors]]
+type = "auth_rifleman"
+player = 1
+cell = [38, 28]
+
+[[actors]]
+type = "auth_rifleman"
+player = 1
+cell = [40, 28]
+
+[[actors]]
+type = "auth_rifleman"
+player = 1
+cell = [42, 28]
+
+[[actors]]
+type = "auth_rifleman"
+player = 1
+cell = [36, 24]
+
+[[actors]]
+type = "auth_rifleman"
+player = 1
+cell = [44, 24]
+
+[[actors]]
+type = "auth_jeep"
+player = 1
+cell = [41, 29]
+
+# The reserve: a relay post in the far north-east corner the script never sends anyone to. It keeps the team alive until the script wins.
+[[actors]]
+type = "auth_power"
+player = 1
+cell = [70, 13]
+tag = "reserve"

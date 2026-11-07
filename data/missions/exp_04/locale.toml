@@ -1,0 +1,31 @@
+# Expedition 04 "The Fuel" locale (the finale). Speaker: Commissioner Imelda Strand (leader_exp_strand); cameos Fleet Admiral Corvin Aldersey, Dr. Anselm Roque and the Directorate's announcer (leader_dir_larkin).
+"e4.start" = "The fleet is off the Ash Plains. Put a Dredge Works on the ash field."
+"e4.radio.start" = "Commander, this is Commissioner Strand. This is the shore we sailed for. We would be grateful if you would put a Dredge Works on the ash field, and then keep it."
+"e4.ship" = "A shipment is landing on the south shore."
+"e4.radio.aldersey" = "Admiral Aldersey to the landing force. The last shipment is coming in, Commander. There will be no more convoys until you have the fuel."
+"e4.fuel" = "A Dredge Works stands on the ash field. The fuel is taken."
+"e4.radio.fuel" = "The ash is ours, Commander. I have orders in my desk that I have not read. Please give me a reason not to."
+"e4.radio.roque" = "Roque here. The field is richer than the charts. Please do not let anyone sit a boot on the seals."
+"e4.ash.lost" = "The Dredge Works is lost. The fuel is gone."
+"e4.col1" = "Directorate column out of the redoubt gate!"
+"e4.radio.larkin" = "Directorate broadcast, overheard: the ash belongs to the Interior. Citizens, to the shore."
+"e4.col2" = "Directorate column on the west flank!"
+"e4.col3" = "The redoubt is sending everything it has!"
+"e4.radio.col3" = "That is all they have left, I think. Hold the shore, then take the redoubt."
+"e4.held" = "The three columns are beaten."
+"e4.base.down" = "The redoubt is broken. The Shaft and the Sunrise Device are down."
+"e4.lost.depot" = "The Landing Depot has fallen. The beachhead is lost."
+"e4.win" = "The ash fields are held. The redoubt is broken."
+"e4.radio.win" = "It is done, Commander. The fleet has its fuel. I will write the telex tonight, and I will write it myself."
+
+# Objective and timer labels (the HUD shows the locale text when a label is a key)
+"e4.obj.fuel" = "Put a Dredge Works on the ash field"
+"e4.obj.hold" = "Hold the beachhead against the three Directorate columns"
+"e4.obj.base" = "Break the redoubt: destroy its Shaft and its Sunrise Device"
+"e4.obj.ash" = "Never lose the Dredge Works"
+"e4.timer.col1" = "First Directorate column"
+
+[voice]
+"e4.radio.start" = "voice/leader_exp_strand/e4.radio.start.ogg"
+"e4.radio.fuel" = "voice/leader_exp_strand/e4.radio.fuel.ogg"
+"e4.radio.win" = "voice/leader_exp_strand/e4.radio.win.ogg"

@@ -1,8 +1,8 @@
 # Directorate campaign (plan 2.2, 2.4, M8-07). Open from the start.
-# PLACEHOLDER mission ids (M8-12): none of dir_01..dir_04 exists yet.
 [campaign]
 faction = "directorate"
 title_key = "campaign.directorate.title"
+ending = "directorate_ending"
 
 [[missions]]
 id = "dir_01"
