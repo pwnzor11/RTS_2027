@@ -12,7 +12,7 @@ Full suite FULLCOUNT.
 ## Start here (shown to the user as the plan; nothing starts until they say go)
 1. Land the session-13 work if the owner has not yet: merge PR #43 (it contains PR #42; #42 then shows as merged). The session's
    safety check refused merges without review this time, so the owner merges, or allows the merge in the session.
-2. Owner picks: Q-59 still style (A / B / mix, from pilot_contact.png); Q-60 balance numbers (one line per number); Q-61, Q-62.
+2. Owner picks: Q-59 still style (A / B / mix, from the pilot contact sheet sent in chat); Q-60 balance numbers (one line per number); Q-61, Q-62.
 3. M8-14 still fan-out (11 more stills, 3 per faction) in the picked style; art via the owner's PC (D-084). Then M8 acceptance in the roadmap.
 4. Apply the approved balance numbers (Q-60) and re-run the S13 balance test and the M8-15 table.
 5. Mission tiers (Q-62): make tier visible in the missions where it does nothing (dir_02, dir_04, lb_01, lb_03, lb_04, auth_04, exp_03)

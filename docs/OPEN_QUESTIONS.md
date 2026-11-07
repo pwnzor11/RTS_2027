@@ -7,7 +7,7 @@ file cited after each question. Recommendations are the lead's, from the researc
 - 🟡 **Q-59 · Act-break still style.** Pilot `still_authority_act2` in two styles (contact sheet sent in session 13): **A, game-style**
   (same render look as the in-game art) / B, poster (stylised) / a mix of the two. Same camera and layout in both. Recommendation: **A** (one look across briefing and game). Blocks the M8-14 fan-out.
 - 🟡 **Q-60 · Bot-found balance numbers** (docs/balance/s13_campaign_balance.md, D-152: owner approves each number).
-  (1) Ash friendly fire: **`dir_ash` contaminate 40 -> 20** (lead; halves own losses, keeps the cloud, no immunity side effects) /
+  (1) Ash friendly fire: **`dir_ash` contaminate 40 -> 20** (lead; cuts own losses by about a third, keeps the cloud, no immunity side effects) /
   Conscript and Ashthrower `rad_resist_permille` 600 -> 1000 (helper; no friendly fire, but immune to all radiation) / no change.
   (2) Bomber vs SAMs: **no rule change** (unpowered SAMs explain it; check the low-power warning is visible) / `exp_sam` needs_power false.
   (3) Conscripts vs Riflemen: **`dir_conscript` max_health 40 -> 50** / cost 80 -> 60 / no change.
