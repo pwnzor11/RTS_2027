@@ -123,8 +123,7 @@ public static class CardModelBuilder
         }
         else
         {
-            stats.Add(new CardStat("Damage", "-"));
-            stats.Add(new CardStat("Range", "-"));
+            stats.Add(new CardStat("Weapon", "none"));
         }
 
         stats.Add(new CardStat("Speed", CardGrouping.Tenths(speed * SimConstants.TicksPerSecond * 10 / 256)));
@@ -178,11 +177,11 @@ public static class CardModelBuilder
 
         string power = t.Power > 0 ? "Power +" + t.Power.ToString(CultureInfo.InvariantCulture)
             : t.Power < 0 ? "Power use " + (-t.Power).ToString(CultureInfo.InvariantCulture) : "Power none";
-        lines.Add(power + "   Base " + hud.PowerOut.ToString(CultureInfo.InvariantCulture) + " / " + hud.PowerUse.ToString(CultureInfo.InvariantCulture));
+        lines.Add(power + "   (grid " + hud.PowerOut.ToString(CultureInfo.InvariantCulture) + " made / " + hud.PowerUse.ToString(CultureInfo.InvariantCulture) + " used)");
 
         if (t.Produces is ProductionCategory lane)
         {
-            lines.Add(ProductionText(r, hud, lane));
+            lines.Add("Production: " + ProductionText(r, hud, lane));
             CellCoord? rally = source.Sim.Production.RallyCell(b.Player, lane);
             lines.Add(rally is null ? "Rally point: not set (right-click the ground)" : "Rally point: set");
         }
@@ -190,9 +189,9 @@ public static class CardModelBuilder
         else if (t.Cost == 0 && t.Prerequisites.Count == 0 && t.Category == ProductionCategory.Structure)
         {
             // a start building (the construction yard, cost 0, no prerequisites) produces nothing itself, but the player's Structure and Defence queues run from it
-            lines.Add("Structures: " + ProductionText(r, hud, ProductionCategory.Structure));
+            lines.Add("Structure queue: " + ProductionText(r, hud, ProductionCategory.Structure));
             string defence = ProductionText(r, hud, ProductionCategory.Defence);
-            if (defence != "Idle") lines.Add("Defences: " + defence);
+            if (defence != "Idle") lines.Add("Defence queue: " + defence);
         }
 
         if (b.Occupants > 0) lines.Add("Garrison " + b.Occupants.ToString(CultureInfo.InvariantCulture));
