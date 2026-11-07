@@ -72,6 +72,9 @@ public sealed class MenuPanel : IUiRegion
         _items = items;
     }
 
+    /// <summary>Pixels the panel is moved down from the centre of the viewport it is given (to sit in a strip of a larger screen).</summary>
+    public int OffsetY { get; set; }
+
     /// <summary>Index of the highlighted row.</summary>
     public int Selected { get; set; }
 
@@ -185,7 +188,7 @@ public sealed class MenuPanel : IUiRegion
         width = Math.Max(width, MinWidthChars * BitmapFont.Advance * scale / 2) + 2 * pad;
 
         int height = pad + rowH + pad / 2 + _items.Count * (rowH + scale) + pad;
-        var panel = new Rectangle((viewport.Width - width) / 2, (viewport.Height - height) / 2, width, height);
+        var panel = new Rectangle((viewport.Width - width) / 2, (viewport.Height - height) / 2 + OffsetY, width, height);
         var rows = new Rectangle[_items.Count];
         var buttonRects = new IReadOnlyList<Rectangle>[_items.Count];
         int y = panel.Y + pad + rowH + pad / 2;

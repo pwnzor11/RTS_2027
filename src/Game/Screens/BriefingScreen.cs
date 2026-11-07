@@ -214,7 +214,11 @@ public sealed class BriefingScreen : IScreen
     }
 
     // The menu panel centres itself in the viewport it is given: give it exactly the strip at the bottom.
-    private Viewport ButtonViewport() => new(0, ButtonsTop(), _s.Viewport.Width, _panel.HeightAt(_s.UiScale));
+    private Viewport ButtonViewport()
+    {
+        _panel.OffsetY = ButtonsTop();
+        return new Viewport(0, 0, _s.Viewport.Width, _panel.HeightAt(_s.UiScale));
+    }
 
     // The text column's width: the still is scaled to it, keeping the 16:9 aspect of the image.
     private static int TextWidth(int scale) => BitmapFont.Measure(new string('M', WrapChars), scale);
