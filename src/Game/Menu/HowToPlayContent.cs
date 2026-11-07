@@ -97,7 +97,8 @@ public static class HowToPlayContent
             "Arrow keys scroll the map. Click or drag the minimap to jump.",
             "A attack-move   S stop   G guard   X scatter   D deploy / unload.",
             "Q W E R T sidebar tabs.   Esc pause menu (or back out of placing).   Space pause the game.",
-            "F3 occupancy, F4 paths and F5 ranges overlays (for testing).",
+            "Home centres on your base.   Ctrl+F5..F8 store a view, F5..F8 jump back to it.   F1 or ? lists every key.",
+            "Sandbox only: F3 occupancy, F4 paths and F10 ranges overlays (for testing).",
         }),
     };
 }

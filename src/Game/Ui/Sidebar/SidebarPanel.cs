@@ -139,7 +139,7 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
         Rts.Sim.View.PlayerView pv = _source.Sim.ViewFor(_player);   // M7-14: shipment timer, own state only
         _shipmentEta = pv.ShipmentEtaTicks; _shipmentPayload = pv.NextShipmentPayload; _shipmentDecay = pv.ShipmentDecayStep;
         _shipmentShown = ShipmentReadout.Shown(_shipmentEta, _shipmentPayload);
-        _layout = SidebarLayout.Compute(windowWidth, windowHeight, _ui, SidebarTabs.CountFor(_hasAircraft), _supplyShown, _shipmentShown);
+        _layout = SidebarLayout.Compute(windowWidth, windowHeight, _ui, SidebarTabs.CountFor(_hasAircraft), _supplyShown, _shipmentShown, _source.Map.Width, _source.Map.Height);
         _mouse = input.MousePosition;
         _tooltip = null;
         if (_shownCredits < 0) _shownCredits = _hud.Cash + _hud.Stored;
@@ -152,12 +152,12 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
         if (Mode == SidebarMode.Placement && ReadyOf(_placementType) != _placementType) CancelMode();
         BuildVisibleList();
 
-        if (input.ConsumePressed(Keys.Q)) SelectTab(SidebarTab.Structures);
-        if (input.ConsumePressed(Keys.W)) SelectTab(SidebarTab.Defences);
-        if (input.ConsumePressed(Keys.E)) SelectTab(SidebarTab.Infantry);
-        if (input.ConsumePressed(Keys.R)) SelectTab(SidebarTab.Vehicles);
-        if (input.ConsumePressed(Keys.T)) SelectTab(SidebarTab.Upgrades);
-        if (_hasAircraft && input.ConsumePressed(Keys.Y)) SelectTab(SidebarTab.Aircraft);
+        if (input.ConsumePressed(GameAction.TabStructures)) SelectTab(SidebarTab.Structures);
+        if (input.ConsumePressed(GameAction.TabDefences)) SelectTab(SidebarTab.Defences);
+        if (input.ConsumePressed(GameAction.TabInfantry)) SelectTab(SidebarTab.Infantry);
+        if (input.ConsumePressed(GameAction.TabVehicles)) SelectTab(SidebarTab.Vehicles);
+        if (input.ConsumePressed(GameAction.TabUpgrades)) SelectTab(SidebarTab.Upgrades);
+        if (_hasAircraft && input.ConsumePressed(GameAction.TabAircraft)) SelectTab(SidebarTab.Aircraft);
 
         if (_minimapDrag)
         {
@@ -240,7 +240,7 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
         DrawCredits(batch, pixel, l);
         if (_supplyShown) DrawSupply(batch, pixel, l);
         if (_shipmentShown) DrawShipment(batch, pixel, l);
-        DrawPowerBar(batch, pixel, l);
+        DrawPowerBar(batch, pixel, l, snapshot.Tick);
         DrawButton(batch, pixel, l.SellButton, "SELL", Mode == SidebarMode.Sell);
         DrawButton(batch, pixel, l.RepairButton, "REPAIR", Mode == SidebarMode.Repair);
         for (int i = 0; i < l.Tabs.Count; i++)
@@ -664,16 +664,32 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
         if (unit.Kind == UnitKind.Vehicle && r.Vehicles[unit.TypeIndex].AircraftSlots > 0
             && _source.Sim.ViewFor(_player).OwnCarrierHangar(key.Id, out int docked, out int slots))
             lines.Add(CarrierReadout.Text(docked, slots));
-        UnitInfoPanel.Draw(batch, pixel, new Point(_layout.MapView.X + 8, _layout.MapView.Y + 8), lines, _ui);
+        UnitInfoPanel.Draw(batch, pixel, new Point(_layout.MapView.X + 8, Math.Max(_layout.MapView.Y + 8, UnitInfoTop)), lines, _ui);
     }
 
-    private void DrawPowerBar(SpriteBatch batch, Texture2D pixel, SidebarLayout l)
+    /// <summary>Lowest y the single-unit info panel may start at: the game screen sets it under the other left-column panels (audit S3).</summary>
+    public int UnitInfoTop { get; set; }
+
+    // H6: "POWER out / use", red while use exceeds output.
+    private void DrawPowerReadout(SpriteBatch batch, Texture2D pixel, Rectangle row, bool low)
+    {
+        if (row.Height <= 2) return;
+        float scale = _ui * 0.8f;
+        string text = "POWER " + SidebarMetrics.PowerText(_hud.PowerOut, _hud.PowerUse);
+        scale = SidebarMetrics.FitScale(sc => BitmapFont.Measure(text, sc, FontWeight.Regular), row.Width - 2, scale);
+        int h = BitmapFont.LineHeight(scale, FontWeight.Regular);
+        Text(batch, pixel, text, new Vector2(row.X + 1, row.Y + (row.Height - h) / 2f), low ? BadRed : TextColour, scale, FontWeight.Regular);
+    }
+
+    private void DrawPowerBar(SpriteBatch batch, Texture2D pixel, SidebarLayout l, int tick)
     {
         Rectangle r = l.PowerBar;
         if (r.Height <= 2) return;
         Shapes.Fill(batch, pixel, r, new Color(0x0C, 0x0E, 0x0A));
         (int fill, int use, bool low) = SidebarMetrics.PowerBar(_hud.PowerOut, _hud.PowerUse, r.Height - 2);
         Color c = low ? BadRed : GoodGreen;
+        DrawPowerReadout(batch, pixel, l.PowerRow, low);   // H6
+        if (!SidebarMetrics.PowerBarLit(low, tick)) c = new Color(0x3A, 0x10, 0x0E);   // H6: the bar blinks while low
         if (fill > 0) Shapes.Fill(batch, pixel, new Rectangle(r.X + 1, r.Bottom - 1 - fill, r.Width - 2, fill), c);
         int markY = r.Bottom - 1 - use;
         Shapes.Fill(batch, pixel, new Rectangle(r.X, Math.Clamp(markY, r.Y, r.Bottom - 1), r.Width, 2), Color.White);
@@ -777,7 +793,7 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
             {
                 Shapes.Fill(batch, pixel, inner, new Color(0x32, 0x3A, 0x2E));
                 Shapes.Outline(batch, pixel, inner, new Color(0x4A, 0x54, 0x44));
-                CentredText(batch, pixel, PlaceholderArt.ShortName(id), inner, TextColour, _ui, FontWeight.Bold);
+                if (!tierEntry.Locked) CentredText(batch, pixel, PlaceholderArt.ShortName(id), inner, TextColour, _ui, FontWeight.Bold);   // P6: a locked cameo shows LOCKED once, not a ghost under it
             }
 
             // Name strip along the bottom.
@@ -806,11 +822,11 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
             }
 
             if (blocked && count == 0) Shapes.Fill(batch, pixel, r, Veil);
-            if (tierEntry.Locked) CentredText(batch, pixel, "LOCKED", r, DimText, small, FontWeight.Bold);
+            if (tierEntry.Locked) FittedCentredText(batch, pixel, "LOCKED", r, DimText, small);   // P6
             if (ready)
             {
                 Shapes.Outline(batch, pixel, r, GoodGreen, 2);
-                CentredText(batch, pixel, "READY", r, GoodGreen, _ui * 0.9f, FontWeight.Bold);
+                FittedCentredText(batch, pixel, "READY", r, GoodGreen, _ui * 0.9f);   // P6: sized to the cameo
             }
             else Shapes.Outline(batch, pixel, r, r.Contains(_mouse) ? Gold : Border);
 
@@ -855,6 +871,13 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
 
     private static void Text(SpriteBatch batch, Texture2D pixel, string text, Vector2 at, Color colour, float scale, FontWeight weight) =>
         BitmapFont.Draw(batch, pixel, text, at, colour, scale, weight);
+
+    // P6: bold label drawn once, scaled down until it fits the cameo with 2 px to spare each side.
+    private static void FittedCentredText(SpriteBatch batch, Texture2D pixel, string text, Rectangle r, Color colour, float scale)
+    {
+        float fit = SidebarMetrics.FitScale(sc => BitmapFont.Measure(text, sc, FontWeight.Bold), r.Width - 4, scale);
+        CentredText(batch, pixel, text, r, colour, fit, FontWeight.Bold);
+    }
 
     private static void CentredText(SpriteBatch batch, Texture2D pixel, string text, Rectangle r, Color colour, float scale,
         FontWeight weight = FontWeight.Regular)

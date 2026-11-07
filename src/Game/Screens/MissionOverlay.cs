@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Rts.Game.Audio;
 using Rts.Game.Input;
 using Rts.Game.Ui;
+using Rts.Game.Ui.Objectives;
 using Rts.Scripting;
 
 namespace Rts.Game.Screens;
@@ -28,7 +29,36 @@ internal sealed class MissionOverlay
     private readonly MissionCameraCue _cameraCue = new();
     private int _tick;
 
-    public MissionOverlay(MissionHost host) => _host = host;
+    public MissionOverlay(MissionHost host, string briefing = "")
+    {
+        _host = host;
+        Guidance = new ObjectiveGuidance(host, briefing);
+    }
+
+    /// <summary>M11-05: arrow, marker, minimap ping, J / Tab / O keys, one-line bar and banner.</summary>
+    internal ObjectiveGuidance Guidance { get; }
+
+    /// <summary>Width of the map view in pixels (the window minus the sidebar); the one-line bar centres in it. Set by the game screen each frame.</summary>
+    public int MapViewWidth { get; set; } = 1000;
+
+    /// <summary>Timer lines of the objectives panel (they sit after the header and the visible objectives).</summary>
+    private List<string> TimerLines() => ObjectiveLines().Skip(1 + _host.VisibleObjectives.Count()).ToList();
+
+    /// <summary>The lines of the expanded panel (O): the objectives and timers wrapped to a fixed width, then the briefing text.</summary>
+    private List<string> ExpandedLines()
+    {
+        var lines = new List<string>();
+        foreach (string l in ObjectiveLines()) lines.AddRange(l.Length <= 64 ? new List<string> { l } : Wrap(l, 64));
+        if (Guidance.BriefingLines.Count > 0)
+        {
+            lines.Add("");
+            lines.Add("BRIEFING");
+            lines.AddRange(Guidance.BriefingLines);
+        }
+
+        lines.Add("O close");
+        return lines;
+    }
 
     /// <summary>The dialogue line on screen, or null (M8-05).</summary>
     public MissionDialogue? CurrentDialogue => _dialogue.Current;
@@ -78,7 +108,14 @@ internal sealed class MissionOverlay
     /// <summary>Updates the click-blocking rectangle of the objectives panel.</summary>
     public void UpdateRegion(int hudLines, int scale)
     {
-        List<string> lines = ObjectiveLines();
+        if (!Guidance.Model.Expanded)
+        {
+            List<string> bar = Guidance.BarLines(TimerLines(), scale, Math.Max(100, MapViewWidth - 32));
+            ObjectivesRegion.Bounds = ObjectiveGuidance.BarRect(bar, scale, MapViewWidth);
+            return;
+        }
+
+        List<string> lines = ExpandedLines();
         Point o = ObjectivesOrigin(hudLines, scale);
         ObjectivesRegion.Bounds = new Rectangle(o.X, o.Y, lines.Max(l => BitmapFont.Measure(l, scale)) + 16, Hud.HeightOf(lines.Count, scale));
     }
@@ -88,7 +125,9 @@ internal sealed class MissionOverlay
     /// </summary>
     public void Draw(SpriteBatch sb, Texture2D pixel, int scale, int hudLines, int helpTop, int tick)
     {
-        Hud.Panel(sb, pixel, ObjectivesOrigin(hudLines, scale), ObjectiveLines(), scale);
+        if (Guidance.Model.Expanded) Hud.Panel(sb, pixel, ObjectivesOrigin(hudLines, scale), ExpandedLines(), scale);
+        else Guidance.DrawBar(sb, pixel, scale, MapViewWidth, TimerLines());
+        Guidance.DrawBanner(sb, pixel, scale, MapViewWidth, ObjectivesRegion.Bounds.Bottom);
         int bottom = helpTop - GapPx;
         List<string> ticker = TickerLines(tick);
         if (ticker.Count > 0)

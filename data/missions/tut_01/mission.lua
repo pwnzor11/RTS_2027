@@ -22,6 +22,15 @@ function OnInit()
   Objective.AddHidden("harvest", "Build a Refinery and collect pitchblende", true)
   Objective.AddHidden("fight", "Destroy the enemy camp", true)
 
+  -- M11-05: where the HUD points for each lesson (arrow, ground marker, minimap ping; J jumps there).
+  Objective.SetTarget("move", "rally")
+  Objective.SetTarget("attack", "dummy")
+  Objective.SetTarget("power", "yard")
+  Objective.SetTarget("barracks", "yard")
+  Objective.SetTarget("train", "yard")
+  Objective.SetTarget("harvest", {x = 8, y = 5})   -- the pitchblende patch
+  Objective.SetTarget("fight", "camp")
+
   Say("intro")
   Say("step.move")
   Camera.Focus("rally", 200)

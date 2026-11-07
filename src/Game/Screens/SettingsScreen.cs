@@ -42,9 +42,13 @@ public sealed class SettingsScreen : IScreen
             new MenuItem(() => $"UI scale: {UiScaleName(_s.Settings.UiScale)}", () => StepUiScale(1), StepUiScale,
                 new MenuButton("<", () => StepUiScale(-1)), new MenuButton(">", () => StepUiScale(1))),
             new MenuItem(() => "Controls", () => _s.Screens.Push(new ControlsScreen(_s, _path))),
+            new MenuItem(() => $"Health bars: {(_s.Settings.HealthBarsAlways ? "Always" : "Damaged or selected")}", ToggleHealthBars, _ => ToggleHealthBars(),
+                new MenuButton("Toggle", ToggleHealthBars)),
             Volume("Master volume", s => s.MasterVolume, (s, v) => s with { MasterVolume = v }),
             Volume("Music volume", s => s.MusicVolume, (s, v) => s with { MusicVolume = v }),
             Volume("Effects volume", s => s.SfxVolume, (s, v) => s with { SfxVolume = v }),
+            new MenuItem(() => $"Camera cue on new objective: {(_s.Settings.CameraCueOnNewObjective ? "On" : "Off")}", ToggleCameraCue, _ => ToggleCameraCue(),
+                new MenuButton("Toggle", ToggleCameraCue)),   // M11-05
             new MenuItem(() => Rts.Game.Ui.Llm.LlmUiText.SectionRow, () => _s.Screens.Push(new Rts.Game.Ui.Llm.LlmSettingsScreen(_s, _path))),
             new MenuItem(() => "About", () => _s.Screens.Push(new AboutScreen(_s))),
             new MenuItem(() => "Back", Back),
@@ -118,11 +122,15 @@ public sealed class SettingsScreen : IScreen
         MenuSounds.Play(_s.Audio, MenuSounds.Move);
     }
 
+    private void ToggleCameraCue() => _s.Settings = _s.Settings with { CameraCueOnNewObjective = !_s.Settings.CameraCueOnNewObjective };
+
     private void ToggleFullscreen()
     {
         _s.Settings = _s.Settings with { Fullscreen = !_s.Settings.Fullscreen };
         _s.ApplyDisplay?.Invoke(_s.Settings);
     }
+
+    private void ToggleHealthBars() => _s.Settings = _s.Settings with { HealthBarsAlways = !_s.Settings.HealthBarsAlways };
 
     private void StepWindow(int d)
     {

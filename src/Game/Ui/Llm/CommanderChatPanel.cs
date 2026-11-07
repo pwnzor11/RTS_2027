@@ -3,6 +3,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using Rts.Game.Controls;
 using Rts.Game.Input;
 using Rts.Game.Sandbox;
 using Rts.Game.Sprites;
@@ -65,7 +66,7 @@ public sealed class CommanderChatPanel
         _model.Refresh(game.Chat);
         if (!_model.Typing)
         {
-            if (commanders.Count > 0 && input.ConsumePressed(Keys.Enter)) _model.Open(commanders);
+            if (commanders.Count > 0 && input.ConsumePressed(GameAction.Talk)) _model.Open(commanders);
             return _model.Typing;
         }
 

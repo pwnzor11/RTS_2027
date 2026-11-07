@@ -9,8 +9,8 @@ namespace Rts.Game.Tests.Controls;
 
 public sealed class GameKeysTests
 {
-    // The files that read the keyboard during play. Escape, Back and Length are not bindings of their own (Esc is in the table;
-    // Back edits chat text; "Keys.Length" is an array length, not a key).
+    // The files that read the keyboard during play. They may name a literal Keys.X only for the fixed keys (GameKeys.FixedKeyNames);
+    // everything else must be a GameAction read through the bindings.
     private static readonly string[] InputSources =
     {
         "src/Game/Screens/GameScreen.cs",
@@ -18,9 +18,8 @@ public sealed class GameKeysTests
         "src/Game/Controls/OrderController.cs",
         "src/Game/Ui/Spectator/SpectatorController.cs",
         "src/Game/Ui/Llm/CommanderChatPanel.cs",
+        "src/Game/Ui/Objectives/ObjectiveGuidance.cs",
     };
-
-    private static readonly HashSet<string> NotBindings = new() { "Back", "Length" };
 
     private static string Root()
     {
@@ -29,33 +28,40 @@ public sealed class GameKeysTests
         return dir ?? throw new InvalidOperationException("repository root not found");
     }
 
-    private static HashSet<string> KeysInCode()
+    private static string AllSource() => string.Join("\n", InputSources.Select(f => File.ReadAllText(Path.Combine(Root(), f))));
+
+    [Fact]
+    public void Input_code_names_no_literal_key_except_the_fixed_ones()
     {
         var found = new HashSet<string>();
-        foreach (string file in InputSources)
-        {
-            string text = File.ReadAllText(Path.Combine(Root(), file));
-            foreach (Match m in Regex.Matches(text, @"(?<![A-Za-z])Keys\.([A-Za-z0-9]+)"))
-                found.Add(m.Groups[1].Value);
-        }
-
-        return found;
+        foreach (Match m in Regex.Matches(AllSource(), @"(?<![A-Za-z])Keys\.([A-Za-z0-9]+)")) found.Add(m.Groups[1].Value);
+        string[] loose = found.Where(k => !GameKeys.FixedKeyNames.Contains(k)).OrderBy(k => k, StringComparer.Ordinal).ToArray();
+        Assert.True(loose.Length == 0, "literal keys in input code (use a GameAction via GameKeys.Infos): " + string.Join(", ", loose));
     }
 
     [Fact]
-    public void Every_key_the_input_code_reads_is_in_the_table()
+    public void Every_action_is_read_by_the_input_code()
     {
-        var table = new HashSet<string>(GameKeys.AllKeys.Select(k => k.ToString()));
-        string[] missing = KeysInCode().Where(k => !table.Contains(k) && !NotBindings.Contains(k)).OrderBy(k => k, StringComparer.Ordinal).ToArray();
-        Assert.True(missing.Length == 0, "keys handled in code but missing from GameKeys.Table: " + string.Join(", ", missing));
+        string source = AllSource();
+        string[] unread = Enum.GetValues<GameAction>().Select(a => a.ToString()).Where(a => !Regex.IsMatch(source, @"GameAction\." + a + @"\b")).ToArray();
+        Assert.True(unread.Length == 0, "actions in GameKeys.Infos that no input code reads: " + string.Join(", ", unread));
     }
 
     [Fact]
-    public void Every_key_in_the_table_is_read_by_the_input_code()
+    public void Infos_cover_every_action_once_in_enum_order_with_unique_ids()
     {
-        HashSet<string> code = KeysInCode();
-        string[] stale = GameKeys.AllKeys.Select(k => k.ToString()).Where(k => !code.Contains(k)).OrderBy(k => k, StringComparer.Ordinal).ToArray();
-        Assert.True(stale.Length == 0, "keys listed in GameKeys.Table that no input code reads: " + string.Join(", ", stale));
+        GameAction[] all = Enum.GetValues<GameAction>();
+        Assert.Equal(all.Length, GameKeys.Infos.Count);
+        for (int i = 0; i < all.Length; i++) Assert.Equal(all[i], GameKeys.Infos[i].Action);
+        Assert.Equal(all.Length, GameKeys.Infos.Select(i => i.Id).Distinct().Count());
+        Assert.All(GameKeys.Infos, i => Assert.Contains(i.Group, GameKeys.Groups));
+    }
+
+    [Fact]
+    public void Default_bindings_have_no_conflict_and_only_bindable_keys()
+    {
+        Assert.Empty(KeyBindings.Default.Conflicts());
+        Assert.All(GameKeys.Infos, i => Assert.True(KeyBindings.IsBindable(i.Default), i.Id));
     }
 
     [Fact]
@@ -63,15 +69,15 @@ public sealed class GameKeysTests
     {
         Assert.Equal(new[] { "Camera", "Selection", "Orders", "Build & System" }, GameKeys.Groups);
         foreach (string g in GameKeys.Groups) Assert.NotEmpty(GameKeys.InGroup(g));
-        Assert.All(GameKeys.Table, b => Assert.Contains(b.Group, GameKeys.Groups));
+        Assert.All(GameKeys.Rows, r => Assert.Contains(r.Group, GameKeys.Groups));
+        Assert.Equal(GameKeys.Infos.Count, GameKeys.Rows.Count(r => r.Action is not null));   // every action has a line on the page
     }
 
     [Fact]
-    public void Order_keys_are_exactly_the_Orders_rows_the_order_controller_handles()
+    public void Order_actions_are_Orders_rows()
     {
-        var orderRows = GameKeys.InGroup(GameKeys.Orders).SelectMany(b => b.Handled).ToHashSet();
-        foreach (Keys k in GameKeys.OrderKeys) Assert.Contains(k, orderRows);
-        Assert.Contains(Keys.K, orderRows);   // K is read by GameScreen's pack handling, not the order controller
+        foreach (GameAction a in GameKeys.OrderActions) Assert.Equal(GameKeys.Orders, GameKeys.InfoOf(a).Group);
+        Assert.Equal(Keys.K, GameKeys.InfoOf(GameAction.Pack).Default);
     }
 
     [Fact]
@@ -82,11 +88,21 @@ public sealed class GameKeysTests
     }
 
     [Fact]
-    public void Controls_page_lists_every_group_and_every_row()
+    public void Ranges_overlay_is_on_F10_and_bookmarks_on_F5_to_F8()
     {
-        var rows = ControlsScreen.TableRows();
-        Assert.Equal(GameKeys.Groups.Count + GameKeys.Table.Count, rows.Count);
-        foreach (string g in GameKeys.Groups) Assert.Contains(rows, r => r.Heading == g);
+        Assert.Equal(Keys.F10, GameKeys.InfoOf(GameAction.DebugRanges).Default);
+        Assert.Equal(Keys.Home, GameKeys.InfoOf(GameAction.CentreBase).Default);
+        Assert.Equal(new[] { Keys.F5, Keys.F6, Keys.F7, Keys.F8 },
+            new[] { GameAction.Bookmark1, GameAction.Bookmark2, GameAction.Bookmark3, GameAction.Bookmark4 }.Select(a => GameKeys.InfoOf(a).Default));
+    }
+
+    [Fact]
+    public void Controls_page_lists_every_group_setting_and_row()
+    {
+        var items = ControlsScreen.Items();
+        Assert.Equal(3 + 1 + GameKeys.Groups.Count + GameKeys.Rows.Count, items.Count);
+        foreach (string g in GameKeys.Groups) Assert.Contains(items, i => i.Heading == g);
+        Assert.Equal(GameKeys.Infos.Count, items.Count(i => i.Kind == ControlsScreen.ItemKind.Binding));
     }
 
     [Fact]

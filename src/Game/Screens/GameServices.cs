@@ -20,7 +20,8 @@ public sealed class GameServices
         Scene = scene;
         RulesDir = rulesDir;
         Audio = audio;
-        Settings = settings;
+        _settings = settings;
+        Controls.GameKeys.Active = settings.Bindings;
         Screens = screens;
         Quit = quit;
     }
@@ -41,7 +42,17 @@ public sealed class GameServices
     public IAudio Audio { get; }
 
     /// <summary>The player's settings.</summary>
-    public Settings Settings { get; set; }
+    public Settings Settings
+    {
+        get => _settings;
+        set
+        {
+            _settings = value;
+            Controls.GameKeys.Active = value.Bindings;   // game input reads its keys through the bindings in force
+        }
+    }
+
+    private Settings _settings;
 
     /// <summary>The screen stack.</summary>
     public ScreenStack Screens { get; }

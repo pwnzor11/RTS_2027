@@ -7,30 +7,67 @@ using Rts.Game.Controls;
 using Rts.Game.Input;
 using Rts.Game.Menu;
 using Rts.Game.Render;
+using Rts.Game.Ui;
 using Rts.Game.Ui.Fonts;
 
 namespace Rts.Game.Screens;
 
 /// <summary>
-/// The Controls page (M11-03): the Edge scroll, Scroll speed and Show diagnostics settings at the top, then the read-only key table
-/// from <see cref="GameKeys"/> grouped Camera / Selection / Orders / Build &amp; System. Opened from Settings, from the pause menu's
-/// Settings, and in play with F1 (or ?). Changes apply at once and are saved when the page closes.
+/// The Controls page (M11-03, D-172 (6)): the Edge scroll, Scroll speed and Show diagnostics settings, "Reset to defaults", then every
+/// control grouped Camera / Selection / Orders / Build &amp; System. Click a key (or select it and press Enter), then press the new key;
+/// a key that another action uses is shown as a conflict and is only taken after a swap (Enter) or dropped (Esc). Opened from Settings,
+/// from the pause menu's Settings, and in play with F1 (or ?). Changes apply at once and are saved when the page closes.
 /// </summary>
 public sealed class ControlsScreen : IScreen
 {
+    /// <summary>What one line of the page is.</summary>
+    public enum ItemKind
+    {
+        /// <summary>One of the three settings (edge scroll, scroll speed, diagnostics).</summary>
+        Setting,
+
+        /// <summary>The "Reset to defaults" line.</summary>
+        Reset,
+
+        /// <summary>A group heading.</summary>
+        Heading,
+
+        /// <summary>A fixed input shown for reference (mouse, Shift, Esc).</summary>
+        Fixed,
+
+        /// <summary>A rebindable action.</summary>
+        Binding,
+    }
+
+    /// <summary>One line of the page.</summary>
+    /// <param name="Kind">What it is.</param>
+    /// <param name="Index">The setting number for a Setting line.</param>
+    /// <param name="Row">The control row for a Fixed or Binding line.</param>
+    /// <param name="Heading">The group name for a Heading line.</param>
+    public sealed record Item(ItemKind Kind, int Index = 0, ControlRow? Row = null, string Heading = "")
+    {
+        /// <summary>True for the lines the cursor can rest on.</summary>
+        public bool Selectable => Kind is ItemKind.Setting or ItemKind.Reset or ItemKind.Binding;
+    }
+
     private const int SpeedStep = 100;
-    private const int RowCount = 3;
+    private const int SettingCount = 3;
     private static readonly Color PanelColour = new(0x12, 0x14, 0x10, 238);
     private static readonly Color BorderColour = new(0x6A, 0x72, 0x60);
     private static readonly Color TitleColour = new(0xD8, 0xC8, 0x8A);
     private static readonly Color TextColour = new(0xDC, 0xDE, 0xD0);
     private static readonly Color KeyColour = new(0xE8, 0xA8, 0x28);
+    private static readonly Color ChangedColour = new(0x7A, 0xD0, 0x7A);
+    private static readonly Color WarnColour = new(0xF0, 0x70, 0x50);
     private static readonly Color HintColour = new(0x90, 0x94, 0x86);
     private static readonly Color SelectColour = new(0x2A, 0x2E, 0x26);
 
+    private static readonly IReadOnlyList<Item> AllItems = BuildItems();
+
     private readonly GameServices _s;
     private readonly string? _path;
-    private int _row;
+    private readonly RebindSession _rebind = new();
+    private int _sel;
     private int _scroll;
     private int _visibleLines = 10;
 
@@ -60,6 +97,12 @@ public sealed class ControlsScreen : IScreen
         _ => settings with { ShowDiagnostics = !settings.ShowDiagnostics },
     };
 
+    /// <summary>The settings after "Reset to defaults": every key back to its factory binding (other settings are not touched).</summary>
+    public static Settings ResetKeys(Settings settings) => settings.WithBindings(KeyBindings.Default);
+
+    /// <summary>All lines of the page in order: the settings, Reset, then a heading and the rows of each group.</summary>
+    public static IReadOnlyList<Item> Items() => AllItems;
+
     /// <inheritdoc />
     public bool BlocksUpdateBelow => true;
 
@@ -77,6 +120,14 @@ public sealed class ControlsScreen : IScreen
     /// <inheritdoc />
     public void Update(InputFrame input, GameTime t)
     {
+        if (_rebind.State != RebindSession.Phase.Idle)
+        {
+            UpdateRebind(input);
+            input.ConsumeKeyboard();
+            input.ConsumeMouse();
+            return;
+        }
+
         if (input.ConsumePressed(Keys.Escape) || input.ConsumePressed(Keys.Back) || input.ConsumePressed(Keys.F1))
         {
             MenuSounds.Play(_s.Audio, MenuSounds.Back);
@@ -84,12 +135,12 @@ public sealed class ControlsScreen : IScreen
             return;
         }
 
-        if (input.ConsumePressed(Keys.Up)) _row = (_row + RowCount - 1) % RowCount;
-        if (input.ConsumePressed(Keys.Down)) _row = (_row + 1) % RowCount;
-        if (input.ConsumePressed(Keys.Left)) Apply(_row, -1);
-        if (input.ConsumePressed(Keys.Right) || input.ConsumePressed(Keys.Enter)) Apply(_row, 1);
+        if (input.ConsumePressed(Keys.Up)) MoveSelection(-1);
+        if (input.ConsumePressed(Keys.Down)) MoveSelection(1);
+        if (input.ConsumePressed(Keys.Left)) Activate(_sel, -1);
+        if (input.ConsumePressed(Keys.Right) || input.ConsumePressed(Keys.Enter)) Activate(_sel, 1);
 
-        int max = Math.Max(0, TableRows().Count - _visibleLines);
+        int max = Math.Max(0, AllItems.Count - _visibleLines);
         if (input.ConsumePressed(Keys.PageDown)) _scroll += _visibleLines - 1;
         if (input.ConsumePressed(Keys.PageUp)) _scroll -= _visibleLines - 1;
         if (input.ConsumePressed(Keys.Home)) _scroll = 0;
@@ -97,22 +148,91 @@ public sealed class ControlsScreen : IScreen
         if (input.WheelDelta != 0) _scroll -= Math.Sign(input.WheelDelta) * 3;
         _scroll = Math.Clamp(_scroll, 0, max);
 
-        Layout(out Rectangle[] rows, out Rectangle back, out _, out _);
+        Layout(out Rectangle list, out Rectangle back, out _);
         if (input.LeftPressed || input.RightPressed)
         {
-            int dir = input.RightPressed ? -1 : 1;
-            for (int i = 0; i < RowCount; i++)
+            int line = Line(_s.UiScale);
+            Point at = input.MousePosition;
+            if (list.Contains(at))
             {
-                if (!rows[i].Contains(input.MousePosition)) continue;
-                _row = i;
-                Apply(i, dir);
+                int i = _scroll + (at.Y - list.Y) / line;
+                if (i >= 0 && i < AllItems.Count && AllItems[i].Selectable)
+                {
+                    _sel = i;
+                    Activate(i, input.RightPressed ? -1 : 1);
+                }
             }
-
-            if (input.LeftPressed && back.Contains(input.MousePosition)) _s.Screens.Pop();
+            else if (input.LeftPressed && back.Contains(at))
+            {
+                _s.Screens.Pop();
+            }
         }
 
         input.ConsumeKeyboard();
         input.ConsumeMouse();
+    }
+
+    private void UpdateRebind(InputFrame input)
+    {
+        if (input.LeftPressed || input.RightPressed)
+        {
+            _rebind.Cancel();   // a click elsewhere leaves the flow
+            return;
+        }
+
+        if (_rebind.State == RebindSession.Phase.Conflict)
+        {
+            if (input.ConsumePressed(Keys.Escape)) _rebind.Cancel();
+            else if (input.ConsumePressed(Keys.Enter) && _rebind.Swap(_s.Settings.Bindings) is { } swapped) Commit(swapped);
+            return;
+        }
+
+        foreach (Keys key in input.Keyboard.GetPressedKeys())
+        {
+            if (!input.Pressed(key)) continue;
+            if (_rebind.Press(_s.Settings.Bindings, key) is { } changed) Commit(changed);
+            return;
+        }
+    }
+
+    private void Commit(KeyBindings bindings)
+    {
+        _s.Settings = _s.Settings.WithBindings(bindings);
+        MenuSounds.Play(_s.Audio, MenuSounds.Move);
+    }
+
+    private void MoveSelection(int dir)
+    {
+        for (int step = 1; step <= AllItems.Count; step++)
+        {
+            int i = ((_sel + dir * step) % AllItems.Count + AllItems.Count) % AllItems.Count;
+            if (!AllItems[i].Selectable) continue;
+            _sel = i;
+            break;
+        }
+
+        if (_sel < _scroll) _scroll = _sel - (AllItems[Math.Max(0, _sel - 1)].Kind == ItemKind.Heading ? 1 : 0);
+        if (_sel >= _scroll + _visibleLines) _scroll = _sel - _visibleLines + 1;
+        _scroll = Math.Max(0, _scroll);
+    }
+
+    private void Activate(int index, int direction)
+    {
+        Item item = AllItems[index];
+        switch (item.Kind)
+        {
+            case ItemKind.Setting:
+                _s.Settings = Step(_s.Settings, item.Index, direction);
+                MenuSounds.Play(_s.Audio, MenuSounds.Move);
+                break;
+            case ItemKind.Reset:
+                _s.Settings = ResetKeys(_s.Settings);
+                MenuSounds.Play(_s.Audio, MenuSounds.Move);
+                break;
+            case ItemKind.Binding when direction > 0 && item.Row?.Action is { } action:
+                _rebind.Begin(action);
+                break;
+        }
     }
 
     /// <inheritdoc />
@@ -122,80 +242,88 @@ public sealed class ControlsScreen : IScreen
         int scale = _s.UiScale;
         int line = Line(scale);
         int pad = 5 * scale;
-        Layout(out Rectangle[] rows, out Rectangle back, out Rectangle panel, out Rectangle table);
+        Layout(out Rectangle list, out Rectangle back, out Rectangle panel);
         Shapes.Fill(sb, _s.Pixel, panel, PanelColour);
         Shapes.Outline(sb, _s.Pixel, panel, BorderColour, Math.Max(1, scale / 2));
         BitmapFont.Draw(sb, _s.Pixel, "Controls", new Vector2(panel.X + pad, panel.Y + pad), TitleColour, scale, FontWeight.Bold);
 
-        for (int i = 0; i < RowCount; i++)
-        {
-            if (i == _row) Shapes.Fill(sb, _s.Pixel, rows[i], SelectColour);
-            BitmapFont.Draw(sb, _s.Pixel, RowText(_s.Settings, i), new Vector2(rows[i].X + scale * 2, rows[i].Y + scale), TextColour, scale);
-        }
-
-        List<(string Heading, string Key, string Action)> list = TableRows();
-        _visibleLines = Math.Max(3, table.Height / line);
-        _scroll = Math.Clamp(_scroll, 0, Math.Max(0, list.Count - _visibleLines));
+        KeyBindings bindings = _s.Settings.Bindings;
+        _visibleLines = Math.Max(3, list.Height / line);
+        _scroll = Math.Clamp(_scroll, 0, Math.Max(0, AllItems.Count - _visibleLines));
         int keyCol = 0;
-        foreach (GameKeyBinding b in GameKeys.Table) keyCol = Math.Max(keyCol, BitmapFont.Measure(b.Label, scale));
-        keyCol += 4 * scale;
-        for (int i = 0; i < _visibleLines && _scroll + i < list.Count; i++)
+        foreach (ControlRow r in GameKeys.Rows) keyCol = Math.Max(keyCol, BitmapFont.Measure(r.LabelFor(KeyBindings.Default), scale));
+        keyCol = Math.Max(keyCol, BitmapFont.Measure("Left click (attack-move armed)", scale)) + 4 * scale;
+        for (int i = 0; i < _visibleLines && _scroll + i < AllItems.Count; i++)
         {
-            (string heading, string key, string action) = list[_scroll + i];
-            var at = new Vector2(table.X, table.Y + i * line);
-            if (heading.Length > 0)
+            int index = _scroll + i;
+            Item item = AllItems[index];
+            var at = new Vector2(list.X, list.Y + i * line);
+            var rowRect = new Rectangle(list.X, list.Y + i * line, list.Width, line);
+            if (index == _sel && item.Selectable) Shapes.Fill(sb, _s.Pixel, rowRect, SelectColour);
+            switch (item.Kind)
             {
-                BitmapFont.Draw(sb, _s.Pixel, heading, at, TitleColour, scale, FontWeight.Bold);
-                continue;
+                case ItemKind.Setting:
+                    BitmapFont.Draw(sb, _s.Pixel, RowText(_s.Settings, item.Index), at + new Vector2(2 * scale, 0), TextColour, scale);
+                    break;
+                case ItemKind.Reset:
+                    BitmapFont.Draw(sb, _s.Pixel, "Reset all keys to defaults", at + new Vector2(2 * scale, 0), bindings.IsAllDefault ? HintColour : KeyColour, scale);
+                    break;
+                case ItemKind.Heading:
+                    BitmapFont.Draw(sb, _s.Pixel, item.Heading, at, TitleColour, scale, FontWeight.Bold);
+                    break;
+                default:
+                    DrawRow(sb, item.Row!, bindings, at, keyCol, scale);
+                    break;
             }
-
-            BitmapFont.Draw(sb, _s.Pixel, key, at + new Vector2(2 * scale, 0), KeyColour, scale);
-            BitmapFont.Draw(sb, _s.Pixel, action, at + new Vector2(keyCol, 0), TextColour, scale);
         }
 
-        string hint = "Up/Down Left/Right: settings   Wheel: scroll the list   Esc: back";
-        BitmapFont.Draw(sb, _s.Pixel, hint, new Vector2(panel.X + pad, panel.Bottom - pad - line + scale), HintColour, scale);
+        string message = _rebind.Message;
+        if (_rebind.State == RebindSession.Phase.Listening && message.Length == 0) message = "Press the new key for this action.  Esc: cancel.";
+        string hint = message.Length > 0 ? message : "Up/Down select   Enter or click: change / rebind   Wheel: scroll   Esc: back";
+        Color hintColour = _rebind.State == RebindSession.Phase.Conflict ? WarnColour : message.Length > 0 ? KeyColour : HintColour;
+        BitmapFont.Draw(sb, _s.Pixel, hint, new Vector2(panel.X + pad, panel.Bottom - pad - line + scale), hintColour, scale);
         Shapes.Fill(sb, _s.Pixel, back, SelectColour);
         Shapes.Outline(sb, _s.Pixel, back, BorderColour);
         BitmapFont.Draw(sb, _s.Pixel, "Back", new Vector2(back.X + 3 * scale, back.Y + scale), TextColour, scale);
     }
 
-    /// <summary>The key table as display rows: a heading row per group, then one row per binding.</summary>
-    public static List<(string Heading, string Key, string Action)> TableRows()
+    private void DrawRow(SpriteBatch sb, ControlRow row, KeyBindings bindings, Vector2 at, int keyCol, int scale)
     {
-        var rows = new List<(string, string, string)>();
-        foreach (string group in GameKeys.Groups)
-        {
-            rows.Add((group, "", ""));
-            foreach (GameKeyBinding b in GameKeys.InGroup(group)) rows.Add(("", b.Label, b.Action));
-        }
-
-        return rows;
+        bool editing = _rebind.State != RebindSession.Phase.Idle && row.Action == _rebind.Action;
+        string label = editing ? (_rebind.State == RebindSession.Phase.Conflict ? KeyNames.Of(_rebind.PendingKey) + " ?" : "press a key") : row.LabelFor(bindings);
+        Color colour = editing ? WarnColour : row.Action is { } a && !bindings.IsDefault(a) ? ChangedColour : KeyColour;
+        BitmapFont.Draw(sb, _s.Pixel, label, at + new Vector2(2 * scale, 0), colour, scale);
+        BitmapFont.Draw(sb, _s.Pixel, row.Description, at + new Vector2(keyCol, 0), TextColour, scale);
     }
 
-    private void Apply(int row, int direction)
+    private static List<Item> BuildItems()
     {
-        _s.Settings = Step(_s.Settings, row, direction);
-        MenuSounds.Play(_s.Audio, MenuSounds.Move);
+        var items = new List<Item>();
+        for (int i = 0; i < SettingCount; i++) items.Add(new Item(ItemKind.Setting, i));
+        items.Add(new Item(ItemKind.Reset));
+        foreach (string group in GameKeys.Groups)
+        {
+            items.Add(new Item(ItemKind.Heading, Heading: group));
+            foreach (ControlRow row in GameKeys.InGroup(group)) items.Add(new Item(row.Action is null ? ItemKind.Fixed : ItemKind.Binding, Row: row));
+        }
+
+        return items;
     }
 
     private static int Line(int scale) => BitmapFont.LineHeight(scale, FontWeight.Regular) + scale;
 
-    private void Layout(out Rectangle[] rows, out Rectangle back, out Rectangle panel, out Rectangle table)
+    private void Layout(out Rectangle list, out Rectangle back, out Rectangle panel)
     {
         int scale = _s.UiScale;
         Viewport vp = _s.Viewport;
         int line = Line(scale);
         int pad = 5 * scale;
-        int width = Math.Min(vp.Width - 8 * scale, 130 * scale * BitmapFont.Advance / 2);
+        int width = Math.Min(vp.Width - 8 * scale, 140 * scale * BitmapFont.Advance / 2);
         int height = vp.Height - 12 * scale;
         panel = new Rectangle((vp.Width - width) / 2, (vp.Height - height) / 2, width, height);
-        rows = new Rectangle[RowCount];
-        int y = panel.Y + pad + line + scale;
-        for (int i = 0; i < RowCount; i++) rows[i] = new Rectangle(panel.X + pad, y + i * (line + scale), width - 2 * pad, line);
-        int tableTop = y + RowCount * (line + scale) + 2 * scale;
+        int top = panel.Y + pad + line + scale;
         int bottom = panel.Bottom - pad - line - scale;
-        table = new Rectangle(panel.X + pad, tableTop, width - 2 * pad, Math.Max(line * 3, bottom - tableTop));
+        list = new Rectangle(panel.X + pad, top, width - 2 * pad, Math.Max(line * 3, bottom - top));
         back = new Rectangle(panel.Right - pad - 12 * scale, panel.Bottom - pad - line, 12 * scale, line);
     }
 }

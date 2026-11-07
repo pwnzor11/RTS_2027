@@ -32,34 +32,49 @@ public sealed class OrderController
         _selection = selection;
     }
 
-    /// <summary>True after A, until the next right-click or A again.</summary>
+    /// <summary>True after A, until the next click (left or right), Esc, or A again.</summary>
     public bool AttackMoveArmed { get; private set; }
 
     /// <summary>True after D when a selected unit deploys at a chosen cell (a Bore), until the next right-click or D again.</summary>
     public bool DeployArmed { get; private set; }
 
+    /// <summary>O1: where the order rings are queued (set by the game screen; null in tests).</summary>
+    public OrderFeedback? Feedback { get; set; }
+
+    /// <summary>True while any order waits for a click (attack-move or a deploy cell).</summary>
+    public bool AnyArmed => AttackMoveArmed || DeployArmed;
+
+    /// <summary>Esc: disarms attack-move and deploy. Returns true when something was armed (the key is then used up).</summary>
+    public bool CancelArmed()
+    {
+        bool was = AnyArmed;
+        AttackMoveArmed = false;
+        DeployArmed = false;
+        return was;
+    }
+
     /// <summary>M4-09: the building the player has selected (set by the screen each frame; <see cref="EntityId.None"/> = none).
     /// D on a garrisoned own building then sends Unload.</summary>
     public EntityId SelectedBuilding { get; set; } = EntityId.None;
 
-    /// <summary>Handles a key that went down this frame. Ignores keys that are not orders.</summary>
-    public void KeyPressed(Keys key)
+    /// <summary>Handles an order action whose key went down this frame. Ignores actions that are not orders.</summary>
+    public void KeyPressed(GameAction action)
     {
-        switch (key)
+        switch (action)
         {
-            case Keys.A:
+            case GameAction.AttackMove:
                 AttackMoveArmed = !AttackMoveArmed;
                 break;
-            case Keys.S:
+            case GameAction.Stop:
                 IssueToSelection(CommandKind.Stop);
                 break;
-            case Keys.D:
+            case GameAction.Deploy:
                 if (!TryUnloadSelectedBuilding()) Deploy();
                 break;
-            case Keys.X:
+            case GameAction.Scatter:
                 IssueToSelection(CommandKind.Scatter);
                 break;
-            case Keys.G:
+            case GameAction.Guard:
                 foreach (UnitKey unit in _selection.Units.ToList())
                 {
                     if (_source.TryGetPosition(unit, out LeptonCoord at)) _source.Order(CommandKind.Guard, unit, at.ToCell());
@@ -98,6 +113,7 @@ public sealed class OrderController
             wreckHere = SalvageOrders.WreckAt(_wrecks, cell);
         }
 
+        OrderMarkKind? mark = null;   // O1: one ring per click, not one per unit
         foreach (UnitKey unit in _selection.Units.ToList())
         {
             BuildingClick click = BuildingClick.None;
@@ -110,10 +126,12 @@ public sealed class OrderController
             if (click is BuildingClick.Capture or BuildingClick.Repair or BuildingClick.EnterTunnel or BuildingClick.Garrison)
             {
                 _source.Order(CommandKind.Enter, unit, default, new ActorRef(ActorKind.Building, buildingId));   // M3-INT / M4-09
+                mark ??= OrderMarkKind.Move;
             }
             else if (click == BuildingClick.Attack || (building is null && enemy is not null))
             {
                 _source.Order(CommandKind.Attack, unit, default, enemy!.Value);
+                mark = OrderMarkKind.Attack;
             }
             else if (own is { Target.Kind: ActorKind.Vehicle } mine && M3Orders.CanBoard(_source.Rules, unit.Kind, mine.TypeIndex))
             {
@@ -131,8 +149,11 @@ public sealed class OrderController
             else if (_source.Map.Contains(cell))
             {
                 _source.Order(armed ? CommandKind.AttackMove : CommandKind.Move, unit, cell);
+                mark ??= armed ? OrderMarkKind.Attack : OrderMarkKind.Move;
             }
         }
+
+        if (mark is { } kind) Feedback?.Add(enemy is not null ? world : Camera.CentreOf(cell), kind);
     }
 
     private BuildingView? ViewOf(EntityId id)
