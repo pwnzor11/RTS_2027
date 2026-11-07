@@ -1315,3 +1315,13 @@ Amends the D-087 build order; priorities (campaign, skirmish, LAN) are unchanged
 **Why:** owner: the UI and controls make the game hard to read and navigate; fixing them makes every later milestone easier to play and test.
 **Alternatives:** LAN first (D-087 order).
 **Status:** owner decision (session 14)
+
+### D-172 · 2026-11-07 · M11 owner picks (UI audit section 6.2)
+**Decision:** (1) selection info as option B, a bottom-centre card over the map; the sidebar build menu never moves. (2) Objective guidance:
+all tools: edge-of-screen arrow with distance, pulsing ground marker, minimap ping, jump key (J) with Tab to cycle, one-line objective bar
+with O for the full list, and a short camera cue when a new objective appears. (3) Unit size: draw units about 25 % larger; zoom default
+unchanged. (4) Attack-move: left click commits, right click is an alias; Esc cancels. (5) No colour-blind mode (owner does not want it).
+(6) Full key rebinding now (Controls page with click-to-rebind, conflict warnings, reset to defaults).
+**Why:** owner answers to docs/reviews/2026-11-07_ui_input_audit.md section 6.2 (session 14).
+**Alternatives:** A sidebar split, C tabs; a subset of guidance tools; default zoom 1.5; read-only key table first; colour-safe palette.
+**Status:** owner decision (session 14)

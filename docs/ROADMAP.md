@@ -248,6 +248,7 @@ Source: docs/reviews/2026-11-07_owner_campaign_feedback.md. Audit: docs/reviews/
 - [ ] M11-08 Resource field readability
 - [ ] M11-09 Building animation speed calmer
 - [ ] M11-11 Blinking "no power" icon over buildings stopped by low power (D-170, s14)
+- [ ] M11-12 Full key rebinding (D-172)
 - [ ] M11-10 Fixes from the M11-01 audit (ids added after the owner picks)
 
 ## M9 · LAN multiplayer (was M5)
