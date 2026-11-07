@@ -84,4 +84,36 @@ public sealed class SettingsTests
         Assert.Equal(4, Settings.Default.EffectiveUiScale(2160));
         Assert.Equal(5, (Settings.Default with { UiScale = 5 }).EffectiveUiScale(720));
     }
+
+    [Fact]
+    public void An_old_file_without_the_camera_keys_gets_edge_scroll_on_and_the_default_speed()
+    {
+        Settings s = Settings.Parse("version = 2\nfullscreen = true\nllm_call_cap = 5");
+        Assert.True(s.EdgeScroll);
+        Assert.Equal(Settings.DefaultScrollSpeed, s.ScrollSpeed);
+        Assert.True(s.Fullscreen);
+    }
+
+    [Fact]
+    public void Camera_keys_round_trip_and_the_speed_is_clamped()
+    {
+        Settings s = Settings.Parse("edge_scroll = false\nscroll_speed = 1400");
+        Assert.False(s.EdgeScroll);
+        Assert.Equal(1400, s.ScrollSpeed);
+        Assert.Equal(s, Settings.Parse(s.ToToml()));
+        Assert.Equal(Settings.MaxScrollSpeed, Settings.Parse("scroll_speed = 99999").ScrollSpeed);
+        Assert.Equal(Settings.MinScrollSpeed, Settings.Parse("scroll_speed = 1").ScrollSpeed);
+        Assert.Equal(Settings.DefaultScrollSpeed, Settings.Parse("scroll_speed = \"fast\"").ScrollSpeed);
+    }
+
+    [Fact]
+    public void Diagnostics_default_off_for_an_old_file_and_round_trip()
+    {
+        Assert.False(Settings.Parse("version = 2\nfullscreen = true").ShowDiagnostics);
+        Assert.False(Settings.Default.ShowDiagnostics);
+        Settings on = Settings.Parse("show_diagnostics = true");
+        Assert.True(on.ShowDiagnostics);
+        Assert.Equal(on, Settings.Parse(on.ToToml()));
+        Assert.False(Settings.Parse("show_diagnostics = 1").ShowDiagnostics);
+    }
 }

@@ -10,7 +10,7 @@ using Rts.Game.Saves;
 namespace Rts.Game.Screens;
 
 /// <summary>
-/// Esc in game: Resume, Restart, Quit to menu. Stops the screens below from updating, so the simulation is paused
+/// Esc in game: Resume, Save, Settings, Archive, Restart, Quit to menu. Stops the screens below from updating, so the simulation is paused
 /// (single player); they are still drawn, dimmed.
 /// </summary>
 public sealed class PauseScreen : IScreen
@@ -32,6 +32,7 @@ public sealed class PauseScreen : IScreen
             items.Add(new MenuItem(() => "Quicksave", () => Choose(() => Saved(save.Save(SaveSlots.Quick), SaveSlots.Quick))));
             items.Add(new MenuItem(() => "Save game", () => Choose(() => _s.Screens.Push(SaveListScreen(save)))));
         }
+        items.Add(new MenuItem(() => "Settings", () => Choose(() => _s.Screens.Push(new SettingsScreen(_s)))));
         items.Add(new MenuItem(() => "Archive", () => Choose(() => _s.Screens.Push(new ArchiveScreen(_s)))));
         items.Add(new MenuItem(() => "Restart", () => Choose(() => GameFlow.Restart(_s, restart))));
         items.Add(new MenuItem(() => "Quit to menu", () => Choose(() => GameFlow.QuitToMenu(_s))));

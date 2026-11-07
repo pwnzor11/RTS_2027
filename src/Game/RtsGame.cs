@@ -109,6 +109,7 @@ public sealed class RtsGame : Microsoft.Xna.Framework.Game
             LegacyEmptySandbox = _empty,
             Sprites = spriteLibrary,
             ApplyDisplay = ApplyDisplay,
+            WindowActive = () => IsActive,
         };
         // The animated menu background (M3-16). It is optional: if it cannot be built the menus use a plain colour.
         try
