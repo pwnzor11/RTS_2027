@@ -661,8 +661,11 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
         if (unit.Kind == UnitKind.Vehicle && r.Vehicles[unit.TypeIndex].AircraftSlots > 0
             && _source.Sim.ViewFor(_player).OwnCarrierHangar(key.Id, out int docked, out int slots))
             lines.Add(CarrierReadout.Text(docked, slots));
-        UnitInfoPanel.Draw(batch, pixel, new Point(_layout.MapView.X + 8, _layout.MapView.Y + 8), lines, _ui);
+        UnitInfoPanel.Draw(batch, pixel, new Point(_layout.MapView.X + 8, Math.Max(_layout.MapView.Y + 8, UnitInfoTop)), lines, _ui);
     }
+
+    /// <summary>Lowest y the single-unit info panel may start at: the game screen sets it under the other left-column panels (audit S3).</summary>
+    public int UnitInfoTop { get; set; }
 
     private void DrawPowerBar(SpriteBatch batch, Texture2D pixel, SidebarLayout l)
     {

@@ -1106,6 +1106,8 @@ public sealed class GameScreen : IScreen
             _specRegion.Bounds = _specPanel.Bounds(scale);
         }
         _mission?.UpdateRegion(lines.Count, scale);
+        if (_sidebar is not null)   // S3: the unit info panel stacks below the debug, spectator and objectives panels
+            _sidebar.UnitInfoTop = HudStack.NextTop(8, 6, new[] { _hudRegion.Bounds, _specRegion.Bounds, _mission?.ObjectivesRegion.Bounds ?? Rectangle.Empty });
         if (_sim is not null)
         {
             string[] help = _spectatorMode ? SpectatorHelpLines : _skirmishMode ? SkirmishHelpLines : HelpLines;
