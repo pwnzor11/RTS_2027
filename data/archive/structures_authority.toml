@@ -109,8 +109,7 @@ field_note = "SEISMIC 9 // THE GROUND TALKS. LISTEN FOR WHAT SHOULD NOT BE THERE
 body = '''
 A squat hut over a bedrock pillar, with a drum and a pen that scratches a trace on moving paper. Technicians learned to read the trace of a burrowing machine within a season of the first hatch sightings. Their warnings are the Authority's earliest and quietest defence.
 '''
-# ASSUMED (M3-17) TODO (M4): replace TBD with the mission id that releases this entry.
-unlock = "campaign:TBD"
+unlock = "campaign:auth_01" # M8-13 (tune)
 
 [[entry]]
 id = "auth_searchlight"
@@ -122,8 +121,7 @@ field_note = "LIGHT 10 // BURN THROUGH THE SMOKE. SEE FIRST, SHOOT SECOND. STOP.
 body = '''
 A steel mast with a carbon-arc lamp and a reflector big enough to read by from a mile away. The lamp cuts through Blackout smoke and exposes anything in the beam. The Authority's belief is simple: if you light the ground, there is less to fear.
 '''
-# ASSUMED (M3-17) TODO (M4): replace TBD with the mission id that releases this entry.
-unlock = "campaign:TBD"
+unlock = "campaign:auth_02" # M8-13 (tune)
 
 [[entry]]
 id = "auth_gate"
@@ -135,8 +133,7 @@ field_note = "GATE 11 // OPEN FOR OURS, SHUT FOR THEM. SIGN THE LOG AT EVERY PAS
 body = '''
 A reinforced sliding gate keyed to the district's own vehicles. It opens for friendly convoys and counts as wall for the seal. Gate-keepers are a proud profession and the most unforgiving checkers of papers on the continent.
 '''
-# ASSUMED (M3-17) TODO (M4): replace TBD with the mission id that releases this entry.
-unlock = "campaign:TBD"
+unlock = "campaign:auth_03" # M8-13 (tune)
 
 [[entry]]
 id = "auth_engineering"
@@ -148,8 +145,7 @@ field_note = "ENGINEERING 12 // DESIGN, TEST, ISSUE AS BULLETIN. NOTHING IS A SE
 body = '''
 A drafting hall and testing yard where new methods are worked out and issued as bulletins. Engineers argue about tolerances for weeks, then release a result that everyone uses for decades.
 '''
-# ASSUMED (M3-17) TODO (M4): replace TBD with the mission id that releases this entry.
-unlock = "campaign:TBD"
+unlock = "campaign:auth_02" # M8-13 (tune)
 
 
 [[entry]]

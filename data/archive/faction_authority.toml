@@ -27,8 +27,7 @@ A day in a reconstruction town starts with the whistle, the roll call and a deco
 
 The towns are stencilled in grey-green: pipework, painted unit numbers, hand-lettered signs. Anything not bolted down is borrowed from the common pool and returned on time. Fear is real, but it is expressed as maintenance.
 '''
-# ASSUMED (M3-17) TODO (M4): replace TBD with the mission id that releases this entry.
-unlock = "campaign:TBD"
+unlock = "campaign:auth_02" # M8-13 (tune)
 
 [[entry]]
 id = "faction_auth_values"
@@ -54,8 +53,7 @@ The army is the labour year with rifles. Riflemen and rocketeers are citizens in
 
 It is slow and expensive, and it is very hard to dislodge. Its air arm is the last thing it rebuilt, and its artillery is the best on the continent, because the Authority never lost the habit of doing the sums.
 '''
-# ASSUMED (M3-17) TODO (M4): replace TBD with the mission id that releases this entry.
-unlock = "campaign:TBD"
+unlock = "campaign:auth_03" # M8-13 (tune)
 
 [[entry]]
 id = "faction_auth_symbols"

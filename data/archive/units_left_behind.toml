@@ -43,8 +43,7 @@ body = '''
 Armed with a sling-arm and a bagful of hand-packed charges cast in tin cans, the Slinger answers armour the way the
 caravans answer everything: with whatever is left over. They are brave in a quiet way and rarely stand still.
 '''
-# ASSUMED (S9) TODO: lore says campaign; replace TBD with the mission id that releases this entry.
-unlock = "campaign:TBD"
+unlock = "campaign:lb_01" # M8-13 (tune)
 
 [[entry]]
 id = "lb_tinker"
@@ -72,8 +71,7 @@ The Veilwalkers move in the ash, wrapped in sail-cloth the colour of the drifts.
 photographed, and are reported by the Authority as "environmental interference". The caravans simply call them the
 quiet ones.
 '''
-# ASSUMED (S9) TODO: lore says campaign; replace TBD with the mission id that releases this entry.
-unlock = "campaign:TBD"
+unlock = "campaign:lb_02" # M8-13 (tune)
 
 # S9 draft, approved by the owner (D-134) (docs/lore/left_behind.md).
 [[entry]]
@@ -139,8 +137,7 @@ body = '''
 A flatbed fitted with an old whaling gun and a drum of cable, bought from a coastal wreck and rebuilt a dozen times.
 The harpoon hooks a hull and drags it off course. Enemy crews hate it most for the noise.
 '''
-# ASSUMED (S9) TODO: lore says campaign; replace TBD with the mission id that releases this entry.
-unlock = "campaign:TBD"
+unlock = "campaign:lb_03" # M8-13 (tune)
 
 # S9 draft, approved by the owner (D-134) (docs/lore/left_behind.md).
 [[entry]]
@@ -193,8 +190,7 @@ Built from three wrecked buses, a bridge girder and an engine nobody can identif
 caravans can make that still moves. It is not fast and it is not pretty. It is, however, almost impossible to bring down
 quickly, because every plate is a different age and every weak point is somewhere new.
 '''
-# ASSUMED (S9) TODO: lore says campaign; replace TBD with the mission id that releases this entry.
-unlock = "campaign:TBD"
+unlock = "campaign:lb_03" # M8-13 (tune)
 
 # S9 draft, approved by the owner (D-134) (docs/lore/left_behind.md).
 [[entry]]

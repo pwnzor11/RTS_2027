@@ -13,8 +13,7 @@ field_note = "ENGINEERING BULLETIN 11 // POUR, SET, CURE. IF THE WALL HOLDS, THE
 body = '''
 Researched at the Engineering Works, Foundation Grouting fills the soft ground enclosed by a base's walls, gates and buildings with quick-curing concrete slurry. Nothing can surface or break through there. The Authority thinks of it as the civil engineer's reply to tunnelling: pour the floor and be done with it. A single broken wall panel spoils the seal, which is why work crews inspect the perimeter every morning.
 '''
-# ASSUMED (M3-17) TODO (M4): replace TBD with the mission id that releases this entry.
-unlock = "campaign:TBD"
+unlock = "campaign:auth_02" # M8-13 (tune)
 
 
 [[entry]]
@@ -280,7 +279,7 @@ field_note = "HYDROGRAPHIC NOTE 4 // NETS LAID ON EVERY PICKET LINE. THE SEA IS 
 body = '''
 Cable nets lowered between the Pickets and the shore, which extend the range of each listening post and reveal submerged boats to the whole team for a short time after they are heard. The nets are heavy to lay and cheap to keep, and the sailors who lay them say the sea sounds different once they are in.
 '''
-unlock = "campaign:TBD"
+unlock = "campaign:exp_01" # M8-13 (tune)
 
 # DRAFT (lead, session 12) — assumed — confirm (owner reads)
 [[entry]]
@@ -293,7 +292,7 @@ field_note = "DRYDOCK NOTE 9 // EVERY SEAM WELDED TWICE. THE PLATES ARE HEAVY AN
 body = '''
 A programme of extra steel plating welded over the original hull seams in the drydocks of the home ports. Every warship in the fleet gains armour from it, though each new plate adds weight, and the engineers argue constantly about how much weight a hull can carry before it stops being fast. The Admiral has ruled that the answer is always more.
 '''
-unlock = "campaign:TBD"
+unlock = "campaign:exp_02" # M8-13 (tune)
 
 # DRAFT (lead, session 12) — assumed — confirm (owner reads)
 [[entry]]
@@ -306,7 +305,7 @@ field_note = "CARROW DOWN 3 // NEW TUBES FITTED. THEY GLOW FAINTER AND THE GUNS 
 body = '''
 Improved valve tubes that run cooler under load, so the guns of every fleet vehicle can fire more often. Crews notice at once, since the new tubes glow a fainter colour and need less attention between engagements. The engineers at Carrow Down remain modest about the work, though privately they believe these are the finest tubes they have ever built.
 '''
-unlock = "campaign:TBD"
+unlock = "campaign:auth_03" # M8-13 (tune)
 
 # DRAFT (lead, session 12) — assumed — confirm (owner reads)
 [[entry]]
@@ -319,7 +318,7 @@ field_note = "LABORATORY NOTE 7 // CERAMIC AND RESIN ON EVERY SKIRT AND CHEST PL
 body = '''
 Layered plates of ceramic and resin fitted to hovercraft skirts, troop carriers and the chest plates of infantry. It stops small arms and splinters that once went straight through, and it weighs less than the steel it replaces. Veterans complain that it smells of a laboratory, though they rarely complain about the first round that bounces away from them.
 '''
-unlock = "campaign:TBD"
+unlock = "campaign:auth_03" # M8-13 (tune)
 
 # DRAFT (lead, session 12) — assumed — confirm (owner reads)
 [[entry]]
@@ -332,7 +331,7 @@ field_note = "SPOTTER BULLETIN 2 // THE SHELL CORRECTS ITSELF IN FLIGHT. THE GUN
 body = '''
 Shells fitted with small steering vanes and a simple radio receiver, which let the fleet's artillery correct its fall of shot in flight. Spotters are delighted, gunners are sceptical, and the Admiral is pleased, because fewer shells are wasted on empty ground. The vanes are fragile and must be fitted by hand, so the armourers keep a stool beside every crate.
 '''
-unlock = "campaign:TBD"
+unlock = "campaign:exp_02" # M8-13 (tune)
 
 # DRAFT (lead, session 12) — assumed — confirm (owner reads)
 [[entry]]
@@ -345,7 +344,7 @@ field_note = "OFFICE OF RETURN 12 // CRANES UP, NIGHT SHIFTS LIT. THE TENDERS CO
 body = '''
 A revised loading system for the supply tenders and quays, with extra cranes, faster winches and better-lit night shifts. Shipments reach the beachhead about fifteen per cent sooner than before. The Commissioner approved the programme at once, and was the first to point out that every saved minute is one the fleet does not have to sit waiting for its bills.
 '''
-unlock = "campaign:TBD"
+unlock = "campaign:dir_03" # M8-13 (tune)
 
 # DRAFT (lead, session 12) — assumed — confirm (owner reads)
 [[entry]]
@@ -358,7 +357,7 @@ field_note = "HYDROGRAPHIC NOTE 11 // HOPPERS DEEPENED, SKIMMERS SITTING LOW. MO
 body = '''
 A survey package fitted to the skimmers that improves their sensors and deepens the hoppers, so each harvest run carries more ash before returning. Operators say the extra load makes the hulls sit lower in the water and the coffee taste worse, since the crew now spends longer on the surface. The Hydrographic Office calls the package a triumph and the skimmer crews call it a burden.
 '''
-unlock = "campaign:TBD"
+unlock = "campaign:auth_02" # M8-13 (tune)
 
 # DRAFT (lead, session 12) — assumed — confirm (owner reads)
 [[entry]]
@@ -371,5 +370,5 @@ field_note = "BARRACKS ORDER 5 // THE DRILL IS SIMPLE. RUN IT TWICE. VETERANS CO
 body = '''
 A rigorous training regime drawn up by the fleet's old sergeants and given a new name by the Office of Return, which spent a great deal of money on it. Units that complete the drill earn veteran status after fewer engagements, and they tend to keep their nerve longer under fire. The sergeants say the drill is simple, and then make the recruit do it twice.
 '''
-unlock = "campaign:TBD"
+unlock = "campaign:auth_03" # M8-13 (tune)
 

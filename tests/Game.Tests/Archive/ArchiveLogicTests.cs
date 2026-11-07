@@ -74,7 +74,11 @@ public sealed class ArchiveLogicTests
         Assert.Equal(browser.Catalog.InCategory(ArchiveCategory.Leader).Count(e => e.Unlock.Kind == ArchiveUnlockKind.Open), open);
         Assert.True(open is > 0 and < 24);
 
-        progress.MarkCampaignMission("TBD");
+        // M8-13: leader entries are released by dir_04 (Authority leaders), lb_03 (Directorate) and lb_04 (Expedition).
+        progress.MarkCampaignMission("dir_04");
+        Assert.True(browser.Count(ArchiveCategory.Leader).Unlocked < 24);
+        progress.MarkCampaignMission("lb_03");
+        progress.MarkCampaignMission("lb_04");
         Assert.Equal(24, browser.Count(ArchiveCategory.Leader).Unlocked);
     }
 

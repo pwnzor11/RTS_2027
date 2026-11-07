@@ -73,8 +73,7 @@ field_note = "DECON UNIT 6 // SPRAY, FLUSH, REPEAT. ONE CLEAN CELL IS ONE LESS W
 body = '''
 A wheeled tanker with spray booms and a neutralising rinse. Decon crews follow the army in blue overalls and are the reason an infantry company can cross poisoned ground. The Authority treats cleaning up after a battle as part of the battle.
 '''
-# ASSUMED (M3-17) TODO (M4): replace TBD with the mission id that releases this entry.
-unlock = "campaign:TBD"
+unlock = "campaign:auth_02" # M8-13 (tune)
 
 
 [[entry]]
