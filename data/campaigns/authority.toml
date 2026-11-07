@@ -6,3 +6,15 @@ ending = "authority_ending"
 
 [[missions]]
 id = "auth_01"
+
+[[missions]]
+id = "auth_02"
+requires = ["auth_01"]
+
+[[missions]]
+id = "auth_03"
+requires = ["auth_02"]
+
+[[missions]]
+id = "auth_04"
+requires = ["auth_03"]

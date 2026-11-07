@@ -194,8 +194,9 @@ public sealed class CampaignScreensTests : IDisposable
         CampaignProgress before = s.Progress("authority");
         CampaignProgress after = s.RecordWin("authority", "auth_01", 2);
         DebriefModel d = DebriefModel.Build("Survey Convoy", "auth_01", 600, Array.Empty<MissionObjective>(), before, after, 2, MissionSelectModel.IsFinal(s, "authority", "auth_01"), ArchiveCatalog.Empty);
-        Assert.True(d.FinalMission);   // auth_01 is the only mission of the sample Authority campaign
-        Assert.Equal(CampaignMissionState.Completed, MissionSelectModel.Build(s, DataDir, "authority").Single().State);
+        Assert.False(d.FinalMission);   // s12: auth_01 is act 1 of 4
+        Assert.True(MissionSelectModel.IsFinal(s, "authority", "auth_04"));
+        Assert.Equal(CampaignMissionState.Completed, MissionSelectModel.Build(s, DataDir, "authority").Single(r => r.Id == "auth_01").State);
     }
 
     [Fact]

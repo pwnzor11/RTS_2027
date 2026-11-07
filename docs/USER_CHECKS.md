@@ -261,7 +261,7 @@ This plays one AI-vs-AI game where side A is commanded by a language model. It n
 1. **Faction pick:** Main menu → Campaign. Four factions show; Authority and Directorate are open, Left Behind and Overseas Expedition say "(locked)" and, when highlighted, "opens after act 2 (act 3) of the Authority or Directorate campaign". "Load game" there still lists campaign saves.
 2. **Mission select:** pick Authority. "Survey Convoy [next]" starts; placeholder missions of other factions read "[not written yet]" and do nothing on Enter.
 3. **Briefing:** the text types out (Space shows it all), the objectives follow, then a Difficulty row (Left/Right or the -/+ buttons, five tier names) and Start mission. `[[archive_id]]` links in a briefing appear as the entry title, with "(locked)" added while locked (plain text, not greyed).
-4. **Win and debrief:** win the mission: a debrief shows time, objectives done, new tech and new Archive entries; Continue returns to the mission select with the mission marked "[completed]". Because Survey Convoy is the only Authority mission so far, the ending follows: 2 slides with "PENDING owner text" captions on dark panels (put `data/images/endings/<image id>.png` to show a still). Click/Enter = next, Esc = skip.
+4. **Win and debrief:** win the mission: a debrief shows time, objectives done, new tech and new Archive entries; Continue returns to the mission select with the mission marked "[completed]". (Since s12 the Authority campaign lists acts 1-4, so the ending shows only after auth_04 is written and won.) The ending sequence: 2 slides with "PENDING owner text" captions on dark panels (put `data/images/endings/<image id>.png` to show a still). Click/Enter = next, Esc = skip.
 5. **Loss:** lose the mission: the Defeat menu offers Restart (same difficulty) or Quit to menu; nothing is saved.
 6. Progress files are `campaign_<faction>.toml` beside settings.toml; delete one to restart that campaign.
 
@@ -269,3 +269,18 @@ This plays one AI-vs-AI game where side A is commanded by a language model. It n
 1. **Tutorial:** Main menu → Campaign → Tutorial → Start. Seven lessons in order (move, attack the practice power plant, Power Plant, Barracks, train a Rifleman, Refinery and a Scraper trip, destroy the camp); each new objective appears when the last is done, and the Instructor explains each step at the bottom left. It cannot be lost. Tell me if any lesson is unclear or stalls.
 2. **Survey Convoy:** Campaign → Authority → Survey Convoy. Brigadier Wrenfield's radio lines show as "WRENFIELD: ..."; the camera jumps to the convoy at the start; the objectives list shows plain text (not keys like a1.obj.reach). After the first raid a "Second raid m:ss" countdown shows under the objectives. The hidden "surveyors" bonus objective does not show until revealed. Try it on Difficulty tier 1 and tier 5: raids get bigger at the higher tier.
 3. Tone check: read the Instructor lines in data/missions/tut_01/locale.toml and Wrenfield's in data/missions/auth_01/locale.toml; this voice becomes the template for the other factions' first missions.
+
+
+## First missions of the Directorate, Left Behind and Expedition (M8-10, session 12)
+Campaign → pick the faction → mission 1 → Start. Left Behind and Expedition open after act 2 / act 3 of either first campaign, which are not written yet. To try them now, quit the game and save this as `campaign_directorate.toml` beside settings.toml (it marks Directorate acts 1-3 done; delete the file afterwards to reset):
+```
+version = 1
+faction = "directorate"
+completed = ["dir_01", "dir_02", "dir_03"]
+techSet = []
+
+[difficulty]
+```
+1. **Directorate 1 (dir_01):** Larkin on the radio. Raise a Reactor Vent, then open a Hatch in the marked site; hold two Authority waves (the second on a "Second response" timer). Bonus: destroy the Authority picket in the north-east.
+2. **Left Behind 1 (lb_01):** Calloway-Ross on the radio. The Mother Rig arrives packed: unpack it, raise power and a Muster Rig, ambush the Authority convoy at the crossing and beat off its relief. Bonus: an abandoned scraper in the south-west gully. Tell me if the convoy's halt at the crossing feels contrived.
+3. **Expedition 1 (exp_01):** Strand on the radio, new coastal map. Deploy the Command Ship on the beach, build only inside the beachhead zone, hold three Authority waves while two shipments land. Bonus: lose no landing craft.

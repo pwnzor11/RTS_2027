@@ -92,7 +92,7 @@ public sealed class CampaignFilesTests : IDisposable
     {
         CampaignDef def = CampaignDef.Load(CampaignDef.PathOf(DataDir, "authority"));
         Assert.Equal("authority", def.Faction);
-        Assert.Equal(new[] { "auth_01" }, def.Missions.Select(m => m.Id));
+        Assert.Equal(new[] { "auth_01", "auth_02", "auth_03", "auth_04" }, def.Missions.Select(m => m.Id));   // s12: acts 1-4
         Assert.True(Directory.Exists(Path.Combine(DataDir, "missions", "auth_01")));
         Assert.True(File.Exists(EndingDef.PathOf(DataDir, "authority")));
         Assert.Equal("authority_ending", def.Ending);

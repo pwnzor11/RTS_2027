@@ -10,7 +10,7 @@ seed = 2027
 schema = 2
 act = 1
 faction = "left_behind"
-next = "left_behind_02"
+next = "lb_02"
 locale = "locale.toml"
 
 [starts_with]

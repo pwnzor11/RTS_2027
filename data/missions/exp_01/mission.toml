@@ -11,7 +11,7 @@ seed = 2027
 schema = 2
 act = 1
 faction = "expedition"
-next = "expedition_02"
+next = "exp_02"
 locale = "locale.toml"
 
 [starts_with]
