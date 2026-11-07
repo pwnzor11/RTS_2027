@@ -1,4 +1,4 @@
-# DRAFT for owner review (D-086)
+# Owner-approved text (D-164, session 13; was DRAFT under D-086)
 # Directorate ending slides (plan 3.8, M8-12). Written as the Directorate's own version of events; no canon winner (Q-C).
 # condition (optional): { kind = "completed", mission = "<id>" } or { kind = "difficulty_min", mission = "<id>", value = 1..5 }
 [ending]

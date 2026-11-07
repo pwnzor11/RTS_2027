@@ -167,6 +167,8 @@ mission facts the progress file records (e.g. difficulty, optional objectives co
 | M8-12 | Fan-out: remaining missions per faction (2-4 each), 1 helper per faction in own worktree | data/missions/<faction>_02..04 | M8-11 |
 | M8-13 | Archive campaign unlock ids, classified leader entries | data/archive | M8-07 |
 | M8-14 | Stills at act breaks (2-3 per faction), art pilot then fan-out | tools/art | owner approval |
+
+M8-14 data: `still = <id>` on the act-opening mission in data/campaigns/<faction>.toml; image data/images/stills/<id>.png, shown on the briefing (s13).
 | M8-16 | Ending sequence: EndingScreen, `<faction>_ending.toml`, conditions from the progress file | src/Game/Screens, data/campaigns | M8-07 |
 | M8-15 | Acceptance: bot play-through of every mission, mission replays, balance table | tests, docs/balance | all |
 

@@ -9,12 +9,15 @@ id = "auth_01"
 
 [[missions]]
 id = "auth_02"
+still = "still_authority_act2"
 requires = ["auth_01"]
 
 [[missions]]
 id = "auth_03"
+still = "still_authority_act3"
 requires = ["auth_02"]
 
 [[missions]]
 id = "auth_04"
+still = "still_authority_act4"
 requires = ["auth_03"]

@@ -5,11 +5,10 @@ file cited after each question. Recommendations are the lead's, from the researc
 
 ## Open
 
-- 🟡 Q-56 Expedition stance in the campaign (Q-F): Commissioner Strand decides (assumed, D-154). The Expedition campaign is now written with Strand on the radio (exp_01-04) — confirm while reading it.
-- 🟡 Q-57 Campaign review (session 12): ten writer choices, four DRAFT endings and three bot-found balance issues in docs/missions/s12_owner_review.md. Rec.: play one campaign, then answer the table in one go.
-- ⚪ Q-58 Authority finale reward: auth_04 unlocks the atomic battery (superweapon). Rec.: keep (it is the finale; skirmish is unaffected) / alternative: no unlock.
 
 ## Answered
+- Q-56, Q-57, Q-58 · 2026-11-06 · Owner played the campaign ("everything looked great"): Strand decides confirmed, all ten writer choices kept,
+  atomic battery unlock kept, endings/briefings/radio lines signed off → D-164. Bot-found balance issues: table first (D-152).
 - Q-55, Q-49 (Q-A..Q-I) · 2026-11-06 · Docks wholly on water → D-153; M8 story answers → D-154, Left Behind lore → D-155.
 - Q-52, Q-53, Q-54 · 2026-11-05 · Owner took the recommendations → D-148 (LB income: re-measure after M7, table first; veterancy
   thresholds unchanged; supply spread re-measured with 64 games per pair in session 11).

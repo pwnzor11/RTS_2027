@@ -1,4 +1,4 @@
-# DRAFT for owner review (D-086). Authority ending slides (plan 3.8): what happened after the victory. Written in the Authority's own voice (Q-C: no canon winner).
+# Owner-approved text (D-164, session 13; was DRAFT under D-086). Authority ending slides (plan 3.8): what happened after the victory. Written in the Authority's own voice (Q-C: no canon winner).
 # Slides 1-4 are drafted from auth_01..auth_04 and lore only (docs/lore/authority.md, leaders.md); no new named characters.
 # condition (optional): { kind = "completed", mission = "<id>" } or { kind = "difficulty_min", mission = "<id>", value = 1..5 }
 [ending]

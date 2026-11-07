@@ -1246,3 +1246,13 @@ M8-11 review gate for the A1 pattern: locale-keyed text, one leader on the radio
 objective, one visible timer, raid size by difficulty tier, a bot test that wins at tiers 3 and 5. D1, L1 and E1 follow it now; the
 remaining missions (M8-12) fan out per faction once those three land. The M8-13 Archive unlock map is accepted as drafted.
 **Status:** confirmed (owner, session 12)
+
+### D-164 · 2026-11-06 · Campaign review passed: writer choices kept, campaign text signed off
+**Decision:** The owner played the whole campaign and answered Q-56..Q-58 in session 13: (1) Commissioner Strand decides the Expedition's
+stance (confirms D-154); (2) all ten writer choices in docs/missions/s12_owner_review.md stay as written, including the auth_04 atomic
+battery unlock (Q-58), the enemy AI firing the Sunrise Device early, pre-built Directorate bases, scripted Left Behind opponents, no
+Second Drift objective (until a superweapon-shot API exists), and the cameo radio lines; (3) the four ending slide sets, the briefings and
+the radio lines are owner-approved text and lose their DRAFT marks (D-086 satisfied). The bot-found rules issues (Ashthrower friendly fire,
+bomber vs SAM, Conscripts vs Riflemen) are measured first; numbers change only with approval (D-152).
+**Why:** M8-11/M8-12 review gate; the owner reported "everything looked great".
+**Status:** confirmed (owner, session 13). Archive upgrade field notes marked "DRAFT (lead, session 12)" are not covered and stay open.

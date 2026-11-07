@@ -1,5 +1,8 @@
 # Session 12 campaign: owner review list (M8-12, D-163)
 
+> **Answered in session 13 (D-164):** the owner played the campaign and kept every choice as written; ending slides, briefings and
+> radio lines are signed off. The three bot-found balance issues are measured in docs/balance/s13_campaign_balance.md (numbers change only with approval, D-152).
+
 All 16 missions are written, tested by a bot at tiers 1/3/5 (or 3/5) and run with no script errors. Nothing here blocks play; each line
 is a choice the writers made that the owner may want to change. Ending slides and radio lines are DRAFT text (D-086).
 

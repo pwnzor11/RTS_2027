@@ -18,7 +18,7 @@ Since s12 the human plays the Expedition in the sim, so the beachhead build zone
 | exp_04 | + core hall, drydock, cruiser, carrier, missile sub, ironbound, diver | bomber, Salvo Array (superweapon) |
 
 ## Ending
-`data/campaigns/expedition_ending.toml`: five slides (DRAFT for owner review, D-086); slide 4 only when exp_04 was won on difficulty 4 or more.
+`data/campaigns/expedition_ending.toml`: five slides (owner-approved, D-164); slide 4 only when exp_04 was won on difficulty 4 or more.
 
 ## Open questions
 1. Archive unlocks (m8_13) list the Plotting Room, Shipyard and cruiser entries under exp_02; the missions put the Plotting Room in the player's hands in exp_02 (pre-placed, glide tanks need tier 2). Entries are text only, so nothing breaks, but the owner may want the Archive moved one mission earlier.
