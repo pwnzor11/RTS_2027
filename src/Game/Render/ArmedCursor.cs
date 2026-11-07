@@ -27,7 +27,8 @@ public static class ArmedCursor
         }
 
         var at = new Vector2(mouse.X + arm + 2, mouse.Y + arm + 2);
-        BitmapFont.Draw(batch, pixel, label, at + new Vector2(1, 1), shadow, uiScale);
+        Shapes.Fill(batch, pixel, new Rectangle((int)at.X - 3, (int)at.Y - 1, BitmapFont.Measure(label, uiScale) + 6,
+            BitmapFont.LineHeight(uiScale, Rts.Game.Ui.Fonts.FontWeight.Regular) + 2), new Color(0, 0, 0, 200));
         BitmapFont.Draw(batch, pixel, label, at, Tint, uiScale);
     }
 }
