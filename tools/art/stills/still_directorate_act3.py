@@ -27,10 +27,10 @@ def build():
     # (ground plane is 700 wide centred y=120 -> ends at y=470; water is below it, so lift the ground edge with a shore ramp)
     for o in bpy.data.objects:
         if o.name == "ground":
-            o.location.y = -92       # land spans y -309..125
+            o.location.y = -137      # land spans y -354..80
             o.scale = (1, 0.62, 1)
     # water-level foam band along the shore
-    K.nolines(K.box("foam", (0, 127, 0.01), (900, 4.0, 0.04), M("#D8E8E0", rough=0.5)))
+    K.nolines(K.box("foam", (0, 82, 0.01), (900, 4.0, 0.04), M("#D8E8E0", rough=0.5)))
 
     # Pad Seven and its gantry, scorched, with the toppled searchlight mast
     D.pad((14.0, 52.0), r=13.0, rng=R)
@@ -67,15 +67,15 @@ def build():
     D.sandbags((-14.5, -8.0), (-6.0, -9.5), rows=3, rng=R)
     D.conscript((-10.0, -7.4), yaw=0.5, kind="rifle", mask=True, scale=1.05)
     D.conscript((-12.0, -7.0), yaw=0.45, kind="ashthrower", mask=False)
-    D.glass_shards(R, n=90, xr=(-40, 45), yr=(-10, 95), avoid=lambda x, y: (x - 14) ** 2 + (y - 52) ** 2 < 200)
+    D.glass_shards(R, n=60, xr=(-40, 45), yr=(-10, 78), avoid=lambda x, y: (x - 14) ** 2 + (y - 52) ** 2 < 200)
     K.debris_field(R, n=60, xr=(-30, 40), yr=(-10, 90))
     K.tufts(R, n=260, xr=(-40, 45), yr=(-10, 95), scale=1.1)
 
     # the Expedition fleet standing off, lights on; far headland
-    D.ship((70.0, 215.0), yaw=1.2, s=1.4)
-    D.ship((-10.0, 250.0), yaw=1.45, s=1.8)
-    D.ship((150.0, 290.0), yaw=1.0, s=1.5)
-    K.ridge(520, R, n=9, h=(20, 40), tint="#6E8A96")
+    D.ship((90.0, 190.0), yaw=1.25, s=1.0)
+    D.ship((-30.0, 240.0), yaw=1.5, s=1.2)
+    D.ship((190.0, 300.0), yaw=1.1, s=1.2)
+    K.ridge(520, R, n=9, h=(20, 40), tint="#5E7C8C")
 
     # light: high cold sun upper left, pale teal 'old glass' sky with long thin cloud bands
     sunv = Vector((-0.45, 0.55, 0.70)).normalized()
@@ -83,8 +83,8 @@ def build():
           glow_col="#FFF4DA", glow_k=0.8, glow_pow=40.0,
           clouds=dict(lo=0.50, hi=0.70, scale=2.4, h0=0.03, h1=0.2, top0=0.5, top1=0.9, opacity=0.8, stretch=4.5, offset=(3, 1, 0),
                       cols=[(0.05, "#F4F2EA"), (0.4, "#C8DCE4"), (0.9, "#9CB8D0")], gain=1.15),
-          strength=1.05)
-    key = K.sun((0, 0, 0), 4.2, colour=(1.0, 0.92, 0.80), angle=1.0)
+          strength=0.9)
+    key = K.sun((0, 0, 0), 3.0, colour=(1.0, 0.92, 0.80), angle=1.0)
     key.rotation_euler = (-sunv).to_track_quat("-Z", "Y").to_euler()
     K.area_light((34, -30, 30), (0, 30, 2), 70, 6000.0, (0.55, 0.7, 1.0))
     K.haze(0.0012, colour="#B8D8E0", top=45.0)

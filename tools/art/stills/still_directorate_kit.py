@@ -64,7 +64,7 @@ def glass_sand_mat():
     m, nt, out = K._new_mat("glass_sand")
     N, L = K._nodes(nt)
     pos = N("ShaderNodeNewGeometry").outputs["Position"]
-    base = K._ramp(nt, K._noise(nt, pos, 0.5, 5).outputs["Fac"], [(0.3, "#7C7A66"), (0.55, "#A39E84"), (0.8, "#C2BC9C")])
+    base = K._ramp(nt, K._noise(nt, pos, 0.5, 5).outputs["Fac"], [(0.3, "#4E4D3E"), (0.55, "#726E58"), (0.8, "#94907A")])
     vor = N("ShaderNodeTexVoronoi"); vor.feature = "DISTANCE_TO_EDGE"; vor.inputs["Scale"].default_value = 0.9
     L(pos, vor.inputs["Vector"])
     vein = K._ramp(nt, vor.outputs["Distance"], [(0.0, (1, 1, 1, 1)), (0.06, (0, 0, 0, 1))])
@@ -549,7 +549,7 @@ def glass_shards(rng, n=40, xr=(-30, 30), yr=(0, 60), avoid=None):
         x, y = rng.uniform(*xr), rng.uniform(*yr)
         if avoid and avoid(x, y):
             continue
-        h = rng.uniform(0.5, 2.6) * (1 + y / 60.0)
+        h = rng.uniform(0.4, 1.8) * (1 + y / 90.0)
         r = h * rng.uniform(0.12, 0.3)
         c = rng.choice(cols)
         o = cyl("shard", (x, y, h / 2 - 0.05), r, h, M("brass", c, rough=0.12, emit=c, estr=0.35), verts=5, r2=0.01)
