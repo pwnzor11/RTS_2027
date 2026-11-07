@@ -1,0 +1,173 @@
+# Left Behind 02: Road Posts (M8-12, D-163). Act 2, Rust Belt: strip three Authority road posts, then beat the reprisal column.
+# Zones are inclusive cell rectangles [x0, y0, x1, y1]. Pre-placed actors are placed before tick 0 (setup log).
+
+[mission]
+title = "Road Posts"
+map = "rustbelt_m2.map.toml"
+script = "mission.lua"
+briefing = "briefing.md"
+seed = 2027
+schema = 2
+act = 2
+faction = "left_behind"
+next = "lb_03"
+locale = "locale.toml"
+
+# lb_01 kit + the Garage Rig it unlocked (and the vehicles that make a garage worth building) + the Lookout, the tier-2 gate that lets slingers be trained.
+[starts_with]
+tech = ["lb_mother_rig", "lb_dynamo_rig", "lb_muster_rig", "lb_yard", "lb_scavenger", "lb_hook_runner", "lb_slinger", "lb_spike_nest", "lb_garage_rig", "lb_buggy", "lb_gleaner", "lb_lookout"]
+
+# Tier-2 gear for act 3: the Tinker's Bench, the harpoon wagon, tinkers and brutes.
+[unlocks_on_win]
+tech = ["lb_bench", "lb_harpoon_wagon", "lb_tinker", "lb_drifter_brute"]
+
+[[players]]
+slot = 0
+name = "The Drift"
+role = "human"
+team = 0
+cash = 2400
+tech = ["lb_mother_rig", "lb_dynamo_rig", "lb_muster_rig", "lb_yard", "lb_scavenger", "lb_hook_runner", "lb_slinger", "lb_spike_nest", "lb_garage_rig", "lb_buggy", "lb_gleaner", "lb_lookout"]
+
+# The Authority posts and the reprisal column are driven by the script only (role "neutral" keeps the AI off them).
+[[players]]
+slot = 1
+name = "Authority road service"
+role = "neutral"
+team = 1
+cash = 0
+
+[[players]]
+slot = 2
+name = "Civilians"
+role = "neutral"
+team = 255
+cash = 0
+
+# Each road post is its own player (same team as the road service) so it has its own power: cut the plant and the turret holds fire.
+[[players]]
+slot = 3
+name = "Post 1"
+role = "neutral"
+team = 1
+cash = 0
+
+[[players]]
+slot = 4
+name = "Post 2"
+role = "neutral"
+team = 1
+cash = 0
+
+[[players]]
+slot = 5
+name = "Post 3"
+role = "neutral"
+team = 1
+cash = 0
+
+[zones.camp]
+rect = [28, 18, 40, 30]
+
+[zones.stash]
+rect = [47, 2, 52, 6]
+
+[zones.north_edge]
+rect = [40, 0, 44, 1]
+
+# The camp: the Mother Rig is already down this time, with power, a yard and a Muster Rig.
+[[actors]]
+type = "lb_mother_rig"
+player = 0
+cell = [32, 21]
+tag = "rig"
+
+[[actors]]
+type = "lb_dynamo_rig"
+player = 0
+cell = [36, 21]
+
+[[actors]]
+type = "lb_yard"
+player = 0
+cell = [32, 25]
+
+[[actors]]
+type = "lb_muster_rig"
+player = 0
+cell = [36, 24]
+
+# Post 1: the east end of the northern road. Post 2: the western road. Post 3: the southern bend.
+[[actors]]
+type = "auth_turret"
+player = 3
+cell = [37, 12]
+tag = "post1"
+
+[[actors]]
+type = "auth_rifleman"
+player = 3
+cell = [39, 12]
+
+[[actors]]
+type = "auth_rifleman"
+player = 3
+cell = [39, 14]
+
+[[actors]]
+type = "auth_turret"
+player = 4
+cell = [9, 32]
+tag = "post2"
+
+[[actors]]
+type = "auth_rifleman"
+player = 4
+cell = [9, 30]
+
+[[actors]]
+type = "auth_rifleman"
+player = 4
+cell = [9, 34]
+
+[[actors]]
+type = "auth_turret"
+player = 5
+cell = [12, 40]
+tag = "post3"
+
+[[actors]]
+type = "auth_rifleman"
+player = 5
+cell = [11, 41]
+
+[[actors]]
+type = "auth_rifleman"
+player = 5
+cell = [13, 41]
+
+# Each post draws power from a plant well outside the turret's reach (8+ cells): slingers can kill the plant unseen by the gun.
+[[actors]]
+type = "auth_power"
+player = 3
+cell = [41, 20]
+tag = "pow1"
+
+[[actors]]
+type = "auth_power"
+player = 4
+cell = [17, 30]
+tag = "pow2"
+
+[[actors]]
+type = "auth_power"
+player = 5
+cell = [20, 33]
+tag = "pow3"
+
+# Anchor: keeps the Authority team alive (the script ends the mission).
+[[actors]]
+type = "auth_power"
+player = 1
+cell = [58, 58]
+tag = "anchor"
