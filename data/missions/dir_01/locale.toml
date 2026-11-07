@@ -1,0 +1,29 @@
+# Directorate 01 "The First Hatch" locale. Speaker: the Voice (leader_dir_larkin), the Directorate broadcast voice.
+"d1.start" = "Shaft Four has broken the surface. Open a hatch on the marked ground."
+"d1.radio.start" = "Commander, this is the Voice. The Interior has returned. Raise a vent for power, then open the hatch."
+"d1.radio.dig" = "The hatch must stand on the marked ground, Commander. Power first, then the Hatch."
+"d1.radio.picket" = "A tenancy picket watches your shaft. Close its eyes if you can."
+"d1.picket.down" = "The picket is silent. No one saw the shaft."
+"d1.hatch.open" = "The first hatch is open. Four citizens must stand at it."
+"d1.radio.open" = "The hatch is open, Commander. The tenancy will answer. Hold it."
+"d1.radio.muster" = "Four citizens stand at the hatch. Good. Hold."
+"d1.wave1" = "Tenancy riflemen from the east road!"
+"d1.wave2" = "The second response comes from the north!"
+"d1.radio.wave1" = "The first response is on the east road. The weather is grim, Commander. The sky is not for them."
+"d1.response.beaten" = "The tenancy response is beaten. The hatch stands."
+"d1.radio.beaten" = "Both responses broken. Citizens, the hatch is yours."
+"d1.lost" = "The shaft or the hatch is lost. The surfacing fails."
+"d1.win" = "The first hatch holds. The Interior is on the surface."
+"d1.radio.win" = "Well done, Commander. The Director is pleased. I, too, am pleased. The sky is overcast today, and cold."
+
+# Objective and timer labels (the HUD shows the locale text when a label is a key)
+"d1.obj.hatch" = "Raise a Reactor Vent, then open a Hatch inside the marked site"
+"d1.obj.muster" = "Stand four Conscripts at the hatch site"
+"d1.obj.hold" = "Hold the hatch until both Authority responses are beaten"
+"d1.obj.picket" = "Destroy the Authority picket to the north-east"
+"d1.timer.wave2" = "Second response"
+
+[voice]
+"d1.radio.start" = "voice/leader_dir_larkin/d1.radio.start.ogg"
+"d1.radio.open" = "voice/leader_dir_larkin/d1.radio.open.ogg"
+"d1.radio.win" = "voice/leader_dir_larkin/d1.radio.win.ogg"
