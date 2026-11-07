@@ -213,3 +213,23 @@ collided (`wp/m7-14ui`); force-push refused (stale `wp/m7-arch`); device bridge 
 §6 bullet 1 (Expedition beats every tier) is not shown yet.
 **User check:** USER_CHECKS.md, "Session 11 · The Overseas Expedition is playable".
 **Next session should:** see HANDOFF (art PR, Q-55, Expedition per-tier AI).
+
+## Session 12 · 2026-11-06/07 (owner answers, M7 close-out, LLM commander tests, tier 5 fix, the whole M8 campaign)
+**Goal:** HANDOFF "Start here" (art PR, Q-55, Expedition per tier), then M7 close-out and M8. Owner at home and answering all session.
+**Done:** owner answered every open question (D-153..D-155, D-158..D-163). Expedition art landed (PR #28, #34 docks variant C). Wave 1-2
+(PR #29-#33): floating docks (D-156), aircraft ammo and rearm, dived-sub visuals, Left Behind income fix (D-157), AI ladder levers,
+Expedition AI per tier, LLM commander CLI with `--swap` and an OpenAI fix (owner ran four API tests: reliable, no strength gain; D-160,
+D-161), M8-02..M8-08 mission systems and campaign screens, M8-16 ending sequence (PR #35). Tier 5 diagnosis and fix (PR #36:
+army before tech; CI test-host timeout raised). Expedition per tier judged on 20-minute games (D-162, M7-18). M8-09 tutorial,
+Survey Convoy on schema 2, HUD timers and locale labels, M8-13 Archive unlocks (PR #37). Owner approved the template (D-163):
+first missions D1/L1/E1, M8-17 API follow-ups (Player.Funds, wins on the elimination tick), missions pass player factions to the sim
+(PR #39); acts 2-4 for all four factions and DRAFT endings (PR #40). 16 campaign missions + tutorial, all bot-tested.
+**Commits:** PR #28-#40 (main 5d0a54b before this handoff).
+**Helpers:** about 30 launches (Sonnet for missions, AI, balance, scripting; Haiku for Archive and data); fix rounds: Archive (×1),
+Player.Funds contract (×1); one container restart mid-fan-out (Left Behind and Expedition helpers resumed with their context).
+**Problems / notes:** GitHub Actions minutes ran out → repo made public (D-159); Windows test host timed out twice (VSTEST_CONNECTION_TIMEOUT
+600); campaign tests that assumed unwritten missions broke as missions landed (now fixture-based); `next` ids had to match campaign files
+(new test). M4-16 is still open (tier 5 beats tier 1 only 55 % decisive in Authority; tier 3 still beats tier 4).
+**User check:** USER_CHECKS.md "Tutorial and Survey Convoy rework", "First missions of the Directorate, Left Behind and Expedition",
+"Full campaign, all four factions"; owner review list docs/missions/s12_owner_review.md.
+**Next session should:** see HANDOFF (owner campaign review, M8-14 stills, M8-15 acceptance, M4-16).
