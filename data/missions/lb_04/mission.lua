@@ -6,12 +6,12 @@
 
 local SPEAKER = "leader_lb_calloway_ross"
 local KELL = "leader_exp_kell"
-local LANDING_DELAY = 5400   -- ticks until the Expedition lands a counter-force on the plains
 local FLEET_DELAY = 12000    -- ticks after the landing before the second wave of the fleet arrives and the coast is lost
 
 function OnInit()
   state.piles = 0
   state.landing = false
+  state.landing2 = false
   state.landingTags = {}
   state.wreck = false
   state.done = false
@@ -33,7 +33,7 @@ function OnInit()
   Camera.Focus("camp", 160)
   ReinforceBeach()
 
-  Mission.Timer("landing", LANDING_DELAY, Landing, "lb4.timer.landing")
+  Mission.Timer("landing", LandingDelay(), Landing, "lb4.timer.landing")
   Trigger.AfterDelay(1800, HintRadio)
   Trigger.Every(20, CheckMission)
   Trigger.OnEnter("wreck", 0, WreckFound)
@@ -56,9 +56,9 @@ function StartInfantry()
            "lb_hook_runner", "lb_hook_runner", "lb_hook_runner" }
 end
 
--- Extra marines at the beachhead by tier: 0,0,2,4,6.
+-- Extra marines at the beachhead by tier: 0,0,2,5,8.
 function ReinforceBeach()
-  local extra = { 0, 0, 2, 4, 6 }
+  local extra = { 0, 0, 2, 5, 8 }
   local n = extra[Mission.Difficulty()]
   if n > 0 then
     local types = {}
@@ -67,14 +67,31 @@ function ReinforceBeach()
   end
 end
 
--- The counter-landing by tier: marines 6,7,8,9,10 plus pathfinders 0,0,1,2,3.
+-- The counter-landing by tier: marines 5,6,8,10,12 plus pathfinders 0,0,1,3,4. It comes earlier at the high tiers,
+-- and tiers 4-5 get a second landing group (see SecondLanding).
 function LandingTypes()
-  local marines = { 6, 7, 8, 9, 10 }
-  local scouts = { 0, 0, 1, 2, 3 }
+  local marines = { 5, 6, 8, 10, 12 }
+  local scouts = { 0, 0, 1, 3, 4 }
   local types = {}
   for i = 1, marines[Mission.Difficulty()] do types[i] = "exp_marine" end
   for i = 1, scouts[Mission.Difficulty()] do types[#types + 1] = "exp_pathfinder" end
   return types
+end
+
+function LandingDelay()
+  local delays = { 5400, 5400, 5400, 4800, 4200 }
+  return delays[Mission.Difficulty()]
+end
+
+-- Tiers 4-5: a second landing group, marines 4,6, comes ashore 1500 ticks after the first.
+function SecondLanding()
+  if state.done then return end
+  local types = {}
+  for i = 1, (Mission.Difficulty() - 2) * 2 do types[i] = "exp_marine" end
+  types[#types + 1] = "exp_pathfinder"
+  local tags = Reinforce.Zone(1, types, "landing", Map.Center("camp"))
+  for i, tag in pairs(tags) do state.landingTags[#state.landingTags + 1] = tag end
+  state.landing2 = true
 end
 
 function HintRadio()
@@ -90,6 +107,7 @@ function Landing()
   Dialogue.Say(KELL, KELL, "lb4.radio.kell")
   Dialogue.Say(SPEAKER, SPEAKER, "lb4.radio.landing")
   Camera.Focus(tags[1], 120)
+  if Mission.Difficulty() >= 4 then Trigger.AfterDelay(1500, SecondLanding) end
   Mission.Timer("fleet", FLEET_DELAY, FleetArrives, "lb4.timer.fleet")
   Trigger.AfterDelay(FLEET_DELAY - 2400, FleetWarning)
 end
@@ -159,7 +177,7 @@ function CheckMission()
   else
     state.rigGone = 0
   end
-  if Objective.Status("counter") == "active" and state.landing and not LandingAlive() then
+  if Objective.Status("counter") == "active" and state.landing and (Mission.Difficulty() < 4 or state.landing2) and not LandingAlive() then
     Objective.Complete("counter")
     Media.MessageKey("lb4.counter.down")
     Dialogue.Say(SPEAKER, SPEAKER, "lb4.radio.counter")
