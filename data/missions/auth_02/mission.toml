@@ -14,7 +14,7 @@ next = "auth_03"
 locale = "locale.toml"
 
 [starts_with]
-tech = ["auth_power", "auth_refinery", "auth_barracks", "auth_rifleman", "auth_jeep", "auth_wall", "auth_turret", "auth_factory", "auth_tank", "auth_engineer"]
+tech = ["auth_power", "auth_refinery", "auth_barracks", "auth_rifleman", "auth_jeep", "auth_wall", "auth_turret", "auth_factory", "auth_tank", "auth_engineer", "auth_ration_hall"]
 
 [unlocks_on_win]
 tech = ["auth_engineering", "auth_searchlight", "auth_decon_truck", "auth_marksman", "auth_carrier"]
@@ -26,7 +26,7 @@ role = "human"
 team = 0
 cash = 4000
 # Only these may be built (production chain prerequisites still apply). The script can Tech.Grant more.
-tech = ["auth_power", "auth_refinery", "auth_barracks", "auth_rifleman", "auth_jeep", "auth_wall", "auth_turret", "auth_factory", "auth_tank", "auth_engineer"]
+tech = ["auth_power", "auth_refinery", "auth_barracks", "auth_rifleman", "auth_jeep", "auth_wall", "auth_turret", "auth_factory", "auth_tank", "auth_engineer", "auth_ration_hall"]
 
 [[players]]
 slot = 1
@@ -65,6 +65,11 @@ cell = [30, 20]
 type = "auth_power"
 player = 0
 cell = [30, 22]
+
+[[actors]]
+type = "auth_ration_hall"
+player = 0
+cell = [27, 18]
 
 [[actors]]
 type = "auth_barracks"
