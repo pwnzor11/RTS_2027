@@ -250,3 +250,24 @@ on Windows; a lead squash on a stale base reverted earlier merges and was caught
 **User check:** USER_CHECKS.md "Session 13 · Campaign acceptance, briefing stills hook, tier ladder".
 **Next session should:** see HANDOFF (merge PRs, Q-59..Q-62, still fan-out, mission tiers, M4-16 mop-up).
 
+
+## Session 14 · 2026-11-07 (owner picks, balance numbers, 12 act-break stills, mission tiers, M11 UI overhaul)
+**Goal:** HANDOFF "Start here" (merge PRs #42/#43, Q-59..Q-62, still fan-out, mission tiers, M4-16), then the owner's campaign feedback
+turned into M11 (UI and input overhaul, built before M9 LAN, D-171).
+**Done:** PRs #42/#43 merged at the start. Decisions D-166..D-173. Q-60 numbers (ash 20, Conscript 50 HP). Q-61 per-faction raid key.
+M8-14: style C "mix" (D-169), Cycles kit v3, all 12 act-break stills. Q-62: nine missions tuned; objective targets in all 17 missions;
+M8-15 table re-measured. M8-18: Wyoming Piper batch tool for voice lines, OGG voice playback. M11: owner feedback doc, adversarial UI/input
+audit with screenshots, edge scroll, Controls page, full key rebinding, debug keys gated, Home/bookmarks, order rings, rally flag,
+attack-move cursor, health-bar setting, power readout, no-power icon (D-170), minimap fit, calmer building animations, units 1.25x,
+objective guidance (bar, marker, edge arrow, minimap ping, J/Tab/O, camera cue), bottom-centre selection card (D-172 B), polish pass.
+M4-17 no-rebuild defeat rule (D-173). CI artifact retention 3/7 days. Owner's laptop ran 384 AI games (docs/balance/s14_laptop_baseline.md).
+**Commits:** integ-s14 (many merges), landed on main through one PR.
+**Helpers:** about 20 packages (Sonnet for code and art, Haiku for small jobs); several were cut off while queued on the dotnet lock and
+were finished by follow-up packages or the lead.
+**Problems / notes:** the 2-CPU box made the dotnet lock the bottleneck (waits of 30-90 min); helpers that background a queued test and end
+their turn report "unverified" - brief them to stay in the foreground. Helpers share /tmp/claude-0 and one overwrote another's script:
+give each a private scratch dir. The mop-up AI did not help (shipped off) and D-173 barely changes the draws: Directorate draws are base
+stalemates (the loser still has a shaft and factories), so the real fix is AI siege behaviour (Q-64). Bulk artifact deletion, force pushes
+and installing a tool on the owner's machine were refused by the session's safety check; the owner has the artifact clean-up command.
+**User check:** USER_CHECKS.md "Session 14".
+**Next session should:** see HANDOFF.
