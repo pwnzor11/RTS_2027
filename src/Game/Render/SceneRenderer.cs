@@ -118,6 +118,7 @@ public sealed class SceneRenderer : IDisposable
         _promotions.Update(snapshot.Tick, _ranks, _promoted);
         PromotionFlash.Draw(batch, pixel, frame.Units, camera, _promotions, snapshot.Tick);
         HealthBars.Draw(batch, pixel, frame, camera, _sprites, _rankMap);
+        NoPowerOverlay.Draw(batch, pixel, frame, camera);   // D-170: blinking marker over a building stopped for lack of power
         if (frame.DragRect is Rectangle box) Shapes.Outline(batch, pixel, box, DragColour);
     }
 
