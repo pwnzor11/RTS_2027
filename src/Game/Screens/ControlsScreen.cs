@@ -290,7 +290,8 @@ public sealed class ControlsScreen : IScreen
         if (_rebind.State == RebindSession.Phase.Listening && message.Length == 0) message = "Press the new key for this action.  Esc: cancel.";
         string hint = message.Length > 0 ? message : "Up/Down select   Enter or click: change / rebind   Wheel: scroll   Esc: back";
         if (maxScroll > 0 && _scroll < maxScroll && message.Length == 0) hint = "More below.  " + hint;
-        while (hint.Length > 8 && BitmapFont.Measure(hint, scale) > back.X - panel.X - 2 * pad) hint = hint[..hint.LastIndexOf("   ", StringComparison.Ordinal) is var cut and > 0 ? cut : hint.Length - 1];
+        int room = back.X - panel.X - 2 * pad;
+        while (BitmapFont.Measure(hint, scale) > room && hint.LastIndexOf("   ", StringComparison.Ordinal) is var cut and > 0) hint = hint[..cut];
         Color hintColour = _rebind.State == RebindSession.Phase.Conflict ? WarnColour : message.Length > 0 ? KeyColour : HintColour;
         BitmapFont.Draw(sb, _s.Pixel, hint, new Vector2(panel.X + pad, panel.Bottom - pad - line + scale), hintColour, scale);
         Shapes.Fill(sb, _s.Pixel, back, SelectColour);

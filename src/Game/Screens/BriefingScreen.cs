@@ -23,7 +23,8 @@ public sealed class BriefingScreen : IScreen
 
     private readonly GameServices _s;
     private readonly BriefingModel _model;
-    private readonly List<string> _lines = new();
+    private readonly List<MdLine> _lines = new();
+    private int _scroll;
     private readonly int _totalChars;
     private readonly MenuPanel _panel;
     private Texture2D? _still;
@@ -56,17 +57,13 @@ public sealed class BriefingScreen : IScreen
         _s = services;
         _model = model;
         foreach (string raw in model.Text.Split('\n'))
-        {
-            string line = raw.TrimEnd('\r');
-            if (line.Length == 0) { _lines.Add(""); continue; }
-            _lines.AddRange(MissionOverlay.Wrap(line, WrapChars));
-        }
+            _lines.AddRange(MarkdownLines.Wrap(MarkdownLines.Parse(raw), WrapChars));
 
         if (model.Objectives.Count > 0)
         {
-            _lines.Add("");
-            _lines.Add("OBJECTIVES");
-            foreach (string o in model.Objectives) _lines.AddRange(MissionOverlay.Wrap("- " + o, WrapChars));
+            _lines.Add(MdLine.Blank);
+            _lines.Add(new MdLine(true, new[] { new MdSpan("OBJECTIVES", true) }));
+            foreach (string o in model.Objectives) _lines.AddRange(MarkdownLines.Wrap(MarkdownLines.Parse("- " + o), WrapChars));
         }
 
         _totalChars = _lines.Sum(l => l.Length + 1);
@@ -123,9 +120,14 @@ public sealed class BriefingScreen : IScreen
         {
             _shown += CharsPerUpdate;
             if (input.ConsumePressed(Keys.Space) || input.LeftPressed) { _shown = _totalChars; input.ConsumeLeft(); }
+            _scroll = Math.Max(0, TypedLines() - VisibleLines());
             return;
         }
 
+        if (input.WheelDelta != 0) _scroll -= Math.Sign(input.WheelDelta) * 3;
+        if (input.ConsumePressed(Keys.PageDown)) _scroll += VisibleLines() - 1;
+        if (input.ConsumePressed(Keys.PageUp)) _scroll -= VisibleLines() - 1;
+        _scroll = Math.Clamp(_scroll, 0, Math.Max(0, _lines.Count - VisibleLines()));
         _panel.Update(input, ButtonViewport(), _s.UiScale);
     }
 
@@ -134,44 +136,91 @@ public sealed class BriefingScreen : IScreen
     {
         Backdrop.FillOpaque(sb, _s);
         int scale = _s.UiScale;
-        int lineHeight = BitmapFont.LineHeight(scale, FontWeight.Regular) + 4;
-        int x = Math.Max(16, (_s.Viewport.Width - BitmapFont.Measure(new string('M', WrapChars), scale)) / 2);
+        int lineHeight = LineHeight();
+        int x = TextX();
         int y = 24;
         BitmapFont.Draw(sb, _s.Pixel, _model.Title.ToUpperInvariant(), new Vector2(x, y), BriefingModel.ThemeOf(_model.Faction), scale);
         y += lineHeight * 2;
         if (_still != null)
         {
             sb.Draw(_still, new Rectangle(x, y, StillHeight(scale) * _still.Width / _still.Height, StillHeight(scale)), Color.White);
-            y += StillHeight(scale) + lineHeight;
         }
 
         int remaining = _shown;
-        foreach (string line in _lines)
+        int visible = VisibleLines();
+        Color theme = BriefingModel.ThemeOf(_model.Faction);
+        for (int i = 0; i < _lines.Count && remaining > 0; i++)
         {
-            if (remaining <= 0) break;
-            string visible = line.Length <= remaining ? line : line[..remaining];
-            BitmapFont.Draw(sb, _s.Pixel, visible, new Vector2(x, y), TextColour, scale);
+            MdLine line = _lines[i];
+            int lineY = TextTop() + (i - _scroll) * lineHeight;
+            if (i >= _scroll && i < _scroll + visible) DrawLine(sb, line, remaining, x, lineY, scale, theme);
             remaining -= line.Length + 1;
-            y += lineHeight;
+        }
+
+        int maxScroll = Math.Max(0, _lines.Count - visible);
+        if (maxScroll > 0)
+        {
+            var track = new Rectangle(x + TextWidth(scale) + 8, TextTop(), 4, visible * lineHeight);
+            Shapes.Fill(sb, _s.Pixel, track, new Color(0x2A, 0x2E, 0x26));
+            ControlsThumb(sb, track, visible, maxScroll);
         }
 
         if (Complete) _panel.Draw(sb, _s.Pixel, ButtonViewport(), scale, _mouse);
     }
 
-    // The menu panel centres itself in the viewport it is given: give it the strip below the text (and the still, when there is one).
-    private Viewport ButtonViewport()
+    private void ControlsThumb(SpriteBatch sb, Rectangle track, int visible, int maxScroll)
     {
-        int lineHeight = BitmapFont.LineHeight(_s.UiScale, FontWeight.Regular) + 4;
-        int stillBlock = _still == null ? 0 : StillHeight(_s.UiScale) + lineHeight;
-        int top = Math.Min(_s.Viewport.Height - 120, 24 + lineHeight * (_lines.Count + 3) + stillBlock);
-        return new Viewport(0, top, _s.Viewport.Width, Math.Max(100, _s.Viewport.Height - top));
+        Rectangle thumb = ControlsScreen.ThumbRect(track, _lines.Count, visible, _scroll);
+        Shapes.Fill(sb, _s.Pixel, thumb, new Color(0x6A, 0x72, 0x60));
     }
+
+    private void DrawLine(SpriteBatch sb, MdLine line, int shownChars, int x, int y, int scale, Color theme)
+    {
+        float px = x;
+        foreach (MdSpan span in line.Spans)
+        {
+            if (shownChars <= 0) break;
+            string text = span.Text.Length <= shownChars ? span.Text : span.Text[..shownChars];
+            shownChars -= span.Text.Length;
+            FontWeight weight = span.Bold ? FontWeight.Bold : FontWeight.Regular;
+            BitmapFont.Draw(sb, _s.Pixel, text, new Vector2(px, y), line.Heading ? theme : TextColour, scale, weight);
+            px += BitmapFont.Measure(text, scale, weight);
+        }
+    }
+
+    private int LineHeight() => BitmapFont.LineHeight(_s.UiScale, FontWeight.Regular) + 4;
+
+    private int TextX() => Math.Max(16, (_s.Viewport.Width - TextWidth(_s.UiScale)) / 2);
+
+    // Below the title and the still (when there is one).
+    private int TextTop() => 24 + LineHeight() * 2 + (_still == null ? 0 : StillHeight(_s.UiScale) + LineHeight());
+
+    // The strip for Start/Back sits at the bottom edge; the text area is everything between the heading block and that strip.
+    private int ButtonsTop() => _s.Viewport.Height - _panel.HeightAt(_s.UiScale) - 8;
+
+    private int VisibleLines() => Math.Max(2, (ButtonsTop() - 8 - TextTop()) / LineHeight());
+
+    private int TypedLines()
+    {
+        int n = 0, left = _shown;
+        foreach (MdLine l in _lines)
+        {
+            if (left <= 0) break;
+            n++;
+            left -= l.Length + 1;
+        }
+
+        return n;
+    }
+
+    // The menu panel centres itself in the viewport it is given: give it exactly the strip at the bottom.
+    private Viewport ButtonViewport() => new(0, ButtonsTop(), _s.Viewport.Width, _panel.HeightAt(_s.UiScale));
 
     // The text column's width: the still is scaled to it, keeping the 16:9 aspect of the image.
     private static int TextWidth(int scale) => BitmapFont.Measure(new string('M', WrapChars), scale);
 
-    // At most a third of the window, so the text and the Start/Back strip still fit on short windows (width follows the aspect).
-    private int StillHeight(int scale) => _still == null ? 0 : Math.Min(TextWidth(scale) * _still.Height / _still.Width, _s.Viewport.Height / 3);
+    // At most a quarter of the window, so the text and the Start/Back strip still fit on short windows (width follows the aspect).
+    private int StillHeight(int scale) => _still == null ? 0 : Math.Min(TextWidth(scale) * _still.Height / _still.Width, _s.Viewport.Height / 4);
 
     // A missing or unreadable still means no image at all (the briefing is laid out as without one).
     private Texture2D? LoadStill()

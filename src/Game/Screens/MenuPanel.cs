@@ -165,6 +165,9 @@ public sealed class MenuPanel : IUiRegion
 
     private static int RowHeight(int scale) => BitmapFont.LineHeight(scale, FontWeight.Regular) + 5 * scale;
 
+    /// <summary>The height of the panel in screen pixels at <paramref name="scale"/> (for callers that reserve room for it).</summary>
+    public int HeightAt(int scale) => Pad(scale) + RowHeight(scale) + Pad(scale) / 2 + _items.Count * (RowHeight(scale) + scale) + Pad(scale);
+
     private Layout Measure(Viewport viewport, int scale)
     {
         int pad = Pad(scale);
