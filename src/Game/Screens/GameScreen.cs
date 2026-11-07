@@ -26,7 +26,7 @@ namespace Rts.Game.Screens;
 /// The battle view (formerly the whole of RtsGame): camera, selection, orders, overlays, HUD and the F1 debug console
 /// over the real simulation (or the --demo source when there is no sim). Controls: arrows or middle-drag to pan, wheel
 /// to zoom, left-click to select or drag a box, right-click to move, attack or (after A) attack-move, S stop, G guard,
-/// X scatter, F2 fog viewer, F3 occupancy, F4 paths, F5 ranges, Space pause, '.' step, Esc opens the pause menu.
+/// X scatter, F2 fog viewer, F3 occupancy, F4 paths, F10 ranges, Space pause, '.' step, Esc opens the pause menu.
 /// F1 opens the debug console (sandbox only); while it is open, typing goes to it and Esc closes it instead.
 /// A skirmish (<see cref="CreateSkirmish"/>) adds the right-hand sidebar and minimap (Q W E R pick the tabs, Esc first leaves
 /// placement, sell and repair mode), a factory selected with the left click takes a rally point with the right click, and the
@@ -379,6 +379,7 @@ public sealed class GameScreen : IScreen
         _sidebar?.Update(input, _camera, _s.Viewport.Width, _s.Viewport.Height);
         HandlePackKeyAndPlacement(input);   // M6-09: K, and the unpack footprint on the map
 
+        bool debugKeys = GameKeys.DebugKeysAllowed(_skirmishMode);
         if (_sim is not null)
         {
             if (_spec is not null)
@@ -388,16 +389,21 @@ public sealed class GameScreen : IScreen
             else
             {
                 if (input.ConsumePressed(Keys.Space)) _sim.Paused = !_sim.Paused;
-                if (input.ConsumePressed(Keys.F2)) _sim.CycleViewer();
-                if (!_skirmishMode && _console is not { IsOpen: true } && input.ConsumePressed(Keys.F9)) StartSpectatorFromSandbox();
+                if (debugKeys && input.ConsumePressed(Keys.F2)) _sim.CycleViewer();
+                if (debugKeys && _console is not { IsOpen: true } && input.ConsumePressed(Keys.F9)) StartSpectatorFromSandbox();
             }
 
-            if (input.ConsumePressed(Keys.OemPeriod)) _sim.StepOnce();
+            if (debugKeys && input.ConsumePressed(Keys.OemPeriod)) _sim.StepOnce();
         }
 
-        if (input.ConsumePressed(Keys.F3)) _overlays.Occupancy = !_overlays.Occupancy;
-        if (input.ConsumePressed(Keys.F4)) _overlays.Paths = !_overlays.Paths;
-        if (input.ConsumePressed(Keys.F5)) _overlays.Ranges = !_overlays.Ranges;
+        if (debugKeys)
+        {
+            if (input.ConsumePressed(Keys.F3)) _overlays.Occupancy = !_overlays.Occupancy;
+            if (input.ConsumePressed(Keys.F4)) _overlays.Paths = !_overlays.Paths;
+            if (input.ConsumePressed(Keys.F10)) _overlays.Ranges = !_overlays.Ranges;
+        }
+
+        HandleCameraKeys(input);
 
         if (_orders is not null) _orders.SelectedBuilding = _selectedBuilding;   // M4-09: D unloads a selected garrisoned building
         if (_orders is not null)
@@ -1031,6 +1037,24 @@ public sealed class GameScreen : IScreen
         Viewport v = _s.Viewport;
         if (_sidebar is null) return v;
         return new Viewport(0, 0, Math.Max(1, _sidebar.Layout.MapView.Width), v.Height);
+    }
+
+    private readonly Vector2?[] _bookmarks = new Vector2?[4];   // M11-02: camera bookmarks F5..F8 (Ctrl+key stores, key recalls)
+
+    // Home centres on the player's base; Ctrl+F5..F8 store the view centre, F5..F8 recall it.
+    private void HandleCameraKeys(InputFrame input)
+    {
+        if (_sim is null) return;
+        if (input.ConsumePressed(Keys.Home)) CentreCameraOnOwnBase();
+        bool ctrl = input.IsDown(Keys.LeftControl) || input.IsDown(Keys.RightControl);
+        Keys[] keys = { Keys.F5, Keys.F6, Keys.F7, Keys.F8 };
+        for (int i = 0; i < keys.Length; i++)
+        {
+            if (!input.ConsumePressed(keys[i])) continue;
+            Viewport map = MapViewport();
+            if (ctrl) _bookmarks[i] = _camera.WorldFromScreen(new Point(map.Width / 2, map.Height / 2));
+            else if (_bookmarks[i] is { } at) CentreCameraOn(at);
+        }
     }
 
     private void CentreCameraOnOwnBase()

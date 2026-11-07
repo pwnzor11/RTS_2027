@@ -13,7 +13,7 @@ namespace Rts.Game.Render;
 
 /// <summary>
 /// Draws one frame in order: terrain, occupancy (F3), M3 ground layers and telegraphs, then buildings and units in one y-sorted pass
-/// (<see cref="DrawOrder"/>), projectiles, fog, path (F4) and range (F5) overlays, health bars above the sprites, then
+/// (<see cref="DrawOrder"/>), projectiles, fog, path (F4) and range (F10) overlays, health bars above the sprites, then
 /// the drag box.
 /// </summary>
 public sealed class SceneRenderer : IDisposable

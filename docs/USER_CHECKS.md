@@ -40,7 +40,7 @@ Counts below supersede the M0-11 lines above (the suite grew to 394 tests).
   truck, 5 riflemen (squares) and a turret; player 1 attacks after about 2 seconds. Keys: arrows /
   middle-drag pan, wheel zoom, left-drag select, right-click move (right-click on an enemy: attack), A then
   right-click on ground: attack-move, S stop, G guard, X scatter, F2 cycles fog viewer (you → enemy → all), F3 occupancy,
-  F4 paths, F5 weapon ranges, Space pause, `.` single step, Esc quit.
+  F4 paths, F10 weapon ranges, Space pause, `.` single step, Esc quit.
 - After Esc the console prints the replay path and the verify command; running it → `OK … ticks`.
 - Headless (also run by CI): `dotnet run --project src/Game -- --headless-check 1200` → `sandbox ok tick 1200 p0 4 p1 0 hash 0x0f28036c22a6c8c9`
   on Windows and Linux alike (cross-platform determinism).
