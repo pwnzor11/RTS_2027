@@ -20,6 +20,7 @@ Binding for M8-03..M8-06. Source of truth for the function list is `MissionApiCo
 `Actor.Alive(tag)`, `Actor.Count(player[, type])`, `Actor.CountInZone(zone, player[, type])`, `Actor.Cell(tag)`,
 `Reinforce.Edge(player, {types}, edgeCell, destCell)`, `Objective.Add(id, text, primary)`, `Objective.Complete(id)`, `Objective.Fail(id)`,
 `Tech.Grant(player, type)`, `Tech.Revoke(player, type)`, `Tech.Has(player, type)`, `Media.Message(text)`, `Player.Cash(player)`,
+`Player.Funds(player)` (M8-17),
 `Player.AddCash(player, delta)`, `Map.Zone(name)`, `Map.Center(zone)`, `Map.Width()`, `Map.Height()`, `Mission.Win(player)`,
 `Mission.Lose(player)`, `Mission.Tick()`, `Random.Next(n)`.
 
@@ -157,3 +158,20 @@ AI.SetTier(1, 3); AI.Defend(1, "enemy_base"); AI.Attack(1, "junction"); AI.Wave(
   Progress is game-layer data, read-only to scripts, never part of a sim save.
 - **Save format:** `SimWriter.SaveVersion` is unchanged. The "mission" part writes its old layout (format 1) unless a timer, hidden objective,
   trigger extra or AI hook flag is set, and then writes format 2 (the old bytes plus an appended tail). Both are read.
+
+### Player.Funds and game over (M8-17)
+| Function | Arguments | Returns | Checks | Status |
+|---|---|---|---|---|
+| `Player.Funds(player)` | slot | integer: Cash + Stored credits (what the player can spend; `Simulation.Funds`) | player valid (an unknown slot is a script error); read-only, no hashed-state change | implemented (M8-17) |
+
+Use it for income checks: `Player.Cash` alone misses credits that sit in storage after a delivery. Stored credits are capped by the player's storage
+(a lone Refinery holds 1000, so one delivery can raise Funds by at most that), and spending lowers Funds, so track a low-water mark rather than a fixed baseline
+(see data/missions/tut_01).
+
+**Game over and script wins.** The sim's tick order is combat, ..., triggers (`RunTriggers`, where the host runs script callbacks), then cleanup
+(`RunCleanup`), which removes dead actors and marks players defeated; `GameOver` is computed from that. So on the tick the last enemy dies the
+script's callbacks run first, `Mission.Win` on that tick makes the outcome Won, and the game screen (which checks `GameOver` after the step) never
+skips a callback. `Trigger.OnAllDestroyed` and `Actor.Count` already saw a health-0 actor as gone. `Trigger.OnDestroyed` did not (an actor stays resolvable until cleanup,
+so it fired one tick late, after the game was already over); since M8-17 it also counts health 0 as destroyed. What is NOT safe: polling
+(`Trigger.Every`) for the end, since the elimination tick may fall between polls and the game then ends with the sim's own win. Use `OnDestroyed` /
+`OnAllDestroyed` for the final win. A mission that must outlive its enemy team's elimination still needs a hidden enemy actor.

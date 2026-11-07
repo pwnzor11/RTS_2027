@@ -73,6 +73,7 @@ public sealed partial class MissionHost
 
         NewApiTable(s, "Player",
             ("Cash", a => Num(_sim!.Players.Cash[PlayerArg(a, 0)])),
+            ("Funds", a => Num(_sim!.Funds((byte)PlayerArg(a, 0)))),   // M8-17: Cash + Stored, read-only
             ("AddCash", a =>
             {
                 int p = PlayerArg(a, 0);

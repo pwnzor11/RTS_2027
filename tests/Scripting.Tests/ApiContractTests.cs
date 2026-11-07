@@ -45,6 +45,7 @@ public sealed class ApiContractTests
         ("AI.SetTier", "1, 3", "1, 6"),
         ("AI.Wave", "1, 'w1', 'z'", "1, 'w 1', 'z'"),
         ("AI.Clear", "1", "0"),
+        ("Player.Funds", "0", "99"),
     };
 
     /// <summary>A script with one callback per case (Case_N) so that each call's error is reported separately under its own name.</summary>
