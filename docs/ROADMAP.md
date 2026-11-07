@@ -242,8 +242,8 @@ Source: docs/reviews/2026-11-07_owner_campaign_feedback.md. Audit: docs/reviews/
 - [x] M11-01 Adversarial UI and input audit, with layout options for the owner (s14)
 - [x] M11-02 Edge scrolling (mouse at the screen edge pans the view)
 - [x] M11-03 Control hints off the HUD; Controls page in Settings
-- [ ] M11-04 Selection panel for single-unit info on the right, build menu shrinks while a unit is selected
-- [ ] M11-05 Objective guidance (where to go: map markers, minimap pings, camera jump) — HUD and API done s14 (D-172); targets for the 16 missions still to apply (docs/missions/objective_targets.md)
+- [x] M11-04 Selection panel for single-unit info on the right, build menu shrinks while a unit is selected
+- [x] M11-05 Objective guidance (s14, D-172): target API, HUD (bar, marker, edge arrow, minimap ping, J/Tab/O, banner, camera cue), targets in all 17 missions
 - [x] M11-06 Unit scale / zoom
 - [ ] M11-07 Terrain readability (paths, water, cliffs distinguishable)
 - [ ] M11-08 Resource field readability
