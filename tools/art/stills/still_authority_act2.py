@@ -1,7 +1,8 @@
 """Act-2 opener still for the Authority campaign (auth_02 The Junction): dawn, Rust Belt road junction.
 
-Usage:  flock -o /home/claude/wt/blender.lock python3 tools/art/stills/still_authority_act2.py [game|poster|both]
-Writes scratch/stills/authority_act2_{A_game,B_poster}.png (1280x720).  Original scene, no text in the image.
+Usage:  flock -o /home/claude/wt/blender.lock python3 tools/art/stills/still_authority_act2.py [game|poster|mix|both|all]
+Writes scratch/stills/authority_act2_{A_game,B_poster,C_mix}.png (1280x720).
+"both" = game+poster; "all" = game+poster+mix.  Original scene, no text in the image.
 Build the scene twice (once per style) from the same code, so camera and layout are identical.
 """
 import os
@@ -77,7 +78,8 @@ def build(style):
 
 
 def render(style, samples):
-    name = {"game": "authority_act2_A_game.png", "poster": "authority_act2_B_poster.png"}[style]
+    name = {"game": "authority_act2_A_game.png", "poster": "authority_act2_B_poster.png",
+            "mix": "authority_act2_C_mix.png"}[style]
     raw = os.path.join(OUT, "raw_" + name)
     final = os.path.join(OUT, name)
     build(style)
@@ -90,6 +92,8 @@ def render(style, samples):
     if style == "game":
         # slight pixel-art feel: 2x down (box), nearest back up
         im = im.resize((640, 360), Image.BOX).resize((1280, 720), Image.NEAREST)
+    elif style == "mix":
+        pass  # game look, unpixelated so the thin outlines stay crisp
     else:
         # limited palette, hard bands, no dither
         from PIL import ImageEnhance
@@ -106,5 +110,5 @@ if __name__ == "__main__":
     os.makedirs(OUT, exist_ok=True)
     which = sys.argv[1] if len(sys.argv) > 1 else "both"
     samples = int(os.environ.get("STILL_SAMPLES", "32"))
-    for st in (("game", "poster") if which == "both" else (which,)):
+    for st in {"both": ("game", "poster"), "all": ("game", "poster", "mix")}.get(which, (which,)):
         render(st, samples)

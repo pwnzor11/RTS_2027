@@ -2,6 +2,7 @@
 
 Style "game": Principled materials, warm low sun, clean render (matches the sprite kit's grey-green/steel/rust palette).
 Style "poster": ShaderToRGB banded (toon) materials + Freestyle outlines, limited palette.
+Style "mix": game materials and lighting (as "game") plus the poster's Freestyle outlines at about half thickness.
 Import from a bpy script only.  Units: metres; +Y is north, +X east, camera looks roughly north-west.
 """
 import math
@@ -398,8 +399,15 @@ def setup_render(path, style, samples=48, res=(1280, 720)):
         sc.eevee.taa_render_samples = samples
     except Exception:
         pass
-    if style == "poster":
-        sc.view_settings.view_transform = "Standard"
+    if style in ("poster", "mix"):
+        if style == "poster":
+            sc.view_settings.view_transform = "Standard"
+        else:
+            try:
+                sc.view_settings.view_transform = "AgX"
+            except TypeError:
+                pass
+            sc.view_settings.look = "AgX - Medium High Contrast"
         sc.render.use_freestyle = True
         sc.render.line_thickness = 1.6
         ls = sc.view_layers[0].freestyle_settings.linesets
@@ -410,7 +418,7 @@ def setup_render(path, style, samples=48, res=(1280, 720)):
         ls.select_border = True
         ls.select_crease = True
         ls.linestyle.color = lin(P["outline"])[:3]
-        ls.linestyle.thickness = 2.2
+        ls.linestyle.thickness = 2.2 if style == "poster" else 1.1
     else:
         try:
             sc.view_settings.view_transform = "AgX"
