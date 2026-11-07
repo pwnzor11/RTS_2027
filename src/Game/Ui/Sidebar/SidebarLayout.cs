@@ -9,7 +9,7 @@ namespace Rts.Game.Ui.Sidebar;
 /// 1, 1.5 or 2). Pure arithmetic on integers and one float: no graphics, so it is unit-tested. The panel is about a fifth of the
 /// window width (never narrower than 150 or wider than 280 units of UI scale). Top to bottom: credits; the sell and repair
 /// buttons; the four tabs; the cameo grid. A vertical power bar runs down the left edge beside them, and the minimap sits at the
-/// bottom, square, as wide as the panel allows.
+/// bottom in the shape of the map (square when unknown), as wide as the panel allows.
 /// </summary>
 public sealed class SidebarLayout
 {
@@ -119,8 +119,10 @@ public sealed class SidebarLayout
     /// <param name="tabCount">Tabs to lay out (M4: 6 while the Aircraft tab is shown).</param>
     /// <param name="supplyRow">SUP-4: reserve a row for the supply counter under the credits (empty rectangle when false).</param>
     /// <param name="shipmentRow">M7-14: reserve a row for the shipment timer under the supply row (empty rectangle when false).</param>
+    /// <param name="mapWidth">C6: map width in cells; with <paramref name="mapHeight"/> the minimap takes the map's shape. 0 = square.</param>
+    /// <param name="mapHeight">C6: map height in cells.</param>
     public static SidebarLayout Compute(int windowWidth, int windowHeight, float uiScale, int tabCount = SidebarTabs.Count,
-        bool supplyRow = false, bool shipmentRow = false)
+        bool supplyRow = false, bool shipmentRow = false, int mapWidth = 0, int mapHeight = 0)
     {
         int pad = Math.Max(2, Px(4, uiScale)), gap = Math.Max(1, Px(3, uiScale));
         int width = WidthFor(windowWidth, uiScale);
@@ -150,9 +152,10 @@ public sealed class SidebarLayout
         var powerRow = new Rectangle(innerLeft, y, innerW, Px(SupplyRowUnits, uiScale));   // H6
         y = powerRow.Bottom + gap;
 
-        // Minimap: square at the bottom, no taller than 40% of the window.
+        // Minimap: at the bottom, no taller than 40% of the window, in the shape of the map (C6; square when the map is unknown).
         int side = Math.Max(0, Math.Min(innerW, (int)(windowHeight * 0.4f)));
-        var minimap = new Rectangle(innerLeft + (innerW - side) / 2, windowHeight - pad - side, side, side);
+        (int mmW, int mmH) = MinimapSize(side, side, mapWidth, mapHeight);
+        var minimap = new Rectangle(innerLeft + (innerW - mmW) / 2, windowHeight - pad - mmH, mmW, mmH);
 
         int powerW = Px(PowerBarUnits, uiScale);
         int contentX = innerLeft + powerW + gap, contentW = Math.Max(0, innerRight - contentX);
@@ -180,6 +183,25 @@ public sealed class SidebarLayout
         var grid = new Rectangle(contentX, y, contentW, gridH);
         return new SidebarLayout(panel, mapView, credits, supply, shipment, powerRow, powerBar, sell, repair, tabs, grid, minimap, columns, rows,
             new Point(cameoW, cameoH), gap);
+    }
+
+    /// <summary>
+    /// C6/H8: the largest rectangle of the map's aspect ratio inside <paramref name="maxW"/> x <paramref name="maxH"/>. An unknown map
+    /// (width or height 0) gives the square the area allows. The space a wide map does not use goes to the build grid.
+    /// </summary>
+    public static (int W, int H) MinimapSize(int maxW, int maxH, int mapWidth, int mapHeight)
+    {
+        maxW = Math.Max(0, maxW); maxH = Math.Max(0, maxH);
+        if (mapWidth <= 0 || mapHeight <= 0)
+        {
+            int side = Math.Min(maxW, maxH);
+            return (side, side);
+        }
+
+        // Compare mapWidth/mapHeight with maxW/maxH by cross-multiplying: the map is wider than the area when mapWidth * maxH > maxW * mapHeight.
+        if ((long)mapWidth * maxH >= (long)maxW * mapHeight)
+            return (maxW, (int)((long)maxW * mapHeight / mapWidth));
+        return ((int)((long)maxH * mapWidth / mapHeight), maxH);
     }
 
     private static int Px(int units, float uiScale) => (int)MathF.Round(units * uiScale);
