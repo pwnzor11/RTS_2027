@@ -111,14 +111,31 @@ public sealed class MonoGameAudio : IAudio
         try
         {
             using FileStream stream = File.OpenRead(Path.Combine(_audioDir, relativePath));
-            SoundEffectInstance voice = SoundEffect.FromStream(stream).CreateInstance();
+            SoundEffect effect;
+            if (relativePath.EndsWith(".ogg", StringComparison.OrdinalIgnoreCase))
+            {
+                // Voice lines are OGG (MissionLocale); FromStream reads WAV only, so decode with NVorbis first.
+                if (!VoiceDecoder.TryDecode(stream, relativePath, out byte[] pcm, out int rate, out int channels))
+                {
+                    Console.Error.WriteLine($"audio: cannot play voice {relativePath}: only mono or stereo OGG is supported");
+                    return;
+                }
+
+                effect = new SoundEffect(pcm, rate, channels == 1 ? AudioChannels.Mono : AudioChannels.Stereo);
+            }
+            else
+            {
+                effect = SoundEffect.FromStream(stream);
+            }
+
+            SoundEffectInstance voice = effect.CreateInstance();
             voice.Volume = Math.Clamp(_sfxVolume / 100f * (_masterVolume / 100f), 0f, 1f);
             voice.Play();
             _active.Add(voice);
         }
-        catch (Exception e) when (e is IOException or InvalidOperationException or ArgumentException or NotSupportedException)
+        catch (Exception e) when (e is IOException or InvalidOperationException or ArgumentException or NotSupportedException or InvalidDataException)
         {
-            // A voice file the backend cannot decode is text-only, not a broken audio device.
+            // A voice file the backend cannot decode (including a corrupt OGG) is text-only, not a broken audio device.
             Console.Error.WriteLine($"audio: cannot play voice {relativePath}: {e.Message}");
         }
     }
