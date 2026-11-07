@@ -4,6 +4,12 @@ Context and trade-offs for every question are in `docs/research/00_SYNTHESIS.md`
 file cited after each question. Recommendations are the lead's, from the research.
 
 ## Open
+- 🟡 **Q-63 · Directorate games that never end (M4-16).** In Directorate mirror games most games are draws at 30 000 ticks
+  (s14: tier 5 v tier 1 = 6 / 7 / 19 in 32 games; s13 at 64 games: 17 / 8 / 39). The loser is usually down to 1-2 units with no income but
+  13-15 structures, and stray hatches count as a base (any non-wall building keeps a player alive). An early mop-up wave did not help
+  (docs/balance/s14_mopup.md). Options: **a player with no production structure, no harvester and no army for 2 minutes is defeated**
+  (classic "build nothing, lose") / hatches and other minor structures don't count toward survival / AI-only fix: bigger, later mop-up that
+  targets outer structures first / leave it. Recommendation: the first option (rule change, applies to skirmish; campaign missions set their own rules).
 
 ## Answered
 - Q-60, Q-61, Q-62 · 2026-11-07 · Owner: Q-60 all three recommendations (ash contaminate 40 -> 20, no SAM rule change + check the
