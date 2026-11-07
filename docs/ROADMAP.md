@@ -153,6 +153,7 @@ Main menu → Map Editor.
   (reverted, stalemates mirrors); tier-cost proposal (Q-43); foam area (Q-42); AI use of engineers/transports; per-tick snapshot
   allocations; walking sub-slot handover and NW-first `Simulation.Spread` (residual asymmetries)
 
+- [ ] M4-17 Skirmish defeat rule: no production, no builder, no harvester for 2 min = defeated (D-173, s14)
 ## M5 · LLM commander (D-087)
 Built-in AI does micro; an LLM sets strategy every 30 s (D-103) and talks in character as a faction leader. API key in Settings
 (Anthropic or OpenAI-compatible), local only. LLM-vs-LLM spectating. Plan: docs/design/09_m5_plan.md (approved, D-103).

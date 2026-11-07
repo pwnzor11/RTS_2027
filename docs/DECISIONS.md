@@ -1325,3 +1325,13 @@ unchanged. (4) Attack-move: left click commits, right click is an alias; Esc can
 **Why:** owner answers to docs/reviews/2026-11-07_ui_input_audit.md section 6.2 (session 14).
 **Alternatives:** A sidebar split, C tabs; a subset of guidance tools; default zoom 1.5; read-only key table first; colour-safe palette.
 **Status:** owner decision (session 14)
+
+### D-173 · 2026-11-07 · Skirmish defeat rule: no way to rebuild for 2 minutes = defeated (Q-63)
+**Decision:** in skirmish (and LAN later), a player who for 2 minutes (2 400 ticks) has no production structure (any building that can
+produce units or structures), no builder unit that can found one (MCV-type / deployable), and no harvester is defeated, whatever other
+units or buildings remain. The 2-minute clock resets as soon as any of those exists again. Campaign missions keep their own win/lose rules.
+**Why:** Directorate games were mostly draws: the loser kept 13-15 defensive/minor buildings and 1-2 units with no income, so the old
+"any non-wall building keeps you alive" rule never ended the game (docs/balance/s14_mopup.md). Owner picked option 1 and chose that
+remaining units do not count.
+**Alternatives:** army counts (fewer games end); hatches don't count; AI-only mop-up; leave it.
+**Status:** owner decision (session 14)
