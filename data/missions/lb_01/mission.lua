@@ -12,6 +12,7 @@ function OnInit()
   state.deployed = false
   state.departed = false
   state.relief = false
+  state.relief2 = false
   state.leg = 0
   state.departTick = 0
   state.reliefCalled = false
@@ -51,12 +52,13 @@ function EscortTypes()
   local types = {}
   for i = 1, sizes[Mission.Difficulty()] do types[i] = "auth_rifleman" end
   if Mission.Difficulty() >= 4 then types[#types + 1] = "auth_jeep" end
+  if Mission.Difficulty() >= 5 then types[#types + 1] = "auth_jeep" end
   return types
 end
 
--- Relief by tier: 1,1,2,2,3 riflemen plus a jeep at tier 5.
+-- Relief by tier: 1,1,2,3,4 riflemen plus a jeep at tier 5. Tiers 4-5 get a second, later relief group.
 function ReliefTypes()
-  local sizes = { 1, 1, 2, 2, 3 }
+  local sizes = { 1, 1, 2, 3, 4 }
   local types = {}
   for i = 1, sizes[Mission.Difficulty()] do types[i] = "auth_rifleman" end
   if Mission.Difficulty() >= 5 then types[#types + 1] = "auth_jeep" end
@@ -117,9 +119,21 @@ function SendRelief()
   local tags = Reinforce.Edge(1, ReliefTypes(), { x = 40 + Random.Next(4), y = 0 }, Map.Center("ambush"))
   for i, tag in pairs(tags) do state.reliefTags[#state.reliefTags + 1] = tag end
   state.relief = true
+  if Mission.Difficulty() >= 4 then Trigger.AfterDelay(500, SendSecondRelief) end
   Media.MessageKey("lb1.relief")
   Dialogue.Say(SPEAKER, SPEAKER, "lb1.radio.relief")
   Camera.Focus(tags[1], 120)
+end
+
+-- Tiers 4-5: a second group arrives from the opposite edge of the north road.
+function SendSecondRelief()
+  if state.done then return end
+  local n = Mission.Difficulty() - 1
+  local types = {}
+  for i = 1, n do types[i] = "auth_rifleman" end
+  local tags = Reinforce.Edge(1, types, { x = 44 + Random.Next(4), y = 0 }, Map.Center("ambush"))
+  for i, tag in pairs(tags) do state.reliefTags[#state.reliefTags + 1] = tag end
+  state.relief2 = true
 end
 
 function CacheFound()
@@ -169,7 +183,7 @@ function CheckMission()
     Media.MessageKey("lb1.scrapers.down")
     Dialogue.Say(SPEAKER, SPEAKER, "lb1.radio.scrapers")
   end
-  if Objective.Status("escort") == "active" and Objective.Status("scrapers") == "completed" and state.relief and not EnemyAlive() then
+  if Objective.Status("escort") == "active" and Objective.Status("scrapers") == "completed" and state.relief and (Mission.Difficulty() < 4 or state.relief2) and not EnemyAlive() then
     Objective.Complete("escort")
   end
   if Mission.AllPrimaryDone() then WinMission() end
