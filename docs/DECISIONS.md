@@ -1301,3 +1301,10 @@ depth, foreground/mid/background layers, colour variety, more props and effects.
 **Why:** owner pick from the A / B / C contact sheet (session 14).
 **Alternatives:** A game-style (soft, blurs small shapes); B poster (strongest look, furthest from the game palette).
 **Status:** owner decision (session 14)
+
+### D-170 · 2026-11-07 · Low-power marker on stopped buildings (bomber vs SAMs follow-up, D-166)
+**Decision:** a small blinking "no power" icon is drawn over any defence or building that has stopped working because of low power.
+The tooltip text and the event-feed message proposed with it were not taken (owner picked item 1 only).
+**Why:** an unpowered SAM held fire with no hint to the player (docs/balance/s13_campaign_balance.md).
+**Alternatives:** tooltip text change; event-feed "Low power." message; no change.
+**Status:** owner decision (session 14)
