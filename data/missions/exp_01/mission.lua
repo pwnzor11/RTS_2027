@@ -60,9 +60,9 @@ function Landed()
   Objective.Reveal("craft")
   ShipOne()
   Mission.Timer("ship2", ShipTwoTicks(), ShipTwo, "e1.timer.ship2")
-  Trigger.AfterDelay(Pick({ 1300, 1250, 1200, 1050, 900 }), WaveOne)
-  Trigger.AfterDelay(Pick({ 3100, 3050, 3000, 2600, 2300 }), WaveTwo)
-  Trigger.AfterDelay(Pick({ 4900, 4850, 4800, 4200, 3700 }), WaveThree)
+  Trigger.AfterDelay(Pick({ 1300, 1250, 1200, 1100, 1000 }), WaveOne)
+  Trigger.AfterDelay(Pick({ 3100, 3050, 3000, 2800, 2600 }), WaveTwo)
+  Trigger.AfterDelay(Pick({ 4900, 4850, 4800, 4500, 4200 }), WaveThree)
 end
 
 -- Shipments. Each is a landing craft with marines aboard, sailing in from the east edge and landing on the beach.
@@ -113,17 +113,17 @@ end
 
 -- Wave strength follows the difficulty tier (1..5); tier 3 is the baseline. Never cash or vision (D-061).
 function WaveOneSize()
-  local sizes = { 3, 3, 4, 5, 7 }
+  local sizes = { 3, 3, 4, 4, 5 }
   return sizes[Mission.Difficulty()]
 end
 
 function WaveTwoSize()
-  local sizes = { 4, 4, 5, 7, 9 }
+  local sizes = { 4, 4, 5, 5, 7 }
   return sizes[Mission.Difficulty()]
 end
 
 function WaveThreeSize()
-  local sizes = { 5, 5, 6, 8, 11 }
+  local sizes = { 5, 5, 6, 7, 8 }
   return sizes[Mission.Difficulty()]
 end
 
@@ -135,10 +135,8 @@ function Wave(n, zone, size, extra)
   local types = {}
   local d = Mission.Difficulty()
   for i = 1, size do types[i] = "auth_rifleman" end
-  -- a jeep at every tier now; a second at tier 4, and a tank in the last wave from tier 3 (two at tier 5)
+  -- a jeep at every tier now (it was tier 3 and up), and a tank closes the last wave at tier 5
   types[#types + 1] = extra
-  if d >= 4 then types[#types + 1] = extra end
-  if n == 3 and d >= 3 then types[#types + 1] = "auth_tank" end
   if n == 3 and d >= 5 then types[#types + 1] = "auth_tank" end
   local tags = Reinforce.Zone(1, types, zone, HOLD)
   for i, tag in pairs(tags) do

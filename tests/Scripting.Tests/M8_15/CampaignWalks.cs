@@ -613,7 +613,8 @@ internal static class CampaignWalks
         Need(bot.BuildAndPlace("exp_billet", spots), bot, "billet");
         Need(bot.BuildAndPlace("exp_pillbox", spots), bot, "pillbox");
         Need(bot.RunUntilObjective("build", limit), bot, "build objective");
-        for (int i = 0; i < 4; i++) bot.Train("exp_marine");
+        for (int i = 0; i < 8; i++) bot.Train("exp_marine");
+        bot.BuildAndPlace("exp_pillbox", spots, 900);
 
         // 3. Hold: marines stand guard at the depot while the waves come.
         var hold = new CellCoord(depot.X + 1, depot.Y - 3);

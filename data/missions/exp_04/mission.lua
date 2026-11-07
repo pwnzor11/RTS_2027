@@ -127,21 +127,21 @@ function ColumnOne()
   Media.MessageKey("e4.col1")
   Dialogue.Say("leader_dir_larkin", "leader_dir_larkin", "e4.radio.larkin")
   Camera.Focus("gate", 120)
-  Column(Pick({ 7, 8, 10, 12, 14 }), "dir_ashthrower", 1, "gate")
+  Column(Pick({ 7, 8, 10, 13, 17 }), "dir_ashthrower", 1, "gate")
 end
 
 function ColumnTwo()
   if state.phase == "done" then return end
   Media.MessageKey("e4.col2")
   Camera.Focus("flank", 100)
-  Column(Pick({ 7, 9, 11, 13, 16 }), "dir_sapper", 2, "flank")
+  Column(Pick({ 7, 9, 11, 15, 20 }), "dir_sapper", 2, "flank")
 end
 
 function ColumnThree()
   if state.phase == "done" then return end
   Media.MessageKey("e4.col3")
   Dialogue.Say(SPEAKER, SPEAKER, "e4.radio.col3")
-  Column(Pick({ 9, 11, 13, 16, 20 }), "dir_ashthrower", 1, "gate")
+  Column(Pick({ 9, 11, 13, 19, 26 }), "dir_ashthrower", 1, "gate")
 end
 
 function WavesDown()
@@ -158,10 +158,10 @@ function Finale()
   if Actor.Alive("shaft") and Actor.Alive("device") then return end
   state.finale = true
   local types = {}
-  for i = 1, Pick({ 10, 12, 14, 18, 22 }) do types[#types + 1] = "dir_conscript" end
-  for i = 1, Pick({ 3, 4, 5, 7, 9 }) do types[#types + 1] = "dir_ashthrower" end
-  for i = 1, Pick({ 2, 2, 3, 4, 6 }) do types[#types + 1] = "dir_sapper" end
-  for i = 1, Pick({ 0, 0, 1, 2, 3 }) do types[#types + 1] = "dir_rocket_truck" end
+  for i = 1, Pick({ 10, 12, 14, 22, 32 }) do types[#types + 1] = "dir_conscript" end
+  for i = 1, Pick({ 3, 4, 5, 9, 14 }) do types[#types + 1] = "dir_ashthrower" end
+  for i = 1, Pick({ 2, 2, 3, 6, 10 }) do types[#types + 1] = "dir_sapper" end
+  for i = 1, Pick({ 0, 0, 1, 3, 5 }) do types[#types + 1] = "dir_rocket_truck" end
   local tags = Reinforce.Zone(1, types, "gate", Map.Center("redoubt"))
   for i, tag in pairs(tags) do
     state.waveTags[#state.waveTags + 1] = tag
