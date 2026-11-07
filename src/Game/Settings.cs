@@ -38,7 +38,8 @@ public sealed record Settings(
     string LlmBaseUrl = "",
     string LlmModel = "",
     bool LlmChatOn = true,
-    int LlmCallCap = 120)
+    int LlmCallCap = 120,
+    bool HealthBarsAlways = false)   // F4: false = "Damaged or selected" (default), true = "Always"
 {
     /// <summary>The file format version this build reads and writes.</summary>
     public const int CurrentVersion = 2;
@@ -98,7 +99,8 @@ public sealed record Settings(
             Text(root, "llm_base_url", d.LlmBaseUrl),
             Text(root, "llm_model", d.LlmModel),
             root.TryGetValue("llm_chat_on", out object? lc) && lc is bool cb ? cb : d.LlmChatOn,
-            Int(root, "llm_call_cap", d.LlmCallCap, 0, 1000));
+            Int(root, "llm_call_cap", d.LlmCallCap, 0, 1000),
+            root.TryGetValue("health_bars_always", out object? hb) && hb is bool hbb ? hbb : d.HealthBarsAlways);
     }
 
     /// <summary>The settings as TOML text.</summary>
@@ -122,6 +124,7 @@ public sealed record Settings(
         sb.AppendLine(FormattableString.Invariant($"llm_model = {Quote(LlmModel)}"));
         sb.AppendLine(FormattableString.Invariant($"llm_chat_on = {(LlmChatOn ? "true" : "false")}"));
         sb.AppendLine(FormattableString.Invariant($"llm_call_cap = {Math.Clamp(LlmCallCap, 0, 1000)}"));
+        sb.AppendLine(FormattableString.Invariant($"health_bars_always = {(HealthBarsAlways ? "true" : "false")}"));
         return sb.ToString();
     }
 

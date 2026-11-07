@@ -9,14 +9,15 @@ using Rts.Sim.Core;
 namespace Rts.Game.Render;
 
 /// <summary>
-/// Health bars above the sprites. Shown only when the unit is damaged or selected (buildings: only when damaged). The bar
+/// Health bars above the sprites. Shown when the unit is damaged or selected (buildings: only when damaged), or on everything with the "Always" setting (F4). The bar
 /// sits above the top edge of the unit's or building's sprite frame, so it clears the artwork. Green above half health,
 /// yellow above a quarter, red below. Ghosts have no bar: their health is stale.
 /// </summary>
 public static class HealthBars
 {
     private const int VehicleWidthPx = 40;
-    private const int InfantryWidthPx = 16;
+    private const int InfantryWidthPx = 24;   // F4: was 16
+    private const int InfantryBarHeightPx = 5;   // F4: was 4
     private const int VehicleHalfPx = 26;
     private const int InfantryHalfPx = 9;
     private const int BarHeightPx = 4;
@@ -26,6 +27,11 @@ public static class HealthBars
     private static readonly Color Yellow = new(0xE8, 0xC0, 0x30);
     private static readonly Color Red = new(0xD0, 0x30, 0x30);
 
+    /// <summary>
+    /// F4: whether a bar is drawn. With <paramref name="always"/> every living thing has one; otherwise only a selected or damaged one does.
+    /// </summary>
+    public static bool ShouldShow(bool always, bool selected, bool damaged) => always || selected || damaged;
+
     /// <summary>Draws the bars for the frame's units and buildings. Does nothing without rules.</summary>
     /// <param name="batch">Batch in progress.</param>
     /// <param name="pixel">1x1 white texture.</param>
@@ -33,7 +39,7 @@ public static class HealthBars
     /// <param name="camera">View.</param>
     /// <param name="sprites">Sprite resolver, to find each sprite's frame top.</param>
     /// <param name="ranks">VET-5: veterancy rank per listed unit (null = none). Ranked units get their pips beside the bar, even when the bar is hidden.</param>
-    public static void Draw(SpriteBatch batch, Texture2D pixel, SceneFrame frame, Camera camera, SpriteResolver sprites, IReadOnlyDictionary<RankKey, int>? ranks = null)
+    public static void Draw(SpriteBatch batch, Texture2D pixel, SceneFrame frame, Camera camera, SpriteResolver sprites, IReadOnlyDictionary<RankKey, int>? ranks = null, bool always = false)
     {
         if (frame.Rules is null) return;
         float zoom = camera.Zoom;
@@ -44,13 +50,14 @@ public static class HealthBars
             UnitView view = unit.View;
             bool vehicle = view.Kind == UnitKind.Vehicle;
             int max = vehicle ? frame.Rules.Vehicles[view.TypeIndex].MaxHealth : frame.Rules.Infantry[view.TypeIndex].MaxHealth;
-            bool showBar = frame.Selection.Contains(UnitKey.Of(view)) || view.Health < max;
+            bool showBar = ShouldShow(always, frame.Selection.Contains(UnitKey.Of(view)), view.Health < max);
             int rank = ranks is not null && ranks.TryGetValue(new RankKey(view.Kind, view.Id), out int found) ? found : 0;
             if (!showBar && rank == 0) continue;
             Vector2 origin = SpriteLayout.UnitOrigin(camera, unit.World);
             Vector2 top = SpriteLayout.FrameTopLeft(origin, sprites.ForUnit(frame.Rules, view).Manifest, zoom);
             int width = (int)MathF.Round((vehicle ? VehicleWidthPx : InfantryWidthPx) * zoom);
-            var r = new Rectangle((int)origin.X - width / 2, (int)MathF.Round(top.Y) - gap - height, width, height);
+            int barH = vehicle ? height : Math.Max(2, (int)MathF.Round(InfantryBarHeightPx * zoom));
+            var r = new Rectangle((int)origin.X - width / 2, (int)MathF.Round(top.Y) - gap - barH, width, barH);
             if (showBar) Bar(batch, pixel, r, view.Health, max);
             RankPips.Draw(batch, pixel, r, rank, zoom);
         }
@@ -59,7 +66,7 @@ public static class HealthBars
         {
             if (building.Ghost) continue;
             int max = frame.Rules.Buildings[building.TypeIndex].MaxHealth;
-            if (building.Health >= max) continue;
+            if (!ShouldShow(always, false, building.Health < max)) continue;
             float left = building.Cell.X * Camera.CellPx;
             float top = building.Cell.Y * Camera.CellPx;
             Rectangle foot = camera.ScreenRect(left, top,

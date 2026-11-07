@@ -20,6 +20,9 @@ public sealed class SceneRenderer : IDisposable
 {
     private static readonly Color DragColour = Color.White;
 
+    /// <summary>F4: draw health bars on everything (the "Health bars: Always" setting); the game screen sets it each frame.</summary>
+    public bool HealthBarsAlways { get; set; }
+
     private readonly SpriteResolver _sprites;
     private readonly SpriteLibrary? _library;
     private readonly FxPlayer _fx = new();
@@ -117,7 +120,7 @@ public sealed class SceneRenderer : IDisposable
         foreach ((RankKey key, int rank) in _ranks) _rankMap[key] = rank;
         _promotions.Update(snapshot.Tick, _ranks, _promoted);
         PromotionFlash.Draw(batch, pixel, frame.Units, camera, _promotions, snapshot.Tick);
-        HealthBars.Draw(batch, pixel, frame, camera, _sprites, _rankMap);
+        HealthBars.Draw(batch, pixel, frame, camera, _sprites, _rankMap, HealthBarsAlways);
         if (frame.DragRect is Rectangle box) Shapes.Outline(batch, pixel, box, DragColour);
     }
 

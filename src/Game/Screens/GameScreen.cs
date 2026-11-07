@@ -491,6 +491,7 @@ public sealed class GameScreen : IScreen
         IReadOnlyList<LeptonCoord> projectiles = _sim is null ? Array.Empty<LeptonCoord>() : _sim.Projectiles;
         var frame = new SceneFrame(snapshot, _renderUnits, projectiles, _sim?.Sim, _sim?.Rules, _overlays, _selection, DragRectangle());
 
+        _s.Scene.HealthBarsAlways = _s.Settings.HealthBarsAlways;
         _s.Scene.Draw(sb, _s.Pixel, frame, _camera, _s.Viewport);
         DrawSelectedBuilding(sb, snapshot);
         _feedback.Draw(sb, _s.Pixel, _camera);
