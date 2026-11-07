@@ -141,7 +141,7 @@ public sealed class BriefingScreen : IScreen
         y += lineHeight * 2;
         if (_still != null)
         {
-            sb.Draw(_still, new Rectangle(x, y, TextWidth(scale), StillHeight(scale)), Color.White);
+            sb.Draw(_still, new Rectangle(x, y, StillHeight(scale) * _still.Width / _still.Height, StillHeight(scale)), Color.White);
             y += StillHeight(scale) + lineHeight;
         }
 
@@ -170,7 +170,8 @@ public sealed class BriefingScreen : IScreen
     // The text column's width: the still is scaled to it, keeping the 16:9 aspect of the image.
     private static int TextWidth(int scale) => BitmapFont.Measure(new string('M', WrapChars), scale);
 
-    private int StillHeight(int scale) => _still == null ? 0 : TextWidth(scale) * _still.Height / _still.Width;
+    // At most a third of the window, so the text and the Start/Back strip still fit on short windows (width follows the aspect).
+    private int StillHeight(int scale) => _still == null ? 0 : Math.Min(TextWidth(scale) * _still.Height / _still.Width, _s.Viewport.Height / 3);
 
     // A missing or unreadable still means no image at all (the briefing is laid out as without one).
     private Texture2D? LoadStill()
