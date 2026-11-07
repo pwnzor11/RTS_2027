@@ -1,8 +1,9 @@
 # Left Behind campaign (plan 2.2, 2.4, M8-07). Opens after act 2 of either original faction.
-# PLACEHOLDER mission ids (M8-12): none of lb_01..lb_04 exists yet; auth_02 / dir_02 are the act-2 missions of the other campaigns.
+# lb_01..lb_04 exist (M8-10, M8-12); auth_02 / dir_02 are the act-2 missions of the other campaigns.
 [campaign]
 faction = "left_behind"
 title_key = "campaign.left_behind.title"
+ending = "left_behind_ending"
 open_after = ["auth_02", "dir_02"]
 
 [[missions]]
