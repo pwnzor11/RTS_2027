@@ -33,6 +33,9 @@ public sealed class Selection
     /// <summary>Removes everything from the selection.</summary>
     public void Clear() => _units.Clear();
 
+    /// <summary>Removes one unit from the selection (shift-click on its cameo in the selection card). False when it was not selected.</summary>
+    public bool Remove(UnitKey key) => _units.Remove(key);
+
     /// <summary>Replaces the selection with the given units.</summary>
     public void Replace(IEnumerable<UnitKey> keys)
     {
