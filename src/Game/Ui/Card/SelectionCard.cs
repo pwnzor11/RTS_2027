@@ -73,7 +73,8 @@ public sealed class SelectionCard : IUiRegion
         Model = CardModelBuilder.Build(_source, _selection, SimSnapshotSource.LocalPlayer, building);
         _scale = CardLayout.ScaleFor(mapView.Width, ui);
         int lh = BitmapFont.LineHeight(_scale, FontWeight.Regular);
-        Layout = CardLayout.Compute(mapView, _scale, lh, Model.Kind, Model.Buttons.Count, Model.Cameos.Count);
+        int width = Math.Max(120, Math.Min((int)MathF.Round(CardLayout.WidthUnits * _scale), mapView.Width - 2 * (int)MathF.Round(8f * _scale)));
+        Layout = CardLayout.Compute(mapView, _scale, lh, Model.Kind, Model.Buttons.Count, Model.Cameos.Count, CardLayout.RowsFor(Model, width, _scale));
     }
 
     /// <summary>Routes a left click (see <see cref="CardRouting.Click"/>).</summary>

@@ -187,6 +187,14 @@ public static class CardModelBuilder
             lines.Add(rally is null ? "Rally point: not set (right-click the ground)" : "Rally point: set");
         }
 
+        else if (t.Cost == 0 && t.Prerequisites.Count == 0 && t.Category == ProductionCategory.Structure)
+        {
+            // a start building (the construction yard, cost 0, no prerequisites) produces nothing itself, but the player's Structure and Defence queues run from it
+            lines.Add("Structures: " + ProductionText(r, hud, ProductionCategory.Structure));
+            string defence = ProductionText(r, hud, ProductionCategory.Defence);
+            if (defence != "Idle") lines.Add("Defences: " + defence);
+        }
+
         if (b.Occupants > 0) lines.Add("Garrison " + b.Occupants.ToString(CultureInfo.InvariantCulture));
 
         return new CardModel

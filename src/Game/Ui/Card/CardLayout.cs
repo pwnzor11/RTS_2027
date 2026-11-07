@@ -13,7 +13,7 @@ namespace Rts.Game.Ui.Card;
 public sealed class CardLayout
 {
     /// <summary>Card width at scale 1, in pixels.</summary>
-    public const int WidthUnits = 540;
+    public const int WidthUnits = 580;
 
     /// <summary>Text rows of a single unit or building card (name, type, health, rank, up to three stat lines).</summary>
     public const int TextRows = 7;
@@ -69,6 +69,17 @@ public sealed class CardLayout
         return Math.Max(1f, Math.Min(ui, s));
     }
 
+    /// <summary>
+    /// How many text rows a single unit or building card needs: name, type and health, then the rank line, the stat lines (two, or three
+    /// on a card too narrow for two) and any extra lines.
+    /// </summary>
+    public static int RowsFor(CardModel model, int cardWidth, float scale)
+    {
+        int rows = 3 + model.Lines.Count + (model.RankLine is null ? 0 : 1);
+        if (model.Kind == CardKind.Unit) rows += cardWidth >= (int)MathF.Round(WidthUnits * 0.8f * scale) ? 2 : 3;
+        return rows;
+    }
+
     private static int Margin(float s) => (int)MathF.Round(8f * s);
 
     /// <summary>Computes the layout.</summary>
@@ -78,7 +89,8 @@ public sealed class CardLayout
     /// <param name="kind">What the card shows.</param>
     /// <param name="buttonCount">Number of buttons.</param>
     /// <param name="unitCount">Selected units (group only).</param>
-    public static CardLayout Compute(Rectangle mapView, float scale, int lineHeight, CardKind kind, int buttonCount, int unitCount)
+    /// <param name="textRows">Text rows of a single unit or building card (see <see cref="RowsFor"/>).</param>
+    public static CardLayout Compute(Rectangle mapView, float scale, int lineHeight, CardKind kind, int buttonCount, int unitCount, int textRows = TextRows)
     {
         if (kind == CardKind.None) return None;
         int margin = Margin(scale), pad = (int)MathF.Round(6f * scale), gap = (int)MathF.Round(4f * scale);
@@ -107,7 +119,8 @@ public sealed class CardLayout
         }
         else
         {
-            contentH = Math.Max(portrait, TextRows * lineStep);
+            textRows = Math.Clamp(textRows, 3, TextRows + 2);
+            contentH = Math.Max(portrait, textRows * lineStep);
         }
 
         int h = 2 * pad + Math.Max(contentH, buttonsH);
@@ -136,7 +149,7 @@ public sealed class CardLayout
         {
             portraitRect = new Rectangle(card.X + pad, card.Y + pad, portrait, portrait);
             int tx = portraitRect.Right + pad;
-            text = new Rectangle(tx, card.Y + pad, Math.Max(10, bx0 - (buttonsW > 0 ? pad : 0) - tx), TextRows * lineStep);
+            text = new Rectangle(tx, card.Y + pad, Math.Max(10, bx0 - (buttonsW > 0 ? pad : 0) - tx), textRows * lineStep);
         }
 
         return new CardLayout(card, portraitRect, text, header, hint, buttons, tileRects, shown, overflow, lineStep);
