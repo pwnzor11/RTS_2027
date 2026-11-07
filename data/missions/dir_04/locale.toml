@@ -1,0 +1,32 @@
+# Directorate 04 "The Sunrise" locale. Speaker: the Voice (leader_dir_larkin); cameos: Thrall (Directorate), Fenn (Authority).
+"d4.start" = "Order Seven is in force. Hold the Device and the tunnel head until the Sunrise is charged."
+"d4.radio.thrall" = "Commander, this is Commissar Thrall. Order Seven is in force. You will hold the Device until it is ready. You will fire it when I say so, which will be when it is ready. Thank you."
+"d4.radio.start" = "Commander, the Voice again. The Device charges in its chamber. Keep the vents standing and the hatch standing. That is all, and it is a great deal."
+"d4.radio.fenn" = "Directorate commander, this is Chief Surveyor Fenn. There are people living under those sites, and there is a stockpile I was told never to record. Whatever you were ordered to do, do not do it."
+"d4.wave1" = "The first tenancy wave crosses the river towards the hatch!"
+"d4.radio.wave1" = "Riflemen from the south, Commander. Hold the hatch."
+"d4.wave2" = "The second wave is on the causeway!"
+"d4.wave3" = "The tenancy throws everything it has at the hatch!"
+"d4.charged" = "The Sunrise Device is charged. Fire it at the Ash Ridge command."
+"d4.radio.charged" = "The Device is charged, Commander. Select it, and name the Ash Ridge command as the target. The Commissar will be listening."
+"d4.radio.west" = "A tenancy post on the west bank. Not required, Commander."
+"d4.west.down" = "The west bank post is destroyed."
+"d4.lost.shaft" = "The shaft is lost. Order Seven fails."
+"d4.lost.device" = "The Device is lost. Order Seven fails."
+"d4.lost.head" = "The tunnel head is lost. The Device has no way to the target."
+"d4.win" = "The Sunrise has fired. The Ash Ridge command is gone."
+"d4.radio.win" = "It is done. Citizens, the Director is pleased. I am not. The sky is very bright tonight, and it is not the stars."
+
+# Objective and timer labels (the HUD shows the locale text when a label is a key)
+"d4.obj.hold" = "Hold the Device and the tunnel head until the Sunrise is charged"
+"d4.obj.fire" = "Fire the Sunrise Device at the Authority Ash Ridge command"
+"d4.obj.west" = "Destroy the Authority watch post on the west bank"
+"d4.timer.charge" = "Sunrise charged"
+"d4.timer.wave1" = "First wave"
+"d4.timer.wave2" = "Second wave"
+"d4.timer.wave3" = "Last assault"
+
+[voice]
+"d4.radio.start" = "voice/leader_dir_larkin/d4.radio.start.ogg"
+"d4.radio.charged" = "voice/leader_dir_larkin/d4.radio.charged.ogg"
+"d4.radio.win" = "voice/leader_dir_larkin/d4.radio.win.ogg"

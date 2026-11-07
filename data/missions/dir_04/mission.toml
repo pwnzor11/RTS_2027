@@ -1,0 +1,216 @@
+# Directorate 04: The Sunrise (M8-12 D4). Order Seven (D-086 canon): fire the Sunrise Device under the Authority's Ash Ridge command.
+# Defend the Device and the tunnel head until it is charged, then fire it. Zones are inclusive cell rectangles [x0, y0, x1, y1].
+# Pre-placed actors are placed before tick 0 (setup log). The Device (3000 ticks to charge) starts charging at tick 0.
+
+[mission]
+title = "The Sunrise"
+map = "ash_reckoning.map.toml"
+script = "mission.lua"
+briefing = "briefing.md"
+seed = 2030
+schema = 2
+act = 4
+faction = "directorate"
+locale = "locale.toml"
+
+[starts_with]
+tech = ["dir_reactor_vent", "dir_muster_hatch", "dir_hatch", "dir_pillbox", "dir_conscript", "dir_ashthrower", "dir_sapper", "dir_smelter_vent", "dir_assembly_bore", "dir_scraper", "dir_rocket_truck", "dir_isotope_works", "dir_mole", "dir_rocket_nest", "dir_commissar", "dir_rad_mortar", "dir_mast", "dir_mooring", "dir_dirigible"]
+
+[unlocks_on_win]
+tech = ["dir_committee_hall", "dir_sunrise", "dir_reactor_crawler", "dir_great_dirigible", "dir_landtrain"]
+
+[[players]]
+slot = 0
+name = "Directorate"
+role = "human"
+team = 0
+cash = 8000
+tech = ["dir_reactor_vent", "dir_muster_hatch", "dir_hatch", "dir_pillbox", "dir_conscript", "dir_ashthrower", "dir_sapper", "dir_smelter_vent", "dir_assembly_bore", "dir_scraper", "dir_rocket_truck", "dir_isotope_works", "dir_mole", "dir_rocket_nest", "dir_commissar", "dir_rad_mortar", "dir_mast", "dir_mooring", "dir_dirigible"]
+
+[[players]]
+slot = 1
+name = "Authority"
+role = "ai"
+team = 1
+cash = 4000
+
+[zones.keep]
+rect = [38, 8, 58, 23]
+
+[zones.device]
+rect = [48, 15, 54, 21]
+
+[zones.head]
+rect = [55, 54, 65, 61]
+
+[zones.ridge]
+rect = [55, 62, 65, 70]
+
+[zones.spawn]
+rect = [50, 72, 60, 75]
+
+[zones.home]
+rect = [40, 74, 56, 88]
+
+[zones.west_post]
+rect = [8, 54, 14, 60]
+
+# The Directorate keep on the north shore, with the Sunrise Device in its deep chamber.
+[[actors]]
+type = "dir_shaft"
+player = 0
+cell = [45, 9]
+tag = "shaft"
+
+[[actors]]
+type = "dir_reactor_vent"
+player = 0
+cell = [41, 9]
+
+[[actors]]
+type = "dir_reactor_vent"
+player = 0
+cell = [49, 9]
+
+[[actors]]
+type = "dir_reactor_vent"
+player = 0
+cell = [52, 9]
+
+[[actors]]
+type = "dir_muster_hatch"
+player = 0
+cell = [45, 13]
+
+[[actors]]
+type = "dir_smelter_vent"
+player = 0
+cell = [49, 13]
+
+[[actors]]
+type = "dir_assembly_bore"
+player = 0
+cell = [45, 16]
+
+[[actors]]
+type = "dir_isotope_works"
+player = 0
+cell = [40, 18]
+
+[[actors]]
+type = "dir_sunrise"
+player = 0
+cell = [50, 17]
+tag = "device"
+
+[[actors]]
+type = "dir_bunk_gallery"
+player = 0
+cell = [53, 20]
+
+[[actors]]
+type = "dir_bunk_gallery"
+player = 0
+cell = [56, 20]
+
+# The tunnel head: the old bore-head reaches beneath the Ash Ridge. A hatch on the south bank is its entrance.
+[[actors]]
+type = "dir_hatch"
+player = 0
+cell = [60, 58]
+tag = "head"
+
+[[actors]]
+type = "dir_pillbox"
+player = 0
+cell = [58, 57]
+
+[[actors]]
+type = "dir_pillbox"
+player = 0
+cell = [62, 57]
+
+[[actors]]
+type = "dir_conscript"
+player = 0
+cell = [59, 56]
+
+[[actors]]
+type = "dir_conscript"
+player = 0
+cell = [61, 56]
+
+# Authority: the Ash Ridge command (the Sunrise target) and the built-up home base to the south.
+[[actors]]
+type = "auth_engineering"
+player = 1
+cell = [60, 65]
+tag = "hq"
+
+[[actors]]
+type = "auth_ration_hall"
+player = 1
+cell = [57, 65]
+
+[[actors]]
+type = "auth_seismograph"
+player = 1
+cell = [63, 66]
+
+[[actors]]
+type = "auth_conyard"
+player = 1
+cell = [47, 82]
+tag = "enemy_yard"
+
+[[actors]]
+type = "auth_power"
+player = 1
+cell = [43, 82]
+
+[[actors]]
+type = "auth_power"
+player = 1
+cell = [50, 79]
+
+[[actors]]
+type = "auth_barracks"
+player = 1
+cell = [47, 78]
+
+[[actors]]
+type = "auth_factory"
+player = 1
+cell = [53, 76]
+
+[[actors]]
+type = "auth_turret"
+player = 1
+cell = [46, 74]
+
+[[actors]]
+type = "auth_turret"
+player = 1
+cell = [50, 74]
+
+[[actors]]
+type = "auth_turret"
+player = 1
+cell = [54, 74]
+
+[[actors]]
+type = "auth_rifleman"
+player = 1
+cell = [49, 76]
+
+[[actors]]
+type = "auth_rifleman"
+player = 1
+cell = [45, 77]
+
+# West watch post (hidden bonus).
+[[actors]]
+type = "auth_searchlight"
+player = 1
+cell = [11, 57]
+tag = "west_post"
