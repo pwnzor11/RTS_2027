@@ -28,14 +28,14 @@ def redoubt(R):
         K.cyl("rhill", (x, y, h / 2 - 1), r, h, E.m("#3A3436", 1.0), verts=8, r2=r * 0.35)
     # curtain wall and gate
     for x0, x1 in ((-46, -9), (9, 46)):
-        K.box("wall", ((x0 + x1) / 2, 200, 4.0), (x1 - x0, 3.0, 8.0), E.m(DARK_L, 0.95))
+        K.box("wall", ((x0 + x1) / 2, 200, 6.0), (x1 - x0, 3.0, 12.0), E.m(DARK_L, 0.95))
         for k in range(int((x1 - x0) / 6)):
-            K.box("merlon", (x0 + 3 + k * 6, 200, 8.5), (3.0, 3.4, 1.4), E.m(DARK_L, 0.95))
-    K.box("gate", (0, 200.5, 4.0), (18, 3.4, 8.0), E.m("#120E0E", 0.9))
+            K.box("merlon", (x0 + 3 + k * 6, 200, 12.5), (3.0, 3.4, 1.4), E.m(DARK_L, 0.95))
+    K.box("gate", (0, 200.5, 5.0), (18, 3.4, 10.0), E.m("#120E0E", 0.9))
     for x in (-10.5, 10.5):
-        K.box("gatetower", (x, 200, 7.5), (4.5, 5.0, 15.0), E.m(DARK, 0.95))
-        K.box("tstripe", (x, 197.4, 11.0), (4.7, 0.2, 1.0), E.m(MAROON, 0.8))
-        K.box("tlamp", (x, 197.3, 13.5), (1.2, 0.2, 1.0), E.m("#FFB060", 0.3, emit="#FF8A30", estr=12.0))
+        K.box("gatetower", (x, 200, 11.0), (4.5, 5.0, 22.0), E.m(DARK, 0.95))
+        K.box("tstripe", (x, 197.4, 15.0), (4.7, 0.2, 1.0), E.m(MAROON, 0.8))
+        K.box("tlamp", (x, 197.3, 19.0), (1.2, 0.2, 1.0), E.m("#FFB060", 0.3, emit="#FF8A30", estr=12.0))
     # Shaft headframe: A-frame tower with a wheel
     sx, sy = -34, 214
     for s in (-1, 1):
@@ -59,7 +59,8 @@ def redoubt(R):
         K.box("nest", (x, y, 1.0), (3.0, 3.0, 2.0), E.m(DARK, 0.95))
         for k in range(4):
             K.cyl("rocket", (x - 1.0 + k * 0.7, y - 0.2, 2.6), 0.18, 2.0, E.m("#8C3A2A", 0.7), rot=(0.9, 0, 0), verts=6)
-    K.fire((-6, 205), size=7.0, rng=R)
+    K.fire((-26, 190), size=6.0, rng=R)
+    K.fire((22, 188), size=5.0, rng=R)
     K.fire((60, 216), size=5.0, rng=R)
     K.fire((-60, 226), size=6.0, rng=R)
     K.smoke_column((-6, 208), h=80, r0=4.0, n=14, rng=R)
@@ -100,11 +101,11 @@ def build():
     E.tent((-27, 20), 0.3, 1.1, col="#BDB8AA")
 
     # midground: Dredge Works going up on the ash, survey hovers skimming ahead
-    E.dredge_works((-3, 62), 0.28, 1.35)
+    E.dredge_works((-16, 70), 0.28, 1.35)
     E.hover_skiff((9, 33), 0.15, 1.2, z=0.4)
     E.hover_skiff((-17, 44), -0.1, 1.0, z=0.4)
     E.hover_skiff((20, 52), 0.3, 0.9, z=0.4)
-    E.depot((22, 22), 0.0, 1.1)
+    E.depot((46, 70), 0.3, 1.1)
     # cooling ash heaps, old craters, drifts
     K.crater((6.0, 15.0), R=2.6, rng=R, rim=0.3)
     K.crater((-24, 40), R=3.2, rng=R, rim=0.3)
@@ -113,7 +114,7 @@ def build():
         x, y = R.uniform(-45, 55), R.uniform(10, 120)
         o = K.cyl("drift", (x, y, 0.5), R.uniform(5, 12), 1.4, E.m("#6F6860", 1.0), verts=9, r2=R.uniform(1, 3))
         K.nolines(o)
-    E.ash_flakes(R, n=380, xr=(-26, 26), yr=(-4, 50), zr=(0.4, 14), size=0.05)
+    E.ash_flakes(R, n=260, xr=(-26, 26), yr=(-26, 60), zr=(0.4, 14), size=0.03)
     E.glass_shards(R, n=6, xr=(30, 80), yr=(40, 100), h=(2, 6), tint="#6A8C88")
     redoubt(R)
 
@@ -127,7 +128,7 @@ def build():
     key.rotation_euler = (-sunv).to_track_quat("-Z", "Y").to_euler()
     K.area_light((34, -30, 34), (0, 15, 2), 60, 14000.0, (0.50, 0.50, 1.0))
     K.haze(float(os.environ.get("STILL_HAZE", "0.0016")), top=50.0, colour="#E0A89C")
-    K.camera((-6.0, -7.0, 2.6), (4.0, 70.0, 5.5), lens=24)
+    K.camera((-3.0, -30.0, 3.0), (8.0, 70.0, 6.0), lens=24)
 
 
 if __name__ == "__main__":

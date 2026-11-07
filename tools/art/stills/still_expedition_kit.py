@@ -617,7 +617,7 @@ def ash_flakes(rng, n=250, xr=(-20, 20), yr=(-4, 40), zr=(0.5, 14), size=0.05):
     for _ in range(n):
         p = (rng.uniform(*xr), rng.uniform(*yr), rng.uniform(*zr))
         s = size * rng.uniform(0.6, 1.8) * (1 + 0.06 * max(0.0, p[1]))
-        o = K.box("flake", p, (s * 1.6, s, s * 0.3), m("#D4CCC0", 1.0, emit="#FFB080", estr=0.6),
+        o = K.box("flake", p, (s * 1.6, s, s * 0.3), m("#A89E94", 1.0, emit="#FFB080", estr=0.35),
                   rot=(rng.uniform(0, 3), rng.uniform(0, 3), rng.uniform(0, 3)))
         K.nolines(o)
 
