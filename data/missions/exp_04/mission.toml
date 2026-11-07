@@ -1,0 +1,240 @@
+# Expedition 04: The Fuel (M8-12, act 4, the finale). The fleet lands on the south shore of the Ash Plains: put a Dredge Works on the ash field, hold the beachhead against the Directorate's response and break the redoubt with its Shaft and its Sunrise Device.
+# Zones are inclusive cell rectangles [x0, y0, x1, y1]. Pre-placed actors are placed before tick 0 (setup log).
+# Map: ash_reckoning (the act 4 map, D-030). Sea along the south edge (shallows y 88-91, open water from y 92); the Directorate redoubt sits at the north start (47,13).
+
+[mission]
+title = "The Fuel"
+map = "ash_reckoning.map.toml"
+script = "mission.lua"
+briefing = "briefing.md"
+seed = 2027
+schema = 2
+act = 4
+faction = "expedition"
+locale = "locale.toml"
+
+[starts_with]
+tech = ["exp_pile_house", "exp_billet", "exp_marine", "exp_pillbox", "exp_beacon", "exp_anchorage", "exp_dredge_works", "exp_skimmer", "exp_hover_yard", "exp_hoverlander", "exp_provision_store", "exp_plotting_room", "exp_glide_tank", "exp_gun_battery", "exp_quay", "exp_landing_craft", "exp_launch", "exp_shipyard", "exp_destroyer", "exp_sparker", "exp_flight_deck", "exp_jet", "exp_gunship", "exp_sam", "exp_skyhook", "exp_core_hall", "exp_drydock", "exp_cruiser", "exp_carrier", "exp_missile_sub", "exp_ironbound", "exp_diver"]
+
+[unlocks_on_win]
+tech = ["exp_bomber", "exp_salvo_array"]
+
+[[players]]
+slot = 0
+name = "Second Relief Fleet"
+role = "human"
+team = 0
+cash = 10000
+tech = ["exp_pile_house", "exp_billet", "exp_marine", "exp_pillbox", "exp_beacon", "exp_anchorage", "exp_dredge_works", "exp_skimmer", "exp_hover_yard", "exp_hoverlander", "exp_provision_store", "exp_plotting_room", "exp_glide_tank", "exp_gun_battery", "exp_quay", "exp_landing_craft", "exp_launch", "exp_shipyard", "exp_destroyer", "exp_sparker", "exp_flight_deck", "exp_jet", "exp_gunship", "exp_sam", "exp_skyhook", "exp_core_hall", "exp_drydock", "exp_cruiser", "exp_carrier", "exp_missile_sub", "exp_ironbound", "exp_diver"]
+
+[[players]]
+slot = 1
+name = "Directorate redoubt"
+role = "ai"
+team = 1
+cash = 3000
+faction = "directorate"
+
+# The beachhead ground on the south shore.
+[zones.beachhead]
+rect = [34, 74, 62, 90]
+
+# The ash field the fleet came for.
+[zones.ash_field]
+rect = [50, 79, 58, 87]
+
+# The Directorate redoubt (shaft, vents, device) and the gate its columns march out of.
+[zones.redoubt]
+rect = [38, 8, 56, 22]
+
+[zones.gate]
+rect = [42, 23, 52, 26]
+
+[zones.flank]
+rect = [20, 60, 28, 64]
+
+[[actors]]
+type = "exp_landing_depot"
+player = 0
+cell = [45, 80]
+tag = "depot"
+
+[[actors]]
+type = "exp_pile_house"
+player = 0
+cell = [49, 78]
+
+[[actors]]
+type = "exp_pile_house"
+player = 0
+cell = [49, 82]
+
+[[actors]]
+type = "exp_billet"
+player = 0
+cell = [41, 78]
+
+[[actors]]
+type = "exp_hover_yard"
+player = 0
+cell = [41, 86]
+
+[[actors]]
+type = "exp_plotting_room"
+player = 0
+cell = [36, 78]
+
+[[actors]]
+type = "exp_core_hall"
+player = 0
+cell = [36, 74]
+
+[[actors]]
+type = "exp_marine"
+player = 0
+cell = [44, 76]
+
+[[actors]]
+type = "exp_marine"
+player = 0
+cell = [46, 76]
+
+[[actors]]
+type = "exp_marine"
+player = 0
+cell = [48, 76]
+
+[[actors]]
+type = "exp_marine"
+player = 0
+cell = [43, 77]
+
+[[actors]]
+type = "exp_marine"
+player = 0
+cell = [47, 77]
+
+[[actors]]
+type = "exp_marine"
+player = 0
+cell = [50, 76]
+
+# The Directorate redoubt: a shaft with its vents, a muster hatch, the isotope works and the Sunrise Device, ringed with emplacements.
+[[actors]]
+type = "dir_shaft"
+player = 1
+cell = [45, 12]
+tag = "shaft"
+
+[[actors]]
+type = "dir_reactor_vent"
+player = 1
+cell = [37, 17]
+
+[[actors]]
+type = "dir_reactor_vent"
+player = 1
+cell = [52, 16]
+
+[[actors]]
+type = "dir_muster_hatch"
+player = 1
+cell = [45, 17]
+
+[[actors]]
+type = "dir_isotope_works"
+player = 1
+cell = [42, 12]
+
+[[actors]]
+type = "dir_sunrise"
+player = 1
+cell = [50, 9]
+tag = "device"
+
+[[actors]]
+type = "dir_pillbox"
+player = 1
+cell = [45, 21]
+
+[[actors]]
+type = "dir_pillbox"
+player = 1
+cell = [49, 21]
+
+[[actors]]
+type = "dir_pillbox"
+player = 1
+cell = [51, 19]
+
+[[actors]]
+type = "dir_rocket_nest"
+player = 1
+cell = [42, 19]
+
+[[actors]]
+type = "dir_rocket_nest"
+player = 1
+cell = [54, 19]
+
+[[actors]]
+type = "dir_conscript"
+player = 1
+cell = [43, 21]
+
+[[actors]]
+type = "dir_conscript"
+player = 1
+cell = [46, 21]
+
+[[actors]]
+type = "dir_conscript"
+player = 1
+cell = [49, 22]
+
+[[actors]]
+type = "dir_conscript"
+player = 1
+cell = [45, 23]
+
+[[actors]]
+type = "dir_conscript"
+player = 1
+cell = [47, 23]
+
+[[actors]]
+type = "dir_conscript"
+player = 1
+cell = [52, 22]
+
+[[actors]]
+type = "dir_conscript"
+player = 1
+cell = [41, 22]
+
+[[actors]]
+type = "dir_conscript"
+player = 1
+cell = [55, 21]
+
+[[actors]]
+type = "dir_ashthrower"
+player = 1
+cell = [46, 22]
+
+[[actors]]
+type = "dir_ashthrower"
+player = 1
+cell = [50, 22]
+
+[[actors]]
+type = "dir_ashthrower"
+player = 1
+cell = [44, 22]
+
+# The reserve: a reactor vent in the far north-east corner nobody is sent to. It keeps the Directorate alive until the script wins.
+[[actors]]
+type = "dir_reactor_vent"
+player = 1
+cell = [86, 10]
+tag = "reserve"

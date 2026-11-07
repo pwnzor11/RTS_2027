@@ -1,0 +1,135 @@
+# Expedition 03: The Fleet Reaches the Coast (M8-12, act 3). The carrier group makes the west coast of the Glass Coast; hold the cove against an Authority column from the north and a Directorate column out of the south dunes, raise an air arm (Flight Deck and SAM Mount) and bring the carrier in.
+# Zones are inclusive cell rectangles [x0, y0, x1, y1]. Pre-placed actors are placed before tick 0 (setup log).
+# Map: glass_coast_e1 (the act 3 map, D-030). Act 1 landed on the south-east beach, act 2 on the north shore; this landing is on the west coast (shallows at x 7-8, open sea west of x 7).
+# Two enemy players on one team (Authority, Directorate); each keeps one reserve post the script never uses so only the script ends the mission.
+
+[mission]
+title = "The Fleet Reaches the Coast"
+map = "glass_coast_e1.map.toml"
+script = "mission.lua"
+briefing = "briefing.md"
+seed = 2027
+schema = 2
+act = 3
+faction = "expedition"
+next = "exp_04"
+locale = "locale.toml"
+
+[starts_with]
+tech = ["exp_pile_house", "exp_billet", "exp_marine", "exp_pillbox", "exp_beacon", "exp_anchorage", "exp_dredge_works", "exp_skimmer", "exp_hover_yard", "exp_hoverlander", "exp_provision_store", "exp_plotting_room", "exp_glide_tank", "exp_gun_battery", "exp_quay", "exp_landing_craft", "exp_launch", "exp_shipyard", "exp_destroyer", "exp_sparker", "exp_flight_deck", "exp_jet", "exp_gunship", "exp_sam", "exp_skyhook"]
+
+[unlocks_on_win]
+tech = ["exp_core_hall", "exp_drydock", "exp_cruiser", "exp_carrier", "exp_missile_sub", "exp_ironbound", "exp_diver"]
+
+[[players]]
+slot = 0
+name = "Second Relief Fleet"
+role = "human"
+team = 0
+cash = 10000
+tech = ["exp_pile_house", "exp_billet", "exp_marine", "exp_pillbox", "exp_beacon", "exp_anchorage", "exp_dredge_works", "exp_skimmer", "exp_hover_yard", "exp_hoverlander", "exp_provision_store", "exp_plotting_room", "exp_glide_tank", "exp_gun_battery", "exp_quay", "exp_landing_craft", "exp_launch", "exp_shipyard", "exp_destroyer", "exp_sparker", "exp_flight_deck", "exp_jet", "exp_gunship", "exp_sam", "exp_skyhook"]
+
+[[players]]
+slot = 1
+name = "Authority coast watch"
+role = "ai"
+team = 1
+cash = 0
+
+[[players]]
+slot = 2
+name = "Directorate dune party"
+role = "ai"
+team = 1
+cash = 0
+faction = "directorate"
+
+# The cove: the landing and the build ground.
+[zones.cove_land]
+rect = [9, 38, 26, 56]
+
+# The water the carrier group anchors in (deep water west of the shallows, shallows at x 7-8).
+[zones.cove]
+rect = [1, 40, 8, 52]
+
+# Authority column: from the north road. Directorate column: from the south dunes. The air raid comes in over the west sea.
+[zones.north_road]
+rect = [20, 28, 28, 33]
+
+[zones.south_dunes]
+rect = [16, 60, 26, 64]
+
+# The advance party: depot, power, billet, dredge works, hover yard, plotting room and a few marines already ashore.
+[[actors]]
+type = "exp_landing_depot"
+player = 0
+cell = [11, 44]
+tag = "depot"
+
+[[actors]]
+type = "exp_pile_house"
+player = 0
+cell = [15, 41]
+
+[[actors]]
+type = "exp_billet"
+player = 0
+cell = [15, 47]
+
+[[actors]]
+type = "exp_dredge_works"
+player = 0
+cell = [19, 49]
+
+[[actors]]
+type = "exp_hover_yard"
+player = 0
+cell = [12, 50]
+
+[[actors]]
+type = "exp_plotting_room"
+player = 0
+cell = [15, 50]
+
+[[actors]]
+type = "exp_marine"
+player = 0
+cell = [17, 44]
+
+[[actors]]
+type = "exp_marine"
+player = 0
+cell = [18, 46]
+
+[[actors]]
+type = "exp_marine"
+player = 0
+cell = [18, 42]
+
+[[actors]]
+type = "exp_marine"
+player = 0
+cell = [19, 45]
+
+[[actors]]
+type = "exp_marine"
+player = 0
+cell = [17, 48]
+
+[[actors]]
+type = "exp_marine"
+player = 0
+cell = [19, 48]
+
+# The reserves: two far posts in the north-east corner nobody is sent to. They keep both enemy players alive until the script wins.
+[[actors]]
+type = "auth_power"
+player = 1
+cell = [70, 13]
+tag = "reserve_auth"
+
+[[actors]]
+type = "dir_bunker"
+player = 2
+cell = [72, 21]
+tag = "reserve_dir"

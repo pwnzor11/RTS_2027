@@ -1,0 +1,33 @@
+# DRAFT for owner review (D-086). Expedition ending slides (plan 3.8, M8-12): the Second Relief Fleet's version of the year, in the telex voice of the fleet.
+# Written from existing lore only (docs/lore/expedition.md): no new named characters. The Strand and Aldersey secrets are hinted, not stated.
+# condition (optional): { kind = "completed", mission = "<id>" } or { kind = "difficulty_min", mission = "<id>", value = 1..5 }
+[ending]
+faction = "expedition"
+
+[[slides]]
+image = "ending_expedition_01"
+key = "ending.expedition.01"
+
+[[slides]]
+image = "ending_expedition_02"
+key = "ending.expedition.02"
+
+[[slides]]
+image = "ending_expedition_03"
+key = "ending.expedition.03"
+
+[[slides]]
+image = "ending_expedition_04"
+key = "ending.expedition.04"
+condition = { kind = "difficulty_min", mission = "exp_04", value = 4 }
+
+[[slides]]
+image = "ending_expedition_05"
+key = "ending.expedition.05"
+
+[text]
+"ending.expedition.01" = "The dredge works on the ash field ran for three seasons. The Second Relief Fleet loaded its holds, and the Concordat's reactors burned a little longer. Commissioner Strand wrote her telex herself. She never mentioned the papers in her desk, and the fleet never asked."
+"ending.expedition.02" = "Fleet Admiral Aldersey brought home most of the ships he took out, and said so at every harbour. In his safe, beside the log of the first relief fleet, he kept a new page: the name of every hull that did not come back. He did not show it to anyone."
+"ending.expedition.03" = "Dr. Roque stayed on the coast. He talked to the valves of the Dredge Works until the day they failed, and apologised to them when they did. Air Marshal Kell flew the last of her jets off the carrier and into the dunes, where there was nothing left to rearm them."
+"ending.expedition.04" = "The Directorate redoubt was a crater by the autumn. The Voice went quiet, the Shaft never reopened, and the Authority's towns on the coast road saw the white pennant and did not close their doors. Nobody in the fleet called it a conquest."
+"ending.expedition.05" = "Across the water the council of ministries went on quarrelling, and the telex stopped answering. The fleet looks at the old continent now and sees a coast, a harbour and a field of ash. RETURN WITH THE TIDE."

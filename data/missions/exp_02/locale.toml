@@ -1,0 +1,32 @@
+# Expedition 02 "The Supply Line" locale. Speaker: Commissioner Imelda Strand (leader_exp_strand); cameos Dr. Anselm Roque and Brigadier Hester Wrenfield.
+"e2.start" = "The party ashore has the depot. Raise the Anchorage on the shallows."
+"e2.radio.start" = "Commander, this is Commissioner Strand. We would be grateful if you would raise the Anchorage on the north shore. The home shipments cannot find us without it."
+"e2.docked" = "The Anchorage stands. The first convoy is coming in."
+"e2.radio.docked" = "The dock is up, Commander. The first convoy is on its way."
+"e2.radio.roque" = "Roque here. The dock is sound. Please do not let the Authority shell it, it dislikes salt."
+"e2.convoy" = "A convoy is landing on the shore."
+"e2.radio.convoy2" = "The second convoy has made the coast. Use it well."
+"e2.line.lost" = "The Anchorage is lost. The supply line is cut."
+"e2.wave1" = "Authority column on the coast road!"
+"e2.radio.wrenfield" = "Authority net, overheard: unknown ships on the north shore. Close the coast road and hold the dock."
+"e2.wave2" = "Authority column on the south-west track!"
+"e2.wave3" = "The garrison is sending everything it has!"
+"e2.radio.wave3" = "That is the last of their reserve on the road, I think. Hold the line."
+"e2.held" = "The three columns are beaten."
+"e2.post.down" = "The coast road garrison is broken."
+"e2.lost.depot" = "The Landing Depot has fallen. The landing is lost."
+"e2.win" = "The supply line is open. The garrison is broken and the dock stands."
+"e2.radio.win" = "The convoys will get through, Commander. I will tell the Office of Return that the road is ours."
+
+# Objective and timer labels (the HUD shows the locale text when a label is a key)
+"e2.obj.dock" = "Raise an Anchorage on the north shore"
+"e2.obj.hold" = "Hold the landing against the three Authority columns"
+"e2.obj.post" = "Break the Authority garrison on the coast road"
+"e2.obj.line" = "Never lose the Anchorage"
+"e2.timer.col1" = "First Authority column"
+"e2.timer.convoy2" = "Second convoy"
+
+[voice]
+"e2.radio.start" = "voice/leader_exp_strand/e2.radio.start.ogg"
+"e2.radio.docked" = "voice/leader_exp_strand/e2.radio.docked.ogg"
+"e2.radio.win" = "voice/leader_exp_strand/e2.radio.win.ogg"
