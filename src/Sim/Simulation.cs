@@ -685,6 +685,7 @@ public sealed partial class Simulation
             }
         }
         UpdateDefeat();   // win rule (M2-08)
+        UpdateNoRebuildDefeat();   // M4-17 (D-173)
         UpdateVision();
     }
 

@@ -314,8 +314,8 @@ public sealed class M7ContractTests
     [Fact]
     public void Formats_AndPartOrder_ArePinned()
     {
-        Assert.Equal(12, SimWriter.SaveVersion);
-        Assert.Equal(12, ReplayWriter.Version);
+        Assert.Equal(13, SimWriter.SaveVersion);
+        Assert.Equal(13, ReplayWriter.Version);
         Assert.Equal(7, ReplayWriter.OldestReadableVersion);
         var sim = ScriptedGame.NewSim(ScriptedGame.Setup());
         string[] names = sim.StateParts.Select(p => p.Name).ToArray();
@@ -384,7 +384,7 @@ public sealed class M7ContractTests
         var rep = new MemoryStream();
         new ReplayWriter(rep, sim, "b", Array.Empty<(string, string)>()).Finish();
         byte[] r = rep.ToArray();
-        Assert.Equal(12, ReplayReader.Read(new MemoryStream(r)).Version);
+        Assert.Equal(13, ReplayReader.Read(new MemoryStream(r)).Version);
         r[ReplayWriter.Magic.Length] = 11;   // the version byte follows the magic
         Assert.Equal(11, ReplayReader.Read(new MemoryStream(r)).Version);
     }

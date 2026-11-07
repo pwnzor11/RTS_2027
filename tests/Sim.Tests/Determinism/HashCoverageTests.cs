@@ -20,6 +20,7 @@ public class HashCoverageTests
         ["PathService._parent"] = "A* scratch, rewritten on every solve (PathService: 'Not saved: scratch and cache.')",
         ["PathService._seen"] = "A* stamp scratch, meaningful only within one solve (PathService: 'Not saved: scratch and cache.')",
         ["PathService._closed"] = "A* stamp scratch, meaningful only within one solve (PathService: 'Not saved: scratch and cache.')",
+        ["ProductionState.NoRebuildTicks"] = "M4-17: written only when SimSetup.NoRebuildDefeat is on (so other games keep their bytes); covered by NoRebuildDefeatTests.ClockIsHashed",
         ["VisionState._ghosts"] = "ghost data is written only where _ghostPresent is set; an absent slot is not state. "
             + "GhostHealth_IsSerialisedWhenPresent covers it with a present ghost.",
     };
@@ -117,6 +118,8 @@ public class HashCoverageTests
     {
         // Simulation
         ["NavalState.LoadEpoch"] = "M7-03: counts loads so the derived region cache recomputes; not state",
+        ["Simulation._lifelineBuilding"] = "M4-17: lazy per-building-type table derived from the immutable Rules",
+        ["Simulation._lifelineVehicle"] = "M4-17: lazy per-vehicle-type table derived from the immutable Rules",
         ["Simulation._regions"] = "M7-03: derived region-label cache, a pure function of the land types; the ship labels are saved in the naval part",
         ["Simulation._setupLog"] = "construction history for replays (SetupLog), not state: a loaded sim starts with an empty log",
         ["Simulation.UnlockFilter"] = "delegate a mission extension installs in OnSetup (M2-15): code, not state; the state it reads is the extension's own hashed part",
