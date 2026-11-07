@@ -21,6 +21,11 @@ function OnInit()
   Objective.Add("power", "lb4.obj.power", true)
   Objective.Add("depot", "lb4.obj.depot", true)
   Objective.AddHidden("wreck", "lb4.obj.wreck", false)
+  -- Objective targets (M11-05): where the HUD points.
+  Objective.SetTarget("counter", "camp")
+  Objective.SetTarget("power", "pile1")
+  Objective.SetTarget("depot", "depot")
+  Objective.SetTarget("wreck", "wreck")
   Media.MessageKey("lb4.start")
   Dialogue.Say(SPEAKER, SPEAKER, "lb4.radio.start")
 
@@ -129,6 +134,7 @@ end
 function PileDown()
   if state.done then return end
   state.piles = state.piles + 1
+  if Actor.Alive("pile2") then Objective.SetTarget("power", "pile2") end
   Media.MessageKey("lb4.pile.down")
   if state.piles >= 2 then
     Objective.Complete("power")

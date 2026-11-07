@@ -24,6 +24,11 @@ function OnInit()
   Objective.Add("hatches", "lb3.obj.hatches", true)
   Objective.Add("column", "lb3.obj.column", true)
   Objective.AddHidden("mast", "lb3.obj.mast", false)
+  -- Objective targets (M11-05): where the HUD points.
+  Objective.SetTarget("vent", "vent")
+  Objective.SetTarget("hatches", "hatch1")
+  Objective.SetTarget("column", "camp")
+  Objective.SetTarget("mast", "mast")
   Media.MessageKey("lb3.start")
   Dialogue.Say(SPEAKER, SPEAKER, "lb3.radio.start")
 
@@ -141,6 +146,9 @@ end
 function HatchDown()
   if state.done then return end
   state.hatchesDown = state.hatchesDown + 1
+  for _, tag in ipairs({ "hatch1", "hatch2", "hatch3" }) do
+    if Actor.Alive(tag) then Objective.SetTarget("hatches", tag) break end
+  end
   Media.MessageKey("lb3.hatch.down")
   if state.hatchesDown >= 3 then
     Objective.Complete("hatches")

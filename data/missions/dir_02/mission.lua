@@ -15,6 +15,9 @@ function OnInit()
   Objective.Add("posts", "d2.obj.posts", true)
   Objective.Add("convoy", "d2.obj.convoy", true)
   Objective.AddHidden("depot", "d2.obj.depot", false)
+  -- Objective targets (M11-05): where the HUD points.
+  Objective.SetTarget("posts", "post_n")
+  Objective.SetTarget("depot", "depot_silo")
   Media.MessageKey("d2.start")
   Dialogue.Say(SPEAKER, SPEAKER, "d2.radio.start")
   Camera.Focus("site", 120)
@@ -55,6 +58,9 @@ end
 
 function PostDown()
   state.postsDown = state.postsDown + 1
+  for _, tag in ipairs({ "post_n", "post_w", "post_e" }) do
+    if Actor.Alive(tag) then Objective.SetTarget("posts", tag) break end
+  end
   if state.postsDown == 1 then
     Dialogue.Say(SPEAKER, SPEAKER, "d2.radio.post1")
     Trigger.AfterDelay(200, ReserveWave)

@@ -13,6 +13,10 @@ function OnInit()
   Objective.Add("reach", "a1.obj.reach", true)
   Objective.Add("scrapers", "a1.obj.scrapers", true)
   Objective.AddHidden("surveyors", "a1.obj.surveyors", false)
+  -- Objective targets (M11-05): where the HUD points.
+  Objective.SetTarget("reach", "survey")
+  Objective.SetTarget("scrapers", "scraper1")
+  Objective.SetTarget("surveyors", "svy1")
   Media.MessageKey("a1.start")
   Dialogue.Say(SPEAKER, SPEAKER, "a1.radio.start")
   Camera.Focus("jeep", 120)
@@ -50,6 +54,7 @@ end
 
 function ScraperLost()
   if state.phase == "done" then return end
+  if not Actor.Alive("scraper1") and Actor.Alive("scraper2") then Objective.SetTarget("scrapers", "scraper2") end
   if not Actor.Alive("scraper1") and not Actor.Alive("scraper2") then
     Objective.Fail("scrapers")
     Media.MessageKey("a1.lost")
@@ -64,6 +69,7 @@ function CheckConvoy()
     state.phase = "survey"
     Objective.Complete("reach")
     Objective.Add("hold", "a1.obj.hold", true)
+    Objective.SetTarget("hold", "survey")
     Dialogue.Say(SPEAKER, SPEAKER, "a1.radio.down")
     Camera.Focus("survey", 120)
     Trigger.AfterDelay(300, RaidOne)
@@ -116,6 +122,7 @@ function CheckRaids()
   Actor.Create("auth_conyard", 0, { x = 23, y = 25 }, "yard")
   Player.AddCash(0, 1000)
   Objective.Add("refinery", "a1.obj.refinery", true)
+  Objective.SetTarget("refinery", "pit")
   Media.MessageKey("a1.raiders.beaten")
   Dialogue.Say(SPEAKER, SPEAKER, "a1.radio.build")
   Camera.Focus("yard", 120)
