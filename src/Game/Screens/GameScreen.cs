@@ -43,6 +43,7 @@ public sealed class GameScreen : IScreen
     private readonly bool _skirmishMode;
     private SidebarPanel? _sidebar;
     private CameoProvider? _cameos;
+    private Rts.Game.Ui.Card.SelectionCard? _card;   // M11-04: the bottom-centre selection card
     private EntityId _selectedBuilding = EntityId.None;
     private bool _selectedBuildingProduces;
     private int _selectedBuildingType = -1;
@@ -270,6 +271,7 @@ public sealed class GameScreen : IScreen
             return;
         }
 
+        if (_sim is not null && _orders is not null && !_skirmishMode) _card = new Rts.Game.Ui.Card.SelectionCard(_sim, _selection, null, PlayerColours.Base(SimSnapshotSource.LocalPlayer));
         if (!_skirmishMode || _sim is null) return;
         string spritesRoot = Path.Combine(Path.GetDirectoryName(Path.GetFullPath(_s.RulesDir)) ?? ".", "sprites");
         _cameos = new CameoProvider(_s.Graphics, spritesRoot);
@@ -277,6 +279,7 @@ public sealed class GameScreen : IScreen
         // D-068: the local player draws in the chosen colour; the AI takes the next palette entry that differs.
         PlayerColours.Assign(Skirmish is { } sk && sk.PlayerCount >= 2 ? ColoursOf(sk) : new[] { colour, colour == 1 ? 0 : 1 });
         _sidebar = new SidebarPanel(_sim, SimSnapshotSource.LocalPlayer, _selection, _cameos, PlayerColours.Base(SimSnapshotSource.LocalPlayer));
+        _card = new Rts.Game.Ui.Card.SelectionCard(_sim, _selection, _cameos, PlayerColours.Base(SimSnapshotSource.LocalPlayer));
         CentreCameraOnOwnBase();
         _archive = new ArchiveTracker(ArchiveProgress.Load());
     }
@@ -299,6 +302,7 @@ public sealed class GameScreen : IScreen
     {
         _mouse = input.MousePosition;
         UpdateHudRegions();
+        UpdateCard(input);   // M11-04: before anything else reads the click
         PlayerHud? localHud = _skirmishMode && _sim is not null ? _sim.Sim.HudFor(SimSnapshotSource.LocalPlayer) : null;
         _superweapon.Update(localHud, _sim?.Sim.Tick ?? 0);
         UpdateSuperweaponRegion();
@@ -335,6 +339,7 @@ public sealed class GameScreen : IScreen
             input.ConsumeMouseOver(_packRegion);
             input.ConsumeMouseOver(_diveRegion);
             input.ConsumeMouseOver(_hudRegion);
+            if (_card is not null) input.ConsumeMouseOver(_card);   // M11-04: clicks on the card never reach the map
             if (_mission is not null) input.ConsumeMouseOver(_mission.ObjectivesRegion);
         }
 
@@ -497,6 +502,7 @@ public sealed class GameScreen : IScreen
         _mission?.Guidance.DrawWorld(sb, _s.Pixel, _camera, MapViewport().Bounds, _s.UiScale);   // M11-05
         DrawHud(sb, snapshot);
         DrawArmedCursor(sb);
+        _card?.Draw(sb, _s.Pixel, _mouse, _orders is { AttackMoveArmed: true });   // M11-04
         _chat.Draw(sb, _s.Pixel, _s.UiScale, new Point(8, _s.Viewport.Height - Hud.HeightOf(1, _s.UiScale) - 12), _s.Viewport.Width - 16);
         _sidebar?.Draw(sb, _s.Pixel, snapshot);
         if (_mission is not null && _sidebar is not null) _mission.Guidance.DrawMinimap(sb, _s.Pixel, _sidebar.Layout.Minimap, snapshot.MapWidth, snapshot.MapHeight);   // M11-05
@@ -506,6 +512,37 @@ public sealed class GameScreen : IScreen
         DrawDiveButton(sb);
         DrawSpectator(sb);
         _console?.Draw(sb, _s.Pixel, _s.Viewport);
+    }
+
+    // M11-04: rebuild the card for this frame and act on a left click on it (the click is then used up).
+    private void UpdateCard(InputFrame input)
+    {
+        if (_card is null) return;
+        Rectangle mapView = _sidebar?.Layout.MapView ?? new Rectangle(0, 0, _s.Viewport.Width, _s.Viewport.Height);
+        _card.Refresh(mapView, Rts.Game.Ui.UiScale.FromBackbuffer(_s.Viewport.Height), _selectedBuilding);
+        if (!_card.Visible || !input.LeftPressed || _dragStart is not null) return;
+        Rts.Game.Ui.Card.CardAction action = _card.Click(input.MousePosition, input.IsDown(Keys.LeftShift) || input.IsDown(Keys.RightShift));
+        if (!action.Consumed) return;
+        input.ConsumeLeft();
+        switch (action.Kind)
+        {
+            case Rts.Game.Ui.Card.CardActionKind.Order:
+                _orders?.KeyPressed(action.Action);
+                break;
+            case Rts.Game.Ui.Card.CardActionKind.SelectOnly:
+                _selection.Replace(new[] { action.Unit });
+                Audio.AudioBootstrap.Director?.Notify(Audio.AudioEventKind.UnitSelect);
+                break;
+            case Rts.Game.Ui.Card.CardActionKind.Remove:
+                _selection.Remove(action.Unit);
+                break;
+            case Rts.Game.Ui.Card.CardActionKind.Sell when _sim is not null && !_selectedBuilding.IsNone:
+                _sim.Host.Issue(SidebarCommands.Sell(SimSnapshotSource.LocalPlayer, _selectedBuilding));
+                break;
+            case Rts.Game.Ui.Card.CardActionKind.Repair when _sim is not null && !_selectedBuilding.IsNone:
+                _sim.Host.Issue(SidebarCommands.Repair(SimSnapshotSource.LocalPlayer, _selectedBuilding));
+                break;
+        }
     }
 
     // O2: while attack-move is armed, a red crosshair at the cursor and a small "ATTACK-MOVE" label beside it.
@@ -1147,8 +1184,6 @@ public sealed class GameScreen : IScreen
         }
         if (_mission is not null) _mission.MapViewWidth = MapViewport().Width;   // M11-05
         _mission?.UpdateRegion(lines.Count, scale);
-        if (_sidebar is not null)   // S3: the unit info panel stacks below the debug, spectator and objectives panels
-            _sidebar.UnitInfoTop = HudStack.NextTop(8, 6, new[] { _hudRegion.Bounds, _specRegion.Bounds, _mission?.ObjectivesRegion.Bounds ?? Rectangle.Empty });
     }
 
     private static Rectangle PanelRect(Point origin, IReadOnlyList<string> lines, int scale) =>

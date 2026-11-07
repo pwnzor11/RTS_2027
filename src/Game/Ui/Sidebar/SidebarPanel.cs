@@ -254,7 +254,6 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
 
         DrawGrid(batch, pixel, l);
         if (LeftBehindText.ShowUnpackHint(_hud, snapshot, _player)) DrawUnpackHint(batch, pixel, l);   // M6-09
-        DrawUnitInfo(batch, pixel, snapshot);   // VET-5
         _minimap.Draw(batch, pixel, l.Minimap, snapshot, _cameraTopLeft, _viewSizeWorld);
         DrawTooltip(batch, pixel);
     }
@@ -629,46 +628,6 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
             y += lh;
         }
     }
-
-    // VET-5: the info panel for exactly one selected own unit, top left of the map view.
-    private void DrawUnitInfo(SpriteBatch batch, Texture2D pixel, SimSnapshot snapshot)
-    {
-        if (_selection.Count != 1) return;
-        UnitKey key = _selection.Units[0];
-        UnitView? found = null;
-        foreach (UnitView u in snapshot.Units)
-            if (u.Player == _player && UnitKey.Of(u) == key) { found = u; break; }
-        if (found is not UnitView unit) return;
-
-        SimRules r = _source.Rules;
-        bool vet = r.Veterancy.Enabled;
-        string name;
-        int max, scale;
-        bool canRank;
-        if (unit.Kind == UnitKind.Vehicle)
-        {
-            VehicleType t = r.Vehicles[unit.TypeIndex];
-            name = CameoNames.Display(t.Id); max = t.MaxHealth; scale = t.VetThresholdPermille; canRank = t.CanRank;
-        }
-        else
-        {
-            InfantryType t = r.Infantry[unit.TypeIndex];
-            name = CameoNames.Display(t.Id); max = t.MaxHealth; scale = t.VetThresholdPermille; canRank = t.CanRank;
-        }
-
-        int rank = vet ? _source.Sim.RankOf(key.Kind, key.Id.Index) : 0;
-        int kill = vet ? _source.Sim.KillValueOf(key.Kind, key.Id.Index) : 0;
-        int next = vet ? VeterancyText.NextThreshold(r.Veterancy.Thresholds, rank, scale, canRank) : 0;
-        var lines = new List<string>(UnitInfoPanel.Lines(name, unit.Health, max, vet, rank, kill, next));
-        // M7-14: a selected own carrier shows its hangar (docked over slots)
-        if (unit.Kind == UnitKind.Vehicle && r.Vehicles[unit.TypeIndex].AircraftSlots > 0
-            && _source.Sim.ViewFor(_player).OwnCarrierHangar(key.Id, out int docked, out int slots))
-            lines.Add(CarrierReadout.Text(docked, slots));
-        UnitInfoPanel.Draw(batch, pixel, new Point(_layout.MapView.X + 8, Math.Max(_layout.MapView.Y + 8, UnitInfoTop)), lines, _ui);
-    }
-
-    /// <summary>Lowest y the single-unit info panel may start at: the game screen sets it under the other left-column panels (audit S3).</summary>
-    public int UnitInfoTop { get; set; }
 
     // H6: "POWER out / use", red while use exceeds output.
     private void DrawPowerReadout(SpriteBatch batch, Texture2D pixel, Rectangle row, bool low)
