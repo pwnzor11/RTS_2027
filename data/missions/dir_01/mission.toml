@@ -1,0 +1,97 @@
+# Directorate 01: The First Hatch (M8-10 D1, D-163). Surface openly for the first time in 2001: open a hatch on the pit, hold it against the Authority response.
+# Zones are inclusive cell rectangles [x0, y0, x1, y1]. Pre-placed actors are placed before tick 0 (setup log).
+
+[mission]
+title = "The First Hatch"
+map = "rustbelt_m2.map.toml"
+script = "mission.lua"
+briefing = "briefing.md"
+seed = 2027
+schema = 2
+act = 1
+faction = "directorate"
+next = "dir_02"
+locale = "locale.toml"
+
+[starts_with]
+tech = ["dir_reactor_vent", "dir_muster_hatch", "dir_hatch", "dir_pillbox", "dir_conscript", "dir_ashthrower"]
+
+[unlocks_on_win]
+tech = ["dir_sapper"]
+
+[[players]]
+slot = 0
+name = "Directorate"
+role = "human"
+team = 0
+cash = 3000
+tech = ["dir_reactor_vent", "dir_muster_hatch", "dir_hatch", "dir_pillbox", "dir_conscript", "dir_ashthrower"]
+
+[[players]]
+slot = 1
+name = "Authority"
+role = "ai"
+team = 1
+cash = 1500
+
+[zones.site]
+rect = [26, 22, 32, 28]
+
+[zones.picket]
+rect = [36, 10, 42, 16]
+
+# The bore shaft that broke the surface, with its first shift.
+[[actors]]
+type = "dir_shaft"
+player = 0
+cell = [23, 25]
+tag = "shaft"
+
+[[actors]]
+type = "dir_conscript"
+player = 0
+cell = [26, 24]
+
+[[actors]]
+type = "dir_conscript"
+player = 0
+cell = [26, 26]
+
+[[actors]]
+type = "dir_conscript"
+player = 0
+cell = [27, 30]
+
+[[actors]]
+type = "dir_ashthrower"
+player = 0
+cell = [24, 29]
+
+# Authority: a small base in the south-east corner (the anchor that keeps the team alive) and a forward picket.
+[[actors]]
+type = "auth_conyard"
+player = 1
+cell = [58, 58]
+tag = "enemy_yard"
+
+[[actors]]
+type = "auth_power"
+player = 1
+cell = [54, 58]
+
+[[actors]]
+type = "auth_barracks"
+player = 1
+cell = [58, 54]
+
+[[actors]]
+type = "auth_rifleman"
+player = 1
+cell = [38, 12]
+tag = "pk1"
+
+[[actors]]
+type = "auth_rifleman"
+player = 1
+cell = [40, 13]
+tag = "pk2"
