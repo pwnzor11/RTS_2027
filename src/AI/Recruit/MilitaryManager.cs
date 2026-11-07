@@ -187,8 +187,11 @@ internal sealed class MilitaryManager
     /// <summary>S14: waves launched by the mop-up rule.</summary>
     public int Mopups { get; private set; }
 
+    /// <summary>S14: the early-launch half of the mop-up. Off: measured worse (Directorate 4 v 3 decisive 54 % -> 41 %, draws unchanged).</summary>
+    public const bool MopupLaunch = false;
+
     private bool MopupDue(RecruitKnowledge k, int n) =>
-        Options.Respond && k.View.Tick >= MopupFromTick && _eLongVal == 0 && n >= MopupMinArmy && k.View.Tick - _lastWave >= MopupGapTicks;
+        MopupLaunch && Options.Respond && k.View.Tick >= MopupFromTick && _eLongVal == 0 && n >= MopupMinArmy && k.View.Tick - _lastWave >= MopupGapTicks;
 
     public MilitaryManager(int attackThreshold) => _threshold = Math.Max(1, attackThreshold);
 
@@ -372,7 +375,7 @@ internal sealed class MilitaryManager
             bool strong = WaveGate.Strong(Options.Respond, OwnValue, EnemyValueSeen, _required, n, tick, _lastWave, Options.AttackRatioPct);   // M4-16 r4: no wave into a clearly bigger army
             bool hookWave = _hookForce && n >= 1;   // M8-06: AI.Wave, once
             bool mop = !hookWave && !Hold && !HookHold && tick >= _cooldownUntil && MopupDue(k, n) && knownEnemyBuildings.Count + _scoutRoute.Count > 0;   // S14: no enemy army about: send what we have
-            if (mop) { desperate = true; Mopups++; }
+            if (mop) { desperate = true; Mopups++; }   // v2 measurement: 4v3 Directorate fell to 41 % decisive, so MopupDue is off unless MopupLaunch
             if (hookWave) { _hookForce = false; _hookWaveActive = true; _hookWaveCell = _hookForceCell; desperate = true; }
             if (hookWave || tick >= _cooldownUntil && !Hold && !HookHold && (strong || desperate) && (n >= Bias.Wave(_nextThreshold, 2) + guard
                 || (n >= Bias.Wave(MinWave, 2) + guard && tick - _lastWave >= Bias.Wave(_nextInterval, 600)) || desperate))
