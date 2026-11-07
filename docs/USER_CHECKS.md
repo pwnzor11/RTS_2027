@@ -302,9 +302,9 @@ Every faction now has four missions and an ending. Play each campaign start to f
 Pull first: `git pull --ff-only origin main` (git-lfs is installed on the PC now). Settings are kept; new options get defaults.
 - **Camera:** mouse at any screen edge scrolls; hold Shift for double speed; Home centres on your base; Ctrl+F5..F8 stores a view, F5..F8 recalls it.
 - **Clean HUD:** no tick/hash/fps line and no key hints on screen. Settings > Controls > "Show diagnostics" brings the line back.
-- **Controls page:** F1 or `?` in a game, or Pause > Settings > Controls. Opaque panel, scrollbar, Back inside the panel. Click a key and press
+- **Controls page:** F1 or `?` in a game (in the sandbox F1 is the console, so use `?`), or Pause > Settings > Controls. Opaque panel, scrollbar, Back inside the panel. Click a key and press
   a new one; a taken key offers Enter to swap / Esc to cancel; "Reset all keys to defaults". Quit and restart: rebinds are kept.
-- **Debug keys:** in skirmish and campaign F2/F3/F4/F10/`.` do nothing; in the sandbox they work (ranges moved from F5 to F10).
+- **Debug keys:** in skirmish and campaign F2/F3/F4/F9/F10/`.` do nothing; in the sandbox they work (ranges moved from F5 to F10).
 - **Orders:** right-click shows a green ring (red on an enemy). Select a factory with a rally point: flag and line. Press A: red crosshair with
   "ATTACK-MOVE"; left click (or right click) sends, Esc cancels first, a second Esc opens the pause menu. A with only a building selected does nothing.
 - **Selection card:** select one unit: card at the bottom centre with health, rank/kills, stats and order buttons showing your current keys.
@@ -317,7 +317,7 @@ Pull first: `git pull --ff-only origin main` (git-lfs is installed on the PC now
   "Camera cue on new objective" turns the short pan off.
 - **Briefings:** headings and bold render properly (no `#` or `**`); Start/Back sit at the bottom; act 2-4 openers show the act-break still.
 - **Mission tiers:** play exp_04, lb_03 or dir_02 at tier 5: clearly harder than tier 1 (exp_04: the Directorate guard marches out when the
-  Shaft or Device is hit and must be beaten).
+  Shaft or Device is destroyed and must be beaten).
 - **Voice lines (optional):** follow the instructions in chat (voice_work\wyoming_batch.py with wyoming-piper on the NAS); a generated
   line under data/audio/voice/<leader>/ plays in the mission instead of text only.
 - **Defeat rule (skirmish):** destroy an enemy's construction building, factories and harvesters but leave its defences: about 2 minutes later it

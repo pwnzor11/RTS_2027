@@ -1,11 +1,11 @@
 # Handoff: Session 15 — AI siege (Q-64), Directorate balance (Q-65), M11 batch 3
-Last commit: `docs: Session 14 handoff` on integ-s14, landed on main by the session-14 PR; check `git log -1 origin/main`
-Where things stand: **M8 is complete** (all 12 act-break stills in style C, D-169; mission tiers tuned in nine missions, D-168; objective
+Last commit: `docs: Session 14 handoff` on integ-s14, to be landed on main by the session-14 PR (at time of writing origin/main was still c770c9b and CI had not run on integ-s14); check `git log -1 origin/main`
+Where things stand: **M8 is complete except M8-18 voice lines** (all 12 act-break stills in style C, D-169; mission tiers tuned in nine missions, D-168; objective
 targets in all 17 missions; M8-15 table re-measured). **M11 (UI and input overhaul, before M9 LAN, D-171) batches 1-2 are done:** edge scroll,
 Controls page with full rebinding, gated debug keys, Home/bookmarks, order feedback, attack-move cursor, health-bar setting, power readout,
 no-power icon, minimap fit, calmer animations, units 1.25x, objective guidance, bottom-centre selection card, a polish pass; nobody has
 played it yet (screenshots only, docs/reviews/img/2026-11-07_ui/). D-166 numbers and D-173 defeat rule are in. Decisions up to D-173.
-Full suite about 3 200 tests, green on integ-s14.
+Full suite about 3 200 tests (local run by the lead; Windows CI has not run on integ-s14 yet).
 
 ## Start here (shown to the user as the plan; nothing starts until they say go)
 1. Owner play-test of the new UI (USER_CHECKS "Session 14"); fix what they report first.
