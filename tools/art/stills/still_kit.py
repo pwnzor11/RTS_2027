@@ -414,6 +414,17 @@ def setup_render(path, style, samples=48, res=(1280, 720)):
         ls = ls[0] if len(ls) else sc.view_layers[0].freestyle_settings.linesets.new("outline")
         if ls.linestyle is None:
             ls.linestyle = bpy.data.linestyles.new('outline')
+        fogo = bpy.data.objects.get("fog")
+        if fogo is not None:
+            # the haze volume is a box: keep its edges out of the outlines
+            fc = bpy.data.collections.new("fog_nolines")
+            sc.collection.children.link(fc)
+            for c in list(fogo.users_collection):
+                c.objects.unlink(fogo)
+            fc.objects.link(fogo)
+            ls.select_by_collection = True
+            ls.collection = fc
+            ls.collection_negation = "EXCLUSIVE"
         ls.select_silhouette = True
         ls.select_border = True
         ls.select_crease = True
