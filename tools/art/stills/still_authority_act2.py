@@ -113,7 +113,7 @@ def build(style):
 
     # light: low dawn sun from the east
     if mix:
-        az, el = math.radians(40.0), math.radians(6.0)      # just off the right edge of frame, 7 deg up
+        az, el = math.radians(58.0), math.radians(7.0)      # well off the right edge (side-lit, rim light), 7 deg up
         sunv = Vector((math.sin(az) * math.cos(el), math.cos(az) * math.cos(el), math.sin(el)))
         K.sky_dawn(sunv, strength=float(os.environ.get("STILL_SKY", "1.05")))
         key = K.sun((0, 0, 0), float(os.environ.get("STILL_SUN", "10.0")), colour=(1.0, 0.60, 0.34), angle=1.2)
@@ -159,16 +159,21 @@ def render(style, samples):
         # slight pixel-art feel: 2x down (box), nearest back up
         im = im.resize((640, 360), Image.BOX).resize((1280, 720), Image.NEAREST)
     elif style == "mix":
-        pass  # unpixelated so the thin outlines stay crisp
+        im = K.finish_mix(im)  # unpixelated so the thin outlines stay crisp
     else:
         # limited palette, hard bands, no dither
         from PIL import ImageEnhance
         im = ImageEnhance.Color(im).enhance(1.5)
         im = ImageEnhance.Contrast(im).enhance(1.15)
         im = im.quantize(colors=18, method=Image.Quantize.MEDIANCUT, dither=Image.Dither.NONE).convert("RGB")
-    if style == "mix" and not preview:
-        pass
     im.save(final)
+    if style == "mix" and not preview:
+        # the shipped campaign still (plain PNG, optimised, kept under 2.5 MB)
+        out = os.path.join(ROOT, "data", "images", "stills", "still_authority_act2.png")
+        os.makedirs(os.path.dirname(out), exist_ok=True)
+        im.save(out, optimize=True)
+        if os.path.getsize(out) > 2_400_000:
+            im.quantize(colors=256, method=Image.Quantize.MEDIANCUT, dither=Image.Dither.FLOYDSTEINBERG).save(out, optimize=True)
     os.remove(raw)
     print(f"RENDER {style}: {dt:.0f}s -> {final}")
     return final

@@ -271,7 +271,18 @@ def crater_mat():
     nv = _ramp(nt, nz, [(0.3, "#FFFFFF"), (0.7, "#9A8E80")])
     L(ramp.outputs[0], mm.inputs[6]); L(nv.outputs[0], mm.inputs[7])
     b = N("ShaderNodeBsdfPrincipled"); b.inputs["Roughness"].default_value = 0.95
-    L(mm.outputs[2], b.inputs["Base Color"]); L(b.outputs[0], out.inputs["Surface"])
+    L(mm.outputs[2], b.inputs["Base Color"])
+    # irregular alpha edge so the patch dissolves into the ground (no square outline)
+    en = _noise(nt, tc.outputs["Generated"], 6.0, 3).outputs["Fac"]
+    ev = N("ShaderNodeMath"); ev.operation = "MULTIPLY_ADD"; ev.inputs[1].default_value = 0.1; L(en, ev.inputs[0])
+    ev.inputs[2].default_value = -0.05
+    ed = N("ShaderNodeMath"); ed.operation = "ADD"; L(ln.outputs["Value"], ed.inputs[0]); L(ev.outputs[0], ed.inputs[1])
+    em = N("ShaderNodeMapRange"); em.inputs[1].default_value = 0.30; em.inputs[2].default_value = 0.44
+    em.inputs[3].default_value = 1.0; em.inputs[4].default_value = 0.0; em.clamp = True
+    L(ed.outputs[0], em.inputs[0])
+    tr = N("ShaderNodeBsdfTransparent")
+    ms = N("ShaderNodeMixShader"); L(em.outputs[0], ms.inputs[0]); L(tr.outputs[0], ms.inputs[1]); L(b.outputs[0], ms.inputs[2])
+    L(ms.outputs[0], out.inputs["Surface"])
     return m
 
 
@@ -757,8 +768,9 @@ def crater(loc, R=2.2, rng=None, rim=0.42, z0=0.06):
             Rr = R * (1 + 0.18 * math.sin(3 * th + 1.0) + 0.1 * math.sin(7 * th))
             z = z0 + rim * math.exp(-((r - Rr) / (0.42 * R * 0.4)) ** 2) * (0.7 + 0.5 * math.sin(5 * th + 2.0)) \
                 + (0.02 if r < Rr else 0.0) + 0.05 * math.exp(-(r / (0.35 * R)) ** 2)
-            z *= 1.0 if r < ext * 0.97 else max(0.0, (ext - r) / (ext * 0.03))
-            verts[(i, j)] = bm.verts.new((loc[0] + u, loc[1] + v, z if r < ext * 0.97 else 0.002))
+            fade = max(0.0, min(1.0, (ext - r) / (ext * 0.35)))
+            z = 0.003 + (z - 0.003) * fade
+            verts[(i, j)] = bm.verts.new((loc[0] + u, loc[1] + v, z))
     for i in range(n):
         for j in range(n):
             bm.faces.new((verts[(i, j)], verts[(i + 1, j)], verts[(i + 1, j + 1)], verts[(i, j + 1)]))
@@ -807,7 +819,7 @@ def embers(loc, n=20, spread=(6, 6, 14), r=0.4, rng=None):
     for i in range(n):
         p = (loc[0] + rng.uniform(-spread[0], spread[0]), loc[1] + rng.uniform(-spread[1], spread[1]),
              loc[2] + rng.uniform(0.5, spread[2]))
-        sphere("ember", p, r * rng.uniform(0.4, 1.0), mat("yellow", "#FFAA40", emit="#FF8A20", estr=60.0))
+        sphere("ember", p, r * rng.uniform(0.4, 1.0), mat("yellow", "#FFAA40", emit="#FF8A20", estr=150.0))
 
 
 def fire(loc, size=3.0, rng=None, light=True):
@@ -822,8 +834,8 @@ def fire(loc, size=3.0, rng=None, light=True):
         cyl("flame", (x + rng.uniform(-size, size) * 0.6, y + rng.uniform(-size, size) * 0.3, r * 0.9), r, r * 2.2,
             mat("yellow", k[0], emit=k[0], estr=k[1]), verts=7, r2=0.02)
     if light:
-        point_light((x, y - size, size * 1.5), 4.0e4 * (size / 3.0) ** 2, (1.0, 0.45, 0.16), size)
-    embers((x, y, 0), n=int(8 + size * 1.5), spread=(size * 2, size * 1.5, size * 5), r=size * 0.05, rng=rng)
+        point_light((x, y - size, size * 1.5), 1.6e4 * (size / 3.0) ** 2, (1.0, 0.45, 0.16), size)
+    embers((x, y, 0), n=int(12 + size * 2), spread=(size * 2, size * 1.5, size * 5), r=size * 0.05, rng=rng)
 
 
 # ------------------------------------------------------------------------------------------------ atmosphere
@@ -835,8 +847,15 @@ def smoke_column(loc, h=45, r0=2.5, n=9, tint="#3A3733", rng=None):
     for i in range(n):
         t = i / (n - 1)
         sm = mat(tint, rough=1.0)
-        if STYLE == "mix" and i < max(2, n // 3):
-            sm = mat("#3A2A22", rough=1.0, emit="#FF6A20", estr=0.35 * (1 - i / max(2, n // 3)))
+        if STYLE == "mix":
+            # dark soot at the base -> ash grey-brown at the top, with the lower puffs lit from the fire below
+            a, b = (0x0A, 0x08, 0x08), (0x3C, 0x36, 0x34)
+            cc = "#%02X%02X%02X" % tuple(int(a[k] + (b[k] - a[k]) * min(1.0, t * 1.15) ** 0.8) for k in range(3))
+            lo = max(2, n // 2)
+            if i < lo:
+                sm = mat(cc, rough=1.0, emit="#FF6A20", estr=1.1 * (1 - i / lo) ** 1.5 + 0.05)
+            else:
+                sm = mat(cc, rough=1.0)
         o = sphere("smoke", (x - t * t * 18 + rng.uniform(-1.5, 1.5), y + rng.uniform(-1.5, 1.5), 2 + t * h),
                    r0 * (1 + t * 2.2), sm, scale=(1, 1, 0.8))
 
@@ -929,9 +948,9 @@ def sky_dawn(sun_vec, strength=1.8):
     dot = N("ShaderNodeVectorMath"); dot.operation = "DOT_PRODUCT"; dot.inputs[1].default_value = tuple(sv)
     L(nrm.outputs[0], dot.inputs[0])
     mx = N("ShaderNodeMath"); mx.operation = "MAXIMUM"; mx.inputs[1].default_value = 0.0; L(dot.outputs["Value"], mx.inputs[0])
-    g1 = N("ShaderNodeMath"); g1.operation = "POWER"; g1.inputs[1].default_value = 14.0; L(mx.outputs[0], g1.inputs[0])
+    g1 = N("ShaderNodeMath"); g1.operation = "POWER"; g1.inputs[1].default_value = 22.0; L(mx.outputs[0], g1.inputs[0])
     g2 = N("ShaderNodeMath"); g2.operation = "POWER"; g2.inputs[1].default_value = 220.0; L(mx.outputs[0], g2.inputs[0])
-    gs = N("ShaderNodeMath"); gs.operation = "MULTIPLY_ADD"; gs.inputs[1].default_value = 1.4; L(g1.outputs[0], gs.inputs[0])
+    gs = N("ShaderNodeMath"); gs.operation = "MULTIPLY_ADD"; gs.inputs[1].default_value = 0.9; L(g1.outputs[0], gs.inputs[0])
     L(g2.outputs[0], gs.inputs[2])
     gcol = N("ShaderNodeVectorMath"); gcol.operation = "SCALE"; gcol.inputs[0].default_value = tuple(lin("#FFC98A")[:3])
     L(gs.outputs[0], gcol.inputs[3])
@@ -969,7 +988,7 @@ def sky_dawn(sun_vec, strength=1.8):
     return w
 
 
-def haze(density=0.0045, colour="#C8D0F5", aniso=0.45, top=70.0):
+def haze(density=0.0045, colour="#C8D0F5", aniso=0.2, top=70.0):
     """Aerial perspective: a big bounded volume (so the sky stays visible behind it) around the whole scene.
     Distance goes lighter and bluer; low sun makes shafts through it.  Cycles only."""
     bpy.ops.mesh.primitive_cube_add(size=1, location=(0, 380, top / 2 - 5))
@@ -1101,7 +1120,9 @@ def setup_render(path, style, samples=48, res=(1280, 720)):
                 sc.view_settings.view_transform = "AgX"
             except TypeError:
                 pass
-            sc.view_settings.look = "AgX - High Contrast" if style == "mix" else "AgX - Medium High Contrast"
+            sc.view_settings.look = "AgX - Medium High Contrast"
+            if style == "mix":
+                sc.view_settings.exposure = -0.25
         sc.render.use_freestyle = True
         sc.render.line_thickness = 1.6 * (res[0] / 1280.0 if style == "mix" else 1.0)
         fs = sc.view_layers[0].freestyle_settings
@@ -1156,6 +1177,13 @@ def setup_render(path, style, samples=48, res=(1280, 720)):
             pass
         sc.view_settings.look = "AgX - Medium High Contrast"
         sc.render.use_freestyle = False
+
+
+def finish_mix(im):
+    """Final grade for mix stills (PIL image in, PIL image out): a touch more saturation and contrast, same palette."""
+    from PIL import ImageEnhance
+    im = ImageEnhance.Color(im).enhance(1.14)
+    return ImageEnhance.Contrast(im).enhance(1.06)
 
 
 def clear():
