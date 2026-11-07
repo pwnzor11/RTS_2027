@@ -69,6 +69,7 @@ jobs:
         with:
           name: test-results
           path: "**/TestResults/*.trx"
+          retention-days: 3
           if-no-files-found: warn
 
   publish-game:
@@ -103,3 +104,4 @@ jobs:
         with:
           name: RTS_2027-win-x64-${{ github.sha }}
           path: publish/Game
+          retention-days: 7
