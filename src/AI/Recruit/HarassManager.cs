@@ -16,8 +16,6 @@ internal sealed class HarassManager
 {
     /// <summary>Raiders in a party.</summary>
     public const int PartySize = 3;
-    /// <summary>Army size before a party is formed (the waves need a body first).</summary>
-    public const int MinArmy = 14;
     /// <summary>Ticks between forming parties.</summary>
     public const int RepickTicks = 600;
 
@@ -36,7 +34,7 @@ internal sealed class HarassManager
         int tick = k.View.Tick;
         int have = squads.RaiderCount;
         if (have == 0 && _lastCount > 0) _nextPick = tick + RepickTicks;
-        if (have < PartySize && k.Army.Count >= MinArmy && tick >= _nextPick) Recruit(k, squads, PartySize - have);
+        if (have < PartySize && k.Army.Count >= planner.HarassMinArmy && tick >= _nextPick) Recruit(k, squads, PartySize - have);
         have = squads.RaiderCount;
         _lastCount = have;
         if (have == 0) return;

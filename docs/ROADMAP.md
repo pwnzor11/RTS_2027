@@ -146,7 +146,7 @@ Main menu → Map Editor.
 - [x] M4-13 Map editor + main menu entry
 - [x] M4-14 RulesOf sweep
 - [x] M4-15 Neutral map features (ruins)
-- [ ] M4-16 Integration + balance. Session 12: research how the reference repos tier their AI (docs/research/25_ai_difficulty.md). Session 8: round-3 diagnosis in docs/balance/m4_16_round3.md (main cause: higher tiers launch small waves on a timer into a bigger home army; tech spending second; round-2 2 v 1 inversion was sampling noise; 64 games per cell from now on); fixes in progress on `wp/m4-16r3-wip`, not landed. Session 7: round-2 re-measure in docs/balance/m4_16_round2.md (ladder flat or inverted, not met). Session 6 (PR #11): start-bias sim fixes + `ai match` per-game seeds (D-104); AI round 1 (D-105:
+- [ ] M4-16 Integration + balance. Session 13: tier 4 beats tier 3 in both factions (air tech and raiders wait for an army, commissar holds; D-165, docs/balance/s13_ladder.md); 5 v 1 at 68-69 %, not 90 %; Directorate draws (mop-up behaviour next). Session 12: research how the reference repos tier their AI (docs/research/25_ai_difficulty.md). Session 8: round-3 diagnosis in docs/balance/m4_16_round3.md (main cause: higher tiers launch small waves on a timer into a bigger home army; tech spending second; round-2 2 v 1 inversion was sampling noise; 64 games per cell from now on); fixes in progress on `wp/m4-16r3-wip`, not landed. Session 7: round-2 re-measure in docs/balance/m4_16_round2.md (ladder flat or inverted, not met). Session 6 (PR #11): start-bias sim fixes + `ai match` per-game seeds (D-104); AI round 1 (D-105:
   finish won games, 4-player targeting; tech hold off); rules garrison counters + Seismic Mortar (D-105); Faction.Neutral (D-100);
   8× spectator benchmark (headless 1 000 ticks/s, fine). **Still open:** re-measure the tier ladder (target ≥ 60 %), cross-faction,
   Directorate veteran mirror and 4-player matrix on the fixed starts; mirror-symmetric AI placement + seeded placement variation
@@ -229,7 +229,8 @@ systems (water locomotion, ships, landings). Lore, roster, art, AI.
 - [x] M8-13 Archive campaign unlock ids (s12; docs/archive/m8_13_unlocks.md)
 - [x] M8-17 Mission API follow-ups from the tutorial (s12): `Player.Funds` (Cash + Stored) for income checks; a script Win on the same tick as elimination must still run (check MissionCheck and the game loop stop at GameOver); tut_01 keeps a hidden reserve power plant so the enemy team survives until the script wins
 - [x] M8-12 Fan-out: acts 2-4 for all four factions plus DRAFT ending slides (s12; owner review list docs/missions/s12_owner_review.md)
-- [ ] M8-14 act-break stills; M8-15 acceptance (M8-16 ending screen done with M8-08)
+- [ ] M8-14 act-break stills (s13: briefing hook and 12 still ids, D-165; pilot in two styles, fan-out waits for Q-59) (M8-16 ending screen done with M8-08)
+- [x] M8-15 Acceptance (s13): owner play-through ("everything looked great", D-164); bot play-through of all 16 missions in one run; mid-mission save/load for every mission; tier table docs/balance/m8_15_acceptance.md (all won; tier tuning → Q-62); bot-found balance table docs/balance/s13_campaign_balance.md (Q-60)
 - [x] M8-01 Campaign plan (docs/design/12_m8_plan.md, plan only; story questions open) (session 9)
 Mission scripting/trigger system, briefing screens, tech gating, campaign flow; written once with all four factions.
 Wires Archive campaign unlocks.

@@ -355,12 +355,12 @@ public class TierCapabilityTests(ITestOutputHelper log)
     [InlineData(Faction.Directorate)]
     public void EliteScoutsAndRaidsAHarvesterItSaw(Faction f)
     {
-        // a lone enemy harvester wanders in our sight; the raiding party must be sent against it
+        // a lone enemy harvester wanders in our sight; the raiding party must be sent against it   // s13: raiders wait for a 30-unit army (14 for Directorate)
         var rig = new TierRig(f, Tier(4) with { AttackThreshold = 500, ExpansionTick = 0 }, r =>
         {
             CellCoord yard = r.Yard(0);
             r.SpawnHarvester(0, f, yard);
-            r.SpawnFoot(0, f, 16, new CellCoord(yard.X + 2, yard.Y + 5));
+            r.SpawnFoot(0, f, 32, new CellCoord(yard.X + 2, yard.Y + 5));
             r.Sim.SpawnVehicle(1, r.VehicleType("auth_scraper"), new CellCoord(yard.X + 9, yard.Y + 5));
         });
         rig.Run(900);

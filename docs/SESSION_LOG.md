@@ -233,3 +233,20 @@ Player.Funds contract (×1); one container restart mid-fan-out (Left Behind and 
 **User check:** USER_CHECKS.md "Tutorial and Survey Convoy rework", "First missions of the Directorate, Left Behind and Expedition",
 "Full campaign, all four factions"; owner review list docs/missions/s12_owner_review.md.
 **Next session should:** see HANDOFF (owner campaign review, M8-14 stills, M8-15 acceptance, M4-16).
+
+## Session 13 · 2026-11-07 (owner review answers, M8-15 acceptance, still hook and pilot, balance table, tier ladder)
+**Goal:** HANDOFF "Start here": owner review answers, bot-found balance table, M8-14 still pilot, M8-15 acceptance, M4-16. Owner answered the
+briefing, then the run was unattended.
+**Done:** owner review applied (D-164: Strand decides, all ten writer choices, atomic battery unlock kept, endings/briefings/radio lines
+signed off). M8-14: briefing still hook (`still` key, 12 ids on act 2-4 openers, height capped at a third of the window) and a two-style
+pilot (A game / B poster, contact sheet sent; Q-59). Balance table for the three bot-found issues, measured only (Q-60). M8-15: shared bot
+walks, 16-mission play-through test, mid-mission save/load for every mission, 42-run tier table (all won; Q-62). M4-16: tier 4 beats
+tier 3 again in both factions (D-165).
+**Commits:** PR #42 (land/s13-w1, CI green, not merged) and PR #43 (integ-s13 with the ladder fix and this handoff).
+**Helpers:** 5 packages (still hook, still pilot art, balance, acceptance, ladder); one container restart mid-wave (helpers resumed).
+**Problems / notes:** the session's safety check refused merging PRs without review, so both PRs wait for the owner; the repo moved
+(remote URL updated); LFS needed the repo added to the session; the owner's folder pull failed (no git-lfs on the bridge), so the owner pulls
+on Windows; a lead squash on a stale base reverted earlier merges and was caught by `git diff --stat` before anything was pushed.
+**User check:** USER_CHECKS.md "Session 13 · Campaign acceptance, briefing stills hook, tier ladder".
+**Next session should:** see HANDOFF (merge PRs, Q-59..Q-62, still fan-out, mission tiers, M4-16 mop-up).
+
