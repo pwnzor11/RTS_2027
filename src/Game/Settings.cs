@@ -44,7 +44,8 @@ public sealed record Settings(
     int LlmCallCap = 120,
     bool EdgeScroll = true,
     int ScrollSpeed = Settings.DefaultScrollSpeed,
-    bool ShowDiagnostics = false)
+    bool ShowDiagnostics = false,
+    bool HealthBarsAlways = false)   // false = "Damaged or selected" (default), true = "Always"
 {
     /// <summary>The file format version this build reads and writes.</summary>
     public const int CurrentVersion = 2;
@@ -116,7 +117,8 @@ public sealed record Settings(
             Int(root, "llm_call_cap", d.LlmCallCap, 0, 1000),
             root.TryGetValue("edge_scroll", out object? es) && es is bool esb ? esb : d.EdgeScroll,
             Int(root, "scroll_speed", d.ScrollSpeed, MinScrollSpeed, MaxScrollSpeed),
-            root.TryGetValue("show_diagnostics", out object? sd) && sd is bool sdb ? sdb : d.ShowDiagnostics);
+            root.TryGetValue("show_diagnostics", out object? sd) && sd is bool sdb ? sdb : d.ShowDiagnostics,
+            root.TryGetValue("health_bars_always", out object? hb) && hb is bool hbb ? hbb : d.HealthBarsAlways);
     }
 
     /// <summary>The settings as TOML text.</summary>
@@ -145,6 +147,7 @@ public sealed record Settings(
         sb.AppendLine(FormattableString.Invariant($"scroll_speed = {Math.Clamp(ScrollSpeed, MinScrollSpeed, MaxScrollSpeed)}"));
         sb.AppendLine("# Show the tick / hash / fps line while playing.");
         sb.AppendLine(FormattableString.Invariant($"show_diagnostics = {(ShowDiagnostics ? "true" : "false")}"));
+        sb.AppendLine(FormattableString.Invariant($"health_bars_always = {(HealthBarsAlways ? "true" : "false")}"));
         return sb.ToString();
     }
 

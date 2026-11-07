@@ -30,11 +30,31 @@ public static class SpriteStates
     /// <summary>Infantry state while moving, when the manifest has one.</summary>
     public const string Walk = "walk";
 
+    /// <summary>
+    /// R3: idle and damaged building loops run this many times slower than the manifest's <c>ticks_per_frame</c> says (the art is
+    /// generated at 5 ticks per frame, which flickers at 4 Hz on every building at once). Applied here, in the renderer, so the art
+    /// does not have to be regenerated. Units and effects are not slowed.
+    /// </summary>
+    public const int BuildingIdleSlowdown = 4;
+
+    /// <summary>
+    /// R3: how long the build animation lasts, in sim ticks (20 per second, so 70 ticks = 3.5 s), whatever the frame count or the
+    /// manifest's <c>ticks_per_frame</c>. The frames are spread evenly over this window and the last one holds.
+    /// </summary>
+    public const int BuildAnimationTicks = 70;
+
+    /// <summary>R3: the build frame step (0 .. frames-1) for a building <paramref name="ageTicks"/> old; -1 once the animation is over.</summary>
+    public static int BuildStep(int ageTicks, int frames)
+    {
+        if (frames <= 0 || ageTicks < 0 || ageTicks >= BuildAnimationTicks) return -1;
+        return Math.Min(ageTicks * frames / BuildAnimationTicks, frames - 1);
+    }
+
     /// <summary>Health fraction under which a building shows its damaged state (half health, exclusive).</summary>
     public const int DamagedDivisor = 2;
 
     /// <summary>
-    /// The frame for a building. During the build window (the first <c>frames * ticks_per_frame</c> ticks after it
+    /// The frame for a building. During the build window (the first <see cref="BuildAnimationTicks"/> ticks after it
     /// appears) the build frames play once and then hold on the last one. After that the building shows
     /// <c>damaged</c> when health is below half of <paramref name="maxHealth"/> (and the manifest has that state),
     /// otherwise <c>idle</c>, looping by tick. Ghosts always pass <paramref name="ghost"/> = true and get idle.
@@ -53,19 +73,15 @@ public static class SpriteStates
         if (!ghost && HasState(manifest, Build))
         {
             SpriteState build = manifest.State(Build);
-            int window = build.Frames * build.TicksPerFrame;
-            if (ageTicks >= 0 && ageTicks < window)
-            {
-                int step = Math.Min(ageTicks / build.TicksPerFrame, build.Frames - 1);
-                return build.First + step;
-            }
+            int step = BuildStep(ageTicks, build.Frames);
+            if (step >= 0) return build.First + step;
         }
 
         if (open && !ghost && HasState(manifest, Open)) return manifest.FrameIndex(Open, 0, Math.Max(0, tick));
 
         bool damaged = !ghost && maxHealth > 0 && health * DamagedDivisor < maxHealth;
         string state = damaged && HasState(manifest, Damaged) ? Damaged : Idle;
-        return manifest.FrameIndex(state, 0, Math.Max(0, tick));
+        return manifest.FrameIndex(state, 0, Math.Max(0, tick) / BuildingIdleSlowdown);   // R3
     }
 
     /// <summary>

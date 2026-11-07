@@ -57,6 +57,7 @@ public sealed class GameScreen : IScreen
     private UnpackPlacement? _unpack;         // M6-09: the unpack footprint follows the cursor
     private readonly Selection _selection = new();
     private readonly OrderController? _orders; // null with --demo
+    private readonly OrderFeedback _feedback = new();   // O1: order rings
     private readonly OverlayToggles _overlays = new();
     private readonly Camera _camera = new();
     private readonly DebugConsole? _console; // null with --demo
@@ -105,7 +106,7 @@ public sealed class GameScreen : IScreen
             }
             else
             {
-                _orders = new OrderController(sim, _selection);
+                _orders = new OrderController(sim, _selection) { Feedback = _feedback };
                 if (!_skirmishMode) _console = new DebugConsole(sim, _selection, _camera); // AllowDebug is off in a skirmish
             }
         }
@@ -367,6 +368,8 @@ public sealed class GameScreen : IScreen
         if (_superweapon.IsArmed && input.ConsumePressed(Keys.Escape)) _superweapon.Cancel();   // Esc leaves targeting first
         if (_unpack is not null && input.ConsumePressed(Keys.Escape)) _unpack = null;            // M6-09: ... and unpack placement
 
+        if (_orders is not null && _orders.AnyArmed && input.ConsumePressed(Keys.Escape)) _orders.CancelArmed();   // F6: Esc leaves an armed order first
+
         if (input.ConsumePressed(Keys.Escape))
         {
             _s.Screens.Push(new PauseScreen(_s, _restart, SaveTarget()));
@@ -405,6 +408,7 @@ public sealed class GameScreen : IScreen
             }
         }
 
+        _feedback.Advance((float)t.ElapsedGameTime.TotalSeconds);
         Vector2 keyDirection = Vector2.Zero;
         if (input.IsDown(Keys.Left)) keyDirection.X -= 1f;
         if (input.IsDown(Keys.Right)) keyDirection.X += 1f;
@@ -468,12 +472,15 @@ public sealed class GameScreen : IScreen
         IReadOnlyList<LeptonCoord> projectiles = _sim is null ? Array.Empty<LeptonCoord>() : _sim.Projectiles;
         var frame = new SceneFrame(snapshot, _renderUnits, projectiles, _sim?.Sim, _sim?.Rules, _overlays, _selection, DragRectangle());
 
+        _s.Scene.HealthBarsAlways = _s.Settings.HealthBarsAlways;
         _s.Scene.Draw(sb, _s.Pixel, frame, _camera, _s.Viewport);
         DrawSelectedBuilding(sb, snapshot);
+        _feedback.Draw(sb, _s.Pixel, _camera);
         DrawPackProgress(sb, snapshot);
         DrawUnpackGhost(sb);
         _sidebar?.DrawMapOverlay(sb, _s.Pixel, _camera, snapshot);
         DrawHud(sb, snapshot);
+        DrawArmedCursor(sb);
         _chat.Draw(sb, _s.Pixel, _s.UiScale, new Point(8, _s.Viewport.Height - Hud.HeightOf(1, _s.UiScale) - 12), _s.Viewport.Width - 16);
         _sidebar?.Draw(sb, _s.Pixel, snapshot);
         DrawSuperweapon(sb, snapshot.Tick);
@@ -482,6 +489,13 @@ public sealed class GameScreen : IScreen
         DrawDiveButton(sb);
         DrawSpectator(sb);
         _console?.Draw(sb, _s.Pixel, _s.Viewport);
+    }
+
+    // O2: while attack-move is armed, a red crosshair at the cursor and a small "ATTACK-MOVE" label beside it.
+    private void DrawArmedCursor(SpriteBatch sb)
+    {
+        if (_orders is not { AttackMoveArmed: true } || !MapViewport().Bounds.Contains(_mouse)) return;
+        ArmedCursor.Draw(sb, _s.Pixel, _mouse, "ATTACK-MOVE", _s.UiScale);
     }
 
     // What Save game writes to: only a skirmish or mission (the sandbox has no save header).
@@ -497,7 +511,12 @@ public sealed class GameScreen : IScreen
         }
 
         Point mouse = input.MousePosition;
-        if (input.LeftPressed)
+        if (input.LeftPressed && _orders is { AttackMoveArmed: true } && _console is not { IsOpen: true } && MapViewport().Bounds.Contains(mouse))
+        {
+            _orders.RightClick(mouse, _camera, _renderUnits);   // O2: a left click commits an armed attack-move (right click is the alias below)
+            input.ConsumeLeft();
+        }
+        else if (input.LeftPressed)
         {
             _dragStart = mouse;
             _dragging = false;
@@ -995,6 +1014,12 @@ public sealed class GameScreen : IScreen
             float left = b.Cell.X * Camera.CellPx, top = b.Cell.Y * Camera.CellPx;
             Rectangle r = _camera.ScreenRect(left, top, left + b.FootprintW * Camera.CellPx, top + b.FootprintH * Camera.CellPx);
             Shapes.Outline(sb, _s.Pixel, r, Color.White, 2);
+            // O4: a selected production building shows its rally flag and a line to it
+            if (_sim is not null && _sim.Rules.Buildings[b.TypeIndex].Produces is { } lane
+                && _sim.Sim.Production.RallyCell(SimSnapshotSource.LocalPlayer, lane) is { } rally)
+            {
+                OrderFeedback.DrawRally(sb, _s.Pixel, _camera, new Vector2(left + b.FootprintW * Camera.CellPx / 2f, top + b.FootprintH * Camera.CellPx / 2f), rally);
+            }
         }
     }
 
@@ -1086,6 +1111,8 @@ public sealed class GameScreen : IScreen
             _specRegion.Bounds = _specPanel.Bounds(scale);
         }
         _mission?.UpdateRegion(lines.Count, scale);
+        if (_sidebar is not null)   // S3: the unit info panel stacks below the debug, spectator and objectives panels
+            _sidebar.UnitInfoTop = HudStack.NextTop(8, 6, new[] { _hudRegion.Bounds, _specRegion.Bounds, _mission?.ObjectivesRegion.Bounds ?? Rectangle.Empty });
     }
 
     private static Rectangle PanelRect(Point origin, IReadOnlyList<string> lines, int scale) =>
