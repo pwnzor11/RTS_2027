@@ -49,7 +49,8 @@ public static class HowToPlayContent
         {
             "Left-click a unit to select it. Click empty ground to clear the selection.",
             "Drag a box with the left mouse button to select every one of your units inside it.",
-            "Click a building to select it; its health and what it can do show in the sidebar.",
+            "Click a building to select it; a card at the bottom of the map shows its health, power, production and rally point, with Sell and Repair.",
+            "A selected unit or group gets the same card, with its stats, order buttons and, for a group, one icon per unit (click an icon to pick that unit, Shift-click to drop it).",
             "Health bars appear over selected units and damaged buildings.",
         }),
         new GuidePage("Moving and attacking", GuideArt.Orders, new[]
