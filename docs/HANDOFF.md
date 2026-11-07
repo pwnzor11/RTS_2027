@@ -15,7 +15,7 @@ Full suite about 3 200 tests, green on integ-s14.
    same type, select-all), alert stack + minimap pings, one UI scale rule, cursor sprites, placement ghost, cameo tooltips.
 5. M11-07/08: terrain and resource readability (palette first; tiles are M10 art).
 6. If time: Q-66 auth_01..03 tiers; ObjectiveTargetTests case for a mission with mixed targeted/untargeted objectives; voice lines once the
-   owner has generated them (credits per voice, D-??? when picked); M10 later: building art depth, stills smoke (tan, not soot).
+   owner has generated them (licence check and credits per voice when picked); M10 later: building art depth, stills smoke (tan, not soot).
 
 ## Half-finished work
 - Nothing in flight; all helper branches merged into integ-s14.
