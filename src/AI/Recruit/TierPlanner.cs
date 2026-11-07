@@ -305,6 +305,14 @@ internal sealed class TierPlanner
     /// <summary>M4-12: army size that also brings the tier-3 gate forward (a rich side climbs early).</summary>
     public const int ArmyBeforeTier3 = 12;   // (tune)
 
+    /// <summary>M4-16 s13 (flag Air): army size before the air producer is added. At 8 units the Directorate air tech (with its tier gate) came out of the
+    /// army budget of tier 4 and lost to tier 3 (Directorate 4 v 3, 32 games: 4 / 16 / 12; with the air tech off 14 / 11 / 7; at 30 units 13 / 11 / 8).</summary>
+    public const int ArmyBeforeAir = 30;   // (tune) s13
+
+    /// <summary>M4-16 s13 (flag Harass): army size before a raiding party is formed. Authority raiders pulled out of a 14-unit army lost tier 4 its wave
+    /// (Authority 4 v 3, 64 games: 24 / 33 / 7 at 14, 30 / 24 / 10 at 30). Directorate raiders pay for themselves (64 games at 30: 14 / 20 / 30; at 14: 23 / 21 / 20).</summary>
+    public int HarassMinArmy => _faction.Faction == Faction.Directorate ? 14 : 30;
+
     /// <summary>M4-16 s12 tier-5 fix (flag UseUpgrades): army size before the research structure and the tier-2 gate are added to the build order. The
     /// tier-5 trace showed the tech spending at 3 minutes leaving the army half the size of a recruit's, so the first wave and then the base were lost.</summary>
     public const int ArmyBeforeTech = 30;   // (tune) s12 tier 5
@@ -343,7 +351,8 @@ internal sealed class TierPlanner
         // M4-12: anti-air once enemy aircraft were seen
         if ((SeenEnemyAir || Bias.WantsAntiAir) && _faction.AntiAirId is string aa && build.StepsOf(aa) < 2) build.Extend(aa);
         bool lateOk = k.Army.Count >= ArmyBeforeLateTech || Bias.EarlyLateTech;
-        if (_p.Air && _faction.AirProducerId is string air && lateOk && (k.View.Tier >= 2 || !up) && build.StepsOf(air) < 1)
+        bool airOk = k.Army.Count >= ArmyBeforeAir || Bias.EarlyLateTech;
+        if (_p.Air && _faction.AirProducerId is string air && airOk && (k.View.Tier >= 2 || !up) && build.StepsOf(air) < 1)
             build.Extend(air);
         if (_p.Superweapons && _faction.SuperweaponBuildingId is string sw && SuperweaponUsable(k.Rules, sw) && lateOk && (k.View.Tier >= 3 || !up)
             && build.StepsOf(sw) < 1) build.Extend(sw);
