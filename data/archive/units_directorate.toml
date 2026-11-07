@@ -25,8 +25,7 @@ field_note = "VOICE: \"THE GROUND REMEMBERS OUR DEBTS. LET IT COLLECT.\""
 body = '''
 A conscript with a pressure tank and a lance, throwing concentrated ash across the ground in front of the line. Volunteers are given a hot meal and a longer service credit. They also have a short life expectancy, and the Commissariat is not shy about it.
 '''
-# ASSUMED (M3-17) TODO (M4): replace TBD with the mission id that releases this entry.
-unlock = "campaign:TBD"
+unlock = "campaign:dir_02" # M8-13 (tune)
 
 [[entry]]
 id = "dir_sapper"
@@ -38,8 +37,7 @@ field_note = "VOICE: \"WALLS ARE ONLY A POLITE REQUEST. THE SAPPER ANSWERS.\""
 body = '''
 Sappers come from the shaft crews who dig and prop the Annex's own tunnels. With a collapse charge on a pole they undermine a wall or gate, and the structure does the rest. The Directorate considers this the most respectable trade below ground.
 '''
-# ASSUMED (M3-17) TODO (M4): replace TBD with the mission id that releases this entry.
-unlock = "campaign:TBD"
+unlock = "campaign:dir_01" # M8-13 (tune)
 
 [[entry]]
 id = "dir_informant"
@@ -51,8 +49,7 @@ field_note = "VOICE: \"A GOOD CITIZEN IS ALWAYS PRESENT. A BETTER CITIZEN IS NEV
 body = '''
 Trained by the Commissariat to lie in the ash for hours and report on what they see. They carry no weapon, only a handset and a very quiet disposition. Their reports feed the purges as often as the battle plan, which is why other conscripts are polite to them.
 '''
-# ASSUMED (M3-17) TODO (M4): replace TBD with the mission id that releases this entry.
-unlock = "campaign:TBD"
+unlock = "campaign:dir_01" # M8-13 (tune)
 
 [[entry]]
 id = "dir_commissar"
@@ -64,8 +61,7 @@ field_note = "VOICE: \"THE COMMISSARIAT SEES WHAT YOU WILL DO BEFORE YOU DO IT.\
 body = '''
 An officer of the Commissariat of Order, in a long coat and a respirator mask. Commissars arrive with the second wave, hold the line by presence and keep a pistol for those who forget they are being watched. The conscripts fight harder near one, and not only out of loyalty.
 '''
-# ASSUMED (M3-17) TODO (M4): replace TBD with the mission id that releases this entry.
-unlock = "campaign:TBD"
+unlock = "campaign:dir_02" # M8-13 (tune)
 
 [[entry]]
 id = "dir_scraper"
@@ -89,8 +85,7 @@ field_note = "VOICE: \"A HATCH WHERE THERE WAS NONE. THE INTERIOR EXTENDS ITS HA
 body = '''
 A drill-nosed tracked machine that grinds to a chosen spot, then deploys into a new Hatch. Bore crews are the closest thing the Directorate has to explorers, and they talk with a swagger that the Commissariat politely ignores.
 '''
-# ASSUMED (M3-17) TODO (M4): replace TBD with the mission id that releases this entry.
-unlock = "campaign:TBD"
+unlock = "campaign:dir_03" # M8-13 (tune)
 
 [[entry]]
 id = "dir_mole"
@@ -102,8 +97,7 @@ field_note = "VOICE: \"FIVE CITIZENS, ONE FINE DARK ROAD. NOBODY WILL SEE YOU AR
 body = '''
 An armoured burrowing carrier that takes five conscripts under the ground and puts them out where they are needed. Mole drivers are known for gallows humour and for never arriving where the Authority expects.
 '''
-# ASSUMED (M3-17) TODO (M4): replace TBD with the mission id that releases this entry.
-unlock = "campaign:TBD"
+unlock = "campaign:dir_02" # M8-13 (tune)
 
 [[entry]]
 id = "dir_agitprop"
@@ -115,8 +109,7 @@ field_note = "VOICE: \"LISTEN, CITIZENS, AND BE STEADY. THE INTERIOR IS WITH YOU
 body = '''
 A tracked vehicle bristling with horn speakers, carrying the Voice into the field. It steadies and hurries nearby conscripts and floods radio bands so Authority scouts cannot read a map. It is easy to dislike, which is partly the point.
 '''
-# ASSUMED (M3-17) TODO (M4): replace TBD with the mission id that releases this entry.
-unlock = "campaign:TBD"
+unlock = "campaign:dir_01" # M8-13 (tune)
 
 [[entry]]
 id = "dir_reactor_crawler"
@@ -128,8 +121,7 @@ field_note = "VOICE: \"THE BRIGHT SERVANT OF THE INTERIOR. DO NOT STAND CLOSE, C
 body = '''
 A slow, heavy crawler whose bare reactor core is the weapon. It throws radiation across the ground in front of it and is shielded for its crew only. When destroyed it melts down, and its crews know this. Nobody volunteers to drive one, and nobody who has driven one is ever teased about it.
 '''
-# ASSUMED (M3-17) TODO (M4): replace TBD with the mission id that releases this entry.
-unlock = "campaign:TBD"
+unlock = "campaign:dir_04" # M8-13 (tune)
 
 [[entry]]
 id = "dir_rocket_truck"
@@ -141,8 +133,7 @@ field_note = "VOICE: \"SKY AND GROUND ALIKE ARE OURS TO RECLAIM. FIRE WHEN THE L
 body = '''
 A fast truck with a rack of unguided rockets that can be aimed at ground or aircraft. Crews chalk a tally of kills on the cab, and the Commissariat does not stop them. The rockets are loaded at the Muster Hatch from a supply that is shorter than the Voice admits.
 '''
-# ASSUMED (M3-17) TODO (M4): replace TBD with the mission id that releases this entry.
-unlock = "campaign:TBD"
+unlock = "campaign:dir_03" # M8-13 (tune)
 
 [[entry]]
 id = "dir_dirigible"
@@ -154,8 +145,7 @@ field_note = "VOICE: \"THE INTERIOR HAS EYES UPON THE HEAVENS. THE SKY IS NO LON
 body = '''
 A slow, fragile envelope hung with a gondola, launched from a Mooring Tower. It sees farther than any ground unit and can drop canisters of Blackout smoke that blind the enemy's own scouts. It is the closest the Directorate has to an air force, and crews who fly it do so mostly to see the sky.
 '''
-# ASSUMED (M3-17) TODO (M4): replace TBD with the mission id that releases this entry.
-unlock = "campaign:TBD"
+unlock = "campaign:dir_04" # M8-13 (tune)
 
 [[entry]]
 id = "dir_landtrain"

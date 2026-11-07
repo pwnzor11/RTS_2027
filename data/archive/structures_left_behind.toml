@@ -187,8 +187,7 @@ a salvaged rocket pod and the memory of the winter that buried the coast, a rig-
 buries a battlefield. It is the closest the Left Behind come to revenge, and the Speaker has never been seen to
 smile when it is used.
 '''
-# ASSUMED (S9) TODO: lore says campaign; replace TBD with the mission id that releases this entry.
-unlock = "campaign:TBD"
+unlock = "campaign:lb_04" # M8-13 (tune)
 
 # session 9: assumed — confirm
 [[entry]]

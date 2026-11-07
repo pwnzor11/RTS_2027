@@ -25,8 +25,7 @@ subtitle = "Classified file"
 body = '''
 Secret: Her own brother was among the Glass Coast evacuees the Authority left behind in 1990, and she has read the decision memo. She follows orders anyway, and has quietly kept a list.
 '''
-# ASSUMED (M3-17) TODO (M4): replace TBD with the mission id that releases this entry.
-unlock = "campaign:TBD"
+unlock = "campaign:dir_04" # M8-13 (tune)
 
 [[entry]]
 id = "leader_auth_pell"
@@ -50,8 +49,7 @@ subtitle = "Classified file"
 body = '''
 Secret: His office has held the 1974 "hum" file for decades. He knew the Annex existed and chose not to dig, because digging meant admitting the Authority was not the only government left.
 '''
-# ASSUMED (M3-17) TODO (M4): replace TBD with the mission id that releases this entry.
-unlock = "campaign:TBD"
+unlock = "campaign:dir_04" # M8-13 (tune)
 
 [[entry]]
 id = "leader_auth_dray"
@@ -64,8 +62,7 @@ A conscript-engineer from Shaft Four, Dray crossed the lines carrying a reactor 
 
 Motivation: to get the people below out before the Annex runs out of air.
 '''
-# ASSUMED (M3-17) TODO (M4): replace TBD with the mission id that releases this entry.
-unlock = "campaign:TBD"
+unlock = "campaign:dir_04" # M8-13 (tune)
 
 [[entry]]
 id = "leader_auth_dray_secret"
@@ -76,8 +73,7 @@ subtitle = "Classified file"
 body = '''
 Secret: He helped design the Sunrise Device's tunnel head. He believes he alone can find where its warheads are buried and he has told no one how he knows.
 '''
-# ASSUMED (M3-17) TODO (M4): replace TBD with the mission id that releases this entry.
-unlock = "campaign:TBD"
+unlock = "campaign:dir_04" # M8-13 (tune)
 
 [[entry]]
 id = "leader_auth_fenn"
@@ -90,8 +86,7 @@ Fenn mapped the Glass Coast launch sites on foot in the Great Drift of 1990. She
 
 Motivation: finish the map, so nobody else walks into those sites blind.
 '''
-# ASSUMED (M3-17) TODO (M4): replace TBD with the mission id that releases this entry.
-unlock = "campaign:TBD"
+unlock = "campaign:dir_04" # M8-13 (tune)
 
 [[entry]]
 id = "leader_auth_fenn_secret"
@@ -102,8 +97,7 @@ subtitle = "Classified file"
 body = '''
 Secret: Her survey also found a sealed Authority depot beneath one site, with a stockpile of pre-Exchange weapons that Pell's office ordered to stay unrecorded.
 '''
-# ASSUMED (M3-17) TODO (M4): replace TBD with the mission id that releases this entry.
-unlock = "campaign:TBD"
+unlock = "campaign:dir_04" # M8-13 (tune)
 
 [[entry]]
 id = "leader_dir_harrowgate"
@@ -127,8 +121,7 @@ subtitle = "Classified file"
 body = '''
 Secret: He died in the winter of 1974. The addresses since then have been assembled from his old recordings and rewritten by a committee. The Voice knows. The Commissar chairs it.
 '''
-# ASSUMED (M3-17) TODO (M4): replace TBD with the mission id that releases this entry.
-unlock = "campaign:TBD"
+unlock = "campaign:lb_03" # M8-13 (tune)
 
 [[entry]]
 id = "leader_dir_larkin"
@@ -152,8 +145,7 @@ subtitle = "Classified file"
 body = '''
 Secret: She has been quietly adding true weather reports and small lullabies to the scripts, and she has twice rewritten an order to spare a battalion. If the Commissar finds out, she disappears.
 '''
-# ASSUMED (M3-17) TODO (M4): replace TBD with the mission id that releases this entry.
-unlock = "campaign:TBD"
+unlock = "campaign:lb_03" # M8-13 (tune)
 
 [[entry]]
 id = "leader_dir_thrall"
@@ -166,8 +158,7 @@ Thrall gives the orders that the Voice announces. Precise, courteous and unhurri
 
 Motivation: preserve the Annex, at any cost to everyone who lives in it.
 '''
-# ASSUMED (M3-17) TODO (M4): replace TBD with the mission id that releases this entry.
-unlock = "campaign:TBD"
+unlock = "campaign:lb_03" # M8-13 (tune)
 
 [[entry]]
 id = "leader_dir_thrall_secret"
@@ -178,8 +169,7 @@ subtitle = "Classified file"
 body = '''
 Secret: Thrall has found the Director's standing instruction, Order Seven, written in 1963: if the surface refuses to submit, the warheads under the launch sites are to be detonated. He is the only one who believes the Director would still want it, and he is preparing the Sunrise Device.
 '''
-# ASSUMED (M3-17) TODO (M4): replace TBD with the mission id that releases this entry.
-unlock = "campaign:TBD"
+unlock = "campaign:lb_03" # M8-13 (tune)
 
 [[entry]]
 id = "leader_dir_lund"
@@ -192,8 +182,7 @@ Lund runs the Directorate's reactors and weapons programme. Intelligent, lonely,
 
 Motivation: keep the reactors alive. She will build whatever the Commissar asks as long as it buys fuel.
 '''
-# ASSUMED (M3-17) TODO (M4): replace TBD with the mission id that releases this entry.
-unlock = "campaign:TBD"
+unlock = "campaign:lb_04" # M8-13 (tune)
 
 [[entry]]
 id = "leader_dir_lund_secret"
@@ -204,8 +193,7 @@ subtitle = "Classified file"
 body = '''
 Secret: She has known for years that the Annex cannot survive another decade, and she has been quietly preparing a way up that does not need a war. She needs someone the Commissar cannot see.
 '''
-# ASSUMED (M3-17) TODO (M4): replace TBD with the mission id that releases this entry.
-unlock = "campaign:TBD"
+unlock = "campaign:lb_03" # M8-13 (tune)
 
 
 # Expedition leaders (S11, M7-10). Text copied verbatim from docs/lore/expedition.md (owner-approved lore, D-128/D-148).
@@ -236,7 +224,7 @@ Secret: He has read the signal log of the first relief fleet. It did not vanish;
 from the south coast, and the Concordat chose not to send help. Aldersey follows his orders and keeps the log in his
 safe.
 '''
-unlock = "campaign:TBD"
+unlock = "campaign:lb_04" # M8-13 (tune)
 
 [[entry]]
 id = "leader_exp_strand"
@@ -263,7 +251,7 @@ body = '''
 Secret: There will not be another. The Concordat's council is fracturing at home, and Strand has received three
 unsent orders to recall the fleet. She has quietly kept the shipments flowing with her own signature.
 '''
-unlock = "campaign:TBD"
+unlock = "campaign:lb_04" # M8-13 (tune)
 
 [[entry]]
 id = "leader_exp_roque"
@@ -289,7 +277,7 @@ body = '''
 Secret: The sealed cores degrade faster than the specifications admit. Without spare parts that only the home
 institute can make, most of the fleet will be scrap within three years, and Roque knows which hulls will fail first.
 '''
-unlock = "campaign:TBD"
+unlock = "campaign:lb_04" # M8-13 (tune)
 
 [[entry]]
 id = "leader_exp_kell"
@@ -303,7 +291,7 @@ She runs the carrier decks like a ward, loudly and with affection, and treats ev
 
 Motivation: land every airman where they took off. She is willing to lose a campaign to keep that promise.
 '''
-unlock = "campaign:TBD"
+unlock = "campaign:lb_04" # M8-13 (tune)
 
 [[entry]]
 id = "leader_exp_kell_secret"
@@ -315,4 +303,4 @@ body = '''
 Secret: She has already taken personal command of a rescue flight into the Glass Coast against orders, and found
 people living there who were never on any manifest.
 '''
-unlock = "campaign:TBD"
+unlock = "campaign:lb_04" # M8-13 (tune)
