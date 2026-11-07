@@ -126,15 +126,20 @@ internal sealed class ObjectiveGuidance
         if (Guided() is not { } o || !_host.TryObjectiveCell(o, out CellCoord cell)) return;
         Vector2 target = camera.ScreenFromWorld(Camera.CentreOf(cell));
         ArrowPlacement p = GuidanceMath.Place(target, view, 36);
-        string label = GuidanceMath.Trim(_host.Label(o.Text), 30);
+        string full = _host.Label(o.Text);
+        string label = GuidanceMath.Trim(full, 30);
         float pulse = 0.5f + 0.5f * MathF.Sin(_time * 5f);
         if (p.OnScreen)
         {
             float r = 14f + 6f * pulse;
             Diamond(sb, pixel, target, r, Orange, 3);
             Diamond(sb, pixel, target, 5f, Gold, 2);
-            int w = BitmapFont.Measure(label, scale);
-            BitmapFont.Draw(sb, pixel, label, new Vector2(target.X - w / 2f, target.Y - r - BitmapFont.LineHeight(scale, FontWeight.Regular) - 4), Orange, scale);
+            List<string> wrapped = GuidanceMath.WrapLabel(full, 40, 2);
+            int w = wrapped.Max(l => BitmapFont.Measure(l, scale)), lh = BitmapFont.LineHeight(scale, FontWeight.Regular) + 2;
+            var backing = new Rectangle((int)(target.X - w / 2f) - 4, (int)(target.Y - r) - lh * wrapped.Count - 10, w + 8, lh * wrapped.Count + 4);
+            Shapes.Fill(sb, pixel, backing, new Color(0, 0, 0, 190));
+            for (int i = 0; i < wrapped.Count; i++)
+                BitmapFont.Draw(sb, pixel, wrapped[i], new Vector2(target.X - BitmapFont.Measure(wrapped[i], scale) / 2f, backing.Y + 2 + i * lh), Orange, scale);
             return;
         }
 

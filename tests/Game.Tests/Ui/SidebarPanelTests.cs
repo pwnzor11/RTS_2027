@@ -58,7 +58,7 @@ public sealed class SidebarPanelTests : IDisposable
     }
 
     // M4: the Structures tab opens with a "Tier 1" heading row (locked tier 2/3 previews exist), so the first cameo is one row down.
-    private Rectangle PowerCameo() => _panel.Layout.Cameo(_panel.Layout.Columns);
+    private Rectangle PowerCameo() => _panel.TierCellRect(1, 0);   // row 0 is the Tier 1 heading
 
     private PlayerHud Hud() => _source.Sim.HudFor(0);
 

@@ -57,13 +57,27 @@ public sealed class OrderController
     /// D on a garrisoned own building then sends Unload.</summary>
     public EntityId SelectedBuilding { get; set; } = EntityId.None;
 
+    /// <summary>The arming rule: attack-move arms only when at least one selected unit can attack (a building alone, or no unit, does not arm).</summary>
+    /// <param name="selectedCanAttack">For each selected unit, whether it has a weapon.</param>
+    public static bool CanArm(IEnumerable<bool> selectedCanAttack) => selectedCanAttack.Any(c => c);
+
+    private bool UnitCanAttack(UnitKey unit)
+    {
+        if (!_source.TryGetTypeIndex(unit, out int type)) return false;
+        Rts.Sim.Rules.SimRules r = _source.Rules;
+        return unit.Kind == ActorKind.Vehicle
+            ? (uint)type < (uint)r.Vehicles.Count && r.Vehicles[type].PrimaryWeapon >= 0
+            : (uint)type < (uint)r.Infantry.Count && r.Infantry[type].PrimaryWeapon >= 0;
+    }
+
     /// <summary>Handles an order action whose key went down this frame. Ignores actions that are not orders.</summary>
     public void KeyPressed(GameAction action)
     {
         switch (action)
         {
             case GameAction.AttackMove:
-                AttackMoveArmed = !AttackMoveArmed;
+                if (AttackMoveArmed) AttackMoveArmed = false;
+                else AttackMoveArmed = CanArm(_selection.Units.Select(UnitCanAttack));
                 break;
             case GameAction.Stop:
                 IssueToSelection(CommandKind.Stop);

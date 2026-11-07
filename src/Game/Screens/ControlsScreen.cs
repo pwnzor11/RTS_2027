@@ -52,7 +52,7 @@ public sealed class ControlsScreen : IScreen
 
     private const int SpeedStep = 100;
     private const int SettingCount = 3;
-    private static readonly Color PanelColour = new(0x12, 0x14, 0x10, 238);
+    private static readonly Color PanelColour = new(0x12, 0x14, 0x10, 255);
     private static readonly Color BorderColour = new(0x6A, 0x72, 0x60);
     private static readonly Color TitleColour = new(0xD8, 0xC8, 0x8A);
     private static readonly Color TextColour = new(0xDC, 0xDE, 0xD0);
@@ -252,7 +252,7 @@ public sealed class ControlsScreen : IScreen
         _scroll = Math.Clamp(_scroll, 0, Math.Max(0, AllItems.Count - _visibleLines));
         int keyCol = 0;
         foreach (ControlRow r in GameKeys.Rows) keyCol = Math.Max(keyCol, BitmapFont.Measure(r.LabelFor(KeyBindings.Default), scale));
-        keyCol = Math.Max(keyCol, BitmapFont.Measure("Left click (attack-move armed)", scale)) + 4 * scale;
+        keyCol = Math.Max(keyCol, BitmapFont.Measure("Left click (attack-move armed)", scale)) + 12 * scale;
         for (int i = 0; i < _visibleLines && _scroll + i < AllItems.Count; i++)
         {
             int index = _scroll + i;
@@ -277,14 +277,39 @@ public sealed class ControlsScreen : IScreen
             }
         }
 
+        int maxScroll = Math.Max(0, AllItems.Count - _visibleLines);
+        if (maxScroll > 0)
+        {
+            Rectangle track = ScrollTrack(list, scale);
+            Shapes.Fill(sb, _s.Pixel, track, SelectColour);
+            Rectangle thumb = ThumbRect(track, AllItems.Count, _visibleLines, _scroll);
+            Shapes.Fill(sb, _s.Pixel, thumb, BorderColour);
+        }
+
         string message = _rebind.Message;
         if (_rebind.State == RebindSession.Phase.Listening && message.Length == 0) message = "Press the new key for this action.  Esc: cancel.";
         string hint = message.Length > 0 ? message : "Up/Down select   Enter or click: change / rebind   Wheel: scroll   Esc: back";
+        if (maxScroll > 0 && _scroll < maxScroll && message.Length == 0) hint = "More below.  " + hint;
+        int room = back.X - panel.X - 2 * pad;
+        while (BitmapFont.Measure(hint, scale) > room && hint.LastIndexOf("   ", StringComparison.Ordinal) is var cut and > 0) hint = hint[..cut];
         Color hintColour = _rebind.State == RebindSession.Phase.Conflict ? WarnColour : message.Length > 0 ? KeyColour : HintColour;
         BitmapFont.Draw(sb, _s.Pixel, hint, new Vector2(panel.X + pad, panel.Bottom - pad - line + scale), hintColour, scale);
         Shapes.Fill(sb, _s.Pixel, back, SelectColour);
         Shapes.Outline(sb, _s.Pixel, back, BorderColour);
         BitmapFont.Draw(sb, _s.Pixel, "Back", new Vector2(back.X + 3 * scale, back.Y + scale), TextColour, scale);
+    }
+
+    /// <summary>The scrollbar track rectangle at the right edge of the list.</summary>
+    public static Rectangle ScrollTrack(Rectangle list, int scale) => new(list.Right + scale, list.Y, 3 * scale, list.Height);
+
+    /// <summary>The scrollbar thumb inside <paramref name="track"/> for <paramref name="total"/> lines, <paramref name="visible"/> shown, scrolled by <paramref name="scroll"/>.</summary>
+    public static Rectangle ThumbRect(Rectangle track, int total, int visible, int scroll)
+    {
+        if (total <= visible || total <= 0) return track;
+        int h = Math.Max(track.Width * 2, track.Height * visible / total);
+        int max = total - visible;
+        int y = track.Y + (track.Height - h) * Math.Clamp(scroll, 0, max) / max;
+        return new Rectangle(track.X, y, track.Width, h);
     }
 
     private void DrawRow(SpriteBatch sb, ControlRow row, KeyBindings bindings, Vector2 at, int keyCol, int scale)
@@ -319,11 +344,12 @@ public sealed class ControlsScreen : IScreen
         int line = Line(scale);
         int pad = 5 * scale;
         int width = Math.Min(vp.Width - 8 * scale, 140 * scale * BitmapFont.Advance / 2);
-        int height = vp.Height - 12 * scale;
+        int height = vp.Height - 4 * scale;
         panel = new Rectangle((vp.Width - width) / 2, (vp.Height - height) / 2, width, height);
         int top = panel.Y + pad + line + scale;
         int bottom = panel.Bottom - pad - line - scale;
-        list = new Rectangle(panel.X + pad, top, width - 2 * pad, Math.Max(line * 3, bottom - top));
-        back = new Rectangle(panel.Right - pad - 12 * scale, panel.Bottom - pad - line, 12 * scale, line);
+        list = new Rectangle(panel.X + pad, top, width - 2 * pad - 5 * scale, Math.Max(line * 3, bottom - top));
+        int backW = BitmapFont.Measure("Back", scale) + 8 * scale;
+        back = new Rectangle(panel.Right - pad - backW, panel.Bottom - pad - line, backW, line);
     }
 }

@@ -52,4 +52,34 @@ public static class GuidanceMath
 
     /// <summary>Shortens <paramref name="text"/> to at most <paramref name="max"/> characters, ending in "..." when cut.</summary>
     public static string Trim(string text, int max) => text.Length <= max ? text : max <= 3 ? text[..Math.Max(0, max)] : text[..(max - 3)] + "...";
+
+    /// <summary>
+    /// Wraps <paramref name="text"/> into at most <paramref name="maxLines"/> lines of at most <paramref name="maxChars"/> characters at word
+    /// breaks. Only when the text does not fit in that many lines is the last line cut with "...".
+    /// </summary>
+    public static List<string> WrapLabel(string text, int maxChars, int maxLines)
+    {
+        var lines = new List<string>();
+        string line = "";
+        foreach (string word in text.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+        {
+            if (line.Length > 0 && line.Length + 1 + word.Length > maxChars)
+            {
+                lines.Add(line);
+                line = word;
+            }
+            else line = line.Length == 0 ? word : line + " " + word;
+        }
+
+        if (line.Length > 0) lines.Add(line);
+        if (lines.Count > maxLines)
+        {
+            string rest = string.Join(" ", lines.Skip(maxLines - 1));
+            lines = lines.Take(maxLines - 1).ToList();
+            lines.Add(rest);
+        }
+
+        for (int i = 0; i < lines.Count; i++) lines[i] = Trim(lines[i], maxChars);
+        return lines;
+    }
 }

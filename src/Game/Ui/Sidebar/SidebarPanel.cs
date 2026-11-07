@@ -312,7 +312,8 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
         {
             int wheel = input.WheelDelta;
             if (wheel != 0) ScrollGrid(wheel > 0 ? -1 : 1);
-            int slot = l.SlotAt(_mouse);
+            int slot = _tab == SidebarTab.Upgrades ? l.SlotAt(_mouse) : -1;
+            TierEntry? tierHit = _tab == SidebarTab.Upgrades ? null : TierEntryAt(_mouse);
             if (_tab == SidebarTab.Upgrades)
             {
                 if (slot >= 0 && UpgradeAtSlot(slot) is UpgradeEntry entry)
@@ -322,7 +323,7 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
                     else if (right && UpgradeList.RightClick(_player, _hud, entry) is Command cancel) _source.Host.Issue(cancel);
                 }
             }
-            else if (slot >= 0 && EntryAtSlot(slot) is TierEntry entry)
+            else if (tierHit is TierEntry entry)
             {
                 if (entry.Locked)
                 {
@@ -423,7 +424,9 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
     private void ScrollGrid(int rows)
     {
         int total = TotalRows;
-        int max = Math.Max(0, total - _layout.Rows);
+        int max = _tab == SidebarTab.Upgrades
+            ? Math.Max(0, total - _layout.Rows)
+            : TierGrouping.MaxFirstRow(_rows, _layout.Grid.Height, _layout.CameoSize.Y, HeadingHeight(), _layout.Gap);
         _scrollRow = Math.Clamp(_scrollRow + rows, 0, max);
     }
 
@@ -498,17 +501,35 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
     private bool IsHidden(BuildOption o) =>
         o.Category == ProductionCategory.Structure && IdOf(o) == SkirmishStart.StartBuildingId;
 
-    private TierEntry? EntryAtSlot(int slot)
+    private int HeadingHeight() => BitmapFont.LineHeight(_ui * 0.85f, FontWeight.Bold) + Math.Max(6, (int)_ui * 6);
+
+    private IReadOnlyList<TierGrouping.PlacedRow> PlacedRows() =>
+        TierGrouping.Place(_rows, _scrollRow, _layout.Grid.Height, _layout.CameoSize.Y, HeadingHeight(), _layout.Gap);
+
+    // The rectangle of a cameo of a placed row (columns left to right).
+    private Rectangle TierCell(SidebarLayout l, TierGrouping.PlacedRow p, int col) =>
+        new(l.Grid.X + col * (l.CameoSize.X + l.Gap), l.Grid.Y + p.Y, l.CameoSize.X, p.Height);
+
+    /// <summary>The screen rectangle of cameo <paramref name="col"/> in grid row <paramref name="row"/> (heading rows count), or empty when not visible.</summary>
+    public Rectangle TierCellRect(int row, int col)
     {
-        int row = _scrollRow + slot / Math.Max(1, _layout.Columns), col = slot % Math.Max(1, _layout.Columns);
-        if (row < 0 || row >= _rows.Count || _rows[row].Heading) return null;
-        return col < _rows[row].Cells.Count ? _rows[row].Cells[col] : null;
+        foreach (TierGrouping.PlacedRow p in PlacedRows())
+            if (p.Row == row) return TierCell(_layout, p, col);
+        return Rectangle.Empty;
     }
 
-    private TierRow? HeadingAtSlot(int slot)
+    private TierEntry? TierEntryAt(Point at)
     {
-        int row = _scrollRow + slot / Math.Max(1, _layout.Columns);
-        return slot % Math.Max(1, _layout.Columns) == 0 && row >= 0 && row < _rows.Count && _rows[row].Heading ? _rows[row] : null;
+        SidebarLayout l = _layout;
+        foreach (TierGrouping.PlacedRow p in PlacedRows())
+        {
+            TierRow row = _rows[p.Row];
+            if (row.Heading) continue;
+            for (int c = 0; c < row.Cells.Count; c++)
+                if (TierCell(l, p, c).Contains(at)) return row.Cells[c];
+        }
+
+        return null;
     }
 
     private string IdOf(BuildOption o)
@@ -722,12 +743,12 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
 
         QueueView? queue = QueueOf(SidebarTabs.CategoryOf(_tab));
         float small = _ui * 0.75f;
-        for (int slot = 0; slot < l.VisibleSlots; slot++)
+        foreach (TierGrouping.PlacedRow placed in PlacedRows())
         {
-            Rectangle r = l.Cameo(slot);
-            if (HeadingAtSlot(slot) is TierRow heading)
+            TierRow heading = _rows[placed.Row];
+            if (heading.Heading)
             {
-                var span = new Rectangle(r.X, r.Y, l.Grid.Width, r.Height);
+                var span = new Rectangle(l.Grid.X, l.Grid.Y + placed.Y, l.Grid.Width, placed.Height);
                 Shapes.Fill(batch, pixel, new Rectangle(span.X, span.Bottom - Math.Max(2, (int)_ui * 2), span.Width, Math.Max(2, (int)_ui * 2)), heading.Locked ? Border : Gold);
                 string text = Fit(TierGrouping.HeadingText(heading), span.Width - 4, _ui * 0.85f);
                 int th = BitmapFont.LineHeight(_ui * 0.85f, FontWeight.Bold);
@@ -735,13 +756,16 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
                 continue;
             }
 
-            if (EntryAtSlot(slot) is not TierEntry tierEntry)
+            for (int col = 0; col < l.Columns; col++)
             {
-                if (_rows.Count == 0 || (_scrollRow + slot / Math.Max(1, l.Columns) < _rows.Count && _rows[_scrollRow + slot / Math.Max(1, l.Columns)].Heading)) continue;
+            Rectangle r = TierCell(l, placed, col);
+            if (col >= heading.Cells.Count)
+            {
                 Shapes.Outline(batch, pixel, r, new Color(0x26, 0x2A, 0x22));
                 continue;
             }
 
+            TierEntry tierEntry = heading.Cells[col];
             BuildOption o = tierEntry.Option;
             string id = IdOf(o);
             bool ready = SidebarCommands.LeftClick(_hud, o) == CameoClick.EnterPlacement;
@@ -797,6 +821,7 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
                 Shapes.Fill(batch, pixel, br, new Color(0, 0, 0, 200));
                 Text(batch, pixel, badge, new Vector2(br.X + 3, br.Y + 1), Gold, small, FontWeight.Bold);
             }
+            }
         }
     }
 
@@ -807,8 +832,8 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
         int lh = BitmapFont.LineHeight(scale, FontWeight.Regular);
         int w = _tooltip.Max(line => BitmapFont.Measure(line, scale, FontWeight.Regular)) + 12;
         int h = lh * _tooltip.Count + 8;
-        // Left of the cursor (the sidebar is on the right edge), inside the window.
-        int x = Math.Max(0, _mouse.X - w - 12), y = Math.Clamp(_mouse.Y - h / 2, 0, Math.Max(0, _layout.Panel.Height - h));
+        // Left of the whole sidebar (over the map edge), so it never covers the cameo grid; inside the window.
+        int x = Math.Max(0, Math.Min(_mouse.X - w - 12, _layout.Panel.X - w - 4)), y = Math.Clamp(_mouse.Y - h / 2, 0, Math.Max(0, _layout.Panel.Height - h));
         var box = new Rectangle(x, y, w, h);
         Shapes.Fill(batch, pixel, box, new Color(0, 0, 0, 230));
         Shapes.Outline(batch, pixel, box, Border);
