@@ -35,6 +35,21 @@
 #   replace_harvesters      also: the no-income rescue (cancel / sell spare structures for a harvester) and broke mode
 #   use_upgrades            also: tier climbing (tier-2 gate at 3 min, tier-3 gate at 7 min or a 12-unit army) and, at the
 #                           matching tier, the Airfield / Mooring (air) and the superweapon (superweapons)
+# D-167 (per faction, optional): tables [faction.authority], [faction.directorate], [faction.left_behind], [faction.expedition]
+#   harass_min_army         1..1000: army size before the raiding party (flag harass) is formed; missing key or table = 30.
+#                           Directorate 14, the others 30 (s13 ladder: Authority raiders pulled out of a small army cost it the wave)
+
+[faction.authority]
+harass_min_army = 30
+
+[faction.directorate]
+harass_min_army = 14
+
+[faction.left_behind]
+harass_min_army = 30
+
+[faction.expedition]
+harass_min_army = 30
 
 [recruit]
 tier = 1

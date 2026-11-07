@@ -51,4 +51,34 @@ public class DifficultyLoaderTests
         var ex = Assert.Throws<RulesException>(() => DifficultyLoader.Load("/nonexistent/difficulty.toml"));
         Assert.Single(ex.Problems);
     }
+
+    [Fact]
+    public void FactionHarassKeyIsReadAndFallsBackTo30()
+    {
+        var real = TestWorld.Tiers[3].FactionKeys;
+        Assert.Equal(14, real.HarassMinArmy((int)Rts.Sim.Rules.Faction.Directorate));
+        Assert.Equal(30, real.HarassMinArmy((int)Rts.Sim.Rules.Faction.Authority));
+        string text = File.ReadAllText(DifficultyLoader.PathBesideRules(TestWorld.RulesDir));
+        string edited = text.Replace("harass_min_army = 14", "harass_min_army = 9");
+        int cut = edited.IndexOf("\n[faction.left_behind]", StringComparison.Ordinal);
+        int end = edited.IndexOf("\n[recruit]", StringComparison.Ordinal);
+        edited = edited.Remove(cut, end - cut);   // left_behind and expedition tables missing
+        string path = Write(edited);
+        try
+        {
+            var keys = DifficultyLoader.Load(path)[4].FactionKeys;
+            Assert.Equal(9, keys.HarassMinArmy((int)Rts.Sim.Rules.Faction.Directorate));
+            Assert.Equal(30, keys.HarassMinArmy((int)Rts.Sim.Rules.Faction.LeftBehind));
+            Assert.Equal(30, keys.HarassMinArmy((int)Rts.Sim.Rules.Faction.Expedition));
+        }
+        finally { File.Delete(path); }
+        string bad = Write(text.Replace("harass_min_army = 14", "harass_min_army = 0\nbogus = 1"));
+        try
+        {
+            var ex = Assert.Throws<RulesException>(() => DifficultyLoader.Load(bad));
+            Assert.Contains(ex.Problems, p => p.Key == "faction.directorate.harass_min_army");
+            Assert.Contains(ex.Problems, p => p.Key == "faction.directorate.bogus");
+        }
+        finally { File.Delete(bad); }
+    }
 }
