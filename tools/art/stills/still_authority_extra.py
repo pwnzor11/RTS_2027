@@ -97,7 +97,7 @@ def sand_mat():
     m, nt, out = K._new_mat("sand_glass")
     N, L = nt.nodes.new, nt.links.new
     pos = N("ShaderNodeNewGeometry").outputs["Position"]
-    base = K._ramp(nt, K._noise(nt, pos, 0.5, 5).outputs["Fac"], [(0.3, "#B79F72"), (0.55, "#CDB88C"), (0.8, "#DCCBA2")])
+    base = K._ramp(nt, K._noise(nt, pos, 0.5, 5).outputs["Fac"], [(0.3, "#B8955E"), (0.55, "#CFAE76"), (0.8, "#DFC592")])
     dark = K._ramp(nt, K._noise(nt, pos, 0.11, 3).outputs["Fac"], [(0.58, (0, 0, 0, 1)), (0.7, (1, 1, 1, 1))])
     c = K._blend(nt, dark.outputs[0], base.outputs[0], K._ramp(nt, K._noise(nt, pos, 3.0, 3).outputs["Fac"], [(0.2, "#8F7A58"), (0.8, "#A89268")]).outputs[0])
     glass = K._ramp(nt, K._noise(nt, pos, 0.16, 4).outputs["Fac"], [(0.68, (0, 0, 0, 1)), (0.74, (1, 1, 1, 1))])
@@ -336,8 +336,8 @@ def sunrise_device(loc, rng=None):
     K.cyl("cradle", (x, y, 1.5), 15.0, 3.0, dark, verts=24)
     K.cyl("cradle2", (x, y, 3.3), 12.0, 1.0, K.mat("#34343A"), verts=24)
     K.cyl("redring", (x, y, 3.85), 12.2, 0.25, red, verts=24)
-    K.cyl("shaft", (x, y, 3.95), 7.0, 0.1, K.mat("yellow", "#FFE0A0", emit="#FF9A40", estr=60.0), verts=24)
-    K.cyl("beam", (x, y, 40), 5.0, 70, K.mat("yellow", "#FFB060", emit="#FF7A20", estr=3.0), verts=16, r2=1.2)
+    K.cyl("shaft", (x, y, 3.95), 7.0, 0.1, K.mat("yellow", "#FFE0A0", emit="#FF9A40", estr=25.0), verts=24)
+    K.cyl("beam", (x, y, 40), 5.0, 70, K.mat("yellow", "#FFB060", emit="#FF7A20", estr=1.2), verts=16, r2=1.2)
     for k in range(8):
         a = k / 8 * math.tau
         K.box("fin", (x + math.cos(a) * 13.5, y + math.sin(a) * 13.5, 6.0), (0.9, 0.9, 6.0), dark, rot=(0, 0, a))
@@ -346,8 +346,8 @@ def sunrise_device(loc, rng=None):
     vx, vy = x + 34, y - 8
     K.cyl("vent", (vx, vy, 13), 3.2, 26, K.mat("#34302C"), verts=12, r2=2.4)
     K.cyl("ventfire", (vx, vy, 28), 3.0, 6.0, K.mat("yellow", "#FF8A20", emit="#FF6A10", estr=40.0), verts=10, r2=0.3)
-    K.point_light((x, y - 8, 12), 3.5e6, (1.0, 0.5, 0.2), 6.0)
-    K.point_light((vx, vy - 6, 24), 1.2e6, (1.0, 0.42, 0.14), 4.0)
+    K.point_light((x, y - 8, 12), 2.5e5, (1.0, 0.5, 0.2), 6.0)
+    K.point_light((vx, vy - 6, 24), 8.0e4, (1.0, 0.42, 0.14), 4.0)
     for k in range(7):                      # perimeter wall and lamp towers
         wx = x - 70 + k * 24
         K.box("wall", (wx, y - 30, 2.5), (22, 1.2, 5.0), K.mat("#2A2A2E"))

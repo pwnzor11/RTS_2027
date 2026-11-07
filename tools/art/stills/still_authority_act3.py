@@ -17,7 +17,7 @@ import still_kit as K  # noqa: E402
 import bpy  # noqa: E402
 from mathutils import Vector  # noqa: E402
 
-SHORE_Y = 150.0
+SHORE_Y = 120.0
 
 
 def roadx(y):
@@ -34,17 +34,17 @@ def zfun(x, y):
     dx = abs(x - roadx(y))
     mask = X.smooth(9.0, 30.0, dx)
     z = mask * (0.55 * dunes(x, y) + 0.03 * max(0.0, dx - 12.0))
-    z += 4.0 * math.exp(-((x + 12) ** 2 + (y + 14) ** 2) / 200.0)          # camera dune
+    z += 9.0 * math.exp(-((x + 10) ** 2 + (y + 16) ** 2) / 260.0)          # camera dune
     z += 9.0 * math.exp(-((x + 50) ** 2 + (y - 74) ** 2) / 420.0)          # left crest (riders)
     fade = 1.0 - X.smooth(120.0, 158.0, abs(x))
-    fade *= X.smooth(-90.0, -60.0, y) * (1.0 - X.smooth(110.0, 140.0, y))
+    fade *= X.smooth(-90.0, -60.0, y) * (1.0 - X.smooth(88.0, 114.0, y))
     return z * fade
 
 
 def build():
     R = random.Random(303)
     X.flat_ground(X.sand_mat())
-    X.terrain(zfun, X.sand_mat(), xr=(-160, 160), yr=(-90, 160), step=2.5)
+    X.terrain(zfun, X.sand_mat(), xr=(-160, 160), yr=(-90, 130), step=2.5)
 
     # sea ahead and an irregular surf line
     shore = [(x, SHORE_Y + 5 * math.sin(x * 0.04) + 3 * math.sin(x * 0.11)) for x in range(-900, 901, 20)]
@@ -53,7 +53,7 @@ def build():
     X.foam_band([(x, y + 6) for x, y in shore if abs(x) < 200], 0.7, 0.07, R)
 
     # coast road: winding weathered asphalt
-    pts = [(roadx(y), y) for y in range(-90, 151, 15)]
+    pts = [(roadx(y), y) for y in range(-90, 126, 15)]
     for a, b in zip(pts[:-1], pts[1:]):
         K.road(a, b, 6.0)
 
@@ -82,7 +82,7 @@ def build():
     K.drum_cluster((9.8, 20.0), rng=R, n=4)
     K.broken_fence((roadx(-20) + 6.0, -22), (roadx(5) + 6.2, 6), rng=R)
     K.road_sign((roadx(-6) - 4.2, -6.0), yaw=0.15)
-    for k, yy in enumerate(range(-30, 140, 22)):
+    for k, yy in enumerate(range(-30, 110, 22)):
         X.survey_stake((roadx(yy) + (4.2 if k % 2 else -4.2), yy), R)
     K.tire_tracks([(roadx(y) + 0.3, y) for y in (-60, -45, -30, -15, 0, 15)], gap=1.8, width=0.3, col="#8A7650", z=0.06)
     K.debris_field(R, n=50, xr=(-14, 14), yr=(-20, 30))
@@ -97,17 +97,17 @@ def build():
         K.box("shipcab", (sx - 6, sy, 7), (8, 6, 5), K.mat("#5A6070"))
 
     # light: clear late afternoon, hard key from the left, cool sky fill, bright sea glare
-    az, el = math.radians(-58.0), math.radians(24.0)
+    az, el = math.radians(-62.0), math.radians(17.0)
     sunv = Vector((math.sin(az) * math.cos(el), math.cos(az) * math.cos(el), math.sin(el)))
-    X.sky_grad(sunv, [(0.0, "#F4DDB8"), (0.05, "#E8D2B4"), (0.14, "#BCCFD8"), (0.32, "#7FAAD2"), (0.6, "#4A82BE"), (1.0, "#274F95")],
+    X.sky_grad(sunv, [(0.0, "#F6DDB0"), (0.05, "#EAD0AC"), (0.14, "#A8C6D8"), (0.32, "#5F96CE"), (0.6, "#2F68B4"), (1.0, "#173C84")],
                strength=1.05, glow="#FFE2B0", glow_pow=(18.0, 160.0), glow_k=(0.8, 1.2),
                cloud_cols=("#FFEAC8", "#F4D6C0", "#C8CCE0"), cloud_range=(0.52, 0.70), cloud_scale=2.2,
                cloud_win=(0.04, 0.14, 0.4, 0.7), cloud_gain=1.6, cloud_stretch=7.0, cloud_alpha=0.8)
-    key = K.sun((0, 0, 0), 9.0, colour=(1.0, 0.80, 0.58), angle=1.4)
+    key = K.sun((0, 0, 0), 11.0, colour=(1.0, 0.80, 0.58), angle=1.4)
     key.rotation_euler = (-sunv).to_track_quat("-Z", "Y").to_euler()
     K.area_light((30, -40, 40), (0, 20, 2), 70, 14000.0, (0.55, 0.65, 1.0))
-    K.haze(0.0012, colour="#CFE0EA", top=45.0)
-    K.camera((-10.0, -16.0, zfun(-10, -16) + 6.0), (2.0, 80.0, 1.5), lens=27)
+    K.haze(0.0007, colour="#CFE0EA", top=45.0)
+    K.camera((-10.0, -16.0, zfun(-10, -16) + 2.5), (2.0, 80.0, 1.5), lens=27)
 
 
 if __name__ == "__main__":
