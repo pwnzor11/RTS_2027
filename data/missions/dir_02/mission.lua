@@ -34,9 +34,9 @@ function OnInit()
   Trigger.AfterDelay(600, RoadRadio)
 end
 
--- Extra garrison by tier: tiers 1-2 none, 3 one, 4 two, 5 three more riflemen spread over the posts.
+-- Extra garrison by tier: tiers 1-2 none, 3 one, 4-5 three more riflemen spread over the posts.
 function AddGarrison()
-  local extra = { 0, 0, 1, 2, 3 }
+  local extra = { 0, 0, 1, 3, 3 }
   local cells = { { x = 39, y = 13 }, { x = 11, y = 36 }, { x = 55, y = 33 } }
   for n = 1, extra[Mission.Difficulty()] do
     Actor.Create("auth_rifleman", 1, cells[n])
@@ -59,6 +59,13 @@ function PostDown()
     Dialogue.Say(SPEAKER, SPEAKER, "d2.radio.post1")
     Trigger.AfterDelay(200, ReserveWave)
   end
+  -- tiers 4-5: a second reserve answers the second post, out of the same road
+  if state.postsDown == 2 and Mission.Difficulty() >= 4 and not state.done then
+    local types = {}
+    for i = 1, (Mission.Difficulty() >= 5 and 5 or 3) do types[i] = "auth_rifleman" end
+    types[#types + 1] = "auth_jeep"
+    Reinforce.Edge(1, types, { x = 63, y = 22 + Random.Next(6) }, Map.Center("site"))
+  end
   if state.postsDown >= 3 then
     Objective.Complete("posts")
     Media.MessageKey("d2.posts.down")
@@ -68,7 +75,7 @@ end
 
 -- Convoys: tier 1..5 sets the escort by unit count only.
 function EscortSize()
-  local sizes = { 1, 1, 1, 2, 2 }
+  local sizes = { 1, 1, 1, 2, 3 }
   return sizes[Mission.Difficulty()]
 end
 
@@ -109,7 +116,7 @@ end
 
 -- The reserve answers the first fallen post. Rifles by tier; a jeep from tier 4.
 function ReserveSize()
-  local sizes = { 2, 2, 3, 4, 5 }
+  local sizes = { 1, 2, 3, 5, 7 }
   return sizes[Mission.Difficulty()]
 end
 

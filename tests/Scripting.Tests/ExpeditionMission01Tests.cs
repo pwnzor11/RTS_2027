@@ -64,7 +64,7 @@ public sealed class ExpeditionMission01Tests
         var hold = new CellCoord(depot.X + 1, depot.Y - 3);
         for (int guard = 0; m.Sim.Tick < TickLimit && !m.Sim.GameOver; guard++)
         {
-            if (guard % 50 == 0) bot.OrderAll(CommandKind.AttackMove, hold);
+            if (guard % 50 == 0) bot.OrderAll(CommandKind.AttackMove, ExpeditionMissionTestKit.EnemyNear(m.Sim, depot, 20) ?? hold);
             else bot.Idle();
         }
 
