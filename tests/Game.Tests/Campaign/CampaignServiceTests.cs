@@ -79,8 +79,8 @@ public sealed class CampaignServiceTests : IDisposable
         Assert.Equal(new[] { "dir_01", "dir_02", "dir_03", "dir_04" }, s.Campaign("directorate").Missions.Select(m => m.Id));
         Assert.Equal(new[] { CampaignMissionState.Next, CampaignMissionState.Locked, CampaignMissionState.Locked, CampaignMissionState.Locked },
             s.Missions("directorate").Select(m => m.State));
-        Assert.All(s.Missions("directorate"), m => Assert.False(m.Exists));   // placeholders
-        Assert.True(s.Missions("authority").Single().Exists);
+        Assert.All(s.Missions("directorate"), m => Assert.Equal(Directory.Exists(Path.Combine(DataDir, "missions", m.Id)), m.Exists));   // written or placeholder
+        Assert.True(s.Missions("authority").First(m => m.Id == "auth_01").Exists);
 
         Write(s, "directorate", CampaignProgress.New("directorate").WithWin("dir_01", 1, Array.Empty<string>()));
         Assert.Equal(new[] { CampaignMissionState.Completed, CampaignMissionState.Next, CampaignMissionState.Locked, CampaignMissionState.Locked },

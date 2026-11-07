@@ -1239,3 +1239,10 @@ a strength lever at tier 3, with either model or prompt. Making directives matte
 40-60 % decisive except tier 5 vs Directorate (80 %), so no rules numbers change. The Marine cost 150 → 110 variant was within noise and is
 not adopted. Evidence: docs/balance/s12_expedition_numbers.md.
 **Status:** confirmed (owner, session 12)
+
+### D-163 · 2026-11-06 · Pilot review passed: Survey Convoy and the tutorial are the mission template; full send on M8
+**Decision:** The owner played the tutorial and the schema-2 Survey Convoy and approved both ("love it all, full send"), which closes the
+M8-11 review gate for the A1 pattern: locale-keyed text, one leader on the radio addressing "Commander", primary plus one hidden bonus
+objective, one visible timer, raid size by difficulty tier, a bot test that wins at tiers 3 and 5. D1, L1 and E1 follow it now; the
+remaining missions (M8-12) fan out per faction once those three land. The M8-13 Archive unlock map is accepted as drafted.
+**Status:** confirmed (owner, session 12)

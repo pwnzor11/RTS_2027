@@ -3,6 +3,7 @@
 using Rts.Data;
 using Rts.Sim;
 using Rts.Sim.Core;
+using Rts.Sim.Rules;
 using Rts.Sim.Map;
 
 namespace Rts.Scripting;
@@ -52,8 +53,27 @@ public sealed class MissionSession
         {
             AllowDebug = false,
             Teams = def.Players.Select(p => p.Team).ToArray(),
+            Factions = FactionsOf(def),
             Extensions = new[] { host },
         };
+
+    /// <summary>
+    /// S12: the sim faction per player slot, or null when every player is Authority (the old setup, so existing missions keep their hashes).
+    /// A player's own <c>faction</c> key wins; a human player without one plays the mission's faction; everyone else is Authority.
+    /// </summary>
+    public static IReadOnlyList<Faction>? FactionsOf(MissionDef def)
+    {
+        var list = def.Players.Select(p => ToSim(p.Faction.Length > 0 ? p.Faction : p.Role == "human" ? def.Faction : "")).ToArray();
+        return list.All(static f => f == Faction.Authority) ? null : list;
+    }
+
+    private static Faction ToSim(string id) => id switch
+    {
+        "directorate" => Faction.Directorate,
+        "left_behind" => Faction.LeftBehind,
+        "expedition" => Faction.Expedition,
+        _ => Faction.Authority,
+    };
 
     /// <summary>Loads <c>data/missions/&lt;missionId&gt;</c> under <paramref name="dataDir"/> (the folder holding rules, maps and missions) and builds a new game.</summary>
     /// <exception cref="InvalidDataException">The mission files are invalid.</exception>

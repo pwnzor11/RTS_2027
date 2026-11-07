@@ -45,7 +45,7 @@ public static class MissionLoader
             if (t.TryGetValue("tech", out object? techObj) && techObj is TomlArray ta)
                 tech = ta.Select(x => (string)x!).ToList();
             players.Add(new MissionPlayer(Int(t, "slot"), Str(t, "name"), Str(t, "role"), (byte)Int(t, "team"),
-                t.ContainsKey("cash") ? Int(t, "cash") : 0, tech));
+                t.ContainsKey("cash") ? Int(t, "cash") : 0, tech, t.ContainsKey("faction") ? Faction(t) : ""));
         }
         for (int i = 0; i < players.Count; i++)
             if (players[i].Slot != i) throw new InvalidDataException("players must be listed in slot order 0..n-1");

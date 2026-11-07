@@ -1,0 +1,33 @@
+# Expedition 01 "First Landing" locale. Speaker: Commissioner Imelda Strand (leader_exp_strand), who sets the Commander's objectives by telex.
+"e1.start" = "The Command Ship is in the shallows. Deploy it on the beach."
+"e1.radio.start" = "Commander, this is Commissioner Strand. We would be grateful if you would put the flagship ashore. Deploy it on the beach."
+"e1.landed" = "Landing Depot established. The first shipment is coming in."
+"e1.radio.landed" = "The depot is down, Commander. The first shipment is on its way in. Please raise the beachhead."
+"e1.ship1" = "First shipment landing on the beach."
+"e1.ship2" = "Second shipment landing on the beach."
+"e1.radio.ship2" = "The second shipment has arrived. Use it well, Commander."
+"e1.built" = "Beachhead raised: power, billet and seawall are standing."
+"e1.radio.built" = "The beachhead stands. Please hold it."
+"e1.wave1" = "Authority patrol on the north road!"
+"e1.wave2" = "Authority column on the west track!"
+"e1.wave3" = "Authority coast watch is making a final push!"
+"e1.radio.wave1" = "The coast watch has seen us. Expect visitors from the north, Commander."
+"e1.radio.wave3" = "Last of their response, I think. Hold the line."
+"e1.craft.lost" = "A landing craft is lost."
+"e1.radio.craft_lost" = "We have lost a landing craft. Please be careful with the rest."
+"e1.lost.ship" = "The Command Ship is lost. The landing has failed."
+"e1.lost.depot" = "The Landing Depot has fallen. The beachhead is lost."
+"e1.win" = "The beachhead holds. The Second Relief Fleet is ashore."
+"e1.radio.win" = "The beachhead is ours, Commander. I will see that the Office of Return hears of it."
+
+# Objective and timer labels (the HUD shows the locale text when a label is a key)
+"e1.obj.landing" = "Deploy the Command Ship on the beach"
+"e1.obj.build" = "Raise the beachhead: a Pile House, a Billet and a Seawall Emplacement"
+"e1.obj.hold" = "Hold the beachhead until the Authority response is beaten"
+"e1.obj.craft" = "Bring both shipments in without losing a landing craft"
+"e1.timer.ship2" = "Second shipment"
+
+[voice]
+"e1.radio.start" = "voice/leader_exp_strand/e1.radio.start.ogg"
+"e1.radio.landed" = "voice/leader_exp_strand/e1.radio.landed.ogg"
+"e1.radio.win" = "voice/leader_exp_strand/e1.radio.win.ogg"

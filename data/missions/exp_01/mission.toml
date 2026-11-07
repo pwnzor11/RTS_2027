@@ -1,0 +1,75 @@
+# Expedition 01: First Landing (M8-10 pilot, act 1). Deploy the Command Ship on the beach, raise the beachhead, hold it against the Authority coast watch.
+# Zones are inclusive cell rectangles [x0, y0, x1, y1]. Pre-placed actors are placed before tick 0 (setup log).
+# Map: glass_coast_e1 (generated: glass_coast, size m, 2 players, seed 11, ocean s). Sea is east of x 87 (shallows at x 86-87); the beach is the clear land at x 72-85, y 76-86.
+
+[mission]
+title = "First Landing"
+map = "glass_coast_e1.map.toml"
+script = "mission.lua"
+briefing = "briefing.md"
+seed = 2027
+schema = 2
+act = 1
+faction = "expedition"
+next = "exp_02"
+locale = "locale.toml"
+
+[starts_with]
+tech = ["exp_pile_house", "exp_billet", "exp_marine", "exp_pillbox", "exp_beacon"]
+
+[unlocks_on_win]
+tech = ["exp_anchorage"]
+
+[[players]]
+slot = 0
+name = "Second Relief Fleet"
+role = "human"
+team = 0
+cash = 2500
+# Only these may be built (production chain prerequisites still apply). The Command Ship deploys into the Landing Depot on its own.
+tech = ["exp_pile_house", "exp_billet", "exp_marine", "exp_pillbox", "exp_beacon"]
+
+[[players]]
+slot = 1
+name = "Authority coast watch"
+role = "ai"
+team = 1
+cash = 0
+
+# The beach: land from the shore up to row 78. The depot and the beachhead go here.
+[zones.beach]
+rect = [72, 78, 90, 86]
+
+# Where the first Authority patrol comes from (north road) and the second (west track).
+[zones.roads]
+rect = [60, 56, 66, 60]
+
+[zones.west_track]
+rect = [52, 72, 57, 78]
+
+[zones.watch_post]
+rect = [62, 50, 68, 54]
+
+# The fleet: the Command Ship in the shallows off the beach.
+[[actors]]
+type = "exp_command_ship"
+player = 0
+cell = [86, 82]
+tag = "flagship"
+
+# Enemy: a small coast watch post inland (the anchor that keeps the team alive) and a few riflemen. The script sends the waves.
+[[actors]]
+type = "auth_power"
+player = 1
+cell = [66, 50]
+tag = "watch_power"
+
+[[actors]]
+type = "auth_rifleman"
+player = 1
+cell = [64, 53]
+
+[[actors]]
+type = "auth_rifleman"
+player = 1
+cell = [66, 53]
