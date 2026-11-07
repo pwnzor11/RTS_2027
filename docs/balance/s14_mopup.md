@@ -15,7 +15,8 @@ Variants were built from the worktree and run from copies of the built tool.
 ## Variants (all gated on `respond_to_attacks`, tier 1 untouched)
 1. v1: when no enemy mobile unit was seen for 3600 ticks (and tick >= 6000, army >= 6), launch a wave with the whole army at once (ignoring thresholds, gate, cooldown), at most every 1500 ticks.
 2. v2: v1 plus a shroud sweep: with nothing known and no enemy army, the wave goal is the nearest never-seen passable cell of an 8-cell grid.
-3. v3: v2 with the early launch off (`MopupLaunch = false`), sweep only. This is what is committed.
+3. v3: v2 with the early launch off (`MopupLaunch = false`), sweep only. The full AI.Tests run then failed `SupplyAiTests.TheAiNeverSitsCappedForMoreThanAMinuteInTheFirstFifteen(LeftBehind, 5)` (passes on the commit before the mop-up), so the sweep is off as well (`MopupSweep = false`).
+   Committed state: both halves compiled in but off; behaviour equals the baseline (AI.Tests 199/199).
 
 ## Table, A / B / draw (decisive %)
 
