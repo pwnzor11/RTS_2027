@@ -237,7 +237,7 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
         DrawCredits(batch, pixel, l);
         if (_supplyShown) DrawSupply(batch, pixel, l);
         if (_shipmentShown) DrawShipment(batch, pixel, l);
-        DrawPowerBar(batch, pixel, l);
+        DrawPowerBar(batch, pixel, l, snapshot.Tick);
         DrawButton(batch, pixel, l.SellButton, "SELL", Mode == SidebarMode.Sell);
         DrawButton(batch, pixel, l.RepairButton, "REPAIR", Mode == SidebarMode.Repair);
         for (int i = 0; i < l.Tabs.Count; i++)
@@ -667,13 +667,26 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
     /// <summary>Lowest y the single-unit info panel may start at: the game screen sets it under the other left-column panels (audit S3).</summary>
     public int UnitInfoTop { get; set; }
 
-    private void DrawPowerBar(SpriteBatch batch, Texture2D pixel, SidebarLayout l)
+    // H6: "POWER out / use", red while use exceeds output.
+    private void DrawPowerReadout(SpriteBatch batch, Texture2D pixel, Rectangle row, bool low)
+    {
+        if (row.Height <= 2) return;
+        float scale = _ui * 0.8f;
+        string text = "POWER " + SidebarMetrics.PowerText(_hud.PowerOut, _hud.PowerUse);
+        scale = SidebarMetrics.FitScale(sc => BitmapFont.Measure(text, sc, FontWeight.Regular), row.Width - 2, scale);
+        int h = BitmapFont.LineHeight(scale, FontWeight.Regular);
+        Text(batch, pixel, text, new Vector2(row.X + 1, row.Y + (row.Height - h) / 2f), low ? BadRed : TextColour, scale, FontWeight.Regular);
+    }
+
+    private void DrawPowerBar(SpriteBatch batch, Texture2D pixel, SidebarLayout l, int tick)
     {
         Rectangle r = l.PowerBar;
         if (r.Height <= 2) return;
         Shapes.Fill(batch, pixel, r, new Color(0x0C, 0x0E, 0x0A));
         (int fill, int use, bool low) = SidebarMetrics.PowerBar(_hud.PowerOut, _hud.PowerUse, r.Height - 2);
         Color c = low ? BadRed : GoodGreen;
+        DrawPowerReadout(batch, pixel, l.PowerRow, low);   // H6
+        if (!SidebarMetrics.PowerBarLit(low, tick)) c = new Color(0x3A, 0x10, 0x0E);   // H6: the bar blinks while low
         if (fill > 0) Shapes.Fill(batch, pixel, new Rectangle(r.X + 1, r.Bottom - 1 - fill, r.Width - 2, fill), c);
         int markY = r.Bottom - 1 - use;
         Shapes.Fill(batch, pixel, new Rectangle(r.X, Math.Clamp(markY, r.Y, r.Bottom - 1), r.Width, 2), Color.White);

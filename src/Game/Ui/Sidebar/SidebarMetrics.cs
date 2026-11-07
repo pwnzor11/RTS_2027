@@ -39,4 +39,14 @@ public static class SidebarMetrics
         while (s > floor && widthAtScale(s) > maxWidth) s -= scale * 0.05f;
         return Math.Max(s, floor);
     }
+
+    /// <summary>Sim ticks per half-period of the low-power blink (10 ticks = 0.5 s at 20 ticks per second).</summary>
+    public const int PowerBlinkHalfPeriodTicks = 10;
+
+    /// <summary>H6: the power readout text, "Output / Use" (negative numbers count as 0).</summary>
+    public static string PowerText(int powerOut, int powerUse) =>
+        FormattableString.Invariant($"{Math.Max(0, powerOut)} / {Math.Max(0, powerUse)}");
+
+    /// <summary>H6: whether the low-power bar is lit at this tick. Always lit when power is not low.</summary>
+    public static bool PowerBarLit(bool low, int tick) => !low || (Math.Max(0, tick) / PowerBlinkHalfPeriodTicks) % 2 == 0;
 }
