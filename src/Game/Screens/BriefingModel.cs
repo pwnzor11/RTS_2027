@@ -4,6 +4,7 @@ using System.Text.RegularExpressions;
 using Microsoft.Xna.Framework;
 using Rts.Data;
 using Rts.Game.Archive;
+using Rts.Game.Campaign;
 using Rts.Game.Sandbox;
 using Rts.Scripting;
 using Rts.Sim.Rules;
@@ -31,7 +32,8 @@ public sealed class BriefingModel
     /// <param name="objectives">Objective texts to preview (primary first); may be empty.</param>
     /// <param name="tierNames">Five difficulty names, tier 1 first.</param>
     /// <param name="tier">The starting tier (1..5).</param>
-    public BriefingModel(string title, string faction, string text, IReadOnlyList<string> objectives, IReadOnlyList<string> tierNames, int tier)
+    /// <param name="still">Act-break still id shown above the text, or null for none.</param>
+    public BriefingModel(string title, string faction, string text, IReadOnlyList<string> objectives, IReadOnlyList<string> tierNames, int tier, string? still = null)
     {
         Title = title;
         Faction = faction;
@@ -39,7 +41,11 @@ public sealed class BriefingModel
         Objectives = objectives;
         TierNames = tierNames;
         Tier = Math.Clamp(tier, MinTier, MaxTier);
+        Still = still;
     }
+
+    /// <summary>Act-break still id (<c>data/images/stills/&lt;id&gt;.png</c>), or null when the mission has none.</summary>
+    public string? Still { get; }
 
     /// <summary>Mission title.</summary>
     public string Title { get; }
@@ -123,6 +129,13 @@ public sealed class BriefingModel
         }
     }
 
+    // The mission's still from its faction's campaign file; null when the file is missing or unreadable or the mission is not listed in it.
+    private static string? StillOf(string dataDir, string faction, string missionId)
+    {
+        try { return CampaignDef.Load(CampaignDef.PathOf(dataDir, faction)).Missions.FirstOrDefault(m => m.Id == missionId)?.Still; }
+        catch (Exception e) when (e is InvalidDataException or IOException) { return null; }
+    }
+
     /// <summary>Builds the model for a mission folder: the text from the briefing file (or the locale key "briefing" when the file is missing).</summary>
     public static BriefingModel Load(string dataDir, string rulesDir, string missionId, string faction, int tier, ArchiveCatalog catalog, ArchiveProgress archive)
     {
@@ -131,7 +144,8 @@ public sealed class BriefingModel
         string briefingPath = Path.Combine(folder, def.BriefingFile);
         string text = File.Exists(briefingPath) ? File.ReadAllText(briefingPath)
             : def.Locale.Contains("briefing") ? def.Locale.Resolve("briefing") : "";
-        return new BriefingModel(def.Title, def.Faction.Length > 0 ? def.Faction : faction, ResolveLinks(text, catalog, archive),
-            PreviewObjectives(rulesDir, missionId), LoadTierNames(rulesDir), tier);
+        string theme = def.Faction.Length > 0 ? def.Faction : faction;
+        return new BriefingModel(def.Title, theme, ResolveLinks(text, catalog, archive),
+            PreviewObjectives(rulesDir, missionId), LoadTierNames(rulesDir), tier, StillOf(dataDir, theme, missionId));
     }
 }

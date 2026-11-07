@@ -11,12 +11,15 @@ id = "exp_01"
 
 [[missions]]
 id = "exp_02"
+still = "still_expedition_act2"
 requires = ["exp_01"]
 
 [[missions]]
 id = "exp_03"
+still = "still_expedition_act3"
 requires = ["exp_02"]
 
 [[missions]]
 id = "exp_04"
+still = "still_expedition_act4"
 requires = ["exp_03"]
