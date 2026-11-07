@@ -1293,3 +1293,11 @@ Mission wave sizes are mission data, approved here as a class; unit rules (D-152
 **Why:** M8-15 table: tier barely changed win time or losses in most missions; three missions were too easy at every tier.
 **Alternatives:** leave the campaign gentle.
 **Status:** owner decision (session 14)
+
+### D-169 · 2026-11-07 · Act-break still style: C, mix, with more detail (Q-59)
+**Decision:** act-break stills use style C: game-style colours and lighting with thin outlines, no pixelation, and a richer scene than the
+pilot (owner: "add more detail, it looks bland, monotone and one-dimensional"): dawn key light with long shadows, sky gradient, atmospheric
+depth, foreground/mid/background layers, colour variety, more props and effects. A second pilot (C v2) is approved before the fan-out.
+**Why:** owner pick from the A / B / C contact sheet (session 14).
+**Alternatives:** A game-style (soft, blurs small shapes); B poster (strongest look, furthest from the game palette).
+**Status:** owner decision (session 14)

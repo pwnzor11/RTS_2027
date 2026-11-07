@@ -4,13 +4,11 @@ Context and trade-offs for every question are in `docs/research/00_SYNTHESIS.md`
 file cited after each question. Recommendations are the lead's, from the research.
 
 ## Open
-- 🟡 **Q-59 · Act-break still style.** Pilot `still_authority_act2` in two styles (contact sheet sent in session 13): **A, game-style**
-  (same render look as the in-game art) / B, poster (stylised) / a mix of the two. Same camera and layout in both. Recommendation: **A** (one look across briefing and game). Blocks the M8-14 fan-out.
 
 ## Answered
 - Q-60, Q-61, Q-62 · 2026-11-07 · Owner: Q-60 all three recommendations (ash contaminate 40 -> 20, no SAM rule change + check the
   low-power warning, Conscript health 40 -> 50) → D-166; Q-61 make it a per-faction setting in difficulty.toml → D-167; Q-62 tune the
-  mission tiers → D-168. Q-59 still open: owner wants to see the examples first.
+  mission tiers → D-168. Q-59 · owner picked C (mix: game look + thin outlines) "but add more detail", from a 3-style contact sheet → D-169.
 - Q-56, Q-57, Q-58 · 2026-11-06 · Owner played the campaign ("everything looked great"): Strand decides confirmed, all ten writer choices kept,
   atomic battery unlock kept, endings/briefings/radio lines signed off → D-164. Bot-found balance issues: table first (D-152).
 - Q-55, Q-49 (Q-A..Q-I) · 2026-11-06 · Docks wholly on water → D-153; M8 story answers → D-154, Left Behind lore → D-155.
