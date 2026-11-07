@@ -4,6 +4,13 @@ Context and trade-offs for every question are in `docs/research/00_SYNTHESIS.md`
 file cited after each question. Recommendations are the lead's, from the research.
 
 ## Open
+- 🟡 **Q-64 · Directorate draws after D-173.** The no-rebuild rule barely changed the draws (1 game in 128): the drawn side still owns
+  its shaft and factories behind a dozen defences, so these are base stalemates (docs/balance/s14_mopup.md "After D-173"). Options:
+  **AI siege behaviour (gather a bigger force, bring long-range units against defences, target the shaft and factories first), measured
+  before/after** / a stricter rule (no income for 3 minutes = defeated, even with buildings) / accept some draws at 30 000 ticks.
+- 🟡 **Q-65 · Directorate is the weak faction** (docs/balance/s14_laptop_baseline.md): Left Behind beats it 56-6 at tier 3, Authority 37-7 at
+  tier 5. Re-measure with D-166 first, then a measured table of options (D-152: owner approves each number). **Re-measure, then table** / leave.
+- ⚪ **Q-66 · auth_01..auth_03 tiers.** Tier 5 is not harder than tier 3 there (M8-15 table, s14). **Tune them like the other nine** / leave.
 
 ## Answered
 - Q-63 · 2026-11-07 · Owner: rule 1, remaining units don't count → D-173.

@@ -1,36 +1,31 @@
-# Handoff: Session 14 — owner picks (stills, balance numbers), still fan-out, mission tiers, M4-16
-Last commit: `docs: Session 13 handoff` on integ-s13 (PR #43, which also carries PR #42's commits); check `git log -1 origin/main`
-Where things stand: **the M8 campaign is owner-approved and bot-accepted.** The owner played it ("everything looked great"); endings,
-briefings and radio lines are signed off (D-164). M8-15: a bot play-through of all 16 missions in one run, mid-mission save/load for
-every mission, and a 42-run tier table (docs/balance/m8_15_acceptance.md): every mission won at every tier, but tier barely changes
-win time and exp_01, exp_04, lb_03 are too easy. Briefings can show an act-break still (`still = …` on the act 2-4 openers; no images
-shipped yet, so nothing shows); the pilot (A game-style, B poster) waits for the owner's pick (Q-59). Three bot-found balance issues are
-measured with a table (docs/balance/s13_campaign_balance.md, Q-60); no rule number changed. M4-16: tier 4 now beats tier 3 in both
-factions (docs/balance/s13_ladder.md) but the margins are thin and 5 v 1 is 68-69 %, not 90 %. Decisions up to D-165.
-Full suite 3 059 tests, all passing (Game 979, Sim 1475, AI 198, Scripting 284, Llm 119, Tools 4).
+# Handoff: Session 15 — AI siege (Q-64), Directorate balance (Q-65), M11 batch 3
+Last commit: `docs: Session 14 handoff` on integ-s14, landed on main by the session-14 PR; check `git log -1 origin/main`
+Where things stand: **M8 is complete** (all 12 act-break stills in style C, D-169; mission tiers tuned in nine missions, D-168; objective
+targets in all 17 missions; M8-15 table re-measured). **M11 (UI and input overhaul, before M9 LAN, D-171) batches 1-2 are done:** edge scroll,
+Controls page with full rebinding, gated debug keys, Home/bookmarks, order feedback, attack-move cursor, health-bar setting, power readout,
+no-power icon, minimap fit, calmer animations, units 1.25x, objective guidance, bottom-centre selection card, a polish pass; nobody has
+played it yet (screenshots only, docs/reviews/img/2026-11-07_ui/). D-166 numbers and D-173 defeat rule are in. Decisions up to D-173.
+Full suite about 3 200 tests, green on integ-s14.
 
 ## Start here (shown to the user as the plan; nothing starts until they say go)
-1. Land the session-13 work if the owner has not yet: merge PR #43 (it contains PR #42; #42 then shows as merged). The session's
-   safety check refused merges without review this time, so the owner merges, or allows the merge in the session.
-2. Owner picks: Q-59 still style (A / B / mix, from the pilot contact sheet sent in chat); Q-60 balance numbers (one line per number); Q-61, Q-62.
-3. M8-14 still fan-out (11 more stills, 3 per faction) in the picked style; art via the owner's PC (D-084). Then M8 acceptance in the roadmap.
-4. Apply the approved balance numbers (Q-60) and re-run the S13 balance test and the M8-15 table.
-5. Mission tiers (Q-62): make tier visible in the missions where it does nothing (dir_02, dir_04, lb_01, lb_03, lb_04, auth_04, exp_03)
-   and harden exp_01, exp_04, lb_03; re-run the M8-15 table.
-6. M4-16: mop-up behaviour (attack-move to the last known structures once the enemy has no army) for the Directorate draws; 5 v 1 to 90 %.
-7. If time: writers' API ideas (keep an enemy alive without a hidden reserve building; `Reinforce.Rig` park-only; detect a superweapon
-   shot); M7-14 close-out line; voice set-up if wanted.
+1. Owner play-test of the new UI (USER_CHECKS "Session 14"); fix what they report first.
+2. Q-64: Directorate draws are base stalemates. Recommended: AI siege behaviour, measured with the laptop script and `ai match`.
+3. Q-65: re-measure Directorate vs Left Behind / Authority with D-166 (owner's laptop: re-run balance_runs\run_s14_baseline.ps1), then a table.
+4. M11 batch 3 from docs/reviews/2026-11-07_ui_input_audit.md section 6.3: selection toolkit (shift-add, control groups, double-click
+   same type, select-all), alert stack + minimap pings, one UI scale rule, cursor sprites, placement ghost, cameo tooltips.
+5. M11-07/08: terrain and resource readability (palette first; tiles are M10 art).
+6. If time: Q-66 auth_01..03 tiers; ObjectiveTargetTests case for a mission with mixed targeted/untargeted objectives; voice lines once the
+   owner has generated them (credits per voice, D-??? when picked); M10 later: building art depth, stills smoke (tan, not soot).
 
 ## Half-finished work
-- PR #42 (land/s13-w1, CI green) and PR #43 (land/s13-w2 = integ-s13 + this handoff) are open, not merged (see step 1).
-- Still pilot: scripts in tools/art/stills/ (still_kit.py, still_authority_act2.py); renders are git-ignored scratch only
-  (scratch/stills/ in the s13-stillpilot worktree, gone with the container); re-render with the script.
-- Archive upgrade field notes marked "DRAFT (lead, session 12)" and the session-11 "PENDING owner text" entries are still open.
+- Nothing in flight; all helper branches merged into integ-s14.
+- Mop-up AI code is in MilitaryManager but switched off (MopupLaunch/MopupSweep = false, docs/balance/s14_mopup.md).
+- Voice lines: tool ready (tools/voice/wyoming_batch.py, copy in the owner's voice_work\); waiting on the owner's voice picks + licence check.
 
 ## Waiting on the user
-- Merge PR #43 (or #42 then #43). Then on the PC: `git pull --ff-only origin main` (the folder pull failed from the cloud: no git-lfs in the bridge VM).
-- Answer Q-59..Q-62 (docs/OPEN_QUESTIONS.md).
-- Delete merged remote branches once happy: `land/s13-w1`, `land/s13-w2`, `integ-s13`, and the session-12 list if still there. Keep `restore/pre-s13` until happy.
+- Play the new UI; answer Q-64..Q-66.
+- Optional: delete old CI artifacts with the gh command from chat; delete merged branches (land/s13-*, integ-s13, wp/s13-handoff, the
+  session-12 list, integ-s14 and all wp/s14-* after the PR lands); keep restore/pre-s14 until happy.
 
 ## How to run this session
 - Lead: Opus for build sessions (the owner wants long unattended overnight builds); Sonnet for a pure review/question session. Helpers: Haiku default; Sonnet for sim core,
@@ -58,6 +53,15 @@ Full suite 3 059 tests, all passing (Game 979, Sim 1475, AI 198, Scripting 284, 
   use Debug/Place commands); golden: `RTS_UPDATE_GOLDEN=1 dotnet test tests/Sim.Tests --filter Golden`.
 - Never copy EA code (D-050). AI never runs inside Step (D-051). Lua only via ISimExtension (D-071). No floats or
   dictionary iteration in src/Sim. Scheduling tools stay forbidden for helpers (one created a stray task this session).
+- Session 14 lessons:
+  - 2 CPUs + 6-8 code helpers = 30-90 min dotnet lock waits. Brief helpers to run builds/tests in the FOREGROUND with a 600 000 ms timeout
+    (or poll); a helper that backgrounds a queued test and ends its turn hands back "unverified" work. Stop such helpers and verify at merge.
+  - Give every helper a private scratch dir (/tmp/claude-0/<pkg>/): one overwrote another's measurement script in the shared /tmp.
+  - Overlapping UI packages: let ONE integration package merge them, build, and fix (s14-ui3 did ui1+ui2+obj+scale cleanly).
+  - The game runs under xvfb for screenshots (recipe in the UI audit "Method"; box-drag needs xdotool mousemove_relative while held).
+  - Stills: Cycles renders ~10 min each on one blender lock; three faction helpers in parallel worked (scenes built while others render).
+  - Safety check refused: bulk deletes of CI artifacts, force-push, installing binaries on the owner's PC. Don't retry; hand the owner the command.
+  - D-173 lesson: check what a diagnosis actually measured (here "13-15 structures" included the shaft and factories) before recommending a rule.
 - Session 5 lessons:
   - Always `flock -o` (D-096) and install the dotnet wrapper first: /usr/local/bin/dotnet sets DOTNET_CLI_USE_MSBUILD_SERVER=0,
     MSBUILDDISABLENODEREUSE=1, UseSharedCompilation=false, then execs /usr/bin/dotnet. Without it VBCSCompiler holds the lock.
