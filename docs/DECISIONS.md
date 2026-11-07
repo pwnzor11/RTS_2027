@@ -1269,3 +1269,27 @@ tier 4 v 3 decisive 42 -> 56 % (Authority), 27 -> 52 % (Directorate); tier 5 v 4
 (Directorate 4 v 3 falls to 41 %).
 **Status:** assumed — confirm (lead, session 13, owner away)
 
+
+### D-166 · 2026-11-07 · Q-60 balance numbers (owner-approved, D-152)
+**Decision:** `dir_ash` warhead contaminate 40 -> 20; `dir_conscript` max_health 40 -> 50; no rule change for the bomber vs SAMs case
+(unpowered SAMs explain it), but the low-power warning must be visible to the player.
+**Why:** docs/balance/s13_campaign_balance.md: halving the ash cuts own Conscript losses by about a third and keeps the cloud; 50 health
+evens Conscripts vs Riflemen without a price change.
+**Alternatives:** radiation immunity for Conscripts/Ashthrowers (immune to all radiation); Conscript cost 80 -> 60; `exp_sam` without power.
+**Status:** owner decision (session 14)
+
+### D-167 · 2026-11-07 · Raiding threshold becomes a per-faction AI setting (Q-61)
+**Decision:** `TierPlanner.HarassMinArmy` moves from code into data/ai/difficulty.toml as a per-faction key; values stay 14 (Directorate)
+and 30 (the others), so behaviour and hashes do not change. Supersedes the "in code" part of D-165 (2).
+**Why:** owner prefers tunable data over a code patch.
+**Alternatives:** keep it in code (D-165 as written).
+**Status:** owner decision (session 14)
+
+### D-168 · 2026-11-07 · Mission difficulty tiers are tuned (Q-62)
+**Decision:** mission scripts get tier knobs that the player can feel (more, earlier or stronger enemy waves at tiers 4-5, lighter at 1-2)
+in dir_02, dir_04, lb_01, lb_03, lb_04, auth_04, exp_03, and exp_01, exp_04, lb_03 are hardened at every tier (exp_04 gets a harder finale).
+Every mission must still be won by the bot walk at every tier inside its limit; the M8-15 table is re-measured afterwards.
+Mission wave sizes are mission data, approved here as a class; unit rules (D-152) are not touched.
+**Why:** M8-15 table: tier barely changed win time or losses in most missions; three missions were too easy at every tier.
+**Alternatives:** leave the campaign gentle.
+**Status:** owner decision (session 14)
