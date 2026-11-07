@@ -1308,3 +1308,10 @@ The tooltip text and the event-feed message proposed with it were not taken (own
 **Why:** an unpowered SAM held fire with no hint to the player (docs/balance/s13_campaign_balance.md).
 **Alternatives:** tooltip text change; event-feed "Low power." message; no change.
 **Status:** owner decision (session 14)
+
+### D-171 · 2026-11-07 · Build order: M11 UI and input overhaul before M9 LAN multiplayer
+**Decision:** after M8 closes, the next milestone is M11 (UI and input overhaul, from the owner's campaign feedback), then M9 LAN.
+Amends the D-087 build order; priorities (campaign, skirmish, LAN) are unchanged in importance.
+**Why:** owner: the UI and controls make the game hard to read and navigate; fixing them makes every later milestone easier to play and test.
+**Alternatives:** LAN first (D-087 order).
+**Status:** owner decision (session 14)

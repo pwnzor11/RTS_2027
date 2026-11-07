@@ -236,7 +236,7 @@ systems (water locomotion, ships, landings). Lore, roster, art, AI.
 Mission scripting/trigger system, briefing screens, tech gating, campaign flow; written once with all four factions.
 Wires Archive campaign unlocks.
 
-## M11 · UI and input overhaul (owner feedback 2026-11-07; build order vs M9 to confirm)
+## M11 · UI and input overhaul (owner feedback 2026-11-07; built before M9, D-171)
 Source: docs/reviews/2026-11-07_owner_campaign_feedback.md. Audit: docs/reviews/2026-11-07_ui_input_audit.md (s14).
 - [ ] M11-01 Adversarial UI and input audit, with layout options for the owner (s14)
 - [ ] M11-02 Edge scrolling (mouse at the screen edge pans the view)
