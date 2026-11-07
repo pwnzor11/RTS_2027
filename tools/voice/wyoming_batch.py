@@ -34,8 +34,22 @@ try:
 except ImportError:
     sys.exit("Missing package: run  pip install wyoming")
 
-ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-VOICE_DIR = os.path.join(ROOT, "tools", "voice")
+def _find_root():
+    """The RTS_2027 folder: the first folder above this script (or the current folder) that holds data/missions."""
+    for start in (os.path.dirname(os.path.abspath(__file__)), os.getcwd()):
+        d = start
+        while True:
+            if os.path.isdir(os.path.join(d, "data", "missions")):
+                return d
+            parent = os.path.dirname(d)
+            if parent == d:
+                break
+            d = parent
+    sys.exit("run this from the RTS_2027 folder (data/missions not found)")
+
+
+ROOT = _find_root()
+VOICE_DIR = os.path.dirname(os.path.abspath(__file__))
 AUDITION_TEXT = ("Wrenfield. Directorate raiders are working the roads. "
                  "Put two Turrets on the crossing and keep the yard standing, Commander.")
 
