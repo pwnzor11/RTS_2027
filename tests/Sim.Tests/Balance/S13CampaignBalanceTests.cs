@@ -50,21 +50,21 @@ public sealed class S13CampaignBalanceTests
         double perKill = real.EnemyDead == 0 ? double.NaN : (double)real.ConsDead / real.EnemyDead;
         _out.WriteLine($"ASH {(big ? "BIG " : "")}{label,-32} | real fight: enemy dead {real.EnemyDead}/{nEnemy} (cleared t={real.TicksEnemyCleared}), own Conscripts dead {real.ConsDead}/{nCons} (HP lost {real.ConsHpLost}), " +
                        $"own Ashthrowers dead {real.AshDead}/{nAsh}, own deaths per enemy kill {perKill:F2} | cloud only (enemy rifles at 0 damage): " +
-                       $"enemy dead {cloud.EnemyDead}/{nEnemy}, Conscripts dead {cloud.ConsDead}/{nCons} (HP lost {cloud.ConsHpLost}/{nCons * 40}), Ashthrowers dead {cloud.AshDead}/{nAsh} (HP lost {cloud.AshHpLost}/{nAsh * 50})");
+                       $"enemy dead {cloud.EnemyDead}/{nEnemy}, Conscripts dead {cloud.ConsDead}/{nCons} (HP lost {cloud.ConsHpLost}/{nCons * 50}), Ashthrowers dead {cloud.AshDead}/{nAsh} (HP lost {cloud.AshHpLost}/{nAsh * 50})");
         Assert.True(real.EnemyDead >= 0 && cloud.EnemyDead >= 0);
     }
 
     [Fact]
     public void Ashthrower_FriendlyFire_NowAndCandidates()
     {
-        PrintAsh("now (contaminate 40)", Array.Empty<S13Edit>());
+        PrintAsh("now (contaminate 20, D-166)", Array.Empty<S13Edit>());
         PrintAsh("contaminate 20", new[] { E("warheads.toml", "dir_ash", "contaminate", "20") });
         PrintAsh("contaminate 0 (no cloud)", new[] { E("warheads.toml", "dir_ash", "contaminate", "0") });
         PrintAsh("Directorate infantry immune to ash",
             new[] { E("infantry.toml", "dir_conscript", "rad_resist_permille", "1000"), E("infantry.toml", "dir_ashthrower", "rad_resist_permille", "1000") });
         PrintAsh("Conscript+Ashthrower resist 600->800",
             new[] { E("infantry.toml", "dir_conscript", "rad_resist_permille", "800"), E("infantry.toml", "dir_ashthrower", "rad_resist_permille", "800") });
-        PrintAsh("now (contaminate 40)", Array.Empty<S13Edit>(), true);
+        PrintAsh("now (contaminate 20, D-166)", Array.Empty<S13Edit>(), true);
         PrintAsh("contaminate 20", new[] { E("warheads.toml", "dir_ash", "contaminate", "20") }, true);
         PrintAsh("contaminate 0 (no cloud)", new[] { E("warheads.toml", "dir_ash", "contaminate", "0") }, true);
     }
@@ -171,7 +171,7 @@ public sealed class S13CampaignBalanceTests
     [Fact]
     public void ConscriptsVsRiflemen_NowAndCandidates()
     {
-        PrintFight("now (hp 40, cost 80)", Array.Empty<S13Edit>());
+        PrintFight("now (hp 50, cost 80, D-166)", Array.Empty<S13Edit>());
         PrintFight("Conscript hp 50", new[] { E("infantry.toml", "dir_conscript", "max_health", "50") });
         PrintFight("Conscript hp 55", new[] { E("infantry.toml", "dir_conscript", "max_health", "55") });
         PrintFight("Conscript cost 60", new[] { E("infantry.toml", "dir_conscript", "cost", "60") });

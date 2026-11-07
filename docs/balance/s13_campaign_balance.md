@@ -67,3 +67,41 @@ fighting once out of each other's range), so I count them by who has more left.
   or too many power users). Recommendation: no rules change; check the low-power warning is visible to the player.
 
 Owner decides (D-152).
+
+## After D-166 (session 14)
+
+Shipped values now: `dir_ash` contaminate 20 (was 40) and `dir_conscript` max_health 50 (was 40), owner decision Q-60 / D-166.
+"Before" is the session-13 measurement above (both at the old values). "After" is `ConscriptsVsRiflemen_NowAndCandidates` and
+`Ashthrower_FriendlyFire_NowAndCandidates` run on the shipped data (session 14, `dotnet test ... --filter S13CampaignBalance`).
+The ash "after" numbers include the Conscript HP change too, because both shipped values are in effect; the ash-only effect
+was not re-measured.
+
+| scenario | before | after |
+|---|---|---|
+| Ash, small fight (5 Ashthrowers, 10 Conscripts vs 10 Riflemen): own Conscript HP lost | 279 of 400 | 180 of 500 |
+| Ash, small fight: own Conscripts dead | 1 of 10 | 0 of 10 |
+| Ash, big fight (10 Ashthrowers, 25 Conscripts vs 20 Riflemen): own Conscripts dead | 8 of 25 (HP lost 759 of 1000) | 6 of 25 (HP lost 507 of 1250) |
+| Ash, big fight: own Ashthrowers dead | 3 of 10 | 0 of 10 |
+| Ash, big fight: enemy dead | 20 of 20 | 20 of 20 (tick 149) |
+| Conscript vs Rifleman, 5v5 equal count: Riflemen left | 5 | 3 |
+| Conscript vs Rifleman, 10v10 equal count: Riflemen left | 9 | 7 |
+| Equal cost 400 (5 Conscripts @80 vs 4 Riflemen @100): Conscripts left / Riflemen left | 2 / 0 | 2 / 0 |
+| Equal cost 400, sides swapped: Riflemen left | 1 | 1 |
+| Equal cost 2000 (25 Conscripts vs 20 Riflemen) at tick 4000: Conscripts left / Riflemen left | 2 / 5 | 2 / 5 (Riflemen ahead, still undecided) |
+| Bomber vs depot, 0 SAMs / 1 powered SAM / 3 unpowered SAMs (section 2) | 1556 / 904 / 1556 | 1556 / 904 / 1556 (unchanged, no rule change) |
+
+Reading: the Conscripts still lose at equal count (they die, as before), and the equal-cost result is unchanged for the 400
+fight and unchanged in the 2000 fight. The ash cloud still kills no Conscripts in the small fight. The big fight still loses
+6 Conscripts to the cloud. Those are the numbers to check in play, not a verdict.
+Note: the "Conscript hp 50" candidate row in the test now equals the "now" row, since "now" is 50 HP.
+
+### Bomber vs SAMs: what the player sees and hears when power is low (no rule change)
+
+- **Sidebar power bar (always drawn, `SidebarPanel.DrawPowerBar`):** a thin vertical bar on the left of the sidebar. It turns red
+  (`BadRed`) when Use > Output, green otherwise, with a white marker at the Use level. There is no text label on the bar.
+- **Hover tooltip on the bar:** "Power", "Output X   Use Y", then "Low power: production is slower" (or "Power is fine"). Shown only while the
+  mouse is over the bar. It says nothing about SAMs, defences or superweapons stopping.
+- **Sound:** event `low_power` (`sfx/low_power.wav`, non-positional, volume 1.0), derived each step while Use > Output, with a 20 s cooldown.
+  Plays once on entering low power, then about every 20 s while it lasts.
+- **Not visible:** no icon, text or marker on the unpowered SAM itself, and no message in the event feed (`grep` found no other "low power"
+  text in `src/Game`). An unpowered SAM simply holds fire. The bomber is not shot at and the player gets no hint why.
