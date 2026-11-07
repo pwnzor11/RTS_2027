@@ -32,11 +32,23 @@ public sealed class OrderController
         _selection = selection;
     }
 
-    /// <summary>True after A, until the next right-click or A again.</summary>
+    /// <summary>True after A, until the next click (left or right), Esc, or A again.</summary>
     public bool AttackMoveArmed { get; private set; }
 
     /// <summary>True after D when a selected unit deploys at a chosen cell (a Bore), until the next right-click or D again.</summary>
     public bool DeployArmed { get; private set; }
+
+    /// <summary>True while any order waits for a click (attack-move or a deploy cell).</summary>
+    public bool AnyArmed => AttackMoveArmed || DeployArmed;
+
+    /// <summary>Esc: disarms attack-move and deploy. Returns true when something was armed (the key is then used up).</summary>
+    public bool CancelArmed()
+    {
+        bool was = AnyArmed;
+        AttackMoveArmed = false;
+        DeployArmed = false;
+        return was;
+    }
 
     /// <summary>M4-09: the building the player has selected (set by the screen each frame; <see cref="EntityId.None"/> = none).
     /// D on a garrisoned own building then sends Unload.</summary>

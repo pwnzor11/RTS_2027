@@ -385,6 +385,8 @@ public sealed class GameScreen : IScreen
         if (_superweapon.IsArmed && input.ConsumePressed(Keys.Escape)) _superweapon.Cancel();   // Esc leaves targeting first
         if (_unpack is not null && input.ConsumePressed(Keys.Escape)) _unpack = null;            // M6-09: ... and unpack placement
 
+        if (_orders is not null && _orders.AnyArmed && input.ConsumePressed(Keys.Escape)) _orders.CancelArmed();   // F6: Esc leaves an armed order first
+
         if (input.ConsumePressed(Keys.Escape))
         {
             _s.Screens.Push(new PauseScreen(_s, _restart, SaveTarget()));
@@ -493,6 +495,7 @@ public sealed class GameScreen : IScreen
         DrawUnpackGhost(sb);
         _sidebar?.DrawMapOverlay(sb, _s.Pixel, _camera, snapshot);
         DrawHud(sb, snapshot);
+        DrawArmedCursor(sb);
         string[] chatHelp = _spectatorMode ? SpectatorHelpLines : _skirmishMode ? SkirmishHelpLines : HelpLines;
         _chat.Draw(sb, _s.Pixel, _s.UiScale, new Point(8, _s.Viewport.Height - Hud.HeightOf(chatHelp.Length, _s.UiScale) - 12), _s.Viewport.Width - 16);
         _sidebar?.Draw(sb, _s.Pixel, snapshot);
@@ -502,6 +505,13 @@ public sealed class GameScreen : IScreen
         DrawDiveButton(sb);
         DrawSpectator(sb);
         _console?.Draw(sb, _s.Pixel, _s.Viewport);
+    }
+
+    // O2: while attack-move is armed, a red crosshair at the cursor and a small "ATTACK-MOVE" label beside it.
+    private void DrawArmedCursor(SpriteBatch sb)
+    {
+        if (_orders is not { AttackMoveArmed: true } || !MapViewport().Bounds.Contains(_mouse)) return;
+        ArmedCursor.Draw(sb, _s.Pixel, _mouse, "ATTACK-MOVE", _s.UiScale);
     }
 
     // What Save game writes to: only a skirmish or mission (the sandbox has no save header).
@@ -517,7 +527,12 @@ public sealed class GameScreen : IScreen
         }
 
         Point mouse = input.MousePosition;
-        if (input.LeftPressed)
+        if (input.LeftPressed && _orders is { AttackMoveArmed: true } && _console is not { IsOpen: true } && MapViewport().Bounds.Contains(mouse))
+        {
+            _orders.RightClick(mouse, _camera, _renderUnits);   // O2: a left click commits an armed attack-move (right click is the alias below)
+            input.ConsumeLeft();
+        }
+        else if (input.LeftPressed)
         {
             _dragStart = mouse;
             _dragging = false;
