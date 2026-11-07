@@ -360,7 +360,7 @@ public sealed partial class MissionHost : ISimExtension
         foreach (AiHookState h in _aiHooks) { w.Write(h.AttackZone); w.Write(h.DefendZone); w.Write(h.Tier); w.Write(h.WaveSeq); w.Write(h.WaveId); w.Write(h.WaveZone); }
         if (v3) w.Write(_difficulty);   // ---- version 3 tail (M8-03) ----
         if (v4) WriteArrivals(w);       // ---- version 4 tail (M8-04) ----
-        if (v5) foreach (MissionObjective o in _objectives) { w.Write((byte)o.Target.Kind); w.Write(o.Target.Name); w.Write(o.Target.X); w.Write(o.Target.Y); }   // ---- version 5 tail (M11-05) ----
+        if (v5) foreach (MissionObjective o in _objectives) { w.Write((byte)o.Target.Kind); w.Write(o.Target.Name ?? ""); w.Write(o.Target.X); w.Write(o.Target.Y); }   // ---- version 5 tail (M11-05) ----
     }
 
     private bool HasObjectiveTarget()
