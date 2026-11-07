@@ -190,6 +190,9 @@ internal sealed class MilitaryManager
     /// <summary>S14: the early-launch half of the mop-up. Off: measured worse (Directorate 4 v 3 decisive 54 % -> 41 %, draws unchanged).</summary>
     public const bool MopupLaunch = false;
 
+    /// <summary>S14: the shroud sweep half of the mop-up. Off: no measurable effect on draws, and it made SupplyAiTests (LeftBehind tier 5) sit capped for over a minute.</summary>
+    public const bool MopupSweep = false;
+
     private bool MopupDue(RecruitKnowledge k, int n) =>
         MopupLaunch && Options.Respond && k.View.Tick >= MopupFromTick && _eLongVal == 0 && n >= MopupMinArmy && k.View.Tick - _lastWave >= MopupGapTicks;
 
@@ -705,7 +708,7 @@ internal sealed class MilitaryManager
             }
         if (found) { _lastGoal = goal; return goal; }
         // S14 mop-up: no enemy army about and no structure known (a stray tunnel hatch keeps a player alive): sweep the shrouded map, nearest cell first
-        if (Options.Respond && tick >= MopupFromTick && _eLongVal == 0 && SweepGoal(k, centre, tick) is CellCoord sweep) { _lastGoal = sweep; return sweep; }
+        if (MopupSweep && Options.Respond && tick >= MopupFromTick && _eLongVal == 0 && SweepGoal(k, centre, tick) is CellCoord sweep) { _lastGoal = sweep; return sweep; }
         // nothing known: look at the route stops in turn; a stop that is in view and shows no building is crossed off
         while (_scoutIdx < _scoutRoute.Count - 1 && k.View.IsVisible(_scoutRoute[_scoutIdx])) _scoutIdx++;
         if (_scoutIdx >= _scoutRoute.Count - 1 && k.View.IsVisible(_scoutRoute[^1])) _scoutIdx = 0;
