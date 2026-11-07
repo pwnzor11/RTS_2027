@@ -61,6 +61,9 @@ public sealed class GameServices
     /// <summary>True when the program was started with --empty: the Sandbox menu entry then uses the legacy 3-tank setup.</summary>
     public bool LegacyEmptySandbox { get; set; }
 
+    /// <summary>True while the game window has focus (the shell sets it); edge scrolling is off otherwise.</summary>
+    public Func<bool> WindowActive { get; set; } = static () => true;
+
     /// <summary>Frames drawn in the last second, set by the shell.</summary>
     public int Fps { get; set; }
 

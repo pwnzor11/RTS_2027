@@ -91,6 +91,9 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
     /// <summary>What the next click on the map does.</summary>
     public SidebarMode Mode { get; private set; }
 
+    /// <summary>True while the left button drags the view on the minimap (the edge scroll then stays off).</summary>
+    public bool MinimapDragging => _minimapDrag;
+
     /// <summary>The selected tab.</summary>
     public SidebarTab Tab => _tab;
 

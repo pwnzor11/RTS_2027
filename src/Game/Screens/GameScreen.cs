@@ -35,7 +35,6 @@ namespace Rts.Game.Screens;
 /// </summary>
 public sealed class GameScreen : IScreen
 {
-    private const float PanScreenPixelsPerSecond = 320f;
     private const float DragThresholdPx = 4f;
     private static readonly Keys[] OrderKeys = { Keys.A, Keys.S, Keys.G, Keys.X, Keys.D };
     private static readonly string[] SkirmishHelpLines =
@@ -428,12 +427,11 @@ public sealed class GameScreen : IScreen
         if (input.IsDown(Keys.Right)) keyDirection.X += 1f;
         if (input.IsDown(Keys.Up)) keyDirection.Y -= 1f;
         if (input.IsDown(Keys.Down)) keyDirection.Y += 1f;
-        if (keyDirection != Vector2.Zero)
-        {
-            keyDirection.Normalize();
-            float seconds = (float)t.ElapsedGameTime.TotalSeconds;
-            _camera.PanScreen(keyDirection * PanScreenPixelsPerSecond * seconds);
-        }
+        bool busy = _dragStart is not null || input.MiddleDragging || _sidebar is { MinimapDragging: true } || _console is { IsOpen: true } || chatTyping;
+        Vector2 edge = CameraScroll.EdgeDirection(input.MousePosition, new Rectangle(0, 0, _s.Viewport.Width, _s.Viewport.Height),
+            _s.Settings.EdgeScroll, _s.WindowActive(), busy);
+        bool shift = input.IsDown(Keys.LeftShift) || input.IsDown(Keys.RightShift);
+        _camera.PanScreen(CameraScroll.FrameDelta(keyDirection + edge, _s.Settings.ScrollSpeed, shift, (float)t.ElapsedGameTime.TotalSeconds));
 
         // Middle-drag: the map follows the cursor, so the view moves opposite to the mouse.
         if (input.MiddleDragging) _camera.PanScreen(-input.MouseDelta.ToVector2());
