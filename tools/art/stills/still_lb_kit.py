@@ -462,7 +462,7 @@ def hatch(loc, yaw=0.0, open_ang=1.1, glow="#9BE04A", rng=None):
     beam((x, y), 22.0, 1.6, glow, 0.5)
 
 
-def beam(loc, h, r, col, strength=0.4, fac=0.10):
+def beam(loc, h, r, col, strength=0.4, fac=0.06):
     """Faint emissive shaft (additive-looking light column)."""
     o = cyl("beam", (loc[0], loc[1], h / 2), r, h, mat(col), verts=14, r2=r * 2.2)
     m = bpy.data.materials.new("beam")

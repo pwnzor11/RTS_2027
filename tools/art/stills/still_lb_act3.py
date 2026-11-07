@@ -25,7 +25,7 @@ def height(x, y):
     far = B.smoothstep(150.0, 195.0, y)
     h = h * (1 - far) - 2.2 * far
     # crest under the camera
-    h += 3.2 * math.exp(-((x - CAM[0]) ** 2 + (y - CAM[1]) ** 2) / (2 * 9.0 ** 2))
+    h += 6.5 * math.exp(-((x - CAM[0]) ** 2 + (y - CAM[1]) ** 2) / (2 * 11.0 ** 2))
     return h
 
 
@@ -72,17 +72,16 @@ def build():
     B.loudspeaker_mast((34.0, 104.0), h=28.0)
     K.sandbag_wall((-9.0, 78.0), (-1.0, 78.0), rows=2, rng=R)
     K.dust_cloud((-90, 170), n=22, length=40, rng=R, tint="#D8A07A")
-    K.smoke_column((7, 3), h=18, r0=0.6, n=7, rng=R, tint="#5A5048")
 
     # light: the sun has just gone, a last orange glow low front-left; cool blue sky fill; green and lantern light do the rest
-    sunv = B.sun_dir(-52.0, 0.8)
+    sunv = B.sun_dir(-52.0, 2.5)
     B.sky(sunv, stops=[(0.0, "#F7B25C"), (0.03, "#EE8A5E"), (0.09, "#BA5F82"), (0.2, "#5E5CA2"), (0.45, "#24366F"), (1.0, "#0B1440")],
           cloud_stops=[(0.03, "#FF9C5E"), (0.15, "#C0607E"), (0.4, "#4A4A92")], glow="#FF9A5A", glow_amt=1.6,
-          strength=float(os.environ.get("STILL_SKY", "0.95")))
-    B.key_sun(sunv, float(os.environ.get("STILL_SUN", "3.5")), (1.0, 0.55, 0.28), angle=2.0)
-    K.area_light((40, -30, 36), (0, 30, 2), 70, float(os.environ.get("STILL_FILL", "12000")), (0.40, 0.52, 1.0))
+          strength=float(os.environ.get("STILL_SKY", "1.15")))
+    B.key_sun(sunv, float(os.environ.get("STILL_SUN", "7.0")), (1.0, 0.55, 0.28), angle=2.0)
+    K.area_light((40, -30, 36), (0, 30, 2), 70, float(os.environ.get("STILL_FILL", "32000")), (0.40, 0.52, 1.0))
     K.haze(float(os.environ.get("STILL_HAZE", "0.0016")), top=40.0, colour="#A9B2E8")
-    K.camera((CAM[0], CAM[1], 5.2), (2.0, 60.0, 4.5), lens=26)
+    K.camera((CAM[0], CAM[1], 9.6), (2.0, 52.0, 2.5), lens=26)
 
 
 if __name__ == "__main__":

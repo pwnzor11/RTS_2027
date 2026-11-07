@@ -33,16 +33,21 @@ def banner(loc, h=15.0, length=9.0, yaw=0.0, rng=None):
     x, y = loc
     K.cyl("mast", (x, y, h / 2), 0.14, h, K.mat("ash_d", B.LB["ash_d"]), verts=8)
     K.sphere("finial", (x, y, h + 0.2), 0.25, K.mat("haz", B.LB["haz"]))
-    rows = ["red", "canvas_l", "teal_l", "haz", "red_l", "plum", "ochre"]
-    n = 5
+    rows = ["red", "canvas_l", "teal_l", "haz", "red_l", "ochre", "turq"]
+    ang = math.radians(38.0)
+    d = (-math.cos(ang), math.sin(ang))          # streams left and away from the camera
+    yaw = math.atan2(d[0], d[1])
+    n = 4
     for r in range(7):
-        z = h - 0.8 - r * 1.15
-        for s in range(n):
-            t = (s + 0.5) / n
-            wave = math.sin(t * 5.5 + r * 0.6) * 0.5 * t
-            col = B.LB[rows[(r + (s // 3)) % len(rows)]] if (s + r) % 4 else B.LB[rows[(r * 2 + s) % len(rows)]]
-            K.box("cloth", (x - length * t - 0.0, y + wave + 0.4 * t * t, z - 0.35 * t * t), (length / n * 1.03, 0.05, 1.12),
-                  K.mat(col, rough=1.0), rot=(0, 0.06 * t, 0.12 * math.sin(t * 5.5 + r * 0.6)))
+        z = h - 0.9 - r * 1.05
+        L = length * (1.0 - r * 0.07)
+        for s_ in range(n):
+            t0, t1 = s_ / n, (s_ + 1) / n
+            tm = (t0 + t1) / 2
+            wave = math.sin(tm * 6.0 + r * 0.7) * 0.7 * tm
+            col = B.LB[rows[r % len(rows)]]
+            K.box("cloth", (x + d[0] * L * tm + 0.3 * wave, y + d[1] * L * tm, z - 0.5 * tm * tm + wave * 0.5),
+                  (0.05, L / n * 1.05, 1.0), K.mat(col, rough=1.0), rot=(0.12 * wave, 0.35 * wave, -yaw + 0.15 * math.sin(tm * 6 + r)))
     for i in range(4):
         B.pole((x, y, 1.0 + i * 0.1), (x + 3.0 * (i - 1.5), y - 1.5, 0.05), 0.02, K.mat("ash", B.LB["ash"]))
 
