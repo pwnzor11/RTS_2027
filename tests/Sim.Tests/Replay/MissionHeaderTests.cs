@@ -57,7 +57,9 @@ public class MissionHeaderTests
             SetupHeader.From(ScriptedGame.NewSim(setup), "test-build", ReplayTests.RulesFiles).Write(w);
         int missionByte = 8 + (int)header.Length;
         Assert.Equal(0, v8[missionByte]);
-        byte[] v7 = v8.Take(missionByte).Concat(v8.Skip(missionByte + 1)).ToArray();
+        // M4-17: format 13 also ends the header with a rule-flags byte, which formats before 13 do not have (it is the byte before the mission flag).
+        Assert.Equal(0, v8[missionByte - 1]);
+        byte[] v7 = v8.Take(missionByte - 1).Concat(v8.Skip(missionByte + 1)).ToArray();
         v7[4] = 7;
 
         var data = ReplayReader.Read(new MemoryStream(v7));
@@ -73,9 +75,9 @@ public class MissionHeaderTests
     public void FutureVersion_IsRejected()
     {
         byte[] bytes = Record(ScriptedGame.Setup(), 32, null);
-        bytes[4] = 13;   // M4-01 took 9, M6-02 took 10, VET-1 took 11, M7-02 took 12
+        bytes[4] = 14;   // M4-01 took 9, M6-02 took 10, VET-1 took 11, M7-02 took 12, M4-17 13
         var ex = Assert.Throws<InvalidDataException>(() => ReplayReader.Read(new MemoryStream(bytes)));
-        Assert.Contains("version 13", ex.Message);
+        Assert.Contains("version 14", ex.Message);
     }
 
     [Fact]
