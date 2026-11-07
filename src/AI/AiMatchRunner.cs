@@ -43,6 +43,7 @@ public static class AiMatchRunner
         var setup = new SimSetup(seed, playMap, 2, rules, rulesHash)
         {
             Factions = sideA.Faction == Faction.Authority && sideB.Faction == Faction.Authority ? null : factions,
+            NoRebuildDefeat = true,   // M4-17 (D-173)
             LandingMarkers = landing ?? Array.Empty<CellCoord>(),   // M7-10: public map data for the Expedition AI
         };
         var sim = new Simulation(setup);
@@ -109,7 +110,7 @@ public static class AiMatchRunner
             factions[slotOf[i]] = sides[i].Faction;
             allAuthority &= sides[i].Faction == Faction.Authority;
         }
-        var sim = new Simulation(new SimSetup(seed, map, n, rules, rulesHash) { Factions = allAuthority ? null : factions });
+        var sim = new Simulation(new SimSetup(seed, map, n, rules, rulesHash) { Factions = allAuthority ? null : factions, NoRebuildDefeat = true });   // M4-17 (D-173)
         ReplayWriter? recorder = replay is null ? null : new ReplayWriter(replay, sim, build, rulesFiles ?? Array.Empty<(string, string)>());
         SkirmishStart.Apply(sim);
         var driver = new AiDriver(seed);

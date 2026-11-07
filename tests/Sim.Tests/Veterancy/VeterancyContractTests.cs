@@ -32,8 +32,8 @@ public sealed class VeterancyContractTests
     [Fact]
     public void Formats_AndPartOrder_ArePinned()
     {
-        Assert.Equal(12, SimWriter.SaveVersion);   // M7-02 took 12 (VET-1: 11)
-        Assert.Equal(12, ReplayWriter.Version);
+        Assert.Equal(13, SimWriter.SaveVersion);   // M7-02 took 12 (VET-1: 11)
+        Assert.Equal(13, ReplayWriter.Version);
         Assert.Equal(7, ReplayWriter.OldestReadableVersion);
         Assert.Equal(11, RulesHash.FormatVersion);
         var sim = ScriptedGame.NewSim(ScriptedGame.Setup());

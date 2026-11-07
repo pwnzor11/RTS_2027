@@ -40,3 +40,25 @@ Variants were built from the worktree and run from copies of the built tool.
   Note the baseline here is lower than the s13 table for Directorate 4 v 3 (s13: 52 %, here 40 %), within the noise band.
 - Not done: the Authority cells for v2/v3, 5 v 4 and 3 v 3 for v3 (the box was queued for hours). Next lever to try: make the mop-up wait for a bigger army and avoid defences
   (outer structures and remote hatches first), and find hatches by sweeping fog cells, not only shroud. The sweep and counters are in place in `MilitaryManager` (`Mopups`, `SweepGoal`).
+
+## After D-173 (M4-17: skirmish "no way to rebuild for 2 minutes" defeat rule)
+
+Rule: in skirmish and AI matches (`SimSetup.NoRebuildDefeat`, on there, off in missions) a player with no production structure, no unit that can found one and no
+harvester for 2 400 ticks is defeated. Production structure = a building type with `produces` set, or a tech-tree root (no prerequisites, listed as a prerequisite by another
+building: `auth_conyard`, `dir_shaft`, `lb_mother_rig`, `exp_landing_depot`). Founder = a vehicle whose `deploys_into` / `unpacks_into` (a packed rig: the type it was packed from) is
+such a building (`dir_landtrain`, `exp_command_ship`, `lb_mother_rig_packed`; the Authority has none). Harvester = `harvest_capacity > 0`. Units that are only an army do not count.
+
+Method as above (Release Tools, one match process at a time, 16 seeds x 2 = 32 games per cell, 30 000 ticks, size 96, `tiered:A` vs `tiered:B`).
+"Before" was re-measured on the commit before the rule (the baseline column in the tables above predates the D-167 merge and no longer matches: it showed Directorate 5 v 1 as 6 / 7 / 19).
+
+| Cell | Before (A / B / draw) | After D-173 (A / B / draw) | Avg end tick before -> after |
+|---|---|---|---|
+| Directorate 5 v 1 | 11 / 6 / 15 (34 %) | 11 / 6 / 15 (34 %) | 25285 -> 25285 |
+| Directorate 4 v 3 | 10 / 11 / 11 (31 %) | 10 / 12 / 10 (31 %) | 22812 -> 22745 |
+| Authority 5 v 1 | 16 / 11 / 5 | 16 / 11 / 5 | 17934 -> 17934 |
+| Authority 4 v 3 | 17 / 12 / 3 | 17 / 12 / 3 | 18820 -> 18813 |
+
+Reading: the rule ends one game out of 128 (Directorate 4 v 3: a draw becomes a B win) and shortens one other by a few ticks. The Directorate draws are not "loser without a way
+to rebuild": in the end-state dump of Directorate 5 v 1 (seed 1, swapped starts) the draw side still owns `dir_shaft`, `dir_assembly_bore`, `dir_muster_hatch`, `dir_isotope_works` and a dozen
+defences, so it counts as able to rebuild, and the other side never finishes it. The rule is correct and cheap, but it does not fix the Directorate draw rate; that needs the attacker to
+win base fights (see the mop-up notes above) or a stricter definition (for example, no income source or no cash for 2 minutes).

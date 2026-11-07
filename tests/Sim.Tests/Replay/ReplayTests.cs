@@ -72,7 +72,7 @@ public class ReplayTests
         bytes[4] = (byte)version; // version is a little-endian int32 right after the magic
         var ex = Assert.Throws<InvalidDataException>(() => ReplayReader.Read(new MemoryStream(bytes)));
         Assert.Contains($"version {version}", ex.Message);
-        Assert.Contains("reads versions 7 to 12", ex.Message);
+        Assert.Contains("reads versions 7 to 13", ex.Message);
     }
 
     [Fact]
@@ -83,7 +83,7 @@ public class ReplayTests
             Teams = new byte[] { 0, 0 }, Limits = new SimLimits(300, 200, 100, 64), AllowDebug = true,
         };
         var data = ReplayReader.Read(new MemoryStream(Record(setup, 40)));
-        Assert.Equal(12, data.Version);
+        Assert.Equal(13, data.Version);
         Assert.Null(data.Mission);
         Assert.Equal("test-build", data.Build);
         Assert.Equal(setup.Seed, data.Seed);

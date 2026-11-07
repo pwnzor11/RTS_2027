@@ -97,6 +97,12 @@ public sealed record SimSetup(ulong Seed, Map.MapData Map, int PlayerCount, SimR
     public SimLimits Limits { get; init; } = SimLimits.Default;
     public bool AllowDebug { get; init; }
 
+    /// <summary>M4-17 (D-173): the skirmish defeat rule. When on, a player with no production structure, no unit that can found one and
+    /// no harvester for <see cref="SimConstants.NoRebuildDefeatTicks"/> ticks is defeated (on top of the old "no building" rule). Default off
+    /// (campaign missions and raw test setups keep their own rules); skirmish and AI-match setups turn it on. Part of the game's identity:
+    /// saved in the header (format 13), written into the production part when on.</summary>
+    public bool NoRebuildDefeat { get; init; }
+
     /// <summary>M7-10: the map's landing markers (public map data, MapMeta.Landing), read-only for the AI through <c>PlayerView.LandingMarkers</c>.
     /// Not part of the game's identity (not saved, not hashed): the sim never reads it. Empty when the host has no map metadata.</summary>
     public IReadOnlyList<CellCoord> LandingMarkers { get; init; } = Array.Empty<CellCoord>();

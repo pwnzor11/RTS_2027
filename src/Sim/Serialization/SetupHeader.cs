@@ -18,6 +18,9 @@ public sealed record SetupHeader(
     /// <summary>Faction per player (M3-01); null = all Authority. Written after the rules files.</summary>
     public IReadOnlyList<Rules.Faction>? Factions { get; init; }
 
+    /// <summary>M4-17 (D-173): the skirmish defeat rule is on. Written after the factions (save and replay format 13); older replays read as false.</summary>
+    public bool NoRebuildDefeat { get; init; }
+
     private const int MaxLimit = 1 << 20;
 
     /// <summary>Header for a running game.</summary>
@@ -25,7 +28,7 @@ public sealed record SetupHeader(
     {
         SimSetup s = sim.Setup;
         return new SetupHeader(build, s.Seed, s.PlayerCount, s.Teams, s.Limits, s.AllowDebug, s.RulesHash, sim.MapHash,
-            s.Map.Width, s.Map.Height, s.Map.Name, rulesFiles) { Factions = s.Factions };
+            s.Map.Width, s.Map.Height, s.Map.Name, rulesFiles) { Factions = s.Factions, NoRebuildDefeat = s.NoRebuildDefeat };
     }
 
     /// <summary>Writes the header fields in their fixed order.</summary>
@@ -55,10 +58,11 @@ public sealed record SetupHeader(
             w.Write(Factions.Count);
             for (int i = 0; i < Factions.Count; i++) w.Write((byte)Factions[i]);
         }
+        w.Write((byte)(NoRebuildDefeat ? 1 : 0));   // M4-17, format 13
     }
 
     /// <summary>Reads what <see cref="Write"/> wrote. Throws InvalidDataException on a malformed or truncated header.</summary>
-    public static SetupHeader Read(BinaryReader r)
+    public static SetupHeader Read(BinaryReader r, bool hasRuleFlags = true)
     {
         try
         {
@@ -101,9 +105,17 @@ public sealed record SetupHeader(
                 }
             }
             else if (hasFactions != 0) throw new InvalidDataException($"Bad factions flag {hasFactions}.");
+            bool noRebuild = false;
+            if (hasRuleFlags)   // M4-17: replays older than format 13 have no flags byte
+            {
+                byte flags = r.ReadByte();
+                if (flags > 1) throw new InvalidDataException($"Bad rule flags {flags}.");
+                noRebuild = flags == 1;
+            }
             return new SetupHeader(build, seed, players, teams, limits, allowDebug, rulesHash, mapHash, w, h, mapName, files)
             {
                 Factions = factions,
+                NoRebuildDefeat = noRebuild,
             };
         }
         catch (EndOfStreamException)
@@ -135,6 +147,8 @@ public sealed record SetupHeader(
             throw new InvalidDataException($"{what} store limits {Limits} do not match setup {setup.Limits}.");
         if (AllowDebug != setup.AllowDebug)
             throw new InvalidDataException($"{what} AllowDebug={AllowDebug} does not match setup AllowDebug={setup.AllowDebug}.");
+        if (NoRebuildDefeat != setup.NoRebuildDefeat)
+            throw new InvalidDataException($"{what} NoRebuildDefeat={NoRebuildDefeat} does not match the setup NoRebuildDefeat={setup.NoRebuildDefeat}.");
         for (int p = 0; p < PlayerCount; p++)
             if (FactionOf(p) != setup.FactionOf((byte)p))
                 throw new InvalidDataException($"{what} faction of player {p} ({FactionOf(p)}) does not match the setup ({setup.FactionOf((byte)p)}).");
@@ -153,7 +167,7 @@ public sealed record SetupHeader(
             throw new InvalidDataException($"Map hash 0x{Map.MapHasher.Compute(map):x16} does not match the recorded 0x{MapHash:x16}.");
         return new SimSetup(Seed, map, PlayerCount, rules, rulesHash)
         {
-            Teams = Teams, Limits = Limits, AllowDebug = AllowDebug, Factions = Factions,
+            Teams = Teams, Limits = Limits, AllowDebug = AllowDebug, Factions = Factions, NoRebuildDefeat = NoRebuildDefeat,
         };
     }
 

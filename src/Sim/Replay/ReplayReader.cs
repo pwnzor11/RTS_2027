@@ -52,7 +52,7 @@ public static class ReplayReader
             if (version < ReplayWriter.OldestReadableVersion || version > ReplayWriter.Version)
                 throw new InvalidDataException($"Unsupported replay format version {version}; this build reads versions {ReplayWriter.OldestReadableVersion} to {ReplayWriter.Version}. " +
                     "Replays from other versions cannot be played back; play it with the build that recorded it.");
-            header = SetupHeader.Read(r);
+            header = SetupHeader.Read(r, hasRuleFlags: version >= 13);   // M4-17: format 13 appends the rule flags
             if (version >= 8) mission = ReplayMission.Read(r);
         }
         catch (EndOfStreamException)

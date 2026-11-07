@@ -368,7 +368,7 @@ public static class AiCommands
             || (flags.TryGetValue("faction-b", out string? tfbArg) && !Enum.TryParse(tfbArg, true, out tfb)))
             return UsageError("--faction-a / --faction-b must be authority or directorate");
         var sim = new Simulation(new SimSetup((ulong)seed, map, 2, rules, world.RulesHash)
-        { Factions = tfa == Faction.Authority && tfb == Faction.Authority ? null : [tfa, tfb] });
+        { Factions = tfa == Faction.Authority && tfb == Faction.Authority ? null : [tfa, tfb], NoRebuildDefeat = true });   // M4-17 (D-173)
         SkirmishStart.Apply(sim);
         var driver = new AiDriver((ulong)seed);
         if (!AiRegistry.TryCreate(a!.AiId, a.Profile, out IAiPlayer? aiA) || !AiRegistry.TryCreate(b!.AiId, b.Profile, out IAiPlayer? aiB)) return UsageError("unknown AI");
@@ -563,7 +563,7 @@ public static class AiCommands
             factions[slotOf[i]] = sides[i].Faction;
         }
         ulong gameSeed = (ulong)(seed * 16 + rot);
-        var sim = new Simulation(new SimSetup(gameSeed, map, n, world!.Rules, world.RulesHash) { Factions = factions });
+        var sim = new Simulation(new SimSetup(gameSeed, map, n, world!.Rules, world.RulesHash) { Factions = factions, NoRebuildDefeat = true });   // M4-17 (D-173)
         SkirmishStart.Apply(sim);
         var driver = new AiDriver(gameSeed);
         var ais = new IAiPlayer?[n];
