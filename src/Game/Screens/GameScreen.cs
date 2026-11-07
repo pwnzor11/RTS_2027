@@ -80,6 +80,7 @@ public sealed class GameScreen : IScreen
     private UnpackPlacement? _unpack;         // M6-09: the unpack footprint follows the cursor
     private readonly Selection _selection = new();
     private readonly OrderController? _orders; // null with --demo
+    private readonly OrderFeedback _feedback = new();   // O1: order rings
     private readonly OverlayToggles _overlays = new();
     private readonly Camera _camera = new();
     private readonly DebugConsole? _console; // null with --demo
@@ -129,7 +130,7 @@ public sealed class GameScreen : IScreen
             }
             else
             {
-                _orders = new OrderController(sim, _selection);
+                _orders = new OrderController(sim, _selection) { Feedback = _feedback };
                 if (!_skirmishMode) _console = new DebugConsole(sim, _selection, _camera); // AllowDebug is off in a skirmish
             }
         }
@@ -425,6 +426,7 @@ public sealed class GameScreen : IScreen
             }
         }
 
+        _feedback.Advance((float)t.ElapsedGameTime.TotalSeconds);
         Vector2 keyDirection = Vector2.Zero;
         if (input.IsDown(Keys.Left)) keyDirection.X -= 1f;
         if (input.IsDown(Keys.Right)) keyDirection.X += 1f;
@@ -491,6 +493,7 @@ public sealed class GameScreen : IScreen
 
         _s.Scene.Draw(sb, _s.Pixel, frame, _camera, _s.Viewport);
         DrawSelectedBuilding(sb, snapshot);
+        _feedback.Draw(sb, _s.Pixel, _camera);
         DrawPackProgress(sb, snapshot);
         DrawUnpackGhost(sb);
         _sidebar?.DrawMapOverlay(sb, _s.Pixel, _camera, snapshot);
@@ -1030,6 +1033,12 @@ public sealed class GameScreen : IScreen
             float left = b.Cell.X * Camera.CellPx, top = b.Cell.Y * Camera.CellPx;
             Rectangle r = _camera.ScreenRect(left, top, left + b.FootprintW * Camera.CellPx, top + b.FootprintH * Camera.CellPx);
             Shapes.Outline(sb, _s.Pixel, r, Color.White, 2);
+            // O4: a selected production building shows its rally flag and a line to it
+            if (_sim is not null && _sim.Rules.Buildings[b.TypeIndex].Produces is { } lane
+                && _sim.Sim.Production.RallyCell(SimSnapshotSource.LocalPlayer, lane) is { } rally)
+            {
+                OrderFeedback.DrawRally(sb, _s.Pixel, _camera, new Vector2(left + b.FootprintW * Camera.CellPx / 2f, top + b.FootprintH * Camera.CellPx / 2f), rally);
+            }
         }
     }
 
