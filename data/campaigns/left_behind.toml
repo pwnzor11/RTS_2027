@@ -11,12 +11,15 @@ id = "lb_01"
 
 [[missions]]
 id = "lb_02"
+still = "still_left_behind_act2"
 requires = ["lb_01"]
 
 [[missions]]
 id = "lb_03"
+still = "still_left_behind_act3"
 requires = ["lb_02"]
 
 [[missions]]
 id = "lb_04"
+still = "still_left_behind_act4"
 requires = ["lb_03"]

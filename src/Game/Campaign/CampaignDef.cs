@@ -8,7 +8,8 @@ namespace Rts.Game.Campaign;
 /// <summary>One mission in a campaign list.</summary>
 /// <param name="Id">Mission id (folder under data/missions).</param>
 /// <param name="Requires">Mission ids that must be completed first (empty = open from the start of the campaign).</param>
-public sealed record CampaignMission(string Id, IReadOnlyList<string> Requires);
+/// <param name="Still">Act-break still id (<c>data/images/stills/&lt;id&gt;.png</c>) shown on the briefing, or null when the mission has none.</param>
+public sealed record CampaignMission(string Id, IReadOnlyList<string> Requires, string? Still = null);
 
 /// <summary>
 /// <c>data/campaigns/&lt;faction&gt;.toml</c> (plan 3.5): the faction's missions in play order with unlock rules, and when the faction itself opens.
@@ -21,6 +22,7 @@ public sealed record CampaignMission(string Id, IReadOnlyList<string> Requires);
 /// [[missions]]
 /// id = "auth_01"
 /// requires = []                        # optional
+/// still = "still_authority_act2"       # optional: act-break still on the briefing
 /// </code>
 /// </summary>
 /// <param name="Faction">Faction id.</param>
@@ -38,6 +40,13 @@ public sealed record CampaignDef(string Faction, string TitleKey, string Ending,
     {
         CampaignMission? m = Missions.FirstOrDefault(x => x.Id == missionId);
         return m != null && m.Requires.All(progress.IsCompleted);
+    }
+
+    /// <summary>An optional id: null when absent, the id when a non-empty string, an error otherwise (an empty string is not allowed).</summary>
+    private static string? OptId(TomlTable t, string key)
+    {
+        if (!t.TryGetValue(key, out object? v)) return null;
+        return v is string { Length: > 0 } s ? s : throw new InvalidDataException($"'{key}' must be a non-empty string");
     }
 
     /// <summary>The path of <c>&lt;faction&gt;.toml</c> under a data folder.</summary>
@@ -63,7 +72,7 @@ public sealed record CampaignDef(string Faction, string TitleKey, string Ending,
         {
             string id = CampaignToml.Str(t, "id");
             if (missions.Exists(x => x.Id == id)) throw new InvalidDataException($"mission '{id}' is listed twice");
-            missions.Add(new CampaignMission(id, CampaignToml.Strings(t, "requires")));
+            missions.Add(new CampaignMission(id, CampaignToml.Strings(t, "requires"), OptId(t, "still")));
         }
 
         foreach (CampaignMission m in missions)

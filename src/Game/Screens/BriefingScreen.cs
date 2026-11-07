@@ -26,6 +26,7 @@ public sealed class BriefingScreen : IScreen
     private readonly List<string> _lines = new();
     private readonly int _totalChars;
     private readonly MenuPanel _panel;
+    private Texture2D? _still;
     private int _shown;
     private Point _mouse;
 
@@ -99,13 +100,13 @@ public sealed class BriefingScreen : IScreen
     public bool BlocksDrawBelow => true;
 
     /// <inheritdoc />
-    public void Enter()
-    {
-    }
+    public void Enter() => _still = LoadStill();
 
     /// <inheritdoc />
     public void Exit()
     {
+        _still?.Dispose();
+        _still = null;
     }
 
     /// <inheritdoc />
@@ -138,6 +139,12 @@ public sealed class BriefingScreen : IScreen
         int y = 24;
         BitmapFont.Draw(sb, _s.Pixel, _model.Title.ToUpperInvariant(), new Vector2(x, y), BriefingModel.ThemeOf(_model.Faction), scale);
         y += lineHeight * 2;
+        if (_still != null)
+        {
+            sb.Draw(_still, new Rectangle(x, y, TextWidth(scale), StillHeight(scale)), Color.White);
+            y += StillHeight(scale) + lineHeight;
+        }
+
         int remaining = _shown;
         foreach (string line in _lines)
         {
@@ -151,11 +158,34 @@ public sealed class BriefingScreen : IScreen
         if (Complete) _panel.Draw(sb, _s.Pixel, ButtonViewport(), scale, _mouse);
     }
 
-    // The menu panel centres itself in the viewport it is given: give it the strip below the text.
+    // The menu panel centres itself in the viewport it is given: give it the strip below the text (and the still, when there is one).
     private Viewport ButtonViewport()
     {
         int lineHeight = BitmapFont.LineHeight(_s.UiScale, FontWeight.Regular) + 4;
-        int top = Math.Min(_s.Viewport.Height - 120, 24 + lineHeight * (_lines.Count + 3));
+        int stillBlock = _still == null ? 0 : StillHeight(_s.UiScale) + lineHeight;
+        int top = Math.Min(_s.Viewport.Height - 120, 24 + lineHeight * (_lines.Count + 3) + stillBlock);
         return new Viewport(0, top, _s.Viewport.Width, Math.Max(100, _s.Viewport.Height - top));
+    }
+
+    // The text column's width: the still is scaled to it, keeping the 16:9 aspect of the image.
+    private static int TextWidth(int scale) => BitmapFont.Measure(new string('M', WrapChars), scale);
+
+    private int StillHeight(int scale) => _still == null ? 0 : TextWidth(scale) * _still.Height / _still.Width;
+
+    // A missing or unreadable still means no image at all (the briefing is laid out as without one).
+    private Texture2D? LoadStill()
+    {
+        if (_model.Still is not { Length: > 0 } id) return null;
+        try
+        {
+            string path = Path.Combine(CampaignFlow.DataDir(_s), "images", "stills", id + ".png");
+            if (!File.Exists(path)) return null;
+            using FileStream fs = File.OpenRead(path);
+            return Texture2D.FromStream(_s.Graphics, fs);
+        }
+        catch (Exception e) when (e is IOException or InvalidOperationException or NotSupportedException or UnauthorizedAccessException)
+        {
+            return null;
+        }
     }
 }

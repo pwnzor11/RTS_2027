@@ -9,12 +9,15 @@ id = "dir_01"
 
 [[missions]]
 id = "dir_02"
+still = "still_directorate_act2"
 requires = ["dir_01"]
 
 [[missions]]
 id = "dir_03"
+still = "still_directorate_act3"
 requires = ["dir_02"]
 
 [[missions]]
 id = "dir_04"
+still = "still_directorate_act4"
 requires = ["dir_03"]
