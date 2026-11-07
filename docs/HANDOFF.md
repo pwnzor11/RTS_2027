@@ -1,7 +1,7 @@
 # Handoff: Session 13 — owner campaign review, M8-14 stills, M8-15 acceptance, M4-16
-Last commit: session 12 handoff, landed after PR #40 (main 5d0a54b before it; see `git log -1 origin/main`)
-Where things stand: **the M8 campaign is playable end to end.** All four factions have four missions (acts 1-4 on shared act maps:
-rustbelt_m2, glass_coast_e1, ash_reckoning) plus DRAFT ending slides; the shared tutorial (tut_01) sits on the Campaign screen. Every
+Last commit: `docs: Session 12 handoff` on integ-s12, landed on main by its own PR after PR #40 (PR #40 merge = 5d0a54b); check `git log -1 origin/main`
+Where things stand: **the M8 campaign is playable end to end.** All four factions have four missions (act maps: rustbelt_m2 for
+acts 1-2, glass_coast_e1 for act 3, ash_reckoning for act 4; the Expedition plays acts 1-3 on glass_coast_e1 since the Rust Belt has no sea) plus DRAFT ending slides; the shared tutorial (tut_01) sits on the Campaign screen. Every
 mission has a bot test (wins at tier 3 and 5, most also at 1) and runs with `--mission-check` at 0 errors. Mission API: objectives
 (primary/hidden), timers shown on the HUD, dialogue/locale keys (labels too), camera hints, reinforcements (edge/zone/transport/naval/rig,
 queued arrivals), AI hooks, difficulty 1-5, Player.Funds; players' factions reach the sim. M7 is closed except the M7-14 acceptance line;
@@ -16,20 +16,20 @@ D-163. Full suite 2 986 tests (Game 973, Sim 1472, AI 198, Scripting 220, Llm 11
 3. M8-14 act-break stills (2-3 per faction): art via the owner's PC (D-084); pilot one still, owner picks, then fan out.
 4. M8-15 acceptance: human play-through notes from the owner, a bot play-through of all 16 missions in one run, mission replays with
    save/load mid-mission, a balance table per mission and tier. Then M7-14 close-out line and M8 acceptance in the roadmap.
-5. M4-16 tier ladder: tier 3 still beats tier 4 (Authority 42 %, Directorate 27 %); Directorate games are draw-heavy. Try a lower
+5. M4-16 tier ladder: tier 3 still beats tier 4 (decisive % for tier 4: Authority 42 %, Directorate 27 %; table in docs/balance/s12_tier5_diagnosis.md); Directorate games are draw-heavy. Try a lower
    army-before-tech threshold for tier 4 (helper's note in docs/balance/s12_tier5_diagnosis.md).
 6. If time: API ideas from the writers (keep an enemy alive without a hidden reserve building; `Reinforce.Rig` park-only; detect a
    superweapon shot); the voice set-up (docs/audio/voice_setup.md) if the owner wants voiced radio lines.
 
 ## Half-finished work
-- Nothing in flight. All helper branches are merged; integ-s12 = main + this handoff.
+- Nothing in flight. All helper branches are merged; integ-s12 = main + this handoff until the handoff PR lands.
 - Ending text, radio lines and briefings are DRAFT (D-086) until the owner signs them off.
 - M4-16 open (see step 5). Archive "PENDING owner text" entries from session 11 still open.
 
 ## Waiting on the user
 - Play the campaign (USER_CHECKS "Full campaign, all four factions"); answer Q-56..Q-58.
 - Delete merged remote branches once happy: `land/s12-w1`, `land/s12-w1b`, `land/s12-w2a`, `land/s12-w2b`, `land/s12-w2c`, `land/s12-w3a`,
-  `land/s12-w4`..`land/s12-w7`, `integ-s12`, `wp/art-docks-s12`, plus the session-11 list. Keep `restore/pre-s12-w1` until happy.
+  `land/s12-w4`..`land/s12-w7`, `wp/art-docks-s12`, `integ-s12` (after the handoff PR lands), `docs/readme-status`. Keep `restore/pre-s12-w1` until happy.
 - The obsolete stash entry from session 12 (lbdock/ladder mix-up) can be dropped locally; it is not on GitHub.
 
 ## How to run this session

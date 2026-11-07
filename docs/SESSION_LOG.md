@@ -229,7 +229,7 @@ first missions D1/L1/E1, M8-17 API follow-ups (Player.Funds, wins on the elimina
 Player.Funds contract (×1); one container restart mid-fan-out (Left Behind and Expedition helpers resumed with their context).
 **Problems / notes:** GitHub Actions minutes ran out → repo made public (D-159); Windows test host timed out twice (VSTEST_CONNECTION_TIMEOUT
 600); campaign tests that assumed unwritten missions broke as missions landed (now fixture-based); `next` ids had to match campaign files
-(new test). M4-16 is still open (tier 5 beats tier 1 only 55 % decisive in Authority; tier 3 still beats tier 4).
+(new test). M4-16 is still open (tier 5 vs tier 1 is 55 % decisive in Authority; tier 3 still beats tier 4; docs/balance/s12_tier5_diagnosis.md).
 **User check:** USER_CHECKS.md "Tutorial and Survey Convoy rework", "First missions of the Directorate, Left Behind and Expedition",
 "Full campaign, all four factions"; owner review list docs/missions/s12_owner_review.md.
 **Next session should:** see HANDOFF (owner campaign review, M8-14 stills, M8-15 acceptance, M4-16).

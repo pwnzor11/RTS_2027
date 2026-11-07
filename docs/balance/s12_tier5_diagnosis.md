@@ -71,3 +71,19 @@ But turning the flags off removes late-game tech for good, so the fix is a condi
 ## Step 4: before -> after, 64 games (32 seeds x 2), 30 000 ticks, A / B / draw
 
 See the table in the final report; raw lines are in the commit message of the doc commit.
+
+## Before → after the fix (PR #36), 64 games per cell (32 seeds x 2), --ticks 30000, A (higher tier) / B / draw
+Before = docs/balance/s12_ladder.md. Decisive % = A / (A + B).
+
+| Cell | Before | After | Decisive % before → after |
+|---|---|---|---|
+| Authority 5 v 1 | 22 / 37 / 5 | 31 / 25 / 8 | 37 → 55 |
+| Authority 5 v 4 | 17 / 36 / 11 | 30 / 21 / 13 | 32 → 59 |
+| Authority 4 v 3 | 21 / 33 / 10 | 24 / 33 / 7 | 39 → 42 |
+| Authority 3 v 2 | 27 / 31 / 6 | 28 / 26 / 10 | 47 → 52 |
+| Directorate 5 v 1 | 3 / 9 / 52 | 7 / 11 / 46 | 25 → 39 |
+| Directorate 5 v 4 | 11 / 33 / 20 | 18 / 23 / 23 | 25 → 44 |
+| Directorate 4 v 3 | 12 / 33 / 19 | 12 / 33 / 19 | 27 → 27 (unchanged) |
+| Directorate 3 v 2 | 34 / 3 / 27 | 34 / 3 / 27 | 92 → 92 (unchanged) |
+
+Target (M4-16) not reached: 5 v 1 is 55 % against the 90 % goal; tier 3 still beats tier 4 in both factions.
