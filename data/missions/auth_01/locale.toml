@@ -1,0 +1,29 @@
+# Authority 01 "Survey Convoy" locale. Speaker: Brigadier Wrenfield (leader_auth_wrenfield), the Authority campaign hero.
+"a1.start" = "Convoy is rolling. Get the scrapers to the survey site."
+"a1.radio.start" = "Convoy, this is Wrenfield. Keep the scrapers in the middle and the rifles outside."
+"a1.radio.chatter" = "Directorate chatter on the band. Stay tight, Commander."
+"a1.site.clear" = "Scouts report the site is clear. Bring the scrapers up."
+"a1.radio.down" = "Gear is down. Raiders will come. Hold the site."
+"a1.raid1" = "Raiders from the east road!"
+"a1.raid2" = "Second wave from the north!"
+"a1.radio.civilians" = "Two surveyors are still out there. Keep them alive if you can."
+"a1.radio.civilians_lost" = "We lost a surveyor. Keep going."
+"a1.raiders.beaten" = "Raiders beaten. A forward Construction Yard has been airlifted to the pit. Power first, then the Refinery."
+"a1.radio.build" = "Yard is on the pit. Power, then the Refinery. Quickly."
+"a1.lost" = "Both scrapers are lost. The survey is over."
+"a1.win" = "Refinery online. Pitchblende is ours. Well done, Commander."
+"a1.radio.win" = "Good work. The convoys will eat this winter."
+
+
+# Objective and timer labels (s12: the HUD shows the locale text when a label is a key)
+"a1.obj.reach" = "Escort the scraper convoy to the survey site in the north-east"
+"a1.obj.scrapers" = "Keep at least one scraper alive"
+"a1.obj.surveyors" = "Bring both civilian surveyors through alive"
+"a1.obj.hold" = "Hold the survey site until the raiders are beaten"
+"a1.obj.refinery" = "Build a Refinery beside the pitchblende pit"
+"a1.timer.raid2" = "Second raid"
+
+[voice]
+"a1.radio.start" = "voice/leader_auth_wrenfield/a1.radio.start.ogg"
+"a1.radio.down" = "voice/leader_auth_wrenfield/a1.radio.down.ogg"
+"a1.radio.win" = "voice/leader_auth_wrenfield/a1.radio.win.ogg"

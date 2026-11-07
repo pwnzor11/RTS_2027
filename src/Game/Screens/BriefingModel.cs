@@ -115,7 +115,7 @@ public sealed class BriefingModel
             MissionGame game = MissionGame.Create(rulesDir, missionId);
             game.Sim.Step(Array.Empty<Rts.Sim.Core.Command>());
             game.Sim.Step(Array.Empty<Rts.Sim.Core.Command>());
-            return game.Host.VisibleObjectives.OrderByDescending(o => o.Primary).Select(o => (o.Primary ? "" : "(optional) ") + o.Text).ToList();
+            return game.Host.VisibleObjectives.OrderByDescending(o => o.Primary).Select(o => (o.Primary ? "" : "(optional) ") + game.Host.Label(o.Text)).ToList();
         }
         catch (Exception e) when (e is InvalidDataException or IOException or InvalidOperationException or RulesException or ArgumentException)
         {

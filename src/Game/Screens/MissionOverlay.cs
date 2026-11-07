@@ -26,6 +26,7 @@ internal sealed class MissionOverlay
     private readonly MissionHost _host;
     private readonly MissionDialoguePresenter _dialogue = new();
     private readonly MissionCameraCue _cameraCue = new();
+    private int _tick;
 
     public MissionOverlay(MissionHost host) => _host = host;
 
@@ -38,6 +39,7 @@ internal sealed class MissionOverlay
     /// </summary>
     public Rts.Sim.Core.CellCoord? Advance(int tick, IAudio audio)
     {
+        _tick = tick;
         _dialogue.Advance(_host.Dialogue, tick);
         if (_dialogue.Started && _dialogue.Current is { } line && MissionDialoguePresenter.VoiceToPlay(line, audio.HasVoice) is { } voice)
             audio.PlayVoice(voice);
@@ -54,18 +56,8 @@ internal sealed class MissionOverlay
     /// <summary>The objectives panel, so clicks on it never reach the map.</summary>
     public RectRegion ObjectivesRegion { get; } = new(Rectangle.Empty);
 
-    /// <summary>Lines of the objectives panel.</summary>
-    public List<string> ObjectiveLines()
-    {
-        var lines = new List<string> { "OBJECTIVES" };
-        foreach (MissionObjective o in _host.Objectives)
-        {
-            string mark = o.Status switch { ObjectiveStatus.Completed => "[x] ", ObjectiveStatus.Failed => "[!] ", _ => "[ ] " };
-            lines.Add(mark + (o.Primary ? "" : "(optional) ") + o.Text);
-        }
-
-        return lines;
-    }
+    /// <summary>Lines of the objectives panel (<see cref="MissionObjectiveLines"/>).</summary>
+    public List<string> ObjectiveLines() => MissionObjectiveLines.Build(_host, _tick);
 
     /// <summary>The ticker lines for the given sim tick: recent messages, wrapped, newest last.</summary>
     public List<string> TickerLines(int tick)

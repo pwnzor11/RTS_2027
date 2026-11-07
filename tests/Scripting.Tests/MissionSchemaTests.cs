@@ -25,16 +25,17 @@ public sealed class MissionSchemaTests : IDisposable
         "[mission]\n" + extraMission + "title = \"T\"\nmap = \"m.map.toml\"\nscript = \"mission.lua\"\nbriefing = \"briefing.md\"\nseed = 1\n";
 
     [Fact]
-    public void Pilot_mission_loads_as_schema_one_with_empty_v2_fields()
+    public void Auth_01_loads_as_schema_two_with_its_v2_fields()
     {
         MissionDef d = MissionLoader.Load(MissionLoader.FolderOf(TestData.DataDir, "auth_01"));
-        Assert.Equal(1, d.Schema);
-        Assert.Equal(0, d.Act);
-        Assert.Equal("", d.Faction);
-        Assert.Empty(d.Next);
-        Assert.Empty(d.StartsWith);
-        Assert.Empty(d.UnlocksOnWin);
-        Assert.Equal("", d.LocaleFile);
+        Assert.Equal(2, d.Schema);
+        Assert.Equal(1, d.Act);
+        Assert.Equal("authority", d.Faction);
+        Assert.Equal(new[] { "auth_02" }, d.Next);
+        Assert.Equal(6, d.StartsWith.Count);
+        Assert.Equal(new[] { "auth_turret" }, d.UnlocksOnWin);
+        Assert.Equal("locale.toml", d.LocaleFile);
+        Assert.Empty(d.Locale.Warnings);
         Assert.Equal("Survey Convoy", d.Title);
     }
 

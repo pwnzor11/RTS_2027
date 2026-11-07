@@ -58,9 +58,10 @@ public sealed class MissionStateContractTests
     [Fact]
     public void A_game_without_v2_features_writes_the_version_one_layout()
     {
-        MissionSession m = MissionSession.Create(TestData.DataDir, "auth_01");
-        TestData.Run(m.Sim, 700);
-        Assert.Equal(1, BitConverter.ToInt32(Bytes(m.Host.State), 0));
+        // auth_01 uses a hidden objective since M8-10, so the plain layout is checked on a script without v2 features.
+        (Simulation sim, MissionHost host) = M85Mission.Build("function OnInit() Objective.Add('a', 'A', true) end");
+        TestData.Run(sim, 700);
+        Assert.Equal(1, BitConverter.ToInt32(Bytes(host.State), 0));
     }
 
     [Fact]
