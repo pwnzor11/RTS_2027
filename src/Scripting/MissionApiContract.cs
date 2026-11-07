@@ -50,6 +50,7 @@ public static class MissionApiContract
         Add(ApiStatus.Implemented, "M8-05", "Dialogue.Say", "Dialogue.Clear", "Camera.Focus", "Media.MessageKey");
         Add(ApiStatus.Implemented, "M8-06", "AI.Attack", "AI.Defend", "AI.SetTier", "AI.Wave", "AI.Clear");
         Add(ApiStatus.Implemented, "M8-17", "Player.Funds");
+        Add(ApiStatus.Implemented, "M11-05", "Objective.SetTarget", "Objective.ClearTarget");
         return l;
     }
 }

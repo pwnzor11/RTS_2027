@@ -78,6 +78,9 @@ public static class GameKeys
         new(GameAction.SpecSpeed4, "spec_speed_4", System, "Spectator: speed 4x", Keys.D3, KeyContext.Spectator),
         new(GameAction.SpecSpeed8, "spec_speed_8", System, "Spectator: speed 8x", Keys.D4, KeyContext.Spectator),
         new(GameAction.SpecDetail, "spec_detail", System, "Spectator: detail panel", Keys.Tab, KeyContext.Spectator),
+        new(GameAction.ObjJump, "obj_jump", System, "Mission: jump to the objective", Keys.J),
+        new(GameAction.ObjCycle, "obj_cycle", System, "Mission: next objective", Keys.Tab),
+        new(GameAction.ObjList, "obj_list", System, "Mission: objective list", Keys.O),
     };
 
     /// <summary>The Controls page lines, grouped in <see cref="Groups"/> order: rebindable actions and fixed inputs shown for reference.</summary>
@@ -133,7 +136,7 @@ public static class GameKeys
             A(GameAction.DebugStep), A(GameAction.DebugSpectator),
             A(GameAction.SpecView), A(GameAction.SpecSpeed1), A(GameAction.SpecSpeed2), A(GameAction.SpecSpeed4), A(GameAction.SpecSpeed8),
             A(GameAction.SpecDetail),
-            // M11 objective guidance (s14-obj) adds its J / Tab / O actions here, as GameAction entries with a Play context.
+            A(GameAction.ObjJump), A(GameAction.ObjCycle), A(GameAction.ObjList),
         };
     }
 }

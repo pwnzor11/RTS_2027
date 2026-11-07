@@ -18,6 +18,7 @@ public sealed class GameKeysTests
         "src/Game/Controls/OrderController.cs",
         "src/Game/Ui/Spectator/SpectatorController.cs",
         "src/Game/Ui/Llm/CommanderChatPanel.cs",
+        "src/Game/Ui/Objectives/ObjectiveGuidance.cs",
     };
 
     private static string Root()

@@ -51,6 +51,13 @@ public sealed partial class MissionHost
                 _objectives[i] = _objectives[i] with { Hidden = false };
                 return DynValue.Nil;
             }),
+            ("SetTarget", ObjectiveSetTarget),
+            ("ClearTarget", a =>
+            {
+                int i = _objectives.FindIndex(o => o.Id == KnownObjective(a, 0));
+                _objectives[i] = _objectives[i] with { Target = default };
+                return DynValue.Nil;
+            }),
             ("Status", a =>
             {
                 MissionObjective o = _objectives.Find(x => x.Id == KnownObjective(a, 0))!;
@@ -109,6 +116,52 @@ public sealed partial class MissionHost
                 foreach (string id in _granted[player]) list.Set(++k, DynValue.NewString(id));
                 return DynValue.NewTable(list);
             }));
+    }
+
+    /// <summary>Objective.SetTarget(id, cell | zone | tag): gives the objective a location for the HUD (M11-05). A zone name wins over a tag.</summary>
+    private DynValue ObjectiveSetTarget(CallbackArguments a)
+    {
+        int i = _objectives.FindIndex(o => o.Id == KnownObjective(a, 0));
+        ObjectiveTarget t;
+        if (a[1].Type == DataType.Table)
+        {
+            CellCoord c = CellArg(a, 1);
+            t = new ObjectiveTarget(ObjectiveTargetKind.Cell, "", c.X, c.Y);
+        }
+        else
+        {
+            string name = ZoneOrTagArg(a, 1);
+            t = new ObjectiveTarget(Def.ZoneNamed(name) != null ? ObjectiveTargetKind.Zone : ObjectiveTargetKind.Actor, name);
+        }
+
+        _objectives[i] = _objectives[i] with { Target = t };
+        return DynValue.Nil;
+    }
+
+    /// <summary>
+    /// The cell the HUD should point at for an objective's target: the cell itself, a zone's middle cell, or the tagged actor's cell
+    /// while it is alive. False when there is no target or the actor is gone. Read-only; for the UI.
+    /// </summary>
+    public bool TryObjectiveCell(MissionObjective o, out CellCoord cell)
+    {
+        cell = default;
+        ObjectiveTarget t = o.Target;
+        switch (t.Kind)
+        {
+            case ObjectiveTargetKind.Cell:
+                cell = new CellCoord(t.X, t.Y);
+                return true;
+            case ObjectiveTargetKind.Zone:
+                if (Def.ZoneNamed(t.Name) is not { } z) return false;
+                cell = new CellCoord((z.X0 + z.X1) / 2, (z.Y0 + z.Y1) / 2);
+                return true;
+            case ObjectiveTargetKind.Actor:
+                if (_sim == null || !TryTag(t.Name, out ActorRef r) || !_sim.TryResolve(r)) return false;
+                cell = CellOfActor(_sim, r);
+                return true;
+            default:
+                return false;
+        }
     }
 
     private DynValue AddAreaTrigger(TriggerKind kind, int player, string name, CallbackArguments args, int fnIndex, int ticks)

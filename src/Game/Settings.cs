@@ -30,6 +30,7 @@ namespace Rts.Game;
 /// <param name="ScrollSpeed">Camera scroll speed in screen pixels per second, 200..3000 (M11-02). Files without the key get 900.</param>
 /// <param name="KeyMap">Rebound keys (D-172 (6)); null = the default bindings. Stored in a <c>[keys]</c> table of action id = key name; missing or unknown entries are ignored.</param>
 /// <param name="ShowDiagnostics">Show the tick / state hash / fps line in play (M11-03). Default false; files without the key get false.</param>
+/// <param name="CameraCueOnNewObjective">Pan the camera to a new mission objective's target (M11-05; default true).</param>
 public sealed record Settings(
     int Version = Settings.CurrentVersion,
     bool Fullscreen = false,
@@ -48,6 +49,7 @@ public sealed record Settings(
     int ScrollSpeed = Settings.DefaultScrollSpeed,
     bool ShowDiagnostics = false,
     bool HealthBarsAlways = false,   // false = "Damaged or selected" (default), true = "Always"
+    bool CameraCueOnNewObjective = true,
     KeyBindings? KeyMap = null)
 {
     /// <summary>The file format version this build reads and writes.</summary>
@@ -122,6 +124,7 @@ public sealed record Settings(
             Int(root, "scroll_speed", d.ScrollSpeed, MinScrollSpeed, MaxScrollSpeed),
             root.TryGetValue("show_diagnostics", out object? sd) && sd is bool sdb ? sdb : d.ShowDiagnostics,
             root.TryGetValue("health_bars_always", out object? hb) && hb is bool hbb ? hbb : d.HealthBarsAlways,
+            root.TryGetValue("camera_cue_on_new_objective", out object? cq) && cq is bool cqb ? cqb : d.CameraCueOnNewObjective,
             ParseKeys(root));
     }
 
@@ -152,6 +155,8 @@ public sealed record Settings(
         sb.AppendLine("# Show the tick / hash / fps line while playing.");
         sb.AppendLine(FormattableString.Invariant($"show_diagnostics = {(ShowDiagnostics ? "true" : "false")}"));
         sb.AppendLine(FormattableString.Invariant($"health_bars_always = {(HealthBarsAlways ? "true" : "false")}"));
+        sb.AppendLine("# Pan the camera to a new mission objective's target (M11-05)");
+        sb.AppendLine(FormattableString.Invariant($"camera_cue_on_new_objective = {(CameraCueOnNewObjective ? "true" : "false")}"));
         IReadOnlyList<(string Id, string Key)> rebound = Bindings.Overrides();
         if (rebound.Count > 0)
         {

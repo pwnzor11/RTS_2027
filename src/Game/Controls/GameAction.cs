@@ -79,4 +79,10 @@ public enum GameAction
     SpecSpeed8,
     /// <summary>Spectator: detail panel.</summary>
     SpecDetail,
+    /// <summary>Mission: jump to the guided objective.</summary>
+    ObjJump,
+    /// <summary>Mission: cycle to the next objective.</summary>
+    ObjCycle,
+    /// <summary>Mission: expand or collapse the objective list.</summary>
+    ObjList,
 }
