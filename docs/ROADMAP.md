@@ -238,7 +238,7 @@ Wires Archive campaign unlocks.
 
 ## M11 · UI and input overhaul (owner feedback 2026-11-07; built before M9, D-171)
 Source: docs/reviews/2026-11-07_owner_campaign_feedback.md. Audit: docs/reviews/2026-11-07_ui_input_audit.md (s14).
-- [ ] M11-01 Adversarial UI and input audit, with layout options for the owner (s14)
+- [x] M11-01 Adversarial UI and input audit, with layout options for the owner (s14)
 - [ ] M11-02 Edge scrolling (mouse at the screen edge pans the view)
 - [ ] M11-03 Control hints off the HUD; Controls page in Settings
 - [ ] M11-04 Selection panel for single-unit info on the right, build menu shrinks while a unit is selected
