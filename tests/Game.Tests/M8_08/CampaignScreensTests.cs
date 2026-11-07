@@ -54,19 +54,32 @@ public sealed class CampaignScreensTests : IDisposable
         Assert.Equal("", lb.Reason);
     }
 
+    /// <summary>A scratch data folder with every campaign file but only auth_01 written, so the "not written yet" rows stay testable as missions land.</summary>
+    private string DataWithOnlyAuth01()
+    {
+        string data = Path.Combine(_dir, "data");
+        Directory.CreateDirectory(Path.Combine(data, "campaigns"));
+        Directory.CreateDirectory(Path.Combine(data, "missions", "auth_01"));
+        foreach (string f in Directory.GetFiles(Path.Combine(DataDir, "campaigns"))) File.Copy(f, Path.Combine(data, "campaigns", Path.GetFileName(f)));
+        foreach (string f in Directory.GetFiles(Path.Combine(DataDir, "missions", "auth_01"))) File.Copy(f, Path.Combine(data, "missions", "auth_01", Path.GetFileName(f)));
+        return data;
+    }
+
     [Fact]
     public void Mission_select_shows_next_completed_locked_and_unwritten_missions()
     {
-        CampaignService s = Service();
-        MissionSelectRow auth = MissionSelectModel.Build(s, DataDir, "authority").Single(r => r.Id == "auth_01");
+        string data = DataWithOnlyAuth01();
+        CampaignService Svc() => new(data, Path.Combine(_dir, "profile"), new ArchiveProgress(), Path.Combine(_dir, "archive.toml"));
+        CampaignService s = Svc();
+        MissionSelectRow auth = MissionSelectModel.Build(s, data, "authority").Single(r => r.Id == "auth_01");
         Assert.Equal(CampaignMissionState.Next, auth.State);
         Assert.True(auth.CanStart);
         Assert.Equal("Survey Convoy", auth.Title);
 
         Assert.True(CampaignProgress.New("authority").WithWin("auth_01", 2, Array.Empty<string>()).Save(s.ProgressPath("authority")));
-        Assert.Equal(CampaignMissionState.Completed, MissionSelectModel.Build(Service(), DataDir, "authority").Single(r => r.Id == "auth_01").State);
+        Assert.Equal(CampaignMissionState.Completed, MissionSelectModel.Build(Svc(), data, "authority").Single(r => r.Id == "auth_01").State);
 
-        IReadOnlyList<MissionSelectRow> dir = MissionSelectModel.Build(s, DataDir, "directorate");
+        IReadOnlyList<MissionSelectRow> dir = MissionSelectModel.Build(s, data, "directorate");
         MissionSelectRow first = dir[0];
         Assert.False(first.Exists);
         Assert.False(first.CanStart);
