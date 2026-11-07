@@ -71,21 +71,23 @@ def build():
     E.landing_craft((22, 30), -0.15, 1.3, wake_on=True, rng=R)
 
     # jets on contrails, climbing away over the cove
-    for p0, p1, bank in (((-20, 40, 40), (-48, 100, 60), 0.35), ((70, 60, 50), (40, 130, 74), -0.3)):
+    for p0, p1, bank in (((-10, 50, 24), (-40, 105, 40), 0.35), ((60, 70, 30), (42, 135, 48), -0.3)):
         yaw = math.atan2(p1[0] - p0[0], p1[1] - p0[1])
         E.jet(p1, yaw, z=p1[2], s=2.0, bank=bank)
-        E.contrail(p0, (p1[0] - math.sin(yaw) * 5, p1[1] - math.cos(yaw) * 5, p1[2]), n=22, r=0.35, rng=R)
+        E.contrail(p0, (p1[0] - math.sin(yaw) * 5, p1[1] - math.cos(yaw) * 5, p1[2]), n=24, r=0.55, rng=R)
+
+    E.light_shaft((8, 118, 0), (30, 330, 190), r_base=22.0, alpha=0.12, emit=1.8)
 
     # sky: storm greys and a gap of sun on the right
-    az, el = math.radians(28.0), math.radians(22.0)
+    az, el = math.radians(14.0), math.radians(16.0)
     sunv = Vector((math.sin(az) * math.cos(el), math.cos(az) * math.cos(el), math.sin(el)))
-    E.sky_custom(sunv, [(0.0, "#D5E0D8"), (0.05, "#A7BDBC"), (0.18, "#5E8296"), (0.5, "#2C4560"), (1.0, "#14213A")],
-                 glow="#FFE6B8", cloud_stops=[(0.04, "#F2F0E2"), (0.18, "#8A9AA8"), (0.45, "#3E5068")],
-                 strength=1.0, cloud_cov=(0.36, 0.54), cloud_gain=1.5, glow_gain=2.2, cloud_band=(0.0, 0.14, 0.6, 0.9))
-    key = K.sun((0, 0, 0), float(os.environ.get("STILL_SUN", "12.0")), colour=(1.0, 0.88, 0.68), angle=1.6)
+    E.sky_custom(sunv, [(0.0, "#CFDAD0"), (0.05, "#8FA9AC"), (0.18, "#456A80"), (0.5, "#1F3550"), (1.0, "#0C1528")],
+                 glow="#FFE6B8", cloud_stops=[(0.04, "#FFF4D8"), (0.15, "#6C7C8C"), (0.45, "#222F44")],
+                 strength=0.9, cloud_cov=(0.30, 0.48), cloud_gain=1.25, glow_gain=3.6, cloud_band=(0.0, 0.14, 0.6, 0.9))
+    key = K.sun((0, 0, 0), float(os.environ.get("STILL_SUN", "14.0")), colour=(1.0, 0.88, 0.68), angle=1.6)
     key.rotation_euler = (-sunv).to_track_quat("-Z", "Y").to_euler()
     K.area_light((-34, -30, 34), (0, 15, 2), 60, 14000.0, (0.55, 0.65, 1.0))
-    K.haze(float(os.environ.get("STILL_HAZE", "0.0014")), top=60.0, colour="#C4D4DA")
+    K.haze(float(os.environ.get("STILL_HAZE", "0.0010")), top=60.0, colour="#C4D4DA")
     K.camera((4.0, -38.0, 12.5), (6.0, 90.0, 3.0), lens=24)
 
 
