@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Rts.Game.Input;
 using Rts.Game.Render;
+using Rts.Game.Ui.Fonts;
 using Rts.Scripting;
 using Rts.Sim.Core;
 
