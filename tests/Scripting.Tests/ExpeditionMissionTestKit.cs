@@ -86,4 +86,38 @@ internal static class ExpeditionMissionTestKit
                 cmds.Add(new Command(s.Tick, player, _seq++, kind, s.Infantry.Slots.IdOf(i), default, cell, (int)ActorKind.Infantry));
         s.Step(cmds);
     }
+
+    /// <summary>The cell of an enemy (any other player) soldier or ground vehicle within <paramref name="radius"/> cells (Chebyshev) of <paramref name="center"/>, nearest first; null when none.</summary>
+    public static CellCoord? EnemyNear(Simulation s, CellCoord center, int radius, byte me = 0)
+    {
+        CellCoord? best = null; int bestD = int.MaxValue;
+        for (int i = 1; i < s.Infantry.Capacity; i++)
+            if (s.Infantry.Slots.IsIndexAlive(i) && s.Infantry.Player[i] != me) Consider(s.Infantry.Position[i]);
+        for (int i = 1; i < s.Units.Capacity; i++)
+            if (s.Units.Slots.IsIndexAlive(i) && s.Units.Player[i] != me && s.Setup.Rules.Vehicles[s.Units.TypeIndex[i]].Locomotion is not (Locomotion.Naval or Locomotion.Air)) Consider(s.Units.Position[i]);
+        return best;
+
+        void Consider(LeptonCoord p)
+        {
+            int x = p.X >> 8, y = p.Y >> 8;
+            int d = Math.Max(Math.Abs(x - center.X), Math.Abs(y - center.Y));
+            if (d <= radius && d < bestD) { bestD = d; best = new CellCoord(x, y); }
+        }
+    }
+
+    /// <summary>Like <see cref="MissionBot.BuildAndPlace"/>, but the army keeps answering enemies near <paramref name="center"/> (else gathers on <paramref name="hold"/>) while the building is made.</summary>
+    public static bool BuildDefending(MissionBot bot, string typeId, IReadOnlyList<CellCoord> spots, CellCoord center, CellCoord hold, int maxTicks = 3000)
+    {
+        int before = bot.Count(typeId);
+        bot.Train(typeId);
+        for (int t = 0; t < maxTicks && !bot.Sim.GameOver; t++)
+        {
+            if (t % 60 == 0) OrderLand(bot.Sim, CommandKind.AttackMove, EnemyNear(bot.Sim, center, 20) ?? hold);
+            if (t % 10 == 0)
+                foreach (CellCoord c in spots)
+                    if (bot.TryPlace(typeId, c)) return true;
+            bot.Idle();
+        }
+        return bot.Count(typeId) > before;
+    }
 }
