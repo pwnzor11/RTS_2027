@@ -388,19 +388,19 @@ public sealed class GameScreen : IScreen
             }
             else
             {
-                if (input.ConsumePressed(Keys.Space)) _sim.Paused = !_sim.Paused;
-                if (debugKeys && input.ConsumePressed(Keys.F2)) _sim.CycleViewer();
-                if (debugKeys && _console is not { IsOpen: true } && input.ConsumePressed(Keys.F9)) StartSpectatorFromSandbox();
+                if (input.ConsumePressed(GameAction.Pause)) _sim.Paused = !_sim.Paused;
+                if (debugKeys && input.ConsumePressed(GameAction.DebugFog)) _sim.CycleViewer();
+                if (debugKeys && _console is not { IsOpen: true } && input.ConsumePressed(GameAction.DebugSpectator)) StartSpectatorFromSandbox();
             }
 
-            if (debugKeys && input.ConsumePressed(Keys.OemPeriod)) _sim.StepOnce();
+            if (debugKeys && input.ConsumePressed(GameAction.DebugStep)) _sim.StepOnce();
         }
 
         if (debugKeys)
         {
-            if (input.ConsumePressed(Keys.F3)) _overlays.Occupancy = !_overlays.Occupancy;
-            if (input.ConsumePressed(Keys.F4)) _overlays.Paths = !_overlays.Paths;
-            if (input.ConsumePressed(Keys.F10)) _overlays.Ranges = !_overlays.Ranges;
+            if (input.ConsumePressed(GameAction.DebugOccupancy)) _overlays.Occupancy = !_overlays.Occupancy;
+            if (input.ConsumePressed(GameAction.DebugPaths)) _overlays.Paths = !_overlays.Paths;
+            if (input.ConsumePressed(GameAction.DebugRanges)) _overlays.Ranges = !_overlays.Ranges;
         }
 
         HandleCameraKeys(input);
@@ -408,18 +408,18 @@ public sealed class GameScreen : IScreen
         if (_orders is not null) _orders.SelectedBuilding = _selectedBuilding;   // M4-09: D unloads a selected garrisoned building
         if (_orders is not null)
         {
-            foreach (Keys key in GameKeys.OrderKeys)
+            foreach (GameAction action in GameKeys.OrderActions)
             {
-                if (input.ConsumePressed(key)) _orders.KeyPressed(key);
+                if (input.ConsumePressed(action)) _orders.KeyPressed(action);
             }
         }
 
         _feedback.Advance((float)t.ElapsedGameTime.TotalSeconds);
         Vector2 keyDirection = Vector2.Zero;
-        if (input.IsDown(Keys.Left)) keyDirection.X -= 1f;
-        if (input.IsDown(Keys.Right)) keyDirection.X += 1f;
-        if (input.IsDown(Keys.Up)) keyDirection.Y -= 1f;
-        if (input.IsDown(Keys.Down)) keyDirection.Y += 1f;
+        if (input.IsDown(GameAction.ScrollLeft)) keyDirection.X -= 1f;
+        if (input.IsDown(GameAction.ScrollRight)) keyDirection.X += 1f;
+        if (input.IsDown(GameAction.ScrollUp)) keyDirection.Y -= 1f;
+        if (input.IsDown(GameAction.ScrollDown)) keyDirection.Y += 1f;
         bool busy = _dragStart is not null || input.MiddleDragging || _sidebar is { MinimapDragging: true } || _console is { IsOpen: true } || chatTyping;
         Vector2 edge = CameraScroll.EdgeDirection(input.MousePosition, new Rectangle(0, 0, _s.Viewport.Width, _s.Viewport.Height),
             _s.Settings.EdgeScroll, _s.WindowActive(), busy);
@@ -877,7 +877,7 @@ public sealed class GameScreen : IScreen
     private void HandlePackKeyAndPlacement(InputFrame input)
     {
         if (_sim is null || _orders is null) return;
-        if (input.ConsumePressed(Keys.K))
+        if (input.ConsumePressed(GameAction.Pack))
         {
             if (_unpack is not null) _unpack = null;
             else if (_pack is { } offer) ActivatePack(offer);
@@ -1045,9 +1045,9 @@ public sealed class GameScreen : IScreen
     private void HandleCameraKeys(InputFrame input)
     {
         if (_sim is null) return;
-        if (input.ConsumePressed(Keys.Home)) CentreCameraOnOwnBase();
+        if (input.ConsumePressed(GameAction.CentreBase)) CentreCameraOnOwnBase();
         bool ctrl = input.IsDown(Keys.LeftControl) || input.IsDown(Keys.RightControl);
-        Keys[] keys = { Keys.F5, Keys.F6, Keys.F7, Keys.F8 };
+        GameAction[] keys = { GameAction.Bookmark1, GameAction.Bookmark2, GameAction.Bookmark3, GameAction.Bookmark4 };
         for (int i = 0; i < keys.Length; i++)
         {
             if (!input.ConsumePressed(keys[i])) continue;
@@ -1108,7 +1108,7 @@ public sealed class GameScreen : IScreen
             lines.Add($"tick {snapshot.Tick}  hash {snapshot.StateHash:x16}  fps {_s.Fps}  zoom {_camera.ZoomLabel}");
         if (_sim is { Paused: true }) lines.Add(debugMode ? "PAUSED (. = step)" : "PAUSED");
 
-        if (_orders is { DeployArmed: true }) lines.Add("DEPLOY: right-click the cell to dig at (D cancels)");
+        if (_orders is { DeployArmed: true }) lines.Add($"DEPLOY: right-click the cell to dig at ({KeyNames.Of(GameKeys.Active.Get(GameAction.Deploy))} cancels)");
         if (_unpack is not null) lines.Add(LeftBehindText.Placeholder(LeftBehindText.UnpackPlacementKey));
 
         if (_sim is not null && _orders is not null && !_skirmishMode) // unit counts of both sides would show the fogged enemy

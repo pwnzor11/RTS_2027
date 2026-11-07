@@ -57,24 +57,24 @@ public sealed class OrderController
     /// D on a garrisoned own building then sends Unload.</summary>
     public EntityId SelectedBuilding { get; set; } = EntityId.None;
 
-    /// <summary>Handles a key that went down this frame. Ignores keys that are not orders.</summary>
-    public void KeyPressed(Keys key)
+    /// <summary>Handles an order action whose key went down this frame. Ignores actions that are not orders.</summary>
+    public void KeyPressed(GameAction action)
     {
-        switch (key)
+        switch (action)
         {
-            case Keys.A:
+            case GameAction.AttackMove:
                 AttackMoveArmed = !AttackMoveArmed;
                 break;
-            case Keys.S:
+            case GameAction.Stop:
                 IssueToSelection(CommandKind.Stop);
                 break;
-            case Keys.D:
+            case GameAction.Deploy:
                 if (!TryUnloadSelectedBuilding()) Deploy();
                 break;
-            case Keys.X:
+            case GameAction.Scatter:
                 IssueToSelection(CommandKind.Scatter);
                 break;
-            case Keys.G:
+            case GameAction.Guard:
                 foreach (UnitKey unit in _selection.Units.ToList())
                 {
                     if (_source.TryGetPosition(unit, out LeptonCoord at)) _source.Order(CommandKind.Guard, unit, at.ToCell());

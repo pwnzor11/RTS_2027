@@ -152,12 +152,12 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
         if (Mode == SidebarMode.Placement && ReadyOf(_placementType) != _placementType) CancelMode();
         BuildVisibleList();
 
-        if (input.ConsumePressed(Keys.Q)) SelectTab(SidebarTab.Structures);
-        if (input.ConsumePressed(Keys.W)) SelectTab(SidebarTab.Defences);
-        if (input.ConsumePressed(Keys.E)) SelectTab(SidebarTab.Infantry);
-        if (input.ConsumePressed(Keys.R)) SelectTab(SidebarTab.Vehicles);
-        if (input.ConsumePressed(Keys.T)) SelectTab(SidebarTab.Upgrades);
-        if (_hasAircraft && input.ConsumePressed(Keys.Y)) SelectTab(SidebarTab.Aircraft);
+        if (input.ConsumePressed(GameAction.TabStructures)) SelectTab(SidebarTab.Structures);
+        if (input.ConsumePressed(GameAction.TabDefences)) SelectTab(SidebarTab.Defences);
+        if (input.ConsumePressed(GameAction.TabInfantry)) SelectTab(SidebarTab.Infantry);
+        if (input.ConsumePressed(GameAction.TabVehicles)) SelectTab(SidebarTab.Vehicles);
+        if (input.ConsumePressed(GameAction.TabUpgrades)) SelectTab(SidebarTab.Upgrades);
+        if (_hasAircraft && input.ConsumePressed(GameAction.TabAircraft)) SelectTab(SidebarTab.Aircraft);
 
         if (_minimapDrag)
         {

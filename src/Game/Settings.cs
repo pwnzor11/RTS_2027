@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
 using System.Text;
+using Rts.Game.Controls;
 using Tomlyn;
 using Tomlyn.Model;
 
@@ -27,6 +28,7 @@ namespace Rts.Game;
 /// <param name="LlmCallCap">Most LLM calls per game, 0..1000; 0 = no cap (default 120). The API key is never a setting.</param>
 /// <param name="EdgeScroll">Mouse at the window edge pans the camera (M11-02). Files without the key get true.</param>
 /// <param name="ScrollSpeed">Camera scroll speed in screen pixels per second, 200..3000 (M11-02). Files without the key get 900.</param>
+/// <param name="KeyMap">Rebound keys (D-172 (6)); null = the default bindings. Stored in a <c>[keys]</c> table of action id = key name; missing or unknown entries are ignored.</param>
 /// <param name="ShowDiagnostics">Show the tick / state hash / fps line in play (M11-03). Default false; files without the key get false.</param>
 public sealed record Settings(
     int Version = Settings.CurrentVersion,
@@ -45,7 +47,8 @@ public sealed record Settings(
     bool EdgeScroll = true,
     int ScrollSpeed = Settings.DefaultScrollSpeed,
     bool ShowDiagnostics = false,
-    bool HealthBarsAlways = false)   // false = "Damaged or selected" (default), true = "Always"
+    bool HealthBarsAlways = false,   // false = "Damaged or selected" (default), true = "Always"
+    KeyBindings? KeyMap = null)
 {
     /// <summary>The file format version this build reads and writes.</summary>
     public const int CurrentVersion = 2;
@@ -118,7 +121,8 @@ public sealed record Settings(
             root.TryGetValue("edge_scroll", out object? es) && es is bool esb ? esb : d.EdgeScroll,
             Int(root, "scroll_speed", d.ScrollSpeed, MinScrollSpeed, MaxScrollSpeed),
             root.TryGetValue("show_diagnostics", out object? sd) && sd is bool sdb ? sdb : d.ShowDiagnostics,
-            root.TryGetValue("health_bars_always", out object? hb) && hb is bool hbb ? hbb : d.HealthBarsAlways);
+            root.TryGetValue("health_bars_always", out object? hb) && hb is bool hbb ? hbb : d.HealthBarsAlways,
+            ParseKeys(root));
     }
 
     /// <summary>The settings as TOML text.</summary>
@@ -148,7 +152,35 @@ public sealed record Settings(
         sb.AppendLine("# Show the tick / hash / fps line while playing.");
         sb.AppendLine(FormattableString.Invariant($"show_diagnostics = {(ShowDiagnostics ? "true" : "false")}"));
         sb.AppendLine(FormattableString.Invariant($"health_bars_always = {(HealthBarsAlways ? "true" : "false")}"));
+        IReadOnlyList<(string Id, string Key)> rebound = Bindings.Overrides();
+        if (rebound.Count > 0)
+        {
+            sb.AppendLine();
+            sb.AppendLine("# Rebound keys: action = key name. Only changed keys are listed; delete a line (or the table) to restore its default.");
+            sb.AppendLine("[keys]");
+            foreach ((string id, string key) in rebound) sb.AppendLine(FormattableString.Invariant($"{id} = {Quote(key)}"));
+        }
+
         return sb.ToString();
+    }
+
+    /// <summary>The key bindings in force (the defaults when none were changed).</summary>
+    public KeyBindings Bindings => KeyMap ?? KeyBindings.Default;
+
+    /// <summary>These settings with <paramref name="bindings"/> (stored as null when they are the defaults, so equal settings compare equal).</summary>
+    public Settings WithBindings(KeyBindings bindings) => this with { KeyMap = bindings.IsAllDefault ? null : bindings };
+
+    private static KeyBindings? ParseKeys(TomlTable root)
+    {
+        if (!root.TryGetValue("keys", out object? raw) || raw is not TomlTable table) return null;
+        var saved = new List<(string, string)>();
+        foreach (KeyValuePair<string, object> entry in table)
+        {
+            if (entry.Value is string name) saved.Add((entry.Key, name));
+        }
+
+        KeyBindings parsed = KeyBindings.FromOverrides(saved);
+        return parsed.IsAllDefault ? null : parsed;
     }
 
     /// <summary>The provider as a <see cref="Rts.Llm.LlmProviderKind"/> (unknown text = none).</summary>

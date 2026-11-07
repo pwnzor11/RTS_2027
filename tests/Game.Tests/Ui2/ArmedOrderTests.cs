@@ -12,7 +12,7 @@ public sealed class ArmedOrderTests
     public void A_arms_and_cancel_clears()
     {
         var orders = new OrderController(null!, new Selection());
-        orders.KeyPressed(Keys.A);
+        orders.KeyPressed(Rts.Game.Controls.GameAction.AttackMove);
         Assert.True(orders.AttackMoveArmed);
         Assert.True(orders.AnyArmed);
         Assert.True(orders.CancelArmed());
