@@ -1,0 +1,111 @@
+# Tutorial 01: Basic Training (M8-09). Shared by every faction's menu; the player learns on Authority units.
+# Map: test_32 (32x32). Zones are inclusive cell rectangles [x0, y0, x1, y1]. Pre-placed actors are placed before tick 0.
+# The base sits in the north-west corner beside a small pitchblende patch (8-9, 5-6); the enemy is to the east.
+
+[mission]
+schema = 2
+title = "Basic Training"
+map = "test_32.map.toml"
+script = "mission.lua"
+briefing = "briefing.md"
+locale = "locale.toml"
+seed = 2027
+act = 1
+faction = "authority"
+
+# Only these may be built (production chain prerequisites still apply). The scraper arrives free with the refinery.
+[starts_with]
+tech = ["auth_power", "auth_refinery", "auth_barracks", "auth_rifleman"]
+
+[[players]]
+slot = 0
+name = "Authority"
+role = "human"
+team = 0
+cash = 3000
+tech = ["auth_power", "auth_refinery", "auth_barracks", "auth_rifleman"]
+
+[[players]]
+slot = 1
+name = "Training opposition"
+role = "ai"
+team = 1
+cash = 0
+
+# Step 1: walk the squad here.
+[zones.rally]
+rect = [11, 4, 13, 6]
+
+# Step 7: the small enemy camp.
+[zones.pit]
+rect = [7, 4, 10, 7]
+
+[zones.camp]
+rect = [24, 0, 29, 3]
+
+# Player start: a construction yard and four riflemen.
+[[actors]]
+type = "auth_conyard"
+player = 0
+cell = [3, 3]
+tag = "yard"
+
+[[actors]]
+type = "auth_rifleman"
+player = 0
+cell = [4, 7]
+
+[[actors]]
+type = "auth_rifleman"
+player = 0
+cell = [6, 7]
+
+[[actors]]
+type = "auth_rifleman"
+player = 0
+cell = [8, 7]
+
+[[actors]]
+type = "auth_rifleman"
+player = 0
+cell = [10, 7]
+
+# Step 2: a lone enemy power plant to practise on.
+[[actors]]
+type = "auth_power"
+player = 1
+cell = [19, 5]
+tag = "dummy"
+
+# Step 7: three riflemen guarding a second power plant.
+[[actors]]
+type = "auth_power"
+player = 1
+cell = [28, 0]
+tag = "camp_power"
+
+[[actors]]
+type = "auth_rifleman"
+player = 1
+cell = [25, 2]
+tag = "foe1"
+
+[[actors]]
+type = "auth_rifleman"
+player = 1
+cell = [26, 2]
+tag = "foe2"
+
+[[actors]]
+type = "auth_rifleman"
+player = 1
+cell = [27, 2]
+tag = "foe3"
+
+# Keeps the enemy team alive until the script says the lesson is over (a team with nothing left ends the game at once).
+# Far from everything the lessons ask for; the script never counts it.
+[[actors]]
+type = "auth_power"
+player = 1
+cell = [28, 28]
+tag = "reserve"
