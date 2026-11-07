@@ -94,3 +94,14 @@ Reading: the Conscripts still lose at equal count (they die, as before), and the
 fight and unchanged in the 2000 fight. The ash cloud still kills no Conscripts in the small fight. The big fight still loses
 6 Conscripts to the cloud. Those are the numbers to check in play, not a verdict.
 Note: the "Conscript hp 50" candidate row in the test now equals the "now" row, since "now" is 50 HP.
+
+### Bomber vs SAMs: what the player sees and hears when power is low (no rule change)
+
+- **Sidebar power bar (always drawn, `SidebarPanel.DrawPowerBar`):** a thin vertical bar on the left of the sidebar. It turns red
+  (`BadRed`) when Use > Output, green otherwise, with a white marker at the Use level. There is no text label on the bar.
+- **Hover tooltip on the bar:** "Power", "Output X   Use Y", then "Low power: production is slower" (or "Power is fine"). Shown only while the
+  mouse is over the bar. It says nothing about SAMs, defences or superweapons stopping.
+- **Sound:** event `low_power` (`sfx/low_power.wav`, non-positional, volume 1.0), derived each step while Use > Output, with a 20 s cooldown.
+  Plays once on entering low power, then about every 20 s while it lasts.
+- **Not visible:** no icon, text or marker on the unpowered SAM itself, and no message in the event feed (`grep` found no other "low power"
+  text in `src/Game`). An unpowered SAM simply holds fire. The bomber is not shot at and the player gets no hint why.
