@@ -32,9 +32,29 @@ public static class VoiceDecoder
         channels = 0;
         if (!string.Equals(Path.GetExtension(path), ".ogg", StringComparison.OrdinalIgnoreCase)) return false;
 
-        using var reader = new VorbisReader(s, false);
-        if (reader.Channels is < 1 or > 2) return false;
+        VorbisReader reader;
+        try
+        {
+            reader = new VorbisReader(s, false);
+        }
+        catch (ArgumentException e)
+        {
+            // NVorbis reports a file without a valid Ogg container as ArgumentException; the contract says InvalidDataException.
+            throw new InvalidDataException($"not an Ogg Vorbis file: {path}", e);
+        }
 
+        using (reader)
+        {
+            if (reader.Channels is < 1 or > 2) return false;
+            DecodeAll(reader, out pcm16);
+            sampleRate = reader.SampleRate;
+            channels = reader.Channels;
+            return true;
+        }
+    }
+
+    private static void DecodeAll(VorbisReader reader, out byte[] pcm16)
+    {
         var samples = new float[reader.Channels * FramesPerRead];
         using var pcm = new MemoryStream();
         int read;
@@ -51,8 +71,5 @@ public static class VoiceDecoder
         }
 
         pcm16 = pcm.ToArray();
-        sampleRate = reader.SampleRate;
-        channels = reader.Channels;
-        return true;
     }
 }
