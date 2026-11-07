@@ -20,6 +20,10 @@ function OnInit()
   Objective.Add("hold", "e4.obj.hold", true)
   Objective.Add("base", "e4.obj.base", true)
   Objective.AddHidden("ash", "e4.obj.ash", false)
+  -- Objective targets (M11-05): where the HUD points.
+  Objective.SetTarget("fuel", "ash_field")
+  Objective.SetTarget("hold", "beachhead")
+  Objective.SetTarget("base", "shaft")
   Media.MessageKey("e4.start")
   Dialogue.Say(SPEAKER, SPEAKER, "e4.radio.start")
   Camera.Focus("ash_field", 120)
@@ -41,6 +45,7 @@ end
 
 function BaseBlow()
   if state.phase == "done" then return end
+  if not Actor.Alive("shaft") and Actor.Alive("device") then Objective.SetTarget("base", "device") end
   Finale()
   CheckHeld()
   CheckBase()

@@ -26,6 +26,11 @@ function OnInit()
   Objective.Add("scrapers", "lb1.obj.scrapers", true)
   Objective.Add("escort", "lb1.obj.escort", true)
   Objective.AddHidden("cache", "lb1.obj.cache", false)
+  -- Objective targets (M11-05): where the HUD points.
+  Objective.SetTarget("deploy", "anchor")
+  Objective.SetTarget("scrapers", "survey")
+  Objective.SetTarget("escort", "ambush")
+  Objective.SetTarget("cache", "cache")
   Media.MessageKey("lb1.start")
   Dialogue.Say(SPEAKER, SPEAKER, "lb1.radio.start")
 
