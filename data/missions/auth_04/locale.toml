@@ -1,0 +1,31 @@
+# Authority 04 "The Sunrise Device" locale. Speaker: Brigadier Wrenfield (leader_auth_wrenfield).
+# Cameos: Lieutenant Dray (leader_auth_dray), Commissar Thrall (leader_dir_thrall), Administrator Pell (leader_auth_pell).
+"a4.start" = "Cross the river. Destroy the Sunrise Device before it fires."
+"a4.radio.pell" = "Teletype, Administrator Pell. The Charter does not provide for this. Neither did I. Please come back."
+"a4.radio.start" = "Wrenfield. This is the last road. The device is in the Directorate base on the south bank. Everything we have is on your yard, Commander. Use it."
+"a4.raid1" = "Raiders out of the west, on the yard!"
+"a4.radio.raid1" = "They are going round the river. Leave a guard at home."
+"a4.raid2" = "A second column is on the yard. Sappers among them."
+"a4.crossed" = "The bridgehead is across. The Directorate is answering."
+"a4.radio.crossed" = "You are over. They will throw everything at the bank. Dig in and push."
+"a4.radio.thrall" = "Commander. Order Seven is older than your Charter. You are very late."
+"a4.device.seen" = "The Sunrise Device is in sight."
+"a4.radio.dray" = "Dray. The device draws from the reactor vent east of it. Kill the vent and the charge slows. The tunnel head is under the cradle. Do not stand on it."
+"a4.vent.down" = "Reactor vent destroyed. The device is losing its charge."
+"a4.lost.yard" = "The yard is lost. There is no one left to give the order."
+"a4.lost.sunrise" = "The Sunrise has fired. The device was not stopped in time."
+"a4.win" = "The Sunrise Device is destroyed."
+"a4.radio.win" = "It is down. The device is down. I will say it plainly: well done, Commander. Now bring them home."
+"a4.radio.pellwin" = "Teletype, Administrator Pell. I will not call this a victory. I will call it a ledger that closed. Thank you."
+
+# Objective and timer labels
+"a4.obj.ford" = "Cross the river with a bridgehead of six units on the south bank"
+"a4.obj.device" = "Destroy the Sunrise Device in the Directorate base"
+"a4.obj.home" = "Keep the forward yard standing"
+"a4.obj.vent" = "Destroy the reactor vent that feeds the device"
+"a4.timer.sunrise" = "Sunrise primed"
+
+[voice]
+"a4.radio.start" = "voice/leader_auth_wrenfield/a4.radio.start.ogg"
+"a4.radio.crossed" = "voice/leader_auth_wrenfield/a4.radio.crossed.ogg"
+"a4.radio.win" = "voice/leader_auth_wrenfield/a4.radio.win.ogg"

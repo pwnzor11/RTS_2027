@@ -1,0 +1,30 @@
+# Authority 02 "The Junction" locale. Speaker: Brigadier Wrenfield (leader_auth_wrenfield); one teletype from Administrator Pell (leader_auth_pell).
+"a2.start" = "Hold the junction until the relief column arrives."
+"a2.radio.pell" = "Teletype, Administrator Pell. The junction carries the winter grain. Please keep it open. Please keep your people alive."
+"a2.radio.start" = "Wrenfield. Directorate raiders are working the roads. Put two Turrets on the crossing and keep the yard standing, Commander."
+"a2.wave1" = "Raiders on the east road!"
+"a2.radio.wave1" = "First raiders. They are testing us. Stay tight."
+"a2.wave2" = "Raiders from the north!"
+"a2.wave3" = "Two columns, east and north!"
+"a2.wave4" = "Heavy column on the east road. Sappers among them."
+"a2.radio.wave4" = "That is the big one. Sappers go for the Turrets. Shoot them first."
+"a2.fortified" = "Two Turrets on the crossing."
+"a2.radio.fortified" = "Good. Now it is a junction with teeth."
+"a2.radio.mast" = "That mast on the ridge is their eyes. Take it down if you can spare a squad."
+"a2.mast.down" = "Listening mast destroyed. The raiders are blind on the north road."
+"a2.relief.wait" = "The relief column will not drive into an open junction. Fortify it. One more chance."
+"a2.turned" = "The relief column has turned back. The junction was never closed to the enemy."
+"a2.lost" = "The forward yard is lost. The junction is closed."
+"a2.win" = "The relief column is through. The junction holds."
+"a2.radio.win" = "Column's through. The grain moves. Well held, Commander."
+
+# Objective and timer labels
+"a2.obj.fortify" = "Build two Turrets on the junction"
+"a2.obj.hold" = "Hold the junction until the relief column arrives"
+"a2.obj.mast" = "Destroy the Directorate listening mast on the ridge"
+"a2.timer.relief" = "Relief column"
+
+[voice]
+"a2.radio.start" = "voice/leader_auth_wrenfield/a2.radio.start.ogg"
+"a2.radio.wave4" = "voice/leader_auth_wrenfield/a2.radio.wave4.ogg"
+"a2.radio.win" = "voice/leader_auth_wrenfield/a2.radio.win.ogg"
