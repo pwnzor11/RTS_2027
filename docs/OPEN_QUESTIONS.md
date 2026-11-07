@@ -5,7 +5,9 @@ file cited after each question. Recommendations are the lead's, from the researc
 
 ## Open
 
-- ⚪ Q-56 Expedition stance in the campaign (Q-F): Commissioner Strand decides (assumed, D-154) — confirm when the Expedition campaign is written.
+- 🟡 Q-56 Expedition stance in the campaign (Q-F): Commissioner Strand decides (assumed, D-154). The Expedition campaign is now written with Strand on the radio (exp_01-04) — confirm while reading it.
+- 🟡 Q-57 Campaign review (session 12): ten writer choices, four DRAFT endings and three bot-found balance issues in docs/missions/s12_owner_review.md. Rec.: play one campaign, then answer the table in one go.
+- ⚪ Q-58 Authority finale reward: auth_04 unlocks the atomic battery (superweapon). Rec.: keep (it is the finale; skirmish is unaffected) / alternative: no unlock.
 
 ## Answered
 - Q-55, Q-49 (Q-A..Q-I) · 2026-11-06 · Docks wholly on water → D-153; M8 story answers → D-154, Left Behind lore → D-155.

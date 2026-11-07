@@ -1,35 +1,36 @@
-# Handoff: Session 12 — Expedition art PR, Q-55 docks, owner play-test of the Expedition
-Last commit: session 11 handoff on integ-s11, landed as PR #27 (see `git log -1 origin/main`); art on local-only `wp/art-exp-all` (D-084)
-Where things stand: **the Overseas Expedition is playable in skirmish** (PR #26/#27): Expedition AI (M7-10), faction pick, coast rules
-and ship/hangar sidebar (M7-14), Archive entries, LLM naval fields, shipments on with tuned Expedition income (D-152: medium/large inside
-±10 %), naval strikes, Expedition golden replay with save/load, 210-game soak with 0 desyncs (docs/balance/m7_14_acceptance.md), Q-54
-re-measured (supply spread 14.1 → 13.3, no change). Art: pilot approved (D-149) and all 46 Expedition sprites drawn and lead-reviewed on
-`wp/art-exp-all` (Game tests 905/905), waiting for the owner's push. Decisions D-148..D-152. Full suite ≈ 2 690 tests.
+# Handoff: Session 13 — owner campaign review, M8-14 stills, M8-15 acceptance, M4-16
+Last commit: `docs: Session 12 handoff` on integ-s12, landed on main by its own PR after PR #40 (PR #40 merge = 5d0a54b); check `git log -1 origin/main`
+Where things stand: **the M8 campaign is playable end to end.** All four factions have four missions (act maps: rustbelt_m2 for
+acts 1-2, glass_coast_e1 for act 3, ash_reckoning for act 4; the Expedition plays acts 1-3 on glass_coast_e1 since the Rust Belt has no sea) plus DRAFT ending slides; the shared tutorial (tut_01) sits on the Campaign screen. Every
+mission has a bot test (wins at tier 3 and 5, most also at 1) and runs with `--mission-check` at 0 errors. Mission API: objectives
+(primary/hidden), timers shown on the HUD, dialogue/locale keys (labels too), camera hints, reinforcements (edge/zone/transport/naval/rig,
+queued arrivals), AI hooks, difficulty 1-5, Player.Funds; players' factions reach the sim. M7 is closed except the M7-14 acceptance line;
+Expedition balance is judged at 20 minutes (D-162). Tier 5 builds an army before tech (PR #36) but M4-16 is still open. Decisions up to
+D-163. Full suite 2 986 tests (Game 973, Sim 1472, AI 198, Scripting 220, Llm 119, Tools 4).
 
 ## Start here (shown to the user as the plan; nothing starts until they say go)
-1. Art PR: if the owner ran push_art.ps1, `wp/art-exp-all` is on GitHub — merge origin/main into it, open the PR, land after Windows CI.
-   If not, the zip is in the owner's chat (rts2027_art_push_s11.zip) and the branch is gone with this cloud workspace: rebuild it only
-   from the owner's pushed branch, never redraw.
-2. Owner answers: Q-55 (shoreline buildings face south only; rec. (a) docks wholly on water), confirm D-150..D-152 (naval deploy rule,
-   tender lane + south default, Expedition shipment numbers 600/2000/60).
-3. Q-55 follow-up: change the four shoreline footprints/masks per the answer, redraw exp_anchorage/exp_quay (stand-ins, no sea side) and
-   adjust exp_shipyard/exp_drydock; drop the "south start" workaround in `ai match` and the setup's South default.
-4. Expedition AI per tier: §6 bullet 1 (win against each tier) not shown; re-run the per-tier soak on the D-152 AI; the AI only escorts
-   and strikes from tier 2 and loses Authority tiers 1-3. Owner play-test is the real check.
-5. If time: Q-52 Left Behind income (now also dragging the small-map Expedition comparison: +12..+22 %), M4-16 top rungs, 16 % draws at
-   the tick limit, Left Behind supply sampler mismatch (608 samples), sub "dived" frames (frames 16-31 of exp_missile_sub.png) not read
-   by the renderer yet, skirmish host does not pass landing markers to the AI (D-151 (2)).
+1. Owner review (Q-56..Q-58): the table in docs/missions/s12_owner_review.md, the four DRAFT endings, the radio voice. Apply the answers
+   (mission data only, small) and log decisions.
+2. Bot-found balance issues (owner call, D-152 rule: numbers change only with approval): Ashthrower ash kills own Conscripts; one
+   Authority bomber kills an Expedition depot through 3 SAM Mounts; Conscripts vs Riflemen. Bring a measured table, one line per number.
+3. M8-14 act-break stills (2-3 per faction): art via the owner's PC (D-084); pilot one still, owner picks, then fan out.
+4. M8-15 acceptance: human play-through notes from the owner, a bot play-through of all 16 missions in one run, mission replays with
+   save/load mid-mission, a balance table per mission and tier. Then M7-14 close-out line and M8 acceptance in the roadmap.
+5. M4-16 tier ladder: tier 3 still beats tier 4 (decisive % for tier 4: Authority 42 %, Directorate 27 %; table in docs/balance/s12_tier5_diagnosis.md); Directorate games are draw-heavy. Try a lower
+   army-before-tech threshold for tier 4 (helper's note in docs/balance/s12_tier5_diagnosis.md).
+6. If time: API ideas from the writers (keep an enemy alive without a hidden reserve building; `Reinforce.Rig` park-only; detect a
+   superweapon shot); the voice set-up (docs/audio/voice_setup.md) if the owner wants voiced radio lines.
 
 ## Half-finished work
-- Art reaches main only via the owner's PC (step 1). exp_anchorage and exp_quay are stand-ins until Q-55.
-- Old follow-ups still open: no ammo system for sorties; dived ships drawn faded for every viewer who sees them; soak idle-rig limit.
+- Nothing in flight. All helper branches are merged; integ-s12 = main + this handoff until the handoff PR lands.
+- Ending text, radio lines and briefings are DRAFT (D-086) until the owner signs them off.
+- M4-16 open (see step 5). Archive "PENDING owner text" entries from session 11 still open.
 
 ## Waiting on the user
-- Run `push_art.ps1` (USER_CHECKS "Session 11" step 8). Q-55. Confirm D-150..D-152. Play-test USER_CHECKS "Session 11".
-- Archive placeholders "PENDING owner text": 8 Expedition upgrade field notes and the Provision Store entry (no lore yet).
-- Delete merged remote branches once happy: `land/s11-w1`, `land/s11-w2`, `integ-s11`, `wp/m7-arch` (stale first version), `wp/m7-llm`,
-  `wp/m7-10ai`, `wp/m7-14ui-s11`, `wp/m7-bal-s11`, `wp/m7-acc-s11` (pushed at wrap-up), plus the session-10 list. Keep `restore/pre-s11` until happy.
-- Still pending from session 7: the LLM commander with a real key (D-110..D-112).
+- Play the campaign (USER_CHECKS "Full campaign, all four factions"); answer Q-56..Q-58.
+- Delete merged remote branches once happy: `land/s12-w1`, `land/s12-w1b`, `land/s12-w2a`, `land/s12-w2b`, `land/s12-w2c`, `land/s12-w3a`,
+  `land/s12-w4`..`land/s12-w7`, `wp/art-docks-s12`, `integ-s12` (after the handoff PR lands), `docs/readme-status`. Keep `restore/pre-s12-w1` until happy.
+- The obsolete stash entry from session 12 (lbdock/ladder mix-up) can be dropped locally; it is not on GitHub.
 
 ## How to run this session
 - Lead: Opus for build sessions (the owner wants long unattended overnight builds); Sonnet for a pure review/question session. Helpers: Haiku default; Sonnet for sim core,
@@ -127,7 +128,7 @@ re-measured (supply spread 14.1 → 13.3, no change). Art: pilot approved (D-149
   - Lead-only small packages (one function, <100 lines) are faster than briefing a helper and waiting on the build lock.
 
 ## If time runs short
-Do items 1-3 (owner answers, M7-10 Expedition AI, faction pick); art and acceptance fill a second overnight session.
+Do step 1 (owner review answers) and step 4's bot play-through; stills and M4-16 can take a separate session.
 
 - Session 10 lessons:
   - Four waves of 4-7 Sonnet helpers each ran 1-3.5 h on the 2-CPU box; merging one by one as reports arrive, then a scoped
@@ -150,3 +151,16 @@ Do items 1-3 (owner answers, M7-10 Expedition AI, faction pick); art and accepta
     could not Deploy on water (D-150). Run an AI game on the real data before calling a faction playable.
   - The device bridge can disconnect mid-session: build the art push as a zip (bundle + LFS objects + push_art.ps1) and send it with
     SendUserFile; a 46-sprite faction is about 5 MB.
+
+- Session 12 lessons:
+  - The owner was present and answered in batches with AskUserQuestion; "full send" after a pilot meant: write the other pilots and the
+    fan-out without another review gate. Put every remaining writer choice in one review file instead of asking mid-run.
+  - Mission fan-out: one Sonnet helper per faction writing acts 2-4 (+ ending) took 30-60 min each on the 2-CPU box with the dotnet lock;
+    ask them to commit one mission at a time — a container restart lost no committed mission, and SendMessage resumed both helpers.
+  - Shared briefs as files (scratch/briefs/*.md, read by absolute path) kept each launch prompt to ~15 lines.
+  - Tests that pin "which missions exist" or placeholder text break the moment content lands: use a temp data folder or an inline fixture.
+  - Ids in data (`next`, campaign lists) need a cross-check test; helpers guessed `left_behind_02` and `expedition_02`.
+  - Missions ran without player factions in the sim until s12 (faction rules silently off): any new mission-only setup path must reuse
+    MissionSession.MakeSetup.
+  - Windows CI: `VSTEST_CONNECTION_TIMEOUT=600` in ci.yml; a test-host connect timeout is a runner problem, re-run once, then fix the env.
+  - GitHub Actions minutes ran out once; the repo is public since (D-159), so Actions are free.

@@ -229,7 +229,7 @@ systems (water locomotion, ships, landings). Lore, roster, art, AI.
 - [x] M8-13 Archive campaign unlock ids (s12; docs/archive/m8_13_unlocks.md)
 - [x] M8-17 Mission API follow-ups from the tutorial (s12): `Player.Funds` (Cash + Stored) for income checks; a script Win on the same tick as elimination must still run (check MissionCheck and the game loop stop at GameOver); tut_01 keeps a hidden reserve power plant so the enemy team survives until the script wins
 - [x] M8-12 Fan-out: acts 2-4 for all four factions plus DRAFT ending slides (s12; owner review list docs/missions/s12_owner_review.md)
-- [ ] M8-14 act-break stills; M8-15 acceptance; M8-16 ending sequence screen
+- [ ] M8-14 act-break stills; M8-15 acceptance (M8-16 ending screen done with M8-08)
 - [x] M8-01 Campaign plan (docs/design/12_m8_plan.md, plan only; story questions open) (session 9)
 Mission scripting/trigger system, briefing screens, tech gating, campaign flow; written once with all four factions.
 Wires Archive campaign unlocks.
