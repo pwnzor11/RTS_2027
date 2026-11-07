@@ -118,7 +118,7 @@ function WaveOneSize()
 end
 
 function WaveTwoSize()
-  local sizes = { 4, 4, 5, 5, 7 }
+  local sizes = { 4, 4, 5, 5, 6 }
   return sizes[Mission.Difficulty()]
 end
 
@@ -135,9 +135,8 @@ function Wave(n, zone, size, extra)
   local types = {}
   local d = Mission.Difficulty()
   for i = 1, size do types[i] = "auth_rifleman" end
-  -- a jeep at every tier now (it was tier 3 and up), and a tank closes the last wave at tier 5
+  -- a jeep at every tier now (it was tier 3 and up)
   types[#types + 1] = extra
-  if n == 3 and d >= 5 then types[#types + 1] = "auth_tank" end
   local tags = Reinforce.Zone(1, types, zone, HOLD)
   for i, tag in pairs(tags) do
     state.waveTags[#state.waveTags + 1] = tag

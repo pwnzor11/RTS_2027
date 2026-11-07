@@ -31,7 +31,7 @@ function OnInit()
   Trigger.OnDestroyed("west_post", WestDown)
   Trigger.OnSeen("west_post", 0, WestSeen)
   Mission.Timer("charge", 3050, Charged, "d4.timer.charge")
-  Mission.Timer("wave1", WaveGap({ 400, 350, 300, 280, 250 }), WaveOne, "d4.timer.wave1")
+  Mission.Timer("wave1", WaveGap({ 400, 350, 300, 300, 300 }), WaveOne, "d4.timer.wave1")
   Trigger.AfterDelay(1800, FennRadio)
 end
 
@@ -62,7 +62,7 @@ end
 function WaveSizes()
   local sizes = {
     { 2, 3, 3, 4, 5 },
-    { 2, 3, 4, 5, 5 },
+    { 2, 3, 4, 4, 5 },
     { 3, 3, 4, 5, 6 },
   }
   return sizes[state.waves + 1][Mission.Difficulty()]
@@ -89,13 +89,13 @@ function WaveOne()
   Media.MessageKey("d4.wave1")
   Dialogue.Say(SPEAKER, SPEAKER, "d4.radio.wave1")
   Wave()
-  Mission.Timer("wave2", WaveGap({ 1000, 950, 900, 850, 800 }), WaveTwo, "d4.timer.wave2")
+  Mission.Timer("wave2", WaveGap({ 1000, 950, 900, 900, 900 }), WaveTwo, "d4.timer.wave2")
 end
 
 function WaveTwo()
   Media.MessageKey("d4.wave2")
   Wave()
-  Mission.Timer("wave3", WaveGap({ 1000, 950, 900, 850, 800 }), WaveThree, "d4.timer.wave3")
+  Mission.Timer("wave3", WaveGap({ 1000, 950, 900, 900, 900 }), WaveThree, "d4.timer.wave3")
 end
 
 function WaveThree()
