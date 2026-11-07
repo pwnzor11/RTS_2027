@@ -105,4 +105,15 @@ public sealed class SettingsTests
         Assert.Equal(Settings.MinScrollSpeed, Settings.Parse("scroll_speed = 1").ScrollSpeed);
         Assert.Equal(Settings.DefaultScrollSpeed, Settings.Parse("scroll_speed = \"fast\"").ScrollSpeed);
     }
+
+    [Fact]
+    public void Diagnostics_default_off_for_an_old_file_and_round_trip()
+    {
+        Assert.False(Settings.Parse("version = 2\nfullscreen = true").ShowDiagnostics);
+        Assert.False(Settings.Default.ShowDiagnostics);
+        Settings on = Settings.Parse("show_diagnostics = true");
+        Assert.True(on.ShowDiagnostics);
+        Assert.Equal(on, Settings.Parse(on.ToToml()));
+        Assert.False(Settings.Parse("show_diagnostics = 1").ShowDiagnostics);
+    }
 }

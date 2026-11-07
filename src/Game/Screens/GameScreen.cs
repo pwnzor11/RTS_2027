@@ -36,28 +36,6 @@ namespace Rts.Game.Screens;
 public sealed class GameScreen : IScreen
 {
     private const float DragThresholdPx = 4f;
-    private static readonly Keys[] OrderKeys = { Keys.A, Keys.S, Keys.G, Keys.X, Keys.D };
-    private static readonly string[] SkirmishHelpLines =
-    {
-        "arrows / middle-drag pan   wheel zoom   LMB select   RMB move, attack or rally",
-        "Q W E R T sidebar tabs   A attack-move   S stop   G guard   X scatter   D deploy   Space pause",
-        "RMB on a Hatch or transport: enter it   T tab: upgrades   K pack / unpack a rig   RMB on a wreck: salvage",
-        "Esc leaves placement / sell / repair, then opens the pause menu",
-    };
-
-    private static readonly string[] HelpLines =
-    {
-        "arrows / middle-drag pan   wheel zoom   LMB select   RMB move or attack",
-        "A then RMB: attack-move   S stop   G guard here   X scatter   Space pause   . step",
-        "F1 console   F2 fog viewer   F3 occupancy   F4 paths   F5 ranges   F9 AI-vs-AI spectator   Esc pause menu",
-    };
-
-    private static readonly string[] SpectatorHelpLines =
-    {
-        "arrows / middle-drag pan   wheel zoom   click a unit or structure: info (read only)",
-        "V next view   F2 full vision / fog   1 2 3 4 speed 1x 2x 4x 8x   Space pause   Tab detail   Esc pause menu",
-    };
-
     private readonly GameServices _s;
     private readonly ISnapshotSource _source;
     private readonly SimSnapshotSource? _sim; // null with --demo
@@ -85,7 +63,6 @@ public sealed class GameScreen : IScreen
     private readonly CommanderChatPanel _chat = new(); // M5-07: commander chat (Enter to talk)
     private readonly List<RenderUnit> _renderUnits = new();
     private readonly RectRegion _hudRegion = new(Rectangle.Empty);
-    private readonly RectRegion _helpRegion = new(Rectangle.Empty);
     private Point _mouse;
     private Point? _dragStart;
     private bool _dragging;
@@ -357,7 +334,6 @@ public sealed class GameScreen : IScreen
             input.ConsumeMouseOver(_packRegion);
             input.ConsumeMouseOver(_diveRegion);
             input.ConsumeMouseOver(_hudRegion);
-            input.ConsumeMouseOver(_helpRegion);
             if (_mission is not null) input.ConsumeMouseOver(_mission.ObjectivesRegion);
         }
 
@@ -379,6 +355,13 @@ public sealed class GameScreen : IScreen
         if (chatTyping) input.ConsumeKeyboard();
         bool typing = _console is { IsOpen: true };
         if (typing) input.ConsumeKeyboard();
+
+        if (!typing && !chatTyping && (_console is null && input.ConsumePressed(Keys.F1) || input.Text.Contains('?')))
+        {
+            input.ConsumeText();
+            _s.Screens.Push(new ControlsScreen(_s));   // M11-03: F1 (or ?) lists the controls; F1 is the console in the sandbox, ? works everywhere
+            return;
+        }
 
         if (_sidebar is { Mode: not SidebarMode.None } && input.ConsumePressed(Keys.Escape)) _sidebar.CancelMode();
         if (_superweapon.IsArmed && input.ConsumePressed(Keys.Escape)) _superweapon.Cancel();   // Esc leaves targeting first
@@ -416,7 +399,7 @@ public sealed class GameScreen : IScreen
         if (_orders is not null) _orders.SelectedBuilding = _selectedBuilding;   // M4-09: D unloads a selected garrisoned building
         if (_orders is not null)
         {
-            foreach (Keys key in OrderKeys)
+            foreach (Keys key in GameKeys.OrderKeys)
             {
                 if (input.ConsumePressed(key)) _orders.KeyPressed(key);
             }
@@ -491,8 +474,7 @@ public sealed class GameScreen : IScreen
         DrawUnpackGhost(sb);
         _sidebar?.DrawMapOverlay(sb, _s.Pixel, _camera, snapshot);
         DrawHud(sb, snapshot);
-        string[] chatHelp = _spectatorMode ? SpectatorHelpLines : _skirmishMode ? SkirmishHelpLines : HelpLines;
-        _chat.Draw(sb, _s.Pixel, _s.UiScale, new Point(8, _s.Viewport.Height - Hud.HeightOf(chatHelp.Length, _s.UiScale) - 12), _s.Viewport.Width - 16);
+        _chat.Draw(sb, _s.Pixel, _s.UiScale, new Point(8, _s.Viewport.Height - Hud.HeightOf(1, _s.UiScale) - 12), _s.Viewport.Width - 16);
         _sidebar?.Draw(sb, _s.Pixel, snapshot);
         DrawSuperweapon(sb, snapshot.Tick);
         DrawUpgradeButton(sb);
@@ -1071,11 +1053,11 @@ public sealed class GameScreen : IScreen
 
     private List<string> HudLines(SimSnapshot snapshot)
     {
-        var lines = new List<string>
-        {
-            $"tick {snapshot.Tick}  hash {snapshot.StateHash:x16}  fps {_s.Fps}  zoom {_camera.ZoomLabel}"
-                + (_sim is { Paused: true } ? "  PAUSED (. = step)" : ""),
-        };
+        var lines = new List<string>();
+        bool debugMode = GameKeys.DebugKeysAllowed(_skirmishMode);
+        if (_s.Settings.ShowDiagnostics)
+            lines.Add($"tick {snapshot.Tick}  hash {snapshot.StateHash:x16}  fps {_s.Fps}  zoom {_camera.ZoomLabel}");
+        if (_sim is { Paused: true }) lines.Add(debugMode ? "PAUSED (. = step)" : "PAUSED");
 
         if (_orders is { DeployArmed: true }) lines.Add("DEPLOY: right-click the cell to dig at (D cancels)");
         if (_unpack is not null) lines.Add(LeftBehindText.Placeholder(LeftBehindText.UnpackPlacementKey));
@@ -1097,31 +1079,21 @@ public sealed class GameScreen : IScreen
     {
         int scale = _s.UiScale;
         List<string> lines = HudLines(_source.Current);
-        _hudRegion.Bounds = PanelRect(new Point(8, 8), lines, scale);
+        _hudRegion.Bounds = lines.Count == 0 ? Rectangle.Empty : PanelRect(new Point(8, 8), lines, scale);
         if (_specPanel is not null)
         {
             _specPanel.Origin = new Point(8, 8 + Hud.HeightOf(lines.Count, scale) + 4);
             _specRegion.Bounds = _specPanel.Bounds(scale);
         }
         _mission?.UpdateRegion(lines.Count, scale);
-        if (_sim is not null)
-        {
-            string[] help = _spectatorMode ? SpectatorHelpLines : _skirmishMode ? SkirmishHelpLines : HelpLines;
-            int top = _s.Viewport.Height - Hud.HeightOf(help.Length, scale) - 8;
-            _helpRegion.Bounds = PanelRect(new Point(8, top), help, scale);
-        }
-        else
-        {
-            _helpRegion.Bounds = Rectangle.Empty;
-        }
     }
 
     private static Rectangle PanelRect(Point origin, IReadOnlyList<string> lines, int scale) =>
         new(origin.X, origin.Y, lines.Max(line => BitmapFont.Measure(line, scale)) + 16, Hud.HeightOf(lines.Count, scale));
 
     /// <summary>
-    /// Top-left: tick, state hash, frames per second, zoom (and PAUSED). Second line: alive units per player, selection,
-    /// overlays, fog viewer. Bottom-left: the key help.
+    /// Top-left: PAUSED, and with Settings > Show diagnostics tick, state hash, frames per second and zoom. In the sandbox a second
+    /// line: alive units per player, selection, overlays, fog viewer. There are no key hints (F1 opens the controls list).
     /// </summary>
     private void DrawHud(SpriteBatch sb, SimSnapshot snapshot)
     {
@@ -1129,12 +1101,6 @@ public sealed class GameScreen : IScreen
         List<string> hud = HudLines(snapshot);
         Hud.Panel(sb, _s.Pixel, new Point(8, 8), hud, scale);
 
-        if (_sim is not null)
-        {
-            string[] help = _spectatorMode ? SpectatorHelpLines : _skirmishMode ? SkirmishHelpLines : HelpLines;
-            int top = _s.Viewport.Height - Hud.HeightOf(help.Length, scale) - 8;
-            Hud.Panel(sb, _s.Pixel, new Point(8, top), help, scale);
-            _mission?.Draw(sb, _s.Pixel, scale, hud.Count, top, snapshot.Tick);
-        }
+        if (_sim is not null) _mission?.Draw(sb, _s.Pixel, scale, hud.Count, _s.Viewport.Height - 8, snapshot.Tick);
     }
 }

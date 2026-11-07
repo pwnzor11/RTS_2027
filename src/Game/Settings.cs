@@ -27,6 +27,7 @@ namespace Rts.Game;
 /// <param name="LlmCallCap">Most LLM calls per game, 0..1000; 0 = no cap (default 120). The API key is never a setting.</param>
 /// <param name="EdgeScroll">Mouse at the window edge pans the camera (M11-02). Files without the key get true.</param>
 /// <param name="ScrollSpeed">Camera scroll speed in screen pixels per second, 200..3000 (M11-02). Files without the key get 900.</param>
+/// <param name="ShowDiagnostics">Show the tick / state hash / fps line in play (M11-03). Default false; files without the key get false.</param>
 public sealed record Settings(
     int Version = Settings.CurrentVersion,
     bool Fullscreen = false,
@@ -42,7 +43,8 @@ public sealed record Settings(
     bool LlmChatOn = true,
     int LlmCallCap = 120,
     bool EdgeScroll = true,
-    int ScrollSpeed = Settings.DefaultScrollSpeed)
+    int ScrollSpeed = Settings.DefaultScrollSpeed,
+    bool ShowDiagnostics = false)
 {
     /// <summary>The file format version this build reads and writes.</summary>
     public const int CurrentVersion = 2;
@@ -113,7 +115,8 @@ public sealed record Settings(
             root.TryGetValue("llm_chat_on", out object? lc) && lc is bool cb ? cb : d.LlmChatOn,
             Int(root, "llm_call_cap", d.LlmCallCap, 0, 1000),
             root.TryGetValue("edge_scroll", out object? es) && es is bool esb ? esb : d.EdgeScroll,
-            Int(root, "scroll_speed", d.ScrollSpeed, MinScrollSpeed, MaxScrollSpeed));
+            Int(root, "scroll_speed", d.ScrollSpeed, MinScrollSpeed, MaxScrollSpeed),
+            root.TryGetValue("show_diagnostics", out object? sd) && sd is bool sdb ? sdb : d.ShowDiagnostics);
     }
 
     /// <summary>The settings as TOML text.</summary>
@@ -140,6 +143,8 @@ public sealed record Settings(
         sb.AppendLine("# Camera: mouse at the window edge scrolls; speed in screen pixels per second (Shift = 2x).");
         sb.AppendLine(FormattableString.Invariant($"edge_scroll = {(EdgeScroll ? "true" : "false")}"));
         sb.AppendLine(FormattableString.Invariant($"scroll_speed = {Math.Clamp(ScrollSpeed, MinScrollSpeed, MaxScrollSpeed)}"));
+        sb.AppendLine("# Show the tick / hash / fps line while playing.");
+        sb.AppendLine(FormattableString.Invariant($"show_diagnostics = {(ShowDiagnostics ? "true" : "false")}"));
         return sb.ToString();
     }
 

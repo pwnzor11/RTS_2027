@@ -9,7 +9,7 @@ using Rts.Game.Menu;
 namespace Rts.Game.Screens;
 
 /// <summary>
-/// Settings: full screen, window size, UI scale, master / music / effects volume, and the About page. Changes apply at once (volume
+/// Settings: full screen, window size, UI scale, master / music / effects volume, the Controls page and the About page. Changes apply at once (volume
 /// by the audio backend, display through <see cref="GameServices.ApplyDisplay"/>) and are written to settings.toml when the screen
 /// closes.
 /// </summary>
@@ -41,8 +41,7 @@ public sealed class SettingsScreen : IScreen
                 new MenuButton("<", () => StepWindow(-1)), new MenuButton(">", () => StepWindow(1))),
             new MenuItem(() => $"UI scale: {UiScaleName(_s.Settings.UiScale)}", () => StepUiScale(1), StepUiScale,
                 new MenuButton("<", () => StepUiScale(-1)), new MenuButton(">", () => StepUiScale(1))),
-            new MenuItem(() => $"Edge scroll: {(_s.Settings.EdgeScroll ? "On" : "Off")}", ToggleEdgeScroll, _ => ToggleEdgeScroll(),
-                new MenuButton("Toggle", ToggleEdgeScroll)),
+            new MenuItem(() => "Controls", () => _s.Screens.Push(new ControlsScreen(_s, _path))),
             Volume("Master volume", s => s.MasterVolume, (s, v) => s with { MasterVolume = v }),
             Volume("Music volume", s => s.MusicVolume, (s, v) => s with { MusicVolume = v }),
             Volume("Effects volume", s => s.SfxVolume, (s, v) => s with { SfxVolume = v }),
@@ -124,8 +123,6 @@ public sealed class SettingsScreen : IScreen
         _s.Settings = _s.Settings with { Fullscreen = !_s.Settings.Fullscreen };
         _s.ApplyDisplay?.Invoke(_s.Settings);
     }
-
-    private void ToggleEdgeScroll() => _s.Settings = _s.Settings with { EdgeScroll = !_s.Settings.EdgeScroll };
 
     private void StepWindow(int d)
     {
