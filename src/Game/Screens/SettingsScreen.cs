@@ -44,6 +44,8 @@ public sealed class SettingsScreen : IScreen
             Volume("Master volume", s => s.MasterVolume, (s, v) => s with { MasterVolume = v }),
             Volume("Music volume", s => s.MusicVolume, (s, v) => s with { MusicVolume = v }),
             Volume("Effects volume", s => s.SfxVolume, (s, v) => s with { SfxVolume = v }),
+            new MenuItem(() => $"Camera cue on new objective: {(_s.Settings.CameraCueOnNewObjective ? "On" : "Off")}", ToggleCameraCue, _ => ToggleCameraCue(),
+                new MenuButton("Toggle", ToggleCameraCue)),   // M11-05
             new MenuItem(() => Rts.Game.Ui.Llm.LlmUiText.SectionRow, () => _s.Screens.Push(new Rts.Game.Ui.Llm.LlmSettingsScreen(_s, _path))),
             new MenuItem(() => "About", () => _s.Screens.Push(new AboutScreen(_s))),
             new MenuItem(() => "Back", Back),
@@ -116,6 +118,8 @@ public sealed class SettingsScreen : IScreen
         AudioSettings.Apply(_s.Audio, _s.Settings);
         MenuSounds.Play(_s.Audio, MenuSounds.Move);
     }
+
+    private void ToggleCameraCue() => _s.Settings = _s.Settings with { CameraCueOnNewObjective = !_s.Settings.CameraCueOnNewObjective };
 
     private void ToggleFullscreen()
     {

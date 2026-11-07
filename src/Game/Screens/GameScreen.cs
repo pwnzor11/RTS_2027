@@ -229,7 +229,7 @@ public sealed class GameScreen : IScreen
         MissionGame game = MissionGame.Create(services.RulesDir, missionId);
         var sim = new SimSnapshotSource(game);
         var screen = new GameScreen(services, sim, null, () => CreateMission(services, missionId), skirmishMode: true);
-        screen._mission = new MissionOverlay(game.Host);
+        screen._mission = new MissionOverlay(game.Host, Rts.Game.Ui.Objectives.ObjectiveGuidance.BriefingOf(game));
         screen.IsGameOver = () => sim.Sim.GameOver;
         return screen;
     }
@@ -242,7 +242,7 @@ public sealed class GameScreen : IScreen
     {
         var sim = new SimSnapshotSource(game);
         var screen = new GameScreen(services, sim, null, restart, skirmishMode: true);
-        screen._mission = new MissionOverlay(game.Host);
+        screen._mission = new MissionOverlay(game.Host, Rts.Game.Ui.Objectives.ObjectiveGuidance.BriefingOf(game));
         screen.IsGameOver = () => sim.Sim.GameOver;
         screen._gameOverOverride = gameOver;
         return screen;
@@ -260,7 +260,7 @@ public sealed class GameScreen : IScreen
             MissionGame game = MissionGame.FromSave(loaded);
             string id = loaded.Header.MissionId;
             var mission = new GameScreen(services, sim, null, () => CreateMission(services, id), skirmishMode: true);
-            mission._mission = new MissionOverlay(game.Host);
+            mission._mission = new MissionOverlay(game.Host, Rts.Game.Ui.Objectives.ObjectiveGuidance.BriefingOf(game));
             mission.IsGameOver = () => sim.Sim.GameOver;
             return mission;
         }
@@ -443,7 +443,16 @@ public sealed class GameScreen : IScreen
 
         if (_sim is not null) _sim.Advance(t.ElapsedGameTime.Ticks / 10); // ticks are 100 ns; microseconds = ticks / 10
         else _source.Update();
-        if (_mission is not null && _sim is not null && _mission.Advance(_sim.Sim.Tick, _s.Audio) is { } hint) CentreCameraOn(Camera.CentreOf(hint));   // M8-05: camera hint, once
+        bool scriptCue = false;
+        if (_mission is not null && _sim is not null && _mission.Advance(_sim.Sim.Tick, _s.Audio) is { } hint) { CentreCameraOn(Camera.CentreOf(hint)); scriptCue = true; }   // M8-05: camera hint, once
+        // ---- M11-05 objective guidance keys: J jump, Tab next objective, O list. (If s14-ui1's key table is merged, register these three there.) ----
+        if (_mission is not null && _sim is not null && _console is not { IsOpen: true })
+        {
+            Vector2 viewCentre = _camera.WorldFromScreen(new Point(MapViewport().Width / 2, MapViewport().Height / 2));
+            if (_mission.Guidance.Update(input, (float)t.ElapsedGameTime.TotalSeconds, _sim.Sim.Tick, viewCentre, _s.Settings.CameraCueOnNewObjective, scriptCue) is { } focus)
+                CentreCameraOn(focus);
+        }
+        // ---- end M11-05 ----
 
         _camera.Clamp(_source.Current.MapWidth, _source.Current.MapHeight, MapViewport());
         Vector2 view = _camera.WorldFromScreen(new Point(MapViewport().Width / 2, MapViewport().Height / 2));   // M3-INT: positional audio
@@ -492,10 +501,12 @@ public sealed class GameScreen : IScreen
         DrawPackProgress(sb, snapshot);
         DrawUnpackGhost(sb);
         _sidebar?.DrawMapOverlay(sb, _s.Pixel, _camera, snapshot);
+        _mission?.Guidance.DrawWorld(sb, _s.Pixel, _camera, MapViewport().Bounds, _s.UiScale);   // M11-05
         DrawHud(sb, snapshot);
         string[] chatHelp = _spectatorMode ? SpectatorHelpLines : _skirmishMode ? SkirmishHelpLines : HelpLines;
         _chat.Draw(sb, _s.Pixel, _s.UiScale, new Point(8, _s.Viewport.Height - Hud.HeightOf(chatHelp.Length, _s.UiScale) - 12), _s.Viewport.Width - 16);
         _sidebar?.Draw(sb, _s.Pixel, snapshot);
+        if (_mission is not null && _sidebar is not null) _mission.Guidance.DrawMinimap(sb, _s.Pixel, _sidebar.Layout.Minimap, snapshot.MapWidth, snapshot.MapHeight);   // M11-05
         DrawSuperweapon(sb, snapshot.Tick);
         DrawUpgradeButton(sb);
         DrawPackButton(sb);
@@ -1105,6 +1116,7 @@ public sealed class GameScreen : IScreen
             _specPanel.Origin = new Point(8, 8 + Hud.HeightOf(lines.Count, scale) + 4);
             _specRegion.Bounds = _specPanel.Bounds(scale);
         }
+        if (_mission is not null) _mission.MapViewWidth = MapViewport().Width;   // M11-05
         _mission?.UpdateRegion(lines.Count, scale);
         if (_sim is not null)
         {

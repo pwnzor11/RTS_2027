@@ -25,6 +25,7 @@ namespace Rts.Game;
 /// <param name="LlmModel">Model id; empty = the provider's default.</param>
 /// <param name="LlmChatOn">Whether the commander chat panel is on (default true).</param>
 /// <param name="LlmCallCap">Most LLM calls per game, 0..1000; 0 = no cap (default 120). The API key is never a setting.</param>
+/// <param name="CameraCueOnNewObjective">Pan the camera to a new mission objective's target (M11-05; default true).</param>
 public sealed record Settings(
     int Version = Settings.CurrentVersion,
     bool Fullscreen = false,
@@ -38,7 +39,8 @@ public sealed record Settings(
     string LlmBaseUrl = "",
     string LlmModel = "",
     bool LlmChatOn = true,
-    int LlmCallCap = 120)
+    int LlmCallCap = 120,
+    bool CameraCueOnNewObjective = true)
 {
     /// <summary>The file format version this build reads and writes.</summary>
     public const int CurrentVersion = 2;
@@ -98,7 +100,8 @@ public sealed record Settings(
             Text(root, "llm_base_url", d.LlmBaseUrl),
             Text(root, "llm_model", d.LlmModel),
             root.TryGetValue("llm_chat_on", out object? lc) && lc is bool cb ? cb : d.LlmChatOn,
-            Int(root, "llm_call_cap", d.LlmCallCap, 0, 1000));
+            Int(root, "llm_call_cap", d.LlmCallCap, 0, 1000),
+            root.TryGetValue("camera_cue_on_new_objective", out object? cq) && cq is bool cqb ? cqb : d.CameraCueOnNewObjective);
     }
 
     /// <summary>The settings as TOML text.</summary>
@@ -122,6 +125,8 @@ public sealed record Settings(
         sb.AppendLine(FormattableString.Invariant($"llm_model = {Quote(LlmModel)}"));
         sb.AppendLine(FormattableString.Invariant($"llm_chat_on = {(LlmChatOn ? "true" : "false")}"));
         sb.AppendLine(FormattableString.Invariant($"llm_call_cap = {Math.Clamp(LlmCallCap, 0, 1000)}"));
+        sb.AppendLine("# Pan the camera to a new mission objective's target (M11-05)");
+        sb.AppendLine(FormattableString.Invariant($"camera_cue_on_new_objective = {(CameraCueOnNewObjective ? "true" : "false")}"));
         return sb.ToString();
     }
 
