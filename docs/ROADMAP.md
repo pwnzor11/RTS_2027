@@ -231,6 +231,7 @@ systems (water locomotion, ships, landings). Lore, roster, art, AI.
 - [x] M8-12 Fan-out: acts 2-4 for all four factions plus DRAFT ending slides (s12; owner review list docs/missions/s12_owner_review.md)
 - [ ] M8-14 act-break stills (s13: briefing hook and 12 still ids, D-165; pilot in two styles, fan-out waits for Q-59) (M8-16 ending screen done with M8-08)
 - [x] M8-15 Acceptance (s13): owner play-through ("everything looked great", D-164); bot play-through of all 16 missions in one run; mid-mission save/load for every mission; tier table docs/balance/m8_15_acceptance.md (all won; tier tuning → Q-62); bot-found balance table docs/balance/s13_campaign_balance.md (Q-60)
+- [ ] M8-18 Voiced radio lines (s14): Wyoming Piper batch tool (tools/voice/wyoming_batch.py, owner runs it on the NAS; its commit says M8-16 by mistake); voices chosen by the owner, licence checked per voice, credits in CREDITS.md; game must play the OGG voice files
 - [x] M8-01 Campaign plan (docs/design/12_m8_plan.md, plan only; story questions open) (session 9)
 Mission scripting/trigger system, briefing screens, tech gating, campaign flow; written once with all four factions.
 Wires Archive campaign unlocks.
