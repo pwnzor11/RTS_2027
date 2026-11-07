@@ -128,9 +128,11 @@ def foam_line(pts, width=1.2, z=0.08, rng=None, col="#F2F6F2"):
         ang = math.atan2(d.y, d.x)
         k = max(1, int(d.length / 3.0))
         for i in range(k):
-            t = (i + 0.5) / k
-            w = width * rng.uniform(0.5, 1.4)
-            o = K.box("foam", (x0 + d.x * t, y0 + d.y * t + rng.uniform(-0.3, 0.3), z), (d.length / k * rng.uniform(0.5, 0.95), w, 0.02),
+            if rng.random() < 0.3:
+                continue
+            t = (i + rng.uniform(0.2, 0.8)) / k
+            w = width * rng.uniform(0.4, 1.8)
+            o = K.box("foam", (x0 + d.x * t, y0 + d.y * t + rng.uniform(-0.9, 0.9), z), (d.length / k * rng.uniform(0.3, 1.1), w, 0.02),
                       m(col, 1.0), rot=(0, 0, ang))
             K.nolines(o)
 
