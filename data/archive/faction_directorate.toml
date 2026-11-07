@@ -27,8 +27,7 @@ From inside, the logic is airtight. The Director held the government of the whol
 
 There is also a quieter reason. The Annex is failing. Reactors age, air plants clog, and the old shafts cannot hold another generation. The Directorate cannot say this aloud, so it says "Reclamation" instead, with great confidence and at volume.
 '''
-# ASSUMED (M3-17) TODO (M4): replace TBD with the mission id that releases this entry.
-unlock = "campaign:TBD"
+unlock = "campaign:dir_02" # M8-13 (tune)
 
 [[entry]]
 id = "faction_dir_voice"
@@ -41,8 +40,7 @@ Every corridor, shaft and surface hatch has a speaker, and every speaker carries
 
 Broadcast is also a weapon. Loudspeaker crawlers carry the Voice into the field, where it steadies the faithful and drowns the doubtful. Nobody inside has heard the Director speak live in thirty years, but nobody doubts the Voice speaks for him. That is rather the point.
 '''
-# ASSUMED (M3-17) TODO (M4): replace TBD with the mission id that releases this entry.
-unlock = "campaign:TBD"
+unlock = "campaign:dir_03" # M8-13 (tune)
 
 [[entry]]
 id = "faction_dir_surfacing"
@@ -55,6 +53,5 @@ The Annex held on for two generations by trimming its numbers and tightening its
 
 The Directorate does not think of this as invasion. It thinks of it as the end of a forty-year emergency. Its engineers bore under the Rust Belt, its conscripts surface in the ash, and its loudspeakers announce that the Interior has returned. Many who are sent up believe every word. A few begin to notice the sky.
 '''
-# ASSUMED (M3-17) TODO (M4): replace TBD with the mission id that releases this entry.
-unlock = "campaign:TBD"
+unlock = "campaign:dir_02" # M8-13 (tune)
 

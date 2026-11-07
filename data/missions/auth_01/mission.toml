@@ -7,6 +7,17 @@ map = "rustbelt_m2.map.toml"
 script = "mission.lua"
 briefing = "briefing.md"
 seed = 2027
+schema = 2
+act = 1
+faction = "authority"
+next = "auth_02"
+locale = "locale.toml"
+
+[starts_with]
+tech = ["auth_power", "auth_refinery", "auth_barracks", "auth_rifleman", "auth_jeep", "auth_wall"]
+
+[unlocks_on_win]
+tech = ["auth_turret"]
 
 [[players]]
 slot = 0
@@ -98,8 +109,10 @@ cell = [58, 54]
 type = "auth_rifleman"
 player = 2
 cell = [55, 6]
+tag = "svy1"
 
 [[actors]]
 type = "auth_rifleman"
 player = 2
 cell = [57, 7]
+tag = "svy2"

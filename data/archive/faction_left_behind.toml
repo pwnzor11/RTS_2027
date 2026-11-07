@@ -75,7 +75,7 @@ Authority said no, and they have not agreed on anything since. The third voice i
 on the Drift, who remembers the last train and has never told anyone what she saw from the platform.
 '''
 # ASSUMED (session 9): the lore marks this page "campaign"; mission id set in M8.
-unlock = "campaign:TBD"
+unlock = "campaign:lb_02" # M8-13 (tune)
 
 [[entry]]
 id = "faction_lb_authority"
@@ -95,7 +95,7 @@ not been seen since; the caravans have a name for him, and the Brigadier has not
 first enemy the Left Behind will fight, because the refusal was made in its offices.
 '''
 # ASSUMED (session 9): the lore marks this page "campaign"; mission id set in M8.
-unlock = "campaign:TBD"
+unlock = "campaign:lb_02" # M8-13 (tune)
 
 [[entry]]
 id = "faction_lb_directorate"
@@ -111,4 +111,4 @@ different wording, and then to hunt the next loudspeaker crawler that surfaced i
 They do not forgive it either, and they do not like what it does to the dunes at night.
 '''
 # ASSUMED (session 9): the lore marks this page "campaign"; mission id set in M8.
-unlock = "campaign:TBD"
+unlock = "campaign:lb_03" # M8-13 (tune)

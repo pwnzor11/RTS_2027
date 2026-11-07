@@ -211,7 +211,7 @@ systems (water locomotion, ships, landings). Lore, roster, art, AI.
 - [x] M7-15 Floating docks (Q-55 (a), D-153, D-156): wholly-on-water docks touching the shore, AI siting, drop the South stop-gap; redraw the four dock sprites (pilot first)
 - [x] M7-16 Aircraft ammo (D-156): 4-5 rounds, rearm at the carrier, carrier balance table
 - [x] M7-17 Submarine dived frames drawn; dived look only for owner and allies
-- [ ] M7-18 Expedition AI per tier (§6 bullet 1) and M7 acceptance close-out
+- [x] M7-18 Expedition AI per tier (§6 bullet 1): accepted at 20-min games (D-162); tier 5 vs Directorate 80 % noted. M7 acceptance close-out still open with M7-14
 - [x] M7-19 Left Behind early income (Q-52, D-153) and Expedition small-map re-measure
 - [x] M7-20 Archive drafts (8 upgrade notes, Provision Store) and Left Behind lore revision (D-155)
 
@@ -224,9 +224,10 @@ systems (water locomotion, ships, landings). Lore, roster, art, AI.
 - [x] M8-06 AI script hooks drive the AI: attack/defend zone, set tier, scripted wave (session 12)
 - [x] M8-07 Campaign progress, tech carry-over, faction unlock order (assumed — confirm), Archive wiring (session 12)
 - [x] M8-08 Game UI: faction pick, mission select, briefing v2 with difficulty, debrief, ending sequence (M8-16; images in data/images/endings/) (session 12)
-- [ ] M8-09 Tutorial mission + mission-check and bot test template
-- [ ] M8-10 Pilot missions, one per faction (A1 port, D1, L1, E1) — then owner review (M8-11)
-- [ ] M8-12 Fan-out missions; M8-13 Archive campaign entries; M8-14 act-break stills; M8-15 acceptance; M8-16 ending sequence screen
+- [x] M8-09 Tutorial mission + mission-check and bot test template (tut_01, MissionBot, Campaign → Tutorial)
+- [ ] M8-10 Pilot missions, one per faction (A1 port done s12; D1, L1, E1 after owner review of A1) — then owner review (M8-11)
+- [x] M8-13 Archive campaign unlock ids (s12; docs/archive/m8_13_unlocks.md)
+- [ ] M8-12 Fan-out missions; M8-14 act-break stills; M8-15 acceptance; M8-16 ending sequence screen
 - [x] M8-01 Campaign plan (docs/design/12_m8_plan.md, plan only; story questions open) (session 9)
 Mission scripting/trigger system, briefing screens, tech gating, campaign flow; written once with all four factions.
 Wires Archive campaign unlocks.

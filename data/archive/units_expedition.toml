@@ -28,7 +28,7 @@ body = '''
 A Hydrographic Office surveyor trained to read a shoreline from a mile off. With a stabilised range finder and a
 shoulder radio, a Pathfinder turns an ordinary hillside into a firing table for the guns offshore.
 '''
-unlock = "campaign:TBD"
+unlock = "campaign:exp_01" # M8-13 (tune)
 
 [[entry]]
 id = "exp_skimmer"
@@ -80,7 +80,7 @@ body = '''
 A turbine destroyer with a sealed core and a bridge full of radar scopes. Its crew spent years guarding grain convoys in
 winter seas and take it personally when a hull goes under.
 '''
-unlock = "campaign:TBD"
+unlock = "campaign:exp_01" # M8-13 (tune)
 
 [[entry]]
 id = "exp_missile_sub"
@@ -93,7 +93,7 @@ body = '''
 A sealed-core boat with six guided missiles and a crew that has not spoken above a murmur in two years. It can strike
 a shoreline from beyond sight and is hunted for exactly that reason.
 '''
-unlock = "campaign:TBD"
+unlock = "campaign:exp_03" # M8-13 (tune)
 
 [[entry]]
 id = "exp_cruiser"
@@ -106,7 +106,7 @@ body = '''
 A nuclear-powered gun cruiser, the largest vessel the Concordat could afford to risk. Its turrets can throw a shell far
 inland, but only at what a Pathfinder or a gyro can see for it.
 '''
-unlock = "campaign:TBD"
+unlock = "campaign:exp_02" # M8-13 (tune)
 
 [[entry]]
 id = "exp_carrier"
@@ -119,7 +119,7 @@ body = '''
 The flagship of the air arm: a slab of flight deck over a sealed reactor, with a hangar bay that smells of oil and tea.
 Air Marshal Kell holds that a carrier is the only place on the continent where every lost airman is counted twice.
 '''
-unlock = "campaign:TBD"
+unlock = "campaign:exp_03" # M8-13 (tune)
 
 [[entry]]
 id = "exp_ironbound"
@@ -132,7 +132,7 @@ body = '''
 A volunteer in a valve-driven powered suit, with shoulder-mounted anti-air missiles and hydraulic gauntlets. There are
 only a few suits, and each carries the name of the engineer who built it stencilled inside the helmet.
 '''
-unlock = "campaign:TBD"
+unlock = "campaign:exp_02" # M8-13 (tune)
 
 [[entry]]
 id = "exp_pioneer"
@@ -160,7 +160,7 @@ Trained in cold tanks beneath the harbour wall, the Combat Diver moves through t
 
 The divers have a saying that a good swim is one nobody remembers, and a bad one is always found.
 '''
-unlock = "campaign:TBD"
+unlock = "campaign:exp_02" # M8-13 (tune)
 
 [[entry]]
 id = "exp_hoverlander"
@@ -184,7 +184,7 @@ field_note = "SPARKER 3 // GUIDED MISSILES, DEADLY AT HEIGHT. NO GUN FOR THE GRO
 body = '''
 A hover platform carrying four guided missiles on a rotating rack, built to keep the air arm honest over the shore. Its operators are known for steady nerves and terrible singing. The Sparker cannot strike ground targets, so its crew hopes the enemy will keep sending aircraft and never notice how thin the screen really is.
 '''
-unlock = "campaign:TBD"
+unlock = "campaign:dir_03" # M8-13 (tune)
 
 [[entry]]
 id = "exp_barrage_lander"
@@ -196,7 +196,7 @@ field_note = "LANDER ARTY 2 // FIRE ON THE SPOTTER'S MARK, THEN LOAD AND RUN. NO
 body = '''
 A tracked rocket carrier that can climb a landing craft's ramp, drive ashore and open fire from the dunes. Its rack of unguided rockets is ugly, loud and indiscriminate, and the gunners say they would rather be feared than accurate. When it stops to fire it becomes a fixed target for anything that reaches it, so the crews keep a second Lander close by to cover the first.
 '''
-unlock = "campaign:TBD"
+unlock = "campaign:exp_01" # M8-13 (tune)
 
 [[entry]]
 id = "exp_repair_hover"
@@ -208,7 +208,7 @@ field_note = "MENDER 1 // HOLD STILL AND LET THE CREW WORK. ONE SHELL AND THE TO
 body = '''
 A skirted workshop with a crane arm, a welding bay and a cabinet of spare plates, sent out to follow the line. Its crew works quickly and talks constantly, mostly to the vehicles they are patching. A Mender can bring a damaged skimmer or boat back into service within minutes, provided nobody shoots at it while it works. It is the most valued and least armoured vehicle in the fleet.
 '''
-unlock = "campaign:TBD"
+unlock = "campaign:exp_01" # M8-13 (tune)
 
 [[entry]]
 id = "exp_survey_hover"
@@ -270,7 +270,7 @@ A slow, deep-bellied ship with a stern ramp that drops sea mines in neat rows ac
 
 Their crews sleep little on the run home, since any mine they laid could be the one that sinks their own convoy.
 '''
-unlock = "campaign:TBD"
+unlock = "campaign:exp_02" # M8-13 (tune)
 
 [[entry]]
 id = "exp_gyro"
@@ -294,7 +294,7 @@ field_note = "SKYHOOK 6 // SIX SOULS OR TWO LIGHT VEHICLES. HOOK UP AND DROP THE
 body = '''
 A squat vertical-lift transport with a cargo cradle slung beneath its belly and room for six infantry or two light vehicles. Crews call it the Hook, and they swear it has pulled men out of worse places than any landing craft ever reached. It is loud, slow to climb and vulnerable to anything that carries a gun, but when a beach is too hot to land on, the Skyhook still gets through.
 '''
-unlock = "campaign:TBD"
+unlock = "campaign:exp_03" # M8-13 (tune)
 
 [[entry]]
 id = "exp_jet"
@@ -306,7 +306,7 @@ field_note = "JET 3 // HOLD THE SKY, DO NOT CHASE. TELEX ENDS."
 body = '''
 A swept-wing jet with a cannon, a pair of air-to-air rockets and a cockpit that smells of hot oil. Pilots regard it as a fine machine and a difficult one, forever tempted to chase an enemy into the flak. The Jet exists to keep the sky clear for the slower aircraft below, and the best pilots know the sky stays clear only while they are above it.
 '''
-unlock = "campaign:TBD"
+unlock = "campaign:exp_03" # M8-13 (tune)
 
 [[entry]]
 id = "exp_gunship"
@@ -318,7 +318,7 @@ field_note = "GUNSHIP 2 // BURN THE GUN POSITIONS, THEN CLIMB OUT. TELEX ENDS."
 body = '''
 A heavy rotary aircraft with a chin turret, rocket pods on both wings and a crew of three who swear it is the only machine that answers when they call. It hunts gun positions and armoured columns from low altitude, firing as it turns. The Gunship is armoured where it counts, but a jet or a fast missile will still bring it down, and its crew listens for that sound all the time.
 '''
-unlock = "campaign:TBD"
+unlock = "campaign:exp_03" # M8-13 (tune)
 
 [[entry]]
 id = "exp_bomber"
@@ -330,4 +330,4 @@ field_note = "BOMBER 1 // ONE RUN, ONE BIG LOAD OF BOMBS. SHE WILL NOT COME BACK
 body = '''
 A long, four-engined aircraft with a bomb bay large enough to hold a small house, built to put heavy weight on buildings and ships. Its crews are older than most of the fleet and quieter than most of the pilots. A Bomber is the most expensive aircraft the air arm flies, and its losses are read out at the Admiral's table like a roll of names. It is never sent without a fighter screen.
 '''
-unlock = "campaign:TBD"
+unlock = "campaign:exp_04" # M8-13 (tune)

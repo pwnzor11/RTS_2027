@@ -85,8 +85,7 @@ field_note = "VOICE: \"WHEN THE SMALL DOOR IS NOT ENOUGH, THE INTERIOR OPENS A L
 body = '''
 A ramped shaft mouth that takes vehicles as well as infantry. It is the heavy artery of the network, and an important reason the Authority fears an empty field.
 '''
-# ASSUMED (M3-17) TODO (M4): replace TBD with the mission id that releases this entry.
-unlock = "campaign:TBD"
+unlock = "campaign:dir_01" # M8-13 (tune)
 
 [[entry]]
 id = "dir_cistern"
@@ -134,8 +133,7 @@ field_note = "VOICE: \"THE SKY IS ALSO THE INTERIOR'S. LET NO ONE FORGET IT.\""
 body = '''
 A sandbagged pit with a rack of rockets pointed at the sky. It is a reply to the one thing the Directorate does not have enough of, and a reminder that it too once looked up in fear.
 '''
-# ASSUMED (M3-17) TODO (M4): replace TBD with the mission id that releases this entry.
-unlock = "campaign:TBD"
+unlock = "campaign:dir_03" # M8-13 (tune)
 
 [[entry]]
 id = "dir_rad_mortar"
@@ -147,8 +145,7 @@ field_note = "VOICE: \"WHAT THE INTERIOR THROWS, THE GROUND KEEPS. LET THE TRESP
 body = '''
 A buried mortar tube lobbing shells of irradiated slurry, poisoning the ground where they land. Authority engineers hate it for the clean-up bill, and Directorate crews love it for the same reason.
 '''
-# ASSUMED (M3-17) TODO (M4): replace TBD with the mission id that releases this entry.
-unlock = "campaign:TBD"
+unlock = "campaign:dir_02" # M8-13 (tune)
 
 [[entry]]
 id = "dir_mast"
@@ -160,8 +157,7 @@ field_note = "VOICE: \"LISTEN. THE INTERIOR SPEAKS ON EVERY BAND, AND NO OTHER V
 body = '''
 A tall lattice mast with a rotating dish and a ring of horns. It watches the sky and drowns enemy radio and maps in static. The Voice's lullaby plays from it at lights-out.
 '''
-# ASSUMED (M3-17) TODO (M4): replace TBD with the mission id that releases this entry.
-unlock = "campaign:TBD"
+unlock = "campaign:dir_01" # M8-13 (tune)
 
 [[entry]]
 id = "dir_isotope_works"
@@ -173,8 +169,7 @@ field_note = "VOICE: \"THE LEARNED CITIZENS OF THE INTERIOR SERVE THE FUTURE. BE
 body = '''
 A shielded laboratory with a vent and a bank of glowing tubes, the domain of Dr. Lund's staff. Research here is real and dangerous, and almost every new weapon in the Directorate's arsenal began on one of its benches.
 '''
-# ASSUMED (M3-17) TODO (M4): replace TBD with the mission id that releases this entry.
-unlock = "campaign:TBD"
+unlock = "campaign:dir_03" # M8-13 (tune)
 
 [[entry]]
 id = "dir_mooring"
@@ -186,8 +181,7 @@ field_note = "VOICE: \"THE INTERIOR RISES. WATCH IT RISE.\""
 body = '''
 A steel mooring mast and a hangar at its base, where dirigibles are inflated, serviced and launched. It is the most cheerful building the Directorate owns, and the staff know it.
 '''
-# ASSUMED (M3-17) TODO (M4): replace TBD with the mission id that releases this entry.
-unlock = "campaign:TBD"
+unlock = "campaign:dir_03" # M8-13 (tune)
 
 [[entry]]
 id = "dir_sunrise"

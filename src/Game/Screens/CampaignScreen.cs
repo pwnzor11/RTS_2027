@@ -13,7 +13,7 @@ namespace Rts.Game.Screens;
 
 /// <summary>
 /// The campaign entry (plan 3.4): the faction pick. Locked factions show why; an open one leads to its mission select. Also offers Load game
-/// for saved campaign missions. Replaces the pilot single-mission list; auth_01 is the first Authority mission.
+/// for saved campaign missions, and the shared tutorial (M8-09) at the top. auth_01 is the first Authority mission.
 /// </summary>
 public sealed class CampaignScreen : IScreen
 {
@@ -32,7 +32,7 @@ public sealed class CampaignScreen : IScreen
         _s = services;
         _svc = CampaignFlow.Service(services);
         _rows = FactionPickModel.Build(_svc);
-        var items = new List<MenuItem>();
+        var items = new List<MenuItem> { new(() => "Tutorial", () => _s.Screens.Push(new BriefingScreen(_s, CampaignFlow.TutorialId, () => CampaignFlow.CreateTutorial(_s)))) };
         foreach (FactionPickRow row in _rows)
         {
             FactionPickRow r = row;

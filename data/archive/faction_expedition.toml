@@ -69,7 +69,7 @@ a sickness rather than a home. Their jokes are about weather and wages, and thei
 They are also fewer than they look. Every crew member has a name on a roster in a port they may never see again, and
 every lost hull is a month of home production. The fleet fights carefully, expensively and well.
 '''
-unlock = "campaign:TBD"
+unlock = "campaign:lb_04" # M8-13 (tune)
 
 [[entry]]
 id = "faction_exp_symbols"
