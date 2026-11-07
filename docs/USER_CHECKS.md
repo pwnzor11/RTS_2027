@@ -287,3 +287,13 @@ techSet = []
 
 ## Full campaign, all four factions (M8-12, session 12)
 Every faction now has four missions and an ending. Play each campaign start to finish on tier 3 (tier 1 for a quick pass). After act 2 of Authority or Directorate, Left Behind opens; after act 3, Expedition opens. Win act 4 to see the ending slides (DRAFT text). The questions the writers left for you are in docs/missions/s12_owner_review.md.
+
+## Session 13 · Campaign acceptance, briefing stills hook, tier ladder (M8-14, M8-15, M4-16)
+- Campaign: open any act 2-4 mission briefing (for example Authority act 2). It should look exactly as before: no still images are shipped
+  yet, so nothing is drawn. Once stills land, the image sits above the text and never pushes the Start/Back buttons off a short window.
+- Endings: the four ending files no longer say DRAFT (owner-approved, D-164).
+- Bot play-through of all 16 missions (about 2 minutes): `dotnet test tests/Scripting.Tests -c Release --filter "Category=Campaign16"` → passes.
+- Tier ladder: `dotnet run --project src/Tools -c Release -- ai match --a tiered:4 --b tiered:3 --faction-a directorate --faction-b directorate --seeds 32 --size 96 --ticks 30000`
+  should give 23 / 21 / 20 (tier 4 wins / tier 3 wins / draws).
+- Skirmish at tier 4 against tier 3 (or yourself against tier 4 then tier 3): tier 4 should now feel at least as strong; tell me if it doesn't.
+

@@ -1,36 +1,36 @@
-# Handoff: Session 13 — owner campaign review, M8-14 stills, M8-15 acceptance, M4-16
-Last commit: `docs: Session 12 handoff` on integ-s12, landed on main by its own PR after PR #40 (PR #40 merge = 5d0a54b); check `git log -1 origin/main`
-Where things stand: **the M8 campaign is playable end to end.** All four factions have four missions (act maps: rustbelt_m2 for
-acts 1-2, glass_coast_e1 for act 3, ash_reckoning for act 4; the Expedition plays acts 1-3 on glass_coast_e1 since the Rust Belt has no sea) plus DRAFT ending slides; the shared tutorial (tut_01) sits on the Campaign screen. Every
-mission has a bot test (wins at tier 3 and 5, most also at 1) and runs with `--mission-check` at 0 errors. Mission API: objectives
-(primary/hidden), timers shown on the HUD, dialogue/locale keys (labels too), camera hints, reinforcements (edge/zone/transport/naval/rig,
-queued arrivals), AI hooks, difficulty 1-5, Player.Funds; players' factions reach the sim. M7 is closed except the M7-14 acceptance line;
-Expedition balance is judged at 20 minutes (D-162). Tier 5 builds an army before tech (PR #36) but M4-16 is still open. Decisions up to
-D-163. Full suite 2 986 tests (Game 973, Sim 1472, AI 198, Scripting 220, Llm 119, Tools 4).
+# Handoff: Session 14 — owner picks (stills, balance numbers), still fan-out, mission tiers, M4-16
+Last commit: `docs: Session 13 handoff` on integ-s13 (PR #43, which also carries PR #42's commits); check `git log -1 origin/main`
+Where things stand: **the M8 campaign is owner-approved and bot-accepted.** The owner played it ("everything looked great"); endings,
+briefings and radio lines are signed off (D-164). M8-15: a bot play-through of all 16 missions in one run, mid-mission save/load for
+every mission, and a 42-run tier table (docs/balance/m8_15_acceptance.md): every mission won at every tier, but tier barely changes
+win time and exp_01, exp_04, lb_03 are too easy. Briefings can show an act-break still (`still = …` on the act 2-4 openers; no images
+shipped yet, so nothing shows); the pilot (A game-style, B poster) waits for the owner's pick (Q-59). Three bot-found balance issues are
+measured with a table (docs/balance/s13_campaign_balance.md, Q-60); no rule number changed. M4-16: tier 4 now beats tier 3 in both
+factions (docs/balance/s13_ladder.md) but the margins are thin and 5 v 1 is 68-69 %, not 90 %. Decisions up to D-165.
+Full suite FULLCOUNT.
 
 ## Start here (shown to the user as the plan; nothing starts until they say go)
-1. Owner review (Q-56..Q-58): the table in docs/missions/s12_owner_review.md, the four DRAFT endings, the radio voice. Apply the answers
-   (mission data only, small) and log decisions.
-2. Bot-found balance issues (owner call, D-152 rule: numbers change only with approval): Ashthrower ash kills own Conscripts; one
-   Authority bomber kills an Expedition depot through 3 SAM Mounts; Conscripts vs Riflemen. Bring a measured table, one line per number.
-3. M8-14 act-break stills (2-3 per faction): art via the owner's PC (D-084); pilot one still, owner picks, then fan out.
-4. M8-15 acceptance: human play-through notes from the owner, a bot play-through of all 16 missions in one run, mission replays with
-   save/load mid-mission, a balance table per mission and tier. Then M7-14 close-out line and M8 acceptance in the roadmap.
-5. M4-16 tier ladder: tier 3 still beats tier 4 (decisive % for tier 4: Authority 42 %, Directorate 27 %; table in docs/balance/s12_tier5_diagnosis.md); Directorate games are draw-heavy. Try a lower
-   army-before-tech threshold for tier 4 (helper's note in docs/balance/s12_tier5_diagnosis.md).
-6. If time: API ideas from the writers (keep an enemy alive without a hidden reserve building; `Reinforce.Rig` park-only; detect a
-   superweapon shot); the voice set-up (docs/audio/voice_setup.md) if the owner wants voiced radio lines.
+1. Land the session-13 work if the owner has not yet: merge PR #43 (it contains PR #42; #42 then shows as merged). The session's
+   safety check refused merges without review this time, so the owner merges, or allows the merge in the session.
+2. Owner picks: Q-59 still style (A / B / mix, from pilot_contact.png); Q-60 balance numbers (one line per number); Q-61, Q-62.
+3. M8-14 still fan-out (11 more stills, 3 per faction) in the picked style; art via the owner's PC (D-084). Then M8 acceptance in the roadmap.
+4. Apply the approved balance numbers (Q-60) and re-run the S13 balance test and the M8-15 table.
+5. Mission tiers (Q-62): make tier visible in the missions where it does nothing (dir_02, dir_04, lb_01, lb_03, lb_04, auth_04, exp_03)
+   and harden exp_01, exp_04, lb_03; re-run the M8-15 table.
+6. M4-16: mop-up behaviour (attack-move to the last known structures once the enemy has no army) for the Directorate draws; 5 v 1 to 90 %.
+7. If time: writers' API ideas (keep an enemy alive without a hidden reserve building; `Reinforce.Rig` park-only; detect a superweapon
+   shot); M7-14 close-out line; voice set-up if wanted.
 
 ## Half-finished work
-- Nothing in flight. All helper branches are merged; integ-s12 = main + this handoff until the handoff PR lands.
-- Ending text, radio lines and briefings are DRAFT (D-086) until the owner signs them off.
-- M4-16 open (see step 5). Archive "PENDING owner text" entries from session 11 still open.
+- PR #42 (land/s13-w1, CI green) and PR #43 (land/s13-w2 = integ-s13 + this handoff) are open, not merged (see step 1).
+- Still pilot: scripts in tools/art/stills/ (still_kit.py, still_authority_act2.py); renders are git-ignored scratch only
+  (scratch/stills/ in the s13-stillpilot worktree, gone with the container); re-render with the script.
+- Archive upgrade field notes marked "DRAFT (lead, session 12)" and the session-11 "PENDING owner text" entries are still open.
 
 ## Waiting on the user
-- Play the campaign (USER_CHECKS "Full campaign, all four factions"); answer Q-56..Q-58.
-- Delete merged remote branches once happy: `land/s12-w1`, `land/s12-w1b`, `land/s12-w2a`, `land/s12-w2b`, `land/s12-w2c`, `land/s12-w3a`,
-  `land/s12-w4`..`land/s12-w7`, `wp/art-docks-s12`, `integ-s12` (after the handoff PR lands), `docs/readme-status`. Keep `restore/pre-s12-w1` until happy.
-- The obsolete stash entry from session 12 (lbdock/ladder mix-up) can be dropped locally; it is not on GitHub.
+- Merge PR #43 (or #42 then #43). Then on the PC: `git pull --ff-only origin main` (the folder pull failed from the cloud: no git-lfs in the bridge VM).
+- Answer Q-59..Q-62 (docs/OPEN_QUESTIONS.md).
+- Delete merged remote branches once happy: `land/s13-w1`, `land/s13-w2`, `integ-s13`, and the session-12 list if still there. Keep `restore/pre-s13` until happy.
 
 ## How to run this session
 - Lead: Opus for build sessions (the owner wants long unattended overnight builds); Sonnet for a pure review/question session. Helpers: Haiku default; Sonnet for sim core,
@@ -128,7 +128,7 @@ D-163. Full suite 2 986 tests (Game 973, Sim 1472, AI 198, Scripting 220, Llm 11
   - Lead-only small packages (one function, <100 lines) are faster than briefing a helper and waiting on the build lock.
 
 ## If time runs short
-Do step 1 (owner review answers) and step 4's bot play-through; stills and M4-16 can take a separate session.
+Do steps 1-2 (land the PRs, owner picks); the fan-out and mission tiers can take a separate session.
 
 - Session 10 lessons:
   - Four waves of 4-7 Sonnet helpers each ran 1-3.5 h on the 2-CPU box; merging one by one as reports arrive, then a scoped
@@ -164,3 +164,15 @@ Do step 1 (owner review answers) and step 4's bot play-through; stills and M4-16
     MissionSession.MakeSetup.
   - Windows CI: `VSTEST_CONNECTION_TIMEOUT=600` in ci.yml; a test-host connect timeout is a runner problem, re-run once, then fix the env.
   - GitHub Actions minutes ran out once; the repo is public since (D-159), so Actions are free.
+
+- Session 13 lessons:
+  - The auto-mode safety check refused `gh api -X PUT …/pulls/<n>/merge` ("merge without review"). Do not look for a way around it;
+    leave PRs open, stack later work on the same integration branch, and ask the owner to merge (or to allow merges) at the end.
+  - Squashing a helper branch with `git reset --soft <integ>` after the integration branch moved on silently REVERTS everything merged
+    since the helper's base. Squash against the merge base (`git reset --soft $(git merge-base …)`) or apply the helper's diff
+    (`git diff <base> <tip> | git apply --index`) onto the integration branch, and check `git diff --stat` before landing.
+  - The repo moved to github.com/pwnzor11/RTS_2027 ("This repository moved" on push): `git remote set-url origin` fixed it.
+  - LFS pulls in the cloud need the repo added to the session (add_repo, push access); then all LFS files check out.
+  - The device bridge VM has no git-lfs: pulls in the owner's folder fail; the owner pulls on Windows.
+  - Helpers on the shared dotnet lock could not finish Sim.Tests/Tools.Tests inside 580 s: the lead runs one full suite per batch.
+  - The solution file is `RTS_2027.slnx` (dotnet test RTS_2027.slnx …).

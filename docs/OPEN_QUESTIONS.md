@@ -4,7 +4,18 @@ Context and trade-offs for every question are in `docs/research/00_SYNTHESIS.md`
 file cited after each question. Recommendations are the lead's, from the research.
 
 ## Open
-
+- 🟡 **Q-59 · Act-break still style.** Pilot `still_authority_act2` in two styles (contact sheet sent in session 13): **A, game-style**
+  (same render look as the in-game art) / B, poster (stylised) / a mix of the two. Same camera and layout in both. Recommendation: **A** (one look across briefing and game). Blocks the M8-14 fan-out.
+- 🟡 **Q-60 · Bot-found balance numbers** (docs/balance/s13_campaign_balance.md, D-152: owner approves each number).
+  (1) Ash friendly fire: **`dir_ash` contaminate 40 -> 20** (lead; halves own losses, keeps the cloud, no immunity side effects) /
+  Conscript and Ashthrower `rad_resist_permille` 600 -> 1000 (helper; no friendly fire, but immune to all radiation) / no change.
+  (2) Bomber vs SAMs: **no rule change** (unpowered SAMs explain it; check the low-power warning is visible) / `exp_sam` needs_power false.
+  (3) Conscripts vs Riflemen: **`dir_conscript` max_health 40 -> 50** / cost 80 -> 60 / no change.
+- ⚪ **Q-61 · Raiding-party threshold per faction.** `TierPlanner.HarassMinArmy` is 14 for the Directorate and 30 for the others (measured,
+  D-165). **Keep as code for now** / make it a per-faction AI profile key in difficulty.toml.
+- 🟡 **Q-62 · Mission difficulty tiers.** The M8-15 table shows tier barely changes win time in most missions, and exp_01, exp_04, lb_03 are
+  too easy for the bot at every tier. **Tune the tier knobs of those missions next session (more or earlier enemy waves at tiers 4-5,
+  a harder exp_04 finale), re-measure** / leave as is (the campaign is meant to be gentle).
 
 ## Answered
 - Q-56, Q-57, Q-58 · 2026-11-06 · Owner played the campaign ("everything looked great"): Strand decides confirmed, all ten writer choices kept,

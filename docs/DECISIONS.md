@@ -1256,3 +1256,16 @@ the radio lines are owner-approved text and lose their DRAFT marks (D-086 satisf
 bomber vs SAM, Conscripts vs Riflemen) are measured first; numbers change only with approval (D-152).
 **Why:** M8-11/M8-12 review gate; the owner reported "everything looked great".
 **Status:** confirmed (owner, session 13). Archive upgrade field notes marked "DRAFT (lead, session 12)" are not covered and stay open.
+
+### D-165 · 2026-11-07 · Act-break stills on the briefing; M4-16 tier-4 levers (assumed — confirm)
+**Decision:** (1) M8-14: an act-break still is shown on the briefing of each faction's act 2-4 opening mission (`still = "still_<faction>_actN"`
+in the campaign file, image `data/images/stills/<id>.png`, height at most a third of the window); a missing image shows nothing. The style
+(A game-style or B poster) is the owner's pick (Q-59). (2) M4-16 AI tuning (AI difficulty data, not unit rules, so D-152 does not apply):
+the tier-4+ air producer waits for a 30-unit army (`TierPlanner.ArmyBeforeAir`); the raiding party forms at 30 units, 14 for the
+Directorate (`TierPlanner.HarassMinArmy`, a measured patch, Q-61); commissar `retreat_health_pct` 25 -> 0.
+**Why:** (1) the plan says "2-3 stills at act breaks" and the briefing is where an act starts; (2) 64-game ladder, docs/balance/s13_ladder.md:
+tier 4 v 3 decisive 42 -> 56 % (Authority), 27 -> 52 % (Directorate); tier 5 v 4 Directorate 44 -> 66 %.
+**Alternatives:** a full-screen still between missions (more UI work); air flag off at tier 4 (loses the feature); 30 units for both factions
+(Directorate 4 v 3 falls to 41 %).
+**Status:** assumed — confirm (lead, session 13, owner away)
+
