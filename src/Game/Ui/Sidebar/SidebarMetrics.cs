@@ -28,4 +28,15 @@ public static class SidebarMetrics
         int use = (int)((long)Math.Max(0, powerUse) * heightPx / scale);
         return (fill, use, powerUse > powerOut);
     }
+
+    /// <summary>
+    /// P6: the largest scale not above <paramref name="scale"/> (in 5% steps, never under 40% of it) at which a label of
+    /// <paramref name="widthAtScale"/> fits in <paramref name="maxWidth"/> pixels.
+    /// </summary>
+    public static float FitScale(Func<float, int> widthAtScale, int maxWidth, float scale)
+    {
+        float s = scale, floor = scale * 0.4f;
+        while (s > floor && widthAtScale(s) > maxWidth) s -= scale * 0.05f;
+        return Math.Max(s, floor);
+    }
 }

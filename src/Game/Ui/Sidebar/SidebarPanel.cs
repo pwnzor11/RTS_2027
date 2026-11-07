@@ -777,7 +777,7 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
             {
                 Shapes.Fill(batch, pixel, inner, new Color(0x32, 0x3A, 0x2E));
                 Shapes.Outline(batch, pixel, inner, new Color(0x4A, 0x54, 0x44));
-                CentredText(batch, pixel, PlaceholderArt.ShortName(id), inner, TextColour, _ui, FontWeight.Bold);
+                if (!tierEntry.Locked) CentredText(batch, pixel, PlaceholderArt.ShortName(id), inner, TextColour, _ui, FontWeight.Bold);   // P6: a locked cameo shows LOCKED once, not a ghost under it
             }
 
             // Name strip along the bottom.
@@ -806,11 +806,11 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
             }
 
             if (blocked && count == 0) Shapes.Fill(batch, pixel, r, Veil);
-            if (tierEntry.Locked) CentredText(batch, pixel, "LOCKED", r, DimText, small, FontWeight.Bold);
+            if (tierEntry.Locked) FittedCentredText(batch, pixel, "LOCKED", r, DimText, small);   // P6
             if (ready)
             {
                 Shapes.Outline(batch, pixel, r, GoodGreen, 2);
-                CentredText(batch, pixel, "READY", r, GoodGreen, _ui * 0.9f, FontWeight.Bold);
+                FittedCentredText(batch, pixel, "READY", r, GoodGreen, _ui * 0.9f);   // P6: sized to the cameo
             }
             else Shapes.Outline(batch, pixel, r, r.Contains(_mouse) ? Gold : Border);
 
@@ -855,6 +855,13 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
 
     private static void Text(SpriteBatch batch, Texture2D pixel, string text, Vector2 at, Color colour, float scale, FontWeight weight) =>
         BitmapFont.Draw(batch, pixel, text, at, colour, scale, weight);
+
+    // P6: bold label drawn once, scaled down until it fits the cameo with 2 px to spare each side.
+    private static void FittedCentredText(SpriteBatch batch, Texture2D pixel, string text, Rectangle r, Color colour, float scale)
+    {
+        float fit = SidebarMetrics.FitScale(sc => BitmapFont.Measure(text, sc, FontWeight.Bold), r.Width - 4, scale);
+        CentredText(batch, pixel, text, r, colour, fit, FontWeight.Bold);
+    }
 
     private static void CentredText(SpriteBatch batch, Texture2D pixel, string text, Rectangle r, Color colour, float scale,
         FontWeight weight = FontWeight.Regular)
