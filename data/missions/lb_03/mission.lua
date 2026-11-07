@@ -84,10 +84,10 @@ function WaveTypes(hatches)
   return types
 end
 
--- Authority column by tier: riflemen 5,6,7,9,11, jeeps 1,2,2,3,4, a tank from tier 3 (two at tier 5).
+-- Authority column by tier: riflemen 5,6,7,8,8, jeeps 1,2,2,3,3, a tank from tier 3 (two at tier 5).
 function ColumnTypes()
-  local rifles = { 5, 6, 7, 9, 11 }
-  local jeeps = { 1, 2, 2, 3, 4 }
+  local rifles = { 5, 6, 7, 8, 8 }
+  local jeeps = { 1, 2, 2, 3, 3 }
   local tier = Mission.Difficulty()
   local types = {}
   for i = 1, rifles[tier] do types[i] = "auth_rifleman" end
