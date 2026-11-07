@@ -33,14 +33,14 @@ def build():
                               ((32, 66), 12, 5, 7, 0.15), ((-48, 36), 10, 4, 12, 0.0), ((-20, 88), 9, 4, 6, 0.1)):
         K.ruin(loc, w, d, h, R, rot=rot)
     for i, py in enumerate((-4, 22, 50, 80, 112)):
-        K.pylon((-15.0, py), 12.5 - i * 0.4)
-    K.power_line([(-15.0, p) for p in (-4, 22, 50, 80, 112)], 12.5, sag=1.5)
+        K.pylon((-24.0, py), 12.5 - i * 0.4)
+    K.power_line([(-24.0, p) for p in (-4, 22, 50, 80, 112)], 12.5, sag=1.5)
     K.skyline(R, 210, n=12, xr=(-160, 160), h=(8, 26), tint="#4A4258")
     K.skyline(R, 140, n=7, xr=(-100, 100), h=(6, 15), tint="#575069")
     K.ridge(430, R, n=9, h=(28, 55), tint="#4E5578")
 
     # caravan: the Kettle in 3/4 view on the left, buses along the right, the Mother Rig up the west side
-    B.kettle_rig((-9.0, 17.0), yaw=-0.45, rng=R, lit=False, steam=True, horn_yaw=0.3)
+    B.kettle_rig((-7.4, 8.5), yaw=-0.35, rng=R, lit=False, steam=True, horn_yaw=0.3)
     B.rig_bus((9.8, 6.0), yaw=0.12, body="turq", trim="red", length=9.5, rng=R, smoke=True, flagcol="haz")
     B.rig_bus((11.5, 24.0), yaw=-0.08, body="red", trim="canvas", length=8.5, rng=R, flagcol="turq", awning=True)
     B.rig_bus((-17.0, 33.0), yaw=1.45, body="ochre", trim="teal", length=9.0, rng=R, flagcol="red")
@@ -55,10 +55,10 @@ def build():
     B.lantern((fp[0], fp[1], 0.6), "#FF9A3C", 60.0, light=700.0)
     for a in (0.3, 1.5, 2.6, 3.9, 5.1):
         B.lb_figure((fp[0] + math.cos(a) * 1.9, fp[1] + math.sin(a) * 1.9), a + math.pi, R, R.choice(["scav", "tinker", "walker"]))
-    B.crowd(R, [(-5.6, 6.5), (-4.8, 8.0), (6.0, 14.0), (6.8, 16.0), (-5.0, 17.0), (4.0, 28.0)], yaw=0.6)
-    B.lb_figure((-3.0, 8.5), 0.4, R, "slinger")
+    B.crowd(R, [(-3.0, 0.5), (-2.6, 2.0), (6.0, 14.0), (6.8, 16.0), (-5.0, 17.0), (4.0, 28.0)], yaw=0.6)
+    B.lb_figure((-2.2, 5.5), 0.4, R, "slinger")
     B.lb_figure((1.6, 15.0), -0.5, R, "slinger")
-    B.lb_figure((-4.3, 4.0), 0.2, R, "tinker")
+    B.lb_figure((-3.2, 3.2), 0.2, R, "tinker")
 
     # foreground and midground clutter
     K.rubble_pile((-5.6, -9.0), r=1.5, n=16, rng=R, h=0.9)
