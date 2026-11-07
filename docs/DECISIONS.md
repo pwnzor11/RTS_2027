@@ -1330,8 +1330,8 @@ unchanged. (4) Attack-move: left click commits, right click is an alias; Esc can
 **Decision:** in skirmish (and LAN later), a player who for 2 minutes (2 400 ticks) has no production structure (any building that can
 produce units or structures), no builder unit that can found one (MCV-type / deployable), and no harvester is defeated, whatever other
 units or buildings remain. The 2-minute clock resets as soon as any of those exists again. Campaign missions keep their own win/lose rules.
-**Why:** Directorate games were mostly draws: the loser kept 13-15 defensive/minor buildings and 1-2 units with no income, so the old
-"any non-wall building keeps you alive" rule never ended the game (docs/balance/s14_mopup.md). Owner picked option 1 and chose that
+**Why:** Directorate games were mostly draws: the loser kept 13-15 structures (its shaft, factories and about a dozen defences) and 1-2 units with no income, so the old
+"any non-wall building keeps you alive" rule never ended the game (docs/balance/s14_mopup.md; after D-173 the draws remain, Q-64). Owner picked option 1 and chose that
 remaining units do not count.
 **Alternatives:** army counts (fewer games end); hatches don't count; AI-only mop-up; leave it.
 **Status:** owner decision (session 14)
