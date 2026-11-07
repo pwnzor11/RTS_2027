@@ -3,6 +3,7 @@
 using Rts.Game.Archive;
 using Rts.Game.Campaign;
 using Rts.Scripting;
+using Rts.Game.Sandbox;
 
 namespace Rts.Game.Screens;
 
@@ -30,6 +31,17 @@ internal static class CampaignFlow
             var model = DebriefModel.Build(title, missionId, start.Game.Sim.Tick, start.Game.Host.Objectives, before, after, tier, final, catalog);
             return new DebriefScreen(s, model, () => AfterWin(s, svc, faction, final));
         });
+    }
+
+    /// <summary>Folder name of the shared tutorial (M8-09) under data/missions. It is not part of any faction's campaign.</summary>
+    public const string TutorialId = "tut_01";
+
+    /// <summary>The tutorial mission at tier 1 (M8-09). No campaign progress is recorded; the end uses the normal game-over menu.</summary>
+    public static GameScreen CreateTutorial(GameServices s)
+    {
+        MissionGame game = MissionGame.Create(s.RulesDir, TutorialId, 1);
+        game.Host.SetDifficulty(1);
+        return GameScreen.CreateCampaignMission(s, game, () => CreateTutorial(s), () => null);
     }
 
     /// <summary>The Archive catalog (empty when it cannot be read).</summary>
