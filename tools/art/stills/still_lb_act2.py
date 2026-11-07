@@ -92,7 +92,7 @@ def build():
     K.dust_cloud((-6, 190), n=24, length=55, rng=R, tint="#E8C690")
 
     # light: low gold sun front-left, cool sky fill, haze with shafts
-    sunv = B.sun_dir(-36.0, 7.0)
+    sunv = B.sun_dir(-52.0, 7.0)
     B.sky(sunv, stops=[(0.0, "#FFC878"), (0.05, "#F5A86A"), (0.15, "#D88F85"), (0.30, "#8C8FB5"), (0.55, "#3F73B5"), (1.0, "#16327C")],
           cloud_stops=[(0.04, "#FFC27E"), (0.16, "#F29A78"), (0.42, "#A0709A")], glow="#FFD08A",
           strength=float(os.environ.get("STILL_SKY", "1.05")))

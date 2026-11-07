@@ -778,7 +778,7 @@ def falling_ash(rng, n, box_min, box_max, col="#D8D4CC", r=(0.02, 0.07)):
         K.nolines(o)
 
 
-def sky(sun_vec, stops, cloud_stops, glow="#FFC98A", glow_pow=(14.0, 220.0), glow_amt=1.4, strength=1.0,
+def sky(sun_vec, stops, cloud_stops, glow="#FFC98A", glow_pow=(22.0, 220.0), glow_amt=0.9, strength=1.0,
         cloud=(0.47, 0.66), cloud_scale=2.6, band=(0.025, 0.11, 0.30, 0.52), cloud_gain=1.9, stretch=5.5, seed=(0, 0, 0)):
     """Parametric version of still_kit.sky_dawn: elevation gradient stops, sun glow, cloud bands (lit by cloud_stops)."""
     w = bpy.data.worlds.new("sky")
@@ -864,7 +864,7 @@ def run(build, still_id, root):
     bpy.ops.render.render(write_still=True)
     dt = time.time() - t
     from PIL import Image
-    im = Image.open(raw).convert("RGB")
+    im = K.finish_mix(Image.open(raw).convert("RGB"))
     final = os.path.join(outdir, name)
     im.save(final, optimize=True)
     if not preview and os.path.getsize(final) > 2.4e6:
