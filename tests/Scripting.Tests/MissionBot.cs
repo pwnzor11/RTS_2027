@@ -16,6 +16,8 @@ internal sealed class MissionBot
     private readonly MissionSession _m;
     private readonly byte _player;
     private ushort _seq;
+    private Simulation? _sim;
+    private MissionHost? _host;
 
     /// <summary>A bot that plays <paramref name="player"/> (default: slot 0, the human) of <paramref name="mission"/>.</summary>
     public MissionBot(MissionSession mission, byte player = 0)
@@ -25,13 +27,36 @@ internal sealed class MissionBot
     }
 
     /// <summary>The simulation the bot plays.</summary>
-    public Simulation Sim => _m.Sim;
+    public Simulation Sim => _sim ?? _m.Sim;
 
     /// <summary>The mission script host (objectives, messages, errors, outcome).</summary>
-    public MissionHost Host => _m.Host;
+    public MissionHost Host => _host ?? _m.Host;
+
+    /// <summary>
+    /// Called at the start of every tick the bot runs (before the tick's commands are built), so a test can swap the game
+    /// underneath a running walk (save, load, <see cref="Rebind"/>). Null = no hook.
+    /// </summary>
+    public Action<MissionBot>? BeforeTick { get; set; }
+
+    /// <summary>Points the bot at a reloaded simulation and host; the bot's own memory (command counter) carries on.</summary>
+    public void Rebind(Simulation sim, MissionHost host)
+    {
+        _sim = sim;
+        _host = host;
+    }
+
+    /// <summary>The next command sequence number (for tests that build their own command batches).</summary>
+    public ushort NextSeq() => _seq++;
+
+    /// <summary>Runs one tick with the given commands.</summary>
+    public void Step(IReadOnlyList<Command> commands)
+    {
+        BeforeTick?.Invoke(this);
+        Sim.Step(commands);
+    }
 
     /// <summary>Runs one tick with no command.</summary>
-    public void Idle() => Sim.Step(TestData.NoCommands);
+    public void Idle() => Step(TestData.NoCommands);
 
     /// <summary>Runs <paramref name="ticks"/> ticks with no command (stops when the game is over).</summary>
     public void Idle(int ticks)
@@ -40,16 +65,35 @@ internal sealed class MissionBot
     }
 
     /// <summary>Sends one raw command (and runs one tick).</summary>
-    public void Send(CommandKind kind, EntityId subject, CellCoord cell, int arg, int arg2 = 0) =>
+    public void Send(CommandKind kind, EntityId subject, CellCoord cell, int arg, int arg2 = 0)
+    {
+        BeforeTick?.Invoke(this);
         Sim.Step(new[] { new Command(Sim.Tick, _player, _seq++, kind, subject, default, cell, arg, arg2) });
+    }
 
     /// <summary>Gives every mobile unit and soldier of the player the same order (Move, AttackMove, Guard...) and runs one tick.</summary>
     public void OrderAll(CommandKind kind, CellCoord cell)
     {
+        BeforeTick?.Invoke(this);
         Simulation s = Sim;
         var cmds = new List<Command>();
         for (int i = 1; i < s.Units.Capacity; i++)
             if (s.Units.Slots.IsIndexAlive(i) && s.Units.Player[i] == _player && !IsHarvester(s.Units.TypeIndex[i]))
+                cmds.Add(new Command(s.Tick, _player, _seq++, kind, s.Units.Slots.IdOf(i), default, cell, (int)ActorKind.Vehicle));
+        for (int i = 1; i < s.Infantry.Capacity; i++)
+            if (s.Infantry.Slots.IsIndexAlive(i) && s.Infantry.Player[i] == _player)
+                cmds.Add(new Command(s.Tick, _player, _seq++, kind, s.Infantry.Slots.IdOf(i), default, cell, (int)ActorKind.Infantry));
+        s.Step(cmds);
+    }
+
+    /// <summary>Like <see cref="OrderAll"/> but harvesters and scrapers get the order too (missions whose objective is to move them).</summary>
+    public void OrderEveryone(CommandKind kind, CellCoord cell)
+    {
+        BeforeTick?.Invoke(this);
+        Simulation s = Sim;
+        var cmds = new List<Command>();
+        for (int i = 1; i < s.Units.Capacity; i++)
+            if (s.Units.Slots.IsIndexAlive(i) && s.Units.Player[i] == _player)
                 cmds.Add(new Command(s.Tick, _player, _seq++, kind, s.Units.Slots.IdOf(i), default, cell, (int)ActorKind.Vehicle));
         for (int i = 1; i < s.Infantry.Capacity; i++)
             if (s.Infantry.Slots.IsIndexAlive(i) && s.Infantry.Player[i] == _player)
