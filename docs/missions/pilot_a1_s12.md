@@ -30,3 +30,8 @@ Convention: `<mission>.<topic>`; radio lines have `radio.` after the mission pre
 3. No portrait id list is documented; I used the leader id as the portrait id.
 4. `Trigger.OnEnter` cannot say "first unit of type X"; the hidden objective is revealed by any player unit entering the site.
 5. `--mission-check` on an idle player ends Lost (raiders win) at tick 14000; it reports `ok` with 0 errors.
+
+## Lead follow-up (s12)
+- Objective and timer labels can now be locale keys (`MissionHost.Label`, display only); auth_01 uses `a1.obj.*` and `a1.timer.raid2`.
+- The HUD now shows running timers (`MissionObjectiveLines`); before this they existed only in the script. Hidden objectives no longer show on the panel (it read `Objectives`, not `VisibleObjectives`).
+- Still open: the briefing (briefing.md) is not keyed; portrait ids are not used by the game yet (speaker id only).

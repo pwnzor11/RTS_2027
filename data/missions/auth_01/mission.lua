@@ -10,9 +10,9 @@ function OnInit()
   state.raidTags = {}
   state.surveyors = 2
 
-  Objective.Add("reach", "Escort the scraper convoy to the survey site in the north-east", true)
-  Objective.Add("scrapers", "Keep at least one scraper alive", true)
-  Objective.AddHidden("surveyors", "Bring both civilian surveyors through alive", false)
+  Objective.Add("reach", "a1.obj.reach", true)
+  Objective.Add("scrapers", "a1.obj.scrapers", true)
+  Objective.AddHidden("surveyors", "a1.obj.surveyors", false)
   Media.MessageKey("a1.start")
   Dialogue.Say(SPEAKER, SPEAKER, "a1.radio.start")
   Camera.Focus("jeep", 120)
@@ -63,11 +63,11 @@ function CheckConvoy()
   if alive >= 1 and Actor.CountInZone("survey", 0, "auth_scraper") >= alive then
     state.phase = "survey"
     Objective.Complete("reach")
-    Objective.Add("hold", "Hold the survey site until the raiders are beaten", true)
+    Objective.Add("hold", "a1.obj.hold", true)
     Dialogue.Say(SPEAKER, SPEAKER, "a1.radio.down")
     Camera.Focus("survey", 120)
     Trigger.AfterDelay(300, RaidOne)
-    Mission.Timer("raid2", 1500, RaidTwo, "Second raid")
+    Mission.Timer("raid2", 1500, RaidTwo, "a1.timer.raid2")
   end
 end
 
@@ -115,7 +115,7 @@ function CheckRaids()
   Objective.Complete("hold")
   Actor.Create("auth_conyard", 0, { x = 23, y = 25 }, "yard")
   Player.AddCash(0, 1000)
-  Objective.Add("refinery", "Build a Refinery beside the pitchblende pit", true)
+  Objective.Add("refinery", "a1.obj.refinery", true)
   Media.MessageKey("a1.raiders.beaten")
   Dialogue.Say(SPEAKER, SPEAKER, "a1.radio.build")
   Camera.Focus("yard", 120)

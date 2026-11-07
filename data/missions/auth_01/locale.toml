@@ -14,6 +14,15 @@
 "a1.win" = "Refinery online. Pitchblende is ours. Well done, Commander."
 "a1.radio.win" = "Good work. The convoys will eat this winter."
 
+
+# Objective and timer labels (s12: the HUD shows the locale text when a label is a key)
+"a1.obj.reach" = "Escort the scraper convoy to the survey site in the north-east"
+"a1.obj.scrapers" = "Keep at least one scraper alive"
+"a1.obj.surveyors" = "Bring both civilian surveyors through alive"
+"a1.obj.hold" = "Hold the survey site until the raiders are beaten"
+"a1.obj.refinery" = "Build a Refinery beside the pitchblende pit"
+"a1.timer.raid2" = "Second raid"
+
 [voice]
 "a1.radio.start" = "voice/leader_auth_wrenfield/a1.radio.start.ogg"
 "a1.radio.down" = "voice/leader_auth_wrenfield/a1.radio.down.ogg"

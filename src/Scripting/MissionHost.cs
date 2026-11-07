@@ -134,6 +134,10 @@ public sealed partial class MissionHost : ISimExtension
     /// <summary>What the script asked the built-in AI of this player to do (D-051: read by the AI on its next decision, never written by it).</summary>
     public AiHookState AiHookOf(int player) => player >= 0 && player < _aiHooks.Length ? _aiHooks[player] : AiHookState.None;
 
+    /// <summary>Display text for an objective or timer label: the locale text when the label is a key in the mission's locale, else the label
+    /// itself (s12). Display only; the hashed state keeps the label as written.</summary>
+    public string Label(string text) => Def.Locale.Contains(text) ? Def.Locale.Resolve(text) : text;
+
     /// <summary>The objectives the HUD should list (hidden ones left out).</summary>
     public IEnumerable<MissionObjective> VisibleObjectives => _objectives.Where(static o => !o.Hidden);
 

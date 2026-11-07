@@ -101,6 +101,7 @@ is free the call is a script error and the units spawned before it stay.
 Output only. `Dialogue.Say` appends a `MissionDialogue` (speaker, portrait, key, resolved text, voice) to `MissionHost.Dialogue`, a FIFO queue of at most `MissionHost.MaxDialogueQueue` (16) lines: a full queue drops the oldest line; `Dialogue.Clear` empties it. `Camera.Focus` sets `MissionHost.CameraHint` (target name, centre cell, `UntilTick`); the latest call wins. Neither is saved or hashed, and the sim never reads them. `Media.MessageKey` is the exception: it appends to the hashed message list, like `Media.Message`, so its text is part of the hash.
 
 Locale: `locale = "locale.toml"` in `[mission]` (schema 2) loads `data/missions/<id>/locale.toml`: flat `key = "text"` lines (dotted keys quoted), plus `[voice]` lines `key = "voice/<leader_id>/<key>.ogg"`. An unknown key resolves to `[key]`; bad lines and a missing file are listed in `MissionLocale.Warnings`. The game shows a dialogue line for 120 ticks and honours a camera hint once, and plays a voice file only when it exists under `data/audio`.
+Labels (s12): an objective text or timer label that is a key in the mission's locale is shown as the locale text on the HUD and the briefing (`MissionHost.Label`, display only; the hashed state keeps the key). Running timers show under the objectives as `label m:ss`. Hidden objectives stay off the panel until revealed.
 
 ### AI hooks (M8-06, file MissionHost.Ai.cs; the AI side is live)
 | Function | Arguments | Returns | Checks | What the AI does |
