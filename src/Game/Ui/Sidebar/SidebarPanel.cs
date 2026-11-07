@@ -510,6 +510,14 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
     private Rectangle TierCell(SidebarLayout l, TierGrouping.PlacedRow p, int col) =>
         new(l.Grid.X + col * (l.CameoSize.X + l.Gap), l.Grid.Y + p.Y, l.CameoSize.X, p.Height);
 
+    /// <summary>The screen rectangle of cameo <paramref name="col"/> in grid row <paramref name="row"/> (heading rows count), or empty when not visible.</summary>
+    public Rectangle TierCellRect(int row, int col)
+    {
+        foreach (TierGrouping.PlacedRow p in PlacedRows())
+            if (p.Row == row) return TierCell(_layout, p, col);
+        return Rectangle.Empty;
+    }
+
     private TierEntry? TierEntryAt(Point at)
     {
         SidebarLayout l = _layout;
