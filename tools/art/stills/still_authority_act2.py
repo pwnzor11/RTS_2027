@@ -29,8 +29,8 @@ def mix_extras():
         return (abs(x) < 4.4 and y > -22) or abs(y) < 4.4
 
     # background silhouettes: skyline then hills (the haze lightens and blues them)
-    K.skyline(R, 190, n=16, xr=(-140, 140), h=(10, 34))
-    K.skyline(R, 120, n=10, xr=(-90, 90), h=(8, 22), tint="#55505A")
+    K.skyline(R, 190, n=11, xr=(-150, 150), h=(8, 26), tint="#3E4262")
+    K.skyline(R, 120, n=6, xr=(-90, 90), h=(6, 15), tint="#4A4560")
     K.ridge(430, R, n=9, h=(28, 60), tint="#4A4A72")
     # midground detail
     K.burnt_car((-8.2, -4.0), yaw=0.55, rng=R)
@@ -46,7 +46,7 @@ def mix_extras():
     # foreground layer (close to the lens): rubble left, shell crater right, debris and dust
     K.rubble_pile((-4.7, -9.6), r=1.5, n=16, rng=R, h=0.9)
     K.rubble_pile((-6.3, -7.0), r=1.0, n=8, rng=R, h=0.5)
-    K.crater((3.3, -8.4), R=2.3, rng=R)
+    K.crater((3.0, -8.2), R=2.4, rng=R, rim=0.3)
     K.debris_field(R, n=90, xr=(-24, 24), yr=(-14, 48))
     K.puddle((2.2, -2.3), 1.5, 0.7, 0.1)
     K.puddle((-1.8, -5.4), 1.1, 0.5, -0.2)
@@ -65,8 +65,8 @@ def mix_extras():
     K.tufts(R, n=1500, xr=(-50, 50), yr=(-16, 90), avoid=road_avoid)
     K.tufts(R, n=350, xr=(-9, 9), yr=(-14, 9), avoid=road_avoid, scale=1.2)
     # fires at the smoke bases
-    K.fire((75, 128), size=5.0, rng=R)
-    K.fire((52, 93), size=3.0, rng=R)
+    K.fire((75, 128), size=8.0, rng=R)
+    K.fire((52, 93), size=4.5, rng=R)
 
 
 def build(style):
@@ -115,11 +115,11 @@ def build(style):
     if mix:
         az, el = math.radians(40.0), math.radians(6.0)      # just off the right edge of frame, 7 deg up
         sunv = Vector((math.sin(az) * math.cos(el), math.cos(az) * math.cos(el), math.sin(el)))
-        K.sky_dawn(sunv, strength=float(os.environ.get("STILL_SKY", "1.2")))
-        key = K.sun((0, 0, 0), float(os.environ.get("STILL_SUN", "7.0")), colour=(1.0, 0.60, 0.34), angle=1.2)
+        K.sky_dawn(sunv, strength=float(os.environ.get("STILL_SKY", "1.05")))
+        key = K.sun((0, 0, 0), float(os.environ.get("STILL_SUN", "10.0")), colour=(1.0, 0.60, 0.34), angle=1.2)
         key.rotation_euler = (-sunv).to_track_quat("-Z", "Y").to_euler()
         K.area_light((-34, -30, 34), (0, 15, 2), 60, 16000.0, (0.50, 0.56, 1.0))     # cool blue-violet fill
-        K.haze(float(os.environ.get("STILL_HAZE", "0.0016")), top=40.0)
+        K.haze(float(os.environ.get("STILL_HAZE", "0.0013")), top=40.0)
         mix_extras()
     else:
         if poster:

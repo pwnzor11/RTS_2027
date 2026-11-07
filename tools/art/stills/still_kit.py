@@ -262,11 +262,11 @@ def crater_mat():
     vsub = N("ShaderNodeVectorMath"); vsub.operation = "SUBTRACT"; vsub.inputs[1].default_value = (0.5, 0.5, 0.0)
     ln = N("ShaderNodeVectorMath"); ln.operation = "LENGTH"
     L(tc.outputs["Generated"], vsub.inputs[0]); L(vsub.outputs[0], ln.inputs[0])
-    rr = N("ShaderNodeMapRange"); rr.inputs[1].default_value = 0.12; rr.inputs[2].default_value = 0.48; rr.clamp = True
+    rr = N("ShaderNodeMapRange"); rr.inputs[1].default_value = 0.2; rr.inputs[2].default_value = 0.5; rr.clamp = True
     L(ln.outputs["Value"], rr.inputs[0])
     pos = N("ShaderNodeNewGeometry").outputs["Position"]
     nz = _noise(nt, pos, 2.5, 4).outputs["Fac"]
-    ramp = _ramp(nt, rr.outputs[0], [(0.0, "#1B1814"), (0.45, "#3A2F25"), (0.8, "#6E5A3E"), (1.0, "#8F7150")])
+    ramp = _ramp(nt, rr.outputs[0], [(0.0, "#14110E"), (0.5, "#2A221B"), (0.85, "#5E4C36"), (1.0, "#8F7150")])
     mm = N("ShaderNodeMix"); mm.data_type = "RGBA"; mm.blend_type = "MULTIPLY"; mm.inputs[0].default_value = 1.0
     nv = _ramp(nt, nz, [(0.3, "#FFFFFF"), (0.7, "#9A8E80")])
     L(ramp.outputs[0], mm.inputs[6]); L(nv.outputs[0], mm.inputs[7])
@@ -823,7 +823,7 @@ def fire(loc, size=3.0, rng=None, light=True):
             mat("yellow", k[0], emit=k[0], estr=k[1]), verts=7, r2=0.02)
     if light:
         point_light((x, y - size, size * 1.5), 4.0e4 * (size / 3.0) ** 2, (1.0, 0.45, 0.16), size)
-    embers((x, y, 0), n=int(14 + size * 3), spread=(size * 2, size * 1.5, size * 5), r=size * 0.12, rng=rng)
+    embers((x, y, 0), n=int(8 + size * 1.5), spread=(size * 2, size * 1.5, size * 5), r=size * 0.05, rng=rng)
 
 
 # ------------------------------------------------------------------------------------------------ atmosphere
@@ -1101,7 +1101,7 @@ def setup_render(path, style, samples=48, res=(1280, 720)):
                 sc.view_settings.view_transform = "AgX"
             except TypeError:
                 pass
-            sc.view_settings.look = "AgX - Medium High Contrast"
+            sc.view_settings.look = "AgX - High Contrast" if style == "mix" else "AgX - Medium High Contrast"
         sc.render.use_freestyle = True
         sc.render.line_thickness = 1.6 * (res[0] / 1280.0 if style == "mix" else 1.0)
         fs = sc.view_layers[0].freestyle_settings
