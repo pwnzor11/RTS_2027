@@ -118,12 +118,12 @@ function WaveOneSize()
 end
 
 function WaveTwoSize()
-  local sizes = { 4, 4, 5, 5, 6 }
+  local sizes = { 4, 4, 5, 6, 6 }
   return sizes[Mission.Difficulty()]
 end
 
 function WaveThreeSize()
-  local sizes = { 5, 5, 6, 7, 8 }
+  local sizes = { 5, 5, 6, 7, 9 }
   return sizes[Mission.Difficulty()]
 end
 

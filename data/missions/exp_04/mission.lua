@@ -142,6 +142,14 @@ function ColumnThree()
   Media.MessageKey("e4.col3")
   Dialogue.Say(SPEAKER, SPEAKER, "e4.radio.col3")
   Column(Pick({ 9, 11, 13, 19, 26 }), "dir_ashthrower", 1, "gate")
+  if Mission.Difficulty() >= 3 then
+    local heavy = {}
+    for i = 1, Pick({ 0, 0, 1, 2, 3 }) do heavy[#heavy + 1] = "dir_reactor_crawler" end
+    local tags = Reinforce.Zone(1, heavy, "gate", HOLD)
+    for i, tag in pairs(tags) do
+      state.waveTags[#state.waveTags + 1] = tag
+    end
+  end
 end
 
 function WavesDown()
@@ -161,7 +169,8 @@ function Finale()
   for i = 1, Pick({ 10, 12, 14, 22, 32 }) do types[#types + 1] = "dir_conscript" end
   for i = 1, Pick({ 3, 4, 5, 9, 14 }) do types[#types + 1] = "dir_ashthrower" end
   for i = 1, Pick({ 2, 2, 3, 6, 10 }) do types[#types + 1] = "dir_sapper" end
-  for i = 1, Pick({ 0, 0, 1, 3, 5 }) do types[#types + 1] = "dir_rocket_truck" end
+  for i = 1, Pick({ 1, 1, 2, 4, 6 }) do types[#types + 1] = "dir_rocket_truck" end
+  for i = 1, Pick({ 1, 1, 2, 3, 4 }) do types[#types + 1] = "dir_reactor_crawler" end
   local tags = Reinforce.Zone(1, types, "gate", Map.Center("redoubt"))
   for i, tag in pairs(tags) do
     state.waveTags[#state.waveTags + 1] = tag
