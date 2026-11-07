@@ -31,7 +31,7 @@ function OnInit()
   Trigger.OnDestroyed("west_post", WestDown)
   Trigger.OnSeen("west_post", 0, WestSeen)
   Mission.Timer("charge", 3050, Charged, "d4.timer.charge")
-  Mission.Timer("wave1", 300, WaveOne, "d4.timer.wave1")
+  Mission.Timer("wave1", WaveGap({ 400, 350, 300, 250, 200 }), WaveOne, "d4.timer.wave1")
   Trigger.AfterDelay(1800, FennRadio)
 end
 
@@ -61,19 +61,27 @@ end
 -- Waves cross the river to the hatch. Counts follow the tier; conscripts lose to riflemen, so the waves are small.
 function WaveSizes()
   local sizes = {
-    { 3, 3, 3, 4, 5 },
-    { 3, 3, 4, 4, 5 },
-    { 3, 4, 4, 5, 6 },
+    { 2, 3, 3, 5, 7 },
+    { 2, 3, 4, 6, 9 },
+    { 3, 3, 4, 7, 10 },
   }
   return sizes[state.waves + 1][Mission.Difficulty()]
+end
+
+-- Ticks before a wave: slower at the low tiers, earlier and closer together at the high ones.
+function WaveGap(ticks)
+  return ticks[Mission.Difficulty()]
 end
 
 function Wave()
   local types = {}
   for i = 1, WaveSizes() do types[i] = "auth_rifleman" end
   local d = Mission.Difficulty()
+  if state.waves == 0 and d >= 5 then types[#types + 1] = "auth_jeep" end
   if state.waves == 1 and d >= 4 then types[#types + 1] = "auth_jeep" end
+  if state.waves == 1 and d >= 5 then types[#types + 1] = "auth_tank" end
   if state.waves == 2 and d >= 3 then types[#types + 1] = "auth_jeep" end
+  if state.waves == 2 and d >= 4 then types[#types + 1] = "auth_tank" end
   if state.waves == 2 and d >= 5 then types[#types + 1] = "auth_tank" end
   Reinforce.Zone(1, types, "spawn", Map.Center("head"))
   state.waves = state.waves + 1
@@ -84,13 +92,13 @@ function WaveOne()
   Media.MessageKey("d4.wave1")
   Dialogue.Say(SPEAKER, SPEAKER, "d4.radio.wave1")
   Wave()
-  Mission.Timer("wave2", 900, WaveTwo, "d4.timer.wave2")
+  Mission.Timer("wave2", WaveGap({ 1000, 950, 900, 800, 700 }), WaveTwo, "d4.timer.wave2")
 end
 
 function WaveTwo()
   Media.MessageKey("d4.wave2")
   Wave()
-  Mission.Timer("wave3", 900, WaveThree, "d4.timer.wave3")
+  Mission.Timer("wave3", WaveGap({ 1000, 950, 900, 800, 700 }), WaveThree, "d4.timer.wave3")
 end
 
 function WaveThree()
