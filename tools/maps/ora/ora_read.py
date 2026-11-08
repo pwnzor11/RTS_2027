@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-# SPDX-License-Identifier: GPL-3.0-only
-# SPDX-FileCopyrightText: RTS_2027 contributors
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
 """Read an OpenRA Red Alert .oramap (analysis only) and dump a per-cell grid of OUR terrain classes as JSON.
 
 Study tool for docs/design/17_oramap_study.md. It never converts a map into our format and writes nothing next to the
