@@ -426,7 +426,8 @@ public sealed class GameScreen : IScreen
         if (input.IsDown(GameAction.ScrollUp)) keyDirection.Y -= 1f;
         if (input.IsDown(GameAction.ScrollDown)) keyDirection.Y += 1f;
         bool busy = _dragStart is not null || input.MiddleDragging || _sidebar is { MinimapDragging: true } || _console is { IsOpen: true } || chatTyping;
-        Vector2 edge = CameraScroll.EdgeDirection(input.MousePosition, new Rectangle(0, 0, _s.Viewport.Width, _s.Viewport.Height),
+        Point client = _s.ClientSize();   // M11-10b: the band is in client pixels, as the mouse is
+        Vector2 edge = CameraScroll.EdgeDirection(input.MousePosition, CameraScroll.ClientRect(client.X, client.Y, _s.Viewport.Width, _s.Viewport.Height),
             _s.Settings.EdgeScroll, _s.WindowActive(), busy);
         bool shift = input.IsDown(Keys.LeftShift) || input.IsDown(Keys.RightShift);
         _camera.PanScreen(CameraScroll.FrameDelta(keyDirection + edge, _s.Settings.ScrollSpeed, shift, (float)t.ElapsedGameTime.TotalSeconds));
