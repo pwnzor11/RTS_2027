@@ -54,7 +54,8 @@ public static class BuildingRenderer
         painter.Draw(batch, sprite, frame, origin, PlayerColours.Base(building.Player), camera.Zoom);
         if (!building.Ghost && sprite.Source == SpriteSource.Library && sprite.Library is not null)
         {
-            FxPlayer.DrawAnchors(batch, sprite.Library, sprite.Manifest, frame, origin, tick, camera.Zoom);
+            FxPlayer.DrawAnchors(batch, sprite.Library, sprite.Manifest, frame, origin, tick, camera.Zoom,
+                fire: DamageTiers.For(building.Health, maxHealth) == DamageTier.Fire);   // D-184: flames only under a quarter
         }
 
         if (open && !SpriteResolver.HasOpenArt(sprite)) DrawOpenPlaceholder(batch, pixel, building, camera);

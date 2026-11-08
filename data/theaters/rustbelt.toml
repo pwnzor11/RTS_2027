@@ -192,3 +192,11 @@ alpha = 170
 size_min = 16
 size_max = 28
 
+
+[mood]
+# D-184 pilot: a colour grade laid over the world view only (not the HUD) and the colour of vehicle dust. Rust Belt: warm, dusty orange.
+# strength 0..90 = how much of the tint is blended in (0 or no table = no grade, the look of today); RTS_MOOD=off switches it off for comparison.
+# ASSUMED (D-184): every value here is a proposal for the owner. NOTE: tools/maps/make_s15_looks.py rewrites this file from variant C; re-add this table if it is run.
+tint = "#E39A4A"
+strength = 28
+dust = "#B98A5C"

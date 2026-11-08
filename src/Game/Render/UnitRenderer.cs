@@ -76,9 +76,16 @@ public static class UnitRenderer
         DrawBracket(batch, pixel, cx, cy, half, length, thick);
     }
 
-    /// <summary>Type-only sprite scale of a unit (before <see cref="SpriteLayout.UnitDrawScale"/>): the vehicle type's <c>draw_scale_permille</c> / 1000 (1 for infantry and unknown types). Game layer only: float is fine here.</summary>
+    /// <summary>D-184 pilot: extra scale of infantry sprites, brackets and health bars on top of <see cref="SpriteLayout.UnitDrawScale"/>. 1 = off (today's look); set from the "Larger infantry" setting.</summary>
+    public static float InfantryExtraScale { get; set; } = 1f;
+
+    /// <summary>The extra infantry scale of the "Larger infantry" setting when it is on.</summary>
+    public const float LargerInfantryScale = 1.25f;
+
+    /// <summary>Type-only sprite scale of a unit (before <see cref="SpriteLayout.UnitDrawScale"/>): the vehicle type's <c>draw_scale_permille</c> / 1000 (<see cref="InfantryExtraScale"/> for infantry, 1 for unknown types). Game layer only: float is fine here.</summary>
     public static float DrawScale(SimRules? rules, UnitView view)
     {
+        if (view.Kind == UnitKind.Infantry) return InfantryExtraScale;
         if (view.Kind != UnitKind.Vehicle || rules is null || (uint)view.TypeIndex >= (uint)rules.Vehicles.Count) return 1f;
         return rules.Vehicles[view.TypeIndex].DrawScalePermille / 1000f;
     }
