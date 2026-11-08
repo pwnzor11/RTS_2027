@@ -7,7 +7,7 @@ namespace Rts.Game.Tests;
 /// <summary>S15 art-packs pilot: the imported effect sheets are well-formed, the new kinds exist, and the classic comparison set swaps in.</summary>
 public sealed class FxImportTests
 {
-    private static readonly string[] Imported = { "explosion_large", "explosion_small", "explosion_energy", "lightning", "fire_small", "fire_large" };
+    private static readonly string[] Imported = { "explosion_large", "explosion_small", "explosion_energy", "lightning", "lightning_fork", "fire_small", "fire_large" };
 
     private static string? SpriteRoot()
     {
@@ -38,6 +38,7 @@ public sealed class FxImportTests
 
         Assert.False(lib.Manifest("explosion_energy").State("play").Loop);
         Assert.False(lib.Manifest("lightning").State("play").Loop);
+        Assert.False(lib.Manifest("lightning_fork").State("play").Loop);
         Assert.True(lib.Manifest("fire_small").State("play").Loop);
         Assert.True(lib.Manifest("fire_large").State("play").Loop);
     }

@@ -135,6 +135,17 @@ def lightning_sheet(src, w, h):
     return out
 
 
+def lightning_fork_sheet(src, size=48):
+    """The pack's forked `lightning` (18 frames, alternating bright flash and faint afterglow): the 9 bright frames, whole 340 px frame to size x size."""
+    frames = load_frames(src)[::2]
+    out = []
+    for k, im in enumerate(frames):
+        rgb, a = box_down(im, (0, 0, 340, 340), (size, size))
+        a2 = np.clip(a * 3.0, 0, 1)
+        out.append(to_ramp(rgb, a2, ARC, k / (len(frames) - 1), hot=1.15, cool_to=0.8, cover_cut=0.30))
+    return out
+
+
 def flame_frames(src):
     fr = []
     for i in range(12):
@@ -257,6 +268,8 @@ def main():
     arcs = lightning_sheet(os.path.join(sfx, "bending_lightning"), 32, 64)
     write_sheet("lightning", arcs, 2, False, (16, 32), note.replace("sci-fi-effects", "sci-fi-effects bending_lightning") + " Green arcs: tinker/arc weapons (not wired).")
 
+    forks = lightning_fork_sheet(os.path.join(sfx, "lightning"))
+    write_sheet("lightning_fork", forks, 2, False, (24, 24), note.replace("sci-fi-effects", "sci-fi-effects lightning (every 2nd frame)") + " Forked green arc (not wired).")
     kdir = os.environ.get("RTS_KENNEY_PARTICLES", "/home/claude/ref/kenney-particles") + "/addons/kenney_particle_pack"
     if ns.kenney_smoke:   # tried and rejected for the shipped sheet (ragged, thinner than the procedural plume); kept for comparison
         write_sheet("smoke_plume", smoke_plume(kdir), 3, True, (16, 63), "Kenney Particle Pack 1.1 (CC0) smoke puffs, regraded to the smoke ramp.")
