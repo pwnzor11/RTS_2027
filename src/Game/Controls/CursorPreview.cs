@@ -82,7 +82,7 @@ public sealed class CursorPreview
     /// there. The order side is added by HarvestOrders (session 15); at merge both should call one function.
     /// </summary>
     public static bool CanHarvestField(SimRules rules, ActorKind kind, int typeIndex) =>
-        kind == ActorKind.Vehicle && (uint)typeIndex < (uint)rules.Vehicles.Count && rules.Vehicles[typeIndex].HarvestCapacity > 0;
+        HarvestOrders.CanHarvest(rules, kind, typeIndex);
 
     /// <summary>The cursor for one selected unit, or <see cref="CursorKind.Select"/> when it would do nothing here.</summary>
     public static CursorKind For(SimRules rules, in Subject unit, in Target t, bool attackMoveArmed, bool deployArmed)
@@ -108,7 +108,11 @@ public sealed class CursorPreview
         if (!attackMoveArmed)
         {
             if (t.WreckHere && SalvageOrders.CanSalvage(rules, unit.Kind, unit.TypeIndex)) return CursorKind.Salvage;
-            if (t.FieldHere && CanHarvestField(rules, unit.Kind, unit.TypeIndex)) return CursorKind.Harvest;
+            // M11-10a: the same classifier as the order side (OrderController -> HarvestOrders); an own refinery shows the enter cursor (Return).
+            HarvestClick hc = HarvestOrders.Classify(rules, unit.Kind, unit.TypeIndex, t.FieldHere ? OverlayKind.Ashfall : OverlayKind.None,
+                t.Building, t.BuildingRelation == Relation.Self);
+            if (hc == HarvestClick.Harvest) return CursorKind.Harvest;
+            if (hc == HarvestClick.Return) return CursorKind.Enter;
             if (unit.Kind == ActorKind.Vehicle && unit.Passengers > 0 && t.FootStandable
                 && LandingOrders.IsLandingTransport(rules, unit.Kind, unit.TypeIndex)) return CursorKind.Unload;
         }
@@ -182,7 +186,7 @@ public sealed class CursorPreview
         {
             view.CopyWrecks(_wrecks);
             wreck = SalvageOrders.WreckAt(_wrecks, cell);
-            field = view.OverlayAt(cell) == OverlayKind.Ashfall && view.VisionAt(cell) > 0;
+            field = HarvestOrders.IsResource(view.OverlayAt(cell)) && view.VisionAt(cell) > 0;
         }
 
         _subjects.Clear();
