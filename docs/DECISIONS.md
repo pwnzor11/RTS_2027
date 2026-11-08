@@ -1425,3 +1425,10 @@ weapon geometry, cyborg bodies) into our units where they add detail. Our unit a
 v Expedition 3 63 -> 56 %, v Directorate 3 87 -> 74 % (draws 2 -> 9); LB5 now beats LB3. The remaining Directorate 3 gap is Directorate's own
 early game: an AI-only package next session (Q-67). These are 32-game cloud cells; the owner's 64-game laptop row (s15_laptop_series.md,
 LB3 v Authority 3 78 %) is a different sample. **Status:** owner decision (session 15)
+
+### D-191 · 2026-11-08 · Q-67 target band and session 16 run mode
+**Decision:** Q-67 (Directorate tiers 1-3 early game, AI only) aims Left Behind 3 v Directorate 3 at 50-65 % decisive with no rise in draws
+(base 17 / 6 / 9), Directorate 1 v Authority 1 not stronger than today (21 / 6 / 5), other tier 3 cells and the controls within noise.
+Session 16 runs with the owner present: helpers on Sonnet for AI, maps and art, Haiku for docs and bulk edits; the map and art pilots stop
+for the owner's look before any fan-out; new sprites reach GitHub through an owner-run art_push zip.
+**Status:** owner decision (session 16)

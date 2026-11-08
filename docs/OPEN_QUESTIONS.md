@@ -4,7 +4,7 @@ Context and trade-offs for every question are in `docs/research/00_SYNTHESIS.md`
 file cited after each question. Recommendations are the lead's, from the research.
 
 ## Open
-- 🟡 **Q-67 · Directorate tiers 1-3 early game.** Left Behind 3 still wins 74 % of decided games against Directorate 3 with 9 draws in 32
+- 🟡 **Q-67 · (band answered: D-191) Directorate tiers 1-3 early game.** Left Behind 3 still wins 74 % of decided games against Directorate 3 with 9 draws in 32
   (docs/balance/s15_lbknob.md); the siege diagnosis also shows Directorate's thin early economy. Owner: fix it next session, AI only, measured
   (D-190). Open detail: the target band (recommend 50-65 % for Left Behind 3 and no draw rise).
 
