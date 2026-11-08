@@ -1423,4 +1423,5 @@ weapon geometry, cyborg bodies) into our units where they add detail. Our unit a
 ### D-190 · 2026-11-08 · Left Behind tier 3 early army cap
 **Decision:** `[faction.left_behind.tier3] army_cap = 20, army_cap_until_tick = 3600`. Measured (32 games): LB3 v Authority 3 68 -> 53 %,
 v Expedition 3 63 -> 56 %, v Directorate 3 87 -> 74 % (draws 2 -> 9); LB5 now beats LB3. The remaining Directorate 3 gap is Directorate's own
-early game: an AI-only package next session (Q-67). **Status:** owner decision (session 15)
+early game: an AI-only package next session (Q-67). These are 32-game cloud cells; the owner's 64-game laptop row (s15_laptop_series.md,
+LB3 v Authority 3 78 %) is a different sample. **Status:** owner decision (session 15)

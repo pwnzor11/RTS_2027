@@ -259,7 +259,7 @@ Source: docs/reviews/2026-11-07_owner_campaign_feedback.md. Audit: docs/reviews/
   - [x] M11-10f Placement ghost with per-cell colour, reason line, build radius
   - [x] M11-10g Cameo tooltips, Shift+click queues 5
   - [x] M11-10h One UI scale rule (75-200 %), text size setting, more font sizes
-  - [ ] M11-10i Hold a production item with right-click (needs a sim pause command)
+  - [x] M11-10i Hold a production item with right-click (CommandKind.Hold, s15)
 
 ## M12 · Maps overhaul (D-180, docs/design/16_maps_overhaul.md; all of it before M9)
 - [x] M12-01 Decal pass (derived decals, per-biome tables, second baked texture) (s15)
