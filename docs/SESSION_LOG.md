@@ -261,7 +261,7 @@ audit with screenshots, edge scroll, Controls page, full key rebinding, debug ke
 attack-move cursor, health-bar setting, power readout, no-power icon (D-170), minimap fit, calmer building animations, units 1.25x,
 objective guidance (bar, marker, edge arrow, minimap ping, J/Tab/O, camera cue), bottom-centre selection card (D-172 B), polish pass.
 M4-17 no-rebuild defeat rule (D-173). CI artifact retention 3/7 days. Owner's laptop ran 384 AI games (docs/balance/s14_laptop_baseline.md).
-**Commits:** integ-s14 (many merges), to be landed on main through one PR (not landed when this entry was written; CI not yet run).
+**Commits:** integ-s14 (many merges), PR #44 to main: Windows CI green, local full suite 3 254/3 254; the merge was refused by the session safety check (no review), so the owner merges it.
 **Helpers:** about 20 packages (Sonnet for code and art, Haiku for small jobs); several were cut off while queued on the dotnet lock and
 were finished by follow-up packages or the lead.
 **Problems / notes:** the 2-CPU box made the dotnet lock the bottleneck (waits of 30-90 min); helpers that background a queued test and end
