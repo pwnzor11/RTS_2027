@@ -90,6 +90,7 @@ public sealed class MenuPanel : IUiRegion
     /// <summary>Handles keyboard and mouse for this frame and consumes what it uses.</summary>
     public void Update(InputFrame input, Viewport viewport, UiUnit scale)
     {
+        scale = Fitted(viewport, scale);
         _layout = Measure(viewport, scale);
         int count = _items.Count;
         if (count == 0) return;
@@ -137,6 +138,7 @@ public sealed class MenuPanel : IUiRegion
     /// <summary>Draws the panel. The sprite batch is already begun.</summary>
     public void Draw(SpriteBatch sb, Texture2D pixel, Viewport viewport, UiUnit scale, Point mouse)
     {
+        scale = Fitted(viewport, scale);
         Layout layout = Measure(viewport, scale);
         _layout = layout;
         Shapes.Fill(sb, pixel, layout.Panel, PanelColour);
@@ -170,6 +172,21 @@ public sealed class MenuPanel : IUiRegion
 
     /// <summary>The height of the panel in screen pixels at <paramref name="scale"/> (for callers that reserve room for it).</summary>
     public int HeightAt(UiUnit scale) => Pad(scale) + RowHeight(scale) + Pad(scale) / 2 + _items.Count * (RowHeight(scale) + scale) + Pad(scale);
+
+    /// <summary>The largest unit not above <paramref name="scale"/> (in 5 % steps) at which the panel, its rows and their buttons fit the window (M11-10h: a tall page at 200 % or Extra large text shrinks instead of running off screen).</summary>
+    private UiUnit Fitted(Viewport viewport, UiUnit scale)
+    {
+        float v = scale.Value, floor = scale.Value * 0.5f;
+        while (v > floor && !Fits(viewport, new UiUnit(v))) v -= scale.Value * 0.05f;
+        return new UiUnit(Math.Max(v, floor));
+    }
+
+    private bool Fits(Viewport viewport, UiUnit scale)
+    {
+        if (HeightAt(scale) > viewport.Height - 8) return false;
+        Layout l = Measure(viewport, scale);
+        return l.Panel.Width <= viewport.Width - 8;
+    }
 
     private Layout Measure(Viewport viewport, UiUnit scale)
     {
