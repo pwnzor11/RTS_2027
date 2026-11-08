@@ -5,7 +5,7 @@ targets in all 17 missions; M8-15 table re-measured). **M11 (UI and input overha
 Controls page with full rebinding, gated debug keys, Home/bookmarks, order feedback, attack-move cursor, health-bar setting, power readout,
 no-power icon, minimap fit, calmer animations, units 1.25x, objective guidance, bottom-centre selection card, a polish pass; nobody has
 played it yet (screenshots only, docs/reviews/img/2026-11-07_ui/). D-166 numbers and D-173 defeat rule are in. Decisions up to D-173.
-Full suite 3 254 tests (local run by the lead; Windows CI has not run on integ-s14 yet).
+Full suite 3 254 tests (local run by the lead; Windows CI green on PR #44).
 
 ## Start here (shown to the user as the plan; nothing starts until they say go)
 1. Owner play-test of the new UI (USER_CHECKS "Session 14"); fix what they report first.
