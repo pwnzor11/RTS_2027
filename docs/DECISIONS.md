@@ -1443,3 +1443,10 @@ Result: 0 of 138 sprites flagged. **Status:** owner decision (session 16)
 **Decision:** a 4-player skirmish on a layout-2 map defaults to teams 1+2 v 3+4 (teammates start side by side, D-183); the setup screen can
 still change it. Layout-1 maps keep today's default. The Rust Belt layout-2 pilot v1 was not approved (one diagonal half used, river in a
 corner, 3/4-player maps failing checks): reworked before any fan-out. **Status:** owner decision (session 16)
+
+### D-194 · 2026-11-08 · Q-67 Directorate tiers 2-3 hold early tech
+**Decision:** the Directorate AI at difficulty tiers 2-3 holds the Isotope Works and Rad Mortar until it has 18 units (army + home guard +
+detached; `TierPlanner.DirectorateTechArmy`, tune). AI behaviour only, no rules or data numbers. Measured (32 games, docs/balance/s16_q67.md):
+LB3 v Dir3 17/6/9 (74 %) -> 17/12/3 (59 %, band met, draws down); Dir1 v Auth1 and the Auth5 v Auth1 control bit-identical; Dir3 v Auth3
+44 -> 65 %; Dir3 v Exp3 50 -> 41 % (near noise); Dir5 v Dir3 5/9/18 -> 5/13/14. Tier 5 falling behind tier 3 gets a follow-up package
+(Directorate tier 5 ladder). Owner's 64-game laptop confirmation: tools/measure/run_s16_q67.ps1. **Status:** owner decision (session 16)
