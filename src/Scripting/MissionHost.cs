@@ -38,6 +38,8 @@ public sealed partial class MissionHost : ISimExtension
     private const int TierFormatVersion = 3;
     /// <summary>M8-04: version 3 plus the queued reinforcement arrivals. Written only while an arrival is queued.</summary>
     private const int ArrivalsFormatVersion = 4;
+    /// <summary>M11-05: version 4 plus the objective targets. Written only while some objective has a target.</summary>
+    private const int TargetsFormatVersion = 5;
 
     private readonly string _source;
     private readonly Script _script;
@@ -317,10 +319,11 @@ public sealed partial class MissionHost : ISimExtension
     internal void WriteState(BinaryWriter w)
     {
         // Each version appends to the one before, and each is written only when its state is in use, so older layouts keep their bytes.
-        bool v4 = _arrivals.Count > 0;                          // M8-04 arrivals
+        bool v5 = HasObjectiveTarget();                         // M11-05 objective targets
+        bool v4 = v5 || _arrivals.Count > 0;                    // M8-04 arrivals
         bool v3 = v4 || _difficulty != DefaultDifficulty;       // M8-03 difficulty tier
         bool v2 = v3 || HasVersion2State();
-        w.Write(v4 ? ArrivalsFormatVersion : v3 ? TierFormatVersion : v2 ? FormatVersion : BaseFormatVersion);
+        w.Write(v5 ? TargetsFormatVersion : v4 ? ArrivalsFormatVersion : v3 ? TierFormatVersion : v2 ? FormatVersion : BaseFormatVersion);
         w.Write(SourceHash);
         w.Write(_initDone); w.Write(_halted); w.Write((byte)_outcome);
         w.Write(_rng); w.Write(_counter); w.Write(_messageSeq);
@@ -357,6 +360,13 @@ public sealed partial class MissionHost : ISimExtension
         foreach (AiHookState h in _aiHooks) { w.Write(h.AttackZone); w.Write(h.DefendZone); w.Write(h.Tier); w.Write(h.WaveSeq); w.Write(h.WaveId); w.Write(h.WaveZone); }
         if (v3) w.Write(_difficulty);   // ---- version 3 tail (M8-03) ----
         if (v4) WriteArrivals(w);       // ---- version 4 tail (M8-04) ----
+        if (v5) foreach (MissionObjective o in _objectives) { w.Write((byte)o.Target.Kind); w.Write(o.Target.Name ?? ""); w.Write(o.Target.X); w.Write(o.Target.Y); }   // ---- version 5 tail (M11-05) ----
+    }
+
+    private bool HasObjectiveTarget()
+    {
+        foreach (MissionObjective o in _objectives) if (o.Target.IsSet) return true;
+        return false;
     }
 
     private bool HasVersion2State()
@@ -371,7 +381,7 @@ public sealed partial class MissionHost : ISimExtension
     internal void ReadState(BinaryReader r)
     {
         int version = r.ReadInt32();
-        if (version is not (BaseFormatVersion or FormatVersion or TierFormatVersion or ArrivalsFormatVersion)) throw new InvalidDataException("mission state: unsupported version");
+        if (version is not (BaseFormatVersion or FormatVersion or TierFormatVersion or ArrivalsFormatVersion or TargetsFormatVersion)) throw new InvalidDataException("mission state: unsupported version");
         if (r.ReadUInt64() != SourceHash) throw new InvalidDataException("mission state: the save was made with a different mission script");
         _initDone = r.ReadBoolean(); _halted = r.ReadBoolean(); _outcome = (MissionOutcome)r.ReadByte();
         _rng = r.ReadUInt64(); _counter = r.ReadInt32(); _messageSeq = r.ReadInt32();
@@ -416,5 +426,8 @@ public sealed partial class MissionHost : ISimExtension
         for (int p = 0; p < _aiHooks.Length; p++) _aiHooks[p] = new AiHookState(r.ReadString(), r.ReadString(), r.ReadInt32(), r.ReadInt32(), r.ReadString(), r.ReadString());
         if (version >= TierFormatVersion) _difficulty = r.ReadInt32();
         if (version >= ArrivalsFormatVersion) ReadArrivals(r);   // M8-04
+        if (version >= TargetsFormatVersion)
+            for (int i = 0; i < _objectives.Count; i++)
+                _objectives[i] = _objectives[i] with { Target = new ObjectiveTarget((ObjectiveTargetKind)r.ReadByte(), r.ReadString(), r.ReadInt32(), r.ReadInt32()) };   // M11-05
     }
 }

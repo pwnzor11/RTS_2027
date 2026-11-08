@@ -25,6 +25,11 @@ function OnInit()
   Objective.Add("posts", "lb2.obj.posts", true)
   Objective.Add("hold", "lb2.obj.hold", true)
   Objective.AddHidden("stash", "lb2.obj.stash", false)
+  -- Objective targets (M11-05): where the HUD points.
+  Objective.SetTarget("gate", "rig")
+  Objective.SetTarget("posts", "post1")
+  Objective.SetTarget("hold", "camp")
+  Objective.SetTarget("stash", "stash")
   Media.MessageKey("lb2.start")
   Dialogue.Say(SPEAKER, SPEAKER, "lb2.radio.start")
 
@@ -102,6 +107,9 @@ function PostDown(n)
   if state.done or state.postDown[n] then return end
   state.postDown[n] = true
   state.posts = state.posts + 1
+  for _, tag in ipairs({ "post1", "post2", "post3" }) do
+    if Actor.Alive(tag) then Objective.SetTarget("posts", tag) break end
+  end
   Media.MessageKey("lb2.post.down")
   Dialogue.Say(SPEAKER, SPEAKER, "lb2.radio.post" .. state.posts)
   if state.posts == 1 and not state.reprisal then

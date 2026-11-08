@@ -6,9 +6,7 @@
 
 local SPEAKER = "leader_lb_calloway_ross"
 local THRALL = "leader_dir_thrall"
-local COLUMN_DELAY = 4800   -- ticks until the Authority column reaches the camp
 local WAVE_FIRST = 2400     -- ticks until the first hatch wave
-local WAVE_GAP = 1500       -- ticks between hatch waves
 local WAVE_LIMIT = 8        -- waves after which the hatches have overrun the camp
 
 function OnInit()
@@ -26,6 +24,11 @@ function OnInit()
   Objective.Add("hatches", "lb3.obj.hatches", true)
   Objective.Add("column", "lb3.obj.column", true)
   Objective.AddHidden("mast", "lb3.obj.mast", false)
+  -- Objective targets (M11-05): where the HUD points.
+  Objective.SetTarget("vent", "vent")
+  Objective.SetTarget("hatches", "hatch1")
+  Objective.SetTarget("column", "camp")
+  Objective.SetTarget("mast", "mast")
   Media.MessageKey("lb3.start")
   Dialogue.Say(SPEAKER, SPEAKER, "lb3.radio.start")
 
@@ -33,7 +36,7 @@ function OnInit()
   Camera.Focus("camp", 160)
   ReinforceField()
 
-  Mission.Timer("column", COLUMN_DELAY, SendColumn, "lb3.timer.column")
+  Mission.Timer("column", ColumnDelay(), SendColumn, "lb3.timer.column")
   Trigger.AfterDelay(WAVE_FIRST, HatchWave)
   Trigger.AfterDelay(1500, HintRadio)
   Trigger.Every(20, CheckMission)
@@ -52,9 +55,21 @@ function StartForce()
            "lb_buggy", "lb_buggy", "lb_buggy" }
 end
 
--- Extra conscripts guarding the vent by tier: 0,0,1,2,3.
+-- Ticks until the Authority column reaches the camp, by tier: sooner at the high tiers.
+function ColumnDelay()
+  local delays = { 4800, 4600, 4400, 3800, 3400 }
+  return delays[Mission.Difficulty()]
+end
+
+-- Ticks between hatch waves, by tier.
+function WaveGap()
+  local gaps = { 1500, 1400, 1300, 1100, 1000 }
+  return gaps[Mission.Difficulty()]
+end
+
+-- Extra conscripts guarding the vent by tier: 2,2,3,4,6.
 function ReinforceField()
-  local extra = { 0, 0, 1, 2, 3 }
+  local extra = { 2, 2, 3, 4, 6 }
   local n = extra[Mission.Difficulty()]
   if n > 0 then
     local types = {}
@@ -63,9 +78,9 @@ function ReinforceField()
   end
 end
 
--- Hatch squads: conscripts per live hatch per wave, 1,1,2,2,3 plus one more every third wave.
+-- Hatch squads: conscripts per live hatch per wave, 2,2,3,3,4 plus one more every third wave.
 function WaveTypes(hatches)
-  local base = { 1, 1, 2, 2, 3 }
+  local base = { 2, 2, 3, 3, 4 }
   local n = base[Mission.Difficulty()]
   if state.waves >= 3 then n = n + 1 end
   if state.waves >= 6 then n = n + 1 end
@@ -74,15 +89,16 @@ function WaveTypes(hatches)
   return types
 end
 
--- Authority column by tier: riflemen 4,5,6,7,8, jeeps 1,1,2,2,3, a tank from tier 4.
+-- Authority column by tier: riflemen 5,6,7,8,8, jeeps 1,2,2,3,3, a tank from tier 3 (two at tier 5).
 function ColumnTypes()
-  local rifles = { 4, 5, 6, 7, 8 }
-  local jeeps = { 1, 1, 2, 2, 3 }
+  local rifles = { 5, 6, 7, 8, 8 }
+  local jeeps = { 1, 2, 2, 3, 3 }
   local tier = Mission.Difficulty()
   local types = {}
   for i = 1, rifles[tier] do types[i] = "auth_rifleman" end
   for i = 1, jeeps[tier] do types[#types + 1] = "auth_jeep" end
-  if tier >= 4 then types[#types + 1] = "auth_tank" end
+  if tier >= 3 then types[#types + 1] = "auth_tank" end
+  if tier >= 5 then types[#types + 1] = "auth_tank" end
   return types
 end
 
@@ -116,7 +132,7 @@ function HatchWave()
   if state.waves == 1 then Dialogue.Say(THRALL, THRALL, "lb3.radio.thrall") end
   if state.waves == 2 then Dialogue.Say(SPEAKER, SPEAKER, "lb3.radio.wave") end
   if state.waves == WAVE_LIMIT - 2 then Dialogue.Say(SPEAKER, SPEAKER, "lb3.radio.warn") end
-  Trigger.AfterDelay(WAVE_GAP, HatchWave)
+  Trigger.AfterDelay(WaveGap(), HatchWave)
 end
 
 function VentDown()
@@ -130,6 +146,9 @@ end
 function HatchDown()
   if state.done then return end
   state.hatchesDown = state.hatchesDown + 1
+  for _, tag in ipairs({ "hatch1", "hatch2", "hatch3" }) do
+    if Actor.Alive(tag) then Objective.SetTarget("hatches", tag) break end
+  end
   Media.MessageKey("lb3.hatch.down")
   if state.hatchesDown >= 3 then
     Objective.Complete("hatches")

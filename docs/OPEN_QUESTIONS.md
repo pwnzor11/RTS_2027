@@ -4,20 +4,19 @@ Context and trade-offs for every question are in `docs/research/00_SYNTHESIS.md`
 file cited after each question. Recommendations are the lead's, from the research.
 
 ## Open
-- 🟡 **Q-59 · Act-break still style.** Pilot `still_authority_act2` in two styles (contact sheet sent in session 13): **A, game-style**
-  (same render look as the in-game art) / B, poster (stylised) / a mix of the two. Same camera and layout in both. Recommendation: **A** (one look across briefing and game). Blocks the M8-14 fan-out.
-- 🟡 **Q-60 · Bot-found balance numbers** (docs/balance/s13_campaign_balance.md, D-152: owner approves each number).
-  (1) Ash friendly fire: **`dir_ash` contaminate 40 -> 20** (lead; cuts own losses by about a third, keeps the cloud, no immunity side effects) /
-  Conscript and Ashthrower `rad_resist_permille` 600 -> 1000 (helper; no friendly fire, but immune to all radiation) / no change.
-  (2) Bomber vs SAMs: **no rule change** (unpowered SAMs explain it; check the low-power warning is visible) / `exp_sam` needs_power false.
-  (3) Conscripts vs Riflemen: **`dir_conscript` max_health 40 -> 50** / cost 80 -> 60 / no change.
-- ⚪ **Q-61 · Raiding-party threshold per faction.** `TierPlanner.HarassMinArmy` is 14 for the Directorate and 30 for the others (measured,
-  D-165). **Keep as code for now** / make it a per-faction AI profile key in difficulty.toml.
-- 🟡 **Q-62 · Mission difficulty tiers.** The M8-15 table shows tier barely changes win time in most missions, and exp_01, exp_04, lb_03 are
-  too easy for the bot at every tier. **Tune the tier knobs of those missions next session (more or earlier enemy waves at tiers 4-5,
-  a harder exp_04 finale), re-measure** / leave as is (the campaign is meant to be gentle).
+- 🟡 **Q-64 · Directorate draws after D-173.** The no-rebuild rule barely changed the draws (1 game in 128): the drawn side still owns
+  its shaft and factories behind a dozen defences, so these are base stalemates (docs/balance/s14_mopup.md "After D-173"). Options:
+  **AI siege behaviour (gather a bigger force, bring long-range units against defences, target the shaft and factories first), measured
+  before/after** / a stricter rule (no income for 3 minutes = defeated, even with buildings) / accept some draws at 30 000 ticks.
+- 🟡 **Q-65 · Directorate is the weak faction** (docs/balance/s14_laptop_baseline.md): Left Behind beats it 56-6 at tier 3, Authority 37-7 at
+  tier 5. Re-measure with D-166 first, then a measured table of options (D-152: owner approves each number). **Re-measure, then table** / leave.
+- ⚪ **Q-66 · auth_01..auth_03 tiers.** Tier 5 is not harder than tier 3 there (M8-15 table, s14). **Tune them like the other nine** / leave.
 
 ## Answered
+- Q-63 · 2026-11-07 · Owner: rule 1, remaining units don't count → D-173.
+- Q-60, Q-61, Q-62 · 2026-11-07 · Owner: Q-60 all three recommendations (ash contaminate 40 -> 20, no SAM rule change + check the
+  low-power warning, Conscript health 40 -> 50) → D-166; Q-61 make it a per-faction setting in difficulty.toml → D-167; Q-62 tune the
+  mission tiers → D-168. Q-59 · owner picked C (mix: game look + thin outlines) "but add more detail", from a 3-style contact sheet → D-169.
 - Q-56, Q-57, Q-58 · 2026-11-06 · Owner played the campaign ("everything looked great"): Strand decides confirmed, all ten writer choices kept,
   atomic battery unlock kept, endings/briefings/radio lines signed off → D-164. Bot-found balance issues: table first (D-152).
 - Q-55, Q-49 (Q-A..Q-I) · 2026-11-06 · Docks wholly on water → D-153; M8 story answers → D-154, Left Behind lore → D-155.

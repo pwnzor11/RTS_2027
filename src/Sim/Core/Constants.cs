@@ -11,4 +11,6 @@ public static class SimConstants
     public const int HashIntervalTicks = 16;
     public const int HashRingSize = 64;
     public const int MaxMapCells = 128;
+    /// <summary>M4-17 (D-173): ticks without a production structure, founder or harvester after which a skirmish player is defeated (2 minutes).</summary>
+    public const int NoRebuildDefeatTicks = TicksPerSecond * 120;
 }

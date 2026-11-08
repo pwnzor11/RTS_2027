@@ -49,7 +49,8 @@ public static class HowToPlayContent
         {
             "Left-click a unit to select it. Click empty ground to clear the selection.",
             "Drag a box with the left mouse button to select every one of your units inside it.",
-            "Click a building to select it; its health and what it can do show in the sidebar.",
+            "Click a building to select it; a card at the bottom of the map shows its health, power, production and rally point, with Sell and Repair.",
+            "A selected unit or group gets the same card, with its stats, order buttons and, for a group, one icon per unit (click an icon to pick that unit, Shift-click to drop it).",
             "Health bars appear over selected units and damaged buildings.",
         }),
         new GuidePage("Moving and attacking", GuideArt.Orders, new[]
@@ -97,7 +98,8 @@ public static class HowToPlayContent
             "Arrow keys scroll the map. Click or drag the minimap to jump.",
             "A attack-move   S stop   G guard   X scatter   D deploy / unload.",
             "Q W E R T sidebar tabs.   Esc pause menu (or back out of placing).   Space pause the game.",
-            "F3 occupancy, F4 paths and F5 ranges overlays (for testing).",
+            "Home centres on your base.   Ctrl+F5..F8 store a view, F5..F8 jump back to it.   F1 or ? lists every key.",
+            "Sandbox only: F3 occupancy, F4 paths and F10 ranges overlays (for testing).",
         }),
     };
 }

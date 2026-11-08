@@ -58,9 +58,10 @@ public static class DifficultyLoader
 
         var problems = new List<RulesProblem>();
         foreach (var kv in root)
-            if (Array.IndexOf(TierIds.ToArray(), kv.Key) < 0)
+            if (kv.Key != FactionTable && Array.IndexOf(TierIds.ToArray(), kv.Key) < 0)
                 problems.Add(new RulesProblem(file, kv.Key, "unknown tier id (expected recruit, regular, veteran, elite or commissar)"));
 
+        FactionAiKeys factionKeys = ParseFactions(root, file, problems);
         var result = new List<DifficultyProfile>();
         for (int t = 0; t < TierIds.Count; t++)
         {
@@ -68,11 +69,36 @@ public static class DifficultyLoader
             if (!root.TryGetValue(id, out object? raw)) { problems.Add(new RulesProblem(file, id, "tier is required")); continue; }
             if (raw is not TomlTable table) { problems.Add(new RulesProblem(file, id, "expected a [table]")); continue; }
             DifficultyProfile? p = Parse(id, t + 1, table, file, problems);
-            if (p is not null) result.Add(p);
+            if (p is not null) result.Add(p with { FactionKeys = factionKeys });
         }
 
         if (problems.Count > 0) throw new RulesException(problems);
         return result;
+    }
+
+    /// <summary>Name of the optional per-faction table group: <c>[faction.directorate]</c> etc.</summary>
+    public const string FactionTable = "faction";
+
+    /// <summary>Faction ids allowed under <c>[faction.*]</c>.</summary>
+    public static readonly IReadOnlyList<string> FactionIds = ["authority", "directorate", "left_behind", "expedition"];
+
+    private static FactionAiKeys ParseFactions(TomlTable root, string file, List<RulesProblem> problems)
+    {
+        if (!root.TryGetValue(FactionTable, out object? raw)) return FactionAiKeys.Default;
+        if (raw is not TomlTable group) { problems.Add(new RulesProblem(file, FactionTable, "expected a [table]")); return FactionAiKeys.Default; }
+        int[] harass = [FactionAiKeys.DefaultHarassMinArmy, FactionAiKeys.DefaultHarassMinArmy, FactionAiKeys.DefaultHarassMinArmy, FactionAiKeys.DefaultHarassMinArmy];
+        foreach (var kv in group)
+        {
+            int i = Array.IndexOf(FactionIds.ToArray(), kv.Key);
+            string id = FactionTable + "." + kv.Key;
+            if (i < 0) { problems.Add(new RulesProblem(file, id, "unknown faction id (expected authority, directorate, left_behind or expedition)")); continue; }
+            if (kv.Value is not TomlTable t) { problems.Add(new RulesProblem(file, id, "expected a [table]")); continue; }
+            foreach (var key in t)
+                if (key.Key != "harass_min_army") problems.Add(new RulesProblem(file, id + "." + key.Key, "unknown key"));
+            int? v = Opt(t, id, "harass_min_army", 1, 1000, FactionAiKeys.DefaultHarassMinArmy, file, problems);
+            if (v is int x) harass[i] = x;
+        }
+        return new FactionAiKeys(harass[1], harass[0], harass[2], harass[3]);
     }
 
     private static DifficultyProfile? Parse(string id, int expectedTier, TomlTable table, string file, List<RulesProblem> problems)

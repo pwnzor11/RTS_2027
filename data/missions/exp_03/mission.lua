@@ -17,11 +17,16 @@ function OnInit()
   state.waves = 0
   state.waveTags = {}
   state.fleet = {}
+  state.third = false
 
   Objective.Add("deck", "e3.obj.deck", true)
   Objective.Add("carrier", "e3.obj.carrier", true)
   Objective.Add("hold", "e3.obj.hold", true)
   Objective.AddHidden("fleet", "e3.obj.fleet", false)
+  -- Objective targets (M11-05): where the HUD points.
+  Objective.SetTarget("deck", "cove_land")
+  Objective.SetTarget("carrier", "cove")
+  Objective.SetTarget("hold", "cove_land")
   Media.MessageKey("e3.start")
   Dialogue.Say(SPEAKER, SPEAKER, "e3.radio.start")
   Camera.Focus("cove", 120)
@@ -32,6 +37,7 @@ function OnInit()
   Trigger.AfterDelay(3800, AirRaid)
   Trigger.AfterDelay(5200, AuthorityTwo)
   Trigger.AfterDelay(6600, DirectorateTwo)
+  if Mission.Difficulty() >= 4 then Trigger.AfterDelay(8400, ThirdWave) end
   Trigger.Every(20, Poll)
 end
 
@@ -123,7 +129,7 @@ function AuthorityOne()
   Media.MessageKey("e3.auth1")
   Dialogue.Say(SPEAKER, SPEAKER, "e3.radio.auth1")
   Camera.Focus("north_road", 120)
-  Wave(1, "auth_rifleman", "north_road", Pick({ 3, 3, 4, 5, 6 }), "auth_jeep", 3)
+  Wave(1, "auth_rifleman", "north_road", Pick({ 2, 3, 4, 6, 8 }), "auth_jeep", 3)
 end
 
 function DirectorateOne()
@@ -131,13 +137,13 @@ function DirectorateOne()
   Media.MessageKey("e3.dir1")
   Dialogue.Say("leader_dir_larkin", "leader_dir_larkin", "e3.radio.larkin")
   Camera.Focus("south_dunes", 120)
-  Wave(2, "dir_conscript", "south_dunes", Pick({ 4, 4, 5, 7, 9 }), "dir_ashthrower", 3)
+  Wave(2, "dir_conscript", "south_dunes", Pick({ 3, 4, 5, 8, 11 }), "dir_ashthrower", 3)
 end
 
 -- The air raid: Authority bombers over the west sea, tier 4 and up (unit count only).
 function AirRaid()
   if state.phase == "done" then return end
-  local n = Pick({ 0, 0, 0, 1, 2 })
+  local n = Pick({ 0, 0, 0, 2, 3 })
   if n == 0 then return end
   Media.MessageKey("e3.raid")
   Dialogue.Say("leader_exp_kell", "leader_exp_kell", "e3.radio.raid")
@@ -152,7 +158,7 @@ end
 function AuthorityTwo()
   if state.phase == "done" then return end
   Media.MessageKey("e3.auth2")
-  Wave(1, "auth_rifleman", "north_road", Pick({ 4, 4, 6, 8, 10 }), "auth_rocketeer", 4)
+  Wave(1, "auth_rifleman", "north_road", Pick({ 3, 4, 6, 9, 12 }), "auth_rocketeer", 4)
 end
 
 function DirectorateTwo()
@@ -160,8 +166,17 @@ function DirectorateTwo()
   Media.MessageKey("e3.dir2")
   Dialogue.Say(SPEAKER, SPEAKER, "e3.radio.last")
   Camera.Focus("south_dunes", 100)
-  Wave(2, "dir_conscript", "south_dunes", Pick({ 5, 5, 7, 9, 12 }), "dir_ashthrower", 2)
+  Wave(2, "dir_conscript", "south_dunes", Pick({ 4, 5, 7, 10, 14 }), "dir_ashthrower", 2)
   state.waves = 5
+end
+
+-- Tiers 4-5: a last combined push from both fronts after the second pair of waves.
+function ThirdWave()
+  if state.phase == "done" then return end
+  Wave(1, "auth_rifleman", "north_road", Pick({ 0, 0, 0, 6, 9 }), "auth_rocketeer", 4)
+  Wave(2, "dir_conscript", "south_dunes", Pick({ 0, 0, 0, 6, 9 }), "dir_ashthrower", 4)
+  state.waves = 5
+  state.third = true
 end
 
 function WavesDown()
@@ -173,7 +188,7 @@ end
 
 function CheckHeld()
   if Objective.Status("hold") ~= "active" then return end
-  if state.waves < 5 or not WavesDown() then return end
+  if state.waves < 5 or (Mission.Difficulty() >= 4 and not state.third) or not WavesDown() then return end
   Objective.Complete("hold")
   Media.MessageKey("e3.held")
 end

@@ -311,7 +311,7 @@ internal sealed class TierPlanner
 
     /// <summary>M4-16 s13 (flag Harass): army size before a raiding party is formed. Authority raiders pulled out of a 14-unit army lost tier 4 its wave
     /// (Authority 4 v 3, 64 games: 24 / 33 / 7 at 14, 30 / 24 / 10 at 30). Directorate raiders pay for themselves (64 games at 30: 14 / 20 / 30; at 14: 23 / 21 / 20).</summary>
-    public int HarassMinArmy => _faction.Faction == Faction.Directorate ? 14 : 30;
+    public int HarassMinArmy => _p.FactionKeys.HarassMinArmy((int)_faction.Faction);
 
     /// <summary>M4-16 s12 tier-5 fix (flag UseUpgrades): army size before the research structure and the tier-2 gate are added to the build order. The
     /// tier-5 trace showed the tech spending at 3 minutes leaving the army half the size of a recruit's, so the first wave and then the base were lost.</summary>

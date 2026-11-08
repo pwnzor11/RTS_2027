@@ -117,6 +117,42 @@ public static class TierGrouping
         return rows;
     }
 
+    /// <summary>One visible row of the grid with its top and height relative to the grid's top.</summary>
+    /// <param name="Row">Index into the tier rows.</param>
+    /// <param name="Y">Top, in pixels from the grid's top.</param>
+    /// <param name="Height">Row height: headings take <c>headingH</c>, cameo rows take <c>cameoH</c> (rows size to content).</param>
+    public readonly record struct PlacedRow(int Row, int Y, int Height);
+
+    /// <summary>The rows visible from <paramref name="firstRow"/> in a grid <paramref name="gridHeight"/> tall; a row that does not fit whole is not shown.</summary>
+    public static IReadOnlyList<PlacedRow> Place(IReadOnlyList<TierRow> rows, int firstRow, int gridHeight, int cameoH, int headingH, int gap)
+    {
+        var placed = new List<PlacedRow>();
+        int y = 0;
+        for (int i = Math.Max(0, firstRow); i < rows.Count; i++)
+        {
+            int h = rows[i].Heading ? headingH : cameoH;
+            if (y + h > gridHeight) break;
+            placed.Add(new PlacedRow(i, y, h));
+            y += h + gap;
+        }
+
+        return placed;
+    }
+
+    /// <summary>The largest first row that still shows the last row (the scroll limit).</summary>
+    public static int MaxFirstRow(IReadOnlyList<TierRow> rows, int gridHeight, int cameoH, int headingH, int gap)
+    {
+        int used = 0;
+        for (int i = rows.Count - 1; i >= 0; i--)
+        {
+            int h = rows[i].Heading ? headingH : cameoH;
+            used += (used > 0 ? gap : 0) + h;
+            if (used > gridHeight) return Math.Min(rows.Count - 1, i + 1);
+        }
+
+        return 0;
+    }
+
     /// <summary>True when any entry is above tier 1, so the grid shows headings.</summary>
     public static bool NeedsHeadings(IReadOnlyList<TierEntry> entries)
     {

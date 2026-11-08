@@ -1,0 +1,6 @@
+{
+  "leader_auth_wrenfield":   { "voice": "", "who": "Brigadier Hester Wrenfield (Authority): field radio, short dry sentences, older officer" },
+  "leader_dir_larkin":       { "voice": "", "who": "The Voice, Odette Larkin (Directorate): former morning-radio announcer, warm and reassuring" },
+  "leader_exp_strand":       { "voice": "", "who": "Commissioner Imelda Strand (Expedition): former harbour auditor, polite, precise requests by telex" },
+  "leader_lb_calloway_ross": { "voice": "", "who": "War-captain Jessup Calloway-Ross (Left Behind): rig-master, loud, rough, best driver on the Drift" }
+}

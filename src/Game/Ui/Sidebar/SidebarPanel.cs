@@ -91,6 +91,9 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
     /// <summary>What the next click on the map does.</summary>
     public SidebarMode Mode { get; private set; }
 
+    /// <summary>True while the left button drags the view on the minimap (the edge scroll then stays off).</summary>
+    public bool MinimapDragging => _minimapDrag;
+
     /// <summary>The selected tab.</summary>
     public SidebarTab Tab => _tab;
 
@@ -136,7 +139,7 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
         Rts.Sim.View.PlayerView pv = _source.Sim.ViewFor(_player);   // M7-14: shipment timer, own state only
         _shipmentEta = pv.ShipmentEtaTicks; _shipmentPayload = pv.NextShipmentPayload; _shipmentDecay = pv.ShipmentDecayStep;
         _shipmentShown = ShipmentReadout.Shown(_shipmentEta, _shipmentPayload);
-        _layout = SidebarLayout.Compute(windowWidth, windowHeight, _ui, SidebarTabs.CountFor(_hasAircraft), _supplyShown, _shipmentShown);
+        _layout = SidebarLayout.Compute(windowWidth, windowHeight, _ui, SidebarTabs.CountFor(_hasAircraft), _supplyShown, _shipmentShown, _source.Map.Width, _source.Map.Height);
         _mouse = input.MousePosition;
         _tooltip = null;
         if (_shownCredits < 0) _shownCredits = _hud.Cash + _hud.Stored;
@@ -149,12 +152,12 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
         if (Mode == SidebarMode.Placement && ReadyOf(_placementType) != _placementType) CancelMode();
         BuildVisibleList();
 
-        if (input.ConsumePressed(Keys.Q)) SelectTab(SidebarTab.Structures);
-        if (input.ConsumePressed(Keys.W)) SelectTab(SidebarTab.Defences);
-        if (input.ConsumePressed(Keys.E)) SelectTab(SidebarTab.Infantry);
-        if (input.ConsumePressed(Keys.R)) SelectTab(SidebarTab.Vehicles);
-        if (input.ConsumePressed(Keys.T)) SelectTab(SidebarTab.Upgrades);
-        if (_hasAircraft && input.ConsumePressed(Keys.Y)) SelectTab(SidebarTab.Aircraft);
+        if (input.ConsumePressed(GameAction.TabStructures)) SelectTab(SidebarTab.Structures);
+        if (input.ConsumePressed(GameAction.TabDefences)) SelectTab(SidebarTab.Defences);
+        if (input.ConsumePressed(GameAction.TabInfantry)) SelectTab(SidebarTab.Infantry);
+        if (input.ConsumePressed(GameAction.TabVehicles)) SelectTab(SidebarTab.Vehicles);
+        if (input.ConsumePressed(GameAction.TabUpgrades)) SelectTab(SidebarTab.Upgrades);
+        if (_hasAircraft && input.ConsumePressed(GameAction.TabAircraft)) SelectTab(SidebarTab.Aircraft);
 
         if (_minimapDrag)
         {
@@ -237,7 +240,7 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
         DrawCredits(batch, pixel, l);
         if (_supplyShown) DrawSupply(batch, pixel, l);
         if (_shipmentShown) DrawShipment(batch, pixel, l);
-        DrawPowerBar(batch, pixel, l);
+        DrawPowerBar(batch, pixel, l, snapshot.Tick);
         DrawButton(batch, pixel, l.SellButton, "SELL", Mode == SidebarMode.Sell);
         DrawButton(batch, pixel, l.RepairButton, "REPAIR", Mode == SidebarMode.Repair);
         for (int i = 0; i < l.Tabs.Count; i++)
@@ -251,7 +254,6 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
 
         DrawGrid(batch, pixel, l);
         if (LeftBehindText.ShowUnpackHint(_hud, snapshot, _player)) DrawUnpackHint(batch, pixel, l);   // M6-09
-        DrawUnitInfo(batch, pixel, snapshot);   // VET-5
         _minimap.Draw(batch, pixel, l.Minimap, snapshot, _cameraTopLeft, _viewSizeWorld);
         DrawTooltip(batch, pixel);
     }
@@ -310,7 +312,8 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
         {
             int wheel = input.WheelDelta;
             if (wheel != 0) ScrollGrid(wheel > 0 ? -1 : 1);
-            int slot = l.SlotAt(_mouse);
+            int slot = _tab == SidebarTab.Upgrades ? l.SlotAt(_mouse) : -1;
+            TierEntry? tierHit = _tab == SidebarTab.Upgrades ? null : TierEntryAt(_mouse);
             if (_tab == SidebarTab.Upgrades)
             {
                 if (slot >= 0 && UpgradeAtSlot(slot) is UpgradeEntry entry)
@@ -320,7 +323,7 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
                     else if (right && UpgradeList.RightClick(_player, _hud, entry) is Command cancel) _source.Host.Issue(cancel);
                 }
             }
-            else if (slot >= 0 && EntryAtSlot(slot) is TierEntry entry)
+            else if (tierHit is TierEntry entry)
             {
                 if (entry.Locked)
                 {
@@ -421,7 +424,9 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
     private void ScrollGrid(int rows)
     {
         int total = TotalRows;
-        int max = Math.Max(0, total - _layout.Rows);
+        int max = _tab == SidebarTab.Upgrades
+            ? Math.Max(0, total - _layout.Rows)
+            : TierGrouping.MaxFirstRow(_rows, _layout.Grid.Height, _layout.CameoSize.Y, HeadingHeight(), _layout.Gap);
         _scrollRow = Math.Clamp(_scrollRow + rows, 0, max);
     }
 
@@ -496,17 +501,35 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
     private bool IsHidden(BuildOption o) =>
         o.Category == ProductionCategory.Structure && IdOf(o) == SkirmishStart.StartBuildingId;
 
-    private TierEntry? EntryAtSlot(int slot)
+    private int HeadingHeight() => BitmapFont.LineHeight(_ui * 0.85f, FontWeight.Bold) + Math.Max(6, (int)_ui * 6);
+
+    private IReadOnlyList<TierGrouping.PlacedRow> PlacedRows() =>
+        TierGrouping.Place(_rows, _scrollRow, _layout.Grid.Height, _layout.CameoSize.Y, HeadingHeight(), _layout.Gap);
+
+    // The rectangle of a cameo of a placed row (columns left to right).
+    private Rectangle TierCell(SidebarLayout l, TierGrouping.PlacedRow p, int col) =>
+        new(l.Grid.X + col * (l.CameoSize.X + l.Gap), l.Grid.Y + p.Y, l.CameoSize.X, p.Height);
+
+    /// <summary>The screen rectangle of cameo <paramref name="col"/> in grid row <paramref name="row"/> (heading rows count), or empty when not visible.</summary>
+    public Rectangle TierCellRect(int row, int col)
     {
-        int row = _scrollRow + slot / Math.Max(1, _layout.Columns), col = slot % Math.Max(1, _layout.Columns);
-        if (row < 0 || row >= _rows.Count || _rows[row].Heading) return null;
-        return col < _rows[row].Cells.Count ? _rows[row].Cells[col] : null;
+        foreach (TierGrouping.PlacedRow p in PlacedRows())
+            if (p.Row == row) return TierCell(_layout, p, col);
+        return Rectangle.Empty;
     }
 
-    private TierRow? HeadingAtSlot(int slot)
+    private TierEntry? TierEntryAt(Point at)
     {
-        int row = _scrollRow + slot / Math.Max(1, _layout.Columns);
-        return slot % Math.Max(1, _layout.Columns) == 0 && row >= 0 && row < _rows.Count && _rows[row].Heading ? _rows[row] : null;
+        SidebarLayout l = _layout;
+        foreach (TierGrouping.PlacedRow p in PlacedRows())
+        {
+            TierRow row = _rows[p.Row];
+            if (row.Heading) continue;
+            for (int c = 0; c < row.Cells.Count; c++)
+                if (TierCell(l, p, c).Contains(at)) return row.Cells[c];
+        }
+
+        return null;
     }
 
     private string IdOf(BuildOption o)
@@ -627,50 +650,26 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
         }
     }
 
-    // VET-5: the info panel for exactly one selected own unit, top left of the map view.
-    private void DrawUnitInfo(SpriteBatch batch, Texture2D pixel, SimSnapshot snapshot)
+    // H6: "POWER out / use", red while use exceeds output.
+    private void DrawPowerReadout(SpriteBatch batch, Texture2D pixel, Rectangle row, bool low)
     {
-        if (_selection.Count != 1) return;
-        UnitKey key = _selection.Units[0];
-        UnitView? found = null;
-        foreach (UnitView u in snapshot.Units)
-            if (u.Player == _player && UnitKey.Of(u) == key) { found = u; break; }
-        if (found is not UnitView unit) return;
-
-        SimRules r = _source.Rules;
-        bool vet = r.Veterancy.Enabled;
-        string name;
-        int max, scale;
-        bool canRank;
-        if (unit.Kind == UnitKind.Vehicle)
-        {
-            VehicleType t = r.Vehicles[unit.TypeIndex];
-            name = CameoNames.Display(t.Id); max = t.MaxHealth; scale = t.VetThresholdPermille; canRank = t.CanRank;
-        }
-        else
-        {
-            InfantryType t = r.Infantry[unit.TypeIndex];
-            name = CameoNames.Display(t.Id); max = t.MaxHealth; scale = t.VetThresholdPermille; canRank = t.CanRank;
-        }
-
-        int rank = vet ? _source.Sim.RankOf(key.Kind, key.Id.Index) : 0;
-        int kill = vet ? _source.Sim.KillValueOf(key.Kind, key.Id.Index) : 0;
-        int next = vet ? VeterancyText.NextThreshold(r.Veterancy.Thresholds, rank, scale, canRank) : 0;
-        var lines = new List<string>(UnitInfoPanel.Lines(name, unit.Health, max, vet, rank, kill, next));
-        // M7-14: a selected own carrier shows its hangar (docked over slots)
-        if (unit.Kind == UnitKind.Vehicle && r.Vehicles[unit.TypeIndex].AircraftSlots > 0
-            && _source.Sim.ViewFor(_player).OwnCarrierHangar(key.Id, out int docked, out int slots))
-            lines.Add(CarrierReadout.Text(docked, slots));
-        UnitInfoPanel.Draw(batch, pixel, new Point(_layout.MapView.X + 8, _layout.MapView.Y + 8), lines, _ui);
+        if (row.Height <= 2) return;
+        float scale = _ui * 0.8f;
+        string text = "POWER " + SidebarMetrics.PowerText(_hud.PowerOut, _hud.PowerUse);
+        scale = SidebarMetrics.FitScale(sc => BitmapFont.Measure(text, sc, FontWeight.Regular), row.Width - 2, scale);
+        int h = BitmapFont.LineHeight(scale, FontWeight.Regular);
+        Text(batch, pixel, text, new Vector2(row.X + 1, row.Y + (row.Height - h) / 2f), low ? BadRed : TextColour, scale, FontWeight.Regular);
     }
 
-    private void DrawPowerBar(SpriteBatch batch, Texture2D pixel, SidebarLayout l)
+    private void DrawPowerBar(SpriteBatch batch, Texture2D pixel, SidebarLayout l, int tick)
     {
         Rectangle r = l.PowerBar;
         if (r.Height <= 2) return;
         Shapes.Fill(batch, pixel, r, new Color(0x0C, 0x0E, 0x0A));
         (int fill, int use, bool low) = SidebarMetrics.PowerBar(_hud.PowerOut, _hud.PowerUse, r.Height - 2);
         Color c = low ? BadRed : GoodGreen;
+        DrawPowerReadout(batch, pixel, l.PowerRow, low);   // H6
+        if (!SidebarMetrics.PowerBarLit(low, tick)) c = new Color(0x3A, 0x10, 0x0E);   // H6: the bar blinks while low
         if (fill > 0) Shapes.Fill(batch, pixel, new Rectangle(r.X + 1, r.Bottom - 1 - fill, r.Width - 2, fill), c);
         int markY = r.Bottom - 1 - use;
         Shapes.Fill(batch, pixel, new Rectangle(r.X, Math.Clamp(markY, r.Y, r.Bottom - 1), r.Width, 2), Color.White);
@@ -744,12 +743,12 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
 
         QueueView? queue = QueueOf(SidebarTabs.CategoryOf(_tab));
         float small = _ui * 0.75f;
-        for (int slot = 0; slot < l.VisibleSlots; slot++)
+        foreach (TierGrouping.PlacedRow placed in PlacedRows())
         {
-            Rectangle r = l.Cameo(slot);
-            if (HeadingAtSlot(slot) is TierRow heading)
+            TierRow heading = _rows[placed.Row];
+            if (heading.Heading)
             {
-                var span = new Rectangle(r.X, r.Y, l.Grid.Width, r.Height);
+                var span = new Rectangle(l.Grid.X, l.Grid.Y + placed.Y, l.Grid.Width, placed.Height);
                 Shapes.Fill(batch, pixel, new Rectangle(span.X, span.Bottom - Math.Max(2, (int)_ui * 2), span.Width, Math.Max(2, (int)_ui * 2)), heading.Locked ? Border : Gold);
                 string text = Fit(TierGrouping.HeadingText(heading), span.Width - 4, _ui * 0.85f);
                 int th = BitmapFont.LineHeight(_ui * 0.85f, FontWeight.Bold);
@@ -757,13 +756,16 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
                 continue;
             }
 
-            if (EntryAtSlot(slot) is not TierEntry tierEntry)
+            for (int col = 0; col < l.Columns; col++)
             {
-                if (_rows.Count == 0 || (_scrollRow + slot / Math.Max(1, l.Columns) < _rows.Count && _rows[_scrollRow + slot / Math.Max(1, l.Columns)].Heading)) continue;
+            Rectangle r = TierCell(l, placed, col);
+            if (col >= heading.Cells.Count)
+            {
                 Shapes.Outline(batch, pixel, r, new Color(0x26, 0x2A, 0x22));
                 continue;
             }
 
+            TierEntry tierEntry = heading.Cells[col];
             BuildOption o = tierEntry.Option;
             string id = IdOf(o);
             bool ready = SidebarCommands.LeftClick(_hud, o) == CameoClick.EnterPlacement;
@@ -774,7 +776,7 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
             {
                 Shapes.Fill(batch, pixel, inner, new Color(0x32, 0x3A, 0x2E));
                 Shapes.Outline(batch, pixel, inner, new Color(0x4A, 0x54, 0x44));
-                CentredText(batch, pixel, PlaceholderArt.ShortName(id), inner, TextColour, _ui, FontWeight.Bold);
+                if (!tierEntry.Locked) CentredText(batch, pixel, PlaceholderArt.ShortName(id), inner, TextColour, _ui, FontWeight.Bold);   // P6: a locked cameo shows LOCKED once, not a ghost under it
             }
 
             // Name strip along the bottom.
@@ -803,11 +805,11 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
             }
 
             if (blocked && count == 0) Shapes.Fill(batch, pixel, r, Veil);
-            if (tierEntry.Locked) CentredText(batch, pixel, "LOCKED", r, DimText, small, FontWeight.Bold);
+            if (tierEntry.Locked) FittedCentredText(batch, pixel, "LOCKED", r, DimText, small);   // P6
             if (ready)
             {
                 Shapes.Outline(batch, pixel, r, GoodGreen, 2);
-                CentredText(batch, pixel, "READY", r, GoodGreen, _ui * 0.9f, FontWeight.Bold);
+                FittedCentredText(batch, pixel, "READY", r, GoodGreen, _ui * 0.9f);   // P6: sized to the cameo
             }
             else Shapes.Outline(batch, pixel, r, r.Contains(_mouse) ? Gold : Border);
 
@@ -819,6 +821,7 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
                 Shapes.Fill(batch, pixel, br, new Color(0, 0, 0, 200));
                 Text(batch, pixel, badge, new Vector2(br.X + 3, br.Y + 1), Gold, small, FontWeight.Bold);
             }
+            }
         }
     }
 
@@ -829,8 +832,8 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
         int lh = BitmapFont.LineHeight(scale, FontWeight.Regular);
         int w = _tooltip.Max(line => BitmapFont.Measure(line, scale, FontWeight.Regular)) + 12;
         int h = lh * _tooltip.Count + 8;
-        // Left of the cursor (the sidebar is on the right edge), inside the window.
-        int x = Math.Max(0, _mouse.X - w - 12), y = Math.Clamp(_mouse.Y - h / 2, 0, Math.Max(0, _layout.Panel.Height - h));
+        // Left of the whole sidebar (over the map edge), so it never covers the cameo grid; inside the window.
+        int x = Math.Max(0, Math.Min(_mouse.X - w - 12, _layout.Panel.X - w - 4)), y = Math.Clamp(_mouse.Y - h / 2, 0, Math.Max(0, _layout.Panel.Height - h));
         var box = new Rectangle(x, y, w, h);
         Shapes.Fill(batch, pixel, box, new Color(0, 0, 0, 230));
         Shapes.Outline(batch, pixel, box, Border);
@@ -852,6 +855,13 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
 
     private static void Text(SpriteBatch batch, Texture2D pixel, string text, Vector2 at, Color colour, float scale, FontWeight weight) =>
         BitmapFont.Draw(batch, pixel, text, at, colour, scale, weight);
+
+    // P6: bold label drawn once, scaled down until it fits the cameo with 2 px to spare each side.
+    private static void FittedCentredText(SpriteBatch batch, Texture2D pixel, string text, Rectangle r, Color colour, float scale)
+    {
+        float fit = SidebarMetrics.FitScale(sc => BitmapFont.Measure(text, sc, FontWeight.Bold), r.Width - 4, scale);
+        CentredText(batch, pixel, text, r, colour, fit, FontWeight.Bold);
+    }
 
     private static void CentredText(SpriteBatch batch, Texture2D pixel, string text, Rectangle r, Color colour, float scale,
         FontWeight weight = FontWeight.Regular)

@@ -11,7 +11,7 @@ using Rts.Sim.Rules;
 namespace Rts.Game.Render;
 
 /// <summary>
-/// F5: the weapon range of each selected unit as a circle, and its minimum range as a red circle when it has one.
+/// F10: the weapon range of each selected unit as a circle, and its minimum range as a red circle when it has one.
 /// Ranges are in leptons; 256 leptons are one 64 px cell at zoom 1.
 /// </summary>
 public static class RangeOverlay

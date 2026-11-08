@@ -16,7 +16,7 @@ Priorities, in order:
 
 Build order (D-087, session 4): finish M3, then skirmish depth (M4), the LLM commander (M5) and two new factions —
 The Left Behind (M6) and the Overseas Expedition (M7) — before the campaign (M8), so the campaign is written once with
-all four factions. Priorities above are unchanged in importance; only the build order moved.
+all four factions. D-171 (session 14): M11 UI and input overhaul comes after M8 and before M9 LAN. Priorities above are unchanged in importance; only the build order moved.
 
 - Repo: `github.com/pwnzor11/rts_2027`, branch `main`. Changes reach main by: **direct push** by the
   lead after review and verification (no branch protection as of session 1; revisit if that changes).

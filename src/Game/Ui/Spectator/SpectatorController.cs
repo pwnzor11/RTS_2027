@@ -2,6 +2,7 @@
 // Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
 using Microsoft.Xna.Framework.Input;
 using Rts.Game.Host;
+using Rts.Game.Controls;
 using Rts.Game.Input;
 
 namespace Rts.Game.Ui.Spectator;
@@ -67,11 +68,11 @@ public sealed class SpectatorController
     /// <summary>Reads V, F2, 1..4, Space and Tab from <paramref name="input"/> and consumes the ones it used.</summary>
     public void Handle(InputFrame input)
     {
-        if (input.ConsumePressed(Keys.V)) CycleViewer();
-        if (input.ConsumePressed(Keys.F2)) ToggleVision();
-        if (input.ConsumePressed(Keys.Space)) TogglePause();
-        if (input.ConsumePressed(Keys.Tab)) ShowDetail = !ShowDetail;
-        Keys[] speedKeys = { Keys.D1, Keys.D2, Keys.D3, Keys.D4 };
+        if (input.ConsumePressed(GameAction.SpecView)) CycleViewer();
+        if (input.ConsumePressed(GameAction.DebugFog)) ToggleVision();
+        if (input.ConsumePressed(GameAction.Pause)) TogglePause();
+        if (input.ConsumePressed(GameAction.SpecDetail)) ShowDetail = !ShowDetail;
+        GameAction[] speedKeys = { GameAction.SpecSpeed1, GameAction.SpecSpeed2, GameAction.SpecSpeed4, GameAction.SpecSpeed8 };
         for (int i = 0; i < speedKeys.Length; i++)
             if (input.ConsumePressed(speedKeys[i])) SetSpeedStep(i);
     }

@@ -13,12 +13,15 @@ namespace Rts.Game.Render;
 
 /// <summary>
 /// Draws one frame in order: terrain, occupancy (F3), M3 ground layers and telegraphs, then buildings and units in one y-sorted pass
-/// (<see cref="DrawOrder"/>), projectiles, fog, path (F4) and range (F5) overlays, health bars above the sprites, then
+/// (<see cref="DrawOrder"/>), projectiles, fog, path (F4) and range (F10) overlays, health bars above the sprites, then
 /// the drag box.
 /// </summary>
 public sealed class SceneRenderer : IDisposable
 {
     private static readonly Color DragColour = Color.White;
+
+    /// <summary>F4: draw health bars on everything (the "Health bars: Always" setting); the game screen sets it each frame.</summary>
+    public bool HealthBarsAlways { get; set; }
 
     private readonly SpriteResolver _sprites;
     private readonly SpriteLibrary? _library;
@@ -117,7 +120,8 @@ public sealed class SceneRenderer : IDisposable
         foreach ((RankKey key, int rank) in _ranks) _rankMap[key] = rank;
         _promotions.Update(snapshot.Tick, _ranks, _promoted);
         PromotionFlash.Draw(batch, pixel, frame.Units, camera, _promotions, snapshot.Tick);
-        HealthBars.Draw(batch, pixel, frame, camera, _sprites, _rankMap);
+        HealthBars.Draw(batch, pixel, frame, camera, _sprites, _rankMap, HealthBarsAlways);
+        NoPowerOverlay.Draw(batch, pixel, frame, camera);   // D-170: blinking marker over a building stopped for lack of power
         if (frame.DragRect is Rectangle box) Shapes.Outline(batch, pixel, box, DragColour);
     }
 

@@ -22,6 +22,26 @@ public static class SpriteLayout
         return Round(camera.ScreenFromWorld(world));
     }
 
+    /// <summary>
+    /// D-172 (3), M11-06: units (infantry, vehicles, aircraft, ships) are drawn this much larger than their art, around
+    /// the origin pixel (ground contact). Render only: sim footprints, ranges and pathing are unchanged, and the default
+    /// camera zoom is unchanged. Buildings and terrain do not use it.
+    /// </summary>
+    public const float UnitDrawScale = 1.25f;
+
+    /// <summary>Total sprite scale of a unit: its type's own draw scale (big ships) times <see cref="UnitDrawScale"/>, then the camera zoom.</summary>
+    /// <param name="typeDrawScale">The type's own scale (<c>draw_scale_permille</c> / 1000; 1 for most).</param>
+    /// <param name="zoom">Camera zoom.</param>
+    public static float UnitSpriteScale(float typeDrawScale, float zoom) => typeDrawScale * UnitDrawScale * zoom;
+
+    /// <summary>
+    /// Screen rectangle a unit frame covers when drawn at <paramref name="origin"/> with <paramref name="scale"/>
+    /// (a value from <see cref="UnitSpriteScale"/>): the frame is scaled about its origin pixel, so the ground contact
+    /// point does not move.
+    /// </summary>
+    public static (Vector2 TopLeft, Vector2 Size) UnitFrameRect(Vector2 origin, SpriteManifest manifest, float scale) =>
+        (origin - new Vector2(manifest.OriginX, manifest.OriginY) * scale, new Vector2(manifest.FrameW, manifest.FrameH) * scale);
+
     /// <summary>Screen position of a unit's origin: its ground contact point, whole pixels.</summary>
     /// <param name="camera">View.</param>
     /// <param name="world">Interpolated zoom-1 world position of the unit.</param>

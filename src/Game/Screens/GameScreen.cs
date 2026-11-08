@@ -26,7 +26,7 @@ namespace Rts.Game.Screens;
 /// The battle view (formerly the whole of RtsGame): camera, selection, orders, overlays, HUD and the F1 debug console
 /// over the real simulation (or the --demo source when there is no sim). Controls: arrows or middle-drag to pan, wheel
 /// to zoom, left-click to select or drag a box, right-click to move, attack or (after A) attack-move, S stop, G guard,
-/// X scatter, F2 fog viewer, F3 occupancy, F4 paths, F5 ranges, Space pause, '.' step, Esc opens the pause menu.
+/// X scatter, F2 fog viewer, F3 occupancy, F4 paths, F10 ranges, Space pause, '.' step, Esc opens the pause menu.
 /// F1 opens the debug console (sandbox only); while it is open, typing goes to it and Esc closes it instead.
 /// A skirmish (<see cref="CreateSkirmish"/>) adds the right-hand sidebar and minimap (Q W E R pick the tabs, Esc first leaves
 /// placement, sell and repair mode), a factory selected with the left click takes a rally point with the right click, and the
@@ -35,30 +35,7 @@ namespace Rts.Game.Screens;
 /// </summary>
 public sealed class GameScreen : IScreen
 {
-    private const float PanScreenPixelsPerSecond = 320f;
     private const float DragThresholdPx = 4f;
-    private static readonly Keys[] OrderKeys = { Keys.A, Keys.S, Keys.G, Keys.X, Keys.D };
-    private static readonly string[] SkirmishHelpLines =
-    {
-        "arrows / middle-drag pan   wheel zoom   LMB select   RMB move, attack or rally",
-        "Q W E R T sidebar tabs   A attack-move   S stop   G guard   X scatter   D deploy   Space pause",
-        "RMB on a Hatch or transport: enter it   T tab: upgrades   K pack / unpack a rig   RMB on a wreck: salvage",
-        "Esc leaves placement / sell / repair, then opens the pause menu",
-    };
-
-    private static readonly string[] HelpLines =
-    {
-        "arrows / middle-drag pan   wheel zoom   LMB select   RMB move or attack",
-        "A then RMB: attack-move   S stop   G guard here   X scatter   Space pause   . step",
-        "F1 console   F2 fog viewer   F3 occupancy   F4 paths   F5 ranges   F9 AI-vs-AI spectator   Esc pause menu",
-    };
-
-    private static readonly string[] SpectatorHelpLines =
-    {
-        "arrows / middle-drag pan   wheel zoom   click a unit or structure: info (read only)",
-        "V next view   F2 full vision / fog   1 2 3 4 speed 1x 2x 4x 8x   Space pause   Tab detail   Esc pause menu",
-    };
-
     private readonly GameServices _s;
     private readonly ISnapshotSource _source;
     private readonly SimSnapshotSource? _sim; // null with --demo
@@ -66,6 +43,7 @@ public sealed class GameScreen : IScreen
     private readonly bool _skirmishMode;
     private SidebarPanel? _sidebar;
     private CameoProvider? _cameos;
+    private Rts.Game.Ui.Card.SelectionCard? _card;   // M11-04: the bottom-centre selection card
     private EntityId _selectedBuilding = EntityId.None;
     private bool _selectedBuildingProduces;
     private int _selectedBuildingType = -1;
@@ -80,13 +58,13 @@ public sealed class GameScreen : IScreen
     private UnpackPlacement? _unpack;         // M6-09: the unpack footprint follows the cursor
     private readonly Selection _selection = new();
     private readonly OrderController? _orders; // null with --demo
+    private readonly OrderFeedback _feedback = new();   // O1: order rings
     private readonly OverlayToggles _overlays = new();
     private readonly Camera _camera = new();
     private readonly DebugConsole? _console; // null with --demo
     private readonly CommanderChatPanel _chat = new(); // M5-07: commander chat (Enter to talk)
     private readonly List<RenderUnit> _renderUnits = new();
     private readonly RectRegion _hudRegion = new(Rectangle.Empty);
-    private readonly RectRegion _helpRegion = new(Rectangle.Empty);
     private Point _mouse;
     private Point? _dragStart;
     private bool _dragging;
@@ -129,7 +107,7 @@ public sealed class GameScreen : IScreen
             }
             else
             {
-                _orders = new OrderController(sim, _selection);
+                _orders = new OrderController(sim, _selection) { Feedback = _feedback };
                 if (!_skirmishMode) _console = new DebugConsole(sim, _selection, _camera); // AllowDebug is off in a skirmish
             }
         }
@@ -229,7 +207,7 @@ public sealed class GameScreen : IScreen
         MissionGame game = MissionGame.Create(services.RulesDir, missionId);
         var sim = new SimSnapshotSource(game);
         var screen = new GameScreen(services, sim, null, () => CreateMission(services, missionId), skirmishMode: true);
-        screen._mission = new MissionOverlay(game.Host);
+        screen._mission = new MissionOverlay(game.Host, Rts.Game.Ui.Objectives.ObjectiveGuidance.BriefingOf(game));
         screen.IsGameOver = () => sim.Sim.GameOver;
         return screen;
     }
@@ -242,7 +220,7 @@ public sealed class GameScreen : IScreen
     {
         var sim = new SimSnapshotSource(game);
         var screen = new GameScreen(services, sim, null, restart, skirmishMode: true);
-        screen._mission = new MissionOverlay(game.Host);
+        screen._mission = new MissionOverlay(game.Host, Rts.Game.Ui.Objectives.ObjectiveGuidance.BriefingOf(game));
         screen.IsGameOver = () => sim.Sim.GameOver;
         screen._gameOverOverride = gameOver;
         return screen;
@@ -260,7 +238,7 @@ public sealed class GameScreen : IScreen
             MissionGame game = MissionGame.FromSave(loaded);
             string id = loaded.Header.MissionId;
             var mission = new GameScreen(services, sim, null, () => CreateMission(services, id), skirmishMode: true);
-            mission._mission = new MissionOverlay(game.Host);
+            mission._mission = new MissionOverlay(game.Host, Rts.Game.Ui.Objectives.ObjectiveGuidance.BriefingOf(game));
             mission.IsGameOver = () => sim.Sim.GameOver;
             return mission;
         }
@@ -293,6 +271,7 @@ public sealed class GameScreen : IScreen
             return;
         }
 
+        if (_sim is not null && _orders is not null && !_skirmishMode) _card = new Rts.Game.Ui.Card.SelectionCard(_sim, _selection, null, PlayerColours.Base(SimSnapshotSource.LocalPlayer));
         if (!_skirmishMode || _sim is null) return;
         string spritesRoot = Path.Combine(Path.GetDirectoryName(Path.GetFullPath(_s.RulesDir)) ?? ".", "sprites");
         _cameos = new CameoProvider(_s.Graphics, spritesRoot);
@@ -300,6 +279,7 @@ public sealed class GameScreen : IScreen
         // D-068: the local player draws in the chosen colour; the AI takes the next palette entry that differs.
         PlayerColours.Assign(Skirmish is { } sk && sk.PlayerCount >= 2 ? ColoursOf(sk) : new[] { colour, colour == 1 ? 0 : 1 });
         _sidebar = new SidebarPanel(_sim, SimSnapshotSource.LocalPlayer, _selection, _cameos, PlayerColours.Base(SimSnapshotSource.LocalPlayer));
+        _card = new Rts.Game.Ui.Card.SelectionCard(_sim, _selection, _cameos, PlayerColours.Base(SimSnapshotSource.LocalPlayer));
         CentreCameraOnOwnBase();
         _archive = new ArchiveTracker(ArchiveProgress.Load());
     }
@@ -322,6 +302,7 @@ public sealed class GameScreen : IScreen
     {
         _mouse = input.MousePosition;
         UpdateHudRegions();
+        UpdateCard(input);   // M11-04: before anything else reads the click
         PlayerHud? localHud = _skirmishMode && _sim is not null ? _sim.Sim.HudFor(SimSnapshotSource.LocalPlayer) : null;
         _superweapon.Update(localHud, _sim?.Sim.Tick ?? 0);
         UpdateSuperweaponRegion();
@@ -358,7 +339,7 @@ public sealed class GameScreen : IScreen
             input.ConsumeMouseOver(_packRegion);
             input.ConsumeMouseOver(_diveRegion);
             input.ConsumeMouseOver(_hudRegion);
-            input.ConsumeMouseOver(_helpRegion);
+            if (_card is not null) input.ConsumeMouseOver(_card);   // M11-04: clicks on the card never reach the map
             if (_mission is not null) input.ConsumeMouseOver(_mission.ObjectivesRegion);
         }
 
@@ -381,9 +362,18 @@ public sealed class GameScreen : IScreen
         bool typing = _console is { IsOpen: true };
         if (typing) input.ConsumeKeyboard();
 
+        if (!typing && !chatTyping && (_console is null && input.ConsumePressed(Keys.F1) || input.Text.Contains('?')))
+        {
+            input.ConsumeText();
+            _s.Screens.Push(new ControlsScreen(_s));   // M11-03: F1 (or ?) lists the controls; F1 is the console in the sandbox, ? works everywhere
+            return;
+        }
+
         if (_sidebar is { Mode: not SidebarMode.None } && input.ConsumePressed(Keys.Escape)) _sidebar.CancelMode();
         if (_superweapon.IsArmed && input.ConsumePressed(Keys.Escape)) _superweapon.Cancel();   // Esc leaves targeting first
         if (_unpack is not null && input.ConsumePressed(Keys.Escape)) _unpack = null;            // M6-09: ... and unpack placement
+
+        if (_orders is not null && _orders.AnyArmed && input.ConsumePressed(Keys.Escape)) _orders.CancelArmed();   // F6: Esc leaves an armed order first
 
         if (input.ConsumePressed(Keys.Escape))
         {
@@ -394,6 +384,7 @@ public sealed class GameScreen : IScreen
         _sidebar?.Update(input, _camera, _s.Viewport.Width, _s.Viewport.Height);
         HandlePackKeyAndPlacement(input);   // M6-09: K, and the unpack footprint on the map
 
+        bool debugKeys = GameKeys.DebugKeysAllowed(_skirmishMode);
         if (_sim is not null)
         {
             if (_spec is not null)
@@ -402,38 +393,43 @@ public sealed class GameScreen : IScreen
             }
             else
             {
-                if (input.ConsumePressed(Keys.Space)) _sim.Paused = !_sim.Paused;
-                if (input.ConsumePressed(Keys.F2)) _sim.CycleViewer();
-                if (!_skirmishMode && _console is not { IsOpen: true } && input.ConsumePressed(Keys.F9)) StartSpectatorFromSandbox();
+                if (input.ConsumePressed(GameAction.Pause)) _sim.Paused = !_sim.Paused;
+                if (debugKeys && input.ConsumePressed(GameAction.DebugFog)) _sim.CycleViewer();
+                if (debugKeys && _console is not { IsOpen: true } && input.ConsumePressed(GameAction.DebugSpectator)) StartSpectatorFromSandbox();
             }
 
-            if (input.ConsumePressed(Keys.OemPeriod)) _sim.StepOnce();
+            if (debugKeys && input.ConsumePressed(GameAction.DebugStep)) _sim.StepOnce();
         }
 
-        if (input.ConsumePressed(Keys.F3)) _overlays.Occupancy = !_overlays.Occupancy;
-        if (input.ConsumePressed(Keys.F4)) _overlays.Paths = !_overlays.Paths;
-        if (input.ConsumePressed(Keys.F5)) _overlays.Ranges = !_overlays.Ranges;
+        if (debugKeys)
+        {
+            if (input.ConsumePressed(GameAction.DebugOccupancy)) _overlays.Occupancy = !_overlays.Occupancy;
+            if (input.ConsumePressed(GameAction.DebugPaths)) _overlays.Paths = !_overlays.Paths;
+            if (input.ConsumePressed(GameAction.DebugRanges)) _overlays.Ranges = !_overlays.Ranges;
+        }
+
+        HandleCameraKeys(input);
 
         if (_orders is not null) _orders.SelectedBuilding = _selectedBuilding;   // M4-09: D unloads a selected garrisoned building
         if (_orders is not null)
         {
-            foreach (Keys key in OrderKeys)
+            foreach (GameAction action in GameKeys.OrderActions)
             {
-                if (input.ConsumePressed(key)) _orders.KeyPressed(key);
+                if (input.ConsumePressed(action)) _orders.KeyPressed(action);
             }
         }
 
+        _feedback.Advance((float)t.ElapsedGameTime.TotalSeconds);
         Vector2 keyDirection = Vector2.Zero;
-        if (input.IsDown(Keys.Left)) keyDirection.X -= 1f;
-        if (input.IsDown(Keys.Right)) keyDirection.X += 1f;
-        if (input.IsDown(Keys.Up)) keyDirection.Y -= 1f;
-        if (input.IsDown(Keys.Down)) keyDirection.Y += 1f;
-        if (keyDirection != Vector2.Zero)
-        {
-            keyDirection.Normalize();
-            float seconds = (float)t.ElapsedGameTime.TotalSeconds;
-            _camera.PanScreen(keyDirection * PanScreenPixelsPerSecond * seconds);
-        }
+        if (input.IsDown(GameAction.ScrollLeft)) keyDirection.X -= 1f;
+        if (input.IsDown(GameAction.ScrollRight)) keyDirection.X += 1f;
+        if (input.IsDown(GameAction.ScrollUp)) keyDirection.Y -= 1f;
+        if (input.IsDown(GameAction.ScrollDown)) keyDirection.Y += 1f;
+        bool busy = _dragStart is not null || input.MiddleDragging || _sidebar is { MinimapDragging: true } || _console is { IsOpen: true } || chatTyping;
+        Vector2 edge = CameraScroll.EdgeDirection(input.MousePosition, new Rectangle(0, 0, _s.Viewport.Width, _s.Viewport.Height),
+            _s.Settings.EdgeScroll, _s.WindowActive(), busy);
+        bool shift = input.IsDown(Keys.LeftShift) || input.IsDown(Keys.RightShift);
+        _camera.PanScreen(CameraScroll.FrameDelta(keyDirection + edge, _s.Settings.ScrollSpeed, shift, (float)t.ElapsedGameTime.TotalSeconds));
 
         // Middle-drag: the map follows the cursor, so the view moves opposite to the mouse.
         if (input.MiddleDragging) _camera.PanScreen(-input.MouseDelta.ToVector2());
@@ -443,7 +439,16 @@ public sealed class GameScreen : IScreen
 
         if (_sim is not null) _sim.Advance(t.ElapsedGameTime.Ticks / 10); // ticks are 100 ns; microseconds = ticks / 10
         else _source.Update();
-        if (_mission is not null && _sim is not null && _mission.Advance(_sim.Sim.Tick, _s.Audio) is { } hint) CentreCameraOn(Camera.CentreOf(hint));   // M8-05: camera hint, once
+        bool scriptCue = false;
+        if (_mission is not null && _sim is not null && _mission.Advance(_sim.Sim.Tick, _s.Audio) is { } hint) { CentreCameraOn(Camera.CentreOf(hint)); scriptCue = true; }   // M8-05: camera hint, once
+        // ---- M11-05 objective guidance keys: J jump, Tab next objective, O list. (Actions ObjJump / ObjCycle / ObjList in the key table.) ----
+        if (_mission is not null && _sim is not null && _console is not { IsOpen: true })
+        {
+            Vector2 viewCentre = _camera.WorldFromScreen(new Point(MapViewport().Width / 2, MapViewport().Height / 2));
+            if (_mission.Guidance.Update(input, (float)t.ElapsedGameTime.TotalSeconds, _sim.Sim.Tick, viewCentre, _s.Settings.CameraCueOnNewObjective, scriptCue) is { } focus)
+                CentreCameraOn(focus);
+        }
+        // ---- end M11-05 ----
 
         _camera.Clamp(_source.Current.MapWidth, _source.Current.MapHeight, MapViewport());
         Vector2 view = _camera.WorldFromScreen(new Point(MapViewport().Width / 2, MapViewport().Height / 2));   // M3-INT: positional audio
@@ -487,21 +492,64 @@ public sealed class GameScreen : IScreen
         IReadOnlyList<LeptonCoord> projectiles = _sim is null ? Array.Empty<LeptonCoord>() : _sim.Projectiles;
         var frame = new SceneFrame(snapshot, _renderUnits, projectiles, _sim?.Sim, _sim?.Rules, _overlays, _selection, DragRectangle());
 
+        _s.Scene.HealthBarsAlways = _s.Settings.HealthBarsAlways;
         _s.Scene.Draw(sb, _s.Pixel, frame, _camera, _s.Viewport);
         DrawSelectedBuilding(sb, snapshot);
+        _feedback.Draw(sb, _s.Pixel, _camera);
         DrawPackProgress(sb, snapshot);
         DrawUnpackGhost(sb);
         _sidebar?.DrawMapOverlay(sb, _s.Pixel, _camera, snapshot);
+        _mission?.Guidance.DrawWorld(sb, _s.Pixel, _camera, MapViewport().Bounds, _s.UiScale);   // M11-05
         DrawHud(sb, snapshot);
-        string[] chatHelp = _spectatorMode ? SpectatorHelpLines : _skirmishMode ? SkirmishHelpLines : HelpLines;
-        _chat.Draw(sb, _s.Pixel, _s.UiScale, new Point(8, _s.Viewport.Height - Hud.HeightOf(chatHelp.Length, _s.UiScale) - 12), _s.Viewport.Width - 16);
+        DrawArmedCursor(sb);
+        _card?.Draw(sb, _s.Pixel, _mouse, _orders is { AttackMoveArmed: true });   // M11-04
+        _chat.Draw(sb, _s.Pixel, _s.UiScale, new Point(8, _s.Viewport.Height - Hud.HeightOf(1, _s.UiScale) - 12), _s.Viewport.Width - 16);
         _sidebar?.Draw(sb, _s.Pixel, snapshot);
+        if (_mission is not null && _sidebar is not null) _mission.Guidance.DrawMinimap(sb, _s.Pixel, _sidebar.Layout.Minimap, snapshot.MapWidth, snapshot.MapHeight);   // M11-05
         DrawSuperweapon(sb, snapshot.Tick);
         DrawUpgradeButton(sb);
         DrawPackButton(sb);
         DrawDiveButton(sb);
         DrawSpectator(sb);
         _console?.Draw(sb, _s.Pixel, _s.Viewport);
+    }
+
+    // M11-04: rebuild the card for this frame and act on a left click on it (the click is then used up).
+    private void UpdateCard(InputFrame input)
+    {
+        if (_card is null) return;
+        Rectangle mapView = _sidebar?.Layout.MapView ?? new Rectangle(0, 0, _s.Viewport.Width, _s.Viewport.Height);
+        _card.Refresh(mapView, Rts.Game.Ui.UiScale.FromBackbuffer(_s.Viewport.Height), _selectedBuilding);
+        if (!_card.Visible || !input.LeftPressed || _dragStart is not null) return;
+        Rts.Game.Ui.Card.CardAction action = _card.Click(input.MousePosition, input.IsDown(Keys.LeftShift) || input.IsDown(Keys.RightShift));
+        if (!action.Consumed) return;
+        input.ConsumeLeft();
+        switch (action.Kind)
+        {
+            case Rts.Game.Ui.Card.CardActionKind.Order:
+                _orders?.KeyPressed(action.Action);
+                break;
+            case Rts.Game.Ui.Card.CardActionKind.SelectOnly:
+                _selection.Replace(new[] { action.Unit });
+                Audio.AudioBootstrap.Director?.Notify(Audio.AudioEventKind.UnitSelect);
+                break;
+            case Rts.Game.Ui.Card.CardActionKind.Remove:
+                _selection.Remove(action.Unit);
+                break;
+            case Rts.Game.Ui.Card.CardActionKind.Sell when _sim is not null && !_selectedBuilding.IsNone:
+                _sim.Host.Issue(SidebarCommands.Sell(SimSnapshotSource.LocalPlayer, _selectedBuilding));
+                break;
+            case Rts.Game.Ui.Card.CardActionKind.Repair when _sim is not null && !_selectedBuilding.IsNone:
+                _sim.Host.Issue(SidebarCommands.Repair(SimSnapshotSource.LocalPlayer, _selectedBuilding));
+                break;
+        }
+    }
+
+    // O2: while attack-move is armed, a red crosshair at the cursor and a small "ATTACK-MOVE" label beside it.
+    private void DrawArmedCursor(SpriteBatch sb)
+    {
+        if (_orders is not { AttackMoveArmed: true } || !MapViewport().Bounds.Contains(_mouse)) return;
+        ArmedCursor.Draw(sb, _s.Pixel, _mouse, "ATTACK-MOVE", _s.UiScale);
     }
 
     // What Save game writes to: only a skirmish or mission (the sandbox has no save header).
@@ -517,7 +565,12 @@ public sealed class GameScreen : IScreen
         }
 
         Point mouse = input.MousePosition;
-        if (input.LeftPressed)
+        if (input.LeftPressed && _orders is { AttackMoveArmed: true } && _console is not { IsOpen: true } && MapViewport().Bounds.Contains(mouse))
+        {
+            _orders.RightClick(mouse, _camera, _renderUnits);   // O2: a left click commits an armed attack-move (right click is the alias below)
+            input.ConsumeLeft();
+        }
+        else if (input.LeftPressed)
         {
             _dragStart = mouse;
             _dragging = false;
@@ -872,7 +925,7 @@ public sealed class GameScreen : IScreen
     private void HandlePackKeyAndPlacement(InputFrame input)
     {
         if (_sim is null || _orders is null) return;
-        if (input.ConsumePressed(Keys.K))
+        if (input.ConsumePressed(GameAction.Pack))
         {
             if (_unpack is not null) _unpack = null;
             else if (_pack is { } offer) ActivatePack(offer);
@@ -1015,6 +1068,12 @@ public sealed class GameScreen : IScreen
             float left = b.Cell.X * Camera.CellPx, top = b.Cell.Y * Camera.CellPx;
             Rectangle r = _camera.ScreenRect(left, top, left + b.FootprintW * Camera.CellPx, top + b.FootprintH * Camera.CellPx);
             Shapes.Outline(sb, _s.Pixel, r, Color.White, 2);
+            // O4: a selected production building shows its rally flag and a line to it
+            if (_sim is not null && _sim.Rules.Buildings[b.TypeIndex].Produces is { } lane
+                && _sim.Sim.Production.RallyCell(SimSnapshotSource.LocalPlayer, lane) is { } rally)
+            {
+                OrderFeedback.DrawRally(sb, _s.Pixel, _camera, new Vector2(left + b.FootprintW * Camera.CellPx / 2f, top + b.FootprintH * Camera.CellPx / 2f), rally);
+            }
         }
     }
 
@@ -1026,6 +1085,24 @@ public sealed class GameScreen : IScreen
         Viewport v = _s.Viewport;
         if (_sidebar is null) return v;
         return new Viewport(0, 0, Math.Max(1, _sidebar.Layout.MapView.Width), v.Height);
+    }
+
+    private readonly Vector2?[] _bookmarks = new Vector2?[4];   // M11-02: camera bookmarks F5..F8 (Ctrl+key stores, key recalls)
+
+    // Home centres on the player's base; Ctrl+F5..F8 store the view centre, F5..F8 recall it.
+    private void HandleCameraKeys(InputFrame input)
+    {
+        if (_sim is null) return;
+        if (input.ConsumePressed(GameAction.CentreBase)) CentreCameraOnOwnBase();
+        bool ctrl = input.IsDown(Keys.LeftControl) || input.IsDown(Keys.RightControl);
+        GameAction[] keys = { GameAction.Bookmark1, GameAction.Bookmark2, GameAction.Bookmark3, GameAction.Bookmark4 };
+        for (int i = 0; i < keys.Length; i++)
+        {
+            if (!input.ConsumePressed(keys[i])) continue;
+            Viewport map = MapViewport();
+            if (ctrl) _bookmarks[i] = _camera.WorldFromScreen(new Point(map.Width / 2, map.Height / 2));
+            else if (_bookmarks[i] is { } at) CentreCameraOn(at);
+        }
     }
 
     private void CentreCameraOnOwnBase()
@@ -1073,13 +1150,13 @@ public sealed class GameScreen : IScreen
 
     private List<string> HudLines(SimSnapshot snapshot)
     {
-        var lines = new List<string>
-        {
-            $"tick {snapshot.Tick}  hash {snapshot.StateHash:x16}  fps {_s.Fps}  zoom {_camera.ZoomLabel}"
-                + (_sim is { Paused: true } ? "  PAUSED (. = step)" : ""),
-        };
+        var lines = new List<string>();
+        bool debugMode = GameKeys.DebugKeysAllowed(_skirmishMode);
+        if (_s.Settings.ShowDiagnostics)
+            lines.Add($"tick {snapshot.Tick}  hash {snapshot.StateHash:x16}  fps {_s.Fps}  zoom {_camera.ZoomLabel}");
+        if (_sim is { Paused: true }) lines.Add(debugMode ? "PAUSED (. = step)" : "PAUSED");
 
-        if (_orders is { DeployArmed: true }) lines.Add("DEPLOY: right-click the cell to dig at (D cancels)");
+        if (_orders is { DeployArmed: true }) lines.Add($"DEPLOY: right-click the cell to dig at ({KeyNames.Of(GameKeys.Active.Get(GameAction.Deploy))} cancels)");
         if (_unpack is not null) lines.Add(LeftBehindText.Placeholder(LeftBehindText.UnpackPlacementKey));
 
         if (_sim is not null && _orders is not null && !_skirmishMode) // unit counts of both sides would show the fogged enemy
@@ -1099,31 +1176,22 @@ public sealed class GameScreen : IScreen
     {
         int scale = _s.UiScale;
         List<string> lines = HudLines(_source.Current);
-        _hudRegion.Bounds = PanelRect(new Point(8, 8), lines, scale);
+        _hudRegion.Bounds = lines.Count == 0 ? Rectangle.Empty : PanelRect(new Point(8, 8), lines, scale);
         if (_specPanel is not null)
         {
             _specPanel.Origin = new Point(8, 8 + Hud.HeightOf(lines.Count, scale) + 4);
             _specRegion.Bounds = _specPanel.Bounds(scale);
         }
+        if (_mission is not null) _mission.MapViewWidth = MapViewport().Width;   // M11-05
         _mission?.UpdateRegion(lines.Count, scale);
-        if (_sim is not null)
-        {
-            string[] help = _spectatorMode ? SpectatorHelpLines : _skirmishMode ? SkirmishHelpLines : HelpLines;
-            int top = _s.Viewport.Height - Hud.HeightOf(help.Length, scale) - 8;
-            _helpRegion.Bounds = PanelRect(new Point(8, top), help, scale);
-        }
-        else
-        {
-            _helpRegion.Bounds = Rectangle.Empty;
-        }
     }
 
     private static Rectangle PanelRect(Point origin, IReadOnlyList<string> lines, int scale) =>
         new(origin.X, origin.Y, lines.Max(line => BitmapFont.Measure(line, scale)) + 16, Hud.HeightOf(lines.Count, scale));
 
     /// <summary>
-    /// Top-left: tick, state hash, frames per second, zoom (and PAUSED). Second line: alive units per player, selection,
-    /// overlays, fog viewer. Bottom-left: the key help.
+    /// Top-left: PAUSED, and with Settings > Show diagnostics tick, state hash, frames per second and zoom. In the sandbox a second
+    /// line: alive units per player, selection, overlays, fog viewer. There are no key hints (F1 opens the controls list).
     /// </summary>
     private void DrawHud(SpriteBatch sb, SimSnapshot snapshot)
     {
@@ -1131,12 +1199,6 @@ public sealed class GameScreen : IScreen
         List<string> hud = HudLines(snapshot);
         Hud.Panel(sb, _s.Pixel, new Point(8, 8), hud, scale);
 
-        if (_sim is not null)
-        {
-            string[] help = _spectatorMode ? SpectatorHelpLines : _skirmishMode ? SkirmishHelpLines : HelpLines;
-            int top = _s.Viewport.Height - Hud.HeightOf(help.Length, scale) - 8;
-            Hud.Panel(sb, _s.Pixel, new Point(8, top), help, scale);
-            _mission?.Draw(sb, _s.Pixel, scale, hud.Count, top, snapshot.Tick);
-        }
+        if (_sim is not null) _mission?.Draw(sb, _s.Pixel, scale, hud.Count, _s.Viewport.Height - 8, snapshot.Tick);
     }
 }

@@ -113,7 +113,7 @@ Both factions, full tech tree, map editor, real AI with difficulty levels, audio
 - [x] M3-11 AI tiers 2–5 (session 5)
 - [x] M3-12 Session 3 follow-ups (mission replays not done → M3-19; wall art 1× and Rocketeer flash crop → M3-ART)
 - [x] M3-13 Superweapon: the Sunrise Device (sim + UI pieces; GameScreen wiring → M3-18)
-- [x] M3-14 Integration and balance pass (docs/balance; tunnel time saved 42–46 %; faction/tier targets not met → M4-16)
+- [x] M3-14 Integration and balance pass (docs/balance; tunnel time saved 42–46 %; faction/tier targets not met → M4-16) s14: per-faction raid key (D-167); mop-up measured and shipped off; draws are base stalemates (Q-64).
 - [ ] M3-15 Map editor → moved to M4 (D-087)
 - [x] M3-16 Main menu lobby: illustrated animated background, full menu (Continue, Campaign new/load, Skirmish new/load, Replays, Archive, How to play, Settings, Quit; LAN and Map editor greyed until built)
 - [x] M3-17 Archive: screens, unlock tracking, approved lore in data/archive (wiring into GameScreen/menu → M3-18; Technology entries still stubs)
@@ -153,6 +153,7 @@ Main menu → Map Editor.
   (reverted, stalemates mirrors); tier-cost proposal (Q-43); foam area (Q-42); AI use of engineers/transports; per-tick snapshot
   allocations; walking sub-slot handover and NW-first `Simulation.Spread` (residual asymmetries)
 
+- [x] M4-17 Skirmish defeat rule: no production, no builder, no harvester for 2 min = defeated (D-173, s14)
 ## M5 · LLM commander (D-087)
 Built-in AI does micro; an LLM sets strategy every 30 s (D-103) and talks in character as a faction leader. API key in Settings
 (Anthropic or OpenAI-compatible), local only. LLM-vs-LLM spectating. Plan: docs/design/09_m5_plan.md (approved, D-103).
@@ -229,14 +230,31 @@ systems (water locomotion, ships, landings). Lore, roster, art, AI.
 - [x] M8-13 Archive campaign unlock ids (s12; docs/archive/m8_13_unlocks.md)
 - [x] M8-17 Mission API follow-ups from the tutorial (s12): `Player.Funds` (Cash + Stored) for income checks; a script Win on the same tick as elimination must still run (check MissionCheck and the game loop stop at GameOver); tut_01 keeps a hidden reserve power plant so the enemy team survives until the script wins
 - [x] M8-12 Fan-out: acts 2-4 for all four factions plus DRAFT ending slides (s12; owner review list docs/missions/s12_owner_review.md)
-- [ ] M8-14 act-break stills (s13: briefing hook and 12 still ids, D-165; pilot in two styles, fan-out waits for Q-59) (M8-16 ending screen done with M8-08)
+- [x] M8-14 act-break stills (s13 hook + pilot; s14: style C mix v2/v3, D-169; all 12 stills rendered, tools/art/stills/)
 - [x] M8-15 Acceptance (s13): owner play-through ("everything looked great", D-164); bot play-through of all 16 missions in one run; mid-mission save/load for every mission; tier table docs/balance/m8_15_acceptance.md (all won; tier tuning → Q-62); bot-found balance table docs/balance/s13_campaign_balance.md (Q-60)
+- [ ] M8-18 Voiced radio lines (s14): Wyoming Piper batch tool (tools/voice/wyoming_batch.py, owner runs it on the NAS; its commit says M8-16 by mistake); voices chosen by the owner, licence checked per voice, credits in CREDITS.md; game must play the OGG voice files
 - [x] M8-01 Campaign plan (docs/design/12_m8_plan.md, plan only; story questions open) (session 9)
 Mission scripting/trigger system, briefing screens, tech gating, campaign flow; written once with all four factions.
 Wires Archive campaign unlocks.
+
+## M11 · UI and input overhaul (owner feedback 2026-11-07; built before M9, D-171)
+Source: docs/reviews/2026-11-07_owner_campaign_feedback.md. Audit: docs/reviews/2026-11-07_ui_input_audit.md (s14).
+- [x] M11-01 Adversarial UI and input audit, with layout options for the owner (s14)
+- [x] M11-02 Edge scrolling (mouse at the screen edge pans the view)
+- [x] M11-03 Control hints off the HUD; Controls page in Settings
+- [x] M11-04 Selection card at the bottom centre for a unit, group or building; the sidebar build menu never moves (D-172 B, s14)
+- [x] M11-05 Objective guidance (s14, D-172): target API, HUD (bar, marker, edge arrow, minimap ping, J/Tab/O, banner, camera cue), targets in all 17 missions
+- [x] M11-06 Unit scale / zoom
+- [ ] M11-07 Terrain readability (paths, water, cliffs distinguishable)
+- [ ] M11-08 Resource field readability
+- [x] M11-09 Building animation speed calmer
+- [x] M11-11 Blinking "no power" icon over buildings stopped by low power (D-170, s14)
+- [x] M11-12 Full key rebinding (D-172)
+- [ ] M11-10 Fixes from the M11-01 audit (ids added after the owner picks)
 
 ## M9 · LAN multiplayer (was M5)
 Lockstep over LAN, lobby, desync detection, replays.
 
 ## M10 · Polish
+- [ ] M10-xx Building art: less flat, more depth (owner 2026-11-07, later polish run)
 Art pass, music/SFX, balance, installer.

@@ -62,6 +62,9 @@ public sealed record DifficultyProfile(
     /// <summary>M4-16 s12: with <see cref="PredictedRetreat"/>, the wave turns back when its value is below this percent of the visible enemy value near it (0 = 70).</summary>
     public int RetreatRatioPct { get; init; }
 
+    /// <summary>D-167: per-faction AI keys from the <c>[faction.*]</c> tables (the same on every tier of one file).</summary>
+    public FactionAiKeys FactionKeys { get; init; } = FactionAiKeys.Default;
+
     /// <summary>Harvesters wanted alive (1..6). With <see cref="ReplaceHarvesters"/> missing ones are built; expansion adds one.</summary>
     public int HarvesterTarget { get; init; } = 1;
 }

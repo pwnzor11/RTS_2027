@@ -40,7 +40,7 @@ Counts below supersede the M0-11 lines above (the suite grew to 394 tests).
   truck, 5 riflemen (squares) and a turret; player 1 attacks after about 2 seconds. Keys: arrows /
   middle-drag pan, wheel zoom, left-drag select, right-click move (right-click on an enemy: attack), A then
   right-click on ground: attack-move, S stop, G guard, X scatter, F2 cycles fog viewer (you → enemy → all), F3 occupancy,
-  F4 paths, F5 weapon ranges, Space pause, `.` single step, Esc quit.
+  F4 paths, F10 weapon ranges, Space pause, `.` single step, Esc quit.
 - After Esc the console prints the replay path and the verify command; running it → `OK … ticks`.
 - Headless (also run by CI): `dotnet run --project src/Game -- --headless-check 1200` → `sandbox ok tick 1200 p0 4 p1 0 hash 0x0f28036c22a6c8c9`
   on Windows and Linux alike (cross-platform determinism).
@@ -297,3 +297,30 @@ Every faction now has four missions and an ending. Play each campaign start to f
   should give 23 / 21 / 20 (tier 4 wins / tier 3 wins / draws).
 - Skirmish at tier 4 against tier 3 (or yourself against tier 4 then tier 3): tier 4 should now feel at least as strong; tell me if it doesn't.
 
+
+## Session 14 · UI overhaul, act-break stills, mission tiers, defeat rule (M11, M8-14, M8-15, M4-17)
+Pull first: `git pull --ff-only origin main` (git-lfs is installed on the PC now). Settings are kept; new options get defaults.
+- **Camera:** mouse at any screen edge scrolls; hold Shift for double speed; Home centres on your base; Ctrl+F5..F8 stores a view, F5..F8 recalls it.
+- **Clean HUD:** no tick/hash/fps line and no key hints on screen. Settings > Controls > "Show diagnostics" brings the line back.
+- **Controls page:** F1 or `?` in a game (in the sandbox F1 is the console, so use `?`), or Pause > Settings > Controls. Opaque panel, scrollbar, Back inside the panel. Click a key and press
+  a new one; a taken key offers Enter to swap / Esc to cancel; "Reset all keys to defaults". Quit and restart: rebinds are kept.
+- **Debug keys:** in skirmish and campaign F2/F3/F4/F9/F10/`.` do nothing; in the sandbox they work (ranges moved from F5 to F10).
+- **Orders:** right-click shows a green ring (red on an enemy). Select a factory with a rally point: flag and line. Press A: red crosshair with
+  "ATTACK-MOVE"; left click (or right click) sends, Esc cancels first, a second Esc opens the pause menu. A with only a building selected does nothing.
+- **Selection card:** select one unit: card at the bottom centre with health, rank/kills, stats and order buttons showing your current keys.
+  Box-select a group: cameo grid, click = only that unit, Shift-click = drop it. Select a building: health, power, production, rally, Sell/Repair.
+- **Display:** units are about 25 % bigger (look for pixel wobble on moving units and say if it bothers you). Settings: "Health bars" Always /
+  Damaged or selected. Sidebar: "POWER out / use" turns red and the bar blinks when low; buildings stopped by low power show a blinking
+  bolt-with-slash icon. Buildings animate calmly; construction takes about 3.5 s. Minimap fits the map shape. Cameo tooltip sits over the map.
+- **Objectives:** in any mission: one-line bar at the top, "NEW OBJECTIVE" banner, pulsing marker on the target, edge arrow with "N cells
+  <direction>" when it is off screen, ring on the minimap. J jumps to it, Tab cycles, O opens the list with the briefing. Settings
+  "Camera cue on new objective" turns the short pan off.
+- **Briefings:** headings and bold render properly (no `#` or `**`); Start/Back sit at the bottom; act 2-4 openers show the act-break still.
+- **Mission tiers:** play exp_04, lb_03 or dir_02 at tier 5: clearly harder than tier 1 (exp_04: the Directorate guard marches out when the
+  Shaft or Device is destroyed and must be beaten).
+- **Voice lines (optional):** follow the instructions in chat (voice_work\wyoming_batch.py with wyoming-piper on the NAS); a generated
+  line under data/audio/voice/<leader>/ plays in the mission instead of text only.
+- **Defeat rule (skirmish):** destroy an enemy's construction building, factories and harvesters but leave its defences: about 2 minutes later it
+  is defeated.
+- **AI ladder repeat (laptop):** re-run balance_runs\run_s14_baseline.ps1 after deleting the s14_*.md results, and compare with
+  docs/balance/s14_laptop_baseline.md.

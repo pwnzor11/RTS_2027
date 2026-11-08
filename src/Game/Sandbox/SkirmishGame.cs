@@ -163,7 +163,7 @@ public sealed class SkirmishGame : IDisposable
             ? MapFile.Load(Path.Combine(rulesDir, "..", "maps", CuratedMapFile))
             : MapGenerator.Generate(GeneratedMapSize, mapSeed);
         ulong simSeed = curated ? CuratedSimSeed : mapSeed;
-        var setup = new SimSetup(simSeed, map, 2, rules.Sim, rules.RulesHash) { AllowDebug = false, Factions = factions };
+        var setup = new SimSetup(simSeed, map, 2, rules.Sim, rules.RulesHash) { AllowDebug = false, Factions = factions, NoRebuildDefeat = true };   // M4-17 (D-173)
         var sim = new Simulation(setup);
         SkirmishStart.Apply(sim);
 
@@ -249,7 +249,7 @@ public sealed class SkirmishGame : IDisposable
             teams = t;
         }
 
-        return new SimSetup(settings.SimSeed, map, total, rules.Sim, rules.RulesHash) { AllowDebug = false, Factions = factions, Teams = teams, LandingMarkers = meta.Landing };   // S12: landing markers are public map data (D-151 (2))
+        return new SimSetup(settings.SimSeed, map, total, rules.Sim, rules.RulesHash) { AllowDebug = false, Factions = factions, Teams = teams, LandingMarkers = meta.Landing, NoRebuildDefeat = true };   // S12: landing markers are public map data (D-151 (2))
     }
 
     /// <summary>The id a save or replay uses for a generated map: <c>gen:BIOME:SIZE:PLAYERS:SEED</c>.</summary>

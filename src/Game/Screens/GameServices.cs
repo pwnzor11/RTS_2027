@@ -20,7 +20,8 @@ public sealed class GameServices
         Scene = scene;
         RulesDir = rulesDir;
         Audio = audio;
-        Settings = settings;
+        _settings = settings;
+        Controls.GameKeys.Active = settings.Bindings;
         Screens = screens;
         Quit = quit;
     }
@@ -41,7 +42,17 @@ public sealed class GameServices
     public IAudio Audio { get; }
 
     /// <summary>The player's settings.</summary>
-    public Settings Settings { get; set; }
+    public Settings Settings
+    {
+        get => _settings;
+        set
+        {
+            _settings = value;
+            Controls.GameKeys.Active = value.Bindings;   // game input reads its keys through the bindings in force
+        }
+    }
+
+    private Settings _settings;
 
     /// <summary>The screen stack.</summary>
     public ScreenStack Screens { get; }
@@ -60,6 +71,9 @@ public sealed class GameServices
 
     /// <summary>True when the program was started with --empty: the Sandbox menu entry then uses the legacy 3-tank setup.</summary>
     public bool LegacyEmptySandbox { get; set; }
+
+    /// <summary>True while the game window has focus (the shell sets it); edge scrolling is off otherwise.</summary>
+    public Func<bool> WindowActive { get; set; } = static () => true;
 
     /// <summary>Frames drawn in the last second, set by the shell.</summary>
     public int Fps { get; set; }

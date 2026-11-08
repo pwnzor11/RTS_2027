@@ -39,6 +39,8 @@ public sealed class ProductionState : ISimStatePart
     internal readonly int[] RepairGen;      // [building slot] generation + 1 while repairing, else 0
     internal readonly int[] RepairFrac;     // [building slot] remainder of the repair cost, in 1/(MaxHealth*1000) credits
     internal readonly bool[] EverHadBase;   // [player]
+    internal readonly int[] NoRebuildTicks; // [player] M4-17: consecutive ticks without production structure, founder or harvester (only kept when the setup flag is on)
+    private readonly bool _noRebuild;
 
     /// <summary>Creates empty production state sized from the setup (player count, queue length, building capacity).</summary>
     public ProductionState(SimSetup setup)
@@ -60,6 +62,8 @@ public sealed class ProductionState : ISimStatePart
         RepairGen = new int[_buildingCapacity];
         RepairFrac = new int[_buildingCapacity];
         EverHadBase = new bool[_players];
+        NoRebuildTicks = new int[_players];
+        _noRebuild = setup.NoRebuildDefeat;
     }
 
     /// <inheritdoc />
@@ -117,6 +121,7 @@ public sealed class ProductionState : ISimStatePart
         }
         for (int b = 0; b < _buildingCapacity; b++) { w.Write(RepairGen[b]); w.Write(RepairFrac[b]); }
         for (int p = 0; p < _players; p++) w.Write(EverHadBase[p]);
+        if (_noRebuild) for (int p = 0; p < _players; p++) w.Write(NoRebuildTicks[p]);   // M4-17: appended only when the rule is on, so other games keep their bytes
     }
 
     /// <inheritdoc />
@@ -138,5 +143,11 @@ public sealed class ProductionState : ISimStatePart
         }
         for (int b = 0; b < _buildingCapacity; b++) { RepairGen[b] = r.ReadInt32(); RepairFrac[b] = r.ReadInt32(); }
         for (int p = 0; p < _players; p++) EverHadBase[p] = r.ReadBoolean();
+        if (_noRebuild)
+            for (int p = 0; p < _players; p++)
+            {
+                NoRebuildTicks[p] = r.ReadInt32();
+                if (NoRebuildTicks[p] < 0 || NoRebuildTicks[p] > SimConstants.NoRebuildDefeatTicks) throw new InvalidDataException("production no-rebuild ticks.");
+            }
     }
 }

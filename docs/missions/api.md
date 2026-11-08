@@ -37,6 +37,8 @@ Common argument kinds: `id` = 1-64 characters, no spaces. `fn` = global function
 | `Objective.AddHidden(id, text, primary)` | id, text, boolean | nil | primary must be a boolean; id unused | implemented (M8-03) |
 | `Objective.Reveal(id)` | id | nil | objective exists | implemented (M8-03) |
 | `Objective.Status(id)` | id | "active"/"completed"/"failed" | objective exists | implemented (M8-03) |
+| `Objective.SetTarget(id, target)` | id, then a zone name, an actor tag, or a cell table `{x=, y=}` | nil | objective exists; zone or tag known (a zone name wins over a tag); cell inside the map; replaces any earlier target | implemented (M11-05) |
+| `Objective.ClearTarget(id)` | id | nil | objective exists | implemented (M11-05) |
 | `Mission.Timer(id, ticks, fn[, label])` | id, ticks 1..1e9, fn, optional HUD text | nil | fn global; label a string if given; the same id restarts the timer; expiry in creation order, once | implemented (M8-03) |
 | `Mission.TimerCancel(id)` | id | nil | id well-formed | implemented (M8-03) |
 | `Mission.TimerLeft(id)` | id | ticks left, or nil (unknown or already fired) | id well-formed | implemented (M8-03) |
@@ -47,6 +49,7 @@ Common argument kinds: `id` = 1-64 characters, no spaces. `fn` = global function
 | `Tech.List(player)` | slot | list of granted ids (sorted) | player valid | implemented (M8-03) |
 
 Hidden objectives (`Objective.AddHidden`, later `Reveal`) set `MissionObjective.Hidden`; the HUD lists `MissionHost.VisibleObjectives`.
+An objective target (`MissionObjective.Target`, M11-05) is a location for the HUD: `MissionHost.TryObjectiveCell(objective, out cell)` gives the cell (the cell itself, a zone's middle cell, or the live tagged actor's cell; false when none or the actor is dead). It is saved and hashed in the mission part's format-5 tail, written only while some objective has a target, so missions without targets keep their bytes and hashes. See `docs/missions/objective_targets.md`.
 Timers live in `MissionHost.Timers` (shown by the HUD). Both are saved in the version-2 tail of the "mission" part.
 
 Hidden objectives (`AddHidden`) are saved in the version-2 tail; the difficulty tier is a version-3 tail field; queued reinforcement arrivals are the version-4 tail (M8-04), written only while one is queued. Trigger counters (`TriggerRecord.Counter`; Leave uses 1 = armed) are saved so a mid-hold save reproduces the same hash.

@@ -13,8 +13,11 @@ namespace Rts.Game.Controls;
 /// </summary>
 public sealed class Selection
 {
-    /// <summary>Pick radius around a unit, in zoom-1 world pixels. A click inside the same cell also hits.</summary>
-    public const float PickRadiusPx = 32f;
+    /// <summary>
+    /// Pick radius around a unit, in zoom-1 world pixels. A click inside the same cell also hits. Grows with
+    /// <see cref="SpriteLayout.UnitDrawScale"/> (M11-06) so a click on the larger visible body still selects it.
+    /// </summary>
+    public const float PickRadiusPx = 32f * SpriteLayout.UnitDrawScale;
 
     private readonly List<UnitKey> _units = new();
 
@@ -29,6 +32,9 @@ public sealed class Selection
 
     /// <summary>Removes everything from the selection.</summary>
     public void Clear() => _units.Clear();
+
+    /// <summary>Removes one unit from the selection (shift-click on its cameo in the selection card). False when it was not selected.</summary>
+    public bool Remove(UnitKey key) => _units.Remove(key);
 
     /// <summary>Replaces the selection with the given units.</summary>
     public void Replace(IEnumerable<UnitKey> keys)

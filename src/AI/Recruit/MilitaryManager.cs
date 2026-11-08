@@ -177,6 +177,25 @@ internal sealed class MilitaryManager
         _required = WaveGate.Escalate(Options.Respond, _required, _launchValue);
     }
 
+    /// <summary>S14 mop-up (flag respond_to_attacks): no enemy mobile unit seen for the whole long window (<see cref="TierPlanner.WaveGateMemoryTicks"/>) counts as "no enemy army".</summary>
+    public const int MopupFromTick = 6000;   // (tune) s14: never before this tick (before first contact "no enemy seen" is true too)
+    /// <summary>S14 mop-up: smallest army a mop-up wave takes.</summary>
+    public const int MopupMinArmy = 6;   // (tune) s14
+    /// <summary>S14 mop-up: least ticks between two waves while mopping up (a wave that died on a defence is not repeated at once).</summary>
+    public const int MopupGapTicks = 1500;   // (tune) s14
+
+    /// <summary>S14: waves launched by the mop-up rule.</summary>
+    public int Mopups { get; private set; }
+
+    /// <summary>S14: the early-launch half of the mop-up. Off: measured worse (Directorate 4 v 3 decisive 54 % -> 41 %, draws unchanged).</summary>
+    public const bool MopupLaunch = false;
+
+    /// <summary>S14: the shroud sweep half of the mop-up. Off: no measurable effect on draws, and it made SupplyAiTests (LeftBehind tier 5) sit capped for over a minute.</summary>
+    public const bool MopupSweep = false;
+
+    private bool MopupDue(RecruitKnowledge k, int n) =>
+        MopupLaunch && Options.Respond && k.View.Tick >= MopupFromTick && _eLongVal == 0 && n >= MopupMinArmy && k.View.Tick - _lastWave >= MopupGapTicks;
+
     public MilitaryManager(int attackThreshold) => _threshold = Math.Max(1, attackThreshold);
 
     /// <summary>M3-11 capabilities (from the profile). The default is the original Recruit behaviour: defend, one prong, never retreat.</summary>
@@ -358,6 +377,8 @@ internal sealed class MilitaryManager
             int guard = _hookForce ? 0 : Bias.HomeGuard;   // M5-02 (M8-06: a scripted wave takes everything): units that stay home (the wave waits for them too)
             bool strong = WaveGate.Strong(Options.Respond, OwnValue, EnemyValueSeen, _required, n, tick, _lastWave, Options.AttackRatioPct);   // M4-16 r4: no wave into a clearly bigger army
             bool hookWave = _hookForce && n >= 1;   // M8-06: AI.Wave, once
+            bool mop = !hookWave && !Hold && !HookHold && tick >= _cooldownUntil && MopupDue(k, n) && knownEnemyBuildings.Count + _scoutRoute.Count > 0;   // S14: no enemy army about: send what we have
+            if (mop) { desperate = true; Mopups++; }   // v2 measurement: 4v3 Directorate fell to 41 % decisive, so MopupDue is off unless MopupLaunch
             if (hookWave) { _hookForce = false; _hookWaveActive = true; _hookWaveCell = _hookForceCell; desperate = true; }
             if (hookWave || tick >= _cooldownUntil && !Hold && !HookHold && (strong || desperate) && (n >= Bias.Wave(_nextThreshold, 2) + guard
                 || (n >= Bias.Wave(MinWave, 2) + guard && tick - _lastWave >= Bias.Wave(_nextInterval, 600)) || desperate))
@@ -686,10 +707,35 @@ internal sealed class MilitaryManager
                 best = d; goal = b.Cell; found = true;
             }
         if (found) { _lastGoal = goal; return goal; }
+        // S14 mop-up: no enemy army about and no structure known (a stray tunnel hatch keeps a player alive): sweep the shrouded map, nearest cell first
+        if (MopupSweep && Options.Respond && tick >= MopupFromTick && _eLongVal == 0 && SweepGoal(k, centre, tick) is CellCoord sweep) { _lastGoal = sweep; return sweep; }
         // nothing known: look at the route stops in turn; a stop that is in view and shows no building is crossed off
         while (_scoutIdx < _scoutRoute.Count - 1 && k.View.IsVisible(_scoutRoute[_scoutIdx])) _scoutIdx++;
         if (_scoutIdx >= _scoutRoute.Count - 1 && k.View.IsVisible(_scoutRoute[^1])) _scoutIdx = 0;
         return _scoutRoute[_scoutIdx];
+    }
+
+    /// <summary>S14 mop-up: cells between two probes of the shroud sweep.</summary>
+    public const int SweepStepCells = 8;   // (tune) s14
+
+    /// <summary>S14 mop-up: the nearest passable cell on an 8-cell grid that the player has never seen (shroud), skipping goals a stalled wave could not reach. Null when the whole grid has been seen.</summary>
+    private CellCoord? SweepGoal(RecruitKnowledge k, LeptonCoord centre, int tick)
+    {
+        var view = k.View;
+        long best = long.MaxValue;
+        CellCoord goal = default;
+        bool found = false;
+        for (int y = SweepStepCells / 2; y < view.MapHeight; y += SweepStepCells)
+            for (int x = SweepStepCells / 2; x < view.MapWidth; x += SweepStepCells)
+            {
+                var c = new CellCoord(x, y);
+                if (view.VisionAt(c) != 0 || !view.IsPassable(c, Locomotion.Tracked)) continue;
+                if (_avoid.Count > 0 && Avoided(c, tick)) continue;
+                long dx = c.X * 256L - centre.X, dy = c.Y * 256L - centre.Y, d = dx * dx + dy * dy;
+                if (d >= best) continue;
+                best = d; goal = c; found = true;
+            }
+        return found ? goal : null;
     }
 
     /// <summary>The own building (in slot order) whose health fell since the previous decision, if any; with the Respond option
@@ -794,6 +840,7 @@ internal sealed class MilitaryManager
         w.Write(_aheadWave);   // M4-16
         w.Write(_launchValue); w.Write(_required);   // M4-16 r4
         w.Write(_eShortVal); w.Write(_eShortBonus); w.Write(_eShortTick); w.Write(_eLongVal); w.Write(_eLongBonus); w.Write(_eLongTick);   // VET-6
+        w.Write(Mopups);   // S14
     }
 
     /// <summary>M8-06: writes the scripted-wave memory (only called when <see cref="HookDirty"/>).</summary>
@@ -842,6 +889,7 @@ internal sealed class MilitaryManager
         _aheadWave = r.ReadBoolean();   // M4-16
         _launchValue = r.ReadInt32(); _required = r.ReadInt32();   // M4-16 r4
         _eShortVal = r.ReadInt32(); _eShortBonus = r.ReadInt32(); _eShortTick = r.ReadInt32(); _eLongVal = r.ReadInt32(); _eLongBonus = r.ReadInt32(); _eLongTick = r.ReadInt32();   // VET-6
+        Mopups = r.ReadInt32();   // S14
         if (_scoutRoute.Count > 0) _scoutIdx = Math.Clamp(_scoutIdx, 0, _scoutRoute.Count - 1);
     }
 }
