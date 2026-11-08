@@ -64,6 +64,8 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
     private CellCoord _ghostTopLeft;
     private bool _ghostValid;
     private bool _hasGhost;
+    private CellProblem[] _ghostCells = Array.Empty<CellProblem>();   // M11-10f: why each footprint cell is refused
+    private string? _ghostReason;
     private List<string>? _tooltip;
     private Point _mouse;
     private MouseCursor? _cursor;
@@ -86,6 +88,25 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
         _houseColour = houseColour;
         _minimap = new Minimap(source.Map, source.Sim, player);
         _hud = source.Sim.HudFor(player);
+    }
+
+    /// <summary>M11-10e: a fully transparent OS cursor, set by the game screen. While it is set and the mouse is over the bare map
+    /// (no mode), the OS cursor is hidden and the game screen draws a software cursor instead.</summary>
+    public MouseCursor? HiddenCursor { get; set; }
+
+    /// <summary>M11-10g: one-line descriptions by rules id (the archive subtitle), or null.</summary>
+    public Func<string, string?>? Blurbs { get; set; }
+
+    /// <summary>True when the software cursor should be drawn: the mouse is over the map and no sidebar mode owns the cursor.</summary>
+    public bool WantsSoftwareCursor => HiddenCursor is not null && Mode == SidebarMode.None
+        && _layout.MapView.Contains(_mouse) && !_layout.Panel.Contains(_mouse);
+
+    /// <summary>Gives the OS cursor back (the game screen is not on top, for example under the pause menu).</summary>
+    public void ShowOsCursor()
+    {
+        if (_cursor is null || _cursor == MouseCursor.Arrow) return;
+        _cursor = null;
+        UpdateCursor();
     }
 
     /// <summary>What the next click on the map does.</summary>
@@ -184,7 +205,7 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
     }
 
     /// <summary>Draws the placement ghost and the sell or repair highlight on the map (call before <see cref="Draw"/>).</summary>
-    public void DrawMapOverlay(SpriteBatch batch, Texture2D pixel, Camera camera, SimSnapshot snapshot)
+    public void DrawMapOverlay(SpriteBatch batch, Texture2D pixel, Camera camera, SimSnapshot snapshot, SceneRenderer? scene = null)
     {
         if (Mode == SidebarMode.Placement && _hasGhost && _placementType >= 0)
         {
@@ -192,9 +213,27 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
             BuildingType bt = _source.Rules.Buildings[_placementType];
             float left = _ghostTopLeft.X * Camera.CellPx, top = _ghostTopLeft.Y * Camera.CellPx;
             Rectangle r = camera.ScreenRect(left, top, left + bt.FootprintW * Camera.CellPx, top + bt.FootprintH * Camera.CellPx);
+            DrawBuildRadius(batch, pixel, camera);   // M11-10f
+            scene?.DrawBuildingGhost(batch, pixel, _source.Rules, _placementType, _ghostTopLeft, camera, snapshot.Tick, _player);
             Color c = _ghostValid ? GoodGreen : BadRed;
-            Shapes.Fill(batch, pixel, r, Shapes.Alpha(c, 90));
+            for (int gy = 0; gy < bt.FootprintH; gy++)
+                for (int gx = 0; gx < bt.FootprintW; gx++)
+                {
+                    bool bad = !_ghostValid && (gy * bt.FootprintW + gx < _ghostCells.Length && _ghostCells[gy * bt.FootprintW + gx] != CellProblem.None
+                        || _ghostCells.All(cp => cp == CellProblem.None));   // refused only by the radius, a seal or the beachhead: every cell red
+                    float cl = (_ghostTopLeft.X + gx) * Camera.CellPx, ct = (_ghostTopLeft.Y + gy) * Camera.CellPx;
+                    Shapes.Fill(batch, pixel, camera.ScreenRect(cl, ct, cl + Camera.CellPx, ct + Camera.CellPx),
+                        Shapes.Alpha(bad ? BadRed : GoodGreen, 80));
+                }
+
             Shapes.Outline(batch, pixel, r, c, 2);
+            if (_ghostReason is not null)
+            {
+                int w = BitmapFont.Measure(_ghostReason, _ui, FontWeight.Bold);
+                var at = new Vector2(Math.Clamp(r.X, 0, Math.Max(0, _layout.MapView.Right - w - 8)), Math.Max(0, r.Y - BitmapFont.LineHeight(_ui, FontWeight.Bold) - 6));
+                Shapes.Fill(batch, pixel, new Rectangle((int)at.X - 3, (int)at.Y - 1, w + 6, BitmapFont.LineHeight(_ui, FontWeight.Bold) + 2), new Color(0, 0, 0, 200));
+                Text(batch, pixel, _ghostReason, at, BadRed, _ui, FontWeight.Bold);
+            }
         }
         else if ((Mode == SidebarMode.Sell || Mode == SidebarMode.Repair) && !_layout.Panel.Contains(_mouse))
         {
@@ -208,6 +247,56 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
 
             string label = Mode == SidebarMode.Sell ? "SELL" : "REPAIR";
             Text(batch, pixel, label, new Vector2(_mouse.X + 16, _mouse.Y + 16), Mode == SidebarMode.Sell ? BadRed : Gold, _ui, FontWeight.Bold);
+        }
+    }
+
+    // M11-10f: the sim's verdict, plus a cause for each footprint cell and one line of words. The verdict (_ghostValid) is never overridden.
+    private void ExplainGhost(BuildingType bt)
+    {
+        int w = bt.FootprintW, h = bt.FootprintH;
+        if (_ghostCells.Length != w * h) _ghostCells = new CellProblem[w * h];
+        Rts.Sim.World.PlacementResult result = _source.Sim.CanPlace(_player, _placementType, _ghostTopLeft);
+        var mask = bt.WaterBuilding && bt.WaterMask.Count == w * h;
+        var map = _source.Sim.Map;
+        for (int dy = 0; dy < h; dy++)
+            for (int dx = 0; dx < w; dx++)
+            {
+                var c = new CellCoord(_ghostTopLeft.X + dx, _ghostTopLeft.Y + dy);
+                if (!_source.Map.Contains(c)) { _ghostCells[dy * w + dx] = CellProblem.Terrain; continue; }
+                LandType land = map.LandAt(c);
+                bool wantWater = bt.WaterBuilding && (!mask || bt.WaterMask[dy * w + dx]);
+                bool occupied = map.OverlayAt(c) != OverlayKind.None || !map.BuildingAt(c).IsNone || (wantWater && !map.VehicleAt(c).IsNone);
+                _ghostCells[dy * w + dx] = PlacementCheck.Cell(wantWater, land is LandType.Water or LandType.Shallow,
+                    map.IsBuildable(c, _source.Rules.Terrain), occupied, UnitOnCell(c));
+            }
+
+        _ghostReason = _ghostValid ? null : PlacementCheck.Reason(result, _ghostValid, PlacementCheck.Worst(_ghostCells));
+    }
+
+    private bool UnitOnCell(CellCoord c)
+    {
+        foreach (UnitView u in _source.Current.Units)
+        {
+            if (u.Position.ToCell() != c) continue;
+            if (u.Kind == UnitKind.Vehicle && (uint)u.TypeIndex < (uint)_source.Rules.Vehicles.Count
+                && _source.Rules.Vehicles[u.TypeIndex].Locomotion == Locomotion.Air) continue;
+            return true;
+        }
+
+        return false;
+    }
+
+    // M11-10f: while placing, outline where building is allowed: each own building's footprint grown by the build radius.
+    private void DrawBuildRadius(SpriteBatch batch, Texture2D pixel, Camera camera)
+    {
+        int radius = _source.Rules.Economy.BuildRadius;
+        foreach (BuildingView b in _source.Current.Buildings)
+        {
+            if (b.Ghost || b.Player != _player) continue;
+            if ((uint)b.TypeIndex < (uint)_source.Rules.Buildings.Count && (_source.Rules.Buildings[b.TypeIndex].Wall || _source.Rules.Buildings[b.TypeIndex].Gate)) continue;
+            float l = (b.Cell.X - radius) * Camera.CellPx, t = (b.Cell.Y - radius) * Camera.CellPx;
+            Rectangle r = camera.ScreenRect(l, t, l + (b.FootprintW + 2 * radius) * Camera.CellPx, t + (b.FootprintH + 2 * radius) * Camera.CellPx);
+            Shapes.DashedOutline(batch, pixel, r, Shapes.Alpha(GoodGreen, 150), 2, 10, 8);
         }
     }
 
@@ -327,13 +416,14 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
             {
                 if (entry.Locked)
                 {
-                    _tooltip = new List<string> { CameoNames.Display(IdOf(entry.Option)), $"Cost {entry.Option.Cost}", TierGrouping.NeedsText(entry) };
+                    _tooltip = CameoTooltip.Head(_source.Rules, entry.Option.Category, entry.Option.TypeIndex, entry.Option.Cost, Blurbs);
+                    _tooltip.Add(TierGrouping.NeedsText(entry));
                 }
                 else
                 {
                     BuildOption option = entry.Option;
                     _tooltip = TooltipFor(option);
-                    if (left) LeftClickCameo(option);
+                    if (left) LeftClickCameo(option, input.IsDown(Keys.LeftShift) || input.IsDown(Keys.RightShift));
                     else if (right) RightClickCameo(option);
                 }
             }
@@ -363,6 +453,7 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
             BuildingType bt = _source.Rules.Buildings[_placementType];
             _ghostTopLeft = SidebarCommands.TopLeftFor(cell, bt.FootprintW, bt.FootprintH);
             _ghostValid = _source.Sim.CanPlaceReady(_player, _placementType, _ghostTopLeft);
+            ExplainGhost(bt);
             // M7-07: CanPlace also refuses a footprint outside an Expedition player's beachhead zone, so the ghost turns red there.
             _hasGhost = true;
             if (input.LeftPressed)
@@ -395,12 +486,14 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
         }
     }
 
-    private void LeftClickCameo(BuildOption option)
+    private void LeftClickCameo(BuildOption option, bool shift)
     {
         switch (SidebarCommands.LeftClick(_hud, option))
         {
             case CameoClick.Build:
-                if (SidebarCommands.Build(_player, option) is Command build) _source.Host.Issue(build);
+                // M11-10g: Shift+click queues five units; the sim refuses what does not fit (full queue, no cash, supply cap).
+                if (SidebarCommands.Build(_player, option) is Command build)
+                    for (int n = SidebarCommands.QueueCount(option.Category, shift); n > 0; n--) _source.Host.Issue(build);
                 break;
             case CameoClick.EnterPlacement:
                 Mode = SidebarMode.Placement;
@@ -582,12 +675,12 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
 
     private List<string> TooltipFor(BuildOption o)
     {
-        var lines = new List<string> { CameoNames.Display(IdOf(o)), $"Cost {o.Cost}" };
+        List<string> lines = CameoTooltip.Head(_source.Rules, o.Category, o.TypeIndex, o.Cost, Blurbs);
         bool ready = SidebarCommands.LeftClick(_hud, o) == CameoClick.EnterPlacement;
         if (ready) lines.Add("Ready: click to place");
         else if (o.Blocked != QueueBlockReason.None) lines.Add(BlockReasonText.Of(o.Blocked, SupplyBuildingName()));
         else if (ShipWithoutShipyard(o)) lines.Add(BlockReasonText.NeedsShipyardOnWater);   // M7-14: the ship would wait at the dock
-        else lines.Add("Left click: build   Right click: cancel");
+        else lines.Add(CameoTooltip.ClickHint(o.Category));
         return lines;
     }
 
@@ -878,7 +971,7 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
         {
             SidebarMode.Sell => MouseCursor.Crosshair,
             SidebarMode.Repair => MouseCursor.Hand,
-            _ => MouseCursor.Arrow,
+            _ => WantsSoftwareCursor ? HiddenCursor! : MouseCursor.Arrow,   // M11-10e
         };
         if (_cursor == wanted) return;
         _cursor = wanted;
@@ -894,7 +987,7 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
 
     private void ResetCursor()
     {
-        if (_cursor is null || _cursor == MouseCursor.Arrow) return;
+        if (_cursor is null || _cursor == MouseCursor.Arrow) return;   // (the hidden cursor is a different object, so it is reset too)
         try
         {
             Mouse.SetCursor(MouseCursor.Arrow);

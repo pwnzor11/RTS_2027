@@ -279,6 +279,8 @@ public sealed class GameScreen : IScreen
         // D-068: the local player draws in the chosen colour; the AI takes the next palette entry that differs.
         PlayerColours.Assign(Skirmish is { } sk && sk.PlayerCount >= 2 ? ColoursOf(sk) : new[] { colour, colour == 1 ? 0 : 1 });
         _sidebar = new SidebarPanel(_sim, SimSnapshotSource.LocalPlayer, _selection, _cameos, PlayerColours.Base(SimSnapshotSource.LocalPlayer));
+        _sidebar.HiddenCursor = SoftwareCursor.MakeHidden(_s.Graphics);   // M11-10e
+        _sidebar.Blurbs = LoadCameoBlurbs();                               // M11-10g
         _card = new Rts.Game.Ui.Card.SelectionCard(_sim, _selection, _cameos, PlayerColours.Base(SimSnapshotSource.LocalPlayer));
         CentreCameraOnOwnBase();
         _archive = new ArchiveTracker(ArchiveProgress.Load());
@@ -302,6 +304,7 @@ public sealed class GameScreen : IScreen
     {
         _nowMs = (long)t.TotalGameTime.TotalMilliseconds;   // M11-10c: clock for the double-tap rules
         _mouse = input.MousePosition;
+        _updatedSinceDraw = true;
         UpdateHudRegions();
         UpdateCard(input);   // M11-04: before anything else reads the click
         PlayerHud? localHud = _skirmishMode && _sim is not null ? _sim.Sim.HudFor(SimSnapshotSource.LocalPlayer) : null;
@@ -502,10 +505,9 @@ public sealed class GameScreen : IScreen
         _feedback.Draw(sb, _s.Pixel, _camera);
         DrawPackProgress(sb, snapshot);
         DrawUnpackGhost(sb);
-        _sidebar?.DrawMapOverlay(sb, _s.Pixel, _camera, snapshot);
+        _sidebar?.DrawMapOverlay(sb, _s.Pixel, _camera, snapshot, _s.Scene);
         _mission?.Guidance.DrawWorld(sb, _s.Pixel, _camera, MapViewport().Bounds, _s.UiScale);   // M11-05
         DrawHud(sb, snapshot);
-        DrawArmedCursor(sb);
         _card?.Draw(sb, _s.Pixel, _mouse, _orders is { AttackMoveArmed: true });   // M11-04
         _chat.Draw(sb, _s.Pixel, _s.UiScale, new Point(8, _s.Viewport.Height - Hud.HeightOf(1, _s.UiScale) - 12), _s.Viewport.Width - 16);
         _sidebar?.Draw(sb, _s.Pixel, snapshot);
@@ -516,6 +518,7 @@ public sealed class GameScreen : IScreen
         DrawDiveButton(sb);
         DrawSpectator(sb);
         _console?.Draw(sb, _s.Pixel, _s.Viewport);
+        DrawMapCursor(sb);   // last, so it sits above everything
     }
 
     // M11-04: rebuild the card for this frame and act on a left click on it (the click is then used up).
@@ -550,11 +553,48 @@ public sealed class GameScreen : IScreen
         }
     }
 
-    // O2: while attack-move is armed, a red crosshair at the cursor and a small "ATTACK-MOVE" label beside it.
-    private void DrawArmedCursor(SpriteBatch sb)
+    private readonly CursorPreview _cursorPreview = new();
+    private bool _updatedSinceDraw;
+
+    // M11-10g: the archive's one-line subtitle for each rules id, for the cameo tooltips (none if the archive is missing).
+    private Func<string, string?>? LoadCameoBlurbs()
     {
-        if (_orders is not { AttackMoveArmed: true } || !MapViewport().Bounds.Contains(_mouse)) return;
-        ArmedCursor.Draw(sb, _s.Pixel, _mouse, "ATTACK-MOVE", _s.UiScale);
+        try
+        {
+            ArchiveCatalog catalog = ArchiveCatalog.Load(ArchiveCatalog.DirectoryFor(_s.RulesDir));
+            return id => catalog.Find(id)?.Subtitle;
+        }
+        catch (Exception e) when (e is IOException or InvalidDataException or UnauthorizedAccessException)
+        {
+            return null;
+        }
+    }
+
+    // M11-10e (audit F2, O7): over the bare map the OS cursor is hidden and a software cursor shows what a right-click would do.
+    // The first armed-attack-move cursor (O2) is kept: its crosshair and label are drawn for AttackMove. When this screen is not
+    // being updated (a menu is on top) the OS cursor comes back.
+    private void DrawMapCursor(SpriteBatch sb)
+    {
+        bool updated = _updatedSinceDraw;
+        _updatedSinceDraw = false;
+        if (!updated) { _sidebar?.ShowOsCursor(); return; }
+        if (_sidebar is not { WantsSoftwareCursor: true })
+        {
+            if (_orders is { AttackMoveArmed: true } && MapViewport().Bounds.Contains(_mouse)) ArmedCursor.Draw(sb, _s.Pixel, _mouse, "ATTACK-MOVE", _s.UiScale);   // O2
+            return;
+        }
+
+        CursorKind kind = CursorKind.Select;
+        bool overUi = _console is { IsOpen: true } || _card is { Visible: true } && _card.HitTest(_mouse) || _hudRegion.HitTest(_mouse)
+            || _swRegion.HitTest(_mouse) || _upgradeRegion.HitTest(_mouse) || _packRegion.HitTest(_mouse) || _diveRegion.HitTest(_mouse)
+            || _specRegion.HitTest(_mouse);
+        if (!overUi && !_spectatorMode && _orders is not null && _sim is not null)
+        {
+            kind = _cursorPreview.Probe(_sim, _selection, _mouse, _camera, _renderUnits, _orders.AttackMoveArmed, _orders.DeployArmed);
+        }
+
+        if (kind == CursorKind.AttackMove) ArmedCursor.Draw(sb, _s.Pixel, _mouse, "ATTACK-MOVE", _s.UiScale);
+        else SoftwareCursor.Draw(sb, _s.Pixel, kind, _mouse, _s.UiScale);
     }
 
     // What Save game writes to: only a skirmish or mission (the sandbox has no save header).

@@ -39,6 +39,13 @@ public static class SidebarCommands
         return option.Blocked == QueueBlockReason.None ? CameoClick.Build : CameoClick.None;
     }
 
+    /// <summary>M11-10g: how many items one cameo click queues: five for Shift+click on a unit cameo, else one.</summary>
+    public static int QueueCount(ProductionCategory category, bool shift) =>
+        shift && category is ProductionCategory.Infantry or ProductionCategory.Vehicle or ProductionCategory.Aircraft ? ShiftQueue : 1;
+
+    /// <summary>Items queued by a Shift+click on a unit cameo.</summary>
+    public const int ShiftQueue = 5;
+
     /// <summary>The Build command for an option, or null when it is blocked.</summary>
     public static Command? Build(byte player, BuildOption option) =>
         option.Blocked != QueueBlockReason.None ? null
