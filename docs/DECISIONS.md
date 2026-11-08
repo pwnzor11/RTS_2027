@@ -1450,3 +1450,10 @@ detached; `TierPlanner.DirectorateTechArmy`, tune). AI behaviour only, no rules 
 LB3 v Dir3 17/6/9 (74 %) -> 17/12/3 (59 %, band met, draws down); Dir1 v Auth1 and the Auth5 v Auth1 control bit-identical; Dir3 v Auth3
 44 -> 65 %; Dir3 v Exp3 50 -> 41 % (near noise); Dir5 v Dir3 5/9/18 -> 5/13/14. Tier 5 falling behind tier 3 gets a follow-up package
 (Directorate tier 5 ladder). Owner's 64-game laptop confirmation: tools/measure/run_s16_q67.ps1. **Status:** owner decision (session 16)
+
+### D-195 · 2026-11-08 · Directorate tier 5 ladder (D-194 follow-up)
+**Decision:** the Directorate AI at tier 5 holds the Isotope Works and Rad Mortar until it has 24 units (`TierPlanner.DirectorateTechArmyTier5`,
+tune); tiers 2-3 keep 18, tier 4 and other factions untouched. AI only. The owner's laptop run before it (64 games) had Dir5 v Dir3 8/27/29 and
+Dir5 v Auth5 13/29/22. After (cloud, 64 games): Dir5 v Dir3 30/20/14 (60 %), Dir5 v Auth5 24/25/15 (49 %); 32 games Dir5 v LB5 15/14/3.
+Tier 1-3 cells and the control are bit-identical. Data knobs (attack threshold/ratio, expansion tick) did not move it. Laptop rows are in
+tools/measure/run_s16_q67.ps1. **Status:** within the owner's D-194 instruction (session 16)
