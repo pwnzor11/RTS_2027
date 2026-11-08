@@ -179,7 +179,7 @@ public sealed class SidebarLayout
         y += rowH + gap;
 
         int columns = Math.Clamp((contentW + gap) / (Px(MinCameoWidthUnits, uiScale) + gap), 1, MaxColumns);
-        int cameoW = Math.Max(1, (contentW - gap * (columns - 1)) / columns), cameoH = Math.Max(Math.Max(1, cameoW * 3 / 4), tf > 1f ? Px(38 * tf, uiScale) : 1);
+        int cameoW = Math.Max(1, (contentW - gap * (columns - 1)) / columns), cameoH = Math.Max(Math.Min(Math.Max(1, cameoW * 3 / 4), Px(50 * tf, uiScale)), tf > 1f ? Px(38 * tf, uiScale) : 1);   // wide cameos are capped in height so more tiers fit above the minimap
         int gridH = Math.Max(0, belowTop - y);
         int rows = Math.Max(0, (gridH + gap) / (cameoH + gap));
         var grid = new Rectangle(contentX, y, contentW, gridH);
