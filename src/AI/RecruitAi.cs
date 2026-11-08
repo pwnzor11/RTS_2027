@@ -249,6 +249,12 @@ public sealed class RecruitAi : IAiPlayer, IAiSnapshotable, IHookableAi
         { ReserveInProgress = bp.RespondToAttacks, SupplyMargin = BuildOrderManager.MarginForTier(bp.Tier) };   // M4-12 (tier 2+); SUP-5 margin by tier
         _planner = new TierPlanner(bp, _faction);
         _build.HoldStep = id => _planner.Behind && _planner.IsTech(id);   // M4-16
+        // S16 (Q-67): the Directorate at tiers 2-3 keeps its tech spending (Isotope Works, Rad Mortar) until it has an early army.
+        if (faction == Faction.Directorate && TierPlanner.HoldsDirectorateTech(bp.Tier))
+        {
+            Func<string, bool> prev = _build.HoldStep;
+            _build.HoldStep = id => prev(id) || TierPlanner.IsDirectorateEarlyTech(id) && _k.Army.Count + _k.Home.Count + _k.Detached.Count < TierPlanner.DirectorateTechArmy;
+        }
         _production = new ProductionManager(_faction, _tactics, _planner);
         _production.Start(_ctx!.Rng);
         if (!ReferenceEquals(_profile, bp)) _planner.SetProfile(_profile);   // M8-06: a tier forced before the first decision
