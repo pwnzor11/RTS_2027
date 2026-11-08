@@ -106,19 +106,22 @@ internal sealed partial class ProceduralBuilder
     {
         if (_skin == SkinRust) return;
         int n = _n, total = n * n;
-        var comp = new int[total]; var size = new List<int> { 0 }; var touchesEdge = new List<bool> { false };
+        var comp = new int[total]; var size = new List<int> { 0 }; var touchesEdge = new List<bool> { false }; var nearRes = new List<bool> { false };
         var stack = new Stack<int>();
         int id = 0;
         for (int s = 0; s < total; s++)
         {
             if (comp[s] != 0 || _g.Land[s] != LandType.Rock) continue;
-            id++; int count = 0; bool edge = false;
+            id++; int count = 0; bool edge = false, res = false;
             comp[s] = id; stack.Push(s);
             while (stack.Count > 0)
             {
                 int c = stack.Pop(); count++;
                 int x = c % n, y = c / n;
                 if (x == 0 || y == 0 || x == n - 1 || y == n - 1) edge = true;
+                for (int dy = -1; dy <= 1 && !res; dy++)
+                    for (int dx = -1; dx <= 1; dx++)
+                        if (_g.In(x + dx, y + dy) && OverlayKinds.IsResource(_g.Overlay[_g.Idx(x + dx, y + dy)])) { res = true; break; }
                 for (int d = 0; d < 4; d++)
                 {
                     int nx = x + (d == 0 ? 1 : d == 1 ? -1 : 0), ny = y + (d == 2 ? 1 : d == 3 ? -1 : 0);
@@ -128,7 +131,7 @@ internal sealed partial class ProceduralBuilder
                     comp[j] = id; stack.Push(j);
                 }
             }
-            size.Add(count); touchesEdge.Add(edge);
+            size.Add(count); touchesEdge.Add(edge); nearRes.Add(res);
         }
         for (int i = 0; i < total; i++)
         {
@@ -136,7 +139,7 @@ internal sealed partial class ProceduralBuilder
             if (c == 0) continue;
             if (_skin == SkinMountains && size[c] >= 40) _g.Land[i] = LandType.Cliff;
             else if (_skin == SkinGlass && touchesEdge[c] && size[c] >= 60) _g.Land[i] = LandType.Water;
-            else if (_skin == SkinAsh && size[c] <= 80 && MinStartDistance(i % n, i / n) > 16 && IsLowImage(i))
+            else if (_skin == SkinAsh && size[c] <= 80 && !nearRes[c] && MinStartDistance(i % n, i / n) > 16 && IsLowImage(i))
             {
                 int v = OrbitHash(i, 1) % 3;
                 foreach (int j in _g.Images(i)) { _g.Land[j] = LandType.Rough; _g.Overlay[j] = OverlayKind.Tree; _g.Density[j] = (byte)v; }
