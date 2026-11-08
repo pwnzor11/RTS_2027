@@ -497,6 +497,7 @@ internal sealed partial class ProceduralBuilder
             {
                 int i = _g.Idx(x, y);
                 if (!_g.All(i, j => _g.Free(j) || _g.Land[j] == LandType.Road)) return false;
+                if (_zoned && !_g.All(i, j => _zone[j] != ZLane)) return false;   // layout 2 keeps its lanes clear
                 if (x >= x0 && y >= y0 && x < x0 + fw && y < y0 + fh) cells.Add(i);
             }
         // The footprint's images must not overlap each other (or touch: the 1-cell margin).

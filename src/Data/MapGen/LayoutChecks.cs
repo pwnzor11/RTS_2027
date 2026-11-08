@@ -31,7 +31,8 @@ public static class LayoutChecks
     };
 
     /// <summary>Main interior (cells west and east of the start, half height) for a map side, shared with the generator.</summary>
-    public static (int West, int East, int Half) MainRect(int side) => side >= 96 ? (8, 16, 8) : (7, 13, 7);
+    public static (int West, int East, int Half) MainRect(int side, int players = 2) =>
+        players > 2 ? (side >= 96 ? (6, 11, 8) : (6, 9, 7)) : side >= 96 ? (8, 16, 8) : (7, 13, 7);
 
     private const int Cap = 20;
 
@@ -87,19 +88,20 @@ public static class LayoutChecks
         }
 
         // ---- entrances ---------------------------------------------------------------------------
-        (int iw, int ie, int hh) = MainRect(n);
+        (int iw, int ie, int hh) = MainRect(n, k);
         string entr = ""; bool entrOk = true; int minEntr = 1000;
         for (int s = 0; s < k; s++)
         {
             List<int> widths = Entrances(map, pass, st[s], iw, ie, hh);
             widths.Sort();
-            int wide = 0; foreach (int w in widths) if (w >= 3) wide++;
+            int minApproach = k > 2 ? 4 : 3;   // 3-4 players: a 3-wide nick at a corner of the shell is not counted as an approach
+            int wide = 0; foreach (int w in widths) if (w >= minApproach) wide++;
             bool ok = wide >= 2 && wide <= 3;
-            if (wide == 1 && widths.Count(w => w >= 3) == 1) { int only = widths.First(w => w >= 3); ok = only >= 4 && only <= 6; }
+            if (wide == 1 && widths.Count(w => w >= minApproach) == 1) { int only = widths.First(w => w >= minApproach); ok = only >= 4 && only <= 6; }
             if (wide == 2 && widths.Count(w => w >= 4 && w <= 6) < 2 && widths.Max() > 9 ) ok = true;
             entrOk &= ok;
-            if (s == 0) entr = string.Join("+", widths.Where(w => w >= 3));
-            foreach (int w in widths) if (w >= 3) minEntr = Math.Min(minEntr, w);
+            if (s == 0) entr = string.Join("+", widths.Where(w => w >= minApproach));
+            foreach (int w in widths) if (w >= minApproach) minEntr = Math.Min(minEntr, w);
         }
         res.Add(new LayoutCheck("main entrances", $"start 1: {entr} wide; narrowest {minEntr}", entrOk && minEntr >= 3, "2-3 approaches >= 3 wide (soft) or 1 ramp / 2 gates of 4..6 (walled)"));
 
@@ -113,7 +115,7 @@ public static class LayoutChecks
         int gapsMax = 0;
         foreach ((int s, int t) in pairs)
         {
-            List<Lane> found = FindLanes(map, pass, width, st[s], st[t], n, dist[s], dist[t], f);
+            List<Lane> found = FindLanes(map, pass, width, st[s], st[t], n, dist[s], dist[t], f, dist[s][map.IndexOf(st[t])]);
             List<Lane> lanes = found.Where(l => l.Min >= 3).ToList();   // a route squeezing through a 1-2 wide gap is an infantry gap, not a lane
             gapsMax = Math.Max(gapsMax, found.Count - lanes.Count);
             lanesMin = Math.Min(lanesMin, lanes.Count); lanesMax = Math.Max(lanesMax, lanes.Count);
@@ -194,13 +196,13 @@ public static class LayoutChecks
         for (int q = 0; q < fc; q++)
         {
             bool ok = size[q] >= 20 && size[q] <= 70;
-            for (int s = 0; s < k && ok; s++) ok = near[s][q] >= P * 44 / 100 && near[s][q] <= P * 88 / 100;
+            for (int s = 0; s < k && ok; s++) ok = near[s][q] >= P * (k > 2 ? 40 : 44) / 100 && near[s][q] <= P * (k > 2 ? 90 : 88) / 100;
             if (!ok) continue;
             contested++; if (pitch[q]) rich++;
             ctext += (ctext.Length > 0 ? ", " : "") + size[q];
         }
         // Fields come once per symmetry image; the study counts them per map.
-        res.Add(new LayoutCheck("contested fields", $"{contested} ({ctext} cells), rich {rich}; all fields (cells@path from each start):{all}", contested >= 2 && contested <= 6 && rich <= 1, "2..6 of 20..70 cells at 0.44..0.88 P from every start, at most one rich centre"));
+        res.Add(new LayoutCheck("contested fields", $"{contested} ({ctext} cells), rich {rich}; all fields (cells@path from each start):{all}", contested >= (k > 2 ? 1 : 2) && contested <= 6 && rich <= 1, "2..6 of 20..70 cells at 0.44..0.88 P from every start, at most one rich centre (3-4 players: 1..6 at 0.40..0.90 P, only the centre is about as far from all starts)"));
 
         // ---- terrain --------------------------------------------------------------------------------
         int rock = 0, water = 0, props = 0, road = 0;
@@ -226,8 +228,8 @@ public static class LayoutChecks
                 if (d0[i] != MapAnalysis.Unreachable && dist[s][i] == MapAnalysis.Unreachable && fid[i] >= 0) reach = false;
             for (int t = 0; t < k; t++) if (dist[s][map.IndexOf(st[t])] == MapAnalysis.Unreachable) reach = false;
         }
-        List<Lane> without = pairs.Count == 0 ? new List<Lane>() : FindLanes(map, noProps, Widths(noProps, n), st[pairs[0].Item1], st[pairs[0].Item2], n, Bfs(map, noProps, st[pairs[0].Item1]), Bfs(map, noProps, st[pairs[0].Item2]), f);
-        List<Lane> with = pairs.Count == 0 ? new List<Lane>() : FindLanes(map, pass, width, st[pairs[0].Item1], st[pairs[0].Item2], n, dist[pairs[0].Item1], dist[pairs[0].Item2], f);
+        List<Lane> without = pairs.Count == 0 ? new List<Lane>() : FindLanes(map, noProps, Widths(noProps, n), st[pairs[0].Item1], st[pairs[0].Item2], n, Bfs(map, noProps, st[pairs[0].Item1]), Bfs(map, noProps, st[pairs[0].Item2]), f, P);
+        List<Lane> with = pairs.Count == 0 ? new List<Lane>() : FindLanes(map, pass, width, st[pairs[0].Item1], st[pairs[0].Item2], n, dist[pairs[0].Item1], dist[pairs[0].Item2], f, P);
         bool propSafe = reach && with.Count >= Math.Min(without.Count, 2);
         res.Add(new LayoutCheck("prop safety", $"lanes {with.Count} with props, {without.Count} without; every field and start reachable: {reach}", propSafe, "props never cut a lane below 2 or a field off"));
         return res;
@@ -319,6 +321,7 @@ public static class LayoutChecks
             (int ax, int ay) = Img(frame, n, x, y);
             open.Add(ax >= 0 && ay >= 0 && ax < n && ay < n && pass[ay * n + ax]);
         }
+        if (System.Environment.GetEnvironmentVariable("MD") == "3") System.Console.Error.WriteLine("RING " + s.X + "," + s.Y + " frame " + frame + ": " + string.Join(" ", ring.Select((r, q) => open[q] ? $"{r.X},{r.Y}" : "").Where(t => t.Length > 0)));
         var runs = new List<int>();
         int m = open.Count, startAt = open.IndexOf(false);
         if (startAt < 0) { runs.Add(m); return runs; }
@@ -359,21 +362,26 @@ public static class LayoutChecks
     private sealed record Lane(int Length, int Median, int Min, int SharePercent, int MinAt);
 
     private const int Exclude = 20;
-    private const int ExcludeBlock = 32;   // lanes may share this much of the way out of a main (the service street of a walled main)
+    private const int ExcludeBlock = 44;   // lanes may share this much of the way out of a main (the service street of a walled main)
 
-    private static List<Lane> FindLanes(MapData map, bool[] pass, int[] width, CellCoord a, CellCoord b, int n, int[] da, int[] db, double f)
+    private static List<Lane> FindLanes(MapData map, bool[] pass, int[] width, CellCoord a, CellCoord b, int n, int[] da, int[] db, double f, int pathLen)
     {
         var lanes = new List<Lane>();
-        int ex = (int)(Exclude * f), exb = (int)(ExcludeBlock * f);
+        int ex = Math.Min((int)(Exclude * f), pathLen * 22 / 100), exb = Math.Min((int)(ExcludeBlock * f), pathLen * 38 / 100);
         var blockedLane = new bool[n * n];
         var used = new bool[n * n];
         int first = 0;
-        for (int round = 0; round < 6; round++)
+        for (int round = 0; round < 8; round++)
         {
             List<int>? path = Route(pass, width, blockedLane, map.IndexOf(a), map.IndexOf(b), n);
-            if (path is null) break;
+            if (path is null)
+            {
+                if (System.Environment.GetEnvironmentVariable("MD") == "2") { for (int yy = 0; yy < n; yy++) { var sb = new System.Text.StringBuilder(); for (int xx = 0; xx < n; xx++) { int ci = yy * n + xx; sb.Append(blockedLane[ci] ? 'X' : pass[ci] ? '.' : '#'); } System.Console.Error.WriteLine("BL " + sb); } }
+                break;
+            }
             if (round == 0) first = path.Count;
             else if (path.Count > first * 14 / 10) break;
+            if (System.Environment.GetEnvironmentVariable("MD") == "1") System.Console.Error.WriteLine("ROUTE " + string.Join(" ", path.Where((c, q) => q % 3 == 0).Select(c => $"{c % n},{c / n}:{width[c]}")));
             var inner = new List<int>(); int minAt = path[0], minW = 1000;
             int shared = 0, counted = 0;
             foreach (int c in path)
@@ -392,7 +400,7 @@ public static class LayoutChecks
                 bool near = da[c] <= exb || db[c] <= exb;
                 used[c] = true;
                 if (near) continue;
-                int r = Math.Min(8, (width[c] + 1) / 2 + 1);
+                int r = Math.Min(12, (width[c] + 1) / 2 + 2);
                 for (int dy = -r; dy <= r; dy++)
                     for (int dx = -r; dx <= r; dx++)
                         if (x + dx >= 0 && y + dy >= 0 && x + dx < n && y + dy < n) blockedLane[(y + dy) * n + x + dx] = true;
@@ -407,7 +415,7 @@ public static class LayoutChecks
         for (int t = 0; t < st.Count; t++)
         {
             if (team[t] == team[0]) continue;
-            foreach (Lane l in FindLanes(map, pass, width, st[0], st[t], n, dist[0], dist[t], f)) best = Math.Max(best, l.Min);
+            foreach (Lane l in FindLanes(map, pass, width, st[0], st[t], n, dist[0], dist[t], f, dist[0][map.IndexOf(st[t])])) best = Math.Max(best, l.Min);
             break;
         }
         return best;

@@ -15,8 +15,10 @@ namespace Rts.Data.MapGen;
 // players add S0' = (n-1-b, n-1-a) beside S0 and S1' beside S1: teams 1+2 and 3+4 are side by side, the enemy team is across.
 internal sealed partial class ProceduralBuilder
 {
-    private const byte ZMain = 1, ZLane = 2, ZPlaza = 3;
-    private int RockPct => _players > 2 ? 0 : 14;
+    private const byte ZMain = 1, ZLane = 2, ZPlaza = 3, AnyZone = 255;
+    private int Hw => _n >= 96 ? 3 : 2;   // half width of the river in cells of x - y (the outer ring is shallow)
+    private int BuildPct => _players > 2 ? 2 : _n >= 96 ? 3 : 0;   // percent of blocks that hold a ruined building / two standing walls
+    private int WallPct => _players > 2 ? 6 : _n >= 96 ? 7 : 3;   // percent of blocks that hold a ruined building / two standing walls
 
     private readonly bool _zoned;
     private readonly int _players;
@@ -26,7 +28,7 @@ internal sealed partial class ProceduralBuilder
     private bool _natural;                 // a natural expansion on this seed
     private int _iw, _ie, _hh;             // main interior: cells west and east of the start, half height
     private int _gapN, _gapNE, _gapE;      // entrance widths
-    private int _wL1, _wL2, _wL3, _bridgeW, _t2, _ry, _riverEnd;
+    private int _wL1, _wL2, _wL3, _bridgeW, _bridgeW2, _t2, _l1x;   // lane widths, the two deck widths, the ford corner, lane 1's column
     private byte[] _zone = Array.Empty<byte>();
     private int[] _wallDist = Array.Empty<int>();
     private readonly List<string> _zoneNotes = new();
@@ -42,19 +44,18 @@ internal sealed partial class ProceduralBuilder
         _rng = new SimRandom(seed);
         bool big = n >= 96;
         _sa = Math.Max(9, n * _rng.Next(14, 21) / 100);
-        _sb = players == 2 ? _sa + n * _rng.Next(43, 51) / 100 : n - 1 - _sa - n * _rng.Next(16, 21) / 100;
+        _sb = players == 2 ? _sa + n * _rng.Next(50, 56) / 100 : n - 1 - _sa - n * (n >= 112 ? _rng.Next(16, 19) : _rng.Next(22, 25)) / 100;
         int m = _rng.Next(12);
         _mode = m < 8 ? 0 : m < 11 ? 1 : 2;
-        _natural = _rng.Next(2) == 0;
+        _natural = players == 2 && _rng.Next(2) == 0;
         _iw = big ? 8 : 7; _ie = big ? 16 : 13; _hh = big ? 8 : 7;
-        if (players > 2) { _iw = 6; _ie = big ? 12 : 10; _hh = 6; }
-        _wL1 = _rng.Next(6, 9); _wL2 = big ? _rng.Next(13, 16) : _rng.Next(10, 13); _wL3 = _rng.Next(5, 8);
-        _bridgeW = _rng.Next(3, 5);
+        if (players > 2) { _iw = 6; _ie = big ? 11 : 9; _hh = big ? 8 : 7; }
+        _wL1 = _rng.Next(6, 9); _wL2 = players > 2 ? _rng.Next(12, 15) : big ? _rng.Next(18, 21) : _rng.Next(13, 16); _wL3 = _rng.Next(5, 8);
+        _bridgeW = _rng.Next(3, 5); _bridgeW2 = _rng.Next(4, 6);
         _gapN = _rng.Next(4, 7); _gapNE = _rng.Next(4, 7); _gapE = _rng.Next(4, 7);
         if (_mode != 0) { _gapE = _rng.Next(4, 7); _gapNE = _rng.Next(4, 7); }
-        _t2 = _sa + _ie - 3 + _rng.Next(4, 9);
-        _ry = _sa + _wL1 / 2 + 5;
-        _riverEnd = _ry + 5;
+        _t2 = (n - 1) / 2 + _rng.Next(-2, 3);
+        _l1x = players > 2 ? _sa - 4 : _sa;
         var s0 = new CellCoord(_sa, _sb);
         var s1 = new CellCoord(_sb, _sa);
         if (players == 2) OrbitStarts = new[] { s0, s1 };
@@ -170,46 +171,61 @@ internal sealed partial class ProceduralBuilder
         if (!Canonical(x0, y0, x1, y1)) return;
         int roll = _rng.Next(100);
         if (w < 3 || h < 3) return;
-        if (roll < RockPct && Math.Min(w, h) >= 5)
-        {
-            // Rubble block: a rock core with chipped corners and a rough spill.
-            int t0 = _rng.Next(0, 2), t1 = _rng.Next(0, 2), t2 = _rng.Next(0, 2), t3 = _rng.Next(0, 2);
-            for (int y = y0; y <= y1; y++)
-                for (int x = x0; x <= x1; x++)
-                {
-                    bool core = x >= x0 + t0 && x <= x1 - t1 && y >= y0 + t2 && y <= y1 - t3;
-                    bool corner = (x == x0 + t0 || x == x1 - t1) && (y == y0 + t2 || y == y1 - t3);
-                    if (core && !(corner && _rng.Next(3) == 0)) _g.SetLand(_g.Idx(x, y), LandType.Rock);
-                    else if (_rng.Next(100) < 30) _g.SetLand(_g.Idx(x, y), LandType.Rough);
-                }
-        }
-        else if (roll < 66)
-        {
-            // A rubble field: an irregular patch of rough ground (slow, passable), sometimes with a rock heap in it.
-            
-            int cx2 = x0 + x1, cy2 = y0 + y1;   // doubled centre
-            int rx = Math.Max(2, w * _rng.Next(40, 56) / 100), ry = Math.Max(2, h * _rng.Next(40, 56) / 100);
-            for (int y = y0; y <= y1; y++)
-                for (int x = x0; x <= x1; x++)
-                {
-                    int ex = (2 * x - cx2) * 100 / (2 * rx), ey = (2 * y - cy2) * 100 / (2 * ry);
-                    if (ex * ex + ey * ey <= 10000 + _rng.Next(-2200, 2200)) _g.SetLand(_g.Idx(x, y), LandType.Rough);
-                }
-            if (Math.Min(w, h) >= 6 && _rng.Next(3) == 0)
+        if (roll < BuildPct && Math.Min(w, h) >= 4) Building(x0, y0, x1, y1);
+        else if (roll < BuildPct + 42) Lot(x0, y0, x1, y1);
+        else if (roll < BuildPct + 42 + WallPct && Math.Min(w, h) >= 5) RuinedWall(x0, y0, x1, y1);
+    }
+
+    /// <summary>A ruined building: a rubble footprint flush with the street on one or two sides, chipped corners, sometimes an L.</summary>
+    private void Building(int x0, int y0, int x1, int y1)
+    {
+        int w = x1 - x0 + 1, h = y1 - y0 + 1;
+        int rw = Math.Min(9, Math.Max(3, w - _rng.Next(0, 3))), rh = Math.Min(9, Math.Max(3, h - _rng.Next(0, 3)));
+        int fx0 = _rng.Next(2) == 0 ? x0 : x1 - rw + 1, fy0 = _rng.Next(2) == 0 ? y0 : y1 - rh + 1;
+        int fx1 = fx0 + rw - 1, fy1 = fy0 + rh - 1;
+        int nw = rw >= 6 && rh >= 6 && _rng.Next(2) == 0 ? rw / 3 : 0, nh = nw == 0 ? 0 : rh / 3;
+        int cornerX = _rng.Next(2) == 0 ? fx0 : fx1 - nw + 1, cornerY = _rng.Next(2) == 0 ? fy0 : fy1 - nh + 1;
+        for (int y = fy0 - 1; y <= fy1 + 1; y++)
+            for (int x = fx0 - 1; x <= fx1 + 1; x++)
             {
-                int cx = (x0 + x1) / 2, cy = (y0 + y1) / 2, hx = Math.Max(1, w / 6), hy = Math.Max(1, h / 6);
-                for (int y = cy - hy; y <= cy + hy; y++)
-                    for (int x = cx - hx; x <= cx + hx; x++) _g.SetLand(_g.Idx(x, y), LandType.Rock);
+                if (x < x0 || x > x1 || y < y0 || y > y1 || !_g.In(x, y)) continue;
+                bool inside = x >= fx0 && x <= fx1 && y >= fy0 && y <= fy1;
+                bool notch = nw > 0 && x >= cornerX && x < cornerX + nw && y >= cornerY && y < cornerY + nh;
+                bool corner = (x == fx0 || x == fx1) && (y == fy0 || y == fy1);
+                if (inside && !notch && !(corner && _rng.Next(3) == 0)) _g.SetLand(_g.Idx(x, y), LandType.Rock);
+                else if ((inside && notch) || (!inside && _rng.Next(100) < 22)) _g.SetLand(_g.Idx(x, y), LandType.Rough);
             }
-        }
-        else if (roll < 78)
-        {
-            // A rubble heap in an open lot.
-            int cx = (x0 + x1) / 2, cy = (y0 + y1) / 2, r = Math.Min(w, h) >= 8 ? 2 : 1;
-            for (int dy = -r; dy <= r; dy++)
-                for (int dx = -r; dx <= r; dx++)
-                    if (Math.Abs(dx) + Math.Abs(dy) <= r + 1) _g.SetLand(_g.Idx(cx + dx, cy + dy), LandType.Rough);
-        }
+    }
+
+    /// <summary>A rubble lot: a rectangle of rough ground with a ragged edge.</summary>
+    private void Lot(int x0, int y0, int x1, int y1)
+    {
+        for (int y = y0; y <= y1; y++)
+            for (int x = x0; x <= x1; x++)
+            {
+                bool edge = x == x0 || x == x1 || y == y0 || y == y1;
+                if (!edge || _rng.Next(100) < 55) _g.SetLand(_g.Idx(x, y), LandType.Rough);
+            }
+    }
+
+    /// <summary>Two standing walls of a ruined house (an L along two sides of the block, 2 thick), the rest open.</summary>
+    private void RuinedWall(int x0, int y0, int x1, int y1)
+    {
+        int w = x1 - x0 + 1, h = y1 - y0 + 1;
+        bool top = _rng.Next(2) == 0, left = _rng.Next(2) == 0;
+        int lenX = Math.Max(3, w * _rng.Next(65, 101) / 100), lenY = Math.Max(3, h * _rng.Next(65, 101) / 100);
+        for (int k = 0; k < lenX; k++)
+            for (int t = 0; t < 2; t++)
+            {
+                int x = left ? x0 + k : x1 - k, y = top ? y0 + t : y1 - t;
+                _g.SetLand(_g.Idx(x, y), LandType.Rock);
+            }
+        for (int k = 0; k < lenY; k++)
+            for (int t = 0; t < 2; t++)
+            {
+                int x = left ? x0 + t : x1 - t, y = top ? y0 + k : y1 - k;
+                _g.SetLand(_g.Idx(x, y), LandType.Rock);
+            }
     }
 
     /// <summary>True when the block rectangle holds the lowest cell index of its own images (so a block is painted once per symmetry orbit).</summary>
@@ -231,33 +247,59 @@ internal sealed partial class ProceduralBuilder
     private void CarveOpen()
     {
         int a = _sa, b = _sb, n = _n;
-        // Main interior.
         Open(a - _iw, b - _hh, a + _ie, b + _hh, ZMain);
         int portY = b - _hh - 4, portE = a + _ie + 4, neX = a + _ie - 3;
-        // Lane 1: the north flank, hugging the west edge to the north-west corner (medium, with a narrow bridge).
-        Corridor(a, portY, a, a, _wL1, padA: false);
-        // Lane 2: the wide boulevard to the middle.
-        Corridor(neX, portY, neX, _t2, _wL2, padA: false);
-        Corridor(neX, _t2, _t2, _t2, _wL2);
-        // Lane 3: the equator, along the start's own row to the diagonal corner (b, b).
+        // Lane 1: the north flank up the west side to the north-west deck (medium, with a narrow deck).
+        Corridor(_l1x, portY, _l1x, _l1x, _wL1, padA: false);
+        // Lane 2: the wide boulevard to the ford at the centre of the river.
+        Corridor(neX, portY, neX, _t2, 7, padA: false);
+        Corridor(neX, _t2, _t2, _t2, _wL2, padA: false);
+        // Lane 3: the equator along the start's own row to the south-east deck at (b, b).
         Corridor(portE, b, b, b, _wL3, padA: false);
-        // North-west courtyard, inside the river's corner.
-        int box = _ry - 3;
-        Open(3, 3, box, box, ZPlaza, false);
-        // Natural plaza beside the east gap (south of the equator in 2 players, north of it in 4).
+        // The ford plaza at the centre of the river.
+        int cx = _t2;
+        int ph = _players > 2 ? 8 : 11;
+        Open(cx - ph, cx - ph, cx + ph, cx + ph, ZPlaza, false);
+        if (_players > 2) return;
+        // Natural pocket beside the east gap, south of the equator (2 players only: with more players the mains are too close).
         int ny0 = _players == 2 ? b + 9 : b - 19, ny1 = _players == 2 ? b + 19 : b - 9;
         Open(portE, ny0, portE + 11, ny1, ZPlaza, false);
-        // The natural is a pocket off the apron: a 5-wide mouth from the equator keeps the lane itself walled.
         Corridor(portE + 3, _players == 2 ? b + 2 : b - 2, portE + 3, _players == 2 ? ny0 + 1 : ny1 - 1, 5, padA: false, padB: false);
-        // South-east yards for the contested pair, joined to the equator corner by a short street each.
+        Ring(portE, ny0, portE + 11, ny1);
+        // South-east yards beyond the deck, one on each side of the river, for the contested pair.
         int px0 = b + 7, px1 = Math.Min(n - 4, b + 20);
         Open(px0, b - 8, px1, b + 3, ZPlaza, false);
         Corridor(b, b - 3, px0, b - 3, 5);
-        // Centre plaza on the diagonal where the boulevard turns.
-        int cx = Math.Max(_t2 + 3, n / 2 - 1);
-        Open(cx - 5, cx - 5, cx + 5, cx + 5, ZPlaza, false);
-        if (_players > 2) { int q = n * 40 / 100; Open(q - 4, q - 4, q + 4, q + 4, ZPlaza, false); }
+        Ring(px0, b - 8, px1, b + 3);
+        // North-west yards beside the first deck (Medium and up): between lane 1 and the map edge, one on each side of the river.
+        if (n >= 96)
+        {
+            int top = _l1x - (_wL1 - 1) / 2, yy1 = top - 4;
+            Open(a + 4, 2, a + 16, yy1, ZPlaza, false);
+            Corridor(a + 10, top - 1, a + 10, yy1, 5, padA: false, padB: false);
+            Ring(a + 4, 2, a + 16, yy1);
+        }
+    }
 
+    /// <summary>A one-cell rubble wall round a rectangle (ruined courtyard wall); cells already tagged as lane, main or plaza stay open.</summary>
+    private void Ring(int x0, int y0, int x1, int y1)
+    {
+        if (_n < 96) return;   // Small maps have no room (or rock budget) for courtyard walls
+        // One 4-wide gap in each of two sides picked by the rng; the rest of the wall stands.
+        int gapSide1 = _rng.Next(4), gapSide2 = (gapSide1 + 1 + _rng.Next(3)) % 4;
+        int g1 = _rng.Next(3, 9), g2 = _rng.Next(3, 9);
+        for (int y = y0 - 1; y <= y1 + 1; y++)
+            for (int x = x0 - 1; x <= x1 + 1; x++)
+            {
+                if (!_g.In(x, y) || (x >= x0 && x <= x1 && y >= y0 && y <= y1)) continue;
+                int side = y < y0 ? 0 : y > y1 ? 1 : x < x0 ? 2 : 3;
+                int along = side < 2 ? x - x0 : y - y0;
+                bool corner = (x < x0 || x > x1) && (y < y0 || y > y1);
+                if (!corner && ((side == gapSide1 && along >= g1 && along < g1 + 4) || (side == gapSide2 && along >= g2 && along < g2 + 4))) continue;
+                int i = _g.Idx(x, y);
+                if (!_g.All(i, j => _zone[j] == 0)) continue;
+                _g.SetLand(i, LandType.Rock);
+            }
     }
 
     private void Shell()
@@ -271,19 +313,19 @@ internal sealed partial class ProceduralBuilder
             {
                 if (x >= ix0 && x <= ix1 && y >= iy0 && y <= iy1) continue;
                 bool outer = x == ix0 - 3 || x == ix1 + 3 || y == iy0 - 3 || y == iy1 + 3;
-                _g.SetLand(_g.Idx(x, y), outer && _rng.Next(100) < 30 ? LandType.Rough : LandType.Rock);
+                _g.SetLand(_g.Idx(x, y), outer && (_players > 2 || _rng.Next(100) < 30) ? LandType.Rough : LandType.Rock);
                 foreach (int j in _g.Images(_g.Idx(x, y))) _zone[j] = 0;
             }
         // Entrances through the three wall layers.
         int hiN = _gapN / 2, loN = (_gapN - 1) / 2;
-        if (_mode == 0) Open(a - loN, iy0 - 3, a + hiN, iy0 - 1, ZLane);
+        if (_mode == 0) Open(_l1x - loN, iy0 - 3, _l1x + hiN, iy0 - 1, ZLane);
         if (_mode != 1) Open(a + _ie - 3 - (_gapNE - 1) / 2, iy0 - 3, a + _ie - 3 + _gapNE / 2, iy0 - 1, ZLane);
         Open(ix1 + 1, b - (_gapE - 1) / 2, ix1 + 3, b + _gapE / 2, ZLane);
         if (_mode == 0) return;
         // Walled main: the north lanes reach the single ramp through a service street along the north face of the wall.
         int portY = iy0 - 4, portE = ix1 + 4;
         Corridor(portE + 2, b, portE + 2, portY - 2, 5, padA: false);
-        Corridor(portE + 2, portY - 2, a, portY - 2, 5);
+        Corridor(portE + 2, portY - 2, _l1x, portY - 2, 5);
     }
 
     // ---- lane linings ---------------------------------------------------------------------------
@@ -295,11 +337,11 @@ internal sealed partial class ProceduralBuilder
         int a = _sa, b = _sb;
         int portY = b - _hh - 4, portE = a + _ie + 4;
         int neX = a + _ie - 3;
-        int sk = _players > 2 ? 40 : 0;
-        LineSegment(a, portY - 1, a, a + 2, _wL1, sk);          // lane 1, vertical
+        int sk = _players > 2 ? 25 : 0;
+        LineSegment(_l1x, portY - 1, _l1x, _l1x + 2, _wL1, sk);          // lane 1, vertical
         LineSegment(portE + 1, b, b - 2, b, _wL3, sk);          // lane 3, horizontal
-        LineSegment(neX, portY - 1, neX, _t2 + 1, _wL2, Math.Max(30, sk));    // lane 2 arms
-        LineSegment(neX + 1, _t2, _t2 - 1, _t2, _wL2, Math.Max(30, sk));
+        LineSegment(neX, portY - 1, neX, _t2 + 1, _wL2, _players > 2 ? 70 : 30);    // lane 2 arms
+        LineSegment(neX + 1, _t2, _t2 - 1, _t2, _wL2, _players > 2 ? 70 : 30);
     }
 
     private void LineSegment(int x0, int y0, int x1, int y1, int w, int skipPct = 0)
@@ -312,19 +354,19 @@ internal sealed partial class ProceduralBuilder
             int t = from + _rng.Next(0, 6);
             while (t < to)
             {
-                int len = _rng.Next(10, 19);
+                int len = _rng.Next(8, 15);
                 bool skip = _rng.Next(100) < skipPct;
                 for (int u = t; !skip && u < Math.Min(to, t + len); u++)
-                    for (int k = 1; k <= 3; k++)
+                    for (int k = 1; k <= 2; k++)
                     {
                         int off = side == 0 ? -(lo + k) : hi + k;
                         int x = vertical ? x0 + off : u, y = vertical ? u : y0 + off;
                         if (!_g.In(x, y)) continue;
                         int i = _g.Idx(x, y);
                         if (_g.All(i, j => _zone[j] == 0 && _g.Land[j] is LandType.Clear or LandType.Rough or LandType.Rock))
-                            _g.SetLand(i, k == 3 && _rng.Next(100) < 35 ? LandType.Rough : LandType.Rock);
+                            _g.SetLand(i, k == 2 && _rng.Next(100) < 35 ? LandType.Rough : LandType.Rock);
                     }
-                t += len + _rng.Next(4, 7);
+                t += len + _rng.Next(5, 10);
             }
         }
     }
@@ -333,36 +375,32 @@ internal sealed partial class ProceduralBuilder
 
     private void River()
     {
-        int n = _n, ry = _ry, end = _riverEnd;
-        var off = new int[end + 1];
-        int cur = 0;
-        for (int x = 0; x <= end; x++)
-        {
-            if (x % 3 == 0 && _rng.Next(5) == 0) cur = Math.Clamp(cur + (_rng.Next(2) == 0 ? -1 : 1), -1, 1);
-            off[x] = cur;
-        }
-        int ford0 = end - 6, ford1 = end - 2;
-        var deck = new List<int>();
-        int a = _sa;
-        for (int x = 0; x <= end; x++)
-        {
-            int yc = ry + off[x];
-            for (int dy = -2; dy <= 2; dy++)
+        int n = _n, c0 = n - 1;
+        int fh = _players > 2 ? 6 : n >= 96 ? 10 : 7;   // ford: half length along the river, in steps of x + y
+        for (int y = 0; y < n; y++)
+            for (int x = 0; x < n; x++)
             {
-                int y = yc + dy;
-                if (y < 0 || y >= n) continue;
+                int d = x - y;
+                if (d < -Hw || d > Hw) continue;
                 int i = _g.Idx(x, y);
-                bool rim = Math.Abs(dy) == 2;
-                bool ford = x >= ford0 && x <= ford1;
-                // The lane-1 bridge keeps its width; the rest of the lane is water.
-                bool onDeck = x >= a - (_bridgeW - 1) / 2 && x <= a + _bridgeW / 2;
-                if (onDeck) { _g.SetLand(i, LandType.Road); continue; }
-                _g.SetLand(i, rim || ford ? LandType.Shallow : LandType.Water);
+                bool deck = false;
+                foreach (int j in _g.Images(i)) deck |= InDeck(j % n, j / n);
+                if (deck) { _g.SetLand(i, LandType.Road); foreach (int j in _g.Images(i)) _g.River[j] = false; continue; }
+                int v = Math.Abs(x + y - c0);
+                if (v <= 2 * fh)
+                {
+                    if (v <= (_players > 2 ? 4 : 9)) { _g.SetLand(i, LandType.Clear); foreach (int j in _g.Images(i)) _g.River[j] = false; }   // the gravel bar in the middle of the ford
+                    else { _g.SetLand(i, LandType.Shallow); _g.MarkRiver(i); }
+                    continue;
+                }
+                _g.SetLand(i, Math.Abs(d) == Hw ? LandType.Shallow : LandType.Water);
                 _g.MarkRiver(i);
             }
-        }
-        _ = deck;
     }
+
+    /// <summary>True when (x, y) lies on one of the two decks: a strip across the river along the other diagonal (|x + y - 2c| below the
+    /// deck width), self-symmetric under the diagonal mirror, so a deck of width w is exactly w cells wide at its middle.</summary>
+    private bool InDeck(int x, int y) => Math.Abs(x + y - 2 * _l1x) <= _bridgeW - 1 || Math.Abs(x + y - 2 * _sb) <= _bridgeW2 - 1;
 
     // ---- clean-up -------------------------------------------------------------------------------
 
@@ -484,56 +522,6 @@ internal sealed partial class ProceduralBuilder
         return false;
     }
 
-    /// <summary>Grows an elongated field of about <paramref name="target"/> cells inside the rectangle, hugging walls (cells 1..dcap from
-    /// blocking terrain), away from lanes. Returns the cells (first image only) or an empty list.</summary>
-    private List<int> GrowField(int x0, int y0, int x1, int y1, int target, int dcap, int minStart, byte zone)
-    {
-        var best = new List<int>();
-        for (int round = 0; round < 3 && best.Count < target * 7 / 10; round++)
-        {
-            int cap = dcap + round;
-            var cand = new List<int>();
-            for (int y = Math.Max(1, y0); y <= Math.Min(_n - 2, y1); y++)
-                for (int x = Math.Max(1, x0); x <= Math.Min(_n - 2, x1); x++)
-                {
-                    int i = _g.Idx(x, y);
-                    if (_zone[i] != zone || _g.Land[i] != LandType.Clear || _g.Overlay[i] != OverlayKind.None || _g.Core[i] || _g.River[i]) continue;
-                    if (_wallDist[i] < 1 || _wallDist[i] > cap) continue;
-                    if (NearLane(x, y, 2) || MinStartDistance(x, y) < minStart) continue;
-                    bool imagesOk = true;
-                    foreach (int j in _g.Images(i)) if (_g.Overlay[j] != OverlayKind.None || _g.Land[j] != LandType.Clear) { imagesOk = false; break; }
-                    if (!imagesOk) continue;
-                    cand.Add(i);
-                }
-            if (cand.Count == 0) continue;
-            for (int attempt = 0; attempt < 6; attempt++)
-            {
-                var chosen = new List<int>();
-                var inSet = new HashSet<int>(cand);   // membership only; never iterated
-                var frontier = new List<int> { cand[_rng.Next(cand.Count)] };
-                while (chosen.Count < target && frontier.Count > 0)
-                {
-                    int pick = _rng.Next(frontier.Count);
-                    int c = frontier[pick];
-                    frontier.RemoveAt(pick);
-                    if (!inSet.Remove(c)) continue;
-                    // Cells whose images overlap the field itself would double up; keep the first image only.
-                    bool clash = false;
-                    foreach (int j in _g.Images(c)) if (j != c && chosen.Contains(j)) { clash = true; break; }
-                    if (clash) continue;
-                    chosen.Add(c);
-                    int x = c % _n, y = c / _n;
-                    for (int dy = -1; dy <= 1; dy++)
-                        for (int dx = -1; dx <= 1; dx++)
-                            if ((dx != 0 || dy != 0) && _g.In(x + dx, y + dy) && inSet.Contains(_g.Idx(x + dx, y + dy))) frontier.Add(_g.Idx(x + dx, y + dy));
-                }
-                if (chosen.Count > best.Count) best = chosen;
-                if (best.Count >= target) break;
-            }
-        }
-        return best;
-    }
-
     /// <summary>An elongated band (3 to 6 thick, along the longer side of the rectangle, ragged ends) for plazas that have no wall to
     /// hug. Cells are chosen one by one, so a lane or a rock inside the rectangle only trims the band. Returns the cells (first image only).</summary>
     private List<int> StripField(int x0, int y0, int x1, int y1, int target, byte zone, int minStart)
@@ -554,7 +542,7 @@ internal sealed partial class ProceduralBuilder
                         int x = alongX ? x0 + u : x0 + off + v, y = alongX ? y0 + off + v : y0 + u;
                         if (!_g.In(x, y)) continue;
                         int i = _g.Idx(x, y);
-                        if (_zone[i] != zone || _g.Land[i] != LandType.Clear || _g.Overlay[i] != OverlayKind.None || _g.Core[i] || _g.River[i] || MinStartDistance(x, y) < minStart) continue;
+                        if ((zone == AnyZone ? _zone[i] == ZMain : _zone[i] != zone) || _g.Land[i] is not (LandType.Clear or LandType.Road) || _g.Overlay[i] != OverlayKind.None || _g.Core[i] || _g.River[i] || MinStartDistance(x, y) < minStart) continue;
                         bool ok = true;
                         foreach (int j in _g.Images(i)) if (j != i && _g.Overlay[j] != OverlayKind.None) { ok = false; break; }
                         if (!ok) continue;
@@ -575,12 +563,8 @@ internal sealed partial class ProceduralBuilder
         return new List<int>();
     }
 
-    private List<int> MakeField(int x0, int y0, int x1, int y1, int target, int dcap, int minStart, byte zone)
-    {
-        List<int> f = GrowField(x0, y0, x1, y1, target, dcap, minStart, zone);
-        if (f.Count < target * 7 / 10) f = StripField(x0, y0, x1, y1, target, zone, minStart);
-        return Largest(f);
-    }
+    private List<int> MakeField(int x0, int y0, int x1, int y1, int target, byte zone, int minStart) =>
+        Largest(StripField(x0, y0, x1, y1, target, zone, minStart));
 
     /// <summary>The largest 8-connected piece of a cell list (stray cells would become one-cell fields).</summary>
     private List<int> Largest(List<int> cells)
@@ -616,31 +600,73 @@ internal sealed partial class ProceduralBuilder
     {
         int a = _sa, b = _sb, n = _n;
         bool gems = _rng.Next(2) == 0;
-        int fs = Math.Max(80, Math.Min(100, _scale)) * (_players > 2 ? 13 : 10) / 10;   // field sizes shrink on Small maps (percent)
-        // Main: three strips along the walls.
+        int fs = Math.Max(80, Math.Min(100, _scale)) * (_players > 2 ? (_n < 80 ? 19 : 13) : 10) / 10;   // field sizes shrink on Small maps (percent)
         int ix0 = a - _iw, ix1 = a + _ie, iy0 = b - _hh, iy1 = b + _hh;
-        var f1 = MakeField(a - 6, b + 2, ix1, iy1, _rng.Next(48, 60) * fs / 100, 2, 5, ZMain);
-        PlaceField(f1, gems ? 0 : 0);
-        var f2 = MakeField(a + 2, iy0, ix1, b - 2, _rng.Next(36, 46) * fs / 100, 2, 5, ZMain);
-        PlaceField(f2, gems ? 8 : 0);
-        var f3 = MakeField(a - 8, iy0, a + 6, iy1, _rng.Next(24, 34) * fs / 100, 2, 6, ZMain);
-        PlaceField(f3, 0);
+        // Main: a thick band along the south wall and one along the north wall.
+        PlaceField(Band(ix0 + 2, iy1 - _hh + (_n < 80 ? 3 : 4), ix1 - 2, iy1 - 1, _rng.Next(56, 72) * fs / 100, ZMain, 4), 0);
+        PlaceField(Band(ix0 + 2, iy0 + 1, ix1 - 2, iy0 + _hh - (_n < 80 ? 3 : 4), _rng.Next(44, 60) * fs / 100, ZMain, 4), gems ? (_n < 80 ? 4 : 8) : 0);
+        if (_n < 80 && _players > 2) PlaceField(Band(ix0 + 1, iy0 + 1, ix0 + 3, iy1 - 1, _rng.Next(14, 20), ZMain, 3), 0);
         // Natural.
         int portE = a + _ie + 4;
         if (_natural)
         {
             int ny0 = _players == 2 ? b + 9 : b - 19, ny1 = _players == 2 ? b + 19 : b - 9;
-            var nat = MakeField(portE, ny0, portE + 11, ny1, _rng.Next(45, 66) * fs / 100, 3, 8, ZPlaza);
-            PlaceField(nat, 0);
+            PlaceField(MakeField(portE, ny0, portE + 11, ny1, _rng.Next(45, 66) * fs / 100, ZPlaza, 8), 0);
         }
-        // Contested: the north-west courtyard, the centre, and the south-east pair.
-        int box = _ry - 3;
-        PlaceField(MakeField(6, 6, box, box, _players > 2 ? _rng.Next(34, 44) : _rng.Next(30, 40), 3, 8, ZPlaza), 0);
-        int cx = Math.Max(_t2 + 3, n / 2 - 1);
-        PlaceField(_players > 2 ? MakeField(cx - 1, cx - 1, cx + 5, cx + 5, _rng.Next(7, 10), 6, 8, ZPlaza) : MakeField(cx - 1, cx - 1, cx + 5, cx + 5, _rng.Next(30, 38), 6, 8, ZPlaza), 6);
-        if (_players == 2) PlaceField(MakeField(b + 7, b - 8, Math.Min(n - 4, b + 20), b + 3, _rng.Next(36, 48), 3, 8, ZPlaza), 0);
-        if (_players > 2) { int q = n * 40 / 100; PlaceField(MakeField(q - 4, q - 4, q + 4, q + 4, _rng.Next(14, 20), 3, 8, ZPlaza), 0); }
+        // Contested: the south-east yards (one on each side of the river) and the gravel bar at the ford.
+        if (n >= 96 && _players == 2) PlaceField(MakeField(a + 4, 2, a + 16, _l1x - (_wL1 - 1) / 2 - 4, _rng.Next(36, 48), ZPlaza, 8), 0);
+        if (_players == 2) PlaceField(MakeField(b + 7, b - 8, Math.Min(n - 4, b + 20), b + 3, _rng.Next(36, 48), ZPlaza, 8), 0);
+        PlaceField(Bar(), 6);
         ScaleDensity();
+    }
+
+    /// <summary>The centre field: the gravel bar of the ford and the banks beside it, an elongated piece along the river (self-symmetric, so it exists once).</summary>
+    private List<int> Bar()
+    {
+        int n = _n, c0 = n - 1;
+        var cells = new List<int>();
+        for (int y = 0; y < n; y++)
+            for (int x = 0; x < n; x++)
+            {
+                int d = x - y, v = x + y - c0;
+                if (Math.Abs(d) > Hw + 1 || Math.Abs(v) > (_players > 2 ? 6 : 7)) continue;
+                int i = _g.Idx(x, y);
+                if (_g.Land[i] is not (LandType.Clear or LandType.Road) || _g.River[i] || _zone[i] == ZMain) continue;
+                cells.Add(i);
+            }
+        var own = new List<int>();
+        foreach (int i in cells)
+        {
+            bool clash = false;
+            foreach (int j in _g.Images(i)) if (j < i && cells.Contains(j)) { clash = true; break; }
+            if (!clash) own.Add(i);
+        }
+        return Largest(own);
+    }
+
+    /// <summary>A thick band (3 or more cells) in a rectangle along its longer side, with ragged ends; about <paramref name="target"/> cells.</summary>
+    private List<int> Band(int x0, int y0, int x1, int y1, int target, byte zone, int minStart)
+    {
+        bool alongX = x1 - x0 >= y1 - y0;
+        int thick = alongX ? y1 - y0 + 1 : x1 - x0 + 1;
+        int len = alongX ? x1 - x0 + 1 : y1 - y0 + 1;
+        int want = Math.Min(len, (target + thick - 1) / thick);
+        int off = len > want ? _rng.Next(0, len - want + 1) : 0;
+        var cells = new List<int>();
+        for (int u = off; u < off + want; u++)
+            for (int v = 0; v < thick; v++)
+            {
+                int x = alongX ? x0 + u : x0 + v, y = alongX ? y0 + v : y0 + u;
+                if (!_g.In(x, y)) continue;
+                int i = _g.Idx(x, y);
+                if ((zone == AnyZone ? _zone[i] == ZMain : _zone[i] != zone) || _g.Land[i] is not (LandType.Clear or LandType.Road) || _g.Overlay[i] != OverlayKind.None || _g.Core[i] || _g.River[i] || MinStartDistance(x, y) < minStart) continue;
+                bool edgeEnd = (u == off || u == off + want - 1) && (v == 0 || v == thick - 1);
+                if (edgeEnd && _rng.Next(2) == 0) continue;   // chipped corner
+                bool ok = true;
+                foreach (int j in _g.Images(i)) if (j != i && (_g.Overlay[j] != OverlayKind.None || cells.Contains(j))) { ok = false; break; }
+                if (ok) cells.Add(i);
+            }
+        return Largest(cells);
     }
 
     /// <summary>Sets the density of every resource cell so that the money on the map per start matches layout 1
