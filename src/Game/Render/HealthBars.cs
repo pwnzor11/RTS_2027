@@ -54,7 +54,7 @@ public static class HealthBars
             int rank = ranks is not null && ranks.TryGetValue(new RankKey(view.Kind, view.Id), out int found) ? found : 0;
             if (!showBar && rank == 0) continue;
             Vector2 origin = SpriteLayout.UnitOrigin(camera, unit.World);
-            Vector2 top = SpriteLayout.FrameTopLeft(origin, sprites.ForUnit(frame.Rules, view).Manifest, SpriteLayout.UnitSpriteScale(UnitRenderer.DrawScale(frame.Rules, view), zoom));   // M11-06: frame top follows the unit scale
+            Vector2 top = SpriteLayout.FrameTopLeft(origin, sprites.ForUnit(frame.Rules, view).Manifest, SpriteLayout.UnitSpriteScale(UnitRenderer.DrawScale(frame.Rules, view, sprites.ForUnit(frame.Rules, view).Manifest), zoom));   // M11-06: frame top follows the unit scale
             int width = (int)MathF.Round((vehicle ? VehicleWidthPx : InfantryWidthPx * UnitRenderer.InfantryExtraScale) * zoom);   // D-184: infantry bars follow the larger infantry
             int barH = vehicle ? height : Math.Max(2, (int)MathF.Round(InfantryBarHeightPx * zoom));
             var r = new Rectangle((int)origin.X - width / 2, (int)MathF.Round(top.Y) - gap - barH, width, barH);

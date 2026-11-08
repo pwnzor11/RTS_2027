@@ -43,7 +43,7 @@ public static class UnitRenderer
         bool moving = memory.IsMoving(UnitKey.Of(view));
         Vector2 origin = SpriteLayout.UnitOrigin(camera, unit.World);
         Color house = PlayerColours.Base(view.Player);
-        float drawScale = DrawScale(rules, view) * SpriteLayout.UnitDrawScale;   // M7-03: big ships are one cell but drawn larger (D-124); M11-06/D-172: all units x1.25
+        float drawScale = DrawScale(rules, view, sprite.Manifest) * SpriteLayout.UnitDrawScale;   // M7-03: big ships are one cell but drawn larger (D-124); M11-06/D-172: all units x1.25
         if (UnitVisuals.ShowTunnelMarker(view)) DrawTunnelMarker(batch, pixel, origin, infantry, house, camera.Zoom * SpriteLayout.UnitDrawScale);
         float alpha = UnitVisuals.Alpha(view, submerged, ownOrAllied);   // M7-14/M7-17: faded only for own and allied dived ships
         int divedFrame = UnitVisuals.DivedBodyFrame(sprite.Manifest, view.Facing, tick, submerged);   // M7-17: dived body frame, or -1
@@ -83,9 +83,10 @@ public static class UnitRenderer
     public const float LargerInfantryScale = 1.25f;
 
     /// <summary>Type-only sprite scale of a unit (before <see cref="SpriteLayout.UnitDrawScale"/>): the vehicle type's <c>draw_scale_permille</c> / 1000 (<see cref="InfantryExtraScale"/> for infantry, 1 for unknown types). Game layer only: float is fine here.</summary>
-    public static float DrawScale(SimRules? rules, UnitView view)
+    public static float DrawScale(SimRules? rules, UnitView view, SpriteManifest? manifest = null)
     {
-        if (view.Kind == UnitKind.Infantry) return InfantryExtraScale;
+        // D-184: a sprite already rendered larger (figure_scale_permille > 1000) is not scaled up again by the setting.
+        if (view.Kind == UnitKind.Infantry) return manifest is { FigureScalePermille: > 1000 } ? 1f : InfantryExtraScale;
         if (view.Kind != UnitKind.Vehicle || rules is null || (uint)view.TypeIndex >= (uint)rules.Vehicles.Count) return 1f;
         return rules.Vehicles[view.TypeIndex].DrawScalePermille / 1000f;
     }

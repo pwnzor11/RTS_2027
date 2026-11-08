@@ -266,6 +266,7 @@ def write_toml(path, mod, sheet_name, firsts, total):
         f"frame_h = {h}",
         f"origin_x = {ox}",
         f"origin_y = {oy}",
+        *([f"figure_scale_permille = {round(getattr(mod, 'SCALE', 1.0) * 1000)}"] if round(getattr(mod, 'SCALE', 1.0) * 1000) != 1000 else []),
         "",
         "# House paint is the 8-shade magenta ramp, darkest first. Exact RGB matches are house pixels; alpha is always 0 or 255.",
         "[house]",
