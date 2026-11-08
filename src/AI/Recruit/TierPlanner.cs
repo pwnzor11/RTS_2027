@@ -336,7 +336,12 @@ internal sealed class TierPlanner
         int funds = k.Hud.Cash + k.Hud.Stored;
         bool up = _p.UseUpgrades || Bias.ForceTech;   // M5-02: a tech focus climbs even on a profile without research
         if (((_p.ExpansionTick > 0 && tick >= _p.ExpansionTick) || Bias.Expand) && build.StepsOf(_faction.RefineryId) < 2)
-            build.Extend(_faction.RefineryId);
+        {
+            // Q-65 (D-182): the high-tier Directorate (air flag) bought its second Smelter Vent behind the whole tech list and ran on one Scraper
+            // for 6 000+ ticks; the expansion refinery now goes right after the Assembly Bore, like the other factions' economy-first order.
+            if (_faction.Faction == Faction.Directorate && _p.Air) build.InsertAfter(_faction.RefineryId, _faction.FactoryId);
+            else build.Extend(_faction.RefineryId);
+        }
         bool armyWait = _faction.Faction != Faction.LeftBehind;   // LeftBehind's supply chain needs the tech structures early (SupplyAiTests)
         bool techArmy = !armyWait || k.Army.Count >= ArmyBeforeTech || Bias.ForceTech;   // s12: no tech spending before there is an army
         if (up && techArmy && _faction.ResearchId is string research && build.StepsOf(research) < 1)
