@@ -11,6 +11,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import common as C
 import auth_rifleman as AR
 
+SCALE = 1.25                  # D-185: figure 1.25 x, frame 48 x 48, house shoulder boards / back panel
 ID = "dir_informant"
 TITLE = "Directorate Informant"
 CANVAS, ORIGIN, STATES, DIE_FACING = AR.CANVAS, AR.ORIGIN, AR.STATES, AR.DIE_FACING
@@ -74,16 +75,19 @@ def build(S, p):
     S.box((0.11, 0.10, 0.025), (-0.10, 0.0, 0.41), "hl", U, rot=(0, 10, 0), bevel=0)      # lighter shoulder highlight                      # coat front seam
     S.box((0.065, 0.05, 0.15), (-0.06, 0.15, 0.27), "coat3", U, rot=(0, 0, 22), bevel=0)   # lapels
     S.box((0.065, 0.05, 0.15), (0.06, 0.15, 0.27), "coat3", U, rot=(0, 0, -22), bevel=0)
-    S.box((0.05, 0.03, 0.05), (0.09, 0.185, 0.29), "house", U, bevel=0)                  # lapel badge (house colour)
+    S.box((0.07, 0.03, 0.07), (0.09, 0.185, 0.29), "house", U, bevel=0)                  # lapel badge (house colour)
     S.box((0.22, 0.07, 0.07), (0, -0.04, 0.385), "coat3", U, bevel=0.01)                  # raised collar, back
     S.cyl(0.165, 0.06, (0, 0.0, 0.37), "coat3", "Z", U, verts=8, r2=0.12)                  # shoulder yoke
+    for sx in (-1, 1):                                                                 # D-185 small house shoulder boards
+        S.box((0.10, 0.15, 0.035), (sx * 0.15, 0.0, 0.405), "house", U, rot=(0, sx * -8, 0), bevel=0)
+    S.box((0.19, 0.025, 0.14), (0, -0.226, 0.26), "house", U, bevel=0)                 # D-185 house panel on the back of the coat
     # head: pale narrow face, dark eye shadow under the brim, wide-brimmed hat with a house band
     S.box((0.07, 0.07, 0.06), (0, 0.01, 0.44), "face", U)
     S.box((0.115, 0.10, 0.10), (0, 0.03, 0.515), "face", U, bevel=0.02)
     S.box((0.12, 0.04, 0.03), (0, 0.075, 0.545), "dark", U, bevel=0)
     S.cyl(0.235, 0.02, (0, 0.02, 0.60), "hat", "Z", U, verts=12)                          # brim
     S.cyl(0.13, 0.12, (0, 0.02, 0.665), "hat", "Z", U, verts=10, r2=0.12)                  # crown
-    S.cyl(0.138, 0.09, (0, 0.02, 0.655), "house", "Z", U, verts=10)                        # hat band
+    S.cyl(0.138, 0.10, (0, 0.02, 0.655), "house", "Z", U, verts=10)                        # hat band
     # pistol only in the fire frames
     GM = (U if p["gun_space"] == "u" else Matrix.Identity(4)) @ R.tr(*p["gun"][0]) @ R.rz(p["gun"][1]) @ R.rx(p["gun"][2])
     if p["pistol"]:

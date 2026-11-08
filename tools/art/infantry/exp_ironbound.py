@@ -10,6 +10,7 @@ import os, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import exp_parts as EP
 
+SCALE = 1.25                  # D-185: figure 1.25 x, frame 48 x 48, team-colour emphasis
 ID = "exp_ironbound"
 TITLE = "Expedition Ironbound Trooper"
 CANVAS, ORIGIN, STATES, DIE_FACING = EP.CANVAS, EP.ORIGIN, EP.STATES, EP.DIE_FACING
@@ -46,7 +47,7 @@ def weapon(S, GM, p, R):
         S.cyl(0.08, 0.36, (0.0, 0.62, 0.0), "flash", "Y", GM, verts=8, r2=0.0)
 
 
-SPEC = dict(shoulder=(0.32, 0.0, 0.36), grips=((0, 0.10, 0.0), (0, 0.10, 0.0)), bulk=1.35,
+SPEC = dict(house_boost=True, shoulder=(0.32, 0.0, 0.36), grips=((0, 0.10, 0.0), (0, 0.10, 0.0)), bulk=1.35,
             body=("navy", "navy2"), sleeves=("navy", "chrome2", "chrome"), helm="chrome", pack=pack, extra=extra, weapon=weapon,
             legs=("navy2", 0.13, (0.12, 0.10)), boot="chrome3")
 

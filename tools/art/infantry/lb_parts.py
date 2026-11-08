@@ -102,6 +102,13 @@ def build_figure(S, p, spec):
     # ---- back load and extras
     if spec.get("pack"):
         spec["pack"](S, U, R)
+    if spec.get("house_boost"):          # D-185: scavenged team colour: painted rag sash, patched shoulder cloth, painted pack panel
+        S.limb(up((0.15 * b, 0.19 * b, 0.38)), up((-0.17 * b, 0.235 * b, 0.03)), 0.12 * b, "house", d=0.04, bevel=0)   # painted rag sash
+        for sx in (-1, 1):
+            S.box((0.13, 0.20 * b, 0.05), (sx * (0.21 * b + 0.02), 0.0, 0.395), "house", U, rot=(0, sx * -10, 0), bevel=0)   # patched shoulder cloth
+        if spec.get("panel"):
+            sz_, ps_ = spec["panel"]
+            S.box(sz_, ps_, "house", U, bevel=0)                      # painted panel on the pack
     if spec.get("extra"):
         spec["extra"](S, U, up, R)
     # ---- held item

@@ -14,6 +14,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import common as C
 import auth_rifleman as AR
 
+SCALE = 1.25                  # D-185: figure 1.25 x, frame 48 x 48, house shoulder boards / back panel
 ID = "dir_conscript"
 TITLE = "Directorate Conscript"
 CANVAS = AR.CANVAS
@@ -87,6 +88,9 @@ def build(S, p):
     S.cyl(0.215, 0.07, (0, 0.0, 0.345), "hood", "Z", U, verts=8, r2=0.17)             # drooping shoulder cape
     S.box((0.17, 0.02, 0.07), (0, -0.215, 0.15), "bone", U, rot=(6, 0, 0), bevel=0)  # bone stencil bar on the back
     S.box((0.17, 0.02, 0.035), (0, -0.222, 0.06), "red", U, rot=(6, 0, 0), bevel=0)
+    for sx in (-1, 1):                                                                 # D-185 house shoulder boards
+        S.box((0.13, 0.17, 0.04), (sx * 0.19, 0.0, 0.395), "house", U, rot=(0, sx * -8, 0), bevel=0)
+    S.box((0.22, 0.025, 0.17), (0, -0.228, 0.27), "house", U, bevel=0)               # D-185 house panel on the back of the coat
     # ---------------- sash (house colour) across the chest, shoulder to opposite hip
     S.limb(up((-0.09, 0.19, 0.32)), up((0.13, 0.225, -0.10)), 0.10, "house", d=0.04, bevel=0)
     S.limb(up((-0.17, 0.02, 0.32)), up((-0.09, 0.19, 0.32)), 0.09, "house", d=0.04, bevel=0)

@@ -10,6 +10,7 @@ import common as C
 import auth_rifleman as AR
 import dir_conscript as DC
 
+SCALE = 1.25                  # D-185: figure 1.25 x, frame 48 x 48, house shoulder boards / back panel
 ID = "dir_sapper"
 TITLE = "Directorate Sapper"
 CANVAS, ORIGIN, STATES, DIE_FACING = AR.CANVAS, AR.ORIGIN, AR.STATES, AR.DIE_FACING
@@ -45,6 +46,8 @@ def build(S, p):
     S.cyl(0.206, 0.04, (0, 0, 0.03), "dark", "Z", U, verts=8)                               # belt
     S.box((0.07, 0.04, 0.05), (0, 0.205, 0.03), "bone", U, bevel=0)
     S.cyl(0.215, 0.07, (0, 0.0, 0.345), "hood", "Z", U, verts=8, r2=0.17)
+    for sx in (-1, 1):                                                                 # D-185 house shoulder boards
+        S.box((0.13, 0.17, 0.04), (sx * 0.19, 0.0, 0.395), "house", U, rot=(0, sx * -8, 0), bevel=0)
     # harness strap (house) shoulder to hip, bone strap crossing it
     S.limb(up((-0.09, 0.19, 0.32)), up((0.13, 0.225, -0.02)), 0.09, "house", d=0.04, bevel=0)
     S.limb(up((-0.17, 0.02, 0.32)), up((-0.09, 0.19, 0.32)), 0.09, "house", d=0.04, bevel=0)
@@ -58,7 +61,7 @@ def build(S, p):
     S.cyl(0.20, 0.05, (-0.10, -0.30, 0.16), "coat3", "X", U, verts=12)
     S.cyl(0.20, 0.05, (0.10, -0.30, 0.16), "coat3", "X", U, verts=12)
     S.cyl(0.07, 0.40, (0, -0.30, 0.16), "dark", "X", U, verts=8)
-    S.box((0.14, 0.02, 0.12), (0, -0.495, 0.16), "house", U, bevel=0)
+    S.box((0.24, 0.03, 0.22), (0, -0.495, 0.16), "house", U, bevel=0)
     # fat pale-bone drill bit rising diagonally up and out over the right shoulder: tapering segments
     A0, A1 = R.Vector((0.10, -0.28, 0.30)), R.Vector((0.40, -0.02, 0.86))
     for t0, t1, w in ((0.0, 0.3, 0.13), (0.3, 0.55, 0.115), (0.55, 0.78, 0.09), (0.78, 1.0, 0.055)):
