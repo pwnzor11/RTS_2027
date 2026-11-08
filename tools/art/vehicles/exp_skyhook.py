@@ -60,6 +60,9 @@ def build(S, state, k, n):
             box(f"rb{s}{i}", (1.8, 0.04, 0.12), (s * 2.05, 0.82, z0 + 1.45), "white", 0.0, rot=(0, a, 0))
         cyl(f"rotcap{s}", 0.12, 0.1, (s * 2.05, 0.9, z0 + 1.45), "copper", "Y", 10)
         box(f"tipmark{s}", (0.2, 0.05, 0.14), (s * 2.05 + 0.85, 0.82, z0 + 1.45), "orange", 0.0)
+    for s in (-1, 1):                                                                        # S16 team colour: wing and tailplane patches
+        box(f"wingpatch{s}", (0.7, 0.55, 0.04), (s * 1.25, 0.1, z0 + 1.32), "house", 0.0)
+        box(f"tailpatch{s}", (0.6, 0.34, 0.04), (s * 0.65, -2.55, z0 + 1.64), "house", 0.0)
     # tail
     box("boom", (0.8, 1.3, 0.55), (0, -2.1, z0 + 1.4), "navy", 0.14)
     box("tailplane", (2.2, 0.5, 0.07), (0, -2.55, z0 + 1.6), "white", 0.01)
