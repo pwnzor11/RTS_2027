@@ -44,6 +44,9 @@ public sealed class TerrainPalette
     /// <summary>Texels per map cell in the baked texture.</summary>
     public int TexelCells { get; }
 
+    /// <summary>Decals and land-linked sprites for this theater (<c>[decor]</c> section); <see cref="DecorTable.Empty"/> when the file has none.</summary>
+    public DecorTable Decor { get; private set; } = DecorTable.Empty;
+
     /// <summary>Optional edge, tone and resource-field options (S15 looks). <see cref="TerrainStyle.None"/> = the plain look.</summary>
     public TerrainStyle Style { get; }
 
@@ -262,10 +265,48 @@ public sealed class TerrainPalette
             miniPitch = OptColour(mini, "pitchblende");
         }
 
-        return new TerrainPalette(texel, shades,
+        var palette = new TerrainPalette(texel, shades,
             Colour(ash, "speck"), Permille(ash, "max_coverage_permille"),
             Colour(pitch, "chunk"), Colour(pitch, "glint"), Permille(pitch, "max_coverage_permille"), oneIn,
             style, miniAsh, miniPitch);
+        palette.Decor = ParseDecor(root);
+        return palette;
+    }
+
+    private static DecorTable ParseDecor(TomlTable root)
+    {
+        if (!root.TryGetValue("decor", out object? dv) || dv is not TomlTable decor) return DecorTable.Empty;
+        var rules = new List<DecalRule>();
+        if (decor.TryGetValue("decal", out object? list) && list is System.Collections.IEnumerable items)
+        {
+            foreach (object? item in items)
+            {
+                if (item is not TomlTable t) throw new InvalidDataException("[[decor.decal]] entries must be tables");
+                string name = t.TryGetValue("name", out object? n) && n is string ns ? ns : "decal";
+                string shapeName = t.TryGetValue("shape", out object? sh) && sh is string ss ? ss : "";
+                if (!Enum.TryParse(shapeName, true, out DecalShape shape)) throw new InvalidDataException($"decal '{name}': unknown shape '{shapeName}'");
+                int mask = 0;
+                if (!t.TryGetValue("on", out object? on) || on is not System.Collections.IEnumerable lands || on is string)
+                    throw new InvalidDataException($"decal '{name}': 'on' must be a list of land types");
+                foreach (object? l in lands)
+                {
+                    if (l is not string ls || !Enum.TryParse(ls, true, out LandType lt)) throw new InvalidDataException($"decal '{name}': unknown land type '{l}'");
+                    mask |= 1 << (int)lt;
+                }
+
+                int sizeMin = OptInt(t, "size_min", 8, 1, 64), sizeMax = OptInt(t, "size_max", sizeMin, sizeMin, 64);
+                rules.Add(new DecalRule(name, shape, mask, Permille(t, "permille"), Colour(t, "colour"), OptInt(t, "alpha", 255, 1, 255), sizeMin, sizeMax));
+            }
+        }
+
+        return new DecorTable(rules, OptSprite(decor, "rock"), OptSprite(decor, "rough"), OptSprite(decor, "bank"));
+    }
+
+    private static SpriteRule? OptSprite(TomlTable decor, string key)
+    {
+        if (!decor.TryGetValue(key, out object? v)) return null;
+        if (v is not string kind || !Enum.TryParse(kind, true, out PropKind pk)) throw new InvalidDataException($"[decor] {key}: unknown sprite '{v}'");
+        return new SpriteRule(pk, OptInt(decor, key + "_permille", 300, 0, 1000));
     }
 
     private static TerrainStyle ParseStyle(TomlTable root)

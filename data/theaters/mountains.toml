@@ -101,3 +101,64 @@ rim = "#0E281E"
 ashfall = "#FF9628"
 pitchblende = "#6EF078"
 
+[decor]
+# M12 decor (shipped look only; the classic, a and b files have none). Decals are derived from an integer hash of (map hash, cell) and baked to a
+# second texture; sizes are sixteenths of a cell. Sprites: the kind per land class and the permille of a cluster's cells that carry one.
+# ASSUMED (M12): all decor colours and chances are proposals for the owner to tune.
+rock = "boulder"
+rock_permille = 360
+rough = "rubble"
+rough_permille = 150
+bank = "iceslab"
+bank_permille = 100
+
+[[decor.decal]]
+name = "scree"
+shape = "dots"
+on = ["rough", "clear"]
+permille = 28
+colour = "#524C44"
+alpha = 230
+size_min = 22
+size_max = 32
+
+[[decor.decal]]
+name = "snow patch"
+shape = "soft"
+on = ["clear", "rough"]
+permille = 24
+colour = "#F0F4FA"
+alpha = 180
+size_min = 22
+size_max = 36
+
+[[decor.decal]]
+name = "pebbles"
+shape = "dots"
+on = ["clear"]
+permille = 16
+colour = "#AEA89C"
+alpha = 240
+size_min = 16
+size_max = 24
+
+[[decor.decal]]
+name = "frost crack"
+shape = "crack"
+on = ["clear"]
+permille = 8
+colour = "#BED4E8"
+alpha = 190
+size_min = 14
+size_max = 22
+
+[[decor.decal]]
+name = "frozen pool"
+shape = "blob"
+on = ["clear"]
+permille = 6
+colour = "#96BEDA"
+alpha = 190
+size_min = 10
+size_max = 16
+

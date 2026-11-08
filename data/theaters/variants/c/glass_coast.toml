@@ -101,3 +101,72 @@ rim = "#0A2822"
 ashfall = "#FF8C32"
 pitchblende = "#3CEB6E"
 
+[decor]
+# M12 decor (shipped look only; the classic, a and b files have none). Decals are derived from an integer hash of (map hash, cell) and baked to a
+# second texture; sizes are sixteenths of a cell. Sprites: the kind per land class and the permille of a cluster's cells that carry one.
+# ASSUMED (M12): all decor colours and chances are proposals for the owner to tune.
+rock = "glasscrest"
+rock_permille = 300
+rough = "rubble"
+rough_permille = 150
+
+[[decor.decal]]
+name = "sand ripple"
+shape = "ripple"
+on = ["clear", "rough"]
+permille = 26
+colour = "#B8A478"
+alpha = 140
+size_min = 20
+size_max = 32
+
+[[decor.decal]]
+name = "glint patch"
+shape = "soft"
+on = ["clear"]
+permille = 10
+colour = "#FFFADC"
+alpha = 100
+size_min = 16
+size_max = 26
+
+[[decor.decal]]
+name = "shells and bone"
+shape = "dots"
+on = ["clear", "rough", "coast"]
+permille = 14
+colour = "#F8F4E6"
+alpha = 240
+size_min = 20
+size_max = 30
+
+[[decor.decal]]
+name = "salt crust"
+shape = "soft"
+on = ["clear", "rough"]
+permille = 12
+colour = "#FAFAF4"
+alpha = 120
+size_min = 24
+size_max = 36
+
+[[decor.decal]]
+name = "glass bowl"
+shape = "ring"
+on = ["clear"]
+permille = 5
+colour = "#3C968C"
+alpha = 170
+size_min = 18
+size_max = 26
+
+[[decor.decal]]
+name = "drowned stripe"
+shape = "stripe"
+on = ["shallow"]
+permille = 26
+colour = "#E8F0E8"
+alpha = 160
+size_min = 12
+size_max = 18
+

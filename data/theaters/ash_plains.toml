@@ -101,3 +101,62 @@ rim = "#0A2C22"
 ashfall = "#FF821E"
 pitchblende = "#50F096"
 
+[decor]
+# M12 decor (shipped look only; the classic, a and b files have none). Decals are derived from an integer hash of (map hash, cell) and baked to a
+# second texture; sizes are sixteenths of a cell. Sprites: the kind per land class and the permille of a cluster's cells that carry one.
+# ASSUMED (M12): all decor colours and chances are proposals for the owner to tune.
+rock = "boulder"
+rock_permille = 280
+rough = "rubble"
+rough_permille = 200
+
+[[decor.decal]]
+name = "ash drift"
+shape = "soft"
+on = ["clear", "ash"]
+permille = 34
+colour = "#C4C0C4"
+alpha = 120
+size_min = 24
+size_max = 40
+
+[[decor.decal]]
+name = "cracked earth"
+shape = "crack"
+on = ["clear", "ash"]
+permille = 32
+colour = "#2C221C"
+alpha = 210
+size_min = 14
+size_max = 26
+
+[[decor.decal]]
+name = "crater"
+shape = "ring"
+on = ["clear", "ash", "rough"]
+permille = 22
+colour = "#2E2826"
+alpha = 210
+size_min = 18
+size_max = 30
+
+[[decor.decal]]
+name = "burnt grass"
+shape = "soft"
+on = ["clear", "ash"]
+permille = 22
+colour = "#262016"
+alpha = 150
+size_min = 18
+size_max = 30
+
+[[decor.decal]]
+name = "bones"
+shape = "dots"
+on = ["clear", "ash"]
+permille = 10
+colour = "#EAE6D8"
+alpha = 245
+size_min = 16
+size_max = 24
+

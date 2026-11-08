@@ -96,6 +96,45 @@ BIOMES = {
 }
 
 
+# M12-01/02 decor tables (look C only). Each decal: (name, shape, [land types], permille per cell, colour, alpha, size_min, size_max) with sizes in
+# sixteenths of a cell. The rules that match one land type are tried in order and their permilles add up (keep each land type under ~100).
+# Sprites: rock/rough/bank kinds and the share (permille) of a cluster's cells that carry one.
+DECOR = {
+    "rust_belt": dict(
+        decals=[("pothole", "blob", ["road"], 22, (30, 28, 26), 190, 5, 9),
+                ("road crack", "crack", ["road", "clear"], 24, (36, 32, 28), 210, 14, 24),
+                ("oil spill", "soft", ["road"], 12, (22, 24, 44), 170, 12, 20),
+                ("manhole", "ring", ["road"], 4, (70, 66, 60), 255, 6, 7),
+                ("soot stain", "soft", ["clear", "rough", "road"], 18, (16, 14, 14), 120, 20, 32),
+                ("snow patch", "soft", ["clear", "ash", "rough"], 28, (236, 240, 246), 170, 20, 34),
+                ("small crater", "ring", ["clear", "ash"], 8, (52, 44, 38), 200, 18, 28),
+                ("frost crack", "crack", ["water"], 30, (214, 234, 248), 170, 16, 28)],
+        sprites=dict(rock=("boulder", 300), rough=("rubble", 220), bank=("iceslab", 120))),
+    "glass_coast": dict(
+        decals=[("sand ripple", "ripple", ["clear", "rough"], 26, (184, 164, 120), 140, 20, 32),
+                ("glint patch", "soft", ["clear"], 10, (255, 250, 220), 100, 16, 26),
+                ("shells and bone", "dots", ["clear", "rough", "coast"], 14, (248, 244, 230), 240, 20, 30),
+                ("salt crust", "soft", ["clear", "rough"], 12, (250, 250, 244), 120, 24, 36),
+                ("glass bowl", "ring", ["clear"], 5, (60, 150, 140), 170, 18, 26),
+                ("drowned stripe", "stripe", ["shallow"], 26, (232, 240, 232), 160, 12, 18)],
+        sprites=dict(rock=("glasscrest", 300), rough=("rubble", 150))),
+    "mountains": dict(
+        decals=[("scree", "dots", ["rough", "clear"], 28, (82, 76, 68), 230, 22, 32),
+                ("snow patch", "soft", ["clear", "rough"], 24, (240, 244, 250), 180, 22, 36),
+                ("pebbles", "dots", ["clear"], 16, (174, 168, 156), 240, 16, 24),
+                ("frost crack", "crack", ["clear"], 8, (190, 212, 232), 190, 14, 22),
+                ("frozen pool", "blob", ["clear"], 6, (150, 190, 218), 190, 10, 16)],
+        sprites=dict(rock=("boulder", 360), rough=("rubble", 150), bank=("iceslab", 100))),
+    "ash_plains": dict(
+        decals=[("ash drift", "soft", ["clear", "ash"], 34, (196, 192, 196), 120, 24, 40),
+                ("cracked earth", "crack", ["clear", "ash"], 32, (44, 34, 28), 210, 14, 26),
+                ("crater", "ring", ["clear", "ash", "rough"], 22, (46, 40, 38), 210, 18, 30),
+                ("burnt grass", "soft", ["clear", "ash"], 22, (38, 32, 22), 150, 18, 30),
+                ("bones", "dots", ["clear", "ash"], 10, (234, 230, 216), 245, 16, 24)],
+        sprites=dict(rock=("boulder", 280), rough=("rubble", 200))),
+}
+
+
 def shades(base):
     dark = tuple(max(0, round(v * 0.88)) for v in base)
     light = tuple(min(255, round(v * 1.14)) for v in base)
@@ -164,6 +203,16 @@ def toml_for(biome, look):
             out += [f"[field.{key}]", f'body = "{hexc(body)}"', f'light = "{hexc(light)}"', f'shade = "{hexc(shade)}"', f'rim = "{hexc(rim)}"', ""]
         out += ["[minimap]", "# Distinct resource colours on the minimap (brighter when richer).",
                 f'ashfall = "{hexc(b["mini_ash"])}"', f'pitchblende = "{hexc(b["mini_pit"])}"', ""]
+        d = DECOR[biome]
+        out += ["[decor]", "# M12 decor (shipped look only; the classic, a and b files have none). Decals are derived from an integer hash of (map hash, cell) and baked to a",
+                "# second texture; sizes are sixteenths of a cell. Sprites: the kind per land class and the permille of a cluster's cells that carry one.",
+                "# ASSUMED (M12): all decor colours and chances are proposals for the owner to tune."]
+        for key, (kind, per) in d["sprites"].items():
+            out += [f'{key} = "{kind}"', f"{key}_permille = {per}"]
+        out.append("")
+        for name, shape, lands, per, col, alpha, lo, hi in d["decals"]:
+            out += ["[[decor.decal]]", f'name = "{name}"', f'shape = "{shape}"', "on = [" + ", ".join(f'"{l}"' for l in lands) + "]",
+                    f"permille = {per}", f'colour = "{hexc(col)}"', f"alpha = {alpha}", f"size_min = {lo}", f"size_max = {hi}", ""]
     return "\n".join(out)
 
 
