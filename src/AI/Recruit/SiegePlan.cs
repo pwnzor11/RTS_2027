@@ -28,9 +28,12 @@ internal static class SiegePlan
     /// <summary>A siege wave waits no longer than this since the last wave (the timed trigger of the normal rules takes over).</summary>
     public const int WaitTicks = 9000;   // (tune) s15
 
-    /// <summary>Fewest army units a siege wave takes, by profile tier (index = tier), plus <see cref="UnitsPerFailure"/> per wave already lost against this enemy (at most <see cref="MaxFailureSteps"/>).</summary>
-    private static readonly int[] MinUnitsByTier = { 0, 0, 12, 14, 16, 18 };   // (tune) s15
-    public const int UnitsPerFailure = 2, MaxFailureSteps = 4;   // (tune) s15
+    /// <summary>Percent added to the siege army requirement per wave already lost (at most <see cref="MaxFailureSteps"/> times).</summary>
+    public const int GrowthPct = 25;   // (tune) s15
+
+    /// <summary>Fewest army units a siege wave takes, by profile tier (index = tier), (not raised after lost waves: measured worse).</summary>
+    private static readonly int[] MinUnitsByTier = { 0, 0, 7, 8, 9, 10 };   // (tune) s15
+    public const int MaxFailureSteps = 4;   // (tune) s15
 
     /// <summary>Army size at which the wait ends whatever the value.</summary>
     public const int CapUnits = 40;   // (tune) s15
@@ -97,9 +100,9 @@ internal static class SiegePlan
         return value;
     }
 
-    /// <summary>Fewest units a siege wave takes at <paramref name="tier"/> after <paramref name="failedWaves"/> lost waves.</summary>
+    /// <summary>Fewest units a siege wave takes at <paramref name="tier"/> (<paramref name="failedWaves"/> is kept for callers; it no longer changes the number).</summary>
     public static int MinUnits(int tier, int failedWaves) =>
-        tier < 2 ? 0 : MinUnitsByTier[Math.Min(tier, MinUnitsByTier.Length - 1)] + UnitsPerFailure * Math.Min(failedWaves, MaxFailureSteps);
+        tier < 2 ? 0 : MinUnitsByTier[Math.Min(tier, MinUnitsByTier.Length - 1)];
 
     /// <summary>The army value a siege wave waits for: the defence value times the tier's percent, capped.</summary>
     public static int Need(int tier, int defenceValue) =>

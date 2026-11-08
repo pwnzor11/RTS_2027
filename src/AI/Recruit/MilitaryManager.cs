@@ -434,7 +434,10 @@ internal sealed class MilitaryManager
             // with no scraper left there is no income to rebuild with: whatever is left goes out as soon as there are a few units
             bool desperate = (k.Harvesters.Count == 0 || Broke) && n >= DesperateWave;   // M4-12: also when income has stalled
             int guard = _hookForce ? 0 : Bias.HomeGuard;   // M5-02 (M8-06: a scripted wave takes everything): units that stay home (the wave waits for them too)
-            bool strong = WaveGate.Strong(Options.Respond, OwnValue, EnemyValueSeen, _required, n, tick, _lastWave, Options.AttackRatioPct);   // M4-16 r4: no wave into a clearly bigger army
+            // S15: against a defended base the escalated requirement of the last lost wave (200 percent of its value, up to 12 000, measured: 4 000 ticks of idling
+            // at home against an enemy with no army) is replaced by the siege requirement: the defence value, a little more after each lost wave
+            int needNow = _siegeOn ? (int)Math.Min(SiegePlan.NeedCap, (long)_siegeNeed * (100 + SiegePlan.GrowthPct * Math.Min(_failedWaves, SiegePlan.MaxFailureSteps)) / 100) : EnemyValueSeen == 0 && _targetPlayer >= 0 ? 0 : _required;   // S15: no enemy army seen for the whole long window and no defence worth a siege: nothing to wait for
+            bool strong = WaveGate.Strong(Options.Respond, OwnValue, EnemyValueSeen, needNow, n, tick, _lastWave, Options.AttackRatioPct);   // M4-16 r4: no wave into a clearly bigger army
             bool hookWave = _hookForce && n >= 1;   // M8-06: AI.Wave, once
             bool mop = !hookWave && !Hold && !HookHold && tick >= _cooldownUntil && MopupDue(k, n) && knownEnemyBuildings.Count + _scoutRoute.Count > 0;   // S14: no enemy army about: send what we have
             if (mop) { desperate = true; Mopups++; }   // v2 measurement: 4v3 Directorate fell to 41 % decisive, so MopupDue is off unless MopupLaunch
@@ -471,7 +474,7 @@ internal sealed class MilitaryManager
                 Reroll();
                 CellCoord launchGoal = PickGoal(k, knownEnemyBuildings);
                 if (_siegeWave && SiegeTarget(k, knownEnemyBuildings) is ViewActor firstTarget) launchGoal = firstTarget.Cell;   // S15: stage short of the first siege target
-                _aheadWave = Options.Respond && Ahead && !_siegeWave;
+                _aheadWave = Options.Respond && (Ahead || (EnemyValueSeen == 0 && _targetPlayer >= 0));   // S15: no enemy army seen lately: stage close, a siege wave included
                 _stage = Tactics?.ForwardStage(k, launchGoal) ?? StageCell(k, launchGoal, _aheadWave ? AheadStageCells : _siegeWave ? Math.Max(StageDistanceCells, _defRangeCells + 5) : StageDistanceCells);
                 if (Tactics != null) _stage = Tactics.SafeCell(k, _stage);
                 _stageB = _stage;
@@ -635,8 +638,10 @@ internal sealed class MilitaryManager
         foreach (ViewActor b in known) score += b.Health + 1;
         int tick = k.View.Tick;
         int sc = (int)Math.Min(score, int.MaxValue);
+        // S15: progress is a new LOW of the target health (damage and the owner's repair alternate, and every dip used to count as progress,
+        // so a wave of hurt infantry in front of a repaired structure never counted as stalled: measured, 70 idle units at home for 12 000 ticks)
         bool progress = sc < _progressScore;
-        _progressScore = sc;
+        if (progress) _progressScore = sc;
         if (progress) { _progressTick = tick; return false; }
         if (tick - _progressTick < StaleAssaultTicks) return false;
         _avoid.Add((_lastGoal, tick + AvoidTicks));

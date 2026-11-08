@@ -87,10 +87,16 @@ internal sealed class EconomyRescue
         if (_harv == -2) _harv = SimRules.IndexOf(rules.Vehicles, faction.HarvesterId, v => v.Id);
         if (_refinery == -2) _refinery = SimRules.IndexOf(rules.Buildings, faction.RefineryId, b => b.Id);
         if (_harv < 0 || _refinery < 0) return;
-        foreach (QueueItemView it in k.Queue(ProductionCategory.Vehicle).Items) if (it.TypeIndex == _harv) return;   // already bought
-        // a refinery brings a free harvester; with one standing a harvester is bought at the factory
-        int need = k.BuildingCount[_refinery] > 0 ? rules.Vehicles[_harv].Cost : rules.Buildings[_refinery].Cost;
         int funds = k.Hud.Cash + k.Hud.Stored;
+        int unpaid = -1;   // S15: credits still owed on a harvester that is in the queue but stalled for lack of money
+        foreach (QueueItemView it in k.Queue(ProductionCategory.Vehicle).Items)
+            if (it.TypeIndex == _harv)
+            {
+                if (!it.Stalled) return;   // already bought and being built
+                unpaid = (int)((long)rules.Vehicles[_harv].Cost * (1000 - it.ProgressPermille) / 1000);
+            }
+        // a refinery brings a free harvester; with one standing a harvester is bought at the factory
+        int need = unpaid >= 0 ? unpaid : k.BuildingCount[_refinery] > 0 ? rules.Vehicles[_harv].Cost : rules.Buildings[_refinery].Cost;
         Saving = true;
         if (funds >= need) return;
         // money already sunk into a structure or unit in production comes back when it is cancelled (front items only)
