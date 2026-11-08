@@ -320,6 +320,16 @@ internal sealed class TierPlanner
     /// <summary>M4-16 s12 tier-5 fix (flag AdaptBuild): army size before extra production or defence structures are added.</summary>
     public const int ArmyBeforeAdapt = 30;   // (tune) s12 tier 5
 
+    /// <summary>S16 (Q-67): army size (units alive, harvesters excluded) the Directorate at tiers 2-3 needs before the Isotope Works and Rad Mortar are bought.
+    /// 16 games: hold 16 left Left Behind 3 v Directorate 3 at 71 % decisive, 20 broke Expedition 3 (30 %) and pushed Authority 3 to 77 %; 18 is the compromise.</summary>
+    public const int DirectorateTechArmy = 18;   // (tune) s16
+
+    /// <summary>S16 (Q-67): true for the difficulty tiers (2 and 3) that hold the early Directorate tech.</summary>
+    public static bool HoldsDirectorateTech(int tier) => tier is >= 2 and <= 3;
+
+    /// <summary>S16 (Q-67): the Directorate structures held back by <see cref="DirectorateTechArmy"/>.</summary>
+    public static bool IsDirectorateEarlyTech(string id) => id == "dir_isotope_works" || id == "dir_rad_mortar";
+
     /// <summary>M4-12: army size before the garrisonable defence is added to the build order.</summary>
     public const int ArmyBeforeGarrison = 16;   // (tune)
 
