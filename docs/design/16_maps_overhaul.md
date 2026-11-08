@@ -378,13 +378,16 @@ bridge. `map report` shows the lane and choke numbers.
 
 ## Wave 3 as built (M12-07, M12-08)
 
-- `MapGenParams.Layout = 2` (`MapGenerator.ZonedLayout`) paints a zone skeleton first (mains, lanes, plazas, river, rubble-block street grid), then the
-  biome. Rust Belt only; other biomes throw "Layout 2 is not built yet". `CurrentLayout` stays 1 and the legacy golden hashes are unchanged.
-- Symmetry: MirrorDiag (2 players); a dihedral four-image grid for 3-4 players (teams 1+2 and 3+4 side by side, enemy across the map).
-- `LayoutChecks` (src/Data/MapGen) measures the D-183 rules (start inset and clear radius, main entrances, enemy and teammate paths, lane count / share /
-  widths, resource per start and parity, natural, contested fields, obstacles, roads, empty area, prop safety); `map report --layout 2` prints each with pass/FAIL.
-  Generation retries seeds (seed + attempt, up to 16) and keeps the first map that passes everything, else the one failing fewest checks.
-- 2 players: every seed of the 50-seed sweep passes at Small, Medium and Large. 3 and 4 players are best effort (medium lane, entrance widths,
-  Small clear radius and resources still fail on many seeds).
-- Zone names are not saved: map format 4 has no zone field (would need a format bump). Tools: `--layout 1|2`, `--raw`, `--checks`.
-- 2v2 team assignment: the setup screen gives every slot its own team; layout 2 needs team = slot / 2 (src/Game change, not made).
+- `MapGenParams.Layout = 2` (`MapGenerator.ZonedLayout`) paints a zone skeleton first (mains, lanes, plazas), then the biome. Rust Belt only; other biomes
+  throw "Layout 2 is not built yet". `CurrentLayout` stays 1 and the legacy golden hashes are unchanged.
+- Symmetry: MirrorDiag (2 players, bases at opposite corners of the anti-diagonal, main-to-main path about the side length); a four-image
+  dihedral grid for 3-4 players (teams 1+2 and 3+4 side by side, enemy across). One river runs corner to corner between the bases with two decks
+  (one is the narrow choke) and a gravel-bar ford in the middle (the centre field). Town fabric: a jittered street grid whose blocks hold ruined
+  buildings, standing walls and rubble lots; walled courtyards at the contested yards; main fields are 3+ thick bands.
+- `LayoutChecks` (src/Data/MapGen) measures the D-183 rules; `map report --layout 2` prints each with pass/FAIL. Generation retries seed + attempt
+  (cap 40) and keeps the first map that passes everything, else the one failing fewest. 3-4 player checks differ slightly (approach width counted from 4,
+  contested fields 1..6 at 0.40-0.90 P, 3-player lane mix judged over both enemies, the played 3-start map is judged).
+- Sweep (50 seeds x S/M/L x 2/3/4 players): every map passes every check; retries per seed 0.2-1.3 (2p), 1.0-6.7 (3-4p, Small worst).
+- Zone names are not saved: map format 4 has no zone field (needs a format bump). Tools: `--layout 1|2`, `--raw`, `--checks`.
+- 2v2 teams: `SkirmishSettings.DefaultTeam` gives teams 1+2 vs 3+4 for 4 players on a layout-2 map (setup screen keeps the choice editable);
+  the screen has no layout switch yet, so this only applies to a preselected layout-2 map.
