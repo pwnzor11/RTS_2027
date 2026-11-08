@@ -64,8 +64,8 @@ public sealed class MapGenLayout2Tests
         Assert.True(checks.Single(c => c.Name == "resource parity").Pass);
     }
 
-    /// <summary>50 seeds (2 players) or 12 seeds (3 and 4 players) x Small/Medium/Large; filter with <c>--filter Category!=Slow</c>. Every map must generate with a clean
-    /// validator; the pass and retry rates are printed, and at least 10 of 12 (or 42 of 50) seeds must pass every layout check.</summary>
+    /// <summary>50 seeds x Small/Medium/Large; filter with <c>--filter Category!=Slow</c>. Every map must generate with a clean
+    /// validator; the pass and retry rates are printed, and at least 42 of 50 seeds must pass every layout check.</summary>
     [Trait("Category", "Slow")]
     [Fact]
     public void Layout2_Sweep_50Seeds_AllSizes_AllPlayerCounts()
@@ -73,7 +73,7 @@ public sealed class MapGenLayout2Tests
         foreach (MapSize size in new[] { MapSize.Small, MapSize.Medium, MapSize.Large })
             foreach (int players in new[] { 2, 3, 4 })
             {
-                int total = players == 2 ? 50 : 12;   // 3 and 4 player maps retry far more often, so they get fewer seeds to keep the sweep to minutes
+                int total = 50;
                 int clean = 0, retries = 0;
                 for (ulong seed = 1; seed <= (ulong)total; seed++)
                 {
@@ -83,7 +83,7 @@ public sealed class MapGenLayout2Tests
                     Assert.DoesNotContain(MapValidator.Validate(map, meta, null), i => i.Severity == MapIssueSeverity.Error);
                 }
                 _out.WriteLine($"{size} {players}p: {clean}/{total} seeds pass every layout check, {retries / (double)total:0.0} retries per seed (cap {MapGenerator.MaxZonedAttempts - 1})");
-                Assert.True(clean >= total * 10 / 12, $"{size} {players}p: only {clean}/{total} seeds pass the layout checks");
+                Assert.True(clean >= total * 42 / 50, $"{size} {players}p: only {clean}/{total} seeds pass the layout checks");
             }
     }
 }
