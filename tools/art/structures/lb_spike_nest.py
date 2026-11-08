@@ -57,6 +57,8 @@ def base(S, dmg=False):
     S.cyl("turnd", 0.8, 0.04, (0, 0, ZH + 0.05), "dark", verts=24, stretch=False)
     S.bb("plate1", -1.55, -0.95, 0.9, 1.2, 0.1, 0.65, "rust", 0.03)
     S.bb("plank", 0.9, 1.5, -1.5, -1.2, 0.1, 0.35, "wood", 0.02)
+    S.bb("plate1h", -1.5, -1.0, 0.9, 1.2, 0.65, 0.67, "house", 0.0, nocast=True)          # S16 team colour: base paint, same in every facing
+    S.bb("plankh", 1.0, 1.4, -1.45, -1.25, 0.35, 0.37, "house", 0.0, nocast=True)
     S.cyl("d0", 0.22, 0.5, (1.2, -1.1, 0.35), "teal", verts=10, stretch=False)
     if dmg:
         S.box("chunk", (0.5, 0.4, 0.2), (1.1, -0.4, 0.2), "ash2", 0.0, rot=(0, 0, 25), stretch=False)
@@ -78,6 +80,8 @@ def head(S, th, dmg=False, flash=0):
     else:
         K.part(S, "shieldhouse", (0.5, 0.04, 0.4), (-0.4, 0.7, z0 + 0.9), "house", th, 0.0)
         K.part(S, "shieldgash", (0.5, 0.12, 0.3), (0.4, 0.65, z0 + 1.2), "char", th, 0.0, nocast=True)
+    K.part(S, "shieldhouseB", (0.7, 0.04, 0.45), (0.3, 0.54, z0 + 1.0), "house", th, 0.0)     # S16 team colour: panel on the back of the shield
+    K.part(S, "shieldhouseT", (1.2, 0.16, 0.04), (0.0, 0.62, z0 + 1.43), "house", th, 0.0)    # and a band along its top edge
     rec = 0.15 if flash == 1 else (0.06 if flash == 2 else 0.0)
     ln = 1.5 if not dmg else 1.0
     # long rail with a drum magazine and a bundle of spikes
@@ -87,6 +91,7 @@ def head(S, th, dmg=False, flash=0):
     if not dmg:
         K.cpart(S, "magazine", 0.3, 0.45, (0.0, -0.25, z0 + 0.95), "rust", th, verts=12)
         K.cpart(S, "magband", 0.32, 0.08, (0.0, -0.25, z0 + 1.0), "hazard", th, verts=12)
+        K.part(S, "cradlehouse", (0.5, 0.5, 0.04), (0, -0.1, z0 + 0.52), "house", th, 0.0)
         K.part(S, "spikes", (0.28, 1.1, 0.1), (0, 0.5 - rec, z0 + 0.8), "rust2", th, 0.0)
         K.part(S, "spiketip", (0.04, 0.4, 0.04), (0, 1.15 - rec, z0 + 0.7), "steel", th, 0.0, nocast=True)
         K.cpart(S, "winch", 0.2, 0.3, (0.55, -0.15, z0 + 0.55), "rope", th, axis="Y", verts=10)
