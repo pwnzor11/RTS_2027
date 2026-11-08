@@ -55,6 +55,7 @@ $rows = @(
     (Row 'directorate' 5 'directorate' 3 '5 / 9 / 18'),
     (Row 'directorate' 5 'authority'   5 '11 / 13 / 8'),
     (Row 'authority'   5 'authority'   1 '20 / 9 / 3'),
+    (Row 'directorate' 5 'left_behind' 5 '6 / 20 / 6'),
     (Row 'directorate' 3 'directorate' 1 '')
 )
 
