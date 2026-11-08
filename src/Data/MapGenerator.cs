@@ -16,6 +16,13 @@ public static class MapGenerator
 {
     /// <summary>Smallest size that fits the starts, the plateau and the features.</summary>
     public const int MinSize = 24;
+    /// <summary>The generator version (<see cref="MapGenParams.Layout"/>) this build produces and can rebuild. 0 = the generator before M12
+    /// (D-180: replaced outright, so a save or map file that names 0 cannot be rebuilt); 1 = the M12 generator with its decoration pass.</summary>
+    public const int CurrentLayout = 1;
+
+    /// <summary>The friendly message of a save made with a generator this build no longer has.</summary>
+    public const string OldGeneratorMessage = "This save was made with an older map generator and can't be loaded.";
+
     /// <summary>How many seeds (seed, seed+1, ...) are tried before giving up on connectivity.</summary>
     public const int MaxAttempts = 10;
 

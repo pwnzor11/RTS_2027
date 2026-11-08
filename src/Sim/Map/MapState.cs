@@ -72,11 +72,11 @@ public sealed class MapState : ISimStatePart
     public OverlayKind OverlayAt(CellCoord c) => _overlay[Idx(c)];
     public byte DensityAt(CellCoord c) => _density[Idx(c)];
 
-    /// <summary>Sets overlay and density. Bumps <see cref="Version"/> only if a wall appears or disappears.</summary>
+    /// <summary>Sets overlay and density. Bumps <see cref="Version"/> only if a wall or blocking prop appears or disappears.</summary>
     public void SetOverlay(CellCoord c, OverlayKind kind, byte density)
     {
         int i = Idx(c);
-        if ((_overlay[i] == OverlayKind.Wall) != (kind == OverlayKind.Wall)) Version++;
+        if (OverlayKinds.BlocksGround(_overlay[i]) != OverlayKinds.BlocksGround(kind)) Version++;
         _overlay[i] = kind;
         _density[i] = density;
     }
@@ -120,7 +120,7 @@ public sealed class MapState : ISimStatePart
     public int SpeedPercent(CellCoord c, Locomotion loco, TerrainTable table)
     {
         if (!In(c)) return 0;
-        if (loco != Locomotion.Air && _overlay[Idx(c)] == OverlayKind.Wall) return 0;
+        if (loco != Locomotion.Air && OverlayKinds.BlocksGround(_overlay[Idx(c)])) return 0;   // M12-04: walls and blocking props
         if (loco == Pathing.MoveClass.NavalDeep) return _land[Idx(c)] == LandType.Shallow ? 0 : table.SpeedPercent(_land[Idx(c)], Locomotion.Naval);   // M7-03: large ships
         return table.SpeedPercent(_land[Idx(c)], loco);
     }

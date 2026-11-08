@@ -122,6 +122,8 @@ public static class GameLoader
             {
                 var gen = new MapGenParams((Biome)biome, (MapSize)size, players, seed);
                 if (settings?.ResolvedGenerator is { } own && SkirmishGame.GeneratedMapId(own) == mapId) gen = own;
+                // M12-05 (D-180 D4): the generator was replaced, so a save made with another layout would rebuild a different map. Refuse it.
+                if (gen.Layout != MapGenerator.CurrentLayout) throw new SaveLoadException(MapGenerator.OldGeneratorMessage);
                 try { return MapGenerator.GenerateWithMeta(gen); }
                 catch (Exception e) when (e is InvalidOperationException or ArgumentException)
                 {
