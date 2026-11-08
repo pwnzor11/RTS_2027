@@ -69,8 +69,9 @@ public sealed class FxPlayer
     /// <param name="origin">Screen position of the building manifest's origin pixel.</param>
     /// <param name="tick">Snapshot tick.</param>
     /// <param name="zoom">Camera zoom.</param>
+    /// <param name="fire">D-184: false draws only the smoke anchors (a building between a quarter and half health smokes, it burns below a quarter); true (the default) draws everything.</param>
     public static void DrawAnchors(SpriteBatch batch, SpriteLibrary library, SpriteManifest building, int frame,
-        Vector2 origin, int tick, float zoom)
+        Vector2 origin, int tick, float zoom, bool fire = true)
     {
         if (building.Fx.Count == 0) return;
         string? state = FxFrames.StateOf(building, frame);
@@ -80,7 +81,7 @@ public sealed class FxPlayer
             foreach (FxAnchor a in building.FxFor(state))
             {
                 bool smoke = a.Kind.StartsWith("smoke", StringComparison.Ordinal);
-                if (smoke != (pass == 1) || !library.Ids.Contains(a.Kind, StringComparer.Ordinal)) continue;
+                if (smoke != (pass == 1) || (!smoke && !fire) || !library.Ids.Contains(a.Kind, StringComparer.Ordinal)) continue;
                 SpriteManifest m = library.Manifest(a.Kind);
                 Vector2 at = origin + new Vector2(a.X - building.OriginX, a.Y - building.OriginY) * zoom;
                 library.Sheet(a.Kind).Draw(batch, FxFrames.Anchored(m, tick, a.Phase), at, Color.White, zoom);

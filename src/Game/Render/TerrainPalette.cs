@@ -47,6 +47,9 @@ public sealed class TerrainPalette
     /// <summary>Decals and land-linked sprites for this theater (<c>[decor]</c> section); <see cref="DecorTable.Empty"/> when the file has none.</summary>
     public DecorTable Decor { get; private set; } = DecorTable.Empty;
 
+    /// <summary>The mood of the theater (<c>[mood]</c> table, D-184): world colour grade and dust colour; <see cref="MoodGrade.None"/> when the file has none.</summary>
+    public MoodGrade Mood { get; private set; } = MoodGrade.None;
+
     /// <summary>Optional edge, tone and resource-field options (S15 looks). <see cref="TerrainStyle.None"/> = the plain look.</summary>
     public TerrainStyle Style { get; }
 
@@ -270,6 +273,7 @@ public sealed class TerrainPalette
             Colour(pitch, "chunk"), Colour(pitch, "glint"), Permille(pitch, "max_coverage_permille"), oneIn,
             style, miniAsh, miniPitch);
         palette.Decor = ParseDecor(root);
+        palette.Mood = MoodGrade.Parse(root);
         return palette;
     }
 

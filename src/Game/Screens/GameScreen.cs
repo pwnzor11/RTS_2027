@@ -503,6 +503,7 @@ public sealed class GameScreen : IScreen
         var frame = new SceneFrame(snapshot, _renderUnits, projectiles, _sim?.Sim, _sim?.Rules, _overlays, _selection, DragRectangle(), _groups);
 
         _s.Scene.HealthBarsAlways = _s.Settings.HealthBarsAlways;
+        _s.Scene.LargerInfantry = _s.Settings.LargerInfantry;   // D-184
         _s.Scene.Draw(sb, _s.Pixel, frame, _camera, _s.Viewport);
         DrawSelectedBuilding(sb, snapshot);
         _feedback.Draw(sb, _s.Pixel, _camera);
