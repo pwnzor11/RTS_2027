@@ -1432,3 +1432,14 @@ LB3 v Authority 3 78 %) is a different sample. **Status:** owner decision (sessi
 Session 16 runs with the owner present: helpers on Sonnet for AI, maps and art, Haiku for docs and bulk edits; the map and art pilots stop
 for the owner's look before any fan-out; new sprites reach GitHub through an owner-run art_push zip.
 **Status:** owner decision (session 16)
+
+### D-192 · 2026-11-08 · Vehicle team-colour pass
+**Decision:** team (house) paint must read on every facing (house_audit.py: body >= 10 px, turret >= 6 px per facing). Pilot (Expedition
+Destroyer, Glide Tank) approved as is, including the Glide Tank's top stripes; fanned out to every flagged sprite (13 more vehicles/turrets
+and lb_spike_nest), design otherwise unchanged. The Hoverlander's copper dome, missing from its current script, was rebuilt in the script.
+Result: 0 of 138 sprites flagged. **Status:** owner decision (session 16)
+
+### D-193 · 2026-11-08 · 2v2 default teams on layout 2 maps
+**Decision:** a 4-player skirmish on a layout-2 map defaults to teams 1+2 v 3+4 (teammates start side by side, D-183); the setup screen can
+still change it. Layout-1 maps keep today's default. The Rust Belt layout-2 pilot v1 was not approved (one diagonal half used, river in a
+corner, 3/4-player maps failing checks): reworked before any fan-out. **Status:** owner decision (session 16)
