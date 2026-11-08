@@ -17,8 +17,8 @@ internal sealed partial class ProceduralBuilder
 {
     private const byte ZMain = 1, ZLane = 2, ZPlaza = 3, AnyZone = 255;
     private int Hw => _n >= 96 ? 3 : 2;   // half width of the river in cells of x - y (the outer ring is shallow)
-    private int BuildPct => _players > 2 ? 2 : _n >= 96 ? 3 : 0;   // percent of blocks that hold a ruined building / two standing walls
-    private int WallPct => _players > 2 ? 6 : _n >= 96 ? 7 : 3;   // percent of blocks that hold a ruined building / two standing walls
+    private int _buildPct, _wallPct, _lotPct;   // percent of street-grid blocks that hold a ruined building, two standing walls, a rubble lot (the rest stays open)
+    private int _gapLo, _gapHi, _offLo, _offHi;   // street pitch (gap between streets) and the offset of the first street
 
     private readonly bool _zoned;
     private readonly int _players;
@@ -37,14 +37,24 @@ internal sealed partial class ProceduralBuilder
     public IReadOnlyList<string> ZoneNotes => _zoneNotes;
 
     /// <summary>Layout 2 builder: <paramref name="players"/> 2 = mirror_diag with two starts, 3 or 4 = four starts (dihedral images).</summary>
-    public ProceduralBuilder(BiomeParams biome, int n, int players, ulong seed)
+    public ProceduralBuilder(BiomeParams biome, int n, int players, ulong seed) : this(biome, n, players, seed, false) { }
+
+    /// <summary>As above; with <paramref name="rot2"/> (2 players, Medium and up) the half-turn skeleton with an S-shaped river is built instead.</summary>
+    public ProceduralBuilder(BiomeParams biome, int n, int players, ulong seed, bool rot2)
     {
-        _b = biome; _n = n; _scale = n * 100 / 96; _decorate = true; _zoned = true; _players = players;
-        _g = new GenGrid(n, MapSymmetry.MirrorDiag, biome.BaseLand, players > 2);
+        _b = biome; _n = n; _scale = n * 100 / 96; _decorate = true; _zoned = true; _players = players; _rot2 = rot2;
+        _g = new GenGrid(n, rot2 ? MapSymmetry.Rot2 : MapSymmetry.MirrorDiag, biome.BaseLand, players > 2);
         _rng = new SimRandom(seed);
         bool big = n >= 96;
-        _sa = Math.Max(9, n * _rng.Next(14, 21) / 100);
-        _sb = players == 2 ? _sa + n * _rng.Next(50, 56) / 100 : n - 1 - _sa - n * (n >= 112 ? _rng.Next(16, 19) : n < 80 ? _rng.Next(29, 33) : _rng.Next(22, 25)) / 100;
+        // Street grid and block fill profile (per seed): pitch 10..20, ruins / yards / plazas.
+        int pitch = _rng.Next(3);
+        (_gapLo, _gapHi) = pitch == 0 ? (7, 11) : pitch == 1 ? (10, 14) : (13, 17);
+        (_offLo, _offHi) = (_rng.Next(2, 6), 0); _offHi = _offLo + _rng.Next(2, 8);
+        int fill = _rng.Next(3);
+        (_buildPct, _wallPct, _lotPct) = !big ? (0, 3, 40) : _players > 2 ? (2, 5, 36) : fill == 0 ? (5, 6, 26) : fill == 1 ? (2, 4, 40) : (3, 5, 14);
+        if (rot2) { OrbitStarts = InitRot2(); return; }
+        _sa = Math.Max(9, n * (players > 2 ? _rng.Next(14, 21) : _rng.Next(13, 23)) / 100);
+        _sb = players == 2 ? _sa + n * _rng.Next(47, 59) / 100 : n - 1 - _sa - n * (n >= 112 ? _rng.Next(16, 19) : n < 80 ? _rng.Next(29, 33) : _rng.Next(22, 25)) / 100;
         int m = _rng.Next(12);
         _mode = m < 8 ? 0 : m < 11 ? 1 : 2;
         _natural = players == 2 && _rng.Next(2) == 0;
@@ -54,7 +64,7 @@ internal sealed partial class ProceduralBuilder
         _bridgeW = _rng.Next(3, 5); _bridgeW2 = _rng.Next(4, 6);
         _gapN = _rng.Next(4, 7); _gapNE = _rng.Next(4, 7); _gapE = _rng.Next(4, 7);
         if (_mode != 0) { _gapE = _rng.Next(4, 7); _gapNE = _rng.Next(4, 7); }
-        _t2 = (n - 1) / 2 + _rng.Next(-2, 3);
+        _t2 = (n - 1) / 2 + (players > 2 ? _rng.Next(-2, 3) : _rng.Next(-6, 7));
         _l1x = players > 2 ? _sa - 4 : _sa;
         var s0 = new CellCoord(_sa, _sb);
         var s1 = new CellCoord(_sb, _sa);
@@ -68,6 +78,7 @@ internal sealed partial class ProceduralBuilder
         Reserve();
         _zone = new byte[n * n];
         Blocks();
+        if (_rot2) return BuildRot2(name, starts);
         CarveOpen();
         Shell();
         Lining();
@@ -131,18 +142,34 @@ internal sealed partial class ProceduralBuilder
     private void Blocks()
     {
         int n = _n;
+        List<(int Lo, int Hi)> xs = Segments(Streets());
+        List<(int Lo, int Hi)> ys = _rot2 ? Segments(Streets()) : xs;   // the diagonal mirror needs the same grid on both axes; the half turn does not
+        foreach ((int yl, int yh) in ys)
+            foreach ((int xl, int xh) in xs) Block(xl, yl, xh, yh, 0);
+    }
+
+    /// <summary>Street positions of one axis, mirrored about the middle (jittered pitch and offset per seed).</summary>
+    private List<(int Lo, int Hi)> Streets()
+    {
+        int n = _n;
         var lo = new List<int>(); var wd = new List<int>();
-        int pos = _rng.Next(3, 7);
+        int pos = _rng.Next(_offLo, _offHi + 1);
         while (true)
         {
             int w = _rng.Next(10) < 7 ? 3 : _rng.Next(4, 6);
             if (pos + w + 6 > n / 2) break;
             lo.Add(pos); wd.Add(w);
-            pos += w + _rng.Next(7, 13);
+            pos += w + _rng.Next(_gapLo, _gapHi + 1);
         }
         var streets = new List<(int Lo, int Hi)>();
         for (int k = 0; k < lo.Count; k++) streets.Add((lo[k], lo[k] + wd[k] - 1));
         for (int k = lo.Count - 1; k >= 0; k--) streets.Add((n - 1 - (lo[k] + wd[k] - 1), n - 1 - lo[k]));
+        return streets;
+    }
+
+    private List<(int Lo, int Hi)> Segments(List<(int Lo, int Hi)> streets)
+    {
+        int n = _n;
         var segs = new List<(int Lo, int Hi)>();
         int from = 0;
         foreach ((int sl, int sh) in streets)
@@ -151,8 +178,7 @@ internal sealed partial class ProceduralBuilder
             from = sh + 1;
         }
         if (from <= n - 1) segs.Add((from, n - 1));
-        foreach ((int yl, int yh) in segs)
-            foreach ((int xl, int xh) in segs) Block(xl, yl, xh, yh, 0);
+        return segs;
     }
 
     private void Block(int x0, int y0, int x1, int y1, int depth)
@@ -171,9 +197,9 @@ internal sealed partial class ProceduralBuilder
         if (!Canonical(x0, y0, x1, y1)) return;
         int roll = _rng.Next(100);
         if (w < 3 || h < 3) return;
-        if (roll < BuildPct && Math.Min(w, h) >= 4) Building(x0, y0, x1, y1);
-        else if (roll < BuildPct + 42) Lot(x0, y0, x1, y1);
-        else if (roll < BuildPct + 42 + WallPct && Math.Min(w, h) >= 5) RuinedWall(x0, y0, x1, y1);
+        if (roll < _buildPct && Math.Min(w, h) >= 4) Building(x0, y0, x1, y1);
+        else if (roll < _buildPct + _lotPct) Lot(x0, y0, x1, y1);
+        else if (roll < _buildPct + _lotPct + _wallPct && Math.Min(w, h) >= 5) RuinedWall(x0, y0, x1, y1);
     }
 
     /// <summary>A ruined building: a rubble footprint flush with the street on one or two sides, chipped corners, sometimes an L.</summary>
@@ -313,7 +339,8 @@ internal sealed partial class ProceduralBuilder
             {
                 if (x >= ix0 && x <= ix1 && y >= iy0 && y <= iy1) continue;
                 bool outer = x == ix0 - 3 || x == ix1 + 3 || y == iy0 - 3 || y == iy1 + 3;
-                _g.SetLand(_g.Idx(x, y), outer && (_players > 2 || _rng.Next(100) < 30) ? LandType.Rough : LandType.Rock);
+                bool beyond = x < ix0 - 3 || x > ix1 + 3 || y < iy0 - 3 || y > iy1 + 3;   // the filled strip between the wall and the map edge
+                _g.SetLand(_g.Idx(x, y), (outer && (_players > 2 || _rng.Next(100) < 30)) || (beyond && _players > 2 && n < 96) ? LandType.Rough : LandType.Rock);
                 foreach (int j in _g.Images(_g.Idx(x, y))) _zone[j] = 0;
             }
         // Entrances through the three wall layers.
@@ -344,7 +371,7 @@ internal sealed partial class ProceduralBuilder
         LineSegment(neX + 1, _t2, _t2 - 1, _t2, _wL2, _players > 2 ? 70 : 30);
     }
 
-    private void LineSegment(int x0, int y0, int x1, int y1, int w, int skipPct = 0)
+    private void LineSegment(int x0, int y0, int x1, int y1, int w, int skipPct = 0, bool dense = false)
     {
         bool vertical = x0 == x1;
         int lo = (w - 1) / 2, hi = w / 2;
@@ -354,7 +381,7 @@ internal sealed partial class ProceduralBuilder
             int t = from + _rng.Next(0, 6);
             while (t < to)
             {
-                int len = _rng.Next(8, 15);
+                int len = dense ? _rng.Next(12, 22) : _rng.Next(8, 15);
                 bool skip = _rng.Next(100) < skipPct;
                 for (int u = t; !skip && u < Math.Min(to, t + len); u++)
                     for (int k = 1; k <= 2; k++)
@@ -366,7 +393,7 @@ internal sealed partial class ProceduralBuilder
                         if (_g.All(i, j => _zone[j] == 0 && _g.Land[j] is LandType.Clear or LandType.Rough or LandType.Rock))
                             _g.SetLand(i, k == 2 && _rng.Next(100) < 35 ? LandType.Rough : LandType.Rock);
                     }
-                t += len + _rng.Next(5, 10);
+                t += len + (dense ? _rng.Next(3, 6) : _rng.Next(5, 10));
             }
         }
     }

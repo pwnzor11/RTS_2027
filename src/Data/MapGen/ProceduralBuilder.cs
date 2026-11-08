@@ -473,7 +473,7 @@ internal sealed partial class ProceduralBuilder
     /// footprint does not survive a quarter turn, so Rot4 / MirrorDiag maps use only the square depot.</summary>
     private void Ruins()
     {
-        bool squareOnly = _g.Symmetry is MapSymmetry.Rot4 or MapSymmetry.MirrorDiag;
+        bool squareOnly = _zoned || _g.Symmetry is MapSymmetry.Rot4 or MapSymmetry.MirrorDiag;   // layout 2 turns the finished map by quarter turns
         for (int r = 0; r < _b.Ruins; r++)
         {
             string type = !squareOnly && r % 2 == 0 ? "neu_ruin_tenement" : "neu_ruin_depot";

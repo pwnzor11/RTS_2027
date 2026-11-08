@@ -31,8 +31,8 @@ public static class LayoutChecks
     };
 
     /// <summary>Main interior (cells west and east of the start, half height) for a map side, shared with the generator.</summary>
-    public static (int West, int East, int Half) MainRect(int side, int players = 2) =>
-        players > 2 ? (side >= 96 ? (6, 11, 8) : (6, 9, 7)) : side >= 96 ? (8, 16, 8) : (7, 13, 7);
+    public static (int West, int East, int Half) MainRect(int side, int players = 2, bool rot2 = false) =>
+        players > 2 ? (side >= 96 ? (6, 11, 8) : (6, 9, 7)) : rot2 ? (side >= 112 ? (8, 16, 10) : (7, 13, 9)) : side >= 96 ? (8, 16, 8) : (7, 13, 7);
 
     private const int Cap = 20;
 
@@ -40,6 +40,24 @@ public static class LayoutChecks
     public static IReadOnlyList<LayoutCheck> Evaluate(MapData map, MapMeta? meta)
     {
         ArgumentNullException.ThrowIfNull(map);
+        bool rot2 = false;
+        if (meta?.Generator is { Layout: MapGenerator.ZonedLayout } g)
+        {
+            // A finished layout-2 map is turned by its seed's symmetry; the checks run in the canonical frame again.
+            (rot2, int t) = LayoutVariant.For(g.Seed, g.Players, map.Width);
+            if (t != 0)
+            {
+                int w = map.Width;
+                map = LayoutVariant.Backward(map, t);
+                meta = meta with { Features = LayoutVariant.MapFeatures(meta.Features, w, (x, y) => LayoutVariant.Inv(t, w, x, y)) };
+            }
+        }
+        return EvaluateCanonical(map, meta, rot2);
+    }
+
+    /// <summary>The checks on a map in the generator's canonical frame (not turned); <paramref name="rot2"/> selects the half-turn skeleton.</summary>
+    internal static IReadOnlyList<LayoutCheck> EvaluateCanonical(MapData map, MapMeta? meta, bool rot2)
+    {
         int n = map.Width, total = n * n;
         var res = new List<LayoutCheck>();
         bool[]? feat = MapAnalysis.FeatureMask(map, meta?.Features);
@@ -65,7 +83,7 @@ public static class LayoutChecks
         var dist = new int[k][];
         for (int s = 0; s < k; s++) dist[s] = Bfs(map, pass, st[s]);
         var team = new int[k];
-        for (int s = 0; s < k; s++) team[s] = st[s].Y > st[s].X ? 0 : 1;
+        for (int s = 0; s < k; s++) team[s] = k == 2 ? s : st[s].Y > st[s].X ? 0 : 1;
         int P = int.MaxValue, Pfar = 0, manhattan = 1;
         for (int s = 0; s < k; s++)
             for (int t = 0; t < k; t++)
@@ -88,11 +106,11 @@ public static class LayoutChecks
         }
 
         // ---- entrances ---------------------------------------------------------------------------
-        (int iw, int ie, int hh) = MainRect(n, k);
+        (int iw, int ie, int hh) = MainRect(n, k, rot2);
         string entr = ""; bool entrOk = true; int minEntr = 1000;
         for (int s = 0; s < k; s++)
         {
-            List<int> widths = Entrances(map, pass, st[s], iw, ie, hh);
+            List<int> widths = Entrances(map, pass, st[s], iw, ie, hh, rot2);
             widths.Sort();
             int minApproach = k > 2 ? 4 : 3;   // 3-4 players: a 3-wide nick at a corner of the shell is not counted as an approach
             int wide = 0; foreach (int w in widths) if (w >= minApproach) wide++;
@@ -115,7 +133,7 @@ public static class LayoutChecks
         int gapsMax = 0; bool anyMedium = false, anyNarrow = false;
         foreach ((int s, int t) in pairs)
         {
-            List<Lane> found = FindLanes(map, pass, width, st[s], st[t], n, dist[s], dist[t], f, dist[s][map.IndexOf(st[t])]);
+            List<Lane> found = FindLanes(map, pass, width, st[s], st[t], n, dist[s], dist[t], f, dist[s][map.IndexOf(st[t])], rot2);
             List<Lane> lanes = found.Where(l => l.Min >= 3).ToList();   // a route squeezing through a 1-2 wide gap is an infantry gap, not a lane
             gapsMax = Math.Max(gapsMax, found.Count - lanes.Count);
             lanesMin = Math.Min(lanesMin, lanes.Count); lanesMax = Math.Max(lanesMax, lanes.Count);
@@ -310,12 +328,13 @@ public static class LayoutChecks
 
     /// <summary>Widths of the passable runs on the square ring 2 cells outside the main interior, in the frame of the start's
     /// upper-left-type image (the interior sits at x -iw..+ie, y -hh..+hh around the start).</summary>
-    private static List<int> Entrances(MapData map, bool[] pass, CellCoord s, int iw, int ie, int hh)
+    private static List<int> Entrances(MapData map, bool[] pass, CellCoord s, int iw, int ie, int hh, bool rot2)
     {
         int n = map.Width;
         // Find which image of the start is the frame start: x < y and x + y < n - 1.
         int frame = 0;
-        for (int k = 0; k < 4; k++) { (int x, int y) = Img(k, n, s.X, s.Y); if (x < y && x + y < n - 1) { frame = k; break; } }
+        if (rot2) { foreach (int k in new[] { 0, 3 }) { (int x, int y) = Img(k, n, s.X, s.Y); if (2 * x < n - 1) { frame = k; break; } } }
+        else for (int k = 0; k < 4; k++) { (int x, int y) = Img(k, n, s.X, s.Y); if (x < y && x + y < n - 1) { frame = k; break; } }
         (int fx, int fy) = Img(frame, n, s.X, s.Y);   // the images are involutions, so Img(frame, .) maps back too
         var ring = new List<(int X, int Y)>();
         int x0 = fx - iw - 2, x1 = fx + ie + 2, y0 = fy - hh - 2, y1 = fy + hh + 2;
@@ -371,7 +390,7 @@ public static class LayoutChecks
     private const int Exclude = 20;
     private const int ExcludeBlock = 44;   // lanes may share this much of the way out of a main (the service street of a walled main)
 
-    private static List<Lane> FindLanes(MapData map, bool[] pass, int[] width, CellCoord a, CellCoord b, int n, int[] da, int[] db, double f, int pathLen)
+    private static List<Lane> FindLanes(MapData map, bool[] pass, int[] width, CellCoord a, CellCoord b, int n, int[] da, int[] db, double f, int pathLen, bool rot2Lanes = false)
     {
         var lanes = new List<Lane>();
         int ex = Math.Min((int)(Exclude * f), pathLen * 22 / 100), exb = Math.Min((int)(ExcludeBlock * f), pathLen * 38 / 100);
@@ -405,7 +424,7 @@ public static class LayoutChecks
                 bool near = da[c] <= exb || db[c] <= exb;
                 used[c] = true;
                 if (near) continue;
-                int r = Math.Min(12, (width[c] + 1) / 2 + 2);
+                int r = Math.Min(rot2Lanes ? 7 : 12, (width[c] + 1) / 2 + (rot2Lanes ? 1 : 2));
                 for (int dy = -r; dy <= r; dy++)
                     for (int dx = -r; dx <= r; dx++)
                         if (x + dx >= 0 && y + dy >= 0 && x + dx < n && y + dy < n) blockedLane[(y + dy) * n + x + dx] = true;

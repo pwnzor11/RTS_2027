@@ -134,12 +134,40 @@ public static class MapGenerator
         BiomeParams biome = BiomeCatalog.For(p.Biome);
         if (biome.Key != "rust_belt") throw new InvalidOperationException($"Layout 2 is not built yet for {biome.Key}; only rust_belt has the zone skeleton.");
         int n = CellsFor(p.Size);
-        var builder = new ProceduralBuilder(biome, n, p.Players, p.Seed);
+        (bool rot2, int t) = LayoutVariant.For(p.Seed, p.Players, n);
+        var builder = new ProceduralBuilder(biome, n, p.Players, AttemptSeed(p.Seed, 0), rot2);
         CellCoord[] orbit = builder.OrbitStarts;
         MapData full = builder.Build(p.Name ?? DefaultName(p), orbit);
-        var meta = new MapMeta(biome.Key, MapSymmetry.MirrorDiag, orbit.Length, p with { Name = null }, builder.Features.ToArray());
-        failure = FirstFailure(full, meta) ?? LayoutChecks.FirstFailure(LayoutChecks.Evaluate(full, meta));
-        return (full, meta);
+        var meta = new MapMeta(biome.Key, rot2 ? MapSymmetry.Rot2 : MapSymmetry.MirrorDiag, orbit.Length, null, builder.Features.ToArray());
+        failure = FirstFailure(full, meta) ?? LayoutChecks.FirstFailure(LayoutChecks.EvaluateCanonical(full, meta, rot2));
+        return FinishZoned(p, biome, n, full, builder, rot2, t);
+    }
+
+    /// <summary>The builder seed of a retry. Attempt 0 is a mix of the seed (not the seed itself), so that retries of one seed never meet the first try of its neighbour.</summary>
+    private static ulong AttemptSeed(ulong seed, int attempt) => unchecked((seed + 1UL) * 0x9E3779B97F4A7C15UL + (ulong)attempt * 0xD1B54A32D192ED03UL);
+
+    /// <summary>The canonical map to the played one: the three-player start choice, then the seed's turn.</summary>
+    private static (MapData Map, MapMeta Meta) FinishZoned(MapGenParams p, BiomeParams biome, int n, MapData full, ProceduralBuilder builder, bool rot2, int t)
+    {
+        CellCoord[] orb = builder.OrbitStarts;
+        CellCoord[] starts = orb;
+        if (p.Players == 3)
+        {
+            int empty = (int)(p.Seed % 4UL);
+            starts = new CellCoord[3];
+            for (int k = 0; k < 3; k++) starts[k] = orb[(empty + 1 + k) % 4];
+        }
+        MapData map;
+        MapFeature[] features = builder.Features.ToArray();
+        if (t == 0)
+            map = new MapData(full.Name, full.Theater, n, n, full.Template.ToArray(), full.Land.ToArray(), full.HeightLevel.ToArray(), full.Overlay.ToArray(), full.Density.ToArray(), starts);
+        else
+        {
+            map = LayoutVariant.Forward(full, t, starts);
+            features = LayoutVariant.MapFeatures(features, n, (x, y) => LayoutVariant.Fwd(t, n, x, y));
+        }
+        var meta = new MapMeta(biome.Key, rot2 ? MapSymmetry.Rot2 : MapSymmetry.MirrorDiag, p.Players, p with { Name = null }, features);
+        return (map, meta);
     }
 
     private static (MapData Map, MapMeta Meta) GenerateZoned(MapGenParams p, BiomeParams biome, out int attempts)
@@ -147,17 +175,18 @@ public static class MapGenerator
         if (biome.Key != "rust_belt") throw new InvalidOperationException($"Layout 2 is not built yet for {biome.Key}; only rust_belt has the zone skeleton.");
         int n = CellsFor(p.Size);
         string name = p.Name ?? DefaultName(p);
+        (bool rot2, int t) = LayoutVariant.For(p.Seed, p.Players, n);
         string? last = null;
         // The first attempt that passes every layout check wins. When none does in MaxZonedAttempts, the attempt with the
         // fewest failed layout checks (and a clean validator) is used, so a map is always produced; `map report` lists what it misses.
         MapData? bestMap = null; ProceduralBuilder? bestBuilder = null; int bestFails = int.MaxValue, bestAttempt = 0;
         for (int attempt = 0; attempt < MaxZonedAttempts; attempt++)
         {
-            ulong seed = p.Seed + (ulong)attempt;
-            var builder = new ProceduralBuilder(biome, n, p.Players, seed);
+            ulong seed = AttemptSeed(p.Seed, attempt);
+            var builder = new ProceduralBuilder(biome, n, p.Players, seed, rot2);
             CellCoord[] orbit = builder.OrbitStarts;
             MapData full = builder.Build(name, orbit);
-            var fullMeta = new MapMeta(biome.Key, MapSymmetry.MirrorDiag, orbit.Length, null, builder.Features.ToArray());
+            var fullMeta = new MapMeta(biome.Key, rot2 ? MapSymmetry.Rot2 : MapSymmetry.MirrorDiag, orbit.Length, null, builder.Features.ToArray());
             last = FirstFailure(full, fullMeta);
             if (last is not null) continue;
             MapData judged = full;
@@ -170,26 +199,15 @@ public static class MapGenerator
                 judged = new MapData(name, full.Theater, n, n, full.Template.ToArray(), full.Land.ToArray(), full.HeightLevel.ToArray(),
                     full.Overlay.ToArray(), full.Density.ToArray(), three);
             }
-            int fails = LayoutChecks.Evaluate(judged, fullMeta).Count(c => !c.Pass);
+            int fails = LayoutChecks.EvaluateCanonical(judged, fullMeta, rot2).Count(c => !c.Pass);
             if (fails < bestFails) { bestFails = fails; bestMap = full; bestBuilder = builder; bestAttempt = attempt; }
             if (fails == 0) break;
         }
         if (bestMap is null || bestBuilder is null)
             throw new InvalidOperationException($"No valid {biome.Key} layout-2 map for size {n}, {p.Players} players from seed {p.Seed} in {MaxZonedAttempts} tries (last: {last}).");
-        CellCoord[] orb = bestBuilder.OrbitStarts;
-        CellCoord[] starts = orb;
-        if (p.Players == 3)
-        {
-            int empty = (int)(p.Seed % 4UL);
-            starts = new CellCoord[3];
-            for (int k = 0; k < 3; k++) starts[k] = orb[(empty + 1 + k) % 4];
-        }
-        var map = new MapData(name, bestMap.Theater, n, n, bestMap.Template.ToArray(), bestMap.Land.ToArray(), bestMap.HeightLevel.ToArray(),
-            bestMap.Overlay.ToArray(), bestMap.Density.ToArray(), starts);
-        var meta = new MapMeta(biome.Key, MapSymmetry.MirrorDiag, p.Players, p with { Name = null }, bestBuilder.Features.ToArray());
         attempts = bestAttempt + 1;
         FailedChecks = bestFails;
-        return (map, meta);
+        return FinishZoned(p, biome, n, bestMap, bestBuilder, rot2, t);
     }
 
     /// <summary>Layout checks the last layout-2 generation on this thread still failed (0 = every check passed); for the sweep test and the report.</summary>
