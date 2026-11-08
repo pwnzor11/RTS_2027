@@ -19,6 +19,7 @@ Full notices, licence texts and the list of native files are in `THIRD_PARTY_NOT
 | Asset | Source | Licence | Use |
 |---|---|---|---|
 | Noto Sans Regular and Bold (`NotoSans-Regular.ttf`, `NotoSans-Bold.ttf`), version 2.004 (font metadata), unmodified. Debian package `fonts-noto-core` 20201225-2; upstream https://github.com/googlei18n/noto-fonts, Copyright 2015 Google LLC. Licence text in `data/fonts/OFL.txt` | Debian `fonts-noto-core` 20201225-2 (`/usr/share/fonts/truetype/noto/`) | OFL-1.1 | UI text: rasterised to atlases `data/fonts/noto-sans-*_<size>.png` and `.font.toml` by `tools/fonts/build_atlas.py` |
+| 0 A.D. prop renders (`data/sprites/props/zeroad/*.png`, `props.toml`): boulder, rubble, concrete block and snag frames for four theaters, rendered from the 0 A.D. meshes `rock_pile`, `stone_pile`, `wrld_block_1_pile_a`, `rubble_wood_3x3`, `wood_pile`, `plank_big_pile_a` and their terrain/skin textures | 0 A.D. (Wildfire Games and 0 A.D. contributors), https://play0ad.com/ , `binaries/data/mods/public/art` | **CC BY-SA 3.0** (https://creativecommons.org/licenses/by-sa/3.0/): attribution required, **share-alike applies** to these images and anything derived from them. Kept as separate data files, never merged into GPL-only sheets. Notice: `data/licences/CC-BY-SA-3.0_0AD_NOTICE.txt` | Map props via `ZeroAdPropAtlas` (`tools/art/zeroad/render_props.py`); owner approved the use of 0 A.D. art (session 15) |
 
 ## Audio
 | Asset | Source | Licence | Use |

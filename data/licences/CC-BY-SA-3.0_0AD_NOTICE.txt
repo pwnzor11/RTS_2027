@@ -1,0 +1,20 @@
+0 A.D. art: Creative Commons Attribution-ShareAlike 3.0 Unported (CC BY-SA 3.0)
+================================================================================
+
+Applies to: every PNG and manifest under data/sprites/props/zeroad/ (and any later 0 A.D.-derived data), which are renders of, or graded
+from, art by Wildfire Games and the 0 A.D. contributors (https://play0ad.com/, https://gitea.wildfiregames.com/0ad/0ad).
+
+Attribution: "Wildfire Games / 0 A.D. contributors". Source files used: binaries/data/mods/public/art/meshes/props/*.dae and
+art/textures/{skins/props,terrain/types} (public mod, git trunk snapshot 61a3b95). Changes: meshes were rendered to 64 px sprites by
+tools/art/zeroad/render_props.py with a different camera and light, then recoloured (palette-mapped) toward each theater.
+
+Licence of the source art, as stated by 0 A.D. (LICENSE.txt, "binaries/data/mods/*/art": Creative Commons Attribution-Share Alike 3.0):
+  Deed:        https://creativecommons.org/licenses/by-sa/3.0/
+  Legal code:  https://creativecommons.org/licenses/by-sa/3.0/legalcode
+
+Share-alike: these derived images may be copied, changed and redistributed only under CC BY-SA 3.0 (or a licence the Creative Commons
+list names as compatible, such as CC BY-SA 4.0), with the attribution above. They are separate data files: the game's code stays
+GPL-3.0-or-later, and the images are never merged into GPL-only sprite sheets.
+
+TODO (lead): the verbatim legal code text could not be fetched while this file was written (the sandbox blocks creativecommons.org).
+Save the text of https://creativecommons.org/licenses/by-sa/3.0/legalcode.txt next to this file as CC-BY-SA-3.0_legalcode.txt.

@@ -31,7 +31,7 @@ FRAME = 64
 #              tint = multiply colour, height_cap = max height in cells)
 P = os.path.join
 PIECES = {
-    "rock_pile": dict(dae="props/rock_pile.dae", tex="textures/terrain/types/cliff_granite.dds", mode="box", widths=(0.45, 0.62, 0.85), yaw=(10, 100, 200)),
+    "rock_pile": dict(dae="props/rock_pile.dae", tex="textures/terrain/types/cliff_granite.dds", mode="box", widths=(0.42, 0.58, 0.72), yaw=(10, 100, 200)),
     "stone_pile": dict(dae="props/stone_pile.dae", tex="textures/terrain/types/cliff_darkgray.dds", mode="box", widths=(0.4, 0.55, 0.75), yaw=(40, 140, 250)),
     "block_pile": dict(dae="props/wrld_block_1_pile_a.dae", tex="textures/terrain/types/cliff_granite.dds", mode="box", widths=(0.5, 0.7, 0.9), yaw=(0, 90, 180)),
     "burned_wood": dict(dae="props/rubble_wood_3x3.dae", tex="textures/skins/props/wood_burned.png", mode="uv", widths=(0.6, 0.8, 1.0), yaw=(20, 110, 200)),
