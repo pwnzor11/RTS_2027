@@ -3,13 +3,14 @@ a long dark greatcoat with pale red-brown trim (hem, cuffs, collar, front seam) 
 and in fire a raised pistol arm.  Original design.  Same contract, scale, camera, states and facings as dir_conscript.py;
 own poses (straight back, slow stride, one fist at the belt, the pistol arm raised and extended in fire, forward fall in die).
 Revised: dark umber greatcoat with pale red-brown trim, wide flat dark peaked cap, bone megaphone.
-House colour: a wide sash across the chest and a 1 px cap badge."""
+House colour (D-184): a wide sash across the chest, shoulder boards, a back panel, cap piping and badge."""
 import math, os, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import common as C
 import auth_rifleman as AR
 
+SCALE = 1.25                  # D-184 pilot: figure 1.25 x, frame 48 x 48, house boards / back panel / cap piping
 ID = "dir_commissar"
 TITLE = "Directorate Commissar"
 CANVAS, ORIGIN, STATES, DIE_FACING = AR.CANVAS, AR.ORIGIN, AR.STATES, AR.DIE_FACING
@@ -82,8 +83,8 @@ def build(S, p):
     S.box((0.05, 0.035, 0.05), (0.0, 0.225, 0.05), "brass", U, bevel=0)
     # shoulder boards (house) and back stencil
     for sx in (-1, 1):
-        S.box((0.11, 0.14, 0.03), (sx * 0.19, 0.0, 0.445), "trim", U, rot=(0, sx * -8, 0), bevel=0)
-    S.box((0.17, 0.02, 0.09), (0, -0.215, 0.20), "trim", U, bevel=0)
+        S.box((0.14, 0.18, 0.045), (sx * 0.20, 0.0, 0.455), "house", U, rot=(0, sx * -8, 0), bevel=0)   # D-184 house shoulder boards
+    S.box((0.20, 0.025, 0.16), (0, -0.218, 0.22), "house", U, bevel=0)                    # D-184 house panel on the back of the coat
     # megaphone slung at the left hip: bone cone, dark mouthpiece, strap
     S.cyl(0.085, 0.30, (-0.25, 0.10, -0.05), "bone", "Y", U, verts=8, r2=0.035)
     S.cyl(0.095, 0.03, (-0.25, 0.25, -0.05), "trim", "Y", U, verts=8)
@@ -97,7 +98,8 @@ def build(S, p):
     S.cyl(0.125, 0.09, (0, 0.03, 0.795), "cap", "Z", U, verts=10, r2=0.195)                 # wide flaring crown
     S.cyl(0.195, 0.02, (0, 0.03, 0.845), "cap", "Z", U, verts=10)                           # flat top
     S.box((0.17, 0.12, 0.022), (0, 0.15, 0.745), "dark", U, rot=(-12, 0, 0), bevel=0)      # visor
-    S.box((0.04, 0.02, 0.04), (0, 0.108, 0.80), "house", U, bevel=0)                        # house dot badge
+    S.box((0.07, 0.03, 0.06), (0, 0.108, 0.795), "house", U, bevel=0)                       # house cap badge (D-184: larger)
+    S.cyl(0.13, 0.025, (0, 0.03, 0.765), "house", "Z", U, verts=10)                         # D-184 thin house piping under the crown
     # pistol (fire only), raised in the right hand
     GM = (U if p["gun_space"] == "u" else Matrix.Identity(4)) @ R.tr(*p["gun"][0]) @ R.rz(p["gun"][1]) @ R.rx(p["gun"][2])
     if p["pistol"]:

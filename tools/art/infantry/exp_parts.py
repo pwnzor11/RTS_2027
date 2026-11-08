@@ -65,7 +65,10 @@ def build_figure(S, p, spec):
     for sx in (-1, 1):
         S.box((0.10, 0.05, 0.11), (sx * 0.12 * b, 0.145 * b, 0.12), "white2", U, bevel=0.01)    # chest pouches
         S.box((0.11, 0.07, 0.08), (sx * 0.14 * b, 0.1, -0.06), "white2", U, bevel=0.01)         # hip pouches
-        S.box((0.065, 0.14 * b, 0.10), (sx * (0.23 * b + 0.015), 0.0, 0.40), "house", U, bevel=0)   # team colour shoulder flash
+        if spec.get("house_boost"):      # D-184: a real shoulder pad in the house ramp (wider, deeper, taller than the flash)
+            S.box((0.10, 0.22 * b, 0.13), (sx * (0.23 * b + 0.03), 0.0, 0.405), "house", U, bevel=0)
+        else:
+            S.box((0.065, 0.14 * b, 0.10), (sx * (0.23 * b + 0.015), 0.0, 0.40), "house", U, bevel=0)   # team colour shoulder flash
         S.box((0.07, 0.15 * b, 0.025), (sx * (0.23 * b + 0.015), 0.0, 0.455), "white", U, bevel=0)
     # ---- head: neck, face plate, chrome helmet with orange visor stripe
     S.box((0.10, 0.10, 0.07), (0, 0, 0.46), "dark", U)
@@ -75,6 +78,8 @@ def build_figure(S, p, spec):
     S.box((0.19, 0.05, 0.06), (0, 0.145, 0.525), "glass", U, bevel=0.01)                        # visor glass
     S.box((0.21, 0.05, 0.028), (0, 0.15, 0.568), "orange", U, bevel=0)                          # orange visor stripe
     S.box((0.04, 0.17, 0.02), (0, 0.0, 0.70), "copper", U, bevel=0)                              # helmet ridge trim
+    if spec.get("house_boost"):          # D-184: house-ramp band over the helmet crown, seen from every side
+        S.box((0.20, 0.07, 0.05), (0, 0.0, 0.625), "house", U, bevel=0)
     # ---- back load and extras
     if spec.get("pack"):
         spec["pack"](S, U, R)

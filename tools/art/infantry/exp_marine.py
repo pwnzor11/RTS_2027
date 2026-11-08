@@ -3,12 +3,13 @@
 Navy fatigues, white cross-webbing, a chrome helmet with an orange visor stripe, a sealed face plate with a chrome rebreather canister,
 a pack with a white dry-bag and a short radio whip, and a gas-operated rifle (navy stock, chrome receiver, copper collar).
 Silhouette at 1x: a round chrome dome over a navy body, white X on the chest, a rounded dry-bag hump and a whip behind.
-Team colour: the flash on each shoulder.
+Team colour (D-184): a house-ramp pad on each shoulder, a band over the helmet crown and a panel on the pack.
 """
 import os, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import exp_parts as EP
 
+SCALE = 1.25                  # D-184 pilot: figure 1.25 x, frame 48 x 48, house pads / helmet band / pack panel
 ID = "exp_marine"
 TITLE = "Expedition Marine"
 CANVAS, ORIGIN, STATES, DIE_FACING = EP.CANVAS, EP.ORIGIN, EP.STATES, EP.DIE_FACING
@@ -23,6 +24,7 @@ def pack(S, U, R):
     S.cyl(0.04, 0.40, (0.11, -0.28, 0.56), "chrome2", "Z", U, verts=6)                   # radio whip
     S.sphere((0.04, 0.04, 0.04), (0.11, -0.28, 0.78), "orange", U, seg=6)
     S.box((0.06, 0.04, 0.14), (-0.10, -0.33, 0.50), "orange2", U, bevel=0)               # sealed radio set
+    S.box((0.22, 0.03, 0.15), (0, -0.335, 0.30), "house", U, bevel=0)                    # D-184 house panel on the pack (seen from behind)
 
 
 def extra(S, U, up, R, p):
@@ -46,7 +48,7 @@ def weapon(S, GM, p, R):
 
 
 SPEC = dict(shoulder=(0.245, 0.0, 0.37), grips=((0, -0.10, -0.075), (0, 0.20, -0.05)), bulk=1.0,
-            pack=pack, extra=extra, weapon=weapon)
+            pack=pack, extra=extra, weapon=weapon, house_boost=True)
 
 
 def build(S, p):
