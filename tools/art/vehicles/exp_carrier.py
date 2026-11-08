@@ -45,6 +45,10 @@ def build(S0, state, k, n):
     box("aline", (0.07, 3.4, 0.03), (-0.2, -1.1, FD + 0.08), "white", 0.0, nocast=True, rot=(0, 0, -7))
     for yy in (-3.0, -1.0, 0.8):
         box(f"stripe{yy}", (1.2, 0.07, 0.03), (0, yy, FD + 0.08), "white", 0.0, nocast=True)
+    for yy, ww in ((-3.25, 1.5), (1.45, 1.3)):                                                    # S16 team colour: flight-deck bands
+        box(f"fdband{yy}", (ww, 0.3, 0.03), (0, yy, FD + 0.075), "house", 0.0, nocast=True)
+    for s in (-1, 1):
+        box(f"sponstripe{s}", (0.12, 4.6, 0.03), (s * (B / 2 + 0.2), -0.5, FD + 0.075), "house", 0.0, nocast=True)
     cyl("padring", 0.45, 0.02, (0, 1.9, FD + 0.075), "orange", "Z", 20, nocast=True)
     box("lift", (0.8, 0.9, 0.03), (-0.1, -2.3, FD + 0.08), "orange2", 0.0, nocast=True)
     # island, starboard side
@@ -57,3 +61,7 @@ def build(S0, state, k, n):
     S0.mount(PIVOT, **MOUNT)
     S0.begin("turret", PIVOT)
     P.turret_parts(S, PIVOT_U[0], PIVOT_U[1], PIVOT_U[2], 2, 0.34, 0.8)
+    px, py, pz = PIVOT_U
+    box("troofband", (0.5, 0.34, 0.035), (px, py - 0.17, pz + 0.41), "house", 0.0)                # S16 team colour: turret roof band
+    for s in (-1, 1):
+        box(f"tflashx{s}", (0.06, 0.55, 0.2), (px + s * 0.31, py - 0.02, pz + 0.25), "house", 0.0)
