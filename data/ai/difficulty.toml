@@ -35,6 +35,12 @@
 #   replace_harvesters      also: the no-income rescue (cancel / sell spare structures for a harvester) and broke mode
 #   use_upgrades            also: tier climbing (tier-2 gate at 3 min, tier-3 gate at 7 min or a 12-unit army) and, at the
 #                           matching tier, the Airfield / Mooring (air) and the superweapon (superweapons)
+# S15 lbknob (D-186, per faction AND tier, optional): tables [faction.<id>.tier1] .. [faction.<id>.tier5] override some numbers of that one tier for
+#   that one faction (the other factions and tiers keep the shared tier table). Allowed keys: attack_threshold, attack_ratio_pct, expansion_tick,
+#   harvester_target, retreat_health_pct, retreat_ratio_pct, unit_reserve, army_cap. Behaviour only, never unit/building/weapon/cost numbers.
+#   army_cap       0..1000: army units alive (home, on a wave, detached; harvesters excluded) at which unit production pauses until losses make room
+#                  (0 = no cap; also allowed in a tier table). The one lever found that cut Left Behind tier 3 without touching its tier 5.
+#   unit_reserve   0..100000: credits a unit purchase leaves in hand (0 = none; also allowed in a tier table)
 # D-167 (per faction, optional): tables [faction.authority], [faction.directorate], [faction.left_behind], [faction.expedition]
 #   harass_min_army         1..1000: army size before the raiding party (flag harass) is formed; missing key or table = 30.
 #                           Directorate 14, the others 30 (s13 ladder: Authority raiders pulled out of a small army cost it the wave)
@@ -47,6 +53,11 @@ harass_min_army = 14
 
 [faction.left_behind]
 harass_min_army = 30
+
+# D-186: Left Behind tier 3 out-produced every tier-3 opponent (68 % decisive v Authority 3, 87 % v Directorate 3 at 32 games, 96x96) while tier 5 was
+# fine; its cheap Buggy / Hook Runner bags snowball to 40+ units by t3000. A cap on the swarm (see docs/balance/s15_lbknob.md) brings tier 3 down.
+[faction.left_behind.tier3]
+army_cap = 36  # (tune) s15
 
 [faction.expedition]
 harass_min_army = 30
