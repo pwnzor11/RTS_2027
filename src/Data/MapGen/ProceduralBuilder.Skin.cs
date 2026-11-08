@@ -37,6 +37,12 @@ internal sealed partial class ProceduralBuilder
     {
         if (_skin == SkinRust) return false;
         int w = x1 - x0 + 1, h = y1 - y0 + 1, m = Math.Min(w, h);
+        if (_n < 80 && _players > 2)
+        {
+            // Small 3-4 player maps are tight: the Rust Belt fill (rubble lots, a few standing walls) keeps the paths between the mains long enough; the post pass still gives the biome its look.
+            if (roll < 40) Lot(x0, y0, x1, y1); else if (roll < 43 && m >= 5) RuinedWall(x0, y0, x1, y1);
+            return true;
+        }
         if (_skin == SkinMountains)
         {
             if (roll < 34 && m >= 4) Blob(x0, y0, x1, y1, LandType.Rock, 3, Math.Min(8, m), true);
@@ -159,7 +165,7 @@ internal sealed partial class ProceduralBuilder
         if (_skin == SkinMountains)
             foreach ((int x0, int y0, int x1, int y1) in _plateaus)
             {
-                for (int y = y0; y <= y1; y++) for (int x = x0; x <= x1; x++) _g.SetHeight(_g.Idx(x, y), 1);
+                for (int y = y0; y <= y1; y++) for (int x = x0; x <= x1; x++) if (_g.In(x, y)) _g.SetHeight(_g.Idx(x, y), 1);
                 // The ring cells that are not rock are the ramp: kept at height 0 beside the rim so the climb is one cell.
                 for (int y = y0 - 1; y <= y1 + 1; y++)
                     for (int x = x0 - 1; x <= x1 + 1; x++)
