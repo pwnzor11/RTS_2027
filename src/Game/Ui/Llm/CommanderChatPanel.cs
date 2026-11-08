@@ -90,7 +90,7 @@ public sealed class CommanderChatPanel
     /// or the chat is off (the last <see cref="Update"/> saw them).
     /// </summary>
     /// <param name="maxWidth">The widest the panel may be, in screen pixels.</param>
-    public void Draw(SpriteBatch sb, Texture2D pixel, int scale, Point bottomLeft, int maxWidth)
+    public void Draw(SpriteBatch sb, Texture2D pixel, UiUnit scale, Point bottomLeft, int maxWidth)
     {
         if (!_active) return;
         _model.VisibleLines(_lastTick, _visible);

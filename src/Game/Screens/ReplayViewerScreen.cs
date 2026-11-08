@@ -137,7 +137,7 @@ public sealed class ReplayViewerScreen : IScreen
         var frame = new SceneFrame(_play.Current, _renderUnits, _play.Projectiles, _play.Sim, _play.Sim.Setup.Rules, _overlays, _selection, null);
         _s.Scene.Draw(sb, _s.Pixel, frame, _camera, _s.Viewport);
 
-        int scale = _s.UiScale;
+        var scale = _s.UiScale;
         ReplayPlaybackClock clock = _play.Clock;
         string state = clock.Ended ? "END" : clock.Paused ? "PAUSED" : $"{clock.Speed}x";
         string view = _play.Viewer < 0 ? "all" : "player " + _play.Viewer;
@@ -154,7 +154,7 @@ public sealed class ReplayViewerScreen : IScreen
 
     private static string Percent(float progress) => FormattableString.Invariant($"{(int)(progress * 100)}%");
 
-    private void DrawProgressBar(SpriteBatch sb, int scale)
+    private void DrawProgressBar(SpriteBatch sb, UiUnit scale)
     {
         int height = Math.Max(4, scale * 2);
         var bar = new Rectangle(0, _s.Viewport.Height - height, _s.Viewport.Width, height);
@@ -162,7 +162,7 @@ public sealed class ReplayViewerScreen : IScreen
         Shapes.Fill(sb, _s.Pixel, new Rectangle(bar.X, bar.Y, (int)(bar.Width * _play.Clock.Progress), bar.Height), new Color(0x7B, 0xC4, 0x6A));
     }
 
-    private void DrawEndBanner(SpriteBatch sb, int scale)
+    private void DrawEndBanner(SpriteBatch sb, UiUnit scale)
     {
         string[] lines = { "End of replay", "R plays it again, Esc goes back" };
         int width = lines.Max(l => BitmapFont.Measure(l, scale)) + 32;

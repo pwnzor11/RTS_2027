@@ -88,7 +88,7 @@ public sealed class MenuPanel : IUiRegion
     public Rectangle ButtonRect(int row, int button) => _layout.Buttons[row][button];
 
     /// <summary>Handles keyboard and mouse for this frame and consumes what it uses.</summary>
-    public void Update(InputFrame input, Viewport viewport, int scale)
+    public void Update(InputFrame input, Viewport viewport, UiUnit scale)
     {
         _layout = Measure(viewport, scale);
         int count = _items.Count;
@@ -135,7 +135,7 @@ public sealed class MenuPanel : IUiRegion
     }
 
     /// <summary>Draws the panel. The sprite batch is already begun.</summary>
-    public void Draw(SpriteBatch sb, Texture2D pixel, Viewport viewport, int scale, Point mouse)
+    public void Draw(SpriteBatch sb, Texture2D pixel, Viewport viewport, UiUnit scale, Point mouse)
     {
         Layout layout = Measure(viewport, scale);
         _layout = layout;
@@ -164,14 +164,14 @@ public sealed class MenuPanel : IUiRegion
         }
     }
 
-    private static int Pad(int scale) => 4 * scale;
+    private static int Pad(UiUnit scale) => 4 * scale;
 
-    private static int RowHeight(int scale) => BitmapFont.LineHeight(scale, FontWeight.Regular) + 5 * scale;
+    private static int RowHeight(UiUnit scale) => BitmapFont.LineHeight(scale, FontWeight.Regular) + 5 * scale;
 
     /// <summary>The height of the panel in screen pixels at <paramref name="scale"/> (for callers that reserve room for it).</summary>
-    public int HeightAt(int scale) => Pad(scale) + RowHeight(scale) + Pad(scale) / 2 + _items.Count * (RowHeight(scale) + scale) + Pad(scale);
+    public int HeightAt(UiUnit scale) => Pad(scale) + RowHeight(scale) + Pad(scale) / 2 + _items.Count * (RowHeight(scale) + scale) + Pad(scale);
 
-    private Layout Measure(Viewport viewport, int scale)
+    private Layout Measure(Viewport viewport, UiUnit scale)
     {
         int pad = Pad(scale);
         int rowH = RowHeight(scale);

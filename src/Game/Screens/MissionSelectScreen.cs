@@ -69,7 +69,7 @@ public sealed class MissionSelectScreen : IScreen
         string hint = _panel.Selected < _rows.Count ? _rows[_panel.Selected].Hint : "";
         if (hint.Length > 0)
         {
-            int scale = _s.UiScale;
+            var scale = _s.UiScale;
             BitmapFont.Draw(sb, _s.Pixel, hint, new Vector2(Math.Max(8, (_s.Viewport.Width - BitmapFont.Measure(hint, scale)) / 2), _s.Viewport.Height - 40 * scale), new Color(0xB8, 0xE0, 0xA0), scale);
         }
     }

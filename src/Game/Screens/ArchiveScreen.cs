@@ -163,7 +163,7 @@ public sealed class ArchiveScreen : IScreen
     public void Draw(SpriteBatch sb)
     {
         Texture2D px = _s.Pixel;
-        int scale = _s.UiScale;
+        var scale = _s.UiScale;
         Shapes.Fill(sb, px, new Rectangle(0, 0, _s.Viewport.Width, _s.Viewport.Height), Backdrop);
         _geo = Measure();
         ArchiveTheme neutral = ArchiveTheme.Neutral;
@@ -200,7 +200,7 @@ public sealed class ArchiveScreen : IScreen
 
     private void DrawList(SpriteBatch sb)
     {
-        int scale = _s.UiScale;
+        var scale = _s.UiScale;
         Rectangle list = _geo.List;
         Shapes.Fill(sb, _s.Pixel, list, ArchiveTheme.Neutral.Panel);
         Shapes.Outline(sb, _s.Pixel, list, ArchiveTheme.Neutral.Border);
@@ -237,7 +237,7 @@ public sealed class ArchiveScreen : IScreen
     private void DrawPane(SpriteBatch sb)
     {
         Texture2D px = _s.Pixel;
-        int scale = _s.UiScale;
+        var scale = _s.UiScale;
         ArchiveEntry? entry = _browser.Current;
         ArchiveTheme theme = entry is null ? ArchiveTheme.Neutral : ArchiveTheme.For(entry.Faction);
         Rectangle pane = _geo.Pane;
@@ -267,7 +267,7 @@ public sealed class ArchiveScreen : IScreen
         {
             y += scale;
             int noteH = content.Note.Count * Line(FontWeight.Regular);
-            Shapes.Fill(sb, px, new Rectangle(x, y, Math.Max(1, scale), noteH), theme.Accent);
+            Shapes.Fill(sb, px, new Rectangle(x, y, Math.Max(1, scale.Whole), noteH), theme.Accent);
             foreach (ArchiveMarkup.Line line in content.Note)
             {
                 DrawWords(sb, line, x + 3 * scale, y, theme, theme.Stencil ? theme.Dim : theme.Emphasis);
@@ -327,7 +327,7 @@ public sealed class ArchiveScreen : IScreen
         }
         if (contentH > view.Height)
         {
-            var track = new Rectangle(view.Right + scale, view.Y, Math.Max(2, scale), view.Height);
+            var track = new Rectangle(view.Right + scale, view.Y, Math.Max(2, scale.Whole), view.Height);
             Shapes.Fill(sb, px, track, Shapes.Alpha(theme.Accent, 80));
             int thumbH = Math.Max(4 * scale, track.Height * view.Height / contentH);
             int thumbY = track.Y + (track.Height - thumbH) * _bodyScroll / Math.Max(1, contentH - view.Height);
@@ -346,17 +346,17 @@ public sealed class ArchiveScreen : IScreen
 
     private void DrawBorder(SpriteBatch sb, Rectangle pane, ArchiveTheme theme)
     {
-        int scale = _s.UiScale;
+        var scale = _s.UiScale;
         if (theme.Stencil)
         {
-            Shapes.DashedOutline(sb, _s.Pixel, pane, theme.Border, Math.Max(1, scale), 6 * scale, 2 * scale);
+            Shapes.DashedOutline(sb, _s.Pixel, pane, theme.Border, Math.Max(1, scale.Whole), 6 * scale, 2 * scale);
             return;
         }
         Shapes.Outline(sb, _s.Pixel, pane, theme.Border, Math.Max(1, scale / 2));
         if (theme.House != 1) return;   // the double border and rivets are the Directorate's
         Rectangle inset = Shrink(pane, 2 * scale);
         Shapes.Outline(sb, _s.Pixel, inset, theme.Accent, Math.Max(1, scale / 2));
-        int rivet = Math.Max(2, scale);
+        int rivet = Math.Max(2, scale.Whole);
         foreach (Point corner in new[] { inset.Location, new Point(inset.Right - rivet, inset.Y), new Point(inset.X, inset.Bottom - rivet),
                      new Point(inset.Right - rivet, inset.Bottom - rivet) })
         {
@@ -392,7 +392,7 @@ public sealed class ArchiveScreen : IScreen
             return c;
         }
 
-        int scale = _s.UiScale;
+        var scale = _s.UiScale;
         Func<string, bool, int> measure = (t, bold) => BitmapFont.Measure(t, scale, bold ? FontWeight.Bold : FontWeight.Regular);
         string note = unlocked ? entry.FieldNote : "";
         int noteWidth = Math.Max(1, _geo.Inner - 3 * scale);
@@ -418,7 +418,7 @@ public sealed class ArchiveScreen : IScreen
         return _content;
     }
 
-    private sealed record Content(string Id, bool Unlocked, int BodyWidth, int StatsWidth, int Scale, int NoteWidth,
+    private sealed record Content(string Id, bool Unlocked, int BodyWidth, int StatsWidth, UiUnit Scale, int NoteWidth,
         IReadOnlyList<ArchiveMarkup.Line> Note, IReadOnlyList<ArchiveMarkup.Line> Body, IReadOnlyList<(string Label, IReadOnlyList<ArchiveMarkup.Line> Lines)> Stats,
         int StatLabelWidth)
     {
@@ -458,7 +458,7 @@ public sealed class ArchiveScreen : IScreen
 
     private Geometry Measure()
     {
-        int scale = _s.UiScale;
+        var scale = _s.UiScale;
         Viewport vp = _s.Viewport;
         int margin = 4 * scale;
         int pad = 3 * scale;
@@ -528,7 +528,7 @@ public sealed class ArchiveScreen : IScreen
     /// <summary>Cuts text to fit a pixel width, ending with "..." when it was cut.</summary>
     private string Fit(string text, int width, FontWeight weight)
     {
-        int scale = _s.UiScale;
+        var scale = _s.UiScale;
         if (BitmapFont.Measure(text, scale, weight) <= width) return text;
         int n = text.Length;
         while (n > 0 && BitmapFont.Measure(text[..n] + "...", scale, weight) > width) n--;

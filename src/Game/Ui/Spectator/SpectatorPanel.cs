@@ -47,7 +47,7 @@ public sealed class SpectatorPanel
     }
 
     /// <summary>The screen rectangle of the strip, so clicks on it never reach the map.</summary>
-    public Rectangle Bounds(int scale)
+    public Rectangle Bounds(UiUnit scale)
     {
         int lines = 1 + _rows.Count + (_controller.ShowDetail ? 1 : 0);
         int lineH = BitmapFont.LineHeight(scale, FontWeight.Regular) + LineGap;
@@ -56,7 +56,7 @@ public sealed class SpectatorPanel
     }
 
     /// <summary>The player whose row contains <paramref name="point"/>, or -1.</summary>
-    public int RowAt(Point point, int scale)
+    public int RowAt(Point point, UiUnit scale)
     {
         Rectangle b = Bounds(scale);
         if (!b.Contains(point)) return -1;
@@ -67,7 +67,7 @@ public sealed class SpectatorPanel
     }
 
     /// <summary>Draws the strip.</summary>
-    public void Draw(SpriteBatch sb, Texture2D pixel, int scale)
+    public void Draw(SpriteBatch sb, Texture2D pixel, UiUnit scale)
     {
         Rectangle b = Bounds(scale);
         sb.Draw(pixel, b, PanelColour);
@@ -97,7 +97,7 @@ public sealed class SpectatorPanel
         }
     }
 
-    private int Measure(int scale)
+    private int Measure(UiUnit scale)
     {
         int lineH = BitmapFont.LineHeight(scale, FontWeight.Regular) + LineGap;
         int w = BitmapFont.Measure("SPECTATING  speed PAUSED  view full vision  (V view  F2 vision  1-4 speed  Space pause  Tab detail)", scale);

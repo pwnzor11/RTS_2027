@@ -103,10 +103,10 @@ internal sealed class MissionOverlay
     }
 
     /// <summary>Where the objectives panel goes: below the tick panel of <paramref name="hudLines"/> lines.</summary>
-    public Point ObjectivesOrigin(int hudLines, int scale) => new(8, 8 + Hud.HeightOf(hudLines, scale) + GapPx);
+    public Point ObjectivesOrigin(int hudLines, UiUnit scale) => new(8, 8 + Hud.HeightOf(hudLines, scale) + GapPx);
 
     /// <summary>Updates the click-blocking rectangle of the objectives panel.</summary>
-    public void UpdateRegion(int hudLines, int scale)
+    public void UpdateRegion(int hudLines, UiUnit scale)
     {
         if (!Guidance.Model.Expanded)
         {
@@ -123,7 +123,7 @@ internal sealed class MissionOverlay
     /// <summary>
     /// Draws the panels. <paramref name="helpTop"/> is the y of the key help panel; the ticker sits above it and the dialogue line above the ticker.
     /// </summary>
-    public void Draw(SpriteBatch sb, Texture2D pixel, int scale, int hudLines, int helpTop, int tick)
+    public void Draw(SpriteBatch sb, Texture2D pixel, UiUnit scale, int hudLines, int helpTop, int tick)
     {
         if (Guidance.Model.Expanded) Hud.Panel(sb, pixel, ObjectivesOrigin(hudLines, scale), ExpandedLines(), scale);
         else Guidance.DrawBar(sb, pixel, scale, MapViewWidth, TimerLines());

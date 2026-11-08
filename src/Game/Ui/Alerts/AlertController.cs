@@ -59,7 +59,7 @@ public sealed class AlertController
     }
 
     /// <summary>Draws the stack at the top right of <paramref name="mapView"/>, clear of the rectangles in <paramref name="avoid"/>.</summary>
-    public void DrawStack(SpriteBatch sb, Texture2D pixel, Rectangle mapView, int scale, int tick, IEnumerable<Rectangle> avoid)
+    public void DrawStack(SpriteBatch sb, Texture2D pixel, Rectangle mapView, UiUnit scale, int tick, IEnumerable<Rectangle> avoid)
     {
         IReadOnlyList<AlertLine> lines = Log.Lines(tick);
         if (lines.Count == 0) return;

@@ -24,7 +24,7 @@ FACES = (
     ("noto-sans-regular", "NotoSans-Regular.ttf"),
     ("noto-sans-bold", "NotoSans-Bold.ttf"),
 )
-DEFAULT_SIZES = (12, 16, 24)
+DEFAULT_SIZES = (9, 10, 12, 14, 16, 18, 20, 24, 28, 32, 36, 40, 48, 56, 64)
 GRID_COLUMNS = 16
 CELL_PAD = 1
 # Latin-1 printable range, minus the C1 controls (U+007F..U+009F), plus the typographic extras the UI uses.

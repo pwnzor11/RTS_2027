@@ -12,7 +12,7 @@ namespace Rts.Game.Ui.Fonts;
 public static class FontLibrary
 {
     /// <summary>Pixel sizes the build script produces by default (tools/fonts/build_atlas.py).</summary>
-    public static IReadOnlyList<int> Sizes { get; } = new[] { 12, 16, 24 };
+    public static IReadOnlyList<int> Sizes { get; } = new[] { 9, 10, 12, 14, 16, 18, 20, 24, 28, 32, 36, 40, 48, 56, 64 };
 
     private static readonly Dictionary<(FontWeight Weight, int Size), FontAtlas?> Metrics = new();
     private static readonly HashSet<(FontWeight Weight, int Size)> TextureFailed = new();

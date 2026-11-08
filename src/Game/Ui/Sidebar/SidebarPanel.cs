@@ -150,9 +150,10 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
     /// <param name="camera">The camera (the minimap moves it; the ghost reads it).</param>
     /// <param name="windowWidth">Window width in pixels.</param>
     /// <param name="windowHeight">Window height in pixels.</param>
-    public void Update(InputFrame input, Camera camera, int windowWidth, int windowHeight)
+    /// <param name="uiScale">The effective UI scale (<see cref="UiScale.Resolve"/>).</param>
+    public void Update(InputFrame input, Camera camera, int windowWidth, int windowHeight, float uiScale = 0f)
     {
-        _ui = UiScale.FromBackbuffer(windowHeight);
+        _ui = uiScale > 0f ? uiScale : UiScale.Resolve(windowWidth, windowHeight, UiScale.DefaultPercent).Scale;
         _hud = _source.Sim.HudFor(_player);
         _hasAircraft = HasAircraft(_hud);
         if (!_hasAircraft && _tab == SidebarTab.Aircraft) SelectTab(SidebarTab.Structures);

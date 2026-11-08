@@ -158,7 +158,7 @@ public sealed class SkirmishSetupScreen : IScreen
     public void Draw(SpriteBatch sb)
     {
         Backdrop.FillOpaque(sb, _s);
-        int scale = _s.UiScale;
+        var scale = _s.UiScale;
         _panel.Draw(sb, _s.Pixel, _s.Viewport, scale, _mouse);
 
         // A colour swatch left of each slot row's buttons.

@@ -77,7 +77,7 @@ internal sealed class ObjectiveGuidance
     // ---- the one-line bar and the banner ----
 
     /// <summary>The lines of the collapsed bar: the objective line, the key hint, then any timer lines. Fitted to <paramref name="maxWidthPx"/>.</summary>
-    public List<string> BarLines(List<string> timerLines, int scale, int maxWidthPx)
+    public List<string> BarLines(List<string> timerLines, UiUnit scale, int maxWidthPx)
     {
         var lines = new List<string> { Fit(Model.OneLine(Visible(), _host.Label), scale, maxWidthPx), "J jump to objective   Tab next objective   O list" };
         lines.AddRange(timerLines);
@@ -85,14 +85,14 @@ internal sealed class ObjectiveGuidance
     }
 
     /// <summary>The bar's screen rectangle: top centre of the map view.</summary>
-    public static Rectangle BarRect(List<string> lines, int scale, int mapWidth)
+    public static Rectangle BarRect(List<string> lines, UiUnit scale, int mapWidth)
     {
         int w = lines.Max(l => BitmapFont.Measure(l, scale)) + 2 * Pad;
         return new Rectangle(Math.Max(0, (mapWidth - w) / 2), 8, w, Hud.HeightOf(lines.Count, scale));
     }
 
     /// <summary>Draws the collapsed bar and returns its rectangle.</summary>
-    public Rectangle DrawBar(SpriteBatch sb, Texture2D pixel, int scale, int mapWidth, List<string> timerLines)
+    public Rectangle DrawBar(SpriteBatch sb, Texture2D pixel, UiUnit scale, int mapWidth, List<string> timerLines)
     {
         List<string> lines = BarLines(timerLines, scale, Math.Max(100, mapWidth - 32));
         Rectangle r = BarRect(lines, scale, mapWidth);
@@ -102,7 +102,7 @@ internal sealed class ObjectiveGuidance
     }
 
     /// <summary>Draws the NEW OBJECTIVE / COMPLETE banner for about three seconds, fading at the end, just below <paramref name="barBottom"/>.</summary>
-    public void DrawBanner(SpriteBatch sb, Texture2D pixel, int scale, int mapWidth, int barBottom)
+    public void DrawBanner(SpriteBatch sb, Texture2D pixel, UiUnit scale, int mapWidth, int barBottom)
     {
         if (Model.Banner.Length == 0 || Model.BannerLeft <= 0f) return;
         byte a = (byte)(255 * Math.Clamp(Model.BannerLeft / 0.5f, 0f, 1f));
@@ -121,7 +121,7 @@ internal sealed class ObjectiveGuidance
     /// Draws the pulsing ground diamond with a short label when the target is inside <paramref name="view"/>, or the edge arrow with a label
     /// and distance when it is not.
     /// </summary>
-    public void DrawWorld(SpriteBatch sb, Texture2D pixel, Camera camera, Rectangle view, int scale)
+    public void DrawWorld(SpriteBatch sb, Texture2D pixel, Camera camera, Rectangle view, UiUnit scale)
     {
         if (Guided() is not { } o || !_host.TryObjectiveCell(o, out CellCoord cell)) return;
         Vector2 target = camera.ScreenFromWorld(Camera.CentreOf(cell));
@@ -197,7 +197,7 @@ internal sealed class ObjectiveGuidance
     }
 
     /// <summary>Cuts <paramref name="text"/> with "..." until it measures at most <paramref name="maxPx"/> pixels.</summary>
-    public static string Fit(string text, int scale, int maxPx)
+    public static string Fit(string text, UiUnit scale, int maxPx)
     {
         string t = text;
         while (t.Length > 4 && BitmapFont.Measure(t, scale) > maxPx) t = GuidanceMath.Trim(t, t.Length - 2);

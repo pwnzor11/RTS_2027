@@ -91,8 +91,12 @@ public sealed class DrawOpRenderer : IDisposable
                 case DrawOpKind.Grain: Use(sb, Mode.Scene); Grain(sb, op, viewport); break;
                 case DrawOpKind.Text:
                     Use(sb, Mode.Ui);
-                    BitmapFont.Draw(sb, _pixel, op.Id ?? "", new Vector2(MathF.Round(op.X), MathF.Round(op.Y)), op.Colour.Premultiplied(), op.Frame,
-                        op.Bold ? FontWeight.Bold : FontWeight.Regular);
+                    if (op.Scale > 0f)
+                        BitmapFont.Draw(sb, _pixel, op.Id ?? "", new Vector2(MathF.Round(op.X), MathF.Round(op.Y)), op.Colour.Premultiplied(), new Rts.Game.Ui.UiUnit(op.Scale),
+                            op.Bold ? FontWeight.Bold : FontWeight.Regular);
+                    else
+                        BitmapFont.Draw(sb, _pixel, op.Id ?? "", new Vector2(MathF.Round(op.X), MathF.Round(op.Y)), op.Colour.Premultiplied(), op.Frame,
+                            op.Bold ? FontWeight.Bold : FontWeight.Regular);
                     break;
             }
         }

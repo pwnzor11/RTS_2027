@@ -3,6 +3,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using Rts.Game.Input;
+using Rts.Game.Ui;
 
 namespace Rts.Game.Menu;
 
@@ -46,7 +47,7 @@ public sealed class LobbyMenuController
     }
 
     /// <summary>Handles this frame's input.</summary>
-    public LobbyResult Update(InputFrame input, int viewW, int viewH, int scale)
+    public LobbyResult Update(InputFrame input, int viewW, int viewH, UiUnit scale)
     {
         Layout = LobbyMenuView.Measure(viewW, viewH, scale, _entries);
         int count = _entries.Count;
