@@ -172,7 +172,7 @@ GRADE = {
 }
 OUTLINE = hx("#0d0f0b")
 SHADOW = hx("#1a1714")
-LEVELS = 6
+LEVELS = 4
 ORIGIN = (FRAME // 2, 40)
 
 
