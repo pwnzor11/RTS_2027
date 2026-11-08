@@ -48,6 +48,7 @@ public sealed class SpriteLibrary : IDisposable
             }
             manifests.Add(manifest.Id, manifest);
         }
+        ClassicFx.Apply(root, manifests, ClassicFx.Requested);
         CheckCompanions(manifests);
         return new SpriteLibrary(manifests);
     }

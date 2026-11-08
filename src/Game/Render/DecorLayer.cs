@@ -102,7 +102,7 @@ public sealed class DecorLayer
         _blocking = PropPlanner.PlanBlocking(map);
         if (_props.Length > 0 || _blocking.Length > 0)
         {
-            _atlas = new ProceduralPropAtlas(palette);
+            _atlas = PropAtlases.Create(palette, TerrainPalette.TheaterIdFor(map, null));
             _atlasTexture = new Texture2D(device, _atlas.Width, _atlas.Height);
             _atlasTexture.SetData(_atlas.Rgba);
         }

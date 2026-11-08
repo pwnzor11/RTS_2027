@@ -21,6 +21,19 @@ Facts were taken from the NuGet packages the build restores (licence fields and 
 Managed libraries the game uses directly are referenced at build time only (Tests and Tools, not shipped): xUnit,
 coverlet and Microsoft.CodeAnalysis.
 
+## Art assets in `data/` (third-party)
+
+Used under GPL-3.0-or-later (the project licence); where a pack is dual-licensed we chose the GPL-3.0 option. Full list with file names in `docs/CREDITS.md`.
+
+| Assets | Author credit | Licences offered by the author | Licence used | Upstream |
+|---|---|---|---|---|
+| `data/sprites/fx/explosion_large`, `explosion_small`, `explosion_energy`, `lightning`, `lightning_fork` (derived from the "sci-fi-effects" frames) | Skorpio | GPL-3.0 or CC-BY-3.0 | GPL-3.0 | https://opengameart.org/ (sci-fi-effects) |
+| `data/sprites/fx/fire_small`, `fire_large` (derived from "LPC flames") | Sharm (Lanea Zimmerman) as graphic artist; submitted by William.Thompsonj | CC-BY 3.0, GPL-3.0 or GPL-2.0 | GPL-3.0 | https://opengameart.org/ (LPC flames) |
+| `data/sprites/props/lpc_props.png` (derived from the Liberated Pixel Cup `terrain_atlas.png`) | Lanea Zimmerman (Sharm), Casper Nilsson, Daniel Eddeland, Johann Charlot, Skyler Robert Colladay, Stephen Challener (Redshrike), Charles Sanchez (CharlesGabriel), Manuel Riecke (MrBeast), Daniel Armstrong (HughSpectrum); list in `data/licences/LPC_Attribution.txt` | CC-BY-SA 3.0 or GPL-3.0 (Charlot's items: LGPL-3.0 or later) | GPL-3.0 | https://opengameart.org/ (Liberated Pixel Cup) |
+| `data/sprites/fx/puffs_dust.png`, `puffs_smoke.png` (derived from Kenney's Smoke particle pack) | Kenney (www.kenney.nl) | CC0 | CC0 | https://kenney.nl/assets/smoke-particles |
+
+The GPL-3.0 text is `LICENSE`. The authors' notes are in `data/licences/`.
+
 ## Native libraries in the publish folder
 
 The publish folder contains these non-managed (native) DLLs and executables. The first three are third-party
@@ -252,3 +265,12 @@ MonoGame.Framework is licensed under the Microsoft Public License (Ms-PL). Per t
 portions are under the MIT License (copyright The Mono.Xna Team). RTS_2027 is a GPL v3 program; the additional
 permission under GPL v3 section 7 in `LICENSE` covers combining RTS_2027 with MonoGame and its native libraries.
 The MonoGame source is at https://github.com/MonoGame/MonoGame .
+
+## 0 A.D. art (Creative Commons Attribution-ShareAlike 3.0)
+
+The map prop sprites in `data/sprites/props/zeroad/` are renders of 0 A.D. meshes and textures, recoloured per theater. Source:
+0 A.D. (c) Wildfire Games and the 0 A.D. contributors, https://play0ad.com/ , art licensed CC BY-SA 3.0
+(https://creativecommons.org/licenses/by-sa/3.0/). The images were changed from the originals (rendered at 64 px with a new camera and
+light, palette-mapped). Share-alike: these images, and any work derived from them, must be distributed under CC BY-SA 3.0 or a
+compatible licence; they are separate data files and are not covered by the GPL of the game code. See
+`data/licences/CC-BY-SA-3.0_0AD_NOTICE.txt` and `docs/CREDITS.md`.

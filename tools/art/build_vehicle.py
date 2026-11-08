@@ -274,7 +274,22 @@ def render(vid, mod, samples, states, facing_sel, preview, layer="body"):
         bpy.ops.object.shade_smooth()
         return finish(o, name, m, False)
 
-    S.box, S.cyl, S.sphere, S.cone = box, cyl, sphere, cone
+    S.maskmats = {}      # object -> mask-pass material, for textured meshes whose house area comes from a texture mask (S.mesh)
+
+    def mesh(name, o, m, mask=None, nocast=False):
+        """Add a ready-made bpy mesh object `o` (unlinked, vertices in vehicle space, e.g. from tools/art/wz/pie_import.build_object).
+        `m` is a material name (BASE_MATERIALS / MATERIALS) or a bpy Material; `mask` is an emission material (white = house) for the
+        mask pass, used when the textured material itself paints the house area."""
+        if not isinstance(m, str):
+            M[m.name] = m
+            m = m.name
+        o.name = name
+        ob = finish(o, name, m, nocast)
+        if mask is not None:
+            S.maskmats[ob] = mask
+        return ob
+
+    S.box, S.cyl, S.sphere, S.cone, S.mesh = box, cyl, sphere, cone, mesh
     S.set_pose = set_pose
     S.clip = False
 
@@ -343,6 +358,7 @@ def render(vid, mod, samples, states, facing_sel, preview, layer="body"):
             S.pose = None
             S.clip = False
             S.group, S.pivot = "body", (0.0, 0.0, 0.0)
+            S.maskmats.clear()
             mod.build(S, name, k, frames)
             S.pose = None
             if S.clip:
@@ -376,7 +392,7 @@ def render(vid, mod, samples, states, facing_sel, preview, layer="body"):
                             o.data.materials.append(marker_mat)
                             o.visible_camera = layer == "body"
                         else:
-                            o.data.materials.append(mask_on if orig[o][0] is M["house"] else mask_off)
+                            o.data.materials.append(S.maskmats.get(o) or (mask_on if orig[o][0] is M["house"] else mask_off))
                     old = wbg.default_value
                     wbg.default_value = 0.0
                     sc.cycles.samples = 1
