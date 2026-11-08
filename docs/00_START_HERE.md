@@ -22,8 +22,9 @@ all four factions. D-171 (session 14): M11 UI and input overhaul comes after M8 
   lead after review and verification (no branch protection as of session 1; revisit if that changes).
 - Reference source: EA's C&C Remastered Collection (GPL v3 + EA additional terms), cloned read-only to
   `/home/claude/ref/CnC_Remastered_Collection` in the cloud workspace (re-clone if missing:
-  `git clone --depth 1 https://github.com/electronicarts/CnC_Remastered_Collection`). We may reuse
-  and port code from it. See `docs/LICENSING.md` for the rules that come with that.
+  `git clone --depth 1 https://github.com/electronicarts/CnC_Remastered_Collection`). It is a read-only
+  reference only: no EA code is ever copied or ported (D-050). The same holds for OpenSAGE (`/home/claude/ref/OpenSAGE`,
+  contains EA-derived Generals code; art/presentation reference, docs/design/18_art_guidance.md). See `docs/LICENSING.md`.
 - User's setup: Windows. Experienced but rusty in C++, C#, Rust, Python, Unity, Godot, Unreal; is
   happy to take on complicated things. Tests by running the game.
 
