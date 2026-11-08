@@ -32,9 +32,6 @@ public static class BitmapFont
     private const int LastChar = 126;
     private const int UnknownGlyph = '?' - FirstChar;
 
-    /// <summary>Em size per font pixel for the int-scale overloads: the 5x7 cap height over Noto Sans' cap height (0.714 em).</summary>
-    private const float EmPerFontPixel = 1f / 0.714f;
-
     /// <summary>Em size per <see cref="UiUnit"/> step (screen pixels per 5x7 font pixel): a unit of 2 gives a 16 px font.</summary>
     private const float EmPerUnit = 8f;
 
@@ -43,7 +40,7 @@ public static class BitmapFont
 
     /// <summary>Atlas size used for an int scale (see the type remarks).</summary>
     /// <param name="scale">Screen pixels per 5x7 font pixel.</param>
-    public static int SizeForScale(int scale) => FontLibrary.NearestSize(GlyphHeight * scale * EmPerFontPixel * UiScale.TextFactor);
+    public static int SizeForScale(int scale) => FontLibrary.NearestSize(EmPerUnit * scale * UiScale.TextFactor);
 
     /// <summary>Atlas size used for a <see cref="UiUnit"/> (the Text size setting included).</summary>
     public static int SizeForUnit(UiUnit unit) => FontLibrary.NearestSize(EmPerUnit * unit.Value * UiScale.TextFactor);

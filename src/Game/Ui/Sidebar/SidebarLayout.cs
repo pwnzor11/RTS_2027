@@ -7,13 +7,13 @@ namespace Rts.Game.Ui.Sidebar;
 /// <summary>
 /// Where everything in the right-hand sidebar goes, from the window size and the UI scale (<see cref="UiScale.FromBackbuffer"/>:
 /// 1, 1.5 or 2). Pure arithmetic on integers and one float: no graphics, so it is unit-tested. The panel is about a fifth of the
-/// window width (never narrower than 150 or wider than 280 units of UI scale). Top to bottom: credits; the sell and repair
+/// window width (never narrower than 190 or wider than 280 units of UI scale). Top to bottom: credits; the sell and repair
 /// buttons; the four tabs; the cameo grid. A vertical power bar runs down the left edge beside them, and the minimap sits at the
 /// bottom in the shape of the map (square when unknown), as wide as the panel allows.
 /// </summary>
 public sealed class SidebarLayout
 {
-    private const int MinWidthUnits = 150;
+    private const int MinWidthUnits = 190;
     private const int MaxWidthUnits = 280;
     private const int PowerBarUnits = 10;
     private const int RowUnits = 20;
@@ -121,9 +121,11 @@ public sealed class SidebarLayout
     /// <param name="shipmentRow">M7-14: reserve a row for the shipment timer under the supply row (empty rectangle when false).</param>
     /// <param name="mapWidth">C6: map width in cells; with <paramref name="mapHeight"/> the minimap takes the map's shape. 0 = square.</param>
     /// <param name="mapHeight">C6: map height in cells.</param>
+    /// <param name="textFactor">The Text size factor (<see cref="UiScale.TextFactor"/>): above 1 the rows, buttons and cameos grow so larger text still fits them.</param>
     public static SidebarLayout Compute(int windowWidth, int windowHeight, float uiScale, int tabCount = SidebarTabs.Count,
-        bool supplyRow = false, bool shipmentRow = false, int mapWidth = 0, int mapHeight = 0)
+        bool supplyRow = false, bool shipmentRow = false, int mapWidth = 0, int mapHeight = 0, float textFactor = 1f)
     {
+        float tf = Math.Max(1f, textFactor);
         int pad = Math.Max(2, Px(4, uiScale)), gap = Math.Max(1, Px(3, uiScale));
         int width = WidthFor(windowWidth, uiScale);
         int x0 = windowWidth - width;
@@ -132,24 +134,24 @@ public sealed class SidebarLayout
         int innerLeft = x0 + pad, innerRight = windowWidth - pad, innerW = Math.Max(0, innerRight - innerLeft);
 
         int y = pad;
-        var credits = new Rectangle(innerLeft, y, innerW, Px(CreditsUnits, uiScale));
+        var credits = new Rectangle(innerLeft, y, innerW, Px(CreditsUnits * tf, uiScale));
         y = credits.Bottom + gap;
 
         var supply = Rectangle.Empty;
         if (supplyRow)
         {
-            supply = new Rectangle(innerLeft, y, innerW, Px(SupplyRowUnits, uiScale));
+            supply = new Rectangle(innerLeft, y, innerW, Px(SupplyRowUnits * tf, uiScale));
             y = supply.Bottom + gap;
         }
 
         var shipment = Rectangle.Empty;
         if (shipmentRow)
         {
-            shipment = new Rectangle(innerLeft, y, innerW, Px(SupplyRowUnits, uiScale));
+            shipment = new Rectangle(innerLeft, y, innerW, Px(SupplyRowUnits * tf, uiScale));
             y = shipment.Bottom + gap;
         }
 
-        var powerRow = new Rectangle(innerLeft, y, innerW, Px(SupplyRowUnits, uiScale));   // H6
+        var powerRow = new Rectangle(innerLeft, y, innerW, Px(SupplyRowUnits * tf, uiScale));   // H6
         y = powerRow.Bottom + gap;
 
         // Minimap: at the bottom, no taller than 40% of the window, in the shape of the map (C6; square when the map is unknown).
@@ -162,7 +164,7 @@ public sealed class SidebarLayout
         int belowTop = minimap.Y - gap;
         var powerBar = new Rectangle(innerLeft, y, powerW, Math.Max(0, belowTop - y));
 
-        int rowH = Px(RowUnits, uiScale);
+        int rowH = Px(RowUnits * tf, uiScale);
         int half = (contentW - gap) / 2;
         var sell = new Rectangle(contentX, y, half, rowH);
         var repair = new Rectangle(contentX + half + gap, y, contentW - half - gap, rowH);
@@ -177,7 +179,7 @@ public sealed class SidebarLayout
         y += rowH + gap;
 
         int columns = Math.Clamp((contentW + gap) / (Px(MinCameoWidthUnits, uiScale) + gap), 1, MaxColumns);
-        int cameoW = Math.Max(1, (contentW - gap * (columns - 1)) / columns), cameoH = Math.Max(1, cameoW * 3 / 4);
+        int cameoW = Math.Max(1, (contentW - gap * (columns - 1)) / columns), cameoH = Math.Max(Math.Max(1, cameoW * 3 / 4), tf > 1f ? Px(38 * tf, uiScale) : 1);
         int gridH = Math.Max(0, belowTop - y);
         int rows = Math.Max(0, (gridH + gap) / (cameoH + gap));
         var grid = new Rectangle(contentX, y, contentW, gridH);
@@ -204,5 +206,5 @@ public sealed class SidebarLayout
         return ((int)((long)maxH * mapWidth / mapHeight), maxH);
     }
 
-    private static int Px(int units, float uiScale) => (int)MathF.Round(units * uiScale);
+    private static int Px(float units, float uiScale) => (int)MathF.Round(units * uiScale);
 }

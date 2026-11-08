@@ -152,32 +152,15 @@ public sealed class FontAtlasTests
     [InlineData(1200, 1.5f)]
     [InlineData(1201, 2f)]
     [InlineData(2160, 2f)]
-    public void UiScaleFollowsBackbufferHeight(int height, float expected)
-    {
-        UiScale.Override = 0;
-        Assert.Equal(expected, UiScale.FromBackbuffer(height));
-    }
-
-    [Fact]
-    public void UiScaleOverrideWins()
-    {
-        UiScale.Override = 3;
-        try
-        {
-            Assert.Equal(3f, UiScale.FromBackbuffer(720));
-        }
-        finally
-        {
-            UiScale.Override = 0;
-        }
-    }
+    public void AutoUiScaleFollowsBackbufferHeight(int height, float expected) => Assert.Equal(expected, UiScale.Auto(height));
 
     [Fact]
     public void UiScaleChoosesTheNearestAtlasSize()
     {
         Assert.Equal(12, BitmapFont.SizeForUiScale(1f));
-        Assert.Equal(16, BitmapFont.SizeForUiScale(1.5f));
+        Assert.Equal(18, BitmapFont.SizeForUiScale(1.5f));
         Assert.Equal(24, BitmapFont.SizeForUiScale(2f));
+        Assert.Equal(9, BitmapFont.SizeForUiScale(0.75f));
         Assert.Equal(16, BitmapFont.SizeForScale(2));
     }
 }
