@@ -8,7 +8,7 @@ namespace Rts.Game.Tests.Render;
 public sealed class ZeroAdPropAtlasTests
 {
     private static readonly string[] Theaters = { "rustbelt", "glass_coast", "mountains", "ash_plains" };
-    private static readonly PropKind[] Covered = { PropKind.Boulder, PropKind.Rubble, PropKind.ConcreteBlock, PropKind.Snag };
+    private static readonly PropKind[] Covered = { PropKind.Boulder, PropKind.Rubble, PropKind.Snag };   // D-188: LPC art wins ConcreteBlock
 
     public static IEnumerable<object[]> TheaterIds() => Theaters.Select(t => new object[] { t });
 
@@ -48,7 +48,7 @@ public sealed class ZeroAdPropAtlasTests
     public void KindsWithoutZeroAdArtAreNotCovered()
     {
         ZeroAdPropAtlas atlas = ZeroAdPropAtlas.Load("rustbelt", Dir());
-        foreach (PropKind kind in new[] { PropKind.GlassCrest, PropKind.IceSlab, PropKind.DeadTree, PropKind.WreckHulk, PropKind.BrokenPylon })
+        foreach (PropKind kind in new[] { PropKind.GlassCrest, PropKind.IceSlab, PropKind.DeadTree, PropKind.WreckHulk, PropKind.BrokenPylon, PropKind.ConcreteBlock })
             Assert.False(atlas.Covers(kind), kind.ToString());
     }
 
@@ -78,12 +78,12 @@ public sealed class ZeroAdPropAtlasTests
     }
 
     [Fact]
-    public void ABadDirectoryOrUnknownTheaterFallsBackToProceduralOnly()
+    public void ABadDirectoryOrUnknownTheaterFallsBackToTheNextSource()
     {
         Assert.Null(ZeroAdPropAtlas.TryLoad("rustbelt", Path.Combine(Path.GetTempPath(), "no_such_zeroad_dir")));
         Assert.Null(ZeroAdPropAtlas.TryLoad("no_such_theater", Dir()));
         IPropAtlas atlas = PropAtlases.Create(TerrainPalette.Load("rustbelt"), "no_such_theater");
-        Assert.IsType<ProceduralPropAtlas>(atlas);
+        Assert.IsNotType<LayeredPropAtlas>(atlas);   // no 0 A.D. layer: the LPC atlas (or its procedural fallback) alone
     }
 
     [Fact]
