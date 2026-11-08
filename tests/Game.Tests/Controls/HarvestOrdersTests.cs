@@ -16,8 +16,19 @@ public sealed class HarvestOrdersTests : IDisposable
 {
     private readonly string _replay = Path.Combine(Path.GetTempPath(), "rts_harvest_" + Guid.NewGuid().ToString("N") + ".rpl");
 
+    private readonly List<SimSnapshotSource> _sources = new();
+
+    // Windows keeps the streamed replay open until it is finished: close every session before deleting its files.
+    private SimSnapshotSource Source(SkirmishGame game)
+    {
+        var source = new SimSnapshotSource(game, StarterHarvestTests.RulesDir, _replay);
+        _sources.Add(source);
+        return source;
+    }
+
     public void Dispose()
     {
+        foreach (SimSnapshotSource source in _sources) source.SaveReplay();
         foreach (string f in new[] { _replay, _replay + ".prev", _replay + ".map.toml" })
             if (File.Exists(f)) File.Delete(f);
     }
@@ -74,7 +85,7 @@ public sealed class HarvestOrdersTests : IDisposable
     private (SimSnapshotSource Source, OrderController Orders, Selection Selection, Camera Camera, EntityId Scraper, CellCoord Field) Rig()
     {
         (SkirmishGame game, EntityId scraper) = StarterHarvestTests.Setup();
-        var source = new SimSnapshotSource(game, StarterHarvestTests.RulesDir, _replay);
+        var source = Source(game);
         var selection = new Selection();
         selection.Replace(new[] { new UnitKey(ActorKind.Vehicle, scraper) });
         var orders = new OrderController(source, selection);
