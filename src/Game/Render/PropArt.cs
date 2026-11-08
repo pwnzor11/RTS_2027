@@ -221,49 +221,53 @@ public static class PropArt
         c.Line(x0 + 4, 36, x1 - 4, 40, dark, 200);                                        // rust seam
     }
 
-    /// <summary>A concrete barrier: variant 0 one jersey block, 1 a wider cracked block, 2 two blocks. Hazard stripe at the top.</summary>
+    /// <summary>A concrete barrier: a low, wide jersey block with a yellow and black hazard band; variant 0 one block, 1 a longer cracked one,
+    /// 2 two blocks end to end.</summary>
     private static void ConcreteBlock(PropCanvas c, int variant, TerrainPalette p)
     {
-        var grey = new TerrainPalette.Rgb(158, 156, 150);
-        TerrainPalette.Rgb lit = Lift(grey, 200), shade = Sink(grey, 300), stripe = new(214, 168, 40);
-        Shadow(c, 32, 48, 22, 6);
+        var grey = new TerrainPalette.Rgb(168, 166, 158);
+        TerrainPalette.Rgb lit = Lift(grey, 220), shade = Sink(grey, 330), stripe = new(222, 176, 34), black = new(34, 32, 30);
+        Shadow(c, 32, 50, 26, 6);
         int blocks = variant == 2 ? 2 : 1;
         for (int b = 0; b < blocks; b++)
         {
-            int ox = blocks == 2 ? (b == 0 ? -14 : 14) : 0, w = variant == 1 ? 13 : variant == 2 ? 12 : 10;
-            Quad(c, 32 + ox - w, 50, 32 + ox + w, 50, 32 + ox + w - 3, 28, 32 + ox - w + 3, 28, grey);
-            Quad(c, 32 + ox + w, 50, 32 + ox + w + 4, 46, 32 + ox + w + 1, 25, 32 + ox + w - 3, 28, shade);
-            Quad(c, 32 + ox - w + 3, 28, 32 + ox + w - 3, 28, 32 + ox + w + 1, 25, 32 + ox - w + 7, 25, lit);
-            for (int s = 0; s < 3; s++)
+            int ox = blocks == 2 ? (b == 0 ? -13 : 13) : 0, w = variant == 1 ? 20 : variant == 2 ? 12 : 15, top = 33, bot = 50;
+            Quad(c, 32 + ox - w, bot, 32 + ox + w, bot, 32 + ox + w - 4, top, 32 + ox - w + 4, top, grey);            // front face
+            Quad(c, 32 + ox + w, bot, 32 + ox + w + 4, bot - 4, 32 + ox + w, top - 4, 32 + ox + w - 4, top, shade);  // end face
+            Quad(c, 32 + ox - w + 4, top, 32 + ox + w - 4, top, 32 + ox + w, top - 4, 32 + ox - w + 8, top - 4, lit);   // top
+            for (int s = 0; s * 8 < 2 * w - 8; s++)                                                                  // hazard band across the front
             {
-                int sx = 32 + ox - w + 6 + s * 7;
-                c.Line(sx, 40, sx + 4, 32, stripe, 235);
+                int sx = 32 + ox - w + 5 + s * 8;
+                Quad(c, sx, top + 2, sx + 4, top + 2, sx + 2, top + 8, sx - 2, top + 8, s % 2 == 0 ? stripe : black);
             }
-            if (variant == 1) c.Line(32 + ox - 2, 28, 32 + ox + 4, 44, Sink(shade, 400));   // crack
+
+            c.Line(32 + ox - w, bot, 32 + ox + w, bot, black, 200);
+            if (variant == 1) c.Line(32 + ox - 2, top, 32 + ox + 4, bot, Sink(shade, 400));   // crack
         }
     }
 
-    /// <summary>A broken pylon: a lattice tower snapped partway up with a stub of cable.</summary>
+    /// <summary>A broken pylon: a dark lattice tower snapped partway up with a stub of cable.</summary>
     private static void BrokenPylon(PropCanvas c, int variant, TerrainPalette p)
     {
-        var steel = new TerrainPalette.Rgb(92, 76, 66);
-        TerrainPalette.Rgb lit = Lift(steel, 320);
+        var steel = new TerrainPalette.Rgb(70, 58, 52);
+        TerrainPalette.Rgb lit = Lift(steel, 420);
         int top = 28 - variant * 8;   // a taller stump with the variant
-        Shadow(c, 32, 55, 14, 5);
-        c.Line(20, 56, 29, top + 6, steel); c.Line(44, 56, 35, top + 6, steel);
-        c.Line(21, 56, 30, top + 6, lit, 200);
+        Shadow(c, 32, 55, 15, 5);
+        void Thick(int x0, int y0, int x1, int y1, TerrainPalette.Rgb col) { c.Line(x0, y0, x1, y1, col); c.Line(x0 + 1, y0, x1 + 1, y1, col); }
+        Thick(19, 56, 28, top + 6, steel); Thick(43, 56, 34, top + 6, steel);
+        c.Line(20, 56, 29, top + 6, lit, 220);
         for (int k = 0; k < 5; k++)
         {
             int y = 54 - k * 8;
             if (y < top + 8) break;
             int half = 12 - k * 2;
-            c.Line(32 - half, y, 32 + half, y - 6, steel, 230);
-            c.Line(32 + half, y, 32 - half, y - 6, steel, 230);
+            Thick(32 - half, y, 32 + half, y - 6, steel);
+            c.Line(32 + half, y, 32 - half, y - 6, steel);
         }
 
-        c.Line(29, top + 6, 24, top, steel);               // snapped top
-        c.Line(35, top + 6, 40 + variant * 2, top + 1, steel);
-        c.Line(40 + variant * 2, top + 1, 52, top + 14 + variant * 4, new TerrainPalette.Rgb(30, 28, 28), 210);   // cable stub
+        Thick(28, top + 6, 22, top, steel);                // snapped top
+        Thick(34, top + 6, 40 + variant * 2, top + 1, steel);
+        c.Line(40 + variant * 2, top + 1, 54, top + 14 + variant * 4, new TerrainPalette.Rgb(20, 18, 18), 230);   // cable stub
     }
 
     /// <summary>Driftwood and debris: crossed logs and a plank, bleached at the lit end.</summary>
