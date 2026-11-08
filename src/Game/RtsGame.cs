@@ -110,6 +110,7 @@ public sealed class RtsGame : Microsoft.Xna.Framework.Game
             Sprites = spriteLibrary,
             ApplyDisplay = ApplyDisplay,
             WindowActive = () => IsActive,
+            ClientSize = () => new Point(Window.ClientBounds.Width, Window.ClientBounds.Height),
         };
         // The animated menu background (M3-16). It is optional: if it cannot be built the menus use a plain colour.
         try

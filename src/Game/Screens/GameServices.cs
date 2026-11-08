@@ -75,6 +75,9 @@ public sealed class GameServices
     /// <summary>True while the game window has focus (the shell sets it); edge scrolling is off otherwise.</summary>
     public Func<bool> WindowActive { get; set; } = static () => true;
 
+    /// <summary>The window's client size in pixels (the shell sets it); zero = unknown, the back buffer size is used. Edge scroll measures its band against it (M11-10b).</summary>
+    public Func<Microsoft.Xna.Framework.Point> ClientSize { get; set; } = static () => Microsoft.Xna.Framework.Point.Zero;
+
     /// <summary>Frames drawn in the last second, set by the shell.</summary>
     public int Fps { get; set; }
 

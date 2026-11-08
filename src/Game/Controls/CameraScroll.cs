@@ -13,6 +13,14 @@ public static class CameraScroll
     /// <summary>Width in window pixels of the band along each window edge that scrolls the camera.</summary>
     public const int EdgeBandPx = 12;
 
+    /// <summary>
+    /// The rectangle the edge band is measured against (M11-10b): the window's client area in client pixels, which is what the mouse
+    /// position is reported in. The back buffer can differ from it while a windowed game is being resized, so it is only the
+    /// fallback for a client size that is not known yet (zero or negative).
+    /// </summary>
+    public static Rectangle ClientRect(int clientWidth, int clientHeight, int fallbackWidth, int fallbackHeight) =>
+        clientWidth > 0 && clientHeight > 0 ? new Rectangle(0, 0, clientWidth, clientHeight) : new Rectangle(0, 0, fallbackWidth, fallbackHeight);
+
     /// <summary>Speed multiplier while Shift is held.</summary>
     public const int ShiftMultiplier = 2;
 
