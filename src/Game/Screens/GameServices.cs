@@ -21,6 +21,7 @@ public sealed class GameServices
         RulesDir = rulesDir;
         Audio = audio;
         _settings = settings;
+        Ui.UiScale.TextFactor = Ui.UiScale.FactorOf(settings.TextSize);
         Controls.GameKeys.Active = settings.Bindings;
         Screens = screens;
         Quit = quit;
@@ -48,6 +49,7 @@ public sealed class GameServices
         set
         {
             _settings = value;
+            Ui.UiScale.TextFactor = Ui.UiScale.FactorOf(value.TextSize);   // the Text size setting reaches every font at once
             Controls.GameKeys.Active = value.Bindings;   // game input reads its keys through the bindings in force
         }
     }
@@ -75,12 +77,21 @@ public sealed class GameServices
     /// <summary>True while the game window has focus (the shell sets it); edge scrolling is off otherwise.</summary>
     public Func<bool> WindowActive { get; set; } = static () => true;
 
+    /// <summary>The window's client size in pixels (the shell sets it); zero = unknown, the back buffer size is used. Edge scroll measures its band against it (M11-10b).</summary>
+    public Func<Microsoft.Xna.Framework.Point> ClientSize { get; set; } = static () => Microsoft.Xna.Framework.Point.Zero;
+
     /// <summary>Frames drawn in the last second, set by the shell.</summary>
     public int Fps { get; set; }
 
     /// <summary>The window viewport now.</summary>
     public Viewport Viewport => Graphics.Viewport;
 
-    /// <summary>UI scale for the current window size (see <see cref="Settings.EffectiveUiScale"/>).</summary>
-    public int UiScale => Settings.EffectiveUiScale(Viewport.Height);
+    /// <summary>THE UI scale for the current window and settings: automatic from the height times the UI scale setting, clamped to what fits.</summary>
+    public Ui.UiScaleResult UiScaleInfo => Settings.ResolveUiScale(Viewport.Width, Viewport.Height);
+
+    /// <summary>The effective UI scale as a number (1 = a 12 px font and a 20 px sidebar row). Sidebar, card, alerts and objectives lay out from this.</summary>
+    public float UiFactor => UiScaleInfo.Scale;
+
+    /// <summary>The same scale for screens that lay out in 5x7 font pixels (menus, pages): fractional, but whole-pixel in arithmetic. See <see cref="Ui.UiUnit"/>.</summary>
+    public Ui.UiUnit UiScale => Ui.UiUnit.FromScale(UiFactor);
 }

@@ -162,6 +162,10 @@ public sealed class Minimap : IDisposable
         Color baseColour = palette is null ? Fallback(land) : ToColor(palette.ShadesFor(land).Base);
         if (palette is not null)
         {
+            // A palette with its own resource colour (S15 looks) shows every resource cell clearly, brighter when richer.
+            int d = palette.NormalDensity(density);
+            if (overlay == OverlayKind.Ashfall && palette.MinimapAshfall is { } ashMini) return Color.Lerp(baseColour, ToColor(ashMini), 0.55f + d / 255f * 0.45f);
+            if (overlay == OverlayKind.Pitchblende && palette.MinimapPitchblende is { } pitchMini) return Color.Lerp(baseColour, ToColor(pitchMini), 0.55f + d / 255f * 0.45f);
             if (overlay == OverlayKind.Ashfall) return Color.Lerp(baseColour, ToColor(palette.AshfallSpeck), density / 255f * 0.6f);
             if (overlay == OverlayKind.Pitchblende) return Color.Lerp(baseColour, ToColor(palette.PitchChunk), density / 255f * 0.8f);
         }

@@ -89,6 +89,10 @@ public readonly record struct DrawOp
     /// <summary>A line of text with its top-left at (x, y); <paramref name="scale"/> is the 5x7 font scale.</summary>
     public static DrawOp Text(string text, float x, float y, int scale, Rgba colour, bool bold = false) =>
         new() { Kind = DrawOpKind.Text, Id = text, X = x, Y = y, Frame = scale, Colour = colour, Colour2 = colour, Bold = bold };
+
+    /// <summary>A line of text at a fractional <see cref="Rts.Game.Ui.UiUnit"/> (the UI scale rule); the renderer reads <see cref="Scale"/>.</summary>
+    public static DrawOp Text(string text, float x, float y, Rts.Game.Ui.UiUnit scale, Rgba colour, bool bold = false) =>
+        new() { Kind = DrawOpKind.Text, Id = text, X = x, Y = y, Frame = scale.Whole, Scale = scale.Value, Colour = colour, Colour2 = colour, Bold = bold };
 }
 
 /// <summary>The shared falloff curves, so the GPU textures and the CPU proof agree.</summary>

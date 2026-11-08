@@ -13,7 +13,7 @@ namespace Rts.Game.Menu;
 /// <param name="TitleY">Top of the title block.</param>
 /// <param name="TitleCell">Size of one title cell in pixels.</param>
 /// <param name="RowWidth">Width of every row.</param>
-public sealed record LobbyLayout(int Scale, Rectangle[] Rows, float TitleX, float TitleY, float TitleCell, int RowWidth);
+public sealed record LobbyLayout(UiUnit Scale, Rectangle[] Rows, float TitleX, float TitleY, float TitleCell, int RowWidth);
 
 /// <summary>
 /// Lays out and draws the main menu as <see cref="DrawOp"/>s: a dark scrim down the left, the block-letter title, the entries (the
@@ -34,7 +34,7 @@ public static class LobbyMenuView
     public const string Tagline = "Forty years after the exchange, the ash still falls.";
 
     /// <summary>Computes the layout for a window and UI scale.</summary>
-    public static LobbyLayout Measure(int viewW, int viewH, int scale, IReadOnlyList<MainMenuEntry> entries)
+    public static LobbyLayout Measure(int viewW, int viewH, UiUnit scale, IReadOnlyList<MainMenuEntry> entries)
     {
         int margin = Math.Max(10 * scale, (int)(viewW * 0.06f));
         float cell = scale * 3f;
@@ -65,7 +65,7 @@ public static class LobbyMenuView
     public static void Build(List<DrawOp> ops, LobbyLayout layout, IReadOnlyList<MainMenuEntry> entries, int selected, float seconds,
         string caption, string version, int viewW, int viewH)
     {
-        int s = layout.Scale;
+        UiUnit s = layout.Scale;
 
         // Scrim: darkest at the left edge, fading out by 46% of the width, so the menu reads over any scene.
         const int strips = 36;

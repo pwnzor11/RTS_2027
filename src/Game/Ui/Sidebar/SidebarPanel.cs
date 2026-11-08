@@ -64,6 +64,8 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
     private CellCoord _ghostTopLeft;
     private bool _ghostValid;
     private bool _hasGhost;
+    private CellProblem[] _ghostCells = Array.Empty<CellProblem>();   // M11-10f: why each footprint cell is refused
+    private string? _ghostReason;
     private List<string>? _tooltip;
     private Point _mouse;
     private MouseCursor? _cursor;
@@ -86,6 +88,25 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
         _houseColour = houseColour;
         _minimap = new Minimap(source.Map, source.Sim, player);
         _hud = source.Sim.HudFor(player);
+    }
+
+    /// <summary>M11-10e: a fully transparent OS cursor, set by the game screen. While it is set and the mouse is over the bare map
+    /// (no mode), the OS cursor is hidden and the game screen draws a software cursor instead.</summary>
+    public MouseCursor? HiddenCursor { get; set; }
+
+    /// <summary>M11-10g: one-line descriptions by rules id (the archive subtitle), or null.</summary>
+    public Func<string, string?>? Blurbs { get; set; }
+
+    /// <summary>True when the software cursor should be drawn: the mouse is over the map and no sidebar mode owns the cursor.</summary>
+    public bool WantsSoftwareCursor => HiddenCursor is not null && Mode == SidebarMode.None
+        && _layout.MapView.Contains(_mouse) && !_layout.Panel.Contains(_mouse);
+
+    /// <summary>Gives the OS cursor back (the game screen is not on top, for example under the pause menu).</summary>
+    public void ShowOsCursor()
+    {
+        if (_cursor is null || _cursor == MouseCursor.Arrow) return;
+        _cursor = null;
+        UpdateCursor();
     }
 
     /// <summary>What the next click on the map does.</summary>
@@ -129,9 +150,10 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
     /// <param name="camera">The camera (the minimap moves it; the ghost reads it).</param>
     /// <param name="windowWidth">Window width in pixels.</param>
     /// <param name="windowHeight">Window height in pixels.</param>
-    public void Update(InputFrame input, Camera camera, int windowWidth, int windowHeight)
+    /// <param name="uiScale">The effective UI scale (<see cref="UiScale.Resolve"/>).</param>
+    public void Update(InputFrame input, Camera camera, int windowWidth, int windowHeight, float uiScale = 0f)
     {
-        _ui = UiScale.FromBackbuffer(windowHeight);
+        _ui = uiScale > 0f ? uiScale : UiScale.Resolve(windowWidth, windowHeight, UiScale.DefaultPercent).Scale;
         _hud = _source.Sim.HudFor(_player);
         _hasAircraft = HasAircraft(_hud);
         if (!_hasAircraft && _tab == SidebarTab.Aircraft) SelectTab(SidebarTab.Structures);
@@ -139,7 +161,7 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
         Rts.Sim.View.PlayerView pv = _source.Sim.ViewFor(_player);   // M7-14: shipment timer, own state only
         _shipmentEta = pv.ShipmentEtaTicks; _shipmentPayload = pv.NextShipmentPayload; _shipmentDecay = pv.ShipmentDecayStep;
         _shipmentShown = ShipmentReadout.Shown(_shipmentEta, _shipmentPayload);
-        _layout = SidebarLayout.Compute(windowWidth, windowHeight, _ui, SidebarTabs.CountFor(_hasAircraft), _supplyShown, _shipmentShown, _source.Map.Width, _source.Map.Height);
+        _layout = SidebarLayout.Compute(windowWidth, windowHeight, _ui, SidebarTabs.CountFor(_hasAircraft), _supplyShown, _shipmentShown, _source.Map.Width, _source.Map.Height, UiScale.TextFactor);
         _mouse = input.MousePosition;
         _tooltip = null;
         if (_shownCredits < 0) _shownCredits = _hud.Cash + _hud.Stored;
@@ -184,7 +206,7 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
     }
 
     /// <summary>Draws the placement ghost and the sell or repair highlight on the map (call before <see cref="Draw"/>).</summary>
-    public void DrawMapOverlay(SpriteBatch batch, Texture2D pixel, Camera camera, SimSnapshot snapshot)
+    public void DrawMapOverlay(SpriteBatch batch, Texture2D pixel, Camera camera, SimSnapshot snapshot, SceneRenderer? scene = null)
     {
         if (Mode == SidebarMode.Placement && _hasGhost && _placementType >= 0)
         {
@@ -192,9 +214,27 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
             BuildingType bt = _source.Rules.Buildings[_placementType];
             float left = _ghostTopLeft.X * Camera.CellPx, top = _ghostTopLeft.Y * Camera.CellPx;
             Rectangle r = camera.ScreenRect(left, top, left + bt.FootprintW * Camera.CellPx, top + bt.FootprintH * Camera.CellPx);
+            DrawBuildRadius(batch, pixel, camera);   // M11-10f
+            scene?.DrawBuildingGhost(batch, pixel, _source.Rules, _placementType, _ghostTopLeft, camera, snapshot.Tick, _player);
             Color c = _ghostValid ? GoodGreen : BadRed;
-            Shapes.Fill(batch, pixel, r, Shapes.Alpha(c, 90));
+            for (int gy = 0; gy < bt.FootprintH; gy++)
+                for (int gx = 0; gx < bt.FootprintW; gx++)
+                {
+                    bool bad = !_ghostValid && (gy * bt.FootprintW + gx < _ghostCells.Length && _ghostCells[gy * bt.FootprintW + gx] != CellProblem.None
+                        || _ghostCells.All(cp => cp == CellProblem.None));   // refused only by the radius, a seal or the beachhead: every cell red
+                    float cl = (_ghostTopLeft.X + gx) * Camera.CellPx, ct = (_ghostTopLeft.Y + gy) * Camera.CellPx;
+                    Shapes.Fill(batch, pixel, camera.ScreenRect(cl, ct, cl + Camera.CellPx, ct + Camera.CellPx),
+                        Shapes.Alpha(bad ? BadRed : GoodGreen, 80));
+                }
+
             Shapes.Outline(batch, pixel, r, c, 2);
+            if (_ghostReason is not null)
+            {
+                int w = BitmapFont.Measure(_ghostReason, _ui, FontWeight.Bold);
+                var at = new Vector2(Math.Clamp(r.X, 0, Math.Max(0, _layout.MapView.Right - w - 8)), Math.Max(0, r.Y - BitmapFont.LineHeight(_ui, FontWeight.Bold) - 6));
+                Shapes.Fill(batch, pixel, new Rectangle((int)at.X - 3, (int)at.Y - 1, w + 6, BitmapFont.LineHeight(_ui, FontWeight.Bold) + 2), new Color(0, 0, 0, 200));
+                Text(batch, pixel, _ghostReason, at, BadRed, _ui, FontWeight.Bold);
+            }
         }
         else if ((Mode == SidebarMode.Sell || Mode == SidebarMode.Repair) && !_layout.Panel.Contains(_mouse))
         {
@@ -208,6 +248,56 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
 
             string label = Mode == SidebarMode.Sell ? "SELL" : "REPAIR";
             Text(batch, pixel, label, new Vector2(_mouse.X + 16, _mouse.Y + 16), Mode == SidebarMode.Sell ? BadRed : Gold, _ui, FontWeight.Bold);
+        }
+    }
+
+    // M11-10f: the sim's verdict, plus a cause for each footprint cell and one line of words. The verdict (_ghostValid) is never overridden.
+    private void ExplainGhost(BuildingType bt)
+    {
+        int w = bt.FootprintW, h = bt.FootprintH;
+        if (_ghostCells.Length != w * h) _ghostCells = new CellProblem[w * h];
+        Rts.Sim.World.PlacementResult result = _source.Sim.CanPlace(_player, _placementType, _ghostTopLeft);
+        var mask = bt.WaterBuilding && bt.WaterMask.Count == w * h;
+        var map = _source.Sim.Map;
+        for (int dy = 0; dy < h; dy++)
+            for (int dx = 0; dx < w; dx++)
+            {
+                var c = new CellCoord(_ghostTopLeft.X + dx, _ghostTopLeft.Y + dy);
+                if (!_source.Map.Contains(c)) { _ghostCells[dy * w + dx] = CellProblem.Terrain; continue; }
+                LandType land = map.LandAt(c);
+                bool wantWater = bt.WaterBuilding && (!mask || bt.WaterMask[dy * w + dx]);
+                bool occupied = map.OverlayAt(c) != OverlayKind.None || !map.BuildingAt(c).IsNone || (wantWater && !map.VehicleAt(c).IsNone);
+                _ghostCells[dy * w + dx] = PlacementCheck.Cell(wantWater, land is LandType.Water or LandType.Shallow,
+                    map.IsBuildable(c, _source.Rules.Terrain), occupied, UnitOnCell(c));
+            }
+
+        _ghostReason = _ghostValid ? null : PlacementCheck.Reason(result, _ghostValid, PlacementCheck.Worst(_ghostCells));
+    }
+
+    private bool UnitOnCell(CellCoord c)
+    {
+        foreach (UnitView u in _source.Current.Units)
+        {
+            if (u.Position.ToCell() != c) continue;
+            if (u.Kind == UnitKind.Vehicle && (uint)u.TypeIndex < (uint)_source.Rules.Vehicles.Count
+                && _source.Rules.Vehicles[u.TypeIndex].Locomotion == Locomotion.Air) continue;
+            return true;
+        }
+
+        return false;
+    }
+
+    // M11-10f: while placing, outline where building is allowed: each own building's footprint grown by the build radius.
+    private void DrawBuildRadius(SpriteBatch batch, Texture2D pixel, Camera camera)
+    {
+        int radius = _source.Rules.Economy.BuildRadius;
+        foreach (BuildingView b in _source.Current.Buildings)
+        {
+            if (b.Ghost || b.Player != _player) continue;
+            if ((uint)b.TypeIndex < (uint)_source.Rules.Buildings.Count && (_source.Rules.Buildings[b.TypeIndex].Wall || _source.Rules.Buildings[b.TypeIndex].Gate)) continue;
+            float l = (b.Cell.X - radius) * Camera.CellPx, t = (b.Cell.Y - radius) * Camera.CellPx;
+            Rectangle r = camera.ScreenRect(l, t, l + (b.FootprintW + 2 * radius) * Camera.CellPx, t + (b.FootprintH + 2 * radius) * Camera.CellPx);
+            Shapes.DashedOutline(batch, pixel, r, Shapes.Alpha(GoodGreen, 150), 2, 10, 8);
         }
     }
 
@@ -248,8 +338,8 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
             var tab = (SidebarTab)i;
             string caption = SidebarTabs.KeyLetter(tab) + " " + SidebarTabs.Caption(tab);
             // Five or six tabs share the width: when the key letter does not fit, the bare caption does.
-            if (BitmapFont.Measure(caption, _ui * 0.8f, FontWeight.Regular) > l.Tabs[i].Width - 4) caption = SidebarTabs.Caption(tab);
-            DrawButton(batch, pixel, l.Tabs[i], caption, tab == _tab, _ui * 0.8f);
+            if (BitmapFont.Measure(caption, _ui, FontWeight.Regular) > l.Tabs[i].Width - 4) caption = SidebarTabs.Caption(tab);
+            DrawButton(batch, pixel, l.Tabs[i], caption, tab == _tab, _ui);
         }
 
         DrawGrid(batch, pixel, l);
@@ -269,7 +359,7 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
     private void DrawUnpackHint(SpriteBatch batch, Texture2D pixel, SidebarLayout l)
     {
         string text = LeftBehindText.Placeholder(LeftBehindText.UnpackHintKey);
-        float scale = _ui * 0.85f;
+        float scale = _ui;
         int y = l.Grid.Y + (int)(_ui * 6);
         foreach (string line in Rts.Game.Menu.TextWrap.Wrap(text, Math.Max(8, l.Grid.Width - 8), s => BitmapFont.Measure(s, scale, FontWeight.Regular)))
         {
@@ -327,13 +417,14 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
             {
                 if (entry.Locked)
                 {
-                    _tooltip = new List<string> { CameoNames.Display(IdOf(entry.Option)), $"Cost {entry.Option.Cost}", TierGrouping.NeedsText(entry) };
+                    _tooltip = CameoTooltip.Head(_source.Rules, entry.Option.Category, entry.Option.TypeIndex, entry.Option.Cost, Blurbs);
+                    _tooltip.Add(TierGrouping.NeedsText(entry));
                 }
                 else
                 {
                     BuildOption option = entry.Option;
                     _tooltip = TooltipFor(option);
-                    if (left) LeftClickCameo(option);
+                    if (left) LeftClickCameo(option, input.IsDown(Keys.LeftShift) || input.IsDown(Keys.RightShift));
                     else if (right) RightClickCameo(option);
                 }
             }
@@ -363,6 +454,7 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
             BuildingType bt = _source.Rules.Buildings[_placementType];
             _ghostTopLeft = SidebarCommands.TopLeftFor(cell, bt.FootprintW, bt.FootprintH);
             _ghostValid = _source.Sim.CanPlaceReady(_player, _placementType, _ghostTopLeft);
+            ExplainGhost(bt);
             // M7-07: CanPlace also refuses a footprint outside an Expedition player's beachhead zone, so the ghost turns red there.
             _hasGhost = true;
             if (input.LeftPressed)
@@ -395,12 +487,14 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
         }
     }
 
-    private void LeftClickCameo(BuildOption option)
+    private void LeftClickCameo(BuildOption option, bool shift)
     {
         switch (SidebarCommands.LeftClick(_hud, option))
         {
             case CameoClick.Build:
-                if (SidebarCommands.Build(_player, option) is Command build) _source.Host.Issue(build);
+                // M11-10g: Shift+click queues five units; the sim refuses what does not fit (full queue, no cash, supply cap).
+                if (SidebarCommands.Build(_player, option) is Command build)
+                    for (int n = SidebarCommands.QueueCount(option.Category, shift); n > 0; n--) _source.Host.Issue(build);
                 break;
             case CameoClick.EnterPlacement:
                 Mode = SidebarMode.Placement;
@@ -501,7 +595,7 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
     private bool IsHidden(BuildOption o) =>
         o.Category == ProductionCategory.Structure && IdOf(o) == SkirmishStart.StartBuildingId;
 
-    private int HeadingHeight() => BitmapFont.LineHeight(_ui * 0.85f, FontWeight.Bold) + Math.Max(6, (int)_ui * 6);
+    private int HeadingHeight() => BitmapFont.LineHeight(_ui, FontWeight.Bold) + Math.Max(6, (int)MathF.Round(_ui * 6));
 
     private IReadOnlyList<TierGrouping.PlacedRow> PlacedRows() =>
         TierGrouping.Place(_rows, _scrollRow, _layout.Grid.Height, _layout.CameoSize.Y, HeadingHeight(), _layout.Gap);
@@ -582,12 +676,12 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
 
     private List<string> TooltipFor(BuildOption o)
     {
-        var lines = new List<string> { CameoNames.Display(IdOf(o)), $"Cost {o.Cost}" };
+        List<string> lines = CameoTooltip.Head(_source.Rules, o.Category, o.TypeIndex, o.Cost, Blurbs);
         bool ready = SidebarCommands.LeftClick(_hud, o) == CameoClick.EnterPlacement;
         if (ready) lines.Add("Ready: click to place");
         else if (o.Blocked != QueueBlockReason.None) lines.Add(BlockReasonText.Of(o.Blocked, SupplyBuildingName()));
         else if (ShipWithoutShipyard(o)) lines.Add(BlockReasonText.NeedsShipyardOnWater);   // M7-14: the ship would wait at the dock
-        else lines.Add("Left click: build   Right click: cancel");
+        else lines.Add(CameoTooltip.ClickHint(o.Category));
         return lines;
     }
 
@@ -654,7 +748,7 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
     private void DrawPowerReadout(SpriteBatch batch, Texture2D pixel, Rectangle row, bool low)
     {
         if (row.Height <= 2) return;
-        float scale = _ui * 0.8f;
+        float scale = _ui;
         string text = "POWER " + SidebarMetrics.PowerText(_hud.PowerOut, _hud.PowerUse);
         scale = SidebarMetrics.FitScale(sc => BitmapFont.Measure(text, sc, FontWeight.Regular), row.Width - 2, scale);
         int h = BitmapFont.LineHeight(scale, FontWeight.Regular);
@@ -678,18 +772,18 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
 
     private void DrawButton(SpriteBatch batch, Texture2D pixel, Rectangle r, string label, bool active, float scale = -1f)
     {
-        if (scale <= 0f) scale = _ui * 0.9f;
+        if (scale <= 0f) scale = _ui;
         bool hover = r.Contains(_mouse);
         Shapes.Fill(batch, pixel, r, active ? ActiveFill : hover ? ButtonHover : ButtonFill);
         Shapes.Outline(batch, pixel, r, active ? Gold : Border);
-        string fitted = Fit(label, r.Width - 4, scale);
-        int w = BitmapFont.Measure(fitted, scale, FontWeight.Regular), h = BitmapFont.LineHeight(scale, FontWeight.Regular);
-        Text(batch, pixel, fitted, new Vector2(r.X + (r.Width - w) / 2f, r.Y + (r.Height - h) / 2f), active ? Color.White : TextColour, scale, FontWeight.Regular);
+        (string fitted, float fs) = FitLabel(label, r.Width - 4, scale);
+        int w = BitmapFont.Measure(fitted, fs, FontWeight.Regular), h = BitmapFont.LineHeight(fs, FontWeight.Regular);
+        Text(batch, pixel, fitted, new Vector2(r.X + (r.Width - w) / 2f, r.Y + (r.Height - h) / 2f), active ? Color.White : TextColour, fs, FontWeight.Regular);
     }
 
     private void DrawUpgradeGrid(SpriteBatch batch, Texture2D pixel, SidebarLayout l)
     {
-        float small = _ui * 0.75f;
+        float small = _ui;
         int lh = BitmapFont.LineHeight(small, FontWeight.Regular);
         for (int slot = 0; slot < l.VisibleSlots; slot++)
         {
@@ -709,9 +803,9 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
                 CentredText(batch, pixel, PlaceholderArt.ShortName(e.Id), inner, TextColour, _ui, FontWeight.Bold);
             }
 
-            string name = Fit(CameoNames.Display(e.Id), r.Width - 4, small);
+            (string name, float nameScale) = FitLabel(CameoNames.Display(e.Id), r.Width - 4, small);
             Shapes.Fill(batch, pixel, new Rectangle(r.X + 1, r.Bottom - lh - 2, r.Width - 2, lh + 1), new Color(0, 0, 0, 170));
-            Text(batch, pixel, name, new Vector2(r.X + 3, r.Bottom - lh - 2), e.State == UpgradeState.Owned ? DimText : TextColour, small, FontWeight.Regular);
+            Text(batch, pixel, name, new Vector2(r.X + 3, r.Bottom - lh - 2 + (lh - BitmapFont.LineHeight(nameScale, FontWeight.Regular)) / 2f), e.State == UpgradeState.Owned ? DimText : TextColour, nameScale, FontWeight.Regular);
 
             switch (e.State)
             {
@@ -742,17 +836,17 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
         }
 
         QueueView? queue = QueueOf(SidebarTabs.CategoryOf(_tab));
-        float small = _ui * 0.75f;
+        float small = _ui;
         foreach (TierGrouping.PlacedRow placed in PlacedRows())
         {
             TierRow heading = _rows[placed.Row];
             if (heading.Heading)
             {
                 var span = new Rectangle(l.Grid.X, l.Grid.Y + placed.Y, l.Grid.Width, placed.Height);
-                Shapes.Fill(batch, pixel, new Rectangle(span.X, span.Bottom - Math.Max(2, (int)_ui * 2), span.Width, Math.Max(2, (int)_ui * 2)), heading.Locked ? Border : Gold);
-                string text = Fit(TierGrouping.HeadingText(heading), span.Width - 4, _ui * 0.85f);
-                int th = BitmapFont.LineHeight(_ui * 0.85f, FontWeight.Bold);
-                Text(batch, pixel, text, new Vector2(span.X + 2, span.Bottom - th - Math.Max(4, (int)_ui * 4)), heading.Locked ? DimText : Gold, _ui * 0.85f, FontWeight.Bold);
+                Shapes.Fill(batch, pixel, new Rectangle(span.X, span.Bottom - Math.Max(2, (int)MathF.Round(_ui * 2)), span.Width, Math.Max(2, (int)MathF.Round(_ui * 2))), heading.Locked ? Border : Gold);
+                (string text, float hs) = FitLabel(TierGrouping.HeadingText(heading), span.Width - 4, _ui, FontWeight.Bold);
+                int th = BitmapFont.LineHeight(hs, FontWeight.Bold);
+                Text(batch, pixel, text, new Vector2(span.X + 2, span.Bottom - th - Math.Max(4, (int)MathF.Round(_ui * 4))), heading.Locked ? DimText : Gold, hs, FontWeight.Bold);
                 continue;
             }
 
@@ -780,10 +874,10 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
             }
 
             // Name strip along the bottom.
-            string name = Fit(CameoNames.Display(id), r.Width - 4, small);
+            (string name, float nameScale) = FitLabel(CameoNames.Display(id), r.Width - 4, small);
             int lh = BitmapFont.LineHeight(small, FontWeight.Regular);
             Shapes.Fill(batch, pixel, new Rectangle(r.X + 1, r.Bottom - lh - 2, r.Width - 2, lh + 1), new Color(0, 0, 0, 170));
-            Text(batch, pixel, name, new Vector2(r.X + 3, r.Bottom - lh - 2), blocked ? DimText : TextColour, small, FontWeight.Regular);
+            Text(batch, pixel, name, new Vector2(r.X + 3, r.Bottom - lh - 2 + (lh - BitmapFont.LineHeight(nameScale, FontWeight.Regular)) / 2f), blocked ? DimText : TextColour, nameScale, FontWeight.Regular);
 
             // Progress of the front item of this type: the unfinished part is veiled from the top.
             int count = 0;
@@ -797,19 +891,20 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
                     int done = r.Height * q.Items[0].ProgressPermille / 1000;
                     Shapes.Fill(batch, pixel, new Rectangle(r.X, r.Y, r.Width, r.Height - done), new Color(0, 0, 0, 120));
                     bool waitingForSupply = SupplyWaits(q.Category, q.Items[0].TypeIndex);   // SUP-4
-                    Shapes.Fill(batch, pixel, new Rectangle(r.X, r.Bottom - Math.Max(2, (int)_ui * 2), r.Width * q.Items[0].ProgressPermille / 1000, Math.Max(2, (int)_ui * 2)), q.Items[0].Stalled || waitingForSupply ? Gold : GoodGreen);
+                    Shapes.Fill(batch, pixel, new Rectangle(r.X, r.Bottom - Math.Max(2, (int)MathF.Round(_ui * 2)), r.Width * q.Items[0].ProgressPermille / 1000, Math.Max(2, (int)MathF.Round(_ui * 2))), q.Items[0].Stalled || waitingForSupply ? Gold : GoodGreen);
                     if (waitingForSupply) DrawWaitingForSupply(batch, pixel, r, small);
                     else if (q.Items[0].Stalled)
-                        CentredText(batch, pixel, "WAIT", r, Gold, small);
+                        CentredText(batch, pixel, "WAIT", new Rectangle(r.X, r.Y, r.Width, Math.Max(1, r.Height - lh - 2)), Gold, small);
                 }
             }
 
             if (blocked && count == 0) Shapes.Fill(batch, pixel, r, Veil);
-            if (tierEntry.Locked) FittedCentredText(batch, pixel, "LOCKED", r, DimText, small);   // P6
+            var above = new Rectangle(r.X, r.Y, r.Width, Math.Max(1, r.Height - lh - 2));   // the state words sit above the name strip, never over it
+            if (tierEntry.Locked) StateStrip(batch, pixel, r, "LOCKED", DimText, small);   // P6; M11-10h: a top band, the art stays visible
             if (ready)
             {
                 Shapes.Outline(batch, pixel, r, GoodGreen, 2);
-                FittedCentredText(batch, pixel, "READY", r, GoodGreen, _ui * 0.9f);   // P6: sized to the cameo
+                StateStrip(batch, pixel, r, "READY", GoodGreen, _ui);   // P6: sized to the cameo
             }
             else Shapes.Outline(batch, pixel, r, r.Contains(_mouse) ? Gold : Border);
 
@@ -828,7 +923,7 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
     private void DrawTooltip(SpriteBatch batch, Texture2D pixel)
     {
         if (_tooltip is null || _tooltip.Count == 0) return;
-        float scale = _ui * 0.9f;
+        float scale = _ui;
         int lh = BitmapFont.LineHeight(scale, FontWeight.Regular);
         int w = _tooltip.Max(line => BitmapFont.Measure(line, scale, FontWeight.Regular)) + 12;
         int h = lh * _tooltip.Count + 8;
@@ -841,20 +936,40 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
             Text(batch, pixel, _tooltip[i], new Vector2(box.X + 6, box.Y + 4 + i * lh), i == 0 ? Gold : TextColour, scale, FontWeight.Regular);
     }
 
-    private static string Fit(string text, int maxWidth, float scale)
+    private static string Fit(string text, int maxWidth, float scale, FontWeight weight = FontWeight.Regular)
     {
-        if (BitmapFont.Measure(text, scale, FontWeight.Regular) <= maxWidth) return text;
+        if (BitmapFont.Measure(text, scale, weight) <= maxWidth) return text;
         for (int n = text.Length - 1; n > 0; n--)
         {
-            string cut = text[..n].TrimEnd();
-            if (BitmapFont.Measure(cut, scale, FontWeight.Regular) <= maxWidth) return cut;
+            string cut = text[..n].TrimEnd() + "\u2026";   // last resort: cut with an ellipsis
+            if (BitmapFont.Measure(cut, scale, weight) <= maxWidth) return cut;
         }
 
         return "";
     }
 
+    // A label that must fit one line: the largest scale from `scale` down to 75 % of it that fits, then (when even that is too wide) cut
+    // to fit. Nothing is ever drawn past maxWidth. Text size and UI scale both reach the label through `scale` and the font factor.
+    private static (string Text, float Scale) FitLabel(string text, int maxWidth, float scale, FontWeight weight = FontWeight.Regular)
+    {
+        float s = scale, floor = scale * 0.6f;   // shrink to smaller atlas sizes first; Fit adds the ellipsis only after that
+        
+        while (s > floor && BitmapFont.Measure(text, s, weight) > maxWidth) s -= scale * 0.05f;
+        s = Math.Max(s, floor);
+        return (Fit(text, maxWidth, s, weight), s);
+    }
+
     private static void Text(SpriteBatch batch, Texture2D pixel, string text, Vector2 at, Color colour, float scale, FontWeight weight) =>
         BitmapFont.Draw(batch, pixel, text, at, colour, scale, weight);
+
+    // A bold state word on a dark band along the top of a cameo (the name strip is at the bottom), so the art between stays visible.
+    private static void StateStrip(SpriteBatch batch, Texture2D pixel, Rectangle r, string text, Color colour, float scale)
+    {
+        int h = BitmapFont.LineHeight(scale, FontWeight.Bold) + 2;
+        var band = new Rectangle(r.X + 1, r.Y + 1, r.Width - 2, Math.Min(h, Math.Max(1, r.Height / 3)));
+        Shapes.Fill(batch, pixel, band, new Color(0, 0, 0, 190));
+        FittedCentredText(batch, pixel, text, band, colour, scale);
+    }
 
     // P6: bold label drawn once, scaled down until it fits the cameo with 2 px to spare each side.
     private static void FittedCentredText(SpriteBatch batch, Texture2D pixel, string text, Rectangle r, Color colour, float scale)
@@ -878,7 +993,7 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
         {
             SidebarMode.Sell => MouseCursor.Crosshair,
             SidebarMode.Repair => MouseCursor.Hand,
-            _ => MouseCursor.Arrow,
+            _ => WantsSoftwareCursor ? HiddenCursor! : MouseCursor.Arrow,   // M11-10e
         };
         if (_cursor == wanted) return;
         _cursor = wanted;
@@ -894,7 +1009,7 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
 
     private void ResetCursor()
     {
-        if (_cursor is null || _cursor == MouseCursor.Arrow) return;
+        if (_cursor is null || _cursor == MouseCursor.Arrow) return;   // (the hidden cursor is a different object, so it is reset too)
         try
         {
             Mouse.SetCursor(MouseCursor.Arrow);

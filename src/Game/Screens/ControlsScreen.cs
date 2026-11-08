@@ -239,7 +239,7 @@ public sealed class ControlsScreen : IScreen
     public void Draw(SpriteBatch sb)
     {
         Backdrop.FillDim(sb, _s);
-        int scale = _s.UiScale;
+        var scale = _s.UiScale;
         int line = Line(scale);
         int pad = 5 * scale;
         Layout(out Rectangle list, out Rectangle back, out Rectangle panel);
@@ -300,7 +300,7 @@ public sealed class ControlsScreen : IScreen
     }
 
     /// <summary>The scrollbar track rectangle at the right edge of the list.</summary>
-    public static Rectangle ScrollTrack(Rectangle list, int scale) => new(list.Right + scale, list.Y, 3 * scale, list.Height);
+    public static Rectangle ScrollTrack(Rectangle list, UiUnit scale) => new(list.Right + scale, list.Y, 3 * scale, list.Height);
 
     /// <summary>The scrollbar thumb inside <paramref name="track"/> for <paramref name="total"/> lines, <paramref name="visible"/> shown, scrolled by <paramref name="scroll"/>.</summary>
     public static Rectangle ThumbRect(Rectangle track, int total, int visible, int scroll)
@@ -312,7 +312,7 @@ public sealed class ControlsScreen : IScreen
         return new Rectangle(track.X, y, track.Width, h);
     }
 
-    private void DrawRow(SpriteBatch sb, ControlRow row, KeyBindings bindings, Vector2 at, int keyCol, int scale)
+    private void DrawRow(SpriteBatch sb, ControlRow row, KeyBindings bindings, Vector2 at, int keyCol, UiUnit scale)
     {
         bool editing = _rebind.State != RebindSession.Phase.Idle && row.Action == _rebind.Action;
         string label = editing ? (_rebind.State == RebindSession.Phase.Conflict ? KeyNames.Of(_rebind.PendingKey) + " ?" : "press a key") : row.LabelFor(bindings);
@@ -335,11 +335,11 @@ public sealed class ControlsScreen : IScreen
         return items;
     }
 
-    private static int Line(int scale) => BitmapFont.LineHeight(scale, FontWeight.Regular) + scale;
+    private static int Line(UiUnit scale) => BitmapFont.LineHeight(scale, FontWeight.Regular) + scale;
 
     private void Layout(out Rectangle list, out Rectangle back, out Rectangle panel)
     {
-        int scale = _s.UiScale;
+        var scale = _s.UiScale;
         Viewport vp = _s.Viewport;
         int line = Line(scale);
         int pad = 5 * scale;

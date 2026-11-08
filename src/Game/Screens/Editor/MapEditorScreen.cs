@@ -95,7 +95,7 @@ public sealed class MapEditorScreen : IScreen
     /// <inheritdoc />
     public void Update(InputFrame input, GameTime t)
     {
-        int scale = _s.UiScale;
+        var scale = _s.UiScale;
         EditorLayout layout = EditorLayout.Compute(_s.Viewport.Width, _s.Viewport.Height, scale);
         _mouse = input.MousePosition;
         if (!_framed) { Frame(layout); _framed = true; }
@@ -166,7 +166,7 @@ public sealed class MapEditorScreen : IScreen
         if (layout.TopBar.Contains(_mouse) || layout.Tools.Contains(_mouse)) input.ConsumeLeft();
     }
 
-    private void HandleIssues(InputFrame input, EditorLayout layout, int scale)
+    private void HandleIssues(InputFrame input, EditorLayout layout, UiUnit scale)
     {
         if (!layout.Issues.Contains(_mouse)) return;
         int rowH = 9 * scale;
@@ -239,7 +239,7 @@ public sealed class MapEditorScreen : IScreen
 
     // ---- widgets -----------------------------------------------------------------------------------------------
 
-    private void BuildWidgets(EditorLayout layout, int scale)
+    private void BuildWidgets(EditorLayout layout, UiUnit scale)
     {
         var top = new FlowLayout(layout.TopBar, scale);
         top.Add("New", false, NewMap);
@@ -391,7 +391,7 @@ public sealed class MapEditorScreen : IScreen
     /// <inheritdoc />
     public void Draw(SpriteBatch sb)
     {
-        int scale = _s.UiScale;
+        var scale = _s.UiScale;
         EditorLayout layout = EditorLayout.Compute(_s.Viewport.Width, _s.Viewport.Height, scale);
         Texture2D px = _s.Pixel;
         Shapes.Fill(sb, px, new Rectangle(0, 0, _s.Viewport.Width, _s.Viewport.Height), Bg);
@@ -420,7 +420,7 @@ public sealed class MapEditorScreen : IScreen
         BitmapFont.Draw(sb, px, line, new Vector2(layout.StatusBar.X + scale * 2, layout.StatusBar.Y + scale * 1), Text, scale);
     }
 
-    private void DrawIssues(SpriteBatch sb, EditorLayout layout, int scale)
+    private void DrawIssues(SpriteBatch sb, EditorLayout layout, UiUnit scale)
     {
         Texture2D px = _s.Pixel;
         Rectangle r = layout.Issues;
@@ -438,7 +438,7 @@ public sealed class MapEditorScreen : IScreen
         }
     }
 
-    private void DrawMap(SpriteBatch sb, EditorLayout layout, int scale)
+    private void DrawMap(SpriteBatch sb, EditorLayout layout, UiUnit scale)
     {
         EditorDocument d = _session.Document;
         int cell = Zooms[_zoom];
@@ -472,7 +472,7 @@ public sealed class MapEditorScreen : IScreen
             CellCoord c = d.Starts[i];
             var sr = new Rectangle(_origin.X + c.X * cell - cell, _origin.Y + c.Y * cell - cell, cell * 3, cell * 3);
             Shapes.Outline(sb, px, sr, new Color(0x60, 0xE0, 0x80), 2);
-            BitmapFont.Draw(sb, px, (i + 1).ToString(), new Vector2(sr.X + cell, sr.Y + cell), Color.White, Math.Max(1, scale));
+            BitmapFont.Draw(sb, px, (i + 1).ToString(), new Vector2(sr.X + cell, sr.Y + cell), Color.White, Math.Max(1, scale.Whole));
         }
         if (_selectedIssue >= 0 && _selectedIssue < _report.Rows.Count && _report.Rows[_selectedIssue].Cell is { } ic)
             Shapes.Outline(sb, px, new Rectangle(_origin.X + ic.X * cell - cell, _origin.Y + ic.Y * cell - cell, cell * 3, cell * 3), ErrorColour, 2);

@@ -17,7 +17,7 @@ namespace Rts.Game;
 /// <param name="Fullscreen">Borderless full screen.</param>
 /// <param name="WindowWidth">Window width in pixels (320..16384).</param>
 /// <param name="WindowHeight">Window height in pixels (240..16384).</param>
-/// <param name="UiScale">Integer UI scale 1..8, or 0 for automatic from the window height.</param>
+/// <param name="UiScalePercent">The UI scale in percent: 75, 100, 125, 150, 175 or 200 (M11-10h; default 100). It multiplies the automatic scale from the window height. The old integer <c>ui_scale</c> key is ignored.</param>
 /// <param name="MusicVolume">0..100.</param>
 /// <param name="SfxVolume">0..100.</param>
 /// <param name="MasterVolume">0..100, scales sound and music together (M3-16). Files without the key get 100.</param>
@@ -28,6 +28,7 @@ namespace Rts.Game;
 /// <param name="LlmCallCap">Most LLM calls per game, 0..1000; 0 = no cap (default 120). The API key is never a setting.</param>
 /// <param name="EdgeScroll">Mouse at the window edge pans the camera (M11-02). Files without the key get true.</param>
 /// <param name="ScrollSpeed">Camera scroll speed in screen pixels per second, 200..3000 (M11-02). Files without the key get 900.</param>
+/// <param name="TextSize">The Text size setting, scaling fonts only (M11-10h). Files without the key get Normal.</param>
 /// <param name="KeyMap">Rebound keys (D-172 (6)); null = the default bindings. Stored in a <c>[keys]</c> table of action id = key name; missing or unknown entries are ignored.</param>
 /// <param name="ShowDiagnostics">Show the tick / state hash / fps line in play (M11-03). Default false; files without the key get false.</param>
 /// <param name="CameraCueOnNewObjective">Pan the camera to a new mission objective's target (M11-05; default true).</param>
@@ -36,7 +37,7 @@ public sealed record Settings(
     bool Fullscreen = false,
     int WindowWidth = 1280,
     int WindowHeight = 720,
-    int UiScale = 0,
+    int UiScalePercent = Ui.UiScale.DefaultPercent,
     int MusicVolume = 70,
     int SfxVolume = 100,
     int MasterVolume = 100,
@@ -50,6 +51,7 @@ public sealed record Settings(
     bool ShowDiagnostics = false,
     bool HealthBarsAlways = false,   // false = "Damaged or selected" (default), true = "Always"
     bool CameraCueOnNewObjective = true,
+    Ui.TextSize TextSize = Ui.TextSize.Normal,
     KeyBindings? KeyMap = null)
 {
     /// <summary>The file format version this build reads and writes.</summary>
@@ -71,9 +73,8 @@ public sealed record Settings(
     public static string DefaultPath =>
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "RTS_2027", "settings.toml");
 
-    /// <summary>The UI scale to draw with: <see cref="UiScale"/>, or when it is 0 a step chosen from the window height.</summary>
-    public int EffectiveUiScale(int windowHeight) =>
-        UiScale > 0 ? UiScale : windowHeight < 1000 ? 2 : windowHeight < 1500 ? 3 : 4;
+    /// <summary>The one UI scale rule for a window: automatic from its height times <see cref="UiScalePercent"/>, clamped to what fits (see <see cref="Ui.UiScale.Resolve"/>).</summary>
+    public Ui.UiScaleResult ResolveUiScale(int windowWidth, int windowHeight) => Ui.UiScale.Resolve(windowWidth, windowHeight, UiScalePercent);
 
     /// <summary>Loads <paramref name="path"/>; never throws. Missing or bad file gives <see cref="Default"/>.</summary>
     public static Settings Load(string? path = null)
@@ -111,7 +112,7 @@ public sealed record Settings(
             root.TryGetValue("fullscreen", out object? fs) && fs is bool b ? b : d.Fullscreen,
             Int(root, "window_width", d.WindowWidth, 320, 16384),
             Int(root, "window_height", d.WindowHeight, 240, 16384),
-            Int(root, "ui_scale", d.UiScale, 0, 8),
+            Ui.UiScale.SnapPercent(Int(root, "ui_scale_percent", d.UiScalePercent, Ui.UiScale.Percents[0], Ui.UiScale.Percents[^1])),
             Int(root, "music_volume", d.MusicVolume, 0, 100),
             Int(root, "sfx_volume", d.SfxVolume, 0, 100),
             Int(root, "master_volume", d.MasterVolume, 0, 100),
@@ -125,6 +126,7 @@ public sealed record Settings(
             root.TryGetValue("show_diagnostics", out object? sd) && sd is bool sdb ? sdb : d.ShowDiagnostics,
             root.TryGetValue("health_bars_always", out object? hb) && hb is bool hbb ? hbb : d.HealthBarsAlways,
             root.TryGetValue("camera_cue_on_new_objective", out object? cq) && cq is bool cqb ? cqb : d.CameraCueOnNewObjective,
+            (Ui.TextSize)Int(root, "text_size", (int)d.TextSize, (int)Ui.TextSize.Small, (int)Ui.TextSize.ExtraLarge),
             ParseKeys(root));
     }
 
@@ -137,8 +139,10 @@ public sealed record Settings(
         sb.AppendLine(FormattableString.Invariant($"fullscreen = {(Fullscreen ? "true" : "false")}"));
         sb.AppendLine(FormattableString.Invariant($"window_width = {WindowWidth}"));
         sb.AppendLine(FormattableString.Invariant($"window_height = {WindowHeight}"));
-        sb.AppendLine("# 0 = automatic from the window height");
-        sb.AppendLine(FormattableString.Invariant($"ui_scale = {UiScale}"));
+        sb.AppendLine("# UI scale in percent (75, 100, 125, 150, 175, 200) on top of the automatic scale from the window height");
+        sb.AppendLine(FormattableString.Invariant($"ui_scale_percent = {Ui.UiScale.SnapPercent(UiScalePercent)}"));
+        sb.AppendLine("# Text size: 0 Small, 1 Normal, 2 Large, 3 Extra large (fonts only)");
+        sb.AppendLine(FormattableString.Invariant($"text_size = {(int)TextSize}"));
         sb.AppendLine(FormattableString.Invariant($"music_volume = {MusicVolume}"));
         sb.AppendLine(FormattableString.Invariant($"sfx_volume = {SfxVolume}"));
         sb.AppendLine(FormattableString.Invariant($"master_volume = {MasterVolume}"));

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
 using Microsoft.Xna.Framework;
+using Rts.Game.Ui;
 
 namespace Rts.Game.Screens.Editor;
 
@@ -8,7 +9,7 @@ namespace Rts.Game.Screens.Editor;
 public sealed record EditorLayout(Rectangle TopBar, Rectangle Tools, Rectangle MapView, Rectangle Issues, Rectangle StatusBar)
 {
     /// <summary>Lays out: a top bar, a tool panel on the left, the validation panel on the right, a status line at the bottom, the map between.</summary>
-    public static EditorLayout Compute(int width, int height, int scale)
+    public static EditorLayout Compute(int width, int height, UiUnit scale)
     {
         int bar = 12 * scale, left = Math.Min(width / 3, 62 * scale), right = Math.Min(width / 3, 70 * scale), status = 9 * scale;
         var top = new Rectangle(0, 0, width, bar);

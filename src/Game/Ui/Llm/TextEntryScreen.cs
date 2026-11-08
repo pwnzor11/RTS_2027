@@ -87,7 +87,7 @@ public sealed class TextEntryScreen : IScreen
     /// <inheritdoc />
     public void Draw(SpriteBatch sb)
     {
-        int scale = _s.UiScale;
+        var scale = _s.UiScale;
         Viewport vp = _s.Viewport;
         int pad = 4 * scale;
         int line = BitmapFont.LineHeight(scale, FontWeight.Regular);

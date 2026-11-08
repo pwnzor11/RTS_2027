@@ -8,7 +8,7 @@ namespace Rts.Game.Ui.Card;
 /// <summary>
 /// Where everything on the selection card goes (M11-04): pure integer arithmetic from the map view rectangle, the card scale and the
 /// line height, so it is unit-tested. The card is centred along the bottom of the MAP VIEW (never over the sidebar), sits clear of
-/// the edge-scroll band at the window's bottom edge, and shrinks (down to scale 1, the smallest UI scale) when the map view is narrow.
+/// the edge-scroll band at the window's bottom edge, and shrinks (down to scale 1, or the UI scale when that is lower) when the map view is narrow.
 /// </summary>
 public sealed class CardLayout
 {
@@ -59,14 +59,14 @@ public sealed class CardLayout
 
     /// <summary>
     /// The scale the card draws at: <paramref name="ui"/> (the sidebar's UI scale) while the card fits the map view, otherwise smaller,
-    /// never below 1.
+    /// never below 1 (or the UI scale itself when that is under 1, M11-10h).
     /// </summary>
     public static float ScaleFor(int mapViewWidth, float ui)
     {
         float s = ui;
-        int room = mapViewWidth - 2 * Margin(1f);
-        if (WidthUnits * s > room) s = Math.Max(1f, room / (float)WidthUnits);
-        return Math.Max(1f, Math.Min(ui, s));
+        int room = mapViewWidth - 2 * Margin(Math.Min(1f, ui));
+        if (WidthUnits * s > room) s = room / (float)WidthUnits;
+        return Math.Max(Math.Min(ui, 1f), Math.Min(ui, s));
     }
 
     /// <summary>
@@ -99,7 +99,8 @@ public sealed class CardLayout
         int w = Math.Max(120, Math.Min(maxW, mapView.Width - 2 * margin));
 
         int cols = w >= (int)MathF.Round(430f * scale) ? 3 : 2;
-        int bw = (int)MathF.Round(58f * scale), bh = lineHeight + (int)MathF.Round(8f * scale);
+        int bw = (int)MathF.Round(58f * scale * Math.Max(1f, UiScale.TextFactor));   // larger text: wider buttons, so "Repair" still fits
+        int bh = lineHeight + (int)MathF.Round(8f * scale);
         int buttonRows = (buttonCount + cols - 1) / cols;
         int usedCols = Math.Min(cols, Math.Max(1, buttonCount));
         int buttonsW = buttonCount == 0 ? 0 : usedCols * bw + (usedCols - 1) * gap;

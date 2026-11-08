@@ -245,12 +245,31 @@ Source: docs/reviews/2026-11-07_owner_campaign_feedback.md. Audit: docs/reviews/
 - [x] M11-04 Selection card at the bottom centre for a unit, group or building; the sidebar build menu never moves (D-172 B, s14)
 - [x] M11-05 Objective guidance (s14, D-172): target API, HUD (bar, marker, edge arrow, minimap ping, J/Tab/O, banner, camera cue), targets in all 17 missions
 - [x] M11-06 Unit scale / zoom
-- [ ] M11-07 Terrain readability (paths, water, cliffs distinguishable)
-- [ ] M11-08 Resource field readability
+- [x] M11-07 Terrain readability (paths, water, cliffs distinguishable) — look C (D-181, s15)
+- [x] M11-08 Resource field readability — slag heaps / crystals by density, minimap colours (D-181, s15)
 - [x] M11-09 Building animation speed calmer
 - [x] M11-11 Blinking "no power" icon over buildings stopped by low power (D-170, s14)
 - [x] M11-12 Full key rebinding (D-172)
-- [ ] M11-10 Fixes from the M11-01 audit (ids added after the owner picks)
+- [x] M11-10 Fixes from the M11-01 audit and the s15 play-test (D-178):
+  - [x] M11-10a Harvesters: right-click a field = harvest there, own refinery = return (s15 play-test)
+  - [x] M11-10b Edge scroll measured in window client pixels (windowed mode, s15 play-test)
+  - [x] M11-10c Selection toolkit: Shift-add, control groups (Ctrl/Shift + 1-9), double-click / Ctrl-click same type, select army (C)
+  - [x] M11-10d Alert stack, minimap pings, last-alert key (End)
+  - [x] M11-10e Cursor per action (CursorPreview mirrors OrderController)
+  - [x] M11-10f Placement ghost with per-cell colour, reason line, build radius
+  - [x] M11-10g Cameo tooltips, Shift+click queues 5
+  - [x] M11-10h One UI scale rule (75-200 %), text size setting, more font sizes
+  - [ ] M11-10i Hold a production item with right-click (needs a sim pause command)
+
+## M12 · Maps overhaul (D-180, docs/design/16_maps_overhaul.md; all of it before M9)
+- [x] M12-01 Decal pass (derived decals, per-biome tables, second baked texture) (s15)
+- [x] M12-02 Land-linked placeholder props on rock/rough/glass/ice (s15)
+- [x] M12-03 Prop atlas interface, decor toggle (H), budget and frame-time tests (s15)
+- [ ] M12-04 Map format 4: decor layer, blocking prop overlay kinds, placement/harvest checks, hash coverage
+- [ ] M12-05 Generator decoration pass (replaces the old generator, D-180 D4; clear message for old saves)
+- [ ] M12-06 Editor Props tool, `map report`, `map render --png`
+- [ ] M12-07..12 Zone skeleton, lanes and chokes, walled mains with a ramp and a natural expansion, fairness checks (design doc wave 3)
+- [ ] M12-13..16 Stamps, rebuilt data maps, prop art (M10), optional extras (design doc wave 4)
 
 ## M9 · LAN multiplayer (was M5)
 Lockstep over LAN, lobby, desync detection, replays.

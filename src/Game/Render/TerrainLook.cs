@@ -13,12 +13,12 @@ namespace Rts.Game.Render;
 public sealed class TerrainLook
 {
     private static readonly Lazy<TerrainPalette> SharedPalette = new(() =>
-        TerrainPalette.Load(Path.Combine(AppContext.BaseDirectory, "data", "theaters", "rustbelt.toml")));
+        TerrainPalette.Load(Path.Combine(AppContext.BaseDirectory, "data", "theaters", "variants", "classic", "rustbelt.toml")));
 
     private MapData? _map;
     private Texture2D? _texture;
 
-    /// <summary>The Rust Belt palette, loaded from the game data on first use.</summary>
+    /// <summary>The classic (pre-S15) Rust Belt palette, loaded from the game data on first use.</summary>
     public static TerrainPalette Palette => SharedPalette.Value;
 
     /// <summary>Draws the whole map at the camera's scale. <paramref name="pixel"/> supplies the graphics device.</summary>

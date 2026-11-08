@@ -85,4 +85,28 @@ public enum GameAction
     ObjCycle,
     /// <summary>Mission: expand or collapse the objective list.</summary>
     ObjList,
+    /// <summary>Select every own combat unit (not harvesters or builders).</summary>
+    SelectAll,
+    /// <summary>Control group 1: the key recalls it (twice quickly centres the view on it), Ctrl + key sets it, Shift + key adds the selection.</summary>
+    Group1,
+    /// <summary>Control group 2: the key recalls it (twice quickly centres the view on it), Ctrl + key sets it, Shift + key adds the selection.</summary>
+    Group2,
+    /// <summary>Control group 3: the key recalls it (twice quickly centres the view on it), Ctrl + key sets it, Shift + key adds the selection.</summary>
+    Group3,
+    /// <summary>Control group 4: the key recalls it (twice quickly centres the view on it), Ctrl + key sets it, Shift + key adds the selection.</summary>
+    Group4,
+    /// <summary>Control group 5: the key recalls it (twice quickly centres the view on it), Ctrl + key sets it, Shift + key adds the selection.</summary>
+    Group5,
+    /// <summary>Control group 6: the key recalls it (twice quickly centres the view on it), Ctrl + key sets it, Shift + key adds the selection.</summary>
+    Group6,
+    /// <summary>Control group 7: the key recalls it (twice quickly centres the view on it), Ctrl + key sets it, Shift + key adds the selection.</summary>
+    Group7,
+    /// <summary>Control group 8: the key recalls it (twice quickly centres the view on it), Ctrl + key sets it, Shift + key adds the selection.</summary>
+    Group8,
+    /// <summary>Control group 9: the key recalls it (twice quickly centres the view on it), Ctrl + key sets it, Shift + key adds the selection.</summary>
+    Group9,
+    /// <summary>Camera: jump to the most recent alert with a place; press again to step back through the last few.</summary>
+    LastAlert,
+    /// <summary>Show or hide the map decor (decals and land-linked sprites) to compare with the bare ground (M12-03).</summary>
+    DecorToggle,
 }

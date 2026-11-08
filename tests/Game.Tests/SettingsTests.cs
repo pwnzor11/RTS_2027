@@ -37,19 +37,19 @@ public sealed class SettingsTests
     [Fact]
     public void Valid_fields_are_read_and_unknown_keys_ignored()
     {
-        Settings s = Settings.Parse("version = 1\nfullscreen = true\nwindow_width = 1920\nwindow_height = 1080\nui_scale = 3\nmusic_volume = 10\nsfx_volume = 20\nfuture_key = 5");
-        Assert.Equal(new Settings(Settings.CurrentVersion, true, 1920, 1080, 3, 10, 20), s);
+        Settings s = Settings.Parse("version = 1\nfullscreen = true\nwindow_width = 1920\nwindow_height = 1080\nui_scale_percent = 150\nmusic_volume = 10\nsfx_volume = 20\nfuture_key = 5");
+        Assert.Equal(new Settings(Settings.CurrentVersion, true, 1920, 1080, 150, 10, 20), s);
     }
 
     [Fact]
     public void Wrong_types_fall_back_per_field_and_out_of_range_is_clamped()
     {
-        Settings s = Settings.Parse("fullscreen = \"yes\"\nwindow_width = 5\nmusic_volume = 500\nsfx_volume = -4\nui_scale = 1.5");
+        Settings s = Settings.Parse("fullscreen = \"yes\"\nwindow_width = 5\nmusic_volume = 500\nsfx_volume = -4\nui_scale_percent = 1.5");
         Assert.False(s.Fullscreen);
         Assert.Equal(320, s.WindowWidth);
         Assert.Equal(100, s.MusicVolume);
         Assert.Equal(0, s.SfxVolume);
-        Assert.Equal(Settings.Default.UiScale, s.UiScale);
+        Assert.Equal(Settings.Default.UiScalePercent, s.UiScalePercent);
         Assert.Equal(Settings.Default.WindowHeight, s.WindowHeight);
     }
 
@@ -66,7 +66,7 @@ public sealed class SettingsTests
         try
         {
             string path = Path.Combine(dir, "sub", "settings.toml");
-            var saved = new Settings(Settings.CurrentVersion, true, 1600, 900, 2, 33, 44);
+            var saved = new Settings(Settings.CurrentVersion, true, 1600, 900, 125, 33, 44);
             Assert.True(saved.Save(path));
             Assert.Equal(saved, Settings.Load(path));
         }
@@ -77,12 +77,24 @@ public sealed class SettingsTests
     }
 
     [Fact]
-    public void Auto_ui_scale_grows_with_window_height_and_manual_wins()
+    public void Ui_scale_percent_and_text_size_round_trip_and_bad_values_fall_back()
     {
-        Assert.Equal(2, Settings.Default.EffectiveUiScale(720));
-        Assert.Equal(3, Settings.Default.EffectiveUiScale(1080));
-        Assert.Equal(4, Settings.Default.EffectiveUiScale(2160));
-        Assert.Equal(5, (Settings.Default with { UiScale = 5 }).EffectiveUiScale(720));
+        Settings s = Settings.Default with { UiScalePercent = 175, TextSize = Rts.Game.Ui.TextSize.Large };
+        Settings back = Settings.Parse(s.ToToml());
+        Assert.Equal(175, back.UiScalePercent);
+        Assert.Equal(Rts.Game.Ui.TextSize.Large, back.TextSize);
+        Assert.Equal(125, Settings.Parse("ui_scale_percent = 130").UiScalePercent);
+        Assert.Equal(200, Settings.Parse("ui_scale_percent = 900").UiScalePercent);
+        Assert.Equal(Rts.Game.Ui.TextSize.Normal, Settings.Parse("text_size = \"big\"").TextSize);
+        Assert.Equal(100, Settings.Parse("ui_scale = 3").UiScalePercent);   // the old integer key is ignored
+    }
+
+    [Fact]
+    public void The_scale_rule_multiplies_the_auto_scale_by_the_setting()
+    {
+        Assert.Equal(1f, Settings.Default.ResolveUiScale(1280, 720).Scale);
+        Assert.Equal(1.5f, Settings.Default.ResolveUiScale(1920, 1080).Scale);
+        Assert.Equal(0.75f, (Settings.Default with { UiScalePercent = 75 }).ResolveUiScale(1280, 720).Scale);
     }
 
     [Fact]

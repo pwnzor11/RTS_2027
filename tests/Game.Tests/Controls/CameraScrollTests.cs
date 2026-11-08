@@ -65,4 +65,39 @@ public sealed class CameraScrollTests
         float seconds = 1280f / Settings.DefaultScrollSpeed;   // the map view of a 1600 px window
         Assert.InRange(seconds, 1.2f, 1.6f);
     }
+
+    // ---- M11-10b: windowed mode -------------------------------------------------------------------
+
+    [Fact]
+    public void The_band_is_measured_in_client_pixels_not_back_buffer_pixels()
+    {
+        Rectangle client = CameraScroll.ClientRect(1280, 720, 1600, 900);   // window resized smaller than the back buffer
+        Assert.Equal(new Rectangle(0, 0, 1280, 720), client);
+        Assert.Equal(new Vector2(1f, 0f), CameraScroll.EdgeDirection(new Point(1279, 300), client, true, true, false));   // right edge of the window
+        Assert.Equal(Vector2.Zero, CameraScroll.EdgeDirection(new Point(1590, 300), client, true, true, false));        // outside the window: no scroll
+        Assert.Equal(Vector2.Zero, CameraScroll.EdgeDirection(new Point(1279, 300), Window, true, true, false));        // the old back-buffer rectangle would not scroll here
+    }
+
+    [Theory]
+    [InlineData(400, -20)]     // over the title bar
+    [InlineData(-3, 300)]      // over another window on the left
+    [InlineData(1280, 300)]    // just past the right edge
+    [InlineData(400, 720)]     // just below the bottom edge
+    public void A_cursor_outside_the_client_area_never_scrolls(int x, int y) =>
+        Assert.Equal(Vector2.Zero, CameraScroll.EdgeDirection(new Point(x, y), CameraScroll.ClientRect(1280, 720, 1600, 900), true, true, false));
+
+    [Fact]
+    public void An_unknown_client_size_falls_back_to_the_back_buffer()
+    {
+        Assert.Equal(new Rectangle(0, 0, 1600, 900), CameraScroll.ClientRect(0, 0, 1600, 900));
+        Assert.Equal(new Rectangle(0, 0, 1600, 900), CameraScroll.ClientRect(-1, 720, 1600, 900));
+    }
+
+    [Fact]
+    public void The_right_band_scrolls_over_the_sidebar_in_a_resized_window()
+    {
+        Rectangle client = CameraScroll.ClientRect(1280, 720, 1600, 900);
+        Assert.Equal(new Vector2(1f, 0f), CameraScroll.EdgeDirection(new Point(1270, 360), client, true, true, false));
+        Assert.Equal(Vector2.Zero, CameraScroll.EdgeDirection(new Point(1270, 360), client, true, false, false));   // window not focused
+    }
 }

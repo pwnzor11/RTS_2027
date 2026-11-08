@@ -279,6 +279,8 @@ public sealed class GameScreen : IScreen
         // D-068: the local player draws in the chosen colour; the AI takes the next palette entry that differs.
         PlayerColours.Assign(Skirmish is { } sk && sk.PlayerCount >= 2 ? ColoursOf(sk) : new[] { colour, colour == 1 ? 0 : 1 });
         _sidebar = new SidebarPanel(_sim, SimSnapshotSource.LocalPlayer, _selection, _cameos, PlayerColours.Base(SimSnapshotSource.LocalPlayer));
+        _sidebar.HiddenCursor = SoftwareCursor.MakeHidden(_s.Graphics);   // M11-10e
+        _sidebar.Blurbs = LoadCameoBlurbs();                               // M11-10g
         _card = new Rts.Game.Ui.Card.SelectionCard(_sim, _selection, _cameos, PlayerColours.Base(SimSnapshotSource.LocalPlayer));
         CentreCameraOnOwnBase();
         _archive = new ArchiveTracker(ArchiveProgress.Load());
@@ -300,7 +302,9 @@ public sealed class GameScreen : IScreen
     /// <inheritdoc />
     public void Update(InputFrame input, GameTime t)
     {
+        _nowMs = (long)t.TotalGameTime.TotalMilliseconds;   // M11-10c: clock for the double-tap rules
         _mouse = input.MousePosition;
+        _updatedSinceDraw = true;
         UpdateHudRegions();
         UpdateCard(input);   // M11-04: before anything else reads the click
         PlayerHud? localHud = _skirmishMode && _sim is not null ? _sim.Sim.HudFor(SimSnapshotSource.LocalPlayer) : null;
@@ -381,7 +385,7 @@ public sealed class GameScreen : IScreen
             return;
         }
 
-        _sidebar?.Update(input, _camera, _s.Viewport.Width, _s.Viewport.Height);
+        _sidebar?.Update(input, _camera, _s.Viewport.Width, _s.Viewport.Height, _s.UiFactor);
         HandlePackKeyAndPlacement(input);   // M6-09: K, and the unpack footprint on the map
 
         bool debugKeys = GameKeys.DebugKeysAllowed(_skirmishMode);
@@ -408,7 +412,9 @@ public sealed class GameScreen : IScreen
             if (input.ConsumePressed(GameAction.DebugRanges)) _overlays.Ranges = !_overlays.Ranges;
         }
 
+        if (input.ConsumePressed(GameAction.DecorToggle)) Rts.Game.Render.DecorSettings.Enabled = !Rts.Game.Render.DecorSettings.Enabled;   // M12-03
         HandleCameraKeys(input);
+        HandleSelectionKeys(input);   // M11-10c: select-all-army and the control groups
 
         if (_orders is not null) _orders.SelectedBuilding = _selectedBuilding;   // M4-09: D unloads a selected garrisoned building
         if (_orders is not null)
@@ -426,7 +432,8 @@ public sealed class GameScreen : IScreen
         if (input.IsDown(GameAction.ScrollUp)) keyDirection.Y -= 1f;
         if (input.IsDown(GameAction.ScrollDown)) keyDirection.Y += 1f;
         bool busy = _dragStart is not null || input.MiddleDragging || _sidebar is { MinimapDragging: true } || _console is { IsOpen: true } || chatTyping;
-        Vector2 edge = CameraScroll.EdgeDirection(input.MousePosition, new Rectangle(0, 0, _s.Viewport.Width, _s.Viewport.Height),
+        Point client = _s.ClientSize();   // M11-10b: the band is in client pixels, as the mouse is
+        Vector2 edge = CameraScroll.EdgeDirection(input.MousePosition, CameraScroll.ClientRect(client.X, client.Y, _s.Viewport.Width, _s.Viewport.Height),
             _s.Settings.EdgeScroll, _s.WindowActive(), busy);
         bool shift = input.IsDown(Keys.LeftShift) || input.IsDown(Keys.RightShift);
         _camera.PanScreen(CameraScroll.FrameDelta(keyDirection + edge, _s.Settings.ScrollSpeed, shift, (float)t.ElapsedGameTime.TotalSeconds));
@@ -450,6 +457,7 @@ public sealed class GameScreen : IScreen
         }
         // ---- end M11-05 ----
 
+        if (_sim is not null && !_spectatorMode) _alerts.Observe(_source.Previous, _source.Current, _sim.Sim.HudFor(SimSnapshotSource.LocalPlayer), SimSnapshotSource.LocalPlayer);   // M11-10d
         _camera.Clamp(_source.Current.MapWidth, _source.Current.MapHeight, MapViewport());
         Vector2 view = _camera.WorldFromScreen(new Point(MapViewport().Width / 2, MapViewport().Height / 2));   // M3-INT: positional audio
         Audio.AudioListener.SetFromWorldPixels(view.X, view.Y, Camera.CellPx);
@@ -465,11 +473,13 @@ public sealed class GameScreen : IScreen
         else if (_sim is { } live)
         {
             _selection.Prune(key => live.IsOwnedAlive(key, SimSnapshotSource.LocalPlayer));
+            _groups.Prune(key => live.IsOwnedAlive(key, SimSnapshotSource.LocalPlayer));
         }
         else
         {
             SimSnapshot shown = _source.Current;
             _selection.Prune(key => shown.Units.Any(unit => UnitKey.Of(unit) == key));
+            _groups.Prune(key => shown.Units.Any(unit => UnitKey.Of(unit) == key));
         }
 
         PruneBuildingSelection();
@@ -490,7 +500,7 @@ public sealed class GameScreen : IScreen
     {
         SimSnapshot snapshot = _source.Current;
         IReadOnlyList<LeptonCoord> projectiles = _sim is null ? Array.Empty<LeptonCoord>() : _sim.Projectiles;
-        var frame = new SceneFrame(snapshot, _renderUnits, projectiles, _sim?.Sim, _sim?.Rules, _overlays, _selection, DragRectangle());
+        var frame = new SceneFrame(snapshot, _renderUnits, projectiles, _sim?.Sim, _sim?.Rules, _overlays, _selection, DragRectangle(), _groups);
 
         _s.Scene.HealthBarsAlways = _s.Settings.HealthBarsAlways;
         _s.Scene.Draw(sb, _s.Pixel, frame, _camera, _s.Viewport);
@@ -498,20 +508,21 @@ public sealed class GameScreen : IScreen
         _feedback.Draw(sb, _s.Pixel, _camera);
         DrawPackProgress(sb, snapshot);
         DrawUnpackGhost(sb);
-        _sidebar?.DrawMapOverlay(sb, _s.Pixel, _camera, snapshot);
+        _sidebar?.DrawMapOverlay(sb, _s.Pixel, _camera, snapshot, _s.Scene);
         _mission?.Guidance.DrawWorld(sb, _s.Pixel, _camera, MapViewport().Bounds, _s.UiScale);   // M11-05
         DrawHud(sb, snapshot);
-        DrawArmedCursor(sb);
         _card?.Draw(sb, _s.Pixel, _mouse, _orders is { AttackMoveArmed: true });   // M11-04
         _chat.Draw(sb, _s.Pixel, _s.UiScale, new Point(8, _s.Viewport.Height - Hud.HeightOf(1, _s.UiScale) - 12), _s.Viewport.Width - 16);
         _sidebar?.Draw(sb, _s.Pixel, snapshot);
         if (_mission is not null && _sidebar is not null) _mission.Guidance.DrawMinimap(sb, _s.Pixel, _sidebar.Layout.Minimap, snapshot.MapWidth, snapshot.MapHeight);   // M11-05
+        if (_sidebar is not null) _alerts.DrawMinimapPings(sb, _s.Pixel, _sidebar.Layout.Minimap, snapshot.MapWidth, snapshot.MapHeight, snapshot.Tick);   // M11-10d
         DrawSuperweapon(sb, snapshot.Tick);
         DrawUpgradeButton(sb);
         DrawPackButton(sb);
         DrawDiveButton(sb);
         DrawSpectator(sb);
         _console?.Draw(sb, _s.Pixel, _s.Viewport);
+        DrawMapCursor(sb);   // last, so it sits above everything
     }
 
     // M11-04: rebuild the card for this frame and act on a left click on it (the click is then used up).
@@ -519,7 +530,8 @@ public sealed class GameScreen : IScreen
     {
         if (_card is null) return;
         Rectangle mapView = _sidebar?.Layout.MapView ?? new Rectangle(0, 0, _s.Viewport.Width, _s.Viewport.Height);
-        _card.Refresh(mapView, Rts.Game.Ui.UiScale.FromBackbuffer(_s.Viewport.Height), _selectedBuilding);
+        _card.Groups = _groups;
+        _card.Refresh(mapView, _s.UiFactor, _selectedBuilding);
         if (!_card.Visible || !input.LeftPressed || _dragStart is not null) return;
         Rts.Game.Ui.Card.CardAction action = _card.Click(input.MousePosition, input.IsDown(Keys.LeftShift) || input.IsDown(Keys.RightShift));
         if (!action.Consumed) return;
@@ -545,11 +557,48 @@ public sealed class GameScreen : IScreen
         }
     }
 
-    // O2: while attack-move is armed, a red crosshair at the cursor and a small "ATTACK-MOVE" label beside it.
-    private void DrawArmedCursor(SpriteBatch sb)
+    private readonly CursorPreview _cursorPreview = new();
+    private bool _updatedSinceDraw;
+
+    // M11-10g: the archive's one-line subtitle for each rules id, for the cameo tooltips (none if the archive is missing).
+    private Func<string, string?>? LoadCameoBlurbs()
     {
-        if (_orders is not { AttackMoveArmed: true } || !MapViewport().Bounds.Contains(_mouse)) return;
-        ArmedCursor.Draw(sb, _s.Pixel, _mouse, "ATTACK-MOVE", _s.UiScale);
+        try
+        {
+            ArchiveCatalog catalog = ArchiveCatalog.Load(ArchiveCatalog.DirectoryFor(_s.RulesDir));
+            return id => catalog.Find(id)?.Subtitle;
+        }
+        catch (Exception e) when (e is IOException or InvalidDataException or UnauthorizedAccessException)
+        {
+            return null;
+        }
+    }
+
+    // M11-10e (audit F2, O7): over the bare map the OS cursor is hidden and a software cursor shows what a right-click would do.
+    // The first armed-attack-move cursor (O2) is kept: its crosshair and label are drawn for AttackMove. When this screen is not
+    // being updated (a menu is on top) the OS cursor comes back.
+    private void DrawMapCursor(SpriteBatch sb)
+    {
+        bool updated = _updatedSinceDraw;
+        _updatedSinceDraw = false;
+        if (!updated) { _sidebar?.ShowOsCursor(); return; }
+        if (_sidebar is not { WantsSoftwareCursor: true })
+        {
+            if (_orders is { AttackMoveArmed: true } && MapViewport().Bounds.Contains(_mouse)) ArmedCursor.Draw(sb, _s.Pixel, _mouse, "ATTACK-MOVE", _s.UiScale.Whole);   // O2
+            return;
+        }
+
+        CursorKind kind = CursorKind.Select;
+        bool overUi = _console is { IsOpen: true } || _card is { Visible: true } && _card.HitTest(_mouse) || _hudRegion.HitTest(_mouse)
+            || _swRegion.HitTest(_mouse) || _upgradeRegion.HitTest(_mouse) || _packRegion.HitTest(_mouse) || _diveRegion.HitTest(_mouse)
+            || _specRegion.HitTest(_mouse);
+        if (!overUi && !_spectatorMode && _orders is not null && _sim is not null)
+        {
+            kind = _cursorPreview.Probe(_sim, _selection, _mouse, _camera, _renderUnits, _orders.AttackMoveArmed, _orders.DeployArmed);
+        }
+
+        if (kind == CursorKind.AttackMove) ArmedCursor.Draw(sb, _s.Pixel, _mouse, "ATTACK-MOVE", _s.UiScale.Whole);
+        else SoftwareCursor.Draw(sb, _s.Pixel, kind, _mouse, _s.UiScale.Whole);
     }
 
     // What Save game writes to: only a skirmish or mission (the sandbox has no save header).
@@ -585,22 +634,39 @@ public sealed class GameScreen : IScreen
             {
                 Vector2 a = _camera.WorldFromScreen(begin);
                 Vector2 b = _camera.WorldFromScreen(mouse);
-                _selection.Replace(Selection.Inside(_renderUnits, Vector2.Min(a, b), Vector2.Max(a, b), SimSnapshotSource.LocalPlayer));
-                ClearBuildingSelection();
+                bool addBox = ShiftHeld(input);   // M11-10c: Shift+box adds to the selection
+                _selection.Apply(Selection.Inside(_renderUnits, Vector2.Min(a, b), Vector2.Max(a, b), SimSnapshotSource.LocalPlayer), addBox);
+                if (!addBox || _selection.Count > 0) ClearBuildingSelection();
+                _clickTap.Reset();
                 if (_selection.Count > 0) Audio.AudioBootstrap.Director?.Notify(Audio.AudioEventKind.UnitSelect);   // M3-INT
             }
             else
             {
                 UnitKey? hit = Selection.Pick(_renderUnits, _camera.WorldFromScreen(mouse), SimSnapshotSource.LocalPlayer);
+                bool addClick = ShiftHeld(input);
                 if (hit is UnitKey key)
                 {
-                    _selection.Replace(new[] { key });
+                    // M11-10c: Ctrl+click or a double-click takes every unit of that type on screen; Shift+click toggles one unit.
+                    if (CtrlHeld(input) || _clickTap.Tap(key, _nowMs))
+                    {
+                        Viewport map = MapViewport();
+                        Vector2 topLeft = _camera.WorldFromScreen(new Point(0, 0));
+                        Vector2 bottomRight = _camera.WorldFromScreen(new Point(map.Width, map.Height));
+                        _selection.Apply(Selection.SameTypeInside(_renderUnits, topLeft, bottomRight, SimSnapshotSource.LocalPlayer, key), addClick);
+                    }
+                    else if (addClick) _selection.Toggle(key);
+                    else _selection.Replace(new[] { key });
                     ClearBuildingSelection();
                     Audio.AudioBootstrap.Director?.Notify(Audio.AudioEventKind.UnitSelect);   // M3-INT
+                }
+                else if (addClick)
+                {
+                    _clickTap.Reset();   // Shift+click on the ground keeps the selection
                 }
                 else
                 {
                     _selection.Clear();
+                    _clickTap.Reset();
                     SelectBuildingAt(Camera.CellAt(_camera.WorldFromScreen(mouse)));
                 }
             }
@@ -674,7 +740,7 @@ public sealed class GameScreen : IScreen
         IReadOnlyList<string>? info = _inspectUnit is UnitView u ? SpectatorInspect.Describe(u, _sim.Sim.Setup.Rules)
             : _inspectBuilding is BuildingView b ? SpectatorInspect.Describe(b, _sim.Sim.Setup.Rules) : null;
         if (info is null) return;
-        int scale = _s.UiScale;
+        var scale = _s.UiScale;
         int w = info.Max(line => BitmapFont.Measure(line, scale)) + 16;
         Hud.Panel(sb, _s.Pixel, new Point(_s.Viewport.Width - w - 8, _s.Viewport.Height - Hud.HeightOf(info.Count, scale) - 8), info, scale);
     }
@@ -683,7 +749,7 @@ public sealed class GameScreen : IScreen
 
     private Rectangle SuperweaponButtonRect(int index)
     {
-        int scale = _s.UiScale;
+        var scale = _s.UiScale;
         int w = BitmapFont.Measure("SUNRISE  PAUSED", scale) + 16;
         int h = Hud.HeightOf(1, scale) + 6;
         return new Rectangle(MapViewport().Width - w - 8, 8 + index * (h + 4), w, h);
@@ -727,7 +793,7 @@ public sealed class GameScreen : IScreen
 
     private void DrawSuperweapon(SpriteBatch sb, int tick)
     {
-        int scale = _s.UiScale;
+        var scale = _s.UiScale;
         for (int i = 0; i < _superweapon.Buttons.Count; i++)
         {
             SuperweaponButton b = _superweapon.Buttons[i];
@@ -765,7 +831,7 @@ public sealed class GameScreen : IScreen
 
     private Rectangle UpgradeButtonRect()
     {
-        int scale = _s.UiScale;
+        var scale = _s.UiScale;
         int w = BitmapFont.Measure("UPGRADE BORE HEAD $9999", scale) + 16;
         int h = Hud.HeightOf(1, scale) + 6;
         Viewport map = MapViewport();
@@ -791,7 +857,7 @@ public sealed class GameScreen : IScreen
     private void DrawUpgradeButton(SpriteBatch sb)
     {
         if (_upgrade is not BuildingUpgradeOffer offer) return;
-        int scale = _s.UiScale;
+        var scale = _s.UiScale;
         Rectangle r = UpgradeButtonRect();
         Shapes.Fill(sb, _s.Pixel, r, new Color(0, 0, 0, 190));
         Shapes.Outline(sb, _s.Pixel, r, offer.Enabled ? Color.White : new Color(90, 90, 90), 2);
@@ -808,7 +874,7 @@ public sealed class GameScreen : IScreen
 
     private Rectangle DiveButtonRect()
     {
-        int scale = _s.UiScale;
+        var scale = _s.UiScale;
         int w = Math.Max(BitmapFont.Measure(DiveOffer.Caption(false), scale), BitmapFont.Measure(DiveOffer.Caption(true), scale)) + 16;
         int h = Hud.HeightOf(1, scale) + 6;
         Viewport map = MapViewport();
@@ -862,7 +928,7 @@ public sealed class GameScreen : IScreen
 
     private Rectangle PackButtonRect()
     {
-        int scale = _s.UiScale;
+        var scale = _s.UiScale;
         int w = BitmapFont.Measure(LeftBehindText.Placeholder(LeftBehindText.UnpackKey), scale) + 16;
         int h = Hud.HeightOf(1, scale) + 6;
         Viewport map = MapViewport();
@@ -960,7 +1026,7 @@ public sealed class GameScreen : IScreen
     private void DrawPackButton(SpriteBatch sb)
     {
         if (_pack is not PackOffer offer) return;
-        int scale = _s.UiScale;
+        var scale = _s.UiScale;
         Rectangle r = PackButtonRect();
         Shapes.Fill(sb, _s.Pixel, r, new Color(0, 0, 0, 190));
         Shapes.Outline(sb, _s.Pixel, r, _unpack is not null ? Color.Red : offer.Enabled ? Color.White : new Color(90, 90, 90), 2);
@@ -1087,6 +1153,65 @@ public sealed class GameScreen : IScreen
         return new Viewport(0, 0, Math.Max(1, _sidebar.Layout.MapView.Width), v.Height);
     }
 
+    // ---- M11-10c selection toolkit: control groups (UI state, not saved), select-all-army, double-tap timing ----
+    private readonly ControlGroups _groups = new();
+    private readonly TapTracker<int> _groupTap = new();
+    private readonly TapTracker<UnitKey> _clickTap = new();
+    private long _nowMs;
+    private static readonly GameAction[] GroupActions =
+    {
+        GameAction.Group1, GameAction.Group2, GameAction.Group3, GameAction.Group4, GameAction.Group5,
+        GameAction.Group6, GameAction.Group7, GameAction.Group8, GameAction.Group9,
+    };
+
+    private static bool ShiftHeld(InputFrame input) => input.IsDown(Keys.LeftShift) || input.IsDown(Keys.RightShift);
+
+    private static bool CtrlHeld(InputFrame input) => input.IsDown(Keys.LeftControl) || input.IsDown(Keys.RightControl);
+
+    // The select-all-army key, then 1..9 (recall; twice quickly centres the view), Ctrl+n (set), Shift+n (add the selection).
+    private void HandleSelectionKeys(InputFrame input)
+    {
+        if (_spectatorMode || _sim is null) return;
+        if (input.ConsumePressed(GameAction.SelectAll))
+        {
+            SimRules rules = _sim.Rules;
+            _selection.Replace(Selection.Army(_renderUnits, SimSnapshotSource.LocalPlayer, unit => Selection.IsCombatUnit(rules, unit)));
+            ClearBuildingSelection();
+            if (_selection.Count > 0) Audio.AudioBootstrap.Director?.Notify(Audio.AudioEventKind.UnitSelect);
+        }
+
+        for (int i = 0; i < GroupActions.Length; i++)
+        {
+            if (!input.ConsumePressed(GroupActions[i])) continue;
+            int number = i + 1;
+            if (CtrlHeld(input)) { _groups.Set(number, _selection.Units); _groupTap.Reset(); continue; }
+            if (ShiftHeld(input)) { _groups.Add(number, _selection.Units); continue; }
+            IReadOnlyList<UnitKey> members = _groups.Members(number);
+            if (members.Count == 0) continue;
+            bool twice = _groupTap.Tap(number, _nowMs);
+            _selection.Replace(members);
+            ClearBuildingSelection();
+            Audio.AudioBootstrap.Director?.Notify(Audio.AudioEventKind.UnitSelect);
+            if (twice && GroupCentre(members) is { } centre) CentreCameraOn(centre);
+        }
+    }
+
+    private Vector2? GroupCentre(IReadOnlyList<UnitKey> members)
+    {
+        Vector2 sum = Vector2.Zero;
+        int n = 0;
+        foreach (RenderUnit unit in _renderUnits)
+        {
+            if (!members.Contains(UnitKey.Of(unit.View))) continue;
+            sum += unit.World;
+            n++;
+        }
+
+        return n == 0 ? null : sum / n;
+    }
+
+    private Rts.Game.Ui.Alerts.AlertController? _alertsBacking;   // M11-10d
+    private Rts.Game.Ui.Alerts.AlertController _alerts => _alertsBacking ??= new Rts.Game.Ui.Alerts.AlertController(u => u.Kind == UnitKind.Vehicle && _sim is not null && _sim.Rules.Vehicles[u.TypeIndex].HarvestCapacity > 0);
     private readonly Vector2?[] _bookmarks = new Vector2?[4];   // M11-02: camera bookmarks F5..F8 (Ctrl+key stores, key recalls)
 
     // Home centres on the player's base; Ctrl+F5..F8 store the view centre, F5..F8 recall it.
@@ -1094,6 +1219,7 @@ public sealed class GameScreen : IScreen
     {
         if (_sim is null) return;
         if (input.ConsumePressed(GameAction.CentreBase)) CentreCameraOnOwnBase();
+        if (input.ConsumePressed(GameAction.LastAlert) && _alerts.JumpTarget(_source.Current.Tick) is { } alertAt) CentreCameraOn(alertAt);   // M11-10d
         bool ctrl = input.IsDown(Keys.LeftControl) || input.IsDown(Keys.RightControl);
         GameAction[] keys = { GameAction.Bookmark1, GameAction.Bookmark2, GameAction.Bookmark3, GameAction.Bookmark4 };
         for (int i = 0; i < keys.Length; i++)
@@ -1123,7 +1249,7 @@ public sealed class GameScreen : IScreen
     /// <summary>Centres the map view on a world point, clamped to the map (the same move as the start view).</summary>
     private void CentreCameraOn(Vector2 centre)
     {
-        int mapWidth = _s.Viewport.Width - SidebarLayout.WidthFor(_s.Viewport.Width, Rts.Game.Ui.UiScale.FromBackbuffer(_s.Viewport.Height));
+        int mapWidth = _s.Viewport.Width - SidebarLayout.WidthFor(_s.Viewport.Width, _s.UiFactor);
         Vector2 size = new Vector2(Math.Max(1, mapWidth), _s.Viewport.Height) / _camera.Zoom;
         Vector2 target = centre - size / 2f;
         _camera.PanScreen((target - _camera.WorldFromScreen(Point.Zero)) * _camera.Zoom);
@@ -1174,7 +1300,7 @@ public sealed class GameScreen : IScreen
     // The HUD panels are UI regions: clicks on them never reach the map.
     private void UpdateHudRegions()
     {
-        int scale = _s.UiScale;
+        var scale = _s.UiScale;
         List<string> lines = HudLines(_source.Current);
         _hudRegion.Bounds = lines.Count == 0 ? Rectangle.Empty : PanelRect(new Point(8, 8), lines, scale);
         if (_specPanel is not null)
@@ -1186,7 +1312,7 @@ public sealed class GameScreen : IScreen
         _mission?.UpdateRegion(lines.Count, scale);
     }
 
-    private static Rectangle PanelRect(Point origin, IReadOnlyList<string> lines, int scale) =>
+    private static Rectangle PanelRect(Point origin, IReadOnlyList<string> lines, UiUnit scale) =>
         new(origin.X, origin.Y, lines.Max(line => BitmapFont.Measure(line, scale)) + 16, Hud.HeightOf(lines.Count, scale));
 
     /// <summary>
@@ -1195,10 +1321,16 @@ public sealed class GameScreen : IScreen
     /// </summary>
     private void DrawHud(SpriteBatch sb, SimSnapshot snapshot)
     {
-        int scale = _s.UiScale;
+        var scale = _s.UiScale;
         List<string> hud = HudLines(snapshot);
         Hud.Panel(sb, _s.Pixel, new Point(8, 8), hud, scale);
 
         if (_sim is not null) _mission?.Draw(sb, _s.Pixel, scale, hud.Count, _s.Viewport.Height - 8, snapshot.Tick);
+        if (_sim is not null && !_spectatorMode)   // M11-10d: alert stack, clear of the objective bar and the buttons
+        {
+            Rectangle mapView = _sidebar?.Layout.MapView ?? new Rectangle(0, 0, _s.Viewport.Width, _s.Viewport.Height);
+            Rectangle banner = _mission is null ? Rectangle.Empty : new Rectangle(_mission.ObjectivesRegion.Bounds.X, _mission.ObjectivesRegion.Bounds.Y, _mission.ObjectivesRegion.Bounds.Width, _mission.ObjectivesRegion.Bounds.Height + 48);
+            _alerts.DrawStack(sb, _s.Pixel, mapView, scale, snapshot.Tick, new[] { banner, _hudRegion.Bounds, _swRegion.Bounds, _upgradeRegion.Bounds, _packRegion.Bounds, _diveRegion.Bounds, _specRegion.Bounds });
+        }
     }
 }

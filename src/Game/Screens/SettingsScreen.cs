@@ -5,11 +5,12 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Rts.Game.Input;
 using Rts.Game.Menu;
+using Rts.Game.Ui;
 
 namespace Rts.Game.Screens;
 
 /// <summary>
-/// Settings: full screen, window size, UI scale, master / music / effects volume, the Controls page and the About page. Changes apply at once (volume
+/// Settings: full screen, window size, UI scale (75 to 200 %), text size, master / music / effects volume, the Controls page and the About page. Changes apply at once (volume
 /// by the audio backend, display through <see cref="GameServices.ApplyDisplay"/>) and are written to settings.toml when the screen
 /// closes.
 /// </summary>
@@ -39,8 +40,10 @@ public sealed class SettingsScreen : IScreen
                 new MenuButton("Toggle", ToggleFullscreen)),
             new MenuItem(() => $"Window size: {_s.Settings.WindowWidth} x {_s.Settings.WindowHeight}", () => StepWindow(1), StepWindow,
                 new MenuButton("<", () => StepWindow(-1)), new MenuButton(">", () => StepWindow(1))),
-            new MenuItem(() => $"UI scale: {UiScaleName(_s.Settings.UiScale)}", () => StepUiScale(1), StepUiScale,
+            new MenuItem(() => UiScaleLine(_s.Settings, _s.UiScaleInfo), () => StepUiScale(1), StepUiScale,
                 new MenuButton("<", () => StepUiScale(-1)), new MenuButton(">", () => StepUiScale(1))),
+            new MenuItem(() => $"Text size: {UiScale.NameOf(_s.Settings.TextSize)}", () => StepTextSize(1), StepTextSize,
+                new MenuButton("<", () => StepTextSize(-1)), new MenuButton(">", () => StepTextSize(1))),
             new MenuItem(() => "Controls", () => _s.Screens.Push(new ControlsScreen(_s, _path))),
             new MenuItem(() => $"Health bars: {(_s.Settings.HealthBarsAlways ? "Always" : "Damaged or selected")}", ToggleHealthBars, _ => ToggleHealthBars(),
                 new MenuButton("Toggle", ToggleHealthBars)),
@@ -139,10 +142,25 @@ public sealed class SettingsScreen : IScreen
         _s.ApplyDisplay?.Invoke(_s.Settings);
     }
 
-    private void StepUiScale(int d) =>
-        _s.Settings = _s.Settings with { UiScale = (_s.Settings.UiScale + d + 5) % 5 };
+    // M11-10h: the UI scale and text size apply at once (every screen reads the one rule each frame) and are saved when this screen closes.
+    private void StepUiScale(int d)
+    {
+        IReadOnlyList<int> steps = UiScale.Percents;
+        int i = 0;
+        for (int k = 0; k < steps.Count; k++)
+            if (steps[k] == UiScale.SnapPercent(_s.Settings.UiScalePercent)) i = k;
+        _s.Settings = _s.Settings with { UiScalePercent = steps[(i + d + steps.Count) % steps.Count] };
+    }
 
-    private static string UiScaleName(int scale) => scale == 0 ? "Auto" : $"{scale}x";
+    private void StepTextSize(int d) =>
+        _s.Settings = _s.Settings with { TextSize = (TextSize)(((int)_s.Settings.TextSize + d + 4) % 4) };
+
+    /// <summary>The UI scale row: "UI scale: 150%", with "(limited by window size)" when the window cannot hold that scale.</summary>
+    public static string UiScaleLine(Settings settings, UiScaleResult result)
+    {
+        string line = $"UI scale: {settings.UiScalePercent}%";
+        return result.Limited ? $"{line} (limited by window size)" : line;
+    }
 
     private void Back()
     {

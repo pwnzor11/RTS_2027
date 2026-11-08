@@ -20,12 +20,15 @@ and `MidMissionSaveLoadTests` (save at half the win tick, load, finish the walk,
 
 | Mission | Tier | Won | Win time (tick) | Player losses | Enemy losses | Notes |
 |---|---|---|---|---|---|---|
-| auth_01 | 3 | yes | 4:31 (5421) | 5 | 8 | 38% of limit 11:40 |
-| auth_01 | 5 | yes | 4:17 (5141) | 5 | 12 | 36% of limit 11:40 |
-| auth_02 | 3 | yes | 4:00 (4801) | 7 | 26 | 16% of limit 25:00 |
-| auth_02 | 5 | yes | 4:00 (4801) | 1 | 41 | 16% of limit 25:00 |
-| auth_03 | 3 | yes | 3:34 (4299) | 11 | 47 | 14% of limit 25:00 |
-| auth_03 | 5 | yes | 3:39 (4387) | 8 | 64 | 14% of limit 25:00 |
+| auth_01 | 1 | yes | 4:45 (5701) | 4 | 5 | 40% of limit 11:40 (new row) |
+| auth_01 | 3 | yes | 4:31 (5421) | 5 | 8 | 38% of limit 11:40 (unchanged) |
+| auth_01 | 5 | yes | 5:37 (6741) | 6 | 12 | 48% of limit 11:40 (was 4:17, 5 losses) |
+| auth_02 | 1 | yes | 4:00 (4801) | 0 | 14 | 16% of limit 25:00 (new row) |
+| auth_02 | 3 | yes | 4:00 (4801) | 7 | 26 | 16% of limit 25:00 (unchanged) |
+| auth_02 | 5 | yes | 4:00 (4801) | 22 | 50 | 16% of limit 25:00 (was 1 loss, 41 enemy) |
+| auth_03 | 1 | yes | 3:37 (4344) | 0 | 27 | 14% of limit 25:00 (new row) |
+| auth_03 | 3 | yes | 3:34 (4299) | 11 | 47 | 14% of limit 25:00 (unchanged) |
+| auth_03 | 5 | yes | 3:34 (4292) | 20 | 76 | 14% of limit 25:00 (was 8 losses, 64 enemy) |
 | auth_04 | 3 | yes | 3:44 (4486) | 15 | 40 | 28% of limit 13:20 |
 | auth_04 | 5 | yes | 3:51 (4625) | 20 | 73 | 28% of limit 13:20 |
 | dir_01 | 3 | yes | 1:57 (2341) | 1 | 5 | 11% of limit 16:40 |
@@ -75,3 +78,11 @@ All 42 runs won, no script errors. Compared with the first table, tier 5 is now 
 - **Win time:** dir_04 is 2:40 at every tier (a fixed timer), and dir_02, dir_03, dir_01, lb_02 and exp_02 change by under 5%. Tier shows up as losses there, not time. lb_03 is faster at tier 5 (3:50 against 4:14).
 - **Still easy for this bot:** exp_03 tier 1 and exp_01 (0 to 2 losses at easy tiers), auth_02 at tier 5 (1 loss against 41 enemy losses). The Expedition missions are easier at low tiers but now bite at tier 5.
 - Finales: dir_04 (2:40) is still short next to dir_03 (7:42 to 7:48); exp_04 is now the longest at tier 5 (14:34, 163 enemy losses).
+
+## Session 15 (Q-66)
+Owner decision Q-66 (D-175): the Authority opening missions get tier knobs like the other nine. Only the mission scripts of auth_01..03 changed (tier 3 is exactly the old design in all three; the 3-tier rows above are unchanged), and `CampaignWalks.Tiers` now also walks tier 1 for them, so these missions have 1, 3 and 5 rows. All 9 runs won, tier 5 is clearly harder than tier 3, which is harder than tier 1.
+- **auth_01** (tutorial-like, stays gentle at tier 1 and 3): the raid sizes were already tiered and are untouched; the new knob is arrival time. Raid 1 arrives 300 ticks after the scrapers reach the site (tiers 1-3) and 260 / 220 at tiers 4 / 5; the raid-2 timer is 1500 (tiers 1-3), 1400 and 1300, so at tier 5 the two raids overlap. Player losses 4 / 5 / 6, enemy losses 5 / 8 / 12, win time 4:45 / 4:31 / 5:37 (tier 5 has to fight longer).
+- **auth_02**: raid sizes scale 2 to 9 conscripts with more Ashthrowers and Sappers at tiers 4-5, and the four waves arrive up to 200 ticks earlier at tier 5 (later at tier 1). Player losses 0 / 7 / 22, enemy losses 14 / 26 / 50. The win tick stays 4:00 because the relief timer (4800) decides it.
+- **auth_03**: yard waves, road ambush, dune riders and shore counter-attack scale (tier 1: 4 conscripts per group, tier 5: 12 to 16), and the yard waves come up to 1000 ticks earlier at tier 5. Player losses 0 / 11 / 20, enemy losses 27 / 47 / 76. Win time is flat (3:34 to 3:37) because the convoy march sets it.
+- Limits: all still under 16% (auth_02/03) or 48% (auth_01) of their design limit. Unit counts and timings only (D-061).
+- Tried and dropped: a third raid and 160-tick raid timers at auth_01 tier 5 (the bot could not win inside the limit; the walk was not changed).

@@ -81,7 +81,7 @@ public sealed class AboutScreen : IScreen
     public void Draw(SpriteBatch sb)
     {
         Backdrop.FillOpaque(sb, _s);
-        int scale = _s.UiScale;
+        var scale = _s.UiScale;
         Viewport vp = _s.Viewport;
         int line = BitmapFont.LineHeight(scale, FontWeight.Regular) + scale;
         int width = Math.Min(vp.Width - 8 * scale, 110 * scale * BitmapFont.Advance / 2);
@@ -112,7 +112,7 @@ public sealed class AboutScreen : IScreen
         BitmapFont.Draw(sb, _s.Pixel, "Back", new Vector2(back.X + 3 * scale, back.Y + scale), TextColour, scale);
     }
 
-    private static Rectangle BackRect(Viewport vp, int scale)
+    private static Rectangle BackRect(Viewport vp, UiUnit scale)
     {
         int line = BitmapFont.LineHeight(scale, FontWeight.Regular) + scale;
         int width = Math.Min(vp.Width - 8 * scale, 110 * scale * BitmapFont.Advance / 2);
@@ -121,7 +121,7 @@ public sealed class AboutScreen : IScreen
         return new Rectangle(panel.Right - 5 * scale - 12 * scale, panel.Bottom - 5 * scale - line, 12 * scale, line);
     }
 
-    private void Wrap(int width, int scale)
+    private void Wrap(int width, UiUnit scale)
     {
         if (_wrappedFor == width) return;
         _wrappedFor = width;

@@ -7,6 +7,7 @@ using Rts.Game.Sprites;
 using Rts.Game.Veterancy;
 using Rts.Sim.Core;
 using Rts.Sim.Map;
+using Rts.Sim.Rules;
 using Rts.Sim.View;
 
 namespace Rts.Game.Render;
@@ -32,6 +33,7 @@ public sealed class SceneRenderer : IDisposable
     private readonly WallTiler _walls = new();
     private readonly List<DrawItem> _items = new();
     private readonly ThemedTerrainLook _terrain = new();
+    private readonly DecorLayer _decor = new();   // M12: decals and land-linked sprites on the terrain
     private readonly List<WreckView> _wreckViews = new();      // M6-09: wreck and storm layers
     private readonly List<WreckDraw> _wrecks = new();
     private readonly List<StormView> _stormViews = new();
@@ -76,6 +78,7 @@ public sealed class SceneRenderer : IDisposable
         if (map is not null)
         {
             _terrain.Draw(batch, pixel, map, camera);
+            _decor.Draw(batch, pixel, map, camera, viewport);
         }
         else
         {
@@ -144,6 +147,20 @@ public sealed class SceneRenderer : IDisposable
             }
         }
         _fx.Draw(batch, _library, camera, snapshot.Tick);
+    }
+
+    /// <summary>
+    /// M11-10f: draws the sprite of building type <paramref name="typeIndex"/> at half transparency with its footprint's top-left on
+    /// <paramref name="topLeft"/> (the placement ghost). Uses the same sprite lookup and painter as real buildings.
+    /// </summary>
+    public void DrawBuildingGhost(SpriteBatch batch, Texture2D pixel, SimRules rules, int typeIndex, CellCoord topLeft, Camera camera, int tick, byte player)
+    {
+        if ((uint)typeIndex >= (uint)rules.Buildings.Count) return;
+        BuildingType bt = rules.Buildings[typeIndex];
+        var view = new BuildingView(default, player, typeIndex, topLeft, bt.FootprintW, bt.FootprintH, bt.MaxHealth, false);
+        ResolvedSprite sprite = _sprites.ForBuilding(rules, view);
+        int frame = SpriteStates.BuildingFrame(sprite.Manifest, int.MaxValue / 2, bt.MaxHealth, bt.MaxHealth, false, tick, false);
+        _painter.Draw(batch, sprite, frame, SpriteLayout.BuildingOrigin(camera, topLeft), PlayerColours.Base(player), camera.Zoom, 0.5f);
     }
 
     /// <inheritdoc />

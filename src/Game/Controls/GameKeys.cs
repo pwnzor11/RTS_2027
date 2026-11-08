@@ -81,6 +81,18 @@ public static class GameKeys
         new(GameAction.ObjJump, "obj_jump", System, "Mission: jump to the objective", Keys.J),
         new(GameAction.ObjCycle, "obj_cycle", System, "Mission: next objective", Keys.Tab),
         new(GameAction.ObjList, "obj_list", System, "Mission: objective list", Keys.O),
+        new(GameAction.SelectAll, "select_all", Selection, "Select all combat units (not harvesters or builders)", Keys.C),
+        new(GameAction.Group1, "group_1", Selection, "Control group 1 (Ctrl + key sets, Shift + key adds, twice centres)", Keys.D1),
+        new(GameAction.Group2, "group_2", Selection, "Control group 2 (Ctrl + key sets, Shift + key adds, twice centres)", Keys.D2),
+        new(GameAction.Group3, "group_3", Selection, "Control group 3 (Ctrl + key sets, Shift + key adds, twice centres)", Keys.D3),
+        new(GameAction.Group4, "group_4", Selection, "Control group 4 (Ctrl + key sets, Shift + key adds, twice centres)", Keys.D4),
+        new(GameAction.Group5, "group_5", Selection, "Control group 5 (Ctrl + key sets, Shift + key adds, twice centres)", Keys.D5),
+        new(GameAction.Group6, "group_6", Selection, "Control group 6 (Ctrl + key sets, Shift + key adds, twice centres)", Keys.D6),
+        new(GameAction.Group7, "group_7", Selection, "Control group 7 (Ctrl + key sets, Shift + key adds, twice centres)", Keys.D7),
+        new(GameAction.Group8, "group_8", Selection, "Control group 8 (Ctrl + key sets, Shift + key adds, twice centres)", Keys.D8),
+        new(GameAction.Group9, "group_9", Selection, "Control group 9 (Ctrl + key sets, Shift + key adds, twice centres)", Keys.D9),
+        new(GameAction.LastAlert, "last_alert", Camera, "Jump to the last alert (again: the one before)", Keys.End),
+        new(GameAction.DecorToggle, "decor_toggle", System, "Show or hide the map decor (decals, boulders, rubble)", Keys.H, KeyContext.Both),
     };
 
     /// <summary>The Controls page lines, grouped in <see cref="Groups"/> order: rebindable actions and fixed inputs shown for reference.</summary>
@@ -120,9 +132,14 @@ public static class GameKeys
             F(Camera, "Middle-drag", "Drag the view"),
             F(Camera, "Mouse wheel", "Zoom"),
             F(Camera, "Minimap click or drag", "Move the view"),
-            A(GameAction.CentreBase), A(GameAction.Bookmark1), A(GameAction.Bookmark2), A(GameAction.Bookmark3), A(GameAction.Bookmark4),
+            A(GameAction.CentreBase), A(GameAction.LastAlert), A(GameAction.Bookmark1), A(GameAction.Bookmark2), A(GameAction.Bookmark3), A(GameAction.Bookmark4),
             F(Selection, "Left click", "Select a unit or structure"),
             F(Selection, "Left drag", "Select units in a box"),
+            F(Selection, "Shift + click or drag", "Add to the selection (Shift + click on a selected unit removes it)"),
+            F(Selection, "Double-click or Ctrl + click", "Select every unit of that type on screen"),
+            A(GameAction.SelectAll),
+            A(GameAction.Group1), A(GameAction.Group2), A(GameAction.Group3), A(GameAction.Group4), A(GameAction.Group5),
+            A(GameAction.Group6), A(GameAction.Group7), A(GameAction.Group8), A(GameAction.Group9),
             F(Orders, "Right click", "Move, attack, enter, salvage; set a factory's rally point"),
             F(Orders, "Left click (attack-move armed)", "Attack-move to the cell"),
             A(GameAction.AttackMove), A(GameAction.Stop), A(GameAction.Guard), A(GameAction.Scatter), A(GameAction.Deploy), A(GameAction.Pack),
@@ -136,7 +153,7 @@ public static class GameKeys
             A(GameAction.DebugStep), A(GameAction.DebugSpectator),
             A(GameAction.SpecView), A(GameAction.SpecSpeed1), A(GameAction.SpecSpeed2), A(GameAction.SpecSpeed4), A(GameAction.SpecSpeed8),
             A(GameAction.SpecDetail),
-            A(GameAction.ObjJump), A(GameAction.ObjCycle), A(GameAction.ObjList),
+            A(GameAction.ObjJump), A(GameAction.ObjCycle), A(GameAction.ObjList), A(GameAction.DecorToggle),
         };
     }
 }

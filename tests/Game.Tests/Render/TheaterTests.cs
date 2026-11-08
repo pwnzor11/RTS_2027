@@ -79,12 +79,25 @@ public sealed class TheaterTests
     }
 
     [Fact]
-    public void RustBeltBakeIsByteIdenticalForTheShippedMap()
+    public void ClassicRustBeltBakeIsByteIdenticalForTheShippedMap()
     {
-        (MapData map, MapMeta meta) = MapFile.LoadWithMeta(RepoFile("data/maps/rustbelt_m2.map.toml"));
+        // D-181: the shipped look is C, so the old pin is kept on the classic palette (the pre-S15 data, unchanged apart from a header comment).
+        (MapData map, _) = MapFile.LoadWithMeta(RepoFile("data/maps/rustbelt_m2.map.toml"));
+        TerrainPalette classic = TerrainPalette.Load(RepoFile("data/theaters/variants/classic/rustbelt.toml"));
+        Assert.Equal(RustBeltM2BakeSha256, Convert.ToHexString(SHA256.HashData(TerrainBake.Bake(map, classic).Rgba)).ToLowerInvariant());
+    }
 
-        foreach (TerrainBake.Result baked in new[] { TerrainBake.Bake(map, meta), TerrainBake.Bake(map, (MapMeta?)null), TerrainBake.Bake(map, TerrainPalette.Load("rust_belt")) })
-            Assert.Equal(RustBeltM2BakeSha256, Convert.ToHexString(SHA256.HashData(baked.Rgba)).ToLowerInvariant());
+    [Theory]
+    [InlineData("rustbelt")]
+    [InlineData("glass_coast")]
+    [InlineData("mountains")]
+    [InlineData("ash_plains")]
+    public void ShippedPaletteIsVariantCAndRustBeltAliasesAgree(string file)
+    {
+        string Body(string path) => string.Join("\n", File.ReadAllText(RepoFile(path)).Replace("\r\n", "\n").Split('\n').Skip(2));
+        Assert.Equal(Body($"data/theaters/variants/c/{file}.toml"), Body($"data/theaters/{file}.toml"));
+
+        Assert.Same(TerrainPalette.Load("rustbelt"), TerrainPalette.Load("rust_belt"));
     }
 
     [Theory]
