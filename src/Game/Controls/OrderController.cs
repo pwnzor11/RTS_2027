@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework.Input;
 using Rts.Game.Render;
 using Rts.Game.Sandbox;
 using Rts.Sim.Core;
+using Rts.Sim.Rules;
 using Rts.Sim.View;
 
 namespace Rts.Game.Controls;
@@ -17,7 +18,8 @@ namespace Rts.Game.Controls;
 /// Right-click: an enemy under the cursor is an Attack (an Engineer on an enemy or neutral building Enters to capture it, and on an own
 /// damaged building Enters to repair it), an own transport (for infantry) or own tunnel entrance (for units that fit
 /// it) is an Enter, the ground is a Move (or an attack-move when armed). M6-09: a unit that salvages (a Hauler or Tinker) right-clicking a wreck
-/// is a Harvest on that cell.
+/// is a Harvest on that cell. M11-10a: a harvester (any vehicle with harvest_capacity) right-clicking a resource
+/// field is a Harvest there and right-clicking an own refinery is a Return (<see cref="HarvestOrders"/>).
 /// </summary>
 public sealed class OrderController
 {
@@ -127,6 +129,9 @@ public sealed class OrderController
             wreckHere = SalvageOrders.WreckAt(_wrecks, cell);
         }
 
+        OverlayKind overlay = !armed && _source.Map.Contains(cell) ? _source.Sim.ViewFor(SimSnapshotSource.LocalPlayer).OverlayAt(cell) : OverlayKind.None;
+        bool ownBuilding = building is BuildingView ob && ob.Player == SimSnapshotSource.LocalPlayer;
+
         OrderMarkKind? mark = null;   // O1: one ring per click, not one per unit
         foreach (UnitKey unit in _selection.Units.ToList())
         {
@@ -150,6 +155,13 @@ public sealed class OrderController
             else if (own is { Target.Kind: ActorKind.Vehicle } mine && M3Orders.CanBoard(_source.Rules, unit.Kind, mine.TypeIndex))
             {
                 _source.Order(CommandKind.Enter, unit, default, mine.Target);   // M3: board an own transport
+            }
+            else if (!armed && _source.TryGetTypeIndex(unit, out int harvester)
+                && HarvestOrders.Classify(_source.Rules, unit.Kind, harvester, overlay, building, ownBuilding) is var harvest and not HarvestClick.None)
+            {
+                // M11-10a: a harvester on a resource field works it (even after the player moved it away), on an own refinery it delivers
+                _source.Order(harvest == HarvestClick.Return ? CommandKind.Return : CommandKind.Harvest, unit, harvest == HarvestClick.Harvest ? cell : default);
+                mark ??= OrderMarkKind.Move;
             }
             else if (wreckHere && _source.TryGetTypeIndex(unit, out int salvager) && SalvageOrders.CanSalvage(_source.Rules, unit.Kind, salvager))
             {
