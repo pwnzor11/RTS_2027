@@ -8,6 +8,7 @@ import os, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import exp_parts as EP
 
+SCALE = 1.25                  # D-185: figure 1.25 x, frame 48 x 48, team-colour emphasis
 ID = "exp_pioneer"
 TITLE = "Expedition Pioneer"
 CANVAS, ORIGIN, STATES, DIE_FACING = EP.CANVAS, EP.ORIGIN, EP.STATES, EP.DIE_FACING
@@ -21,6 +22,7 @@ def pack(S, U, R):
     S.sphere((0.085, 0.085, 0.06), (-0.07, -0.27, 0.56), "orange2", U, seg=8)
     S.cyl(0.09, 0.04, (-0.07, -0.27, 0.40), "chrome", "Z", U, verts=10)
     S.box((0.20, 0.12, 0.26), (0.12, -0.26, 0.18), "navy3", U, bevel=0.02)
+    S.box((0.18, 0.03, 0.16), (0.12, -0.335, 0.18), "house", U, bevel=0)                      # D-185 house panel on the pack
 
 
 def extra(S, U, up, R, p):
@@ -39,7 +41,7 @@ def weapon(S, GM, p, R):
     S.cyl(0.036, 0.12, (0, -0.10, 0), "orange2", "Y", GM, verts=6)
 
 
-SPEC = dict(shoulder=(0.22, 0.0, 0.37), grips=((0, -0.04, 0.0), (0, 0.10, 0.0)), bulk=1.05,
+SPEC = dict(house_boost=True, shoulder=(0.22, 0.0, 0.37), grips=((0, -0.04, 0.0), (0, 0.10, 0.0)), bulk=1.05,
             body=("navy", "navy2"), pack=pack, extra=extra, weapon=weapon)
 
 
