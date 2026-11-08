@@ -120,7 +120,7 @@ public sealed class SidebarPanelTests : IDisposable
     }
 
     [Fact]
-    public void Left_click_queues_right_click_cancels()
+    public void Left_click_queues_right_click_holds_then_cancels_and_left_click_resumes()
     {
         Point cameo = PowerCameo().Center;
         InputFrame press = Click(cameo);
@@ -130,7 +130,21 @@ public sealed class SidebarPanelTests : IDisposable
         Assert.Single(q.Items);
         Assert.Equal(_power, q.Items[0].TypeIndex);
 
+        Click(cameo, right: true);   // S15: the first right click holds
+        _source.StepTicks(2);
+        q = Hud().Queues.Single(x => x.Category == ProductionCategory.Structure);
+        Assert.True(q.Items[0].Held);
+        int progress = q.Items[0].ProgressPermille;
+        _source.StepTicks(10);
+        Assert.Equal(progress, Hud().Queues.Single(x => x.Category == ProductionCategory.Structure).Items[0].ProgressPermille);
+
+        Click(cameo);   // left click on the held item resumes it
+        _source.StepTicks(2);
+        Assert.False(Hud().Queues.Single(x => x.Category == ProductionCategory.Structure).Items[0].Held);
+
         Click(cameo, right: true);
+        _source.StepTicks(2);
+        Click(cameo, right: true);   // the second right click cancels
         _source.StepTicks(2);
         Assert.Empty(Hud().Queues.Single(x => x.Category == ProductionCategory.Structure).Items);
     }

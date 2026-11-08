@@ -117,4 +117,28 @@ public sealed class UpgradeTests
         while (!sim.HasUpgrade(0, A)) sim.Step(None);
         Assert.Equal(4600, sim.Players.Cash[0]);              // 100 already drained + 400 more = 500 in total
     }
+
+    [Fact]
+    public void Hold_PausesResearchAndSpending_ResumeFinishes_CancelRefunds()
+    {
+        Simulation sim = WithLab();
+        Run(sim, 30, BuildUpgrade(sim, A));
+        Run(sim, 1, new Command(sim.Tick, 0, 900, CommandKind.Hold, default, default, default, (int)ProductionCategory.Upgrade, 1));
+        int cash = sim.Players.Cash[0];
+        Assert.True(sim.HudFor(0).Queues.Single(q => q.Category == ProductionCategory.Upgrade).Items[0].Held);
+        Run(sim, 300);
+        Assert.Equal(cash, sim.Players.Cash[0]);
+        Assert.False(sim.HasUpgrade(0, A));
+        Run(sim, 1, new Command(sim.Tick, 0, 901, CommandKind.Hold, default, default, default, (int)ProductionCategory.Upgrade, 0));
+        int steps = 0;
+        while (!sim.HasUpgrade(0, A) && steps < 300) { sim.Step(None); steps++; }
+        Assert.True(sim.HasUpgrade(0, A));
+        Assert.Equal(1500, sim.Players.Cash[0]);
+
+        Simulation held = WithLab();
+        Run(held, 30, BuildUpgrade(held, A));
+        Run(held, 1, new Command(held.Tick, 0, 900, CommandKind.Hold, default, default, default, (int)ProductionCategory.Upgrade, 1));
+        Run(held, 1, CancelUpgrade(held, 0));
+        Assert.Equal(2000, held.Players.Cash[0]);
+    }
 }

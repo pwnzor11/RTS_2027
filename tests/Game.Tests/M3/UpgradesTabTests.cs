@@ -121,4 +121,20 @@ public sealed class UpgradesTabTests
         Assert.Equal(3, c.Arg2);
         Assert.True(c.Subject.IsNone);
     }
+
+    [Fact]
+    public void Upgrade_right_click_holds_then_cancels_and_left_click_resumes()
+    {
+        PlayerHud running = Hud(0, Array.Empty<int>(), UpgradeQueue(new QueueItemView(1, 300, false)));
+        UpgradeEntry e = Assert.Single(UpgradeList.Entries(running, Upgrades));
+        Command hold = UpgradeList.RightClick(0, running, e)!.Value;
+        Assert.Equal((CommandKind.Hold, (int)ProductionCategory.Upgrade, 1), (hold.Kind, hold.Arg, hold.Arg2));
+        Assert.Null(UpgradeList.LeftClick(0, running, e));
+
+        PlayerHud held = Hud(0, Array.Empty<int>(), UpgradeQueue(new QueueItemView(1, 300, false, true)));
+        UpgradeEntry he = Assert.Single(UpgradeList.Entries(held, Upgrades));
+        Assert.Equal(CommandKind.Cancel, UpgradeList.RightClick(0, held, he)!.Value.Kind);
+        Command resume = UpgradeList.LeftClick(0, held, he)!.Value;
+        Assert.Equal((CommandKind.Hold, 0), (resume.Kind, resume.Arg2));
+    }
 }

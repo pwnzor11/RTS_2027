@@ -328,6 +328,7 @@ public sealed partial class Simulation
                 break;
             case CommandKind.Build: ApplyBuild(c); break;       // Simulation.Production.cs (M2-08)
             case CommandKind.Cancel: ApplyCancel(c); break;
+            case CommandKind.Hold: ApplyHold(c); break;         // S15: Simulation.Production.cs
             case CommandKind.Place: ApplyPlace(c); break;
             case CommandKind.Rally: ApplyRally(c); break;
             case CommandKind.Repair: ApplyRepair(c); break;

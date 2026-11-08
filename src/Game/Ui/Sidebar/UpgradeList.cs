@@ -75,11 +75,26 @@ public static class UpgradeList
         return -1;
     }
 
-    /// <summary>The command a left click on an entry issues: research it when available, else nothing.</summary>
+    /// <summary>S15: true when the upgrade is the front item of the Upgrade queue and on hold.</summary>
+    public static bool IsHeld(PlayerHud hud, int upgradeIndex) =>
+        SidebarCommands.FrontHeld(hud, ProductionCategory.Upgrade, upgradeIndex);
+
+    /// <summary>The command a left click on an available entry issues: research it, else nothing (no HUD, so no resume).</summary>
     public static Command? LeftClick(byte player, UpgradeEntry entry) =>
         entry.State == UpgradeState.Available ? SidebarCommands.BuildUpgrade(player, entry.Index) : null;
 
-    /// <summary>The command a right click on an entry issues: cancel it when it is queued, else nothing.</summary>
-    public static Command? RightClick(byte player, PlayerHud hud, UpgradeEntry entry) =>
-        entry.State == UpgradeState.Researching ? SidebarCommands.CancelUpgrade(player, hud, entry.Index) : null;
+    /// <summary>The command a left click on an entry issues: research it when available, resume it when held, else nothing.</summary>
+    public static Command? LeftClick(byte player, PlayerHud hud, UpgradeEntry entry) =>
+        entry.State == UpgradeState.Available ? SidebarCommands.BuildUpgrade(player, entry.Index)
+        : entry.State == UpgradeState.Researching && IsHeld(hud, entry.Index) ? SidebarCommands.Hold(player, ProductionCategory.Upgrade, false)
+        : null;
+
+    /// <summary>S15: the command a right click on an entry issues: hold the research in progress, cancel it when held or queued behind, else nothing.</summary>
+    public static Command? RightClick(byte player, PlayerHud hud, UpgradeEntry entry)
+    {
+        if (entry.State != UpgradeState.Researching) return null;
+        return QueuePosition(hud, entry.Index, out _) == 0 && !IsHeld(hud, entry.Index)
+            ? SidebarCommands.Hold(player, ProductionCategory.Upgrade, true)
+            : SidebarCommands.CancelUpgrade(player, hud, entry.Index);
+    }
 }
