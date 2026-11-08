@@ -68,7 +68,7 @@ def build(S, state, k, n):
             cyl(f"pipe{i}{j}", 0.115, ln, Q(lx, 0.1 + ln / 2 - 0.6, 0.55 + j * 0.25), mats[(i + j * 2) % 6], rot=(TILT - 90, 0, 0), verts=8)
             cyl(f"mouth{i}{j}", 0.09, 0.05, Q(lx, 0.1 + ln - 0.6 + 0.02, 0.55 + j * 0.25), "dark", rot=(TILT - 90, 0, 0), verts=8)
     box("bonnet", (1.6, 0.9, 0.7), Q(0, -0.7, 0.75), "canvas", 0.18, rot=(TILT, 0, 0))
-    box("bonnetstripe", (0.5, 0.92, 0.72), Q(0.5, -0.7, 0.75), "rust", 0.1, rot=(TILT, 0, 0))
+    box("bonnetstripe", (0.5, 0.92, 0.72), Q(0.5, -0.7, 0.75), "house", 0.1, rot=(TILT, 0, 0))
     for s in (-1, 1):
         box(f"rside{s}", (0.05, 1.0, 0.45), Q(s * 0.82, -0.1, 0.65), "house", 0.0, rot=(TILT, 0, 0))
         box(f"strap{s}", (0.06, 0.1, 0.8), Q(s * 0.82, 0.5, 0.65), "rope", 0.0, rot=(TILT, 0, 0))
