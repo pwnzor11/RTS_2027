@@ -13,7 +13,7 @@ namespace Rts.Game.Ui;
 /// <remarks>
 /// Two size conventions. The <c>int scale</c> overloads are the original 5x7 convention, where a font pixel is
 /// <c>scale</c> screen pixels; they pick the atlas whose cap height is nearest <c>GlyphHeight * scale</c> (scale 1 gives
-/// 12 px, 2 gives 16 px, 3 gives 24 px). The <c>float uiScale</c> overloads take <see cref="UiScale.FromBackbuffer"/>
+/// 12 px, 2 gives 16 px, 3 gives 24 px). The <c>float uiScale</c> overloads take <see cref="UiScale.Resolve"/>
 /// and pick the atlas nearest to 12 px times that scale (1 gives 12 px, 1.5 gives 16 px, 2 gives 24 px). Text is never
 /// stretched.
 /// </remarks>
@@ -32,19 +32,22 @@ public static class BitmapFont
     private const int LastChar = 126;
     private const int UnknownGlyph = '?' - FirstChar;
 
-    /// <summary>Em size per font pixel for the int-scale overloads: the 5x7 cap height over Noto Sans' cap height (0.714 em).</summary>
-    private const float EmPerFontPixel = 1f / 0.714f;
+    /// <summary>Em size per <see cref="UiUnit"/> step (screen pixels per 5x7 font pixel): a unit of 2 gives a 16 px font.</summary>
+    private const float EmPerUnit = 8f;
 
     /// <summary>Em size per UI-scale step for the float overloads.</summary>
     private const float BaseEm = 12f;
 
     /// <summary>Atlas size used for an int scale (see the type remarks).</summary>
     /// <param name="scale">Screen pixels per 5x7 font pixel.</param>
-    public static int SizeForScale(int scale) => FontLibrary.NearestSize(GlyphHeight * scale * EmPerFontPixel);
+    public static int SizeForScale(int scale) => FontLibrary.NearestSize(EmPerUnit * scale * UiScale.TextFactor);
+
+    /// <summary>Atlas size used for a <see cref="UiUnit"/> (the Text size setting included).</summary>
+    public static int SizeForUnit(UiUnit unit) => FontLibrary.NearestSize(EmPerUnit * unit.Value * UiScale.TextFactor);
 
     /// <summary>Atlas size used for a UI scale (see the type remarks).</summary>
-    /// <param name="uiScale">A scale from <see cref="UiScale.FromBackbuffer"/>.</param>
-    public static int SizeForUiScale(float uiScale) => FontLibrary.NearestSize(BaseEm * uiScale);
+    /// <param name="uiScale">A scale from <see cref="UiScale.Resolve"/>.</param>
+    public static int SizeForUiScale(float uiScale) => FontLibrary.NearestSize(BaseEm * uiScale * UiScale.TextFactor);
 
     /// <summary>Line pitch in screen pixels for a text drawn at <paramref name="scale"/>.</summary>
     /// <param name="scale">Screen pixels per 5x7 font pixel.</param>
@@ -56,12 +59,41 @@ public static class BitmapFont
     }
 
     /// <summary>Line pitch in screen pixels for a text drawn at a UI scale.</summary>
-    /// <param name="uiScale">A scale from <see cref="UiScale.FromBackbuffer"/>.</param>
+    /// <param name="uiScale">A scale from <see cref="UiScale.Resolve"/>.</param>
     /// <param name="weight">The weight.</param>
     public static int LineHeight(float uiScale, FontWeight weight)
     {
         FontAtlas? atlas = FontLibrary.Get(weight, SizeForUiScale(uiScale));
         return atlas?.LineHeight ?? GlyphHeight * LegacyScale(uiScale);
+    }
+
+    /// <summary>Line pitch in screen pixels for a text drawn at a <see cref="UiUnit"/>.</summary>
+    public static int LineHeight(UiUnit unit, FontWeight weight)
+    {
+        FontAtlas? atlas = FontLibrary.Get(weight, SizeForUnit(unit));
+        return atlas?.LineHeight ?? GlyphHeight * unit.Whole;
+    }
+
+    /// <summary>Width in screen pixels of a string drawn at a <see cref="UiUnit"/> (regular weight).</summary>
+    public static int Measure(string text, UiUnit unit) => Measure(text, unit, FontWeight.Regular);
+
+    /// <summary>Width in screen pixels of a string drawn at a <see cref="UiUnit"/>.</summary>
+    public static int Measure(string text, UiUnit unit, FontWeight weight)
+    {
+        FontAtlas? atlas = FontLibrary.Get(weight, SizeForUnit(unit));
+        return atlas is null ? text.Length * Advance * unit.Whole : atlas.Measure(text);
+    }
+
+    /// <summary>Draws text at a <see cref="UiUnit"/> (regular weight).</summary>
+    public static void Draw(SpriteBatch batch, Texture2D pixel, string text, Vector2 origin, Color colour, UiUnit unit) =>
+        Draw(batch, pixel, text, origin, colour, unit, FontWeight.Regular);
+
+    /// <summary>Draws text at a <see cref="UiUnit"/>.</summary>
+    public static void Draw(SpriteBatch batch, Texture2D pixel, string text, Vector2 origin, Color colour, UiUnit unit, FontWeight weight)
+    {
+        FontAtlas? atlas = FontLibrary.GetWithTexture(batch.GraphicsDevice, weight, SizeForUnit(unit));
+        if (atlas is null) DrawLegacy(batch, pixel, text, origin, colour, unit.Whole);
+        else DrawAtlas(atlas, batch, text, origin, colour);
     }
 
     /// <summary>Width in screen pixels of a string drawn at <paramref name="scale"/> (regular weight).</summary>
@@ -79,7 +111,7 @@ public static class BitmapFont
 
     /// <summary>Width in screen pixels of a string drawn at a UI scale.</summary>
     /// <param name="text">Text to measure.</param>
-    /// <param name="uiScale">A scale from <see cref="UiScale.FromBackbuffer"/>.</param>
+    /// <param name="uiScale">A scale from <see cref="UiScale.Resolve"/>.</param>
     /// <param name="weight">The weight.</param>
     public static int Measure(string text, float uiScale, FontWeight weight)
     {
@@ -124,7 +156,7 @@ public static class BitmapFont
     /// <param name="text">Text to draw.</param>
     /// <param name="origin">Top-left corner in screen pixels.</param>
     /// <param name="colour">Text colour.</param>
-    /// <param name="uiScale">A scale from <see cref="UiScale.FromBackbuffer"/>.</param>
+    /// <param name="uiScale">A scale from <see cref="UiScale.Resolve"/>.</param>
     /// <param name="weight">The weight.</param>
     public static void Draw(SpriteBatch batch, Texture2D pixel, string text, Vector2 origin, Color colour, float uiScale, FontWeight weight)
     {

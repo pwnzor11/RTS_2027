@@ -100,7 +100,7 @@ public sealed class GameOverScreen : IScreen
         _panel.Draw(sb, _s.Pixel, _s.Viewport, _s.UiScale, _mouse);
         if (_statsLines.Count > 0)
         {
-            int scale = _s.UiScale;
+            var scale = _s.UiScale;
             int width = _statsLines.Max(line => BitmapFont.Measure(line, scale)) + 16;
             Hud.Panel(sb, _s.Pixel, new Point(Math.Max(0, (_s.Viewport.Width - width) / 2), 16), _statsLines, scale);
         }

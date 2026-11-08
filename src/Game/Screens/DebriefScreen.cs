@@ -61,7 +61,7 @@ public sealed class DebriefScreen : IScreen
     {
         Backdrop.FillDim(sb, _s);
         _panel.Draw(sb, _s.Pixel, _s.Viewport, _s.UiScale, _mouse);
-        int scale = _s.UiScale;
+        var scale = _s.UiScale;
         var lines = new List<string>(_model.Lines());
         int width = lines.Max(l => BitmapFont.Measure(l, scale)) + 16;
         Hud.Panel(sb, _s.Pixel, new Point(Math.Max(0, (_s.Viewport.Width - width) / 2), 16), lines, scale);

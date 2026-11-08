@@ -69,7 +69,7 @@ public sealed class EndingScreen : IScreen
     {
         Backdrop.FillOpaque(sb, _s);
         if (_model.Current is not { } frame) return;
-        int scale = _s.UiScale;
+        var scale = _s.UiScale;
         Viewport vp = _s.Viewport;
         int lineHeight = BitmapFont.LineHeight(scale, FontWeight.Regular) + 4;
         int imageH = vp.Height * 55 / 100, imageW = Math.Min(vp.Width - 32, imageH * 16 / 9);

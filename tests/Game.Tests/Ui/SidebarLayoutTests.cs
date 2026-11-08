@@ -72,7 +72,7 @@ public sealed class SidebarLayoutTests
                 Assert.False(slots[i].Intersects(slots[j]));
         Assert.Equal(Rectangle.Empty, l.Cameo(-1));
         Assert.Equal(Rectangle.Empty, l.Cameo(l.VisibleSlots));
-        Assert.Equal(l.CameoSize.X * 3 / 4, l.CameoSize.Y);
+        Assert.True(l.CameoSize.Y <= l.CameoSize.X * 3 / 4 && l.CameoSize.Y >= l.CameoSize.X * 3 / 8);   // 3:4, or capped in height
     }
 
     [Fact]

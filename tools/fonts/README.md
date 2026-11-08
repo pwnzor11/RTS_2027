@@ -12,7 +12,7 @@ Python or the TTF files at run time.
 | `data/fonts/noto-sans-<weight>_<size>.png` | Atlas: white glyphs, straight alpha (RGB 255, A = coverage), 16 columns, one grid cell per glyph. |
 | `data/fonts/noto-sans-<weight>_<size>.font.toml` | Metrics: `line_height`, `baseline`, `[[glyph]]` (`codepoint`, `x`, `y`, `w`, `h`, `xoffset`, `yoffset`, `advance`), `[[kerning]]` (`left`, `right`, `amount`). |
 
-Sizes are 12, 16 and 24 px (`FontLibrary.Sizes` in `src/Game/Ui/Fonts/FontLibrary.cs` must match the build). Glyphs cover
+Sizes are 9, 10, 12, 14, 16, 18, 20, 24, 28, 32, 36, 40, 48, 56 and 64 px (M11-10h: the UI scale 75 to 200 % and the Text size setting pick the nearest) (`FontLibrary.Sizes` in `src/Game/Ui/Fonts/FontLibrary.cs` must match the build). Glyphs cover
 U+0020..U+00FF except the C1 controls U+007F..U+009F, plus U+2013, U+2014, U+2018, U+2019, U+201C, U+201D, U+2022 and
 U+2026. Any other character draws as '?'.
 
@@ -25,7 +25,7 @@ Requirements: Python 3.11 or later, Pillow built with raqm (`python -c "from PIL
 prints `True`). Pillow alone is needed; no network access.
 
 ```
-python tools/fonts/build_atlas.py                 # all faces, sizes 12 16 24, written to data/fonts
+python tools/fonts/build_atlas.py                 # all faces, sizes 9 10 12 14 16 18 20 24 28 32 36 40 48 56 64, written to data/fonts
 python tools/fonts/build_atlas.py --sizes 12 16   # a subset
 ```
 

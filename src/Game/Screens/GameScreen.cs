@@ -385,7 +385,7 @@ public sealed class GameScreen : IScreen
             return;
         }
 
-        _sidebar?.Update(input, _camera, _s.Viewport.Width, _s.Viewport.Height);
+        _sidebar?.Update(input, _camera, _s.Viewport.Width, _s.Viewport.Height, _s.UiFactor);
         HandlePackKeyAndPlacement(input);   // M6-09: K, and the unpack footprint on the map
 
         bool debugKeys = GameKeys.DebugKeysAllowed(_skirmishMode);
@@ -531,7 +531,7 @@ public sealed class GameScreen : IScreen
         if (_card is null) return;
         Rectangle mapView = _sidebar?.Layout.MapView ?? new Rectangle(0, 0, _s.Viewport.Width, _s.Viewport.Height);
         _card.Groups = _groups;
-        _card.Refresh(mapView, Rts.Game.Ui.UiScale.FromBackbuffer(_s.Viewport.Height), _selectedBuilding);
+        _card.Refresh(mapView, _s.UiFactor, _selectedBuilding);
         if (!_card.Visible || !input.LeftPressed || _dragStart is not null) return;
         Rts.Game.Ui.Card.CardAction action = _card.Click(input.MousePosition, input.IsDown(Keys.LeftShift) || input.IsDown(Keys.RightShift));
         if (!action.Consumed) return;
@@ -584,7 +584,7 @@ public sealed class GameScreen : IScreen
         if (!updated) { _sidebar?.ShowOsCursor(); return; }
         if (_sidebar is not { WantsSoftwareCursor: true })
         {
-            if (_orders is { AttackMoveArmed: true } && MapViewport().Bounds.Contains(_mouse)) ArmedCursor.Draw(sb, _s.Pixel, _mouse, "ATTACK-MOVE", _s.UiScale);   // O2
+            if (_orders is { AttackMoveArmed: true } && MapViewport().Bounds.Contains(_mouse)) ArmedCursor.Draw(sb, _s.Pixel, _mouse, "ATTACK-MOVE", _s.UiScale.Whole);   // O2
             return;
         }
 
@@ -597,8 +597,8 @@ public sealed class GameScreen : IScreen
             kind = _cursorPreview.Probe(_sim, _selection, _mouse, _camera, _renderUnits, _orders.AttackMoveArmed, _orders.DeployArmed);
         }
 
-        if (kind == CursorKind.AttackMove) ArmedCursor.Draw(sb, _s.Pixel, _mouse, "ATTACK-MOVE", _s.UiScale);
-        else SoftwareCursor.Draw(sb, _s.Pixel, kind, _mouse, _s.UiScale);
+        if (kind == CursorKind.AttackMove) ArmedCursor.Draw(sb, _s.Pixel, _mouse, "ATTACK-MOVE", _s.UiScale.Whole);
+        else SoftwareCursor.Draw(sb, _s.Pixel, kind, _mouse, _s.UiScale.Whole);
     }
 
     // What Save game writes to: only a skirmish or mission (the sandbox has no save header).
@@ -740,7 +740,7 @@ public sealed class GameScreen : IScreen
         IReadOnlyList<string>? info = _inspectUnit is UnitView u ? SpectatorInspect.Describe(u, _sim.Sim.Setup.Rules)
             : _inspectBuilding is BuildingView b ? SpectatorInspect.Describe(b, _sim.Sim.Setup.Rules) : null;
         if (info is null) return;
-        int scale = _s.UiScale;
+        var scale = _s.UiScale;
         int w = info.Max(line => BitmapFont.Measure(line, scale)) + 16;
         Hud.Panel(sb, _s.Pixel, new Point(_s.Viewport.Width - w - 8, _s.Viewport.Height - Hud.HeightOf(info.Count, scale) - 8), info, scale);
     }
@@ -749,7 +749,7 @@ public sealed class GameScreen : IScreen
 
     private Rectangle SuperweaponButtonRect(int index)
     {
-        int scale = _s.UiScale;
+        var scale = _s.UiScale;
         int w = BitmapFont.Measure("SUNRISE  PAUSED", scale) + 16;
         int h = Hud.HeightOf(1, scale) + 6;
         return new Rectangle(MapViewport().Width - w - 8, 8 + index * (h + 4), w, h);
@@ -793,7 +793,7 @@ public sealed class GameScreen : IScreen
 
     private void DrawSuperweapon(SpriteBatch sb, int tick)
     {
-        int scale = _s.UiScale;
+        var scale = _s.UiScale;
         for (int i = 0; i < _superweapon.Buttons.Count; i++)
         {
             SuperweaponButton b = _superweapon.Buttons[i];
@@ -831,7 +831,7 @@ public sealed class GameScreen : IScreen
 
     private Rectangle UpgradeButtonRect()
     {
-        int scale = _s.UiScale;
+        var scale = _s.UiScale;
         int w = BitmapFont.Measure("UPGRADE BORE HEAD $9999", scale) + 16;
         int h = Hud.HeightOf(1, scale) + 6;
         Viewport map = MapViewport();
@@ -857,7 +857,7 @@ public sealed class GameScreen : IScreen
     private void DrawUpgradeButton(SpriteBatch sb)
     {
         if (_upgrade is not BuildingUpgradeOffer offer) return;
-        int scale = _s.UiScale;
+        var scale = _s.UiScale;
         Rectangle r = UpgradeButtonRect();
         Shapes.Fill(sb, _s.Pixel, r, new Color(0, 0, 0, 190));
         Shapes.Outline(sb, _s.Pixel, r, offer.Enabled ? Color.White : new Color(90, 90, 90), 2);
@@ -874,7 +874,7 @@ public sealed class GameScreen : IScreen
 
     private Rectangle DiveButtonRect()
     {
-        int scale = _s.UiScale;
+        var scale = _s.UiScale;
         int w = Math.Max(BitmapFont.Measure(DiveOffer.Caption(false), scale), BitmapFont.Measure(DiveOffer.Caption(true), scale)) + 16;
         int h = Hud.HeightOf(1, scale) + 6;
         Viewport map = MapViewport();
@@ -928,7 +928,7 @@ public sealed class GameScreen : IScreen
 
     private Rectangle PackButtonRect()
     {
-        int scale = _s.UiScale;
+        var scale = _s.UiScale;
         int w = BitmapFont.Measure(LeftBehindText.Placeholder(LeftBehindText.UnpackKey), scale) + 16;
         int h = Hud.HeightOf(1, scale) + 6;
         Viewport map = MapViewport();
@@ -1026,7 +1026,7 @@ public sealed class GameScreen : IScreen
     private void DrawPackButton(SpriteBatch sb)
     {
         if (_pack is not PackOffer offer) return;
-        int scale = _s.UiScale;
+        var scale = _s.UiScale;
         Rectangle r = PackButtonRect();
         Shapes.Fill(sb, _s.Pixel, r, new Color(0, 0, 0, 190));
         Shapes.Outline(sb, _s.Pixel, r, _unpack is not null ? Color.Red : offer.Enabled ? Color.White : new Color(90, 90, 90), 2);
@@ -1249,7 +1249,7 @@ public sealed class GameScreen : IScreen
     /// <summary>Centres the map view on a world point, clamped to the map (the same move as the start view).</summary>
     private void CentreCameraOn(Vector2 centre)
     {
-        int mapWidth = _s.Viewport.Width - SidebarLayout.WidthFor(_s.Viewport.Width, Rts.Game.Ui.UiScale.FromBackbuffer(_s.Viewport.Height));
+        int mapWidth = _s.Viewport.Width - SidebarLayout.WidthFor(_s.Viewport.Width, _s.UiFactor);
         Vector2 size = new Vector2(Math.Max(1, mapWidth), _s.Viewport.Height) / _camera.Zoom;
         Vector2 target = centre - size / 2f;
         _camera.PanScreen((target - _camera.WorldFromScreen(Point.Zero)) * _camera.Zoom);
@@ -1300,7 +1300,7 @@ public sealed class GameScreen : IScreen
     // The HUD panels are UI regions: clicks on them never reach the map.
     private void UpdateHudRegions()
     {
-        int scale = _s.UiScale;
+        var scale = _s.UiScale;
         List<string> lines = HudLines(_source.Current);
         _hudRegion.Bounds = lines.Count == 0 ? Rectangle.Empty : PanelRect(new Point(8, 8), lines, scale);
         if (_specPanel is not null)
@@ -1312,7 +1312,7 @@ public sealed class GameScreen : IScreen
         _mission?.UpdateRegion(lines.Count, scale);
     }
 
-    private static Rectangle PanelRect(Point origin, IReadOnlyList<string> lines, int scale) =>
+    private static Rectangle PanelRect(Point origin, IReadOnlyList<string> lines, UiUnit scale) =>
         new(origin.X, origin.Y, lines.Max(line => BitmapFont.Measure(line, scale)) + 16, Hud.HeightOf(lines.Count, scale));
 
     /// <summary>
@@ -1321,7 +1321,7 @@ public sealed class GameScreen : IScreen
     /// </summary>
     private void DrawHud(SpriteBatch sb, SimSnapshot snapshot)
     {
-        int scale = _s.UiScale;
+        var scale = _s.UiScale;
         List<string> hud = HudLines(snapshot);
         Hud.Panel(sb, _s.Pixel, new Point(8, 8), hud, scale);
 

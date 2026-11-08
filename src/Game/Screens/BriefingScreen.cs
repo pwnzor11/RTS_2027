@@ -135,7 +135,7 @@ public sealed class BriefingScreen : IScreen
     public void Draw(SpriteBatch sb)
     {
         Backdrop.FillOpaque(sb, _s);
-        int scale = _s.UiScale;
+        var scale = _s.UiScale;
         int lineHeight = LineHeight();
         int x = TextX();
         int y = 24;
@@ -174,7 +174,7 @@ public sealed class BriefingScreen : IScreen
         Shapes.Fill(sb, _s.Pixel, thumb, new Color(0x6A, 0x72, 0x60));
     }
 
-    private void DrawLine(SpriteBatch sb, MdLine line, int shownChars, int x, int y, int scale, Color theme)
+    private void DrawLine(SpriteBatch sb, MdLine line, int shownChars, int x, int y, UiUnit scale, Color theme)
     {
         float px = x;
         foreach (MdSpan span in line.Spans)
@@ -221,10 +221,10 @@ public sealed class BriefingScreen : IScreen
     }
 
     // The text column's width: the still is scaled to it, keeping the 16:9 aspect of the image.
-    private static int TextWidth(int scale) => BitmapFont.Measure(new string('M', WrapChars), scale);
+    private static int TextWidth(UiUnit scale) => BitmapFont.Measure(new string('M', WrapChars), scale);
 
     // At most a quarter of the window, so the text and the Start/Back strip still fit on short windows (width follows the aspect).
-    private int StillHeight(int scale) => _still == null ? 0 : Math.Min(TextWidth(scale) * _still.Height / _still.Width, _s.Viewport.Height / 4);
+    private int StillHeight(UiUnit scale) => _still == null ? 0 : Math.Min(TextWidth(scale) * _still.Height / _still.Width, _s.Viewport.Height / 4);
 
     // A missing or unreadable still means no image at all (the briefing is laid out as without one).
     private Texture2D? LoadStill()

@@ -20,12 +20,12 @@ public sealed record EditorLabel(Point Position, string Text);
 public sealed class FlowLayout
 {
     private readonly Rectangle _area;
-    private readonly int _scale;
+    private readonly UiUnit _scale;
     private readonly int _gap;
     private int _x, _y, _lineHeight;
 
     /// <summary>Starts at the top-left of <paramref name="area"/>.</summary>
-    public FlowLayout(Rectangle area, int scale)
+    public FlowLayout(Rectangle area, UiUnit scale)
     {
         _area = area; _scale = scale; _gap = scale * 2;
         _x = area.X + _gap; _y = area.Y + _gap;

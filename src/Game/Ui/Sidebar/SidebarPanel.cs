@@ -150,9 +150,10 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
     /// <param name="camera">The camera (the minimap moves it; the ghost reads it).</param>
     /// <param name="windowWidth">Window width in pixels.</param>
     /// <param name="windowHeight">Window height in pixels.</param>
-    public void Update(InputFrame input, Camera camera, int windowWidth, int windowHeight)
+    /// <param name="uiScale">The effective UI scale (<see cref="UiScale.Resolve"/>).</param>
+    public void Update(InputFrame input, Camera camera, int windowWidth, int windowHeight, float uiScale = 0f)
     {
-        _ui = UiScale.FromBackbuffer(windowHeight);
+        _ui = uiScale > 0f ? uiScale : UiScale.Resolve(windowWidth, windowHeight, UiScale.DefaultPercent).Scale;
         _hud = _source.Sim.HudFor(_player);
         _hasAircraft = HasAircraft(_hud);
         if (!_hasAircraft && _tab == SidebarTab.Aircraft) SelectTab(SidebarTab.Structures);
@@ -160,7 +161,7 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
         Rts.Sim.View.PlayerView pv = _source.Sim.ViewFor(_player);   // M7-14: shipment timer, own state only
         _shipmentEta = pv.ShipmentEtaTicks; _shipmentPayload = pv.NextShipmentPayload; _shipmentDecay = pv.ShipmentDecayStep;
         _shipmentShown = ShipmentReadout.Shown(_shipmentEta, _shipmentPayload);
-        _layout = SidebarLayout.Compute(windowWidth, windowHeight, _ui, SidebarTabs.CountFor(_hasAircraft), _supplyShown, _shipmentShown, _source.Map.Width, _source.Map.Height);
+        _layout = SidebarLayout.Compute(windowWidth, windowHeight, _ui, SidebarTabs.CountFor(_hasAircraft), _supplyShown, _shipmentShown, _source.Map.Width, _source.Map.Height, UiScale.TextFactor);
         _mouse = input.MousePosition;
         _tooltip = null;
         if (_shownCredits < 0) _shownCredits = _hud.Cash + _hud.Stored;
@@ -337,8 +338,8 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
             var tab = (SidebarTab)i;
             string caption = SidebarTabs.KeyLetter(tab) + " " + SidebarTabs.Caption(tab);
             // Five or six tabs share the width: when the key letter does not fit, the bare caption does.
-            if (BitmapFont.Measure(caption, _ui * 0.8f, FontWeight.Regular) > l.Tabs[i].Width - 4) caption = SidebarTabs.Caption(tab);
-            DrawButton(batch, pixel, l.Tabs[i], caption, tab == _tab, _ui * 0.8f);
+            if (BitmapFont.Measure(caption, _ui, FontWeight.Regular) > l.Tabs[i].Width - 4) caption = SidebarTabs.Caption(tab);
+            DrawButton(batch, pixel, l.Tabs[i], caption, tab == _tab, _ui);
         }
 
         DrawGrid(batch, pixel, l);
@@ -358,7 +359,7 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
     private void DrawUnpackHint(SpriteBatch batch, Texture2D pixel, SidebarLayout l)
     {
         string text = LeftBehindText.Placeholder(LeftBehindText.UnpackHintKey);
-        float scale = _ui * 0.85f;
+        float scale = _ui;
         int y = l.Grid.Y + (int)(_ui * 6);
         foreach (string line in Rts.Game.Menu.TextWrap.Wrap(text, Math.Max(8, l.Grid.Width - 8), s => BitmapFont.Measure(s, scale, FontWeight.Regular)))
         {
@@ -594,7 +595,7 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
     private bool IsHidden(BuildOption o) =>
         o.Category == ProductionCategory.Structure && IdOf(o) == SkirmishStart.StartBuildingId;
 
-    private int HeadingHeight() => BitmapFont.LineHeight(_ui * 0.85f, FontWeight.Bold) + Math.Max(6, (int)_ui * 6);
+    private int HeadingHeight() => BitmapFont.LineHeight(_ui, FontWeight.Bold) + Math.Max(6, (int)MathF.Round(_ui * 6));
 
     private IReadOnlyList<TierGrouping.PlacedRow> PlacedRows() =>
         TierGrouping.Place(_rows, _scrollRow, _layout.Grid.Height, _layout.CameoSize.Y, HeadingHeight(), _layout.Gap);
@@ -747,7 +748,7 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
     private void DrawPowerReadout(SpriteBatch batch, Texture2D pixel, Rectangle row, bool low)
     {
         if (row.Height <= 2) return;
-        float scale = _ui * 0.8f;
+        float scale = _ui;
         string text = "POWER " + SidebarMetrics.PowerText(_hud.PowerOut, _hud.PowerUse);
         scale = SidebarMetrics.FitScale(sc => BitmapFont.Measure(text, sc, FontWeight.Regular), row.Width - 2, scale);
         int h = BitmapFont.LineHeight(scale, FontWeight.Regular);
@@ -771,18 +772,18 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
 
     private void DrawButton(SpriteBatch batch, Texture2D pixel, Rectangle r, string label, bool active, float scale = -1f)
     {
-        if (scale <= 0f) scale = _ui * 0.9f;
+        if (scale <= 0f) scale = _ui;
         bool hover = r.Contains(_mouse);
         Shapes.Fill(batch, pixel, r, active ? ActiveFill : hover ? ButtonHover : ButtonFill);
         Shapes.Outline(batch, pixel, r, active ? Gold : Border);
-        string fitted = Fit(label, r.Width - 4, scale);
-        int w = BitmapFont.Measure(fitted, scale, FontWeight.Regular), h = BitmapFont.LineHeight(scale, FontWeight.Regular);
-        Text(batch, pixel, fitted, new Vector2(r.X + (r.Width - w) / 2f, r.Y + (r.Height - h) / 2f), active ? Color.White : TextColour, scale, FontWeight.Regular);
+        (string fitted, float fs) = FitLabel(label, r.Width - 4, scale);
+        int w = BitmapFont.Measure(fitted, fs, FontWeight.Regular), h = BitmapFont.LineHeight(fs, FontWeight.Regular);
+        Text(batch, pixel, fitted, new Vector2(r.X + (r.Width - w) / 2f, r.Y + (r.Height - h) / 2f), active ? Color.White : TextColour, fs, FontWeight.Regular);
     }
 
     private void DrawUpgradeGrid(SpriteBatch batch, Texture2D pixel, SidebarLayout l)
     {
-        float small = _ui * 0.75f;
+        float small = _ui;
         int lh = BitmapFont.LineHeight(small, FontWeight.Regular);
         for (int slot = 0; slot < l.VisibleSlots; slot++)
         {
@@ -802,9 +803,9 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
                 CentredText(batch, pixel, PlaceholderArt.ShortName(e.Id), inner, TextColour, _ui, FontWeight.Bold);
             }
 
-            string name = Fit(CameoNames.Display(e.Id), r.Width - 4, small);
+            (string name, float nameScale) = FitLabel(CameoNames.Display(e.Id), r.Width - 4, small);
             Shapes.Fill(batch, pixel, new Rectangle(r.X + 1, r.Bottom - lh - 2, r.Width - 2, lh + 1), new Color(0, 0, 0, 170));
-            Text(batch, pixel, name, new Vector2(r.X + 3, r.Bottom - lh - 2), e.State == UpgradeState.Owned ? DimText : TextColour, small, FontWeight.Regular);
+            Text(batch, pixel, name, new Vector2(r.X + 3, r.Bottom - lh - 2 + (lh - BitmapFont.LineHeight(nameScale, FontWeight.Regular)) / 2f), e.State == UpgradeState.Owned ? DimText : TextColour, nameScale, FontWeight.Regular);
 
             switch (e.State)
             {
@@ -835,17 +836,17 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
         }
 
         QueueView? queue = QueueOf(SidebarTabs.CategoryOf(_tab));
-        float small = _ui * 0.75f;
+        float small = _ui;
         foreach (TierGrouping.PlacedRow placed in PlacedRows())
         {
             TierRow heading = _rows[placed.Row];
             if (heading.Heading)
             {
                 var span = new Rectangle(l.Grid.X, l.Grid.Y + placed.Y, l.Grid.Width, placed.Height);
-                Shapes.Fill(batch, pixel, new Rectangle(span.X, span.Bottom - Math.Max(2, (int)_ui * 2), span.Width, Math.Max(2, (int)_ui * 2)), heading.Locked ? Border : Gold);
-                string text = Fit(TierGrouping.HeadingText(heading), span.Width - 4, _ui * 0.85f);
-                int th = BitmapFont.LineHeight(_ui * 0.85f, FontWeight.Bold);
-                Text(batch, pixel, text, new Vector2(span.X + 2, span.Bottom - th - Math.Max(4, (int)_ui * 4)), heading.Locked ? DimText : Gold, _ui * 0.85f, FontWeight.Bold);
+                Shapes.Fill(batch, pixel, new Rectangle(span.X, span.Bottom - Math.Max(2, (int)MathF.Round(_ui * 2)), span.Width, Math.Max(2, (int)MathF.Round(_ui * 2))), heading.Locked ? Border : Gold);
+                (string text, float hs) = FitLabel(TierGrouping.HeadingText(heading), span.Width - 4, _ui, FontWeight.Bold);
+                int th = BitmapFont.LineHeight(hs, FontWeight.Bold);
+                Text(batch, pixel, text, new Vector2(span.X + 2, span.Bottom - th - Math.Max(4, (int)MathF.Round(_ui * 4))), heading.Locked ? DimText : Gold, hs, FontWeight.Bold);
                 continue;
             }
 
@@ -873,10 +874,10 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
             }
 
             // Name strip along the bottom.
-            string name = Fit(CameoNames.Display(id), r.Width - 4, small);
+            (string name, float nameScale) = FitLabel(CameoNames.Display(id), r.Width - 4, small);
             int lh = BitmapFont.LineHeight(small, FontWeight.Regular);
             Shapes.Fill(batch, pixel, new Rectangle(r.X + 1, r.Bottom - lh - 2, r.Width - 2, lh + 1), new Color(0, 0, 0, 170));
-            Text(batch, pixel, name, new Vector2(r.X + 3, r.Bottom - lh - 2), blocked ? DimText : TextColour, small, FontWeight.Regular);
+            Text(batch, pixel, name, new Vector2(r.X + 3, r.Bottom - lh - 2 + (lh - BitmapFont.LineHeight(nameScale, FontWeight.Regular)) / 2f), blocked ? DimText : TextColour, nameScale, FontWeight.Regular);
 
             // Progress of the front item of this type: the unfinished part is veiled from the top.
             int count = 0;
@@ -890,19 +891,20 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
                     int done = r.Height * q.Items[0].ProgressPermille / 1000;
                     Shapes.Fill(batch, pixel, new Rectangle(r.X, r.Y, r.Width, r.Height - done), new Color(0, 0, 0, 120));
                     bool waitingForSupply = SupplyWaits(q.Category, q.Items[0].TypeIndex);   // SUP-4
-                    Shapes.Fill(batch, pixel, new Rectangle(r.X, r.Bottom - Math.Max(2, (int)_ui * 2), r.Width * q.Items[0].ProgressPermille / 1000, Math.Max(2, (int)_ui * 2)), q.Items[0].Stalled || waitingForSupply ? Gold : GoodGreen);
+                    Shapes.Fill(batch, pixel, new Rectangle(r.X, r.Bottom - Math.Max(2, (int)MathF.Round(_ui * 2)), r.Width * q.Items[0].ProgressPermille / 1000, Math.Max(2, (int)MathF.Round(_ui * 2))), q.Items[0].Stalled || waitingForSupply ? Gold : GoodGreen);
                     if (waitingForSupply) DrawWaitingForSupply(batch, pixel, r, small);
                     else if (q.Items[0].Stalled)
-                        CentredText(batch, pixel, "WAIT", r, Gold, small);
+                        CentredText(batch, pixel, "WAIT", new Rectangle(r.X, r.Y, r.Width, Math.Max(1, r.Height - lh - 2)), Gold, small);
                 }
             }
 
             if (blocked && count == 0) Shapes.Fill(batch, pixel, r, Veil);
-            if (tierEntry.Locked) FittedCentredText(batch, pixel, "LOCKED", r, DimText, small);   // P6
+            var above = new Rectangle(r.X, r.Y, r.Width, Math.Max(1, r.Height - lh - 2));   // the state words sit above the name strip, never over it
+            if (tierEntry.Locked) StateStrip(batch, pixel, r, "LOCKED", DimText, small);   // P6; M11-10h: a top band, the art stays visible
             if (ready)
             {
                 Shapes.Outline(batch, pixel, r, GoodGreen, 2);
-                FittedCentredText(batch, pixel, "READY", r, GoodGreen, _ui * 0.9f);   // P6: sized to the cameo
+                StateStrip(batch, pixel, r, "READY", GoodGreen, _ui);   // P6: sized to the cameo
             }
             else Shapes.Outline(batch, pixel, r, r.Contains(_mouse) ? Gold : Border);
 
@@ -921,7 +923,7 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
     private void DrawTooltip(SpriteBatch batch, Texture2D pixel)
     {
         if (_tooltip is null || _tooltip.Count == 0) return;
-        float scale = _ui * 0.9f;
+        float scale = _ui;
         int lh = BitmapFont.LineHeight(scale, FontWeight.Regular);
         int w = _tooltip.Max(line => BitmapFont.Measure(line, scale, FontWeight.Regular)) + 12;
         int h = lh * _tooltip.Count + 8;
@@ -934,20 +936,40 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
             Text(batch, pixel, _tooltip[i], new Vector2(box.X + 6, box.Y + 4 + i * lh), i == 0 ? Gold : TextColour, scale, FontWeight.Regular);
     }
 
-    private static string Fit(string text, int maxWidth, float scale)
+    private static string Fit(string text, int maxWidth, float scale, FontWeight weight = FontWeight.Regular)
     {
-        if (BitmapFont.Measure(text, scale, FontWeight.Regular) <= maxWidth) return text;
+        if (BitmapFont.Measure(text, scale, weight) <= maxWidth) return text;
         for (int n = text.Length - 1; n > 0; n--)
         {
-            string cut = text[..n].TrimEnd();
-            if (BitmapFont.Measure(cut, scale, FontWeight.Regular) <= maxWidth) return cut;
+            string cut = text[..n].TrimEnd() + "\u2026";   // last resort: cut with an ellipsis
+            if (BitmapFont.Measure(cut, scale, weight) <= maxWidth) return cut;
         }
 
         return "";
     }
 
+    // A label that must fit one line: the largest scale from `scale` down to 75 % of it that fits, then (when even that is too wide) cut
+    // to fit. Nothing is ever drawn past maxWidth. Text size and UI scale both reach the label through `scale` and the font factor.
+    private static (string Text, float Scale) FitLabel(string text, int maxWidth, float scale, FontWeight weight = FontWeight.Regular)
+    {
+        float s = scale, floor = scale * 0.6f;   // shrink to smaller atlas sizes first; Fit adds the ellipsis only after that
+        
+        while (s > floor && BitmapFont.Measure(text, s, weight) > maxWidth) s -= scale * 0.05f;
+        s = Math.Max(s, floor);
+        return (Fit(text, maxWidth, s, weight), s);
+    }
+
     private static void Text(SpriteBatch batch, Texture2D pixel, string text, Vector2 at, Color colour, float scale, FontWeight weight) =>
         BitmapFont.Draw(batch, pixel, text, at, colour, scale, weight);
+
+    // A bold state word on a dark band along the top of a cameo (the name strip is at the bottom), so the art between stays visible.
+    private static void StateStrip(SpriteBatch batch, Texture2D pixel, Rectangle r, string text, Color colour, float scale)
+    {
+        int h = BitmapFont.LineHeight(scale, FontWeight.Bold) + 2;
+        var band = new Rectangle(r.X + 1, r.Y + 1, r.Width - 2, Math.Min(h, Math.Max(1, r.Height / 3)));
+        Shapes.Fill(batch, pixel, band, new Color(0, 0, 0, 190));
+        FittedCentredText(batch, pixel, text, band, colour, scale);
+    }
 
     // P6: bold label drawn once, scaled down until it fits the cameo with 2 px to spare each side.
     private static void FittedCentredText(SpriteBatch batch, Texture2D pixel, string text, Rectangle r, Color colour, float scale)

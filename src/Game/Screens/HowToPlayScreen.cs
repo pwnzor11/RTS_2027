@@ -90,7 +90,7 @@ public sealed class HowToPlayScreen : IScreen
     public void Draw(SpriteBatch sb)
     {
         Backdrop.FillOpaque(sb, _s);
-        int scale = _s.UiScale;
+        var scale = _s.UiScale;
         Layout l = Measure();
         Shapes.Fill(sb, _s.Pixel, l.Panel, PanelColour);
         Shapes.Outline(sb, _s.Pixel, l.Panel, BorderColour, Math.Max(1, scale / 2));
@@ -123,7 +123,7 @@ public sealed class HowToPlayScreen : IScreen
         BitmapFont.Draw(sb, _s.Pixel, counter, new Vector2(l.Panel.Center.X - BitmapFont.Measure(counter, scale) / 2, l.Prev.Y + scale), Dim, scale);
     }
 
-    private void DrawButton(SpriteBatch sb, Rectangle r, string label, int scale)
+    private void DrawButton(SpriteBatch sb, Rectangle r, string label, UiUnit scale)
     {
         Shapes.Fill(sb, _s.Pixel, r, r.Contains(_mouse) ? new Color(0x58, 0x6E, 0x50) : new Color(0x2A, 0x2E, 0x26));
         Shapes.Outline(sb, _s.Pixel, r, BorderColour);
@@ -135,7 +135,7 @@ public sealed class HowToPlayScreen : IScreen
     private Layout Measure()
     {
         Viewport vp = _s.Viewport;
-        int scale = _s.UiScale;
+        var scale = _s.UiScale;
         int line = BitmapFont.LineHeight(scale, FontWeight.Regular) + scale;
         int width = Math.Min(vp.Width - 8 * scale, 120 * scale * BitmapFont.Advance / 2);
         int height = Math.Min(vp.Height - 8 * scale, 150 * scale * 4);
@@ -169,7 +169,7 @@ public sealed class HowToPlayScreen : IScreen
 
     // ---- illustrations ----
 
-    private void DrawIllustration(SpriteBatch sb, GuideArt art, Rectangle area, int scale)
+    private void DrawIllustration(SpriteBatch sb, GuideArt art, Rectangle area, UiUnit scale)
     {
         Shapes.Fill(sb, _s.Pixel, area, Ground);
         Shapes.Outline(sb, _s.Pixel, area, BorderColour);
@@ -228,7 +228,7 @@ public sealed class HowToPlayScreen : IScreen
             {
                 var rnd = new SceneRng(7);
                 for (int i = 0; i < 60; i++)
-                    Shapes.Fill(sb, _s.Pixel, new Rectangle(area.X + (int)(area.Width * (0.04f + 0.3f * rnd.Next())), area.Y + (int)(area.Height * (0.45f + 0.45f * rnd.Next())), 2 * scale, scale), new Color(0x78, 0x78, 0x6E));
+                    Shapes.Fill(sb, _s.Pixel, new Rectangle(area.X + (int)(area.Width * (0.04f + 0.3f * rnd.Next())), area.Y + (int)(area.Height * (0.45f + 0.45f * rnd.Next())), 2 * scale, scale.Whole), new Color(0x78, 0x78, 0x6E));
                 Sprite(sb, "auth_scraper", "idle", 64, tick, area.X + area.Width * 0.45f, area.Y + area.Height * 0.8f, u * 0.8f, false);
                 Sprite(sb, "auth_refinery", "idle", 0, tick, area.X + area.Width * 0.78f, area.Y + area.Height * 0.92f, u * 0.6f, true);
                 Shapes.Line(sb, _s.Pixel, new Vector2(area.X + area.Width * 0.3f, area.Y + area.Height * 0.62f), new Vector2(area.X + area.Width * 0.6f, area.Y + area.Height * 0.62f), Green, Math.Max(1, scale / 2));
@@ -301,12 +301,12 @@ public sealed class HowToPlayScreen : IScreen
         }
     }
 
-    private void Cursor(SpriteBatch sb, Point at, int scale)
+    private void Cursor(SpriteBatch sb, Point at, UiUnit scale)
     {
         // A small arrow cursor: a triangle made of three short lines.
         var tip = at.ToVector2();
-        Shapes.Line(sb, _s.Pixel, tip, tip + new Vector2(0, 10 * scale), Color.White, Math.Max(1, scale));
-        Shapes.Line(sb, _s.Pixel, tip, tip + new Vector2(7 * scale, 7 * scale), Color.White, Math.Max(1, scale));
-        Shapes.Line(sb, _s.Pixel, tip + new Vector2(0, 10 * scale), tip + new Vector2(3 * scale, 7 * scale), Color.White, Math.Max(1, scale));
+        Shapes.Line(sb, _s.Pixel, tip, tip + new Vector2(0, 10 * scale), Color.White, Math.Max(1, scale.Whole));
+        Shapes.Line(sb, _s.Pixel, tip, tip + new Vector2(7 * scale, 7 * scale), Color.White, Math.Max(1, scale.Whole));
+        Shapes.Line(sb, _s.Pixel, tip + new Vector2(0, 10 * scale), tip + new Vector2(3 * scale, 7 * scale), Color.White, Math.Max(1, scale.Whole));
     }
 }
