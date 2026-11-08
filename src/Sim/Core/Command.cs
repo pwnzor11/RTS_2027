@@ -21,6 +21,10 @@ public enum CommandKind : byte
     /// <see cref="Rules.VehicleType.UnpacksInto"/> building with Cell = the top-left cell of the target footprint). Arg, Target unused.
     /// Behaviour arrives with M6-03; until then the sim ignores the command.</summary>
     Pack = 24,
+    /// <summary>S15 (M11-10i): hold or resume the front item of a production lane. Arg = <see cref="Rules.ProductionCategory"/> (any lane,
+    /// Upgrade included), Arg2 = 1 to hold, 0 to resume. A held item makes no progress and spends no credits; cancelling it refunds what was
+    /// spent. Ignored when the lane is empty. Never sent by the AI.</summary>
+    Hold = 25,
 }
 
 /// <summary>

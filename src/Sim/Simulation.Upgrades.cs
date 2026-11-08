@@ -87,7 +87,7 @@ public sealed partial class Simulation
                 PopQueue(lane, 0);
                 continue;
             }
-            if (!OwnsResearchBuilding(player)) continue;
+            if (s.Held[lane] || !OwnsResearchBuilding(player)) continue;   // S15: a held research pays nothing
             UpgradeType u = upgrades[type];
             int total = ProductionTotalTicks(player, u.Cost, u.BuildTime, 1);
             if (s.Total[lane] != total)

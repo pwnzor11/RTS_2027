@@ -160,4 +160,43 @@ public sealed class SidebarLogicTests
     [InlineData(false, -1, 0, "Defeat")]
     public void Game_over_headline(bool localDefeated, int winningTeam, int localTeam, string expected) =>
         Assert.Equal(expected, GameOverScreen.Headline(localDefeated, winningTeam, localTeam));
+
+    // ---- S15 (M11-10i): production hold ----
+
+    [Fact]
+    public void Right_click_holds_the_front_item_then_cancels_it_and_left_click_resumes()
+    {
+        PlayerHud running = Hud(-1, new QueueItemView(5, 300, false));
+        Command hold = SidebarCommands.RightClick(0, running, Opt(ProductionCategory.Structure, 5))!.Value;
+        Assert.Equal((CommandKind.Hold, (int)ProductionCategory.Structure, 1), (hold.Kind, hold.Arg, hold.Arg2));
+        Assert.Equal(CameoClick.None, SidebarCommands.LeftClick(running, Opt(ProductionCategory.Structure, 5, QueueBlockReason.StructureWaiting)));
+
+        PlayerHud held = Hud(-1, new QueueItemView(5, 300, false, true));
+        Command cancel = SidebarCommands.RightClick(0, held, Opt(ProductionCategory.Structure, 5))!.Value;
+        Assert.Equal((CommandKind.Cancel, (int)ProductionCategory.Structure, 0), (cancel.Kind, cancel.Arg, cancel.Arg2));
+        Assert.Equal(CameoClick.Resume, SidebarCommands.LeftClick(held, Opt(ProductionCategory.Structure, 5)));
+        Command resume = SidebarCommands.Hold(0, ProductionCategory.Structure, false);
+        Assert.Equal((CommandKind.Hold, 0), (resume.Kind, resume.Arg2));
+    }
+
+    [Fact]
+    public void Right_click_on_an_item_queued_behind_the_front_cancels_it_and_an_unqueued_cameo_does_nothing()
+    {
+        PlayerHud hud = Hud(-1, new QueueItemView(5, 300, false), new QueueItemView(3, 0, false));
+        Command c = SidebarCommands.RightClick(0, hud, Opt(ProductionCategory.Structure, 3))!.Value;
+        Assert.Equal((CommandKind.Cancel, 1), (c.Kind, c.Arg2));
+        Assert.Null(SidebarCommands.RightClick(0, hud, Opt(ProductionCategory.Structure, 9)));
+        Assert.Null(SidebarCommands.RightClick(0, hud, Opt(ProductionCategory.Vehicle, 5)));
+        // A held item of another type at the front does not make this type resume.
+        PlayerHud held = Hud(-1, new QueueItemView(5, 300, false, true), new QueueItemView(3, 0, false));
+        Assert.NotEqual(CameoClick.Resume, SidebarCommands.LeftClick(held, Opt(ProductionCategory.Structure, 3)));
+    }
+
+    [Fact]
+    public void Tooltip_hint_mentions_hold_for_every_category()
+    {
+        foreach (ProductionCategory c in new[] { ProductionCategory.Infantry, ProductionCategory.Vehicle, ProductionCategory.Aircraft,
+                     ProductionCategory.Structure, ProductionCategory.Defence })
+            Assert.Contains("hold / cancel", CameoTooltip.ClickHint(c));
+    }
 }
