@@ -30,9 +30,9 @@ light = "#CDD4E3"
 
 [land.water]
 # Deep water: clearly blue.
-dark = "#214D88"
-base = "#25589A"
-light = "#2A64B0"
+dark = "#2C4F76"
+base = "#325A86"
+light = "#396799"
 
 [land.rock]
 # Rock outcrops.
@@ -64,6 +64,8 @@ glint_one_in = 7
 
 [style]
 # Distances are in texels (16 per cell here).
+# The sim's real density scale is 0..12 (EconomyState.MaxDensity); the old rules read it as 0..255, which is why fields looked faint.
+density_full = 12
 blotch_shift = 4
 tone_amp = 7
 tone_cells = 7

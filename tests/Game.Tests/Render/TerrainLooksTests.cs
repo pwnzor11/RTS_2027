@@ -157,14 +157,14 @@ public sealed class TerrainLooksTests
         {
             TerrainBake.Result empty = TerrainBake.Bake(Cell(OverlayKind.None, 0), p);
             TerrainPalette.FieldLook look = kind == OverlayKind.Ashfall ? p.Style.Ashfall! : p.Style.Pitchblende!;
-            int sparse = Heap(TerrainBake.Bake(Cell(kind, 20), p), look, p, s);
-            int rich = Heap(TerrainBake.Bake(Cell(kind, 250), p), look, p, s);
+            int sparse = Heap(TerrainBake.Bake(Cell(kind, 2), p), look, p, s);
+            int rich = Heap(TerrainBake.Bake(Cell(kind, 12), p), look, p, s);
 
             Assert.True(sparse > 0, $"{kind}: a sparse field is still drawn");
             Assert.True(rich > sparse, $"{kind}: rich ({rich}) covers more than sparse ({sparse})");
 
             // nothing outside the field cell changes
-            TerrainBake.Result field = TerrainBake.Bake(Cell(kind, 250), p);
+            TerrainBake.Result field = TerrainBake.Bake(Cell(kind, 12), p);
             for (int ty = 0; ty < field.Height; ty++)
             {
                 for (int tx = 0; tx < field.Width; tx++)
@@ -177,11 +177,26 @@ public sealed class TerrainLooksTests
     }
 
     [Fact]
+    public void RealSimDensitiesOneToTwelveReadSparseToRich()
+    {
+        TerrainPalette p = Variant("c", "rustbelt");
+        int s = p.TexelCells;
+        Assert.Equal(12, p.Style.DensityFull);
+        Assert.Equal(255, p.NormalDensity(12));
+        Assert.Equal(255, p.NormalDensity(200));   // the old curated map's 0..255 values saturate instead of overflowing
+
+        TerrainPalette.FieldLook look = p.Style.Ashfall!;
+        int sparse = Heap(TerrainBake.Bake(Cell(OverlayKind.Ashfall, 3), p), look, p, s);
+        int rich = Heap(TerrainBake.Bake(Cell(OverlayKind.Ashfall, 12), p), look, p, s);
+        Assert.True(sparse > 0 && rich > 2 * sparse, $"sparse {sparse}, rich {rich}");
+    }
+
+    [Fact]
     public void FieldRimIsDarkerThanTheGroundItMeets()
     {
         TerrainPalette p = Variant("c", "rustbelt");
         int s = p.TexelCells;
-        TerrainBake.Result field = TerrainBake.Bake(Cell(OverlayKind.Ashfall, 255), p);
+        TerrainBake.Result field = TerrainBake.Bake(Cell(OverlayKind.Ashfall, 12), p);
         TerrainBake.Result empty = TerrainBake.Bake(Cell(OverlayKind.None, 0), p);
 
         int darker = 0;

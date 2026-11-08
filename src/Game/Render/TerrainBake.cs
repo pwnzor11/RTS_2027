@@ -59,7 +59,7 @@ public static class TerrainBake
                 int k = cy * w + cx;
                 LandType land = map.Land[k];
                 OverlayKind overlay = map.Overlay[k];
-                int dens = map.Density[k];
+                int dens = palette.NormalDensity(map.Density[k]);
 
                 TerrainPalette.Rgb col = Texel(palette, land, overlay, dens, tx, ty, fields);
                 if (fields && overlay is OverlayKind.Ashfall or OverlayKind.Pitchblende)
@@ -235,7 +235,7 @@ public static class TerrainBake
         if (st.FieldBedPermille > 0) col = Mix(col, look.Rim, st.FieldBedPermille + dens * 150 / 255);
 
         bool crystal = overlay == OverlayKind.Pitchblende;
-        int rMin = Math.Max(1, s / 8), rMax = Math.Max(rMin, crystal ? s / 5 : s / 4);
+        int rMin = Math.Max(1, crystal ? s / 8 : s / 6), rMax = Math.Max(rMin, crystal ? s / 4 : s * 5 / 16);
         int r0 = rMin + (rMax - rMin) * dens / 255;
         int count = 1 + (st.FieldMaxHeaps - 1) * dens / 255;
         for (int i = 0; i < count; i++)

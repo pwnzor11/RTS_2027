@@ -30,9 +30,9 @@ light = "#CDD4E3"
 
 [land.water]
 # Deep water: clearly blue.
-dark = "#214D88"
-base = "#25589A"
-light = "#2A64B0"
+dark = "#2C4F76"
+base = "#325A86"
+light = "#396799"
 
 [land.rock]
 # Rock outcrops.

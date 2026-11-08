@@ -57,7 +57,7 @@ CHAIN = [(0.062 * R ** i) - 0.05 for i in range(6)]   # luminance targets, each 
 BIOMES = {
     "rust_belt": dict(
         order=["cliff", "ash", "water", "rough", "shallow", "road"],
-        hue=dict(cliff=(30, 28, 26), ash=(84, 72, 98), water=(30, 80, 150), rough=(150, 98, 72), shallow=(90, 185, 200), road=(196, 188, 172),
+        hue=dict(cliff=(30, 28, 26), ash=(84, 72, 98), water=(52, 90, 140), rough=(150, 98, 72), shallow=(90, 185, 200), road=(196, 188, 172),
                  clear=(128, 118, 102), rock=(96, 98, 106)),
         extra=dict(clear=0.23, rock=0.068),
         road_line=(52, 46, 40), foam=(205, 232, 242), cliff_top=(190, 180, 160),
@@ -65,17 +65,17 @@ BIOMES = {
         pit_f=((110, 210, 120), (176, 250, 170), (40, 120, 80), (14, 40, 30)),
         glint=(240, 255, 200), mini_ash=(255, 150, 40), mini_pit=(110, 240, 120)),
     "glass_coast": dict(
-        order=["cliff", "water", "ash", "road", "rough", "shallow"],
-        hue=dict(cliff=(36, 52, 50), water=(20, 70, 140), ash=(128, 96, 88), road=(130, 150, 150), rough=(190, 160, 110), shallow=(60, 190, 185),
+        order=["cliff", "water", "ash", "road", "shallow", "rough"],
+        hue=dict(cliff=(36, 52, 50), water=(30, 76, 130), ash=(128, 96, 88), road=(130, 150, 150), rough=(190, 160, 110), shallow=(70, 170, 168),
                  clear=(214, 204, 176), rock=(78, 112, 104)),
-        extra=dict(clear=0.58, rock=0.068),
+        extra=dict(clear=0.70, rock=0.068),
         road_line=(224, 238, 232), foam=(240, 248, 246), cliff_top=(170, 215, 205),
         ash_f=((128, 60, 38), (190, 98, 60), (70, 32, 24), (40, 20, 16)),
         pit_f=((40, 150, 110), (110, 220, 170), (16, 80, 66), (10, 40, 34)),
         glint=(230, 255, 230), mini_ash=(255, 140, 50), mini_pit=(60, 235, 110)),
     "mountains": dict(
         order=["cliff", "rough", "water", "shallow", "road", "ash"],
-        hue=dict(cliff=(40, 35, 32), rough=(96, 84, 74), water=(36, 86, 150), shallow=(96, 170, 196), road=(150, 142, 128), ash=(190, 196, 210),
+        hue=dict(cliff=(40, 35, 32), rough=(96, 84, 74), water=(50, 90, 135), shallow=(96, 170, 196), road=(150, 142, 128), ash=(190, 196, 210),
                  clear=(112, 102, 88), rock=(92, 88, 82)),
         extra=dict(clear=0.24, rock=0.068),
         road_line=(236, 224, 190), foam=(210, 232, 244), cliff_top=(196, 190, 180),
@@ -84,7 +84,7 @@ BIOMES = {
         glint=(240, 255, 200), mini_ash=(255, 150, 40), mini_pit=(110, 240, 120)),
     "ash_plains": dict(
         order=["cliff", "rough", "water", "shallow", "ash", "road"],
-        hue=dict(cliff=(26, 26, 30), rough=(88, 62, 48), water=(34, 86, 156), shallow=(80, 170, 170), ash=(150, 130, 160), road=(200, 196, 186),
+        hue=dict(cliff=(26, 26, 30), rough=(88, 62, 48), water=(54, 92, 138), shallow=(80, 170, 170), ash=(150, 137, 140), road=(200, 196, 186),
                  clear=(120, 116, 76), rock=(84, 84, 92)),
         extra=dict(clear=0.2, rock=0.068),
         road_line=(52, 46, 48), foam=(205, 232, 242), cliff_top=(170, 160, 180),
@@ -146,7 +146,10 @@ def toml_for(biome, look):
     pit_cov = re.search(r"\[overlay\.pitchblende\].*?max_coverage_permille = (\d+)", shipped, re.S).group(1)
     out += ["[overlay.pitchblende]", f'chunk = "{chunk}"', f'glint = "{glint}"', f"max_coverage_permille = {pit_cov}", "glint_one_in = 7", ""]
     if look in "bc":
-        out += ["[style]", "# Distances are in texels (16 per cell here).", "blotch_shift = 4", "tone_amp = 7", "tone_cells = 7",
+        out += ["[style]", "# Distances are in texels (16 per cell here).",
+                *(["# The sim's real density scale is 0..12 (EconomyState.MaxDensity); the old rules read it as 0..255, which is why fields looked faint.",
+                   "density_full = 12"] if look == "c" else []),
+                "blotch_shift = 4", "tone_amp = 7", "tone_cells = 7",
                 f'road_edge = "{hexc(b["road_line"])}"', "road_edge_texels = 1",
                 f'shore = "{hexc(b["foam"])}"', "shore_texels = 3",
                 f'cliff_top = "{hexc(b["cliff_top"])}"', "cliff_top_texels = 1", "cliff_shadow_permille = 500", "cliff_shadow_texels = 4", ""]

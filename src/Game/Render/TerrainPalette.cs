@@ -47,6 +47,12 @@ public sealed class TerrainPalette
     /// <summary>Optional edge, tone and resource-field options (S15 looks). <see cref="TerrainStyle.None"/> = the plain look.</summary>
     public TerrainStyle Style { get; }
 
+    /// <summary>
+    /// A cell's density on the 0..255 scale the look rules use. The sim's real scale is 0..<see cref="TerrainStyle.DensityFull"/> (12 for
+    /// generated maps), so a palette sets <c>density_full</c> to make a rich cell look rich; the default 255 leaves values unchanged.
+    /// </summary>
+    public int NormalDensity(int density) => Math.Min(255, density * 255 / Style.DensityFull);
+
     /// <summary>Minimap colour of an ashfall cell at full density, or null for the old tint-by-speck-colour rule.</summary>
     public Rgb? MinimapAshfall { get; }
 
@@ -269,6 +275,7 @@ public sealed class TerrainPalette
             st = st with
             {
                 BlotchShift = OptInt(t, "blotch_shift", st.BlotchShift, 1, 6),
+                DensityFull = OptInt(t, "density_full", st.DensityFull, 1, 255),
                 ToneAmp = OptInt(t, "tone_amp", st.ToneAmp, 0, 40),
                 ToneCells = OptInt(t, "tone_cells", st.ToneCells, 1, 64),
                 RoadEdge = OptColour(t, "road_edge"),
@@ -366,6 +373,9 @@ public sealed class TerrainPalette
 
         /// <summary>The cell-scale shade blotch is 1 &lt;&lt; this many texels square (original: 3 = 8 texels).</summary>
         public int BlotchShift { get; init; } = 3;
+
+        /// <summary>The density value that counts as a full (richest) cell. 255 = the original scale; the sim itself uses 12 (<c>EconomyState.MaxDensity</c>).</summary>
+        public int DensityFull { get; init; } = 255;
 
         /// <summary>Largest large-scale tone offset in RGB levels on open ground (0 = off).</summary>
         public int ToneAmp { get; init; }

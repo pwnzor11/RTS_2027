@@ -6,9 +6,9 @@ texel_cells = 16
 
 [land.clear]
 # Open ground.
-dark = "#B9B098"
-base = "#D2C8AD"
-light = "#EFE4C5"
+dark = "#C9C0A5"
+base = "#E4DABC"
+light = "#FFF9D6"
 
 [land.road]
 # Roads: lighter than the ground around them.
@@ -18,9 +18,9 @@ light = "#778989"
 
 [land.rough]
 # Rubble and scrub.
-dark = "#978057"
-base = "#AC9163"
-light = "#C4A571"
+dark = "#BC9F6D"
+base = "#D6B57C"
+light = "#F4CE8D"
 
 [land.ash]
 # Ash ground: its own hue.
@@ -30,9 +30,9 @@ light = "#7C5D55"
 
 [land.water]
 # Deep water: clearly blue.
-dark = "#0F3468"
-base = "#113B76"
-light = "#134387"
+dark = "#15365C"
+base = "#183D69"
+light = "#1B4678"
 
 [land.rock]
 # Rock outcrops.
@@ -48,9 +48,9 @@ light = "#182321"
 
 [land.shallow]
 # Fords and lagoon: lighter blue-green than deep water.
-dark = "#39B4AF"
-base = "#41CDC7"
-light = "#4AEAE3"
+dark = "#3B8F8E"
+base = "#43A3A1"
+light = "#4CBAB8"
 
 [overlay.ashfall]
 speck = "#6A645A"
