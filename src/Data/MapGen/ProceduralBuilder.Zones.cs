@@ -16,6 +16,7 @@ namespace Rts.Data.MapGen;
 internal sealed partial class ProceduralBuilder
 {
     private const byte ZMain = 1, ZLane = 2, ZPlaza = 3;
+    private int RockPct => _players > 2 ? 0 : 14;
 
     private readonly bool _zoned;
     private readonly int _players;
@@ -41,11 +42,12 @@ internal sealed partial class ProceduralBuilder
         _rng = new SimRandom(seed);
         bool big = n >= 96;
         _sa = Math.Max(9, n * _rng.Next(14, 21) / 100);
-        _sb = _sa + n * (players == 2 ? _rng.Next(43, 51) : _rng.Next(38, 43)) / 100;
+        _sb = players == 2 ? _sa + n * _rng.Next(43, 51) / 100 : n - 1 - _sa - n * _rng.Next(20, 24) / 100;
         int m = _rng.Next(12);
         _mode = m < 8 ? 0 : m < 11 ? 1 : 2;
         _natural = _rng.Next(2) == 0;
         _iw = big ? 8 : 7; _ie = big ? 16 : 13; _hh = big ? 8 : 7;
+        if (players > 2) { _iw = 6; _ie = big ? 12 : 10; _hh = 6; }
         _wL1 = _rng.Next(6, 9); _wL2 = big ? _rng.Next(13, 16) : _rng.Next(10, 13); _wL3 = _rng.Next(5, 8);
         _bridgeW = _rng.Next(3, 5);
         _gapN = _rng.Next(4, 7); _gapNE = _rng.Next(4, 7); _gapE = _rng.Next(4, 7);
@@ -168,7 +170,7 @@ internal sealed partial class ProceduralBuilder
         if (!Canonical(x0, y0, x1, y1)) return;
         int roll = _rng.Next(100);
         if (w < 3 || h < 3) return;
-        if (roll < 9 && Math.Min(w, h) >= 5)
+        if (roll < RockPct && Math.Min(w, h) >= 5)
         {
             // Rubble block: a rock core with chipped corners and a rough spill.
             int t0 = _rng.Next(0, 2), t1 = _rng.Next(0, 2), t2 = _rng.Next(0, 2), t3 = _rng.Next(0, 2);
@@ -181,10 +183,10 @@ internal sealed partial class ProceduralBuilder
                     else if (_rng.Next(100) < 30) _g.SetLand(_g.Idx(x, y), LandType.Rough);
                 }
         }
-        else if (roll < 62)
+        else if (roll < 66)
         {
             // A rubble field: an irregular patch of rough ground (slow, passable), sometimes with a rock heap in it.
-            double dummy = 0; _ = dummy;
+            
             int cx2 = x0 + x1, cy2 = y0 + y1;   // doubled centre
             int rx = Math.Max(2, w * _rng.Next(40, 56) / 100), ry = Math.Max(2, h * _rng.Next(40, 56) / 100);
             for (int y = y0; y <= y1; y++)
@@ -200,7 +202,7 @@ internal sealed partial class ProceduralBuilder
                     for (int x = cx - hx; x <= cx + hx; x++) _g.SetLand(_g.Idx(x, y), LandType.Rock);
             }
         }
-        else if (roll < 74)
+        else if (roll < 78)
         {
             // A rubble heap in an open lot.
             int cx = (x0 + x1) / 2, cy = (y0 + y1) / 2, r = Math.Min(w, h) >= 8 ? 2 : 1;
@@ -254,6 +256,7 @@ internal sealed partial class ProceduralBuilder
         // Centre plaza on the diagonal where the boulevard turns.
         int cx = Math.Max(_t2 + 3, n / 2 - 1);
         Open(cx - 5, cx - 5, cx + 5, cx + 5, ZPlaza, false);
+        if (_players > 2) { int q = n * 40 / 100; Open(q - 4, q - 4, q + 4, q + 4, ZPlaza, false); }
 
     }
 
@@ -292,10 +295,11 @@ internal sealed partial class ProceduralBuilder
         int a = _sa, b = _sb;
         int portY = b - _hh - 4, portE = a + _ie + 4;
         int neX = a + _ie - 3;
-        LineSegment(a, portY - 1, a, a + 2, _wL1);          // lane 1, vertical
-        LineSegment(portE + 1, b, b - 2, b, _wL3);          // lane 3, horizontal
-        LineSegment(neX, portY - 1, neX, _t2 + 1, _wL2, 30);    // lane 2 arms
-        LineSegment(neX + 1, _t2, _t2 - 1, _t2, _wL2, 30);
+        int sk = _players > 2 ? 40 : 0;
+        LineSegment(a, portY - 1, a, a + 2, _wL1, sk);          // lane 1, vertical
+        LineSegment(portE + 1, b, b - 2, b, _wL3, sk);          // lane 3, horizontal
+        LineSegment(neX, portY - 1, neX, _t2 + 1, _wL2, Math.Max(30, sk));    // lane 2 arms
+        LineSegment(neX + 1, _t2, _t2 - 1, _t2, _wL2, Math.Max(30, sk));
     }
 
     private void LineSegment(int x0, int y0, int x1, int y1, int w, int skipPct = 0)
@@ -501,12 +505,6 @@ internal sealed partial class ProceduralBuilder
                     if (!imagesOk) continue;
                     cand.Add(i);
                 }
-            if (Environment.GetEnvironmentVariable("MAPGEN_DEBUG") == "1")
-            {
-                int zc = 0, lc = 0, wc = 0;
-                for (int y = y0; y <= y1; y++) for (int x = x0; x <= x1; x++) { int i = _g.Idx(x, y); if (_zone[i] == zone) zc++; if (_g.Land[i] == LandType.Clear) lc++; if (_wallDist[i] >= 1 && _wallDist[i] <= cap) wc++; }
-                Console.Error.WriteLine($"grow rect {x0},{y0}-{x1},{y1} cap {cap}: cand {cand.Count} zone {zc} clear {lc} wall {wc}");
-            }
             if (cand.Count == 0) continue;
             for (int attempt = 0; attempt < 6; attempt++)
             {
@@ -581,7 +579,6 @@ internal sealed partial class ProceduralBuilder
     {
         List<int> f = GrowField(x0, y0, x1, y1, target, dcap, minStart, zone);
         if (f.Count < target * 7 / 10) f = StripField(x0, y0, x1, y1, target, zone, minStart);
-        if (f.Count == 0 && Environment.GetEnvironmentVariable("MAPGEN_DEBUG") == "1") Console.Error.WriteLine($"field failed rect {x0},{y0}-{x1},{y1} target {target} zone {zone}");
         return Largest(f);
     }
 
@@ -619,7 +616,7 @@ internal sealed partial class ProceduralBuilder
     {
         int a = _sa, b = _sb, n = _n;
         bool gems = _rng.Next(2) == 0;
-        int fs = Math.Max(80, Math.Min(100, _scale));   // field sizes shrink on Small maps (percent)
+        int fs = Math.Max(80, Math.Min(100, _scale)) * (_players > 2 ? 13 : 10) / 10;   // field sizes shrink on Small maps (percent)
         // Main: three strips along the walls.
         int ix0 = a - _iw, ix1 = a + _ie, iy0 = b - _hh, iy1 = b + _hh;
         var f1 = MakeField(a - 6, b + 2, ix1, iy1, _rng.Next(48, 60) * fs / 100, 2, 5, ZMain);
@@ -638,10 +635,11 @@ internal sealed partial class ProceduralBuilder
         }
         // Contested: the north-west courtyard, the centre, and the south-east pair.
         int box = _ry - 3;
-        PlaceField(MakeField(6, 6, box, box, _rng.Next(30, 40), 3, 8, ZPlaza), 0);
+        PlaceField(MakeField(6, 6, box, box, _players > 2 ? _rng.Next(34, 44) : _rng.Next(30, 40), 3, 8, ZPlaza), 0);
         int cx = Math.Max(_t2 + 3, n / 2 - 1);
-        PlaceField(MakeField(cx - 1, cx - 1, cx + 5, cx + 5, _rng.Next(30, 38), 6, 8, ZPlaza), 6);
-        PlaceField(MakeField(b + 7, b - 8, Math.Min(n - 4, b + 20), b + 3, _rng.Next(36, 48), 3, 8, ZPlaza), 0);
+        PlaceField(_players > 2 ? MakeField(cx - 1, cx - 1, cx + 5, cx + 5, _rng.Next(7, 10), 6, 8, ZPlaza) : MakeField(cx - 1, cx - 1, cx + 5, cx + 5, _rng.Next(30, 38), 6, 8, ZPlaza), 6);
+        if (_players == 2) PlaceField(MakeField(b + 7, b - 8, Math.Min(n - 4, b + 20), b + 3, _rng.Next(36, 48), 3, 8, ZPlaza), 0);
+        if (_players > 2) { int q = n * 40 / 100; PlaceField(MakeField(q - 4, q - 4, q + 4, q + 4, _rng.Next(14, 20), 3, 8, ZPlaza), 0); }
         ScaleDensity();
     }
 

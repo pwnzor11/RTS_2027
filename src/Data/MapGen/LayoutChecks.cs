@@ -108,6 +108,7 @@ public static class LayoutChecks
         string laneText = ""; bool laneOk = true;
         var pairs = new List<(int, int)>();
         for (int t = 0; t < k; t++) if (team[t] != team[0]) pairs.Add((0, t));
+        if (pairs.Count > 1) { int nearest = pairs.OrderBy(q => dist[q.Item1][map.IndexOf(st[q.Item2])]).First().Item2; pairs = pairs.Where(q => q.Item2 == nearest).ToList(); }   // the lanes that matter are those to the nearest enemy
         int lanesMin = 99, lanesMax = 0, widest = 0, narrowMin = 99; bool hasMedium = true, hasWide = true, hasNarrow = true; int maxShare = 0;
         int gapsMax = 0;
         foreach ((int s, int t) in pairs)
@@ -359,7 +360,6 @@ public static class LayoutChecks
 
     private const int Exclude = 20;
     private const int ExcludeBlock = 32;   // lanes may share this much of the way out of a main (the service street of a walled main)
-    private const int ExcludeUnused = 28;   // path cells from a start that count as its surroundings (scaled for small maps)
 
     private static List<Lane> FindLanes(MapData map, bool[] pass, int[] width, CellCoord a, CellCoord b, int n, int[] da, int[] db, double f)
     {
