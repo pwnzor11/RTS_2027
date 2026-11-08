@@ -24,7 +24,7 @@ public static class MapGenerator
     public const int ZonedLayout = 2;
 
     /// <summary>Attempts allowed for the zoned layout (its checks are stricter than layout 1's).</summary>
-    public const int MaxZonedAttempts = 16;
+    public const int MaxZonedAttempts = 40;
 
     /// <summary>The friendly message of a save made with a generator this build no longer has.</summary>
     public const string OldGeneratorMessage = "This save was made with an older map generator and can't be loaded.";
@@ -160,7 +160,17 @@ public static class MapGenerator
             var fullMeta = new MapMeta(biome.Key, MapSymmetry.MirrorDiag, orbit.Length, null, builder.Features.ToArray());
             last = FirstFailure(full, fullMeta);
             if (last is not null) continue;
-            int fails = LayoutChecks.Evaluate(full, fullMeta).Count(c => !c.Pass);
+            MapData judged = full;
+            if (p.Players == 3)
+            {
+                // Judge the map that is actually played: the start chosen by the seed stays empty.
+                int emptyAt = (int)(p.Seed % 4UL);
+                var three = new CellCoord[3];
+                for (int k = 0; k < 3; k++) three[k] = orbit[(emptyAt + 1 + k) % 4];
+                judged = new MapData(name, full.Theater, n, n, full.Template.ToArray(), full.Land.ToArray(), full.HeightLevel.ToArray(),
+                    full.Overlay.ToArray(), full.Density.ToArray(), three);
+            }
+            int fails = LayoutChecks.Evaluate(judged, fullMeta).Count(c => !c.Pass);
             if (fails < bestFails) { bestFails = fails; bestMap = full; bestBuilder = builder; bestAttempt = attempt; }
             if (fails == 0) break;
         }

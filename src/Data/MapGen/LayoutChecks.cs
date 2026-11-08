@@ -110,9 +110,9 @@ public static class LayoutChecks
         string laneText = ""; bool laneOk = true;
         var pairs = new List<(int, int)>();
         for (int t = 0; t < k; t++) if (team[t] != team[0]) pairs.Add((0, t));
-        if (pairs.Count > 1) { int nearest = pairs.OrderBy(q => dist[q.Item1][map.IndexOf(st[q.Item2])]).First().Item2; pairs = pairs.Where(q => q.Item2 == nearest).ToList(); }   // the lanes that matter are those to the nearest enemy
+        if (k == 4 && pairs.Count > 1) { int nearest = pairs.OrderBy(q => dist[q.Item1][map.IndexOf(st[q.Item2])]).First().Item2; pairs = pairs.Where(q => q.Item2 == nearest).ToList(); }   // the lanes that matter are those to the nearest enemy
         int lanesMin = 99, lanesMax = 0, widest = 0, narrowMin = 99; bool hasMedium = true, hasWide = true, hasNarrow = true; int maxShare = 0;
-        int gapsMax = 0;
+        int gapsMax = 0; bool anyMedium = false, anyNarrow = false;
         foreach ((int s, int t) in pairs)
         {
             List<Lane> found = FindLanes(map, pass, width, st[s], st[t], n, dist[s], dist[t], f, dist[s][map.IndexOf(st[t])]);
@@ -128,12 +128,14 @@ public static class LayoutChecks
                 maxShare = Math.Max(maxShare, l.SharePercent);
             }
             widest = Math.Max(widest, wMax);
-            hasWide &= wMax >= (int)(12 * f); hasMedium &= med; hasNarrow &= narrow;
+            hasWide &= wMax >= (int)(12 * f);
+            if (k == 3) { anyMedium |= med; anyNarrow |= narrow; } else { hasMedium &= med; hasNarrow &= narrow; }   // 3 players: the lane mix may come from either enemy
             laneText += (laneText.Length > 0 ? " | " : "") + $"{st[s].X},{st[s].Y}->{st[t].X},{st[t].Y}: " +
                 string.Join(", ", found.Select(l => $"[len {l.Length} median {l.Median} min {l.Min} at {l.MinAt % n},{l.MinAt / n}]"));
             if (lanes.Count == 0) laneOk = false;
         }
-        res.Add(new LayoutCheck("lane count", $"{lanesMin}..{lanesMax} lanes of width >= 3 per enemy pair, {gapsMax} infantry gap(s) of 1-2; {laneText}", laneOk && lanesMin >= 2 && lanesMax <= 5, "2..5, about 3"));
+        if (k == 3) { hasMedium = anyMedium; hasNarrow = anyNarrow; }
+        res.Add(new LayoutCheck("lane count", $"{lanesMin}..{lanesMax} lanes of width >= 3 per enemy pair, {gapsMax} infantry gap(s) of 1-2; {laneText}", laneOk && (k == 3 ? lanesMax >= 2 : lanesMin >= 2) && lanesMax <= 5, "2..5, about 3"));
         res.Add(new LayoutCheck("lane share", $"{maxShare} % shared beyond the starts' surroundings", maxShare < 30, "< 30 %"));
         res.Add(new LayoutCheck("wide lane", $"widest median {widest}", hasWide, $"one lane with median width >= {(int)(12 * f)} (12..16 at Medium and up; the cap is 20)"));
         res.Add(new LayoutCheck("medium lane", hasMedium ? "present" : "missing", hasMedium, "one lane with median width 5..9"));
@@ -198,7 +200,13 @@ public static class LayoutChecks
             bool ok = size[q] >= 20 && size[q] <= 70;
             for (int s = 0; s < k && ok; s++) ok = near[s][q] >= P * (k > 2 ? 40 : 44) / 100 && near[s][q] <= P * (k > 2 ? 90 : 88) / 100;
             if (!ok) continue;
-            contested++; if (pitch[q]) rich++;
+            contested++;
+            if (pitch[q])
+            {
+                int lo2 = int.MaxValue, hi2 = 0;
+                for (int s = 0; s < k; s++) { lo2 = Math.Min(lo2, near[s][q]); hi2 = Math.Max(hi2, near[s][q]); }
+                if (hi2 * 10 <= lo2 * 13) rich++;   // a rich CENTRE field (about equally far from every start); an empty 3-player main is not one
+            }
             ctext += (ctext.Length > 0 ? ", " : "") + size[q];
         }
         // Fields come once per symmetry image; the study counts them per map.
@@ -321,7 +329,6 @@ public static class LayoutChecks
             (int ax, int ay) = Img(frame, n, x, y);
             open.Add(ax >= 0 && ay >= 0 && ax < n && ay < n && pass[ay * n + ax]);
         }
-        if (System.Environment.GetEnvironmentVariable("MD") == "3") System.Console.Error.WriteLine("RING " + s.X + "," + s.Y + " frame " + frame + ": " + string.Join(" ", ring.Select((r, q) => open[q] ? $"{r.X},{r.Y}" : "").Where(t => t.Length > 0)));
         var runs = new List<int>();
         int m = open.Count, startAt = open.IndexOf(false);
         if (startAt < 0) { runs.Add(m); return runs; }
@@ -376,12 +383,10 @@ public static class LayoutChecks
             List<int>? path = Route(pass, width, blockedLane, map.IndexOf(a), map.IndexOf(b), n);
             if (path is null)
             {
-                if (System.Environment.GetEnvironmentVariable("MD") == "2") { for (int yy = 0; yy < n; yy++) { var sb = new System.Text.StringBuilder(); for (int xx = 0; xx < n; xx++) { int ci = yy * n + xx; sb.Append(blockedLane[ci] ? 'X' : pass[ci] ? '.' : '#'); } System.Console.Error.WriteLine("BL " + sb); } }
                 break;
             }
             if (round == 0) first = path.Count;
             else if (path.Count > first * 14 / 10) break;
-            if (System.Environment.GetEnvironmentVariable("MD") == "1") System.Console.Error.WriteLine("ROUTE " + string.Join(" ", path.Where((c, q) => q % 3 == 0).Select(c => $"{c % n},{c / n}:{width[c]}")));
             var inner = new List<int>(); int minAt = path[0], minW = 1000;
             int shared = 0, counted = 0;
             foreach (int c in path)
