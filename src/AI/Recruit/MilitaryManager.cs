@@ -494,7 +494,7 @@ internal sealed class MilitaryManager
             _phase = Phase.Gather;
             _roster.Clear();
         }
-        else if (_phase == Phase.Assault && Stalled(k, knownEnemyBuildings))   // S15: also for tier 1 (a wave of hurt units on an unkillable target never ended)
+        else if (_phase == Phase.Assault && (Options.Respond || !_hookWaveActive) && Stalled(k, knownEnemyBuildings))   // S15: also for tier 1 (a wave of hurt units on an unkillable target never ended)
         {
             // M4-12: the wave has destroyed nothing for a long time (a target it cannot kill, a wall, free repairs): end it; every
             // survivor is counted again for the next wave, which goes out at once when the army is big enough
