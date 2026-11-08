@@ -14,12 +14,13 @@ public static class MapCommands
 {
     private const string Usage =
         "usage: map new --size <n> --seed <s> --out <path>\n" +
-        "       map gen --biome rust_belt|glass_coast|mountains|ash_plains --size s|m|l --players 2|3|4 --seed <s> --out <path> [--ocean n|e|s|w letters, e.g. ns] [--ascii]\n" +
+        "       map gen --biome rust_belt|glass_coast|mountains|ash_plains --size s|m|l --players 2|3|4 --seed <s> --out <path> [--ocean n|e|s|w letters, e.g. ns] [--layout 1|2] [--ascii]\n" +
         "       map validate <path> [--rules-dir <dir>]\n" +
         "       map info <path>\n" +
         "       map ascii <path>\n" +
         "       map report <path> | <gen options>        (measured table of design 16 section 1.2; gen options as for map gen, without --out)\n" +
-        "       map render <path> | <gen options> --png <out.png> [--scale <px per cell, default 6>]";
+        "       map render <path> | <gen options> --png <out.png> [--scale <px per cell, default 6>]\n" +
+        "       (report/render: --layout 1|2 picks the generator; --raw shows layout 2 seed as is, with no retry; --checks adds the layout checks to a layout 1 report)";
 
     public static int Run(string[] args)
     {
@@ -85,15 +86,19 @@ public static class MapCommands
     private static int Gen(string[] args)
     {
         Biome? biome = null; MapSize? size = null; int? players = null; ulong? seed = null; string? outPath = null; bool ascii = false;
+        int layout = MapGenerator.CurrentLayout;
         OceanEdges ocean = OceanEdges.None;   // M7-13: --ocean ns turns the north and south edges (and their symmetry images) into sea
         for (int i = 0; i < args.Length; i++)
         {
             string a = args[i];
             if (a == "--ascii") { ascii = true; continue; }
-            if (i + 1 >= args.Length || a is not ("--biome" or "--size" or "--players" or "--seed" or "--out" or "--ocean")) { Console.Error.WriteLine(Usage); return 2; }
+            if (i + 1 >= args.Length || a is not ("--biome" or "--size" or "--players" or "--seed" or "--out" or "--ocean" or "--layout")) { Console.Error.WriteLine(Usage); return 2; }
             string v = args[++i];
             switch (a)
             {
+                case "--layout":
+                    if (!int.TryParse(v, NumberStyles.None, CultureInfo.InvariantCulture, out int lay) || lay < 1 || lay > 2) { Console.Error.WriteLine("error: --layout must be 1 or 2"); return 2; }
+                    layout = lay; break;
                 case "--biome":
                     int b = Array.IndexOf(MapFile.BiomeKeys, v);
                     if (b < 0) { Console.Error.WriteLine($"error: unknown biome '{v}' (one of {string.Join(", ", MapFile.BiomeKeys)})"); return 2; }
@@ -123,7 +128,7 @@ public static class MapCommands
         if (biome is null || size is null || players is null || seed is null || outPath is null) { Console.Error.WriteLine(Usage); return 2; }
         try
         {
-            var p = new MapGenParams(biome.Value, size.Value, players.Value, seed.Value, null, ocean);
+            var p = new MapGenParams(biome.Value, size.Value, players.Value, seed.Value, null, ocean, layout);
             long t0 = System.Diagnostics.Stopwatch.GetTimestamp();
             (MapData map, MapMeta meta) = MapGenerator.GenerateWithMeta(p);
             long ms = (long)System.Diagnostics.Stopwatch.GetElapsedTime(t0).TotalMilliseconds;
@@ -177,14 +182,20 @@ public static class MapCommands
     {
         string? path = null, png = null; int scale = 6;
         Biome? biome = null; MapSize? size = null; int? players = null; ulong? seed = null; OceanEdges ocean = OceanEdges.None;
+        int layout = MapGenerator.CurrentLayout; bool raw = false, checks = false;
         for (int i = 0; i < args.Length; i++)
         {
             string a = args[i];
             if (!a.StartsWith("--", StringComparison.Ordinal)) { if (path is not null) { Console.Error.WriteLine(Usage); return 2; } path = a; continue; }
+            if (a == "--raw") { raw = true; continue; }
+            if (a == "--checks") { checks = true; continue; }
             if (i + 1 >= args.Length) { Console.Error.WriteLine(Usage); return 2; }
             string v = args[++i];
             switch (a)
             {
+                case "--layout":
+                    if (!int.TryParse(v, NumberStyles.None, CultureInfo.InvariantCulture, out layout) || layout < 1 || layout > 2) { Console.Error.WriteLine("error: --layout must be 1 or 2"); return 2; }
+                    break;
                 case "--png": png = v; break;
                 case "--scale": if (!int.TryParse(v, NumberStyles.None, CultureInfo.InvariantCulture, out scale) || scale < 1 || scale > 16) { Console.Error.WriteLine("error: --scale must be 1..16"); return 2; } break;
                 case "--biome":
@@ -204,11 +215,25 @@ public static class MapCommands
         if ((path is null) == !gen || (gen && (biome is null || size is null || players is null || seed is null)) || (render && png is null)) { Console.Error.WriteLine(Usage); return 2; }
         try
         {
-            MapData map; MapMeta meta;
-            if (gen) (map, meta) = MapGenerator.GenerateWithMeta(new MapGenParams(biome!.Value, size!.Value, players!.Value, seed!.Value, null, ocean));
+            MapData map; MapMeta meta; string? rawFailure = null; int attempts = 1;
+            if (gen)
+            {
+                var gp = new MapGenParams(biome!.Value, size!.Value, players!.Value, seed!.Value, null, ocean, layout);
+                if (raw && layout == MapGenerator.ZonedLayout) (map, meta) = MapGenerator.GenerateZonedRaw(gp, out rawFailure);
+                else (map, meta) = MapGenerator.GenerateWithMeta(gp, Rts.Data.MapGen.BiomeCatalog.For(gp.Biome), out attempts);
+            }
             else (map, meta) = MapFile.LoadWithMeta(path!);
             if (png is not null) { MapRender.WritePng(map, meta, scale, png); Console.WriteLine($"wrote {png} ({map.Width * scale}x{map.Height * scale})"); }
-            if (!render) foreach (string line in Rts.Data.MapGen.MapReport.Measure(map, meta).Lines()) Console.WriteLine(line);
+            if (!render)
+            {
+                foreach (string line in Rts.Data.MapGen.MapReport.Measure(map, meta).Lines()) Console.WriteLine(line);
+                if (checks || meta.Generator?.Layout == MapGenerator.ZonedLayout)
+                {
+                    Console.WriteLine($"layout checks (layout {meta.Generator?.Layout ?? 0}, attempts {attempts}{(rawFailure is null ? "" : ", raw seed rejected: " + rawFailure)}):");
+                    foreach (Rts.Data.MapGen.LayoutCheck c in Rts.Data.MapGen.LayoutChecks.Evaluate(map, meta))
+                        Console.WriteLine($"  {(c.Pass ? "pass" : "FAIL")} {c.Name,-20} {c.Value}   [{c.Target}]");
+                }
+            }
             return 0;
         }
         catch (Exception e) when (e is ArgumentException or InvalidOperationException or IOException or UnauthorizedAccessException or RulesException or MapFileException)

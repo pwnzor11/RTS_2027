@@ -86,6 +86,17 @@ public sealed class SkirmishSetupTests
     }
 
     [Fact]
+    public void Four_players_on_a_layout_2_map_default_to_teams_12_versus_34_and_layout_1_keeps_one_team_each()
+    {
+        int zoned = MapGenerator.ZonedLayout, old = MapGenerator.CurrentLayout;
+        Assert.Equal(new[] { 0, 0, 1, 1 }, Enumerable.Range(0, 4).Select(i => SkirmishSettings.DefaultTeam(i, 4, zoned)).ToArray());
+        Assert.Equal(new[] { 0, 1, 2, 3 }, Enumerable.Range(0, 4).Select(i => SkirmishSettings.DefaultTeam(i, 4, old)).ToArray());
+        Assert.Equal(new[] { 0, 1, 2 }, Enumerable.Range(0, 3).Select(i => SkirmishSettings.DefaultTeam(i, 3, zoned)).ToArray());
+        var slots = Enumerable.Range(0, 4).Select(i => i == 0 ? Human(0, SkirmishSettings.DefaultTeam(i, 4, zoned)) : Ai(i, SkirmishSettings.DefaultTeam(i, 4, zoned))).ToArray();
+        Assert.Equal(new byte[] { 0, 0, 1, 1 }, OnFile("x", slots).Teams!.ToArray());
+    }
+
+    [Fact]
     public void Teams_reach_the_simulation_setup()
     {
         using var t = new SkirmishTestMaps();

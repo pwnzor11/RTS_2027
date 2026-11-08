@@ -20,6 +20,12 @@ public static class MapGenerator
     /// (D-180: replaced outright, so a save or map file that names 0 cannot be rebuilt); 1 = the M12 generator with its decoration pass.</summary>
     public const int CurrentLayout = 1;
 
+    /// <summary>The zone-skeleton generator (M12-07, D-183), built for Rust Belt only; opt in with <c>MapGenParams.Layout = 2</c>.</summary>
+    public const int ZonedLayout = 2;
+
+    /// <summary>Attempts allowed for the zoned layout (its checks are stricter than layout 1's).</summary>
+    public const int MaxZonedAttempts = 40;
+
     /// <summary>The friendly message of a save made with a generator this build no longer has.</summary>
     public const string OldGeneratorMessage = "This save was made with an older map generator and can't be loaded.";
 
@@ -77,11 +83,16 @@ public static class MapGenerator
     /// rule: Foot + Tracked connectivity, ≥ 2 fields within 14 cells of path, exact path equality, a 5×5 buildable start square and
     /// ≥ 12 cells between starts. Throws <see cref="InvalidOperationException"/> when no attempt passes.
     /// </summary>
-    public static (MapData Map, MapMeta Meta) GenerateWithMeta(MapGenParams p, BiomeParams biome)
+    public static (MapData Map, MapMeta Meta) GenerateWithMeta(MapGenParams p, BiomeParams biome) => GenerateWithMeta(p, biome, out _);
+
+    /// <summary>As above; <paramref name="attempts"/> is how many seeds were tried (1 = the first passed).</summary>
+    public static (MapData Map, MapMeta Meta) GenerateWithMeta(MapGenParams p, BiomeParams biome, out int attempts)
     {
         ArgumentNullException.ThrowIfNull(p);
         ArgumentNullException.ThrowIfNull(biome);
+        attempts = 1;
         if (p.Players < 2 || p.Players > 4) throw new ArgumentOutOfRangeException(nameof(p), "Players must be 2..4.");
+        if (p.Layout == ZonedLayout) return GenerateZoned(p, biome, out attempts);
         if (p.Layout != CurrentLayout) throw new InvalidOperationException(OldGeneratorMessage);   // D-180 D4: the old generator is gone
         int n = CellsFor(p.Size);
         string name = p.Name ?? DefaultName(p);
@@ -115,6 +126,90 @@ public static class MapGenerator
         throw new InvalidOperationException(
             $"No valid {biome.Key} map for size {n}, {p.Players} players from seed {p.Seed} in {MaxAttempts} tries (last: {last}).");
     }
+
+    /// <summary>Development view of layout 2: the first seed only, with no retry; <paramref name="failure"/> names what the checks reject (null = it would pass).</summary>
+    public static (MapData Map, MapMeta Meta) GenerateZonedRaw(MapGenParams p, out string? failure)
+    {
+        ArgumentNullException.ThrowIfNull(p);
+        BiomeParams biome = BiomeCatalog.For(p.Biome);
+        int n = CellsFor(p.Size);
+        (bool rot2, int t) = LayoutVariant.For(p.Seed, p.Players, n);
+        var builder = new ProceduralBuilder(biome, n, p.Players, AttemptSeed(p.Seed, 0), rot2);
+        CellCoord[] orbit = builder.OrbitStarts;
+        MapData full = builder.Build(p.Name ?? DefaultName(p), orbit);
+        var meta = new MapMeta(biome.Key, rot2 ? MapSymmetry.Rot2 : MapSymmetry.MirrorDiag, orbit.Length, null, builder.Features.ToArray());
+        failure = FirstFailure(full, meta) ?? LayoutChecks.FirstFailure(LayoutChecks.EvaluateCanonical(full, meta, rot2));
+        return FinishZoned(p, biome, n, full, builder, rot2, t);
+    }
+
+    /// <summary>The builder seed of a retry. Attempt 0 is a mix of the seed (not the seed itself), so that retries of one seed never meet the first try of its neighbour.</summary>
+    private static ulong AttemptSeed(ulong seed, int attempt) => unchecked((seed + 1UL) * 0x9E3779B97F4A7C15UL + (ulong)attempt * 0xD1B54A32D192ED03UL);
+
+    /// <summary>The canonical map to the played one: the three-player start choice, then the seed's turn.</summary>
+    private static (MapData Map, MapMeta Meta) FinishZoned(MapGenParams p, BiomeParams biome, int n, MapData full, ProceduralBuilder builder, bool rot2, int t)
+    {
+        CellCoord[] orb = builder.OrbitStarts;
+        CellCoord[] starts = orb;
+        if (p.Players == 3)
+        {
+            int empty = (int)(p.Seed % 4UL);
+            starts = new CellCoord[3];
+            for (int k = 0; k < 3; k++) starts[k] = orb[(empty + 1 + k) % 4];
+        }
+        MapData map;
+        MapFeature[] features = builder.Features.ToArray();
+        if (t == 0)
+            map = new MapData(full.Name, full.Theater, n, n, full.Template.ToArray(), full.Land.ToArray(), full.HeightLevel.ToArray(), full.Overlay.ToArray(), full.Density.ToArray(), starts);
+        else
+        {
+            map = LayoutVariant.Forward(full, t, starts);
+            features = LayoutVariant.MapFeatures(features, n, (x, y) => LayoutVariant.Fwd(t, n, x, y));
+        }
+        var meta = new MapMeta(biome.Key, rot2 ? MapSymmetry.Rot2 : MapSymmetry.MirrorDiag, p.Players, p with { Name = null }, features);
+        return (map, meta);
+    }
+
+    private static (MapData Map, MapMeta Meta) GenerateZoned(MapGenParams p, BiomeParams biome, out int attempts)
+    {
+        int n = CellsFor(p.Size);
+        string name = p.Name ?? DefaultName(p);
+        (bool rot2, int t) = LayoutVariant.For(p.Seed, p.Players, n);
+        string? last = null;
+        // The first attempt that passes every layout check wins. When none does in MaxZonedAttempts, the attempt with the
+        // fewest failed layout checks (and a clean validator) is used, so a map is always produced; `map report` lists what it misses.
+        MapData? bestMap = null; ProceduralBuilder? bestBuilder = null; int bestFails = int.MaxValue, bestAttempt = 0;
+        for (int attempt = 0; attempt < MaxZonedAttempts; attempt++)
+        {
+            ulong seed = AttemptSeed(p.Seed, attempt);
+            var builder = new ProceduralBuilder(biome, n, p.Players, seed, rot2);
+            CellCoord[] orbit = builder.OrbitStarts;
+            MapData full = builder.Build(name, orbit);
+            var fullMeta = new MapMeta(biome.Key, rot2 ? MapSymmetry.Rot2 : MapSymmetry.MirrorDiag, orbit.Length, null, builder.Features.ToArray());
+            last = FirstFailure(full, fullMeta);
+            if (last is not null) continue;
+            MapData judged = full;
+            if (p.Players == 3)
+            {
+                // Judge the map that is actually played: the start chosen by the seed stays empty.
+                int emptyAt = (int)(p.Seed % 4UL);
+                var three = new CellCoord[3];
+                for (int k = 0; k < 3; k++) three[k] = orbit[(emptyAt + 1 + k) % 4];
+                judged = new MapData(name, full.Theater, n, n, full.Template.ToArray(), full.Land.ToArray(), full.HeightLevel.ToArray(),
+                    full.Overlay.ToArray(), full.Density.ToArray(), three);
+            }
+            int fails = LayoutChecks.EvaluateCanonical(judged, fullMeta, rot2).Count(c => !c.Pass);
+            if (fails < bestFails) { bestFails = fails; bestMap = full; bestBuilder = builder; bestAttempt = attempt; }
+            if (fails == 0) break;
+        }
+        if (bestMap is null || bestBuilder is null)
+            throw new InvalidOperationException($"No valid {biome.Key} layout-2 map for size {n}, {p.Players} players from seed {p.Seed} in {MaxZonedAttempts} tries (last: {last}).");
+        attempts = bestAttempt + 1;
+        FailedChecks = bestFails;
+        return FinishZoned(p, biome, n, bestMap, bestBuilder, rot2, t);
+    }
+
+    /// <summary>Layout checks the last layout-2 generation on this thread still failed (0 = every check passed); for the sweep test and the report.</summary>
+    [ThreadStatic] public static int FailedChecks;
 
     /// <summary>The first §1 check an attempt fails (validator errors and warnings, then exact path equality), or null.</summary>
     private static string? FirstFailure(MapData map, MapMeta meta)

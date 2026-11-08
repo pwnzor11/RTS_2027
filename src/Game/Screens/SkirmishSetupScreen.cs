@@ -33,6 +33,7 @@ public sealed class SkirmishSetupScreen : IScreen
     private ulong _seed = DefaultGeneratedSeed;
     private OceanEdges _ocean = OceanEdges.None;   // M7-14
     private readonly List<SkirmishSlot> _slots;
+    private int _layout = MapGenerator.CurrentLayout;   // generator layout of the generated map (a layout-2 map defaults 4 players to teams 1+2 vs 3+4)
     private int _seedRow = -1;
     private int _firstSlotRow;
     private string _error = "";
@@ -59,6 +60,7 @@ public sealed class SkirmishSetupScreen : IScreen
             _size = g.Size;
             _seed = g.Seed;
             _ocean = g.OceanEdges;
+            _layout = g.Layout;
         }
         _tierNames = LoadTierNames(services.RulesDir);
         _slots = new List<SkirmishSlot>(SkirmishSettings.Default.Slots);
@@ -114,7 +116,7 @@ public sealed class SkirmishSetupScreen : IScreen
             MapEntry entry = _maps[_mapIndex];
             int open = _slots.Count(x => x.Kind != SlotKind.Closed);
             MapChoice map = entry.IsGenerated
-                ? new MapChoice(null, new MapGenParams(_biome, _size, Math.Clamp(open, SkirmishSettings.MinPlayers, SkirmishSettings.MaxSlots), _seed, null, ResolvedOcean(out _)))
+                ? new MapChoice(null, new MapGenParams(_biome, _size, Math.Clamp(open, SkirmishSettings.MinPlayers, SkirmishSettings.MaxSlots), _seed, null, ResolvedOcean(out _), _layout))
                 : new MapChoice(entry.File, null);
             ulong simSeed = entry.IsGenerated ? _seed : SkirmishGame.CuratedSimSeed;
             return new SkirmishSettings(map, _slots.ToArray(), simSeed);
@@ -323,6 +325,8 @@ public sealed class SkirmishSetupScreen : IScreen
         int n = Math.Clamp(_slots.Count + delta, SkirmishSettings.MinPlayers, SkirmishSettings.MaxSlots);
         while (_slots.Count > n) _slots.RemoveAt(_slots.Count - 1);
         while (_slots.Count < n) _slots.Add(NewSlot(_slots.Count));
+        if (_layout == MapGenerator.ZonedLayout)
+            for (int i = 0; i < _slots.Count; i++) _slots[i] = _slots[i] with { Team = SkirmishSettings.DefaultTeam(i, _slots.Count, _layout) };
         Rebuild();
     }
 
