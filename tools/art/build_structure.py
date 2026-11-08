@@ -189,6 +189,20 @@ def render(sid, mod, samples, only, preview):
         return finish(o, m, nocast, noclip, False)
 
     S.box, S.bb, S.cyl, S.cone, S.sphere = box, bb, cyl, cone, sphere
+    S.maskmats = {}      # object -> mask-pass emission material (white = house) for textured meshes whose house area is a texture mask
+
+    def mesh(name, o, m, mask=None, nocast=False, noclip=True):
+        """Add a ready-made bpy mesh object `o` (unlinked; vertices already in ground units, y stretched by S.YS, e.g. from
+        tools/art/wz/pie_import.build_object(..., ystretch=S.YS)).  `m` = material name from MATERIALS/house, or a bpy Material."""
+        if not isinstance(m, str):
+            M[m.name] = m
+            m = m.name
+        o.name = name
+        ob = finish(o, m, nocast, noclip, False)
+        if ob is not None and mask is not None:
+            S.maskmats[ob] = mask
+        return ob
+    S.mesh = mesh
 
     def reset():
         for o, _m, _c in S.objs:
@@ -197,6 +211,7 @@ def render(sid, mod, samples, only, preview):
             if me.users == 0:
                 bpy.data.meshes.remove(me)
         S.objs.clear()
+        S.maskmats.clear()
         S.clip_z = None
         S.skin.clear()
         S.hide = lambda name: False
@@ -321,7 +336,7 @@ def render(sid, mod, samples, only, preview):
         if not preview:
             for o, m, _c in S.objs:
                 o.data.materials.clear()
-                o.data.materials.append(mask_on if m == "house" else (mask_h2 if m == "house2" else (mask_rad if m in rad_mats else mask_off)))
+                o.data.materials.append(S.maskmats.get(o) or (mask_on if m == "house" else (mask_h2 if m == "house2" else (mask_rad if m in rad_mats else mask_off))))
                 o.data.materials.append(mask_off)
             wbg = w.node_tree.nodes["Background"].inputs[1]
             wbg.default_value = 0.0
