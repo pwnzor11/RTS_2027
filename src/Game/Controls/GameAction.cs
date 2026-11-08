@@ -107,4 +107,6 @@ public enum GameAction
     Group9,
     /// <summary>Camera: jump to the most recent alert with a place; press again to step back through the last few.</summary>
     LastAlert,
+    /// <summary>Show or hide the map decor (decals and land-linked sprites) to compare with the bare ground (M12-03).</summary>
+    DecorToggle,
 }

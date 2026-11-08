@@ -33,6 +33,7 @@ public sealed class SceneRenderer : IDisposable
     private readonly WallTiler _walls = new();
     private readonly List<DrawItem> _items = new();
     private readonly ThemedTerrainLook _terrain = new();
+    private readonly DecorLayer _decor = new();   // M12: decals and land-linked sprites on the terrain
     private readonly List<WreckView> _wreckViews = new();      // M6-09: wreck and storm layers
     private readonly List<WreckDraw> _wrecks = new();
     private readonly List<StormView> _stormViews = new();
@@ -77,6 +78,7 @@ public sealed class SceneRenderer : IDisposable
         if (map is not null)
         {
             _terrain.Draw(batch, pixel, map, camera);
+            _decor.Draw(batch, pixel, map, camera, viewport);
         }
         else
         {

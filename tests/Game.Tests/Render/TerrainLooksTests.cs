@@ -34,13 +34,18 @@ public sealed class TerrainLooksTests
 
     [Theory]
     [MemberData(nameof(ShippedFiles))]
-    public void ShippedPalettesHaveNoStyleSoTheLookIsUnchanged(string file)
+    public void ShippedPalettesAreVariantCAndClassicKeepsThePlainLook(string file)
     {
-        TerrainPalette p = TerrainPalette.Load(RepoFile($"data/theaters/{file}.toml"));
+        TerrainPalette shipped = TerrainPalette.Load(RepoFile($"data/theaters/{file}.toml"));
+        Assert.NotEqual(TerrainPalette.TerrainStyle.None, shipped.Style);
+        Assert.NotNull(shipped.Style.Ashfall);
+        Assert.NotNull(shipped.MinimapAshfall);
+        Assert.Equal(12, shipped.Style.DensityFull);
 
-        Assert.Equal(TerrainPalette.TerrainStyle.None, p.Style);
-        Assert.Null(p.MinimapAshfall);
-        Assert.Null(p.MinimapPitchblende);
+        TerrainPalette classic = TerrainPalette.Load(RepoFile($"data/theaters/variants/classic/{file}.toml"));
+        Assert.Equal(TerrainPalette.TerrainStyle.None, classic.Style);
+        Assert.Null(classic.MinimapAshfall);
+        Assert.Null(classic.MinimapPitchblende);
     }
 
     public static IEnumerable<object[]> ShippedFiles() => Files.Select(f => new object[] { f });
@@ -212,7 +217,7 @@ public sealed class TerrainLooksTests
     public void MinimapUsesTheResourceColourWhenThePaletteHasOne()
     {
         TerrainPalette c = Variant("c", "rustbelt");
-        TerrainPalette plain = TerrainPalette.Load(RepoFile("data/theaters/rustbelt.toml"));
+        TerrainPalette plain = TerrainPalette.Load(RepoFile("data/theaters/variants/classic/rustbelt.toml"));
 
         var rich = Rts.Game.Ui.Minimap.TerrainColour(c, LandType.Ash, OverlayKind.Ashfall, 255);
         var bare = Rts.Game.Ui.Minimap.TerrainColour(c, LandType.Ash, OverlayKind.None, 0);

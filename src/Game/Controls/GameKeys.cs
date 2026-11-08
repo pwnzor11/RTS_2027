@@ -92,6 +92,7 @@ public static class GameKeys
         new(GameAction.Group8, "group_8", Selection, "Control group 8 (Ctrl + key sets, Shift + key adds, twice centres)", Keys.D8),
         new(GameAction.Group9, "group_9", Selection, "Control group 9 (Ctrl + key sets, Shift + key adds, twice centres)", Keys.D9),
         new(GameAction.LastAlert, "last_alert", Camera, "Jump to the last alert (again: the one before)", Keys.End),
+        new(GameAction.DecorToggle, "decor_toggle", System, "Show or hide the map decor (decals, boulders, rubble)", Keys.H, KeyContext.Both),
     };
 
     /// <summary>The Controls page lines, grouped in <see cref="Groups"/> order: rebindable actions and fixed inputs shown for reference.</summary>
@@ -152,7 +153,7 @@ public static class GameKeys
             A(GameAction.DebugStep), A(GameAction.DebugSpectator),
             A(GameAction.SpecView), A(GameAction.SpecSpeed1), A(GameAction.SpecSpeed2), A(GameAction.SpecSpeed4), A(GameAction.SpecSpeed8),
             A(GameAction.SpecDetail),
-            A(GameAction.ObjJump), A(GameAction.ObjCycle), A(GameAction.ObjList),
+            A(GameAction.ObjJump), A(GameAction.ObjCycle), A(GameAction.ObjList), A(GameAction.DecorToggle),
         };
     }
 }

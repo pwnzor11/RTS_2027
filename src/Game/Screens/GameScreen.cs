@@ -412,6 +412,7 @@ public sealed class GameScreen : IScreen
             if (input.ConsumePressed(GameAction.DebugRanges)) _overlays.Ranges = !_overlays.Ranges;
         }
 
+        if (input.ConsumePressed(GameAction.DecorToggle)) Rts.Game.Render.DecorSettings.Enabled = !Rts.Game.Render.DecorSettings.Enabled;   // M12-03
         HandleCameraKeys(input);
         HandleSelectionKeys(input);   // M11-10c: select-all-army and the control groups
 

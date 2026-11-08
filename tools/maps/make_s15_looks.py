@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: GPL-3.0-or-later
 # Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
-"""S15 terrain/resource look variants (M11-07, M11-08): writes data/theaters/variants/{a,b,c}/<theater>.toml and prints the
-WCAG contrast table. The shipped palettes in data/theaters/*.toml are the "current" look and are not touched.
+"""S15 terrain/resource look variants (M11-07, M11-08). Writes data/theaters/variants/{a,b,c}/<theater>.toml, prints the WCAG
+contrast table, and (D-181) writes the shipped data/theaters/<theater>.toml as a copy of variant C with a "shipped" header.
+Layout: data/theaters/<theater>.toml = shipped (C); data/theaters/variants/classic/ = the pre-S15 hand-written look (the
+source of the ashfall/pitchblende numbers, never rewritten); variants/a, b, c = generated. RTS_TERRAIN_LOOK=classic|a|b|c picks one.
 
   A "Re-tune"        palette only: water blue and lighter, lighter roads, ash a different hue, spread of luminance.
   B "Edges"          A + road edge lines, shoreline band, cliff lip/drop shadow, large-scale tone variation (16 texels per cell).
@@ -94,6 +96,46 @@ BIOMES = {
 }
 
 
+# M12-01/02 decor tables (look C only). Each decal: (name, shape, [land types], permille per cell, colour, alpha, size_min, size_max) with sizes in
+# sixteenths of a cell. The rules that match one land type are tried in order and their permilles add up (keep each land type under ~100).
+# Sprites: rock/rough/bank kinds and the share (permille) of a cluster's cells that carry one.
+DECOR = {
+    "rust_belt": dict(
+        decals=[("pothole", "blob", ["road"], 22, (30, 28, 26), 190, 5, 9),
+                ("road crack", "crack", ["road", "clear"], 24, (36, 32, 28), 210, 14, 24),
+                ("oil spill", "soft", ["road"], 12, (22, 24, 44), 170, 12, 20),
+                ("manhole", "ring", ["road"], 4, (70, 66, 60), 255, 6, 7),
+                ("soot stain", "soft", ["clear", "rough", "road"], 18, (16, 14, 14), 120, 20, 32),
+                ("snow patch", "soft", ["clear", "ash", "rough"], 14, (236, 240, 246), 150, 18, 30),
+                ("small crater", "ring", ["clear", "ash"], 8, (52, 44, 38), 200, 18, 28),
+                ("frost crack", "crack", ["water"], 30, (214, 234, 248), 170, 16, 28)],
+        sprites=dict(rock=("boulder", 300), rough=("rubble", 220), bank=("iceslab", 120))),
+    "glass_coast": dict(
+        decals=[("sand ripple", "ripple", ["clear", "rough"], 30, (166, 144, 100), 200, 20, 32),
+                ("glint patch", "soft", ["clear"], 10, (255, 250, 220), 100, 16, 26),
+                ("shells and bone", "dots", ["clear", "rough", "coast"], 16, (140, 112, 84), 230, 20, 30),
+                ("dune shadow", "soft", ["clear"], 14, (150, 128, 96), 120, 24, 40),
+                ("salt crust", "soft", ["clear", "rough"], 12, (250, 250, 244), 120, 24, 36),
+                ("glass bowl", "ring", ["clear"], 5, (60, 150, 140), 170, 18, 26),
+                ("drowned stripe", "stripe", ["shallow"], 26, (232, 240, 232), 160, 12, 18)],
+        sprites=dict(rock=("glasscrest", 300), rough=("rubble", 150))),
+    "mountains": dict(
+        decals=[("scree", "dots", ["rough", "clear"], 28, (82, 76, 68), 230, 22, 32),
+                ("snow patch", "soft", ["clear", "rough"], 12, (240, 244, 250), 160, 20, 32),
+                ("pebbles", "dots", ["clear"], 16, (174, 168, 156), 240, 16, 24),
+                ("frost crack", "crack", ["clear"], 8, (190, 212, 232), 190, 14, 22),
+                ("frozen pool", "blob", ["clear"], 6, (150, 190, 218), 190, 10, 16)],
+        sprites=dict(rock=("boulder", 360), rough=("rubble", 150), bank=("iceslab", 100))),
+    "ash_plains": dict(
+        decals=[("ash drift", "soft", ["clear", "ash"], 34, (196, 192, 196), 120, 24, 40),
+                ("cracked earth", "crack", ["clear", "ash"], 32, (44, 34, 28), 210, 14, 26),
+                ("crater", "ring", ["clear", "ash", "rough"], 12, (46, 40, 38), 210, 18, 30),
+                ("burnt grass", "soft", ["clear", "ash"], 22, (38, 32, 22), 150, 18, 30),
+                ("bones", "dots", ["clear", "ash"], 10, (234, 230, 216), 245, 16, 24)],
+        sprites=dict(rock=("boulder", 280), rough=("rubble", 200))),
+}
+
+
 def shades(base):
     dark = tuple(max(0, round(v * 0.88)) for v in base)
     light = tuple(min(255, round(v * 1.14)) for v in base)
@@ -122,13 +164,14 @@ COMMENTS = dict(clear="Open ground.", road="Roads: lighter than the ground aroun
 def toml_for(biome, look):
     b = BIOMES[biome]
     base = build(biome)
-    shipped = read_shipped(os.path.join(THEATERS, FILES[biome] + ".toml"))
+    shipped = read_shipped(os.path.join(THEATERS, "variants", "classic", FILES[biome] + ".toml"))
     out = []
     names = {"rust_belt": "Rust Belt", "glass_coast": "Glass Coast", "mountains": "Mountains", "ash_plains": "Ash Plains"}
     desc = {"a": "A 'Re-tune': palette only", "b": "B 'Edges': A plus road edge lines, shoreline, cliff lip and drop shadow, large-scale tone",
             "c": "C 'Edges + fields': B plus resource deposits (heaps/crystals with a rim) and minimap resource colours"}[look]
     out.append(f"# {names[biome]} terrain palette, S15 look variant {desc}.")
-    out.append("# Generated by tools/maps/make_s15_looks.py. Not active by default: set RTS_TERRAIN_LOOK=" + look + " (see TerrainPalette.ActiveLook).")
+    out.append("# Generated by tools/maps/make_s15_looks.py. Pick it with RTS_TERRAIN_LOOK=" + look + " (see TerrainPalette.ActiveLook)"
+               + ("; this is also what data/theaters/" + FILES[biome] + ".toml ships (D-181)." if look == "c" else "."))
     out.append("# ASSUMED (S15): every colour is a proposal for the owner to pick from.")
     out.append("format_version = 1")
     out.append("texel_cells = 8" if look == "a" else "texel_cells = 16")
@@ -161,11 +204,21 @@ def toml_for(biome, look):
             out += [f"[field.{key}]", f'body = "{hexc(body)}"', f'light = "{hexc(light)}"', f'shade = "{hexc(shade)}"', f'rim = "{hexc(rim)}"', ""]
         out += ["[minimap]", "# Distinct resource colours on the minimap (brighter when richer).",
                 f'ashfall = "{hexc(b["mini_ash"])}"', f'pitchblende = "{hexc(b["mini_pit"])}"', ""]
+        d = DECOR[biome]
+        out += ["[decor]", "# M12 decor (shipped look only; the classic, a and b files have none). Decals are derived from an integer hash of (map hash, cell) and baked to a",
+                "# second texture; sizes are sixteenths of a cell. Sprites: the kind per land class and the permille of a cluster's cells that carry one.",
+                "# ASSUMED (M12): all decor colours and chances are proposals for the owner to tune."]
+        for key, (kind, per) in d["sprites"].items():
+            out += [f'{key} = "{kind}"', f"{key}_permille = {per}"]
+        out.append("")
+        for name, shape, lands, per, col, alpha, lo, hi in d["decals"]:
+            out += ["[[decor.decal]]", f'name = "{name}"', f'shape = "{shape}"', "on = [" + ", ".join(f'"{l}"' for l in lands) + "]",
+                    f"permille = {per}", f'colour = "{hexc(col)}"', f"alpha = {alpha}", f"size_min = {lo}", f"size_max = {hi}", ""]
     return "\n".join(out)
 
 
 def shipped_base(biome):
-    text = open(os.path.join(THEATERS, FILES[biome] + ".toml")).read()
+    text = open(os.path.join(THEATERS, "variants", "classic", FILES[biome] + ".toml")).read()
     import re
     res = {}
     for t in ["clear", "road", "rough", "ash", "water", "rock", "cliff", "shallow"]:
@@ -180,7 +233,7 @@ PAIRS_TYPES = ["road", "ash", "water", "cliff", "rough", "shallow"]
 def table():
     lines = ["| Biome | Look | min of 15 pairs | road/ash | road/water | ash/water | ash/cliff | water/cliff | rough/shallow |", "|---|---|---|---|---|---|---|---|---|"]
     for biome in BIOMES:
-        for look, base in (("current", shipped_base(biome)), ("A/B/C", build(biome))):
+        for look, base in (("classic", shipped_base(biome)), ("A/B/C", build(biome))):
             ps = [(a, b2) for i, a in enumerate(PAIRS_TYPES) for b2 in PAIRS_TYPES[i + 1:]]
             m = min(contrast(base[a], base[b2]) for a, b2 in ps)
             sel = [contrast(base[a], base[b2]) for a, b2 in (("road", "ash"), ("road", "water"), ("ash", "water"), ("ash", "cliff"), ("water", "cliff"), ("rough", "shallow"))]
@@ -194,6 +247,14 @@ if __name__ == "__main__":
             d = os.path.join(THEATERS, "variants", look)
             os.makedirs(d, exist_ok=True)
             for biome, fn in FILES.items():
+                text = toml_for(biome, look) + "\n"
                 with open(os.path.join(d, fn + ".toml"), "w", newline="\n") as f:
-                    f.write(toml_for(biome, look) + "\n")
+                    f.write(text)
+                if look == "c":   # D-181: the shipped file is C; only the two header lines differ
+                    lines = text.split("\n")
+                    lines[0] = lines[0].replace("S15 look variant C", "SHIPPED look (D-181) = S15 variant C")
+                    lines[1] = ("# Generated by tools/maps/make_s15_looks.py (do not hand-edit; variants/c is the same data). Look files: variants/classic = pre-S15 look, "
+                                "variants/a|b|c; RTS_TERRAIN_LOOK=classic|a|b|c selects one, unset = this file.")
+                    with open(os.path.join(THEATERS, fn + ".toml"), "w", newline="\n") as f:
+                        f.write("\n".join(lines))
     print(table())

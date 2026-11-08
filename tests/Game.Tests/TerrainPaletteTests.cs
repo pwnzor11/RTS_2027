@@ -9,7 +9,7 @@ using Rts.Sim.Rules;
 
 namespace Rts.Game.Tests;
 
-/// <summary>Rust Belt palette, texture bake and resource speckle.</summary>
+/// <summary>Rust Belt palette, texture bake and resource speckle. Pinned to the classic (pre-S15) look: the python bake in make_rustbelt_m2.py only knows that algorithm (D-181).</summary>
 public sealed class TerrainPaletteTests
 {
     /// <summary>SHA-256 of the baked texture for data/maps/rustbelt_m2.map.toml. Python prints the same value.</summary>
@@ -18,7 +18,7 @@ public sealed class TerrainPaletteTests
     [Fact]
     public void PaletteFileParses()
     {
-        TerrainPalette palette = TerrainPalette.Load(RepoFile("data/theaters/rustbelt.toml"));
+        TerrainPalette palette = TerrainPalette.Load(RepoFile("data/theaters/variants/classic/rustbelt.toml"));
 
         Assert.Equal(8, palette.TexelCells);
         Assert.True(palette.AshfallMaxPermille > 0);
@@ -28,7 +28,7 @@ public sealed class TerrainPaletteTests
     [Fact]
     public void EveryLandTypeHasAColour()
     {
-        TerrainPalette palette = TerrainPalette.Load(RepoFile("data/theaters/rustbelt.toml"));
+        TerrainPalette palette = TerrainPalette.Load(RepoFile("data/theaters/variants/classic/rustbelt.toml"));
 
         foreach (LandType type in Enum.GetValues<LandType>())
         {
@@ -42,7 +42,7 @@ public sealed class TerrainPaletteTests
     [Fact]
     public void MissingLandTypeIsRejected()
     {
-        string text = File.ReadAllText(RepoFile("data/theaters/rustbelt.toml"));
+        string text = File.ReadAllText(RepoFile("data/theaters/variants/classic/rustbelt.toml"));
         string broken = text.Replace("[land.cliff]", "[land.cliffless]");
 
         Assert.Throws<InvalidDataException>(() => TerrainPalette.FromToml(broken));
