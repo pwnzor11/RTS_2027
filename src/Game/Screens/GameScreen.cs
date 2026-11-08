@@ -300,6 +300,7 @@ public sealed class GameScreen : IScreen
     /// <inheritdoc />
     public void Update(InputFrame input, GameTime t)
     {
+        _nowMs = (long)t.TotalGameTime.TotalMilliseconds;   // M11-10c: clock for the double-tap rules
         _mouse = input.MousePosition;
         UpdateHudRegions();
         UpdateCard(input);   // M11-04: before anything else reads the click
@@ -409,6 +410,7 @@ public sealed class GameScreen : IScreen
         }
 
         HandleCameraKeys(input);
+        HandleSelectionKeys(input);   // M11-10c: select-all-army and the control groups
 
         if (_orders is not null) _orders.SelectedBuilding = _selectedBuilding;   // M4-09: D unloads a selected garrisoned building
         if (_orders is not null)
@@ -465,11 +467,13 @@ public sealed class GameScreen : IScreen
         else if (_sim is { } live)
         {
             _selection.Prune(key => live.IsOwnedAlive(key, SimSnapshotSource.LocalPlayer));
+            _groups.Prune(key => live.IsOwnedAlive(key, SimSnapshotSource.LocalPlayer));
         }
         else
         {
             SimSnapshot shown = _source.Current;
             _selection.Prune(key => shown.Units.Any(unit => UnitKey.Of(unit) == key));
+            _groups.Prune(key => shown.Units.Any(unit => UnitKey.Of(unit) == key));
         }
 
         PruneBuildingSelection();
@@ -490,7 +494,7 @@ public sealed class GameScreen : IScreen
     {
         SimSnapshot snapshot = _source.Current;
         IReadOnlyList<LeptonCoord> projectiles = _sim is null ? Array.Empty<LeptonCoord>() : _sim.Projectiles;
-        var frame = new SceneFrame(snapshot, _renderUnits, projectiles, _sim?.Sim, _sim?.Rules, _overlays, _selection, DragRectangle());
+        var frame = new SceneFrame(snapshot, _renderUnits, projectiles, _sim?.Sim, _sim?.Rules, _overlays, _selection, DragRectangle(), _groups);
 
         _s.Scene.HealthBarsAlways = _s.Settings.HealthBarsAlways;
         _s.Scene.Draw(sb, _s.Pixel, frame, _camera, _s.Viewport);
@@ -519,6 +523,7 @@ public sealed class GameScreen : IScreen
     {
         if (_card is null) return;
         Rectangle mapView = _sidebar?.Layout.MapView ?? new Rectangle(0, 0, _s.Viewport.Width, _s.Viewport.Height);
+        _card.Groups = _groups;
         _card.Refresh(mapView, Rts.Game.Ui.UiScale.FromBackbuffer(_s.Viewport.Height), _selectedBuilding);
         if (!_card.Visible || !input.LeftPressed || _dragStart is not null) return;
         Rts.Game.Ui.Card.CardAction action = _card.Click(input.MousePosition, input.IsDown(Keys.LeftShift) || input.IsDown(Keys.RightShift));
@@ -585,22 +590,39 @@ public sealed class GameScreen : IScreen
             {
                 Vector2 a = _camera.WorldFromScreen(begin);
                 Vector2 b = _camera.WorldFromScreen(mouse);
-                _selection.Replace(Selection.Inside(_renderUnits, Vector2.Min(a, b), Vector2.Max(a, b), SimSnapshotSource.LocalPlayer));
-                ClearBuildingSelection();
+                bool addBox = ShiftHeld(input);   // M11-10c: Shift+box adds to the selection
+                _selection.Apply(Selection.Inside(_renderUnits, Vector2.Min(a, b), Vector2.Max(a, b), SimSnapshotSource.LocalPlayer), addBox);
+                if (!addBox || _selection.Count > 0) ClearBuildingSelection();
+                _clickTap.Reset();
                 if (_selection.Count > 0) Audio.AudioBootstrap.Director?.Notify(Audio.AudioEventKind.UnitSelect);   // M3-INT
             }
             else
             {
                 UnitKey? hit = Selection.Pick(_renderUnits, _camera.WorldFromScreen(mouse), SimSnapshotSource.LocalPlayer);
+                bool addClick = ShiftHeld(input);
                 if (hit is UnitKey key)
                 {
-                    _selection.Replace(new[] { key });
+                    // M11-10c: Ctrl+click or a double-click takes every unit of that type on screen; Shift+click toggles one unit.
+                    if (CtrlHeld(input) || _clickTap.Tap(key, _nowMs))
+                    {
+                        Viewport map = MapViewport();
+                        Vector2 topLeft = _camera.WorldFromScreen(new Point(0, 0));
+                        Vector2 bottomRight = _camera.WorldFromScreen(new Point(map.Width, map.Height));
+                        _selection.Apply(Selection.SameTypeInside(_renderUnits, topLeft, bottomRight, SimSnapshotSource.LocalPlayer, key), addClick);
+                    }
+                    else if (addClick) _selection.Toggle(key);
+                    else _selection.Replace(new[] { key });
                     ClearBuildingSelection();
                     Audio.AudioBootstrap.Director?.Notify(Audio.AudioEventKind.UnitSelect);   // M3-INT
+                }
+                else if (addClick)
+                {
+                    _clickTap.Reset();   // Shift+click on the ground keeps the selection
                 }
                 else
                 {
                     _selection.Clear();
+                    _clickTap.Reset();
                     SelectBuildingAt(Camera.CellAt(_camera.WorldFromScreen(mouse)));
                 }
             }
@@ -1085,6 +1107,63 @@ public sealed class GameScreen : IScreen
         Viewport v = _s.Viewport;
         if (_sidebar is null) return v;
         return new Viewport(0, 0, Math.Max(1, _sidebar.Layout.MapView.Width), v.Height);
+    }
+
+    // ---- M11-10c selection toolkit: control groups (UI state, not saved), select-all-army, double-tap timing ----
+    private readonly ControlGroups _groups = new();
+    private readonly TapTracker<int> _groupTap = new();
+    private readonly TapTracker<UnitKey> _clickTap = new();
+    private long _nowMs;
+    private static readonly GameAction[] GroupActions =
+    {
+        GameAction.Group1, GameAction.Group2, GameAction.Group3, GameAction.Group4, GameAction.Group5,
+        GameAction.Group6, GameAction.Group7, GameAction.Group8, GameAction.Group9,
+    };
+
+    private static bool ShiftHeld(InputFrame input) => input.IsDown(Keys.LeftShift) || input.IsDown(Keys.RightShift);
+
+    private static bool CtrlHeld(InputFrame input) => input.IsDown(Keys.LeftControl) || input.IsDown(Keys.RightControl);
+
+    // The select-all-army key, then 1..9 (recall; twice quickly centres the view), Ctrl+n (set), Shift+n (add the selection).
+    private void HandleSelectionKeys(InputFrame input)
+    {
+        if (_spectatorMode || _sim is null) return;
+        if (input.ConsumePressed(GameAction.SelectAll))
+        {
+            SimRules rules = _sim.Rules;
+            _selection.Replace(Selection.Army(_renderUnits, SimSnapshotSource.LocalPlayer, unit => Selection.IsCombatUnit(rules, unit)));
+            ClearBuildingSelection();
+            if (_selection.Count > 0) Audio.AudioBootstrap.Director?.Notify(Audio.AudioEventKind.UnitSelect);
+        }
+
+        for (int i = 0; i < GroupActions.Length; i++)
+        {
+            if (!input.ConsumePressed(GroupActions[i])) continue;
+            int number = i + 1;
+            if (CtrlHeld(input)) { _groups.Set(number, _selection.Units); _groupTap.Reset(); continue; }
+            if (ShiftHeld(input)) { _groups.Add(number, _selection.Units); continue; }
+            IReadOnlyList<UnitKey> members = _groups.Members(number);
+            if (members.Count == 0) continue;
+            bool twice = _groupTap.Tap(number, _nowMs);
+            _selection.Replace(members);
+            ClearBuildingSelection();
+            Audio.AudioBootstrap.Director?.Notify(Audio.AudioEventKind.UnitSelect);
+            if (twice && GroupCentre(members) is { } centre) CentreCameraOn(centre);
+        }
+    }
+
+    private Vector2? GroupCentre(IReadOnlyList<UnitKey> members)
+    {
+        Vector2 sum = Vector2.Zero;
+        int n = 0;
+        foreach (RenderUnit unit in _renderUnits)
+        {
+            if (!members.Contains(UnitKey.Of(unit.View))) continue;
+            sum += unit.World;
+            n++;
+        }
+
+        return n == 0 ? null : sum / n;
     }
 
     private readonly Vector2?[] _bookmarks = new Vector2?[4];   // M11-02: camera bookmarks F5..F8 (Ctrl+key stores, key recalls)

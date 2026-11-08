@@ -60,6 +60,7 @@ public static class HealthBars
             var r = new Rectangle((int)origin.X - width / 2, (int)MathF.Round(top.Y) - gap - barH, width, barH);
             if (showBar) Bar(batch, pixel, r, view.Health, max);
             RankPips.Draw(batch, pixel, r, rank, zoom);
+            if (frame.Groups?.GroupOf(UnitKey.Of(view)) is > 0 and int group && (showBar || rank > 0)) DrawGroupNumber(batch, pixel, r, group, zoom);   // M11-10c
         }
 
         foreach (BuildingView building in frame.Snapshot.Buildings)
@@ -77,6 +78,15 @@ public static class HealthBars
             var r = new Rectangle(foot.Center.X - width / 2, (int)MathF.Round(frameTop.Y) - gap - height, width, height);
             Bar(batch, pixel, r, building.Health, max);
         }
+    }
+
+    // M11-10c: the control-group number, small and dim, just right of the unit's bar.
+    private static void DrawGroupNumber(SpriteBatch batch, Texture2D pixel, Rectangle bar, int group, float zoom)
+    {
+        float fs = Math.Clamp(zoom * 0.7f, 0.6f, 1.2f);
+        string text = group.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        int h = Ui.BitmapFont.LineHeight(fs, Ui.Fonts.FontWeight.Bold);
+        Ui.BitmapFont.Draw(batch, pixel, text, new Vector2(bar.Right + 3, bar.Y + (bar.Height - h) / 2f), new Color(0xD8, 0xC8, 0x8A, 220), fs, Ui.Fonts.FontWeight.Bold);
     }
 
     private static void Bar(SpriteBatch batch, Texture2D pixel, Rectangle r, int health, int max)
