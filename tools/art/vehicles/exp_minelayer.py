@@ -47,6 +47,8 @@ def build(S0, state, k, n):
             for a in range(4):
                 an = a * math.pi / 2
                 sph(f"spk{i}_{s}_{a}", 0.04, (x + math.cos(an) * 0.19, yy + math.sin(an) * 0.19, D + 0.2), "chrome", nocast=True)
+    for nm, yy, ww, ll in (("bow", 3.1, 0.9, 0.3), ("aft", -3.65, 1.1, 0.26), ("mid", 0.25, 1.2, 0.26)):   # S16 team colour: deck bands
+        box(f"deckband_{nm}", (ww, ll, 0.04), (0, yy, D + 0.012), "house", 0.0)
     box("ramp", (1.2, 0.2, 0.34), (0, -L / 2 + 0.05, D + 0.12), "copper", 0.03)
     box("rampbar", (1.3, 0.08, 0.05), (0, -L / 2 + 0.0, D + 0.3), "chrome", 0.0)
     # derrick
