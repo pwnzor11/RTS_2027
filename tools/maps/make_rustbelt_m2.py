@@ -30,7 +30,7 @@ THEATER = "rustbelt"
 STARTS = [(4, 4), (59, 59)]
 REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 MAP_OUT = os.path.join(REPO, "data", "maps", MAP_NAME + ".map.toml")
-PALETTE_PATH = os.path.join(REPO, "data", "theaters", "rustbelt.toml")
+PALETTE_PATH = os.path.join(REPO, "data", "theaters", "variants", "classic", "rustbelt.toml")   # D-181: the proof bake is the classic look
 
 # LandType and OverlayKind values from src/Sim/Rules/Enums.cs (append-only, persisted).
 CLEAR, ROAD, ROUGH, ASH, WATER, ROCK, CLIFF = range(7)

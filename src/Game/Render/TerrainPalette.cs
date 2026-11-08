@@ -10,7 +10,7 @@ using Tomlyn.Model;
 namespace Rts.Game.Render;
 
 /// <summary>
-/// The Rust Belt terrain palette, read from <c>data/theaters/rustbelt.toml</c>: three shades per land type, the
+/// The terrain palette of a theater, read from <c>data/theaters/&lt;theater&gt;.toml</c> (the shipped look, variant C): three shades per land type, the
 /// ashfall and pitchblende overlay colours and the texture settings. The game bakes it per map (see
 /// <see cref="TerrainBake"/>); <c>tools/maps/make_rustbelt_m2.py</c> reads the same file for the proof images.
 /// </summary>
@@ -60,9 +60,10 @@ public sealed class TerrainPalette
     public Rgb? MinimapPitchblende { get; }
 
     /// <summary>
-    /// The look variant folder to read palettes from: the <c>RTS_TERRAIN_LOOK</c> environment variable (<c>a</c>, <c>b</c> or <c>c</c>),
-    /// or null for the shipped look. A variant file lives at <c>data/theaters/variants/&lt;look&gt;/&lt;theater&gt;.toml</c>; a missing one
-    /// falls back to the shipped palette. Off unless the variable is set.
+    /// The look variant folder to read palettes from: the <c>RTS_TERRAIN_LOOK</c> environment variable (<c>classic</c>, <c>a</c>, <c>b</c>
+    /// or <c>c</c>), or null for the shipped look (D-181: <c>data/theaters/&lt;theater&gt;.toml</c>, a copy of variant C). A variant file
+    /// lives at <c>data/theaters/variants/&lt;look&gt;/&lt;theater&gt;.toml</c>; <c>classic</c> is the pre-S15 look kept for comparison. A
+    /// missing variant file falls back to the shipped palette. Unset = shipped.
     /// </summary>
     public static string? ActiveLook { get; set; } = LookFromEnvironment();
 
