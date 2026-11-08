@@ -312,6 +312,9 @@ internal sealed class MilitaryManager
     /// <summary>M7-10: draws the next wave trigger again (after <see cref="ThresholdBonus"/> was set). Draws random numbers: call at the same point on a fresh and on a restored AI is not needed, the state is saved.</summary>
     internal void RerollNow() => _nextThreshold += ThresholdBonus;
 
+    /// <summary>S15 lbknob: moves the wave trigger drawn in <see cref="Start"/> by a per-faction threshold override (no random numbers drawn).</summary>
+    internal void ShiftFirstTrigger(int delta) => _nextThreshold = Math.Max(2, _nextThreshold + delta);
+
     private void Reroll()
     {
         _nextThreshold = Math.Max(2, _threshold + ThresholdBonus + _bias + (_rng?.Next(ThresholdJitter) ?? 0) - 1);
