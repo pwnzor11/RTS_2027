@@ -452,6 +452,44 @@ public sealed class FxLookTests
         Assert.True(Opaque(3) > 0);
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void KenneyPuffAtlasesKeepThePuffContract(bool smoke)
+    {
+        byte[] atlas = PuffArt.Render(smoke);
+        Assert.Equal(PuffArt.Frames * PuffArt.FramePx * PuffArt.FramePx * 4, atlas.Length);
+        int[] solid = new int[PuffArt.Frames];
+        for (int y = 0; y < PuffArt.FramePx; y++)
+            for (int x = 0; x < PuffArt.Frames * PuffArt.FramePx; x++)
+            {
+                int o = (y * PuffArt.Frames * PuffArt.FramePx + x) * 4;
+                if (atlas[o + 3] == 0) continue;
+                Assert.Equal(255, atlas[o + 3]);
+                Assert.True(atlas[o] == atlas[o + 1] && atlas[o + 1] == atlas[o + 2]);
+                solid[x / PuffArt.FramePx]++;
+            }
+
+        Assert.All(solid, n => Assert.True(n > 20));
+        Assert.True(solid[1] > solid[0]);   // the puff grows
+    }
+
+    [Theory]
+    [InlineData("puffs_dust.png")]
+    [InlineData("puffs_smoke.png")]
+    public void KenneyPuffSheetsOnDiskAreGreyHardAlphaAndFourFrames(string file)
+    {
+        string path = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "data", "sprites", "fx", file));
+        if (!File.Exists(path)) return;
+        (byte[] rgba, int w, int h) = PngRgba.Load(path);
+        Assert.Equal((PuffArt.Frames * PuffArt.FramePx, PuffArt.FramePx), (w, h));
+        for (int i = 0; i < rgba.Length; i += 4)
+        {
+            Assert.True(rgba[i + 3] is 0 or 255);
+            if (rgba[i + 3] == 255) Assert.True(rgba[i] == rgba[i + 1] && rgba[i + 1] == rgba[i + 2]);
+        }
+    }
+
     // ---- setting and size ----------------------------------------------------------------------------------------------------------
 
     [Fact]

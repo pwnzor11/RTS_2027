@@ -18,7 +18,7 @@ namespace Rts.Game.Render;
 /// <param name="MaxAlpha">Opacity at birth, 0..255.</param>
 /// <param name="Scale">Size multiplier on the 32 px art frame.</param>
 /// <param name="Rise">Pixels it climbs over its life (zoom 1).</param>
-public readonly record struct Puff(float X, float Y, int Born, int Life, uint Rgb, int MaxAlpha, float Scale, float Rise);
+public readonly record struct Puff(float X, float Y, int Born, int Life, uint Rgb, int MaxAlpha, float Scale, float Rise, bool Smoke = false);
 
 /// <summary>The puffs alive now, with a cap (the oldest goes first). Pure.</summary>
 public sealed class PuffField
