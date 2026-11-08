@@ -46,7 +46,8 @@ public static class CardModelBuilder
     /// <param name="selection">The selected units.</param>
     /// <param name="player">The local player.</param>
     /// <param name="building">The selected own building, or <see cref="EntityId.None"/>.</param>
-    public static CardModel Build(SimSnapshotSource source, Selection selection, byte player, EntityId building)
+    /// <param name="controlGroups">The control groups, to number the cameos of a group; null for none.</param>
+    public static CardModel Build(SimSnapshotSource source, Selection selection, byte player, EntityId building, ControlGroups? controlGroups = null)
     {
         SimSnapshot snap = source.Current;
         SimRules rules = source.Rules;
@@ -69,7 +70,7 @@ public static class CardModelBuilder
             if (found is not UnitView unit) continue;
             single = unit;
             (string id, int max) = IdAndMax(rules, unit);
-            cameos.Add(new CardCameo(key, id, unit.Health, max));
+            cameos.Add(new CardCameo(key, id, unit.Health, max, controlGroups?.GroupOf(key) ?? 0));
             if (M3Orders.DeployModeOf(rules, key.Kind, unit.TypeIndex) != DeployMode.None) deploy = true;
         }
 

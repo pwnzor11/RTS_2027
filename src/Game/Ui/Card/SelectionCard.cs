@@ -52,6 +52,9 @@ public sealed class SelectionCard : IUiRegion
         _house = house;
     }
 
+    /// <summary>The control groups, so the group grid can number its cameos (null: no numbers).</summary>
+    public ControlGroups? Groups { get; set; }
+
     /// <summary>What the card shows this frame.</summary>
     public CardModel Model { get; private set; } = CardModel.Empty;
 
@@ -70,7 +73,7 @@ public sealed class SelectionCard : IUiRegion
     /// <param name="building">The selected own building, or none.</param>
     public void Refresh(Rectangle mapView, float ui, EntityId building)
     {
-        Model = CardModelBuilder.Build(_source, _selection, SimSnapshotSource.LocalPlayer, building);
+        Model = CardModelBuilder.Build(_source, _selection, SimSnapshotSource.LocalPlayer, building, Groups);
         _scale = CardLayout.ScaleFor(mapView.Width, ui);
         int lh = BitmapFont.LineHeight(_scale, FontWeight.Regular);
         int width = Math.Max(120, Math.Min((int)MathF.Round(CardLayout.WidthUnits * _scale), mapView.Width - 2 * (int)MathF.Round(8f * _scale)));
@@ -166,6 +169,11 @@ public sealed class SelectionCard : IUiRegion
                 int bh = Math.Max(3, r.Height / 8);
                 DrawHealth(batch, pixel, new Rectangle(r.X + 2, r.Bottom - bh - 2, r.Width - 4, bh), c.Health, c.MaxHealth);
                 Shapes.Outline(batch, pixel, r, r.Contains(mouse) ? Gold : Border);
+                if (c.Group > 0)   // subtle control-group number, top-left corner of the tile
+                {
+                    float gs = Math.Max(1f, s * 0.7f);
+                    BitmapFont.Draw(batch, pixel, c.Group.ToString(System.Globalization.CultureInfo.InvariantCulture), new Vector2(r.X + 3, r.Y + 2), Gold, gs, FontWeight.Bold);
+                }
             }
             else
             {

@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework;
 using Rts.Game.Render;
 using Rts.Game.Sandbox;
 using Rts.Sim.Core;
+using Rts.Sim.Rules;
 
 namespace Rts.Game.Controls;
 
@@ -42,6 +43,37 @@ public sealed class Selection
         List<UnitKey> copy = keys.ToList(); // copy first: the source may be this selection's own list
         _units.Clear();
         _units.AddRange(copy);
+    }
+
+    /// <summary>Adds units that are not selected yet, keeping the order (Shift+box, Shift+double-click, control-group add). Returns how many were added.</summary>
+    public int AddRange(IEnumerable<UnitKey> keys)
+    {
+        int added = 0;
+        foreach (UnitKey key in keys.ToList())
+        {
+            if (_units.Contains(key)) continue;
+            _units.Add(key);
+            added++;
+        }
+
+        return added;
+    }
+
+    /// <summary>Shift+click on a unit: removes it when selected, adds it otherwise. Returns true when it is selected afterwards.</summary>
+    public bool Toggle(UnitKey key)
+    {
+        if (_units.Remove(key)) return false;
+        _units.Add(key);
+        return true;
+    }
+
+    /// <summary>
+    /// Applies a pick or a box result: with <paramref name="additive"/> (Shift held) the units join the selection, otherwise they replace it.
+    /// </summary>
+    public void Apply(IEnumerable<UnitKey> keys, bool additive)
+    {
+        if (additive) AddRange(keys);
+        else Replace(keys);
     }
 
     /// <summary>Drops every selected unit for which <paramref name="isAlive"/> is false.</summary>
@@ -83,5 +115,56 @@ public sealed class Selection
                 yield return UnitKey.Of(unit.View);
             }
         }
+    }
+
+    /// <summary>
+    /// Every unit of <paramref name="localPlayer"/> inside the world box [min, max] that has the same kind and type as <paramref name="like"/>
+    /// (double-click or Ctrl+click: "all of this type on screen").
+    /// </summary>
+    public static IEnumerable<UnitKey> SameTypeInside(IReadOnlyList<RenderUnit> units, Vector2 min, Vector2 max, byte localPlayer, UnitKey like)
+    {
+        UnitView? model = null;
+        foreach (RenderUnit unit in units)
+        {
+            if (UnitKey.Of(unit.View) == like) { model = unit.View; break; }
+        }
+
+        if (model is not UnitView m) yield break;
+        foreach (RenderUnit unit in units)
+        {
+            UnitView v = unit.View;
+            if (v.Player != localPlayer || v.Kind != m.Kind || v.TypeIndex != m.TypeIndex) continue;
+            Vector2 p = unit.World;
+            if (p.X >= min.X && p.X <= max.X && p.Y >= min.Y && p.Y <= max.Y) yield return UnitKey.Of(v);
+        }
+    }
+
+    /// <summary>
+    /// The select-all-army set: every unit of <paramref name="localPlayer"/> for which <paramref name="isCombat"/> is true, anywhere on the map
+    /// (harvesters, builders and other non-fighters are the caller's <paramref name="isCombat"/> to leave out).
+    /// </summary>
+    public static IEnumerable<UnitKey> Army(IReadOnlyList<RenderUnit> units, byte localPlayer, Func<UnitView, bool> isCombat)
+    {
+        foreach (RenderUnit unit in units)
+        {
+            if (unit.View.Player == localPlayer && isCombat(unit.View)) yield return UnitKey.Of(unit.View);
+        }
+    }
+
+    /// <summary>
+    /// True for a unit that fights: it has a primary weapon and is not a harvester, a deployable builder (MCV type), a salvager or an engineer.
+    /// </summary>
+    public static bool IsCombatUnit(SimRules rules, UnitView unit)
+    {
+        if (unit.Kind == UnitKind.Vehicle)
+        {
+            if ((uint)unit.TypeIndex >= (uint)rules.Vehicles.Count) return false;
+            VehicleType v = rules.Vehicles[unit.TypeIndex];
+            return v.PrimaryWeapon >= 0 && v.HarvestCapacity <= 0 && v.DeploysInto < 0 && v.SalvageRate <= 0;
+        }
+
+        if ((uint)unit.TypeIndex >= (uint)rules.Infantry.Count) return false;
+        InfantryType i = rules.Infantry[unit.TypeIndex];
+        return i.PrimaryWeapon >= 0 && !i.Engineer && i.SalvageRate <= 0;
     }
 }

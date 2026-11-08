@@ -21,7 +21,8 @@ public readonly record struct SceneFrame(
     SimRules? Rules,
     OverlayToggles Overlays,
     Selection Selection,
-    Rectangle? DragRect)
+    Rectangle? DragRect,
+    ControlGroups? Groups = null)
 {
     /// <summary>The interpolated world position of a unit as drawn this frame.</summary>
     public bool TryFind(UnitKey key, out Vector2 world)
