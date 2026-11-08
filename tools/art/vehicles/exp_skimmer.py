@@ -35,6 +35,8 @@ def build(S0, state, k, n):
         box(f"stripe{s}", (0.05, 2.5, 0.14), (s * 1.0, -0.05, 0.68), "house", 0.0)
         box(f"sill{s}", (0.07, 2.9, 0.05), (s * 1.0, -0.05, 0.88), "copper", 0.0)
         E.lamp(S, f"L{s}", s * 0.62, 2.0, 0.7)
+    for s in (-1, 1):                                                                        # S16 team colour: top stripes on the foredeck
+        box(f"topstripe{s}", (0.14, 1.3, 0.045), (s * 0.62, 0.7, 1.14), "house", 0.0)
     # suction scoop: flared copper trough on the prow with a dark mouth and a ribbed hose to the hopper
     box("scoop", (1.5, 0.75, 0.3), (0, 2.1, 0.5), "copper", 0.1, rot=(14, 0, 0))
     box("scoopmouth", (1.3, 0.1, 0.2), (0, 2.5, 0.46), "dark", 0.03, rot=(14, 0, 0))
