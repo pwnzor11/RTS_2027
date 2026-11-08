@@ -375,3 +375,16 @@ bridge. `map report` shows the lane and choke numbers.
 1. Does the minimap show class C props? (UI helper: suggest "dark dot".)
 2. Mission scripting: should triggers be able to remove a prop cell (for example "the barricade falls" in a story mission)? Cheap with the overlay layer; not scheduled.
 3. Resource floor per start (L8, Glass Coast): the balance helper should set the number the parity check uses.
+
+## Wave 3 as built (M12-07, M12-08)
+
+- `MapGenParams.Layout = 2` (`MapGenerator.ZonedLayout`) paints a zone skeleton first (mains, lanes, plazas, river, rubble-block street grid), then the
+  biome. Rust Belt only; other biomes throw "Layout 2 is not built yet". `CurrentLayout` stays 1 and the legacy golden hashes are unchanged.
+- Symmetry: MirrorDiag (2 players); a dihedral four-image grid for 3-4 players (teams 1+2 and 3+4 side by side, enemy across the map).
+- `LayoutChecks` (src/Data/MapGen) measures the D-183 rules (start inset and clear radius, main entrances, enemy and teammate paths, lane count / share /
+  widths, resource per start and parity, natural, contested fields, obstacles, roads, empty area, prop safety); `map report --layout 2` prints each with pass/FAIL.
+  Generation retries seeds (seed + attempt, up to 16) and keeps the first map that passes everything, else the one failing fewest checks.
+- 2 players: every seed of the 50-seed sweep passes at Small, Medium and Large. 3 and 4 players are best effort (medium lane, entrance widths,
+  Small clear radius and resources still fail on many seeds).
+- Zone names are not saved: map format 4 has no zone field (would need a format bump). Tools: `--layout 1|2`, `--raw`, `--checks`.
+- 2v2 team assignment: the setup screen gives every slot its own team; layout 2 needs team = slot / 2 (src/Game change, not made).
