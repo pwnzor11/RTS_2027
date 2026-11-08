@@ -4,11 +4,9 @@ Context and trade-offs for every question are in `docs/research/00_SYNTHESIS.md`
 file cited after each question. Recommendations are the lead's, from the research.
 
 ## Open
-- 🟡 **Q-67 · Directorate tiers 1-3 early game.** Left Behind 3 still wins 74 % of decided games against Directorate 3 with 9 draws in 32
-  (docs/balance/s15_lbknob.md); the siege diagnosis also shows Directorate's thin early economy. Owner: fix it next session, AI only, measured
-  (D-190). Open detail: the target band (recommend 50-65 % for Left Behind 3 and no draw rise).
 
 ## Answered
+- Q-67 · 2026-11-08 · Owner: band 50-65 % (D-191); hold 18 landed, tier-5 ladder follow-up → D-194.
 - Q-64 · 2026-11-07 · Owner: AI siege behaviour → D-174.
 - Q-65 · 2026-11-07 · Owner: re-measure (D-176), then AI-only fixes → D-182.
 - Q-66 · 2026-11-07 · Owner: tune them → D-175.

@@ -1425,3 +1425,35 @@ weapon geometry, cyborg bodies) into our units where they add detail. Our unit a
 v Expedition 3 63 -> 56 %, v Directorate 3 87 -> 74 % (draws 2 -> 9); LB5 now beats LB3. The remaining Directorate 3 gap is Directorate's own
 early game: an AI-only package next session (Q-67). These are 32-game cloud cells; the owner's 64-game laptop row (s15_laptop_series.md,
 LB3 v Authority 3 78 %) is a different sample. **Status:** owner decision (session 15)
+
+### D-191 · 2026-11-08 · Q-67 target band and session 16 run mode
+**Decision:** Q-67 (Directorate tiers 1-3 early game, AI only) aims Left Behind 3 v Directorate 3 at 50-65 % decisive with no rise in draws
+(base 17 / 6 / 9), Directorate 1 v Authority 1 not stronger than today (21 / 6 / 5), other tier 3 cells and the controls within noise.
+Session 16 runs with the owner present: helpers on Sonnet for AI, maps and art, Haiku for docs and bulk edits; the map and art pilots stop
+for the owner's look before any fan-out; new sprites reach GitHub through an owner-run art_push zip.
+**Status:** owner decision (session 16)
+
+### D-192 · 2026-11-08 · Vehicle team-colour pass
+**Decision:** team (house) paint must read on every facing (house_audit.py: body >= 10 px, turret >= 6 px per facing). Pilot (Expedition
+Destroyer, Glide Tank) approved as is, including the Glide Tank's top stripes; fanned out to every flagged sprite (13 more vehicles/turrets
+and lb_spike_nest), design otherwise unchanged. The Hoverlander's copper dome, missing from its current script, was rebuilt in the script.
+Result: 0 of 138 sprites flagged. **Status:** owner decision (session 16)
+
+### D-193 · 2026-11-08 · 2v2 default teams on layout 2 maps
+**Decision:** a 4-player skirmish on a layout-2 map defaults to teams 1+2 v 3+4 (teammates start side by side, D-183); the setup screen can
+still change it. Layout-1 maps keep today's default. The Rust Belt layout-2 pilot v1 was not approved (one diagonal half used, river in a
+corner, 3/4-player maps failing checks): reworked before any fan-out. **Status:** owner decision (session 16)
+
+### D-194 · 2026-11-08 · Q-67 Directorate tiers 2-3 hold early tech
+**Decision:** the Directorate AI at difficulty tiers 2-3 holds the Isotope Works and Rad Mortar until it has 18 units (army + home guard +
+detached; `TierPlanner.DirectorateTechArmy`, tune). AI behaviour only, no rules or data numbers. Measured (32 games, docs/balance/s16_q67.md):
+LB3 v Dir3 17/6/9 (74 %) -> 17/12/3 (59 %, band met, draws down); Dir1 v Auth1 and the Auth5 v Auth1 control bit-identical; Dir3 v Auth3
+44 -> 65 %; Dir3 v Exp3 50 -> 41 % (near noise); Dir5 v Dir3 5/9/18 -> 5/13/14. Tier 5 falling behind tier 3 gets a follow-up package
+(Directorate tier 5 ladder). Owner's 64-game laptop confirmation: tools/measure/run_s16_q67.ps1. **Status:** owner decision (session 16)
+
+### D-195 · 2026-11-08 · Directorate tier 5 ladder (D-194 follow-up)
+**Decision:** the Directorate AI at tier 5 holds the Isotope Works and Rad Mortar until it has 24 units (`TierPlanner.DirectorateTechArmyTier5`,
+tune); tiers 2-3 keep 18, tier 4 and other factions untouched. AI only. The owner's laptop run before it (64 games) had Dir5 v Dir3 8/27/29 and
+Dir5 v Auth5 13/29/22. After (cloud, 64 games): Dir5 v Dir3 30/20/14 (60 %), Dir5 v Auth5 24/25/15 (49 %); 32 games Dir5 v LB5 15/14/3.
+Tier 1-3 cells and the control are bit-identical. Data knobs (attack threshold/ratio, expansion tick) did not move it. Laptop rows are in
+tools/measure/run_s16_q67.ps1. **Status:** within the owner's D-194 instruction (session 16)

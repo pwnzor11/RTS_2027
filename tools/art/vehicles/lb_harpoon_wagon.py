@@ -63,7 +63,7 @@ def build(S, state, k, n):
     cyl("breechcanvas", 0.3, 0.8, (px, py - 0.55, pz + 1.05), "canvas", "Y", 12)
     cyl("tube", 0.2, 2.4, (px, py + 0.95, pz + 0.85), "steel", "Y", 12)
     cyl("tubeband1", 0.23, 0.2, (px, py + 0.5, pz + 0.85), "hazard", "Y", 12)
-    cyl("tubeband2", 0.23, 0.2, (px, py + 1.4, pz + 0.85), "rust", "Y", 12)
+    cyl("tubeband2", 0.23, 0.3, (px, py + 1.4, pz + 0.85), "house", "Y", 12)         # S16 team colour: tube band reads on every facing
     cyl("mouth", 0.25, 0.14, (px, py + 2.18, pz + 0.85), "dark", "Y", 12)
     S.cone("harp", 0.14, 0.0, 0.55, (px, py + 2.3, pz + 0.85), "steel", rot=(-90, 0, 0), verts=8)
     for s in (-1, 1):

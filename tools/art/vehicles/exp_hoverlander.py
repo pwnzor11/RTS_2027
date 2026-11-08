@@ -38,6 +38,8 @@ def build(S0, state, k, n):
         box(f"slit{s}", (0.05, 1.8, 0.16), (s * 1.06, 0.0, 1.32), "glass", 0.0)
         box(f"troof{s}", (0.06, 2.3, 0.06), (s * 0.97, -0.2, 1.52), "copper", 0.0)
         E.lamp(S, f"L{s}", s * 0.6, 2.05, 0.72)
+    for s in (-1, 1):                                                                        # S16 team colour: roof stripes
+        box(f"topstripe{s}", (0.12, 2.1, 0.045), (s * 0.82, -0.2, 1.545), "house", 0.0)
     # rear door
     box("door", (1.1, 0.07, 0.5), (0, -1.47, 1.2), "navy2", 0.02)
     box("doorbar", (1.1, 0.08, 0.1), (0, -1.5, 1.2), "orange", 0.0)
@@ -54,6 +56,7 @@ def build(S0, state, k, n):
     cyl("fanhub", 0.12, 0.1, (0.0, -0.95, 1.7), "copper", "Z", 10)
     for q in range(3):
         box(f"blade{q}", (0.95, 0.12, 0.03), (0, -0.95, 1.7), "chrome", 0.0, rot=(0, 0, q * 60))
+    sph("fandome", 0.58, (0.0, -0.95, 2.08), "copper", scale=(1, 1, 0.3))                       # copper dome over the fan, as in the M7-11 sheet
     for s in (-1, 1):
         cyl(f"cage{s}", 0.03, 0.4, (s * 0.58, -0.95, 1.82), "chrome", "Z", 6)
         cyl(f"cagey{s}", 0.03, 0.4, (0, -0.95 + s * 0.58, 1.82), "chrome", "Z", 6)

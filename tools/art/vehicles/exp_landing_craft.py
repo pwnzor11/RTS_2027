@@ -27,7 +27,7 @@ def build(S, state, k, n):
     box("hull", (2.5, 4.9, 0.7), (0, 0.0, 0.5), "navy2", 0.14)
     for s in (-1, 1):
         box(f"wall{s}", (0.22, 4.6, 0.5), (s * 1.12, -0.05, 0.98), "navy", 0.07)
-        box(f"coam{s}", (0.1, 4.6, 0.06), (s * 1.12, -0.05, 1.25), "copper", 0.0)
+        box(f"coam{s}", (0.12, 4.6, 0.06), (s * 1.12, -0.05, 1.25), "house", 0.0)                  # S16 team colour: coaming reads from above
         box(f"stripe{s}", (0.05, 3.9, 0.17), (s * 1.27, -0.1, 0.66), "house", 0.0)
         box(f"sill{s}", (0.06, 4.5, 0.05), (s * 1.27, -0.05, 0.9), "copper", 0.0)
         box(f"bowcheek{s}", (0.8, 0.9, 0.66), (s * 0.85, 2.3, 0.5), "navy2", 0.14, rot=(0, 0, -s * 24))
@@ -49,6 +49,7 @@ def build(S, state, k, n):
     # crew compartment aft
     box("cabin", (2.3, 1.3, 0.95), (0, -1.75, 1.3), "navy", 0.12)
     box("cabroof", (2.1, 1.1, 0.05), (0, -1.75, 1.8), "white", 0.01)
+    box("cabroofb", (1.8, 0.2, 0.06), (0, -2.2, 1.8), "house", 0.0)                                 # S16 team colour: roof band
     box("cabroofs", (2.1, 0.07, 0.055), (0, -1.45, 1.8), "orange", 0.0)
     E.digits(S, "hn", "07", 0, -1.85, 1.83, 0.075, "white")
     box("cabfront", (2.1, 0.1, 0.6), (0, -1.1, 1.3), "navy2", 0.04, rot=(-8, 0, 0))
