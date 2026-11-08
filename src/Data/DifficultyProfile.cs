@@ -67,4 +67,26 @@ public sealed record DifficultyProfile(
 
     /// <summary>Harvesters wanted alive (1..6). With <see cref="ReplaceHarvesters"/> missing ones are built; expansion adds one.</summary>
     public int HarvesterTarget { get; init; } = 1;
+
+    /// <summary>S15 lbknob: credits an AI keeps in hand before it buys a unit (added to the build-order reserve; 0 = none). Slows the army build-up only.</summary>
+    public int UnitReserve { get; init; }
+
+    /// <summary>S15 lbknob: army units (alive, harvesters excluded) at which unit production pauses until losses or a wave leave room (0 = no cap).</summary>
+    public int ArmyCap { get; init; }
+
+    // S15 lbknob: per-faction versions of this tier (index = Faction enum value), from the [faction.<id>.tier<N>] tables; null = the shared profile.
+    private DifficultyProfile?[] _byFaction = new DifficultyProfile?[5];
+
+    /// <summary>S15 lbknob: this tier as <paramref name="faction"/> (the <c>Faction</c> enum value) plays it: the shared profile, or the same
+    /// instance every call when a <c>[faction.&lt;id&gt;.tier&lt;N&gt;]</c> table overrides some numbers.</summary>
+    public DifficultyProfile ForFaction(int faction) => faction >= 0 && faction < _byFaction.Length && _byFaction[faction] is { } p ? p : this;
+
+    /// <summary>S15 lbknob: a copy of this profile that plays as <paramref name="over"/> for <paramref name="faction"/>.</summary>
+    public DifficultyProfile WithFactionOverride(int faction, DifficultyProfile over)
+    {
+        DifficultyProfile copy = this with { };
+        copy._byFaction = (DifficultyProfile?[])_byFaction.Clone();   // a record copy shares the field
+        copy._byFaction[faction] = over;
+        return copy;
+    }
 }
