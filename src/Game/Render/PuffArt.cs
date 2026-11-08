@@ -15,6 +15,40 @@ public static class PuffArt
     /// <summary>Frame size in pixels.</summary>
     public const int FramePx = 32;
 
+    /// <summary>
+    /// The atlas for dust (<paramref name="smoke"/> false) or damage smoke: Kenney's CC0 smoke-particle shapes from <c>data/sprites/fx/puffs_dust.png</c>
+    /// and <c>puffs_smoke.png</c> when they load (and <c>RTS_FX=classic</c> is not set), otherwise <see cref="Render()"/>, the procedural blob.
+    /// Same layout and contract as <see cref="Render()"/>.
+    /// </summary>
+    public static byte[] Render(bool smoke)
+    {
+        if (!Rts.Game.Sprites.ClassicFx.Requested)
+        {
+            try
+            {
+                string path = Path.Combine(AppContext.BaseDirectory, "data", "sprites", "fx", smoke ? "puffs_smoke.png" : "puffs_dust.png");
+                (byte[] rgba, int w, int h) = PngRgba.Load(path);
+                if (w == Frames * FramePx && h == FramePx)
+                {
+                    for (int i = 0; i < rgba.Length; i += 4)   // premultiply (the art is hard alpha, grey)
+                    {
+                        rgba[i] = (byte)(rgba[i] * rgba[i + 3] / 255);
+                        rgba[i + 1] = (byte)(rgba[i + 1] * rgba[i + 3] / 255);
+                        rgba[i + 2] = (byte)(rgba[i + 2] * rgba[i + 3] / 255);
+                    }
+
+                    return rgba;
+                }
+            }
+            catch (Exception ex) when (ex is IOException or InvalidDataException or UnauthorizedAccessException)
+            {
+                // fall through to the procedural placeholder
+            }
+        }
+
+        return Render();
+    }
+
     /// <summary>Draws the atlas: <see cref="Frames"/> x <see cref="FramePx"/> wide, <see cref="FramePx"/> high, premultiplied RGBA.</summary>
     public static byte[] Render()
     {

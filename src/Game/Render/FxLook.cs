@@ -26,6 +26,7 @@ public sealed class FxLook : IDisposable
     private readonly List<DeathRecord> _dead = new();
     private readonly Dictionary<(RemainKind Kind, int A, int B, int Faction, int Variant), Texture2D> _textures = new();
     private Texture2D? _puffTexture;
+    private Texture2D? _smokeTexture;
 
     /// <summary>
     /// Switches every D-184 look improvement off at once (damage tiers and their flames rule, remains, dust, mood tint), restoring today's look, to compare.
@@ -116,7 +117,7 @@ public sealed class FxLook : IDisposable
     }
 
     private void AddSmokePuff(float x, float y, int tick, float scale) =>
-        _puffs.Add(new Puff(x, y, tick, 28, 0x3C3A38, 170, scale, 22));
+        _puffs.Add(new Puff(x, y, tick, 28, 0x3C3A38, 170, scale, 22, Smoke: true));
 
     // ---- remains -----------------------------------------------------------------------------------------------------------------
 
@@ -251,7 +252,9 @@ public sealed class FxLook : IDisposable
         if (_puffTexture is null)
         {
             _puffTexture = new Texture2D(device, PuffArt.Frames * PuffArt.FramePx, PuffArt.FramePx);
-            _puffTexture.SetData(PuffArt.Render());
+            _puffTexture.SetData(PuffArt.Render(false));
+            _smokeTexture = new Texture2D(device, PuffArt.Frames * PuffArt.FramePx, PuffArt.FramePx);
+            _smokeTexture.SetData(PuffArt.Render(true));
         }
 
         foreach (Puff p in _puffs.Items)
@@ -265,7 +268,7 @@ public sealed class FxLook : IDisposable
             if (!dest.Intersects(viewport.Bounds)) continue;
             int frame = PuffField.Frame(age, p.Life);
             var tint = new Color((int)(p.Rgb >> 16 & 0xFF), (int)(p.Rgb >> 8 & 0xFF), (int)(p.Rgb & 0xFF));
-            batch.Draw(_puffTexture, dest, new Rectangle(frame * PuffArt.FramePx, 0, PuffArt.FramePx, PuffArt.FramePx), Shapes.Alpha(tint, (byte)alpha));
+            batch.Draw(p.Smoke ? _smokeTexture! : _puffTexture, dest, new Rectangle(frame * PuffArt.FramePx, 0, PuffArt.FramePx, PuffArt.FramePx), Shapes.Alpha(tint, (byte)alpha));
         }
     }
 
@@ -325,5 +328,7 @@ public sealed class FxLook : IDisposable
         _textures.Clear();
         _puffTexture?.Dispose();
         _puffTexture = null;
+        _smokeTexture?.Dispose();
+        _smokeTexture = null;
     }
 }

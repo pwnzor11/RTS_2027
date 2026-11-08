@@ -1,0 +1,286 @@
+"""Imports open-source effect art into our FX sheets (S15 art-packs pilot). Pillow + numpy only.
+
+Usage:  python3 tools/art/fx/import_scifi_fx.py [--packs DIR]    # default DIR: $RTS_ART_PACKS or /tmp/claude-0/s15-packs
+Writes data/sprites/fx/{explosion_large,explosion_small,explosion_energy,lightning,fire_small,fire_large}.png + .sprite.toml.
+The pre-import procedural sheets stay in data/sprites_classic/fx/ (build_fx.py --classic writes them); RTS_FX=classic loads those.
+
+Sources (see docs/CREDITS.md, used under GPL-3.0-or-later):
+  sci-fi-effects by "Skorpio" (opengameart.org), dual GPL-3.0 / CC-BY-3.0: explosion2, explosion3, explosion4, bending_lightning.
+  LPC flames by Sharm (William.Thompsonj submission, opengameart.org), CC-BY 3.0 / GPL-3.0 / GPL-2.0: 12 frames of 16x24.
+
+Method (explosions, lightning): the source frames are soft 640 px (340 px) alpha-blended sprites. Each frame is cropped square around the
+fireball, area-averaged (BOX, premultiplied) down to our frame size, then converted to a HARD-pixel ramp: coverage x brightness x a
+distance-to-edge term gives a "heat" value that picks one of five ramp colours, alpha is 0 or 255 (Bayer-dithered where coverage is thin).
+Area averaging first, quantise second: nearest-neighbour from 640 px would keep single speckles and lose the body; the ramp pass puts the
+art in the same flat-colour, hard-edged language as the other sheets and removes the pastel/pink fringes of the sources.
+The flames are already hard pixel, 6 colours: only nearest 2x and a base-align (all frames rest on the same row).
+"""
+import argparse, glob, math, os, sys
+import numpy as np
+from PIL import Image
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, HERE)
+import build_fx as B   # FIRE / SMOKE ramps, Bayer matrix, toml layout
+
+ROOT = B.ROOT
+OUT = B.OUT
+
+ENERGY = [B.hx(c) for c in ("#F4FCFF", "#A6EBFF", "#3FB6F2", "#2467CC", "#15307C")]   # white-hot .. deep blue
+ARC = [B.hx(c) for c in ("#F6FFE6", "#B9FF7C", "#5BD63C", "#2A8A2A", "#16461F")]      # white-green .. dark green
+BAYER = B.BAYER
+
+
+def ramp_colour(ramp, v):
+    """Heat 0..1 -> ramp colour (same thresholds as build_fx.fire_colour), None when cold."""
+    if v > 0.80: return ramp[0]
+    if v > 0.58: return ramp[1]
+    if v > 0.34: return ramp[2]
+    if v > 0.13: return ramp[3]
+    if v > 0.0: return ramp[4]
+    return None
+
+
+def load_frames(folder, count=None):
+    fs = sorted(glob.glob(os.path.join(folder, "*.png")))
+    if count: fs = fs[:count]
+    return [Image.open(f).convert("RGBA") for f in fs]
+
+
+def box_down(im, box, size):
+    """Crop to box (l, t, r, b), area-average in premultiplied space to size x size. Returns float arrays (rgb 0..1, a 0..1)."""
+    pm = im.crop(box).convert("RGBa").resize(size, Image.BOX)
+    arr = np.asarray(pm).astype(float) / 255.0          # premultiplied
+    a = arr[..., 3]
+    rgb = np.where(a[..., None] > 1e-4, arr[..., :3] / np.maximum(a[..., None], 1e-4), 0.0)
+    return rgb, a
+
+
+def blur3(x, n=2):
+    for _ in range(n):
+        p = np.pad(x, 1, mode="edge")
+        x = (p[:-2, 1:-1] + p[2:, 1:-1] + p[1:-1, :-2] + p[1:-1, 2:] + 4 * p[1:-1, 1:-1]) / 8.0
+    return x
+
+
+def smoothstep(a, b, x):
+    t = min(1.0, max(0.0, (x - a) / (b - a)))
+    return t * t * (3 - 2 * t)
+
+
+def to_ramp(rgb, a, ramp, t, hot=1.0, cool_to=0.55, smoke=False, cover_cut=0.42, cool_from=0.12):
+    """One frame -> RGBA uint8, hard pixels. t = 0..1 life. hot scales the heat; cool_to = heat left at end of life."""
+    h, w = a.shape
+    depth = blur3(a, 2)                                   # 0 at the rim, 1 deep inside
+    bright = rgb.max(axis=2)
+    heat = (0.35 * a + 0.65 * depth) ** 1.15 * (0.40 + 0.60 * bright) * hot
+    heat *= 1.0 - (1.0 - cool_to) * smoothstep(cool_from, 1.0, t)
+    out = np.zeros((h, w, 4), dtype=np.uint8)
+    for y in range(h):
+        for x in range(w):
+            cov = a[y, x]
+            if cov <= 0.03: continue
+            bay = BAYER[y % 4, x % 4]
+            if cov < cover_cut and bay >= cov / cover_cut: continue      # thin edge: ordered-dither it away
+            v = heat[y, x] + (bay - 0.5) * 0.10
+            c = ramp_colour(ramp, v)
+            if smoke and t > 0.42 and v < 0.20:                  # burnt-out rim of an old fireball is smoke, not fire
+                c = B.SMOKE[1] if v < 0.12 else B.SMOKE[2]
+            elif c is None:
+                c = ramp[4]
+            out[y, x] = (*c, 255)
+    return out
+
+
+def write_sheet(name, frames, tpf, loop, origin, note):
+    w, h = frames[0].shape[1], frames[0].shape[0]
+    n = len(frames)
+    sheet = np.zeros((h, w * n, 4), dtype=np.uint8)
+    for i, f in enumerate(frames):
+        sheet[:, i * w:(i + 1) * w] = f
+    assert set(np.unique(sheet[..., 3])) <= {0, 255}, name
+    os.makedirs(OUT, exist_ok=True)
+    Image.fromarray(sheet, "RGBA").save(os.path.join(OUT, f"{name}.png"))
+    ox, oy = origin
+    lines = [f"# Effect sprite {name}. Generated by tools/art/fx/import_scifi_fx.py -- do not hand-edit.",
+             f"# {note} One row of {n} frames. Origin = {'base-centre pixel: sits on the anchor' if oy == h - 1 or name.startswith('fire') else 'centre pixel'}.",
+             "", f'file = "{name}.png"', f"frame_w = {w}", f"frame_h = {h}", f"origin_x = {ox}", f"origin_y = {oy}", "",
+             "[[state]]", 'name = "play"', "facings = 1", f"frames = {n}", "first = 0", f"ticks_per_frame = {tpf}"]
+    if not loop: lines.append("loop = false")
+    with open(os.path.join(OUT, f"{name}.sprite.toml"), "w", newline="\n") as fh:
+        fh.write("\n".join(lines) + "\n")
+    print("wrote", name, w, h, n)
+
+
+def explosion_sheet(src, size, pick, crop_r, centre, ramp, hot, cool_to, smoke, cover_cut=0.42, cool_from=0.12):
+    frames = load_frames(src)
+    cx, cy = centre
+    box = (cx - crop_r, cy - crop_r, cx + crop_r, cy + crop_r)
+    out = []
+    for k, i in enumerate(pick):
+        rgb, a = box_down(frames[i], box, (size, size))
+        out.append(to_ramp(rgb, a, ramp, k / (len(pick) - 1), hot, cool_to, smoke, cover_cut, cool_from))
+    return out
+
+
+def lightning_sheet(src, w, h):
+    frames = load_frames(src)
+    box = (60, 10, 300, 330)                                 # the bolts live in x 105..250, y 20..319
+    out = []
+    for k, im in enumerate(frames):
+        rgb, a = box_down(im, box, (w, h))
+        # a bolt is thin: boost coverage so the 1-2 px core survives the area average
+        a2 = np.clip(a * 3.0, 0, 1)
+        out.append(to_ramp(rgb, a2, ARC, k / (len(frames) - 1), hot=1.15, cool_to=0.8, cover_cut=0.30))
+    return out
+
+
+def lightning_fork_sheet(src, size=48):
+    """The pack's forked `lightning` (18 frames, alternating bright flash and faint afterglow): the 9 bright frames, whole 340 px frame to size x size."""
+    frames = load_frames(src)[::2]
+    out = []
+    for k, im in enumerate(frames):
+        rgb, a = box_down(im, (0, 0, 340, 340), (size, size))
+        a2 = np.clip(a * 3.0, 0, 1)
+        out.append(to_ramp(rgb, a2, ARC, k / (len(frames) - 1), hot=1.15, cool_to=0.8, cover_cut=0.30))
+    return out
+
+
+def flame_frames(src):
+    fr = []
+    for i in range(12):
+        a = np.asarray(Image.open(os.path.join(src, f"{i + 1:02d}.png")).convert("RGBA")).copy()
+        ys, xs = np.where(a[..., 3] > 0)
+        fr.append((a, int(ys.max())))
+    return fr
+
+
+def shift_to_base(a, bottom, base):
+    out = np.zeros_like(a)
+    d = base - bottom
+    if d >= 0: out[d:] = a[:a.shape[0] - d] if d else a
+    else: out[:d] = a[-d:]
+    return out
+
+
+def up2(a):
+    return np.repeat(np.repeat(a, 2, axis=0), 2, axis=1)
+
+
+def fire_small(src):
+    """One LPC flame, 2x nearest, base aligned. Frame 32 x 42, origin = bottom-centre."""
+    frames = []
+    for a, bottom in flame_frames(src):
+        s = shift_to_base(a, bottom, 20)[:21]                # 16 x 21, flame foot on the last row
+        frames.append(up2(s))
+    return frames
+
+
+def paste(dst, src, ox, oy):
+    h, w = src.shape[:2]
+    for y in range(h):
+        for x in range(w):
+            if src[y, x, 3] and 0 <= oy + y < dst.shape[0] and 0 <= ox + x < dst.shape[1]:
+                dst[oy + y, ox + x] = src[y, x]
+
+
+def fire_large(src):
+    """A cluster of three flames (2x nearest) with phase offsets: a tall centre flame and two shorter ones, partly overlapping."""
+    base = fire_small(src)
+    n = len(base)
+    fh, fw = base[0].shape[:2]
+    W, H = 56, fh + 6
+    frames = []
+    for f in range(n):
+        cv = np.zeros((H, W, 4), dtype=np.uint8)
+        paste(cv, base[(f + 4) % n], 0, H - fh - 0)          # left (behind): out of phase
+        paste(cv, base[(f + 8) % n], W - fw, H - fh - 0)     # right
+        paste(cv, base[f], (W - fw) // 2, H - fh - 5 + 0)    # centre, in front, a little taller (stands 5 px higher)
+        frames.append(cv)
+    return frames
+
+
+def smoke_plume(kdir):
+    """Kenney Particle Pack (CC0) smoke puffs (04, 07, 08; 512 px greyscale) rising and growing in a 32 x 64 frame, like build_fx.smoke_plume.
+    Each puff is area-averaged to its radius, its light/dark texture picks one of the five smoke-ramp browns (young puffs dark, old ones pale,
+    lit from the upper left), coverage is Bayer-dithered for the fade, and a 1 px dark outline closes the silhouette."""
+    puffs = []
+    for k, (name, flip) in enumerate([("smoke_04", 0), ("smoke_07", 1), ("smoke_08", 0), ("smoke_07", 0), ("smoke_04", 1), ("smoke_08", 1)]):
+        im = Image.open(os.path.join(kdir, name + ".png")).convert("RGBA")
+        if flip: im = im.transpose(Image.FLIP_LEFT_RIGHT)
+        puffs.append(dict(off=k / 6, im=im, wob=k * 1.7))
+    w, h, n = 32, 64, 12
+    frames = []
+    for f in range(n):
+        cv = np.zeros((h, w, 4), dtype=np.uint8)
+        order = sorted(((((f / n) + P["off"]) % 1.0, P) for P in puffs), key=lambda t: -t[0])
+        for a, P in order:
+            r = 4.5 + 8.0 * a ** 0.7
+            d = int(round(2 * r))
+            rgb, cov = box_down(P["im"], (0, 0, 512, 512), (d, d))
+            cov = np.clip(cov * 1.6, 0, 1)
+            lum = rgb.mean(axis=2)
+            cx = 15.5 + 7.0 * a + 2.2 * math.sin(2 * math.pi * a * 1.2 + P["wob"]) * a
+            cy = 60.0 - 45.0 * a ** 0.9
+            opacity = smoothstep(0.0, 0.14, a) * (1 - smoothstep(0.62, 1.0, a))
+            base = 3.0 * a
+            solid = np.zeros((d, d), dtype=bool)
+            idx = np.zeros((d, d), dtype=int)
+            for y in range(d):
+                for x in range(d):
+                    if cov[y, x] < 0.5: continue
+                    gx, gy = int(round(cx - r)) + x, int(round(cy - r)) + y
+                    if not (0 <= gx < w and 0 <= gy < h): continue
+                    if opacity < 0.999 and BAYER[gy % 4, gx % 4] >= opacity: continue
+                    lit = -0.55 * (x / d - 0.5) * 2 - 0.65 * (y / d - 0.5) * 2
+                    sv = base + 0.9 - 1.5 * (0.5 + 0.5 * lit) + (lum[y, x] - 0.45) * 2.2 + (BAYER[(gy + 2) % 4, (gx + 1) % 4] - 0.5) * 0.6
+                    solid[y, x] = True
+                    idx[y, x] = int(min(4, max(0, math.floor(sv + 0.5))))
+                    cv[gy, gx] = (*B.SMOKE[idx[y, x]], 255)
+            for y in range(d):                                # outline: solid pixels that touch an empty neighbour go darkest
+                for x in range(d):
+                    if not solid[y, x]: continue
+                    for dy, dx in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                        yy, xx = y + dy, x + dx
+                        if not (0 <= yy < d and 0 <= xx < d) or not solid[yy, xx]:
+                            gx, gy = int(round(cx - r)) + x, int(round(cy - r)) + y
+                            if 0 <= gx < w and 0 <= gy < h: cv[gy, gx] = (*B.SMOKE[0], 255)
+                            break
+        frames.append(cv)
+    return frames
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--packs", default=os.environ.get("RTS_ART_PACKS", "/tmp/claude-0/s15-packs"))
+    ap.add_argument("--kenney-smoke", action="store_true", help="also overwrite smoke_plume with the Kenney-puff version")
+    ns = ap.parse_args()
+    sfx = os.path.join(ns.packs, "sci-fi-effects")
+    note = "Skorpio sci-fi-effects (GPL-3.0 / CC-BY-3.0), regraded to our hard-pixel ramp."
+
+    # explosion2: mottled yellow fireball with a dark core hole -> the big one; explosion3: tighter, whiter -> the small one
+    large = explosion_sheet(os.path.join(sfx, "explosion2"), 64, list(range(15)), 330, (320, 322), B.FIRE, 0.92, 0.28, True)
+    write_sheet("explosion_large", large, 2, False, (32, 32), note.replace("sci-fi-effects", "sci-fi-effects explosion2"))
+    small = explosion_sheet(os.path.join(sfx, "explosion3"), 32, [0, 1, 2, 3, 4, 6, 8, 10, 12, 14], 300, (320, 320), B.FIRE, 0.92, 0.28, True)
+    write_sheet("explosion_small", small, 2, False, (16, 16), note.replace("sci-fi-effects", "sci-fi-effects explosion3"))
+    energy = explosion_sheet(os.path.join(sfx, "explosion4"), 64, list(range(15)), 330, (320, 315), ENERGY, 0.9, 0.35, False)
+    write_sheet("explosion_energy", energy, 2, False, (32, 32), note.replace("sci-fi-effects", "sci-fi-effects explosion4") + " Blue/white: Expedition energy weapons.")
+    arcs = lightning_sheet(os.path.join(sfx, "bending_lightning"), 32, 64)
+    write_sheet("lightning", arcs, 2, False, (16, 32), note.replace("sci-fi-effects", "sci-fi-effects bending_lightning") + " Green arcs: tinker/arc weapons (not wired).")
+
+    forks = lightning_fork_sheet(os.path.join(sfx, "lightning"))
+    write_sheet("lightning_fork", forks, 2, False, (24, 24), note.replace("sci-fi-effects", "sci-fi-effects lightning (every 2nd frame)") + " Forked green arc (not wired).")
+    kdir = os.environ.get("RTS_KENNEY_PARTICLES", "/home/claude/ref/kenney-particles") + "/addons/kenney_particle_pack"
+    if ns.kenney_smoke:   # tried and rejected for the shipped sheet (ragged, thinner than the procedural plume); kept for comparison
+        write_sheet("smoke_plume", smoke_plume(kdir), 3, True, (16, 63), "Kenney Particle Pack 1.1 (CC0) smoke puffs, regraded to the smoke ramp.")
+
+    fl = os.path.join(ns.packs, "flames")
+    fnote = "LPC flames by Sharm (CC-BY 3.0 / GPL-3.0 / GPL-2.0), 2x nearest, base aligned."
+    sm = fire_small(fl)
+    write_sheet("fire_small", sm, 3, True, (sm[0].shape[1] // 2, sm[0].shape[0] - 1), fnote)
+    lg = fire_large(fl)
+    write_sheet("fire_large", lg, 3, True, (lg[0].shape[1] // 2, lg[0].shape[0] - 1), fnote + " Cluster of three, phase offsets.")
+
+
+if __name__ == "__main__":
+    main()
