@@ -253,7 +253,8 @@ public sealed class RecruitAi : IAiPlayer, IAiSnapshotable, IHookableAi
         if (faction == Faction.Directorate && TierPlanner.HoldsDirectorateTech(bp.Tier))
         {
             Func<string, bool> prev = _build.HoldStep;
-            _build.HoldStep = id => prev(id) || TierPlanner.IsDirectorateEarlyTech(id) && _k.Army.Count + _k.Home.Count + _k.Detached.Count < TierPlanner.DirectorateTechArmy;
+            int holdArmy = TierPlanner.DirectorateTechArmyFor(bp.Tier);
+            _build.HoldStep = id => prev(id) || TierPlanner.IsDirectorateEarlyTech(id) && _k.Army.Count + _k.Home.Count + _k.Detached.Count < holdArmy;
         }
         _production = new ProductionManager(_faction, _tactics, _planner);
         _production.Start(_ctx!.Rng);
