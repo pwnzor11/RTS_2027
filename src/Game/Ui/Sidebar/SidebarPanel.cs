@@ -900,11 +900,11 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
 
             if (blocked && count == 0) Shapes.Fill(batch, pixel, r, Veil);
             var above = new Rectangle(r.X, r.Y, r.Width, Math.Max(1, r.Height - lh - 2));   // the state words sit above the name strip, never over it
-            if (tierEntry.Locked) FittedCentredText(batch, pixel, "LOCKED", above, DimText, small);   // P6
+            if (tierEntry.Locked) StateStrip(batch, pixel, r, "LOCKED", DimText, small);   // P6; M11-10h: a top band, the art stays visible
             if (ready)
             {
                 Shapes.Outline(batch, pixel, r, GoodGreen, 2);
-                FittedCentredText(batch, pixel, "READY", above, GoodGreen, _ui);   // P6: sized to the cameo
+                StateStrip(batch, pixel, r, "READY", GoodGreen, _ui);   // P6: sized to the cameo
             }
             else Shapes.Outline(batch, pixel, r, r.Contains(_mouse) ? Gold : Border);
 
@@ -941,7 +941,7 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
         if (BitmapFont.Measure(text, scale, weight) <= maxWidth) return text;
         for (int n = text.Length - 1; n > 0; n--)
         {
-            string cut = text[..n].TrimEnd();
+            string cut = text[..n].TrimEnd() + "\u2026";   // last resort: cut with an ellipsis
             if (BitmapFont.Measure(cut, scale, weight) <= maxWidth) return cut;
         }
 
@@ -952,7 +952,8 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
     // to fit. Nothing is ever drawn past maxWidth. Text size and UI scale both reach the label through `scale` and the font factor.
     private static (string Text, float Scale) FitLabel(string text, int maxWidth, float scale, FontWeight weight = FontWeight.Regular)
     {
-        float s = scale, floor = scale * 0.75f;
+        float s = scale, floor = scale * 0.6f;   // shrink to smaller atlas sizes first; Fit adds the ellipsis only after that
+        
         while (s > floor && BitmapFont.Measure(text, s, weight) > maxWidth) s -= scale * 0.05f;
         s = Math.Max(s, floor);
         return (Fit(text, maxWidth, s, weight), s);
@@ -960,6 +961,15 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
 
     private static void Text(SpriteBatch batch, Texture2D pixel, string text, Vector2 at, Color colour, float scale, FontWeight weight) =>
         BitmapFont.Draw(batch, pixel, text, at, colour, scale, weight);
+
+    // A bold state word on a dark band along the top of a cameo (the name strip is at the bottom), so the art between stays visible.
+    private static void StateStrip(SpriteBatch batch, Texture2D pixel, Rectangle r, string text, Color colour, float scale)
+    {
+        int h = BitmapFont.LineHeight(scale, FontWeight.Bold) + 2;
+        var band = new Rectangle(r.X + 1, r.Y + 1, r.Width - 2, Math.Min(h, Math.Max(1, r.Height / 3)));
+        Shapes.Fill(batch, pixel, band, new Color(0, 0, 0, 190));
+        FittedCentredText(batch, pixel, text, band, colour, scale);
+    }
 
     // P6: bold label drawn once, scaled down until it fits the cameo with 2 px to spare each side.
     private static void FittedCentredText(SpriteBatch batch, Texture2D pixel, string text, Rectangle r, Color colour, float scale)

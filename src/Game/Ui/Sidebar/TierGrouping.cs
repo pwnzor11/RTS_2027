@@ -132,6 +132,8 @@ public static class TierGrouping
         {
             int h = rows[i].Heading ? headingH : cameoH;
             if (y + h > gridHeight) break;
+            // A heading is never shown without the row under it: if that row does not fit too, stop here.
+            if (rows[i].Heading && i + 1 < rows.Count && y + h + gap + (rows[i + 1].Heading ? headingH : cameoH) > gridHeight) break;
             placed.Add(new PlacedRow(i, y, h));
             y += h + gap;
         }

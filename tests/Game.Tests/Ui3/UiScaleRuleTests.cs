@@ -137,3 +137,22 @@ public sealed class UiScaleRuleTests
         Assert.True(l.Credits.Height > 0 && l.SellButton.Height > 0 && l.Minimap.Height > 0 && l.CameoSize.Y > 0);
     }
 }
+
+public sealed class TierPlacementTests
+{
+    [Fact]
+    public void A_heading_is_never_placed_without_the_row_under_it()
+    {
+        var cell = System.Array.Empty<Rts.Game.Ui.Sidebar.TierEntry>();
+        var rows = new[]
+        {
+            new Rts.Game.Ui.Sidebar.TierRow(true, 1, false, "", cell), new Rts.Game.Ui.Sidebar.TierRow(false, 1, false, "", cell),
+            new Rts.Game.Ui.Sidebar.TierRow(true, 2, false, "", cell), new Rts.Game.Ui.Sidebar.TierRow(false, 2, false, "", cell),
+        };
+        // heading 20, cameo 50, gap 4: heading + row = 74; two groups need 152. A grid of 120 fits the first group and the second heading only.
+        var placed = Rts.Game.Ui.Sidebar.TierGrouping.Place(rows, 0, 120, 50, 20, 4);
+        Assert.Equal(new[] { 0, 1 }, placed.Select(p => p.Row).ToArray());
+        int last = Rts.Game.Ui.Sidebar.TierGrouping.MaxFirstRow(rows, 120, 50, 20, 4);
+        Assert.Contains(3, Rts.Game.Ui.Sidebar.TierGrouping.Place(rows, last, 120, 50, 20, 4).Select(p => p.Row));
+    }
+}
