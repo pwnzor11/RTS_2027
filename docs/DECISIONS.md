@@ -1379,3 +1379,49 @@ as slag heaps (ash) and crystals (pitchblende) by density, bright resource colou
 **Decision:** fix the Directorate's tier 4-5 AI and tune the Left Behind tier-3 AI profile; re-measure; unit numbers only if a gap remains (as a table, D-152).
 **Why:** Directorate decisive % falls with tier (v Authority 74/50/23 % at tiers 1/3/5); Left Behind wins 78-86 % at tier 3 but 58-60 % at tier 5.
 **Alternatives:** buff Directorate late units; Left Behind numbers table; leave. **Status:** owner decision (session 15)
+
+### D-183 · 2026-11-08 · Map study revises D-180 (docs/design/17_oramap_study.md)
+**Decision:** from 15 OpenRA community maps the owner likes (measured as reference; nothing copied or converted): (D3) start bases are MIXED per
+seed, mostly a soft shell with 2-3 approaches at least 3 cells wide, sometimes a walled main with one ramp; 2v2 teammates start side by side;
+layout follows the measured maps: about 3 lanes (1-5) at least 3 cells wide at the narrowest, direct paths (the 1.2x path rule is dropped),
+about 4 contested fields, a natural expansion on about half the maps; prop densities and placement rules from the study.
+**Why:** the liked maps contradict D-180 D3 and design 16's path rule (it would reject 13 of 14). **Status:** owner decision (session 15)
+
+### D-184 · 2026-11-08 · Art direction from the OpenSAGE study (docs/design/18_art_guidance.md)
+**Decision:** smoke/fire damage tiers (smoke under 50 %, fire under 25 %, a burst on entering a tier) for buildings and vehicles; fading rubble,
+vehicle wrecks and scorch (view only); dust behind moving ground vehicles; infantry larger with a guaranteed team-colour area; keep the upper-left
+sun (~40 degrees) and hard dithered shadows as a written rule (section 7) and add a subtle per-biome mood tint. Pilot first, then fan out.
+**Note:** OpenSAGE contains EA-derived code; it is a presentation reference only (D-050). **Status:** owner decision (session 15)
+
+### D-185 · 2026-11-08 · All 18 infantry re-rendered at figure scale 1.25
+**Decision:** after the Marine/Commissar pilot, every infantry type is rendered 1.25x larger with team-colour emphasis (tools/art/house_audit.py:
+at least 10 px of house colour on every facing). Manifests carry `figure_scale_permille = 1250`; the renderer's "Larger infantry" step skips such
+sprites, so infantry appear at about 1.56x the original art (D-172's 1.25 times the baked 1.25). **Status:** owner decision (session 15)
+
+### D-186 · 2026-11-08 · Q-65 follow-ups: Left Behind per-faction AI override; Directorate tier 4-5 economy fix
+**Decision:** data/ai/difficulty.toml accepts `[faction.<id>.tier<N>]` override tables (AI behaviour only, never unit numbers). The Directorate
+tier 4-5 expansion refinery is built right after the Assembly Bore (s15_q65.md). **Status:** owner decision (session 15)
+
+### D-187 · 2026-11-08 · Look pilot approved for all factions
+**Decision:** D-184 items (damage tiers, remains, dust, mood tint) ship for every faction; infantry stay at the pilot size (about 1.56x the original
+art). Old look: `RTS_FXLOOK=off`, `RTS_MOOD=off`. **Status:** owner decision (session 15)
+
+### D-188 · 2026-11-08 · Imported open-licence art (credits in docs/CREDITS.md, notices in THIRD_PARTY_NOTICES.md)
+**Decision:** effects from Skorpio's "sci-fi-effects" (GPL-3.0 option): new fireballs, energy explosion, lightning, lightning_fork; fire from the
+LPC flames (Sharm, GPL-3.0 option); dust and damage-smoke puffs from Kenney Smoke Particles (CC0). Props: 0 A.D. renders (CC-BY-SA 3.0, kept as
+separately licensed data files in data/sprites/props/zeroad/) for Boulder, Rubble and Snag; the LPC atlas (GPL-3.0 option) for ConcreteBlock and
+DeadTree; procedural for the rest. Old sets: `RTS_FX=classic`, `RTS_PROCEDURAL_PROPS=1`. Packs without a verifiable licence (space-ship packs,
+Wesnoth-style icons) are reference only; Kenney Sci-Fi RTS (CC0) is reference only (style clash).
+**Status:** owner decision (session 15)
+
+### D-189 · 2026-11-08 · Warzone 2100 models: kitbash, keep our designs
+**Decision:** Warzone 2100 data (GPL-2.0-or-later) may be used through tools/art/wz (our own .pie importer) to kitbash parts (tracks, turrets,
+weapon geometry, cyborg bodies) into our units where they add detail. Our unit and building designs stay. Never use Warzone's CC-BY-SA 3.0 files
+(page-6/17/30 textures, wheel propulsion models): CC-BY-SA 3.0 cannot be relicensed under the GPL. The pilot's candidate sprites were not shipped.
+**Status:** owner decision (session 15)
+
+### D-190 · 2026-11-08 · Left Behind tier 3 early army cap
+**Decision:** `[faction.left_behind.tier3] army_cap = 20, army_cap_until_tick = 3600`. Measured (32 games): LB3 v Authority 3 68 -> 53 %,
+v Expedition 3 63 -> 56 %, v Directorate 3 87 -> 74 % (draws 2 -> 9); LB5 now beats LB3. The remaining Directorate 3 gap is Directorate's own
+early game: an AI-only package next session (Q-67). These are 32-game cloud cells; the owner's 64-game laptop row (s15_laptop_series.md,
+LB3 v Authority 3 78 %) is a different sample. **Status:** owner decision (session 15)

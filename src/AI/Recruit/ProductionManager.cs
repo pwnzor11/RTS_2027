@@ -95,7 +95,7 @@ internal sealed class ProductionManager
         // Vehicles first; infantry leaves the next vehicle's price in reserve so cheap riflemen cannot starve the factory.
         // No scraper left (it is never replaced): there is no income to wait for, so nothing is held back.
         if (_noIncome) reserve = 0;
-        else reserve += Bias.UnitReserve;   // M5-02: economy / tech first (the rescue above is never held back)
+        else reserve += Bias.UnitReserve + (_tier?.Profile.UnitReserve ?? 0);   // M5-02: economy / tech first (the rescue above is never held back); S15 lbknob: per-faction pacing
         if (holdForHarvester) reserve += rules.Vehicles[harv].Cost;
         else Lane(k, sink, reserve + (Bias.Mix == DirectiveCodec.MixInfantry ? MixLaneHold : 0), ProductionCategory.Vehicle, _veh, ref _vehIdx, t => rules.Vehicles[t].Cost);
         int vehicleReserve = holdForHarvester || _noIncome ? 0 : k.Queue(ProductionCategory.Vehicle).Items.Count == 0 && k.Buildable(ProductionCategory.Vehicle, PeekVehicle(rules))
@@ -109,6 +109,7 @@ internal sealed class ProductionManager
         Func<int, int> cost)
     {
         if (k.Queue(cat).Items.Count > 0) return;
+        if (_tier is { Profile.ArmyCap: > 0 } && (_tier.Profile.ArmyCapUntilTick == 0 || k.View.Tick < _tier.Profile.ArmyCapUntilTick) && k.Army.Count + k.Home.Count + k.Detached.Count >= _tier.Profile.ArmyCap) return;   // S15 lbknob: swarm cap
         if (cat == ProductionCategory.Infantry && _tactics != null && _tactics.HoldInfantry(k)) return;   // M7-10
         int type = cat == ProductionCategory.Vehicle ? PeekVehicle(k.Rules) : mix[idx % mix.Length];
         if (_tier != null && !(cat == ProductionCategory.Vehicle && _first)) type = _tier.PickUnit(k, cat, mix, type, _rng!);   // M3-11

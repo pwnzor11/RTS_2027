@@ -324,3 +324,29 @@ Pull first: `git pull --ff-only origin main` (git-lfs is installed on the PC now
   is defeated.
 - **AI ladder repeat (laptop):** re-run balance_runs\run_s14_baseline.ps1 after deleting the s14_*.md results, and compare with
   docs/balance/s14_laptop_baseline.md.
+
+## Session 15 · Play-test fixes, M11 batch 3, siege AI, maps, art (M11-10, M12-01..06, M10-01..04, Q-64..Q-66)
+Pull first: `git pull --ff-only origin main` then `git lfs pull` (new sprites). Run: `dotnet run --project src\Game -c Release`.
+- **Harvesting:** select a scraper (you get one free with each refinery), right-click an ash or pitchblende field: it drives there and harvests. Right-click
+  your own refinery: it delivers. Move it away, right-click a field again: it resumes. The cursor shows the harvest/enter symbol first.
+- **Windowed mode:** make the window smaller; the edge band scrolls; moving the mouse onto the title bar or another window stops it.
+- **Selection:** Ctrl+1..9 sets a group, 1..9 recalls it, twice quickly centres on it, Shift+number adds. Shift+click/drag adds; double-click or
+  Ctrl+click selects all of that type on screen; **C** selects the whole army. Group numbers show next to health bars and in the card.
+- **Alerts:** "Base/Unit/Harvester under attack", "Construction complete", "Unit ready", "Low power", "Unit/Building lost" top right with a minimap ping;
+  **End** jumps to the last alert, again for the one before.
+- **Cursors / placement / tooltips:** cursor changes per action (move, attack, enter, capture, repair, harvest, blocked...). Placing a building shows the
+  sprite at half alpha, red/green cells, a reason line and the build radius. Cameo tooltip: cost, time, power, description. Shift+click queues 5.
+- **Production hold:** right-click a unit or structure in progress: "ON HOLD", money stops; left-click resumes; right-click again cancels with a refund.
+- **Settings:** "UI scale" 75-200 % (shows "limited by window size" when capped), "Text size" Small..Extra large, "Larger infantry" (on).
+- **Look:** terrain look C (clear roads, water, cliffs; resource fields as slag heaps and crystals). **H** toggles map decor. Damaged units and buildings
+  smoke (under 50 %) and burn (under 25 %); dead buildings leave rubble, vehicles a wreck and scorch; tanks kick up dust; each biome has a slight tint.
+  New explosions, blue energy blast (Expedition), fire; rocks/rubble/charred wood (0 A.D.) and concrete blocks/stumps (LPC) on generated maps.
+  Old look: set `RTS_TERRAIN_LOOK=classic`, `RTS_FX=classic`, `RTS_FXLOOK=off`, `RTS_PROCEDURAL_PROPS=1` before starting.
+- **Infantry:** all 18 types are bigger with clear team colour on every facing.
+- **Maps:** generated maps have blocking props (tree/wreck/barrier clusters) that ground units path around; an old skirmish save on a generated map
+  shows "This save was made with an older map generator and can't be loaded." Tools: `dotnet run --project src\Tools -- map report <map or seed>`,
+  `map render --png`.
+- **Missions:** auth_02 (The Junction) at tier 1 vs tier 5: small late raids vs about three times larger raids with Ashthrowers and Sappers.
+- **AI:** fewer endless stalemates in skirmish (siege mode: the AI gathers, brings artillery, hits factories first). Laptop repeat (optional):
+  `powershell -ExecutionPolicy Bypass -File tools\measure\run_s15_series.ps1` after deleting balance_runs\s15\*.md, compare with
+  docs/balance/s15_laptop_series.md.

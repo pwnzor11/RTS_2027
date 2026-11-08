@@ -81,4 +81,53 @@ public class DifficultyLoaderTests
         }
         finally { File.Delete(bad); }
     }
+
+    private const int LeftBehind = (int)Rts.Sim.Rules.Faction.LeftBehind;
+    private const int Authority = (int)Rts.Sim.Rules.Faction.Authority;
+
+    [Fact]
+    public void LeftBehindTierThreeOverrideAppliesToThatFactionAndTierOnly()
+    {
+        var tiers = TestWorld.Tiers;
+        var shared = tiers[2];
+        var lb = shared.ForFaction(LeftBehind);
+        Assert.NotSame(shared, lb);
+        Assert.True(lb.ArmyCap > 0);
+        Assert.Equal(0, shared.ArmyCap);                              // the shared tier 3 table is untouched
+        Assert.Same(shared, shared.ForFaction(Authority));            // other factions play the shared profile
+        Assert.Same(lb, shared.ForFaction(LeftBehind));               // same instance every call (the AI compares by reference)
+        Assert.Equal(shared.AttackThreshold, lb.AttackThreshold);     // keys the table does not name keep the tier value
+        Assert.Equal(shared.Tier, lb.Tier);
+        foreach (int t in new[] { 0, 1, 3, 4 }) Assert.Same(tiers[t], tiers[t].ForFaction(LeftBehind));   // other tiers have no override
+    }
+
+    [Fact]
+    public void TierOverrideTableIsValidated()
+    {
+        string text = File.ReadAllText(DifficultyLoader.PathBesideRules(TestWorld.RulesDir)).Replace("\r\n", "\n");
+        string plain = text.Replace("[faction.left_behind.tier3]\narmy_cap", "[faction.left_behind.tier3]\nattack_threshold = 5\nunit_reserve = 120\narmy_cap");
+        string path = Write(plain);
+        try
+        {
+            var lb = DifficultyLoader.Load(path)[2].ForFaction(LeftBehind);
+            Assert.Equal(5, lb.AttackThreshold);
+            Assert.Equal(120, lb.UnitReserve);
+        }
+        finally { File.Delete(path); }
+        string bad = Write(text.Replace("[faction.left_behind.tier3]\narmy_cap", "[faction.left_behind.tier3]\nfocus_fire = 1\nattack_threshold = 0.5\narmy_cap"));
+        try
+        {
+            var ex = Assert.Throws<RulesException>(() => DifficultyLoader.Load(bad));
+            Assert.Contains(ex.Problems, p => p.Key == "faction.left_behind.tier3.focus_fire");        // not an overridable key
+            Assert.Contains(ex.Problems, p => p.Key == "faction.left_behind.tier3.attack_threshold");  // a float
+        }
+        finally { File.Delete(bad); }
+        string noTier = Write(text.Replace("[faction.left_behind.tier3]", "[faction.left_behind.tier9]"));
+        try
+        {
+            var ex = Assert.Throws<RulesException>(() => DifficultyLoader.Load(noTier));
+            Assert.Contains(ex.Problems, p => p.Key == "faction.left_behind.tier9");
+        }
+        finally { File.Delete(noTier); }
+    }
 }

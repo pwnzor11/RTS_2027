@@ -1,36 +1,44 @@
-# Handoff: Session 15 — AI siege (Q-64), Directorate balance (Q-65), M11 batch 3
-Last commit: `docs: Session 14 handoff` on integ-s14 = PR #44 (Windows CI green, local full suite 3 254/3 254). If PR #44 is still open, step 0 is: the owner merges it (the session safety check refused a merge without review). Check `git log -1 origin/main`.
-Where things stand: **M8 is complete except M8-18 voice lines** (all 12 act-break stills in style C, D-169; mission tiers tuned in nine missions, D-168; objective
-targets in all 17 missions; M8-15 table re-measured). **M11 (UI and input overhaul, before M9 LAN, D-171) batches 1-2 are done:** edge scroll,
-Controls page with full rebinding, gated debug keys, Home/bookmarks, order feedback, attack-move cursor, health-bar setting, power readout,
-no-power icon, minimap fit, calmer animations, units 1.25x, objective guidance, bottom-centre selection card, a polish pass; nobody has
-played it yet (screenshots only, docs/reviews/img/2026-11-07_ui/). D-166 numbers and D-173 defeat rule are in. Decisions up to D-173.
-Full suite 3 254 tests (local run by the lead; Windows CI green on PR #44).
+# Handoff: Session 16 — Directorate early game (Q-67), maps M12 wave 3 (zones and lanes), art follow-ups
+Last commit: `docs: Session 15 handoff` on integ-s15, landed through the PR named in the session 15 log (Windows CI must be green; the owner allowed the
+lead to merge, D-179). Check `git log -1 origin/main` and that integ-s15 is merged.
+Where things stand: **M11 is complete** except the Editor props tool (M12-06b). M11 batch 3 shipped (selection toolkit, alerts, cursors,
+placement ghost, tooltips, production hold, UI scale + text size); the owner play-tested the session 14 UI and liked it. **M12 waves 1-2 are done**
+(decals, blocking props, map format 4, decoration pass with map-study densities, `map report` / `map render`); wave 3 (zones, lanes, start shapes)
+is next, revised by the OpenRA map study (D-183, docs/design/17_oramap_study.md). **Art:** look C terrain, damage tiers / remains / dust / mood tint,
+all 18 infantry re-rendered, imported FX and props (credits and licence texts in the repo), Warzone .pie importer. **AI:** siege mode (Q-64, D-174),
+Directorate tier 4-5 economy fix, Left Behind tier-3 cap (D-190). Decisions up to D-190; open question Q-67.
+Full suite: 3 666 tests (Game 1 470, AI 213, Scripting 295, Sim 1 565 on the final integ-s15; Llm 119 and Tools 4 unchanged since their last green run).
 
 ## Start here (shown to the user as the plan; nothing starts until they say go)
-1. Owner play-test of the new UI (USER_CHECKS "Session 14"); fix what they report first.
-2. Q-64: Directorate draws are base stalemates. Recommended: AI siege behaviour, measured with the laptop script and `ai match`.
-3. Q-65: re-measure Directorate vs Left Behind / Authority with D-166 (owner's laptop: re-run balance_runs\run_s14_baseline.ps1), then a table.
-4. M11 batch 3 from docs/reviews/2026-11-07_ui_input_audit.md section 6.3: selection toolkit (shift-add, control groups, double-click
-   same type, select-all), alert stack + minimap pings, one UI scale rule, cursor sprites, placement ghost, cameo tooltips.
-5. M11-07/08: terrain and resource readability (palette first; tiles are M10 art).
-6. If time: Q-66 auth_01..03 tiers; ObjectiveTargetTests case for a mission with mixed targeted/untargeted objectives; voice lines once the
-   owner has generated them (licence check and credits per voice when picked); M10 later: building art depth, stills smoke (tan, not soot).
+1. Q-67: Directorate tiers 1-3 early game (AI only, measured). Read docs/balance/s15_lbknob.md, s15_q65.md, s15_siege.md first. Target: Left Behind 3
+   v Directorate 3 into about 50-65 % with no draw rise; keep Directorate 1 v Authority 1 from getting stronger (it already wins 74 %).
+   Then push a laptop script (tools/measure/run_s15_series.ps1 rows plus the Directorate ladder) for the owner to confirm on 64-game cells.
+2. M12 wave 3 (design 16 section 5 wave 3, revised by D-183 and design 17): zone skeleton, ~3 lanes at least 3 cells wide, mixed start shapes
+   (mostly soft shell with 2-3 approaches, some walled with a ramp), natural expansion on about half the maps, 2v2 teammates side by side,
+   resource amounts per player from the study, fairness checks with 50-seed sweeps. Re-measure income and the AI matrix afterwards (more resources
+   per base moves balance). Pilot one biome, owner looks, then the rest.
+3. Art follow-ups (owner rule: pilot, approve, fan out): vehicle team-colour fixes from tools/art/house_audit.py (11 of 45 hulls, 8 of 13
+   turrets under 10 px); kitbash Warzone parts where they add detail (D-189); per-vehicle FX anchors; art for GlassCrest, IceSlab, WreckHulk,
+   BrokenPylon props; building art depth (M10).
+4. If time: Editor props tool (M12-06b); wire `explosion_energy` / `lightning_fork` to weapons (Expedition energy, Left Behind arc); decide the
+   mop-up AI switches (still off; siege did not make them redundant for stray hatches); voice lines once the owner has Piper set up.
 
 ## Half-finished work
-- Nothing in flight; all helper branches merged into integ-s14.
-- Mop-up AI code is in MilitaryManager but switched off (MopupLaunch/MopupSweep = false, docs/balance/s14_mopup.md).
-- Voice lines: tool ready (tools/voice/wyoming_batch.py, copy in the owner's voice_work\); waiting on the owner's voice picks + licence check.
+- Nothing in flight; every helper branch of session 15 is merged into integ-s15.
+- Mop-up AI code is in MilitaryManager but switched off (MopupLaunch/MopupSweep = false).
+- Voice lines: on hold until the owner has Piper set up (tools/voice/wyoming_batch.py).
+- `unit_reserve` difficulty override key exists and is tested but unused (s15_lbknob.md).
 
 ## Waiting on the user
-- Play the new UI; answer Q-64..Q-66.
-- Optional: delete old CI artifacts with the gh command from chat; delete merged branches (land/s13-*, integ-s13, wp/s13-handoff, the
-  session-12 list, integ-s14 and all wp/s14-* after the PR lands); keep restore/pre-s14 until happy.
+- Pull and play (USER_CHECKS "Session 15"); say how the new look, infantry and props feel.
+- Optional clean-up: delete merged branches (integ-s14, wp/s14-*, land/s15-*, wp/s15-*, wp/art-*, art/s15-*, integ-s15 after it lands,
+  save/integ-s15-with-art); keep restore/pre-s15 until happy.
+- Optional: Kenney Sci-Fi RTS is in the owner's downloads as reference; download pages for the space-ship packs if they should be re-checked.
 
 ## How to run this session
 - Lead: Opus for build sessions (the owner wants long unattended overnight builds); Sonnet for a pure review/question session. Helpers: Haiku default; Sonnet for sim core,
   determinism, serialisation, movement, combat, AI, scripting, and all Blender art.
-- Repo clone: `/home/claude/rts_2027`; main has no branch protection, but land through a PR so Windows CI runs first
+- Repo clone: `/home/claude/rts_2027` (remote URL github.com/pwnzor11/RTS_2027.git; re-set it after a container restart); main has no branch protection, but land through a PR so Windows CI runs first
   (`gh pr create` fails — use `gh api repos/pwnzor11/RTS_2027/pulls -f title=… -f head=… -f base=main`); GitHub marks the
   PR merged when main fast-forwards to its head. Tag pushes are blocked: use `restore/<name>` branches.
 - Setup: `apt-get update && apt-get install -y dotnet-sdk-10.0`; Blender `pip install bpy --break-system-packages`
@@ -169,6 +177,19 @@ Do steps 1-2 (land the PRs, owner picks); the fan-out and mission tiers can take
   - Windows CI: `VSTEST_CONNECTION_TIMEOUT=600` in ci.yml; a test-host connect timeout is a runner problem, re-run once, then fix the env.
   - GitHub Actions minutes ran out once; the repo is public since (D-159), so Actions are free.
 
+- Session 15 lessons:
+  - New sprites (LFS) cannot be pushed from the cloud. Package them for the owner: `git bundle create <zip>/x.bundle <base>..<branch>`, copy EVERY
+    LFS object referenced by any commit in the range (not just the tip: `git lfs push` checks history; the first packs package missed 9 versions),
+    and a push_art.ps1 that fetches, verifies the bundle, copies objects into .git/lfs/objects, `git lfs push origin <branch>`, `git push`.
+    Ship it as a .zip (the owner's browser refuses a bare .ps1). Keep art commits off branches you need to push until the owner has pushed.
+  - Licences: OpenGameArt and kenney.nl block automated reads. Read the packs' own licence files; get verbatim licence texts from GitHub
+    (raw.githubusercontent.com/spdx/license-list-data/main/text/<id>.txt works). CC-BY-SA 3.0 is not GPL-compatible: keep such art as separate,
+    separately licensed data files (0 A.D. props) and never in GPL sprite sheets; avoid it in tooling that mixes (Warzone page-6/17/30, wheels).
+  - Enum-count pins live in several contract tests (M4, M6, M7): grep for `Enum.GetValues<CommandKind>().Length` when adding a command.
+  - Windows CI catches file-lock bugs Linux misses (a test deleted a replay file still open): close sessions (SaveReplay) before deleting.
+  - A container restart lost nothing committed; helper reports can be recovered from the end of their task transcripts.
+  - When a re-rendered asset and a renderer-side scale option overlap, give the asset a manifest flag (figure_scale_permille) so they do not stack.
+  - The owner answered every question within minutes; batching 2-4 questions with AskUserQuestion and sending contact sheets first worked well.
 - Session 13 lessons:
   - The auto-mode safety check refused `gh api -X PUT …/pulls/<n>/merge` ("merge without review"). Do not look for a way around it;
     leave PRs open, stack later work on the same integration branch, and ask the owner to merge (or to allow merges) at the end.

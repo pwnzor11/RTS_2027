@@ -259,16 +259,17 @@ Source: docs/reviews/2026-11-07_owner_campaign_feedback.md. Audit: docs/reviews/
   - [x] M11-10f Placement ghost with per-cell colour, reason line, build radius
   - [x] M11-10g Cameo tooltips, Shift+click queues 5
   - [x] M11-10h One UI scale rule (75-200 %), text size setting, more font sizes
-  - [ ] M11-10i Hold a production item with right-click (needs a sim pause command)
+  - [x] M11-10i Hold a production item with right-click (CommandKind.Hold, s15)
 
 ## M12 · Maps overhaul (D-180, docs/design/16_maps_overhaul.md; all of it before M9)
 - [x] M12-01 Decal pass (derived decals, per-biome tables, second baked texture) (s15)
 - [x] M12-02 Land-linked placeholder props on rock/rough/glass/ice (s15)
 - [x] M12-03 Prop atlas interface, decor toggle (H), budget and frame-time tests (s15)
-- [ ] M12-04 Map format 4: decor layer, blocking prop overlay kinds, placement/harvest checks, hash coverage
-- [ ] M12-05 Generator decoration pass (replaces the old generator, D-180 D4; clear message for old saves)
-- [ ] M12-06 Editor Props tool, `map report`, `map render --png`
-- [ ] M12-07..12 Zone skeleton, lanes and chokes, walled mains with a ramp and a natural expansion, fairness checks (design doc wave 3)
+- [x] M12-04 Map format 4: decor layer, blocking prop overlay kinds, placement/harvest checks, hash coverage (s15)
+- [x] M12-05 Generator decoration pass with the map-study densities (D-183); replaces the old generator (D-180 D4); old saves refused with a message (s15)
+- [x] M12-06 `map report`, `map render --png` (s15)
+- [ ] M12-06b Editor Props tool and decal brush (skipped in s15)
+- [ ] M12-07..12 Zone skeleton, ~3 lanes and chokes, mixed start shapes (mostly soft shell, some walled with a ramp), natural expansion on about half the maps, 2v2 teammates side by side, fairness checks, income re-measure (design 16 wave 3, revised by D-183 / design 17)
 - [ ] M12-13..16 Stamps, rebuilt data maps, prop art (M10), optional extras (design doc wave 4)
 
 ## M9 · LAN multiplayer (was M5)
@@ -276,4 +277,11 @@ Lockstep over LAN, lobby, desync detection, replays.
 
 ## M10 · Polish
 - [ ] M10-xx Building art: less flat, more depth (owner 2026-11-07, later polish run)
+- [x] M10-01 Damage smoke/fire tiers, rubble/wrecks/scorch, vehicle dust, biome mood tint, larger-infantry option (D-184, D-187, s15)
+- [x] M10-02 All 18 infantry re-rendered at figure scale 1.25 with team-colour emphasis; tools/art/house_audit.py (D-185, s15)
+- [x] M10-03 Imported FX (Skorpio, LPC flames, Kenney puffs) and props (0 A.D., LPC) with credits and licence texts (D-188, s15)
+- [x] M10-04 Warzone 2100 .pie importer and kitbash tooling (D-189, s15)
+- [ ] M10-05 Team-colour audit fixes for vehicles (11 of 45 hulls, 8 of 13 turrets under 10 px; tools/art/house_audit.py)
+- [ ] M10-06 Kitbash Warzone parts into our vehicles where they add detail (D-189); per-vehicle FX anchors in manifests
+- [ ] M10-07 Props still procedural: GlassCrest, IceSlab, WreckHulk, BrokenPylon (no fitting open art yet)
 Art pass, music/SFX, balance, installer.

@@ -18,8 +18,9 @@ Build order (D-087, session 4): finish M3, then skirmish depth (M4), the LLM com
 The Left Behind (M6) and the Overseas Expedition (M7) — before the campaign (M8), so the campaign is written once with
 all four factions. D-171 (session 14): M11 UI and input overhaul comes after M8 and before M9 LAN. Priorities above are unchanged in importance; only the build order moved.
 
-- Repo: `github.com/pwnzor11/rts_2027`, branch `main`. Changes reach main by: **direct push** by the
-  lead after review and verification (no branch protection as of session 1; revisit if that changes).
+- Repo: `github.com/pwnzor11/RTS_2027`, branch `main`. Changes reach main by: **pull request** from an integration
+  branch, merged by the lead once Windows CI is green (D-179; direct pushes to main are refused by the session safety check).
+  New LFS art cannot be pushed from the cloud: the owner pushes it with a packaged bundle (HANDOFF, session 15 lessons).
 - Reference source: EA's C&C Remastered Collection (GPL v3 + EA additional terms), cloned read-only to
   `/home/claude/ref/CnC_Remastered_Collection` in the cloud workspace (re-clone if missing:
   `git clone --depth 1 https://github.com/electronicarts/CnC_Remastered_Collection`). It is a read-only

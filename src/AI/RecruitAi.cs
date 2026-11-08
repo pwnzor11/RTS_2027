@@ -200,6 +200,7 @@ public sealed class RecruitAi : IAiPlayer, IAiSnapshotable, IHookableAi
     /// </summary>
     public void ApplyHooks(AiHooks hooks, DifficultyProfile profile)
     {
+        if (_faction is not null) profile = profile.ForFaction((int)_faction.Faction);   // S15 lbknob: the faction's own version of the tier
         if (!ReferenceEquals(profile, _profile))
         {
             _profile = profile;
@@ -235,14 +236,22 @@ public sealed class RecruitAi : IAiPlayer, IAiSnapshotable, IHookableAi
     private void Init(Faction faction)
     {
         _faction = RecruitFaction.For(faction);
-        _tactics = _faction.CreateTactics(_baseProfile);
-        _build = new BuildOrderManager(_faction.OrderFor(_baseProfile.BuildRepertoire), _faction.PowerId, _faction.YardId)
-        { ReserveInProgress = _baseProfile.RespondToAttacks, SupplyMargin = BuildOrderManager.MarginForTier(_baseProfile.Tier) };   // M4-12 (tier 2+); SUP-5 margin by tier
-        _planner = new TierPlanner(_baseProfile, _faction);
+        // S15 lbknob: the faction's own version of the tier ([faction.<id>.tier<N>] in difficulty.toml); the shared profile when none
+        DifficultyProfile bp = _baseProfile.ForFaction((int)faction);
+        if (!ReferenceEquals(bp, _baseProfile))
+        {
+            _military.Retune(bp, false, 0);
+            _military.ShiftFirstTrigger(bp.AttackThreshold - _baseProfile.AttackThreshold);   // the first trigger was drawn in Start from the shared threshold
+        }
+        _profile = _profile.ForFaction((int)faction);
+        _tactics = _faction.CreateTactics(bp);
+        _build = new BuildOrderManager(_faction.OrderFor(bp.BuildRepertoire), _faction.PowerId, _faction.YardId)
+        { ReserveInProgress = bp.RespondToAttacks, SupplyMargin = BuildOrderManager.MarginForTier(bp.Tier) };   // M4-12 (tier 2+); SUP-5 margin by tier
+        _planner = new TierPlanner(bp, _faction);
         _build.HoldStep = id => _planner.Behind && _planner.IsTech(id);   // M4-16
         _production = new ProductionManager(_faction, _tactics, _planner);
         _production.Start(_ctx!.Rng);
-        if (!ReferenceEquals(_profile, _baseProfile)) _planner.SetProfile(_profile);   // M8-06: a tier forced before the first decision
+        if (!ReferenceEquals(_profile, bp)) _planner.SetProfile(_profile);   // M8-06: a tier forced before the first decision
         _military.Tactics = _tactics;
         _tactics?.Start(_ctx);
         if (_tactics is LeftBehindTactics lb) lb.Attach(_squads);   // M6-10
