@@ -1,6 +1,6 @@
 """Procedural pixel-art effects (D-069): fire, smoke, sparks, explosions. Pillow + numpy only, no Blender.
 
-Usage:  python3 tools/art/fx/build_fx.py            # writes data/sprites/fx/*.png + *.sprite.toml
+Usage:  python3 tools/art/fx/build_fx.py [--classic]  # writes data/sprites/fx/*.png + *.sprite.toml (--classic: data/sprites_classic/fx, all sheets)
 Every pixel is hard (alpha 0 or 255): no blur, no antialiasing. Fire uses its own 5-step ramp (the 24-colour art
 palette has no red/orange), smoke uses 5 brown-greys with checker-dithered edges.
 Origins: flames/smoke = base-centre pixel (the anchor sits on the ground), sparks/explosions = centre.
@@ -316,10 +316,21 @@ EFFECTS = {
 }
 
 
+# Sheets replaced by art imported with import_scifi_fx.py (S15). `--classic` writes ALL the procedural sheets to data/sprites_classic/fx
+# (the RTS_FX=classic comparison set) and leaves data/sprites/fx alone.
+IMPORTED = {"explosion_small", "explosion_large", "fire_small", "fire_large"}
+CLASSIC = "--classic" in sys.argv
+if CLASSIC:
+    OUT = os.path.join(ROOT, "data", "sprites_classic", "fx")
+
+
 def build_all():
     os.makedirs(OUT, exist_ok=True)
     result = {}
     for name, (fn, tpf, loop, org) in EFFECTS.items():
+        if name in IMPORTED and not CLASSIC:
+            print("skip", name, "(now imported art: tools/art/fx/import_scifi_fx.py; pass --classic to rebuild the old sheet)")
+            continue
         w, h, n, frames = fn()
         sheet = Image.new("RGBA", (w * n, h), (0, 0, 0, 0))
         for i, cv in enumerate(frames):
