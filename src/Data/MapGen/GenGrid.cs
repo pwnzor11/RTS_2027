@@ -27,9 +27,15 @@ internal sealed class GenGrid
     public readonly bool[] Feature;
     private readonly int[] _orbit;
 
-    public GenGrid(int n, MapSymmetry symmetry, LandType baseLand)
+    public GenGrid(int n, MapSymmetry symmetry, LandType baseLand) : this(n, symmetry, baseLand, false) { }
+
+    /// <summary>As above; with <paramref name="dihedral"/> (layout 2, four players) a <see cref="MapSymmetry.MirrorDiag"/> grid also
+    /// writes the images across the other diagonal and the half turn, so every cell has four images (id, main diagonal, anti-diagonal,
+    /// half turn). The map is then still symmetric under <see cref="MapSymmetry.MirrorDiag"/>, which is what the file declares.</summary>
+    public GenGrid(int n, MapSymmetry symmetry, LandType baseLand, bool dihedral)
     {
-        N = n; Symmetry = symmetry; Base = baseLand; K = MapSymmetries.Order(symmetry);
+        if (dihedral && symmetry != MapSymmetry.MirrorDiag) throw new ArgumentException("dihedral needs mirror_diag", nameof(dihedral));
+        N = n; Symmetry = symmetry; Base = baseLand; K = dihedral ? 4 : MapSymmetries.Order(symmetry);
         int c = n * n;
         Land = new LandType[c]; Height = new byte[c]; Overlay = new OverlayKind[c]; Density = new byte[c];
         Reserved = new bool[c]; Core = new bool[c]; Ramp = new bool[c]; River = new bool[c]; Feature = new bool[c];
@@ -40,6 +46,13 @@ internal sealed class GenGrid
             {
                 var img = MapSymmetries.Images(symmetry, n, n, x, y);
                 int i = y * n + x;
+                if (dihedral)
+                {
+                    _orbit[i * K] = i; _orbit[i * K + 1] = img[1].Y * n + img[1].X;
+                    _orbit[i * K + 2] = (n - 1 - x) * n + (n - 1 - y);   // anti-diagonal mirror: (x,y) -> (n-1-y, n-1-x)
+                    _orbit[i * K + 3] = (n - 1 - y) * n + (n - 1 - x);   // half turn
+                    continue;
+                }
                 for (int k = 0; k < K; k++) _orbit[i * K + k] = img[k].Y * n + img[k].X;
             }
     }

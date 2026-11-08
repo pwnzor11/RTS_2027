@@ -20,6 +20,12 @@ public static class MapGenerator
     /// (D-180: replaced outright, so a save or map file that names 0 cannot be rebuilt); 1 = the M12 generator with its decoration pass.</summary>
     public const int CurrentLayout = 1;
 
+    /// <summary>The zone-skeleton generator (M12-07, D-183), built for Rust Belt only; opt in with <c>MapGenParams.Layout = 2</c>.</summary>
+    public const int ZonedLayout = 2;
+
+    /// <summary>Attempts allowed for the zoned layout (its checks are stricter than layout 1's).</summary>
+    public const int MaxZonedAttempts = 40;
+
     /// <summary>The friendly message of a save made with a generator this build no longer has.</summary>
     public const string OldGeneratorMessage = "This save was made with an older map generator and can't be loaded.";
 
@@ -77,11 +83,16 @@ public static class MapGenerator
     /// rule: Foot + Tracked connectivity, ≥ 2 fields within 14 cells of path, exact path equality, a 5×5 buildable start square and
     /// ≥ 12 cells between starts. Throws <see cref="InvalidOperationException"/> when no attempt passes.
     /// </summary>
-    public static (MapData Map, MapMeta Meta) GenerateWithMeta(MapGenParams p, BiomeParams biome)
+    public static (MapData Map, MapMeta Meta) GenerateWithMeta(MapGenParams p, BiomeParams biome) => GenerateWithMeta(p, biome, out _);
+
+    /// <summary>As above; <paramref name="attempts"/> is how many seeds were tried (1 = the first passed).</summary>
+    public static (MapData Map, MapMeta Meta) GenerateWithMeta(MapGenParams p, BiomeParams biome, out int attempts)
     {
         ArgumentNullException.ThrowIfNull(p);
         ArgumentNullException.ThrowIfNull(biome);
+        attempts = 1;
         if (p.Players < 2 || p.Players > 4) throw new ArgumentOutOfRangeException(nameof(p), "Players must be 2..4.");
+        if (p.Layout == ZonedLayout) return GenerateZoned(p, biome, out attempts);
         if (p.Layout != CurrentLayout) throw new InvalidOperationException(OldGeneratorMessage);   // D-180 D4: the old generator is gone
         int n = CellsFor(p.Size);
         string name = p.Name ?? DefaultName(p);
@@ -114,6 +125,57 @@ public static class MapGenerator
         }
         throw new InvalidOperationException(
             $"No valid {biome.Key} map for size {n}, {p.Players} players from seed {p.Seed} in {MaxAttempts} tries (last: {last}).");
+    }
+
+    /// <summary>Development view of layout 2: the first seed only, with no retry; <paramref name="failure"/> names what the checks reject (null = it would pass).</summary>
+    public static (MapData Map, MapMeta Meta) GenerateZonedRaw(MapGenParams p, out string? failure)
+    {
+        ArgumentNullException.ThrowIfNull(p);
+        BiomeParams biome = BiomeCatalog.For(p.Biome);
+        if (biome.Key != "rust_belt") throw new InvalidOperationException($"Layout 2 is not built yet for {biome.Key}; only rust_belt has the zone skeleton.");
+        int n = CellsFor(p.Size);
+        var builder = new ProceduralBuilder(biome, n, p.Players, p.Seed);
+        CellCoord[] orbit = builder.OrbitStarts;
+        MapData full = builder.Build(p.Name ?? DefaultName(p), orbit);
+        var meta = new MapMeta(biome.Key, MapSymmetry.MirrorDiag, orbit.Length, p with { Name = null }, builder.Features.ToArray());
+        failure = FirstFailure(full, meta) ?? LayoutChecks.FirstFailure(LayoutChecks.Evaluate(full, meta));
+        return (full, meta);
+    }
+
+    private static (MapData Map, MapMeta Meta) GenerateZoned(MapGenParams p, BiomeParams biome, out int attempts)
+    {
+        if (biome.Key != "rust_belt") throw new InvalidOperationException($"Layout 2 is not built yet for {biome.Key}; only rust_belt has the zone skeleton.");
+        int n = CellsFor(p.Size);
+        string name = p.Name ?? DefaultName(p);
+        string? last = null;
+        for (int attempt = 0; attempt < MaxZonedAttempts; attempt++)
+        {
+            ulong seed = p.Seed + (ulong)attempt;
+            var builder = new ProceduralBuilder(biome, n, p.Players, seed);
+            CellCoord[] orbit = builder.OrbitStarts;
+            MapData full = builder.Build(name, orbit);
+            var fullMeta = new MapMeta(biome.Key, MapSymmetry.MirrorDiag, orbit.Length, null, builder.Features.ToArray());
+            last = FirstFailure(full, fullMeta);
+            if (last is null)
+            {
+                string? bad = LayoutChecks.FirstFailure(LayoutChecks.Evaluate(full, fullMeta));
+                if (bad is not null) last = "layout checks: " + bad;
+            }
+            if (last is not null) continue;
+            CellCoord[] starts = orbit;
+            if (p.Players == 3)
+            {
+                int empty = (int)(p.Seed % 4UL);
+                starts = new CellCoord[3];
+                for (int k = 0; k < 3; k++) starts[k] = orbit[(empty + 1 + k) % 4];
+            }
+            var map = new MapData(name, full.Theater, n, n, full.Template.ToArray(), full.Land.ToArray(), full.HeightLevel.ToArray(),
+                full.Overlay.ToArray(), full.Density.ToArray(), starts);
+            var meta = new MapMeta(biome.Key, MapSymmetry.MirrorDiag, p.Players, p with { Name = null }, builder.Features.ToArray());
+            attempts = attempt + 1;
+            return (map, meta);
+        }
+        throw new InvalidOperationException($"No valid {biome.Key} layout-2 map for size {n}, {p.Players} players from seed {p.Seed} in {MaxZonedAttempts} tries (last: {last}).");
     }
 
     /// <summary>The first §1 check an attempt fails (validator errors and warnings, then exact path equality), or null.</summary>

@@ -65,6 +65,7 @@ internal sealed partial class ProceduralBuilder
 
     public MapData Build(string name, IReadOnlyList<CellCoord> starts)
     {
+        if (_zoned) return BuildZoned(name, starts);   // layout 2 (M12-07)
         Reserve();
         if (_b.OceanWidth > 0) Ocean();
         _ocean?.Paint();
