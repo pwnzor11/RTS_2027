@@ -91,6 +91,7 @@ public static class GameKeys
         new(GameAction.Group7, "group_7", Selection, "Control group 7 (Ctrl + key sets, Shift + key adds, twice centres)", Keys.D7),
         new(GameAction.Group8, "group_8", Selection, "Control group 8 (Ctrl + key sets, Shift + key adds, twice centres)", Keys.D8),
         new(GameAction.Group9, "group_9", Selection, "Control group 9 (Ctrl + key sets, Shift + key adds, twice centres)", Keys.D9),
+        new(GameAction.LastAlert, "last_alert", Camera, "Jump to the last alert (again: the one before)", Keys.End),
     };
 
     /// <summary>The Controls page lines, grouped in <see cref="Groups"/> order: rebindable actions and fixed inputs shown for reference.</summary>
@@ -130,7 +131,7 @@ public static class GameKeys
             F(Camera, "Middle-drag", "Drag the view"),
             F(Camera, "Mouse wheel", "Zoom"),
             F(Camera, "Minimap click or drag", "Move the view"),
-            A(GameAction.CentreBase), A(GameAction.Bookmark1), A(GameAction.Bookmark2), A(GameAction.Bookmark3), A(GameAction.Bookmark4),
+            A(GameAction.CentreBase), A(GameAction.LastAlert), A(GameAction.Bookmark1), A(GameAction.Bookmark2), A(GameAction.Bookmark3), A(GameAction.Bookmark4),
             F(Selection, "Left click", "Select a unit or structure"),
             F(Selection, "Left drag", "Select units in a box"),
             F(Selection, "Shift + click or drag", "Add to the selection (Shift + click on a selected unit removes it)"),

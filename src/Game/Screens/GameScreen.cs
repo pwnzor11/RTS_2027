@@ -455,6 +455,7 @@ public sealed class GameScreen : IScreen
         }
         // ---- end M11-05 ----
 
+        if (_sim is not null && !_spectatorMode) _alerts.Observe(_source.Previous, _source.Current, _sim.Sim.HudFor(SimSnapshotSource.LocalPlayer), SimSnapshotSource.LocalPlayer);   // M11-10d
         _camera.Clamp(_source.Current.MapWidth, _source.Current.MapHeight, MapViewport());
         Vector2 view = _camera.WorldFromScreen(new Point(MapViewport().Width / 2, MapViewport().Height / 2));   // M3-INT: positional audio
         Audio.AudioListener.SetFromWorldPixels(view.X, view.Y, Camera.CellPx);
@@ -512,6 +513,7 @@ public sealed class GameScreen : IScreen
         _chat.Draw(sb, _s.Pixel, _s.UiScale, new Point(8, _s.Viewport.Height - Hud.HeightOf(1, _s.UiScale) - 12), _s.Viewport.Width - 16);
         _sidebar?.Draw(sb, _s.Pixel, snapshot);
         if (_mission is not null && _sidebar is not null) _mission.Guidance.DrawMinimap(sb, _s.Pixel, _sidebar.Layout.Minimap, snapshot.MapWidth, snapshot.MapHeight);   // M11-05
+        if (_sidebar is not null) _alerts.DrawMinimapPings(sb, _s.Pixel, _sidebar.Layout.Minimap, snapshot.MapWidth, snapshot.MapHeight, snapshot.Tick);   // M11-10d
         DrawSuperweapon(sb, snapshot.Tick);
         DrawUpgradeButton(sb);
         DrawPackButton(sb);
@@ -1206,6 +1208,8 @@ public sealed class GameScreen : IScreen
         return n == 0 ? null : sum / n;
     }
 
+    private Rts.Game.Ui.Alerts.AlertController? _alertsBacking;   // M11-10d
+    private Rts.Game.Ui.Alerts.AlertController _alerts => _alertsBacking ??= new Rts.Game.Ui.Alerts.AlertController(u => u.Kind == UnitKind.Vehicle && _sim is not null && _sim.Rules.Vehicles[u.TypeIndex].HarvestCapacity > 0);
     private readonly Vector2?[] _bookmarks = new Vector2?[4];   // M11-02: camera bookmarks F5..F8 (Ctrl+key stores, key recalls)
 
     // Home centres on the player's base; Ctrl+F5..F8 store the view centre, F5..F8 recall it.
@@ -1213,6 +1217,7 @@ public sealed class GameScreen : IScreen
     {
         if (_sim is null) return;
         if (input.ConsumePressed(GameAction.CentreBase)) CentreCameraOnOwnBase();
+        if (input.ConsumePressed(GameAction.LastAlert) && _alerts.JumpTarget(_source.Current.Tick) is { } alertAt) CentreCameraOn(alertAt);   // M11-10d
         bool ctrl = input.IsDown(Keys.LeftControl) || input.IsDown(Keys.RightControl);
         GameAction[] keys = { GameAction.Bookmark1, GameAction.Bookmark2, GameAction.Bookmark3, GameAction.Bookmark4 };
         for (int i = 0; i < keys.Length; i++)
@@ -1319,5 +1324,11 @@ public sealed class GameScreen : IScreen
         Hud.Panel(sb, _s.Pixel, new Point(8, 8), hud, scale);
 
         if (_sim is not null) _mission?.Draw(sb, _s.Pixel, scale, hud.Count, _s.Viewport.Height - 8, snapshot.Tick);
+        if (_sim is not null && !_spectatorMode)   // M11-10d: alert stack, clear of the objective bar and the buttons
+        {
+            Rectangle mapView = _sidebar?.Layout.MapView ?? new Rectangle(0, 0, _s.Viewport.Width, _s.Viewport.Height);
+            Rectangle banner = _mission is null ? Rectangle.Empty : new Rectangle(_mission.ObjectivesRegion.Bounds.X, _mission.ObjectivesRegion.Bounds.Y, _mission.ObjectivesRegion.Bounds.Width, _mission.ObjectivesRegion.Bounds.Height + 48);
+            _alerts.DrawStack(sb, _s.Pixel, mapView, scale, snapshot.Tick, new[] { banner, _hudRegion.Bounds, _swRegion.Bounds, _upgradeRegion.Bounds, _packRegion.Bounds, _diveRegion.Bounds, _specRegion.Bounds });
+        }
     }
 }

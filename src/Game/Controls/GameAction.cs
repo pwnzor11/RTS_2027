@@ -105,4 +105,6 @@ public enum GameAction
     Group8,
     /// <summary>Control group 9: the key recalls it (twice quickly centres the view on it), Ctrl + key sets it, Shift + key adds the selection.</summary>
     Group9,
+    /// <summary>Camera: jump to the most recent alert with a place; press again to step back through the last few.</summary>
+    LastAlert,
 }
