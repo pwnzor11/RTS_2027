@@ -375,3 +375,27 @@ bridge. `map report` shows the lane and choke numbers.
 1. Does the minimap show class C props? (UI helper: suggest "dark dot".)
 2. Mission scripting: should triggers be able to remove a prop cell (for example "the barricade falls" in a story mission)? Cheap with the overlay layer; not scheduled.
 3. Resource floor per start (L8, Glass Coast): the balance helper should set the number the parity check uses.
+
+## Wave 3 as built (M12-07, M12-08)
+
+- `MapGenParams.Layout = 2` (`MapGenerator.ZonedLayout`) paints a zone skeleton first (mains, lanes, plazas), then the biome. Rust Belt only; other biomes
+  throw "Layout 2 is not built yet". `CurrentLayout` stays 1 and the legacy golden hashes are unchanged.
+- Symmetry: MirrorDiag (2 players, bases at opposite corners of the anti-diagonal, main-to-main path about the side length); a four-image
+  dihedral grid for 3-4 players (teams 1+2 and 3+4 side by side, enemy across). One river runs corner to corner between the bases with two decks
+  (one is the narrow choke) and a gravel-bar ford in the middle (the centre field). Town fabric: a jittered street grid whose blocks hold ruined
+  buildings, standing walls and rubble lots; walled courtyards at the contested yards; main fields are 3+ thick bands.
+- `LayoutChecks` (src/Data/MapGen) measures the D-183 rules; `map report --layout 2` prints each with pass/FAIL. Generation retries seed + attempt
+  (cap 40) and keeps the first map that passes everything, else the one failing fewest. 3-4 player checks differ slightly (approach width counted from 4,
+  contested fields 1..6 at 0.40-0.90 P, 3-player lane mix judged over both enemies, the played 3-start map is judged).
+- Sweep (50 seeds x S/M/L x 2/3/4 players): every map passes every check; retries per seed 0.2-1.3 (2p), 1.0-6.7 (3-4p, Small worst).
+- Zone names are not saved: map format 4 has no zone field (needs a format bump). Tools: `--layout 1|2`, `--raw`, `--checks`.
+- 2v2 teams: `SkirmishSettings.DefaultTeam` gives teams 1+2 vs 3+4 for 4 players on a layout-2 map (setup screen keeps the choice editable);
+  the screen has no layout switch yet, so this only applies to a preselected layout-2 map.
+
+### Wave 3 as built, v3 variety
+
+Layout 2 now varies per seed. `LayoutVariant` picks, from the seed, a half-turn (rot2) skeleton for 2 players on Medium and up (80 %), and a whole-map turn by one of the eight square symmetries (bases left/right, top/bottom or on either diagonal). Generation always runs in a canonical frame and the map is turned afterwards; `LayoutChecks` undoes the turn, so every D-183 rule is judged on the canonical frame. The rot2 skeleton has an S-shaped river with three bends between the bases, two decks and a gravel ford whose positions move with the bends. Street grid pitch (10..20), offset and block fill (ruins, yards, rubble lots) are drawn per seed. Retries use a mixed seed so neighbouring seeds never share a first try. Layout 1 is unchanged. Known limit: seeds that share an orientation still share the skeleton; seeds 1/2/3/9 and 4/5/7/12 of Medium 2p differ in base position, river bends, fields and grid, not in structure.
+
+### Wave 3 as built, v4 (soft shells, natural, all four biomes; M12-07, M12-09..11)
+Rust Belt 2-player mains are a soft shell on about 2 seeds in 3 (rubble pieces 6 to 14 cells long and 1 to 3 layers thick, 2 or 3 approaches, a third on a free side, yard walls and lots outside), a walled main with two gates or one ramp otherwise. 3 and 4 player mains keep the solid ring with three wide gates (a leaky shell shortens the enemy path below 0.8 of the side on Small). A natural expansion (a walled yard off the south lane) is on about half the 2-player Medium and Large seeds. Main fields are two bands, an L plus a band, or a crescent plus two bands.
+Other biomes use the same skeleton, with their own block fill (`ProceduralBuilder.Skin.cs`) and a post pass that keeps passability: Mountains has boulders and scree blocks, rock masses of 40 cells or more become cliff, and the natural sits on a plateau (height 1, cliff ring, ramp cells); Ash Plains has crater fields, ash ground and burnt groves (tree props that replace small rubble walls, never touching a field); Glass Coast has dune crests with rough flanks, lagoons, drowned buildings, and sea (rock masses that reach the map edge become water with a beach). Known limits: Ash Plains has the deck and ford crossings only (no third, broken causeway); Small 3 and 4 player maps use the Rust Belt block fill in every biome; plateaus exist only where a natural exists. CurrentLayout stays 1.

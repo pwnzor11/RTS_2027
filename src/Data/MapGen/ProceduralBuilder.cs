@@ -65,6 +65,7 @@ internal sealed partial class ProceduralBuilder
 
     public MapData Build(string name, IReadOnlyList<CellCoord> starts)
     {
+        if (_zoned) return BuildZoned(name, starts);   // layout 2 (M12-07)
         Reserve();
         if (_b.OceanWidth > 0) Ocean();
         _ocean?.Paint();
@@ -472,7 +473,7 @@ internal sealed partial class ProceduralBuilder
     /// footprint does not survive a quarter turn, so Rot4 / MirrorDiag maps use only the square depot.</summary>
     private void Ruins()
     {
-        bool squareOnly = _g.Symmetry is MapSymmetry.Rot4 or MapSymmetry.MirrorDiag;
+        bool squareOnly = _zoned || _g.Symmetry is MapSymmetry.Rot4 or MapSymmetry.MirrorDiag;   // layout 2 turns the finished map by quarter turns
         for (int r = 0; r < _b.Ruins; r++)
         {
             string type = !squareOnly && r % 2 == 0 ? "neu_ruin_tenement" : "neu_ruin_depot";
@@ -496,6 +497,7 @@ internal sealed partial class ProceduralBuilder
             {
                 int i = _g.Idx(x, y);
                 if (!_g.All(i, j => _g.Free(j) || _g.Land[j] == LandType.Road)) return false;
+                if (_zoned && !_g.All(i, j => _zone[j] != ZLane)) return false;   // layout 2 keeps its lanes clear
                 if (x >= x0 && y >= y0 && x < x0 + fw && y < y0 + fh) cells.Add(i);
             }
         // The footprint's images must not overlap each other (or touch: the 1-cell margin).
