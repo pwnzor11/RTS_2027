@@ -9,6 +9,7 @@ import os, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import lb_parts as LP
 
+SCALE = 1.25                  # D-185: figure 1.25 x, frame 48 x 48, team-colour emphasis
 ID = "lb_slinger"
 TITLE = "Left Behind Slinger"
 CANVAS, ORIGIN, STATES, DIE_FACING = LP.CANVAS, LP.ORIGIN, LP.STATES, LP.DIE_FACING
@@ -37,7 +38,7 @@ def weapon(S, GM, p, R):
     S.cyl(0.02, 0.1, (0, -0.02, 0.0), "rope", "Y", GM, verts=5)
 
 
-SPEC = dict(shoulder=(0.19, 0.02, 0.36), grips=((0, -0.03, 0.0), (0, 0.0, 0.0)), bulk=1.0,
+SPEC = dict(house_boost=True, panel=((0.18,0.03,0.14),(0.0,-0.305,0.12)), shoulder=(0.19, 0.02, 0.36), grips=((0, -0.03, 0.0), (0, 0.0, 0.0)), bulk=1.0,
             coat=("wrapE", "wrapE", "ashB", "hazard"), hem_z=-0.28, cape="wrapB", scarf="house",
             hood=("wrapB", 0.18, 0.10), extra=extra, pack=pack, weapon=weapon, sleeves=("wrapE", "wrapB", "rope"))
 
