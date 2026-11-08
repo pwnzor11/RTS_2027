@@ -244,7 +244,6 @@ public sealed class RecruitAi : IAiPlayer, IAiSnapshotable, IHookableAi
         _production.Start(_ctx!.Rng);
         if (!ReferenceEquals(_profile, _baseProfile)) _planner.SetProfile(_profile);   // M8-06: a tier forced before the first decision
         _military.Tactics = _tactics;
-        if (_tactics is LeftBehindTactics && _baseProfile.Tier == 3) { _military.ThresholdBonus = LeftBehindTactics.Tier3WaveBonus; _military.RerollNow(); }   // Q-65 (D-182)
         _tactics?.Start(_ctx);
         if (_tactics is LeftBehindTactics lb) lb.Attach(_squads);   // M6-10
         if (_tactics is ExpeditionTactics ex)   // M7-10

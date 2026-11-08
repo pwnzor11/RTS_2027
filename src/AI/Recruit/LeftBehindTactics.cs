@@ -86,11 +86,6 @@ internal sealed class LeftBehindTactics : IFactionTactics
     private enum Reloc : byte { Idle = 0, Moving = 1 }
 
     private readonly DifficultyProfile? _profile;
-
-    /// <summary>Q-65 (D-182): added to the wave trigger of the tier 3 profile only. The shared tier 3 profile (attack_threshold 8) let Left Behind build
-    /// armies of 200+ against 50-150 and win 78 % of decisive games against Authority 3 and 86 % against the Directorate; waves of about 4 units
-    /// leave it with the same roster but fewer, earlier fights.</summary>
-    public const int Tier3WaveBonus = -4;   // (tune) Q-65
     private Squads? _squads;
     private int _mapW, _mapH;
     private CellCoord _home;
