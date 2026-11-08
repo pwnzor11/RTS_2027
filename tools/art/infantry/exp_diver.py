@@ -9,6 +9,7 @@ import os, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import exp_parts as EP
 
+SCALE = 1.25                  # D-185: figure 1.25 x, frame 48 x 48, house shoulder pads / helmet band / tank stripes
 ID = "exp_diver"
 TITLE = "Expedition Combat Diver"
 CANVAS, ORIGIN, STATES, DIE_FACING = EP.CANVAS, EP.ORIGIN, EP.STATES, EP.DIE_FACING
@@ -20,7 +21,7 @@ pose = EP.make_pose(lean=12.0, stride=0.22, hold=((0.06, 0.16, 0.12), 20.0, 55.0
 def pack(S, U, R):
     for sx in (-1, 1):
         S.cyl(0.075, 0.46, (sx * 0.10, -0.26, 0.24), "chrome", "Z", U, verts=10)              # twin tanks
-        S.cyl(0.08, 0.04, (sx * 0.10, -0.26, 0.14), "house", "Z", U, verts=10)
+        S.cyl(0.082, 0.07, (sx * 0.10, -0.26, 0.14), "house", "Z", U, verts=10)
         S.cyl(0.05, 0.05, (sx * 0.10, -0.26, 0.49), "copper", "Z", U, verts=8)
     S.box((0.24, 0.05, 0.05), (0, -0.26, 0.46), "chrome3", U, bevel=0)                       # manifold
 
@@ -39,7 +40,7 @@ def weapon(S, GM, p, R):
 
 SPEC = dict(shoulder=(0.20, 0.0, 0.36), grips=((0, 0.0, 0.0), (0, 0.10, 0.0)), bulk=0.88,
             body=("navy3", "navy2"), sleeves=("navy3", "navy2", "chrome2"), legs=("navy2", 0.085, (0.085, 0.07)), boot="chrome3",
-            pack=pack, extra=extra, weapon=weapon)
+            pack=pack, extra=extra, weapon=weapon, house_boost=True)
 
 
 def build(S, p):
