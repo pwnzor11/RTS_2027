@@ -11,6 +11,7 @@ import common as C
 import auth_rifleman as AR
 import dir_conscript as DC
 
+SCALE = 1.25                  # D-185: figure 1.25 x, frame 48 x 48, house shoulder boards / back panel
 ID = "dir_ashthrower"
 TITLE = "Directorate Ashthrower"
 CANVAS, ORIGIN, STATES, DIE_FACING = AR.CANVAS, AR.ORIGIN, AR.STATES, AR.DIE_FACING
@@ -53,6 +54,8 @@ def build(S, p):
     # short house sash over the shoulders above the apron
     S.limb(up((-0.17, 0.02, 0.33)), up((-0.06, 0.19, 0.31)), 0.09, "house", d=0.04, bevel=0)
     S.limb(up((0.17, 0.02, 0.33)), up((0.06, 0.19, 0.31)), 0.09, "house", d=0.04, bevel=0)
+    for sx in (-1, 1):                                                                 # D-185 house shoulder boards
+        S.box((0.13, 0.17, 0.04), (sx * 0.19, 0.0, 0.395), "house", U, rot=(0, sx * -8, 0), bevel=0)
     # canister backpack: big bone-white tank, red radiation band, dark caps, twin small tanks, harness
     S.cyl(0.125, 0.52, (0, -0.30, 0.17), "bone", "Z", U, verts=10)
     S.cyl(0.132, 0.075, (0, -0.30, 0.19), "red", "Z", U, verts=10)
@@ -60,7 +63,7 @@ def build(S, p):
     S.cyl(0.128, 0.05, (0, -0.30, -0.09), "dark", "Z", U, verts=10)
     S.cyl(0.07, 0.38, (-0.17, -0.27, 0.10), "bone", "Z", U, verts=8)
     S.cyl(0.07, 0.38, (0.17, -0.27, 0.10), "bone", "Z", U, verts=8)
-    S.box((0.22, 0.03, 0.10), (0, -0.425, 0.30), "house", U, bevel=0)
+    S.box((0.25, 0.03, 0.20), (0, -0.425, 0.28), "house", U, bevel=0)
     S.limb(up((0.0, -0.18, 0.40)), up((0.0, 0.20, 0.42)), 0.04, "dark", d=0.03, bevel=0)   # harness strap over the shoulders
     # head: hood, bone plate, filter dot (as conscript)
     S.box((0.08, 0.09, 0.07), (0, 0.07, 0.44), "dark", U)

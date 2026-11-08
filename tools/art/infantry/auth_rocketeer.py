@@ -21,6 +21,7 @@ a ridge stripe over the helmet, a panel on the back of the pack (all material "h
 """
 import math
 
+SCALE = 1.25                  # D-185: figure 1.25 x, frame 48 x 48, house pads / helmet band / pack panel
 ID = "auth_rocketeer"
 TITLE = "Authority Rocketeer"
 CANVAS = (32, 32)
@@ -117,9 +118,11 @@ def build(S, p):
     S.box((0.12, 0.05, 0.13), (0.1, 0.14, 0.2), "rust", U)                           # chest pouches
     S.box((0.12, 0.05, 0.13), (-0.1, 0.14, 0.2), "rust", U)
     S.box((0.42, 0.28, 0.06), (0, -0.02, 0.43), "cloth", U, bevel=0.03)             # ash mantle over the shoulders
+    for sx in (-1, 1):                                                                  # D-185 house shoulder pads
+        S.box((0.09, 0.22, 0.12), (sx * 0.255, 0.0, 0.43), "house", U, bevel=0)
         # ---------------- backpack: bedroll, filter canister, house panel on the back
     S.box((0.30, 0.17, 0.36), (0, -0.26, 0.24), "pack", U, bevel=0.02)
-    S.box((0.24, 0.025, 0.20), (0, -0.355, 0.27), "house", U, bevel=0)
+    S.box((0.26, 0.03, 0.24), (0, -0.355, 0.27), "house", U, bevel=0)
     S.box((0.28, 0.12, 0.17), (0, -0.37, 0.06), "hull2", U, bevel=0.02)                 # rocket satchel
     S.box((0.29, 0.13, 0.03), (0, -0.37, 0.12), "rust", U)
     for sx in (-0.07, 0.07):                                                              # two rocket noses sticking up
@@ -130,6 +133,7 @@ def build(S, p):
     # ---------------- head: helmet + ridge stripe, visor, goggles, respirator
     hc = (0, 0.0, 0.54)
     S.box((0.10, 0.10, 0.07), (0, 0, 0.46), "dark", U)                               # neck
+    S.box((0.20, 0.07, 0.05), (0, 0.0, 0.625), "house", U, bevel=0)                       # D-185 house band over the helmet crown
     S.sphere((0.17, 0.18, 0.14), (0, 0, 0.56), "helm", U)                                     # helmet
     S.sphere((0.055, 0.19, 0.152), (0, 0, 0.56), "house", U)                                   # ridge stripe over the crown
     S.box((0.19, 0.12, 0.12), (0, 0.075, 0.47), "skin", U, bevel=0.03)               # sealed face hood
