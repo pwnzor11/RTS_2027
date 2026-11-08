@@ -33,6 +33,8 @@ def build(S0, state, k, n):
         box(f"stripe{s}", (0.05, 2.5, 0.13), (s * 0.79, 0, 0.66), "house", 0.0)
         box(f"sill{s}", (0.06, 2.6, 0.05), (s * 0.79, 0, 0.84), "copper", 0.0)
         E.lamp(S, f"L{s}", s * 0.45, 1.93, 0.68, 0.09)
+    for s in (-1, 1):                                                                        # S16 team colour: top stripes
+        box(f"topstripe{s}", (0.12, 1.7, 0.04), (s * 0.58, -0.1, 1.1), "house", 0.0)
     box("deckw", (1.1, 1.0, 0.04), (0, -0.7, 1.1), "white", 0.01)           # chart table deck
     box("deckst", (1.1, 0.06, 0.045), (0, -0.2, 1.1), "orange", 0.0)
     E.digits(S, "hn", "04", 0, 0.75, 1.1, 0.065, "white")
