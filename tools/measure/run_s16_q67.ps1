@@ -55,11 +55,8 @@ $rows = @(
     (Row 'directorate' 5 'directorate' 3 '5 / 9 / 18'),
     (Row 'directorate' 5 'authority'   5 '11 / 13 / 8'),
     (Row 'authority'   5 'authority'   1 '20 / 9 / 3'),
-    (Row 'directorate' 3 'directorate' 1 ''),
-    (Row 'directorate' 5 'directorate' 3 '')
+    (Row 'directorate' 3 'directorate' 1 '')
 )
-# the last row repeats 5 v 3 only in the ladder list above; drop the duplicate
-$rows = @($rows | Sort-Object { "{0}{1}{2}{3}" -f $_.FA, $_.TA, $_.FB, $_.TB } -Unique)
 
 $dataRow = '^\|\s*(\d+)\s*\|\s*(\d+)\s*\|\s*(\d+)\s*\|\s*(\d+)\s*\|\s*(\d+)\s*\|'
 $queue = New-Object System.Collections.Queue
