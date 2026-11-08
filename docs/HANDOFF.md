@@ -7,7 +7,7 @@ placement ghost, tooltips, production hold, UI scale + text size); the owner pla
 is next, revised by the OpenRA map study (D-183, docs/design/17_oramap_study.md). **Art:** look C terrain, damage tiers / remains / dust / mood tint,
 all 18 infantry re-rendered, imported FX and props (credits and licence texts in the repo), Warzone .pie importer. **AI:** siege mode (Q-64, D-174),
 Directorate tier 4-5 economy fix, Left Behind tier-3 cap (D-190). Decisions up to D-190; open question Q-67.
-Full suite at the last run: 3 662 tests (Game 1 470, AI 209/213 after the Left Behind merge, Scripting 295, Llm 119, Tools 4, Sim 1 565).
+Full suite: 3 666 tests (Game 1 470, AI 213, Scripting 295, Sim 1 565 on the final integ-s15; Llm 119 and Tools 4 unchanged since their last green run).
 
 ## Start here (shown to the user as the plan; nothing starts until they say go)
 1. Q-67: Directorate tiers 1-3 early game (AI only, measured). Read docs/balance/s15_lbknob.md, s15_q65.md, s15_siege.md first. Target: Left Behind 3
