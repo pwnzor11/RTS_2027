@@ -1,5 +1,5 @@
 # Design 18 · Art guidance from OpenSAGE
-Package s15-art (session 15). **Analysis only: no art, data or code changed.** The owner asked: "clone OpenSAGE and use it as inspiration and
+Package s15-art (session 15). **Analysis only: no art, data or code changed** (sections 0 to 6; the s15-fxlook pilot of D-184 later built the renderer items 1, 2, 3, 5, 9 of section 5 as view-only code, and section 7 is the sun rule). The owner asked: "clone OpenSAGE and use it as inspiration and
 guidance on the artwork we have for the game so far." This document compares how that project presents art with what RTS_2027 shows today and
 turns the difference into a plan for M10, with a pilot step for every item (owner's rule: pilot one sample, owner approves, then fan out).
 
@@ -189,3 +189,14 @@ to the sun.
 ## 6 · References and credit
 OpenSAGE (https://github.com/OpenSAGE/OpenSAGE) is consulted as a read-only reference under D-050; no file from it is in this repository. The
 repository's own sources named in section 1 are the only source for the "ours now" columns.
+
+## 7 · The sun rule (D-184, binding for every future render)
+**One sun, upper left, about 40 degrees above the horizon.** Light comes from the north-west (screen upper left) and shadows fall to the south-east
+(screen lower right). Shadows are **hard and dithered** (a 1-bit checker pattern at 50 % alpha under the body, in the fixed shadow colour; air units
+keep their separate shadow sheet); no soft or partial-alpha shadows, no second light, no per-sprite sun. Concretely, for anything new:
+- **Blender renders** (units, buildings, effects, wrecks): the same sun vector as the approved tank and structure scenes in `tools/art`; check a new sprite beside an
+  old one before approving. Lit faces are the top and the left; the right and front faces are the shaded ones; the highlight edge is upper left.
+- **Code-drawn art** (props, decals, remains, dust, rim highlights, the cliff lip and drop shadow): lit from the upper left too, shadow ellipse offset to the
+  lower right, ground ellipses squashed to the camera elevation (width x sin 40 degrees = 0.643).
+- **Not covered**: act-break stills and other cinematic images may use their own light; they are not game sprites.
+- **Changing the sun** (direction or elevation) would mean re-rendering every sheet; it needs a new owner decision, not a helper's judgment.

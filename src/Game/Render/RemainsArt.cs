@@ -173,8 +173,7 @@ public static class RemainsArt
         {
             uint g = H(seed, i, 6);
             int px = 22 + (int)(g % 40u), py = 24 + (int)((g >> 8) % 20u);
-            if ((g & 0x10000) != 0) c.Ellipse(px, py, 2 + (int)((g >> 12) % 4u), 1 + (int)((g >> 14) % 2u), char1, 150);
-            else c.Ellipse(px, py, 2, 1, rust, 170);
+            c.Ellipse(px, py, 3 + (int)((g >> 12) % 4u), 1 + (int)((g >> 14) % 2u), (g & 0x10000) != 0 ? char1 : Sink(rust, 700), 150);
         }
 
         return (seed & 2) != 0 ? Mirror(c) : c;
