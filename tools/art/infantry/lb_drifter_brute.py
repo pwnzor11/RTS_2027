@@ -10,6 +10,7 @@ import os, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import lb_parts as LP
 
+SCALE = 1.25                  # D-185: figure 1.25 x, frame 48 x 48, team-colour emphasis
 ID = "lb_drifter_brute"
 TITLE = "Left Behind Drifter Brute"
 CANVAS, ORIGIN, STATES, DIE_FACING = LP.CANVAS, LP.ORIGIN, LP.STATES, LP.DIE_FACING
@@ -41,7 +42,7 @@ def weapon(S, GM, p, R):
         S.sphere((0.11, 0.11, 0.11), (0, 0.78, 0), "flash", GM, seg=8)
 
 
-SPEC = dict(shoulder=(0.27, 0.02, 0.37), grips=((0, -0.04, 0.0), (0, 0.16, 0.0)), bulk=1.3, tin_len=0.13,
+SPEC = dict(house_boost=True, panel=((0.22,0.03,0.16),(0.0,-0.375,0.22)), shoulder=(0.27, 0.02, 0.37), grips=((0, -0.04, 0.0), (0, 0.16, 0.0)), bulk=1.3, tin_len=0.13,
             coat=("wrapE", "wrapC", "ashB", "hazard"), hem_z=-0.12, cape="wrapB", scarf="house",
             hood=("wrapB", 0.10, 0.06), extra=extra, pack=pack, weapon=weapon, sleeves=("wrapC", "wrapE", "rope"),
             legs=("pants", 0.12, (0.125, 0.105)))

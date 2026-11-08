@@ -9,6 +9,7 @@ import os, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import lb_parts as LP
 
+SCALE = 1.25                  # D-185: figure 1.25 x, frame 48 x 48, team-colour emphasis
 ID = "lb_tinker"
 TITLE = "Left Behind Tinker"
 CANVAS, ORIGIN, STATES, DIE_FACING = LP.CANVAS, LP.ORIGIN, LP.STATES, LP.DIE_FACING
@@ -39,7 +40,7 @@ def weapon(S, GM, p, R):
     S.cyl(0.035, 0.1, (0, -0.10, 0), "rope", "Y", GM, verts=6)                     # grip tape
 
 
-SPEC = dict(shoulder=(0.17, 0.02, 0.36), grips=((0, -0.04, 0.0), (0, 0.10, 0.0)), bulk=1.0,
+SPEC = dict(house_boost=True, panel=((0.20,0.03,0.07),(0.0,-0.355,0.33)), shoulder=(0.17, 0.02, 0.36), grips=((0, -0.04, 0.0), (0, 0.10, 0.0)), bulk=1.0,
             coat=("wrapF", "wrapD", "ashB", "rust"), hem_z=-0.14, cape="wrapD", scarf="house",
             hood=("wrapF", 0.12, 0.06), extra=extra, pack=pack, weapon=weapon, sleeves=("wrapD", "wrapF", "rope"))
 

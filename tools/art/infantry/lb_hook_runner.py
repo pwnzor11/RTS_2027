@@ -9,6 +9,7 @@ import os, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import lb_parts as LP
 
+SCALE = 1.25                  # D-185: figure 1.25 x, frame 48 x 48, team-colour emphasis
 ID = "lb_hook_runner"
 TITLE = "Left Behind Hook Runner"
 CANVAS, ORIGIN, STATES, DIE_FACING = LP.CANVAS, LP.ORIGIN, LP.STATES, LP.DIE_FACING
@@ -34,7 +35,7 @@ def weapon(S, GM, p, R):
     S.box((0.22, 0.04, 0.03), (0, 0.58, -0.12), "steel", GM)
 
 
-SPEC = dict(shoulder=(0.15, 0.02, 0.36), grips=((0, -0.04, 0.0), (0, 0.02, 0.0)), bulk=0.85,
+SPEC = dict(house_boost=True, panel=((0.16,0.03,0.16),(0.0,-0.32,0.20)), shoulder=(0.15, 0.02, 0.36), grips=((0, -0.04, 0.0), (0, 0.02, 0.0)), bulk=0.85,
             coat=("wrapD", "wrapB", "ashB", "wrapA"), hem_z=-0.02, cape=None, scarf="house",
             hood=("wrapA", 0.26, 0.12), pack=pack, weapon=weapon, sleeves=("wrapD", "wrapB", "rope"),
             legs=("pants", 0.09, (0.085, 0.075)))

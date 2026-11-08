@@ -8,6 +8,7 @@ import os, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import exp_parts as EP
 
+SCALE = 1.25                  # D-185: figure 1.25 x, frame 48 x 48, team-colour emphasis
 ID = "exp_pathfinder"
 TITLE = "Expedition Pathfinder"
 CANVAS, ORIGIN, STATES, DIE_FACING = EP.CANVAS, EP.ORIGIN, EP.STATES, EP.DIE_FACING
@@ -20,6 +21,7 @@ def pack(S, U, R):
     S.box((0.26, 0.14, 0.32), (0, -0.24, 0.22), "navy3", U, bevel=0.02)
     S.box((0.20, 0.10, 0.22), (0.0, -0.33, 0.30), "chrome3", U, bevel=0.01)                  # radio set
     S.box((0.16, 0.03, 0.06), (0.0, -0.385, 0.34), "orange2", U, bevel=0)
+    S.box((0.22, 0.03, 0.12), (0, -0.325, 0.10), "house", U, bevel=0)                         # D-185 house panel on the pack frame
     S.cyl(0.03, 0.80, (0.12, -0.30, 0.70), "chrome2", "Z", U, verts=6)                       # tall whip
     S.box((0.03, 0.14, 0.09), (0.12, -0.37, 1.04), "orange", U, bevel=0)                    # pennant tip
 
@@ -43,7 +45,7 @@ def weapon(S, GM, p, R):
         S.sphere((0.09, 0.09, 0.09), (0, 0.88, 0.005), "flash", GM, seg=8)
 
 
-SPEC = dict(shoulder=(0.22, 0.0, 0.37), grips=((0, -0.10, -0.075), (0, 0.20, -0.05)), bulk=0.9,
+SPEC = dict(house_boost=True, shoulder=(0.22, 0.0, 0.37), grips=((0, -0.10, -0.075), (0, 0.20, -0.05)), bulk=0.9,
             body=("navy2", "navy3"), pack=pack, extra=extra, weapon=weapon)
 
 
