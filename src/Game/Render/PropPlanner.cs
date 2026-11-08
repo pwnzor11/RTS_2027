@@ -45,6 +45,36 @@ public static class PropPlanner
     }
 
     /// <summary>
+    /// The blocking props of a map (M12-04: overlay kinds Tree to Snag), as sprites sorted by (row, column). The overlay's density byte is the
+    /// variant; the sprite stands on the cell centre with no offset, so what a unit cannot enter is exactly what is drawn there. They are not
+    /// decoration: they are drawn even with decor off, in the y-sorted pass with units and buildings.
+    /// </summary>
+    public static PropInstance[] PlanBlocking(MapData map)
+    {
+        ArgumentNullException.ThrowIfNull(map);
+        var list = new List<PropInstance>();
+        int w = map.Width;
+        for (int k = 0; k < map.Overlay.Count; k++)
+        {
+            if (!OverlayKinds.IsProp(map.Overlay[k])) continue;
+            list.Add(new PropInstance(KindOf(map.Overlay[k]), (byte)(map.Density[k] % 3), (short)(k % w), (short)(k / w), 0, 0));
+        }
+
+        return list.ToArray();   // already in (row, column) order: the scan is row-major
+    }
+
+    /// <summary>The sprite kind that draws a blocking overlay kind.</summary>
+    public static PropKind KindOf(OverlayKind overlay) => overlay switch
+    {
+        OverlayKind.Tree => PropKind.DeadTree,
+        OverlayKind.Wreck => PropKind.WreckHulk,
+        OverlayKind.Block => PropKind.ConcreteBlock,
+        OverlayKind.Pylon => PropKind.BrokenPylon,
+        OverlayKind.Snag => PropKind.Snag,
+        _ => throw new ArgumentOutOfRangeException(nameof(overlay)),
+    };
+
+    /// <summary>
     /// Index of the first prop whose row is at least <paramref name="minRow"/> in a plan from <see cref="Plan"/> (props are sorted by row), so a
     /// renderer walks only the rows on screen.
     /// </summary>

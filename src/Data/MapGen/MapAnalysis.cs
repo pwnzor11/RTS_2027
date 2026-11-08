@@ -69,14 +69,15 @@ public static class MapAnalysis
 
     /// <summary>4-way BFS path lengths from <paramref name="from"/> for <paramref name="loco"/>; <see cref="Unreachable"/> elsewhere.
     /// <paramref name="blocked"/> cells (features) are impassable.</summary>
-    public static int[] Distances(MapData map, CellCoord from, Locomotion loco, TerrainTable? table, bool[]? blocked = null)
+    public static int[] Distances(MapData map, CellCoord from, Locomotion loco, TerrainTable? table, bool[]? blocked = null, bool propsBlock = true)
     {
         ArgumentNullException.ThrowIfNull(map);
-        return Distances(map, new[] { map.IndexOf(from) }, loco, table, blocked);
+        return Distances(map, new[] { map.IndexOf(from) }, loco, table, blocked, propsBlock);
     }
 
-    /// <summary>Multi-source 4-way BFS (distance 0 at every source).</summary>
-    public static int[] Distances(MapData map, IReadOnlyList<int> sources, Locomotion loco, TerrainTable? table, bool[]? blocked = null)
+    /// <summary>Multi-source 4-way BFS (distance 0 at every source). Blocking props (and walls) stop every ground locomotion unless
+    /// <paramref name="propsBlock"/> is false (M12-04: the validator asks both ways to tell a prop-made break from a terrain one).</summary>
+    public static int[] Distances(MapData map, IReadOnlyList<int> sources, Locomotion loco, TerrainTable? table, bool[]? blocked = null, bool propsBlock = true)
     {
         ArgumentNullException.ThrowIfNull(map);
         ArgumentNullException.ThrowIfNull(sources);
@@ -100,6 +101,7 @@ public static class MapAnalysis
                 if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
                 int j = ny * w + nx;
                 if (dist[j] != Unreachable || (blocked is not null && blocked[j]) || !Passable(map.Land[j], loco, table)) continue;
+                if (propsBlock && loco != Locomotion.Air && OverlayKinds.BlocksGround(map.Overlay[j])) continue;   // M12-04
                 dist[j] = nd; queue[tail++] = j;
             }
         }

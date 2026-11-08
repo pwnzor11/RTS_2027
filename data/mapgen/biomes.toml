@@ -18,6 +18,17 @@
 #   ocean_width             ocean band on all four edges at Medium (scaled with size), 0 = none   # ASSUMED (M4-02)
 #   extra_fields            small Ashfall fields scattered away from the starts                    # ASSUMED (M4-02)
 #   ruins                   neutral neu_ruin_* features (Q-M4-b)
+#
+# [biome.<key>.decor] (M12-05, design 16 s2.5; defaults from the community-map study, design 17): the blocking-prop pass. Props block
+# ground units like walls, never sight or shots. Weights are per mille (1000 = neutral).
+#   prop_permille           prop cells as a share of all cells (study: 2.0 per 100 = 20, range 4 to 36)
+#   cluster_min/_max        cells per grove, wreck field or barrier line; single_permille = share of lone props
+#   gap_permille            chance per cluster cell of a hole, so infantry can weave through
+#   cliff_/map_edge_/water_/road_permille   where cluster seeds are drawn: beside cliffs and rock (1.6x), near the map edge (2x), beside
+#                           water (1.7x), near roads (0.35x)
+#   yard_min/_max           prop cells around each neutral ruin ("yard"), with yard_kinds
+#   dead_target_permille    the fill pass adds clusters until fewer cells than this have nothing within 4 cells (study: 1 to 3 %)
+#   kinds / yard_kinds      "tree" | "wreck" | "block" | "pylon" | "snag", optionally ":weight"
 
 [biome.rust_belt]
 theater = "rustbelt"
@@ -44,6 +55,23 @@ field_density_min = 3
 field_density_max = 12
 ruins = 2
 
+
+[biome.rust_belt.decor]
+prop_permille = 20
+cluster_min = 3
+cluster_max = 9
+single_permille = 120
+gap_permille = 150
+cliff_permille = 1600
+map_edge_permille = 2000
+water_permille = 1700
+road_permille = 350
+yard_min = 4
+yard_max = 8
+dead_target_permille = 30
+kinds = ["tree:3", "wreck:3", "block:3", "pylon:1"]
+yard_kinds = ["wreck:3", "block:3", "pylon:1"]
+
 [biome.glass_coast]
 theater = "glasscoast"
 base_land = "clear"
@@ -68,6 +96,23 @@ extra_fields = 0
 field_density_min = 3
 field_density_max = 10
 ruins = 0
+
+
+[biome.glass_coast.decor]
+prop_permille = 18
+cluster_min = 3
+cluster_max = 8
+single_permille = 150
+gap_permille = 150
+cliff_permille = 1600
+map_edge_permille = 1000
+water_permille = 1700
+road_permille = 350
+yard_min = 4
+yard_max = 8
+dead_target_permille = 30
+kinds = ["snag:3", "wreck:2", "block:2", "pylon:1"]
+yard_kinds = ["wreck:3", "block:3", "pylon:1"]
 
 [biome.mountains]
 theater = "mountains"
@@ -94,6 +139,23 @@ field_density_min = 3
 field_density_max = 12
 ruins = 0
 
+
+[biome.mountains.decor]
+prop_permille = 22
+cluster_min = 3
+cluster_max = 10
+single_permille = 120
+gap_permille = 150
+cliff_permille = 1600
+map_edge_permille = 2000
+water_permille = 1700
+road_permille = 350
+yard_min = 4
+yard_max = 8
+dead_target_permille = 30
+kinds = ["tree:4", "snag:2", "wreck:1", "block:2"]
+yard_kinds = ["wreck:3", "block:2"]
+
 [biome.ash_plains]
 theater = "ashplains"
 base_land = "ash"
@@ -118,3 +180,20 @@ extra_fields = 4
 field_density_min = 5
 field_density_max = 12
 ruins = 1
+
+
+[biome.ash_plains.decor]
+prop_permille = 20
+cluster_min = 3
+cluster_max = 10
+single_permille = 100
+gap_permille = 150
+cliff_permille = 1600
+map_edge_permille = 2000
+water_permille = 1700
+road_permille = 350
+yard_min = 4
+yard_max = 8
+dead_target_permille = 30
+kinds = ["tree:4", "wreck:3", "pylon:1", "block:1"]
+yard_kinds = ["wreck:3", "block:2", "pylon:1"]

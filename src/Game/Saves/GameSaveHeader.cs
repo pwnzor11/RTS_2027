@@ -13,8 +13,8 @@ namespace Rts.Game.Saves;
 /// </summary>
 public sealed record GameSaveHeader
 {
-    /// <summary>The header version this build writes and reads. Bump it when the layout changes. Version 1 (two-player skirmish settings) is still read; M4-11 wrote version 2 (map choice, 2 to 4 slots); M3-21 wrote version 3 (appends each AI's saved memory after its slot record; versions 1 and 2 load with the AI starting fresh); M5-09 wrote version 4 (appends one commander byte, 0 or 1, per skirmish slot at the end; versions 1 to 3 load with no commander); M7-14 wrote version 5 (appends one ocean-edge flags byte after the commander bytes when the skirmish map is generated; versions 1 to 4 load with no ocean).</summary>
-    public const int CurrentVersion = 5;
+    /// <summary>The header version this build writes and reads. Bump it when the layout changes. Version 1 (two-player skirmish settings) is still read; M4-11 wrote version 2 (map choice, 2 to 4 slots); M3-21 wrote version 3 (appends each AI's saved memory after its slot record; versions 1 and 2 load with the AI starting fresh); M5-09 wrote version 4 (appends one commander byte, 0 or 1, per skirmish slot at the end; versions 1 to 3 load with no commander); M7-14 wrote version 5 (appends one ocean-edge flags byte after the commander bytes when the skirmish map is generated; versions 1 to 4 load with no ocean); M12-05 wrote version 6 (appends one generator-layout byte after the ocean-edge byte when the skirmish map is generated; versions 1 to 5 load as layout 0, the pre-M12 generator, which this build cannot rebuild, so <see cref="GameLoader"/> refuses them with a friendly message).</summary>
+    public const int CurrentVersion = 6;
 
     private const int MaxAiStateBytes = 1 << 22;
 
@@ -122,6 +122,7 @@ public sealed record GameSaveHeader
         if (Version >= 4 && Skirmish is { } sk)
             foreach (SkirmishSlot slot in sk.Slots) w.Write((byte)(slot.Commander ? 1 : 0));
         if (Version >= 5 && Skirmish?.Map.Generated is { } gen) w.Write((byte)gen.OceanEdges);   // M7-14
+        if (Version >= 6 && Skirmish?.Map.Generated is { } gen6) w.Write((byte)gen6.Layout);   // M12-05
     }
 
     /// <summary>Reads a header body written by <see cref="Write"/> for header <paramref name="version"/>.</summary>
@@ -191,6 +192,11 @@ public sealed record GameSaveHeader
             if (edges > 15) throw new InvalidDataException($"bad ocean edge flags {edges}");
             skirmish = new SkirmishSettings(new MapChoice(null, generated with { OceanEdges = (OceanEdges)edges }), skirmish.Slots, skirmish.SimSeed);
         }
+        if (version >= 6 && skirmish?.Map.Generated is { } layered)   // M12-05: the generator version; older saves keep 0
+        {
+            byte layout = r.ReadByte();
+            skirmish = new SkirmishSettings(new MapChoice(null, layered with { Layout = layout }), skirmish.Slots, skirmish.SimSeed);
+        }
         return new GameSaveHeader
         {
             Version = version, Mode = mode, MapId = mapId, MapName = mapName, RulesHash = rulesHash, LocalPlayer = local, Tick = tick,
@@ -241,7 +247,7 @@ public sealed record GameSaveHeader
             int players = r.ReadInt32();
             ulong seed = r.ReadUInt64();
             string? name = r.ReadBoolean() ? r.ReadString() : null;
-            map = new MapChoice(null, new MapGenParams(biome, size, players, seed, name));
+            map = new MapChoice(null, new MapGenParams(biome, size, players, seed, name, OceanEdges.None, 0));   // layout 0 until the version-6 byte says otherwise (M12-05)
         }
         else throw new InvalidDataException($"unknown skirmish map kind {mapKind}");
         ulong simSeed = r.ReadUInt64();

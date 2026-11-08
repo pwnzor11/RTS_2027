@@ -121,6 +121,7 @@ public sealed partial class Simulation
     private bool SurfaceCellOk(CellCoord c, EntityId self, byte owner) =>
         DiveCellOk(c) && !IsHardenedAgainst(owner, c)   // integration (M3-04): only an unfriendly team's grouting blocks
         && !IsFoamed(c)                   // M4-05: Quick-Set Foam blocks surfacing and Bore break-through (hatch sites use this too)
+        && !OverlayKinds.IsProp(_map.OverlayAt(c))   // M12-04 (design 16 s2.4): a blocking prop closes the surfacing point (it does not count as a structure for the ring)
         && _map.IsPassableTerrain(c, Locomotion.Burrow, Setup.Rules.Terrain)
         && SurfaceAreaFree(c, self);
 

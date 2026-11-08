@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
 using Rts.Data;
+using Rts.Data.MapGen;
 using Rts.Sim.Core;
 using Rts.Sim.Map;
 using Rts.Sim.Rules;
@@ -10,7 +11,9 @@ namespace Rts.Sim.Tests.Map;
 /// <summary>M7-13: the opt-in ocean edge of the map generator, its convoy and landing markers, and the naval map validator checks.</summary>
 public sealed class MapGenOceanTests
 {
-    /// <summary>Hashes captured on integ-s10 6d816c0, before the ocean option existed.</summary>
+    /// <summary>Hashes captured on integ-s10 6d816c0, before the ocean option existed. M12-05 added the blocking-prop pass to every generated map
+    /// (D-180: the generator is replaced), so the check now runs with the prop budget set to zero: the land, resources and ruins underneath are
+    /// still byte-identical to the pre-M7 generator, and a map without props draws no random number the old generator did not.</summary>
     [Theory]
     [InlineData(Biome.RustBelt, MapSize.Small, 3, 1UL, 0x5eb1722317252615UL)]
     [InlineData(Biome.RustBelt, MapSize.Small, 4, 77UL, 0xdef26d1bb6ce5602UL)]
@@ -38,12 +41,16 @@ public sealed class MapGenOceanTests
     [InlineData(Biome.AshPlains, MapSize.Large, 4, 77UL, 0x23da721aaf48c285UL)]
     public void OptionOff_MapsAreByteIdenticalToPreM7(Biome biome, MapSize size, int players, ulong seed, ulong expected)
     {
-        var (map, meta) = MapGenerator.GenerateWithMeta(new MapGenParams(biome, size, players, seed));
+        string text = File.ReadAllText(BiomeCatalog.FindFile(AppContext.BaseDirectory)!).Replace("\r\n", "\n");
+        BiomeParams bare = BiomeCatalog.Parse(System.Text.RegularExpressions.Regex.Replace(text, @"prop_permille = \d+", "prop_permille = 0"), "b.toml")[(int)biome];
+        var p = new MapGenParams(biome, size, players, seed);
+        var (map, meta) = MapGenerator.GenerateWithMeta(p, bare);
         Assert.Equal(expected, MapHasher.Compute(map));
         Assert.Empty(meta.ConvoyEdge);
         Assert.Empty(meta.Landing);
         Assert.DoesNotContain(map.Land, l => l == LandType.Coast);
-        Assert.Equal(expected, MapHasher.Compute(MapGenerator.Generate(new MapGenParams(biome, size, players, seed, null, OceanEdges.None))));
+        Assert.DoesNotContain(map.Overlay, OverlayKinds.IsProp);
+        Assert.Equal(expected, MapHasher.Compute(MapGenerator.Generate(new MapGenParams(biome, size, players, seed, null, OceanEdges.None), bare)));
     }
 
     [Theory]

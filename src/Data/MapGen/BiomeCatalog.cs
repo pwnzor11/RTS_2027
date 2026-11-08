@@ -20,8 +20,16 @@ public static class BiomeCatalog
     [
         "theater", "base_land", "symmetry_2p", "symmetry_4p", "water_permille", "shallow_permille", "rock_permille", "rough_permille",
         "rock_style", "cliff_plateaus", "rivers", "river_width", "river_wander_permille", "ford_spacing", "road_grid", "ocean_width",
-        "ash_fields_per_start", "pitch_fields_per_start", "contested_fields", "extra_fields", "field_density_min", "field_density_max", "ruins",
+        "ash_fields_per_start", "pitch_fields_per_start", "contested_fields", "extra_fields", "field_density_min", "field_density_max", "ruins", "decor",
     ];
+
+    private static readonly string[] DecorKeys =
+    [
+        "prop_permille", "cluster_min", "cluster_max", "single_permille", "gap_permille", "cliff_permille", "map_edge_permille", "water_permille",
+        "road_permille", "yard_min", "yard_max", "dead_target_permille", "kinds", "yard_kinds",
+    ];
+
+    private static readonly string[] PropNames = ["tree", "wreck", "block", "pylon", "snag"];
 
     private static readonly string[] RockStyles = ["rubble", "dunes", "spurs", "blobs"];
 
@@ -93,6 +101,58 @@ public static class BiomeCatalog
         return result.Select(r => r!).ToArray();
     }
 
+    private static DecorParams ParseDecor(TomlTable biome, string prefix, string file, List<RulesProblem> problems)
+    {
+        if (!biome.TryGetValue("decor", out object? dv) || dv is not TomlTable t)
+        {
+            problems.Add(new RulesProblem(file, prefix + "decor", "missing [biome.<key>.decor] table"));
+            return DecorParams.None;
+        }
+        string pre = prefix + "decor.";
+        foreach (var kv in t)
+            if (Array.IndexOf(DecorKeys, kv.Key) < 0) problems.Add(new RulesProblem(file, pre + kv.Key, "unknown key"));
+        int Int(string k, int min, int max)
+        {
+            if (t.TryGetValue(k, out object? v) && v is long l)
+            {
+                if (l >= min && l <= max) return (int)l;
+                problems.Add(new RulesProblem(file, pre + k, $"must be {min}..{max}, got {l.ToString(CultureInfo.InvariantCulture)}"));
+                return min;
+            }
+            problems.Add(new RulesProblem(file, pre + k, "missing or not an integer"));
+            return min;
+        }
+        List<PropWeight> Kinds(string k)
+        {
+            var list = new List<PropWeight>();
+            if (!t.TryGetValue(k, out object? v) || v is not TomlArray arr || arr.Count == 0)
+            {
+                problems.Add(new RulesProblem(file, pre + k, "missing or empty list of \"kind:weight\" strings"));
+                return list;
+            }
+            foreach (object? item in arr)
+            {
+                string text = item as string ?? "";
+                string[] parts = text.Split(':');
+                int idx = Array.IndexOf(PropNames, parts[0]);
+                if (idx < 0 || parts.Length > 2 || (parts.Length == 2 && !(int.TryParse(parts[1], NumberStyles.None, CultureInfo.InvariantCulture, out int w0) && w0 >= 1)))
+                {
+                    problems.Add(new RulesProblem(file, pre + k, $"'{text}' must be <{string.Join("|", PropNames)}> or <kind>:<weight>"));
+                    continue;
+                }
+                list.Add(new PropWeight((OverlayKind)((int)OverlayKind.Tree + idx), parts.Length == 2 ? int.Parse(parts[1], CultureInfo.InvariantCulture) : 1));
+            }
+            return list;
+        }
+        int cmin = Int("cluster_min", 1, 12), cmax = Int("cluster_max", 1, 24);
+        if (cmin > cmax) problems.Add(new RulesProblem(file, pre + "cluster_min", "must not exceed cluster_max"));
+        int ymin = Int("yard_min", 0, 16), ymax = Int("yard_max", 0, 24);
+        if (ymin > ymax) problems.Add(new RulesProblem(file, pre + "yard_min", "must not exceed yard_max"));
+        return new DecorParams(Int("prop_permille", 0, 80), cmin, cmax, Int("single_permille", 0, 1000), Int("gap_permille", 0, 500),
+            Int("cliff_permille", 100, 4000), Int("map_edge_permille", 100, 4000), Int("water_permille", 100, 4000), Int("road_permille", 50, 4000),
+            ymin, ymax, Int("dead_target_permille", 0, 1000), Kinds("kinds"), Kinds("yard_kinds"));
+    }
+
     private static BiomeParams? ParseOne(string key, TomlTable t, string file, List<RulesProblem> problems)
     {
         string prefix = "biome." + key + ".";
@@ -147,7 +207,7 @@ public static class BiomeCatalog
             Int("water_permille", 0, 300), Int("shallow_permille", 0, 300), Int("rock_permille", 0, 300), Int("rough_permille", 0, 400),
             style, Int("cliff_plateaus", 0, 6), Int("rivers", 0, 2), Int("river_width", 1, 4), Int("river_wander_permille", 0, 1000),
             Int("ford_spacing", 8, 64), roadGrid, Int("ocean_width", 0, 16), ash, pitch, Int("contested_fields", 0, 8),
-            Int("extra_fields", 0, 16), dMin, dMax, Int("ruins", 0, 4));
+            Int("extra_fields", 0, 16), dMin, dMax, Int("ruins", 0, 4), ParseDecor(t, prefix, file, problems));
         return problems.Count > before ? null : p;
     }
 }
