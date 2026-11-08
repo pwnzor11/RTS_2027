@@ -48,3 +48,7 @@ def build(S0, state, k, n):
     S0.mount(PIVOT, **MOUNT)
     S0.begin("turret", PIVOT)
     P.turret_parts(S, PIVOT_U[0], PIVOT_U[1], PIVOT_U[2], 3, 0.58, 1.6)
+    px, py, pz = PIVOT_U
+    box("troofband", (0.62, 0.3, 0.035), (px, py - 0.3, pz + 0.41), "house", 0.0)                  # S16 team colour: turret roof band
+    for s in (-1, 1):
+        box(f"tflashx{s}", (0.05, 0.8, 0.16), (px + s * 0.53, py - 0.02, pz + 0.25), "house", 0.0)

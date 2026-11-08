@@ -1,7 +1,7 @@
 """Expedition Destroyer (all-round warship) for tools/art/build_vehicle.py.  Contract: see auth_jeep.py.
 
 Slim navy hull with a red boot-top and white hull number 12, one tier of white bridge with glass band, a raked funnel with the team-colour
-band, lattice mast with radar, a fixed aft twin gun and a rotating twin gun turret on the fore deck (turret layer).  No draw scale (1.0),
+band (S16 pilot: plus house deck bands, a turret roof band), lattice mast with radar, a fixed aft twin gun and a rotating twin gun turret on the fore deck (turret layer).  No draw scale (1.0),
 so about 1.3 cells long.  Water only, small bow wave.  Original design.  Layers: body (hull + shadow), turret.
 """
 import math, os, sys
@@ -31,6 +31,9 @@ def build(S0, state, k, n):
     S.begin("body")
     P.hull(S, L, B, H, boot="orange2", band=0.08, num="12", numy=0.3, bowfrac=0.34)
     P.fixed_turret(S, "a", 0, -2.5, D, 2, 180, r=0.3, gl=0.8)
+    # S16 pilot: team colour must read from above on every facing -> house deck bands (bow, aft)
+    for nm, yy, ww, ll in (("bow", 3.2, 0.8, 0.3), ("aft", -2.0, 1.0, 0.26)):
+        box(f"deckband_{nm}", (ww, ll, 0.04), (0, yy, D + 0.012), "house", 0.0)
     P.block(S, "br", 0, 0.9, D, 0.95, 1.5, 0.4, bevel=0.08)
     P.block(S, "br2", 0, 1.0, D + 0.4, 0.75, 0.8, 0.28, bevel=0.07)
     box("wing", (1.3, 0.16, 0.05), (0, 1.35, D + 0.55), "white2", 0.01)
@@ -43,3 +46,7 @@ def build(S0, state, k, n):
     S0.mount(PIVOT, **MOUNT)
     S0.begin("turret", PIVOT)
     P.turret_parts(S, PIVOT_U[0], PIVOT_U[1], PIVOT_U[2], 2, 0.4, 1.2)
+    px, py, pz = PIVOT_U
+    box("troofband", (0.52, 0.3, 0.035), (px, py - 0.22, pz + 0.41), "house", 0.0)                 # S16 pilot: team band on the turret roof
+    for s in (-1, 1):
+        box(f"tflashx{s}", (0.05, 0.62, 0.17), (px + s * 0.37, py - 0.02, pz + 0.25), "house", 0.0)  # taller side flash

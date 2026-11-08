@@ -42,6 +42,9 @@ def build(S0, state, k, n):
     for s in (-1, 1):
         box(f"glassS{s}", (0.05, 0.7, 0.18), (s * 0.56, -0.2, 1.08), "glass", 0.0)
         box(f"hflash{s}", (0.05, 0.9, 0.12), (s * 0.56, -0.2, 0.86), "house", 0.0)
+    box("roofband", (0.8, 0.22, 0.03), (0, -0.55, 1.34), "house", 0.0)                         # S16 team colour: roof and deck bands
+    box("bowband", (0.5, 0.2, 0.03), (0, 2.15, 0.735), "house", 0.0)
+    box("aftband", (1.0, 0.2, 0.03), (0, -1.1, 0.735), "house", 0.0)
     # searchlight + whip
     cyl("lampbase", 0.1, 0.18, (0.0, -0.1, 1.42), "chrome2", "Z", 10)
     cyl("search", 0.17, 0.3, (0.0, 0.05, 1.57), "chrome", "Y", 12)

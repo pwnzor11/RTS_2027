@@ -43,6 +43,8 @@ def build(S0, state, k, n):
         box(f"sill{s}", (0.07, 3.0, 0.05), (s * 1.12, -0.05, 0.9), "copper", 0.0)
         E.lamp(S, f"L{s}", s * 0.55, 2.05, 0.72)                                             # landing lights
         box(f"vent{s}", (0.35, 0.5, 0.04), (s * 0.55, -0.9, 1.19), "chrome2", 0.0)           # intake grilles
+    for s in (-1, 1):                                                                        # S16 pilot: top-facing team stripes, visible on every facing
+        box(f"topstripe{s}", (0.16, 2.1, 0.045), (s * 0.78, -0.1, 1.18), "house", 0.0)
     box("deckw", (1.0, 1.5, 0.04), (0, -0.85, 1.18), "white", 0.01)
     box("deckstripe", (1.0, 0.07, 0.045), (0, -0.2, 1.18), "orange", 0.0)
     E.digits(S, "hn", "04", 0, 0.78, 1.18, 0.075, "white")
@@ -65,6 +67,7 @@ def build(S0, state, k, n):
     box("tfront", (1.35, 0.7, 0.38), (px, py + 0.75, pz + 0.3), "navy", 0.14, rot=(-26, 0, 0))
     box("troof", (1.0, 1.0, 0.04), (px, py - 0.25, pz + 0.53), "white", 0.01)
     box("troofstripe", (1.0, 0.05, 0.045), (px, py + 0.1, pz + 0.53), "orange", 0.0)
+    box("troofband", (1.0, 0.2, 0.045), (px, py - 0.55, pz + 0.53), "house", 0.0)              # S16 pilot: roof band
     for s in (-1, 1):
         box(f"tflash{s}", (0.05, 1.0, 0.16), (px + s * 0.74, py - 0.05, pz + 0.3), "house", 0.0)    # team colour turret flash
         box(f"ttrim{s}", (0.05, 1.35, 0.05), (px + s * 0.72, py - 0.05, pz + 0.5), "copper", 0.0)
