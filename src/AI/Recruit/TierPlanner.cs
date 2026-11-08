@@ -325,7 +325,15 @@ internal sealed class TierPlanner
     public const int DirectorateTechArmy = 18;   // (tune) s16
 
     /// <summary>S16 (Q-67): true for the difficulty tiers (2 and 3) that hold the early Directorate tech.</summary>
-    public static bool HoldsDirectorateTech(int tier) => tier is >= 2 and <= 3;
+    public static bool HoldsDirectorateTech(int tier) => tier is >= 2 and <= 3 || tier == 5;
+
+    /// <summary>S16 (dir5): army size the Directorate at tier 5 needs before the Isotope Works and Rad Mortar are bought. Tier 5 lost to the (now
+    /// tech-holding) tier 3 and drew 14-29 of 64 games with its tech and air spending ahead of its army. Directorate 5 v 3, 16 seeds: hold 24 21 / 8 / 3,
+    /// hold 30 18 / 10 / 4, hold 36 19 / 8 / 5 (from 5 / 13 / 14); hold 36 pushed Authority 5 to 73 %, hold 24 keeps it at 56 %.</summary>
+    public const int DirectorateTechArmyTier5 = 24;   // (tune) s16 dir5
+
+    /// <summary>S16: the army size for <paramref name="tier"/>'s Directorate tech hold (tier 5 has its own, larger value).</summary>
+    public static int DirectorateTechArmyFor(int tier) => tier == 5 ? DirectorateTechArmyTier5 : DirectorateTechArmy;
 
     /// <summary>S16 (Q-67): the Directorate structures held back by <see cref="DirectorateTechArmy"/>.</summary>
     public static bool IsDirectorateEarlyTech(string id) => id == "dir_isotope_works" || id == "dir_rad_mortar";
