@@ -27,8 +27,17 @@ public sealed class FxLook : IDisposable
     private readonly Dictionary<(RemainKind Kind, int A, int B, int Faction, int Variant), Texture2D> _textures = new();
     private Texture2D? _puffTexture;
 
-    /// <summary>Remains, dust and damage effects on or off (the mood tint is separate). Always on in the game; tests and contact sheets switch it.</summary>
-    public bool Enabled { get; set; } = true;
+    /// <summary>
+    /// Switches every D-184 look improvement off at once (damage tiers and their flames rule, remains, dust, mood tint), restoring today's look, to compare.
+    /// Starts true when the <c>RTS_FXLOOK</c> environment variable is <c>off</c>. The infantry size is its own setting.
+    /// </summary>
+    public static bool Off { get; set; } =
+        string.Equals(Environment.GetEnvironmentVariable("RTS_FXLOOK"), "off", StringComparison.OrdinalIgnoreCase);
+
+    private bool _enabled = true;
+
+    /// <summary>Remains, dust and damage effects on or off for this instance (the mood tint is separate); always off while <see cref="Off"/> is set.</summary>
+    public bool Enabled { get => _enabled && !Off; set => _enabled = value; }
 
     /// <summary>The remains that exist now (for tests and the contact sheet).</summary>
     public RemainsBook Remains => _remains;
@@ -44,7 +53,8 @@ public sealed class FxLook : IDisposable
     /// <param name="rules">Rules, or null (then only the expiry runs).</param>
     /// <param name="fx">The one-shot effect player the bursts go to.</param>
     /// <param name="mood">The theater's mood (its dust colour).</param>
-    public void Observe(SimSnapshot snapshot, SimRules? rules, FxPlayer fx, MoodGrade mood)
+    /// <param name="sprites">Sprite resolver, to find where a building's smoke comes out (its <c>damaged</c> anchors); null = the middle of the footprint.</param>
+    public void Observe(SimSnapshot snapshot, SimRules? rules, FxPlayer fx, MoodGrade mood, SpriteResolver? sprites = null)
     {
         ArgumentNullException.ThrowIfNull(snapshot);
         int tick = snapshot.Tick;
@@ -56,7 +66,7 @@ public sealed class FxLook : IDisposable
         }
 
         _tiers.Observe(snapshot, rules, _changes);
-        foreach (TierChange c in _changes) Burst(snapshot, rules, fx, c);
+        foreach (TierChange c in _changes) Burst(snapshot, rules, fx, c, sprites);
         _deaths.Observe(snapshot, _dead);
         foreach (DeathRecord d in _dead) Bury(rules, d);
         _dust.Observe(snapshot, rules, _puffs, mood.DustColour);
@@ -64,13 +74,21 @@ public sealed class FxLook : IDisposable
 
     // ---- bursts ------------------------------------------------------------------------------------------------------------------
 
-    private void Burst(SimSnapshot snapshot, SimRules rules, FxPlayer fx, TierChange c)
+    private void Burst(SimSnapshot snapshot, SimRules rules, FxPlayer fx, TierChange c, SpriteResolver? sprites)
     {
         int tick = snapshot.Tick;
         if (c.Building)
         {
             BuildingView b = snapshot.Buildings[c.Index];
             float cx = (b.Cell.X + b.FootprintW / 2f) * Camera.CellPx, cy = (b.Cell.Y + b.FootprintH / 2f) * Camera.CellPx - 14;
+            if (sprites is not null)   // burst where the smoke comes out: the mean of the damaged anchors
+            {
+                SpriteManifest m = sprites.ForBuilding(rules, b).Manifest;
+                int n = 0, sx = 0, sy = 0;
+                foreach (FxAnchor a in m.FxFor(SpriteStates.Damaged)) { n++; sx += a.X - m.OriginX; sy += a.Y - m.OriginY; }
+                if (n > 0) { cx = b.Cell.X * Camera.CellPx + sx / (float)n; cy = b.Cell.Y * Camera.CellPx + sy / (float)n; }
+            }
+
             float spread = 10 * Math.Max(b.FootprintW, b.FootprintH);
             for (int i = 0; i < (c.To == DamageTier.Fire ? 4 : 3); i++)
             {
@@ -115,7 +133,7 @@ public sealed class FxLook : IDisposable
                 BuildingType bt = rules.Buildings[d.TypeIndex];
                 if (bt.Wall) return;   // walls die by the dozen and are one cell: no heap
                 int side = Math.Max(d.Width, d.Height);
-                _remains.Add(new Remain(RemainKind.Scorch, x, y, side * Camera.CellPx * 575 / 1000, 900, (int)bt.Faction, seed, d.Tick));
+                _remains.Add(new Remain(RemainKind.Scorch, x, y, side * Camera.CellPx * 540 / 1000, 900, (int)bt.Faction, seed, d.Tick));
                 _remains.Add(new Remain(RemainKind.BuildingRubble, x, y, d.Width, d.Height, (int)bt.Faction, seed, d.Tick));
                 break;
             }
@@ -162,10 +180,11 @@ public sealed class FxLook : IDisposable
         DrawPuffs(batch, device, camera, viewport, tick);
     }
 
-    private static bool HasSimWreck(IReadOnlyList<WreckDraw>? wrecks, Remain r)
+    /// <summary>Whether the sim has its own wreck (a Left Behind salvage wreck) on the cell a remain lies in.</summary>
+    public static bool HasSimWreck(IReadOnlyList<WreckDraw>? wrecks, Remain r)
     {
         if (wrecks is null) return false;
-        int cx = r.X / Camera.CellPx, cy = r.Y / Camera.CellPx;
+        int cx = r.X < 0 ? -1 : r.X / Camera.CellPx, cy = r.Y < 0 ? -1 : r.Y / Camera.CellPx;
         foreach (WreckDraw w in wrecks) if (w.Cell.X == cx && w.Cell.Y == cy) return true;
         return false;
     }

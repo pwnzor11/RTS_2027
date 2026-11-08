@@ -111,7 +111,7 @@ public sealed class SceneRenderer : IDisposable
             _mood = map is null ? MoodGrade.None : TerrainPalette.ForMap(map).Mood;
         }
 
-        _look.Observe(snapshot, frame.Rules, _fx, _mood);   // D-184
+        _look.Observe(snapshot, frame.Rules, _fx, _mood, _sprites);   // D-184
         if (frame.Sim is not null && frame.Rules is not null)   // M6-09: wrecks lie on the ground, under buildings and units
         {
             WreckStormOverlay.PlanWrecks(frame.Sim.ViewFor(0), frame.Rules.Economy.WreckTicks, _wreckViews, _wrecks);

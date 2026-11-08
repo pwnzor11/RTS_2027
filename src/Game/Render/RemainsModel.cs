@@ -117,7 +117,7 @@ public static class RemainsTiming
         if (age < 0 || age >= life) return 0;
         int a = max;
         int hold = life * HoldPermille / 1000;
-        if (age > hold) a = max * (life - age) / Math.Max(1, life - hold);
+        if (age > hold) a = Math.Max(1, max * (life - age) / Math.Max(1, life - hold));   // never 0 while it exists
         if (age < FadeInTicks) a = a * (age + 1) / (FadeInTicks + 1);
         return Math.Clamp(a, 0, 255);
     }

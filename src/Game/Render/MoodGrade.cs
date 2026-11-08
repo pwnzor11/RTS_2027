@@ -19,12 +19,12 @@ public sealed record MoodGrade(uint Tint, int Strength, uint? Dust)
     public const int MaxStrength = 90;
 
     /// <summary>Dust colour when a theater names none.</summary>
-    public const uint DefaultDust = 0xB4A58A;
+    public const uint DefaultDust = 0xD0C3A4;
 
     /// <summary>No grade (the look of today).</summary>
     public static MoodGrade None { get; } = new(0xFFFFFF, 0, null);
 
-    /// <summary>Set the <c>RTS_MOOD</c> environment variable to <c>off</c> to draw every theater ungraded (to compare with the look of today).</summary>
+    /// <summary>Set the <c>RTS_MOOD</c> environment variable to <c>off</c> to draw every theater ungraded (to compare with the look of today). <c>RTS_FXLOOK=off</c> does that and more (<see cref="FxLook.Off"/>).</summary>
     public static bool DisabledByEnvironment { get; set; } =
         string.Equals(Environment.GetEnvironmentVariable("RTS_MOOD"), "off", StringComparison.OrdinalIgnoreCase);
 
@@ -32,7 +32,7 @@ public sealed record MoodGrade(uint Tint, int Strength, uint? Dust)
     public uint DustColour => Dust ?? DefaultDust;
 
     /// <summary>Whether the grade changes anything.</summary>
-    public bool Active => Strength > 0 && !DisabledByEnvironment;
+    public bool Active => Strength > 0 && !DisabledByEnvironment && !FxLook.Off;
 
     /// <summary>Reads the <c>[mood]</c> table of a parsed theater file. A missing table, or a bad value, gives <see cref="None"/> or the default for that value.</summary>
     public static MoodGrade Parse(TomlTable root)

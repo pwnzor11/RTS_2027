@@ -169,4 +169,4 @@ size_max = 16
 # ASSUMED (D-184): every value here is a proposal for the owner. NOTE: tools/maps/make_s15_looks.py rewrites this file from variant C; re-add this table if it is run.
 tint = "#6F8FC8"
 strength = 30
-dust = "#A9ADB3"
+dust = "#C4C8CE"

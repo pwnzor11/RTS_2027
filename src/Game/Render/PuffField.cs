@@ -64,7 +64,7 @@ public static class DustRate
     public const int MaxPeriod = 10;
 
     /// <summary>Numerator of the period: the period is this over the speed, so twice the speed is twice the puffs. ASSUMED.</summary>
-    public const int PeriodNumerator = 80;
+    public const int PeriodNumerator = 64;
 
     /// <summary>Ticks between puffs at <paramref name="speed"/> leptons per tick; 0 = none (too slow).</summary>
     public static int PeriodTicks(int speed) => speed < MinSpeed ? 0 : Math.Clamp(PeriodNumerator / speed, MinPeriod, MaxPeriod);
@@ -89,8 +89,8 @@ public static class DustRate
 /// </summary>
 public sealed class DustEmitter
 {
-    /// <summary>Puff life in ticks (0.8 s). ASSUMED.</summary>
-    public const int PuffLife = 16;
+    /// <summary>Puff life in ticks (1 s). ASSUMED.</summary>
+    public const int PuffLife = 20;
 
     private Dictionary<UnitKey, LeptonCoord> _positions = new();
     private int _tick = int.MinValue;
@@ -140,10 +140,10 @@ public sealed class DustEmitter
         float bx = -(float)Math.Sin(a), by = (float)Math.Cos(a);
         uint h = DecorHash.Mix(0x4455_5354UL, u.Id.Index, tick, (uint)u.TypeIndex);
         float side = ((int)(h & 15) - 7.5f) * 1.2f;
-        float back = 22 + (int)((h >> 4) & 7);
+        float back = 36 + (int)((h >> 4) & 7);
         float x = u.Position.X * Camera.CellPx / (float)SimConstants.LeptonsPerCell + bx * back - by * side;
         float y = u.Position.Y * Camera.CellPx / (float)SimConstants.LeptonsPerCell + by * back * 0.75f + bx * side * 0.75f;
-        float scale = type.Locomotion == Locomotion.Tracked ? 0.8f : 0.6f;
-        return new Puff(x, y, tick, PuffLife, dust, 120, scale, 10);
+        float scale = type.Locomotion == Locomotion.Tracked ? 1.0f : 0.75f;
+        return new Puff(x, y + 6, tick, PuffLife, dust, 190, scale, 12);
     }
 }

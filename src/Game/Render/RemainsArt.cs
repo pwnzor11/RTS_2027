@@ -65,10 +65,19 @@ public static class RemainsArt
         (int cw, int ch) = RubbleSize(Math.Max(1, widthCells), Math.Max(1, heightCells));
         var c = new PropCanvas(cw, ch);
         var (dark, mid, light) = Tones(faction);
-        int cx = cw / 2, cy = ch / 2, rx = cw / 2 - 6, ry = ch / 2 - 6;
-        c.Ellipse(cx, cy + 2, rx, ry, Ash, 120);
-        c.Ellipse(cx - rx / 4, cy, rx * 3 / 4, ry * 3 / 4, Ash, 110);
-        c.Ellipse(cx + rx / 4, cy + 4, rx * 3 / 4, ry * 2 / 3, Ash, 110);
+        int cx = cw / 2, cy = ch / 2, rx = cw / 2 - 12, ry = ch / 2 - 12;
+        // the pad: a scorched, slightly ragged rectangle that fills the footprint; its rim is dithered
+        for (int y = 5; y < ch - 5; y++)
+        {
+            for (int x = 5; x < cw - 5; x++)
+            {
+                int edge = Math.Min(Math.Min(x - 5, cw - 6 - x), Math.Min(y - 5, ch - 6 - y));
+                int rag = (int)(H(seed, (x / 5) * 64 + y / 5, 9) % 9u);
+                if (edge < rag) continue;
+                if (edge < 9 && ((x + y) & 1) == 0) continue;
+                c.Over(x, y, Ash, edge < 9 ? 105 : 135);
+            }
+        }
 
         int count = 9 * widthCells * heightCells + 10;
         var xs = new int[count];
@@ -77,18 +86,11 @@ public static class RemainsArt
         var tn = new int[count];
         for (int i = 0; i < count; i++)
         {
-            int x = cx, y = cy;
-            for (int t = 0; t < 6; t++)   // a point inside the ellipse, by rejection
-            {
-                uint h = H(seed, i * 8 + t, 1);
-                x = cx + (int)(h % (uint)(2 * rx + 1)) - rx;
-                y = cy + (int)((h >> 12) % (uint)(2 * ry + 1)) - ry;
-                long nx = (long)(x - cx) * 1000 / rx, ny = (long)(y - cy) * 1000 / ry;
-                if (nx * nx + ny * ny <= 1_000_000) break;
-            }
-
+            uint h = H(seed, i, 1);
+            int x = cx + (int)(h % (uint)(2 * rx + 1)) - rx;
+            int y = cy + (int)((h >> 12) % (uint)(2 * ry + 1)) - ry;
             long ex = (long)(x - cx) * 1000 / rx, ey = (long)(y - cy) * 1000 / ry;
-            int near = (int)Math.Max(0, 1000 - (ex * ex + ey * ey) / 1000);   // 1000 at the middle, 0 at the rim
+            int near = (int)Math.Max(0, 1000 - Math.Max(Math.Abs(ex), Math.Abs(ey)));   // 1000 at the middle, 0 at the rim
             uint g = H(seed, i, 2);
             xs[i] = x;
             ys[i] = y - near / 120;                       // the heap rises toward the middle
@@ -109,6 +111,21 @@ public static class RemainsArt
             c.Triangle(x + s, y, x + s, y + th, x - s, y + th, front);
             c.Line(x - s, y + th, x + s, y + th, edge, 200);
             if (tn[i] != 3) c.Line(x - s, y - 0, x - s + skew, y - s / 2 - 1, Lift(top, 220), 200);     // lit left edge
+        }
+
+        int stubs = 2 + widthCells * heightCells / 2;
+        for (int i = 0; i < stubs; i++)   // broken wall stubs standing near the edge: they give the heap a silhouette
+        {
+            uint h = H(seed, i, 10);
+            bool horizontal = (h & 1) == 0;
+            int x = horizontal ? cx + (int)((h >> 4) % (uint)(2 * rx + 1)) - rx : cx + ((h & 2) == 0 ? -rx : rx) + (int)((h >> 8) % 7u) - 3;
+            int y = horizontal ? cy + ((h & 2) == 0 ? -ry : ry) + (int)((h >> 8) % 7u) - 3 : cy + (int)((h >> 4) % (uint)(2 * ry + 1)) - ry;
+            int sw = 6 + (int)((h >> 12) % 5u), sh = 9 + (int)((h >> 16) % 9u);
+            c.Ellipse(x + 4, y + 2, sw, 3, Black, 80);
+            c.Triangle(x - sw / 2, y, x - sw / 2, y - sh, x + sw / 2, y - sh + (int)((h >> 20) % 5u), light);        // lit face
+            c.Triangle(x - sw / 2, y, x + sw / 2, y - sh + (int)((h >> 20) % 5u), x + sw / 2, y, mid);
+            c.Triangle(x + sw / 2, y, x + sw / 2, y - sh + (int)((h >> 20) % 5u), x + sw / 2 + 3, y - sh + 2, Sink(mid, 450));  // shaded side
+            c.Line(x - sw / 2, y, x + sw / 2, y, Sink(dark, 600), 220);
         }
 
         int rebar = widthCells * heightCells + 2;

@@ -160,3 +160,11 @@ alpha = 245
 size_min = 16
 size_max = 24
 
+
+[mood]
+# D-184 pilot: a colour grade laid over the world view only (not the HUD) and the colour of vehicle dust. Ash Plains: a pale warm-grey haze.
+# strength 0..90 = how much of the tint is blended in (0 or no table = no grade, the look of today); RTS_MOOD=off switches it off for comparison.
+# ASSUMED (D-184): every value here is a proposal for the owner. NOTE: tools/maps/make_s15_looks.py rewrites this file from variant C; re-add this table if it is run.
+tint = "#C9BFB4"
+strength = 34
+dust = "#D2C6A6"

@@ -45,7 +45,7 @@ public static class DamageFx
             Draw(batch, library, FireSmall, at + new Vector2(8, 1) * scale, scale * 0.8f, tick, phase + 3);
         }
 
-        Draw(batch, library, Smoke, at, scale * (tier == DamageTier.Fire ? 0.75f : 0.55f), tick, phase + 5);
+        Draw(batch, library, Smoke, at, scale * (tier == DamageTier.Fire ? 0.8f : 0.65f), tick, phase + 5);
     }
 
     /// <summary>
