@@ -186,6 +186,26 @@ Order is by value for effort. Each item ends with the pilot step. Nothing here i
 Not recommended now: wheel and tread animation frames (L; a full vehicle re-render), a baked third damage tier (L), real-time shadows, any change
 to the sun.
 
+## 5b · House-colour audit and the infantry pilot (D-184, session 15)
+`python3 tools/art/house_audit.py [paths] [--min 10] [--all-states] [--csv f] [--report f]` counts exact house-ramp pixels per facing (idle
+frame of each facing by default) for every sprite manifest and flags assets whose minimum is under the threshold (default 10 px at 1x).
+Air-unit shadow sheets are skipped. Result on the 76 infantry and vehicle sheets before the pilot:
+
+| Group | Assets | Flagged (min < 10 px) | Median of idle medians | Lowest idle minimum |
+|---|---|---|---|---|
+| Infantry | 18 | 13 | 10.8 px | 0 (Marine) |
+| Vehicle hulls | 45 | 11 | 216.5 px | 2 |
+| Vehicle turrets (small overlay sheets) | 13 | 8 | 41.5 px | 0 |
+
+Worst infantry (idle min/median): Marine 0/3, Pathfinder 2/3, Pioneer 2/5, Diver 2/5, Commissar 1/11, Informant 6/9.5, Conscript 5/10.5.
+Flagged vehicles are mostly Expedition naval and hover hulls whose paint sits on turrets or small decks (Carrier 3/7.5, Destroyer 6/8,
+Minelayer 6/9, Cruiser turret 0/4); the turret sheets are overlays and are judged with their hull.
+
+Pilot (Marine and Commissar only, rendered at figure scale 1.25 with `build_infantry.py`, frame 48 x 48, origin (24, 42)): Marine now has a
+house pad on each shoulder, a band over the helmet crown and a panel on the pack: idle min 26, median 34.5. Commissar has house shoulder
+boards, a back panel, cap piping and a larger badge besides the chest sash: idle min 33, median 48.5. Both pass the 10 px rule on every facing
+and every state (all-frame minimums 21 and 30). Owner approves the look before the other 16 infantry are done.
+
 ## 6 · References and credit
 OpenSAGE (https://github.com/OpenSAGE/OpenSAGE) is consulted as a read-only reference under D-050; no file from it is in this repository. The
 repository's own sources named in section 1 are the only source for the "ours now" columns.
