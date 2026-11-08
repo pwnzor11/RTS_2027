@@ -44,6 +44,7 @@ public sealed class AlertTests
         Assert.True(log.Add(At(AlertKind.BaseUnderAttack, 0)));
         Assert.False(log.Add(At(AlertKind.BaseUnderAttack, 60)));             // merged into the live line, not counted
         Assert.Equal("Base under attack", log.Lines(60)[0].Text);
+        for (int t = 100; t < 200; t += 50) log.Add(At(AlertKind.BaseUnderAttack, t));   // sustained fire keeps the line up
         Assert.True(log.Add(At(AlertKind.BaseUnderAttack, 200)));             // ten seconds on
         Assert.Equal("Base under attack x2", log.Lines(200)[0].Text);
     }
