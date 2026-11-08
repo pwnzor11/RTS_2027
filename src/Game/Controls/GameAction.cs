@@ -85,4 +85,6 @@ public enum GameAction
     ObjCycle,
     /// <summary>Mission: expand or collapse the objective list.</summary>
     ObjList,
+    /// <summary>Camera: jump to the most recent alert with a place; press again to step back through the last few.</summary>
+    LastAlert,
 }

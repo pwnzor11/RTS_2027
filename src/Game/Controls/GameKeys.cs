@@ -81,6 +81,7 @@ public static class GameKeys
         new(GameAction.ObjJump, "obj_jump", System, "Mission: jump to the objective", Keys.J),
         new(GameAction.ObjCycle, "obj_cycle", System, "Mission: next objective", Keys.Tab),
         new(GameAction.ObjList, "obj_list", System, "Mission: objective list", Keys.O),
+        new(GameAction.LastAlert, "last_alert", Camera, "Jump to the last alert (again: the one before)", Keys.End),
     };
 
     /// <summary>The Controls page lines, grouped in <see cref="Groups"/> order: rebindable actions and fixed inputs shown for reference.</summary>
@@ -120,7 +121,7 @@ public static class GameKeys
             F(Camera, "Middle-drag", "Drag the view"),
             F(Camera, "Mouse wheel", "Zoom"),
             F(Camera, "Minimap click or drag", "Move the view"),
-            A(GameAction.CentreBase), A(GameAction.Bookmark1), A(GameAction.Bookmark2), A(GameAction.Bookmark3), A(GameAction.Bookmark4),
+            A(GameAction.CentreBase), A(GameAction.LastAlert), A(GameAction.Bookmark1), A(GameAction.Bookmark2), A(GameAction.Bookmark3), A(GameAction.Bookmark4),
             F(Selection, "Left click", "Select a unit or structure"),
             F(Selection, "Left drag", "Select units in a box"),
             F(Orders, "Right click", "Move, attack, enter, salvage; set a factory's rally point"),
