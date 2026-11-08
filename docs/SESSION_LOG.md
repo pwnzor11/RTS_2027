@@ -271,3 +271,23 @@ stalemates (the loser still has a shaft and factories), so the real fix is AI si
 and installing a tool on the owner's machine were refused by the session's safety check; the owner has the artifact clean-up command.
 **User check:** USER_CHECKS.md "Session 14".
 **Next session should:** see HANDOFF.
+
+## Session 15 · 2026-11-07/08 (play-test fixes, M11 batch 3, siege AI, laptop balance series, maps M12 waves 1-2, art pass and open-licence imports)
+**Goal:** HANDOFF "Start here" (owner UI play-test, Q-64 siege, Q-65, M11 batch 3, M11-07/08, Q-66). The owner was present all session and added
+maps (OpenRA map study) and art (OpenSAGE study, infantry, open-licence packs, Warzone/0 A.D./Kenney) along the way.
+**Done:** play-test fixes (harvest/return orders, windowed edge scroll). M11 batch 3: selection toolkit, alert stack + pings + End, cursor per action,
+placement ghost, cameo tooltips + shift-queue, production hold, one UI scale rule + text size. Q-66 auth_01..03 tiers. Laptop series (17 rows,
+1 088 games, docs/balance/s15_laptop_series.md). Q-64 siege mode + stall/rescue fixes (draws down in most cells, Directorate v Authority not yet).
+Q-65 Directorate tier 4-5 economy (5 v Authority 5: 23 -> 46 %) and Left Behind tier-3 early army cap (68 -> 53 % v Authority). Terrain look C,
+M12 waves 1-2 (decals, land-linked and blocking props, map format 4, decoration pass, map report/render, old-save message). Map study of 15 OpenRA
+maps (design 17) and art guidance from OpenSAGE (design 18). Look pilot (damage tiers, remains, dust, mood tint), all 18 infantry re-rendered,
+imported FX/props with credits, Warzone importer. Decisions D-174..D-190.
+**Commits:** PR #45-#49 merged to main (main b45630b before this handoff); the Left Behind cap and this handoff land in the next PR.
+**Helpers:** about 30 packages (Sonnet for code, AI, art; one container restart, all work survived). Fix rounds: UI scale sidebar (x1), art-packs (x2).
+**Problems / notes:** LFS uploads from the cloud are refused, so new sprites went through owner-run push packages (art_push_s15*.zip, bundle +
+LFS objects + push_art.ps1); the first packs package missed intermediate LFS versions (collect every version in the range, not just the tip).
+OpenGameArt and kenney.nl block automated reads; licences were checked from the packs' own files, GitHub copies (SPDX texts, Warzone COPYING)
+and the owner's downloads. Two enum-count pins (M4/M7 contract tests) missed the new Hold command until the full suite. A Windows-only test
+failure (replay file still open on delete) was caught by CI and fixed.
+**User check:** USER_CHECKS.md "Session 15".
+**Next session should:** see HANDOFF (Q-67 Directorate early game, M12 wave 3 zones and lanes with an income re-measure, art follow-ups).
