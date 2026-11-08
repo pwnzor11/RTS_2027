@@ -107,6 +107,7 @@ internal sealed partial class ProceduralBuilder
         ReadOnlySpan<int> imgs = _g.Images(i);
         foreach (int j in imgs)
         {
+            if (_zoned && _zone[j] == ZLane) return false;   // layout 2: lanes stay clear, so their width is the corridor's
             if (_g.Overlay[j] != OverlayKind.None || _g.Reserved[j] || _g.Height[j] != 0 || _g.River[j] || _g.Feature[j] || _g.Ramp[j] || _nearResource[j]) return false;
             LandType l = _g.Land[j];
             if (l != _g.Base && l != LandType.Rough) return false;

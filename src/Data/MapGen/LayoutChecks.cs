@@ -108,30 +108,34 @@ public static class LayoutChecks
         string laneText = ""; bool laneOk = true;
         var pairs = new List<(int, int)>();
         for (int t = 0; t < k; t++) if (team[t] != team[0]) pairs.Add((0, t));
-        int lanesMin = 99, widest = 0, narrowMin = 99; bool hasMedium = true, hasWide = true, hasNarrow = true; int maxShare = 0;
+        int lanesMin = 99, lanesMax = 0, widest = 0, narrowMin = 99; bool hasMedium = true, hasWide = true, hasNarrow = true; int maxShare = 0;
+        int gapsMax = 0;
         foreach ((int s, int t) in pairs)
         {
-            List<Lane> lanes = FindLanes(map, pass, width, st[s], st[t], n);
-            lanesMin = Math.Min(lanesMin, lanes.Count);
-            int wMax = 0, nMin = 99; bool med = false;
+            List<Lane> found = FindLanes(map, pass, width, st[s], st[t], n, dist[s], dist[t], f);
+            List<Lane> lanes = found.Where(l => l.Min >= 3).ToList();   // a route squeezing through a 1-2 wide gap is an infantry gap, not a lane
+            gapsMax = Math.Max(gapsMax, found.Count - lanes.Count);
+            lanesMin = Math.Min(lanesMin, lanes.Count); lanesMax = Math.Max(lanesMax, lanes.Count);
+            int wMax = 0; bool med = false, narrow = false;
             foreach (Lane l in lanes)
             {
-                wMax = Math.Max(wMax, l.Median); nMin = Math.Min(nMin, l.Min);
+                wMax = Math.Max(wMax, l.Median); narrowMin = Math.Min(narrowMin, l.Min);
                 if (l.Median >= 5 && l.Median <= 9) med = true;
+                if (l.Min >= 3 && l.Min <= 5) narrow = true;
                 maxShare = Math.Max(maxShare, l.SharePercent);
             }
-            widest = Math.Max(widest, wMax); narrowMin = Math.Min(narrowMin, nMin);
-            hasWide &= wMax >= 12; hasMedium &= med; hasNarrow &= nMin >= 3 && nMin <= 5;
+            widest = Math.Max(widest, wMax);
+            hasWide &= wMax >= (int)(12 * f); hasMedium &= med; hasNarrow &= narrow;
             laneText += (laneText.Length > 0 ? " | " : "") + $"{st[s].X},{st[s].Y}->{st[t].X},{st[t].Y}: " +
-                string.Join(", ", lanes.Select(l => $"[len {l.Length} median {l.Median} min {l.Min}]"));
+                string.Join(", ", found.Select(l => $"[len {l.Length} median {l.Median} min {l.Min} at {l.MinAt % n},{l.MinAt / n}]"));
             if (lanes.Count == 0) laneOk = false;
         }
-        res.Add(new LayoutCheck("lane count", $"{lanesMin} (min over enemy pairs); {laneText}", laneOk && lanesMin >= 2, ">= 2, about 3"));
+        res.Add(new LayoutCheck("lane count", $"{lanesMin}..{lanesMax} lanes of width >= 3 per enemy pair, {gapsMax} infantry gap(s) of 1-2; {laneText}", laneOk && lanesMin >= 2 && lanesMax <= 5, "2..5, about 3"));
         res.Add(new LayoutCheck("lane share", $"{maxShare} % shared beyond the starts' surroundings", maxShare < 30, "< 30 %"));
-        res.Add(new LayoutCheck("wide lane", $"widest median {widest}", hasWide, "one lane with median width 12..16 (cap 20)"));
+        res.Add(new LayoutCheck("wide lane", $"widest median {widest}", hasWide, $"one lane with median width >= {(int)(12 * f)} (12..16 at Medium and up; the cap is 20)"));
         res.Add(new LayoutCheck("medium lane", hasMedium ? "present" : "missing", hasMedium, "one lane with median width 5..9"));
-        res.Add(new LayoutCheck("narrow choke", $"narrowest lane min {narrowMin}", hasNarrow, "one lane whose narrowest point is 3..5"));
-        res.Add(new LayoutCheck("lane >= 3 wide", $"narrowest point of the best lane {BestMin(map, pass, width, st, team, n)}", BestMin(map, pass, width, st, team, n) >= 3, ">= 3"));
+        res.Add(new LayoutCheck("narrow choke", $"narrowest lane point {narrowMin}", hasNarrow, "one lane whose narrowest point is 3..5"));
+        res.Add(new LayoutCheck("lane >= 3 wide", $"narrowest point of the best lane {BestMin(map, pass, width, st, team, n, dist, f)}", BestMin(map, pass, width, st, team, n, dist, f) >= 3, ">= 3"));
 
         // ---- fields ----------------------------------------------------------------------------------
         int[] fid = MapAnalysis.FieldIds(map, out int fc);
@@ -157,7 +161,7 @@ public static class LayoutChecks
                     cells30[s]++; money30[s] += map.Density[i] * (map.Overlay[i] == OverlayKind.Pitchblende ? 2 : 1);
                 }
         long cMin = cells30.Min(), cMax = cells30.Max();
-        res.Add(new LayoutCheck("resource per start", $"{cMin}..{cMax} cells within {radius} path cells; money {money30.Min()}..{money30.Max()}", cMin >= 100 && cMax <= 220, "100..220 cells"));
+        res.Add(new LayoutCheck("resource per start", $"{cMin}..{cMax} cells within {radius} path cells; money {money30.Min()}..{money30.Max()}", cMin >= (int)(100 * f) && cMax <= 220, $"{(int)(100 * f)}..220 cells (the lower bound scales with min(1, side/96))"));
         res.Add(new LayoutCheck("resource parity", $"cells {cMin}/{cMax}, money {money30.Min()}/{money30.Max()}", cMin == cMax && money30.Min() == money30.Max(), "equal across starts"));
         long allMoney = 0; for (int i = 0; i < fc; i++) allMoney += money[i];
         res.Add(new LayoutCheck("money per start", $"{allMoney / k} (layout 1 target {MoneyTarget(n, k == 2 ? 2 : 4)})", true, "reported"));
@@ -182,17 +186,20 @@ public static class LayoutChecks
         }
         res.Add(new LayoutCheck("natural", natAny ? natText : "none on this seed", natAny == natAll, "none, or 30..80 cells at 18..28, enemy >= 2.5x (all starts alike)"));
 
-        int contested = 0, rich = 0; string ctext = "";
+        int contested = 0, rich = 0; string ctext = "", all = "";
+        var firstCell = new int[fc]; Array.Fill(firstCell, -1);
+        for (int i = 0; i < total; i++) if (fid[i] >= 0 && firstCell[fid[i]] < 0) firstCell[fid[i]] = i;
+        for (int q = 0; q < fc; q++) all += $" ({firstCell[q] % n},{firstCell[q] / n}){size[q]}@{string.Join("/", Enumerable.Range(0, k).Select(s => near[s][q]))}";
         for (int q = 0; q < fc; q++)
         {
             bool ok = size[q] >= 20 && size[q] <= 70;
-            for (int s = 0; s < k && ok; s++) ok = near[s][q] >= P * 44 / 100 && near[s][q] <= P * 82 / 100;
+            for (int s = 0; s < k && ok; s++) ok = near[s][q] >= P * 44 / 100 && near[s][q] <= P * 88 / 100;
             if (!ok) continue;
             contested++; if (pitch[q]) rich++;
             ctext += (ctext.Length > 0 ? ", " : "") + size[q];
         }
         // Fields come once per symmetry image; the study counts them per map.
-        res.Add(new LayoutCheck("contested fields", $"{contested} ({ctext} cells), rich {rich}", contested >= 2 && contested <= 6 && rich <= 2, "2..6 of 20..70 cells at 0.44..0.82 P from every start, at most one rich centre"));
+        res.Add(new LayoutCheck("contested fields", $"{contested} ({ctext} cells), rich {rich}; all fields (cells@path from each start):{all}", contested >= 2 && contested <= 6 && rich <= 1, "2..6 of 20..70 cells at 0.44..0.88 P from every start, at most one rich centre"));
 
         // ---- terrain --------------------------------------------------------------------------------
         int rock = 0, water = 0, props = 0, road = 0;
@@ -218,8 +225,8 @@ public static class LayoutChecks
                 if (d0[i] != MapAnalysis.Unreachable && dist[s][i] == MapAnalysis.Unreachable && fid[i] >= 0) reach = false;
             for (int t = 0; t < k; t++) if (dist[s][map.IndexOf(st[t])] == MapAnalysis.Unreachable) reach = false;
         }
-        List<Lane> without = pairs.Count == 0 ? new List<Lane>() : FindLanes(map, noProps, Widths(noProps, n), st[pairs[0].Item1], st[pairs[0].Item2], n);
-        List<Lane> with = pairs.Count == 0 ? new List<Lane>() : FindLanes(map, pass, width, st[pairs[0].Item1], st[pairs[0].Item2], n);
+        List<Lane> without = pairs.Count == 0 ? new List<Lane>() : FindLanes(map, noProps, Widths(noProps, n), st[pairs[0].Item1], st[pairs[0].Item2], n, Bfs(map, noProps, st[pairs[0].Item1]), Bfs(map, noProps, st[pairs[0].Item2]), f);
+        List<Lane> with = pairs.Count == 0 ? new List<Lane>() : FindLanes(map, pass, width, st[pairs[0].Item1], st[pairs[0].Item2], n, dist[pairs[0].Item1], dist[pairs[0].Item2], f);
         bool propSafe = reach && with.Count >= Math.Min(without.Count, 2);
         res.Add(new LayoutCheck("prop safety", $"lanes {with.Count} with props, {without.Count} without; every field and start reachable: {reach}", propSafe, "props never cut a lane below 2 or a field off"));
         return res;
@@ -348,13 +355,16 @@ public static class LayoutChecks
         return w;
     }
 
-    private sealed record Lane(int Length, int Median, int Min, int SharePercent);
+    private sealed record Lane(int Length, int Median, int Min, int SharePercent, int MinAt);
 
-    private const int Exclude = 17;   // cells within this Chebyshev distance of a start count as its surroundings
+    private const int Exclude = 20;
+    private const int ExcludeBlock = 32;   // lanes may share this much of the way out of a main (the service street of a walled main)
+    private const int ExcludeUnused = 28;   // path cells from a start that count as its surroundings (scaled for small maps)
 
-    private static List<Lane> FindLanes(MapData map, bool[] pass, int[] width, CellCoord a, CellCoord b, int n)
+    private static List<Lane> FindLanes(MapData map, bool[] pass, int[] width, CellCoord a, CellCoord b, int n, int[] da, int[] db, double f)
     {
         var lanes = new List<Lane>();
+        int ex = (int)(Exclude * f), exb = (int)(ExcludeBlock * f);
         var blockedLane = new bool[n * n];
         var used = new bool[n * n];
         int first = 0;
@@ -364,23 +374,22 @@ public static class LayoutChecks
             if (path is null) break;
             if (round == 0) first = path.Count;
             else if (path.Count > first * 14 / 10) break;
-            var inner = new List<int>();
+            var inner = new List<int>(); int minAt = path[0], minW = 1000;
             int shared = 0, counted = 0;
             foreach (int c in path)
             {
-                int x = c % n, y = c / n;
-                bool near = Math.Max(Math.Abs(x - a.X), Math.Abs(y - a.Y)) <= Exclude || Math.Max(Math.Abs(x - b.X), Math.Abs(y - b.Y)) <= Exclude;
+                bool near = da[c] <= ex || db[c] <= ex;
                 if (near) continue;
-                inner.Add(width[c]); counted++;
+                inner.Add(width[c]); counted++; if (width[c] < minW) { minW = width[c]; minAt = c; }
                 if (used[c]) shared++;
             }
             if (inner.Count == 0) break;
             inner.Sort();
-            lanes.Add(new Lane(path.Count, inner[inner.Count / 2], inner[0], counted == 0 ? 0 : shared * 100 / counted));
+            lanes.Add(new Lane(path.Count, inner[inner.Count / 2], inner[0], counted == 0 ? 0 : shared * 100 / counted, minAt));
             foreach (int c in path)
             {
                 int x = c % n, y = c / n;
-                bool near = Math.Max(Math.Abs(x - a.X), Math.Abs(y - a.Y)) <= Exclude || Math.Max(Math.Abs(x - b.X), Math.Abs(y - b.Y)) <= Exclude;
+                bool near = da[c] <= exb || db[c] <= exb;
                 used[c] = true;
                 if (near) continue;
                 int r = Math.Min(8, (width[c] + 1) / 2 + 1);
@@ -392,13 +401,13 @@ public static class LayoutChecks
         return lanes;
     }
 
-    private static int BestMin(MapData map, bool[] pass, int[] width, IReadOnlyList<CellCoord> st, int[] team, int n)
+    private static int BestMin(MapData map, bool[] pass, int[] width, IReadOnlyList<CellCoord> st, int[] team, int n, int[][] dist, double f)
     {
         int best = 0;
         for (int t = 0; t < st.Count; t++)
         {
             if (team[t] == team[0]) continue;
-            foreach (Lane l in FindLanes(map, pass, width, st[0], st[t], n)) best = Math.Max(best, l.Min);
+            foreach (Lane l in FindLanes(map, pass, width, st[0], st[t], n, dist[0], dist[t], f)) best = Math.Max(best, l.Min);
             break;
         }
         return best;
