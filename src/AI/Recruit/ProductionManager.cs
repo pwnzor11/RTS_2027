@@ -109,7 +109,7 @@ internal sealed class ProductionManager
         Func<int, int> cost)
     {
         if (k.Queue(cat).Items.Count > 0) return;
-        if (_tier is { Profile.ArmyCap: > 0 } && k.Army.Count + k.Home.Count + k.Detached.Count >= _tier.Profile.ArmyCap) return;   // S15 lbknob: swarm cap
+        if (_tier is { Profile.ArmyCap: > 0 } && (_tier.Profile.ArmyCapUntilTick == 0 || k.View.Tick < _tier.Profile.ArmyCapUntilTick) && k.Army.Count + k.Home.Count + k.Detached.Count >= _tier.Profile.ArmyCap) return;   // S15 lbknob: swarm cap
         if (cat == ProductionCategory.Infantry && _tactics != null && _tactics.HoldInfantry(k)) return;   // M7-10
         int type = cat == ProductionCategory.Vehicle ? PeekVehicle(k.Rules) : mix[idx % mix.Length];
         if (_tier != null && !(cat == ProductionCategory.Vehicle && _first)) type = _tier.PickUnit(k, cat, mix, type, _rng!);   // M3-11

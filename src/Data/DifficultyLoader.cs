@@ -28,14 +28,14 @@ public static class DifficultyLoader
         // M4-16 s12 ladder
         "attack_ratio_pct", "predicted_retreat", "retreat_ratio_pct",
         // S15 lbknob: credits kept in hand before a unit is bought (pacing)
-        "unit_reserve", "army_cap",
+        "unit_reserve", "army_cap", "army_cap_until_tick",
     ];
 
     /// <summary>S15 lbknob: the profile keys a <c>[faction.&lt;id&gt;.tier&lt;N&gt;]</c> table may override (numbers the AI reads at run time; the driver's
     /// decision interval / command delay and the capability flags stay with the shared tier).</summary>
     public static readonly IReadOnlyList<string> OverrideKeys =
     [
-        "attack_threshold", "attack_ratio_pct", "expansion_tick", "harvester_target", "retreat_health_pct", "retreat_ratio_pct", "unit_reserve", "army_cap",
+        "attack_threshold", "attack_ratio_pct", "expansion_tick", "harvester_target", "retreat_health_pct", "retreat_ratio_pct", "unit_reserve", "army_cap", "army_cap_until_tick",
     ];
 
     /// <summary>The data/ai/difficulty.toml beside the nearest data/rules above <paramref name="startDirectory"/>, or null.</summary>
@@ -146,11 +146,12 @@ public static class DifficultyLoader
             int? rr = Opt(table, id, "retreat_ratio_pct", 0, 1000, b.RetreatRatioPct, file, problems);
             int? res = Opt(table, id, "unit_reserve", 0, 100000, b.UnitReserve, file, problems);
             int? cap = Opt(table, id, "army_cap", 0, 1000, b.ArmyCap, file, problems);
+            int? capUntil = Opt(table, id, "army_cap_until_tick", 0, 10000000, b.ArmyCapUntilTick, file, problems);
             if (problems.Count > before) continue;
             DifficultyProfile o = b with
             {
                 AttackThreshold = thr!.Value, AttackRatioPct = ratio!.Value, ExpansionTick = exp!.Value, HarvesterTarget = harv!.Value,
-                RetreatHealthPct = ret!.Value, RetreatRatioPct = rr!.Value, UnitReserve = res!.Value, ArmyCap = cap!.Value,
+                RetreatHealthPct = ret!.Value, RetreatRatioPct = rr!.Value, UnitReserve = res!.Value, ArmyCap = cap!.Value, ArmyCapUntilTick = capUntil!.Value,
             };
             result[idx] = b.WithFactionOverride(FactionEnum[f], o);
         }
@@ -193,6 +194,7 @@ public static class DifficultyLoader
         int? retreatRatio = Opt(table, id, "retreat_ratio_pct", 0, 1000, 0, file, problems);
         int? reserve = Opt(table, id, "unit_reserve", 0, 100000, 0, file, problems);
         int? armyCap = Opt(table, id, "army_cap", 0, 1000, 0, file, problems);
+        int? armyCapUntil = Opt(table, id, "army_cap_until_tick", 0, 10000000, 0, file, problems);
 
         if (problems.Count > before) return null;
         return new DifficultyProfile(id, tier!.Value, interval!.Value, delay!.Value, infoAge!.Value, threshold!.Value,
@@ -203,7 +205,7 @@ public static class DifficultyLoader
             ActiveScouting = scouting == 1, Harass = harass == 1, UseUpgrades = upgrades == 1, AdaptBuild = adapt == 1,
             HarvesterTarget = harvesters!.Value,
             AttackRatioPct = ratio!.Value, PredictedRetreat = predicted == 1, RetreatRatioPct = retreatRatio!.Value,
-            UnitReserve = reserve!.Value, ArmyCap = armyCap!.Value,
+            UnitReserve = reserve!.Value, ArmyCap = armyCap!.Value, ArmyCapUntilTick = armyCapUntil!.Value,
         };
     }
 

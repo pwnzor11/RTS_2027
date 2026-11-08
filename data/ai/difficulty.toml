@@ -40,6 +40,7 @@
 #   harvester_target, retreat_health_pct, retreat_ratio_pct, unit_reserve, army_cap. Behaviour only, never unit/building/weapon/cost numbers.
 #   army_cap       0..1000: army units alive (home, on a wave, detached; harvesters excluded) at which unit production pauses until losses make room
 #                  (0 = no cap; also allowed in a tier table). The one lever found that cut Left Behind tier 3 without touching its tier 5.
+#   army_cap_until_tick  0..: the cap holds only before this tick (0 = the whole game)
 #   unit_reserve   0..100000: credits a unit purchase leaves in hand (0 = none; also allowed in a tier table)
 # D-167 (per faction, optional): tables [faction.authority], [faction.directorate], [faction.left_behind], [faction.expedition]
 #   harass_min_army         1..1000: army size before the raiding party (flag harass) is formed; missing key or table = 30.
@@ -55,9 +56,10 @@ harass_min_army = 14
 harass_min_army = 30
 
 # D-186: Left Behind tier 3 out-produced every tier-3 opponent (68 % decisive v Authority 3, 87 % v Directorate 3 at 32 games, 96x96) while tier 5 was
-# fine; its cheap Buggy / Hook Runner bags snowball to 40+ units by t3000. A cap on the swarm (see docs/balance/s15_lbknob.md) brings tier 3 down.
+# fine; its cheap Buggy / Hook Runner bags snowball to 40+ units by t3000. A cap on the early swarm (see docs/balance/s15_lbknob.md) brings tier 3 down.
 [faction.left_behind.tier3]
-army_cap = 36  # (tune) s15
+army_cap = 20  # (tune) s15
+army_cap_until_tick = 3600  # (tune) s15: the early snowball only; a longer cap cost it the Expedition games
 
 [faction.expedition]
 harass_min_army = 30

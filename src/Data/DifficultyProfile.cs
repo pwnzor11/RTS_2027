@@ -74,6 +74,9 @@ public sealed record DifficultyProfile(
     /// <summary>S15 lbknob: army units (alive, harvesters excluded) at which unit production pauses until losses or a wave leave room (0 = no cap).</summary>
     public int ArmyCap { get; init; }
 
+    /// <summary>S15 lbknob: with <see cref="ArmyCap"/>, the cap holds only before this tick (0 = for the whole game).</summary>
+    public int ArmyCapUntilTick { get; init; }
+
     // S15 lbknob: per-faction versions of this tier (index = Faction enum value), from the [faction.<id>.tier<N>] tables; null = the shared profile.
     private DifficultyProfile?[] _byFaction = new DifficultyProfile?[5];
 

@@ -41,4 +41,18 @@ public sealed class LbKnobTests
         Assert.True(open > Cap + 4, $"without the cap the army grows past it ({open})");
         Assert.True(held <= Cap + 4, $"with the cap the army stays near it ({held}; in-flight units and free spawns allowed)");
     }
+
+    [Fact]
+    public void ALeftBehindTierThreeAiSavedMidGameContinuesLikeOneThatNeverSaved()
+    {
+        const int Before = 3000, After = 1500;   // across the end of the early cap
+        DifficultyProfile tier = TestWorld.Tiers[2];
+        var straight = new TierRig(Faction.LeftBehind, tier);
+        straight.Run(Before + After);
+        var r = new TierRig(Faction.LeftBehind, tier);
+        r.Run(Before);
+        byte[]? blob = r.CaptureAi();
+        Assert.NotNull(blob);
+        Assert.Equal(straight.Sim.ComputeStateHash(), r.ResumeWithBlob(blob!, After));
+    }
 }
