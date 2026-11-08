@@ -7,6 +7,7 @@ using Rts.Game.Sprites;
 using Rts.Game.Veterancy;
 using Rts.Sim.Core;
 using Rts.Sim.Map;
+using Rts.Sim.Rules;
 using Rts.Sim.View;
 
 namespace Rts.Game.Render;
@@ -144,6 +145,20 @@ public sealed class SceneRenderer : IDisposable
             }
         }
         _fx.Draw(batch, _library, camera, snapshot.Tick);
+    }
+
+    /// <summary>
+    /// M11-10f: draws the sprite of building type <paramref name="typeIndex"/> at half transparency with its footprint's top-left on
+    /// <paramref name="topLeft"/> (the placement ghost). Uses the same sprite lookup and painter as real buildings.
+    /// </summary>
+    public void DrawBuildingGhost(SpriteBatch batch, Texture2D pixel, SimRules rules, int typeIndex, CellCoord topLeft, Camera camera, int tick, byte player)
+    {
+        if ((uint)typeIndex >= (uint)rules.Buildings.Count) return;
+        BuildingType bt = rules.Buildings[typeIndex];
+        var view = new BuildingView(default, player, typeIndex, topLeft, bt.FootprintW, bt.FootprintH, bt.MaxHealth, false);
+        ResolvedSprite sprite = _sprites.ForBuilding(rules, view);
+        int frame = SpriteStates.BuildingFrame(sprite.Manifest, int.MaxValue / 2, bt.MaxHealth, bt.MaxHealth, false, tick, false);
+        _painter.Draw(batch, sprite, frame, SpriteLayout.BuildingOrigin(camera, topLeft), PlayerColours.Base(player), camera.Zoom, 0.5f);
     }
 
     /// <inheritdoc />
