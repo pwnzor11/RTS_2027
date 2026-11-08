@@ -52,6 +52,7 @@ def build(S0, state, k, n):
     cyl("ring", 0.75, 0.1, (px, py, pz + 0.05), "chrome", "Z", 22)
     box("base", (1.6, 1.8, 0.4), (px, py, pz + 0.28), "navy", 0.15)
     box("baseroof", (1.2, 1.4, 0.04), (px, py - 0.1, pz + 0.5), "white", 0.01)
+    box("troofband", (1.2, 0.45, 0.045), (px, py - 0.55, pz + 0.52), "house", 0.0)                 # S16 team colour: roof band
     for s in (-1, 1):
         box(f"tflash{s}", (0.05, 1.2, 0.16), (px + s * 0.82, py, pz + 0.28), "house", 0.0)
         box(f"ttrim{s}", (0.05, 1.5, 0.05), (px + s * 0.8, py, pz + 0.48), "copper", 0.0)
@@ -66,6 +67,6 @@ def build(S0, state, k, n):
             cyl(f"tube{c}{r}", 0.15, 0.1, (xx, py + 1.62, zz + 0.35), "dark", "Y", 12, rot=(90 + t, 0, 0))
             cyl(f"cap{c}{r}", 0.11, 0.07, (xx, py + 1.55, zz + 0.33), "orange", "Y", 12, rot=(90 + t, 0, 0))
     box("podtop", (1.1, 1.9, 0.05), (px, py + 0.4, pz + 1.38), "copper", 0.0, rot=(t, 0, 0))
-    box("podband", (1.25, 0.12, 0.84), (px, py + 0.0, pz + 0.92), "copper", 0.03, rot=(t, 0, 0))
+    box("podband", (1.25, 0.12, 0.84), (px, py + 0.0, pz + 0.92), "house", 0.03, rot=(t, 0, 0))
     sph("spotter", 0.26, (px - 0.5, py - 0.65, pz + 0.55), "glass", scale=(1, 1, 0.7))
     cyl("spring", 0.27, 0.06, (px - 0.5, py - 0.65, pz + 0.5), "chrome", "Z", 14)
