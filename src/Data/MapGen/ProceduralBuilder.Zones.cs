@@ -42,7 +42,7 @@ internal sealed partial class ProceduralBuilder
         _rng = new SimRandom(seed);
         bool big = n >= 96;
         _sa = Math.Max(9, n * _rng.Next(14, 21) / 100);
-        _sb = players == 2 ? _sa + n * _rng.Next(43, 51) / 100 : n - 1 - _sa - n * _rng.Next(20, 24) / 100;
+        _sb = players == 2 ? _sa + n * _rng.Next(43, 51) / 100 : n - 1 - _sa - n * _rng.Next(16, 21) / 100;
         int m = _rng.Next(12);
         _mode = m < 8 ? 0 : m < 11 ? 1 : 2;
         _natural = _rng.Next(2) == 0;

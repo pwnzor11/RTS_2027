@@ -24,7 +24,7 @@ public static class MapGenerator
     public const int ZonedLayout = 2;
 
     /// <summary>Attempts allowed for the zoned layout (its checks are stricter than layout 1's).</summary>
-    public const int MaxZonedAttempts = 40;
+    public const int MaxZonedAttempts = 16;
 
     /// <summary>The friendly message of a save made with a generator this build no longer has.</summary>
     public const string OldGeneratorMessage = "This save was made with an older map generator and can't be loaded.";
