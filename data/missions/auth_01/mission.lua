@@ -72,20 +72,22 @@ function CheckConvoy()
     Objective.SetTarget("hold", "survey")
     Dialogue.Say(SPEAKER, SPEAKER, "a1.radio.down")
     Camera.Focus("survey", 120)
-    Trigger.AfterDelay(300, RaidOne)
-    Mission.Timer("raid2", 1500, RaidTwo, "a1.timer.raid2")
+    Trigger.AfterDelay(Pick({ 300, 300, 300, 260, 220 }), RaidOne)
+    Mission.Timer("raid2", Pick({ 1500, 1500, 1500, 1400, 1300 }), RaidTwo, "a1.timer.raid2")
   end
 end
 
--- Raid strength follows the difficulty tier (1..5); tier 3 is the original raid. Never cash or vision (D-061).
-function RaidOneSize()
-  local sizes = { 2, 2, 3, 4, 5 }
+-- Raid strength and arrival time follow the difficulty tier (1..5); tier 3 is the original raid. Never cash or vision (D-061).
+function Pick(sizes)
   return sizes[Mission.Difficulty()]
 end
 
+function RaidOneSize()
+  return Pick({ 2, 2, 3, 4, 5 })
+end
+
 function RaidTwoSize()
-  local sizes = { 3, 3, 4, 5, 6 }
-  return sizes[Mission.Difficulty()]
+  return Pick({ 3, 3, 4, 5, 6 })
 end
 
 function Raid(types, edge)

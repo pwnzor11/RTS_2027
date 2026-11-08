@@ -61,7 +61,7 @@ internal static class CampaignWalks
     /// <summary>The tiers the per-mission test supports for this mission's walk.</summary>
     public static int[] Tiers(string id) => id switch
     {
-        "auth_01" or "auth_02" or "auth_03" or "auth_04" or "dir_01" or "exp_01" => new[] { 3, 5 },
+        "auth_04" or "dir_01" or "exp_01" => new[] { 3, 5 },
         _ => new[] { 1, 3, 5 },
     };
 

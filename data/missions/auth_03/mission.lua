@@ -30,9 +30,9 @@ function OnInit()
   AI.Defend(1, "enemy_base")
 
   Mission.Timer("tide", 9000, TideTurns, "a3.timer.tide")
-  Trigger.AfterDelay(1200, HomeWaveOne)
-  Trigger.AfterDelay(3000, HomeWaveTwo)
-  Trigger.AfterDelay(4800, HomeWaveThree)
+  Trigger.AfterDelay(Pick({ 1200, 1200, 1200, 1000, 800 }), HomeWaveOne)
+  Trigger.AfterDelay(Pick({ 3000, 3000, 3000, 2600, 2200 }), HomeWaveTwo)
+  Trigger.AfterDelay(Pick({ 4800, 4800, 4800, 4300, 3800 }), HomeWaveThree)
   Trigger.Every(20, CheckEscort)
   Trigger.OnDestroyed("carrier1", CarrierLost)
   Trigger.OnDestroyed("carrier2", CarrierLost)
@@ -71,17 +71,17 @@ end
 function HomeWaveOne()
   Media.MessageKey("a3.home1")
   Dialogue.Say(SPEAKER, SPEAKER, "a3.radio.home1")
-  Reinforce.Zone(1, Squad("dir", Pick({ 4, 5, 6, 8, 10 }), Pick({ 0, 0, 1, 2, 2 }), 0), "spawn_e", Map.Center("home"))
+  Reinforce.Zone(1, Squad("dir", Pick({ 4, 4, 6, 9, 12 }), Pick({ 0, 0, 1, 2, 3 }), 0), "spawn_e", Map.Center("home"))
 end
 
 function HomeWaveTwo()
   Media.MessageKey("a3.home2")
-  Reinforce.Zone(1, Squad("dir", Pick({ 5, 6, 8, 10, 12 }), Pick({ 1, 1, 2, 3, 4 }), 0), "spawn_e", Map.Center("home"))
+  Reinforce.Zone(1, Squad("dir", Pick({ 4, 5, 8, 11, 14 }), Pick({ 1, 1, 2, 4, 5 }), 0), "spawn_e", Map.Center("home"))
 end
 
 function HomeWaveThree()
   Media.MessageKey("a3.home3")
-  Reinforce.Zone(1, Squad("dir", Pick({ 6, 7, 9, 11, 14 }), Pick({ 1, 2, 3, 4, 5 }), Pick({ 0, 1, 1, 2, 3 })), "spawn_e", Map.Center("home"))
+  Reinforce.Zone(1, Squad("dir", Pick({ 5, 6, 9, 12, 16 }), Pick({ 1, 2, 3, 5, 6 }), Pick({ 0, 0, 1, 3, 4 })), "spawn_e", Map.Center("home"))
 end
 
 -- front one: the road
@@ -90,7 +90,7 @@ function MidAmbush()
   state.midHit = true
   Media.MessageKey("a3.mid")
   Dialogue.Say(SPEAKER, SPEAKER, "a3.radio.mid")
-  Reinforce.Zone(1, Squad("dir", Pick({ 5, 6, 8, 10, 12 }), Pick({ 1, 2, 3, 4, 5 }), Pick({ 0, 0, 1, 2, 3 })), "spawn_mid", Map.Center("mid"))
+  Reinforce.Zone(1, Squad("dir", Pick({ 4, 5, 8, 11, 14 }), Pick({ 1, 1, 3, 5, 6 }), Pick({ 0, 0, 1, 2, 4 })), "spawn_mid", Map.Center("mid"))
   Camera.Focus("mid", 100)
 end
 
@@ -99,7 +99,7 @@ function DunesAmbush()
   state.dunesHit = true
   Media.MessageKey("a3.dunes")
   Dialogue.Say(CALLOWAY, CALLOWAY, "a3.radio.drift")
-  Reinforce.Zone(2, Squad("lb", Pick({ 4, 5, 6, 8, 10 }), Pick({ 2, 2, 3, 4, 5 }), 0), "lb_spawn", Map.Center("dunes"))
+  Reinforce.Zone(2, Squad("lb", Pick({ 4, 4, 6, 9, 12 }), Pick({ 2, 2, 3, 5, 6 }), 0), "lb_spawn", Map.Center("dunes"))
 end
 
 function CoastCounter()
@@ -107,7 +107,7 @@ function CoastCounter()
   state.coastHit = true
   Media.MessageKey("a3.coast")
   Dialogue.Say(SPEAKER, SPEAKER, "a3.radio.coast")
-  Reinforce.Zone(1, Squad("dir", Pick({ 5, 6, 8, 10, 12 }), Pick({ 2, 2, 3, 4, 5 }), Pick({ 0, 1, 2, 2, 3 })), "enemy_base", Map.Center("coast"))
+  Reinforce.Zone(1, Squad("dir", Pick({ 4, 5, 8, 11, 14 }), Pick({ 2, 2, 3, 5, 6 }), Pick({ 0, 0, 2, 3, 4 })), "enemy_base", Map.Center("coast"))
 end
 
 function CacheFound()
