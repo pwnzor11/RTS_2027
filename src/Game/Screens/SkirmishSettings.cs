@@ -97,6 +97,11 @@ public sealed record SkirmishSettings(MapChoice Map, IReadOnlyList<SkirmishSlot>
         }
     }
 
+    /// <summary>The team a new slot gets by default. A 4-player game on a layout-2 map (teammates side by side, M12-07) defaults to teams 1+2
+    /// against 3+4; every other case keeps the old default of one team per slot. The setup screen still lets the player change it.</summary>
+    public static int DefaultTeam(int index, int players, int layout) =>
+        layout == MapGenerator.ZonedLayout && players == 4 ? index / 2 : Math.Min(index, MaxSlots - 1);
+
     /// <summary>
     /// The value for <c>SimSetup.Teams</c>, one entry per player. Slot team numbers are renumbered by first appearance in player order,
     /// and null is returned when that gives every player its own team in order (the sim default), as the old two-player game.
