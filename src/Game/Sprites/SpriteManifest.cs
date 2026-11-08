@@ -24,7 +24,7 @@ public sealed class SpriteManifest
     private static readonly string[] TopKeys =
     {
         "file", "frame_w", "frame_h", "origin_x", "origin_y", "house", "state", "fx", "shadow_dx", "shadow_dy",
-        "layer", "pivot_x", "pivot_y", "pivot_z", "altitude",
+        "layer", "pivot_x", "pivot_y", "pivot_z", "altitude", "figure_scale_permille",
     };
     private static readonly string[] PivotKeys = { "pivot_x", "pivot_y", "pivot_z" };
     private static readonly string[] Layers = { "body", "turret", "shadow" };
@@ -79,6 +79,9 @@ public sealed class SpriteManifest
     /// code does not use it.
     /// </summary>
     public double Altitude { get; }
+
+    /// <summary>D-184: how much larger than the original art the figure was rendered, in per mille (1000 = original; optional key <c>figure_scale_permille</c>). The renderer's "Larger infantry" step is skipped for sprites already rendered larger.</summary>
+    public int FigureScalePermille { get; private init; } = 1000;
 
     /// <summary>Sprite id, the manifest's file stem.</summary>
     public string Id { get; }
@@ -174,7 +177,10 @@ public sealed class SpriteManifest
         TurretPivot? pivot = ReadPivot(root, layer, sourcePath);
         double altitude = Number(root, "altitude", sourcePath) ?? 0;
         return new SpriteManifest(id, sourcePath, file, frameW, frameH, originX, originY, ramp, states, fx, shadowDx, shadowDy,
-            layer, pivot, altitude);
+            layer, pivot, altitude)
+        {
+            FigureScalePermille = root.ContainsKey("figure_scale_permille") ? Positive(root, "figure_scale_permille", sourcePath) : 1000,
+        };
     }
 
     private static string ReadLayer(TomlTable root, string sourcePath)

@@ -175,6 +175,7 @@ internal sealed class MilitaryManager
     private void WaveFailed()
     {
         _required = WaveGate.Escalate(Options.Respond, _required, _launchValue);
+        _failedWaves++;   // S15
     }
 
     /// <summary>S14 mop-up (flag respond_to_attacks): no enemy mobile unit seen for the whole long window (<see cref="TierPlanner.WaveGateMemoryTicks"/>) counts as "no enemy army".</summary>
@@ -195,6 +196,63 @@ internal sealed class MilitaryManager
 
     private bool MopupDue(RecruitKnowledge k, int n) =>
         MopupLaunch && Options.Respond && k.View.Tick >= MopupFromTick && _eLongVal == 0 && n >= MopupMinArmy && k.View.Tick - _lastWave >= MopupGapTicks;
+
+    // ---- S15 siege (Q-64, D-174): decisions in SiegePlan, memory here (saved at the end of Snapshot) ----
+    private bool _siegeOn, _siegeWave, _siegeHave;
+    private int _siegeNeed, _defRangeCells, _failedWaves;
+    private EntityId _siegeId, _siegeIssued;
+    private CellCoord _siegeCell;
+
+    /// <summary>S15: waves launched in siege mode (the enemy base was defended).</summary>
+    public int SiegeWaves { get; private set; }
+
+    /// <summary>S15: decisions on which a wave was held back to gather a bigger army.</summary>
+    public int SiegeHolds { get; private set; }
+
+    /// <summary>S15: true while the wave on the march is a siege wave.</summary>
+    public bool SiegeActive => _siegeWave && _phase != Phase.Gather;
+
+    /// <summary>S15: the army value the next wave waits for (0 while the enemy base is not seen as defended).</summary>
+    public int SiegeNeed => _siegeOn ? _siegeNeed : 0;
+
+    /// <summary>S15: waits for a bigger army and picks the siege target. Known defences of the target player decide; tier 1 never sieges.</summary>
+    private void AssessSiege(RecruitKnowledge k)
+    {
+        _siegeOn = false; _siegeNeed = 0;
+        if (!Options.Respond || !SiegePlan.Enabled(Options.Tier) || _targetPlayer < 0) return;
+        int v = SiegePlan.DefenceValue(k.Rules, _targetBuildings, out _defRangeCells);
+        // the view shows only the defences the army has been close to: a base that already killed a wave counts as defended whatever is known
+        if (v < SiegePlan.MinDefenceValue && !(_failedWaves > 0 && v > 0)) return;
+        _siegeOn = true;
+        _siegeNeed = SiegePlan.Need(Options.Tier, v);
+    }
+
+    /// <summary>S15: the building the siege wave attacks now. Sticks to the current one while it is known and not avoided, unless a vital structure
+    /// no defence covers has come into reach and the current one is not vital.</summary>
+    private ViewActor? SiegeTarget(RecruitKnowledge k, List<ViewActor> known)
+    {
+        int tick = k.View.Tick;
+        SimRules rules = k.Rules;
+        ViewActor? current = null;
+        if (_siegeHave)
+            foreach (ViewActor b in known)
+                if (b.Id == _siegeId && !Avoided(b.Cell, tick)) { current = b; break; }
+        long x = 0, y = 0; int c = 0;
+        foreach (ViewActor a in k.Army)
+            if (_roster.Contains(Key(a))) { x += a.Position.X; y += a.Position.Y; c++; }
+        if (c == 0) foreach (ViewActor a in k.Army) { x += a.Position.X; y += a.Position.Y; c++; }
+        CellCoord from = c == 0 ? _home : new CellCoord((int)(x / c / 256), (int)(y / c / 256));
+        if (current is ViewActor cur && SiegePlan.IsVital(rules.Buildings[cur.TypeIndex])) return cur;
+        ViewActor? pick = SiegePlan.PickTarget(rules, known, from, cell => Avoided(cell, tick));
+        if (pick is ViewActor p)
+        {
+            bool better = current is null || (SiegePlan.IsVital(rules.Buildings[p.TypeIndex]) && SiegePlan.Cover(rules, known, p.Cell) == 0);
+            if (better) { _siegeHave = true; _siegeId = p.Id; _siegeCell = p.Cell; return p; }
+        }
+        if (current is ViewActor keep) { _siegeCell = keep.Cell; return keep; }
+        _siegeHave = false;
+        return null;
+    }
 
     public MilitaryManager(int attackThreshold) => _threshold = Math.Max(1, attackThreshold);
 
@@ -223,7 +281,7 @@ internal sealed class MilitaryManager
 
     /// <summary>The cell the army is heading for now (nearest known enemy building, else the scouting route).</summary>
     public CellCoord Goal(RecruitKnowledge k, List<ViewActor> knownEnemyBuildings) =>
-        PickGoal(k, _targetPlayer >= 0 ? _targetBuildings : knownEnemyBuildings);
+        SiegeActive && _phase == Phase.Assault && _siegeHave ? _siegeCell : PickGoal(k, _targetPlayer >= 0 ? _targetBuildings : knownEnemyBuildings);
 
     /// <summary>Waves launched so far.</summary>
     public int Waves { get; private set; }
@@ -263,7 +321,7 @@ internal sealed class MilitaryManager
     private static ulong Key(ViewActor a) => ((ulong)a.Id.Index << 16) | a.Id.Generation | ((ulong)(int)a.Kind << 48);
 
     /// <summary>M4-12 (diagnostics): the wave phase (0 gather, 1 stage, 2 assault), the scout-route stop and the last goal picked.</summary>
-    public string Debug => $"{(int)_phase}:{_scoutIdx}/{_scoutRoute.Count}@{(_scoutRoute.Count > 0 ? _scoutRoute[Math.Min(_scoutIdx, _scoutRoute.Count - 1)] : default)} goal {_lastGoal} stage {_stage} roster {_roster.Count}";
+    public string Debug => $"{(int)_phase}:{_scoutIdx}/{_scoutRoute.Count}@{(_scoutRoute.Count > 0 ? _scoutRoute[Math.Min(_scoutIdx, _scoutRoute.Count - 1)] : default)} goal {_lastGoal} stage {_stage} roster {_roster.Count} siege {(SiegeActive ? "wave" : _siegeOn ? "on" : "off")} need {_siegeNeed} waves {SiegeWaves} holds {SiegeHolds} tgt {(_siegeHave ? _siegeCell.ToString() : "-")}";
 
     /// <summary>M4-12: set by the AI while its income has stalled (map mined out): waves go out at <see cref="DesperateWave"/> units.</summary>
     public bool Broke { get; set; }
@@ -335,6 +393,7 @@ internal sealed class MilitaryManager
         ApplyRankValues(k);   // VET-6
         ChooseTarget(k, allKnownEnemyBuildings);
         List<ViewActor> knownEnemyBuildings = _targetBuildings;
+        AssessSiege(k);   // S15
         ViewActor? attacked = FindAttacked(k);
         int n = k.Army.Count;
 
@@ -375,19 +434,27 @@ internal sealed class MilitaryManager
             // with no scraper left there is no income to rebuild with: whatever is left goes out as soon as there are a few units
             bool desperate = (k.Harvesters.Count == 0 || Broke) && n >= DesperateWave;   // M4-12: also when income has stalled
             int guard = _hookForce ? 0 : Bias.HomeGuard;   // M5-02 (M8-06: a scripted wave takes everything): units that stay home (the wave waits for them too)
-            bool strong = WaveGate.Strong(Options.Respond, OwnValue, EnemyValueSeen, _required, n, tick, _lastWave, Options.AttackRatioPct);   // M4-16 r4: no wave into a clearly bigger army
+            // S15: against a defended base the escalated requirement of the last lost wave (200 percent of its value, up to 12 000, measured: 4 000 ticks of idling
+            // at home against an enemy with no army) is replaced by the siege requirement: the defence value, a little more after each lost wave
+            int needNow = _siegeOn ? (int)Math.Min(SiegePlan.NeedCap, (long)_siegeNeed * (100 + SiegePlan.GrowthPct * Math.Min(_failedWaves, SiegePlan.MaxFailureSteps)) / 100) : EnemyValueSeen == 0 && _targetPlayer >= 0 ? 0 : _required;   // S15: no enemy army seen for the whole long window and no defence worth a siege: nothing to wait for
+            bool strong = WaveGate.Strong(Options.Respond, OwnValue, EnemyValueSeen, needNow, n, tick, _lastWave, Options.AttackRatioPct);   // M4-16 r4: no wave into a clearly bigger army
             bool hookWave = _hookForce && n >= 1;   // M8-06: AI.Wave, once
             bool mop = !hookWave && !Hold && !HookHold && tick >= _cooldownUntil && MopupDue(k, n) && knownEnemyBuildings.Count + _scoutRoute.Count > 0;   // S14: no enemy army about: send what we have
             if (mop) { desperate = true; Mopups++; }   // v2 measurement: 4v3 Directorate fell to 41 % decisive, so MopupDue is off unless MopupLaunch
             if (hookWave) { _hookForce = false; _hookWaveActive = true; _hookWaveCell = _hookForceCell; desperate = true; }
-            if (hookWave || tick >= _cooldownUntil && !Hold && !HookHold && (strong || desperate) && (n >= Bias.Wave(_nextThreshold, 2) + guard
+            // S15: the enemy base is defended: gather an army worth a share of its defences first (not when broke, scripted, or after a long wait)
+            bool siegeHold = _siegeOn && !desperate && (OwnValue < _siegeNeed || n < SiegePlan.MinUnits(Options.Tier, _failedWaves)) && n < SiegePlan.CapUnits && tick - _lastWave < SiegePlan.WaitTicks;
+            if (siegeHold && n >= Bias.Wave(_nextThreshold, 2) + guard) SiegeHolds++;
+            if (hookWave || tick >= _cooldownUntil && !Hold && !HookHold && !siegeHold && (strong || desperate) && (n >= Bias.Wave(_nextThreshold, 2) + guard
                 || (n >= Bias.Wave(MinWave, 2) + guard && tick - _lastWave >= Bias.Wave(_nextInterval, 600)) || desperate))
             {
                 _roster.Clear(); _squadB.Clear();
                 long hp = 0;
                 int idx = 0;
                 CellCoord first = PickGoal(k, knownEnemyBuildings);
-                CellCoord? second = Options.TwoPronged && n >= MinProngArmy ? SecondGoal(k, knownEnemyBuildings, first) : null;
+                _siegeWave = _siegeOn && !hookWave;   // S15
+                if (_siegeWave) { SiegeWaves++; _siegeHave = false; _siegeIssued = default; }
+                CellCoord? second = Options.TwoPronged && n >= MinProngArmy && !_siegeWave ? SecondGoal(k, knownEnemyBuildings, first) : null;
                 _prong = second is not null;
                 int take = desperate ? n : Math.Max(1, n - guard), seen = 0;
                 foreach (ViewActor a in k.Army)
@@ -406,8 +473,9 @@ internal sealed class MilitaryManager
                 Waves++;
                 Reroll();
                 CellCoord launchGoal = PickGoal(k, knownEnemyBuildings);
-                _aheadWave = Options.Respond && Ahead;
-                _stage = Tactics?.ForwardStage(k, launchGoal) ?? StageCell(k, launchGoal, _aheadWave ? AheadStageCells : StageDistanceCells);
+                if (_siegeWave && SiegeTarget(k, knownEnemyBuildings) is ViewActor firstTarget) launchGoal = firstTarget.Cell;   // S15: stage short of the first siege target
+                _aheadWave = Options.Respond && (Ahead || (EnemyValueSeen == 0 && _targetPlayer >= 0));   // S15: no enemy army seen lately: stage close, a siege wave included
+                _stage = Tactics?.ForwardStage(k, launchGoal) ?? StageCell(k, launchGoal, _aheadWave ? AheadStageCells : _siegeWave ? Math.Max(StageDistanceCells, _defRangeCells + 5) : StageDistanceCells);
                 if (Tactics != null) _stage = Tactics.SafeCell(k, _stage);
                 _stageB = _stage;
                 if (_prong && Options.MultiFront && second is CellCoord flank)
@@ -426,7 +494,7 @@ internal sealed class MilitaryManager
             _phase = Phase.Gather;
             _roster.Clear();
         }
-        else if (Options.Respond && _phase == Phase.Assault && Stalled(k, knownEnemyBuildings))
+        else if (_phase == Phase.Assault && (Options.Respond || !_hookWaveActive) && Stalled(k, knownEnemyBuildings))   // S15: also for tier 1 (a wave of hurt units on an unkillable target never ended)
         {
             // M4-12: the wave has destroyed nothing for a long time (a target it cannot kill, a wall, free repairs): end it; every
             // survivor is counted again for the next wave, which goes out at once when the army is big enough
@@ -458,13 +526,25 @@ internal sealed class MilitaryManager
                 if (b) thereB++; else there++;
             }
             int aliveA = alive - aliveB;
-            bool ready = there * 100 >= aliveA * 70 && thereB * 100 >= aliveB * 70;
-            if (!_prong) ready = (there + thereB) * 100 >= alive * 70;
+            int readyPct = _siegeWave ? SiegePlan.ReadyPct : 70;   // S15
+            bool ready = there * 100 >= aliveA * readyPct && thereB * 100 >= aliveB * readyPct;
+            if (!_prong) ready = (there + thereB) * 100 >= alive * readyPct;
             if (ready || tick - _stageSince >= (_aheadWave ? AheadStageTimeoutTicks : StageTimeoutTicks)) _phase = Phase.Assault;
         }
 
         if (Options.Respond) Unstick(k, sink);
-        CellCoord goal = _phase == Phase.Assault ? PickGoal(k, knownEnemyBuildings) : default;
+        // S15: a siege wave attacks one building at a time, outside-in; long-range units shoot it from where the defences cannot reach back
+        ViewActor? siegeTarget = _siegeWave && _phase == Phase.Assault ? SiegeTarget(k, knownEnemyBuildings) : null;
+        CellCoord goal = _phase == Phase.Assault ? (siegeTarget is ViewActor stg ? stg.Cell : PickGoal(k, knownEnemyBuildings)) : default;
+        if (siegeTarget is not null) _lastGoal = goal;
+        bool retarget = siegeTarget is ViewActor stn && stn.Id != _siegeIssued;
+        bool holdLine = false;
+        CellCoord line = goal;
+        if (siegeTarget is ViewActor sgt)
+        {
+            if (retarget) _siegeIssued = sgt.Id;
+            holdLine = SiegeHoldLine(k, sgt, out line);
+        }
         CellCoord goalB = goal;
         if (_prong && _phase == Phase.Assault) goalB = SecondGoal(k, knownEnemyBuildings, goal) ?? goal;
         // VET-6: below the defence response, an assaulting wave concentrates on a visible rank-3 enemy
@@ -477,14 +557,28 @@ internal sealed class MilitaryManager
             }
         foreach (ViewActor a in k.Army)
         {
-            if (!a.Idle) continue;
-            bool member = _phase != Phase.Gather && _roster.Contains(Key(a));
+            bool memberNow = _phase != Phase.Gather && _roster.Contains(Key(a));
+            if (!a.Idle && !(retarget && memberNow && !a.Underground)) continue;
+            bool member = memberNow;
             bool prongB = member && _squadB.Contains(Key(a));
             if (member && _phase == Phase.Stage)
             {
                 CellCoord stage = prongB ? _stageB : _stage;
                 if (Tactics != null && Tactics.TryEnter(k, sink, a, stage)) continue;
                 if (Chebyshev(a.Cell, stage) > ReissueDistanceCells) sink.Issue(CommandKind.AttackMove, a.Id, a.Kind, stage);
+            }
+            else if (member && siegeTarget is ViewActor st)
+            {
+                bool art = Options.Artillery && SiegePlan.IsArtillery(k.Rules, a);
+                if (art && !st.Ghost)
+                {
+                    if (a.Idle || a.Target != st.Id) sink.Issue(CommandKind.Attack, a.Id, a.Kind, default, st.Ref);
+                }
+                else
+                {
+                    CellCoord to = holdLine ? line : st.Cell;
+                    if (Chebyshev(a.Cell, to) > ReissueDistanceCells) sink.Issue(CommandKind.AttackMove, a.Id, a.Kind, to);
+                }
             }
             else if (member)
             {
@@ -494,6 +588,27 @@ internal sealed class MilitaryManager
             else if (Chebyshev(a.Cell, rally) > HomeRadiusCells)
                 sink.Issue(CommandKind.Move, a.Id, a.Kind, rally);
         }
+    }
+
+    /// <summary>S15: with enough artillery in the wave and a target the artillery outranges, the direct-fire units hold a line at the artillery's firing
+    /// distance (between the guns and the target) instead of charging into the defences. <paramref name="line"/> is that cell.</summary>
+    private bool SiegeHoldLine(RecruitKnowledge k, ViewActor target, out CellCoord line)
+    {
+        line = target.Cell;
+        if (!Options.Artillery) return false;
+        int art = 0, minRange = int.MaxValue;
+        foreach (ViewActor a in k.Army)
+        {
+            if (!_roster.Contains(Key(a)) || !SiegePlan.IsArtillery(k.Rules, a)) continue;
+            art++;
+            minRange = Math.Min(minRange, SiegePlan.UnitRange(k.Rules, a));
+        }
+        if (art < SiegePlan.MinArtillery) return false;
+        int artCells = minRange / 256;
+        BuildingType bt = k.Rules.Buildings[target.TypeIndex];
+        if (SiegePlan.RangeCells(k.Rules, bt) + 1 >= artCells) return false;   // the target reaches the guns too: everyone goes in
+        line = StageCell(k, target.Cell, Math.Max(SiegePlan.RangeCells(k.Rules, bt) + 2, artCells - 3));
+        return true;
     }
 
     /// <summary>
@@ -509,6 +624,7 @@ internal sealed class MilitaryManager
         int threshold = Bias.Wave(_nextThreshold, 2);   // M5-02
         int need = (_mapWidth >= LargeMapCells ? Math.Max(2, threshold * LargeMapRegroupPct / 100) : threshold) + Bias.HomeGuard;   // M4-16
         if (waiting < need) return false;
+        if (_siegeWave && waiting < RosterAlive(k)) return false;   // S15: a siege wave is only called back for a reinforcement at least as big as itself
         Reinforcements += waiting;
         return true;
     }
@@ -522,8 +638,10 @@ internal sealed class MilitaryManager
         foreach (ViewActor b in known) score += b.Health + 1;
         int tick = k.View.Tick;
         int sc = (int)Math.Min(score, int.MaxValue);
+        // S15: progress is a new LOW of the target health (damage and the owner's repair alternate, and every dip used to count as progress,
+        // so a wave of hurt infantry in front of a repaired structure never counted as stalled: measured, 70 idle units at home for 12 000 ticks)
         bool progress = sc < _progressScore;
-        _progressScore = sc;
+        if (progress) _progressScore = sc;
         if (progress) { _progressTick = tick; return false; }
         if (tick - _progressTick < StaleAssaultTicks) return false;
         _avoid.Add((_lastGoal, tick + AvoidTicks));
@@ -841,6 +959,8 @@ internal sealed class MilitaryManager
         w.Write(_launchValue); w.Write(_required);   // M4-16 r4
         w.Write(_eShortVal); w.Write(_eShortBonus); w.Write(_eShortTick); w.Write(_eLongVal); w.Write(_eLongBonus); w.Write(_eLongTick);   // VET-6
         w.Write(Mopups);   // S14
+        w.Write(_siegeWave); w.Write(_siegeHave); w.Write(_failedWaves); w.Write(SiegeWaves); w.Write(SiegeHolds);   // S15
+        AiSnapshot.WriteId(w, _siegeId); AiSnapshot.WriteId(w, _siegeIssued); AiSnapshot.WriteCell(w, _siegeCell);
     }
 
     /// <summary>M8-06: writes the scripted-wave memory (only called when <see cref="HookDirty"/>).</summary>
@@ -890,6 +1010,8 @@ internal sealed class MilitaryManager
         _launchValue = r.ReadInt32(); _required = r.ReadInt32();   // M4-16 r4
         _eShortVal = r.ReadInt32(); _eShortBonus = r.ReadInt32(); _eShortTick = r.ReadInt32(); _eLongVal = r.ReadInt32(); _eLongBonus = r.ReadInt32(); _eLongTick = r.ReadInt32();   // VET-6
         Mopups = r.ReadInt32();   // S14
+        _siegeWave = r.ReadBoolean(); _siegeHave = r.ReadBoolean(); _failedWaves = r.ReadInt32(); SiegeWaves = r.ReadInt32(); SiegeHolds = r.ReadInt32();   // S15
+        _siegeId = AiSnapshot.ReadId(r); _siegeIssued = AiSnapshot.ReadId(r); _siegeCell = AiSnapshot.ReadCell(r);
         if (_scoutRoute.Count > 0) _scoutIdx = Math.Clamp(_scoutIdx, 0, _scoutRoute.Count - 1);
     }
 }

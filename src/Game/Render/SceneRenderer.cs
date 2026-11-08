@@ -24,9 +24,19 @@ public sealed class SceneRenderer : IDisposable
     /// <summary>F4: draw health bars on everything (the "Health bars: Always" setting); the game screen sets it each frame.</summary>
     public bool HealthBarsAlways { get; set; }
 
+    /// <summary>D-184 pilot: draw infantry 1.25 times larger (the "Larger infantry" setting); the game screen sets it each frame.</summary>
+    public bool LargerInfantry
+    {
+        get => UnitRenderer.InfantryExtraScale > 1f;
+        set => UnitRenderer.InfantryExtraScale = value ? UnitRenderer.LargerInfantryScale : 1f;
+    }
+
     private readonly SpriteResolver _sprites;
     private readonly SpriteLibrary? _library;
     private readonly FxPlayer _fx = new();
+    private readonly FxLook _look = new();   // D-184: damage tiers, remains, dust, mood tint
+    private MapData? _moodMap;
+    private MoodGrade _mood = MoodGrade.None;
     private int _fxTick = -1;
     private readonly SpritePainter _painter = new();
     private readonly RenderMemory _memory = new();
@@ -38,6 +48,7 @@ public sealed class SceneRenderer : IDisposable
     private readonly List<WreckDraw> _wrecks = new();
     private readonly List<StormView> _stormViews = new();
     private readonly List<StormDraw> _storms = new();
+    private Viewport _viewport;   // M12-04: remembered from Draw for the prop culling
     private bool _disposed;
     private readonly HashSet<EntityId> _submerged = new();                    // M7-14: dived ships the viewer can see
     private readonly HashSet<EntityId> _ownOrAllied = new();                  // M7-17: dived ships the viewer owns or is allied with
@@ -75,6 +86,7 @@ public sealed class SceneRenderer : IDisposable
     {
         SimSnapshot snapshot = frame.Snapshot;
         MapData? map = frame.Sim?.Setup.Map;
+        _viewport = viewport;
         if (map is not null)
         {
             _terrain.Draw(batch, pixel, map, camera);
@@ -95,13 +107,22 @@ public sealed class SceneRenderer : IDisposable
         TelegraphRenderer.Draw(batch, pixel, snapshot.Telegraphs, snapshot.Tick, camera, viewport);
         if (frame.Sim is not null) FoamOverlay.Draw(batch, frame.Sim, snapshot.Viewer, camera);
 
+        if (!ReferenceEquals(map, _moodMap))
+        {
+            _moodMap = map;
+            _mood = map is null ? MoodGrade.None : TerrainPalette.ForMap(map).Mood;
+        }
+
+        _look.Observe(snapshot, frame.Rules, _fx, _mood, _sprites);   // D-184
         if (frame.Sim is not null && frame.Rules is not null)   // M6-09: wrecks lie on the ground, under buildings and units
         {
             WreckStormOverlay.PlanWrecks(frame.Sim.ViewFor(0), frame.Rules.Economy.WreckTicks, _wreckViews, _wrecks);
             WreckStormOverlay.DrawWrecks(batch, pixel, _wrecks, camera);
         }
 
+        _look.DrawGround(batch, pixel, camera, viewport, snapshot.Tick, _wrecks);   // D-184: remains and dust, on the ground
         DrawSprites(batch, pixel, frame, camera);
+        _look.DrawOverSprites(batch, _library, _sprites, frame, _memory, camera, viewport);   // D-184: damage smoke and fire
         GarrisonOverlay.Draw(batch, snapshot, camera);
         DrawEffects(batch, snapshot, camera);
 
@@ -114,6 +135,7 @@ public sealed class SceneRenderer : IDisposable
         }
 
         FogRenderer.Draw(batch, pixel, snapshot, camera, viewport);
+        FxLook.DrawMood(batch, pixel, _mood, viewport.Bounds);   // D-184: world colour grade (the HUD draws after the scene)
         if (frame.Overlays.Paths) PathOverlay.Draw(batch, pixel, frame, camera);
         if (frame.Overlays.Ranges) RangeOverlay.Draw(batch, pixel, frame, camera);
         // VET-5: ranks come from the viewer's view only (fog-honest); the flash comes from the client-side tracker.
@@ -169,6 +191,23 @@ public sealed class SceneRenderer : IDisposable
         if (_disposed) return;
         _disposed = true;
         _painter.Dispose();
+        _look.Dispose();
+    }
+
+    // M12-04: blocking props in view join the y-sorted pass, so a unit south of a tree is drawn over it and one north of it under it.
+    private void AddBlockingProps(SceneFrame frame, Camera camera)
+    {
+        MapData? map = frame.Sim?.Setup.Map;
+        IReadOnlyList<PropInstance> props = _decor.Blocking;
+        if (map is null || props.Count == 0 || _viewport.Width <= 0) return;
+        if (!camera.VisibleCells(map.Width, map.Height, _viewport, out int x0, out int y0, out int x1, out int y1)) return;
+        for (int i = PropPlanner.FirstAtRow(props, y0 - 1); i < props.Count; i++)
+        {
+            PropInstance p = props[i];
+            if (p.CellY > y1 + 1) break;
+            if (p.CellX < x0 - 1 || p.CellX > x1 + 1) continue;
+            _items.Add(new DrawItem(DrawKind.Prop, i, (p.CellY + 1) * Camera.CellPx, p.CellX * Camera.CellPx));
+        }
     }
 
     private void DrawSprites(SpriteBatch batch, Texture2D pixel, SceneFrame frame, Camera camera)
@@ -205,11 +244,16 @@ public sealed class SceneRenderer : IDisposable
             RenderUnit unit = frame.Units[i];
             _items.Add(new DrawItem(DrawKind.Unit, i, unit.World.Y, unit.World.X));
         }
+        AddBlockingProps(frame, camera);
         _items.Sort(DrawOrder.Instance);
 
         foreach (DrawItem item in _items)
         {
-            if (item.Kind == DrawKind.Building)
+            if (item.Kind == DrawKind.Prop)
+            {
+                _decor.DrawBlocking(batch, camera, item.Index);
+            }
+            else if (item.Kind == DrawKind.Building)
             {
                 BuildingRenderer.Draw(batch, pixel, _sprites, _painter, _memory, snapshot.Tick, frame.Rules,
                     snapshot.Buildings[item.Index], camera, _walls);

@@ -146,7 +146,7 @@ public sealed class M7UiTests
         GameSaveHeader v4 = WithMap(new MapChoice(null, gen)) with { Version = 4 };
         GameSaveHeader back = RoundTrip(v4, 4);
         Assert.Equal(OceanEdges.None, back.Skirmish!.Map.Generated!.OceanEdges);
-        Assert.Equal(gen with { OceanEdges = OceanEdges.None }, back.Skirmish.Map.Generated);
+        Assert.Equal(gen with { OceanEdges = OceanEdges.None, Layout = 0 }, back.Skirmish.Map.Generated);   // M12-05: a header before version 6 names generator layout 0
     }
 
     [Fact]

@@ -38,9 +38,9 @@ public sealed class MapFormat3Tests
         };
 
     [Fact]
-    public void Version_IsThree_AndOlderStillRead()
+    public void Version_IsFour_AndOlderStillRead()   // M12-04: format 3 content (Coast, markers) is still written and read by format 4
     {
-        Assert.Equal(3, MapFile.FormatVersion);
+        Assert.Equal(4, MapFile.FormatVersion);
         Assert.Equal(1, MapFile.OldestReadableVersion);
     }
 
@@ -50,7 +50,7 @@ public sealed class MapFormat3Tests
         MapData map = CoastMap();
         string path = Temp("c.map.toml");
         MapFile.Save(map, Meta(map), path);
-        Assert.Contains("format_version = 3", File.ReadAllText(path));
+        Assert.Contains("format_version = 4", File.ReadAllText(path));
         var (back, meta) = MapFile.LoadWithMeta(path);
         Assert.Equal(MapHasher.Compute(map), MapHasher.Compute(back));
         Assert.Equal(LandType.Coast, back.Land[3 * 8 + 5]);
@@ -79,7 +79,7 @@ public sealed class MapFormat3Tests
         MapData map = MapGenerator.Generate(32, 5, "two");
         string path = Temp("two.map.toml");
         MapFile.Save(map, new MapMeta("rust_belt", MapSymmetry.Rot2, 2, null, Array.Empty<MapFeature>()), path);
-        File.WriteAllText(path, File.ReadAllText(path).Replace("format_version = 3", "format_version = 2"));
+        File.WriteAllText(path, File.ReadAllText(path).Replace("format_version = 4", "format_version = 2"));
         var (back, meta) = MapFile.LoadWithMeta(path);
         Assert.Equal(MapHasher.Compute(map), MapHasher.Compute(back));
         Assert.Equal((MapSymmetry.Rot2, 2), (meta.Symmetry, meta.MaxPlayers));
@@ -97,7 +97,7 @@ public sealed class MapFormat3Tests
         MapData map = MapGenerator.Generate(32, 7, "one");
         string path = Temp("one.map.toml");
         MapFile.Save(map, path);
-        File.WriteAllText(path, File.ReadAllText(path).Replace("format_version = 3", "format_version = 1"));
+        File.WriteAllText(path, File.ReadAllText(path).Replace("format_version = 4", "format_version = 1"));
         var (back, meta) = MapFile.LoadWithMeta(path);
         Assert.Equal(MapHasher.Compute(map), MapHasher.Compute(back));
         Assert.Equal(MapMeta.DefaultFor(back).MaxPlayers, meta.MaxPlayers);
@@ -110,7 +110,7 @@ public sealed class MapFormat3Tests
         MapData map = CoastMap();
         string path = Temp("f.map.toml");
         MapFile.Save(map, path);
-        File.WriteAllText(path, File.ReadAllText(path).Replace("format_version = 3", "format_version = 4"));
+        File.WriteAllText(path, File.ReadAllText(path).Replace("format_version = 4", "format_version = 5"));
         Assert.Throws<MapFileException>(() => MapFile.Load(path));
     }
 

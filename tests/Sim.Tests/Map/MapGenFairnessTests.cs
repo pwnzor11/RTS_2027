@@ -172,7 +172,7 @@ public sealed class MapGenFairnessTests
         {
             Assert.Contains(OverlayKind.Pitchblende, m.Overlay);
             for (int i = 0; i < m.Overlay.Count; i++)
-                if (m.Overlay[i] != OverlayKind.None) Assert.InRange(m.Density[i], 1, 12);
+                if (m.Overlay[i] != OverlayKind.None && !OverlayKinds.IsProp(m.Overlay[i])) Assert.InRange(m.Density[i], 1, 12);   // props carry a 0..2 variant
         }
         (_, MapMeta rustMeta) = MapGenerator.GenerateWithMeta(new MapGenParams(Biome.RustBelt, MapSize.Medium, 2, 99));
         Assert.Contains(rustMeta.Features, f => f.Type == "neu_ruin_tenement");

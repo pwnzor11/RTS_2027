@@ -46,8 +46,8 @@ public static class CameoTooltip
     /// <summary>The click hint line of an unblocked cameo.</summary>
     public static string ClickHint(ProductionCategory category) =>
         category is ProductionCategory.Infantry or ProductionCategory.Vehicle or ProductionCategory.Aircraft
-            ? "Left: build (Shift: x5)   Right: cancel"
-            : "Left click: build   Right click: cancel";
+            ? "Left: build (Shift: x5)   Right: hold / cancel"
+            : "Left click: build   Right click: hold / cancel";
 
     private static string IdOf(SimRules rules, ProductionCategory category, int typeIndex) => category switch
     {

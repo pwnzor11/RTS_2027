@@ -431,7 +431,7 @@ public class ProductionTests
         Step(sim, Build(sim, Infantry, rifle), Build(sim, Infantry, Inf("test_engineer")), Build(sim, Structure, power));
         Run(sim, 9);   // 10 ticks of progress on the rifleman (20 total) and on the power plant (60 total)
         PlayerHud hud = sim.HudFor(0);
-        Assert.Equal(5, hud.Queues.Count);
+        Assert.Equal(6, hud.Queues.Count);   // S15: the Upgrade lane view was appended
         var inf = hud.Queues.Single(q => q.Category == Infantry);
         Assert.Equal(new[] { new QueueItemView(rifle, 500, false), new QueueItemView(Inf("test_engineer"), 0, false) }, inf.Items.ToArray());
         Assert.Equal(-1, inf.ReadyTypeIndex);

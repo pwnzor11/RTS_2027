@@ -162,6 +162,17 @@ public sealed partial class Simulation
         PopQueue(lane, c.Arg2);
     }
 
+    /// <summary>S15: Hold. Arg = category, Arg2 = 1 hold / 0 resume the front item. Only a lane with a queued item can be held.</summary>
+    private void ApplyHold(Command c)
+    {
+        if (_players.IsNeutral(c.Player) || c.Arg < 0 || c.Arg > (int)ProductionCategory.Upgrade) return;
+        int lane = ProductionState.Lane(c.Player, (ProductionCategory)c.Arg);
+        if (_production.QueueCount[lane] == 0) return;
+        bool hold = c.Arg2 != 0;
+        _production.Held[lane] = hold;
+        if (hold) _production.Stalled[lane] = false;
+    }
+
     /// <summary>Remove the item at a queue position; removing the front resets the progress.</summary>
     private void PopQueue(int lane, int position)
     {
@@ -173,6 +184,7 @@ public sealed partial class Simulation
         {
             _production.Spent[lane] = 0; _production.Ticks[lane] = 0; _production.Total[lane] = 0;
             _production.Stalled[lane] = false;
+            _production.Held[lane] = false;
         }
     }
 
@@ -266,7 +278,7 @@ public sealed partial class Simulation
             {
                 var category = (ProductionCategory)k;
                 int lane = ProductionState.Lane(p, category);
-                if (_production.QueueCount[lane] == 0) continue;
+                if (_production.QueueCount[lane] == 0 || _production.Held[lane]) continue;   // S15: a held item neither progresses nor pays
                 if (!IsUnitCategory(category) && _production.Ready[lane] >= 0) continue;   // wait for the placement
                 if (!IsUnitCategory(category) && RigLanePaused(player, category)) continue;   // M6-03: rig packing or packed
                 int factories = 1;
@@ -542,7 +554,7 @@ public sealed partial class Simulation
     private IReadOnlyList<QueueView> BuildQueueViews(byte player)
     {
         var views = new List<QueueView>(ProductionState.Categories);
-        for (int k = 0; k <= (int)ProductionCategory.Defence; k++)
+        for (int k = 0; k <= (int)ProductionCategory.Upgrade; k++)   // S15: the Upgrade lane is exposed too (it can be held)
         {
             var category = (ProductionCategory)k;
             int lane = ProductionState.Lane(player, category);
@@ -550,7 +562,7 @@ public sealed partial class Simulation
             var items = new List<QueueItemView>(count);
             for (int j = 0; j < count; j++)
                 items.Add(new QueueItemView(_production.QueueType[lane * _production.MaxQueue + j],
-                    j == 0 ? _production.ProgressPermille(lane) : 0, j == 0 && _production.Stalled[lane]));
+                    j == 0 ? _production.ProgressPermille(lane) : 0, j == 0 && _production.Stalled[lane], j == 0 && _production.Held[lane]));
             views.Add(new QueueView(category, items, _production.Ready[lane]));
         }
         return views;

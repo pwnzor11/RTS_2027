@@ -409,7 +409,7 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
                 if (slot >= 0 && UpgradeAtSlot(slot) is UpgradeEntry entry)
                 {
                     _tooltip = UpgradeTooltip(entry);
-                    if (left && UpgradeList.LeftClick(_player, entry) is Command research) _source.Host.Issue(research);
+                    if (left && UpgradeList.LeftClick(_player, _hud, entry) is Command research) _source.Host.Issue(research);
                     else if (right && UpgradeList.RightClick(_player, _hud, entry) is Command cancel) _source.Host.Issue(cancel);
                 }
             }
@@ -496,6 +496,9 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
                 if (SidebarCommands.Build(_player, option) is Command build)
                     for (int n = SidebarCommands.QueueCount(option.Category, shift); n > 0; n--) _source.Host.Issue(build);
                 break;
+            case CameoClick.Resume:
+                _source.Host.Issue(SidebarCommands.Hold(_player, option.Category, false));
+                break;
             case CameoClick.EnterPlacement:
                 Mode = SidebarMode.Placement;
                 _placementType = option.TypeIndex;
@@ -506,7 +509,7 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
     private void RightClickCameo(BuildOption option)
     {
         if (Mode == SidebarMode.Placement) CancelMode();
-        if (SidebarCommands.Cancel(_player, _hud, option) is Command cancel) _source.Host.Issue(cancel);
+        if (SidebarCommands.RightClick(_player, _hud, option) is Command click) _source.Host.Issue(click);   // S15: hold, then cancel
     }
 
     private void SetMode(SidebarMode mode)
@@ -566,7 +569,7 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
         lines.Add(e.State switch
         {
             UpgradeState.Owned => "Researched",
-            UpgradeState.Researching => "Researching   Right click: cancel",
+            UpgradeState.Researching => UpgradeList.IsHeld(_hud, e.Index) ? "On hold   Left: resume   Right: cancel" : "Researching   Right: hold / cancel",
             _ => "Left click: research",
         });
         return lines;
@@ -814,6 +817,7 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
                     Shapes.Fill(batch, pixel, new Rectangle(r.X, r.Y, r.Width, r.Height - done), new Color(0, 0, 0, 120));
                     Shapes.Fill(batch, pixel, new Rectangle(r.X, r.Bottom - 2, r.Width * e.ProgressPermille / 1000, 2), GoodGreen);
                     Shapes.Outline(batch, pixel, r, Gold);
+                    if (UpgradeList.IsHeld(_hud, e.Index)) StateStrip(batch, pixel, r, "ON HOLD", Gold, small);   // S15
                     break;
                 case UpgradeState.Owned:
                     Shapes.Fill(batch, pixel, r, Veil);
@@ -881,6 +885,7 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
 
             // Progress of the front item of this type: the unfinished part is veiled from the top.
             int count = 0;
+            bool held = false;
             if (queue is QueueView q)
             {
                 for (int i = 0; i < q.Items.Count; i++)
@@ -892,7 +897,8 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
                     Shapes.Fill(batch, pixel, new Rectangle(r.X, r.Y, r.Width, r.Height - done), new Color(0, 0, 0, 120));
                     bool waitingForSupply = SupplyWaits(q.Category, q.Items[0].TypeIndex);   // SUP-4
                     Shapes.Fill(batch, pixel, new Rectangle(r.X, r.Bottom - Math.Max(2, (int)MathF.Round(_ui * 2)), r.Width * q.Items[0].ProgressPermille / 1000, Math.Max(2, (int)MathF.Round(_ui * 2))), q.Items[0].Stalled || waitingForSupply ? Gold : GoodGreen);
-                    if (waitingForSupply) DrawWaitingForSupply(batch, pixel, r, small);
+                    if (q.Items[0].Held) held = true;   // S15: the ON HOLD band is drawn with the other state bands below
+                    else if (waitingForSupply) DrawWaitingForSupply(batch, pixel, r, small);
                     else if (q.Items[0].Stalled)
                         CentredText(batch, pixel, "WAIT", new Rectangle(r.X, r.Y, r.Width, Math.Max(1, r.Height - lh - 2)), Gold, small);
                 }
@@ -900,6 +906,7 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
 
             if (blocked && count == 0) Shapes.Fill(batch, pixel, r, Veil);
             var above = new Rectangle(r.X, r.Y, r.Width, Math.Max(1, r.Height - lh - 2));   // the state words sit above the name strip, never over it
+            if (held) StateStrip(batch, pixel, r, "ON HOLD", Gold, small);   // S15: C&C-style production hold
             if (tierEntry.Locked) StateStrip(batch, pixel, r, "LOCKED", DimText, small);   // P6; M11-10h: a top band, the art stays visible
             if (ready)
             {

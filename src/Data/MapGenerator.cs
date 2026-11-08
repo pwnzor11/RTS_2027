@@ -16,6 +16,13 @@ public static class MapGenerator
 {
     /// <summary>Smallest size that fits the starts, the plateau and the features.</summary>
     public const int MinSize = 24;
+    /// <summary>The generator version (<see cref="MapGenParams.Layout"/>) this build produces and can rebuild. 0 = the generator before M12
+    /// (D-180: replaced outright, so a save or map file that names 0 cannot be rebuilt); 1 = the M12 generator with its decoration pass.</summary>
+    public const int CurrentLayout = 1;
+
+    /// <summary>The friendly message of a save made with a generator this build no longer has.</summary>
+    public const string OldGeneratorMessage = "This save was made with an older map generator and can't be loaded.";
+
     /// <summary>How many seeds (seed, seed+1, ...) are tried before giving up on connectivity.</summary>
     public const int MaxAttempts = 10;
 
@@ -51,6 +58,9 @@ public static class MapGenerator
     /// </summary>
     public static MapData Generate(MapGenParams p) => GenerateWithMeta(p).Map;
 
+    /// <summary>As <see cref="Generate(MapGenParams)"/>, with explicit biome parameters (tests and tools).</summary>
+    public static MapData Generate(MapGenParams p, BiomeParams biome) => GenerateWithMeta(p, biome).Map;
+
     /// <summary>As <see cref="Generate(MapGenParams)"/>, plus the map metadata (biome, symmetry, max players, provenance, ruins).</summary>
     public static (MapData Map, MapMeta Meta) GenerateWithMeta(MapGenParams p)
     {
@@ -72,6 +82,7 @@ public static class MapGenerator
         ArgumentNullException.ThrowIfNull(p);
         ArgumentNullException.ThrowIfNull(biome);
         if (p.Players < 2 || p.Players > 4) throw new ArgumentOutOfRangeException(nameof(p), "Players must be 2..4.");
+        if (p.Layout != CurrentLayout) throw new InvalidOperationException(OldGeneratorMessage);   // D-180 D4: the old generator is gone
         int n = CellsFor(p.Size);
         string name = p.Name ?? DefaultName(p);
         MapSymmetry symmetry = p.Players == 2 ? biome.Symmetry2p : biome.Symmetry4p;

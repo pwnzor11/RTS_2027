@@ -18,10 +18,14 @@ namespace Rts.Data;
 /// (<c>type</c>, <c>cell = [x, y]</c>). Version 1 files still load, with <see cref="MapMeta.DefaultFor"/>. None of it enters the map hash.
 /// Format 3 (M7-02, docs/design/11_m7_plan.md §2.2) allows <see cref="LandType.Coast"/> (value 8) in the land layer and adds optional
 /// <c>[map]</c> keys <c>convoy_edge</c> and <c>landing</c> (lists of <c>[x, y]</c> marker cells; see <see cref="MapMeta"/>). Versions 1 and 2 still load.
+/// Format 4 (M12-04, docs/design/16_maps_overhaul.md §2.4) allows the blocking prop overlay kinds (<see cref="OverlayKind.Tree"/> to
+/// <see cref="OverlayKind.Snag"/>; the density byte is the sprite variant), adds an optional <c>[layers] decor</c> (one decal byte per cell;
+/// render only, not in the map hash) and an optional <c>layout</c> key in <c>[map.generator]</c> (the generator version; absent = 0).
+/// Versions 1 to 3 still load.
 /// </summary>
 public static class MapFile
 {
-    public const int FormatVersion = 3;
+    public const int FormatVersion = 4;
 
     /// <summary>Oldest format version <see cref="Load"/> still reads.</summary>
     public const int OldestReadableVersion = 1;
@@ -34,10 +38,10 @@ public static class MapFile
 
     private static readonly string[] SizeKeys = ["s", "m", "l"];
 
-    /// <summary>Writes the map with no metadata (format 3; loads back with <see cref="MapMeta.DefaultFor"/>).</summary>
+    /// <summary>Writes the map with no metadata (format 4; loads back with <see cref="MapMeta.DefaultFor"/>).</summary>
     public static void Save(MapData map, string path) => Save(map, null, path);
 
-    /// <summary>Writes the map and, when given, its metadata (format 3).</summary>
+    /// <summary>Writes the map and, when given, its metadata (format 4).</summary>
     public static void Save(MapData map, MapMeta? meta, string path)
     {
         ArgumentNullException.ThrowIfNull(map);
@@ -69,6 +73,7 @@ public static class MapFile
         sb.Append("height = \"").Append(Convert.ToBase64String(hgt)).Append("\"\n");
         sb.Append("overlay = \"").Append(Convert.ToBase64String(ovl)).Append("\"\n");
         sb.Append("density = \"").Append(Convert.ToBase64String(den)).Append("\"\n");
+        if (map.Decor is { } decor && decor.Any(b => b != 0)) sb.Append("decor = \"").Append(Convert.ToBase64String(decor.ToArray())).Append("\"\n");   // format 4, only when used
 
         string? dir = Path.GetDirectoryName(Path.GetFullPath(path));
         if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
@@ -78,7 +83,7 @@ public static class MapFile
     /// <summary>Reads a map file (format 1 to 3); metadata is ignored.</summary>
     public static MapData Load(string path) => LoadWithMeta(path).Map;
 
-    /// <summary>Reads a map file and its metadata (format 1 to 3; a version-1 file gets <see cref="MapMeta.DefaultFor"/>).</summary>
+    /// <summary>Reads a map file and its metadata (format 1 to 4; a version-1 file gets <see cref="MapMeta.DefaultFor"/>).</summary>
     public static (MapData Map, MapMeta Meta) LoadWithMeta(string path)
     {
         string text;
@@ -127,10 +132,12 @@ public static class MapFile
         for (int i = 0; i < n; i++)
         {
             if (landB[i] >= RuleCounts.LandTypes) throw new MapFileException(path, $"layers.land: invalid land type {landB[i]} at cell {i}");
-            if (ovlB[i] > (byte)OverlayKind.Wall) throw new MapFileException(path, $"layers.overlay: invalid overlay {ovlB[i]} at cell {i}");
+            if (ovlB[i] > (byte)OverlayKind.Wall && version < 4) throw new MapFileException(path, $"layers.overlay: prop {ovlB[i]} at cell {i} needs format_version 4");
+            if (ovlB[i] > (byte)OverlayKinds.Last) throw new MapFileException(path, $"layers.overlay: invalid overlay {ovlB[i]} at cell {i}");
             land[i] = (LandType)landB[i]; ovl[i] = (OverlayKind)ovlB[i];
         }
-        var map = new MapData(name, theater, w, h, tpl, land, hgtB, ovl, denB, starts);
+        byte[]? decor = version >= 4 && l.ContainsKey("decor") ? Layer(l, "decor", n, path) : null;
+        var map = new MapData(name, theater, w, h, tpl, land, hgtB, ovl, denB, starts, decor);
         return (map, version >= 2 ? ReadMeta(root, m, map, version, path) : MapMeta.DefaultFor(map));
     }
 
@@ -159,6 +166,7 @@ public static class MapFile
             sb.Append("seed = ").Append(g.Seed <= long.MaxValue ? g.Seed.ToString(CultureInfo.InvariantCulture)
                 : Quote(g.Seed.ToString(CultureInfo.InvariantCulture))).Append('\n');
             if (g.OceanEdges != OceanEdges.None) sb.Append("ocean_edges = ").Append(Quote(OceanEdgeKeys(g.OceanEdges))).Append('\n');   // M7-13, only when on
+            sb.Append("layout = ").Append(g.Layout.ToString(CultureInfo.InvariantCulture)).Append('\n');   // M12-05: generator version
         }
         foreach (MapFeature f in meta.Features)
         {
@@ -232,7 +240,8 @@ public static class MapFile
                     ocean |= (OceanEdges)(1 << bit);
                 }
             }
-            generator = new MapGenParams((Biome)b, (MapSize)z, players, seed, null, ocean);
+            int layout = g.ContainsKey("layout") ? Int(g, "layout", path) : 0;   // M12-05: files written before the version field name generator 0
+            generator = new MapGenParams((Biome)b, (MapSize)z, players, seed, null, ocean, layout);
         }
 
         var features = new List<MapFeature>();

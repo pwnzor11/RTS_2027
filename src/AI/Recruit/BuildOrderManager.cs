@@ -31,6 +31,15 @@ internal sealed class BuildOrderManager
     /// <summary>M3-11: appends a structure to the end of the order (a tier capability: expansion refinery, research, production). Resolved on the next Think.</summary>
     public void Extend(string id) => _order.Add(id);
 
+    /// <summary>Q-65: inserts a structure into the order directly after the first listed <paramref name="after"/> (at the end when that is not listed),
+    /// so an economy structure is not queued behind the tech steps. Resolved on the next Think.</summary>
+    public void InsertAfter(string id, string after)
+    {
+        int at = _order.IndexOf(after);
+        _order.Insert(at < 0 ? _order.Count : at + 1, id);
+        _orderTypes.Clear();
+    }
+
     /// <summary>How many times the order lists <paramref name="id"/> (so a caller can append only the missing copies).</summary>
     public int StepsOf(string id)
     {

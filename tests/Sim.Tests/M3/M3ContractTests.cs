@@ -261,7 +261,7 @@ public sealed class M3ContractTests
         Assert.Equal(Faction.Directorate, hud.Faction);
         Assert.Equal(4UL, hud.Upgrades);
         Assert.Empty(hud.BuildableUpgrades);              // CanResearch is a stub until M3-06
-        Assert.Equal(5, hud.Queues.Count);                // the M2 queue views are unchanged
+        Assert.Equal(6, hud.Queues.Count);                // S15: the Upgrade lane view was appended
         Assert.Equal(Faction.Directorate, sim.ViewFor(1).Faction);
         Assert.True(sim.ViewFor(1).HasUpgrade(2));
     }

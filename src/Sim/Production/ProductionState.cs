@@ -32,6 +32,7 @@ public sealed class ProductionState : ISimStatePart
     internal readonly int[] Ticks;          // [lane] progress ticks of the front item (against Total)
     internal readonly int[] Total;          // [lane] total ticks at the last tick (0 = not started)
     internal readonly bool[] Stalled;       // [lane]
+    internal readonly bool[] Held;          // [lane] S15: the front item is on hold (no progress, no spending); saved in bit 1 of the Stalled byte, cleared when the front leaves
     internal readonly int[] Ready;          // [lane] building type index waiting to be placed, or -1
     internal readonly EntityId[] Primary;   // [lane]
     internal readonly bool[] RallySet;      // [lane]
@@ -54,6 +55,7 @@ public sealed class ProductionState : ISimStatePart
         QueueCount = new int[lanes];
         Spent = new int[lanes]; Ticks = new int[lanes]; Total = new int[lanes];
         Stalled = new bool[lanes];
+        Held = new bool[lanes];
         Ready = new int[lanes];
         Array.Fill(Ready, -1);
         Primary = new EntityId[lanes];
@@ -94,6 +96,9 @@ public sealed class ProductionState : ISimStatePart
     /// <summary>True if the front item could not pay on the last tick (or could not find a free exit cell).</summary>
     public bool IsStalled(byte player, ProductionCategory category) => Stalled[Lane(player, category)];
 
+    /// <summary>True if the front item of the lane is on hold (S15).</summary>
+    public bool IsHeld(byte player, ProductionCategory category) => Held[Lane(player, category)];
+
     /// <summary>The factory explicitly chosen by a Rally command (may be dead; the sim then falls back), else none.</summary>
     public EntityId PrimaryFactory(byte player, ProductionCategory category) => Primary[Lane(player, category)];
 
@@ -115,7 +120,7 @@ public sealed class ProductionState : ISimStatePart
         for (int i = 0; i < QueueType.Length; i++) w.Write(QueueType[i]);
         for (int l = 0; l < QueueCount.Length; l++)
         {
-            w.Write(QueueCount[l]); w.Write(Spent[l]); w.Write(Ticks[l]); w.Write(Total[l]); w.Write(Stalled[l]);
+            w.Write(QueueCount[l]); w.Write(Spent[l]); w.Write(Ticks[l]); w.Write(Total[l]); w.Write((byte)((Stalled[l] ? 1 : 0) | (Held[l] ? 2 : 0)));   // S15: Held rides in bit 1, so games that never hold keep their bytes
             w.Write(Ready[l]); w.Write(Primary[l].Index); w.Write(Primary[l].Generation);
             w.Write(RallySet[l]); w.Write(Rally[l].X); w.Write(Rally[l].Y);
         }
@@ -135,7 +140,9 @@ public sealed class ProductionState : ISimStatePart
         for (int l = 0; l < QueueCount.Length; l++)
         {
             QueueCount[l] = r.ReadInt32(); Spent[l] = r.ReadInt32(); Ticks[l] = r.ReadInt32(); Total[l] = r.ReadInt32();
-            Stalled[l] = r.ReadBoolean(); Ready[l] = r.ReadInt32();
+            byte flags = r.ReadByte();
+            if (flags > 3) throw new InvalidDataException("production lane flags.");
+            Stalled[l] = (flags & 1) != 0; Held[l] = (flags & 2) != 0; Ready[l] = r.ReadInt32();
             ushort index = r.ReadUInt16(), gen = r.ReadUInt16();
             Primary[l] = new EntityId(index, gen);
             RallySet[l] = r.ReadBoolean(); Rally[l] = new CellCoord(r.ReadInt32(), r.ReadInt32());

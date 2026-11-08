@@ -430,7 +430,7 @@ public static class AiCommands
                 PlayerHud hud = sim.HudFor((byte)p);
                 var q = new List<string>();
                 foreach (QueueView qv in hud.Queues)
-                    q.Add($"{qv.Category}:[{string.Join(",", qv.Items.Select(i => (qv.Category is ProductionCategory.Vehicle ? rules.Vehicles[i.TypeIndex].Id : qv.Category is ProductionCategory.Infantry ? rules.Infantry[i.TypeIndex].Id : rules.Buildings[i.TypeIndex].Id) + (i.Stalled ? "(stalled)" : "") + i.ProgressPermille))}] ready {qv.ReadyTypeIndex}");
+                    q.Add($"{qv.Category}:[{string.Join(",", qv.Items.Select(i => (qv.Category is ProductionCategory.Vehicle ? rules.Vehicles[i.TypeIndex].Id : qv.Category is ProductionCategory.Infantry ? rules.Infantry[i.TypeIndex].Id : qv.Category is ProductionCategory.Upgrade ? rules.Upgrades[i.TypeIndex].Id : rules.Buildings[i.TypeIndex].Id) + (i.Stalled ? "(stalled)" : "") + i.ProgressPermille))}] ready {qv.ReadyTypeIndex}");
                 Console.WriteLine($"  P{p} hud: cash {hud.Cash}+{hud.Stored} power {hud.PowerOut}/{hud.PowerUse} queues {string.Join(" ", q)}; buildable {hud.Buildable.Count}");
             }
         if (dump)

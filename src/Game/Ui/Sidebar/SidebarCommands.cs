@@ -14,6 +14,8 @@ public enum CameoClick
     Build,
     /// <summary>The item is finished: enter placement mode.</summary>
     EnterPlacement,
+    /// <summary>S15: the item is on hold; resume it (a Hold command with Arg2 = 0).</summary>
+    Resume,
 }
 
 /// <summary>
@@ -31,9 +33,42 @@ public static class SidebarCommands
         return -1;
     }
 
+    /// <summary>S15: true when the front item of the category's queue is this type and is on hold.</summary>
+    public static bool FrontHeld(PlayerHud hud, ProductionCategory category, int typeIndex)
+    {
+        foreach (QueueView q in hud.Queues)
+            if (q.Category == category)
+                return q.Items.Count > 0 && q.Items[0].TypeIndex == typeIndex && q.Items[0].Held;
+        return false;
+    }
+
+    /// <summary>S15: the Hold command for a category: hold (true) or resume (false) the front item.</summary>
+    public static Command Hold(byte player, ProductionCategory category, bool hold) =>
+        new(0, player, 0, CommandKind.Hold, EntityId.None, EntityId.None, default, (int)category, hold ? 1 : 0);
+
+    /// <summary>
+    /// S15: the command a right click on a cameo issues, C&amp;C style. The front item in progress goes on hold; a held front item is
+    /// cancelled (refund as before); an item queued behind the front is cancelled at once; null when none of that type is queued.
+    /// </summary>
+    public static Command? RightClick(byte player, PlayerHud hud, BuildOption option)
+    {
+        foreach (QueueView q in hud.Queues)
+        {
+            if (q.Category != option.Category) continue;
+            for (int i = 0; i < q.Items.Count; i++)
+            {
+                if (q.Items[i].TypeIndex != option.TypeIndex) continue;
+                if (i == 0 && !q.Items[0].Held) return Hold(player, option.Category, true);
+                return new Command(0, player, 0, CommandKind.Cancel, EntityId.None, EntityId.None, default, (int)option.Category, i);
+            }
+        }
+        return null;
+    }
+
     /// <summary>What a left click on this option does: place a finished one, queue an unblocked one, else nothing.</summary>
     public static CameoClick LeftClick(PlayerHud hud, BuildOption option)
     {
+        if (FrontHeld(hud, option.Category, option.TypeIndex)) return CameoClick.Resume;   // S15: a held item resumes on left click
         bool structure = option.Category is ProductionCategory.Structure or ProductionCategory.Defence;
         if (structure && ReadyType(hud, option.Category) == option.TypeIndex) return CameoClick.EnterPlacement;
         return option.Blocked == QueueBlockReason.None ? CameoClick.Build : CameoClick.None;
@@ -52,7 +87,7 @@ public static class SidebarCommands
             : new Command(0, player, 0, CommandKind.Build, EntityId.None, EntityId.None, default, (int)option.Category, option.TypeIndex);
 
     /// <summary>
-    /// The Cancel command for a right click: the front-most queued item of the option's type (position 0 first), or null when none
+    /// The Cancel command (plain cancel, no hold step): the front-most queued item of the option's type (position 0 first), or null when none
     /// of that type is queued. A finished structure waiting for placement cannot be cancelled.
     /// </summary>
     public static Command? Cancel(byte player, PlayerHud hud, BuildOption option)

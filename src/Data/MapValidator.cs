@@ -11,6 +11,9 @@ namespace Rts.Data;
 /// Errors: <c>starts_count</c> (2–4 starts), <c>start_space</c> (clear buildable 5×5 square, flat, no resources, no features),
 /// <c>start_distance</c> (≥ 12 cells Chebyshev), <c>connectivity_foot</c> / <c>connectivity_tracked</c> (every start reaches every
 /// other), <c>feature_cell</c> (on the map, on buildable land, no overlap, ≥ 6 cells from a start).
+/// M12-04 (blocking props) adds errors <c>prop_in_start_square</c> (a prop inside a start square), <c>prop_on_resource</c> (a prop on or beside a
+/// resource field cell, where harvesters need room) and <c>prop_blocks_path</c> (starts, or a start and a field, that are connected without the
+/// props but not with them).
 /// Warnings: <c>few_fields</c> (&lt; 2 fields within 14 cells of path, Tracked) and <c>symmetry</c> (first cell that differs from
 /// the declared symmetry).</summary>
 public static class MapValidator
@@ -43,9 +46,12 @@ public static class MapValidator
 
         for (int s = 0; s < starts.Count; s++)
         {
+            string? prop = PropInStartSquare(map, starts[s]);
+            if (prop is not null) { issues.Add(Error("prop_in_start_square", starts[s], $"start {s + 1}: {prop} inside the 5x5 start square")); continue; }
             string? why = StartSquareProblem(map, starts[s], terrain, blocked);
             if (why is not null) issues.Add(Error("start_space", starts[s], $"start {s + 1}: no clear 5x5 buildable square ({why})"));
         }
+        PropChecks(map, starts, terrain, blocked, issues);
 
         for (int a = 0; a < starts.Count; a++)
             for (int b = a + 1; b < starts.Count; b++)
@@ -158,6 +164,75 @@ public static class MapValidator
             for (int i = 0; i < w * h && !reach; i++) reach = beach[i] && dist[i] != MapAnalysis.Unreachable;
             if (!reach) issues.Add(Error("landing_unreachable", map.StartPositions[s], $"start {s + 1} cannot walk to a Coast cell that ships can reach"));
         }
+    }
+
+    private static string? PropInStartSquare(MapData map, CellCoord s)
+    {
+        for (int dy = -StartSquareRadius; dy <= StartSquareRadius; dy++)
+            for (int dx = -StartSquareRadius; dx <= StartSquareRadius; dx++)
+            {
+                var c = new CellCoord(s.X + dx, s.Y + dy);
+                if (map.Contains(c) && OverlayKinds.IsProp(map.Overlay[map.IndexOf(c)])) return $"{map.Overlay[map.IndexOf(c)]} at ({c.X},{c.Y})";
+            }
+        return null;
+    }
+
+    /// <summary>M12-04 prop checks. <c>prop_on_resource</c>: a prop on or 8-adjacent to a resource cell. <c>prop_blocks_path</c>: a start that
+    /// reaches another start (Foot or Tracked) or a resource field without the props but not with them. Both are no-ops on a map with no props.</summary>
+    private static void PropChecks(MapData map, IReadOnlyList<CellCoord> starts, TerrainTable? terrain, bool[]? blocked, List<MapIssue> issues)
+    {
+        int w = map.Width, h = map.Height, n = w * h;
+        bool any = false;
+        for (int i = 0; i < n && !any; i++) any = OverlayKinds.IsProp(map.Overlay[i]);
+        if (!any) return;
+        bool reportedResource = false;
+        for (int i = 0; i < n && !reportedResource; i++)
+        {
+            if (!OverlayKinds.IsProp(map.Overlay[i])) continue;
+            int x = i % w, y = i / w;
+            for (int dy = -1; dy <= 1 && !reportedResource; dy++)
+                for (int dx = -1; dx <= 1 && !reportedResource; dx++)
+                {
+                    int nx = x + dx, ny = y + dy;
+                    if (nx < 0 || ny < 0 || nx >= w || ny >= h || !OverlayKinds.IsResource(map.Overlay[ny * w + nx])) continue;
+                    issues.Add(Error("prop_on_resource", new CellCoord(x, y), $"{map.Overlay[i]} at ({x},{y}) touches a resource field"));
+                    reportedResource = true;
+                }
+        }
+
+        if (starts.Count < 1) return;
+        int[] fields = MapAnalysis.FieldIds(map, out int fieldCount);
+        foreach (Locomotion loco in new[] { Locomotion.Foot, Locomotion.Tracked })
+            for (int s = 0; s < starts.Count; s++)
+            {
+                int[] with = MapAnalysis.Distances(map, starts[s], loco, terrain, blocked, propsBlock: true);
+                int[] without = MapAnalysis.Distances(map, starts[s], loco, terrain, blocked, propsBlock: false);
+                bool reported = false;
+                for (int t = 0; t < starts.Count && !reported; t++)
+                {
+                    int ti = map.IndexOf(starts[t]);
+                    if (t != s && with[ti] == MapAnalysis.Unreachable && without[ti] != MapAnalysis.Unreachable)
+                    {
+                        issues.Add(Error("prop_blocks_path", starts[s], $"props cut {loco} units off between start {s + 1} and start {t + 1}"));
+                        reported = true;
+                    }
+                }
+                var fieldSeen = new bool[fieldCount];
+                for (int i = 0; i < n && !reported; i++)
+                {
+                    int f = fields[i];
+                    if (f < 0 || fieldSeen[f] || without[i] == MapAnalysis.Unreachable) continue;
+                    // A field counts as reached when any of its cells is; check it once all its cells are known unreachable with the props.
+                    fieldSeen[f] = true;
+                    bool reach = false;
+                    for (int j = i; j < n && !reach; j++) reach = fields[j] == f && with[j] != MapAnalysis.Unreachable;
+                    if (!reach)
+                    {
+                        issues.Add(Error("prop_blocks_path", starts[s], $"props cut {loco} units at start {s + 1} off from the resource field at ({i % w},{i / w})"));
+                        reported = true;
+                    }
+                }
+            }
     }
 
     private static string? StartSquareProblem(MapData map, CellCoord s, TerrainTable? terrain, bool[]? blocked)

@@ -33,6 +33,11 @@ public static class PropArt
             case PropKind.Rubble: Rubble(canvas, variant, palette); break;
             case PropKind.GlassCrest: GlassCrest(canvas, variant, palette); break;
             case PropKind.IceSlab: IceSlab(canvas, variant, palette); break;
+            case PropKind.DeadTree: DeadTree(canvas, variant, palette); break;
+            case PropKind.WreckHulk: WreckHulk(canvas, variant, palette); break;
+            case PropKind.ConcreteBlock: ConcreteBlock(canvas, variant, palette); break;
+            case PropKind.BrokenPylon: BrokenPylon(canvas, variant, palette); break;
+            case PropKind.Snag: Snag(canvas, variant, palette); break;
             default: throw new ArgumentOutOfRangeException(nameof(kind));
         }
 
@@ -152,5 +157,136 @@ public static class PropArt
         c.Line(cx - w, cy + hgt / 2, cx + w, cy + hgt / 2, White, 200);
         c.Line(cx - w + skew, cy - hgt / 2, cx + w + skew, cy - hgt / 2, White, 160);
         c.Line(cx - 2, cy - hgt / 2 + 1, cx + 1 + skew / 2, cy + hgt / 2 - 1, edge, 150);   // crack
+    }
+
+    // ---- blocking props (M12-04): dark silhouettes, a clear step darker or lighter than the ground (design 16 s2.2) ----
+
+    private static void Quad(PropCanvas c, int x0, int y0, int x1, int y1, int x2, int y2, int x3, int y3, TerrainPalette.Rgb col, int a = 255)
+    {
+        c.Triangle(x0, y0, x1, y1, x2, y2, col, a);
+        c.Triangle(x0, y0, x2, y2, x3, y3, col, a);
+    }
+
+    /// <summary>A stripped dead tree: a forked dark trunk with a lit left edge and bare branches.</summary>
+    private static void DeadTree(PropCanvas c, int variant, TerrainPalette p)
+    {
+        var bark = new TerrainPalette.Rgb(44, 36, 32);
+        TerrainPalette.Rgb lit = Lift(bark, 380), snow = new(214, 222, 228);
+        int lean = (variant - 1) * 3, top = 20 - variant * 4, bx = 32, by = 56;   // taller with the variant
+        Shadow(c, bx, by - 2, 12, 5);
+        int tx = bx + lean;
+        Quad(c, bx - 4, by, tx - 2, top + 18, tx + 2, top + 18, bx + 4, by, bark);
+        c.Line(bx - 4, by, tx - 2, top + 18, lit, 230);
+        for (int i = 0; i < 4 + variant; i++)
+        {
+            uint h = H(PropKind.DeadTree, variant, i, 5);
+            int fromY = by - 14 - (int)(h % 26u), side = (h & 0x100u) != 0 ? 1 : -1;
+            int len = 8 + (int)((h >> 12) % 10u), rise = 5 + (int)((h >> 16) % 8u);
+            int sx = bx + lean * (by - fromY) / Math.Max(1, by - top);
+            c.Line(sx, fromY, sx + side * len, fromY - rise, bark);
+            c.Line(sx + side * len / 2, fromY - rise / 2, sx + side * (len / 2 + 5), fromY - rise / 2 - 6, bark, 230);
+            if (variant == 2) c.Line(sx, fromY - 1, sx + side * len, fromY - rise - 1, snow, 170);
+        }
+
+        c.Line(tx - 2, top + 18, tx - 1 + lean / 2, top, bark);
+        c.Line(tx + 1, top + 18, tx + 6, top + 4, bark);
+    }
+
+    /// <summary>A wrecked vehicle hulk: rusted body, dark windows, flat tyres; variant 2 is a tank hull with a bent barrel.</summary>
+    private static void WreckHulk(PropCanvas c, int variant, TerrainPalette p)
+    {
+        var rust = new TerrainPalette.Rgb(122, 66, 40);
+        TerrainPalette.Rgb lit = Lift(rust, 260), dark = Sink(rust, 520), black = new(26, 24, 24);
+        Shadow(c, 32, 46, 24, 8);
+        if (variant == 2)
+        {
+            var olive = new TerrainPalette.Rgb(78, 82, 58);
+            Quad(c, 5, 36, 59, 36, 61, 52, 3, 52, Sink(olive, 300));
+            Quad(c, 7, 30, 57, 30, 59, 38, 5, 38, olive);
+            c.Triangle(20, 30, 25, 18, 43, 18, olive); c.Triangle(20, 30, 43, 18, 46, 30, Lift(olive, 120));
+            c.Line(42, 24, 60, 17, black); c.Line(42, 25, 60, 19, dark, 220);
+            for (int i = 0; i < 7; i++) c.Ellipse(10 + i * 7, 53, 4, 3, black, 230);
+            return;
+        }
+
+        int len = variant == 1 ? 21 : 13;   // a small car, then a truck, then (variant 2) a tank hull
+        int x0 = 32 - len, x1 = 32 + len;
+        Quad(c, x0, 36, x1, 36, x1 + 2, 48, x0 - 2, 48, dark);
+        Quad(c, x0 + 2, 32, x1 - 2, 32, x1, 38, x0, 38, rust);
+        Quad(c, x0 + 4, 24, x0 + 16, 24, x0 + 20, 33, x0 + 2, 33, lit);                 // cab roof
+        Quad(c, x0 + 6, 26, x0 + 14, 26, x0 + 16, 32, x0 + 5, 32, black);               // window
+        if (variant == 1) Quad(c, x0 + 22, 30, x1 - 1, 30, x1 - 1, 36, x0 + 22, 36, Sink(lit, 150));   // flat bed
+        c.Ellipse(x0 + 8, 49, 5, 4, black, 240);
+        c.Ellipse(x1 - 8, 49, 5, 4, black, 240);
+        c.Line(x0 + 4, 36, x1 - 4, 40, dark, 200);                                        // rust seam
+    }
+
+    /// <summary>A concrete barrier: a low, wide jersey block with a yellow and black hazard band; variant 0 one block, 1 a longer cracked one,
+    /// 2 two blocks end to end.</summary>
+    private static void ConcreteBlock(PropCanvas c, int variant, TerrainPalette p)
+    {
+        var grey = new TerrainPalette.Rgb(168, 166, 158);
+        TerrainPalette.Rgb lit = Lift(grey, 220), shade = Sink(grey, 330), stripe = new(222, 176, 34), black = new(34, 32, 30);
+        Shadow(c, 32, 50, 26, 6);
+        int blocks = variant == 2 ? 2 : 1;
+        for (int b = 0; b < blocks; b++)
+        {
+            int ox = blocks == 2 ? (b == 0 ? -13 : 13) : 0, w = variant == 1 ? 20 : variant == 2 ? 12 : 15, top = 33, bot = 50;
+            Quad(c, 32 + ox - w, bot, 32 + ox + w, bot, 32 + ox + w - 4, top, 32 + ox - w + 4, top, grey);            // front face
+            Quad(c, 32 + ox + w, bot, 32 + ox + w + 4, bot - 4, 32 + ox + w, top - 4, 32 + ox + w - 4, top, shade);  // end face
+            Quad(c, 32 + ox - w + 4, top, 32 + ox + w - 4, top, 32 + ox + w, top - 4, 32 + ox - w + 8, top - 4, lit);   // top
+            for (int s = 0; s * 8 < 2 * w - 8; s++)                                                                  // hazard band across the front
+            {
+                int sx = 32 + ox - w + 5 + s * 8;
+                Quad(c, sx, top + 2, sx + 4, top + 2, sx + 2, top + 8, sx - 2, top + 8, s % 2 == 0 ? stripe : black);
+            }
+
+            c.Line(32 + ox - w, bot, 32 + ox + w, bot, black, 200);
+            if (variant == 1) c.Line(32 + ox - 2, top, 32 + ox + 4, bot, Sink(shade, 400));   // crack
+        }
+    }
+
+    /// <summary>A broken pylon: a dark lattice tower snapped partway up with a stub of cable.</summary>
+    private static void BrokenPylon(PropCanvas c, int variant, TerrainPalette p)
+    {
+        var steel = new TerrainPalette.Rgb(70, 58, 52);
+        TerrainPalette.Rgb lit = Lift(steel, 420);
+        int top = 28 - variant * 8;   // a taller stump with the variant
+        Shadow(c, 32, 55, 15, 5);
+        void Thick(int x0, int y0, int x1, int y1, TerrainPalette.Rgb col) { c.Line(x0, y0, x1, y1, col); c.Line(x0 + 1, y0, x1 + 1, y1, col); }
+        Thick(19, 56, 28, top + 6, steel); Thick(43, 56, 34, top + 6, steel);
+        c.Line(20, 56, 29, top + 6, lit, 220);
+        for (int k = 0; k < 5; k++)
+        {
+            int y = 54 - k * 8;
+            if (y < top + 8) break;
+            int half = 12 - k * 2;
+            Thick(32 - half, y, 32 + half, y - 6, steel);
+            c.Line(32 + half, y, 32 - half, y - 6, steel);
+        }
+
+        Thick(28, top + 6, 22, top, steel);                // snapped top
+        Thick(34, top + 6, 40 + variant * 2, top + 1, steel);
+        c.Line(40 + variant * 2, top + 1, 54, top + 14 + variant * 4, new TerrainPalette.Rgb(20, 18, 18), 230);   // cable stub
+    }
+
+    /// <summary>Driftwood and debris: crossed logs and a plank, bleached at the lit end.</summary>
+    private static void Snag(PropCanvas c, int variant, TerrainPalette p)
+    {
+        var wood = new TerrainPalette.Rgb(112, 92, 72);
+        TerrainPalette.Rgb lit = Lift(wood, 380), dark = Sink(wood, 450);
+        Shadow(c, 32, 46, 20, 7);
+        int logs = 3 + variant;
+        for (int i = 0; i < logs; i++)
+        {
+            uint h = H(PropKind.Snag, variant, i, 6);
+            int cx = 32 + (int)(h % 14u) - 7, cy = 42 + (int)((h >> 8) % 8u) - 4, len = 11 + (int)((h >> 12) % 9u), rise = (int)((h >> 16) % 11u) - 5;
+            c.Line(cx - len, cy + rise, cx + len, cy - rise, dark);
+            c.Line(cx - len, cy + rise - 1, cx + len, cy - rise - 1, wood);
+            c.Line(cx - len, cy + rise - 2, cx - len / 2, cy + rise / 2 - 2, lit, 220);
+            c.Ellipse(cx + len, cy - rise, 2, 2, lit, 230);
+        }
+
+        c.Line(22, 36, 30, 28, dark); c.Line(40, 30, 46, 38, dark, 220);   // stubby branches
     }
 }

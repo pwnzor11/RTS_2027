@@ -162,3 +162,11 @@ alpha = 190
 size_min = 10
 size_max = 16
 
+
+[mood]
+# D-184 pilot: a colour grade laid over the world view only (not the HUD) and the colour of vehicle dust. Mountains: cold blue.
+# strength 0..90 = how much of the tint is blended in (0 or no table = no grade, the look of today); RTS_MOOD=off switches it off for comparison.
+# ASSUMED (D-184): every value here is a proposal for the owner. NOTE: tools/maps/make_s15_looks.py rewrites this file from variant C; re-add this table if it is run.
+tint = "#6F8FC8"
+strength = 30
+dust = "#C4C8CE"

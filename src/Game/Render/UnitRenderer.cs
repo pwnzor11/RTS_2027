@@ -43,7 +43,7 @@ public static class UnitRenderer
         bool moving = memory.IsMoving(UnitKey.Of(view));
         Vector2 origin = SpriteLayout.UnitOrigin(camera, unit.World);
         Color house = PlayerColours.Base(view.Player);
-        float drawScale = DrawScale(rules, view) * SpriteLayout.UnitDrawScale;   // M7-03: big ships are one cell but drawn larger (D-124); M11-06/D-172: all units x1.25
+        float drawScale = DrawScale(rules, view, sprite.Manifest) * SpriteLayout.UnitDrawScale;   // M7-03: big ships are one cell but drawn larger (D-124); M11-06/D-172: all units x1.25
         if (UnitVisuals.ShowTunnelMarker(view)) DrawTunnelMarker(batch, pixel, origin, infantry, house, camera.Zoom * SpriteLayout.UnitDrawScale);
         float alpha = UnitVisuals.Alpha(view, submerged, ownOrAllied);   // M7-14/M7-17: faded only for own and allied dived ships
         int divedFrame = UnitVisuals.DivedBodyFrame(sprite.Manifest, view.Facing, tick, submerged);   // M7-17: dived body frame, or -1
@@ -76,9 +76,17 @@ public static class UnitRenderer
         DrawBracket(batch, pixel, cx, cy, half, length, thick);
     }
 
-    /// <summary>Type-only sprite scale of a unit (before <see cref="SpriteLayout.UnitDrawScale"/>): the vehicle type's <c>draw_scale_permille</c> / 1000 (1 for infantry and unknown types). Game layer only: float is fine here.</summary>
-    public static float DrawScale(SimRules? rules, UnitView view)
+    /// <summary>D-184 pilot: extra scale of infantry sprites, brackets and health bars on top of <see cref="SpriteLayout.UnitDrawScale"/>. 1 = off (today's look); set from the "Larger infantry" setting.</summary>
+    public static float InfantryExtraScale { get; set; } = 1f;
+
+    /// <summary>The extra infantry scale of the "Larger infantry" setting when it is on.</summary>
+    public const float LargerInfantryScale = 1.25f;
+
+    /// <summary>Type-only sprite scale of a unit (before <see cref="SpriteLayout.UnitDrawScale"/>): the vehicle type's <c>draw_scale_permille</c> / 1000 (<see cref="InfantryExtraScale"/> for infantry, 1 for unknown types). Game layer only: float is fine here.</summary>
+    public static float DrawScale(SimRules? rules, UnitView view, SpriteManifest? manifest = null)
     {
+        // D-184: a sprite already rendered larger (figure_scale_permille > 1000) is not scaled up again by the setting.
+        if (view.Kind == UnitKind.Infantry) return manifest is { FigureScalePermille: > 1000 } ? 1f : InfantryExtraScale;
         if (view.Kind != UnitKind.Vehicle || rules is null || (uint)view.TypeIndex >= (uint)rules.Vehicles.Count) return 1f;
         return rules.Vehicles[view.TypeIndex].DrawScalePermille / 1000f;
     }

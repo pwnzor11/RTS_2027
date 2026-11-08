@@ -5,7 +5,7 @@ using Rts.Sim.Rules;
 namespace Rts.Sim.Core;
 
 /// <summary>One queued item in a production queue. Progress is 0..1000.</summary>
-public readonly record struct QueueItemView(int TypeIndex, int ProgressPermille, bool Stalled);
+public readonly record struct QueueItemView(int TypeIndex, int ProgressPermille, bool Stalled, bool Held = false);
 
 /// <summary>One production queue: its items (front first) and the finished structure waiting to be placed (-1 = none).</summary>
 public sealed record QueueView(ProductionCategory Category, IReadOnlyList<QueueItemView> Items, int ReadyTypeIndex);

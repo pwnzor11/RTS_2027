@@ -45,9 +45,9 @@ public sealed class SkirmishCommanderSaveTests
     }
 
     [Fact]
-    public void Current_header_version_is_five()
+    public void Current_header_version_is_six()
     {
-        Assert.Equal(5, GameSaveHeader.CurrentVersion);   // M7-14 added the ocean byte; version 4 is still read
+        Assert.Equal(6, GameSaveHeader.CurrentVersion);   // M7-14 added the ocean byte, M12-05 the generator layout byte; version 4 is still read
     }
 
     [Fact]
@@ -55,7 +55,7 @@ public sealed class SkirmishCommanderSaveTests
     {
         SkirmishSettings s = FourSlot();
         GameSaveHeader back = Read(Bytes(WithSettings(s)), GameSaveHeader.CurrentVersion);
-        Assert.Equal(5, back.Version);
+        Assert.Equal(6, back.Version);
         Assert.Equal(s, back.Skirmish);
         Assert.False(back.Skirmish!.Slots[0].Commander);
         Assert.True(back.Skirmish.Slots[1].Commander);
@@ -71,7 +71,10 @@ public sealed class SkirmishCommanderSaveTests
         GameSaveHeader back = Read(bytes, 3);
         Assert.Equal(3, back.Version);
         Assert.Equal(2, back.Skirmish!.Slots.Count);
-        Assert.Equal(new SkirmishSettings(77, 3, 2, Faction.Directorate, Faction.Authority), back.Skirmish);
+        var expected = new SkirmishSettings(77, 3, 2, Faction.Directorate, Faction.Authority);
+        // M12-05: a header before version 6 names generator layout 0 (the pre-M12 generator)
+        if (expected.Map.Generated is { } gen) expected = expected with { Map = new MapChoice(null, gen with { Layout = 0 }) };
+        Assert.Equal(expected, back.Skirmish);
         Assert.All(back.Skirmish.Slots, slot => Assert.False(slot.Commander));
     }
 

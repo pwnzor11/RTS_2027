@@ -12,8 +12,11 @@ public enum ArmorClass : byte { Unarmored = 0, Light = 1, Heavy = 2, Structure =
 /// M4: Water now means deep water; Shallow (7) is a fordable shallow (TOML key <c>shallow</c>). M7-02: Coast = 8 is the beach (TOML key <c>coast</c>, <c>landing = true</c>).</summary>
 public enum LandType : byte { Clear = 0, Road = 1, Rough = 2, Ash = 3, Water = 4, Rock = 5, Cliff = 6, Shallow = 7, Coast = 8 }
 
-/// <summary>What a map cell's overlay holds. Append only.</summary>
-public enum OverlayKind : byte { None = 0, Ashfall = 1, Pitchblende = 2, Wall = 3 }
+/// <summary>What a map cell's overlay holds. Append only. M12-04 (map format 4, D-180) adds the static blocking props after
+/// <see cref="Wall"/>: <see cref="Tree"/> (dead tree), <see cref="Wreck"/>, <see cref="Block"/> (barrier or concrete block),
+/// <see cref="Pylon"/> and <see cref="Snag"/> (driftwood or debris). A prop blocks ground units like a wall, never sight or shots,
+/// cannot be destroyed, and its density byte is the sprite variant (see <see cref="OverlayKinds"/>).</summary>
+public enum OverlayKind : byte { None = 0, Ashfall = 1, Pitchblende = 2, Wall = 3, Tree = 4, Wreck = 5, Block = 6, Pylon = 7, Snag = 8 }
 
 /// <summary>What a production queue builds (M2). Append only: values are persisted.</summary>
 public enum ProductionCategory : byte { Infantry = 0, Vehicle = 1, Aircraft = 2, Structure = 3, Defence = 4, Upgrade = 5 }
