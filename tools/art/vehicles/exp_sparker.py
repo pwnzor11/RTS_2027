@@ -39,6 +39,8 @@ def build(S0, state, k, n):
         box(f"stripe{s}", (0.05, 2.6, 0.15), (s * 1.07, -0.05, 0.7), "house", 0.0)
         box(f"sill{s}", (0.07, 2.9, 0.05), (s * 1.07, -0.05, 0.9), "copper", 0.0)
         E.lamp(S, f"L{s}", s * 0.55, 2.03, 0.72)
+    for s in (-1, 1):                                                                        # S16 team colour: top stripes
+        box(f"topstripe{s}", (0.14, 1.9, 0.045), (s * 0.82, -0.1, 1.17), "house", 0.0)
     box("deckw", (1.5, 2.3, 0.04), (0, -0.1, 1.16), "white", 0.01)
     box("deckst", (1.5, 0.07, 0.045), (0, 1.0, 1.16), "orange", 0.0)
     E.digits(S, "hn", "03", 0, 1.35, 1.16, 0.07, "white")
@@ -57,10 +59,11 @@ def build(S0, state, k, n):
     px, py, pz = PIVOT_U
     cyl("ring", 0.62, 0.1, (px, py, pz + 0.05), "chrome", "Z", 22)
     box("base", (1.3, 1.2, 0.34), (px, py, pz + 0.26), "navy", 0.14)
+    box("troofband", (1.0, 0.5, 0.04), (px, py - 0.3, pz + 0.44), "house", 0.0)                 # S16 team colour: base roof band
     for s in (-1, 1):
         box(f"bflash{s}", (0.05, 0.8, 0.14), (px + s * 0.66, py, pz + 0.26), "house", 0.0)
         box(f"btrim{s}", (0.05, 1.0, 0.05), (px + s * 0.65, py, pz + 0.42), "copper", 0.0)
-        box(f"yoke{s}", (0.1, 0.9, 0.5), (px + s * 0.52, py + 0.05, pz + 0.65), "chrome2", 0.03)
+        box(f"yoke{s}", (0.1, 0.9, 0.5), (px + s * 0.52, py + 0.05, pz + 0.65), "house", 0.03)
     # rack: tilted cradle with four missiles (2 x 2) pointing forward
     cr = (18, 0, 0)
     box("cradle", (1.0, 1.9, 0.12), (px, py + 0.4, pz + 0.72), "chrome", 0.03, rot=cr)
