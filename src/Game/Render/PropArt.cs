@@ -52,7 +52,7 @@ public static class PropArt
     {
         TerrainPalette.LandShades rock = p.ShadesFor(Rts.Sim.Rules.LandType.Rock);
         TerrainPalette.Rgb lit = Lift(rock.Light, 380), mid = Lift(rock.Base, 230), dark = rock.Dark, edge = Sink(rock.Dark, 600);
-        int rx = 11 + variant * 5, ry = 8 + variant * 3, cx = 32, cy = 34;
+        int rx = 13 + variant * 6, ry = 10 + variant * 4, cx = 32, cy = 34;
         Shadow(c, cx, cy + ry / 2, rx, ry);
         var vx = new int[8];
         var vy = new int[8];

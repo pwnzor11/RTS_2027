@@ -75,8 +75,7 @@ public static class DecorBake
                 int jitter = Math.Max(1, s / 4);
                 int px = cx * s + s / 2 + (int)(DecorHash.Mix(seed, cx, cy, 3) % (uint)(2 * jitter + 1)) - jitter;
                 int py = cy * s + s / 2 + (int)(DecorHash.Mix(seed, cx, cy, 4) % (uint)(2 * jitter + 1)) - jitter;
-                canvas.Stamp(pick, px, py, size, seed, cx, cy);
-                count++;
+                if (canvas.Stamp(pick, px, py, size, seed, cx, cy)) count++;
             }
         }
 
@@ -99,11 +98,18 @@ public static class DecorBake
             _rgba = rgba;
         }
 
-        public void Stamp(DecalRule rule, int px, int py, int size, ulong seed, int cx, int cy)
+        public bool Stamp(DecalRule rule, int px, int py, int size, ulong seed, int cx, int cy)
         {
             _rule = rule;
             TerrainPalette.Rgb col = rule.Colour;
             int r = Math.Max(1, size / 2);
+            // A disc or crater that would be cut by other ground (a river bank, a cliff, a resource field) is not drawn at all: half a crater looks wrong.
+            if (rule.Shape is DecalShape.Blob or DecalShape.Ring)
+            {
+                for (int i = 0; i < 8; i++)
+                    if (!Allowed(px + Dx[i] * (r + 1), py + Dy[i] * (r + 1))) return false;
+            }
+
             switch (rule.Shape)
             {
                 case DecalShape.Blob:
@@ -186,6 +192,15 @@ public static class DecorBake
                     }
                     break;
             }
+
+            return true;
+        }
+
+        private bool Allowed(int tx, int ty)
+        {
+            if (tx < 0 || ty < 0 || tx >= _tw || ty >= _th) return false;
+            int k = ty / _s * _map.Width + tx / _s;
+            return _rule.Allows(_map.Land[k]) && _map.Overlay[k] == OverlayKind.None;
         }
 
         private void Put(int tx, int ty, TerrainPalette.Rgb col, int coverage)

@@ -166,11 +166,11 @@ size_max = 32
 name = "snow patch"
 shape = "soft"
 on = ["clear", "ash", "rough"]
-permille = 28
+permille = 14
 colour = "#ECF0F6"
-alpha = 170
-size_min = 20
-size_max = 34
+alpha = 150
+size_min = 18
+size_max = 30
 
 [[decor.decal]]
 name = "small crater"

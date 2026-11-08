@@ -114,9 +114,9 @@ rough_permille = 150
 name = "sand ripple"
 shape = "ripple"
 on = ["clear", "rough"]
-permille = 26
-colour = "#B8A478"
-alpha = 140
+permille = 30
+colour = "#A69064"
+alpha = 200
 size_min = 20
 size_max = 32
 
@@ -134,11 +134,21 @@ size_max = 26
 name = "shells and bone"
 shape = "dots"
 on = ["clear", "rough", "coast"]
-permille = 14
-colour = "#F8F4E6"
-alpha = 240
+permille = 16
+colour = "#8C7054"
+alpha = 230
 size_min = 20
 size_max = 30
+
+[[decor.decal]]
+name = "dune shadow"
+shape = "soft"
+on = ["clear"]
+permille = 14
+colour = "#968060"
+alpha = 120
+size_min = 24
+size_max = 40
 
 [[decor.decal]]
 name = "salt crust"

@@ -126,11 +126,11 @@ size_max = 32
 name = "snow patch"
 shape = "soft"
 on = ["clear", "rough"]
-permille = 24
+permille = 12
 colour = "#F0F4FA"
-alpha = 180
-size_min = 22
-size_max = 36
+alpha = 160
+size_min = 20
+size_max = 32
 
 [[decor.decal]]
 name = "pebbles"
