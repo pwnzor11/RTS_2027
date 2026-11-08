@@ -391,3 +391,7 @@ bridge. `map report` shows the lane and choke numbers.
 - Zone names are not saved: map format 4 has no zone field (needs a format bump). Tools: `--layout 1|2`, `--raw`, `--checks`.
 - 2v2 teams: `SkirmishSettings.DefaultTeam` gives teams 1+2 vs 3+4 for 4 players on a layout-2 map (setup screen keeps the choice editable);
   the screen has no layout switch yet, so this only applies to a preselected layout-2 map.
+
+### Wave 3 as built, v3 variety
+
+Layout 2 now varies per seed. `LayoutVariant` picks, from the seed, a half-turn (rot2) skeleton for 2 players on Medium and up (80 %), and a whole-map turn by one of the eight square symmetries (bases left/right, top/bottom or on either diagonal). Generation always runs in a canonical frame and the map is turned afterwards; `LayoutChecks` undoes the turn, so every D-183 rule is judged on the canonical frame. The rot2 skeleton has an S-shaped river with three bends between the bases, two decks and a gravel ford whose positions move with the bends. Street grid pitch (10..20), offset and block fill (ruins, yards, rubble lots) are drawn per seed. Retries use a mixed seed so neighbouring seeds never share a first try. Layout 1 is unchanged. Known limit: seeds that share an orientation still share the skeleton; seeds 1/2/3/9 and 4/5/7/12 of Medium 2p differ in base position, river bends, fields and grid, not in structure.
