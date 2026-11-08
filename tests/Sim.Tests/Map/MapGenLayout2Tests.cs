@@ -7,7 +7,7 @@ using Xunit.Abstractions;
 
 namespace Rts.Sim.Tests.Map;
 
-/// <summary>M12-07 / M12-08: generator layout 2 (zone skeleton first) for Rust Belt, and its fairness checks.</summary>
+/// <summary>M12-07 / M12-08 / M12-09..11: generator layout 2 (zone skeleton first) for all four biomes, and its fairness checks.</summary>
 public sealed class MapGenLayout2Tests
 {
     private readonly ITestOutputHelper _out;
@@ -15,7 +15,7 @@ public sealed class MapGenLayout2Tests
     /// <summary>Creates the test class.</summary>
     public MapGenLayout2Tests(ITestOutputHelper output) => _out = output;
 
-    private static MapGenParams P(MapSize size, int players, ulong seed) => new(Biome.RustBelt, size, players, seed) { Layout = MapGenerator.ZonedLayout };
+    private static MapGenParams P(MapSize size, int players, ulong seed, Biome biome = Biome.RustBelt) => new(biome, size, players, seed) { Layout = MapGenerator.ZonedLayout };
 
     [Theory]
     [InlineData(MapSize.Medium, 2, 1UL)]
@@ -45,10 +45,13 @@ public sealed class MapGenLayout2Tests
     [InlineData(Biome.AshPlains)]
     [InlineData(Biome.GlassCoast)]
     [InlineData(Biome.Mountains)]
-    public void Layout2_OtherBiomes_ThrowNotBuiltYet(Biome biome)
+    public void Layout2_OtherBiomes_AreDeterministicAndKeepTheirTheater(Biome biome)
     {
-        var ex = Assert.Throws<InvalidOperationException>(() => MapGenerator.Generate(new MapGenParams(biome, MapSize.Medium, 2, 1UL) { Layout = MapGenerator.ZonedLayout }));
-        Assert.Contains("not built yet", ex.Message);
+        MapData a = MapGenerator.Generate(P(MapSize.Medium, 2, 1UL, biome));
+        MapData b = MapGenerator.Generate(P(MapSize.Medium, 2, 1UL, biome));
+        Assert.Equal(MapHasher.Compute(a), MapHasher.Compute(b));
+        Assert.NotEqual(MapHasher.Compute(a), MapHasher.Compute(MapGenerator.Generate(P(MapSize.Medium, 2, 1UL))));
+        Assert.Equal(BiomeCatalog.For(biome).Theater, a.Theater);
     }
 
     [Theory]
@@ -64,11 +67,15 @@ public sealed class MapGenLayout2Tests
         Assert.True(checks.Single(c => c.Name == "resource parity").Pass);
     }
 
-    /// <summary>50 seeds x Small/Medium/Large; filter with <c>--filter Category!=Slow</c>. Every map must generate with a clean
-    /// validator; the pass and retry rates are printed, and at least 42 of 50 seeds must pass every layout check.</summary>
+    /// <summary>50 seeds x Small/Medium/Large x 2/3/4 players for each biome; filter with <c>--filter Category!=Slow</c>. Every map must generate
+    /// with a clean validator; the pass and retry rates are printed, and at least 42 of 50 seeds must pass every layout check.</summary>
     [Trait("Category", "Slow")]
-    [Fact]
-    public void Layout2_Sweep_50Seeds_AllSizes_AllPlayerCounts()
+    [Theory]
+    [InlineData(Biome.RustBelt)]
+    [InlineData(Biome.Mountains)]
+    [InlineData(Biome.AshPlains)]
+    [InlineData(Biome.GlassCoast)]
+    public void Layout2_Sweep_50Seeds_AllSizes_AllPlayerCounts(Biome biome)
     {
         foreach (MapSize size in new[] { MapSize.Small, MapSize.Medium, MapSize.Large })
             foreach (int players in new[] { 2, 3, 4 })
@@ -77,13 +84,13 @@ public sealed class MapGenLayout2Tests
                 int clean = 0, retries = 0;
                 for (ulong seed = 1; seed <= (ulong)total; seed++)
                 {
-                    (MapData map, MapMeta meta) = MapGenerator.GenerateWithMeta(P(size, players, seed), BiomeCatalog.For(Biome.RustBelt), out int attempts);
+                    (MapData map, MapMeta meta) = MapGenerator.GenerateWithMeta(P(size, players, seed, biome), BiomeCatalog.For(biome), out int attempts);
                     retries += attempts - 1;
                     if (MapGenerator.FailedChecks == 0) clean++;
                     Assert.DoesNotContain(MapValidator.Validate(map, meta, null), i => i.Severity == MapIssueSeverity.Error);
                 }
-                _out.WriteLine($"{size} {players}p: {clean}/{total} seeds pass every layout check, {retries / (double)total:0.0} retries per seed (cap {MapGenerator.MaxZonedAttempts - 1})");
-                Assert.True(clean >= total * 42 / 50, $"{size} {players}p: only {clean}/{total} seeds pass the layout checks");
+                _out.WriteLine($"{biome} {size} {players}p: {clean}/{total} seeds pass every layout check, {retries / (double)total:0.0} retries per seed (cap {MapGenerator.MaxZonedAttempts - 1})");
+                Assert.True(clean >= total * 42 / 50, $"{biome} {size} {players}p: only {clean}/{total} seeds pass the layout checks");
             }
     }
 }

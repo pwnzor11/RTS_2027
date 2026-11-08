@@ -43,7 +43,8 @@ internal sealed partial class ProceduralBuilder
     public ProceduralBuilder(BiomeParams biome, int n, int players, ulong seed, bool rot2)
     {
         _b = biome; _n = n; _scale = n * 100 / 96; _decorate = true; _zoned = true; _players = players; _rot2 = rot2;
-        _g = new GenGrid(n, rot2 ? MapSymmetry.Rot2 : MapSymmetry.MirrorDiag, biome.BaseLand, players > 2);
+        _g = new GenGrid(n, rot2 ? MapSymmetry.Rot2 : MapSymmetry.MirrorDiag, LandType.Clear, players > 2);   // built on clear ground; Ash Plains turns it to ash at the end
+        _skin = SkinOf(biome.Key);
         _rng = new SimRandom(seed);
         bool big = n >= 96;
         // Street grid and block fill profile (per seed): pitch 10..20, ruins / yards / plazas.
@@ -89,8 +90,10 @@ internal sealed partial class ProceduralBuilder
         FieldsZoned();
         Ruins();
         StartSquares();
+        Skin();
         var map = new MapData(name, _b.Theater, n, n, new ushort[n * n], _g.Land, _g.Height, _g.Overlay, _g.Density, starts);
         DecorateProps(map);
+        FinishLand();
         return map;
     }
 
@@ -197,6 +200,7 @@ internal sealed partial class ProceduralBuilder
         if (!Canonical(x0, y0, x1, y1)) return;
         int roll = _rng.Next(100);
         if (w < 3 || h < 3) return;
+        if (SkinBlock(x0, y0, x1, y1, roll)) return;
         if (roll < _buildPct && Math.Min(w, h) >= 4) Building(x0, y0, x1, y1);
         else if (roll < _buildPct + _lotPct) Lot(x0, y0, x1, y1);
         else if (roll < _buildPct + _lotPct + _wallPct && Math.Min(w, h) >= 5) RuinedWall(x0, y0, x1, y1);
@@ -291,7 +295,7 @@ internal sealed partial class ProceduralBuilder
         int ny0 = _players == 2 ? b + 9 : b - 19, ny1 = _players == 2 ? b + 19 : b - 9;
         Open(portE, ny0, portE + 11, ny1, ZPlaza, false);
         Corridor(portE + 3, _players == 2 ? b + 2 : b - 2, portE + 3, _players == 2 ? ny0 + 1 : ny1 - 1, 5, padA: false, padB: false);
-        Ring(portE, ny0, portE + 11, ny1);
+        Ring(portE, ny0, portE + 11, ny1, true);
         // South-east yards beyond the deck, one on each side of the river, for the contested pair.
         int px0 = b + 7, px1 = Math.Min(n - 4, b + 20);
         Open(px0, b - 8, px1, b + 3, ZPlaza, false);
@@ -308,8 +312,9 @@ internal sealed partial class ProceduralBuilder
     }
 
     /// <summary>A one-cell rubble wall round a rectangle (ruined courtyard wall); cells already tagged as lane, main or plaza stay open.</summary>
-    private void Ring(int x0, int y0, int x1, int y1)
+    private void Ring(int x0, int y0, int x1, int y1, bool plateau = false)
     {
+        if (plateau && _skin == SkinMountains) _plateaus.Add((x0, y0, x1, y1));
         if (_n < 96) return;   // Small maps have no room (or rock budget) for courtyard walls
         // One 4-wide gap in each of two sides picked by the rng; the rest of the wall stands.
         int gapSide1 = _rng.Next(4), gapSide2 = (gapSide1 + 1 + _rng.Next(3)) % 4;
@@ -334,6 +339,9 @@ internal sealed partial class ProceduralBuilder
         int ix0 = a - _iw, ix1 = a + _ie, iy0 = b - _hh, iy1 = b + _hh;
         int ox0 = ix0 - 3, ox1 = ix1 + 3, oy0 = iy0 - 3, oy1 = iy1 + 3;
         if (ox0 <= 6) ox0 = 0; if (oy0 <= 6) oy0 = 0; if (ox1 >= n - 7) ox1 = n - 1; if (oy1 >= n - 7) oy1 = n - 1;
+        if (_mode == 0 && _players == 2)   // 3-4 players keep the solid ring with three wide gates (their mains are too close for a leaky shell)
+            SoftShell(ix0, iy0, ix1, iy1, new List<(int X, int Y, int W)> { (_l1x, iy0 - 2, _gapN), (a + _ie - 3, iy0 - 2, _gapNE), (ix1 + 2, b, _gapE) }, false);
+        else
         for (int y = oy0; y <= oy1; y++)
             for (int x = ox0; x <= ox1; x++)
             {

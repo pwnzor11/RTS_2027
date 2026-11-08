@@ -31,10 +31,12 @@ internal sealed partial class ProceduralBuilder
         int sum = n * _rng.Next(44, 58) / 100;
         _y0 = Math.Clamp(sum - _sa, Math.Max(_hh + 11, n * 19 / 100), n * 38 / 100);
         _ye = _y0 + _rng.Next(-3, 4);
-        _mode = _rng.Next(12) < 8 ? 0 : 1;   // 0 soft shell (east and south gates), 1 walled main with one east ramp
+        int mr = _rng.Next(12);
+        _mode = mr < 8 ? 0 : mr < 10 ? 2 : 1;   // 0 soft shell, 2 walled main with two gates (east and south), 1 walled main with one east ramp
         _wL1 = _rng.Next(6, 9); _wL2 = _rng.Next(13, 17); _bridgeW = _rng.Next(3, 6);
         _gapE = _rng.Next(4, 7); _gapS = _rng.Next(4, 7);
-        _gx2 = _sa + _rng.Next(-2, 5);
+        _gx2 = _sa + _rng.Next(-3, 7);
+        _natural = _rng.Next(2) == 0;
         // The river: knots in the top half, mirrored with the sign flipped, then smoothed (odd smoothing keeps it odd).
         var o = new int[n];
         int k1 = n / 6, k2 = n / 3, mid = (n - 1) / 2;
@@ -76,8 +78,10 @@ internal sealed partial class ProceduralBuilder
         FieldsRot2();
         Ruins();
         StartSquares();
+        Skin();
         var map = new MapData(name, _b.Theater, n, n, new ushort[n * n], _g.Land, _g.Height, _g.Overlay, _g.Density, starts);
         DecorateProps(map);
+        FinishLand();
         return map;
     }
 
@@ -93,7 +97,17 @@ internal sealed partial class ProceduralBuilder
         Corridor(_gx2, iy1 + 4, _gx2, n - 1 - _ye, _wL2, padA: false);
         // The ford boulevard across the middle, and the plaza round the ford.
         Corridor(_gx2, yf, ve, yf, _wL2);
-        Open(cx - 14, cx - 9, cx + 13, cx + 8, ZPlaza, false);
+        Open(cx - _rng.Next(11, 16), cx - _rng.Next(7, 11), cx + _rng.Next(10, 15), cx + _rng.Next(6, 10), ZPlaza, false);
+        // Natural (about half of the seeds, R4): a walled yard east of the south lane, reached from it.
+        if (_natural)
+        {
+            int px0 = _gx2 + _wL2 / 2 + 3 + _rng.Next(0, 4), py0 = iy1 + 6 + _rng.Next(0, 5);
+            int px1 = px0 + 10 + _rng.Next(0, 3), py1 = py0 + 9 + _rng.Next(0, 3);
+            Open(px0, py0, px1, py1, ZPlaza, false);
+            Corridor(_gx2 + _wL2 / 2, (py0 + py1) / 2, px0, (py0 + py1) / 2, 5, padA: false);
+            Ring(px0, py0, px1, py1, true);
+            _natRect = (px0, py0, px1, py1);
+        }
         // Contested yards next to the north deck on the east bank (images: the west bank beside the south deck).
         int amp = n >= 112 ? 10 : 7, yx0 = cx + amp + _hw + 3 + _rng.Next(0, 5), yx1 = yx0 + 13 + _rng.Next(0, 4);
         int yy1 = _ye - 5 - _rng.Next(0, 3), yy0 = yy1 - 10 - _rng.Next(0, 4);
@@ -104,7 +118,7 @@ internal sealed partial class ProceduralBuilder
         _yardRect = (yx0, yy0, yx1, yy1);
     }
 
-    private (int X0, int Y0, int X1, int Y1) _yardRect;
+    private (int X0, int Y0, int X1, int Y1) _yardRect, _natRect;
 
     private void Shell2()
     {
@@ -112,6 +126,9 @@ internal sealed partial class ProceduralBuilder
         int ix0 = a - _iw, ix1 = a + _ie, iy0 = _y0 - _hh, iy1 = _y0 + _hh;
         int ox0 = ix0 - 3, ox1 = ix1 + 3, oy0 = iy0 - 3, oy1 = iy1 + 3;
         if (ox0 <= 6) ox0 = 0; if (oy0 <= 6) oy0 = 0;
+        if (_mode == 0)
+            SoftShell(ix0, iy0, ix1, iy1, new List<(int X, int Y, int W)> { (ix1 + 2, _ye, _gapE), (_gx2, iy1 + 2, _gapS) }, true);
+        else
         for (int y = oy0; y <= oy1; y++)
             for (int x = ox0; x <= ox1; x++)
             {
@@ -121,7 +138,7 @@ internal sealed partial class ProceduralBuilder
                 foreach (int j in _g.Images(_g.Idx(x, y))) _zone[j] = 0;
             }
         Open(ix1 + 1, _ye - (_gapE - 1) / 2, ix1 + 3, _ye + _gapE / 2, ZLane);
-        if (_mode == 0)
+        if (_mode != 1)
         {
             Open(_gx2 - (_gapS - 1) / 2, iy1 + 1, _gx2 + _gapS / 2, iy1 + 3, ZLane);
             return;
@@ -189,18 +206,27 @@ internal sealed partial class ProceduralBuilder
         bool gems = _rng.Next(2) == 0;
         int fs = Math.Max(80, Math.Min(100, _scale));
         int ix0 = a - _iw, ix1 = a + _ie, iy0 = _y0 - _hh, iy1 = _y0 + _hh;
-        // Main: a south band and a north band (thick), or a west crescent beside the wall, per seed.
-        if (_rng.Next(3) == 0)
+        // Main: two bands (south and north), an L along the west and south walls plus a north band, or a thin west crescent plus two bands (per seed).
+        int shape = _rng.Next(3);
+        if (shape == 0)
+        {
+            PlaceField(Band(ix0 + 2, _y0 + 4, ix1 - 2, iy1 - 1, _rng.Next(56, 72) * fs / 100, ZMain, 4), 0);
+            PlaceField(Band(ix0 + 2, iy0 + 1, ix1 - 2, _y0 - 4, _rng.Next(44, 60) * fs / 100, ZMain, 4), gems ? 8 : 0);
+        }
+        else if (shape == 1)
+        {
+            var l = Band(ix0 + 1, _y0 + 1, ix0 + 4, iy1 - 5, _rng.Next(22, 28) * fs / 100, ZMain, 4);
+            foreach (int c in Band(ix0 + 1, iy1 - 4, ix1 - 3, iy1 - 1, _rng.Next(36, 46) * fs / 100, ZMain, 4)) if (!l.Contains(c)) l.Add(c);
+            PlaceField(l, 0);
+            PlaceField(Band(ix0 + 6, iy0 + 1, ix1 - 2, iy0 + 4, _rng.Next(40, 52) * fs / 100, ZMain, 4), gems ? 8 : 0);
+        }
+        else
         {
             PlaceField(Band(ix0 + 1, iy0 + 2, ix0 + 4, iy1 - 2, _rng.Next(50, 64) * fs / 100, ZMain, 4), 0);
             PlaceField(Band(ix0 + 6, iy1 - 4, ix1 - 2, iy1 - 1, _rng.Next(40, 52) * fs / 100, ZMain, 4), gems ? 8 : 0);
             PlaceField(Band(ix0 + 6, iy0 + 1, ix1 - 2, iy0 + 4, _rng.Next(30, 40) * fs / 100, ZMain, 4), 0);
         }
-        else
-        {
-            PlaceField(Band(ix0 + 2, _y0 + 4, ix1 - 2, iy1 - 1, _rng.Next(56, 72) * fs / 100, ZMain, 4), 0);
-            PlaceField(Band(ix0 + 2, iy0 + 1, ix1 - 2, _y0 - 4, _rng.Next(44, 60) * fs / 100, ZMain, 4), gems ? 8 : 0);
-        }
+        if (_natural) PlaceField(MakeField(_natRect.X0, _natRect.Y0, _natRect.X1, _natRect.Y1, _rng.Next(45, 66) * fs / 100, ZPlaza, 8), 0);
         // Contested: the yard by the north deck (image: by the south deck) and the gravel bar of the ford.
         (int x0, int y0, int x1, int y1) = _yardRect;
         PlaceField(MakeField(x0, y0, x1, y1, _rng.Next(36, 48), ZPlaza, 8), 0);

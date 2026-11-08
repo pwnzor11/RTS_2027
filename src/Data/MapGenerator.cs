@@ -132,7 +132,6 @@ public static class MapGenerator
     {
         ArgumentNullException.ThrowIfNull(p);
         BiomeParams biome = BiomeCatalog.For(p.Biome);
-        if (biome.Key != "rust_belt") throw new InvalidOperationException($"Layout 2 is not built yet for {biome.Key}; only rust_belt has the zone skeleton.");
         int n = CellsFor(p.Size);
         (bool rot2, int t) = LayoutVariant.For(p.Seed, p.Players, n);
         var builder = new ProceduralBuilder(biome, n, p.Players, AttemptSeed(p.Seed, 0), rot2);
@@ -172,7 +171,6 @@ public static class MapGenerator
 
     private static (MapData Map, MapMeta Meta) GenerateZoned(MapGenParams p, BiomeParams biome, out int attempts)
     {
-        if (biome.Key != "rust_belt") throw new InvalidOperationException($"Layout 2 is not built yet for {biome.Key}; only rust_belt has the zone skeleton.");
         int n = CellsFor(p.Size);
         string name = p.Name ?? DefaultName(p);
         (bool rot2, int t) = LayoutVariant.For(p.Seed, p.Players, n);
