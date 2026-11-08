@@ -2,7 +2,7 @@
 // Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
 namespace Rts.Game.Render;
 
-/// <summary>Whether a draw item is a building or a unit.</summary>
+/// <summary>Whether a draw item is a building, a unit or a blocking prop.</summary>
 public enum DrawKind : byte
 {
     /// <summary>A building, sorted by its footprint's bottom edge.</summary>
@@ -10,6 +10,9 @@ public enum DrawKind : byte
 
     /// <summary>A unit, sorted by its ground position.</summary>
     Unit = 1,
+
+    /// <summary>A blocking map prop (M12-04), sorted by the bottom edge of its cell like a one-cell building.</summary>
+    Prop = 2,
 }
 
 /// <summary>

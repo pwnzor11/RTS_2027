@@ -17,4 +17,19 @@ public enum PropKind
 
     /// <summary>A tilted slab of ice, for river banks.</summary>
     IceSlab,
+
+    /// <summary>M12-04: a stripped dead tree. A blocking prop (<see cref="Rts.Sim.Rules.OverlayKind.Tree"/>).</summary>
+    DeadTree,
+
+    /// <summary>M12-04: a wrecked car, truck or tank hull (<see cref="Rts.Sim.Rules.OverlayKind.Wreck"/>).</summary>
+    WreckHulk,
+
+    /// <summary>M12-04: a concrete barrier or block (<see cref="Rts.Sim.Rules.OverlayKind.Block"/>).</summary>
+    ConcreteBlock,
+
+    /// <summary>M12-04: a broken pylon (<see cref="Rts.Sim.Rules.OverlayKind.Pylon"/>).</summary>
+    BrokenPylon,
+
+    /// <summary>M12-04: driftwood or debris (<see cref="Rts.Sim.Rules.OverlayKind.Snag"/>).</summary>
+    Snag,
 }

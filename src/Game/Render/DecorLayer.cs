@@ -19,6 +19,7 @@ public sealed class DecorLayer
     private Texture2D? _atlasTexture;
     private IPropAtlas? _atlas;
     private PropInstance[] _props = Array.Empty<PropInstance>();
+    private PropInstance[] _blocking = Array.Empty<PropInstance>();   // M12-04: gameplay props, drawn even with decor off
 
     /// <summary>Milliseconds the last decal bake took (for the debug line and the contact-sheet notes); 0 before the first bake.</summary>
     public long LastBakeMs { get; private set; }
@@ -27,8 +28,8 @@ public sealed class DecorLayer
     public void Draw(SpriteBatch batch, Texture2D pixel, MapData map, Camera camera, Viewport viewport)
     {
         ArgumentNullException.ThrowIfNull(map);
+        Ensure(pixel.GraphicsDevice, map);
         if (!DecorSettings.Enabled) return;
-        if (!ReferenceEquals(_map, map)) Rebuild(pixel.GraphicsDevice, map);
 
         if (_decals is not null)
         {
@@ -41,6 +42,26 @@ public sealed class DecorLayer
 
     /// <summary>The number of land-linked sprites on the current map (0 before the first draw).</summary>
     public int PropCount => _props.Length;
+
+    /// <summary>The blocking props of the current map (M12-04), sorted by row; empty before <see cref="Ensure"/>.</summary>
+    public IReadOnlyList<PropInstance> Blocking => _blocking;
+
+    /// <summary>Builds the layer for <paramref name="map"/> if it is not built yet (decals, land-linked sprites, blocking props).</summary>
+    public void Ensure(GraphicsDevice device, MapData map)
+    {
+        if (!ReferenceEquals(_map, map)) Rebuild(device, map);
+    }
+
+    /// <summary>Draws one blocking prop (the y-sorted pass calls this). The prop atlas frame is anchored on the cell centre.</summary>
+    public void DrawBlocking(SpriteBatch batch, Camera camera, int index)
+    {
+        if (_atlas is null || _atlasTexture is null || (uint)index >= (uint)_blocking.Length) return;
+        PropInstance p = _blocking[index];
+        PropRect f = _atlas.Frame(p.Kind, p.Variant);
+        float wx = (p.CellX + 0.5f) * Camera.CellPx - f.OriginX, wy = (p.CellY + 0.5f) * Camera.CellPx - f.OriginY;
+        Rectangle dest = camera.ScreenRect(wx, wy, wx + f.Width, wy + f.Height);
+        batch.Draw(_atlasTexture, dest, new Rectangle(f.X, f.Y, f.Width, f.Height), Color.White);
+    }
 
     private void DrawProps(SpriteBatch batch, MapData map, Camera camera, Viewport viewport)
     {
@@ -78,7 +99,8 @@ public sealed class DecorLayer
         _atlasTexture = null;
         _atlas = null;
         _props = PropPlanner.Plan(map, palette, seed);
-        if (_props.Length > 0)
+        _blocking = PropPlanner.PlanBlocking(map);
+        if (_props.Length > 0 || _blocking.Length > 0)
         {
             _atlas = new ProceduralPropAtlas(palette);
             _atlasTexture = new Texture2D(device, _atlas.Width, _atlas.Height);

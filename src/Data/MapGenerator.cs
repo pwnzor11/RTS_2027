@@ -58,6 +58,9 @@ public static class MapGenerator
     /// </summary>
     public static MapData Generate(MapGenParams p) => GenerateWithMeta(p).Map;
 
+    /// <summary>As <see cref="Generate(MapGenParams)"/>, with explicit biome parameters (tests and tools).</summary>
+    public static MapData Generate(MapGenParams p, BiomeParams biome) => GenerateWithMeta(p, biome).Map;
+
     /// <summary>As <see cref="Generate(MapGenParams)"/>, plus the map metadata (biome, symmetry, max players, provenance, ruins).</summary>
     public static (MapData Map, MapMeta Meta) GenerateWithMeta(MapGenParams p)
     {
@@ -79,6 +82,7 @@ public static class MapGenerator
         ArgumentNullException.ThrowIfNull(p);
         ArgumentNullException.ThrowIfNull(biome);
         if (p.Players < 2 || p.Players > 4) throw new ArgumentOutOfRangeException(nameof(p), "Players must be 2..4.");
+        if (p.Layout != CurrentLayout) throw new InvalidOperationException(OldGeneratorMessage);   // D-180 D4: the old generator is gone
         int n = CellsFor(p.Size);
         string name = p.Name ?? DefaultName(p);
         MapSymmetry symmetry = p.Players == 2 ? biome.Symmetry2p : biome.Symmetry4p;

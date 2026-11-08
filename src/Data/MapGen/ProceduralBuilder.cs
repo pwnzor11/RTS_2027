@@ -9,9 +9,9 @@ namespace Rts.Data.MapGen;
 /// <summary>
 /// One attempt of the procedural generator (design 08 §1): paints a fundamental domain through <see cref="GenGrid"/> so every write
 /// lands on all symmetry images. Order: start reserves, ocean, plateaus, rivers, roads, ponds, lagoons, rock, rough, fields, ruins,
-/// start squares, shore rings. Uses only <see cref="SimRandom"/> and integer maths.
+/// start squares, shore rings, blocking props (M12-05, <see cref="DecorateProps"/>). Uses only <see cref="SimRandom"/> and integer maths.
 /// </summary>
-internal sealed class ProceduralBuilder
+internal sealed partial class ProceduralBuilder
 {
     /// <summary>Chebyshev radius of the clear, buildable start square (5×5).</summary>
     public const int StartSquareRadius = 2;
@@ -25,6 +25,7 @@ internal sealed class ProceduralBuilder
     private readonly SimRandom _rng;
     private readonly int _n;
     private readonly int _scale;   // map size relative to Medium, in percent
+    private readonly bool _decorate;   // M12-05: the prop pass (Layout 1)
     private readonly List<MapFeature> _features = new();
     private readonly OceanEdgePass? _ocean;   // M7-13: null unless the ocean edge option is on
 
@@ -37,9 +38,9 @@ internal sealed class ProceduralBuilder
     /// <summary>Landing beach markers (<c>landing</c>) of the ocean edge option, filled by <see cref="Build"/>; empty when it is off.</summary>
     public IReadOnlyList<CellCoord> Landing { get; private set; } = Array.Empty<CellCoord>();
 
-    public ProceduralBuilder(BiomeParams biome, int n, MapSymmetry symmetry, ulong seed, OceanEdges oceanEdges = OceanEdges.None)
+    public ProceduralBuilder(BiomeParams biome, int n, MapSymmetry symmetry, ulong seed, OceanEdges oceanEdges = OceanEdges.None, bool decorate = true)
     {
-        _b = biome; _n = n; _scale = n * 100 / 96;
+        _b = biome; _n = n; _scale = n * 100 / 96; _decorate = decorate;
         _g = new GenGrid(n, symmetry, biome.BaseLand);
         _rng = new SimRandom(seed);
         int inset = biome.OceanWidth > 0 ? OceanWidth() + 7 : PlainInset;
@@ -80,6 +81,7 @@ internal sealed class ProceduralBuilder
         ShoreRings();
         int c = _n * _n;
         var map = new MapData(name, _b.Theater, _n, _n, new ushort[c], _g.Land, _g.Height, _g.Overlay, _g.Density, starts);
+        if (_decorate) DecorateProps(map);   // M12-05: last of the land passes; the arrays are shared with the map
         if (_ocean is not null)
         {
             _ocean.PaintCoast();   // the arrays are shared with the map, so the beach shows in it

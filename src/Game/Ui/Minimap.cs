@@ -159,6 +159,7 @@ public sealed class Minimap : IDisposable
     public static Color TerrainColour(TerrainPalette? palette, LandType land, OverlayKind overlay, byte density)
     {
         if (overlay == OverlayKind.Wall) return new Color(0x70, 0x70, 0x68);
+        if (OverlayKinds.IsProp(overlay)) return new Color(0x2A, 0x2A, 0x26);   // M12-04: blocking props are dark dots (design 16 open question 1)
         Color baseColour = palette is null ? Fallback(land) : ToColor(palette.ShadesFor(land).Base);
         if (palette is not null)
         {

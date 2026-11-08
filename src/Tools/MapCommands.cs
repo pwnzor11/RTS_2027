@@ -17,7 +17,9 @@ public static class MapCommands
         "       map gen --biome rust_belt|glass_coast|mountains|ash_plains --size s|m|l --players 2|3|4 --seed <s> --out <path> [--ocean n|e|s|w letters, e.g. ns] [--ascii]\n" +
         "       map validate <path> [--rules-dir <dir>]\n" +
         "       map info <path>\n" +
-        "       map ascii <path>";
+        "       map ascii <path>\n" +
+        "       map report <path> | <gen options>        (measured table of design 16 section 1.2; gen options as for map gen, without --out)\n" +
+        "       map render <path> | <gen options> --png <out.png> [--scale <px per cell, default 6>]";
 
     public static int Run(string[] args)
     {
@@ -29,6 +31,8 @@ public static class MapCommands
             case "gen": return Gen(args[1..]);
             case "validate": return ValidateMap(args[1..]);
             case "ascii": return Ascii(args[1..]);
+            case "report": return Report(args[1..], render: false);
+            case "render": return Report(args[1..], render: true);
             default:
                 Console.Error.WriteLine($"error: unknown map command '{args[0]}'");
                 Console.Error.WriteLine(Usage);
@@ -168,6 +172,52 @@ public static class MapCommands
         }
     }
 
+    /// <summary>`map report` and `map render`: the source is a map file path or the generator options (--biome --size --players --seed [--ocean]).</summary>
+    private static int Report(string[] args, bool render)
+    {
+        string? path = null, png = null; int scale = 6;
+        Biome? biome = null; MapSize? size = null; int? players = null; ulong? seed = null; OceanEdges ocean = OceanEdges.None;
+        for (int i = 0; i < args.Length; i++)
+        {
+            string a = args[i];
+            if (!a.StartsWith("--", StringComparison.Ordinal)) { if (path is not null) { Console.Error.WriteLine(Usage); return 2; } path = a; continue; }
+            if (i + 1 >= args.Length) { Console.Error.WriteLine(Usage); return 2; }
+            string v = args[++i];
+            switch (a)
+            {
+                case "--png": png = v; break;
+                case "--scale": if (!int.TryParse(v, NumberStyles.None, CultureInfo.InvariantCulture, out scale) || scale < 1 || scale > 16) { Console.Error.WriteLine("error: --scale must be 1..16"); return 2; } break;
+                case "--biome":
+                    int b = Array.IndexOf(MapFile.BiomeKeys, v);
+                    if (b < 0) { Console.Error.WriteLine($"error: unknown biome '{v}'"); return 2; }
+                    biome = (Biome)b; break;
+                case "--size": size = v switch { "s" or "S" => MapSize.Small, "m" or "M" => MapSize.Medium, "l" or "L" => MapSize.Large, _ => null }; if (size is null) { Console.Error.WriteLine("error: --size must be s, m or l"); return 2; } break;
+                case "--players": if (!int.TryParse(v, NumberStyles.None, CultureInfo.InvariantCulture, out int pl) || pl < 2 || pl > 4) { Console.Error.WriteLine("error: --players must be 2, 3 or 4"); return 2; } players = pl; break;
+                case "--seed": if (!ulong.TryParse(v, NumberStyles.None, CultureInfo.InvariantCulture, out ulong sd)) { Console.Error.WriteLine(Usage); return 2; } seed = sd; break;
+                case "--ocean":
+                    foreach (char ch in v) { int bit = "nesw".IndexOf(char.ToLowerInvariant(ch)); if (bit < 0) { Console.Error.WriteLine("error: --ocean takes n, e, s, w"); return 2; } ocean |= (OceanEdges)(1 << bit); }
+                    break;
+                default: Console.Error.WriteLine(Usage); return 2;
+            }
+        }
+        bool gen = biome is not null || size is not null || players is not null || seed is not null;
+        if ((path is null) == !gen || (gen && (biome is null || size is null || players is null || seed is null)) || (render && png is null)) { Console.Error.WriteLine(Usage); return 2; }
+        try
+        {
+            MapData map; MapMeta meta;
+            if (gen) (map, meta) = MapGenerator.GenerateWithMeta(new MapGenParams(biome!.Value, size!.Value, players!.Value, seed!.Value, null, ocean));
+            else (map, meta) = MapFile.LoadWithMeta(path!);
+            if (png is not null) { MapRender.WritePng(map, meta, scale, png); Console.WriteLine($"wrote {png} ({map.Width * scale}x{map.Height * scale})"); }
+            if (!render) foreach (string line in Rts.Data.MapGen.MapReport.Measure(map, meta).Lines()) Console.WriteLine(line);
+            return 0;
+        }
+        catch (Exception e) when (e is ArgumentException or InvalidOperationException or IOException or UnauthorizedAccessException or RulesException or MapFileException)
+        {
+            Console.Error.WriteLine($"error: {e.Message}");
+            return 1;
+        }
+    }
+
     private static int Ascii(string[] args)
     {
         if (args.Length != 1) { Console.Error.WriteLine(Usage); return 2; }
@@ -185,7 +235,7 @@ public static class MapCommands
     }
 
     /// <summary>One character per cell: 1-4 starts, F feature, $ Ashfall, P Pitchblende, ~ deep water, , shallow, # rock, X cliff,
-    /// = road, : rough, ^ height 1, A height 2+, . flat ground.</summary>
+    /// = road, : rough, ^ height 1, A height 2+, . flat ground; props t tree, w wreck, b block, p pylon, s snag.</summary>
     private static void PrintAscii(MapData map, MapMeta meta)
     {
         bool[]? features = Rts.Data.MapGen.MapAnalysis.FeatureMask(map, meta.Features);
@@ -202,6 +252,7 @@ public static class MapCommands
                 else if (features is not null && features[i]) ch = 'F';
                 else if (map.Overlay[i] == OverlayKind.Ashfall) ch = '$';
                 else if (map.Overlay[i] == OverlayKind.Pitchblende) ch = 'P';
+                else if (OverlayKinds.IsProp(map.Overlay[i])) ch = "twbps"[(int)map.Overlay[i] - (int)OverlayKind.Tree];   // M12: tree wreck block pylon snag
                 else ch = map.Land[i] switch
                 {
                     LandType.Water => '~', LandType.Shallow => ',', LandType.Rock => '#', LandType.Cliff => 'X', LandType.Road => '=',

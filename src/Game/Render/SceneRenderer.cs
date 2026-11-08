@@ -38,6 +38,7 @@ public sealed class SceneRenderer : IDisposable
     private readonly List<WreckDraw> _wrecks = new();
     private readonly List<StormView> _stormViews = new();
     private readonly List<StormDraw> _storms = new();
+    private Viewport _viewport;   // M12-04: remembered from Draw for the prop culling
     private bool _disposed;
     private readonly HashSet<EntityId> _submerged = new();                    // M7-14: dived ships the viewer can see
     private readonly HashSet<EntityId> _ownOrAllied = new();                  // M7-17: dived ships the viewer owns or is allied with
@@ -75,6 +76,7 @@ public sealed class SceneRenderer : IDisposable
     {
         SimSnapshot snapshot = frame.Snapshot;
         MapData? map = frame.Sim?.Setup.Map;
+        _viewport = viewport;
         if (map is not null)
         {
             _terrain.Draw(batch, pixel, map, camera);
@@ -171,6 +173,22 @@ public sealed class SceneRenderer : IDisposable
         _painter.Dispose();
     }
 
+    // M12-04: blocking props in view join the y-sorted pass, so a unit south of a tree is drawn over it and one north of it under it.
+    private void AddBlockingProps(SceneFrame frame, Camera camera)
+    {
+        MapData? map = frame.Sim?.Setup.Map;
+        IReadOnlyList<PropInstance> props = _decor.Blocking;
+        if (map is null || props.Count == 0 || _viewport.Width <= 0) return;
+        if (!camera.VisibleCells(map.Width, map.Height, _viewport, out int x0, out int y0, out int x1, out int y1)) return;
+        for (int i = PropPlanner.FirstAtRow(props, y0 - 1); i < props.Count; i++)
+        {
+            PropInstance p = props[i];
+            if (p.CellY > y1 + 1) break;
+            if (p.CellX < x0 - 1 || p.CellX > x1 + 1) continue;
+            _items.Add(new DrawItem(DrawKind.Prop, i, (p.CellY + 1) * Camera.CellPx, p.CellX * Camera.CellPx));
+        }
+    }
+
     private void DrawSprites(SpriteBatch batch, Texture2D pixel, SceneFrame frame, Camera camera)
     {
         SimSnapshot snapshot = frame.Snapshot;
@@ -205,11 +223,16 @@ public sealed class SceneRenderer : IDisposable
             RenderUnit unit = frame.Units[i];
             _items.Add(new DrawItem(DrawKind.Unit, i, unit.World.Y, unit.World.X));
         }
+        AddBlockingProps(frame, camera);
         _items.Sort(DrawOrder.Instance);
 
         foreach (DrawItem item in _items)
         {
-            if (item.Kind == DrawKind.Building)
+            if (item.Kind == DrawKind.Prop)
+            {
+                _decor.DrawBlocking(batch, camera, item.Index);
+            }
+            else if (item.Kind == DrawKind.Building)
             {
                 BuildingRenderer.Draw(batch, pixel, _sprites, _painter, _memory, snapshot.Tick, frame.Rules,
                     snapshot.Buildings[item.Index], camera, _walls);
