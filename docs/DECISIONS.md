@@ -1335,3 +1335,47 @@ units or buildings remain. The 2-minute clock resets as soon as any of those exi
 remaining units do not count.
 **Alternatives:** army counts (fewer games end); hatches don't count; AI-only mop-up; leave it.
 **Status:** owner decision (session 14)
+
+### D-174 · 2026-11-07 · Q-64: AI siege behaviour against defended bases
+**Decision:** the AI gets a siege mode (gather a bigger force, long-range units against defences, production and tech roots first), measured before/after.
+**Why:** Directorate draws are base stalemates; half survive even at 60 000 ticks (docs/balance/s15_laptop_series.md set C). **Alternatives:** stricter defeat rule; accept draws.
+**Status:** owner decision (session 15)
+
+### D-175 · 2026-11-07 · Q-66: tune auth_01..auth_03 tiers like the other nine missions
+**Decision:** tier 3 = the old design, tier 5 clearly harder, tier 1 easier; bot wins every tier (docs/balance/m8_15_acceptance.md "Session 15").
+**Status:** owner decision (session 15)
+
+### D-176 · 2026-11-07 · Q-65: re-measure on the owner's laptop first
+**Decision:** run tools/measure/run_s15_series.ps1 (17 rows) before choosing a fix; results in docs/balance/s15_laptop_series.md. Superseded in part by D-182.
+**Status:** owner decision (session 15)
+
+### D-177 · 2026-11-07 · Camera keys stay as they are
+**Decision:** QWERT stay the sidebar tab keys; scrolling is arrows, screen edge and minimap; no WASD (UI audit K3).
+**Status:** owner decision (session 15)
+
+### D-178 · 2026-11-07 · M11 batch 3 scope
+**Decision:** the whole planned batch 3 (selection toolkit, alert stack + minimap pings, one UI scale rule, cursor sprites, placement ghost,
+cameo tooltips) plus a UI-scale (75-200 %) and text-size setting. Colour-blind mode stays out (D-172 (5)).
+**Status:** owner decision (session 15)
+
+### D-179 · 2026-11-07 · The lead may merge PRs to main after Windows CI is green
+**Decision:** the owner allows the lead to merge its PRs once Windows CI is green (replaces "the owner merges" from sessions 13-14).
+**Status:** owner decision (session 15)
+
+### D-180 · 2026-11-07 · Maps overhaul M12 (docs/design/16_maps_overhaul.md)
+**Decision:** (D1) props = decoration plus static blocking props (block ground units like walls, not sight; not destructible); (D2) generator =
+zone skeleton with natural expansions, a contested centre and 2-3 lanes with chokepoints (stamps later); (D3) starts = walled main with one 4-6 cell
+ramp plus a natural expansion; (D4) the new generator REPLACES the old one (skirmish saves on generated maps stop loading, with a clear message;
+the hand-made data/maps stay); (D5) procedural placeholder props now, real art in M10; (D6) all of M12 before M9 LAN.
+**Why:** owner play-test: maps look flat and samey; previews show no lanes, no chokes, no expansions, empty plateaus. **Alternatives:** section 4 of the design doc.
+**Status:** owner decision (session 15)
+
+### D-181 · 2026-11-07 · Terrain look C is the default (M11-07, M11-08)
+**Decision:** palette with contrast >= 1.5 between ground types, road edges, shore band, cliff lip and shadow, tone drift, resource fields drawn
+as slag heaps (ash) and crystals (pitchblende) by density, bright resource colours on the minimap. The old look stays as variants/classic.
+**Alternatives:** A palette only; B edges without new fields. **Status:** owner decision (session 15)
+
+### D-182 · 2026-11-07 · Q-65: AI-only fixes for the Directorate and the Left Behind
+**Decision:** fix the Directorate's tier 4-5 AI and tune the Left Behind tier-3 AI profile; re-measure; unit numbers only if a gap remains (as a table, D-152).
+**Why:** Directorate decisive % falls with tier (v Authority 74/50/23 % at tiers 1/3/5); Left Behind wins 78-86 % at tier 3 but 58-60 % at tier 5.
+**Alternatives:** buff Directorate late units; Left Behind numbers table; leave. **Status:** owner decision (session 15)
