@@ -120,7 +120,7 @@ internal sealed partial class ProceduralBuilder
             {
                 int c = stack.Pop(); count++;
                 int x = c % n, y = c / n;
-                if (x == 0 || y == 0 || x == n - 1 || y == n - 1) edge = true;
+                if (x == 0 || y == 0 || x == n - 1 || y == n - 1 || (_sea && (x <= 2 || y <= 2 || x >= n - 3 || y >= n - 3))) edge = true;
                 for (int dy = -1; dy <= 1 && !res; dy++)
                     for (int dx = -1; dx <= 1; dx++)
                         if (_g.In(x + dx, y + dy) && OverlayKinds.IsResource(_g.Overlay[_g.Idx(x + dx, y + dy)])) { res = true; break; }
@@ -139,13 +139,33 @@ internal sealed partial class ProceduralBuilder
         {
             int c = comp[i];
             if (c == 0) continue;
-            if ((_skin == SkinGlass || _sea) && touchesEdge[c] && size[c] >= 60) _g.Land[i] = LandType.Water;
+            if ((_skin == SkinGlass || _sea) && touchesEdge[c] && size[c] >= (_sea ? 30 : 60)) _g.Land[i] = LandType.Water;
             else if (_skin == SkinMountains && size[c] >= 24) _g.Land[i] = LandType.Cliff;
             else if (_skin == SkinAsh && size[c] <= 80 && !nearRes[c] && MinStartDistance(i % n, i / n) > 16 && IsLowImage(i))
             {
                 int v = OrbitHash(i, 1) % 3;
                 OverlayKind kind = (comp[i] % 3 == 0) ? OverlayKind.Wreck : OverlayKind.Tree;   // every third small mass is a tank graveyard, the rest burnt groves
                 foreach (int j in _g.Images(i)) { _g.Land[j] = LandType.Rough; _g.Overlay[j] = kind; _g.Density[j] = (byte)v; }
+            }
+        }
+        if (_sea)
+        {
+            // Let each sea mass reach the map edge: water cells within 3 of a border extend straight out to it (all images, so it stays symmetric).
+            for (int i = 0; i < total; i++)
+            {
+                if (_g.Land[i] != LandType.Water) continue;
+                int x = i % n, y = i / n;
+                for (int dir = 0; dir < 4; dir++)
+                {
+                    int dist = dir == 0 ? x : dir == 1 ? n - 1 - x : dir == 2 ? y : n - 1 - y;
+                    if (dist > 3) continue;
+                    for (int k = 1; k <= dist; k++)
+                    {
+                        int xx = dir == 0 ? x - k : dir == 1 ? x + k : x, yy = dir == 2 ? y - k : dir == 3 ? y + k : y;
+                        int j = _g.Idx(xx, yy);
+                        if (_g.Land[j] is LandType.Clear or LandType.Rough or LandType.Rock && _g.Overlay[j] == OverlayKind.None && !_g.Core[j]) foreach (int q in _g.Images(j)) _g.Land[q] = LandType.Water;
+                    }
+                }
             }
         }
         if (_skin == SkinGlass || _sea)

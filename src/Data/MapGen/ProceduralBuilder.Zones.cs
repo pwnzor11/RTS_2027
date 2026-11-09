@@ -351,7 +351,7 @@ internal sealed partial class ProceduralBuilder
                 if (x >= ix0 && x <= ix1 && y >= iy0 && y <= iy1) continue;
                 bool outer = x == ix0 - 3 || x == ix1 + 3 || y == iy0 - 3 || y == iy1 + 3;
                 bool beyond = x < ix0 - 3 || x > ix1 + 3 || y < iy0 - 3 || y > iy1 + 3;   // the filled strip between the wall and the map edge
-                _g.SetLand(_g.Idx(x, y), (outer && (_players > 2 || _rng.Next(100) < 30)) || (beyond && _players > 2 && n < 96) ? LandType.Rough : LandType.Rock);
+                _g.SetLand(_g.Idx(x, y), (outer && (_players > 2 || _rng.Next(100) < 30)) || (beyond && _players > 2 && n < 96 && !_sea) ? LandType.Rough : LandType.Rock);
                 foreach (int j in _g.Images(_g.Idx(x, y))) _zone[j] = 0;
             }
         // Entrances through the three wall layers.
