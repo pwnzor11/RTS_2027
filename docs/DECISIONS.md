@@ -1457,3 +1457,18 @@ tune); tiers 2-3 keep 18, tier 4 and other factions untouched. AI only. The owne
 Dir5 v Auth5 13/29/22. After (cloud, 64 games): Dir5 v Dir3 30/20/14 (60 %), Dir5 v Auth5 24/25/15 (49 %); 32 games Dir5 v LB5 15/14/3.
 Tier 1-3 cells and the control are bit-identical. Data knobs (attack threshold/ratio, expansion tick) did not move it. Laptop rows are in
 tools/measure/run_s16_q67.ps1. **Status:** within the owner's D-194 instruction (session 16)
+
+### D-196 · 2026-11-09 · Directorate tuning closed; art renders move to the owner's PC
+**Decision:** (1) The owner closed Directorate AI tuning after his 64-game laptop run on D-194 + D-195 (docs/balance/s16_q67_laptop_after_tier5.md);
+LB3 v Dir3 66 % and Dir3 v Auth3 71 % are accepted. (2) Blender art renders now run on the owner's PC: `.venv-art` in the RTS_2027 folder
+(Python 3.13, bpy 5.2.3, numpy, pillow; about 18 s per vehicle against about 90 s in the cloud). Art passes hand the owner a `render_*.ps1`; he sends
+contact sheets back and commits/pushes the sprites himself (no more art_push zips). A full re-render on his PC (art/pc-rerender-<date>, local branch)
+gives the baseline and a script-drift check. **Status:** owner decision (session 16)
+
+### D-197 · 2026-11-09 · Map layout 2 status after v5
+**Decision:** layout 2 (all four biomes) stays off by default (`CurrentLayout = 1`) until it passes the owner's three blockers from M12-12:
+an Expedition coast in every biome (M7-1), start side <= 60 % decisive in tier-3 mirrors (64 games per biome), and income within +-10 % of layout 1 at
+3, 5 and 10 min. After v5: coast built for all biomes, but the Expedition still does nothing on Ash Plains (cause not found); fairness met on Rust Belt
+(51 %) and Glass Coast (50 %), not on Mountains (57 %, inside the limit but skewed for Directorate/Left Behind) or Ash Plains (64 %, its mirror skeleton);
+income not met (+11 to +30 % at 5-10 min; Glass Coast +39/+109 %; field richness is not the lever). Biome identity: Mountains ridge/plateau mains,
+Ash causeway. Details: docs/balance/s16_layout2.md "v5 re-measure". **Status:** owner decision (session 16), next steps in Q-68 and Q-69
