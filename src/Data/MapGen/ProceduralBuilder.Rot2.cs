@@ -24,19 +24,20 @@ internal sealed partial class ProceduralBuilder
         int n = _n;
         (_iw, _ie, _hh) = LayoutChecks.MainRect(n, 2, true);
         int amp = n >= 112 ? 10 : 7;
-        _hw = 3; _fh = 8;
+        _hw = _skin == SkinMountains ? 2 : 3; _fh = 8;
         int riverWest = n / 2 - amp - _hw - 1;
         int amin = (n * 12 + 99) / 100, amax = Math.Min(riverWest - 5 - _ie - 3, n * 22 / 100);
+        if (_sea) amax = Math.Min(amax, _iw + 9);   // the wall must reach the map edge: the sea goes behind the main
         _sa = _rng.Next(amin, Math.Max(amin, amax) + 1);
         int sum = n * _rng.Next(44, 58) / 100;
         _y0 = Math.Clamp(sum - _sa, Math.Max(_hh + 11, n * 19 / 100), n * 38 / 100);
         _ye = _y0 + _rng.Next(-3, 4);
         int mr = _rng.Next(12);
-        _mode = mr < 8 ? 0 : mr < 10 ? 2 : 1;   // 0 soft shell, 2 walled main with two gates (east and south), 1 walled main with one east ramp
+        _mode = _skin == SkinMountains ? (mr < 7 ? 2 : 1) : mr < 8 ? 0 : mr < 10 ? 2 : 1;   // 0 soft shell, 2 walled main with two gates (east and south), 1 walled main with one east ramp
         _wL1 = _rng.Next(6, 9); _wL2 = _rng.Next(13, 17); _bridgeW = _rng.Next(3, 6);
         _gapE = _rng.Next(4, 7); _gapS = _rng.Next(4, 7);
         _gx2 = _sa + _rng.Next(-3, 7);
-        _natural = _rng.Next(2) == 0;
+        _natural = _rng.Next(10) < 4;
         // The river: knots in the top half, mirrored with the sign flipped, then smoothed (odd smoothing keeps it odd).
         var o = new int[n];
         int k1 = n / 6, k2 = n / 3, mid = (n - 1) / 2;
@@ -176,8 +177,7 @@ internal sealed partial class ProceduralBuilder
                 int i = _g.Idx(x, y);
                 if (deckRow[y])
                 {
-                    _g.SetLand(i, LandType.Road);
-                    foreach (int j in _g.Images(i)) _g.River[j] = false;
+                    PaintDeck(i, x, y);
                     continue;
                 }
                 if (y2 <= 2 * (_fh - 2) - 1)
@@ -186,8 +186,8 @@ internal sealed partial class ProceduralBuilder
                     foreach (int j in _g.Images(i)) _g.River[j] = false;
                     continue;
                 }
-                if (y2 <= 2 * _fh - 1) { _g.SetLand(i, LandType.Shallow); _g.MarkRiver(i); continue; }
-                _g.SetLand(i, d == 2 * _hw - 1 ? LandType.Shallow : LandType.Water);
+                if (y2 <= 2 * _fh - 1) { _g.SetLand(i, _skin == SkinMountains ? LandType.Cliff : LandType.Shallow); _g.MarkRiver(i); continue; }
+                _g.SetLand(i, _skin == SkinMountains ? LandType.Cliff : d == 2 * _hw - 1 ? LandType.Shallow : LandType.Water);   // Mountains: a ridge instead of a river
                 _g.MarkRiver(i);
             }
         }
@@ -222,15 +222,15 @@ internal sealed partial class ProceduralBuilder
         }
         else
         {
-            PlaceField(Band(ix0 + 1, iy0 + 2, ix0 + 4, iy1 - 2, _rng.Next(50, 64) * fs / 100, ZMain, 4), 0);
-            PlaceField(Band(ix0 + 6, iy1 - 4, ix1 - 2, iy1 - 1, _rng.Next(40, 52) * fs / 100, ZMain, 4), gems ? 8 : 0);
-            PlaceField(Band(ix0 + 6, iy0 + 1, ix1 - 2, iy0 + 4, _rng.Next(30, 40) * fs / 100, ZMain, 4), 0);
+            PlaceField(Band(ix0 + 1, iy0 + 2, ix0 + 4, iy1 - 2, _rng.Next(40, 50) * fs / 100, ZMain, 4), 0);
+            PlaceField(Band(ix0 + 6, iy1 - 4, ix1 - 2, iy1 - 1, _rng.Next(32, 40) * fs / 100, ZMain, 4), gems ? 8 : 0);
+            PlaceField(Band(ix0 + 6, iy0 + 1, ix1 - 2, iy0 + 4, _rng.Next(24, 30) * fs / 100, ZMain, 4), 0);
         }
-        if (_natural) PlaceField(MakeField(_natRect.X0, _natRect.Y0, _natRect.X1, _natRect.Y1, _rng.Next(45, 66) * fs / 100, ZPlaza, 8), 0);
+        if (_natural) PlaceField(MakeField(_natRect.X0, _natRect.Y0, _natRect.X1, _natRect.Y1, _rng.Next(36, 48) * fs / 100, ZPlaza, 8), 0);
         // Contested: the yard by the north deck (image: by the south deck) and the gravel bar of the ford.
         (int x0, int y0, int x1, int y1) = _yardRect;
-        PlaceField(MakeField(x0, y0, x1, y1, _rng.Next(36, 48), ZPlaza, 8), 0);
-        PlaceField(Bar2(), 6);
+        PlaceField(MakeField(x0, y0, x1, y1, _rng.Next(20, 25), ZPlaza, 8), 0);
+        PlaceField(Bar2(), 3);
         ScaleDensity();
     }
 

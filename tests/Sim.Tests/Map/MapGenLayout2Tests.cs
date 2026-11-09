@@ -93,4 +93,23 @@ public sealed class MapGenLayout2Tests
                 Assert.True(clean >= total * 42 / 50, $"{biome} {size} {players}p: only {clean}/{total} seeds pass the layout checks");
             }
     }
+
+    /// <summary>D-124: an Expedition player is guaranteed a coast. With an ocean requested, layout 2 puts sea behind the mains in every biome and writes
+    /// convoy cells and one landing per start; the finished (turned) map passes the validator, naval checks included.</summary>
+    [Theory]
+    [InlineData(Biome.RustBelt)]
+    [InlineData(Biome.Mountains)]
+    [InlineData(Biome.AshPlains)]
+    [InlineData(Biome.GlassCoast)]
+    public void Layout2_WithOcean_HasSeaConvoyAndLandings(Biome biome)
+    {
+        foreach ((MapSize size, int players) in new[] { (MapSize.Medium, 2), (MapSize.Small, 2), (MapSize.Large, 2), (MapSize.Medium, 3), (MapSize.Medium, 4), (MapSize.Small, 4) })
+            for (ulong seed = 1; seed <= 6; seed++)
+            {
+                (MapData map, MapMeta meta) = MapGenerator.GenerateWithMeta(P(size, players, seed, biome) with { OceanEdges = OceanEdges.North | OceanEdges.South });
+                Assert.True(meta.ConvoyEdge.Count > 0, $"{biome} {size} {players}p seed {seed}: no convoy cells");
+                Assert.True(meta.Landing.Count >= 1, $"{biome} {size} {players}p seed {seed}: no landing");
+                Assert.DoesNotContain(MapValidator.Validate(map, meta, null), i => i.Severity == MapIssueSeverity.Error);
+            }
+    }
 }

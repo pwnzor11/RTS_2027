@@ -118,6 +118,32 @@ Expedition cells only on glass_coast, the one biome where Expedition starts on l
 
 Rust Belt and Glass Coast are the two biomes run. The layout-1 column is the synthetic map, not the biome generator at layout 1, so it is a reference, not a like-for-like control.
 
+## v5 re-measure (M12-12 follow-up, partial: work stopped when the shell tool became unavailable)
+
+Sea for the Expedition: layout 2 now builds sea behind every main (rock masses that reach the map edge become water with a beach), convoy cells and one landing per start whenever the generator gets an ocean request, in all four biomes (`MapGenerator.WithMarkers`; test `Layout2_WithOcean_HasSeaConvoyAndLandings`). `ai match` now asks for the sea on layout 2 as well. Expedition v Expedition at layout 2 plays on rust_belt (24 / 28 / 12), mountains (26 / 26 / 12) and glass_coast (25 / 25 / 14). Ash Plains is still 0 / 0 / 64 (no structure, no unit): not yet found; the map has convoy cells and two landings and passes the validator, so it is probably the Expedition start ship choosing a site (ExpeditionTactics.ChooseSite) or the start kit placement on this skeleton. Not fixed.
+
+Income (tier 3 Authority mirror, Medium 2p, 8 seeds, harvested credits per minute at 3 / 5 / 10 min, layout 2 after the trims: money per start about 42 % of layout 1 (30 % on glass_coast), contested and natural fields cut, ford bar 3 pitch cells, natural on 4 seeds in 10, main fields kept 3+ thick). Layout 1 numbers are the M12-12 table above (Authority).
+
+| Biome | L1 | L2 before | L2 after | After vs L1 |
+|---|---|---|---|---|
+| rust_belt | 3204 / 3579 / 3605 | 3311 / 4273 / 5076 | 3157 / 4211 / 4671 | -1 / +18 / +30 % |
+| mountains | 2922 / 3820 / 3681 | 3034 / 4188 / 5471 | 3021 / 4240 / 4760 | +3 / +11 / +29 % |
+| ash_plains | 3425 / 4147 / 4579 | 3199 / 4383 / 5199 | 2965 / 4181 / 4564 | -13 / +1 / 0 % |
+| glass_coast | 2771 / 3003 / 2078 | 3172 / 4309 / 5123 | 3180 / 4166 / 4337 | +15 / +39 / +109 % |
+
+Not within +-10 % yet at 5 and 10 minutes on rust_belt, mountains and glass_coast: the harvest rate per minute is limited by harvesters and travel more than by field richness (cutting the money from 100 % to 25 % of layout 1 moved the 10-minute rate from 5796 to 4768 only), so the next lever is field distance / count near the main, not density. Glass Coast layout 1 falls after 5 minutes (its fields run dry), which layout 2 does not copy.
+
+Start fairness (tier 3 mirror, 32 seeds = 64 games per cell; wins by start index, start 0 / start 1), after making every Medium and Large 2-player seed half-turn (a mirror-diagonal skeleton gave 64-70 % to one start; rot2 skeletons measure about even):
+
+| Biome | Authority | Directorate | Left Behind | Expedition | Pooled larger share |
+|---|---|---|---|---|---|
+| rust_belt | 35 / 25 | 20 / 27 | 20 / 23 | 28 / 24 | 51 % |
+| mountains | 31 / 28 | 30 / 16 | 29 / 13 | 24 / 28 | 57 % |
+| glass_coast | 30 / 25 | 22 / 26 | 22 / 19 | 23 / 27 | 50 % |
+| ash_plains (mirror skeleton, kept for its two different crossings) | 17 / 27 | 9 / 23 | 16 / 24 | no start | 64 % |
+
+Mountains Directorate and Left Behind are still skewed (65 % and 69 % to start 0), ash_plains is over the limit. Cause not found for Mountains (the skeleton is the rot2 one that is even on rust_belt; the plateau mains and ridge river differ). For Ash Plains the mirror-diagonal skeleton is the likely cause, since the same skeleton measured 64-70 % on rust_belt and mountains before v5; moving Ash Plains to half-turn needs its three different crossings redesigned (the two decks of a half-turn map are images of each other).
+
 Reading: on layout 2 the order of the factions changes a lot. Directorate tier 3 beats Authority (86-90 %), Expedition (87 %) and Left Behind (85-100 %); Left Behind loses to Authority on Glass Coast
 (13 %) and to Directorate everywhere, and is the only faction whose position drops on both maps. Directorate's early-army hold (D-191, tier 3 army 18 before tech) plus layout 2's long, bridged
 approach seems to favour a faction that fields a larger defended army before attacking; Left Behind's tier 3 pressure relies on an early raid that has to cross a river deck or a ford and a walled main

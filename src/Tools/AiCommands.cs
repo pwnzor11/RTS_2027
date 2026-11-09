@@ -752,7 +752,7 @@ public static class AiCommands
             {
                 // M12-12: biome generator at a chosen layout. Layout 2 has no ocean edges (the zoned generator ignores them), so an Expedition
                 // side plays there without sea lanes; layout 1 keeps the M7-10 north + south ocean for Expedition.
-                bool sea = (a.Faction == Faction.Expedition || b.Faction == Faction.Expedition) && mc.Layout == MapGenerator.CurrentLayout;
+                bool sea = a.Faction == Faction.Expedition || b.Faction == Faction.Expedition;   // v5: layout 2 builds its sea behind the mains too
                 var gen = MapGenerator.GenerateWithMeta(mc.Params(size, 2, (ulong)s, sea ? OceanEdges.North | OceanEdges.South : OceanEdges.None));
                 map = gen.Map; landing = sea ? gen.Meta.Landing : null;
             }

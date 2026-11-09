@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
+using Rts.Sim.Core;
 using Rts.Sim.Rules;
 
 namespace Rts.Data.MapGen;
@@ -14,6 +15,7 @@ internal sealed partial class ProceduralBuilder
 {
     private const int SkinRust = 0, SkinMountains = 1, SkinAsh = 2, SkinGlass = 3;
     private int _skin;
+    private readonly bool _sea;   // an Expedition is in the match (OceanEdges given): sea behind every main, with a beach, in every biome
     private readonly List<(int X0, int Y0, int X1, int Y1)> _plateaus = new();
 
     private static int SkinOf(string key) => key switch { "mountains" => SkinMountains, "ash_plains" => SkinAsh, "glass_coast" => SkinGlass, _ => SkinRust };
@@ -45,7 +47,7 @@ internal sealed partial class ProceduralBuilder
         }
         if (_skin == SkinMountains)
         {
-            if (roll < 34 && m >= 4) Blob(x0, y0, x1, y1, LandType.Rock, 3, Math.Min(8, m), true);
+            if (roll < (_n >= 96 ? 12 : 3) && m >= 4) Blob(x0, y0, x1, y1, LandType.Rock, 4, Math.Min(10, m), true);
             else if (roll < 52) Lot(x0, y0, x1, y1);
         }
         else if (_skin == SkinAsh)
@@ -104,7 +106,7 @@ internal sealed partial class ProceduralBuilder
     /// <summary>The post pass: plateaus (Mountains), groves (Ash Plains), flanks and sea (Glass Coast). Passability is kept the same.</summary>
     private void Skin()
     {
-        if (_skin == SkinRust) return;
+        if (_skin == SkinRust && !_sea) return;
         int n = _n, total = n * n;
         var comp = new int[total]; var size = new List<int> { 0 }; var touchesEdge = new List<bool> { false }; var nearRes = new List<bool> { false };
         var stack = new Stack<int>();
@@ -118,7 +120,7 @@ internal sealed partial class ProceduralBuilder
             {
                 int c = stack.Pop(); count++;
                 int x = c % n, y = c / n;
-                if (x == 0 || y == 0 || x == n - 1 || y == n - 1) edge = true;
+                if (x == 0 || y == 0 || x == n - 1 || y == n - 1 || (_sea && (x <= 2 || y <= 2 || x >= n - 3 || y >= n - 3))) edge = true;
                 for (int dy = -1; dy <= 1 && !res; dy++)
                     for (int dx = -1; dx <= 1; dx++)
                         if (_g.In(x + dx, y + dy) && OverlayKinds.IsResource(_g.Overlay[_g.Idx(x + dx, y + dy)])) { res = true; break; }
@@ -137,21 +139,42 @@ internal sealed partial class ProceduralBuilder
         {
             int c = comp[i];
             if (c == 0) continue;
-            if (_skin == SkinMountains && size[c] >= 40) _g.Land[i] = LandType.Cliff;
-            else if (_skin == SkinGlass && touchesEdge[c] && size[c] >= 60) _g.Land[i] = LandType.Water;
+            if ((_skin == SkinGlass || _sea) && touchesEdge[c] && size[c] >= (_sea ? 30 : 60)) _g.Land[i] = LandType.Water;
+            else if (_skin == SkinMountains && size[c] >= 24) _g.Land[i] = LandType.Cliff;
             else if (_skin == SkinAsh && size[c] <= 80 && !nearRes[c] && MinStartDistance(i % n, i / n) > 16 && IsLowImage(i))
             {
                 int v = OrbitHash(i, 1) % 3;
-                foreach (int j in _g.Images(i)) { _g.Land[j] = LandType.Rough; _g.Overlay[j] = OverlayKind.Tree; _g.Density[j] = (byte)v; }
+                OverlayKind kind = (comp[i] % 3 == 0) ? OverlayKind.Wreck : OverlayKind.Tree;   // every third small mass is a tank graveyard, the rest burnt groves
+                foreach (int j in _g.Images(i)) { _g.Land[j] = LandType.Rough; _g.Overlay[j] = kind; _g.Density[j] = (byte)v; }
             }
         }
-        if (_skin == SkinGlass)
+        if (_sea)
+        {
+            // Let each sea mass reach the map edge: water cells within 3 of a border extend straight out to it (all images, so it stays symmetric).
+            for (int i = 0; i < total; i++)
+            {
+                if (_g.Land[i] != LandType.Water) continue;
+                int x = i % n, y = i / n;
+                for (int dir = 0; dir < 4; dir++)
+                {
+                    int dist = dir == 0 ? x : dir == 1 ? n - 1 - x : dir == 2 ? y : n - 1 - y;
+                    if (dist > 3) continue;
+                    for (int k = 1; k <= dist; k++)
+                    {
+                        int xx = dir == 0 ? x - k : dir == 1 ? x + k : x, yy = dir == 2 ? y - k : dir == 3 ? y + k : y;
+                        int j = _g.Idx(xx, yy);
+                        if (_g.Land[j] is LandType.Clear or LandType.Rough or LandType.Rock && _g.Overlay[j] == OverlayKind.None && !_g.Core[j]) foreach (int q in _g.Images(j)) _g.Land[q] = LandType.Water;
+                    }
+                }
+            }
+        }
+        if (_skin == SkinGlass || _sea)
         {
             // Beach: the open cells beside the sea; rough flanks along the dune crests (hash-picked so both images agree).
             var beach = new List<int>(); var flank = new List<int>();
             for (int i = 0; i < total; i++)
             {
-                if (_g.Land[i] is not (LandType.Clear or LandType.Rough) || _zone[i] == ZLane || _zone[i] == ZMain || _g.Overlay[i] != OverlayKind.None) continue;
+                if (_g.Land[i] is not (LandType.Clear or LandType.Rough) || _zone[i] == ZLane || (_zone[i] == ZMain && !_sea) || _g.Overlay[i] != OverlayKind.None || _g.Core[i]) continue;
                 int x = i % n, y = i / n; bool sea = false, crest = false;
                 for (int dy = -1; dy <= 1; dy++)
                     for (int dx = -1; dx <= 1; dx++)
@@ -164,6 +187,14 @@ internal sealed partial class ProceduralBuilder
             }
             foreach (int i in beach) _g.Land[i] = LandType.Coast;
             foreach (int i in flank) _g.Land[i] = LandType.Rough;
+        }
+        if (_skin == SkinMountains && _n >= 96 && (_mode != 0 || _players > 2))
+        {
+            // Plateau mains: the interior and its cliff wall stand one level up; the gates are the ramps.
+            CellCoord st = OrbitStarts[0];
+            for (int y = st.Y - _hh - 3; y <= st.Y + _hh + 3; y++)
+                for (int x = st.X - _iw - 3; x <= st.X + _ie + 3; x++)
+                    if (_g.In(x, y)) _g.SetHeight(_g.Idx(x, y), 1);
         }
         if (_skin == SkinMountains)
             foreach ((int x0, int y0, int x1, int y1) in _plateaus)
