@@ -21,19 +21,20 @@ public static class AiCommands
 {
     private const int DefaultTier = 2;
     private const string Usage =
-        "usage: ai match --a <aiId>[:<tier>] --b <aiId>[:<tier>] [--seeds 8] [--ticks 30000] [--size 64] [--out file.md] [--record-dir dir] [--flat 1] [--starts alt|slot|swap] [--start economy|army] [--first 1] [--faction-a authority|directorate|left_behind|expedition] [--faction-b ...]\n" +
+        "usage: ai match --a <aiId>[:<tier>] --b <aiId>[:<tier>] [--seeds 8] [--ticks 30000] [--size 64] [--out file.md] [--record-dir dir] [--flat 1] [--starts alt|slot|swap] [--start economy|army] [--first 1] [--faction-a authority|directorate|left_behind|expedition] [--faction-b ...] [--layout 1|2] [--biome rust_belt|glass_coast|mountains|ash_plains] [--income 1]\n" +
+        "         --layout / --biome (M12-12) build the map with the biome generator (size 64 = small, 96 = medium, else large) instead of the synthetic map; layout 2 is the zoned layout, no flag = unchanged. --income prints harvested credits at 3/5/10 min.\n" +
         "         example (M7-10): ai match --a tiered:2 --b tiered:2 --faction-a expedition --faction-b authority --size 96 --seeds 4   (an Expedition side gets ocean north+south edges; 96 = medium)\n" +
-        "       ai matrix --ai <aiId> [--faction authority|directorate] [--tiers 1-5] [--seeds 4] [--ticks 30000] [--size 64] [--out file.md]\n" +
-        "       ai matrix --players 2-4 [--ai tiered] [--tiers 3] [--faction authority|directorate|mixed] [--biome rust_belt|glass_coast|mountains|ash_plains|all] [--size s|m|l|<cells>] [--seeds 2] [--ticks 25000] [--out file.md]\n" +
-        "       ai timeline --a <aiId>[:<tier>] --b <aiId>[:<tier>] [--seed 1] [--ticks 30000] [--size 64] [--swap 0|1] [--trace N] [--dump 1]\n" +
+        "       ai matrix --ai <aiId> [--faction authority|directorate] [--tiers 1-5] [--seeds 4] [--ticks 30000] [--size 64] [--layout 1|2] [--out file.md]\n" +
+        "       ai matrix --players 2-4 [--ai tiered] [--tiers 3] [--faction authority|directorate|mixed] [--biome rust_belt|glass_coast|mountains|ash_plains|all] [--size s|m|l|<cells>] [--layout 1|2] [--seeds 2] [--ticks 25000] [--out file.md]\n" +
+        "       ai timeline --a <aiId>[:<tier>] --b <aiId>[:<tier>] [--seed 1] [--ticks 30000] [--size 64] [--swap 0|1] [--trace N] [--dump 1] [--layout 1|2] [--biome ...]\n" +
         "       ai commander --a <aiId>[:<tier>] --b <aiId>[:<tier>] --provider openai|anthropic [--model <name>] [--seed 1] [--ticks 30000] [--size 64] [--swap 0|1] [--out dir]   (side A = LLM commander; key from OPENAI_API_KEY or ANTHROPIC_API_KEY)\n" +
         "       ai duel --a <spec> --b <spec> [--count 1] [--count-b N] [--ticks 3000] [--gap 12]   (spec = id[:n][,id[:n]...], e.g. auth_tank:3,auth_turret:1)\n" +
         "  <tier> is 1..5 or recruit|regular|veteran|elite|commissar (default regular). Seeds are first..first+N-1 (first defaults to 1).";
 
-    private static readonly string[] MatchOptions = ["a", "b", "seeds", "ticks", "size", "out", "record-dir", "flat", "starts", "start", "first", "faction-a", "faction-b", "trace", "game", "extras"];
-    private static readonly string[] TimelineOptions = ["a", "b", "seed", "ticks", "size", "swap", "trace", "dump", "faction-a", "faction-b"];
+    private static readonly string[] MatchOptions = ["a", "b", "seeds", "ticks", "size", "out", "record-dir", "flat", "starts", "start", "first", "faction-a", "faction-b", "trace", "game", "extras", "layout", "biome", "income"];
+    private static readonly string[] TimelineOptions = ["a", "b", "seed", "ticks", "size", "swap", "trace", "dump", "faction-a", "faction-b", "layout", "biome"];
     private static readonly string[] DuelOptions = ["a", "b", "count", "count-b", "ticks", "gap"];
-    private static readonly string[] MatrixOptions = ["ai", "tiers", "seeds", "ticks", "size", "out", "faction", "players", "biome"];
+    private static readonly string[] MatrixOptions = ["ai", "tiers", "seeds", "ticks", "size", "out", "faction", "players", "biome", "layout"];
 
     /// <summary>Runs `ai ...` (args exclude the leading "ai").</summary>
     public static int Run(string[] args)
@@ -71,6 +72,8 @@ public static class AiCommands
         if (flags.TryGetValue("faction-b", out string? fb) && !(Enum.TryParse(fb.Replace("_", ""), true, out Faction facB) && (b = b! with { Faction = facB }) is not null))
             return UsageError("--faction-b must be authority, directorate, left_behind or expedition");
 
+        if (!ParseMapChoice(flags, out MapChoice? choice, out error)) return UsageError(error!);
+        _income = flags.ContainsKey("income");
         bool army = false;
         if (flags.TryGetValue("start", out string? startArg))
         {
@@ -85,7 +88,7 @@ public static class AiCommands
         _extraSum = new long[2, 4];
         var clock = Stopwatch.StartNew();
         MatchTally tally;
-        try { tally = PlayPair(world!, a!, b!, seeds, ticks, size, recordDir, verbose: true, flat: flags.ContainsKey("flat"), startMode: flags.TryGetValue("starts", out string? sm) ? sm : "alt", start: army ? AiStartMode.Army : AiStartMode.Economy, firstSeed: firstSeed); }
+        try { tally = PlayPair(world!, a!, b!, seeds, ticks, size, recordDir, verbose: true, flat: flags.ContainsKey("flat"), startMode: flags.TryGetValue("starts", out string? sm) ? sm : "alt", start: army ? AiStartMode.Army : AiStartMode.Economy, firstSeed: firstSeed, mapChoice: choice); }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException or ArgumentException or InvalidOperationException)
         {
             Console.Error.WriteLine($"error: {e.Message}");
@@ -93,7 +96,7 @@ public static class AiCommands
         }
         clock.Stop();
 
-        string table = MatchTable(a!, b!, tally, seeds, ticks, size);
+        string table = MatchTable(a!, b!, tally, seeds, ticks, size, choice);
         Console.WriteLine(table);
         if (_extras)
             for (int side = 0; side < 2; side++)
@@ -102,12 +105,12 @@ public static class AiCommands
         return WriteOut(flags, table);
     }
 
-    private static string MatchTable(AiSide a, AiSide b, MatchTally t, int seeds, int ticks, int size)
+    private static string MatchTable(AiSide a, AiSide b, MatchTally t, int seeds, int ticks, int size, MapChoice? choice = null)
     {
         var sb = new StringBuilder();
         sb.AppendLine($"# AI match: {a.Label} (A) vs {b.Label} (B)");
         sb.AppendLine();
-        sb.AppendLine($"{seeds} seeds x 2 (start positions swapped), {ticks} ticks per game, map size {size}.");
+        sb.AppendLine($"{seeds} seeds x 2 (start positions swapped), {ticks} ticks per game, map size {size}{(choice is null ? "" : $", {choice.Value.BiomeName} layout {choice.Value.Layout}")}.");
         sb.AppendLine();
         sb.AppendLine("| Games | A wins | B wins | Draws | Avg end tick | A win % |");
         sb.AppendLine("|---:|---:|---:|---:|---:|---:|");
@@ -134,6 +137,7 @@ public static class AiCommands
         Faction faction = Faction.Authority;
         if (flags.TryGetValue("faction", out string? facArg) && !Enum.TryParse(facArg, true, out faction))
             return UsageError("--faction must be authority or directorate");
+        if (!ParseMapChoice(flags, out MapChoice? mchoice, out error)) return UsageError(error!);
         if (!LoadData(out var world, out var profiles)) return 1;
         int n = list!.Count;
         var wins = new int[n, n];    // wins of row tier over column tier
@@ -150,7 +154,7 @@ public static class AiCommands
                     var sa = new AiSide(aiId, profiles![list[r] - 1], faction);
                     var sb = new AiSide(aiId, profiles[list[c] - 1], faction);
                     MatchTally t = PlayPair(world!, sa, sb, seeds, ticks, size, null, verbose: false,
-                        start: aiId == AiRegistry.SkirmisherId ? AiStartMode.Army : AiStartMode.Economy);
+                        start: aiId == AiRegistry.SkirmisherId ? AiStartMode.Army : AiStartMode.Economy, mapChoice: mchoice);
                     totalTicks += t.Ticks;
                     games[r, c] = t.Games; draws[r, c] = t.Draws; wins[r, c] = t.AWins; ahead[r, c] = t.DrawsAAhead;
                     games[c, r] = t.Games; draws[c, r] = t.Draws; ahead[c, r] = c == r ? t.DrawsAAhead : t.DrawsBAhead; wins[c, r] = c == r ? t.AWins : t.BWins;
@@ -211,6 +215,9 @@ public static class AiCommands
         int cells = 0;
         if (sizeClass is null && (!int.TryParse(sizeArg, NumberStyles.None, CultureInfo.InvariantCulture, out cells) || cells < MapGenerator.MinSize || cells > SimConstants.MaxMapCells))
             return UsageError($"--size must be s, m, l or {MapGenerator.MinSize}..{SimConstants.MaxMapCells}");
+        int layout = MapGenerator.CurrentLayout;
+        if (flags.TryGetValue("layout", out string? layArg) && (!int.TryParse(layArg, NumberStyles.None, CultureInfo.InvariantCulture, out layout) || layout is not (1 or 2)))
+            return UsageError("--layout must be 1 or 2");
         if (!LoadData(out var world, out var profiles)) return 1;
 
         var md = new StringBuilder();
@@ -241,7 +248,7 @@ public static class AiCommands
                 var pairs = new int[players];
                 for (int seed = 1; seed <= seeds; seed++)
                 {
-                    MapData map = MultiMap(biome, sizeClass, cells, players, (ulong)seed, out string? note);
+                    MapData map = MultiMap(biome, sizeClass, cells, players, (ulong)seed, out string? note, layout);
                     mapNote ??= note;
                     for (int rot = 0; rot < players; rot++)
                     {
@@ -292,10 +299,10 @@ public static class AiCommands
     /// the top-left quadrant of the generated map mirrored into all four quadrants (4-fold symmetric, a start in every corner), checked
     /// for connectivity, and <paramref name="note"/> says so. An explicit cell size always uses the legacy generator (plus the stand-in).
     /// </summary>
-    private static MapData MultiMap(Biome biome, MapSize? sizeClass, int cells, int players, ulong seed, out string? note)
+    private static MapData MultiMap(Biome biome, MapSize? sizeClass, int cells, int players, ulong seed, out string? note, int layout = MapGenerator.CurrentLayout)
     {
         note = null;
-        MapData m = sizeClass is MapSize sc ? MapGenerator.Generate(new MapGenParams(biome, sc, players, seed)) : MapGenerator.Generate(cells, seed);
+        MapData m = sizeClass is MapSize sc ? MapGenerator.Generate(new MapGenParams(biome, sc, players, seed, null, OceanEdges.None, layout)) : MapGenerator.Generate(cells, seed);
         if (m.StartPositions.Count >= players) return m;
         note = $"Note: the map generator returned {m.StartPositions.Count} starts for {players} players (M4-02 not merged yet), so these games used a stand-in: the generated map's top-left quadrant mirrored into all four corners. Biome is not used by the stand-in.";
         for (ulong attempt = 0; attempt < 10; attempt++)
@@ -361,7 +368,8 @@ public static class AiCommands
         if (!ParseSide(aArg, tiers!, out AiSide? a, out error) || !ParseSide(bArg, tiers!, out AiSide? b, out error)) return UsageError(error!);
 
         SimRules rules = world!.Rules;
-        MapData map = MapGenerator.Generate(size, (ulong)seed);
+        if (!ParseMapChoice(flags, out MapChoice? tchoice, out error)) return UsageError(error!);
+        MapData map = tchoice is MapChoice tc ? MapGenerator.Generate(tc.Params(size, 2, (ulong)seed)) : MapGenerator.Generate(size, (ulong)seed);
         if (swap == 1) { var st = new List<CellCoord>(map.StartPositions); st.Reverse(); map = new MapData(map.Name, map.Theater, map.Width, map.Height, map.Template.ToArray(), map.Land.ToArray(), map.HeightLevel.ToArray(), map.Overlay.ToArray(), map.Density.ToArray(), st); }
         Faction tfa = Faction.Authority, tfb = Faction.Authority;
         if ((flags.TryGetValue("faction-a", out string? tfaArg) && !Enum.TryParse(tfaArg, true, out tfa))
@@ -731,7 +739,7 @@ public static class AiCommands
             new OverlayKind[n], new byte[n], m.StartPositions);
     }
 
-    private static MatchTally PlayPair(World w, AiSide a, AiSide b, int seeds, int ticks, int size, string? recordDir, bool verbose, bool flat = false, string startMode = "alt", AiStartMode start = AiStartMode.Economy, int firstSeed = 1)
+    private static MatchTally PlayPair(World w, AiSide a, AiSide b, int seeds, int ticks, int size, string? recordDir, bool verbose, bool flat = false, string startMode = "alt", AiStartMode start = AiStartMode.Economy, int firstSeed = 1, MapChoice? mapChoice = null)
     {
         var tally = new MatchTally();
         if (recordDir is not null) Directory.CreateDirectory(recordDir);
@@ -740,7 +748,15 @@ public static class AiCommands
             // M7-10: an Expedition side needs sea: ocean north + south edges (size class by cells: below 80 small, below 112 medium, else large)
             IReadOnlyList<CellCoord>? landing = null;
             MapData map;
-            if (a.Faction == Faction.Expedition || b.Faction == Faction.Expedition)
+            if (mapChoice is MapChoice mc)
+            {
+                // M12-12: biome generator at a chosen layout. Layout 2 has no ocean edges (the zoned generator ignores them), so an Expedition
+                // side plays there without sea lanes; layout 1 keeps the M7-10 north + south ocean for Expedition.
+                bool sea = (a.Faction == Faction.Expedition || b.Faction == Faction.Expedition) && mc.Layout == MapGenerator.CurrentLayout;
+                var gen = MapGenerator.GenerateWithMeta(mc.Params(size, 2, (ulong)s, sea ? OceanEdges.North | OceanEdges.South : OceanEdges.None));
+                map = gen.Map; landing = sea ? gen.Meta.Landing : null;
+            }
+            else if (a.Faction == Faction.Expedition || b.Faction == Faction.Expedition)
             {
                 var gen = MapGenerator.GenerateWithMeta(new MapGenParams(Biome.RustBelt, size < 80 ? MapSize.Small : size < 112 ? MapSize.Medium : MapSize.Large, 2, (ulong)s, null, OceanEdges.North | OceanEdges.South));
                 map = gen.Map; landing = gen.Meta.Landing;
@@ -768,7 +784,7 @@ public static class AiCommands
                 var incomePrev = new int[2];
                 var shipMarks = new int[2, 3];             // M7-14: shipment credits paid by 3/5/10 min
                 bool expo = a.Faction == Faction.Expedition || b.Faction == Faction.Expedition;
-                if (trace is not null || lbx is not null || expo)
+                if (trace is not null || lbx is not null || expo || _income)
                     obs = (sim, x, y, sa, sb) =>
                     {
                         trace?.Observe(sim, x, y, sa, sb); lbx?.Observe(sim, x, y, sa, sb);
@@ -825,9 +841,10 @@ public static class AiCommands
                     Console.WriteLine($"seed {s} game {g + 1} (A in slot {(aInSlot0 ? 0 : 1)}, A at start {(aInSlot0 != swapSlots ? 0 : 1)}): {result} at tick {r.EndTick} (health A {r.ValueA}, B {r.ValueB})");
                     if (start == AiStartMode.Economy)
                         Console.WriteLine($"    A: {Stats(r.StatsA)} | B: {Stats(r.StatsB)}");
+                    if (expo || _income)
+                        Console.WriteLine($"    income at 3/5/10 min (harvested + shipments): A {marks[0, 0]}/{marks[0, 1]}/{marks[0, 2]} | B {marks[1, 0]}/{marks[1, 1]}/{marks[1, 2]}");
                     if (expo)
                     {
-                        Console.WriteLine($"    income at 3/5/10 min (harvested + shipments): A {marks[0, 0]}/{marks[0, 1]}/{marks[0, 2]} | B {marks[1, 0]}/{marks[1, 1]}/{marks[1, 2]}");
                         Console.WriteLine($"    econ: first refinery tick A {firstRefinery[0]} B {firstRefinery[1]} | tenders sunk A {tendersSunk[0]} B {tendersSunk[1]} | decay step at 10 min A {decayAt10[0]} B {decayAt10[1]} | shipments 3/5/10 A {shipMarks[0, 0]}/{shipMarks[0, 1]}/{shipMarks[0, 2]} B {shipMarks[1, 0]}/{shipMarks[1, 1]}/{shipMarks[1, 2]}");
                     }
                     if (lbx is not null)
@@ -839,7 +856,7 @@ public static class AiCommands
     }
 
     private static int _traceEvery, _traceGame;
-    private static bool _extras;
+    private static bool _extras, _income;
     private static long[,] _extraSum = new long[2, 4];
 
     /// <summary>M4-16 round 3: per-side diagnostic lines for one game (tier, army count and value, scrapers, cash, income, structures, waves).</summary>
@@ -903,6 +920,36 @@ public static class AiCommands
         $"structures {s.Structures}, units {s.Units}, funds min {s.CashMin} max {s.CashMax} end {s.CashEnd}";
 
     // ---- arguments ----------------------------------------------------------------------------
+
+    /// <summary>M12-12: the biome and generator layout a match is played on (null = the synthetic <c>MapGenerator.Generate(size, seed)</c> map).</summary>
+    internal readonly record struct MapChoice(Biome Biome, int Layout)
+    {
+        /// <summary>The biome's file-style name.</summary>
+        public string BiomeName { get { Biome me = Biome; return BiomeNames.First(b => b.Biome == me).Name; } }
+
+        /// <summary>Generator input for this choice; size class by cells (below 80 small, below 112 medium, else large).</summary>
+        public MapGenParams Params(int size, int players, ulong seed, OceanEdges ocean = OceanEdges.None) =>
+            new(Biome, size < 80 ? MapSize.Small : size < 112 ? MapSize.Medium : MapSize.Large, players, seed, null, ocean, Layout);
+    }
+
+    /// <summary>Reads --layout 1|2 and --biome; null when neither is given (layout 1 and rust_belt fill in whichever is missing).</summary>
+    internal static bool ParseMapChoice(Dictionary<string, string> flags, out MapChoice? choice, out string? error)
+    {
+        choice = null; error = null;
+        if (!flags.ContainsKey("layout") && !flags.ContainsKey("biome")) return true;
+        int layout = MapGenerator.CurrentLayout;
+        if (flags.TryGetValue("layout", out string? la) && (!int.TryParse(la, NumberStyles.None, CultureInfo.InvariantCulture, out layout) || layout is not (1 or 2)))
+        { error = "--layout must be 1 or 2"; return false; }
+        Biome biome = Biome.RustBelt;
+        if (flags.TryGetValue("biome", out string? ba))
+        {
+            int at = Array.FindIndex(BiomeNames, b => b.Name == ba);
+            if (at < 0) { error = "--biome must be rust_belt, glass_coast, mountains or ash_plains"; return false; }
+            biome = BiomeNames[at].Biome;
+        }
+        choice = new MapChoice(biome, layout);
+        return true;
+    }
 
     private static bool LoadData(out World? world, out IReadOnlyList<DifficultyProfile>? tiers)
     {
