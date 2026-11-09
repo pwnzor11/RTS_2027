@@ -134,10 +134,10 @@ public static class MapGenerator
         BiomeParams biome = BiomeCatalog.For(p.Biome);
         int n = CellsFor(p.Size);
         (bool rot2, int t) = LayoutVariant.For(p.Seed, p.Players, n);
-        var builder = new ProceduralBuilder(biome, n, p.Players, AttemptSeed(p.Seed, 0), rot2);
+        var builder = new ProceduralBuilder(biome, n, p.Players, AttemptSeed(p.Seed, 0), rot2, p.OceanEdges != OceanEdges.None);
         CellCoord[] orbit = builder.OrbitStarts;
         MapData full = builder.Build(p.Name ?? DefaultName(p), orbit);
-        var meta = new MapMeta(biome.Key, rot2 ? MapSymmetry.Rot2 : MapSymmetry.MirrorDiag, orbit.Length, null, builder.Features.ToArray());
+        var meta = WithMarkers(new MapMeta(biome.Key, rot2 ? MapSymmetry.Rot2 : MapSymmetry.MirrorDiag, orbit.Length, null, builder.Features.ToArray()), full, p);
         failure = FirstFailure(full, meta) ?? LayoutChecks.FirstFailure(LayoutChecks.EvaluateCanonical(full, meta, rot2));
         return FinishZoned(p, biome, n, full, builder, rot2, t);
     }
@@ -165,8 +165,59 @@ public static class MapGenerator
             map = LayoutVariant.Forward(full, t, starts);
             features = LayoutVariant.MapFeatures(features, n, (x, y) => LayoutVariant.Fwd(t, n, x, y));
         }
-        var meta = new MapMeta(biome.Key, rot2 ? MapSymmetry.Rot2 : MapSymmetry.MirrorDiag, p.Players, p with { Name = null }, features);
+        var meta = WithMarkers(new MapMeta(biome.Key, rot2 ? MapSymmetry.Rot2 : MapSymmetry.MirrorDiag, p.Players, p with { Name = null }, features), map, p);
         return (map, meta);
+    }
+
+    /// <summary>Layout 2 with a sea requested (an Expedition player, D-124): adds the convoy cells (every 8th sea cell on the map border, edge order N, E, S, W)
+    /// and, per start, the Coast cell beside the border sea that is nearest on foot. The sea itself is painted by the builder behind every main.</summary>
+    private static MapMeta WithMarkers(MapMeta meta, MapData map, MapGenParams p)
+    {
+        if (p.OceanEdges == OceanEdges.None) return meta;
+        int n = map.Width, total = n * n;
+        var sea = new bool[total]; var queue = new int[total]; int head = 0, tail = 0;
+        for (int i = 0; i < total; i++)
+        {
+            int x = i % n, y = i / n;
+            if ((x == 0 || y == 0 || x == n - 1 || y == n - 1) && MapAnalysis.BuiltInPassable(map.Land[i], Locomotion.Naval)) { sea[i] = true; queue[tail++] = i; }
+        }
+        while (head < tail)
+        {
+            int i = queue[head++]; int x = i % n, y = i / n;
+            for (int d = 0; d < 4; d++)
+            {
+                int nx = x + (d == 0 ? 1 : d == 1 ? -1 : 0), ny = y + (d == 2 ? 1 : d == 3 ? -1 : 0);
+                if (nx < 0 || ny < 0 || nx >= n || ny >= n) continue;
+                int j = ny * n + nx;
+                if (!sea[j] && MapAnalysis.BuiltInPassable(map.Land[j], Locomotion.Naval)) { sea[j] = true; queue[tail++] = j; }
+            }
+        }
+        var convoy = new List<CellCoord>();
+        for (int e = 0; e < 4; e++)
+        {
+            int taken = 0;
+            for (int t = 0; t < n; t++)
+            {
+                int x = e == 1 ? n - 1 : e == 3 ? 0 : t, y = e == 0 ? 0 : e == 2 ? n - 1 : t;
+                if (sea[y * n + x] && map.Land[y * n + x] == LandType.Water && taken++ % 8 == 0 && !convoy.Contains(new CellCoord(x, y))) convoy.Add(new CellCoord(x, y));
+            }
+        }
+        bool[]? blocked = MapAnalysis.FeatureMask(map, meta.Features);
+        var landing = new List<CellCoord>();
+        foreach (CellCoord s in map.StartPositions)
+        {
+            int[] dist = MapAnalysis.Distances(map, s, Locomotion.Foot, null, blocked);
+            int best = -1;
+            for (int i = 0; i < total; i++)
+            {
+                if (map.Land[i] != LandType.Coast || dist[i] == MapAnalysis.Unreachable) continue;
+                int x = i % n, y = i / n; bool touches = false;
+                if (x + 1 < n) touches |= sea[i + 1]; if (x > 0) touches |= sea[i - 1]; if (y + 1 < n) touches |= sea[i + n]; if (y > 0) touches |= sea[i - n];
+                if (touches && (best < 0 || dist[i] < dist[best])) best = i;
+            }
+            if (best >= 0 && !landing.Contains(new CellCoord(best % n, best / n))) landing.Add(new CellCoord(best % n, best / n));
+        }
+        return meta with { ConvoyEdge = convoy, Landing = landing };
     }
 
     private static (MapData Map, MapMeta Meta) GenerateZoned(MapGenParams p, BiomeParams biome, out int attempts)
@@ -181,10 +232,10 @@ public static class MapGenerator
         for (int attempt = 0; attempt < MaxZonedAttempts; attempt++)
         {
             ulong seed = AttemptSeed(p.Seed, attempt);
-            var builder = new ProceduralBuilder(biome, n, p.Players, seed, rot2);
+            var builder = new ProceduralBuilder(biome, n, p.Players, seed, rot2, p.OceanEdges != OceanEdges.None);
             CellCoord[] orbit = builder.OrbitStarts;
             MapData full = builder.Build(name, orbit);
-            var fullMeta = new MapMeta(biome.Key, rot2 ? MapSymmetry.Rot2 : MapSymmetry.MirrorDiag, orbit.Length, null, builder.Features.ToArray());
+            var fullMeta = WithMarkers(new MapMeta(biome.Key, rot2 ? MapSymmetry.Rot2 : MapSymmetry.MirrorDiag, orbit.Length, null, builder.Features.ToArray()), full, p);
             last = FirstFailure(full, fullMeta);
             if (last is not null) continue;
             MapData judged = full;

@@ -40,8 +40,9 @@ internal sealed partial class ProceduralBuilder
     public ProceduralBuilder(BiomeParams biome, int n, int players, ulong seed) : this(biome, n, players, seed, false) { }
 
     /// <summary>As above; with <paramref name="rot2"/> (2 players, Medium and up) the half-turn skeleton with an S-shaped river is built instead.</summary>
-    public ProceduralBuilder(BiomeParams biome, int n, int players, ulong seed, bool rot2)
+    public ProceduralBuilder(BiomeParams biome, int n, int players, ulong seed, bool rot2, bool sea = false)
     {
+        _sea = sea;
         _b = biome; _n = n; _scale = n * 100 / 96; _decorate = true; _zoned = true; _players = players; _rot2 = rot2;
         _g = new GenGrid(n, rot2 ? MapSymmetry.Rot2 : MapSymmetry.MirrorDiag, LandType.Clear, players > 2);   // built on clear ground; Ash Plains turns it to ash at the end
         _skin = SkinOf(biome.Key);
@@ -55,6 +56,7 @@ internal sealed partial class ProceduralBuilder
         (_buildPct, _wallPct, _lotPct) = !big ? (0, 3, 40) : _players > 2 ? (2, 5, 36) : fill == 0 ? (5, 6, 26) : fill == 1 ? (2, 4, 40) : (3, 5, 14);
         if (rot2) { OrbitStarts = InitRot2(); return; }
         _sa = Math.Max(9, n * (players > 2 ? _rng.Next(14, 21) : _rng.Next(13, 23)) / 100);
+        if (_sea) _sa = Math.Min(_sa, Math.Max(9, LayoutChecks.MainRect(n, players, false).West + 9));   // the wall must reach the map edge: the sea goes behind the main
         _sb = players == 2 ? _sa + n * _rng.Next(47, 59) / 100 : n - 1 - _sa - n * (n >= 112 ? _rng.Next(16, 19) : n < 80 ? _rng.Next(29, 33) : _rng.Next(22, 25)) / 100;
         int m = _rng.Next(12);
         _mode = m < 8 ? 0 : m < 11 ? 1 : 2;

@@ -27,6 +27,7 @@ internal sealed partial class ProceduralBuilder
         _hw = 3; _fh = 8;
         int riverWest = n / 2 - amp - _hw - 1;
         int amin = (n * 12 + 99) / 100, amax = Math.Min(riverWest - 5 - _ie - 3, n * 22 / 100);
+        if (_sea) amax = Math.Min(amax, _iw + 9);   // the wall must reach the map edge: the sea goes behind the main
         _sa = _rng.Next(amin, Math.Max(amin, amax) + 1);
         int sum = n * _rng.Next(44, 58) / 100;
         _y0 = Math.Clamp(sum - _sa, Math.Max(_hh + 11, n * 19 / 100), n * 38 / 100);

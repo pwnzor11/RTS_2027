@@ -14,6 +14,7 @@ internal sealed partial class ProceduralBuilder
 {
     private const int SkinRust = 0, SkinMountains = 1, SkinAsh = 2, SkinGlass = 3;
     private int _skin;
+    private readonly bool _sea;   // an Expedition is in the match (OceanEdges given): sea behind every main, with a beach, in every biome
     private readonly List<(int X0, int Y0, int X1, int Y1)> _plateaus = new();
 
     private static int SkinOf(string key) => key switch { "mountains" => SkinMountains, "ash_plains" => SkinAsh, "glass_coast" => SkinGlass, _ => SkinRust };
@@ -104,7 +105,7 @@ internal sealed partial class ProceduralBuilder
     /// <summary>The post pass: plateaus (Mountains), groves (Ash Plains), flanks and sea (Glass Coast). Passability is kept the same.</summary>
     private void Skin()
     {
-        if (_skin == SkinRust) return;
+        if (_skin == SkinRust && !_sea) return;
         int n = _n, total = n * n;
         var comp = new int[total]; var size = new List<int> { 0 }; var touchesEdge = new List<bool> { false }; var nearRes = new List<bool> { false };
         var stack = new Stack<int>();
@@ -137,21 +138,21 @@ internal sealed partial class ProceduralBuilder
         {
             int c = comp[i];
             if (c == 0) continue;
-            if (_skin == SkinMountains && size[c] >= 40) _g.Land[i] = LandType.Cliff;
-            else if (_skin == SkinGlass && touchesEdge[c] && size[c] >= 60) _g.Land[i] = LandType.Water;
+            if ((_skin == SkinGlass || _sea) && touchesEdge[c] && size[c] >= 60) _g.Land[i] = LandType.Water;
+            else if (_skin == SkinMountains && size[c] >= 40) _g.Land[i] = LandType.Cliff;
             else if (_skin == SkinAsh && size[c] <= 80 && !nearRes[c] && MinStartDistance(i % n, i / n) > 16 && IsLowImage(i))
             {
                 int v = OrbitHash(i, 1) % 3;
                 foreach (int j in _g.Images(i)) { _g.Land[j] = LandType.Rough; _g.Overlay[j] = OverlayKind.Tree; _g.Density[j] = (byte)v; }
             }
         }
-        if (_skin == SkinGlass)
+        if (_skin == SkinGlass || _sea)
         {
             // Beach: the open cells beside the sea; rough flanks along the dune crests (hash-picked so both images agree).
             var beach = new List<int>(); var flank = new List<int>();
             for (int i = 0; i < total; i++)
             {
-                if (_g.Land[i] is not (LandType.Clear or LandType.Rough) || _zone[i] == ZLane || _zone[i] == ZMain || _g.Overlay[i] != OverlayKind.None) continue;
+                if (_g.Land[i] is not (LandType.Clear or LandType.Rough) || _zone[i] == ZLane || (_zone[i] == ZMain && !_sea) || _g.Overlay[i] != OverlayKind.None || _g.Core[i]) continue;
                 int x = i % n, y = i / n; bool sea = false, crest = false;
                 for (int dy = -1; dy <= 1; dy++)
                     for (int dx = -1; dx <= 1; dx++)
