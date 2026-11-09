@@ -74,7 +74,7 @@ internal sealed partial class ProceduralBuilder
                 int i = _g.Idx(x, y);
                 if (layer > 3)
                 {
-                    _g.SetLand(i, _players > 2 && n < 96 ? LandType.Rough : LandType.Rock);   // the filled strip between the ring and the map edge
+                    _g.SetLand(i, _players > 2 && n < 96 && !_sea ? LandType.Rough : LandType.Rock);   // the filled strip between the ring and the map edge
                 }
                 else
                 {

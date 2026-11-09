@@ -9,6 +9,16 @@ all 18 infantry re-rendered, imported FX and props (credits and licence texts in
 Directorate tier 4-5 economy fix, Left Behind tier-3 cap (D-190). Decisions up to D-190; open question Q-67.
 Full suite: 3 666 tests (Game 1 470, AI 213, Scripting 295, Sim 1 565 on the final integ-s15; Llm 119 and Tools 4 unchanged since their last green run).
 
+## Session 16 checkpoint (2026-11-09, mid-session; full rewrite at wrap-up)
+Landed on main: PR #51 (Q-67 hold 18 D-194, tier-5 hold 24 D-195, team-colour pass on 17 sprites D-192), PR #52 (map layout 2 v4, all biomes, off by
+default; 2v2 default teams D-193). On integ-s16, not yet on main: owner laptop results, `ai match/matrix/timeline --layout --biome --income`,
+docs/balance/s16_layout2.md, layout 2 v5 (coast for the Expedition, Mountains ridge / Ash causeway skeletons, half-turn 2p, income trims), D-196, D-197.
+Open: Q-68 (Ash fairness vs crossings), Q-69 (income lever), the Ash Expedition stall (map valid, 9 convoy cells, 2 landings, AI places nothing: suspect
+ExpeditionTactics.ChooseSite or the start-kit ship spawn on that skeleton), Mountains start skew for Directorate/Left Behind.
+Waiting on the owner: his overnight PC re-render (`art_rerender\<date>\summary.md`, compare\report.md, top_diffs_*.png; branch art/pc-rerender-<date>
+stays local until reviewed) and his s15-series regression run (balance_runs\s15\s15_summary.md, Directorate tuning is closed: read it as a regression check).
+Lessons: render art on the owner's PC (D-196); the layout-2 income rate follows harvest distance, not field money; mirror-diagonal skeletons favour start 1.
+
 ## Start here (shown to the user as the plan; nothing starts until they say go)
 1. Q-67: Directorate tiers 1-3 early game (AI only, measured). Read docs/balance/s15_lbknob.md, s15_q65.md, s15_siege.md first. Target: Left Behind 3
    v Directorate 3 into about 50-65 % with no draw rise; keep Directorate 1 v Authority 1 from getting stronger (it already wins 74 %).
