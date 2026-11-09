@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
+using Rts.Sim.Core;
 using Rts.Sim.Rules;
 
 namespace Rts.Data.MapGen;
@@ -46,7 +47,7 @@ internal sealed partial class ProceduralBuilder
         }
         if (_skin == SkinMountains)
         {
-            if (roll < 34 && m >= 4) Blob(x0, y0, x1, y1, LandType.Rock, 3, Math.Min(8, m), true);
+            if (roll < (_n >= 96 ? 12 : 3) && m >= 4) Blob(x0, y0, x1, y1, LandType.Rock, 4, Math.Min(10, m), true);
             else if (roll < 52) Lot(x0, y0, x1, y1);
         }
         else if (_skin == SkinAsh)
@@ -139,11 +140,12 @@ internal sealed partial class ProceduralBuilder
             int c = comp[i];
             if (c == 0) continue;
             if ((_skin == SkinGlass || _sea) && touchesEdge[c] && size[c] >= 60) _g.Land[i] = LandType.Water;
-            else if (_skin == SkinMountains && size[c] >= 40) _g.Land[i] = LandType.Cliff;
+            else if (_skin == SkinMountains && size[c] >= 24) _g.Land[i] = LandType.Cliff;
             else if (_skin == SkinAsh && size[c] <= 80 && !nearRes[c] && MinStartDistance(i % n, i / n) > 16 && IsLowImage(i))
             {
                 int v = OrbitHash(i, 1) % 3;
-                foreach (int j in _g.Images(i)) { _g.Land[j] = LandType.Rough; _g.Overlay[j] = OverlayKind.Tree; _g.Density[j] = (byte)v; }
+                OverlayKind kind = (comp[i] % 3 == 0) ? OverlayKind.Wreck : OverlayKind.Tree;   // every third small mass is a tank graveyard, the rest burnt groves
+                foreach (int j in _g.Images(i)) { _g.Land[j] = LandType.Rough; _g.Overlay[j] = kind; _g.Density[j] = (byte)v; }
             }
         }
         if (_skin == SkinGlass || _sea)
@@ -165,6 +167,14 @@ internal sealed partial class ProceduralBuilder
             }
             foreach (int i in beach) _g.Land[i] = LandType.Coast;
             foreach (int i in flank) _g.Land[i] = LandType.Rough;
+        }
+        if (_skin == SkinMountains && _n >= 96 && (_mode != 0 || _players > 2))
+        {
+            // Plateau mains: the interior and its cliff wall stand one level up; the gates are the ramps.
+            CellCoord st = OrbitStarts[0];
+            for (int y = st.Y - _hh - 3; y <= st.Y + _hh + 3; y++)
+                for (int x = st.X - _iw - 3; x <= st.X + _ie + 3; x++)
+                    if (_g.In(x, y)) _g.SetHeight(_g.Idx(x, y), 1);
         }
         if (_skin == SkinMountains)
             foreach ((int x0, int y0, int x1, int y1) in _plateaus)

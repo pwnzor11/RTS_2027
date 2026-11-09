@@ -133,7 +133,7 @@ public static class MapGenerator
         ArgumentNullException.ThrowIfNull(p);
         BiomeParams biome = BiomeCatalog.For(p.Biome);
         int n = CellsFor(p.Size);
-        (bool rot2, int t) = LayoutVariant.For(p.Seed, p.Players, n);
+        (bool rot2, int t) = LayoutVariant.For(p.Seed, p.Players, n, p.Biome != Biome.AshPlains);
         var builder = new ProceduralBuilder(biome, n, p.Players, AttemptSeed(p.Seed, 0), rot2, p.OceanEdges != OceanEdges.None);
         CellCoord[] orbit = builder.OrbitStarts;
         MapData full = builder.Build(p.Name ?? DefaultName(p), orbit);
@@ -224,7 +224,7 @@ public static class MapGenerator
     {
         int n = CellsFor(p.Size);
         string name = p.Name ?? DefaultName(p);
-        (bool rot2, int t) = LayoutVariant.For(p.Seed, p.Players, n);
+        (bool rot2, int t) = LayoutVariant.For(p.Seed, p.Players, n, p.Biome != Biome.AshPlains);
         string? last = null;
         // The first attempt that passes every layout check wins. When none does in MaxZonedAttempts, the attempt with the
         // fewest failed layout checks (and a clean validator) is used, so a map is always produced; `map report` lists what it misses.

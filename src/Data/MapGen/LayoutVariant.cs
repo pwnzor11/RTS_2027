@@ -14,11 +14,11 @@ namespace Rts.Data.MapGen;
 /// </summary>
 internal static class LayoutVariant
 {
-    /// <summary>The skeleton and the turn for a seed: <c>Rot2</c> selects the half-turn skeleton (2 players, Medium and up), <c>T</c> is 0..7 (bit 0 flips x, bit 1 flips y, bit 2 transposes first).</summary>
-    public static (bool Rot2, int T) For(ulong seed, int players, int n)
+    /// <summary>The skeleton and the turn for a seed (<paramref name="allowRot2"/> false: always the mirror-diagonal skeleton): <c>Rot2</c> selects the half-turn skeleton (2 players, Medium and up), <c>T</c> is 0..7 (bit 0 flips x, bit 1 flips y, bit 2 transposes first).</summary>
+    public static (bool Rot2, int T) For(ulong seed, int players, int n, bool allowRot2 = true)
     {
         var r = new SimRandom(unchecked(seed * 0x9E3779B97F4A7C15UL + 12345UL));
-        bool rot2 = players == 2 && n >= 96 && r.Next(100) < 80;
+        bool rot2 = players == 2 && n >= 96 && r.Next(100) < 80 && allowRot2;   // Ash Plains needs two crossings that differ, so its decks cannot be half-turn images of each other
         int t = rot2 || players > 2 ? r.Next(8) : (r.Next(2) == 0 ? 0 : 3);
         return (rot2, t);
     }

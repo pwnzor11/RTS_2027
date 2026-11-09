@@ -16,8 +16,9 @@ namespace Rts.Data.MapGen;
 internal sealed partial class ProceduralBuilder
 {
     private const byte ZMain = 1, ZLane = 2, ZPlaza = 3, AnyZone = 255;
-    private int Hw => _n >= 96 ? 3 : 2;   // half width of the river in cells of x - y (the outer ring is shallow)
+    private int Hw => _skin == SkinMountains ? (_n >= 96 ? 2 : 1) : _n >= 96 ? 3 : 2;   // half width of the river in cells of x - y (the outer ring is shallow)
     private int _buildPct, _wallPct, _lotPct;   // percent of street-grid blocks that hold a ruined building, two standing walls, a rubble lot (the rest stays open)
+    private int _lineDepth => _skin == SkinMountains && _n >= 96 ? 3 : 2;   // thickness of the lane lining walls (Mountains: ridges)
     private int _gapLo, _gapHi, _offLo, _offHi;   // street pitch (gap between streets) and the offset of the first street
 
     private readonly bool _zoned;
@@ -59,7 +60,7 @@ internal sealed partial class ProceduralBuilder
         if (_sea) _sa = Math.Min(_sa, Math.Max(9, LayoutChecks.MainRect(n, players, false).West + 9));   // the wall must reach the map edge: the sea goes behind the main
         _sb = players == 2 ? _sa + n * _rng.Next(47, 59) / 100 : n - 1 - _sa - n * (n >= 112 ? _rng.Next(16, 19) : n < 80 ? _rng.Next(29, 33) : _rng.Next(22, 25)) / 100;
         int m = _rng.Next(12);
-        _mode = m < 8 ? 0 : m < 11 ? 1 : 2;
+        _mode = _skin == SkinMountains && n >= 96 && players == 2 ? (m < 8 ? 2 : 1) : m < 8 ? 0 : m < 11 ? 1 : 2;   // Mountains mains are plateaus with ramps: always walled
         _natural = players == 2 && _rng.Next(2) == 0;
         _iw = big ? 8 : 7; _ie = big ? 16 : 13; _hh = big ? 8 : 7;
         if (players > 2) { _iw = 6; _ie = big ? 11 : 9; _hh = big ? 8 : 7; }
@@ -394,7 +395,7 @@ internal sealed partial class ProceduralBuilder
                 int len = dense ? _rng.Next(12, 22) : _rng.Next(8, 15);
                 bool skip = _rng.Next(100) < skipPct;
                 for (int u = t; !skip && u < Math.Min(to, t + len); u++)
-                    for (int k = 1; k <= 2; k++)
+                    for (int k = 1; k <= _lineDepth; k++)
                     {
                         int off = side == 0 ? -(lo + k) : hi + k;
                         int x = vertical ? x0 + off : u, y = vertical ? u : y0 + off;
@@ -422,17 +423,37 @@ internal sealed partial class ProceduralBuilder
                 int i = _g.Idx(x, y);
                 bool deck = false;
                 foreach (int j in _g.Images(i)) deck |= InDeck(j % n, j / n);
-                if (deck) { _g.SetLand(i, LandType.Road); foreach (int j in _g.Images(i)) _g.River[j] = false; continue; }
+                if (deck)
+                {
+                    PaintDeck(i, x, y);
+                    continue;
+                }
                 int v = Math.Abs(x + y - c0);
                 if (v <= 2 * fh)
                 {
-                    if (v <= (_players > 2 ? 4 : 9)) { _g.SetLand(i, LandType.Clear); foreach (int j in _g.Images(i)) _g.River[j] = false; }   // the gravel bar in the middle of the ford
-                    else { _g.SetLand(i, LandType.Shallow); _g.MarkRiver(i); }
+                    if (v <= (_players > 2 ? 4 : 9)) { _g.SetLand(i, LandType.Clear); foreach (int j in _g.Images(i)) _g.River[j] = false; }   // the gravel bar in the middle of the ford (Mountains: a wide pass through the ridge)
+                    else { _g.SetLand(i, _skin == SkinMountains ? LandType.Cliff : LandType.Shallow); _g.MarkRiver(i); }
                     continue;
                 }
-                _g.SetLand(i, Math.Abs(d) == Hw ? LandType.Shallow : LandType.Water);
+                _g.SetLand(i, _skin == SkinMountains ? LandType.Cliff : Math.Abs(d) == Hw ? LandType.Shallow : LandType.Water);   // Mountains: a ridge instead of a river
                 _g.MarkRiver(i);
             }
+    }
+
+    /// <summary>One deck cell. Rust Belt and Glass Coast: a road bridge. Mountains: a pass through the ridge (clear ground). Ash Plains: the first deck is
+    /// the intact bridge, the second a broken causeway (road and rubble, shallows on both sides, a 3-wide way through).</summary>
+    private void PaintDeck(int i, int x, int y)
+    {
+        LandType land = LandType.Road;
+        if (_skin == SkinMountains) land = OrbitHash(i, 5) < 25 ? LandType.Rough : LandType.Clear;
+        else if (_skin == SkinAsh && Math.Abs(x + y - 2 * _sb) <= _bridgeW2 - 1 && Math.Abs(x + y - 2 * _l1x) > _bridgeW - 1)
+        {
+            int off = x + y - 2 * _sb, w = _bridgeW2 - 1;
+            bool edge = Math.Abs(off) >= w;   // the outer cell on each side is flooded
+            land = edge ? LandType.Shallow : OrbitHash(i, 6) < 40 ? LandType.Rough : LandType.Road;
+        }
+        _g.SetLand(i, land);
+        foreach (int j in _g.Images(i)) _g.River[j] = false;
     }
 
     /// <summary>True when (x, y) lies on one of the two decks: a strip across the river along the other diagonal (|x + y - 2c| below the
@@ -648,12 +669,12 @@ internal sealed partial class ProceduralBuilder
         if (_natural)
         {
             int ny0 = _players == 2 ? b + 9 : b - 19, ny1 = _players == 2 ? b + 19 : b - 9;
-            PlaceField(MakeField(portE, ny0, portE + 11, ny1, _rng.Next(45, 66) * fs / 100, ZPlaza, 8), 0);
+            PlaceField(MakeField(portE, ny0, portE + 11, ny1, _rng.Next(36, 48) * fs / 100, ZPlaza, 8), 0);
         }
         // Contested: the south-east yards (one on each side of the river) and the gravel bar at the ford.
-        if (n >= 96 && _players == 2) PlaceField(MakeField(a + 4, 2, a + 16, _l1x - (_wL1 - 1) / 2 - 4, _rng.Next(36, 48), ZPlaza, 8), 0);
-        if (_players == 2) PlaceField(MakeField(b + 7, b - 8, Math.Min(n - 4, b + 20), b + 3, _rng.Next(36, 48), ZPlaza, 8), 0);
-        PlaceField(Bar(), 6);
+        if (n >= 96 && _players == 2) PlaceField(MakeField(a + 4, 2, a + 16, _l1x - (_wL1 - 1) / 2 - 4, _rng.Next(20, 25), ZPlaza, 8), 0);
+        if (_players == 2) PlaceField(MakeField(b + 7, b - 8, Math.Min(n - 4, b + 20), b + 3, _rng.Next(20, 25), ZPlaza, 8), 0);
+        PlaceField(Bar(), 3);
         ScaleDensity();
     }
 
@@ -712,11 +733,13 @@ internal sealed partial class ProceduralBuilder
     private void ScaleDensity()
     {
         int total = _n * _n;
+        // Main fields are worth twice a contested or natural cell per cell (cut the outer fields first, D-183 income parity), and the biome's money
+        // permille (measured against layout 1, M12-12 re-measure) scales the whole map.
         long weight = 0;
         for (int i = 0; i < total; i++)
-            if (OverlayKinds.IsResource(_g.Overlay[i])) weight += _g.Overlay[i] == OverlayKind.Pitchblende ? 2 : 1;
+            if (OverlayKinds.IsResource(_g.Overlay[i])) weight += (_g.Overlay[i] == OverlayKind.Pitchblende ? 2 : 1) * Share(i);
         if (weight == 0) return;
-        long left = LayoutChecks.MoneyTarget(_n, _players) * _orbitStarts;
+        long left = LayoutChecks.MoneyTarget(_n, _players) * _orbitStarts * MoneyPermille / 1000;
         long leftWeight = weight;
         for (int i = 0; i < total; i++)
         {
@@ -726,10 +749,17 @@ internal sealed partial class ProceduralBuilder
             if (low != i) continue;
             var seen = new List<int>();
             foreach (int j in _g.Images(i)) if (!seen.Contains(j)) seen.Add(j);
-            int w = (_g.Overlay[i] == OverlayKind.Pitchblende ? 2 : 1) * seen.Count;
-            int d = (int)Math.Clamp((left + leftWeight / 2) / leftWeight, 1, 12);
-            left -= (long)d * w; leftWeight -= w;
+            int share = Share(i);
+            int w = (_g.Overlay[i] == OverlayKind.Pitchblende ? 2 : 1) * seen.Count * share;
+            int d = (int)Math.Clamp((left * share + leftWeight / 2) / leftWeight, 1, 12);
+            left -= (long)d * w / share; leftWeight -= w;
             foreach (int j in seen) _g.Density[j] = (byte)d;
         }
     }
+
+    /// <summary>Relative richness of a resource cell: 2 in a main, 1 elsewhere.</summary>
+    private int Share(int i) => _zone[i] == ZMain ? 2 : 1;
+
+    /// <summary>The share of layout 1's money per start that this biome's layout-2 maps carry, in per mille (tuned by the M12-12 income re-measure).</summary>
+    private int MoneyPermille => _skin == SkinGlass ? 300 : 420;
 }
