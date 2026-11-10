@@ -3,6 +3,7 @@
 using Rts.Data;
 using Rts.Data.MapGen;
 using Rts.Sim.Map;
+using Rts.Sim.Rules;
 using Xunit.Abstractions;
 
 namespace Rts.Sim.Tests.Map;
@@ -65,6 +66,28 @@ public sealed class MapGenLayout2Tests
         Assert.Contains(checks, c => c.Name == "lane count");
         Assert.Contains(checks, c => c.Name == "prop safety");
         Assert.True(checks.Single(c => c.Name == "resource parity").Pass);
+    }
+
+    /// <summary>Q-68 (v6): Ash Plains 2-player Medium and Large maps are half-turn symmetric like the other biomes (the bridge + broken causeway pair sits on both decks).</summary>
+    [Theory]
+    [InlineData(MapSize.Medium)]
+    [InlineData(MapSize.Large)]
+    public void Layout2_AshPlains_TwoPlayers_IsHalfTurnWithThePairOnBothDecks(MapSize size)
+    {
+        for (ulong seed = 1; seed <= 6; seed++)
+        {
+            (MapData map, MapMeta meta) = MapGenerator.GenerateWithMeta(P(size, 2, seed, Biome.AshPlains));
+            Assert.Equal(MapSymmetry.Rot2, meta.Symmetry);
+            int n = map.Width, shallowRoad = 0;
+            for (int i = 0; i < n * n; i++)
+            {
+                int j = n * n - 1 - i;   // the half turn of cell i
+                Assert.Equal(map.Land[i], map.Land[j]);
+                Assert.Equal(map.Overlay[i], map.Overlay[j]);
+                if (map.Land[i] == LandType.Road) shallowRoad++;
+            }
+            Assert.True(shallowRoad > 0);
+        }
     }
 
     /// <summary>50 seeds x Small/Medium/Large x 2/3/4 players for each biome; filter with <c>--filter Category!=Slow</c>. Every map must generate

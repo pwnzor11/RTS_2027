@@ -18,7 +18,7 @@ internal static class LayoutVariant
     public static (bool Rot2, int T) For(ulong seed, int players, int n, bool allowRot2 = true)
     {
         var r = new SimRandom(unchecked(seed * 0x9E3779B97F4A7C15UL + 12345UL));
-        bool rot2 = players == 2 && n >= 96 && allowRot2;   // v5: every Medium and Large 2-player seed is half-turn (a mirror skeleton measured 67-70 % wins for start 1 in two biomes); Ash Plains needs two different crossings, which a half turn would copy
+        bool rot2 = players == 2 && n >= 96 && allowRot2;   // v5: every Medium and Large 2-player seed is half-turn (a mirror skeleton measured 67-70 % wins for start 1 in two biomes); Ash Plains too since v6 (its bridge + causeway pair is built on both decks)
         int t = rot2 || players > 2 ? r.Next(8) : (r.Next(2) == 0 ? 0 : 3);
         return (rot2, t);
     }
