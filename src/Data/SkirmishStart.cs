@@ -22,6 +22,9 @@ public static class SkirmishStart
     /// <summary>Largest ring searched around the start for start units.</summary>
     private const int MaxUnitRing = 8;
 
+    /// <summary>Largest ring of the fallback pass for start units the strict pass could not place (S17: Ash Plains layout 2 puts the Expedition's sea 9 cells from the start).</summary>
+    private const int MaxFallbackRing = 16;
+
     /// <summary>Places each player's start building at the map start of the same index. Returns the placed ids by player (None if no spot was found).</summary>
     public static EntityId[] Apply(Simulation sim) => Apply(sim, null);
 
@@ -101,6 +104,27 @@ public static class SkirmishStart
                     used.Add(c);
                     next++;
                 }
+        // S17: units the strict pass left over (the first unit blocks the rest when it has no passable cell within MaxUnitRing, e.g. a Command Ship
+        // whose sea is further out) are placed one by one on the nearest free passable cell, up to MaxFallbackRing. Never runs when the strict pass placed everything.
+        for (; next < units.Count; next++)
+        {
+            (ActorKind kind, int type) = units[next];
+            Locomotion loco = kind == ActorKind.Vehicle ? rules.Vehicles[type].Locomotion : Locomotion.Foot;
+            bool done = false;
+            for (int r = 1; r <= MaxFallbackRing && !done; r++)
+                for (int dy = -r; dy <= r && !done; dy++)
+                    for (int dx = -r; dx <= r && !done; dx++)
+                    {
+                        if (Math.Max(Math.Abs(dx), Math.Abs(dy)) != r) continue;
+                        var c = new CellCoord(start.X + dx, start.Y + dy);
+                        if (!sim.Setup.Map.Contains(c) || !sim.Map.BuildingAt(c).IsNone || used.Contains(c)) continue;
+                        if (!sim.Map.IsPassableTerrain(c, loco, rules.Terrain)) continue;
+                        EntityId spawned = kind == ActorKind.Vehicle ? sim.SpawnVehicle(player, type, c) : sim.SpawnInfantry(player, type, c);
+                        if (first == EntityId.None) first = spawned;
+                        used.Add(c);
+                        done = true;
+                    }
+        }
         return first;
     }
 }
