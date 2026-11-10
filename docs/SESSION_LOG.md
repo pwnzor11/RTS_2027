@@ -306,7 +306,7 @@ tiers 2-3; D-195 Directorate tier 5 ladder; D-196 Directorate tuning closed, art
 at the start of session 17 as D-198 and D-199. Ash Plains Expedition stall (the AI places nothing on that skeleton; cause not found). Mountains
 start skew for Directorate and Left Behind (57 % pooled larger share). Layout 2 stays off by default (`CurrentLayout = 1`): income and fairness
 not yet within limits. The owner's PC re-render (branch art/pc-rerender-<date>, local only) and the owner's s15-series regression run came back after
-the session; see docs/balance/s16_laptop_regression.md and the owner's notes in scratch/.
+the session; see docs/balance/s16_laptop_regression.md.
 **Lessons:** render art on the owner's PC (D-196); the layout-2 income rate follows harvest distance, not field money; mirror-diagonal skeletons
 favour start 1.
 **PRs:** #51 (Q-67 hold, tier-5 hold, team-colour pass), #52 (map layout 2 v4, all biomes, off by default; 2v2 default teams), #53 (layout 2 v5:
