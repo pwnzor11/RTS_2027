@@ -291,3 +291,25 @@ and the owner's downloads. Two enum-count pins (M4/M7 contract tests) missed the
 failure (replay file still open on delete) was caught by CI and fixed.
 **User check:** USER_CHECKS.md "Session 15".
 **Next session should:** see HANDOFF (Q-67 Directorate early game, M12 wave 3 zones and lanes with an income re-measure, art follow-ups).
+
+## Session 16 · 2026-11-08/09 (Q-67 Directorate early tech, vehicle team colours, map layout 2 v5, PRs #51-#53)
+**Goal:** Q-67 target band (D-191: Left Behind 3 v Directorate 3 at 50-65 % decisive, no rise in draws), the vehicle team-colour pass, and
+map layout 2 (M12 waves 1-3). The owner was present all session; map and art pilots stopped for his look before any fan-out.
+**Done:** Q-67: Directorate tiers 2-3 hold the Isotope Works and Rad Mortar until 18 units (D-194), tier 5 until 24 units (D-195); the owner's
+64-game laptop run closed Directorate tuning (D-196). Team-colour pass: house paint on every facing of the flagged vehicles and turrets (D-192).
+Map layout 2 (M12-07..M12-12): zone skeletons, per-seed variety, half-turn 2-player seeds (Medium and Large), 4-player geometry, sea, convoy
+cells and landings in every biome, income trims (D-197); 2v2 teams default to 1+2 v 3+4 on layout 2 (D-193). `ai match`, `ai matrix` and
+`ai timeline` take `--layout` and `--biome` (docs/balance/s16_layout2.md).
+**Decisions:** D-191..D-197 (D-191 Q-67 band and run mode; D-192 vehicle team colours; D-193 2v2 default teams on layout 2; D-194 Q-67 Directorate
+tiers 2-3; D-195 Directorate tier 5 ladder; D-196 Directorate tuning closed, art renders on the owner's PC; D-197 layout 2 status after v5).
+**Not done / open:** Q-68 (Ash Plains fairness vs two different crossings) and Q-69 (layout 2 income lever) were open at session end; answered
+at the start of session 17 as D-198 and D-199. Ash Plains Expedition stall (the AI places nothing on that skeleton; cause not found). Mountains
+start skew for Directorate and Left Behind (57 % pooled larger share). Layout 2 stays off by default (`CurrentLayout = 1`): income and fairness
+not yet within limits. The owner's PC re-render (branch art/pc-rerender-<date>, local only) and the owner's s15-series regression run came back after
+the session; see docs/balance/s16_laptop_regression.md.
+**Lessons:** render art on the owner's PC (D-196); the layout-2 income rate follows harvest distance, not field money; mirror-diagonal skeletons
+favour start 1.
+**PRs:** #51 (Q-67 hold, tier-5 hold, team-colour pass), #52 (map layout 2 v4, all biomes, off by default; 2v2 default teams), #53 (layout 2 v5:
+coast for the Expedition, biome skeletons, half-turn 2p, income trims). All three merged to main.
+**User check:** USER_CHECKS.md "Session 16".
+**Note:** no wrap-up was run; this entry was written at the start of session 17 from the commits and decisions.
