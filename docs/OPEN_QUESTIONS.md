@@ -4,15 +4,11 @@ Context and trade-offs for every question are in `docs/research/00_SYNTHESIS.md`
 file cited after each question. Recommendations are the lead's, from the research.
 
 ## Open
-- 🟡 **Q-68 · 2026-11-09 · Ash Plains layout 2: fairness or two different crossings?** The Ash skeleton is a mirror so its two crossings can
-  differ (intact bridge, broken causeway); in mirrors start side wins 64 % (limit 60 %). A half-turn skeleton (as Rust Belt now) fixes fairness but
-  each side gets the same crossing mix. Options: **(a) half-turn, the same crossing pair on both sides of the centre (recommended: fairness first)**;
-  (b) keep the mirror and look for an AI-side cause first.
-- 🟡 **Q-69 · 2026-11-09 · Layout 2 income lever.** Income is +11 to +30 % above layout 1 at 5-10 min (Glass Coast +39/+109 %) although money per start
-  was cut to 42 %: the rate comes from harvest distance, not field size. Options: **(a) move main/natural fields further from the refinery spot and use
-  fewer field patches near the main (recommended)**; (b) accept the richer economy and rebalance the factions to it; (c) cap refinery count early in the AI.
+- (none)
 
 ## Answered
+- Q-68 · 2026-11-09 · Owner: (a) half-turn skeleton for Ash Plains, same crossing pair both sides → D-198.
+- Q-69 · 2026-11-09 · Owner: (a) move main/natural fields further from the refinery spot, fewer patches near the main → D-199.
 - Q-67 · 2026-11-08 · Owner: band 50-65 % (D-191); hold 18 landed, tier-5 ladder follow-up → D-194.
 - Q-64 · 2026-11-07 · Owner: AI siege behaviour → D-174.
 - Q-65 · 2026-11-07 · Owner: re-measure (D-176), then AI-only fixes → D-182.

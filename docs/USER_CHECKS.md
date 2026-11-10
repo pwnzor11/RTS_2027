@@ -350,3 +350,11 @@ Pull first: `git pull --ff-only origin main` then `git lfs pull` (new sprites). 
 - **AI:** fewer endless stalemates in skirmish (siege mode: the AI gathers, brings artillery, hits factories first). Laptop repeat (optional):
   `powershell -ExecutionPolicy Bypass -File tools\measure\run_s15_series.ps1` after deleting balance_runs\s15\*.md, compare with
   docs/balance/s15_laptop_series.md.
+
+## Session 16 · Team colours, map layout 2 (off by default), Directorate early tech (D-191..D-197)
+- **Vehicles:** team (house) colour reads clearly on every facing of the vehicles and turrets re-coloured in session 16 (D-192).
+- **Skirmish default:** a new skirmish still uses map layout 1; layout 2 is not the default (`CurrentLayout = 1`, D-197).
+- **AI match:** `ai match --layout 2 --biome rust_belt` runs, and its table heading reads "rust_belt layout 2" (docs/balance/s16_layout2.md).
+- **Other biomes:** `ai match --layout 2 --biome mountains` and `ai match --layout 2 --biome glass_coast` run; `ai match --layout 2 --biome ash_plains` runs, but the Expedition still builds nothing there (known, not fixed, D-197).
+- **Timeline and matrix:** `ai timeline --layout 2 --biome rust_belt` and `ai matrix --layout 2` run and take the same flags (docs/balance/s16_layout2.md).
+- **Optional laptop run:** `tools/measure/run_s16_layout2.ps1` (32 seeds, 64 games per row, rust_belt and ash_plains by default) gives the layout 2 numbers to compare with the layout 1 base column.

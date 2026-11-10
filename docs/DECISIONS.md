@@ -1472,3 +1472,13 @@ an Expedition coast in every biome (M7-1), start side <= 60 % decisive in tier-3
 (51 %) and Glass Coast (50 %), not on Mountains (57 %, inside the limit but skewed for Directorate/Left Behind) or Ash Plains (64 %, its mirror skeleton);
 income not met (+11 to +30 % at 5-10 min; Glass Coast +39/+109 %; field richness is not the lever). Biome identity: Mountains ridge/plateau mains,
 Ash causeway. Details: docs/balance/s16_layout2.md "v5 re-measure". **Status:** owner decision (session 16), next steps in Q-68 and Q-69
+
+### D-198 · 2026-11-09 · Ash Plains layout 2 goes half-turn
+**Decision:** Q-68 answered (a). The Ash Plains layout 2 skeleton becomes a half-turn with the same crossing pair on both sides of the centre,
+so start fairness comes first and each side gets the same crossing mix. The mirror skeleton and its two different crossings go (D-197 measured
+64 % start-side wins on Ash Plains with the mirror). Not decided here: the Ash Plains Expedition stall (D-197). **Status:** owner decision (session 17)
+
+### D-199 · 2026-11-09 · Layout 2 income: fields further from the refinery spot
+**Decision:** Q-69 answered (a). On layout 2, main and natural fields move further from the refinery spot and fewer field patches sit near the
+main, because the income rate follows harvest distance, not field money (D-197). Plus: the owner asked to fix the script drift found by the PC
+re-render (four LB rigs and auth_turret) before the re-render branch becomes the baseline. **Status:** owner decision (session 17)
