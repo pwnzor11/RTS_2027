@@ -280,7 +280,7 @@ cell = [50, 87]
 [[actors]]
 type = "dir_conscript"
 player = 1
-cell = [44, 79]
+cell = [45, 79]   # was (44,79), inside a reactor vent (S19 MIS-13)
 
 [[actors]]
 type = "dir_conscript"
@@ -315,7 +315,7 @@ cell = [49, 81]
 [[actors]]
 type = "dir_ashthrower"
 player = 1
-cell = [47, 81]
+cell = [44, 81]   # was (47,81), inside the shaft (S19 MIS-13)
 
 [[actors]]
 type = "dir_sapper"
