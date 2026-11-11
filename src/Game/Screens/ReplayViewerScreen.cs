@@ -146,7 +146,8 @@ public sealed class ReplayViewerScreen : IScreen
             $"REPLAY  {state}   tick {clock.Tick} / {clock.FinalTick} ({Percent(clock.Progress)})   view {view}",
             "Space pause  1-4 speed  . step  F skip 10s  F2 view  R restart  Esc back",
         };
-        if (_play.DesyncTick >= 0) lines.Add($"WARNING: the replay no longer matches the game data (differs from tick {_play.DesyncTick})");
+        if (_play.ShowDesyncWarning) lines.Add($"WARNING: the replay no longer matches the game data (differs from tick {_play.DesyncTick})");
+        if (_play.IsMissionReplay) lines.Add(Rts.Scripting.MissionReplay.WatchableOnlyNote);   // S18 GS-03 (owner): watchable only
         Hud.Panel(sb, _s.Pixel, new Point(8, 8), lines, scale);
         DrawProgressBar(sb, scale);
         if (clock.Ended) DrawEndBanner(sb, scale);

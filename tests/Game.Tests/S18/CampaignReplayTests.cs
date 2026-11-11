@@ -10,7 +10,8 @@ using Rts.Game.Tests.Saves;
 
 namespace Rts.Game.Tests.S18;
 
-/// <summary>S18 GS-03: a campaign mission replay recorded at tier 5 stores only the mission id and script hash, so playback runs at tier 3.</summary>
+/// <summary>S18 GS-03: a campaign mission replay recorded at tier 5 stores only the mission id and script hash, so playback runs at tier 3 and
+/// drifts; by owner decision mission replays are "watchable only" and hide the desync warning, skirmish replays keep it.</summary>
 public sealed class CampaignReplayTests
 {
     private const int Ticks = 400;
@@ -27,9 +28,10 @@ public sealed class CampaignReplayTests
         return (path, game.Sim.ComputeStateHash());
     }
 
-    // S18 audit: pins current behaviour of GS-03; flip the assertion when fixed.
+    // S18 GS-03 (owner decision, "watchable only"): the replay still drifts (it carries no tier or campaign tech), but the viewer shows the
+    // watchable-only note instead of the desync warning.
     [Fact]
-    public void Audit_A_tier_5_campaign_replay_desyncs_on_playback()
+    public void A_tier_5_campaign_replay_drifts_but_is_watchable_only()
     {
         using var t = new SaveTestSupport();
         (string path, ulong final) = RecordTier5(t);
@@ -38,16 +40,26 @@ public sealed class CampaignReplayTests
         play.ScrubForward();
         Assert.NotEqual(final, play.Sim.ComputeStateHash());
         Assert.NotEqual(-1, play.DesyncTick);
+        Assert.True(play.IsMissionReplay);
+        Assert.False(play.ShowDesyncWarning);
+        Assert.Equal("Mission replay: watchable only, it may drift from the original game", Rts.Scripting.MissionReplay.WatchableOnlyNote);
     }
 
-    [Fact(Skip = "S18 GS-03: awaiting owner decision")]
-    public void A_tier_5_campaign_replay_plays_back_with_no_desync()
+    [Fact]
+    public void A_skirmish_replay_that_desyncs_still_shows_the_warning()
     {
         using var t = new SaveTestSupport();
-        (string path, ulong final) = RecordTier5(t);
+        SkirmishGame game = SkirmishGame.Create(t.RulesDir, 0, 2);
+        string path = Path.Combine(t.Folder, "skirmish.rpl");
+        var rec = new ReplayRecording(game.Sim, RulesBundle.ReadDirectory(t.RulesDir), path, Path.Combine(t.Folder, "prev.rpl"));
+        new SimHost(game.Sim, rec).StepTicks(Ticks);
+        Assert.True(rec.Finish());
+
         ReplayPlayback play = ReplayPlaybackLoader.Open(path, t.RulesDir);
+        Assert.False(play.IsMissionReplay);
+        play.Sim.Players.Cash[0] += 1;   // force a desync: the playback no longer matches the recorded hashes
         play.ScrubForward();
-        Assert.Equal(final, play.Sim.ComputeStateHash());
-        Assert.Equal(-1, play.DesyncTick);
+        Assert.NotEqual(-1, play.DesyncTick);
+        Assert.True(play.ShowDesyncWarning);
     }
 }
