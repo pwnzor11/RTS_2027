@@ -16,7 +16,7 @@ locale = "locale.toml"
 
 # lb_02 kit + what lb_02 unlocked (Tinker's Bench, harpoon wagons, tinkers, brutes).
 [starts_with]
-tech = ["lb_mother_rig", "lb_dynamo_rig", "lb_muster_rig", "lb_yard", "lb_scavenger", "lb_hook_runner", "lb_slinger", "lb_spike_nest", "lb_garage_rig", "lb_buggy", "lb_gleaner", "lb_lookout", "lb_bench", "lb_harpoon_wagon", "lb_tinker", "lb_drifter_brute"]
+tech = ["lb_mother_rig", "lb_dynamo_rig", "lb_muster_rig", "lb_yard", "lb_scavenger", "lb_hook_runner", "lb_slinger", "lb_spike_nest", "lb_garage_rig", "lb_buggy", "lb_gleaner", "lb_lookout", "lb_bench", "lb_harpoon_wagon", "lb_tinker", "lb_drifter_brute", "lb_still_rig", "lb_hauler"]
 
 # The tier-3 gate and its first fruits, for act 4.
 [unlocks_on_win]
@@ -28,7 +28,7 @@ name = "The Drift"
 role = "human"
 team = 0
 cash = 2500
-tech = ["lb_mother_rig", "lb_dynamo_rig", "lb_muster_rig", "lb_yard", "lb_scavenger", "lb_hook_runner", "lb_slinger", "lb_spike_nest", "lb_garage_rig", "lb_buggy", "lb_gleaner", "lb_lookout", "lb_bench", "lb_harpoon_wagon", "lb_tinker", "lb_drifter_brute"]
+tech = ["lb_mother_rig", "lb_dynamo_rig", "lb_muster_rig", "lb_yard", "lb_scavenger", "lb_hook_runner", "lb_slinger", "lb_spike_nest", "lb_garage_rig", "lb_buggy", "lb_gleaner", "lb_lookout", "lb_bench", "lb_harpoon_wagon", "lb_tinker", "lb_drifter_brute", "lb_still_rig", "lb_hauler"]
 
 # The Authority column is driven by the script only (role "neutral" keeps the AI off it). Team 1.
 [[players]]

@@ -14,7 +14,7 @@ faction = "authority"
 locale = "locale.toml"
 
 [starts_with]
-tech = ["auth_power", "auth_refinery", "auth_barracks", "auth_rifleman", "auth_jeep", "auth_wall", "auth_turret", "auth_factory", "auth_tank", "auth_engineer", "auth_ration_hall", "auth_engineering", "auth_searchlight", "auth_decon_truck", "auth_marksman", "auth_carrier", "auth_signals_hq", "auth_howitzer", "auth_bulwark", "auth_gate", "auth_flak", "auth_airfield"]
+tech = ["auth_power", "auth_refinery", "auth_barracks", "auth_rifleman", "auth_jeep", "auth_wall", "auth_turret", "auth_factory", "auth_tank", "auth_engineer", "auth_ration_hall", "auth_engineering", "auth_searchlight", "auth_decon_truck", "auth_marksman", "auth_carrier", "auth_signals_hq", "auth_howitzer", "auth_bulwark", "auth_gate", "auth_flak", "auth_airfield", "auth_rocketeer", "auth_scraper", "auth_silo", "auth_seismograph"]
 
 [unlocks_on_win]
 tech = ["auth_atomic_battery"]
@@ -26,7 +26,7 @@ role = "human"
 team = 0
 cash = 8000
 # Only these may be built (production chain prerequisites still apply). The script can Tech.Grant more.
-tech = ["auth_power", "auth_refinery", "auth_barracks", "auth_rifleman", "auth_jeep", "auth_wall", "auth_turret", "auth_factory", "auth_tank", "auth_engineer", "auth_ration_hall", "auth_engineering", "auth_searchlight", "auth_decon_truck", "auth_marksman", "auth_carrier", "auth_signals_hq", "auth_howitzer", "auth_bulwark", "auth_gate", "auth_flak", "auth_airfield"]
+tech = ["auth_power", "auth_refinery", "auth_barracks", "auth_rifleman", "auth_jeep", "auth_wall", "auth_turret", "auth_factory", "auth_tank", "auth_engineer", "auth_ration_hall", "auth_engineering", "auth_searchlight", "auth_decon_truck", "auth_marksman", "auth_carrier", "auth_signals_hq", "auth_howitzer", "auth_bulwark", "auth_gate", "auth_flak", "auth_airfield", "auth_rocketeer", "auth_scraper", "auth_silo", "auth_seismograph"]
 
 [[players]]
 slot = 1

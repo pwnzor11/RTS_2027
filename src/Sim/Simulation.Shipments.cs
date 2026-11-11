@@ -185,6 +185,9 @@ public sealed partial class Simulation
         if (dockSlot == 0) return;   // no dock: the tender waits at sea
         BuildingType dt = RulesOf(t.Player).Buildings[_buildings.TypeIndex[dockSlot]];
         CellCoord dtl = _buildings.Cell[dockSlot];
+        // Equal distances: first in cell-index order for a dock in the first half of the map, last for the second (M13-03: a point-mirrored
+        // pair of docks gets mirrored goals, so both tenders arrive on the same tick).
+        _ = NearestOwnDockDistance(t.Player, from, out bool lateHalf);
         long best = long.MaxValue;
         CellCoord goal = default;
         bool found = false;
@@ -195,14 +198,35 @@ public sealed partial class Simulation
                 if (!InMap(c) || !_map.IsPassableTerrain(c, Locomotion.Naval, Setup.Rules.Terrain) || !_map.BuildingAt(c).IsNone) continue;
                 long dx = c.X - (long)from.X, dy = c.Y - (long)from.Y;
                 long d = dx * dx + dy * dy;
-                if (d < best) { best = d; goal = c; found = true; }   // scan order = cell-index order, so the first of equals wins
+                if (d < best || (lateHalf && d == best)) { best = d; goal = c; found = true; }
             }
         if (!found) return;
         ApplyMovementCommand(new Command(Tick, t.Player, 0, CommandKind.Move, id, EntityId.None, goal, (int)ActorKind.Vehicle));
     }
 
-    // Spawns the tender on an ocean-edge cell: the edge water cells in cell-index order, starting at index (NextTenderId mod count) so
-    // consecutive shipments rotate round the coast; the first free one from there on is used. No SimRandom.
+    private long NearestOwnDockDistance(byte p, CellCoord c, out bool lateHalf)
+    {
+        long best = long.MaxValue;
+        lateHalf = false;
+        for (int b = 1; b < _buildings.Capacity; b++)
+        {
+            if (!IsDock(b) || _buildings.Player[b] != p) continue;
+            BuildingType dt = RulesOf(p).Buildings[_buildings.TypeIndex[b]];
+            CellCoord tl = _buildings.Cell[b];
+            long dx = 2L * tl.X + dt.FootprintW - (2L * c.X + 1), dy = 2L * tl.Y + dt.FootprintH - (2L * c.Y + 1);
+            long d = dx * dx + dy * dy;
+            if (d >= best) continue;
+            best = d;
+            // Which half of the map the dock sits in (centre compared with the point-mirrored centre, (y, x) order): equal-distance edge
+            // cells are taken lowest-first for the first half and highest-first for the second, so a point-symmetric map serves both alike.
+            long cx = 2L * tl.X + dt.FootprintW, cy = 2L * tl.Y + dt.FootprintH;
+            long mx = 2L * Setup.Map.Width - cx, my = 2L * Setup.Map.Height - cy;
+            lateHalf = cy > my || (cy == my && cx > mx);
+        }
+        return best == long.MaxValue ? 0 : best;
+    }
+
+    // Spawns the tender on the ocean-edge cell nearest the receiving dock (M13-03); the first free one in that order is used. No SimRandom.
     private void LaunchTender(byte p, int tenderType)
     {
         int payload = ShipmentPayload(p);
@@ -238,10 +262,19 @@ public sealed partial class Simulation
             var near = edge.FindAll(e => docked.Contains(NavalRegionAt(e, false)));
             if (near.Count > 0) edge = near;
         }
-        int start = (int)((uint)_shipments.NextTenderId % (uint)edge.Count);
+        // S19 M13-03 (D-205): the edge cell nearest the receiving dock (squared distance from the dock footprint centre in half-cells, so
+        // integer-only); equal distances go lowest (y, x) first for a dock in the first half of the map and highest first for the second, so
+        // point-mirrored docks are served alike (no corner bias).
+        var order = new List<(long D, int T, int K)>(edge.Count);
         for (int k = 0; k < edge.Count; k++)
         {
-            CellCoord c = edge[(start + k) % edge.Count];
+            long d = NearestOwnDockDistance(p, edge[k], out bool late);
+            order.Add((d, late ? -k : k, k));
+        }
+        order.Sort((a, b) => a.D != b.D ? a.D.CompareTo(b.D) : a.T.CompareTo(b.T));
+        for (int oi = 0; oi < order.Count; oi++)
+        {
+            CellCoord c = edge[order[oi].K];
             if (!_map.BuildingAt(c).IsNone || !_map.VehicleAt(c).IsNone || ActorStandsOn(c)) continue;
             EntityId id = SpawnVehicle(p, tenderType, c);
             if (id.IsNone) return;   // vehicle store full: try again next interval

@@ -33,7 +33,7 @@ namespace Rts.Game.Screens;
 /// game-over screen says Victory or Defeat. The skirmish has no debug console.
 /// The simulation is stepped only by its <see cref="SimHost"/>, driven here from the game time of each Update.
 /// </summary>
-public sealed class GameScreen : IScreen
+public sealed class GameScreen : IScreen, IFocusPausable
 {
     private readonly GameServices _s;
     private readonly ISnapshotSource _source;
@@ -112,6 +112,13 @@ public sealed class GameScreen : IScreen
             }
         }
     }
+
+    /// <inheritdoc />
+    /// <remarks>Only a single-player game the player is playing (skirmish vs AI, or a campaign mission) and has not paused with P. There is no multiplayer yet; it must never pause there.</remarks>
+    public IScreen? CreateFocusPause() =>
+        _sim is { Paused: false } && !_spectatorMode && (_skirmishMode || _mission is not null)
+            ? new PauseScreen(_s, _restart, SaveTarget())
+            : null;
 
     /// <summary>The skirmish choices this game was started with, or null for the plain sandbox and demo.</summary>
     public SkirmishSettings? Skirmish { get; }

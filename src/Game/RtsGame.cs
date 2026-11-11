@@ -31,6 +31,7 @@ public sealed class RtsGame : Microsoft.Xna.Framework.Game
     private readonly bool _direct;
     private readonly bool _empty;
     private readonly ScreenStack _screens = new();
+    private readonly FocusPause _focusPause = new();
     private readonly List<char> _typed = new();
     private SpriteBatch _spriteBatch = null!;
     private Texture2D _pixel = null!;
@@ -55,9 +56,10 @@ public sealed class RtsGame : Microsoft.Xna.Framework.Game
         {
             PreferredBackBufferWidth = _settings.WindowWidth,
             PreferredBackBufferHeight = _settings.WindowHeight,
-            IsFullScreen = _settings.Fullscreen,
             SynchronizeWithVerticalRetrace = true,
+            HardwareModeSwitch = DisplayPlan.HardwareModeSwitch,   // S18 GAMEREND-07: borderless, not a real mode switch
         };
+        ApplyDisplayPlan(_settings);
 
         _rulesDir = RulesLocator.FindRulesDir(AppContext.BaseDirectory)
             ?? throw new InvalidOperationException($"data/rules not found above {AppContext.BaseDirectory}");
@@ -131,10 +133,19 @@ public sealed class RtsGame : Microsoft.Xna.Framework.Game
     // Settings > Full screen / Window size: apply to the live window.
     private void ApplyDisplay(Settings settings)
     {
-        _graphics.IsFullScreen = settings.Fullscreen;
-        _graphics.PreferredBackBufferWidth = settings.WindowWidth;
-        _graphics.PreferredBackBufferHeight = settings.WindowHeight;
+        ApplyDisplayPlan(settings);
         _graphics.ApplyChanges();
+    }
+
+    // Fullscreen is borderless at the desktop size (the UI scale is then worked out for the real screen); windowed uses the saved size.
+    private void ApplyDisplayPlan(Settings settings)
+    {
+        DisplayMode desktop = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode;
+        DisplayPlan plan = DisplayPlan.For(settings, desktop.Width, desktop.Height);
+        _graphics.HardwareModeSwitch = DisplayPlan.HardwareModeSwitch;
+        _graphics.IsFullScreen = plan.Fullscreen;
+        _graphics.PreferredBackBufferWidth = plan.Width;
+        _graphics.PreferredBackBufferHeight = plan.Height;
     }
 
     /// <inheritdoc />
@@ -145,6 +156,7 @@ public sealed class RtsGame : Microsoft.Xna.Framework.Game
         var input = new InputFrame(keys, _previousKeys, mouse, _previousMouse, _typed);
         _typed.Clear();
 
+        _focusPause.Update(IsActive, _screens);   // S19: a single-player game pauses while the window is in the background
         _screens.Update(input, gameTime);
 
         _previousKeys = keys;

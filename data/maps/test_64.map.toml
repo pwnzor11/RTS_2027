@@ -1,4 +1,5 @@
 [map]
+dev = true
 name = "test_64"
 theater = "rust_belt"
 width = 64

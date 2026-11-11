@@ -130,5 +130,5 @@ title = "Atomic Artillery"
 subtitle = "Technology"
 body = "[draft pending]"
 # ASSUMED (M3-17)
-unlock = "campaign:auth_05"
+unlock = "campaign:auth_04"
 

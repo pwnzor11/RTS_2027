@@ -93,7 +93,9 @@ public sealed class SetupMapCheckTests
         try
         {
             File.WriteAllText(Path.Combine(user, "broken" + MapPicker.MapSuffix), "garbage [[[");
-            File.Copy(Path.Combine(MapsDir, "test_32.map.toml"), Path.Combine(user, "good" + MapPicker.MapSuffix));
+            // test_32 is a dev fixture (S19 dev = true) and would be hidden: the copy is an ordinary map.
+            string fixture = File.ReadAllText(Path.Combine(MapsDir, "test_32.map.toml")).Replace("dev = true", "", StringComparison.Ordinal);
+            File.WriteAllText(Path.Combine(user, "good" + MapPicker.MapSuffix), fixture);
             var log = new List<string>();
             IReadOnlyList<MapEntry> list = MapPicker.List(RulesDir, user, log.Add);
             Assert.DoesNotContain(list, m => m.File is { } f && f.EndsWith("broken" + MapPicker.MapSuffix, StringComparison.Ordinal));

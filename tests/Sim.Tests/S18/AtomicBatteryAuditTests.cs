@@ -24,12 +24,12 @@ public sealed class AtomicBatteryAuditTests
     }
 
     [Fact]
-    public void Audit_NoAuthorityBuildingIsATunnelEntrance_ButTheBatteryNeedsOneInRange()
+    public void Fixed_BatteryNeedsNoEntrance_SoItFiresAnywhere()
     {
-        // S18 audit: pins current behaviour of FAD-01; flip the assertion when fixed.
+        // D-205 / M13-08a: range 0 = fire anywhere (same as D-132(4) for Left Behind).
         SimRules r = S18World.RealRules;
         BuildingType battery = r.Buildings.Single(b => b.Id == "auth_atomic_battery");
-        Assert.Equal(8, battery.SuperweaponEntranceRange);
+        Assert.Equal(0, battery.SuperweaponEntranceRange);
         Assert.DoesNotContain(r.Buildings, b => b.Faction == Faction.Authority && b.Entrance != TunnelSize.None);
         // the other three superweapons: the Directorate one also needs an entrance (it has entrances), the two newer ones fire anywhere
         Assert.Equal(8, r.Buildings.Single(b => b.Id == "dir_sunrise").SuperweaponEntranceRange);
@@ -38,29 +38,6 @@ public sealed class AtomicBatteryAuditTests
     }
 
     [Fact]
-    public void Audit_ChargedBattery_RefusesEveryTargetCell_AndTheSpecialOrderDoesNothing()
-    {
-        // S18 audit: pins current behaviour of FAD-01; flip the assertion when fixed.
-        var (w, battery, tank) = Make();
-        int total = w.Rules.Buildings[w.B("auth_atomic_battery")].SuperweaponChargeTicks;
-        w.Run(5);
-        w.Sim.Effects.BuildingCharge[battery.Index] = total;   // fully charged
-        Assert.True(w.Sim.ViewFor(0).Hud.Superweapons.Single().Ready);   // the HUD says "ready"
-
-        int size = w.Sim.Setup.Map.Width, allowed = 0;
-        for (int y = 0; y < size; y++)
-            for (int x = 0; x < size; x++)
-                if (w.Sim.CanFireSuperweapon(0, battery, new CellCoord(x, y))) allowed++;
-        Assert.Equal(0, allowed);   // not one cell of the map is a legal target
-
-        int hp = w.VehHp(tank);
-        w.Run(1, w.Cmd(0, CommandKind.Special, battery, default, new CellCoord(40, 40)));
-        w.Run(20);
-        Assert.Equal(total, w.Sim.Effects.BuildingCharge[battery.Index]);   // still charged: the shot never left
-        Assert.Equal(hp, w.VehHp(tank));
-    }
-
-    [Fact(Skip = "S18 FAD-01: awaiting owner decision")]
     public void Desired_ChargedBattery_FiresAtAnEnemyAndResetsItsCharge()
     {
         var (w, battery, tank) = Make();

@@ -13,6 +13,9 @@ public sealed record MapMeta(string Biome, MapSymmetry Symmetry, int MaxPlayers,
     public static MapMeta DefaultFor(Rts.Sim.Map.MapData map) =>
         new("", MapSymmetry.None, map.StartPositions.Count, null, Array.Empty<MapFeature>());
 
+    /// <summary>True for a developer fixture (TOML <c>[map] dev = true</c>, any format version): hidden from the skirmish map list, still loadable by tests and tools. Not part of the map hash.</summary>
+    public bool Dev { get; init; }
+
     /// <summary>Map format 3 (M7-02): cells on the map edge where Expedition supply tenders sail in (TOML <c>[map] convoy_edge</c>, a list of
     /// <c>[x, y]</c>). Empty = none declared. Not part of the map hash.</summary>
     public IReadOnlyList<Rts.Sim.Core.CellCoord> ConvoyEdge { get; init; } = Array.Empty<Rts.Sim.Core.CellCoord>();

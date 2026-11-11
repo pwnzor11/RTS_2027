@@ -11,7 +11,7 @@ namespace Rts.Game.Screens;
 
 /// <summary>
 /// The lobby you land in at start-up: an animated illustrated background with the menu down the left (Continue, Campaign,
-/// Skirmish, LAN Game, Map Editor, Replays, Archive, How to Play, Settings, Quit). Up/Down/Enter or the mouse. Esc quits.
+/// Skirmish, LAN Game, Map Editor, Replays, Archive, How to Play, Settings, Quit). Up/Down/Enter or the mouse. Esc does nothing (Quit is the way out).
 /// F9 opens the battle sandbox (debug; it is no longer a menu entry, and <c>--sandbox</c> still starts straight in it).
 /// </summary>
 public sealed class MainMenuScreen : IScreen
@@ -75,12 +75,8 @@ public sealed class MainMenuScreen : IScreen
             }
         }
 
-        // ASSUMED (M3-16): Esc on the main menu still quits, as it did before the redesign.
-        if (input.ConsumePressed(Keys.Escape))
-        {
-            _s.Quit();
-            return;
-        }
+        // S19 (D-205): Esc on the main menu does nothing; the Quit row is the way out.
+        input.ConsumePressed(Keys.Escape);
         // ASSUMED (M3-16): F9 is the debug key that opens the sandbox now that the menu entry is gone.
         if (input.ConsumePressed(Keys.F9))
         {
