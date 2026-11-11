@@ -100,7 +100,7 @@ public static class SkirmishStart
                     (ActorKind kind, int type) = units[next];
                     Locomotion loco = kind == ActorKind.Vehicle ? rules.Vehicles[type].Locomotion : Locomotion.Foot;
                     if (!sim.Map.IsPassableTerrain(c, loco, rules.Terrain)) continue;
-                    if (loco == Locomotion.Naval && !(edgeSea ??= EdgeConnectedSea(sim))[c.Y * sim.Setup.Map.Width + c.X]) continue;   // M13-01: never an inland lake
+                    if (loco == Locomotion.Naval && !SeaOk(ref edgeSea, sim, c)) continue;   // M13-01: never an inland lake
                     EntityId spawned = kind == ActorKind.Vehicle ? sim.SpawnVehicle(player, type, c) : sim.SpawnInfantry(player, type, c);
                     if (first == EntityId.None) first = spawned;
                     used.Add(c);
@@ -123,7 +123,7 @@ public static class SkirmishStart
                         var c = new CellCoord(start.X + dx, start.Y + dy);
                         if (!sim.Setup.Map.Contains(c) || !sim.Map.BuildingAt(c).IsNone || used.Contains(c)) continue;
                         if (!sim.Map.IsPassableTerrain(c, loco, rules.Terrain)) continue;
-                        if (loco == Locomotion.Naval && !(edgeSea ??= EdgeConnectedSea(sim))[c.Y * sim.Setup.Map.Width + c.X]) continue;
+                        if (loco == Locomotion.Naval && !SeaOk(ref edgeSea, sim, c)) continue;
                         EntityId spawned = kind == ActorKind.Vehicle ? sim.SpawnVehicle(player, type, c) : sim.SpawnInfantry(player, type, c);
                         if (first == EntityId.None) first = spawned;
                         used.Add(c);
@@ -131,6 +131,15 @@ public static class SkirmishStart
                     }
         }
         return first;
+    }
+
+    /// <summary>M13-01: a naval start unit may use the cell when it is edge-connected sea; when the map has no edge-connected water at all,
+    /// any water will do (the best available: the ship is never left out, so the player always has a unit and can be defeated).</summary>
+    private static bool SeaOk(ref bool[]? edgeSea, Simulation sim, CellCoord c)
+    {
+        edgeSea ??= EdgeConnectedSea(sim);
+        if (edgeSea[c.Y * sim.Setup.Map.Width + c.X]) return true;
+        return Array.IndexOf(edgeSea, true) < 0;
     }
 
     /// <summary>Naval-passable cells connected (8-way) to a naval-passable cell on the map edge (M13-01): the water a supply tender can reach.</summary>
