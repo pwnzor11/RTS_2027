@@ -25,6 +25,11 @@ public enum CommandKind : byte
     /// Upgrade included), Arg2 = 1 to hold, 0 to resume. A held item makes no progress and spends no credits; cancelling it refunds what was
     /// spent. Ignored when the lane is empty. Never sent by the AI.</summary>
     Hold = 25,
+    /// <summary>S19 D-205 (FAD-05): fire at a ground cell. Subject = a vehicle or soldier (Arg low byte = its <see cref="ActorKind"/>),
+    /// Cell = the aim point. The unit closes to weapon range and fires at the cell until given another order (the classic force-fire);
+    /// it is how a Decon Truck cleans bare hot ground. Refused for an anti-air-only weapon, an unarmed unit or an off-map cell.
+    /// Never sent by the AI.</summary>
+    AttackGround = 26,
 }
 
 /// <summary>

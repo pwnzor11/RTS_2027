@@ -324,6 +324,7 @@ public sealed partial class Simulation
             case CommandKind.Attack:
             case CommandKind.AttackMove:
             case CommandKind.Guard:
+            case CommandKind.AttackGround:   // S19 (FAD-05)
                 if (c.Kind != CommandKind.Attack && !InMap(c.Cell)) break;
                 ApplyCombatCommand(c);     // Simulation.Combat.cs (M1-09)
                 break;
@@ -363,7 +364,7 @@ public sealed partial class Simulation
     private bool IsOrderToCarriedUnit(Command c)
     {
         if (c.Kind is not (CommandKind.Move or CommandKind.Stop or CommandKind.Scatter or CommandKind.Attack or CommandKind.AttackMove
-            or CommandKind.Guard or CommandKind.Enter)) return false;
+            or CommandKind.Guard or CommandKind.Enter or CommandKind.AttackGround)) return false;
         if (StoreOf((ActorKind)(c.Arg & 0xFF)) is not { } store || !store.Slots.IsAlive(c.Subject)) return false;
         return ActorLayers.IsCarried(_tunnels.LayerOf((ActorKind)(c.Arg & 0xFF), c.Subject.Index));
     }
@@ -652,6 +653,7 @@ public sealed partial class Simulation
         store.Status[i] = MissionStatus.Init;
         store.WakeTick[i] = 0;
         store.Target[i] = store.NextTarget[i];
+        if (m == MissionKind.AttackGround) store.Destination[i] = LeptonCoord.CenterOf(store.NextCell[i]);   // S19 (FAD-05): the aim point
         if (m == MissionKind.Move)
             store.Destination[i] = kind == ActorKind.Infantry
                 ? InfantryStore.SlotPosition(store.NextCell[i], _infantry.SubSlot[i])

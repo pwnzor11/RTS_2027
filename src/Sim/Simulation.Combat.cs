@@ -414,6 +414,16 @@ public sealed partial class Simulation
                 Queue(store!, i, MissionKind.Attack, default, c.Target);
                 break;
             }
+            case CommandKind.AttackGround:
+            {
+                // S19 (FAD-05): mobile units only; an unarmed unit, an anti-air-only or submerged-only weapon or an off-map cell is refused.
+                if (kind > ActorKind.Infantry || !InMap(c.Cell) || WeaponOf(kind, i) < 0) return;
+                WeaponTargets wt = RulesOf(c.Player).Weapons[WeaponOf(kind, i)].Targets;
+                if (wt is WeaponTargets.Air or WeaponTargets.Submerged) return;
+                e.AttackTarget = default;
+                Queue(store!, i, MissionKind.AttackGround, c.Cell, default);
+                break;
+            }
             case CommandKind.AttackMove:
                 if (!InMap(c.Cell)) return;
                 e.GuardPoint = c.Cell; e.GuardPending = true; e.AttackTarget = default;

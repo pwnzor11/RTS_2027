@@ -144,6 +144,7 @@ public static class GameKeys
             A(GameAction.Group6), A(GameAction.Group7), A(GameAction.Group8), A(GameAction.Group9),
             F(Orders, "Right click", "Move, attack, enter, salvage; set a factory's rally point"),
             F(Orders, "Left click (attack-move armed)", "Attack-move to the cell"),
+            F(Orders, "Ctrl + right click", "Attack ground: fire at the cell (a Decon Truck cleans it, a Foam Layer foams it)"),
             A(GameAction.AttackMove), A(GameAction.Stop), A(GameAction.Guard), A(GameAction.Scatter), A(GameAction.Deploy), A(GameAction.Pack),
             A(GameAction.TabStructures), A(GameAction.TabDefences), A(GameAction.TabInfantry), A(GameAction.TabVehicles),
             A(GameAction.TabUpgrades), A(GameAction.TabAircraft),

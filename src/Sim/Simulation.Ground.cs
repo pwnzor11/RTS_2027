@@ -205,6 +205,24 @@ public sealed partial class Simulation
         return still >= StealthDelayFor(kind, i);
     }
 
+    /// <summary>Radiation level at which an attack-ground Ash Sower considers a cell sown (ASSUMED, S19): stops it killing itself on an
+    /// endless order.</summary>
+    private const int SownRadiation = 128;
+
+    /// <summary>S19 (FAD-05): true when a ground-effect weapon (damage 0: decon, foam, sow, blackout) has done its job on the cell, so an
+    /// attack-ground order with it can end: decon = cell clean, foam = foamed, sow = radiation at <see cref="SownRadiation"/>, blackout = under cloud.
+    /// A weapon that deals damage never ends by itself.</summary>
+    internal bool GroundEffectDone(byte owner, WeaponType w, CellCoord cell)
+    {
+        if (w.Damage > 0 || !_ground.Contains(cell)) return false;
+        WarheadType wh = RulesOf(owner).Warheads[w.Warhead];
+        if (wh.Decontaminate > 0) return _ground.RadiationAt(cell) == 0;
+        if (wh.FoamTicks > 0) return IsFoamed(cell);
+        if (wh.Contaminate > 0) return _ground.RadiationAt(cell) >= SownRadiation;
+        if (wh.BlackoutTicks > 0) return _ground.BlackoutAt(cell) > 0;
+        return false;
+    }
+
     /// <summary>S19 FAD-19: a building whose type needs power and whose owner is at a low-power band does nothing (Searchlight sight,
     /// Broadcast Mast jam), like an unpowered turret holding fire. Mobile actors are never unpowered.</summary>
     private bool IsUnpowered(ActorKind kind, int i) =>

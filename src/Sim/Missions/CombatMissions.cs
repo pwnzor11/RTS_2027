@@ -81,6 +81,29 @@ internal static class CombatMissions
         return 1;
     }
 
+    /// <summary>S19 (FAD-05): fire at the ground cell the mission was given (<c>Destination</c>), closing in when out of range.</summary>
+    public static int HandleAttackGround(Simulation sim, MobileStore store, ActorKind kind, int i)
+    {
+        ref CombatEntry e = ref sim.CombatData.At(kind, i);
+        if (store.Status[i] == MissionStatus.Init) { store.Status[i] = MissionStatus.Waiting; e.RetargetTick = 0; e.AttackTarget = default; }
+        int weapon = sim.WeaponOf(kind, i);
+        if (weapon < 0) { ToGuard(sim, store, kind, i); return 1; }
+        WeaponType w = sim.RulesOf(store.Player[i]).Weapons[weapon];
+        LeptonCoord pos = store.Position[i];
+        LeptonCoord tp = store.Destination[i];
+        if (sim.GroundEffectDone(store.Player[i], w, tp.ToCell())) { ToGuard(sim, store, kind, i); return 1; }
+        int dist = LeptonMath.Distance(pos, tp);
+        if (dist > w.Range)
+        {
+            if (sim.Tick >= e.RetargetTick) { e.ChaseCell = tp.ToCell(); e.RetargetTick = sim.Tick + ChaseRetargetTicks; }
+            MoveMission.StepToward(sim, store, kind, i, e.ChaseCell);
+            return 1;
+        }
+        if (dist < w.MinRange) return 1;
+        if (sim.Aim(store, kind, i, tp) && e.ReloadTicks == 0) sim.Fire(kind, i, weapon, default, tp);
+        return 1;
+    }
+
     public static int HandleAttackMove(Simulation sim, MobileStore store, ActorKind kind, int i)
     {
         ref CombatEntry e = ref sim.CombatData.At(kind, i);

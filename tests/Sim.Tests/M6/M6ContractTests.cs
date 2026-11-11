@@ -33,9 +33,9 @@ public sealed class M6ContractTests
         Assert.True(RuleCounts.IsPlayable(Faction.Expedition));   // M7-14
         Assert.False(RuleCounts.IsPlayable(Faction.Neutral));
         Assert.Equal(24, (int)CommandKind.Pack);
-        Assert.Equal(26, Enum.GetValues<CommandKind>().Length);   // S15: Hold = 25
+        Assert.Equal(27, Enum.GetValues<CommandKind>().Length);   // S15: Hold = 25; S19: AttackGround = 26
         Assert.Equal((16, 17, 18), ((int)MissionKind.Salvage, (int)MissionKind.Pack, (int)MissionKind.Withdraw));
-        Assert.Equal(23, Enum.GetValues<MissionKind>().Length);   // M7-02 appended Unload..ConvoySail
+        Assert.Equal(24, Enum.GetValues<MissionKind>().Length);   // M7-02 appended Unload..ConvoySail; S19 AttackGround = 23
         Assert.Equal(Faction.LeftBehind, SimRules.FactionFromId("lb_mother_rig"));
     }
 
