@@ -503,7 +503,18 @@ internal static class MoveMission
         // waited long enough
         store.BlockedTicks[i] = 0;
         int stuck = ++store.StuckCount[i];
-        if (stuck > MaxStuck) { arrived = settle; return 1; }
+        if (stuck > MaxStuck)
+        {
+            arrived = settle;
+            if (settle) return 1;
+            // M13-05 (S18 SP-03, StepToward half): a caller that does not settle used to get 1 here on every later cycle, never a detour
+            // or a repath, so two harvesters head-on at a dock waited for each other for good. Report "no way from here" instead
+            // (callers pick another field, re-queue at the dock or retry) and start counting afresh with a new route.
+            store.StuckCount[i] = 0;
+            store.PathCells[i] = null;
+            store.PathPos[i] = 0;
+            return WaitTicks;
+        }
         if (n == goal)
         {
             // The final cell is taken: keep waiting while its occupant is itself on the move (or was just asked to move),
