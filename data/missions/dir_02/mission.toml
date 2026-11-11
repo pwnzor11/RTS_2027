@@ -14,7 +14,7 @@ next = "dir_03"
 locale = "locale.toml"
 
 [starts_with]
-tech = ["dir_reactor_vent", "dir_muster_hatch", "dir_hatch", "dir_pillbox", "dir_conscript", "dir_ashthrower", "dir_sapper", "dir_smelter_vent", "dir_assembly_bore", "dir_scraper", "dir_rocket_truck"]
+tech = ["dir_reactor_vent", "dir_muster_hatch", "dir_hatch", "dir_pillbox", "dir_conscript", "dir_ashthrower", "dir_sapper", "dir_smelter_vent", "dir_assembly_bore", "dir_scraper", "dir_rocket_truck", "dir_bore_head", "dir_bunk_gallery"]
 
 [unlocks_on_win]
 tech = ["dir_isotope_works", "dir_mole", "dir_rocket_nest"]
@@ -25,7 +25,7 @@ name = "Directorate"
 role = "human"
 team = 0
 cash = 6000
-tech = ["dir_reactor_vent", "dir_muster_hatch", "dir_hatch", "dir_pillbox", "dir_conscript", "dir_ashthrower", "dir_sapper", "dir_smelter_vent", "dir_assembly_bore", "dir_scraper", "dir_rocket_truck"]
+tech = ["dir_reactor_vent", "dir_muster_hatch", "dir_hatch", "dir_pillbox", "dir_conscript", "dir_ashthrower", "dir_sapper", "dir_smelter_vent", "dir_assembly_bore", "dir_scraper", "dir_rocket_truck", "dir_bore_head", "dir_bunk_gallery"]
 
 [[players]]
 slot = 1

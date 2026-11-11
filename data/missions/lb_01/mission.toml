@@ -14,7 +14,7 @@ next = "lb_02"
 locale = "locale.toml"
 
 [starts_with]
-tech = ["lb_mother_rig", "lb_dynamo_rig", "lb_muster_rig", "lb_yard", "lb_scavenger", "lb_hook_runner", "lb_slinger", "lb_spike_nest"]
+tech = ["lb_mother_rig", "lb_dynamo_rig", "lb_muster_rig", "lb_yard", "lb_scavenger", "lb_hook_runner", "lb_slinger", "lb_spike_nest", "lb_still_rig"]
 
 [unlocks_on_win]
 tech = ["lb_garage_rig"]
@@ -26,7 +26,7 @@ role = "human"
 team = 0
 cash = 2000
 # Only these may be built (production chain prerequisites still apply). The script can Tech.Grant more.
-tech = ["lb_mother_rig", "lb_dynamo_rig", "lb_muster_rig", "lb_yard", "lb_scavenger", "lb_hook_runner", "lb_slinger", "lb_spike_nest"]
+tech = ["lb_mother_rig", "lb_dynamo_rig", "lb_muster_rig", "lb_yard", "lb_scavenger", "lb_hook_runner", "lb_slinger", "lb_spike_nest", "lb_still_rig"]
 
 # The Authority convoy is driven by the script only (role "neutral" keeps the AI off the scrapers).
 [[players]]

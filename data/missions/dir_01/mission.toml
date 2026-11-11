@@ -14,7 +14,7 @@ next = "dir_02"
 locale = "locale.toml"
 
 [starts_with]
-tech = ["dir_reactor_vent", "dir_muster_hatch", "dir_hatch", "dir_pillbox", "dir_conscript", "dir_ashthrower"]
+tech = ["dir_reactor_vent", "dir_muster_hatch", "dir_hatch", "dir_pillbox", "dir_conscript", "dir_ashthrower", "dir_bore_head"]
 
 [unlocks_on_win]
 tech = ["dir_sapper"]
@@ -25,7 +25,7 @@ name = "Directorate"
 role = "human"
 team = 0
 cash = 3000
-tech = ["dir_reactor_vent", "dir_muster_hatch", "dir_hatch", "dir_pillbox", "dir_conscript", "dir_ashthrower"]
+tech = ["dir_reactor_vent", "dir_muster_hatch", "dir_hatch", "dir_pillbox", "dir_conscript", "dir_ashthrower", "dir_bore_head"]
 
 [[players]]
 slot = 1

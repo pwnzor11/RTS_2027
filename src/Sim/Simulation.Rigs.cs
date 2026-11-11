@@ -113,6 +113,30 @@ public sealed partial class Simulation
             int from = _rigs.PackedFrom[v] - 1;
             if (from < rules.Buildings.Count && rules.Buildings[from].Produces == category) return true;
         }
+        return _players.Faction[player] == Faction.LeftBehind && RootRigDown(player, rules);   // M13-09 (D-102)
+    }
+
+    /// <summary>M13-09 (D-102: a packed rig cannot produce): true when a Left Behind player's conyard-root rig (a packable building with no
+    /// prerequisites, the Mother Rig) is packing or packed and no root rig of theirs stands unpacked. Shipped data gives no building
+    /// <c>Produces</c> = Structure or Defence, so the structure and defence lanes are tied to the root rig instead.</summary>
+    private bool RootRigDown(byte player, SimRules rules)
+    {
+        bool packing = false;
+        for (int i = 1; i < _buildings.Capacity; i++)
+        {
+            if (!_buildings.Slots.IsIndexAlive(i) || _buildings.Player[i] != player) continue;
+            BuildingType bt = BuildingTypeAt(i);
+            if (bt.PacksInto < 0 || bt.Prerequisites.Count != 0) continue;
+            if (_rigs.PackTicksLeft[i] == 0) return false;
+            packing = true;
+        }
+        if (packing) return true;
+        for (int v = 1; v < _units.Capacity; v++)
+        {
+            if (!_units.Slots.IsIndexAlive(v) || _units.Player[v] != player || !_rigs.IsPackedRig(v)) continue;
+            int from = _rigs.PackedFrom[v] - 1;
+            if (from < rules.Buildings.Count && rules.Buildings[from].PacksInto >= 0 && rules.Buildings[from].Prerequisites.Count == 0) return true;
+        }
         return false;
     }
 

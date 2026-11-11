@@ -15,7 +15,7 @@ locale = "locale.toml"
 
 # lb_01 kit + the Garage Rig it unlocked (and the vehicles that make a garage worth building) + the Lookout, the tier-2 gate that lets slingers be trained.
 [starts_with]
-tech = ["lb_mother_rig", "lb_dynamo_rig", "lb_muster_rig", "lb_yard", "lb_scavenger", "lb_hook_runner", "lb_slinger", "lb_spike_nest", "lb_garage_rig", "lb_buggy", "lb_gleaner", "lb_lookout"]
+tech = ["lb_mother_rig", "lb_dynamo_rig", "lb_muster_rig", "lb_yard", "lb_scavenger", "lb_hook_runner", "lb_slinger", "lb_spike_nest", "lb_garage_rig", "lb_buggy", "lb_gleaner", "lb_lookout", "lb_still_rig", "lb_hauler"]
 
 # Tier-2 gear for act 3: the Tinker's Bench, the harpoon wagon, tinkers and brutes.
 [unlocks_on_win]
@@ -27,7 +27,7 @@ name = "The Drift"
 role = "human"
 team = 0
 cash = 2400
-tech = ["lb_mother_rig", "lb_dynamo_rig", "lb_muster_rig", "lb_yard", "lb_scavenger", "lb_hook_runner", "lb_slinger", "lb_spike_nest", "lb_garage_rig", "lb_buggy", "lb_gleaner", "lb_lookout"]
+tech = ["lb_mother_rig", "lb_dynamo_rig", "lb_muster_rig", "lb_yard", "lb_scavenger", "lb_hook_runner", "lb_slinger", "lb_spike_nest", "lb_garage_rig", "lb_buggy", "lb_gleaner", "lb_lookout", "lb_still_rig", "lb_hauler"]
 
 # The Authority posts and the reprisal column are driven by the script only (role "neutral" keeps the AI off them).
 [[players]]
