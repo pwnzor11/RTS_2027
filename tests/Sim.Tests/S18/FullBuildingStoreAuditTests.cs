@@ -107,43 +107,48 @@ public sealed class FullBuildingStoreAuditTests
 
     // ---- SIM-RULES-03 --------------------------------------------------------------------------
 
-    // S18 audit: pins current behaviour of SIM-RULES-03; flip the assertion when fixed.
-    [Theory]
-    [InlineData(0)]
-    [InlineData(-1)]
-    public void Audit_ReadyStructure_CannotBeCancelledOrRefunded_AndBlocksItsLane(int cancelPosition)
+    // M13-06 (D-205): the former Audit_ pins are inverted; the ready item is cancelled with Arg2 = -1, position 0 is only the queue front.
+    [Fact]
+    public void ReadyStructure_CancelledWithMinusOne_RefundsInFull_AndFreesTheLane()
     {
         Simulation sim = ProductionFixture.Base();
         int power = ProductionFixture.Bld("test_power"), barracks = ProductionFixture.Bld("test_barracks");
+        int before = sim.Players.Cash[0];
         sim.Step(new[] { ProductionFixture.Build(sim, Structure, power) });
         ProductionFixture.RunUntil(sim, () => sim.Production.ReadyType(0, Structure) == power);
-        int cash = sim.Players.Cash[0];
-        sim.Step(new[] { ProductionFixture.Cancel(sim, Structure, cancelPosition) });
-        Assert.Equal(power, sim.Production.ReadyType(0, Structure));        // still ready
-        Assert.Equal(cash, sim.Players.Cash[0]);                            // nothing refunded
+        sim.Step(new[] { ProductionFixture.Cancel(sim, Structure, Simulation.ReadyCancelPosition) });
+        Assert.Equal(before, sim.Players.Cash[0]);
+        Assert.Equal(QueueBlockReason.None, sim.QueueBlockReason(0, Structure, barracks));
         sim.Step(new[] { ProductionFixture.Build(sim, Structure, barracks) });
-        Assert.Equal(0, sim.Production.QueueLength(0, Structure));          // and the lane accepts nothing new
-        Assert.Equal(QueueBlockReason.StructureWaiting, sim.QueueBlockReason(0, Structure, barracks));
-        ProductionFixture.Run(sim, 2000);                                   // 100 s later: unchanged, it never times out
-        Assert.Equal(power, sim.Production.ReadyType(0, Structure));
-        Assert.Equal(cash, sim.Players.Cash[0]);
+        Assert.Equal(1, sim.Production.QueueLength(0, Structure));
     }
 
-    // S18 audit: pins current behaviour of SIM-RULES-03; flip the assertion when fixed.
     [Fact]
-    public void Audit_QueuedItemBehindAReadyStructure_IsCancelledInstead_WhenCancelPositionZeroIsSent()
+    public void CancelPositionZero_WithAReadyStructure_CancelsOnlyTheQueueFront_NeverTheReadyItem()
     {
         Simulation sim = ProductionFixture.Base();
         int power = ProductionFixture.Bld("test_power"), barracks = ProductionFixture.Bld("test_barracks");
         sim.Step(new[] { ProductionFixture.Build(sim, Structure, power), ProductionFixture.Build(sim, Structure, barracks) });
         ProductionFixture.RunUntil(sim, () => sim.Production.ReadyType(0, Structure) == power);
-        Assert.Equal(1, sim.Production.QueueLength(0, Structure));
+        int cash = sim.Players.Cash[0];
         sim.Step(new[] { ProductionFixture.Cancel(sim, Structure, 0) });
-        Assert.Equal(0, sim.Production.QueueLength(0, Structure));          // the waiting barracks went
+        Assert.Equal(0, sim.Production.QueueLength(0, Structure));
         Assert.Equal(power, sim.Production.ReadyType(0, Structure));        // the finished plant stays
+        Assert.Equal(cash, sim.Players.Cash[0]);                            // the waiting barracks had paid nothing
+        sim.Step(new[] { ProductionFixture.Cancel(sim, Structure, Simulation.ReadyCancelPosition) });
+        Assert.Equal(-1, sim.Production.ReadyType(0, Structure));
     }
 
-    [Fact(Skip = "S18 SIM-RULES-03: awaiting owner decision")]
+    [Fact]
+    public void ReadyCancel_WithNothingReady_OrOnAUnitLane_IsIgnored()
+    {
+        Simulation sim = ProductionFixture.Base();
+        int cash = sim.Players.Cash[0];
+        sim.Step(new[] { ProductionFixture.Cancel(sim, Structure, Simulation.ReadyCancelPosition), ProductionFixture.Cancel(sim, Infantry, Simulation.ReadyCancelPosition) });
+        Assert.Equal(cash, sim.Players.Cash[0]);
+    }
+
+    [Fact]
     public void Desired_ReadyStructure_CanBeCancelledForARefund()
     {
         Simulation sim = ProductionFixture.Base();
