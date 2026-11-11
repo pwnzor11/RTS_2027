@@ -178,4 +178,15 @@ script's callbacks run first, `Mission.Win` on that tick makes the outcome Won, 
 skips a callback. `Trigger.OnAllDestroyed` and `Actor.Count` already saw a health-0 actor as gone. `Trigger.OnDestroyed` did not (an actor stays resolvable until cleanup,
 so it fired one tick late, after the game was already over); since M8-17 it also counts health 0 as destroyed. What is NOT safe: polling
 (`Trigger.Every`) for the end, since the elimination tick may fall between polls and the game then ends with the sim's own win. Use `OnDestroyed` /
-`OnAllDestroyed` for the final win. A mission that must outlive its enemy team's elimination still needs a hidden enemy actor.
+`OnAllDestroyed` for the final win.
+
+**A dying actor is gone (S18, MIS-03).** An actor whose health reached 0 this tick counts as destroyed everywhere in the API, even though the sim
+removes it only in cleanup, after the script callbacks: `Actor.Alive(tag)` is false, `Actor.Cell(tag)` is nil, `Trigger.OnDestroyed` fires, and an
+objective marker that targets it points nowhere. So inside an actor's own `OnDestroyed` callback, `Actor.Alive` of that tag is already false, and
+two actors that die on the same tick both read as dead in both callbacks.
+
+**What ends a mission (S18, MIS-01 / MIS-05).** The game screen ends a scripted mission when the script calls `Mission.Win` / `Mission.Lose`, or
+when the human player is defeated (lost every building). The sim's own elimination rule alone does not end it: an enemy team that loses its
+last building is marked defeated (its orders stop), but the mission goes on until the script decides; and after `Mission.Lose(0)` the mission
+ends even if a third team is still alive. Only a script that has halted on a fatal error falls back to the sim's rule. An anchor building is
+therefore no longer needed to keep a mission alive, though a defeated enemy's units no longer obey orders or the AI.
