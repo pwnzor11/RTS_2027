@@ -243,6 +243,7 @@ public sealed class GameScreen : IScreen
             mission.EndOnMission(game);
             mission._gameOverOverride = campaign?.GameOver;
             mission._lastAutosaveTick = loaded.Header.Tick;   // D-205
+            mission._groups.Restore(loaded.Header.ControlGroups);
             return mission;
         }
 
@@ -250,6 +251,7 @@ public sealed class GameScreen : IScreen
         var screen = new GameScreen(services, sim, settings, () => CreateSkirmish(services, settings), skirmishMode: true);
         screen.IsGameOver = () => sim.Sim.GameOver;
         screen._lastAutosaveTick = loaded.Header.Tick;   // D-205: a loaded game waits a full interval for its first autosave
+        screen._groups.Restore(loaded.Header.ControlGroups);   // D-205
         return screen;
     }
 
@@ -626,7 +628,7 @@ public sealed class GameScreen : IScreen
 
     // What Save game writes to: only a skirmish or mission (the sandbox has no save header).
     private GameSaveTarget? SaveTarget() =>
-        _sim is { SaveTemplate: { } template } ? new GameSaveTarget(new SaveCatalog(_s.SaveRoot ?? SaveCatalog.DefaultRoot), template, _sim.Host, _s.RulesDir) : null;
+        _sim is { SaveTemplate: { } template } ? new GameSaveTarget(new SaveCatalog(_s.SaveRoot ?? SaveCatalog.DefaultRoot), template, _sim.Host, _s.RulesDir, _groups.Snapshot) : null;   // D-205: groups are saved
 
     // ---- D-205 (S18 GS-06): quicksave / quickload keys, single-player autosave, and the one-line toast they report with ----
     private readonly GameToast _toast = new();

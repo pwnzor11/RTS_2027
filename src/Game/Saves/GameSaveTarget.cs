@@ -2,6 +2,7 @@
 // Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
 using Rts.Game.Host;
 using Rts.Game.Menu;
+using Rts.Game.Sandbox;
 
 namespace Rts.Game.Saves;
 
@@ -12,14 +13,18 @@ public sealed class GameSaveTarget
     private readonly GameSaveHeader _template;
     private readonly SimHost _host;
     private readonly string _rulesDir;
+    private readonly Func<IReadOnlyList<IReadOnlyList<UnitKey>>>? _controlGroups;
 
     /// <summary>Creates the target.</summary>
     /// <param name="catalog">The save folders.</param>
     /// <param name="template">The game's fixed header (see <see cref="GameSaver.Capture"/>).</param>
     /// <param name="host">The host whose simulation and command queue are saved.</param>
     /// <param name="rulesDir">The data/rules directory (its files are embedded in the save).</param>
-    public GameSaveTarget(SaveCatalog catalog, GameSaveHeader template, SimHost host, string rulesDir)
+    /// <param name="controlGroups">Reads the player's control groups at save time (D-205); null = none are saved.</param>
+    public GameSaveTarget(SaveCatalog catalog, GameSaveHeader template, SimHost host, string rulesDir,
+        Func<IReadOnlyList<IReadOnlyList<UnitKey>>>? controlGroups = null)
     {
+        _controlGroups = controlGroups;
         _catalog = catalog;
         _template = template;
         _host = host;
@@ -40,7 +45,7 @@ public sealed class GameSaveTarget
     {
         try
         {
-            GameSaver.Save(_catalog, _template, _host, _rulesDir, slotName);
+            GameSaver.Save(_catalog, _template, _host, _rulesDir, slotName, _controlGroups?.Invoke());
             return null;
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException)
