@@ -44,24 +44,7 @@ public sealed class RigUnpackAuditTests
         Assert.Equal(Lookout, s.Buildings.TypeIndex[b.Index]);
     }
 
-    // S18 audit: pins current behaviour of SIM-RULES-07; flip the assertion when fixed.
     [Fact]
-    public void Audit_LookoutRig_NextToABuilding_IsAcceptedByTheOrderThenDroppedByTheMission()
-    {
-        var (s, rig) = PackedLookout(neighbour: true);
-        Assert.True(s.UnpackSiteOk(0, Lookout, Site, rig.Index));         // the 1x1 site itself is legal
-        Assert.False(s.UnpackSiteOk(0, Mother, Site, rig.Index));         // a 3x3 there would overlap the barracks
-        OrderUnpack(s, rig);
-        Assert.Equal(new CellCoord(28, 30), s.Units.Position[rig.Index].ToCell());
-        for (int t = 0; t < 600; t++) s.Step(Array.Empty<Command>());
-        Assert.True(s.Units.Slots.IsAlive(rig));                          // still a packed vehicle
-        Assert.True(s.Map.BuildingAt(Site).IsNone);
-        Assert.Equal(new CellCoord(28, 30), s.Units.Position[rig.Index].ToCell());   // it never even set off
-        Assert.Equal(MissionKind.Guard, s.Units.Mission[rig.Index]);
-        Assert.Equal(0, s.Rigs.UnpackTicksLeft[rig.Index]);
-    }
-
-    [Fact(Skip = "S18 SIM-RULES-07: awaiting owner decision")]
     public void Desired_LookoutRig_NextToABuilding_Unpacks()
     {
         var (s, rig) = PackedLookout(neighbour: true);
