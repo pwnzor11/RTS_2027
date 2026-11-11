@@ -42,25 +42,9 @@ public sealed class DefeatAuditTests
     }
 
     [Fact]
-    public void Audit_ExpeditionWhoseCommandShipIsSunkBeforeDeploying_IsNeverDefeated_EvenWithNothingLeft()
-    {
-        // S18 audit: pins current behaviour of FACTION-LE-02 (case b); flip the assertion when fixed.
-        var (w, ship) = FounderOnly(Faction.Expedition);
-        w.Run(1);
-        w.Sim.Units.Health[ship.Index] = 0;       // the Command Ship is sunk on tick 1
-        w.Run(200);
-        KillEverythingOf(w.Sim, 0);               // then every last unit dies too
-        w.Run(LongEnough);
-
-        Assert.Equal(0, LiveActorsOf(w.Sim, 0));  // the player owns nothing at all
-        Assert.False(w.Sim.Players.Defeated[0]);
-        Assert.False(w.Sim.GameOver);             // the match cannot end
-    }
-
-    [Fact]
     public void Audit_LeftBehindWhosePackedRigDiesBeforeUnpacking_IsDefeatedAtOnce()
     {
-        // S18 audit: the comparison case for FACTION-LE-02: a packed rig counts as a base, a Command Ship does not.
+        // S18 audit: the comparison case for FACTION-LE-02: a packed rig counts as a base; since M13-02 a live Command Ship does too.
         var (w, rig) = FounderOnly(Faction.LeftBehind);
         w.Run(1);
         w.Sim.Units.Health[rig.Index] = 0;
@@ -92,7 +76,7 @@ public sealed class DefeatAuditTests
         Assert.False(w.Sim.GameOver);
     }
 
-    [Fact(Skip = "S18 FACTION-LE-02: awaiting owner decision")]
+    [Fact]
     public void Desired_ExpeditionWithNoFounderNoBuildingAndNoUnits_IsDefeated()
     {
         var (w, ship) = FounderOnly(Faction.Expedition);
@@ -125,24 +109,16 @@ public sealed class DefeatAuditTests
     }
 
     [Fact]
-    public void Audit_ExpeditionWithASecondCommandShipButNoBuilding_IsDefeatedAtOnce_WhileALeftBehindPackedRigKeepsItsPlayerAlive()
+    public void LeftBehindWithAPackedRigAndNoBuilding_IsNotDefeated()
     {
-        // S18 audit: pins current behaviour of FACTION-LE-19; flip the assertion when fixed.
-        var (exp, depot) = BaseAndSpareFounder(Faction.Expedition);
-        exp.Run(5);
-        Assert.False(exp.Sim.Players.Defeated[0]);
-        exp.Run(1, exp.Cmd(0, CommandKind.Debug, depot, default, default, (int)DebugOp.Kill, (int)ActorKind.Building));
-        exp.Run(3);
-        Assert.True(exp.Sim.Players.Defeated[0]);     // the live Command Ship does not count
-
         var (lb, rig) = BaseAndSpareFounder(Faction.LeftBehind);
         lb.Run(5);
         lb.Run(1, lb.Cmd(0, CommandKind.Debug, rig, default, default, (int)DebugOp.Kill, (int)ActorKind.Building));
         lb.Run(300);
-        Assert.False(lb.Sim.Players.Defeated[0]);     // the packed rig does
+        Assert.False(lb.Sim.Players.Defeated[0]);
     }
 
-    [Fact(Skip = "S18 FACTION-LE-19: awaiting owner decision")]
+    [Fact]
     public void Desired_ExpeditionWithALiveCommandShip_IsNotDefeatedWhenItsLastBuildingFalls()
     {
         var (exp, depot) = BaseAndSpareFounder(Faction.Expedition);
