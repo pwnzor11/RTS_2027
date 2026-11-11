@@ -39,6 +39,7 @@ Common argument kinds: `id` = 1-64 characters, no spaces. `fn` = global function
 | `Objective.Status(id)` | id | "active"/"completed"/"failed" | objective exists | implemented (M8-03) |
 | `Objective.SetTarget(id, target)` | id, then a zone name, an actor tag, or a cell table `{x=, y=}` | nil | objective exists; zone or tag known (a zone name wins over a tag); cell inside the map; replaces any earlier target | implemented (M11-05) |
 | `Objective.ClearTarget(id)` | id | nil | objective exists | implemented (M11-05) |
+| `Actor.Charged(tag)` | actor tag | boolean | tag known; true only for a standing superweapon building whose real charge is ready (false while a power loss pauses it); read-only | implemented (S19 MIS-18) |
 | `Mission.Timer(id, ticks, fn[, label])` | id, ticks 1..1e9, fn, optional HUD text | nil | fn global; label a string if given; the same id restarts the timer; expiry in creation order, once | implemented (M8-03) |
 | `Mission.TimerCancel(id)` | id | nil | id well-formed | implemented (M8-03) |
 | `Mission.TimerLeft(id)` | id | ticks left, or nil (unknown or already fired) | id well-formed | implemented (M8-03) |

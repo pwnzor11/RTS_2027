@@ -48,7 +48,8 @@ public sealed partial class MissionHost
             ("Alive", a => DynValue.NewBoolean(TryTag(Str(a, 0), out ActorRef r) && IsStanding(_sim!, r))),   // S18 MIS-03: health 0 is gone
             ("Count", a => { var (k, ix) = TypeFilter(a, 1); return Num(CountAlive(_sim!, (byte)PlayerArg(a, 0), ix, k)); }),
             ("CountInZone", ActorCountInZone),
-            ("Cell", ActorCellOf));
+            ("Cell", ActorCellOf),
+            ("Charged", ActorCharged));   // S19 MIS-18: read-only
 
         NewApiTable(s, "Reinforce", ("Edge", ReinforceEdge));
 
@@ -279,6 +280,17 @@ public sealed partial class MissionHost
         string? tag = a[3].Type is DataType.Nil or DataType.Void ? null : Str(a, 3);
         string made = SpawnActor(_sim!, type, PlayerArg(a, 1), CellArg(a, 2), tag);
         return DynValue.NewString(made);
+    }
+
+    /// <summary>S19 MIS-18: true when the tagged building is standing, is a superweapon and its real charge is ready (a power loss that paused the charge says false). Read-only.</summary>
+    private DynValue ActorCharged(CallbackArguments a)
+    {
+        string tag = KnownTag(a, 0);
+        if (!TryTag(tag, out ActorRef r) || r.Kind != ActorKind.Building || !IsStanding(_sim!, r)) return DynValue.False;
+        byte owner = _sim!.Buildings.Player[r.Id.Index];
+        foreach (SuperweaponView v in _sim.HudFor(owner).Superweapons)
+            if (v.Building == r.Id) return DynValue.NewBoolean(v.Ready);
+        return DynValue.False;
     }
 
     private DynValue ActorOrder(CallbackArguments a)

@@ -57,4 +57,27 @@ public sealed class MissionFixTests
         Assert.NotEqual(MissionOutcome.Won, m.Host.Outcome);
         Assert.NotEqual(ObjectiveStatus.Completed, m.Host.Objectives.Single(o => o.Id == "fire").Status);
     }
+
+    [Fact]
+    public void Mis18_Dir04_says_charged_only_when_the_devices_real_charge_is_ready()
+    {
+        MissionSession m = MissionSession.Create(TestData.DataDir, "dir_04");
+        var bot = new MissionBot(m);
+        bot.Idle(2900);
+        int type = Rts.Sim.Rules.SimRules.IndexOf(m.Sim.Setup.Rules.Buildings, "dir_sunrise", b => b.Id);
+        int device = -1;
+        for (int i = 1; i < m.Sim.Buildings.Capacity; i++)
+            if (m.Sim.Buildings.Slots.IsIndexAlive(i) && m.Sim.Buildings.Player[i] == 0 && m.Sim.Buildings.TypeIndex[i] == type) device = i;
+        Assert.True(device > 0);
+        m.Sim.Effects.BuildingCharge[device] = 1000;   // as if a power loss had paused the charge
+        bot.Idle(300);                                   // the 3050-tick timer has run out
+        Assert.Equal("false", TestAccess.StateValue(m.Host, "charged"));
+        Assert.NotEqual(ObjectiveStatus.Completed, m.Host.Objectives.Single(o => o.Id == "hold").Status);
+
+        m.Sim.Effects.BuildingCharge[device] = 1_000_000;   // the real charge is ready
+        bot.Idle(60);
+        Assert.Empty(m.Host.Errors);
+        Assert.Equal("true", TestAccess.StateValue(m.Host, "charged"));
+        Assert.Equal(ObjectiveStatus.Completed, m.Host.Objectives.Single(o => o.Id == "hold").Status);
+    }
 }

@@ -112,6 +112,11 @@ end
 -- The Device is charged: the player fires it (Special command at the Ash Ridge command).
 function Charged()
   if state.done then return end
+  -- The timer is only an estimate: a power loss pauses the real charge, so ask the Device (S19 MIS-18).
+  if not Actor.Charged("device") then
+    Trigger.AfterDelay(40, Charged)
+    return
+  end
   state.charged = true
   Objective.Complete("hold")
   Media.MessageKey("d4.charged")
