@@ -189,7 +189,7 @@ public sealed partial class Simulation
         CellCoord cell = PositionAt(kind, i).ToCell();
         if (layer is ActorLayer.Tunnel or ActorLayer.Passenger or ActorLayer.Garrisoned) return true;   // inside a network, a transport or a garrison (M4): never seen
         if (layer is ActorLayer.Burrowed or ActorLayer.Surfacing) return !IsSeismicRevealed(viewer, cell);
-        if (IsSubmergedShip(kind, i)) return !IsSonarRevealed(viewer, cell);   // M7-05
+        if (IsHiddenSub(kind, i)) return !IsSonarRevealed(viewer, cell);   // M7-05
         return IsStealthedNow(kind, i) && !IsStealthRevealed(viewer, cell);
     }
 }

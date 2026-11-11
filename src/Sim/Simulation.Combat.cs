@@ -238,7 +238,7 @@ public sealed partial class Simulation
         int rank = shooter.Id.IsNone ? 0 : RankOf(kind, i);   // VET-3: the shooter's rank at the moment of firing
         int damage = rank == 0 ? w.Damage : ScaleByRank(VetRules.DamagePermille, rank, w.Damage);
         if (w.ProjectileSpeed <= 0)
-            Detonate(owner, damage, w.Warhead, targetPoint, target, true, shooter);
+            Detonate(owner, damage, w.Warhead, targetPoint, target, true, shooter, w.Targets);
         else
         {
             if (!_projectiles.HasFree) return false;
@@ -249,6 +249,8 @@ public sealed partial class Simulation
         if (kind != ActorKind.Building) e.ReloadTicks = Math.Max(1, (int)((long)e.ReloadTicks * _effects.RofPermille(kind, i) / 1000));   // M3-06: aura rate of fire
         if (rank > 0) e.ReloadTicks = Math.Max(1, ScaleByRank(VetRules.ReloadPermille, rank, e.ReloadTicks));   // VET-3: faster reload
         if (!shooter.Id.IsNone) MarkCombat(kind, i);   // VET-3: self-heal waits after a shot
+        if (kind == ActorKind.Vehicle) { _effects.VehicleStill[i] = 0; if (_naval.Submerged[i]) _naval.RevealLeft[i] = SubRevealTicks; }   // D-205 (SIM-RULES-04): firing always breaks stealth, whatever the reload; (LE-05): a dived sub that fires is seen
+        else if (kind == ActorKind.Infantry) _effects.InfantryStill[i] = 0;
         return true;
     }
 
@@ -258,6 +260,7 @@ public sealed partial class Simulation
     public static int ComputeDamage(int damage, WarheadType warhead, ArmorClass armor)
     {
         int pct = (int)armor < warhead.VersusPercent.Count ? warhead.VersusPercent[(int)armor] : 100;
+        if (damage <= 0) return 0;   // D-205 (FAD-13): a damage-0 warhead deals 0, not the minimum 1
         int d = (int)((long)damage * pct / 100);
         return d < 1 ? 1 : d;
     }
@@ -266,6 +269,7 @@ public sealed partial class Simulation
     private void Hurt(ActorKind kind, int i, int damage, WarheadType wh, bool half, byte source, ActorRef shooter = default)
     {
         int d = ComputeDamage(damage, wh, ArmorAt(kind, i));
+        if (d <= 0) return;   // D-205 (FAD-13)
         if (kind == ActorKind.Building && wh.BonusVsEntrancePercent != 100 && BuildingTypeAt(i).Entrance != TunnelSize.None)
             d = Math.Max(1, (int)((long)d * wh.BonusVsEntrancePercent / 100));   // M4-05: bonus vs tunnel entrances
         if (wh.BonusVsIrradiatedPercent != 100 && IsIrradiatedTarget(kind, i)) d = Math.Max(1, (int)((long)d * wh.BonusVsIrradiatedPercent / 100));   // M3-05
@@ -336,7 +340,7 @@ public sealed partial class Simulation
     /// (Chebyshev; buildings by nearest footprint cell) takes full damage at distance 0 and half (min 1) otherwise.
     /// Eligible = not owned by <paramref name="owner"/> or its allies, unless the warhead HitsAllies (Neutral actors are always eligible).
     /// </summary>
-    internal void Detonate(byte owner, int damage, int warheadIndex, LeptonCoord impact, ActorRef primary, bool instant, ActorRef shooter = default)
+    internal void Detonate(byte owner, int damage, int warheadIndex, LeptonCoord impact, ActorRef primary, bool instant, ActorRef shooter = default, WeaponTargets targets = WeaponTargets.Both)
     {
         WarheadType wh = RulesOf(owner).Warheads[warheadIndex];
         ApplyWarheadGround(wh, impact.ToCell(), wh.Splash < 0 ? 0 : wh.Splash);   // M3-05: contaminate / decontaminate / Blackout
@@ -368,9 +372,13 @@ public sealed partial class Simulation
                     // hit by warheads with hits_burrowed.
                     ActorLayer layer = _tunnels.LayerOf(kind, i);
                     if (layer == ActorLayer.Garrisoned || SplashSparesSubmerged(kind, i, primary)) continue;   // M7-05
+                    if (layer == ActorLayer.Passenger || layer == ActorLayer.Tunnel) continue;   // D-205 (SIM-RULES-05): riders, docked aircraft and tunnel transit are spared like every other area effect
+                    // D-205 (FAD-06): splash respects air / ground (the shooter itself is exempt, so the Kite's own bomb still catches the Kite: LE-14 stays as it was). An anti-air burst (Air) hurts aircraft only; every other splash except Both spares aircraft.
+                    if (targets != WeaponTargets.Both && !(shooter.Kind == kind && shooter.Id.Index == i && shooter.Id == IdAt(kind, i)) && IsAirUnit(kind, i) != (targets == WeaponTargets.Air)) continue;
                     if ((layer == ActorLayer.Burrowed || layer == ActorLayer.Surfacing) && !wh.HitsBurrowed) continue;
                 }
                 if (!wh.HitsAllies && IsFriendly(owner, PlayerAt(kind, i))) continue;
+                if (kind == ActorKind.Building && targets == WeaponTargets.Air) continue;   // D-205 (FAD-06): flak never hurts buildings
                 int d;
                 if (kind == ActorKind.Building)
                 {
@@ -495,8 +503,9 @@ public sealed partial class Simulation
                 byte owner = p.Owner[i];
                 int damage = p.Damage[i], warhead = p.Warhead[i];
                 ActorRef target = p.Target[i], shooter = p.Shooter[i];
+                WeaponTargets targets = RulesOf(owner).Weapons[p.Source[i]].Targets;
                 p.Free(id);   // free first: detonation never sees its own slot
-                Detonate(owner, damage, warhead, dest, target, false, shooter);
+                Detonate(owner, damage, warhead, dest, target, false, shooter, targets);
                 continue;
             }
             p.Position[i] = new LeptonCoord(pos.X + (int)RoundDiv(dx * speed, remaining), pos.Y + (int)RoundDiv(dy * speed, remaining));

@@ -347,8 +347,8 @@ public readonly struct PlayerView
                 dest.Add(new ViewActor(s.Slots.IdOf(i), kind, owner, RelationOf(owner), type, cell, s.Position[i], s.Health[i],
                     max, MissionKind.None, false, EntityId.None, false, 1, 1)
                 {
-                    Underground = underground, Stealthed = stealthed, Rank = _sim.RankOf(kind, i), Submerged = _sim.IsSubmergedShip(kind, i),
-                    Revealed = !friendly && (underground || stealthed || _sim.IsSubmergedShip(kind, i)),   // listed although hidden-capable: revealed
+                    Underground = underground, Stealthed = stealthed, Rank = _sim.RankOf(kind, i), Submerged = _sim.IsHiddenSub(kind, i),   // D-205: a dived sub that just fired draws surfaced and can be clicked
+                    Revealed = !friendly && (underground || stealthed || _sim.IsHiddenSub(kind, i)),   // listed although hidden-capable: revealed
                 });
             }
         }

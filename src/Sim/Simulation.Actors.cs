@@ -81,7 +81,7 @@ public sealed partial class Simulation
         SimRules r = RulesOf(PlayerAt(kind, i));
         return kind switch
         {
-            ActorKind.Vehicle => r.Vehicles[_units.TypeIndex[i]].Armor,
+            ActorKind.Vehicle => IsHiddenSub(kind, i) ? ArmorClass.Submerged : r.Vehicles[_units.TypeIndex[i]].Armor,   // D-205 (LE-06): submerged armour only while dived and unseen
             ActorKind.Infantry => r.Infantry[_infantry.TypeIndex[i]].Armor,
             _ => r.Buildings[_buildings.TypeIndex[i]].Armor,
         };

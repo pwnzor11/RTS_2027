@@ -21,27 +21,27 @@ public sealed class MinorRulesAuditTests
 
     // ---- SIM-RULES-12 --------------------------------------------------------------------------
 
-    // S18 audit: pins current behaviour of SIM-RULES-12; flip the assertion when fixed.
+    // S19 (D-205): flipped from the S18 audit pin.
     [Fact]
-    public void Audit_ZeroDamageAgainstAZeroPercentArmour_StillDealsOne()
+    public void ZeroDamageAgainstAZeroPercentArmour_DealsNothing()
     {
         var nothing = new WarheadType("nothing", new[] { 0, 0, 0, 0, 0 }, 1, false);
-        foreach (ArmorClass armor in Enum.GetValues<ArmorClass>()) Assert.Equal(1, Simulation.ComputeDamage(0, nothing, armor));
+        foreach (ArmorClass armor in Enum.GetValues<ArmorClass>()) Assert.Equal(0, Simulation.ComputeDamage(0, nothing, armor));
     }
 
-    // S18 audit: pins current behaviour of SIM-RULES-12; flip the assertion when fixed.
+    // S19 (D-205): flipped from the S18 audit pin.
     [Fact]
-    public void Audit_ShippedData_HasUtilityWeaponsWithDamageZero_ThatThereforeDealOne()
+    public void ShippedData_HasUtilityWeaponsWithDamageZero_ThatDealNothing()
     {
         SimRules r = RealRules();
         string[] zero = r.Weapons.Where(w => w.Damage == 0).Select(w => w.Id).OrderBy(x => x, StringComparer.Ordinal).ToArray();
         Assert.Equal(new[] { "auth_decon_spray", "auth_foam_spray", "dir_ash_sow", "dir_blackout_drop", "lb_dust_drop" }, zero);
         foreach (WeaponType w in r.Weapons.Where(w => w.Damage == 0))
             foreach (ArmorClass armor in Enum.GetValues<ArmorClass>())
-                Assert.Equal(1, Simulation.ComputeDamage(w.Damage, r.Warheads[w.Warhead], armor));
+                Assert.Equal(0, Simulation.ComputeDamage(w.Damage, r.Warheads[w.Warhead], armor));
     }
 
-    [Fact(Skip = "S18 SIM-RULES-12: awaiting owner decision")]
+    [Fact]
     public void Desired_ZeroDamage_DealsNothing()
     {
         var nothing = new WarheadType("nothing", new[] { 0, 0, 0, 0, 0 }, 1, false);
@@ -151,21 +151,7 @@ public sealed class MinorRulesAuditTests
         return (s, craft, apc, marine);
     }
 
-    // S18 audit: pins current behaviour of SIM-RULES-10; flip the assertion when fixed.
     [Fact]
-    public void Audit_SoldierInACarriedApc_SurvivesTheSinking_StandingOnDeepWater()
-    {
-        var (s, craft, apc, marine) = SinkLoadedCraft();
-        Assert.False(s.Units.Slots.IsAlive(craft));
-        Assert.False(s.Units.Slots.IsAlive(apc));
-        Assert.True(s.Infantry.Slots.IsAlive(marine));                                        // the marine outlived both
-        Assert.Equal(ActorLayer.Surface, s.Tunnels.InfantryLayer[marine.Index]);
-        CellCoord at = s.Infantry.Position[marine.Index].ToCell();
-        Assert.Equal(LandType.Water, s.Map.LandAt(at));                                       // on deep sea
-        Assert.Equal(0, s.Setup.Rules.Terrain.SpeedPercent(LandType.Water, Locomotion.Foot)); // where foot cannot stand
-    }
-
-    [Fact(Skip = "S18 SIM-RULES-10: awaiting owner decision")]
     public void Desired_SoldierInACarriedApc_IsLostWithTheShip()
     {
         var (s, _, _, marine) = SinkLoadedCraft();

@@ -10,9 +10,9 @@ namespace Rts.Sim.Tests.S18;
 public sealed class SplashAuditTests
 {
     [Fact]
-    public void Audit_FlakShootingAnAircraft_DamagesItsOwnersBuildingUnderneath()
+    public void FlakShootingAnAircraft_DoesNotDamageItsOwnersBuildingUnderneath()
     {
-        // S18 audit: pins current behaviour of FAD-06; flip the assertion when fixed.
+        // S19 (D-205, FAD-06): flipped from the S18 audit pin; flak splash hurts aircraft only.
         var w = new S18World();
         EntityId plant = w.Place(0, "auth_power", 20, 20);
         w.Place(0, "auth_flak", 23, 23);
@@ -26,15 +26,14 @@ public sealed class SplashAuditTests
         w.Run(200);
 
         Assert.True(w.VehHp(skyhook) < skyMax, "the flak did engage the aircraft");
-        int lost = plantMax - w.BldHp(plant);
-        Assert.True(lost >= perShell, $"own power plant lost {lost}");   // the only weapon on the map is the plant owner's own flak
-        Assert.Equal(0, lost % perShell);
+        Assert.True(perShell > 0);
+        Assert.Equal(plantMax, w.BldHp(plant));   // the only weapon on the map is the plant owner's own flak
     }
 
     [Fact]
-    public void Audit_GroundShellLandingOnABuilding_DamagesTheAircraftAboveIt()
+    public void GroundShellLandingOnABuilding_DoesNotDamageTheAircraftAboveIt()
     {
-        // S18 audit: pins current behaviour of FAD-06; flip the assertion when fixed.
+        // S19 (D-205, FAD-06): flipped from the S18 audit pin.
         var w = new S18World();
         EntityId target = w.Place(1, "auth_power", 28, 30);
         EntityId howitzer = w.Veh(0, "auth_howitzer", 20, 30);
@@ -43,10 +42,11 @@ public sealed class SplashAuditTests
         int skyMax = w.VehHp(skyhook);
         w.Run(1, w.Attack(0, ActorKind.Vehicle, howitzer, ActorKind.Building, target));
         w.Run(200);
-        Assert.True(w.VehHp(skyhook) < skyMax, "a ground-only shell hurt the aircraft overhead");
+        Assert.True(w.BldHp(target) < w.Rules.Buildings[w.B("auth_power")].MaxHealth, "the shell did land");
+        Assert.Equal(skyMax, w.VehHp(skyhook));
     }
 
-    [Fact(Skip = "S18 FAD-06: awaiting owner decision")]
+    [Fact]
     public void Desired_FlakShootingAnAircraft_LeavesTheBuildingUnderneathAlone()
     {
         var w = new S18World();
@@ -62,9 +62,9 @@ public sealed class SplashAuditTests
     [InlineData("auth_decon_truck", "auth_decon_spray")]
     [InlineData("auth_foam_truck", "auth_foam_spray")]
     [InlineData("dir_ash_sower", "dir_ash_sow")]
-    public void Audit_ZeroDamageSpray_StillTakesOneHitPointPerShot(string truck, string weapon)
+    public void ZeroDamageSpray_TakesNoHitPoints(string truck, string weapon)
     {
-        // S18 audit: pins current behaviour of FAD-13; flip the assertion when fixed.
+        // S19 (D-205, FAD-13): flipped from the S18 audit pin.
         var w = new S18World();
         WeaponType spray = w.W(weapon);
         Assert.Equal(0, spray.Damage);
@@ -75,22 +75,22 @@ public sealed class SplashAuditTests
         w.Run(1, w.Attack(0, ActorKind.Vehicle, t, ActorKind.Building, silo));
         w.Run(260);
         int lost = max - w.BldHp(silo);
-        Assert.InRange(lost, 5, 13);   // one point per spray, every 20 ticks, once the truck has closed in
+        Assert.Equal(0, lost);
     }
 
     [Fact]
-    public void Audit_EveryZeroDamageWeapon_ComputesToOnePoint()
+    public void EveryZeroDamageWeapon_ComputesToZero()
     {
-        // S18 audit: pins current behaviour of FAD-13; flip the assertion when fixed.
+        // S19 (D-205, FAD-13): flipped from the S18 audit pin.
         SimRules r = S18World.RealRules;
         WeaponType[] zero = r.Weapons.Where(w => w.Damage == 0).ToArray();
         Assert.Equal(new[] { "auth_decon_spray", "auth_foam_spray", "dir_ash_sow", "dir_blackout_drop", "lb_dust_drop" }, zero.Select(w => w.Id).OrderBy(x => x, StringComparer.Ordinal));
         foreach (WeaponType w in zero)
             foreach (ArmorClass a in Enum.GetValues<ArmorClass>())
-                Assert.Equal(1, Simulation.ComputeDamage(w.Damage, r.Warheads[w.Warhead], a));
+                Assert.Equal(0, Simulation.ComputeDamage(w.Damage, r.Warheads[w.Warhead], a));
     }
 
-    [Fact(Skip = "S18 FAD-13: awaiting owner decision")]
+    [Fact]
     public void Desired_ZeroDamageSpray_DealsNoDamage()
     {
         var w = new S18World();
