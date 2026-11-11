@@ -35,7 +35,6 @@ namespace Rts.Game.Screens;
 /// </summary>
 public sealed class GameScreen : IScreen
 {
-    private const float DragThresholdPx = 4f;
     private readonly GameServices _s;
     private readonly ISnapshotSource _source;
     private readonly SimSnapshotSource? _sim; // null with --demo
@@ -262,6 +261,7 @@ public sealed class GameScreen : IScreen
     /// <inheritdoc />
     public void Enter()
     {
+        _s.Scene.Reset();   // S18 GAMEREND-01: the shared renderer must not remember the previous game's buildings
         if (_spectatorMode && _sim is not null)
         {
             PlayerColours.Assign(Skirmish is { IsSpectator: true } spec ? ColoursOf(spec) : new[] { 0, 1 });
@@ -279,6 +279,7 @@ public sealed class GameScreen : IScreen
         // D-068: the local player draws in the chosen colour; the AI takes the next palette entry that differs.
         PlayerColours.Assign(Skirmish is { } sk && sk.PlayerCount >= 2 ? ColoursOf(sk) : new[] { colour, colour == 1 ? 0 : 1 });
         _sidebar = new SidebarPanel(_sim, SimSnapshotSource.LocalPlayer, _selection, _cameos, PlayerColours.Base(SimSnapshotSource.LocalPlayer));
+        _sidebar.Orders = _orders;                                         // S18 GAMEUI-05
         _sidebar.HiddenCursor = SoftwareCursor.MakeHidden(_s.Graphics);   // M11-10e
         _sidebar.Blurbs = LoadCameoBlurbs();                               // M11-10g
         _card = new Rts.Game.Ui.Card.SelectionCard(_sim, _selection, _cameos, PlayerColours.Base(SimSnapshotSource.LocalPlayer));
@@ -442,7 +443,7 @@ public sealed class GameScreen : IScreen
         if (input.MiddleDragging) _camera.PanScreen(-input.MouseDelta.ToVector2());
 
         int wheelDelta = input.WheelDelta;
-        if (wheelDelta != 0) _camera.ZoomBy(wheelDelta > 0 ? 1 : -1);
+        if (wheelDelta != 0) _camera.ZoomBy(wheelDelta > 0 ? 1 : -1, input.MousePosition);   // S18 GAMEUI-02: zoom about the cursor
 
         if (_sim is not null) _sim.Advance(t.ElapsedGameTime.Ticks / 10); // ticks are 100 ns; microseconds = ticks / 10
         else _source.Update();
@@ -627,11 +628,11 @@ public sealed class GameScreen : IScreen
         }
         else if (input.LeftDown && _dragStart is Point start && !_dragging)
         {
-            _dragging = Vector2.Distance(start.ToVector2(), mouse.ToVector2()) > DragThresholdPx;
+            _dragging = ClickDrag.IsDrag(start, mouse, _s.UiFactor);   // S18 GAMEUI-04: a slightly moving click is still a click
         }
         else if (input.LeftReleased && _dragStart is Point begin)
         {
-            if (_dragging)
+            if (_dragging && ClickDrag.IsDrag(begin, mouse, _s.UiFactor))
             {
                 Vector2 a = _camera.WorldFromScreen(begin);
                 Vector2 b = _camera.WorldFromScreen(mouse);

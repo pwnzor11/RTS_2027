@@ -336,7 +336,7 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
         for (int i = 0; i < l.Tabs.Count; i++)
         {
             var tab = (SidebarTab)i;
-            string caption = SidebarTabs.KeyLetter(tab) + " " + SidebarTabs.Caption(tab);
+            string caption = SidebarTabs.KeyName(tab) + " " + SidebarTabs.Caption(tab);
             // Five or six tabs share the width: when the key letter does not fit, the bare caption does.
             if (BitmapFont.Measure(caption, _ui, FontWeight.Regular) > l.Tabs[i].Width - 4) caption = SidebarTabs.Caption(tab);
             DrawButton(batch, pixel, l.Tabs[i], caption, tab == _tab, _ui);
@@ -394,7 +394,7 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
         if (tabHit >= 0)
         {
             var tab = (SidebarTab)tabHit;
-            _tooltip = new List<string> { $"{SidebarTabs.Title(tab)}  ({SidebarTabs.KeyLetter(tab)})" };
+            _tooltip = new List<string> { $"{SidebarTabs.Title(tab)}  ({SidebarTabs.KeyName(tab)})" };
             if (left) SelectTab(tab);
         }
 
@@ -534,8 +534,17 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
         camera.PanScreen((target - camera.WorldFromScreen(Point.Zero)) * camera.Zoom);
     }
 
+    /// <summary>S18 GAMEUI-05: the order controller a minimap right-click goes through, so an armed attack-move is honoured. Null = plain Move.</summary>
+    public Rts.Game.Controls.OrderController? Orders { get; set; }
+
     private void OrderSelectionTo(CellCoord cell)
     {
+        if (Orders is not null)
+        {
+            Orders.MinimapOrder(cell);
+            return;
+        }
+
         foreach (UnitKey unit in _selection.Units.ToList()) _source.Order(CommandKind.Move, unit, cell);
     }
 

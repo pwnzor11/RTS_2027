@@ -30,6 +30,17 @@ public sealed class Camera
     /// <summary>Steps the zoom, clamped to the available levels. Positive zooms in.</summary>
     public void ZoomBy(int steps) => _zoomIndex = Math.Clamp(_zoomIndex + steps, 0, ZoomLevels.Length - 1);
 
+    /// <summary>
+    /// Steps the zoom keeping the world point under <paramref name="anchorScreen"/> (the cursor) where it is on screen (S18 GAMEUI-02).
+    /// </summary>
+    public void ZoomBy(int steps, Point anchorScreen)
+    {
+        Vector2 anchorWorld = WorldFromScreen(anchorScreen);
+        int before = _zoomIndex;
+        ZoomBy(steps);
+        if (_zoomIndex != before) _position = anchorWorld - anchorScreen.ToVector2() / Zoom;
+    }
+
     /// <summary>Moves the view by a delta in screen pixels. Positive x moves the view right.</summary>
     public void PanScreen(Vector2 screenDelta) => _position += screenDelta / Zoom;
 
