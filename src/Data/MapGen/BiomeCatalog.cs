@@ -46,6 +46,15 @@ public static class BiomeCatalog
     /// <summary>The located parameters of <paramref name="biome"/>.</summary>
     public static BiomeParams For(Biome biome) => Default[(int)biome];
 
+    /// <summary>Layout 2 field placement of a biome (v6, Q-69; see <see cref="Layout2Fields"/>), tuned by the income probe of docs/balance/s16_layout2.md.</summary>
+    public static Layout2Fields Layout2FieldsFor(string biomeKey) => biomeKey switch
+    {
+        "rust_belt" => new Layout2Fields(7, 2, 2, 100, 40),
+        "mountains" => new Layout2Fields(7, 2, 2, 100, 40),
+        "ash_plains" => new Layout2Fields(7, 2, 2, 100, 40),
+        _ => new Layout2Fields(7, 2, 2, 100, 40),   // glass_coast
+    };
+
     /// <summary>The first <c>data/mapgen/biomes.toml</c> found walking up from <paramref name="startDirectory"/>, or null.</summary>
     public static string? FindFile(string startDirectory)
     {

@@ -90,6 +90,24 @@ public sealed class MapGenLayout2Tests
         }
     }
 
+    /// <summary>v6 (Q-69): the harvest travel distance (path cells from the start to the nearest field cell, and to the 60 nearest) stays inside a band per biome on
+    /// Medium 2-player maps. v5 measured 4.2 / 7.9; layout 1 measured 5.5-6.5 / 20-67 (20 seeds); v6 about 9 / 13.</summary>
+    [Theory]
+    [InlineData(Biome.RustBelt)]
+    [InlineData(Biome.Mountains)]
+    [InlineData(Biome.AshPlains)]
+    [InlineData(Biome.GlassCoast)]
+    public void Layout2_HarvestDistance_StaysInItsBand(Biome biome)
+    {
+        for (ulong seed = 1; seed <= 6; seed++)
+        {
+            (MapData map, MapMeta meta) = MapGenerator.GenerateWithMeta(P(MapSize.Medium, 2, seed, biome));
+            (int near, int mean) = MapReport.HarvestDistance(map, meta);
+            Assert.InRange(near, 70, 140);
+            Assert.InRange(mean, 100, 240);
+        }
+    }
+
     /// <summary>50 seeds x Small/Medium/Large x 2/3/4 players for each biome; filter with <c>--filter Category!=Slow</c>. Every map must generate
     /// with a clean validator; the pass and retry rates are printed, and at least 42 of 50 seeds must pass every layout check.</summary>
     [Trait("Category", "Slow")]

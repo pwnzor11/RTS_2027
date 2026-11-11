@@ -39,7 +39,7 @@ internal sealed partial class ProceduralBuilder
         _wL1 = _rng.Next(6, 9); _wL2 = _rng.Next(13, 17); _bridgeW = _rng.Next(3, 6);
         _gapE = _rng.Next(4, 7); _gapS = _rng.Next(4, 7);
         _gx2 = _sa + _rng.Next(-3, 7);
-        _natural = _rng.Next(10) < 4;
+        _natural = _rng.Next(100) < BiomeCatalog.Layout2FieldsFor(_b.Key).NaturalPct;
         // The river: knots in the top half, mirrored with the sign flipped, then smoothed (odd smoothing keeps it odd).
         var o = new int[n];
         int k1 = n / 6, k2 = n / 3, mid = (n - 1) / 2;
@@ -236,25 +236,16 @@ internal sealed partial class ProceduralBuilder
         bool gems = _rng.Next(2) == 0;
         int fs = Math.Max(80, Math.Min(100, _scale));
         int ix0 = a - _iw, ix1 = a + _ie, iy0 = _y0 - _hh, iy1 = _y0 + _hh;
-        // Main: two bands (south and north), an L along the west and south walls plus a north band, or a thin west crescent plus two bands (per seed).
-        int shape = _rng.Next(3);
-        if (shape == 0)
-        {
-            PlaceField(Band(ix0 + 2, _y0 + 4, ix1 - 2, iy1 - 1, _rng.Next(56, 72) * fs / 100, ZMain, 4), 0);
-            PlaceField(Band(ix0 + 2, iy0 + 1, ix1 - 2, _y0 - 4, _rng.Next(44, 60) * fs / 100, ZMain, 4), gems ? 8 : 0);
-        }
-        else if (shape == 1)
-        {
-            var l = Band(ix0 + 1, _y0 + 1, ix0 + 4, iy1 - 5, _rng.Next(22, 28) * fs / 100, ZMain, 4);
-            foreach (int c in Band(ix0 + 1, iy1 - 4, ix1 - 3, iy1 - 1, _rng.Next(36, 46) * fs / 100, ZMain, 4)) if (!l.Contains(c)) l.Add(c);
-            PlaceField(l, 0);
-            PlaceField(Band(ix0 + 6, iy0 + 1, ix1 - 2, iy0 + 4, _rng.Next(40, 52) * fs / 100, ZMain, 4), gems ? 8 : 0);
-        }
+        // Main (v6, Q-69): the fields lie at the far end of the main, along the east wall, at least MainDist cells (Chebyshev) from the start, so the
+        // harvest trip from the refinery is longer than with the old bands beside the start; MainBands 1 = one strip, 2 = a north and a south strip.
+        Layout2Fields lf = BiomeCatalog.Layout2FieldsFor(_b.Key);
+        int bx0 = Math.Max(ix0 + 2, a + lf.MainDist), bx1 = ix1;
+        if (lf.MainBands <= 1)
+            PlaceField(Band(bx0, iy0 + 1, bx1, iy1 - 1, _rng.Next(100, 130) * fs / 100 * lf.MainCellsPct / 100, ZMain, lf.MainDist), gems ? 8 : 0);
         else
         {
-            PlaceField(Band(ix0 + 1, iy0 + 2, ix0 + 4, iy1 - 2, _rng.Next(40, 50) * fs / 100, ZMain, 4), 0);
-            PlaceField(Band(ix0 + 6, iy1 - 4, ix1 - 2, iy1 - 1, _rng.Next(32, 40) * fs / 100, ZMain, 4), gems ? 8 : 0);
-            PlaceField(Band(ix0 + 6, iy0 + 1, ix1 - 2, iy0 + 4, _rng.Next(24, 30) * fs / 100, ZMain, 4), 0);
+            PlaceField(Band(bx0, iy0, bx1, _y0 - 2, _rng.Next(56, 72) * fs / 100 * lf.MainCellsPct / 100, ZMain, lf.MainDist), 0);
+            PlaceField(Band(bx0, _y0 + 2, bx1, iy1, _rng.Next(56, 72) * fs / 100 * lf.MainCellsPct / 100, ZMain, lf.MainDist), gems ? 8 : 0);
         }
         if (_natural) PlaceField(MakeField(_natRect.X0, _natRect.Y0, _natRect.X1, _natRect.Y1, _rng.Next(36, 48) * fs / 100, ZPlaza, 8), 0);
         // Contested: the yard by the north deck (image: by the south deck) and the gravel bar of the ford.
