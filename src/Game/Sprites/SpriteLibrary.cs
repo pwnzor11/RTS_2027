@@ -30,7 +30,22 @@ public sealed class SpriteLibrary : IDisposable
     /// <param name="root">Folder to search, normally <c>data/sprites</c>.</param>
     /// <exception cref="DirectoryNotFoundException">The folder does not exist.</exception>
     /// <exception cref="InvalidDataException">A manifest is invalid, or two manifests share an id.</exception>
-    public static SpriteLibrary Scan(string root)
+    public static SpriteLibrary Scan(string root) => Scan(root, null);
+
+    /// <summary>
+    /// Like <see cref="Scan(string)"/> but forgiving (S18 GAMEREND-02): a manifest that does not load, a duplicate id or a companion sheet with
+    /// no body is skipped and reported through <paramref name="log"/> instead of failing the whole library.
+    /// </summary>
+    /// <param name="root">Folder to search, normally <c>data/sprites</c>.</param>
+    /// <param name="log">Receives one line per skipped manifest.</param>
+    /// <exception cref="DirectoryNotFoundException">The folder does not exist.</exception>
+    public static SpriteLibrary ScanTolerant(string root, Action<string> log)
+    {
+        ArgumentNullException.ThrowIfNull(log);
+        return Scan(root, log);
+    }
+
+    private static SpriteLibrary Scan(string root, Action<string>? log)
     {
         ArgumentNullException.ThrowIfNull(root);
         if (!Directory.Exists(root)) throw new DirectoryNotFoundException($"sprite folder not found: {root}");
@@ -40,38 +55,69 @@ public sealed class SpriteLibrary : IDisposable
             .OrderBy(p => p, StringComparer.Ordinal);
         foreach (string path in paths)
         {
-            SpriteManifest manifest = SpriteManifest.Load(path);
+            SpriteManifest manifest;
+            try
+            {
+                manifest = SpriteManifest.Load(path);
+            }
+            catch (Exception e) when (log is not null && e is not OutOfMemoryException)
+            {
+                log($"sprite manifest skipped: {path}: {e.Message}");
+                continue;
+            }
+
             if (manifests.TryGetValue(manifest.Id, out SpriteManifest? existing))
             {
-                throw new InvalidDataException(
-                    $"sprite id '{manifest.Id}' is defined twice: {existing.SourcePath} and {path}");
+                if (log is null)
+                {
+                    throw new InvalidDataException(
+                        $"sprite id '{manifest.Id}' is defined twice: {existing.SourcePath} and {path}");
+                }
+
+                log($"sprite manifest skipped: {path}: id '{manifest.Id}' is already defined by {existing.SourcePath}");
+                continue;
             }
             manifests.Add(manifest.Id, manifest);
         }
-        ClassicFx.Apply(root, manifests, ClassicFx.Requested);
-        CheckCompanions(manifests);
+
+        try
+        {
+            ClassicFx.Apply(root, manifests, ClassicFx.Requested);
+        }
+        catch (Exception e) when (log is not null && e is not OutOfMemoryException)
+        {
+            log($"classic fx skipped: {e.Message}");
+        }
+
+        CheckCompanions(manifests, log);
         return new SpriteLibrary(manifests);
     }
 
     // A turret or shadow sheet is only meaningful beside its body sheet, so it must be named <base>_<layer> and <base> must exist.
-    private static void CheckCompanions(SortedDictionary<string, SpriteManifest> manifests)
+    private static void CheckCompanions(SortedDictionary<string, SpriteManifest> manifests, Action<string>? log)
     {
+        var bad = new List<string>();
         foreach (SpriteManifest manifest in manifests.Values)
         {
             if (manifest.Layer == "body") continue;
             string suffix = "_" + manifest.Layer;
+            string? problem = null;
             if (!manifest.Id.EndsWith(suffix, StringComparison.Ordinal) || manifest.Id.Length == suffix.Length)
             {
-                throw new InvalidDataException(
-                    $"{manifest.SourcePath}: a {manifest.Layer} sheet must be named <base>{suffix}");
+                problem = $"{manifest.SourcePath}: a {manifest.Layer} sheet must be named <base>{suffix}";
             }
-            string baseId = manifest.Id[..^suffix.Length];
-            if (!manifests.ContainsKey(baseId))
+            else if (!manifests.ContainsKey(manifest.Id[..^suffix.Length]))
             {
-                throw new InvalidDataException(
-                    $"{manifest.SourcePath}: no body sprite '{baseId}' for this {manifest.Layer} sheet");
+                problem = $"{manifest.SourcePath}: no body sprite '{manifest.Id[..^suffix.Length]}' for this {manifest.Layer} sheet";
             }
+
+            if (problem is null) continue;
+            if (log is null) throw new InvalidDataException(problem);
+            log("sprite manifest skipped: " + problem);
+            bad.Add(manifest.Id);
         }
+
+        foreach (string id in bad) manifests.Remove(id);
     }
 
     /// <summary>
@@ -97,14 +143,33 @@ public sealed class SpriteLibrary : IDisposable
 
     /// <summary>Loads the GPU sheet of every sprite. Calling it again does nothing.</summary>
     /// <param name="device">Graphics device that owns the textures.</param>
-    public void LoadAll(GraphicsDevice device)
+    public void LoadAll(GraphicsDevice device) => LoadAll(device, null);
+
+    /// <summary>
+    /// Loads every sheet. With <paramref name="log"/> (S18 GAMEREND-02) a sheet that fails to load is dropped from the library and reported,
+    /// and the others still load; without it the first failure throws, as before.
+    /// </summary>
+    /// <param name="device">Graphics device that owns the textures.</param>
+    /// <param name="log">Receives one line per sheet that could not be loaded.</param>
+    public void LoadAll(GraphicsDevice device, Action<string>? log) => LoadAll(m => SpriteSheet.Load(device, m.SourcePath), log);
+
+    /// <summary>The loading loop of <see cref="LoadAll(GraphicsDevice, Action{string})"/> with the sheet loader supplied (so it can be tested without a GPU).</summary>
+    /// <param name="load">Builds the sheet of a manifest.</param>
+    /// <param name="log">As for <see cref="LoadAll(GraphicsDevice, Action{string})"/>.</param>
+    public void LoadAll(Func<SpriteManifest, SpriteSheet> load, Action<string>? log)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
-        foreach (SpriteManifest manifest in _manifests.Values)
+        foreach (SpriteManifest manifest in _manifests.Values.ToList())
         {
-            if (!_sheets.ContainsKey(manifest.Id))
+            if (_sheets.ContainsKey(manifest.Id)) continue;
+            try
             {
-                _sheets.Add(manifest.Id, SpriteSheet.Load(device, manifest.SourcePath));
+                _sheets.Add(manifest.Id, load(manifest));
+            }
+            catch (Exception e) when (log is not null && e is IOException or InvalidDataException or FormatException or InvalidOperationException or ArgumentException)
+            {
+                log($"sprite sheet skipped: {manifest.SourcePath}: {e.Message}");
+                _manifests.Remove(manifest.Id);
             }
         }
     }
