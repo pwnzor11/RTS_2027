@@ -88,6 +88,7 @@ public static class SkirmishStart
         if (units.Count == 0) return first;
         SimRules rules = sim.Setup.Rules;
         var used = new List<CellCoord>();
+        bool[]? edgeSea = null;   // M13-01: naval cells connected to the map edge, built on first use
         int next = 0;
         for (int r = 1; r <= MaxUnitRing && next < units.Count; r++)
             for (int dy = -r; dy <= r && next < units.Count; dy++)
@@ -99,6 +100,7 @@ public static class SkirmishStart
                     (ActorKind kind, int type) = units[next];
                     Locomotion loco = kind == ActorKind.Vehicle ? rules.Vehicles[type].Locomotion : Locomotion.Foot;
                     if (!sim.Map.IsPassableTerrain(c, loco, rules.Terrain)) continue;
+                    if (loco == Locomotion.Naval && !(edgeSea ??= EdgeConnectedSea(sim))[c.Y * sim.Setup.Map.Width + c.X]) continue;   // M13-01: never an inland lake
                     EntityId spawned = kind == ActorKind.Vehicle ? sim.SpawnVehicle(player, type, c) : sim.SpawnInfantry(player, type, c);
                     if (first == EntityId.None) first = spawned;
                     used.Add(c);
@@ -111,7 +113,9 @@ public static class SkirmishStart
             (ActorKind kind, int type) = units[next];
             Locomotion loco = kind == ActorKind.Vehicle ? rules.Vehicles[type].Locomotion : Locomotion.Foot;
             bool done = false;
-            for (int r = 1; r <= MaxFallbackRing && !done; r++)
+            // M13-01: a naval unit searches the whole map (nearest edge-connected sea, ties by row then column); others stop at MaxFallbackRing
+            int maxRing = loco == Locomotion.Naval ? Math.Max(sim.Setup.Map.Width, sim.Setup.Map.Height) : MaxFallbackRing;
+            for (int r = 1; r <= maxRing && !done; r++)
                 for (int dy = -r; dy <= r && !done; dy++)
                     for (int dx = -r; dx <= r && !done; dx++)
                     {
@@ -119,6 +123,7 @@ public static class SkirmishStart
                         var c = new CellCoord(start.X + dx, start.Y + dy);
                         if (!sim.Setup.Map.Contains(c) || !sim.Map.BuildingAt(c).IsNone || used.Contains(c)) continue;
                         if (!sim.Map.IsPassableTerrain(c, loco, rules.Terrain)) continue;
+                        if (loco == Locomotion.Naval && !(edgeSea ??= EdgeConnectedSea(sim))[c.Y * sim.Setup.Map.Width + c.X]) continue;
                         EntityId spawned = kind == ActorKind.Vehicle ? sim.SpawnVehicle(player, type, c) : sim.SpawnInfantry(player, type, c);
                         if (first == EntityId.None) first = spawned;
                         used.Add(c);
@@ -126,5 +131,33 @@ public static class SkirmishStart
                     }
         }
         return first;
+    }
+
+    /// <summary>Naval-passable cells connected (8-way) to a naval-passable cell on the map edge (M13-01): the water a supply tender can reach.</summary>
+    private static bool[] EdgeConnectedSea(Simulation sim)
+    {
+        SimRules rules = sim.Setup.Rules;
+        var map = sim.Setup.Map;
+        int w = map.Width, h = map.Height;
+        var seen = new bool[w * h];
+        var queue = new int[w * h];
+        int head = 0, tail = 0;
+        for (int y = 0; y < h; y++)
+            for (int x = 0; x < w; x++)
+                if ((x == 0 || y == 0 || x == w - 1 || y == h - 1) && sim.Map.IsPassableTerrain(new CellCoord(x, y), Locomotion.Naval, rules.Terrain))
+                { seen[y * w + x] = true; queue[tail++] = y * w + x; }
+        while (head < tail)
+        {
+            int i = queue[head++], cx = i % w, cy = i / w;
+            for (int dy = -1; dy <= 1; dy++)
+                for (int dx = -1; dx <= 1; dx++)
+                {
+                    int nx = cx + dx, ny = cy + dy;
+                    if (nx < 0 || ny < 0 || nx >= w || ny >= h || seen[ny * w + nx]) continue;
+                    if (!sim.Map.IsPassableTerrain(new CellCoord(nx, ny), Locomotion.Naval, rules.Terrain)) continue;
+                    seen[ny * w + nx] = true; queue[tail++] = ny * w + nx;
+                }
+        }
+        return seen;
     }
 }
