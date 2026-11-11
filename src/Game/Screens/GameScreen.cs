@@ -35,7 +35,6 @@ namespace Rts.Game.Screens;
 /// </summary>
 public sealed class GameScreen : IScreen
 {
-    private const float DragThresholdPx = 4f;
     private readonly GameServices _s;
     private readonly ISnapshotSource _source;
     private readonly SimSnapshotSource? _sim; // null with --demo
@@ -71,6 +70,7 @@ public sealed class GameScreen : IScreen
     private bool _gameOverShown;
     private Func<IScreen?>? _gameOverOverride;   // M8-08: campaign missions show a debrief on a win
     private MissionOverlay? _mission;   // campaign mission mode (D-061), null otherwise
+    private MissionGame? _missionGame;  // S18 MIS-01/05: a mission ends on the script outcome or the human's defeat
     private readonly SuperweaponController _superweapon = new();   // M3-18: Sunrise Device button, targeting and flash
     private readonly RectRegion _swRegion = new(Rectangle.Empty);
     private ArchiveTracker? _archive;   // M3-18: unlock progress, skirmish and missions only
@@ -208,7 +208,7 @@ public sealed class GameScreen : IScreen
         var sim = new SimSnapshotSource(game);
         var screen = new GameScreen(services, sim, null, () => CreateMission(services, missionId), skirmishMode: true);
         screen._mission = new MissionOverlay(game.Host, Rts.Game.Ui.Objectives.ObjectiveGuidance.BriefingOf(game));
-        screen.IsGameOver = () => sim.Sim.GameOver;
+        screen.EndOnMission(game);
         return screen;
     }
 
@@ -221,7 +221,7 @@ public sealed class GameScreen : IScreen
         var sim = new SimSnapshotSource(game);
         var screen = new GameScreen(services, sim, null, restart, skirmishMode: true);
         screen._mission = new MissionOverlay(game.Host, Rts.Game.Ui.Objectives.ObjectiveGuidance.BriefingOf(game));
-        screen.IsGameOver = () => sim.Sim.GameOver;
+        screen.EndOnMission(game);
         screen._gameOverOverride = gameOver;
         return screen;
     }
@@ -237,9 +237,11 @@ public sealed class GameScreen : IScreen
         {
             MissionGame game = MissionGame.FromSave(loaded);
             string id = loaded.Header.MissionId;
-            var mission = new GameScreen(services, sim, null, () => CreateMission(services, id), skirmishMode: true);
+            var campaign = CampaignFlow.Resume(services, game);   // S18 MIS-02: a campaign mission keeps its campaign wiring
+            var mission = new GameScreen(services, sim, null, campaign?.Restart ?? (() => CreateMission(services, id)), skirmishMode: true);
             mission._mission = new MissionOverlay(game.Host, Rts.Game.Ui.Objectives.ObjectiveGuidance.BriefingOf(game));
-            mission.IsGameOver = () => sim.Sim.GameOver;
+            mission.EndOnMission(game);
+            mission._gameOverOverride = campaign?.GameOver;
             return mission;
         }
 
@@ -247,6 +249,14 @@ public sealed class GameScreen : IScreen
         var screen = new GameScreen(services, sim, settings, () => CreateSkirmish(services, settings), skirmishMode: true);
         screen.IsGameOver = () => sim.Sim.GameOver;
         return screen;
+    }
+
+    // S18 MIS-01 / MIS-05: a scripted mission ends when the script decides or the human is defeated (MissionGame.IsOver), not on the sim's
+    // elimination rule, which can end it early (enemy out of buildings) or never (a third team survives Mission.Lose).
+    private void EndOnMission(MissionGame game)
+    {
+        _missionGame = game;
+        IsGameOver = () => game.IsOver;
     }
 
     /// <summary>Creates the --demo screen: fabricated orbiting units, no simulation.</summary>
@@ -262,6 +272,7 @@ public sealed class GameScreen : IScreen
     /// <inheritdoc />
     public void Enter()
     {
+        _s.Scene.Reset();   // S18 GAMEREND-01: the shared renderer must not remember the previous game's buildings
         if (_spectatorMode && _sim is not null)
         {
             PlayerColours.Assign(Skirmish is { IsSpectator: true } spec ? ColoursOf(spec) : new[] { 0, 1 });
@@ -279,6 +290,7 @@ public sealed class GameScreen : IScreen
         // D-068: the local player draws in the chosen colour; the AI takes the next palette entry that differs.
         PlayerColours.Assign(Skirmish is { } sk && sk.PlayerCount >= 2 ? ColoursOf(sk) : new[] { colour, colour == 1 ? 0 : 1 });
         _sidebar = new SidebarPanel(_sim, SimSnapshotSource.LocalPlayer, _selection, _cameos, PlayerColours.Base(SimSnapshotSource.LocalPlayer));
+        _sidebar.Orders = _orders;                                         // S18 GAMEUI-05
         _sidebar.HiddenCursor = SoftwareCursor.MakeHidden(_s.Graphics);   // M11-10e
         _sidebar.Blurbs = LoadCameoBlurbs();                               // M11-10g
         _card = new Rts.Game.Ui.Card.SelectionCard(_sim, _selection, _cameos, PlayerColours.Base(SimSnapshotSource.LocalPlayer));
@@ -305,6 +317,7 @@ public sealed class GameScreen : IScreen
         _nowMs = (long)t.TotalGameTime.TotalMilliseconds;   // M11-10c: clock for the double-tap rules
         _mouse = input.MousePosition;
         _updatedSinceDraw = true;
+        if (_sim is not null) _income.Observe(_sim.Sim);   // S18 UXG-10: feeds the INCOME/M column of the final table
         UpdateHudRegions();
         UpdateCard(input);   // M11-04: before anything else reads the click
         PlayerHud? localHud = _skirmishMode && _sim is not null ? _sim.Sim.HudFor(SimSnapshotSource.LocalPlayer) : null;
@@ -442,7 +455,7 @@ public sealed class GameScreen : IScreen
         if (input.MiddleDragging) _camera.PanScreen(-input.MouseDelta.ToVector2());
 
         int wheelDelta = input.WheelDelta;
-        if (wheelDelta != 0) _camera.ZoomBy(wheelDelta > 0 ? 1 : -1);
+        if (wheelDelta != 0) _camera.ZoomBy(wheelDelta > 0 ? 1 : -1, input.MousePosition);   // S18 GAMEUI-02: zoom about the cursor
 
         if (_sim is not null) _sim.Advance(t.ElapsedGameTime.Ticks / 10); // ticks are 100 ns; microseconds = ticks / 10
         else _source.Update();
@@ -490,7 +503,10 @@ public sealed class GameScreen : IScreen
         {
             _gameOverShown = true;
             if (_gameOverOverride?.Invoke() is { } replacement) { _s.Screens.Push(replacement); return; }
-            IReadOnlyList<string>? table = _sim is null ? null : SpectatorTable.Final(SpectatorTable.Collect(_sim.Sim));
+            // S18 UXG-10: income from the tracker, columns placed by measured pixels.
+            UiUnit tableScale = _s.UiScale;
+            IReadOnlyList<string>? table = _sim is null ? null
+                : SpectatorTable.Final(SpectatorTable.Collect(_sim.Sim, _income), line => BitmapFont.Measure(line, tableScale));
             _s.Screens.Push(new GameOverScreen(_s, _restart, GameOverHeadline(), table, _spectatorMode, () => _sim?.SaveReplay()));
         }
     }
@@ -559,6 +575,7 @@ public sealed class GameScreen : IScreen
     }
 
     private readonly CursorPreview _cursorPreview = new();
+    private readonly IncomeTracker _income = new();
     private bool _updatedSinceDraw;
 
     // M11-10g: the archive's one-line subtitle for each rules id, for the cameo tooltips (none if the archive is missing).
@@ -627,11 +644,11 @@ public sealed class GameScreen : IScreen
         }
         else if (input.LeftDown && _dragStart is Point start && !_dragging)
         {
-            _dragging = Vector2.Distance(start.ToVector2(), mouse.ToVector2()) > DragThresholdPx;
+            _dragging = ClickDrag.IsDrag(start, mouse, _s.UiFactor);   // S18 GAMEUI-04: a slightly moving click is still a click
         }
         else if (input.LeftReleased && _dragStart is Point begin)
         {
-            if (_dragging)
+            if (_dragging && ClickDrag.IsDrag(begin, mouse, _s.UiFactor))
             {
                 Vector2 a = _camera.WorldFromScreen(begin);
                 Vector2 b = _camera.WorldFromScreen(mouse);
@@ -737,6 +754,7 @@ public sealed class GameScreen : IScreen
     private void DrawSpectator(SpriteBatch sb)
     {
         if (_specPanel is null || _sim is null) return;
+        if (_gameOverShown) return;   // S18 UX-LM-06: the final stats table is on screen; the live HUD lines would print through it
         _specPanel.Draw(sb, _s.Pixel, _s.UiScale);
         IReadOnlyList<string>? info = _inspectUnit is UnitView u ? SpectatorInspect.Describe(u, _sim.Sim.Setup.Rules)
             : _inspectBuilding is BuildingView b ? SpectatorInspect.Describe(b, _sim.Sim.Setup.Rules) : null;
@@ -1185,7 +1203,7 @@ public sealed class GameScreen : IScreen
         {
             if (!input.ConsumePressed(GroupActions[i])) continue;
             int number = i + 1;
-            if (CtrlHeld(input)) { _groups.Set(number, _selection.Units); _groupTap.Reset(); continue; }
+            if (CtrlHeld(input)) { _groups.TrySet(number, _selection.Units); _groupTap.Reset(); continue; }   // S18 GAMEUI-07: an empty selection keeps the group
             if (ShiftHeld(input)) { _groups.Add(number, _selection.Units); continue; }
             IReadOnlyList<UnitKey> members = _groups.Members(number);
             if (members.Count == 0) continue;
@@ -1261,6 +1279,7 @@ public sealed class GameScreen : IScreen
     {
         if (_sim is null) return GameOverScreen.Headline(false, -1, 0);
         if (_spectatorMode) return GameOverScreen.SpectatorHeadline(_sim.Sim.WinningTeam);
+        if (_missionGame is { } mg) return GameOverScreen.Headline(!mg.LocalWon, mg.LocalWon ? 0 : -1, 0);   // S18 MIS-01
         byte local = SimSnapshotSource.LocalPlayer;
         return GameOverScreen.Headline(_sim.Sim.HudFor(local).Defeated, _sim.Sim.WinningTeam, _sim.Sim.Setup.TeamOf(local));
     }
@@ -1326,8 +1345,10 @@ public sealed class GameScreen : IScreen
         List<string> hud = HudLines(snapshot);
         Hud.Panel(sb, _s.Pixel, new Point(8, 8), hud, scale);
 
-        if (_sim is not null) _mission?.Draw(sb, _s.Pixel, scale, hud.Count, _s.Viewport.Height - 8, snapshot.Tick);
-        if (_sim is not null && !_spectatorMode)   // M11-10d: alert stack, clear of the objective bar and the buttons
+        // S18 UXG-03: the dialogue and ticker sit above the selection card, never under it. S18 UXG-10: the game-over table owns the screen.
+        int missionBottom = _card is { Visible: true } card ? card.Layout.ClearBottom(_s.Viewport.Height - 8, 4) : _s.Viewport.Height - 8;
+        if (_sim is not null && !_gameOverShown) _mission?.Draw(sb, _s.Pixel, scale, hud.Count, missionBottom, snapshot.Tick);
+        if (_sim is not null && !_spectatorMode && !_gameOverShown)   // M11-10d: alert stack, clear of the objective bar and the buttons
         {
             Rectangle mapView = _sidebar?.Layout.MapView ?? new Rectangle(0, 0, _s.Viewport.Width, _s.Viewport.Height);
             Rectangle banner = _mission is null ? Rectangle.Empty : new Rectangle(_mission.ObjectivesRegion.Bounds.X, _mission.ObjectivesRegion.Bounds.Y, _mission.ObjectivesRegion.Bounds.Width, _mission.ObjectivesRegion.Bounds.Height + 48);

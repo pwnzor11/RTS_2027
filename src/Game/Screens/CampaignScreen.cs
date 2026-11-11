@@ -22,16 +22,45 @@ public sealed class CampaignScreen : IScreen
 
     private readonly GameServices _s;
     private readonly CampaignService _svc;
-    private readonly IReadOnlyList<FactionPickRow> _rows;
-    private readonly MenuPanel _panel;
+    private IReadOnlyList<FactionPickRow> _rows;
+    private MenuPanel _panel;
     private Point _mouse;
 
     /// <summary>Creates the menu.</summary>
     public CampaignScreen(GameServices services)
+        : this(services, CampaignFlow.Service(services))
+    {
+    }
+
+    /// <summary>Creates the menu over a given campaign service (S18: tests pass their own profile folder).</summary>
+    public CampaignScreen(GameServices services, CampaignService service)
     {
         _s = services;
-        _svc = CampaignFlow.Service(services);
+        _svc = service;
         _rows = FactionPickModel.Build(_svc);
+        _panel = BuildPanel();
+    }
+
+    /// <summary>The faction rows the menu shows (S18 GS-04).</summary>
+    public IReadOnlyList<FactionPickRow> Rows => _rows;
+
+    /// <summary>The lock hint for a menu row index (S18 GS-04 / UX-05): row 0 is the tutorial, then one row per faction.</summary>
+    public string HintAt(int panelIndex) => panelIndex >= FirstFactionRow && panelIndex - FirstFactionRow < _rows.Count ? _rows[panelIndex - FirstFactionRow].Reason : "";
+
+    /// <summary>Rebuilds the rows from the progress files (S18 GS-04), keeping the selected row. Called after a campaign win.</summary>
+    public void Refresh()
+    {
+        int selected = _panel.Selected;
+        _rows = FactionPickModel.Build(_svc);
+        _panel = BuildPanel();
+        _panel.Selected = selected;
+    }
+
+    // The menu's first row is the tutorial; the faction rows follow it.
+    private const int FirstFactionRow = 1;
+
+    private MenuPanel BuildPanel()
+    {
         var items = new List<MenuItem> { new(() => "Tutorial", () => _s.Screens.Push(new BriefingScreen(_s, CampaignFlow.TutorialId, () => CampaignFlow.CreateTutorial(_s)))) };
         foreach (FactionPickRow row in _rows)
         {
@@ -41,7 +70,7 @@ public sealed class CampaignScreen : IScreen
 
         items.Add(new MenuItem(() => "Load game", () => _s.Screens.Push(LoadGameScreen.Create(_s, SaveKind.Campaign))));
         items.Add(new MenuItem(() => "Back", () => _s.Screens.Pop()));
-        _panel = new MenuPanel("Campaign", items);
+        return new MenuPanel("Campaign", items);
     }
 
     /// <inheritdoc />
@@ -78,7 +107,7 @@ public sealed class CampaignScreen : IScreen
     {
         Backdrop.FillOpaque(sb, _s);
         _panel.Draw(sb, _s.Pixel, _s.Viewport, _s.UiScale, _mouse);
-        string hint = _panel.Selected < _rows.Count ? _rows[_panel.Selected].Reason : "";
+        string hint = HintAt(_panel.Selected);
         if (hint.Length > 0)
         {
             var scale = _s.UiScale;

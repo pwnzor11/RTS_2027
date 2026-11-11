@@ -130,12 +130,9 @@ public static class ReplayCommands
             Console.Error.WriteLine($"error: mission replay {file} cannot be played back: {e.Message}");
             return 1;
         }
-        if (result.FirstMismatchTick >= 0)
-        {
-            string where = result.FirstMismatchPart is { } part ? $"in part {part}" : "(replay has no sub-hashes)";
-            Console.WriteLine($"DESYNC at tick {result.FirstMismatchTick} {where}");
-            return 1;
-        }
+        // S18 GS-03 (owner decision): mission replays are watchable only (no tier or campaign tech in the file), so drift is a note, not a failure.
+        Console.WriteLine(MissionReplay.WatchableOnlyNote);
+        if (result.FirstMismatchTick >= 0) Console.WriteLine($"note: it drifts from the recording from tick {result.FirstMismatchTick}");
         Console.WriteLine($"OK mission '{data.Mission!.Id}' {result.TicksRun} ticks, outcome {host.Outcome}, final hash 0x{result.FinalHash:x16}{(result.Truncated ? " (truncated replay)" : "")}");
         return 0;
     }

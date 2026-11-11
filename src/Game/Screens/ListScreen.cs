@@ -46,17 +46,21 @@ public sealed class ListScreen : IScreen
             int captured = slot;
             items.Add(new MenuItem(() => RowAt(captured)?.Label ?? "", () => ActivateRow(RowAt(captured))));
         }
-        if (rows.Count == 0) items.Add(new MenuItem(() => emptyText));
-        else items.Add(new MenuItem(() => SelectedDetail()));
+        // The empty message, the detail line and the hint only inform: dim, never highlighted, not choices (S18 UX-LM-12).
+        if (rows.Count == 0) items.Add(new MenuItem(() => emptyText) { Info = true });
+        else items.Add(new MenuItem(() => SelectedDetail()) { Info = true });
         if (rows.Count > PageSize)
         {
             items.Add(new MenuItem(() => $"Page {_page + 1} of {Pages}", null, StepPage,
                 new MenuButton("<", () => StepPage(-1)), new MenuButton(">", () => StepPage(1))));
         }
-        if (hint.Length > 0) items.Add(new MenuItem(() => hint));
+        if (hint.Length > 0) items.Add(new MenuItem(() => hint) { Info = true });
         items.Add(new MenuItem(() => "Back", Back));
         _panel = new MenuPanel(title, items);
     }
+
+    /// <summary>The panel (tests).</summary>
+    public MenuPanel Panel => _panel;
 
     private int Pages => Math.Max(1, (_rows.Count + PageSize - 1) / PageSize);
 

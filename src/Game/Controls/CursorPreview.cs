@@ -165,7 +165,7 @@ public sealed class CursorPreview
         bool inMap = source.Map.Contains(cell);
         SimRules rules = source.Rules;
 
-        ActorRef? enemy = TargetPicker.Pick(units, source.Current, world, local);
+        ActorRef? enemy = TargetPicker.Pick(units, source.Current, world, local, p => source.Sim.RelationOf(local, p));
         (ActorRef Target, int TypeIndex)? own = enemy is null
             ? TargetPicker.PickOwn(units, source.Current, world, local, selection.Contains)
             : null;

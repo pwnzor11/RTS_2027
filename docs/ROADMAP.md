@@ -270,8 +270,35 @@ Source: docs/reviews/2026-11-07_owner_campaign_feedback.md. Audit: docs/reviews/
 - [x] M12-06 `map report`, `map render --png` (s15)
 - [ ] M12-06b Editor Props tool and decal brush (skipped in s15)
 - [~] M12-07..12 (s16: layout 2 built for all four biomes, off by default. s17: v6 = Ash half-turn D-198, fields further out D-199, Expedition start units fixed; open: 64-game fairness and income on v6, Q-70, Mountains skew is not the map) Zone skeleton, ~3 lanes and chokes, mixed start shapes (mostly soft shell, some walled with a ramp), natural expansion on about half the maps, 2v2 teammates side by side, fairness checks, income re-measure (design 16 wave 3, revised by D-183 / design 17)
-- [ ] M12-12b `ai timeline` builds layout 2 maps without sea for the Expedition (unlike `ai match`); Glass Coast layout 1 Expedition start skew (55 v 5, s17 baseline)
+- [~] M12-12b `ai timeline` now plays the same map as `ai match` (s18). Open: Glass Coast layout 1 Expedition start skew: cause measured in s18 (tender spawn, M13-03)
 - [ ] M12-13..16 Stamps, rebuilt data maps, prop art (M10), optional extras (design doc wave 4)
+
+## M13 · Audit fix batch (session 18 audit, D-205; docs/reviews/2026-11-11_s18_audit/README.md)
+- [x] M13-00 Clear non-sim bugs fixed with tests: campaign/missions, in-match UI, menus/setup/tools, LLM key per provider, credits (s18 PR)
+- [ ] M13-01 Expedition on Mountains layout 1: edge-connected sea near each start (generator) + whole-map SkirmishStart fallback (item 1)
+- [ ] M13-02 Expedition founder counts as a base for defeat (item 2)
+- [ ] M13-03 Supply tender spawns at the edge cell nearest the dock (item 3)
+- [ ] M13-04 Garrisoned/carried units ignore orders and are not selectable (item 4)
+- [ ] M13-05 Path stall: retarget blocked goals, cap per-tick path work, group search retry (item 5, SP-01/SP-13)
+- [ ] M13-06 Ready structure: cancel with refund; AI cancels after failed site searches; Cancel slot fix (item 6)
+- [ ] M13-07 Full building store: refuse deploy, StoreFull reason (item 7)
+- [ ] M13-08 Data: Atomic Battery range 0, campaign allow-lists (items 8, 10)
+- [ ] M13-09 Left Behind lanes pause while the Mother Rig is packed (item 9)
+- [ ] M13-10 Start-side tie-breaks (item 11; after the owner's laptop series, skew_experiment.patch)
+- [ ] M13-11 Mechanics items 12-22, 25 (splash, subs, stealth, landing unload, rigs, morph cost, melee acquire, harvesters, kill value, path leak, power)
+- [ ] M13-12 Ashfall hazard (item 23), attack-ground order (item 24), hide/reword missing mechanics (item 26)
+- [ ] M13-13 Numbers pass with the suggested values (section 2.3), then measure
+- [ ] M13-14 UI/wording/design list (section 2.4) incl. mission-script one-liners, naming pass from data/archive
+- [ ] M13-15 QoL: game speed incl. slow; idle button and alerts; cameo hotkeys, repeat production, range rings, strong/weak line; handicap and starting conditions; stances and shift-queued waypoints
+- [ ] M13-16 One golden / AI baseline re-pin batch; owner laptop series before and after
+
+## M14 · Field Manual (D-206, docs/design/19_field_manual.md)
+- [x] M14-01 Pilot: 9 pages, generator scripts (tools/booklet), design 19 (s18)
+- [x] M14-02 Hero render mode and laptop script (tools/booklet/render_heroes.ps1) (s18)
+- [ ] M14-03 Owner runs the 12-render pilot, approves, then `-All` (124 ids; 26 need models first: M4-ART)
+- [ ] M14-04 Directorate lore draft (Authority approved), then the other three faction chapters
+- [ ] M14-05 Full build (about 108 pages) after M13 lands; quick-reference card
+- [ ] M14-06 Models and sprites for the 26 ids without art (list: design 19 section 5)
 
 ## M9 · LAN multiplayer (was M5)
 Lockstep over LAN, lobby, desync detection, replays.

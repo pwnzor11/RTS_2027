@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
+
 using System.Diagnostics;
 
 namespace Rts.Game.Tests.Audio;
@@ -51,11 +52,14 @@ public sealed class SfxrTests
         Assert.True(p.ExitCode == 0, err);
     }
 
+    /// <summary>S18 TESTS-REPO-05: on CI a missing Python must fail, not pass silently.</summary>
+    private static bool OnCi() => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("CI"));
+
     [Fact]
     public void SameSeedGivesByteIdenticalWavs()
     {
         string? python = FindPython();
-        if (python is null) return; // no Python 3.11+ on this machine; the Python-side test in tools/audio covers it
+        if (python is null) { Assert.False(OnCi(), "Python 3.11+ is required on CI for this test"); return; } // locally: the Python-side test in tools/audio covers it
 
         string root = Path.Combine(Path.GetTempPath(), "rts2027_sfxr_" + Guid.NewGuid().ToString("N"));
         try
@@ -80,7 +84,7 @@ public sealed class SfxrTests
     public void CommittedWavFilesMatchThePresets()
     {
         string? python = FindPython();
-        if (python is null) return;
+        if (python is null) { Assert.False(OnCi(), "Python 3.11+ is required on CI for this test"); return; }
 
         string root = Path.Combine(Path.GetTempPath(), "rts2027_sfxr_" + Guid.NewGuid().ToString("N"));
         try

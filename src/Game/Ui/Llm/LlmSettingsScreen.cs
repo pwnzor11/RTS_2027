@@ -27,7 +27,7 @@ public sealed class LlmSettingsScreen : IScreen
     {
         _s = services;
         _path = settingsPath;
-        Model = new LlmSettingsModel(() => _s.Settings, v => _s.Settings = v, LlmHooks.SecretStore, LlmHooks.Defaults, LlmHooks.TestConnection);
+        Model = new LlmSettingsModel(() => _s.Settings, v => _s.Settings = v, LlmHooks.Keys, LlmHooks.Defaults, LlmHooks.TestConnection);
         LlmSettingsModel m = Model;
         _panel = new MenuPanel(LlmUiText.Title, new[]
         {

@@ -1,0 +1,73 @@
+# Continental Reconstruction Authority roster (generated from data/rules by /home/claude/audit/faction-ad/roster.py)
+
+Units: speed in cells/s (speed leptons/tick x 20 / 256); range in cells (256 leptons); build time = sim BuildTicks (40 ticks per 100 credits unless build_time set) at one factory, full power, 20 ticks/s. Supply: game.toml bands (<=400:1, <=900:2, else 3) unless `supply` set. Prerequisites include the tier gate appended by TierSugar. DPS = damage x versus% (min 1) x 20 / rate_of_fire, vs Unarmored/Light/Heavy/Structure/Fortified, before veterancy and auras. Name = archive/lore title; Cameo = the name the build sidebar actually shows (CameoNames.Display). Campaign = first mission whose allow-list contains it.
+
+
+## Infantry
+
+| id | Name / Cameo | Role (tooltip) | Cost | Build | Prereqs (effective) | Tier | Supply | HP / armour | Weapon | Speed | Sight | Specials | Upgrades that affect it | Art / lore | Campaign |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| `auth_rifleman` | Rifleman / Rifleman | Citizen-army infantry | 100 | 40t (2s) | auth_barracks | 1 | 1 | 50 unarmored | `auth_rifle`: 8 dmg / 15t, rng 3c, `auth_small_arms`. DPS U/L/H/S/F: 10.7/5.3/1.3/1.3/1.3 | 0.94 | 4 |  | auth_up_flak_vests (max_health x1.15) | sprite, lore | in allow-list from auth_01 |
+| `auth_rocketeer` | Rocketeer / Rocketeer | Anti-armour infantry | 300 | 120t (6s) | auth_barracks | 1 | 1 | 60 unarmored | `auth_rocket`: 100 dmg / 75t, rng 5c, `auth_ap`. DPS U/L/H/S/F: 6.7/20.0/26.7/13.3/10.7 | 0.78 | 5 |  | auth_up_flak_vests (max_health x1.15) | sprite, lore | **never in campaign** |
+| `auth_engineer` | Field Engineer / Engineer **(differs)** | Repair and capture infantry | 100 | 40t (2s) | auth_barracks | 1 | 1 | 50 unarmored | — | 0.94 | 4 | engineer=True | auth_up_flak_vests (max_health x1.15) | **no sprite (placeholder)**, lore | in allow-list from auth_02 |
+| `auth_marksman` | Marksman / Marksman | Long-range anti-infantry | 100 | 40t (2s) | auth_barracks, auth_tier2 | 2 | 1 | 50 unarmored | `auth_marksman_rifle`: 8 dmg / 15t, rng 4c, `auth_small_arms`. DPS U/L/H/S/F: 10.7/5.3/1.3/1.3/1.3 | 0.94 | 4 |  | auth_up_flak_vests (max_health x1.15) | **no sprite (placeholder)**, lore | in allow-list from auth_03 |
+
+## Vehicles and aircraft
+
+| id | Name / Cameo | Role (tooltip) | Cost | Build | Prereqs (effective) | Tier | Supply | HP / armour | Weapon | Speed | Sight | Specials | Upgrades that affect it | Art / lore | Campaign |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| `auth_scraper` | Scraper / Scraper | Armoured ashfall harvester | 700 | 280t (14s) | auth_factory | 1 | 1 | 350 heavy | — | 1.41 | 4 | harvest_capacity=20; loco=tracked | auth_up_convoy_drill (speed x1.1) | sprite, lore | **never in campaign** |
+| `auth_jeep` | Scout Car / Jeep **(differs)** | Light recon vehicle | 350 | 140t (7s) | auth_factory | 1 | 1 | 150 light | `auth_jeep_mg`: 6 dmg / 8t, rng 3.5c, `auth_small_arms`. DPS U/L/H/S/F: 15.0/7.5/2.5/2.5/2.5 | 2.81 | 7 | loco=wheeled | auth_up_convoy_drill (speed x1.1) | sprite, lore | in allow-list from auth_01 |
+| `auth_tank` | Heavy Tank / Medium Tank **(differs)** | Main battle armour | 800 | 320t (16s) | auth_factory | 1 | 2 | 400 heavy | `auth_tank_cannon`: 60 dmg / 40t, rng 5c, `auth_ap`. DPS U/L/H/S/F: 7.5/22.5/30.0/15.0/12.0 | 1.56 | 5 | crusher=True; loco=tracked turret | auth_up_composite_armour (max_health x1.2); auth_up_tungsten_shot (damage x1.25) | sprite, lore | in allow-list from auth_02 |
+| `auth_decon_truck` | Decontamination Truck / Decon Truck **(differs)** | Clean-up and ground restoration | 400 | 160t (8s) | auth_factory, auth_tier2 | 2 | 1 | 300 light | `auth_decon_spray`: 0 dmg / 20t, rng 1.5c, `auth_decon` splash [decontaminate 40] — no damage by design (sim still deals 1 per hit, see FAD finding) | 1.88 | 5 | veteran=False; loco=wheeled | — | sprite, lore | in allow-list from auth_03 |
+| `auth_carrier` | Sealed Carrier / Carrier **(differs)** | Ashfall-proof transport | 700 | 280t (14s) | auth_factory, auth_tier2 | 2 | 2 | 350 heavy | — | 1.41 | 4 | passengers=5; loco=tracked | auth_up_convoy_drill (speed x1.1) | **no sprite (placeholder)**, lore | in allow-list from auth_03 |
+| `auth_seismic_mortar` | Seismic Mortar / Seismic Mortar | Anti-tunnel artillery | 800 | 320t (16s) | auth_factory, auth_tier2 | 2 | 2 | 400 heavy | `auth_seismic_mortar_gun`: 28 dmg / 90t, rng 9c (min 2), `auth_seismic` splash (hits allies) [hits_burrowed True, bonus_vs_entrance_percent 200, garrison_damage_percent 50]. DPS U/L/H/S/F: 6.2/4.9/3.6/4.2/3.1 | 1.56 | 5 | loco=tracked turret | — | **no sprite (placeholder)**, lore | **never in campaign** |
+| `auth_foam_truck` | Quick-Set Foam Layer / Foam Truck **(differs)** | Ground-sealing support vehicle | 400 | 160t (8s) | auth_factory, auth_tier2 | 2 | 1 | 300 light | `auth_foam_spray`: 0 dmg / 20t, rng 1.5c, `auth_foam` splash [foam_ticks 400] — no damage by design (sim still deals 1 per hit, see FAD finding) | 1.88 | 5 | veteran=False; loco=wheeled | — | **no sprite (placeholder)**, lore | **never in campaign** |
+| `auth_interceptor` | Interceptor / Interceptor | Prop fighter | 600 | 240t (12s) | auth_airfield, auth_tier2 | 2 | 2 | 200 light | `auth_interceptor_gun`: 100 dmg / 75t, rng 5c, `auth_ap`, targets air. DPS U/L/H/S/F: 6.7/20.0/26.7/13.3/10.7 | 0.62 | 8 | loco=air | — | **no sprite (placeholder)**, lore | **never in campaign** |
+| `auth_bomber` | Heavy Bomber / Bomber **(differs)** | Four-engine ground-attack aircraft | 600 | 240t (12s) | auth_airfield, auth_tier3 | 3 | 2 | 200 light | `auth_bomb`: 120 dmg / 60t, rng 2c, `auth_he` splash (hits allies). DPS U/L/H/S/F: 40.0/32.0/24.0/28.0/20.0 | 0.62 | 8 | loco=air | — | **no sprite (placeholder)**, lore | **never in campaign** |
+| `auth_howitzer` | Field Howitzer / Howitzer **(differs)** | Long-range artillery | 800 | 320t (16s) | auth_factory, auth_tier3 | 3 | 2 | 400 heavy | `auth_howitzer_gun`: 20 dmg / 90t, rng 10c (min 2), `auth_he` splash (hits allies). DPS U/L/H/S/F: 4.4/3.6/2.7/3.1/2.2 | 1.56 | 5 | loco=tracked turret | — | **no sprite (placeholder)**, lore | in allow-list from auth_04 |
+| `auth_bulwark` | Bulwark Heavy Tank / Bulwark **(differs)** | Heavy armour | 800 | 320t (16s) | auth_factory, auth_tier3 | 3 | 2 | 400 heavy | `auth_tank_cannon`: 60 dmg / 40t, rng 5c, `auth_ap`. DPS U/L/H/S/F: 7.5/22.5/30.0/15.0/12.0 | 1.56 | 5 | crusher=True; loco=tracked turret | auth_up_composite_armour (max_health x1.2); auth_up_tungsten_shot (damage x1.25) | **no sprite (placeholder)**, lore | in allow-list from auth_04 |
+
+## Structures and defences
+
+| id | Name / Cameo | Role (tooltip) | Cat. | Cost | Build | Power | Prereqs (effective) | Provides | Tier | HP / armour | Size | Weapon | Function | Upgrades that affect it | Art / lore | Campaign |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| `auth_conyard` | Construction Yard / Construction Yard | Base seat of an Authority district | structure | 0 | — | 0 | — | auth_conyard | 1 | 1000 structure | 3x3 | — | supply_provided=20; buildable=False | auth_up_signals_net (sight +2) | sprite, lore | start / pre-placed |
+| `auth_power` | Power Plant / Power Plant | Reactor and turbine hall | structure | 300 | 120t (6s) | 100 | auth_conyard | — | 1 | 400 structure | 2x2 | — |  | auth_up_signals_net (sight +2) | sprite, lore | in allow-list from auth_01 |
+| `auth_ration_hall` | Ration Hall / Ration Hall | Everyone counted, everyone fed | structure | 200 | 80t (4s) | -10 | auth_power | — | 1 | 300 structure | 2x2 | — | supply_provided=10 | auth_up_signals_net (sight +2) | **no sprite (placeholder)**, lore | in allow-list from auth_02 |
+| `auth_refinery` | Ashfall Refinery / Refinery **(differs)** | Centrifuge plant | structure | 2000 | 400t (20s) | -40 | auth_power | — | 1 | 700 structure | 3x3 | — | refinery=True; storage=1000; free_unit=auth_scraper | auth_up_signals_net (sight +2) | sprite, lore | in allow-list from auth_01 |
+| `auth_barracks` | Barracks / Barracks | Infantry muster hall | structure | 300 | 120t (6s) | -20 | auth_power | — | 1 | 450 structure | 2x2 | — | produces=infantry; researches=True | auth_up_signals_net (sight +2) | sprite, lore | in allow-list from auth_01 |
+| `auth_factory` | Vehicle Factory / War Factory **(differs)** | Armoured vehicle works | structure | 2000 | 800t (40s) | -30 | auth_refinery | — | 1 | 800 structure | 3x3 | — | produces=vehicle; researches=True | auth_up_signals_net (sight +2) | sprite, lore | in allow-list from auth_02 |
+| `auth_silo` | Storage Silo / Silo **(differs)** | Concentrate store | structure | 150 | 60t (3s) | -10 | auth_refinery | — | 1 | 250 structure | 2x2 | — | storage=1500 | auth_up_signals_net (sight +2) | sprite, lore | **never in campaign** |
+| `auth_wall` | Perimeter Wall / Wall **(differs)** | Base wall segment | defence | 50 | 20t (1s) | 0 | auth_conyard | — | 1 | 200 fortified | 1x1 | — | wall=True | auth_up_signals_net (sight +2) | sprite, lore | in allow-list from auth_01 |
+| `auth_turret` | Gun Turret / Gun Turret | Fixed defensive gun | defence | 400 | 160t (8s) | -20 | auth_barracks | — | 1 | 400 fortified | 1x1 | `auth_turret_gun`: 20 dmg / 30t, rng 5c, `auth_he` splash (hits allies). DPS U/L/H/S/F: 13.3/10.7/8.0/9.3/6.7 | needs_power=True | auth_up_signals_net (sight +2) | sprite, lore | in allow-list from auth_02 |
+| `auth_seismograph` | Seismograph Station / Seismograph **(differs)** | Underground listening post | structure | 250 | 100t (5s) | -10 | auth_power | — | 1 | 300 structure | 2x2 | — | seismic_radius=8 | auth_up_signals_net (sight +2) | sprite, lore | **never in campaign** |
+| `auth_searchlight` | Searchlight Tower / Searchlight **(differs)** | Anti-Blackout and night watch | defence | 300 | 120t (6s) | -20 | auth_barracks, auth_tier2 | — | 2 | 400 fortified | 1x1 | — | needs_power=True; sees_through_blackout=True | auth_up_signals_net (sight +2); auth_up_sodium_lamps (sight +2) | sprite, lore | in allow-list from auth_03 |
+| `auth_gate` | Gate / Gate | Perimeter gate | defence | 60 | 24t (2s) | 0 | auth_conyard | — | 1 | 200 fortified | 1x1 | — | gate=True | auth_up_signals_net (sight +2) | sprite, lore | in allow-list from auth_04 |
+| `auth_engineering` | Engineering Works / Engineering **(differs)** | Research and standards bureau | structure | 500 | 200t (10s) | -20 | auth_power, auth_factory | auth_tier2 | 2 | 450 structure | 2x2 | — | researches=True | auth_up_signals_net (sight +2) | sprite, lore | in allow-list from auth_03 |
+| `auth_signals_hq` | Signals Headquarters / Signals Hq **(differs)** | Tier 3 command and communications centre | structure | 2500 | 1000t (50s) | -60 | auth_engineering | auth_tier3 | 3 | 900 structure | 3x3 | — | researches=True | auth_up_signals_net (sight +2) | **no sprite (placeholder)**, lore | in allow-list from auth_04 |
+| `auth_blockhouse` | Blockhouse / Blockhouse | Garrison strongpoint | defence | 300 | 120t (6s) | 0 | auth_barracks | — | 1 | 450 fortified | 2x2 | — | garrison=5 | auth_up_signals_net (sight +2) | **no sprite (placeholder)**, lore | **never in campaign** |
+| `auth_flak` | Flak Emplacement / Flak **(differs)** | Anti-air gun | defence | 400 | 160t (8s) | -20 | auth_barracks, auth_tier2 | — | 2 | 400 fortified | 1x1 | `auth_flak_gun`: 20 dmg / 30t, rng 5c, `auth_he` splash (hits allies), targets air. DPS U/L/H/S/F: 13.3/10.7/8.0/9.3/6.7 | needs_power=True | auth_up_signals_net (sight +2) | **no sprite (placeholder)**, lore | in allow-list from auth_04 |
+| `auth_airfield` | Airfield / Airfield | Aircraft production | structure | 2000 | 800t (40s) | -30 | auth_factory, auth_tier2 | — | 2 | 800 structure | 3x3 | — | produces=aircraft | auth_up_signals_net (sight +2) | **no sprite (placeholder)**, lore | in allow-list from auth_04 |
+| `auth_atomic_battery` | Atomic Artillery Battery / Atomic Battery **(differs)** | Superweapon | structure | 3000 | 1200t (60s) | -60 | auth_factory, auth_tier3 | — | 3 | 900 structure | 3x3 | — | superweapon=auth_atomic; superweapon_charge_ticks=3000; superweapon_entrance_range=8 | auth_up_signals_net (sight +2) | **no sprite (placeholder)**, lore | unlocked by auth_04 win (final reward, replay only) |
+
+## Upgrades (researched at any own building with researches = true; tier gate appended)
+
+| id | Name | Tooltip | Cost | Time | Tier | Prereqs (effective) | Effects (as the sim applies them) |
+|---|---|---|---|---|---|---|---|
+| `auth_grouting` | Foundation Grouting | Hardened ground inside the walls | 1500 | 600t (30s) | 2 | auth_tier2 | effect key `grouting` |
+| `auth_up_composite_armour` | Composite Armour | Thicker tank plating | 1500 | 600t (30s) | 2 | auth_tier2 | auth_tank.max_health x1.2; auth_bulwark.max_health x1.2 |
+| `auth_up_convoy_drill` | Convoy Drill | Faster light vehicles | 800 | 320t (16s) | 1 | — | auth_jeep.speed x1.1; auth_scraper.speed x1.1; auth_carrier.speed x1.1 |
+| `auth_up_flak_vests` | Flak Vests | Padded infantry armour | 800 | 320t (16s) | 1 | — | class:infantry.max_health x1.15 |
+| `auth_up_signals_net` | Signals Net | Wider base sight | 2500 | 1000t (50s) | 3 | auth_tier3 | class:building.sight +2 |
+| `auth_up_sodium_lamps` | Sodium Lamps | Brighter searchlight beams | 1500 | 600t (30s) | 2 | auth_tier2 | auth_searchlight.sight +2 |
+| `auth_up_tungsten_shot` | Tungsten Shot | Armour-piercing tank rounds | 2500 | 1000t (50s) | 3 | auth_tier3 | weapon:auth_tank_cannon.damage x1.25 |
+
+## Booklet caveats (from the faction-ad audit, /home/claude/audit/faction-ad/findings.md)
+- The sidebar shows the Cameo name, not the archive title (e.g. auth_tank reads "Medium Tank" in game, "Heavy Tank" in the archive). Pick one before printing (FAD-15).
+- auth_atomic_battery cannot fire as the data stands: superweapon_entrance_range = 8 needs an own tunnel entrance and the Authority has none (FAD-01).
+- auth_bulwark is a copy of auth_tank; auth_howitzer is weaker than the tier-2 Seismic Mortar; auth_interceptor and auth_bomber fly at 0.62 cells/s, slower than a rifleman (FAD-07). Do not describe them by their lore until the numbers change.
+- Decon Truck and Foam Layer can only spray an enemy unit or building within 1.5 cells; there is no attack-ground order (FAD-05).
+- Campaign: rocketeer, scraper, silo, seismograph, blockhouse, seismic mortar, foam truck and all aircraft are never buildable in the Authority campaign (FAD-03, FAD-04).
+- Rad resistance (rad_resist_permille) only matters against weapon radiation; ashfall fields do not hurt anyone (FAD-10).
+- Upgrades: Flak Vests and other max_health upgrades do not heal units that already exist (design 08, Q-M4-j).

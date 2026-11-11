@@ -62,6 +62,18 @@ public sealed class MissionGame
     /// <summary>The script host (objectives, messages, errors).</summary>
     public MissionHost Host { get; }
 
+    /// <summary>
+    /// S18 MIS-01 / MIS-05: whether the mission screen should end. A scripted mission ends only when the script has decided
+    /// (<see cref="MissionHost.Outcome"/>) or the local player is defeated; the sim's own elimination rule (<see cref="Simulation.GameOver"/>)
+    /// neither ends it early (an enemy with no buildings left) nor keeps it running (a third team still alive after Mission.Lose).
+    /// Only when the script has halted on a fatal error does the sim's rule decide, so the game can still end.
+    /// </summary>
+    public bool IsOver => Host.Outcome != MissionOutcome.None || Sim.Players.Defeated[LocalPlayer] || (Host.Halted && Sim.GameOver);
+
+    /// <summary>S18 MIS-01: true when the end screen should say Victory: the script won, or (halted script only) the sim's winning team is ours.</summary>
+    public bool LocalWon => Host.Outcome == MissionOutcome.Won
+        || (Host.Outcome == MissionOutcome.None && !Sim.Players.Defeated[LocalPlayer] && Sim.WinningTeam >= 0 && Sim.WinningTeam == Sim.Setup.TeamOf(LocalPlayer));
+
     /// <summary>What a replay of this mission stores in its header: the mission id and script hash (M3-19).</summary>
     public ReplayMission ReplayRef => new(Def.Id, Host.SourceHash);
 

@@ -17,12 +17,13 @@ public static class Program
     /// runs the scripted sandbox fight with no window, saves the replay and exits; <c>--skirmish-check &lt;ticks&gt;</c> runs the
     /// menu's skirmish (idle player 0 against the AI) with no window and prints the result; <c>--mission-check &lt;id&gt; &lt;ticks&gt;</c> does
     /// the same for a campaign mission (<see cref="MissionCheck"/>). Any unhandled exception writes
-    /// <c>logs/crash-*.txt</c> beside the exe and returns exit code 1 (C-6).
+    /// <c>logs/crash-*.txt</c> beside the exe (and a copy under the application-data folder) and returns exit code 1 (C-6).
     /// </summary>
     /// <param name="args">Command-line arguments.</param>
     /// <returns>The exit code: 0 on success, 1 after a crash, otherwise the headless check's result.</returns>
     public static int Main(string[] args)
     {
+        AppLog.Install();   // S18 GAMEREND-03: a WinExe has no console, so Console.Error lines also go to %APPDATA%/RTS_2027/logs
         AppDomain.CurrentDomain.UnhandledException += (_, e) =>
             CrashReport.Report(e.ExceptionObject as Exception ?? new InvalidOperationException("Unknown exception."), args);
 
@@ -65,6 +66,7 @@ internal static class CrashReport
     {
         if (Interlocked.Exchange(ref _reported, 1) == 1) return;
 
+        AppLog.Line("crash: " + ex.GetType().Name + ": " + ex.Message);
         string? path = WriteLog(ex, args);
         if (OperatingSystem.IsWindows())
         {
@@ -84,22 +86,31 @@ internal static class CrashReport
 
     private static string? WriteLog(Exception ex, string[] args)
     {
+        var sb = new StringBuilder();
+        sb.AppendLine("RTS_2027 crash report");
+        sb.AppendLine($"Time: {DateTime.Now:yyyy-MM-dd HH:mm:ss zzz}");
+        sb.AppendLine($"Version: {BuildInfo.Version}");
+        sb.AppendLine($"OS: {RuntimeInformation.OSDescription} ({RuntimeInformation.ProcessArchitecture})");
+        sb.AppendLine($"Runtime: {RuntimeInformation.FrameworkDescription}");
+        sb.AppendLine($"Arguments: {string.Join(' ', args)}");
+        sb.AppendLine();
+        sb.AppendLine(ex.ToString());
+        string text = sb.ToString();
+
+        // Beside the exe (fails under a read-only install) and, S18 GAMEREND-03, under the application-data folder with the other logs.
+        string name = $"crash-{DateTime.Now:yyyyMMdd-HHmmss}.txt";
+        string? beside = TryWrite(Path.Combine(AppContext.BaseDirectory, "logs"), name, text);
+        string? appData = TryWrite(Path.GetDirectoryName(AppLog.DefaultPath) ?? ".", name, text);
+        return beside ?? appData;
+    }
+
+    private static string? TryWrite(string dir, string name, string text)
+    {
         try
         {
-            string dir = Path.Combine(AppContext.BaseDirectory, "logs");
             Directory.CreateDirectory(dir);
-            string path = Path.Combine(dir, $"crash-{DateTime.Now:yyyyMMdd-HHmmss}.txt");
-
-            var sb = new StringBuilder();
-            sb.AppendLine("RTS_2027 crash report");
-            sb.AppendLine($"Time: {DateTime.Now:yyyy-MM-dd HH:mm:ss zzz}");
-            sb.AppendLine($"Version: {BuildInfo.Version}");
-            sb.AppendLine($"OS: {RuntimeInformation.OSDescription} ({RuntimeInformation.ProcessArchitecture})");
-            sb.AppendLine($"Runtime: {RuntimeInformation.FrameworkDescription}");
-            sb.AppendLine($"Arguments: {string.Join(' ', args)}");
-            sb.AppendLine();
-            sb.AppendLine(ex.ToString());
-            File.WriteAllText(path, sb.ToString());
+            string path = Path.Combine(dir, name);
+            File.WriteAllText(path, text);
             return path;
         }
         catch (Exception)

@@ -67,7 +67,10 @@ public sealed class ArchiveProgress
         try
         {
             string file = path ?? DefaultPath;
-            return File.Exists(file) ? Parse(File.ReadAllText(file)) : new ArchiveProgress();
+            if (!File.Exists(file)) return new ArchiveProgress();
+            ArchiveProgress p = Parse(File.ReadAllText(file), out bool readable);
+            if (!readable) Campaign.CampaignProgress.KeepAsBad(file);   // S18 GS-05: keep it as <file>.bad, do not overwrite it later
+            return p;
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException or System.Security.SecurityException)
         {
@@ -76,9 +79,13 @@ public sealed class ArchiveProgress
     }
 
     /// <summary>Parses file text; never throws. Bad text, a newer version or wrong-typed lists give what could be read (or empty).</summary>
-    public static ArchiveProgress Parse(string text)
+    public static ArchiveProgress Parse(string text) => Parse(text, out _);
+
+    // S18 GS-05: readable is false for text that is not TOML or has a newer version (the caller keeps such a file as .bad).
+    private static ArchiveProgress Parse(string text, out bool readable)
     {
         var progress = new ArchiveProgress();
+        readable = false;
         TomlTable root;
         try
         {
@@ -89,6 +96,7 @@ public sealed class ArchiveProgress
             return progress;
         }
         if (root.TryGetValue("version", out object? v) && v is long version && version > CurrentVersion) return progress;
+        readable = true;
         Fill(progress._encounters, root, "encounters");
         Fill(progress._research, root, "research");
         Fill(progress._missions, root, "missions");
@@ -116,7 +124,9 @@ public sealed class ArchiveProgress
             string file = path ?? DefaultPath;
             string? dir = Path.GetDirectoryName(file);
             if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
-            File.WriteAllText(file, ToToml());
+            string tmp = file + ".tmp";   // S18 GS-05: write through a temporary file, as CampaignProgress does
+            File.WriteAllText(tmp, ToToml());
+            File.Move(tmp, file, overwrite: true);
             Dirty = false;
             return true;
         }

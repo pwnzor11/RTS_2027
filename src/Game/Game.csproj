@@ -24,6 +24,12 @@
           CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 
+  <!-- The About screen reads docs/CREDITS.md two folders above data/rules, so a published build needs it at docs/CREDITS.md beside data/ (S18 TESTS-REPO-02). -->
+  <ItemGroup>
+    <None Include="..\..\docs\CREDITS.md" Link="docs\CREDITS.md"
+          CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net10.0</TargetFramework>

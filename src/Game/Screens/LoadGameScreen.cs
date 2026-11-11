@@ -38,9 +38,9 @@ public static class LoadGameScreen
             GameScreen screen = GameScreen.CreateFromSave(s, loaded);
             s.Screens.Push(screen);
         }
-        catch (SaveLoadException e)
+        catch (Exception e) when (ScreenGuard.IsDataError(e))   // S18 GS-10: not only SaveLoadException (a map or mission file can be damaged too)
         {
-            s.Screens.Push(new NoticeScreen(s, "Cannot load", e.Message));
+            s.Screens.Push(new NoticeScreen(s, "Cannot load", ScreenGuard.Describe(e)));
         }
     }
 

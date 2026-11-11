@@ -43,6 +43,7 @@ public sealed class OpenAiCompatibleProvider : IChatProvider
     public Task<ChatResult> CompleteAsync(ChatRequest request, CancellationToken ct)
     {
         string url = EndpointFor(_cfg.BaseUrl);
+        if (_key.Length > 0 && !KeyPolicy.MaySendKey(_cfg.BaseUrl, DefaultBaseUrl)) return Task.FromResult(ProviderHttp.Fail(KeyPolicy.RefusedReason));   // S18 AI-07
         return ProviderHttp.SendAsync(_http, _cfg.TimeoutSeconds, () =>
         {
             var req = new HttpRequestMessage(HttpMethod.Post, url);

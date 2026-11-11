@@ -35,7 +35,7 @@ public sealed class CommanderSet : IDisposable
         foreach ((byte player, SkirmishSlot slot) in slots)
         {
             if (!slot.Commander || driver.AiOf(player) is null) continue;
-            IChatProvider? provider = app.ProviderKind == LlmProviderKind.None ? null : ProviderFactory.Create(cfg, LlmHooks.SecretStore.Load());
+            IChatProvider? provider = app.ProviderKind == LlmProviderKind.None ? null : ProviderFactory.Create(cfg, LlmHooks.Keys.Load(app.ProviderKind));   // only this provider's own key (S18 AI-07)
             personas ??= PersonaCatalog.Load(Path.Combine(AppContext.BaseDirectory, "data", "llm", "personas.toml"));
             string faction = slot.Faction.ToString();
             var commander = new Commander(player, provider, PersonaCatalog.Pick(personas, faction, player), faction, app.LlmCallCap,

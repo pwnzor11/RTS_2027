@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
+using Rts.Game.Tests.S18;
 using System.Text;
 using Microsoft.Xna.Framework;
 using Rts.Game.Sprites;
@@ -422,6 +423,7 @@ public sealed class SpriteLibraryTests : IDisposable
 }
 
 /// <summary>Checks the palette the house colours are drawn from.</summary>
+[Collection("UiStatics")]   // S18 TESTS-REPO-01: touches process-wide statics, runs alone
 public sealed class PlayerColoursTests
 {
     [Fact]
@@ -460,7 +462,7 @@ public sealed class PlayerColoursTests
 /// </summary>
 public sealed class HouseColourProofTests
 {
-    [Fact]
+    [ProbeFact("RTS_PROOF_IN")]
     public void Compose_the_tank_for_eight_houses()
     {
         string? input = Environment.GetEnvironmentVariable("RTS_PROOF_IN");

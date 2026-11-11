@@ -29,6 +29,17 @@ public sealed class ControlGroups
         _groups[number - 1].AddRange(copy);
     }
 
+    /// <summary>
+    /// Ctrl+number (S18 GAMEUI-07): like <see cref="Set"/> but an empty selection leaves the group alone, so a stray Ctrl+1 with nothing
+    /// (or only a building) selected does not wipe a hotkeyed army. Returns whether the group was set.
+    /// </summary>
+    public bool TrySet(int number, IReadOnlyCollection<UnitKey> units)
+    {
+        if (units.Count == 0 || !InRange(number)) return false;
+        Set(number, units);
+        return true;
+    }
+
     /// <summary>Adds the given units to group <paramref name="number"/> (Shift+number), taking them out of any other group.</summary>
     public void Add(int number, IEnumerable<UnitKey> units)
     {

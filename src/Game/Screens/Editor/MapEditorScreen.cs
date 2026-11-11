@@ -169,8 +169,8 @@ public sealed class MapEditorScreen : IScreen
     private void HandleIssues(InputFrame input, EditorLayout layout, UiUnit scale)
     {
         if (!layout.Issues.Contains(_mouse)) return;
-        int rowH = 9 * scale;
-        int firstY = layout.Issues.Y + 12 * scale;
+        int rowH = EditorLayout.RowHeight(scale);
+        int firstY = layout.Issues.Y + EditorLayout.HeaderHeight(scale);
         int visible = Math.Max(1, (layout.Issues.Bottom - firstY) / rowH);
         if (input.WheelDelta != 0) { _issueScroll = Math.Clamp(_issueScroll - Math.Sign(input.WheelDelta), 0, Math.Max(0, _report.Rows.Count - visible)); input.ConsumeWheel(); }
         if (input.LeftPressed)
@@ -417,6 +417,7 @@ public sealed class MapEditorScreen : IScreen
         var (hx, hy) = EditorLayout.CellAt(_mouse, _origin, Zooms[_zoom]);
         string pos = d.Contains(hx, hy) ? $"({hx}, {hy}) {d.Land[d.IndexOf(hx, hy)]}" : "";
         string line = $"{d.Name}{(_session.Dirty ? "*" : "")}  {d.Width}x{d.Height}  {pos}  {status}";
+        line = TextWrap.Ellipsize(line, layout.StatusBar.Width - scale * 4, t => BitmapFont.Measure(t, scale));   // never cut off by the window edge
         BitmapFont.Draw(sb, px, line, new Vector2(layout.StatusBar.X + scale * 2, layout.StatusBar.Y + scale * 1), Text, scale);
     }
 
@@ -424,16 +425,17 @@ public sealed class MapEditorScreen : IScreen
     {
         Texture2D px = _s.Pixel;
         Rectangle r = layout.Issues;
-        BitmapFont.Draw(sb, px, "Validation: " + _report.Summary, new Vector2(r.X + scale * 2, r.Y + scale * 2), _report.ErrorCount > 0 ? ErrorColour : Text, scale);
-        int rowH = 9 * scale, y = r.Y + 12 * scale;
-        int maxChars = Math.Max(8, (r.Width - scale * 4) / (BitmapFont.Advance * scale));
+        int room = r.Width - scale * 4;
+        string header = TextWrap.Ellipsize("Validation: " + _report.Summary, room, t => BitmapFont.Measure(t, scale));
+        BitmapFont.Draw(sb, px, header, new Vector2(r.X + scale * 2, r.Y + scale * 2), _report.ErrorCount > 0 ? ErrorColour : Text, scale);
+        int rowH = EditorLayout.RowHeight(scale), y = r.Y + EditorLayout.HeaderHeight(scale);
         for (int i = _issueScroll; i < _report.Rows.Count && y + rowH <= r.Bottom; i++, y += rowH)
         {
             ValidationRow row = _report.Rows[i];
             var rect = new Rectangle(r.X + 1, y, r.Width - 2, rowH);
             if (i == _selectedIssue) Shapes.Fill(sb, px, rect, BtnActive);
             else if (rect.Contains(_mouse)) Shapes.Fill(sb, px, rect, BtnHover);
-            string t = row.Text.Length > maxChars ? row.Text[..(maxChars - 2)] + ".." : row.Text;
+            string t = TextWrap.Ellipsize(row.Text, room, m => BitmapFont.Measure(m, scale));
             BitmapFont.Draw(sb, px, t, new Vector2(r.X + scale * 2, y + scale), row.Severity == MapIssueSeverity.Error ? ErrorColour : WarnColour, scale);
         }
     }

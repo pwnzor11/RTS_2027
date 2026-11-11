@@ -9,11 +9,11 @@ public sealed class LlmSettingsTests
 {
     private static readonly ProviderDefaults Defaults = ProviderDefaults.Builtin;
 
-    private static (LlmSettingsModel Model, Func<Rts.Game.Settings> Get, MemorySecretStore Store) Build(
+    private static (LlmSettingsModel Model, Func<Rts.Game.Settings> Get, ProviderKeyring Keys) Build(
         TestConnectionFunc? test = null, Rts.Game.Settings? start = null)
     {
         Rts.Game.Settings s = start ?? Rts.Game.Settings.Default;
-        var store = new MemorySecretStore();
+        ProviderKeyring store = ProviderKeyring.InMemory();
         var model = new LlmSettingsModel(() => s, v => s = v, store, Defaults, test ?? ((_, _, _) => Task.FromResult("not wired yet")));
         return (model, () => s, store);
     }
@@ -130,12 +130,12 @@ public sealed class LlmSettingsTests
     [Fact]
     public void Key_status_shows_only_set_or_none()
     {
-        var (model, _, store) = Build();
+        var (model, _, store) = Build(start: new Rts.Game.Settings(LlmProvider: "anthropic"));   // S18 AI-07: a key belongs to a provider
         Assert.Equal("no key", model.KeyStatus);
         Assert.False(model.SetKey("   "));
         Assert.True(model.SetKey("  sk-abc  "));
         Assert.Equal("key set", model.KeyStatus);
-        Assert.Equal("sk-abc", store.Load());
+        Assert.Equal("sk-abc", store.Load(LlmProviderKind.Anthropic));
         model.ClearKey();
         Assert.Equal("no key", model.KeyStatus);
     }

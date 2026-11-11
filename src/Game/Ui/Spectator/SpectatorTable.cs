@@ -66,6 +66,60 @@ public static class SpectatorTable
         + $"{r.PowerOut}/{r.PowerUse,-4} {r.Stats.UnitsBuilt,-6} {r.Stats.UnitsLost,-5} {r.Stats.Kills,-6} {r.Upgrades}"
         + (r.Defeated ? "  OUT" : "");
 
+    private static string[] DetailCells(SpectatorRow r) => new[]
+    {
+        "P" + (r.Player + 1) + Tag(r), r.Faction.ToString(), r.Tier.ToString(), (r.Cash + r.Stored).ToString(), r.IncomePerMinute.ToString(),
+        r.ArmyValue.ToString(), r.Structures.ToString(), $"{r.PowerOut}/{r.PowerUse}", r.Stats.UnitsBuilt.ToString(), r.Stats.UnitsLost.ToString(),
+        r.Stats.Kills.ToString(), r.Upgrades.ToString(), r.Defeated ? "OUT" : "",
+    };
+
+    private static readonly string[] HeaderCells =
+        { "PLAYER", "FACTION", "TIER", "CASH", "INCOME/M", "ARMY", "STRUCT", "POWER", "BUILT", "LOST", "KILLS", "UPG", "" };
+
+    /// <summary>
+    /// S18 UXG-10: the final table with its columns lined up in a proportional font. Each cell is followed by as many spaces as bring the
+    /// next column to the same pixel x on every line, using <paramref name="measure"/> (pixel width of a string at the size it is drawn),
+    /// so the error is under one space width. The padding-by-character-count of <see cref="Final(IReadOnlyList{SpectatorRow})"/> only
+    /// lines up in a fixed-width font.
+    /// </summary>
+    public static IReadOnlyList<string> Final(IReadOnlyList<SpectatorRow> rows, Func<string, int> measure)
+    {
+        var table = new List<string[]>(rows.Count + 1) { HeaderCells };
+        foreach (SpectatorRow r in rows) table.Add(DetailCells(r));
+        int columns = HeaderCells.Length;
+        int space = Math.Max(1, measure("i i") - measure("ii"));
+        var start = new int[columns + 1];
+        for (int c = 0; c < columns; c++)
+        {
+            int widest = 0;
+            foreach (string[] row in table) widest = Math.Max(widest, measure(row[c]));
+            start[c + 1] = start[c] + widest + 2 * space;
+        }
+
+        var lines = new List<string>(table.Count);
+        foreach (string[] row in table)
+        {
+            var line = new System.Text.StringBuilder();
+            for (int c = 0; c < columns; c++)
+            {
+                line.Append(row[c]);
+                if (c == columns - 1) break;
+                int target = start[c + 1];
+                while (true)
+                {
+                    int now = measure(line.ToString());
+                    int next = measure(line.ToString() + " ");
+                    if (Math.Abs(next - target) >= Math.Abs(now - target)) break;
+                    line.Append(' ');
+                }
+            }
+
+            lines.Add(line.ToString().TrimEnd());
+        }
+
+        return lines;
+    }
+
     /// <summary>Lines of the final table shown at game over: the header, then one line per player.</summary>
     public static IReadOnlyList<string> Final(IReadOnlyList<SpectatorRow> rows)
     {

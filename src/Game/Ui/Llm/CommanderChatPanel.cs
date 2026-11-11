@@ -26,6 +26,7 @@ public sealed class CommanderChatPanel
     /// <summary>Most rows drawn above the input line.</summary>
     public const int MaxRows = 12;
 
+    private readonly Rts.Game.Input.KeyRepeat _backRepeat = new();
     private const int Pad = 8;
     private const int LineGap = 4;
     private static readonly Color PanelColour = new(0, 0, 0, 170);
@@ -80,7 +81,9 @@ public sealed class CommanderChatPanel
             _model.Submit(commanders, tick);
             return _model.Typing;
         }
-        if (input.ConsumePressed(Keys.Back)) _model.Backspace();
+        bool backHeld = input.IsDown(Keys.Back);
+        input.ConsumePressed(Keys.Back);
+        if (_backRepeat.Step(backHeld)) _model.Backspace();   // S18 GAMEUI-11: holding Backspace repeats
         foreach (char ch in input.ConsumeText()) _model.Type(ch);
         return _model.Typing;
     }

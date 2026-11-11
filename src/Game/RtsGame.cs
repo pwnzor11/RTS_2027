@@ -92,8 +92,9 @@ public sealed class RtsGame : Microsoft.Xna.Framework.Game
         SpriteLibrary? spriteLibrary = null;
         try
         {
-            SpriteLibrary library = SpriteLibrary.Scan(Path.Combine(_dataDir, "sprites"));
-            library.LoadAll(GraphicsDevice);
+            // S18 GAMEREND-02: a bad manifest or sheet is skipped and logged, the rest still load.
+            SpriteLibrary library = SpriteLibrary.ScanTolerant(Path.Combine(_dataDir, "sprites"), Console.Error.WriteLine);
+            library.LoadAll(GraphicsDevice, Console.Error.WriteLine);
             spriteLibrary = library;
             scene = new SceneRenderer(library);
         }

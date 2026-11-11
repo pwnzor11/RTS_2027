@@ -367,3 +367,27 @@ Pull first: `git pull --ff-only origin main` then `git lfs pull` (new sprites). 
   both sides of the centre field; `map report` with the same arguments prints the harvest distance line.
 - **Expedition v Expedition on Ash Plains layout 2:** `ai match --a tiered:3 --b tiered:3 --faction-a expedition --faction-b expedition --size 96 --seeds 1 --layout 2 --biome ash_plains` ends with both sides having built.
 - **Laptop run (64 games per row):** `powershell -ExecutionPolicy Bypass -File tools\measure\run_s17_layout2.ps1`, results in `balance_runs\s17l2\s17l2_summary.md`.
+
+## Session 18 · Audit fixes, Field Manual pilot (D-202..D-206)
+Back up `%APPDATA%\RTS_2027` first (progress and settings files are now written via a temporary file; unreadable ones are kept as `.bad`).
+- 2v2 skirmish: right-click an ally's unit (or a full or non-garrisonable ally building) with units selected: they move, no attack cursor.
+  An allied building with room still garrisons infantry.
+- Build a War Factory, sell the Refinery before placing it: the Factory cameo stays on the sidebar and can be placed or cancelled.
+- Tutorial: select units; the instructor line sits above the selection card.
+- Mouse wheel over a fight: the point under the cursor stays put.
+- Press A, then right-click the minimap: units attack-move there.
+- Settings: UI scale 200 %, Text Extra large, window 1280x720: the main menu and skirmish setup fit; slot labels end in "..." and the panel does not change width.
+- Load a corrupt save: a Notice instead of a crash.
+- exp_03 or lb_04: aircraft from the Flight Deck / Rotor Pad can be built.
+- auth_03: let the tide timer run out: the Defeat screen with Retry appears.
+- auth_01: lose both scrapers: the mission is lost, not stuck.
+- Campaign: save mid-mission, quit, load, win: the debrief shows and the next mission unlocks.
+- Win auth_02, back to the Campaign menu: Left Behind reads open; the lock hint names the highlighted faction.
+- exp_04 saves and replays made before session 18 no longer load (script changed, D-203): expected.
+- A campaign replay shows "watchable only" and no desync warning; a skirmish replay keeps its check.
+- Settings > AI commander (LLM)...: switch Provider between Anthropic and OpenAI-compatible; each keeps its own key. An http base URL to
+  another machine refuses to send a key (Test connection obeys the same rule).
+- About: the full credits list (Skorpio, LPC, Kenney, 0 A.D.) also in a published build.
+- `%APPDATA%\RTS_2027\logs\rts_2027.log` exists after a run.
+- Laptop series: `powershell -ExecutionPolicy Bypass -File tools\measure\run_s18_audit.ps1` (about 95 min) -> send back `balance_runs\s18audit\s18audit_summary.md`.
+- Booklet hero render pilot: `powershell -ExecutionPolicy Bypass -File tools\booklet\render_heroes.ps1 -Pilot` (12 renders, about 15-45 min) -> send back `art\booklet\contact_<date>.png`.

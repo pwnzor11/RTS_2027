@@ -16,19 +16,19 @@ public sealed class LlmSettingsModel
 
     private readonly Func<Settings> _get;
     private readonly Action<Settings> _set;
-    private readonly ISecretStore _store;
+    private readonly ProviderKeyring _keys;
     private readonly ProviderDefaults _defaults;
     private readonly TestConnectionFunc _test;
     private CancellationTokenSource? _cts;
     private Task<string>? _running;
     private bool _hasKey;
 
-    /// <summary>Creates the model over a settings accessor pair, a key store, the provider defaults and a test function.</summary>
-    public LlmSettingsModel(Func<Settings> get, Action<Settings> set, ISecretStore store, ProviderDefaults defaults, TestConnectionFunc test)
+    /// <summary>Creates the model over a settings accessor pair, the per-provider keys, the provider defaults and a test function.</summary>
+    public LlmSettingsModel(Func<Settings> get, Action<Settings> set, ProviderKeyring keys, ProviderDefaults defaults, TestConnectionFunc test)
     {
         _get = get;
         _set = set;
-        _store = store;
+        _keys = keys;
         _defaults = defaults;
         _test = test;
         RefreshKey();
@@ -56,6 +56,7 @@ public sealed class LlmSettingsModel
     {
         int next = ((int)Provider + (direction >= 0 ? 1 : 2)) % 3;
         _set(_get() with { LlmProvider = Settings.ProviderName((LlmProviderKind)next), LlmBaseUrl = "", LlmModel = "" });
+        RefreshKey();   // each provider has its own key: the status now shows the new provider's
     }
 
     /// <summary>Sets the base URL (empty = provider default).</summary>
@@ -120,7 +121,7 @@ public sealed class LlmSettingsModel
     /// <summary>The cap row text.</summary>
     public string CapText() => _get().LlmCallCap == 0 ? LlmUiText.NoCap : _get().LlmCallCap.ToString(System.Globalization.CultureInfo.InvariantCulture);
 
-    /// <summary>"key set" or "no key"; never the key.</summary>
+    /// <summary>"key set" or "no key" for the current provider; never the key.</summary>
     public string KeyStatus => _hasKey ? LlmUiText.KeySet : LlmUiText.NoKey;
 
     /// <summary>True when a key is stored.</summary>
@@ -130,7 +131,7 @@ public sealed class LlmSettingsModel
     public bool SetKey(string key)
     {
         string k = key.Trim();
-        bool ok = k.Length > 0 && _store.Save(k);
+        bool ok = k.Length > 0 && _keys.Save(Provider, k);
         RefreshKey();
         return ok;
     }
@@ -138,10 +139,10 @@ public sealed class LlmSettingsModel
     /// <summary>Shows "could not save the key" in the result line.</summary>
     public void ReportKeyFailure() => TestResult = LlmUiText.KeySaveFailed;
 
-    /// <summary>Deletes the stored key.</summary>
+    /// <summary>Deletes the stored key of the current provider.</summary>
     public void ClearKey()
     {
-        _store.Clear();
+        _keys.Clear(Provider);
         RefreshKey();
     }
 
@@ -157,7 +158,7 @@ public sealed class LlmSettingsModel
 
         Settings s = _get();
         LlmConfig config = _defaults.Resolve(s.ProviderKind, s.LlmBaseUrl, s.LlmModel);
-        string? key = _store.Load();
+        string? key = _keys.Load(s.ProviderKind);
         _cts?.Dispose();
         _cts = new CancellationTokenSource();
         CancellationToken ct = _cts.Token;
@@ -198,7 +199,7 @@ public sealed class LlmSettingsModel
         }
     }
 
-    private void RefreshKey() => _hasKey = _store.Load() is not null;
+    private void RefreshKey() => _hasKey = _keys.Load(Provider) is not null;
 
     // Belt and braces: a result line never carries the key, whatever the test function returned.
     private static string Scrub(string result, string? key)

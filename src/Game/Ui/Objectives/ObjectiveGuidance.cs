@@ -79,7 +79,7 @@ internal sealed class ObjectiveGuidance
     /// <summary>The lines of the collapsed bar: the objective line, the key hint, then any timer lines. Fitted to <paramref name="maxWidthPx"/>.</summary>
     public List<string> BarLines(List<string> timerLines, UiUnit scale, int maxWidthPx)
     {
-        var lines = new List<string> { Fit(Model.OneLine(Visible(), _host.Label), scale, maxWidthPx), "J jump to objective   Tab next objective   O list" };
+        var lines = new List<string> { Fit(Model.OneLine(Visible(), _host.Label), scale, maxWidthPx), ObjectiveKeyHints.Bar() };
         lines.AddRange(timerLines);
         return lines;
     }
@@ -148,7 +148,7 @@ internal sealed class ObjectiveGuidance
         for (int i = -14; i <= 14; i += 2) Shapes.Line(sb, pixel, tip, back + side * i, Orange, 3);
         Vector2 here = camera.WorldFromScreen(new Point(view.X + view.Width / 2, view.Y + view.Height / 2));
         string dist = GuidanceMath.DistanceText(Camera.CellAt(here), cell);
-        var box = new List<string> { label.ToUpperInvariant(), dist, "J: jump there" };
+        var box = new List<string> { label.ToUpperInvariant(), dist, ObjectiveKeyHints.Jump() };
         int bw = box.Max(l => BitmapFont.Measure(l, scale)) + 2 * Pad, bh = Hud.HeightOf(box.Count, scale);
         Vector2 c = back - p.Direction * (10f + MathF.Abs(p.Direction.X) * bw / 2f + MathF.Abs(p.Direction.Y) * bh / 2f);
         var rect = new Rectangle((int)(c.X - bw / 2f), (int)(c.Y - bh / 2f), bw, bh);

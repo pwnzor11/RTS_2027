@@ -91,20 +91,38 @@ public sealed record CampaignProgress(
         return new CampaignProgress((int)version, faction, completed, diff, tech.ToList());
     }
 
-    /// <summary>Loads the file; never throws. A missing or unreadable file, or one for another faction, gives an empty record.</summary>
+    /// <summary>
+    /// Loads the file; never throws. A missing or unreadable file, or one for another faction, gives an empty record. S18 GS-05: a file that
+    /// exists but cannot be parsed (bad TOML, a newer version, bad values, another faction) is first renamed to <c>&lt;file&gt;.bad</c>, so the
+    /// next save does not destroy it.
+    /// </summary>
     public static CampaignProgress Load(string faction, string? path = null)
     {
+        string file = path ?? DefaultPath(faction);
         try
         {
-            string file = path ?? DefaultPath(faction);
             if (!File.Exists(file)) return New(faction);
             CampaignProgress p = Parse(File.ReadAllText(file));
-            return p.Faction == faction ? p : New(faction);
+            if (p.Faction == faction) return p;
+            KeepAsBad(file);
+            return New(faction);
         }
-        catch (Exception e) when (e is IOException or UnauthorizedAccessException or InvalidDataException or System.Security.SecurityException)
+        catch (InvalidDataException)
+        {
+            KeepAsBad(file);
+            return New(faction);
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException or System.Security.SecurityException)
         {
             return New(faction);
         }
+    }
+
+    /// <summary>S18 GS-05: renames an unreadable profile file to <c>&lt;file&gt;.bad</c> (replacing an older one); never throws.</summary>
+    internal static void KeepAsBad(string file)
+    {
+        try { File.Move(file, file + ".bad", overwrite: true); }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException) { }
     }
 
     /// <summary>Writes the file (folders are created) through a temporary file. Returns false instead of throwing.</summary>

@@ -29,6 +29,7 @@ public sealed class AnthropicProvider : IChatProvider
     public Task<ChatResult> CompleteAsync(ChatRequest request, CancellationToken ct)
     {
         string baseUrl = string.IsNullOrWhiteSpace(_cfg.BaseUrl) ? DefaultBaseUrl : _cfg.BaseUrl.Trim().TrimEnd('/');
+        if (_key.Length > 0 && !KeyPolicy.MaySendKey(baseUrl, DefaultBaseUrl)) return Task.FromResult(ProviderHttp.Fail(KeyPolicy.RefusedReason));   // S18 AI-07
         return ProviderHttp.SendAsync(_http, _cfg.TimeoutSeconds, () =>
         {
             var req = new HttpRequestMessage(HttpMethod.Post, baseUrl + "/v1/messages");

@@ -156,7 +156,7 @@ public sealed partial class MissionHost
                 cell = new CellCoord((z.X0 + z.X1) / 2, (z.Y0 + z.Y1) / 2);
                 return true;
             case ObjectiveTargetKind.Actor:
-                if (_sim == null || !TryTag(t.Name, out ActorRef r) || !_sim.TryResolve(r)) return false;
+                if (_sim == null || !TryTag(t.Name, out ActorRef r) || !IsStanding(_sim, r)) return false;   // S18 MIS-03: a dying actor is gone
                 cell = CellOfActor(_sim, r);
                 return true;
             default:

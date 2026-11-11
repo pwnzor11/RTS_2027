@@ -264,11 +264,8 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
             {
                 var c = new CellCoord(_ghostTopLeft.X + dx, _ghostTopLeft.Y + dy);
                 if (!_source.Map.Contains(c)) { _ghostCells[dy * w + dx] = CellProblem.Terrain; continue; }
-                LandType land = map.LandAt(c);
                 bool wantWater = bt.WaterBuilding && (!mask || bt.WaterMask[dy * w + dx]);
-                bool occupied = map.OverlayAt(c) != OverlayKind.None || !map.BuildingAt(c).IsNone || (wantWater && !map.VehicleAt(c).IsNone);
-                _ghostCells[dy * w + dx] = PlacementCheck.Cell(wantWater, land is LandType.Water or LandType.Shallow,
-                    map.IsBuildable(c, _source.Rules.Terrain), occupied, UnitOnCell(c));
+                _ghostCells[dy * w + dx] = PlacementCheck.CellAt(map, _source.Rules.Terrain, wantWater, c, UnitOnCell(c));   // S18 UXG-06
             }
 
         _ghostReason = _ghostValid ? null : PlacementCheck.Reason(result, _ghostValid, PlacementCheck.Worst(_ghostCells));
@@ -336,7 +333,7 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
         for (int i = 0; i < l.Tabs.Count; i++)
         {
             var tab = (SidebarTab)i;
-            string caption = SidebarTabs.KeyLetter(tab) + " " + SidebarTabs.Caption(tab);
+            string caption = SidebarTabs.KeyName(tab) + " " + SidebarTabs.Caption(tab);
             // Five or six tabs share the width: when the key letter does not fit, the bare caption does.
             if (BitmapFont.Measure(caption, _ui, FontWeight.Regular) > l.Tabs[i].Width - 4) caption = SidebarTabs.Caption(tab);
             DrawButton(batch, pixel, l.Tabs[i], caption, tab == _tab, _ui);
@@ -360,7 +357,7 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
     {
         string text = LeftBehindText.Placeholder(LeftBehindText.UnpackHintKey);
         float scale = _ui;
-        int y = l.Grid.Y + (int)(_ui * 6);
+        int y = l.Grid.Y + TierGrouping.ContentBottom(PlacedRows()) + (int)(_ui * 6);   // S18 UXG-08: below the locked tier previews, not over them
         foreach (string line in Rts.Game.Menu.TextWrap.Wrap(text, Math.Max(8, l.Grid.Width - 8), s => BitmapFont.Measure(s, scale, FontWeight.Regular)))
         {
             Text(batch, pixel, line, new Vector2(l.Grid.X + 4, y), Gold, scale, FontWeight.Regular);
@@ -394,7 +391,7 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
         if (tabHit >= 0)
         {
             var tab = (SidebarTab)tabHit;
-            _tooltip = new List<string> { $"{SidebarTabs.Title(tab)}  ({SidebarTabs.KeyLetter(tab)})" };
+            _tooltip = new List<string> { $"{SidebarTabs.Title(tab)}  ({SidebarTabs.KeyName(tab)})" };
             if (left) SelectTab(tab);
         }
 
@@ -534,8 +531,20 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
         camera.PanScreen((target - camera.WorldFromScreen(Point.Zero)) * camera.Zoom);
     }
 
+    /// <summary>The cameos the current tab offers (for tests).</summary>
+    public IReadOnlyList<BuildOption> VisibleOptions => _visible;
+
+    /// <summary>S18 GAMEUI-05: the order controller a minimap right-click goes through, so an armed attack-move is honoured. Null = plain Move.</summary>
+    public Rts.Game.Controls.OrderController? Orders { get; set; }
+
     private void OrderSelectionTo(CellCoord cell)
     {
+        if (Orders is not null)
+        {
+            Orders.MinimapOrder(cell);
+            return;
+        }
+
         foreach (UnitKey unit in _selection.Units.ToList()) _source.Order(CommandKind.Move, unit, cell);
     }
 
@@ -585,6 +594,11 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
             if (o.Category != category || IsHidden(o)) continue;
             _visible.Add(o);
         }
+
+        // S18 UXG-01: an item the lane still holds stays on the sidebar even when its prerequisite is gone, so it can be placed or cancelled.
+        if (_tab != SidebarTab.Upgrades)
+            foreach (BuildOption o in SidebarQueueOptions.Missing(_hud, _source.Rules, category, _visible).ToList())
+                if (!IsHidden(o)) _visible.Add(o);
 
         int tier = _source.Sim.TierOf(_player);
         _rows = _tab == SidebarTab.Upgrades
