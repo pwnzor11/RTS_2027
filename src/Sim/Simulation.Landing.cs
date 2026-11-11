@@ -38,6 +38,24 @@ public sealed partial class Simulation
         Queue(_units, i, MissionKind.Unload, c.Cell, default);
     }
 
+    /// <summary>D-205 (SIM-RULES-06): Deploy on a landing transport. A Skyhook (air locomotion) is always airborne and the order is refused;
+    /// a landing craft starts the timed unload (<c>unload_ticks</c> per passenger) onto the first standable cell next to it (N..NW order);
+    /// refused when it has no such neighbour.</summary>
+    private void ApplyLandingDeploy(Command c, VehicleType vt)
+    {
+        if (vt.Locomotion == Locomotion.Air) return;
+        CellCoord at = _units.Position[c.Subject.Index].ToCell();
+        for (int dy = -1; dy <= 1; dy++)
+            for (int dx = -1; dx <= 1; dx++)
+            {
+                if (dx == 0 && dy == 0) continue;
+                var cc = new CellCoord(at.X + dx, at.Y + dy);
+                if (!InMap(cc) || !_map.IsPassableTerrain(cc, Locomotion.Foot, Setup.Rules.Terrain)) continue;
+                ApplyLandingUnload(new Command(c.ExecTick, c.Player, c.Sequence, CommandKind.Unload, c.Subject, default, cc, (int)ActorKind.Vehicle), vt);
+                return;
+            }
+    }
+
     /// <summary>The sea (movement-class passable) cell around <paramref name="shore"/> nearest the craft, in the craft's own region.</summary>
     private bool FindApproachCell(int i, VehicleType vt, CellCoord shore, out CellCoord found)
     {

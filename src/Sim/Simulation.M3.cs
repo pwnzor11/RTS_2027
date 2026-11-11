@@ -109,7 +109,11 @@ public sealed partial class Simulation
         if (!_units.Slots.IsAlive(c.Subject) || _units.Player[c.Subject.Index] != c.Player) return;
         Rules.VehicleType vt = RulesOf(c.Player).Vehicles[_units.TypeIndex[c.Subject.Index]];
         if (vt.Submerges) { ApplySubmerge(c); return; }   // M7-05
-        if (vt.Passengers > 0 || vt.VehicleSlots > 0) ApplyUnload(c);   // M7-04b: vehicle_slots
+        if (vt.Passengers > 0 || vt.VehicleSlots > 0)   // M7-04b: vehicle_slots
+        {
+            if (IsLandingTransport(vt)) ApplyLandingDeploy(c, vt);   // D-205 (SIM-RULES-06): timed unload, never all at once
+            else ApplyUnload(c);
+        }
         else if (vt.DeploysInto >= 0) ApplyDeployInto(c);
     }
 

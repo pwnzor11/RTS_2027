@@ -122,40 +122,24 @@ public sealed class TransportAuditTests
         Assert.Equal(PerPassenger, ticks[2] - ticks[1]);
     }
 
-    // S18 audit: pins current behaviour of SIM-RULES-06; flip the assertion when fixed.
     [Fact]
-    public void Audit_DeployOrder_OnALandingCraft_PutsEveryoneAshoreInOneTick()
-    {
-        var (s, craft, marines) = LoadedTransport(Craft);
-        List<int> ticks = LeaveTicks(s, craft, Order(s, CommandKind.Deploy, craft));
-        Assert.Equal(new[] { 1 }, ticks);                                 // all three left in the tick of the order
-        foreach (EntityId m in marines) Assert.Equal(ActorLayer.Surface, s.Tunnels.InfantryLayer[m.Index]);
-        Assert.Equal(0, s.Naval.UnloadTicksLeft[craft.Index]);
-    }
-
-    // S18 audit: pins current behaviour of SIM-RULES-06; flip the assertion when fixed.
-    [Fact]
-    public void Audit_DeployOrder_OnAFlyingSkyhook_DropsTheSquadMidFlightInOneTick()
-    {
-        var (s, hook, marines) = LoadedTransport(Hook);
-        s.Step(new[] { Order(s, CommandKind.Move, hook, 25, 25) });
-        for (int t = 0; t < 12; t++) s.Step(None);
-        CellCoord at = s.Units.Position[hook.Index].ToCell();
-        Assert.NotEqual(new CellCoord(25, 25), at);                       // still on its way
-        Assert.NotEqual(new CellCoord(9, 10), at);
-        List<int> ticks = LeaveTicks(s, hook, Order(s, CommandKind.Deploy, hook));
-        Assert.Equal(new[] { 1 }, ticks);
-        foreach (EntityId m in marines) Assert.Equal(ActorLayer.Surface, s.Tunnels.InfantryLayer[m.Index]);
-        for (int t = 0; t < 20; t++) s.Step(None);
-        Assert.NotEqual(at, s.Units.Position[hook.Index].ToCell());       // and it never stopped flying
-    }
-
-    [Fact(Skip = "S18 SIM-RULES-06: awaiting owner decision")]
     public void Desired_DeployOrder_OnALandingCraft_IsTimedLikeUnload()
     {
         var (s, craft, _) = LoadedTransport(Craft);
         List<int> ticks = LeaveTicks(s, craft, Order(s, CommandKind.Deploy, craft));
-        Assert.Equal(3, ticks.Count);   // or 0, if Deploy is refused for landing transports
+        Assert.Equal(3, ticks.Count);
         Assert.Equal(PerPassenger, ticks[1] - ticks[0]);
+    }
+
+    [Fact]
+    public void DeployOrder_OnAFlyingSkyhook_IsRefused()
+    {
+        var (s, hook, marines) = LoadedTransport(Hook);
+        s.Step(new[] { Order(s, CommandKind.Move, hook, 25, 25) });
+        for (int t = 0; t < 12; t++) s.Step(None);
+        List<int> ticks = LeaveTicks(s, hook, Order(s, CommandKind.Deploy, hook));
+        Assert.Empty(ticks);
+        Assert.Equal(3, s.PassengersIn(hook));
+        foreach (EntityId m in marines) Assert.Equal(ActorLayer.Passenger, s.Tunnels.InfantryLayer[m.Index]);
     }
 }
