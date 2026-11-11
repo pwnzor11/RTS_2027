@@ -37,6 +37,8 @@ public sealed class SkirmishSetupScreen : IScreen
     private int _seedRow = -1;
     private int _firstSlotRow;
     private string _error = "";
+    private bool _hasKey;                 // GS-13: whether an LLM key is stored, read once (the key store is a file read plus a decrypt)
+    private Settings? _keyFor;            // the settings value _hasKey was read for; a new value (Settings changed) reads it again
 
     /// <summary>Creates the screen with <see cref="SkirmishSettings.Default"/> values (curated map, a human against a Regular AI).</summary>
     public SkirmishSetupScreen(GameServices services) : this(services, MapPicker.List(services.RulesDir))
@@ -64,6 +66,7 @@ public sealed class SkirmishSetupScreen : IScreen
         }
         _tierNames = LoadTierNames(services.RulesDir);
         _slots = new List<SkirmishSlot>(SkirmishSettings.Default.Slots);
+        RefreshKey();
         _panel = BuildPanel();
     }
 
@@ -146,6 +149,7 @@ public sealed class SkirmishSetupScreen : IScreen
     public void Update(InputFrame input, GameTime t)
     {
         _mouse = input.MousePosition;
+        if (!ReferenceEquals(_keyFor, _s.Settings)) RefreshKey();   // the settings were changed (and saved) since: read the key state again
         if (input.ConsumePressed(Keys.Escape))
         {
             _s.Screens.Pop();
@@ -160,21 +164,14 @@ public sealed class SkirmishSetupScreen : IScreen
     public void Draw(SpriteBatch sb)
     {
         Backdrop.FillOpaque(sb, _s);
-        var scale = _s.UiScale;
-        _panel.Draw(sb, _s.Pixel, _s.Viewport, scale, _mouse);
+        _panel.Draw(sb, _s.Pixel, _s.Viewport, _s.UiScale, _mouse);
+    }
 
-        // A colour swatch left of each slot row's buttons.
-        for (int i = 0; i < _slots.Count; i++)
-        {
-            if (_slots[i].Kind == SlotKind.Closed) continue;
-            int row = _firstSlotRow + i;
-            Rectangle r = _panel.RowRect(row);
-            Rectangle firstButton = _panel.ButtonRect(row, 0);
-            int size = r.Height - 4 * scale;
-            var swatch = new Rectangle(firstButton.X - size - 3 * scale, r.Y + (r.Height - size) / 2, size, size);
-            Shapes.Fill(sb, _s.Pixel, swatch, PlayerColours.Choice(_slots[i].Colour));
-            Shapes.Outline(sb, _s.Pixel, swatch, Color.White);
-        }
+    // The key store is read here and nowhere else while the screen is open (it is a file read and a decrypt).
+    private void RefreshKey()
+    {
+        _keyFor = _s.Settings;
+        _hasKey = HasCommanderKey(_s.Settings);
     }
 
     // The rows depend on the map kind and the slot count, so the panel is rebuilt when either changes; the highlighted row is kept.
@@ -182,19 +179,26 @@ public sealed class SkirmishSetupScreen : IScreen
     {
         var rows = new List<MenuItem>
         {
-            new(() => $"Map: {_maps[_mapIndex].Label}", null, StepMap, new MenuButton("<", () => StepMap(-1)), new MenuButton(">", () => StepMap(1))),
+            new(() => $"Map: {_maps[_mapIndex].Label}", null, StepMap, new MenuButton("<", () => StepMap(-1)), new MenuButton(">", () => StepMap(1)))
+            {
+                WidthTexts = _maps.Select(m => $"Map: {m.Label}").ToArray(),   // the panel keeps one width whichever map is shown
+            },
         };
         _seedRow = -1;
         if (_maps[_mapIndex].IsGenerated)
         {
             rows.Add(new(() => $"Biome: {MapPicker.BiomeName(_biome)}", null, StepBiome,
-                new MenuButton("<", () => StepBiome(-1)), new MenuButton(">", () => StepBiome(1))));
-            rows.Add(new(SizeText, null, StepSize, new MenuButton("<", () => StepSize(-1)), new MenuButton(">", () => StepSize(1))));
+                new MenuButton("<", () => StepBiome(-1)), new MenuButton(">", () => StepBiome(1)))
+            { WidthTexts = Enum.GetValues<Biome>().Select(b => $"Biome: {MapPicker.BiomeName(b)}").ToArray() });
+            rows.Add(new(SizeText, null, StepSize, new MenuButton("<", () => StepSize(-1)), new MenuButton(">", () => StepSize(1)))
+            { WidthTexts = Enum.GetValues<MapSize>().Select(z => SizeTextFor(z, 4)).ToArray() });
             rows.Add(new(() => OceanChoices.Label(_ocean), null, d => _ocean = OceanChoices.Step(_ocean, d),
-                new MenuButton("<", () => _ocean = OceanChoices.Step(_ocean, -1)), new MenuButton(">", () => _ocean = OceanChoices.Step(_ocean, 1))));
+                new MenuButton("<", () => _ocean = OceanChoices.Step(_ocean, -1)), new MenuButton(">", () => _ocean = OceanChoices.Step(_ocean, 1)))
+            { WidthTexts = OceanChoices.All.Select(OceanChoices.Label).ToArray() });
             _seedRow = rows.Count;
             rows.Add(new(() => $"Seed: {_seed}", null, d => StepSeed(d),
-                new MenuButton("-", () => StepSeed(-1)), new MenuButton("+", () => StepSeed(1)), new MenuButton("Reroll", RerollSeed)));
+                new MenuButton("-", () => StepSeed(-1)), new MenuButton("+", () => StepSeed(1)), new MenuButton("Reroll", RerollSeed))
+            { WidthTexts = new[] { $"Seed: {MaxSeed}" } });
         }
 
         rows.Add(new(() => $"Slots: {_slots.Count}", null, StepSlotCount,
@@ -203,14 +207,20 @@ public sealed class SkirmishSetupScreen : IScreen
         for (int i = 0; i < _slots.Count; i++)
         {
             int slot = i;
+            // A fixed label column (cut with "..." when a label is longer), the colour swatch in a column of its own, then the buttons.
+            // The panel is sized for the widest label there can be, so it keeps one width while the choices change (S18 UX-LM-03).
             rows.Add(new(() => SlotText(slot), null, d => StepKind(slot, d),
                 new MenuButton("Kind", () => StepKind(slot, 1)), new MenuButton("Fac", () => StepSlotFaction(slot)),
                 new MenuButton("Tier", () => StepSlotTier(slot)), new MenuButton("Cmdr", () => ToggleSlotCommander(slot)),
                 new MenuButton("Team", () => StepSlotTeam(slot)),
-                new MenuButton("Col", () => StepSlotColour(slot))));
+                new MenuButton("Col", () => StepSlotColour(slot)))
+            {
+                WidthTexts = WidestSlotTexts(_tierNames),
+                Swatch = () => _slots[slot].Kind == SlotKind.Closed ? null : PlayerColours.Choice(_slots[slot].Colour),
+            });
         }
 
-        rows.Add(new(() => _error.Length > 0 ? _error : NoteText() ?? HintText()));
+        rows.Add(new(() => _error.Length > 0 ? _error : NoteText() ?? HintText()) { Info = true });
         rows.Add(new(() => IsSpectate ? "Spectate" : "Start", Start));
         rows.Add(new(() => "Back", () => _s.Screens.Pop()));
 
@@ -221,12 +231,13 @@ public sealed class SkirmishSetupScreen : IScreen
 
     private void Rebuild() => _panel = BuildPanel();
 
-    private string SizeText()
+    private string SizeText() => SizeTextFor(_size, _slots.Count(x => x.Kind != SlotKind.Closed));
+
+    private static string SizeTextFor(MapSize size, int open)
     {
-        int cells = MapGenerator.CellsFor(_size);
-        int open = _slots.Count(x => x.Kind != SlotKind.Closed);
-        string tight = _size == MapSize.Small && open == 4 ? " (tight for 4)" : "";
-        return $"Size: {MapPicker.SizeName(_size)} {cells}x{cells}{tight}";
+        int cells = MapGenerator.CellsFor(size);
+        string tight = size == MapSize.Small && open == 4 ? " (tight for 4)" : "";
+        return $"Size: {MapPicker.SizeName(size)} {cells}x{cells}{tight}";
     }
 
     /// <summary>M7-14: the one-line note about the Expedition's ocean edge, or null.</summary>
@@ -240,18 +251,30 @@ public sealed class SkirmishSetupScreen : IScreen
     private OceanEdges ResolvedOcean(out string? note) =>
         ExpeditionSetup.ResolveOcean(_ocean, _maps[_mapIndex].IsGenerated && ExpeditionSetup.HasExpedition(_slots), out note);
 
-    private string HintText() => IsSpectate ? "(no Human slot: you will watch)" : "(Kind Fac Tier Cmdr Team Col cycle each choice)";
+    // The highlighted slot says when its LLM commander has no key (it used to be appended to the row, which made the row grow).
+    private string HintText() =>
+        _panel is not null && _panel.Selected >= _firstSlotRow && _panel.Selected < _firstSlotRow + _slots.Count && NoKeyFor(_slots[_panel.Selected - _firstSlotRow])
+            ? SetupText.NoKeyHint
+            : IsSpectate ? "(no Human slot: you will watch)" : "(Kind Fac Tier Cmdr Team Col cycle each choice)";
 
-    private string SlotText(int i)
+    private bool NoKeyFor(SkirmishSlot x) => x.Kind == SlotKind.Ai && x.Commander && !_hasKey;
+
+    private string SlotText(int i) => SlotLabel(_slots[i], i, _tierNames);
+
+    /// <summary>Every slot label there can be, longest first in effect: the panel is sized for the widest, so it never changes width when a choice changes.</summary>
+    public static IReadOnlyList<string> WidestSlotTexts(IReadOnlyList<string> tierNames)
     {
-        SkirmishSlot x = _slots[i];
-        string label = SlotLabel(x, i, _tierNames);
-        return x.Kind == SlotKind.Ai && x.Commander && !HasCommanderKey(_s.Settings) ? label + " " + SetupText.NoKeyHint : label;
+        var texts = new List<string>();
+        foreach (Faction f in RuleCounts.PlayableOrder)
+            foreach (bool commander in new[] { false, true })
+                foreach (string tier in tierNames)
+                    texts.Add($"4 AI {(commander ? SetupText.CommanderLabel + " " : "")}{tier} {FactionName(f)} T4");
+        return texts;
     }
 
-    /// <summary>True when an LLM provider is chosen in the settings and a key is stored (<see cref="Rts.Game.Ui.Llm.LlmHooks.SecretStore"/>).</summary>
+    /// <summary>True when an LLM provider is chosen in the settings and a key is stored for it (<see cref="Rts.Game.Ui.Llm.LlmHooks.Keys"/>).</summary>
     public static bool HasCommanderKey(Settings settings) =>
-        settings.ProviderKind != Rts.Llm.LlmProviderKind.None && !string.IsNullOrEmpty(Rts.Game.Ui.Llm.LlmHooks.SecretStore.Load());
+        settings.ProviderKind != Rts.Llm.LlmProviderKind.None && !string.IsNullOrEmpty(Rts.Game.Ui.Llm.LlmHooks.Keys.Load(settings.ProviderKind));
 
     /// <summary>The slot with its Commander flag flipped; Human and Closed slots come back unchanged.</summary>
     public static SkirmishSlot ToggleCommander(SkirmishSlot slot) =>
@@ -394,6 +417,12 @@ public sealed class SkirmishSetupScreen : IScreen
     /// <summary>Cuts text to at most <paramref name="max"/> characters, ending in "..." when it was cut.</summary>
     public static string Shorten(string text, int max) => text.Length <= max ? text : text[..(max - 3)] + "...";
 
+    private IReadOnlyList<string>? MapErrors(string file)
+    {
+        try { return MapCheck.Errors(_s.RulesDir, file); }
+        catch (MapFileException e) { return new[] { e.Message }; }
+    }
+
     // ASSUMED (M3-08): a faction whose start kit names types the rules do not have yet does not crash the menu; the setup screen stays
     // open and says why.
     private void Start()
@@ -411,13 +440,21 @@ public sealed class SkirmishSetupScreen : IScreen
             return;
         }
 
+        // S18 DATA-TOOLS-03: a hand-made map is checked by the map validator; an error names the map in a Notice (generated maps are checked when made).
+        if (!_maps[_mapIndex].IsGenerated && settings.Map.File is { } handMade && MapErrors(handMade) is { Count: > 0 } mapErrors)
+        {
+            _s.Screens.Push(new NoticeScreen(_s, "This map cannot be played",
+                $"{_maps[_mapIndex].Label}\n" + string.Join("\n", mapErrors.Take(4)) + (mapErrors.Count > 4 ? $"\n... and {mapErrors.Count - 4} more" : "")));
+            return;
+        }
+
         try
         {
             GameScreen screen = GameScreen.CreateSkirmish(_s, settings);
             _error = "";
             _s.Screens.Push(screen);
         }
-        catch (Exception e) when (e is InvalidOperationException or RulesException)
+        catch (Exception e) when (ScreenGuard.IsDataError(e))   // S18 GS-10: also IOException, MapFileException and the like
         {
             _error = Shorten("Cannot start: " + e.Message, 56);
         }
