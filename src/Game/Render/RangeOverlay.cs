@@ -11,7 +11,7 @@ using Rts.Sim.Rules;
 namespace Rts.Game.Render;
 
 /// <summary>
-/// F10: the weapon range of each selected unit as a circle, and its minimum range as a red circle when it has one.
+/// F10 in the sandbox, the Range rings key (L) in play (M13-15): the weapon range of each selected unit as a circle, and its minimum range as a red circle when it has one.
 /// Ranges are in leptons; 256 leptons are one 64 px cell at zoom 1.
 /// </summary>
 public static class RangeOverlay
@@ -38,6 +38,26 @@ public static class RangeOverlay
                 Shapes.Circle(batch, pixel, centre, LeptonsToScreen(weapon.MinRange, camera), MinRangeColour, LinePx, Segments);
             }
         }
+    }
+
+    /// <summary>
+    /// M13-15: the weapon range and minimum range in leptons of a building type's primary weapon (a defence), or null when it has none.
+    /// </summary>
+    public static (int Range, int MinRange)? BuildingRange(SimRules rules, int typeIndex)
+    {
+        if ((uint)typeIndex >= (uint)rules.Buildings.Count) return null;
+        int weapon = rules.Buildings[typeIndex].PrimaryWeapon;
+        if (weapon < 0 || weapon >= rules.Weapons.Count || rules.Weapons[weapon].Range <= 0) return null;
+        return (rules.Weapons[weapon].Range, rules.Weapons[weapon].MinRange);
+    }
+
+    /// <summary>M13-15: draws the range circles of one building (a selected defence), centred on its footprint.</summary>
+    public static void DrawBuilding(SpriteBatch batch, Texture2D pixel, Camera camera, SimRules rules, BuildingView building)
+    {
+        if (BuildingRange(rules, building.TypeIndex) is not { } r) return;
+        Vector2 centre = camera.ScreenFromWorld(new Vector2((building.Cell.X + building.FootprintW / 2f) * Camera.CellPx, (building.Cell.Y + building.FootprintH / 2f) * Camera.CellPx));
+        Shapes.Circle(batch, pixel, centre, LeptonsToScreen(r.Range, camera), RangeColour, LinePx, Segments);
+        if (r.MinRange > 0) Shapes.Circle(batch, pixel, centre, LeptonsToScreen(r.MinRange, camera), MinRangeColour, LinePx, Segments);
     }
 
     private static float LeptonsToScreen(int leptons, Camera camera) =>

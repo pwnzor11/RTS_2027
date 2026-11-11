@@ -99,6 +99,24 @@ public static class UiText
     /// <summary>M13-15: toast when the idle-factory key finds none.</summary>
     public const string NoIdleFactory = "ui.idle.no_factory";
 
+    /// <summary>M13-15: cameo tooltip, repeat production is off. Placeholder: <c>{key}</c> (the modifier, "Alt").</summary>
+    public const string RepeatHint = "ui.repeat.hint";
+
+    /// <summary>M13-15: cameo tooltip, repeat production is on.</summary>
+    public const string RepeatOnHint = "ui.repeat.on_hint";
+
+    /// <summary>M13-15: the loop marker drawn on a repeating cameo.</summary>
+    public const string RepeatMarker = "ui.repeat.marker";
+
+    /// <summary>M13-15: tooltip line "Strong vs: ...". Placeholder: <c>{classes}</c>.</summary>
+    public const string StrongVs = "ui.matchup.strong";
+
+    /// <summary>M13-15: tooltip line "Weak vs: ...". Placeholder: <c>{classes}</c>.</summary>
+    public const string WeakVs = "ui.matchup.weak";
+
+    /// <summary>M13-15: toast when the weapon range rings are switched on or off. Placeholder: <c>{state}</c> (on / off).</summary>
+    public const string RangeRingsToast = "ui.rings.toast";
+
     private static readonly Dictionary<string, string> English = new(StringComparer.Ordinal)
     {
         [SupplyLabel] = "Supply",
@@ -131,6 +149,12 @@ public static class UiText
         [IdleFactoryButton] = "IDLE FACTORY {count} ({key})",
         [NoIdleHarvester] = "No idle harvester",
         [NoIdleFactory] = "No idle factory",
+        [RepeatHint] = "{key}+click: repeat production",
+        [RepeatOnHint] = "Repeating: {key}+click to stop, right click to cancel",
+        [RepeatMarker] = "LOOP",
+        [StrongVs] = "Strong vs: {classes}",
+        [WeakVs] = "Weak vs: {classes}",
+        [RangeRingsToast] = "Weapon range rings {state}",
     };
 
     /// <summary>The English text of a key, or the key itself when it is unknown.</summary>

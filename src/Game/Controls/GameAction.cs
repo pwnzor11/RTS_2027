@@ -121,4 +121,30 @@ public enum GameAction
     IdleHarvester,
     /// <summary>M13-15: jump to the next idle factory; again for the next one.</summary>
     IdleFactory,
+    /// <summary>M13-15: sidebar cameo hotkey 1 (row 1, column 1 of the active tab).</summary>
+    CameoSlot1,
+    /// <summary>M13-15: sidebar cameo hotkey 2 (row 1, column 2 of the active tab).</summary>
+    CameoSlot2,
+    /// <summary>M13-15: sidebar cameo hotkey 3 (row 1, column 3 of the active tab).</summary>
+    CameoSlot3,
+    /// <summary>M13-15: sidebar cameo hotkey 4 (row 2, column 1 of the active tab).</summary>
+    CameoSlot4,
+    /// <summary>M13-15: sidebar cameo hotkey 5 (row 2, column 2 of the active tab).</summary>
+    CameoSlot5,
+    /// <summary>M13-15: sidebar cameo hotkey 6 (row 2, column 3 of the active tab).</summary>
+    CameoSlot6,
+    /// <summary>M13-15: sidebar cameo hotkey 7 (row 3, column 1 of the active tab).</summary>
+    CameoSlot7,
+    /// <summary>M13-15: sidebar cameo hotkey 8 (row 3, column 2 of the active tab).</summary>
+    CameoSlot8,
+    /// <summary>M13-15: sidebar cameo hotkey 9 (row 3, column 3 of the active tab).</summary>
+    CameoSlot9,
+    /// <summary>M13-15: sidebar cameo hotkey 10 (row 4, column 1 of the active tab).</summary>
+    CameoSlot10,
+    /// <summary>M13-15: sidebar cameo hotkey 11 (row 4, column 2 of the active tab).</summary>
+    CameoSlot11,
+    /// <summary>M13-15: sidebar cameo hotkey 12 (row 4, column 3 of the active tab).</summary>
+    CameoSlot12,
+    /// <summary>M13-15: show or hide the weapon range rings of the selected units and defences in play (off by default).</summary>
+    RangeRings,
 }

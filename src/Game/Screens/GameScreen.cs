@@ -448,6 +448,12 @@ public sealed class GameScreen : IScreen, IFocusPausable
             if (input.ConsumePressed(GameAction.DebugRanges)) _overlays.Ranges = !_overlays.Ranges;
         }
 
+        if (_skirmishMode && !_spectatorMode && !(typing || chatTyping) && input.ConsumePressed(GameAction.RangeRings))   // M13-15: in play, off by default
+        {
+            _overlays.Ranges = !_overlays.Ranges;
+            _toast.Show(UiText.Format(UiText.RangeRingsToast, "state", _overlays.Ranges ? "on" : "off"), _nowMs);
+        }
+
         if (input.ConsumePressed(GameAction.DecorToggle)) Rts.Game.Render.DecorSettings.Enabled = !Rts.Game.Render.DecorSettings.Enabled;   // M12-03
         HandleSaveKeys(input, typing || chatTyping);   // D-205: F5 quicksave, F9 quickload
         TickAutosave();                                // D-205
@@ -1393,6 +1399,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
             float left = b.Cell.X * Camera.CellPx, top = b.Cell.Y * Camera.CellPx;
             Rectangle r = _camera.ScreenRect(left, top, left + b.FootprintW * Camera.CellPx, top + b.FootprintH * Camera.CellPx);
             Shapes.Outline(sb, _s.Pixel, r, Color.White, 2);
+            if (_overlays.Ranges && _sim is not null) RangeOverlay.DrawBuilding(sb, _s.Pixel, _camera, _sim.Rules, b);   // M13-15: a selected defence shows its range
             // O4: a selected production building shows its rally flag and a line to it
             if (_sim is not null && _sim.Rules.Buildings[b.TypeIndex].Produces is { } lane
                 && _sim.Sim.Production.RallyCell(SimSnapshotSource.LocalPlayer, lane) is { } rally)

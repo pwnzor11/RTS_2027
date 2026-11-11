@@ -173,6 +173,7 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
 
         if (Mode == SidebarMode.Placement && ReadyOf(_placementType) != _placementType) CancelMode();
         BuildVisibleList();
+        foreach (Command again in _repeat.Due(_player, _hud, _source.Sim.Tick)) _source.Host.Issue(again);   // M13-15: repeat production
 
         if (input.ConsumePressed(GameAction.TabStructures)) SelectTab(SidebarTab.Structures);
         if (input.ConsumePressed(GameAction.TabDefences)) SelectTab(SidebarTab.Defences);
@@ -180,6 +181,7 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
         if (input.ConsumePressed(GameAction.TabVehicles)) SelectTab(SidebarTab.Vehicles);
         if (input.ConsumePressed(GameAction.TabUpgrades)) SelectTab(SidebarTab.Upgrades);
         if (_hasAircraft && input.ConsumePressed(GameAction.TabAircraft)) SelectTab(SidebarTab.Aircraft);
+        HandleCameoKeys(input);   // M13-15
 
         if (_minimapDrag)
         {
@@ -421,7 +423,8 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
                 {
                     BuildOption option = entry.Option;
                     _tooltip = TooltipFor(option);
-                    if (left) LeftClickCameo(option, input.IsDown(Keys.LeftShift) || input.IsDown(Keys.RightShift));
+                    if (left && input.IsAltDown() && RepeatProduction.CanLoop(option.Category)) _repeat.Toggle(option.Category, option.TypeIndex);   // M13-15
+                    else if (left) LeftClickCameo(option, input.IsDown(Keys.LeftShift) || input.IsDown(Keys.RightShift));
                     else if (right) RightClickCameo(option);
                 }
             }
@@ -484,6 +487,48 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
         }
     }
 
+    /// <summary>M13-15: the cameo hotkey actions in grid order (row by row, left to right).</summary>
+    public static readonly GameAction[] CameoActions =
+    {
+        GameAction.CameoSlot1, GameAction.CameoSlot2, GameAction.CameoSlot3, GameAction.CameoSlot4, GameAction.CameoSlot5, GameAction.CameoSlot6,
+        GameAction.CameoSlot7, GameAction.CameoSlot8, GameAction.CameoSlot9, GameAction.CameoSlot10, GameAction.CameoSlot11, GameAction.CameoSlot12,
+    };
+
+    // M13-15: the cameo hotkeys act like a left click on the cameo at that grid position of the active tab (Shift queues five).
+    private void HandleCameoKeys(InputFrame input)
+    {
+        if (Mode == SidebarMode.Sell || Mode == SidebarMode.Repair) return;
+        bool shift = input.IsDown(Keys.LeftShift) || input.IsDown(Keys.RightShift);
+        for (int i = 0; i < CameoHotkeys.Count; i++)
+        {
+            if (!input.ConsumePressed(CameoHotkeys.Actions[i])) continue;
+            ActivateCameoSlot(i, shift);
+        }
+    }
+
+    /// <summary>Does what a left click on the cameo at hotkey position <paramref name="index"/> (0..11) of the active tab does. False when the position is empty or locked.</summary>
+    public bool ActivateCameoSlot(int index, bool shift)
+    {
+        if (_tab == SidebarTab.Upgrades)
+        {
+            int slot = (index / CameoHotkeys.Columns) * _layout.Columns + index % CameoHotkeys.Columns;
+            if (index % CameoHotkeys.Columns >= _layout.Columns || UpgradeAtSlot(slot) is not UpgradeEntry entry) return false;
+            if (UpgradeList.LeftClick(_player, _hud, entry) is Command research) _source.Host.Issue(research);
+            return true;
+        }
+
+        var onScreen = new List<TierRow>();
+        foreach (TierGrouping.PlacedRow placed in PlacedRows()) onScreen.Add(_rows[placed.Row]);
+        if (CameoHotkeys.EntryAt(onScreen, index) is not TierEntry hit || hit.Locked) return false;
+        LeftClickCameo(hit.Option, shift);
+        return true;
+    }
+
+    private readonly RepeatProduction _repeat = new();
+
+    /// <summary>M13-15: the cameo loops (Alt+click), for the marker, the tooltip and tests.</summary>
+    public RepeatProduction Repeat => _repeat;
+
     private void LeftClickCameo(BuildOption option, bool shift)
     {
         switch (SidebarCommands.LeftClick(_hud, option))
@@ -506,7 +551,9 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
     private void RightClickCameo(BuildOption option)
     {
         if (Mode == SidebarMode.Placement) CancelMode();
-        if (SidebarCommands.RightClick(_player, _hud, option) is Command click) _source.Host.Issue(click);   // S15: hold, then cancel
+        Command? click = SidebarCommands.RightClick(_player, _hud, option);
+        if (click is not { Kind: CommandKind.Hold }) _repeat.Stop(option.Category, option.TypeIndex);   // M13-15: a cancel ends the loop (a hold keeps it)
+        if (click is Command issue) _source.Host.Issue(issue);   // S15: hold, then cancel
     }
 
     private void SetMode(SidebarMode mode)
@@ -695,6 +742,8 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
     {
         List<string> lines = CameoTooltip.Head(_source.Rules, o.Category, o.TypeIndex, o.Cost, Blurbs);
         bool ready = SidebarCommands.LeftClick(_hud, o) == CameoClick.EnterPlacement;
+        if (RepeatProduction.CanLoop(o.Category))
+            lines.Add(UiText.Format(_repeat.IsOn(o.Category, o.TypeIndex) ? UiText.RepeatOnHint : UiText.RepeatHint, "key", "Alt"));   // M13-15
         if (ready) lines.Add("Ready: click to place");
         else if (o.Blocked != QueueBlockReason.None) lines.Add(BlockReasonText.Of(o.Blocked, SupplyBuildingName()));
         else if (ShipWithoutShipyard(o)) lines.Add(BlockReasonText.NeedsShipyardOnWater);   // M7-14: the ship would wait at the dock
@@ -855,9 +904,11 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
 
         QueueView? queue = QueueOf(SidebarTabs.CategoryOf(_tab));
         float small = _ui;
+        int cameoRow = -1;   // M13-15: counts the cameo rows on screen for the hotkey hints
         foreach (TierGrouping.PlacedRow placed in PlacedRows())
         {
             TierRow heading = _rows[placed.Row];
+            if (!heading.Heading) cameoRow++;
             if (heading.Heading)
             {
                 var span = new Rectangle(l.Grid.X, l.Grid.Y + placed.Y, l.Grid.Width, placed.Height);
@@ -928,6 +979,23 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
                 StateStrip(batch, pixel, r, "READY", GoodGreen, _ui);   // P6: sized to the cameo
             }
             else Shapes.Outline(batch, pixel, r, r.Contains(_mouse) ? Gold : Border);
+
+            if (CameoHotkeys.IndexOf(cameoRow, col) is int hotkey and >= 0 && !tierEntry.Locked)   // M13-15: the key in the top left corner
+            {
+                string hint = CameoHotkeys.KeyName(hotkey).Replace("Num ", "", StringComparison.Ordinal);
+                int hw = BitmapFont.Measure(hint, small, FontWeight.Regular) + 4;
+                Shapes.Fill(batch, pixel, new Rectangle(r.X + 1, r.Y + 1, hw, lh + 2), new Color(0, 0, 0, 150));
+                Text(batch, pixel, hint, new Vector2(r.X + 3, r.Y + 2), DimText, small, FontWeight.Regular);
+            }
+
+            if (_repeat.IsOn(o.Category, o.TypeIndex))   // M13-15: the loop marker, bottom right above the name strip
+            {
+                string loop = UiText.Get(UiText.RepeatMarker);
+                int lw = BitmapFont.Measure(loop, small, FontWeight.Bold) + 6;
+                var lr = new Rectangle(r.Right - lw - 1, r.Bottom - lh * 2 - 5, lw, lh + 2);
+                Shapes.Fill(batch, pixel, lr, new Color(0, 0, 0, 200));
+                Text(batch, pixel, loop, new Vector2(lr.X + 3, lr.Y + 1), GoodGreen, small, FontWeight.Bold);
+            }
 
             if (count > 0)
             {
