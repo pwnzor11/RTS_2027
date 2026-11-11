@@ -6,7 +6,9 @@ using Rts.Sim.Rules;
 namespace Rts.Sim.Tests.S18;
 
 /// <summary>S18 audit, FACTION-LE-13: five upgrades whose real effect on the shipped data is smaller than their text. One test each,
-/// showing what the upgrade actually changes.</summary>
+/// showing what the upgrade actually changes. S19 (D-205): the tooltips (Rts.Game TodayText) now say exactly what these tests pin, so a
+/// change to a number here means the tooltip text must change too (Scrap Plate +20 % health, Patchwork 5 cells, Grapple x1.5 up to the
+/// cap, Salvage Rights 1.5x drain, Sonar Nets +2 sight).</summary>
 public sealed class UpgradeTextAuditTests
 {
     // ---- Salvage Rights: "wreck value x1.5" -----------------------------------------------------------------
@@ -32,7 +34,8 @@ public sealed class UpgradeTextAuditTests
         var (upgraded, drainUpgraded) = SalvageRights(true);
         Assert.Equal(200, plain);          // 25 % of an 800-credit tank
         Assert.Equal(plain, upgraded);     // the wreck's value does not change
-        Assert.True(drainUpgraded > drainPlain, $"drain {drainPlain} -> {drainUpgraded}");   // only the credits per salvage visit do
+        Assert.True(drainUpgraded > drainPlain, $"drain {drainPlain} -> {drainUpgraded}");
+        Assert.Equal(1500, drainUpgraded);   // the tooltip says "1.5x faster"   // only the credits per salvage visit do
     }
 
     // ---- Grapple: "plunder x1.5" ------------------------------------------------------------------------------

@@ -69,9 +69,9 @@ public sealed record GameSaveHeader
     {
         double minutes = Tick / (double)SimConstants.TicksPerSecond / 60.0;
         string time = FormattableString.Invariant($"{minutes:0.0} min");
-        if (Mode == SaveMode.Mission) return $"Mission {MissionId}, {time}";
+        if (Mode == SaveMode.Mission) return $"Mission: {Rts.Game.Ui.DisplayNames.Mission(MissionId)}, {time}";
         string ai = Ai.Count > 0 ? $", vs {Ai[0].AiId} tier {Ai[0].Tier}" : "";
-        return $"Skirmish on {MapName}{ai}, {time}";
+        return $"Skirmish on {Rts.Game.Ui.DisplayNames.Map(MapName)}{ai}, {time}";
     }
 
     /// <summary>Writes the header body (without the file envelope).</summary>

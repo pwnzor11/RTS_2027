@@ -121,7 +121,7 @@ public sealed class SidebarLogicTests
 
     [Theory]
     [InlineData("auth_power", "Power Plant")]
-    [InlineData("auth_tank", "Medium Tank")]
+    [InlineData("auth_tank", "Heavy Tank")]
     [InlineData("auth_big_thing", "Big Thing")]
     [InlineData("plain", "Plain")]
     public void Cameo_names_come_from_the_rules_id(string id, string expected) => Assert.Equal(expected, CameoNames.Display(id));

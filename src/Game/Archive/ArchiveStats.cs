@@ -45,7 +45,7 @@ public static class ArchiveStats
                 new("Cost", Credits(u.Cost)),
                 new("Research time", Seconds(SimRules.BuildTicks(u.Cost, u.BuildTime, rules.Economy))),
                 new("Requires", Requires(u.Prerequisites)),
-                new("Effect", u.Effect),
+                new("Effect", Rts.Game.Ui.Sidebar.TodayText.Upgrade(u.Id) is { } today ? string.Join(" ", today) : u.Effect),
             };
         }
         return Array.Empty<ArchiveStatLine>();

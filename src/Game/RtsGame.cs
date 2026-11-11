@@ -64,6 +64,7 @@ public sealed class RtsGame : Microsoft.Xna.Framework.Game
         _rulesDir = RulesLocator.FindRulesDir(AppContext.BaseDirectory)
             ?? throw new InvalidOperationException($"data/rules not found above {AppContext.BaseDirectory}");
         _dataDir = Path.GetDirectoryName(_rulesDir)!;
+        Rts.Game.Ui.DisplayNames.DataDir = _dataDir;
     }
 
     /// <inheritdoc />
