@@ -172,7 +172,12 @@ public sealed partial class MissionHost
         var tags = new List<string>();
         foreach (string t in types)
         {
-            string tag = SpawnNear(player, t, centre, ring, zone.Contains);
+            // S18 MIS-07: when the zone is full (the player's army stands in it), overflow to the nearest free cell around it instead of failing
+            // the callback halfway (flags set, timers never scheduled: lb_04 Landing, lb_03 waves, exp_04 Finale soft-locked).
+            (ActorKind kind, int ix) = ResolveType(t);
+            string tag = FreeCellNear(centre, LocomotionOf(kind, ix), ring, zone.Contains) is null
+                ? SpawnNear(player, t, centre, ring + FreeCellRing)
+                : SpawnNear(player, t, centre, ring, zone.Contains);
             AttackMoveTo(tag, dest);
             tags.Add(tag);
         }

@@ -69,7 +69,7 @@ few extra operations (board, unload, unpack, rank) are the public wrappers in `s
 player command runs. No new sim command and no new sim state. Reinforcements are units: a building type is a script error. Every spawn takes
 the free cell nearest the wanted one (right terrain, no building, no vehicle, no soldier; search radius 10), so nothing is stacked; if none
 is free the call is a script error and the units spawned before it stay.
-- `Reinforce.Zone`: units appear on free cells of the zone, nearest its centre first, then attack-move to `destCell`. Tags come back in list order.
+- `Reinforce.Zone`: units appear on free cells of the zone, nearest its centre first, then attack-move to `destCell`. Tags come back in list order. When the zone has no free cell left for a unit (S18, MIS-07), that unit appears on the nearest free cell around the zone (up to 10 rings out) instead of failing the callback; only when that also fails is it a script error.
 - `Reinforce.Delayed`: queued; `ticks` after the call the units appear exactly as `Reinforce.Edge` places them (block just inside the edge,
   attack-move to `destCell`). Errors at arrival time (no room) are collected in `Errors`, not thrown at the call. No tags are returned.
 - `Reinforce.Transport`: soldiers in the list ride; any other type drives in by itself like `Edge`. The transport is the smallest ground type
