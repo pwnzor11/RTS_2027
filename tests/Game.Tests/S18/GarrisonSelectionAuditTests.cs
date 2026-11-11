@@ -43,13 +43,14 @@ public sealed class GarrisonSelectionAuditTests
         return list;
     }
 
-    // S18 audit: pins current behaviour of SIMDET-01 / SIM-RULES-01 (UI reachability); flip the assertion when fixed.
+    // S19 D-205: the own snapshot still lists the garrisoned soldier, now flagged Carried so the client can skip it.
     [Fact]
-    public void Audit_OwnSnapshot_ListsTheGarrisonedSoldier_AsAnOrdinaryUnit()
+    public void OwnSnapshot_FlagsTheGarrisonedSoldier_AsCarried()
     {
         var (sim, _, man, _) = GarrisonedRifleman();
         UnitView view = Assert.Single(sim.Snapshot(0).Units, u => u.Kind == UnitKind.Infantry && u.Id == man);
-        Assert.False(view.Underground);   // no flag tells the client it is inside a building
+        Assert.True(view.Carried);
+        Assert.False(view.Underground);
         Assert.False(view.Stealthed);
         Assert.DoesNotContain(sim.Snapshot(1).Units, u => u.Kind == UnitKind.Infantry && u.Id == man);
     }

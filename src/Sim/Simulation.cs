@@ -794,6 +794,7 @@ public sealed partial class Simulation
                     {
                         Underground = IsUnderground(kind, i), Stealthed = IsStealthedNow(kind, i),
                         TurretFacing = TurretFacingOf(kind, i), Diving = IsDiving(kind, i),   // M3-21
+                        Carried = ActorLayers.IsCarried(_tunnels.LayerOf(kind, i)),   // S19 D-205
                     });
         }
         ulong hash = _recentHashes.Count > 0 ? _recentHashes[^1].Hash : 0UL;
