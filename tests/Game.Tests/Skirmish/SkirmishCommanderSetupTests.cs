@@ -44,19 +44,19 @@ public sealed class SkirmishCommanderSetupTests
     [Fact]
     public void Key_check_needs_a_provider_and_a_stored_key()
     {
-        ISecretStore old = LlmHooks.SecretStore;
+        ProviderKeyring old = LlmHooks.Keys;
         try
         {
-            var store = new MemorySecretStore();
-            LlmHooks.SecretStore = store;
+            ProviderKeyring store = ProviderKeyring.InMemory();
+            LlmHooks.Keys = store;
             var none = new Settings(LlmProvider: "none");
             var openai = new Settings(LlmProvider: "openai");
             Assert.False(SkirmishSetupScreen.HasCommanderKey(openai));   // provider but no key
-            store.Save("sk-test");
+            store.Save(LlmProviderKind.OpenAiCompatible, "sk-test");
             Assert.False(SkirmishSetupScreen.HasCommanderKey(none));     // key but no provider
             Assert.True(SkirmishSetupScreen.HasCommanderKey(openai));
         }
-        finally { LlmHooks.SecretStore = old; }
+        finally { LlmHooks.Keys = old; }
         Assert.Contains("no key", SetupText.NoKeyHint);
     }
 

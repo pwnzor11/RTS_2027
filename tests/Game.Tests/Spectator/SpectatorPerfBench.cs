@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
+using Rts.Game.Tests.S18;
 using System.Diagnostics;
 using Rts.Data;
 using Rts.Game.Host;
@@ -30,7 +31,7 @@ public sealed class SpectatorPerfBench
     private static int EnvInt(string name, int fallback) =>
         int.TryParse(Environment.GetEnvironmentVariable(name), out int v) ? v : fallback;
 
-    [Fact]
+    [ProbeFact("RTS_PERF")]
     public void Eight_times_speed_four_ai_medium_map_rate()
     {
         if (Environment.GetEnvironmentVariable("RTS_PERF") != "1") return;

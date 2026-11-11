@@ -52,21 +52,23 @@ decon showers, in a world that never got past 1962.
 | M5 · LLM commander: an optional language model sets strategy every 30 s and talks in character as a faction leader (your own API key) | Done; owner play-test with a real key pending |
 | M6 · The Left Behind: mobile rig bases, wrecks and salvage, raids, the Second Drift storm, AI, art | Done |
 | M7 · The Overseas Expedition: ships, submarines, landings, carriers, home shipments, beachheads, floating docks, AI, art | Playable in skirmish; final acceptance and owner play-test open |
-| M8 · Campaign for all four factions | In progress: mission scripting, objectives, triggers, dialogue, reinforcements, AI script hooks, campaign screens, briefings and ending sequence are built; a tutorial and the first Authority mission run on it; the other pilot missions come next |
+| M8 · Campaign for all four factions | Done: the tutorial and 16 missions (four acts for each faction) with endings are written and a bot has played all of them; owner review of the later acts and the voiced radio lines (M8-18) are open |
+| M11 · UI and input overhaul | Done: edge scrolling, selection card, objective guidance, key rebinding, one UI scale rule and text size, terrain and resource readability |
+| M12 · Maps overhaul | Waves 1-3 built: decals, props, map format 4, generator decoration pass, `map report` / `map render`; map layout 2 (zones and lanes) exists for all four biomes but is off by default; the Editor props tool (M12-06b) is open |
 | M9 · LAN multiplayer | Not started |
-| M10 · Polish (art pass, music, balance, installer) | Not started |
+| M10 · Polish (art pass, music, balance, installer) | Started: damage effects, imported effects and props, infantry re-render; the rest is open |
 
 What you can play today:
 
 - **Skirmish** with all four factions on generated or hand-made maps, 2–4 players, against AI at five difficulty tiers,
   with an optional ocean edge for naval play. Supply caps, three-rank veterancy and superweapons are in.
 - **Spectate** AI against AI (or LLM commander against LLM commander).
-- **Campaign → Tutorial**, plus the first Authority mission as a pilot.
+- **Campaign**: a tutorial plus the full campaign for all four factions.
 - **Archive**: an in-game encyclopaedia of the world's history, factions, units and leaders that unlocks as you play.
 - **Map editor**, save/load, and replays.
 
-Known gaps: the AI difficulty tiers are not yet evenly spaced, most of the campaign is still to be written, and the art is
-a first pass that will be revisited once the game is complete.
+Known gaps: the AI difficulty tiers are not yet evenly spaced, map layout 2 is not the default yet, there is no multiplayer,
+and the art is a first pass that will be revisited in the polish milestone.
 
 ## Build and run (Windows)
 

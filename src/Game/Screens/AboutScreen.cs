@@ -109,16 +109,18 @@ public sealed class AboutScreen : IScreen
         Rectangle back = BackRect(vp, scale);
         Shapes.Fill(sb, _s.Pixel, back, new Color(0x2A, 0x2E, 0x26));
         Shapes.Outline(sb, _s.Pixel, back, BorderColour);
-        BitmapFont.Draw(sb, _s.Pixel, "Back", new Vector2(back.X + 3 * scale, back.Y + scale), TextColour, scale);
+        BitmapFont.Draw(sb, _s.Pixel, "Back", new Vector2(back.Center.X - BitmapFont.Measure("Back", scale) / 2, back.Y + scale), TextColour, scale);
     }
 
-    private static Rectangle BackRect(Viewport vp, UiUnit scale)
+    /// <summary>The Back button's rectangle for a window and scale (public so a test can check that its label fits the box, S18 UX-LM-10).</summary>
+    public static Rectangle BackRect(Viewport vp, UiUnit scale)
     {
         int line = BitmapFont.LineHeight(scale, FontWeight.Regular) + scale;
         int width = Math.Min(vp.Width - 8 * scale, 110 * scale * BitmapFont.Advance / 2);
         int height = vp.Height - 16 * scale;
         var panel = new Rectangle((vp.Width - width) / 2, (vp.Height - height) / 2, width, height);
-        return new Rectangle(panel.Right - 5 * scale - 12 * scale, panel.Bottom - 5 * scale - line, 12 * scale, line);
+        int w = ButtonSizing.WidthFor("Back", scale, 12);
+        return new Rectangle(panel.Right - 5 * scale - w, panel.Bottom - 5 * scale - line, w, line);
     }
 
     private void Wrap(int width, UiUnit scale)

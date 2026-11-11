@@ -50,10 +50,10 @@ public class OpenAiCompatibleProviderTests
     public async Task Bad_request_reports_the_api_message_but_401_does_not()
     {
         var bad = StubHandler.Json("{\"error\":{\"message\":\"Unsupported parameter: 'max_tokens'.\",\"type\":\"invalid_request_error\"}}", HttpStatusCode.BadRequest);
-        var r = await new OpenAiCompatibleProvider(Cfg("http://x.test"), Key, bad).CompleteAsync(Req, CancellationToken.None);
+        var r = await new OpenAiCompatibleProvider(Cfg("https://x.test"), Key, bad).CompleteAsync(Req, CancellationToken.None);
         Assert.Equal("HTTP 400: Unsupported parameter: 'max_tokens'.", r.Error);
         var auth = StubHandler.Json("{\"error\":{\"message\":\"Incorrect API key provided: sk-OP***-9\"}}", HttpStatusCode.Unauthorized);
-        var r2 = await new OpenAiCompatibleProvider(Cfg("http://x.test"), Key, auth).CompleteAsync(Req, CancellationToken.None);
+        var r2 = await new OpenAiCompatibleProvider(Cfg("https://x.test"), Key, auth).CompleteAsync(Req, CancellationToken.None);
         Assert.Equal("HTTP 401", r2.Error);
     }
 
@@ -86,7 +86,7 @@ public class OpenAiCompatibleProviderTests
     public async Task Http_errors_fail_without_key(HttpStatusCode code, string reason)
     {
         var h = StubHandler.Json("{\"error\":\"\"}", code);
-        var r = await new OpenAiCompatibleProvider(Cfg("http://x.test"), Key, h).CompleteAsync(Req, CancellationToken.None);
+        var r = await new OpenAiCompatibleProvider(Cfg("https://x.test"), Key, h).CompleteAsync(Req, CancellationToken.None);
         Assert.False(r.Ok);
         Assert.Equal(reason, r.Error);
         Assert.DoesNotContain(Key, r.Error);
@@ -99,7 +99,7 @@ public class OpenAiCompatibleProviderTests
     [InlineData("{\"choices\":[{\"message\":{\"content\":null}}]}")]
     public async Task Malformed_body_fails(string body)
     {
-        var r = await new OpenAiCompatibleProvider(Cfg("http://x.test"), Key, StubHandler.Json(body)).CompleteAsync(Req, CancellationToken.None);
+        var r = await new OpenAiCompatibleProvider(Cfg("https://x.test"), Key, StubHandler.Json(body)).CompleteAsync(Req, CancellationToken.None);
         Assert.False(r.Ok);
         Assert.Equal("bad response", r.Error);
     }
@@ -108,7 +108,7 @@ public class OpenAiCompatibleProviderTests
     public async Task Exception_message_never_leaks_key()
     {
         var h = new StubHandler((_, _) => throw new InvalidOperationException("Bearer " + Key));
-        var r = await new OpenAiCompatibleProvider(Cfg("http://x.test"), Key, h).CompleteAsync(Req, CancellationToken.None);
+        var r = await new OpenAiCompatibleProvider(Cfg("https://x.test"), Key, h).CompleteAsync(Req, CancellationToken.None);
         Assert.False(r.Ok);
         Assert.DoesNotContain(Key, r.Error);
     }
@@ -117,7 +117,7 @@ public class OpenAiCompatibleProviderTests
     public async Task Timeout_fails_with_reason()
     {
         var h = new StubHandler(async (_, ct) => { await Task.Delay(Timeout.Infinite, ct); return new HttpResponseMessage(); });
-        var r = await new OpenAiCompatibleProvider(Cfg("http://x.test", 1), Key, h).CompleteAsync(Req, CancellationToken.None);
+        var r = await new OpenAiCompatibleProvider(Cfg("https://x.test", 1), Key, h).CompleteAsync(Req, CancellationToken.None);
         Assert.False(r.Ok);
         Assert.Equal("timeout", r.Error);
     }

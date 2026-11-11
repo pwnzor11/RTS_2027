@@ -11,6 +11,7 @@ using Tomlyn.Model;
 namespace Rts.Game.Tests.Render;
 
 /// <summary>D-184: the pure logic of the renderer look improvements (damage tiers, remains, dust, mood) and their placeholder art.</summary>
+[Collection("UiStatics")]   // S18 TESTS-REPO-01: touches process-wide statics, runs alone
 public sealed class FxLookTests
 {
     private static readonly SimRules Rules = LoadRules();

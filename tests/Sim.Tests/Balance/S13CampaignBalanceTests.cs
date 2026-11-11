@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
+
 using Rts.Sim.Core;
 using Xunit.Abstractions;
 
@@ -51,7 +52,9 @@ public sealed class S13CampaignBalanceTests
         _out.WriteLine($"ASH {(big ? "BIG " : "")}{label,-32} | real fight: enemy dead {real.EnemyDead}/{nEnemy} (cleared t={real.TicksEnemyCleared}), own Conscripts dead {real.ConsDead}/{nCons} (HP lost {real.ConsHpLost}), " +
                        $"own Ashthrowers dead {real.AshDead}/{nAsh}, own deaths per enemy kill {perKill:F2} | cloud only (enemy rifles at 0 damage): " +
                        $"enemy dead {cloud.EnemyDead}/{nEnemy}, Conscripts dead {cloud.ConsDead}/{nCons} (HP lost {cloud.ConsHpLost}/{nCons * 50}), Ashthrowers dead {cloud.AshDead}/{nAsh} (HP lost {cloud.AshHpLost}/{nAsh * 50})");
-        Assert.True(real.EnemyDead >= 0 && cloud.EnemyDead >= 0);
+        Assert.InRange(real.EnemyDead, 0, nEnemy);   // S18: was ">= 0" (always true); the counts must at least be possible
+        Assert.InRange(cloud.EnemyDead, 0, nEnemy);
+        Assert.InRange(real.ConsDead, 0, nCons);
     }
 
     [Fact]

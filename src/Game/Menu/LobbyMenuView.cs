@@ -15,6 +15,13 @@ namespace Rts.Game.Menu;
 /// <param name="RowWidth">Width of every row.</param>
 public sealed record LobbyLayout(UiUnit Scale, Rectangle[] Rows, float TitleX, float TitleY, float TitleCell, int RowWidth);
 
+/// <summary>Where the footer texts of the main menu go (<see cref="LobbyMenuView.Footer"/>).</summary>
+/// <param name="CaptionText">The caption as drawn (cut with "..." when it would run into the version line).</param>
+/// <param name="Caption">Its rectangle (empty width when there is no caption).</param>
+/// <param name="Version">The version line's rectangle.</param>
+/// <param name="VersionText">The version line.</param>
+public sealed record LobbyFooter(string CaptionText, Rectangle Caption, Rectangle Version, string VersionText);
+
 /// <summary>
 /// Lays out and draws the main menu as <see cref="DrawOp"/>s: a dark scrim down the left, the block-letter title, the entries (the
 /// selected one with an amber bar, disabled ones greyed with a tooltip), the scene caption and the version.
@@ -33,8 +40,40 @@ public static class LobbyMenuView
     // ASSUMED (M3-16): the tagline wording (from the setting doc: forty years after the exchange, ash still falls).
     public const string Tagline = "Forty years after the exchange, the ash still falls.";
 
-    /// <summary>Computes the layout for a window and UI scale.</summary>
+    /// <summary>The share of the requested scale the menu may shrink to before it gives up.</summary>
+    public const float FloorShare = 0.3f;
+
+    /// <summary>
+    /// Computes the layout for a window and UI scale. Like <c>MenuPanel</c> it shrinks the scale in 5 % steps until the title, every entry
+    /// and the footer line fit the window (S18 UX-LM-01: at 200 % and Extra large text the last entries ran into the caption).
+    /// </summary>
     public static LobbyLayout Measure(int viewW, int viewH, UiUnit scale, IReadOnlyList<MainMenuEntry> entries)
+    {
+        float v = scale.Value, floor = scale.Value * FloorShare;
+        LobbyLayout layout = MeasureAt(viewW, viewH, scale, entries);
+        while (v > floor && !Fits(layout, viewW, viewH, entries))
+        {
+            v -= scale.Value * 0.05f;
+            layout = MeasureAt(viewW, viewH, new UiUnit(Math.Max(v, floor)), entries);
+        }
+        return layout;
+    }
+
+    private static bool Fits(LobbyLayout layout, int viewW, int viewH, IReadOnlyList<MainMenuEntry> entries)
+    {
+        UiUnit s = layout.Scale;
+        if (layout.TitleY < 0 || layout.Rows.Length == 0) return layout.TitleY >= 0;
+        // The last entry must end above the footer line, and the widest row and the tagline must be inside the window.
+        if (layout.Rows[^1].Bottom > FooterTop(s, viewH) - s) return false;
+        if (layout.Rows[0].X + layout.RowWidth > viewW) return false;
+        if (layout.TitleX + BitmapFont.Measure(Tagline, s, FontWeight.Regular) > viewW) return false;
+        // A disabled entry's tooltip box sits to the right of its row.
+        foreach (MainMenuEntry e in entries)
+            if (!e.Enabled && e.Tooltip is { } tip && layout.Rows[0].X + layout.RowWidth + 4 * s + BitmapFont.Measure(tip, s, FontWeight.Regular) + 10 * s > viewW) return false;
+        return true;
+    }
+
+    private static LobbyLayout MeasureAt(int viewW, int viewH, UiUnit scale, IReadOnlyList<MainMenuEntry> entries)
     {
         int margin = Math.Max(10 * scale, (int)(viewW * 0.06f));
         float cell = scale * 3f;
@@ -60,6 +99,33 @@ public static class LobbyMenuView
         }
         return new LobbyLayout(scale, rows, margin, top, cell, rowW);
     }
+
+    /// <summary>
+    /// Where the scene caption (bottom left) and the version line (bottom right) are drawn. A caption too long for the room left of
+    /// the version line is cut with "..." so the two never overprint (S18 UX-LM-01).
+    /// </summary>
+    public static LobbyFooter Footer(LobbyLayout layout, string caption, string version, int viewW, int viewH)
+    {
+        UiUnit s = layout.Scale;
+        int line = BitmapFont.LineHeight(s, FontWeight.Regular);
+        int footerY = FooterTop(s, viewH);
+        string right = $"v{version}   GPL v3";
+        int rightW = BitmapFont.Measure(right, s, FontWeight.Regular);
+        var versionRect = new Rectangle(viewW - rightW - 8 * s, footerY, rightW, line);
+        int captionX = (int)layout.TitleX + 5 * s;
+        int room = versionRect.X - 4 * s - captionX;
+        string text = caption;
+        if (text.Length > 0 && BitmapFont.Measure(text, s, FontWeight.Regular) > room)
+        {
+            while (text.Length > 0 && BitmapFont.Measure(text + "...", s, FontWeight.Regular) > room) text = text[..^1];
+            text = text.Length == 0 ? "" : text.TrimEnd() + "...";
+        }
+        int captionW = text.Length == 0 ? 0 : BitmapFont.Measure(text, s, FontWeight.Regular);
+        return new LobbyFooter(text, new Rectangle(captionX, footerY, captionW, line), versionRect, right);
+    }
+
+    /// <summary>Top of the footer line for a window height.</summary>
+    public static int FooterTop(UiUnit s, int viewH) => viewH - BitmapFont.LineHeight(s, FontWeight.Regular) - 6 * s;
 
     /// <summary>Appends the ops for the menu. <paramref name="selected"/> is the highlighted entry; <paramref name="seconds"/> animates the pulse.</summary>
     public static void Build(List<DrawOp> ops, LobbyLayout layout, IReadOnlyList<MainMenuEntry> entries, int selected, float seconds,
@@ -112,13 +178,12 @@ public static class LobbyMenuView
         }
 
         // Footer.
-        int footerY = viewH - line - 6 * s;
-        if (caption.Length > 0)
+        LobbyFooter footer = Footer(layout, caption, version, viewW, viewH);
+        if (footer.CaptionText.Length > 0)
         {
-            ops.Add(DrawOp.Rect(layout.TitleX, footerY + line / 2 - s, 2 * s, 2 * s, Amber));
-            ops.Add(DrawOp.Text(caption, layout.TitleX + 5 * s, footerY, s, new Rgba(0xA8, 0xA8, 0x98)));
+            ops.Add(DrawOp.Rect(layout.TitleX, footer.Caption.Y + line / 2 - s, 2 * s, 2 * s, Amber));
+            ops.Add(DrawOp.Text(footer.CaptionText, footer.Caption.X, footer.Caption.Y, s, new Rgba(0xA8, 0xA8, 0x98)));
         }
-        string right = $"v{version}   GPL v3";
-        ops.Add(DrawOp.Text(right, viewW - BitmapFont.Measure(right, s, FontWeight.Regular) - 8 * s, footerY, s, new Rgba(0x80, 0x82, 0x76)));
+        ops.Add(DrawOp.Text(footer.VersionText, footer.Version.X, footer.Version.Y, s, new Rgba(0x80, 0x82, 0x76)));
     }
 }

@@ -11,6 +11,7 @@ using Rts.Game.Ui.Sidebar;
 namespace Rts.Game.Tests.Ui3;
 
 /// <summary>M11-10h: the one UI scale rule, and layouts at the extremes of window size and setting.</summary>
+[Collection("UiStatics")]   // S18 TESTS-REPO-01: touches process-wide statics, runs alone
 public sealed class UiScaleRuleTests
 {
     public static IEnumerable<object[]> Sizes() => new[]

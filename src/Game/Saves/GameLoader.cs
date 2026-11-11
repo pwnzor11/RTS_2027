@@ -51,7 +51,8 @@ public static class GameLoader
         {
             return header.Mode == SaveMode.Mission ? LoadMission(input, header, rules, rulesDir, dataDir) : LoadSkirmish(input, header, rules, rulesDir, dataDir);
         }
-        catch (Exception e) when (e is InvalidDataException or EndOfStreamException or InvalidOperationException or IOException or ArgumentException)
+        catch (Exception e) when (e is InvalidDataException or EndOfStreamException or InvalidOperationException or IOException or ArgumentException
+            or MapFileException or FormatException or KeyNotFoundException or IndexOutOfRangeException)   // S18 GS-10
         {
             throw new SaveLoadException("The save could not be restored: " + e.Message, e);
         }

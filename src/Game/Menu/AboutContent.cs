@@ -38,16 +38,37 @@ public static class AboutContent
         var lines = new List<string>();
         if (markdown is not null)
         {
+            int licenceColumn = 1;
             foreach (string raw in markdown.Replace("\r", "").Split('\n'))
             {
                 string line = raw.Trim();
                 if (!line.StartsWith('|') || line.StartsWith("|---") || line.StartsWith("| ---")) continue;
                 string[] cells = line.Trim('|').Split('|').Select(c => Clean(c)).ToArray();
-                if (cells.Length < 2 || cells[0] is "Library" or "Asset" or "(none yet)" || cells[0].Length == 0) continue;
-                lines.Add(cells[0].Length > 78 ? cells[0][..75] + "..." : cells[0] + " - " + Short(cells[1]));
+                if (cells.Length < 2) continue;
+                if (cells[0] is "Library" or "Asset")
+                {
+                    // S18 TESTS-REPO-02: the asset tables put the licence in a "Licence" column that is not always the second one.
+                    int at = Array.IndexOf(cells, "Licence");
+                    licenceColumn = at > 0 ? at : 1;
+                    continue;
+                }
+                if (cells[0] is "(none yet)" || cells[0].Length == 0) continue;
+                // The About page wraps long lines, so the whole name is kept (it used to be cut at 75 characters, which dropped the pack
+                // and author names that the licences require).
+                string licence = licenceColumn < cells.Length ? cells[licenceColumn] : cells[1];
+                lines.Add(cells[0] + " - " + (licenceColumn == 1 ? Short(licence) : ShortAssetLicence(licence)));
             }
         }
         return lines.Count > 0 ? lines : FallbackCredits;
+    }
+
+    // Asset licence cells start with the licence and go on with the conditions; keep the first clause, cut at ';' or ': '.
+    private static string ShortAssetLicence(string licence)
+    {
+        int cut = licence.IndexOf("; ", StringComparison.Ordinal);
+        int colon = licence.IndexOf(": ", StringComparison.Ordinal);
+        if (colon > 0 && (cut < 0 || colon < cut)) cut = colon;
+        return cut > 3 ? licence[..cut] : licence;
     }
 
     private static string Clean(string cell) => cell.Replace("`", "").Replace("**", "").Trim();

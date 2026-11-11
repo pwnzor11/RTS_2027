@@ -33,4 +33,16 @@ public static class TextWrap
         }
         return lines;
     }
+
+    /// <summary>
+    /// Cuts <paramref name="text"/> to at most <paramref name="maxWidth"/> (as <paramref name="measure"/> reports), ending in "..." when it was cut.
+    /// Text that fits comes back unchanged; when even "..." does not fit the result is empty.
+    /// </summary>
+    public static string Ellipsize(string text, int maxWidth, Func<string, int> measure)
+    {
+        if (measure(text) <= maxWidth) return text;
+        int keep = text.Length;
+        while (keep > 0 && measure(text[..keep].TrimEnd() + "...") > maxWidth) keep--;
+        return keep == 0 ? "" : text[..keep].TrimEnd() + "...";
+    }
 }
