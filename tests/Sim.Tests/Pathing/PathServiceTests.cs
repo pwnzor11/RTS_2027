@@ -203,21 +203,34 @@ public class PathServiceTests
 
     private static CellCoord[] Corners() => new[] { new CellCoord(0, 0) };
 
+    private static readonly CellCoord SerpentineEnd = new(0, 63);
+
+    /// <summary>64x64 with a rock row every 4th row and the gap at alternate ends: (0,0) to (0,63) must wind through all of it, so any
+    /// search between them settles most of the map whatever its heuristic (M13-05: the group search now has one).</summary>
+    private static MapState Serpentine()
+    {
+        var m = Flat(64, 64);
+        for (int row = 2, k = 0; row < 64; row += 4, k++)
+            for (int x = 0; x < 64; x++)
+                if (x != (k % 2 == 0 ? 63 : 0)) m.SetLand(new(x, row), LandType.Rock);
+        return m;
+    }
+
     [Fact]
     public void RequestsQueuedTogetherAreSolvedTogether_ThenDebtDelaysTheNextBatch()
     {
         // M2-01: everything queued when Process runs is solved in that call (so the first and the last asker of a tick
         // are served alike); the overdraft is carried as debt and delays the NEXT batch.
-        var m = Flat(64, 64); var t = Table();
-        // A group search to the far corner settles nearly all 4096 cells: more than 2500, less than 5000.
+        var m = Serpentine(); var t = Table();
+        // A group search through the serpentine settles nearly all of its ~3 100 open cells: more than 2500, less than 5000.
         var s = new PathService(m, t, 2500);
-        int a = s.RequestGroup(Corners(), new(63, 63), Locomotion.Foot);
-        int b = s.RequestGroup(Corners(), new(63, 63), Locomotion.Foot);
+        int a = s.RequestGroup(Corners(), SerpentineEnd, Locomotion.Foot);
+        int b = s.RequestGroup(Corners(), SerpentineEnd, Locomotion.Foot);
         s.Process();
         Assert.Equal(PathStatus.Found, s.Poll(a, 0, out _));
         Assert.Equal(PathStatus.Found, s.Poll(b, 0, out _));
         int c = s.Request(new(0, 0), new(5, 0), Locomotion.Foot);
-        s.Process();   // two searches of ~4000 each against a budget of 2500: debt of about 5500
+        s.Process();   // two searches of ~3000 each against a budget of 2500: debt of about 3500
         Assert.Equal(PathStatus.Pending, s.Poll(c, 0, out _));
         int ticks = 1;
         while (s.Poll(c, 0, out _) == PathStatus.Pending && ticks < 100) { s.Process(); ticks++; }
@@ -252,16 +265,16 @@ public class PathServiceTests
     [Fact]
     public void LargeDebtSpansSeveralTicks()
     {
-        var m = Flat(64, 64); var t = Table();
+        var m = Serpentine(); var t = Table();
         var s = new PathService(m, t, 500);
-        int a = s.RequestGroup(Corners(), new(63, 63), Locomotion.Foot);
+        int a = s.RequestGroup(Corners(), SerpentineEnd, Locomotion.Foot);
         s.Process();
         Assert.Equal(PathStatus.Found, s.Poll(a, 0, out _));
         int b = s.Request(new(0, 0), new(5, 0), Locomotion.Foot);
         int ticks = 1;
         s.Process();
         while (s.Poll(b, 0, out _) == PathStatus.Pending && ticks < 100) { s.Process(); ticks++; }
-        Assert.InRange(ticks, 6, 10); // about 4000 cells of debt repaid at 500 per tick
+        Assert.InRange(ticks, 5, 8); // about 2600 cells of debt repaid at 500 per tick
     }
 
     [Fact]

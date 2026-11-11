@@ -20,6 +20,9 @@ public class HashCoverageTests
         ["PathService._parent"] = "A* scratch, rewritten on every solve (PathService: 'Not saved: scratch and cache.')",
         ["PathService._seen"] = "A* stamp scratch, meaningful only within one solve (PathService: 'Not saved: scratch and cache.')",
         ["PathService._closed"] = "A* stamp scratch, meaningful only within one solve (PathService: 'Not saved: scratch and cache.')",
+        ["PathService._wanted"] = "M13-05: group-search stamp scratch, meaningful only within one solve",
+        ["PathService._startLabels"] = "M13-05: scratch, the start's region labels within one solve",
+        ["PathService._floodQueue"] = "M13-05: flood-fill scratch for the region labels",
         ["ProductionState.NoRebuildTicks"] = "M4-17: written only when SimSetup.NoRebuildDefeat is on (so other games keep their bytes); covered by NoRebuildDefeatTests.ClockIsHashed",
         ["VisionState._ghosts"] = "ghost data is written only where _ghostPresent is set; an absent slot is not state. "
             + "GhostHealth_IsSerialisedWhenPresent covers it with a present ghost.",
@@ -178,11 +181,13 @@ public class HashCoverageTests
         ["PathService.CacheEnabled"] = "a switch for tests and benchmarks; results do not depend on it",
         ["PathService._passer"] = "passer of the request being solved, set at the start of every solve (M3-04 scratch)",
         ["PathService.GateOpen"] = "gate rule delegate wired by the Simulation constructor; a pure function of hashed state (M3-04)",
+        ["PathService.LastProcessCount"] = "diagnostics for tests: requests solved by the last Process call; never read by the sim (M13-05)",
         ["PathService.LastProcessCost"] = "diagnostics for tests: expansions charged by the last Process call; never read by the sim (M13-05)",
         ["PathService._regions"] = "region-label cache, a pure function of map state per (locomotion, passer, map version); rebuilt after a load (M13-05)",
         ["PathService._epoch"] = "load counter that invalidates the region-label cache; only equality matters (M13-05)",
         ["PathService._floodQueue"] = "flood-fill scratch for the region labels (M13-05)",
         ["PathService._startLabels"] = "scratch: the start's region labels within one solve (M13-05)",
+        ["PathService._wanted"] = "group-search stamp scratch, meaningful only within one solve (M13-05)",
         // MapState
         ["MapState.Data"] = "the immutable starting MapData; the live layers are the arrays above",
         ["MapState.Width"] = "constant for the game (from the map)",
