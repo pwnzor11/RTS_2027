@@ -6,12 +6,12 @@
 # (default 100), blackout_ticks.
 
 [auth_small_arms]
-versus = [100, 50, 15, 10, 5, 100, 100, 100]
+versus = [100, 50, 15, 10, 5, 70, 30, 100]   # D-205 (LE-07): ship columns copy exp_small_arms (Submerged left at 100)
 splash = 0
 hits_allies = false
 
 [auth_ap]
-versus = [25, 75, 100, 50, 40, 100, 100, 100]
+versus = [25, 75, 100, 50, 40, 90, 70, 100]   # D-205 (LE-07): ship columns copy exp_guided_ap (Submerged left at 100)
 splash = 0
 hits_allies = false
 
@@ -23,7 +23,7 @@ hits_allies = true
 # M3-07: Directorate roster (design 05 §5, D-078) and Authority counters (D-079). Numbers not fixed by the design are ASSUMED (M3-07), tune in M3-14.
 
 [dir_small_arms]
-versus = [100, 60, 20, 10, 5, 100, 100, 100]  # ASSUMED (M3-07)
+versus = [100, 60, 20, 10, 5, 70, 30, 100]  # ASSUMED (M3-07) # D-205 (LE-07): ship columns copy exp_small_arms (Submerged left at 100)
 splash = 0  # ASSUMED (M3-07)
 hits_allies = false
 
@@ -47,12 +47,12 @@ hits_allies = false
 contaminate = 80  # ASSUMED (M3-07)
 
 [dir_rocket]
-versus = [25, 75, 100, 60, 40, 100, 100, 100]  # ASSUMED (M3-07)
+versus = [25, 75, 100, 60, 40, 90, 70, 100]  # ASSUMED (M3-07) # D-205 (LE-07): ship columns copy exp_guided_ap (Submerged left at 100)
 splash = 1  # ASSUMED (M3-07)
 hits_allies = false
 
 [dir_slug]
-versus = [25, 75, 100, 50, 40, 100, 100, 100]  # ASSUMED (M3-07)
+versus = [25, 75, 100, 50, 40, 90, 70, 100]  # ASSUMED (M3-07) # D-205 (LE-07): ship columns copy exp_guided_ap (Submerged left at 100)
 splash = 0  # ASSUMED (M3-07)
 hits_allies = false
 
@@ -114,12 +114,12 @@ contaminate = 60  # ASSUMED (M4-07)
 
 # M6-08: Left Behind warheads (design 06 §5-6). All numbers (tune); reuse of Directorate/Authority shapes where the design says so.
 [lb_small_arms]   # (tune) copy of dir_small_arms
-versus = [100, 60, 20, 10, 5, 100, 100, 100]
+versus = [100, 60, 20, 10, 5, 70, 30, 100]   # D-205 (LE-07): ship columns copy exp_small_arms (Submerged left at 100)
 splash = 0
 hits_allies = false
 
 [lb_ap]   # (tune) copy of auth_ap
-versus = [25, 75, 100, 50, 40, 100, 100, 100]
+versus = [25, 75, 100, 50, 40, 90, 70, 100]   # D-205 (LE-07): ship columns copy exp_guided_ap (Submerged left at 100)
 splash = 0
 hits_allies = false
 
@@ -134,7 +134,7 @@ splash = 1
 hits_allies = false
 
 [lb_harpoon]   # (tune) tether: the slow is a later sim hook, the hit is anti-armour
-versus = [25, 75, 100, 50, 40, 100, 100, 100]
+versus = [25, 75, 100, 50, 40, 90, 70, 100]   # D-205 (LE-07): ship columns copy exp_guided_ap (Submerged left at 100)
 splash = 0
 hits_allies = false
 

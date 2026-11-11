@@ -5,8 +5,8 @@ using Rts.Sim.Rules;
 
 namespace Rts.Sim.Tests.S18;
 
-/// <summary>S18 audit, FACTION-LE-08: the Tow Truck's <c>tow_bonus_permille = 1000</c> is the neutral value, so a packed rig next to a
-/// Tow Truck moves exactly as fast as one without.</summary>
+/// <summary>S18 audit, FACTION-LE-08: the Tow Truck's <c>tow_bonus_permille = 1000</c> was the neutral value (D-205 raised it to 1750), so a packed rig next to a
+/// Tow Truck now moves faster than one without.</summary>
 public sealed class TowAuditTests
 {
     /// <summary>A packed Mother Rig drives east for 20 ticks, with or without a Tow Truck parked one cell away. Returns its x in leptons
@@ -23,19 +23,19 @@ public sealed class TowAuditTests
     }
 
     [Fact]
-    public void Audit_TowedPackedRig_MovesNoFasterThanAnUntowedOne()
+    public void TowedPackedRig_MovesFasterThanAnUntowedOne()
     {
-        // S18 audit: pins current behaviour of FACTION-LE-08; flip the assertion when fixed.
-        Assert.Equal(1000, S18World.RealRules.Vehicles.Single(v => v.Id == "lb_tow").TowBonusPermille);
+        // D-205 / LE-08: tow_bonus_permille 1000 -> 1750.
+        Assert.Equal(1750, S18World.RealRules.Vehicles.Single(v => v.Id == "lb_tow").TowBonusPermille);
         var (alone, speedAlone) = Drive(false);
         var (towed, speedTowed) = Drive(true);
         Assert.True(alone > 20 * 256 + 128, "the rig did move");
         Assert.Equal(1000, speedAlone);
-        Assert.Equal(1000, speedTowed);
-        Assert.Equal(alone, towed);
+        Assert.Equal(1750, speedTowed);
+        Assert.True(towed > alone);
     }
 
-    [Fact(Skip = "S18 FACTION-LE-08: awaiting owner decision")]
+    [Fact]
     public void Desired_TowedPackedRig_MovesFaster()
     {
         var (alone, _) = Drive(false);

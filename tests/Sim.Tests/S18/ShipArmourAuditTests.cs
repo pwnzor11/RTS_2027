@@ -22,49 +22,53 @@ public sealed class ShipArmourAuditTests
         return PerShot(weapon, armor) * 2000 / w.RateOfFire;
     }
 
-    [Fact]
-    public void Audit_EveryNonExpeditionWarhead_Is100PercentOrZeroAgainstAllThreeShipClasses()
+    [Theory]
+    // D-205 / LE-07: the small-arms and anti-armour warheads of the three land factions copy the Expedition's graded ship columns
+    // (Submerged stays 100: those weapons cannot target a dived vessel). Area/flame/demolition warheads are still 100 (QUESTIONS in s19_numbers.md).
+    [InlineData("auth_small_arms", 70, 30)]
+    [InlineData("dir_small_arms", 70, 30)]
+    [InlineData("lb_small_arms", 70, 30)]
+    [InlineData("auth_ap", 90, 70)]
+    [InlineData("lb_ap", 90, 70)]
+    [InlineData("lb_harpoon", 90, 70)]
+    [InlineData("dir_rocket", 90, 70)]
+    [InlineData("dir_slug", 90, 70)]
+    public void SmallArmsAndAntiArmourWarheads_AreGradedAgainstShips(string id, int light, int heavy)
     {
-        // S18 audit: pins current behaviour of FACTION-LE-07; flip the assertion when fixed.
-        SimRules r = S18World.RealRules;
-        WarheadType[] land = r.Warheads.Where(w => !w.Id.StartsWith("exp_", StringComparison.Ordinal)).ToArray();
-        Assert.True(land.Length >= 20);
-        foreach (WarheadType w in land)
-        {
-            int[] ship = { w.VersusPercent[(int)ArmorClass.ShipLight], w.VersusPercent[(int)ArmorClass.ShipHeavy], w.VersusPercent[(int)ArmorClass.Submerged] };
-            Assert.True(ship.All(p => p == 100) || ship.All(p => p == 0), $"{w.Id}: {string.Join(",", ship)}");
-        }
-        // the Expedition's own rifle warhead, for comparison, is graded
-        WarheadType own = r.Warheads.Single(w => w.Id == "exp_small_arms");
+        WarheadType w = S18World.RealRules.Warheads.Single(x => x.Id == id);
+        Assert.Equal(light, w.VersusPercent[(int)ArmorClass.ShipLight]);
+        Assert.Equal(heavy, w.VersusPercent[(int)ArmorClass.ShipHeavy]);
+        Assert.Equal(100, w.VersusPercent[(int)ArmorClass.Submerged]);
+        WarheadType own = S18World.RealRules.Warheads.Single(x => x.Id == "exp_small_arms");
         Assert.Equal(70, own.VersusPercent[(int)ArmorClass.ShipLight]);
         Assert.Equal(30, own.VersusPercent[(int)ArmorClass.ShipHeavy]);
     }
 
     [Theory]
     // weapon, damage per 100 s vs a heavy tank, vs a ship_heavy hull (cruiser, destroyer, tender, Command Ship)
-    [InlineData("lb_rifle", 133, 933)]          // Scavenger: 1.3 -> 9.3 dps
-    [InlineData("lb_rotor_gun", 250, 1750)]     // Rotor: 2.5 -> 17.5 dps
-    [InlineData("dir_rifle", 125, 750)]         // Conscript
+    [InlineData("lb_rifle", 133, 266)]          // Scavenger: 9.3 -> 2.7 dps vs a ship_heavy hull
+    [InlineData("lb_rotor_gun", 250, 500)]      // Rotor: 17.5 -> 5 dps
+    [InlineData("dir_rifle", 125, 125)]         // Conscript: 7.5 -> 1.25 dps (1-damage shots, integer rounding)
     [InlineData("exp_marine_rifle", 285, 428)]  // the Expedition's own rifle: 30 % vs ship_heavy
-    public void Audit_SmallArms_DpsAgainstAHeavyTank_AndAgainstAHeavyShip(string weapon, int vsHeavy, int vsShipHeavy)
+    public void SmallArms_DpsAgainstAHeavyTank_AndAgainstAHeavyShip(string weapon, int vsHeavy, int vsShipHeavy)
     {
-        // S18 audit: pins current behaviour of FACTION-LE-07; flip the assertion when fixed.
+        // D-205 / LE-07: numbers re-pinned after the ship columns were filled.
         Assert.Equal(vsHeavy, Dps100(weapon, ArmorClass.Heavy));
         Assert.Equal(vsShipHeavy, Dps100(weapon, ArmorClass.ShipHeavy));
     }
 
     [Fact]
-    public void Audit_FourRotors_SinkACruiserInAbout17Seconds_OnPaper()
+    public void FourRotors_SinkACruiserInAbout60Seconds_OnPaper()
     {
         // S18 audit: pins current behaviour of FACTION-LE-07 (duel `lb_rotor:4` vs `exp_cruiser:1` measured 516 ticks incl. the approach).
         SimRules r = S18World.RealRules;
         int hp = r.Vehicles.Single(v => v.Id == "exp_cruiser").MaxHealth;
         int ticks = hp * 2000 / (4 * Dps100("lb_rotor_gun", ArmorClass.ShipHeavy)) ;
         Assert.Equal(1200, hp);
-        Assert.InRange(ticks, 330, 350);
+        Assert.InRange(ticks, 1190, 1210);   // was about 340 ticks (17 s)
     }
 
-    [Fact(Skip = "S18 FACTION-LE-07: awaiting owner decision")]
+    [Fact]
     public void Desired_RifleFire_IsNoBetterAgainstAHeavyShipThanAgainstAHeavyTank()
     {
         Assert.True(Dps100("lb_rifle", ArmorClass.ShipHeavy) <= 2 * Dps100("lb_rifle", ArmorClass.Heavy));

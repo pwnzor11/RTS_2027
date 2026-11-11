@@ -316,6 +316,7 @@ public sealed class DirectorateDataTests
         AuraTargetsAll(s, ids);
         VehicleType agit = s.Vehicles.Single(v => v.Id == "dir_agitprop");
         Assert.Equal(4, agit.AuraRadius);
+        Assert.Equal(800, agit.AuraRofPermille);
         Assert.Equal(6, agit.JamRadius);
     }
 

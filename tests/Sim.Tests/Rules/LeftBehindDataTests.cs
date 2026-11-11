@@ -233,7 +233,7 @@ public sealed class LeftBehindDataTests
         Assert.True(Veh(s, "lb_buggy").Raider);
         Assert.False(Inf(s, "lb_hook_runner").RaiderOneUse);
         Assert.True(Inf(s, "lb_tinker").AuraRepairPermille > 0);
-        Assert.True(Veh(s, "lb_tow").TowBonusPermille > 0);
+        Assert.True(Veh(s, "lb_tow").TowBonusPermille > 1000);   // D-205: 1750
         Assert.Equal(6, Veh(s, "lb_tow").Passengers);
         Assert.True(Veh(s, "lb_dust_sail").DropsBlackoutTicks > 0);
         Assert.True(Inf(s, "lb_veilwalker").AshStealthThreshold > 0);

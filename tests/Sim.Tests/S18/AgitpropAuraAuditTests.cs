@@ -5,8 +5,8 @@ using Rts.Sim.Rules;
 
 namespace Rts.Sim.Tests.S18;
 
-/// <summary>S18 audit, FAD-02 / FACTION-MATH-03: the Agitprop's aura (aura_rof_permille = 1250) multiplies RELOAD TIME, so the
-/// conscripts it escorts fire slower. Shipped data, measured as damage dealt to a building in a fixed time.</summary>
+/// <summary>S18 audit, FAD-02 / FACTION-MATH-03: the Agitprop's aura (aura_rof_permille, 1250 until D-205, now 800) multiplies RELOAD TIME. Fixed: the
+/// conscripts it escorts now fire faster. Shipped data, measured as damage dealt to a building in a fixed time.</summary>
 public sealed class AgitpropAuraAuditTests
 {
     private const int Ticks = 800;
@@ -26,25 +26,23 @@ public sealed class AgitpropAuraAuditTests
     }
 
     [Fact]
-    public void Audit_AgitpropNearby_ConscriptsReloadSlower_AndDealLessDamage()
+    public void AgitpropNearby_ConscriptsReloadFaster_AndDealMoreDamage()
     {
-        // S18 audit: pins current behaviour of FAD-02 / FACTION-MATH-03; flip the assertion when fixed.
+        // D-205 / FAD-02: aura_rof_permille 1250 -> 800 (reload x0.8).
         VehicleType agit = S18World.RealRules.Vehicles.Single(v => v.Id == "dir_agitprop");
-        Assert.Equal(1250, agit.AuraRofPermille);
-        Assert.Equal(1000, agit.AuraSpeedPermille);   // "hurries" has no data behind it either
+        Assert.Equal(800, agit.AuraRofPermille);
+        Assert.Equal(1000, agit.AuraSpeedPermille);
 
         var (plain, rofPlain) = Measure(false);
         var (escorted, rofEscorted) = Measure(true);
 
         Assert.Equal(1000, rofPlain);
-        Assert.Equal(1250, rofEscorted);          // reload time x1.25
+        Assert.Equal(800, rofEscorted);
         Assert.True(plain > 0);
-        Assert.True(escorted < plain, $"escorted {escorted} vs plain {plain}");
-        // 16-tick reload becomes 20: about 80 % of the damage (within one volley of rounding)
-        Assert.InRange(escorted * 100 / plain, 76, 84);
+        Assert.True(escorted > plain, $"escorted {escorted} vs plain {plain}");
     }
 
-    [Fact(Skip = "S18 FAD-02: awaiting owner decision")]
+    [Fact]
     public void Desired_AgitpropNearby_ConscriptsDealMoreDamage()
     {
         var (plain, _) = Measure(false);
