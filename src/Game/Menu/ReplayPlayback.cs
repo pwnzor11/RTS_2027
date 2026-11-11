@@ -87,6 +87,15 @@ public sealed class ReplayPlayback
     /// <summary>First tick at which the state hash differed from the recorded one, or -1 while everything matched.</summary>
     public int DesyncTick { get; private set; } = -1;
 
+    /// <summary>True for a replay of a campaign mission or the tutorial (it re-runs a mission script).</summary>
+    public bool IsMissionReplay => Host is not null;
+
+    /// <summary>
+    /// S18 GS-03 (owner decision): whether the viewer shows the desync warning. Mission replays are watchable only (they carry no tier or
+    /// campaign tech, see <see cref="MissionReplay.WatchableOnlyNote"/>), so only skirmish replays warn.
+    /// </summary>
+    public bool ShowDesyncWarning => DesyncTick >= 0 && !IsMissionReplay;
+
     /// <summary>Moves to the next view: everything, player 0, player 1, ... then everything again.</summary>
     public void CycleViewer()
     {

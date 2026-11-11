@@ -69,7 +69,7 @@ few extra operations (board, unload, unpack, rank) are the public wrappers in `s
 player command runs. No new sim command and no new sim state. Reinforcements are units: a building type is a script error. Every spawn takes
 the free cell nearest the wanted one (right terrain, no building, no vehicle, no soldier; search radius 10), so nothing is stacked; if none
 is free the call is a script error and the units spawned before it stay.
-- `Reinforce.Zone`: units appear on free cells of the zone, nearest its centre first, then attack-move to `destCell`. Tags come back in list order.
+- `Reinforce.Zone`: units appear on free cells of the zone, nearest its centre first, then attack-move to `destCell`. Tags come back in list order. When the zone has no free cell left for a unit (S18, MIS-07), that unit appears on the nearest free cell around the zone (up to 10 rings out) instead of failing the callback; only when that also fails is it a script error.
 - `Reinforce.Delayed`: queued; `ticks` after the call the units appear exactly as `Reinforce.Edge` places them (block just inside the edge,
   attack-move to `destCell`). Errors at arrival time (no room) are collected in `Errors`, not thrown at the call. No tags are returned.
 - `Reinforce.Transport`: soldiers in the list ride; any other type drives in by itself like `Edge`. The transport is the smallest ground type
@@ -178,4 +178,15 @@ script's callbacks run first, `Mission.Win` on that tick makes the outcome Won, 
 skips a callback. `Trigger.OnAllDestroyed` and `Actor.Count` already saw a health-0 actor as gone. `Trigger.OnDestroyed` did not (an actor stays resolvable until cleanup,
 so it fired one tick late, after the game was already over); since M8-17 it also counts health 0 as destroyed. What is NOT safe: polling
 (`Trigger.Every`) for the end, since the elimination tick may fall between polls and the game then ends with the sim's own win. Use `OnDestroyed` /
-`OnAllDestroyed` for the final win. A mission that must outlive its enemy team's elimination still needs a hidden enemy actor.
+`OnAllDestroyed` for the final win.
+
+**A dying actor is gone (S18, MIS-03).** An actor whose health reached 0 this tick counts as destroyed everywhere in the API, even though the sim
+removes it only in cleanup, after the script callbacks: `Actor.Alive(tag)` is false, `Actor.Cell(tag)` is nil, `Trigger.OnDestroyed` fires, and an
+objective marker that targets it points nowhere. So inside an actor's own `OnDestroyed` callback, `Actor.Alive` of that tag is already false, and
+two actors that die on the same tick both read as dead in both callbacks.
+
+**What ends a mission (S18, MIS-01 / MIS-05).** The game screen ends a scripted mission when the script calls `Mission.Win` / `Mission.Lose`, or
+when the human player is defeated (lost every building). The sim's own elimination rule alone does not end it: an enemy team that loses its
+last building is marked defeated (its orders stop), but the mission goes on until the script decides; and after `Mission.Lose(0)` the mission
+ends even if a third team is still alive. Only a script that has halted on a fatal error falls back to the sim's rule. An anchor building is
+therefore no longer needed to keep a mission alive, though a defeated enemy's units no longer obey orders or the AI.

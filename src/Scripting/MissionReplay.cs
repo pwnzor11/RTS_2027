@@ -17,6 +17,12 @@ namespace Rts.Scripting;
 /// </summary>
 public static class MissionReplay
 {
+    /// <summary>
+    /// S18 GS-03 (owner decision, "watchable only"): a mission replay stores only the mission id and script hash, not the difficulty tier or
+    /// the campaign tech, so it may drift from the original game. Viewers and verify show this note instead of a desync warning.
+    /// </summary>
+    public const string WatchableOnlyNote = "Mission replay: watchable only, it may drift from the original game";
+
     /// <summary>What a recording of <paramref name="session"/> stores in its header.</summary>
     public static ReplayMission RefFor(MissionSession session)
     {

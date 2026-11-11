@@ -24,6 +24,10 @@ public sealed class BalanceTableTests
     public static IEnumerable<object[]> MissionTiers() =>
         CampaignWalks.AllMissions.SelectMany(id => CampaignWalks.Tiers(id).Select(t => new object[] { id, t }));
 
+    // S18 MIS-03 (owner): the auth_01 tier-5 bot loses both scrapers in the survey phase, which is now a loss as the script intends
+    // (before MIS-03 the loss never fired and the bot won anyway).
+    internal static bool ExpectedLoss(string id, int tier) => id == "auth_01" && tier == 5;
+
     [Theory]
     [MemberData(nameof(MissionTiers))]
     public void Every_mission_tier_is_walked_and_reported(string id, int tier)
@@ -37,6 +41,13 @@ public sealed class BalanceTableTests
         _out.WriteLine($"ROW | {id} | {tier} | {(r.Won ? "yes" : "NO")} | {r.Tick} | {Clock(r.Tick)} | {r.PlayerLosses} | {r.EnemyLosses} | {note} | {sw.ElapsedMilliseconds} ms");
         Assert.Empty(r.Errors);
         Assert.Equal(0, r.LocaleWarnings);
+        if (ExpectedLoss(id, tier))
+        {
+            Assert.False(r.Won, r.Diagnostics);
+            Assert.Contains("scrapers=Failed", r.Diagnostics, StringComparison.Ordinal);
+            return;
+        }
+
         Assert.True(r.Won, r.Diagnostics);
         Assert.True(r.Tick < limit, r.Diagnostics);
     }

@@ -45,7 +45,7 @@ public sealed partial class MissionHost
         NewApiTable(s, "Actor",
             ("Create", ActorCreate),
             ("Order", ActorOrder),
-            ("Alive", a => DynValue.NewBoolean(TryTag(Str(a, 0), out ActorRef r) && _sim!.TryResolve(r))),
+            ("Alive", a => DynValue.NewBoolean(TryTag(Str(a, 0), out ActorRef r) && IsStanding(_sim!, r))),   // S18 MIS-03: health 0 is gone
             ("Count", a => { var (k, ix) = TypeFilter(a, 1); return Num(CountAlive(_sim!, (byte)PlayerArg(a, 0), ix, k)); }),
             ("CountInZone", ActorCountInZone),
             ("Cell", ActorCellOf));
@@ -298,8 +298,8 @@ public sealed partial class MissionHost
 
     private DynValue ActorCellOf(CallbackArguments a)
     {
-        if (!TryTag(Str(a, 0), out ActorRef r) || !_sim!.TryResolve(r)) return DynValue.Nil;
-        return CellTable(CellOfActor(_sim, r));
+        if (!TryTag(Str(a, 0), out ActorRef r) || !IsStanding(_sim!, r)) return DynValue.Nil;   // S18 MIS-03
+        return CellTable(CellOfActor(_sim!, r));
     }
 
     private static CellCoord CellOfActor(Simulation sim, ActorRef r) => r.Kind switch

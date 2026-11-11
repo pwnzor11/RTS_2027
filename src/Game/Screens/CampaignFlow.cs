@@ -20,17 +20,32 @@ internal static class CampaignFlow
     public static GameScreen CreateMission(GameServices s, CampaignService svc, string faction, string missionId, int tier)
     {
         CampaignStart start = svc.Start(s.RulesDir, faction, missionId, tier);
-        string title = start.Game.Def.Title;
-        return GameScreen.CreateCampaignMission(s, start.Game, () => CreateMission(s, svc, faction, missionId, tier), () =>
-        {
-            if (start.Game.Host.Outcome != MissionOutcome.Won) return null;   // a loss uses the normal Retry / Quit menu
-            CampaignProgress before = svc.Progress(faction);
-            CampaignProgress after = svc.RecordWin(faction, missionId, tier);
-            bool final = MissionSelectModel.IsFinal(svc, faction, missionId);
-            ArchiveCatalog catalog = LoadCatalog(s);
-            var model = DebriefModel.Build(title, missionId, start.Game.Sim.Tick, start.Game.Host.Objectives, before, after, tier, final, catalog);
-            return new DebriefScreen(s, model, () => AfterWin(s, svc, faction, final));
-        });
+        return GameScreen.CreateCampaignMission(s, start.Game, () => CreateMission(s, svc, faction, missionId, tier), WinScreen(s, svc, faction, missionId, tier, start.Game));
+    }
+
+    /// <summary>The game-over hook of a campaign mission: on a win, records it and returns the debrief; on a loss, null (the normal Retry / Quit menu).</summary>
+    private static Func<IScreen?> WinScreen(GameServices s, CampaignService svc, string faction, string missionId, int tier, MissionGame game) => () =>
+    {
+        if (game.Host.Outcome != MissionOutcome.Won) return null;   // a loss uses the normal Retry / Quit menu
+        CampaignProgress before = svc.Progress(faction);
+        CampaignProgress after = svc.RecordWin(faction, missionId, tier);
+        bool final = MissionSelectModel.IsFinal(svc, faction, missionId);
+        ArchiveCatalog catalog = LoadCatalog(s);
+        var model = DebriefModel.Build(game.Def.Title, missionId, game.Sim.Tick, game.Host.Objectives, before, after, tier, final, catalog);
+        bool saved = svc.LastWinSaved;   // S18 GS-05: a failed progress write is told after the debrief
+        return new DebriefScreen(s, model, () => AfterWin(s, svc, faction, final, saved));
+    };
+
+    /// <summary>
+    /// S18 MIS-02 / GS-02: the campaign wiring of a mission restored from a save: Restart through the campaign (same tier, the campaign tech) and the
+    /// win hook (RecordWin, debrief, unlocks, ending). The tutorial restarts as the tutorial with the normal end menu. Null for any other mission.
+    /// </summary>
+    public static (Func<GameScreen> Restart, Func<IScreen?> GameOver)? Resume(GameServices s, MissionGame game)
+    {
+        if (game.Def.Id == TutorialId) return (() => CreateTutorial(s), static () => null);
+        CampaignService svc = Service(s);
+        if (svc.CampaignMissionOf(game.Host) is not { } link) return null;
+        return (() => CreateMission(s, svc, link.Faction, link.MissionId, link.Tier), WinScreen(s, svc, link.Faction, link.MissionId, link.Tier, game));
     }
 
     /// <summary>Folder name of the shared tutorial (M8-09) under data/missions. It is not part of any faction's campaign.</summary>
@@ -61,12 +76,31 @@ internal static class CampaignFlow
     }
 
     /// <summary>Leaves the debrief: back to the mission select (refreshed), then the ending when the faction's last mission was won.</summary>
-    public static void AfterWin(GameServices s, CampaignService svc, string faction, bool final) => s.Screens.Post(() =>
+    public static void AfterWin(GameServices s, CampaignService svc, string faction, bool final, bool saved = true) => s.Screens.Post(() =>
     {
-        if (!s.Screens.Screens.Any(x => x is MissionSelectScreen)) { GameFlow.QuitToMenu(s); return; }
+        AfterWinScreens(s, svc, faction, final);
+        if (!saved) s.Screens.Push(new NoticeScreen(s, ProgressNotSavedTitle, ProgressNotSavedText));
+    });
+
+    // S18 GS-05: shown when RecordWin could not write the campaign progress file.
+    private const string ProgressNotSavedTitle = "Progress not saved";
+    private const string ProgressNotSavedText = "The campaign progress file could not be written, so this win is not kept. Check the free disk space and that the settings folder can be written.";
+
+    private static void AfterWinScreens(GameServices s, CampaignService svc, string faction, bool final)
+    {
+        if (!s.Screens.Screens.Any(x => x is MissionSelectScreen))
+        {
+            // S18 MIS-02: a mission loaded from a save has no mission select under it: back to the main menu, then the ending if it was the last.
+            s.Screens.ReplaceAll(new MainMenuScreen(s));
+            if (final && LoadEnding(s, svc, faction) is { } end)
+                s.Screens.Push(new EndingScreen(s, new EndingModel(end, svc.Progress(faction)), Path.Combine(DataDir(s), "images", "endings")));
+            return;
+        }
+
         while (s.Screens.Top is not MissionSelectScreen) s.Screens.Pop();   // debrief, game, briefing
         ((MissionSelectScreen)s.Screens.Top).Refresh();
+        foreach (CampaignScreen c in s.Screens.Screens.OfType<CampaignScreen>()) c.Refresh();   // S18 GS-04: newly opened factions, counts
         if (final && LoadEnding(s, svc, faction) is { } ending)
             s.Screens.Push(new EndingScreen(s, new EndingModel(ending, svc.Progress(faction)), Path.Combine(DataDir(s), "images", "endings")));
-    });
+    }
 }
