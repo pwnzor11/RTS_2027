@@ -1,0 +1,107 @@
+# tests-repo: tests, CI, build config, licensing, repo hygiene — findings
+Scope read: tests/ (six projects: structure, skip/early-return/env-gated tests, timing asserts, static state, pinned hashes, temp files), .github/workflows/ci.yml plus CI run history via `gh` (public repo, last 100 runs, failed-run logs), all csproj files, Directory.Build.props, global.json, .gitattributes, .gitignore, README, LICENSE head, NOTICE.md, THIRD_PARTY_NOTICES.md, docs/LICENSING.md, docs/CREDITS.md, data/licences, data/archive, data/sprites_classic, art/, branch list (51 remote heads compared with main via GitHub API), file-name case check script (casecheck*.py: 0 mismatches), coverage script (cov.py), no-assert scan (noassert.py). Did NOT: build or run any test, read every test body, run the NuGet vulnerability audit (no network audit data; versions only), read the full GPL text, read docs for contradictions beyond README/ROADMAP/HANDOFF/CREDITS.
+
+## Summary
+1. TEST-01 (major): several statics (UiScale.TextFactor, PlayerColours assignment, UnitRenderer.InfantryExtraScale) are flipped by tests with no xunit collection, while other classes read them in parallel: latent flaky tests.
+2. PROCESS-02 (major): a published build shows only the hard-coded FallbackCredits in About; it omits the CC BY-SA 0 A.D. props, Skorpio, LPC, Kenney. Attribution then lives only in files beside the exe.
+3. PROCESS-03 (major): README is stale (session 17 reality: 16 missions + tutorial done, M11 done, M12 in progress; README says "most of the campaign is still to be written", no M11/M12 rows).
+4. TEST-04 (major): the default-skirmish state hash test is pinned against the shipped data/rules plus AI, so any balance edit turns it red with no way to judge if the change is right.
+5. TEST-05 (minor): ~6 tests pass while doing nothing (env-gated probes, vacuous `>= 0` assert, silent early returns on missing Python/data).
+6. TEST-06 (minor): wall-clock budgets (2 s map gen, 5 ms CanPlace, 20 ms/tick, 1-2 s render) can flake on a loaded 2-core runner.
+7. PROCESS-07: CI has no timeout-minutes, no permissions block, no Linux job; two main runs went red from testhost timeouts (now mitigated).
+8. PROCESS-08: THIRD_PARTY_NOTICES.md omits Noto Sans (OFL) and the runtime's bundled-component notices are not shipped; licence texts split between data/fonts and data/licences.
+9. Good news: GPL §7 MonoGame permission text IS present in LICENSE (D-055); no EA trademarks/code found; SPDX on 1064/1064 .cs files; no Debug-only code; data/archive is live data, not dead; cls_kA.txt is an empty tracked file.
+
+## Findings
+### TESTS-REPO-01 · major · TEST · confidence medium
+**What:** Tests mutate process-wide statics and restore them in `finally`, but xunit runs test classes in parallel and there is no `[Collection]`/DisableParallelization on them; other classes read the same statics.
+**Where:** tests/Game.Tests/Ui3/UiScaleRuleTests.cs:60-75 (sets `UiScale.TextFactor` to Normal then Large); read by src/Game/Ui/Card/CardLayout.cs:102, src/Game/Ui/BitmapFont.cs:43, SidebarLayout/SidebarPanel (tests: Ui/Card/CardLayoutTests, Ui/SidebarLayoutTests, Ui/SidebarPanelTests, FontAtlasTests). tests/Game.Tests/SpriteSheetTests.cs:445-451 (`PlayerColours.Assign`/`ResetAssignment`, assert Base(0) between) vs src/Game/Screens/GameScreen.cs:267,280 which calls `PlayerColours.Assign` (Game.Tests/Integration/M4SkirmishIntegrationTests.cs builds GameScreen). tests/Game.Tests/Render/FxLookTests.cs:513-521 (`UnitRenderer.InfantryExtraScale`). Only collection used anywhere: `[Collection("LlmHooks")]` (SkirmishCommanderSetupTests.cs:11); no xunit.runner.json, no assembly CollectionBehavior.
+**Evidence:** grep of static mutable members in src (`UiScale.TextFactor`, `PlayerColours._choiceBySlot`, `UnitRenderer.InfantryExtraScale`, `GameKeys._active`, `FxLook.Off`, `GarrisonOverlay.Rules`) vs the tests that set them. Window is a few microseconds per run, so failure would be rare and unreproducible, which is the worst kind.
+**Impact:** an occasional red CI run (or a wrong layout assertion) that passes on rerun; the team has already normalised reruns.
+**Fix idea:** put the mutating tests (and anything reading those statics) in one `[Collection("UiStatics")]`, or make the statics [ThreadStatic]/injected. S.
+
+### TESTS-REPO-02 · major · PROCESS · confidence medium-high (not legal advice; owner to verify)
+**What:** In a published build the About screen cannot read docs/CREDITS.md, so it shows `AboutContent.FallbackCredits`, a hard-coded 9-line list with only libraries and Noto Sans. It lacks the 0 A.D. props (CC BY-SA 3.0, attribution required), Skorpio, Sharm/LPC artists, Kenney, and the audio/music rows. Also `ParseCredits` truncates any long asset cell to 75 chars + "..." and drops its licence.
+**Where:** src/Game/Menu/AboutContent.cs (FallbackCredits, ParseCredits line `cells[0].Length > 78 ? cells[0][..75] + "..."`), src/Game/Screens/AboutScreen.cs:139-146 (docs/CREDITS.md "a published build does not carry it"); src/Game/Game.csproj copies LICENSE, NOTICE.md, THIRD_PARTY_* and data/** but not docs/CREDITS.md. Review item E-6 (2026-11-03) asked for in-game credits. Test tests/Game.Tests/Menu/CatalogAndTextTests.cs:98-110 only checks 3 names and returns silently if the file is missing.
+**Evidence:** code read; the shipped files do carry the 0 A.D. notice (THIRD_PARTY_NOTICES.md:269-276, data/licences/CC-BY-SA-3.0_0AD_NOTICE.txt, data/sprites/props/zeroad/LICENSE.txt), so attribution exists beside the exe but not in-game.
+**Impact:** a friend's copy credits art authors only in loose files; the comment "Keep in step with that file" has no test enforcing it.
+**Fix idea:** copy CREDITS.md into the publish folder (add to the Game.csproj None item) and/or generate FallbackCredits from it; add a test that every CREDITS asset/library appears in the fallback or that the file ships. S.
+
+### TESTS-REPO-03 · major · PROCESS · confidence high
+**What:** README.md contradicts the repo's current state.
+**Where:** README.md "Where the project stands (November 2026)": M8 says "a tutorial and the first Authority mission run on it; the other pilot missions come next" and "most of the campaign is still to be written"; ROADMAP M8-12/M8-15 and data/missions (16 missions + tut_01, all walked by Scripting.Tests CampaignPlaythroughTests) say all done. No rows for M11 (complete) or M12 (waves 1-3 built, layout 2 v6 off by default). M10 "Not started" vs art/audio/font work done. Tool list omits `ai` and `map` commands. Publish paragraph omits THIRD_PARTY_LGPL-2.0.txt and data/licences.
+**Evidence:** docs/HANDOFF.md header (session 17: "M11 is complete", 3709 tests, decisions to D-201); `ls data/missions`.
+**Impact:** anyone (friend, contributor) is told the game is far less finished than it is; also session count/test count are not stated anywhere in README.
+**Fix idea:** rewrite the status table from ROADMAP, add M11/M12 rows. S.
+
+### TESTS-REPO-04 · major · TEST · confidence high
+**What:** `Default_settings_give_the_pinned_simulation` pins a state hash after 1200 ticks of a default skirmish run on the SHIPPED data/rules with the real AI. Any balance tweak, AI change or new rules field moves it; the failure message gives no way to tell a correct change from a bug, and the pin has been re-pinned several times (comments M4-16, M4-17).
+**Where:** tests/Game.Tests/Skirmish/SkirmishDefaultHashTests.cs:13-16, 29-35. Same pattern, but isolated from shipped data, in Sim.Tests/Golden/* (fixture rules, regenerated via RTS_UPDATE_GOLDEN=1) and CombatTests.cs:336 (inline 0xDD1088B14A69B1ED), MapGenOceanTests.cs:18-41 (24 inline map hashes), MapGenDeterminismTests (8), DecalTests.cs:91.
+**Evidence:** test uses `RulesLocator.FindRulesDir` (= data/rules). Inline constants have no regeneration switch; only the three golden txt files do.
+**Impact:** the owner's normal activity (editing data/rules numbers) breaks the build with a hash he cannot interpret; temptation is to paste the new value.
+**Fix idea:** run that test on Fixtures rules like the goldens, or move to a golden file with RTS_UPDATE_GOLDEN and a diff of part sub-hashes; same for the inline pins. M.
+
+### TESTS-REPO-05 · minor · TEST · confidence high
+**What:** Tests that report "passed" without checking anything.
+**Where:** Sim.Tests/M7/CarrierBalanceProbe.cs:105-108 (returns unless RTS_BALANCE_PROBE set); Game.Tests/Spectator/SpectatorPerfBench.cs:36 (RTS_PERF); Game.Tests/SpriteSheetTests.cs:466-469 (RTS_PROOF_IN/OUT); Sim.Tests/Balance/S13CampaignBalanceTests.cs:57-118-171 (three probes that only print; line 53 asserts `real.EnemyDead >= 0 && cloud.EnemyDead >= 0`, always true); Sim.Tests/Vision/VisionPerformanceTests.cs:82-90 (logs ticks/s, asserts nothing); silent early returns when data or Python is missing: Game.Tests/Audio/SfxrTests.cs:58,83 (no python3/python -> both determinism tests pass; Windows `py` launcher or Store stub is not found), Render/LpcPropAtlasTests.cs:22,57, Render/FxLookTests.cs:483, FxTests.cs:165, FxImportTests.cs:29,50, Menu/CatalogAndTextTests.cs:102, Wiring/BuildingUpgradeOfferTests.cs:55 (returns if the data has no extra prerequisite). ZeroAdPropAtlasTests.cs:93 returns if an env var is set.
+**Evidence:** grep + reading. No `Skip=` attributes exist anywhere; CI logs show "Skipped: 0" in every project, so these count as passes. The data-dir ones resolve `../../../../../data` from the test bin folder, which works today (5 levels), so they are real in practice; only the Python ones can silently not run.
+**Impact:** the green count (3,709) overstates coverage by roughly 8 tests; the Sfxr "committed WAVs match presets" check could be silently off on the owner's PC.
+**Fix idea:** make probes `[Fact(Skip=...)]`-style via a custom attribute or [Trait] and exclude, or delete the tautology; make SfxrTests fail (or Assert.Skip-equivalent) when Python is absent on CI (`CI=true`). S.
+
+### TESTS-REPO-06 · minor · TEST · confidence medium
+**What:** Hard wall-clock budgets in normal tests.
+**Where:** Sim.Tests/Map/MapGenDeterminismTests.cs:97-108 (Large map < 2 s, 4 biomes), Buildings/PlacementTests.cs:138-146 (CanPlace < 5 ms, 10 samples), M3/Hardening/WallPlacementAndSaveTests.cs:119 (< 20 ms/tick), Pathing/PathServiceTests.cs:416 (< 2000 ms), Game.Tests/Render/PropTests.cs:231-250 (1000 ms, 2000 us), DecalTests.cs:166 (1500 ms). Also Llm CommanderReplayAndSaveTests.cs:28-60 depends on a thread-pool task and a 50-tick poll window (its own comment records a CI failure in session 9); CommanderTests.cs:37 polls 500x2 ms.
+**Evidence:** the suite runs 5-6 testhosts in parallel on a 2-core runner (ci.yml comment says so) and the lead's Linux box; the already-seen VSTEST testhost-connect failure shows the load. CI history: 6 failed runs of 100, none attributable to these budgets so far.
+**Impact:** rare false reds. The Commander test is the likeliest.
+**Fix idea:** keep as Trait("Category","Perf") outside the gate, or multiply budgets 5x; for Commander, drive the reply through a synchronous fake. S.
+
+### TESTS-REPO-07 · minor · PROCESS · confidence high
+**What:** CI hardening gaps.
+**Where:** .github/workflows/ci.yml: no `timeout-minutes` (default 360; HANDOFF session 7 records a deadlocked test stalling a wave; test step has no `--blame-hang-timeout`), no `permissions:` block (token defaults), no `concurrency` group (push + PR both run, about 10-16 min each on Windows; public repo so no cost), actions pinned by tag (`@v4`) not SHA, no NuGet cache, only windows-latest (Linux-only/Windows-only differences are caught only by the lead's manual Linux run; a past Windows-only failure was a locked temp .rpl in HarvestOrdersTests, fixed). `AI tier matrix` step: `ai matrix` is not the last command, so a non-zero exit with a partial ai_matrix.md would still pass; the step and "Match throughput" are informational, nothing gates on AI strength. Publish job smoke test runs `--headless-check 200` only: it would not notice a missing SDL2.dll/openal.dll or LICENSE/THIRD_PARTY files in the publish folder, since no window or audio device is created. Artifacts: trx 3 days, game 7 days (fine). No secrets are used. LFS is fetched (`lfs: true`, both jobs). A failing `dotnet test` cannot be masked (no continue-on-error).
+**Evidence:** workflow read; `gh run list` (93 success, 6 failure, 1 in progress); failed run 42286909059 and 42271342592 on main (2026-11-06) were "Test Run Aborted: vstest.console failed to connect to testhost after 90 seconds" (now VSTEST_CONNECTION_TIMEOUT=600, last 10 main runs green); 42447029307 was the HarvestOrdersTests IOException.
+**Impact:** a hung test burns up to 6 h of runner; a broken publish folder is not caught.
+**Fix idea:** add `timeout-minutes: 45`, `permissions: contents: read`, a publish-folder assertion step (SDL2.dll, openal.dll, LICENSE, NOTICE.md, THIRD_PARTY_*, data/licences). S.
+
+### TESTS-REPO-08 · minor · PROCESS · confidence medium (not legal advice)
+**What:** Notice completeness gaps.
+**Where:** THIRD_PARTY_NOTICES.md has no Noto Sans / SIL OFL entry (its text is only data/fonts/OFL.txt; CREDITS.md and AboutContent do list it). Line ~150: runtime `THIRD-PARTY-NOTICES.TXT` "is not copied into the publish folder yet" (self-contained publish bundles zlib-ng, MsQuic etc.). data/licences/CC-BY-3.0.txt is not referenced by any doc (the CC-BY option is not used). LICENSE contains the GPL as converted Markdown (`_Version 3, 29 June 2007_`, `&lt;<http://fsf.org/>&gt;`), not the verbatim FSF text. docs/CREDITS.md says music is `data/music/*.ogg` CC0; no music file exists in the repo (USER_CHECKS: "No music ships yet"), and the real recordings row says "none yet".
+**Evidence:** greps above; `find data -name '*.ogg'` returns nothing.
+**Impact:** small; a stricter reader of OFL/MIT would want the font and runtime notices in the shipped notices file.
+**Fix idea:** add Noto row + copy the runtime notices file in Game.csproj; restore verbatim LICENSE text below the §7 paragraph. S.
+
+### TESTS-REPO-09 · minor · PROCESS · confidence high
+**What:** Stray and stale repo items.
+**Where:** `cls_kA.txt` at the repo root is a tracked, 0-byte file (`git ls-files cls_kA.txt`, one commit: the merge e059f0f); looks like a shell redirect accident (`... > cls_kA.txt`). Remote branches: 51 heads; every one except `wp/s13-handoff` is fully merged into main (GitHub compare, ahead=0); `wp/s13-handoff` holds 2 draft handoff commits (49c13f20, f89d03a4) superseded by later handoffs. `main` has no branch protection (HANDOFF knows). 12 stills in data/images/stills (~11 MB) and 35 review screenshots in docs/reviews/img are plain PNG in git, not LFS (rule covers only data/sprites and art). tools/measure/bal_probe/BalProbe.csproj is not in RTS_2027.slnx, so CI never compiles it (could rot). Python tools (217 files) and Lua mission files carry no SPDX header (all 1,064 .cs files do).
+**Evidence:** see commands in notes; branch comparison saved in /home/claude/audit/tests-repo/branches.txt.
+**Impact:** hygiene only.
+**Fix idea:** delete cls_kA.txt; owner deletes branches (all but main, restore/pre-s17, restore/pre-s18 are safe by the compare); add BalProbe to the slnx or a CI build line. S.
+
+### TESTS-REPO-10 · minor · CODE · confidence medium
+**What:** Build config notes. (a) TreatWarningsAsErrors is global and .NET 10 NuGetAudit is on by default, so a newly published advisory on any package (including the transitive Newtonsoft.Json 13.0.3 pulled by the test SDK) turns the build red until bumped. (b) `Nullable`/`ImplicitUsings`/`TargetFramework` are duplicated in every csproj and Directory.Build.props (harmless). (c) No analyzer level set (defaults only). (d) `Deterministic` is true but `ContinuousIntegrationBuild` is not set in CI, so PDB/embedded paths contain runner paths; harmless for play. (e) No trimming, R2R or single-file: friend gets a folder of ~200 files, fine and documented.
+**Evidence:** Directory.Build.props, csproj files.
+**Impact:** a surprise red build; nothing else.
+**Fix idea:** `<WarningsNotAsErrors>NU1901;NU1902;NU1903;NU1904</WarningsNotAsErrors>`. S.
+
+### TESTS-REPO-11 · idea · TEST · confidence medium
+**What:** Coverage gaps by direct type reference (a crude measure: indirect coverage through match/soak tests exists for most). Largest src files with fewest test references to their types (loc / refs): AI/Recruit/ExpeditionTactics.cs 994/2; Game/Ui/Sidebar/SidebarPanel.cs 1028/3; AI/Recruit/LeftBehindTactics.cs 808/0; Data/MapGen/ProceduralBuilder.Zones.cs 765/0 (+ ProceduralBuilder.cs 575/0, .Decor 301/0, .Rot2 275/0, .Skin 221/0); Game/Screens/GameScreen.cs 1337/10; AI/Recruit/MilitaryManager.cs 1020/17; Game/Screens/Editor/MapEditorScreen.cs 541/0; Data/GameRulesLoader.cs 406/0 (+UnitRulesLoader 262/0, StructureRulesLoader 233/0, RulesFields 284/0); Sim/Missions/HarvestMission.cs 400/0; Data/MapGen/LayoutChecks.cs 502/2; AI/Recruit/DirectorateTactics.cs 308/0; AI/Recruit/ProductionManager.cs 284/0; BuildOrderManager 275/1; Tools/MapCommands.cs 317/0, CommanderMatchCommand 306/5; Game/Render/SceneRenderer.cs 271/0; Game/Ui/DebugConsole.cs 271/0; Game/Screens/BriefingScreen.cs 245/0.
+**Behaviours that most need a named test:** (1) Expedition AI withdraw state machine (WithdrawPct 60/Resume 90, WithdrawMaxTicks 3000, cooldown 1800, `_military.Hold`, snapshot of `_withdraw*` fields): `grep -i withdraw tests/AI.Tests` = 0 hits; the save/load test only covers paths a game happens to play. (2) HANDOFF's own list: Expedition start units on Mountains layout 1 (no test), `ai timeline` ocean request. (3) Mop-up AI (MopupLaunch/MopupSweep, off) has no tests; switching it on later is untested. (4) HarvestMission edge cases (field exhausted mid-trip, refinery destroyed while loaded) have no direct test file. (5) Left Behind rig relocation under attack: one test (tier 3 packs and moves); no test for relocating onto blocked ground or a rig lost mid-pack. (6) Tools commands `match`, `replay verify`, `map` are only exercised by CI steps, Tools.Tests has 10 tests; a CLI exit-code regression would show only on CI. (7) Layout-2 start fairness is measured by laptop runs, not by a test, and the `CurrentLayout_StaysOne` test (MapGenLayout2Tests.cs:36) will fail by design when the default flips (expected, but update it in the same commit).
+**Evidence:** /home/claude/audit/tests-repo/cov.py output (rerun to regenerate).
+**Impact:** where regressions will first appear unnoticed.
+**Fix idea:** add focused tests for 1, 2, 4; M.
+
+## Open questions
+- Is the Python `py` launcher the only Python on the owner's PC? If so SfxrTests silently skips there.
+- Should the 0 A.D. attribution also appear in-game (E-6 asked for it)? Owner/lawyer decision.
+- Is the empty cls_kA.txt something an external tool expects? Nothing in the repo references it.
+- E-1 decision: D-055 chose the §7 permission (option a). Whether Ms-PL code can be covered by a permission the game's licensors grant is the legal question the FSF's incompatibility note raises; the text is present, a lawyer check was offered in D-055 and is not recorded as done.
+
+## Things checked and found sound
+- GPL §7 additional permission for MonoGame/SDL2/OpenAL Soft is present at the top of LICENSE and repeated in NOTICE.md, AboutContent, THIRD_PARTY_NOTICES, with SPDX `GPL-3.0-or-later` on all 683 src and 381 test .cs files.
+- Game.csproj ships LICENSE, NOTICE.md, THIRD_PARTY_NOTICES.md, THIRD_PARTY_LGPL-2.0.txt and all of data/ (including data/licences, data/fonts/OFL.txt) in build and publish; CI publishes and smoke-tests from an empty folder; the documented publish command is in README.
+- CC BY-SA 0 A.D. props stay a separate data folder with LICENSE.txt, the notice file and CC-BY-SA-3.0.txt; every licence file in data/licences matches a CREDITS row (CC-BY-3.0.txt is the unused extra).
+- No EA code, "Command & Conquer", Tiberium, Red Alert, GDI, Nod, Westwood text in data/, src/ or tests (only the README/docs non-affiliation line and a code comment "C&C-style"); LICENSING.md register of EA-derived files is empty and consistent.
+- File-name case: every .png/.toml/.wav/.lua reference in data TOML and C# literals resolves with exact case (script, 0 mismatches). No hard-coded backslash paths; CRLF in raw strings is normalised in tests.
+- No `#if DEBUG`, `Debug.Assert`, or `[Conditional]` in src; debug console is off in skirmish.
+- data/archive is the live Archive encyclopedia (src/Game/Archive/ArchiveCatalog.cs:35-37), data/sprites_classic is the RTS_FX classic folder used by ClassicFx and tests: neither is dead.
+- LFS: 251 tracked files, `lfs: true` in both CI jobs; no large binaries outside the LFS rule except the stills and review screenshots noted above. Tests use unique temp names (Guid) and temp save folders; none touch %APPDATA% defaults.
+- Package list (all PackageReferences): MonoGame.Framework.DesktopGL 3.8.6; Tomlyn 2.10.1; MoonSharp 2.0.0 (last release 2016, effectively abandoned, netstandard1.6/net40 build, reflection heavy; no trimming used, so fine today); System.IO.Hashing 10.0.14; System.Security.Cryptography.ProtectedData 10.0.0 (Windows-only API); test-only: Microsoft.NET.Test.Sdk 17.14.1, xunit 2.9.3, xunit.runner.visualstudio 3.1.4, coverlet.collector 6.0.4, Microsoft.CodeAnalysis.CSharp 5.9.0; transitive Newtonsoft.Json 13.0.3, NVorbis 0.10.4. Target net10.0, SDK 10.0.100 with rollForward latestFeature. Known-vulnerability status not checked (no audit data offline).
