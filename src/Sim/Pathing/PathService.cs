@@ -104,6 +104,9 @@ public sealed class PathService : ISimStatePart
     /// <summary>Test hook: when false the cache is bypassed. Results and costs must be identical either way.</summary>
     internal bool CacheEnabled { get; set; } = true;
 
+    /// <summary>Diagnostics (not state): expansions charged by the last <see cref="Process"/> call.</summary>
+    internal int LastProcessCost { get; private set; }
+
     /// <summary>Queues a single path request and returns its id (monotonic).</summary>
     public int Request(CellCoord from, CellCoord to, Locomotion loco) => Request(from, to, loco, NoPasser);
 
@@ -135,6 +138,7 @@ public sealed class PathService : ISimStatePart
     {
         long budget = (long)_perTick - _debt;
         _debt = 0;
+        long spent = 0;
         // Batch rule (M2-01): while budget is left, EVERYTHING queued so far is solved in this call, not just the first few
         // requests. The overdraft becomes debt that delays the next batch. Requests of one tick are therefore all answered
         // together, whichever player's actors (low or high slot) asked first; a per-request cut-off made the actors with
@@ -148,10 +152,12 @@ public sealed class PathService : ISimStatePart
                 int cost = Solve(r, out Entry[] entries);
                 _results[r.Id] = entries;
                 budget -= cost;
+                spent += cost;
             }
             _queue.RemoveRange(0, batch);
         }
         if (budget < 0) _debt = (int)(-budget);
+        LastProcessCost = (int)Math.Min(spent, int.MaxValue);
     }
 
     /// <summary>
