@@ -100,7 +100,7 @@ public static class MapPicker
                 skipped.Add($"{Path.GetFileName(path)} (room for {max} players, a skirmish needs {SkirmishSettings.MinPlayers})");
                 return;
             }
-            string label = $"{map.Name} {map.Width}x{map.Height}, {max} players" + (tag.Length > 0 ? " " + tag : "");
+            string label = $"{(user ? map.Name : Rts.Game.Ui.DisplayNames.Map(map.Name))} {map.Width}x{map.Height}, {max} players" + (tag.Length > 0 ? " " + tag : "");
             list.Add(new MapEntry(label, file, user, max));
         }
         catch (MapFileException e)

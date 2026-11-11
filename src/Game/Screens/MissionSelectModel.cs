@@ -41,7 +41,7 @@ public static class MissionSelectModel
         if (m.State == CampaignMissionState.Next) return "Ready to play.";
         CampaignProgress p = service.Progress(faction);
         IEnumerable<string> missing = service.Campaign(faction).Missions.First(x => x.Id == m.Id).Requires.Where(r => !p.IsCompleted(r));
-        return "Finish " + string.Join(" and ", missing) + " first.";
+        return "Finish " + string.Join(" and ", missing.Select(Rts.Game.Ui.DisplayNames.Mission)) + " first.";
     }
 
     /// <summary>True when <paramref name="missionId"/> is the last mission listed in the faction's campaign.</summary>

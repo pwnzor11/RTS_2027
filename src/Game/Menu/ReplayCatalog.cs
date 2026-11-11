@@ -57,7 +57,7 @@ public sealed class ReplayCatalog
             ReplayData d = ReplayReader.Read(stream);
             double minutes = d.FinalTick / (double)Rts.Sim.Core.SimConstants.TicksPerSecond / 60.0;
             string state = d.Truncated ? ", unfinished" : "";
-            return (FormattableString.Invariant($"{d.Header.MapName}, {d.PlayerCount} players, {minutes:0.0} min, seed {d.Seed}{state}"), true);
+            return (FormattableString.Invariant($"{Rts.Game.Ui.DisplayNames.Map(d.Header.MapName)}, {d.PlayerCount} players, {minutes:0.0} min, seed {d.Seed}{state}"), true);
         }
         catch (Exception e) when (e is InvalidDataException or EndOfStreamException or IOException or UnauthorizedAccessException)
         {
