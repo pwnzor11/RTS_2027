@@ -111,12 +111,59 @@ public sealed class MissionFixTests
         Assert.True(ChargeLeft(m, 1) > 100_000);
     }
 
+    private static List<int> VehiclesOf(MissionSession m, byte player, string type)
+    {
+        var sim = m.Sim;
+        int t = Rts.Sim.Rules.SimRules.IndexOf(sim.Setup.Rules.Vehicles, type, v => v.Id);
+        var list = new List<int>();
+        for (int i = 1; i < sim.Units.Capacity; i++)
+            if (sim.Units.Slots.IsIndexAlive(i) && sim.Units.Player[i] == player && sim.Units.TypeIndex[i] == t) list.Add(i);
+        return list;
+    }
+
     [Fact]
     public void Mis14_Tut01_fight_text_names_no_outpost_that_does_not_exist()
     {
         string locale = File.ReadAllText(Path.Combine(TestData.DataDir, "missions", "tut_01", "locale.toml"));
         Assert.DoesNotContain("outpost", locale, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("south-east", locale, StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>Adds a spare carrier at home (before the first step) and returns the slots of the two survey carriers.</summary>
+    private static List<int> SurveyCarriersWithASpare(MissionSession m)
+    {
+        List<int> survey = VehiclesOf(m, 0, "auth_carrier");
+        Assert.Equal(2, survey.Count);
+        int carrier = Rts.Sim.Rules.SimRules.IndexOf(m.Sim.Setup.Rules.Vehicles, "auth_carrier", v => v.Id);
+        Assert.False(m.Sim.SpawnVehicle(0, carrier, new CellCoord(12, 12)).IsNone);   // a carrier built at home
+        return survey;
+    }
+
+    [Fact]
+    public void Mis15_Auth03_a_spare_built_carrier_does_not_keep_the_escort_alive_after_the_survey_carriers_die()
+    {
+        MissionSession m = MissionSession.Create(TestData.DataDir, "auth_03");
+        List<int> survey = SurveyCarriersWithASpare(m);
+        var bot = new MissionBot(m);
+        bot.Idle(5);
+        foreach (int i in survey) m.Sim.Units.Health[i] = 0;
+        bot.Idle(3);
+        Assert.Equal(MissionOutcome.Lost, m.Host.Outcome);
+        Assert.Empty(m.Host.Errors);
+    }
+
+    [Fact]
+    public void Mis15_Auth03_the_escort_completes_when_both_survey_carriers_reach_the_coast_with_a_spare_left_at_home()
+    {
+        MissionSession m = MissionSession.Create(TestData.DataDir, "auth_03");
+        List<int> survey = SurveyCarriersWithASpare(m);
+        var bot = new MissionBot(m);
+        bot.Idle(5);
+        MissionZone coast = m.Def.ZoneNamed("coast")!.Value;
+        foreach (int i in survey) m.Sim.Units.Position[i] = LeptonCoord.CenterOf(new CellCoord((coast.X0 + coast.X1) / 2, (coast.Y0 + coast.Y1) / 2));   // test-only teleport
+        bot.Idle(60);
+        Assert.Empty(m.Host.Errors);
+        Assert.Equal(ObjectiveStatus.Completed, m.Host.Objectives.Single(o => o.Id == "escort").Status);
     }
 
     [Fact]
