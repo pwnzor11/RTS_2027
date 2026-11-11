@@ -89,27 +89,8 @@ public class StartPlacementAuditTests(ITestOutputHelper output)
 
     // ---- AI-02 ------------------------------------------------------------------------------------
 
-    // S18 audit: pins current behaviour of AI-02; flip the assertion when fixed.
+    // M13-01: the Audit_ pin of AI-02 was removed when the fix landed (D-205); the twin below is the live test.
     [Theory]
-    [InlineData(1UL)]
-    [InlineData(5UL)]
-    [InlineData(6UL)]
-    public void Audit_Expedition_MountainsLayout1_Medium_GetsNoCommandShip(ulong seed)
-    {
-        Simulation sim = Start(Biome.Mountains, 1, seed, Faction.Expedition);
-        for (byte p = 0; p < 2; p++)
-        {
-            CellCoord s = sim.Setup.Map.StartPositions[p];
-            var veh = Vehicles(sim, p);
-            int sea = NearestSea(sim, s, edgeOnly: false);
-            output.WriteLine($"seed {seed} p{p} start {s}: vehicles {veh.Count} (naval {veh.Count(v => v.Naval)}), infantry {Infantry(sim, p)}, nearest sea {sea}");
-            Assert.DoesNotContain(veh, v => v.Naval);
-            Assert.True(sea > 16, "the nearest sea lies beyond the ring-16 fallback");
-            Assert.Equal(4, veh.Count + Infantry(sim, p));   // 3 Marines and the Skimmer only: no Command Ship and no Landing Craft
-        }
-    }
-
-    [Theory(Skip = "S18 AI-02: awaiting owner decision")]
     [InlineData(1UL)]
     [InlineData(5UL)]
     [InlineData(6UL)]
@@ -125,7 +106,7 @@ public class StartPlacementAuditTests(ITestOutputHelper output)
     [Fact]
     public void Audit_Expedition_WithNoBuildingEver_IsNeverDefeated_EvenWithNothingLeft()
     {
-        Simulation sim = Start(Biome.Mountains, 1, 1UL, Faction.Expedition, debug: true);   // AI-02 case: no Command Ship
+        Simulation sim = Start(Biome.Mountains, 1, 1UL, Faction.Expedition, debug: true);   // formerly the AI-02 case (no Command Ship); the kill list covers whatever vehicles exist
         var kills = new List<Command>();
         ushort seq = 1;
         foreach (var v in Vehicles(sim, 0))
@@ -142,23 +123,8 @@ public class StartPlacementAuditTests(ITestOutputHelper output)
 
     // ---- AI-03 ------------------------------------------------------------------------------------
 
-    // S18 audit: pins current behaviour of AI-03; flip the assertion when fixed.
+    // M13-01: the Audit_ pin of AI-03 was removed when the fix landed (D-205); the test below is the live one.
     [Fact]
-    public void Audit_Expedition_MountainsLayout1_Seed2_CommandShipSpawnsOnAnInlandLake()
-    {
-        Simulation sim = Start(Biome.Mountains, 1, 2UL, Faction.Expedition);
-        bool[] edgeSea = EdgeConnectedSea(sim);
-        int w = sim.Setup.Map.Width;
-        for (byte p = 0; p < 2; p++)
-        {
-            CellCoord s = sim.Setup.Map.StartPositions[p];
-            var ship = Vehicles(sim, p).Single(v => v.Id == "exp_command_ship");
-            output.WriteLine($"p{p} start {s}: ship at {ship.Cell} (offset {ship.Cell.X - s.X},{ship.Cell.Y - s.Y}); nearest sea {NearestSea(sim, s, false)}, nearest edge-connected sea {NearestSea(sim, s, true)}");
-            Assert.False(edgeSea[ship.Cell.Y * w + ship.Cell.X], $"p{p}: the ship's water does not reach the map edge");
-        }
-    }
-
-    [Fact(Skip = "S18 AI-03: awaiting owner decision")]
     public void Expedition_CommandShip_SpawnsOnSeaThatReachesTheMapEdge()
     {
         Simulation sim = Start(Biome.Mountains, 1, 2UL, Faction.Expedition);

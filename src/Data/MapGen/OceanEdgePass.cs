@@ -70,6 +70,83 @@ internal sealed class OceanEdgePass
             }
     }
 
+    /// <summary>M13-01 (D-205): where no sea that reaches the map edge lies within <see cref="NearSea"/> cells of the start (Mountains layout 1:
+    /// the start sits mid-edge and the ocean is on the north and south edges), carves a three-wide Shallow channel from the edge sea to
+    /// within <see cref="ChannelEnd"/> cells of the start. Shallow is passable on foot and by ship, so land routes are never cut. The path
+    /// is the shortest 4-way one over cells free of resources, features, start surroundings, plateaus and rivers (ties in cell-index order).
+    /// Writes go to every image, and the channel joins the edge band so <see cref="PaintCoast"/> gives it a beach. Does nothing (and draws no
+    /// random numbers) when the start already has such sea, so maps without the problem stay byte-identical. Run before the props.</summary>
+    public void Channel(CellCoord start)
+    {
+        int n = _g.N;
+        var edge = new bool[n * n];
+        var queue = new int[n * n];
+        int head = 0, tail = 0;
+        for (int i = 0; i < n * n; i++)
+        {
+            int x = i % n, y = i / n;
+            if ((x == 0 || y == 0 || x == n - 1 || y == n - 1) && IsSea(_g.Land[i])) { edge[i] = true; queue[tail++] = i; }
+        }
+        while (head < tail)
+        {
+            int i = queue[head++], cx = i % n, cy = i / n;
+            for (int dy = -1; dy <= 1; dy++)
+                for (int dx = -1; dx <= 1; dx++)
+                {
+                    int nx = cx + dx, ny = cy + dy;
+                    if (nx < 0 || ny < 0 || nx >= n || ny >= n || edge[ny * n + nx] || !IsSea(_g.Land[ny * n + nx])) continue;
+                    edge[ny * n + nx] = true; queue[tail++] = ny * n + nx;
+                }
+        }
+        for (int i = 0; i < n * n; i++)
+            if (edge[i] && Math.Max(Math.Abs(i % n - start.X), Math.Abs(i / n - start.Y)) <= NearSea) return;
+
+        // shortest 4-way path from the edge sea to a free cell near the start
+        var parent = new int[n * n];
+        Array.Fill(parent, -2);
+        head = 0; tail = 0;
+        for (int i = 0; i < n * n; i++) if (edge[i]) { parent[i] = -1; queue[tail++] = i; }
+        int goal = -1;
+        while (head < tail && goal < 0)
+        {
+            int i = queue[head++], cx = i % n, cy = i / n;
+            for (int d = 0; d < 4; d++)
+            {
+                int nx = cx + (d == 0 ? 1 : d == 1 ? -1 : 0), ny = cy + (d == 2 ? 1 : d == 3 ? -1 : 0);
+                if (nx < 0 || ny < 0 || nx >= n || ny >= n) continue;
+                int j = ny * n + nx;
+                if (parent[j] != -2 || !Carvable(j)) continue;
+                parent[j] = i; queue[tail++] = j;
+                if (Math.Max(Math.Abs(nx - start.X), Math.Abs(ny - start.Y)) <= ChannelEnd) { goal = j; break; }
+            }
+        }
+        if (goal < 0) return;   // walled in: the validator and SkirmishStart's whole-map fallback cover it
+        var path = new List<int>();
+        for (int i = goal; i >= 0 && !edge[i]; i = parent[i]) path.Add(i);
+        foreach (int i in path)
+            for (int dy = -1; dy <= 1; dy++)
+                for (int dx = -1; dx <= 1; dx++)
+                {
+                    int x = i % n + dx, y = i / n + dy;
+                    if (!_g.In(x, y) || !Carvable(_g.Idx(x, y))) continue;
+                    _g.SetLand(_g.Idx(x, y), LandType.Shallow);
+                }
+        foreach (int i in path)
+            for (int dy = -CoastWidth - 1; dy <= CoastWidth + 1; dy++)
+                for (int dx = -CoastWidth - 1; dx <= CoastWidth + 1; dx++)
+                {
+                    int x = i % n + dx, y = i / n + dy;
+                    if (_g.In(x, y)) foreach (int j in _g.Images(_g.Idx(x, y))) _strip[j] = true;
+                }
+    }
+
+    /// <summary>Cells the channel may take: plain flat ground with nothing on it, outside start surroundings and rivers (the sea itself is skipped by the caller).</summary>
+    private bool Carvable(int i) =>
+        !IsSea(_g.Land[i]) && _g.All(i, j => _g.Overlay[j] == OverlayKind.None && !_g.Feature[j] && !_g.Reserved[j] && !_g.River[j] && !_g.Ramp[j] && _g.Height[j] == 0);
+
+    /// <summary>The Command Ship wants edge-connected sea this close to the start (SkirmishStart's ring-16 fallback).</summary>
+    private const int NearSea = 16, ChannelEnd = 10;
+
     /// <summary>Flood the edge sea, then make the two rings of plain free land beside it Coast (the landing beach). Run after every
     /// other terrain step so rivers, ruins and start squares are already in place.</summary>
     public void PaintCoast()
