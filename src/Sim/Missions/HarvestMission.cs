@@ -263,7 +263,7 @@ internal static class HarvestMission
             case DockStep.Pick:
             {
                 EntityId rid = PickRefinery(sim, player, cur);
-                if (rid.IsNone) return ToGuard(sim, store, kind, i);
+                if (rid.IsNone) { eco.NoRefinery[i] = 1; return ToGuard(sim, store, kind, i); }   // D-205: resumes when a refinery is rebuilt
                 eco.DockTarget[i] = rid; eco.Ticket[i] = 0;
                 eco.DockState[i] = (byte)DockStep.Go;
                 return 1;
@@ -345,7 +345,7 @@ internal static class HarvestMission
         return new CellCoord(tl.X + d.X, tl.Y + d.Y);
     }
 
-    private static EntityId PickRefinery(Simulation sim, byte player, CellCoord from)
+    internal static EntityId PickRefinery(Simulation sim, byte player, CellCoord from)
     {
         BuildingStore b = sim.Buildings;
         EntityId best = default;

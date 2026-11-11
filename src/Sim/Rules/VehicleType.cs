@@ -79,6 +79,13 @@ public sealed record VehicleType(string Id, Locomotion Locomotion, int Speed, in
     /// <summary>Raider consumed by a successful plunder instead of withdrawing (TOML <c>raider_one_use</c>, default false).</summary>
     public bool RaiderOneUse { get; init; }
 
+    /// <summary>D-205 (FACTION-LE-14): consumed by its first shot, no wreck, no death weapon (TOML <c>one_use</c>, default false; Kite).</summary>
+    public bool OneUse { get; init; }
+
+    /// <summary>D-205 (FACTION-LE-04): false for a vehicle that production never offers (tender, Command Ship, packed rig form); TOML
+    /// <c>buildable</c>, default true. Its <see cref="Cost"/> is only what a kill or a wreck of it is worth.</summary>
+    public bool Buildable { get; init; } = true;
+
     /// <summary>Blackout ticks laid on its own cell while moving (TOML <c>drops_blackout_ticks</c>, 0 = off; Dust Sail).</summary>
     public int DropsBlackoutTicks { get; init; }
 

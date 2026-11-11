@@ -251,6 +251,7 @@ public sealed partial class Simulation
         if (!shooter.Id.IsNone) MarkCombat(kind, i);   // VET-3: self-heal waits after a shot
         if (kind == ActorKind.Vehicle) { _effects.VehicleStill[i] = 0; if (_naval.Submerged[i]) _naval.RevealLeft[i] = SubRevealTicks; }   // D-205 (SIM-RULES-04): firing always breaks stealth, whatever the reload; (LE-05): a dived sub that fires is seen
         else if (kind == ActorKind.Infantry) _effects.InfantryStill[i] = 0;
+        if (kind == ActorKind.Vehicle && RulesOf(owner).Vehicles[_units.TypeIndex[i]].OneUse) RemoveMobileQuietly(kind, i);   // D-205 (LE-14): the Kite is spent by its bomb
         return true;
     }
 

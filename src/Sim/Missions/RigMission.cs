@@ -21,10 +21,11 @@ internal static class RigMission
         if (sim.Rigs.UnpackTicksLeft[i] > 0) return 1;   // unpacking: stand still, RunRigs counts down
         byte owner = store.Player[i];
         VehicleType vt = sim.RulesOf(owner).Vehicles[store.TypeIndex[i]];
-        if (vt.UnpacksInto < 0 || vt.UnpacksInto >= sim.RulesOf(owner).Buildings.Count) { End(sim, store, kind, i); return 1; }
-        BuildingType bt = sim.RulesOf(owner).Buildings[vt.UnpacksInto];
+        int into = sim.UnpackTypeOf(i);   // D-205 (SIM-RULES-07): the type it was packed from, as the Pack command and FinishUnpack use
+        if (into < 0 || into >= sim.RulesOf(owner).Buildings.Count) { End(sim, store, kind, i); return 1; }
+        BuildingType bt = sim.RulesOf(owner).Buildings[into];
         var tl = new CellCoord(sim.Rigs.UnpackX[i], sim.Rigs.UnpackY[i]);
-        if (!sim.UnpackSiteOk(owner, vt.UnpacksInto, tl, i)) { End(sim, store, kind, i); return 1; }
+        if (!sim.UnpackSiteOk(owner, into, tl, i)) { End(sim, store, kind, i); return 1; }
         CellCoord cur = Occupancy.CurCell(kind, store, i);
         bool inside = cur.X >= tl.X && cur.X < tl.X + bt.FootprintW && cur.Y >= tl.Y && cur.Y < tl.Y + bt.FootprintH;
         if (inside && !store.NextCellReserved[i])
