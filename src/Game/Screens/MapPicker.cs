@@ -61,20 +61,24 @@ public static class MapPicker
 
     /// <summary>
     /// The map list: the curated map first, the other maps of data/maps in name order, the user's maps in name order, then the
-    /// "Generated" entry. A file that cannot be read is left out. <paramref name="userDir"/> null = <see cref="UserMapsDir"/>.
+    /// "Generated" entry. A file that cannot be read is left out, and the log gets one line with how many and why (S18 GS-16).
+    /// <paramref name="userDir"/> null = <see cref="UserMapsDir"/>. <paramref name="log"/> null = the error stream, where the game logs its other start-up problems.
     /// </summary>
-    public static IReadOnlyList<MapEntry> List(string rulesDir, string? userDir = null)
+    public static IReadOnlyList<MapEntry> List(string rulesDir, string? userDir = null, Action<string>? log = null)
     {
         var list = new List<MapEntry>();
+        var skipped = new List<string>();
         string dataDir = Path.GetFullPath(Path.Combine(rulesDir, "..", "maps"));
-        AddFile(list, Path.Combine(dataDir, SkirmishSettings.CuratedFile), SkirmishSettings.CuratedFile, user: false, "(curated)");
+        AddFile(list, skipped, Path.Combine(dataDir, SkirmishSettings.CuratedFile), SkirmishSettings.CuratedFile, user: false, "(curated)");
         foreach (string path in Files(dataDir))
         {
             string name = Path.GetFileName(path);
-            if (name != SkirmishSettings.CuratedFile) AddFile(list, path, name, user: false, "");
+            if (name != SkirmishSettings.CuratedFile) AddFile(list, skipped, path, name, user: false, "");
         }
-        foreach (string path in Files(userDir ?? UserMapsDir)) AddFile(list, path, Path.GetFullPath(path), user: true, "(yours)");
+        foreach (string path in Files(userDir ?? UserMapsDir)) AddFile(list, skipped, path, Path.GetFullPath(path), user: true, "(yours)");
         list.Add(new MapEntry("Generated", null, false, 0));
+        if (skipped.Count > 0)
+            (log ?? Console.Error.WriteLine)($"map list: {skipped.Count} map file(s) not offered: {string.Join("; ", skipped)}");
         return list;
     }
 
@@ -83,20 +87,25 @@ public static class MapPicker
             ? Directory.EnumerateFiles(dir, "*" + MapSuffix).Order(StringComparer.Ordinal)
             : Enumerable.Empty<string>();
 
-    private static void AddFile(List<MapEntry> list, string path, string file, bool user, string tag)
+    private static void AddFile(List<MapEntry> list, List<string> skipped, string path, string file, bool user, string tag)
     {
         if (!File.Exists(path)) return;
         try
         {
             (Rts.Sim.Map.MapData map, MapMeta meta) = MapFile.LoadWithMeta(path);
             int max = meta.MaxPlayers > 0 ? Math.Min(meta.MaxPlayers, map.StartPositions.Count) : map.StartPositions.Count;
-            if (max < SkirmishSettings.MinPlayers) return;
+            if (max < SkirmishSettings.MinPlayers)
+            {
+                skipped.Add($"{Path.GetFileName(path)} (room for {max} players, a skirmish needs {SkirmishSettings.MinPlayers})");
+                return;
+            }
             string label = $"{map.Name} {map.Width}x{map.Height}, {max} players" + (tag.Length > 0 ? " " + tag : "");
             list.Add(new MapEntry(label, file, user, max));
         }
-        catch (MapFileException)
+        catch (MapFileException e)
         {
-            // A map that does not load is not offered.
+            // A map that does not load is not offered, but the log says which and why.
+            skipped.Add($"{Path.GetFileName(path)} ({e.Message})");
         }
     }
 }
