@@ -107,12 +107,12 @@ engineer = true
 
 [auth_marksman]   # PLACEHOLDER ART (M4-ART); long-range anti-infantry, strong in garrisons (design 08 §4)
 tier = 2
-speed = 12  # ASSUMED (M4-07)
+speed = 10  # D-205 (FAD-14): 12 -> 10, trades speed for reach
 max_health = 50  # ASSUMED (M4-07)
 armor = "unarmored"
 sight = 4  # ASSUMED (M4-07)
 primary_weapon = "auth_marksman_rifle"
-cost = 100  # ASSUMED (M4-07)
+cost = 200  # D-205 (FAD-14): 100 -> 200
 prerequisites = ["auth_barracks"]
 
 [dir_assessor]   # PLACEHOLDER ART (M4-ART); Directorate engineer (design 08 §4)
