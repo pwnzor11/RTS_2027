@@ -225,6 +225,31 @@ public class PathServiceTests
     }
 
     [Fact]
+    public void OneCallStartsAtMostFourBudgetsOfWork_TheRestWaitsInFifoOrder()
+    {
+        // M13-05 (S18 SP-01): Process used to solve the whole queue in one call however much it cost.
+        var m = Flat(64, 64); var t = Table();
+        var s = new PathService(m, t, 100);
+        var ids = new List<int>();
+        for (int i = 0; i < 20; i++) ids.Add(s.Request(new(0, i), new(63, 63 - i), Locomotion.Foot));
+        s.Process();
+        int first = s.LastProcessCost;
+        var solvedAt = new int[ids.Count];
+        for (int tick = 1; tick <= 200; tick++)
+        {
+            for (int i = 0; i < ids.Count; i++)
+                if (solvedAt[i] == 0 && s.Poll(ids[i], 0, out _) == PathStatus.Found) solvedAt[i] = tick;
+            s.Process();
+            Assert.InRange(s.LastProcessCost, 0, PathService.BurstFactor * 100 + 400);   // the cap plus at most one search
+        }
+        Assert.InRange(first, PathService.BurstFactor * 100, PathService.BurstFactor * 100 + 400);
+        Assert.Equal(1, solvedAt[0]);
+        Assert.True(solvedAt[^1] > 1, "not everything in one call");
+        for (int i = 1; i < ids.Count; i++) Assert.True(solvedAt[i] >= solvedAt[i - 1], "FIFO order");
+        Assert.DoesNotContain(0, solvedAt);
+    }
+
+    [Fact]
     public void LargeDebtSpansSeveralTicks()
     {
         var m = Flat(64, 64); var t = Table();

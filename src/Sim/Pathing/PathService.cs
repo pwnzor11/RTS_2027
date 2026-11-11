@@ -11,9 +11,10 @@ namespace Rts.Sim.Pathing;
 /// debt, unpolled results and the next request id are saved; the result cache is a pure function of map state
 /// and is not.
 /// <para>Rules: a request is either untouched in the queue or fully solved inside one <see cref="Process"/>.
-/// Process, when budget is left, solves every request queued so far (in FIFO order, so one tick's askers are served alike);
-/// each solve costs its node-expansion count and may overdraw, the overdraft is carried as debt into the next tick. A cache hit charges the cost of the
-/// original solve, so timing never depends on cache state.</para>
+/// Process, when budget is left, solves queued requests in FIFO order until the call has charged <see cref="BurstFactor"/> times the
+/// per-tick budget (M13-05, D-205; a normal tick's askers are still all served in the same call, D-063); requests left over wait at the
+/// front of the queue, in order, for the next call. Each solve costs its node-expansion count and may overdraw; the overdraft is
+/// carried as debt into the next tick. A cache hit charges the cost of the original solve, so timing never depends on cache state.</para>
 /// <para>Search: A* over 8 directions, open set ordered by (f, h, line tie-break, cell index) in a hand-written heap (a total
 /// order). Straight step 10, diagonal 14, times the destination cell factor 10000 / SpeedPercent. Blocked =
 /// outside the map, SpeedPercent 0 or a building. Diagonals may not cut a blocked corner. The start cell is
@@ -34,6 +35,9 @@ public sealed class PathService : ISimStatePart
 {
     private const int GroupMargin = 16;
     private const int CacheLimit = 4096;
+
+    /// <summary>M13-05: one <see cref="Process"/> call starts no new solve once it has charged this many times the per-tick budget.</summary>
+    public const int BurstFactor = 4;
 
     /// <summary>Passer value meaning "no player": every building blocks (M3-04).</summary>
     public const byte NoPasser = 0xFF;
@@ -157,22 +161,23 @@ public sealed class PathService : ISimStatePart
         long budget = (long)_perTick - _debt;
         _debt = 0;
         long spent = 0;
-        // Batch rule (M2-01): while budget is left, EVERYTHING queued so far is solved in this call, not just the first few
-        // requests. The overdraft becomes debt that delays the next batch. Requests of one tick are therefore all answered
-        // together, whichever player's actors (low or high slot) asked first; a per-request cut-off made the actors with
-        // the lowest slots move several ticks before the rest.
+        // Batch rule (M2-01, D-063): while budget is left, everything queued so far is solved in this call, so one tick's
+        // askers are answered together whichever player's actors (low or high slot) asked first. M13-05 (S18 SP-01): but no
+        // more than BurstFactor x the per-tick budget is started in one call; the rest waits, in FIFO order, for the next.
+        // The overdraft becomes debt that delays the next batch.
         if (budget > 0)
         {
-            int batch = _queue.Count;
-            for (int k = 0; k < batch; k++)
+            long cap = (long)_perTick * BurstFactor;
+            int k = 0;
+            while (k < _queue.Count && spent < cap)
             {
-                Req r = _queue[k];
+                Req r = _queue[k++];
                 int cost = Solve(r, out Entry[] entries);
                 _results[r.Id] = entries;
                 budget -= cost;
                 spent += cost;
             }
-            _queue.RemoveRange(0, batch);
+            _queue.RemoveRange(0, k);
         }
         if (budget < 0) _debt = (int)(-budget);
         LastProcessCost = (int)Math.Min(spent, int.MaxValue);
