@@ -213,6 +213,10 @@ internal static class MoveMission
             }
             else
             {
+                // M13-05: a soldier already in the nearest cell it can reach (an attacker next to a building) moves to the free sub-slot
+                // of that cell nearest the goal, so a short-range weapon is not left out of range in the far corner.
+                if (!settle && kind == ActorKind.Infantry && status == PathStatus.NotFound && ShiftTowardGoal(sim, (InfantryStore)store, i, cur, goal))
+                    return 1;
                 arrived = settle;            // no way forward: stop here
                 return settle ? 1 : WaitTicks;
             }
@@ -385,6 +389,33 @@ internal static class MoveMission
             if (d < bestD || (d == bestD && side < bestSide)) { best = s; bestD = d; bestSide = side; }
         }
         return best;
+    }
+
+    /// <summary>M13-05: moves soldier <paramref name="i"/> to the free sub-slot of its cell <paramref name="cur"/> strictly nearer the centre
+    /// of <paramref name="goal"/> than its own (ties: lowest sub-slot); the next ticks drive it there. False if none is nearer.</summary>
+    private static bool ShiftTowardGoal(Simulation sim, InfantryStore inf, int i, CellCoord cur, CellCoord goal)
+    {
+        LeptonCoord g = LeptonCoord.CenterOf(goal);
+        int own = inf.SubSlot[i];
+        long Dist(int s)
+        {
+            LeptonCoord p = InfantryStore.SlotPosition(cur, s);
+            long dx = p.X - g.X, dy = p.Y - g.Y;
+            return dx * dx + dy * dy;
+        }
+        int best = own; long bestD = Dist(own);
+        for (int s = 0; s < InfantryStore.SubSlotCount; s++)
+        {
+            if (s == own || !sim.Map.InfantryAt(cur, s).IsNone) continue;
+            long d = Dist(s);
+            if (d < bestD) { best = s; bestD = d; }
+        }
+        if (best == own) return false;
+        EntityId me = inf.Slots.IdOf(i);
+        if (sim.Map.InfantryAt(cur, own) == me) sim.Map.SetInfantry(cur, own, EntityId.None);
+        sim.Map.SetInfantry(cur, best, me);
+        inf.SubSlot[i] = (byte)best;
+        return true;
     }
 
     // ---- entering a cell ----------------------------------------------------------------------
