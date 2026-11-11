@@ -603,6 +603,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
         try
         {
             ArchiveCatalog catalog = ArchiveCatalog.Load(ArchiveCatalog.DirectoryFor(_s.RulesDir));
+            CameoNames.ArchiveTitle = id => catalog.Find(id)?.Title;   // S19: one name per thing, the Archive title
             return id => catalog.Find(id)?.Subtitle;
         }
         catch (Exception e) when (e is IOException or InvalidDataException or UnauthorizedAccessException)
