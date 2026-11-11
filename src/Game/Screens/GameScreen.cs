@@ -831,7 +831,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
             }
             else
             {
-                _orders.RightClick(mouse, _camera, _renderUnits);
+                _orders.RightClick(mouse, _camera, _renderUnits, CtrlHeld(input));   // S19 FAD-05: Ctrl + right-click = attack ground
             }
         }
     }

@@ -38,6 +38,10 @@ damage_interval_ticks = 20
 damage_threshold = 32
 damage_permille = 100
 no_build_threshold = 64
+# S19 D-028 (M13-12): soldiers standing on an ashfall or pitchblende field cell take this much damage every interval, before their
+# rad resistance. Vehicles and buildings are unaffected.
+ashfall_damage = 2  # PENDING owner number (S19)
+ashfall_interval_ticks = 30  # PENDING owner number (S19)
 
 [stealth]
 delay_ticks = 60

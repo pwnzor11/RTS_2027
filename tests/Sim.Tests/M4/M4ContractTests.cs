@@ -25,7 +25,7 @@ public sealed class M4ContractTests
     public void SimEnumValues_ArePinned()
     {
         Assert.Equal(22, (int)CommandKind.Unload);
-        Assert.Equal(26, Enum.GetValues<CommandKind>().Length);   // no other new CommandKind in M4; M5-01 added Directive = 23, M6-02 Pack = 24, M11-10i Hold = 25
+        Assert.Equal(27, Enum.GetValues<CommandKind>().Length);   // S19 AttackGround = 26; no other new CommandKind in M4; M5-01 added Directive = 23, M6-02 Pack = 24, M11-10i Hold = 25
         Assert.Equal(7, (int)ActorLayer.Garrisoned);
         Assert.Equal(15, (int)MissionKind.Garrisoned);
         Assert.Equal(14, (int)MissionKind.Capture);

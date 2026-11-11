@@ -43,6 +43,7 @@ public sealed partial class RulesOfSweepGrepTests
         ("Simulation.Garrison.cs", "Setup.Rules.Garrison.EjectDamagePermille"),   // owner: Simulation.Garrison.cs, follow-up
         ("Simulation.Ground.cs", "Setup.Rules.Radiation"), ("Simulation.Ground.cs", "Setup.Rules.Radiation.DamageThreshold"),   // owner: Simulation.Ground.cs, follow-up
         ("Simulation.Ground.cs", "Setup.Rules.Stealth.DelayTicks"),
+        ("Simulation.Ashfall.cs", "Setup.Rules.Radiation"),   // S19 M13-12: global field hazard rate, not an upgradable attribute
         ("Simulation.Hardening.cs", "Setup.Rules.Buildings"), ("Simulation.Hardening.cs", "Setup.Rules.Terrain"),   // owner: Simulation.Hardening.cs, follow-up
         ("Simulation.Hardening.cs", "Setup.Rules.Upgrades"),
         ("Simulation.Hud.cs", "Setup.Rules.Buildings["), ("Simulation.Hud.cs", "Setup.Rules.Upgrades"),   // owner: Simulation.Hud.cs, follow-up

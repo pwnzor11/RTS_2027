@@ -65,6 +65,7 @@ public sealed partial class Simulation
     {
         RunHardening();   // M3-04: recompute enclosure when Ground.HardeningDirty
         RunRadiation();   // M3-05: decay + damage
+        RunAshfall();     // S19 M13-12: soldiers on an ashfall field
         RunBlackout();    // M3-05: Blackout timers
     }
 

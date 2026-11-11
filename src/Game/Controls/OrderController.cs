@@ -99,8 +99,12 @@ public sealed class OrderController
         }
     }
 
-    /// <summary>Handles a right-click at a screen point, using the units as drawn this frame for picking.</summary>
-    public void RightClick(Point screen, Camera camera, IReadOnlyList<RenderUnit> units)
+    /// <summary>S19 (FAD-05): the order a forced-fire click (Ctrl + right-click) gives the selection: attack the ground cell.</summary>
+    public const CommandKind ForceFireOrder = CommandKind.AttackGround;
+
+    /// <summary>Handles a right-click at a screen point, using the units as drawn this frame for picking. <paramref name="forceFire"/>
+    /// (Ctrl held, S19 FAD-05) sends the whole selection an attack-ground order on the clicked cell instead of any other order.</summary>
+    public void RightClick(Point screen, Camera camera, IReadOnlyList<RenderUnit> units, bool forceFire = false)
     {
         bool armed = AttackMoveArmed;
         bool deployArmed = DeployArmed;
@@ -113,6 +117,14 @@ public sealed class OrderController
         if (deployArmed)
         {
             DeployAt(cell);
+            return;
+        }
+
+        if (forceFire)
+        {
+            if (!_source.Map.Contains(cell)) return;
+            foreach (UnitKey unit in _selection.Units.ToList()) _source.Order(ForceFireOrder, unit, cell);
+            Feedback?.Add(Camera.CentreOf(cell), OrderMarkKind.Attack);
             return;
         }
 
