@@ -63,6 +63,7 @@ internal sealed class ProductionManager
         Rally = RallyCell(k);
         if (Bias.HasRallyCell && k.View.IsPassable(Bias.RallyCell, Locomotion.Tracked)) Rally = Bias.RallyCell;   // M5-02: a turtle defends where the commander says
         if (_tactics != null) Rally = _tactics.SafeCell(k, Rally);   // M3-10: not on an irradiated cell
+        Rally = AshCells.OffField(k.View, Rally);   // S19 M13-12: soldiers do not wait on an ash field
         if (_faction.SkipUnbuildable)
         {
             SkipUnbuildable(k, ProductionCategory.Infantry, _inf, ref _infIdx);
