@@ -738,6 +738,7 @@ public sealed class GameScreen : IScreen
     private void DrawSpectator(SpriteBatch sb)
     {
         if (_specPanel is null || _sim is null) return;
+        if (_gameOverShown) return;   // S18 UX-LM-06: the final stats table is on screen; the live HUD lines would print through it
         _specPanel.Draw(sb, _s.Pixel, _s.UiScale);
         IReadOnlyList<string>? info = _inspectUnit is UnitView u ? SpectatorInspect.Describe(u, _sim.Sim.Setup.Rules)
             : _inspectBuilding is BuildingView b ? SpectatorInspect.Describe(b, _sim.Sim.Setup.Rules) : null;
@@ -1186,7 +1187,7 @@ public sealed class GameScreen : IScreen
         {
             if (!input.ConsumePressed(GroupActions[i])) continue;
             int number = i + 1;
-            if (CtrlHeld(input)) { _groups.Set(number, _selection.Units); _groupTap.Reset(); continue; }
+            if (CtrlHeld(input)) { _groups.TrySet(number, _selection.Units); _groupTap.Reset(); continue; }   // S18 GAMEUI-07: an empty selection keeps the group
             if (ShiftHeld(input)) { _groups.Add(number, _selection.Units); continue; }
             IReadOnlyList<UnitKey> members = _groups.Members(number);
             if (members.Count == 0) continue;
