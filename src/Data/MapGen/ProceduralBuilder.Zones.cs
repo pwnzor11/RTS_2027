@@ -757,8 +757,8 @@ internal sealed partial class ProceduralBuilder
         }
     }
 
-    /// <summary>Relative richness of a resource cell: 2 in a main, 1 elsewhere.</summary>
-    private int Share(int i) => _zone[i] == ZMain ? 2 : 1;
+    /// <summary>Relative richness of a resource cell: 2 in a main, 1 elsewhere (half-turn skeleton, v6: <see cref="Layout2Fields.MainShare"/> against 4).</summary>
+    private int Share(int i) => _rot2 ? (_zone[i] == ZMain ? BiomeCatalog.Layout2FieldsFor(_b.Key).MainShare : 4) : _zone[i] == ZMain ? 2 : 1;
 
     /// <summary>The share of layout 1's money per start that this biome's layout-2 maps carry, in per mille (tuned by the M12-12 income re-measure).</summary>
     private int MoneyPermille => _skin == SkinGlass ? 300 : 420;

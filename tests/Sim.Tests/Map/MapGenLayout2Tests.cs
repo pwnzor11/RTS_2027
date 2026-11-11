@@ -3,6 +3,7 @@
 using Rts.Data;
 using Rts.Data.MapGen;
 using Rts.Sim.Map;
+using Rts.Sim.Rules;
 using Xunit.Abstractions;
 
 namespace Rts.Sim.Tests.Map;
@@ -65,6 +66,69 @@ public sealed class MapGenLayout2Tests
         Assert.Contains(checks, c => c.Name == "lane count");
         Assert.Contains(checks, c => c.Name == "prop safety");
         Assert.True(checks.Single(c => c.Name == "resource parity").Pass);
+    }
+
+    /// <summary>Q-68 (v6): Ash Plains 2-player Medium and Large maps are half-turn symmetric like the other biomes (the bridge + broken causeway pair sits on both decks).</summary>
+    [Theory]
+    [InlineData(MapSize.Medium)]
+    [InlineData(MapSize.Large)]
+    public void Layout2_AshPlains_TwoPlayers_IsHalfTurnWithThePairOnBothDecks(MapSize size)
+    {
+        for (ulong seed = 1; seed <= 6; seed++)
+        {
+            (MapData map, MapMeta meta) = MapGenerator.GenerateWithMeta(P(size, 2, seed, Biome.AshPlains));
+            Assert.Equal(MapSymmetry.Rot2, meta.Symmetry);
+            int n = map.Width, shallowRoad = 0;
+            for (int i = 0; i < n * n; i++)
+            {
+                int j = n * n - 1 - i;   // the half turn of cell i
+                Assert.Equal(map.Land[i], map.Land[j]);
+                Assert.Equal(map.Overlay[i], map.Overlay[j]);
+                if (map.Land[i] == LandType.Road) shallowRoad++;
+            }
+            Assert.True(shallowRoad > 0);
+        }
+    }
+
+    /// <summary>v6 (Q-69): the harvest travel distance (path cells from the start to the nearest field cell, and to the 60 nearest) stays inside a band per biome on
+    /// Medium 2-player maps. v5 measured 4.2 / 7.9; layout 1 measured 5.5-6.5 / 20-67 (20 seeds); v6 about 9 / 13.</summary>
+    [Theory]
+    [InlineData(Biome.RustBelt)]
+    [InlineData(Biome.Mountains)]
+    [InlineData(Biome.AshPlains)]
+    [InlineData(Biome.GlassCoast)]
+    public void Layout2_HarvestDistance_StaysInItsBand(Biome biome)
+    {
+        for (ulong seed = 1; seed <= 6; seed++)
+        {
+            (MapData map, MapMeta meta) = MapGenerator.GenerateWithMeta(P(MapSize.Medium, 2, seed, biome));
+            (int near, int mean) = MapReport.HarvestDistance(map, meta);
+            Assert.InRange(near, 70, 140);
+            Assert.InRange(mean, 100, 240);
+        }
+    }
+
+    /// <summary>v6 Mountains skew study (Directorate 30/16, Left Behind 29/13 by start index in the 64-game mirrors): over 50 seeds the two starts of a Mountains
+    /// 2-player map are exact half-turn images in land, height, overlay, density and ruin features, so the skew is not in the map data.</summary>
+    [Fact]
+    public void Layout2_Mountains_TwoPlayers_StartsAreExactImages()
+    {
+        for (ulong seed = 1; seed <= 50; seed++)
+        {
+            (MapData map, MapMeta meta) = MapGenerator.GenerateWithMeta(P(MapSize.Medium, 2, seed, Biome.Mountains));
+            int n = map.Width, t = n * n - 1;
+            for (int i = 0; i < n * n; i++)
+            {
+                Assert.Equal(map.Land[i], map.Land[t - i]);
+                Assert.Equal(map.HeightLevel[i], map.HeightLevel[t - i]);
+                Assert.Equal(map.Overlay[i], map.Overlay[t - i]);
+                Assert.Equal(map.Density[i], map.Density[t - i]);
+            }
+            Assert.Equal(map.StartPositions[0].X, n - 1 - map.StartPositions[1].X);
+            Assert.Equal(map.StartPositions[0].Y, n - 1 - map.StartPositions[1].Y);
+            foreach (MapFeature f in meta.Features)
+                Assert.Contains(meta.Features, g => g.Type == f.Type && Math.Abs(g.Cell.X - (n - 1 - f.Cell.X)) <= 3 && Math.Abs(g.Cell.Y - (n - 1 - f.Cell.Y)) <= 3);   // a ruin's cell is its corner, so its image is within its footprint
+        }
     }
 
     /// <summary>50 seeds x Small/Medium/Large x 2/3/4 players for each biome; filter with <c>--filter Category!=Slow</c>. Every map must generate

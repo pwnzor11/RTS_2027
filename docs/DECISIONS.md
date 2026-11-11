@@ -1472,3 +1472,25 @@ an Expedition coast in every biome (M7-1), start side <= 60 % decisive in tier-3
 (51 %) and Glass Coast (50 %), not on Mountains (57 %, inside the limit but skewed for Directorate/Left Behind) or Ash Plains (64 %, its mirror skeleton);
 income not met (+11 to +30 % at 5-10 min; Glass Coast +39/+109 %; field richness is not the lever). Biome identity: Mountains ridge/plateau mains,
 Ash causeway. Details: docs/balance/s16_layout2.md "v5 re-measure". **Status:** owner decision (session 16), next steps in Q-68 and Q-69
+
+### D-198 · 2026-11-09 · Ash Plains layout 2 goes half-turn
+**Decision:** Q-68 answered (a). The Ash Plains layout 2 skeleton becomes a half-turn with the same crossing pair on both sides of the centre,
+so start fairness comes first and each side gets the same crossing mix. The mirror skeleton and its two different crossings go (D-197 measured
+64 % start-side wins on Ash Plains with the mirror). Not decided here: the Ash Plains Expedition stall (D-197). **Status:** owner decision (session 17)
+
+### D-199 · 2026-11-09 · Layout 2 income: fields further from the refinery spot
+**Decision:** Q-69 answered (a). On layout 2, main and natural fields move further from the refinery spot and fewer field patches sit near the
+main, because the income rate follows harvest distance, not field money (D-197). Plus: the owner asked to fix the script drift found by the PC
+re-render (four LB rigs and auth_turret) before the re-render branch becomes the baseline. **Status:** owner decision (session 17)
+
+### D-200 · 2026-11-10 · Art baseline is the owner's PC re-render
+**Decision:** the full re-render on the owner's PC (123 assets, 144 sheets, PR #54) is the committed art baseline, `auth_turret` included, so later
+re-renders on that PC give a clean drift check (D-196). The four Left Behind rigs (muster, lookout, dynamo, refinery) keep the darker grey-edged pad
+the scripts have produced since 29827be; their old sheets were stale (rendered before the shared `lb_common` dust colours changed). `auth_turret`
+differed only by pad-edge pixel rounding between machines (cause not isolated). No script changed. **Status:** owner decision (session 17)
+
+### D-201 · 2026-11-10 · Layout 2 income test: 10-minute point over live games only
+**Decision:** the income blocker of D-197 (within 10 % of layout 1) is measured at 3 and 5 minutes as before; the 10-minute point counts only games
+still running at 10 minutes (tick 12 000). The plain 10-minute mean includes dead sides and games that ended early, so it tracks game length
+(docs/balance/s17_layout1_baseline.md). Reference numbers are the owner's 64-game layout 1 baseline, not the 16-game cells of s16_layout2.md.
+**Status:** owner decision (session 17)

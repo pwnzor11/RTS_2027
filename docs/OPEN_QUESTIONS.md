@@ -4,15 +4,15 @@ Context and trade-offs for every question are in `docs/research/00_SYNTHESIS.md`
 file cited after each question. Recommendations are the lead's, from the research.
 
 ## Open
-- 🟡 **Q-68 · 2026-11-09 · Ash Plains layout 2: fairness or two different crossings?** The Ash skeleton is a mirror so its two crossings can
-  differ (intact bridge, broken causeway); in mirrors start side wins 64 % (limit 60 %). A half-turn skeleton (as Rust Belt now) fixes fairness but
-  each side gets the same crossing mix. Options: **(a) half-turn, the same crossing pair on both sides of the centre (recommended: fairness first)**;
-  (b) keep the mirror and look for an AI-side cause first.
-- 🟡 **Q-69 · 2026-11-09 · Layout 2 income lever.** Income is +11 to +30 % above layout 1 at 5-10 min (Glass Coast +39/+109 %) although money per start
-  was cut to 42 %: the rate comes from harvest distance, not field size. Options: **(a) move main/natural fields further from the refinery spot and use
-  fewer field patches near the main (recommended)**; (b) accept the richer economy and rebalance the factions to it; (c) cap refinery count early in the AI.
+- 🟡 **Q-70 · 2026-11-10 · Layout 2 income after v6.** Moving the main fields from about 4 to about 9 cells (D-199) moved income only a few percent:
+  the AI parks its refinery near the yard. On 16 sides per biome v6 is within 10 % of layout 1 at 3 minutes everywhere, but +13 % (rust_belt) and
+  +28 % (glass_coast) at 5 minutes. Decide after the owner's 64-game run (`tools/measure/run_s17_layout2.ps1`). Options: **(a) wait for the 64-game
+  numbers, then cut money per field cell on the biomes still over (recommended)**; (b) relax the layout check "100 field cells within 30 path cells"
+  for layout 2 so the main field can be halved (the only change that matched layout 1 in the probe); (c) accept the richer early economy on layout 2.
 
 ## Answered
+- Q-68 · 2026-11-09 · Owner: (a) half-turn skeleton for Ash Plains, same crossing pair both sides → D-198.
+- Q-69 · 2026-11-09 · Owner: (a) move main/natural fields further from the refinery spot, fewer patches near the main → D-199.
 - Q-67 · 2026-11-08 · Owner: band 50-65 % (D-191); hold 18 landed, tier-5 ladder follow-up → D-194.
 - Q-64 · 2026-11-07 · Owner: AI siege behaviour → D-174.
 - Q-65 · 2026-11-07 · Owner: re-measure (D-176), then AI-only fixes → D-182.

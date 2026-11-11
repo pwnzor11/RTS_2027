@@ -30,14 +30,16 @@ internal sealed partial class ProceduralBuilder
         if (_sea) amax = Math.Min(amax, _iw + 9);   // the wall must reach the map edge: the sea goes behind the main
         _sa = _rng.Next(amin, Math.Max(amin, amax) + 1);
         int sum = n * _rng.Next(44, 58) / 100;
-        _y0 = Math.Clamp(sum - _sa, Math.Max(_hh + 11, n * 19 / 100), n * 38 / 100);
+        int y0Max = n * 38 / 100;
+        if (_skin == SkinAsh) y0Max = Math.Min(y0Max, n / 2 - _fh - 2 - (2 + CauseGap + CauseRows) - 3);   // Ash: the causeway sits south of the bridge and must end above the ford
+        _y0 = Math.Clamp(sum - _sa, Math.Max(_hh + 11, n * 19 / 100), Math.Max(y0Max, Math.Max(_hh + 11, n * 19 / 100)));
         _ye = _y0 + _rng.Next(-3, 4);
         int mr = _rng.Next(12);
         _mode = _skin == SkinMountains ? (mr < 7 ? 2 : 1) : mr < 8 ? 0 : mr < 10 ? 2 : 1;   // 0 soft shell, 2 walled main with two gates (east and south), 1 walled main with one east ramp
         _wL1 = _rng.Next(6, 9); _wL2 = _rng.Next(13, 17); _bridgeW = _rng.Next(3, 6);
         _gapE = _rng.Next(4, 7); _gapS = _rng.Next(4, 7);
         _gx2 = _sa + _rng.Next(-3, 7);
-        _natural = _rng.Next(10) < 4;
+        _natural = _rng.Next(100) < BiomeCatalog.Layout2FieldsFor(_b.Key).NaturalPct;
         // The river: knots in the top half, mirrored with the sign flipped, then smoothed (odd smoothing keeps it odd).
         var o = new int[n];
         int k1 = n / 6, k2 = n / 3, mid = (n - 1) / 2;
@@ -112,6 +114,16 @@ internal sealed partial class ProceduralBuilder
         // Contested yards next to the north deck on the east bank (images: the west bank beside the south deck).
         int amp = n >= 112 ? 10 : 7, yx0 = cx + amp + _hw + 3 + _rng.Next(0, 5), yx1 = yx0 + 13 + _rng.Next(0, 4);
         int yy1 = _ye - 5 - _rng.Next(0, 3), yy0 = yy1 - 10 - _rng.Next(0, 4);
+        if (_skin == SkinAsh)
+        {
+            // Both banks flare over the causeway rows so that the pair of crossings is one reachable crossing area, 6 cells deep on each bank.
+            for (int y = _ye + _bridgeW / 2 + 1; y < CauseTop + CauseRows; y++)
+            {
+                int xl = n / 2 + _riverO[y] - _hw, xr = n / 2 + _riverO[y] + _hw - 1;
+                Open(xl - 6, y, xl - 1, y, ZLane);
+                Open(xr + 1, y, xr + 6, y, ZLane);
+            }
+        }
         Open(yx0, yy0, yx1, yy1, ZPlaza, false);
         Corridor((yx0 + yx1) / 2, yy1 + 1, (yx0 + yx1) / 2, _ye - 1, 5, padA: false, padB: false);
         Ring(yx0, yy0, yx1, yy1);
@@ -120,6 +132,13 @@ internal sealed partial class ProceduralBuilder
     }
 
     private (int X0, int Y0, int X1, int Y1) _yardRect, _natRect;
+
+    /// <summary>Ash Plains half turn (Q-68): each deck is a pair, the intact bridge and, <see cref="CauseGap"/> water rows south of it, a broken causeway of
+    /// <see cref="CauseRows"/> rows (shallows on both edges, a 3-wide road and rubble way through). The half turn copies the pair to the other deck.</summary>
+    private const int CauseGap = 2, CauseRows = 5;
+
+    /// <summary>First row of the broken causeway south of the bridge at row ye (Ash Plains only).</summary>
+    private int CauseTop => _ye + _bridgeW / 2 + 1 + CauseGap;
 
     private void Shell2()
     {
@@ -167,6 +186,9 @@ internal sealed partial class ProceduralBuilder
         var deckRow = new bool[n];
         int lo = (_bridgeW - 1) / 2, hi = _bridgeW / 2;
         for (int y = _ye - lo; y <= _ye + hi; y++) if (y >= 0 && y < n) { deckRow[y] = true; deckRow[n - 1 - y] = true; }
+        var causeRow = new int[n];   // Ash Plains: 1..CauseRows on the rows of the broken causeway (and its half-turn image), else 0
+        if (_skin == SkinAsh)
+            for (int k = 0; k < CauseRows; k++) { int y = CauseTop + k; causeRow[y] = k + 1; causeRow[n - 1 - y] = k + 1; }
         for (int y = 0; y < n; y++)
         {
             int c2 = 2 * _riverO[y], y2 = Math.Abs(2 * y - (n - 1));
@@ -178,6 +200,14 @@ internal sealed partial class ProceduralBuilder
                 if (deckRow[y])
                 {
                     PaintDeck(i, x, y);
+                    continue;
+                }
+                if (causeRow[y] != 0)
+                {
+                    int k = causeRow[y];
+                    bool edge = k == 1 || k == CauseRows;   // the outer row on each side is flooded
+                    _g.SetLand(i, edge ? LandType.Shallow : OrbitHash(i, 6) < 40 ? LandType.Rough : LandType.Road);
+                    foreach (int j in _g.Images(i)) _g.River[j] = false;
                     continue;
                 }
                 if (y2 <= 2 * (_fh - 2) - 1)
@@ -206,25 +236,16 @@ internal sealed partial class ProceduralBuilder
         bool gems = _rng.Next(2) == 0;
         int fs = Math.Max(80, Math.Min(100, _scale));
         int ix0 = a - _iw, ix1 = a + _ie, iy0 = _y0 - _hh, iy1 = _y0 + _hh;
-        // Main: two bands (south and north), an L along the west and south walls plus a north band, or a thin west crescent plus two bands (per seed).
-        int shape = _rng.Next(3);
-        if (shape == 0)
-        {
-            PlaceField(Band(ix0 + 2, _y0 + 4, ix1 - 2, iy1 - 1, _rng.Next(56, 72) * fs / 100, ZMain, 4), 0);
-            PlaceField(Band(ix0 + 2, iy0 + 1, ix1 - 2, _y0 - 4, _rng.Next(44, 60) * fs / 100, ZMain, 4), gems ? 8 : 0);
-        }
-        else if (shape == 1)
-        {
-            var l = Band(ix0 + 1, _y0 + 1, ix0 + 4, iy1 - 5, _rng.Next(22, 28) * fs / 100, ZMain, 4);
-            foreach (int c in Band(ix0 + 1, iy1 - 4, ix1 - 3, iy1 - 1, _rng.Next(36, 46) * fs / 100, ZMain, 4)) if (!l.Contains(c)) l.Add(c);
-            PlaceField(l, 0);
-            PlaceField(Band(ix0 + 6, iy0 + 1, ix1 - 2, iy0 + 4, _rng.Next(40, 52) * fs / 100, ZMain, 4), gems ? 8 : 0);
-        }
+        // Main (v6, Q-69): the fields lie at the far end of the main, along the east wall, at least MainDist cells (Chebyshev) from the start, so the
+        // harvest trip from the refinery is longer than with the old bands beside the start; MainBands 1 = one strip, 2 = a north and a south strip.
+        Layout2Fields lf = BiomeCatalog.Layout2FieldsFor(_b.Key);
+        int bx0 = Math.Max(ix0 + 2, a + lf.MainDist), bx1 = ix1;
+        if (lf.MainBands <= 1)
+            PlaceField(Band(bx0, iy0 + 1, bx1, iy1 - 1, _rng.Next(100, 130) * fs / 100 * lf.MainCellsPct / 100, ZMain, lf.MainDist), gems ? 8 : 0);
         else
         {
-            PlaceField(Band(ix0 + 1, iy0 + 2, ix0 + 4, iy1 - 2, _rng.Next(40, 50) * fs / 100, ZMain, 4), 0);
-            PlaceField(Band(ix0 + 6, iy1 - 4, ix1 - 2, iy1 - 1, _rng.Next(32, 40) * fs / 100, ZMain, 4), gems ? 8 : 0);
-            PlaceField(Band(ix0 + 6, iy0 + 1, ix1 - 2, iy0 + 4, _rng.Next(24, 30) * fs / 100, ZMain, 4), 0);
+            PlaceField(Band(bx0, iy0, bx1, _y0 - 2, _rng.Next(56, 72) * fs / 100 * lf.MainCellsPct / 100, ZMain, lf.MainDist), 0);
+            PlaceField(Band(bx0, _y0 + 2, bx1, iy1, _rng.Next(56, 72) * fs / 100 * lf.MainCellsPct / 100, ZMain, lf.MainDist), gems ? 8 : 0);
         }
         if (_natural) PlaceField(MakeField(_natRect.X0, _natRect.Y0, _natRect.X1, _natRect.Y1, _rng.Next(36, 48) * fs / 100, ZPlaza, 8), 0);
         // Contested: the yard by the north deck (image: by the south deck) and the gravel bar of the ford.
