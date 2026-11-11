@@ -32,7 +32,22 @@ Notes
 
 Rust Belt hits -10 % (within 2 points). Glass Coast cannot reach -20 % with this knob: every resource cell has density >= 1 and permille 100 to 220 all give the same 2406, so -12.8 % is the floor (every cell at density 1). A further cut needs fewer or smaller Glass Coast field cells (a layout change that moves more than money). Open for the owner.
 
-## QUESTIONS (no concrete number in any report, or the report gives alternatives)
+### FAD-20 Directorate structures (owner: yes, -20 % HP, -15 % cost and build time, cost rounded to 10)
+| Directorate | Authority twin | HP | cost | build_time |
+|---|---|---|---|---|
+| dir_shaft | auth_conyard | 1000 -> 800 | 0 (not buildable) | derived |
+| dir_reactor_vent | auth_power | 400 -> 320 | 300 -> 260 | derived from cost |
+| dir_smelter_vent | auth_refinery | 700 -> 560 | 2000 -> 1700 | 400 -> 340 (explicit) |
+| dir_muster_hatch | auth_barracks | 450 -> 360 | 300 -> 260 | derived from cost |
+| dir_assembly_bore | auth_factory | 800 -> 640 | 2000 -> 1700 | derived from cost |
+| dir_cistern | auth_silo | 250 -> 200 | 150 -> 130 | derived from cost |
+| dir_bunker | auth_wall | 200 -> 160 | 50 -> 40 | derived from cost |
+| dir_pillbox | auth_turret | 400 -> 320 | 400 -> 340 | derived from cost |
+
+### FAD-09 Commissar aura (owner: yes)
+infantry.toml `[dir_commissar]`: added `aura_radius = 3`, `aura_rof_permille = 870` (Agitprop 800 = reload x0.8 = +25 % rate; +15 % rate = reload x0.87), `aura_targets = [dir_conscript, dir_ashthrower, dir_sapper, dir_volunteer]`. Infantry already load the aura keys, so no code change.
+
+## QUESTIONS (items 2 and 3 below were answered yes and applied above; item 1 and the rest of item 4 stay as they are. Original text: no concrete number in any report, or the report gives alternatives)
 1. Non-Expedition HE / area / flame / demolition warheads vs ship armour (`auth_he`, `auth_seismic`, `dir_ash`, `dir_demolition`, `dir_rad_shell`, `lb_he`, `lb_flame`, `lb_rocket`, `lb_kite_blast`): still 100 / 100. The closest Expedition analogue (`exp_naval_shell_he`) is also 100 / 100. Give values or keep.
 2. Bulwark = Tank (FAD-07): the report names no number. Options: more HP or cost, slower speed, own weapon.
 3. Howitzer weaker than the tier-2 mortar (FAD-07): no number (mortar 28 damage, range 9; howitzer 20, range 10).
