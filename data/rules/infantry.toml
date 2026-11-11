@@ -90,6 +90,9 @@ primary_weapon = "dir_pistol"
 cost = 400  # ASSUMED (M3-07)
 prerequisites = ["dir_isotope_works"]
 rad_resist_permille = 600
+aura_radius = 3  # D-205 (FAD-09): own fire-rate aura, +15 % rate = reload x0.87 (Agitprop 800 = +25 %)
+aura_rof_permille = 870  # D-205 (FAD-09)
+aura_targets = ["dir_conscript", "dir_ashthrower", "dir_sapper", "dir_volunteer"]  # D-205 (FAD-09): own infantry
 
 # M4-07 (design 08 §4): new infantry. PLACEHOLDER ART (M4-ART): no sprite file yet, draws the generated placeholder.
 # Numbers marked ASSUMED (M4-07) copy the nearest existing type. Engineers have no weapon and do not garrison by default.
