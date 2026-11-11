@@ -67,3 +67,21 @@ Layout 1 itself does not meet the 60 % limit on glass_coast and mountains.
   biomes with short games (glass_coast, average end tick 13 075) show a falling 10-minute number. s16_layout2.md read this as "fields run dry"; that is
   not shown by these numbers. Compare layout 2 at 3 and 5 minutes, or at 10 minutes over games that were still running.
 - **Glass Coast Expedition** wins 55 v 5 from start 0 on layout 1: a map-side skew for that faction, not yet examined.
+
+## After the fix (cloud, session 17, integ-s17 before PR #55)
+
+Expedition v Expedition, tier 3, size 96, with the `SkirmishStart.SpawnUnits` second pass:
+
+| Map | Games | Result (A / B / draws) | Games where a side built nothing |
+|---|---:|---|---:|
+| mountains layout 1, 4 seeds, 30 000 ticks | 8 | 1 / 3 / 4 | 0 |
+| mountains layout 1, 16 seeds, 3 000 ticks (start check only) | 32 | - | 0 |
+| ash_plains layout 2, 4 seeds, 30 000 ticks | 8 | 4 / 2 / 2 | 0 |
+| ash_plains layout 2, 16 seeds, 3 000 ticks | 32 | - | 0 |
+| mountains layout 2, 16 seeds, 3 000 ticks | 32 | - | 0 |
+| glass_coast layout 2, 16 seeds, 3 000 ticks | 32 | - | 0 |
+| glass_coast layout 1, 4 seeds, 30 000 ticks | 8 | 3 / 3 / 2 (start 0 won all 6 decisive) | 0 |
+
+The Mountains layout 1 stall is gone in these games; half of the 30 000-tick games there still end as draws. There is no automated test for the
+Mountains layout 1 case yet (the new tests cover Ash Plains layout 2). The six new tests were run against the code before the fix by the helper
+that wrote them (6 of 6 failed: no Command Ship spawned, 0 structures by tick 3 000).

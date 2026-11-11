@@ -313,3 +313,23 @@ favour start 1.
 coast for the Expedition, biome skeletons, half-turn 2p, income trims). All three merged to main.
 **User check:** USER_CHECKS.md "Session 16".
 **Note:** no wrap-up was run; this entry was written at the start of session 17 from the commits and decisions.
+
+## Session 17 · 2026-11-09/10 (session 16 records, Expedition start units, map layout 2 v6, art baseline, layout 1 laptop baseline; PRs #54, #55)
+**Goal:** close out session 16 (no wrap-up was run), fix the Ash Plains Expedition stall, build layout 2 v6 from the owner's Q-68 and Q-69 answers,
+and resolve the PC re-render drift. The owner was present; the session spanned two days and two container restarts.
+**Done:** session 16 log entry, user checks and laptop regression table (docs/balance/s16_laptop_regression.md). Expedition start units:
+`SkirmishStart.SpawnUnits` places units the strict ring pass left over, out to ring 16 (6 new tests that fail on the old code); this fixes the
+Ash Plains layout 2 stall (tests) and the same stall on Mountains layout 1 found by the baseline (checked by games, no test yet). Layout 2 v6: Ash Plains half-turn with the bridge +
+causeway pair on both decks, main fields about 9 cells from the start with a harvest-distance band test, per-start harvest distance in `map report`,
+Mountains starts proven exact images; layout 2 stays off by default. Laptop scripts `run_s17_layout1_base.ps1` and `run_s17_layout2.ps1`. Layout 1
+baseline on the owner's laptop (16 rows, 64 games each, docs/balance/s17_layout1_baseline.md). Art: the re-render drift was stale sprites, not
+scripts (four Left Behind rigs rendered before the shared pad colours changed; `auth_turret` pad-edge rounding); the owner pushed his re-render and
+it is the baseline (PR #54).
+**Decisions:** D-198 Ash Plains half-turn (Q-68); D-199 fields further from the refinery spot (Q-69); D-200 art baseline = the owner's PC re-render,
+dark rig pad; D-201 income test counts the 10-minute point over live games only.
+**Not done / open:** the owner's 64-game layout 2 v6 run (script handed over, not yet run); Q-70 (income lever: on 16 sides per biome v6 is within
+10 % at 3 minutes, +13 % rust_belt and +28 % glass_coast at 5 minutes); layout 2 default decision; Mountains start skew (not the map); Glass Coast
+layout 1 Expedition 55 v 5 by start and the `ai timeline` sea gap (M12-12b). Art follow-ups and the Editor props tool were not started.
+**Lessons:** HANDOFF "Session 17 lessons".
+**PRs:** #54 (art baseline), #55 (Expedition start units, layout 2 v6, session 16 records, baseline docs), then the handoff PR. Windows CI green on #54 and #55.
+**User check:** USER_CHECKS.md "Session 17".
