@@ -180,17 +180,20 @@ internal static class GameRulesLoader
         {
             return root.ContainsKey(RadiationSection) ? null : d;
         }
-        f.CheckKeys("decay_ticks", "damage_interval_ticks", "damage_threshold", "damage_permille", "no_build_threshold");
+        f.CheckKeys("decay_ticks", "damage_interval_ticks", "damage_threshold", "damage_permille", "no_build_threshold",
+            "ashfall_damage", "ashfall_interval_ticks");
         int? decay = f.OptInt("decay_ticks", 1, 1_000_000, d.DecayTicks);
         int? interval = f.OptInt("damage_interval_ticks", 1, 1_000_000, d.DamageIntervalTicks);
         int? threshold = f.OptInt("damage_threshold", 0, 255, d.DamageThreshold);
         int? permille = f.OptInt("damage_permille", 0, 100_000, d.DamagePermille);
         int? noBuild = f.OptInt("no_build_threshold", 0, 256, d.NoBuildThreshold);
-        if (decay is null || interval is null || threshold is null || permille is null || noBuild is null)
+        int? ashDamage = f.OptInt("ashfall_damage", 0, 100_000, d.AshfallDamage);
+        int? ashInterval = f.OptInt("ashfall_interval_ticks", 1, 1_000_000, d.AshfallIntervalTicks);
+        if (decay is null || interval is null || threshold is null || permille is null || noBuild is null || ashDamage is null || ashInterval is null)
         {
             return null;
         }
-        return new RadiationRules(decay.Value, interval.Value, threshold.Value, permille.Value, noBuild.Value);
+        return new RadiationRules(decay.Value, interval.Value, threshold.Value, permille.Value, noBuild.Value, ashDamage.Value, ashInterval.Value);
     }
 
     /// <summary>Parses the optional [stealth] table (M3). Null after a problem.</summary>
