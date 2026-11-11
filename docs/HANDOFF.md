@@ -1,5 +1,5 @@
 # Handoff: Session 19 — build the M13 audit fix batch (all owner recommendations, D-205), then the Field Manual (M14)
-Last commit: `docs: Session 18 handoff` on integ-s18, landed through the session 18 PR (Windows CI green first; the lead merges, D-179).
+Last commit: `docs: session 18 wrap-up` on integ-s18 (landed through the session 18 wrap-up PR after PR #57). Check `git log -1 origin/main`.
 Check `git log -1 origin/main`.
 Where things stand: session 18 (2026-11-10/11) was an adversarial audit (D-202): 18 reviewers, then 6 verify/fix helpers. About 45 clear
 non-sim bugs are fixed with tests (campaign/missions, in-match UI, menus/setup/tools, LLM key per provider, credits). Most sim and design findings
