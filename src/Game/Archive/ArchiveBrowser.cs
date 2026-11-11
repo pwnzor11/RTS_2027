@@ -82,7 +82,7 @@ public sealed class ArchiveBrowser
     }
 
     /// <summary>The hint for a locked entry (empty when it is open); ids are named by their catalog title when there is one.</summary>
-    public string Hint(ArchiveEntry entry) => entry.Unlock.Hint(id => Catalog.Find(id)?.Title);
+    public string Hint(ArchiveEntry entry) => entry.Unlock.Hint(id => Catalog.Find(id)?.Title ?? Rts.Game.Ui.DisplayNames.Mission(id));
 
     private void Rebuild() => _entries = Catalog.InCategory(_tab).ToArray();
 }
