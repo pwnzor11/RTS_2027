@@ -111,4 +111,20 @@ public sealed class MissionFixTests
         Assert.True(ChargeLeft(m, 1) > 100_000);
     }
 
+    [Fact]
+    public void Mis11_Auth04_killing_the_vent_pushes_the_sunrise_timer_and_the_Devices_charge_out_by_1500()
+    {
+        MissionSession m = MissionSession.Create(TestData.DataDir, "auth_04");
+        var bot = new MissionBot(m);
+        bot.Idle(600);
+        int endBefore = m.Host.Timers.Single(t => t.Id == "sunrise").EndTick;
+        int chargeLeftBefore = ChargeLeft(m, 1);
+        Kill(m, "dir_reactor_vent", 1, 51, 84);
+        bot.Idle(40);
+        Assert.Empty(m.Host.Errors);
+        Assert.Equal(ObjectiveStatus.Completed, m.Host.Objectives.Single(o => o.Id == "vent").Status);
+        Assert.Equal(endBefore + 1500, m.Host.Timers.Single(t => t.Id == "sunrise").EndTick);
+        Assert.True(ChargeLeft(m, 1) > chargeLeftBefore + 1300, "the Device's real charge must be held back with the timer");
+    }
+
 }

@@ -108,6 +108,12 @@ function VentDown()
   if Objective.Status("vent") == "active" then
     Objective.Complete("vent")
     Media.MessageKey("a4.vent.down")
+    -- The vent fed the Device: its charge slows, so the scripted moment moves out by 1500 ticks (S19 MIS-11).
+    local left = Mission.TimerLeft("sunrise")
+    if left then
+      Mission.Timer("sunrise", left + 1500, SunriseFires, "a4.timer.sunrise")
+      Actor.DelayCharge("device", left + 1500)
+    end
   end
 end
 
