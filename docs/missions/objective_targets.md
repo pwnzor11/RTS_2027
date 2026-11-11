@@ -67,7 +67,7 @@ actors with no stable tag, or nothing to point at).
 | exp_04 | hold | zone:beachhead | |
 | exp_04 | base | tag:shaft | the redoubt's Shaft (tag:device is the Sunrise Device; re-point after the Shaft falls) |
 | exp_04 | ash (hidden) | none | standing condition |
-| lb_01 | deploy | tag:anchor | Mother Rig unpack site (zone:camp is the enemy camp, not this) |
+| lb_01 | deploy | zone:camp | Mother Rig unpack site (the rig is driven to 26,22; S19 MIS-06) |
 | lb_01 | scrapers | zone:survey | scrapers must be stopped before they reach the survey ground |
 | lb_01 | escort | zone:ambush | the convoy's escort (zone:camp for the relief) |
 | lb_01 | cache (hidden) | zone:cache | south-west gully |

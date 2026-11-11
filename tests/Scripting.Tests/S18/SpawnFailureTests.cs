@@ -30,25 +30,19 @@ public sealed class SpawnFailureTests
             + "end");
     }
 
-    // S18 audit: pins current behaviour of MIS-07 (auth_01 CheckRaids); flip the assertion when fixed.
+    // S19 MIS-07: the yard airlift goes to the nearest legal site when a unit stands on the planned one (was Audit_..., which pinned the soft-lock).
     [Fact]
-    public void Audit_Auth01_CheckRaids_with_a_unit_on_the_yard_site_stops_halfway()
-    {
-        MissionSession m = PrepareCheckRaids();
-
-        Assert.Contains(m.Host.Errors, e => e.Contains("CheckRaids", StringComparison.Ordinal) && e.Contains("auth_conyard", StringComparison.Ordinal));
-        Assert.Equal("build", TestAccess.StateValue(m.Host, "phase"));                           // the flag set before the spawn stuck
-        Assert.Equal(ObjectiveStatus.Completed, m.Host.Objectives.Single(o => o.Id == "hold").Status);
-        Assert.DoesNotContain(m.Host.Objectives, o => o.Id == "refinery");                   // the next objective never appears: soft-lock
-        Assert.False(m.Host.Halted);                                                           // and nothing tells the player
-    }
-
-    [Fact(Skip = "S18 MIS-07: awaiting owner decision")]
     public void Auth01_CheckRaids_with_a_unit_on_the_yard_site_still_gives_the_refinery_objective()
     {
         MissionSession m = PrepareCheckRaids();
         Assert.Empty(m.Host.Errors);
         Assert.Contains(m.Host.Objectives, o => o.Id == "refinery");
+        Assert.True(m.Host.Objectives.Single(o => o.Id == "hold").Status == ObjectiveStatus.Completed);
+        int yard = Rts.Sim.Rules.SimRules.IndexOf(m.Sim.Setup.Rules.Buildings, "auth_conyard", b => b.Id);
+        int built = 0;
+        for (int i = 1; i < m.Sim.Buildings.Capacity; i++)
+            if (m.Sim.Buildings.Slots.IsIndexAlive(i) && m.Sim.Buildings.Player[i] == 0 && m.Sim.Buildings.TypeIndex[i] == yard) built++;
+        Assert.Equal(1, built);   // the yard stands, beside the crowded site
     }
 
     private static MissionSession PrepareCheckRaids()

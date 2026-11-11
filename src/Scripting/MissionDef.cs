@@ -83,6 +83,9 @@ public sealed class MissionDef
     /// <summary>Schema 2: type ids added to the campaign tech set when the mission is won (<c>[unlocks_on_win] tech</c>).</summary>
     public IReadOnlyList<string> UnlocksOnWin { get; init; } = Array.Empty<string>();
 
+    /// <summary>The mission's folder (<c>data/missions/&lt;id&gt;</c>) as loaded; empty for a hand-made definition. S19 MIS-12 uses it to find the data folder's Archive.</summary>
+    public string Folder { get; init; } = "";
+
     /// <summary>The zone with this name, or null.</summary>
     public MissionZone? ZoneNamed(string name)
     {

@@ -78,7 +78,7 @@ public static class MissionLoader
 
         return new MissionDef
         {
-            Id = id, Title = Str(m, "title"), MapFile = Str(m, "map"), ScriptFile = Str(m, "script"), BriefingFile = Str(m, "briefing"),
+            Id = id, Folder = folder, Title = Str(m, "title"), MapFile = Str(m, "map"), ScriptFile = Str(m, "script"), BriefingFile = Str(m, "briefing"),
             Seed = (ulong)Int(m, "seed"), Players = players, Zones = zones, Actors = actors,
             Schema = schema,
             Act = schema >= 2 && m.ContainsKey("act") ? IntIn(m, "act", 1, 4) : 0,

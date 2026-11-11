@@ -70,16 +70,16 @@ public sealed class ArchiveLogicTests
 
         browser.Tab = ArchiveCategory.Leader;
         (int open, int total) = browser.Count(ArchiveCategory.Leader);
-        Assert.Equal(24, total);   // 16 Authority/Directorate entries (8 leaders, 8 secrets), plus 4 Expedition leaders and their 4 secrets (M7-10)
+        Assert.Equal(25, total);   // 16 Authority/Directorate entries (8 leaders, 8 secrets), plus 4 Expedition leaders and their 4 secrets (M7-10), plus Calloway-Ross (S19 MIS-12)
         Assert.Equal(browser.Catalog.InCategory(ArchiveCategory.Leader).Count(e => e.Unlock.Kind == ArchiveUnlockKind.Open), open);
-        Assert.True(open is > 0 and < 24);
+        Assert.True(open is > 0 and < 25);
 
         // M8-13: leader entries are released by dir_04 (Authority leaders), lb_03 (Directorate) and lb_04 (Expedition).
         progress.MarkCampaignMission("dir_04");
-        Assert.True(browser.Count(ArchiveCategory.Leader).Unlocked < 24);
+        Assert.True(browser.Count(ArchiveCategory.Leader).Unlocked < 25);
         progress.MarkCampaignMission("lb_03");
         progress.MarkCampaignMission("lb_04");
-        Assert.Equal(24, browser.Count(ArchiveCategory.Leader).Unlocked);
+        Assert.Equal(25, browser.Count(ArchiveCategory.Leader).Unlocked);
     }
 
     [Fact]

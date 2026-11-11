@@ -186,7 +186,7 @@ end
 
 function CheckMission()
   if state.done then return end
-  if Actor.Count(0, "lb_mother_rig") + Actor.Count(0, "lb_mother_rig_packed") == 0 then
+  if Actor.Count(0, "lb_mother_rig") + Actor.CountPacked(0, "lb_mother_rig") == 0 then
     state.rigGone = state.rigGone + 1
     if state.rigGone >= 2 then return LoseMission("lb3.lost.rig", "column") end
   else

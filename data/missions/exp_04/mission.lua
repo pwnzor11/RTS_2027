@@ -32,6 +32,8 @@ function OnInit()
   AI.SetTier(1, Mission.Difficulty())
   AI.Defend(1, "redoubt")
 
+  -- The redoubt's Device is a story prop here: the script has no Sunrise moment, so keep its real charge from ever completing (S19 MIS-10).
+  Actor.DelayCharge("device", 1000000000)
   Trigger.AfterDelay(500, ShipOne)
   Mission.Timer("col1", Pick({ 2600, 2500, 2400, 2200, 2000 }), ColumnOne, "e4.timer.col1")
   Trigger.AfterDelay(Pick({ 5400, 5300, 5200, 4700, 4200 }), ColumnTwo)
