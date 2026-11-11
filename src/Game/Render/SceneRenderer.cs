@@ -185,6 +185,9 @@ public sealed class SceneRenderer : IDisposable
         _painter.Draw(batch, sprite, frame, SpriteLayout.BuildingOrigin(camera, topLeft), PlayerColours.Base(player), camera.Zoom, 0.5f);
     }
 
+    /// <summary>S18 GAMEREND-01: forgets what the renderer remembered of the previous game (building first-seen ticks, movers). Called when a game screen starts.</summary>
+    public void Reset() => _memory.Reset();
+
     /// <inheritdoc />
     public void Dispose()
     {

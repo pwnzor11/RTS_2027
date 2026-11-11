@@ -79,6 +79,17 @@ public static class SidebarTabs
         _ => "Vehicles",
     };
 
-    /// <summary>The hot key letter shown on the tab.</summary>
+    /// <summary>The default hot key letter of the tab (Q W E R T Y). The UI shows <see cref="KeyName"/>, which follows rebinding.</summary>
     public static char KeyLetter(SidebarTab tab) => "QWERTY"[(int)tab];
+
+    /// <summary>The name of the key currently bound to the tab (S18 GAMEUI-03: read from the bindings, not hard-coded).</summary>
+    public static string KeyName(SidebarTab tab) => Rts.Game.Controls.KeyNames.Of(Rts.Game.Controls.GameKeys.Active.Get(tab switch
+    {
+        SidebarTab.Structures => Rts.Game.Controls.GameAction.TabStructures,
+        SidebarTab.Defences => Rts.Game.Controls.GameAction.TabDefences,
+        SidebarTab.Infantry => Rts.Game.Controls.GameAction.TabInfantry,
+        SidebarTab.Vehicles => Rts.Game.Controls.GameAction.TabVehicles,
+        SidebarTab.Upgrades => Rts.Game.Controls.GameAction.TabUpgrades,
+        _ => Rts.Game.Controls.GameAction.TabAircraft,
+    }));
 }

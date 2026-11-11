@@ -58,6 +58,12 @@ public sealed class CardLayout
         Array.Empty<Rectangle>(), Array.Empty<Rectangle>(), 0, 0, 0);
 
     /// <summary>
+    /// S18 UXG-03: the lowest y that other bottom-left panels (mission ticker and dialogue) may end at: <paramref name="defaultBottom"/>, or
+    /// just above the card when the card is showing, so the card never covers them.
+    /// </summary>
+    public int ClearBottom(int defaultBottom, int gap) => Card.IsEmpty ? defaultBottom : Math.Min(defaultBottom, Card.Top - gap);
+
+    /// <summary>
     /// The scale the card draws at: <paramref name="ui"/> (the sidebar's UI scale) while the card fits the map view, otherwise smaller,
     /// never below 1 (or the UI scale itself when that is under 1, M11-10h).
     /// </summary>

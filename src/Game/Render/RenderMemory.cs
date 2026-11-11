@@ -24,12 +24,23 @@ public sealed class RenderMemory
     private Dictionary<UnitKey, LeptonCoord> _positions = new();
     private HashSet<UnitKey> _moving = new();
 
+    /// <summary>Forgets everything: the next snapshot is treated as the first of a new game, so its buildings count as already built.</summary>
+    public void Reset()
+    {
+        _started = false;
+        _tick = 0;
+        _built = new Dictionary<EntityId, int>();
+        _positions = new Dictionary<UnitKey, LeptonCoord>();
+        _moving = new HashSet<UnitKey>();
+    }
+
     /// <summary>Records a snapshot. Does nothing when it has the same tick as the last one recorded.</summary>
     /// <param name="snapshot">The snapshot about to be drawn.</param>
     public void Observe(SimSnapshot snapshot)
     {
         ArgumentNullException.ThrowIfNull(snapshot);
         if (_started && snapshot.Tick == _tick) return;
+        if (_started && snapshot.Tick < _tick) Reset();   // S18 GAMEREND-01: time ran backwards, so this is a new game
 
         var built = new Dictionary<EntityId, int>();
         foreach (BuildingView building in snapshot.Buildings)

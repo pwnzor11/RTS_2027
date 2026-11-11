@@ -84,7 +84,11 @@ public sealed record Settings(
         try
         {
             string file = path ?? DefaultPath;
-            return File.Exists(file) ? Parse(File.ReadAllText(file)) : Default;
+            if (!File.Exists(file)) return Default;
+            string text = File.ReadAllText(file);
+            Settings parsed = Parse(text, out bool unreadable);
+            if (unreadable) KeepAsBad(file);   // S18 GAMEREND-12: the next Save must not destroy a file this build could not read
+            return parsed;
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException or System.Security.SecurityException)
         {
@@ -92,9 +96,25 @@ public sealed record Settings(
         }
     }
 
-    /// <summary>Parses settings text; never throws. Bad text gives <see cref="Default"/>.</summary>
-    public static Settings Parse(string text)
+    // Moves an unreadable settings file aside as <file>.bad (replacing an older .bad); never throws.
+    private static void KeepAsBad(string file)
     {
+        try
+        {
+            File.Move(file, file + ".bad", overwrite: true);
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        {
+            // Left where it is: the next Save will replace it, as before.
+        }
+    }
+
+    /// <summary>Parses settings text; never throws. Bad text gives <see cref="Default"/>.</summary>
+    public static Settings Parse(string text) => Parse(text, out _);
+
+    private static Settings Parse(string text, out bool unreadable)
+    {
+        unreadable = false;
         TomlTable root;
         try
         {
@@ -102,11 +122,16 @@ public sealed record Settings(
         }
         catch (Exception)
         {
+            unreadable = true;
             return Default;
         }
 
         int version = Int(root, "version", 1, 0, int.MaxValue);
-        if (version > CurrentVersion) return Default;
+        if (version > CurrentVersion)
+        {
+            unreadable = true;   // written by a newer build
+            return Default;
+        }
 
         Settings d = Default;
         return new Settings(

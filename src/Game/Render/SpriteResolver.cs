@@ -99,7 +99,7 @@ public sealed class SpriteResolver
     }
 
     /// <summary>Whether the library holds a sprite file with this id.</summary>
-    public bool LibraryHas(string id) => _library is not null && _library.Ids.Contains(id, StringComparer.Ordinal);
+    public bool LibraryHas(string id) => _library is not null && _library.Has(id);
 
     private ResolvedSprite ResolveUncached(SpriteKind kind, string? id, int fw, int fh)
     {

@@ -9,6 +9,9 @@ namespace Rts.Game.Render;
 /// <summary>Builds the units to draw, placed between the previous and current snapshot.</summary>
 public static class UnitInterpolator
 {
+    [ThreadStatic]
+    private static Dictionary<UnitKey, UnitView>? Before;   // scratch map, one per thread
+
     /// <summary>
     /// Fills <paramref name="output"/> with every unit of <paramref name="current"/> at its position between
     /// <paramref name="previous"/> and <paramref name="current"/>. Units are matched by kind and id; a unit with no
@@ -18,7 +21,8 @@ public static class UnitInterpolator
     public static void Build(SimSnapshot current, SimSnapshot previous, float alpha, List<RenderUnit> output)
     {
         output.Clear();
-        var before = new Dictionary<UnitKey, UnitView>();
+        Dictionary<UnitKey, UnitView> before = Before ??= new Dictionary<UnitKey, UnitView>();   // reused: no dictionary per frame
+        before.Clear();
         if (!ReferenceEquals(current, previous))
         {
             foreach (UnitView unit in previous.Units) before[UnitKey.Of(unit)] = unit;

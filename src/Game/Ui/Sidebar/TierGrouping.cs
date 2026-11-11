@@ -123,6 +123,14 @@ public static class TierGrouping
     /// <param name="Height">Row height: headings take <c>headingH</c>, cameo rows take <c>cameoH</c> (rows size to content).</param>
     public readonly record struct PlacedRow(int Row, int Y, int Height);
 
+    /// <summary>The y (grid-relative) just below the last placed row, 0 for none (S18 UXG-08: where free space starts).</summary>
+    public static int ContentBottom(IReadOnlyList<PlacedRow> placed)
+    {
+        int bottom = 0;
+        foreach (PlacedRow p in placed) bottom = Math.Max(bottom, p.Y + p.Height);
+        return bottom;
+    }
+
     /// <summary>The rows visible from <paramref name="firstRow"/> in a grid <paramref name="gridHeight"/> tall; a row that does not fit whole is not shown.</summary>
     public static IReadOnlyList<PlacedRow> Place(IReadOnlyList<TierRow> rows, int firstRow, int gridHeight, int cameoH, int headingH, int gap)
     {

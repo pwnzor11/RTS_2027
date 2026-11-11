@@ -42,7 +42,7 @@ public sealed class FxPlayer
         for (int i = _active.Count - 1; i >= 0; i--)
         {
             Active a = _active[i];
-            if (!library.Ids.Contains(a.Kind, StringComparer.Ordinal))
+            if (!library.Has(a.Kind))
             {
                 _active.RemoveAt(i);
                 continue;
@@ -81,7 +81,7 @@ public sealed class FxPlayer
             foreach (FxAnchor a in building.FxFor(state))
             {
                 bool smoke = a.Kind.StartsWith("smoke", StringComparison.Ordinal);
-                if (smoke != (pass == 1) || (!smoke && !fire) || !library.Ids.Contains(a.Kind, StringComparer.Ordinal)) continue;
+                if (smoke != (pass == 1) || (!smoke && !fire) || !library.Has(a.Kind)) continue;
                 SpriteManifest m = library.Manifest(a.Kind);
                 Vector2 at = origin + new Vector2(a.X - building.OriginX, a.Y - building.OriginY) * zoom;
                 library.Sheet(a.Kind).Draw(batch, FxFrames.Anchored(m, tick, a.Phase), at, Color.White, zoom);

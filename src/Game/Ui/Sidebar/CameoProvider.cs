@@ -26,7 +26,7 @@ public sealed class CameoProvider : IDisposable
         _device = device;
         try
         {
-            _library = SpriteLibrary.Scan(spritesRoot);
+            _library = SpriteLibrary.ScanTolerant(spritesRoot, Console.Error.WriteLine);   // S18 GAMEREND-02
         }
         catch (Exception e) when (e is IOException or InvalidDataException or UnauthorizedAccessException)
         {
