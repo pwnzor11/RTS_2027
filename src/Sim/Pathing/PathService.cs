@@ -11,10 +11,12 @@ namespace Rts.Sim.Pathing;
 /// debt, unpolled results and the next request id are saved; the result cache is a pure function of map state
 /// and is not.
 /// <para>Rules: a request is either untouched in the queue or fully solved inside one <see cref="Process"/>.
-/// Process, when budget is left, solves queued requests in FIFO order until the call has charged <see cref="BurstFactor"/> times the
-/// per-tick budget (M13-05, D-205; a normal tick's askers are still all served in the same call, D-063); requests left over wait at the
-/// front of the queue, in order, for the next call. Each solve costs its node-expansion count and may overdraw; the overdraft is
-/// carried as debt into the next tick. A cache hit charges the cost of the original solve, so timing never depends on cache state.</para>
+/// Process, when budget is left, solves in FIFO order every request that has already waited through an earlier call, then the
+/// requests filed since the last call, but those only while the call has charged less than <see cref="BurstFactor"/> times the
+/// per-tick budget (M13-05, D-205). The requests of one tick are solved in the same call or all wait (D-063: no slot-order bias, so
+/// mirrored players stay mirrored); a waiting request is flagged and saved with the flag. Each solve costs its node-expansion count
+/// and may overdraw; the overdraft is carried as debt into the next tick. A cache hit charges the cost of the original solve, so
+/// timing never depends on cache state.</para>
 /// <para>Search: A* over 8 directions, open set ordered by (f, h, line tie-break, cell index) in a hand-written heap (a total
 /// order). Straight step 10, diagonal 14, times the destination cell factor 10000 / SpeedPercent. Blocked =
 /// outside the map, SpeedPercent 0 or a building. Diagonals may not cut a blocked corner. The start cell is
@@ -36,7 +38,8 @@ public sealed class PathService : ISimStatePart
 {
     private const int CacheLimit = 4096;
 
-    /// <summary>M13-05: one <see cref="Process"/> call starts no new solve once it has charged this many times the per-tick budget.</summary>
+    /// <summary>M13-05: one <see cref="Process"/> call leaves the newly filed requests waiting when the requests that had already waited
+    /// cost at least this many times the per-tick budget.</summary>
     public const int BurstFactor = 4;
 
     /// <summary>Passer value meaning "no player": every building blocks (M3-04).</summary>
@@ -51,6 +54,7 @@ public sealed class PathService : ISimStatePart
         public Locomotion Loco;
         public byte Passer = NoPasser;   // M3-04
         public bool Group;
+        public bool Waited;   // M13-05: has waited through a Process call (saved as bit 5 of the loco byte)
         public CellCoord To;
         public CellCoord[] Froms = Array.Empty<CellCoord>();
     }
@@ -167,27 +171,31 @@ public sealed class PathService : ISimStatePart
         _debt = 0;
         long spent = 0;
         LastProcessCount = 0;
-        // Batch rule (M2-01, D-063): while budget is left, everything queued so far is solved in this call, so one tick's
-        // askers are answered together whichever player's actors (low or high slot) asked first. M13-05 (S18 SP-01): but no
-        // more than BurstFactor x the per-tick budget is started in one call; the rest waits, in FIFO order, for the next.
-        // The overdraft becomes debt that delays the next batch.
+        // Batch rule (M2-01, D-063): while budget is left, the requests are solved a tick's worth at a time, never split, so one tick's
+        // askers are answered together whichever player's actors (low or high slot) asked first. M13-05 (S18 SP-01): the requests
+        // that already waited (FIFO, they come first) are always solved; the ones filed since the last call only while this call has
+        // charged less than BurstFactor x the per-tick budget, else they all wait. The overdraft becomes debt that delays the next batch.
         if (budget > 0)
         {
             long cap = (long)_perTick * BurstFactor;
             int k = 0;
-            while (k < _queue.Count && spent < cap)
-            {
-                Req r = _queue[k++];
-                int cost = Solve(r, out Entry[] entries);
-                _results[r.Id] = entries;
-                budget -= cost;
-                spent += cost;
-            }
+            while (k < _queue.Count && _queue[k].Waited) spent += SolveAt(k++);
+            if (spent < cap) while (k < _queue.Count) spent += SolveAt(k++);
             _queue.RemoveRange(0, k);
             LastProcessCount = k;
+            budget -= spent;
         }
+        for (int i = 0; i < _queue.Count; i++) _queue[i].Waited = true;
         if (budget < 0) _debt = (int)(-budget);
         LastProcessCost = (int)Math.Min(spent, int.MaxValue);
+    }
+
+    private int SolveAt(int k)
+    {
+        Req r = _queue[k];
+        int cost = Solve(r, out Entry[] entries);
+        _results[r.Id] = entries;
+        return cost;
     }
 
     /// <summary>
@@ -542,6 +550,7 @@ public sealed class PathService : ISimStatePart
         _g[goal] = 0; _seen[goal] = _stamp;
         long h0 = BoxHeur(to.X, to.Y, minX, maxX, minY, maxY, minF);
         _heap.Push(h0, h0, goal);
+        int bx2 = minX + maxX, by2 = minY + maxY;   // twice the centre of the starts' box: ties go along the goal-box line (D-063)
         int expansions = 0;
         while (_heap.Count > 0 && remaining > 0)
         {
@@ -565,7 +574,7 @@ public sealed class PathService : ISimStatePart
                 if (_seen[n] == _stamp && ng >= _g[n]) continue;
                 _g[n] = ng; _seen[n] = _stamp;
                 long h = BoxHeur(nx, ny, minX, maxX, minY, maxY, minF);
-                _heap.Push(ng + h, h, n);
+                _heap.Push(ng + h, h, n, LineKey(2 * nx, 2 * ny, bx2, by2, 2 * to.X, 2 * to.Y));
             }
         }
 
@@ -618,8 +627,9 @@ public sealed class PathService : ISimStatePart
         foreach (Req r in _queue)
         {
             w.Write(r.Id);
-            // M3-04: bit 7 of the loco byte = a passer byte follows (unset, the bytes are as before).
-            if (r.Passer == NoPasser) w.Write((byte)r.Loco); else { w.Write((byte)((byte)r.Loco | 0x80)); w.Write(r.Passer); }
+            // M3-04: bit 7 of the loco byte = a passer byte follows (unset, the bytes are as before). M13-05: bit 5 = waited.
+            byte lb = (byte)((byte)r.Loco | (r.Waited ? 0x20 : 0));
+            if (r.Passer == NoPasser) w.Write(lb); else { w.Write((byte)(lb | 0x80)); w.Write(r.Passer); }
             w.Write(r.Group); w.Write(r.To.X); w.Write(r.To.Y);
             w.Write(r.Froms.Length);
             foreach (CellCoord f in r.Froms) { w.Write(f.X); w.Write(f.Y); }
@@ -645,8 +655,9 @@ public sealed class PathService : ISimStatePart
         for (int i = 0; i < q; i++)
         {
             var req = new Req { Id = r.ReadInt32() };
-            byte loco = r.ReadByte();   // M3-04: bit 7 = passer follows
-            req.Loco = (Locomotion)(loco & 0x7F);
+            byte loco = r.ReadByte();   // M3-04: bit 7 = passer follows; M13-05: bit 5 = waited
+            req.Loco = (Locomotion)(loco & 0x5F);
+            req.Waited = (loco & 0x20) != 0;
             if ((loco & 0x80) != 0) req.Passer = r.ReadByte();
             req.Group = r.ReadBoolean();
             req.To = new CellCoord(r.ReadInt32(), r.ReadInt32());

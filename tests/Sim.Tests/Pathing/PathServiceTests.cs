@@ -240,28 +240,43 @@ public class PathServiceTests
     }
 
     [Fact]
-    public void OneCallStartsAtMostFourBudgetsOfWork_TheRestWaitsInFifoOrder()
+    public void ATicksRequestsAreNeverSplit_ButWaitWhenOlderOnesUsedTheCap()
     {
-        // M13-05 (S18 SP-01): Process used to solve the whole queue in one call however much it cost.
+        // M13-05 (S18 SP-01): Process used to solve the whole queue in one call however much it cost. Now the requests filed since
+        // the last call wait (all of them, D-063) when the requests that had already waited cost BurstFactor budgets or more.
         var m = Flat(64, 64); var t = Table();
         var s = new PathService(m, t, 100);
-        var ids = new List<int>();
-        for (int i = 0; i < 20; i++) ids.Add(s.Request(new(0, i), new(63, 63 - i), Locomotion.Foot));
-        s.Process();
-        int first = s.LastProcessCost;
-        var solvedAt = new int[ids.Count];
-        for (int tick = 1; tick <= 200; tick++)
-        {
-            for (int i = 0; i < ids.Count; i++)
-                if (solvedAt[i] == 0 && s.Poll(ids[i], 0, out _) == PathStatus.Found) solvedAt[i] = tick;
-            s.Process();
-            Assert.InRange(s.LastProcessCost, 0, PathService.BurstFactor * 100 + 400);   // the cap plus at most one search
-        }
-        Assert.InRange(first, PathService.BurstFactor * 100, PathService.BurstFactor * 100 + 400);
-        Assert.Equal(1, solvedAt[0]);
-        Assert.True(solvedAt[^1] > 1, "not everything in one call");
-        for (int i = 1; i < ids.Count; i++) Assert.True(solvedAt[i] >= solvedAt[i - 1], "FIFO order");
-        Assert.DoesNotContain(0, solvedAt);
+        var debt = typeof(PathService).GetField("_debt", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!;
+        var a = new List<int>();
+        for (int i = 0; i < 10; i++) a.Add(s.Request(new(0, i), new(63, 63 - i), Locomotion.Foot));   // about 64 each: 640 > 400
+        debt.SetValue(s, 150);
+        s.Process();                                                       // in debt: nothing solved, A waits
+        Assert.Equal(PathStatus.Pending, s.Poll(a[0], 0, out _));
+        var b = new List<int>();
+        for (int i = 0; i < 3; i++) b.Add(s.Request(new(1, i), new(5, i), Locomotion.Foot));
+        s.Process();                                                       // budget 50: all of A (more than 4 x 100), none of B
+        Assert.True(s.LastProcessCost >= PathService.BurstFactor * 100, $"{s.LastProcessCost}");
+        Assert.All(a, id => Assert.Equal(PathStatus.Found, s.Poll(id, 0, out _)));
+        Assert.All(b, id => Assert.Equal(PathStatus.Pending, s.Poll(id, 0, out _)));
+        int ticks = 0;
+        while (s.Poll(b[0], 0, out _) == PathStatus.Pending && ticks < 100) { s.Process(); ticks++; }
+        Assert.InRange(ticks, 2, 10);                                     // after the debt is paid
+        Assert.All(b.Skip(1), id => Assert.Equal(PathStatus.Found, s.Poll(id, 0, out _)));   // together
+
+        // The waited flag survives a save.
+        var s2 = new PathService(m, t, 100);
+        int c = s2.Request(new(0, 0), new(9, 9), Locomotion.Foot);
+        debt.SetValue(s2, 500);
+        s2.Process();
+        var ms = new MemoryStream();
+        using (var w = new BinaryWriter(ms, System.Text.Encoding.UTF8, true)) s2.Write(w);
+        var s3 = new PathService(m, t, 100);
+        ms.Position = 0;
+        using (var r = new BinaryReader(ms)) s3.Read(r);
+        var ms2 = new MemoryStream();
+        using (var w = new BinaryWriter(ms2, System.Text.Encoding.UTF8, true)) s3.Write(w);
+        Assert.Equal(ms.ToArray(), ms2.ToArray());
+        Assert.Equal(PathStatus.Pending, s3.Poll(c, 0, out _));
     }
 
     [Fact]
