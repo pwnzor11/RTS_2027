@@ -137,9 +137,13 @@ public sealed class CampaignService
             throw new InvalidOperationException($"mission '{missionId}' is not in the {faction} campaign");
         MissionDef def = MissionLoader.Load(MissionLoader.FolderOf(_dataDir, missionId));
         CampaignProgress next = Progress(faction).WithWin(missionId, difficulty, def.UnlocksOnWin);
-        next.Save(ProgressPath(faction));
+        LastWinSaved = next.Save(ProgressPath(faction));
         _archive.MarkCampaignMission(missionId);
-        _archive.Save(_archivePath);
+        // S18 GS-01: mark a fresh copy of the file, not the one read when the Campaign screen opened, so unlocks the game's ArchiveTracker
+        // wrote since then (encounters, research) are kept.
+        ArchiveProgress fresh = ArchiveProgress.Load(_archivePath);
+        fresh.MarkCampaignMission(missionId);
+        fresh.Save(_archivePath);
         return next;
     }
 
