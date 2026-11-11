@@ -15,12 +15,18 @@ public sealed class AircraftTechTests
             tech: "auth_conyard,auth_power,auth_factory,auth_airfield,auth_interceptor");
         SimRules rules = sim.Setup.Rules;
         int B(string id) => SimRules.IndexOf(rules.Buildings, id, b => b.Id);
-        Assert.False(sim.PlaceBuilding(0, B("auth_conyard"), new CellCoord(20, 20)).IsNone);
-        Assert.False(sim.PlaceBuilding(0, B("auth_power"), new CellCoord(24, 20)).IsNone);
-        Assert.False(sim.PlaceBuilding(0, B("auth_factory"), new CellCoord(20, 24)).IsNone);
-        Assert.False(sim.PlaceBuilding(0, B("auth_airfield"), new CellCoord(25, 24)).IsNone);
+        foreach (string id in new[] { "auth_conyard", "auth_power", "auth_factory", "auth_airfield" }) Place(sim, B(id));
         TestData.Run(sim, 2);
         return (sim, host, SimRules.IndexOf(rules.Vehicles, "auth_interceptor", v => v.Id), SimRules.IndexOf(rules.Vehicles, "auth_bomber", v => v.Id));
+    }
+
+    // Places a building for player 0 on the first free spot of a scan near the map's top-left quarter.
+    private static void Place(Simulation sim, int type)
+    {
+        for (int y = 16; y < 60; y += 4)
+            for (int x = 16; x < 60; x += 4)
+                if (!sim.PlaceBuilding(0, type, new CellCoord(x, y)).IsNone) return;
+        Assert.Fail("no room for building type " + type);
     }
 
     [Fact]
