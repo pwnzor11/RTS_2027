@@ -66,6 +66,23 @@ public sealed class SubRevealTests
     }
 
     [Fact]
+    public void View_ShowsAFiringSubSurfaced_ToTheEnemyThatSeesTheCell_AndKeepsItDivedForItsOwner()
+    {
+        var (w, sub, _) = Coast();
+        w.Run(1, w.Cmd(0, CommandKind.Deploy, sub, default, default, (int)ActorKind.Vehicle));
+        var l = new List<Rts.Sim.View.ViewActor>();
+        w.Sim.ViewFor(1).CopyVisible(l);
+        Assert.DoesNotContain(l, a => a.Id == sub);   // dived and silent: not listed
+        w.Sim.Naval.RevealLeft[sub.Index] = 50;
+        l.Clear();
+        w.Sim.ViewFor(1).CopyVisible(l);
+        Assert.Contains(l, a => a.Id == sub && !a.Submerged);   // listed, draws surfaced, can be clicked
+        var own = new List<Rts.Sim.View.ViewActor>();
+        w.Sim.ViewFor(0).CopyOwn(own);
+        Assert.Contains(own, a => a.Id == sub && a.Submerged);   // the owner's dive toggle still reads dived
+    }
+
+    [Fact]
     public void RevealTimer_SurvivesSaveAndLoad()
     {
         var (w, sub, _) = Coast();
