@@ -573,7 +573,8 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
     private List<string> UpgradeTooltip(UpgradeEntry e)
     {
         var lines = new List<string> { CameoNames.Display(e.Id), $"Cost {e.Cost}" };
-        if ((uint)e.Index < (uint)_source.Rules.Upgrades.Count)
+        if (TodayText.Upgrade(e.Id) is { } today) lines.AddRange(today);   // S19: only what it really does
+        else if ((uint)e.Index < (uint)_source.Rules.Upgrades.Count)
             lines.AddRange(UpgradeEffectText.Lines(_source.Rules, _source.Rules.Upgrades[e.Index]));   // M4-09: what it really does
         lines.Add(e.State switch
         {

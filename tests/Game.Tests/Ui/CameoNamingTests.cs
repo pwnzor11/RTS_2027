@@ -39,4 +39,31 @@ public sealed class CameoNamingTests
         Assert.Equal("Heavy Tank", CameoNames.Display("auth_tank", null));
         Assert.Equal("Power Plant", CameoNames.Display("auth_power", null));
     }
+
+    [Theory]
+    [InlineData("exp_minelayer", "mines")]
+    [InlineData("exp_diver", "swim")]
+    [InlineData("exp_drydock", "repair")]
+    [InlineData("exp_destroyer", "depth charge")]
+    [InlineData("lb_harpoon_wagon", "tether")]
+    public void Unbuilt_mechanics_are_worded_as_not_there_yet(string id, string word)
+    {
+        string text = TodayText.Cameo(id)!;
+        Assert.Contains(word, text, StringComparison.OrdinalIgnoreCase);
+        Assert.Matches("not|cannot|no ", text);   // every one says what is missing
+    }
+
+    [Fact]
+    public void Every_today_text_id_exists_in_the_rules()
+    {
+        SimRules rules = ArchiveTestData.Rules();
+        var ids = AllIds(rules).ToHashSet(StringComparer.Ordinal);
+        foreach (string id in new[] { "exp_minelayer", "exp_diver", "exp_drydock", "exp_destroyer", "lb_harpoon_wagon" })
+            Assert.Contains(id, ids);
+        foreach (string id in new[] { "lb_up_scrap_plate", "lb_up_patchwork", "lb_up_quick_pack", "lb_up_grapple", "lb_up_salvage_rights", "exp_up_sonar_nets" })
+        {
+            Assert.Contains(id, ids);
+            Assert.NotNull(TodayText.Upgrade(id));
+        }
+    }
 }
