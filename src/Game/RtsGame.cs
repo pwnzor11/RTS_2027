@@ -31,6 +31,7 @@ public sealed class RtsGame : Microsoft.Xna.Framework.Game
     private readonly bool _direct;
     private readonly bool _empty;
     private readonly ScreenStack _screens = new();
+    private readonly FocusPause _focusPause = new();
     private readonly List<char> _typed = new();
     private SpriteBatch _spriteBatch = null!;
     private Texture2D _pixel = null!;
@@ -145,6 +146,7 @@ public sealed class RtsGame : Microsoft.Xna.Framework.Game
         var input = new InputFrame(keys, _previousKeys, mouse, _previousMouse, _typed);
         _typed.Clear();
 
+        _focusPause.Update(IsActive, _screens);   // S19: a single-player game pauses while the window is in the background
         _screens.Update(input, gameTime);
 
         _previousKeys = keys;
