@@ -299,7 +299,7 @@ public sealed partial class MissionHost
     private DynValue ActorCellOf(CallbackArguments a)
     {
         if (!TryTag(Str(a, 0), out ActorRef r) || !IsStanding(_sim!, r)) return DynValue.Nil;   // S18 MIS-03
-        return CellTable(CellOfActor(_sim, r));
+        return CellTable(CellOfActor(_sim!, r));
     }
 
     private static CellCoord CellOfActor(Simulation sim, ActorRef r) => r.Kind switch
