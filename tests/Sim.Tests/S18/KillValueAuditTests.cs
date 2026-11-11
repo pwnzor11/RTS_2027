@@ -22,28 +22,30 @@ public sealed class KillValueAuditTests
     }
 
     [Fact]
-    public void Audit_PlaceholderCosts_AndTheHeroThreshold()
+    public void RealCosts_AndNotBuildableFlags_AndTheHeroThreshold()
     {
-        // S18 audit: pins current behaviour of FACTION-LE-04; flip the assertion when fixed.
+        // D-205 (LE-04): the three non-buildable vehicles carry real costs
         SimRules r = S18World.RealRules;
-        Assert.Equal(4000, r.Vehicles.Single(v => v.Id == "lb_mother_rig_packed").Cost);
-        Assert.Equal(6000, r.Vehicles.Single(v => v.Id == "exp_supply_tender").Cost);
-        Assert.Equal(6000, r.Vehicles.Single(v => v.Id == "exp_command_ship").Cost);
+        Assert.Equal(200, r.Vehicles.Single(v => v.Id == "lb_mother_rig_packed").Cost);
+        Assert.Equal(1500, r.Vehicles.Single(v => v.Id == "exp_supply_tender").Cost);
+        Assert.Equal(900, r.Vehicles.Single(v => v.Id == "exp_command_ship").Cost);
+        foreach (string id in new[] { "lb_mother_rig_packed", "exp_supply_tender", "exp_command_ship" })
+            Assert.False(r.Vehicles.Single(v => v.Id == id).Buildable, id);
+        Assert.Equal(3, r.Vehicles.Count(v => !v.Buildable));
         Assert.Equal(new[] { 600, 1600, 3200 }, r.Veterancy.Thresholds);
         Assert.Equal(1000, r.Veterancy.KillPermilleUnit);
     }
 
     [Theory]
-    [InlineData("exp_supply_tender", true, 6000)]
-    [InlineData("exp_command_ship", true, 6000)]
-    [InlineData("lb_mother_rig_packed", false, 4000)]
-    public void Audit_OneKillOfAPlaceholderCostVehicle_MakesTheShooterAHero(string victim, bool atSea, int value)
+    [InlineData("exp_supply_tender", true, 1500, 1)]
+    [InlineData("exp_command_ship", true, 900, 1)]
+    [InlineData("lb_mother_rig_packed", false, 200, 0)]
+    public void OneKillOfAFormerPlaceholderCostVehicle_FollowsItsRealCost(string victim, bool atSea, int value, int expectedRank)
     {
-        // S18 audit: pins current behaviour of FACTION-LE-04 / FACTION-MATH-04; flip the assertion when fixed.
         var (rank, killValue, dead) = OneKill(victim, atSea);
         Assert.True(dead);
         Assert.Equal(value, killValue);
-        Assert.Equal(3, rank);
+        Assert.Equal(expectedRank, rank);
     }
 
     [Fact]
@@ -63,9 +65,8 @@ public sealed class KillValueAuditTests
     }
 
     [Fact]
-    public void Audit_PackedStillRig_LeavesA1000CreditWreck_TheSameRigUnpackedLeaves50()
+    public void PackedStillRig_LeavesTheSameWreckAsTheUnpackedRig()
     {
-        // S18 audit: pins current behaviour of FACTION-LE-04 (wreck value); flip the assertion when fixed.
         var w = new S18World(Faction.LeftBehind, Faction.Authority);
         Assert.Equal(200, w.Rules.Buildings[w.B("lb_still_rig")].Cost);
         EntityId packed = w.Veh(0, "lb_mother_rig_packed", 20, 20);
@@ -79,7 +80,7 @@ public sealed class KillValueAuditTests
             w.Cmd(0, CommandKind.Debug, still, default, default, (int)DebugOp.Kill, (int)ActorKind.Building));
         w.Run(2);
 
-        Assert.Equal(1000, WreckValueAt(w.Sim, new CellCoord(20, 20)));   // min(1000, 25 % of 4000)
+        Assert.Equal(50, WreckValueAt(w.Sim, new CellCoord(20, 20)));     // 25 % of the 200 the packed rig carries
         Assert.Equal(50, WreckValueAt(w.Sim, centre));                    // 25 % of 200
     }
 
@@ -98,8 +99,8 @@ public sealed class KillValueAuditTests
         Assert.Contains(rigs, b => b.MaxHealth <= 300);                           // e.g. a 250-300 hp rig drives around with 1000
     }
 
-    [Fact(Skip = "S18 FACTION-LE-04: awaiting owner decision")]
-    public void Desired_OneKillOfASupplyTender_DoesNotMakeAHero()
+    [Fact]
+    public void OneKillOfASupplyTender_DoesNotMakeAHero()
     {
         var (rank, _, dead) = OneKill("exp_supply_tender", true);
         Assert.True(dead);

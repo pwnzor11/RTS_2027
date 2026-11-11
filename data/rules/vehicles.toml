@@ -540,8 +540,9 @@ primary_weapon = ""
 has_turret = false
 turret_turn_rate = 0
 crusher = false
-cost = 4000  # (tune)
+cost = 200  # D-205: real worth for kills and wrecks (a packed rig counts as the building it carries); not buildable
 prerequisites = ["lb_bench"]
+buildable = false
 unpacks_into = "lb_mother_rig"
 pack_ticks = 200  # (tune)
 supply = 0  # (tune) SUP-3: the base amount comes from the unpacked building (design 13 §2.4)
@@ -578,6 +579,7 @@ crusher = false
 cost = 500  # (tune)
 prerequisites = ["lb_rotor_pad"]
 death_weapon = "lb_kite_bomb"
+one_use = true  # D-205 (LE-14): spent by its bomb
 
 # M7-08: Expedition vehicles, hovercraft, ships and aircraft (docs/design/07_expedition.md §5, 11_m7_plan §3, D-087, D-124..D-127). PLACEHOLDER ART:
 # no sprite manifests yet, the generated placeholder is drawn. The faction is NOT playable yet (RuleCounts.PlayableFactions stays 3).
@@ -759,8 +761,9 @@ primary_weapon = ""
 has_turret = false
 turret_turn_rate = 0
 crusher = false
-cost = 6000  # (tune)
+cost = 1500  # D-205: the convoy cargo (shipment value, design 07 section 2.2); not buildable
 prerequisites = ["exp_anchorage"]
+buildable = false
 supply = 0  # (tune) spawned by the home supply line, never counts against the cap
 
 [exp_destroyer]   # PLACEHOLDER ART; all-round warship
@@ -869,8 +872,9 @@ primary_weapon = ""
 has_turret = false
 turret_turn_rate = 0
 crusher = false
-cost = 6000  # (tune)
+cost = 900  # D-205: a warship hull (the Destroyer's price); not buildable
 prerequisites = ["exp_drydock"]
+buildable = false
 draw_scale_permille = 1800  # (tune) D-124
 deploys_into = "exp_landing_depot"
 supply = 0  # (tune) the base amount comes from the depot (design 13 §2.4)

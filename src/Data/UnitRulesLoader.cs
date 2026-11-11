@@ -22,6 +22,8 @@ internal static class UnitRulesLoader
         // schema v5 (M6-02)
         "unpacks_into", "pack_ticks", "salvage_rate", "raider", "raider_one_use", "drops_blackout_ticks", "aura_repair_permille",
         "tow_bonus_permille",
+        // D-205 (M13-11)
+        "one_use", "buildable",
         // schema v6 (VET-1)
         "veteran",
         // schema v7 (SUP-1)
@@ -116,6 +118,8 @@ internal static class UnitRulesLoader
         int? salvageRate = f.OptInt("salvage_rate", 0, 10_000, 0);
         bool? raider = f.OptBool("raider", false);
         bool? raiderOneUse = f.OptBool("raider_one_use", false);
+        bool? oneUse = f.OptBool("one_use", false);
+        bool? buildable = f.OptBool("buildable", true);
         int? dropsBlackout = f.OptInt("drops_blackout_ticks", 0, 1_000_000, 0);
         int? auraRepair = f.OptInt("aura_repair_permille", 0, 1000, 0);
         int? towBonus = f.OptInt("tow_bonus_permille", 0, 100_000, 0);
@@ -142,7 +146,7 @@ internal static class UnitRulesLoader
         }
         if (aircraftSlots.Value > 0 && sortieTicks.Value == 0) { f.Problem("sortie_ticks", "a carrier (aircraft_slots > 0) needs sortie_ticks > 0"); return null; }
         if (ammo.Value > 0 && rearmTicks.Value == 0) { f.Problem("rearm_ticks", "a unit with ammo > 0 needs rearm_ticks > 0"); return null; }
-        if (unpacksInto is null || packTicks is null || salvageRate is null || raider is null || raiderOneUse is null
+        if (unpacksInto is null || packTicks is null || salvageRate is null || raider is null || raiderOneUse is null || oneUse is null || buildable is null
             || dropsBlackout is null || auraRepair is null || towBonus is null) return null;
         if (v3 is null || passengers is null || deploysInto is null || tier is null) return null;
         if (harvestCapacity is null || buildTime is null || speed is null || maxHealth is null || locomotion is null || turnRate is null || armor is null
@@ -177,6 +181,8 @@ internal static class UnitRulesLoader
             SalvageRate = salvageRate.Value,
             Raider = raider.Value,
             RaiderOneUse = raiderOneUse.Value,
+            OneUse = oneUse.Value,
+            Buildable = buildable.Value,
             DropsBlackoutTicks = dropsBlackout.Value,
             AuraRepairPermille = auraRepair.Value,
             TowBonusPermille = towBonus.Value,

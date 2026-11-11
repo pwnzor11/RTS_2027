@@ -37,6 +37,7 @@ public sealed partial class Simulation
                 if (typeIndex < 0 || typeIndex >= rules.Vehicles.Count) return false;
                 VehicleType vt = rules.Vehicles[typeIndex];
                 if ((vt.Locomotion == Locomotion.Air) != (category == ProductionCategory.Aircraft)) return false;
+                if (!vt.Buildable) return false;   // D-205 (FACTION-LE-04): tender, Command Ship and the packed rig form are never offered
                 (cost, buildTime, prerequisites) = (vt.Cost, vt.BuildTime, vt.Prerequisites);
                 return true;
             case ProductionCategory.Structure:
