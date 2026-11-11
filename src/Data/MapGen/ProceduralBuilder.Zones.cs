@@ -762,6 +762,6 @@ internal sealed partial class ProceduralBuilder
 
     /// <summary>The share of layout 1's money per start that this biome's layout-2 maps carry, in per mille (tuned by the M12-12 income re-measure).</summary>
     /// <remarks>Q-70 (D-205), layout 2 only (this method runs only in the zoned builders; layout 1 never reaches it, so layout 1 maps stay byte-identical):
-    /// Glass Coast 300 -> 240 (-20 %), Rust Belt 420 -> 378 (-10 %); Mountains and Ash Plains stay at 420.</remarks>
-    private int MoneyPermille => _skin == SkinGlass ? 240 : _skin == SkinRust ? 378 : 420;
+    /// Glass Coast 300 -> 220 (the floor: every resource cell is already density 1, so -12.8 % is the most this knob can cut), Rust Belt 420 -> 378 (-10 %); Mountains and Ash Plains stay at 420.</remarks>
+    private int MoneyPermille => _skin == SkinGlass ? 220 : _skin == SkinRust ? 378 : 420;
 }
