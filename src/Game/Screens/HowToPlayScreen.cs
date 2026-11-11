@@ -132,10 +132,13 @@ public sealed class HowToPlayScreen : IScreen
 
     private sealed record Layout(Rectangle Panel, Rectangle Art, Rectangle Text, Rectangle Prev, Rectangle Next, Rectangle Back, int Line);
 
-    private Layout Measure()
+    private Layout Measure() => MeasureFor(_s.Viewport, _s.UiScale);
+
+    /// <summary>The Back button's rectangle for a window and scale (public so a test can check that its label fits the box, S18 UX-LM-10).</summary>
+    public static Rectangle BackRectFor(Viewport vp, UiUnit scale) => MeasureFor(vp, scale).Back;
+
+    private static Layout MeasureFor(Viewport vp, UiUnit scale)
     {
-        Viewport vp = _s.Viewport;
-        var scale = _s.UiScale;
         int line = BitmapFont.LineHeight(scale, FontWeight.Regular) + scale;
         int width = Math.Min(vp.Width - 8 * scale, 120 * scale * BitmapFont.Advance / 2);
         int height = Math.Min(vp.Height - 8 * scale, 150 * scale * 4);
@@ -163,7 +166,8 @@ public sealed class HowToPlayScreen : IScreen
         int by = panel.Bottom - pad - bh;
         var prev = new Rectangle(panel.Center.X - 30 * scale - bw, by, bw, bh);
         var next = new Rectangle(panel.Center.X + 30 * scale, by, bw, bh);
-        var back = new Rectangle(panel.Right - pad - 14 * scale, by, 14 * scale, bh);
+        int backW = ButtonSizing.WidthFor("Back", scale, 14);   // as wide as its label needs (the label used to poke out of a fixed 14-unit box)
+        var back = new Rectangle(panel.Right - pad - backW, by, backW, bh);
         return new Layout(panel, art, text, prev, next, back, line);
     }
 

@@ -29,7 +29,7 @@ public sealed class FlowLayout
     {
         _area = area; _scale = scale; _gap = scale * 2;
         _x = area.X + _gap; _y = area.Y + _gap;
-        _lineHeight = 9 * scale;
+        _lineHeight = EditorLayout.RowHeight(scale);
     }
 
     /// <summary>Buttons added so far.</summary>
