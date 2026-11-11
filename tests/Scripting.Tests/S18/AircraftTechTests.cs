@@ -15,7 +15,8 @@ public sealed class AircraftTechTests
             tech: "auth_conyard,auth_power,auth_factory,auth_airfield,auth_interceptor");
         SimRules rules = sim.Setup.Rules;
         int B(string id) => SimRules.IndexOf(rules.Buildings, id, b => b.Id);
-        foreach (string id in new[] { "auth_conyard", "auth_power", "auth_factory", "auth_airfield" }) Place(sim, B(id));
+        foreach (string id in new[] { "auth_conyard", "auth_power", "auth_power", "auth_factory", "auth_airfield", "auth_engineering", "auth_signals_hq" })
+            Place(sim, B(id));   // engineering (tier 2) and signals hq (tier 3) meet the tier gates, so only the tech list decides
         TestData.Run(sim, 2);
         return (sim, host, SimRules.IndexOf(rules.Vehicles, "auth_interceptor", v => v.Id), SimRules.IndexOf(rules.Vehicles, "auth_bomber", v => v.Id));
     }
