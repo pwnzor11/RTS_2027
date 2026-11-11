@@ -145,11 +145,12 @@ public sealed class ExpeditionSummaryTests
         var h = new SummaryHistory();
         Assert.Contains("convoy_in_danger: false", Summary(sim, h));
 
-        // a gunboat three cells from the tender: in the tender's own sight, so the viewer sees it
-        var at = new CellCoord(tender.Cell.X + 3, tender.Cell.Y + 1);
+        // a gunboat three cells from the tender, on the west water (x < 10): in the tender's own sight, so the viewer sees it.
+        // S19 M13-03: the tender spawns at the edge cell nearest the dock, so place relative to wherever it is.
+        var at = new CellCoord(tender.Cell.X >= 3 ? tender.Cell.X - 3 : tender.Cell.X + 3, tender.Cell.Y < H / 2 ? tender.Cell.Y + 1 : tender.Cell.Y - 1);
         Assert.False(Enemy(sim, GunboatT, at).IsNone);
         Run(sim, 1);
-        Assert.True(sim.ViewFor(0).IsVisible(at), "the gunboat must be visible for this test");
+        Assert.True(sim.ViewFor(0).IsVisible(at), $"the gunboat must be visible for this test (tender {tender.Cell.X},{tender.Cell.Y}, at {at.X},{at.Y})");
         string text = Summary(sim, h);
         Assert.Contains("convoy_in_danger: true", text);
         Assert.Contains("naval_threat: 1 (1 surface, 0 dived), strength ~300cr", text);
@@ -188,7 +189,10 @@ public sealed class ExpeditionSummaryTests
     {
         var sim = NewSim(sonar: true);   // the own tender's sonar (radius 6) reveals the submerged enemy
         Run(sim, 110);
-        EntityId sub = Enemy(sim, SubT, new CellCoord(3, 3));
+        var tenders = new List<TenderView>();
+        sim.ViewFor(0).CopyOwnTenders(tenders);
+        CellCoord tc = Assert.Single(tenders).Cell;   // S19 M13-03: place the sub within the tender's sonar wherever it spawned
+        EntityId sub = Enemy(sim, SubT, new CellCoord(tc.X >= 3 ? tc.X - 3 : tc.X + 3, tc.Y < H / 2 ? tc.Y + 2 : tc.Y - 2));
         sim.Step(new[] { new Command(sim.Tick, 1, _seq++, CommandKind.Deploy, sub, default, default, 0, 0) });
         Run(sim, 1);
         string text = Summary(sim, new SummaryHistory());
