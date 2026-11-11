@@ -53,4 +53,24 @@ public sealed class MapListDevTests
             File.Delete(tmp);
         }
     }
+
+    [Fact]
+    public void The_editor_document_keeps_dev_through_open_and_re_save()
+    {
+        string maps = Path.GetFullPath(Path.Combine(FindRules(), "..", "maps"));
+        (Rts.Sim.Map.MapData map, MapMeta meta) = MapFile.LoadWithMeta(Path.Combine(maps, "test_32.map.toml"));
+        Assert.True(meta.Dev);
+        var doc = Rts.Game.Screens.Editor.EditorDocument.From(map, meta);
+        Assert.True(doc.ToMeta().Dev);
+        string tmp = Path.Combine(Path.GetTempPath(), "rts_s19_dev2_" + Guid.NewGuid().ToString("N") + ".map.toml");
+        try
+        {
+            MapFile.Save(doc.ToMapData(), doc.ToMeta(), tmp);
+            Assert.True(MapFile.LoadWithMeta(tmp).Item2.Dev);
+        }
+        finally
+        {
+            File.Delete(tmp);
+        }
+    }
 }
