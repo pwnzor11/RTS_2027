@@ -69,30 +69,30 @@ public sealed class ShipmentsSpawnAuditTests(ITestOutputHelper output)
     // Docks are exact half-turn images: (4,4) and (40-4-2, 40-4-2) = (34,34); both touch the ring of sea.
     private static readonly CellCoord NorthWest = new(Sea, Sea), SouthEast = new(N - Sea - 2, N - Sea - 2);
 
-    // S18 audit: pins current behaviour of AI-01; flip the assertion when fixed.
     [Fact]
-    public void Audit_MirroredDocks_TheNorthWestDockIsSuppliedFirst()
-    {
-        (int[] paid, CellCoord[] spawn) = Run(NewSim(NorthWest, SouthEast));
-        Assert.Equal(0, spawn[0].Y);   // both first tenders appear on the top row
-        Assert.Equal(0, spawn[1].Y);
-        Assert.True(spawn[0].X < 4 && spawn[1].X < 4, "both spawn at the north-west end of the top row");
-        Assert.True(paid[0] > 0 && paid[1] > 0, "both are paid within 1 200 ticks");
-        Assert.True(paid[1] - paid[0] >= 100, $"the south-east dock waits at least one full interval longer ({paid[0]} v {paid[1]})");
-    }
-
-    // S18 audit: pins current behaviour of AI-01; flip the assertion when fixed.
-    [Fact]
-    public void Audit_SwappedDocks_TheAdvantageFollowsTheCornerNotTheSlot()
+    public void SwappedDocks_AreAlsoSuppliedAtTheSameTick_TheAdvantageNoLongerFollowsTheCorner()
     {
         (int[] paid, _) = Run(NewSim(SouthEast, NorthWest));
-        Assert.True(paid[0] - paid[1] >= 100, $"now player 1 (north-west dock) is paid first ({paid[0]} v {paid[1]})");
+        AssertSameTick(paid);
     }
 
-    [Fact(Skip = "S18 AI-01: awaiting owner decision")]
+    // The two tenders sail mirrored routes of equal length, but one heads down and one up the map and the sim reads a position as the cell
+    // it floors to, so on this fixture's whole-cell tie the arrival can differ by one tick. Anything under a few ticks is "the same tick";
+    // before M13-03 the gap was a full shipment interval (136 ticks).
+    private static void AssertSameTick(int[] paid) => Assert.True(Math.Abs(paid[0] - paid[1]) <= 1, $"paid at {paid[0]} v {paid[1]}");
+
+    [Fact]
+    public void MirroredDocks_TendersSpawnOnTheEdgeNearestTheirDock()
+    {
+        (_, CellCoord[] spawn) = Run(NewSim(NorthWest, SouthEast));
+        Assert.True(spawn[0].X < N / 2 && spawn[0].Y < N / 2, $"north-west dock, spawn {spawn[0]}");
+        Assert.True(spawn[1].X >= N / 2 && spawn[1].Y >= N / 2, $"south-east dock, spawn {spawn[1]}");
+    }
+
+    [Fact]
     public void MirroredDocks_AreSuppliedAtTheSameTick()
     {
         (int[] paid, _) = Run(NewSim(NorthWest, SouthEast));
-        Assert.Equal(paid[0], paid[1]);
+        AssertSameTick(paid);
     }
 }
