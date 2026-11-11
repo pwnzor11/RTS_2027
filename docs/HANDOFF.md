@@ -8,7 +8,8 @@ and a few others are measured only. Report and decision table: docs/reviews/2026
 The owner took every recommendation (D-205), chose to apply the suggested numbers now (measure after), and picked all four QoL groups.
 Field Manual pilot approved (D-206); hero renders of every unit and building on the owner's laptop. Decisions up to D-206; Q-70 still open
 (layout 2 income, waits for the laptop run). M11 complete except M12-06b; layout 2 still off by default.
-Full suite: see SESSION_LOG session 18 for the integ-s18 run.
+Full suite on integ-s18 (Linux, 2026-11-11): 4 110 tests, 4 070 passed, 40 skipped (the S18 `Desired_` twins and env-gated probes), 0 failed
+(Sim 1 675/1 707, AI 239/243, Game 1 678/1 681, Scripting 304/305, Tools 22/22, Llm 152/152). Windows CI: the session 18 PR.
 
 ## Start here (shown to the user as the plan; nothing starts until they say go)
 1. Read the owner's laptop results if they exist: `balance_runs\s18audit\s18audit_summary.md` (tools/measure/run_s18_audit.ps1) and

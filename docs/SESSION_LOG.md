@@ -352,5 +352,5 @@ campaign tech lists leave out core units.
 **Helpers:** 25 packages (Fable, Opus, Sonnet); several cut off by the 5-hour usage limit and resumed with SendMessage; helpers cannot write
 report .md files, so the lead saved every hand-back from the transcripts.
 **Problems / notes:** the baseline full-suite run on untouched main hit the 1-hour background limit on the loaded box; the full suite ran
-once on integ-s18 instead.
+once on integ-s18 instead: 4 110 tests, 4 070 passed, 40 skipped, 0 failed.
 **Next session should:** see HANDOFF (M13 batch, owner's laptop series and render pilot, then M14).
