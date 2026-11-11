@@ -298,6 +298,7 @@ Source: docs/reviews/2026-11-07_owner_campaign_feedback.md. Audit: docs/reviews/
 - [ ] M14-03 Owner runs the 12-render pilot, approves, then `-All` (124 ids; 26 need models first: M4-ART)
 - [ ] M14-04 Directorate lore draft (Authority approved), then the other three faction chapters
 - [ ] M14-05 Full build (about 108 pages) after M13 lands; quick-reference card
+- [ ] M14-06 Models and sprites for the 26 ids without art (list: design 19 section 5)
 
 ## M9 · LAN multiplayer (was M5)
 Lockstep over LAN, lobby, desync detection, replays.

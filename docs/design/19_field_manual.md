@@ -9,9 +9,9 @@ by Claude and signed off by the owner, spoilers limited to premise plus a missio
 Full build waits until the session 18 audit fixes land, because the stat pages are generated from `data/rules`.
 
 ## 1. How it is built
-- Source: `tools/booklet/` (to be added with the full build): `prep.py` (sprite plates in faction colour, unit stat cards from the
-  resolved rules), `tree.py` (tech trees with Graphviz, split so no box crosses the gutter), `build.py` (HTML pages, print CSS),
-  `render.py` (Chromium via Playwright prints the PDF). The pilot scripts are in `tools/booklet/pilot/`.
+- Source: `tools/booklet/` (pilot scripts in `pilot/`: `prep.py` sprite plates and stat cards, `tree.py` tech trees split so no box
+  crosses the gutter, `build.py` HTML pages and print CSS, `render.py` Chromium via Playwright; generators in `data/`; hero renders in
+  `render_heroes.*`). The full build extends these. The pilot scripts are in `tools/booklet/pilot/`.
 - Data: `rules_resolved.json` from the audit's `resolve_rules.py` (inheritance applied exactly as the loaders do), display names
   and body text from `data/archive` (never from ids: 80 sidebar names differ from the Archive titles today, audit UX-02).
 - Fonts: TeX Gyre Heros Condensed (headings, stats), TeX Gyre Schola (body), Courier 10 Pitch (teletype, field notes); all free,
@@ -85,7 +85,7 @@ behind them. Count your shells and your credits before every attack, because the
 build and cheaper to keep alive; repair them. Hold ground you can supply and give up ground you cannot. The Authority does not
 win quickly. It wins by still being there.
 
-## 7. Questions for the owner (booklet)
+## 7. Questions (answered in session 18, see the top)
 - Q-B1 Art: sprite plates for every unit plus about 10 hero renders (recommended), or a full hero render of every unit and building
   (about 150 renders on the PC, many hours)?
 - Q-B2 The pilot look: keep (paper tint, condensed headings, hazard stripes, teletype boxes), or change direction?

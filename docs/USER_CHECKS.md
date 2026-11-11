@@ -370,7 +370,8 @@ Pull first: `git pull --ff-only origin main` then `git lfs pull` (new sprites). 
 
 ## Session 18 · Audit fixes, Field Manual pilot (D-202..D-206)
 Back up `%APPDATA%\RTS_2027` first (progress and settings files are now written via a temporary file; unreadable ones are kept as `.bad`).
-- 2v2 skirmish: right-click an ally's unit or building with units selected: they move, no attack cursor.
+- 2v2 skirmish: right-click an ally's unit (or a full or non-garrisonable ally building) with units selected: they move, no attack cursor.
+  An allied building with room still garrisons infantry.
 - Build a War Factory, sell the Refinery before placing it: the Factory cameo stays on the sidebar and can be placed or cancelled.
 - Tutorial: select units; the instructor line sits above the selection card.
 - Mouse wheel over a fight: the point under the cursor stays put.
@@ -382,8 +383,10 @@ Back up `%APPDATA%\RTS_2027` first (progress and settings files are now written 
 - auth_01: lose both scrapers: the mission is lost, not stuck.
 - Campaign: save mid-mission, quit, load, win: the debrief shows and the next mission unlocks.
 - Win auth_02, back to the Campaign menu: Left Behind reads open; the lock hint names the highlighted faction.
+- exp_04 saves and replays made before session 18 no longer load (script changed, D-203): expected.
 - A campaign replay shows "watchable only" and no desync warning; a skirmish replay keeps its check.
-- Settings > Commander: Anthropic and OpenAI keep separate keys; an http base URL to another machine refuses to send a key.
+- Settings > AI commander (LLM)...: switch Provider between Anthropic and OpenAI-compatible; each keeps its own key. An http base URL to
+  another machine refuses to send a key (Test connection obeys the same rule).
 - About: the full credits list (Skorpio, LPC, Kenney, 0 A.D.) also in a published build.
 - `%APPDATA%\RTS_2027\logs\rts_2027.log` exists after a run.
 - Laptop series: `powershell -ExecutionPolicy Bypass -File tools\measure\run_s18_audit.ps1` (about 95 min) -> send back `balance_runs\s18audit\s18audit_summary.md`.

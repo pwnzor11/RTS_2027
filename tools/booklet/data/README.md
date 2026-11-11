@@ -1,13 +1,10 @@
 # faction-math: computed audit of data/rules (session 18)
 
-Python 3.11+ (`tomllib`), no third-party packages. Nothing here writes to the repo. Run from this folder:
+Python 3.11+ (`tomllib`), no third-party packages. Writes only into this folder (outputs are git-ignored). Run from this folder:
 
 ```
 python3 resolve_rules.py     # -> rules_resolved.json           (booklet stat pages)
-python3 check_refs.py        # -> refs_report.md / .json        (reference integrity, orphans, cross-faction reach, missions, art, lore, names)
 python3 techtree.py          # -> techtree_<faction>.json/.dot, techtree_report.md   (dot -Tsvg techtree_authority.dot -o a.svg)
-python3 analysis.py          # -> efficiency.csv, efficiency_report.md, duels.csv, counters.json, counters_report.md,
-                             #    economy_report.md, upgrades_report.md, analysis_summary.json
 ```
 `resolve_rules.py [repo_root] [out.json]` takes another checkout; the other scripts import `load_rules()` from it (repo path = `REPO` at the top).
 
@@ -37,7 +34,3 @@ does full damage in the impact cell and half in the 8 cells around it; a shot is
 ## Other outputs
 - `techtree_<faction>.json`: `nodes[id]` = kind, tier, cost, build_ticks, `producer`, `requires`, `chain` (cheapest set of buildings needed first),
   `min_cost`, `min_ticks` / `min_seconds`, `obtainable`; `edges` (prereq / built at / free unit / deploys / packs / morphs); `cycles`; `dead_ends`.
-- `efficiency.csv`: one row per unit and defence with DPS against each of the 8 armour classes and effective HP against each damaging warhead.
-- `duels.csv`: every cross-faction pair of armed items: 1v1 time to kill both ways, equal-budget Lanchester ratio, notes (range head start, kiting, min range).
-- `counters.json`: per unit and enemy faction: `beaten_by`, `beats`, `can_be_kited_by`; `no_counter`; `layer_gaps`.
-- Model limits are in the docstring of `analysis.py` (no splash on groups, no crushing, no turn time, no terrain, no veterancy or auras). The duel numbers rank matchups; they are not win odds.

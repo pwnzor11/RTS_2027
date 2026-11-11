@@ -339,8 +339,8 @@ layout 1 Expedition 55 v 5 by start and the `ai timeline` sea gap (M12-12b). Art
 QoL research from other RTS games, then a 1990s-style game booklet. Three rounds of questions first; owner present throughout.
 **Done:** wave 1, 18 read-only reviewers (sim x3, AI/LLM, data/mapgen/tools, scripting/missions, render/audio, screens/saves, in-game UI,
 tests/CI/repo, three faction audits incl. a computed rules resolver, text/onboarding, live play of menus and matches, two QoL research
-passes). Wave 2, six helpers: verification tests on the real data for every sim/faction/AI finding (Audit_ tests pin today's behaviour,
-skipped Desired_ twins), fixes for about 45 clear non-sim bugs, duels and matches, a start-skew experiment, and the laptop series
+passes). Wave 2, six helpers: verification tests on the real data for most sim/faction/AI findings (Audit_ tests pin today's behaviour,
+mostly with skipped twins; numbers measured by duels), fixes for about 45 clear non-sim bugs, duels and matches, a start-skew experiment, and the laptop series
 `tools/measure/run_s18_audit.ps1`. Field Manual pilot (9 half-letter pages) with generator scripts; hero render mode and laptop script.
 Report and decision table: docs/reviews/2026-11-11_s18_audit/README.md.
 **Decisions:** D-202..D-206 (audit rules; dying actors in scripts with exp_04 balance kept; mission replays watchable only; all decision-table

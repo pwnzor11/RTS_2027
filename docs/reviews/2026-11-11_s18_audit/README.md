@@ -13,8 +13,10 @@ Files: `wave1/<package>.md` (findings), `wave2/<package>.md` (verdicts, fixes, m
 Rosters for all four factions: `wave1/roster_*.md`.
 
 ## 1. Fixed in this session (PR from `integ-s18`)
-About 45 findings, each with a test that failed on the old code (or, where noted in wave 2, a compile-only failure). No sim rule,
-balance number or pinned hash changed, apart from the mission-script and test changes the owner approved for MIS-03.
+About 45 findings, each with a test that failed on the old code (or, where noted in wave 2, a compile-only failure), except GAMEREND-10,
+UX-LM-06 and GAMEUI-04 (no test) and the Settings atomic write (its test cannot fail on old code). No sim rule, balance number or pinned
+hash changed. Owner-approved behaviour changes: the MIS-03 mission-script and test changes (D-203; exp_04 saves and replays made before
+session 18 no longer load) and mission replays are watchable only (D-204; `Tools replay verify` exits 0 on drift for mission replays).
 - **Campaign and missions** (wave2/fix-missions.md): granted aircraft can be built in tech-restricted missions (dir_04, exp_03, exp_04,
   lb_04); auth_03 and lb_03 losses reach the Defeat screen instead of a frozen match; razing a mission's last enemy building no longer
   ends it without progress; a campaign mission loaded from a save keeps its campaign wiring (progress, debrief, tier); a dying unit no
@@ -32,7 +34,7 @@ balance number or pinned hash changed, apart from the mission-script and test ch
   http except to localhost; `ai timeline` plays the same map as `ai match` (M12-12b, timeline half); the About screen lists every
   credit in a published build; test static-state collection, honest probe skips, CI timeouts and permissions, README status, stray file.
 
-## 2. Verified, waiting for the owner (tests pin today's behaviour; a skipped twin holds the wanted behaviour)
+## 2. Verified, waiting for the owner (most have an `Audit_` test pinning today's behaviour and a skipped twin; numbers and a few others are measured only)
 Recommendation in **bold**. "Moves hashes" = goldens and AI baselines are re-pinned once in the fix batch.
 
 ### 2.1 Game-breaking (sim)
@@ -56,7 +58,7 @@ Recommendation in **bold**. "Moves hashes" = goldens and AI baselines are re-pin
 | 12 | Splash ignores air/ground (flak hurts its own base; artillery hurts aircraft overhead); damage-0 sprays deal 1 per hit. Both touch D-048(3). | **respect air/ground; 0 means 0** |
 | 13 | Splash hurts passengers in transports (and, by code reading, docked aircraft and tunnel transit); every other area effect spares them. | **spare them** |
 | 14 | A dived missile sub fires and no Authority / Directorate / Left Behind weapon or sonar can touch it (D-143); a surfaced sub keeps "submerged" armour and takes 1 damage from all 16 Expedition anti-ship weapons. | **firing reveals the sub for a few seconds; surfaced armour ship_light** |
-| 15 | Veteran or aura-buffed stealth units fire without breaking stealth. | **fix** |
+| 15 | Veteran stealth units fire without breaking stealth (tested; the aura variant shares the code line, not run). | **fix** |
 | 16 | Deploy on a landing craft / Skyhook unloads everyone at once, skipping `unload_ticks`. | **route craft to the timed unload; refuse for an airborne Skyhook** |
 | 17 | A small Left Behind rig is refused unpack sites because the check uses the 3x3 Mother Rig. | **fix** |
 | 18 | Hatch -> Bore Head morph charges starting cash only, not harvested credits. | **use funds** |
@@ -65,7 +67,7 @@ Recommendation in **bold**. "Moves hashes" = goldens and AI baselines are re-pin
 | 21 | Kill value = victim cost, so one tender (6000), Command Ship (6000) or packed rig (4000) gives instant Hero; a packed 200-credit rig leaves a 1000 wreck. | **`buildable = false` flag + real costs** |
 | 22 | Group path results leak into the saved/hashed paths part when a member is re-ordered. | **fix** |
 | 23 | Ashfall hazard (D-028) is not implemented; rad resistance only matters against weapons. | owner: **implement** or record a decision to drop |
-| 24 | No attack-ground order: Decon Truck, Foam Layer, Ash Sower, Dirigible cannot do their jobs without an enemy in range. | owner: **add attack-ground** |
+| 24 | No attack-ground order: the Decon Truck (tested) cannot clean bare ground; Foam Layer, Ash Sower and Dirigible share the code path (not run). | owner: **add attack-ground** |
 | 25 | Searchlight and Broadcast Mast work at zero power. | **check power** |
 | 26 | Promised but missing: Minelayer (no mines), Diver (cannot swim), Drydock (produces/repairs nothing), Destroyer depth charge, Harpoon tether, Grapple breach, five upgrades doing less than their text. | owner: **hide or reword now, build later** |
 
@@ -87,11 +89,12 @@ map key**) · control groups saved with the game (**yes**) · speaker ids in dia
 raw map ids, raw mission ids, upgrade effect text (**one naming pass from data/archive**) · Expedition start cue and Anchorage
 "must touch the shore" reason (**yes**) · map editor validates only after the first edit (**yes**) · the old single LLM key is kept
 only if the saved provider was Anthropic (**as built**) · "Progress not saved" Notice wording (review) · mission script one-liners
-MIS-06/08/09/11/13/14/15/19/20 and GS-07 (exact lines in wave2/fix-missions.md: **approve all**).
+MIS-06/08/09/11/13/14/15/19/20, GS-07 and the MIS-07 follow-ups (exact lines in wave2/fix-missions.md: **approve all**); MIS-10/12/16/18
+need an owner pick between the options listed in wave2/fix-missions.md.
 
 ## 3. QoL ideas from other RTS games (wave1/qol-cnc.md, wave1/qol-modern.md; about 100 candidates, merged)
 Front-end only unless marked. Top picks, in order:
-1. Game speed for skirmish including slow (0.5x, 0.75x): best single feature for family play.
+1. Game speed for skirmish including slow (0.5x, 0.75x): best single feature for casual and family play.
 2. Idle harvester / factory button with a count and hotkey.
 3. Keyboard hotkeys for the sidebar cameo grid.
 4. Tactical pause that visibly accepts orders (orders are already accepted while paused).

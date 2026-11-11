@@ -2,9 +2,9 @@
 Last commit: `docs: Session 18 handoff` on integ-s18, landed through the session 18 PR (Windows CI green first; the lead merges, D-179).
 Check `git log -1 origin/main`.
 Where things stand: session 18 (2026-11-10/11) was an adversarial audit (D-202): 18 reviewers, then 6 verify/fix helpers. About 45 clear
-non-sim bugs are fixed with tests (campaign/missions, in-match UI, menus/setup/tools, LLM key per provider, credits). Every sim, numbers and
-design finding is proven by an `Audit_` test that pins today's behaviour, with a skipped `Desired_` twin holding the wanted behaviour (flip them
-as M13 lands). Report and decision table: docs/reviews/2026-11-11_s18_audit/README.md (wave1/ findings, wave2/ verdicts and measurements).
+non-sim bugs are fixed with tests (campaign/missions, in-match UI, menus/setup/tools, LLM key per provider, credits). Most sim and design findings
+are proven by an `Audit_` test that pins today's behaviour, with a skipped twin holding the wanted behaviour (flip them as M13 lands); numbers
+and a few others are measured only. Report and decision table: docs/reviews/2026-11-11_s18_audit/README.md (wave1/ findings, wave2/ verdicts and measurements).
 The owner took every recommendation (D-205), chose to apply the suggested numbers now (measure after), and picked all four QoL groups.
 Field Manual pilot approved (D-206); hero renders of every unit and building on the owner's laptop. Decisions up to D-206; Q-70 still open
 (layout 2 income, waits for the laptop run). M11 complete except M12-06b; layout 2 still off by default.
@@ -17,10 +17,12 @@ Full suite: see SESSION_LOG session 18 for the integ-s18 run.
 2. M13 wave A (game-breaking, ROADMAP M13-01..M13-09): Expedition sea on Mountains L1 (generator + fallback), founder counts as a base,
    tender spawn nearest the dock, carried units ignore orders and are not selectable, path stall (retarget, per-tick cap, group retry),
    ready-structure cancel with refund + AI cancel, StoreFull, Atomic Battery range 0 + campaign allow-lists, LB lanes pause while packed.
-   Each finding already has a skipped `Desired_` test in tests/*/S18: un-skip it as the fix lands and delete or flip the `Audit_` twin.
+   Most findings have a skipped twin holding the wanted assertion (named `Desired_...` in tests/Sim.Tests/S18 and Game.Tests/S18; in AI.Tests,
+   ShipmentsSpawnAuditTests and SpawnFailureTests it has another name: search for `Skip =`). Un-skip it as the fix lands and flip the `Audit_` twin.
+   No twin yet: path stall (SP-01/SP-09, perf probe only), AI-04/05/06/08, DATA-TOOLS-06, LE-13, LE-14, the 2.3 numbers: write those tests as you fix.
 3. M13 wave B: mechanics items 12-26 (report 2.2) incl. the ashfall hazard and an attack-ground order; then the numbers pass (report 2.3,
    suggested values from wave1/faction-*.md and wave2/v-sim-faction.md); then the UI/wording/design list (report 2.4, mission-script
-   one-liners in wave2/fix-missions.md).
+   one-liners in wave2/fix-missions.md). Ask the owner first: MIS-10/12/16/18 options (wave2/fix-missions.md).
 4. M13 wave C: QoL (game speed incl. slow; idle button and alerts; cameo hotkeys, repeat production, range rings, strong/weak tooltip line;
    handicap and starting conditions; stances and shift-queued waypoints). Front-end items first; stances and waypoints touch the sim.
 5. One golden / AI baseline re-pin batch at the end of M13; push a laptop script (copy run_s18_audit.ps1) for the "after" numbers.
@@ -31,7 +33,7 @@ Full suite: see SESSION_LOG session 18 for the integ-s18 run.
 
 ## Half-finished work
 - Nothing in flight; every session 18 branch is merged into integ-s18 (wp/s18-*). The experimental worktree s18-exp-skew was never committed.
-- 26 ids have no model or sprite (list in docs/design/19_field_manual.md section 5): the booklet and the game both need them (M4-ART).
+- 26 ids have no model or sprite (list in docs/design/19_field_manual.md section 5): the booklet and the game both need them (ROADMAP M14-06).
 - exp_04 script hash changed (D-203): exp_04 saves and replays made before session 18 no longer load (they show the script-changed message).
 - `Tools replay verify` exits 0 for mission replays (D-204) and prints a drift note; skirmish verify still fails on a desync.
 - Mop-up AI code is in MilitaryManager but switched off (MopupLaunch/MopupSweep = false).
