@@ -4,8 +4,10 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Rts.Data;
+using Rts.Game.Host;
 using Rts.Game.Input;
 using Rts.Game.Render;
+using Rts.Game.Ui;
 using Rts.Game.Sandbox;
 using Rts.Game.Sprites;
 using Rts.Sim.Rules;
@@ -141,9 +143,7 @@ public sealed class SkirmishSetupScreen : IScreen
     }
 
     /// <inheritdoc />
-    public void Exit()
-    {
-    }
+    public void Exit() => SaveSpeed();
 
     /// <inheritdoc />
     public void Update(InputFrame input, GameTime t)
@@ -220,6 +220,11 @@ public sealed class SkirmishSetupScreen : IScreen
             });
         }
 
+        rows.Add(new(() => UiText.Format(UiText.SpeedSetup, "speed", GameSpeed.Label(_s.Settings.GameSpeedPercent)), null, StepSpeed,   // M13-15
+            new MenuButton("<", () => StepSpeed(-1)), new MenuButton(">", () => StepSpeed(1)))
+        {
+            WidthTexts = GameSpeed.Percents.Select(p => UiText.Format(UiText.SpeedSetup, "speed", GameSpeed.Label(p))).ToArray(),
+        });
         rows.Add(new(() => _error.Length > 0 ? _error : NoteText() ?? HintText()) { Info = true });
         rows.Add(new(() => IsSpectate ? "Spectate" : "Start", Start));
         rows.Add(new(() => "Back", () => _s.Screens.Pop()));
@@ -230,6 +235,25 @@ public sealed class SkirmishSetupScreen : IScreen
     }
 
     private void Rebuild() => _panel = BuildPanel();
+
+    // M13-15: the single-player game speed is a setting (kept for the next game); keys + and - change it in play.
+    private void StepSpeed(int delta)
+    {
+        _s.Settings = _s.Settings with { GameSpeedPercent = GameSpeed.Step(_s.Settings.GameSpeedPercent, delta) };
+        _speedChanged = true;
+    }
+
+    private bool _speedChanged;
+
+    /// <summary>Where the game speed is saved (tests point it at a temp file); null = the default settings file. Saved when the screen is left or a game starts.</summary>
+    public string? SettingsPath { get; set; }
+
+    private void SaveSpeed()
+    {
+        if (!_speedChanged) return;
+        _speedChanged = false;
+        _s.Settings.Save(SettingsPath);
+    }
 
     private string SizeText() => SizeTextFor(_size, _slots.Count(x => x.Kind != SlotKind.Closed));
 
@@ -461,6 +485,7 @@ public sealed class SkirmishSetupScreen : IScreen
         try
         {
             GameScreen screen = GameScreen.CreateSkirmish(_s, settings);
+            SaveSpeed();
             _error = "";
             _s.Screens.Push(screen);
         }

@@ -207,6 +207,13 @@ public sealed class SimSnapshotSource : ISnapshotSource
         set => _host.Paused = value;
     }
 
+    /// <summary>Single-player game speed in percent of normal (50..200). Front end only; see <see cref="SimHost.SpeedPercent"/>.</summary>
+    public int SpeedPercent
+    {
+        get => _host.SpeedPercent;
+        set => _host.SpeedPercent = value;
+    }
+
     /// <summary>Ticks run per tick interval while running (1 = normal speed). Front end only; set by the debug console.</summary>
     public int SpeedMultiplier
     {

@@ -33,11 +33,11 @@ public static class GameKeys
 
     /// <summary>
     /// Keys the input code may name literally because they cannot be rebound: Esc (leave / pause menu), F1 (help), Backspace and Enter
-    /// (text editing in the chat box), Shift and Ctrl (modifiers). "Length" is an array length, not a key.
+    /// (text editing in the chat box), Shift, Ctrl and Alt (modifiers). "Length" is an array length, not a key.
     /// </summary>
     public static readonly IReadOnlySet<string> FixedKeyNames = new HashSet<string>
     {
-        "Escape", "F1", "Back", "Enter", "LeftShift", "RightShift", "LeftControl", "RightControl", "Length",
+        "Escape", "F1", "Back", "Enter", "LeftShift", "RightShift", "LeftControl", "RightControl", "LeftAlt", "RightAlt", "Length",
     };
 
     /// <summary>Every rebindable action with its default key, in <see cref="GameAction"/> order.</summary>
@@ -95,6 +95,23 @@ public static class GameKeys
         new(GameAction.DecorToggle, "decor_toggle", System, "Show or hide the map decor (decals, boulders, rubble)", Keys.H, KeyContext.Both),
         new(GameAction.QuickSave, "quick_save", System, "Quicksave (skirmish and missions)", Keys.F5),
         new(GameAction.QuickLoad, "quick_load", System, "Quickload (asks first)", Keys.F9),
+        new(GameAction.GameSpeedUp, "game_speed_up", System, "Faster game speed (skirmish, single player)", Keys.OemPlus),
+        new(GameAction.GameSpeedDown, "game_speed_down", System, "Slower game speed (skirmish, single player)", Keys.OemMinus),
+        new(GameAction.IdleHarvester, "idle_harvester", Selection, "Jump to the next idle harvester", Keys.I),
+        new(GameAction.IdleFactory, "idle_factory", Selection, "Jump to the next idle factory", Keys.B),
+        new(GameAction.CameoSlot1, "cameo_slot_1", System, "Sidebar cameo row 1, column 1 (Shift: queue five)", Keys.NumPad7),
+        new(GameAction.CameoSlot2, "cameo_slot_2", System, "Sidebar cameo row 1, column 2 (Shift: queue five)", Keys.NumPad8),
+        new(GameAction.CameoSlot3, "cameo_slot_3", System, "Sidebar cameo row 1, column 3 (Shift: queue five)", Keys.NumPad9),
+        new(GameAction.CameoSlot4, "cameo_slot_4", System, "Sidebar cameo row 2, column 1 (Shift: queue five)", Keys.NumPad4),
+        new(GameAction.CameoSlot5, "cameo_slot_5", System, "Sidebar cameo row 2, column 2 (Shift: queue five)", Keys.NumPad5),
+        new(GameAction.CameoSlot6, "cameo_slot_6", System, "Sidebar cameo row 2, column 3 (Shift: queue five)", Keys.NumPad6),
+        new(GameAction.CameoSlot7, "cameo_slot_7", System, "Sidebar cameo row 3, column 1 (Shift: queue five)", Keys.NumPad1),
+        new(GameAction.CameoSlot8, "cameo_slot_8", System, "Sidebar cameo row 3, column 2 (Shift: queue five)", Keys.NumPad2),
+        new(GameAction.CameoSlot9, "cameo_slot_9", System, "Sidebar cameo row 3, column 3 (Shift: queue five)", Keys.NumPad3),
+        new(GameAction.CameoSlot10, "cameo_slot_10", System, "Sidebar cameo row 4, column 1 (Shift: queue five)", Keys.NumPad0),
+        new(GameAction.CameoSlot11, "cameo_slot_11", System, "Sidebar cameo row 4, column 2 (Shift: queue five)", Keys.Decimal),
+        new(GameAction.CameoSlot12, "cameo_slot_12", System, "Sidebar cameo row 4, column 3 (Shift: queue five)", Keys.Add),
+        new(GameAction.RangeRings, "range_rings", System, "Show or hide weapon range rings of the selection", Keys.L),
     };
 
     /// <summary>The Controls page lines, grouped in <see cref="Groups"/> order: rebindable actions and fixed inputs shown for reference.</summary>
@@ -139,7 +156,7 @@ public static class GameKeys
             F(Selection, "Left drag", "Select units in a box"),
             F(Selection, "Shift + click or drag", "Add to the selection (Shift + click on a selected unit removes it)"),
             F(Selection, "Double-click or Ctrl + click", "Select every unit of that type on screen"),
-            A(GameAction.SelectAll),
+            A(GameAction.SelectAll), A(GameAction.IdleHarvester), A(GameAction.IdleFactory),
             A(GameAction.Group1), A(GameAction.Group2), A(GameAction.Group3), A(GameAction.Group4), A(GameAction.Group5),
             A(GameAction.Group6), A(GameAction.Group7), A(GameAction.Group8), A(GameAction.Group9),
             F(Orders, "Right click", "Move, attack, enter, salvage; set a factory's rally point"),
@@ -148,8 +165,10 @@ public static class GameKeys
             A(GameAction.AttackMove), A(GameAction.Stop), A(GameAction.Guard), A(GameAction.Scatter), A(GameAction.Deploy), A(GameAction.Pack),
             A(GameAction.TabStructures), A(GameAction.TabDefences), A(GameAction.TabInfantry), A(GameAction.TabVehicles),
             A(GameAction.TabUpgrades), A(GameAction.TabAircraft),
+            A(GameAction.CameoSlot1), A(GameAction.CameoSlot2), A(GameAction.CameoSlot3), A(GameAction.CameoSlot4), A(GameAction.CameoSlot5), A(GameAction.CameoSlot6), A(GameAction.CameoSlot7), A(GameAction.CameoSlot8), A(GameAction.CameoSlot9), A(GameAction.CameoSlot10), A(GameAction.CameoSlot11), A(GameAction.CameoSlot12),
+            A(GameAction.RangeRings),
             F(System, "Esc", "Leave a mode, then open the pause menu"),
-            A(GameAction.Pause), A(GameAction.QuickSave), A(GameAction.QuickLoad),
+            A(GameAction.Pause), A(GameAction.QuickSave), A(GameAction.QuickLoad), A(GameAction.GameSpeedUp), A(GameAction.GameSpeedDown),
             F(System, "F1 or ?", "This list (F1 opens the console in the sandbox)"),
             A(GameAction.Talk),
             A(GameAction.DebugFog), A(GameAction.DebugOccupancy), A(GameAction.DebugPaths), A(GameAction.DebugRanges),

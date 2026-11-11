@@ -33,6 +33,8 @@ public sealed class SimHost
     private long _accumulatedUs;
     private bool _paused;
     private int _speedMultiplier = 1;
+    private int _speedPercent = GameSpeed.Normal;
+    private long _speedCarry;   // leftover hundredths of a microsecond from scaling the elapsed time
     private int _viewer;
     private bool _spectator;
     private SimSnapshot _previous;
@@ -146,6 +148,16 @@ public sealed class SimHost
     }
 
     /// <summary>
+    /// Single-player game speed in percent of normal (<see cref="GameSpeed.Percents"/>, S19 D-205). It scales the elapsed time that
+    /// <see cref="Advance"/> adds, so the sim step is unchanged and only the steps per real second differ. Front end only; it is not saved.
+    /// </summary>
+    public int SpeedPercent
+    {
+        get => _speedPercent;
+        set => _speedPercent = GameSpeed.Snap(value);
+    }
+
+    /// <summary>
     /// Adds <paramref name="elapsedMicroseconds"/> and runs every whole tick that is due, <see cref="SpeedMultiplier"/>
     /// steps per interval. Does nothing while paused. Accumulated time is capped at
     /// <see cref="MaxAccumulatedMicroseconds"/> (catch-up cap).
@@ -159,7 +171,15 @@ public sealed class SimHost
             return 0;
         }
 
-        _accumulatedUs = Math.Min(_accumulatedUs + Math.Max(0, elapsedMicroseconds), MaxAccumulatedMicroseconds);
+        long scaled = Math.Max(0, elapsedMicroseconds);
+        if (_speedPercent != GameSpeed.Normal)
+        {
+            long hundredths = scaled * _speedPercent + _speedCarry;
+            scaled = hundredths / 100;
+            _speedCarry = hundredths % 100;
+        }
+
+        _accumulatedUs = Math.Min(_accumulatedUs + scaled, MaxAccumulatedMicroseconds);
         int stepped = 0;
         while (_accumulatedUs >= TickMicroseconds)
         {

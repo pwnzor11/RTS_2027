@@ -10,6 +10,8 @@ public static class KeyNames
     /// <summary>The key as shown on screen, for example <c>.</c> for OemPeriod and <c>1</c> for D1.</summary>
     public static string Of(Keys key) => key switch
     {
+        Keys.Decimal => "Num .",
+        Keys.Add => "Num +",
         Keys.OemPeriod => ".",
         Keys.OemComma => ",",
         Keys.OemMinus => "-",
