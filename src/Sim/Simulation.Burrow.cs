@@ -130,8 +130,8 @@ public sealed partial class Simulation
         if (from.MorphsInto != target || to.FootprintW != from.FootprintW || to.FootprintH != from.FootprintH) return;
         if (!HasPrerequisites(c.Player, to.Prerequisites)) return;
         int cost = Math.Max(0, to.Cost - from.Cost);
-        if (_players.Cash[c.Player] < cost) return;
-        _players.Cash[c.Player] -= cost;
+        if (Funds(c.Player) < cost) return;   // D-205 (SIM-RULES-02): harvested credits count, as for every other purchase
+        Spend(c.Player, cost);
         // ASSUMED (M3-03): without morph_ticks, the morph takes the build time of a unit costing the price difference (min 1).
         _tunnels.BuildingMorphType[b] = target + 1;
         _tunnels.BuildingMorphTicks[b] = from.MorphTicks > 0 ? from.MorphTicks : SimRules.BuildTicks(cost, 0, rules.Economy);
