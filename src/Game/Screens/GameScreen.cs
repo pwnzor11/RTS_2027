@@ -453,7 +453,7 @@ public sealed class GameScreen : IScreen
         bool busy = _dragStart is not null || input.MiddleDragging || _sidebar is { MinimapDragging: true } || _console is { IsOpen: true } || chatTyping;
         Point client = _s.ClientSize();   // M11-10b: the band is in client pixels, as the mouse is
         Vector2 edge = CameraScroll.EdgeDirection(input.MousePosition, CameraScroll.ClientRect(client.X, client.Y, _s.Viewport.Width, _s.Viewport.Height),
-            _s.Settings.EdgeScroll, _s.WindowActive(), busy);
+            _s.Settings.EdgeScroll, _s.WindowActive(), busy, sidebar: SidebarInClientPixels(client));   // D-205: a 3 px band over the sidebar
         bool shift = input.IsDown(Keys.LeftShift) || input.IsDown(Keys.RightShift);
         _camera.PanScreen(CameraScroll.FrameDelta(keyDirection + edge, _s.Settings.ScrollSpeed, shift, (float)t.ElapsedGameTime.TotalSeconds));
 
@@ -695,6 +695,16 @@ public sealed class GameScreen : IScreen
         _lastAutosaveTick = tick;
         string? error = target.Save(Autosave.NextSlot(target.Existing()));
         if (error is not null) _toast.Show(UiText.Format(UiText.AutosaveFailed, "reason", error), _nowMs);
+    }
+
+    // The sidebar panel in the pixels the mouse is reported in (client pixels; they differ from the back buffer while a window is being resized).
+    private Rectangle? SidebarInClientPixels(Point client)
+    {
+        if (_sidebar is null) return null;
+        Rectangle p = _sidebar.Layout.Panel;
+        Viewport v = _s.Viewport;
+        if (client.X <= 0 || client.Y <= 0 || v.Width <= 0 || v.Height <= 0) return p;
+        return new Rectangle(p.X * client.X / v.Width, p.Y * client.Y / v.Height, p.Width * client.X / v.Width, p.Height * client.Y / v.Height);
     }
 
     // The toast sits at the top centre of the map view, under the objective banner space.
