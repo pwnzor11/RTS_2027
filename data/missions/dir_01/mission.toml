@@ -40,6 +40,10 @@ rect = [26, 22, 32, 28]
 [zones.picket]
 rect = [36, 10, 42, 16]
 
+# The enemy base (actors at 54-58,54-58); the AI rallies here, not on the player's hatch site (S19 MIS-08).
+[zones.enemy_base]
+rect = [52, 52, 62, 62]
+
 # The bore shaft that broke the surface, with its first shift.
 [[actors]]
 type = "dir_shaft"
