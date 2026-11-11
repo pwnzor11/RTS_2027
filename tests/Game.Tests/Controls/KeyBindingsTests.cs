@@ -120,13 +120,13 @@ public sealed class KeyBindingsTests
     [Fact]
     public void Bindings_survive_a_save_and_load()
     {
-        Settings s = Settings.Default.WithBindings(KeyBindings.Default.TrySwap(GameAction.AttackMove, Keys.S)!.With(GameAction.Pack, Keys.F12));
+        Settings s = Settings.Default.WithBindings(KeyBindings.Default.TrySwap(GameAction.AttackMove, Keys.S)!.With(GameAction.Pack, Keys.F11));
         string toml = s.ToToml();
         Assert.Contains("[keys]", toml);
         Settings back = Settings.Parse(toml);
         Assert.Equal(Keys.S, back.Bindings.Get(GameAction.AttackMove));
         Assert.Equal(Keys.A, back.Bindings.Get(GameAction.Stop));
-        Assert.Equal(Keys.F12, back.Bindings.Get(GameAction.Pack));
+        Assert.Equal(Keys.F11, back.Bindings.Get(GameAction.Pack));
         Assert.Equal(s, back);
     }
 

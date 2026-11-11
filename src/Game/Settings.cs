@@ -32,6 +32,7 @@ namespace Rts.Game;
 /// <param name="KeyMap">Rebound keys (D-172 (6)); null = the default bindings. Stored in a <c>[keys]</c> table of action id = key name; missing or unknown entries are ignored.</param>
 /// <param name="ShowDiagnostics">Show the tick / state hash / fps line in play (M11-03). Default false; files without the key get false.</param>
 /// <param name="CameraCueOnNewObjective">Pan the camera to a new mission objective's target (M11-05; default true).</param>
+/// <param name="AutosaveMinutes">D-205: single-player autosave every this many minutes of play (plus one at the start of a match), into 3 rotating slots; 0 = off. Default 5; files without the key get 5.</param>
 /// <param name="LargerInfantry">D-184 pilot: draw infantry (sprites, selection brackets, health bars) 1.25 times larger than today. Render only. Default true for the pilot screenshots; files without the key get true.</param>
 public sealed record Settings(
     int Version = Settings.CurrentVersion,
@@ -54,10 +55,17 @@ public sealed record Settings(
     bool CameraCueOnNewObjective = true,
     Ui.TextSize TextSize = Ui.TextSize.Normal,
     KeyBindings? KeyMap = null,
-    bool LargerInfantry = true)
+    bool LargerInfantry = true,
+    int AutosaveMinutes = Settings.DefaultAutosaveMinutes)
 {
     /// <summary>The file format version this build reads and writes.</summary>
     public const int CurrentVersion = 2;
+
+    /// <summary>Default autosave interval in minutes (D-205).</summary>
+    public const int DefaultAutosaveMinutes = 5;
+
+    /// <summary>Longest autosave interval in minutes.</summary>
+    public const int MaxAutosaveMinutes = 60;
 
     /// <summary>Default camera scroll speed in screen pixels per second.</summary>
     public const int DefaultScrollSpeed = 900;
@@ -155,7 +163,8 @@ public sealed record Settings(
             root.TryGetValue("camera_cue_on_new_objective", out object? cq) && cq is bool cqb ? cqb : d.CameraCueOnNewObjective,
             (Ui.TextSize)Int(root, "text_size", (int)d.TextSize, (int)Ui.TextSize.Small, (int)Ui.TextSize.ExtraLarge),
             ParseKeys(root),
-            root.TryGetValue("larger_infantry", out object? li) && li is bool lib ? lib : d.LargerInfantry);
+            root.TryGetValue("larger_infantry", out object? li) && li is bool lib ? lib : d.LargerInfantry,
+            Int(root, "autosave_minutes", d.AutosaveMinutes, 0, MaxAutosaveMinutes));
     }
 
     /// <summary>The settings as TOML text.</summary>
@@ -189,6 +198,8 @@ public sealed record Settings(
         sb.AppendLine(FormattableString.Invariant($"health_bars_always = {(HealthBarsAlways ? "true" : "false")}"));
         sb.AppendLine("# Draw infantry 1.25 times larger (D-184 pilot; sprites, selection brackets and health bars; render only).");
         sb.AppendLine(FormattableString.Invariant($"larger_infantry = {(LargerInfantry ? "true" : "false")}"));
+        sb.AppendLine("# Single-player autosave: minutes between autosaves (0 = off); 3 rotating slots (D-205).");
+        sb.AppendLine(FormattableString.Invariant($"autosave_minutes = {Math.Clamp(AutosaveMinutes, 0, MaxAutosaveMinutes)}"));
         sb.AppendLine("# Pan the camera to a new mission objective's target (M11-05)");
         sb.AppendLine(FormattableString.Invariant($"camera_cue_on_new_objective = {(CameraCueOnNewObjective ? "true" : "false")}"));
         IReadOnlyList<(string Id, string Key)> rebound = Bindings.Overrides();

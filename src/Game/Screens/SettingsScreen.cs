@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Rts.Game.Input;
 using Rts.Game.Menu;
+using Rts.Game.Saves;
 using Rts.Game.Ui;
 
 namespace Rts.Game.Screens;
@@ -52,6 +53,8 @@ public sealed class SettingsScreen : IScreen
             Volume("Master volume", s => s.MasterVolume, (s, v) => s with { MasterVolume = v }),
             Volume("Music volume", s => s.MusicVolume, (s, v) => s with { MusicVolume = v }),
             Volume("Effects volume", s => s.SfxVolume, (s, v) => s with { SfxVolume = v }),
+            new MenuItem(() => UiText.Format(UiText.AutosaveSetting, "interval", Autosave.IntervalText(_s.Settings.AutosaveMinutes)),
+                () => StepAutosave(1), StepAutosave, new MenuButton("<", () => StepAutosave(-1)), new MenuButton(">", () => StepAutosave(1))),   // D-205
             new MenuItem(() => $"Camera cue on new objective: {(_s.Settings.CameraCueOnNewObjective ? "On" : "Off")}", ToggleCameraCue, _ => ToggleCameraCue(),
                 new MenuButton("Toggle", ToggleCameraCue)),   // M11-05
             new MenuItem(() => Rts.Game.Ui.Llm.LlmUiText.SectionRow, () => _s.Screens.Push(new Rts.Game.Ui.Llm.LlmSettingsScreen(_s, _path))),
@@ -126,6 +129,9 @@ public sealed class SettingsScreen : IScreen
         AudioSettings.Apply(_s.Audio, _s.Settings);
         MenuSounds.Play(_s.Audio, MenuSounds.Move);
     }
+
+    private void StepAutosave(int d) =>
+        _s.Settings = _s.Settings with { AutosaveMinutes = Autosave.StepMinutes(_s.Settings.AutosaveMinutes, d) };
 
     private void ToggleCameraCue() => _s.Settings = _s.Settings with { CameraCueOnNewObjective = !_s.Settings.CameraCueOnNewObjective };
 

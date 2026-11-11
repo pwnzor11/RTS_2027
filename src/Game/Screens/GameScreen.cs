@@ -242,12 +242,14 @@ public sealed class GameScreen : IScreen
             mission._mission = new MissionOverlay(game.Host, Rts.Game.Ui.Objectives.ObjectiveGuidance.BriefingOf(game));
             mission.EndOnMission(game);
             mission._gameOverOverride = campaign?.GameOver;
+            mission._lastAutosaveTick = loaded.Header.Tick;   // D-205
             return mission;
         }
 
         SkirmishSettings settings = loaded.Header.Skirmish ?? SkirmishSettings.Default;
         var screen = new GameScreen(services, sim, settings, () => CreateSkirmish(services, settings), skirmishMode: true);
         screen.IsGameOver = () => sim.Sim.GameOver;
+        screen._lastAutosaveTick = loaded.Header.Tick;   // D-205: a loaded game waits a full interval for its first autosave
         return screen;
     }
 
@@ -426,6 +428,8 @@ public sealed class GameScreen : IScreen
         }
 
         if (input.ConsumePressed(GameAction.DecorToggle)) Rts.Game.Render.DecorSettings.Enabled = !Rts.Game.Render.DecorSettings.Enabled;   // M12-03
+        HandleSaveKeys(input, typing || chatTyping);   // D-205: F5 quicksave, F9 quickload
+        TickAutosave();                                // D-205
         HandleCameraKeys(input);
         HandleSelectionKeys(input);   // M11-10c: select-all-army and the control groups
 
@@ -529,6 +533,7 @@ public sealed class GameScreen : IScreen
         _mission?.Guidance.DrawWorld(sb, _s.Pixel, _camera, MapViewport().Bounds, _s.UiScale);   // M11-05
         DrawHud(sb, snapshot);
         _card?.Draw(sb, _s.Pixel, _mouse, _orders is { AttackMoveArmed: true });   // M11-04
+        DrawToast(sb);   // D-205
         _chat.Draw(sb, _s.Pixel, _s.UiScale, new Point(8, _s.Viewport.Height - Hud.HeightOf(1, _s.UiScale) - 12), _s.Viewport.Width - 16);
         _sidebar?.Draw(sb, _s.Pixel, snapshot);
         if (_mission is not null && _sidebar is not null) _mission.Guidance.DrawMinimap(sb, _s.Pixel, _sidebar.Layout.Minimap, snapshot.MapWidth, snapshot.MapHeight);   // M11-05
@@ -621,7 +626,85 @@ public sealed class GameScreen : IScreen
 
     // What Save game writes to: only a skirmish or mission (the sandbox has no save header).
     private GameSaveTarget? SaveTarget() =>
-        _sim is { SaveTemplate: { } template } ? new GameSaveTarget(new SaveCatalog(SaveCatalog.DefaultRoot), template, _sim.Host, _s.RulesDir) : null;
+        _sim is { SaveTemplate: { } template } ? new GameSaveTarget(new SaveCatalog(_s.SaveRoot ?? SaveCatalog.DefaultRoot), template, _sim.Host, _s.RulesDir) : null;
+
+    // ---- D-205 (S18 GS-06): quicksave / quickload keys, single-player autosave, and the one-line toast they report with ----
+    private readonly GameToast _toast = new();
+    private int _lastAutosaveTick = -1;   // -1 = none yet: the first update of a new match takes the start autosave
+
+    private void HandleSaveKeys(InputFrame input, bool typing)
+    {
+        if (_spectatorMode || typing || _sim is null || SaveTarget() is not { } target) return;
+        if (input.ConsumePressed(GameAction.QuickSave))
+        {
+            string? error = target.Save(SaveSlots.Quick);
+            _toast.Show(error is null ? UiText.Get(UiText.Quicksaved) : UiText.Format(UiText.QuicksaveFailed, "reason", error), _nowMs);
+        }
+
+        if (input.ConsumePressed(GameAction.QuickLoad)) AskQuickLoad(target);
+    }
+
+    // The quicksave slot exists and reads: ask first (a stray key must not lose a mission), else say there is none.
+    private void AskQuickLoad(GameSaveTarget target)
+    {
+        SaveEntry? entry = target.Existing().FirstOrDefault(e => e.Name == SaveSlots.Quick);
+        if (entry is not { Readable: true })
+        {
+            _toast.Show(UiText.Format(UiText.NoQuicksave, "key", KeyNames.Of(GameKeys.Active.Get(GameAction.QuickSave))), _nowMs);
+            return;
+        }
+
+        var rows = new List<ListRow> { new(UiText.Get(UiText.QuickloadYes), entry.Summary, () => QuickLoad(entry)) };
+        _s.Screens.Push(new ListScreen(_s, UiText.Get(UiText.QuickloadTitle), rows, "", UiText.Get(UiText.QuickloadHint)));
+    }
+
+    // Reads the save first (a damaged one gives a notice and the game goes on), then swaps this game for the loaded one.
+    private void QuickLoad(SaveEntry entry)
+    {
+        LoadedGame loaded;
+        try { loaded = GameLoader.Load(entry.Path, _s.RulesDir); }
+        catch (Exception e) when (ScreenGuard.IsDataError(e))
+        {
+            _s.Screens.Push(new NoticeScreen(_s, "Cannot load", ScreenGuard.Describe(e)));
+            return;
+        }
+
+        _s.Screens.Post(() =>
+        {
+            _s.Screens.Pop();   // the confirmation list
+            _s.Screens.Pop();   // this game (it saves its replay on exit, before the new one starts its own)
+            try { _s.Screens.Push(CreateFromSave(_s, loaded)); }
+            catch (Exception e) when (ScreenGuard.IsDataError(e))
+            {
+                if (_s.Screens.Count == 0) _s.Screens.Push(new MainMenuScreen(_s));
+                _s.Screens.Push(new NoticeScreen(_s, "Cannot load", ScreenGuard.Describe(e)));
+            }
+        });
+    }
+
+    // One autosave when a match starts and one per N minutes of play (the sim tick, so a paused game does not save), into 3 rotating slots.
+    private void TickAutosave()
+    {
+        if (_spectatorMode || _gameOverShown || _sim is null || SaveTarget() is not { } target) return;
+        int tick = _sim.Sim.Tick;
+        if (!Autosave.Due(tick, _lastAutosaveTick, Autosave.IntervalTicks(_s.Settings.AutosaveMinutes))) return;
+        _lastAutosaveTick = tick;
+        string? error = target.Save(Autosave.NextSlot(target.Existing()));
+        if (error is not null) _toast.Show(UiText.Format(UiText.AutosaveFailed, "reason", error), _nowMs);
+    }
+
+    // The toast sits at the top centre of the map view, under the objective banner space.
+    private void DrawToast(SpriteBatch sb)
+    {
+        if (_toast.Current(_nowMs) is not { } text) return;
+        UiUnit unit = _s.UiScale;
+        int w = BitmapFont.Measure(text, unit) + 8 * unit;
+        int h = BitmapFont.LineHeight(unit, Rts.Game.Ui.Fonts.FontWeight.Regular) + 4 * unit;
+        Viewport map = MapViewport();
+        var box = new Rectangle((map.Width - w) / 2, 6 * unit, w, h);
+        sb.Draw(_s.Pixel, box, new Color(0, 0, 0, 190));
+        BitmapFont.Draw(sb, _s.Pixel, text, new Vector2(box.X + 4 * unit, box.Y + 2 * unit), Color.White, unit);
+    }
 
     private void HandleMouse(InputFrame input)
     {
