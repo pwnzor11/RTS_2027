@@ -146,7 +146,7 @@ public class PathServiceTests
         CellCoord end = p[^1];
         Assert.Equal(6, end.X); // closest reachable by Chebyshev is column 6 (distance 2)
         Assert.Equal(2, Math.Max(Math.Abs(end.X - 8), Math.Abs(end.Y - 8)));
-        Assert.Equal(new CellCoord(6, 8), end); // M13-05: tie by octile distance to the start among distance-2 cells
+        Assert.Equal(new CellCoord(6, 8), end); // M13-05: straight-line nearest (6,8), (10,8), (8,6), (8,10); tie: nearest the start
         Cost(m, t, Locomotion.Foot, new(1, 8), p);
     }
 
@@ -161,17 +161,19 @@ public class PathServiceTests
         var s = new PathService(m, t);
         var (st, p) = Solve(s, new(2, 2), new(59, 59));
         Assert.Equal(PathStatus.Partial, st);
-        Assert.Equal(new CellCoord(57, 57), p[^1]);   // the cell next to the footprint nearest the attacker
+        CellCoord e = p[^1];                            // a cell sharing an edge with the footprint, mid-side (straight-line nearest)
+        Assert.Equal(4, (e.X - 59) * (e.X - 59) + (e.Y - 59) * (e.Y - 59));
+        Assert.True(e == new CellCoord(57, 59) || e == new CellCoord(59, 57), $"{e}");
         Assert.InRange(s.LastProcessCost, 1, 400);    // was about 4 000 (the whole map)
         (st, p) = Solve(s, new(30, 30), new(5, 43));
         Assert.Equal(PathStatus.Partial, st);
-        Assert.Equal(new CellCoord(9, 39), p[^1]);    // outside the ring (Chebyshev 4 from the goal), nearest the start
+        Assert.Equal(new CellCoord(9, 43), p[^1]);    // outside the ring, 4 straight cells from the goal, the one nearest the start
         Assert.InRange(s.LastProcessCost, 1, 400);
-        Assert.Equal(PathStatus.NotFound, Solve(s, new(57, 57), new(59, 59)).Item1);   // already as close as it gets
+        Assert.Equal(PathStatus.NotFound, Solve(s, e, new(59, 59)).Item1);   // already as close as it gets
         Assert.Equal(0, s.LastProcessCost);
         (st, p) = Solve(s, new(5, 43), new(30, 30));  // from inside the ring out: nearest cell inside the ring
         Assert.Equal(PathStatus.Partial, st);
-        Assert.Equal(new CellCoord(7, 43), p[^1]);    // column 7 is all Chebyshev 23 from the goal: nearest the start wins
+        Assert.Equal(new CellCoord(7, 41), p[^1]);    // the inside cell nearest the goal in a straight line
     }
 
     [Fact]

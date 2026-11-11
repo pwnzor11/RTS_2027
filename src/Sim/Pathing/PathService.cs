@@ -21,8 +21,8 @@ namespace Rts.Sim.Pathing;
 /// never checked. Paths exclude the start and include the end; every cell is returned.</para>
 /// <para>Blocked or enclosed goal (M13-05, D-205): reachability comes from region labels (4-connected flood over <c>Factor</c> for the
 /// request's locomotion and passer; a pure function of map state, cached per map version, not saved). When the goal is not in a region
-/// the start can enter, it is retargeted before searching to the nearest cell (Chebyshev ring around the goal) in such a region (tie:
-/// octile distance to the start, then <see cref="LineKey"/>, then lowest cell index); the answer is Partial toward that cell, or NotFound
+/// the start can enter, it is retargeted before searching to the nearest cell (squared straight-line distance to the goal) in such a
+/// region (tie: octile distance to the start, then <see cref="LineKey"/>, then lowest cell index); the answer is Partial toward that cell, or NotFound
 /// when that cell is the start. So A* never expands a whole region looking for a goal it cannot reach.</para>
 /// <para>Group search (M13-05, S18 SP-13): a backward A* from the goal toward the starts in the goal's region, guided by the octile
 /// distance to the bounding box of those starts (consistent, so every settled cell has its exact distance). It ends when all of them
@@ -357,7 +357,7 @@ public sealed class PathService : ISimStatePart
     }
 
     /// <summary>
-    /// M13-05: the goal itself when the start can reach it; otherwise the nearest cell (Chebyshev ring around the goal) in a region the
+    /// M13-05: the goal itself when the start can reach it; otherwise the nearest cell (squared distance to the goal) in a region the
     /// start can enter (tie: octile distance to the start, then <see cref="LineKey"/>, then lowest cell index). The start's regions are
     /// its own, or, when the start cell is blocked (never checked), those of the neighbours a first step can enter. With no such
     /// region the goal is returned unchanged (the search then ends at once).
@@ -390,10 +390,14 @@ public sealed class PathService : ISimStatePart
         }
         if (Reach(lab[to.Y * w + to.X])) return to;
 
+        // Nearest by squared straight-line distance to the goal, so a cell sharing an edge with a blocked goal cell beats a diagonal one
+        // (an attacker next to the edge of a footprint is in range; one at its corner may not be). Rings are scanned until no farther
+        // ring can hold a nearer cell (every cell of ring r is at least r*r away).
         int maxR = Math.Max(_w, _h);
+        int best = -1; long bestE = 0, bestD = 0, bestK = 0;
         for (int r = 1; r <= maxR; r++)
         {
-            int best = -1; long bestD = 0, bestK = 0;
+            if (best >= 0 && (long)r * r > bestE) break;
             for (int y = to.Y - r; y <= to.Y + r; y++)
             {
                 if (y < 0 || y >= _h) continue;
@@ -404,13 +408,15 @@ public sealed class PathService : ISimStatePart
                     if (x < 0 || x >= _w) continue;
                     int c = y * w + x;
                     if (!Reach(lab[c])) continue;
+                    long ee = (long)(x - to.X) * (x - to.X) + (long)(y - to.Y) * (y - to.Y);
                     long dd = Heur(x, y, from, 1);
                     long kk = LineKey(x, y, from.X, from.Y, to.X, to.Y);
-                    if (best < 0 || dd < bestD || (dd == bestD && (kk < bestK || (kk == bestK && c < best)))) { best = c; bestD = dd; bestK = kk; }
+                    if (best < 0 || ee < bestE || (ee == bestE && (dd < bestD || (dd == bestD && (kk < bestK || (kk == bestK && c < best))))))
+                    { best = c; bestE = ee; bestD = dd; bestK = kk; }
                 }
             }
-            if (best >= 0) return new CellCoord(best % w, best / w);
         }
+        if (best >= 0) return new CellCoord(best % w, best / w);
         return to;
     }
 
