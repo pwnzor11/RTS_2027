@@ -21,6 +21,9 @@ public static class CameraScroll
     public static Rectangle ClientRect(int clientWidth, int clientHeight, int fallbackWidth, int fallbackHeight) =>
         clientWidth > 0 && clientHeight > 0 ? new Rectangle(0, 0, clientWidth, clientHeight) : new Rectangle(0, 0, fallbackWidth, fallbackHeight);
 
+    /// <summary>Width in window pixels of the edge band while the cursor is over the sidebar (D-205, S18 GAMEUI-09): only the outermost pixels of the screen scroll there.</summary>
+    public const int SidebarEdgeBandPx = 3;
+
     /// <summary>Speed multiplier while Shift is held.</summary>
     public const int ShiftMultiplier = 2;
 
@@ -36,9 +39,13 @@ public static class CameraScroll
     /// <param name="windowFocused">True while the game window has focus.</param>
     /// <param name="busy">True while a selection box, minimap drag, middle-drag or text entry is in progress.</param>
     /// <param name="band">Band width in pixels.</param>
-    public static Vector2 EdgeDirection(Point mouse, Rectangle window, bool enabled, bool windowFocused, bool busy, int band = EdgeBandPx)
+    /// <param name="sidebar">The sidebar's rectangle in the same pixels as <paramref name="mouse"/>, or null. While the cursor is over it the band is only <paramref name="sidebarBand"/> wide, so reaching for a build button at the screen edge does not move the view.</param>
+    /// <param name="sidebarBand">Band width in pixels over the sidebar.</param>
+    public static Vector2 EdgeDirection(Point mouse, Rectangle window, bool enabled, bool windowFocused, bool busy, int band = EdgeBandPx,
+        Rectangle? sidebar = null, int sidebarBand = SidebarEdgeBandPx)
     {
         if (!enabled || !windowFocused || busy || !window.Contains(mouse)) return Vector2.Zero;
+        if (sidebar is { } panel && panel.Contains(mouse)) band = Math.Min(band, sidebarBand);
         float x = 0f, y = 0f;
         if (mouse.X < window.Left + band) x = -1f;
         else if (mouse.X >= window.Right - band) x = 1f;

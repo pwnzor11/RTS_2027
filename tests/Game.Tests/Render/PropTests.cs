@@ -189,11 +189,13 @@ public sealed class PropTests
     }
 
     [Fact]
-    public void DecorToggleIsTheLastActionAFreeKeyInTheSystemGroup()
+    public void DecorToggleIsAFreeKeyInTheSystemGroupAndOnlyTheQuickKeysFollowIt()
     {
         GameAction[] all = Enum.GetValues<GameAction>();
-        Assert.Equal(GameAction.DecorToggle, all[^1]);
-        Assert.Equal(GameAction.LastAlert, all[^2]);
+        Assert.Equal(GameAction.QuickLoad, all[^1]);   // D-205 appended QuickSave and QuickLoad
+        Assert.Equal(GameAction.QuickSave, all[^2]);
+        Assert.Equal(GameAction.DecorToggle, all[^3]);
+        Assert.Equal(GameAction.LastAlert, all[^4]);
         ActionInfo info = GameKeys.InfoOf(GameAction.DecorToggle);
         Assert.Equal(GameKeys.System, info.Group);
         Assert.Equal("decor_toggle", info.Id);

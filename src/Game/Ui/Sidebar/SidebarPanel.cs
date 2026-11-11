@@ -268,7 +268,7 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
                 _ghostCells[dy * w + dx] = PlacementCheck.CellAt(map, _source.Rules.Terrain, wantWater, c, UnitOnCell(c));   // S18 UXG-06
             }
 
-        _ghostReason = _ghostValid ? null : PlacementCheck.Reason(result, _ghostValid, PlacementCheck.Worst(_ghostCells));
+        _ghostReason = _ghostValid ? null : PlacementCheck.Reason(result, _ghostValid, PlacementCheck.Worst(_ghostCells), bt.WaterBuilding && !mask);   // D-205: "Must touch the shore"
     }
 
     private bool UnitOnCell(CellCoord c)

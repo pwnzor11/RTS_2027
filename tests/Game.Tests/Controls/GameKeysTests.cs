@@ -88,11 +88,11 @@ public sealed class GameKeysTests
     }
 
     [Fact]
-    public void Ranges_overlay_is_on_F10_and_bookmarks_on_F5_to_F8()
+    public void Ranges_overlay_is_on_F10_and_bookmarks_on_F6_to_F8_and_F12()
     {
         Assert.Equal(Keys.F10, GameKeys.InfoOf(GameAction.DebugRanges).Default);
         Assert.Equal(Keys.Home, GameKeys.InfoOf(GameAction.CentreBase).Default);
-        Assert.Equal(new[] { Keys.F5, Keys.F6, Keys.F7, Keys.F8 },
+        Assert.Equal(new[] { Keys.F6, Keys.F7, Keys.F8, Keys.F12 },
             new[] { GameAction.Bookmark1, GameAction.Bookmark2, GameAction.Bookmark3, GameAction.Bookmark4 }.Select(a => GameKeys.InfoOf(a).Default));
     }
 

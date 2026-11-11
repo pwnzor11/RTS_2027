@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
 using Rts.Data;
+using Rts.Game.Sandbox;
 using Rts.Game.Screens;
 using Rts.Sim.Core;
 using Rts.Sim.Rules;
@@ -13,8 +14,8 @@ namespace Rts.Game.Saves;
 /// </summary>
 public sealed record GameSaveHeader
 {
-    /// <summary>The header version this build writes and reads. Bump it when the layout changes. Version 1 (two-player skirmish settings) is still read; M4-11 wrote version 2 (map choice, 2 to 4 slots); M3-21 wrote version 3 (appends each AI's saved memory after its slot record; versions 1 and 2 load with the AI starting fresh); M5-09 wrote version 4 (appends one commander byte, 0 or 1, per skirmish slot at the end; versions 1 to 3 load with no commander); M7-14 wrote version 5 (appends one ocean-edge flags byte after the commander bytes when the skirmish map is generated; versions 1 to 4 load with no ocean); M12-05 wrote version 6 (appends one generator-layout byte after the ocean-edge byte when the skirmish map is generated; versions 1 to 5 load as layout 0, the pre-M12 generator, which this build cannot rebuild, so <see cref="GameLoader"/> refuses them with a friendly message).</summary>
-    public const int CurrentVersion = 6;
+    /// <summary>The header version this build writes and reads. Bump it when the layout changes. Version 1 (two-player skirmish settings) is still read; M4-11 wrote version 2 (map choice, 2 to 4 slots); M3-21 wrote version 3 (appends each AI's saved memory after its slot record; versions 1 and 2 load with the AI starting fresh); M5-09 wrote version 4 (appends one commander byte, 0 or 1, per skirmish slot at the end; versions 1 to 3 load with no commander); M7-14 wrote version 5 (appends one ocean-edge flags byte after the commander bytes when the skirmish map is generated; versions 1 to 4 load with no ocean); M12-05 wrote version 6 (appends one generator-layout byte after the ocean-edge byte when the skirmish map is generated; versions 1 to 5 load as layout 0, the pre-M12 generator, which this build cannot rebuild, so <see cref="GameLoader"/> refuses them with a friendly message); D-205 wrote version 7 (appends the nine control groups at the very end; versions 1 to 6 load with no groups).</summary>
+    public const int CurrentVersion = 7;
 
     private const int MaxAiStateBytes = 1 << 22;
 
@@ -56,6 +57,9 @@ public sealed record GameSaveHeader
 
     /// <summary>Next command sequence number of each player that has issued commands (index = player).</summary>
     public IReadOnlyList<ushort> Sequences { get; init; } = Array.Empty<ushort>();
+
+    /// <summary>The nine control groups (index 0 = group 1) as the player had set them (D-205). Empty for a save older than header version 7 and for the sandbox.</summary>
+    public IReadOnlyList<IReadOnlyList<UnitKey>> ControlGroups { get; init; } = Array.Empty<IReadOnlyList<UnitKey>>();
 
     /// <summary>Build version that wrote the save.</summary>
     public string Build { get; init; } = "";
@@ -123,6 +127,42 @@ public sealed record GameSaveHeader
             foreach (SkirmishSlot slot in sk.Slots) w.Write((byte)(slot.Commander ? 1 : 0));
         if (Version >= 5 && Skirmish?.Map.Generated is { } gen) w.Write((byte)gen.OceanEdges);   // M7-14
         if (Version >= 6 && Skirmish?.Map.Generated is { } gen6) w.Write((byte)gen6.Layout);   // M12-05
+        if (Version >= 7) WriteGroups(w);   // D-205
+    }
+
+    private void WriteGroups(BinaryWriter w)
+    {
+        w.Write((byte)ControlGroups.Count);
+        foreach (IReadOnlyList<UnitKey> group in ControlGroups)
+        {
+            w.Write((ushort)group.Count);
+            foreach (UnitKey key in group)
+            {
+                w.Write((byte)key.Kind);
+                w.Write(key.Id.Index);
+                w.Write(key.Id.Generation);
+            }
+        }
+    }
+
+    private static IReadOnlyList<IReadOnlyList<UnitKey>> ReadGroups(BinaryReader r)
+    {
+        int count = r.ReadByte();
+        if (count > Rts.Game.Controls.ControlGroups.Count) throw new InvalidDataException($"bad control group count {count}");
+        var groups = new List<IReadOnlyList<UnitKey>>(count);
+        for (int g = 0; g < count; g++)
+        {
+            int members = r.ReadUInt16();
+            var list = new List<UnitKey>(members);
+            for (int i = 0; i < members; i++)
+            {
+                var kind = (ActorKind)r.ReadByte();
+                if (kind is not (ActorKind.Vehicle or ActorKind.Infantry)) throw new InvalidDataException($"bad control group unit kind {(int)kind}");
+                list.Add(new UnitKey(kind, new EntityId(r.ReadUInt16(), r.ReadUInt16())));
+            }
+            groups.Add(list);
+        }
+        return groups;
     }
 
     /// <summary>Reads a header body written by <see cref="Write"/> for header <paramref name="version"/>.</summary>
@@ -197,10 +237,12 @@ public sealed record GameSaveHeader
             byte layout = r.ReadByte();
             skirmish = new SkirmishSettings(new MapChoice(null, layered with { Layout = layout }), skirmish.Slots, skirmish.SimSeed);
         }
+        IReadOnlyList<IReadOnlyList<UnitKey>> controlGroups = version >= 7 ? ReadGroups(r) : Array.Empty<IReadOnlyList<UnitKey>>();   // D-205
         return new GameSaveHeader
         {
             Version = version, Mode = mode, MapId = mapId, MapName = mapName, RulesHash = rulesHash, LocalPlayer = local, Tick = tick,
             MissionId = missionId, ScriptHash = scriptHash, Build = build, Skirmish = skirmish, Ai = ai, Pending = pending, Sequences = sequences,
+            ControlGroups = controlGroups,
         };
     }
 

@@ -48,10 +48,10 @@ public static class GameKeys
         new(GameAction.ScrollUp, "scroll_up", Camera, "Scroll the view up", Keys.Up),
         new(GameAction.ScrollDown, "scroll_down", Camera, "Scroll the view down", Keys.Down),
         new(GameAction.CentreBase, "centre_base", Camera, "Centre the view on your base", Keys.Home),
-        new(GameAction.Bookmark1, "bookmark_1", Camera, "Camera bookmark 1 (Ctrl + key stores it)", Keys.F5),
-        new(GameAction.Bookmark2, "bookmark_2", Camera, "Camera bookmark 2 (Ctrl + key stores it)", Keys.F6),
-        new(GameAction.Bookmark3, "bookmark_3", Camera, "Camera bookmark 3 (Ctrl + key stores it)", Keys.F7),
-        new(GameAction.Bookmark4, "bookmark_4", Camera, "Camera bookmark 4 (Ctrl + key stores it)", Keys.F8),
+        new(GameAction.Bookmark1, "bookmark_1", Camera, "Camera bookmark 1 (Ctrl + key stores it)", Keys.F6),
+        new(GameAction.Bookmark2, "bookmark_2", Camera, "Camera bookmark 2 (Ctrl + key stores it)", Keys.F7),
+        new(GameAction.Bookmark3, "bookmark_3", Camera, "Camera bookmark 3 (Ctrl + key stores it)", Keys.F8),
+        new(GameAction.Bookmark4, "bookmark_4", Camera, "Camera bookmark 4 (Ctrl + key stores it)", Keys.F12),
         new(GameAction.AttackMove, "attack_move", Orders, "Attack-move: press, then click the ground", Keys.A),
         new(GameAction.Stop, "stop", Orders, "Stop", Keys.S),
         new(GameAction.Guard, "guard", Orders, "Guard here", Keys.G),
@@ -71,7 +71,7 @@ public static class GameKeys
         new(GameAction.DebugPaths, "debug_paths", System, "Sandbox: paths overlay", Keys.F4),
         new(GameAction.DebugRanges, "debug_ranges", System, "Sandbox: weapon range overlay", Keys.F10),
         new(GameAction.DebugStep, "debug_step", System, "Sandbox: step the simulation once", Keys.OemPeriod),
-        new(GameAction.DebugSpectator, "debug_spectator", System, "Sandbox: start an AI-vs-AI spectator game", Keys.F9),
+        new(GameAction.DebugSpectator, "debug_spectator", System, "Sandbox: start an AI-vs-AI spectator game", Keys.P),
         new(GameAction.SpecView, "spec_view", System, "Spectator: next view", Keys.V, KeyContext.Spectator),
         new(GameAction.SpecSpeed1, "spec_speed_1", System, "Spectator: speed 1x", Keys.D1, KeyContext.Spectator),
         new(GameAction.SpecSpeed2, "spec_speed_2", System, "Spectator: speed 2x", Keys.D2, KeyContext.Spectator),
@@ -93,6 +93,8 @@ public static class GameKeys
         new(GameAction.Group9, "group_9", Selection, "Control group 9 (Ctrl + key sets, Shift + key adds, twice centres)", Keys.D9),
         new(GameAction.LastAlert, "last_alert", Camera, "Jump to the last alert (again: the one before)", Keys.End),
         new(GameAction.DecorToggle, "decor_toggle", System, "Show or hide the map decor (decals, boulders, rubble)", Keys.H, KeyContext.Both),
+        new(GameAction.QuickSave, "quick_save", System, "Quicksave (skirmish and missions)", Keys.F5),
+        new(GameAction.QuickLoad, "quick_load", System, "Quickload (asks first)", Keys.F9),
     };
 
     /// <summary>The Controls page lines, grouped in <see cref="Groups"/> order: rebindable actions and fixed inputs shown for reference.</summary>
@@ -114,7 +116,7 @@ public static class GameKeys
     public static IEnumerable<ControlRow> InGroup(string group) => Rows.Where(r => r.Group == group);
 
     /// <summary>
-    /// True when the sandbox debug keys (F2 fog viewer, F3/F4/F10 overlays, '.' step, F9) may act: only in the sandbox and spectator games,
+    /// True when the sandbox debug keys (F2 fog viewer, F3/F4/F10 overlays, '.' step, P) may act: only in the sandbox and spectator games,
     /// never in a skirmish or a campaign mission (K2).
     /// </summary>
     /// <param name="skirmishOrMission">True for a skirmish, a mission or a loaded save of either.</param>
@@ -146,7 +148,7 @@ public static class GameKeys
             A(GameAction.TabStructures), A(GameAction.TabDefences), A(GameAction.TabInfantry), A(GameAction.TabVehicles),
             A(GameAction.TabUpgrades), A(GameAction.TabAircraft),
             F(System, "Esc", "Leave a mode, then open the pause menu"),
-            A(GameAction.Pause),
+            A(GameAction.Pause), A(GameAction.QuickSave), A(GameAction.QuickLoad),
             F(System, "F1 or ?", "This list (F1 opens the console in the sandbox)"),
             A(GameAction.Talk),
             A(GameAction.DebugFog), A(GameAction.DebugOccupancy), A(GameAction.DebugPaths), A(GameAction.DebugRanges),

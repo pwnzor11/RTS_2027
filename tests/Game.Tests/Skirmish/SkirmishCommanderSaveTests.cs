@@ -45,9 +45,9 @@ public sealed class SkirmishCommanderSaveTests
     }
 
     [Fact]
-    public void Current_header_version_is_six()
+    public void Current_header_version_is_seven()
     {
-        Assert.Equal(6, GameSaveHeader.CurrentVersion);   // M7-14 added the ocean byte, M12-05 the generator layout byte; version 4 is still read
+        Assert.Equal(7, GameSaveHeader.CurrentVersion);   // M7-14 added the ocean byte, M12-05 the generator layout byte, D-205 the control groups; version 4 is still read
     }
 
     [Fact]
@@ -55,7 +55,7 @@ public sealed class SkirmishCommanderSaveTests
     {
         SkirmishSettings s = FourSlot();
         GameSaveHeader back = Read(Bytes(WithSettings(s)), GameSaveHeader.CurrentVersion);
-        Assert.Equal(6, back.Version);
+        Assert.Equal(7, back.Version);
         Assert.Equal(s, back.Skirmish);
         Assert.False(back.Skirmish!.Slots[0].Commander);
         Assert.True(back.Skirmish.Slots[1].Commander);

@@ -129,7 +129,7 @@ public sealed class SelectionToolkitTests
         GameAction[] all = Enum.GetValues<GameAction>();
         int at = Array.IndexOf(all, GameAction.ObjList);
         Assert.Equal(new[] { GameAction.SelectAll, GameAction.Group1, GameAction.Group2, GameAction.Group3, GameAction.Group4, GameAction.Group5,
-            GameAction.Group6, GameAction.Group7, GameAction.Group8, GameAction.Group9, GameAction.LastAlert, GameAction.DecorToggle }, all.Skip(at + 1).ToArray());   // DecorToggle: M12-03
+            GameAction.Group6, GameAction.Group7, GameAction.Group8, GameAction.Group9, GameAction.LastAlert, GameAction.DecorToggle, GameAction.QuickSave, GameAction.QuickLoad }, all.Skip(at + 1).ToArray());   // DecorToggle: M12-03; QuickSave, QuickLoad: D-205
         Assert.Equal(Microsoft.Xna.Framework.Input.Keys.D5, GameKeys.InfoOf(GameAction.Group5).Default);
         Assert.All(all.Skip(at + 1).Take(10), a => Assert.Equal(GameKeys.Selection, GameKeys.InfoOf(a).Group));
     }
