@@ -136,14 +136,17 @@ public class TierCapabilityTests(ITestOutputHelper log)
         int Scatters(int tier)
         {
             TierRig rig = HomeGuardRig(f, tier, 4);
-            rig.Run(900);   // the soldiers have walked to the rally cell and stand together
+            rig.Run(900);
+            log.WriteLine($"{f} t{tier}: garrisoned peak {rig.Ai.PeakGarrisoned}");   // the soldiers have walked to the rally cell and stand together
             int hurt = 0;
             for (int i = 1; i < rig.Sim.Infantry.Capacity; i++)
-                if (rig.Sim.Infantry.Slots.IsIndexAlive(i) && rig.Sim.Infantry.Player[i] == 0 && hurt < 4)
+                if (rig.Sim.Infantry.Slots.IsIndexAlive(i) && rig.Sim.Infantry.Player[i] == 0 && hurt < 4
+                    && !ActorLayers.IsCarried(rig.Sim.LayerOf(ActorKind.Infantry, i)))   // S19: a garrisoned soldier is not in the open (D-205)
                 {
                     rig.Sim.Infantry.Health[i] -= Math.Max(1, rig.World.Sim.Infantry[rig.Sim.Infantry.TypeIndex[i]].MaxHealth / 5);
                     hurt++;
                 }
+            Assert.True(hurt >= 2, $"at least two soldiers stand in the open to be hit (tier {tier}: {hurt})");
             rig.Run(90);
             return rig.Issue(CommandKind.Scatter);
         }
