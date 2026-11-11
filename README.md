@@ -15,7 +15,8 @@ RTS_2027 is not affiliated with or endorsed by Electronic Arts; no EA code, art 
 > **New session? Start with [`docs/00_START_HERE.md`](docs/00_START_HERE.md).**
 > **Setup and run: see [Run it](#run-it) below.**
 > **The game booklet: [`docs/field_manual/RTS_2027_Field_Manual_pilot.pdf`](docs/field_manual/RTS_2027_Field_Manual_pilot.pdf)**
-> (the pilot pages of the 1990s-style game booklet; the full manual comes with M14).
+> (the pilot pages of the 1990s-style game booklet; the full manual comes with M14). It names the Authority campaign
+> missions with a one-line premise each, but no plot.
 
 ---
 
@@ -167,7 +168,7 @@ Selling returns half the cost, and repairs cost credits.
 ### Tech tiers
 
 Every faction has three tiers. Tier 2 and tier 3 are unlocked by owning a gate building (the Authority's Engineering
-Works and Signals Headquarters, the Directorate's Isotope Works and Committee Hall, the Left Behind's Lookout Mast and
+Works and Signals Headquarters, the Directorate's Isotope Works and Committee Chamber, the Left Behind's Lookout Mast and
 Rotor Pad, the Expedition's Plotting Room and Core Hall). The sidebar tells you what a locked item is missing.
 
 ### Upgrades
@@ -333,7 +334,7 @@ Upgrades: Blackout Canisters, Fervour, Hot Cores, Lead Lining, Mass Conscription
 | Gleaner | 600 | 1 | Ash harvester |
 | Salvage Hauler | 500 | 1 | Wreck collector |
 | Dune Buggy | 300 | 1 | Fast scout |
-| Harpoon Wagon | 700 | 2 | Tethering anti-armour |
+| Harpoon Wagon | 700 | 2 | Anti-armour (the tether comes later) |
 | Organ | 800 | 2 | Rocket-rack artillery |
 | Tow Truck | 600 | 2 | Transport and rig-tow |
 | Dust Sail | 600 | 2 | Wind-rigged screen |
@@ -370,7 +371,7 @@ Upgrades: Scrap Plate, Ash Wraps, Quick Pack, Grapple Hooks, Salvage Rights, Pat
 |---|---|---|---|
 | Marine | 150 | 1 | Amphibious infantry |
 | Pioneer | 200 | 1 | Field engineer |
-| Combat Diver | 250 | 1 | Underwater saboteur |
+| Combat Diver | 250 | 1 | Saboteur (swimming comes later) |
 | Pathfinder | 350 | 2 | Spotter and designator |
 | Ironbound Trooper | 900 | 3 | Powered-suit heavy infantry |
 | Hover Skimmer | 500 | 1 | Amphibious harvester |
@@ -383,9 +384,9 @@ Upgrades: Scrap Plate, Ash Wraps, Quick Pack, Grapple Hooks, Salvage Rights, Pat
 | Patrol Launch | 300 | 1 | Light scout boat |
 | Landing Craft | 500 | 1 | Beachable transport |
 | Supply Tender | 6000 | 1 | Convoy freighter |
-| Destroyer | 900 | 2 | Escort warship |
+| Destroyer | 900 | 2 | Gun warship that detects submarines |
 | Missile Submarine | 1100 | 2 | Silent striker |
-| Minelayer | 500 | 2 | Sea mine layer |
+| Minelayer | 500 | 2 | Unarmed sea hull (mines come later) |
 | Cruiser | 1700 | 3 | Bombardment ship |
 | Carrier | 2200 | 3 | Floating airbase |
 | Command Ship | 6000 | 1 | Expedition flagship |
@@ -415,7 +416,7 @@ Upgrades: Scrap Plate, Ash Wraps, Quick Pack, Grapple Hooks, Salvage Rights, Pat
 | Sonar Picket | Submarine detection post |
 | SAM Mount | Surface-to-air battery |
 | Core Hall | Valve-computer research hall (tier 3 gate) |
-| Drydock | Heavy ship repair |
+| Drydock | Unlocks the Cruiser, Carrier and Command Ship |
 | Salvo Array | Fleet missile barrage (superweapon) |
 
 Upgrades: Sonar Nets, Hardened Hulls, Vacuum Cores, Composite Armour, Guided Shells, Fast Charging, Deep Survey, Veteran Drill.
@@ -492,7 +493,7 @@ structure with an illustration and its stats. The first nine pages are built as 
 
 | Cover | Inside page |
 |---|---|
-| ![Field Manual cover](docs/field_manual/img/page1.png) | ![Field Manual inside page](docs/field_manual/img/page_interior.png) |
+| ![Field Manual cover](docs/field_manual/img/page01_cover.png) | ![Field Manual inside page](docs/field_manual/img/page04_vehicles.png) |
 
 The full manual (about 108 pages, with a chapter for each faction) is milestone M14. The generator scripts are in
 `tools/booklet`, and the plan is [`docs/design/19_field_manual.md`](docs/design/19_field_manual.md).
