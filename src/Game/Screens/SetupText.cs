@@ -11,6 +11,12 @@ public static class SetupText
     /// <summary>Shown after a Commander slot's row when no provider or key is set.</summary>
     public const string NoKeyHint = "(no key - plays as standard AI)";
 
+    /// <summary>Title of the notice shown when an LLM commander is picked without a key.</summary>
+    public const string NoKeyNoticeTitle = "LLM commander";
+
+    /// <summary>Text of the notice shown when an LLM commander is picked without a key.</summary>
+    public const string NoKeyNotice = "No LLM key is set, so this slot will play as the standard AI. Add a key in Settings to use the commander.";
+
     /// <summary>Marker next to a spectator row's player name.</summary>
     public const string SpectatorTag = "LLM";
 }
