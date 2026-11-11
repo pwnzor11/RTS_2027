@@ -369,14 +369,17 @@ public static class AiCommands
 
         SimRules rules = world!.Rules;
         if (!ParseMapChoice(flags, out MapChoice? tchoice, out error)) return UsageError(error!);
-        MapData map = tchoice is MapChoice tc ? MapGenerator.Generate(tc.Params(size, 2, (ulong)seed)) : MapGenerator.Generate(size, (ulong)seed);
-        if (swap == 1) { var st = new List<CellCoord>(map.StartPositions); st.Reverse(); map = new MapData(map.Name, map.Theater, map.Width, map.Height, map.Template.ToArray(), map.Land.ToArray(), map.HeightLevel.ToArray(), map.Overlay.ToArray(), map.Density.ToArray(), st); }
         Faction tfa = Faction.Authority, tfb = Faction.Authority;
-        if ((flags.TryGetValue("faction-a", out string? tfaArg) && !Enum.TryParse(tfaArg, true, out tfa))
-            || (flags.TryGetValue("faction-b", out string? tfbArg) && !Enum.TryParse(tfbArg, true, out tfb)))
-            return UsageError("--faction-a / --faction-b must be authority or directorate");
+        if ((flags.TryGetValue("faction-a", out string? tfaArg) && !Enum.TryParse(tfaArg.Replace("_", ""), true, out tfa))
+            || (flags.TryGetValue("faction-b", out string? tfbArg) && !Enum.TryParse(tfbArg.Replace("_", ""), true, out tfb)))
+            return UsageError("--faction-a / --faction-b must be authority, directorate, left_behind or expedition");
+        (MapData map, IReadOnlyList<CellCoord>? landing) = BuildMatchMap(tchoice, tfa, tfb, size, seed);
+        if (swap == 1) { var st = new List<CellCoord>(map.StartPositions); st.Reverse(); map = new MapData(map.Name, map.Theater, map.Width, map.Height, map.Template.ToArray(), map.Land.ToArray(), map.HeightLevel.ToArray(), map.Overlay.ToArray(), map.Density.ToArray(), st); }
         var sim = new Simulation(new SimSetup((ulong)seed, map, 2, rules, world.RulesHash)
-        { Factions = tfa == Faction.Authority && tfb == Faction.Authority ? null : [tfa, tfb], NoRebuildDefeat = true });   // M4-17 (D-173)
+        {
+            Factions = tfa == Faction.Authority && tfb == Faction.Authority ? null : [tfa, tfb], NoRebuildDefeat = true,   // M4-17 (D-173)
+            LandingMarkers = landing ?? Array.Empty<CellCoord>(),   // M7-10: public map data for the Expedition AI, as `ai match` passes it
+        });
         SkirmishStart.Apply(sim);
         var driver = new AiDriver((ulong)seed);
         if (!AiRegistry.TryCreate(a!.AiId, a.Profile, out IAiPlayer? aiA) || !AiRegistry.TryCreate(b!.AiId, b.Profile, out IAiPlayer? aiB)) return UsageError("unknown AI");
@@ -739,29 +742,37 @@ public static class AiCommands
             new OverlayKind[n], new byte[n], m.StartPositions);
     }
 
+    /// <summary>
+    /// The map a headless AI game is played on, and its landing markers (null = none). An Expedition side needs sea: north and south
+    /// ocean edges (size class by cells: below 80 small, below 112 medium, else large), and the generator's landing markers go to the
+    /// sim. <c>ai match</c> and <c>ai timeline</c> both build their map here, so a timeline traces the game a match plays (S18 DATA-TOOLS-02).
+    /// </summary>
+    internal static (MapData Map, IReadOnlyList<CellCoord>? Landing) BuildMatchMap(MapChoice? mapChoice, Faction factionA, Faction factionB, int size, int seed)
+    {
+        bool expedition = factionA == Faction.Expedition || factionB == Faction.Expedition;
+        if (mapChoice is MapChoice mc)
+        {
+            // M12-12: biome generator at a chosen layout. Layout 2 has no ocean edges (the zoned generator ignores them), so an Expedition
+            // side plays there without sea lanes; layout 1 keeps the M7-10 north + south ocean for Expedition.
+            var gen = MapGenerator.GenerateWithMeta(mc.Params(size, 2, (ulong)seed, expedition ? OceanEdges.North | OceanEdges.South : OceanEdges.None));   // v5: layout 2 builds its sea behind the mains too
+            return (gen.Map, expedition ? gen.Meta.Landing : null);
+        }
+        if (expedition)
+        {
+            var gen = MapGenerator.GenerateWithMeta(new MapGenParams(Biome.RustBelt, size < 80 ? MapSize.Small : size < 112 ? MapSize.Medium : MapSize.Large, 2, (ulong)seed, null, OceanEdges.North | OceanEdges.South));
+            return (gen.Map, gen.Meta.Landing);
+        }
+        return (MapGenerator.Generate(size, (ulong)seed), null);
+    }
+
     private static MatchTally PlayPair(World w, AiSide a, AiSide b, int seeds, int ticks, int size, string? recordDir, bool verbose, bool flat = false, string startMode = "alt", AiStartMode start = AiStartMode.Economy, int firstSeed = 1, MapChoice? mapChoice = null)
     {
         var tally = new MatchTally();
         if (recordDir is not null) Directory.CreateDirectory(recordDir);
         for (int s = firstSeed; s < firstSeed + seeds; s++)
         {
-            // M7-10: an Expedition side needs sea: ocean north + south edges (size class by cells: below 80 small, below 112 medium, else large)
-            IReadOnlyList<CellCoord>? landing = null;
-            MapData map;
-            if (mapChoice is MapChoice mc)
-            {
-                // M12-12: biome generator at a chosen layout. Layout 2 has no ocean edges (the zoned generator ignores them), so an Expedition
-                // side plays there without sea lanes; layout 1 keeps the M7-10 north + south ocean for Expedition.
-                bool sea = a.Faction == Faction.Expedition || b.Faction == Faction.Expedition;   // v5: layout 2 builds its sea behind the mains too
-                var gen = MapGenerator.GenerateWithMeta(mc.Params(size, 2, (ulong)s, sea ? OceanEdges.North | OceanEdges.South : OceanEdges.None));
-                map = gen.Map; landing = sea ? gen.Meta.Landing : null;
-            }
-            else if (a.Faction == Faction.Expedition || b.Faction == Faction.Expedition)
-            {
-                var gen = MapGenerator.GenerateWithMeta(new MapGenParams(Biome.RustBelt, size < 80 ? MapSize.Small : size < 112 ? MapSize.Medium : MapSize.Large, 2, (ulong)s, null, OceanEdges.North | OceanEdges.South));
-                map = gen.Map; landing = gen.Meta.Landing;
-            }
-            else map = MapGenerator.Generate(size, (ulong)s);
+            // M7-10 / M12-12: the map `ai match` plays on (S18: `ai timeline` builds the very same one)
+            (MapData map, IReadOnlyList<CellCoord>? landing) = BuildMatchMap(mapChoice, a.Faction, b.Faction, size, s);
             if (flat) map = Flatten(map);
             for (int g = 0; g < 2; g++)
             {
