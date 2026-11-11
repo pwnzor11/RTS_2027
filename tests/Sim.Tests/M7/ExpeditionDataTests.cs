@@ -157,7 +157,7 @@ public sealed class ExpeditionDataTests
         Assert.Equal(2000, cruiser.DrawScalePermille);
         VehicleType sub = s.Vehicles.Single(v => v.Id == "exp_missile_sub");
         Assert.True(sub.Submerges);
-        Assert.Equal(ArmorClass.Submerged, sub.Armor);
+        Assert.Equal(ArmorClass.ShipLight, sub.Armor);
         VehicleType carrier = s.Vehicles.Single(v => v.Id == "exp_carrier");
         Assert.Equal(4, carrier.AircraftSlots);
         Assert.True(carrier.SortieTicks > 0);
