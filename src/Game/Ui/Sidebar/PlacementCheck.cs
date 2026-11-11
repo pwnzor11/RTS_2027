@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
+using Rts.Sim.Core;
+using Rts.Sim.Rules;
 using Rts.Sim.World;
 
 namespace Rts.Game.Ui.Sidebar;
@@ -37,7 +39,19 @@ public static class PlacementCheck
         }
         else if (isWater) return CellProblem.Water;
         else if (!buildable) return hasBuildingOrOverlay ? CellProblem.Building : CellProblem.Terrain;
+        else if (hasBuildingOrOverlay) return CellProblem.Building;
         return hasUnit ? CellProblem.Unit : CellProblem.None;
+    }
+
+    /// <summary>
+    /// The cause for one footprint cell read from the map. S18 UXG-06: <c>buildable</c> is the land test alone (terrain kind), because
+    /// <c>MapState.IsBuildable</c> also fails for a unit and would hide the "unit" cause behind "terrain".
+    /// </summary>
+    public static CellProblem CellAt(Rts.Sim.Map.MapState map, Rts.Sim.Rules.TerrainTable table, bool wantWater, CellCoord c, bool unitHere)
+    {
+        LandType land = map.LandAt(c);
+        bool occupied = map.OverlayAt(c) != OverlayKind.None || !map.BuildingAt(c).IsNone || (wantWater && !map.VehicleAt(c).IsNone);
+        return Cell(wantWater, land is LandType.Water or LandType.Shallow, table.Buildable(land), occupied, unitHere);
     }
 
     /// <summary>The most permanent problem of a set (the one worth naming).</summary>
