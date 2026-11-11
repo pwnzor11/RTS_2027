@@ -100,6 +100,7 @@ public sealed partial class Simulation
         _paths = new PathService(_map, setup.Rules.Terrain);
         _regions = new Pathing.RegionCache(_map, setup.Rules.Terrain);   // M7-03
         _paths.GateOpen = GateOpenFor;   // M3-04: own-team gates are passable (D-076)
+        _paths.AshPathPenalty = setup.Rules.Radiation.AshPathPenalty;   // S19 M13-12: soldiers skirt ash fields
         _vision = new VisionState(setup.Map.Width, setup.Map.Height, setup.PlayerCount,
             Math.Max(setup.Limits.Vehicles, setup.Limits.Infantry));
         // Parts after vision come from the partial files in canonical order: combat (M1-09) first.

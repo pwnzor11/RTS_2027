@@ -214,7 +214,7 @@ public static class RulesHash
         w.Write(t.TelegraphTicks); w.Write(t.EntranceTelegraphTicks); w.Write(t.EmergingHealthPermille); w.Write(t.SurfacingRing);
         RadiationRules r = sim.Radiation;
         w.Write(r.DecayTicks); w.Write(r.DamageIntervalTicks); w.Write(r.DamageThreshold); w.Write(r.DamagePermille); w.Write(r.NoBuildThreshold);
-        w.Write(r.AshfallDamage); w.Write(r.AshfallIntervalTicks);   // S19 M13-12
+        w.Write(r.AshfallDamage); w.Write(r.AshfallIntervalTicks); w.Write(r.AshPathPenalty);   // S19 M13-12
         w.Write(sim.Stealth.DelayTicks);
         w.Write(sim.StartKits.Count);
         foreach (FactionStartKit k in sim.StartKits) { WriteString(w, k.Conyard); WriteStrings(w, k.Units); }

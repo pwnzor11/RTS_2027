@@ -101,6 +101,10 @@ public sealed class PathService : ISimStatePart
     /// Simulation; null = no gates (every building blocks). Must be a pure function of sim state.</summary>
     public Func<EntityId, byte, bool>? GateOpen { get; set; }
 
+    /// <summary>S19 M13-12: path-cost multiplier for a Foot request entering an ashfall or pitchblende cell (1 = none). Set by the
+    /// Simulation from the rules. A penalty only adds cost, so the MinFactor heuristic stays admissible.</summary>
+    public int AshPathPenalty { get; set; } = 1;
+
     /// <summary>Test hook: when false the cache is bypassed. Results and costs must be identical either way.</summary>
     internal bool CacheEnabled { get; set; } = true;
 
@@ -204,7 +208,9 @@ public sealed class PathService : ISimStatePart
         int sp = _map.SpeedPercent(c, loco, _terrain);
         if (sp <= 0) return 0;
         int f = 10000 / sp;
-        return f < 1 ? 1 : f;
+        if (f < 1) f = 1;
+        if (loco == Locomotion.Foot && AshPathPenalty > 1 && OverlayKinds.IsResource(_map.OverlayAt(c))) f *= AshPathPenalty;   // S19 M13-12: soldiers skirt fields
+        return f;
     }
 
     private int MinFactor(Locomotion loco)
