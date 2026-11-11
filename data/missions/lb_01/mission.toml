@@ -55,7 +55,7 @@ rect = [26, 20, 36, 26]
 [zones.cache]
 rect = [3, 44, 8, 48]
 
-# The convoy waits at the old rail depot in the north-west: two scrapers, a jeep, riflemen added by the script by tier.
+# The convoy waits at the old rail depot in the north-west: two scrapers; the script adds riflemen (and a jeep from tier 4) by tier.
 [[actors]]
 type = "auth_scraper"
 player = 1

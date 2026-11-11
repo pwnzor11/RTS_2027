@@ -129,6 +129,14 @@ public sealed class MissionFixTests
         Assert.DoesNotContain("south-east", locale, StringComparison.OrdinalIgnoreCase);
     }
 
+    [Fact]
+    public void Mis19_Lb01_briefing_promises_only_what_every_tier_has()
+    {
+        string briefing = File.ReadAllText(Path.Combine(TestData.DataDir, "missions", "lb_01", "briefing.md"));
+        Assert.DoesNotContain("JEEP", briefing, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("TWO SCRAPERS", briefing, StringComparison.Ordinal);
+    }
+
     /// <summary>Adds a spare carrier at home (before the first step) and returns the slots of the two survey carriers.</summary>
     private static List<int> SurveyCarriersWithASpare(MissionSession m)
     {
