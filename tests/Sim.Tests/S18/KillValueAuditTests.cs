@@ -26,9 +26,9 @@ public sealed class KillValueAuditTests
     {
         // D-205 (LE-04): the three non-buildable vehicles carry real costs
         SimRules r = S18World.RealRules;
-        Assert.Equal(200, r.Vehicles.Single(v => v.Id == "lb_mother_rig_packed").Cost);
+        Assert.Equal(1500, r.Vehicles.Single(v => v.Id == "lb_mother_rig_packed").Cost);   // owner S19: 1500 each
         Assert.Equal(1500, r.Vehicles.Single(v => v.Id == "exp_supply_tender").Cost);
-        Assert.Equal(900, r.Vehicles.Single(v => v.Id == "exp_command_ship").Cost);
+        Assert.Equal(1500, r.Vehicles.Single(v => v.Id == "exp_command_ship").Cost);
         foreach (string id in new[] { "lb_mother_rig_packed", "exp_supply_tender", "exp_command_ship" })
             Assert.False(r.Vehicles.Single(v => v.Id == id).Buildable, id);
         Assert.Equal(3, r.Vehicles.Count(v => !v.Buildable));
@@ -38,8 +38,8 @@ public sealed class KillValueAuditTests
 
     [Theory]
     [InlineData("exp_supply_tender", true, 1500, 1)]
-    [InlineData("exp_command_ship", true, 900, 1)]
-    [InlineData("lb_mother_rig_packed", false, 200, 0)]
+    [InlineData("exp_command_ship", true, 1500, 1)]
+    [InlineData("lb_mother_rig_packed", false, 1500, 1)]
     public void OneKillOfAFormerPlaceholderCostVehicle_FollowsItsRealCost(string victim, bool atSea, int value, int expectedRank)
     {
         var (rank, killValue, dead) = OneKill(victim, atSea);
