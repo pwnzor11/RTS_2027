@@ -127,7 +127,7 @@ crusher = false
 cost = 700  # ASSUMED (M3-07)
 prerequisites = ["dir_assembly_bore"]
 aura_radius = 4  # ASSUMED (M3-07)
-aura_rof_permille = 1250  # ASSUMED (M3-07)
+aura_rof_permille = 800  # D-205 (FAD-02): 1250 -> 800, reload x0.8 (was a debuff on its own conscripts)
 aura_targets = ["dir_conscript", "dir_ashthrower", "dir_sapper"]
 jam_radius = 6  # ASSUMED (M3-07)
 
@@ -491,7 +491,7 @@ prerequisites = ["lb_garage_rig"]
 passengers = 6
 aura_radius = 2  # (tune)
 aura_targets = ["lb_mother_rig_packed"]
-tow_bonus_permille = 1000  # (tune) packed rigs keep full speed when towed
+tow_bonus_permille = 1750  # D-205 (LE-08): 1000 -> 1750, a towed packed rig moves x1.75 (1000 was a no-op)
 
 [lb_dust_sail]   # PLACEHOLDER ART; wind-rigged Blackout layer
 veteran = false  # VET-4: its weapon deals no damage (it lays foam/ash/blackout/decon), so it never earns kills; an armed type would default to ranking
