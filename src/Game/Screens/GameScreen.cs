@@ -238,9 +238,11 @@ public sealed class GameScreen : IScreen
         {
             MissionGame game = MissionGame.FromSave(loaded);
             string id = loaded.Header.MissionId;
-            var mission = new GameScreen(services, sim, null, () => CreateMission(services, id), skirmishMode: true);
+            var campaign = CampaignFlow.Resume(services, game);   // S18 MIS-02: a campaign mission keeps its campaign wiring
+            var mission = new GameScreen(services, sim, null, campaign?.Restart ?? (() => CreateMission(services, id)), skirmishMode: true);
             mission._mission = new MissionOverlay(game.Host, Rts.Game.Ui.Objectives.ObjectiveGuidance.BriefingOf(game));
             mission.EndOnMission(game);
+            mission._gameOverOverride = campaign?.GameOver;
             return mission;
         }
 

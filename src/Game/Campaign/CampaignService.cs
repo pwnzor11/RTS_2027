@@ -143,5 +143,19 @@ public sealed class CampaignService
         return next;
     }
 
+    /// <summary>S18 GS-05: false when the last <see cref="RecordWin"/> could not write the campaign progress file (the win is then not kept).</summary>
+    public bool LastWinSaved { get; private set; } = true;
+
+    /// <summary>S18 MIS-02: the campaign mission a mission host runs, or null when it is not one (the tutorial, or a mission outside its faction's campaign).</summary>
+    public CampaignMissionRef? CampaignMissionOf(MissionHost host)
+    {
+        ArgumentNullException.ThrowIfNull(host);
+        string faction = host.Def.Faction;
+        if (faction.Length == 0 || !Factions.Contains(faction)) return null;
+        if (!Campaign(faction).Missions.Any(m => m.Id == host.Def.Id)) return null;
+        // Start sets the script tier to the campaign tier, and the "mission" state part saves it, so a restored host still knows it.
+        return new CampaignMissionRef(faction, host.Def.Id, Math.Clamp(host.DifficultyTier, 1, 5));
+    }
+
     private bool MissionExists(string id) => Directory.Exists(MissionLoader.FolderOf(_dataDir, id));
 }
