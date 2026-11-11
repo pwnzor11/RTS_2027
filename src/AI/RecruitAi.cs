@@ -342,13 +342,15 @@ public sealed class RecruitAi : IAiPlayer, IAiSnapshotable, IHookableAi
     private const int StateVersion = 1;
     /// <summary>M8-06: layout with the script-hook memory appended; written only once a hook was served, so other games save as before.</summary>
     private const int HookStateVersion = 2;
+    /// <summary>M13-06: BuildOrderManager writes the ready-cancel fields. Versions 1 and 2 (session 18 saves) are still read.</summary>
+    private const int CancelStateVersion = 3, CancelHookStateVersion = 4;
 
     /// <inheritdoc />
     public void SaveState(BinaryWriter w)
     {
         bool thinking = _faction is not null && _build is not null && _production is not null && _planner is not null && _ctx is not null;
         bool hooked = thinking && (_servedWaveSeq != 0 || _military.HookDirty);
-        w.Write(hooked ? HookStateVersion : StateVersion);
+        w.Write(hooked ? CancelHookStateVersion : CancelStateVersion);
         w.Write(_id);
         w.Write(thinking);
         if (!thinking) return;   // never decided anything: a fresh AI is the same AI
@@ -381,13 +383,13 @@ public sealed class RecruitAi : IAiPlayer, IAiSnapshotable, IHookableAi
     {
         if (_ctx is null) throw new InvalidOperationException("LoadState needs Start first.");
         int version = r.ReadInt32();
-        if (version != StateVersion && version != HookStateVersion) throw new InvalidDataException("AI state of another layout");
+        if (version is not (StateVersion or HookStateVersion or CancelStateVersion or CancelHookStateVersion)) throw new InvalidDataException("AI state of another layout");
         if (r.ReadString() != _id) throw new InvalidDataException("AI state of another AI");
         if (!r.ReadBoolean()) return;
         Init((Faction)r.ReadByte());   // builds the faction-dependent managers exactly as the first decision does
         _ctx.Rng.State = r.ReadUInt64();
         MaxTier = r.ReadInt32(); Tier2Tick = r.ReadInt32(); Tier3Tick = r.ReadInt32();
-        _build!.Restore(r);
+        _build!.Restore(r, legacy: version is StateVersion or HookStateVersion);
         _planner!.Restore(r);
         _production!.Restore(r);
         _military.Restore(r);
@@ -404,6 +406,6 @@ public sealed class RecruitAi : IAiPlayer, IAiSnapshotable, IHookableAi
         if (r.ReadBoolean() && _tactics is DirectorateTactics d) d.Restore(r);
         if (_tactics is LeftBehindTactics lb) lb.Restore(r);
         if (_tactics is ExpeditionTactics ex) ex.Restore(r);
-        if (version == HookStateVersion) { _servedWaveSeq = r.ReadInt32(); _military.RestoreHooks(r); }   // M8-06
+        if (version is HookStateVersion or CancelHookStateVersion) { _servedWaveSeq = r.ReadInt32(); _military.RestoreHooks(r); }   // M8-06
     }
 }

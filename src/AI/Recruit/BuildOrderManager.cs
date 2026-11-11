@@ -293,12 +293,13 @@ internal sealed class BuildOrderManager
     }
 
     /// <summary>M3-21: reads what <see cref="Snapshot"/> wrote. Types are resolved again on the next Think.</summary>
-    internal void Restore(BinaryReader r)
+    internal void Restore(BinaryReader r, bool legacy = false)
     {
         int n = AiSnapshot.Count(r);
         _order.Clear(); _orderTypes.Clear();
         for (int i = 0; i < n; i++) _order.Add(r.ReadString());
         Placed = r.ReadInt32(); Unplaceable = r.ReadInt32(); PendingCost = r.ReadInt32();
+        if (legacy) { Cancelled = 0; _failedSearches[0] = _failedSearches[1] = 0; _banType = -1; _banLeft = 0; return; }   // session 18 layout: no M13-06 fields
         Cancelled = r.ReadInt32(); _failedSearches[0] = r.ReadInt32(); _failedSearches[1] = r.ReadInt32(); _banType = r.ReadInt32(); _banLeft = r.ReadInt32();   // M13-06
     }
 }
