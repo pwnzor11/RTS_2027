@@ -51,7 +51,7 @@ public static class MissionApiContract
         Add(ApiStatus.Implemented, "M8-06", "AI.Attack", "AI.Defend", "AI.SetTier", "AI.Wave", "AI.Clear");
         Add(ApiStatus.Implemented, "M8-17", "Player.Funds");
         Add(ApiStatus.Implemented, "M11-05", "Objective.SetTarget", "Objective.ClearTarget");
-        Add(ApiStatus.Implemented, "S19", "Actor.Charged");
+        Add(ApiStatus.Implemented, "S19", "Actor.Charged", "Actor.DelayCharge", "Actor.CountPacked");
         return l;
     }
 }

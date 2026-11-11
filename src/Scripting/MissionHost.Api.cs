@@ -49,7 +49,9 @@ public sealed partial class MissionHost
             ("Count", a => { var (k, ix) = TypeFilter(a, 1); return Num(CountAlive(_sim!, (byte)PlayerArg(a, 0), ix, k)); }),
             ("CountInZone", ActorCountInZone),
             ("Cell", ActorCellOf),
-            ("Charged", ActorCharged));   // S19 MIS-18: read-only
+            ("Charged", ActorCharged),   // S19 MIS-18: read-only
+            ("DelayCharge", ActorDelayCharge),   // S19 MIS-10
+            ("CountPacked", ActorCountPacked));   // S19 MIS-20
 
         NewApiTable(s, "Reinforce", ("Edge", ReinforceEdge));
 
@@ -258,6 +260,8 @@ public sealed partial class MissionHost
             ActorKind.Infantry => sim.SpawnInfantry((byte)player, index, cell),
             _ => sim.PlaceBuilding((byte)player, index, cell),
         };
+        // S19 MIS-07: a building whose site is blocked (a unit stands on it) goes to the nearest legal site instead of failing the callback.
+        if (id.IsNone && kind == ActorKind.Building && FreeSiteNear(sim, (byte)player, index, cell) is { } site) id = sim.PlaceBuilding((byte)player, index, site);
         if (id.IsNone) throw new InvalidOperationException(kind == ActorKind.Building ? "cannot place " + typeId + " at (" + cell.X + "," + cell.Y + ")" : "no room for another " + typeId);
         tag ??= NewTag();
         _tags.Add(new(tag, new ActorRef(kind, id)));
@@ -291,6 +295,39 @@ public sealed partial class MissionHost
         foreach (SuperweaponView v in _sim.HudFor(owner).Superweapons)
             if (v.Building == r.Id) return DynValue.NewBoolean(v.Ready);
         return DynValue.False;
+    }
+
+    /// <summary>
+    /// S19 MIS-10: <c>Actor.DelayCharge(tag, ticks)</c> makes the tagged superweapon building ready no sooner than <c>ticks</c> from now
+    /// (at full power; a power shortage is slower). It only ever lowers the building's charge, so calling it again with a later moment postpones further and
+    /// never hurries it. The charge counter is the one the sim already saves and hashes; this is how a script keeps an AI-owned story Device from firing early.
+    /// </summary>
+    private DynValue ActorDelayCharge(CallbackArguments a)
+    {
+        string tag = KnownTag(a, 0);
+        int ticks = Int(a, 1, 1, 1_000_000_000);
+        if (!TryTag(tag, out ActorRef r) || r.Kind != ActorKind.Building || !IsStanding(_sim!, r)) throw Err("'" + tag + "' is not a standing building");
+        int i = r.Id.Index;
+        BuildingType bt = _sim!.Setup.Rules.Buildings[_sim.Buildings.TypeIndex[i]];
+        if (bt.Superweapon.Length == 0 || bt.SuperweaponChargeTicks <= 0) throw Err("'" + tag + "' is not a superweapon");
+        _sim.Effects.BuildingCharge[i] = Math.Min(_sim.Effects.BuildingCharge[i], bt.SuperweaponChargeTicks - ticks);
+        return DynValue.Nil;
+    }
+
+    /// <summary>
+    /// S19 MIS-20: <c>Actor.CountPacked(player, buildingTypeId)</c> counts the player's live packed-rig vehicles that were packed from that building type
+    /// (every Left Behind rig packs into the one generic <c>lb_mother_rig_packed</c>; the sim remembers which rig it came from). Read-only.
+    /// </summary>
+    private DynValue ActorCountPacked(CallbackArguments a)
+    {
+        byte player = (byte)PlayerArg(a, 0);
+        (ActorKind kind, int type) = ResolveType(Str(a, 1));
+        if (kind != ActorKind.Building) throw Err("'" + Str(a, 1) + "' is not a building type");
+        Simulation sim = _sim!;
+        int n = 0;
+        for (int i = 1; i < sim.Units.Capacity; i++)
+            if (sim.Units.Slots.IsIndexAlive(i) && sim.Units.Health[i] > 0 && sim.Units.Player[i] == player && sim.Rigs.PackedFrom[i] == type + 1) n++;
+        return Num(n);
     }
 
     private DynValue ActorOrder(CallbackArguments a)

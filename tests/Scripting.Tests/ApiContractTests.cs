@@ -51,6 +51,8 @@ public sealed class ApiContractTests
         ("AI.Clear", "1", "0"),
         ("Player.Funds", "0", "99"),
         ("Actor.Charged", "'t1'", "'nope'"),
+        ("Actor.DelayCharge", "'sw', 500", "'t1', 500"),
+        ("Actor.CountPacked", "0, 'lb_mother_rig'", "0, 'lb_mother_rig_packed'"),
     };
 
     /// <summary>A script with one callback per case (Case_N) so that each call's error is reported separately under its own name.</summary>
@@ -66,6 +68,7 @@ public sealed class ApiContractTests
 
         sb.AppendLine("function OnInit()");
         sb.AppendLine("  Actor.Create('auth_rifleman', 0, {x=12, y=12}, 't1')");
+        sb.AppendLine("  Actor.Create('dir_sunrise', 0, {x=44, y=44}, 'sw')");
         sb.AppendLine("  Objective.Add('o1', 'x', true)");
         for (int i = 0; i < Cases.Length; i++)
             if ((good ? Cases[i].Good : Cases[i].Bad) != null) sb.AppendLine($"  Trigger.AfterDelay(1, Case_{i})");

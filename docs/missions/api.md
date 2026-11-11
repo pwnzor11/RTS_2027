@@ -40,6 +40,8 @@ Common argument kinds: `id` = 1-64 characters, no spaces. `fn` = global function
 | `Objective.SetTarget(id, target)` | id, then a zone name, an actor tag, or a cell table `{x=, y=}` | nil | objective exists; zone or tag known (a zone name wins over a tag); cell inside the map; replaces any earlier target | implemented (M11-05) |
 | `Objective.ClearTarget(id)` | id | nil | objective exists | implemented (M11-05) |
 | `Actor.Charged(tag)` | actor tag | boolean | tag known; true only for a standing superweapon building whose real charge is ready (false while a power loss pauses it); read-only | implemented (S19 MIS-18) |
+| `Actor.DelayCharge(tag, ticks)` | actor tag, ticks 1..1e9 | nil | tag is a standing superweapon building; makes it ready no sooner than `ticks` from now (at full power); only lowers the charge counter, so a later call postpones further and never hurries; the counter is already saved and hashed | implemented (S19 MIS-10) |
+| `Actor.CountPacked(player, buildingType)` | slot, building type id | number | type is a building; counts the player's live packed-rig vehicles packed from that building type (all Left Behind rigs share the vehicle `lb_mother_rig_packed`); read-only | implemented (S19 MIS-20) |
 | `Mission.Timer(id, ticks, fn[, label])` | id, ticks 1..1e9, fn, optional HUD text | nil | fn global; label a string if given; the same id restarts the timer; expiry in creation order, once | implemented (M8-03) |
 | `Mission.TimerCancel(id)` | id | nil | id well-formed | implemented (M8-03) |
 | `Mission.TimerLeft(id)` | id | ticks left, or nil (unknown or already fired) | id well-formed | implemented (M8-03) |
@@ -71,6 +73,7 @@ player command runs. No new sim command and no new sim state. Reinforcements are
 the free cell nearest the wanted one (right terrain, no building, no vehicle, no soldier; search radius 10), so nothing is stacked; if none
 is free the call is a script error and the units spawned before it stay.
 - `Reinforce.Zone`: units appear on free cells of the zone, nearest its centre first, then attack-move to `destCell`. Tags come back in list order. When the zone has no free cell left for a unit (S18, MIS-07), that unit appears on the nearest free cell around the zone (up to 10 rings out) instead of failing the callback; only when that also fails is it a script error.
+- `Actor.Create` of a building (S19, MIS-07): when the site is blocked (a unit stands on it, or the one-cell gap rule refuses it), the host places the building on the nearest legal site within 10 rings instead of failing the callback. The returned tag is the building that was placed. Only when no site is found is it a script error. Unit spawns are unchanged.
 - `Reinforce.Delayed`: queued; `ticks` after the call the units appear exactly as `Reinforce.Edge` places them (block just inside the edge,
   attack-move to `destCell`). Errors at arrival time (no room) are collected in `Errors`, not thrown at the call. No tags are returned.
 - `Reinforce.Transport`: soldiers in the list ride; any other type drives in by itself like `Edge`. The transport is the smallest ground type

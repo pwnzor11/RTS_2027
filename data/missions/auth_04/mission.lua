@@ -33,6 +33,8 @@ function OnInit()
   AI.Defend(1, "device_site")
 
   Mission.Timer("sunrise", 16000, SunriseFires, "a4.timer.sunrise")
+  -- The Device belongs to the built-in AI: hold its real charge back to the timer so the AI cannot fire it before the scripted moment (S19 MIS-10).
+  Actor.DelayCharge("device", 16000)
   Trigger.AfterDelay(Pick({ 3600, 3300, 3000, 2400, 1800 }), HomeRaidOne)
   Trigger.AfterDelay(Pick({ 7000, 6800, 6500, 4000, 3200 }), HomeRaidTwo)
   AddDefenders()

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
 using Rts.Sim.Core;
+using Rts.Sim;
 
 namespace Rts.Scripting.Tests.S19;
 
@@ -80,4 +81,34 @@ public sealed class MissionFixTests
         Assert.Equal("true", TestAccess.StateValue(m.Host, "charged"));
         Assert.Equal(ObjectiveStatus.Completed, m.Host.Objectives.Single(o => o.Id == "hold").Status);
     }
+
+    /// <summary>Ticks until the first superweapon of <paramref name="player"/> is ready, from the sim's own view (0 when ready).</summary>
+    private static int ChargeLeft(MissionSession m, byte player)
+    {
+        SuperweaponView v = m.Sim.HudFor(player).Superweapons.Single();
+        return v.Ready ? 0 : v.Total - v.Charge;
+    }
+
+    [Fact]
+    public void Mis10_Auth04_the_AI_owned_Device_is_held_back_to_the_scripted_sunrise_timer()
+    {
+        MissionSession m = MissionSession.Create(TestData.DataDir, "auth_04");
+        var bot = new MissionBot(m);
+        bot.Idle(3100);   // past the rule's own 3000-tick charge
+        Assert.Empty(m.Host.Errors);
+        int left = ChargeLeft(m, 1);
+        Assert.InRange(left, 12800, 13000);   // 16000 - 3100 (the timer ends at 16000)
+        Assert.Equal(16000, m.Host.Timers.Single(t => t.Id == "sunrise").EndTick);
+    }
+
+    [Fact]
+    public void Mis10_Exp04_the_redoubt_Device_does_not_charge_during_the_mission()
+    {
+        MissionSession m = MissionSession.Create(TestData.DataDir, "exp_04");
+        var bot = new MissionBot(m);
+        bot.Idle(3100);
+        Assert.Empty(m.Host.Errors);
+        Assert.True(ChargeLeft(m, 1) > 100_000);
+    }
+
 }

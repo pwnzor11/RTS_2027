@@ -6,6 +6,7 @@ using Rts.Sim.Core;
 using Rts.Sim.Map;
 using Rts.Sim.Missions;
 using Rts.Sim.Rules;
+using Rts.Sim.World;
 
 namespace Rts.Scripting;
 
@@ -141,6 +142,25 @@ public sealed partial class MissionHost
                     bool soldier = false;
                     for (int s = 0; s < MapState.InfantrySlots && !soldier; s++) soldier = !sim.Map.InfantryAt(c, s).IsNone;
                     if (!soldier) return c;
+                }
+
+        return null;
+    }
+
+    /// <summary>
+    /// S19 MIS-07: the legal building site nearest <paramref name="want"/> (rings of growing size, row-major inside a ring, up to <see cref="FreeCellRing"/>):
+    /// the top-left cell where <see cref="Simulation.CanPlace"/> says Ok now. Null when none.
+    /// </summary>
+    private static CellCoord? FreeSiteNear(Simulation sim, byte player, int buildingType, CellCoord want)
+    {
+        for (int r = 1; r <= FreeCellRing; r++)
+            for (int dy = -r; dy <= r; dy++)
+                for (int dx = -r; dx <= r; dx++)
+                {
+                    if (Math.Max(Math.Abs(dx), Math.Abs(dy)) != r) continue;
+                    var c = new CellCoord(want.X + dx, want.Y + dy);
+                    if (c.X < 0 || c.Y < 0) continue;
+                    if (sim.CanPlace(player, buildingType, c) == PlacementResult.Ok) return c;
                 }
 
         return null;
