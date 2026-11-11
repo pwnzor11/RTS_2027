@@ -119,10 +119,11 @@ function Charged()
   Camera.Focus("device", 160)
 end
 
+-- Only the Device's shot razes the Authority command post for the win: any other loss of it before the charge is ignored (S19 MIS-09).
 function SunriseFired()
   if state.done then return end
+  if not state.charged then return end
   state.done = true
-  if not state.charged then Objective.Complete("hold") end
   Objective.Complete("fire")
   if Objective.Status("west") == "active" then Objective.Reveal("west") end
   Media.MessageKey("d4.win")
