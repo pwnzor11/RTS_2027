@@ -312,6 +312,7 @@ public sealed partial class Simulation
     private void Apply(Command c)
     {
         if (c.Player >= Setup.PlayerCount || _players.Defeated[c.Player]) return;   // defeated players' commands are ignored (D-062)
+        if (IsOrderToCarriedUnit(c)) return;   // S19 D-205: a soldier inside a building or a passenger in a vehicle obeys no unit order
         switch (c.Kind)
         {
             case CommandKind.Move:
@@ -351,6 +352,20 @@ public sealed partial class Simulation
             default:
                 break; // M1: remaining command kinds
         }
+    }
+
+    /// <summary>
+    /// S19 D-205 (M13-04): true for a unit order (Move, Stop, Scatter, Attack, AttackMove, Guard, Enter; subject kind in the low byte of
+    /// <see cref="Command.Arg"/>) whose subject is a live unit carried by something (<see cref="ActorLayers.IsCarried"/>: a garrisoned
+    /// soldier or a vehicle passenger). Such an order would replace the carried mission while the layer stays carried, walking the unit out
+    /// invisible and untargetable. Orders addressed to the CARRIER (Unload, Rally, ...) are not unit orders and are never dropped here.
+    /// </summary>
+    private bool IsOrderToCarriedUnit(Command c)
+    {
+        if (c.Kind is not (CommandKind.Move or CommandKind.Stop or CommandKind.Scatter or CommandKind.Attack or CommandKind.AttackMove
+            or CommandKind.Guard or CommandKind.Enter)) return false;
+        if (StoreOf((ActorKind)(c.Arg & 0xFF)) is not { } store || !store.Slots.IsAlive(c.Subject)) return false;
+        return ActorLayers.IsCarried(_tunnels.LayerOf((ActorKind)(c.Arg & 0xFF), c.Subject.Index));
     }
 
     private void ApplyDebug(Command c)
