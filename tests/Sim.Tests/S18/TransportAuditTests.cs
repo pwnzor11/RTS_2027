@@ -29,43 +29,7 @@ public sealed class TransportAuditTests
         return (sim, truck, riders, crawler);
     }
 
-    // S18 audit: pins current behaviour of SIM-RULES-05; flip the assertion when fixed.
     [Fact]
-    public void Audit_Splash_HurtsPassengersInsideATransport()
-    {
-        var (sim, truck, riders, crawler) = Loaded(crawlerDx: 0);
-        foreach (EntityId r in riders)
-        {
-            Assert.True(sim.IsUntargetableBy(1, ActorKind.Infantry, r.Index));   // no enemy can aim at them
-            Assert.Equal(50, sim.Infantry.Health[r.Index]);
-        }
-        SystemsFixture.Run(sim, 2, SystemsFixture.Kill(sim, ActorKind.Vehicle, crawler));   // the meltdown goes off one cell from the truck
-        Assert.True(sim.Units.Slots.IsAlive(truck));
-        Assert.Equal(75, sim.Units.Health[truck.Index]);                  // half of 50 at distance 1
-        foreach (EntityId r in riders)
-        {
-            Assert.Equal(ActorLayer.Passenger, sim.LayerOf(ActorKind.Infantry, r.Index));
-            Assert.Equal(25, sim.Infantry.Health[r.Index]);              // each rider took the same hit as the truck
-        }
-    }
-
-    // S18 audit: pins current behaviour of SIM-RULES-05; flip the assertion when fixed.
-    [Fact]
-    public void Audit_SecondSplash_KillsTheRidersButNotTheirTransport()
-    {
-        Simulation sim = SystemsFixture.NewSim();
-        EntityId truck = sim.SpawnVehicle(0, SystemsFixture.Truck, new CellCoord(10, 10));
-        EntityId rider = sim.SpawnInfantry(0, SystemsFixture.Rifle, new CellCoord(11, 10));
-        EntityId c1 = sim.SpawnVehicle(1, SystemsFixture.Crawler, new CellCoord(9, 11));
-        EntityId c2 = sim.SpawnVehicle(1, SystemsFixture.Crawler, new CellCoord(11, 11));
-        SystemsFixture.Run(sim, 1, SystemsFixture.Enter(sim, 0, ActorKind.Infantry, rider, ActorKind.Vehicle, truck));
-        SystemsFixture.Run(sim, 3, SystemsFixture.Kill(sim, ActorKind.Vehicle, c1), SystemsFixture.Kill(sim, ActorKind.Vehicle, c2));
-        Assert.True(sim.Units.Slots.IsAlive(truck));                      // 100 - 25 - 25
-        Assert.False(sim.Infantry.Slots.IsAlive(rider));                  // 50 - 25 - 25: dead inside a living transport
-        Assert.Equal(0, sim.PassengersIn(truck));
-    }
-
-    [Fact(Skip = "S18 SIM-RULES-05: awaiting owner decision")]
     public void Desired_Splash_SparesPassengers()
     {
         var (sim, _, riders, crawler) = Loaded(crawlerDx: 0);

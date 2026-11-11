@@ -107,6 +107,7 @@ public sealed partial class Simulation
         for (int v = 1; v < _units.Capacity; v++)
         {
             if (!_units.Slots.IsIndexAlive(v) || _tunnels.VehicleLayer[v] != ActorLayer.Passenger || _tunnels.VehicleCarrier[v] != transport) continue;
+            OnTransportDying(v);   // D-205 (SIM-RULES-10): a carried APC takes its own soldiers down with it
             RemoveMobileQuietly(ActorKind.Vehicle, v);
         }
     }
