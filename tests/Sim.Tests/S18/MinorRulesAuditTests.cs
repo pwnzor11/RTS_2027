@@ -67,20 +67,8 @@ public sealed class MinorRulesAuditTests
         return (sim.Units.Mission[h.Index], sim.Units.Position[h.Index] != parked, sim.Economy.Cargo[h.Index], back, sim.StatsOf(0).CreditsHarvested);
     }
 
-    // S18 audit: pins current behaviour of SIM-RULES-13; flip the assertion when fixed.
     [Fact]
-    public void Audit_Harvester_StaysIdle_AfterTheRefineryIsRebuilt()
-    {
-        var r = RebuildRefinery(after: 2000);   // 100 s with a working refinery and a full field
-        Assert.True(r.RefineryBack);
-        Assert.True(r.EarnedByTheNewOne > 0);   // the new refinery's free harvester proves the economy works again
-        Assert.Equal(MissionKind.Guard, r.Mission);
-        Assert.False(r.Moved);                  // the old one never stirred,
-        Assert.True(r.Cargo > 0);               // still holding the load it could not deliver
-    }
-
-    [Fact(Skip = "S18 SIM-RULES-13: awaiting owner decision")]
-    public void Desired_Harvester_Resumes_AfterTheRefineryIsRebuilt()
+    public void Harvester_Resumes_AfterTheRefineryIsRebuilt()
     {
         var r = RebuildRefinery(after: 2000);
         Assert.True(r.Moved);
