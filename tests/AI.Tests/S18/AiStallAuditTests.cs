@@ -35,16 +35,18 @@ public class AiStallAuditTests(ITestOutputHelper output)
 
     // ---- AI-04 ------------------------------------------------------------------------------------
 
-    // S18 audit: pins current behaviour of AI-04; flip the assertion when fixed.
+    // M13-06 (D-205): was Audit_..._HoldsAnUnplaceableReadyStructureForTheWholeGame. The AI now cancels a ready structure it cannot place
+    // after BuildOrderManager.CancelAfterFailedSearches searches, so no finished structure is held for 2 000 ticks.
     // Glass Coast layout 1, size 96, seed 4, Expedition tier 3 mirror, game 1 of the pair as `ai match --starts slot` plays it.
     [Fact]
-    public void Audit_GlassCoastSeed4_ExpeditionAi_HoldsAnUnplaceableReadyStructureForTheWholeGame()
+    public void GlassCoastSeed4_ExpeditionAi_CancelsAnUnplaceableReadyStructure_AndKeepsBuilding()
     {
         const ulong seed = 4;
         var gen = MapGenerator.GenerateWithMeta(new MapGenParams(Biome.GlassCoast, MapSize.Medium, 2, seed, null, OceanEdges.North | OceanEdges.South, 1));
         var side = new AiSide(AiRegistry.TieredId, TestWorld.Tiers[2], Faction.Expedition);
         var readySince = new[] { -1, -1 };
         var readyType = new[] { -1, -1 };
+        var longestHold = new[] { 0, 0 };
         var ais = new RecruitAi?[2];
         Simulation? last = null;
         AiMatchRunner.Play(gen.Map, Rules, TestWorld.Rules.RulesHash, seed * 16, side, side, true, 4000, observe: (sim, a, b, sa, sb) =>
@@ -55,6 +57,7 @@ public class AiStallAuditTests(ITestOutputHelper output)
             {
                 int r = Lane(sim, p, ProductionCategory.Structure).ReadyTypeIndex;
                 if (r != readyType[p]) { readyType[p] = r; readySince[p] = sim.Tick; }
+                if (r >= 0) longestHold[p] = Math.Max(longestHold[p], sim.Tick - readySince[p]);
             }
         }, landing: gen.Meta.Landing);
         Simulation s = last!;
@@ -62,14 +65,12 @@ public class AiStallAuditTests(ITestOutputHelper output)
         {
             int buildings = 0;
             for (int i = 1; i < s.Buildings.Capacity; i++) if (s.Buildings.Slots.IsIndexAlive(i) && s.Buildings.Player[i] == p) buildings++;
-            string ready = readyType[p] >= 0 ? Rules.Buildings[readyType[p]].Id : "none";
-            output.WriteLine($"p{p}: buildings {buildings}, ready structure {ready} since tick {readySince[p]}, placed {ais[p]!.StructuresPlaced}, unplaceable {ais[p]!.Unplaceable}, cash {s.Funds(p)}");
-            Assert.True(readyType[p] >= 0, $"p{p} has a finished structure waiting");
-            Assert.True(s.Tick - readySince[p] >= 2000, $"p{p} has held it for at least 2 000 ticks");
-            Assert.True(buildings <= 2, $"p{p} stopped at {buildings} buildings");
-            // the counter only counts a site the search found that CanPlace then refused; here the search finds no site at all
-            Assert.Equal(0, ais[p]!.Unplaceable);
+            output.WriteLine($"p{p}: buildings {buildings}, longest ready hold {longestHold[p]}, placed {ais[p]!.StructuresPlaced}, unplaceable {ais[p]!.Unplaceable}, cancelled {ais[p]!.CancelledReady}, cash {s.Funds(p)}");
+            Assert.True(longestHold[p] < 2000, $"p{p} held a finished structure for {longestHold[p]} ticks");
+            Assert.True(buildings > 2, $"p{p} kept building past 2 structures ({buildings})");
         }
+        Assert.True(ais[0]!.CancelledReady + ais[1]!.CancelledReady > 0, "the stall was resolved by a cancel");
+        Assert.True(ais[0]!.Unplaceable + ais[1]!.Unplaceable > 0, "a search with no site is counted");
     }
 
     // ---- AI-05 ------------------------------------------------------------------------------------

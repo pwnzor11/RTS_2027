@@ -15,4 +15,6 @@ public enum PlacementResult : byte
     SealsRegion = 3,
     /// <summary>M7-07: an Expedition structure's footprint is not wholly inside the player's beachhead zone.</summary>
     OutsideBeachhead = 4,
+    /// <summary>M13-07: the shared building store (walls and gates count) has no free slot.</summary>
+    StoreFull = 5,
 }

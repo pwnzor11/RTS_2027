@@ -157,9 +157,23 @@ public sealed partial class Simulation
         if (c.Arg == (int)ProductionCategory.Upgrade) { ApplyCancelUpgrade(c); return; }   // M3: Simulation.Upgrades.cs
         if (_players.IsNeutral(c.Player) || c.Arg < 0 || c.Arg > (int)ProductionCategory.Defence) return;
         int lane = ProductionState.Lane(c.Player, (ProductionCategory)c.Arg);
+        if (c.Arg2 == ReadyCancelPosition) { CancelReady(c.Player, (ProductionCategory)c.Arg, lane); return; }   // M13-06
         if (c.Arg2 < 0 || c.Arg2 >= _production.QueueCount[lane]) return;
         if (c.Arg2 == 0) Refund(c.Player, _production.Spent[lane]);   // only the front item has spent anything
         PopQueue(lane, c.Arg2);
+    }
+
+    /// <summary>M13-06: <c>Command.Arg2</c> of a Cancel that targets the finished structure waiting for placement (not a queue position).
+    /// Queue position 0 is always the front of the queue, never the ready item.</summary>
+    public const int ReadyCancelPosition = -1;
+
+    /// <summary>M13-06: cancel the finished structure of a lane with a full refund of its cost, freeing the lane.</summary>
+    private void CancelReady(byte player, ProductionCategory category, int lane)
+    {
+        int type = _production.Ready[lane];
+        if (type < 0 || IsUnitCategory(category)) return;
+        if (TryTypeInfo(player, category, type, out int cost, out _, out _)) Refund(player, cost);
+        _production.Ready[lane] = -1;
     }
 
     /// <summary>S15: Hold. Arg = category, Arg2 = 1 hold / 0 resume the front item. Only a lane with a queued item can be held.</summary>
