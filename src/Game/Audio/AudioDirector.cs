@@ -25,6 +25,8 @@ public sealed class AudioDirector
     private readonly Func<LeptonCoord?> _listener;
     private readonly AudioEventDeriver _deriver = new();
     private readonly Dictionary<AudioEventKind, long> _lastPlayedMs = new();
+    private readonly Dictionary<AudioEventKind, long> _lastNotifiedMs = new();   // S18 GAMEREND-04: Notify cooldowns run on the wall clock
+    private readonly Func<long> _wallClockMs;
     private readonly List<AudioEvent> _scratch = new();
     private readonly MusicPlayer? _music;
     private long _nowMs;
@@ -34,14 +36,20 @@ public sealed class AudioDirector
     private Faction _faction;
 
     /// <summary>Creates the director. <paramref name="listener"/> gives the camera centre (default <see cref="AudioListener.Position"/>); <paramref name="music"/> is optional.</summary>
-    public AudioDirector(SoundBank bank, IAudio audio, Random rng, Func<LeptonCoord?>? listener = null, MusicPlayer? music = null)
+    public AudioDirector(SoundBank bank, IAudio audio, Random rng, Func<LeptonCoord?>? listener = null, MusicPlayer? music = null,
+        Func<long>? wallClockMs = null)
     {
+        _wallClockMs = wallClockMs ?? DefaultWallClock;
         _bank = bank;
         _audio = audio;
         _rng = rng;
         _listener = listener ?? (() => AudioListener.Position);
         _music = music;
     }
+
+    private static readonly System.Diagnostics.Stopwatch WallWatch = System.Diagnostics.Stopwatch.StartNew();
+
+    private static long DefaultWallClock() => WallWatch.ElapsedMilliseconds;
 
     /// <summary>The music state the director wants now (menu until a game frame has been processed).</summary>
     public MusicState MusicState { get; private set; } = MusicState.Menu;
@@ -72,8 +80,11 @@ public sealed class AudioDirector
         };
     }
 
-    /// <summary>Plays an event that has no snapshot trace, such as selecting a unit. Same cooldown and lookup as derived events.</summary>
-    public void Notify(AudioEventKind kind, LeptonCoord? pos = null) => Play(new AudioEvent(kind, pos));
+    /// <summary>
+    /// Plays an event that has no snapshot trace, such as selecting a unit. Same lookup as derived events, but the cooldown runs on the wall clock,
+    /// not the sim clock, so UI sounds still work while the game is paused (S18 GAMEREND-04).
+    /// </summary>
+    public void Notify(AudioEventKind kind, LeptonCoord? pos = null) => Play(new AudioEvent(kind, pos), wall: true);
 
     /// <summary>Advances the music by <paramref name="dt"/> seconds. <paramref name="inGame"/> false means menus.</summary>
     public void UpdateMusic(float dt, bool inGame)
@@ -86,11 +97,13 @@ public sealed class AudioDirector
         k is AudioEventKind.FireBullet or AudioEventKind.FireShell or AudioEventKind.FireMissile
             or AudioEventKind.ExplosionSmall or AudioEventKind.ExplosionLarge or AudioEventKind.UnderAttack;
 
-    private void Play(AudioEvent e)
+    private void Play(AudioEvent e, bool wall = false)
     {
         EventDef? def = _bank.Event(e.Kind);
         if (def is null) return;
-        if (_lastPlayedMs.TryGetValue(e.Kind, out long last) && _nowMs - last < def.CooldownMs) return;
+        Dictionary<AudioEventKind, long> played = wall ? _lastNotifiedMs : _lastPlayedMs;
+        long now = wall ? _wallClockMs() : _nowMs;
+        if (played.TryGetValue(e.Kind, out long last) && now - last < def.CooldownMs) return;
 
         float gain = def.Volume;
         float pan = 0f;
@@ -102,7 +115,7 @@ public sealed class AudioDirector
         }
 
         if (gain < AudibleGain) return;
-        _lastPlayedMs[e.Kind] = _nowMs;
+        played[e.Kind] = now;
         _audio.PlaySfx(_bank.Pick(def, _rng).Id, gain, pan);
     }
 }
