@@ -567,7 +567,7 @@ prerequisites = ["auth_factory"]
 provides = []
 superweapon = "auth_atomic"
 superweapon_charge_ticks = 3000  # ASSUMED (M4-07)
-superweapon_entrance_range = 8  # ASSUMED (M4-07)
+superweapon_entrance_range = 0  # D-205 (FAD-01): fires anywhere, like lb_second_drift (D-132(4))
 
 [dir_redoubt]   # PLACEHOLDER ART (M4-ART); T1 garrison defence, half-buried is flavour only (design 08 §3, §4)
 tier = 1
