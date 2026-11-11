@@ -75,6 +75,30 @@ public static class UiText
     /// <summary>M13-15: HUD line while the game speed is not 1x. Placeholder: <c>{speed}</c>.</summary>
     public const string SpeedHud = "ui.speed.hud";
 
+    /// <summary>M13-15: alert line when a research finished.</summary>
+    public const string AlertUpgradeComplete = "ui.alert.upgrade_complete";
+
+    /// <summary>M13-15: alert line when a unit lane stood empty for a while.</summary>
+    public const string AlertProductionIdle = "ui.alert.production_idle";
+
+    /// <summary>M13-15: alert line when production is stalled.</summary>
+    public const string AlertProductionBlocked = "ui.alert.production_blocked";
+
+    /// <summary>M13-15: alert line when a harvester has been idle for a while.</summary>
+    public const string AlertHarvesterIdle = "ui.alert.harvester_idle";
+
+    /// <summary>M13-15: the idle-harvester button. Placeholders: <c>{count}</c>, <c>{key}</c>.</summary>
+    public const string IdleHarvesterButton = "ui.idle.harvester_button";
+
+    /// <summary>M13-15: the idle-factory button. Placeholders: <c>{count}</c>, <c>{key}</c>.</summary>
+    public const string IdleFactoryButton = "ui.idle.factory_button";
+
+    /// <summary>M13-15: toast when the idle-harvester key finds none.</summary>
+    public const string NoIdleHarvester = "ui.idle.no_harvester";
+
+    /// <summary>M13-15: toast when the idle-factory key finds none.</summary>
+    public const string NoIdleFactory = "ui.idle.no_factory";
+
     private static readonly Dictionary<string, string> English = new(StringComparer.Ordinal)
     {
         [SupplyLabel] = "Supply",
@@ -99,6 +123,14 @@ public static class UiText
         [SpeedToast] = "Game speed {speed}",
         [SpeedSetup] = "Game speed: {speed}",
         [SpeedHud] = "SPEED {speed}",
+        [AlertUpgradeComplete] = "Upgrade complete",
+        [AlertProductionIdle] = "Production idle",
+        [AlertProductionBlocked] = "Production blocked",
+        [AlertHarvesterIdle] = "Harvester idle",
+        [IdleHarvesterButton] = "IDLE HARVESTER {count} ({key})",
+        [IdleFactoryButton] = "IDLE FACTORY {count} ({key})",
+        [NoIdleHarvester] = "No idle harvester",
+        [NoIdleFactory] = "No idle factory",
     };
 
     /// <summary>The English text of a key, or the key itself when it is unknown.</summary>

@@ -117,4 +117,8 @@ public enum GameAction
     GameSpeedUp,
     /// <summary>M13-15: slower single-player game speed.</summary>
     GameSpeedDown,
+    /// <summary>M13-15: jump to the next idle harvester (and select it); again for the next one.</summary>
+    IdleHarvester,
+    /// <summary>M13-15: jump to the next idle factory; again for the next one.</summary>
+    IdleFactory,
 }

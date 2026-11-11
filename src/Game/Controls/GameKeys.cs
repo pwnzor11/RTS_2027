@@ -97,6 +97,8 @@ public static class GameKeys
         new(GameAction.QuickLoad, "quick_load", System, "Quickload (asks first)", Keys.F9),
         new(GameAction.GameSpeedUp, "game_speed_up", System, "Faster game speed (skirmish, single player)", Keys.OemPlus),
         new(GameAction.GameSpeedDown, "game_speed_down", System, "Slower game speed (skirmish, single player)", Keys.OemMinus),
+        new(GameAction.IdleHarvester, "idle_harvester", Selection, "Jump to the next idle harvester", Keys.I),
+        new(GameAction.IdleFactory, "idle_factory", Selection, "Jump to the next idle factory", Keys.F),
     };
 
     /// <summary>The Controls page lines, grouped in <see cref="Groups"/> order: rebindable actions and fixed inputs shown for reference.</summary>
@@ -141,7 +143,7 @@ public static class GameKeys
             F(Selection, "Left drag", "Select units in a box"),
             F(Selection, "Shift + click or drag", "Add to the selection (Shift + click on a selected unit removes it)"),
             F(Selection, "Double-click or Ctrl + click", "Select every unit of that type on screen"),
-            A(GameAction.SelectAll),
+            A(GameAction.SelectAll), A(GameAction.IdleHarvester), A(GameAction.IdleFactory),
             A(GameAction.Group1), A(GameAction.Group2), A(GameAction.Group3), A(GameAction.Group4), A(GameAction.Group5),
             A(GameAction.Group6), A(GameAction.Group7), A(GameAction.Group8), A(GameAction.Group9),
             F(Orders, "Right click", "Move, attack, enter, salvage; set a factory's rally point"),
