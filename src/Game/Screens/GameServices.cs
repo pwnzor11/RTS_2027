@@ -84,7 +84,10 @@ public sealed class GameServices
     public int Fps { get; set; }
 
     /// <summary>The window viewport now.</summary>
-    public Viewport Viewport => Graphics.Viewport;
+    public Viewport Viewport => ViewportOverride?.Invoke() ?? Graphics.Viewport;
+
+    /// <summary>Tests only: a viewport to use when there is no graphics device. Null in the game.</summary>
+    public Func<Viewport>? ViewportOverride { get; set; }
 
     /// <summary>THE UI scale for the current window and settings: automatic from the height times the UI scale setting, clamped to what fits.</summary>
     public Ui.UiScaleResult UiScaleInfo => Settings.ResolveUiScale(Viewport.Width, Viewport.Height);

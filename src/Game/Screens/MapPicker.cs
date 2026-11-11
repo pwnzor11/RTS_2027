@@ -93,6 +93,7 @@ public static class MapPicker
         try
         {
             (Rts.Sim.Map.MapData map, MapMeta meta) = MapFile.LoadWithMeta(path);
+            if (meta.Dev) return;   // S19 (D-205): test fixtures (test_32, test_64) are not offered to players
             int max = meta.MaxPlayers > 0 ? Math.Min(meta.MaxPlayers, map.StartPositions.Count) : map.StartPositions.Count;
             if (max < SkirmishSettings.MinPlayers)
             {

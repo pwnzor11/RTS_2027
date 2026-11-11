@@ -32,6 +32,9 @@ public sealed class EditorDocument
     /// <summary>Biome key as in <see cref="MapFile.BiomeKeys"/> (also the theater), or "" for none.</summary>
     public string Biome { get; set; }
 
+    /// <summary>Developer fixture flag (<c>[map] dev = true</c>), kept so re-saving a dev map keeps it.</summary>
+    public bool Dev { get; set; }
+
     /// <summary>Declared symmetry, saved in <c>[map] symmetry</c> and checked by the validator.</summary>
     public MapSymmetry Symmetry { get; set; }
 
@@ -91,7 +94,7 @@ public sealed class EditorDocument
     /// <summary>Copies an existing map and its metadata into a document.</summary>
     public static EditorDocument From(MapData map, MapMeta meta)
     {
-        var d = new EditorDocument(map.Name, meta.Biome, map.Width, map.Height) { Symmetry = meta.Symmetry, Generator = meta.Generator };
+        var d = new EditorDocument(map.Name, meta.Biome, map.Width, map.Height) { Symmetry = meta.Symmetry, Generator = meta.Generator, Dev = meta.Dev };
         for (int i = 0; i < map.Width * map.Height; i++)
         {
             d.Template[i] = map.Template[i]; d.Land[i] = map.Land[i]; d.HeightLevel[i] = map.HeightLevel[i];
@@ -114,6 +117,7 @@ public sealed class EditorDocument
     {
         ConvoyEdge = ConvoyEdge.ToArray(),
         Landing = Landing.ToArray(),
+        Dev = Dev,
     };
 
     internal void SetStarts(IEnumerable<CellCoord> starts) => Starts = new List<CellCoord>(starts);

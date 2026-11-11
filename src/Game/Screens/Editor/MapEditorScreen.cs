@@ -41,7 +41,7 @@ public sealed class MapEditorScreen : IScreen
     private readonly Func<MapData, MapMeta?, TerrainTable?, IReadOnlyList<MapIssue>>? _validator;
     private EditorSession _session;
     private ValidationReport _report = ValidationReport.From(Array.Empty<MapIssue>());
-    private bool _revalidate = true;
+    private bool _revalidate;   // a new blank map shows no errors until the first edit (S18 UX-LM-14); Open sets it
     private bool _saveToData;
     private int _zoom = 3;
     private Point _origin;
@@ -74,6 +74,9 @@ public sealed class MapEditorScreen : IScreen
         _play = play ?? DefaultPlay;
         _session = new EditorSession(NewMapScreen.Build(0, 64), _featureTypes);
     }
+
+    /// <summary>The validation panel's current report (for tests).</summary>
+    public ValidationReport Report => _report;
 
     /// <summary>The editing session (for tests).</summary>
     public EditorSession Session => _session;
@@ -319,7 +322,8 @@ public sealed class MapEditorScreen : IScreen
         _session = new EditorSession(doc, _featureTypes);
         _framed = false;
         _texDirty = true;
-        _revalidate = true;
+        _revalidate = false;
+        _report = ValidationReport.From(Array.Empty<MapIssue>());
         _selectedIssue = -1;
         _currentPath = null;
         Say("New map " + doc.Name);

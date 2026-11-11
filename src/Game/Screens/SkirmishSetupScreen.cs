@@ -280,7 +280,17 @@ public sealed class SkirmishSetupScreen : IScreen
     public static SkirmishSlot ToggleCommander(SkirmishSlot slot) =>
         slot.Kind == SlotKind.Ai ? slot with { Commander = !slot.Commander } : slot;
 
-    private void ToggleSlotCommander(int i) => _slots[i] = ToggleCommander(_slots[i]);
+    /// <summary>True when flipping <paramref name="before"/> to <paramref name="after"/> switches a commander on although no key is set (S19 D-205: say so first).</summary>
+    public static bool NeedsNoKeyNotice(SkirmishSlot before, SkirmishSlot after, bool hasKey) =>
+        before.Kind == SlotKind.Ai && !before.Commander && after.Commander && !hasKey;
+
+    private void ToggleSlotCommander(int i)
+    {
+        SkirmishSlot before = _slots[i];
+        _slots[i] = ToggleCommander(before);
+        if (NeedsNoKeyNotice(before, _slots[i], _hasKey))
+            _s.Screens.Push(new NoticeScreen(_s, SetupText.NoKeyNoticeTitle, SetupText.NoKeyNotice));
+    }
 
     /// <summary>The row text of a slot: "1 Human Authority T1", "2 AI Directorate tier 3 Veteran T2", "3 Closed".</summary>
     public static string SlotLabel(SkirmishSlot slot, int index, IReadOnlyList<string> tierNames)
