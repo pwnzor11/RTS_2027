@@ -46,11 +46,10 @@ public sealed class PathLeakAuditTests
         EntityId a = sim.SpawnVehicle(0, Veh("test_tank"), new CellCoord(10, 10));
         EntityId b = sim.SpawnVehicle(0, Veh("test_tank"), new CellCoord(10, 12));
         int empty = Bytes(sim.Paths);
-        // One whole-map search (goal = a building cell, see SP-01) overdraws the 4000-expansion budget for several ticks.
-        int probe = sim.Paths.Request(new CellCoord(5, 5), sim.Buildings.Cell[hq.Index], Locomotion.Tracked);
+        // A debt of several ticks of the 4000-expansion budget. (Until M13-05 one search for a building cell did this, SP-01; that search
+        // is now small, so the debt is set directly.)
+        typeof(PathService).GetField("_debt", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!.SetValue(sim.Paths, 3 * 4000);
         sim.Step(None);
-        Assert.NotEqual(PathStatus.Pending, sim.Paths.Poll(probe, 0, out _));   // solved and released
-        Assert.Equal(empty, Bytes(sim.Paths));
         sim.Step(new[] { Move(sim, 0, ActorKind.Vehicle, a, 30, 11), Move(sim, 0, ActorKind.Vehicle, b, 30, 11) });
         Assert.True(sim.Units.PathIsGroup[a.Index] && sim.Units.PathId[a.Index] > 0);
         // Still queued: Poll answers Pending for a valid index only while the request is in the queue.

@@ -154,7 +154,14 @@ internal static class CombatMissions
         int dist = LeptonMath.Distance(pos, tp);
         if (dist > w.Range)
         {
-            if (sim.Tick >= e.RetargetTick) { e.ChaseCell = tp.ToCell(); e.RetargetTick = sim.Tick + ChaseRetargetTicks; }
+            if (sim.Tick >= e.RetargetTick)
+            {
+                // M13-05: a building never moves, so a chase cell already on its footprint is kept (a new cell restarts the route search;
+                // the path service turns the footprint cell into the nearest free cell next to it).
+                bool onFootprint = target.Kind == ActorKind.Building && sim.Map.BuildingAt(e.ChaseCell) == target.Id;
+                if (!onFootprint) e.ChaseCell = tp.ToCell();
+                e.RetargetTick = sim.Tick + ChaseRetargetTicks;
+            }
             MoveMission.StepToward(sim, store, kind, i, e.ChaseCell);
             return;
         }

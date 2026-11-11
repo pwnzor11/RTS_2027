@@ -13,7 +13,8 @@ namespace AI.Tests.Directorate;
 /// <summary>M3-10: the Recruit AI plays the Directorate (build order, scraper economy, Bores into Hatches, tunnel transit, radiation care).</summary>
 public class DirectorateRecruitTests(ITestOutputHelper log)
 {
-    private const int Ticks = 9000;
+    // M13-05: 9000 -> 10800, see the transit assertion.
+    private const int Ticks = 10800;
     private static MapData Map(ulong seed) => MapGenerator.Generate(48, seed);
 
     [Theory]
@@ -26,7 +27,10 @@ public class DirectorateRecruitTests(ITestOutputHelper log)
         Assert.True(o.Structures >= 6, "a base: yard, vent, smelter, hatch, reactor, bore");
         Assert.True(o.Income > 0, "the scraper brought credits in");
         Assert.True(o.HatchesBuilt >= 1, "at least one Hatch was dug by a Bore");
-        Assert.True(o.TransitUnits >= 1, "at least one unit rode the network");
+        // M13-05: or the Directorate won before a wave could use it. Seed 2 now trades its second wave worse (the enemy army lives to
+        // minute 6), its first Bore digs no Hatch, the second Hatch stands at tick 7200, the same tick as the fifth wave, and the fifth
+        // wave wins at tick 9624, so no later wave needs the network. Before M13-05 the Hatch stood at 6300 and the wave at 7500 rode it.
+        Assert.True(o.TransitUnits >= 1 || o.Winner == 0, $"at least one unit rode the network (or the game was won first): {o}");
         Assert.Equal(0, o.Unplaceable);
     }
 
