@@ -175,6 +175,27 @@ public sealed class MissionFixTests
     }
 
     [Fact]
+    public void Mis20_Lb01_a_packed_rig_of_another_kind_does_not_keep_the_Mother_Rig_alive()
+    {
+        MissionSession m = MissionSession.Create(TestData.DataDir, "lb_01");
+        var rules = m.Sim.Setup.Rules;
+        int packedType = Rts.Sim.Rules.SimRules.IndexOf(rules.Vehicles, "lb_mother_rig_packed", v => v.Id);
+        int dynamo = Rts.Sim.Rules.SimRules.IndexOf(rules.Buildings, "lb_dynamo_rig", b => b.Id);
+        // A packed rig that was packed from a Dynamo Rig: same vehicle type, different origin (placed before the first step).
+        Rts.Sim.Core.EntityId other = m.Sim.SpawnVehicle(0, packedType, new CellCoord(6, 6));
+        Assert.False(other.IsNone);
+        m.Sim.Rigs.PackedFrom[other.Index] = dynamo + 1;
+        var bot = new MissionBot(m);
+        bot.Idle(5);
+        List<int> rigs = VehiclesOf(m, 0, "lb_mother_rig_packed").Where(i => i != other.Index).ToList();
+        Assert.Single(rigs);   // the Mother Rig, still packed
+        m.Sim.Units.Health[rigs[0]] = 0;   // the Mother Rig is lost
+        bot.Idle(200);
+        Assert.Empty(m.Host.Errors);
+        Assert.Equal(MissionOutcome.Lost, m.Host.Outcome);
+    }
+
+    [Fact]
     public void Mis11_Auth04_killing_the_vent_pushes_the_sunrise_timer_and_the_Devices_charge_out_by_1500()
     {
         MissionSession m = MissionSession.Create(TestData.DataDir, "auth_04");
@@ -189,5 +210,4 @@ public sealed class MissionFixTests
         Assert.Equal(endBefore + 1500, m.Host.Timers.Single(t => t.Id == "sunrise").EndTick);
         Assert.True(ChargeLeft(m, 1) > chargeLeftBefore + 1300, "the Device's real charge must be held back with the timer");
     }
-
 }
