@@ -27,7 +27,7 @@ function OnInit()
   Objective.Add("escort", "lb1.obj.escort", true)
   Objective.AddHidden("cache", "lb1.obj.cache", false)
   -- Objective targets (M11-05): where the HUD points.
-  Objective.SetTarget("deploy", "anchor")
+  Objective.SetTarget("deploy", "camp")
   Objective.SetTarget("scrapers", "survey")
   Objective.SetTarget("escort", "ambush")
   Objective.SetTarget("cache", "cache")
