@@ -5,6 +5,7 @@ using Rts.AI.Recruit;
 using Rts.Data;
 using Rts.Sim;
 using Rts.Sim.Core;
+using Rts.Sim.Missions;
 using Rts.Sim.Rules;
 using Rts.Sim.View;
 using Xunit.Abstractions;
@@ -136,17 +137,26 @@ public class TierCapabilityTests(ITestOutputHelper log)
         int Scatters(int tier)
         {
             TierRig rig = HomeGuardRig(f, tier, 4);
-            rig.Run(900);
-            log.WriteLine($"{f} t{tier}: garrisoned peak {rig.Ai.PeakGarrisoned}");   // the soldiers have walked to the rally cell and stand together
-            int hurt = 0;
-            for (int i = 1; i < rig.Sim.Infantry.Capacity; i++)
-                if (rig.Sim.Infantry.Slots.IsIndexAlive(i) && rig.Sim.Infantry.Player[i] == 0 && hurt < 4
-                    && !ActorLayers.IsCarried(rig.Sim.LayerOf(ActorKind.Infantry, i)))   // S19: a garrisoned soldier is not in the open (D-205)
-                {
-                    rig.Sim.Infantry.Health[i] -= Math.Max(1, rig.World.Sim.Infantry[rig.Sim.Infantry.TypeIndex[i]].MaxHealth / 5);
-                    hurt++;
-                }
-            Assert.True(hurt >= 2, $"at least two soldiers stand in the open to be hit (tier {tier}: {hurt})");
+            // The splash lands on soldiers standing still in the open, a pair close together. A cheaper tree (D-205 Directorate numbers) sends
+            // the first wave out before tick 900, so wait for the moment such a pair exists instead of assuming a fixed tick.
+            var idle = new List<int>();
+            for (int t = 0; t < 900 && idle.Count < 2; t += 10)
+            {
+                rig.Run(10);
+                idle.Clear();
+                for (int i = 1; i < rig.Sim.Infantry.Capacity; i++)
+                    if (rig.Sim.Infantry.Slots.IsIndexAlive(i) && rig.Sim.Infantry.Player[i] == 0
+                        && rig.Sim.Infantry.Mission[i] is MissionKind.Guard or MissionKind.None
+                        && !ActorLayers.IsCarried(rig.Sim.LayerOf(ActorKind.Infantry, i)))   // S19: a garrisoned soldier is not in the open (D-205)
+                        idle.Add(i);
+                bool pair = false;
+                foreach (int x in idle) foreach (int y in idle)
+                    if (x != y && Math.Max(Math.Abs(rig.Sim.Infantry.Position[x].X - rig.Sim.Infantry.Position[y].X), Math.Abs(rig.Sim.Infantry.Position[x].Y - rig.Sim.Infantry.Position[y].Y)) <= 2 * 256) pair = true;
+                if (!pair) idle.Clear();
+            }
+            Assert.True(idle.Count >= 2, $"at least two idle soldiers stand together in the open (tier {tier}: {idle.Count})");
+            foreach (int i in idle)
+                rig.Sim.Infantry.Health[i] -= Math.Max(1, rig.World.Sim.Infantry[rig.Sim.Infantry.TypeIndex[i]].MaxHealth / 5);
             rig.Run(90);
             return rig.Issue(CommandKind.Scatter);
         }
