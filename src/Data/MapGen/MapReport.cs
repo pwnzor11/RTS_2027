@@ -31,18 +31,23 @@ namespace Rts.Data.MapGen;
 /// <param name="AreaNearStartPermille">Per mille of all cells within 12 cells of a start.</param>
 /// <param name="BlockedTerrainPermille">Per mille of cells that are Water, Rock or Cliff.</param>
 /// <param name="HarvestNearestTenths">Harvest travel distance (v6): path cells from a start to its nearest resource cell, averaged over the starts, in tenths.</param>
+/// <param name="HarvestPerStart">Per start (in start order) nearest / mean distance in tenths, as text (the Mountains skew study compares the two starts).</param>
 /// <param name="HarvestMeanTenths">Path cells from a start to the <see cref="HarvestCells"/> nearest resource cells (the first cells its harvesters mine), averaged over the cells and the starts, in tenths.</param>
 public sealed record MapReport(string Name, int Width, int Height, int Starts, int StartPath, int Manhattan, int NearShortestCells, int HalfwayWidth,
     int Fields, int FieldsNearStart, int Ruins, int DeadPermille, int Props, int PropsPer100, int PropClusterShare, int PropMedianCluster,
-    int PropNearStartPermille, int AreaNearStartPermille, int BlockedTerrainPermille, int HarvestNearestTenths = 0, int HarvestMeanTenths = 0)
+    int PropNearStartPermille, int AreaNearStartPermille, int BlockedTerrainPermille, int HarvestNearestTenths = 0, int HarvestMeanTenths = 0, string HarvestPerStart = "")
 {
     /// <summary>How many of the nearest resource cells <see cref="HarvestMeanTenths"/> averages.</summary>
     public const int HarvestCells = 60;
 
     /// <summary>Harvest travel distance of a map (the v6 income lever): per start, the path distance (Tracked 4-way, props and ruins block) from the start cell to
     /// its nearest resource cell and the mean over its <see cref="HarvestCells"/> nearest ones; both averaged over the starts, in tenths of a cell.</summary>
-    public static (int NearestTenths, int MeanTenths) HarvestDistance(MapData map, MapMeta? meta)
+    public static (int NearestTenths, int MeanTenths) HarvestDistance(MapData map, MapMeta? meta) => HarvestDistance(map, meta, out _);
+
+    /// <summary>As above, also listing each start's own numbers.</summary>
+    public static (int NearestTenths, int MeanTenths) HarvestDistance(MapData map, MapMeta? meta, out string perStart)
     {
+        perStart = "";
         ArgumentNullException.ThrowIfNull(map);
         bool[]? blocked = MapAnalysis.FeatureMask(map, meta?.Features);
         long nearSum = 0, meanSum = 0; int counted = 0;
@@ -57,6 +62,7 @@ public sealed record MapReport(string Name, int Width, int Height, int Starts, i
             int take = Math.Min(HarvestCells, list.Count);
             long sum = 0; for (int k = 0; k < take; k++) sum += list[k];
             nearSum += list[0] * 10L; meanSum += sum * 10 / take; counted++;
+            perStart += (perStart.Length > 0 ? " | " : "") + $"{list[0] * 10}/{sum * 10 / take}";
         }
         return counted == 0 ? (0, 0) : ((int)(nearSum / counted), (int)(meanSum / counted));
     }
@@ -155,10 +161,10 @@ public sealed record MapReport(string Name, int Width, int Height, int Starts, i
         perProp.Sort();
         int median = perProp.Count == 0 ? 0 : perProp[perProp.Count / 2];
 
-        (int hNear, int hMean) = HarvestDistance(map, meta);
+        (int hNear, int hMean) = HarvestDistance(map, meta, out string hPer);
         return new MapReport(map.Name, w, h, starts.Count, path, manhattan, near, half, fieldCount, fieldsNear, ruins,
             dead * 1000 / n, props, props * 10000 / n, props == 0 ? 0 : inBig * 1000 / props, median,
-            props == 0 ? 0 : nearStartProps * 1000 / props, areaNear * 1000 / n, blockedTerrain * 1000 / n, hNear, hMean);
+            props == 0 ? 0 : nearStartProps * 1000 / props, areaNear * 1000 / n, blockedTerrain * 1000 / n, hNear, hMean, hPer);
     }
 
     private static void Land(MapData map, out LandType baseLand)
@@ -182,7 +188,7 @@ public sealed record MapReport(string Name, int Width, int Height, int Starts, i
             $"cells within +10% of shortest {NearShortestCells}",
             $"width at the halfway line    {HalfwayWidth}",
             $"resource fields              {Fields}, {F(FieldsNearStart, 10)} within 14 path of a start",
-            $"harvest distance            nearest {F(HarvestNearestTenths, 10)}, mean of the {HarvestCells} nearest cells {F(HarvestMeanTenths, 10)} (path cells from the start)",
+            $"harvest distance            nearest {F(HarvestNearestTenths, 10)}, mean of the {HarvestCells} nearest cells {F(HarvestMeanTenths, 10)} (path cells from the start); per start, tenths: {HarvestPerStart}",
             $"neutral ruins                {Ruins}",
             $"dead ground (nothing in 9x9) {F(DeadPermille, 10)} %",
             $"blocked terrain              {F(BlockedTerrainPermille, 10)} %",

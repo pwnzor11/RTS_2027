@@ -108,6 +108,29 @@ public sealed class MapGenLayout2Tests
         }
     }
 
+    /// <summary>v6 Mountains skew study (Directorate 30/16, Left Behind 29/13 by start index in the 64-game mirrors): over 50 seeds the two starts of a Mountains
+    /// 2-player map are exact half-turn images in land, height, overlay, density and ruin features, so the skew is not in the map data.</summary>
+    [Fact]
+    public void Layout2_Mountains_TwoPlayers_StartsAreExactImages()
+    {
+        for (ulong seed = 1; seed <= 50; seed++)
+        {
+            (MapData map, MapMeta meta) = MapGenerator.GenerateWithMeta(P(MapSize.Medium, 2, seed, Biome.Mountains));
+            int n = map.Width, t = n * n - 1;
+            for (int i = 0; i < n * n; i++)
+            {
+                Assert.Equal(map.Land[i], map.Land[t - i]);
+                Assert.Equal(map.HeightLevel[i], map.HeightLevel[t - i]);
+                Assert.Equal(map.Overlay[i], map.Overlay[t - i]);
+                Assert.Equal(map.Density[i], map.Density[t - i]);
+            }
+            Assert.Equal(map.StartPositions[0].X, n - 1 - map.StartPositions[1].X);
+            Assert.Equal(map.StartPositions[0].Y, n - 1 - map.StartPositions[1].Y);
+            foreach (MapFeature f in meta.Features)
+                Assert.Contains(meta.Features, g => g.Type == f.Type && Math.Abs(g.Cell.X - (n - 1 - f.Cell.X)) <= 3 && Math.Abs(g.Cell.Y - (n - 1 - f.Cell.Y)) <= 3);   // a ruin's cell is its corner, so its image is within its footprint
+        }
+    }
+
     /// <summary>50 seeds x Small/Medium/Large x 2/3/4 players for each biome; filter with <c>--filter Category!=Slow</c>. Every map must generate
     /// with a clean validator; the pass and retry rates are printed, and at least 42 of 50 seeds must pass every layout check.</summary>
     [Trait("Category", "Slow")]
