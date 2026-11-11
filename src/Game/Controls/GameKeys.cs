@@ -95,6 +95,8 @@ public static class GameKeys
         new(GameAction.DecorToggle, "decor_toggle", System, "Show or hide the map decor (decals, boulders, rubble)", Keys.H, KeyContext.Both),
         new(GameAction.QuickSave, "quick_save", System, "Quicksave (skirmish and missions)", Keys.F5),
         new(GameAction.QuickLoad, "quick_load", System, "Quickload (asks first)", Keys.F9),
+        new(GameAction.GameSpeedUp, "game_speed_up", System, "Faster game speed (skirmish, single player)", Keys.OemPlus),
+        new(GameAction.GameSpeedDown, "game_speed_down", System, "Slower game speed (skirmish, single player)", Keys.OemMinus),
     };
 
     /// <summary>The Controls page lines, grouped in <see cref="Groups"/> order: rebindable actions and fixed inputs shown for reference.</summary>
@@ -148,7 +150,7 @@ public static class GameKeys
             A(GameAction.TabStructures), A(GameAction.TabDefences), A(GameAction.TabInfantry), A(GameAction.TabVehicles),
             A(GameAction.TabUpgrades), A(GameAction.TabAircraft),
             F(System, "Esc", "Leave a mode, then open the pause menu"),
-            A(GameAction.Pause), A(GameAction.QuickSave), A(GameAction.QuickLoad),
+            A(GameAction.Pause), A(GameAction.QuickSave), A(GameAction.QuickLoad), A(GameAction.GameSpeedUp), A(GameAction.GameSpeedDown),
             F(System, "F1 or ?", "This list (F1 opens the console in the sandbox)"),
             A(GameAction.Talk),
             A(GameAction.DebugFog), A(GameAction.DebugOccupancy), A(GameAction.DebugPaths), A(GameAction.DebugRanges),

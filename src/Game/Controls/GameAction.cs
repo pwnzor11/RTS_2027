@@ -113,4 +113,8 @@ public enum GameAction
     QuickSave,
     /// <summary>Load the quicksave slot, after a confirmation (D-205).</summary>
     QuickLoad,
+    /// <summary>M13-15: faster single-player game speed (0.5x, 0.75x, 1x, 1.5x, 2x).</summary>
+    GameSpeedUp,
+    /// <summary>M13-15: slower single-player game speed.</summary>
+    GameSpeedDown,
 }

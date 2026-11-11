@@ -66,6 +66,15 @@ public static class UiText
     /// <summary>D-205 (S18 UXG-07): the placement reason of a floating dock (the Anchorage) that does not touch land.</summary>
     public const string MustTouchShore = "ui.placement.must_touch_shore";
 
+    /// <summary>M13-15: toast after the game speed changed in play. Placeholder: <c>{speed}</c> (0.5x, 0.75x, 1x, 1.5x, 2x).</summary>
+    public const string SpeedToast = "ui.speed.toast";
+
+    /// <summary>M13-15: the skirmish setup row of the game speed. Placeholder: <c>{speed}</c>.</summary>
+    public const string SpeedSetup = "ui.speed.setup";
+
+    /// <summary>M13-15: HUD line while the game speed is not 1x. Placeholder: <c>{speed}</c>.</summary>
+    public const string SpeedHud = "ui.speed.hud";
+
     private static readonly Dictionary<string, string> English = new(StringComparer.Ordinal)
     {
         [SupplyLabel] = "Supply",
@@ -87,6 +96,9 @@ public static class UiText
         [ExpeditionStart] = "Your Command Ship is at the centre of the view. Select it and press {key} to land.",
         [MustTouchShore] = "Must touch the shore",
         [SellConfirm] = "Confirm",
+        [SpeedToast] = "Game speed {speed}",
+        [SpeedSetup] = "Game speed: {speed}",
+        [SpeedHud] = "SPEED {speed}",
     };
 
     /// <summary>The English text of a key, or the key itself when it is unknown.</summary>

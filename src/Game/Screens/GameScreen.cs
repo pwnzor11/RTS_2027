@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Rts.Game.Archive;
 using Rts.Game.Controls;
+using Rts.Game.Host;
 using Rts.Game.Input;
 using Rts.Game.Menu;
 using Rts.Game.Render;
@@ -297,6 +298,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
 
         if (_sim is not null && _orders is not null && !_skirmishMode) _card = new Rts.Game.Ui.Card.SelectionCard(_sim, _selection, null, PlayerColours.Base(SimSnapshotSource.LocalPlayer));
         if (!_skirmishMode || _sim is null) return;
+        if (SpeedAllowed) _sim.Host.SpeedPercent = GameSpeed.Effective(_s.Settings.GameSpeedPercent, Networked);   // M13-15
         string spritesRoot = Path.Combine(Path.GetDirectoryName(Path.GetFullPath(_s.RulesDir)) ?? ".", "sprites");
         _cameos = new CameoProvider(_s.Graphics, spritesRoot);
         int colour = Skirmish?.PlayerColour ?? 0;
@@ -424,6 +426,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
             else
             {
                 if (input.ConsumePressed(GameAction.Pause)) _sim.Paused = !_sim.Paused;
+                HandleSpeedKeys(input, typing || chatTyping);   // M13-15
                 if (debugKeys && input.ConsumePressed(GameAction.DebugFog)) _sim.CycleViewer();
                 if (debugKeys && _console is not { IsOpen: true } && input.ConsumePressed(GameAction.DebugSpectator)) StartSpectatorFromSandbox();
             }
@@ -646,6 +649,24 @@ public sealed class GameScreen : IScreen, IFocusPausable
     private readonly GameToast _toast = new();
     private readonly Rts.Game.Ui.Card.SellConfirm _sellConfirm = new();
     private int _lastAutosaveTick = -1;   // -1 = none yet: the first update of a new match takes the start autosave
+
+    // ---- M13-15: game speed (single-player skirmish only; the sim step never changes, only the steps per real second) ----
+
+    /// <summary>There is no LAN game yet; when there is, it sets this and the speed is locked to 1x.</summary>
+    private const bool Networked = false;
+
+    private bool SpeedAllowed => _skirmishMode && !_spectatorMode && Skirmish is not null && _sim is not null && !Networked;
+
+    private void HandleSpeedKeys(InputFrame input, bool typing)
+    {
+        if (!SpeedAllowed || typing || _sim is null) return;
+        int delta = 0;
+        if (input.ConsumePressed(GameAction.GameSpeedUp)) delta = 1;
+        else if (input.ConsumePressed(GameAction.GameSpeedDown)) delta = -1;
+        if (delta == 0) return;
+        _sim.SpeedPercent = GameSpeed.Step(_sim.SpeedPercent, delta);
+        _toast.Show(UiText.Format(UiText.SpeedToast, "speed", GameSpeed.Label(_sim.SpeedPercent)), _nowMs);
+    }
 
     private void HandleSaveKeys(InputFrame input, bool typing)
     {
@@ -1423,6 +1444,8 @@ public sealed class GameScreen : IScreen, IFocusPausable
         if (_s.Settings.ShowDiagnostics)
             lines.Add($"tick {snapshot.Tick}  hash {snapshot.StateHash:x16}  fps {_s.Fps}  zoom {_camera.ZoomLabel}");
         if (_sim is { Paused: true }) lines.Add(debugMode ? "PAUSED (. = step)" : "PAUSED");
+        else if (SpeedAllowed && _sim is { } speedSim && speedSim.SpeedPercent != GameSpeed.Normal)
+            lines.Add(UiText.Format(UiText.SpeedHud, "speed", GameSpeed.Label(speedSim.SpeedPercent)));   // M13-15
 
         if (_orders is { DeployArmed: true }) lines.Add($"DEPLOY: right-click the cell to dig at ({KeyNames.Of(GameKeys.Active.Get(GameAction.Deploy))} cancels)");
         if (_unpack is not null) lines.Add(LeftBehindText.Placeholder(LeftBehindText.UnpackPlacementKey));
