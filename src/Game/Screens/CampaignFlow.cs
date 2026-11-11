@@ -84,7 +84,7 @@ internal static class CampaignFlow
 
     // S18 GS-05: shown when RecordWin could not write the campaign progress file.
     private const string ProgressNotSavedTitle = "Progress not saved";
-    private const string ProgressNotSavedText = "The campaign progress file could not be written, so this win is not kept. Check the free disk space and that the settings folder can be written.";
+    private const string ProgressNotSavedText = "This win could not be saved. Check that your disk has free space.";
 
     private static void AfterWinScreens(GameServices s, CampaignService svc, string faction, bool final)
     {
