@@ -1482,3 +1482,15 @@ so start fairness comes first and each side gets the same crossing mix. The mirr
 **Decision:** Q-69 answered (a). On layout 2, main and natural fields move further from the refinery spot and fewer field patches sit near the
 main, because the income rate follows harvest distance, not field money (D-197). Plus: the owner asked to fix the script drift found by the PC
 re-render (four LB rigs and auth_turret) before the re-render branch becomes the baseline. **Status:** owner decision (session 17)
+
+### D-200 · 2026-11-10 · Art baseline is the owner's PC re-render
+**Decision:** the full re-render on the owner's PC (123 assets, 144 sheets, PR #54) is the committed art baseline, `auth_turret` included, so later
+re-renders on that PC give a clean drift check (D-196). The four Left Behind rigs (muster, lookout, dynamo, refinery) keep the darker grey-edged pad
+the scripts have produced since 29827be; their old sheets were stale (rendered before the shared `lb_common` dust colours changed). `auth_turret`
+differed only by pad-edge pixel rounding between machines (cause not isolated). No script changed. **Status:** owner decision (session 17)
+
+### D-201 · 2026-11-10 · Layout 2 income test: 10-minute point over live games only
+**Decision:** the income blocker of D-197 (within 10 % of layout 1) is measured at 3 and 5 minutes as before; the 10-minute point counts only games
+still running at 10 minutes (tick 12 000). The plain 10-minute mean includes dead sides and games that ended early, so it tracks game length
+(docs/balance/s17_layout1_baseline.md). Reference numbers are the owner's 64-game layout 1 baseline, not the 16-game cells of s16_layout2.md.
+**Status:** owner decision (session 17)

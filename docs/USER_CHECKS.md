@@ -358,3 +358,12 @@ Pull first: `git pull --ff-only origin main` then `git lfs pull` (new sprites). 
 - **Other biomes:** `ai match --layout 2 --biome mountains` and `ai match --layout 2 --biome glass_coast` run; `ai match --layout 2 --biome ash_plains` runs, but the Expedition still builds nothing there (known, not fixed, D-197).
 - **Timeline and matrix:** `ai timeline --layout 2 --biome rust_belt` and `ai matrix --layout 2` run and take the same flags (docs/balance/s16_layout2.md).
 - **Optional laptop run:** `tools/measure/run_s16_layout2.ps1` (32 seeds, 64 games per row, rust_belt and ash_plains by default) gives the layout 2 numbers to compare with the layout 1 base column.
+
+## Session 17 · Art baseline, Expedition start units, map layout 2 v6 (D-198..D-201)
+- **Left Behind rigs:** Muster Rig, Lookout, Dynamo Rig and Refinery Rig stand on the darker grey-edged pad, like the Mother Rig (D-200).
+- **Expedition on Mountains:** start a skirmish as the Expedition on a Mountains map (default layout): you get the Command Ship and the start units
+  (before session 17 the start could be empty).
+- **Ash Plains layout 2:** `map render --biome ash_plains --size m --players 2 --seed 1 --layout 2 --png a.png` shows a bridge and a broken causeway on
+  both sides of the centre field; `map report` with the same arguments prints the harvest distance line.
+- **Expedition v Expedition on Ash Plains layout 2:** `ai match --a tiered:3 --b tiered:3 --faction-a expedition --faction-b expedition --size 96 --seeds 1 --layout 2 --biome ash_plains` ends with both sides having built.
+- **Laptop run (64 games per row):** `powershell -ExecutionPolicy Bypass -File tools\measure\run_s17_layout2.ps1`, results in `balance_runs\s17l2\s17l2_summary.md`.

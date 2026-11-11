@@ -1,6 +1,5 @@
-# Handoff: Session 16 — Directorate early game (Q-67), maps M12 wave 3 (zones and lanes), art follow-ups
-Last commit: `docs: Session 15 handoff` on integ-s15, landed through the PR named in the session 15 log (Windows CI must be green; the owner allowed the
-lead to merge, D-179). Check `git log -1 origin/main` and that integ-s15 is merged.
+# Handoff: Session 17 — layout 2 v6, Expedition start units, art baseline (checkpoint; plan below is from session 15/16)
+Last commit: `docs: checkpoint after s17 wave 1` on integ-s17, landed through the session 17 PR. Check `git log -1 origin/main`.
 Where things stand: **M11 is complete** except the Editor props tool (M12-06b). M11 batch 3 shipped (selection toolkit, alerts, cursors,
 placement ghost, tooltips, production hold, UI scale + text size); the owner play-tested the session 14 UI and liked it. **M12 waves 1-2 are done**
 (decals, blocking props, map format 4, decoration pass with map-study densities, `map report` / `map render`); wave 3 (zones, lanes, start shapes)
@@ -9,15 +8,17 @@ all 18 infantry re-rendered, imported FX and props (credits and licence texts in
 Directorate tier 4-5 economy fix, Left Behind tier-3 cap (D-190). Decisions up to D-190; open question Q-67.
 Full suite: 3 666 tests (Game 1 470, AI 213, Scripting 295, Sim 1 565 on the final integ-s15; Llm 119 and Tools 4 unchanged since their last green run).
 
-## Session 16 checkpoint (2026-11-09, mid-session; full rewrite at wrap-up)
-Landed on main: PR #51 (Q-67 hold 18 D-194, tier-5 hold 24 D-195, team-colour pass on 17 sprites D-192), PR #52 (map layout 2 v4, all biomes, off by
-default; 2v2 default teams D-193). On integ-s16, not yet on main: owner laptop results, `ai match/matrix/timeline --layout --biome --income`,
-docs/balance/s16_layout2.md, layout 2 v5 (coast for the Expedition, Mountains ridge / Ash causeway skeletons, half-turn 2p, income trims), D-196, D-197.
-Open: Q-68 (Ash fairness vs crossings), Q-69 (income lever), the Ash Expedition stall (map valid, 9 convoy cells, 2 landings, AI places nothing: suspect
-ExpeditionTactics.ChooseSite or the start-kit ship spawn on that skeleton), Mountains start skew for Directorate/Left Behind.
-Waiting on the owner: his overnight PC re-render (`art_rerender\<date>\summary.md`, compare\report.md, top_diffs_*.png; branch art/pc-rerender-<date>
-stays local until reviewed) and his s15-series regression run (balance_runs\s15\s15_summary.md, Directorate tuning is closed: read it as a regression check).
-Lessons: render art on the owner's PC (D-196); the layout-2 income rate follows harvest distance, not field money; mirror-diagonal skeletons favour start 1.
+## Session 17 checkpoint (2026-11-10, mid-session; full rewrite at wrap-up)
+Session 16 had no wrap-up; its log entry, user checks and D-198/D-199 were written at the start of session 17. Landed on main: PR #54 (art baseline =
+the owner's PC re-render, D-200). On integ-s17 (PR pending): Expedition start-unit fix (`SkirmishStart.SpawnUnits` second pass to ring 16; fixes the
+Ash Plains layout 2 stall AND the Mountains layout 1 stall found by the baseline), layout 2 v6 (Ash half-turn, main fields about 9 cells out,
+harvest-distance band test, Mountains starts proven exact images), `run_s17_layout1_base.ps1`, `run_s17_layout2.ps1`,
+docs/balance/s17_layout1_baseline.md, D-200, D-201, Q-70. Full suite 3 709 green (Sim 1 589, AI 222, Game 1 471, Scripting 295, Tools 13, Llm 119).
+Open: the owner's 64-game layout 2 v6 run (fairness per biome, income at 3/5 min and 10 min over live games), then Q-70; Mountains start skew
+(not the map: look at the AI or the factions); Glass Coast layout 1 Expedition 55 v 5 by start; M12-12b.
+Lessons: a container restart stops helpers but SendMessage resumes them with context; brief helpers to commit after every step; `git lfs fetch` needs
+the full ref (refs/remotes/origin/<branch>); the owner's laptop does a 16-row 64-game series in about 90 minutes (use it instead of cloud cells);
+layout 1 itself fails the 60 % start limit on two biomes, so measure the baseline before setting a blocker.
 
 ## Start here (shown to the user as the plan; nothing starts until they say go)
 1. Q-67: Directorate tiers 1-3 early game (AI only, measured). Read docs/balance/s15_lbknob.md, s15_q65.md, s15_siege.md first. Target: Left Behind 3

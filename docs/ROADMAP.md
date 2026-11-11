@@ -269,7 +269,8 @@ Source: docs/reviews/2026-11-07_owner_campaign_feedback.md. Audit: docs/reviews/
 - [x] M12-05 Generator decoration pass with the map-study densities (D-183); replaces the old generator (D-180 D4); old saves refused with a message (s15)
 - [x] M12-06 `map report`, `map render --png` (s15)
 - [ ] M12-06b Editor Props tool and decal brush (skipped in s15)
-- [~] M12-07..12 (s16: layout 2 built for all four biomes, off by default; open: Ash Expedition, Ash/Mountains fairness, income — D-197, Q-68, Q-69) Zone skeleton, ~3 lanes and chokes, mixed start shapes (mostly soft shell, some walled with a ramp), natural expansion on about half the maps, 2v2 teammates side by side, fairness checks, income re-measure (design 16 wave 3, revised by D-183 / design 17)
+- [~] M12-07..12 (s16: layout 2 built for all four biomes, off by default. s17: v6 = Ash half-turn D-198, fields further out D-199, Expedition start units fixed; open: 64-game fairness and income on v6, Q-70, Mountains skew is not the map) Zone skeleton, ~3 lanes and chokes, mixed start shapes (mostly soft shell, some walled with a ramp), natural expansion on about half the maps, 2v2 teammates side by side, fairness checks, income re-measure (design 16 wave 3, revised by D-183 / design 17)
+- [ ] M12-12b `ai timeline` builds layout 2 maps without sea for the Expedition (unlike `ai match`); Glass Coast layout 1 Expedition start skew (55 v 5, s17 baseline)
 - [ ] M12-13..16 Stamps, rebuilt data maps, prop art (M10), optional extras (design doc wave 4)
 
 ## M9 · LAN multiplayer (was M5)
