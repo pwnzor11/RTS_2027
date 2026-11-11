@@ -60,6 +60,12 @@ public static class UiText
     /// <summary>D-205: the card's Sell button label after the first click (the second click within 2 s sells).</summary>
     public const string SellConfirm = "ui.card.sell_confirm";
 
+    /// <summary>D-205: the one-line hint at the start of an Expedition match. Placeholder: <c>{key}</c> (the Deploy key).</summary>
+    public const string ExpeditionStart = "ui.expedition.start_hint";
+
+    /// <summary>D-205 (S18 UXG-07): the placement reason of a floating dock (the Anchorage) that does not touch land.</summary>
+    public const string MustTouchShore = "ui.placement.must_touch_shore";
+
     private static readonly Dictionary<string, string> English = new(StringComparer.Ordinal)
     {
         [SupplyLabel] = "Supply",
@@ -78,6 +84,8 @@ public static class UiText
         [QuickloadYes] = "Yes, load the quicksave",
         [QuickloadHint] = "Progress since the quicksave is lost.",
         [AutosaveSetting] = "Autosave: {interval}",
+        [ExpeditionStart] = "Your Command Ship is at the centre of the view. Select it and press {key} to land.",
+        [MustTouchShore] = "Must touch the shore",
         [SellConfirm] = "Confirm",
     };
 

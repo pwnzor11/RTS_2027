@@ -244,6 +244,7 @@ public sealed class GameScreen : IScreen
             mission._gameOverOverride = campaign?.GameOver;
             mission._lastAutosaveTick = loaded.Header.Tick;   // D-205
             mission._groups.Restore(loaded.Header.ControlGroups);
+            mission._startCueDone = true;
             return mission;
         }
 
@@ -252,6 +253,7 @@ public sealed class GameScreen : IScreen
         screen.IsGameOver = () => sim.Sim.GameOver;
         screen._lastAutosaveTick = loaded.Header.Tick;   // D-205: a loaded game waits a full interval for its first autosave
         screen._groups.Restore(loaded.Header.ControlGroups);   // D-205
+        screen._startCueDone = true;
         return screen;
     }
 
@@ -432,6 +434,7 @@ public sealed class GameScreen : IScreen
         if (input.ConsumePressed(GameAction.DecorToggle)) Rts.Game.Render.DecorSettings.Enabled = !Rts.Game.Render.DecorSettings.Enabled;   // M12-03
         HandleSaveKeys(input, typing || chatTyping);   // D-205: F5 quicksave, F9 quickload
         TickAutosave();                                // D-205
+        TickStartCue();                                // D-205
         HandleCameraKeys(input);
         HandleSelectionKeys(input);   // M11-10c: select-all-army and the control groups
 
@@ -695,6 +698,20 @@ public sealed class GameScreen : IScreen
         _lastAutosaveTick = tick;
         string? error = target.Save(Autosave.NextSlot(target.Existing()));
         if (error is not null) _toast.Show(UiText.Format(UiText.AutosaveFailed, "reason", error), _nowMs);
+    }
+
+    // D-205 (S18 UXG-09): once, at the start of a new match, an Expedition player (no building yet) gets the view centred on the Command Ship
+    // and a one-line hint. A loaded game has had its start.
+    private bool _startCueDone;
+
+    private void TickStartCue()
+    {
+        if (_startCueDone || _spectatorMode || !_skirmishMode || _sim is null) return;
+        _startCueDone = true;
+        byte local = SimSnapshotSource.LocalPlayer;
+        if (!ExpeditionCue.Applies(_sim.Sim.HudFor(local), _source.Current, local)) return;
+        if (ExpeditionCue.FindShip(_source.Current, _sim.Rules, local) is { } ship) CentreCameraOn(Camera.WorldFromLepton(ship.Position));
+        _toast.Show(ExpeditionCue.Text(), _nowMs, ExpeditionCue.ToastMs);
     }
 
     // The sidebar panel in the pixels the mouse is reported in (client pixels; they differ from the back buffer while a window is being resized).

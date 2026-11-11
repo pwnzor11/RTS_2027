@@ -67,7 +67,8 @@ public static class PlacementCheck
     /// <param name="result">The sim's terrain and occupancy verdict.</param>
     /// <param name="inRadius">True when the sim's build radius test passes.</param>
     /// <param name="worst">The worst per-cell cause, used to name a plain Blocked.</param>
-    public static string? Reason(PlacementResult result, bool inRadius, CellProblem worst) => result switch
+    /// <param name="needsShore">True for a floating dock (a water building with no water mask, such as the Expedition Anchorage). The sim refuses one that touches no land with a plain Blocked and no cell at fault, so that case is named here (D-205, S18 UXG-07).</param>
+    public static string? Reason(PlacementResult result, bool inRadius, CellProblem worst, bool needsShore = false) => result switch
     {
         PlacementResult.Ok => inRadius ? null : "Too far from your base",
         PlacementResult.OutOfMap => "Off the map",
@@ -80,7 +81,7 @@ public static class PlacementCheck
             CellProblem.Terrain => "Blocked by terrain",
             CellProblem.Building => "Blocked by a building",
             CellProblem.Unit => "Blocked by a unit",
-            _ => "Blocked",
+            _ => needsShore ? UiText.Get(UiText.MustTouchShore) : "Blocked",
         },
     };
 }
