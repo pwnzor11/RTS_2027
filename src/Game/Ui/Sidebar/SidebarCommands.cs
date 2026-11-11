@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
+using Rts.Sim;
 using Rts.Sim.Core;
 using Rts.Sim.Rules;
 
@@ -46,12 +47,19 @@ public static class SidebarCommands
     public static Command Hold(byte player, ProductionCategory category, bool hold) =>
         new(0, player, 0, CommandKind.Hold, EntityId.None, EntityId.None, default, (int)category, hold ? 1 : 0);
 
+    /// <summary>M13-06: the Cancel of the finished structure waiting for placement (full refund), or null when the option is not it.</summary>
+    private static Command? CancelReady(byte player, PlayerHud hud, BuildOption option) =>
+        option.Category is ProductionCategory.Structure or ProductionCategory.Defence && ReadyType(hud, option.Category) == option.TypeIndex
+            ? new Command(0, player, 0, CommandKind.Cancel, EntityId.None, EntityId.None, default, (int)option.Category, Simulation.ReadyCancelPosition)
+            : null;
+
     /// <summary>
     /// S15: the command a right click on a cameo issues, C&amp;C style. The front item in progress goes on hold; a held front item is
     /// cancelled (refund as before); an item queued behind the front is cancelled at once; null when none of that type is queued.
     /// </summary>
     public static Command? RightClick(byte player, PlayerHud hud, BuildOption option)
     {
+        if (CancelReady(player, hud, option) is Command ready) return ready;   // M13-06: a finished structure is cancelled outright
         foreach (QueueView q in hud.Queues)
         {
             if (q.Category != option.Category) continue;
@@ -88,10 +96,11 @@ public static class SidebarCommands
 
     /// <summary>
     /// The Cancel command (plain cancel, no hold step): the front-most queued item of the option's type (position 0 first), or null when none
-    /// of that type is queued. A finished structure waiting for placement cannot be cancelled.
+    /// of that type is queued. A finished structure waiting for placement is cancelled first (M13-06, Arg2 = -1, full refund).
     /// </summary>
     public static Command? Cancel(byte player, PlayerHud hud, BuildOption option)
     {
+        if (CancelReady(player, hud, option) is Command ready) return ready;
         foreach (QueueView q in hud.Queues)
         {
             if (q.Category != option.Category) continue;

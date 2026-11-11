@@ -121,7 +121,8 @@ end
 
 function CarrierLost()
   if state.over or state.escortDone then return end
-  if not Actor.Alive("carrier1") and not Actor.Alive("carrier2") and Actor.Count(0, "auth_carrier") == 0 then
+  -- Only the two survey carriers count: a built carrier is not the survey party (S19 MIS-15).
+  if not Actor.Alive("carrier1") and not Actor.Alive("carrier2") then
     state.over = true
     Objective.Fail("escort")
     Media.MessageKey("a3.lost.carriers")
@@ -147,8 +148,17 @@ end
 
 function CheckEscort()
   if state.escortDone or state.over then return end
-  local alive = Actor.Count(0, "auth_carrier")
-  if alive >= 1 and Actor.CountInZone("coast", 0, "auth_carrier") >= alive then
+  -- The survey carriers by tag, not every auth_carrier: a spare built carrier at home must not block the objective (S19 MIS-15).
+  local z = Map.Zone("coast")
+  local alive, ashore = 0, 0
+  for _, tag in ipairs({ "carrier1", "carrier2" }) do
+    if Actor.Alive(tag) then
+      alive = alive + 1
+      local c = Actor.Cell(tag)
+      if c.x >= z.x0 and c.x <= z.x1 and c.y >= z.y0 and c.y <= z.y1 then ashore = ashore + 1 end
+    end
+  end
+  if alive >= 1 and ashore >= alive then
     state.escortDone = true
     Objective.Complete("escort")
     Media.MessageKey("a3.shore")

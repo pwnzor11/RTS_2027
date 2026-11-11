@@ -80,6 +80,25 @@ public sealed class Selection
     public void Prune(Func<UnitKey, bool> isAlive) => _units.RemoveAll(key => !isAlive(key));
 
     /// <summary>
+    /// S19 D-205: drops every selected unit that the snapshot lists as carried (a soldier ordered to Enter a building leaves the selection
+    /// once it is inside; it cannot be ordered until its carrier unloads it).
+    /// </summary>
+    public void DropCarried(IReadOnlyList<RenderUnit> units) => _units.RemoveAll(key => IsCarried(units, key));
+
+    /// <summary>S19 D-205: <paramref name="keys"/> without the units the snapshot lists as carried (control-group recall keeps the membership but selects only free units).</summary>
+    public static List<UnitKey> WithoutCarried(IEnumerable<UnitKey> keys, IReadOnlyList<RenderUnit> units) => keys.Where(key => !IsCarried(units, key)).ToList();
+
+    private static bool IsCarried(IReadOnlyList<RenderUnit> units, UnitKey key)
+    {
+        foreach (RenderUnit unit in units)
+        {
+            if (unit.View.Carried && UnitKey.Of(unit.View) == key) return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
     /// The unit of <paramref name="localPlayer"/> under a world point: the nearest one within <see cref="PickRadiusPx"/>,
     /// or any such unit in the clicked cell. Null when nothing is hit.
     /// </summary>
@@ -90,7 +109,7 @@ public sealed class Selection
         float bestDistSq = float.MaxValue;
         foreach (RenderUnit unit in units)
         {
-            if (unit.View.Player != localPlayer) continue;
+            if (unit.View.Player != localPlayer || unit.View.Carried) continue;   // S19 D-205: a click on a garrisoned building picks the building
             float distSq = Vector2.DistanceSquared(unit.World, worldPoint);
             bool sameCell = Camera.CellAt(unit.World) == clicked;
             if (!sameCell && distSq > PickRadiusPx * PickRadiusPx) continue;
@@ -108,7 +127,7 @@ public sealed class Selection
     {
         foreach (RenderUnit unit in units)
         {
-            if (unit.View.Player != localPlayer) continue;
+            if (unit.View.Player != localPlayer || unit.View.Carried) continue;   // S19 D-205
             Vector2 p = unit.World;
             if (p.X >= min.X && p.X <= max.X && p.Y >= min.Y && p.Y <= max.Y)
             {
@@ -133,7 +152,7 @@ public sealed class Selection
         foreach (RenderUnit unit in units)
         {
             UnitView v = unit.View;
-            if (v.Player != localPlayer || v.Kind != m.Kind || v.TypeIndex != m.TypeIndex) continue;
+            if (v.Player != localPlayer || v.Carried || v.Kind != m.Kind || v.TypeIndex != m.TypeIndex) continue;   // S19 D-205
             Vector2 p = unit.World;
             if (p.X >= min.X && p.X <= max.X && p.Y >= min.Y && p.Y <= max.Y) yield return UnitKey.Of(v);
         }
@@ -147,7 +166,7 @@ public sealed class Selection
     {
         foreach (RenderUnit unit in units)
         {
-            if (unit.View.Player == localPlayer && isCombat(unit.View)) yield return UnitKey.Of(unit.View);
+            if (unit.View.Player == localPlayer && !unit.View.Carried && isCombat(unit.View)) yield return UnitKey.Of(unit.View);
         }
     }
 

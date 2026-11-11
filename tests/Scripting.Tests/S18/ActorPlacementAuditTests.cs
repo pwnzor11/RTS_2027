@@ -48,16 +48,10 @@ public sealed class ActorPlacementAuditTests
         return found;
     }
 
-    // S18 audit: pins current behaviour of MIS-13; flip the assertion when fixed (the list should be empty).
+    // S19 MIS-13: the three badly placed units were moved (auth_01 svy1 off the water; auth_04 conscript and ashthrower out of the buildings).
     [Fact]
-    public void Audit_Pre_placed_actors_on_impassable_or_occupied_cells()
+    public void Pre_placed_actors_stand_on_passable_free_cells()
     {
-        string[] expected =
-        {
-            "auth_01 auth_rifleman (55,6) terrain",          // svy1 stands on water
-            "auth_04 dir_conscript (44,79) in building",     // inside a reactor vent
-            "auth_04 dir_ashthrower (47,81) in building",    // inside the shaft
-        };
-        Assert.Equal(expected, Problems());
+        Assert.Empty(Problems());
     }
 }

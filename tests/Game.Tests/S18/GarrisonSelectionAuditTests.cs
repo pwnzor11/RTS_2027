@@ -43,40 +43,41 @@ public sealed class GarrisonSelectionAuditTests
         return list;
     }
 
-    // S18 audit: pins current behaviour of SIMDET-01 / SIM-RULES-01 (UI reachability); flip the assertion when fixed.
+    // S19 D-205: the own snapshot still lists the garrisoned soldier, now flagged Carried so the client can skip it.
     [Fact]
-    public void Audit_OwnSnapshot_ListsTheGarrisonedSoldier_AsAnOrdinaryUnit()
+    public void OwnSnapshot_FlagsTheGarrisonedSoldier_AsCarried()
     {
         var (sim, _, man, _) = GarrisonedRifleman();
         UnitView view = Assert.Single(sim.Snapshot(0).Units, u => u.Kind == UnitKind.Infantry && u.Id == man);
-        Assert.False(view.Underground);   // no flag tells the client it is inside a building
+        Assert.True(view.Carried);
+        Assert.False(view.Underground);
         Assert.False(view.Stealthed);
         Assert.DoesNotContain(sim.Snapshot(1).Units, u => u.Kind == UnitKind.Infantry && u.Id == man);
     }
 
-    // S18 audit: pins current behaviour of SIMDET-01 / SIM-RULES-01 (UI reachability); flip the assertion when fixed.
+    // S19 D-205: the selection helpers skip a carried soldier, and a Move order sent to it anyway (a stale selection) is dropped by the sim.
     [Fact]
-    public void Audit_BoxSelectAndSelectArmy_PickTheGarrisonedSoldier_AndAMoveOrderWalksItOut()
+    public void BoxSelectArmyAndPick_SkipTheGarrisonedSoldier_AndAMoveOrderDoesNotWalkItOut()
     {
         var (sim, rules, man, house) = GarrisonedRifleman();
         var key = new UnitKey(ActorKind.Infantry, man);
         List<RenderUnit> units = RenderUnits(sim);
         Vector2 at = Camera.WorldFromLepton(sim.Infantry.Position[man.Index]);   // the building centre
         var pad = new Vector2(4, 4);
-        Assert.Contains(key, Selection.Inside(units, at - pad, at + pad, 0));                               // drag a box over the building
-        Assert.Contains(key, Selection.Army(units, 0, u => Selection.IsCombatUnit(rules.Sim, u)));          // "select army"
-        Assert.Equal(key, Selection.Pick(units, at, 0));                                                    // a plain click on the building centre
+        Assert.DoesNotContain(key, Selection.Inside(units, at - pad, at + pad, 0));                               // drag a box over the building
+        Assert.DoesNotContain(key, Selection.Army(units, 0, u => Selection.IsCombatUnit(rules.Sim, u)));          // "select army"
+        Assert.Null(Selection.Pick(units, at, 0));                                                                // a plain click on the building centre
 
         // The order the game then issues for a right-click on open ground:
         sim.Step(new[] { OrderBuilder.Build(sim.Tick, 0, 1, CommandKind.Move, key, new CellCoord(25, 10), default) });
         for (int t = 0; t < 600; t++) sim.Step(None);
         CellCoord cell = sim.Infantry.Position[man.Index].ToCell();
-        Assert.True(cell.X >= 20, $"the soldier should have walked out toward (25,10), is at {cell}");
+        Assert.True(cell.X < 20, $"the order must be dropped; the soldier is at {cell}");
         Assert.Equal(ActorLayer.Garrisoned, sim.LayerOf(ActorKind.Infantry, man.Index));
         Assert.Equal(1, sim.OccupantsIn(house));
     }
 
-    [Fact(Skip = "S18 SIMDET-01 / SIM-RULES-01: awaiting owner decision")]
+    [Fact]
     public void Desired_SelectionNeverPicksAGarrisonedSoldier()
     {
         var (sim, rules, man, _) = GarrisonedRifleman();

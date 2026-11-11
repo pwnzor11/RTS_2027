@@ -62,6 +62,9 @@ public sealed class GameServices
     /// <summary>Asks the shell to close the window.</summary>
     public Action Quit { get; }
 
+    /// <summary>The folder that holds the saves (campaign and skirmish sub-folders); null = the default folder beside the settings file. Tests point it at a temp folder.</summary>
+    public string? SaveRoot { get; set; }
+
     /// <summary>The animated menu background, or null in headless runs (menu screens then fill a plain colour).</summary>
     public MenuBackground? Background { get; set; }
 

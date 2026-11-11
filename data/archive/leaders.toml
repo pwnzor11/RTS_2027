@@ -304,3 +304,19 @@ Secret: She has already taken personal command of a rescue flight into the Glass
 people living there who were never on any manifest.
 '''
 unlock = "campaign:lb_04" # M8-13 (tune)
+
+# Left Behind leader (S19 MIS-12). Text copied verbatim from docs/lore/left_behind.md (owner-approved lore, section "The Speakers"); no new names.
+
+[[entry]]
+id = "leader_lb_calloway_ross"
+category = "Leader"
+faction = "left_behind"
+title = "Jessup Calloway-Ross"
+subtitle = "War-captain of the caravans"
+body = '''
+Jessup Calloway-Ross is the war-captain, the rig-master of Kettle and the best driver on the Drift. He is loud
+where she is quiet. Since the refusal he has bound the rigs into a loose alliance under his own banner, and the Drift has
+started calling him the warlord. The two agreed for six years on one thing, that the Authority should be asked first. The
+Authority said no, and they have not agreed on anything since.
+'''
+unlock = "open"

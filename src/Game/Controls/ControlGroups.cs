@@ -5,7 +5,7 @@ using Rts.Game.Sandbox;
 namespace Rts.Game.Controls;
 
 /// <summary>
-/// The nine control groups (Ctrl+1..9 sets, 1..9 recalls). UI state only: the simulation never sees it, and it is not saved. A unit
+/// The nine control groups (Ctrl+1..9 sets, 1..9 recalls). UI state (the simulation never sees it; the game save file keeps it, D-205, through <see cref="Snapshot"/> and <see cref="Restore"/>). A unit
 /// belongs to at most one group (setting or adding to a group takes the units out of the others, as in classic RTS games), so the
 /// number drawn on a unit is unambiguous. Dead units are dropped by <see cref="Prune"/>.
 /// </summary>
@@ -64,6 +64,22 @@ public sealed class ControlGroups
     public void Prune(Func<UnitKey, bool> isAlive)
     {
         foreach (List<UnitKey> g in _groups) g.RemoveAll(k => !isAlive(k));
+    }
+
+    /// <summary>The members of all nine groups (index 0 = group 1), copied, for the save file (D-205).</summary>
+    public IReadOnlyList<IReadOnlyList<UnitKey>> Snapshot() => _groups.Select(g => (IReadOnlyList<UnitKey>)g.ToArray()).ToArray();
+
+    /// <summary>
+    /// Replaces every group with the saved ones (index 0 = group 1; missing entries leave a group empty). A unit listed twice keeps
+    /// its first group, so the one-group-per-unit rule still holds for a hand-edited or damaged save.
+    /// </summary>
+    public void Restore(IReadOnlyList<IReadOnlyList<UnitKey>> saved)
+    {
+        Clear();
+        var seen = new HashSet<UnitKey>();
+        for (int i = 0; i < Count && i < saved.Count; i++)
+            foreach (UnitKey key in saved[i])
+                if (seen.Add(key)) _groups[i].Add(key);
     }
 
     /// <summary>Empties every group (a new game).</summary>

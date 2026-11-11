@@ -112,6 +112,11 @@ end
 -- The Device is charged: the player fires it (Special command at the Ash Ridge command).
 function Charged()
   if state.done then return end
+  -- The timer is only an estimate: a power loss pauses the real charge, so ask the Device (S19 MIS-18).
+  if not Actor.Charged("device") then
+    Trigger.AfterDelay(40, Charged)
+    return
+  end
   state.charged = true
   Objective.Complete("hold")
   Media.MessageKey("d4.charged")
@@ -119,10 +124,17 @@ function Charged()
   Camera.Focus("device", 160)
 end
 
+-- Only the charged Device's shot razes the Authority command post for the win; razing it earlier loses the mission (S19 MIS-09).
 function SunriseFired()
   if state.done then return end
+  if not state.charged then
+    -- The command post fell to anything but the Device: the order cannot be carried out, a loss (owner pick, S19 MIS-09).
+    state.done = true
+    Objective.Fail("fire")
+    Mission.Lose(0)
+    return
+  end
   state.done = true
-  if not state.charged then Objective.Complete("hold") end
   Objective.Complete("fire")
   if Objective.Status("west") == "active" then Objective.Reveal("west") end
   Media.MessageKey("d4.win")

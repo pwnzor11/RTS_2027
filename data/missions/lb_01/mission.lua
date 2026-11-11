@@ -27,7 +27,7 @@ function OnInit()
   Objective.Add("escort", "lb1.obj.escort", true)
   Objective.AddHidden("cache", "lb1.obj.cache", false)
   -- Objective targets (M11-05): where the HUD points.
-  Objective.SetTarget("deploy", "anchor")
+  Objective.SetTarget("deploy", "camp")
   Objective.SetTarget("scrapers", "survey")
   Objective.SetTarget("escort", "ambush")
   Objective.SetTarget("cache", "cache")
@@ -175,7 +175,7 @@ function CheckMission()
     Dialogue.Say(SPEAKER, SPEAKER, "lb1.radio.deployed")
     Camera.Focus("camp", 120)
   end
-  if Actor.Count(0, "lb_mother_rig") + Actor.Count(0, "lb_mother_rig_packed") == 0 then
+  if Actor.Count(0, "lb_mother_rig") + Actor.CountPacked(0, "lb_mother_rig") == 0 then
     state.rigGone = state.rigGone + 1
     if state.rigGone >= 2 then return LoseMission("lb1.lost.rig", "deploy") end
   else

@@ -108,7 +108,7 @@ cell = [58, 54]
 [[actors]]
 type = "auth_rifleman"
 player = 2
-cell = [55, 6]
+cell = [55, 7]   # off the water at (55,6); (55,7) keeps the simple-bot Pilot tests green (S19 MIS-13)
 tag = "svy1"
 
 [[actors]]

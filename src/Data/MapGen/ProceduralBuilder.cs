@@ -80,6 +80,7 @@ internal sealed partial class ProceduralBuilder
         Ruins();
         StartSquares();
         ShoreRings();
+        _ocean?.Channel(OrbitStarts[0]);   // M13-01
         int c = _n * _n;
         var map = new MapData(name, _b.Theater, _n, _n, new ushort[c], _g.Land, _g.Height, _g.Overlay, _g.Density, starts);
         if (_decorate) DecorateProps(map);   // M12-05: last of the land passes; the arrays are shared with the map

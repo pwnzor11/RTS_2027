@@ -2,6 +2,7 @@
 // Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Rts.Game.Archive;
 using Rts.Game.Audio;
 using Rts.Game.Input;
 using Rts.Game.Ui;
@@ -29,9 +30,16 @@ internal sealed class MissionOverlay
     private readonly MissionCameraCue _cameraCue = new();
     private int _tick;
 
-    public MissionOverlay(MissionHost host, string briefing = "")
+    private readonly ArchiveCatalog? _archive;
+    private ArchiveCatalog? _names;
+
+    /// <param name="host">The running mission.</param>
+    /// <param name="briefing">The briefing text.</param>
+    /// <param name="archive">The Archive whose Leader titles name the dialogue speakers; null loads the one beside the mission's data folder (S19 MIS-12).</param>
+    public MissionOverlay(MissionHost host, string briefing = "", ArchiveCatalog? archive = null)
     {
         _host = host;
+        _archive = archive;
         Guidance = new ObjectiveGuidance(host, briefing);
     }
 
@@ -76,12 +84,17 @@ internal sealed class MissionOverlay
         return _cameraCue.Take(_host.CameraHint, tick);
     }
 
-    /// <summary>The dialogue line as HUD text: "SPEAKER: text", wrapped (empty when no line is up).</summary>
+    /// <summary>The dialogue line as HUD text: "Speaker name: text", wrapped (empty when no line is up). The name comes from the Archive (S19 MIS-12).</summary>
     public List<string> DialogueLines()
     {
         MissionDialogue? line = _dialogue.Current;
-        return line is null ? new List<string>() : Wrap(line.Speaker.ToUpperInvariant() + ": " + line.Text, WrapChars);
+        if (line is null) return new List<string>();
+        _names ??= _archive ?? SpeakerNames.CatalogFor(_host.Def);
+        return Wrap(SpeakerNames.NameOf(line.Speaker, _names) + ": " + line.Text, WrapChars);
     }
+
+    /// <summary>S19 MIS-07: the script debug line (<see cref="MissionDebugLine"/>), or null when the script is healthy.</summary>
+    public string? DebugLine(bool showDiagnostics) => MissionDebugLine.Of(_host, showDiagnostics);
 
     /// <summary>The objectives panel, so clicks on it never reach the map.</summary>
     public RectRegion ObjectivesRegion { get; } = new(Rectangle.Empty);
@@ -123,7 +136,7 @@ internal sealed class MissionOverlay
     /// <summary>
     /// Draws the panels. <paramref name="helpTop"/> is the y of the key help panel; the ticker sits above it and the dialogue line above the ticker.
     /// </summary>
-    public void Draw(SpriteBatch sb, Texture2D pixel, UiUnit scale, int hudLines, int helpTop, int tick)
+    public void Draw(SpriteBatch sb, Texture2D pixel, UiUnit scale, int hudLines, int helpTop, int tick, bool showDiagnostics = false)
     {
         if (Guidance.Model.Expanded) Hud.Panel(sb, pixel, ObjectivesOrigin(hudLines, scale), ExpandedLines(), scale);
         else Guidance.DrawBar(sb, pixel, scale, MapViewWidth, TimerLines());
@@ -134,6 +147,15 @@ internal sealed class MissionOverlay
         {
             bottom = helpTop - GapPx - Hud.HeightOf(ticker.Count, scale);
             Hud.Panel(sb, pixel, new Point(8, bottom), ticker, scale);
+            bottom -= GapPx;
+        }
+
+        string? debug = DebugLine(showDiagnostics);
+        if (debug != null)
+        {
+            var one = new List<string> { debug };
+            bottom -= Hud.HeightOf(1, scale);
+            Hud.Panel(sb, pixel, new Point(8, bottom), one, scale);
             bottom -= GapPx;
         }
 

@@ -3,6 +3,7 @@
 using Rts.Data;
 using Rts.Game.Host;
 using Rts.Game.Menu;
+using Rts.Game.Sandbox;
 
 namespace Rts.Game.Saves;
 
@@ -11,9 +12,9 @@ public static class GameSaver
 {
     /// <summary>
     /// The header to write now: the game's fixed <paramref name="template"/> (mode, map, rules, AI slots, mission) completed with the
-    /// current tick and the commands still queued in <paramref name="host"/>.
+    /// current tick and the commands still queued in <paramref name="host"/> (and, D-205, the player's control groups when given).
     /// </summary>
-    public static GameSaveHeader Capture(GameSaveHeader template, SimHost host) =>
+    public static GameSaveHeader Capture(GameSaveHeader template, SimHost host, IReadOnlyList<IReadOnlyList<UnitKey>>? controlGroups = null) =>
         template with
         {
             Version = GameSaveHeader.CurrentVersion,
@@ -22,6 +23,7 @@ public static class GameSaver
             Pending = host.Pending.ToArray(),
             Sequences = host.Sequences,
             Ai = template.Ai.Select(a => a with { State = host.Ai?.CaptureState(a.Slot) }).ToArray(),   // M3-21: each AI's own memory
+            ControlGroups = controlGroups ?? template.ControlGroups,
         };
 
     /// <summary>
@@ -29,7 +31,7 @@ public static class GameSaver
     /// failed write never destroys an older save. Returns the path.
     /// </summary>
     /// <exception cref="IOException">The folder or file could not be written.</exception>
-    public static string Save(SaveCatalog catalog, GameSaveHeader template, SimHost host, string rulesDir, string slotName)
+    public static string Save(SaveCatalog catalog, GameSaveHeader template, SimHost host, string rulesDir, string slotName, IReadOnlyList<IReadOnlyList<UnitKey>>? controlGroups = null)
     {
         string path = SaveSlots.PathFor(catalog, SaveSlots.KindOf(template.Mode), slotName);
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
@@ -37,7 +39,7 @@ public static class GameSaver
         try
         {
             using (var file = new FileStream(temp, FileMode.Create, FileAccess.Write, FileShare.None))
-                GameSaveFile.Write(file, Capture(template, host), host.Sim, RulesBundle.ReadDirectory(rulesDir));
+                GameSaveFile.Write(file, Capture(template, host, controlGroups), host.Sim, RulesBundle.ReadDirectory(rulesDir));
             File.Move(temp, path, overwrite: true);
         }
         finally

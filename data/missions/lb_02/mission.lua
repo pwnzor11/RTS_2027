@@ -174,7 +174,7 @@ function CheckMission()
     Media.MessageKey("lb2.gate")
     Dialogue.Say(SPEAKER, SPEAKER, "lb2.radio.gate")
   end
-  if Actor.Count(0, "lb_mother_rig") + Actor.Count(0, "lb_mother_rig_packed") == 0 then
+  if Actor.Count(0, "lb_mother_rig") + Actor.CountPacked(0, "lb_mother_rig") == 0 then
     state.rigGone = state.rigGone + 1
     if state.rigGone >= 2 then return LoseMission("lb2.lost.rig", "gate") end
   else

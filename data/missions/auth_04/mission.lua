@@ -33,6 +33,8 @@ function OnInit()
   AI.Defend(1, "device_site")
 
   Mission.Timer("sunrise", 16000, SunriseFires, "a4.timer.sunrise")
+  -- The Device belongs to the built-in AI: hold its real charge back to the timer so the AI cannot fire it before the scripted moment (S19 MIS-10).
+  Actor.DelayCharge("device", 16000)
   Trigger.AfterDelay(Pick({ 3600, 3300, 3000, 2400, 1800 }), HomeRaidOne)
   Trigger.AfterDelay(Pick({ 7000, 6800, 6500, 4000, 3200 }), HomeRaidTwo)
   AddDefenders()
@@ -106,6 +108,12 @@ function VentDown()
   if Objective.Status("vent") == "active" then
     Objective.Complete("vent")
     Media.MessageKey("a4.vent.down")
+    -- The vent fed the Device: its charge slows, so the scripted moment moves out by 1500 ticks (S19 MIS-11).
+    local left = Mission.TimerLeft("sunrise")
+    if left then
+      Mission.Timer("sunrise", left + 1500, SunriseFires, "a4.timer.sunrise")
+      Actor.DelayCharge("device", left + 1500)
+    end
   end
 end
 

@@ -109,4 +109,8 @@ public enum GameAction
     LastAlert,
     /// <summary>Show or hide the map decor (decals and land-linked sprites) to compare with the bare ground (M12-03).</summary>
     DecorToggle,
+    /// <summary>Save the game into the quicksave slot (D-205).</summary>
+    QuickSave,
+    /// <summary>Load the quicksave slot, after a confirmation (D-205).</summary>
+    QuickLoad,
 }

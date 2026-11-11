@@ -6,7 +6,7 @@
 "step.barracks" = "Power is up. Build a Barracks from the Structure tab and place it near the yard. The Barracks trains infantry."
 "step.train" = "Select the Barracks tab and train a Rifleman. New soldiers join the squad at the Barracks."
 "step.harvest" = "Soldiers cost money. Build a Refinery from the Structure tab. It comes with a free Scraper. Watch it drive to the pitchblende patch next to your base, fill up and bring the load home."
-"step.fight" = "Last lesson. A small enemy camp sits in the north-east. Gather the squad and attack-move onto it. Destroy every soldier and the power plant there. Ignore the lone outpost in the far south-east; it is not part of the exercise."
+"step.fight" = "Last lesson. A small enemy camp sits in the north-east. Gather the squad and attack-move onto it. Destroy every soldier and the power plant there."
 "hint.move" = "Hint: left-click a soldier to select it, then right-click the marked ground to move."
 "hint.attack" = "Hint: select soldiers, then right-click the enemy building to attack it."
 "hint.power" = "Hint: Structure tab, Power Plant, then click a free cell beside the Construction Yard."

@@ -312,6 +312,7 @@ public sealed partial class Simulation
     private void Apply(Command c)
     {
         if (c.Player >= Setup.PlayerCount || _players.Defeated[c.Player]) return;   // defeated players' commands are ignored (D-062)
+        if (IsOrderToCarriedUnit(c)) return;   // S19 D-205: a soldier inside a building or a passenger in a vehicle obeys no unit order
         switch (c.Kind)
         {
             case CommandKind.Move:
@@ -351,6 +352,20 @@ public sealed partial class Simulation
             default:
                 break; // M1: remaining command kinds
         }
+    }
+
+    /// <summary>
+    /// S19 D-205 (M13-04): true for a unit order (Move, Stop, Scatter, Attack, AttackMove, Guard, Enter; subject kind in the low byte of
+    /// <see cref="Command.Arg"/>) whose subject is a live unit carried by something (<see cref="ActorLayers.IsCarried"/>: a garrisoned
+    /// soldier or a vehicle passenger). Such an order would replace the carried mission while the layer stays carried, walking the unit out
+    /// invisible and untargetable. Orders addressed to the CARRIER (Unload, Rally, ...) are not unit orders and are never dropped here.
+    /// </summary>
+    private bool IsOrderToCarriedUnit(Command c)
+    {
+        if (c.Kind is not (CommandKind.Move or CommandKind.Stop or CommandKind.Scatter or CommandKind.Attack or CommandKind.AttackMove
+            or CommandKind.Guard or CommandKind.Enter)) return false;
+        if (StoreOf((ActorKind)(c.Arg & 0xFF)) is not { } store || !store.Slots.IsAlive(c.Subject)) return false;
+        return ActorLayers.IsCarried(_tunnels.LayerOf((ActorKind)(c.Arg & 0xFF), c.Subject.Index));
     }
 
     private void ApplyDebug(Command c)
@@ -455,9 +470,13 @@ public sealed partial class Simulation
                 && !IsAirUnit(ActorKind.Vehicle, i)) return PlacementResult.Blocked;   // M3-INT: air units hold no cell (M3-06)
         for (int i = 1; i < _infantry.Capacity; i++)
             if (_infantry.Slots.IsIndexAlive(i) && InRect(_infantry.Position[i].ToCell(), x0, y0, w, h)) return PlacementResult.Blocked;
+        if (BuildingStoreFull) return PlacementResult.StoreFull;   // M13-07: nothing can be placed, deployed or surfaced into a full store
         if (bt.Wall || bt.Gate) return PlacementResult.Ok;   // M3-04: wall and gate pieces are exempt from the gap rule (D-076)
         return SealsRegion(x0, y0, w, h) ? PlacementResult.SealsRegion : PlacementResult.Ok;
     }
+
+    /// <summary>M13-07: true when the building store (slot 0 is reserved; walls and gates share it) has no free slot.</summary>
+    internal bool BuildingStoreFull => _buildings.Slots.Count >= _buildings.Capacity - 1;
 
     private static bool InRect(CellCoord c, int x0, int y0, int w, int h) =>
         c.X >= x0 && c.X < x0 + w && c.Y >= y0 && c.Y < y0 + h;
@@ -779,6 +798,7 @@ public sealed partial class Simulation
                     {
                         Underground = IsUnderground(kind, i), Stealthed = IsStealthedNow(kind, i),
                         TurretFacing = TurretFacingOf(kind, i), Diving = IsDiving(kind, i),   // M3-21
+                        Carried = ActorLayers.IsCarried(_tunnels.LayerOf(kind, i)),   // S19 D-205
                     });
         }
         ulong hash = _recentHashes.Count > 0 ? _recentHashes[^1].Hash : 0UL;

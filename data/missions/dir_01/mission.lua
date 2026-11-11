@@ -22,7 +22,7 @@ function OnInit()
   Camera.Focus("shaft", 120)
 
   -- The enemy base stays home; the response comes only from the script (unit count by tier, D-061).
-  AI.Defend(1, "site")
+  AI.Defend(1, "enemy_base")
 
   Trigger.Every(20, CheckHatch)
   Trigger.Every(40, CheckMuster)

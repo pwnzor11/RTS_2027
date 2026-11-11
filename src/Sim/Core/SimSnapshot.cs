@@ -77,6 +77,10 @@ public readonly record struct UnitView(EntityId Id, UnitKind Kind, byte Player, 
     /// <summary>M3-21: the unit is in the dive animation of a burrower (<see cref="ActorLayer.Diving"/>: going under or still on the
     /// surface). It is on the surface, so enemies see it like any visible unit.</summary>
     public bool Diving { get; init; }
+
+    /// <summary>S19 D-205: the unit is carried (<see cref="ActorLayers.IsCarried"/>: a garrisoned soldier or a vehicle passenger / docked
+    /// aircraft). It obeys no unit order, so a client must not offer it for selection; it leaves only when its carrier unloads.</summary>
+    public bool Carried { get; init; }
 }
 
 /// <summary>Everything needed to start a deterministic game. RulesHash covers the rules; the map hash is
