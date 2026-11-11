@@ -138,7 +138,10 @@ public static class MapFile
         }
         byte[]? decor = version >= 4 && l.ContainsKey("decor") ? Layer(l, "decor", n, path) : null;
         var map = new MapData(name, theater, w, h, tpl, land, hgtB, ovl, denB, starts, decor);
-        return (map, version >= 2 ? ReadMeta(root, m, map, version, path) : MapMeta.DefaultFor(map));
+        MapMeta meta = version >= 2 ? ReadMeta(root, m, map, version, path) : MapMeta.DefaultFor(map);
+        // S19 (D-205): "dev = true" marks a developer fixture. The skirmish map list hides it; every loader still reads it.
+        if (m.TryGetValue("dev", out object? dev) && dev is true) meta = meta with { Dev = true };
+        return (map, meta);
     }
 
     /// <summary>The letters n, e, s, w (in that order) of the edges set in <paramref name="edges"/>, e.g. "ns".</summary>
@@ -154,6 +157,7 @@ public static class MapFile
         sb.Append("biome = ").Append(Quote(meta.Biome)).Append('\n');
         sb.Append("symmetry = ").Append(Quote(SymmetryKeys[(int)meta.Symmetry])).Append('\n');
         sb.Append("max_players = ").Append(meta.MaxPlayers.ToString(CultureInfo.InvariantCulture)).Append('\n');
+        if (meta.Dev) sb.Append("dev = true\n");
         AppendCells(sb, "convoy_edge", meta.ConvoyEdge);
         AppendCells(sb, "landing", meta.Landing);
         if (meta.Generator is { } g)
