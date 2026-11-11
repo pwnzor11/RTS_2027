@@ -306,6 +306,7 @@ public sealed class GameScreen : IScreen
         _nowMs = (long)t.TotalGameTime.TotalMilliseconds;   // M11-10c: clock for the double-tap rules
         _mouse = input.MousePosition;
         _updatedSinceDraw = true;
+        if (_sim is not null) _income.Observe(_sim.Sim);   // S18 UXG-10: feeds the INCOME/M column of the final table
         UpdateHudRegions();
         UpdateCard(input);   // M11-04: before anything else reads the click
         PlayerHud? localHud = _skirmishMode && _sim is not null ? _sim.Sim.HudFor(SimSnapshotSource.LocalPlayer) : null;
@@ -491,7 +492,10 @@ public sealed class GameScreen : IScreen
         {
             _gameOverShown = true;
             if (_gameOverOverride?.Invoke() is { } replacement) { _s.Screens.Push(replacement); return; }
-            IReadOnlyList<string>? table = _sim is null ? null : SpectatorTable.Final(SpectatorTable.Collect(_sim.Sim));
+            // S18 UXG-10: income from the tracker, columns placed by measured pixels.
+            UiUnit tableScale = _s.UiScale;
+            IReadOnlyList<string>? table = _sim is null ? null
+                : SpectatorTable.Final(SpectatorTable.Collect(_sim.Sim, _income), line => BitmapFont.Measure(line, tableScale));
             _s.Screens.Push(new GameOverScreen(_s, _restart, GameOverHeadline(), table, _spectatorMode, () => _sim?.SaveReplay()));
         }
     }
@@ -560,6 +564,7 @@ public sealed class GameScreen : IScreen
     }
 
     private readonly CursorPreview _cursorPreview = new();
+    private readonly IncomeTracker _income = new();
     private bool _updatedSinceDraw;
 
     // M11-10g: the archive's one-line subtitle for each rules id, for the cameo tooltips (none if the archive is missing).
@@ -1328,8 +1333,10 @@ public sealed class GameScreen : IScreen
         List<string> hud = HudLines(snapshot);
         Hud.Panel(sb, _s.Pixel, new Point(8, 8), hud, scale);
 
-        if (_sim is not null) _mission?.Draw(sb, _s.Pixel, scale, hud.Count, _s.Viewport.Height - 8, snapshot.Tick);
-        if (_sim is not null && !_spectatorMode)   // M11-10d: alert stack, clear of the objective bar and the buttons
+        // S18 UXG-03: the dialogue and ticker sit above the selection card, never under it. S18 UXG-10: the game-over table owns the screen.
+        int missionBottom = _card is { Visible: true } card ? card.Layout.ClearBottom(_s.Viewport.Height - 8, 4) : _s.Viewport.Height - 8;
+        if (_sim is not null && !_gameOverShown) _mission?.Draw(sb, _s.Pixel, scale, hud.Count, missionBottom, snapshot.Tick);
+        if (_sim is not null && !_spectatorMode && !_gameOverShown)   // M11-10d: alert stack, clear of the objective bar and the buttons
         {
             Rectangle mapView = _sidebar?.Layout.MapView ?? new Rectangle(0, 0, _s.Viewport.Width, _s.Viewport.Height);
             Rectangle banner = _mission is null ? Rectangle.Empty : new Rectangle(_mission.ObjectivesRegion.Bounds.X, _mission.ObjectivesRegion.Bounds.Y, _mission.ObjectivesRegion.Bounds.Width, _mission.ObjectivesRegion.Bounds.Height + 48);
