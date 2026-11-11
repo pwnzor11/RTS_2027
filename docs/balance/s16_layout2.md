@@ -191,6 +191,17 @@ Pinned by `Layout2_HarvestDistance_StaysInItsBand` (nearest 7.0-14.0, mean 10.0-
 
 Finding: moving the fields from 4 to 9 path cells and cutting the main's money share moved the rates by only a few percent. The first harvester earns about 5 500 per minute on both layouts (timeline, seed 1), and the AI puts the refinery within a few cells of the yard, so the trip depends on the nearest field cell, which is bounded by the main's size (13-16 cells east of the start) and the 100-cells check. The only change that matched layout 1 at 5 and 10 minutes (rust_belt 2955 / 3824 / 3736) halved the main's cells, which fails the layout check (64 cells within 30 path cells), so it was not kept. Not within +-10 % at 10 minutes on rust_belt, mountains, glass_coast (glass_coast layout 1 itself falls to 1937; not a fair target). Next levers that need an owner decision: relax the 100-cells check for layout 2 (Q-70 proposal), or cut the money permille again (Q-69 excluded it).
 
+**Income against the owner's 64-game layout-1 baseline** (`docs/balance/s17_layout1_baseline.md`; cumulative credits at 3 / 5 min, Authority tier-3 mirror; the 10-minute point counts only games still running at tick 12 000, so it is not compared with the old 10-minute means, which measured game length). v6 is the 4-seed probe above (16 sides) converted to cumulative credits (rate x minutes):
+
+| Biome | Layout 1 (64 games) 3 / 5 min | v6 (16 sides) 3 / 5 min | v6 vs layout 1 | v6 at 10 min, live games only (per minute) |
+|---|---|---|---|---|
+| rust_belt | 8690 / 17858 | 9396 / 20205 | +8 / +13 % | 4553 (16 sides) |
+| mountains | 9051 / 19496 | 9261 / 19800 | +2 / +2 % | 4661 (16 sides) |
+| ash_plains | 9905 / 20821 | 9321 / 19690 | -6 / -5 % | 4100 (12 sides) |
+| glass_coast | 8495 / 15204 | 9183 / 19415 | +8 / +28 % | 4492 (14 sides) |
+
+So at 3 and 5 minutes mountains and ash_plains are within 10 %, rust_belt is within 10 % at 3 minutes only (+13 % at 5), glass_coast is +28 % at 5 minutes (its layout-1 income is the lowest of the four). No layout-1 10-minute live-game figure was given, so none is compared. The Mountains finding stands as written: layout 2 Mountains is symmetric in the map data, and layout 1 Mountains is itself skewed (pooled 64 % to start 1), so the skew is not something this generator work introduces.
+
 **Mountains skew** (Directorate 30/16, Left Behind 29/13 by start index). Checked over 50 seeds (Medium 2p): the two starts are exact half-turn images in land, height level, overlay, density and ruin features (`Layout2_Mountains_TwoPlayers_StartsAreExactImages`), and `map report` per-start harvest distances are identical on all 50 seeds (Mountains and rust_belt). So plateau mains, ridge river, ramp side, natural side and field distance do not differ between the two starts; the skew is not in the map data. Not fixed, nothing invented: the cause is in how the sim or AI treats slot / start order on this terrain (candidate: harvester and placement tie-breaks, `HarvestMission.FindRich`, or the AI's search order), outside this package. The 64-game laptop series will show whether it reproduces (rust_belt and glass_coast mirrors measured even).
 
 Laptop series: `tools/measure/run_s17_layout2.ps1` (tier-3 mirror per faction plus Expedition v Authority, all four biomes, 32 seeds x 2, `--income 1`, writes `balance_runs\s17l2\s17l2_summary.md`); compare with the layout-1 baseline script `run_s17_layout1_base.ps1`.
