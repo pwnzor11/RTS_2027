@@ -25,6 +25,9 @@ public sealed class DpapiSecretStore : ISecretStore
     public static string DefaultPath =>
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "RTS_2027", "llm.key");
 
+    /// <summary>The path of another key file beside the default one (<c>%APPDATA%/RTS_2027/&lt;name&gt;</c>).</summary>
+    public static string PathFor(string fileName) => Path.Combine(Path.GetDirectoryName(DefaultPath)!, fileName);
+
     /// <inheritdoc />
     public string? Load()
     {

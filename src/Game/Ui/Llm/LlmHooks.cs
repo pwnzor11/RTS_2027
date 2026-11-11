@@ -12,15 +12,21 @@ public delegate Task<string> TestConnectionFunc(LlmConfig config, string? key, C
 /// real provider call; tests replace <see cref="SecretStore"/>.</summary>
 public static class LlmHooks
 {
-    private static ISecretStore? _store;
+    private static ProviderKeyring? _keys;
     private static ProviderDefaults? _defaults;
 
-    /// <summary>The key store: DPAPI on Windows, in-memory elsewhere. Settable for tests.</summary>
-    public static ISecretStore SecretStore
+    /// <summary>
+    /// The API keys, one per provider (S18 AI-07): DPAPI files on Windows, in memory elsewhere. Settable for tests. The first use moves
+    /// the key an older version stored for "the" provider (see <see cref="ProviderKeyring.MigrateLegacy"/>).
+    /// </summary>
+    public static ProviderKeyring Keys
     {
-        get => _store ??= CreateDefaultStore();
-        set => _store = value;
+        get => _keys ??= CreateDefaultKeys();
+        set => _keys = value;
     }
+
+    /// <summary>What the first-use migration of the old single key did (<see cref="LegacyKeyOutcome.NoLegacyKey"/> until it runs).</summary>
+    public static LegacyKeyOutcome LegacyOutcome { get; private set; }
 
     /// <summary>Provider defaults from data/llm/providers.toml beside the exe (built-in values if missing). Settable for tests.</summary>
     public static ProviderDefaults Defaults
@@ -32,8 +38,14 @@ public static class LlmHooks
     /// <summary>Runs "Test connection": one small real call through the provider (M5-05). Settable for tests.</summary>
     public static TestConnectionFunc TestConnection { get; set; } = (config, key, ct) => LlmConnectionTest.RunAsync(config, key, ct);
 
-    private static ISecretStore CreateDefaultStore() => OperatingSystem.IsWindows() ? CreateDpapi() : new MemorySecretStore();
+    private static ProviderKeyring CreateDefaultKeys()
+    {
+        if (!OperatingSystem.IsWindows()) return ProviderKeyring.InMemory();
+        ProviderKeyring keys = CreateDpapi();
+        LegacyOutcome = keys.MigrateLegacy(Settings.Load().ProviderKind);
+        return keys;
+    }
 
     [SupportedOSPlatform("windows")]
-    private static ISecretStore CreateDpapi() => new DpapiSecretStore();
+    private static ProviderKeyring CreateDpapi() => ProviderKeyring.Dpapi();
 }
