@@ -168,7 +168,8 @@ end
 -- from the gate, and the mission is not won until it is down.
 function Finale()
   if state.finale then return end
-  if Actor.Alive("shaft") and Actor.Alive("device") then return end
+  -- S18 MIS-03 (owner decision): keep the tested balance, the guard marches on the SECOND blow (Shaft and Device both down).
+  if Actor.Alive("shaft") or Actor.Alive("device") then return end
   state.finale = true
   local types = {}
   for i = 1, Pick({ 10, 12, 14, 22, 32 }) do types[#types + 1] = "dir_conscript" end
