@@ -146,8 +146,32 @@ public class PathServiceTests
         CellCoord end = p[^1];
         Assert.Equal(6, end.X); // closest reachable by Chebyshev is column 6 (distance 2)
         Assert.Equal(2, Math.Max(Math.Abs(end.X - 8), Math.Abs(end.Y - 8)));
-        Assert.Equal(new CellCoord(6, 6), end); // tie by lowest cell index among distance-2 cells
+        Assert.Equal(new CellCoord(6, 8), end); // M13-05: tie by octile distance to the start among distance-2 cells
         Cost(m, t, Locomotion.Foot, new(1, 8), p);
+    }
+
+    [Fact]
+    public void BlockedOrEnclosedGoal_IsRetargeted_SoTheSearchStaysSmall()
+    {
+        // M13-05 (S18 SP-01): a goal the start cannot reach used to expand every reachable cell before answering.
+        var m = Flat(64, 64); var t = Table();
+        for (int x = 58; x <= 60; x++) for (int y = 58; y <= 60; y++) m.SetBuilding(new(x, y), Bld);   // a 3x3 building
+        for (int x = 2; x <= 8; x++) for (int y = 40; y <= 46; y++)                                     // a sealed rock ring
+            if (x == 2 || x == 8 || y == 40 || y == 46) m.SetLand(new(x, y), LandType.Rock);
+        var s = new PathService(m, t);
+        var (st, p) = Solve(s, new(2, 2), new(59, 59));
+        Assert.Equal(PathStatus.Partial, st);
+        Assert.Equal(new CellCoord(57, 57), p[^1]);   // the cell next to the footprint nearest the attacker
+        Assert.InRange(s.LastProcessCost, 1, 400);    // was about 4 000 (the whole map)
+        (st, p) = Solve(s, new(30, 30), new(5, 43));
+        Assert.Equal(PathStatus.Partial, st);
+        Assert.Equal(new CellCoord(9, 39), p[^1]);    // outside the ring (Chebyshev 4 from the goal), nearest the start
+        Assert.InRange(s.LastProcessCost, 1, 400);
+        Assert.Equal(PathStatus.NotFound, Solve(s, new(57, 57), new(59, 59)).Item1);   // already as close as it gets
+        Assert.Equal(0, s.LastProcessCost);
+        (st, p) = Solve(s, new(5, 43), new(30, 30));  // from inside the ring out: nearest cell inside the ring
+        Assert.Equal(PathStatus.Partial, st);
+        Assert.Equal(new CellCoord(7, 43), p[^1]);    // column 7 is all Chebyshev 23 from the goal: nearest the start wins
     }
 
     [Fact]

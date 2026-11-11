@@ -178,6 +178,11 @@ public class HashCoverageTests
         ["PathService.CacheEnabled"] = "a switch for tests and benchmarks; results do not depend on it",
         ["PathService._passer"] = "passer of the request being solved, set at the start of every solve (M3-04 scratch)",
         ["PathService.GateOpen"] = "gate rule delegate wired by the Simulation constructor; a pure function of hashed state (M3-04)",
+        ["PathService.LastProcessCost"] = "diagnostics for tests: expansions charged by the last Process call; never read by the sim (M13-05)",
+        ["PathService._regions"] = "region-label cache, a pure function of map state per (locomotion, passer, map version); rebuilt after a load (M13-05)",
+        ["PathService._epoch"] = "load counter that invalidates the region-label cache; only equality matters (M13-05)",
+        ["PathService._floodQueue"] = "flood-fill scratch for the region labels (M13-05)",
+        ["PathService._startLabels"] = "scratch: the start's region labels within one solve (M13-05)",
         // MapState
         ["MapState.Data"] = "the immutable starting MapData; the live layers are the arrays above",
         ["MapState.Width"] = "constant for the game (from the map)",

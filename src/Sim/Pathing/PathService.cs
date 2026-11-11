@@ -18,8 +18,11 @@ namespace Rts.Sim.Pathing;
 /// order). Straight step 10, diagonal 14, times the destination cell factor 10000 / SpeedPercent. Blocked =
 /// outside the map, SpeedPercent 0 or a building. Diagonals may not cut a blocked corner. The start cell is
 /// never checked. Paths exclude the start and include the end; every cell is returned.</para>
-/// <para>Simplifications: a goal that is blocked or enclosed gives Partial toward the reachable cell closest
-/// by Chebyshev distance (tie: lowest cell index), or NotFound when that cell is the start. A group search is a
+/// <para>Blocked or enclosed goal (M13-05, D-205): reachability comes from region labels (4-connected flood over <c>Factor</c> for the
+/// request's locomotion and passer; a pure function of map state, cached per map version, not saved). When the goal is not in a region
+/// the start can enter, it is retargeted before searching to the nearest cell (Chebyshev ring around the goal) in such a region (tie:
+/// octile distance to the start, then <see cref="LineKey"/>, then lowest cell index); the answer is Partial toward that cell, or NotFound
+/// when that cell is the start. So A* never expands a whole region looking for a goal it cannot reach. A group search is a
 /// backward Dijkstra from the goal bounded to the bounding box of the starts and goal plus 16 cells; starts that
 /// are blocked, outside the map or not reached inside the box get NotFound, and a blocked goal gives NotFound
 /// for all. Groups are not cached.</para>
@@ -83,6 +86,21 @@ public sealed class PathService : ISimStatePart
     private readonly int[] _closed; // == _stamp when expanded
     private int _stamp;
     private byte _passer = NoPasser;   // M3-04: passer of the request being solved (scratch)
+
+    // M13-05: region labels per (locomotion, passer, map version, load epoch). A cache of a pure function of map state.
+    private sealed class Regions
+    {
+        public Locomotion Loco;
+        public byte Passer;
+        public int Version;
+        public int Epoch;
+        public int[] Label = Array.Empty<int>();
+    }
+    private const int RegionSlots = 8;
+    private readonly List<Regions> _regions = new();   // index order only, never keyed
+    private int _epoch;
+    private int[]? _floodQueue;
+    private readonly int[] _startLabels = new int[8];
 
     public PathService(MapState map, TerrainTable terrain, int expansionBudgetPerTick = 4000)
     {
@@ -247,7 +265,17 @@ public sealed class PathService : ISimStatePart
             return hit.Expansions;
         }
 
-        int expansions = Astar(from, to, r.Loco, out PathStatus status, out CellCoord[] path);
+        int expansions;
+        PathStatus status;
+        CellCoord[] path;
+        CellCoord target = ReachableGoal(from, to, r.Loco);   // M13-05: blocked/enclosed goal -> nearest reachable cell
+        if (target == to) expansions = Astar(from, to, r.Loco, out status, out path);
+        else if (target == from) { expansions = 0; status = PathStatus.NotFound; path = Array.Empty<CellCoord>(); }
+        else
+        {
+            expansions = Astar(from, target, r.Loco, out status, out path);
+            if (status == PathStatus.Found) status = PathStatus.Partial;
+        }
         entries[0] = new Entry { Status = status, Path = path };
         if (CacheEnabled)
         {
@@ -255,6 +283,105 @@ public sealed class PathService : ISimStatePart
             _cache[key] = new CacheValue { Status = status, Path = path, Expansions = expansions };
         }
         return expansions;
+    }
+
+    /// <summary>M13-05: region labels for the locomotion and the current passer (0 = blocked), recomputed when the map changed.</summary>
+    private int[] RegionLabels(Locomotion loco)
+    {
+        for (int i = 0; i < _regions.Count; i++)
+        {
+            Regions e = _regions[i];
+            if (e.Loco == loco && e.Passer == _passer && e.Version == _map.Version && e.Epoch == _epoch) return e.Label;
+        }
+        Regions slot;
+        if (_regions.Count < RegionSlots) { slot = new Regions { Label = new int[_w * _h] }; _regions.Add(slot); }
+        else { slot = _regions[0]; _regions.RemoveAt(0); _regions.Add(slot); }   // oldest out; affects speed only
+        slot.Loco = loco; slot.Passer = _passer; slot.Version = _map.Version; slot.Epoch = _epoch;
+        Flood(loco, slot.Label);
+        return slot.Label;
+    }
+
+    /// <summary>4-connected flood (the search never cuts a blocked corner, so this is exactly 8-direction reachability).</summary>
+    private void Flood(Locomotion loco, int[] label)
+    {
+        int w = _w, h = _h, n = w * h;
+        Array.Clear(label);
+        int[] q = _floodQueue ??= new int[n];
+        int next = 0;
+        for (int s = 0; s < n; s++)
+        {
+            if (label[s] != 0 || Factor(s % w, s / w, loco) == 0) continue;
+            int id = ++next;
+            int head = 0, tail = 0;
+            q[tail++] = s; label[s] = id;
+            while (head < tail)
+            {
+                int cur = q[head++];
+                int x = cur % w, y = cur / w;
+                if (y > 0 && label[cur - w] == 0 && Factor(x, y - 1, loco) != 0) { label[cur - w] = id; q[tail++] = cur - w; }
+                if (x < w - 1 && label[cur + 1] == 0 && Factor(x + 1, y, loco) != 0) { label[cur + 1] = id; q[tail++] = cur + 1; }
+                if (y < h - 1 && label[cur + w] == 0 && Factor(x, y + 1, loco) != 0) { label[cur + w] = id; q[tail++] = cur + w; }
+                if (x > 0 && label[cur - 1] == 0 && Factor(x - 1, y, loco) != 0) { label[cur - 1] = id; q[tail++] = cur - 1; }
+            }
+        }
+    }
+
+    /// <summary>
+    /// M13-05: the goal itself when the start can reach it; otherwise the nearest cell (Chebyshev ring around the goal) in a region the
+    /// start can enter (tie: octile distance to the start, then <see cref="LineKey"/>, then lowest cell index). The start's regions are
+    /// its own, or, when the start cell is blocked (never checked), those of the neighbours a first step can enter. With no such
+    /// region the goal is returned unchanged (the search then ends at once).
+    /// </summary>
+    private CellCoord ReachableGoal(CellCoord from, CellCoord to, Locomotion loco)
+    {
+        if (from == to) return to;
+        int[] lab = RegionLabels(loco);
+        int w = _w;
+        int count = 0;
+        int own = lab[from.Y * w + from.X];
+        if (own != 0) _startLabels[count++] = own;
+        else
+            for (int d = 0; d < 8; d++)
+            {
+                int nx = from.X + Dx[d], ny = from.Y + Dy[d];
+                if (Factor(nx, ny, loco) == 0) continue;
+                if ((d & 1) == 1 && (Factor(from.X + Dx[d], from.Y, loco) == 0 || Factor(from.X, from.Y + Dy[d], loco) == 0)) continue;
+                int l = lab[ny * w + nx];
+                bool dup = false;
+                for (int k = 0; k < count; k++) if (_startLabels[k] == l) dup = true;
+                if (!dup) _startLabels[count++] = l;
+            }
+        if (count == 0) return to;
+        bool Reach(int l)
+        {
+            if (l == 0) return false;
+            for (int k = 0; k < count; k++) if (_startLabels[k] == l) return true;
+            return false;
+        }
+        if (Reach(lab[to.Y * w + to.X])) return to;
+
+        int maxR = Math.Max(_w, _h);
+        for (int r = 1; r <= maxR; r++)
+        {
+            int best = -1; long bestD = 0, bestK = 0;
+            for (int y = to.Y - r; y <= to.Y + r; y++)
+            {
+                if (y < 0 || y >= _h) continue;
+                bool edgeRow = y == to.Y - r || y == to.Y + r;
+                int step = edgeRow ? 1 : 2 * r;
+                for (int x = to.X - r; x <= to.X + r; x += step)
+                {
+                    if (x < 0 || x >= _w) continue;
+                    int c = y * w + x;
+                    if (!Reach(lab[c])) continue;
+                    long dd = Heur(x, y, from, 1);
+                    long kk = LineKey(x, y, from.X, from.Y, to.X, to.Y);
+                    if (best < 0 || dd < bestD || (dd == bestD && (kk < bestK || (kk == bestK && c < best)))) { best = c; bestD = dd; bestK = kk; }
+                }
+            }
+            if (best >= 0) return new CellCoord(best % w, best / w);
+        }
+        return to;
     }
 
     private int Astar(CellCoord from, CellCoord to, Locomotion loco, out PathStatus status, out CellCoord[] path)
@@ -469,6 +596,7 @@ public sealed class PathService : ISimStatePart
     {
         _nextId = r.ReadInt32(); _debt = r.ReadInt32();
         _queue.Clear(); _results.Clear(); _cache.Clear();
+        _epoch++;   // M13-05: region labels are recomputed after a load
         int q = r.ReadInt32();
         for (int i = 0; i < q; i++)
         {
