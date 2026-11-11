@@ -33,7 +33,10 @@ public sealed class MidMissionSaveLoadTests
     private void Check(string id, int tier)
     {
         WalkResult straight = WalkCache.Get(id, tier);
-        Assert.True(straight.Won, "the uninterrupted walk must win first: " + straight.Diagnostics);
+        // S18 MIS-03 (owner): the auth_01 tier-5 walk now ends in a loss (both scrapers lost); the save/load check is the same either way:
+        // the resumed walk must end exactly like the uninterrupted one.
+        bool expectWin = !BalanceTableTests.ExpectedLoss(id, tier);
+        Assert.True(straight.Won == expectWin, "the uninterrupted walk must " + (expectWin ? "win" : "lose") + " first: " + straight.Diagnostics);
         int saveAt = straight.Tick / 2;
 
         MissionSession m = MissionSession.Create(TestData.DataDir, id);
@@ -68,7 +71,7 @@ public sealed class MidMissionSaveLoadTests
         Assert.Equal(tier, loadedTier);
         Assert.Null(resumed.Failure);
         Assert.Empty(resumed.Errors);
-        Assert.True(resumed.Won, resumed.Diagnostics);
+        Assert.True(resumed.Won == straight.Won, resumed.Diagnostics);
         Assert.Equal(straight.Tick, resumed.Tick);
         Assert.Equal(straight.PlayerLosses, resumed.PlayerLosses);
         Assert.Equal(straight.EnemyLosses, resumed.EnemyLosses);

@@ -65,8 +65,31 @@ public sealed class PilotMissionTests
 
     [Theory]
     [InlineData(3)]
-    [InlineData(5)]
     public void A_simple_player_can_win(int tier)
+    {
+        (MissionSession m, string diag) = Play(tier);
+        Simulation sim = m.Sim;
+        Assert.True(m.Host.Errors.Count == 0, diag);
+        Assert.True(m.Host.Outcome == MissionOutcome.Won, diag);
+        Assert.True(sim.GameOver);
+        Assert.True(sim.Tick < 14000, diag);
+        Assert.Equal(0, sim.WinningTeam);
+        Assert.All(m.Host.Objectives.Where(o => o.Primary), o => Assert.Equal(ObjectiveStatus.Completed, o.Status));
+    }
+
+    // S18 MIS-03 (owner): at tier 5 this simple bot loses both scrapers in the survey phase; that is now a loss, as the script intends
+    // (before MIS-03 the second ScraperLost saw the dying scraper as alive, so the loss never fired and the bot won anyway).
+    [Fact]
+    public void A_simple_player_that_loses_both_scrapers_at_tier_5_loses()
+    {
+        (MissionSession m, string diag) = Play(5);
+        Assert.True(m.Host.Errors.Count == 0, diag);
+        Assert.True(m.Host.Outcome == MissionOutcome.Lost, diag);
+        Assert.Equal(ObjectiveStatus.Failed, m.Host.Objectives.Single(o => o.Id == "scrapers").Status);
+        Assert.True(m.Sim.Players.Defeated[0]);
+    }
+
+    private static (MissionSession M, string Diag) Play(int tier)
     {
         MissionSession m = MissionSession.Create(TestData.DataDir, "auth_01");
         m.Host.SetDifficulty(tier);
@@ -78,7 +101,7 @@ public sealed class PilotMissionTests
         var site = new CellCoord(56, 6);
         bot.OrderAll(CommandKind.AttackMove, site);
         int queuedPower = -1, queuedRefinery = -1;
-        for (int guard = 0; guard < 14000 && !sim.GameOver; guard++)
+        for (int guard = 0; guard < 14000 && !sim.GameOver && m.Host.Outcome == MissionOutcome.None; guard++)
         {
             bool build = m.Host.Objectives.Any(o => o.Id == "refinery");
             if (build && queuedPower < 0) { bot.Send(CommandKind.Build, default, default, (int)ProductionCategory.Structure, power); queuedPower = sim.Tick; continue; }
@@ -95,11 +118,6 @@ public sealed class PilotMissionTests
         }
 
         string diag = $"tick {sim.Tick} objectives [{string.Join("; ", m.Host.Objectives.Select(o => o.Id + "=" + o.Status))}] units {sim.Units.Slots.Count} inf {sim.Infantry.Slots.Count} bld {sim.Buildings.Slots.Count} msgs [{string.Join(" | ", m.Host.Messages.Select(x => x.Tick + ":" + x.Text))}] errors [{string.Join("; ", m.Host.Errors)}] cash {sim.Players.Cash[0]}";
-        Assert.True(m.Host.Errors.Count == 0, diag);
-        Assert.True(m.Host.Outcome == MissionOutcome.Won, diag);
-        Assert.True(sim.GameOver);
-        Assert.True(sim.Tick < 14000, diag);
-        Assert.Equal(0, sim.WinningTeam);
-        Assert.All(m.Host.Objectives.Where(o => o.Primary), o => Assert.Equal(ObjectiveStatus.Completed, o.Status));
+        return (m, diag);
     }
 }
