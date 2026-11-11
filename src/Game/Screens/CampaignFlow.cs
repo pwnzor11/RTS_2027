@@ -88,6 +88,7 @@ internal static class CampaignFlow
 
         while (s.Screens.Top is not MissionSelectScreen) s.Screens.Pop();   // debrief, game, briefing
         ((MissionSelectScreen)s.Screens.Top).Refresh();
+        foreach (CampaignScreen c in s.Screens.Screens.OfType<CampaignScreen>()) c.Refresh();   // S18 GS-04: newly opened factions, counts
         if (final && LoadEnding(s, svc, faction) is { } ending)
             s.Screens.Push(new EndingScreen(s, new EndingModel(ending, svc.Progress(faction)), Path.Combine(DataDir(s), "images", "endings")));
     });
