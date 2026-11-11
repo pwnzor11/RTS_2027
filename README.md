@@ -469,7 +469,7 @@ Every key can be rebound in Settings; **F1** or **?** lists them in game.
 |---|---|
 | Camera | Arrow keys or mouse at the screen edge scroll (Shift is twice as fast); wheel zooms; middle-drag moves; click the minimap; **Home** centres on your base; **End** jumps to the last alert; **F6, F7, F8, F12** recall a camera bookmark and **Ctrl** with the key stores it |
 | Selecting | Left click or drag a box; Shift adds; double-click or Ctrl-click selects every unit of that type on screen; **C** selects all combat units; **1 to 9** recall a control group, **Ctrl+n** sets it, **Shift+n** adds to it, twice quickly centres the view |
-| Orders | Right click moves, attacks, enters or salvages, and sets a factory's rally point; **Ctrl + right click** attacks the ground; **A** then click is attack-move; **S** stop; **G** guard; **X** scatter; **D** deploy or unload; **K** pack or unpack a rig |
+| Orders | Right click moves, attacks, enters or salvages, and sets a factory's rally point; **A** then click is attack-move; **S** stop; **G** guard; **X** scatter; **D** deploy or unload; **K** pack or unpack a rig |
 | Building | **Q W E R T** (and **Y** for aircraft) pick the sidebar tab; right click a cameo cancels; **Esc** backs out of placing |
 | System | **Space** pauses; **F5** quicksave; **F9** quickload (asks first); **Enter** talks to an AI commander; **H** hides map decor |
 | Missions | **J** jumps to the objective, **Tab** cycles objectives, **O** lists them |
