@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
+using Rts.Sim.Tests.S18;
 using System.Diagnostics;
 using Rts.Sim.Core;
 using Rts.Sim.Vision;
@@ -79,7 +80,7 @@ public class VisionPerformanceTests(ITestOutputHelper output)
         }
     }
 
-    [Fact]
+    [ProbeFact("RTS_PERF")]
     public void RandomWalk_400ActorsOn128x128For200Steps_LogsTicksPerSecond()
     {
         var sw = Stopwatch.StartNew();

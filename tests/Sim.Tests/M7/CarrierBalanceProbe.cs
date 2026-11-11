@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
+using Rts.Sim.Tests.S18;
 using System.Text;
 using Rts.Data;
 using Rts.Sim.Core;
@@ -102,7 +103,7 @@ public sealed class CarrierBalanceProbe
     private static int Cost(SimRules r, string spec) =>
         spec.Split(',').Sum(part => { var p = part.Split(':'); int n = p.Length > 1 ? int.Parse(p[1]) : 1; return n * r.Vehicles[SimRules.IndexOf(r.Vehicles, p[0], t => t.Id)].Cost; });
 
-    [Fact]
+    [ProbeFact("RTS_BALANCE_PROBE")]
     public void Probe()
     {
         string? outFile = Environment.GetEnvironmentVariable("RTS_BALANCE_PROBE");

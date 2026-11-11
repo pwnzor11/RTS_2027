@@ -15,6 +15,7 @@ using Rts.Sim.Rules;
 namespace Rts.Game.Tests.Integration;
 
 /// <summary>M4-INT2: setup v2 settings reach a running sim through the factory the game screen uses, saves and replays of N-player and generated games.</summary>
+[Collection("UiStatics")]   // S18 TESTS-REPO-01: touches process-wide statics, runs alone
 public sealed class M4SkirmishIntegrationTests
 {
     private static SkirmishSlot Slot(SlotKind kind, int colour, int team, int tier = 1, Faction faction = Faction.Authority) =>
