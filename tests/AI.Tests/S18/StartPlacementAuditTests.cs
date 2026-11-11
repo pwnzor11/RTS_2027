@@ -109,7 +109,7 @@ public class StartPlacementAuditTests(ITestOutputHelper output)
         }
     }
 
-    [Theory(Skip = "S18 AI-02: awaiting owner decision")]
+    [Theory]
     [InlineData(1UL)]
     [InlineData(5UL)]
     [InlineData(6UL)]
@@ -158,7 +158,7 @@ public class StartPlacementAuditTests(ITestOutputHelper output)
         }
     }
 
-    [Fact(Skip = "S18 AI-03: awaiting owner decision")]
+    [Fact]
     public void Expedition_CommandShip_SpawnsOnSeaThatReachesTheMapEdge()
     {
         Simulation sim = Start(Biome.Mountains, 1, 2UL, Faction.Expedition);
