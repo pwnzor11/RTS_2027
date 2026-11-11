@@ -32,7 +32,8 @@ internal static class CampaignFlow
         bool final = MissionSelectModel.IsFinal(svc, faction, missionId);
         ArchiveCatalog catalog = LoadCatalog(s);
         var model = DebriefModel.Build(game.Def.Title, missionId, game.Sim.Tick, game.Host.Objectives, before, after, tier, final, catalog);
-        return new DebriefScreen(s, model, () => AfterWin(s, svc, faction, final));
+        bool saved = svc.LastWinSaved;   // S18 GS-05: a failed progress write is told after the debrief
+        return new DebriefScreen(s, model, () => AfterWin(s, svc, faction, final, saved));
     };
 
     /// <summary>
@@ -75,7 +76,17 @@ internal static class CampaignFlow
     }
 
     /// <summary>Leaves the debrief: back to the mission select (refreshed), then the ending when the faction's last mission was won.</summary>
-    public static void AfterWin(GameServices s, CampaignService svc, string faction, bool final) => s.Screens.Post(() =>
+    public static void AfterWin(GameServices s, CampaignService svc, string faction, bool final, bool saved = true) => s.Screens.Post(() =>
+    {
+        AfterWinScreens(s, svc, faction, final);
+        if (!saved) s.Screens.Push(new NoticeScreen(s, ProgressNotSavedTitle, ProgressNotSavedText));
+    });
+
+    // S18 GS-05: shown when RecordWin could not write the campaign progress file.
+    private const string ProgressNotSavedTitle = "Progress not saved";
+    private const string ProgressNotSavedText = "The campaign progress file could not be written, so this win is not kept. Check the free disk space and that the settings folder can be written.";
+
+    private static void AfterWinScreens(GameServices s, CampaignService svc, string faction, bool final)
     {
         if (!s.Screens.Screens.Any(x => x is MissionSelectScreen))
         {
@@ -91,5 +102,5 @@ internal static class CampaignFlow
         foreach (CampaignScreen c in s.Screens.Screens.OfType<CampaignScreen>()) c.Refresh();   // S18 GS-04: newly opened factions, counts
         if (final && LoadEnding(s, svc, faction) is { } ending)
             s.Screens.Push(new EndingScreen(s, new EndingModel(ending, svc.Progress(faction)), Path.Combine(DataDir(s), "images", "endings")));
-    });
+    }
 }

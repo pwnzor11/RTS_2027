@@ -242,7 +242,9 @@ public sealed record Settings(
             string file = path ?? DefaultPath;
             string? dir = Path.GetDirectoryName(file);
             if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
-            File.WriteAllText(file, ToToml());
+            string tmp = file + ".tmp";   // S18 GS-05: a crash mid-write no longer truncates the settings
+            File.WriteAllText(tmp, ToToml());
+            File.Move(tmp, file, overwrite: true);
             return true;
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException)
