@@ -143,9 +143,7 @@ public sealed class SkirmishSetupScreen : IScreen
     }
 
     /// <inheritdoc />
-    public void Exit()
-    {
-    }
+    public void Exit() => SaveSpeed();
 
     /// <inheritdoc />
     public void Update(InputFrame input, GameTime t)
@@ -242,7 +240,19 @@ public sealed class SkirmishSetupScreen : IScreen
     private void StepSpeed(int delta)
     {
         _s.Settings = _s.Settings with { GameSpeedPercent = GameSpeed.Step(_s.Settings.GameSpeedPercent, delta) };
-        _s.Settings.Save();
+        _speedChanged = true;
+    }
+
+    private bool _speedChanged;
+
+    /// <summary>Where the game speed is saved (tests point it at a temp file); null = the default settings file. Saved when the screen is left or a game starts.</summary>
+    public string? SettingsPath { get; set; }
+
+    private void SaveSpeed()
+    {
+        if (!_speedChanged) return;
+        _speedChanged = false;
+        _s.Settings.Save(SettingsPath);
     }
 
     private string SizeText() => SizeTextFor(_size, _slots.Count(x => x.Kind != SlotKind.Closed));
@@ -475,6 +485,7 @@ public sealed class SkirmishSetupScreen : IScreen
         try
         {
             GameScreen screen = GameScreen.CreateSkirmish(_s, settings);
+            SaveSpeed();
             _error = "";
             _s.Screens.Push(screen);
         }
