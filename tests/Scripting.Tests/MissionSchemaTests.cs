@@ -32,7 +32,7 @@ public sealed class MissionSchemaTests : IDisposable
         Assert.Equal(1, d.Act);
         Assert.Equal("authority", d.Faction);
         Assert.Equal(new[] { "auth_02" }, d.Next);
-        Assert.Equal(6, d.StartsWith.Count);
+        Assert.Equal(7, d.StartsWith.Count);
         Assert.Equal(new[] { "auth_turret" }, d.UnlocksOnWin);
         Assert.Equal("locale.toml", d.LocaleFile);
         Assert.Empty(d.Locale.Warnings);
