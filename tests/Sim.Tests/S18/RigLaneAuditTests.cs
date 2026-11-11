@@ -33,45 +33,15 @@ public sealed class RigLaneAuditTests
     }
 
     [Fact]
-    public void Audit_NoShippedBuildingProducesStructuresOrDefences_SoTheRigPauseNeverMatches()
+    public void NoShippedBuildingProducesStructuresOrDefences_SoThePauseIsTiedToTheRootRig()
     {
-        // S18 audit: pins current behaviour of FACTION-LE-03; flip the assertion when fixed.
+        // Still true after M13-09: the pause is tied to the root rig, not to a Produces value (see RootRigDown).
         Assert.DoesNotContain(S18World.RealRules.Buildings,
             b => b.Produces == ProductionCategory.Structure || b.Produces == ProductionCategory.Defence);
         Assert.Null(S18World.RealRules.Buildings.Single(b => b.Id == "lb_mother_rig").Produces);
     }
 
     [Fact]
-    public void Audit_StructureAndDefenceLanes_KeepBuildingWhileTheMotherRigIsPackingAndPacked()
-    {
-        // S18 audit: pins current behaviour of FACTION-LE-03; flip the assertion when fixed.
-        Run r = Start();
-        S18World w = r.W;
-        Assert.Equal(1, w.Sim.Production.QueueLength(0, ProductionCategory.Structure));
-        Assert.Equal(1, w.Sim.Production.QueueLength(0, ProductionCategory.Defence));
-
-        w.Run(1, w.Cmd(0, CommandKind.Pack, r.Rig));
-        int atOrder = w.Sim.Production.Ticks[r.StructLane];
-        int packTicks = w.Rules.Buildings[w.B("lb_mother_rig")].PackTicks;
-        w.Run(packTicks / 2);
-        int whilePacking = w.Sim.Production.Ticks[r.StructLane];
-        Assert.True(whilePacking > atOrder, "the structure lane advanced while the rig was packing");
-
-        w.Run(packTicks / 2 + 5);
-        Assert.False(w.Sim.Buildings.Slots.IsAlive(r.Rig));   // the building is gone
-        Assert.True(HasPackedRig(w.Sim));                      // and drives as a packed rig
-        int packedA = w.Sim.Production.Ticks[r.StructLane];
-        w.Run(30);
-        int packedB = w.Sim.Production.Ticks[r.StructLane];
-        Assert.True(packedB > packedA, "the structure lane advanced while the rig was packed");
-        Assert.Equal(r.Nest, w.Sim.Production.ReadyType(0, ProductionCategory.Defence));   // the defence finished meanwhile
-
-        w.Run(900);
-        Assert.True(HasPackedRig(w.Sim));
-        Assert.Equal(r.Refinery, w.Sim.Production.ReadyType(0, ProductionCategory.Structure));   // a whole Refinery Rig was built with no conyard standing
-    }
-
-    [Fact(Skip = "S18 FACTION-LE-03: awaiting owner decision")]
     public void Desired_StructureLane_MakesNoProgressWhileTheMotherRigIsPacked()
     {
         Run r = Start();
