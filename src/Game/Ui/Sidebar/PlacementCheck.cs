@@ -73,6 +73,7 @@ public static class PlacementCheck
         PlacementResult.OutOfMap => "Off the map",
         PlacementResult.SealsRegion => "Would seal off an area",
         PlacementResult.OutsideBeachhead => "Outside your beachhead",
+        PlacementResult.StoreFull => "Too many buildings",   // M13-07
         _ => worst switch
         {
             CellProblem.Water => "Not on water",

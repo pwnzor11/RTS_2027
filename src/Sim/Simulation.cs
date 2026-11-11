@@ -455,9 +455,13 @@ public sealed partial class Simulation
                 && !IsAirUnit(ActorKind.Vehicle, i)) return PlacementResult.Blocked;   // M3-INT: air units hold no cell (M3-06)
         for (int i = 1; i < _infantry.Capacity; i++)
             if (_infantry.Slots.IsIndexAlive(i) && InRect(_infantry.Position[i].ToCell(), x0, y0, w, h)) return PlacementResult.Blocked;
+        if (BuildingStoreFull) return PlacementResult.StoreFull;   // M13-07: nothing can be placed, deployed or surfaced into a full store
         if (bt.Wall || bt.Gate) return PlacementResult.Ok;   // M3-04: wall and gate pieces are exempt from the gap rule (D-076)
         return SealsRegion(x0, y0, w, h) ? PlacementResult.SealsRegion : PlacementResult.Ok;
     }
+
+    /// <summary>M13-07: true when the building store (slot 0 is reserved; walls and gates share it) has no free slot.</summary>
+    internal bool BuildingStoreFull => _buildings.Slots.Count >= _buildings.Capacity - 1;
 
     private static bool InRect(CellCoord c, int x0, int y0, int w, int h) =>
         c.X >= x0 && c.X < x0 + w && c.Y >= y0 && c.Y < y0 + h;

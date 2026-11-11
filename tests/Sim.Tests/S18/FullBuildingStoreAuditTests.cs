@@ -23,35 +23,35 @@ public sealed class FullBuildingStoreAuditTests
         return sim;
     }
 
-    // S18 audit: pins current behaviour of SIMDET-02; flip the assertion when fixed.
+    // M13-07 (D-205): inverted from Audit_DeployInPlace_...: the deploy is refused and the vehicle stays.
     [Fact]
-    public void Audit_DeployInPlace_WithAFullBuildingStore_RemovesTheVehicleAndBuildsNothing()
+    public void DeployInPlace_WithAFullBuildingStore_IsRefused_AndTheVehicleStays()
     {
         Simulation sim = FullBurrowSim();
         EntityId train = sim.SpawnVehicle(0, BurrowWorld.Train, new CellCoord(20, 20));
         int buildings = sim.Buildings.Slots.Count;
         sim.Step(new[] { BurrowWorld.Cmd(sim, CommandKind.Deploy, train, default, (int)ActorKind.Vehicle) });
-        Assert.False(sim.Units.Slots.IsAlive(train));                       // the land-train is gone
+        Assert.True(sim.Units.Slots.IsAlive(train));                        // the land-train is still there
         Assert.Equal(buildings, sim.Buildings.Slots.Count);                 // and no Shaft exists
         Assert.True(sim.Map.BuildingAt(new CellCoord(20, 20)).IsNone);
     }
 
-    // S18 audit: pins current behaviour of SIMDET-02; flip the assertion when fixed.
+    // M13-07: inverted from Audit_BoreBreakThrough_...: the Bore is kept (it surfaces as a unit instead).
     [Fact]
-    public void Audit_BoreBreakThrough_WithAFullBuildingStore_LosesTheBore()
+    public void BoreBreakThrough_WithAFullBuildingStore_KeepsTheBore()
     {
         Simulation sim = FullBurrowSim();
         EntityId bore = sim.SpawnVehicle(0, BurrowWorld.Bore, new CellCoord(10, 10));
         int buildings = sim.Buildings.Slots.Count;
         sim.Step(new[] { BurrowWorld.DeployAt(sim, bore, 20, 10) });
         for (int t = 0; t < 2000 && sim.Units.Slots.IsAlive(bore); t++) sim.Step(None);
-        Assert.False(sim.Units.Slots.IsAlive(bore));
+        Assert.True(sim.Units.Slots.IsAlive(bore));
         Assert.Equal(buildings, sim.Buildings.Slots.Count);
         Assert.True(sim.Map.BuildingAt(new CellCoord(20, 10)).IsNone);
         Assert.Empty(sim.Tunnels.Telegraphs);
     }
 
-    [Fact(Skip = "S18 SIMDET-02: awaiting owner decision")]
+    [Fact]
     public void Desired_Deploy_WithAFullBuildingStore_KeepsTheVehicle()
     {
         Simulation sim = FullBurrowSim();
@@ -75,9 +75,9 @@ public sealed class FullBuildingStoreAuditTests
         return sim;
     }
 
-    // S18 audit: pins current behaviour of SIMDET-02 / SP-02; flip the assertion when fixed.
+    // M13-07: inverted from Audit_ReadyStructure_CannotBePlacedInAFullStore_WhileCanPlaceSaysOk: the ghost is refused with StoreFull, and Cancel (M13-06) frees the lane.
     [Fact]
-    public void Audit_ReadyStructure_CannotBePlacedInAFullStore_WhileCanPlaceSaysOk()
+    public void ReadyStructure_InAFullStore_IsRefusedWithStoreFull_AndCanBeCancelledForARefund()
     {
         Simulation sim = TightBase(spare: 0);
         int power = ProductionFixture.Bld("test_power");
@@ -86,23 +86,25 @@ public sealed class FullBuildingStoreAuditTests
         ProductionFixture.RunUntil(sim, () => sim.Production.ReadyType(0, Structure) == power);
         int cash = sim.Players.Cash[0];
         var site = new CellCoord(1, 1);
-        Assert.Equal(PlacementResult.Ok, sim.CanPlace(0, power, site));     // the ghost is green
-        Assert.True(sim.CanPlaceReady(0, power, site));
+        Assert.Equal(PlacementResult.StoreFull, sim.CanPlace(0, power, site));   // the ghost is red, with a reason
+        Assert.False(sim.CanPlaceReady(0, power, site));
         sim.Step(new[] { ProductionFixture.Place(sim, power, site.X, site.Y) });
         Assert.Equal(4, sim.Buildings.Slots.Count);                         // nothing was placed
         Assert.True(sim.Map.BuildingAt(site).IsNone);
         Assert.Equal(power, sim.Production.ReadyType(0, Structure));        // the item still occupies the lane
-        Assert.Equal(cash, sim.Players.Cash[0]);                            // paid in full, no refund
+        Assert.Equal(cash, sim.Players.Cash[0]);
         Assert.Equal(QueueBlockReason.StructureWaiting, sim.QueueBlockReason(0, Structure, power));
+        sim.Step(new[] { ProductionFixture.Cancel(sim, Structure, Simulation.ReadyCancelPosition) });
+        Assert.Equal(-1, sim.Production.ReadyType(0, Structure));
+        Assert.True(sim.Players.Cash[0] > cash);                            // the price came back
     }
 
-    [Fact(Skip = "S18 SIMDET-02 / SP-02: awaiting owner decision")]
+    [Fact]
     public void Desired_FullStore_IsReportedByCanPlace()
     {
         Simulation sim = TightBase(spare: 0);
         int power = ProductionFixture.Bld("test_power");
-        Assert.NotEqual(PlacementResult.Ok, sim.CanPlace(0, power, new CellCoord(1, 1)));
-        Assert.False(sim.CanBuild(0, Structure, power));   // or: refuse to start a structure nobody can place
+        Assert.Equal(PlacementResult.StoreFull, sim.CanPlace(0, power, new CellCoord(1, 1)));   // M13-07 (the CanBuild alternative was not taken)
     }
 
     // ---- SIM-RULES-03 --------------------------------------------------------------------------

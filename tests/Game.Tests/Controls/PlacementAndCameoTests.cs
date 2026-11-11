@@ -17,6 +17,7 @@ public sealed class PlacementAndCameoTests
     [InlineData(PlacementResult.OutOfMap, false, CellProblem.None, "Off the map")]
     [InlineData(PlacementResult.SealsRegion, false, CellProblem.None, "Would seal off an area")]
     [InlineData(PlacementResult.OutsideBeachhead, false, CellProblem.None, "Outside your beachhead")]
+    [InlineData(PlacementResult.StoreFull, false, CellProblem.None, "Too many buildings")]
     [InlineData(PlacementResult.Blocked, false, CellProblem.Water, "Not on water")]
     [InlineData(PlacementResult.Blocked, false, CellProblem.Unit, "Blocked by a unit")]
     [InlineData(PlacementResult.Blocked, false, CellProblem.None, "Blocked")]

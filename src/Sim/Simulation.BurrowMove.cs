@@ -289,7 +289,7 @@ public sealed partial class Simulation
             var tl = new CellCoord(c.X - (bt.FootprintW - 1) / 2, c.Y - (bt.FootprintH - 1) / 2);
             if (HatchSiteOk(tl, bt, _units.Player[i])) { topLeft = tl; found = true; break; }
         }
-        if (!found) return false;
+        if (!found || BuildingStoreFull) return false;   // M13-07: a full store refuses the break-through; the Bore stays
         byte owner = _units.Player[i];
         RemoveVehicleForDeploy(i);
         int health = (int)Math.Max(1L, (long)bt.MaxHealth * Setup.Rules.Tunnels.EmergingHealthPermille / 1000);
@@ -348,6 +348,7 @@ public sealed partial class Simulation
     {
         VehicleType vt = RulesOf(_units.Player[i]).Vehicles[_units.TypeIndex[i]];
         if (vt.DeploysInto < 0 || vt.DeploysInto >= RulesOf(_units.Player[i]).Buildings.Count || _tunnels.VehicleLayer[i] != ActorLayer.Surface) return false;
+        if (BuildingStoreFull) return false;   // M13-07: refused, the vehicle stays
         BuildingType bt = RulesOf(_units.Player[i]).Buildings[vt.DeploysInto];
         CellCoord at = _units.Position[i].ToCell();
         EntityId self = _units.Slots.IdOf(i);
