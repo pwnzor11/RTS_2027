@@ -333,3 +333,24 @@ layout 1 Expedition 55 v 5 by start and the `ai timeline` sea gap (M12-12b). Art
 **Lessons:** HANDOFF "Session 17 lessons".
 **PRs:** #54 (art baseline), #55 (Expedition start units, layout 2 v6, session 16 records, baseline docs), then the handoff PR. Windows CI green on #54 and #55.
 **User check:** USER_CHECKS.md "Session 17".
+
+## Session 18 · 2026-11-10/11 (adversarial audit, clear-bug fixes, Field Manual pilot)
+**Goal:** owner brief: deep code audit (bugs, issues, optimisation), adversarial UX/UI review, faction units/buildings/upgrades audit,
+QoL research from other RTS games, then a 1990s-style game booklet. Three rounds of questions first; owner present throughout.
+**Done:** wave 1, 18 read-only reviewers (sim x3, AI/LLM, data/mapgen/tools, scripting/missions, render/audio, screens/saves, in-game UI,
+tests/CI/repo, three faction audits incl. a computed rules resolver, text/onboarding, live play of menus and matches, two QoL research
+passes). Wave 2, six helpers: verification tests on the real data for every sim/faction/AI finding (Audit_ tests pin today's behaviour,
+skipped Desired_ twins), fixes for about 45 clear non-sim bugs, duels and matches, a start-skew experiment, and the laptop series
+`tools/measure/run_s18_audit.ps1`. Field Manual pilot (9 half-letter pages) with generator scripts; hero render mode and laptop script.
+Report and decision table: docs/reviews/2026-11-11_s18_audit/README.md.
+**Decisions:** D-202..D-206 (audit rules; dying actors in scripts with exp_04 balance kept; mission replays watchable only; all decision-table
+recommendations taken, numbers applied now, QoL list; Field Manual).
+**Biggest findings:** Expedition broken on 80-98 % of Mountains layout 1 maps; Expedition with no building never defeated; tender spawn favours
+the north-west start (Glass Coast skew cause, measured); garrisoned soldiers walk out invisible; 20 units attacking a building stall all pathing
+for 22.6 s; unplaceable ready structures block a lane for the match (UI soft-lock fixed, sim cancel pending); Atomic Battery never fires;
+campaign tech lists leave out core units.
+**Helpers:** 25 packages (Fable, Opus, Sonnet); several cut off by the 5-hour usage limit and resumed with SendMessage; helpers cannot write
+report .md files, so the lead saved every hand-back from the transcripts.
+**Problems / notes:** the baseline full-suite run on untouched main hit the 1-hour background limit on the loaded box; the full suite ran
+once on integ-s18 instead.
+**Next session should:** see HANDOFF (M13 batch, owner's laptop series and render pilot, then M14).

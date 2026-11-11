@@ -1494,3 +1494,32 @@ differed only by pad-edge pixel rounding between machines (cause not isolated). 
 still running at 10 minutes (tick 12 000). The plain 10-minute mean includes dead sides and games that ended early, so it tracks game length
 (docs/balance/s17_layout1_baseline.md). Reference numbers are the owner's 64-game layout 1 baseline, not the 16-game cells of s16_layout2.md.
 **Status:** owner decision (session 17)
+
+### D-202 · 2026-11-11 · Session 18 audit: how findings are handled
+**Decision:** the owner asked for an adversarial audit of code, UX/UI and faction data. Rules for the session: clear bugs outside match
+outcomes are fixed with tests (S18 PR); anything changing match outcomes, numbers, visible wording or design goes to the owner. Balance
+evidence: data analysis, cloud duels and matches, plus a laptop series (`tools/measure/run_s18_audit.ps1`). Report:
+docs/reviews/2026-11-11_s18_audit/README.md. **Status:** owner decision (session 18)
+
+### D-203 · 2026-11-11 · Dying actors in mission scripts; exp_04 keeps its tested balance
+**Decision:** `Actor.Alive`, `Actor.Cell` and objective markers treat an actor at 0 health as gone, also inside its own destroyed callback
+(fixes the auth_01 soft-lock, MIS-03). exp_04's Finale guard still marches on the second blow (script changed to keep today's tested balance);
+auth_01 tier-5 bot tests now expect a loss when both scrapers die, as the script intends. **Status:** owner decision (session 18)
+
+### D-204 · 2026-11-11 · Mission replays are "watchable only"
+**Decision:** campaign and tutorial replays are labelled watchable only and show no desync warning (they carry no tier or tech list, GS-03);
+skirmish replays keep the exact desync check. **Status:** owner decision (session 18)
+
+### D-205 · 2026-11-11 · Session 18 decision table: all recommendations taken
+**Decision:** the owner took every recommendation in docs/reviews/2026-11-11_s18_audit/README.md sections 2.1, 2.2 and 2.4 (items 1-26 and the
+UI/wording/design list; item 11 waits for the owner's laptop series; item 23 implement the ashfall hazard; item 24 add an attack-ground order;
+item 26 hide or reword now, build later). Numbers (section 2.3): apply the suggested values now and measure afterwards (D-152 path, values listed
+in the report and the wave-2 reports). QoL to build: game speed incl. slow; idle button and more alerts; cameo hotkeys, repeat production, range
+rings, strong/weak tooltip line; per-slot handicap and starting conditions, stance buttons and shift-queued waypoints. Built from session 19 as
+the M13 batch, with one golden/baseline re-pin. **Status:** owner decision (session 18)
+
+### D-206 · 2026-11-11 · Field Manual (game booklet)
+**Decision:** a 1990s-style printed manual: print-ready half-letter PDF, about 80-120 pages, hybrid voice, premise plus mission list (no endings),
+stat and tech pages generated from data (docs/design/19_field_manual.md). Pilot approved: keep the look; the draft text and the Authority lore
+draft are approved; full page for main units, half pages for the rest; every unit and building gets a full hero render on the owner's laptop
+(`tools/booklet/render_heroes.ps1 -Pilot`, then `-All`). Full build after the M13 fixes land. **Status:** owner decision (session 18)
