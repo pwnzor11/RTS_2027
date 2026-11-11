@@ -1347,7 +1347,7 @@ public sealed class GameScreen : IScreen
 
         // S18 UXG-03: the dialogue and ticker sit above the selection card, never under it. S18 UXG-10: the game-over table owns the screen.
         int missionBottom = _card is { Visible: true } card ? card.Layout.ClearBottom(_s.Viewport.Height - 8, 4) : _s.Viewport.Height - 8;
-        if (_sim is not null && !_gameOverShown) _mission?.Draw(sb, _s.Pixel, scale, hud.Count, missionBottom, snapshot.Tick);
+        if (_sim is not null && !_gameOverShown) _mission?.Draw(sb, _s.Pixel, scale, hud.Count, missionBottom, snapshot.Tick, _s.Settings.ShowDiagnostics);
         if (_sim is not null && !_spectatorMode && !_gameOverShown)   // M11-10d: alert stack, clear of the objective bar and the buttons
         {
             Rectangle mapView = _sidebar?.Layout.MapView ?? new Rectangle(0, 0, _s.Viewport.Width, _s.Viewport.Height);

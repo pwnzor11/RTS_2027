@@ -94,7 +94,7 @@ internal sealed class MissionOverlay
     }
 
     /// <summary>S19 MIS-07: the script debug line (<see cref="MissionDebugLine"/>), or null when the script is healthy.</summary>
-    public string? DebugLine() => MissionDebugLine.Of(_host);
+    public string? DebugLine(bool showDiagnostics) => MissionDebugLine.Of(_host, showDiagnostics);
 
     /// <summary>The objectives panel, so clicks on it never reach the map.</summary>
     public RectRegion ObjectivesRegion { get; } = new(Rectangle.Empty);
@@ -136,7 +136,7 @@ internal sealed class MissionOverlay
     /// <summary>
     /// Draws the panels. <paramref name="helpTop"/> is the y of the key help panel; the ticker sits above it and the dialogue line above the ticker.
     /// </summary>
-    public void Draw(SpriteBatch sb, Texture2D pixel, UiUnit scale, int hudLines, int helpTop, int tick)
+    public void Draw(SpriteBatch sb, Texture2D pixel, UiUnit scale, int hudLines, int helpTop, int tick, bool showDiagnostics = false)
     {
         if (Guidance.Model.Expanded) Hud.Panel(sb, pixel, ObjectivesOrigin(hudLines, scale), ExpandedLines(), scale);
         else Guidance.DrawBar(sb, pixel, scale, MapViewWidth, TimerLines());
@@ -150,7 +150,7 @@ internal sealed class MissionOverlay
             bottom -= GapPx;
         }
 
-        string? debug = DebugLine();
+        string? debug = DebugLine(showDiagnostics);
         if (debug != null)
         {
             var one = new List<string> { debug };

@@ -13,9 +13,10 @@ public static class MissionDebugLine
     /// <summary>The longest the line gets, in characters.</summary>
     public const int MaxChars = 78;
 
-    /// <summary>The note for this mission, or null when the script is healthy.</summary>
-    public static string? Of(MissionHost host)
+    /// <summary>The note for this mission, or null when the script is healthy or <paramref name="showDiagnostics"/> (Settings > Show diagnostics) is off, so players never see it by default.</summary>
+    public static string? Of(MissionHost host, bool showDiagnostics)
     {
+        if (!showDiagnostics) return null;
         if (host.Halted) return Truncate("SCRIPT HALTED" + (host.Errors.Count > 0 ? ": " + host.Errors[^1] : ""));
         return host.Errors.Count > 0 ? Truncate("SCRIPT ERROR (" + host.Errors.Count + "): " + host.Errors[^1]) : null;
     }

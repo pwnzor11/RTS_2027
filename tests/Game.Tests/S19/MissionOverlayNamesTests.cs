@@ -65,11 +65,12 @@ public sealed class MissionOverlayNamesTests
         using var t = new SaveTestSupport();
         MissionGame game = MissionGame.Create(t.RulesDir, "tut_01");
         game.Sim.Step(Array.Empty<Rts.Sim.Core.Command>());
-        Assert.Null(MissionDebugLine.Of(game.Host));
+        Assert.Null(MissionDebugLine.Of(game.Host, true));
 
         var errors = (List<string>)typeof(Rts.Scripting.MissionHost).GetField("_errors", BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(game.Host)!;
         errors.Add("CheckRaids: cannot place auth_conyard at (23,25)");
-        string? line = MissionDebugLine.Of(game.Host);
+        Assert.Null(MissionDebugLine.Of(game.Host, false));   // diagnostics off: players never see it
+        string? line = MissionDebugLine.Of(game.Host, true);
         Assert.NotNull(line);
         Assert.StartsWith("SCRIPT ERROR (1): CheckRaids", line, StringComparison.Ordinal);
         Assert.True(line!.Length <= MissionDebugLine.MaxChars);
