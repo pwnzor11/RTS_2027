@@ -44,7 +44,7 @@ public static class LayoutChecks
         if (meta?.Generator is { Layout: MapGenerator.ZonedLayout } g)
         {
             // A finished layout-2 map is turned by its seed's symmetry; the checks run in the canonical frame again.
-            (rot2, int t) = LayoutVariant.For(g.Seed, g.Players, map.Width, g.Biome != Biome.AshPlains);
+            (rot2, int t) = LayoutVariant.For(g.Seed, g.Players, map.Width);
             if (t != 0)
             {
                 int w = map.Width;
