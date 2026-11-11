@@ -112,6 +112,14 @@ public sealed class MissionFixTests
     }
 
     [Fact]
+    public void Mis14_Tut01_fight_text_names_no_outpost_that_does_not_exist()
+    {
+        string locale = File.ReadAllText(Path.Combine(TestData.DataDir, "missions", "tut_01", "locale.toml"));
+        Assert.DoesNotContain("outpost", locale, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("south-east", locale, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public void Mis11_Auth04_killing_the_vent_pushes_the_sunrise_timer_and_the_Devices_charge_out_by_1500()
     {
         MissionSession m = MissionSession.Create(TestData.DataDir, "auth_04");
