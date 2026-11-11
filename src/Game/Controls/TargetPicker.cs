@@ -49,8 +49,13 @@ public static class TargetPicker
         return null;
     }
 
-    /// <summary>The enemy under a zoom-1 world point, or null.</summary>
-    public static ActorRef? Pick(IReadOnlyList<RenderUnit> units, SimSnapshot snapshot, Vector2 world, byte localPlayer)
+    /// <summary>
+    /// The enemy under a zoom-1 world point, or null. With <paramref name="relationOf"/> (S18 GAMEUI-01) allied units are skipped, so a
+    /// right-click on a friend is a plain move; an allied building is still returned (the caller needs it for garrisoning) and its
+    /// <see cref="GarrisonOrders.Classify"/> answer is never Attack.
+    /// </summary>
+    public static ActorRef? Pick(IReadOnlyList<RenderUnit> units, SimSnapshot snapshot, Vector2 world, byte localPlayer,
+        Func<byte, Relation>? relationOf = null)
     {
         CellCoord clicked = Camera.CellAt(world);
         ActorRef? best = null;
@@ -58,6 +63,7 @@ public static class TargetPicker
         foreach (RenderUnit unit in units)
         {
             if (unit.View.Player == localPlayer) continue;
+            if (relationOf is not null && relationOf(unit.View.Player) == Relation.Ally) continue;
             float distSq = Vector2.DistanceSquared(unit.World, world);
             bool sameCell = Camera.CellAt(unit.World) == clicked;
             if (!sameCell && distSq > Selection.PickRadiusPx * Selection.PickRadiusPx) continue;

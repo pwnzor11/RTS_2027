@@ -116,7 +116,7 @@ public sealed class OrderController
             return;
         }
 
-        ActorRef? enemy = TargetPicker.Pick(units, _source.Current, world, SimSnapshotSource.LocalPlayer);
+        ActorRef? enemy = TargetPicker.Pick(units, _source.Current, world, SimSnapshotSource.LocalPlayer, p => _source.Sim.RelationOf(SimSnapshotSource.LocalPlayer, p));
         (ActorRef Target, int TypeIndex)? own = enemy is null
             ? TargetPicker.PickOwn(units, _source.Current, world, SimSnapshotSource.LocalPlayer, _selection.Contains)
             : null;
@@ -180,6 +180,27 @@ public sealed class OrderController
         }
 
         if (mark is { } kind) Feedback?.Add(enemy is not null ? world : Camera.CentreOf(cell), kind);
+    }
+
+    /// <summary>
+    /// S18 GAMEUI-05: a right-click on the minimap. Honours an armed attack-move (the selection attack-moves there and the arming ends)
+    /// or an armed deploy cell, otherwise moves; the ring appears on the map cell.
+    /// </summary>
+    public void MinimapOrder(CellCoord cell)
+    {
+        bool armed = AttackMoveArmed;
+        bool deployArmed = DeployArmed;
+        AttackMoveArmed = false;
+        DeployArmed = false;
+        if (_selection.Count == 0 || !_source.Map.Contains(cell)) return;
+        if (deployArmed)
+        {
+            DeployAt(cell);
+            return;
+        }
+
+        foreach (UnitKey unit in _selection.Units.ToList()) _source.Order(armed ? CommandKind.AttackMove : CommandKind.Move, unit, cell);
+        Feedback?.Add(Camera.CentreOf(cell), armed ? OrderMarkKind.Attack : OrderMarkKind.Move);
     }
 
     private BuildingView? ViewOf(EntityId id)

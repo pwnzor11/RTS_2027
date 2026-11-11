@@ -58,7 +58,7 @@ public static class GarrisonOrders
                 if (HasRoom(rules, subjectKind, subjectType, building)) return BuildingClick.Garrison;
                 return BuildingClick.None;
             case Relation.Ally:
-                return HasRoom(rules, subjectKind, subjectType, building) ? BuildingClick.Garrison : BuildingClick.Attack;
+                return HasRoom(rules, subjectKind, subjectType, building) ? BuildingClick.Garrison : BuildingClick.None;   // S18 GAMEUI-01: an ally is never an attack target
             case Relation.Neutral:
                 if (M3Orders.IsEngineer(rules, subjectKind, subjectType)) return BuildingClick.Capture;
                 return building.Occupants == 0 && HasRoom(rules, subjectKind, subjectType, building) ? BuildingClick.Garrison : BuildingClick.Attack;
