@@ -281,7 +281,19 @@ def render_structure(rid, h):
     run_builder(lambda: B.render(rid, mod, Hero.samples, {fi}, False))
 
 
+def purge_art_modules():
+    """Forget every module loaded from tools/art before the next id.  Vehicles and structures each have their own
+    `lb_common.py`; without this the vehicle copy stays cached as `lb_common` and every Left Behind structure rendered
+    after a Left Behind vehicle in the same run fails (`module 'lb_common' has no attribute 'fx'`)."""
+    art = os.path.normcase(os.path.abspath(ART)) + os.sep
+    for name, m in list(sys.modules.items()):
+        f = getattr(m, "__file__", None)
+        if f and os.path.normcase(os.path.abspath(f)).startswith(art):
+            del sys.modules[name]
+
+
 def render_id(rid, h):
+    purge_art_modules()
     if h["script"].endswith("build_tank.py"):
         render_tank(rid, h)
     elif h["kind"] == "vehicle":
