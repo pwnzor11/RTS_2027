@@ -493,7 +493,8 @@ public sealed class GameScreen : IScreen, IFocusPausable
         else if (_sim is { } live)
         {
             _selection.Prune(key => live.IsOwnedAlive(key, SimSnapshotSource.LocalPlayer));
-            _groups.Prune(key => live.IsOwnedAlive(key, SimSnapshotSource.LocalPlayer));
+            _selection.DropCarried(_renderUnits);   // S19 D-205 (NEW-2): a soldier ordered to Enter leaves the selection once inside
+            _groups.Prune(key => live.IsOwnedAlive(key, SimSnapshotSource.LocalPlayer));   // groups keep carried members; recall skips them
         }
         else
         {
@@ -1215,7 +1216,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
             IReadOnlyList<UnitKey> members = _groups.Members(number);
             if (members.Count == 0) continue;
             bool twice = _groupTap.Tap(number, _nowMs);
-            _selection.Replace(members);
+            _selection.Replace(Selection.WithoutCarried(members, _renderUnits));   // S19 D-205: carried members stay in the group but are not selected
             ClearBuildingSelection();
             Audio.AudioBootstrap.Director?.Notify(Audio.AudioEventKind.UnitSelect);
             if (twice && GroupCentre(members) is { } centre) CentreCameraOn(centre);
