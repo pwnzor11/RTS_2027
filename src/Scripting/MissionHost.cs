@@ -236,6 +236,8 @@ public sealed partial class MissionHost : ISimExtension
     /// <summary>
     /// M8-17: an actor that is resolvable and still has health. The sim removes a dead actor (and may end the game) in RunCleanup, AFTER
     /// the trigger phase of the tick it died on; counting health 0 as gone lets OnDestroyed fire on that same tick, like OnAllDestroyed.
+    /// S18 MIS-03: <c>Actor.Alive</c>, <c>Actor.Cell</c> and the objective marker (<see cref="TryObjectiveCell"/>) use the same rule, so inside a
+    /// dying actor's own OnDestroyed callback it already reads as gone.
     /// </summary>
     private static bool IsStanding(Simulation sim, ActorRef r)
     {
@@ -303,10 +305,10 @@ public sealed partial class MissionHost : ISimExtension
     {
         if (player >= _restricted.Length || !_restricted[player]) return true;
         SimRules rules = _sim!.Setup.Rules;
-        string? id = category switch
+        string? id = category switch   // S18 MIS-04: aircraft are vehicle entries (M4-04), so Aircraft reads the vehicle list too
         {
             ProductionCategory.Infantry => typeIndex >= 0 && typeIndex < (rules.Infantry?.Count ?? 0) ? rules.Infantry![typeIndex].Id : null,
-            ProductionCategory.Vehicle => typeIndex >= 0 && typeIndex < rules.Vehicles.Count ? rules.Vehicles[typeIndex].Id : null,
+            ProductionCategory.Vehicle or ProductionCategory.Aircraft => typeIndex >= 0 && typeIndex < rules.Vehicles.Count ? rules.Vehicles[typeIndex].Id : null,
             ProductionCategory.Structure or ProductionCategory.Defence =>
                 typeIndex >= 0 && typeIndex < (rules.Buildings?.Count ?? 0) ? rules.Buildings![typeIndex].Id : null,
             _ => null,
