@@ -132,6 +132,7 @@ public sealed partial class Simulation
     private void RunStealth()
     {
         int delay = Setup.Rules.Stealth.DelayTicks;   // the still counter caps here; readers compare with StealthDelayFor
+        for (int i = 1; i < _naval.RevealLeft.Length; i++) if (_naval.RevealLeft[i] > 0) _naval.RevealLeft[i]--;   // D-205: a firing sub's reveal runs out
         for (int k = 0; k < 2; k++)
         {
             var kind = (ActorKind)k;

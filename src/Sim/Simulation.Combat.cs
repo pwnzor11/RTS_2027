@@ -249,6 +249,8 @@ public sealed partial class Simulation
         if (kind != ActorKind.Building) e.ReloadTicks = Math.Max(1, (int)((long)e.ReloadTicks * _effects.RofPermille(kind, i) / 1000));   // M3-06: aura rate of fire
         if (rank > 0) e.ReloadTicks = Math.Max(1, ScaleByRank(VetRules.ReloadPermille, rank, e.ReloadTicks));   // VET-3: faster reload
         if (!shooter.Id.IsNone) MarkCombat(kind, i);   // VET-3: self-heal waits after a shot
+        if (kind == ActorKind.Vehicle) { _effects.VehicleStill[i] = 0; if (_naval.Submerged[i]) _naval.RevealLeft[i] = SubRevealTicks; }   // D-205 (SIM-RULES-04): firing always breaks stealth, whatever the reload; (LE-05): a dived sub that fires is seen
+        else if (kind == ActorKind.Infantry) _effects.InfantryStill[i] = 0;
         return true;
     }
 

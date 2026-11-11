@@ -22,13 +22,15 @@ namespace Rts.Sim.Naval;
 /// for every vehicle slot with any non-zero field, 0-terminated. Version 2 (written only while some aircraft holds a hangar place, so games
 /// without carriers hash as before) appends (slot, hangarOf, airState, sortieLeft) for every slot with any non-zero hangar field, 0-terminated.
 /// Version 3 (written only while some slot has ammo or rearm progress, D-156) writes the hangar list (possibly empty) and then appends
-/// (slot, ammoLeft, rearmProgress) for every slot with either non-zero, 0-terminated.
+/// (slot, ammoLeft, rearmProgress) for every slot with either non-zero, 0-terminated. Version 4 (written only while a firing submarine is
+/// revealed, D-205) writes the hangar and ammo lists (possibly empty) and appends (slot, revealLeft), 0-terminated.
 /// </summary>
 public sealed class NavalState : ISimStatePart
 {
     private const byte Version = 1;
     private const byte VersionHangar = 2;
     private const byte VersionAmmo = 3;
+    private const byte VersionReveal = 4;
 
     /// <summary><see cref="AirState"/>: the aircraft sits in its carrier's hangar (layer Passenger, rearming and repairing).</summary>
     public const byte AirDocked = 1;
@@ -47,6 +49,8 @@ public sealed class NavalState : ISimStatePart
     public readonly int[] UnloadY;
     /// <summary>True while a submarine is dived, per vehicle slot.</summary>
     public readonly bool[] Submerged;
+    /// <summary>Ticks left in which a dived submarine that has just fired stays visible and targetable, per vehicle slot (D-205, FACTION-LE-05).</summary>
+    public readonly int[] RevealLeft;
     /// <summary>Carrier vehicle slot an aircraft holds a hangar place in, per vehicle slot (0 = none).</summary>
     public readonly int[] HangarOf;
     /// <summary>Hangar state per aircraft slot (0 = none, else <see cref="AirDocked"/>, <see cref="AirOnSortie"/>, <see cref="AirReturning"/>).</summary>
@@ -70,7 +74,7 @@ public sealed class NavalState : ISimStatePart
         int v = setup.Limits.Vehicles;
         UnloadTicksLeft = new int[v]; UnloadX = new int[v]; UnloadY = new int[v]; Submerged = new bool[v];
         HangarOf = new int[v]; AirState = new byte[v]; SortieLeft = new int[v];
-        AmmoLeft = new int[v]; RearmProgress = new int[v];
+        AmmoLeft = new int[v]; RearmProgress = new int[v]; RevealLeft = new int[v];
     }
 
     /// <inheritdoc />
@@ -81,7 +85,7 @@ public sealed class NavalState : ISimStatePart
     {
         UnloadTicksLeft[i] = 0; UnloadX[i] = 0; UnloadY[i] = 0; Submerged[i] = false;
         HangarOf[i] = 0; AirState[i] = 0; SortieLeft[i] = 0;
-        AmmoLeft[i] = 0; RearmProgress[i] = 0;
+        AmmoLeft[i] = 0; RearmProgress[i] = 0; RevealLeft[i] = 0;
     }
 
     private bool HasHangarData(int i) => HangarOf[i] != 0 || AirState[i] != 0 || SortieLeft[i] != 0;
@@ -95,7 +99,9 @@ public sealed class NavalState : ISimStatePart
         for (int i = 1; i < HangarOf.Length && !hangar; i++) hangar = HasHangarData(i);
         bool ammo = false;
         for (int i = 1; i < AmmoLeft.Length && !ammo; i++) ammo = HasAmmoData(i);
-        w.Write(ammo ? VersionAmmo : hangar ? VersionHangar : Version);
+        bool reveal = false;
+        for (int i = 1; i < RevealLeft.Length && !reveal; i++) reveal = RevealLeft[i] != 0;
+        w.Write(reveal ? VersionReveal : ammo ? VersionAmmo : hangar ? VersionHangar : Version);
         w.Write(NavalRegion.Length); w.Write(UnloadTicksLeft.Length);
         int n = 0;
         foreach (ushort x in NavalRegion) if (x != 0) n++;
@@ -107,18 +113,25 @@ public sealed class NavalState : ISimStatePart
             w.Write(i); w.Write(UnloadTicksLeft[i]); w.Write(UnloadX[i]); w.Write(UnloadY[i]); w.Write(Submerged[i]);
         }
         w.Write(0);
-        if (!hangar && !ammo) return;
+        if (!hangar && !ammo && !reveal) return;
         for (int i = 1; i < HangarOf.Length; i++)
         {
             if (!HasHangarData(i)) continue;
             w.Write(i); w.Write(HangarOf[i]); w.Write(AirState[i]); w.Write(SortieLeft[i]);
         }
         w.Write(0);
-        if (!ammo) return;
+        if (!ammo && !reveal) return;
         for (int i = 1; i < AmmoLeft.Length; i++)
         {
             if (!HasAmmoData(i)) continue;
             w.Write(i); w.Write(AmmoLeft[i]); w.Write(RearmProgress[i]);
+        }
+        w.Write(0);
+        if (!reveal) return;
+        for (int i = 1; i < RevealLeft.Length; i++)
+        {
+            if (RevealLeft[i] == 0) continue;
+            w.Write(i); w.Write(RevealLeft[i]);
         }
         w.Write(0);
     }
@@ -127,7 +140,7 @@ public sealed class NavalState : ISimStatePart
     public void Read(BinaryReader r)
     {
         byte version = r.ReadByte();
-        if (version != Version && version != VersionHangar && version != VersionAmmo) throw new InvalidDataException("naval version mismatch.");
+        if (version != Version && version != VersionHangar && version != VersionAmmo && version != VersionReveal) throw new InvalidDataException("naval version mismatch.");
         LoadEpoch++;
         if (r.ReadInt32() != NavalRegion.Length || r.ReadInt32() != UnloadTicksLeft.Length) throw new InvalidDataException("naval capacity mismatch.");
         Array.Clear(NavalRegion);
@@ -144,7 +157,7 @@ public sealed class NavalState : ISimStatePart
             int s = StateIo.Slot(i, UnloadTicksLeft.Length, Name);
             UnloadTicksLeft[s] = r.ReadInt32(); UnloadX[s] = r.ReadInt32(); UnloadY[s] = r.ReadInt32(); Submerged[s] = r.ReadBoolean();
         }
-        Array.Clear(HangarOf); Array.Clear(AirState); Array.Clear(SortieLeft);
+        Array.Clear(HangarOf); Array.Clear(AirState); Array.Clear(SortieLeft); Array.Clear(AmmoLeft); Array.Clear(RearmProgress); Array.Clear(RevealLeft);
         if (version < VersionHangar) return;
         for (int i = r.ReadInt32(); i != 0; i = r.ReadInt32())
         {
@@ -153,12 +166,17 @@ public sealed class NavalState : ISimStatePart
             if (h < 0 || h >= HangarOf.Length) throw new InvalidDataException("naval hangar slot out of range.");
             HangarOf[s] = h; AirState[s] = r.ReadByte(); SortieLeft[s] = r.ReadInt32();
         }
-        Array.Clear(AmmoLeft); Array.Clear(RearmProgress);
         if (version < VersionAmmo) return;
         for (int i = r.ReadInt32(); i != 0; i = r.ReadInt32())
         {
             int s = StateIo.Slot(i, AmmoLeft.Length, Name);
             AmmoLeft[s] = r.ReadInt32(); RearmProgress[s] = r.ReadInt32();
+        }
+        if (version < VersionReveal) return;
+        for (int i = r.ReadInt32(); i != 0; i = r.ReadInt32())
+        {
+            int s = StateIo.Slot(i, RevealLeft.Length, Name);
+            RevealLeft[s] = r.ReadInt32();
         }
     }
 }
