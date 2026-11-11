@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
+using Rts.Sim;
 using Rts.Sim.Core;
 using Rts.Sim.Rules;
 
@@ -71,11 +72,24 @@ internal sealed class BuildOrderManager
     /// <summary>Number of structures placed so far by this AI.</summary>
     public int Placed { get; private set; }
 
-    /// <summary>The Place commands that were rejected by <c>CanPlace</c> before issue: should always stay 0.</summary>
+    /// <summary>Ready-structure placements that failed before issue: the search found no site, or <c>CanPlace</c> refused the site found.</summary>
     public int Unplaceable { get; private set; }
+
+    /// <summary>M13-06: consecutive decisions in which a finished structure found no usable site before the AI cancels it (full refund).</summary>
+    public const int CancelAfterFailedSearches = 3;
+
+    /// <summary>M13-06: decisions during which a cancelled structure type is skipped in the build order, so another step can go first.</summary>
+    public const int CancelledTypeCooldown = 20;
+
+    /// <summary>M13-06: ready structures cancelled because no site was found.</summary>
+    public int Cancelled { get; private set; }
+
+    private readonly int[] _failedSearches = new int[2];   // M13-06: per lane (Structure, Defence)
+    private int _banType = -1, _banLeft;                   // M13-06: the last cancelled type and its remaining cooldown
 
     public void Think(RecruitKnowledge k, ICommandSink sink)
     {
+        if (_banLeft > 0 && --_banLeft == 0) _banType = -1;
         SimRules rules = k.Rules;
         if (_orderTypes.Count < _order.Count || _queued.Length == 0)
         {
@@ -97,6 +111,7 @@ internal sealed class BuildOrderManager
         foreach (ProductionCategory cat in new[] { ProductionCategory.Structure, ProductionCategory.Defence })
         {
             QueueView q = k.Queue(cat);
+            int lane = cat == ProductionCategory.Structure ? 0 : 1;
             foreach (QueueItemView it in q.Items)
             {
                 _queued[it.TypeIndex]++; laneBusy = true;
@@ -106,8 +121,17 @@ internal sealed class BuildOrderManager
             {
                 _queued[q.ReadyTypeIndex]++;
                 laneBusy = true;
-                TryPlace(k, sink, q.ReadyTypeIndex);
+                if (TryPlace(k, sink, q.ReadyTypeIndex)) _failedSearches[lane] = 0;
+                else if (++_failedSearches[lane] >= CancelAfterFailedSearches)
+                {
+                    // M13-06: nobody can place it; hand the credits back and free the lane instead of holding it for the match
+                    sink.Issue(CommandKind.Cancel, EntityId.None, (ActorKind)(int)cat, default, default, Simulation.ReadyCancelPosition);
+                    _failedSearches[lane] = 0; Cancelled++;
+                    _banType = q.ReadyTypeIndex; _banLeft = CancelledTypeCooldown;
+                    _queued[q.ReadyTypeIndex]--;
+                }
             }
+            else _failedSearches[lane] = 0;
         }
 
         int next = NextType(k);
@@ -133,6 +157,7 @@ internal sealed class BuildOrderManager
             int t = _orderTypes[i];
             seen[t]++;
             if (k.BuildingCount[t] + _queued[t] >= seen[t]) continue;
+            if (t == _banType && _banLeft > 0) continue;   // M13-06: just cancelled for want of a site
             BuildingType bt = rules.Buildings[t];
             if (!k.Buildable(bt.Category, t)) continue;
             if (HoldStep != null && HoldStep(_order[i])) { TechSkips++; continue; }
@@ -243,16 +268,18 @@ internal sealed class BuildOrderManager
         return -1;
     }
 
-    private void TryPlace(RecruitKnowledge k, ICommandSink sink, int type)
+    /// <summary>Issues the Place for a ready structure; false when the search found no site or <c>CanPlace</c> refused it (both count as Unplaceable).</summary>
+    private bool TryPlace(RecruitKnowledge k, ICommandSink sink, int type)
     {
         BuildingType bt = k.Rules.Buildings[type];
         bool front = bt.Category == ProductionCategory.Defence && bt.PrimaryWeapon >= 0;
         CellCoord cell;
         if (Placer is not null && Placer(k, type) is { Ok: true } chosen) cell = chosen.Cell;
-        else if (!_search.Find(k, type, front, out cell)) return;
-        if (!k.View.CanPlace(type, cell)) { Unplaceable++; return; }
+        else if (!_search.Find(k, type, front, out cell)) { Unplaceable++; return false; }   // M13-06: S18-AI-NEW-2, no site at all counts too
+        if (!k.View.CanPlace(type, cell)) { Unplaceable++; return false; }
         sink.Place(type, cell);
         Placed++;
+        return true;
     }
     // ---- M3-21: AI save/restore. Appended at the end of the class; the format is private to the matching Restore. ----
 
@@ -262,6 +289,7 @@ internal sealed class BuildOrderManager
         w.Write(_order.Count);
         foreach (string s in _order) w.Write(s);
         w.Write(Placed); w.Write(Unplaceable); w.Write(PendingCost);
+        w.Write(Cancelled); w.Write(_failedSearches[0]); w.Write(_failedSearches[1]); w.Write(_banType); w.Write(_banLeft);   // M13-06
     }
 
     /// <summary>M3-21: reads what <see cref="Snapshot"/> wrote. Types are resolved again on the next Think.</summary>
@@ -271,5 +299,6 @@ internal sealed class BuildOrderManager
         _order.Clear(); _orderTypes.Clear();
         for (int i = 0; i < n; i++) _order.Add(r.ReadString());
         Placed = r.ReadInt32(); Unplaceable = r.ReadInt32(); PendingCost = r.ReadInt32();
+        Cancelled = r.ReadInt32(); _failedSearches[0] = r.ReadInt32(); _failedSearches[1] = r.ReadInt32(); _banType = r.ReadInt32(); _banLeft = r.ReadInt32();   // M13-06
     }
 }

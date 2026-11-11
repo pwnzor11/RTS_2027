@@ -104,8 +104,11 @@ public sealed class RecruitAi : IAiPlayer, IAiSnapshotable, IHookableAi
     /// <summary>Units queued.</summary>
     public int UnitsQueued => _production?.Queued ?? 0;
 
-    /// <summary>Place commands the AI withheld because the view said the cell was illegal (stays 0 when search and rules agree).</summary>
+    /// <summary>Ready-structure placements that failed before issue (no site found, or the view refused it); M13-06 counts both.</summary>
     public int Unplaceable => _build?.Unplaceable ?? 0;
+
+    /// <summary>M13-06: finished structures cancelled because no site could be found.</summary>
+    public int CancelledReady => _build?.Cancelled ?? 0;
 
     /// <summary>Attack waves launched.</summary>
     public int Waves => _military.Waves;
