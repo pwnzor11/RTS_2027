@@ -54,9 +54,9 @@ public sealed class GroundEffectAuditTests
     }
 
     [Fact]
-    public void Audit_UnpoweredSearchlight_StillSeesThroughBlackoutAndRevealsStealth_WhileAnUnpoweredTurretHoldsFire()
+    public void UnpoweredSearchlight_SeesNothingThroughBlackout_AndRevealsNoStealth_LikeAnUnpoweredTurret()
     {
-        // S18 audit: pins current behaviour of FAD-19; flip the assertion when fixed.
+        // S19 (FAD-19 fixed): needs_power now also stops the Searchlight's sight.
         var w = new S18World(keepAlive: false);
         w.Place(1, "auth_conyard", 10, 50);
         w.Place(0, "auth_searchlight", 20, 20);
@@ -70,26 +70,26 @@ public sealed class GroundEffectAuditTests
 
         Assert.True(w.Sim.PowerBand(0) >= 1);                                       // no power at all
         Assert.Equal(max, w.InfHp(enemy));                                           // the turret obeys needs_power
-        Assert.True(w.Sim.CanSeeThroughBlackout(0, new CellCoord(25, 20)));          // the Searchlight does not
-        Assert.True(w.Sim.IsStealthRevealed(0, new CellCoord(26, 20)));
+        Assert.False(w.Sim.CanSeeThroughBlackout(0, new CellCoord(25, 20)));         // nor does the Searchlight now
+        Assert.False(w.Sim.IsStealthRevealed(0, new CellCoord(26, 20)));
         Assert.False(w.Sim.CanSeeThroughBlackout(0, new CellCoord(40, 40)));         // (outside its sight: not covered)
     }
 
     [Fact]
-    public void Audit_UnpoweredBroadcastMast_StillJams()
+    public void UnpoweredBroadcastMast_NoLongerJams()
     {
-        // S18 audit: pins current behaviour of FAD-19; flip the assertion when fixed.
+        // S19 (FAD-19 fixed).
         var w = new S18World(Faction.Authority, Faction.Directorate, keepAlive: false);
         w.Place(0, "auth_conyard", 10, 10);
         w.Place(1, "dir_mast", 40, 40);
         Assert.True(w.Rules.Buildings[w.B("dir_mast")].NeedsPower);
         w.Run(20);
         Assert.True(w.Sim.PowerBand(1) >= 1);
-        Assert.True(w.Sim.IsJammedFor(0, new CellCoord(44, 44)));
+        Assert.False(w.Sim.IsJammedFor(0, new CellCoord(44, 44)));
         Assert.False(w.Sim.IsJammedFor(0, new CellCoord(52, 52)));
     }
 
-    [Fact(Skip = "S18 FAD-19: awaiting owner decision")]
+    [Fact]
     public void Desired_UnpoweredSearchlightAndMast_DoNothing()
     {
         var w = new S18World(Faction.Authority, Faction.Directorate, keepAlive: false);

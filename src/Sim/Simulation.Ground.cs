@@ -120,7 +120,7 @@ public sealed partial class Simulation
                 int d = LeptonMath.ChebyshevCells(cell, VisionCellOf(kind, i));
                 if (d <= 1) return true;
                 // ASSUMED (M3-05): Searchlight sight is a square (Chebyshev) of the building's Sight radius.
-                if (kind == ActorKind.Building && BuildingTypeAt(i).SeesThroughBlackout && d <= SightOf(kind, i)) return true;
+                if (kind == ActorKind.Building && BuildingTypeAt(i).SeesThroughBlackout && !IsUnpowered(kind, i) && d <= SightOf(kind, i)) return true;
             }
         }
         return false;
@@ -205,6 +205,11 @@ public sealed partial class Simulation
         return still >= StealthDelayFor(kind, i);
     }
 
+    /// <summary>S19 FAD-19: a building whose type needs power and whose owner is at a low-power band does nothing (Searchlight sight,
+    /// Broadcast Mast jam), like an unpowered turret holding fire. Mobile actors are never unpowered.</summary>
+    private bool IsUnpowered(ActorKind kind, int i) =>
+        kind == ActorKind.Building && BuildingTypeAt(i).NeedsPower && PowerBand(_buildings.Player[i]) >= 1;
+
     /// <summary>True if the viewer's team reveals stealthed actors on <paramref name="cell"/> (within 1 cell, Searchlight sight).</summary>
     internal bool IsStealthRevealed(byte viewer, CellCoord cell)
     {
@@ -217,7 +222,7 @@ public sealed partial class Simulation
                 if (!slots.IsIndexAlive(i) || !IsFriendly(viewer, PlayerAt(kind, i))) continue;
                 int d = LeptonMath.ChebyshevCells(cell, VisionCellOf(kind, i));
                 if (d <= 1) return true;
-                if (kind == ActorKind.Building && BuildingTypeAt(i).SeesThroughBlackout && d <= SightOf(kind, i)) return true;
+                if (kind == ActorKind.Building && BuildingTypeAt(i).SeesThroughBlackout && !IsUnpowered(kind, i) && d <= SightOf(kind, i)) return true;
             }
         }
         return false;
@@ -286,7 +291,7 @@ public sealed partial class Simulation
         RefreshEmitters();
         foreach ((ActorKind kind, int i) in _emitters)
         {
-            if (!SlotsOf(kind).IsIndexAlive(i) || RelationOf(viewer, PlayerAt(kind, i)) != Relation.Enemy) continue;
+            if (!SlotsOf(kind).IsIndexAlive(i) || RelationOf(viewer, PlayerAt(kind, i)) != Relation.Enemy || IsUnpowered(kind, i)) continue;
             int rad = JamRadiusOf(kind, i);
             if (rad > 0 && LeptonMath.ChebyshevCells(cell, VisionCellOf(kind, i)) <= rad) return true;
         }
@@ -317,7 +322,7 @@ public sealed partial class Simulation
             SlotArray slots = SlotsOf(kind);
             for (int i = 1; i < slots.Capacity; i++)
             {
-                if (!slots.IsIndexAlive(i) || RelationOf(viewer, PlayerAt(kind, i)) != Relation.Enemy) continue;
+                if (!slots.IsIndexAlive(i) || RelationOf(viewer, PlayerAt(kind, i)) != Relation.Enemy || IsUnpowered(kind, i)) continue;
                 int rad = JamRadiusOf(kind, i);
                 if (rad > 0 && LeptonMath.ChebyshevCells(cell, VisionCellOf(kind, i)) <= rad) return true;
             }
