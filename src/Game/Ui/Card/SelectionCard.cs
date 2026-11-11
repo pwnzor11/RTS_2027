@@ -55,6 +55,9 @@ public sealed class SelectionCard : IUiRegion
     /// <summary>The control groups, so the group grid can number its cameos (null: no numbers).</summary>
     public ControlGroups? Groups { get; set; }
 
+    /// <summary>True while the first Sell click is armed: the Sell button then reads "Confirm" and is highlighted (D-205).</summary>
+    public bool SellArmed { get; set; }
+
     /// <summary>What the card shows this frame.</summary>
     public CardModel Model { get; private set; } = CardModel.Empty;
 
@@ -104,7 +107,9 @@ public sealed class SelectionCard : IUiRegion
         {
             CardButton b = Model.Buttons[i];
             Rectangle r = l.Buttons[i];
-            bool active = b.Kind == CardButtonKind.Order && b.Action == GameAction.AttackMove && attackMoveArmed;
+            bool sellArmed = b.Kind == CardButtonKind.Sell && SellArmed;
+            if (sellArmed) b = b with { Label = UiText.Get(UiText.SellConfirm) };
+            bool active = sellArmed || b.Kind == CardButtonKind.Order && b.Action == GameAction.AttackMove && attackMoveArmed;
             Shapes.Fill(batch, pixel, r, active ? ActiveFill : hover == i ? ButtonHover : ButtonFill);
             Shapes.Outline(batch, pixel, r, active ? Gold : Border);
             DrawButtonText(batch, pixel, r, b, s);

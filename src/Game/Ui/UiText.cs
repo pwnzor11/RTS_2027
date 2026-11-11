@@ -57,6 +57,9 @@ public static class UiText
     /// <summary>D-205: Settings row label of the autosave interval. Placeholder: <c>{interval}</c>.</summary>
     public const string AutosaveSetting = "ui.save.autosave_setting";
 
+    /// <summary>D-205: the card's Sell button label after the first click (the second click within 2 s sells).</summary>
+    public const string SellConfirm = "ui.card.sell_confirm";
+
     private static readonly Dictionary<string, string> English = new(StringComparer.Ordinal)
     {
         [SupplyLabel] = "Supply",
@@ -75,6 +78,7 @@ public static class UiText
         [QuickloadYes] = "Yes, load the quicksave",
         [QuickloadHint] = "Progress since the quicksave is lost.",
         [AutosaveSetting] = "Autosave: {interval}",
+        [SellConfirm] = "Confirm",
     };
 
     /// <summary>The English text of a key, or the key itself when it is unknown.</summary>

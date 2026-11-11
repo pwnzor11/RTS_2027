@@ -556,6 +556,7 @@ public sealed class GameScreen : IScreen
         Rectangle mapView = _sidebar?.Layout.MapView ?? new Rectangle(0, 0, _s.Viewport.Width, _s.Viewport.Height);
         _card.Groups = _groups;
         _card.Refresh(mapView, _s.UiFactor, _selectedBuilding);
+        _card.SellArmed = _sellConfirm.IsArmed(_selectedBuilding, _nowMs);   // D-205
         if (!_card.Visible || !input.LeftPressed || _dragStart is not null) return;
         Rts.Game.Ui.Card.CardAction action = _card.Click(input.MousePosition, input.IsDown(Keys.LeftShift) || input.IsDown(Keys.RightShift));
         if (!action.Consumed) return;
@@ -573,7 +574,7 @@ public sealed class GameScreen : IScreen
                 _selection.Remove(action.Unit);
                 break;
             case Rts.Game.Ui.Card.CardActionKind.Sell when _sim is not null && !_selectedBuilding.IsNone:
-                _sim.Host.Issue(SidebarCommands.Sell(SimSnapshotSource.LocalPlayer, _selectedBuilding));
+                if (_sellConfirm.Click(_selectedBuilding, _nowMs)) _sim.Host.Issue(SidebarCommands.Sell(SimSnapshotSource.LocalPlayer, _selectedBuilding));   // D-205: the second click within 2 s sells
                 break;
             case Rts.Game.Ui.Card.CardActionKind.Repair when _sim is not null && !_selectedBuilding.IsNone:
                 _sim.Host.Issue(SidebarCommands.Repair(SimSnapshotSource.LocalPlayer, _selectedBuilding));
@@ -632,6 +633,7 @@ public sealed class GameScreen : IScreen
 
     // ---- D-205 (S18 GS-06): quicksave / quickload keys, single-player autosave, and the one-line toast they report with ----
     private readonly GameToast _toast = new();
+    private readonly Rts.Game.Ui.Card.SellConfirm _sellConfirm = new();
     private int _lastAutosaveTick = -1;   // -1 = none yet: the first update of a new match takes the start autosave
 
     private void HandleSaveKeys(InputFrame input, bool typing)
