@@ -19,8 +19,8 @@ green on PRs #54 and #55.
 2. Q-70 with those numbers (income lever after v6), then ask the owner whether layout 2 becomes the default. D-197 names three blockers: Expedition
    coast in every biome (met, session 17 sweeps), start side at most 60 %, income within 10 %. Note for the owner: layout 1 itself fails the 60 %
    limit on glass_coast (66 %) and mountains (64 %).
-3. Start skews that are not the map (M12-12b and the Mountains item): Mountains favours one start for Directorate and Left Behind on both layouts
-   although the layout 2 starts are exact images (test `Layout2_Mountains_TwoPlayers_StartsAreExactImages`); Glass Coast layout 1 Expedition wins
+3. Start skews that are not the map (M12-12b and the Mountains item): Mountains favours one start for Directorate on both layouts (layout 1: 15 v 33; layout 2 v5: 30 v 16) and
+   for Left Behind on layout 2 (29 v 13; layout 1 is 9 v 11 with 44 draws), although the layout 2 starts are exact images (test `Layout2_Mountains_TwoPlayers_StartsAreExactImages`); Glass Coast layout 1 Expedition wins
    55 v 5 from start 0. Look at slot order, AI first-move order and the Expedition landing choice; measure with `ai match` on the owner's laptop.
 4. `ai timeline` builds layout 2 maps without sea for the Expedition, unlike `ai match` (M12-12b): make it pass the ocean request.
 5. Art follow-ups (owner rule: pilot, approve, fan out; renders on the owner's PC, D-196): kitbash Warzone parts where they add detail (D-189);
@@ -33,7 +33,9 @@ green on PRs #54 and #55.
   (diagnosis only, no script change was needed).
 - Layout 2 v6: field distance applies to the half-turn skeleton only (Medium and Large 2-player maps); Small, 3-player and 4-player maps are unchanged.
   `Layout2Fields` values are the same for every biome so far.
-- Layout 2 v6 fairness on Ash Plains (new skeleton) is NOT measured yet; the cloud probes were 8-32 games. The laptop run is the measurement.
+- Layout 2 v6 fairness on Ash Plains (new skeleton) is NOT measured yet; the cloud income probe was 8 games per biome and the Expedition checks 8-32 games. The laptop run is the measurement.
+- The Expedition start fix has tests for Ash Plains layout 2 only. Mountains layout 1 was checked by games (docs/balance/s17_layout1_baseline.md,
+  "After the fix"), not by a test: add one (Expedition kit spawns on Mountains layout 1, a few seeds).
 - Mop-up AI code is in MilitaryManager but switched off (MopupLaunch/MopupSweep = false).
 - Voice lines: on hold until the owner has Piper set up (tools/voice/wyoming_batch.py).
 - `unit_reserve` difficulty override key exists and is tested but unused (s15_lbknob.md).

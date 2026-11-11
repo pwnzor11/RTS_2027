@@ -319,7 +319,7 @@ coast for the Expedition, biome skeletons, half-turn 2p, income trims). All thre
 and resolve the PC re-render drift. The owner was present; the session spanned two days and two container restarts.
 **Done:** session 16 log entry, user checks and laptop regression table (docs/balance/s16_laptop_regression.md). Expedition start units:
 `SkirmishStart.SpawnUnits` places units the strict ring pass left over, out to ring 16 (6 new tests that fail on the old code); this fixes the
-Ash Plains layout 2 stall and the same stall on Mountains layout 1 found by the baseline. Layout 2 v6: Ash Plains half-turn with the bridge +
+Ash Plains layout 2 stall (tests) and the same stall on Mountains layout 1 found by the baseline (checked by games, no test yet). Layout 2 v6: Ash Plains half-turn with the bridge +
 causeway pair on both decks, main fields about 9 cells from the start with a harvest-distance band test, per-start harvest distance in `map report`,
 Mountains starts proven exact images; layout 2 stays off by default. Laptop scripts `run_s17_layout1_base.ps1` and `run_s17_layout2.ps1`. Layout 1
 baseline on the owner's laptop (16 rows, 64 games each, docs/balance/s17_layout1_baseline.md). Art: the re-render drift was stale sprites, not
