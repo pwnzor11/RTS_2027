@@ -1,54 +1,51 @@
-# Handoff: Session 18 — read the layout 2 v6 laptop run, settle Q-70, decide the layout 2 default; then the start skews and art follow-ups
-Last commit: `docs: Session 17 handoff` on integ-s17, landed through the session 17 handoff PR (Windows CI green first; the lead merges, D-179).
+# Handoff: Session 19 — build the M13 audit fix batch (all owner recommendations, D-205), then the Field Manual (M14)
+Last commit: `docs: Session 18 handoff` on integ-s18, landed through the session 18 PR (Windows CI green first; the lead merges, D-179).
 Check `git log -1 origin/main`.
-Where things stand: **M11 is complete** except the Editor props tool (M12-06b). **M12 waves 1-3 are built**; map layout 2 (zones, lanes, all four
-biomes) is at v6 and still OFF by default (`MapGenerator.CurrentLayout = 1`, D-197). Session 17 (2026-11-09/10): wrote the missing session 16
-records; Ash Plains layout 2 is half-turn (D-198); main fields about 9 cells from the start with a band test (D-199); the Expedition start-unit bug is
-fixed (`SkirmishStart.SpawnUnits`, second pass to ring 16; it also broke Expedition on Mountains layout 1, the default); the art baseline is the
-owner's PC re-render (D-200, PR #54); the layout 2 income test counts the 10-minute point over live games only (D-201). Directorate AI tuning is
-closed (D-196). Decisions up to D-201; open question Q-70.
-Full suite: 3 709 tests on integ-s17 before the PR #55 merge (Sim 1 589, AI 222, Game 1 471, Scripting 295, Tools 13, Llm 119), Linux; Windows CI
-green on PRs #54 and #55.
+Where things stand: session 18 (2026-11-10/11) was an adversarial audit (D-202): 18 reviewers, then 6 verify/fix helpers. About 45 clear
+non-sim bugs are fixed with tests (campaign/missions, in-match UI, menus/setup/tools, LLM key per provider, credits). Every sim, numbers and
+design finding is proven by an `Audit_` test that pins today's behaviour, with a skipped `Desired_` twin holding the wanted behaviour (flip them
+as M13 lands). Report and decision table: docs/reviews/2026-11-11_s18_audit/README.md (wave1/ findings, wave2/ verdicts and measurements).
+The owner took every recommendation (D-205), chose to apply the suggested numbers now (measure after), and picked all four QoL groups.
+Field Manual pilot approved (D-206); hero renders of every unit and building on the owner's laptop. Decisions up to D-206; Q-70 still open
+(layout 2 income, waits for the laptop run). M11 complete except M12-06b; layout 2 still off by default.
+Full suite: see SESSION_LOG session 18 for the integ-s18 run.
 
 ## Start here (shown to the user as the plan; nothing starts until they say go)
-1. Read the owner's layout 2 v6 laptop run if it exists: `balance_runs\s17l2\s17l2_summary.md` and the `.log` files in the owner's RTS_2027 folder
-   (device bridge, read-only; or ask him to attach the summary). Compare with docs/balance/s17_layout1_baseline.md: start share per biome against the
-   60 % limit, income at 3 and 5 minutes within 10 %, 10 minutes over games still running at tick 12 000 (D-201). The income lines are in the logs
-   (`income at 3/5/10 min (harvested + shipments): A x/y/z | B x/y/z`, CRLF: strip `\r` before parsing, skip the literal `3/5/10`).
-   Write docs/balance/s17_layout2_v6.md.
-2. Q-70 with those numbers (income lever after v6), then ask the owner whether layout 2 becomes the default. D-197 names three blockers: Expedition
-   coast in every biome (met, session 17 sweeps), start side at most 60 %, income within 10 %. Note for the owner: layout 1 itself fails the 60 %
-   limit on glass_coast (66 %) and mountains (64 %).
-3. Start skews that are not the map (M12-12b and the Mountains item): Mountains favours one start for Directorate on both layouts (layout 1: 15 v 33; layout 2 v5: 30 v 16) and
-   for Left Behind on layout 2 (29 v 13; layout 1 is 9 v 11 with 44 draws), although the layout 2 starts are exact images (test `Layout2_Mountains_TwoPlayers_StartsAreExactImages`); Glass Coast layout 1 Expedition wins
-   55 v 5 from start 0. Look at slot order, AI first-move order and the Expedition landing choice; measure with `ai match` on the owner's laptop.
-4. `ai timeline` builds layout 2 maps without sea for the Expedition, unlike `ai match` (M12-12b): make it pass the ocean request.
-5. Art follow-ups (owner rule: pilot, approve, fan out; renders on the owner's PC, D-196): kitbash Warzone parts where they add detail (D-189);
-   per-vehicle FX anchors; art for GlassCrest, IceSlab, WreckHulk, BrokenPylon props; building art depth (M10).
-6. If time: Editor props tool (M12-06b); wire `explosion_energy` / `lightning_fork` to weapons; decide the mop-up AI switches (still off); voice
-   lines once the owner has Piper set up.
+1. Read the owner's laptop results if they exist: `balance_runs\s18audit\s18audit_summary.md` (tools/measure/run_s18_audit.ps1) and
+   `art\booklet\contact_<date>.png` (render pilot). The summary is the "before" baseline for M13; the render pilot needs his approval
+   before `-All` (owner rule: pilot, approve, fan out).
+2. M13 wave A (game-breaking, ROADMAP M13-01..M13-09): Expedition sea on Mountains L1 (generator + fallback), founder counts as a base,
+   tender spawn nearest the dock, carried units ignore orders and are not selectable, path stall (retarget, per-tick cap, group retry),
+   ready-structure cancel with refund + AI cancel, StoreFull, Atomic Battery range 0 + campaign allow-lists, LB lanes pause while packed.
+   Each finding already has a skipped `Desired_` test in tests/*/S18: un-skip it as the fix lands and delete or flip the `Audit_` twin.
+3. M13 wave B: mechanics items 12-26 (report 2.2) incl. the ashfall hazard and an attack-ground order; then the numbers pass (report 2.3,
+   suggested values from wave1/faction-*.md and wave2/v-sim-faction.md); then the UI/wording/design list (report 2.4, mission-script
+   one-liners in wave2/fix-missions.md).
+4. M13 wave C: QoL (game speed incl. slow; idle button and alerts; cameo hotkeys, repeat production, range rings, strong/weak tooltip line;
+   handicap and starting conditions; stances and shift-queued waypoints). Front-end items first; stances and waypoints touch the sim.
+5. One golden / AI baseline re-pin batch at the end of M13; push a laptop script (copy run_s18_audit.ps1) for the "after" numbers.
+   Item 11 (start-side tie-breaks) only after the laptop series; the A/B switches are in docs/reviews/2026-11-11_s18_audit (wave2/v-ai-map.md)
+   and the patch at /home/claude/audit/v-ai-map/skew_experiment.patch is NOT in the repo (re-create from the report if the container is gone).
+6. M14 Field Manual once M13 lands: Directorate lore draft (pilot for the voice is approved for the Authority), then the full ~108 pages with
+   tools/booklet (README there), using art/booklet/ hero renders where they exist and sprite plates as fallback.
 
 ## Half-finished work
-- Nothing in flight; every session 17 helper branch is merged (wp/s17-docs, wp/s17-expstall, wp/s17-l2v6). wp/s17-artdrift has no commits
-  (diagnosis only, no script change was needed).
-- Layout 2 v6: field distance applies to the half-turn skeleton only (Medium and Large 2-player maps); Small, 3-player and 4-player maps are unchanged.
-  `Layout2Fields` values are the same for every biome so far.
-- Layout 2 v6 fairness on Ash Plains (new skeleton) is NOT measured yet; the cloud income probe was 8 games per biome and the Expedition checks 8-32 games. The laptop run is the measurement.
-- The Expedition start fix has tests for Ash Plains layout 2 only. Mountains layout 1 was checked by games (docs/balance/s17_layout1_baseline.md,
-  "After the fix"), not by a test: add one (Expedition kit spawns on Mountains layout 1, a few seeds).
+- Nothing in flight; every session 18 branch is merged into integ-s18 (wp/s18-*). The experimental worktree s18-exp-skew was never committed.
+- 26 ids have no model or sprite (list in docs/design/19_field_manual.md section 5): the booklet and the game both need them (M4-ART).
+- exp_04 script hash changed (D-203): exp_04 saves and replays made before session 18 no longer load (they show the script-changed message).
+- `Tools replay verify` exits 0 for mission replays (D-204) and prints a drift note; skirmish verify still fails on a desync.
 - Mop-up AI code is in MilitaryManager but switched off (MopupLaunch/MopupSweep = false).
 - Voice lines: on hold until the owner has Piper set up (tools/voice/wyoming_batch.py).
 - `unit_reserve` difficulty override key exists and is tested but unused (s15_lbknob.md).
 
 ## Waiting on the user
-- Run the layout 2 series on the laptop (after `git pull`): `powershell -ExecutionPolicy Bypass -File tools\measure\run_s17_layout2.ps1`
-  (20 rows, 64 games each; results in `balance_runs\s17l2\`).
-- Pull and play (USER_CHECKS "Session 17"): Expedition skirmish on Mountains now has its start units; the four Left Behind rigs have the darker pad.
-- The re-render summary script on the owner's PC (outside the repo) counts lines containing the word "flag" as audit flags: its "5 FLAG lines"
-  was 0 real flags. Fix it there or ignore the line.
-- Optional clean-up (the owner deletes branches himself): art/pc-rerender-20261108, land/s16-*, land/s17-w1, wp/s16-*, wp/s17-*, wp/art-s16-pilot,
-  integ-s16, older integ-*/land-*/wp-* branches; `art_rerender\20261108\after_extract` and `balance_runs\run_s17_layout1_base.ps1` in his folder
-  (copies made by the lead in session 17). Keep restore/pre-s17 until happy.
+- After `git pull`: laptop series `powershell -ExecutionPolicy Bypass -File tools\measure\run_s18_audit.ps1` (about 95 min; 17 rows of 64 games)
+  and the render pilot `powershell -ExecutionPolicy Bypass -File tools\booklet\render_heroes.ps1 -Pilot` (12 renders, 15-45 min).
+- Back up `%APPDATA%\RTS_2027` before playing (progress and settings writes changed; unreadable files are kept as `.bad`).
+- Pull and play (USER_CHECKS "Session 18").
+- Still open from session 17: `tools\measure\run_s17_layout2.ps1` for Q-70.
+- Optional clean-up (the owner deletes branches himself): wp/s18-*, land/s18-*, integ-s17, land/s17-*, wp/s17-*, older integ-*/land-*/wp-*.
+  Keep restore/pre-s18 until happy.
 
 ## How to run this session
 - Lead: Opus for build sessions (the owner wants long unattended overnight builds); Sonnet for a pure review/question session. Helpers: Haiku default; Sonnet for sim core,
@@ -227,3 +224,15 @@ green on PRs #54 and #55.
   - To read LFS files from a local-only branch in the owner's folder (no git-lfs in the bridge VM): `git cat-file -p <branch>:<path>` gives the
     pointer, the object is at `.git/lfs/objects/<aa>/<bb>/<oid>`. In the cloud, `git lfs fetch origin refs/remotes/origin/<branch>` (the short name fails).
   - A helper made one stray device-bridge call despite the brief (no effect). Keep "no mcp__remote-devices__* tools" in every brief.
+
+- Session 18 lessons:
+  - Helpers cannot write report .md files (the harness refuses "report files from subagents"): brief them to hand back the full text, and save
+    it from the task transcript (the lead used a small script that pulls the SubagentHandback text out of the .output JSONL).
+  - The 5-hour usage limit cut off 5 helpers twice; SendMessage after the reset resumed every one of them with its context and commits.
+  - "Verify only" packages that pin today's behaviour (`Audit_` test + skipped `Desired_` twin) let a whole audit land without moving a hash,
+    and give the fix session ready-made acceptance tests.
+  - A full-suite run in the background on a box loaded with live-play helpers hit the 1-hour background limit: run it per project
+    (`dotnet test tests/<P>.Tests --no-build`) after the helpers finish, with run_in_background and a 2-hour timeout.
+  - Live play under Xvfb found the worst UI bug (structure-lane soft-lock); code reading alone had missed it. Keep one live-play reviewer.
+  - Wave-1 static estimates were wrong both ways when measured (path stall 3 s estimated, 22.6 s measured; hash cost 9-15 ms estimated, 3-5 ms
+    measured; Mountains Expedition "3 of 8 seeds" was 80-98 % of maps). Always measure before ranking.
