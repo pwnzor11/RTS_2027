@@ -124,10 +124,16 @@ function Charged()
   Camera.Focus("device", 160)
 end
 
--- Only the Device's shot razes the Authority command post for the win: any other loss of it before the charge is ignored (S19 MIS-09).
+-- Only the charged Device's shot razes the Authority command post for the win; razing it earlier loses the mission (S19 MIS-09).
 function SunriseFired()
   if state.done then return end
-  if not state.charged then return end
+  if not state.charged then
+    -- The command post fell to anything but the Device: the order cannot be carried out, a loss (owner pick, S19 MIS-09).
+    state.done = true
+    Objective.Fail("fire")
+    Mission.Lose(0)
+    return
+  end
   state.done = true
   Objective.Complete("fire")
   if Objective.Status("west") == "active" then Objective.Reveal("west") end

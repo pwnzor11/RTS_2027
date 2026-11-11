@@ -47,7 +47,7 @@ public sealed class MissionFixTests
     }
 
     [Fact]
-    public void Mis09_Dir04_razing_the_command_post_before_the_charge_does_not_win()
+    public void Mis09_Dir04_razing_the_command_post_before_the_charge_loses_the_mission()
     {
         MissionSession m = MissionSession.Create(TestData.DataDir, "dir_04");
         var bot = new MissionBot(m);
@@ -55,8 +55,8 @@ public sealed class MissionFixTests
         Kill(m, "auth_engineering", 1, 60, 65);   // a conventional kill, long before the Device is charged
         bot.Idle(60);
         Assert.Empty(m.Host.Errors);
-        Assert.NotEqual(MissionOutcome.Won, m.Host.Outcome);
-        Assert.NotEqual(ObjectiveStatus.Completed, m.Host.Objectives.Single(o => o.Id == "fire").Status);
+        Assert.Equal(MissionOutcome.Lost, m.Host.Outcome);
+        Assert.Equal(ObjectiveStatus.Failed, m.Host.Objectives.Single(o => o.Id == "fire").Status);
     }
 
     [Fact]
