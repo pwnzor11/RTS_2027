@@ -34,8 +34,8 @@ public sealed class PauseScreen : IScreen
         }
         items.Add(new MenuItem(() => "Settings", () => Choose(() => _s.Screens.Push(new SettingsScreen(_s)))));
         items.Add(new MenuItem(() => "Archive", () => Choose(() => _s.Screens.Push(new ArchiveScreen(_s)))));
-        items.Add(new MenuItem(() => "Restart", () => Choose(() => GameFlow.Restart(_s, restart))));
-        items.Add(new MenuItem(() => "Quit to menu", () => Choose(() => GameFlow.QuitToMenu(_s))));
+        items.Add(new MenuItem(() => "Restart", () => Choose(() => Ask(ConfirmScreen.RestartTitle, ConfirmScreen.RestartText, ConfirmScreen.RestartYes, () => GameFlow.Restart(_s, restart)))));
+        items.Add(new MenuItem(() => "Quit to menu", () => Choose(() => Ask(ConfirmScreen.QuitTitle, ConfirmScreen.QuitText, ConfirmScreen.QuitYes, () => GameFlow.QuitToMenu(_s)))));
         _panel = new MenuPanel("Paused", items);
     }
 
@@ -50,10 +50,13 @@ public sealed class PauseScreen : IScreen
         {
             if (e.Name == SaveSlots.Quick) continue;
             string name = e.Name;
-            rows.Add(new ListRow("Overwrite: " + name, e.Summary, () => SaveAndClose(save, name)));
+            rows.Add(new ListRow("Overwrite: " + name, e.Summary, () => Ask(ConfirmScreen.OverwriteTitle, string.Format(ConfirmScreen.OverwriteText, name), ConfirmScreen.OverwriteYes, () => SaveAndClose(save, name))));
         }
         return new ListScreen(_s, "Save game", rows, "", "Choose a slot.");
     }
+
+    private void Ask(string title, string text, string yes, Action onYes) =>
+        _s.Screens.Push(new ConfirmScreen(_s, title, text, yes, onYes));
 
     private void SaveAndClose(GameSaveTarget save, string slot)
     {
