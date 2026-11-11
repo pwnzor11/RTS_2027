@@ -71,6 +71,7 @@ public sealed class GameScreen : IScreen
     private bool _gameOverShown;
     private Func<IScreen?>? _gameOverOverride;   // M8-08: campaign missions show a debrief on a win
     private MissionOverlay? _mission;   // campaign mission mode (D-061), null otherwise
+    private MissionGame? _missionGame;  // S18 MIS-01/05: a mission ends on the script outcome or the human's defeat
     private readonly SuperweaponController _superweapon = new();   // M3-18: Sunrise Device button, targeting and flash
     private readonly RectRegion _swRegion = new(Rectangle.Empty);
     private ArchiveTracker? _archive;   // M3-18: unlock progress, skirmish and missions only
@@ -208,7 +209,7 @@ public sealed class GameScreen : IScreen
         var sim = new SimSnapshotSource(game);
         var screen = new GameScreen(services, sim, null, () => CreateMission(services, missionId), skirmishMode: true);
         screen._mission = new MissionOverlay(game.Host, Rts.Game.Ui.Objectives.ObjectiveGuidance.BriefingOf(game));
-        screen.IsGameOver = () => sim.Sim.GameOver;
+        screen.EndOnMission(game);
         return screen;
     }
 
@@ -221,7 +222,7 @@ public sealed class GameScreen : IScreen
         var sim = new SimSnapshotSource(game);
         var screen = new GameScreen(services, sim, null, restart, skirmishMode: true);
         screen._mission = new MissionOverlay(game.Host, Rts.Game.Ui.Objectives.ObjectiveGuidance.BriefingOf(game));
-        screen.IsGameOver = () => sim.Sim.GameOver;
+        screen.EndOnMission(game);
         screen._gameOverOverride = gameOver;
         return screen;
     }
@@ -239,7 +240,7 @@ public sealed class GameScreen : IScreen
             string id = loaded.Header.MissionId;
             var mission = new GameScreen(services, sim, null, () => CreateMission(services, id), skirmishMode: true);
             mission._mission = new MissionOverlay(game.Host, Rts.Game.Ui.Objectives.ObjectiveGuidance.BriefingOf(game));
-            mission.IsGameOver = () => sim.Sim.GameOver;
+            mission.EndOnMission(game);
             return mission;
         }
 
@@ -247,6 +248,14 @@ public sealed class GameScreen : IScreen
         var screen = new GameScreen(services, sim, settings, () => CreateSkirmish(services, settings), skirmishMode: true);
         screen.IsGameOver = () => sim.Sim.GameOver;
         return screen;
+    }
+
+    // S18 MIS-01 / MIS-05: a scripted mission ends when the script decides or the human is defeated (MissionGame.IsOver), not on the sim's
+    // elimination rule, which can end it early (enemy out of buildings) or never (a third team survives Mission.Lose).
+    private void EndOnMission(MissionGame game)
+    {
+        _missionGame = game;
+        IsGameOver = () => game.IsOver;
     }
 
     /// <summary>Creates the --demo screen: fabricated orbiting units, no simulation.</summary>
@@ -1261,6 +1270,7 @@ public sealed class GameScreen : IScreen
     {
         if (_sim is null) return GameOverScreen.Headline(false, -1, 0);
         if (_spectatorMode) return GameOverScreen.SpectatorHeadline(_sim.Sim.WinningTeam);
+        if (_missionGame is { } mg) return GameOverScreen.Headline(!mg.LocalWon, mg.LocalWon ? 0 : -1, 0);   // S18 MIS-01
         byte local = SimSnapshotSource.LocalPlayer;
         return GameOverScreen.Headline(_sim.Sim.HudFor(local).Defeated, _sim.Sim.WinningTeam, _sim.Sim.Setup.TeamOf(local));
     }
