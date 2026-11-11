@@ -23,6 +23,9 @@ public sealed class SpriteLibrary : IDisposable
     /// <summary>Ids of every sprite, in ordinal order.</summary>
     public IReadOnlyCollection<string> Ids => _manifests.Keys;
 
+    /// <summary>Whether a sprite with this id exists (a dictionary lookup; <see cref="Ids"/>.Contains scans).</summary>
+    public bool Has(string id) => _manifests.ContainsKey(id);
+
     /// <summary>
     /// Reads every <c>*.sprite.toml</c> under <paramref name="root"/> (recursively), in path order. No textures are
     /// loaded.

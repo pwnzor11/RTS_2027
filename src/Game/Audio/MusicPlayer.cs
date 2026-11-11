@@ -43,8 +43,24 @@ public sealed class MusicPlayer
     /// <summary>The current fade factor 0..1.</summary>
     public float Gain => _gain;
 
+    // S18 GAMEREND-10: the library never changes after it is scanned, so each (state, faction) answer is worked out once.
+    private readonly Dictionary<(MusicState, Faction), (IReadOnlyList<string> Ids, string Group)> _candidateCache = new();
+
     /// <summary>The ids that can play for a state and faction, in the order of preference (empty = silence).</summary>
     public IReadOnlyList<string> Candidates(MusicState state, Faction faction, out string group)
+    {
+        if (_candidateCache.TryGetValue((state, faction), out var hit))
+        {
+            group = hit.Group;
+            return hit.Ids;
+        }
+
+        IReadOnlyList<string> ids = ComputeCandidates(state, faction, out group);
+        _candidateCache[(state, faction)] = (ids, group);
+        return ids;
+    }
+
+    private IReadOnlyList<string> ComputeCandidates(MusicState state, Faction faction, out string group)
     {
         string battle = "battle_" + faction.ToString().ToLowerInvariant();
         (string Group, string Prefix)[] order = state switch
