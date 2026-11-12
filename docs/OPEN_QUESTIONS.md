@@ -5,9 +5,11 @@ file cited after each question. Recommendations are the lead's, from the researc
 
 ## Open
 
-- 🟡 **Q-75 · 2026-11-12 · Campaign retune targets (M13-17).** The retune is measured as wins over 12 mission seeds with ash on (D-218).
-  Proposed targets: **tier 1 ≥ 11/12, tier 3 ≥ 9/12, tier 5 ≥ 4/12** (hard but winnable by the simple bot) / other targets. Below target in
-  the s20 baseline: see docs/balance/s20_campaign_seed_baseline.md. Pilot auth_01 first (tier 3 wins 3/12), then fan out.
+- 🟡 **Q-77 · 2026-11-12 · Expedition skirmish strength (after the s21 laptop after-series).** The s19 after-series (commit 6e3c15f9, before
+  PR #70 and D-219) has the Expedition winning most cross-faction rows: Rust Belt v Authority 50-13, v Directorate 35-26, v Left Behind 38-21;
+  Glass Coast 43-15, 46-11, 43-15 (s18: 37-24, 24-35, 27-29, 25-37, 27-30, 33-23). Start skew itself is fixed (worst 92 % -> 54 %). Re-measured
+  on integ-s21 by the owner's laptop (`run_s19_after.ps1 -OutName s21after`); then options: **(a) tune Expedition numbers (shipments, hover
+  costs) toward 45-55 % per pair (recommended)** / (b) leave it until a play-test.
 - ⚪ **Q-76 · 2026-11-12 · Harvester dock in a dead-end corridor.** One-cell dead-end corridor to a dock: the harvester that unloaded cannot
   leave because the next one waits behind it (pinned as skipped `YardDockLivelockTests.Desired_DeadEndCorridorToTheDock_KeepsDelivering`).
   **(a) waiters stand back two cells off the dock approach until the dock is free** / (b) leave it (shipped yards have an open dock cell).
@@ -15,10 +17,12 @@ file cited after each question. Recommendations are the lead's, from the researc
 - 🟡 **Q-73 · 2026-11-12 · Par-time medals (M10-19).** No campaign mission has a par time, so the Profile page awards only Completed and
   No losses. Options: **(a) the owner gives a par time per mission (recommended; the bot walk-through times in docs/balance are a starting point)**;
   (b) par = the bot's tier-3 win time + 50 %; (c) no par medal.
-- ⚪ **Q-74 · 2026-11-12 · Chat in LAN replays (Q-M9-g sub-answer).** Chat is kept on screen only, because the replay format has no chat
-  block. Options: **(a) add a chat block in the next replay format bump (recommended)**; (b) leave chat out of replays.
 
 ## Answered
+- Q-75 · 2026-11-12 · Owner: targets over 12 seeds with ash on are **tier 1 >= 10/12, tier 3 >= 8/12, tier 5 >= 3/12** (harder than the
+  recommendation) → D-222. Q-74 · 2026-11-12 · Owner (a): chat block at the next replay format bump → D-222.
+- Session 21 · 2026-11-12 · Owner: default stance engages hostile units in sight and returns to its post → D-219; development saves and
+  replays need not outlive the next session → D-220; tier-5 fixed-seed walks only need a clean run → D-221.
 - Q-71 · 2026-11-12 · Owner (a): accept the winnable auth_01 tier 5; the S18 MIS-03 expectation is dropped → D-217.
 - Q-72 · 2026-11-12 · Owner: keep the ash step-off rules (3-cell step-off, ash-stealth infantry stay, foot penalty 4) → D-217.
 - Owner confirmations · 2026-11-12 · Confirmed the remaining "assumed — confirm" items after D-153's blanket confirmation: the revised Left

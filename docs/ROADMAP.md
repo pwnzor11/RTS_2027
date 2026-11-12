@@ -284,14 +284,14 @@ Source: docs/reviews/2026-11-07_owner_campaign_feedback.md. Audit: docs/reviews/
 - [x] M13-07 Full building store: refuse deploy, StoreFull reason (item 7)
 - [x] M13-08 Data: Atomic Battery range 0, campaign allow-lists (items 8, 10)
 - [x] M13-09 Left Behind lanes pause while the Mother Rig is packed (item 9)
-- [x] M13-10 Start-side tie-breaks (item 11): mirror-image placement tie-break and start kits; wider AI placement window (s19; 64-game confirmation in the after-series)
+- [x] M13-10 Start-side tie-breaks (item 11): mirror-image placement tie-break and start kits; wider AI placement window (s19; confirmed by the after-series: worst start share 92 % -> 54 %, D-222)
 - [x] M13-11 Mechanics items 12-22, 25 (s19: 12-18, 20 harvester-after-rebuild, 21, 25, LE-14; s20: 19 melee acquire, 20 unreachable field (SP-04) + choke give-up (SP-03 Move half), 22 path leak (SIMDET-03), D-218)
 - [x] M13-12 Ashfall hazard (item 23), attack-ground order (item 24), hide/reword missing mechanics (item 26)
 - [~] M13-13 Numbers pass (s19, D-208: Agitprop, Tow, Marksman, ship warheads small-arms/AP, Directorate copy structures, Commissar aura, layout 2 money; option-only items wait for the after-series)
 - [x] M13-14 UI/wording/design list (section 2.4) incl. mission-script one-liners, naming pass from data/archive
 - [x] M13-15 QoL: game speed incl. slow; idle button and alerts; cameo hotkeys, repeat production, range rings, strong/weak line; handicap and starting conditions; stances and shift-queued waypoints
 - [~] M13-16 Re-pins done per merge batch (s19); owner laptop series before (s18audit, done) and after (`tools/measure/run_s19_after.ps1`, open)
-- [~] M13-17 Campaign retune with the ashfall hazard on (missions run with ash damage and ash path cost off until then, D-211). s20: 12-seed win-rate baseline with ash on for all 45 mission-tiers (docs/balance/s20_campaign_seed_baseline.md, D-218 point 8); tuning to the targets (Q-75) is next; auth_01 tier 5 winnable accepted (D-217)
+- [~] M13-17 Campaign retune with the ashfall hazard on (missions run with ash damage and ash path cost off until then, D-211). s20: 12-seed win-rate baseline with ash on for all 45 mission-tiers (docs/balance/s20_campaign_seed_baseline.md, D-218 point 8); auth_01 tier 5 winnable accepted (D-217). s21: ash on in missions, D-219 stance rule, retunes of auth_01/03/04, dir_04, lb_03, exp_03 to the Q-75 targets (D-222, docs/balance/s21_campaign_retune.md); confirm with the laptop sweep (tools/measure/run_s21_campaign_sweep.ps1) on the landed commit
 - [~] M13-18 Follow-ups found in s19 (s20, D-218): placement lane outlet toward the map centre (S18-AI-NEW-3) done; ClearBuildArea removed; LB Still Rigs 14-18 and used, no cap; LB yard dock livelock not reproduced in the open, dead-end corridor case open (Q-76); walls/gates hero renders re-angled to 3/4 (M14) open
 
 ## M14 · Field Manual (D-206, docs/design/19_field_manual.md)

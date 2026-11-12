@@ -1612,3 +1612,38 @@ measured as a win rate over 12 mission seeds per mission-tier (ash on), not a si
 luck (auth_01 tier 3 wins 3/12 even with ash off), and ash on changes the rate notably only for dir_02 tier 5 (10/12 → 6/12). Targets: Q-75.
 **Why:** audit items SP-03, SP-04, SIMDET-03, item 19 and the s19 follow-ups; the sweep showed the bot walks are seed coin-flips.
 **Status:** lead decision (session 20); numbers marked (tune) are assumed — confirm.
+
+### D-219 · 2026-11-12 · The default stance engages hostile units in sight (amends M13-15 stances)
+**Decision:** the Aggressive stance (still the default; names unchanged) acquires enemy vehicles and infantry anywhere inside the unit's sight
+while guarding or attack-moving; buildings are still acquired only inside weapon range. The Guard leash (sight from the post) walks it back to
+its post when the target leaves. Defensive (weapon range, 3-cell chase) and Hold Fire are unchanged; melee units keep their sight search
+(D-218 item 19). An attack-mover next to a goal cell that something else holds, once blocked, guards where it stands (it used to step toward the
+held cell for good and never guarded). Code: `CombatMissions.AcquireFor`, `Simulation.AcquireTarget(..., mobilesOnlyBeyondRange)`.
+**Why:** the campaign retune kept finding the same loss: an enemy parked just outside a unit's weapon range (auth_01 raid jeep, dir_04 tank, auth_03
+rocket nest) killed everything around it unopposed. Owner: "when something hostile comes within that visual range they will move to engage".
+**Alternatives:** tuning each mission around it (done first for auth_01, reverted where no longer needed); engaging buildings in sight too (lead:
+no, idle units would walk into every turret they can see). Moves the golden and combat final hashes; skirmish balance re-measured by the laptop
+after-series (Q-77). **Status:** owner decision (session 21)
+
+### D-220 · 2026-11-12 · Development saves and replays are disposable
+**Decision:** no save or replay made during development needs to load after the next session. After a rules or format change, re-pin golden
+hashes and baselines and bump formats without loaders for older ones when that is simpler; no migration code. Shipped-release compatibility is
+a separate decision when there is a release. **Why:** owner: "don't waste time trying to preserve old saves or replays". **Status:** owner decision (session 21)
+
+### D-221 · 2026-11-12 · Tier-5 fixed-seed walks only need a clean run
+**Decision:** the single-seed campaign walks (BalanceTableTests, per-mission test classes, the mid-mission save test) assert a win at tiers 1-3
+only; at tier 5 they assert a clean run (no script errors, no locale warnings). The balance gate for every tier is the 12-seed sweep against the
+Q-75 targets (SeedSweepTests, D-218 point 8). Per-mission tier-5 cases whose fixed seed loses were dropped (auth_03, lb_02, lb_03, exp_04); the S19
+known-shift skips and auth_01's expected loss are gone. lb_01's idle-player test now checks that an idle player never wins (under D-219 the start
+force stops the convoy, so it no longer loses). **Why:** tier 5 aims at 3-12 wins in 12 seeds, so one fixed seed may lose. **Status:** owner decision (session 21)
+
+### D-222 · 2026-11-12 · M13-17 campaign retune: ash on in missions, Q-75 targets, mission changes
+**Decision:** (1) Campaign and tutorial missions run with the ashfall hazard (MissionSession.CampaignRules removed; ends D-211's override).
+(2) Q-75 targets over 12 seeds with ash on: tier 1 >= 10/12, tier 3 >= 8/12, tier 5 >= 3/12. (3) Mission changes, measured under D-219:
+auth_01 raid 2 brings its jeep from tier 4 (was 3); auth_03 coast counter infantry {4,5,8,11,14} -> {4,5,6,7,8}, ashthrowers {2,2,3,5,6} ->
+{2,2,2,3,3}, sappers {0,0,2,3,4} -> {0,0,1,1,2}, and its bot sweeps onto the picket's rear; auth_04 tier-5 home raid 1 at tick 2400 (was 1800);
+dir_04 tier 5 drops the wave-3 tank; lb_03 tier-5 column at 4300 with 7 riflemen (was 3400 / 8) and the start force off the ash field at (21,24);
+exp_03 tier-5 air raid split into 2 bombers at 3800 and an unannounced 3-bomber sortie at 6400 from the south-west sea. Table:
+docs/balance/s21_campaign_retune.md. (4) Q-74 (a): LAN chat gets a block in the next replay format bump. (5) The s19 after-series confirms
+the start-side fix (M13-10). **Rejected:** auth_03 tier-5 tide 9000 -> 2780 (a visible countdown three times shorter). **Status:** owner
+decisions (targets, "fix all, show me after"); per-mission values are the lead's within those targets — confirm with the laptop sweep
