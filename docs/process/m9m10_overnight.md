@@ -29,3 +29,10 @@ ExpeditionMission04Tests). Not ours; reported to session 19 through the owner.
 - Q-M10C-1: par-time medals need per-mission par times; no campaign data has one. Supply times, or say how to derive them (stub in MedalRules.cs).
 - M10-F assumptions: dev builds never show the update notice; "-pre" tags are never offered; release zip is RTS_2027-<tag>-win-x64.zip; the installer needs admin rights (Program Files).
 - M10-B: ships leave a wake while dived (UnitView has no dived flag); water animation runs on the game tick, so it freezes while paused.
+
+## Outcome
+- Wave 1 merged as PR #69 (Windows CI green). Wave 2 (W2-G in-game, W2-L lobby, W2-T UDP soak) merged into integ-m9m10; the full suite on it
+  was green (Sim 1795, Game 1988, AI 347, Scripting 332, Net 170, Llm 152, Tools 34) before the review fixes.
+- Independent review (Opus, fresh): 8 findings, all fixed with tests first (M9-14): shared network clock (HIGH), desync resolve on clients,
+  per-tick command cap, failed-start latch + Bye, resume refused during desync, bounded pending hashes, late leavers dropped to AI, resync
+  save failure handled. Decisions recorded as D-212..D-216; open questions Q-73, Q-74.

@@ -373,3 +373,18 @@ until the retune M13-17).
 **Problems / notes:** the 2-CPU box with 6-9 helpers queued every test run behind one lock (10-15 min each); local batches skipped the slow
 Scripting project, so Windows CI found the campaign regressions (ashfall, path) late. lb_03 and exp_04 tier 5 are known skipped shifts until M13-17.
 **Next session should:** see HANDOFF (campaign retune with ash on, after-series, follow-ups, then M14).
+
+## Session 19p · 2026-11-11/12 (parallel to session 19: M9 + M10 design, M14-06 art scripts, M9 + M10 code overnight)
+**Goal:** owner asked for the M9 LAN design round, then the M10 round, the 26 missing art scripts, a music pipeline, and finally M9 + the
+code-only M10 built overnight and landed after session 19.
+**Done:** design 20 (M9, D-213) and design 21 (M10, D-214), PRs #64/#65 merged; D-212 confirmations; M14-06 scripts for all 26 ids (pilot
+approved, D-215, draft PR #67, laptop render script); ACE-Step 1.5 set up on the owner's CPU-only laptop (UHD 620; ~13 min of compute per
+minute of music) with an overnight batch of 20 tracks (tools/audio/ace_step); overnight build (D-216): wave 1 = src/Net (codec, UDP with
+reliability, discovery, lockstep core, loopback, soak) + every code-only M10 feature, PR #69 merged; wave 2 = lobby + browser + handshake +
+map transfer, in-game LAN (overlay, chat, pause, drop to AI, desync reports + resync, continue vs AI, LAN replays), UDP soak, and 8 fixes from
+an independent review.
+**Helpers:** Sonnet for art (6 batches) and most packages, Opus for the lockstep core, in-game LAN, the review and the fixes, Haiku for music states.
+**Problems / notes:** the ACE-Step batch first failed on a UTF-8 BOM in the job files, then on an emoji print under cp1252, then on ACE-Step's
+600 s generation timeout (raised with ACESTEP_GENERATION_TIMEOUT). A build started while a merge was still writing files reported missing
+types: never build until a merge has finished. The lan-soak repeat test failed on a fresh Windows runner (first-run "wrote <map>" note).
+**Next session should:** see HANDOFF "Parallel session additions".
