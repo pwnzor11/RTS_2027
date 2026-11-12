@@ -44,6 +44,11 @@ internal static class HarvestMission
     public const int SkipTicks = 1200;
     /// <summary>Ticks between dock-free checks while queued.</summary>
     public const int QueuePollTicks = 3;
+    /// <summary>S22 (Q-76, M13-18): radius (cells) of the box searched for the dock's exit lane; a corridor longer than this is not recognised.</summary>
+    public const int LaneRadius = 8;
+    private const int LaneSide = 2 * LaneRadius + 1;
+    /// <summary>S22 (Q-76): a waiter at a lane dock stands at least this far (Chebyshev) from the lane's outer end, so the unloader can step out.</summary>
+    public const int StandOff = 2;
 
     // ---- Harvest ------------------------------------------------------------------------------
 
@@ -279,6 +284,21 @@ internal static class HarvestMission
             case DockStep.Go:
             {
                 CellCoord dock = DockCell(sim, eco.DockTarget[i]);
+                // S22 (Q-76): a dock whose only way out is a lane (dead-end corridor): queue outside it, never in it.
+                Span<CellCoord> lane = stackalloc CellCoord[LaneRadius * 2 + 2];
+                int laneN = Occupancy.Chebyshev(cur, dock) <= LaneRadius + QueueRadius + StandOff
+                    ? DockLane(sim, dock, Occupancy.LocoOf(sim, kind, store, i), player, lane) : 0;
+                if (laneN > 0)
+                {
+                    CellCoord outer = lane[laneN - 1];
+                    if (!store.NextCellReserved[i] && WaitsOutside(cur, dock, lane, laneN) && Occupancy.Chebyshev(cur, outer) <= StandOff + QueueRadius)
+                    {
+                        eco.Ticket[i] = eco.NextTicket++;
+                        eco.DockState[i] = (byte)DockStep.Wait;
+                        return 1;
+                    }
+                    return MoveMission.StepToward(sim, store, kind, i, StandOffCell(sim, kind, store, i, dock, lane, laneN, out CellCoord t) ? t : outer);
+                }
                 if (Occupancy.Chebyshev(cur, dock) <= QueueRadius && !store.NextCellReserved[i])
                 {
                     eco.Ticket[i] = eco.NextTicket++;
@@ -289,6 +309,22 @@ internal static class HarvestMission
             }
             case DockStep.Wait:
             {
+                {   // S22 (Q-76): back off the lane of a dead-end dock, and take the dock only when the lane is empty of other units
+                    CellCoord dock = DockCell(sim, eco.DockTarget[i]);
+                    Span<CellCoord> lane = stackalloc CellCoord[LaneRadius * 2 + 2];
+                    int laneN = DockLane(sim, dock, Occupancy.LocoOf(sim, kind, store, i), player, lane);
+                    if (laneN > 0)
+                    {
+                        if (!WaitsOutside(cur, dock, lane, laneN) && !store.NextCellReserved[i])
+                        {
+                            if (!StandOffCell(sim, kind, store, i, dock, lane, laneN, out CellCoord t)) return QueuePollTicks;
+                            MoveMission.StepToward(sim, store, kind, i, t);
+                            return 1;
+                        }
+                        if (store.NextCellReserved[i]) return 1;
+                        if (LaneBusy(sim, lane, laneN, me)) return QueuePollTicks;
+                    }
+                }
                 if (!TryClaim(sim, eco, i, me)) return QueuePollTicks;
                 eco.DockOccupant[eco.DockTarget[i].Index] = me;
                 eco.DockState[i] = (byte)DockStep.Enter;
@@ -395,6 +431,108 @@ internal static class HarvestMission
             if (eco.DockTarget[j] == rid && eco.DockState[j] == (byte)DockStep.Wait && eco.Ticket[j] < eco.Ticket[i]) return false;
         }
         return true;
+    }
+
+
+    // ---- dead-end dock lane (S22, Q-76) --------------------------------------------------------
+
+    /// <summary>
+    /// The cells that must stay clear for a unit on the dock to get out: the dock cell and every cell, within <see cref="LaneRadius"/> of it,
+    /// whose loss (as terrain) would cut the dock off from the outside of that box. Ordered from the dock outwards; returns 0 when the dock
+    /// has two ways out (an open yard) or none. Pure function of the map: BFS in the fixed neighbour order, integer arithmetic only.
+    /// </summary>
+    internal static int DockLane(Simulation sim, CellCoord dock, Locomotion loco, byte passer, Span<CellCoord> lane)
+    {
+        Span<int> parent = stackalloc int[LaneSide * LaneSide];
+        Span<int> queue = stackalloc int[LaneSide * LaneSide];
+        int start = LaneRadius * LaneSide + LaneRadius;
+        int target = LaneReach(sim, dock, loco, passer, -1, parent, queue);
+        if (target < 0) return 0;
+        Span<int> path = stackalloc int[LaneRadius + 2];
+        int n = 0;
+        for (int c = target; c != start && n < path.Length; c = parent[c]) path[n++] = c;   // outer to inner, without the dock
+        int count = 0;
+        for (int k = n - 1; k >= 0; k--)
+        {
+            if (LaneReach(sim, dock, loco, passer, path[k], parent, queue) >= 0) continue;
+            if (count == 0) lane[count++] = dock;
+            lane[count++] = new CellCoord(dock.X + path[k] % LaneSide - LaneRadius, dock.Y + path[k] / LaneSide - LaneRadius);
+        }
+        return count;
+    }
+
+    /// <summary>BFS from the dock over free terrain (cell <paramref name="exclude"/> treated as blocked); the box index of the first cell on the box edge, or -1.</summary>
+    private static int LaneReach(Simulation sim, CellCoord dock, Locomotion loco, byte passer, int exclude, Span<int> parent, Span<int> queue)
+    {
+        parent.Fill(-2);
+        int start = LaneRadius * LaneSide + LaneRadius, head = 0, tail = 0;
+        queue[tail++] = start;
+        parent[start] = -1;
+        while (head < tail)
+        {
+            int cur = queue[head++], cx = cur % LaneSide, cy = cur / LaneSide;
+            if (Math.Max(Math.Abs(cx - LaneRadius), Math.Abs(cy - LaneRadius)) == LaneRadius) return cur;
+            var from = new CellCoord(dock.X + cx - LaneRadius, dock.Y + cy - LaneRadius);
+            for (int d = 0; d < 8; d++)
+            {
+                int nx = cx + Occupancy.Dx[d], ny = cy + Occupancy.Dy[d];
+                if (nx < 0 || ny < 0 || nx >= LaneSide || ny >= LaneSide) continue;
+                int nb = ny * LaneSide + nx;
+                if (nb == exclude || parent[nb] != -2) continue;
+                if (!Occupancy.TerrainOk(sim, new CellCoord(from.X + Occupancy.Dx[d], from.Y + Occupancy.Dy[d]), loco, passer)
+                    || !Occupancy.CornersOk(sim, from, d, loco, passer)) continue;
+                parent[nb] = cur;
+                queue[tail++] = nb;
+            }
+        }
+        return -1;
+    }
+
+    private static bool InLane(CellCoord c, ReadOnlySpan<CellCoord> lane, int n)
+    {
+        for (int k = 0; k < n; k++) if (lane[k] == c) return true;
+        return false;
+    }
+
+    /// <summary>The cell is outside the lane, at least <see cref="StandOff"/> from its outer end and farther from the dock than that end.</summary>
+    private static bool WaitsOutside(CellCoord c, CellCoord dock, ReadOnlySpan<CellCoord> lane, int n)
+    {
+        CellCoord outer = lane[n - 1];
+        return !InLane(c, lane, n) && Occupancy.Chebyshev(c, outer) >= StandOff && Occupancy.Chebyshev(c, dock) > Occupancy.Chebyshev(outer, dock);
+    }
+
+    /// <summary>First free cell (rings around the lane's outer end, row-major) that <see cref="WaitsOutside"/> accepts.</summary>
+    private static bool StandOffCell(Simulation sim, ActorKind kind, MobileStore store, int i, CellCoord dock, ReadOnlySpan<CellCoord> lane, int n, out CellCoord cell)
+    {
+        CellCoord outer = lane[n - 1];
+        Locomotion loco = Occupancy.LocoOf(sim, kind, store, i);
+        byte passer = store.Player[i];
+        EntityId me = store.Slots.IdOf(i);
+        for (int r = StandOff; r <= StandOff + 2; r++)
+            for (int dy = -r; dy <= r; dy++)
+                for (int dx = -r; dx <= r; dx++)
+                {
+                    if (Math.Max(Math.Abs(dx), Math.Abs(dy)) != r) continue;
+                    var c = new CellCoord(outer.X + dx, outer.Y + dy);
+                    if (!WaitsOutside(c, dock, lane, n) || !Occupancy.FreeForVehicle(sim, c, loco, me, passer)) continue;
+                    cell = c;
+                    return true;
+                }
+        cell = default;
+        return false;
+    }
+
+    /// <summary>Another vehicle or soldier stands on a lane cell (the unloader still on the dock, someone coming out).</summary>
+    private static bool LaneBusy(Simulation sim, ReadOnlySpan<CellCoord> lane, int n, EntityId me)
+    {
+        for (int k = 0; k < n; k++)
+        {
+            EntityId v = sim.Map.VehicleAt(lane[k]);
+            if (!v.IsNone && v != me) return true;
+            for (int s = 0; s < InfantryStore.SubSlotCount; s++)
+                if (!sim.Map.InfantryAt(lane[k], s).IsNone) return true;
+        }
+        return false;
     }
 
     // ---- helpers ------------------------------------------------------------------------------

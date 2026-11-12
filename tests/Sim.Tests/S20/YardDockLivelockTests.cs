@@ -17,28 +17,29 @@ public sealed class YardDockLivelockTests
 
     public YardDockLivelockTests(ITestOutputHelper output) => _out = output;
 
-    /// <summary>Rock on both sides of the dock cell (5,6) leaves a one-cell corridor x = 5 from the south.</summary>
-    private static void Walls(OverlayKind[] overlay, byte[] density, int w)
+    /// <summary>Rock on both sides of the dock cell (5,6) down to row <c>5 + rows</c> leaves a one-cell corridor x = 5 from the south
+    /// (rows = 7: the corridor cells (5,7)..(5,12); rows = 3: two cells, (5,7) and (5,8)).</summary>
+    private static Action<OverlayKind[], byte[], int> Walls(int rows) => (overlay, density, w) =>
     {
-        for (int y = 6; y <= 12; y++) { overlay[y * w + 4] = OverlayKind.Block; overlay[y * w + 6] = OverlayKind.Block; }
-    }
+        for (int y = 6; y <= 5 + rows; y++) { overlay[y * w + 4] = OverlayKind.Block; overlay[y * w + 6] = OverlayKind.Block; }
+    };
 
     [Theory]
     [InlineData(2, false)]
     [InlineData(3, false)]
     [InlineData(5, false)]
-    public void SeveralGleaners_OneYard_EveryoneDelivers(int count, bool corridor) => Play(count, corridor);
+    public void SeveralGleaners_OneYard_EveryoneDelivers(int count, bool corridor) => Play(count, corridor ? 7 : 0);
 
-    /// <summary>Known deadlock (S20, M13-18, not fixed): in a one-cell dead-end corridor to the dock, a gleaner that has unloaded stands on the
-    /// dock cell and cannot leave because the next waiter stands behind it, while that waiter cannot enter because the dock cell is taken.
-    /// Movement cannot solve it (mutual block, no detour); the queue would have to back the waiters up. Measured: income stops at tick ~500.</summary>
-    [Fact(Skip = "S20 known gap: dead-end dock corridor deadlocks; needs a queue back-off design (owner decision)")]
-    public void Desired_DeadEndCorridorToTheDock_KeepsDelivering() => Play(3, true);
+    /// <summary>S22 (Q-76, option a; was the skipped Desired_ test): in a one-cell dead-end corridor to the dock, the waiters stand back outside
+    /// the corridor, so the gleaner that has unloaded can leave and the next one go in. Income keeps flowing to the end of the run.</summary>
+    [Fact]
+    public void DeadEndCorridorToTheDock_KeepsDelivering() => Play(3, 7);
 
-    private void Play(int count, bool corridor)
+    /// <param name="wallRows">0 = open yard; otherwise the rows of rock on both sides of the dock cell (see <see cref="Walls"/>).</param>
+    internal void Play(int count, int wallRows)
     {
         SimRules rules = Rts.Sim.Tests.S18.S18World.RealRules;
-        var sim = new Simulation(new SimSetup(20, EconomyFixture.PaintMap(OverlayKind.Ashfall, 12, corridor ? Walls : null), 2, rules, 0x520UL)
+        var sim = new Simulation(new SimSetup(20, EconomyFixture.PaintMap(OverlayKind.Ashfall, 12, wallRows > 0 ? Walls(wallRows) : null), 2, rules, 0x520UL)
             { AllowDebug = true, Factions = new[] { Faction.LeftBehind, Faction.LeftBehind } });
         Assert.False(sim.PlaceBuilding(0, SimRules.IndexOf(rules.Buildings, "lb_yard", b => b.Id), new CellCoord(4, 4)).IsNone);
         int glean = SimRules.IndexOf(rules.Vehicles, "lb_gleaner", v => v.Id);
@@ -58,10 +59,11 @@ public sealed class YardDockLivelockTests
             int paid = sim.StatsOf(0).CreditsHarvested;
             if (paid != lastPay) { lastPay = paid; lastTick = t; }
         }
-        _out.WriteLine($"count {count} corridor {corridor}: harvested {lastPay}, last payment at tick {lastTick}");
+        _out.WriteLine($"count {count} wall rows {wallRows}: harvested {lastPay}, last payment at tick {lastTick}");
         for (int k = 0; k < count; k++)
             _out.WriteLine($"  h{k}: mission {sim.Units.Mission[hs[k].Index]} dock {sim.Economy.DockState[hs[k].Index]} cargo {sim.Economy.Cargo[hs[k].Index]} at {sim.Units.Position[hs[k].Index].ToCell()}");
         Assert.True(lastPay > 0);
         Assert.True(lastTick > 6000 - 2000, $"deliveries stalled at tick {lastTick}");
+        for (int k = 0; k < count; k++) Assert.True(sim.Units.Slots.IsAlive(hs[k]));
     }
 }
