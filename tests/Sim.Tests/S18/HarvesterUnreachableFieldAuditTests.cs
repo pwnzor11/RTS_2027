@@ -62,20 +62,8 @@ public sealed class HarvesterUnreachableFieldAuditTests
         Assert.True(r.FarLeft < 108);
     }
 
-    // S18 audit: pins current behaviour of SP-04; flip the assertion when fixed.
-    // Measured at S18: after 4000 ticks (200 s) nothing harvested, the open far field untouched, the harvester parked by the rock ring.
     [Fact]
-    public void Audit_WalledInNearField_TrapsTheHarvester_WhileAnOpenFieldExists()
-    {
-        var r = Play(nearField: true, sealNear: true);
-        Assert.Equal(0, r.Harvested);
-        Assert.Equal(108, r.FarLeft);    // 9 cells x 12: never touched
-        Assert.Equal(108, r.NearLeft);
-        Assert.True(Math.Max(Math.Abs(r.At.X - 15), Math.Abs(r.At.Y - 9)) <= 4, $"harvester should be loitering by the sealed field, is at {r.At}");
-    }
-
-    [Fact(Skip = "S18 SP-04: awaiting owner decision")]
-    public void Desired_WalledInNearField_IsSkippedForTheReachableOne()
+    public void WalledInNearField_IsSkippedForTheReachableOne()
     {
         var r = Play(nearField: true, sealNear: true);
         Assert.True(r.Harvested > 0);
