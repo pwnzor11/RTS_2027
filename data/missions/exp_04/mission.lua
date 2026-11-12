@@ -173,6 +173,8 @@ function Finale()
   -- S18 MIS-03 (owner decision): keep the tested balance, the guard marches on the SECOND blow (Shaft and Device both down).
   if Actor.Alive("shaft") or Actor.Alive("device") then return end
   state.finale = true
+  Media.MessageKey("e4.finale")
+  Dialogue.Say(SPEAKER, SPEAKER, "e4.radio.finale")
   local types = {}
   for i = 1, Pick({ 10, 12, 14, 22, 32 }) do types[#types + 1] = "dir_conscript" end
   for i = 1, Pick({ 3, 4, 5, 9, 14 }) do types[#types + 1] = "dir_ashthrower" end
