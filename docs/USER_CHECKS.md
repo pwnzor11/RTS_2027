@@ -394,8 +394,8 @@ Back up `%APPDATA%\RTS_2027` first (progress and settings files are now written 
 
 ## Session 19 · M13 audit fix batch (D-205, D-207..D-211)
 Back up `%APPDATA%\RTS_2027` first (game saves gained control groups and the setup header gained handicap flags; old saves still load).
-- **Saves:** F5 shows "Quicksaved."; F9 asks "Load the quicksave?" and returns there. After 5 minutes "autosave 1" appears in Load Skirmish
-  (Settings: "Autosave: 5 min", Off/1/2/3/5/10/15/30/60). Camera bookmarks moved to F6, F7, F8, F12; the sandbox spectator key is P.
+- **Saves:** F5 shows "Quicksaved."; F9 asks "Load the quicksave?" and returns there. "autosave 1" appears in Load Skirmish right at the match start and "autosave 2" after 5 minutes
+  (Settings: "Autosave: every 5 min"; choices Off, every 1/2/3/5/10/15/30/60 min). Camera bookmarks moved to F6, F7, F8, F12; the sandbox spectator key is P.
 - **Menus:** Pause > Quit to menu asks "Quit to menu?"; Restart asks "Restart?"; overwriting a save asks "Overwrite save?". Esc on the main menu
   does nothing. Alt-tab out of a skirmish or mission pauses it. Fullscreen is borderless.
 - **Garrison:** riflemen in a building: box-select over it and Select all: not selected; a click on the building selects the building.
