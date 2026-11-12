@@ -90,5 +90,5 @@ public sealed class MissionSelectScreen : IScreen
     }
 
     private BriefingScreen OpenBriefing(string missionId) =>
-        new(_s, missionId, tier => CampaignFlow.CreateMission(_s, _svc, _faction, missionId, tier), _faction, _svc.Progress(_faction).Difficulty.GetValueOrDefault(missionId, 3));
+        new(_s, missionId, tier => LoadingCampaign.ForMission(_s, _faction, missionId, () => CampaignFlow.CreateMission(_s, _svc, _faction, missionId, tier)), _faction, _svc.Progress(_faction).Difficulty.GetValueOrDefault(missionId, 3));
 }

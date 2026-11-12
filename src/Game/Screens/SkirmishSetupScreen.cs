@@ -561,16 +561,11 @@ public sealed class SkirmishSetupScreen : IScreen
             return;
         }
 
-        try
-        {
-            GameScreen screen = GameScreen.CreateSkirmish(_s, settings);
-            SaveSpeed();
-            _error = "";
-            _s.Screens.Push(screen);
-        }
-        catch (Exception e) when (ScreenGuard.IsDataError(e))   // S18 GS-10: also IOException, MapFileException and the like
-        {
-            _error = Shorten("Cannot start: " + e.Message, 56);
-        }
+        // M10-20: a loading screen builds the game (it draws one frame first); a data error comes back here, as it did before (S18 GS-10).
+        SaveSpeed();
+        _error = "";
+        var factions = settings.Slots.Where(x => x.Kind != SlotKind.Closed).Select(x => LoadingArt.IdOf(x.Faction)).OfType<string>().Distinct().ToArray();
+        _s.Screens.Push(LoadingScreen.For(_s, SkirmishGame.DescribeMap(settings.Map), factions, null,
+            () => GameScreen.CreateSkirmish(_s, settings), e => _error = Shorten("Cannot start: " + e.Message, 56)));
     }
 }
