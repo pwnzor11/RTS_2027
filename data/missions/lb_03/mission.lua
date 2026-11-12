@@ -32,7 +32,7 @@ function OnInit()
   Media.MessageKey("lb3.start")
   Dialogue.Say(SPEAKER, SPEAKER, "lb3.radio.start")
 
-  Actor.CreateGroup(StartForce(), 0, { x = 23, y = 26 }, { formation = "box" })
+  Actor.CreateGroup(StartForce(), 0, { x = 21, y = 24 }, { formation = "box" })
   Camera.Focus("camp", 160)
   ReinforceField()
 
@@ -57,7 +57,7 @@ end
 
 -- Ticks until the Authority column reaches the camp, by tier: sooner at the high tiers.
 function ColumnDelay()
-  local delays = { 4800, 4600, 4400, 3800, 3400 }
+  local delays = { 4800, 4600, 4400, 3800, 4000 }
   return delays[Mission.Difficulty()]
 end
 
