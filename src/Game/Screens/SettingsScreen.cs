@@ -57,6 +57,8 @@ public sealed class SettingsScreen : IScreen
                 () => StepAutosave(1), StepAutosave, new MenuButton("<", () => StepAutosave(-1)), new MenuButton(">", () => StepAutosave(1))),   // D-205
             new MenuItem(() => $"Camera cue on new objective: {(_s.Settings.CameraCueOnNewObjective ? "On" : "Off")}", ToggleCameraCue, _ => ToggleCameraCue(),
                 new MenuButton("Toggle", ToggleCameraCue)),   // M11-05
+            new MenuItem(() => $"Check for updates at start: {(_s.Settings.CheckForUpdates ? "On" : "Off")}", ToggleCheckForUpdates, _ => ToggleCheckForUpdates(),
+                new MenuButton("Toggle", ToggleCheckForUpdates)),   // M10-23
             new MenuItem(() => Rts.Game.Ui.Llm.LlmUiText.SectionRow, () => _s.Screens.Push(new Rts.Game.Ui.Llm.LlmSettingsScreen(_s, _path))),
             new MenuItem(() => "About", () => _s.Screens.Push(new AboutScreen(_s))),
             new MenuItem(() => "Back", Back),
@@ -129,6 +131,9 @@ public sealed class SettingsScreen : IScreen
         AudioSettings.Apply(_s.Audio, _s.Settings);
         MenuSounds.Play(_s.Audio, MenuSounds.Move);
     }
+
+    private void ToggleCheckForUpdates() =>
+        _s.Settings = _s.Settings with { CheckForUpdates = !_s.Settings.CheckForUpdates };
 
     private void StepAutosave(int d) =>
         _s.Settings = _s.Settings with { AutosaveMinutes = Autosave.StepMinutes(_s.Settings.AutosaveMinutes, d) };

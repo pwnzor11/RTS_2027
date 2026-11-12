@@ -1,0 +1,60 @@
+name: Release
+
+# Runs when a version tag is pushed (git tag -a v0.2.0 -m "notes" && git push origin v0.2.0).
+# Attaches the zip and the installer to a GitHub Release; the notes are the tag message.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build and publish release
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+          fetch-depth: 0
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Publish
+        run: dotnet publish src/Game -c Release -r win-x64 --self-contained -o publish/Game
+
+      - name: Smoke test
+        shell: pwsh
+        run: |
+          $p = Start-Process -FilePath publish/Game/Game.exe -ArgumentList '--headless-check', '200' -WorkingDirectory publish/Game -Wait -PassThru -NoNewWindow
+          if ($p.ExitCode -ne 0) { throw "Published game failed the headless smoke test (exit $($p.ExitCode))." }
+
+      - name: Zip game
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path publish/out | Out-Null
+          Compress-Archive -Path publish/Game/* -DestinationPath "publish/out/RTS_2027-${{ github.ref_name }}-win-x64.zip" -Force
+
+      - name: Build installer (Inno Setup)
+        shell: pwsh
+        run: |
+          choco install innosetup -y --no-progress
+          $ver = "${{ github.ref_name }}".TrimStart('v')
+          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" "/DAppVersion=$ver" "/DSourceDir=$PWD\publish\Game" installer\rts_2027.iss
+          if ($LASTEXITCODE -ne 0) { throw "Inno Setup failed (exit $LASTEXITCODE)." }
+
+      - name: Create release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Notes: the tag message (an annotated tag); a lightweight tag falls back to its commit message.
+          git fetch --tags --force
+          $notes = git for-each-ref "refs/tags/${{ github.ref_name }}" --format='%(contents)'
+          if (-not $notes) { $notes = "RTS_2027 ${{ github.ref_name }}" }
+          Set-Content -Path release_notes.md -Value $notes -Encoding utf8
+          gh release create "${{ github.ref_name }}" --title "RTS_2027 ${{ github.ref_name }}" --notes-file release_notes.md (Get-ChildItem publish/out/*.zip).FullName (Get-ChildItem publish/installer/*.exe).FullName
