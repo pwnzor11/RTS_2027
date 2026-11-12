@@ -195,6 +195,8 @@ internal static class CampaignWalks
             if (s.Infantry.Slots.IsIndexAlive(i) && s.Infantry.Player[i] == 0) escort.Add((s.Infantry.Slots.IdOf(i), ActorKind.Infantry));
 
         bool assault = false;
+        int assaultAt = 0;
+        bool sweep = false; // after the first push, advance onto the rear of the picket (units only acquire targets inside their own weapon range)
         void March()
         {
             foreach (EntityId c in carriers)
@@ -202,7 +204,7 @@ internal static class CampaignWalks
             foreach ((EntityId id, ActorKind kind) in escort)
             {
                 bool alive = kind == ActorKind.Vehicle ? bot.Sim.Units.Slots.IsAlive(id) : bot.Sim.Infantry.Slots.IsAlive(id);
-                if (alive) bot.Send(CommandKind.AttackMove, id, assault ? new CellCoord(64, 81) : new CellCoord(52, 76), (int)kind);
+                if (alive) bot.Send(CommandKind.AttackMove, id, assault ? (sweep ? new CellCoord(67, 83) : new CellCoord(64, 81)) : new CellCoord(52, 76), (int)kind);
             }
         }
 
@@ -214,7 +216,8 @@ internal static class CampaignWalks
         int marched = bot.Sim.Tick;
         for (int t = 0; t < limit && !bot.Sim.GameOver; t += 100)
         {
-            if (!assault && bot.Sim.Tick - marched > 1400) assault = true;
+            if (!assault && bot.Sim.Tick - marched > 1400) { assault = true; assaultAt = bot.Sim.Tick; }
+            if (assault && !sweep && bot.Sim.Tick - assaultAt > 900) sweep = true;
             if (t % 300 == 0) March();
             if (t % 900 == 0) bot.Train("auth_rifleman");
             bot.Idle(99);
