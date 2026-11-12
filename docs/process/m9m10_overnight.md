@@ -24,3 +24,8 @@ ExpeditionMission04Tests). Not ours; reported to session 19 through the owner.
   M10-D previews + loading + credits, M10-E music states, M10-F installer + releases + update notice.
 - Wave 2 (after wave 1 merges): M9 lobby, discovery UI, in-game LAN (waiting, chat, pause, drop to AI, host-leave continue vs AI,
   desync reports + resync, spectators, map transfer, LAN replays), `lan soak --udp`.
+
+## Open for the owner (from the overnight run)
+- Q-M10C-1: par-time medals need per-mission par times; no campaign data has one. Supply times, or say how to derive them (stub in MedalRules.cs).
+- M10-F assumptions: dev builds never show the update notice; "-pre" tags are never offered; release zip is RTS_2027-<tag>-win-x64.zip; the installer needs admin rights (Program Files).
+- M10-B: ships leave a wake while dived (UnitView has no dived flag); water animation runs on the game tick, so it freezes while paused.
