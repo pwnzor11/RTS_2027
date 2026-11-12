@@ -31,7 +31,7 @@ Q-76 (dead-end dock), plus the M9/M10 session's Q-73 (par times) and Q-74 (chat 
 - Back up `%APPDATA%\RTS_2027`, `git checkout main`, `git pull`, play USER_CHECKS "Session 20" (and "Session 19p" for the LAN work).
 - Laptop "after" series: `powershell -ExecutionPolicy Bypass -File tools\measure\run_s19_after.ps1` (about 95 min), if not done.
 - Answer Q-75 (and Q-76 when convenient).
-- Branch clean-up (owner deletes): integ-s20, land/s20-w1, land/s20-handoff, wp/s20-path, wp/s20-harvest, wp/s20-melee, wp/s20-ai,
+- Branch clean-up (owner deletes): integ-s20, land/s20-w1, wp/s20-path, wp/s20-harvest, wp/s20-melee, wp/s20-ai,
   wp/s20-docs, scratch/s20-ash-diag (after session 21 has the probe); keep restore/pre-s20 until happy.
 
 ## Parallel session additions (session 19p, 2026-11-12; read with the plan below)

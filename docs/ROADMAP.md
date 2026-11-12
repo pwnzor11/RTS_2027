@@ -291,7 +291,7 @@ Source: docs/reviews/2026-11-07_owner_campaign_feedback.md. Audit: docs/reviews/
 - [x] M13-14 UI/wording/design list (section 2.4) incl. mission-script one-liners, naming pass from data/archive
 - [x] M13-15 QoL: game speed incl. slow; idle button and alerts; cameo hotkeys, repeat production, range rings, strong/weak line; handicap and starting conditions; stances and shift-queued waypoints
 - [~] M13-16 Re-pins done per merge batch (s19); owner laptop series before (s18audit, done) and after (`tools/measure/run_s19_after.ps1`, open)
-- [~] M13-17 Campaign retune with the ashfall hazard on (missions run with ash damage and ash path cost off until then, D-211). s20: 12-seed win-rate baseline with ash on for all 45 mission-tiers (docs/balance/s20_campaign_seed_baseline.md, D-218 point 8); tuning to the targets (Q-75) is next; auth_01 tier 5 winnable accepted (D-212)
+- [~] M13-17 Campaign retune with the ashfall hazard on (missions run with ash damage and ash path cost off until then, D-211). s20: 12-seed win-rate baseline with ash on for all 45 mission-tiers (docs/balance/s20_campaign_seed_baseline.md, D-218 point 8); tuning to the targets (Q-75) is next; auth_01 tier 5 winnable accepted (D-217)
 - [~] M13-18 Follow-ups found in s19 (s20, D-218): placement lane outlet toward the map centre (S18-AI-NEW-3) done; ClearBuildArea removed; LB Still Rigs 14-18 and used, no cap; LB yard dock livelock not reproduced in the open, dead-end corridor case open (Q-76); walls/gates hero renders re-angled to 3/4 (M14) open
 
 ## M14 · Field Manual (D-206, docs/design/19_field_manual.md)

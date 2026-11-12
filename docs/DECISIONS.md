@@ -1603,7 +1603,7 @@ equally stuck blockers count every cycle as before. (2) SIMDET-03: a re-ordered 
 (`PathService.ReleaseMember`); the saved format is unchanged. (3) SP-04: a harvester whose path to a field fails skips every cell within 4 of it
 for 1200 ticks (`SkipRadius`, `SkipTicks`, both (tune)); the economy part is written as version 4 unless a skip is active (version 5 then), so no
 hash or save moves. (4) Item 19: a weapon with a reach of one cell or less acquires within its owner's sight on attack-move and guard (Sapper,
-Combat Diver, Volunteer, Kite, bomber); a Defensive-stance marcher still never chases. (5) S18-AI-NEW-3: the AI's placement lane gets a 2x2
+Combat Diver, Kite, Expedition bomber; death weapons such as the Volunteer burst are not used to acquire); a Defensive-stance marcher still never chases. (5) S18-AI-NEW-3: the AI's placement lane gets a 2x2
 outlet at its far end on the side facing the map centre (the exit stays south); ClearBuildArea, StagingCell and CancelAfterBlockedSearches are
 removed (0 uses in 15-minute games, all factions, tiers 1 and 5). (6) LB Still Rigs: 14-18 in a corner base, all used by the army (supply
 about 189/200), so no cap; a global cap of 8 was tried and reverted because it weakened every AI. (7) The LB yard dock livelock does not
