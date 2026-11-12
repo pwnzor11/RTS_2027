@@ -42,6 +42,9 @@ no_build_threshold = 64
 # rad resistance. Vehicles and buildings are unaffected.
 ashfall_damage = 2  # owner-confirmed S19 (D-207)
 ashfall_interval_ticks = 30  # owner-confirmed S19 (D-207)
+# S19 M13-12 (owner option a): a soldier's path pays this many normal cells to enter an ashfall or pitchblende cell, so infantry walk
+# around a field when the detour is short and still cross when it is long. 1 = no penalty. Vehicles are unaffected.
+ash_path_penalty = 4  # (tune)
 
 [stealth]
 delay_ticks = 60

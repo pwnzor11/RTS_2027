@@ -72,11 +72,12 @@ public sealed class MapState : ISimStatePart
     public OverlayKind OverlayAt(CellCoord c) => _overlay[Idx(c)];
     public byte DensityAt(CellCoord c) => _density[Idx(c)];
 
-    /// <summary>Sets overlay and density. Bumps <see cref="Version"/> only if a wall or blocking prop appears or disappears.</summary>
+    /// <summary>Sets overlay and density. Bumps <see cref="Version"/> only if a wall or blocking prop, or a resource field (S19 M13-12), appears or disappears.</summary>
     public void SetOverlay(CellCoord c, OverlayKind kind, byte density)
     {
         int i = Idx(c);
-        if (OverlayKinds.BlocksGround(_overlay[i]) != OverlayKinds.BlocksGround(kind)) Version++;
+        if (OverlayKinds.BlocksGround(_overlay[i]) != OverlayKinds.BlocksGround(kind)
+            || OverlayKinds.IsResource(_overlay[i]) != OverlayKinds.IsResource(kind)) Version++;   // S19 M13-12: a field cell costs soldiers more (path cache)
         _overlay[i] = kind;
         _density[i] = density;
     }
