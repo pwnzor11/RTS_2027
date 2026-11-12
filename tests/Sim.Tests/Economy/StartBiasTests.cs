@@ -152,6 +152,41 @@ public class StartBiasTests
         }
     }
 
+    /// <summary>S22 M13-19 (R4): on mirror maps (starts on the same row with mirrored columns, or the same column with mirrored rows)
+    /// the partner building's exit and dock are the reflection, not the point mirror, of the first building's.</summary>
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void ExitsAndDocks_OnMirrorMaps_AreReflected(bool mirrorX)
+    {
+        var flat = MapData.CreateFlat(W, W);
+        CellCoord[] starts = mirrorX ? new[] { new CellCoord(4, 6), new CellCoord(W - 1 - 4, 6) } : new[] { new CellCoord(6, 4), new CellCoord(6, W - 1 - 4) };
+        var map = new MapData("mirror", flat.Theater, W, W, new ushort[W * W], new LandType[W * W], new byte[W * W], new OverlayKind[W * W], new byte[W * W], starts);
+        var sim = NewSim(map);
+        foreach (BuildingType b in new[] { Loaded.Sim.Buildings[Bld("test_factory")], Loaded.Sim.Buildings[Bld("test_refinery")] })
+        {
+            foreach (CellCoord rel in new[] { b.Exit, b.Dock })
+            {
+                // a building in each half along the mirror axis, at mirrored positions; also one in the south half for MirrorX
+                foreach (int row in new[] { 5, W - b.FootprintH - 5 })
+                {
+                    CellCoord tlA = mirrorX ? new CellCoord(6, row) : new CellCoord(row, 6);
+                    CellCoord tlB = mirrorX ? new CellCoord(W - b.FootprintW - 6, row) : new CellCoord(row, W - b.FootprintH - 6);
+                    CellCoord a = sim.OrientedOffset(rel, b.FootprintW, b.FootprintH, tlA);
+                    CellCoord c = sim.OrientedOffset(rel, b.FootprintW, b.FootprintH, tlB);
+                    CellCoord absA = new(tlA.X + a.X, tlA.Y + a.Y), absB = new(tlB.X + c.X, tlB.Y + c.Y);
+                    CellCoord want = mirrorX ? new CellCoord(W - 1 - absA.X, absA.Y) : new CellCoord(absA.X, W - 1 - absA.Y);
+                    Assert.Equal(want, absB);
+                }
+            }
+        }
+        // a point-mirror map keeps the M4-16 rule exactly
+        var rot = NewSim(MapData.CreateFlat(W, W));
+        BuildingType f = Loaded.Sim.Buildings[Bld("test_factory")];
+        var tlS = new CellCoord(W - f.FootprintW - 6, W - f.FootprintH - 5);
+        Assert.Equal(new CellCoord(f.FootprintW - 1 - f.Exit.X, f.FootprintH - 1 - f.Exit.Y), rot.OrientedOffset(f.Exit, f.FootprintW, f.FootprintH, tlS));
+    }
+
     /// <summary>M4-16: a factory exit and a refinery dock are authored for a building in the north half (facing south, toward the
     /// centre). A building in the south half uses them turned by 180 degrees inside its footprint, so a base and its point mirror
     /// produce units and dock harvesters on mirrored cells.</summary>
