@@ -1,0 +1,13 @@
+# RTS_2027 M10-09 job 20: credits.ogg (docs/audio/music_brief.md)
+caption = 'instrumental, reflective orchestral suite, gentle strings, solo horn melody, soft piano, light industrial percussion in the middle section, hopeful rebuilding mood, resolving ending, 92 BPM, F major, warm mix, no vocals'
+instrumental = true
+lyrics = '[Instrumental]'
+duration = 210
+batch_size = 1
+audio_format = 'wav'
+thinking = false
+use_cot_metas = false
+use_cot_caption = false
+use_cot_lyrics = false
+use_cot_language = false
+use_random_seed = true

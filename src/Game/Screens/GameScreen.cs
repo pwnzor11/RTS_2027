@@ -12,6 +12,7 @@ using Rts.Game.Render;
 using Rts.Game.Saves;
 using Rts.Game.Sandbox;
 using Rts.Game.Sprites;
+using Rts.Game.Stats;
 using Rts.Game.Ui;
 using Rts.Game.Ui.Alerts;
 using Rts.Game.Ui.Llm;
@@ -492,6 +493,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
 
         if (_sim is not null) _sim.Advance(t.ElapsedGameTime.Ticks / 10); // ticks are 100 ns; microseconds = ticks / 10
         else _source.Update();
+        if (_sim is not null) _sampler.Observe(_sim.Sim, _income);   // M10-17: a sample every 10 s of game time
         bool scriptCue = false;
         if (_mission is not null && _sim is not null && _mission.Advance(_sim.Sim.Tick, _s.Audio) is { } hint) { CentreCameraOn(Camera.CentreOf(hint)); scriptCue = true; }   // M8-05: camera hint, once
         // ---- M11-05 objective guidance keys: J jump, Tab next objective, O list. (Actions ObjJump / ObjCycle / ObjList in the key table.) ----
@@ -536,12 +538,19 @@ public sealed class GameScreen : IScreen, IFocusPausable
         if (!_gameOverShown && IsGameOver())
         {
             _gameOverShown = true;
-            if (_gameOverOverride?.Invoke() is { } replacement) { _s.Screens.Push(replacement); return; }
+            if (_sim is not null) _sampler.Finish(_sim.Sim, _income);   // M10-17: the last point of the graphs
+            RecordSkirmishResult();   // M10-19
+            if (_gameOverOverride?.Invoke() is { } replacement)
+            {
+                if (replacement is DebriefScreen debrief) debrief.Timeline = _sampler.Timeline;
+                _s.Screens.Push(replacement);
+                return;
+            }
             // S18 UXG-10: income from the tracker, columns placed by measured pixels.
             UiUnit tableScale = _s.UiScale;
             IReadOnlyList<string>? table = _sim is null ? null
                 : SpectatorTable.Final(SpectatorTable.Collect(_sim.Sim, _income), line => BitmapFont.Measure(line, tableScale));
-            _s.Screens.Push(new GameOverScreen(_s, _restart, GameOverHeadline(), table, _spectatorMode, () => _sim?.SaveReplay()));
+            _s.Screens.Push(new GameOverScreen(_s, _restart, GameOverHeadline(), table, _spectatorMode, () => _sim?.SaveReplay(), _sampler.Timeline));
         }
     }
 
@@ -554,6 +563,8 @@ public sealed class GameScreen : IScreen, IFocusPausable
 
         _s.Scene.HealthBarsAlways = _s.Settings.HealthBarsAlways;
         _s.Scene.LargerInfantry = _s.Settings.LargerInfantry;   // D-184
+        _s.Scene.WeatherEnabled = _s.Settings.Weather;   // M10-12
+        _s.Scene.ShakeEnabled = _s.Settings.ScreenShake;   // M10-14
         _s.Scene.Draw(sb, _s.Pixel, frame, _camera, _s.Viewport);
         DrawSelectedBuilding(sb, snapshot);
         DrawQueuedPaths(sb);   // M13-15: the waypoints of the selected units
@@ -614,6 +625,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
 
     private readonly CursorPreview _cursorPreview = new();
     private readonly IncomeTracker _income = new();
+    private readonly StatsSampler _sampler = new();   // M10-17: the end-of-match graphs
     private bool _updatedSinceDraw;
 
     // M11-10g: the archive's one-line subtitle for each rules id, for the cameo tooltips (none if the archive is missing).
@@ -1535,6 +1547,18 @@ public sealed class GameScreen : IScreen, IFocusPausable
         Vector2 target = centre - size / 2f;
         _camera.PanScreen((target - _camera.WorldFromScreen(Point.Zero)) * _camera.Zoom);
         _camera.Clamp(_source.Current.MapWidth, _source.Current.MapHeight, new Viewport(0, 0, Math.Max(1, mapWidth), _s.Viewport.Height));
+    }
+
+    // M10-19: a finished skirmish against the AI counts toward the profile records (not spectating, not a mission, not the sandbox).
+    private void RecordSkirmishResult()
+    {
+        if (_sim is null || !_skirmishMode || _spectatorMode || Skirmish is null || _mission is not null) return;
+        byte local = SimSnapshotSource.LocalPlayer;
+        bool won = GameOverHeadline() == "Victory";
+        MatchTimeline? timeline = _sampler.Timeline;
+        int column = timeline?.ColumnOf(local) ?? -1;
+        int army = column >= 0 ? timeline!.PeakArmy(column) : 0;
+        Profile.ProfileRecorder.RecordSkirmish(Profile.ProfileRecorder.PathFor(_s), Skirmish.PlayerFaction, Skirmish.AiTier, won, _sim.Sim.Tick, army);
     }
 
     private string GameOverHeadline()

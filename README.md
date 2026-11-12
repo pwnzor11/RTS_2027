@@ -56,6 +56,20 @@ revisits them).
 
 ---
 
+## Install
+
+Windows 64-bit, no .NET needed. Download from the [Releases page](https://github.com/pwnzor11/RTS_2027/releases):
+
+- **Installer** (`RTS_2027-<version>-win-x64-setup.exe`): installs to Program Files, adds a Start menu entry and an uninstaller.
+  The optional "Allow LAN games through Windows Firewall (private networks)" box opens UDP ports 47270-47271 for the game on
+  private networks only; uninstalling removes the rule.
+- **Zip** (`RTS_2027-<tag>-win-x64.zip`): unzip anywhere and run `Game.exe`. Nothing is installed.
+
+The game checks GitHub once at start for a newer release and shows a "New version X.Y.Z available" line on the main menu.
+Turn it off in Settings (Check for updates at start). Releases are built by the `Release` workflow when a `v*` tag is pushed.
+
+---
+
 ## Run it
 
 One-time setup: install the .NET SDK named in `global.json`, then install Git LFS and turn it on for your user:

@@ -4,6 +4,7 @@
     <Project Path="src/Data/Data.csproj" />
     <Project Path="src/Game/Game.csproj" />
     <Project Path="src/Llm/Llm.csproj" />
+    <Project Path="src/Net/Net.csproj" />
     <Project Path="src/Scripting/Scripting.csproj" />
     <Project Path="src/Sim/Sim.csproj" />
     <Project Path="src/Tools/Tools.csproj" />
@@ -12,6 +13,7 @@
     <Project Path="tests/AI.Tests/AI.Tests.csproj" />
     <Project Path="tests/Game.Tests/Game.Tests.csproj" />
     <Project Path="tests/Llm.Tests/Llm.Tests.csproj" />
+    <Project Path="tests/Net.Tests/Net.Tests.csproj" />
     <Project Path="tests/Scripting.Tests/Scripting.Tests.csproj" />
     <Project Path="tests/Sim.Tests/Sim.Tests.csproj" />
     <Project Path="tests/Tools.Tests/Tools.Tests.csproj" />

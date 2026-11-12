@@ -34,6 +34,8 @@ public sealed class AudioDirector
     private int _lastCombatTick = int.MinValue / 2;
     private GameResult _result;
     private Faction _faction;
+    private MusicState? _requested;
+    private Faction _requestedFaction;
 
     /// <summary>Creates the director. <paramref name="listener"/> gives the camera centre (default <see cref="AudioListener.Position"/>); <paramref name="music"/> is optional.</summary>
     public AudioDirector(SoundBank bank, IAudio audio, Random rng, Func<LeptonCoord?>? listener = null, MusicPlayer? music = null,
@@ -86,9 +88,43 @@ public sealed class AudioDirector
     /// </summary>
     public void Notify(AudioEventKind kind, LeptonCoord? pos = null) => Play(new AudioEvent(kind, pos), wall: true);
 
-    /// <summary>Advances the music by <paramref name="dt"/> seconds. <paramref name="inGame"/> false means menus.</summary>
+    /// <summary>
+    /// Asks for a music state from a screen outside a game (the briefing, the credits roll). It applies only while no game is on the
+    /// stack, so a mission started from a briefing plays its game music, and the briefing music returns when the game is left.
+    /// Call <see cref="ReleaseMusic"/> when the screen leaves.
+    /// </summary>
+    public void RequestMusic(MusicState state, Faction faction = Faction.Neutral)
+    {
+        _requested = state;
+        _requestedFaction = faction;
+    }
+
+    /// <summary>Ends a <see cref="RequestMusic"/> request; the music goes back to what the game or menus want.</summary>
+    public void ReleaseMusic() => _requested = null;
+
+    /// <summary>
+    /// The faction for a faction id as the campaign and mission files write it ("authority", "directorate", "left_behind",
+    /// "expedition"). Anything else (empty, neutral, unknown) is <see cref="Faction.Neutral"/>, which has no faction music.
+    /// </summary>
+    public static Faction FactionOf(string factionId) => factionId switch
+    {
+        "authority" => Faction.Authority,
+        "directorate" => Faction.Directorate,
+        "left_behind" => Faction.LeftBehind,
+        "expedition" => Faction.Expedition,
+        _ => Faction.Neutral,
+    };
+
+    /// <summary>Advances the music by <paramref name="dt"/> seconds. <paramref name="inGame"/> false means no game is on the stack (menus and screens).</summary>
     public void UpdateMusic(float dt, bool inGame)
     {
+        if (!inGame && _requested is { } requested)
+        {
+            MusicState = requested;
+            _music?.Update(dt, requested, _requestedFaction);
+            return;
+        }
+
         if (!inGame) MusicState = MusicState.Menu;
         _music?.Update(dt, MusicState, _faction);
     }

@@ -42,6 +42,9 @@ public sealed class GameServices
     /// <summary>Sound output (a null implementation until the audio package lands).</summary>
     public IAudio Audio { get; }
 
+    /// <summary>The background update check (M10-23); the main menu shows its result when a newer release is found.</summary>
+    public Update.UpdateChecker Updates { get; } = new();
+
     /// <summary>The player's settings.</summary>
     public Settings Settings
     {

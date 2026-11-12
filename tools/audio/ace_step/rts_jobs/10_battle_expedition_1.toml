@@ -1,0 +1,13 @@
+# RTS_2027 M10-09 job 10: battle_expedition_1.ogg (docs/audio/music_brief.md)
+caption = 'instrumental, naval action anthem, brass fanfare with a sea-shanty rhythm, pulsing synth bass, snare and big drums, low strings, sonar-like synth pings, disciplined assault, 126 BPM, D Mixolydian, bright punchy mix, no vocals'
+instrumental = true
+lyrics = '[Instrumental]'
+duration = 180
+batch_size = 1
+audio_format = 'wav'
+thinking = false
+use_cot_metas = false
+use_cot_caption = false
+use_cot_lyrics = false
+use_cot_language = false
+use_random_seed = true

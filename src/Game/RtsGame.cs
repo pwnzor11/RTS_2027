@@ -126,6 +126,7 @@ public sealed class RtsGame : Microsoft.Xna.Framework.Game
             Console.Error.WriteLine($"menu background disabled: {ex.Message}");
         }
 
+        _services.Updates.Start(_settings.CheckForUpdates, BuildInfo.Version);   // M10-23: once, in the background, never blocks
         if (_demo) _screens.Push(GameScreen.CreateDemo(_services));
         else if (_direct) _screens.Push(GameScreen.CreateSandbox(_services, _empty, null));
         else _screens.Push(new MainMenuScreen(_services));

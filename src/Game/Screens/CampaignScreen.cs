@@ -61,7 +61,7 @@ public sealed class CampaignScreen : IScreen
 
     private MenuPanel BuildPanel()
     {
-        var items = new List<MenuItem> { new(() => "Tutorial", () => _s.Screens.Push(new BriefingScreen(_s, CampaignFlow.TutorialId, () => CampaignFlow.CreateTutorial(_s)))) };
+        var items = new List<MenuItem> { new(() => "Tutorial", () => _s.Screens.Push(new BriefingScreen(_s, CampaignFlow.TutorialId, () => LoadingCampaign.ForTutorial(_s, () => CampaignFlow.CreateTutorial(_s))))) };
         foreach (FactionPickRow row in _rows)
         {
             FactionPickRow r = row;

@@ -7,8 +7,17 @@ file cited after each question. Recommendations are the lead's, from the researc
 
 
 ## Answered
-- Q-71 · 2026-11-11 · Owner (a): accept the winnable auth_01 tier 5; the S18 MIS-03 expectation is dropped → D-212.
-- Q-72 · 2026-11-11 · Owner: keep the ash step-off rules (3-cell step-off, ash-stealth infantry stay, foot penalty 4) → D-212.
+- Q-71 · 2026-11-12 · Owner (a): accept the winnable auth_01 tier 5; the S18 MIS-03 expectation is dropped → D-212.
+- Q-72 · 2026-11-12 · Owner: keep the ash step-off rules (3-cell step-off, ash-stealth infantry stay, foot penalty 4) → D-212.
+- Owner confirmations · 2026-11-12 · Confirmed the remaining "assumed — confirm" items after D-153's blanket confirmation: the revised Left
+  Behind lore text (D-155), D-156 (floating docks, aircraft ammo), D-157 (1) (lb_yard storage 3000), D-165 (act-break stills, tier-4 AI levers),
+  and the Archive upgrade field notes marked "DRAFT (lead, session 12)" (they lose the DRAFT mark). DECISIONS entry at the next wrap-up.
+- Q-M9-a..o · 2026-11-12 · M9 LAN design round (docs/design/20_m9_lan_plan.md §9). Owner: UDP with own reliability (a, not the rec);
+  host-sequenced turn bundles (b); host picks 2/3/4-tick delay in the lobby (c, not the rec); AI takes over a dropped slot (d); desync pauses,
+  host picks Resync/Continue/End (e); host runs all AI incl. LLM on its key (f); chat outside the sim, kept in replays (g); anyone pauses,
+  3 s resume, 1x (h); no LAN saves ever (i, not the rec); clients may save and continue vs AI when the host leaves (j, not the rec); host
+  sends custom maps (k); up to 2 spectators (l); no reconnect ever (m, not the rec); no co-op campaign in M9 (n); §8 assumptions confirmed (o).
+  DECISIONS entries are numbered at the next wrap-up, after session 19's.
 - Q-70 · 2026-11-10 · Owner (a): layout 2 money per field cell cut on Rust Belt (-9.8 % measured) and Glass Coast (-12.8 %, density floor); decide on Glass Coast fields after the after-series → D-208.
 - Q-68 · 2026-11-09 · Owner: (a) half-turn skeleton for Ash Plains, same crossing pair both sides → D-198.
 - Q-69 · 2026-11-09 · Owner: (a) move main/natural fields further from the refinery spot, fewer patches near the main → D-199.

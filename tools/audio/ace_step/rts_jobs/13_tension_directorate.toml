@@ -1,0 +1,13 @@
+# RTS_2027 M10-09 job 13: tension_directorate.ogg (docs/audio/music_brief.md)
+caption = 'instrumental, sparse industrial ambient, distant machinery hum, slow metallic drips, low choir drone, faint Geiger ticks, deep sub-bass swells, underground unease, 68 BPM, C minor, wide reverb, no melody, no vocals'
+instrumental = true
+lyrics = '[Instrumental]'
+duration = 200
+batch_size = 1
+audio_format = 'wav'
+thinking = false
+use_cot_metas = false
+use_cot_caption = false
+use_cot_lyrics = false
+use_cot_language = false
+use_random_seed = true
