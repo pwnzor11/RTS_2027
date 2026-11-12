@@ -16,7 +16,7 @@ public static class LanCommands
     private const string Usage =
         "usage: lan soak [--players 2..4] [--ticks 4000] [--latency-ms 0] [--jitter-ms 40] [--loss 0] [--seed 1] [--delay 2|3|4] [--tier 1..5] [--udp]\n" +
         "         Runs one host and players-1 clients over the in-process loopback network (latency and jitter in ms, loss in % of\n" +
-        "         unreliable messages). --udp will use real sockets on 127.0.0.1 once the UDP transport is in.";
+        "         unreliable messages). --udp uses real UDP sockets on 127.0.0.1 instead (latency, jitter and loss are then ignored).";
 
     private static readonly string[] SoakOptions = ["players", "ticks", "latency-ms", "jitter-ms", "loss", "seed", "delay", "tier", "udp"];
 
@@ -70,7 +70,7 @@ public static class LanCommands
         }
         if (r is null)
         {
-            Console.Error.WriteLine("error: the UDP transport is not available yet; run without --udp");
+            Console.Error.WriteLine("error: the UDP handshake on 127.0.0.1 did not finish");
             return 2;
         }
 

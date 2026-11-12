@@ -6,9 +6,15 @@ file cited after each question. Recommendations are the lead's, from the researc
 ## Open
 
 
+- 🟡 **Q-73 · 2026-11-12 · Par-time medals (M10-19).** No campaign mission has a par time, so the Profile page awards only Completed and
+  No losses. Options: **(a) the owner gives a par time per mission (recommended; the bot walk-through times in docs/balance are a starting point)**;
+  (b) par = the bot's tier-3 win time + 50 %; (c) no par medal.
+- ⚪ **Q-74 · 2026-11-12 · Chat in LAN replays (Q-M9-g sub-answer).** Chat is kept on screen only, because the replay format has no chat
+  block. Options: **(a) add a chat block in the next replay format bump (recommended)**; (b) leave chat out of replays.
+
 ## Answered
-- Q-71 · 2026-11-12 · Owner (a): accept the winnable auth_01 tier 5; the S18 MIS-03 expectation is dropped → D-212.
-- Q-72 · 2026-11-12 · Owner: keep the ash step-off rules (3-cell step-off, ash-stealth infantry stay, foot penalty 4) → D-212.
+- Q-71 · 2026-11-12 · Owner (a): accept the winnable auth_01 tier 5; the S18 MIS-03 expectation is dropped → D-217.
+- Q-72 · 2026-11-12 · Owner: keep the ash step-off rules (3-cell step-off, ash-stealth infantry stay, foot penalty 4) → D-217.
 - Owner confirmations · 2026-11-12 · Confirmed the remaining "assumed — confirm" items after D-153's blanket confirmation: the revised Left
   Behind lore text (D-155), D-156 (floating docks, aircraft ammo), D-157 (1) (lb_yard storage 3000), D-165 (act-break stills, tier-4 AI levers),
   and the Archive upgrade field notes marked "DRAFT (lead, session 12)" (they lose the DRAFT mark). DECISIONS entry at the next wrap-up.

@@ -5,7 +5,7 @@ using Rts.Tools;
 
 namespace Rts.Tools.Tests;
 
-/// <summary>M9-03: `lan soak` plays a short headless LAN match in sync and refuses bad arguments; --udp is a hook until M9-A.</summary>
+/// <summary>M9-03: `lan soak` plays a short headless LAN match in sync and refuses bad arguments; --udp runs it over real sockets (M9-04).</summary>
 [Collection("ToolsConsole")]
 public sealed class LanSoakCommandTests
 {
@@ -39,12 +39,10 @@ public sealed class LanSoakCommandTests
         (int b, string two) = Capture(args);
         Assert.Equal(0, a);
         Assert.Equal(0, b);
-        Assert.Equal(WithoutFileNotes(one), WithoutFileNotes(two));
+        // other test classes may print to the shared console meanwhile: compare only the soak's own lines
+        static string Soak(string t) => string.Join("\n", t.Split('\n').Where(l => l.StartsWith("LAN soak") || l.StartsWith("hashes") || l.StartsWith("final") || l.StartsWith("bundles") || l.StartsWith("OK") || l.StartsWith("FAIL")));
+        Assert.Equal(Soak(one), Soak(two));
     }
-
-    // The first run on a fresh machine also prints "wrote <path>" when it caches a generated map; that note is not part of the soak result.
-    private static string WithoutFileNotes(string output) =>
-        string.Join("\n", output.Replace("\r\n", "\n").Split('\n').Where(l => !l.StartsWith("wrote ", StringComparison.Ordinal)));
 
     [Fact]
     public void The_soak_is_the_same_game_as_a_plain_run_of_the_bundles()
@@ -70,10 +68,22 @@ public sealed class LanSoakCommandTests
         Assert.Equal(2, Capture(["lan", "soak", key, value]).Code);
     }
 
-    [Fact]
-    public void Udp_is_a_hook_that_says_it_is_not_there_yet()
+    [Theory]
+    [InlineData("2")]
+    [InlineData("3")]
+    public void A_short_soak_over_real_udp_sockets_stays_in_sync(string players)
     {
-        Assert.Equal(2, Capture(["lan", "soak", "--udp", "--ticks", "16"]).Code);
+        (int code, string text) = Capture(["lan", "soak", "--udp", "--players", players, "--ticks", "160", "--seed", "4"]);
+        Assert.True(code == 0, text);
+        Assert.Contains("transport udp", text);
+        Assert.Contains($"hashes compared {(int.Parse(players) - 1) * 160 / 16}, desyncs 0, unchecked 0", text);
+        Assert.Contains("all peers agree: yes, bundle replay matches: yes", text);
+        Assert.Contains("OK: in sync", text);
+    }
+
+    [Fact]
+    public void A_missing_subcommand_exits_2()
+    {
         Assert.Equal(2, Capture(["lan"]).Code);
     }
 }

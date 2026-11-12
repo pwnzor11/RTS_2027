@@ -301,18 +301,33 @@ Source: docs/reviews/2026-11-07_owner_campaign_feedback.md. Audit: docs/reviews/
 - [x] M14-03 Hero renders: pilot approved, all 124 rendered on the laptop and on main (s19, D-210; PR #63). Open: walls/gates re-angle
 - [ ] M14-04 Directorate lore draft (Authority approved), then the other three faction chapters
 - [ ] M14-05 Full build (about 108 pages) after M13 lands; quick-reference card
-- [ ] M14-06 Models and sprites for the 26 ids without art (list: design 19 section 5)
+- [~] M14-06 Models and sprites for the 26 ids without art (scripts done, D-215, PR #67; owner renders on the laptop) (list: design 19 section 5)
 
 ## M9 · LAN multiplayer (was M5)
-Lockstep over LAN, lobby, desync detection, replays.
+Plan: docs/design/20_m9_lan_plan.md (§9 = owner answers, D-213). Built overnight (D-216). User can try: two PCs → LAN Game → host / join → play.
+- [x] M9-00 Contracts: src/Net, NetMessage/INetTransport/NetProtocol, SimHost Outbox + StepWithBundle
+- [x] M9-01 NetCodec, UDP transport with reliability (acks, resend, ordering, fragments), LAN discovery
+- [x] M9-03 Lockstep core (scheduler, buffer, host, client; pause, drop to AI, hash compare, desync), loopback network
+- [x] M9-04 `Tools lan soak` (loopback and `--udp`), UDP lockstep test
+- [x] M9-05/06/13 LAN browser, lobby (host/client, slots, map with preview, options, delay, spectators, chat), handshake (version + content hash), custom map transfer
+- [x] M9-07/08/10 In-game LAN: lockstep wiring, waiting overlay + drop, pause countdown, chat, AI takeover, desync reports + resync, host left → continue vs AI, LAN replays
+- [x] M9-14 Independent review fixes (shared network clock, desync resolve, bundle cap, failed start, hash bounds, late leavers, resync errors)
+- [ ] M9-15 Owner two-PC LAN test (and a Wi-Fi test); Q-74 chat in replays
 
 ## M10 · Polish
+Plan: docs/design/21_m10_polish_plan.md (D-214). Code-only parts built overnight (D-216, PR #69):
+- [x] M10-09c Faction-aware music states (tension, briefing, credits); tracks: tools/audio/ace_step (owner's laptop, 20 tracks take 1 overnight)
+- [x] M10-12 Weather per biome (toggle) · [x] M10-13 Animated water, shore foam, ship wakes · [x] M10-14 Battle juice (shake toggle, hit flash, muzzle flash)
+- [x] M10-17 End-of-match graphs · [x] M10-18 Map preview thumbnails · [x] M10-19 Medals and records (Profile page; par medals Q-73)
+- [x] M10-20 Loading screen with tips, credits roll · [x] M10-22 Inno Setup installer + CI artifacts + release workflow · [x] M10-23 Update notice
+- [ ] M10-06 Warzone tracks on every tracked vehicle · [ ] M10-08 Building depth pipeline · [ ] M10-10 SFX pass · [ ] M10-11 Portraits, death frames
+- [ ] M10-15 Faction UI skin (pilot first) · [ ] M10-16 Portraits in the card · [ ] M10-14b Death animations (need frames) · [ ] M10-21 Final balance pass
 - [ ] M10-xx Building art: less flat, more depth (owner 2026-11-07, later polish run)
 - [x] M10-01 Damage smoke/fire tiers, rubble/wrecks/scorch, vehicle dust, biome mood tint, larger-infantry option (D-184, D-187, s15)
 - [x] M10-02 All 18 infantry re-rendered at figure scale 1.25 with team-colour emphasis; tools/art/house_audit.py (D-185, s15)
 - [x] M10-03 Imported FX (Skorpio, LPC flames, Kenney puffs) and props (0 A.D., LPC) with credits and licence texts (D-188, s15)
 - [x] M10-04 Warzone 2100 .pie importer and kitbash tooling (D-189, s15)
-- [ ] M10-05 Team-colour audit fixes for vehicles (11 of 45 hulls, 8 of 13 turrets under 10 px; tools/art/house_audit.py)
+- [x] M10-05 (closed, D-214: D-192 left 0 of 138 flagged) Team-colour audit fixes for vehicles (11 of 45 hulls, 8 of 13 turrets under 10 px; tools/art/house_audit.py)
 - [ ] M10-06 Kitbash Warzone parts into our vehicles where they add detail (D-189); per-vehicle FX anchors in manifests
 - [ ] M10-07 Props still procedural: GlassCrest, IceSlab, WreckHulk, BrokenPylon (no fitting open art yet)
 Art pass, music/SFX, balance, installer.

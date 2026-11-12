@@ -1557,9 +1557,41 @@ assumed — confirm; ash-stealth infantry stay). That was not enough, so the own
 damage and the ash path cost OFF (`MissionSession.CampaignRules`) until a campaign retune (M13-17); skirmish keeps all of it. lb_03 tier 5
 and exp_04 tier 5 (non-ash M13 shifts) are known, skipped cases until the retune. **Status:** owner decision (session 19)
 
-### D-212 · 2026-11-12 · Owner answers at the start of session 20 (Q-71, Q-72, run mode)
+### D-212 · 2026-11-12 · Owner confirms the remaining assumed decisions after D-153
+**Decision:** confirmed: the revised Left Behind lore text (D-155), D-156 (floating docks, aircraft ammo), D-157 (1) (lb_yard storage 3000),
+D-165 (act-break stills, tier-4 AI levers) and the Archive upgrade field notes marked "DRAFT (lead, session 12)" (the DRAFT marks are to be
+removed in data/archive/upgrades.toml and structures_expedition.toml). **Status:** owner decision (parallel session to s19)
+
+### D-213 · 2026-11-12 · M9 LAN design answers (Q-M9-a..o)
+**Decision:** docs/design/20_m9_lan_plan.md §9: UDP with our own reliability for lobby AND match (owner: "UDP for the lobby too"); host-sequenced
+turn bundles; the host picks a 2/3/4-tick delay in the lobby (default 3); a dropped player's slot goes to an AI; desync pauses and the host
+picks Resync / Continue / End; the host runs every AI incl. LLM commanders on its key; chat outside the sim; anyone pauses, 3 s resume, 1x;
+no LAN saves; when the host leaves, clients may continue vs AI; the host sends custom maps; up to 2 spectators; no reconnect; no co-op
+campaign in M9; the §8 assumptions confirmed (amended by D-214: the installer offers the firewall rule). **Status:** owner decision
+
+### D-214 · 2026-11-12 · M10 polish plan answers
+**Decision:** docs/design/21_m10_polish_plan.md: assets run in parallel now, code after M9 (later overridden for this work by D-216), look
+first; the 26 missing ids in today's style; building depth via the shared pipeline; Warzone tracks on every tracked vehicle; M10-05 closed;
+about 20 music tracks, style mixed by faction (ACE-Step 1.5, MIT); Piper barks later with M8-18; SFX per weapon class and faction; zip +
+Inno Setup installer with an optional LAN firewall rule; GitHub Releases + update notice; all eleven extras. **Status:** owner decision
+
+### D-215 · 2026-11-12 · M14-06 art: pilot approved, 24 more scripted
+**Decision:** the owner approved the Authority Bomber + Airfield pilot ("approve, fan out"); scripts for all 26 ids are on art/m14-06-pilot
+(PR #67, draft). Sheets and manifests are generated on the owner's laptop (tools/art/render_m14_06.ps1, D-196) and land with the PNGs.
+**Status:** owner decision
+
+### D-216 · 2026-11-12 · M9 and the code-only part of M10 built overnight, ahead of the D-171/D-205/D-206 order
+**Decision:** at the owner's request M9 LAN and every code-only M10 feature were built overnight in a session parallel to session 19, from a
+snapshot of integ-s19, and landed after session 19: wave 1 (Net core + M10 features) as PR #69, wave 2 (lobby, in-game LAN, UDP soak,
+review fixes) as its own PR, each merged when Windows CI was green. Lead contracts: a graphics-free src/Net project (NetMessage, INetTransport,
+NetProtocol, NetCodec) and SimHost.Outbox + SimHost.StepWithBundle as the only SimHost seam; no sim, save, replay or rules-hash format change.
+An independent review found 8 LAN defects (one HIGH: lobby and match polled the transport on different clocks); all fixed with tests
+before landing. Open: Q-73 (par times), Q-74 (chat in LAN replays). Notes: docs/process/m9m10_overnight.md.
+**Status:** owner request; implementation choices assumed — confirm at the owner's two-PC LAN test
+
+### D-217 · 2026-11-12 · Owner answers at the start of session 20 (Q-71, Q-72, run mode)
 **Decision:** (1) Q-71 (a): auth_01 tier 5 is allowed to be winnable after the M13 batch; the S18 MIS-03 expectation (tier-5 bot loses both
 scrapers, D-203) is dropped and the balance table expects a win like every other tier. (2) Q-72 keep: idle infantry on ash step to the nearest
 clean cell within 3 cells, ash-stealth infantry stay on ash, foot `ash_path_penalty = 4` (D-211) — confirmed. (3) Session 20 runs unattended:
-the lead takes its recommendation on reversible questions and logs them "assumed — confirm"; the campaign retune (M13-17) goes first and the
-laptop after-series is read once it exists. **Status:** owner decision (session 20)
+the lead takes its recommendation on reversible questions and logs them "assumed — confirm". (Committed during session 20 as "D-212"; renumbered
+at the merge with the parallel M9/M10 session, which had already used D-212..D-216.) **Status:** owner decision (session 20)

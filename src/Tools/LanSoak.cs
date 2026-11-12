@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
+using System.Net;
 using Rts.AI;
 using Rts.Data;
 using Rts.Net;
 using Rts.Net.Lockstep;
 using Rts.Net.Loopback;
+using Rts.Net.Udp;
 using Rts.Sim;
 using Rts.Sim.Core;
 using Rts.Sim.Map;
@@ -30,11 +32,11 @@ internal static class LanSoak
 {
     private const long StepMicroseconds = 10_000;
 
-    /// <summary>Plays the soak. Null when the transport is not available (the UDP hook before M9-A lands).</summary>
+    /// <summary>Plays the soak. Null when the UDP handshake does not finish.</summary>
     public static LanSoakResult? Run(LanSoakOptions o, SimRules rules, ulong rulesHash, IReadOnlyList<DifficultyProfile> tiers)
     {
         int clients = o.Players - 1;
-        (INetTransport host, INetTransport[] peers)? transports = o.Udp ? CreateUdp(clients) : CreateLoopback(o, clients);
+        (INetTransport host, INetTransport[] peers)? transports = o.Udp ? CreateUdp(clients, rulesHash) : CreateLoopback(o, clients);
         if (transports is null) return null;
         (INetTransport hostTransport, INetTransport[] clientTransports) = transports.Value;
 
@@ -111,9 +113,46 @@ internal static class LanSoak
         return (net.Host, peers);
     }
 
-    // PENDING Q-M9-03 (wave 2, M9-A): --udp runs this soak over the real UdpTransport on 127.0.0.1 (one host socket, players-1 client
-    // sockets, handshake done before returning). Latency/jitter/loss then come from the transport's own test hooks. Until then: null.
-    private static (INetTransport, INetTransport[])? CreateUdp(int clients) => null;
+    /// <summary>
+    /// The real UdpTransport on 127.0.0.1: one host socket and one socket per client on ephemeral ports. The handshake runs first on a
+    /// virtual clock (Hello, Accept, Welcome) so every client has its peer id before the lockstep layer starts. Latency, jitter and loss
+    /// options do not apply: the kernel's loopback is the network. Null when the handshake does not finish.
+    /// </summary>
+    private static (INetTransport, INetTransport[])? CreateUdp(int clients, ulong contentHash)
+    {
+        UdpTransport host = UdpTransport.Host(0, NetProtocol.TimeoutMs, IPAddress.Loopback);
+        var endPoint = new IPEndPoint(IPAddress.Loopback, host.LocalEndPoint.Port);
+        var peers = new UdpTransport[clients];
+        for (int i = 0; i < clients; i++)
+            peers[i] = UdpTransport.Connect(endPoint, new NetMessage.Hello(NetProtocol.Version, BuildInfo.Version, contentHash, $"soak{i + 1}", false));
+
+        int accepted = 0;
+        long now = 0;
+        bool done = false;
+        for (int step = 0; step < 6000 && !done; step++)   // 60 s of virtual time at most
+        {
+            now += StepMicroseconds;
+            host.Poll(now);
+            foreach (UdpTransport c in peers) c.Poll(now);
+            while (host.TryReceive(out int from, out NetMessage m))
+            {
+                if (m is not NetMessage.Hello || from >= 0) continue;
+                int id = ++accepted;
+                if (host.Accept(from, id)) host.Send(id, new NetMessage.Welcome(id));
+            }
+            foreach (UdpTransport c in peers) while (c.TryReceive(out _, out _)) { }   // Welcome
+            foreach (UdpTransport c in peers) while (c.TryGetEvent(out _)) { }
+            while (host.TryGetEvent(out _)) { }
+            done = accepted == clients && peers.All(c => c.LocalPeer >= 1);
+        }
+        if (!done)
+        {
+            host.Dispose();
+            foreach (UdpTransport c in peers) c.Dispose();
+            return null;
+        }
+        return (host, peers);
+    }
 
     private static MapData BuildMap(int players, ulong seed)
     {

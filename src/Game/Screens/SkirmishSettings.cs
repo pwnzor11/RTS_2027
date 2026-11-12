@@ -171,8 +171,13 @@ public sealed record SkirmishSettings(MapChoice Map, IReadOnlyList<SkirmishSlot>
         }
     }
 
-    /// <summary>Why these settings cannot start a game, one message per problem; empty when they can.</summary>
-    public IReadOnlyList<string> Validate()
+    /// <summary>Why these settings cannot start a game, one message per problem; empty when they can. One Human slot at most (single player).</summary>
+    public IReadOnlyList<string> Validate() => Validate(1);
+
+    /// <summary>
+    /// As <see cref="Validate()"/>, but up to <paramref name="maxHumans"/> slots may be Human (M9-05: a LAN lobby passes <see cref="MaxSlots"/>).
+    /// </summary>
+    public IReadOnlyList<string> Validate(int maxHumans)
     {
         var errors = new List<string>();
         if (Slots.Count < MinPlayers || Slots.Count > MaxSlots) errors.Add($"A skirmish has {MinPlayers} to {MaxSlots} slots.");
@@ -196,7 +201,7 @@ public sealed record SkirmishSettings(MapChoice Map, IReadOnlyList<SkirmishSlot>
             if (s.CreditsPreset < 0 || s.CreditsPreset >= SlotOptions.CreditsPresets.Count) errors.Add($"Slot {i + 1}: unknown starting credits.");
         }
         if (open < MinPlayers) errors.Add("At least two slots must be open.");
-        if (humans > 1) errors.Add("Only one slot can be Human.");
+        if (humans > maxHumans) errors.Add(maxHumans == 1 ? "Only one slot can be Human." : $"At most {maxHumans} slots can be Human.");
         if (open >= MinPlayers && teams.Count < 2) errors.Add("All players are on one team: there is nobody to fight.");
         if ((Map.File is null) == (Map.Generated is null)) errors.Add("Choose a map.");
         else if (Map.Generated is { } g)

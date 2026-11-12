@@ -419,3 +419,18 @@ Back up `%APPDATA%\RTS_2027` first (game saves gained control groups and the set
 - **Missions:** dir_04: razing the HQ before the device is charged loses the mission; the script-error line shows only with Show diagnostics on.
 - **Laptop "after" series:** `powershell -ExecutionPolicy Bypass -File tools\measure\run_s19_after.ps1` (about 95 min) -> send back
   `balance_runs\s19after\s19after_summary.md`.
+
+## Session 19p · M9 LAN + M10 polish (D-212..D-216)
+- **LAN (two PCs on one network):** main menu → LAN Game on both. PC 1: Host game. PC 2: the game appears in the list within about 2 s → Join,
+  pick a faction, Ready; PC 1: Start. Both play the same match. Press P on either: both show "Paused by <name>", Resume counts down 3 s.
+  Enter opens chat (Tab = All/Team). Pull PC 2's network cable: PC 1 shows "Waiting for <name>…", after 10 s a Drop button, then an AI plays that side.
+- **LAN lobby wait:** wait a minute in the lobby before Start: nobody is dropped at the handover (review fix 1).
+- **Firewall:** the first Host shows the Windows Firewall prompt: allow Private networks (or tick the firewall task in the installer).
+- **Weather / juice:** Ash Plains skirmish: ash drifts; a big building blowing up shakes the screen. Settings → Weather / Screen shake toggle them.
+- **Water:** a coast map: glints, white foam along the shore, wakes behind ships.
+- **Graphs / Profile:** win a skirmish → Graphs; main menu → Profile shows records; win a campaign mission → Completed / No losses medals.
+- **Setup / loading / credits:** skirmish setup shows a map thumbnail that changes with biome and size; Start shows a loading screen with a tip;
+  Settings → Credits rolls the credits.
+- **Update notice:** with a newer GitHub release, the main menu shows "New version X.Y.Z available" (Settings → Check for updates turns it off).
+- **Soak:** `dotnet src\Tools\bin\Debug\net10.0\Tools.dll lan soak --players 4 --ticks 4000 --jitter-ms 40 --loss 10` → "OK: in sync";
+  add `--udp` for real sockets on loopback.

@@ -19,7 +19,7 @@ namespace Rts.Game.Sandbox;
 /// </summary>
 public sealed class SimSnapshotSource : ISnapshotSource
 {
-    /// <summary>The player this debug view controls.</summary>
+    /// <summary>The player a single-player view controls (the human is always player 0 there); see <see cref="Local"/>.</summary>
     public const byte LocalPlayer = 0;
 
     /// <summary>Number of players in the sandbox.</summary>
@@ -162,6 +162,29 @@ public sealed class SimSnapshotSource : ISnapshotSource
         _host.RefreshSnapshots();
     }
 
+    /// <summary>
+    /// M9: wraps a simulation that is already set up for a LAN peer. No AI joins the tick loop (the LAN host runs every AI and its
+    /// commands arrive in turn bundles), and <paramref name="recording"/> is used as it is: the LAN session owns it and keeps it across
+    /// a resync, when the simulation is replaced by the host's.
+    /// </summary>
+    /// <param name="sim">The simulation, ready for its next Step.</param>
+    /// <param name="map">The map it runs on.</param>
+    /// <param name="recording">The replay the bundles are recorded into, or null.</param>
+    public SimSnapshotSource(Simulation sim, MapData map, ReplayRecording? recording)
+    {
+        _map = map;
+        _recording = recording;
+        _verifyCommand = null;
+        _host = new SimHost(sim, recording);
+        _host.RefreshSnapshots();
+    }
+
+    /// <summary>
+    /// The player this view controls and issues orders for: <see cref="LocalPlayer"/> (0) in single player and in the sandbox, the
+    /// save's local player for a loaded game, and the peer's own player in a LAN match (M9, the index of its slot in PlayerSlots).
+    /// </summary>
+    public byte Local { get; init; } = LocalPlayer;
+
     /// <summary>The menu skirmish this source wraps, or null for the sandbox, a mission or a loaded game.</summary>
     public SkirmishGame? Game => _game;
 
@@ -250,13 +273,13 @@ public sealed class SimSnapshotSource : ISnapshotSource
 
     /// <summary>Issues one order for one of the local player's units, to run on the next tick.</summary>
     public void Order(CommandKind kind, UnitKey subject, CellCoord cell = default, ActorRef target = default) =>
-        Enqueue(Tick + SimHost.CommandDelayTicks, LocalPlayer, kind, subject, cell, target);
+        Enqueue(Tick + SimHost.CommandDelayTicks, Local, kind, subject, cell, target);
 
     /// <summary>S19 (M13-15): sets the stance of one of the local player's units (the Arg carries the unit kind and the stance).</summary>
     public void OrderStance(UnitKey subject, UnitStance stance)
     {
-        if (!IsOwnedAlive(subject, LocalPlayer)) return;
-        _host.Issue(new Command(Tick + SimHost.CommandDelayTicks, LocalPlayer, 0, CommandKind.SetStance, subject.Id, EntityId.None, default,
+        if (!IsOwnedAlive(subject, Local)) return;
+        _host.Issue(new Command(Tick + SimHost.CommandDelayTicks, Local, 0, CommandKind.SetStance, subject.Id, EntityId.None, default,
             (int)subject.Kind | ((int)stance << 8)));
     }
 
@@ -264,8 +287,8 @@ public sealed class SimSnapshotSource : ISnapshotSource
     /// the local player's units; an idle unit starts it at once.</summary>
     public void OrderQueued(UnitKey subject, CellCoord cell, bool attackMove)
     {
-        if (!IsOwnedAlive(subject, LocalPlayer) || !_map.Contains(cell)) return;
-        _host.Issue(new Command(Tick + SimHost.CommandDelayTicks, LocalPlayer, 0, CommandKind.QueueOrder, subject.Id, EntityId.None, cell,
+        if (!IsOwnedAlive(subject, Local) || !_map.Contains(cell)) return;
+        _host.Issue(new Command(Tick + SimHost.CommandDelayTicks, Local, 0, CommandKind.QueueOrder, subject.Id, EntityId.None, cell,
             (int)subject.Kind | (attackMove ? 0x100 : 0)));
     }
 

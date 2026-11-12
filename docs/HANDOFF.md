@@ -6,6 +6,18 @@ skirmish has the hazard, the infantry detour and the idle step-off. lb_03 tier 5
 LeftBehindMission03Tests, ExpeditionMission04Tests; exp_04 t5 stalls at tick 30000 with the ash objective open since the head-on fix b01a024: investigate first). Open questions Q-71 (auth_01 tier 5 expectation with ash on) and Q-72 (assumed — confirm ash rules).
 All 124 Field Manual hero renders are on main (art/booklet); the pilot PDF is docs/field_manual/RTS_2027_Field_Manual_pilot.pdf.
 
+## Parallel session additions (session 19p, 2026-11-12; read with the plan below)
+- M9 LAN and every code-only M10 feature are on main (D-216): PR #69 (wave 1) and the wave-2 PR (lobby, in-game LAN, review fixes). Notes and
+  open items: docs/process/m9m10_overnight.md. Not yet tested on two real PCs (ROADMAP M9-15): that is the first owner check.
+- Open questions: Q-73 (par times), Q-74 (chat in LAN replays).
+- M14-06: scripts for the 26 ids are on art/m14-06-pilot (draft PR #67). The owner runs `tools\art\render_m14_06.ps1` on the laptop, then
+  `render_heroes.ps1 -Ids …`, pushes; the lead then removes the ids from RenderSpriteLoadTests.KnownWithoutArt and the PLACEHOLDER ART comments.
+- Music: take 1 of 20 tracks is in C:\ACE-Step-1.5\output\rts\<track>\take1\ on the owner's laptop (`rts_batch.ps1`, `-Takes 2` for more).
+  Next: the owner picks takes; the lead converts to OGG at -16 LUFS (ffmpeg) into data/music/ (names in docs/audio/music_brief.md).
+- D-212: remove the "DRAFT (lead, session 12)" marks from data/archive/upgrades.toml and structures_expedition.toml.
+- Lessons: one monotonic network clock for lobby and match; never build while a merge is writing files; run Scripting.Tests in every batch
+  (slow but it catches campaign regressions); Windows CI catches first-run console output in tests.
+
 ## Start here (shown to the user as the plan; nothing starts until they say go)
 1. Read the owner's "after" series if it exists: `balance_runs\s19after\s19after_summary.md` (tools/measure/run_s19_after.ps1), compare with
    `balance_runs\s18audit\s18audit_summary.md` (start shares, Glass Coast tender skew, LB cross-faction results). Decide with the owner:
