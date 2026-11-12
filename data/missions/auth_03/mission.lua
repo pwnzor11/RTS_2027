@@ -76,11 +76,13 @@ end
 
 function HomeWaveTwo()
   Media.MessageKey("a3.home2")
+  Dialogue.Say(SPEAKER, SPEAKER, "a3.radio.home2")
   Reinforce.Zone(1, Squad("dir", Pick({ 4, 5, 8, 11, 14 }), Pick({ 1, 1, 2, 4, 5 }), 0), "spawn_e", Map.Center("home"))
 end
 
 function HomeWaveThree()
   Media.MessageKey("a3.home3")
+  Dialogue.Say(SPEAKER, SPEAKER, "a3.radio.home3")
   Reinforce.Zone(1, Squad("dir", Pick({ 5, 6, 9, 12, 16 }), Pick({ 1, 2, 3, 5, 6 }), Pick({ 0, 0, 1, 3, 4 })), "spawn_e", Map.Center("home"))
 end
 

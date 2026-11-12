@@ -76,6 +76,7 @@ end
 function HomeRaidTwo()
   if state.over then return end
   Media.MessageKey("a4.raid2")
+  Dialogue.Say(SPEAKER, SPEAKER, "a4.radio.raid2")
   Reinforce.Zone(1, Squad(Pick({ 5, 6, 8, 10, 12 }), Pick({ 1, 2, 3, 3, 4 }), Pick({ 0, 0, 1, 2, 3 })), "spawn_w", Map.Center("home"))
 end
 

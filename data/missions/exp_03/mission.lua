@@ -170,6 +170,7 @@ end
 function AuthorityTwo()
   if state.phase == "done" then return end
   Media.MessageKey("e3.auth2")
+  Dialogue.Say(SPEAKER, SPEAKER, "e3.radio.auth2")
   Wave(1, "auth_rifleman", "north_road", Pick({ 3, 4, 6, 9, 12 }), "auth_rocketeer", 4)
 end
 
