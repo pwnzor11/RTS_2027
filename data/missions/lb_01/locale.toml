@@ -10,6 +10,8 @@
 "lb1.radio.contact" = "That is the first of them. Keep at the scrapers."
 "lb1.radio.relief" = "Authority relief on the north road. They came. Of course they came."
 "lb1.relief" = "An Authority relief patrol is coming down from the north."
+"lb1.relief2" = "A second Authority group is coming down the north road."
+"lb1.radio.relief2" = "A second group, right behind the first. Of course there is."
 "lb1.scrapers.down" = "Both scrapers are down."
 "lb1.radio.scrapers" = "Both scrapers burning. Now finish the escort."
 "lb1.cache" = "The gully scraper is ours, and the fuel with it."

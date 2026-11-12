@@ -97,6 +97,8 @@ function SecondLanding()
   local tags = Reinforce.Zone(1, types, "landing", Map.Center("camp"))
   for i, tag in pairs(tags) do state.landingTags[#state.landingTags + 1] = tag end
   state.landing2 = true
+  Media.MessageKey("lb4.landing2")
+  Dialogue.Say(SPEAKER, SPEAKER, "lb4.radio.landing2")
 end
 
 function HintRadio()

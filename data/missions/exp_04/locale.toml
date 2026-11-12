@@ -12,6 +12,8 @@
 "e4.col2" = "Directorate column on the west flank!"
 "e4.col3" = "The redoubt is sending everything it has!"
 "e4.radio.col3" = "That is all they have left, I think. Hold the shore, then take the redoubt."
+"e4.finale" = "The redoubt gate is open. Its last guard is marching out!"
+"e4.radio.finale" = "Shaft and Device are down, and the redoubt has opened its gate. The last of its guard is coming out, Commander. We would be grateful if you would meet it."
 "e4.held" = "The three columns are beaten."
 "e4.base.down" = "The redoubt is broken. The Shaft and the Sunrise Device are down."
 "e4.lost.depot" = "The Landing Depot has fallen. The beachhead is lost."

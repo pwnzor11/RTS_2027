@@ -5,6 +5,8 @@
 "lb4.landing" = "The Expedition has landed a counter-force on the plains."
 "lb4.radio.kell" = "Landing force, down. Keep your heads up and count each other. Nobody is left on that sand."
 "lb4.radio.landing" = "Marines on the plains, coming for the camp. Hold the camp. The beach will keep."
+"lb4.landing2" = "A second Expedition landing group is coming ashore."
+"lb4.radio.landing2" = "More marines on the plains, right behind the first. Hold the camp."
 "lb4.counter.down" = "The counter-landing is broken."
 "lb4.radio.counter" = "Their landing is bleeding out on the plains. Now take the east flank."
 "lb4.pile.down" = "A pile house is down."
