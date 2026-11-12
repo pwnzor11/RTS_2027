@@ -35,6 +35,12 @@ namespace Rts.Game;
 /// <param name="AutosaveMinutes">D-205: single-player autosave every this many minutes of play (plus one at the start of a match), into 3 rotating slots; 0 = off. Default 5; files without the key get 5.</param>
 /// <param name="GameSpeedPercent">S19 D-205 (M13-15): single-player skirmish game speed in percent of normal: 50, 75, 100, 150 or 200. Default 100; files without the key get 100.</param>
 /// <param name="LargerInfantry">D-184 pilot: draw infantry (sprites, selection brackets, health bars) 1.25 times larger than today. Render only. Default true for the pilot screenshots; files without the key get true.</param>
+/// <param name="Weather">M10 design 21 §4: view-only weather particles per biome. Default true; files without the key get true.</param>
+/// <param name="ScreenShake">M10 design 21 §4: light screen shake on big blasts. Default true.</param>
+/// <param name="CheckForUpdates">M10 design 21 §5: check GitHub Releases once at start and show "new version available". Default true.</param>
+/// <param name="PlayerName">M9 LAN player name; empty = the Windows user name (design 20 §8 item 4).</param>
+/// <param name="LanGamePort">M9 LAN game port (UDP), 1024..65535. Default <see cref="Rts.Net.NetProtocol.DefaultGamePort"/>.</param>
+/// <param name="LanDiscoveryPort">M9 LAN discovery port (UDP), 1024..65535. Default <see cref="Rts.Net.NetProtocol.DefaultDiscoveryPort"/>.</param>
 public sealed record Settings(
     int Version = Settings.CurrentVersion,
     bool Fullscreen = false,
@@ -58,7 +64,13 @@ public sealed record Settings(
     KeyBindings? KeyMap = null,
     bool LargerInfantry = true,
     int AutosaveMinutes = Settings.DefaultAutosaveMinutes,
-    int GameSpeedPercent = Rts.Game.Host.GameSpeed.Normal)
+    int GameSpeedPercent = Rts.Game.Host.GameSpeed.Normal,
+    bool Weather = true,
+    bool ScreenShake = true,
+    bool CheckForUpdates = true,
+    string PlayerName = "",
+    int LanGamePort = Rts.Net.NetProtocol.DefaultGamePort,
+    int LanDiscoveryPort = Rts.Net.NetProtocol.DefaultDiscoveryPort)
 {
     /// <summary>The file format version this build reads and writes.</summary>
     public const int CurrentVersion = 2;
@@ -167,7 +179,13 @@ public sealed record Settings(
             ParseKeys(root),
             root.TryGetValue("larger_infantry", out object? li) && li is bool lib ? lib : d.LargerInfantry,
             Int(root, "autosave_minutes", d.AutosaveMinutes, 0, MaxAutosaveMinutes),
-            Rts.Game.Host.GameSpeed.Snap(Int(root, "game_speed_percent", d.GameSpeedPercent, 50, 200)));
+            Rts.Game.Host.GameSpeed.Snap(Int(root, "game_speed_percent", d.GameSpeedPercent, 50, 200)),
+            root.TryGetValue("weather", out object? we) && we is bool web ? web : d.Weather,
+            root.TryGetValue("screen_shake", out object? sh) && sh is bool shb ? shb : d.ScreenShake,
+            root.TryGetValue("check_for_updates", out object? cu) && cu is bool cub ? cub : d.CheckForUpdates,
+            Text(root, "player_name", d.PlayerName),
+            Int(root, "lan_game_port", d.LanGamePort, 1024, 65535),
+            Int(root, "lan_discovery_port", d.LanDiscoveryPort, 1024, 65535));
     }
 
     /// <summary>The settings as TOML text.</summary>
@@ -205,6 +223,15 @@ public sealed record Settings(
         sb.AppendLine(FormattableString.Invariant($"autosave_minutes = {Math.Clamp(AutosaveMinutes, 0, MaxAutosaveMinutes)}"));
         sb.AppendLine("# Single-player skirmish game speed in percent of normal: 50, 75, 100, 150 or 200 (the sim step is unchanged).");
         sb.AppendLine(FormattableString.Invariant($"game_speed_percent = {Rts.Game.Host.GameSpeed.Snap(GameSpeedPercent)}"));
+        sb.AppendLine("# Weather particles and screen shake on big blasts (view only).");
+        sb.AppendLine(FormattableString.Invariant($"weather = {(Weather ? "true" : "false")}"));
+        sb.AppendLine(FormattableString.Invariant($"screen_shake = {(ScreenShake ? "true" : "false")}"));
+        sb.AppendLine("# Check GitHub Releases once at start for a newer version (nothing is downloaded).");
+        sb.AppendLine(FormattableString.Invariant($"check_for_updates = {(CheckForUpdates ? "true" : "false")}"));
+        sb.AppendLine("# LAN: player name (empty = Windows user name) and UDP ports.");
+        sb.AppendLine(FormattableString.Invariant($"player_name = {Quote(PlayerName)}"));
+        sb.AppendLine(FormattableString.Invariant($"lan_game_port = {Math.Clamp(LanGamePort, 1024, 65535)}"));
+        sb.AppendLine(FormattableString.Invariant($"lan_discovery_port = {Math.Clamp(LanDiscoveryPort, 1024, 65535)}"));
         sb.AppendLine("# Pan the camera to a new mission objective's target (M11-05)");
         sb.AppendLine(FormattableString.Invariant($"camera_cue_on_new_objective = {(CameraCueOnNewObjective ? "true" : "false")}"));
         IReadOnlyList<(string Id, string Key)> rebound = Bindings.Overrides();
