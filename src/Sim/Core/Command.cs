@@ -30,12 +30,18 @@ public enum CommandKind : byte
     /// it is how a Decon Truck cleans bare hot ground. Refused for an anti-air-only weapon, an unarmed unit or an off-map cell.
     /// Never sent by the AI.</summary>
     AttackGround = 26,
+    /// <summary>S19 D-205 (M13-15): Shift+right-click. Subject = a vehicle or soldier (Arg low byte = its <see cref="ActorKind"/>), Cell = the
+    /// waypoint, Arg bit 8 set = it is an attack-move (clear = a plain move). An idle unit starts it at once; a busy one appends it to its
+    /// queue of at most <see cref="Combat.CombatState.MaxWaypoints"/> waypoints, run in order each time the unit would fall idle. Any plain
+    /// order (Move, Stop, Attack, ...) clears the queue. Refused for an off-map cell or a full queue. Never sent by the AI.</summary>
+    QueueOrder = 27,
 }
 
 /// <summary>
 /// The only way anything outside Simulation.Step changes sim state. Fixed generic payload for v1:
 /// Subject = the acting entity, Target = target entity, Cell = target cell, Arg = kind-specific int
-/// (type index for Build/Place, stance for SetStance, ...). Step sorts by (Player, Sequence).
+/// (type index for Build/Place, ...). SetStance (S19): Subject = a vehicle or soldier, Arg low byte = its <see cref="ActorKind"/>, Arg bits
+/// 8..15 = the <see cref="UnitStance"/>. Step sorts by (Player, Sequence).
 /// For Move and Stop, Arg = (int)<see cref="ActorKind"/> of the Subject (0 = Vehicle, 1 = Infantry), because an
 /// EntityId alone does not say which store it indexes. Move queues a Move mission to Cell; Stop queues Stop.
 /// Attack / AttackMove / Guard (M1-09): Arg low byte = subject ActorKind, Arg bits 8..15 = target ActorKind (Attack),

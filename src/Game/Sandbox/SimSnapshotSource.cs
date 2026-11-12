@@ -252,6 +252,23 @@ public sealed class SimSnapshotSource : ISnapshotSource
     public void Order(CommandKind kind, UnitKey subject, CellCoord cell = default, ActorRef target = default) =>
         Enqueue(Tick + SimHost.CommandDelayTicks, LocalPlayer, kind, subject, cell, target);
 
+    /// <summary>S19 (M13-15): sets the stance of one of the local player's units (the Arg carries the unit kind and the stance).</summary>
+    public void OrderStance(UnitKey subject, UnitStance stance)
+    {
+        if (!IsOwnedAlive(subject, LocalPlayer)) return;
+        _host.Issue(new Command(Tick + SimHost.CommandDelayTicks, LocalPlayer, 0, CommandKind.SetStance, subject.Id, EntityId.None, default,
+            (int)subject.Kind | ((int)stance << 8)));
+    }
+
+    /// <summary>S19 (M13-15): Shift + right-click. Queues a waypoint (a move, or an attack-move when <paramref name="attackMove"/>) for one of
+    /// the local player's units; an idle unit starts it at once.</summary>
+    public void OrderQueued(UnitKey subject, CellCoord cell, bool attackMove)
+    {
+        if (!IsOwnedAlive(subject, LocalPlayer) || !_map.Contains(cell)) return;
+        _host.Issue(new Command(Tick + SimHost.CommandDelayTicks, LocalPlayer, 0, CommandKind.QueueOrder, subject.Id, EntityId.None, cell,
+            (int)subject.Kind | (attackMove ? 0x100 : 0)));
+    }
+
     /// <summary>
     /// The one way orders reach the sim. Queues a command for <paramref name="execTick"/> and records it. Ignored when
     /// the subject is not a live unit of <paramref name="player"/>, when the tick has passed, or when a move-type

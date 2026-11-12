@@ -34,7 +34,9 @@ internal static class CombatMissions
 
         byte owner = store.Player[i];
         int weapon = sim.WeaponOf(kind, i);
-        if (weapon >= 0)
+        UnitStance stance = sim.CombatData.StanceOf(kind, i);   // S19 (M13-15)
+        if (weapon >= 0 && stance == UnitStance.HoldFire) e.AttackTarget = default;
+        else if (weapon >= 0)
         {
             WeaponType w = sim.RulesOf(store.Player[i]).Weapons[weapon];
             if (!e.AttackTarget.Id.IsNone)
@@ -42,8 +44,9 @@ internal static class CombatMissions
                 bool keep = sim.IsValidAutoTarget(owner, e.AttackTarget) && sim.IsTargetVisible(owner, e.AttackTarget);
                 if (keep && sim.TargetPoint(e.AttackTarget, pos, out LeptonCoord tp))
                 {
-                    // Leash: chasing is allowed up to Sight cells from the guard point; a target already in range needs no chase.
-                    int leash = sim.SightOf(kind, i) * SimConstants.LeptonsPerCell;
+                    // Leash: chasing is allowed up to Sight cells from the guard point (a Defensive unit: DefensiveChaseCells);
+                    // a target already in range needs no chase.
+                    int leash = (stance == UnitStance.Defensive ? Simulation.DefensiveChaseCells : sim.SightOf(kind, i)) * SimConstants.LeptonsPerCell;
                     if (LeptonMath.Distance(pos, tp) > w.Range && LeptonMath.Distance(pos, LeptonCoord.CenterOf(e.GuardPoint)) > leash)
                         keep = false;
                 }
@@ -115,10 +118,16 @@ internal static class CombatMissions
         }
         byte owner = store.Player[i];
         int weapon = sim.WeaponOf(kind, i);
-        if (weapon >= 0)
+        UnitStance stance = sim.CombatData.StanceOf(kind, i);   // S19 (M13-15)
+        if (weapon >= 0 && stance == UnitStance.HoldFire) e.AttackTarget = default;
+        else if (weapon >= 0)
         {
             if (!e.AttackTarget.Id.IsNone && !(sim.IsValidAutoTarget(owner, e.AttackTarget) && sim.IsTargetVisible(owner, e.AttackTarget)))
                 e.AttackTarget = default;
+            if (stance == UnitStance.Defensive && !e.AttackTarget.Id.IsNone
+                && !(sim.TargetPoint(e.AttackTarget, store.Position[i], out LeptonCoord at)
+                    && LeptonMath.Distance(store.Position[i], at) <= sim.RulesOf(owner).Weapons[weapon].Range))
+                e.AttackTarget = default;   // a defensive marcher fires at what is in range and never chases it
             if (e.AttackTarget.Id.IsNone && sim.Tick >= e.ScanTick)
             {
                 e.AttackTarget = sim.AcquireTarget(owner, store.Position[i], sim.RulesOf(store.Player[i]).Weapons[weapon]);

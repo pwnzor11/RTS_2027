@@ -81,7 +81,7 @@ public sealed partial class Simulation
         _infantry = new InfantryStore(setup.Limits.Infantry);
         _buildings = new BuildingStore(setup.Limits.Buildings);
         _players = new PlayerStore(setup);
-        for (int p = 0; p < setup.PlayerCount; p++) if (!_players.IsNeutral((byte)p)) _players.Cash[p] = setup.Rules.Economy.StartingCash;   // M2-07
+        for (int p = 0; p < setup.PlayerCount; p++) if (!_players.IsNeutral((byte)p)) _players.Cash[p] = setup.StartingCashOf((byte)p);   // M2-07; S19 (M13-15): a per-slot amount when the setup carries one
         _economy = new EconomyState(setup);
         _production = new ProductionState(setup);
         _tunnels = new TunnelState(setup);
@@ -313,6 +313,7 @@ public sealed partial class Simulation
     {
         if (c.Player >= Setup.PlayerCount || _players.Defeated[c.Player]) return;   // defeated players' commands are ignored (D-062)
         if (IsOrderToCarriedUnit(c)) return;   // S19 D-205: a soldier inside a building or a passenger in a vehicle obeys no unit order
+        ClearQueueForPlainOrder(c);            // S19 (M13-15): a plain order replaces the unit's waypoint queue
         switch (c.Kind)
         {
             case CommandKind.Move:
@@ -328,6 +329,8 @@ public sealed partial class Simulation
                 if (c.Kind != CommandKind.Attack && !InMap(c.Cell)) break;
                 ApplyCombatCommand(c);     // Simulation.Combat.cs (M1-09)
                 break;
+            case CommandKind.SetStance: ApplySetStance(c); break;   // S19 (M13-15): Simulation.Orders.cs
+            case CommandKind.QueueOrder: ApplyQueueOrder(c); break; // S19 (M13-15): Simulation.Orders.cs
             case CommandKind.Build: ApplyBuild(c); break;       // Simulation.Production.cs (M2-08)
             case CommandKind.Cancel: ApplyCancel(c); break;
             case CommandKind.Hold: ApplyHold(c); break;         // S15: Simulation.Production.cs
@@ -364,7 +367,7 @@ public sealed partial class Simulation
     private bool IsOrderToCarriedUnit(Command c)
     {
         if (c.Kind is not (CommandKind.Move or CommandKind.Stop or CommandKind.Scatter or CommandKind.Attack or CommandKind.AttackMove
-            or CommandKind.Guard or CommandKind.Enter or CommandKind.AttackGround)) return false;
+            or CommandKind.Guard or CommandKind.Enter or CommandKind.AttackGround or CommandKind.QueueOrder)) return false;
         if (StoreOf((ActorKind)(c.Arg & 0xFF)) is not { } store || !store.Slots.IsAlive(c.Subject)) return false;
         return ActorLayers.IsCarried(_tunnels.LayerOf((ActorKind)(c.Arg & 0xFF), c.Subject.Index));
     }
@@ -648,6 +651,7 @@ public sealed partial class Simulation
 
     private void Commence(MobileStore store, ActorKind kind, int i)
     {
+        if (store.NextMission[i] == MissionKind.Guard && _combat.WaypointCount(kind, i) > 0) StartQueuedWaypoint(store, kind, i);   // S19 (M13-15)
         MissionKind m = store.NextMission[i];
         store.Mission[i] = m;
         store.Status[i] = MissionStatus.Init;
