@@ -556,6 +556,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
         _s.Scene.LargerInfantry = _s.Settings.LargerInfantry;   // D-184
         _s.Scene.Draw(sb, _s.Pixel, frame, _camera, _s.Viewport);
         DrawSelectedBuilding(sb, snapshot);
+        DrawQueuedPaths(sb);   // M13-15: the waypoints of the selected units
         _feedback.Draw(sb, _s.Pixel, _camera);
         DrawPackProgress(sb, snapshot);
         DrawUnpackGhost(sb);
@@ -881,7 +882,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
         Point mouse = input.MousePosition;
         if (input.LeftPressed && _orders is { AttackMoveArmed: true } && _console is not { IsOpen: true } && MapViewport().Bounds.Contains(mouse))
         {
-            _orders.RightClick(mouse, _camera, _renderUnits);   // O2: a left click commits an armed attack-move (right click is the alias below)
+            _orders.RightClick(mouse, _camera, _renderUnits, queue: ShiftHeld(input));   // O2: a left click commits an armed attack-move (right click is the alias below)
             input.ConsumeLeft();
         }
         else if (input.LeftPressed)
@@ -955,7 +956,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
             }
             else
             {
-                _orders.RightClick(mouse, _camera, _renderUnits, CtrlHeld(input));   // S19 FAD-05: Ctrl + right-click = attack ground
+                _orders.RightClick(mouse, _camera, _renderUnits, CtrlHeld(input), ShiftHeld(input));   // S19 FAD-05: Ctrl + right-click = attack ground; M13-15: Shift = queue a waypoint
             }
         }
     }
@@ -1407,6 +1408,19 @@ public sealed class GameScreen : IScreen, IFocusPausable
             {
                 OrderFeedback.DrawRally(sb, _s.Pixel, _camera, new Vector2(left + b.FootprintW * Camera.CellPx / 2f, top + b.FootprintH * Camera.CellPx / 2f), rally);
             }
+        }
+    }
+
+    // M13-15: for each selected own unit with queued waypoints, a thin line from the unit through them and a small marker on each
+    // (green for a move, red for an attack-move). Reads the sim's own queue, so only the local player's selected units ever show one.
+    private void DrawQueuedPaths(SpriteBatch sb)
+    {
+        if (_sim is null || _selection.Count == 0) return;
+        foreach (UnitKey unit in _selection.Units)
+        {
+            var actor = new ActorRef(unit.Kind, unit.Id);
+            if (_sim.Sim.WaypointCountOf(actor) == 0 || !_sim.TryGetPosition(unit, out LeptonCoord at)) continue;
+            OrderFeedback.DrawWaypointPath(sb, _s.Pixel, _camera, Camera.WorldFromLepton(at), _sim.Sim.WaypointsOf(actor));
         }
     }
 

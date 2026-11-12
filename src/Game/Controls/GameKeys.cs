@@ -29,7 +29,8 @@ public static class GameKeys
 
     /// <summary>The order actions <c>GameScreen</c> forwards to <see cref="OrderController.KeyPressed"/>.</summary>
     public static readonly GameAction[] OrderActions =
-        { GameAction.AttackMove, GameAction.Stop, GameAction.Guard, GameAction.Scatter, GameAction.Deploy };
+        { GameAction.AttackMove, GameAction.Stop, GameAction.Guard, GameAction.Scatter, GameAction.Deploy,
+          GameAction.StanceAggressive, GameAction.StanceDefensive, GameAction.StanceHoldFire };
 
     /// <summary>
     /// Keys the input code may name literally because they cannot be rebound: Esc (leave / pause menu), F1 (help), Backspace and Enter
@@ -112,6 +113,9 @@ public static class GameKeys
         new(GameAction.CameoSlot11, "cameo_slot_11", System, "Sidebar cameo row 4, column 2 (Shift: queue five)", Keys.Decimal),
         new(GameAction.CameoSlot12, "cameo_slot_12", System, "Sidebar cameo row 4, column 3 (Shift: queue five)", Keys.Add),
         new(GameAction.RangeRings, "range_rings", System, "Show or hide weapon range rings of the selection", Keys.L),
+        new(GameAction.StanceAggressive, "stance_aggressive", Orders, "Stance: aggressive (chase what is in sight)", Keys.M),
+        new(GameAction.StanceDefensive, "stance_defensive", Orders, "Stance: defensive (fire in range, chase a few cells, walk back)", Keys.N),
+        new(GameAction.StanceHoldFire, "stance_hold_fire", Orders, "Stance: hold fire (fire only at what you order)", Keys.U),
     };
 
     /// <summary>The Controls page lines, grouped in <see cref="Groups"/> order: rebindable actions and fixed inputs shown for reference.</summary>
@@ -161,8 +165,10 @@ public static class GameKeys
             A(GameAction.Group6), A(GameAction.Group7), A(GameAction.Group8), A(GameAction.Group9),
             F(Orders, "Right click", "Move, attack, enter, salvage; set a factory's rally point"),
             F(Orders, "Left click (attack-move armed)", "Attack-move to the cell"),
+            F(Orders, "Shift + right click", "Queue a waypoint: the selection walks the queue in order (up to 8); any plain order clears it"),
             F(Orders, "Ctrl + right click", "Attack ground: fire at the cell (a Decon Truck cleans it, a Foam Layer foams it)"),
             A(GameAction.AttackMove), A(GameAction.Stop), A(GameAction.Guard), A(GameAction.Scatter), A(GameAction.Deploy), A(GameAction.Pack),
+            A(GameAction.StanceAggressive), A(GameAction.StanceDefensive), A(GameAction.StanceHoldFire),
             A(GameAction.TabStructures), A(GameAction.TabDefences), A(GameAction.TabInfantry), A(GameAction.TabVehicles),
             A(GameAction.TabUpgrades), A(GameAction.TabAircraft),
             A(GameAction.CameoSlot1), A(GameAction.CameoSlot2), A(GameAction.CameoSlot3), A(GameAction.CameoSlot4), A(GameAction.CameoSlot5), A(GameAction.CameoSlot6), A(GameAction.CameoSlot7), A(GameAction.CameoSlot8), A(GameAction.CameoSlot9), A(GameAction.CameoSlot10), A(GameAction.CameoSlot11), A(GameAction.CameoSlot12),

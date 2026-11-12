@@ -147,4 +147,10 @@ public enum GameAction
     CameoSlot12,
     /// <summary>M13-15: show or hide the weapon range rings of the selected units and defences in play (off by default).</summary>
     RangeRings,
+    /// <summary>M13-15: set the selected units' stance to aggressive (today's behaviour: chase what attacks them).</summary>
+    StanceAggressive,
+    /// <summary>M13-15: set the selected units' stance to defensive (fire in range, chase a few cells, walk back to the post).</summary>
+    StanceDefensive,
+    /// <summary>M13-15: set the selected units' stance to hold fire (fire only at what they are ordered to attack).</summary>
+    StanceHoldFire,
 }

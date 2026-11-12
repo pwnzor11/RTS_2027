@@ -220,6 +220,17 @@ public sealed class SkirmishSetupScreen : IScreen
             });
         }
 
+        // S19 (M13-15): one options row per slot after the slot rows: handicap, starting credits, start units (see SlotOptions).
+        for (int i = 0; i < _slots.Count; i++)
+        {
+            int slot = i;
+            rows.Add(new(() => OptionsText(slot), null, null,
+                new MenuButton(UiText.Get(UiText.OptHandicapButton), () => StepSlotHandicap(slot)),
+                new MenuButton(UiText.Get(UiText.OptCreditsButton), () => StepSlotCredits(slot)),
+                new MenuButton(UiText.Get(UiText.OptStartButton), () => ToggleSlotArmy(slot)))
+            { WidthTexts = WidestOptionsTexts() });
+        }
+
         rows.Add(new(() => UiText.Format(UiText.SpeedSetup, "speed", GameSpeed.Label(_s.Settings.GameSpeedPercent)), null, StepSpeed,   // M13-15
             new MenuButton("<", () => StepSpeed(-1)), new MenuButton(">", () => StepSpeed(1)))
         {
@@ -277,7 +288,9 @@ public sealed class SkirmishSetupScreen : IScreen
 
     // The highlighted slot says when its LLM commander has no key (it used to be appended to the row, which made the row grow).
     private string HintText() =>
-        _panel is not null && _panel.Selected >= _firstSlotRow && _panel.Selected < _firstSlotRow + _slots.Count && NoKeyFor(_slots[_panel.Selected - _firstSlotRow])
+        _panel is not null && _panel.Selected >= _firstSlotRow + _slots.Count && _panel.Selected < _firstSlotRow + 2 * _slots.Count
+            ? UiText.Get(UiText.OptHint)
+            : _panel is not null && _panel.Selected >= _firstSlotRow && _panel.Selected < _firstSlotRow + _slots.Count && NoKeyFor(_slots[_panel.Selected - _firstSlotRow])
             ? SetupText.NoKeyHint
             : IsSpectate ? "(no Human slot: you will watch)" : "(Kind Fac Tier Cmdr Team Col cycle each choice)";
 
@@ -411,6 +424,34 @@ public sealed class SkirmishSetupScreen : IScreen
         if (next != SlotKind.Closed && _slots.Where((x, k) => k != i && x.Kind != SlotKind.Closed).Any(x => x.Colour == _slots[i].Colour))
             _slots[i] = _slots[i] with { Colour = FreeColour(_slots[i].Colour, i) };
         _error = "";
+    }
+
+    // ---- S19 (M13-15): per-slot handicap, starting credits and start units ----
+
+    /// <summary>The options row of a slot: "1  Handicap 75%  Credits 10000  Start: small army" (a Closed slot says so).</summary>
+    public static string OptionsLabel(SkirmishSlot slot, int index) =>
+        slot.Kind == SlotKind.Closed
+            ? $"{index + 1} Closed"
+            : $"{index + 1} {SlotOptions.HandicapLabel(slot.Handicap)}, {SlotOptions.CreditsLabel(slot.CreditsPreset)}, {SlotOptions.StartLabel(slot.SmallArmy)}";
+
+    private string OptionsText(int i) => OptionsLabel(_slots[i], i);
+
+    private static IReadOnlyList<string> WidestOptionsTexts() =>
+        new[] { OptionsLabel(new SkirmishSlot(SlotKind.Ai, Faction.Authority, 1, 0, 0, false, 50, 3, true), 3) };
+
+    private void StepSlotHandicap(int i)
+    {
+        if (_slots[i].Kind != SlotKind.Closed) _slots[i] = _slots[i] with { Handicap = SlotOptions.NextHandicap(_slots[i].Handicap) };
+    }
+
+    private void StepSlotCredits(int i)
+    {
+        if (_slots[i].Kind != SlotKind.Closed) _slots[i] = _slots[i] with { CreditsPreset = SlotOptions.NextCredits(_slots[i].CreditsPreset) };
+    }
+
+    private void ToggleSlotArmy(int i)
+    {
+        if (_slots[i].Kind != SlotKind.Closed) _slots[i] = _slots[i] with { SmallArmy = !_slots[i].SmallArmy };
     }
 
     private void StepSlotFaction(int i) => _slots[i] = _slots[i] with { Faction = NextFaction(_slots[i].Faction, 1) };

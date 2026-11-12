@@ -109,7 +109,7 @@ public sealed class SelectionCard : IUiRegion
             Rectangle r = l.Buttons[i];
             bool sellArmed = b.Kind == CardButtonKind.Sell && SellArmed;
             if (sellArmed) b = b with { Label = UiText.Get(UiText.SellConfirm) };
-            bool active = sellArmed || b.Kind == CardButtonKind.Order && b.Action == GameAction.AttackMove && attackMoveArmed;
+            bool active = sellArmed || b.Active || b.Kind == CardButtonKind.Order && b.Action == GameAction.AttackMove && attackMoveArmed;
             Shapes.Fill(batch, pixel, r, active ? ActiveFill : hover == i ? ButtonHover : ButtonFill);
             Shapes.Outline(batch, pixel, r, active ? Gold : Border);
             DrawButtonText(batch, pixel, r, b, s);

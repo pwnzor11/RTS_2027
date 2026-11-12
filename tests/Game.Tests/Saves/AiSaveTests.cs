@@ -156,9 +156,9 @@ public sealed class AiSaveTests
     }
 
     [Fact]
-    public void A_header_with_AI_state_round_trips_and_the_save_version_is_7()
+    public void A_header_with_AI_state_round_trips_and_the_save_version_is_8()
     {
-        Assert.Equal(7, GameSaveHeader.CurrentVersion);
+        Assert.Equal(8, GameSaveHeader.CurrentVersion);   // M13-15: version 8 appends the per-slot options
         using var t = new SaveTestSupport();
         (SimHost host, _) = t.NewSkirmish();
         var h = new GameSaveHeader
@@ -175,7 +175,7 @@ public sealed class AiSaveTests
         GameSaveFile.Write(ms, h, host.Sim, Array.Empty<(string, string)>());
         ms.Position = 0;
         GameSaveHeader back = GameSaveFile.ReadHeader(ms);
-        Assert.Equal(7, back.Version);
+        Assert.Equal(8, back.Version);
         Assert.Equal(new byte[] { 9, 8, 7 }, back.Ai[0].State);
         Assert.Null(back.Ai[1].State);
     }

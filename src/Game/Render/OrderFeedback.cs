@@ -81,6 +81,31 @@ public sealed class OrderFeedback
         }
     }
 
+    /// <summary>Screen-space half size of a waypoint marker at zoom 1, in pixels.</summary>
+    public const int WaypointMarkerHalf = 4;
+
+    /// <summary>
+    /// Draws the queued path of one unit (M13-15): a thin line from <paramref name="unitWorld"/> through every waypoint in order and a small
+    /// diamond on each; green for a move, red for an attack-move.
+    /// </summary>
+    public static void DrawWaypointPath(SpriteBatch batch, Texture2D pixel, Camera camera, Vector2 unitWorld,
+        IReadOnlyList<(Rts.Sim.Core.CellCoord Cell, bool AttackMove)> waypoints)
+    {
+        Vector2 from = camera.ScreenFromWorld(unitWorld);
+        foreach ((Rts.Sim.Core.CellCoord cell, bool attack) in waypoints)
+        {
+            Color c = attack ? AttackColour : MoveColour;
+            Vector2 to = camera.ScreenFromWorld(Camera.CentreOf(cell));
+            Shapes.Line(batch, pixel, from, to, Shapes.Alpha(c, 150), 1);
+            int h = Math.Max(3, (int)MathF.Round(WaypointMarkerHalf * camera.Zoom));
+            Shapes.Line(batch, pixel, to + new Vector2(0, -h), to + new Vector2(h, 0), c, 2);
+            Shapes.Line(batch, pixel, to + new Vector2(h, 0), to + new Vector2(0, h), c, 2);
+            Shapes.Line(batch, pixel, to + new Vector2(0, h), to + new Vector2(-h, 0), c, 2);
+            Shapes.Line(batch, pixel, to + new Vector2(-h, 0), to + new Vector2(0, -h), c, 2);
+            from = to;
+        }
+    }
+
     /// <summary>Draws a flag at <paramref name="rallyCell"/> and a thin line to it from <paramref name="buildingCentreWorld"/> (O4).</summary>
     public static void DrawRally(SpriteBatch batch, Texture2D pixel, Camera camera, Vector2 buildingCentreWorld, Rts.Sim.Core.CellCoord rallyCell)
     {

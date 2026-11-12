@@ -90,6 +90,15 @@ public sealed class OrderController
             case GameAction.Scatter:
                 IssueToSelection(CommandKind.Scatter);
                 break;
+            case GameAction.StanceAggressive:
+                SetStance(UnitStance.Aggressive);
+                break;
+            case GameAction.StanceDefensive:
+                SetStance(UnitStance.Defensive);
+                break;
+            case GameAction.StanceHoldFire:
+                SetStance(UnitStance.HoldFire);
+                break;
             case GameAction.Guard:
                 foreach (UnitKey unit in _selection.Units.ToList())
                 {
@@ -99,12 +108,21 @@ public sealed class OrderController
         }
     }
 
+    /// <summary>S19 (M13-15): sets the stance of every selected unit that has a weapon (an unarmed unit has nothing to hold).</summary>
+    private void SetStance(UnitStance stance)
+    {
+        foreach (UnitKey unit in _selection.Units.ToList())
+            if (UnitCanAttack(unit)) _source.OrderStance(unit, stance);
+    }
+
     /// <summary>S19 (FAD-05): the order a forced-fire click (Ctrl + right-click) gives the selection: attack the ground cell.</summary>
     public const CommandKind ForceFireOrder = CommandKind.AttackGround;
 
     /// <summary>Handles a right-click at a screen point, using the units as drawn this frame for picking. <paramref name="forceFire"/>
-    /// (Ctrl held, S19 FAD-05) sends the whole selection an attack-ground order on the clicked cell instead of any other order.</summary>
-    public void RightClick(Point screen, Camera camera, IReadOnlyList<RenderUnit> units, bool forceFire = false)
+    /// (Ctrl held, S19 FAD-05) sends the whole selection an attack-ground order on the clicked cell instead of any other order.
+    /// <paramref name="queue"/> (Shift held, S19 M13-15) makes a plain move or attack-move on the ground a queued waypoint instead; every
+    /// other kind of click is an ordinary order.</summary>
+    public void RightClick(Point screen, Camera camera, IReadOnlyList<RenderUnit> units, bool forceFire = false, bool queue = false)
     {
         bool armed = AttackMoveArmed;
         bool deployArmed = DeployArmed;
@@ -186,7 +204,8 @@ public sealed class OrderController
             }
             else if (_source.Map.Contains(cell))
             {
-                _source.Order(armed ? CommandKind.AttackMove : CommandKind.Move, unit, cell);
+                if (queue) _source.OrderQueued(unit, cell, armed);
+                else _source.Order(armed ? CommandKind.AttackMove : CommandKind.Move, unit, cell);
                 mark ??= armed ? OrderMarkKind.Attack : OrderMarkKind.Move;
             }
         }
@@ -198,7 +217,7 @@ public sealed class OrderController
     /// S18 GAMEUI-05: a right-click on the minimap. Honours an armed attack-move (the selection attack-moves there and the arming ends)
     /// or an armed deploy cell, otherwise moves; the ring appears on the map cell.
     /// </summary>
-    public void MinimapOrder(CellCoord cell)
+    public void MinimapOrder(CellCoord cell, bool queue = false)
     {
         bool armed = AttackMoveArmed;
         bool deployArmed = DeployArmed;
@@ -211,7 +230,12 @@ public sealed class OrderController
             return;
         }
 
-        foreach (UnitKey unit in _selection.Units.ToList()) _source.Order(armed ? CommandKind.AttackMove : CommandKind.Move, unit, cell);
+        foreach (UnitKey unit in _selection.Units.ToList())
+        {
+            if (queue) _source.OrderQueued(unit, cell, armed);
+            else _source.Order(armed ? CommandKind.AttackMove : CommandKind.Move, unit, cell);
+        }
+
         Feedback?.Add(Camera.CentreOf(cell), armed ? OrderMarkKind.Attack : OrderMarkKind.Move);
     }
 

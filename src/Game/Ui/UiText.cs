@@ -117,6 +117,27 @@ public static class UiText
     /// <summary>M13-15: toast when the weapon range rings are switched on or off. Placeholder: <c>{state}</c> (on / off).</summary>
     public const string RangeRingsToast = "ui.rings.toast";
 
+    /// <summary>M13-15: card button and toast name of the aggressive stance.</summary>
+    public const string StanceAggressive = "ui.stance.aggressive";
+
+    /// <summary>M13-15: card button and toast name of the defensive stance.</summary>
+    public const string StanceDefensive = "ui.stance.defensive";
+
+    /// <summary>M13-15: card button and toast name of the hold-fire stance.</summary>
+    public const string StanceHoldFire = "ui.stance.hold_fire";
+
+    /// <summary>M13-15: skirmish setup, caption of the button that cycles a slot's handicap (50, 75, 100 percent of production speed and income).</summary>
+    public const string OptHandicapButton = "ui.setup.handicap";
+
+    /// <summary>M13-15: skirmish setup, caption of the button that cycles a slot's starting credits preset.</summary>
+    public const string OptCreditsButton = "ui.setup.credits";
+
+    /// <summary>M13-15: skirmish setup, caption of the button that toggles a slot's start units (base only / small army).</summary>
+    public const string OptStartButton = "ui.setup.start_units";
+
+    /// <summary>M13-15: skirmish setup, hint under the panel while an options row is highlighted.</summary>
+    public const string OptHint = "ui.setup.options_hint";
+
     private static readonly Dictionary<string, string> English = new(StringComparer.Ordinal)
     {
         [SupplyLabel] = "Supply",
@@ -155,6 +176,13 @@ public static class UiText
         [StrongVs] = "Strong vs: {classes}",
         [WeakVs] = "Weak vs: {classes}",
         [RangeRingsToast] = "Weapon range rings {state}",
+        [StanceAggressive] = "Aggro",
+        [StanceDefensive] = "Defend",
+        [StanceHoldFire] = "Hold",
+        [OptHandicapButton] = "HC",
+        [OptCreditsButton] = "Cash",
+        [OptStartButton] = "Army",
+        [OptHint] = "(HC handicap, Cash start credits, Army start units)",
     };
 
     /// <summary>The English text of a key, or the key itself when it is unknown.</summary>

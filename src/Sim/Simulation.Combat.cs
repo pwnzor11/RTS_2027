@@ -542,5 +542,6 @@ public sealed partial class Simulation
         for (int i = 1; i < _projectiles.Capacity; i++)
             if (_projectiles.Target[i] == dead) _projectiles.Target[i] = default;
         _combat.At(kind, index) = default;
+        _combat.ResetOrders(kind, index);   // S19 (M13-15): stance and waypoint queue die with the unit
     }
 }
