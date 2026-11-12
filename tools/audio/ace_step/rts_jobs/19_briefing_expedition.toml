@@ -1,0 +1,13 @@
+# RTS_2027 M10-09 job 19: briefing_expedition.ogg (docs/audio/music_brief.md)
+caption = 'instrumental, maritime command theme, stately brass melody with a shanty lilt, warm low strings, gentle synth pad, light snare, resolute, 96 BPM, F major, clean mix, no vocals'
+instrumental = true
+lyrics = '[Instrumental]'
+duration = 120
+batch_size = 1
+audio_format = 'wav'
+thinking = false
+use_cot_metas = false
+use_cot_caption = false
+use_cot_lyrics = false
+use_cot_language = false
+use_random_seed = true

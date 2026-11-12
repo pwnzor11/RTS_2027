@@ -1,0 +1,13 @@
+# RTS_2027 M10-09 job 15: tension_expedition.ogg (docs/audio/music_brief.md)
+caption = 'instrumental, quiet naval suspense, slow sonar pings, low string drone, distant foghorn-like brass, soft synth pulse, creaking hull textures, far from home, 70 BPM, B minor, wide reverb, no melody, no vocals'
+instrumental = true
+lyrics = '[Instrumental]'
+duration = 200
+batch_size = 1
+audio_format = 'wav'
+thinking = false
+use_cot_metas = false
+use_cot_caption = false
+use_cot_lyrics = false
+use_cot_language = false
+use_random_seed = true
