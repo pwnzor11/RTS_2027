@@ -1,0 +1,1183 @@
+# TEST FIXTURE: data/audio/sounds.toml as `make_sfx.py --pick` writes it when all 80 generated sounds exist (qualified events + ambience).
+# Regenerate: see tests/Game.Tests/Audio/GeneratedSoundsTomlTests.cs. The files named here are NOT in the repository; tests only parse it.
+# Game events -> sounds (D-080). Files are relative to this folder. Generated sounds come from tools/audio/presets.toml and tools/audio/sfx/.
+# Variants: an event with several sounds picks one at random (game-side RNG, not the sim).
+# max_voices: at most this many copies of ONE sound play at once; extra plays are dropped.
+# cooldown_ms: least time between two plays of one event. positional: volume and pan follow the camera.
+#
+# QUALIFIED EVENTS (S22, M10-10). An event name may carry a class and a faction: [event.unit_died.infantry.directorate].
+# The game looks an event up most-specific-first and plays the first entry that exists:
+#     <event>.<class>.<faction>  ->  <event>.<class>  ->  <event>.<faction>  ->  <event>
+# and when none of them exists, the event's stand-in: unit_died -> explosion_small, building_destroyed -> explosion_large,
+# water_impact -> explosion_small (explosion_large for a splash of 3+ cells, class "large"), ship_horn -> unit_ready (class ship). The stand-in is
+# looked up the same way. Events with no stand-in (sonar, air_flyby, air_hover, rig_deploy, rig_pack) are silent without an entry. So the game plays
+# exactly what it played before when a qualified entry (or its sound file) is missing. A cooldown runs per entry (per resolved name).
+#   class   : unit_died / unit_ready: infantry | vehicle | ship | air.   fire_*: the weapon class of the [weapon] table below
+#             (small_arms sniper mg flame spray | cannon rail energy mortar howitzer flak naval_shell naval_heavy depth_charge | rocket salvo sam harpoon).
+#             explosion_large.bomb: a bomber's blast.   water_impact.large: a splash of 3+ cells.
+#   faction : authority | directorate | left_behind | expedition   (building_placed, construction_complete, building_destroyed, unit_ready,
+#             unit_died, fire_*, air_*, rig_*).
+# Raised by: building_placed (own building placed), construction_complete (own queue item ready), building_destroyed (a building removed with its
+# health gone), unit_died (a unit removed with its health gone; class and faction of the unit), unit_ready (an own new unit), ship_horn (an own new
+# ship, instead of unit_ready), fire_bullet / fire_shell / fire_missile (a shot; the weapon class qualifies it), explosion_*, water_impact (a blast on
+# an empty water cell), sonar (an enemy submarine comes into view), air_flyby (a moving aircraft of speed 40+, every 6 s each), air_hover (aircraft of
+# speed 20..39, every 4 s each), rig_deploy / rig_pack (a rig unfolds / packs; the building/vehicle swap is not reported as placed / ready / sold).
+#
+# AMBIENCE (S22): [ambience.<key>] sound = "<sound id>", volume = 0..1 plays a stereo loop while a game is on screen. Keys: glass_coast, rust_belt,
+# ash_plains, mountains (the map's theater) and open_sea (when over 60% of the cells around the camera are water). Cross-faded, off in menus,
+# scaled by the Ambience volume setting. No entry = that biome is silent.
+#
+# The sections below the "sfx-generated" marker at the end of the file are written by tools/audio/sfx/make_sfx.py --pick; do not edit them by hand.
+version = 1
+
+[settings]
+default_max_voices = 4
+hearing_radius_cells = 48   # a positional sound is silent beyond this distance from the camera centre
+pan_radius_cells = 24       # horizontal offset that pans fully left or right
+
+[sound.blackout_hum]
+file = "sfx/blackout_hum.wav"
+volume = 1.0
+max_voices = 1
+
+[sound.building_place]
+file = "sfx/building_place.wav"
+volume = 1.0
+max_voices = 2
+
+[sound.construction_complete]
+file = "sfx/construction_complete.wav"
+volume = 1.0
+max_voices = 2
+
+[sound.explosion_large_1]
+file = "sfx/explosion_large_1.wav"
+volume = 1.0
+max_voices = 3
+
+[sound.explosion_large_2]
+file = "sfx/explosion_large_2.wav"
+volume = 1.0
+max_voices = 3
+
+[sound.explosion_small_1]
+file = "sfx/explosion_small_1.wav"
+volume = 1.0
+max_voices = 4
+
+[sound.explosion_small_2]
+file = "sfx/explosion_small_2.wav"
+volume = 1.0
+max_voices = 4
+
+[sound.fire_bullet_1]
+file = "sfx/fire_bullet_1.wav"
+volume = 1.0
+max_voices = 6
+
+[sound.fire_bullet_2]
+file = "sfx/fire_bullet_2.wav"
+volume = 1.0
+max_voices = 6
+
+[sound.fire_cannon_1]
+file = "sfx/fire_cannon_1.wav"
+volume = 1.0
+max_voices = 4
+
+[sound.fire_cannon_2]
+file = "sfx/fire_cannon_2.wav"
+volume = 1.0
+max_voices = 4
+
+[sound.fire_missile]
+file = "sfx/fire_missile.wav"
+volume = 1.0
+max_voices = 3
+
+[sound.harvest_unload]
+file = "sfx/harvest_unload.wav"
+volume = 1.0
+max_voices = 2
+
+[sound.low_funds]
+file = "sfx/low_funds.wav"
+volume = 1.0
+max_voices = 1
+
+[sound.low_power]
+file = "sfx/low_power.wav"
+volume = 1.0
+max_voices = 1
+
+[sound.move_ack_1]
+file = "sfx/move_ack_1.wav"
+volume = 1.0
+max_voices = 2
+
+[sound.move_ack_2]
+file = "sfx/move_ack_2.wav"
+volume = 1.0
+max_voices = 2
+
+[sound.radiation_crackle]
+file = "sfx/radiation_crackle.wav"
+volume = 1.0
+max_voices = 1
+
+[sound.select_1]
+file = "sfx/select_1.wav"
+volume = 1.0
+max_voices = 2
+
+[sound.select_2]
+file = "sfx/select_2.wav"
+volume = 1.0
+max_voices = 2
+
+[sound.sold]
+file = "sfx/sold.wav"
+volume = 1.0
+max_voices = 2
+
+[sound.surface_rumble]
+file = "sfx/surface_rumble.wav"
+volume = 1.0
+max_voices = 2
+
+[sound.tunnel_enter]
+file = "sfx/tunnel_enter.wav"
+volume = 1.0
+max_voices = 2
+
+[sound.under_attack]
+file = "sfx/under_attack.wav"
+volume = 1.0
+max_voices = 1
+
+[sound.unit_ready]
+file = "sfx/unit_ready.wav"
+volume = 1.0
+max_voices = 2
+
+[sound.upgrade_complete]
+file = "sfx/upgrade_complete.wav"
+volume = 1.0
+max_voices = 2
+
+# Menu / interface sounds (M3-20). They reuse existing generated sfx files at low volume; played by MenuSounds, not by a game event.
+# ASSUMED (M3-20): file choice and volumes are guesses made without listening.
+[sound.ui_move]
+file = "sfx/gui_move.wav"   # was sfx/select_2.wav (sfxr, M10-10)
+volume = 0.35
+max_voices = 2
+
+[sound.ui_select]
+file = "sfx/gui_select.wav"   # was sfx/select_1.wav (sfxr, M10-10)
+volume = 0.7
+max_voices = 2
+
+[sound.ui_back]
+file = "sfx/gui_back.wav"   # was sfx/move_ack_2.wav (sfxr, M10-10)
+volume = 0.5
+max_voices = 2
+
+[sound.ui_deny]
+file = "sfx/gui_deny.wav"   # was sfx/low_funds.wav (sfxr, M10-10)
+volume = 0.5
+max_voices = 1
+
+[event.fire_bullet]
+sounds = ["fire_bullet_1", "fire_bullet_2", "wpn_rifle_auth"]
+volume = 0.8
+positional = true
+cooldown_ms = 70
+
+[event.fire_shell]
+sounds = ["fire_cannon_1", "fire_cannon_2", "wpn_cannon_auth"]
+volume = 0.9
+positional = true
+cooldown_ms = 90
+
+[event.fire_missile]
+sounds = ["fire_missile", "wpn_rocket_auth"]
+volume = 0.9
+positional = true
+cooldown_ms = 120
+
+[event.explosion_small]
+sounds = ["explosion_small_1", "explosion_small_2", "exp_small_a", "exp_small_b"]
+volume = 0.9
+positional = true
+cooldown_ms = 80
+
+[event.explosion_large]
+sounds = ["explosion_large_1", "explosion_large_2", "exp_large_a", "exp_large_b"]
+volume = 1.0
+positional = true
+cooldown_ms = 150
+
+[event.unit_select]
+sounds = ["select_1", "select_2"]
+volume = 0.8
+positional = false
+cooldown_ms = 60
+
+[event.move_ack]
+sounds = ["move_ack_1", "move_ack_2"]
+volume = 0.8
+positional = false
+cooldown_ms = 120
+
+[event.building_placed]
+sounds = ["building_place"]
+volume = 1.0
+positional = false
+cooldown_ms = 200
+
+[event.construction_complete]
+sounds = ["construction_complete"]
+volume = 1.0
+positional = false
+cooldown_ms = 1000
+
+[event.unit_ready]
+sounds = ["unit_ready"]
+volume = 1.0
+positional = false
+cooldown_ms = 600
+
+# Session 9 (VET-5): a unit gains a veterancy rank. Reuses the unit_ready cue, quieter (assumed — a dedicated cue can come in the art/audio pass).
+[event.promotion]
+sounds = ["unit_ready", "prod_promotion"]
+volume = 0.6
+positional = false
+cooldown_ms = 300
+
+[event.low_power]
+sounds = ["low_power", "evt_low_power"]
+volume = 1.0
+positional = false
+cooldown_ms = 20000
+
+[event.sold]
+sounds = ["sold", "evt_sold"]
+volume = 1.0
+positional = false
+cooldown_ms = 300
+
+[event.harvester_unload]
+sounds = ["harvest_unload", "evt_harvest_unload"]
+volume = 0.7
+positional = false
+cooldown_ms = 1500
+
+[event.tunnel_enter]
+sounds = ["tunnel_enter", "tunnel_enter_bore"]
+volume = 0.9
+positional = true
+cooldown_ms = 200
+
+[event.surface_rumble]
+sounds = ["surface_rumble", "tunnel_surface_burst"]
+volume = 1.0
+positional = true
+cooldown_ms = 400
+
+[event.radiation_crackle]
+sounds = ["radiation_crackle", "evt_radiation"]
+volume = 0.7
+positional = true
+cooldown_ms = 1200
+
+[event.blackout_hum]
+sounds = ["blackout_hum", "evt_blackout_hum"]
+volume = 0.6
+positional = false
+cooldown_ms = 1200
+
+[event.upgrade_complete]
+sounds = ["upgrade_complete", "evt_upgrade_complete"]
+volume = 1.0
+positional = false
+cooldown_ms = 1000
+
+[event.low_funds]
+sounds = ["low_funds", "evt_low_funds"]
+volume = 1.0
+positional = false
+cooldown_ms = 15000
+
+[event.under_attack]
+sounds = ["under_attack", "evt_under_attack"]
+volume = 1.0
+positional = false
+cooldown_ms = 8000
+
+# Weapon id -> sound class, for EVERY weapon in data/rules/weapons.toml (a test fails when a weapon has no class). S22 (M10-10).
+# The class picks the event family (small_arms, sniper, mg, flame, spray -> fire_bullet; cannon, rail, energy, mortar, howitzer, flak, naval_shell,
+# naval_heavy, depth_charge -> fire_shell; rocket, salvo, sam, harpoon -> fire_missile) and is the first qualifier of the lookup, for example
+# fire_shell.cannon.authority -> fire_shell.cannon -> fire_shell.authority -> fire_shell. 'silent' (death and self-destruct weapons) and 'bomb'
+# (the sound is the detonation, explosion_large.bomb) make no shot sound. Projectile weapons are named by the projectile's weapon; instant weapons by the
+# nearest armed enemy in range of the hit (a guess when several shoot at once). The faction qualifier comes from the weapon id prefix.
+[weapon]
+# Authority
+auth_rifle = "small_arms"
+auth_rocket = "rocket"
+auth_jeep_mg = "mg"
+auth_tank_cannon = "cannon"
+auth_turret_gun = "cannon"
+auth_decon_spray = "spray"
+auth_marksman_rifle = "sniper"
+auth_seismic_mortar_gun = "mortar"
+auth_foam_spray = "spray"
+auth_flak_gun = "flak"
+auth_interceptor_gun = "rocket"
+auth_howitzer_gun = "howitzer"
+auth_bomb = "bomb"
+# Directorate
+dir_rifle = "small_arms"
+dir_ash_spray = "spray"
+dir_collapse_charge = "silent"
+dir_pistol = "small_arms"
+dir_rad_cannon = "energy"
+dir_meltdown = "silent"
+dir_rocket_salvo = "salvo"
+dir_blackout_drop = "spray"
+dir_rail_gun = "rail"
+dir_rocket_nest_gun = "salvo"
+dir_pillbox_gun = "energy"
+dir_rad_mortar_shell = "mortar"
+dir_ash_sow = "spray"
+dir_volunteer_burst = "silent"
+dir_delver_gun = "energy"
+dir_rad_bomb = "bomb"
+# Left Behind
+lb_rifle = "small_arms"
+lb_sling_charge = "mortar"
+lb_flame_hammer = "flame"
+lb_veil_rifle = "sniper"
+lb_hook_pistol = "small_arms"
+lb_buggy_gun = "mg"
+lb_harpoon_gun = "harpoon"
+lb_organ_rack = "salvo"
+lb_dust_drop = "spray"
+lb_fort_cannon = "cannon"
+lb_rotor_gun = "mg"
+lb_kite_bomb = "silent"
+lb_spike_gun = "small_arms"
+lb_flak_gun = "flak"
+# Expedition
+exp_marine_rifle = "small_arms"
+exp_diver_charge = "silent"
+exp_pathfinder_rifle = "sniper"
+exp_ironbound_pod = "rocket"
+exp_glide_cannon = "cannon"
+exp_sparker_missile = "sam"
+exp_barrage_rockets = "salvo"
+exp_launch_charge = "depth_charge"
+exp_destroyer_gun = "naval_shell"
+exp_sub_missile = "rocket"
+exp_cruiser_gun = "naval_heavy"
+exp_carrier_aa = "sam"
+exp_jet_missile = "rocket"
+exp_gunship_rockets = "rocket"
+exp_bomb_run = "bomb"
+exp_pillbox_gun = "mg"
+exp_battery_gun = "naval_shell"
+exp_sam_missile = "sam"
+
+# BEGIN sfx-generated (tools/audio/sfx/make_sfx.py --pick; do not edit by hand, rerun the tool)
+# Stable Audio Open sounds (M10-10). Generated by --pick from tools/audio/sfx/sfx_jobs.toml.
+
+[sound.wpn_rifle_auth]
+file = "sfx/wpn_rifle_auth.wav"
+volume = 1
+max_voices = 4
+
+[sound.wpn_mg_auth]
+file = "sfx/wpn_mg_auth.wav"
+volume = 1
+max_voices = 4
+
+[sound.wpn_sniper_long]
+file = "sfx/wpn_sniper_long.wav"
+volume = 1
+max_voices = 4
+
+[sound.wpn_pistol_dir]
+file = "sfx/wpn_pistol_dir.wav"
+volume = 1
+max_voices = 4
+
+[sound.wpn_rifle_lb]
+file = "sfx/wpn_rifle_lb.wav"
+volume = 1
+max_voices = 4
+
+[sound.wpn_rifle_exp]
+file = "sfx/wpn_rifle_exp.wav"
+volume = 1
+max_voices = 4
+
+[sound.wpn_cannon_auth]
+file = "sfx/wpn_cannon_auth.wav"
+volume = 1
+max_voices = 4
+
+[sound.wpn_cannon_dir]
+file = "sfx/wpn_cannon_dir.wav"
+volume = 1
+max_voices = 4
+
+[sound.wpn_rail_dir]
+file = "sfx/wpn_rail_dir.wav"
+volume = 1
+max_voices = 4
+
+[sound.wpn_cannon_lb]
+file = "sfx/wpn_cannon_lb.wav"
+volume = 1
+max_voices = 4
+
+[sound.wpn_naval_destroyer]
+file = "sfx/wpn_naval_destroyer.wav"
+volume = 1
+max_voices = 4
+
+[sound.wpn_naval_cruiser]
+file = "sfx/wpn_naval_cruiser.wav"
+volume = 1
+max_voices = 4
+
+[sound.wpn_howitzer]
+file = "sfx/wpn_howitzer.wav"
+volume = 1
+max_voices = 4
+
+[sound.wpn_organ_lb]
+file = "sfx/wpn_organ_lb.wav"
+volume = 1
+max_voices = 4
+
+[sound.wpn_rocket_auth]
+file = "sfx/wpn_rocket_auth.wav"
+volume = 1
+max_voices = 4
+
+[sound.wpn_salvo_dir]
+file = "sfx/wpn_salvo_dir.wav"
+volume = 1
+max_voices = 4
+
+[sound.wpn_pod_exp]
+file = "sfx/wpn_pod_exp.wav"
+volume = 1
+max_voices = 4
+
+[sound.wpn_sam]
+file = "sfx/wpn_sam.wav"
+volume = 1
+max_voices = 4
+
+[sound.wpn_harpoon_lb]
+file = "sfx/wpn_harpoon_lb.wav"
+volume = 1
+max_voices = 4
+
+[sound.wpn_flame]
+file = "sfx/wpn_flame.wav"
+volume = 1
+max_voices = 4
+
+[sound.wpn_spray]
+file = "sfx/wpn_spray.wav"
+volume = 1
+max_voices = 4
+
+[sound.wpn_depth_charge]
+file = "sfx/wpn_depth_charge.wav"
+volume = 1
+max_voices = 4
+
+[sound.exp_small_a]
+file = "sfx/exp_small_a.wav"
+volume = 1
+max_voices = 3
+
+[sound.exp_small_b]
+file = "sfx/exp_small_b.wav"
+volume = 1
+max_voices = 3
+
+[sound.exp_large_a]
+file = "sfx/exp_large_a.wav"
+volume = 1
+max_voices = 3
+
+[sound.exp_large_b]
+file = "sfx/exp_large_b.wav"
+volume = 1
+max_voices = 3
+
+[sound.exp_bomb_heavy]
+file = "sfx/exp_bomb_heavy.wav"
+volume = 1
+max_voices = 3
+
+[sound.exp_rad_burst]
+file = "sfx/exp_rad_burst.wav"
+volume = 1
+max_voices = 3
+
+[sound.bld_place_auth]
+file = "sfx/bld_place_auth.wav"
+volume = 1
+max_voices = 2
+
+[sound.bld_place_dir]
+file = "sfx/bld_place_dir.wav"
+volume = 1
+max_voices = 2
+
+[sound.bld_place_lb]
+file = "sfx/bld_place_lb.wav"
+volume = 1
+max_voices = 2
+
+[sound.bld_place_exp]
+file = "sfx/bld_place_exp.wav"
+volume = 1
+max_voices = 2
+
+[sound.bld_done_auth]
+file = "sfx/bld_done_auth.wav"
+volume = 1
+max_voices = 2
+
+[sound.bld_done_dir]
+file = "sfx/bld_done_dir.wav"
+volume = 1
+max_voices = 2
+
+[sound.bld_done_lb]
+file = "sfx/bld_done_lb.wav"
+volume = 1
+max_voices = 2
+
+[sound.bld_done_exp]
+file = "sfx/bld_done_exp.wav"
+volume = 1
+max_voices = 2
+
+[sound.bld_destroyed_auth]
+file = "sfx/bld_destroyed_auth.wav"
+volume = 1
+max_voices = 2
+
+[sound.bld_destroyed_dir]
+file = "sfx/bld_destroyed_dir.wav"
+volume = 1
+max_voices = 2
+
+[sound.bld_destroyed_lb]
+file = "sfx/bld_destroyed_lb.wav"
+volume = 1
+max_voices = 2
+
+[sound.bld_destroyed_exp]
+file = "sfx/bld_destroyed_exp.wav"
+volume = 1
+max_voices = 2
+
+[sound.die_inf_auth]
+file = "sfx/die_inf_auth.wav"
+volume = 1
+max_voices = 2
+
+[sound.die_inf_dir]
+file = "sfx/die_inf_dir.wav"
+volume = 1
+max_voices = 2
+
+[sound.die_inf_lb]
+file = "sfx/die_inf_lb.wav"
+volume = 1
+max_voices = 2
+
+[sound.die_inf_exp]
+file = "sfx/die_inf_exp.wav"
+volume = 1
+max_voices = 2
+
+[sound.die_veh_auth]
+file = "sfx/die_veh_auth.wav"
+volume = 1
+max_voices = 2
+
+[sound.die_veh_dir]
+file = "sfx/die_veh_dir.wav"
+volume = 1
+max_voices = 2
+
+[sound.die_veh_lb]
+file = "sfx/die_veh_lb.wav"
+volume = 1
+max_voices = 2
+
+[sound.die_veh_exp]
+file = "sfx/die_veh_exp.wav"
+volume = 1
+max_voices = 2
+
+[sound.die_ship]
+file = "sfx/die_ship.wav"
+volume = 1
+max_voices = 2
+
+[sound.die_air_crash]
+file = "sfx/die_air_crash.wav"
+volume = 1
+max_voices = 2
+
+[sound.prod_ready_auth]
+file = "sfx/prod_ready_auth.wav"
+volume = 1
+max_voices = 2
+
+[sound.prod_ready_dir]
+file = "sfx/prod_ready_dir.wav"
+volume = 1
+max_voices = 2
+
+[sound.prod_ready_lb]
+file = "sfx/prod_ready_lb.wav"
+volume = 1
+max_voices = 2
+
+[sound.prod_ready_exp]
+file = "sfx/prod_ready_exp.wav"
+volume = 1
+max_voices = 2
+
+[sound.prod_promotion]
+file = "sfx/prod_promotion.wav"
+volume = 0.9
+max_voices = 2
+
+[sound.tunnel_enter_bore]
+file = "sfx/tunnel_enter_bore.wav"
+volume = 1
+max_voices = 2
+
+[sound.tunnel_surface_burst]
+file = "sfx/tunnel_surface_burst.wav"
+volume = 1
+max_voices = 2
+
+[sound.rig_deploy_lb]
+file = "sfx/rig_deploy_lb.wav"
+volume = 1
+max_voices = 2
+
+[sound.nav_splash_shell]
+file = "sfx/nav_splash_shell.wav"
+volume = 1
+max_voices = 2
+
+[sound.nav_sonar_ping]
+file = "sfx/nav_sonar_ping.wav"
+volume = 1
+max_voices = 2
+
+[sound.nav_ship_horn]
+file = "sfx/nav_ship_horn.wav"
+volume = 1
+max_voices = 2
+
+[sound.air_jet_flyby]
+file = "sfx/air_jet_flyby.wav"
+volume = 1
+max_voices = 2
+
+[sound.air_rotor_hover]
+file = "sfx/air_rotor_hover.wav"
+volume = 1
+max_voices = 2
+
+[sound.evt_sold]
+file = "sfx/evt_sold.wav"
+volume = 1
+max_voices = 2
+
+[sound.evt_harvest_unload]
+file = "sfx/evt_harvest_unload.wav"
+volume = 0.9
+max_voices = 2
+
+[sound.evt_upgrade_complete]
+file = "sfx/evt_upgrade_complete.wav"
+volume = 1
+max_voices = 2
+
+[sound.evt_low_power]
+file = "sfx/evt_low_power.wav"
+volume = 1
+max_voices = 2
+
+[sound.evt_low_funds]
+file = "sfx/evt_low_funds.wav"
+volume = 1
+max_voices = 2
+
+[sound.evt_under_attack]
+file = "sfx/evt_under_attack.wav"
+volume = 1
+max_voices = 2
+
+[sound.evt_radiation]
+file = "sfx/evt_radiation.wav"
+volume = 1
+max_voices = 2
+
+[sound.evt_blackout_hum]
+file = "sfx/evt_blackout_hum.wav"
+volume = 1
+max_voices = 2
+
+[sound.amb_glass_coast]
+file = "sfx/amb_glass_coast.wav"
+volume = 1
+max_voices = 1
+
+[sound.amb_rust_belt]
+file = "sfx/amb_rust_belt.wav"
+volume = 1
+max_voices = 1
+
+[sound.amb_ash_plains]
+file = "sfx/amb_ash_plains.wav"
+volume = 1
+max_voices = 1
+
+[sound.amb_mountains]
+file = "sfx/amb_mountains.wav"
+volume = 1
+max_voices = 1
+
+[sound.amb_open_sea]
+file = "sfx/amb_open_sea.wav"
+volume = 1
+max_voices = 1
+
+[event.air_flyby]
+sounds = ["air_jet_flyby"]
+volume = 0.7
+positional = true
+cooldown_ms = 1500
+
+[event.air_hover]
+sounds = ["air_rotor_hover"]
+volume = 0.5
+positional = true
+cooldown_ms = 800
+
+[event.building_destroyed.authority]
+sounds = ["bld_destroyed_auth"]
+volume = 1
+positional = true
+cooldown_ms = 150
+
+[event.building_destroyed.directorate]
+sounds = ["bld_destroyed_dir"]
+volume = 1
+positional = true
+cooldown_ms = 150
+
+[event.building_destroyed.expedition]
+sounds = ["bld_destroyed_exp"]
+volume = 1
+positional = true
+cooldown_ms = 150
+
+[event.building_destroyed.left_behind]
+sounds = ["bld_destroyed_lb"]
+volume = 1
+positional = true
+cooldown_ms = 150
+
+[event.building_placed.authority]
+sounds = ["bld_place_auth"]
+volume = 1
+positional = false
+cooldown_ms = 200
+
+[event.building_placed.directorate]
+sounds = ["bld_place_dir"]
+volume = 1
+positional = false
+cooldown_ms = 200
+
+[event.building_placed.expedition]
+sounds = ["bld_place_exp"]
+volume = 1
+positional = false
+cooldown_ms = 200
+
+[event.building_placed.left_behind]
+sounds = ["bld_place_lb"]
+volume = 1
+positional = false
+cooldown_ms = 200
+
+[event.construction_complete.authority]
+sounds = ["bld_done_auth"]
+volume = 1
+positional = false
+cooldown_ms = 1000
+
+[event.construction_complete.directorate]
+sounds = ["bld_done_dir"]
+volume = 1
+positional = false
+cooldown_ms = 1000
+
+[event.construction_complete.expedition]
+sounds = ["bld_done_exp"]
+volume = 1
+positional = false
+cooldown_ms = 1000
+
+[event.construction_complete.left_behind]
+sounds = ["bld_done_lb"]
+volume = 1
+positional = false
+cooldown_ms = 1000
+
+[event.explosion_large.bomb]
+sounds = ["exp_bomb_heavy"]
+volume = 1
+positional = true
+cooldown_ms = 150
+
+[event.fire_bullet.flame]
+sounds = ["wpn_flame"]
+volume = 0.8
+positional = true
+cooldown_ms = 70
+
+[event.fire_bullet.mg]
+sounds = ["wpn_mg_auth"]
+volume = 0.8
+positional = true
+cooldown_ms = 70
+
+[event.fire_bullet.mg.authority]
+sounds = ["wpn_mg_auth"]
+volume = 0.8
+positional = true
+cooldown_ms = 70
+
+[event.fire_bullet.small_arms]
+sounds = ["wpn_rifle_auth"]
+volume = 0.8
+positional = true
+cooldown_ms = 70
+
+[event.fire_bullet.small_arms.authority]
+sounds = ["wpn_rifle_auth"]
+volume = 0.8
+positional = true
+cooldown_ms = 70
+
+[event.fire_bullet.small_arms.directorate]
+sounds = ["wpn_pistol_dir"]
+volume = 0.8
+positional = true
+cooldown_ms = 70
+
+[event.fire_bullet.small_arms.expedition]
+sounds = ["wpn_rifle_exp"]
+volume = 0.8
+positional = true
+cooldown_ms = 70
+
+[event.fire_bullet.small_arms.left_behind]
+sounds = ["wpn_rifle_lb"]
+volume = 0.8
+positional = true
+cooldown_ms = 70
+
+[event.fire_bullet.sniper]
+sounds = ["wpn_sniper_long"]
+volume = 0.8
+positional = true
+cooldown_ms = 70
+
+[event.fire_bullet.spray]
+sounds = ["wpn_spray"]
+volume = 0.8
+positional = true
+cooldown_ms = 70
+
+[event.fire_missile.harpoon]
+sounds = ["wpn_harpoon_lb"]
+volume = 0.9
+positional = true
+cooldown_ms = 120
+
+[event.fire_missile.rocket]
+sounds = ["wpn_rocket_auth"]
+volume = 0.9
+positional = true
+cooldown_ms = 120
+
+[event.fire_missile.rocket.authority]
+sounds = ["wpn_rocket_auth"]
+volume = 0.9
+positional = true
+cooldown_ms = 120
+
+[event.fire_missile.rocket.expedition]
+sounds = ["wpn_pod_exp"]
+volume = 0.9
+positional = true
+cooldown_ms = 120
+
+[event.fire_missile.salvo]
+sounds = ["wpn_salvo_dir"]
+volume = 0.9
+positional = true
+cooldown_ms = 120
+
+[event.fire_missile.salvo.directorate]
+sounds = ["wpn_salvo_dir"]
+volume = 0.9
+positional = true
+cooldown_ms = 120
+
+[event.fire_missile.salvo.left_behind]
+sounds = ["wpn_organ_lb"]
+volume = 0.9
+positional = true
+cooldown_ms = 120
+
+[event.fire_missile.sam]
+sounds = ["wpn_sam"]
+volume = 0.9
+positional = true
+cooldown_ms = 120
+
+[event.fire_shell.cannon]
+sounds = ["wpn_cannon_auth"]
+volume = 0.9
+positional = true
+cooldown_ms = 90
+
+[event.fire_shell.cannon.authority]
+sounds = ["wpn_cannon_auth"]
+volume = 0.9
+positional = true
+cooldown_ms = 90
+
+[event.fire_shell.cannon.left_behind]
+sounds = ["wpn_cannon_lb"]
+volume = 0.9
+positional = true
+cooldown_ms = 90
+
+[event.fire_shell.depth_charge]
+sounds = ["wpn_depth_charge"]
+volume = 0.9
+positional = true
+cooldown_ms = 90
+
+[event.fire_shell.energy]
+sounds = ["wpn_cannon_dir"]
+volume = 0.9
+positional = true
+cooldown_ms = 90
+
+[event.fire_shell.energy.directorate]
+sounds = ["wpn_cannon_dir"]
+volume = 0.9
+positional = true
+cooldown_ms = 90
+
+[event.fire_shell.howitzer]
+sounds = ["wpn_howitzer"]
+volume = 0.9
+positional = true
+cooldown_ms = 90
+
+[event.fire_shell.mortar]
+sounds = ["wpn_howitzer"]
+volume = 0.9
+positional = true
+cooldown_ms = 90
+
+[event.fire_shell.naval_heavy]
+sounds = ["wpn_naval_cruiser"]
+volume = 0.9
+positional = true
+cooldown_ms = 90
+
+[event.fire_shell.naval_shell]
+sounds = ["wpn_naval_destroyer"]
+volume = 0.9
+positional = true
+cooldown_ms = 90
+
+[event.fire_shell.rail]
+sounds = ["wpn_rail_dir"]
+volume = 0.9
+positional = true
+cooldown_ms = 90
+
+[event.fire_shell.rail.directorate]
+sounds = ["wpn_rail_dir"]
+volume = 0.9
+positional = true
+cooldown_ms = 90
+
+[event.rig_deploy]
+sounds = ["rig_deploy_lb"]
+volume = 1
+positional = true
+cooldown_ms = 1000
+
+[event.rig_pack]
+sounds = ["rig_deploy_lb"]
+volume = 1
+positional = true
+cooldown_ms = 1000
+
+[event.ship_horn]
+sounds = ["nav_ship_horn"]
+volume = 0.9
+positional = false
+cooldown_ms = 2500
+
+[event.sonar]
+sounds = ["nav_sonar_ping"]
+volume = 0.8
+positional = true
+cooldown_ms = 4000
+
+[event.unit_died.air]
+sounds = ["die_air_crash"]
+volume = 0.9
+positional = true
+cooldown_ms = 60
+
+[event.unit_died.infantry.authority]
+sounds = ["die_inf_auth"]
+volume = 0.9
+positional = true
+cooldown_ms = 60
+
+[event.unit_died.infantry.directorate]
+sounds = ["die_inf_dir"]
+volume = 0.9
+positional = true
+cooldown_ms = 60
+
+[event.unit_died.infantry.expedition]
+sounds = ["die_inf_exp"]
+volume = 0.9
+positional = true
+cooldown_ms = 60
+
+[event.unit_died.infantry.left_behind]
+sounds = ["die_inf_lb"]
+volume = 0.9
+positional = true
+cooldown_ms = 60
+
+[event.unit_died.ship]
+sounds = ["die_ship"]
+volume = 0.9
+positional = true
+cooldown_ms = 60
+
+[event.unit_died.vehicle.authority]
+sounds = ["die_veh_auth"]
+volume = 0.9
+positional = true
+cooldown_ms = 60
+
+[event.unit_died.vehicle.directorate]
+sounds = ["die_veh_dir"]
+volume = 0.9
+positional = true
+cooldown_ms = 60
+
+[event.unit_died.vehicle.expedition]
+sounds = ["die_veh_exp"]
+volume = 0.9
+positional = true
+cooldown_ms = 60
+
+[event.unit_died.vehicle.left_behind]
+sounds = ["die_veh_lb"]
+volume = 0.9
+positional = true
+cooldown_ms = 60
+
+[event.unit_ready.authority]
+sounds = ["prod_ready_auth"]
+volume = 1
+positional = false
+cooldown_ms = 600
+
+[event.unit_ready.directorate]
+sounds = ["prod_ready_dir"]
+volume = 1
+positional = false
+cooldown_ms = 600
+
+[event.unit_ready.expedition]
+sounds = ["prod_ready_exp"]
+volume = 1
+positional = false
+cooldown_ms = 600
+
+[event.unit_ready.left_behind]
+sounds = ["prod_ready_lb"]
+volume = 1
+positional = false
+cooldown_ms = 600
+
+[event.water_impact]
+sounds = ["nav_splash_shell"]
+volume = 0.9
+positional = true
+cooldown_ms = 100
+
+[event.water_impact.large]
+sounds = ["nav_splash_shell"]
+volume = 0.9
+positional = true
+cooldown_ms = 100
+
+[ambience.glass_coast]
+sound = "amb_glass_coast"
+volume = 0.5
+
+[ambience.rust_belt]
+sound = "amb_rust_belt"
+volume = 0.5
+
+[ambience.ash_plains]
+sound = "amb_ash_plains"
+volume = 0.5
+
+[ambience.mountains]
+sound = "amb_mountains"
+volume = 0.5
+
+[ambience.open_sea]
+sound = "amb_open_sea"
+volume = 0.5
+
+# END sfx-generated

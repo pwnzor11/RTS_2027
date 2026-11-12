@@ -34,7 +34,7 @@ class JobTests(unittest.TestCase):
             self.assertIn("music", j["negative"])
             self.assertEqual(j["file"], f"sfx/{j['id']}.wav")
             self.assertIsNone(BRANDS.search(j["prompt"]), j["id"])
-            self.assertTrue(j["events"] or j["mix_into"] or j["planned"] or j["repoint"], j["id"])
+            self.assertTrue(j["events"] or j["mix_into"] or j["planned"] or j["repoint"] or j["ambience"], j["id"])
 
     def test_ids_do_not_clash_with_existing_sfxr_sounds(self):
         existing = {p.stem for p in m.DEFAULT_SFX_DIR.glob("*.wav") if not (m.DEFAULT_OUT / p.stem).exists()}
@@ -47,9 +47,36 @@ class JobTests(unittest.TestCase):
         tables = tomllib.loads(text)
         for j in self.jobs:
             for e in j["events"] + j["mix_into"]:
-                self.assertIn(e, tables["event"], f"{j['id']} -> {e}")
+                base = e.split(".")[0]   # a qualified key (unit_died.infantry.directorate) needs its plain event, or defaults in the jobs file
+                self.assertTrue(base in tables["event"] or base in self.data["event_defaults"], f"{j['id']} -> {e}")
             if j["repoint"]:
                 self.assertIn(j["repoint"], tables["sound"], j["id"])
+
+    def test_default_rate_is_22k_and_every_loop_has_a_biome(self):
+        self.assertEqual(m.OUTPUT_RATE, 22050)
+        for j in self.jobs:
+            self.assertLessEqual(j["rate"], 32000, j["id"])
+            if not j["loop"]:
+                self.assertEqual(j["channels"], 1, j["id"])
+                self.assertEqual(j["rate"], 22050, j["id"])
+        self.assertEqual(sorted(j["ambience"] for j in self.jobs if j["ambience"]),
+                         ["ash_plains", "glass_coast", "mountains", "open_sea", "rust_belt"])
+
+    def test_event_keys_are_known_to_the_game(self):
+        # plain event names the game raises (AudioEventKind) and the qualifier words it builds
+        kinds = {"fire_bullet", "fire_shell", "fire_missile", "explosion_small", "explosion_large", "building_placed", "construction_complete",
+                 "unit_ready", "unit_died", "building_destroyed", "water_impact", "sonar", "ship_horn", "air_flyby", "air_hover", "rig_deploy",
+                 "rig_pack", "tunnel_enter", "surface_rumble", "promotion", "sold", "harvester_unload", "upgrade_complete", "low_power", "low_funds",
+                 "under_attack", "radiation_crackle", "blackout_hum"}
+        factions = {"authority", "directorate", "left_behind", "expedition"}
+        for j in self.jobs:
+            for e in j["events"]:
+                parts = e.split(".")
+                self.assertIn(parts[0], kinds, e)
+                for q in parts[1:]:
+                    self.assertTrue(q in factions or q.isidentifier(), e)
+                if parts[0] in ("building_placed", "construction_complete", "building_destroyed") and len(parts) == 2:
+                    self.assertIn(parts[1], factions, e)
 
     def test_loops_are_stereo_and_long(self):
         loops = [j for j in self.jobs if j["loop"]]
@@ -221,17 +248,55 @@ class PickTests(unittest.TestCase):
             m.parse_picks(["nonsense"], None)
 
 
+class QualifiedKeyTests(unittest.TestCase):
+    def test_qualified_events_and_ambience_are_written(self):
+        base = {"category": "weapons", "volume": 1.0, "max_voices": 4, "planned": "", "repoint": "", "events": [], "mix_into": [], "ambience": ""}
+        jobs = [
+            {**base, "id": "cannon_a", "file": "sfx/cannon_a.wav", "events": ["fire_bullet.mg.authority", "fire_bullet.mg", "sonar"]},
+            {**base, "id": "amb_x", "file": "sfx/amb_x.wav", "ambience": "glass_coast", "loop": True},
+        ]
+        defaults = {"sonar": {"volume": 0.8, "positional": True, "cooldown_ms": 4000}, "ambience": {"volume": 0.4}}
+        text = SOUNDS
+        new, notes = m.update_sounds_toml(text, jobs, {"cannon_a", "amb_x"}, event_defaults=defaults)
+        d = tomllib.loads(new)
+        self.assertEqual(notes, [])
+        ev = d["event"]["fire_bullet"]
+        self.assertEqual(ev["sounds"], ["old_1"])   # the plain event is untouched
+        self.assertEqual(ev["mg"]["authority"]["sounds"], ["cannon_a"])
+        self.assertEqual(ev["mg"]["authority"]["cooldown_ms"], 0)   # taken from the plain event (the fixture has none)
+        self.assertEqual(ev["mg"]["authority"]["volume"], 0.8)
+        self.assertEqual(d["event"]["sonar"]["cooldown_ms"], 4000)
+        self.assertEqual(d["ambience"]["glass_coast"], {"sound": "amb_x", "volume": 0.4})
+        again, _ = m.update_sounds_toml(new, jobs, {"cannon_a", "amb_x"}, event_defaults=defaults)
+        self.assertEqual(new, again)
+        back, _ = m.update_sounds_toml(new, jobs, set(), event_defaults=defaults)
+        self.assertNotIn("ambience", tomllib.loads(back))
+        self.assertNotIn("mg", tomllib.loads(back)["event"]["fire_bullet"])
+
+
 class RealFileTests(unittest.TestCase):
     def test_real_sounds_toml_survives_all_files_present(self):
         jobs = m.load_jobs()["jobs"]
         text = m.DEFAULT_SOUNDS.read_text(encoding="utf-8")
-        new, notes = m.update_sounds_toml(text, jobs, {j["id"] for j in jobs}, mix=True)
+        defaults = m.load_jobs()["event_defaults"]
+        new, notes = m.update_sounds_toml(text, jobs, {j["id"] for j in jobs}, mix=True, event_defaults=defaults)
         d = tomllib.loads(new)
         self.assertEqual(notes, [])
-        for name, ev in d["event"].items():
-            for s in ev["sounds"]:
-                self.assertIn(s, d["sound"], f"{name} -> {s}")
-        again, _ = m.update_sounds_toml(new, jobs, {j["id"] for j in jobs}, mix=True)
+
+        def walk(name, table):
+            if "sounds" in table:
+                for s in table["sounds"]:
+                    self.assertIn(s, d["sound"], f"{name} -> {s}")
+            for k, v in table.items():
+                if isinstance(v, dict):
+                    walk(f"{name}.{k}", v)
+        walk("event", d["event"])
+        self.assertEqual(d["event"]["building_placed"]["authority"]["sounds"], ["bld_place_auth"])
+        self.assertEqual(d["event"]["unit_died"]["infantry"]["directorate"]["sounds"], ["die_inf_dir"])
+        self.assertEqual(d["event"]["fire_shell"]["cannon"]["authority"]["sounds"], ["wpn_cannon_auth"])
+        self.assertEqual(d["ambience"]["open_sea"]["sound"], "amb_open_sea")
+        self.assertEqual(sorted(d["ambience"]), ["ash_plains", "glass_coast", "mountains", "open_sea", "rust_belt"])
+        again, _ = m.update_sounds_toml(new, jobs, {j["id"] for j in jobs}, mix=True, event_defaults=defaults)
         self.assertEqual(new, again)
 
 

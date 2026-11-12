@@ -24,6 +24,9 @@ public sealed class MonoGameAudio : IAudio
     private int _musicVolume = 100;
     private int _sfxVolume = 100;
     private int _masterVolume = 100;
+    private int _ambienceVolume = 100;
+    private readonly List<AmbienceVoice> _ambience = new();
+    private const int MaxSimultaneousSfx = 40;   // S22: no new one-shot starts while this many are playing
     private float _fade = 1f;
     private bool _broken;
 
@@ -44,6 +47,103 @@ public sealed class MonoGameAudio : IAudio
         {
             _masterVolume = Math.Clamp(value, 0, 100);
             ApplyMusicVolume();
+            ApplyAmbienceVolume();
+        }
+    }
+
+    /// <inheritdoc />
+    public int AmbienceVolume
+    {
+        get => _ambienceVolume;
+        set
+        {
+            _ambienceVolume = Math.Clamp(value, 0, 100);
+            ApplyAmbienceVolume();
+        }
+    }
+
+    /// <inheritdoc />
+    public IAmbienceVoice? StartAmbience(string soundId, float gain)
+    {
+        if (_broken) return null;
+        SoundDef? def = _bank.Sound(soundId);
+        if (def is null) return null;
+        try
+        {
+            SoundEffect? effect = Effect(def);
+            if (effect is null) return null;
+            SoundEffectInstance instance = effect.CreateInstance();
+            instance.IsLooped = true;
+            var voice = new AmbienceVoice(this, instance, def.Volume) { Gain = Math.Clamp(gain, 0f, 1f) };
+            voice.Apply();
+            instance.Play();
+            _ambience.Add(voice);
+            return voice;
+        }
+        catch (Exception e) when (e is NoAudioHardwareException or InvalidOperationException or IOException)
+        {
+            Fail(e);
+            return null;
+        }
+    }
+
+    private float AmbienceScale => _ambienceVolume / 100f * (_masterVolume / 100f);
+
+    private void ApplyAmbienceVolume()
+    {
+        if (_broken) return;
+        foreach (AmbienceVoice v in _ambience) v.Apply();
+    }
+
+    private sealed class AmbienceVoice : IAmbienceVoice
+    {
+        private readonly MonoGameAudio _owner;
+        private readonly SoundEffectInstance _instance;
+        private readonly float _base;
+        private bool _stopped;
+
+        public AmbienceVoice(MonoGameAudio owner, SoundEffectInstance instance, float baseVolume)
+        {
+            _owner = owner;
+            _instance = instance;
+            _base = baseVolume;
+        }
+
+        public float Gain { get; set; }
+
+        public void SetGain(float gain)
+        {
+            Gain = Math.Clamp(gain, 0f, 1f);
+            Apply();
+        }
+
+        public void Apply()
+        {
+            if (_stopped || _owner._broken) return;
+            try
+            {
+                _instance.Volume = Math.Clamp(Gain * _base * _owner.AmbienceScale, 0f, 1f);
+            }
+            catch (Exception e) when (e is NoAudioHardwareException or InvalidOperationException or ObjectDisposedException)
+            {
+                _stopped = true;
+            }
+        }
+
+        public void Stop()
+        {
+            if (_stopped) return;
+            _stopped = true;
+            _owner._ambience.Remove(this);
+            try
+            {
+                _instance.Stop();
+                _instance.Dispose();
+            }
+            catch (Exception e) when (e is NoAudioHardwareException or InvalidOperationException or ObjectDisposedException)
+            {
+                // the device went away; nothing left to stop
+            }
         }
     }
 
@@ -88,6 +188,8 @@ public sealed class MonoGameAudio : IAudio
                     _active.RemoveAt(i);
                 }
             }
+
+            if (_active.Count >= MaxSimultaneousSfx) return;   // S22: a hard ceiling on the voices of a big battle
 
             SoundEffectInstance voice = effect.CreateInstance();
             voice.Volume = Math.Clamp(gain * def.Volume * (_sfxVolume / 100f) * (_masterVolume / 100f), 0f, 1f);

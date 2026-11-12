@@ -8,14 +8,18 @@
 #   seconds       generation window in seconds (the model is told this length; the file is trimmed to the sound, never longer)
 #   takes         how many alternatives to generate (default 3)
 #   channels      1 = mono downmix, 2 = keep stereo
-#   rate          output sample rate (default 44100)
+#   rate          output sample rate (default 22050; one-shots mono, ambience stereo; S22 storage decision, the WAVs go through Git LFS)
 #   peak_db       peak ceiling in dBFS; rms_db optional loudness target (RMS of the trimmed sound, capped by the peak ceiling)
 #   trim_db       leading/trailing silence threshold in dBFS below the peak; fade_in_ms, fade_out_ms; trim=false keeps length
 #   loop          true = make a seamless loop by cross-fading the tail into the head over loop_xfade seconds (no trim, no fades)
 #   cfg           classifier-free guidance scale (default 7.0)
-#   events        sounds.toml events the CODE PLAYS TODAY; the sound is added as another random variant of each
-#   mix_into      events it can ALSO be mixed into (only with `--pick --mix`, as a stop-gap until the per-faction code exists)
-#   planned       the event the sound is meant for once src/ can pick it (faction / class / biome / weapon); informational
+#   events        sounds.toml event keys the sound plays for. A plain key that already has an [event.x] (fire_bullet, explosion_small ...) gets the sound as
+#                 one more random variant. A qualified key (S22) such as building_placed.authority, unit_died.infantry.directorate or fire_shell.cannon.authority
+#                 becomes its own [event.<key>] section; the game looks keys up most specific first (class.faction, class, faction, plain; see the top of sounds.toml)
+#                 and falls back to the plain event, so the game runs with any subset of the files.
+#   ambience      a biome key (glass_coast rust_belt ash_plains mountains open_sea): the file becomes the looping [ambience.<key>] sound
+#   mix_into      events it can ALSO be mixed into as an extra random variant (only with `--pick --mix`; no job uses it since the S22 code reads faction keys)
+#   planned       informational note (only for a sound nothing plays yet)
 #   repoint       an existing [sound.<id>] whose file is switched to this one when picked (menu sounds have no variants; their volume stays as tuned in sounds.toml)
 #   volume, max_voices   written to the [sound.<id>] entry
 # Faction voices: Authority = 1960s mechanical (steel, relays, bells, diesel); Directorate = industrial and radioactive (pneumatic,
@@ -25,7 +29,7 @@
 [defaults]
 takes = 3
 channels = 1
-rate = 44100
+rate = 22050   # S22 decision A: one-shots 22.05 kHz mono 16-bit (about 44 KB per second); the model renders 44.1 kHz and the tool resamples
 seconds = 2.0
 peak_db = -1.5
 trim = true
@@ -35,6 +39,57 @@ fade_out_ms = 60
 cfg = 7.0
 volume = 1.0
 negative = "music, melody, singing, voice, speech, talking, whispering, crowd, laughter, drum loop, rhythm, beat, reverb wash, background noise, hiss, distortion, low quality"
+
+# Defaults for the [event.<key>] sections that --pick creates for keys with no plain [event.x] in sounds.toml (qualified keys copy volume,
+# positional and cooldown_ms from their plain event when it exists, so fire_shell.cannon.authority takes them from fire_shell).
+[event_defaults.unit_died]
+volume = 0.9
+positional = true
+cooldown_ms = 60
+
+[event_defaults.building_destroyed]
+volume = 1.0
+positional = true
+cooldown_ms = 150
+
+[event_defaults.water_impact]
+volume = 0.9
+positional = true
+cooldown_ms = 100
+
+[event_defaults.sonar]
+volume = 0.8
+positional = true
+cooldown_ms = 4000
+
+[event_defaults.ship_horn]
+volume = 0.9
+positional = false
+cooldown_ms = 2500
+
+[event_defaults.air_flyby]
+volume = 0.7
+positional = true
+cooldown_ms = 1500
+
+[event_defaults.air_hover]
+volume = 0.5
+positional = true
+cooldown_ms = 800
+
+[event_defaults.rig_deploy]
+volume = 1.0
+positional = true
+cooldown_ms = 1000
+
+[event_defaults.rig_pack]
+volume = 1.0
+positional = true
+cooldown_ms = 1000
+
+[event_defaults.ambience]
+volume = 0.5   # the quiet level of every [ambience.<key>] entry
+
 
 [category.weapons]
 label = "Weapons: small arms, cannons, missiles, special"
@@ -86,7 +141,7 @@ seconds = 24.0
 channels = 2
 loop = true
 loop_xfade = 2.0
-rate = 32000
+rate = 22050   # stereo loop, about 88 KB per second: 22 s is 1.9 MB. Use 32000 here for a crisper loop (2.8 MB) if you can hear the difference
 trim = false
 peak_db = -3.0
 rms_db = -26
@@ -94,162 +149,147 @@ takes = 2
 negative_extra = "sudden loud events, thunder crack, footsteps, distinct beats"
 
 # =====================================================================================================================
-# WEAPONS. Code today: fire_bullet (instant hits), fire_shell (EVERY new projectile, rockets included), fire_missile (never
-# raised by the deriver, only by a weapon-aware caller). Per weapon / faction / class needs src/ (see QUESTIONS in the hand-back).
+# WEAPONS. The shot raises fire_bullet / fire_shell / fire_missile qualified by the weapon class of the [weapon] table of sounds.toml and by the
+# faction of the weapon id: fire_shell.cannon.authority -> fire_shell.cannon -> fire_shell.authority -> fire_shell. Classes: small_arms sniper mg flame spray |
+# cannon rail energy mortar howitzer flak naval_shell naval_heavy depth_charge | rocket salvo sam harpoon. Flak, bomb and silent (death) weapons have no job:
+# flak uses fire_shell, bombs sound as explosion_large.bomb, death weapons as the explosion.
 # =====================================================================================================================
 
 [job.wpn_rifle_auth]
 category = "weapons"
 prompt = "single rifle shot, sharp dry crack with a short mechanical bolt clack, outdoors, close microphone, no echo"
 seconds = 1.5
-events = ["fire_bullet"]
-planned = "fire_bullet:authority"
+events = ["fire_bullet", "fire_bullet.small_arms", "fire_bullet.small_arms.authority"]
 
 [job.wpn_mg_auth]
 category = "weapons"
 prompt = "short burst of five light machine gun shots, fast rattling dry cracks, steel action clatter, outdoors, close microphone"
 seconds = 2.0
-events = ["fire_bullet"]
-planned = "fire_bullet:authority_vehicle_mg"
+events = ["fire_bullet.mg", "fire_bullet.mg.authority"]
 
 [job.wpn_sniper_long]
 category = "weapons"
 prompt = "single long-range bolt-action rifle shot, loud sharp crack with a distant flat slap echo, outdoors"
 seconds = 2.5
-planned = "fire_bullet:sniper (auth_marksman_rifle, lb_veil_rifle, exp_pathfinder_rifle)"
-mix_into = ["fire_bullet"]
+events = ["fire_bullet.sniper"]
 
 [job.wpn_pistol_dir]
 category = "weapons"
 prompt = "single heavy pistol shot in a concrete corridor, flat hard crack with a short slap echo and a dull metallic ring"
 seconds = 1.5
-planned = "fire_bullet:directorate (dir_rifle, dir_pistol)"
-mix_into = ["fire_bullet"]
+events = ["fire_bullet.small_arms.directorate"]
 
 [job.wpn_rifle_lb]
 category = "weapons"
 prompt = "single crude homemade rifle shot, rattly low crack with a rusty metal clatter and a loose rattle, outdoors in a desert"
 seconds = 1.5
-planned = "fire_bullet:left_behind (lb_rifle, lb_hook_pistol, lb_buggy_gun)"
-mix_into = ["fire_bullet"]
+events = ["fire_bullet.small_arms.left_behind"]
 
 [job.wpn_rifle_exp]
 category = "weapons"
 prompt = "single rifle shot, clean snappy crack with a faint electronic whine, open water with a faint distant echo"
 seconds = 1.5
-planned = "fire_bullet:expedition (exp_marine_rifle)"
-mix_into = ["fire_bullet"]
+events = ["fire_bullet.small_arms.expedition"]
 
 [job.wpn_cannon_auth]
 category = "weapons"
 prompt = "close heavy tank cannon shot, sharp crack and low boom, short metallic tail, dry, no music"
 seconds = 3.0
-events = ["fire_shell"]
-planned = "fire_shell:authority (auth_tank_cannon)"
+events = ["fire_shell", "fire_shell.cannon", "fire_shell.cannon.authority"]
 
 [job.wpn_cannon_dir]
 category = "weapons"
 prompt = "heavy energy cannon shot, deep thump with a rising electrical hum and a crackling discharge, industrial, short tail"
 seconds = 3.0
-planned = "fire_shell:directorate (dir_rad_cannon, dir_delver_gun, dir_pillbox_gun)"
-mix_into = ["fire_shell"]
+events = ["fire_shell.energy", "fire_shell.energy.directorate"]
 
 [job.wpn_rail_dir]
 category = "weapons"
 prompt = "electric railgun shot, a sharp electrical snap then a metallic crack and a brief high ringing, no explosion"
 seconds = 2.5
-planned = "fire_shell:directorate_rail (dir_rail_gun)"
-mix_into = ["fire_shell"]
+events = ["fire_shell.rail", "fire_shell.rail.directorate"]
 
 [job.wpn_cannon_lb]
 category = "weapons"
 prompt = "huge improvised scrap-metal cannon firing, deep rough boom with clattering metal debris and a rattling rusty tail"
 seconds = 3.5
-planned = "fire_shell:left_behind (lb_fort_cannon)"
-mix_into = ["fire_shell"]
+events = ["fire_shell.cannon.left_behind"]
 
 [job.wpn_naval_destroyer]
 category = "weapons"
 prompt = "naval deck gun firing at sea, sharp bang with a sizzling ring, open water, quick fading echo"
 seconds = 3.0
-planned = "fire_shell:naval (exp_destroyer_gun, exp_battery_gun)"
-mix_into = ["fire_shell"]
+events = ["fire_shell.naval_shell"]
 
 [job.wpn_naval_cruiser]
 category = "weapons"
 prompt = "very heavy naval gun firing, enormous low boom with a long rolling echo over open water, rumbling tail"
 seconds = 5.0
-planned = "fire_shell:naval_heavy (exp_cruiser_gun)"
+events = ["fire_shell.naval_heavy"]
 
 [job.wpn_howitzer]
 category = "weapons"
 prompt = "large artillery howitzer firing, thunderous low boom with a heavy breech slam and a shell whistling away"
 seconds = 4.0
-planned = "fire_shell:artillery (auth_howitzer_gun, auth_seismic_mortar_gun)"
-mix_into = ["fire_shell"]
+events = ["fire_shell.howitzer", "fire_shell.mortar"]
 
 [job.wpn_organ_lb]
 category = "weapons"
 prompt = "four crude rockets leaving scrap pipe tubes one after another, rattling pops and hissing exhaust, rusty metal"
 seconds = 3.0
-planned = "fire_missile:left_behind (lb_organ_rack)"
-mix_into = ["fire_shell"]
+events = ["fire_missile.salvo.left_behind"]
 
 [job.wpn_rocket_auth]
 category = "weapons"
 prompt = "single rocket launch from a shoulder launcher, sharp ignition then a hissing whoosh fading away, outdoors"
 seconds = 2.5
-events = ["fire_missile", "fire_shell"]
-planned = "fire_missile:authority (auth_rocket, auth_interceptor_gun)"
+events = ["fire_missile", "fire_missile.rocket", "fire_missile.rocket.authority"]
 
 [job.wpn_salvo_dir]
 category = "weapons"
 prompt = "six rockets launched in a quick salvo from a concrete nest, overlapping whooshes and hissing exhaust"
 seconds = 3.0
-planned = "fire_missile:directorate (dir_rocket_salvo, dir_rocket_nest_gun)"
-mix_into = ["fire_missile"]
+events = ["fire_missile.salvo", "fire_missile.salvo.directorate"]
 
 [job.wpn_pod_exp]
 category = "weapons"
 prompt = "small missile pod launching two missiles, quick crisp hiss and pop, clean electronic tail"
 seconds = 2.0
-planned = "fire_missile:expedition (exp_ironbound_pod, exp_jet_missile, exp_sub_missile)"
-mix_into = ["fire_missile"]
+events = ["fire_missile.rocket.expedition"]
 
 [job.wpn_sam]
 category = "weapons"
 prompt = "surface-to-air missile launch, loud ignition roar rising and moving away, thin smoke hiss"
 seconds = 3.0
-planned = "fire_missile:anti_air (exp_sam_missile, exp_sparker_missile, exp_carrier_aa)"
-mix_into = ["fire_missile"]
+events = ["fire_missile.sam"]
 
 [job.wpn_harpoon_lb]
 category = "weapons"
 prompt = "large spring-loaded harpoon launch, a heavy metallic twang and a whoosh with chain rattling out behind it"
 seconds = 3.0
-planned = "fire_missile:left_behind (lb_harpoon_gun)"
-mix_into = ["fire_shell"]
+events = ["fire_missile.harpoon"]
 
 [job.wpn_flame]
 category = "weapons"
 prompt = "flamethrower burst, a roaring whoosh of burning gas with crackling fire, close microphone"
 seconds = 3.0
-planned = "fire_flame (lb_flame_hammer, dir_ash_spray)"
+events = ["fire_bullet.flame"]
 
 [job.wpn_spray]
 category = "weapons"
 prompt = "pressurised chemical spray from a nozzle, a steady strong hiss with liquid spatter, short burst"
 seconds = 3.0
-planned = "fire_spray (auth_decon_spray, auth_foam_spray, dir_ash_sow, lb_dust_drop)"
+events = ["fire_bullet.spray"]
 
 [job.wpn_depth_charge]
 category = "weapons"
 prompt = "depth charge launched from a ship, a dull launcher thump then a heavy plop into water and a bubbling fizz"
 seconds = 3.0
-planned = "fire_depth_charge (exp_launch_charge)"
+events = ["fire_shell.depth_charge"]
 
 # =====================================================================================================================
-# EXPLOSIONS. Code today: explosion_small (unit death, small splash), explosion_large (building death, splash of 3+ cells).
+# EXPLOSIONS. explosion_small / explosion_large (a blast; 3+ cells is large), explosion_large.bomb (a blast near a bomber). Unit and building deaths have their own
+# keys below; they fall back to these.
 # =====================================================================================================================
 
 [job.exp_small_a]
@@ -280,211 +320,185 @@ events = ["explosion_large"]
 category = "explosions"
 prompt = "heavy aircraft bomb detonation, a violent thunderclap then a long deep rumbling shockwave"
 seconds = 6.0
-planned = "explosion_bomb (auth_bomb, exp_bomb_run, lb_kite_bomb, dir_rad_bomb)"
-mix_into = ["explosion_large"]
+events = ["explosion_large.bomb"]
 
 [job.exp_rad_burst]
 category = "explosions"
 prompt = "radioactive burst, a low dull thump with a swelling electrical crackle and a sizzling rising hiss"
 seconds = 4.0
-planned = "explosion_radiation (dir_volunteer_burst, dir_collapse_charge, dir_meltdown)"
-mix_into = ["explosion_small"]
+planned = "not wired: no sim signal tells a radiation burst from another blast; plays nowhere yet (a future explosion_small.radiation)"
 
 # =====================================================================================================================
-# BUILDINGS per faction. Code today: building_placed, construction_complete, explosion_large (building death). The code
-# does not tell the faction of the building, so per-faction variants are random until src/ picks by faction (--mix).
+# BUILDINGS per faction: building_placed.<faction>, construction_complete.<faction>, building_destroyed.<faction> (falls back to explosion_large).
 # =====================================================================================================================
 
 [job.bld_place_auth]
 category = "buildings"
 prompt = "heavy steel structure being lowered onto a concrete pad, deep clank, bolts ratcheting tight, a short dust-and-gear settle"
 seconds = 2.5
-planned = "building_placed:authority"
-mix_into = ["building_placed"]
+events = ["building_placed.authority"]
 
 [job.bld_place_dir]
 category = "buildings"
 prompt = "massive concrete block set down with a dull thud, then pneumatic hisses and a deep metallic clunk of a locking hatch"
 seconds = 2.5
-planned = "building_placed:directorate"
-mix_into = ["building_placed"]
+events = ["building_placed.directorate"]
 
 [job.bld_place_lb]
 category = "buildings"
 prompt = "scrap metal sheets and timber slammed together, hammering on tin, rattling bolts and a creaking settle"
 seconds = 2.5
-planned = "building_placed:left_behind"
-mix_into = ["building_placed"]
+events = ["building_placed.left_behind"]
 
 [job.bld_place_exp]
 category = "buildings"
 prompt = "prefabricated panels snapping into place on a dock, hydraulic hiss, soft metallic clack and a short electronic confirmation chirp"
 seconds = 2.5
-planned = "building_placed:expedition"
-mix_into = ["building_placed"]
+events = ["building_placed.expedition"]
 
 [job.bld_done_auth]
 category = "buildings"
 prompt = "mechanical completion chime: a brass bell struck twice with a relay clunk, tinny and dry, 1960s machine"
 seconds = 2.5
-planned = "construction_complete:authority"
-mix_into = ["construction_complete"]
+events = ["construction_complete.authority"]
 
 [job.bld_done_dir]
 category = "buildings"
 prompt = "heavy industrial completion signal: a deep foghorn-like blast of a factory siren, short, with a pneumatic thud"
 seconds = 3.0
-planned = "construction_complete:directorate"
-mix_into = ["construction_complete"]
+events = ["construction_complete.directorate"]
 
 [job.bld_done_lb]
 category = "buildings"
 prompt = "rough completion signal: a rusty hand bell rung three times with a clatter of loose metal"
 seconds = 2.5
-planned = "construction_complete:left_behind"
-mix_into = ["construction_complete"]
+events = ["construction_complete.left_behind"]
 
 [job.bld_done_exp]
 category = "buildings"
 prompt = "clean electronic completion signal: two soft sonar-like pings and a quick rising blip, short, no melody"
 seconds = 2.0
-planned = "construction_complete:expedition"
-mix_into = ["construction_complete"]
+events = ["construction_complete.expedition"]
 
 [job.bld_destroyed_auth]
 category = "buildings"
 prompt = "large steel-framed building collapsing, loud blast then groaning girders, falling masonry, relays popping, long rumble"
 seconds = 6.0
-planned = "building_destroyed:authority"
-mix_into = ["explosion_large"]
+events = ["building_destroyed.authority"]
 
 [job.bld_destroyed_dir]
 category = "buildings"
 prompt = "reinforced concrete bunker collapsing, a deep thud, cracking slabs, grinding rubble, a burst of steam and a reactor-like hiss"
 seconds = 6.0
-planned = "building_destroyed:directorate"
-mix_into = ["explosion_large"]
+events = ["building_destroyed.directorate"]
 
 [job.bld_destroyed_lb]
 category = "buildings"
 prompt = "scrap-metal shack collapsing, crashing sheet metal and clattering pipes, splintering wood, a dull boom of a fuel drum"
 seconds = 5.0
-planned = "building_destroyed:left_behind"
-mix_into = ["explosion_large"]
+events = ["building_destroyed.left_behind"]
 
 [job.bld_destroyed_exp]
 category = "buildings"
 prompt = "dockside building exploding, a sharp blast, shattering glass, twisting metal and a splash of debris into water"
 seconds = 5.0
-planned = "building_destroyed:expedition"
-mix_into = ["explosion_large"]
+events = ["building_destroyed.expedition"]
 
 # =====================================================================================================================
-# UNIT DEATHS. Code today: only the generic explosion_small / explosion_large. Infantry vs vehicle and faction need src/.
+# UNIT DEATHS: unit_died.<class>.<faction> -> unit_died.<class> -> unit_died -> explosion_small. Class: infantry, vehicle, ship, air.
 # =====================================================================================================================
 
 [job.die_inf_auth]
 category = "deaths"
 prompt = "soldier hit and falling, a short breathy grunt-less thud, rifle clattering to the ground, dry"
 seconds = 2.0
-planned = "unit_death_infantry:authority"
+events = ["unit_died.infantry.authority"]
 negative_extra = "scream, shout, words"
-mix_into = ["explosion_small"]
 
 [job.die_inf_dir]
 category = "deaths"
 prompt = "body falling heavily on concrete with a dull thud, a metal canteen clanking, a short sizzle of static"
 seconds = 2.0
-planned = "unit_death_infantry:directorate"
+events = ["unit_died.infantry.directorate"]
 negative_extra = "scream, shout, words"
 
 [job.die_inf_lb]
 category = "deaths"
 prompt = "person collapsing in sand and gravel, loose scrap gear clattering, a dull thump, wind"
 seconds = 2.0
-planned = "unit_death_infantry:left_behind"
+events = ["unit_died.infantry.left_behind"]
 negative_extra = "scream, shout, words"
 
 [job.die_inf_exp]
 category = "deaths"
 prompt = "person falling onto a metal deck with a thump and a splash of water, equipment clinking"
 seconds = 2.0
-planned = "unit_death_infantry:expedition"
+events = ["unit_died.infantry.expedition"]
 negative_extra = "scream, shout, words"
 
 [job.die_veh_auth]
 category = "deaths"
 prompt = "armoured vehicle blowing up, sharp blast, ringing steel, a turret clanging down, crackling flames"
 seconds = 4.0
-planned = "unit_death_vehicle:authority"
-mix_into = ["explosion_small"]
+events = ["unit_died.vehicle.authority"]
 
 [job.die_veh_dir]
 category = "deaths"
 prompt = "heavy industrial vehicle destroyed, a dull blast, groaning metal, a gush of steam and a fizzing electrical discharge"
 seconds = 4.0
-planned = "unit_death_vehicle:directorate"
-mix_into = ["explosion_small"]
+events = ["unit_died.vehicle.directorate"]
 
 [job.die_veh_lb]
 category = "deaths"
 prompt = "rusty buggy exploding, a ragged boom, scrap parts scattering and clanging, a burning fuel whoomph"
 seconds = 4.0
-planned = "unit_death_vehicle:left_behind"
-mix_into = ["explosion_small"]
+events = ["unit_died.vehicle.left_behind"]
 
 [job.die_veh_exp]
 category = "deaths"
 prompt = "hovercraft destroyed, a sharp electric pop, a rush of air venting, a hiss and metal debris splashing into water"
 seconds = 4.0
-planned = "unit_death_vehicle:expedition"
-mix_into = ["explosion_small"]
+events = ["unit_died.vehicle.expedition"]
 
 [job.die_ship]
 category = "deaths"
 prompt = "warship hit and sinking, a deep blast followed by groaning bending steel, rushing water and a long bubbling gurgle"
 seconds = 8.0
-planned = "unit_death_ship (exp_destroyer, exp_cruiser, exp_carrier, exp_command_ship ...)"
-mix_into = ["explosion_large"]
+events = ["unit_died.ship"]
 
 [job.die_air_crash]
 category = "deaths"
 prompt = "aircraft crashing, a falling engine whine then a heavy crunch and a rolling explosion, debris scattering"
 seconds = 5.0
-planned = "unit_death_air (auth_bomber, exp_jet, lb_rotor, dir_dirigible ...)"
-mix_into = ["explosion_large"]
+events = ["unit_died.air"]
 
 # =====================================================================================================================
-# PRODUCTION READY per faction. Code today: unit_ready (and promotion, which reuses it). Faction of the unit needs src/.
+# PRODUCTION READY: unit_ready.<faction> (also unit_ready.<class>.<faction>); promotion reuses its own event. A new ship raises ship_horn (falls back to unit_ready.ship).
 # =====================================================================================================================
 
 [job.prod_ready_auth]
 category = "production"
 prompt = "factory door of a vehicle plant rumbling up on chains, a clanking mechanical bell ding, diesel engine starting"
 seconds = 3.0
-planned = "unit_ready:authority"
-mix_into = ["unit_ready"]
+events = ["unit_ready.authority"]
 
 [job.prod_ready_dir]
 category = "production"
 prompt = "heavy pneumatic hatch hissing open in a concrete bay, a clunk of locking bolts and a single low machine tone"
 seconds = 2.5
-planned = "unit_ready:directorate"
-mix_into = ["unit_ready"]
+events = ["unit_ready.directorate"]
 
 [job.prod_ready_lb]
 category = "production"
 prompt = "rusty workshop door scraping open, a wrench dropped on metal, a sputtering engine catching and idling"
 seconds = 3.0
-planned = "unit_ready:left_behind"
-mix_into = ["unit_ready"]
+events = ["unit_ready.left_behind"]
 
 [job.prod_ready_exp]
 category = "production"
 prompt = "hydraulic ramp lowering with a soft hiss at a shipyard, a clean electronic blip, a distant ship horn"
 seconds = 3.0
-planned = "unit_ready:expedition"
-mix_into = ["unit_ready"]
+events = ["unit_ready.expedition"]
 
 [job.prod_promotion]
 category = "production"
@@ -494,7 +508,8 @@ events = ["promotion"]
 volume = 0.9
 
 # =====================================================================================================================
-# NAVAL, AIR, TUNNEL, RIG. Code today: tunnel_enter and surface_rumble only. The rest has no event.
+# NAVAL, AIR, TUNNEL, RIG: water_impact (a blast on empty water; .large for 3+ cells), sonar (enemy submarine comes into view), ship_horn (own new ship),
+# air_flyby (aircraft of speed 40+), air_hover (speed 20..39), rig_deploy / rig_pack (the one rig sound serves both), tunnel_enter, surface_rumble.
 # =====================================================================================================================
 
 [job.tunnel_enter_bore]
@@ -513,43 +528,42 @@ events = ["surface_rumble"]
 category = "special"
 prompt = "huge mobile rig unfolding on rusty hinges, hydraulic hiss, heavy chains rattling, stabiliser legs thudding onto sand"
 seconds = 5.0
-planned = "rig_deploy (lb_mother_rig_packed -> lb_mother_rig)"
+events = ["rig_deploy", "rig_pack"]
 
 [job.nav_splash_shell]
 category = "special"
 prompt = "artillery shell hitting open water, a deep splash with a rising column of spray falling back down"
 seconds = 3.5
-planned = "water_impact (shell or bomb lands on water)"
+events = ["water_impact", "water_impact.large"]
 
 [job.nav_sonar_ping]
 category = "special"
 prompt = "single sonar ping underwater, a clear tone with a long watery echo decaying, no melody"
 seconds = 3.0
-planned = "sonar_ping (exp_launch / exp_missile_sub / depth charge target found)"
+events = ["sonar"]
 negative_extra = "melody, tune"
 
 [job.nav_ship_horn]
 category = "special"
 prompt = "single deep ship horn blast across open water, long low note with a slow decaying echo"
 seconds = 4.0
-planned = "ship_horn (carrier / command ship arrival, naval unit_ready)"
+events = ["ship_horn"]
 negative_extra = "melody, tune"
 
 [job.air_jet_flyby]
 category = "special"
 prompt = "jet fighter flying past fast, rising turbine whine then a roaring Doppler pass and fading away"
 seconds = 5.0
-planned = "air_flyby (exp_jet, auth_interceptor)"
+events = ["air_flyby"]
 
 [job.air_rotor_hover]
 category = "special"
 prompt = "light helicopter hovering, steady chopping rotor blades and a whining engine, outdoors"
 seconds = 5.0
-planned = "air_hover (lb_rotor, exp_gunship, exp_gyro)"
+events = ["air_hover"]
 
 # =====================================================================================================================
-# ECONOMY AND ALERTS. Code today: sold, harvester_unload, upgrade_complete, low_power, low_funds, under_attack,
-# radiation_crackle, blackout_hum. Added as variants (or --replace-sfxr to swap the sfxr ones out).
+# ECONOMY AND ALERTS. Added as variants of the existing events (or --replace-sfxr to swap the sfxr ones out).
 # =====================================================================================================================
 
 [job.evt_sold]
@@ -636,30 +650,31 @@ repoint = "ui_deny"
 negative_extra = "melody, tune"
 
 # =====================================================================================================================
-# AMBIENT BIOME LOOPS. No ambience event exists in the code (planned: a looping ambience player keyed by theatre/biome).
+# AMBIENT BIOME LOOPS. The AmbiencePlayer loops the one for the map's theater, or open_sea when over 60% of the cells around the camera are water; cross-fades;
+# quiet ([event_defaults.ambience] volume); scaled by the Ambience volume setting.
 # =====================================================================================================================
 
 [job.amb_glass_coast]
 category = "ambience"
 prompt = "seamless loop, empty glassy desert shoreline, gentle surf washing on sand, light wind over dunes, distant gulls, calm"
-planned = "ambience:glass_coast"
+ambience = "glass_coast"
 
 [job.amb_rust_belt]
 category = "ambience"
 prompt = "seamless loop, abandoned industrial city in cold wind, distant creaking sheet metal, faint dripping, a hollow low wind through ruins"
-planned = "ambience:rust_belt"
+ambience = "rust_belt"
 
 [job.amb_ash_plains]
 category = "ambience"
 prompt = "seamless loop, barren ash plain, a dry whispering wind carrying grit, distant low rumble of a volcano, faint crackle"
-planned = "ambience:ash_plains"
+ambience = "ash_plains"
 
 [job.amb_mountains]
 category = "ambience"
 prompt = "seamless loop, high mountain pass, steady strong cold wind, occasional distant rock clatter, wide open space"
-planned = "ambience:mountains"
+ambience = "mountains"
 
 [job.amb_open_sea]
 category = "ambience"
 prompt = "seamless loop, open sea, rolling swell and waves slapping against a steel hull, creaking ropes, steady wind"
-planned = "ambience:sea (naval maps)"
+ambience = "open_sea"

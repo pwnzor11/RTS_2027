@@ -39,6 +39,12 @@ public sealed record AudioFrame(SimSnapshot Previous, SimSnapshot Current, byte 
     /// <summary>VET-5: vehicles and soldiers whose veterancy rank rose at <see cref="Current"/> (empty when none).</summary>
     public IReadOnlyList<Rts.Game.Veterancy.RankKey> Promotions { get; init; } = Array.Empty<Rts.Game.Veterancy.RankKey>();
 
+    /// <summary>S22: the rules view (unit class, faction, weapon class). Null = unknown: the deriver then raises the generic events only.</summary>
+    public AudioRules? Rules { get; init; }
+
+    /// <summary>S22: the weapon index (into the rules' weapon table) of each projectile in <see cref="Projectiles"/>, same order; empty when unknown.</summary>
+    public IReadOnlyList<int> ProjectileWeapons { get; init; } = Array.Empty<int>();
+
     /// <summary>Whether the local player has won or lost.</summary>
     public GameResult Result { get; init; }
 }

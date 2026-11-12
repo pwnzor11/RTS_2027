@@ -57,6 +57,7 @@ public sealed class SettingsScreen : IScreen
             Volume("Master volume", s => s.MasterVolume, (s, v) => s with { MasterVolume = v }),
             Volume("Music volume", s => s.MusicVolume, (s, v) => s with { MusicVolume = v }),
             Volume("Effects volume", s => s.SfxVolume, (s, v) => s with { SfxVolume = v }),
+            Volume("Ambience volume", s => s.AmbienceVolume, (s, v) => s with { AmbienceVolume = v }),   // S22
             new MenuItem(() => UiText.Format(UiText.AutosaveSetting, "interval", Autosave.IntervalText(_s.Settings.AutosaveMinutes)),
                 () => StepAutosave(1), StepAutosave, new MenuButton("<", () => StepAutosave(-1)), new MenuButton(">", () => StepAutosave(1))),   // D-205
             new MenuItem(() => $"Camera cue on new objective: {(_s.Settings.CameraCueOnNewObjective ? "On" : "Off")}", ToggleCameraCue, _ => ToggleCameraCue(),

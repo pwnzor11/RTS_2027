@@ -35,7 +35,7 @@ param(
     [int]$Steps = 0,            # denoising steps (0 = 100)
     [switch]$Draft,             # 30 steps, 1 take, files named draft<N>.wav
     [double]$SecondsScale = 1.0,
-    [int]$Rate = 0,             # override output sample rate, e.g. 22050 for smaller files
+    [int]$Rate = 0,             # override output sample rate (default 22050 from sfx_jobs.toml; 32000 gives crisper ambience loops)
     [int]$Threads = 0,          # CPU threads (0 = all)
     [string[]]$Picks,           # with -Pick: id=2, id=d1 ...
     [switch]$Mix,               # with -Pick: also mix the faction/class sounds into the generic events
@@ -64,14 +64,32 @@ function Run-Py {
     return $LASTEXITCODE
 }
 
+function New-Py311Venv([string]$dir) {
+    # Python 3.11 is what torch / diffusers were checked with here (3.13 is UNVERIFIED for these pins, so it is not accepted). Try the py launcher,
+    # then uv (it downloads 3.11 by itself), then winget's Python 3.11 folder.
+    try { & py -3.11 -m venv $dir 2>$null } catch { }
+    if (Test-Path (Join-Path $dir 'Scripts\python.exe')) { return }
+    $uv = Get-Command uv -ErrorAction SilentlyContinue
+    if (-not $uv -and (Test-Path "$env:USERPROFILE\.local\bin\uv.exe")) { $uv = Get-Item "$env:USERPROFILE\.local\bin\uv.exe" }
+    if ($uv) {
+        Log "py launcher has no 3.11; using uv to fetch Python 3.11"
+        $uvPath = if ($uv.Source) { $uv.Source } else { $uv.FullName }
+        & $uvPath venv --seed --python 3.11 $dir
+        if (Test-Path (Join-Path $dir 'Scripts\python.exe')) { return }
+    }
+    $wp = "$env:LOCALAPPDATA\Programs\Python\Python311\python.exe"
+    if (Test-Path $wp) { & $wp -m venv $dir }
+}
+
 # Keep Windows awake (the system, not the display) until this script ends.
 Add-Type -Namespace RtsSfx -Name Power -MemberDefinition '[DllImport("kernel32.dll")] public static extern uint SetThreadExecutionState(uint esFlags);'
 
 if ($Setup) {
     Log "=== setup ==="
-    & py -3.11 --version
-    if ($LASTEXITCODE -ne 0) { throw "Python 3.11 not found via the 'py' launcher. Install it from https://www.python.org/downloads/release/python-3119/ (tick 'py launcher')." }
-    if (-not (Test-Path $py)) { & py -3.11 -m venv $venv }
+    if (-not (Test-Path $py)) {
+        New-Py311Venv $venv
+        if (-not (Test-Path $py)) { throw "Could not create the venv. Run 'winget install --id Python.Python.3.11 -e', open a NEW PowerShell window, then run -Setup again." }
+    }
     & $py -m pip install --upgrade pip
     # torch CPU build (no CUDA download), then the rest. diffusers/transformers versions are the ones the job runner was checked against.
     & $py -m pip install torch --index-url https://download.pytorch.org/whl/cpu

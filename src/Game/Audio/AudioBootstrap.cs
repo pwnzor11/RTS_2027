@@ -31,10 +31,11 @@ public static class AudioBootstrap
             {
                 MusicVolume = settings.MusicVolume,
                 SfxVolume = settings.SfxVolume,
+                AmbienceVolume = settings.AmbienceVolume,
             };
             var rng = new Random();
-            var director = new AudioDirector(bank, audio, rng, music: new MusicPlayer(audio, library, rng));
-            game.Components.Add(new AudioComponent(game, director, screens));
+            var director = new AudioDirector(bank, audio, rng, music: new MusicPlayer(audio, library, rng), ambience: new AmbiencePlayer(audio, bank));
+            game.Components.Add(new AudioComponent(game, director, screens, bank));
             Director = director;
             return audio;
         }
@@ -56,6 +57,10 @@ public sealed class AudioComponent : GameComponent
 {
     private readonly AudioDirector _director;
     private readonly ScreenStack _screens;
+    private readonly SoundBank _bank;
+    private AudioRules? _rules;
+    private string? _theater;
+    private readonly List<int> _projectileWeapons = new();
     private SimSnapshotSource? _source;
     private int _lastTick = -1;
     private IReadOnlyList<LeptonCoord> _previousProjectiles = Array.Empty<LeptonCoord>();
@@ -66,11 +71,12 @@ public sealed class AudioComponent : GameComponent
     private readonly List<Rts.Game.Veterancy.RankKey> _promoted = new();
 
     /// <summary>Creates the component.</summary>
-    public AudioComponent(Microsoft.Xna.Framework.Game game, AudioDirector director, ScreenStack screens)
+    public AudioComponent(Microsoft.Xna.Framework.Game game, AudioDirector director, ScreenStack screens, SoundBank bank)
         : base(game)
     {
         _director = director;
         _screens = screens;
+        _bank = bank;
     }
 
     /// <inheritdoc />
@@ -89,6 +95,8 @@ public sealed class AudioComponent : GameComponent
             _promotions = new Rts.Game.Veterancy.PromotionTracker();   // VET-5: a new game starts with no remembered ranks
             _previousHud = null;
             _previousProjectiles = Array.Empty<LeptonCoord>();
+            _rules = source is null ? null : AudioRules.Build(source.Rules, _bank);   // S22
+            _theater = source is null ? null : Rts.Game.Render.TerrainPalette.TheaterIdFor(source.Map, null);
         }
 
         if (source is not null && source.Current.Tick != _lastTick)
@@ -111,6 +119,8 @@ public sealed class AudioComponent : GameComponent
                     Pending = source.Host.Pending,
                     PreviousProjectiles = _previousProjectiles,
                     Projectiles = source.Projectiles,
+                    ProjectileWeapons = CaptureProjectileWeapons(source),
+                    Rules = _rules,
                     Result = result,
                     Promotions = _promoted,
                 });
@@ -121,7 +131,22 @@ public sealed class AudioComponent : GameComponent
             _previousProjectiles = source.Projectiles.ToArray();
         }
 
-        _director.UpdateMusic((float)gameTime.ElapsedGameTime.TotalSeconds, source is not null);
+        float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
+        _director.UpdateMusic(dt, source is not null);
+        _director.UpdateAmbience(dt, source is not null, _theater, source?.Current);
         base.Update(gameTime);
+    }
+
+    // S22: the weapon index of every live projectile, in the order SimHost lists their positions (slot order). Read-only.
+    private IReadOnlyList<int> CaptureProjectileWeapons(SimSnapshotSource source)
+    {
+        _projectileWeapons.Clear();
+        var store = source.Sim.Projectiles;
+        for (int i = 1; i < store.Capacity; i++)
+        {
+            if (store.Slots.IsIndexAlive(i)) _projectileWeapons.Add(store.Source[i]);
+        }
+
+        return _projectileWeapons;
     }
 }
