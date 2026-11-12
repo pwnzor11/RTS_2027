@@ -221,11 +221,11 @@ crusher = false
 cost = 400  # ASSUMED (M3-07)
 prerequisites = ["auth_factory"]
 
-# M4-07 (design 08 §4): new vehicles and aircraft. PLACEHOLDER ART (M4-ART): no sprite file yet, draws the generated placeholder.
+# M4-07 (design 08 §4): new vehicles and aircraft.
 # Aircraft are vehicle entries with locomotion = "air" and leave from a building with produces = "aircraft" (dir_mooring, auth_airfield).
 # Numbers marked ASSUMED (M4-07) copy the nearest existing type. Auth_bulwark and auth_howitzer currently share auth_tank's numbers.
 
-[auth_carrier]   # PLACEHOLDER ART (M4-ART); sealed carrier, five passengers (design 08 §4)
+[auth_carrier]   # sealed carrier, five passengers (design 08 §4)
 tier = 2
 locomotion = "tracked"
 speed = 18  # ASSUMED (M4-07)
@@ -241,7 +241,7 @@ cost = 700  # ASSUMED (M4-07)
 prerequisites = ["auth_factory"]
 passengers = 5  # (tune) design 08 §4
 
-[auth_seismic_mortar]   # PLACEHOLDER ART (M4-ART); artillery that hits burrowed units (design 08 §4)
+[auth_seismic_mortar]   # artillery that hits burrowed units (design 08 §4)
 tier = 2
 locomotion = "tracked"
 speed = 20  # ASSUMED (M4-07)
@@ -256,7 +256,7 @@ crusher = false
 cost = 800  # ASSUMED (M4-07)
 prerequisites = ["auth_factory"]
 
-[auth_foam_truck]   # PLACEHOLDER ART (M4-ART); Quick-Set Foam Layer (design 08 §4, D-077)
+[auth_foam_truck]   # Quick-Set Foam Layer (design 08 §4, D-077)
 veteran = false  # VET-4: its weapon deals no damage (it lays foam/ash/blackout/decon), so it never earns kills; an armed type would default to ranking
 tier = 2
 locomotion = "wheeled"
@@ -272,7 +272,7 @@ crusher = false
 cost = 400  # ASSUMED (M4-07)
 prerequisites = ["auth_factory"]
 
-[auth_interceptor]   # PLACEHOLDER ART (M4-ART); prop fighter, anti-air (design 08 §4)
+[auth_interceptor]   # prop fighter, anti-air (design 08 §4)
 tier = 2
 locomotion = "air"
 speed = 8  # ASSUMED (M4-07)
@@ -287,7 +287,7 @@ crusher = false
 cost = 600  # ASSUMED (M4-07)
 prerequisites = ["auth_airfield"]
 
-[auth_bomber]   # PLACEHOLDER ART (M4-ART); heavy bomber, splash bombs against ground (design 08 §4)
+[auth_bomber]   # heavy bomber, splash bombs against ground (design 08 §4)
 tier = 3
 locomotion = "air"
 speed = 8  # ASSUMED (M4-07)
@@ -302,7 +302,7 @@ crusher = false
 cost = 600  # ASSUMED (M4-07)
 prerequisites = ["auth_airfield"]
 
-[auth_howitzer]   # PLACEHOLDER ART (M4-ART); long-range artillery (design 08 §4)
+[auth_howitzer]   # long-range artillery (design 08 §4)
 tier = 3
 locomotion = "tracked"
 speed = 20  # ASSUMED (M4-07)
@@ -317,7 +317,7 @@ crusher = false
 cost = 800  # ASSUMED (M4-07)
 prerequisites = ["auth_factory"]
 
-[auth_bulwark]   # PLACEHOLDER ART (M4-ART); heavy armour, crusher (design 08 §4)
+[auth_bulwark]   # heavy armour, crusher (design 08 §4)
 tier = 3
 locomotion = "tracked"
 speed = 20  # ASSUMED (M4-07)
@@ -332,7 +332,7 @@ crusher = true
 cost = 800  # ASSUMED (M4-07)
 prerequisites = ["auth_factory"]
 
-[dir_ash_sower]   # PLACEHOLDER ART (M4-ART); lays radiation with a contaminate-only weapon (design 08 §4)
+[dir_ash_sower]   # lays radiation with a contaminate-only weapon (design 08 §4)
 veteran = false  # VET-4: its weapon deals no damage (it lays foam/ash/blackout/decon), so it never earns kills; an armed type would default to ranking
 faction = "directorate"
 tier = 2
@@ -350,7 +350,7 @@ crusher = false
 cost = 800  # ASSUMED (M4-07)
 prerequisites = ["dir_assembly_bore"]
 
-[dir_delver]   # PLACEHOLDER ART (M4-ART); armed burrower, ambush tank (design 08 §4)
+[dir_delver]   # armed burrower, ambush tank (design 08 §4)
 faction = "directorate"
 tier = 2
 tunnel_size = "M"
@@ -367,7 +367,7 @@ crusher = false
 cost = 800  # ASSUMED (M4-07)
 prerequisites = ["dir_assembly_bore"]
 
-[dir_great_dirigible]   # PLACEHOLDER ART (M4-ART); heavy air bomber with radiation bombs (design 08 §4; no Blackout, one weapon per type)
+[dir_great_dirigible]   # heavy air bomber with radiation bombs (design 08 §4; no Blackout, one weapon per type)
 faction = "directorate"
 tier = 3
 tunnel_size = "none"
@@ -384,10 +384,10 @@ crusher = false
 cost = 600  # ASSUMED (M4-07)
 prerequisites = ["dir_mooring"]
 
-# M6-08: Left Behind vehicles and aircraft (design 06 §5, D-102). PLACEHOLDER ART: no sprite manifests yet, the generated
-# placeholder is drawn (as the M4-ART types). Every number is (tune).
+# M6-08: Left Behind vehicles and aircraft (design 06 §5, D-102).
+# Every number is (tune).
 
-[lb_gleaner]   # PLACEHOLDER ART; ash harvester, light hopper
+[lb_gleaner]   # ash harvester, light hopper
 faction = "left_behind"
 tier = 1
 speed = 16  # (tune)
@@ -405,7 +405,7 @@ prerequisites = ["lb_garage_rig"]
 harvest_capacity = 12  # (tune) 60 percent of a Scraper (20)
 supply = 1  # (tune) SUP-2: harvesters cost 1 supply (design 13 §2.1)
 
-[lb_hauler]   # PLACEHOLDER ART; wreck collector
+[lb_hauler]   # wreck collector
 faction = "left_behind"
 tier = 1
 speed = 18  # (tune)
@@ -424,7 +424,7 @@ salvage_rate = 12  # (tune) drains wrecks into the hopper
 harvest_capacity = 10  # (tune)
 supply = 1  # (tune) SUP-2: harvesters cost 1 supply (design 13 §2.1)
 
-[lb_buggy]   # PLACEHOLDER ART; fast raider scout
+[lb_buggy]   # fast raider scout
 faction = "left_behind"
 tier = 1
 speed = 40  # (tune)
@@ -441,7 +441,7 @@ cost = 300  # (tune)
 prerequisites = ["lb_garage_rig"]
 raider = true
 
-[lb_harpoon_wagon]   # PLACEHOLDER ART; anti-armour, tethers (slow is a later sim hook)
+[lb_harpoon_wagon]   # anti-armour, tethers (slow is a later sim hook)
 faction = "left_behind"
 tier = 2
 speed = 20  # (tune)
@@ -457,7 +457,7 @@ crusher = false
 cost = 700  # (tune)
 prerequisites = ["lb_garage_rig"]
 
-[lb_organ]   # PLACEHOLDER ART; rocket-rack artillery
+[lb_organ]   # rocket-rack artillery
 faction = "left_behind"
 tier = 2
 speed = 16  # (tune)
@@ -473,7 +473,7 @@ crusher = false
 cost = 800  # (tune)
 prerequisites = ["lb_garage_rig"]
 
-[lb_tow]   # PLACEHOLDER ART; transport (6) + tows packed rigs
+[lb_tow]   # transport (6) + tows packed rigs
 faction = "left_behind"
 tier = 2
 speed = 24  # (tune)
@@ -493,7 +493,7 @@ aura_radius = 2  # (tune)
 aura_targets = ["lb_mother_rig_packed"]
 tow_bonus_permille = 1750  # D-205 (LE-08): 1000 -> 1750, a towed packed rig moves x1.75 (1000 was a no-op)
 
-[lb_dust_sail]   # PLACEHOLDER ART; wind-rigged Blackout layer
+[lb_dust_sail]   # wind-rigged Blackout layer
 veteran = false  # VET-4: its weapon deals no damage (it lays foam/ash/blackout/decon), so it never earns kills; an armed type would default to ranking
 faction = "left_behind"
 tier = 2
@@ -511,7 +511,7 @@ cost = 600  # (tune)
 prerequisites = ["lb_garage_rig"]
 drops_blackout_ticks = 200  # (tune)
 
-[lb_rolling_fort]   # PLACEHOLDER ART; heavy patchwork tank
+[lb_rolling_fort]   # heavy patchwork tank
 faction = "left_behind"
 tier = 3
 speed = 14  # (tune)
@@ -527,7 +527,7 @@ crusher = false
 cost = 1400  # (tune)
 prerequisites = ["lb_garage_rig"]
 
-[lb_mother_rig_packed]   # PLACEHOLDER ART; packed rig (start-kit unit, generic form of every rig). Not meant to be built: gated behind the Bench at a prohibitive cost
+[lb_mother_rig_packed]   # packed rig (start-kit unit, generic form of every rig). Not meant to be built: gated behind the Bench at a prohibitive cost
 faction = "left_behind"
 tier = 1
 speed = 10  # (tune)
@@ -547,7 +547,7 @@ unpacks_into = "lb_mother_rig"
 pack_ticks = 200  # (tune)
 supply = 0  # (tune) SUP-3: the base amount comes from the unpacked building (design 13 §2.4)
 
-[lb_rotor]   # PLACEHOLDER ART; autogyro light gunship (aircraft)
+[lb_rotor]   # autogyro light gunship (aircraft)
 faction = "left_behind"
 tier = 3
 speed = 30  # (tune)
@@ -563,7 +563,7 @@ crusher = false
 cost = 1000  # (tune)
 prerequisites = ["lb_rotor_pad"]
 
-[lb_kite]   # PLACEHOLDER ART; one-use glider bomber, death weapon on impact
+[lb_kite]   # one-use glider bomber, death weapon on impact
 faction = "left_behind"
 tier = 3
 speed = 36  # (tune)
@@ -581,8 +581,8 @@ prerequisites = ["lb_rotor_pad"]
 death_weapon = "lb_kite_bomb"
 one_use = true  # D-205 (LE-14): spent by its bomb
 
-# M7-08: Expedition vehicles, hovercraft, ships and aircraft (docs/design/07_expedition.md §5, 11_m7_plan §3, D-087, D-124..D-127). PLACEHOLDER ART:
-# no sprite manifests yet, the generated placeholder is drawn. The faction is NOT playable yet (RuleCounts.PlayableFactions stays 3).
+# M7-08: Expedition vehicles, hovercraft, ships and aircraft (docs/design/07_expedition.md §5, 11_m7_plan §3, D-087, D-124..D-127).
+# The faction is NOT playable yet (RuleCounts.PlayableFactions stays 3).
 # Every number below is (tune) and assumed -- confirm (owner review: docs/balance/m7_08_expedition_data.md). Only fields the loader has
 # today are used; mechanics still being built carry a "TODO M7-0X" line. Dropped on purpose (landlocked rule, 11 §2.5): exp_skyfreighter.
 # Ship armour: ship_light for small hulls, ship_heavy for the destroyer and up, "submerged" for the submarine (single armour field).
@@ -590,7 +590,7 @@ one_use = true  # D-205 (LE-14): spent by its bomb
 # TODO M7-04: ships are produced from the shared "vehicle" lane (hover yard, quay, shipyard); the exit cell of a water yard must be water
 #   (D-138 follow-up) -- until then a ship built while a hover yard is the primary factory would leave on land.
 
-[exp_skimmer]   # PLACEHOLDER ART; hover harvester, amphibious, low capacity (income model: docs/balance/m7_08_expedition_data.md)
+[exp_skimmer]   # hover harvester, amphibious, low capacity (income model: docs/balance/m7_08_expedition_data.md)
 faction = "expedition"
 tier = 1
 speed = 26  # (tune)
@@ -609,7 +609,7 @@ harvest_capacity = 5  # (tune) a quarter of a Scraper (20); fast, so the round t
 supply = 1  # (tune) harvesters cost 1 supply (design 13 §2.1)
 # TODO M7-04: harvesting ash in shallow water needs the sim to let a hover harvester work Shallow cells (not data)
 
-[exp_hoverlander]   # PLACEHOLDER ART; amphibious APC
+[exp_hoverlander]   # amphibious APC
 faction = "expedition"
 tier = 1
 speed = 34  # (tune)
@@ -626,7 +626,7 @@ cost = 450  # (tune)
 prerequisites = ["exp_hover_yard"]
 passengers = 5  # design 07 §5
 
-[exp_survey_hover]   # PLACEHOLDER ART; scout hover
+[exp_survey_hover]   # scout hover
 faction = "expedition"
 tier = 1
 speed = 44  # (tune)
@@ -643,7 +643,7 @@ cost = 250  # (tune)
 prerequisites = ["exp_hover_yard"]
 # TODO M7-14: "reveals ash richness" is a view/UI feature, no rules field
 
-[exp_glide_tank]   # PLACEHOLDER ART; fast hover medium tank, guided cannon (pilot unit for art, M7-11)
+[exp_glide_tank]   # fast hover medium tank, guided cannon (pilot unit for art, M7-11)
 faction = "expedition"
 tier = 2
 speed = 32  # (tune)
@@ -659,7 +659,7 @@ crusher = false
 cost = 900  # (tune)
 prerequisites = ["exp_hover_yard"]
 
-[exp_sparker]   # PLACEHOLDER ART; hover anti-air, guided missile
+[exp_sparker]   # hover anti-air, guided missile
 faction = "expedition"
 tier = 2
 speed = 30  # (tune)
@@ -675,7 +675,7 @@ crusher = false
 cost = 600  # (tune)
 prerequisites = ["exp_hover_yard"]
 
-[exp_repair_hover]   # PLACEHOLDER ART; Mender: repair aura for hovercraft and ships
+[exp_repair_hover]   # Mender: repair aura for hovercraft and ships
 faction = "expedition"
 tier = 2
 speed = 30  # (tune)
@@ -695,7 +695,7 @@ aura_repair_permille = 10  # (tune) permille of max HP per 10 ticks
 aura_targets = ["exp_skimmer", "exp_hoverlander", "exp_survey_hover", "exp_glide_tank", "exp_sparker", "exp_repair_hover", "exp_barrage_lander", "exp_launch", "exp_landing_craft", "exp_destroyer", "exp_missile_sub", "exp_cruiser", "exp_carrier", "exp_minelayer", "exp_command_ship"]
 # TODO M7-09: bay_repair (units inside a landing craft or Skyhook heal slowly) has no rules field yet
 
-[exp_barrage_lander]   # PLACEHOLDER ART; tracked rocket artillery, loads onto a landing craft
+[exp_barrage_lander]   # tracked rocket artillery, loads onto a landing craft
 faction = "expedition"
 tier = 3
 speed = 14  # (tune)
@@ -712,7 +712,7 @@ cost = 1100  # (tune)
 prerequisites = ["exp_hover_yard"]
 
 # Ships
-[exp_launch]   # PLACEHOLDER ART; Patrol Launch: cheap fast scout and depth-charge boat
+[exp_launch]   # Patrol Launch: cheap fast scout and depth-charge boat
 faction = "expedition"
 tier = 1
 speed = 40  # (tune)
@@ -729,7 +729,7 @@ cost = 300  # (tune)
 prerequisites = ["exp_quay"]
 # TODO M7-05: a second (gun) weapon slot for the Launch does not exist; only the depth charge is wired
 
-[exp_landing_craft]   # PLACEHOLDER ART; transport, beachable
+[exp_landing_craft]   # transport, beachable
 faction = "expedition"
 tier = 1
 speed = 24  # (tune)
@@ -748,7 +748,7 @@ passengers = 8  # design 07 §5 (8 infantry)
 unload_ticks = 10  # (tune) one passenger onto the shore every half second
 vehicle_slots = 2  # design 07 §6.3: carries 2 vehicles beside the infantry; vehicles land only on `landing` (Coast) cells
 
-[exp_supply_tender]   # PLACEHOLDER ART; convoy ship spawned by [shipments]; unarmed. Not meant to be built: gated behind the Anchorage at a prohibitive cost
+[exp_supply_tender]   # convoy ship spawned by [shipments]; unarmed. Not meant to be built: gated behind the Anchorage at a prohibitive cost
 faction = "expedition"
 tier = 1
 speed = 16  # (tune)
@@ -766,7 +766,7 @@ prerequisites = ["exp_anchorage"]
 buildable = false
 supply = 0  # (tune) spawned by the home supply line, never counts against the cap
 
-[exp_destroyer]   # PLACEHOLDER ART; all-round warship
+[exp_destroyer]   # all-round warship
 faction = "expedition"
 tier = 2
 speed = 28  # (tune)
@@ -784,7 +784,7 @@ prerequisites = ["exp_shipyard"]
 sonar_radius = 6  # (tune) detects submerged vessels (M7-05 machinery)
 # TODO M7-05: depth charge and AA secondary weapons (design 07 §5) need a second weapon slot
 
-[exp_missile_sub]   # PLACEHOLDER ART; Missile Submarine, dive toggle via Deploy
+[exp_missile_sub]   # Missile Submarine, dive toggle via Deploy
 faction = "expedition"
 tier = 2
 speed = 22  # (tune)
@@ -803,7 +803,7 @@ deep_only = true
 submerges = true
 # TODO M7-05: surfaced vs submerged armour class (one `armor` field only), dive timing, torpedoes
 
-[exp_minelayer]   # PLACEHOLDER ART; lays sea mines (optional, cut last, D-124)
+[exp_minelayer]   # lays sea mines (optional, cut last, D-124)
 faction = "expedition"
 tier = 2
 speed = 24  # (tune)
@@ -820,7 +820,7 @@ cost = 500  # (tune)
 prerequisites = ["exp_shipyard"]
 # TODO M7-05: sea-mine laying and sweeping have no rules fields; unarmed until the mine mechanic exists
 
-[exp_cruiser]   # PLACEHOLDER ART; large ship, shore bombardment, 1-cell body drawn 2x
+[exp_cruiser]   # large ship, shore bombardment, 1-cell body drawn 2x
 faction = "expedition"
 tier = 3
 speed = 16  # (tune)
@@ -838,7 +838,7 @@ prerequisites = ["exp_drydock"]
 draw_scale_permille = 2000  # (tune) D-124
 deep_only = true
 
-[exp_carrier]   # PLACEHOLDER ART; produces and recovers four aircraft at sea
+[exp_carrier]   # produces and recovers four aircraft at sea
 faction = "expedition"
 tier = 3
 speed = 12  # (tune)
@@ -859,7 +859,7 @@ aircraft_slots = 4  # design 07 §5
 sortie_ticks = 200  # (tune)
 # TODO M7-09: which aircraft fit the hangar, build-in-hangar and return/repair missions
 
-[exp_command_ship]   # PLACEHOLDER ART; start unit, Deploy ashore turns it into the Landing Depot. Not meant to be built: gated behind the Drydock at a prohibitive cost
+[exp_command_ship]   # start unit, Deploy ashore turns it into the Landing Depot. Not meant to be built: gated behind the Drydock at a prohibitive cost
 faction = "expedition"
 tier = 1
 speed = 14  # (tune)
@@ -881,7 +881,7 @@ supply = 0  # (tune) the base amount comes from the depot (design 13 §2.4)
 # TODO M7-04: Deploy only on a landing-coast cell (shore cell next to shallow water); not enforced by data
 
 # Aircraft: built at exp_flight_deck (tier 2), so the T1 scout of the design (Gyro) is tier 2 here.
-[exp_gyro]   # PLACEHOLDER ART; rotary scout and designator
+[exp_gyro]   # rotary scout and designator
 faction = "expedition"
 tier = 2
 speed = 30  # (tune)
@@ -898,7 +898,7 @@ cost = 350  # (tune)
 prerequisites = ["exp_flight_deck"]
 # TODO M7-14: designating a ground cell for naval gunfire uses Attack on a cell (no rules field)
 
-[exp_skyhook]   # PLACEHOLDER ART; VTOL transport
+[exp_skyhook]   # VTOL transport
 faction = "expedition"
 tier = 2
 speed = 34  # (tune)
@@ -916,7 +916,7 @@ prerequisites = ["exp_flight_deck"]
 passengers = 6  # design 07 §5
 # TODO M7-04: airlift of 2 light vehicles and beacon delivery
 
-[exp_jet]   # PLACEHOLDER ART; air-superiority fighter
+[exp_jet]   # air-superiority fighter
 faction = "expedition"
 tier = 2
 speed = 60  # (tune)
@@ -934,7 +934,7 @@ prerequisites = ["exp_flight_deck"]
 ammo = 5  # (tune) D-156
 rearm_ticks = 150  # (tune) D-156
 
-[exp_gunship]   # PLACEHOLDER ART; rotary ground attack
+[exp_gunship]   # rotary ground attack
 faction = "expedition"
 tier = 2
 speed = 30  # (tune)
@@ -952,7 +952,7 @@ prerequisites = ["exp_flight_deck"]
 ammo = 5  # (tune) D-156
 rearm_ticks = 150  # (tune) D-156
 
-[exp_bomber]   # PLACEHOLDER ART; heavy bombs against buildings and ships
+[exp_bomber]   # heavy bombs against buildings and ships
 faction = "expedition"
 tier = 3
 speed = 44  # (tune)

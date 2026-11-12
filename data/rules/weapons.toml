@@ -162,7 +162,7 @@ rate_of_fire = 15  # ASSUMED (M4-07)
 projectile_speed = 0
 warhead = "auth_small_arms"
 
-[auth_seismic_mortar_gun]   # PLACEHOLDER ART (M4-ART) on the carrier; artillery, copy of dir_rad_mortar_shell
+[auth_seismic_mortar_gun]   # artillery, copy of dir_rad_mortar_shell
 damage = 28  # (tune) M4-16: 20 -> 28, two mortars take a hatch in ~30 s
 range = 2304  # ASSUMED (M4-07)
 min_range = 512  # ASSUMED (M4-07)
