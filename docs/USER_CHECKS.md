@@ -445,3 +445,18 @@ No save format change (the economy part writes its old layout unless a harvester
   carries on to the destination. A guarding Sapper attacks an enemy that enters its sight, then walks back to its post.
 - **AI lanes:** watch an AI base for a few minutes: units leaving its factories head toward the map centre; nothing piles up south of the exits.
 - **LB corner base:** a Left Behind AI in a corner keeps building Still Rigs while its army uses the supply (about 14-18 by 10 minutes is expected).
+
+## Session 21 · Campaign retune with ash on, sight-range engagement (D-219..D-222)
+Back up `%APPDATA%\RTS_2027` first: old development saves and replays may not load (D-220).
+- **Sight-range engagement (D-219):** skirmish, park a tank next to your base and drive an enemy jeep to about 5 cells from it (outside the
+  tank's gun range, inside its sight): the tank drives over, fights, and returns to where it stood when the jeep leaves. Set the tank to
+  Defensive and repeat: it fires only at what is in gun range and chases at most 3 cells.
+- **Attack-move into a crowd:** attack-move a group onto a cell where your own harvester is parked: the group stops around it and guards
+  (each unit then engages enemies in sight), instead of milling at the cell.
+- **Ash in missions:** any campaign mission with an ash field: infantry standing on ash take damage and step off; vehicles are unaffected.
+- **auth_01 tier 3:** the second raid has no jeep (from tier 4 it does).
+- **auth_03 tier 5:** the shore garrison that answers your landing is about 13 units, not 24; the tide countdown is unchanged (9000).
+- **dir_04 tier 5:** the third wave has no tank. **exp_03 tier 5:** two bombers at ~3:10, three more from the south-west sea at ~5:20 (no message).
+- **lb_03 tier 5:** the Authority column arrives at ~3:35 with 7 riflemen, 3 jeeps and 2 tanks; the start force begins just west of the ash patch.
+- **lb_01 idle:** leave the mission running untouched: the start force shoots the passing convoy and the mission waits for you to deploy (no loss).
+- **Art:** every unit and building has a sprite (Authority bomber, carrier, howitzer, Directorate dirigible, ruins...): no grey placeholder boxes.

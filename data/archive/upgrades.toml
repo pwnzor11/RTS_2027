@@ -268,7 +268,6 @@ unlock = "research:lb_up_patchwork"
 # Expedition upgrades (S11, M7-10). Text copied verbatim from docs/lore/expedition.md (owner-approved lore, D-128/D-148).
 # The lore gives no field notes for upgrades yet: field_notes below are lead drafts until the owner confirms them.
 
-# DRAFT (lead, session 12) — assumed — confirm (owner reads)
 [[entry]]
 id = "exp_up_sonar_nets"
 category = "Upgrade"
@@ -281,7 +280,6 @@ Cable nets lowered between the Pickets and the shore, which extend the range of 
 '''
 unlock = "campaign:exp_01" # M8-13 (tune)
 
-# DRAFT (lead, session 12) — assumed — confirm (owner reads)
 [[entry]]
 id = "exp_up_hardened_hulls"
 category = "Upgrade"
@@ -294,7 +292,6 @@ A programme of extra steel plating welded over the original hull seams in the dr
 '''
 unlock = "campaign:exp_02" # M8-13 (tune)
 
-# DRAFT (lead, session 12) — assumed — confirm (owner reads)
 [[entry]]
 id = "exp_up_vacuum_cores"
 category = "Upgrade"
@@ -307,7 +304,6 @@ Improved valve tubes that run cooler under load, so the guns of every fleet vehi
 '''
 unlock = "campaign:auth_03" # M8-13 (tune)
 
-# DRAFT (lead, session 12) — assumed — confirm (owner reads)
 [[entry]]
 id = "exp_up_composite_armour"
 category = "Upgrade"
@@ -320,7 +316,6 @@ Layered plates of ceramic and resin fitted to hovercraft skirts, troop carriers 
 '''
 unlock = "campaign:auth_03" # M8-13 (tune)
 
-# DRAFT (lead, session 12) — assumed — confirm (owner reads)
 [[entry]]
 id = "exp_up_guided_shells"
 category = "Upgrade"
@@ -333,7 +328,6 @@ Shells fitted with small steering vanes and a simple radio receiver, which let t
 '''
 unlock = "campaign:exp_02" # M8-13 (tune)
 
-# DRAFT (lead, session 12) — assumed — confirm (owner reads)
 [[entry]]
 id = "exp_up_fast_charging"
 category = "Upgrade"
@@ -346,7 +340,6 @@ A revised loading system for the supply tenders and quays, with extra cranes, fa
 '''
 unlock = "campaign:dir_03" # M8-13 (tune)
 
-# DRAFT (lead, session 12) — assumed — confirm (owner reads)
 [[entry]]
 id = "exp_up_deep_survey"
 category = "Upgrade"
@@ -359,7 +352,6 @@ A survey package fitted to the skimmers that improves their sensors and deepens 
 '''
 unlock = "campaign:auth_02" # M8-13 (tune)
 
-# DRAFT (lead, session 12) — assumed — confirm (owner reads)
 [[entry]]
 id = "exp_up_veteran_drill"
 category = "Upgrade"

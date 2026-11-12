@@ -46,6 +46,8 @@ all four factions. D-171 (session 14): M11 UI and input overhaul comes after M8 
 - Design before build: session 1 settled that we hold several rounds of design discussion before
   writing game code. Do not start building until `docs/design/` records the decisions.
 - Pilot one sample before fanning out subjective work (art, writing, mission design).
+- Development saves and replays are disposable (D-220): after a rules or format change, re-pin golden hashes and baselines; no
+  migration or old-format loaders. Long measurement runs (campaign sweeps, skirmish series) go to the owner's laptop via tools/measure.
 
 ## Load order for a fresh session
 1. This file. 2. HANDOFF.md — run the staleness check against `Last commit:`.
