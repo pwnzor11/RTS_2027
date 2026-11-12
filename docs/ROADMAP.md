@@ -275,27 +275,30 @@ Source: docs/reviews/2026-11-07_owner_campaign_feedback.md. Audit: docs/reviews/
 
 ## M13 · Audit fix batch (session 18 audit, D-205; docs/reviews/2026-11-11_s18_audit/README.md)
 - [x] M13-00 Clear non-sim bugs fixed with tests: campaign/missions, in-match UI, menus/setup/tools, LLM key per provider, credits (s18 PR)
-- [ ] M13-01 Expedition on Mountains layout 1: edge-connected sea near each start (generator) + whole-map SkirmishStart fallback (item 1)
-- [ ] M13-02 Expedition founder counts as a base for defeat (item 2)
-- [ ] M13-03 Supply tender spawns at the edge cell nearest the dock (item 3)
-- [ ] M13-04 Garrisoned/carried units ignore orders and are not selectable (item 4)
-- [ ] M13-05 Path stall: retarget blocked goals, cap per-tick path work, group search retry (item 5, SP-01/SP-13)
-- [ ] M13-06 Ready structure: cancel with refund; AI cancels after failed site searches; Cancel slot fix (item 6)
-- [ ] M13-07 Full building store: refuse deploy, StoreFull reason (item 7)
-- [ ] M13-08 Data: Atomic Battery range 0, campaign allow-lists (items 8, 10)
-- [ ] M13-09 Left Behind lanes pause while the Mother Rig is packed (item 9)
-- [ ] M13-10 Start-side tie-breaks (item 11; after the owner's laptop series, skew_experiment.patch)
-- [ ] M13-11 Mechanics items 12-22, 25 (splash, subs, stealth, landing unload, rigs, morph cost, melee acquire, harvesters, kill value, path leak, power)
-- [ ] M13-12 Ashfall hazard (item 23), attack-ground order (item 24), hide/reword missing mechanics (item 26)
-- [ ] M13-13 Numbers pass with the suggested values (section 2.3), then measure
-- [ ] M13-14 UI/wording/design list (section 2.4) incl. mission-script one-liners, naming pass from data/archive
-- [ ] M13-15 QoL: game speed incl. slow; idle button and alerts; cameo hotkeys, repeat production, range rings, strong/weak line; handicap and starting conditions; stances and shift-queued waypoints
-- [ ] M13-16 One golden / AI baseline re-pin batch; owner laptop series before and after
+- [x] M13-01 Expedition on Mountains layout 1: edge-connected sea near each start (generator) + whole-map SkirmishStart fallback (item 1)
+- [x] M13-02 Expedition founder counts as a base for defeat (item 2)
+- [x] M13-03 Supply tender spawns at the edge cell nearest the dock (item 3)
+- [x] M13-04 Garrisoned/carried units ignore orders and are not selectable (item 4)
+- [x] M13-05 Path stall: retarget blocked goals, cap per-tick path work, group search retry (item 5, SP-01/SP-13; s19, D-209; also the harvester head-on deadlock and goal-held waiting)
+- [x] M13-06 Ready structure: cancel with refund; AI cancels after failed site searches; Cancel slot fix (item 6)
+- [x] M13-07 Full building store: refuse deploy, StoreFull reason (item 7)
+- [x] M13-08 Data: Atomic Battery range 0, campaign allow-lists (items 8, 10)
+- [x] M13-09 Left Behind lanes pause while the Mother Rig is packed (item 9)
+- [x] M13-10 Start-side tie-breaks (item 11): mirror-image placement tie-break and start kits; wider AI placement window (s19; 64-game confirmation in the after-series)
+- [~] M13-11 Mechanics items 12-22, 25 (s19: 12-18, 20 harvester-after-rebuild, 21, 25, LE-14 done; open: 19 melee acquire, 20 unreachable field + choke give-up (SP-03 Move half, SP-04), 22 path leak (SIMDET-03))
+- [x] M13-12 Ashfall hazard (item 23), attack-ground order (item 24), hide/reword missing mechanics (item 26)
+- [~] M13-13 Numbers pass (s19, D-208: Agitprop, Tow, Marksman, ship warheads small-arms/AP, Directorate copy structures, Commissar aura, layout 2 money; option-only items wait for the after-series)
+- [x] M13-14 UI/wording/design list (section 2.4) incl. mission-script one-liners, naming pass from data/archive
+- [x] M13-15 QoL: game speed incl. slow; idle button and alerts; cameo hotkeys, repeat production, range rings, strong/weak line; handicap and starting conditions; stances and shift-queued waypoints
+- [~] M13-16 Re-pins done per merge batch (s19); owner laptop series before (s18audit, done) and after (`tools/measure/run_s19_after.ps1`, open)
+- [ ] M13-17 Campaign retune with the ashfall hazard on (missions run with ash damage and ash path cost off until then, D-211); lb_03 and exp_04 tier 5 known shifts; auth_01 tier 5 now winnable (owner to confirm the S18 MIS-03 expectation)
+- [ ] M13-18 Follow-ups found in s19: LB yard dock harvester livelock (HarvestMission Enter); placement lanes always south of exits (S18-AI-NEW-3); LB AI builds ~30 Still Rigs in a corner base; ClearBuildArea keep or drop; walls/gates hero renders re-angled to 3/4 (M14)
 
 ## M14 · Field Manual (D-206, docs/design/19_field_manual.md)
 - [x] M14-01 Pilot: 9 pages, generator scripts (tools/booklet), design 19 (s18)
-- [x] M14-02 Hero render mode and laptop script (tools/booklet/render_heroes.ps1) (s18)
-- [ ] M14-03 Owner runs the 12-render pilot, approves, then `-All` (124 ids; 26 need models first: M4-ART)
+- [x] M14-02 Hero render mode and laptop script (tools/booklet/render_heroes.ps1) (s18); s19: module cache fix (LB structures)
+- [x] M14-07 Pilot PDF and previews in docs/field_manual/, linked from the README (s19)
+- [x] M14-03 Hero renders: pilot approved, all 124 rendered on the laptop and on main (s19, D-210; PR #63). Open: walls/gates re-angle
 - [ ] M14-04 Directorate lore draft (Authority approved), then the other three faction chapters
 - [ ] M14-05 Full build (about 108 pages) after M13 lands; quick-reference card
 - [ ] M14-06 Models and sprites for the 26 ids without art (list: design 19 section 5)
