@@ -93,7 +93,7 @@ if ($Setup) {
     & $py -m pip install --upgrade pip
     # torch CPU build (no CUDA download), then the rest. diffusers/transformers versions are the ones the job runner was checked against.
     & $py -m pip install torch --index-url https://download.pytorch.org/whl/cpu
-    & $py -m pip install "diffusers==0.43.0" "transformers==5.22.2" accelerate sentencepiece protobuf soundfile scipy numpy huggingface_hub
+    & $py -m pip install "diffusers==0.43.0" "transformers==5.22.2" accelerate sentencepiece protobuf torchsde soundfile scipy numpy huggingface_hub
     & $py -c "import torch, diffusers, transformers; print('torch', torch.__version__, '| diffusers', diffusers.__version__, '| transformers', transformers.__version__, '| threads', torch.get_num_threads())"
     Write-Host ""
     Write-Host "Next (once): accept the model terms at  https://huggingface.co/stabilityai/stable-audio-open-1.0"
