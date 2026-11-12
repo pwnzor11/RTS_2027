@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Rts.Game.Input;
+using Rts.Game.Stats;
 using Rts.Game.Ui;
 
 namespace Rts.Game.Screens;
@@ -26,24 +27,28 @@ public sealed class GameOverScreen : IScreen
     /// <param name="statsLines">M4-08: the final stats table for all players (header first), drawn above the menu; null for none.</param>
     /// <param name="spectator">True after an AI-vs-AI game: the menu offers Save replay, Watch again (same seed) and Menu.</param>
     /// <param name="saveReplay">Called by "Save replay" (spectator menu); null hides nothing, the item then does nothing.</param>
+    /// <param name="timeline">M10-17: the match samples; when given the menu gets a Graphs item.</param>
     public GameOverScreen(GameServices services, Func<IScreen> restart, string? headline = null,
-        IReadOnlyList<string>? statsLines = null, bool spectator = false, Action? saveReplay = null)
+        IReadOnlyList<string>? statsLines = null, bool spectator = false, Action? saveReplay = null, MatchTimeline? timeline = null)
     {
         _s = services;
         Title = headline ?? "Game over";
         _statsLines = statsLines ?? Array.Empty<string>();
-        _panel = new MenuPanel(Title, spectator
-            ? new[]
-            {
-                new MenuItem(() => "Save replay", () => saveReplay?.Invoke()),
-                new MenuItem(() => "Watch again", () => GameFlow.Restart(_s, restart)),
-                new MenuItem(() => "Menu", () => GameFlow.QuitToMenu(_s)),
-            }
-            : new[]
-            {
-                new MenuItem(() => "Restart", () => GameFlow.Restart(_s, restart)),
-                new MenuItem(() => "Quit to menu", () => GameFlow.QuitToMenu(_s)),
-            });
+        var items = new List<MenuItem>();
+        if (timeline is not null) items.Add(new MenuItem(() => "Graphs", () => _s.Screens.Push(GraphsScreen.For(_s, timeline))));
+        if (spectator)
+        {
+            items.Add(new MenuItem(() => "Save replay", () => saveReplay?.Invoke()));
+            items.Add(new MenuItem(() => "Watch again", () => GameFlow.Restart(_s, restart)));
+            items.Add(new MenuItem(() => "Menu", () => GameFlow.QuitToMenu(_s)));
+        }
+        else
+        {
+            items.Add(new MenuItem(() => "Restart", () => GameFlow.Restart(_s, restart)));
+            items.Add(new MenuItem(() => "Quit to menu", () => GameFlow.QuitToMenu(_s)));
+        }
+
+        _panel = new MenuPanel(Title, items);
     }
 
     /// <summary>The title shown on the menu.</summary>
