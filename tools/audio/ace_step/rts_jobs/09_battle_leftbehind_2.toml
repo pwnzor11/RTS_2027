@@ -1,0 +1,13 @@
+# RTS_2027 M10-09 job 09: battle_leftbehind_2.ogg (docs/audio/music_brief.md)
+caption = 'instrumental, tribal junkyard percussion ensemble, hand drums and hammered pipes, bowed saw, droning bass strings, chaotic stomps and claps, feral and relentless, 112 BPM, D minor, dusty raw mix, no vocals'
+instrumental = true
+lyrics = '[Instrumental]'
+duration = 180
+batch_size = 1
+audio_format = 'wav'
+thinking = false
+use_cot_metas = false
+use_cot_caption = false
+use_cot_lyrics = false
+use_cot_language = false
+use_random_seed = true

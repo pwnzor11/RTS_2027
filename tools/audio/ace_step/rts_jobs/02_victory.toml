@@ -1,0 +1,13 @@
+# RTS_2027 M10-09 job 02: victory.ogg (docs/audio/music_brief.md)
+caption = 'instrumental, triumphant orchestral fanfare, bright brass, big timpani and snare, rising strings, resolving to a strong final held chord, celebratory, 120 BPM, C major, ends cleanly, no vocals'
+instrumental = true
+lyrics = '[Instrumental]'
+duration = 40
+batch_size = 1
+audio_format = 'wav'
+thinking = false
+use_cot_metas = false
+use_cot_caption = false
+use_cot_lyrics = false
+use_cot_language = false
+use_random_seed = true

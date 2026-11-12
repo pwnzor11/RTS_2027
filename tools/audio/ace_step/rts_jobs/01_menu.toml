@@ -1,0 +1,13 @@
+# RTS_2027 M10-09 job 01: menu.ogg (docs/audio/music_brief.md)
+caption = 'instrumental, cinematic orchestral, slow build, warm strings and distant brass swells, soft timpani, subtle metallic percussion pulse, low synth drone, expectant, dignified, 86 BPM, D minor, wide clean mix, no vocals'
+instrumental = true
+lyrics = '[Instrumental]'
+duration = 165
+batch_size = 1
+audio_format = 'wav'
+thinking = false
+use_cot_metas = false
+use_cot_caption = false
+use_cot_lyrics = false
+use_cot_language = false
+use_random_seed = true
