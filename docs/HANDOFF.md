@@ -1,8 +1,8 @@
 # Handoff: Session 23 — read the laptop series, pick the sound effects, land session 22 on main
-Last commit: `docs: Session 22 handoff` on branch `integ-s22` (PR to main opened at wrap-up, see the wrap-up message). Check `git log -1 origin/integ-s22`.
+Last commit: `docs: Session 22 handoff` on branch `integ-s22` (PR #76 to main, opened at wrap-up, not merged). Check `git log -1 origin/integ-s22`.
 Where things stand: session 22 (2026-11-12) finished on `integ-s22`, not yet on main: Q-77 balance picks (D-223), mop-up AI on in skirmish
 (D-224), dead-end dock lanes (D-225), audio (D-226: 20 music tracks, 164 Kokoro voice lines, SFX generator, sound keys, ambience), wall/gate
-art (D-227), sign-offs (D-228). Cloud suites green on the combined branch (Sim 1811, AI 367, Scripting 388, Game 2061, Tools/Net/Llm all).
+art (D-227), sign-offs (D-228). Local test runs on the cloud box green on the combined branch, not CI (Sim 1811, AI 367, Scripting 388, Game 2061, Tools/Net/Llm all).
 Decisions up to D-228. Open questions: Q-73 (par times). The owner's laptop is running the series and the full SFX generation overnight.
 
 ## Start here (shown to the user as the plan; nothing starts until they say go)
@@ -12,7 +12,7 @@ Decisions up to D-228. Open questions: Q-73 (par times). The owner's laptop is r
    (all 45 mission-tiers vs Q-75 targets; the old sweep is in `s21sweep_before`). Table first, owner picks any follow-up tweaks (Rust Belt Auth v
    Exp may need a second shipments step; Glass Coast Exp v LB was 25 % in the probe).
 2. SFX: the owner runs `tools\audio\sfx\make_sfx.ps1 -Audition`, picks takes, `-Pick`, commits (LFS). Listen in game; tune volumes in sounds.toml.
-3. Land `integ-s22` on main: refresh the PR (fetch main first), Windows CI green, owner merges (the auto-mode check refuses lead merges).
+3. Land `integ-s22` on main via PR #76: refresh it (fetch main first), Windows CI green, owner merges (the auto-mode check refuses lead merges).
 4. M14: Left Behind and Expedition lore chapters in the approved voice (design 19 §6), then the full ~108-page booklet build (tools/booklet) once
    the balance numbers settle (stat pages are generated from data/rules).
 
@@ -25,7 +25,7 @@ Decisions up to D-228. Open questions: Q-73 (par times). The owner's laptop is r
 
 ## Waiting on the user
 - Laptop: s22after, s22mopup, campaign sweep (commands in the session 22 wrap-up), then the full SFX run, audition and pick.
-- Merge the session 22 PR when CI is green and the series looks right. Rotate the Hugging Face token that was pasted in chat (if not done).
+- Merge PR #76 (session 22) when CI is green and the series looks right. Rotate the Hugging Face token that was pasted in chat (if not done).
 - Two-PC LAN test (M9-15) still open. Answer Q-73 (par times) when convenient.
 - Branch clean-up: wp/s22-* branches on GitHub after the merge (owner deletes).
 

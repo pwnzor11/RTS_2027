@@ -467,9 +467,9 @@ Back up `%APPDATA%\RTS_2027` first (D-220: old development saves and replays may
 - **Voices:** start any campaign mission: the first radio line is spoken (e.g. auth_01 Wrenfield) as well as shown; a mission whose voice file is
   missing still shows the text silently.
 - **New radio lines:** exp_03 tier 5: "A second flight of Authority bombers, low over the south-west sea!" with Kell on the radio at ~5:20;
-  exp_04: after the Dredge Works, Strand warns "The Directorate army is on the march"; auth_01: "Raiders from the east road!" now has a Wrenfield line.
-- **Ambience:** Settings has an **Ambience** slider; in a skirmish nothing changes until the generated ambience loops land (falls back silently).
-- **Mop-up AI:** skirmish v a tier 3-5 AI, then wreck its army and leave a few outlying buildings: after about 7-8 minutes of game time the AI
+  exp_04: after the Dredge Works, Strand warns "The Directorate army is on the march"; auth_01: the "Raiders from the east road!" ticker is followed by Wrenfield: "Riflemen on the east road. Keep the scrapers behind the line."
+- **Ambience:** Settings has an **Ambience volume** slider; in a skirmish nothing changes until the generated ambience loops land (falls back silently).
+- **Mop-up AI:** skirmish v a tier 2-5 AI, then wreck its army and leave a few outlying buildings: after about 7-8 minutes of game time the AI
   sends small parties that search the map for your last buildings (it does the same to you). Tier 1 never does.
 - **Dead-end dock (Q-76):** wall a refinery or yard dock into a one-cell corridor and send 3+ harvesters: they wait at the corridor mouth and
   each drives in, unloads and out without stopping.
