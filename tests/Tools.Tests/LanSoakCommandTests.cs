@@ -39,7 +39,9 @@ public sealed class LanSoakCommandTests
         (int b, string two) = Capture(args);
         Assert.Equal(0, a);
         Assert.Equal(0, b);
-        Assert.Equal(one, two);
+        // other test classes may print to the shared console meanwhile: compare only the soak's own lines
+        static string Soak(string t) => string.Join("\n", t.Split('\n').Where(l => l.StartsWith("LAN soak") || l.StartsWith("hashes") || l.StartsWith("final") || l.StartsWith("bundles") || l.StartsWith("OK") || l.StartsWith("FAIL")));
+        Assert.Equal(Soak(one), Soak(two));
     }
 
     [Fact]
