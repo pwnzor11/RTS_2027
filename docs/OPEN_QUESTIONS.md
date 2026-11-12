@@ -9,8 +9,12 @@ file cited after each question. Recommendations are the lead's, from the researc
   +28 % (glass_coast) at 5 minutes. Decide after the owner's 64-game run (`tools/measure/run_s17_layout2.ps1`). Options: **(a) wait for the 64-game
   numbers, then cut money per field cell on the biomes still over (recommended)**; (b) relax the layout check "100 field cells within 30 path cells"
   for layout 2 so the main field can be halved (the only change that matched layout 1 in the probe); (c) accept the richer early economy on layout 2.
+  Owner 2026-11-12: wait for the laptop run, as in (a).
 
 ## Answered
+- Owner confirmations · 2026-11-12 · Confirmed the remaining "assumed — confirm" items after D-153's blanket confirmation: the revised Left
+  Behind lore text (D-155), D-156 (floating docks, aircraft ammo), D-157 (1) (lb_yard storage 3000), D-165 (act-break stills, tier-4 AI levers),
+  and the Archive upgrade field notes marked "DRAFT (lead, session 12)" (they lose the DRAFT mark). DECISIONS entry at the next wrap-up.
 - Q-M9-a..o · 2026-11-12 · M9 LAN design round (docs/design/20_m9_lan_plan.md §9). Owner: UDP with own reliability (a, not the rec);
   host-sequenced turn bundles (b); host picks 2/3/4-tick delay in the lobby (c, not the rec); AI takes over a dropped slot (d); desync pauses,
   host picks Resync/Continue/End (e); host runs all AI incl. LLM on its key (f); chat outside the sim, kept in replays (g); anyone pauses,

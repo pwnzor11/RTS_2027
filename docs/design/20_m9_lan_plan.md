@@ -209,7 +209,7 @@ The DECISIONS entries for these get their numbers at the next wrap-up, after ses
 so the two sessions cannot pick the same id.
 
 **What changes in the plan (lead reading; flag any that are wrong):**
-- **Transport (a).** One UDP protocol for lobby and match; discovery uses the same socket family. `src/Net` gains a small
+- **Transport (a).** One UDP protocol for lobby and match (owner confirmed 2026-11-12: UDP for the lobby too); discovery uses the same socket family. `src/Net` gains a small
   reliability layer: per-peer packet ids, acks carried on every packet, resend of unacked reliable messages after a timeout
   set from measured round-trip, duplicate drop, and packets kept under 1 200 bytes (no IP fragmentation). TurnBundles and
   Inputs are reliable and ordered per peer; pings and hashes may be unreliable. Because the host stamps every tick (b), C&C's
