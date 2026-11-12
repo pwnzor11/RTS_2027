@@ -379,7 +379,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
         if (_lan is not null && !ReferenceEquals(_s.Screens.Top, this))
         {
             // M9: a menu is open over the match (LanCover); the match keeps running for everyone, but this screen takes no input
-            PumpLan(t);
+            PumpLan();
             UnitInterpolator.Build(_source.Current, _source.Previous, _source.Alpha, _renderUnits);
             return;
         }
@@ -546,7 +546,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
         int wheelDelta = input.WheelDelta;
         if (wheelDelta != 0) _camera.ZoomBy(wheelDelta > 0 ? 1 : -1, input.MousePosition);   // S18 GAMEUI-02: zoom about the cursor
 
-        if (_lan is not null) PumpLan(t);   // M9: the lockstep steps the sim when it holds the bundles
+        if (_lan is not null) PumpLan();   // M9: the lockstep steps the sim when it holds the bundles
         else if (_sim is not null) _sim.Advance(t.ElapsedGameTime.Ticks / 10); // ticks are 100 ns; microseconds = ticks / 10
         else _source.Update();
         if (_sim is not null) _sampler.Observe(_sim.Sim, _income);   // M10-17: a sample every 10 s of game time
@@ -1610,7 +1610,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
     // ---- M9-07 / M9-08 / M9-10: the LAN match ----
 
     // The lockstep steps the sim on the game time; the network is pumped every frame, also while a menu is open over the match.
-    private void PumpLan(GameTime t) => _lan!.Update(t.TotalGameTime.Ticks / 10);   // ticks are 100 ns
+    private void PumpLan() => _lan!.Update(_s.NetMicros());   // M9-14: the clock the lobby polled the transport on, not the game time
 
     // The overlay's buttons (Drop, Resume, the desync and host-left choices). True when this screen is leaving.
     private bool HandleLanOverlay(InputFrame input)

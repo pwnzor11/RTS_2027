@@ -101,6 +101,9 @@ public static class LanText
     /// <summary>Bye reason the host sends when it leaves or ends the match.</summary>
     public const string HostClosed = "host left";
 
+    /// <summary>The Bye reason the host sends when its own side of the match could not start.</summary>
+    public const string HostStartFailed = "The host could not start the match.";
+
     /// <summary>Bye reason a client sends when it leaves.</summary>
     public const string ClientClosed = "left";
 

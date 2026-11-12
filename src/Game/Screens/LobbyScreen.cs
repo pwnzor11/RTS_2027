@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
-using System.Diagnostics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -32,7 +31,6 @@ public sealed class LobbyScreen : IScreen
     private readonly LobbyClient? _client;
     private readonly DiscoveryResponder? _responder;
     private readonly int _gamePort;
-    private readonly Stopwatch _clock = Stopwatch.StartNew();
     private readonly string[] _tiers;
     private readonly IReadOnlyList<MapEntry> _maps;
     private readonly MapPreviewView _previewView = new();
@@ -72,6 +70,9 @@ public sealed class LobbyScreen : IScreen
         _panel = BuildPanel();
     }
 
+    /// <summary>Builds the match screen from the setup (the game uses <see cref="LanMatch.CreateScreen"/>; tests replace it).</summary>
+    public Func<GameServices, LanMatchSetup, IScreen> MatchFactory { get; init; } = LanMatch.CreateScreen;
+
     /// <inheritdoc />
     public bool BlocksUpdateBelow => true;
 
@@ -94,7 +95,8 @@ public sealed class LobbyScreen : IScreen
         _host?.Transport.Dispose();
     }
 
-    private long NowMicros => _clock.ElapsedTicks * 1_000_000L / Stopwatch.Frequency;
+    // the shared network clock: the match polls the same transport on it after the handover (M9-14)
+    private long NowMicros => _s.NetMicros();
 
     private LobbyData? Data => _host?.Data ?? _client?.Data;
 
@@ -149,7 +151,7 @@ public sealed class LobbyScreen : IScreen
     {
         try
         {
-            IScreen game = LanMatch.CreateScreen(_s, setup);
+            IScreen game = MatchFactory(_s, setup);
             _handedOver = true;
             _s.Screens.Replace(game);
         }

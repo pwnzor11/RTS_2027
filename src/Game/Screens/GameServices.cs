@@ -86,6 +86,21 @@ public sealed class GameServices
     /// <summary>The window's client size in pixels (the shell sets it); zero = unknown, the back buffer size is used. Edge scroll measures its band against it (M11-10b).</summary>
     public Func<Microsoft.Xna.Framework.Point> ClientSize { get; set; } = static () => Microsoft.Xna.Framework.Point.Zero;
 
+    /// <summary>
+    /// The one monotonic clock (microseconds) every LAN transport is polled with for its whole life: the lobby and the match that takes
+    /// the transport over both read it, so the transport's timeouts, resends and RTT never see a jump at the handover (M9-14). Tests replace it.
+    /// </summary>
+    public Func<long> NetMicros { get; set; } = static () => MicrosOf(NetWatch.ElapsedTicks);
+
+    private static readonly System.Diagnostics.Stopwatch NetWatch = System.Diagnostics.Stopwatch.StartNew();
+
+    // ticks to microseconds without overflow for any uptime
+    private static long MicrosOf(long ticks)
+    {
+        long f = System.Diagnostics.Stopwatch.Frequency;
+        return ticks / f * 1_000_000 + ticks % f * 1_000_000 / f;
+    }
+
     /// <summary>Frames drawn in the last second, set by the shell.</summary>
     public int Fps { get; set; }
 

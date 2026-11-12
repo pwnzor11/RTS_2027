@@ -55,6 +55,7 @@ public sealed class ReliableChannel
     {
         public int Id = -1;
         public long SentAt;
+        public bool NoSample;
         public readonly List<Unit> Units = new();
     }
 
@@ -91,6 +92,19 @@ public sealed class ReliableChannel
     {
         _lastRecvAt = nowMicroseconds;
         _lastSendAt = nowMicroseconds;
+    }
+
+    /// <summary>
+    /// The caller's clock jumped: restarts the silence and keepalive timers at <paramref name="nowMicroseconds"/>, makes every unacknowledged
+    /// unit due for resend, and voids the RTT samples of packets sent before the jump (their send times are on the old clock).
+    /// </summary>
+    public void Rebase(long nowMicroseconds)
+    {
+        _lastRecvAt = nowMicroseconds;
+        _lastSendAt = nowMicroseconds;
+        foreach (Unit u in _units)
+            if (u.LastSent >= 0) u.LastSent = Math.Max(0, nowMicroseconds - MaxRtoMicros);
+        foreach (SentPacket sp in _sent) sp.NoSample = true;
     }
 
     /// <summary>Set when the peer broke the protocol (oversized reassembly); the owner should drop the peer.</summary>
@@ -185,7 +199,7 @@ public sealed class ReliableChannel
         BinaryPrimitives.WriteUInt16LittleEndian(buffer.AsSpan(3), _recvHigh);
         BinaryPrimitives.WriteUInt32LittleEndian(buffer.AsSpan(5), _recvBits);
         SentPacket sp = _sent[id % SentRing];
-        sp.Id = id; sp.SentAt = now; sp.Units.Clear(); sp.Units.AddRange(packetUnits);
+        sp.Id = id; sp.SentAt = now; sp.NoSample = false; sp.Units.Clear(); sp.Units.AddRange(packetUnits);
         _ackDirty = false;
         _lastSendAt = now;
         PacketsBuilt++;
@@ -324,7 +338,7 @@ public sealed class ReliableChannel
         if (sp.Id != id) return;
         sp.Id = -1;
         long sample = now - sp.SentAt;
-        if (sample >= 0)
+        if (sample >= 0 && !sp.NoSample)
             _srtt = _srtt < 0 ? sample : (_srtt * 7 + sample) / 8;
         foreach (Unit u in sp.Units) u.Acked = true;
         sp.Units.Clear();

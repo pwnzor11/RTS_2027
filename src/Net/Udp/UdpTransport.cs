@@ -13,7 +13,9 @@ namespace Rts.Net.Udp;
 /// real id, a Connected event, and the lobby sends Welcome itself) or <see cref="Reject"/> (a Reject message is sent, then the
 /// peer is closed once it is acknowledged or after two seconds). Anything else from a pending peer is ignored. Client side:
 /// <see cref="Connect"/> queues the Hello as the first reliable message; <see cref="LocalPeer"/> becomes the Welcome id and the
-/// Connected event fires when Welcome arrives. A Reject or Bye ends the connection after being surfaced.
+/// Connected event fires when Welcome arrives. A Reject or Bye ends the connection after being surfaced. The caller's clock should be one
+/// monotonic clock for the transport's whole life; a jump of more than the timeout between two polls (either way) is treated as a stall of
+/// the caller, never as the peers' silence.
 /// </summary>
 public sealed class UdpTransport : INetTransport
 {
@@ -99,12 +101,22 @@ public sealed class UdpTransport : INetTransport
     public void Poll(long nowMicroseconds)
     {
         if (_disposed) return;
-        _lastNow = nowMicroseconds;
         if (!_clockStarted)
         {
             _clockStarted = true;
             foreach (Peer p in _peers) StartPeer(p, nowMicroseconds);
         }
+        else if (nowMicroseconds < _lastNow || nowMicroseconds - _lastNow > _timeoutMicros)
+        {
+            // The caller's clock jumped (another clock, or the game loop stalled for longer than the timeout): the silence was ours, not
+            // the peers'. Restart every silence and resend timer at the new time and void RTT samples that span the jump (M9-14).
+            foreach (Peer p in _peers)
+            {
+                p.Channel.Rebase(nowMicroseconds);
+                if (p.CloseDeadline != 0) p.CloseDeadline = nowMicroseconds + ClosingGraceMicros;
+            }
+        }
+        _lastNow = nowMicroseconds;
         ReceiveAll(nowMicroseconds);
         foreach (Peer p in _peers.ToArray())
         {
