@@ -85,7 +85,7 @@ behind them. Count your shells and your credits before every attack, because the
 build and cheaper to keep alive; repair them. Hold ground you can supply and give up ground you cannot. The Authority does not
 win quickly. It wins by still being there.
 
-## 6b. Directorate lore expansion (DRAFT for sign-off, session 22, M14-04)
+## 6b. Directorate lore expansion (approved by the owner, session 22, D-228)
 Same shape as the approved Authority entries: four entries for the Directorate chapter, in-universe voice, no campaign secrets
 (the Director's death, Order Seven and the Sunrise Device stay out of the manual; premise only). Vocabulary from docs/lore and the
 Archive: the Annex, levels, shifts, the Voice, the Commissariat, service year, "the tenancy", Bores, Hatches, the Land-Train.

@@ -304,7 +304,7 @@ Source: docs/reviews/2026-11-07_owner_campaign_feedback.md. Audit: docs/reviews/
 - [x] M14-02 Hero render mode and laptop script (tools/booklet/render_heroes.ps1) (s18); s19: module cache fix (LB structures)
 - [x] M14-07 Pilot PDF and previews in docs/field_manual/, linked from the README (s19)
 - [x] M14-03 Hero renders: pilot approved, all 124 rendered on the laptop and on main (s19, D-210; PR #63). Open: walls/gates re-angle s22: walls/gates re-angled -35 deg with half sky light and detail-passed models, laptop renders on integ-s22 (D-227)
-- [ ] M14-04 Directorate lore draft (Authority approved), then the other three faction chapters s22: Directorate draft in design 19 §6b, waiting for owner sign-off
+- [ ] M14-04 Directorate lore draft (Authority approved), then the other three faction chapters s22: Directorate draft approved (design 19 §6b, D-228); Left Behind and Expedition chapters next
 - [ ] M14-05 Full build (about 108 pages) after M13 lands; quick-reference card
 - [x] M14-06 Models and sprites for the 26 ids without art (scripts D-215; owner rendered on the laptop; landed in PR #74 s21; no rules id is left without art)
 

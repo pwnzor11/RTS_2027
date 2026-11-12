@@ -426,3 +426,21 @@ laptop renders landed, no rules id left without art. Tools: SeedSweepTests (kept
 all-or-nothing for the bot (auth_04, dir_04); lb_01's idle player no longer loses (D-219). Sweeps on the 2-CPU box took 1-2 h per pass;
 the laptop did all 45 in 21 min.
 **Next session should:** see HANDOFF (Q-77 balance round starting from the owner's A/B, then M14).
+
+## Session 22 · 2026-11-12 (Q-77 balance round, mop-up AI, Q-76 dock lanes, radio lines, audio pipeline, wall art)
+**Goal:** owner: A/B on the laptop first; meanwhile mop-up AI fix, missing radio lines, Q-76; then audio for the laptop and the balance round.
+**Done:** A/B (balance_runs\s21ab_nod219) ruled out D-219 for the Authority's slide. Diagnosis (docs/balance/s22_balance_options.md): Expedition
+shipments, Rocket Truck splash, two mirror-map handedness bugs; owner took all picks (D-223) incl. 9 M13-13 data items; SkirmishStart.KitFlip and
+Simulation.OrientedOffset follow mirror symmetry. Mop-up AI back on in skirmish (MopupPlan, D-224). Dead-end dock lanes (D-225). Radio lines on
+every unannounced and announced wave (M13-21, 22 new lines plus exp_04 march). Audio (D-226): music export (20 tracks, take 1, in LFS), Kokoro
+voices (164 slots, 11 leaders, owner auditioned), Stable Audio Open SFX generator (80 jobs) for the laptop, sound keys by faction/class/weapon,
+biome ambience loops, audio WAVs and music OGG through Git LFS. Wall/gate heroes turned -35 deg with half sky light and models detail-passed
+(D-227, laptop renders). Directorate lore draft approved; Q-78 confirmed (D-228). Hero yaw support in tools/booklet.
+**Decisions:** D-223..D-228.
+**Helpers:** 11 Sonnet packages (mopup, radio x2, dock, baldiag, balance, wallart x2, audio, sfx, sfxcode).
+**Problems / notes:** add_repo was refused until the owner asked for push access; cloud LFS uploads are still refused (the owner pushed the
+LFS audio commits with a bundle package; the file transfer re-encoded the WAVs, so the LFS objects were rebuilt from his clone's own files).
+The owner pasted a Hugging Face token into chat; not stored anywhere, he was asked to rotate it. Windows had no Python 3.11 (setup now falls
+back to uv/winget); SFX setup missed torchsde (fixed). Cloud smoke (16 games/cell) after the picks: Auth v Exp Rust Belt 7-8, Glass Coast 8-8,
+Auth v Dir 8-6; LB mirror income ratio 0.78 before the OrientedOffset fix, 0.95 in its trial run.
+**Next session should:** see HANDOFF (read the laptop series s22after / s22mopup / campaign sweep, then SFX picks, PR to main).

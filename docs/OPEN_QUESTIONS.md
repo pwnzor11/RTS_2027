@@ -14,6 +14,7 @@ file cited after each question. Recommendations are the lead's, from the researc
   (b) par = the bot's tier-3 win time + 50 %; (c) no par medal.
 
 ## Answered
+- Q-78 · 2026-11-12 · Owner: all four assumed items confirmed (Kokoro CC0, mop-up constants for now, Harpoon anti-air, horn/sonar) → D-228.
 - Q-77 · 2026-11-12 · Owner: take all recommendations (docs/balance/s22_balance_options.md); the A/B ruled out D-219 → D-223.
   Q-76 · 2026-11-12 · Owner (a), "go ahead and fix this" → D-225.
 - Q-75 · 2026-11-12 · Owner: targets over 12 seeds with ash on are **tier 1 >= 10/12, tier 3 >= 8/12, tier 5 >= 3/12** (harder than the

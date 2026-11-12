@@ -1672,7 +1672,7 @@ waiters stand at least 2 cells beyond its outer end and claim the dock only whil
 ### D-226 · 2026-11-12 · Session 22 audio: music, voices, sound effects
 **Decision:** (1) Music: take 1 of all 20 ACE-Step tracks ships now (tools/audio/export_music.py, -16 LUFS, victory/defeat -14), any track
 can be swapped. (2) Voice: Kokoro-82M (Apache-2.0) on the owner's laptop, one preset voice per leader chosen by audition (tools/voice/
-leaders.json), every radio line voiced (164 slots); output released CC0 (assumed — confirm). (3) SFX: about 80 sounds generated on the
+leaders.json), every radio line voiced (164 slots); output released CC0 (owner confirmed, Q-78). (3) SFX: about 80 sounds generated on the
 owner's laptop with Stable Audio Open 1.0 (Stability AI Community License, free below USD 1M revenue, outputs ours; weights never in the
 repo); CREDITS: "Generated with Stable Audio Open 1.0 (Stability AI Community License); outputs owned by the project, shipped under the
 game's GPL v3" — no CC0 claim. One-shots 22 kHz mono, ambience loops stereo; data/audio WAVs and data/music OGGs go through Git LFS.
@@ -1685,3 +1685,8 @@ events; biome ambience loops with an Ambience slider (view only, no sim change).
 sky light (render_heroes.py STRUCTURE_YAW, TURNED_WORLD_STRENGTH), and their models got a detail pass (panels, seams, grime, props) that also
 changes the game sprites; rendered on the owner's laptop (tools/art/render_s22_walls.ps1). **Status:** owner decisions ("lighting + detail",
 "bolder, then fan out"; renders approved)
+
+### D-228 · 2026-11-12 · Session 22 sign-offs
+**Decision:** the owner approved the Directorate lore draft (design 19 §6b, M14-04) and confirmed Q-78: Kokoro output CC0; the mop-up
+constants stand until the laptop on/off series; the Harpoon Wagon counts as anti-air in the AI mix; ship-ready horn and sub sonar stay.
+**Status:** owner decision (session 22, "signoffs look great")

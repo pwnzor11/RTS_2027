@@ -1,33 +1,33 @@
-# Handoff: Session 22 — skirmish balance round (Q-77, M13-19), then the Field Manual (M14)
-Last commit: `docs: Session 21 handoff` (PR after #74). Check `git log -1 origin/main`.
-Where things stand: session 21 (2026-11-12) landed PR #74 (with #70 and #67): campaign missions run with ash on and all 45 mission-tiers meet
-the owner's targets over 12 seeds (D-222, confirmed on the owner's laptop); the default stance engages hostile units in sight (D-219);
-tier-5 fixed-seed walks only need a clean run (D-221); development saves and replays are disposable (D-220); M14-06 art is in, no rules id
-left without art. Decisions up to D-222. Open questions: Q-77 (skirmish balance), Q-76 (dead-end dock), Q-73 (par times).
+# Handoff: Session 23 — read the laptop series, pick the sound effects, land session 22 on main
+Last commit: `docs: Session 22 handoff` on branch `integ-s22` (PR to main opened at wrap-up, see the wrap-up message). Check `git log -1 origin/integ-s22`.
+Where things stand: session 22 (2026-11-12) finished on `integ-s22`, not yet on main: Q-77 balance picks (D-223), mop-up AI on in skirmish
+(D-224), dead-end dock lanes (D-225), audio (D-226: 20 music tracks, 164 Kokoro voice lines, SFX generator, sound keys, ambience), wall/gate
+art (D-227), sign-offs (D-228). Cloud suites green on the combined branch (Sim 1811, AI 367, Scripting 388, Game 2061, Tools/Net/Llm all).
+Decisions up to D-228. Open questions: Q-73 (par times). The owner's laptop is running the series and the full SFX generation overnight.
 
 ## Start here (shown to the user as the plan; nothing starts until they say go)
-1. Read the owner's A/B: `balance_runs\s21ab_nod219\s21ab_nod219_summary.md` (D-219 OFF) against `balance_runs\s21after\s21after_summary.md`
-   (D-219 ON) for four rows: Authority v Directorate and v Expedition on Rust Belt, Expedition v Authority on Glass Coast, Left Behind mirror
-   Mountains L1. Tells whether D-219 or faction numbers weakened the Authority. Read through the linked folder (device bridge).
-2. Q-77 balance round (M13-19), table first, owner picks: Authority v Directorate 17-36 and v Expedition 12-51 on Rust Belt; Glass Coast
-   Expedition 43-55 v 7-14; Left Behind mirror Mountains L1 start 0 earns ~25 % less (fields). Measure on the owner's laptop
-   (run_s19_after.ps1 -OutName <name> -Only <rows>); the owner wants sweeps and series on the laptop, not the cloud box.
-3. M13-13 option list (D-208, docs/reviews/2026-11-11_s18_audit/s19_numbers.md QUESTIONS 1-6, 8-14) as part of the same round.
-4. M14: re-angle the walls and gates hero renders (auth_gate, auth_wall, dir_bunker, lb_scrap_wall), Directorate lore draft, hero-render support
-   in tools/booklet, then the full ~108-page build (all 150 heroes are in art/booklet now).
+1. Read the laptop results through the linked folder: `balance_runs\s22after\s22after_summary.md` (compare with `s21after`; target 45-55 % per
+   cross-faction pair, start share under 60 %; LB mirror Mountains L1 should be near even after the OrientedOffset fix), `balance_runs\s22mopup\
+   s22mopup_summary.md` (draws with mop-up on vs off; keep on only if it cuts draws without hurting 4v3), `balance_runs\s21sweep\s21sweep_summary.md`
+   (all 45 mission-tiers vs Q-75 targets; the old sweep is in `s21sweep_before`). Table first, owner picks any follow-up tweaks (Rust Belt Auth v
+   Exp may need a second shipments step; Glass Coast Exp v LB was 25 % in the probe).
+2. SFX: the owner runs `tools\audio\sfx\make_sfx.ps1 -Audition`, picks takes, `-Pick`, commits (LFS). Listen in game; tune volumes in sounds.toml.
+3. Land `integ-s22` on main: refresh the PR (fetch main first), Windows CI green, owner merges (the auto-mode check refuses lead merges).
+4. M14: Left Behind and Expedition lore chapters in the approved voice (design 19 §6), then the full ~108-page booklet build (tools/booklet) once
+   the balance numbers settle (stat pages are generated from data/rules).
 
 ## Half-finished work
-- Nothing in flight. Session 21 helper branches are merged or disposable.
-- Mop-up AI code in MilitaryManager still switched off; voice lines on hold (Piper); `unit_reserve` override unused.
-- exp_03 tier 5's second bomber sortie has no radio line (new text would be needed; owner not asked yet).
-- Tier 5 wins 12/12 in eight missions (no harder than tier 3 for the bot): a human play-test decides whether to raise it.
+- SFX: 80 jobs generating on the owner's laptop (draft, then full run). Nothing picked or committed yet. `exp_rad_burst` has no event; flak has no job.
+- Mop-up constants (MopupPlan.cs, "(tune) s22") wait for the s22mopup series.
+- Mop-up AI code in MilitaryManager is now ON in skirmish tiers 2-5 (was off); campaign missions keep it off.
+- Tier 5 wins 12/12 in eight missions (unchanged): a human play-test decides whether to raise it. M13-13 item 13 needs a hand check.
+- Unit barks (Piper/Kokoro per unit class, D-214) not started; the tutorial instructor has no voice (owner not asked).
 
 ## Waiting on the user
-- Merge the session 21 handoff PR (docs only).
-- Laptop: `git checkout main; git pull; powershell -ExecutionPolicy Bypass -File tools\measure\run_s21_ab.ps1` (~25-35 min), results stay in the folder.
-- Back up `%APPDATA%\RTS_2027`, `git pull`, play USER_CHECKS "Session 21" and "Session 19p" (two-PC LAN test, M9-15 still open).
-- Music: pick ACE-Step takes (docs/audio/music_brief.md) when ready. Answer Q-73 (par times) when convenient.
-- Branch clean-up (owner deletes; this session cannot): see the list in the session 21 wrap-up message.
+- Laptop: s22after, s22mopup, campaign sweep (commands in the session 22 wrap-up), then the full SFX run, audition and pick.
+- Merge the session 22 PR when CI is green and the series looks right. Rotate the Hugging Face token that was pasted in chat (if not done).
+- Two-PC LAN test (M9-15) still open. Answer Q-73 (par times) when convenient.
+- Branch clean-up: wp/s22-* branches on GitHub after the merge (owner deletes).
 
 ## How to run this session
 - Session 20 lessons: (1) a single fixed-seed bot walk is not a balance measure: the campaign walks flip with the seed; judge a mission-tier
@@ -223,6 +223,17 @@ left without art. Decisions up to D-222. Open questions: Q-77 (skirmish balance)
   - The safety check refuses force-pushes even to our own land/ branches: open a new land branch and PR instead (#66 superseded #62).
   - Helpers' "assumed" picks that touch player-visible behaviour go to OPEN_QUESTIONS as "assumed — confirm" (Q-72).
   - The owner answers phone pushes quickly: batch 1-5 picks per push with a recommendation each; PushNotification works.
+- Session 22 lessons:
+  - add_repo (push access) is refused by the auto-mode check unless the owner asks for it in chat; once added, git push and LFS *downloads* work,
+    but LFS *uploads* from the cloud are still refused (S3 "Forbidden"). Keep new LFS files off branches the lead must push, or hand the owner a
+    package: bundle + a push script. Do NOT send LFS objects through SendUserFile/device_commit_files: WAVs arrived re-encoded (checksums broke).
+    Rebuild objects on the owner's side from his own working files (git show HEAD:<path> | sha256) instead.
+  - git commands in the device bridge leave .lock files (no delete permission): use `git show`/`git cat-file`, not status/diff/checkout, and move
+    any stray `.git/index.lock` aside.
+  - The owner's Windows has Python 3.13 (art venv) but no 3.11; laptop setups now try py -3.11, then uv, then winget's Python 3.11.
+  - Laptop scripts written blind need one quick dry run by the owner before a long run: missing packages (torchsde) only show at model load.
+  - Never put credentials in docs/briefs; when the owner pastes one, don't use or store it and ask him to rotate it.
+  - Art: the owner judges heroes by eye; a quick 24-sample cloud preview sheet per round, then full renders on the laptop, worked well.
 - Session 21 lessons:
   - Check GitHub for a parallel session before starting (`git ls-remote origin 'refs/heads/*s<N>*'`): a whole session 20 had run overnight;
     build on its PR and handoff instead of redoing it.
