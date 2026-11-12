@@ -18,17 +18,26 @@ public sealed class AudioDirector
     private const int BattleHoldTicks = 20 * SimConstants.TicksPerSecond;
     // A sound quieter than this is not worth a voice.
     private const float AudibleGain = 0.02f;
+    // S22: at most this many fight sounds (shots, explosions, deaths) start per sim step, so 50 units firing do not stack hundreds of voices.
+    // Alerts, production and interface sounds are not counted. (The backend also caps the copies of one sound, SoundDef.MaxVoices.)
+    private const int MaxCombatPlaysPerStep = 8;
+    private const float WaterCheckSeconds = 0.5f;
 
     private readonly SoundBank _bank;
     private readonly IAudio _audio;
     private readonly Random _rng;
     private readonly Func<LeptonCoord?> _listener;
     private readonly AudioEventDeriver _deriver = new();
-    private readonly Dictionary<AudioEventKind, long> _lastPlayedMs = new();
-    private readonly Dictionary<AudioEventKind, long> _lastNotifiedMs = new();   // S18 GAMEREND-04: Notify cooldowns run on the wall clock
+    private readonly Dictionary<string, long> _lastPlayedMs = new(StringComparer.Ordinal);   // S22: keyed by the resolved event name, so qualified events have their own cooldown
+    private readonly Dictionary<string, long> _lastNotifiedMs = new(StringComparer.Ordinal);   // S18 GAMEREND-04: Notify cooldowns run on the wall clock
     private readonly Func<long> _wallClockMs;
     private readonly List<AudioEvent> _scratch = new();
     private readonly MusicPlayer? _music;
+    private readonly AmbiencePlayer? _ambience;
+    private float _waterTimer;
+    private double _waterFraction;
+    private string? _ambienceKey;
+    private int _combatPlaysThisStep;
     private long _nowMs;
     private int _lastTick = -1;
     private int _lastCombatTick = int.MinValue / 2;
@@ -39,8 +48,9 @@ public sealed class AudioDirector
 
     /// <summary>Creates the director. <paramref name="listener"/> gives the camera centre (default <see cref="AudioListener.Position"/>); <paramref name="music"/> is optional.</summary>
     public AudioDirector(SoundBank bank, IAudio audio, Random rng, Func<LeptonCoord?>? listener = null, MusicPlayer? music = null,
-        Func<long>? wallClockMs = null)
+        Func<long>? wallClockMs = null, AmbiencePlayer? ambience = null)
     {
+        _ambience = ambience;
         _wallClockMs = wallClockMs ?? DefaultWallClock;
         _bank = bank;
         _audio = audio;
@@ -67,6 +77,7 @@ public sealed class AudioDirector
         _result = frame.Result;
 
         _scratch.Clear();
+        _combatPlaysThisStep = 0;
         _deriver.Derive(frame, _scratch);
         foreach (AudioEvent e in _scratch)
         {
@@ -129,17 +140,52 @@ public sealed class AudioDirector
         _music?.Update(dt, MusicState, _faction);
     }
 
+    /// <summary>
+    /// Advances the biome ambience by <paramref name="dt"/> seconds (S22). <paramref name="inGame"/> false (menus, briefings) fades it out. In a game the
+    /// biome comes from <paramref name="theaterId"/> (the map's theater: rust_belt, glass_coast, ash_plains, mountains), or open_sea when most of
+    /// the cells around the camera are water (checked twice a second). Nothing plays for a biome with no [ambience] entry in sounds.toml.
+    /// </summary>
+    public void UpdateAmbience(float dt, bool inGame, string? theaterId, SimSnapshot? snapshot)
+    {
+        if (_ambience is null) return;
+        if (!inGame || snapshot is null)
+        {
+            _ambienceKey = null;
+            _ambience.Update(dt, null);
+            return;
+        }
+
+        _waterTimer -= dt;
+        if (_waterTimer <= 0f)
+        {
+            _waterTimer = WaterCheckSeconds;
+            _waterFraction = AmbienceSelector.WaterFraction(snapshot, _listener());
+        }
+
+        _ambienceKey = AmbienceSelector.Choose(theaterId, _waterFraction, _ambienceKey);
+        _ambience.Update(dt, _ambienceKey);
+    }
+
+    /// <summary>The ambience key playing or fading in now (glass_coast, open_sea ...), or null.</summary>
+    public string? AmbienceKey => _ambienceKey;
+
     private static bool IsCombat(AudioEventKind k) =>
         k is AudioEventKind.FireBullet or AudioEventKind.FireShell or AudioEventKind.FireMissile
-            or AudioEventKind.ExplosionSmall or AudioEventKind.ExplosionLarge or AudioEventKind.UnderAttack;
+            or AudioEventKind.ExplosionSmall or AudioEventKind.ExplosionLarge or AudioEventKind.UnderAttack
+            or AudioEventKind.UnitDied or AudioEventKind.BuildingDestroyed or AudioEventKind.WaterImpact;
+
+    // The sounds the per-step cap counts: shots, blasts, deaths and splashes (not the alert).
+    private static bool IsFightSound(AudioEventKind k) => IsCombat(k) && k != AudioEventKind.UnderAttack;
 
     private void Play(AudioEvent e, bool wall = false)
     {
-        EventDef? def = _bank.Event(e.Kind);
+        EventDef? def = _bank.Resolve(e);   // S22: most specific key first, then the plain event, then the stand-in event
         if (def is null) return;
-        Dictionary<AudioEventKind, long> played = wall ? _lastNotifiedMs : _lastPlayedMs;
+        Dictionary<string, long> played = wall ? _lastNotifiedMs : _lastPlayedMs;
         long now = wall ? _wallClockMs() : _nowMs;
-        if (played.TryGetValue(e.Kind, out long last) && now - last < def.CooldownMs) return;
+        if (played.TryGetValue(def.Name, out long last) && now - last < def.CooldownMs) return;
+        bool fight = !wall && IsFightSound(e.Kind);
+        if (fight && _combatPlaysThisStep >= MaxCombatPlaysPerStep) return;
 
         float gain = def.Volume;
         float pan = 0f;
@@ -151,7 +197,8 @@ public sealed class AudioDirector
         }
 
         if (gain < AudibleGain) return;
-        played[e.Kind] = now;
+        played[def.Name] = now;
+        if (fight) _combatPlaysThisStep++;
         _audio.PlaySfx(_bank.Pick(def, _rng).Id, gain, pan);
     }
 }

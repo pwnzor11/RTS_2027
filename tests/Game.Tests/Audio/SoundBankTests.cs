@@ -17,11 +17,28 @@ public sealed class SoundBankTests
         Assert.Empty(bank.MissingFiles(AudioTestSupport.AudioDir()));
     }
 
+    // S22: events that exist only when a generated sound file does (no plain entry, and no stand-in event): silent without it.
+    private static readonly AudioEventKind[] SilentWithoutSound =
+    {
+        AudioEventKind.Sonar, AudioEventKind.AirFlyby, AudioEventKind.AirHover, AudioEventKind.RigDeploy, AudioEventKind.RigPack,
+    };
+
     [Fact]
-    public void EveryEventKindIsMapped()
+    public void EveryEventKindIsMappedOrHasAStandIn()
     {
         SoundBank bank = Load();
         foreach (AudioEventKind kind in Enum.GetValues<AudioEventKind>())
+        {
+            if (SilentWithoutSound.Contains(kind)) continue;
+            Assert.True(bank.Resolve(new AudioEvent(kind)) is { Sounds.Count: > 0 }, $"no event or stand-in for {AudioEventNames.Of(kind)}");
+        }
+    }
+
+    [Fact]
+    public void TheOriginalEventsStillHavePlainEntries()
+    {
+        SoundBank bank = Load();
+        foreach (AudioEventKind kind in Enum.GetValues<AudioEventKind>().Where(k => k <= AudioEventKind.Promotion))
         {
             Assert.True(bank.Event(kind) is { Sounds.Count: > 0 }, $"no event for {AudioEventNames.Of(kind)}");
         }
@@ -52,6 +69,9 @@ public sealed class SoundBankTests
     {
         SoundBank bank = Load();
         Assert.Equal(AudioEventKind.FireMissile, bank.EventForWeapon("auth_rocket"));
+        Assert.Equal(AudioEventKind.FireShell, bank.EventForWeapon("auth_tank_cannon"));
+        Assert.Equal(AudioEventKind.FireBullet, bank.EventForWeapon("auth_rifle"));
+        Assert.Null(bank.EventForWeapon("auth_bomb"));   // a bomb sounds at its detonation
         Assert.Null(bank.EventForWeapon("no_such_weapon"));
     }
 

@@ -21,6 +21,7 @@ namespace Rts.Game;
 /// <param name="MusicVolume">0..100.</param>
 /// <param name="SfxVolume">0..100.</param>
 /// <param name="MasterVolume">0..100, scales sound and music together (M3-16). Files without the key get 100.</param>
+/// <param name="AmbienceVolume">0..100, the looping biome ambience (S22). Files without the key get 100 (the ambience loops are mixed quietly in sounds.toml).</param>
 /// <param name="LlmProvider">AI commander backend: none, anthropic or openai (an OpenAI-compatible endpoint). Default none.</param>
 /// <param name="LlmBaseUrl">Endpoint base URL; empty = the provider's default (data/llm/providers.toml).</param>
 /// <param name="LlmModel">Model id; empty = the provider's default.</param>
@@ -70,7 +71,8 @@ public sealed record Settings(
     bool CheckForUpdates = true,
     string PlayerName = "",
     int LanGamePort = Rts.Net.NetProtocol.DefaultGamePort,
-    int LanDiscoveryPort = Rts.Net.NetProtocol.DefaultDiscoveryPort)
+    int LanDiscoveryPort = Rts.Net.NetProtocol.DefaultDiscoveryPort,
+    int AmbienceVolume = 100)
 {
     /// <summary>The file format version this build reads and writes.</summary>
     public const int CurrentVersion = 2;
@@ -185,7 +187,8 @@ public sealed record Settings(
             root.TryGetValue("check_for_updates", out object? cu) && cu is bool cub ? cub : d.CheckForUpdates,
             Text(root, "player_name", d.PlayerName),
             Int(root, "lan_game_port", d.LanGamePort, 1024, 65535),
-            Int(root, "lan_discovery_port", d.LanDiscoveryPort, 1024, 65535));
+            Int(root, "lan_discovery_port", d.LanDiscoveryPort, 1024, 65535),
+            Int(root, "ambience_volume", d.AmbienceVolume, 0, 100));
     }
 
     /// <summary>The settings as TOML text.</summary>
@@ -204,6 +207,7 @@ public sealed record Settings(
         sb.AppendLine(FormattableString.Invariant($"music_volume = {MusicVolume}"));
         sb.AppendLine(FormattableString.Invariant($"sfx_volume = {SfxVolume}"));
         sb.AppendLine(FormattableString.Invariant($"master_volume = {MasterVolume}"));
+        sb.AppendLine(FormattableString.Invariant($"ambience_volume = {AmbienceVolume}"));
         sb.AppendLine("# AI commander (LLM). The API key is NOT stored here; it is kept encrypted in llm.key.");
         sb.AppendLine("# llm_provider: none | anthropic | openai. Empty url / model = the provider default. llm_call_cap 0 = no cap.");
         sb.AppendLine(FormattableString.Invariant($"llm_provider = {Quote(Provider(LlmProvider))}"));

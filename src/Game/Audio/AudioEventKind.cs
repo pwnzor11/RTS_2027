@@ -47,6 +47,24 @@ public enum AudioEventKind
     UnderAttack,
     /// <summary>A vehicle or soldier rose in veterancy rank (VET-5). The client detects it from the views; the sim sends no event.</summary>
     Promotion,
+    /// <summary>S22: a unit died. Qualified by unit class (infantry, vehicle, ship, air) and faction; without a specific sound it plays <see cref="ExplosionSmall"/>.</summary>
+    UnitDied,
+    /// <summary>S22: a building was destroyed. Qualified by faction; without a specific sound it plays <see cref="ExplosionLarge"/>.</summary>
+    BuildingDestroyed,
+    /// <summary>S22: a shell or bomb landed on water. Class <c>large</c> for a splash of 3 or more cells; without a sound it plays the explosion.</summary>
+    WaterImpact,
+    /// <summary>S22: an enemy submarine came into the local player's view (sonar contact).</summary>
+    Sonar,
+    /// <summary>S22: a new ship of the local player left its yard. Without a sound it plays <see cref="UnitReady"/> (class ship).</summary>
+    ShipHorn,
+    /// <summary>S22: a fast aircraft (jet or bomber) passes; throttled per aircraft.</summary>
+    AirFlyby,
+    /// <summary>S22: a rotor aircraft hovers or cruises; throttled per aircraft.</summary>
+    AirHover,
+    /// <summary>S22: a packed rig unfolded into a building.</summary>
+    RigDeploy,
+    /// <summary>S22: a rig building packed into a vehicle.</summary>
+    RigPack,
 }
 
 /// <summary>Event names used in data/audio/sounds.toml.</summary>

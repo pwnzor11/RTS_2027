@@ -17,8 +17,10 @@ stopped run can simply be started again. The seed of a take is a hash of id and 
 --pick copies the chosen take (default take 1; ``id=2`` for take 2, ``id=d1`` for draft 1; or a picks.toml with a [picks] table)
 to data/audio/sfx/<id>.wav and edits data/audio/sounds.toml:
   * each picked sound gets a [sound.<id>] entry inside a managed block at the end of the file;
-  * the events it lists in ``events`` get the sound as one more random variant (the sfxr sounds stay unless --replace-sfxr);
-  * ``--mix`` also adds the sounds listed in ``mix_into`` (faction / class sounds, a stop-gap until src/ can choose by faction);
+  * the events it lists in ``events`` get the sound as one more random variant (the sfxr sounds stay unless --replace-sfxr); a qualified key
+    such as ``building_placed.authority`` or ``fire_shell.cannon.authority`` becomes its own [event.<key>] section, which the game prefers
+    over the plain event (lookup order at the top of data/audio/sounds.toml); an ``ambience = "glass_coast"`` job becomes [ambience.glass_coast];
+  * ``--mix`` also adds the sounds listed in ``mix_into`` (extra random variants of generic events; no job needs it any more);
   * a ``repoint`` job switches that existing menu sound ([sound.ui_move] ...) to the new file.
 Only files that exist are referenced, so the game and SoundBankTests keep loading. Running --pick again is safe (idempotent).
 
@@ -101,6 +103,7 @@ def load_jobs(path: Path = DEFAULT_JOBS) -> dict:
         r.setdefault("mix_into", [])
         r.setdefault("planned", "")
         r.setdefault("repoint", "")
+        r.setdefault("ambience", "")
         r.setdefault("loop", False)
         r.setdefault("max_voices", MAX_VOICES_BY_CATEGORY.get(cat, 2))
         if r["seconds"] > MODEL_MAX_SECONDS:
@@ -113,7 +116,11 @@ def load_jobs(path: Path = DEFAULT_JOBS) -> dict:
     ids = [j["id"] for j in jobs]
     if len(ids) != len(set(ids)):
         raise ValueError("duplicate job ids")
-    return {"meta": raw.get("defaults", {}), "jobs": jobs}
+    for j in jobs:
+        for ev in j["events"] + j["mix_into"]:
+            if not re.fullmatch(r"[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*){0,2}", ev):
+                raise ValueError(f"job '{j['id']}': event key '{ev}' must be snake_case parts joined by dots (event.class.faction)")
+    return {"meta": raw.get("defaults", {}), "jobs": jobs, "event_defaults": raw.get("event_defaults", {})}
 
 
 def seed_for(job_id: str, take: int) -> int:
@@ -395,7 +402,7 @@ def run_pick(args, data: dict) -> int:
             print(f"warning: {j['id']} is {src.stat().st_size} bytes, over the {cap} byte cap SoundBankTests allows; regenerate with a lower --rate or --seconds-scale")
     present = [j["id"] for j in data["jobs"] if (args.sfx_dir / f"{j['id']}.wav").exists()]
     text = args.sounds.read_text(encoding="utf-8")
-    new, notes = update_sounds_toml(text, data["jobs"], set(present), args.mix, args.replace_sfxr)
+    new, notes = update_sounds_toml(text, data["jobs"], set(present), args.mix, args.replace_sfxr, data.get("event_defaults"))
     if new != text:
         args.sounds.write_text(new, encoding="utf-8", newline="\n")
     print(f"copied {len(copied)} file(s); {len(missing)} job(s) without a generated take (skipped); {len(present)} generated sound(s) in {args.sfx_dir}")
@@ -416,9 +423,34 @@ def _section_span(lines: list[str], header: str) -> tuple[int, int] | None:
     return None
 
 
-def update_sounds_toml(text: str, jobs: list[dict], present: set[str], mix: bool = False, replace_sfxr: bool = False) -> tuple[str, list[str]]:
-    """Return (new sounds.toml text, notes). Idempotent; references only sounds whose file is in ``present``."""
+GENERIC_EVENT = {"volume": 1.0, "positional": True, "cooldown_ms": 0}
+
+
+def _section_values(lines: list[str], header: str) -> dict:
+    """volume / positional / cooldown_ms of an existing [event.x] section (empty dict when there is none)."""
+    span = _section_span(lines, header)
+    out: dict = {}
+    if span is None:
+        return out
+    for k in range(span[0] + 1, span[1]):
+        m = re.match(r"^\s*(volume|positional|cooldown_ms)\s*=\s*([^#\s]+)", lines[k])
+        if m:
+            v = m.group(2)
+            out[m.group(1)] = (v == "true") if m.group(1) == "positional" else (float(v) if m.group(1) == "volume" else int(float(v)))
+    return out
+
+
+def update_sounds_toml(text: str, jobs: list[dict], present: set[str], mix: bool = False, replace_sfxr: bool = False,
+                       event_defaults: dict | None = None) -> tuple[str, list[str]]:
+    """Return (new sounds.toml text, notes). Idempotent; references only sounds whose file is in ``present``.
+
+    An event key in a job's ``events`` is either an existing generic ``[event.x]`` (the sound is added as one more random variant) or a
+    new/qualified key such as ``unit_died.infantry.directorate`` (S22): the tool writes ``[event.unit_died.infantry.directorate]`` into the managed
+    block, with volume / positional / cooldown_ms copied from the plain event (``[event.unit_died]`` or ``[event_defaults.unit_died]`` of the jobs file).
+    A job with ``ambience = "glass_coast"`` gets an ``[ambience.glass_coast]`` entry. The game looks events up most-specific-first, see the top of sounds.toml.
+    """
     notes: list[str] = []
+    event_defaults = event_defaults or {}
     # 1. drop the managed block
     lines = text.split("\n")
     if MARK_BEGIN in lines and MARK_END in lines:
@@ -436,11 +468,12 @@ def update_sounds_toml(text: str, jobs: list[dict], present: set[str], mix: bool
         for e in evs:
             wanted.setdefault(e, []).append(j["id"])
     all_events = {e for j in jobs for e in list(j["events"]) + list(j["mix_into"])}
+    new_events: dict[str, list[str]] = {}
     for e in sorted(all_events):
         span = _section_span(lines, f"[event.{e}]")
         if span is None:
             if e in wanted:
-                notes.append(f"event '{e}' is not in sounds.toml; its sounds ({', '.join(wanted[e])}) are not wired")
+                new_events[e] = wanted[e]
             continue
         s, t = span
         for k in range(s + 1, t):
@@ -480,6 +513,14 @@ def update_sounds_toml(text: str, jobs: list[dict], present: set[str], mix: bool
         if j["id"] not in present or j["repoint"]:
             continue
         block += [f"[sound.{j['id']}]", f'file = "{j["file"]}"', f"volume = {float(j['volume']):g}", f"max_voices = {int(j['max_voices'])}", ""]
+    for e, ids in new_events.items():
+        base = e.split(".")[0]
+        vals = {**GENERIC_EVENT, **event_defaults.get(base, {}), **_section_values(lines, f"[event.{base}]")}
+        block += [f"[event.{e}]", "sounds = [" + ", ".join(f'"{i}"' for i in ids) + "]", f"volume = {float(vals['volume']):g}",
+                  f"positional = {'true' if vals['positional'] else 'false'}", f"cooldown_ms = {int(vals['cooldown_ms'])}", ""]
+    for j in jobs:
+        if j.get("ambience") and j["id"] in present:
+            block += [f"[ambience.{j['ambience']}]", f'sound = "{j["id"]}"', f"volume = {float(event_defaults.get('ambience', {}).get('volume', 0.5)):g}", ""]
     block.append(MARK_END)
     while lines and lines[-1] == "":
         lines.pop()
@@ -512,11 +553,13 @@ def run_audition(args, data: dict) -> int:
                 cells.append('<div class="t none">not generated yet</div>')
             meta = []
             if j["events"]:
-                meta.append("plays today as: " + ", ".join(j["events"]))
+                meta.append("plays as: " + ", ".join(j["events"]))
+            if j.get("ambience"):
+                meta.append("ambience loop: " + j["ambience"])
             if j["mix_into"]:
                 meta.append("can mix into: " + ", ".join(j["mix_into"]))
             if j["planned"]:
-                meta.append("needs code: " + j["planned"])
+                meta.append("note: " + j["planned"])
             if j["repoint"]:
                 meta.append("replaces menu sound " + j["repoint"])
             parts.append(
