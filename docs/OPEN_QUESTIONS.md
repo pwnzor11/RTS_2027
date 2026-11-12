@@ -9,7 +9,6 @@ file cited after each question. Recommendations are the lead's, from the researc
   +28 % (glass_coast) at 5 minutes. Decide after the owner's 64-game run (`tools/measure/run_s17_layout2.ps1`). Options: **(a) wait for the 64-game
   numbers, then cut money per field cell on the biomes still over (recommended)**; (b) relax the layout check "100 field cells within 30 path cells"
   for layout 2 so the main field can be halved (the only change that matched layout 1 in the probe); (c) accept the richer early economy on layout 2.
-  Owner 2026-11-12: wait for the laptop run, as in (a).
 
 ## Answered
 - Owner confirmations · 2026-11-12 · Confirmed the remaining "assumed — confirm" items after D-153's blanket confirmation: the revised Left
