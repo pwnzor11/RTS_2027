@@ -382,7 +382,8 @@ approved, D-215, draft PR #67, laptop render script); ACE-Step 1.5 set up on the
 minute of music) with an overnight batch of 20 tracks (tools/audio/ace_step); overnight build (D-216): wave 1 = src/Net (codec, UDP with
 reliability, discovery, lockstep core, loopback, soak) + every code-only M10 feature, PR #69 merged; wave 2 = lobby + browser + handshake +
 map transfer, in-game LAN (overlay, chat, pause, drop to AI, desync reports + resync, continue vs AI, LAN replays), UDP soak, and 8 fixes from
-an independent review.
+an independent review; landed as PR #71 (Windows CI green). Both waves are on main; restore branches restore/pre-m9m10-land and
+restore/pre-m9m10-w2. Music: 19 of 20 tracks (take 1) done by morning, credits rendering.
 **Helpers:** Sonnet for art (6 batches) and most packages, Opus for the lockstep core, in-game LAN, the review and the fixes, Haiku for music states.
 **Problems / notes:** the ACE-Step batch first failed on a UTF-8 BOM in the job files, then on an emoji print under cp1252, then on ACE-Step's
 600 s generation timeout (raised with ACESTEP_GENERATION_TIMEOUT). A build started while a merge was still writing files reported missing

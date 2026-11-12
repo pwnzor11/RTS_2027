@@ -16,7 +16,7 @@ Priorities, in order:
 
 Build order (D-087, session 4): finish M3, then skirmish depth (M4), the LLM commander (M5) and two new factions —
 The Left Behind (M6) and the Overseas Expedition (M7) — before the campaign (M8), so the campaign is written once with
-all four factions. D-171 (session 14): M11 UI and input overhaul comes after M8 and before M9 LAN. D-205/D-206 (session 18): the M13 audit fix batch, then the M14 Field Manual, come before M9. Priorities above are unchanged in importance; only the build order moved.
+all four factions. D-171 (session 14): M11 UI and input overhaul comes after M8 and before M9 LAN. D-205/D-206 (session 18): the M13 audit fix batch, then the M14 Field Manual, come before M9. D-216 (session 19p): M9 LAN and the code-only M10 features were built early at the owner's request and are on main; M9 still needs the owner's two-PC test. Priorities above are unchanged in importance; only the build order moved.
 
 - Repo: `github.com/pwnzor11/RTS_2027`, branch `main`. Changes reach main by: **pull request** from an integration
   branch, merged by the lead once Windows CI is green (D-179; direct pushes to main are refused by the session safety check).
