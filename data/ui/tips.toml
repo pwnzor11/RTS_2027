@@ -1,0 +1,104 @@
+# Loading-screen tips (M10-20). One [[tip]] per line of advice; an optional faction (authority, directorate, left_behind, expedition) shows the tip
+# only when that faction is in the game. Every tip must match data/rules and the How to Play pages (src/Game/Menu/HowToPlayContent.cs); never invent mechanics.
+
+[[tip]]
+text = "Buildings need power. Keep your Power Plants ahead of what you build."
+
+[[tip]]
+text = "Low power slows production. Build another Power Plant before you queue more."
+
+[[tip]]
+text = "Ashfall is the only resource. Refineries turn it into credits, and credits pay for everything else."
+
+[[tip]]
+text = "Build a Refinery and a Scraper drives out to the nearest ashfall field on its own."
+
+[[tip]]
+text = "More Scrapers mean faster income, but ash fields run thin. Pitchblende pits are rare and rich."
+
+[[tip]]
+text = "Pitchblende is worth twice as much as ashfall, unit for unit."
+
+[[tip]]
+text = "The enemy hunts Scrapers first. Guard them."
+
+[[tip]]
+text = "Soldiers standing on an ashfall field slowly take damage. Vehicles do not. Keep infantry out of the thick of it."
+
+[[tip]]
+text = "Drag a box with the left mouse button to select every one of your units inside it."
+
+[[tip]]
+text = "Right-click ground to move. Right-click an enemy to attack it."
+
+[[tip]]
+text = "Press A, then right-click ground: your units attack anything they meet on the way. Press A again to cancel."
+
+[[tip]]
+text = "S stops, G guards the spot a unit stands on, and X scatters the group."
+
+[[tip]]
+text = "Units fire on their own at enemies in range."
+
+[[tip]]
+text = "The sidebar tabs are Q Structures, W Defences, E Infantry, R Vehicles and T Upgrades."
+
+[[tip]]
+text = "Right-click a cameo in the sidebar to cancel what is being built."
+
+[[tip]]
+text = "A finished structure waits for you. Click it, then click a green spot near your base to place it. Red means blocked."
+
+[[tip]]
+text = "Set a rally point on a production building to send new units where you want them."
+
+[[tip]]
+text = "Selling a building returns half of its cost. Repair costs credits and restores health."
+
+[[tip]]
+text = "Units count against a supply cap. At the cap, new units wait, so build your faction's supply building to raise it."
+
+[[tip]]
+text = "Units that destroy enemies earn ranks: Veteran, Elite, then Hero. Ranked units hit harder and take less damage."
+
+[[tip]]
+text = "A Hero heals on its own when it has been quiet for a few seconds. Pull your best units back to recover."
+
+[[tip]]
+text = "Press T for upgrades. Research takes time and credits, and the upgrade then applies to your whole army."
+
+[[tip]]
+text = "Late in the game a superweapon can be built. It charges for a long time, and so does the one aimed at you."
+
+[[tip]]
+text = "Click or drag the minimap to jump the view. Home centres on your base."
+
+[[tip]]
+text = "Ctrl+F5 to F8 store a view, and F5 to F8 jump back to it."
+
+[[tip]]
+text = "Space pauses the game. F1 lists every key."
+
+[[tip]]
+faction = "directorate"
+text = "The Directorate lives under the map. Its entrances and vents on the surface are the only part you can hit."
+
+[[tip]]
+faction = "directorate"
+text = "Right-click one of your tunnel entrances with a unit that fits to send it in. It can come out of any other entrance of your network."
+
+[[tip]]
+faction = "directorate"
+text = "A Bore digs new entrances: select it, press D, then right-click the cell to dig at."
+
+[[tip]]
+faction = "authority"
+text = "The Authority is a slow, heavy surface army. Build up before you push."
+
+[[tip]]
+faction = "left_behind"
+text = "The Left Behind have no Construction Yard. Unpack the Mother Rig to found your base."
+
+[[tip]]
+faction = "expedition"
+text = "The Expedition begins at sea. Deploy the Command Ship on a landing coast to found its base."
