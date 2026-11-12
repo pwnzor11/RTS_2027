@@ -22,19 +22,22 @@ public sealed class PathLeakAuditTests
         return (int)ms.Length;
     }
 
-    // S18 audit: pins current behaviour of SIMDET-03; flip the assertion when fixed.
     [Fact]
-    public void Audit_Service_PollOfAQueuedGroupEntry_ReleasesNothing_SoTheResultStays()
+    public void Service_ReleasingAQueuedGroupMember_LeavesNoResultForIt()
     {
         var s = new PathService(PathServiceTests.Flat(20, 20), PathServiceTests.Table());
         int empty = Bytes(s);
         int id = s.RequestGroup(new[] { new CellCoord(1, 1), new CellCoord(1, 3) }, new CellCoord(15, 2), Locomotion.Tracked);
-        Assert.Equal(PathStatus.Pending, s.Poll(id, 0, out _));   // what MoveMission.DropRequest does for a group member: no effect while queued
+        s.ReleaseMember(id, 0);
+        Assert.Equal(PathStatus.Pending, s.Poll(id, 1, out _));
         s.Process();
-        Assert.Equal(PathStatus.Found, s.Poll(id, 1, out _));     // the other member takes its path
-        Assert.True(Bytes(s) > empty + 14 * 8, "member 0's 14-cell path is still stored");
-        for (int t = 0; t < 1000; t++) s.Process();
-        Assert.True(Bytes(s) > empty + 14 * 8);                   // and nothing ever ages it out
+        Assert.Equal(PathStatus.Unknown, s.Poll(id, 0, out _));
+        Assert.Equal(PathStatus.Found, s.Poll(id, 1, out _));
+        Assert.Equal(empty, Bytes(s));
+        int id2 = s.RequestGroup(new[] { new CellCoord(1, 1) }, new CellCoord(15, 2), Locomotion.Tracked);
+        s.ReleaseMember(id2, 0);
+        s.Process();
+        Assert.Equal(empty, Bytes(s));
     }
 
     /// <summary>Two tanks are ordered to one cell while the path service is paying off a debt, so their group request waits in the queue;
@@ -69,16 +72,8 @@ public sealed class PathLeakAuditTests
         Assert.Equal(empty, bytes);
     }
 
-    // S18 audit: pins current behaviour of SIMDET-03; flip the assertion when fixed.
     [Fact]
-    public void Audit_Sim_ReorderingAGroupMemberWhileItsRequestIsQueued_LeaksItsResultForGood()
-    {
-        var (bytes, empty) = GroupMove(reorderWhileQueued: true);
-        Assert.True(bytes > empty, $"paths part is {bytes} bytes against {empty} when empty");
-    }
-
-    [Fact(Skip = "S18 SIMDET-03: awaiting owner decision")]
-    public void Desired_Sim_ReorderingAGroupMember_LeavesNothingBehind()
+    public void Sim_ReorderingAGroupMember_LeavesNothingBehind()
     {
         var (bytes, empty) = GroupMove(reorderWhileQueued: true);
         Assert.Equal(empty, bytes);

@@ -121,7 +121,7 @@ internal static class MoveMission
         if (id > 0)
         {
             // A group id is shared by many actors: cancelling it would wipe the others' results, so only release our own entry.
-            if (store.PathIsGroup[i]) sim.Paths.Poll(id, store.PathIndex[i], out _);
+            if (store.PathIsGroup[i]) sim.Paths.ReleaseMember(id, store.PathIndex[i]);
             else sim.Paths.Cancel(id);
         }
         store.PathId[i] = 0;
