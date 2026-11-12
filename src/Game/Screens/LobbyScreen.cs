@@ -45,6 +45,7 @@ public sealed class LobbyScreen : IScreen
     private int _shownRevision = -1;
     private int _seedRow = -1, _chatRow = -1;
     private bool _handedOver;
+    private bool _startFailed;   // M9-14: a failed start is tried once; the lobby is left with a notice
     private MapChoice? _previewFor;
     private MapPreviewImage? _preview;
 
@@ -140,7 +141,7 @@ public sealed class LobbyScreen : IScreen
                 _s.Screens.Pop();
                 return false;
             case LobbyClientState.Started:
-                BeginMatch(_client.Setup!);
+                if (!_startFailed) BeginMatch(_client.Setup!);
                 return false;
         }
 
@@ -155,11 +156,14 @@ public sealed class LobbyScreen : IScreen
             _handedOver = true;
             _s.Screens.Replace(game);
         }
-        catch (Exception ex) when (ex is InvalidDataException or IOException or InvalidOperationException)
+        catch (Exception ex) when (ex is InvalidDataException or IOException or InvalidOperationException or RulesException
+            or ArgumentException or UnauthorizedAccessException)
         {
-            // A bad map or rules file on this machine: stay in the lobby and say why instead of crashing.
-            _status = "Could not start the match: " + ex.Message;
-            Rebuild();
+            // A bad map or rules file on this machine: the transport is gone with the failed match (the others were told), so leave the
+            // lobby and say why instead of crashing or rebuilding the match every frame.
+            _startFailed = true;
+            LanMatch.Abandon(setup);
+            _s.Screens.Replace(new NoticeScreen(_s, LobbyText.StartFailedTitle, ex.Message));
         }
     }
 

@@ -39,6 +39,9 @@ public static class LobbyText
         }
     }
 
+    /// <summary>Title of the notice shown when this machine could not start the match (the lobby is left).</summary>
+    public const string StartFailedTitle = "Could not start the match";
+
     /// <summary>The options line of a slot (handicap, credits, start units), as in skirmish setup.</summary>
     public static string OptionsLine(LobbySlotState s, int index) => SkirmishSetupScreen.OptionsLabel(s.Slot, index);
 
