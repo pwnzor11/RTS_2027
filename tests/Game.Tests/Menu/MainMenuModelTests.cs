@@ -33,13 +33,13 @@ public sealed class MainMenuModelTests
     }
 
     [Fact]
-    public void Lan_is_disabled_with_the_coming_later_tooltip()
+    public void Lan_is_enabled_without_a_tooltip()
     {
         foreach (bool hasSave in new[] { false, true })
         {
             MainMenuEntry entry = MainMenuModel.Build(hasSave).Single(e => e.Action == MenuAction.LanGame);
-            Assert.False(entry.Enabled);
-            Assert.Equal("Coming in a later update", entry.Tooltip);
+            Assert.True(entry.Enabled);
+            Assert.Null(entry.Tooltip);
         }
     }
 
@@ -57,7 +57,7 @@ public sealed class MainMenuModelTests
     [Fact]
     public void Every_other_entry_is_enabled()
     {
-        var alwaysOff = new[] { MenuAction.Continue, MenuAction.LanGame };
+        var alwaysOff = new[] { MenuAction.Continue };
         foreach (MainMenuEntry e in MainMenuModel.Build(true).Where(e => !alwaysOff.Contains(e.Action)))
             Assert.True(e.Enabled, e.Label);
         Assert.True(MainMenuModel.Build(true)[0].Enabled);
@@ -94,7 +94,13 @@ public sealed class MainMenuModelTests
         lobby.Update(Press(Keys.Down), 1280, 720, 2);   // Skirmish
         lobby.Update(Press(Keys.Down), 1280, 720, 2);   // LAN Game
         Assert.Equal(MenuAction.LanGame, lobby.Entries[lobby.Selected].Action);
-        LobbyResult denied = lobby.Update(Press(Keys.Enter), 1280, 720, 2);
+        LobbyResult lan = lobby.Update(Press(Keys.Enter), 1280, 720, 2);   // M9: LAN Game opens the browser
+        Assert.Equal(MenuAction.LanGame, lan.Action);
+        Assert.Equal(MenuSounds.Select, lan.SoundId);
+
+        var noSave = new LobbyMenuController(MainMenuModel.Build(false));
+        noSave.Update(Press(Keys.Up), 1280, 720, 2);   // Continue, greyed out
+        LobbyResult denied = noSave.Update(Press(Keys.Enter), 1280, 720, 2);
         Assert.Null(denied.Action);
         Assert.Equal(MenuSounds.Deny, denied.SoundId);
     }
@@ -128,11 +134,11 @@ public sealed class MainMenuModelTests
         LobbyLayout layout = LobbyMenuView.Measure(1280, 720, 2, entries);
 
         var on = new List<DrawOp>();
-        LobbyMenuView.Build(on, layout, entries, selected: 3, 0f, "", "0", 1280, 720);
+        LobbyMenuView.Build(on, layout, entries, selected: 0, 0f, "", "0", 1280, 720);
         var off = new List<DrawOp>();
         LobbyMenuView.Build(off, layout, entries, selected: 1, 0f, "", "0", 1280, 720);
 
-        Assert.Contains(on, o => o.Kind == DrawOpKind.Text && o.Id == "Coming in a later update");
-        Assert.DoesNotContain(off, o => o.Kind == DrawOpKind.Text && o.Id == "Coming in a later update");
+        Assert.Contains(on, o => o.Kind == DrawOpKind.Text && o.Id == MainMenuModel.NoSaves);
+        Assert.DoesNotContain(off, o => o.Kind == DrawOpKind.Text && o.Id == MainMenuModel.NoSaves);
     }
 }
