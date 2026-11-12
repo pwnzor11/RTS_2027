@@ -10,6 +10,7 @@ param(
 $ErrorActionPreference = "Continue"
 $env:PYTHONIOENCODING = "utf-8"   # ACE-Step prints emoji; the Windows console code page cannot
 $env:PYTHONUTF8 = "1"
+$env:ACESTEP_GENERATION_TIMEOUT = "10800"   # ACE-Step default is 600 s; a 3-minute track takes longer on a CPU
 Set-Location -Path $PSScriptRoot
 $python = Join-Path $PSScriptRoot ".venv\Scripts\python.exe"
 if (-not (Test-Path $python)) { Write-Host "Cannot find $python - run 'uv sync' first."; exit 1 }
