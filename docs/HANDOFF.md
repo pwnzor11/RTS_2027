@@ -1,54 +1,36 @@
-# Handoff: Session 19 — build the M13 audit fix batch (all owner recommendations, D-205), then the Field Manual (M14)
-Last commit: `docs: session 18 wrap-up` on integ-s18 (landed through the session 18 wrap-up PR after PR #57). Check `git log -1 origin/main`.
-Check `git log -1 origin/main`.
-Where things stand: session 18 (2026-11-10/11) was an adversarial audit (D-202): 18 reviewers, then 6 verify/fix helpers. About 45 clear
-non-sim bugs are fixed with tests (campaign/missions, in-match UI, menus/setup/tools, LLM key per provider, credits). Most sim and design findings
-are proven by an `Audit_` test that pins today's behaviour, with a skipped twin holding the wanted behaviour (flip them as M13 lands); numbers
-and a few others are measured only. Report and decision table: docs/reviews/2026-11-11_s18_audit/README.md (wave1/ findings, wave2/ verdicts and measurements).
-The owner took every recommendation (D-205), chose to apply the suggested numbers now (measure after), and picked all four QoL groups.
-Field Manual pilot approved (D-206); hero renders of every unit and building on the owner's laptop. Decisions up to D-206; Q-70 still open
-(layout 2 income, waits for the laptop run). M11 complete except M12-06b; layout 2 still off by default.
-Full suite on integ-s18 (Linux, 2026-11-11): 4 110 tests, 4 070 passed, 40 skipped (the S18 `Desired_` twins and env-gated probes), 0 failed
-(Sim 1 675/1 707, AI 239/243, Game 1 678/1 681, Scripting 304/305, Tools 22/22, Llm 152/152). Windows CI: the session 18 PR.
+# Handoff: Session 20 — campaign retune with the ashfall hazard on (M13-17), the "after" series, M13 follow-ups, then the Field Manual (M14)
+Last commit: `docs: Session 19 handoff` on wp/s19-docs, landed through its PR after PR #66 (all of M13). Check `git log -1 origin/main`.
+Where things stand: session 19 (2026-11-11/12) built the M13 batch (D-205) in waves A, B and C: see SESSION_LOG session 19 and ROADMAP M13.
+Decisions up to D-211. Campaign missions run with ash damage and the ash path cost OFF (`MissionSession.CampaignRules`, D-211) until M13-17;
+skirmish has the hazard, the infantry detour and the idle step-off. lb_03 tier 5 is a skipped known shift (BalanceTableTests.KnownShifts and
+LeftBehindMission03Tests). Open questions Q-71 (auth_01 tier 5 expectation with ash on) and Q-72 (assumed — confirm ash rules).
+All 124 Field Manual hero renders are on main (art/booklet); the pilot PDF is docs/field_manual/RTS_2027_Field_Manual_pilot.pdf.
 
 ## Start here (shown to the user as the plan; nothing starts until they say go)
-1. Read the owner's laptop results if they exist: `balance_runs\s18audit\s18audit_summary.md` (tools/measure/run_s18_audit.ps1) and
-   `art\booklet\contact_<date>.png` (render pilot). The summary is the "before" baseline for M13; the render pilot needs his approval
-   before `-All` (owner rule: pilot, approve, fan out).
-2. M13 wave A (game-breaking, ROADMAP M13-01..M13-09): Expedition sea on Mountains L1 (generator + fallback), founder counts as a base,
-   tender spawn nearest the dock, carried units ignore orders and are not selectable, path stall (retarget, per-tick cap, group retry),
-   ready-structure cancel with refund + AI cancel, StoreFull, Atomic Battery range 0 + campaign allow-lists, LB lanes pause while packed.
-   Most findings have a skipped twin holding the wanted assertion (named `Desired_...` in tests/Sim.Tests/S18 and Game.Tests/S18; in AI.Tests,
-   ShipmentsSpawnAuditTests and SpawnFailureTests it has another name: search for `Skip =`). Un-skip it as the fix lands and flip the `Audit_` twin.
-   No twin yet: path stall (SP-01/SP-09, perf probe only), AI-04/05/06/08, DATA-TOOLS-06, LE-13, LE-14, the 2.3 numbers: write those tests as you fix.
-3. M13 wave B: mechanics items 12-26 (report 2.2) incl. the ashfall hazard and an attack-ground order; then the numbers pass (report 2.3,
-   suggested values from wave1/faction-*.md and wave2/v-sim-faction.md); then the UI/wording/design list (report 2.4, mission-script
-   one-liners in wave2/fix-missions.md). Ask the owner first: MIS-10/12/16/18 options (wave2/fix-missions.md).
-4. M13 wave C: QoL (game speed incl. slow; idle button and alerts; cameo hotkeys, repeat production, range rings, strong/weak tooltip line;
-   handicap and starting conditions; stances and shift-queued waypoints). Front-end items first; stances and waypoints touch the sim.
-5. One golden / AI baseline re-pin batch at the end of M13; push a laptop script (copy run_s18_audit.ps1) for the "after" numbers.
-   Item 11 (start-side tie-breaks) only after the laptop series; the A/B switches are in docs/reviews/2026-11-11_s18_audit (wave2/v-ai-map.md)
-   and the patch at /home/claude/audit/v-ai-map/skew_experiment.patch is NOT in the repo (re-create from the report if the container is gone).
-6. M14 Field Manual once M13 lands: Directorate lore draft (pilot for the voice is approved for the Authority), then the full ~108 pages with
-   tools/booklet (README there), using art/booklet/ hero renders where they exist and sprite plates as fallback.
+1. Read the owner's "after" series if it exists: `balance_runs\s19after\s19after_summary.md` (tools/measure/run_s19_after.ps1), compare with
+   `balance_runs\s18audit\s18audit_summary.md` (start shares, Glass Coast tender skew, LB cross-faction results). Decide with the owner:
+   the option-only 2.3 numbers (D-208), the Glass Coast layout 2 fields (D-208), and whether start-side skew is solved (M13-10).
+2. M13-17 campaign retune: turn the hazard on in missions (remove CampaignRules' override mission by mission), walk the 16 missions + tutorial
+   at tiers 1/3/5 with the bot tests, and fix escort routes / staging cells / script spawns standing on ash (lb_03 spawns its start force
+   on a field at (23,26)); un-skip lb_03 tier 5; ask Q-71. Owner rule: pilot one mission first, then fan out.
+3. M13-11/13/18 follow-ups: melee acquire (item 19), harvester unreachable field + choke give-up (SP-03 Move half, SP-04), path leak
+   (SIMDET-03), LB yard dock harvester livelock (HarvestMission Enter ~288-300), placement lanes south of exits (S18-AI-NEW-3), LB AI ~30
+   Still Rigs in a corner base, ClearBuildArea keep or drop.
+4. M14: re-angle the walls and gates hero renders (auth_gate, auth_wall, dir_bunker, lb_scrap_wall; owner asked), Directorate lore draft,
+   then the full ~108-page build using art/booklet renders (tools/booklet; the pilot scripts have no hero-render support yet: add it).
 
 ## Half-finished work
-- Nothing in flight; every session 18 branch is merged into integ-s18 (wp/s18-*). The experimental worktree s18-exp-skew was never committed.
-- 26 ids have no model or sprite (list in docs/design/19_field_manual.md section 5): the booklet and the game both need them (ROADMAP M14-06).
-- exp_04 script hash changed (D-203): exp_04 saves and replays made before session 18 no longer load (they show the script-changed message).
-- `Tools replay verify` exits 0 for mission replays (D-204) and prints a drift note; skirmish verify still fails on a desync.
-- Mop-up AI code is in MilitaryManager but switched off (MopupLaunch/MopupSweep = false).
-- Voice lines: on hold until the owner has Piper set up (tools/voice/wyoming_batch.py).
-- `unit_reserve` difficulty override key exists and is tested but unused (s15_lbknob.md).
+- Nothing in flight. Every s19 branch is merged; worktrees under /home/claude/wt are disposable.
+- 26 ids still have no model or sprite (docs/design/19_field_manual.md section 5, ROADMAP M14-06).
+- Parallel sessions opened PR #64 (M9 LAN plan) and PR #65 (M10 polish plan), docs only; not touched by session 19.
+- Mop-up AI code in MilitaryManager still switched off; voice lines on hold (Piper); `unit_reserve` override unused.
 
 ## Waiting on the user
-- After `git pull`: laptop series `powershell -ExecutionPolicy Bypass -File tools\measure\run_s18_audit.ps1` (about 95 min; 17 rows of 64 games)
-  and the render pilot `powershell -ExecutionPolicy Bypass -File tools\booklet\render_heroes.ps1 -Pilot` (12 renders, 15-45 min).
-- Back up `%APPDATA%\RTS_2027` before playing (progress and settings writes changed; unreadable files are kept as `.bad`).
-- Pull and play (USER_CHECKS "Session 18").
-- Still open from session 17: `tools\measure\run_s17_layout2.ps1` for Q-70.
-- Optional clean-up (the owner deletes branches himself): wp/s18-*, land/s18-*, integ-s17, land/s17-*, wp/s17-*, older integ-*/land-*/wp-*.
-  Keep restore/pre-s18 until happy.
+- Back up `%APPDATA%\RTS_2027`, `git checkout main`, `git pull` (drop the local render_heroes.py edit first: `git checkout tools/booklet/render_heroes.py`), play USER_CHECKS "Session 19".
+- Laptop "after" series: `powershell -ExecutionPolicy Bypass -File tools\measure\run_s19_after.ps1` (about 95 min).
+- Answer Q-71 and Q-72 when convenient.
+- Branch clean-up (owner deletes): the list sent in session 19 plus, once #66 and the handoff PR are merged: integ-s19, land/s19-w4,
+  land/s19-w5, land/s19-handoff, wp/s19-*, art/booklet-heroes; keep restore/pre-s19 until happy. Close PR #62 (superseded by #66) if still open.
 
 ## How to run this session
 - Lead: Opus for build sessions (the owner wants long unattended overnight builds); Sonnet for a pure review/question session. Helpers: Haiku default; Sonnet for sim core,
@@ -228,6 +210,16 @@ Full suite on integ-s18 (Linux, 2026-11-11): 4 110 tests, 4 070 passed, 40 skipp
     pointer, the object is at `.git/lfs/objects/<aa>/<bb>/<oid>`. In the cloud, `git lfs fetch origin refs/remotes/origin/<branch>` (the short name fails).
   - A helper made one stray device-bridge call despite the brief (no effect). Keep "no mcp__remote-devices__* tools" in every brief.
 
+- Session 19 lessons:
+  - Local merge batches must include Scripting.Tests (or the campaign bot classes) whenever a change touches movement, combat, economy or
+    infantry rules: the campaign bots swing on small changes and Windows CI found ashfall and path regressions only after the PR.
+  - Bisect campaign regressions with temporary rules switches (e.g. `ashfall_damage = 0` locally) and per-merge-commit checkouts before reading
+    code; it split "ash" from "path" from "data" quickly. Never commit the local switch.
+  - A full Scripting.Tests run plus Sim/AI/Game takes well over an hour on the loaded box; the background run limit (2 h) killed one batch.
+    Let Windows CI verify slow projects in parallel by pushing a land/ branch early.
+  - The safety check refuses force-pushes even to our own land/ branches: open a new land branch and PR instead (#66 superseded #62).
+  - Helpers' "assumed" picks that touch player-visible behaviour go to OPEN_QUESTIONS as "assumed — confirm" (Q-72).
+  - The owner answers phone pushes quickly: batch 1-5 picks per push with a recommendation each; PushNotification works.
 - Session 18 lessons:
   - Helpers cannot write report .md files (the harness refuses "report files from subagents"): brief them to hand back the full text, and save
     it from the task transcript (the lead used a small script that pulls the SubagentHandback text out of the .output JSONL).
