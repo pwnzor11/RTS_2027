@@ -110,3 +110,26 @@ jobs:
           name: RTS_2027-win-x64-${{ github.sha }}
           path: publish/Game
           retention-days: 7
+
+      - name: Zip game
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path publish/out | Out-Null
+          Compress-Archive -Path publish/Game/* -DestinationPath "publish/out/RTS_2027-win-x64.zip" -Force
+
+      - name: Build installer (Inno Setup)
+        shell: pwsh
+        run: |
+          choco install innosetup -y --no-progress
+          $ver = ([xml](Get-Content Directory.Build.props)).Project.PropertyGroup.Version | Where-Object { $_ } | Select-Object -First 1
+          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" "/DAppVersion=$ver" "/DSourceDir=$PWD\publish\Game" installer\rts_2027.iss
+          if ($LASTEXITCODE -ne 0) { throw "Inno Setup failed (exit $LASTEXITCODE)." }
+
+      - name: Upload zip and installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: RTS_2027-release-files-${{ github.sha }}
+          path: |
+            publish/out/*.zip
+            publish/installer/*.exe
+          retention-days: 7
