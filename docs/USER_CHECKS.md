@@ -391,3 +391,31 @@ Back up `%APPDATA%\RTS_2027` first (progress and settings files are now written 
 - `%APPDATA%\RTS_2027\logs\rts_2027.log` exists after a run.
 - Laptop series: `powershell -ExecutionPolicy Bypass -File tools\measure\run_s18_audit.ps1` (about 95 min) -> send back `balance_runs\s18audit\s18audit_summary.md`.
 - Booklet hero render pilot: `powershell -ExecutionPolicy Bypass -File tools\booklet\render_heroes.ps1 -Pilot` (12 renders, about 15-45 min) -> send back `art\booklet\contact_<date>.png`.
+
+## Session 19 · M13 audit fix batch (D-205, D-207..D-211)
+Back up `%APPDATA%\RTS_2027` first (game saves gained control groups and the setup header gained handicap flags; old saves still load).
+- **Saves:** F5 shows "Quicksaved."; F9 asks "Load the quicksave?" and returns there. "autosave 1" appears in Load Skirmish right at the match start and "autosave 2" after 5 minutes
+  (Settings: "Autosave: every 5 min"; choices Off, every 1/2/3/5/10/15/30/60 min). Camera bookmarks moved to F6, F7, F8, F12; the sandbox spectator key is P.
+- **Menus:** Pause > Quit to menu asks "Quit to menu?"; Restart asks "Restart?"; overwriting a save asks "Overwrite save?". Esc on the main menu
+  does nothing. Alt-tab out of a skirmish or mission pauses it. Fullscreen is borderless.
+- **Garrison:** riflemen in a building: box-select over it and Select all: not selected; a click on the building selects the building.
+- **Ready structure:** wall off every site, then right-click (or Cancel) the ready cameo: full refund, the lane frees.
+- **Card Sell:** first click shows "Confirm"; a second click within 2 s sells.
+- **Expedition:** Mountains (layout 1), Expedition, a few seeds: the Command Ship floats on open sea (a shallow channel may run along the map
+  edge) and shipments arrive; Glass Coast Expedition v Expedition: both sides' first shipment arrives at about the same time; a match start
+  shows "Your Command Ship is at the centre of the view. Select it and press {key} to land." A floating dock placed off the shore says "Must touch the shore".
+- **Combat:** flak firing at aircraft over your own base does not hurt the base; a dived missile sub that fires can be shot back for 5 s and
+  shows surfaced; a Decon Truck with Ctrl + right click on bare hot ground sprays and cleans it.
+- **Ashfall (skirmish only):** idle riflemen standing in an ash field lose health and walk to the field edge; ordered onto ash they stay.
+  Riflemen ordered past a small field walk around it. Campaign missions have no ash damage (D-211).
+- **Units:** a loaded landing craft deployed at the shore (D) lets troops out one by one; a Kite is spent by its bomb; the Agitprop speeds up
+  nearby Conscripts; a Commissar among Conscripts makes them fire faster; a Directorate Pillbox costs 340.
+- **QoL:** skirmish setup "Game speed: 1x" row; in game = and - change speed ("SPEED 0.5x" in the HUD); I and B jump to an idle harvester /
+  factory (bottom-right buttons with counts); number pad 7-9/4-6/1-3/0/./+ press sidebar cameos; Alt+click a cameo shows LOOP (repeat
+  production); L toggles weapon range rings; cameo tooltips show "Strong vs:" and "Weak vs:"; M / N / U = aggressive / defensive / hold fire;
+  Shift + right click queues waypoints (markers); setup slots offer handicap, starting credits and "small army".
+- **Names:** the sidebar says "Heavy Tank", "Vehicle Factory", "Ashfall Refinery"; the Minelayer tooltip says it cannot lay mines yet;
+  map list shows "Rustbelt", "Ash Reckoning", "Glass Coast"; mission dialogue shows "Brigadier Hester Wrenfield:".
+- **Missions:** dir_04: razing the HQ before the device is charged loses the mission; the script-error line shows only with Show diagnostics on.
+- **Laptop "after" series:** `powershell -ExecutionPolicy Bypass -File tools\measure\run_s19_after.ps1` (about 95 min) -> send back
+  `balance_runs\s19after\s19after_summary.md`.

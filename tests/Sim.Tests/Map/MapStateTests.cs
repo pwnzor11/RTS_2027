@@ -98,9 +98,12 @@ public class MapStateTests
         int v = m.Version;
         m.SetVehicle(C, Id(1));
         m.SetInfantry(C, 0, Id(2));
-        m.SetOverlay(C, OverlayKind.Ashfall, 4);
-        m.SetOverlay(C, OverlayKind.Pitchblende, 9);
         Assert.Equal(v, m.Version);
+        m.SetOverlay(C, OverlayKind.Ashfall, 4);    // S19 M13-12: a field appearing changes infantry path costs (ash_path_penalty)
+        Assert.Equal(v + 1, m.Version);
+        m.SetOverlay(C, OverlayKind.Pitchblende, 9);   // still a field: no change
+        Assert.Equal(v + 1, m.Version);
+        v++;
 
         m.SetBuilding(C, Id(3));
         Assert.Equal(v + 1, m.Version);

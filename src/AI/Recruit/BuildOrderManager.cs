@@ -3,6 +3,7 @@
 using Rts.Sim;
 using Rts.Sim.Core;
 using Rts.Sim.Rules;
+using Rts.Sim.View;
 
 namespace Rts.AI.Recruit;
 
@@ -78,6 +79,9 @@ internal sealed class BuildOrderManager
     /// <summary>M13-06: consecutive decisions in which a finished structure found no usable site before the AI cancels it (full refund).</summary>
     public const int CancelAfterFailedSearches = 3;
 
+    /// <summary>M13-10 (AI-04 family): failed searches before a cancel while own army units stand in the build area; they are ordered off it first.</summary>
+    public const int CancelAfterBlockedSearches = 60;
+
     /// <summary>M13-06: decisions during which a cancelled structure type is skipped in the build order, so another step can go first.</summary>
     public const int CancelledTypeCooldown = 20;
 
@@ -122,7 +126,7 @@ internal sealed class BuildOrderManager
                 _queued[q.ReadyTypeIndex]++;
                 laneBusy = true;
                 if (TryPlace(k, sink, q.ReadyTypeIndex)) _failedSearches[lane] = 0;
-                else if (++_failedSearches[lane] >= CancelAfterFailedSearches)
+                else if (++_failedSearches[lane] >= (ClearBuildArea(k, sink) ? CancelAfterBlockedSearches : CancelAfterFailedSearches))
                 {
                     // M13-06: nobody can place it; hand the credits back and free the lane instead of holding it for the match
                     sink.Issue(CommandKind.Cancel, EntityId.None, (ActorKind)(int)cat, default, default, Simulation.ReadyCancelPosition);
@@ -266,6 +270,44 @@ internal sealed class BuildOrderManager
             if (k.Buildable(rules.Buildings[p].Category, p)) return p;
         }
         return -1;
+    }
+
+    /// <summary>M13-10: after a failed search, orders the own army units that stand idle in the build area (the search radius around the yard) to a
+    /// staging cell beyond it, toward the map centre. Returns true when any own army unit stands in the area, i.e. the site may be blocked by units
+    /// that are about to leave, so the caller waits longer before cancelling the structure.</summary>
+    private static bool ClearBuildArea(RecruitKnowledge k, ICommandSink sink)
+    {
+        bool any = false;
+        CellCoord stage = default;
+        bool staged = false;
+        for (int pass = 0; pass < 2; pass++)
+        {
+            List<ViewActor> group = pass == 0 ? k.Army : k.Home;
+            foreach (ViewActor a in group)
+            {
+                if (!a.IsMobile || Math.Max(Math.Abs(a.Cell.X - k.Yard.X), Math.Abs(a.Cell.Y - k.Yard.Y)) > PlacementSearch.SearchRadius + 1) continue;
+                if (a.Kind == ActorKind.Vehicle && k.Rules.Vehicles[a.TypeIndex].Locomotion == Locomotion.Air) continue;   // aircraft hold no cell
+                any = true;
+                if (!a.Idle) continue;
+                if (!staged) { stage = StagingCell(k); staged = true; }
+                if (stage != k.Yard) sink.Issue(CommandKind.Move, a.Id, a.Kind, stage);
+            }
+        }
+        return any;
+    }
+
+    /// <summary>A passable cell 16-24 cells from the yard on the line toward the map centre (the yard itself when the line has none).</summary>
+    private static CellCoord StagingCell(RecruitKnowledge k)
+    {
+        PlayerView v = k.View;
+        long dx = v.MapWidth / 2 - k.Yard.X, dy = v.MapHeight / 2 - k.Yard.Y;
+        long len = Math.Max(1, Math.Max(Math.Abs(dx), Math.Abs(dy)));
+        for (int d = 16; d <= 24; d++)
+        {
+            var c = new CellCoord((int)(k.Yard.X + dx * d / len), (int)(k.Yard.Y + dy * d / len));
+            if (v.InMap(c) && v.IsPassable(c, Locomotion.Foot) && v.IsPassable(c, Locomotion.Tracked)) return c;
+        }
+        return k.Yard;
     }
 
     /// <summary>Issues the Place for a ready structure; false when the search found no site or <c>CanPlace</c> refused it (both count as Unplaceable).</summary>

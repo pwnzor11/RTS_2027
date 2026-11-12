@@ -37,6 +37,7 @@ public sealed partial class Simulation
                 if (typeIndex < 0 || typeIndex >= rules.Vehicles.Count) return false;
                 VehicleType vt = rules.Vehicles[typeIndex];
                 if ((vt.Locomotion == Locomotion.Air) != (category == ProductionCategory.Aircraft)) return false;
+                if (!vt.Buildable) return false;   // D-205 (FACTION-LE-04): tender, Command Ship and the packed rig form are never offered
                 (cost, buildTime, prerequisites) = (vt.Cost, vt.BuildTime, vt.Prerequisites);
                 return true;
             case ProductionCategory.Structure:
@@ -319,7 +320,17 @@ public sealed partial class Simulation
         long baseTicks = SimRules.BuildTicks(cost, buildTime, eco);
         int band = PowerBand(player);
         long slowdown = band > 0 && band <= eco.LowPowerSlowdownPermille.Count ? eco.LowPowerSlowdownPermille[band - 1] : 1000;
+        int handicap = _players.HandicapPercent[player];   // S19 (M13-15): h percent = the item builds in 100/h of the time
+        if (handicap != SimSetup.DefaultHandicap) return (int)Math.Max(1, baseTicks * slowdown * 2 * 100 / (1000L * (1 + factories) * handicap));
         return (int)Math.Max(1, baseTicks * slowdown * 2 / (1000L * (1 + factories)));
+    }
+
+    /// <summary>S19 (M13-15): what a delivery of <paramref name="amount"/> credits is worth to <paramref name="player"/> after the handicap
+    /// (rounded to the nearest credit; unchanged at 100 percent).</summary>
+    internal int HandicapIncome(byte player, int amount)
+    {
+        int h = _players.HandicapPercent[player];
+        return h == SimSetup.DefaultHandicap || amount <= 0 ? amount : (int)(((long)amount * h + 50) / 100);
     }
 
     private void AdvanceLane(byte player, ProductionCategory category, int lane, int factories)

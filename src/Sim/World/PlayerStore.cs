@@ -28,8 +28,18 @@ public sealed class PlayerStore : ISimStatePart
         Defeated = new bool[Count];
         Faction = new Faction[Count];
         Upgrades = new ulong[Count];
-        for (int p = 0; p < Count; p++) { Team[p] = setup.TeamOf((byte)p); Faction[p] = setup.FactionOf((byte)p); }
+        HandicapPercent = new int[Count];
+        for (int p = 0; p < Count; p++)
+        {
+            Team[p] = setup.TeamOf((byte)p); Faction[p] = setup.FactionOf((byte)p);
+            int h = setup.HandicapOf((byte)p);
+            if (h < SimSetup.MinHandicap || h > SimSetup.MaxHandicap) throw new ArgumentException($"Handicap of player {p} must be {SimSetup.MinHandicap} to {SimSetup.MaxHandicap} percent.", nameof(setup));
+            HandicapPercent[p] = h;
+            if (h != SimSetup.DefaultHandicap) _hasHandicap = true;
+        }
     }
+
+    private readonly bool _hasHandicap;
 
     public string Name => "players";
     public int Count { get; }
@@ -43,6 +53,8 @@ public sealed class PlayerStore : ISimStatePart
     public readonly Faction[] Faction;
     /// <summary>Upgrade mask per player: bit i = SimRules.Upgrades[i] researched.</summary>
     public readonly ulong[] Upgrades;
+    /// <summary>S19 (M13-15): handicap percent per player (from the setup; constant; 100 = none). Written to the part only when some player has one.</summary>
+    public readonly int[] HandicapPercent;
 
     /// <summary>True if the player has researched upgrade <paramref name="upgradeIndex"/> (false for a bad player or index).</summary>
     public bool HasUpgrade(byte player, int upgradeIndex) =>
@@ -60,6 +72,7 @@ public sealed class PlayerStore : ISimStatePart
             w.Write(PowerOut[p]); w.Write(PowerUse[p]); w.Write(Defeated[p]);
         }
         for (int p = 0; p < Count; p++) { w.Write((byte)Faction[p]); w.Write(Upgrades[p]); }   // M3-01, appended
+        if (_hasHandicap) for (int p = 0; p < Count; p++) w.Write(HandicapPercent[p]);   // S19 (M13-15): only when on, so other games keep their bytes
     }
 
     public void Read(BinaryReader r)
@@ -78,5 +91,8 @@ public sealed class PlayerStore : ISimStatePart
             if ((Faction)r.ReadByte() != Faction[p]) throw new InvalidDataException("players faction mismatch.");
             Upgrades[p] = r.ReadUInt64();
         }
+        if (_hasHandicap)
+            for (int p = 0; p < Count; p++)
+                if (r.ReadInt32() != HandicapPercent[p]) throw new InvalidDataException("players handicap mismatch.");
     }
 }

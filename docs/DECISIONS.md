@@ -1523,3 +1523,36 @@ the M13 batch, with one golden/baseline re-pin. **Status:** owner decision (sess
 stat and tech pages generated from data (docs/design/19_field_manual.md). Pilot approved: keep the look; the draft text and the Authority lore
 draft are approved; full page for main units, half pages for the rest; every unit and building gets a full hero render on the owner's laptop
 (`tools/booklet/render_heroes.ps1 -Pilot`, then `-All`). Full build after the M13 fixes land. **Status:** owner decision (session 18)
+
+### D-207 · 2026-11-11 · Session 19 owner picks for the M13 batch
+**Decision:** (1) MIS-10: the pre-placed `dir_sunrise` charge in auth_04/exp_04 matches the script's sunrise timer (exp_04 has no sunrise
+moment, so its device never charges); MIS-16 a+b: `dir_bore_head` in dir_01's list, `auth_factory` in auth_01's; MIS-18: dir_04 says "charged"
+only when the real charge is ready; MIS-09: razing the dir_04 HQ before the device is charged is a mission loss; MIS-12: speaker ids show the
+Archive title, the Left Behind leader entry opens "Jessup Calloway-Ross is the war-captain". (2) Ashfall hazard (D-028, item 23): infantry on
+ashfall or pitchblende lose 2 HP every 30 ticks before rad resistance (`[radiation] ashfall_damage`, `ashfall_interval_ticks`). (3) Kill value
+(LE-04): the non-buildable Supply Tender, Command Ship and packed Mother Rig are worth 1500 each. (4) Cameo grid hotkeys default to the number pad.
+(5) Archive lore for units whose mechanics are not built yet stays as written; only tooltips are reworded (TodayText). **Status:** owner decision (session 19)
+
+### D-208 · 2026-11-11 · Session 19 numbers picks (2.3) and Q-70
+**Decision:** other warheads stay at 100 % against ship armour until the "after" laptop series (small-arms and armour-piercing classes copy
+the Expedition values); the eight Directorate structures that copy Authority ones get -20 % HP and -15 % cost and build time; the Commissar
+gets its own fire-rate aura (radius 3, +15 %); the option-only 2.3 items wait for the after-series. Q-70 (a): layout 2 money per field cell
+cut on Rust Belt (-9.8 % measured) and Glass Coast (-12.8 %, the density floor; a deeper cut would need smaller fields, decided after the
+after-series). Values: docs/reviews/2026-11-11_s18_audit/s19_numbers.md. **Status:** owner decision (session 19)
+
+### D-209 · 2026-11-11 · Path work cap per tick (amends D-063 point 5)
+**Decision:** a path request whose goal the start cannot reach is retargeted to the nearest reachable cell (region labels, not saved); one
+`PathService.Process` call starts at most 4x the per-tick expansion budget but never splits one tick's requests (a saved "waited" bit keeps
+the order deterministic and mirror-fair); group search uses a heuristic and a region filter. Fixes SP-01 (20 units on a building stalled all
+pathing 22.6 s). **Why:** D-063(5)'s "answer one tick's requests together" is kept; the cap only bounds a pathological batch. **Status:** confirmed (session 19, D-205 item 5)
+
+### D-210 · 2026-11-11 · Field Manual hero renders approved; render pilot fan-out
+**Decision:** the 12-render Authority pilot is approved as is; `render_heroes.ps1 -All` runs on the owner's laptop. **Status:** owner decision (session 19)
+
+### D-211 · 2026-11-11 · Ashfall vs the campaign: detour, step-off, missions off until a retune
+**Decision:** with the ashfall hazard on, 13 campaign bot tests lost (escorts and staging cells sit on fields). Owner picked (a): foot units pay
+`[radiation] ash_path_penalty = 4` to enter an ash cell (they detour when the way round is short; an ordered goal on ash is still reached),
+the Recruit AI's rally and wave staging cells step off ash, and idle infantry standing on ash step to the nearest clean cell within 3 (Q-72,
+assumed — confirm; ash-stealth infantry stay). That was not enough, so the owner then picked: campaign and tutorial missions run with ash
+damage and the ash path cost OFF (`MissionSession.CampaignRules`) until a campaign retune (M13-17); skirmish keeps all of it. lb_03 tier 5
+and exp_04 tier 5 (non-ash M13 shifts) are known, skipped cases until the retune. **Status:** owner decision (session 19)

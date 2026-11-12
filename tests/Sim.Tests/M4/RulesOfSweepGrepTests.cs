@@ -26,6 +26,7 @@ public sealed partial class RulesOfSweepGrepTests
         ("Simulation.cs", "Setup.Rules.Terrain"),
         ("Movement/Occupancy.cs", "Setup.Rules.Vehicles["),   // locomotion
         ("Movement/Occupancy.cs", "Setup.Rules.Terrain"),
+        ("Simulation.Ashfall.cs", "Setup.Rules.Terrain"),   // S19 M13-12: step-off needs passability; terrain is not upgradable
         ("Simulation.Movement.cs", "Setup.Rules.Vehicles["),   // locomotion
         ("Simulation.Naval.cs", "Setup.Rules.Vehicles"), ("Simulation.Naval.cs", "Setup.Rules.Vehicles["), ("Simulation.Naval.cs", "Setup.Rules.Terrain"),   // M7-03: locomotion and terrain, not upgradable
         ("Simulation.Economy.cs", "Setup.Rules.Economy.RegrowthIntervalTicks"),   // global, not an effect attr
@@ -43,6 +44,7 @@ public sealed partial class RulesOfSweepGrepTests
         ("Simulation.Garrison.cs", "Setup.Rules.Garrison.EjectDamagePermille"),   // owner: Simulation.Garrison.cs, follow-up
         ("Simulation.Ground.cs", "Setup.Rules.Radiation"), ("Simulation.Ground.cs", "Setup.Rules.Radiation.DamageThreshold"),   // owner: Simulation.Ground.cs, follow-up
         ("Simulation.Ground.cs", "Setup.Rules.Stealth.DelayTicks"),
+        ("Simulation.Ashfall.cs", "Setup.Rules.Radiation"),   // S19 M13-12: global field hazard rate, not an upgradable attribute
         ("Simulation.Hardening.cs", "Setup.Rules.Buildings"), ("Simulation.Hardening.cs", "Setup.Rules.Terrain"),   // owner: Simulation.Hardening.cs, follow-up
         ("Simulation.Hardening.cs", "Setup.Rules.Upgrades"),
         ("Simulation.Hud.cs", "Setup.Rules.Buildings["), ("Simulation.Hud.cs", "Setup.Rules.Upgrades"),   // owner: Simulation.Hud.cs, follow-up

@@ -354,3 +354,22 @@ report .md files, so the lead saved every hand-back from the transcripts.
 **Problems / notes:** the baseline full-suite run on untouched main hit the 1-hour background limit on the loaded box; the full suite ran
 once on integ-s18 instead: 4 110 tests, 4 070 passed, 40 skipped, 0 failed.
 **Next session should:** see HANDOFF (M13 batch, owner's laptop series and render pilot, then M14).
+
+## Session 19 · 2026-11-11/12 (M13 audit fix batch, Field Manual renders, README)
+**Goal:** build the session 18 audit fixes (M13, D-205) in waves A, B and C, unattended; owner at work, questions by phone.
+**Done:** M13-01..10, 12, 14, 15 done; M13-11 and M13-13 mostly (open items listed in ROADMAP); goldens/baselines re-pinned per batch.
+Wave A: Expedition edge sea on Mountains L1, founder counts as a base, tenders spawn nearest the dock, carried units ignore orders and
+selection, path stall (retarget, 4x cap, group heuristic, D-209) plus a harvester head-on deadlock and goal-held waiting fix, ready-structure
+cancel with refund + AI cancel, StoreFull, Atomic Battery range 0, campaign allow-lists, LB lanes pause while packed. Wave B: mission script
+fixes (MIS-06..20, owner picks), menus/window (confirms, focus pause, borderless), in-match UI (autosave, F5/F9, control groups in saves,
+two-click Sell, edge scroll), splash/subs/stealth, landing craft/rigs/morph/harvester/kill value/Kite, ashfall hazard + attack ground +
+power checks, naming pass and honest tooltips, numbers pass (D-208), start-side tie-breaks. Wave C: game speed, idle buttons and alerts,
+cameo hotkeys, repeat production, range rings, strong/weak tooltips, stances, shift waypoints, handicap and starting conditions.
+Field Manual: render fix (LB structures), all 124 hero renders approved and on main, pilot PDF in docs/field_manual. README rewritten
+spoiler-free in the Gnomestead shape with the booklet link. Laptop: s18audit "before" series read; s17l2 read (Q-70).
+**Decisions:** D-207..D-211 (owner picks, numbers, path cap, renders, ashfall vs campaign: detour + step-off, missions run with ash off
+until the retune M13-17).
+**Helpers:** about 25 packages (Sonnet; Opus for path and the campaign bisect); several fix rounds; all reports kept in the session.
+**Problems / notes:** the 2-CPU box with 6-9 helpers queued every test run behind one lock (10-15 min each); local batches skipped the slow
+Scripting project, so Windows CI found the campaign regressions (ashfall, path) late. lb_03 and exp_04 tier 5 are known skipped shifts until M13-17.
+**Next session should:** see HANDOFF (campaign retune with ash on, after-series, follow-ups, then M14).

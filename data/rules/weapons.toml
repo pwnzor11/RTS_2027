@@ -337,7 +337,7 @@ warhead = "lb_small_arms"
 damage = 120  # (tune)
 range = 256  # (tune)
 min_range = 0
-rate_of_fire = 1
+rate_of_fire = 60  # D-205 (LE-14): was 1; the Kite is spent by its first bomb (one_use), so this only matters for a shot-down Kite
 projectile_speed = 0
 warhead = "lb_kite_blast"
 

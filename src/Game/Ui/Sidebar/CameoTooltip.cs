@@ -38,6 +38,7 @@ public static class CameoTooltip
         }
 
         var lines = new List<string> { CameoNames.Display(id), stats };
+        lines.AddRange(WeaponMatchup.Lines(rules, category, typeIndex));   // M13-15: strong vs / weak vs, from the warhead table
         string? text = blurb?.Invoke(id);
         if (!string.IsNullOrWhiteSpace(text)) lines.Add(text.Trim());
         return lines;

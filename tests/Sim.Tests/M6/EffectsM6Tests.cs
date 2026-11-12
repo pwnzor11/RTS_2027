@@ -72,6 +72,7 @@ public sealed class EffectsM6Tests
         EntityId atThreshold = sim.SpawnInfantry(0, Sneak, new CellCoord(8, 5));
         EntityId offAsh = sim.SpawnInfantry(0, Sneak, new CellCoord(12, 5));
         EntityId noRule = sim.SpawnInfantry(0, Plain, new CellCoord(5, 5), 1);
+        sim.Infantry.PathGoal[noRule.Index] = new CellCoord(5, 5);   // S19 M13-12: as if ordered there, so it does not walk off the ash
         sim.Map.SetOverlay(new CellCoord(5, 5), OverlayKind.Ashfall, 4);
         Run(sim, 4);
         Assert.False(sim.IsStealthedNow(ActorKind.Infantry, onAsh.Index));

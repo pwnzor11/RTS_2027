@@ -213,6 +213,10 @@ internal static class MoveMission
             }
             else
             {
+                // M13-05: a soldier already in the nearest cell it can reach (an attacker next to a building) moves to the free sub-slot
+                // of that cell nearest the goal, so a short-range weapon is not left out of range in the far corner.
+                if (!settle && kind == ActorKind.Infantry && status == PathStatus.NotFound && ShiftTowardGoal(sim, (InfantryStore)store, i, cur, goal))
+                    return 1;
                 arrived = settle;            // no way forward: stop here
                 return settle ? 1 : WaitTicks;
             }
@@ -387,6 +391,33 @@ internal static class MoveMission
         return best;
     }
 
+    /// <summary>M13-05: moves soldier <paramref name="i"/> to the free sub-slot of its cell <paramref name="cur"/> strictly nearer the centre
+    /// of <paramref name="goal"/> than its own (ties: lowest sub-slot); the next ticks drive it there. False if none is nearer.</summary>
+    private static bool ShiftTowardGoal(Simulation sim, InfantryStore inf, int i, CellCoord cur, CellCoord goal)
+    {
+        LeptonCoord g = LeptonCoord.CenterOf(goal);
+        int own = inf.SubSlot[i];
+        long Dist(int s)
+        {
+            LeptonCoord p = InfantryStore.SlotPosition(cur, s);
+            long dx = p.X - g.X, dy = p.Y - g.Y;
+            return dx * dx + dy * dy;
+        }
+        int best = own; long bestD = Dist(own);
+        for (int s = 0; s < InfantryStore.SubSlotCount; s++)
+        {
+            if (s == own || !sim.Map.InfantryAt(cur, s).IsNone) continue;
+            long d = Dist(s);
+            if (d < bestD) { best = s; bestD = d; }
+        }
+        if (best == own) return false;
+        EntityId me = inf.Slots.IdOf(i);
+        if (sim.Map.InfantryAt(cur, own) == me) sim.Map.SetInfantry(cur, own, EntityId.None);
+        sim.Map.SetInfantry(cur, best, me);
+        inf.SubSlot[i] = (byte)best;
+        return true;
+    }
+
     // ---- entering a cell ----------------------------------------------------------------------
 
     private static bool IsIdle(MobileStore s, int idx) =>
@@ -472,7 +503,22 @@ internal static class MoveMission
         // waited long enough
         store.BlockedTicks[i] = 0;
         int stuck = ++store.StuckCount[i];
-        if (stuck > MaxStuck) { arrived = settle; return 1; }
+        if (stuck > MaxStuck)
+        {
+            arrived = settle;
+            // M13-16: not when the blocked cell is the goal itself: an attack-mover whose final cell is held keeps waiting there, awake
+            // (a no-way answer made it sleep 10 ticks out of every 140 with its guns idle, and campaign bots lost their hold fights).
+            // Unless the goal's holder is head-on waiting for our cell (Mutual): a harvester entering the dock while the one on it
+            // tries to leave through us; nobody moves unless someone is told there is no way (M4AiTests Directorate tier climb).
+            if (settle || (n == goal && !b.Mutual)) return 1;
+            // M13-05 (S18 SP-03, StepToward half): a caller that does not settle used to get 1 here on every later cycle, never a detour
+            // or a repath, so two harvesters head-on at a dock waited for each other for good. Report "no way from here" instead
+            // (callers pick another field, re-queue at the dock or retry) and start counting afresh with a new route.
+            store.StuckCount[i] = 0;
+            store.PathCells[i] = null;
+            store.PathPos[i] = 0;
+            return WaitTicks;
+        }
         if (n == goal)
         {
             // The final cell is taken: keep waiting while its occupant is itself on the move (or was just asked to move),

@@ -32,6 +32,10 @@ public static class AlertInfo
         AlertKind.UnitLost => "Unit lost",
         AlertKind.SuperweaponReady => "Superweapon ready",
         AlertKind.SuperweaponLaunched => "Superweapon launched",
+        AlertKind.UpgradeComplete => UiText.Get(UiText.AlertUpgradeComplete),
+        AlertKind.ProductionIdle => UiText.Get(UiText.AlertProductionIdle),
+        AlertKind.ProductionBlocked => UiText.Get(UiText.AlertProductionBlocked),
+        AlertKind.HarvesterIdle => UiText.Get(UiText.AlertHarvesterIdle),
         _ => kind.ToString(),
     };
 
@@ -39,7 +43,7 @@ public static class AlertInfo
     public static AlertTone Tone(AlertKind kind) => kind switch
     {
         AlertKind.BaseUnderAttack or AlertKind.UnitUnderAttack or AlertKind.HarvesterUnderAttack or AlertKind.BuildingLost or AlertKind.UnitLost => AlertTone.Danger,
-        AlertKind.LowPower => AlertTone.Warning,
+        AlertKind.LowPower or AlertKind.ProductionIdle or AlertKind.ProductionBlocked or AlertKind.HarvesterIdle => AlertTone.Warning,
         _ => AlertTone.Good,
     };
 
@@ -49,25 +53,28 @@ public static class AlertInfo
     /// <summary>True when the same alert in different places counts as different (attacks, losses, superweapons); false when one line serves the whole map.</summary>
     public static bool PerArea(AlertKind kind) => kind switch
     {
-        AlertKind.ConstructionComplete or AlertKind.UnitReady or AlertKind.LowPower => false,
+        AlertKind.ConstructionComplete or AlertKind.UnitReady or AlertKind.LowPower
+            or AlertKind.UpgradeComplete or AlertKind.ProductionIdle or AlertKind.ProductionBlocked => false,
         _ => true,
     };
 
     /// <summary>Whether the last-alert key can jump to this kind (it needs a place; routine "ready" alerts are left out so they cannot bury an attack).</summary>
     public static bool InJumpList(AlertKind kind) => kind switch
     {
-        AlertKind.ConstructionComplete or AlertKind.UnitReady or AlertKind.LowPower => false,
+        AlertKind.ConstructionComplete or AlertKind.UnitReady or AlertKind.LowPower
+            or AlertKind.UpgradeComplete or AlertKind.ProductionIdle or AlertKind.ProductionBlocked => false,
         _ => true,
     };
 
     /// <summary>Whether a merged line shows "x3" (not for a state like low power).</summary>
-    public static bool ShowsCount(AlertKind kind) => kind != AlertKind.LowPower;
+    public static bool ShowsCount(AlertKind kind) => kind != AlertKind.LowPower && kind != AlertKind.ProductionIdle && kind != AlertKind.ProductionBlocked;
 
     /// <summary>Minimum sim ticks between two counted occurrences of the same alert in the same area (the rate limit).</summary>
     public static int IntervalTicks(AlertKind kind) => kind switch
     {
         AlertKind.BaseUnderAttack or AlertKind.UnitUnderAttack or AlertKind.HarvesterUnderAttack => 10 * TicksPerSecond,
         AlertKind.LowPower => 30 * TicksPerSecond,
+        AlertKind.ProductionIdle or AlertKind.ProductionBlocked or AlertKind.HarvesterIdle => 30 * TicksPerSecond,   // M13-15: a nag, not a siren
         AlertKind.SuperweaponReady or AlertKind.SuperweaponLaunched => 10 * TicksPerSecond,
         _ => 2 * TicksPerSecond,
     };

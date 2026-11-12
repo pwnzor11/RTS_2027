@@ -38,7 +38,7 @@ public sealed partial class Simulation
         SimRules vrules = RulesOf(victimOwner);   // the victim owner's table: a cost upgrade changes what the kill is worth
         long add = victim.Kind switch
         {
-            ActorKind.Vehicle => (long)vrules.Vehicles[_units.TypeIndex[vi]].Cost * vr.KillPermilleUnit / 1000,
+            ActorKind.Vehicle => (long)VehicleWorth(vi) * vr.KillPermilleUnit / 1000,
             ActorKind.Infantry => (long)vrules.Infantry[_infantry.TypeIndex[vi]].Cost * vr.KillPermilleUnit / 1000,
             ActorKind.Building => (long)vrules.Buildings[_buildings.TypeIndex[vi]].Cost * vr.KillPermilleBuilding / 1000,
             _ => 0,

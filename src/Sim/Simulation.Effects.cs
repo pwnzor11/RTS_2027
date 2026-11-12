@@ -188,7 +188,7 @@ public sealed partial class Simulation
         // Not a shot at an actor: detonate at the actor's own position as a splash (instant: false, so a splash-0 warhead hurts one
         // actor of the cell). The hits are applied at once because RunCleanup runs after RunCombat's ApplyPendingDamage; leaving them
         // queued would lose them if the game were saved between ticks. Victims that die from it are removed this tick or the next.
-        Detonate(PlayerAt(kind, i), weapon.Damage, weapon.Warhead, PositionAt(kind, i), default, false);
+        Detonate(PlayerAt(kind, i), weapon.Damage, weapon.Warhead, PositionAt(kind, i), default, false, default, weapon.Targets);
         ApplyPendingDamage();
     }
 }

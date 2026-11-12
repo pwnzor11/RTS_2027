@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Rts.Game.Archive;
 using Rts.Game.Controls;
+using Rts.Game.Host;
 using Rts.Game.Input;
 using Rts.Game.Menu;
 using Rts.Game.Render;
@@ -12,6 +13,7 @@ using Rts.Game.Saves;
 using Rts.Game.Sandbox;
 using Rts.Game.Sprites;
 using Rts.Game.Ui;
+using Rts.Game.Ui.Alerts;
 using Rts.Game.Ui.Llm;
 using Rts.Game.Ui.Sidebar;
 using Rts.Game.Ui.Spectator;
@@ -54,6 +56,8 @@ public sealed class GameScreen : IScreen, IFocusPausable
     private bool _diveShown;                  // M7-14: Dive/Surface button for a selected own submarine
     private bool _diveSubmerged;
     private readonly RectRegion _diveRegion = new(Rectangle.Empty);
+    private readonly RectRegion _idleHarvesterRegion = new(Rectangle.Empty);   // M13-15: idle harvester / idle factory buttons
+    private readonly RectRegion _idleFactoryRegion = new(Rectangle.Empty);
     private UnpackPlacement? _unpack;         // M6-09: the unpack footprint follows the cursor
     private readonly Selection _selection = new();
     private readonly OrderController? _orders; // null with --demo
@@ -297,6 +301,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
 
         if (_sim is not null && _orders is not null && !_skirmishMode) _card = new Rts.Game.Ui.Card.SelectionCard(_sim, _selection, null, PlayerColours.Base(SimSnapshotSource.LocalPlayer));
         if (!_skirmishMode || _sim is null) return;
+        if (SpeedAllowed) _sim.Host.SpeedPercent = GameSpeed.Effective(_s.Settings.GameSpeedPercent, Networked);   // M13-15
         string spritesRoot = Path.Combine(Path.GetDirectoryName(Path.GetFullPath(_s.RulesDir)) ?? ".", "sprites");
         _cameos = new CameoProvider(_s.Graphics, spritesRoot);
         int colour = Skirmish?.PlayerColour ?? 0;
@@ -355,6 +360,8 @@ public sealed class GameScreen : IScreen, IFocusPausable
             input.ConsumeLeft();
         }
         if (_superweapon.Buttons.Count > 0 && input.LeftPressed) ClickSuperweaponButton(input);
+        if (input.LeftPressed && _idleHarvesterRegion.HitTest(input.MousePosition)) { JumpToIdleHarvester(); input.ConsumeLeft(); }   // M13-15
+        else if (input.LeftPressed && _idleFactoryRegion.HitTest(input.MousePosition)) { JumpToIdleFactory(); input.ConsumeLeft(); }
         if (_specPanel is not null && _spec is not null && input.LeftPressed)
         {
             int row = _specPanel.RowAt(input.MousePosition, _s.UiScale);
@@ -368,6 +375,8 @@ public sealed class GameScreen : IScreen, IFocusPausable
             input.ConsumeMouseOver(_upgradeRegion);
             input.ConsumeMouseOver(_packRegion);
             input.ConsumeMouseOver(_diveRegion);
+            input.ConsumeMouseOver(_idleHarvesterRegion);
+            input.ConsumeMouseOver(_idleFactoryRegion);
             input.ConsumeMouseOver(_hudRegion);
             if (_card is not null) input.ConsumeMouseOver(_card);   // M11-04: clicks on the card never reach the map
             if (_mission is not null) input.ConsumeMouseOver(_mission.ObjectivesRegion);
@@ -424,6 +433,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
             else
             {
                 if (input.ConsumePressed(GameAction.Pause)) _sim.Paused = !_sim.Paused;
+                HandleSpeedKeys(input, typing || chatTyping);   // M13-15
                 if (debugKeys && input.ConsumePressed(GameAction.DebugFog)) _sim.CycleViewer();
                 if (debugKeys && _console is not { IsOpen: true } && input.ConsumePressed(GameAction.DebugSpectator)) StartSpectatorFromSandbox();
             }
@@ -438,12 +448,19 @@ public sealed class GameScreen : IScreen, IFocusPausable
             if (input.ConsumePressed(GameAction.DebugRanges)) _overlays.Ranges = !_overlays.Ranges;
         }
 
+        if (_skirmishMode && !_spectatorMode && !(typing || chatTyping) && input.ConsumePressed(GameAction.RangeRings))   // M13-15: in play, off by default
+        {
+            _overlays.Ranges = !_overlays.Ranges;
+            _toast.Show(UiText.Format(UiText.RangeRingsToast, "state", _overlays.Ranges ? "on" : "off"), _nowMs);
+        }
+
         if (input.ConsumePressed(GameAction.DecorToggle)) Rts.Game.Render.DecorSettings.Enabled = !Rts.Game.Render.DecorSettings.Enabled;   // M12-03
         HandleSaveKeys(input, typing || chatTyping);   // D-205: F5 quicksave, F9 quickload
         TickAutosave();                                // D-205
         TickStartCue();                                // D-205
         HandleCameraKeys(input);
         HandleSelectionKeys(input);   // M11-10c: select-all-army and the control groups
+        UpdateIdle(input, typing || chatTyping);   // M13-15: idle buttons, keys and alerts
 
         if (_orders is not null) _orders.SelectedBuilding = _selectedBuilding;   // M4-09: D unloads a selected garrisoned building
         if (_orders is not null)
@@ -539,6 +556,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
         _s.Scene.LargerInfantry = _s.Settings.LargerInfantry;   // D-184
         _s.Scene.Draw(sb, _s.Pixel, frame, _camera, _s.Viewport);
         DrawSelectedBuilding(sb, snapshot);
+        DrawQueuedPaths(sb);   // M13-15: the waypoints of the selected units
         _feedback.Draw(sb, _s.Pixel, _camera);
         DrawPackProgress(sb, snapshot);
         DrawUnpackGhost(sb);
@@ -555,6 +573,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
         DrawUpgradeButton(sb);
         DrawPackButton(sb);
         DrawDiveButton(sb);
+        DrawIdleButtons(sb);
         DrawSpectator(sb);
         _console?.Draw(sb, _s.Pixel, _s.Viewport);
         DrawMapCursor(sb);   // last, so it sits above everything
@@ -647,6 +666,112 @@ public sealed class GameScreen : IScreen, IFocusPausable
     private readonly GameToast _toast = new();
     private readonly Rts.Game.Ui.Card.SellConfirm _sellConfirm = new();
     private int _lastAutosaveTick = -1;   // -1 = none yet: the first update of a new match takes the start autosave
+
+    // ---- M13-15: idle harvester / idle factory buttons, keys and alerts ----
+
+    private readonly IdleWatch _idleWatch = new();
+    private readonly List<ViewActor> _ownScratch = new();
+    private readonly List<ViewActor> _idleHarvesters = new();
+    private readonly List<ViewActor> _idleFactories = new();
+    private readonly List<GameAlert> _idleAlerts = new();
+    private EntityId _lastIdleHarvester, _lastIdleFactory;
+
+    private void UpdateIdle(InputFrame input, bool typing)
+    {
+        _idleHarvesters.Clear();
+        _idleFactories.Clear();
+        _idleHarvesterRegion.Bounds = Rectangle.Empty;
+        _idleFactoryRegion.Bounds = Rectangle.Empty;
+        if (_sim is null || !_skirmishMode || _spectatorMode || _gameOverShown) return;
+        _sim.Sim.ViewFor(SimSnapshotSource.LocalPlayer).CopyOwn(_ownScratch);
+        PlayerHud hud = _sim.Sim.HudFor(SimSnapshotSource.LocalPlayer);
+        IdleFinder.Harvesters(_ownScratch, _sim.Rules, _idleHarvesters);
+        IdleFinder.Factories(_ownScratch, _sim.Rules, hud, _idleFactories);
+        _idleAlerts.Clear();
+        _idleWatch.Observe(_source.Current.Tick, _ownScratch, _sim.Rules, hud, _idleAlerts);
+        foreach (GameAlert a in _idleAlerts) _alerts.Log.Add(a);
+
+        if (_idleHarvesters.Count > 0) _idleHarvesterRegion.Bounds = IdleButtonRect(0, IdleHarvesterCaption());
+        if (_idleFactories.Count > 0) _idleFactoryRegion.Bounds = IdleButtonRect(1, IdleFactoryCaption());
+        if (typing) return;
+        if (input.ConsumePressed(GameAction.IdleHarvester)) JumpToIdleHarvester();
+        if (input.ConsumePressed(GameAction.IdleFactory)) JumpToIdleFactory();
+    }
+
+    private string IdleHarvesterCaption() => UiText.Format(UiText.IdleHarvesterButton, "count", _idleHarvesters.Count.ToString(System.Globalization.CultureInfo.InvariantCulture))
+        .Replace("{key}", KeyNames.Of(GameKeys.Active.Get(GameAction.IdleHarvester)), StringComparison.Ordinal);
+
+    private string IdleFactoryCaption() => UiText.Format(UiText.IdleFactoryButton, "count", _idleFactories.Count.ToString(System.Globalization.CultureInfo.InvariantCulture))
+        .Replace("{key}", KeyNames.Of(GameKeys.Active.Get(GameAction.IdleFactory)), StringComparison.Ordinal);
+
+    // Stacked above the dive / pack / upgrade buttons at the bottom right of the map.
+    private Rectangle IdleButtonRect(int index, string caption)
+    {
+        var scale = _s.UiScale;
+        int w = BitmapFont.Measure(caption, scale) + 16;
+        int h = Hud.HeightOf(1, scale) + 6;
+        Viewport map = MapViewport();
+        return new Rectangle(map.Width - w - 8, map.Height - (4 + index) * h - (16 + 4 * index) - 4, w, h);
+    }
+
+    private void JumpToIdleHarvester()
+    {
+        if (_sim is null || IdleFinder.Next(_idleHarvesters, _lastIdleHarvester) is not { } h)
+        {
+            _toast.Show(UiText.Get(UiText.NoIdleHarvester), _nowMs);
+            return;
+        }
+
+        _lastIdleHarvester = h.Id;
+        ClearBuildingSelection();
+        _selection.Replace(new[] { new UnitKey(h.Kind, h.Id) });
+        CentreCameraOn(Camera.CentreOf(h.Cell));
+    }
+
+    private void JumpToIdleFactory()
+    {
+        if (_sim is null || IdleFinder.Next(_idleFactories, _lastIdleFactory) is not { } f)
+        {
+            _toast.Show(UiText.Get(UiText.NoIdleFactory), _nowMs);
+            return;
+        }
+
+        _lastIdleFactory = f.Id;
+        SelectBuildingAt(f.Cell);
+        CentreCameraOn(new Vector2((f.Cell.X + f.FootprintW / 2f) * Camera.CellPx, (f.Cell.Y + f.FootprintH / 2f) * Camera.CellPx));
+    }
+
+    private void DrawIdleButtons(SpriteBatch sb)
+    {
+        var scale = _s.UiScale;
+        if (_idleHarvesters.Count > 0) DrawIdleButton(sb, _idleHarvesterRegion.Bounds, IdleHarvesterCaption(), scale);
+        if (_idleFactories.Count > 0) DrawIdleButton(sb, _idleFactoryRegion.Bounds, IdleFactoryCaption(), scale);
+    }
+
+    private void DrawIdleButton(SpriteBatch sb, Rectangle r, string caption, UiUnit scale)
+    {
+        Shapes.Fill(sb, _s.Pixel, r, new Color(0, 0, 0, 190));
+        Shapes.Outline(sb, _s.Pixel, r, r.Contains(_mouse) ? Color.White : new Color(0xF0, 0xB0, 0x40), 2);
+        BitmapFont.Draw(sb, _s.Pixel, caption, new Vector2(r.X + 8, r.Y + 4), new Color(0xF0, 0xE6, 0xC0), scale);
+    }
+
+    // ---- M13-15: game speed (single-player skirmish only; the sim step never changes, only the steps per real second) ----
+
+    /// <summary>There is no LAN game yet; when there is, it sets this and the speed is locked to 1x.</summary>
+    private const bool Networked = false;
+
+    private bool SpeedAllowed => _skirmishMode && !_spectatorMode && Skirmish is not null && _sim is not null && !Networked;
+
+    private void HandleSpeedKeys(InputFrame input, bool typing)
+    {
+        if (!SpeedAllowed || typing || _sim is null) return;
+        int delta = 0;
+        if (input.ConsumePressed(GameAction.GameSpeedUp)) delta = 1;
+        else if (input.ConsumePressed(GameAction.GameSpeedDown)) delta = -1;
+        if (delta == 0) return;
+        _sim.SpeedPercent = GameSpeed.Step(_sim.SpeedPercent, delta);
+        _toast.Show(UiText.Format(UiText.SpeedToast, "speed", GameSpeed.Label(_sim.SpeedPercent)), _nowMs);
+    }
 
     private void HandleSaveKeys(InputFrame input, bool typing)
     {
@@ -757,7 +882,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
         Point mouse = input.MousePosition;
         if (input.LeftPressed && _orders is { AttackMoveArmed: true } && _console is not { IsOpen: true } && MapViewport().Bounds.Contains(mouse))
         {
-            _orders.RightClick(mouse, _camera, _renderUnits);   // O2: a left click commits an armed attack-move (right click is the alias below)
+            _orders.RightClick(mouse, _camera, _renderUnits, queue: ShiftHeld(input));   // O2: a left click commits an armed attack-move (right click is the alias below)
             input.ConsumeLeft();
         }
         else if (input.LeftPressed)
@@ -831,7 +956,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
             }
             else
             {
-                _orders.RightClick(mouse, _camera, _renderUnits);
+                _orders.RightClick(mouse, _camera, _renderUnits, CtrlHeld(input), ShiftHeld(input));   // S19 FAD-05: Ctrl + right-click = attack ground; M13-15: Shift = queue a waypoint
             }
         }
     }
@@ -1276,12 +1401,26 @@ public sealed class GameScreen : IScreen, IFocusPausable
             float left = b.Cell.X * Camera.CellPx, top = b.Cell.Y * Camera.CellPx;
             Rectangle r = _camera.ScreenRect(left, top, left + b.FootprintW * Camera.CellPx, top + b.FootprintH * Camera.CellPx);
             Shapes.Outline(sb, _s.Pixel, r, Color.White, 2);
+            if (_overlays.Ranges && _sim is not null) RangeOverlay.DrawBuilding(sb, _s.Pixel, _camera, _sim.Rules, b);   // M13-15: a selected defence shows its range
             // O4: a selected production building shows its rally flag and a line to it
             if (_sim is not null && _sim.Rules.Buildings[b.TypeIndex].Produces is { } lane
                 && _sim.Sim.Production.RallyCell(SimSnapshotSource.LocalPlayer, lane) is { } rally)
             {
                 OrderFeedback.DrawRally(sb, _s.Pixel, _camera, new Vector2(left + b.FootprintW * Camera.CellPx / 2f, top + b.FootprintH * Camera.CellPx / 2f), rally);
             }
+        }
+    }
+
+    // M13-15: for each selected own unit with queued waypoints, a thin line from the unit through them and a small marker on each
+    // (green for a move, red for an attack-move). Reads the sim's own queue, so only the local player's selected units ever show one.
+    private void DrawQueuedPaths(SpriteBatch sb)
+    {
+        if (_sim is null || _selection.Count == 0) return;
+        foreach (UnitKey unit in _selection.Units)
+        {
+            var actor = new ActorRef(unit.Kind, unit.Id);
+            if (_sim.Sim.WaypointCountOf(actor) == 0 || !_sim.TryGetPosition(unit, out LeptonCoord at)) continue;
+            OrderFeedback.DrawWaypointPath(sb, _s.Pixel, _camera, Camera.WorldFromLepton(at), _sim.Sim.WaypointsOf(actor));
         }
     }
 
@@ -1424,6 +1563,8 @@ public sealed class GameScreen : IScreen, IFocusPausable
         if (_s.Settings.ShowDiagnostics)
             lines.Add($"tick {snapshot.Tick}  hash {snapshot.StateHash:x16}  fps {_s.Fps}  zoom {_camera.ZoomLabel}");
         if (_sim is { Paused: true }) lines.Add(debugMode ? "PAUSED (. = step)" : "PAUSED");
+        else if (SpeedAllowed && _sim is { } speedSim && speedSim.SpeedPercent != GameSpeed.Normal)
+            lines.Add(UiText.Format(UiText.SpeedHud, "speed", GameSpeed.Label(speedSim.SpeedPercent)));   // M13-15
 
         if (_orders is { DeployArmed: true }) lines.Add($"DEPLOY: right-click the cell to dig at ({KeyNames.Of(GameKeys.Active.Get(GameAction.Deploy))} cancels)");
         if (_unpack is not null) lines.Add(LeftBehindText.Placeholder(LeftBehindText.UnpackPlacementKey));
@@ -1475,7 +1616,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
         {
             Rectangle mapView = _sidebar?.Layout.MapView ?? new Rectangle(0, 0, _s.Viewport.Width, _s.Viewport.Height);
             Rectangle banner = _mission is null ? Rectangle.Empty : new Rectangle(_mission.ObjectivesRegion.Bounds.X, _mission.ObjectivesRegion.Bounds.Y, _mission.ObjectivesRegion.Bounds.Width, _mission.ObjectivesRegion.Bounds.Height + 48);
-            _alerts.DrawStack(sb, _s.Pixel, mapView, scale, snapshot.Tick, new[] { banner, _hudRegion.Bounds, _swRegion.Bounds, _upgradeRegion.Bounds, _packRegion.Bounds, _diveRegion.Bounds, _specRegion.Bounds });
+            _alerts.DrawStack(sb, _s.Pixel, mapView, scale, snapshot.Tick, new[] { banner, _hudRegion.Bounds, _swRegion.Bounds, _upgradeRegion.Bounds, _packRegion.Bounds, _diveRegion.Bounds, _idleHarvesterRegion.Bounds, _idleFactoryRegion.Bounds, _specRegion.Bounds });
         }
     }
 }

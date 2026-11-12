@@ -1,0 +1,13 @@
+# RTS_2027 M10-09 job 14: tension_leftbehind.ogg (docs/audio/music_brief.md)
+caption = 'instrumental, sparse survivor ambient, wind through ruins, slow bowed saw, faint harmonica drone, distant metal clanks, lonely detuned guitar notes, wary, 66 BPM, E minor, wide dry mix, no melody, no vocals'
+instrumental = true
+lyrics = '[Instrumental]'
+duration = 200
+batch_size = 1
+audio_format = 'wav'
+thinking = false
+use_cot_metas = false
+use_cot_caption = false
+use_cot_lyrics = false
+use_cot_language = false
+use_random_seed = true

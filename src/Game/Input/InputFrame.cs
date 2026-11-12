@@ -60,6 +60,9 @@ public sealed class InputFrame
     /// <summary>Characters typed this frame and not yet consumed.</summary>
     public IReadOnlyList<char> Text => _keyboardConsumed ? NoText : _text;
 
+    /// <summary>True while either Alt key is held (fixed modifier, M13-15 repeat production).</summary>
+    public bool IsAltDown() => IsDown(Keys.LeftAlt) || IsDown(Keys.RightAlt);
+
     /// <summary>True when the key is held and nobody consumed it.</summary>
     public bool IsDown(Keys key) => !IsKeyConsumed(key) && Keyboard.IsKeyDown(key);
 

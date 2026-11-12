@@ -146,8 +146,34 @@ public class PathServiceTests
         CellCoord end = p[^1];
         Assert.Equal(6, end.X); // closest reachable by Chebyshev is column 6 (distance 2)
         Assert.Equal(2, Math.Max(Math.Abs(end.X - 8), Math.Abs(end.Y - 8)));
-        Assert.Equal(new CellCoord(6, 6), end); // tie by lowest cell index among distance-2 cells
+        Assert.Equal(new CellCoord(6, 8), end); // M13-05: straight-line nearest (6,8), (10,8), (8,6), (8,10); tie: nearest the start
         Cost(m, t, Locomotion.Foot, new(1, 8), p);
+    }
+
+    [Fact]
+    public void BlockedOrEnclosedGoal_IsRetargeted_SoTheSearchStaysSmall()
+    {
+        // M13-05 (S18 SP-01): a goal the start cannot reach used to expand every reachable cell before answering.
+        var m = Flat(64, 64); var t = Table();
+        for (int x = 58; x <= 60; x++) for (int y = 58; y <= 60; y++) m.SetBuilding(new(x, y), Bld);   // a 3x3 building
+        for (int x = 2; x <= 8; x++) for (int y = 40; y <= 46; y++)                                     // a sealed rock ring
+            if (x == 2 || x == 8 || y == 40 || y == 46) m.SetLand(new(x, y), LandType.Rock);
+        var s = new PathService(m, t);
+        var (st, p) = Solve(s, new(2, 2), new(59, 59));
+        Assert.Equal(PathStatus.Partial, st);
+        CellCoord e = p[^1];                            // a cell sharing an edge with the footprint, mid-side (straight-line nearest)
+        Assert.Equal(4, (e.X - 59) * (e.X - 59) + (e.Y - 59) * (e.Y - 59));
+        Assert.True(e == new CellCoord(57, 59) || e == new CellCoord(59, 57), $"{e}");
+        Assert.InRange(s.LastProcessCost, 1, 400);    // was about 4 000 (the whole map)
+        (st, p) = Solve(s, new(30, 30), new(5, 43));
+        Assert.Equal(PathStatus.Partial, st);
+        Assert.Equal(new CellCoord(9, 43), p[^1]);    // outside the ring, 4 straight cells from the goal, the one nearest the start
+        Assert.InRange(s.LastProcessCost, 1, 400);
+        Assert.Equal(PathStatus.NotFound, Solve(s, e, new(59, 59)).Item1);   // already as close as it gets
+        Assert.Equal(0, s.LastProcessCost);
+        (st, p) = Solve(s, new(5, 43), new(30, 30));  // from inside the ring out: nearest cell inside the ring
+        Assert.Equal(PathStatus.Partial, st);
+        Assert.Equal(new CellCoord(7, 41), p[^1]);    // the inside cell nearest the goal in a straight line
     }
 
     [Fact]
@@ -179,21 +205,34 @@ public class PathServiceTests
 
     private static CellCoord[] Corners() => new[] { new CellCoord(0, 0) };
 
+    private static readonly CellCoord SerpentineEnd = new(0, 63);
+
+    /// <summary>64x64 with a rock row every 4th row and the gap at alternate ends: (0,0) to (0,63) must wind through all of it, so any
+    /// search between them settles most of the map whatever its heuristic (M13-05: the group search now has one).</summary>
+    private static MapState Serpentine()
+    {
+        var m = Flat(64, 64);
+        for (int row = 2, k = 0; row < 64; row += 4, k++)
+            for (int x = 0; x < 64; x++)
+                if (x != (k % 2 == 0 ? 63 : 0)) m.SetLand(new(x, row), LandType.Rock);
+        return m;
+    }
+
     [Fact]
     public void RequestsQueuedTogetherAreSolvedTogether_ThenDebtDelaysTheNextBatch()
     {
         // M2-01: everything queued when Process runs is solved in that call (so the first and the last asker of a tick
         // are served alike); the overdraft is carried as debt and delays the NEXT batch.
-        var m = Flat(64, 64); var t = Table();
-        // A group search to the far corner settles nearly all 4096 cells: more than 2500, less than 5000.
+        var m = Serpentine(); var t = Table();
+        // A group search through the serpentine settles nearly all of its ~3 100 open cells: more than 2500, less than 5000.
         var s = new PathService(m, t, 2500);
-        int a = s.RequestGroup(Corners(), new(63, 63), Locomotion.Foot);
-        int b = s.RequestGroup(Corners(), new(63, 63), Locomotion.Foot);
+        int a = s.RequestGroup(Corners(), SerpentineEnd, Locomotion.Foot);
+        int b = s.RequestGroup(Corners(), SerpentineEnd, Locomotion.Foot);
         s.Process();
         Assert.Equal(PathStatus.Found, s.Poll(a, 0, out _));
         Assert.Equal(PathStatus.Found, s.Poll(b, 0, out _));
         int c = s.Request(new(0, 0), new(5, 0), Locomotion.Foot);
-        s.Process();   // two searches of ~4000 each against a budget of 2500: debt of about 5500
+        s.Process();   // two searches of ~3000 each against a budget of 2500: debt of about 3500
         Assert.Equal(PathStatus.Pending, s.Poll(c, 0, out _));
         int ticks = 1;
         while (s.Poll(c, 0, out _) == PathStatus.Pending && ticks < 100) { s.Process(); ticks++; }
@@ -201,18 +240,58 @@ public class PathServiceTests
     }
 
     [Fact]
+    public void ATicksRequestsAreNeverSplit_ButWaitWhenOlderOnesUsedTheCap()
+    {
+        // M13-05 (S18 SP-01): Process used to solve the whole queue in one call however much it cost. Now the requests filed since
+        // the last call wait (all of them, D-063) when the requests that had already waited cost BurstFactor budgets or more.
+        var m = Flat(64, 64); var t = Table();
+        var s = new PathService(m, t, 100);
+        var debt = typeof(PathService).GetField("_debt", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!;
+        var a = new List<int>();
+        for (int i = 0; i < 10; i++) a.Add(s.Request(new(0, i), new(63, 63 - i), Locomotion.Foot));   // about 64 each: 640 > 400
+        debt.SetValue(s, 150);
+        s.Process();                                                       // in debt: nothing solved, A waits
+        Assert.Equal(PathStatus.Pending, s.Poll(a[0], 0, out _));
+        var b = new List<int>();
+        for (int i = 0; i < 3; i++) b.Add(s.Request(new(1, i), new(5, i), Locomotion.Foot));
+        s.Process();                                                       // budget 50: all of A (more than 4 x 100), none of B
+        Assert.True(s.LastProcessCost >= PathService.BurstFactor * 100, $"{s.LastProcessCost}");
+        Assert.All(a, id => Assert.Equal(PathStatus.Found, s.Poll(id, 0, out _)));
+        Assert.All(b, id => Assert.Equal(PathStatus.Pending, s.Poll(id, 0, out _)));
+        int ticks = 0;
+        while (s.Poll(b[0], 0, out _) == PathStatus.Pending && ticks < 100) { s.Process(); ticks++; }
+        Assert.InRange(ticks, 2, 10);                                     // after the debt is paid
+        Assert.All(b.Skip(1), id => Assert.Equal(PathStatus.Found, s.Poll(id, 0, out _)));   // together
+
+        // The waited flag survives a save.
+        var s2 = new PathService(m, t, 100);
+        int c = s2.Request(new(0, 0), new(9, 9), Locomotion.Foot);
+        debt.SetValue(s2, 500);
+        s2.Process();
+        var ms = new MemoryStream();
+        using (var w = new BinaryWriter(ms, System.Text.Encoding.UTF8, true)) s2.Write(w);
+        var s3 = new PathService(m, t, 100);
+        ms.Position = 0;
+        using (var r = new BinaryReader(ms)) s3.Read(r);
+        var ms2 = new MemoryStream();
+        using (var w = new BinaryWriter(ms2, System.Text.Encoding.UTF8, true)) s3.Write(w);
+        Assert.Equal(ms.ToArray(), ms2.ToArray());
+        Assert.Equal(PathStatus.Pending, s3.Poll(c, 0, out _));
+    }
+
+    [Fact]
     public void LargeDebtSpansSeveralTicks()
     {
-        var m = Flat(64, 64); var t = Table();
+        var m = Serpentine(); var t = Table();
         var s = new PathService(m, t, 500);
-        int a = s.RequestGroup(Corners(), new(63, 63), Locomotion.Foot);
+        int a = s.RequestGroup(Corners(), SerpentineEnd, Locomotion.Foot);
         s.Process();
         Assert.Equal(PathStatus.Found, s.Poll(a, 0, out _));
         int b = s.Request(new(0, 0), new(5, 0), Locomotion.Foot);
         int ticks = 1;
         s.Process();
         while (s.Poll(b, 0, out _) == PathStatus.Pending && ticks < 100) { s.Process(); ticks++; }
-        Assert.InRange(ticks, 6, 10); // about 4000 cells of debt repaid at 500 per tick
+        Assert.InRange(ticks, 5, 8); // about 2600 cells of debt repaid at 500 per tick
     }
 
     [Fact]

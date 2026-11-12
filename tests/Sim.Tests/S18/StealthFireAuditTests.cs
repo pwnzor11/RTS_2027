@@ -49,18 +49,7 @@ public sealed class StealthFireAuditTests
         Assert.Equal(0, hidden);
     }
 
-    // S18 audit: pins current behaviour of SIM-RULES-04; flip the assertion when fixed.
     [Theory]
-    [InlineData(600)]    // rank 1
-    [InlineData(3200)]   // rank 3
-    public void Audit_RankedShooter_StaysStealthedWhileFiring(int killValue)
-    {
-        var (shots, hidden) = Shoot(killValue);
-        Assert.True(shots >= 3);
-        Assert.True(hidden >= shots / 2, $"{hidden} of {shots} shots left it hidden");   // hidden again 60 ticks after it stopped walking, and firing on
-    }
-
-    [Theory(Skip = "S18 SIM-RULES-04: awaiting owner decision")]
     [InlineData(600)]
     [InlineData(3200)]
     public void Desired_RankedShooter_BreaksStealthWithEveryShot(int killValue)

@@ -81,7 +81,7 @@ public sealed partial class Simulation
         _infantry = new InfantryStore(setup.Limits.Infantry);
         _buildings = new BuildingStore(setup.Limits.Buildings);
         _players = new PlayerStore(setup);
-        for (int p = 0; p < setup.PlayerCount; p++) if (!_players.IsNeutral((byte)p)) _players.Cash[p] = setup.Rules.Economy.StartingCash;   // M2-07
+        for (int p = 0; p < setup.PlayerCount; p++) if (!_players.IsNeutral((byte)p)) _players.Cash[p] = setup.StartingCashOf((byte)p);   // M2-07; S19 (M13-15): a per-slot amount when the setup carries one
         _economy = new EconomyState(setup);
         _production = new ProductionState(setup);
         _tunnels = new TunnelState(setup);
@@ -100,6 +100,7 @@ public sealed partial class Simulation
         _paths = new PathService(_map, setup.Rules.Terrain);
         _regions = new Pathing.RegionCache(_map, setup.Rules.Terrain);   // M7-03
         _paths.GateOpen = GateOpenFor;   // M3-04: own-team gates are passable (D-076)
+        _paths.AshPathPenalty = setup.Rules.Radiation.AshPathPenalty;   // S19 M13-12: soldiers skirt ash fields
         _vision = new VisionState(setup.Map.Width, setup.Map.Height, setup.PlayerCount,
             Math.Max(setup.Limits.Vehicles, setup.Limits.Infantry));
         // Parts after vision come from the partial files in canonical order: combat (M1-09) first.
@@ -247,6 +248,7 @@ public sealed partial class Simulation
         RunCarriers();     // M7-09: Simulation.Carrier.cs — hangar rides, sortie timers (before missions)
         RunAircraftAmmo(); // D-156: Simulation.Carrier.cs — dry aircraft without a hangar place go home; hover rearm
         RunShipments();    // M7-06: Simulation.Shipments.cs — home supply line (its Move orders are resolved by RunMovement this tick)
+        RunAshStepOff();   // S19 M13-12: idle soldiers walk off ash fields (Move orders resolved by RunMovement this tick)
         RunMissions();
         RunMovement();
         RunTunnels();      // M3: Simulation.Tunnels.cs — queues, transit, surfacing (before combat: underground units are untargetable)
@@ -313,6 +315,7 @@ public sealed partial class Simulation
     {
         if (c.Player >= Setup.PlayerCount || _players.Defeated[c.Player]) return;   // defeated players' commands are ignored (D-062)
         if (IsOrderToCarriedUnit(c)) return;   // S19 D-205: a soldier inside a building or a passenger in a vehicle obeys no unit order
+        ClearQueueForPlainOrder(c);            // S19 (M13-15): a plain order replaces the unit's waypoint queue
         switch (c.Kind)
         {
             case CommandKind.Move:
@@ -324,9 +327,12 @@ public sealed partial class Simulation
             case CommandKind.Attack:
             case CommandKind.AttackMove:
             case CommandKind.Guard:
+            case CommandKind.AttackGround:   // S19 (FAD-05)
                 if (c.Kind != CommandKind.Attack && !InMap(c.Cell)) break;
                 ApplyCombatCommand(c);     // Simulation.Combat.cs (M1-09)
                 break;
+            case CommandKind.SetStance: ApplySetStance(c); break;   // S19 (M13-15): Simulation.Orders.cs
+            case CommandKind.QueueOrder: ApplyQueueOrder(c); break; // S19 (M13-15): Simulation.Orders.cs
             case CommandKind.Build: ApplyBuild(c); break;       // Simulation.Production.cs (M2-08)
             case CommandKind.Cancel: ApplyCancel(c); break;
             case CommandKind.Hold: ApplyHold(c); break;         // S15: Simulation.Production.cs
@@ -363,7 +369,7 @@ public sealed partial class Simulation
     private bool IsOrderToCarriedUnit(Command c)
     {
         if (c.Kind is not (CommandKind.Move or CommandKind.Stop or CommandKind.Scatter or CommandKind.Attack or CommandKind.AttackMove
-            or CommandKind.Guard or CommandKind.Enter)) return false;
+            or CommandKind.Guard or CommandKind.Enter or CommandKind.AttackGround or CommandKind.QueueOrder)) return false;
         if (StoreOf((ActorKind)(c.Arg & 0xFF)) is not { } store || !store.Slots.IsAlive(c.Subject)) return false;
         return ActorLayers.IsCarried(_tunnels.LayerOf((ActorKind)(c.Arg & 0xFF), c.Subject.Index));
     }
@@ -647,11 +653,13 @@ public sealed partial class Simulation
 
     private void Commence(MobileStore store, ActorKind kind, int i)
     {
+        if (store.NextMission[i] == MissionKind.Guard && _combat.WaypointCount(kind, i) > 0) StartQueuedWaypoint(store, kind, i);   // S19 (M13-15)
         MissionKind m = store.NextMission[i];
         store.Mission[i] = m;
         store.Status[i] = MissionStatus.Init;
         store.WakeTick[i] = 0;
         store.Target[i] = store.NextTarget[i];
+        if (m == MissionKind.AttackGround) store.Destination[i] = LeptonCoord.CenterOf(store.NextCell[i]);   // S19 (FAD-05): the aim point
         if (m == MissionKind.Move)
             store.Destination[i] = kind == ActorKind.Infantry
                 ? InfantryStore.SlotPosition(store.NextCell[i], _infantry.SubSlot[i])

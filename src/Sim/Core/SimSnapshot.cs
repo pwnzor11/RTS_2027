@@ -107,6 +107,41 @@ public sealed record SimSetup(ulong Seed, Map.MapData Map, int PlayerCount, SimR
     /// saved in the header (format 13), written into the production part when on.</summary>
     public bool NoRebuildDefeat { get; init; }
 
+    /// <summary>S19 D-205 (M13-15): per-player handicap in percent, one entry per player slot; null = every player at <see cref="DefaultHandicap"/>.
+    /// A handicap of h percent makes the player's items build in 100/h of the normal time (production speed) and scales what the player's
+    /// harvesters and salvagers deliver to h percent (income). Battle damage and health are untouched. Part of the game's identity: saved in the
+    /// header (written only when some player is off 100, so other games keep their bytes) and written into the "players" part when on.</summary>
+    public IReadOnlyList<int>? Handicap { get; init; }
+
+    /// <summary>S19 D-205 (M13-15): starting credits per player slot; null = every player gets <c>Rules.Economy.StartingCash</c>. An entry below 0
+    /// means "the rules' amount" for that slot. Part of the game's identity (saved in the header with <see cref="Handicap"/>); the credits
+    /// themselves are ordinary state in the "players" part.</summary>
+    public IReadOnlyList<int>? StartingCash { get; init; }
+
+    /// <summary>The neutral handicap, in percent.</summary>
+    public const int DefaultHandicap = 100;
+
+    /// <summary>Lowest and highest handicap percent a setup may carry.</summary>
+    public const int MinHandicap = 10, MaxHandicap = 200;
+
+    /// <summary>Handicap percent of a player slot (100 when <see cref="Handicap"/> is null or too short).</summary>
+    public int HandicapOf(byte player) => Handicap != null && player < Handicap.Count ? Handicap[player] : DefaultHandicap;
+
+    /// <summary>Starting credits of a player slot: its <see cref="StartingCash"/> entry when that is 0 or more, else the rules' amount.</summary>
+    public int StartingCashOf(byte player) =>
+        StartingCash != null && player < StartingCash.Count && StartingCash[player] >= 0 ? StartingCash[player] : Rules.Economy.StartingCash;
+
+    /// <summary>True when any player's handicap or starting credits differ from the defaults (the header then carries the slot options).</summary>
+    public bool HasSlotOptions
+    {
+        get
+        {
+            for (int p = 0; p < PlayerCount; p++)
+                if (HandicapOf((byte)p) != DefaultHandicap || (StartingCash != null && p < StartingCash.Count && StartingCash[p] >= 0)) return true;
+            return false;
+        }
+    }
+
     /// <summary>M7-10: the map's landing markers (public map data, MapMeta.Landing), read-only for the AI through <c>PlayerView.LandingMarkers</c>.
     /// Not part of the game's identity (not saved, not hashed): the sim never reads it. Empty when the host has no map metadata.</summary>
     public IReadOnlyList<CellCoord> LandingMarkers { get; init; } = Array.Empty<CellCoord>();

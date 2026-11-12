@@ -29,43 +29,7 @@ public sealed class TransportAuditTests
         return (sim, truck, riders, crawler);
     }
 
-    // S18 audit: pins current behaviour of SIM-RULES-05; flip the assertion when fixed.
     [Fact]
-    public void Audit_Splash_HurtsPassengersInsideATransport()
-    {
-        var (sim, truck, riders, crawler) = Loaded(crawlerDx: 0);
-        foreach (EntityId r in riders)
-        {
-            Assert.True(sim.IsUntargetableBy(1, ActorKind.Infantry, r.Index));   // no enemy can aim at them
-            Assert.Equal(50, sim.Infantry.Health[r.Index]);
-        }
-        SystemsFixture.Run(sim, 2, SystemsFixture.Kill(sim, ActorKind.Vehicle, crawler));   // the meltdown goes off one cell from the truck
-        Assert.True(sim.Units.Slots.IsAlive(truck));
-        Assert.Equal(75, sim.Units.Health[truck.Index]);                  // half of 50 at distance 1
-        foreach (EntityId r in riders)
-        {
-            Assert.Equal(ActorLayer.Passenger, sim.LayerOf(ActorKind.Infantry, r.Index));
-            Assert.Equal(25, sim.Infantry.Health[r.Index]);              // each rider took the same hit as the truck
-        }
-    }
-
-    // S18 audit: pins current behaviour of SIM-RULES-05; flip the assertion when fixed.
-    [Fact]
-    public void Audit_SecondSplash_KillsTheRidersButNotTheirTransport()
-    {
-        Simulation sim = SystemsFixture.NewSim();
-        EntityId truck = sim.SpawnVehicle(0, SystemsFixture.Truck, new CellCoord(10, 10));
-        EntityId rider = sim.SpawnInfantry(0, SystemsFixture.Rifle, new CellCoord(11, 10));
-        EntityId c1 = sim.SpawnVehicle(1, SystemsFixture.Crawler, new CellCoord(9, 11));
-        EntityId c2 = sim.SpawnVehicle(1, SystemsFixture.Crawler, new CellCoord(11, 11));
-        SystemsFixture.Run(sim, 1, SystemsFixture.Enter(sim, 0, ActorKind.Infantry, rider, ActorKind.Vehicle, truck));
-        SystemsFixture.Run(sim, 3, SystemsFixture.Kill(sim, ActorKind.Vehicle, c1), SystemsFixture.Kill(sim, ActorKind.Vehicle, c2));
-        Assert.True(sim.Units.Slots.IsAlive(truck));                      // 100 - 25 - 25
-        Assert.False(sim.Infantry.Slots.IsAlive(rider));                  // 50 - 25 - 25: dead inside a living transport
-        Assert.Equal(0, sim.PassengersIn(truck));
-    }
-
-    [Fact(Skip = "S18 SIM-RULES-05: awaiting owner decision")]
     public void Desired_Splash_SparesPassengers()
     {
         var (sim, _, riders, crawler) = Loaded(crawlerDx: 0);
@@ -122,40 +86,24 @@ public sealed class TransportAuditTests
         Assert.Equal(PerPassenger, ticks[2] - ticks[1]);
     }
 
-    // S18 audit: pins current behaviour of SIM-RULES-06; flip the assertion when fixed.
     [Fact]
-    public void Audit_DeployOrder_OnALandingCraft_PutsEveryoneAshoreInOneTick()
-    {
-        var (s, craft, marines) = LoadedTransport(Craft);
-        List<int> ticks = LeaveTicks(s, craft, Order(s, CommandKind.Deploy, craft));
-        Assert.Equal(new[] { 1 }, ticks);                                 // all three left in the tick of the order
-        foreach (EntityId m in marines) Assert.Equal(ActorLayer.Surface, s.Tunnels.InfantryLayer[m.Index]);
-        Assert.Equal(0, s.Naval.UnloadTicksLeft[craft.Index]);
-    }
-
-    // S18 audit: pins current behaviour of SIM-RULES-06; flip the assertion when fixed.
-    [Fact]
-    public void Audit_DeployOrder_OnAFlyingSkyhook_DropsTheSquadMidFlightInOneTick()
-    {
-        var (s, hook, marines) = LoadedTransport(Hook);
-        s.Step(new[] { Order(s, CommandKind.Move, hook, 25, 25) });
-        for (int t = 0; t < 12; t++) s.Step(None);
-        CellCoord at = s.Units.Position[hook.Index].ToCell();
-        Assert.NotEqual(new CellCoord(25, 25), at);                       // still on its way
-        Assert.NotEqual(new CellCoord(9, 10), at);
-        List<int> ticks = LeaveTicks(s, hook, Order(s, CommandKind.Deploy, hook));
-        Assert.Equal(new[] { 1 }, ticks);
-        foreach (EntityId m in marines) Assert.Equal(ActorLayer.Surface, s.Tunnels.InfantryLayer[m.Index]);
-        for (int t = 0; t < 20; t++) s.Step(None);
-        Assert.NotEqual(at, s.Units.Position[hook.Index].ToCell());       // and it never stopped flying
-    }
-
-    [Fact(Skip = "S18 SIM-RULES-06: awaiting owner decision")]
     public void Desired_DeployOrder_OnALandingCraft_IsTimedLikeUnload()
     {
         var (s, craft, _) = LoadedTransport(Craft);
         List<int> ticks = LeaveTicks(s, craft, Order(s, CommandKind.Deploy, craft));
-        Assert.Equal(3, ticks.Count);   // or 0, if Deploy is refused for landing transports
+        Assert.Equal(3, ticks.Count);
         Assert.Equal(PerPassenger, ticks[1] - ticks[0]);
+    }
+
+    [Fact]
+    public void DeployOrder_OnAFlyingSkyhook_IsRefused()
+    {
+        var (s, hook, marines) = LoadedTransport(Hook);
+        s.Step(new[] { Order(s, CommandKind.Move, hook, 25, 25) });
+        for (int t = 0; t < 12; t++) s.Step(None);
+        List<int> ticks = LeaveTicks(s, hook, Order(s, CommandKind.Deploy, hook));
+        Assert.Empty(ticks);
+        Assert.Equal(3, s.PassengersIn(hook));
+        foreach (EntityId m in marines) Assert.Equal(ActorLayer.Passenger, s.Tunnels.InfantryLayer[m.Index]);
     }
 }

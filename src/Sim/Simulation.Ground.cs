@@ -120,7 +120,7 @@ public sealed partial class Simulation
                 int d = LeptonMath.ChebyshevCells(cell, VisionCellOf(kind, i));
                 if (d <= 1) return true;
                 // ASSUMED (M3-05): Searchlight sight is a square (Chebyshev) of the building's Sight radius.
-                if (kind == ActorKind.Building && BuildingTypeAt(i).SeesThroughBlackout && d <= SightOf(kind, i)) return true;
+                if (kind == ActorKind.Building && BuildingTypeAt(i).SeesThroughBlackout && !IsUnpowered(kind, i) && d <= SightOf(kind, i)) return true;
             }
         }
         return false;
@@ -132,6 +132,7 @@ public sealed partial class Simulation
     private void RunStealth()
     {
         int delay = Setup.Rules.Stealth.DelayTicks;   // the still counter caps here; readers compare with StealthDelayFor
+        for (int i = 1; i < _naval.RevealLeft.Length; i++) if (_naval.RevealLeft[i] > 0) _naval.RevealLeft[i]--;   // D-205: a firing sub's reveal runs out
         for (int k = 0; k < 2; k++)
         {
             var kind = (ActorKind)k;
@@ -205,6 +206,29 @@ public sealed partial class Simulation
         return still >= StealthDelayFor(kind, i);
     }
 
+    /// <summary>Radiation level at which an attack-ground Ash Sower considers a cell sown (ASSUMED, S19): stops it killing itself on an
+    /// endless order.</summary>
+    private const int SownRadiation = 128;
+
+    /// <summary>S19 (FAD-05): true when a ground-effect weapon (damage 0: decon, foam, sow, blackout) has done its job on the cell, so an
+    /// attack-ground order with it can end: decon = cell clean, foam = foamed, sow = radiation at <see cref="SownRadiation"/>, blackout = under cloud.
+    /// A weapon that deals damage never ends by itself.</summary>
+    internal bool GroundEffectDone(byte owner, WeaponType w, CellCoord cell)
+    {
+        if (w.Damage > 0 || !_ground.Contains(cell)) return false;
+        WarheadType wh = RulesOf(owner).Warheads[w.Warhead];
+        if (wh.Decontaminate > 0) return _ground.RadiationAt(cell) == 0;
+        if (wh.FoamTicks > 0) return IsFoamed(cell);
+        if (wh.Contaminate > 0) return _ground.RadiationAt(cell) >= SownRadiation;
+        if (wh.BlackoutTicks > 0) return _ground.BlackoutAt(cell) > 0;
+        return false;
+    }
+
+    /// <summary>S19 FAD-19: a building whose type needs power and whose owner is at a low-power band does nothing (Searchlight sight,
+    /// Broadcast Mast jam), like an unpowered turret holding fire. Mobile actors are never unpowered.</summary>
+    private bool IsUnpowered(ActorKind kind, int i) =>
+        kind == ActorKind.Building && BuildingTypeAt(i).NeedsPower && PowerBand(_buildings.Player[i]) >= 1;
+
     /// <summary>True if the viewer's team reveals stealthed actors on <paramref name="cell"/> (within 1 cell, Searchlight sight).</summary>
     internal bool IsStealthRevealed(byte viewer, CellCoord cell)
     {
@@ -217,7 +241,7 @@ public sealed partial class Simulation
                 if (!slots.IsIndexAlive(i) || !IsFriendly(viewer, PlayerAt(kind, i))) continue;
                 int d = LeptonMath.ChebyshevCells(cell, VisionCellOf(kind, i));
                 if (d <= 1) return true;
-                if (kind == ActorKind.Building && BuildingTypeAt(i).SeesThroughBlackout && d <= SightOf(kind, i)) return true;
+                if (kind == ActorKind.Building && BuildingTypeAt(i).SeesThroughBlackout && !IsUnpowered(kind, i) && d <= SightOf(kind, i)) return true;
             }
         }
         return false;
@@ -286,7 +310,7 @@ public sealed partial class Simulation
         RefreshEmitters();
         foreach ((ActorKind kind, int i) in _emitters)
         {
-            if (!SlotsOf(kind).IsIndexAlive(i) || RelationOf(viewer, PlayerAt(kind, i)) != Relation.Enemy) continue;
+            if (!SlotsOf(kind).IsIndexAlive(i) || RelationOf(viewer, PlayerAt(kind, i)) != Relation.Enemy || IsUnpowered(kind, i)) continue;
             int rad = JamRadiusOf(kind, i);
             if (rad > 0 && LeptonMath.ChebyshevCells(cell, VisionCellOf(kind, i)) <= rad) return true;
         }
@@ -317,7 +341,7 @@ public sealed partial class Simulation
             SlotArray slots = SlotsOf(kind);
             for (int i = 1; i < slots.Capacity; i++)
             {
-                if (!slots.IsIndexAlive(i) || RelationOf(viewer, PlayerAt(kind, i)) != Relation.Enemy) continue;
+                if (!slots.IsIndexAlive(i) || RelationOf(viewer, PlayerAt(kind, i)) != Relation.Enemy || IsUnpowered(kind, i)) continue;
                 int rad = JamRadiusOf(kind, i);
                 if (rad > 0 && LeptonMath.ChebyshevCells(cell, VisionCellOf(kind, i)) <= rad) return true;
             }

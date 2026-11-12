@@ -18,11 +18,11 @@ public sealed class KiteAuditTests
         WeaponType bomb = r.Weapons[kite.PrimaryWeapon];
         WarheadType blast = r.Warheads[bomb.Warhead];
         Assert.Equal("lb_kite_bomb", bomb.Id);
-        Assert.Equal(1, bomb.RateOfFire);                       // reloads every tick
+        Assert.Equal(60, bomb.RateOfFire);                      // D-205: no longer every tick
         Assert.Equal(kite.PrimaryWeapon, kite.DeathWeapon);     // and drops the same bomb again when it dies
         Assert.True(blast.HitsAllies);
         Assert.Equal(1, blast.Splash);
-        Assert.False(kite.RaiderOneUse);
+        Assert.True(kite.OneUse);                                // D-205: the explicit one-use flag
         // half splash on its own light armour = exactly its health; one point more health and it would survive a drop
         Assert.Equal(kite.MaxHealth, Simulation.ComputeDamage(bomb.Damage, blast, kite.Armor) / 2);
     }
@@ -43,23 +43,19 @@ public sealed class KiteAuditTests
     }
 
     [Fact]
-    public void Audit_Kite_DropsOneBomb_DiesOfItsOwnSplash_AndItsDeathDropsASecond()
+    public void Kite_DropsOneBomb_AndIsSpent_WithNoSecondDeathBomb()
     {
-        // S18 audit: pins current behaviour of FACTION-LE-14; flip the assertion when fixed.
         var (damage, dead, perBomb) = Bomb(0);
         Assert.Equal(144, perBomb);
         Assert.True(dead);
-        // the bomb (full, on the footprint) plus the death bomb (full or half, depending on which cell the Kite died over)
-        Assert.Contains(damage, new[] { perBomb + perBomb, perBomb + perBomb / 2 });
+        Assert.Equal(perBomb, damage);   // exactly one bomb: it is consumed by the shot, so its death weapon never goes off
     }
 
     [Fact]
-    public void Audit_HeroKite_StillDiesOnItsFirstDrop_BecauseRankAlsoRaisesItsOwnBomb()
+    public void HeroKite_IsAlsoSpentByItsFirstDrop()
     {
-        // S18 audit: FACTION-LE-14 said any veterancy rank would make the Kite reusable. Measured: it does not (rank raises the bomb
-        // damage more than it lowers damage taken), so no current rule keeps a Kite alive. The mechanism is still an accident of numbers.
         var (damage, dead, perBomb) = Bomb(3);
         Assert.True(dead);
-        Assert.True(damage < 3 * (perBomb * 13 / 10), $"damage {damage}");   // not more than two Hero bombs
+        Assert.True(damage < 2 * perBomb, $"damage {damage}");
     }
 }

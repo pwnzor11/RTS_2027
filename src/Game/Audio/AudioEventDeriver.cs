@@ -201,7 +201,7 @@ public sealed class AudioEventDeriver
 
     private static bool IsAckable(CommandKind k) =>
         k is CommandKind.Move or CommandKind.AttackMove or CommandKind.Attack or CommandKind.Harvest or CommandKind.Return
-            or CommandKind.Enter or CommandKind.Guard or CommandKind.Scatter or CommandKind.Deploy;
+            or CommandKind.Enter or CommandKind.Guard or CommandKind.Scatter or CommandKind.Deploy or CommandKind.QueueOrder;
 
     private static bool NearAny(List<LeptonCoord> points, LeptonCoord p)
     {
