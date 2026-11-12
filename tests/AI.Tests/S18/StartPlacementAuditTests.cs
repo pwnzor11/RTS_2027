@@ -203,4 +203,55 @@ public class StartPlacementAuditTests(ITestOutputHelper output)
         (List<string> a, List<string> b) = Layouts(faction, 3UL);
         Assert.Equal(a, b);
     }
+
+    // M13-19 (D-223): on a mirror map the second start's kit is the mirror image (not the half turn) of the first start's kit.
+    [Theory]
+    [InlineData(Biome.Mountains, Faction.Authority)]
+    [InlineData(Biome.Mountains, Faction.Directorate)]
+    [InlineData(Biome.Mountains, Faction.LeftBehind)]
+    [InlineData(Biome.AshPlains, Faction.Authority)]
+    [InlineData(Biome.AshPlains, Faction.Directorate)]
+    [InlineData(Biome.AshPlains, Faction.LeftBehind)]
+    public void StartKit_IsTheMirrorImage_OnMirrorMapsLayout1(Biome biome, Faction faction)
+    {
+        Simulation sim = Start(biome, 1, 3UL, faction);
+        MapData m = sim.Setup.Map;
+        CellCoord s0 = m.StartPositions[0], s1 = m.StartPositions[1];
+        bool mirrorX = s1.X == m.Width - 1 - s0.X && s1.Y == s0.Y;
+        bool mirrorY = s1.Y == m.Height - 1 - s0.Y && s1.X == s0.X;
+        Assert.True(mirrorX || mirrorY, "precondition: the biome's layout 1 is a mirror map");
+        List<string> a = Layout(sim, 0, false), b = LayoutMirrored(sim, mirrorX);
+        output.WriteLine($"{biome} {faction}\n  start 0:             {string.Join("; ", a)}\n  start 1 mapped back: {string.Join("; ", b)}");
+        Assert.Equal(a, b);
+    }
+
+    /// <summary>Player 1's kit mapped back through the mirror (X axis flipped, or Y axis flipped) to start 0's frame.</summary>
+    private static List<string> LayoutMirrored(Simulation sim, bool mirrorX)
+    {
+        CellCoord s = sim.Setup.Map.StartPositions[1];
+        int sx = mirrorX ? -1 : 1, sy = mirrorX ? 1 : -1;
+        var items = new List<string>();
+        for (int i = 1; i < sim.Buildings.Capacity; i++)
+            if (sim.Buildings.Slots.IsIndexAlive(i) && sim.Buildings.Player[i] == 1)
+            {
+                BuildingType bt = Rules.Buildings[sim.Buildings.TypeIndex[i]];
+                int dx = sim.Buildings.Cell[i].X - s.X, dy = sim.Buildings.Cell[i].Y - s.Y;
+                if (mirrorX) dx = -dx - bt.FootprintW + 1; else dy = -dy - bt.FootprintH + 1;
+                items.Add($"B {bt.Id} {dx},{dy}");
+            }
+        for (int i = 1; i < sim.Units.Capacity; i++)
+            if (sim.Units.Slots.IsIndexAlive(i) && sim.Units.Player[i] == 1)
+            {
+                CellCoord c = sim.Units.Position[i].ToCell();
+                items.Add($"V {Rules.Vehicles[sim.Units.TypeIndex[i]].Id} {(c.X - s.X) * sx},{(c.Y - s.Y) * sy}");
+            }
+        for (int i = 1; i < sim.Infantry.Capacity; i++)
+            if (sim.Infantry.Slots.IsIndexAlive(i) && sim.Infantry.Player[i] == 1)
+            {
+                CellCoord c = sim.Infantry.SlotCell[i];
+                items.Add($"I {Rules.Infantry[sim.Infantry.TypeIndex[i]].Id} {(c.X - s.X) * sx},{(c.Y - s.Y) * sy}");
+            }
+        items.Sort(StringComparer.Ordinal);
+        return items;
+    }
 }
