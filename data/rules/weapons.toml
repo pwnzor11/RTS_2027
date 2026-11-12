@@ -197,7 +197,7 @@ warhead = "auth_ap"
 targets = "air"
 
 [auth_howitzer_gun]   # Field Howitzer, long-range artillery (design 08 §4)
-damage = 20  # ASSUMED (M4-07)
+damage = 32  # ASSUMED (M4-07) # s22 M13-13 (D-223): 20 -> 32
 range = 2560  # ASSUMED (M4-07): longer than the Seismic Mortar, the role is long range
 min_range = 512  # ASSUMED (M4-07)
 rate_of_fire = 90  # ASSUMED (M4-07)
