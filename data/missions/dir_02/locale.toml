@@ -7,6 +7,7 @@
 "d2.convoy1" = "A convoy comes down from the north!"
 "d2.radio.convoy1" = "The first convoy is on the north road. Stop it before it reaches the post."
 "d2.convoy2" = "A second convoy comes in from the east!"
+"d2.radio.convoy2" = "The second convoy is on the east road. Another chance to starve them."
 "d2.convoys.down" = "Both convoys are destroyed."
 "d2.radio.convoys" = "Both convoys burn. The tenancy will eat cold rations this winter."
 "d2.reserve" = "The road reserve is coming from the east!"

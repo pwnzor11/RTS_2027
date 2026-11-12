@@ -107,6 +107,7 @@ end
 
 function ConvoyTwo()
   Media.MessageKey("d2.convoy2")
+  Dialogue.Say(SPEAKER, SPEAKER, "d2.radio.convoy2")
   Convoy({ x = 63, y = 30 }, { x = 57, y = 30 })
   Camera.Focus("east_post", 160)
 end
