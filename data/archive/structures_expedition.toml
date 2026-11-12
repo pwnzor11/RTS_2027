@@ -236,7 +236,6 @@ A deep concrete basin with gates at one end, large enough to take in the fleet's
 '''
 unlock = "campaign:exp_03" # M8-13 (tune)
 
-# DRAFT (lead, session 12) — assumed — confirm (owner reads)
 [[entry]]
 id = "exp_provision_store"
 category = "Structure"

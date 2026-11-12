@@ -408,3 +408,21 @@ D-218 (the follow-up fixes and the 12-seed measure).
 D-212..D-216 and Q-73/Q-74 clashed with ours (renumbered here). The single ash-on Scripting run plus the sweeps held the build lock for hours
 on the 2-CPU box. Diagnostics live only on branch scratch/s20-ash-diag (local ash switch, trace, sweep probe; never merge).
 **Next session should:** see HANDOFF (campaign retune to the Q-75 targets with ash on, after-series, then M14).
+
+## Session 21 · 2026-11-12 (campaign retune with ash on, sight-range engagement, M14-06 art, after-series)
+**Goal:** owner: start with the campaign retune (M13-17); accept every recommendation. A parallel session 20 had already done the M13
+follow-ups and the 12-seed baseline overnight, so this session built on PR #70 and its handoff.
+**Done:** campaign missions run with ash on (CampaignRules removed). Owner targets (Q-75): tier 1 >= 10, tier 3 >= 8, tier 5 >= 3 wins of 12.
+Pilot auth_01 t3 found units only acquire inside their own weapon range (a raider parked just outside it won); the owner then chose a sim rule:
+the default stance engages hostile units in sight and returns to its post (D-219). Re-swept all 45 mission-tiers; retunes of auth_01, auth_03,
+auth_04, dir_04, lb_03, exp_03 (D-222, docs/balance/s21_campaign_retune.md). The owner's laptop sweep confirmed 45/45 on target, seed for seed
+identical to the cloud. Tier-5 fixed-seed walks only need a clean run (D-221). Dev saves/replays are disposable (D-220). M14-06: the owner's 26
+laptop renders landed, no rules id left without art. Tools: SeedSweepTests (kept probe), run_s21_campaign_sweep.ps1, run_s19_after.ps1
+-OutName/-Only, run_s21_ab.ps1. After-series on the s21 code read (docs/balance/s21_after_series.md, Q-77). Deleted 107 old Actions artifacts
+(owner). PR #74 merged by the lead on the owner's word (also landed #70 and #67).
+**Decisions:** D-219..D-222.
+**Helpers:** 9 Sonnet packages (two retune rounds); one handed back early on a busy build lock and was resumed.
+**Problems / notes:** helpers' tier-5 picks overshot or cut visible timers (auth_03 tide 9000 -> 2780 rejected); several missions are
+all-or-nothing for the bot (auth_04, dir_04); lb_01's idle player no longer loses (D-219). Sweeps on the 2-CPU box took 1-2 h per pass;
+the laptop did all 45 in 21 min.
+**Next session should:** see HANDOFF (Q-77 balance round starting from the owner's A/B, then M14).

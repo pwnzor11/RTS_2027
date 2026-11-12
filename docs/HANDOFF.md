@@ -1,51 +1,33 @@
-# Handoff: Session 21 — campaign retune with the ashfall hazard on (M13-17), the "after" series, then the Field Manual (M14)
-Last commit: `docs: Session 20 handoff` on wp/s20-docs, landed through its PR after PR #70 (session 20 wave 1). Check `git log -1 origin/main`.
-Where things stand: session 20 (2026-11-12) closed M13-11 and most of M13-18 (D-218) and measured the campaign with ash on over 12 seeds
-(docs/balance/s20_campaign_seed_baseline.md). A parallel session landed M9 LAN and the code-only M10 work on main (D-212..D-216,
-docs/process/m9m10_overnight.md). Decisions up to D-218. Campaign missions still run with ash damage and the ash path cost OFF
-(`MissionSession.CampaignRules`, D-211); lb_03 tier 5 and exp_04 tier 5 are still skipped known shifts. Open questions: Q-75 (retune targets),
-Q-76 (dead-end dock), plus the M9/M10 session's Q-73 (par times) and Q-74 (chat in LAN replays).
+# Handoff: Session 22 — skirmish balance round (Q-77, M13-19), then the Field Manual (M14)
+Last commit: `docs: Session 21 handoff` (PR after #74). Check `git log -1 origin/main`.
+Where things stand: session 21 (2026-11-12) landed PR #74 (with #70 and #67): campaign missions run with ash on and all 45 mission-tiers meet
+the owner's targets over 12 seeds (D-222, confirmed on the owner's laptop); the default stance engages hostile units in sight (D-219);
+tier-5 fixed-seed walks only need a clean run (D-221); development saves and replays are disposable (D-220); M14-06 art is in, no rules id
+left without art. Decisions up to D-222. Open questions: Q-77 (skirmish balance), Q-76 (dead-end dock), Q-73 (par times).
 
 ## Start here (shown to the user as the plan; nothing starts until they say go)
-1. Ask Q-75 (targets: tier 1 ≥ 11/12, tier 3 ≥ 9/12, tier 5 ≥ 4/12 wins over 12 seeds).
-2. M13-17 campaign retune, pilot first: auth_01 tier 3 (3/12; see the baseline notes: riflemen lose raid 2 by a few HP, then a surviving
-   enemy vehicle grinds the scrapers). Show the owner the pilot (what changed, win rates before/after at tiers 1/3/5), then fan out to the
-   other four below target: auth_03 t1 (6/12), auth_04 t5 (0/12), dir_04 t5 (0/12), lb_03 t5 (1/12). Then remove CampaignRules' override
-   (ash on in missions), delete S19 CampaignAshfallOffTests, update the fixed-seed BalanceTableTests/mission tests (KnownShifts, auth_01
-   tier 5 expects a win per D-217, PilotMissionTests' "loses both scrapers at tier 5" goes) and un-skip lb_03 and exp_04 tier 5.
-   Re-measure every touched mission-tier with the 12-seed probe (branch scratch/s20-ash-diag; make it a proper tool if it stays useful).
-   Don't edit shared maps for one mission (rustbelt_m2 serves six missions).
-3. The owner's "after" series if it exists: `balance_runs\s19after\s19after_summary.md` vs `balance_runs\s18audit\s18audit_summary.md`;
-   decide the option-only 2.3 numbers (D-208), the Glass Coast layout 2 fields, and start-side skew (M13-10). Needs the PC linked.
-4. M14: re-angle the walls and gates hero renders (auth_gate, auth_wall, dir_bunker, lb_scrap_wall), Directorate lore draft, hero-render
-   support in tools/booklet, then the full build. Q-76 (dead-end dock back-off) only if the owner wants it.
+1. Read the owner's A/B: `balance_runs\s21ab_nod219\s21ab_nod219_summary.md` (D-219 OFF) against `balance_runs\s21after\s21after_summary.md`
+   (D-219 ON) for four rows: Authority v Directorate and v Expedition on Rust Belt, Expedition v Authority on Glass Coast, Left Behind mirror
+   Mountains L1. Tells whether D-219 or faction numbers weakened the Authority. Read through the linked folder (device bridge).
+2. Q-77 balance round (M13-19), table first, owner picks: Authority v Directorate 17-36 and v Expedition 12-51 on Rust Belt; Glass Coast
+   Expedition 43-55 v 7-14; Left Behind mirror Mountains L1 start 0 earns ~25 % less (fields). Measure on the owner's laptop
+   (run_s19_after.ps1 -OutName <name> -Only <rows>); the owner wants sweeps and series on the laptop, not the cloud box.
+3. M13-13 option list (D-208, docs/reviews/2026-11-11_s18_audit/s19_numbers.md QUESTIONS 1-6, 8-14) as part of the same round.
+4. M14: re-angle the walls and gates hero renders (auth_gate, auth_wall, dir_bunker, lb_scrap_wall), Directorate lore draft, hero-render support
+   in tools/booklet, then the full ~108-page build (all 150 heroes are in art/booklet now).
 
 ## Half-finished work
-- Nothing in flight. integ-s20 is merged; worktrees under /home/claude/wt are disposable.
-- scratch/s20-ash-diag: diagnostic only (local ash variants via RTS_LOCAL_ASH=off|dmg|pen|both, auth_01 trace, S20Sweep seed probe, ash
-  scan, seed-dir script). Never merge; cherry-pick the probe into a real tool if needed.
-- 26 ids still have no model or sprite (D-215: scripts on art/m14-06-pilot, PR #67 draft, rendered on the owner's laptop).
+- Nothing in flight. Session 21 helper branches are merged or disposable.
 - Mop-up AI code in MilitaryManager still switched off; voice lines on hold (Piper); `unit_reserve` override unused.
+- exp_03 tier 5's second bomber sortie has no radio line (new text would be needed; owner not asked yet).
+- Tier 5 wins 12/12 in eight missions (no harder than tier 3 for the bot): a human play-test decides whether to raise it.
 
 ## Waiting on the user
-- Back up `%APPDATA%\RTS_2027`, `git checkout main`, `git pull`, play USER_CHECKS "Session 20" (and "Session 19p" for the LAN work).
-- Laptop "after" series: `powershell -ExecutionPolicy Bypass -File tools\measure\run_s19_after.ps1` (about 95 min), if not done.
-- Answer Q-75 (and Q-76 when convenient).
-- Branch clean-up (owner deletes): integ-s20, land/s20-w1, wp/s20-path, wp/s20-harvest, wp/s20-melee, wp/s20-ai,
-  wp/s20-docs, scratch/s20-ash-diag (after session 21 has the probe); keep restore/pre-s20 until happy.
-
-## Parallel session additions (session 19p, 2026-11-12; read with the plan below)
-- Last commit of session 19p: `docs: Session 19p handoff` (wrap-up PR after #71). Check `git log -1 origin/main`.
-- M9 LAN and every code-only M10 feature are on main (D-216): PR #69 (wave 1) and PR #71 (wave 2: lobby, in-game LAN, review fixes). Notes and
-  open items: docs/process/m9m10_overnight.md. Not yet tested on two real PCs (ROADMAP M9-15): that is the first owner check.
-- Open questions: Q-73 (par times), Q-74 (chat in LAN replays).
-- M14-06: scripts for the 26 ids are on art/m14-06-pilot (draft PR #67). The owner runs `tools\art\render_m14_06.ps1` on the laptop, then
-  `tools\booklet\render_heroes.ps1 -Ids …`, pushes; the lead then removes the ids from RenderSpriteLoadTests.KnownWithoutArt and the PLACEHOLDER ART comments.
-- Music: take 1 of 20 tracks (19 done, credits rendering at wrap-up) is in C:\ACE-Step-1.5\output\rts\<track>\take1\ on the owner's laptop (`rts_batch.ps1`, `-Takes 2` for more).
-  Next: the owner picks takes; the lead converts to OGG at -16 LUFS (ffmpeg) into data/music/ (names in docs/audio/music_brief.md).
-- D-212: remove the "DRAFT (lead, session 12)" marks from data/archive/upgrades.toml and structures_expedition.toml.
-- Lessons: one monotonic network clock for lobby and match; never build while a merge is writing files; run Scripting.Tests in every batch
-  (slow but it catches campaign regressions); Windows CI catches first-run console output in tests.
+- Merge the session 21 handoff PR (docs only).
+- Laptop: `git checkout main; git pull; powershell -ExecutionPolicy Bypass -File tools\measure\run_s21_ab.ps1` (~25-35 min), results stay in the folder.
+- Back up `%APPDATA%\RTS_2027`, `git pull`, play USER_CHECKS "Session 21" and "Session 19p" (two-PC LAN test, M9-15 still open).
+- Music: pick ACE-Step takes (docs/audio/music_brief.md) when ready. Answer Q-73 (par times) when convenient.
+- Branch clean-up (owner deletes; this session cannot): see the list in the session 21 wrap-up message.
 
 ## How to run this session
 - Session 20 lessons: (1) a single fixed-seed bot walk is not a balance measure: the campaign walks flip with the seed; judge a mission-tier
@@ -241,6 +223,19 @@ Q-76 (dead-end dock), plus the M9/M10 session's Q-73 (par times) and Q-74 (chat 
   - The safety check refuses force-pushes even to our own land/ branches: open a new land branch and PR instead (#66 superseded #62).
   - Helpers' "assumed" picks that touch player-visible behaviour go to OPEN_QUESTIONS as "assumed — confirm" (Q-72).
   - The owner answers phone pushes quickly: batch 1-5 picks per push with a recommendation each; PushNotification works.
+- Session 21 lessons:
+  - Check GitHub for a parallel session before starting (`git ls-remote origin 'refs/heads/*s<N>*'`): a whole session 20 had run overnight;
+    build on its PR and handoff instead of redoing it.
+  - Owner policy (D-220): never spend time keeping development saves or replays loadable; re-pin hashes freely.
+  - The owner wants campaign sweeps and skirmish series on his laptop, not the cloud box: write a tools/measure script, he runs it and says
+    "done"; read the summary through the linked folder. The laptop runs all 45 campaign mission-tiers in ~21 min (cloud: 1-2 h per pass) and
+    gives seed-for-seed identical results.
+  - Find root causes with the per-unit trace before scaling numbers: three missions lost to the same weapon-range gap, fixed once in the sim.
+  - A sim rule change voids every earlier sweep: re-sweep all missions, keep only retunes that are still needed (dir_04's round-1 change was not).
+  - Brief retune helpers: don't shorten visible timers, keep each tier's identity, set TMPDIR for the trace probe; tier-5 cliffs are common
+    (several missions are all-or-nothing for the bot).
+  - Don't merge into the folder a running test reads its data from; don't wrap long test runs in the shared build lock (helpers queue behind it).
+  - The proxy blocks Actions caches and numeric-id artifact pagination; page artifacts with &page=N.
 - Session 18 lessons:
   - Helpers cannot write report .md files (the harness refuses "report files from subagents"): brief them to hand back the full text, and save
     it from the task transcript (the lead used a small script that pulls the SubagentHandback text out of the .output JSONL).

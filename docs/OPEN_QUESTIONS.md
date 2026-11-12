@@ -5,11 +5,11 @@ file cited after each question. Recommendations are the lead's, from the researc
 
 ## Open
 
-- 🟡 **Q-77 · 2026-11-12 · Expedition skirmish strength (after the s21 laptop after-series).** The s19 after-series (commit 6e3c15f9, before
-  PR #70 and D-219) has the Expedition winning most cross-faction rows: Rust Belt v Authority 50-13, v Directorate 35-26, v Left Behind 38-21;
-  Glass Coast 43-15, 46-11, 43-15 (s18: 37-24, 24-35, 27-29, 25-37, 27-30, 33-23). Start skew itself is fixed (worst 92 % -> 54 %). Re-measured
-  on integ-s21 by the owner's laptop (`run_s19_after.ps1 -OutName s21after`); then options: **(a) tune Expedition numbers (shipments, hover
-  costs) toward 45-55 % per pair (recommended)** / (b) leave it until a play-test.
+- 🟡 **Q-77 · 2026-11-12 · Skirmish balance after s21 (docs/balance/s21_after_series.md).** On the session 21 code (PR #70 + D-219):
+  (1) the Authority is behind: Rust Belt v Directorate 17-36 (was 24-24), v Expedition 12-51; (2) Glass Coast: Expedition beats everyone
+  43-55 to 7-14; (3) Left Behind mirror on Mountains layout 1: start share 74 %, start 0 earns ~25 % less by 5 min. First step: the owner's A/B
+  `tools/measure/run_s21_ab.ps1` (D-219 reverted for those rows) splits "D-219" from "faction numbers". Then options per item: **(a) tune numbers
+  toward 45-55 % per pair (recommended)** / (b) for Glass Coast, accept a naval map favouring the naval faction / (c) leave until a play-test.
 - ⚪ **Q-76 · 2026-11-12 · Harvester dock in a dead-end corridor.** One-cell dead-end corridor to a dock: the harvester that unloaded cannot
   leave because the next one waits behind it (pinned as skipped `YardDockLivelockTests.Desired_DeadEndCorridorToTheDock_KeepsDelivering`).
   **(a) waiters stand back two cells off the dock approach until the dock is free** / (b) leave it (shipped yards have an open dock cell).

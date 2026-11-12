@@ -31,6 +31,8 @@
 .PARAMETER OutName
   Output folder under balance_runs (default s19after). Use a new name to measure another commit, e.g. -OutName s21after;
   finished rows in the folder are skipped, so the same name would skip everything.
+.PARAMETER Only
+  Row names to run (as in the .md file names, e.g. g3_rust_belt_l1_authority3_v_expedition3_30k); default all rows of the groups.
 .PARAMETER DryRun
   Print the rows and the command lines without building or running anything.
 #>
@@ -39,7 +41,8 @@ param(
     [switch]$SkipBuild,
     [int[]]$Groups = @(1, 2, 3, 4),
     [switch]$DryRun,
-    [string]$OutName = 's19after'
+    [string]$OutName = 's19after',
+    [string[]]$Only
 )
 $ErrorActionPreference = 'Stop'
 $root = (Get-Location).Path
@@ -87,6 +90,7 @@ $all = @()
 foreach ($r in $rows) {
     $name = "g{0}_{1}_l{2}_{3}{4}_v_{5}{6}_{7}k" -f $r.Group, $r.Biome, $r.Layout, $r.FA, $r.TA, $r.FB, $r.TB, ($r.Ticks / 1000)
     $r | Add-Member Name $name
+    if ($Only -and -not ((($Only -join ',') -split ',') -contains $name)) { continue }
     $r | Add-Member Md (Join-Path $out "$name.md")
     $r | Add-Member Log (Join-Path $out "$name.log")
     $r | Add-Member ArgList ("ai match --a tiered:{0} --b tiered:{1} --faction-a {2} --faction-b {3} --seeds 32 --size 96 --layout {4} --biome {5} --ticks {6} --income 1 --out {7}\{8}.md" -f $r.TA, $r.TB, $r.FA, $r.FB, $r.Layout, $r.Biome, $r.Ticks, $outRel, $name)
