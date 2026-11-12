@@ -26,9 +26,9 @@ D-192 (team-colour pass), D-196 (renders on the owner's PC), design 18 (art guid
 ## 3. Audio
 | Item | Owner answer | Notes |
 |---|---|---|
-| Soundtrack size | **About 20 tracks** (not the lead's 10) | Proposed list: menu theme; per faction a briefing theme, a build/calm track and two battle tracks (16); victory, defeat, end credits; a LAN lobby track. |
+| Soundtrack size | **About 20 tracks** (not the lead's 10) | List: menu, credits, victory, defeat; per faction two battle tracks, a tension (calm) track and a briefing theme (16). The LAN lobby uses the menu track. |
 | Style | **Mix by faction** (not the lead's single style) | Authority 1960s orchestral (brass, strings, snare); Directorate industrial (machines, low synths, choir hits); Left Behind raw folk and percussion; Expedition naval brass over electronics. Menu, lobby and credits blend all four. |
-| Tool | ACE-Step on the owner's PC (D-080); **not set up yet** | Lead writes a setup guide (like docs/audio/voice_setup.md), a prompt pack for all 20 tracks and a batch script. Tracks ship CC0, tool credited in CREDITS. The music player and `data/music` folder already exist. |
+| Tool | ACE-Step on the owner's PC (D-080); **not set up yet** | Setup guide: docs/audio/ace_step_setup.md (ACE-Step 1.5, now MIT). Prompt pack for all 20 tracks: docs/audio/music_brief.md. A batch script follows once the REST API is checked on the owner's machine. Tracks ship CC0, tool credited in CREDITS. The music player and `data/music` folder already exist. |
 | Unit responses | **Piper voice barks later**, together with M8-18 | Short spoken acknowledgements per unit class once Piper runs on the NAS; the current clicks stay until then. |
 | SFX | **Per weapon class and faction**, about 60-80 sounds | Every weapon class, per-faction building/death/production sounds, naval/air/tunnel/rig events, ambient biome loops. CC0 packs and our own sfxr output, every file in CREDITS. Wired through the existing `data/audio/sounds.toml` events. |
 
