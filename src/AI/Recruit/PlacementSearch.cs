@@ -19,6 +19,7 @@ internal sealed class PlacementSearch
     internal const int SearchRadius = 12;
     internal const int WideSearchRadius = 24;
     private const int LaneHalfWidth = 1, LaneDepth = 4;
+    private const int OutletWidth = 2, OutletRows = 2;   // S18-AI-NEW-3: the lane's mouth widens toward the open side (the map centre)
 
     private readonly record struct Rect(int X0, int Y0, int X1, int Y1)
     {
@@ -41,7 +42,7 @@ internal sealed class PlacementSearch
         {
             BuildingType t = rules.Buildings[b.TypeIndex];
             _blocks.Add(new Rect(b.Cell.X, b.Cell.Y, b.Cell.X + t.FootprintW - 1, b.Cell.Y + t.FootprintH - 1));
-            if (HasLane(t)) AddLanes(t, b.Cell, _lanes);
+            if (HasLane(t)) AddLanes(t, b.Cell, _lanes, k.View.MapWidth);
             if (t.Produces != null) _mouths.Add(new Rect(b.Cell.X + t.Exit.X, b.Cell.Y + t.Exit.Y, b.Cell.X + t.Exit.X, b.Cell.Y + t.Exit.Y));
             if (t.Refinery) _mouths.Add(new Rect(b.Cell.X + t.Dock.X, b.Cell.Y + t.Dock.Y, b.Cell.X + t.Dock.X, b.Cell.Y + t.Dock.Y));
         }
@@ -96,13 +97,23 @@ internal sealed class PlacementSearch
 
     private static bool HasLane(BuildingType t) => t.Produces != null || t.Refinery;
 
-    private static void AddLanes(BuildingType t, CellCoord topLeft, List<Rect> into)
+    private static void AddLanes(BuildingType t, CellCoord topLeft, List<Rect> into, int mapWidth)
     {
-        if (t.Produces != null) into.Add(LaneAt(topLeft.X + t.Exit.X, topLeft.Y + t.Exit.Y));
-        if (t.Refinery) into.Add(LaneAt(topLeft.X + t.Dock.X, topLeft.Y + t.Dock.Y));
+        if (t.Produces != null) AddLane(topLeft.X + t.Exit.X, topLeft.Y + t.Exit.Y, mapWidth, into);
+        if (t.Refinery) AddLane(topLeft.X + t.Dock.X, topLeft.Y + t.Dock.Y, mapWidth, into);
     }
 
-    private static Rect LaneAt(int x, int y) => new(x - LaneHalfWidth, y, x + LaneHalfWidth, y + LaneDepth - 1);
+    /// <summary>The lane straight out of an exit or dock (3 wide, 4 deep: the exit itself is fixed by the sim), plus an outlet beside its far end
+    /// on the side facing the map centre, so units and harvesters can turn toward the open side. S18-AI-NEW-3: the side follows the base, so a
+    /// mirrored or half-turned start keeps the image of the same outlet (an exit exactly on the centre line takes the east side).</summary>
+    private static void AddLane(int x, int y, int mapWidth, List<Rect> into)
+    {
+        into.Add(new Rect(x - LaneHalfWidth, y, x + LaneHalfWidth, y + LaneDepth - 1));
+        bool west = x * 2L + 1 < mapWidth;   // the exit is west of the centre line: the open side is east
+        int far = LaneDepth - OutletRows;
+        into.Add(west ? new Rect(x + LaneHalfWidth + 1, y + far, x + LaneHalfWidth + OutletWidth, y + LaneDepth - 1)
+                      : new Rect(x - LaneHalfWidth - OutletWidth, y + far, x - LaneHalfWidth - 1, y + LaneDepth - 1));
+    }
 
     private bool GapOk(Rect foot)
     {
@@ -117,10 +128,11 @@ internal sealed class PlacementSearch
         foreach (Rect lane in _lanes)
             if (foot.Intersects(lane)) return false;
         if (!HasLane(bt)) return true;
-        var mine = new List<Rect>(2);
-        AddLanes(bt, new CellCoord(x, y), mine);
-        foreach (Rect lane in mine)
+        var mine = new List<Rect>(4);
+        AddLanes(bt, new CellCoord(x, y), mine, view.MapWidth);
+        for (int li = 0; li < mine.Count; li += 2)   // each lane is its main rectangle followed by its outlet
         {
+            Rect lane = mine[li];
             int ex = (lane.X0 + lane.X1) / 2, ey = lane.Y0;
             if (!view.InMap(new CellCoord(ex, ey)) || !view.IsPassable(new CellCoord(ex, ey), Locomotion.Tracked)) return false;
             foreach (Rect b in _blocks)
