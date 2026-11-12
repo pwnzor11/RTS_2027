@@ -71,11 +71,13 @@ end
 
 function WaveTwo()
   Media.MessageKey("a2.wave2")
+  Dialogue.Say(SPEAKER, SPEAKER, "a2.radio.wave2")
   Raid(Squad(Pick({ 3, 4, 5, 7, 9 }), Pick({ 0, 0, 1, 2, 3 }), 0), NorthEdge())
 end
 
 function WaveThree()
   Media.MessageKey("a2.wave3")
+  Dialogue.Say(SPEAKER, SPEAKER, "a2.radio.wave3")
   Raid(Squad(Pick({ 2, 2, 3, 4, 5 }), Pick({ 1, 1, 1, 2, 2 }), 0), EastEdge())
   Raid(Squad(Pick({ 2, 2, 3, 4, 5 }), Pick({ 0, 0, 1, 1, 2 }), 0), NorthEdge())
 end
