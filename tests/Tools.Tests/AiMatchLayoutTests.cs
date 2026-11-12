@@ -6,6 +6,7 @@ using Rts.Tools;
 namespace Rts.Tools.Tests;
 
 /// <summary>M12-12: `ai match` / `ai timeline` / `ai matrix` take --layout 1|2 and --biome; no flag keeps the synthetic map.</summary>
+[Collection("ToolsConsole")]   // runs AI matches that print to the console; keep it out of the LAN soak capture (S20 CI flake)
 public class AiMatchLayoutTests
 {
     private static Dictionary<string, string> Flags(params string[] kv)
