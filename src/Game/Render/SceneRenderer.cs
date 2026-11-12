@@ -43,6 +43,7 @@ public sealed class SceneRenderer : IDisposable
     private readonly WallTiler _walls = new();
     private readonly List<DrawItem> _items = new();
     private readonly ThemedTerrainLook _terrain = new();
+    private readonly WaterOverlay _water = new();   // M10-13: animated water, shore foam, ship wakes
     private readonly DecorLayer _decor = new();   // M12: decals and land-linked sprites on the terrain
     private readonly List<WreckView> _wreckViews = new();      // M6-09: wreck and storm layers
     private readonly List<WreckDraw> _wrecks = new();
@@ -106,6 +107,7 @@ public sealed class SceneRenderer : IDisposable
         GroundOverlay.DrawBelowUnits(batch, pixel, snapshot, camera, viewport);
         TelegraphRenderer.Draw(batch, pixel, snapshot.Telegraphs, snapshot.Tick, camera, viewport);
         if (frame.Sim is not null) FoamOverlay.Draw(batch, frame.Sim, snapshot.Viewer, camera);
+        if (map is not null) _water.Draw(batch, pixel, map, frame, camera, viewport);   // M10-13
 
         if (!ReferenceEquals(map, _moodMap))
         {
@@ -186,7 +188,11 @@ public sealed class SceneRenderer : IDisposable
     }
 
     /// <summary>S18 GAMEREND-01: forgets what the renderer remembered of the previous game (building first-seen ticks, movers). Called when a game screen starts.</summary>
-    public void Reset() => _memory.Reset();
+    public void Reset()
+    {
+        _memory.Reset();
+        _water.Reset();
+    }
 
     /// <inheritdoc />
     public void Dispose()
