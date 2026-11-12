@@ -1,0 +1,13 @@
+# RTS_2027 M10-09 job 06: battle_directorate_1.ogg (docs/audio/music_brief.md)
+caption = 'instrumental, industrial, dark ambient meets heavy percussion, pounding metallic anvil hits, low brass ostinato, male choir pads singing ooh and ahh, detuned sub-bass drone, Geiger counter ticks, radioactive, underground, ominous, 96 BPM, C Phrygian, gritty distorted mix, no lyrics'
+instrumental = true
+lyrics = '[Instrumental]'
+duration = 180
+batch_size = 1
+audio_format = 'wav'
+thinking = false
+use_cot_metas = false
+use_cot_caption = false
+use_cot_lyrics = false
+use_cot_language = false
+use_random_seed = true

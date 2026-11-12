@@ -1,0 +1,13 @@
+# RTS_2027 M10-09 job 16: briefing_authority.ogg (docs/audio/music_brief.md)
+caption = 'instrumental, 1960s newsreel orchestral theme, proud brass melody, light snare march, strings, a hint of organ, civic optimism, measured, 100 BPM, D major, clean mix, no vocals'
+instrumental = true
+lyrics = '[Instrumental]'
+duration = 120
+batch_size = 1
+audio_format = 'wav'
+thinking = false
+use_cot_metas = false
+use_cot_caption = false
+use_cot_lyrics = false
+use_cot_language = false
+use_random_seed = true
