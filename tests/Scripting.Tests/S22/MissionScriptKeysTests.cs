@@ -73,6 +73,22 @@ public sealed partial class MissionScriptKeysTests
     [InlineData("dir_02", "d2.reserve2", "d2.radio.reserve2")]
     [InlineData("lb_01", "lb1.relief2", "lb1.radio.relief2")]
     [InlineData("lb_04", "lb4.landing2", "lb4.radio.landing2")]
+    [InlineData("exp_03", "e3.auth2", "e3.radio.auth2")]
+    [InlineData("exp_04", "e4.col2", "e4.radio.col2")]
+    [InlineData("exp_04", "e4.fuel", "e4.radio.march")]
+    [InlineData("auth_01", "a1.raid1", "a1.radio.raid1")]
+    [InlineData("auth_01", "a1.raid2", "a1.radio.raid2")]
+    [InlineData("auth_02", "a2.wave2", "a2.radio.wave2")]
+    [InlineData("auth_02", "a2.wave3", "a2.radio.wave3")]
+    [InlineData("auth_03", "a3.home2", "a3.radio.home2")]
+    [InlineData("auth_03", "a3.home3", "a3.radio.home3")]
+    [InlineData("auth_04", "a4.raid2", "a4.radio.raid2")]
+    [InlineData("dir_01", "d1.wave2", "d1.radio.wave2")]
+    [InlineData("dir_02", "d2.convoy2", "d2.radio.convoy2")]
+    [InlineData("dir_04", "d4.wave2", "d4.radio.wave2")]
+    [InlineData("dir_04", "d4.wave3", "d4.radio.wave3")]
+    [InlineData("exp_01", "e1.wave2", "e1.radio.wave2")]
+    [InlineData("exp_02", "e2.wave2", "e2.radio.wave2")]
     public void Previously_silent_arrivals_have_a_message_and_a_radio_line(string id, string message, string radio)
     {
         string dir = Path.Combine(TestData.DataDir, "missions", id);
