@@ -691,7 +691,7 @@ crusher = false
 cost = 550  # (tune)
 prerequisites = ["exp_hover_yard"]
 aura_radius = 3  # (tune)
-aura_repair_permille = 10  # (tune) permille of max HP per 10 ticks
+aura_repair_permille = 5  # (tune) permille of max HP per 10 ticks # s22 M13-13 (D-223): 10 -> 5
 aura_targets = ["exp_skimmer", "exp_hoverlander", "exp_survey_hover", "exp_glide_tank", "exp_sparker", "exp_repair_hover", "exp_barrage_lander", "exp_launch", "exp_landing_craft", "exp_destroyer", "exp_missile_sub", "exp_cruiser", "exp_carrier", "exp_minelayer", "exp_command_ship"]
 # TODO M7-09: bay_repair (units inside a landing craft or Skyhook heal slowly) has no rules field yet
 
