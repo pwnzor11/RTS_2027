@@ -1548,3 +1548,11 @@ pathing 22.6 s). **Why:** D-063(5)'s "answer one tick's requests together" is ke
 
 ### D-210 · 2026-11-11 · Field Manual hero renders approved; render pilot fan-out
 **Decision:** the 12-render Authority pilot is approved as is; `render_heroes.ps1 -All` runs on the owner's laptop. **Status:** owner decision (session 19)
+
+### D-211 · 2026-11-11 · Ashfall vs the campaign: detour, step-off, missions off until a retune
+**Decision:** with the ashfall hazard on, 13 campaign bot tests lost (escorts and staging cells sit on fields). Owner picked (a): foot units pay
+`[radiation] ash_path_penalty = 4` to enter an ash cell (they detour when the way round is short; an ordered goal on ash is still reached),
+the Recruit AI's rally and wave staging cells step off ash, and idle infantry standing on ash step to the nearest clean cell within 3 (Q-72,
+assumed — confirm; ash-stealth infantry stay). That was not enough, so the owner then picked: campaign and tutorial missions run with ash
+damage and the ash path cost OFF (`MissionSession.CampaignRules`) until a campaign retune (M13-17); skirmish keeps all of it. lb_03 tier 5
+and exp_04 tier 5 (non-ash M13 shifts) are known, skipped cases until the retune. **Status:** owner decision (session 19)
