@@ -38,8 +38,11 @@ MANIFEST = os.path.join(HERE, "render_manifest.toml")
 FACING_DEG = 225.0       # clockwise from north: the south-west three-quarter view of the pilot pages
 # Structures are drawn from the fixed game camera, so a straight wall or gate piece faces it square-on and reads flat in the booklet.
 # These ids get their model turned about its centre for the hero only (degrees, positive = counter-clockwise seen from above);
-# the camera and sun stay as they are.  --yaw overrides the table for one run.
-STRUCTURE_YAW = {"auth_gate": 35.0, "auth_wall": 35.0, "dir_bunker": 35.0, "lb_scrap_wall": 35.0}
+# the camera and sun stay as they are.  --yaw overrides the table for one run.  Negative: the sun is in the west (upper left), so
+# turning clockwise keeps the long face lit (s22: +35 put it in shade and it read flat).
+STRUCTURE_YAW = {"auth_gate": -35.0, "auth_wall": -35.0, "dir_bunker": -35.0, "lb_scrap_wall": -35.0}
+# Turned structures also get half the sprite pipeline's sky light (0.9 -> 0.45), so the sun gives the faces real contrast.
+TURNED_WORLD_STRENGTH = 0.45
 FACTION_ORDER = ("authority", "directorate", "left_behind", "expedition", "neutral")
 
 
@@ -189,6 +192,8 @@ def hero_render(real_render):
             o.hide_render = True
     if Hero.yaw:
         turn_model(Hero.yaw)
+        if sc.world is not None and sc.world.use_nodes and "Background" in sc.world.node_tree.nodes:
+            sc.world.node_tree.nodes["Background"].inputs[1].default_value = TURNED_WORLD_STRENGTH
     frame_camera(Hero.long_side)
     sc.render.engine = "CYCLES"
     sc.cycles.device = "CPU"

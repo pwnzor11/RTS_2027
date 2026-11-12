@@ -31,7 +31,7 @@
 .PARAMETER LongSide Long side in pixels (default 1600).
 .PARAMETER Force    Re-render ids whose PNG already exists.
 .PARAMETER Yaw      Buildings only: turn the model this many degrees for the hero (default: the STRUCTURE_YAW table in render_heroes.py,
-                    35 for the wall and gate pieces auth_gate, auth_wall, dir_bunker, lb_scrap_wall).
+                    -35 for the wall and gate pieces auth_gate, auth_wall, dir_bunker, lb_scrap_wall).
 #>
 param(
     [string[]]$Ids,
