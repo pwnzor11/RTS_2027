@@ -248,6 +248,7 @@ public sealed partial class Simulation
         RunCarriers();     // M7-09: Simulation.Carrier.cs — hangar rides, sortie timers (before missions)
         RunAircraftAmmo(); // D-156: Simulation.Carrier.cs — dry aircraft without a hangar place go home; hover rearm
         RunShipments();    // M7-06: Simulation.Shipments.cs — home supply line (its Move orders are resolved by RunMovement this tick)
+        RunAshStepOff();   // S19 M13-12: idle soldiers walk off ash fields (Move orders resolved by RunMovement this tick)
         RunMissions();
         RunMovement();
         RunTunnels();      // M3: Simulation.Tunnels.cs — queues, transit, surfacing (before combat: underground units are untargetable)

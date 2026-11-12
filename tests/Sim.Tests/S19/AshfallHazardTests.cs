@@ -15,7 +15,11 @@ public sealed class AshfallHazardTests
     private static S18World Field30(OverlayKind kind = OverlayKind.Ashfall)
     {
         var w = new S18World(Faction.Authority, Faction.Directorate);
-        w.Sim.Map.SetOverlay(Field, kind, 100);
+        // S19 M13-12: idle soldiers walk off a field when a clean cell is within Simulation.AshStepOffRadius; a 9x9 field keeps
+        // the soldiers in its middle on ash, so these tests still measure the damage.
+        for (int y = Field.Y - 4; y <= Field.Y + 4; y++)
+            for (int x = Field.X - 4; x <= Field.X + 4; x++)
+                w.Sim.Map.SetOverlay(new CellCoord(x, y), kind, 100);
         return w;
     }
 
