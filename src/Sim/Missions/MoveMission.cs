@@ -27,6 +27,8 @@ internal static class MoveMission
     public const int WaitTicks = 10;
     /// <summary>Blocked-wait cycles without any progress after which a Move gives up and stops.</summary>
     public const int MaxStuck = 12;
+    /// <summary>A blocked wait behind an allied mover counts as stuck only once in this many wait cycles (a moving queue is progress).</summary>
+    public const int QueueSlowdown = 8;
 
     private readonly struct Stats
     {
@@ -38,6 +40,7 @@ internal static class MoveMission
     {
         public bool Invalid, Enterable, Kill, AllyIdle, AllyMoving, EnemyVeh, EnemyInf, Mutual;
         public int MutualIndex;
+        public int MovingVehicle;   // slot of the allied moving vehicle in the cell, else -1 (set in Inspect)
         public readonly bool Hostile => EnemyVeh || EnemyInf;
     }
 
@@ -121,7 +124,7 @@ internal static class MoveMission
         if (id > 0)
         {
             // A group id is shared by many actors: cancelling it would wipe the others' results, so only release our own entry.
-            if (store.PathIsGroup[i]) sim.Paths.Poll(id, store.PathIndex[i], out _);
+            if (store.PathIsGroup[i]) sim.Paths.ReleaseMember(id, store.PathIndex[i]);
             else sim.Paths.Cancel(id);
         }
         store.PathId[i] = 0;
@@ -434,7 +437,7 @@ internal static class MoveMission
 
     private static Block Inspect(Simulation sim, MobileStore store, ActorKind kind, int i, Stats st, CellCoord cur, CellCoord n)
     {
-        var b = new Block();
+        var b = new Block { MovingVehicle = -1 };
         if (!Occupancy.TerrainOk(sim, n, st.Loco, store.Player[i])) { b.Invalid = true; return b; }   // M3-04: own gates
         for (int d = 0; d < 8; d++)
             if (cur.X + Occupancy.Dx[d] == n.X && cur.Y + Occupancy.Dy[d] == n.Y)
@@ -459,6 +462,7 @@ internal static class MoveMission
                 else
                 {
                     b.AllyMoving = true;
+                    b.MovingVehicle = v.Index;
                     if (NextCellOf(sim.Units, v.Index) == cur) { b.Mutual = true; b.MutualIndex = v.Index; }
                 }
             }
@@ -502,7 +506,12 @@ internal static class MoveMission
 
         // waited long enough
         store.BlockedTicks[i] = 0;
-        int stuck = ++store.StuckCount[i];
+        // M13-11 (S18 SP-03): a queue behind a mover that is still on its way (a big group through a one-cell gap) is making progress, so
+        // such a wait counts only one cycle in QueueSlowdown while that vehicle has itself waited less than half the give-up count (it is
+        // advancing, so we follow it). Idle, hostile, head-on and equally stuck blockers count every cycle as before.
+        int stuck = store.StuckCount[i];
+        bool following = settle && b.MovingVehicle >= 0 && !b.Mutual && !b.Hostile && sim.Units.StuckCount[b.MovingVehicle] < MaxStuck / 2;
+        if (!following || (sim.Tick / WaitTicks) % QueueSlowdown == 0) store.StuckCount[i] = ++stuck;
         if (stuck > MaxStuck)
         {
             arrived = settle;

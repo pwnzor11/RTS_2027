@@ -198,6 +198,17 @@ public sealed class PathService : ISimStatePart
     {
         Req r = _queue[k];
         int cost = Solve(r, out Entry[] entries);
+        if (r.Group)
+        {
+            // SIMDET-03: members released while the request was queued (ReleaseMember) get no result, so nothing is left behind for them.
+            bool any = false;
+            for (int i = 0; i < entries.Length; i++)
+            {
+                if (r.Froms[i].X == Released) entries[i] = new Entry { Status = PathStatus.Unknown };
+                else any = true;
+            }
+            if (!any) return cost;
+        }
         _results[r.Id] = entries;
         return cost;
     }
@@ -221,6 +232,27 @@ public sealed class PathService : ISimStatePart
         for (int i = 0; i < entries.Length; i++) if (entries[i].Status != PathStatus.Unknown) { any = true; break; }
         if (!any) _results.Remove(id);
         return s;
+    }
+
+    private const int Released = int.MinValue;   // Froms.X of a group member that let go of its entry while queued
+
+    /// <summary>
+    /// A group member lets go of its entry (SIMDET-03): a queued entry gets no result when the request is solved (the request is
+    /// dropped when every member let go), a stored result is released as by <see cref="Poll"/>. Idempotent.
+    /// </summary>
+    public void ReleaseMember(int id, int index)
+    {
+        for (int i = 0; i < _queue.Count; i++)
+            if (_queue[i].Id == id)
+            {
+                Req q = _queue[i];
+                if (!q.Group || index < 0 || index >= q.Froms.Length) { if (!q.Group) _queue.RemoveAt(i); return; }
+                q.Froms[index] = new CellCoord(Released, Released);
+                foreach (CellCoord f in q.Froms) if (f.X != Released) return;
+                _queue.RemoveAt(i);
+                return;
+            }
+        Poll(id, index, out _);
     }
 
     /// <summary>Drops a queued request or an unpolled result.</summary>
