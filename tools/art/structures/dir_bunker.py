@@ -45,9 +45,15 @@ for _v in VARIANTS:
     STATES.append((_v + "_damaged", 1, 1))
 STATES.append(("build", 4, 5))
 FX = []
-MATERIALS = DD.MATERIALS
-SOOT_SKIN = DD.SOOT_SKIN
-PRIMER_SKIN = DD.PRIMER_SKIN
+MATERIALS = dict(DD.MATERIALS)
+MATERIALS.update({           # S22 detail pass: warmer second bone tone, umber ground-in grime
+    "bone2": ("#CBBB98", dict(rough=0.9)),
+    "dgrime": ("#4E4333", dict(rough=1.0)),
+})
+SOOT_SKIN = dict(DD.SOOT_SKIN)
+SOOT_SKIN.update({"bone2": "bone_s", "dgrime": "pad_s"})
+PRIMER_SKIN = dict(DD.PRIMER_SKIN)
+PRIMER_SKIN.update({"bone2": "primer", "dgrime": "raw"})
 
 HX = 1.7
 WT = 0.55           # half thickness of the slab
@@ -63,6 +69,77 @@ def steps(dmg_arm, d):
     if d != dmg_arm:
         return [(0.0, HX, WZ)]
     return [(0.0, 0.45, WZ), (0.45, 0.85, 0.85), (0.85, 1.25, 0.55), (1.25, 1.5, 1.0), (1.5, HX, WZ)]
+
+
+def detail(S, a, b, ys, broken):
+    """S22 detail pass on one south-facing span (x from a to b, face plane ys): alternate bone tones, stencilled room number on the
+    red stripe, a brass speaker grille and a caged dim red lamp at the panel joints, rivets, umber grime at the foot, red paint
+    drips and chips.  Flat cladding on the 0.85 grid: no silhouette change, cells line up."""
+    def runs(x0, x1):
+        x0, x1 = max(x0, a), min(x1, b)
+        if x1 - x0 < 0.02:
+            return []
+        if broken:
+            return [(p0, p1) for (p0, p1) in ((x0, min(x1, broken[0])), (max(x0, broken[1]), x1)) if p1 - p0 > 0.02]
+        return [(x0, x1)]
+
+    def at(x, w=0.0):
+        return a + 0.02 <= x - w and x + w <= b - 0.02 and not (broken and broken[0] - w < x < broken[1] + w)
+
+    for k in range(4):                                   # second bone tone on alternate panels, strip above the house panel
+        x0 = -1.7 + 0.85 * k
+        if k % 2 == 1:
+            for (p0, p1) in runs(x0, x0 + 0.85):
+                S.bb("tone", p0, p1, ys - 0.012, ys, 0.78, WZ - 0.28, "bone2", 0.0, nocast=True)
+    for (p0, p1) in runs(-1.7, 1.7):                     # umber grime band at the foot, ragged top
+        for j, h in enumerate((0.2, 0.34, 0.16, 0.3, 0.22, 0.36, 0.18, 0.28)):
+            x0 = -1.7 + j * 0.425
+            q0, q1 = max(p0, x0), min(p1, x0 + 0.425)
+            if q1 - q0 > 0.02:
+                S.bb("dgrime", q0, q1, ys - 0.02, ys, 0.3, 0.3 + h, "dgrime", 0.0, nocast=True)
+    for x in (-1.45, -0.62, -0.2, 0.2, 0.62, 1.05, 1.45):    # red paint drips from the stripe
+        if at(x, 0.05):
+            S.bb("drip", x - 0.045, x + 0.045, ys - 0.045, ys, 0.82 + 0.1 * ((int(x * 10) % 3)), WZ - 0.28, "oxide", 0.0, nocast=True)
+    for k in range(8):                                   # rivet row on the red stripe
+        x = -1.4875 + 0.425 * k
+        if at(x, 0.04):
+            S.bb("rivet", x - 0.04, x + 0.04, -WT - 0.05, -WT - 0.03, WZ - 0.08, WZ - 0.02, "brass_dim", 0.0, nocast=True)
+    if at(-0.85, 0.17):                                  # brass speaker grille over the joint
+        S.bb("grille", -1.02, -0.68, ys - 0.05, ys, 0.8, 1.04, "brass", 0.0, nocast=True)
+        for j in range(3):
+            S.bb("grslat", -0.97, -0.73, ys - 0.06, ys - 0.05, 0.85 + 0.07 * j, 0.89 + 0.07 * j, "dark", 0.0, nocast=True)
+    if at(0.85, 0.15):                                   # caged dim red lamp
+        S.bb("lcage", 0.7, 1.0, ys - 0.05, ys, 0.8, 1.04, "dark", 0.0, nocast=True)
+        S.bb("lamp", 0.76, 0.94, ys - 0.075, ys - 0.05, 0.84, 1.0, "redglow", 0.0, nocast=True)
+        S.bb("lbar", 0.84, 0.86, ys - 0.085, ys - 0.075, 0.84, 1.0, "dark", 0.0, nocast=True)
+    # stencilled room number on the stripe: bone plate with dark glyph bars, one per 1.7 (two patterns)
+    for (cx, pat) in ((-0.425, (1, 0, 1, 1)), (1.275, (1, 1, 0, 1))):
+        if at(cx, 0.28):
+            S.bb("splate", cx - 0.28, cx + 0.28, ys - 0.065, ys - 0.03, WZ - 0.22, WZ - 0.04, "bone", 0.0, nocast=True)
+            for j, on in enumerate(pat):
+                if on:
+                    gx = cx - 0.21 + 0.14 * j
+                    S.bb("sgl", gx, gx + 0.07, ys - 0.075, ys - 0.065, WZ - 0.2, WZ - 0.06, "dark", 0.0, nocast=True)
+    zt = WZ + 0.1                                        # slab top: alternate tone plates, vent slots, brass hatch, red dashes
+    for k in range(4):
+        x0 = -1.7 + 0.85 * k
+        if k % 2 == 0:
+            for (p0, p1) in runs(x0 + 0.04, x0 + 0.81):
+                S.bb("toptone", p0, p1, -0.38, 0.38, zt, zt + 0.025, "bone2", 0.0, nocast=True)
+    if at(0.425, 0.25):
+        for j in range(5):
+            y0 = -0.3 + 0.12 * j
+            S.bb("tvent", 0.22, 0.63, y0, y0 + 0.06, zt + 0.025, zt + 0.04, "dark", 0.0, nocast=True)
+    if at(-0.425, 0.2):
+        S.bb("thatch", -0.62, -0.23, -0.28, 0.28, zt + 0.025, zt + 0.06, "brass_dim", 0.0, nocast=True)
+        S.bb("thandle", -0.5, -0.35, -0.04, 0.04, zt + 0.06, zt + 0.09, "oxide", 0.0, nocast=True)
+    for k in range(8):
+        x = -1.4875 + 0.425 * k
+        if k % 2 == 0 and at(x, 0.1):
+            S.bb("tdash", x - 0.1, x + 0.1, -0.03, 0.03, zt, zt + 0.03, "oxide", 0.0, nocast=True)
+    for (x, w) in ((-1.2, 0.3), (0.5, 0.26)):            # chips: bone showing through the red
+        if at(x, w / 2):
+            S.bb("chip", x - w / 2, x + w / 2, ys - 0.075, ys - 0.03, WZ - 0.1, WZ - 0.02, "bone", 0.0, nocast=True)
 
 
 def finished(S, arms, dmg=False):
@@ -122,7 +199,8 @@ def finished(S, arms, dmg=False):
                 S.bb("hpanelb", m0, m1, ys - 0.05, ys - 0.04, 0.22, 0.28, "dark", 0.0, nocast=True)
         for gx in (-0.85, 0.85):
             if a + 0.1 < gx < b - 0.1 and not (broken and broken[0] < gx < broken[1]):
-                S.bb("joint", gx - 0.03, gx + 0.03, ys - 0.03, ys, 0.3, WZ - 0.28, "concrete2", 0.0, nocast=True)
+                S.bb("joint", gx - 0.03, gx + 0.03, ys - 0.03, ys, 0.3, WZ - 0.28, "dark", 0.0, nocast=True)
+        detail(S, a, b, ys, broken)
         for gx in (-0.42, 0.42, -1.27, 1.27):
             if a + 0.15 < gx < b - 0.15 and not (broken and broken[0] - 0.1 < gx < broken[1] + 0.1) and abs(gx) > 0.0:
                 S.bb("notch", gx - 0.12, gx + 0.12, ys - 0.03, ys, 0.88, 1.0, "dark", 0.0, nocast=True)
