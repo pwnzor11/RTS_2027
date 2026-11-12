@@ -29,7 +29,7 @@ public sealed class LaneSideTests
         BuildingType ft = rules.Buildings[factory];
         var covered = new HashSet<(int, int)>();
         var search = new PlacementSearch();
-        for (int i = 0; i < 6; i++)
+        for (int i = 0; i < 24; i++)
         {
             var k = new RecruitKnowledge();
             k.Refresh(sim.ViewFor(0), "auth_conyard");
