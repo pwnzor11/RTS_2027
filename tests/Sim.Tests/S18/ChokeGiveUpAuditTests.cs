@@ -50,24 +50,10 @@ public sealed class ChokeGiveUpAuditTests
         Assert.Equal(0, west);
     }
 
-    // S18 audit: pins current behaviour of SP-03; flip the assertion when fixed.
-    // Measured at S18: 40 tanks -> 3 stop west (first at tick 349); 60 tanks -> 9 (first at tick 158); 60 slow tanks (speed 11) -> 21.
     [Theory]
     [InlineData(40)]
     [InlineData(60)]
-    public void Audit_BigGroupThroughAOneCellGap_SomeTanksDropTheMoveOnTheNearSide(int tanks)
-    {
-        var (east, west, firstGiveUp, gapFree) = Funnel(tanks, 40);
-        Assert.InRange(west, 1, tanks - 1);          // some gave up ...
-        Assert.Equal(tanks, east + west);            // ... everyone else is through, all are idle,
-        Assert.True(gapFree);                        // and nothing stands in the gap: they could simply drive on if they still had the order
-        Assert.True(firstGiveUp >= 130, "nobody gives up before 13 waits of 10 ticks");
-    }
-
-    [Theory(Skip = "S18 SP-03: awaiting owner decision")]
-    [InlineData(40)]
-    [InlineData(60)]
-    public void Desired_BigGroupThroughAOneCellGap_EveryTankArrives(int tanks)
+    public void BigGroupThroughAOneCellGap_EveryTankArrives(int tanks)
     {
         var (east, west, _, _) = Funnel(tanks, 40);
         Assert.Equal(tanks, east);

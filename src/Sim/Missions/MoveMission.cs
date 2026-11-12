@@ -27,6 +27,8 @@ internal static class MoveMission
     public const int WaitTicks = 10;
     /// <summary>Blocked-wait cycles without any progress after which a Move gives up and stops.</summary>
     public const int MaxStuck = 12;
+    /// <summary>A blocked wait behind an allied mover counts as stuck only once in this many wait cycles (a moving queue is progress).</summary>
+    public const int QueueSlowdown = 8;
 
     private readonly struct Stats
     {
@@ -502,7 +504,10 @@ internal static class MoveMission
 
         // waited long enough
         store.BlockedTicks[i] = 0;
-        int stuck = ++store.StuckCount[i];
+        // M13-11 (S18 SP-03): a queue behind a mover that is still on its way (a big group through a one-cell gap) is making progress, so
+        // such a wait counts only one cycle in QueueSlowdown; a blocker that is idle, hostile or head-on counts every cycle as before.
+        int stuck = store.StuckCount[i];
+        if (!(b.AllyMoving && !b.Mutual && !b.Hostile) || (sim.Tick / WaitTicks) % QueueSlowdown == 0) store.StuckCount[i] = ++stuck;
         if (stuck > MaxStuck)
         {
             arrived = settle;
