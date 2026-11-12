@@ -283,7 +283,7 @@ public sealed class LockstepHost
                 if (_progress.TryGetValue(from, out int old) && progress.SteppedTick > old) _progress[from] = progress.SteppedTick;
                 break;
             case NetMessage.Hash hash:
-                if (_progress.ContainsKey(from)) _pendingHashes.Add((from, hash.Tick, hash.Value, hash.SubHashes));
+                if (_progress.ContainsKey(from) && PlausibleHash(from, hash.Tick)) _pendingHashes.Add((from, hash.Tick, hash.Value, hash.SubHashes));
                 CheckHashes();
                 break;
             case NetMessage.Chat chat:
@@ -302,6 +302,17 @@ public sealed class LockstepHost
                 _transport.Send(from, new NetMessage.Pong(ping.Stamp), reliable: false);
                 break;
         }
+    }
+
+    // M9-14: a hash is only kept for a tick on the hash interval, no further ahead than a client can be, and once per peer and tick,
+    // so a faulty or hostile client cannot grow the pending list
+    private bool PlausibleHash(int peer, int tick)
+    {
+        if (tick <= 0 || tick % SimConstants.HashIntervalTicks != 0) return false;
+        if (tick > Tick + Math.Max(MaxLead, Delay) + 1) return false;
+        foreach ((int Peer, int Tick, ulong, ulong[]) h in _pendingHashes)
+            if (h.Peer == peer && h.Tick == tick) return false;
+        return true;
     }
 
     private void CheckHashes()
