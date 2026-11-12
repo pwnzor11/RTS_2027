@@ -18,7 +18,9 @@ public enum DockStep : byte { Pick = 0, Go = 1, Wait = 2, Enter = 3, Unload = 4 
 /// </summary>
 public sealed class EconomyState : ISimStatePart
 {
-    private const byte Version = 5;
+    private const byte Version = 4;
+    /// <summary>Layout written while any harvester has an active field skip (S20); otherwise <see cref="Version"/> keeps the old bytes.</summary>
+    private const byte VersionSkip = 5;
 
     /// <summary>Highest density a cell can hold (design 02 section 2).</summary>
     public const int MaxDensity = 12;
@@ -110,7 +112,9 @@ public sealed class EconomyState : ISimStatePart
     /// (slot, id) for each occupied dock ended by 0.</summary>
     public void Write(BinaryWriter w)
     {
-        w.Write(Version);
+        bool skips = false;
+        for (int i = 1; i < Owner.Length; i++) if (SkipUntil[i] != 0 || SkipCell[i] != default) { skips = true; break; }
+        w.Write(skips ? VersionSkip : Version);
         w.Write(Owner.Length); w.Write(DockOccupant.Length);
         w.Write(NextTicket);
         for (int i = 1; i < Owner.Length; i++)
@@ -123,7 +127,7 @@ public sealed class EconomyState : ISimStatePart
             WriteId(w, DockTarget[i]);
             w.Write(DockState[i]); w.Write(HarvestState[i]);
             w.Write(Timer[i]); w.Write(Ticket[i]); w.Write(SearchRing[i]); w.Write(NoRefinery[i]);
-            WriteCell(w, SkipCell[i]); w.Write(SkipUntil[i]);
+            if (skips) { WriteCell(w, SkipCell[i]); w.Write(SkipUntil[i]); }
         }
         w.Write(0);
         for (int b = 1; b < DockOccupant.Length; b++)
@@ -138,7 +142,7 @@ public sealed class EconomyState : ISimStatePart
     public void Read(BinaryReader r)
     {
         byte version = r.ReadByte();
-        if (version != Version) throw new InvalidDataException("economy version mismatch.");
+        if (version != Version && version != VersionSkip) throw new InvalidDataException("economy version mismatch.");
         if (r.ReadInt32() != Owner.Length || r.ReadInt32() != DockOccupant.Length) throw new InvalidDataException("economy capacity mismatch.");
         NextTicket = r.ReadInt32();
         for (int i = 1; i < Owner.Length; i++) Clear(i);
@@ -152,7 +156,7 @@ public sealed class EconomyState : ISimStatePart
             DockTarget[i] = ReadId(r);
             DockState[i] = r.ReadByte(); HarvestState[i] = r.ReadByte();
             Timer[i] = r.ReadInt32(); Ticket[i] = r.ReadInt32(); SearchRing[i] = r.ReadInt32(); NoRefinery[i] = r.ReadByte();
-            SkipCell[i] = ReadCell(r); SkipUntil[i] = r.ReadInt32();
+            if (version == VersionSkip) { SkipCell[i] = ReadCell(r); SkipUntil[i] = r.ReadInt32(); }
         }
         for (int b = r.ReadInt32(); b != 0; b = r.ReadInt32())
         {

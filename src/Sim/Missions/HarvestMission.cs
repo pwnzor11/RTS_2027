@@ -71,6 +71,7 @@ internal static class HarvestMission
         {
             case HarvestStep.Seek:
             {
+                if (eco.SkipUntil[i] != 0 && sim.Tick >= eco.SkipUntil[i]) { eco.SkipUntil[i] = 0; eco.SkipCell[i] = default; }   // expired: back to the old save layout
                 Locomotion loco = rules.Vehicles[store.TypeIndex[i]].Locomotion;
                 CellCoord last = eco.LastFieldCell[i];
                 CellCoord goal;
