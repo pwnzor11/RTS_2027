@@ -6,3 +6,5 @@
 *.png binary
 data/sprites/**/*.png filter=lfs diff=lfs merge=lfs -text
 art/**/*.png filter=lfs diff=lfs merge=lfs -text
+data/audio/**/*.wav filter=lfs diff=lfs merge=lfs -text
+data/music/*.ogg filter=lfs diff=lfs merge=lfs -text

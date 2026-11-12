@@ -35,7 +35,7 @@ param(
     [int]$Steps = 0,            # denoising steps (0 = 100)
     [switch]$Draft,             # 30 steps, 1 take, files named draft<N>.wav
     [double]$SecondsScale = 1.0,
-    [int]$Rate = 0,             # override output sample rate, e.g. 22050 for smaller files
+    [int]$Rate = 0,             # override output sample rate (default 22050 from sfx_jobs.toml; 32000 gives crisper ambience loops)
     [int]$Threads = 0,          # CPU threads (0 = all)
     [string[]]$Picks,           # with -Pick: id=2, id=d1 ...
     [switch]$Mix,               # with -Pick: also mix the faction/class sounds into the generic events

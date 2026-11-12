@@ -62,8 +62,14 @@ public sealed class SoundBankTests
         Assert.Throws<InvalidDataException>(() => SoundBank.Parse(text));
     }
 
+    // S22 (owner decision A): one-shots are 22.05 kHz mono (a 6 s clip is about 264 KB), ambience loops (amb_*.wav) may be stereo
+    // (a 30 s loop at 22.05 kHz is about 2.65 MB). All of data/audio goes through Git LFS, so a pointer file here means LFS was not checked out.
+    private const long OneShotMaxBytes = 270_000;
+    private const long LoopMaxBytes = 2_700_000;
+    private const long TotalMaxBytes = 40_000_000;
+
     [Fact]
-    public void AllWavFilesAreSmall16BitMono()
+    public void AllWavFilesAreSmall16Bit_MonoOneShotsAndStereoLoops()
     {
         string dir = Path.Combine(AudioTestSupport.AudioDir(), "sfx");
         string[] files = Directory.GetFiles(dir, "*.wav");
@@ -73,14 +79,25 @@ public sealed class SoundBankTests
         {
             byte[] b = File.ReadAllBytes(f);
             total += b.Length;
-            Assert.Equal("RIFF", System.Text.Encoding.ASCII.GetString(b, 0, 4));
+            bool loop = Path.GetFileName(f).StartsWith("amb_", StringComparison.Ordinal);
+            Assert.True(b.Length > 1000 && System.Text.Encoding.ASCII.GetString(b, 0, 4) == "RIFF", $"{f} is not a WAV (an LFS pointer? check out with git lfs)");
             Assert.Equal("WAVE", System.Text.Encoding.ASCII.GetString(b, 8, 4));
-            Assert.Equal(1, BitConverter.ToInt16(b, 22));   // channels
+            int channels = BitConverter.ToInt16(b, 22);
             Assert.Equal(16, BitConverter.ToInt16(b, 34));  // bits
-            Assert.True(BitConverter.ToInt32(b, 24) <= 22050);
-            Assert.True(b.Length < 100_000, f);
+            if (loop)
+            {
+                Assert.InRange(channels, 1, 2);
+                Assert.True(BitConverter.ToInt32(b, 24) <= 32000, f);
+                Assert.True(b.Length <= LoopMaxBytes, f);
+            }
+            else
+            {
+                Assert.Equal(1, channels);
+                Assert.True(BitConverter.ToInt32(b, 24) <= 22050, f);
+                Assert.True(b.Length <= OneShotMaxBytes, f);
+            }
         }
 
-        Assert.True(total < 1_000_000);
+        Assert.True(total < TotalMaxBytes);
     }
 }

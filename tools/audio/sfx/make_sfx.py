@@ -52,6 +52,9 @@ DEFAULT_SOUNDS = REPO / "data" / "audio" / "sounds.toml"
 DEFAULT_PICKS = HERE / "picks.toml"
 MODEL_ID = "stabilityai/stable-audio-open-1.0"
 MODEL_RATE = 44100
+OUTPUT_RATE = 22050            # S22 (owner decision A): one-shots are 22.05 kHz mono, 16-bit; ambience loops 22.05 kHz stereo (jobs may override `rate`)
+MAX_ONESHOT_BYTES = 270_000    # a 6 s 22.05 kHz mono 16-bit clip; SoundBankTests.AllWavFilesAreSmall16Bit enforces the same caps
+MAX_LOOP_BYTES = 2_700_000     # a 30 s 22.05 kHz stereo 16-bit loop
 VAE_HOP = 2048                 # audio samples per latent frame
 MODEL_MAX_SECONDS = 47.0       # the model's window is 47.55 s
 MIN_WINDOW_SECONDS = 2.0       # shorter windows are padded: very short latents give poor sounds (UNVERIFIED, conservative)
@@ -208,7 +211,7 @@ def postprocess(audio: np.ndarray, in_rate: int, job: dict, scale: float = 1.0, 
     if x.ndim == 1:
         x = x[None, :]
     x = x - x.mean(axis=1, keepdims=True)                       # DC offset
-    rate = int(rate_override or job.get("rate", MODEL_RATE))
+    rate = int(rate_override or job.get("rate", OUTPUT_RATE))
     x = resample(x, in_rate, rate)
     if job["channels"] == 1 and x.shape[0] > 1:
         x = x.mean(axis=0, keepdims=True)
@@ -387,6 +390,9 @@ def run_pick(args, data: dict) -> int:
             continue
         shutil.copyfile(src, args.sfx_dir / f"{j['id']}.wav")
         copied.append(j["id"])
+        cap = MAX_LOOP_BYTES if j["loop"] else MAX_ONESHOT_BYTES
+        if src.stat().st_size > cap:
+            print(f"warning: {j['id']} is {src.stat().st_size} bytes, over the {cap} byte cap SoundBankTests allows; regenerate with a lower --rate or --seconds-scale")
     present = [j["id"] for j in data["jobs"] if (args.sfx_dir / f"{j['id']}.wav").exists()]
     text = args.sounds.read_text(encoding="utf-8")
     new, notes = update_sounds_toml(text, data["jobs"], set(present), args.mix, args.replace_sfxr)
@@ -576,7 +582,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--draft", action="store_true", help=f"fast preview: {DRAFT_STEPS} steps, 1 take, files named draft<N>.wav")
     ap.add_argument("--seconds-scale", type=float, default=1.0, help="multiply every job's length (0.5 = half)")
     ap.add_argument("--latent-mode", choices=("short", "full"), default="short", help="short = noise sized to the clip (fast); full = stock 47 s window (slow)")
-    ap.add_argument("--rate", type=int, help="override the output sample rate (e.g. 22050 for smaller files)")
+    ap.add_argument("--rate", type=int, help=f"override the output sample rate (default {OUTPUT_RATE} for every job; e.g. 32000 for a crisper ambience loop)")
     ap.add_argument("--threads", type=int, help="torch CPU threads (default: all)")
     ap.add_argument("--model", default=MODEL_ID)
     ap.add_argument("--dry-run", action="store_true", help="count and estimate, do not load the model")

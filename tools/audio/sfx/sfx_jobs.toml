@@ -8,7 +8,7 @@
 #   seconds       generation window in seconds (the model is told this length; the file is trimmed to the sound, never longer)
 #   takes         how many alternatives to generate (default 3)
 #   channels      1 = mono downmix, 2 = keep stereo
-#   rate          output sample rate (default 44100)
+#   rate          output sample rate (default 22050; one-shots mono, ambience stereo; S22 storage decision, the WAVs go through Git LFS)
 #   peak_db       peak ceiling in dBFS; rms_db optional loudness target (RMS of the trimmed sound, capped by the peak ceiling)
 #   trim_db       leading/trailing silence threshold in dBFS below the peak; fade_in_ms, fade_out_ms; trim=false keeps length
 #   loop          true = make a seamless loop by cross-fading the tail into the head over loop_xfade seconds (no trim, no fades)
@@ -25,7 +25,7 @@
 [defaults]
 takes = 3
 channels = 1
-rate = 44100
+rate = 22050   # S22 decision A: one-shots 22.05 kHz mono 16-bit (about 44 KB per second); the model renders 44.1 kHz and the tool resamples
 seconds = 2.0
 peak_db = -1.5
 trim = true
@@ -86,7 +86,7 @@ seconds = 24.0
 channels = 2
 loop = true
 loop_xfade = 2.0
-rate = 32000
+rate = 22050   # stereo loop, about 88 KB per second: 22 s is 1.9 MB. Use 32000 here for a crisper loop (2.8 MB) if you can hear the difference
 trim = false
 peak_db = -3.0
 rms_db = -26
