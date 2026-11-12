@@ -24,3 +24,4 @@ __pycache__/
 __pycache__/
 tools/voice/out/
 tools/voice/audition/
+.venv-audio/

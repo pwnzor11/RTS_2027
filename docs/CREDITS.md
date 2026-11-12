@@ -32,7 +32,8 @@ Full notices, licence texts and the list of native files are in `THIRD_PARTY_NOT
 |---|---|---|---|
 | Generated sound effects (`data/audio/sfx/`) | `tools/audio/sfxr.py` (this repository) | GPL-3.0-or-later (code); output released CC0 (ASSUMED, M3-INT: owner to confirm) | Sound effects |
 | Real sound recordings | none yet; add each one here with its download page. CC0 only: Kenney (kenney.nl), OpenGameArt, Freesound (CC0 filter), BigSoundBank (`docs/audio/music_brief.md`) | CC0 | Sound effects |
-| Music tracks (`data/music/*.ogg`) | Music generated with ACE-Step (Apache-2.0). Released CC0 / no rights claimed (D-080) | CC0 | Menu and in-game music |
+| Music tracks (`data/music/*.ogg`) | Music generated with ACE-Step 1.5 (MIT). Released CC0 / no rights claimed (D-080). Exported by `tools/audio/export_music.py` | CC0 | Menu and in-game music |
+| Radio voice lines (`data/audio/voice/<leader>/<key>.ogg`) | Voices generated locally with Kokoro-82M (`hexgrad/Kokoro-82M`, code and weights Apache-2.0) by `tools/voice/kokoro_batch.py`; one preset voice per leader (`tools/voice/leaders.json`). Generated locally from Kokoro-82M (Apache-2.0). No cloned or third-party voice | Apache-2.0 model; output released CC0 / no rights claimed (ASSUMED, M8-18: owner to confirm) | Spoken radio lines in the campaign missions (text-only fallback when a file is missing) |
 
 ## AI-assisted artwork
 | Asset | Tool | Human work done | Notes |
