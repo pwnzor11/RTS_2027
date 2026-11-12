@@ -24,3 +24,6 @@ __pycache__/
 __pycache__/
 tools/voice/out/
 tools/voice/audition/
+# Stable Audio Open SFX generator (M10-10): venv and generated takes
+.venv-sfx/
+tools/audio/sfx/out/
