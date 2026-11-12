@@ -3,6 +3,7 @@ Design round only (session 19, parallel session; no code). Builds on D-005, D-00
 research in `docs/research/03_cnc_networking_determinism.md`, `10_rts_architecture.md`, `22_ageserver.md` and `00_SYNTHESIS.md` §14.
 Build order is unchanged: M9 starts after M13 and M14 (D-205, D-206). Every choice below is an option with a recommendation; the
 owner decides. The questions are logged as Q-M9-a..n in `docs/OPEN_QUESTIONS.md`, plus Q-M9-o, one batch of assumptions to confirm (§8).
+**The owner answered all of them on 2026-11-12: see §9, which overrides §3–§5 wherever they differ.**
 
 ## 1. What is already settled
 - **Goal (D-005):** family and friends on a home network. No public servers, matchmaking, accounts or hosting. Nice-to-have.
@@ -184,3 +185,44 @@ co-op campaign (unless Q-M9-n says otherwise).
 5. Game options in the LAN lobby are exactly the skirmish ones, set by the host.
 6. Testing: loopback soak in CI, two windows on one PC, then the owner's desktop plus laptop.
 7. One fixed port pair (discovery UDP, game TCP), changeable in settings for a clash.
+
+## 9. Owner answers (2026-11-12) and what they change
+| Q | Answer | Rec? |
+|---|---|---|
+| Q-M9-a Transport | **UDP with our own reliability** (option 2) | no |
+| Q-M9-b Turn model | Host-sequenced turn bundles | yes |
+| Q-M9-c Command delay | **Host picks 2/3/4 ticks in the lobby** (option 4); lead default 3 | no |
+| Q-M9-d Dropped player | AI takes over the slot | yes |
+| Q-M9-e Desync | Pause; host picks Resync from host / Continue / End | yes |
+| Q-M9-f AI and LLM slots | Host runs every AI slot; LLM commanders on the host's key, offered only if the host has one | yes |
+| Q-M9-g Chat | Outside the sim, All/Team, relayed by the host, kept in the replay | yes |
+| Q-M9-h Pause and speed | Anyone pauses; anyone resumes after a 3 s countdown; speed fixed 1x | yes |
+| Q-M9-i Saving LAN games | **Never**: LAN games are one sitting | no |
+| Q-M9-j Host leaving | **Clients may also save and continue vs AI** (option 2) | no |
+| Q-M9-k Custom maps | Host sends the file in the lobby, hash checked | yes |
+| Q-M9-l Spectators | Up to 2 from the lobby; nobody waits on them | yes |
+| Q-M9-m Reconnect | **Never**: a dropped player stays dropped | no |
+| Q-M9-n Co-op campaign | Not in M9 | yes |
+| Q-M9-o Assumptions §8 | All confirmed | yes |
+
+The DECISIONS entries for these get their numbers at the next wrap-up, after session 19's (integ-s19 already uses up to D-210),
+so the two sessions cannot pick the same id.
+
+**What changes in the plan (lead reading; flag any that are wrong):**
+- **Transport (a).** One UDP protocol for lobby and match; discovery uses the same socket family. `src/Net` gains a small
+  reliability layer: per-peer packet ids, acks carried on every packet, resend of unacked reliable messages after a timeout
+  set from measured round-trip, duplicate drop, and packets kept under 1 200 bytes (no IP fragmentation). TurnBundles and
+  Inputs are reliable and ordered per peer; pings and hashes may be unreliable. Because the host stamps every tick (b), C&C's
+  "command count hole" check is not needed: a peer simply waits for bundle T. New item **M9-01b reliability layer** with its
+  own tests (loss, duplication, reordering), and the soak tool (M9-04) injects loss and reordering as well as latency.
+- **Delay (c).** A lobby option "Command delay: 2 / 3 / 4 ticks (100 / 150 / 200 ms)", default 3, next to the ping column.
+  Fixed for the whole match.
+- **Saves (i) and host leaving (j).** No LAN save or resume. When the host leaves, each client offers "Continue against AI":
+  it writes an ordinary single-player skirmish save of the last tick it fully stepped, with every other human slot (the host
+  included) turned into an AI slot, and loads it. Host-run AIs start with empty memory on the client, because their memory
+  lived on the host (D-051). The result is a normal skirmish save, never a LAN save, so it fits Q-M9-i. Needs a small
+  "LAN match → skirmish save" converter in M9-07.
+- **Reconnect (m).** Dropped stays dropped; the AI keeps the slot. A save is still sent over the network for desync Resync (e),
+  so SaveBlob stays, but only as host → all at a paused tick.
+- **Phase 3 shrinks** to: M9-10 desync reports and Resync from host, M9-13 spectators and custom map transfer. M9-11 (host
+  save/resume) and M9-12 (reconnect) are dropped.

@@ -10,34 +10,13 @@ file cited after each question. Recommendations are the lead's, from the researc
   numbers, then cut money per field cell on the biomes still over (recommended)**; (b) relax the layout check "100 field cells within 30 path cells"
   for layout 2 so the main field can be halved (the only change that matched layout 1 in the probe); (c) accept the richer early economy on layout 2.
 
-### M9 LAN design round (2026-11-12, docs/design/20_m9_lan_plan.md; options and trade-offs are in the § cited). Needed before M9 starts, after M14.
-- ⚪ **Q-M9-a · Transport (§4.1).** **(1) TCP for lobby and match, UDP only for discovery (recommended)**; (2) UDP with our own reliability; (3) LiteNetLib.
-- ⚪ **Q-M9-b · Turn model (§4.2).** **(1) host-sequenced turn bundles: host stamps ExecTick and broadcasts one bundle per tick (recommended)**;
-  (2) peer-equal lockstep relayed through the host (C&C style).
-- ⚪ **Q-M9-c · Command delay (§4.3).** **(1) fixed 3 ticks (150 ms), a settings value, ping shown in the lobby (recommended)**; (2) fixed 2 ticks;
-  (3) adaptive from round-trip; (4) host picks 2/3/4 in the lobby.
-- ⚪ **Q-M9-d · Slow or dropped player (§4.4).** Wait overlay at 1 s, host may drop at 10 s, auto-drop at 60 s; then **(1) an AI takes over the slot
-  (recommended)**; (2) slot goes idle; (3) player defeated.
-- ⚪ **Q-M9-e · Desync response (§4.5).** Reports written on every peer, then **(1) pause with Resync from host / Continue / End (recommended)**;
-  (2) stop the match; (3) warn and play on.
-- ⚪ **Q-M9-f · AI and LLM slots (§4.6).** **(1) host runs every AI slot, LLM commanders on the host's key, LLM slots only if the host has a key
-  (recommended)**; (2) each AI runs on the peer that added it.
-- ⚪ **Q-M9-g · Player chat (§4.7).** **(1) outside the sim, All/Team, relayed by the host (recommended)**; (2) chat as a sim command.
-  Sub-question: keep chat in replays? **yes (recommended)** / no.
-- ⚪ **Q-M9-h · Pause and speed (§4.8).** **(1) anyone pauses, anyone resumes after a 3 s countdown, speed fixed 1x (recommended)**; (2) host only;
-  (3) no pause.
-- ⚪ **Q-M9-i · Saving LAN games (§4.9).** **(1) none in the first build, host-only save and resume in phase 3 (recommended)**; (2) host save in the
-  first build; (3) never.
-- ⚪ **Q-M9-j · Host leaving (§4.10).** **(1) "Host left", replay kept, back to menu (recommended)**; (2) clients may also save and continue vs AI.
-- ⚪ **Q-M9-k · Custom maps (§4.11).** **(1) host sends the map file in the lobby, hash checked (recommended)**; (2) players copy it by hand.
-- ⚪ **Q-M9-l · Spectators (§4.12).** **(1) up to 2 from the lobby, nobody waits on them (recommended)**; (2) none.
-- ⚪ **Q-M9-m · Reconnect (§4.13).** **(1) not in the first build, in phase 3 via the resync save (recommended)**; (2) never.
-- ⚪ **Q-M9-n · Co-op campaign (§4.14).** **(1) not in M9, a possible later milestone (recommended)**; (2) plan it into M9.
-- ⚪ **Q-M9-o · Assumptions batch (§8).** Map hack accepted, no lobby password, Windows firewall prompt + help page, Windows user name as default
-  player name, skirmish options set by the host, loopback → two windows → desktop + laptop testing, fixed changeable ports. **Confirm all
-  (recommended)** / change some.
-
 ## Answered
+- Q-M9-a..o · 2026-11-12 · M9 LAN design round (docs/design/20_m9_lan_plan.md §9). Owner: UDP with own reliability (a, not the rec);
+  host-sequenced turn bundles (b); host picks 2/3/4-tick delay in the lobby (c, not the rec); AI takes over a dropped slot (d); desync pauses,
+  host picks Resync/Continue/End (e); host runs all AI incl. LLM on its key (f); chat outside the sim, kept in replays (g); anyone pauses,
+  3 s resume, 1x (h); no LAN saves ever (i, not the rec); clients may save and continue vs AI when the host leaves (j, not the rec); host
+  sends custom maps (k); up to 2 spectators (l); no reconnect ever (m, not the rec); no co-op campaign in M9 (n); §8 assumptions confirmed (o).
+  DECISIONS entries are numbered at the next wrap-up, after session 19's.
 - Q-68 · 2026-11-09 · Owner: (a) half-turn skeleton for Ash Plains, same crossing pair both sides → D-198.
 - Q-69 · 2026-11-09 · Owner: (a) move main/natural fields further from the refinery spot, fewer patches near the main → D-199.
 - Q-67 · 2026-11-08 · Owner: band 50-65 % (D-191); hold 18 landed, tier-5 ladder follow-up → D-194.
