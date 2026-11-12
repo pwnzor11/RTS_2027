@@ -32,9 +32,8 @@ public sealed class BalanceTableTests
     [InlineData("exp_04", 5)]
     public void KnownShift_mission_tier_is_walked_and_reported(string id, int tier) => Every_mission_tier_is_walked_and_reported(id, tier);
 
-    // S18 MIS-03 (owner): the auth_01 tier-5 bot loses both scrapers in the survey phase, which is now a loss as the script intends
-    // (before MIS-03 the loss never fired and the bot won anyway).
-    internal static bool ExpectedLoss(string id, int tier) => id == "auth_01" && tier == 5;
+    // S18 MIS-03 made auth_01 tier 5 an expected loss; S21 (D-217, Q-71 (a)): with ash on that bot wins, so no mission-tier expects a loss.
+    internal static bool ExpectedLoss(string id, int tier) => false;
 
     [Theory]
     [MemberData(nameof(MissionTiers))]
