@@ -50,15 +50,17 @@ MATERIALS = dict(_ref.MATERIALS)
 MATERIALS.update({
     "steel2": ("#979EA3", dict(rough=0.4, metal=0.5)),
     # S22 detail pass: a second concrete grey for alternate panels, ground-in grime, chipped-paint bare concrete
-    "panelA": ("#9DA196", dict(rough=0.95)),
-    "panelB": ("#7C8077", dict(rough=0.95)),
-    "grime": ("#4B4D43", dict(rough=1.0)),
+    "panelA": ("#A6AA9E", dict(rough=0.95)),
+    "panelB": ("#8E7F69", dict(rough=0.95)),      # warmer, sandier concrete
+    "grime": ("#2F3029", dict(rough=1.0)),
+    "rust2": ("#A8582A", dict(rough=0.9)),
+    "steelD": ("#566066", dict(rough=0.5, metal=0.5)),
     "bolt": ("#B4BABD", dict(rough=0.4, metal=0.6)),
 })
 SOOT_SKIN = dict(_ref.SOOT_SKIN)
-SOOT_SKIN.update({"panelA": "concrete_s", "panelB": "concrete2_s", "grime": "soot", "bolt": "steel_s"})
+SOOT_SKIN.update({"panelA": "concrete_s", "panelB": "concrete2_s", "grime": "soot", "bolt": "steel_s", "rust2": "rust", "steelD": "steel_s"})
 PRIMER_SKIN = dict(_ref.PRIMER_SKIN)
-PRIMER_SKIN.update({"panelA": "raw", "panelB": "raw", "grime": "raw", "bolt": "primer"})
+PRIMER_SKIN.update({"panelA": "raw", "panelB": "raw", "grime": "raw", "bolt": "primer", "rust2": "raw", "steelD": "primer"})
 
 HX = 1.7                 # half cell
 WT = 0.5                 # half thickness of the wall
@@ -146,23 +148,45 @@ def detail(S, a, b, face, broken, pillar):
         if at(gx, 0.03):
             S.bb("capj", gx - 0.025, gx + 0.025, -WT - 0.14, -0.14, WZ + 0.16, WZ + 0.175, "dark", 0.0, nocast=True)
     # ground-in grime at the foot of the block and on the plinth front (ragged top edge)
-    for k, h in enumerate((0.17, 0.26, 0.12, 0.22, 0.14, 0.28, 0.16, 0.2, 0.13, 0.24, 0.18, 0.1)):
+    for k, h in enumerate((0.26, 0.4, 0.2, 0.34, 0.22, 0.42, 0.25, 0.32, 0.2, 0.38, 0.28, 0.18)):
         x0 = -1.7 + k * 0.2833
         for (p0, p1) in runs(x0, x0 + 0.2833):
             S.bb("grime", p0, p1, f - 0.02, f, 0.42, 0.42 + h, "grime", 0.0, nocast=True)
-            S.bb("grime", p0, p1, -WT - 0.23, -WT - 0.2, 0.0, 0.1 + h * 0.2, "grime", 0.0, nocast=True)
-    # rust drips from the cap and below the band
-    for (x, z1, z0) in ((-1.25, WZ - 0.02, 1.72), (-0.42, WZ - 0.02, 1.86), (0.55, WZ - 0.02, 1.68), (1.3, WZ - 0.02, 1.8),
-                        (-1.45, 0.88, 0.62), (-0.3, 0.88, 0.7), (1.05, 0.88, 0.58)):
+            S.bb("grime", p0, p1, -WT - 0.23, -WT - 0.2, 0.0, 0.14 + h * 0.3, "grime", 0.0, nocast=True)
+    # rust drips from the cap and below the band (wide, warm), plus stains round the bolt plates
+    for (x, z1, z0) in ((-1.25, WZ - 0.02, 1.66), (-0.42, WZ - 0.02, 1.8), (-0.18, WZ - 0.02, 1.7), (0.55, WZ - 0.02, 1.62), (0.95, WZ - 0.02, 1.76),
+                        (1.3, WZ - 0.02, 1.7), (-1.45, 0.88, 0.58), (-0.6, 0.88, 0.7), (-0.3, 0.88, 0.64), (0.25, 0.88, 0.6),
+                        (1.05, 0.88, 0.55), (1.45, 0.88, 0.68)):
+        if at(x, 0.07):
+            S.bb("rust", x - 0.07, x + 0.07, f - 0.045, f, z0, z1, "rust2", 0.0, nocast=True)
+            S.bb("rust", x - 0.035, x + 0.035, f - 0.05, f, z0 - 0.08, z0, "rust", 0.0, nocast=True)
+    # cap top: second tone (alternate darker plates), vent grille, access hatch, conduit run with clamps
+    for k in range(4):
+        x0 = -1.7 + 0.85 * k
+        if k % 2 == 1:
+            for (p0, p1) in runs(x0 + 0.03, x0 + 0.82):
+                S.bb("captone", p0, p1, -WT - 0.12, -0.16, WZ + 0.16, WZ + 0.18, "steelD", 0.0, nocast=True)
+    if at(-0.425, 0.22):                       # vent grille: dark slots
+        for j in range(5):
+            y0 = -0.56 + 0.075 * j
+            S.bb("grille", -0.62, -0.23, y0, y0 + 0.04, WZ + 0.18, WZ + 0.2, "dark", 0.0, nocast=True)
+    if at(0.425, 0.2):                         # access hatch with a yellow handle
+        S.bb("hatch", 0.25, 0.6, -0.55, -0.25, WZ + 0.16, WZ + 0.2, "steel2", 0.0, nocast=True)
+        S.bb("hatchd", 0.25, 0.6, -0.56, -0.54, WZ + 0.16, WZ + 0.21, "dark", 0.0, nocast=True)
+        S.bb("hatchh", 0.36, 0.5, -0.43, -0.37, WZ + 0.2, WZ + 0.23, "yellow", 0.0, nocast=True)
+    for (p0, p1) in runs(-1.7, 1.7):           # conduit along the rail foot
+        S.bb("conduit", p0, p1, -0.22, -0.15, WZ + 0.16, WZ + 0.22, "dark", 0.0, nocast=True)
+    for k in range(4):
+        x = -1.275 + 0.85 * k
         if at(x, 0.05):
-            S.bb("rust", x - 0.05, x + 0.05, f - 0.04, f, z0, z1, "rust", 0.0, nocast=True)
+            S.bb("clamp", x - 0.05, x + 0.05, -0.24, -0.13, WZ + 0.16, WZ + 0.24, "bolt", 0.0, nocast=True)
     # chips in the house band: bare concrete showing through the paint
-    for (x, w, h, z) in ((-1.3, 0.16, 0.06, 1.49), (0.4, 0.2, 0.06, 1.49), (1.1, 0.12, 0.06, 0.99)):
+    for (x, w, h, z) in ((-1.2, 0.34, 0.12, 1.42), (0.9, 0.3, 0.1, 1.02)):
         if at(x, w / 2) and not pillar:
             S.bb("chip", x - w / 2, x + w / 2, face - 0.072, face - 0.045, z, z + h, "concrete", 0.0, nocast=True)
-    # warning sign on the lower strip (once per run)
-    if not pillar and a <= -0.6 and b >= -0.2:
-        sx = -0.425
+    # warning sign on the lower strip (on run ends)
+    if not pillar and b - a < 1.2 and not broken:      # run ends only (no cell index is available to the model)
+        sx = (a + b) / 2
         S.bb("sign", sx - 0.17, sx + 0.17, f - 0.05, f, 0.52, 0.83, "yellow", 0.0, nocast=True)
         S.bb("signbar", sx - 0.03, sx + 0.03, f - 0.07, f - 0.05, 0.62, 0.76, "dark", 0.0, nocast=True)
         S.bb("signdot", sx - 0.03, sx + 0.03, f - 0.07, f - 0.05, 0.56, 0.6, "dark", 0.0, nocast=True)
