@@ -100,6 +100,7 @@ end
 
 function RaidOne()
   Media.MessageKey("a1.raid1")
+  Dialogue.Say(SPEAKER, SPEAKER, "a1.radio.raid1")
   local types = {}
   for i = 1, RaidOneSize() do types[i] = "auth_rifleman" end
   Raid(types, { x = 63, y = 8 + Random.Next(6) })
@@ -107,6 +108,7 @@ end
 
 function RaidTwo()
   Media.MessageKey("a1.raid2")
+  Dialogue.Say(SPEAKER, SPEAKER, "a1.radio.raid2")
   local types = {}
   for i = 1, RaidTwoSize() do types[i] = "auth_rifleman" end
   if Mission.Difficulty() >= 4 then types[#types + 1] = "auth_jeep" end
