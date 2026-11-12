@@ -26,6 +26,7 @@ public sealed partial class RulesOfSweepGrepTests
         ("Simulation.cs", "Setup.Rules.Terrain"),
         ("Movement/Occupancy.cs", "Setup.Rules.Vehicles["),   // locomotion
         ("Movement/Occupancy.cs", "Setup.Rules.Terrain"),
+        ("Simulation.Ashfall.cs", "Setup.Rules.Terrain"),   // S19 M13-12: step-off needs passability; terrain is not upgradable
         ("Simulation.Movement.cs", "Setup.Rules.Vehicles["),   // locomotion
         ("Simulation.Naval.cs", "Setup.Rules.Vehicles"), ("Simulation.Naval.cs", "Setup.Rules.Vehicles["), ("Simulation.Naval.cs", "Setup.Rules.Terrain"),   // M7-03: locomotion and terrain, not upgradable
         ("Simulation.Economy.cs", "Setup.Rules.Economy.RegrowthIntervalTicks"),   // global, not an effect attr
