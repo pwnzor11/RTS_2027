@@ -300,6 +300,7 @@ min_range = 0
 rate_of_fire = 45  # (tune)
 projectile_speed = 80
 warhead = "lb_harpoon"
+targets = "both"  # s22 M13-13 (D-223): ground -> both (air takes the light column, 75 %)
 
 [lb_organ_rack]   # Organ: inaccurate area artillery
 damage = 35  # (tune)
