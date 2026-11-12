@@ -67,7 +67,7 @@ function WaveSizes()
   local sizes = {
     { 2, 3, 3, 4, 5 },
     { 2, 3, 4, 4, 5 },
-    { 3, 3, 4, 5, 6 },
+    { 3, 3, 4, 5, 9 },
   }
   return sizes[state.waves + 1][Mission.Difficulty()]
 end
@@ -81,9 +81,7 @@ function Wave()
   local types = {}
   for i = 1, WaveSizes() do types[i] = "auth_rifleman" end
   local d = Mission.Difficulty()
-  if state.waves == 1 and d >= 4 then types[#types + 1] = "auth_jeep" end
   if state.waves == 2 and d >= 3 then types[#types + 1] = "auth_jeep" end
-  if state.waves == 2 and d >= 5 then types[#types + 1] = "auth_tank" end
   Reinforce.Zone(1, types, "spawn", Map.Center("head"))
   state.waves = state.waves + 1
   Camera.Focus("head", 160)
