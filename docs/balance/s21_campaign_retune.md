@@ -2,7 +2,8 @@
 
 Wins over 12 mission seeds (`seed = 1000 + k*7919`, k = 1..12) with the ashfall hazard on and the D-219 stance rule, measured in the cloud on
 the mission's branch or on integ-s21 (SeedSweepTests). Targets (Q-75, owner): tier 1 >= 10/12, tier 3 >= 8/12, tier 5 >= 3/12. The owner's
-laptop re-measures every row on the landed commit (`tools/measure/run_s21_campaign_sweep.ps1`, summary in balance_runs\s21sweep).
+laptop re-measured every row (`tools/measure/run_s21_campaign_sweep.ps1`): integ-s21 @ 8b418a2e, all 45 mission-tiers on target, seed for seed
+identical to the cloud numbers (Windows and Linux play the campaign the same; 21 min on 8 CPUs).
 
 | Mission | Tier 1 | Tier 3 | Tier 5 | s20 baseline (ash on, before D-219) | Change this session |
 |---|---|---|---|---|---|
