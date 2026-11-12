@@ -1556,3 +1556,10 @@ the Recruit AI's rally and wave staging cells step off ash, and idle infantry st
 assumed — confirm; ash-stealth infantry stay). That was not enough, so the owner then picked: campaign and tutorial missions run with ash
 damage and the ash path cost OFF (`MissionSession.CampaignRules`) until a campaign retune (M13-17); skirmish keeps all of it. lb_03 tier 5
 and exp_04 tier 5 (non-ash M13 shifts) are known, skipped cases until the retune. **Status:** owner decision (session 19)
+
+### D-212 · 2026-11-12 · Owner answers at the start of session 20 (Q-71, Q-72, run mode)
+**Decision:** (1) Q-71 (a): auth_01 tier 5 is allowed to be winnable after the M13 batch; the S18 MIS-03 expectation (tier-5 bot loses both
+scrapers, D-203) is dropped and the balance table expects a win like every other tier. (2) Q-72 keep: idle infantry on ash step to the nearest
+clean cell within 3 cells, ash-stealth infantry stay on ash, foot `ash_path_penalty = 4` (D-211) — confirmed. (3) Session 20 runs unattended:
+the lead takes its recommendation on reversible questions and logs them "assumed — confirm"; the campaign retune (M13-17) goes first and the
+laptop after-series is read once it exists. **Status:** owner decision (session 20)
