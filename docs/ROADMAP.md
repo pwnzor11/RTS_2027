@@ -285,14 +285,14 @@ Source: docs/reviews/2026-11-07_owner_campaign_feedback.md. Audit: docs/reviews/
 - [x] M13-08 Data: Atomic Battery range 0, campaign allow-lists (items 8, 10)
 - [x] M13-09 Left Behind lanes pause while the Mother Rig is packed (item 9)
 - [x] M13-10 Start-side tie-breaks (item 11): mirror-image placement tie-break and start kits; wider AI placement window (s19; 64-game confirmation in the after-series)
-- [~] M13-11 Mechanics items 12-22, 25 (s19: 12-18, 20 harvester-after-rebuild, 21, 25, LE-14 done; open: 19 melee acquire, 20 unreachable field + choke give-up (SP-03 Move half, SP-04), 22 path leak (SIMDET-03))
+- [x] M13-11 Mechanics items 12-22, 25 (s19: 12-18, 20 harvester-after-rebuild, 21, 25, LE-14; s20: 19 melee acquire, 20 unreachable field (SP-04) + choke give-up (SP-03 Move half), 22 path leak (SIMDET-03), D-218)
 - [x] M13-12 Ashfall hazard (item 23), attack-ground order (item 24), hide/reword missing mechanics (item 26)
 - [~] M13-13 Numbers pass (s19, D-208: Agitprop, Tow, Marksman, ship warheads small-arms/AP, Directorate copy structures, Commissar aura, layout 2 money; option-only items wait for the after-series)
 - [x] M13-14 UI/wording/design list (section 2.4) incl. mission-script one-liners, naming pass from data/archive
 - [x] M13-15 QoL: game speed incl. slow; idle button and alerts; cameo hotkeys, repeat production, range rings, strong/weak line; handicap and starting conditions; stances and shift-queued waypoints
 - [~] M13-16 Re-pins done per merge batch (s19); owner laptop series before (s18audit, done) and after (`tools/measure/run_s19_after.ps1`, open)
-- [ ] M13-17 Campaign retune with the ashfall hazard on (missions run with ash damage and ash path cost off until then, D-211); lb_03 and exp_04 tier 5 known shifts; auth_01 tier 5 now winnable (owner to confirm the S18 MIS-03 expectation)
-- [ ] M13-18 Follow-ups found in s19: LB yard dock harvester livelock (HarvestMission Enter); placement lanes always south of exits (S18-AI-NEW-3); LB AI builds ~30 Still Rigs in a corner base; ClearBuildArea keep or drop; walls/gates hero renders re-angled to 3/4 (M14)
+- [~] M13-17 Campaign retune with the ashfall hazard on (missions run with ash damage and ash path cost off until then, D-211). s20: 12-seed win-rate baseline with ash on for all 45 mission-tiers (docs/balance/s20_campaign_seed_baseline.md, D-218 point 8); tuning to the targets (Q-75) is next; auth_01 tier 5 winnable accepted (D-212)
+- [~] M13-18 Follow-ups found in s19 (s20, D-218): placement lane outlet toward the map centre (S18-AI-NEW-3) done; ClearBuildArea removed; LB Still Rigs 14-18 and used, no cap; LB yard dock livelock not reproduced in the open, dead-end corridor case open (Q-76); walls/gates hero renders re-angled to 3/4 (M14) open
 
 ## M14 · Field Manual (D-206, docs/design/19_field_manual.md)
 - [x] M14-01 Pilot: 9 pages, generator scripts (tools/booklet), design 19 (s18)

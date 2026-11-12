@@ -434,3 +434,14 @@ Back up `%APPDATA%\RTS_2027` first (game saves gained control groups and the set
 - **Update notice:** with a newer GitHub release, the main menu shows "New version X.Y.Z available" (Settings → Check for updates turns it off).
 - **Soak:** `dotnet src\Tools\bin\Debug\net10.0\Tools.dll lan soak --players 4 --ticks 4000 --jitter-ms 40 --loss 10` → "OK: in sync";
   add `--udp` for real sockets on loopback.
+
+## Session 20 · M13 follow-ups (D-217, D-218)
+No save format change (the economy part writes its old layout unless a harvester is skipping a field).
+- **Big group through a gap:** sandbox or skirmish, wall off an area leaving a one-cell gap, select 40-60 tanks and give one move order
+  through it: every tank arrives; none stops short in the queue.
+- **Walled-in field:** a harvester whose nearest ash field is walled off goes to the next reachable field within a few seconds instead of
+  parking by the wall.
+- **Melee acquire:** Directorate, attack-move a Sapper past an enemy tank about 3 cells off its path: it turns, attacks the tank, then
+  carries on to the destination. A guarding Sapper attacks an enemy that enters its sight, then walks back to its post.
+- **AI lanes:** watch an AI base for a few minutes: units leaving its factories head toward the map centre; nothing piles up south of the exits.
+- **LB corner base:** a Left Behind AI in a corner keeps building Still Rigs while its army uses the supply (about 14-18 by 10 minutes is expected).

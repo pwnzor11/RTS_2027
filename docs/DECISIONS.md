@@ -1595,3 +1595,20 @@ scrapers, D-203) is dropped and the balance table expects a win like every other
 clean cell within 3 cells, ash-stealth infantry stay on ash, foot `ash_path_penalty = 4` (D-211) — confirmed. (3) Session 20 runs unattended:
 the lead takes its recommendation on reversible questions and logs them "assumed — confirm". (Committed during session 20 as "D-212"; renumbered
 at the merge with the parallel M9/M10 session, which had already used D-212..D-216.) **Status:** owner decision (session 20)
+
+### D-218 · 2026-11-12 · Session 20 follow-up fixes (M13-11, M13-18) and how the campaign retune is measured
+**Decision:** (1) SP-03: a Move waiting behind an allied vehicle that is still advancing (its own stuck count below half of MaxStuck, not head-on,
+not hostile) counts one wait cycle in eight (`MoveMission.QueueSlowdown = 8`, keyed on the tick) toward giving up; idle, hostile, head-on and
+equally stuck blockers count every cycle as before. (2) SIMDET-03: a re-ordered group member releases its queued path entry
+(`PathService.ReleaseMember`); the saved format is unchanged. (3) SP-04: a harvester whose path to a field fails skips every cell within 4 of it
+for 1200 ticks (`SkipRadius`, `SkipTicks`, both (tune)); the economy part is written as version 4 unless a skip is active (version 5 then), so no
+hash or save moves. (4) Item 19: a weapon with a reach of one cell or less acquires within its owner's sight on attack-move and guard (Sapper,
+Combat Diver, Volunteer, Kite, bomber); a Defensive-stance marcher still never chases. (5) S18-AI-NEW-3: the AI's placement lane gets a 2x2
+outlet at its far end on the side facing the map centre (the exit stays south); ClearBuildArea, StagingCell and CancelAfterBlockedSearches are
+removed (0 uses in 15-minute games, all factions, tiers 1 and 5). (6) LB Still Rigs: 14-18 in a corner base, all used by the army (supply
+about 189/200), so no cap; a global cap of 8 was tried and reverted because it weakened every AI. (7) The LB yard dock livelock does not
+reproduce in the open; a one-cell dead-end corridor to the dock deadlocks and is pinned as a skipped Desired_ test (Q-76). (8) M13-17 is
+measured as a win rate over 12 mission seeds per mission-tier (ash on), not a single fixed-seed walk: the fixed-seed walks were passing by
+luck (auth_01 tier 3 wins 3/12 even with ash off), and ash on changes the rate notably only for dir_02 tier 5 (10/12 → 6/12). Targets: Q-75.
+**Why:** audit items SP-03, SP-04, SIMDET-03, item 19 and the s19 follow-ups; the sweep showed the bot walks are seed coin-flips.
+**Status:** lead decision (session 20); numbers marked (tune) are assumed — confirm.

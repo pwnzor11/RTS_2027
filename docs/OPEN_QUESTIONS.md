@@ -5,6 +5,12 @@ file cited after each question. Recommendations are the lead's, from the researc
 
 ## Open
 
+- 🟡 **Q-75 · 2026-11-12 · Campaign retune targets (M13-17).** The retune is measured as wins over 12 mission seeds with ash on (D-218).
+  Proposed targets: **tier 1 ≥ 11/12, tier 3 ≥ 9/12, tier 5 ≥ 4/12** (hard but winnable by the simple bot) / other targets. Below target in
+  the s20 baseline: see docs/balance/s20_campaign_seed_baseline.md. Pilot auth_01 first (tier 3 wins 3/12), then fan out.
+- ⚪ **Q-76 · 2026-11-12 · Harvester dock in a dead-end corridor.** One-cell dead-end corridor to a dock: the harvester that unloaded cannot
+  leave because the next one waits behind it (pinned as skipped `YardDockLivelockTests.Desired_DeadEndCorridorToTheDock_KeepsDelivering`).
+  **(a) waiters stand back two cells off the dock approach until the dock is free** / (b) leave it (shipped yards have an open dock cell).
 
 - 🟡 **Q-73 · 2026-11-12 · Par-time medals (M10-19).** No campaign mission has a par time, so the Profile page awards only Completed and
   No losses. Options: **(a) the owner gives a par time per mission (recommended; the bot walk-through times in docs/balance are a starting point)**;

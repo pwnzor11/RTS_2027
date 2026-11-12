@@ -388,3 +388,22 @@ an independent review.
 600 s generation timeout (raised with ACESTEP_GENERATION_TIMEOUT). A build started while a merge was still writing files reported missing
 types: never build until a merge has finished. The lan-soak repeat test failed on a fresh Windows runner (first-run "wrote <map>" note).
 **Next session should:** see HANDOFF "Parallel session additions".
+
+## Session 20 · 2026-11-12 (M13 follow-ups; campaign retune baseline, D-217, D-218)
+**Goal:** campaign retune with ash on (M13-17), the M13-11/13/18 follow-ups, then M14 if time; unattended after the go-ahead. Mid-session the
+owner moved the campaign retune itself to the next session and asked for a wrap-up.
+**Done:** wave 1 (four Sonnet helpers): SP-03 big groups through a one-cell gap all arrive (QueueSlowdown); SIMDET-03 path leak closed
+(PathService.ReleaseMember); SP-04 harvesters skip an unreachable field (economy part stays v4 unless a skip is active, no hash moved); item 19
+melee acquire on attack-move and guard; AI placement lane outlet toward the map centre; ClearBuildArea removed. LB Still Rigs measured (14-18,
+all used; a cap of 8 was tried and reverted). LB yard dock livelock not reproduced in the open; the dead-end corridor case is pinned (Q-76).
+Tools test isolation: AiMatchLayoutTests joined the ToolsConsole collection (it printed into the M9 LAN soak capture on Windows CI).
+Campaign: ash-on walks run for all 45 mission-tiers and the rest of Scripting.Tests; diagnosis showed the fixed-seed walks are seed coin-flips;
+12-seed win-rate baseline with ash on in docs/balance/s20_campaign_seed_baseline.md (5 mission-tiers below the proposed targets, Q-75).
+exp_04 tier 5's stall was an ash-off artefact (wins 5/12 with ash on). Not done: the retune itself, the after-series (owner's PC not linked), M14.
+**Decisions:** D-217 (owner answers Q-71 (a), Q-72 keep; committed as "D-212" and renumbered at the merge with the parallel M9/M10 session),
+D-218 (the follow-up fixes and the 12-seed measure).
+**Helpers:** 4 Sonnet packages (path, harvest, melee, ai), two sent back once (economy part version, supply cap revert).
+**Problems / notes:** a parallel session landed M9/M10 (PRs #69 and wave 2) while this one ran: main was merged into integ-s20 twice, and its
+D-212..D-216 and Q-73/Q-74 clashed with ours (renumbered here). The single ash-on Scripting run plus the sweeps held the build lock for hours
+on the 2-CPU box. Diagnostics live only on branch scratch/s20-ash-diag (local ash switch, trace, sweep probe; never merge).
+**Next session should:** see HANDOFF (campaign retune to the Q-75 targets with ash on, after-series, then M14).

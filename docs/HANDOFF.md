@@ -1,10 +1,38 @@
-# Handoff: Session 20 — campaign retune with the ashfall hazard on (M13-17), the "after" series, M13 follow-ups, then the Field Manual (M14)
-Last commit: `docs: Session 19 handoff` on wp/s19-docs, landed through its PR after PR #66 (all of M13). Check `git log -1 origin/main`.
-Where things stand: session 19 (2026-11-11/12) built the M13 batch (D-205) in waves A, B and C: see SESSION_LOG session 19 and ROADMAP M13.
-Decisions up to D-211. Campaign missions run with ash damage and the ash path cost OFF (`MissionSession.CampaignRules`, D-211) until M13-17;
-skirmish has the hazard, the infantry detour and the idle step-off. lb_03 tier 5 and exp_04 tier 5 are skipped known shifts (BalanceTableTests.KnownShifts,
-LeftBehindMission03Tests, ExpeditionMission04Tests; exp_04 t5 stalls at tick 30000 with the ash objective open since the head-on fix b01a024: investigate first). Open questions Q-71 (auth_01 tier 5 expectation with ash on) and Q-72 (assumed — confirm ash rules).
-All 124 Field Manual hero renders are on main (art/booklet); the pilot PDF is docs/field_manual/RTS_2027_Field_Manual_pilot.pdf.
+# Handoff: Session 21 — campaign retune with the ashfall hazard on (M13-17), the "after" series, then the Field Manual (M14)
+Last commit: `docs: Session 20 handoff` on wp/s20-docs, landed through its PR after PR #70 (session 20 wave 1). Check `git log -1 origin/main`.
+Where things stand: session 20 (2026-11-12) closed M13-11 and most of M13-18 (D-218) and measured the campaign with ash on over 12 seeds
+(docs/balance/s20_campaign_seed_baseline.md). A parallel session landed M9 LAN and the code-only M10 work on main (D-212..D-216,
+docs/process/m9m10_overnight.md). Decisions up to D-218. Campaign missions still run with ash damage and the ash path cost OFF
+(`MissionSession.CampaignRules`, D-211); lb_03 tier 5 and exp_04 tier 5 are still skipped known shifts. Open questions: Q-75 (retune targets),
+Q-76 (dead-end dock), plus the M9/M10 session's Q-73 (par times) and Q-74 (chat in LAN replays).
+
+## Start here (shown to the user as the plan; nothing starts until they say go)
+1. Ask Q-75 (targets: tier 1 ≥ 11/12, tier 3 ≥ 9/12, tier 5 ≥ 4/12 wins over 12 seeds).
+2. M13-17 campaign retune, pilot first: auth_01 tier 3 (3/12; see the baseline notes: riflemen lose raid 2 by a few HP, then a surviving
+   enemy vehicle grinds the scrapers). Show the owner the pilot (what changed, win rates before/after at tiers 1/3/5), then fan out to the
+   other four below target: auth_03 t1 (6/12), auth_04 t5 (0/12), dir_04 t5 (0/12), lb_03 t5 (1/12). Then remove CampaignRules' override
+   (ash on in missions), delete S19 CampaignAshfallOffTests, update the fixed-seed BalanceTableTests/mission tests (KnownShifts, auth_01
+   tier 5 expects a win per D-217, PilotMissionTests' "loses both scrapers at tier 5" goes) and un-skip lb_03 and exp_04 tier 5.
+   Re-measure every touched mission-tier with the 12-seed probe (branch scratch/s20-ash-diag; make it a proper tool if it stays useful).
+   Don't edit shared maps for one mission (rustbelt_m2 serves six missions).
+3. The owner's "after" series if it exists: `balance_runs\s19after\s19after_summary.md` vs `balance_runs\s18audit\s18audit_summary.md`;
+   decide the option-only 2.3 numbers (D-208), the Glass Coast layout 2 fields, and start-side skew (M13-10). Needs the PC linked.
+4. M14: re-angle the walls and gates hero renders (auth_gate, auth_wall, dir_bunker, lb_scrap_wall), Directorate lore draft, hero-render
+   support in tools/booklet, then the full build. Q-76 (dead-end dock back-off) only if the owner wants it.
+
+## Half-finished work
+- Nothing in flight. integ-s20 is merged; worktrees under /home/claude/wt are disposable.
+- scratch/s20-ash-diag: diagnostic only (local ash variants via RTS_LOCAL_ASH=off|dmg|pen|both, auth_01 trace, S20Sweep seed probe, ash
+  scan, seed-dir script). Never merge; cherry-pick the probe into a real tool if needed.
+- 26 ids still have no model or sprite (D-215: scripts on art/m14-06-pilot, PR #67 draft, rendered on the owner's laptop).
+- Mop-up AI code in MilitaryManager still switched off; voice lines on hold (Piper); `unit_reserve` override unused.
+
+## Waiting on the user
+- Back up `%APPDATA%\RTS_2027`, `git checkout main`, `git pull`, play USER_CHECKS "Session 20" (and "Session 19p" for the LAN work).
+- Laptop "after" series: `powershell -ExecutionPolicy Bypass -File tools\measure\run_s19_after.ps1` (about 95 min), if not done.
+- Answer Q-75 (and Q-76 when convenient).
+- Branch clean-up (owner deletes): integ-s20, land/s20-w1, land/s20-handoff, wp/s20-path, wp/s20-harvest, wp/s20-melee, wp/s20-ai,
+  wp/s20-docs, scratch/s20-ash-diag (after session 21 has the probe); keep restore/pre-s20 until happy.
 
 ## Parallel session additions (session 19p, 2026-11-12; read with the plan below)
 - M9 LAN and every code-only M10 feature are on main (D-216): PR #69 (wave 1) and the wave-2 PR (lobby, in-game LAN, review fixes). Notes and
@@ -18,33 +46,13 @@ All 124 Field Manual hero renders are on main (art/booklet); the pilot PDF is do
 - Lessons: one monotonic network clock for lobby and match; never build while a merge is writing files; run Scripting.Tests in every batch
   (slow but it catches campaign regressions); Windows CI catches first-run console output in tests.
 
-## Start here (shown to the user as the plan; nothing starts until they say go)
-1. Read the owner's "after" series if it exists: `balance_runs\s19after\s19after_summary.md` (tools/measure/run_s19_after.ps1), compare with
-   `balance_runs\s18audit\s18audit_summary.md` (start shares, Glass Coast tender skew, LB cross-faction results). Decide with the owner:
-   the option-only 2.3 numbers (D-208), the Glass Coast layout 2 fields (D-208), and whether start-side skew is solved (M13-10).
-2. M13-17 campaign retune: turn the hazard on in missions (remove CampaignRules' override mission by mission), walk the 16 missions + tutorial
-   at tiers 1/3/5 with the bot tests, and fix escort routes / staging cells / script spawns standing on ash (lb_03 spawns its start force
-   on a field at (23,26)); un-skip lb_03 and exp_04 tier 5 (exp_04 t5 may be a movement stall, not balance: check first); ask Q-71. Owner rule: pilot one mission first, then fan out.
-3. M13-11/13/18 follow-ups: melee acquire (item 19), harvester unreachable field + choke give-up (SP-03 Move half, SP-04), path leak
-   (SIMDET-03), LB yard dock harvester livelock (HarvestMission Enter ~288-300), placement lanes south of exits (S18-AI-NEW-3), LB AI ~30
-   Still Rigs in a corner base, ClearBuildArea keep or drop.
-4. M14: re-angle the walls and gates hero renders (auth_gate, auth_wall, dir_bunker, lb_scrap_wall; owner asked), Directorate lore draft,
-   then the full ~108-page build using art/booklet renders (tools/booklet; the pilot scripts have no hero-render support yet: add it).
-
-## Half-finished work
-- Nothing in flight. Every s19 branch is merged; worktrees under /home/claude/wt are disposable.
-- 26 ids still have no model or sprite (docs/design/19_field_manual.md section 5, ROADMAP M14-06).
-- Parallel sessions opened PR #64 (M9 LAN plan) and PR #65 (M10 polish plan), docs only; not touched by session 19.
-- Mop-up AI code in MilitaryManager still switched off; voice lines on hold (Piper); `unit_reserve` override unused.
-
-## Waiting on the user
-- Back up `%APPDATA%\RTS_2027`, `git checkout main`, `git pull` (drop the local render_heroes.py edit first: `git checkout tools/booklet/render_heroes.py`), play USER_CHECKS "Session 19".
-- Laptop "after" series: `powershell -ExecutionPolicy Bypass -File tools\measure\run_s19_after.ps1` (about 95 min).
-- Answer Q-71 and Q-72 when convenient.
-- Branch clean-up (owner deletes): the list sent in session 19 plus, once #66 and the handoff PR are merged: integ-s19, land/s19-w4,
-  land/s19-w5, land/s19-handoff, wp/s19-*, art/booklet-heroes; keep restore/pre-s19 until happy. Close PR #62 (superseded by #66) if still open.
-
 ## How to run this session
+- Session 20 lessons: (1) a single fixed-seed bot walk is not a balance measure: the campaign walks flip with the seed; judge a mission-tier
+  by wins over 12 seeds (scratch/s20-ash-diag S20Sweep, ~2 h for all 45 on the 2-CPU box). (2) To split a rules effect, run the variants
+  separately (ash damage only vs path cost only) before tuning. (3) Another session may land on main at any time: fetch main before opening
+  or refreshing a PR, and pick D-/Q-numbers from origin/main at wrap-up, not from the session start. (4) A PR whose branch conflicts with
+  main gets no CI run at all: check `mergeable` when CI doesn't start. (5) Tools tests that print to the console must be in the
+  ToolsConsole collection, or they leak into another test's captured output on Windows CI.
 - Lead: Opus for build sessions (the owner wants long unattended overnight builds); Sonnet for a pure review/question session. Helpers: Haiku default; Sonnet for sim core,
   determinism, serialisation, movement, combat, AI, scripting, and all Blender art.
 - Repo clone: `/home/claude/rts_2027` (remote URL github.com/pwnzor11/RTS_2027.git; re-set it after a container restart); main has no branch protection, but land through a PR so Windows CI runs first
