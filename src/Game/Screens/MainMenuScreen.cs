@@ -6,6 +6,7 @@ using Microsoft.Xna.Framework.Input;
 using Rts.Data;
 using Rts.Game.Input;
 using Rts.Game.Menu;
+using Rts.Game.Update;
 
 namespace Rts.Game.Screens;
 
@@ -104,12 +105,22 @@ public sealed class MainMenuScreen : IScreen
         {
             Backdrop.FillOpaque(sb, _s);
             _plain.Draw(sb, _s.Pixel, vp, _s.UiScale, _mouse);
+            if (_s.Updates.Found is { } plainUpdate)
+                Ui.BitmapFont.Draw(sb, _s.Pixel, UpdateCheck.NoticeText(plainUpdate), new Vector2(8, 8), new Color(0xE8, 0xA8, 0x28), _s.UiScale);
             return;
         }
 
         background.Draw(sb, vp);
         _ops.Clear();
         LobbyMenuView.Build(_ops, _lobby.Layout, _lobby.Entries, _lobby.Selected, _seconds, background.Caption, BuildInfo.Version, vp.Width, vp.Height);
+        if (_s.Updates.Found is { } update)
+        {
+            // M10-23: a small line above the footer, left side.
+            Ui.UiUnit unit = _lobby.Layout.Scale;
+            int line = Ui.BitmapFont.LineHeight(unit, Ui.Fonts.FontWeight.Regular);
+            _ops.Add(DrawOp.Text(UpdateCheck.NoticeText(update), _lobby.Layout.TitleX + 5 * unit, LobbyMenuView.FooterTop(unit, vp.Height) - line - 2 * unit,
+                unit, new Rgba(0xE8, 0xA8, 0x28)));
+        }
         background.DrawOps(sb, _ops, vp);
     }
 
@@ -123,6 +134,7 @@ public sealed class MainMenuScreen : IScreen
             case MenuAction.MapEditor: _s.Screens.Push(new Editor.MapEditorScreen(_s, path => _s.Screens.Push(new SkirmishSetupScreen(_s, new MapChoice(path, null))))); break;
             case MenuAction.Replays: _s.Screens.Push(LoadGameScreen.CreateReplays(_s)); break;
             case MenuAction.Archive: _s.Screens.Push(new ArchiveScreen(_s)); break;
+            case MenuAction.Profile: _s.Screens.Push(new Profile.ProfileScreen(_s)); break;
             case MenuAction.HowToPlay: _s.Screens.Push(new HowToPlayScreen(_s)); break;
             case MenuAction.Settings: _s.Screens.Push(new SettingsScreen(_s)); break;
             case MenuAction.Quit: _s.Quit(); break;

@@ -40,6 +40,9 @@ public sealed class SkirmishSetupScreen : IScreen
     private int _firstSlotRow;
     private string _error = "";
     private bool _hasKey;                 // GS-13: whether an LLM key is stored, read once (the key store is a file read plus a decrypt)
+    private readonly MapPreviewView _previewView = new();   // M10-18: the map thumbnail beside the panel
+    private MapChoice? _previewFor;
+    private MapPreviewImage? _preview;
     private Settings? _keyFor;            // the settings value _hasKey was read for; a new value (Settings changed) reads it again
 
     /// <summary>Creates the screen with <see cref="SkirmishSettings.Default"/> values (curated map, a human against a Regular AI).</summary>
@@ -143,7 +146,27 @@ public sealed class SkirmishSetupScreen : IScreen
     }
 
     /// <inheritdoc />
-    public void Exit() => SaveSpeed();
+    public void Exit()
+    {
+        SaveSpeed();
+        _previewView.Dispose();
+    }
+
+    /// <summary>M10-18: the preview picture of the map as it is chosen now (null when it cannot be made). Updates when the map, biome, size, seed or slot count changes.</summary>
+    public MapPreviewImage? Preview
+    {
+        get
+        {
+            MapChoice choice = Current.Map;
+            if (!Equals(choice, _previewFor))
+            {
+                _previewFor = choice;
+                _preview = MapPreviewCache.For(_s.RulesDir, choice);
+            }
+
+            return _preview;
+        }
+    }
 
     /// <inheritdoc />
     public void Update(InputFrame input, GameTime t)
@@ -165,6 +188,21 @@ public sealed class SkirmishSetupScreen : IScreen
     {
         Backdrop.FillOpaque(sb, _s);
         _panel.Draw(sb, _s.Pixel, _s.Viewport, _s.UiScale, _mouse);
+        DrawPreview(sb);
+    }
+
+    // M10-18: to the right of the panel when there is room, else to the left; skipped on a narrow window.
+    private void DrawPreview(SpriteBatch sb)
+    {
+        Rectangle panel = _panel.PanelRect;
+        UiUnit scale = _s.UiScale;
+        int side = 48 * scale;
+        int gap = 3 * scale;
+        int x;
+        if (_s.Viewport.Width - panel.Right - gap >= side) x = panel.Right + gap;
+        else if (panel.X - gap >= side) x = panel.X - gap - side;
+        else return;
+        _previewView.Draw(sb, _s.Pixel, new Rectangle(x, panel.Y, side, side), Preview, scale);
     }
 
     // The key store is read here and nowhere else while the screen is open (it is a file read and a decrypt).
@@ -523,16 +561,11 @@ public sealed class SkirmishSetupScreen : IScreen
             return;
         }
 
-        try
-        {
-            GameScreen screen = GameScreen.CreateSkirmish(_s, settings);
-            SaveSpeed();
-            _error = "";
-            _s.Screens.Push(screen);
-        }
-        catch (Exception e) when (ScreenGuard.IsDataError(e))   // S18 GS-10: also IOException, MapFileException and the like
-        {
-            _error = Shorten("Cannot start: " + e.Message, 56);
-        }
+        // M10-20: a loading screen builds the game (it draws one frame first); a data error comes back here, as it did before (S18 GS-10).
+        SaveSpeed();
+        _error = "";
+        var factions = settings.Slots.Where(x => x.Kind != SlotKind.Closed).Select(x => LoadingArt.IdOf(x.Faction)).OfType<string>().Distinct().ToArray();
+        _s.Screens.Push(LoadingScreen.For(_s, SkirmishGame.DescribeMap(settings.Map), factions, null,
+            () => GameScreen.CreateSkirmish(_s, settings), e => _error = Shorten("Cannot start: " + e.Message, 56)));
     }
 }

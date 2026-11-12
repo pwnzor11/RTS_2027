@@ -14,7 +14,7 @@ public sealed class MainMenuModelTests
         IReadOnlyList<MainMenuEntry> entries = MainMenuModel.Build(hasSave: false);
 
         Assert.Equal(
-            new[] { "Continue", "Campaign", "Skirmish", "LAN Game", "Map Editor", "Replays", "Archive", "How to Play", "Settings", "Quit" },
+            new[] { "Continue", "Campaign", "Skirmish", "LAN Game", "Map Editor", "Replays", "Archive", "Profile", "How to Play", "Settings", "Quit" },
             entries.Select(e => e.Label));
         Assert.DoesNotContain(entries, e => e.Label.Contains("Sandbox", StringComparison.OrdinalIgnoreCase));
     }
@@ -115,7 +115,7 @@ public sealed class MainMenuModelTests
         foreach ((int w, int h, int scale) in new[] { (1280, 720, 2), (1920, 1080, 3), (1024, 600, 2) })
         {
             LobbyLayout layout = LobbyMenuView.Measure(w, h, scale, MainMenuModel.Build(true));
-            Assert.Equal(10, layout.Rows.Length);
+            Assert.Equal(MainMenuModel.Build(true).Count, layout.Rows.Length);
             Assert.All(layout.Rows, r => Assert.True(r.Top >= 0 && r.Bottom <= h && r.Right <= w, $"{w}x{h}: {r}"));
             for (int i = 1; i < layout.Rows.Length; i++) Assert.True(layout.Rows[i].Top >= layout.Rows[i - 1].Bottom);
         }

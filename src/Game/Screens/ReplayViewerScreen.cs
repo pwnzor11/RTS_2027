@@ -9,6 +9,7 @@ using Rts.Game.Menu;
 using Rts.Game.Render;
 using Rts.Game.Saves;
 using Rts.Game.Sprites;
+using Rts.Game.Stats;
 using Rts.Game.Ui;
 
 namespace Rts.Game.Screens;
@@ -30,6 +31,7 @@ public sealed class ReplayViewerScreen : IScreen
     private readonly Selection _selection = new();
     private readonly List<RenderUnit> _renderUnits = new();
     private bool _centred;
+    private readonly StatsSampler _sampler = new();   // M10-17: graphs of the replay played so far
 
     /// <summary>Creates the viewer over an opened replay of the file <paramref name="path"/> (kept for Restart).</summary>
     public ReplayViewerScreen(GameServices services, string path, ReplayPlayback playback)
@@ -95,6 +97,7 @@ public sealed class ReplayViewerScreen : IScreen
         if (input.ConsumePressed(Keys.F) || input.ConsumePressed(Keys.PageDown)) _play.ScrubForward();
         if (input.ConsumePressed(Keys.F2)) _play.CycleViewer();
         if (input.ConsumePressed(Keys.F3)) _overlays.Occupancy = !_overlays.Occupancy;
+        if (input.ConsumePressed(Keys.G)) _s.Screens.Push(GraphsScreen.For(_s, _sampler.Timeline));   // M10-17
         if (input.ConsumePressed(Keys.R))
         {
             Restart();
@@ -115,6 +118,7 @@ public sealed class ReplayViewerScreen : IScreen
         if (input.WheelDelta != 0) _camera.ZoomBy(input.WheelDelta > 0 ? 1 : -1);
 
         _play.Advance(t.ElapsedGameTime.Ticks / 10);   // ticks are 100 ns; microseconds = ticks / 10
+        _sampler.Observe(_play.Sim);   // M10-17
 
         var view = new Viewport(0, 0, _s.Viewport.Width, _s.Viewport.Height);
         if (!_centred)
@@ -144,7 +148,7 @@ public sealed class ReplayViewerScreen : IScreen
         var lines = new List<string>
         {
             $"REPLAY  {state}   tick {clock.Tick} / {clock.FinalTick} ({Percent(clock.Progress)})   view {view}",
-            "Space pause  1-4 speed  . step  F skip 10s  F2 view  R restart  Esc back",
+            "Space pause  1-4 speed  . step  F skip 10s  F2 view  G graphs  R restart  Esc back",
         };
         if (_play.ShowDesyncWarning) lines.Add($"WARNING: the replay no longer matches the game data (differs from tick {_play.DesyncTick})");
         if (_play.IsMissionReplay) lines.Add(Rts.Scripting.MissionReplay.WatchableOnlyNote);   // S18 GS-03 (owner): watchable only

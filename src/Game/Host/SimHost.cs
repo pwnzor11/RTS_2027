@@ -59,6 +59,13 @@ public sealed class SimHost
     /// </summary>
     public AiDriver? Ai { get; set; }
 
+    /// <summary>
+    /// LAN lockstep (M9, design 20 §9). When set, <see cref="Issue"/> and <see cref="IssueOrder"/> hand the command to this sink
+    /// instead of queuing it: the host's turn scheduler stamps ExecTick and Sequence and the command comes back in a sealed turn
+    /// bundle through <see cref="StepWithBundle"/>. Null (the default) keeps single-player behaviour unchanged.
+    /// </summary>
+    public Action<Command>? Outbox { get; set; }
+
     /// <summary>Optional timing sink for the perf benchmark (M4-16); null in the game, so the clock is never read.</summary>
     public HostProfile? Profile { get; set; }
 
@@ -193,6 +200,22 @@ public sealed class SimHost
         return stepped;
     }
 
+    /// <summary>
+    /// LAN lockstep (M9): queues the commands of the sealed turn bundle for the tick about to run (already stamped by the host, so
+    /// nothing is re-stamped), records them in the replay, then runs exactly one tick. <see cref="Advance"/> is not used in a LAN
+    /// game; the lockstep driver calls this once per tick it holds a bundle for. Set <see cref="Ai"/> to null on LAN peers: the host
+    /// runs the AIs itself and their commands arrive in bundles like everyone else's.
+    /// </summary>
+    public void StepWithBundle(IReadOnlyList<Command> bundle)
+    {
+        foreach (Command command in bundle)
+        {
+            _pending.Add(command);
+            _recording?.RecordCommand(command);
+        }
+        StepCore();
+    }
+
     /// <summary>Runs exactly one tick now, whatever the pause state or the clock.</summary>
     public void StepOnce() => StepCore();
 
@@ -213,6 +236,12 @@ public sealed class SimHost
         {
             RefusedCommands++;
             return command;   // not queued, not recorded
+        }
+
+        if (Outbox is { } outbox)
+        {
+            outbox(command);   // LAN: stamped and recorded when it comes back in a turn bundle
+            return command;
         }
 
         int exec = Math.Max(command.ExecTick, _sim.Tick + CommandDelayTicks);

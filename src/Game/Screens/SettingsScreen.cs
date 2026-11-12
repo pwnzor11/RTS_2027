@@ -50,6 +50,10 @@ public sealed class SettingsScreen : IScreen
                 new MenuButton("Toggle", ToggleHealthBars)),
             new MenuItem(() => $"Larger infantry (x1.25): {(_s.Settings.LargerInfantry ? "On" : "Off")}", ToggleLargerInfantry, _ => ToggleLargerInfantry(),
                 new MenuButton("Toggle", ToggleLargerInfantry)),   // D-184
+            new MenuItem(() => $"Weather: {(_s.Settings.Weather ? "On" : "Off")}", ToggleWeather, _ => ToggleWeather(),
+                new MenuButton("Toggle", ToggleWeather)),   // M10-12
+            new MenuItem(() => $"Screen shake: {(_s.Settings.ScreenShake ? "On" : "Off")}", ToggleScreenShake, _ => ToggleScreenShake(),
+                new MenuButton("Toggle", ToggleScreenShake)),   // M10-14
             Volume("Master volume", s => s.MasterVolume, (s, v) => s with { MasterVolume = v }),
             Volume("Music volume", s => s.MusicVolume, (s, v) => s with { MusicVolume = v }),
             Volume("Effects volume", s => s.SfxVolume, (s, v) => s with { SfxVolume = v }),
@@ -57,8 +61,11 @@ public sealed class SettingsScreen : IScreen
                 () => StepAutosave(1), StepAutosave, new MenuButton("<", () => StepAutosave(-1)), new MenuButton(">", () => StepAutosave(1))),   // D-205
             new MenuItem(() => $"Camera cue on new objective: {(_s.Settings.CameraCueOnNewObjective ? "On" : "Off")}", ToggleCameraCue, _ => ToggleCameraCue(),
                 new MenuButton("Toggle", ToggleCameraCue)),   // M11-05
+            new MenuItem(() => $"Check for updates at start: {(_s.Settings.CheckForUpdates ? "On" : "Off")}", ToggleCheckForUpdates, _ => ToggleCheckForUpdates(),
+                new MenuButton("Toggle", ToggleCheckForUpdates)),   // M10-23
             new MenuItem(() => Rts.Game.Ui.Llm.LlmUiText.SectionRow, () => _s.Screens.Push(new Rts.Game.Ui.Llm.LlmSettingsScreen(_s, _path))),
             new MenuItem(() => "About", () => _s.Screens.Push(new AboutScreen(_s))),
+            new MenuItem(() => "Credits", () => _s.Screens.Push(new CreditsScreen(_s))),   // M10-20
             new MenuItem(() => "Back", Back),
         });
     }
@@ -130,6 +137,9 @@ public sealed class SettingsScreen : IScreen
         MenuSounds.Play(_s.Audio, MenuSounds.Move);
     }
 
+    private void ToggleCheckForUpdates() =>
+        _s.Settings = _s.Settings with { CheckForUpdates = !_s.Settings.CheckForUpdates };
+
     private void StepAutosave(int d) =>
         _s.Settings = _s.Settings with { AutosaveMinutes = Autosave.StepMinutes(_s.Settings.AutosaveMinutes, d) };
 
@@ -142,6 +152,10 @@ public sealed class SettingsScreen : IScreen
     }
 
     private void ToggleLargerInfantry() => _s.Settings = _s.Settings with { LargerInfantry = !_s.Settings.LargerInfantry };
+
+    private void ToggleWeather() => _s.Settings = _s.Settings with { Weather = !_s.Settings.Weather };
+
+    private void ToggleScreenShake() => _s.Settings = _s.Settings with { ScreenShake = !_s.Settings.ScreenShake };
 
     private void ToggleHealthBars() => _s.Settings = _s.Settings with { HealthBarsAlways = !_s.Settings.HealthBarsAlways };
 

@@ -31,7 +31,10 @@ internal static class CampaignFlow
         CampaignProgress after = svc.RecordWin(faction, missionId, tier);
         bool final = MissionSelectModel.IsFinal(svc, faction, missionId);
         ArchiveCatalog catalog = LoadCatalog(s);
-        var model = DebriefModel.Build(game.Def.Title, missionId, game.Sim.Tick, game.Host.Objectives, before, after, tier, final, catalog);
+        // M10-19: medals. Completed always; No losses when no own unit died.
+        IReadOnlyList<string> medals = Profile.ProfileRecorder.RecordMissionWin(Profile.ProfileRecorder.PathFor(s), missionId, game.Sim.Tick,
+            game.Sim.StatsOf(MissionGame.LocalPlayer).UnitsLost);
+        var model = DebriefModel.Build(game.Def.Title, missionId, game.Sim.Tick, game.Host.Objectives, before, after, tier, final, catalog, medals);
         bool saved = svc.LastWinSaved;   // S18 GS-05: a failed progress write is told after the debrief
         return new DebriefScreen(s, model, () => AfterWin(s, svc, faction, final, saved));
     };
@@ -93,7 +96,11 @@ internal static class CampaignFlow
             // S18 MIS-02: a mission loaded from a save has no mission select under it: back to the main menu, then the ending if it was the last.
             s.Screens.ReplaceAll(new MainMenuScreen(s));
             if (final && LoadEnding(s, svc, faction) is { } end)
+            {
+                s.Screens.Push(new CreditsScreen(s));   // M10-20: the credits roll after the ending slides
                 s.Screens.Push(new EndingScreen(s, new EndingModel(end, svc.Progress(faction)), Path.Combine(DataDir(s), "images", "endings")));
+            }
+
             return;
         }
 
@@ -101,6 +108,9 @@ internal static class CampaignFlow
         ((MissionSelectScreen)s.Screens.Top).Refresh();
         foreach (CampaignScreen c in s.Screens.Screens.OfType<CampaignScreen>()) c.Refresh();   // S18 GS-04: newly opened factions, counts
         if (final && LoadEnding(s, svc, faction) is { } ending)
+        {
+            s.Screens.Push(new CreditsScreen(s));   // M10-20: the credits roll after the ending slides
             s.Screens.Push(new EndingScreen(s, new EndingModel(ending, svc.Progress(faction)), Path.Combine(DataDir(s), "images", "endings")));
+        }
     }
 }

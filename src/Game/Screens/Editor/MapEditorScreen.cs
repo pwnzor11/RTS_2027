@@ -341,7 +341,7 @@ public sealed class MapEditorScreen : IScreen
     private void OpenMap()
     {
         IReadOnlyList<MapFileEntry> files = MapFolders.List(_userDir, _dataDir);
-        var rows = files.Select(f => new ListRow($"{f.Name}  [{(f.IsUser ? "user" : "data")}]", f.Path, () => Open(f))).ToList();
+        var rows = files.Select(f => new ListRow($"{f.Name}  [{(f.IsUser ? "user" : "data")}]", f.Path, () => Open(f), () => MapPreviewCache.For(_s.RulesDir, new MapChoice(f.Path, null)))).ToList();
         _s.Screens.Push(new ListScreen(_s, "Open map", rows, "No maps found", $"{_userDir}  |  {_dataDir}"));
     }
 

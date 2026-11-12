@@ -15,6 +15,14 @@ public sealed class MusicLibrary
     /// <summary>Track ids in name order.</summary>
     public IReadOnlyList<string> Ids => _paths.Keys.OrderBy(k => k, StringComparer.Ordinal).ToList();
 
+    /// <summary>A library holding exactly these track ids (no files). For tests and tools.</summary>
+    public static MusicLibrary FromIds(IEnumerable<string> ids)
+    {
+        var paths = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        foreach (string id in ids) paths[id] = id + ".ogg";
+        return new MusicLibrary(paths);
+    }
+
     /// <summary>Scans <paramref name="dir"/> for *.ogg files; never throws.</summary>
     public static MusicLibrary Scan(string dir)
     {

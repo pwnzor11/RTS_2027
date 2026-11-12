@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Rts.Game.Input;
 using Rts.Game.Menu;
+using Rts.Game.Ui;
 
 namespace Rts.Game.Screens;
 
@@ -12,7 +13,8 @@ namespace Rts.Game.Screens;
 /// <param name="Label">The row text.</param>
 /// <param name="Detail">A second line shown while the row is selected.</param>
 /// <param name="Activate">Runs on Enter or a click, or null.</param>
-public sealed record ListRow(string Label, string Detail, Action? Activate);
+/// <param name="Preview">M10-18: makes the map picture shown beside the list while the row is selected (the editor's Open list), or null for no picture.</param>
+public sealed record ListRow(string Label, string Detail, Action? Activate, Func<Rts.Game.Ui.MapPreviewImage?>? Preview = null);
 
 /// <summary>
 /// A paged list of rows (saves, replays) with a detail line for the selected row and Back. With no rows it shows
@@ -28,6 +30,9 @@ public sealed class ListScreen : IScreen
     private readonly MenuPanel _panel;
     private Point _mouse;
     private int _page;
+    private readonly MapPreviewView _previewView = new();
+    private ListRow? _previewRow;
+    private MapPreviewImage? _previewImage;
 
     /// <summary>Creates the screen.</summary>
     /// <param name="services">Shared services.</param>
@@ -76,9 +81,7 @@ public sealed class ListScreen : IScreen
     }
 
     /// <inheritdoc />
-    public void Exit()
-    {
-    }
+    public void Exit() => _previewView.Dispose();
 
     /// <inheritdoc />
     public void Update(InputFrame input, GameTime t)
@@ -100,6 +103,28 @@ public sealed class ListScreen : IScreen
     {
         Backdrop.FillOpaque(sb, _s);
         _panel.Draw(sb, _s.Pixel, _s.Viewport, _s.UiScale, _mouse);
+        DrawPreview(sb);
+    }
+
+    // M10-18: the selected row's map picture, to the right of the panel (or the left) when there is room.
+    private void DrawPreview(SpriteBatch sb)
+    {
+        ListRow? row = _panel.Selected < Math.Min(PageSize, _rows.Count) ? RowAt(_panel.Selected) : null;
+        if (row?.Preview is null) return;
+        if (!ReferenceEquals(row, _previewRow))
+        {
+            _previewRow = row;
+            _previewImage = row.Preview();
+        }
+
+        Rectangle panel = _panel.PanelRect;
+        UiUnit scale = _s.UiScale;
+        int side = 48 * scale, gap = 3 * scale;
+        int x;
+        if (_s.Viewport.Width - panel.Right - gap >= side) x = panel.Right + gap;
+        else if (panel.X - gap >= side) x = panel.X - gap - side;
+        else return;
+        _previewView.Draw(sb, _s.Pixel, new Rectangle(x, panel.Y, side, side), _previewImage, scale);
     }
 
     private ListRow? RowAt(int slot)

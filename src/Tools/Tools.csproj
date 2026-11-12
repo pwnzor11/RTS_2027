@@ -6,6 +6,7 @@
     <ProjectReference Include="..\Data\Data.csproj" />
     <ProjectReference Include="..\Scripting\Scripting.csproj" />
     <ProjectReference Include="..\Llm\Llm.csproj" />
+    <ProjectReference Include="..\Net\Net.csproj" />
   </ItemGroup>
 
   <ItemGroup>
