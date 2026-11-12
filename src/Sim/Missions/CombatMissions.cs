@@ -54,7 +54,7 @@ internal static class CombatMissions
             }
             if (e.AttackTarget.Id.IsNone && sim.Tick >= e.ScanTick)
             {
-                e.AttackTarget = sim.AcquireTarget(owner, pos, w);
+                e.AttackTarget = sim.AcquireTarget(owner, pos, w, AcquireReach(sim, kind, i, w));
                 e.ScanTick = sim.Tick + Simulation.ScanIntervalTicks;
                 e.RetargetTick = 0;
             }
@@ -130,7 +130,8 @@ internal static class CombatMissions
                 e.AttackTarget = default;   // a defensive marcher fires at what is in range and never chases it
             if (e.AttackTarget.Id.IsNone && sim.Tick >= e.ScanTick)
             {
-                e.AttackTarget = sim.AcquireTarget(owner, store.Position[i], sim.RulesOf(store.Player[i]).Weapons[weapon]);
+                e.AttackTarget = sim.AcquireTarget(owner, store.Position[i], sim.RulesOf(store.Player[i]).Weapons[weapon],
+                    AcquireReach(sim, kind, i, sim.RulesOf(store.Player[i]).Weapons[weapon]));
                 e.ScanTick = sim.Tick + AttackMoveScanTicks;
                 e.RetargetTick = 0;
             }
@@ -148,6 +149,11 @@ internal static class CombatMissions
         }
         return MoveMission.StepToward(sim, store, kind, i, e.GuardPoint);
     }
+
+    /// <summary>Weapons with a reach of one cell or less are melee (M13-11 item 19): their owner acquires anything in sight and closes in.
+    /// Longer weapons keep acquiring within their own range. Returns 0 for no extra search range.</summary>
+    private static int AcquireReach(Simulation sim, ActorKind kind, int i, WeaponType w) =>
+        w.Range <= SimConstants.LeptonsPerCell ? sim.SightOf(kind, i) * SimConstants.LeptonsPerCell : 0;
 
     private static void ToGuard(Simulation sim, MobileStore store, ActorKind kind, int i) =>
         sim.AssignMission(new ActorRef(kind, store.Slots.IdOf(i)), MissionKind.Guard);

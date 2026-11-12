@@ -160,13 +160,14 @@ public sealed partial class Simulation
     }
 
     /// <summary>Nearest visible enemy (vehicles, infantry, then buildings; equal distance: lower health, then slot order) whose distance from
-    /// <paramref name="from"/> lies in the weapon's [MinRange, Range]. Returns a ref with Id.IsNone if there is none.</summary>
-    internal ActorRef AcquireTarget(byte player, LeptonCoord from, WeaponType w)
+    /// <paramref name="from"/> lies in the weapon's [MinRange, Range] (or [MinRange, <paramref name="searchRange"/>] when that is larger). Returns a ref with Id.IsNone if there is none.</summary>
+    internal ActorRef AcquireTarget(byte player, LeptonCoord from, WeaponType w, int searchRange = 0)
     {
         ActorRef best = default;
         long bestD = long.MaxValue;
         int bestHp = int.MaxValue;
-        long maxD2 = (long)w.Range * w.Range, minD2 = (long)w.MinRange * w.MinRange;
+        int reach = Math.Max(w.Range, searchRange);   // M13-11 item 19: a melee unit searches out to its sight, not its reach
+        long maxD2 = (long)reach * reach, minD2 = (long)w.MinRange * w.MinRange;
         for (int k = 0; k < LiveKinds; k++)
         {
             var kind = (ActorKind)k;
