@@ -49,9 +49,16 @@ FX = []
 MATERIALS = dict(_ref.MATERIALS)
 MATERIALS.update({
     "steel2": ("#979EA3", dict(rough=0.4, metal=0.5)),
+    # S22 detail pass: a second concrete grey for alternate panels, ground-in grime, chipped-paint bare concrete
+    "panelA": ("#9DA196", dict(rough=0.95)),
+    "panelB": ("#7C8077", dict(rough=0.95)),
+    "grime": ("#4B4D43", dict(rough=1.0)),
+    "bolt": ("#B4BABD", dict(rough=0.4, metal=0.6)),
 })
 SOOT_SKIN = dict(_ref.SOOT_SKIN)
+SOOT_SKIN.update({"panelA": "concrete_s", "panelB": "concrete2_s", "grime": "soot", "bolt": "steel_s"})
 PRIMER_SKIN = dict(_ref.PRIMER_SKIN)
+PRIMER_SKIN.update({"panelA": "raw", "panelB": "raw", "grime": "raw", "bolt": "primer"})
 
 HX = 1.7                 # half cell
 WT = 0.5                 # half thickness of the wall
@@ -96,6 +103,69 @@ def teeth(S, arms, snapped=()):
             S.cone(f"toothf{k}", 0.34, 0.1, 0.55, (x + 0.2, y - 0.2, 0.17), "concrete2", verts=4, rot=(0, 78, 25), nocast=False)
             continue
         S.cone(f"tooth{k}", 0.46, 0.06, 0.78, (x, y, 0.39), "concrete2", verts=4, rot=(0, 0, 45), nocast=False)
+
+
+def detail(S, a, b, face, broken, pillar):
+    """S22 detail pass on one south-facing span (x from a to b, face plane y = `face`): alternate grey panels, dark seams,
+    bolt plates, a grime band at the foot, rust drips, chips in the house band and a warning sign.  All of it is flat
+    cladding (no silhouette change) laid out on the 0.85 panel grid so neighbouring cells line up."""
+    def runs(x0, x1):
+        x0, x1 = max(x0, a), min(x1, b)
+        if x1 - x0 < 0.02:
+            return []
+        if broken:
+            return [(p0, p1) for (p0, p1) in ((x0, min(x1, broken[0])), (max(x0, broken[1]), x1)) if p1 - p0 > 0.02]
+        return [(x0, x1)]
+
+    def at(x, w=0.0):
+        return a + 0.02 <= x - w and x + w <= b - 0.02 and not (broken and broken[0] - w < x < broken[1] + w)
+
+    f = face
+    # alternate panel greys, lower and upper strip
+    for k in range(4):
+        x0 = -1.7 + 0.85 * k
+        m = "panelA" if k % 2 == 0 else "panelB"
+        for (p0, p1) in runs(x0, x0 + 0.85):
+            S.bb("pan", p0, p1, f - 0.012, f, 0.45, 0.88, m, 0.0, nocast=True)
+            S.bb("pan", p0, p1, f - 0.012, f, 1.64, WZ - 0.02, m, 0.0, nocast=True)
+    # seams: dark vertical joints, with a bolt plate on the band at each
+    for gx in (-0.85, 0.0, 0.85):
+        if at(gx, 0.04):
+            S.bb("seam", gx - 0.03, gx + 0.03, f - 0.035, f, 0.45, 0.88, "dark", 0.0, nocast=True)
+            S.bb("seam", gx - 0.03, gx + 0.03, f - 0.035, f, 1.64, WZ - 0.02, "dark", 0.0, nocast=True)
+        if at(gx, 0.07):
+            for z in (1.04, 1.44):
+                S.bb("plate", gx - 0.07, gx + 0.07, face - 0.075, face - 0.05, z, z + 0.08, "steel2", 0.0, nocast=True)
+    # bolt row along the cap lip (pitch 0.425, offset half a pitch so it repeats across cells)
+    for k in range(8):
+        x = -1.4875 + 0.425 * k
+        if at(x, 0.05):
+            S.bb("bolt", x - 0.05, x + 0.05, -WT - 0.17, -WT - 0.14, WZ + 0.05, WZ + 0.12, "bolt", 0.0, nocast=True)
+    # joints across the cap top
+    for gx in (-0.85, 0.0, 0.85):
+        if at(gx, 0.03):
+            S.bb("capj", gx - 0.025, gx + 0.025, -WT - 0.14, -0.14, WZ + 0.16, WZ + 0.175, "dark", 0.0, nocast=True)
+    # ground-in grime at the foot of the block and on the plinth front (ragged top edge)
+    for k, h in enumerate((0.17, 0.26, 0.12, 0.22, 0.14, 0.28, 0.16, 0.2, 0.13, 0.24, 0.18, 0.1)):
+        x0 = -1.7 + k * 0.2833
+        for (p0, p1) in runs(x0, x0 + 0.2833):
+            S.bb("grime", p0, p1, f - 0.02, f, 0.42, 0.42 + h, "grime", 0.0, nocast=True)
+            S.bb("grime", p0, p1, -WT - 0.23, -WT - 0.2, 0.0, 0.1 + h * 0.2, "grime", 0.0, nocast=True)
+    # rust drips from the cap and below the band
+    for (x, z1, z0) in ((-1.25, WZ - 0.02, 1.72), (-0.42, WZ - 0.02, 1.86), (0.55, WZ - 0.02, 1.68), (1.3, WZ - 0.02, 1.8),
+                        (-1.45, 0.88, 0.62), (-0.3, 0.88, 0.7), (1.05, 0.88, 0.58)):
+        if at(x, 0.05):
+            S.bb("rust", x - 0.05, x + 0.05, f - 0.04, f, z0, z1, "rust", 0.0, nocast=True)
+    # chips in the house band: bare concrete showing through the paint
+    for (x, w, h, z) in ((-1.3, 0.16, 0.06, 1.49), (0.4, 0.2, 0.06, 1.49), (1.1, 0.12, 0.06, 0.99)):
+        if at(x, w / 2) and not pillar:
+            S.bb("chip", x - w / 2, x + w / 2, face - 0.072, face - 0.045, z, z + h, "concrete", 0.0, nocast=True)
+    # warning sign on the lower strip (once per run)
+    if not pillar and a <= -0.6 and b >= -0.2:
+        sx = -0.425
+        S.bb("sign", sx - 0.17, sx + 0.17, f - 0.05, f, 0.52, 0.83, "yellow", 0.0, nocast=True)
+        S.bb("signbar", sx - 0.03, sx + 0.03, f - 0.07, f - 0.05, 0.62, 0.76, "dark", 0.0, nocast=True)
+        S.bb("signdot", sx - 0.03, sx + 0.03, f - 0.07, f - 0.05, 0.56, 0.6, "dark", 0.0, nocast=True)
 
 
 def damaged_arm(arms):
@@ -145,6 +215,7 @@ def finished(S, arms, dmg=False):
             S.bb("pillar", -PW, PW, -PW, PW, 0.0, WZ + PZ, "concrete", 0.0)
             S.bb("pcap", -PW - 0.06, PW + 0.06, -PW - 0.06, PW + 0.06, WZ + PZ, WZ + PZ + 0.14, "steel", 0.0)
             S.bb("pcap2", -0.2, 0.2, -0.2, 0.2, WZ + PZ + 0.14, WZ + PZ + 0.26, "steel2", 0.0)
+            S.bb("plamp", -0.15, 0.15, -0.215, -0.2, WZ + PZ + 0.16, WZ + PZ + 0.24, "lamp", 0.0, nocast=True)
     # ---- south-facing decoration: house band, trims, panel joints
     inner = PW if pillar else 0.0
     spans = []
@@ -168,10 +239,7 @@ def finished(S, arms, dmg=False):
             parts = [(p0, p1) for (p0, p1) in ((a, min(b, broken[0])), (max(a, broken[1]), b)) if p1 - p0 > 0.01]
         for (p0, p1) in parts:
             S.bb("band", p0, p1, face - 0.05, face, 0.97, 1.55, "house", 0.0, nocast=True)
-        for gx in (-0.85, 0.85):
-            if a + 0.1 < gx < b - 0.1 and not (broken and broken[0] < gx < broken[1]):
-                S.bb("groove", gx - 0.03, gx + 0.03, ys - 0.03, ys, 0.45, 0.88, "concrete2", 0.0, nocast=True)
-                S.bb("groove", gx - 0.03, gx + 0.03, ys - 0.03, ys, 1.64, WZ - 0.02, "concrete2", 0.0, nocast=True)
+        detail(S, a, b, face, broken, face != ys)
     # hazard chevrons at the foot of exposed plinth fronts
     fy = -(pl if pillar else WT + 0.2) - 0.03
     for k in range(8):
