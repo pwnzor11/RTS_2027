@@ -5,10 +5,6 @@ file cited after each question. Recommendations are the lead's, from the researc
 
 ## Open
 
-- 🟡 **Q-78 · 2026-11-12 · Assumed — confirm (session 22).** (1) Kokoro voice output is released CC0 (CREDITS row). (2) The mop-up
-  constants in src/AI/Recruit/MopupPlan.cs (tick 9000, 8 units, 4x ratio, parties of 6) are first guesses until the laptop on/off series.
-  (3) The Harpoon Wagon now counts as anti-air in the AI's production mix (side effect of targets = both). (4) Ship-ready plays a horn,
-  sonar plays when an enemy sub first comes into view. **Recommended: keep all four unless the series or a play-test says otherwise.**
 - 🟡 **Q-73 · 2026-11-12 · Par-time medals (M10-19).** No campaign mission has a par time, so the Profile page awards only Completed and
   No losses. Options: **(a) the owner gives a par time per mission (recommended; the bot walk-through times in docs/balance are a starting point)**;
   (b) par = the bot's tier-3 win time + 50 %; (c) no par medal.
