@@ -97,13 +97,16 @@ public sealed class LockstepHost
     /// <summary>Client hashes compared with the host's.</summary>
     public int HashesCompared { get; private set; }
 
+    /// <summary>Client hashes received but not yet compared (the host has not reached their tick).</summary>
+    public int PendingHashCount => _pendingHashes.Count;
+
     /// <summary>Client hashes that differed from the host's.</summary>
     public int HashMismatches { get; private set; }
 
     /// <summary>Client hashes that could not be checked (the host no longer had that tick).</summary>
     public int HashesUnchecked { get; private set; }
 
-    /// <summary>Commands refused: wrong slot, no slot, dropped sender, or an oversized Input.</summary>
+    /// <summary>Commands refused: wrong slot, no slot, dropped sender, an oversized Input, or too many waiting (input flood).</summary>
     public int RejectedCommands => _scheduler.Rejected + _oversizeInputs;
 
     /// <summary>The first unacknowledged desync: tick, peers, and the sub-hashes the first differing client sent.</summary>
@@ -247,7 +250,7 @@ public sealed class LockstepHost
         {
             _aiScratch.Clear();
             collect(t, _aiScratch);
-            foreach (Command c in _aiScratch) _scheduler.SubmitTrusted(c, t);
+            foreach (Command c in _aiScratch) _scheduler.TrySubmitTrusted(c, t, out _);
         }
         if (!Paused)
         {
