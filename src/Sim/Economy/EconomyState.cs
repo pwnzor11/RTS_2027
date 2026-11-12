@@ -19,6 +19,8 @@ public enum DockStep : byte { Pick = 0, Go = 1, Wait = 2, Enter = 3, Unload = 4 
 public sealed class EconomyState : ISimStatePart
 {
     private const byte Version = 4;
+    /// <summary>Layout written while any harvester has an active field skip (S20); otherwise <see cref="Version"/> keeps the old bytes.</summary>
+    private const byte VersionSkip = 5;
 
     /// <summary>Highest density a cell can hold (design 02 section 2).</summary>
     public const int MaxDensity = 12;
@@ -35,6 +37,10 @@ public sealed class EconomyState : ISimStatePart
     public readonly CellCoord[] Goal;
     /// <summary>Harvest: a cell that turned out unreachable, skipped by the next search.</summary>
     public readonly CellCoord[] BadCell;
+    /// <summary>Harvest: centre of a field the harvester could not reach (S20, SP-04); cells within <see cref="Missions.HarvestMission.SkipRadius"/> of it are skipped until <see cref="SkipUntil"/>.</summary>
+    public readonly CellCoord[] SkipCell;
+    /// <summary>Absolute tick until which <see cref="SkipCell"/> applies; 0 = none.</summary>
+    public readonly int[] SkipUntil;
     /// <summary>Harvest widening search: the next ring (Chebyshev radius) to scan beyond the near search; 0 = not widening.</summary>
     public readonly int[] SearchRing;
     /// <summary>1 = the harvester went idle (Guard) because no refinery existed when it tried to return (D-205, SIM-RULES-13); it
@@ -66,6 +72,8 @@ public sealed class EconomyState : ISimStatePart
         Goal = new CellCoord[v];
         BadCell = new CellCoord[v];
         SearchRing = new int[v];
+        SkipCell = new CellCoord[v];
+        SkipUntil = new int[v];
         NoRefinery = new byte[v];
         DockTarget = new EntityId[v];
         DockState = new byte[v];
@@ -91,20 +99,22 @@ public sealed class EconomyState : ISimStatePart
     /// <summary>Reset every harvester field of a vehicle slot.</summary>
     public void Clear(int i)
     {
-        Owner[i] = default; Cargo[i] = 0; CargoValue[i] = 0; LastFieldCell[i] = default; Goal[i] = default; BadCell[i] = default; SearchRing[i] = 0; NoRefinery[i] = 0;
+        Owner[i] = default; Cargo[i] = 0; CargoValue[i] = 0; LastFieldCell[i] = default; Goal[i] = default; BadCell[i] = default; SearchRing[i] = 0; NoRefinery[i] = 0; SkipCell[i] = default; SkipUntil[i] = 0;
         DockTarget[i] = default; DockState[i] = 0; HarvestState[i] = 0; Timer[i] = 0; Ticket[i] = 0;
     }
 
     /// <summary>True if the slot holds anything other than the cleared default.</summary>
     public bool IsDirty(int i) =>
         !Owner[i].IsNone || Cargo[i] != 0 || CargoValue[i] != 0 || LastFieldCell[i] != default || Goal[i] != default
-        || BadCell[i] != default || SearchRing[i] != 0 || NoRefinery[i] != 0 || !DockTarget[i].IsNone || DockState[i] != 0 || HarvestState[i] != 0 || Timer[i] != 0 || Ticket[i] != 0;
+        || BadCell[i] != default || SkipUntil[i] != 0 || SkipCell[i] != default || SearchRing[i] != 0 || NoRefinery[i] != 0 || !DockTarget[i].IsNone || DockState[i] != 0 || HarvestState[i] != 0 || Timer[i] != 0 || Ticket[i] != 0;
 
     /// <summary>Layout: version, capacities, next ticket, then (slot, fields) for each dirty vehicle slot ended by 0, then
     /// (slot, id) for each occupied dock ended by 0.</summary>
     public void Write(BinaryWriter w)
     {
-        w.Write(Version);
+        bool skips = false;
+        for (int i = 1; i < Owner.Length; i++) if (SkipUntil[i] != 0 || SkipCell[i] != default) { skips = true; break; }
+        w.Write(skips ? VersionSkip : Version);
         w.Write(Owner.Length); w.Write(DockOccupant.Length);
         w.Write(NextTicket);
         for (int i = 1; i < Owner.Length; i++)
@@ -117,6 +127,7 @@ public sealed class EconomyState : ISimStatePart
             WriteId(w, DockTarget[i]);
             w.Write(DockState[i]); w.Write(HarvestState[i]);
             w.Write(Timer[i]); w.Write(Ticket[i]); w.Write(SearchRing[i]); w.Write(NoRefinery[i]);
+            if (skips) { WriteCell(w, SkipCell[i]); w.Write(SkipUntil[i]); }
         }
         w.Write(0);
         for (int b = 1; b < DockOccupant.Length; b++)
@@ -131,7 +142,7 @@ public sealed class EconomyState : ISimStatePart
     public void Read(BinaryReader r)
     {
         byte version = r.ReadByte();
-        if (version != Version) throw new InvalidDataException("economy version mismatch.");
+        if (version != Version && version != VersionSkip) throw new InvalidDataException("economy version mismatch.");
         if (r.ReadInt32() != Owner.Length || r.ReadInt32() != DockOccupant.Length) throw new InvalidDataException("economy capacity mismatch.");
         NextTicket = r.ReadInt32();
         for (int i = 1; i < Owner.Length; i++) Clear(i);
@@ -145,6 +156,7 @@ public sealed class EconomyState : ISimStatePart
             DockTarget[i] = ReadId(r);
             DockState[i] = r.ReadByte(); HarvestState[i] = r.ReadByte();
             Timer[i] = r.ReadInt32(); Ticket[i] = r.ReadInt32(); SearchRing[i] = r.ReadInt32(); NoRefinery[i] = r.ReadByte();
+            if (version == VersionSkip) { SkipCell[i] = ReadCell(r); SkipUntil[i] = r.ReadInt32(); }
         }
         for (int b = r.ReadInt32(); b != 0; b = r.ReadInt32())
         {

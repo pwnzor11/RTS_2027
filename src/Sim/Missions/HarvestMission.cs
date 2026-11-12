@@ -38,6 +38,10 @@ internal static class HarvestMission
     public const int RetryTicks = 40;
     /// <summary>Distance (cells) from the dock cell at which a returning harvester joins the queue.</summary>
     public const int QueueRadius = 3;
+    /// <summary>S20 (SP-04): Chebyshev radius around an unreachable goal whose cells are skipped.</summary>
+    public const int SkipRadius = 4;
+    /// <summary>S20 (SP-04): ticks an unreachable field stays skipped for the harvester that failed to reach it.</summary>
+    public const int SkipTicks = 1200;
     /// <summary>Ticks between dock-free checks while queued.</summary>
     public const int QueuePollTicks = 3;
 
@@ -67,6 +71,7 @@ internal static class HarvestMission
         {
             case HarvestStep.Seek:
             {
+                if (eco.SkipUntil[i] != 0 && sim.Tick >= eco.SkipUntil[i]) { eco.SkipUntil[i] = 0; eco.SkipCell[i] = default; }   // expired: back to the old save layout
                 Locomotion loco = rules.Vehicles[store.TypeIndex[i]].Locomotion;
                 CellCoord last = eco.LastFieldCell[i];
                 CellCoord goal;
@@ -122,7 +127,7 @@ internal static class HarvestMission
                     return 1;
                 }
                 int sleep = MoveMission.StepToward(sim, store, kind, i, goal);
-                if (sleep >= MoveMission.WaitTicks) { eco.BadCell[i] = goal; eco.HarvestState[i] = (byte)HarvestStep.Seek; }
+                if (sleep >= MoveMission.WaitTicks) { eco.BadCell[i] = goal; eco.SkipCell[i] = goal; eco.SkipUntil[i] = sim.Tick + SkipTicks; eco.HarvestState[i] = (byte)HarvestStep.Seek; }
                 return sleep;
             }
             default:
@@ -164,6 +169,8 @@ internal static class HarvestMission
         best = default;
         EconomyRules er = sim.RulesOf(sim.Units.Player[self]).Economy;
         CellCoord at = sim.Units.Position[self].ToCell();
+        bool skipping = sim.Economy.SkipUntil[self] > sim.Tick;
+        CellCoord skipCell = sim.Economy.SkipCell[self];
         for (int r = fromRing; r <= toRing; r++)
         {
             long bestValue = -1, bestD2c = 0, bestD2h = 0, bestKey = 0;
@@ -176,6 +183,7 @@ internal static class HarvestMission
                 {
                     var c = new CellCoord(x, y);
                     if (!IsResource(sim, c) || c == sim.Economy.BadCell[self]) continue;
+                    if (skipping && Occupancy.Chebyshev(c, skipCell) <= SkipRadius) continue;
                     long value = (long)sim.Map.DensityAt(c) * UnitValue(er, sim.Map.OverlayAt(c));
                     if (value < bestValue) continue;
                     long d2c = Sq(c.X - center.X) + Sq(c.Y - center.Y), d2h = Sq(c.X - at.X) + Sq(c.Y - at.Y);
