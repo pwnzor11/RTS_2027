@@ -318,6 +318,7 @@ internal static class HarvestMission
                     int pay = eco.CargoValue[i] / eco.Cargo[i];
                     eco.CargoValue[i] -= pay;
                     eco.Cargo[i]--;
+                    pay = sim.HandicapIncome(player, pay);   // S19 (M13-15)
                     int space = Math.Max(0, sim.StorageCap(player) - sim.Players.Stored[player]);
                     sim.Players.Stored[player] += Math.Min(pay, space);   // the overflow is lost
                     sim.OnStatsHarvested(player, Math.Min(pay, space));   // M4-06

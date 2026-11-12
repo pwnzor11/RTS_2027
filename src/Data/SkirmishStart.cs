@@ -44,7 +44,46 @@ public static class SkirmishStart
 
     /// <summary>As <see cref="Apply(Simulation)"/> with <paramref name="startOf"/> naming the map start (index into the map's start
     /// positions) of each player; null = player p uses start p. Neutral players and players without a start get no building.</summary>
-    public static EntityId[] Apply(Simulation sim, IReadOnlyList<int>? startOf)
+    public static EntityId[] Apply(Simulation sim, IReadOnlyList<int>? startOf) => Apply(sim, startOf, null);
+
+    /// <summary>S19 (M13-15): the size of the small-army start: this many of the faction's cheapest armed tier 1 soldier ...</summary>
+    public const int SmallArmySoldiers = 4;
+
+    /// <summary>... and this many of its cheapest armed tier 1 land vehicle, on top of the faction kit.</summary>
+    public const int SmallArmyVehicles = 2;
+
+    /// <summary>
+    /// S19 (M13-15): the units the "small army" start adds for <paramref name="faction"/>, from the rules alone: <see cref="SmallArmySoldiers"/> of
+    /// the cheapest armed tier 1 soldier of the faction and <see cref="SmallArmyVehicles"/> of its cheapest armed, buildable tier 1 Wheeled or
+    /// Tracked vehicle (cost, then rules order). A faction with neither gets nothing extra.
+    /// </summary>
+    public static IReadOnlyList<(ActorKind Kind, int Type)> SmallArmy(SimRules rules, Faction faction)
+    {
+        var army = new List<(ActorKind, int)>();
+        int soldier = -1;
+        if (rules.Infantry is { } infantry)
+            for (int i = 0; i < infantry.Count; i++)
+            {
+                InfantryType t = infantry[i];
+                if (t.Faction != faction || t.Tier != 1 || t.PrimaryWeapon < 0 || t.Engineer || t.Raider) continue;
+                if (soldier < 0 || t.Cost < infantry[soldier].Cost) soldier = i;
+            }
+        for (int k = 0; soldier >= 0 && k < SmallArmySoldiers; k++) army.Add((ActorKind.Infantry, soldier));
+        int vehicle = -1;
+        for (int i = 0; i < rules.Vehicles.Count; i++)
+        {
+            VehicleType t = rules.Vehicles[i];
+            if (t.Faction != faction || t.Tier != 1 || t.PrimaryWeapon < 0 || !t.Buildable || t.HarvestCapacity > 0) continue;
+            if (t.Locomotion is not (Locomotion.Wheeled or Locomotion.Tracked)) continue;
+            if (vehicle < 0 || t.Cost < rules.Vehicles[vehicle].Cost) vehicle = i;
+        }
+        for (int k = 0; vehicle >= 0 && k < SmallArmyVehicles; k++) army.Add((ActorKind.Vehicle, vehicle));
+        return army;
+    }
+
+    /// <summary>As <see cref="Apply(Simulation, IReadOnlyList{int})"/>; <paramref name="smallArmy"/> (one flag per player, null = none) adds
+    /// <see cref="SmallArmy"/> to the start units of the flagged players.</summary>
+    public static EntityId[] Apply(Simulation sim, IReadOnlyList<int>? startOf, IReadOnlyList<bool>? smallArmy)
     {
         ArgumentNullException.ThrowIfNull(sim);
         SimRules rules = sim.Setup.Rules;
@@ -56,6 +95,12 @@ public static class SkirmishStart
             int startIndex = startOf is null ? p : p < startOf.Count ? startOf[p] : -1;
             if (sim.Players.IsNeutral((byte)p) || startIndex < 0 || startIndex >= map.StartPositions.Count) continue;
             (int type, IReadOnlyList<(ActorKind Kind, int Type)> units) = rules.ResolveStartKit(sim.Players.Faction[p]);
+            if (smallArmy is not null && p < smallArmy.Count && smallArmy[p])
+            {
+                var all = new List<(ActorKind Kind, int Type)>(units);
+                all.AddRange(SmallArmy(rules, sim.Players.Faction[p]));
+                units = all;
+            }
             CellCoord s = map.StartPositions[startIndex];
             if (type < 0)
             {

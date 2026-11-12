@@ -14,8 +14,8 @@ namespace Rts.Game.Saves;
 /// </summary>
 public sealed record GameSaveHeader
 {
-    /// <summary>The header version this build writes and reads. Bump it when the layout changes. Version 1 (two-player skirmish settings) is still read; M4-11 wrote version 2 (map choice, 2 to 4 slots); M3-21 wrote version 3 (appends each AI's saved memory after its slot record; versions 1 and 2 load with the AI starting fresh); M5-09 wrote version 4 (appends one commander byte, 0 or 1, per skirmish slot at the end; versions 1 to 3 load with no commander); M7-14 wrote version 5 (appends one ocean-edge flags byte after the commander bytes when the skirmish map is generated; versions 1 to 4 load with no ocean); M12-05 wrote version 6 (appends one generator-layout byte after the ocean-edge byte when the skirmish map is generated; versions 1 to 5 load as layout 0, the pre-M12 generator, which this build cannot rebuild, so <see cref="GameLoader"/> refuses them with a friendly message); D-205 wrote version 7 (appends the nine control groups at the very end; versions 1 to 6 load with no groups).</summary>
-    public const int CurrentVersion = 7;
+    /// <summary>The header version this build writes and reads. Bump it when the layout changes. Version 1 (two-player skirmish settings) is still read; M4-11 wrote version 2 (map choice, 2 to 4 slots); M3-21 wrote version 3 (appends each AI's saved memory after its slot record; versions 1 and 2 load with the AI starting fresh); M5-09 wrote version 4 (appends one commander byte, 0 or 1, per skirmish slot at the end; versions 1 to 3 load with no commander); M7-14 wrote version 5 (appends one ocean-edge flags byte after the commander bytes when the skirmish map is generated; versions 1 to 4 load with no ocean); M12-05 wrote version 6 (appends one generator-layout byte after the ocean-edge byte when the skirmish map is generated; versions 1 to 5 load as layout 0, the pre-M12 generator, which this build cannot rebuild, so <see cref="GameLoader"/> refuses them with a friendly message); D-205 wrote version 7 (appends the nine control groups at the very end; versions 1 to 6 load with no groups); M13-15 wrote version 8 (appends three bytes per skirmish slot after the groups: handicap percent, starting-credits preset, small-army flag; versions 1 to 7 load with every slot at the defaults).</summary>
+    public const int CurrentVersion = 8;
 
     private const int MaxAiStateBytes = 1 << 22;
 
@@ -128,6 +128,13 @@ public sealed record GameSaveHeader
         if (Version >= 5 && Skirmish?.Map.Generated is { } gen) w.Write((byte)gen.OceanEdges);   // M7-14
         if (Version >= 6 && Skirmish?.Map.Generated is { } gen6) w.Write((byte)gen6.Layout);   // M12-05
         if (Version >= 7) WriteGroups(w);   // D-205
+        if (Version >= 8 && Skirmish is { } opts)   // M13-15: the slot options (handicap, credits preset, small army)
+            foreach (SkirmishSlot slot in opts.Slots)
+            {
+                w.Write((byte)slot.Handicap);
+                w.Write((byte)slot.CreditsPreset);
+                w.Write(slot.SmallArmy);
+            }
     }
 
     private void WriteGroups(BinaryWriter w)
@@ -238,6 +245,19 @@ public sealed record GameSaveHeader
             skirmish = new SkirmishSettings(new MapChoice(null, layered with { Layout = layout }), skirmish.Slots, skirmish.SimSeed);
         }
         IReadOnlyList<IReadOnlyList<UnitKey>> controlGroups = version >= 7 ? ReadGroups(r) : Array.Empty<IReadOnlyList<UnitKey>>();   // D-205
+        if (version >= 8 && skirmish is not null)   // M13-15
+        {
+            var withOptions = new List<SkirmishSlot>(skirmish.Slots.Count);
+            foreach (SkirmishSlot slot in skirmish.Slots)
+            {
+                int handicap = r.ReadByte(), credits = r.ReadByte();
+                bool army = r.ReadBoolean();
+                if (handicap < SimSetup.MinHandicap || handicap > 100) throw new InvalidDataException($"bad slot handicap {handicap}");
+                if (credits >= SlotOptions.CreditsPresets.Count) throw new InvalidDataException($"bad slot credits preset {credits}");
+                withOptions.Add(slot with { Handicap = handicap, CreditsPreset = credits, SmallArmy = army });
+            }
+            skirmish = new SkirmishSettings(skirmish.Map, withOptions, skirmish.SimSeed);
+        }
         return new GameSaveHeader
         {
             Version = version, Mode = mode, MapId = mapId, MapName = mapName, RulesHash = rulesHash, LocalPlayer = local, Tick = tick,

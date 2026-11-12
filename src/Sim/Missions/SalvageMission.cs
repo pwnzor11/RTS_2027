@@ -70,7 +70,7 @@ internal static class SalvageMission
         else
         {
             int space = Math.Max(0, sim.StorageCap(player) - sim.Players.Stored[player]);
-            int paid = Math.Min(d, space);   // the overflow is lost, as for an unload
+            int paid = Math.Min(sim.HandicapIncome(player, d), space);   // the overflow is lost, as for an unload; S19 (M13-15): handicap
             sim.Players.Stored[player] += paid;
             sim.OnStatsHarvested(player, paid);
         }

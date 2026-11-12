@@ -205,7 +205,7 @@ public sealed class SkirmishGame : IDisposable
         SimSetup setup = MakeSetup(rules, settings, map, meta);
         bool neutral = meta.Features.Count > 0;
         var sim = new Simulation(setup);
-        SkirmishStart.Apply(sim, SkirmishStart.ChooseStarts(players, map.StartPositions.Count));
+        SkirmishStart.Apply(sim, SkirmishStart.ChooseStarts(players, map.StartPositions.Count), settings.SmallArmies);   // S19 (M13-15): the small-army start
         if (neutral) MapFeatures.Place(sim, meta, (byte)players);
 
         string aiId = ChooseAiId();
@@ -249,7 +249,10 @@ public sealed class SkirmishGame : IDisposable
             teams = t;
         }
 
-        return new SimSetup(settings.SimSeed, map, total, rules.Sim, rules.RulesHash) { AllowDebug = false, Factions = factions, Teams = teams, LandingMarkers = meta.Landing, NoRebuildDefeat = true };   // S12: landing markers are public map data (D-151 (2))
+        IReadOnlyList<int>? handicap = settings.Handicaps, cash = settings.StartingCash;   // S19 (M13-15): per-slot options; the neutral slot (last) has none
+        if (neutral && handicap is not null) handicap = handicap.Append(SimSetup.DefaultHandicap).ToArray();
+        if (neutral && cash is not null) cash = cash.Append(-1).ToArray();
+        return new SimSetup(settings.SimSeed, map, total, rules.Sim, rules.RulesHash) { AllowDebug = false, Factions = factions, Teams = teams, LandingMarkers = meta.Landing, NoRebuildDefeat = true, Handicap = handicap, StartingCash = cash };   // S12: landing markers are public map data (D-151 (2))
     }
 
     /// <summary>The id a save or replay uses for a generated map: <c>gen:BIOME:SIZE:PLAYERS:SEED</c>.</summary>

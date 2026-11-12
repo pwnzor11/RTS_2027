@@ -68,7 +68,7 @@ public sealed class ControlGroupSaveTests
     public void Header_round_trips_the_groups()
     {
         GameSaveHeader back = RoundTrip(Header(GameSaveHeader.CurrentVersion, Groups().Snapshot()));
-        Assert.Equal(7, back.Version);
+        Assert.Equal(8, back.Version);
         Assert.Equal(ControlGroups.Count, back.ControlGroups.Count);
         Assert.Equal(new[] { V(3), V(4), I(9) }, back.ControlGroups[0]);
         Assert.Empty(back.ControlGroups[1]);

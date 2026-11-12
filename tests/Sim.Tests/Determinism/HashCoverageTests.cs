@@ -24,6 +24,7 @@ public class HashCoverageTests
         ["PathService._startLabels"] = "M13-05: scratch, the start's region labels within one solve",
         ["PathService._floodQueue"] = "M13-05: flood-fill scratch for the region labels",
         ["ProductionState.NoRebuildTicks"] = "M4-17: written only when SimSetup.NoRebuildDefeat is on (so other games keep their bytes); covered by NoRebuildDefeatTests.ClockIsHashed",
+        ["PlayerStore.HandicapPercent"] = "S19 D-205: written only when SimSetup.Handicap has a player off 100 (so other games keep their bytes); covered by HandicapTests.ADefaultSlotOptions_SetupKeepsTheOldHashAndHeaderBytes",
         ["VisionState._ghosts"] = "ghost data is written only where _ghostPresent is set; an absent slot is not state. "
             + "GhostHealth_IsSerialisedWhenPresent covers it with a present ghost.",
     };
