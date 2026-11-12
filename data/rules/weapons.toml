@@ -78,8 +78,8 @@ projectile_speed = 0  # ASSUMED (M3-07)
 warhead = "dir_small_arms"
 
 [dir_rad_cannon]
-damage = 40  # ASSUMED (M3-07)
-range = 1024  # ASSUMED (M3-07)
+damage = 60  # ASSUMED (M3-07) # s22 M13-13 (D-223): 40 -> 60
+range = 1280  # ASSUMED (M3-07) # s22 M13-13 (D-223): 1024 -> 1280
 min_range = 0  # ASSUMED (M3-07)
 rate_of_fire = 40  # ASSUMED (M3-07)
 projectile_speed = 64  # ASSUMED (M3-07)
