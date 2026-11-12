@@ -93,7 +93,11 @@ internal static class CampaignFlow
             // S18 MIS-02: a mission loaded from a save has no mission select under it: back to the main menu, then the ending if it was the last.
             s.Screens.ReplaceAll(new MainMenuScreen(s));
             if (final && LoadEnding(s, svc, faction) is { } end)
+            {
+                s.Screens.Push(new CreditsScreen(s));   // M10-20: the credits roll after the ending slides
                 s.Screens.Push(new EndingScreen(s, new EndingModel(end, svc.Progress(faction)), Path.Combine(DataDir(s), "images", "endings")));
+            }
+
             return;
         }
 
@@ -101,6 +105,9 @@ internal static class CampaignFlow
         ((MissionSelectScreen)s.Screens.Top).Refresh();
         foreach (CampaignScreen c in s.Screens.Screens.OfType<CampaignScreen>()) c.Refresh();   // S18 GS-04: newly opened factions, counts
         if (final && LoadEnding(s, svc, faction) is { } ending)
+        {
+            s.Screens.Push(new CreditsScreen(s));   // M10-20: the credits roll after the ending slides
             s.Screens.Push(new EndingScreen(s, new EndingModel(ending, svc.Progress(faction)), Path.Combine(DataDir(s), "images", "endings")));
+        }
     }
 }

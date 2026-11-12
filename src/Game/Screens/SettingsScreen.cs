@@ -59,6 +59,7 @@ public sealed class SettingsScreen : IScreen
                 new MenuButton("Toggle", ToggleCameraCue)),   // M11-05
             new MenuItem(() => Rts.Game.Ui.Llm.LlmUiText.SectionRow, () => _s.Screens.Push(new Rts.Game.Ui.Llm.LlmSettingsScreen(_s, _path))),
             new MenuItem(() => "About", () => _s.Screens.Push(new AboutScreen(_s))),
+            new MenuItem(() => "Credits", () => _s.Screens.Push(new CreditsScreen(_s))),   // M10-20
             new MenuItem(() => "Back", Back),
         });
     }
