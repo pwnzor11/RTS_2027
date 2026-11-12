@@ -135,10 +135,10 @@ public sealed class LockstepHardeningTests
         Assert.True(rig.Host.Paused);
         Assert.Equal(0, rig.Host.ResumeCountdownMs);
 
-        rig.Host.ContinueAfterDesync();
-        rig.Host.RequestResume();
-        rig.Run(5_000_000);
-        Assert.False(rig.Host.Paused);
+        rig.Host.ContinueAfterDesync();   // the host answered: now a resume is taken (client 1 stays corrupt, so no long run after it)
+        rig.Clients[1].RequestResume();
+        rig.Run(100_000);
+        Assert.True(rig.Host.ResumeCountdownMs > 0);
     }
 
     [Fact]
