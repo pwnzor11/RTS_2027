@@ -63,13 +63,15 @@ public static class SkirmishStart
                 placed[p] = SpawnUnits(sim, (byte)p, s, units);
                 continue;
             }
+            bool flip = SecondHalf(s, map.Width, map.Height);
             BuildingType bt = rules.Buildings[type];
             // centre the footprint on the start cell, then search rings outward in a fixed order
             int cx = s.X - bt.FootprintW / 2, cy = s.Y - bt.FootprintH / 2;
             for (int r = 0; r <= 8 && placed[p] == EntityId.None; r++)
-                for (int dy = -r; dy <= r && placed[p] == EntityId.None; dy++)
-                    for (int dx = -r; dx <= r && placed[p] == EntityId.None; dx++)
+                for (int ky = 0; ky <= 2 * r && placed[p] == EntityId.None; ky++)
+                    for (int kx = 0; kx <= 2 * r && placed[p] == EntityId.None; kx++)
                     {
+                        int dy = Scan(ky, r, flip), dx = Scan(kx, r, flip);
                         if (Math.Max(Math.Abs(dx), Math.Abs(dy)) != r) continue;
                         var tl = new CellCoord(cx + dx, cy + dy);
                         if (tl.X < 0 || tl.Y < 0 || tl.X + bt.FootprintW > map.Width || tl.Y + bt.FootprintH > map.Height) continue;
@@ -90,10 +92,12 @@ public static class SkirmishStart
         var used = new List<CellCoord>();
         bool[]? edgeSea = null;   // M13-01: naval cells connected to the map edge, built on first use
         int next = 0;
+        bool flip = SecondHalf(start, sim.Setup.Map.Width, sim.Setup.Map.Height);
         for (int r = 1; r <= MaxUnitRing && next < units.Count; r++)
-            for (int dy = -r; dy <= r && next < units.Count; dy++)
-                for (int dx = -r; dx <= r && next < units.Count; dx++)
+            for (int ky = 0; ky <= 2 * r && next < units.Count; ky++)
+                for (int kx = 0; kx <= 2 * r && next < units.Count; kx++)
                 {
+                    int dy = Scan(ky, r, flip), dx = Scan(kx, r, flip);
                     if (Math.Max(Math.Abs(dx), Math.Abs(dy)) != r) continue;
                     var c = new CellCoord(start.X + dx, start.Y + dy);
                     if (!sim.Setup.Map.Contains(c) || !sim.Map.BuildingAt(c).IsNone || used.Contains(c)) continue;
@@ -116,9 +120,10 @@ public static class SkirmishStart
             // M13-01: a naval unit searches the whole map (nearest edge-connected sea, ties by row then column); others stop at MaxFallbackRing
             int maxRing = loco == Locomotion.Naval ? Math.Max(sim.Setup.Map.Width, sim.Setup.Map.Height) : MaxFallbackRing;
             for (int r = 1; r <= maxRing && !done; r++)
-                for (int dy = -r; dy <= r && !done; dy++)
-                    for (int dx = -r; dx <= r && !done; dx++)
+                for (int ky = 0; ky <= 2 * r && !done; ky++)
+                    for (int kx = 0; kx <= 2 * r && !done; kx++)
                     {
+                        int dy = Scan(ky, r, flip), dx = Scan(kx, r, flip);
                         if (Math.Max(Math.Abs(dx), Math.Abs(dy)) != r) continue;
                         var c = new CellCoord(start.X + dx, start.Y + dy);
                         if (!sim.Setup.Map.Contains(c) || !sim.Map.BuildingAt(c).IsNone || used.Contains(c)) continue;
@@ -132,6 +137,13 @@ public static class SkirmishStart
         }
         return first;
     }
+
+    /// <summary>M13-10 / DATA-TOOLS-01: true for a start past the map centre (rows, then columns), whose ring searches run in the reverse order so
+    /// that on a half-turn map its kit is the point-mirror image of the first start's kit instead of a translation of it.</summary>
+    private static bool SecondHalf(CellCoord s, int w, int h) => s.Y * 2 > h - 1 || (s.Y * 2 == h - 1 && s.X * 2 > w - 1);
+
+    /// <summary>The k-th offset (0..2r) of a ring row/column scan: ascending from -r, or descending from +r when <paramref name="flip"/>.</summary>
+    private static int Scan(int k, int r, bool flip) => flip ? r - k : k - r;
 
     /// <summary>M13-01: a naval start unit may use the cell when it is edge-connected sea; when the map has no edge-connected water at all,
     /// any water will do (the best available: the ship is never left out, so the player always has a unit and can be defeated).</summary>

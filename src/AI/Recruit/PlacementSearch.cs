@@ -8,7 +8,7 @@ namespace Rts.AI.Recruit;
 
 /// <summary>
 /// Deterministic structure placement for the Recruit AI: candidates are every top-left cell within SearchRadius of the
-/// yard, ordered by distance (turrets: by distance to the map centre, i.e. the front), then (y, x). A candidate must pass
+/// yard, ordered by distance (turrets: by distance to the map centre, i.e. the front), then by distance to the map centre, then (y, x) in an order mirrored for a yard past the centre. A candidate must pass
 /// <see cref="PlayerView.CanPlace"/> (terrain, occupancy, region sealing and the build radius: the AI never re-implements
 /// those rules). Three tiers of extra care are tried in turn: (0) a one-cell gap to every other building and the lanes kept
 /// free, (1) lanes only, (2) anything legal. Lanes = the cells in front of every factory/barracks exit and refinery dock
@@ -16,7 +16,8 @@ namespace Rts.AI.Recruit;
 /// </summary>
 internal sealed class PlacementSearch
 {
-    private const int SearchRadius = 12;
+    internal const int SearchRadius = 12;
+    internal const int WideSearchRadius = 24;
     private const int LaneHalfWidth = 1, LaneDepth = 4;
 
     private readonly record struct Rect(int X0, int Y0, int X1, int Y1)
@@ -28,12 +29,11 @@ internal sealed class PlacementSearch
     private readonly List<Rect> _blocks = new();
     private readonly List<Rect> _lanes = new();
     private readonly List<Rect> _mouths = new();   // D-157: the single dock / exit cells themselves; no tier may build on them
-    private readonly List<(long Score, int X, int Y)> _cands = new();
+    private readonly List<(long Score, long Centre, int X, int Y)> _cands = new();
 
     /// <summary>Finds a legal top-left for <paramref name="type"/> near the yard, or false if none exists.</summary>
     public bool Find(RecruitKnowledge k, int type, bool towardCentre, out CellCoord cell)
     {
-        PlayerView view = k.View;
         SimRules rules = k.Rules;
         BuildingType bt = rules.Buildings[type];
         _blocks.Clear(); _lanes.Clear(); _mouths.Clear();
@@ -46,21 +46,34 @@ internal sealed class PlacementSearch
             if (t.Refinery) _mouths.Add(new Rect(b.Cell.X + t.Dock.X, b.Cell.Y + t.Dock.Y, b.Cell.X + t.Dock.X, b.Cell.Y + t.Dock.Y));
         }
 
+        // M13-10: a base that has filled the window around the yard (a corner base, 30 supply structures) searches a wider window before giving up
+        return Search(k, type, bt, towardCentre, SearchRadius, out cell) || Search(k, type, bt, towardCentre, WideSearchRadius, out cell);
+    }
+
+    private bool Search(RecruitKnowledge k, int type, BuildingType bt, bool towardCentre, int radius, out CellCoord cell)
+    {
+        PlayerView view = k.View;
         int w = bt.FootprintW, h = bt.FootprintH;
         long cx2 = k.Yard.X * 2L + 3, cy2 = k.Yard.Y * 2L + 3;   // yard centre in half cells (3x3 yard)
         if (towardCentre) { cx2 = view.MapWidth; cy2 = view.MapHeight; }
+        // M13-10 / AI-08: ties are broken toward the map centre, then in an order that is flipped for a yard on the far side of the
+        // centre (x when east of it, y when south of it), so under a mirror or half turn of the map the other start's first pick
+        // is the image of this start's pick instead of a translation of it.
+        int flipX = k.Yard.X * 2L + 3 > view.MapWidth ? -1 : 1, flipY = k.Yard.Y * 2L + 3 > view.MapHeight ? -1 : 1;
         _cands.Clear();
-        for (int y = k.Yard.Y - SearchRadius; y <= k.Yard.Y + SearchRadius; y++)
-            for (int x = k.Yard.X - SearchRadius; x <= k.Yard.X + SearchRadius; x++)
+        for (int y = k.Yard.Y - radius; y <= k.Yard.Y + radius; y++)
+            for (int x = k.Yard.X - radius; x <= k.Yard.X + radius; x++)
             {
                 if (x < 0 || y < 0 || x + w > view.MapWidth || y + h > view.MapHeight) continue;
                 long dx = x * 2L + w - cx2, dy = y * 2L + h - cy2;
-                _cands.Add((dx * dx + dy * dy, x, y));
+                long mx = x * 2L + w - view.MapWidth, my = y * 2L + h - view.MapHeight;
+                _cands.Add((dx * dx + dy * dy, mx * mx + my * my, x, y));
             }
-        _cands.Sort(static (a, b) => a.Score != b.Score ? a.Score.CompareTo(b.Score) : a.Y != b.Y ? a.Y.CompareTo(b.Y) : a.X.CompareTo(b.X));
+        _cands.Sort((a, b) => a.Score != b.Score ? a.Score.CompareTo(b.Score) : a.Centre != b.Centre ? a.Centre.CompareTo(b.Centre)
+            : a.Y != b.Y ? flipY * a.Y.CompareTo(b.Y) : flipX * a.X.CompareTo(b.X));
 
         for (int tier = 0; tier <= 2; tier++)
-            foreach (var (_, x, y) in _cands)
+            foreach (var (_, _, x, y) in _cands)
             {
                 var foot = new Rect(x, y, x + w - 1, y + h - 1);
                 if (OnMouth(foot)) continue;   // D-157: a structure on a refinery dock cell or factory exit starves the economy for good
