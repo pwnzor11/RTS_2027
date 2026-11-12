@@ -109,7 +109,7 @@ function RaidTwo()
   Media.MessageKey("a1.raid2")
   local types = {}
   for i = 1, RaidTwoSize() do types[i] = "auth_rifleman" end
-  if Mission.Difficulty() >= 3 then types[#types + 1] = "auth_jeep" end
+  if Mission.Difficulty() >= 4 then types[#types + 1] = "auth_jeep" end
   Raid(types, { x = 44 + Random.Next(4), y = 0 })
   Trigger.Every(40, CheckRaids)
 end
