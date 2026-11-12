@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Rts.Game.Input;
+using Rts.Game.Stats;
 using Rts.Game.Ui.Fonts;
 using Rts.Game.Ui;
 
@@ -27,8 +28,15 @@ public sealed class DebriefScreen : IScreen
         _s = services;
         _model = model;
         _continue = onContinue;
-        _panel = new MenuPanel("Victory: " + model.Title, new[] { new MenuItem(() => model.FinalMission ? "Continue to the ending" : "Continue", _continue) });
+        _panel = new MenuPanel("Victory: " + model.Title, new[]
+        {
+            new MenuItem(() => model.FinalMission ? "Continue to the ending" : "Continue", _continue),
+            new MenuItem(() => "Graphs", () => _s.Screens.Push(GraphsScreen.For(_s, Timeline))),   // M10-17
+        });
     }
+
+    /// <summary>M10-17: the match samples for the Graphs item; the game screen sets it when it pushes the debrief. Null shows "No data yet".</summary>
+    public MatchTimeline? Timeline { get; set; }
 
     /// <inheritdoc />
     public bool BlocksUpdateBelow => true;
