@@ -29,14 +29,16 @@ public sealed class LeftBehindMission01Tests
         Assert.Single(m.Host.Timers);
     }
 
+    // S21 (D-219): the start force now engages the convoy in sight, so an idle player stops it and the mission waits for the Mother Rig
+    // to be deployed instead of ending in a loss. An idle player still never wins, and the script stays clean.
     [Fact]
-    public void Idle_player_eventually_loses_without_a_stall()
+    public void Idle_player_never_wins_and_the_script_stays_clean()
     {
         MissionSession m = MissionSession.Create(TestData.DataDir, Mission);
         var bot = new MissionBot(m);
         bot.RunUntil(() => m.Host.Outcome != MissionOutcome.None, TickLimit, every: 20);
         Assert.Empty(m.Host.Errors);
-        Assert.Equal(MissionOutcome.Lost, m.Host.Outcome);
+        Assert.NotEqual(MissionOutcome.Won, m.Host.Outcome);
     }
 
     [Fact]
