@@ -11,6 +11,8 @@
 "d2.radio.convoys" = "Both convoys burn. The tenancy will eat cold rations this winter."
 "d2.reserve" = "The road reserve is coming from the east!"
 "d2.radio.reserve" = "The tenancy sends its reserve down the east road. Hold the shaft, Commander."
+"d2.reserve2" = "A second reserve is coming down the east road!"
+"d2.radio.reserve2" = "Two posts silent, and a second reserve on the east road. The tenancy is stubborn, Commander. Hold the shaft."
 "d2.radio.depot" = "A road depot. Not required, Commander. Not forbidden either."
 "d2.depot.down" = "The road depot is destroyed."
 "d2.lost" = "The shaft is lost. The raid fails."

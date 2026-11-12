@@ -71,6 +71,8 @@ function PostDown()
     for i = 1, (Mission.Difficulty() >= 5 and 5 or 3) do types[i] = "auth_rifleman" end
     types[#types + 1] = "auth_jeep"
     Reinforce.Edge(1, types, { x = 63, y = 22 + Random.Next(6) }, Map.Center("site"))
+    Media.MessageKey("d2.reserve2")
+    Dialogue.Say(SPEAKER, SPEAKER, "d2.radio.reserve2")
   end
   if state.postsDown >= 3 then
     Objective.Complete("posts")
