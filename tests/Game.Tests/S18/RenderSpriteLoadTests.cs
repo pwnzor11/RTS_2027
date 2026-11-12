@@ -72,13 +72,7 @@ public sealed class RenderSpriteLoadTests : IDisposable
 
     // GAMEREND-06: rules ids that have no sprite file and so draw as placeholders (designed fallback). New gaps must fail this test;
     // when art arrives, remove the id from the list.
-    private static readonly string[] KnownWithoutArt =
-    {
-        "auth_airfield", "auth_atomic_battery", "auth_blockhouse", "auth_bomber", "auth_bulwark", "auth_carrier", "auth_engineer",
-        "auth_flak", "auth_foam_truck", "auth_howitzer", "auth_interceptor", "auth_marksman", "auth_ration_hall", "auth_seismic_mortar",
-        "auth_signals_hq", "dir_ash_sower", "dir_assessor", "dir_bunk_gallery", "dir_committee_hall", "dir_delver", "dir_great_dirigible",
-        "dir_redoubt", "dir_volunteer", "lb_still_rig", "neu_ruin_depot", "neu_ruin_tenement",
-    };
+    private static readonly string[] KnownWithoutArt = System.Array.Empty<string>();   // M14-06: the last 26 ids got art (owner's laptop render)
 
     [Fact]
     public void The_rules_ids_without_a_sprite_are_exactly_the_known_list()
