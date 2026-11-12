@@ -182,6 +182,9 @@ public sealed class LanSession : IDisposable
     /// <summary>True on the host from Resync from host until the save is sent; on a client while it waits for or holds the save.</summary>
     public bool Resyncing => _resyncRequested || _pendingResync is not null;
 
+    /// <summary>Host: why the last "Resync from host" failed (the desync stays open), or null.</summary>
+    public string? ResyncError { get; private set; }
+
     /// <summary>Resyncs completed on this peer.</summary>
     public int ResyncCount { get; private set; }
 
@@ -255,6 +258,7 @@ public sealed class LanSession : IDisposable
     {
         if (_host is null || DesyncTick is null) return;
         DesyncTick = null;
+        ResyncError = null;
         _tap.BlockResume = false;
         _host.ContinueAfterDesync();
         _host.RequestResume();
@@ -583,7 +587,17 @@ public sealed class LanSession : IDisposable
     {
         _resyncRequested = false;
         int tick = host.Tick;
-        byte[] save = CaptureSave();
+        byte[] save;
+        try { save = CaptureSave(); }
+        catch (Exception e) when (e is IOException or InvalidOperationException or ArgumentException or UnauthorizedAccessException)
+        {
+            // M9-14: the desync stays open, so the host keeps Continue and End match; it is told why the resync did not happen
+            Console.Error.WriteLine($"error: resync save not made: {e.Message}");
+            ResyncError = LanText.ResyncFailed.Replace("{reason}", e.Message);
+            AddNotice(ResyncError);
+            return;
+        }
+        ResyncError = null;
         int id = ++_transferId;
         _tap.Broadcast(new NetMessage.ResyncBegin(tick, id));
         foreach (NetMessage.FileChunk chunk in LanResync.Split(save, id)) _tap.Broadcast(chunk);

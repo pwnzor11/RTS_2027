@@ -147,6 +147,7 @@ public sealed class LanOverlay
             }
             lines.Add(LanText.DesyncHost.Replace("{tick}", (session.DesyncTick ?? session.Tick).ToString(System.Globalization.CultureInfo.InvariantCulture)));
             if (session.DesyncReportFolder is { } folder) lines.Add(LanText.DesyncReport.Replace("{folder}", folder));
+            if (session.ResyncError is { } error && !session.Resyncing) lines.Add(error);
             if (session.Resyncing)
             {
                 lines.Add(LanText.Resyncing);

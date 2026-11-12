@@ -98,6 +98,9 @@ public static class LanText
     /// <summary>Notice when the continue save could not be written or loaded. {reason} = why.</summary>
     public const string ContinueFailed = "Could not continue against AI: {reason}";
 
+    /// <summary>Host notice when "Resync from host" could not make its save. {reason} = why.</summary>
+    public const string ResyncFailed = "Resync failed: {reason}. Continue or end the match.";
+
     /// <summary>Bye reason the host sends when it leaves or ends the match.</summary>
     public const string HostClosed = "host left";
 
