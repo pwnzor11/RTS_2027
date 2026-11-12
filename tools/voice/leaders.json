@@ -1,13 +1,13 @@
 {
-  "leader_auth_wrenfield":   { "voice": "", "speed": 1.0, "who": "Brigadier Hester Wrenfield (Authority): field radio, short dry sentences, older officer" },
-  "leader_auth_pell":        { "voice": "", "speed": 1.0, "who": "Administrator Josiah Pell (Authority): county drainage engineer, soft-spoken and exact, sets objectives by teletype" },
-  "leader_auth_dray":        { "voice": "", "speed": 1.0, "who": "Lieutenant Anselm Dray (Authority, Directorate defector): clever conscript-engineer, awkward, speaks plainly and quickly" },
-  "leader_auth_fenn":        { "voice": "", "speed": 1.0, "who": "Chief Surveyor Imogen Fenn (Authority): blunt, tireless survey and logistics lead" },
-  "leader_dir_larkin":       { "voice": "", "speed": 1.0, "who": "The Voice, Odette Larkin (Directorate): former morning-radio announcer, warm and reassuring" },
-  "leader_dir_thrall":       { "voice": "", "speed": 1.0, "who": "Commissar Ignatius Thrall (Directorate): precise, courteous, unhurried, never raises his voice" },
-  "leader_exp_strand":       { "voice": "", "speed": 1.0, "who": "Commissioner Imelda Strand (Expedition): former harbour auditor, polite, precise requests by telex" },
-  "leader_exp_aldersey":     { "voice": "", "speed": 1.0, "who": "Fleet Admiral Corvin Aldersey (Expedition): career convoy officer, unhurried formal sentences" },
-  "leader_exp_roque":        { "voice": "", "speed": 1.0, "who": "Dr. Anselm Roque (Expedition): chief engineer, gentle, distracted, talks to valves" },
-  "leader_exp_kell":         { "voice": "", "speed": 1.0, "who": "Air Marshal Perpetua Kell (Expedition): fleet air arm commander, loud and affectionate, rescue pilot" },
-  "leader_lb_calloway_ross": { "voice": "", "speed": 1.0, "who": "War-captain Jessup Calloway-Ross (Left Behind): rig-master, loud, rough, best driver on the Drift" }
+  "leader_auth_wrenfield":   { "voice": "bf_emma", "speed": 1.0, "who": "Brigadier Hester Wrenfield (Authority): field radio, short dry sentences, older officer" },
+  "leader_auth_pell":        { "voice": "am_fenrir", "speed": 1.0, "who": "Administrator Josiah Pell (Authority): county drainage engineer, soft-spoken and exact, sets objectives by teletype" },
+  "leader_auth_dray":        { "voice": "am_liam", "speed": 1.0, "who": "Lieutenant Anselm Dray (Authority, Directorate defector): clever conscript-engineer, awkward, speaks plainly and quickly" },
+  "leader_auth_fenn":        { "voice": "af_alloy", "speed": 1.0, "who": "Chief Surveyor Imogen Fenn (Authority): blunt, tireless survey and logistics lead" },
+  "leader_dir_larkin":       { "voice": "af_heart", "speed": 1.0, "who": "The Voice, Odette Larkin (Directorate): former morning-radio announcer, warm and reassuring" },
+  "leader_dir_thrall":       { "voice": "bm_george", "speed": 1.0, "who": "Commissar Ignatius Thrall (Directorate): precise, courteous, unhurried, never raises his voice" },
+  "leader_exp_strand":       { "voice": "bf_alice", "speed": 1.0, "who": "Commissioner Imelda Strand (Expedition): former harbour auditor, polite, precise requests by telex" },
+  "leader_exp_aldersey":     { "voice": "bm_fable", "speed": 1.0, "who": "Fleet Admiral Corvin Aldersey (Expedition): career convoy officer, unhurried formal sentences" },
+  "leader_exp_roque":        { "voice": "am_echo", "speed": 1.0, "who": "Dr. Anselm Roque (Expedition): chief engineer, gentle, distracted, talks to valves" },
+  "leader_exp_kell":         { "voice": "bf_isabella", "speed": 1.0, "who": "Air Marshal Perpetua Kell (Expedition): fleet air arm commander, loud and affectionate, rescue pilot" },
+  "leader_lb_calloway_ross": { "voice": "am_onyx", "speed": 1.0, "who": "War-captain Jessup Calloway-Ross (Left Behind): rig-master, loud, rough, best driver on the Drift" }
 }
