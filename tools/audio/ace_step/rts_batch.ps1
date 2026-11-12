@@ -8,6 +8,8 @@ param(
     [string]$Only = ""        # optional: run only jobs whose name contains this text, e.g. -Only battle
 )
 $ErrorActionPreference = "Continue"
+$env:PYTHONIOENCODING = "utf-8"   # ACE-Step prints emoji; the Windows console code page cannot
+$env:PYTHONUTF8 = "1"
 Set-Location -Path $PSScriptRoot
 $python = Join-Path $PSScriptRoot ".venv\Scripts\python.exe"
 if (-not (Test-Path $python)) { Write-Host "Cannot find $python - run 'uv sync' first."; exit 1 }
@@ -35,7 +37,7 @@ for ($take = 1; $take -le $Takes; $take++) {
         [System.IO.File]::WriteAllText($runToml, $text, (New-Object System.Text.UTF8Encoding $false))   # no BOM: Python's toml rejects it
         Log "start  $track take $take"
         $t0 = Get-Date
-        & $python cli.py --config $runToml --log-level WARNING *>> (Join-Path $PSScriptRoot "rts_batch_detail.log")
+        & $python cli.py --config $runToml --log-level INFO *>> (Join-Path $PSScriptRoot "rts_batch_detail.log")
         $mins = [math]::Round(((Get-Date) - $t0).TotalMinutes, 1)
         if ((Test-Path $full) -and (Get-ChildItem -Path $full -Filter "*.wav" -ErrorAction SilentlyContinue)) { Log "done   $track take $take ($mins min)" }
         else { Log "FAILED $track take $take ($mins min) - see rts_batch_detail.log" }
