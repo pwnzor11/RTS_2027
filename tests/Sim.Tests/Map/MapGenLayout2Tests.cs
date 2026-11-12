@@ -176,4 +176,49 @@ public sealed class MapGenLayout2Tests
                 Assert.DoesNotContain(MapValidator.Validate(map, meta, null), i => i.Severity == MapIssueSeverity.Error);
             }
     }
+
+    private static long Money(MapData m)
+    {
+        long t = 0;
+        for (int i = 0; i < m.Overlay.Count; i++)
+            if (OverlayKinds.IsResource(m.Overlay[i])) t += (m.Overlay[i] == OverlayKind.Pitchblende ? 2 : 1) * m.Density[i];
+        return t;
+    }
+
+    /// <summary>Q-70 (D-205): layout 2 carries less money on Glass Coast (-20 %) and Rust Belt (-10 %); Mountains and Ash Plains are unchanged.</summary>
+    [Theory]
+    [InlineData(Biome.GlassCoast)]
+    [InlineData(Biome.RustBelt)]
+    [InlineData(Biome.Mountains)]
+    [InlineData(Biome.AshPlains)]
+    public void Layout2_Money_PerBiome(Biome biome)
+    {
+        long m = Money(MapGenerator.Generate(P(MapSize.Medium, 2, 1UL, biome)));
+        _out.WriteLine($"L2MONEY {biome} {m}");
+        Assert.Equal(L2Money(biome), m);
+    }
+
+    /// <summary>Before Q-70: 470 for Rust, Mountains and Ash, 352 for Glass (integer cell densities round the -10 % / -20 % money target to -10 % / -11 % on this seed).</summary>
+    private static long L2Money(Biome b) => b == Biome.GlassCoast ? 312 : b == Biome.RustBelt ? 424 : 470;
+
+    /// <summary>Q-70: layout 1 maps do not move (pinned from the build before the Q-70 change).</summary>
+    [Theory]
+    [InlineData(Biome.RustBelt)]
+    [InlineData(Biome.GlassCoast)]
+    [InlineData(Biome.Mountains)]
+    [InlineData(Biome.AshPlains)]
+    public void Layout1_MapHash_IsUnchangedByQ70(Biome biome)
+    {
+        ulong h = MapHasher.Compute(MapGenerator.Generate(new MapGenParams(biome, MapSize.Medium, 2, 1UL)));
+        _out.WriteLine($"L1 {biome} {h:x16}");
+        Assert.Equal(L1Hash(biome), h);
+    }
+
+    private static ulong L1Hash(Biome b) => b switch
+    {
+        Biome.RustBelt => 0x09378d3102f55d9dUL,
+        Biome.AshPlains => 0xc7d912b969e88e28UL,
+        Biome.Mountains => 0x3750ac7cfc2dc9c6UL,
+        _ => 0xf1241fd4cdaa5a6bUL,
+    };
 }

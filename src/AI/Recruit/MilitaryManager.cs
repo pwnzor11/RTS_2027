@@ -480,11 +480,13 @@ internal sealed class MilitaryManager
                 _aheadWave = Options.Respond && (Ahead || (EnemyValueSeen == 0 && _targetPlayer >= 0));   // S15: no enemy army seen lately: stage close, a siege wave included
                 _stage = Tactics?.ForwardStage(k, launchGoal) ?? StageCell(k, launchGoal, _aheadWave ? AheadStageCells : _siegeWave ? Math.Max(StageDistanceCells, _defRangeCells + 5) : StageDistanceCells);
                 if (Tactics != null) _stage = Tactics.SafeCell(k, _stage);
+                _stage = AshCells.OffField(k.View, _stage);   // S19 M13-12: the wave does not gather on an ash field
                 _stageB = _stage;
                 if (_prong && Options.MultiFront && second is CellCoord flank)
                 {
                     _stageB = StageCell(k, flank, _aheadWave ? AheadStageCells : StageDistanceCells);   // the second prong approaches from its own side and the two assault together
                     if (Tactics != null) _stageB = Tactics.SafeCell(k, _stageB);
+                    _stageB = AshCells.OffField(k.View, _stageB);   // S19 M13-12
                 }
                 _phase = Phase.Stage;
                 alive = take;

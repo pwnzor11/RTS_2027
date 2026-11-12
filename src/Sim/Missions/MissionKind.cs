@@ -16,4 +16,6 @@ public enum MissionKind : byte { None = 0, Sleep = 1, Guard = 2, Move = 3, Attac
     Harvest = 7, Return = 8, EnterTunnel = 9, Transit = 10, Burrow = 11, Surface = 12, Deploy = 13, Capture = 14,
     Garrisoned = 15,
     Salvage = 16, Pack = 17, Withdraw = 18,
-    Unload = 19, Submerge = 20, Sortie = 21, ConvoySail = 22 }
+    Unload = 19, Submerge = 20, Sortie = 21, ConvoySail = 22,
+    /// <summary>S19 (FAD-05): fire at the cell in <c>Destination</c> until re-ordered.</summary>
+    AttackGround = 23 }

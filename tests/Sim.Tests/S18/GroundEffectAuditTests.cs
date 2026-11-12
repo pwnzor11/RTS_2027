@@ -25,38 +25,32 @@ public sealed class GroundEffectAuditTests
         if (truck && enemyOnIt) w.Run(1, w.Attack(0, ActorKind.Vehicle, t, ActorKind.Building, silo));
         else if (truck)
         {
-            w.Run(1, w.Cmd(0, CommandKind.Attack, t, default, Hot, (int)ActorKind.Vehicle));          // attack with a cell and no target
-            w.Run(1, w.Cmd(0, CommandKind.AttackMove, t, default, new CellCoord(21, 20), (int)ActorKind.Vehicle));
-            w.Run(60);
-            w.Run(1, w.Cmd(0, CommandKind.Guard, t, default, new CellCoord(21, 20), (int)ActorKind.Vehicle));
+            w.Run(1, w.Cmd(0, CommandKind.AttackGround, t, default, Hot, (int)ActorKind.Vehicle));   // S19: the attack-ground order
         }
         w.Run(400 - w.Sim.Tick);   // every variant runs the same 400 ticks, so natural decay is equal
         return w.Sim.Ground.RadiationAt(new CellCoord(Hot.X - 1, Hot.Y));
     }
 
     [Fact]
-    public void Audit_DeconTruck_CannotCleanEmptyGround_OnlyGroundAnEnemyStandsOn()
+    public void AttackGround_IsAppendedAt26_AndStillSpraysEnemyGround()
     {
-        // S18 audit: pins current behaviour of FAD-05; flip the assertion when fixed.
-        Assert.DoesNotContain(Enum.GetNames<CommandKind>(), n => n.Contains("Ground", StringComparison.OrdinalIgnoreCase) || n == "AttackCell");
+        Assert.Equal(26, (int)CommandKind.AttackGround);
         int untouched = RadiationLeft(truck: false, enemyOnIt: false);
-        int ordered = RadiationLeft(truck: true, enemyOnIt: false);
         int withEnemy = RadiationLeft(truck: true, enemyOnIt: true);
         Assert.True(untouched > 0);
-        Assert.Equal(untouched, ordered);       // no order makes the truck spray the bare hot cell
-        Assert.True(withEnemy < untouched);     // it sprays only as a side effect of attacking an enemy actor there
+        Assert.True(withEnemy < untouched);     // attacking an enemy actor there still sprays
     }
 
-    [Fact(Skip = "S18 FAD-05: awaiting owner decision")]
-    public void Desired_DeconTruck_CleansGroundItIsOrderedTo()
+    [Fact]
+    public void DeconTruck_CleansGroundItIsOrderedTo()
     {
         Assert.True(RadiationLeft(truck: true, enemyOnIt: false) < RadiationLeft(truck: false, enemyOnIt: false));
     }
 
     [Fact]
-    public void Audit_UnpoweredSearchlight_StillSeesThroughBlackoutAndRevealsStealth_WhileAnUnpoweredTurretHoldsFire()
+    public void UnpoweredSearchlight_SeesNothingThroughBlackout_AndRevealsNoStealth_LikeAnUnpoweredTurret()
     {
-        // S18 audit: pins current behaviour of FAD-19; flip the assertion when fixed.
+        // S19 (FAD-19 fixed): needs_power now also stops the Searchlight's sight.
         var w = new S18World(keepAlive: false);
         w.Place(1, "auth_conyard", 10, 50);
         w.Place(0, "auth_searchlight", 20, 20);
@@ -70,26 +64,26 @@ public sealed class GroundEffectAuditTests
 
         Assert.True(w.Sim.PowerBand(0) >= 1);                                       // no power at all
         Assert.Equal(max, w.InfHp(enemy));                                           // the turret obeys needs_power
-        Assert.True(w.Sim.CanSeeThroughBlackout(0, new CellCoord(25, 20)));          // the Searchlight does not
-        Assert.True(w.Sim.IsStealthRevealed(0, new CellCoord(26, 20)));
+        Assert.False(w.Sim.CanSeeThroughBlackout(0, new CellCoord(25, 20)));         // nor does the Searchlight now
+        Assert.False(w.Sim.IsStealthRevealed(0, new CellCoord(26, 20)));
         Assert.False(w.Sim.CanSeeThroughBlackout(0, new CellCoord(40, 40)));         // (outside its sight: not covered)
     }
 
     [Fact]
-    public void Audit_UnpoweredBroadcastMast_StillJams()
+    public void UnpoweredBroadcastMast_NoLongerJams()
     {
-        // S18 audit: pins current behaviour of FAD-19; flip the assertion when fixed.
+        // S19 (FAD-19 fixed).
         var w = new S18World(Faction.Authority, Faction.Directorate, keepAlive: false);
         w.Place(0, "auth_conyard", 10, 10);
         w.Place(1, "dir_mast", 40, 40);
         Assert.True(w.Rules.Buildings[w.B("dir_mast")].NeedsPower);
         w.Run(20);
         Assert.True(w.Sim.PowerBand(1) >= 1);
-        Assert.True(w.Sim.IsJammedFor(0, new CellCoord(44, 44)));
+        Assert.False(w.Sim.IsJammedFor(0, new CellCoord(44, 44)));
         Assert.False(w.Sim.IsJammedFor(0, new CellCoord(52, 52)));
     }
 
-    [Fact(Skip = "S18 FAD-19: awaiting owner decision")]
+    [Fact]
     public void Desired_UnpoweredSearchlightAndMast_DoNothing()
     {
         var w = new S18World(Faction.Authority, Faction.Directorate, keepAlive: false);

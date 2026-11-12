@@ -31,6 +31,20 @@ public static class CardModelBuilder
         return list;
     }
 
+    /// <summary>
+    /// S19 (M13-15): the three stance buttons (aggressive, defensive, hold fire), the one every selected unit shares drawn active
+    /// (<paramref name="shared"/> null = a mixed selection, none active).
+    /// </summary>
+    public static IReadOnlyList<CardButton> StanceButtons(UnitStance? shared) => new[]
+    {
+        StanceButton(GameAction.StanceAggressive, UiText.StanceAggressive, shared == UnitStance.Aggressive),
+        StanceButton(GameAction.StanceDefensive, UiText.StanceDefensive, shared == UnitStance.Defensive),
+        StanceButton(GameAction.StanceHoldFire, UiText.StanceHoldFire, shared == UnitStance.HoldFire),
+    };
+
+    private static CardButton StanceButton(GameAction action, string key, bool active) =>
+        new(CardButtonKind.Order, action, UiText.Get(key), KeyNames.Of(GameKeys.Active.Get(action))) { Active = active };
+
     /// <summary>The buttons of a building: Sell and Repair.</summary>
     public static IReadOnlyList<CardButton> BuildingButtons() => new[]
     {
@@ -61,7 +75,8 @@ public static class CardModelBuilder
 
         var cameos = new List<CardCameo>(selection.Count);
         UnitView? single = null;
-        bool deploy = false;
+        bool deploy = false, armed = false, first = true;
+        UnitStance? shared = null;
         foreach (UnitKey key in selection.Units)
         {
             UnitView? found = null;
@@ -72,10 +87,18 @@ public static class CardModelBuilder
             (string id, int max) = IdAndMax(rules, unit);
             cameos.Add(new CardCameo(key, id, unit.Health, max, controlGroups?.GroupOf(key) ?? 0));
             if (M3Orders.DeployModeOf(rules, key.Kind, unit.TypeIndex) != DeployMode.None) deploy = true;
+            int primary = unit.Kind == UnitKind.Vehicle ? rules.Vehicles[unit.TypeIndex].PrimaryWeapon : rules.Infantry[unit.TypeIndex].PrimaryWeapon;
+            if (primary >= 0)   // M13-15: only armed units take a stance
+            {
+                armed = true;
+                UnitStance stance = source.Sim.StanceOf(new ActorRef(key.Kind, key.Id));
+                if (first) shared = stance; else if (shared != stance) shared = null;
+                first = false;
+            }
         }
 
         if (cameos.Count == 0) return CardModel.Empty;
-        if (cameos.Count == 1 && single is UnitView only) return ForUnit(source, only, cameos[0], deploy);
+        if (cameos.Count == 1 && single is UnitView only) return ForUnit(source, only, cameos[0], deploy, armed ? StanceButtons(shared) : Array.Empty<CardButton>());
 
         IReadOnlyList<CardCameo> ordered = CardGrouping.Order(cameos);
         IReadOnlyList<CardGroup> groups = CardGrouping.Groups(ordered, CameoNames.Display);
@@ -85,7 +108,7 @@ public static class CardModelBuilder
             Title = CardGrouping.Header(ordered.Count, groups),
             Cameos = ordered,
             Groups = groups,
-            Buttons = UnitButtons(deploy),
+            Buttons = armed ? UnitButtons(deploy).Concat(StanceButtons(shared)).ToList() : UnitButtons(deploy),
         };
     }
 
@@ -94,7 +117,7 @@ public static class CardModelBuilder
             ? (rules.Vehicles[u.TypeIndex].Id, rules.Vehicles[u.TypeIndex].MaxHealth)
             : (rules.Infantry[u.TypeIndex].Id, rules.Infantry[u.TypeIndex].MaxHealth);
 
-    private static CardModel ForUnit(SimSnapshotSource source, UnitView unit, CardCameo cameo, bool deploy)
+    private static CardModel ForUnit(SimSnapshotSource source, UnitView unit, CardCameo cameo, bool deploy, IReadOnlyList<CardButton> stances)
     {
         SimRules r = source.Rules;
         UnitKey key = cameo.Key;
@@ -158,7 +181,7 @@ public static class CardModelBuilder
             Stats = stats,
             Lines = lines,
             Cameos = new[] { cameo },
-            Buttons = UnitButtons(deploy),
+            Buttons = stances.Count == 0 ? UnitButtons(deploy) : UnitButtons(deploy).Concat(stances).ToList(),
         };
     }
 

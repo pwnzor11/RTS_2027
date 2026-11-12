@@ -78,6 +78,16 @@ public sealed partial class Simulation
         }
     }
 
+    /// <summary>D-205 (FACTION-LE-04): what a vehicle is worth to a kill or a wreck: the cost of the building a packed rig carries
+    /// (RigState.PackedFrom) when that is above 0, else the type's rules cost (real for the non-buildable tender, Command Ship and packed form).</summary>
+    internal int VehicleWorth(int i)
+    {
+        Rules.SimRules rules = RulesOf(_units.Player[i]);
+        int from = _rigs.PackedFrom[i] - 1;
+        int carried = from >= 0 && from < rules.Buildings.Count ? rules.Buildings[from].Cost : 0;
+        return carried > 0 ? carried : rules.Vehicles[_units.TypeIndex[i]].Cost;   // the free Mother Rig building falls back to the packed form's cost
+    }
+
     /// <summary>RunCleanup, for a dying vehicle or building (any team) before it is removed: add a wreck when wreck_ticks &gt; 0.</summary>
     private void SpawnWreckFor(ActorKind kind, int i)
     {
@@ -87,7 +97,7 @@ public sealed partial class Simulation
         int cost; CellCoord cell;
         if (kind == ActorKind.Vehicle)
         {
-            cost = RulesOf(_units.Player[i]).Vehicles[_units.TypeIndex[i]].Cost;
+            cost = VehicleWorth(i);
             cell = _units.Position[i].ToCell();
         }
         else

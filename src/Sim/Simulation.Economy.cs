@@ -97,6 +97,16 @@ public sealed partial class Simulation
                 if (_economy.IsDirty(i)) _economy.Clear(i);
                 continue;
             }
+            if (_economy.NoRefinery[i] != 0)
+            {   // D-205 (SIM-RULES-13): an idle harvester that gave up for lack of a refinery resumes once one exists
+                if (_units.NextMission[i] != MissionKind.Guard && (_units.Mission[i] != MissionKind.Guard || _units.NextMission[i] != MissionKind.None)) _economy.NoRefinery[i] = 0;   // any other order cancels
+                else if (_units.Mission[i] == MissionKind.Guard && _units.NextMission[i] == MissionKind.None && !HarvestMission.PickRefinery(this, _units.Player[i], _units.Position[i].ToCell()).IsNone)
+                {
+                    _economy.NoRefinery[i] = 0;
+                    Queue(_units, i, _economy.Cargo[i] > 0 ? MissionKind.Return : MissionKind.Harvest, default, default);
+                    continue;
+                }
+            }
             if (_units.Mission[i] != MissionKind.None || _units.NextMission[i] != MissionKind.None) continue;
             if (RulesOf(_units.Player[i]).Vehicles[_units.TypeIndex[i]].HarvestCapacity <= 0) continue;
             _economy.Touch(i, _units.Slots.IdOf(i));

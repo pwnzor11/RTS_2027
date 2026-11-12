@@ -11,6 +11,9 @@ namespace Rts.Game.Ui.Card;
 /// <param name="KeyText">The bound key as shown on screen, or empty.</param>
 public sealed record CardButton(CardButtonKind Kind, GameAction Action, string Label, string KeyText)
 {
+    /// <summary>True when the button shows a state that is on (the stance every selected unit shares, M13-15): drawn as an active button.</summary>
+    public bool Active { get; init; }
+
     /// <summary>The text drawn on the button: the label and the key.</summary>
     public string Text => KeyText.Length == 0 ? Label : Label + " " + KeyText;
 }

@@ -51,27 +51,6 @@ public sealed class SubmarineAuditTests
     }
 
     [Fact]
-    public void Audit_DivedSub_KillsACoastalTurret_AndIsNeverHitOrTargeted()
-    {
-        // S18 audit: pins current behaviour of FACTION-LE-05 / FACTION-MATH-02 (and D-143 "a dived sub can still fire"); flip when fixed.
-        var (w, sub, turret, tank) = Coast();
-        int max = w.VehHp(sub);
-        w.Run(1, w.Cmd(0, CommandKind.Deploy, sub, default, default, (int)ActorKind.Vehicle));   // dive
-        Assert.True(w.Sim.Naval.Submerged[sub.Index]);
-        w.Run(1,
-            w.Attack(0, ActorKind.Vehicle, sub, ActorKind.Building, turret),
-            w.Attack(1, ActorKind.Vehicle, tank, ActorKind.Vehicle, sub));   // the defender's explicit order is refused
-        var subRef = new ActorRef(ActorKind.Vehicle, sub);
-        Assert.False(w.Sim.IsValidTarget(1, subRef));
-        Assert.False(w.Sim.IsValidAutoTarget(1, subRef));
-        w.Run(700);
-
-        Assert.Equal(0, w.BldHp(turret));                // the turret is dead
-        Assert.True(w.Sim.Naval.Submerged[sub.Index]);   // the sub never had to surface
-        Assert.Equal(max, w.VehHp(sub));                 // and took no damage at all
-    }
-
-    [Fact]
     public void Audit_SameCoast_SurfacedSub_IsShotByTheTurretAndTheTank()
     {
         // the comparison case: the defenders are in range and do fight a sub they can see
@@ -82,7 +61,7 @@ public sealed class SubmarineAuditTests
         Assert.True(w.VehHp(sub) < max);
     }
 
-    [Fact(Skip = "S18 FACTION-LE-05: awaiting owner decision")]
+    [Fact]
     public void Desired_DivedSubThatFiresOnACoast_CanBeAnswered()
     {
         var (w, sub, turret, _) = Coast();
@@ -94,32 +73,6 @@ public sealed class SubmarineAuditTests
     }
 
     [Fact]
-    public void Audit_SurfacedSub_KeepsSubmergedArmour_AndEveryExpeditionWeaponDoesOnePointToIt()
-    {
-        // S18 audit: pins current behaviour of FACTION-LE-06; flip the assertion when fixed.
-        SimRules r = S18World.RealRules;
-        Assert.Equal(ArmorClass.Submerged, r.Vehicles.Single(v => v.Id == "exp_missile_sub").Armor);
-        WeaponType[] canHitSurface = r.Weapons
-            .Where(w => w.Id.StartsWith("exp_", StringComparison.Ordinal))
-            .Where(w => w.Targets is WeaponTargets.Ground or WeaponTargets.Both or WeaponTargets.Naval or WeaponTargets.NavalAndSubmerged).ToArray();
-        Assert.True(canHitSurface.Length >= 10);
-        Assert.All(canHitSurface, w => Assert.True(Simulation.ComputeDamage(w.Damage, r.Warheads[w.Warhead], ArmorClass.Submerged) == 1, w.Id));
-
-        // scenario: an enemy Destroyer shells a SURFACED sub for 10 seconds
-        var world = new S18World(Faction.Expedition, Faction.Expedition, waterFromX: 40, keepAlive: false);
-        world.Place(0, "exp_landing_depot", 30, 10);
-        world.Place(1, "exp_landing_depot", 30, 50);
-        EntityId sub = world.Veh(0, "exp_missile_sub", 44, 30);
-        EntityId destroyer = world.Veh(1, "exp_destroyer", 44, 25);
-        int max = world.VehHp(sub);
-        world.Run(1, world.Attack(1, ActorKind.Vehicle, destroyer, ActorKind.Vehicle, sub));
-        world.Run(200);
-        Assert.False(world.Sim.Naval.Submerged[sub.Index]);
-        int lost = max - world.VehHp(sub);
-        Assert.InRange(lost, 3, 8);   // 30-damage shells every 1.5 s: one hit point each
-    }
-
-    [Fact(Skip = "S18 FACTION-LE-06: awaiting owner decision")]
     public void Desired_SurfacedSub_TakesRealDamageFromADestroyerGun()
     {
         var world = new S18World(Faction.Expedition, Faction.Expedition, waterFromX: 40, keepAlive: false);

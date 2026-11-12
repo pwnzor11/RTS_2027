@@ -29,6 +29,8 @@ public sealed class AlertDeriver
 
         if (Has(AudioEventKind.ConstructionComplete)) alerts.Add(new GameAlert(AlertKind.ConstructionComplete, tick));
         if (Has(AudioEventKind.LowPower)) alerts.Add(new GameAlert(AlertKind.LowPower, tick));
+        if (Has(AudioEventKind.UpgradeComplete)) alerts.Add(new GameAlert(AlertKind.UpgradeComplete, tick));    // M13-15 (the sound already exists)
+        if (Has(AudioEventKind.LowFunds)) alerts.Add(new GameAlert(AlertKind.ProductionBlocked, tick));         // M13-15: the stalled-queue event
         if (!stepped) return;
 
         IReadOnlyList<FxEvent> fx = cur.FxEvents ?? Array.Empty<FxEvent>();

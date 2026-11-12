@@ -47,7 +47,11 @@ public sealed partial class Simulation
                 }
                 break;
             case CommandKind.Stop:
-                if (OwnsSubject(c, out store)) Queue(store!, c.Subject.Index, MissionKind.Stop, default, default);
+                if (OwnsSubject(c, out store))
+                {
+                    if (store == _units) _economy.NoRefinery[c.Subject.Index] = 0;   // D-205: a player Stop parks a harvester for good
+                    Queue(store!, c.Subject.Index, MissionKind.Stop, default, default);
+                }
                 break;
             case CommandKind.Scatter:
                 if (OwnsSubject(c, out store)) RequestScatter((ActorKind)c.Arg, store!, c.Subject.Index);

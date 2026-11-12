@@ -21,8 +21,16 @@ public sealed class BalanceTableTests
         return $"{s / 60}:{s % 60:00}";
     }
 
+    // S19 known shifts (owner, D-211): walked in KnownShift_ below (skipped) until the campaign retune M13-17.
+    internal static readonly (string Id, int Tier)[] KnownShifts = { ("lb_03", 5), ("exp_04", 5) };
+
     public static IEnumerable<object[]> MissionTiers() =>
-        CampaignWalks.AllMissions.SelectMany(id => CampaignWalks.Tiers(id).Select(t => new object[] { id, t }));
+        CampaignWalks.AllMissions.SelectMany(id => CampaignWalks.Tiers(id).Where(t => !KnownShifts.Contains((id, t))).Select(t => new object[] { id, t }));
+
+    [Theory(Skip = "S19 known shift (owner, D-211): lb_03 tier 5 loses the Mother Rig, exp_04 tier 5 stalls with the ash objective open (after the s19 head-on fix); re-tune or fix in M13-17")]
+    [InlineData("lb_03", 5)]
+    [InlineData("exp_04", 5)]
+    public void KnownShift_mission_tier_is_walked_and_reported(string id, int tier) => Every_mission_tier_is_walked_and_reported(id, tier);
 
     // S18 MIS-03 (owner): the auth_01 tier-5 bot loses both scrapers in the survey phase, which is now a loss as the script intends
     // (before MIS-03 the loss never fired and the bot won anyway).

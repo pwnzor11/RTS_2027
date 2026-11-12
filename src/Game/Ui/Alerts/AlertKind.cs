@@ -25,4 +25,12 @@ public enum AlertKind
     SuperweaponReady,
     /// <summary>The local player's superweapon went off.</summary>
     SuperweaponLaunched,
+    /// <summary>M13-15: a research finished.</summary>
+    UpgradeComplete,
+    /// <summary>M13-15: a unit lane stood empty for a while with a factory standing.</summary>
+    ProductionIdle,
+    /// <summary>M13-15: production is stalled (the sound for it already exists).</summary>
+    ProductionBlocked,
+    /// <summary>M13-15: a harvester has been idle for a while.</summary>
+    HarvesterIdle,
 }

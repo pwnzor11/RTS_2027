@@ -25,32 +25,33 @@ public sealed class MorphCostAuditTests
 
     private static Command Upgrade(Simulation sim, EntityId b) => BurrowWorld.Cmd(sim, CommandKind.Upgrade, b, default, BurrowWorld.BoreHead);
 
-    // S18 audit: pins current behaviour of SIM-RULES-02; flip the assertion when fixed.
     [Fact]
-    public void Audit_Morph_IsRefused_WhenTheMoneyIsInStoredAndCashIsShort()
+    public void Morph_IsAccepted_WhenTheMoneyIsInStoredAndCashIsShort()
     {
         var (sim, hatch) = Scene(cash: 299, stored: 2000);   // the morph costs 400 - 100 = 300
-        Assert.Equal(2299, sim.Funds(0));
         sim.Step(new[] { Upgrade(sim, hatch) });
-        Assert.Equal(0, sim.Tunnels.BuildingMorphType[hatch.Index]);        // refused
-        Assert.Equal(299, sim.Players.Cash[0]);
-        Assert.Equal(2000, sim.Players.Stored[0]);                          // Stored survived the tick, so it really was available
+        Assert.Equal(BurrowWorld.BoreHead + 1, sim.Tunnels.BuildingMorphType[hatch.Index]);
     }
 
-    // S18 audit: pins current behaviour of SIM-RULES-02; flip the assertion when fixed.
     [Fact]
-    public void Audit_Morph_IsChargedToCashOnly_AndIsNotCountedAsSpent()
+    public void Morph_IsCountedAsSpent()
     {
         var (sim, hatch) = Scene(cash: 300, stored: 2000);
         int spentBefore = sim.Stats.CreditsSpent[0];
         sim.Step(new[] { Upgrade(sim, hatch) });
-        Assert.Equal(BurrowWorld.BoreHead + 1, sim.Tunnels.BuildingMorphType[hatch.Index]);
-        Assert.Equal(0, sim.Players.Cash[0]);
-        Assert.Equal(2000, sim.Players.Stored[0]);
-        Assert.Equal(spentBefore, sim.Stats.CreditsSpent[0]);                   // bypasses Spend, so the score screen misses it
+        Assert.Equal(spentBefore + 300, sim.Stats.CreditsSpent[0]);
     }
 
-    [Fact(Skip = "S18 SIM-RULES-02: awaiting owner decision")]
+    [Fact]
+    public void Morph_IsRefused_WhenFundsAreShort()
+    {
+        var (sim, hatch) = Scene(cash: 100, stored: 199);
+        sim.Step(new[] { Upgrade(sim, hatch) });
+        Assert.Equal(0, sim.Tunnels.BuildingMorphType[hatch.Index]);
+        Assert.Equal(299, sim.Funds(0));
+    }
+
+    [Fact]
     public void Desired_Morph_IsPaidFromFunds_CashFirstThenStored()
     {
         var (sim, hatch) = Scene(cash: 100, stored: 2000);

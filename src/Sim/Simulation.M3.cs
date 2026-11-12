@@ -65,6 +65,7 @@ public sealed partial class Simulation
     {
         RunHardening();   // M3-04: recompute enclosure when Ground.HardeningDirty
         RunRadiation();   // M3-05: decay + damage
+        RunAshfall();     // S19 M13-12: soldiers on an ashfall field
         RunBlackout();    // M3-05: Blackout timers
     }
 
@@ -109,7 +110,11 @@ public sealed partial class Simulation
         if (!_units.Slots.IsAlive(c.Subject) || _units.Player[c.Subject.Index] != c.Player) return;
         Rules.VehicleType vt = RulesOf(c.Player).Vehicles[_units.TypeIndex[c.Subject.Index]];
         if (vt.Submerges) { ApplySubmerge(c); return; }   // M7-05
-        if (vt.Passengers > 0 || vt.VehicleSlots > 0) ApplyUnload(c);   // M7-04b: vehicle_slots
+        if (vt.Passengers > 0 || vt.VehicleSlots > 0)   // M7-04b: vehicle_slots
+        {
+            if (IsLandingTransport(vt)) ApplyLandingDeploy(c, vt);   // D-205 (SIM-RULES-06): timed unload, never all at once
+            else ApplyUnload(c);
+        }
         else if (vt.DeploysInto >= 0) ApplyDeployInto(c);
     }
 
@@ -189,7 +194,7 @@ public sealed partial class Simulation
         CellCoord cell = PositionAt(kind, i).ToCell();
         if (layer is ActorLayer.Tunnel or ActorLayer.Passenger or ActorLayer.Garrisoned) return true;   // inside a network, a transport or a garrison (M4): never seen
         if (layer is ActorLayer.Burrowed or ActorLayer.Surfacing) return !IsSeismicRevealed(viewer, cell);
-        if (IsSubmergedShip(kind, i)) return !IsSonarRevealed(viewer, cell);   // M7-05
+        if (IsHiddenSub(kind, i)) return !IsSonarRevealed(viewer, cell);   // M7-05
         return IsStealthedNow(kind, i) && !IsStealthRevealed(viewer, cell);
     }
 }

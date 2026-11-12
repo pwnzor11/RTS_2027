@@ -44,7 +44,46 @@ public static class SkirmishStart
 
     /// <summary>As <see cref="Apply(Simulation)"/> with <paramref name="startOf"/> naming the map start (index into the map's start
     /// positions) of each player; null = player p uses start p. Neutral players and players without a start get no building.</summary>
-    public static EntityId[] Apply(Simulation sim, IReadOnlyList<int>? startOf)
+    public static EntityId[] Apply(Simulation sim, IReadOnlyList<int>? startOf) => Apply(sim, startOf, null);
+
+    /// <summary>S19 (M13-15): the size of the small-army start: this many of the faction's cheapest armed tier 1 soldier ...</summary>
+    public const int SmallArmySoldiers = 4;
+
+    /// <summary>... and this many of its cheapest armed tier 1 land vehicle, on top of the faction kit.</summary>
+    public const int SmallArmyVehicles = 2;
+
+    /// <summary>
+    /// S19 (M13-15): the units the "small army" start adds for <paramref name="faction"/>, from the rules alone: <see cref="SmallArmySoldiers"/> of
+    /// the cheapest armed tier 1 soldier of the faction and <see cref="SmallArmyVehicles"/> of its cheapest armed, buildable tier 1 Wheeled or
+    /// Tracked vehicle (cost, then rules order). A faction with neither gets nothing extra.
+    /// </summary>
+    public static IReadOnlyList<(ActorKind Kind, int Type)> SmallArmy(SimRules rules, Faction faction)
+    {
+        var army = new List<(ActorKind, int)>();
+        int soldier = -1;
+        if (rules.Infantry is { } infantry)
+            for (int i = 0; i < infantry.Count; i++)
+            {
+                InfantryType t = infantry[i];
+                if (t.Faction != faction || t.Tier != 1 || t.PrimaryWeapon < 0 || t.Engineer || t.Raider) continue;
+                if (soldier < 0 || t.Cost < infantry[soldier].Cost) soldier = i;
+            }
+        for (int k = 0; soldier >= 0 && k < SmallArmySoldiers; k++) army.Add((ActorKind.Infantry, soldier));
+        int vehicle = -1;
+        for (int i = 0; i < rules.Vehicles.Count; i++)
+        {
+            VehicleType t = rules.Vehicles[i];
+            if (t.Faction != faction || t.Tier != 1 || t.PrimaryWeapon < 0 || !t.Buildable || t.HarvestCapacity > 0) continue;
+            if (t.Locomotion is not (Locomotion.Wheeled or Locomotion.Tracked)) continue;
+            if (vehicle < 0 || t.Cost < rules.Vehicles[vehicle].Cost) vehicle = i;
+        }
+        for (int k = 0; vehicle >= 0 && k < SmallArmyVehicles; k++) army.Add((ActorKind.Vehicle, vehicle));
+        return army;
+    }
+
+    /// <summary>As <see cref="Apply(Simulation, IReadOnlyList{int})"/>; <paramref name="smallArmy"/> (one flag per player, null = none) adds
+    /// <see cref="SmallArmy"/> to the start units of the flagged players.</summary>
+    public static EntityId[] Apply(Simulation sim, IReadOnlyList<int>? startOf, IReadOnlyList<bool>? smallArmy)
     {
         ArgumentNullException.ThrowIfNull(sim);
         SimRules rules = sim.Setup.Rules;
@@ -56,6 +95,12 @@ public static class SkirmishStart
             int startIndex = startOf is null ? p : p < startOf.Count ? startOf[p] : -1;
             if (sim.Players.IsNeutral((byte)p) || startIndex < 0 || startIndex >= map.StartPositions.Count) continue;
             (int type, IReadOnlyList<(ActorKind Kind, int Type)> units) = rules.ResolveStartKit(sim.Players.Faction[p]);
+            if (smallArmy is not null && p < smallArmy.Count && smallArmy[p])
+            {
+                var all = new List<(ActorKind Kind, int Type)>(units);
+                all.AddRange(SmallArmy(rules, sim.Players.Faction[p]));
+                units = all;
+            }
             CellCoord s = map.StartPositions[startIndex];
             if (type < 0)
             {
@@ -63,13 +108,15 @@ public static class SkirmishStart
                 placed[p] = SpawnUnits(sim, (byte)p, s, units);
                 continue;
             }
+            bool flip = SecondHalf(s, map.Width, map.Height);
             BuildingType bt = rules.Buildings[type];
             // centre the footprint on the start cell, then search rings outward in a fixed order
             int cx = s.X - bt.FootprintW / 2, cy = s.Y - bt.FootprintH / 2;
             for (int r = 0; r <= 8 && placed[p] == EntityId.None; r++)
-                for (int dy = -r; dy <= r && placed[p] == EntityId.None; dy++)
-                    for (int dx = -r; dx <= r && placed[p] == EntityId.None; dx++)
+                for (int ky = 0; ky <= 2 * r && placed[p] == EntityId.None; ky++)
+                    for (int kx = 0; kx <= 2 * r && placed[p] == EntityId.None; kx++)
                     {
+                        int dy = Scan(ky, r, flip), dx = Scan(kx, r, flip);
                         if (Math.Max(Math.Abs(dx), Math.Abs(dy)) != r) continue;
                         var tl = new CellCoord(cx + dx, cy + dy);
                         if (tl.X < 0 || tl.Y < 0 || tl.X + bt.FootprintW > map.Width || tl.Y + bt.FootprintH > map.Height) continue;
@@ -90,10 +137,12 @@ public static class SkirmishStart
         var used = new List<CellCoord>();
         bool[]? edgeSea = null;   // M13-01: naval cells connected to the map edge, built on first use
         int next = 0;
+        bool flip = SecondHalf(start, sim.Setup.Map.Width, sim.Setup.Map.Height);
         for (int r = 1; r <= MaxUnitRing && next < units.Count; r++)
-            for (int dy = -r; dy <= r && next < units.Count; dy++)
-                for (int dx = -r; dx <= r && next < units.Count; dx++)
+            for (int ky = 0; ky <= 2 * r && next < units.Count; ky++)
+                for (int kx = 0; kx <= 2 * r && next < units.Count; kx++)
                 {
+                    int dy = Scan(ky, r, flip), dx = Scan(kx, r, flip);
                     if (Math.Max(Math.Abs(dx), Math.Abs(dy)) != r) continue;
                     var c = new CellCoord(start.X + dx, start.Y + dy);
                     if (!sim.Setup.Map.Contains(c) || !sim.Map.BuildingAt(c).IsNone || used.Contains(c)) continue;
@@ -116,9 +165,10 @@ public static class SkirmishStart
             // M13-01: a naval unit searches the whole map (nearest edge-connected sea, ties by row then column); others stop at MaxFallbackRing
             int maxRing = loco == Locomotion.Naval ? Math.Max(sim.Setup.Map.Width, sim.Setup.Map.Height) : MaxFallbackRing;
             for (int r = 1; r <= maxRing && !done; r++)
-                for (int dy = -r; dy <= r && !done; dy++)
-                    for (int dx = -r; dx <= r && !done; dx++)
+                for (int ky = 0; ky <= 2 * r && !done; ky++)
+                    for (int kx = 0; kx <= 2 * r && !done; kx++)
                     {
+                        int dy = Scan(ky, r, flip), dx = Scan(kx, r, flip);
                         if (Math.Max(Math.Abs(dx), Math.Abs(dy)) != r) continue;
                         var c = new CellCoord(start.X + dx, start.Y + dy);
                         if (!sim.Setup.Map.Contains(c) || !sim.Map.BuildingAt(c).IsNone || used.Contains(c)) continue;
@@ -132,6 +182,13 @@ public static class SkirmishStart
         }
         return first;
     }
+
+    /// <summary>M13-10 / DATA-TOOLS-01: true for a start past the map centre (rows, then columns), whose ring searches run in the reverse order so
+    /// that on a half-turn map its kit is the point-mirror image of the first start's kit instead of a translation of it.</summary>
+    private static bool SecondHalf(CellCoord s, int w, int h) => s.Y * 2 > h - 1 || (s.Y * 2 == h - 1 && s.X * 2 > w - 1);
+
+    /// <summary>The k-th offset (0..2r) of a ring row/column scan: ascending from -r, or descending from +r when <paramref name="flip"/>.</summary>
+    private static int Scan(int k, int r, bool flip) => flip ? r - k : k - r;
 
     /// <summary>M13-01: a naval start unit may use the cell when it is edge-connected sea; when the map has no edge-connected water at all,
     /// any water will do (the best available: the ship is never left out, so the player always has a unit and can be defeated).</summary>

@@ -18,7 +18,7 @@ public enum DockStep : byte { Pick = 0, Go = 1, Wait = 2, Enter = 3, Unload = 4 
 /// </summary>
 public sealed class EconomyState : ISimStatePart
 {
-    private const byte Version = 3;
+    private const byte Version = 4;
 
     /// <summary>Highest density a cell can hold (design 02 section 2).</summary>
     public const int MaxDensity = 12;
@@ -37,6 +37,9 @@ public sealed class EconomyState : ISimStatePart
     public readonly CellCoord[] BadCell;
     /// <summary>Harvest widening search: the next ring (Chebyshev radius) to scan beyond the near search; 0 = not widening.</summary>
     public readonly int[] SearchRing;
+    /// <summary>1 = the harvester went idle (Guard) because no refinery existed when it tried to return (D-205, SIM-RULES-13); it
+    /// resumes when one is rebuilt. Cleared by any other order, including a player Stop.</summary>
+    public readonly byte[] NoRefinery;
     /// <summary>The refinery the harvester is returning to.</summary>
     public readonly EntityId[] DockTarget;
     /// <summary>Return step, a <see cref="DockStep"/>.</summary>
@@ -63,6 +66,7 @@ public sealed class EconomyState : ISimStatePart
         Goal = new CellCoord[v];
         BadCell = new CellCoord[v];
         SearchRing = new int[v];
+        NoRefinery = new byte[v];
         DockTarget = new EntityId[v];
         DockState = new byte[v];
         HarvestState = new byte[v];
@@ -87,14 +91,14 @@ public sealed class EconomyState : ISimStatePart
     /// <summary>Reset every harvester field of a vehicle slot.</summary>
     public void Clear(int i)
     {
-        Owner[i] = default; Cargo[i] = 0; CargoValue[i] = 0; LastFieldCell[i] = default; Goal[i] = default; BadCell[i] = default; SearchRing[i] = 0;
+        Owner[i] = default; Cargo[i] = 0; CargoValue[i] = 0; LastFieldCell[i] = default; Goal[i] = default; BadCell[i] = default; SearchRing[i] = 0; NoRefinery[i] = 0;
         DockTarget[i] = default; DockState[i] = 0; HarvestState[i] = 0; Timer[i] = 0; Ticket[i] = 0;
     }
 
     /// <summary>True if the slot holds anything other than the cleared default.</summary>
     public bool IsDirty(int i) =>
         !Owner[i].IsNone || Cargo[i] != 0 || CargoValue[i] != 0 || LastFieldCell[i] != default || Goal[i] != default
-        || BadCell[i] != default || SearchRing[i] != 0 || !DockTarget[i].IsNone || DockState[i] != 0 || HarvestState[i] != 0 || Timer[i] != 0 || Ticket[i] != 0;
+        || BadCell[i] != default || SearchRing[i] != 0 || NoRefinery[i] != 0 || !DockTarget[i].IsNone || DockState[i] != 0 || HarvestState[i] != 0 || Timer[i] != 0 || Ticket[i] != 0;
 
     /// <summary>Layout: version, capacities, next ticket, then (slot, fields) for each dirty vehicle slot ended by 0, then
     /// (slot, id) for each occupied dock ended by 0.</summary>
@@ -112,7 +116,7 @@ public sealed class EconomyState : ISimStatePart
             WriteCell(w, LastFieldCell[i]); WriteCell(w, Goal[i]); WriteCell(w, BadCell[i]);
             WriteId(w, DockTarget[i]);
             w.Write(DockState[i]); w.Write(HarvestState[i]);
-            w.Write(Timer[i]); w.Write(Ticket[i]); w.Write(SearchRing[i]);
+            w.Write(Timer[i]); w.Write(Ticket[i]); w.Write(SearchRing[i]); w.Write(NoRefinery[i]);
         }
         w.Write(0);
         for (int b = 1; b < DockOccupant.Length; b++)
@@ -140,7 +144,7 @@ public sealed class EconomyState : ISimStatePart
             LastFieldCell[i] = ReadCell(r); Goal[i] = ReadCell(r); BadCell[i] = ReadCell(r);
             DockTarget[i] = ReadId(r);
             DockState[i] = r.ReadByte(); HarvestState[i] = r.ReadByte();
-            Timer[i] = r.ReadInt32(); Ticket[i] = r.ReadInt32(); SearchRing[i] = r.ReadInt32();
+            Timer[i] = r.ReadInt32(); Ticket[i] = r.ReadInt32(); SearchRing[i] = r.ReadInt32(); NoRefinery[i] = r.ReadByte();
         }
         for (int b = r.ReadInt32(); b != 0; b = r.ReadInt32())
         {

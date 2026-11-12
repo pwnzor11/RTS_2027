@@ -42,7 +42,7 @@ namespace Rts.Data;
 /// joins the terrain and soft tables.</item>
 /// <item>Schema v5 block (M6-02, format 8): economy WreckTicks, SalvagePercent, WreckMinValue, WreckMaxValue, PlunderPercent, PlunderCap,
 /// SpoilsPermille; per warhead StormRadius, StormTicks, StormContaminateStep, StormContaminateCap, StormSpeedPermille; per vehicle
-/// UnpacksInto, PackTicks, SalvageRate, Raider, RaiderOneUse, DropsBlackoutTicks, AuraRepairPermille, TowBonusPermille; per infantry
+/// UnpacksInto, PackTicks, SalvageRate, Raider, RaiderOneUse, DropsBlackoutTicks, AuraRepairPermille, TowBonusPermille, OneUse, Buildable; per infantry
 /// SalvageRate, Raider, RaiderOneUse, AshStealthDelayTicks, AshStealthThreshold, AuraRepairPermille; per building PacksInto, PackTicks;
 /// per upgrade PackTicksPermille, SalvagePermille, PlunderPermille, RepairsVehiclesAtRange.</item>
 /// <item>Schema v6 block (VET-1, format 9): Veterancy Enabled, Thresholds, KillPermilleUnit, KillPermilleBuilding, DamagePermille,
@@ -214,6 +214,7 @@ public static class RulesHash
         w.Write(t.TelegraphTicks); w.Write(t.EntranceTelegraphTicks); w.Write(t.EmergingHealthPermille); w.Write(t.SurfacingRing);
         RadiationRules r = sim.Radiation;
         w.Write(r.DecayTicks); w.Write(r.DamageIntervalTicks); w.Write(r.DamageThreshold); w.Write(r.DamagePermille); w.Write(r.NoBuildThreshold);
+        w.Write(r.AshfallDamage); w.Write(r.AshfallIntervalTicks); w.Write(r.AshPathPenalty);   // S19 M13-12
         w.Write(sim.Stealth.DelayTicks);
         w.Write(sim.StartKits.Count);
         foreach (FactionStartKit k in sim.StartKits) { WriteString(w, k.Conyard); WriteStrings(w, k.Units); }
@@ -339,6 +340,7 @@ public static class RulesHash
         {
             w.Write(x.UnpacksInto); w.Write(x.PackTicks); w.Write(x.SalvageRate); w.Write(x.Raider); w.Write(x.RaiderOneUse);
             w.Write(x.DropsBlackoutTicks); w.Write(x.AuraRepairPermille); w.Write(x.TowBonusPermille);
+            w.Write(x.OneUse); w.Write(x.Buildable);   // D-205 (M13-11)
         }
         foreach (InfantryType x in sim.Infantry)
         {

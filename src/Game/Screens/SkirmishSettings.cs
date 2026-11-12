@@ -97,6 +97,40 @@ public sealed record SkirmishSettings(MapChoice Map, IReadOnlyList<SkirmishSlot>
         }
     }
 
+    /// <summary>
+    /// S19 (M13-15): the value for <c>SimSetup.Handicap</c>, one percent per player. Null when every player is at 100, so a default skirmish
+    /// builds exactly the old setup.
+    /// </summary>
+    public IReadOnlyList<int>? Handicaps
+    {
+        get
+        {
+            int[] all = PlayerSlots.Select(i => Slots[i].Handicap).ToArray();
+            return all.All(h => h == SlotOptions.NoHandicap) ? null : all;
+        }
+    }
+
+    /// <summary>S19 (M13-15): the value for <c>SimSetup.StartingCash</c>, one entry per player (-1 = the rules' amount). Null when every player
+    /// has the default preset.</summary>
+    public IReadOnlyList<int>? StartingCash
+    {
+        get
+        {
+            int[] all = PlayerSlots.Select(i => SlotOptions.CreditsFor(Slots[i].CreditsPreset)).ToArray();
+            return all.All(c => c < 0) ? null : all;
+        }
+    }
+
+    /// <summary>S19 (M13-15): one flag per player, true where the slot starts with the small army. Null when nobody does.</summary>
+    public IReadOnlyList<bool>? SmallArmies
+    {
+        get
+        {
+            bool[] all = PlayerSlots.Select(i => Slots[i].SmallArmy).ToArray();
+            return all.Any(a => a) ? all : null;
+        }
+    }
+
     /// <summary>The team a new slot gets by default. A 4-player game on a layout-2 map (teammates side by side, M12-07) defaults to teams 1+2
     /// against 3+4; every other case keeps the old default of one team per slot. The setup screen still lets the player change it.</summary>
     public static int DefaultTeam(int index, int players, int layout) =>
@@ -158,6 +192,8 @@ public sealed record SkirmishSettings(MapChoice Map, IReadOnlyList<SkirmishSlot>
             if (s.Team < 0 || s.Team >= MaxSlots) errors.Add($"Slot {i + 1}: team must be 1 to {MaxSlots}.");
             teams.Add(s.Team);
             if (!Enum.IsDefined(s.Faction) || !RuleCounts.IsPlayable(s.Faction)) errors.Add($"Slot {i + 1}: unknown faction.");
+            if (s.Handicap < Rts.Sim.Core.SimSetup.MinHandicap || s.Handicap > 100) errors.Add($"Slot {i + 1}: handicap must be {Rts.Sim.Core.SimSetup.MinHandicap} to 100 percent.");
+            if (s.CreditsPreset < 0 || s.CreditsPreset >= SlotOptions.CreditsPresets.Count) errors.Add($"Slot {i + 1}: unknown starting credits.");
         }
         if (open < MinPlayers) errors.Add("At least two slots must be open.");
         if (humans > 1) errors.Add("Only one slot can be Human.");

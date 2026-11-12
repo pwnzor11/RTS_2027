@@ -207,6 +207,13 @@ public sealed class SimSnapshotSource : ISnapshotSource
         set => _host.Paused = value;
     }
 
+    /// <summary>Single-player game speed in percent of normal (50..200). Front end only; see <see cref="SimHost.SpeedPercent"/>.</summary>
+    public int SpeedPercent
+    {
+        get => _host.SpeedPercent;
+        set => _host.SpeedPercent = value;
+    }
+
     /// <summary>Ticks run per tick interval while running (1 = normal speed). Front end only; set by the debug console.</summary>
     public int SpeedMultiplier
     {
@@ -244,6 +251,23 @@ public sealed class SimSnapshotSource : ISnapshotSource
     /// <summary>Issues one order for one of the local player's units, to run on the next tick.</summary>
     public void Order(CommandKind kind, UnitKey subject, CellCoord cell = default, ActorRef target = default) =>
         Enqueue(Tick + SimHost.CommandDelayTicks, LocalPlayer, kind, subject, cell, target);
+
+    /// <summary>S19 (M13-15): sets the stance of one of the local player's units (the Arg carries the unit kind and the stance).</summary>
+    public void OrderStance(UnitKey subject, UnitStance stance)
+    {
+        if (!IsOwnedAlive(subject, LocalPlayer)) return;
+        _host.Issue(new Command(Tick + SimHost.CommandDelayTicks, LocalPlayer, 0, CommandKind.SetStance, subject.Id, EntityId.None, default,
+            (int)subject.Kind | ((int)stance << 8)));
+    }
+
+    /// <summary>S19 (M13-15): Shift + right-click. Queues a waypoint (a move, or an attack-move when <paramref name="attackMove"/>) for one of
+    /// the local player's units; an idle unit starts it at once.</summary>
+    public void OrderQueued(UnitKey subject, CellCoord cell, bool attackMove)
+    {
+        if (!IsOwnedAlive(subject, LocalPlayer) || !_map.Contains(cell)) return;
+        _host.Issue(new Command(Tick + SimHost.CommandDelayTicks, LocalPlayer, 0, CommandKind.QueueOrder, subject.Id, EntityId.None, cell,
+            (int)subject.Kind | (attackMove ? 0x100 : 0)));
+    }
 
     /// <summary>
     /// The one way orders reach the sim. Queues a command for <paramref name="execTick"/> and records it. Ignored when

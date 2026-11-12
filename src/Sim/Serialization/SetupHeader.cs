@@ -21,14 +21,27 @@ public sealed record SetupHeader(
     /// <summary>M4-17 (D-173): the skirmish defeat rule is on. Written after the factions (save and replay format 13); older replays read as false.</summary>
     public bool NoRebuildDefeat { get; init; }
 
+    /// <summary>S19 D-205 (M13-15): handicap percent per player; null = everyone at 100. Written after the rule flags only when some player is off
+    /// the defaults (flag bit 1), so other games and older replays keep their bytes.</summary>
+    public IReadOnlyList<int>? Handicap { get; init; }
+
+    /// <summary>S19 D-205 (M13-15): starting credits per player (an entry below 0 = the rules' amount); null = the rules' amount for everyone.
+    /// Written together with <see cref="Handicap"/>.</summary>
+    public IReadOnlyList<int>? StartingCash { get; init; }
+
     private const int MaxLimit = 1 << 20;
+    private const int MaxStartingCash = 100_000_000;
 
     /// <summary>Header for a running game.</summary>
     public static SetupHeader From(Simulation sim, string build, IReadOnlyList<(string Name, string Text)> rulesFiles)
     {
         SimSetup s = sim.Setup;
         return new SetupHeader(build, s.Seed, s.PlayerCount, s.Teams, s.Limits, s.AllowDebug, s.RulesHash, sim.MapHash,
-            s.Map.Width, s.Map.Height, s.Map.Name, rulesFiles) { Factions = s.Factions, NoRebuildDefeat = s.NoRebuildDefeat };
+            s.Map.Width, s.Map.Height, s.Map.Name, rulesFiles)
+        {
+            Factions = s.Factions, NoRebuildDefeat = s.NoRebuildDefeat,
+            Handicap = s.HasSlotOptions ? s.Handicap : null, StartingCash = s.HasSlotOptions ? s.StartingCash : null,
+        };
     }
 
     /// <summary>Writes the header fields in their fixed order.</summary>
@@ -58,7 +71,26 @@ public sealed record SetupHeader(
             w.Write(Factions.Count);
             for (int i = 0; i < Factions.Count; i++) w.Write((byte)Factions[i]);
         }
-        w.Write((byte)(NoRebuildDefeat ? 1 : 0));   // M4-17, format 13
+        bool options = HasSlotOptions;
+        w.Write((byte)((NoRebuildDefeat ? 1 : 0) | (options ? 2 : 0)));   // M4-17, format 13; bit 1 = slot options follow (S19, M13-15)
+        if (!options) return;
+        for (int p = 0; p < PlayerCount; p++)
+        {
+            w.Write((byte)HandicapOf(p));
+            w.Write(StartingCashOf(p));
+        }
+    }
+
+    private int HandicapOf(int p) => Handicap != null && p < Handicap.Count ? Handicap[p] : SimSetup.DefaultHandicap;
+    private int StartingCashOf(int p) => StartingCash != null && p < StartingCash.Count ? StartingCash[p] : -1;
+
+    private bool HasSlotOptions
+    {
+        get
+        {
+            for (int p = 0; p < PlayerCount; p++) if (HandicapOf(p) != SimSetup.DefaultHandicap || StartingCashOf(p) >= 0) return true;
+            return false;
+        }
     }
 
     /// <summary>Reads what <see cref="Write"/> wrote. Throws InvalidDataException on a malformed or truncated header.</summary>
@@ -106,16 +138,31 @@ public sealed record SetupHeader(
             }
             else if (hasFactions != 0) throw new InvalidDataException($"Bad factions flag {hasFactions}.");
             bool noRebuild = false;
+            int[]? handicap = null, startingCash = null;
             if (hasRuleFlags)   // M4-17: replays older than format 13 have no flags byte
             {
                 byte flags = r.ReadByte();
-                if (flags > 1) throw new InvalidDataException($"Bad rule flags {flags}.");
-                noRebuild = flags == 1;
+                if (flags > 3) throw new InvalidDataException($"Bad rule flags {flags}.");
+                noRebuild = (flags & 1) != 0;
+                if ((flags & 2) != 0)   // S19 (M13-15): per-player handicap and starting credits
+                {
+                    handicap = new int[players];
+                    startingCash = new int[players];
+                    for (int p = 0; p < players; p++)
+                    {
+                        handicap[p] = r.ReadByte();
+                        startingCash[p] = r.ReadInt32();
+                        if (handicap[p] < SimSetup.MinHandicap || handicap[p] > SimSetup.MaxHandicap) throw new InvalidDataException($"Bad handicap {handicap[p]}.");
+                        if (startingCash[p] < -1 || startingCash[p] > MaxStartingCash) throw new InvalidDataException($"Bad starting credits {startingCash[p]}.");
+                    }
+                }
             }
             return new SetupHeader(build, seed, players, teams, limits, allowDebug, rulesHash, mapHash, w, h, mapName, files)
             {
                 Factions = factions,
                 NoRebuildDefeat = noRebuild,
+                Handicap = handicap,
+                StartingCash = startingCash,
             };
         }
         catch (EndOfStreamException)
@@ -150,6 +197,14 @@ public sealed record SetupHeader(
         if (NoRebuildDefeat != setup.NoRebuildDefeat)
             throw new InvalidDataException($"{what} NoRebuildDefeat={NoRebuildDefeat} does not match the setup NoRebuildDefeat={setup.NoRebuildDefeat}.");
         for (int p = 0; p < PlayerCount; p++)
+        {
+            if (HandicapOf(p) != setup.HandicapOf((byte)p))
+                throw new InvalidDataException($"{what} handicap of player {p} ({HandicapOf(p)}) does not match the setup ({setup.HandicapOf((byte)p)}).");
+            int cash = StartingCashOf(p) >= 0 ? StartingCashOf(p) : setup.Rules.Economy.StartingCash;
+            if (cash != setup.StartingCashOf((byte)p))
+                throw new InvalidDataException($"{what} starting credits of player {p} ({cash}) do not match the setup ({setup.StartingCashOf((byte)p)}).");
+        }
+        for (int p = 0; p < PlayerCount; p++)
             if (FactionOf(p) != setup.FactionOf((byte)p))
                 throw new InvalidDataException($"{what} faction of player {p} ({FactionOf(p)}) does not match the setup ({setup.FactionOf((byte)p)}).");
     }
@@ -168,6 +223,7 @@ public sealed record SetupHeader(
         return new SimSetup(Seed, map, PlayerCount, rules, rulesHash)
         {
             Teams = Teams, Limits = Limits, AllowDebug = AllowDebug, Factions = Factions, NoRebuildDefeat = NoRebuildDefeat,
+            Handicap = Handicap, StartingCash = StartingCash,
         };
     }
 

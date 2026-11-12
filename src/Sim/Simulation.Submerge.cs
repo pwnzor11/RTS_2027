@@ -19,6 +19,13 @@ public sealed partial class Simulation
     /// <summary>True while the actor is a submarine that is dived.</summary>
     internal bool IsSubmergedShip(ActorKind kind, int i) => kind == ActorKind.Vehicle && _naval.Submerged[i];
 
+    /// <summary>D-205 (FACTION-LE-05): how long a dived submarine stays visible and targetable after it fires: 5 seconds.</summary>
+    internal const int SubRevealTicks = 5 * SimConstants.TicksPerSecond;
+
+    /// <summary>True while a submarine is dived and has not fired in the last <see cref="SubRevealTicks"/>: the state in which it is
+    /// hidden, untargetable by ordinary weapons, spared by splash and uses submerged armour.</summary>
+    internal bool IsHiddenSub(ActorKind kind, int i) => kind == ActorKind.Vehicle && _naval.Submerged[i] && _naval.RevealLeft[i] == 0;
+
     /// <summary>True if a ship or building of the viewer's team with a sonar radius covers <paramref name="cell"/> (Chebyshev, like the Seismograph).</summary>
     internal bool IsSonarRevealed(byte viewer, CellCoord cell)
     {
@@ -49,7 +56,7 @@ public sealed partial class Simulation
     /// </summary>
     internal bool WeaponTargetsActor(WeaponType w, ActorKind kind, int i)
     {
-        bool air = IsAirUnit(kind, i), sub = IsSubmergedShip(kind, i);
+        bool air = IsAirUnit(kind, i), sub = IsHiddenSub(kind, i);   // D-205: a sub that just fired is an ordinary surface target
         switch (w.Targets)
         {
             case WeaponTargets.Both: return !sub;
@@ -63,7 +70,7 @@ public sealed partial class Simulation
 
     /// <summary>True if area damage skips this actor: a dived ship is only hurt when it is the shot's own target.</summary>
     internal bool SplashSparesSubmerged(ActorKind kind, int i, ActorRef primary) =>
-        IsSubmergedShip(kind, i) && !(primary.Kind == kind && primary.Id == IdAt(kind, i));
+        IsHiddenSub(kind, i) && !(primary.Kind == kind && primary.Id == IdAt(kind, i));
 
     /// <summary>Deploy on a ship with <c>submerges</c>: toggles dive and surface at once. Subject is an own live ship.</summary>
     private void ApplySubmerge(Command c)

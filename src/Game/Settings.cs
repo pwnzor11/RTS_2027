@@ -33,6 +33,7 @@ namespace Rts.Game;
 /// <param name="ShowDiagnostics">Show the tick / state hash / fps line in play (M11-03). Default false; files without the key get false.</param>
 /// <param name="CameraCueOnNewObjective">Pan the camera to a new mission objective's target (M11-05; default true).</param>
 /// <param name="AutosaveMinutes">D-205: single-player autosave every this many minutes of play (plus one at the start of a match), into 3 rotating slots; 0 = off. Default 5; files without the key get 5.</param>
+/// <param name="GameSpeedPercent">S19 D-205 (M13-15): single-player skirmish game speed in percent of normal: 50, 75, 100, 150 or 200. Default 100; files without the key get 100.</param>
 /// <param name="LargerInfantry">D-184 pilot: draw infantry (sprites, selection brackets, health bars) 1.25 times larger than today. Render only. Default true for the pilot screenshots; files without the key get true.</param>
 public sealed record Settings(
     int Version = Settings.CurrentVersion,
@@ -56,7 +57,8 @@ public sealed record Settings(
     Ui.TextSize TextSize = Ui.TextSize.Normal,
     KeyBindings? KeyMap = null,
     bool LargerInfantry = true,
-    int AutosaveMinutes = Settings.DefaultAutosaveMinutes)
+    int AutosaveMinutes = Settings.DefaultAutosaveMinutes,
+    int GameSpeedPercent = Rts.Game.Host.GameSpeed.Normal)
 {
     /// <summary>The file format version this build reads and writes.</summary>
     public const int CurrentVersion = 2;
@@ -164,7 +166,8 @@ public sealed record Settings(
             (Ui.TextSize)Int(root, "text_size", (int)d.TextSize, (int)Ui.TextSize.Small, (int)Ui.TextSize.ExtraLarge),
             ParseKeys(root),
             root.TryGetValue("larger_infantry", out object? li) && li is bool lib ? lib : d.LargerInfantry,
-            Int(root, "autosave_minutes", d.AutosaveMinutes, 0, MaxAutosaveMinutes));
+            Int(root, "autosave_minutes", d.AutosaveMinutes, 0, MaxAutosaveMinutes),
+            Rts.Game.Host.GameSpeed.Snap(Int(root, "game_speed_percent", d.GameSpeedPercent, 50, 200)));
     }
 
     /// <summary>The settings as TOML text.</summary>
@@ -200,6 +203,8 @@ public sealed record Settings(
         sb.AppendLine(FormattableString.Invariant($"larger_infantry = {(LargerInfantry ? "true" : "false")}"));
         sb.AppendLine("# Single-player autosave: minutes between autosaves (0 = off); 3 rotating slots (D-205).");
         sb.AppendLine(FormattableString.Invariant($"autosave_minutes = {Math.Clamp(AutosaveMinutes, 0, MaxAutosaveMinutes)}"));
+        sb.AppendLine("# Single-player skirmish game speed in percent of normal: 50, 75, 100, 150 or 200 (the sim step is unchanged).");
+        sb.AppendLine(FormattableString.Invariant($"game_speed_percent = {Rts.Game.Host.GameSpeed.Snap(GameSpeedPercent)}"));
         sb.AppendLine("# Pan the camera to a new mission objective's target (M11-05)");
         sb.AppendLine(FormattableString.Invariant($"camera_cue_on_new_objective = {(CameraCueOnNewObjective ? "true" : "false")}"));
         IReadOnlyList<(string Id, string Key)> rebound = Bindings.Overrides();
