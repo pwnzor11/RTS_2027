@@ -181,6 +181,7 @@ co-op campaign (unless Q-M9-n says otherwise).
 1. Map hack is accepted; no anti-cheat (family LAN).
 2. No lobby password in the first build; the game only answers discovery on the local network.
 3. Windows shows its own firewall prompt on first host; we add a How to Play page and a lobby message, no installer rule.
+   *Amended 2026-11-12 (design 21 §5): the M10 Inno Setup installer offers a checkbox that adds a private-network rule; zip users keep the prompt and help page.*
 4. Player name defaults to the Windows user name, editable, stored in settings.
 5. Game options in the LAN lobby are exactly the skirmish ones, set by the host.
 6. Testing: loopback soak in CI, two windows on one PC, then the owner's desktop plus laptop.
