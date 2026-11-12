@@ -50,6 +50,21 @@ public sealed class SpritePainter : IDisposable
         }
     }
 
+    /// <summary>M10-14: adds the hit flash over a frame just drawn with <see cref="Draw"/> (library and legacy sheets; placeholders do not flash).</summary>
+    public void DrawFlash(SpriteBatch batch, ResolvedSprite sprite, int frame, Vector2 origin, float zoom)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        switch (sprite.Source)
+        {
+            case SpriteSource.Library:
+                sprite.Library!.Sheet(sprite.Id).DrawFlash(batch, frame, origin, zoom);
+                break;
+            case SpriteSource.Legacy:
+                sprite.Legacy!.DrawFlash(batch, frame, origin, zoom);
+                break;
+        }
+    }
+
     /// <inheritdoc />
     public void Dispose()
     {

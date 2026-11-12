@@ -41,6 +41,12 @@ public sealed class Camera
         if (_zoomIndex != before) _position = anchorWorld - anchorScreen.ToVector2() / Zoom;
     }
 
+    /// <summary>Top-left of the view in zoom-1 world pixels (M10-14: saved and restored around a screen shake).</summary>
+    public Vector2 Position => _position;
+
+    /// <summary>Puts the view top-left at an exact zoom-1 world position, unclamped (M10-14: restores <see cref="Position"/> after a screen shake).</summary>
+    public void MoveTo(Vector2 position) => _position = position;
+
     /// <summary>Moves the view by a delta in screen pixels. Positive x moves the view right.</summary>
     public void PanScreen(Vector2 screenDelta) => _position += screenDelta / Zoom;
 

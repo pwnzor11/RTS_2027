@@ -162,6 +162,17 @@ public sealed class SpriteSheet : IDisposable
         }
     }
 
+    /// <summary>
+    /// M10-14: draws the frame's base pixels a second time additively (the hit flash): colour (255,255,255,0) on a premultiplied texture adds the
+    /// pixel colour to what is already there and leaves the sprite's shape alone. Call right after <see cref="Draw"/> with the same arguments.
+    /// </summary>
+    public void DrawFlash(SpriteBatch batch, int frame, Vector2 position, float scale)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        ArgumentNullException.ThrowIfNull(batch);
+        batch.Draw(_base, position, FrameRect(frame), new Color((byte)255, (byte)255, (byte)255, (byte)0), 0f, Origin, scale, SpriteEffects.None, 0f);
+    }
+
     /// <inheritdoc />
     public void Dispose()
     {

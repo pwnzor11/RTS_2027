@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
+using System.Diagnostics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Rts.Game.Sandbox;
@@ -31,6 +32,21 @@ public sealed class SceneRenderer : IDisposable
         set => UnitRenderer.InfantryExtraScale = value ? UnitRenderer.LargerInfantryScale : 1f;
     }
 
+    /// <summary>M10-12: draw weather particles for the map's biome (the "Weather" setting); the game screen sets it each frame.</summary>
+    public bool WeatherEnabled { get; set; } = true;
+
+    /// <summary>M10-14: shake the world view on big blasts (the "Screen shake" setting); the game screen sets it each frame.</summary>
+    public bool ShakeEnabled { get; set; } = true;
+
+    private readonly Stopwatch _clock = Stopwatch.StartNew();   // presentation time only: weather drift and shake decay, never the sim
+    private double _lastSeconds;
+    private readonly JuiceShake _shake = new();
+    private readonly JuiceHitFlash _hits = new();
+    private int _frame;
+    private int _juiceTick = int.MinValue;
+    private int _prevProjectiles;
+    private WeatherKind _weather;
+    private Vector2 _homeCamera;   // the camera position before this frame's shake; weather follows this, not the shaken view
     private readonly SpriteResolver _sprites;
     private readonly SpriteLibrary? _library;
     private readonly FxPlayer _fx = new();
@@ -85,6 +101,27 @@ public sealed class SceneRenderer : IDisposable
     /// <summary>Draws the frame. <paramref name="pixel"/> is a 1x1 white texture; the batch is already begun.</summary>
     public void Draw(SpriteBatch batch, Texture2D pixel, SceneFrame frame, Camera camera, Viewport viewport)
     {
+        // M10-14: the shake moves only the world drawing (the camera is put back exactly afterwards, so input and the HUD never see it).
+        _homeCamera = camera.Position;
+        _frame++;
+        double now = _clock.Elapsed.TotalSeconds;
+        float dt = (float)Math.Clamp(now - _lastSeconds, 0.0, 0.1);
+        _lastSeconds = now;
+        ObserveJuice(frame, camera, viewport, dt);
+        Vector2 shake = ShakeEnabled ? _shake.Offset : Vector2.Zero;
+        if (shake != Vector2.Zero) camera.MoveTo(_homeCamera + shake / camera.Zoom);
+        try
+        {
+            DrawWorld(batch, pixel, frame, camera, viewport, now);
+        }
+        finally
+        {
+            camera.MoveTo(_homeCamera);
+        }
+    }
+
+    private void DrawWorld(SpriteBatch batch, Texture2D pixel, SceneFrame frame, Camera camera, Viewport viewport, double seconds)
+    {
         SimSnapshot snapshot = frame.Snapshot;
         MapData? map = frame.Sim?.Setup.Map;
         _viewport = viewport;
@@ -113,6 +150,7 @@ public sealed class SceneRenderer : IDisposable
         {
             _moodMap = map;
             _mood = map is null ? MoodGrade.None : TerrainPalette.ForMap(map).Mood;
+            _weather = map is null ? WeatherKind.None : WeatherModel.KindFor(TerrainPalette.TheaterIdFor(map, null));   // M10-12
         }
 
         _look.Observe(snapshot, frame.Rules, _fx, _mood, _sprites);   // D-184
@@ -138,6 +176,8 @@ public sealed class SceneRenderer : IDisposable
 
         FogRenderer.Draw(batch, pixel, snapshot, camera, viewport);
         FxLook.DrawMood(batch, pixel, _mood, viewport.Bounds);   // D-184: world colour grade (the HUD draws after the scene)
+        if (WeatherEnabled && _weather != WeatherKind.None)   // M10-12: above the units, under the overlays and the HUD
+            WeatherLayer.Draw(batch, pixel, _weather, viewport.Bounds, seconds, _homeCamera.X * camera.Zoom, _homeCamera.Y * camera.Zoom);
         if (frame.Overlays.Paths) PathOverlay.Draw(batch, pixel, frame, camera);
         if (frame.Overlays.Ranges) RangeOverlay.Draw(batch, pixel, frame, camera);
         // VET-5: ranks come from the viewer's view only (fog-honest); the flash comes from the client-side tracker.
@@ -150,6 +190,45 @@ public sealed class SceneRenderer : IDisposable
         HealthBars.Draw(batch, pixel, frame, camera, _sprites, _rankMap, HealthBarsAlways);
         NoPowerOverlay.Draw(batch, pixel, frame, camera);   // D-170: blinking marker over a building stopped for lack of power
         if (frame.DragRect is Rectangle box) Shapes.Outline(batch, pixel, box, DragColour);
+    }
+
+    // M10-14: once per sim tick, shake on big blasts, a muzzle flash and smoke puff for each new shell, and the units that were just hit.
+    private void ObserveJuice(SceneFrame frame, Camera camera, Viewport viewport, float dt)
+    {
+        SimSnapshot snapshot = frame.Snapshot;
+        _shake.Update(dt);
+        _hits.Observe(snapshot.Tick, snapshot.Units, _frame);
+        if (snapshot.Tick == _juiceTick) return;
+        bool forward = snapshot.Tick > _juiceTick && _juiceTick != int.MinValue;
+        _juiceTick = snapshot.Tick;
+        int landed = 0;
+        if (snapshot.FxEvents is { Count: > 0 } events)
+        {
+            foreach (FxEvent e in events)
+            {
+                if (e.Kind == FxKind.Detonation) landed++;
+                float amp = JuiceBlast.Amplitude(e);
+                if (amp > 0f && ShakeEnabled && forward && InView(Camera.WorldFromLepton(e.Pos), camera, viewport)) _shake.Kick(amp);
+            }
+        }
+
+        int count = frame.Projectiles.Count;
+        int shots = forward ? JuiceMuzzle.NewShots(_prevProjectiles, count, landed) : 0;
+        _prevProjectiles = count;
+        for (int i = 0; i < shots; i++)
+        {
+            Vector2 at = Camera.WorldFromLepton(frame.Projectiles[count - 1 - i]);
+            if (!InView(at, camera, viewport)) continue;
+            _fx.Spawn("sparks", at, snapshot.Tick, 1.1f);
+            _look.Puffs.Add(new Puff(at.X, at.Y - 6, snapshot.Tick, 14, 0x8F8B86, 130, 0.4f, 9, Smoke: true));
+        }
+    }
+
+    // A world point within one half-view of the screen, so off-screen blasts neither shake the view nor spawn flashes.
+    private static bool InView(Vector2 world, Camera camera, Viewport viewport)
+    {
+        Vector2 s = camera.ScreenFromWorld(world);
+        return s.X >= -viewport.Width / 2f && s.X <= viewport.Width * 1.5f && s.Y >= -viewport.Height / 2f && s.Y <= viewport.Height * 1.5f;
     }
 
     // Explosions (M2-19): the sim's per-tick events of a snapshot are turned into one-shot effects exactly once,
@@ -192,6 +271,10 @@ public sealed class SceneRenderer : IDisposable
     {
         _memory.Reset();
         _water.Reset();
+        _hits.Reset();
+        _shake.Clear();
+        _juiceTick = int.MinValue;
+        _prevProjectiles = 0;
     }
 
     /// <inheritdoc />
@@ -273,7 +356,7 @@ public sealed class SceneRenderer : IDisposable
                 bool selected = frame.Selection.Contains(UnitKey.Of(unit.View));
                 UnitRenderer.Draw(batch, pixel, _sprites, _painter, _memory, snapshot.Tick, frame.Rules, unit,
                     selected, camera, unit.View.Kind == UnitKind.Vehicle && _submerged.Contains(unit.View.Id),
-                    _ownOrAllied.Contains(unit.View.Id));
+                    _ownOrAllied.Contains(unit.View.Id), _hits.IsFlashing(unit.View.Id, snapshot.Tick, _frame));
             }
         }
     }

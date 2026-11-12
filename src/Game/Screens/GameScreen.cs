@@ -563,6 +563,8 @@ public sealed class GameScreen : IScreen, IFocusPausable
 
         _s.Scene.HealthBarsAlways = _s.Settings.HealthBarsAlways;
         _s.Scene.LargerInfantry = _s.Settings.LargerInfantry;   // D-184
+        _s.Scene.WeatherEnabled = _s.Settings.Weather;   // M10-12
+        _s.Scene.ShakeEnabled = _s.Settings.ScreenShake;   // M10-14
         _s.Scene.Draw(sb, _s.Pixel, frame, _camera, _s.Viewport);
         DrawSelectedBuilding(sb, snapshot);
         DrawQueuedPaths(sb);   // M13-15: the waypoints of the selected units
