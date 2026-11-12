@@ -47,15 +47,10 @@ public sealed class CreditsScreen : IScreen
     public bool BlocksDrawBelow => true;
 
     /// <inheritdoc />
-    public void Enter()
-    {
-        // TODO(M10-E merge): ask the music player for the "credits" state here once MusicState.Credits exists (and go back to Menu in Exit).
-    }
+    public void Enter() => Rts.Game.Audio.AudioBootstrap.Director?.RequestMusic(Rts.Game.Audio.MusicState.Credits);
 
     /// <inheritdoc />
-    public void Exit()
-    {
-    }
+    public void Exit() => Rts.Game.Audio.AudioBootstrap.Director?.ReleaseMusic();
 
     /// <inheritdoc />
     public void Update(InputFrame input, GameTime t)
