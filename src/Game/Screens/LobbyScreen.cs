@@ -153,10 +153,10 @@ public sealed class LobbyScreen : IScreen
             _handedOver = true;
             _s.Screens.Replace(game);
         }
-        catch (NotImplementedException)
+        catch (Exception ex) when (ex is InvalidDataException or IOException or InvalidOperationException)
         {
-            // PENDING M9 W2-G: the in-game LAN screen is not built yet in this branch.
-            _status = "The LAN match screen is not in this build yet.";
+            // A bad map or rules file on this machine: stay in the lobby and say why instead of crashing.
+            _status = "Could not start the match: " + ex.Message;
             Rebuild();
         }
     }
