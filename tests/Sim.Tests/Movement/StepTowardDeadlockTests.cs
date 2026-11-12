@@ -58,4 +58,26 @@ public sealed class StepTowardDeadlockTests
         Assert.Equal(new CellCoord(5, 1), MoveWorld.CellOf(sim, a));
         Assert.Equal(0, noWay);
     }
+
+    /// <summary>M13-16: each tank's goal is the cell the other stands on, and each waits for the other (a harvester entering the dock
+    /// while the one on it leaves through it). A held goal alone keeps the mover waiting awake (above); a head-on swap must still
+    /// end in a no-way answer, or both wait for good.</summary>
+    [Fact]
+    public void HeadOnSwapOfGoalCells_StepTowardReportsNoWay()
+    {
+        var map = MoveWorld.Grid(12, 3, (land, w) => { for (int x = 0; x < w; x++) { land[x] = LandType.Rock; land[2 * w + x] = LandType.Rock; } });
+        var sim = MoveWorld.NewSim(map);
+        EntityId a = sim.SpawnVehicle(0, 0, new CellCoord(5, 1));
+        EntityId b = sim.SpawnVehicle(0, 0, new CellCoord(6, 1));
+        sim.Units.Mission[a.Index] = MissionKind.Submerge;
+        sim.Units.Mission[b.Index] = MissionKind.Submerge;
+        int noWay = 0;
+        for (int t = 0; t < 800; t++)
+        {
+            if (MoveMission.StepToward(sim, sim.Units, ActorKind.Vehicle, a.Index, new CellCoord(6, 1)) >= MoveMission.WaitTicks) noWay++;
+            if (MoveMission.StepToward(sim, sim.Units, ActorKind.Vehicle, b.Index, new CellCoord(5, 1)) >= MoveMission.WaitTicks) noWay++;
+            sim.Step(MoveWorld.None);
+        }
+        Assert.True(noWay >= 1, "a head-on swap never told either side there was no way");
+    }
 }
