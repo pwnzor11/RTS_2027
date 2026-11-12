@@ -39,8 +39,12 @@ public sealed class LanSoakCommandTests
         (int b, string two) = Capture(args);
         Assert.Equal(0, a);
         Assert.Equal(0, b);
-        Assert.Equal(one, two);
+        Assert.Equal(WithoutFileNotes(one), WithoutFileNotes(two));
     }
+
+    // The first run on a fresh machine also prints "wrote <path>" when it caches a generated map; that note is not part of the soak result.
+    private static string WithoutFileNotes(string output) =>
+        string.Join("\n", output.Replace("\r\n", "\n").Split('\n').Where(l => !l.StartsWith("wrote ", StringComparison.Ordinal)));
 
     [Fact]
     public void The_soak_is_the_same_game_as_a_plain_run_of_the_bundles()
