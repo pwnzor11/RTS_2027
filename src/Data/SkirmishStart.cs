@@ -108,7 +108,7 @@ public static class SkirmishStart
                 placed[p] = SpawnUnits(sim, (byte)p, s, units);
                 continue;
             }
-            bool flip = SecondHalf(s, map.Width, map.Height);
+            (bool flipX, bool flipY) = KitFlip(s, map);
             BuildingType bt = rules.Buildings[type];
             // centre the footprint on the start cell, then search rings outward in a fixed order
             int cx = s.X - bt.FootprintW / 2, cy = s.Y - bt.FootprintH / 2;
@@ -116,7 +116,7 @@ public static class SkirmishStart
                 for (int ky = 0; ky <= 2 * r && placed[p] == EntityId.None; ky++)
                     for (int kx = 0; kx <= 2 * r && placed[p] == EntityId.None; kx++)
                     {
-                        int dy = Scan(ky, r, flip), dx = Scan(kx, r, flip);
+                        int dy = Scan(ky, r, flipY), dx = Scan(kx, r, flipX);
                         if (Math.Max(Math.Abs(dx), Math.Abs(dy)) != r) continue;
                         var tl = new CellCoord(cx + dx, cy + dy);
                         if (tl.X < 0 || tl.Y < 0 || tl.X + bt.FootprintW > map.Width || tl.Y + bt.FootprintH > map.Height) continue;
@@ -137,12 +137,12 @@ public static class SkirmishStart
         var used = new List<CellCoord>();
         bool[]? edgeSea = null;   // M13-01: naval cells connected to the map edge, built on first use
         int next = 0;
-        bool flip = SecondHalf(start, sim.Setup.Map.Width, sim.Setup.Map.Height);
+        (bool flipX, bool flipY) = KitFlip(start, sim.Setup.Map);
         for (int r = 1; r <= MaxUnitRing && next < units.Count; r++)
             for (int ky = 0; ky <= 2 * r && next < units.Count; ky++)
                 for (int kx = 0; kx <= 2 * r && next < units.Count; kx++)
                 {
-                    int dy = Scan(ky, r, flip), dx = Scan(kx, r, flip);
+                    int dy = Scan(ky, r, flipY), dx = Scan(kx, r, flipX);
                     if (Math.Max(Math.Abs(dx), Math.Abs(dy)) != r) continue;
                     var c = new CellCoord(start.X + dx, start.Y + dy);
                     if (!sim.Setup.Map.Contains(c) || !sim.Map.BuildingAt(c).IsNone || used.Contains(c)) continue;
@@ -168,7 +168,7 @@ public static class SkirmishStart
                 for (int ky = 0; ky <= 2 * r && !done; ky++)
                     for (int kx = 0; kx <= 2 * r && !done; kx++)
                     {
-                        int dy = Scan(ky, r, flip), dx = Scan(kx, r, flip);
+                        int dy = Scan(ky, r, flipY), dx = Scan(kx, r, flipX);
                         if (Math.Max(Math.Abs(dx), Math.Abs(dy)) != r) continue;
                         var c = new CellCoord(start.X + dx, start.Y + dy);
                         if (!sim.Setup.Map.Contains(c) || !sim.Map.BuildingAt(c).IsNone || used.Contains(c)) continue;
@@ -186,6 +186,32 @@ public static class SkirmishStart
     /// <summary>M13-10 / DATA-TOOLS-01: true for a start past the map centre (rows, then columns), whose ring searches run in the reverse order so
     /// that on a half-turn map its kit is the point-mirror image of the first start's kit instead of a translation of it.</summary>
     private static bool SecondHalf(CellCoord s, int w, int h) => s.Y * 2 > h - 1 || (s.Y * 2 == h - 1 && s.X * 2 > w - 1);
+
+    /// <summary>
+    /// M13-19 (D-223): which scan axes run reversed for the kit of the start <paramref name="s"/>, so that the second start's kit is the exact
+    /// image of the first start's kit under the map's own symmetry (the transform of <see cref="MapSymmetries.Images"/> that maps this start onto
+    /// another start). Half-turn (Rot2, and every map without a mirror partner) reverses both axes for the second half, as before;
+    /// MirrorX (partner at w-1-x, y) reverses columns only for a start right of the centre; MirrorY (partner at x, h-1-y) reverses rows only
+    /// for a start below the centre. The symmetry is read from the start positions, which the generator places as an orbit of the symmetry;
+    /// a Rot2 partner wins when it exists, so every half-turn map keeps its old kit.
+    /// </summary>
+    private static (bool X, bool Y) KitFlip(CellCoord s, Rts.Sim.Map.MapData map)
+    {
+        int w = map.Width, h = map.Height;
+        bool rot2 = false, mirrorX = false, mirrorY = false;
+        for (int i = 0; i < map.StartPositions.Count; i++)
+        {
+            CellCoord o = map.StartPositions[i];
+            if (o.X == s.X && o.Y == s.Y) continue;
+            if (o.X == w - 1 - s.X && o.Y == h - 1 - s.Y) rot2 = true;
+            else if (o.X == w - 1 - s.X && o.Y == s.Y) mirrorX = true;
+            else if (o.X == s.X && o.Y == h - 1 - s.Y) mirrorY = true;
+        }
+        if (!rot2 && mirrorX) return (s.X * 2 > w - 1, false);
+        if (!rot2 && mirrorY) return (false, s.Y * 2 > h - 1);
+        bool flip = SecondHalf(s, w, h);
+        return (flip, flip);
+    }
 
     /// <summary>The k-th offset (0..2r) of a ring row/column scan: ascending from -r, or descending from +r when <paramref name="flip"/>.</summary>
     private static int Scan(int k, int r, bool flip) => flip ? r - k : k - r;
