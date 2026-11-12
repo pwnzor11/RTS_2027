@@ -7,6 +7,7 @@ using Rts.Game.Archive;
 using Rts.Game.Controls;
 using Rts.Game.Host;
 using Rts.Game.Input;
+using Rts.Game.Lan;
 using Rts.Game.Menu;
 using Rts.Game.Render;
 using Rts.Game.Saves;
@@ -86,12 +87,17 @@ public sealed class GameScreen : IScreen, IFocusPausable
     private readonly RectRegion _specRegion = new(Rectangle.Empty);
     private UnitView? _inspectUnit;
     private BuildingView? _inspectBuilding;
+    private readonly LanSession? _lan;          // M9-07: a LAN match; null for every single-player game
+    private readonly LanOverlay? _lanOverlay;   // M9-08: waiting, pause, desync, host-left panels and the chat
+    private bool _lanHandoff;                   // M9-10: this screen is being replaced after a resync; the session lives on
 
     private GameScreen(GameServices services, SimSnapshotSource? sim, SkirmishSettings? skirmish, Func<GameScreen> restart,
-        bool skirmishMode = false, bool spectator = false)
+        bool skirmishMode = false, bool spectator = false, LanSession? lan = null)
     {
         _s = services;
         _sim = sim;
+        _lan = lan;
+        if (lan is not null) _lanOverlay = new LanOverlay();
         Skirmish = skirmish;
         _restart = restart;
         _skirmishMode = skirmishMode && sim is not null;
@@ -119,9 +125,9 @@ public sealed class GameScreen : IScreen, IFocusPausable
     }
 
     /// <inheritdoc />
-    /// <remarks>Only a single-player game the player is playing (skirmish vs AI, or a campaign mission) and has not paused with P. There is no multiplayer yet; it must never pause there.</remarks>
+    /// <remarks>Only a single-player game the player is playing (skirmish vs AI, or a campaign mission) and has not paused with P. A LAN match never pauses on focus loss (M9).</remarks>
     public IScreen? CreateFocusPause() =>
-        _sim is { Paused: false } && !_spectatorMode && (_skirmishMode || _mission is not null)
+        _lan is null && _sim is { Paused: false } && !_spectatorMode && (_skirmishMode || _mission is not null)
             ? new PauseScreen(_s, _restart, SaveTarget())
             : null;
 
@@ -136,6 +142,9 @@ public sealed class GameScreen : IScreen, IFocusPausable
 
     /// <summary>The sandbox simulation source, or null for the demo.</summary>
     public SimSnapshotSource? Sim => _sim;
+
+    // The player this screen plays: 0 in single player, the save's local player for a loaded game, the peer's own player in LAN (M9).
+    private byte Me => _sim?.Local ?? SimSnapshotSource.LocalPlayer;
 
     /// <summary>Creates a sandbox game screen. <paramref name="skirmish"/> supplies the seed (null = the default sandbox seed).</summary>
     public static GameScreen CreateSandbox(GameServices services, bool empty, SkirmishSettings? skirmish)
@@ -211,6 +220,25 @@ public sealed class GameScreen : IScreen, IFocusPausable
     }
 
     /// <summary>
+    /// M9-07: the screen of a LAN match. The same skirmish screen (or, for a LAN spectator, the spectator screen with full map vision), driven
+    /// by the session's lockstep every frame instead of <see cref="SimHost.Advance"/>: no single-player pause, no game speed, no save, load or
+    /// autosave, focus loss never pauses, menus open over the running match, and the LAN overlay shows waiting, pause, desync, host-left and
+    /// chat. The game ends as a skirmish does. After a resync the screen rebuilds itself around the session's new source.
+    /// </summary>
+    public static GameScreen CreateLan(GameServices services, LanSession session)
+    {
+        ArgumentNullException.ThrowIfNull(session);
+        SimSnapshotSource sim = session.Source;
+        var screen = new GameScreen(services, sim, session.Settings,
+            () => throw new InvalidOperationException("A LAN match cannot be restarted."),
+            skirmishMode: !session.IsSpectator, spectator: session.IsSpectator, lan: session);
+        if (session.IsSpectator) sim.Host.SetViewer(-1);
+        screen.IsGameOver = () => sim.Sim.GameOver;
+        screen._startCueDone = session.Tick > 0;   // a rebuilt screen (resync) has had its start
+        return screen;
+    }
+
+    /// <summary>
     /// Creates a campaign mission (D-061): skirmish-style sidebar and fog over the mission's sim, objectives panel and message ticker,
     /// game over when the script (or a destroyed base) decides the match.
     /// </summary>
@@ -244,7 +272,8 @@ public sealed class GameScreen : IScreen, IFocusPausable
     /// </summary>
     public static GameScreen CreateFromSave(GameServices services, LoadedGame loaded)
     {
-        var sim = new SimSnapshotSource(loaded, services.Settings);   // M5-10: brings back the save's LLM commanders
+        // M5-10: brings back the save's LLM commanders. M9: a "continue against AI" save from a LAN match keeps the peer's own player.
+        var sim = new SimSnapshotSource(loaded, services.Settings) { Local = loaded.Header.LocalPlayer };
         if (loaded.Header.Mode == SaveMode.Mission)
         {
             MissionGame game = MissionGame.FromSave(loaded);
@@ -261,7 +290,11 @@ public sealed class GameScreen : IScreen, IFocusPausable
         }
 
         SkirmishSettings settings = loaded.Header.Skirmish ?? SkirmishSettings.Default;
-        var screen = new GameScreen(services, sim, settings, () => CreateSkirmish(services, settings), skirmishMode: true);
+        // M9 (Q-M9-j): a save continued from a LAN match keeps its several Human slots so the players keep their numbers; a restart is a
+        // normal skirmish where the other humans are AIs
+        SkirmishSettings restart = settings.Slots.Count(sl => sl.Kind == SlotKind.Human) > 1
+            ? LanSession.SinglePlayerSettings(settings, loaded.Header.LocalPlayer) : settings;
+        var screen = new GameScreen(services, sim, settings, () => CreateSkirmish(services, restart), skirmishMode: true);
         screen.IsGameOver = () => sim.Sim.GameOver;
         screen._lastAutosaveTick = loaded.Header.Tick;   // D-205: a loaded game waits a full interval for its first autosave
         screen._groups.Restore(loaded.Header.ControlGroups);   // D-205
@@ -290,17 +323,18 @@ public sealed class GameScreen : IScreen, IFocusPausable
     /// <inheritdoc />
     public void Enter()
     {
+        if (_lan is not null) _lan.SourceReplaced += OnLanSourceReplaced;   // M9-10
         _s.Scene.Reset();   // S18 GAMEREND-01: the shared renderer must not remember the previous game's buildings
         if (_spectatorMode && _sim is not null)
         {
-            PlayerColours.Assign(Skirmish is { IsSpectator: true } spec ? ColoursOf(spec) : new[] { 0, 1 });
+            PlayerColours.Assign(Skirmish is { } spec && (spec.IsSpectator || _lan is not null) ? ColoursOf(spec) : new[] { 0, 1 });
             Vector2 mapCentre = new(_source.Current.MapWidth * Camera.CellPx / 2f, _source.Current.MapHeight * Camera.CellPx / 2f);
             Vector2 half = new Vector2(_s.Viewport.Width, _s.Viewport.Height) / _camera.Zoom / 2f;
             _camera.PanScreen((mapCentre - half - _camera.WorldFromScreen(Point.Zero)) * _camera.Zoom);
             return;
         }
 
-        if (_sim is not null && _orders is not null && !_skirmishMode) _card = new Rts.Game.Ui.Card.SelectionCard(_sim, _selection, null, PlayerColours.Base(SimSnapshotSource.LocalPlayer));
+        if (_sim is not null && _orders is not null && !_skirmishMode) _card = new Rts.Game.Ui.Card.SelectionCard(_sim, _selection, null, PlayerColours.Base(Me));
         if (!_skirmishMode || _sim is null) return;
         if (SpeedAllowed) _sim.Host.SpeedPercent = GameSpeed.Effective(_s.Settings.GameSpeedPercent, Networked);   // M13-15
         string spritesRoot = Path.Combine(Path.GetDirectoryName(Path.GetFullPath(_s.RulesDir)) ?? ".", "sprites");
@@ -308,11 +342,11 @@ public sealed class GameScreen : IScreen, IFocusPausable
         int colour = Skirmish?.PlayerColour ?? 0;
         // D-068: the local player draws in the chosen colour; the AI takes the next palette entry that differs.
         PlayerColours.Assign(Skirmish is { } sk && sk.PlayerCount >= 2 ? ColoursOf(sk) : new[] { colour, colour == 1 ? 0 : 1 });
-        _sidebar = new SidebarPanel(_sim, SimSnapshotSource.LocalPlayer, _selection, _cameos, PlayerColours.Base(SimSnapshotSource.LocalPlayer));
+        _sidebar = new SidebarPanel(_sim, Me, _selection, _cameos, PlayerColours.Base(Me));
         _sidebar.Orders = _orders;                                         // S18 GAMEUI-05
         _sidebar.HiddenCursor = SoftwareCursor.MakeHidden(_s.Graphics);   // M11-10e
         _sidebar.Blurbs = LoadCameoBlurbs();                               // M11-10g
-        _card = new Rts.Game.Ui.Card.SelectionCard(_sim, _selection, _cameos, PlayerColours.Base(SimSnapshotSource.LocalPlayer));
+        _card = new Rts.Game.Ui.Card.SelectionCard(_sim, _selection, _cameos, PlayerColours.Base(Me));
         CentreCameraOnOwnBase();
         _archive = new ArchiveTracker(ArchiveProgress.Load());
     }
@@ -323,10 +357,18 @@ public sealed class GameScreen : IScreen, IFocusPausable
     /// <inheritdoc />
     public void Exit()
     {
+        if (_lan is not null) _lan.SourceReplaced -= OnLanSourceReplaced;
         PlayerColours.ResetAssignment();
         _sidebar?.Dispose();
         _cameos?.Dispose();
-        _sim?.SaveReplay();
+        if (_lan is not null)
+        {
+            if (!_lanHandoff) _lan.Dispose();   // M9: Bye, the replay, the transport; not when a resync only rebuilds this screen
+        }
+        else
+        {
+            _sim?.SaveReplay();
+        }
         _sim?.Commanders?.Dispose();   // M5-05: cancels any LLM call still in flight
     }
 
@@ -334,18 +376,26 @@ public sealed class GameScreen : IScreen, IFocusPausable
     public void Update(InputFrame input, GameTime t)
     {
         _nowMs = (long)t.TotalGameTime.TotalMilliseconds;   // M11-10c: clock for the double-tap rules
+        if (_lan is not null && !ReferenceEquals(_s.Screens.Top, this))
+        {
+            // M9: a menu is open over the match (LanCover); the match keeps running for everyone, but this screen takes no input
+            PumpLan(t);
+            UnitInterpolator.Build(_source.Current, _source.Previous, _source.Alpha, _renderUnits);
+            return;
+        }
         _mouse = input.MousePosition;
         _updatedSinceDraw = true;
         if (_sim is not null) _income.Observe(_sim.Sim);   // S18 UXG-10: feeds the INCOME/M column of the final table
         UpdateHudRegions();
+        if (_lan is not null && HandleLanOverlay(input)) return;   // M9-08: overlay buttons first; true when this screen is leaving
         UpdateCard(input);   // M11-04: before anything else reads the click
-        PlayerHud? localHud = _skirmishMode && _sim is not null ? _sim.Sim.HudFor(SimSnapshotSource.LocalPlayer) : null;
+        PlayerHud? localHud = _skirmishMode && _sim is not null ? _sim.Sim.HudFor(Me) : null;
         _superweapon.Update(localHud, _sim?.Sim.Tick ?? 0);
         UpdateSuperweaponRegion();
         UpdateUpgradeOffer(localHud);
         if (_upgrade is { Enabled: true } offer && input.LeftPressed && _upgradeRegion.HitTest(input.MousePosition))
         {
-            _sim!.Host.Issue(offer.Command(SimSnapshotSource.LocalPlayer, _selectedBuilding));
+            _sim!.Host.Issue(offer.Command(Me, _selectedBuilding));
             input.ConsumeLeft();
         }
         UpdatePackOffer();
@@ -397,7 +447,9 @@ public sealed class GameScreen : IScreen, IFocusPausable
             }
         }
 
-        bool chatTyping = _chat.Update(input, _sim?.Commanders, _sim?.Sim.Tick ?? 0, _s.Settings.LlmChatOn, _console is { IsOpen: true });
+        bool chatTyping = _lan is not null && _lanOverlay is not null
+            ? _lanOverlay.UpdateChat(input, _lan)   // M9-08: LAN chat (Enter, Tab All/Team)
+            : _chat.Update(input, _sim?.Commanders, _sim?.Sim.Tick ?? 0, _s.Settings.LlmChatOn, _console is { IsOpen: true });
         if (chatTyping) input.ConsumeKeyboard();
         bool typing = _console is { IsOpen: true };
         if (typing) input.ConsumeKeyboard();
@@ -405,7 +457,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
         if (!typing && !chatTyping && (_console is null && input.ConsumePressed(Keys.F1) || input.Text.Contains('?')))
         {
             input.ConsumeText();
-            _s.Screens.Push(new ControlsScreen(_s));   // M11-03: F1 (or ?) lists the controls; F1 is the console in the sandbox, ? works everywhere
+            _s.Screens.Push(_lan is null ? new ControlsScreen(_s) : new LanCover(new ControlsScreen(_s)));   // M11-03: F1 (or ?) lists the controls; F1 is the console in the sandbox, ? works everywhere
             return;
         }
 
@@ -417,23 +469,26 @@ public sealed class GameScreen : IScreen, IFocusPausable
 
         if (input.ConsumePressed(Keys.Escape))
         {
-            _s.Screens.Push(new PauseScreen(_s, _restart, SaveTarget()));
+            // M9: the LAN menu opens over the running match (no pause, save or restart there)
+            _s.Screens.Push(_lan is null ? new PauseScreen(_s, _restart, SaveTarget()) : new LanCover(new LanMenuScreen(_s)));
             return;
         }
 
         _sidebar?.Update(input, _camera, _s.Viewport.Width, _s.Viewport.Height, _s.UiFactor);
         HandlePackKeyAndPlacement(input);   // M6-09: K, and the unpack footprint on the map
 
-        bool debugKeys = GameKeys.DebugKeysAllowed(_skirmishMode);
+        bool debugKeys = _lan is null && GameKeys.DebugKeysAllowed(_skirmishMode);   // M9: never a local step in a LAN match
         if (_sim is not null)
         {
+            if (_lan is not null && input.ConsumePressed(GameAction.Pause)) _lan.TogglePause();   // M9: a LAN pause request (Q-M9-h)
             if (_spec is not null)
             {
+                if (_lan is not null) ConsumeSpectatorSpeedKeys(input);   // M9: speed is fixed at 1x in LAN
                 _spec.Handle(input);   // V, F2, 1-4, Space, Tab
             }
             else
             {
-                if (input.ConsumePressed(GameAction.Pause)) _sim.Paused = !_sim.Paused;
+                if (_lan is null && input.ConsumePressed(GameAction.Pause)) _sim.Paused = !_sim.Paused;
                 HandleSpeedKeys(input, typing || chatTyping);   // M13-15
                 if (debugKeys && input.ConsumePressed(GameAction.DebugFog)) _sim.CycleViewer();
                 if (debugKeys && _console is not { IsOpen: true } && input.ConsumePressed(GameAction.DebugSpectator)) StartSpectatorFromSandbox();
@@ -491,7 +546,8 @@ public sealed class GameScreen : IScreen, IFocusPausable
         int wheelDelta = input.WheelDelta;
         if (wheelDelta != 0) _camera.ZoomBy(wheelDelta > 0 ? 1 : -1, input.MousePosition);   // S18 GAMEUI-02: zoom about the cursor
 
-        if (_sim is not null) _sim.Advance(t.ElapsedGameTime.Ticks / 10); // ticks are 100 ns; microseconds = ticks / 10
+        if (_lan is not null) PumpLan(t);   // M9: the lockstep steps the sim when it holds the bundles
+        else if (_sim is not null) _sim.Advance(t.ElapsedGameTime.Ticks / 10); // ticks are 100 ns; microseconds = ticks / 10
         else _source.Update();
         if (_sim is not null) _sampler.Observe(_sim.Sim, _income);   // M10-17: a sample every 10 s of game time
         bool scriptCue = false;
@@ -505,7 +561,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
         }
         // ---- end M11-05 ----
 
-        if (_sim is not null && !_spectatorMode) _alerts.Observe(_source.Previous, _source.Current, _sim.Sim.HudFor(SimSnapshotSource.LocalPlayer), SimSnapshotSource.LocalPlayer);   // M11-10d
+        if (_sim is not null && !_spectatorMode) _alerts.Observe(_source.Previous, _source.Current, _sim.Sim.HudFor(Me), Me);   // M11-10d
         _camera.Clamp(_source.Current.MapWidth, _source.Current.MapHeight, MapViewport());
         Vector2 view = _camera.WorldFromScreen(new Point(MapViewport().Width / 2, MapViewport().Height / 2));   // M3-INT: positional audio
         Audio.AudioListener.SetFromWorldPixels(view.X, view.Y, Camera.CellPx);
@@ -520,9 +576,9 @@ public sealed class GameScreen : IScreen, IFocusPausable
         }
         else if (_sim is { } live)
         {
-            _selection.Prune(key => live.IsOwnedAlive(key, SimSnapshotSource.LocalPlayer));
+            _selection.Prune(key => live.IsOwnedAlive(key, Me));
             _selection.DropCarried(_renderUnits);   // S19 D-205 (NEW-2): a soldier ordered to Enter leaves the selection once inside
-            _groups.Prune(key => live.IsOwnedAlive(key, SimSnapshotSource.LocalPlayer));   // groups keep carried members; recall skips them
+            _groups.Prune(key => live.IsOwnedAlive(key, Me));   // groups keep carried members; recall skips them
         }
         else
         {
@@ -539,7 +595,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
         {
             _gameOverShown = true;
             if (_sim is not null) _sampler.Finish(_sim.Sim, _income);   // M10-17: the last point of the graphs
-            RecordSkirmishResult();   // M10-19
+            if (_lan is null) RecordSkirmishResult();   // M10-19 (a LAN match is not a skirmish against the AI)
             if (_gameOverOverride?.Invoke() is { } replacement)
             {
                 if (replacement is DebriefScreen debrief) debrief.Timeline = _sampler.Timeline;
@@ -550,6 +606,13 @@ public sealed class GameScreen : IScreen, IFocusPausable
             UiUnit tableScale = _s.UiScale;
             IReadOnlyList<string>? table = _sim is null ? null
                 : SpectatorTable.Final(SpectatorTable.Collect(_sim.Sim, _income), line => BitmapFont.Measure(line, tableScale));
+            if (_lan is not null)
+            {
+                // M9: as in skirmish, but no Restart; the match below keeps running (LanCover) so the other peers are not held up
+                _s.Screens.Push(new LanCover(new GameOverScreen(_s, _restart, GameOverHeadline(), table, _spectatorMode, () => _lan.SaveReplay(),
+                    _sampler.Timeline, restartable: false)));
+                return;
+            }
             _s.Screens.Push(new GameOverScreen(_s, _restart, GameOverHeadline(), table, _spectatorMode, () => _sim?.SaveReplay(), _sampler.Timeline));
         }
     }
@@ -587,6 +650,11 @@ public sealed class GameScreen : IScreen, IFocusPausable
         DrawIdleButtons(sb);
         DrawSpectator(sb);
         _console?.Draw(sb, _s.Pixel, _s.Viewport);
+        if (_lan is not null && _lanOverlay is not null)   // M9-08
+        {
+            Rectangle mapView = _sidebar?.Layout.MapView ?? new Rectangle(0, 0, _s.Viewport.Width, _s.Viewport.Height);
+            _lanOverlay.Draw(sb, _s.Pixel, _lan, mapView, _s.UiScale, _mouse, LanChatAnchor());
+        }
         DrawMapCursor(sb);   // last, so it sits above everything
     }
 
@@ -615,10 +683,10 @@ public sealed class GameScreen : IScreen, IFocusPausable
                 _selection.Remove(action.Unit);
                 break;
             case Rts.Game.Ui.Card.CardActionKind.Sell when _sim is not null && !_selectedBuilding.IsNone:
-                if (_sellConfirm.Click(_selectedBuilding, _nowMs)) _sim.Host.Issue(SidebarCommands.Sell(SimSnapshotSource.LocalPlayer, _selectedBuilding));   // D-205: the second click within 2 s sells
+                if (_sellConfirm.Click(_selectedBuilding, _nowMs)) _sim.Host.Issue(SidebarCommands.Sell(Me, _selectedBuilding));   // D-205: the second click within 2 s sells
                 break;
             case Rts.Game.Ui.Card.CardActionKind.Repair when _sim is not null && !_selectedBuilding.IsNone:
-                _sim.Host.Issue(SidebarCommands.Repair(SimSnapshotSource.LocalPlayer, _selectedBuilding));
+                _sim.Host.Issue(SidebarCommands.Repair(Me, _selectedBuilding));
                 break;
         }
     }
@@ -670,9 +738,9 @@ public sealed class GameScreen : IScreen, IFocusPausable
         else SoftwareCursor.Draw(sb, _s.Pixel, kind, _mouse, _s.UiScale.Whole);
     }
 
-    // What Save game writes to: only a skirmish or mission (the sandbox has no save header).
+    // What Save game writes to: only a skirmish or mission (the sandbox has no save header). Never a LAN match (Q-M9-i).
     private GameSaveTarget? SaveTarget() =>
-        _sim is { SaveTemplate: { } template } ? new GameSaveTarget(new SaveCatalog(_s.SaveRoot ?? SaveCatalog.DefaultRoot), template, _sim.Host, _s.RulesDir, _groups.Snapshot) : null;   // D-205: groups are saved
+        _lan is null && _sim is { SaveTemplate: { } template } ? new GameSaveTarget(new SaveCatalog(_s.SaveRoot ?? SaveCatalog.DefaultRoot), template, _sim.Host, _s.RulesDir, _groups.Snapshot) : null;   // D-205: groups are saved
 
     // ---- D-205 (S18 GS-06): quicksave / quickload keys, single-player autosave, and the one-line toast they report with ----
     private readonly GameToast _toast = new();
@@ -695,8 +763,8 @@ public sealed class GameScreen : IScreen, IFocusPausable
         _idleHarvesterRegion.Bounds = Rectangle.Empty;
         _idleFactoryRegion.Bounds = Rectangle.Empty;
         if (_sim is null || !_skirmishMode || _spectatorMode || _gameOverShown) return;
-        _sim.Sim.ViewFor(SimSnapshotSource.LocalPlayer).CopyOwn(_ownScratch);
-        PlayerHud hud = _sim.Sim.HudFor(SimSnapshotSource.LocalPlayer);
+        _sim.Sim.ViewFor(Me).CopyOwn(_ownScratch);
+        PlayerHud hud = _sim.Sim.HudFor(Me);
         IdleFinder.Harvesters(_ownScratch, _sim.Rules, _idleHarvesters);
         IdleFinder.Factories(_ownScratch, _sim.Rules, hud, _idleFactories);
         _idleAlerts.Clear();
@@ -769,8 +837,8 @@ public sealed class GameScreen : IScreen, IFocusPausable
 
     // ---- M13-15: game speed (single-player skirmish only; the sim step never changes, only the steps per real second) ----
 
-    /// <summary>There is no LAN game yet; when there is, it sets this and the speed is locked to 1x.</summary>
-    private const bool Networked = false;
+    // M9: a LAN match locks the speed to 1x (Q-M9-h).
+    private bool Networked => _lan is not null;
 
     private bool SpeedAllowed => _skirmishMode && !_spectatorMode && Skirmish is not null && _sim is not null && !Networked;
 
@@ -854,7 +922,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
     {
         if (_startCueDone || _spectatorMode || !_skirmishMode || _sim is null) return;
         _startCueDone = true;
-        byte local = SimSnapshotSource.LocalPlayer;
+        byte local = Me;
         if (!ExpeditionCue.Applies(_sim.Sim.HudFor(local), _source.Current, local)) return;
         if (ExpeditionCue.FindShip(_source.Current, _sim.Rules, local) is { } ship) CentreCameraOn(Camera.WorldFromLepton(ship.Position));
         _toast.Show(ExpeditionCue.Text(), _nowMs, ExpeditionCue.ToastMs);
@@ -913,14 +981,14 @@ public sealed class GameScreen : IScreen, IFocusPausable
                 Vector2 a = _camera.WorldFromScreen(begin);
                 Vector2 b = _camera.WorldFromScreen(mouse);
                 bool addBox = ShiftHeld(input);   // M11-10c: Shift+box adds to the selection
-                _selection.Apply(Selection.Inside(_renderUnits, Vector2.Min(a, b), Vector2.Max(a, b), SimSnapshotSource.LocalPlayer), addBox);
+                _selection.Apply(Selection.Inside(_renderUnits, Vector2.Min(a, b), Vector2.Max(a, b), Me), addBox);
                 if (!addBox || _selection.Count > 0) ClearBuildingSelection();
                 _clickTap.Reset();
                 if (_selection.Count > 0) Audio.AudioBootstrap.Director?.Notify(Audio.AudioEventKind.UnitSelect);   // M3-INT
             }
             else
             {
-                UnitKey? hit = Selection.Pick(_renderUnits, _camera.WorldFromScreen(mouse), SimSnapshotSource.LocalPlayer);
+                UnitKey? hit = Selection.Pick(_renderUnits, _camera.WorldFromScreen(mouse), Me);
                 bool addClick = ShiftHeld(input);
                 if (hit is UnitKey key)
                 {
@@ -930,7 +998,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
                         Viewport map = MapViewport();
                         Vector2 topLeft = _camera.WorldFromScreen(new Point(0, 0));
                         Vector2 bottomRight = _camera.WorldFromScreen(new Point(map.Width, map.Height));
-                        _selection.Apply(Selection.SameTypeInside(_renderUnits, topLeft, bottomRight, SimSnapshotSource.LocalPlayer, key), addClick);
+                        _selection.Apply(Selection.SameTypeInside(_renderUnits, topLeft, bottomRight, Me, key), addClick);
                     }
                     else if (addClick) _selection.Toggle(key);
                     else _selection.Replace(new[] { key });
@@ -964,7 +1032,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
             CellCoord cell = Camera.CellAt(_camera.WorldFromScreen(mouse));
             if (_sim is not null && !_selectedBuilding.IsNone && _selectedBuildingProduces && _sim.Map.Contains(cell))
             {
-                _sim.Host.Issue(SidebarCommands.Rally(SimSnapshotSource.LocalPlayer, _selectedBuilding, cell));
+                _sim.Host.Issue(SidebarCommands.Rally(Me, _selectedBuilding, cell));
             }
             else
             {
@@ -1062,7 +1130,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
         }
         else if (input.LeftPressed && MapViewport().Bounds.Contains(input.MousePosition))
         {
-            byte local = SimSnapshotSource.LocalPlayer;
+            byte local = Me;
             CellCoord cell = Camera.CellAt(_camera.WorldFromScreen(input.MousePosition));
             Command? command = _superweapon.ClickMap(local, cell, (b, c) => _sim.Sim.CanFireSuperweapon(local, b, c));
             input.ConsumeLeft();   // never also select or box-drag
@@ -1128,7 +1196,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
 
         var owned = new List<string>();
         foreach (BuildingView b in _source.Current.Buildings)
-            if (!b.Ghost && b.Player == SimSnapshotSource.LocalPlayer) owned.Add(_sim.Rules.Buildings[b.TypeIndex].Id);
+            if (!b.Ghost && b.Player == Me) owned.Add(_sim.Rules.Buildings[b.TypeIndex].Id);
         _upgrade = BuildingUpgradeOffer.For(_sim.Rules, _selectedBuildingType, hud.Cash, owned);
         _upgradeRegion.Bounds = _upgrade is null ? Rectangle.Empty : UpgradeButtonRect();
     }
@@ -1171,7 +1239,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
         }
 
         List<ViewActor> own = _diveScratch;
-        _sim.Sim.ViewFor(SimSnapshotSource.LocalPlayer).CopyOwn(own, includeBuildings: false);
+        _sim.Sim.ViewFor(Me).CopyOwn(own, includeBuildings: false);
         foreach (UnitKey key in _selection.Units)
         {
             if (!_sim.TryGetTypeIndex(key, out int type) || !M3Orders.IsDiver(_sim.Rules, key.Kind, type)) continue;
@@ -1225,7 +1293,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
             return;
         }
 
-        PlayerView view = _sim.Sim.ViewFor(SimSnapshotSource.LocalPlayer);
+        PlayerView view = _sim.Sim.ViewFor(Me);
         if (!_selectedBuilding.IsNone && _selectedBuildingType >= 0)
         {
             int progress = view.PackProgressPermille(new ActorRef(ActorKind.Building, _selectedBuilding));
@@ -1251,7 +1319,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
     private void ActivatePack(PackOffer offer)
     {
         if (_sim is null || !offer.Enabled || _packSubject.IsNone) return;
-        byte local = SimSnapshotSource.LocalPlayer;
+        byte local = Me;
         if (offer.Action == PackAction.Pack)
         {
             _sim.Host.Issue(PackOffer.PackCommand(local, _packSubject));
@@ -1277,7 +1345,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
         }
 
         if (_unpack is not { } placing) return;
-        if (_sim.Sim.ViewFor(SimSnapshotSource.LocalPlayer).UnpackTypeOf(placing.Rig) < 0)
+        if (_sim.Sim.ViewFor(Me).UnpackTypeOf(placing.Rig) < 0)
         {
             _unpack = null;   // the rig died, or is no longer packed
             return;
@@ -1292,7 +1360,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
         }
         else if (input.LeftPressed)
         {
-            if (placing.Click(SimSnapshotSource.LocalPlayer) is Command unpack)
+            if (placing.Click(Me) is Command unpack)
             {
                 _sim.Host.Issue(unpack);
                 _unpack = null;
@@ -1333,7 +1401,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
     private void DrawPackProgress(SpriteBatch sb, SimSnapshot snapshot)
     {
         if (_sim is null || !_skirmishMode) return;
-        byte local = SimSnapshotSource.LocalPlayer;
+        byte local = Me;
         PlayerView view = _sim.Sim.ViewFor(local);
         foreach (BuildingView b in snapshot.Buildings)
         {
@@ -1380,7 +1448,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
         if (_sim is null || !_skirmishMode) return;
         foreach (BuildingView b in _source.Current.Buildings)
         {
-            if (b.Ghost || b.Player != SimSnapshotSource.LocalPlayer) continue;
+            if (b.Ghost || b.Player != Me) continue;
             if (cell.X < b.Cell.X || cell.X >= b.Cell.X + b.FootprintW || cell.Y < b.Cell.Y || cell.Y >= b.Cell.Y + b.FootprintH) continue;
             _selectedBuilding = b.Id;
             _selectedBuildingProduces = _sim.Rules.Buildings[b.TypeIndex].Produces is not null;
@@ -1416,7 +1484,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
             if (_overlays.Ranges && _sim is not null) RangeOverlay.DrawBuilding(sb, _s.Pixel, _camera, _sim.Rules, b);   // M13-15: a selected defence shows its range
             // O4: a selected production building shows its rally flag and a line to it
             if (_sim is not null && _sim.Rules.Buildings[b.TypeIndex].Produces is { } lane
-                && _sim.Sim.Production.RallyCell(SimSnapshotSource.LocalPlayer, lane) is { } rally)
+                && _sim.Sim.Production.RallyCell(Me, lane) is { } rally)
             {
                 OrderFeedback.DrawRally(sb, _s.Pixel, _camera, new Vector2(left + b.FootprintW * Camera.CellPx / 2f, top + b.FootprintH * Camera.CellPx / 2f), rally);
             }
@@ -1468,7 +1536,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
         if (input.ConsumePressed(GameAction.SelectAll))
         {
             SimRules rules = _sim.Rules;
-            _selection.Replace(Selection.Army(_renderUnits, SimSnapshotSource.LocalPlayer, unit => Selection.IsCombatUnit(rules, unit)));
+            _selection.Replace(Selection.Army(_renderUnits, Me, unit => Selection.IsCombatUnit(rules, unit)));
             ClearBuildingSelection();
             if (_selection.Count > 0) Audio.AudioBootstrap.Director?.Notify(Audio.AudioEventKind.UnitSelect);
         }
@@ -1530,14 +1598,95 @@ public sealed class GameScreen : IScreen, IFocusPausable
         Vector2? centre = null;
         foreach (BuildingView b in _source.Current.Buildings)
         {
-            if (b.Player != SimSnapshotSource.LocalPlayer) continue;
+            if (b.Player != Me) continue;
             centre = new Vector2((b.Cell.X + b.FootprintW / 2f) * Camera.CellPx, (b.Cell.Y + b.FootprintH / 2f) * Camera.CellPx);
             break;
         }
 
-        centre ??= Camera.CentreOf(_sim.Map.StartPositions[SimSnapshotSource.LocalPlayer]);
+        centre ??= Camera.CentreOf(_sim.Map.StartPositions[Me]);
         CentreCameraOn(centre.Value);
     }
+
+    // ---- M9-07 / M9-08 / M9-10: the LAN match ----
+
+    // The lockstep steps the sim on the game time; the network is pumped every frame, also while a menu is open over the match.
+    private void PumpLan(GameTime t) => _lan!.Update(t.TotalGameTime.Ticks / 10);   // ticks are 100 ns
+
+    // The overlay's buttons (Drop, Resume, the desync and host-left choices). True when this screen is leaving.
+    private bool HandleLanOverlay(InputFrame input)
+    {
+        Rectangle mapView = _sidebar?.Layout.MapView ?? new Rectangle(0, 0, _s.Viewport.Width, _s.Viewport.Height);
+        if (_lanOverlay!.Update(input, _lan!, mapView, _s.UiScale) is not { } action) return false;
+        switch (action.Kind)
+        {
+            case LanOverlayActionKind.Drop: _lan!.Drop(action.Peer); break;
+            case LanOverlayActionKind.Resume: _lan!.RequestResume(); break;
+            case LanOverlayActionKind.Resync: _lan!.ResyncFromHost(); break;
+            case LanOverlayActionKind.Continue: _lan!.ContinueAfterDesync(); break;
+            case LanOverlayActionKind.EndMatch:
+            case LanOverlayActionKind.BackToMenu:
+                GameFlow.QuitToMenu(_s);
+                return true;
+            case LanOverlayActionKind.ContinueAgainstAi:
+                ContinueAgainstAi();
+                return true;
+        }
+        return false;
+    }
+
+    // Q-M9-j: an ordinary skirmish save of the last stepped tick, the other sides played by AIs, loaded as a normal skirmish.
+    private void ContinueAgainstAi()
+    {
+        LoadedGame loaded;
+        try
+        {
+            string path = _lan!.WriteContinueSave(new SaveCatalog(_s.SaveRoot ?? SaveCatalog.DefaultRoot));
+            loaded = GameLoader.Load(path, _s.RulesDir);
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException or InvalidOperationException || ScreenGuard.IsDataError(e))
+        {
+            _s.Screens.Push(new LanCover(new NoticeScreen(_s, LanText.ContinueAgainstAi, LanText.ContinueFailed.Replace("{reason}", e.Message))));
+            return;
+        }
+        _s.Screens.Post(() =>
+        {
+            try { ReplaceSelf(CreateFromSave(_s, loaded)); }
+            catch (Exception e) when (ScreenGuard.IsDataError(e))
+            {
+                _s.Screens.ReplaceAll(new MainMenuScreen(_s));
+                _s.Screens.Push(new NoticeScreen(_s, "Cannot load", ScreenGuard.Describe(e)));
+            }
+        });
+    }
+
+    // A resync replaced the session's simulation: rebuild this screen around it (the session, its replay and its transport live on).
+    private void OnLanSourceReplaced()
+    {
+        if (_lan is null || _lanHandoff) return;
+        _lanHandoff = true;
+        LanSession session = _lan;
+        _s.Screens.Post(() => ReplaceSelf(CreateLan(_s, session)));
+    }
+
+    // Pops the screens over this one and this one, then pushes the next.
+    private void ReplaceSelf(IScreen next)
+    {
+        while (_s.Screens.Count > 0 && _s.Screens.Screens.Contains(this) && !ReferenceEquals(_s.Screens.Top, this)) _s.Screens.Pop();
+        if (ReferenceEquals(_s.Screens.Top, this)) _s.Screens.Pop();
+        _s.Screens.Push(next);
+    }
+
+    // The spectator speed keys do nothing in LAN (speed is fixed at 1x).
+    private static void ConsumeSpectatorSpeedKeys(InputFrame input)
+    {
+        input.ConsumePressed(GameAction.SpecSpeed1);
+        input.ConsumePressed(GameAction.SpecSpeed2);
+        input.ConsumePressed(GameAction.SpecSpeed4);
+        input.ConsumePressed(GameAction.SpecSpeed8);
+    }
+
+    // Where the LAN chat list sits: bottom left of the map, where the commander chat sits in a skirmish.
+    private Point LanChatAnchor() => new(8, _s.Viewport.Height - Hud.HeightOf(1, _s.UiScale) - 12);
 
     /// <summary>Centres the map view on a world point, clamped to the map (the same move as the start view).</summary>
     private void CentreCameraOn(Vector2 centre)
@@ -1553,12 +1702,14 @@ public sealed class GameScreen : IScreen, IFocusPausable
     private void RecordSkirmishResult()
     {
         if (_sim is null || !_skirmishMode || _spectatorMode || Skirmish is null || _mission is not null) return;
-        byte local = SimSnapshotSource.LocalPlayer;
+        byte local = Me;
         bool won = GameOverHeadline() == "Victory";
         MatchTimeline? timeline = _sampler.Timeline;
         int column = timeline?.ColumnOf(local) ?? -1;
         int army = column >= 0 ? timeline!.PeakArmy(column) : 0;
-        Profile.ProfileRecorder.RecordSkirmish(Profile.ProfileRecorder.PathFor(_s), Skirmish.PlayerFaction, Skirmish.AiTier, won, _sim.Sim.Tick, army);
+        // the local player's faction: player 0's in a new skirmish, the peer's own in a game continued from a LAN match
+        Faction faction = local < Skirmish.PlayerCount ? Skirmish.Slots[Skirmish.PlayerSlots[local]].Faction : Skirmish.PlayerFaction;
+        Profile.ProfileRecorder.RecordSkirmish(Profile.ProfileRecorder.PathFor(_s), faction, Skirmish.AiTier, won, _sim.Sim.Tick, army);
     }
 
     private string GameOverHeadline()
@@ -1566,7 +1717,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
         if (_sim is null) return GameOverScreen.Headline(false, -1, 0);
         if (_spectatorMode) return GameOverScreen.SpectatorHeadline(_sim.Sim.WinningTeam);
         if (_missionGame is { } mg) return GameOverScreen.Headline(!mg.LocalWon, mg.LocalWon ? 0 : -1, 0);   // S18 MIS-01
-        byte local = SimSnapshotSource.LocalPlayer;
+        byte local = Me;
         return GameOverScreen.Headline(_sim.Sim.HudFor(local).Defeated, _sim.Sim.WinningTeam, _sim.Sim.Setup.TeamOf(local));
     }
 

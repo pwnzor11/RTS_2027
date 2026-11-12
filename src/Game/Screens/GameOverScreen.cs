@@ -28,8 +28,10 @@ public sealed class GameOverScreen : IScreen
     /// <param name="spectator">True after an AI-vs-AI game: the menu offers Save replay, Watch again (same seed) and Menu.</param>
     /// <param name="saveReplay">Called by "Save replay" (spectator menu); null hides nothing, the item then does nothing.</param>
     /// <param name="timeline">M10-17: the match samples; when given the menu gets a Graphs item.</param>
+    /// <param name="restartable">M9: false after a LAN match, which cannot be restarted or watched again: the menu has no Restart item.</param>
     public GameOverScreen(GameServices services, Func<IScreen> restart, string? headline = null,
-        IReadOnlyList<string>? statsLines = null, bool spectator = false, Action? saveReplay = null, MatchTimeline? timeline = null)
+        IReadOnlyList<string>? statsLines = null, bool spectator = false, Action? saveReplay = null, MatchTimeline? timeline = null,
+        bool restartable = true)
     {
         _s = services;
         Title = headline ?? "Game over";
@@ -39,12 +41,12 @@ public sealed class GameOverScreen : IScreen
         if (spectator)
         {
             items.Add(new MenuItem(() => "Save replay", () => saveReplay?.Invoke()));
-            items.Add(new MenuItem(() => "Watch again", () => GameFlow.Restart(_s, restart)));
+            if (restartable) items.Add(new MenuItem(() => "Watch again", () => GameFlow.Restart(_s, restart)));
             items.Add(new MenuItem(() => "Menu", () => GameFlow.QuitToMenu(_s)));
         }
         else
         {
-            items.Add(new MenuItem(() => "Restart", () => GameFlow.Restart(_s, restart)));
+            if (restartable) items.Add(new MenuItem(() => "Restart", () => GameFlow.Restart(_s, restart)));
             items.Add(new MenuItem(() => "Quit to menu", () => GameFlow.QuitToMenu(_s)));
         }
 

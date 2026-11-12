@@ -4,10 +4,21 @@ using Rts.Game.Screens;
 
 namespace Rts.Game.Lan;
 
-/// <summary>Starts a LAN match from a <see cref="LanMatchSetup"/> (M9 wave-2 contract; package W2-G fills the body).</summary>
+/// <summary>Starts a LAN match from a <see cref="LanMatchSetup"/> (M9 wave-2 contract; the body is M9-07).</summary>
 public static class LanMatch
 {
     /// <summary>Builds the screen that plays the match on this peer. The caller replaces the lobby with it.</summary>
-    public static IScreen CreateScreen(GameServices services, LanMatchSetup setup) =>
-        throw new NotImplementedException("M9 W2-G");
+    public static IScreen CreateScreen(GameServices services, LanMatchSetup setup)
+    {
+        ArgumentNullException.ThrowIfNull(services);
+        ArgumentNullException.ThrowIfNull(setup);
+        LanSession session;
+        try { session = new LanSession(setup, services.RulesDir, LanSessionOptions.ForGame(services.Settings)); }
+        catch
+        {
+            setup.Transport.Dispose();   // the match owns the transport: nobody else will close it
+            throw;
+        }
+        return GameScreen.CreateLan(services, session);
+    }
 }

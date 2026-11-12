@@ -146,21 +146,21 @@ public sealed class OrderController
             return;
         }
 
-        ActorRef? enemy = TargetPicker.Pick(units, _source.Current, world, SimSnapshotSource.LocalPlayer, p => _source.Sim.RelationOf(SimSnapshotSource.LocalPlayer, p));
+        ActorRef? enemy = TargetPicker.Pick(units, _source.Current, world, _source.Local, p => _source.Sim.RelationOf(_source.Local, p));
         (ActorRef Target, int TypeIndex)? own = enemy is null
-            ? TargetPicker.PickOwn(units, _source.Current, world, SimSnapshotSource.LocalPlayer, _selection.Contains)
+            ? TargetPicker.PickOwn(units, _source.Current, world, _source.Local, _selection.Contains)
             : null;
         EntityId buildingId = enemy is { Kind: ActorKind.Building } e ? e.Id : own is { Target.Kind: ActorKind.Building } o ? o.Target.Id : EntityId.None;
         BuildingView? building = buildingId.IsNone ? null : ViewOf(buildingId);
         bool wreckHere = false;
         if (!armed && _source.Map.Contains(cell))
         {
-            _source.Sim.ViewFor(SimSnapshotSource.LocalPlayer).CopyWrecks(_wrecks);
+            _source.Sim.ViewFor(_source.Local).CopyWrecks(_wrecks);
             wreckHere = SalvageOrders.WreckAt(_wrecks, cell);
         }
 
-        OverlayKind overlay = !armed && _source.Map.Contains(cell) ? _source.Sim.ViewFor(SimSnapshotSource.LocalPlayer).OverlayAt(cell) : OverlayKind.None;
-        bool ownBuilding = building is BuildingView ob && ob.Player == SimSnapshotSource.LocalPlayer;
+        OverlayKind overlay = !armed && _source.Map.Contains(cell) ? _source.Sim.ViewFor(_source.Local).OverlayAt(cell) : OverlayKind.None;
+        bool ownBuilding = building is BuildingView ob && ob.Player == _source.Local;
 
         OrderMarkKind? mark = null;   // O1: one ring per click, not one per unit
         foreach (UnitKey unit in _selection.Units.ToList())
@@ -168,7 +168,7 @@ public sealed class OrderController
             BuildingClick click = BuildingClick.None;
             if (building is BuildingView view && _source.TryGetTypeIndex(unit, out int type))
             {
-                Relation relation = _source.Sim.RelationOf(SimSnapshotSource.LocalPlayer, view.Player);
+                Relation relation = _source.Sim.RelationOf(_source.Local, view.Player);
                 click = GarrisonOrders.Classify(_source.Rules, unit.Kind, type, view, relation);
             }
 
@@ -250,8 +250,8 @@ public sealed class OrderController
     private bool TryUnloadSelectedBuilding()
     {
         if (SelectedBuilding.IsNone) return false;
-        if (!GarrisonOrders.CanUnload(ViewOf(SelectedBuilding), SimSnapshotSource.LocalPlayer)) return false;
-        _source.Host.Issue(GarrisonOrders.Unload(SimSnapshotSource.LocalPlayer, SelectedBuilding));
+        if (!GarrisonOrders.CanUnload(ViewOf(SelectedBuilding), _source.Local)) return false;
+        _source.Host.Issue(GarrisonOrders.Unload(_source.Local, SelectedBuilding));
         return true;
     }
 

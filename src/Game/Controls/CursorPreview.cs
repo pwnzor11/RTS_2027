@@ -159,7 +159,7 @@ public sealed class CursorPreview
     public CursorKind Probe(SimSnapshotSource source, Selection selection, Point screen, Camera camera, IReadOnlyList<RenderUnit> units,
         bool attackMoveArmed, bool deployArmed)
     {
-        byte local = SimSnapshotSource.LocalPlayer;
+        byte local = source.Local;
         Vector2 world = camera.WorldFromScreen(screen);
         CellCoord cell = Camera.CellAt(world);
         bool inMap = source.Map.Contains(cell);

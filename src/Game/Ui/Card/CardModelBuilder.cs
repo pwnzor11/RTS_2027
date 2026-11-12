@@ -166,7 +166,7 @@ public static class CardModelBuilder
 
         var lines = new List<string>();
         if (unit.Kind == UnitKind.Vehicle && r.Vehicles[unit.TypeIndex].AircraftSlots > 0
-            && source.Sim.ViewFor(SimSnapshotSource.LocalPlayer).OwnCarrierHangar(key.Id, out int docked, out int slots))
+            && source.Sim.ViewFor(source.Local).OwnCarrierHangar(key.Id, out int docked, out int slots))
             lines.Add(CarrierReadout.Text(docked, slots));
 
         return new CardModel
