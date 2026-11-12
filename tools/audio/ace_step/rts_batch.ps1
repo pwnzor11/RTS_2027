@@ -31,7 +31,8 @@ for ($take = 1; $take -le $Takes; $take++) {
         $full = Join-Path $PSScriptRoot $outDir
         if ((Test-Path $full) -and (Get-ChildItem -Path $full -Filter "*.wav" -ErrorAction SilentlyContinue)) { continue }
         $runToml = Join-Path $tmp "$($job.BaseName)_take$take.toml"
-        (Get-Content -Raw $job.FullName) + "save_dir = '$outDir'`n" | Set-Content -Path $runToml -Encoding ASCII
+        $text = (Get-Content -Raw $job.FullName) + "save_dir = '$outDir'`n"
+        [System.IO.File]::WriteAllText($runToml, $text, (New-Object System.Text.UTF8Encoding $false))   # no BOM: Python's toml rejects it
         Log "start  $track take $take"
         $t0 = Get-Date
         & $python cli.py --config $runToml --log-level WARNING *>> (Join-Path $PSScriptRoot "rts_batch_detail.log")
