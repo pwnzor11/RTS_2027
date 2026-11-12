@@ -178,24 +178,60 @@ internal sealed class MilitaryManager
         _failedWaves++;   // S15
     }
 
-    /// <summary>S14 mop-up (flag respond_to_attacks): no enemy mobile unit seen for the whole long window (<see cref="TierPlanner.WaveGateMemoryTicks"/>) counts as "no enemy army".</summary>
-    public const int MopupFromTick = 6000;   // (tune) s14: never before this tick (before first contact "no enemy seen" is true too)
-    /// <summary>S14 mop-up: smallest army a mop-up wave takes.</summary>
-    public const int MopupMinArmy = 6;   // (tune) s14
-    /// <summary>S14 mop-up: least ticks between two waves while mopping up (a wave that died on a defence is not repeated at once).</summary>
-    public const int MopupGapTicks = 1500;   // (tune) s14
+    /// <summary>S22 mop-up (runtime option <see cref="MilitaryOptions.Mopup"/>, tier 2+ with respond_to_attacks, never in missions): finishes a beaten enemy.
+    /// Decisions are in <see cref="MopupPlan"/>; the memory (hold timer, threat timer, fog stamps) lives here and is saved with the manager.</summary>
+    public bool MissionBot { get; set; }
 
-    /// <summary>S14: waves launched by the mop-up rule.</summary>
+    /// <summary>S22: true while the mop-up rules are in force for this AI.</summary>
+    internal bool MopupOn => Options.Respond && Options.Mopup && !MissionBot;
+
+    /// <summary>S14/S22: waves launched by the mop-up rule.</summary>
     public int Mopups { get; private set; }
 
-    /// <summary>S14: the early-launch half of the mop-up. Off: measured worse (Directorate 4 v 3 decisive 54 % -> 41 %, draws unchanged).</summary>
-    public const bool MopupLaunch = false;
+    /// <summary>S22: tick since which the enemy has counted as beaten without a break (-1 = not beaten).</summary>
+    private int _beatenSince = -1;
+    /// <summary>S22: last tick a threat showed at home (own building hit, or an armed enemy unit near the base).</summary>
+    private int _threatTick = int.MinValue / 2;
+    /// <summary>S22: per 8-cell block of the map, the last tick (+1) at which any of it was in view (0 = never). Own memory: the view only knows shroud / fog / visible.</summary>
+    private int[] _stamp = Array.Empty<int>();
+    private int _stampW;
+    /// <summary>S22: count of block refreshes (never seen or stale -> in view), and its value at the last progress check.</summary>
+    private int _sweepFound, _sweepMark;
 
-    /// <summary>S14: the shroud sweep half of the mop-up. Off: no measurable effect on draws, and it made SupplyAiTests (LeftBehind tier 5) sit capped for over a minute.</summary>
-    public const bool MopupSweep = false;
+    /// <summary>S22: the enemy counts as beaten and the mop-up may sweep for the last buildings.</summary>
+    internal bool Sweeping => MopupOn && _beatenSince >= 0;
 
-    private bool MopupDue(RecruitKnowledge k, int n) =>
-        MopupLaunch && Options.Respond && k.View.Tick >= MopupFromTick && _eLongVal == 0 && n >= MopupMinArmy && k.View.Tick - _lastWave >= MopupGapTicks;
+    private void UpdateMopup(RecruitKnowledge k, ViewActor? attacked, int armyCount)
+    {
+        if (!MopupOn) { _beatenSince = -1; return; }
+        int tick = k.View.Tick;
+        // fog memory
+        int gw = (k.View.MapWidth + MopupPlan.BlockCells - 1) / MopupPlan.BlockCells, gh = (k.View.MapHeight + MopupPlan.BlockCells - 1) / MopupPlan.BlockCells;
+        if (_stamp.Length != gw * gh) { _stamp = new int[gw * gh]; _stampW = gw; }
+        for (int by = 0; by < gh; by++)
+            for (int bx = 0; bx < gw; bx++)
+            {
+                var c = new CellCoord(bx * MopupPlan.BlockCells + MopupPlan.BlockCells / 2, by * MopupPlan.BlockCells + MopupPlan.BlockCells / 2);
+                if (c.X >= k.View.MapWidth || c.Y >= k.View.MapHeight || !k.View.IsVisible(c)) continue;
+                int i = by * gw + bx;
+                if (MopupPlan.Stale(_stamp[i], tick)) _sweepFound++;
+                _stamp[i] = tick + 1;
+            }
+        // threats at home
+        if (attacked is not null) _threatTick = tick;
+        else
+            foreach (ViewActor e in k.Visible)
+                if (e.Relation == Relation.Enemy && e.IsMobile && Chebyshev(e.Cell, _home) <= MopupPlan.HomeThreatCells && !(e.Kind == ActorKind.Vehicle && k.Rules.Vehicles[e.TypeIndex].HarvestCapacity > 0))
+                { _threatTick = tick; break; }
+        // beaten
+        if (tick >= MopupPlan.FromTick && MopupPlan.Beaten(OwnValue, EnemyValueSeen, armyCount)) { if (_beatenSince < 0) _beatenSince = tick; }
+        else _beatenSince = -1;
+    }
+
+    /// <summary>S22: a mop-up wave may leave now (the thresholds and the strength gate do not apply; siege hold, retreat cooldown and scripted holds still do).</summary>
+    private bool MopupDue(int tick, int n, int guard) =>
+        MopupOn && _beatenSince >= 0 && tick - _beatenSince >= MopupPlan.HoldTicks && tick - _threatTick >= MopupPlan.CalmTicks
+        && n >= MopupPlan.MinArmy + guard && tick - _lastWave >= MopupPlan.GapTicks;
 
     // ---- S15 siege (Q-64, D-174): decisions in SiegePlan, memory here (saved at the end of Snapshot) ----
     private bool _siegeOn, _siegeWave, _siegeHave;
@@ -324,7 +360,7 @@ internal sealed class MilitaryManager
     private static ulong Key(ViewActor a) => ((ulong)a.Id.Index << 16) | a.Id.Generation | ((ulong)(int)a.Kind << 48);
 
     /// <summary>M4-12 (diagnostics): the wave phase (0 gather, 1 stage, 2 assault), the scout-route stop and the last goal picked.</summary>
-    public string Debug => $"{(int)_phase}:{_scoutIdx}/{_scoutRoute.Count}@{(_scoutRoute.Count > 0 ? _scoutRoute[Math.Min(_scoutIdx, _scoutRoute.Count - 1)] : default)} goal {_lastGoal} stage {_stage} roster {_roster.Count} siege {(SiegeActive ? "wave" : _siegeOn ? "on" : "off")} need {_siegeNeed} waves {SiegeWaves} holds {SiegeHolds} tgt {(_siegeHave ? _siegeCell.ToString() : "-")}";
+    public string Debug => $"{(int)_phase}:{_scoutIdx}/{_scoutRoute.Count}@{(_scoutRoute.Count > 0 ? _scoutRoute[Math.Min(_scoutIdx, _scoutRoute.Count - 1)] : default)} goal {_lastGoal} stage {_stage} roster {_roster.Count} siege {(SiegeActive ? "wave" : _siegeOn ? "on" : "off")} need {_siegeNeed} waves {SiegeWaves} holds {SiegeHolds} tgt {(_siegeHave ? _siegeCell.ToString() : "-")} mopup {(MopupOn ? "on" : "off")} beaten {_beatenSince} mops {Mopups} found {_sweepFound} kb {_targetBuildings.Count}";
 
     /// <summary>M4-12: set by the AI while its income has stalled (map mined out): waves go out at <see cref="DesperateWave"/> units.</summary>
     public bool Broke { get; set; }
@@ -399,6 +435,7 @@ internal sealed class MilitaryManager
         AssessSiege(k);   // S15
         ViewActor? attacked = FindAttacked(k);
         int n = k.Army.Count;
+        UpdateMopup(k, attacked, n);   // S22
 
         int alive = RosterAlive(k);
 
@@ -442,24 +479,25 @@ internal sealed class MilitaryManager
             int needNow = _siegeOn ? (int)Math.Min(SiegePlan.NeedCap, (long)_siegeNeed * (100 + SiegePlan.GrowthPct * Math.Min(_failedWaves, SiegePlan.MaxFailureSteps)) / 100) : EnemyValueSeen == 0 && _targetPlayer >= 0 ? 0 : _required;   // S15: no enemy army seen for the whole long window and no defence worth a siege: nothing to wait for
             bool strong = WaveGate.Strong(Options.Respond, OwnValue, EnemyValueSeen, needNow, n, tick, _lastWave, Options.AttackRatioPct);   // M4-16 r4: no wave into a clearly bigger army
             bool hookWave = _hookForce && n >= 1;   // M8-06: AI.Wave, once
-            bool mop = !hookWave && !Hold && !HookHold && tick >= _cooldownUntil && MopupDue(k, n) && knownEnemyBuildings.Count + _scoutRoute.Count > 0;   // S14: no enemy army about: send what we have
-            if (mop) { desperate = true; Mopups++; }   // v2 measurement: 4v3 Directorate fell to 41 % decisive, so MopupDue is off unless MopupLaunch
+            bool mop = !hookWave && !Hold && !HookHold && tick >= _cooldownUntil && MopupDue(tick, n, guard);   // S22: the enemy is beaten: go and finish it
             if (hookWave) { _hookForce = false; _hookWaveActive = true; _hookWaveCell = _hookForceCell; desperate = true; }
             // S15: the enemy base is defended: gather an army worth a share of its defences first (not when broke, scripted, or after a long wait)
             bool siegeHold = _siegeOn && !desperate && (OwnValue < _siegeNeed || n < SiegePlan.MinUnits(Options.Tier, _failedWaves)) && n < SiegePlan.CapUnits && tick - _lastWave < SiegePlan.WaitTicks;
             if (siegeHold && n >= Bias.Wave(_nextThreshold, 2) + guard) SiegeHolds++;
-            if (hookWave || tick >= _cooldownUntil && !Hold && !HookHold && !siegeHold && (strong || desperate) && (n >= Bias.Wave(_nextThreshold, 2) + guard
-                || (n >= Bias.Wave(MinWave, 2) + guard && tick - _lastWave >= Bias.Wave(_nextInterval, 600)) || desperate))
+            if (hookWave || tick >= _cooldownUntil && !Hold && !HookHold && !siegeHold && (strong || desperate || mop) && (n >= Bias.Wave(_nextThreshold, 2) + guard
+                || (n >= Bias.Wave(MinWave, 2) + guard && tick - _lastWave >= Bias.Wave(_nextInterval, 600)) || desperate || mop))
             {
                 _roster.Clear(); _squadB.Clear();
                 long hp = 0;
                 int idx = 0;
                 CellCoord first = PickGoal(k, knownEnemyBuildings);
-                _siegeWave = _siegeOn && !hookWave;   // S15
-                if (_siegeWave) { SiegeWaves++; _siegeHave = false; _siegeIssued = default; }
+                bool mopWave = mop && !desperate;   // S22
+                if (mopWave) Mopups++;
+                _siegeWave = (_siegeOn || mopWave) && !hookWave;   // S15 (S22: a mop-up wave picks its targets the same way: outside-in, uncovered vital structures first)
+                if (_siegeWave) { if (_siegeOn) SiegeWaves++; _siegeHave = false; _siegeIssued = default; }
                 CellCoord? second = Options.TwoPronged && n >= MinProngArmy && !_siegeWave ? SecondGoal(k, knownEnemyBuildings, first) : null;
                 _prong = second is not null;
-                int take = desperate ? n : Math.Max(1, n - guard), seen = 0;
+                int take = desperate ? n : Math.Max(1, n - (mopWave ? Math.Max(guard, MopupPlan.KeepHome) : guard)), seen = 0;
                 foreach (ViewActor a in k.Army)
                 {
                     if (seen++ >= take) break;
@@ -560,9 +598,13 @@ internal sealed class MilitaryManager
                 if (PickFocus(k.Visible, a.Cell, k.Rules) is ViewActor f && a.Target != f.Id)
                     sink.Issue(CommandKind.Attack, a.Id, a.Kind, default, f.Ref);
             }
+        List<CellCoord>? parties = _phase == Phase.Assault && siegeTarget is null && knownEnemyBuildings.Count == 0 && Sweeping && !_prong && !_hookWaveActive && HookAttack is null
+            ? SweepParties(k, tick, RosterAlive(k)) : null;   // S22: a big wave splits up to look in several places at once
+        int memberIdx = 0;
         foreach (ViewActor a in k.Army)
         {
             bool memberNow = _phase != Phase.Gather && _roster.Contains(Key(a));
+            int partyIdx = memberNow ? memberIdx++ : 0;
             if (!a.Idle && !(retarget && memberNow && !a.Underground)) continue;
             bool member = memberNow;
             bool prongB = member && _squadB.Contains(Key(a));
@@ -588,6 +630,7 @@ internal sealed class MilitaryManager
             else if (member)
             {
                 CellCoord target = prongB ? goalB : goal;
+                if (parties is { Count: > 1 }) target = parties[partyIdx % parties.Count];   // S22
                 if (Chebyshev(a.Cell, target) > ReissueDistanceCells) sink.Issue(CommandKind.AttackMove, a.Id, a.Kind, target);
             }
             else if (Chebyshev(a.Cell, rally) > HomeRadiusCells)
@@ -639,6 +682,14 @@ internal sealed class MilitaryManager
     /// <see cref="AvoidTicks"/>.</summary>
     private bool Stalled(RecruitKnowledge k, List<ViewActor> known)
     {
+        if (known.Count == 0 && Sweeping)
+        {
+            // S22: a sweep has nothing to destroy; it makes progress while blocks of the map come into view again
+            if (_sweepFound != _sweepMark) { _sweepMark = _sweepFound; _progressTick = k.View.Tick; return false; }
+            if (k.View.Tick - _progressTick < StaleAssaultTicks) return false;
+            _avoid.Add((_lastGoal, k.View.Tick + AvoidTicks));
+            return true;
+        }
         long score = 0;
         foreach (ViewActor b in known) score += b.Health + 1;
         int tick = k.View.Tick;
@@ -830,35 +881,35 @@ internal sealed class MilitaryManager
                 best = d; goal = b.Cell; found = true;
             }
         if (found) { _lastGoal = goal; return goal; }
-        // S14 mop-up: no enemy army about and no structure known (a stray tunnel hatch keeps a player alive): sweep the shrouded map, nearest cell first
-        if (MopupSweep && Options.Respond && tick >= MopupFromTick && _eLongVal == 0 && SweepGoal(k, centre, tick) is CellCoord sweep) { _lastGoal = sweep; return sweep; }
+        // S22 mop-up: the enemy is beaten and no structure is known (a stray tunnel hatch keeps a player alive): sweep the map, never-seen blocks first, then blocks not in view for a long time
+        if (Sweeping && SweepGoal(k, centre, tick) is CellCoord sweep) { _lastGoal = sweep; return sweep; }
         // nothing known: look at the route stops in turn; a stop that is in view and shows no building is crossed off
         while (_scoutIdx < _scoutRoute.Count - 1 && k.View.IsVisible(_scoutRoute[_scoutIdx])) _scoutIdx++;
         if (_scoutIdx >= _scoutRoute.Count - 1 && k.View.IsVisible(_scoutRoute[^1])) _scoutIdx = 0;
         return _scoutRoute[_scoutIdx];
     }
 
-    /// <summary>S14 mop-up: cells between two probes of the shroud sweep.</summary>
-    public const int SweepStepCells = 8;   // (tune) s14
+    /// <summary>S22: goals for the sweep parties of a big wave (empty when the wave sweeps as one group).</summary>
+    private List<CellCoord> SweepParties(RecruitKnowledge k, int tick, int alive)
+    {
+        var view = k.View;
+        long cx = 0, cy = 0; int c = 0;
+        foreach (ViewActor a in k.Army)
+            if (_roster.Contains(Key(a))) { cx += a.Position.X; cy += a.Position.Y; c++; }
+        if (c == 0) return new List<CellCoord>();
+        var from = new CellCoord((int)(cx / c / 256), (int)(cy / c / 256));
+        int parties = MopupPlan.Parties(alive);
+        if (parties < 2) return new List<CellCoord>();
+        return MopupPlan.PickSweeps(k.Rules, _stamp, _stampW, view.MapWidth, view.MapHeight, tick, from, _targetBuildings,
+            cell => view.IsPassable(cell, Locomotion.Tracked), cell => _avoid.Count > 0 && Avoided(cell, tick), parties);
+    }
 
-    /// <summary>S14 mop-up: the nearest passable cell on an 8-cell grid that the player has never seen (shroud), skipping goals a stalled wave could not reach. Null when the whole grid has been seen.</summary>
+    /// <summary>S22 mop-up: the next block of the sweep (see <see cref="MopupPlan.PickSweep"/>), skipping goals a stalled wave could not reach. Null when the whole map is fresh.</summary>
     private CellCoord? SweepGoal(RecruitKnowledge k, LeptonCoord centre, int tick)
     {
         var view = k.View;
-        long best = long.MaxValue;
-        CellCoord goal = default;
-        bool found = false;
-        for (int y = SweepStepCells / 2; y < view.MapHeight; y += SweepStepCells)
-            for (int x = SweepStepCells / 2; x < view.MapWidth; x += SweepStepCells)
-            {
-                var c = new CellCoord(x, y);
-                if (view.VisionAt(c) != 0 || !view.IsPassable(c, Locomotion.Tracked)) continue;
-                if (_avoid.Count > 0 && Avoided(c, tick)) continue;
-                long dx = c.X * 256L - centre.X, dy = c.Y * 256L - centre.Y, d = dx * dx + dy * dy;
-                if (d >= best) continue;
-                best = d; goal = c; found = true;
-            }
-        return found ? goal : null;
+        return MopupPlan.PickSweep(k.Rules, _stamp, _stampW, view.MapWidth, view.MapHeight, tick, new CellCoord(centre.X / 256, centre.Y / 256),
+            _targetBuildings, c => view.IsPassable(c, Locomotion.Tracked), c => _avoid.Count > 0 && Avoided(c, tick));
     }
 
     /// <summary>The own building (in slot order) whose health fell since the previous decision, if any; with the Respond option
@@ -964,6 +1015,8 @@ internal sealed class MilitaryManager
         w.Write(_launchValue); w.Write(_required);   // M4-16 r4
         w.Write(_eShortVal); w.Write(_eShortBonus); w.Write(_eShortTick); w.Write(_eLongVal); w.Write(_eLongBonus); w.Write(_eLongTick);   // VET-6
         w.Write(Mopups);   // S14
+        w.Write(_beatenSince); w.Write(_threatTick); w.Write(_sweepFound); w.Write(_sweepMark); w.Write(_stampW); w.Write(_stamp.Length);   // S22
+        foreach (int v in _stamp) w.Write(v);
         w.Write(_siegeWave); w.Write(_siegeHave); w.Write(_failedWaves); w.Write(SiegeWaves); w.Write(SiegeHolds);   // S15
         AiSnapshot.WriteId(w, _siegeId); AiSnapshot.WriteId(w, _siegeIssued); AiSnapshot.WriteCell(w, _siegeCell);
     }
@@ -992,7 +1045,7 @@ internal sealed class MilitaryManager
     }
 
     /// <summary>M3-21: reads what <see cref="Snapshot"/> wrote. Call after Start.</summary>
-    internal void Restore(BinaryReader r)
+    internal void Restore(BinaryReader r, bool mopup = true)
     {
         _nextThreshold = r.ReadInt32(); _nextInterval = r.ReadInt32(); _bias = r.ReadInt32();
         AiSnapshot.ReadMap(r, _lastHealth, br => br.ReadInt32());
@@ -1015,6 +1068,12 @@ internal sealed class MilitaryManager
         _launchValue = r.ReadInt32(); _required = r.ReadInt32();   // M4-16 r4
         _eShortVal = r.ReadInt32(); _eShortBonus = r.ReadInt32(); _eShortTick = r.ReadInt32(); _eLongVal = r.ReadInt32(); _eLongBonus = r.ReadInt32(); _eLongTick = r.ReadInt32();   // VET-6
         Mopups = r.ReadInt32();   // S14
+        if (mopup)   // S22 (saves of layout 5 and later)
+        {
+            _beatenSince = r.ReadInt32(); _threatTick = r.ReadInt32(); _sweepFound = r.ReadInt32(); _sweepMark = r.ReadInt32(); _stampW = r.ReadInt32();
+            _stamp = new int[AiSnapshot.Count(r)];
+            for (int i = 0; i < _stamp.Length; i++) _stamp[i] = r.ReadInt32();
+        }
         _siegeWave = r.ReadBoolean(); _siegeHave = r.ReadBoolean(); _failedWaves = r.ReadInt32(); SiegeWaves = r.ReadInt32(); SiegeHolds = r.ReadInt32();   // S15
         _siegeId = AiSnapshot.ReadId(r); _siegeIssued = AiSnapshot.ReadId(r); _siegeCell = AiSnapshot.ReadCell(r);
         if (_scoutRoute.Count > 0) _scoutIdx = Math.Clamp(_scoutIdx, 0, _scoutRoute.Count - 1);
