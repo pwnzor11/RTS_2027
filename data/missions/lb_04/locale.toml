@@ -35,3 +35,13 @@
 [voice]
 "lb4.radio.start" = "voice/leader_lb_calloway_ross/lb4.radio.start.ogg"
 "lb4.radio.win" = "voice/leader_lb_calloway_ross/lb4.radio.win.ogg"
+"lb4.radio.landing2" = "voice/leader_lb_calloway_ross/lb4.radio.landing2.ogg"
+"lb4.radio.hint" = "voice/leader_lb_calloway_ross/lb4.radio.hint.ogg"
+"lb4.radio.kell" = "voice/leader_exp_kell/lb4.radio.kell.ogg"
+"lb4.radio.landing" = "voice/leader_lb_calloway_ross/lb4.radio.landing.ogg"
+"lb4.radio.fleet" = "voice/leader_exp_kell/lb4.radio.fleet.ogg"
+"lb4.radio.warn" = "voice/leader_lb_calloway_ross/lb4.radio.warn.ogg"
+"lb4.radio.dark" = "voice/leader_lb_calloway_ross/lb4.radio.dark.ogg"
+"lb4.radio.kellout" = "voice/leader_exp_kell/lb4.radio.kellout.ogg"
+"lb4.radio.wreck" = "voice/leader_lb_calloway_ross/lb4.radio.wreck.ogg"
+"lb4.radio.counter" = "voice/leader_lb_calloway_ross/lb4.radio.counter.ogg"
