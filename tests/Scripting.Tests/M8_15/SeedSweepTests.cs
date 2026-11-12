@@ -10,7 +10,7 @@ namespace Rts.Scripting.Tests.M8_15;
 /// k = 1..12), the session 20 probe made a kept tool. It does nothing unless <c>RTS_SWEEP</c> names the cases, so the normal suite
 /// skips it in no time. Run:
 /// <c>RTS_SWEEP="auth_01:3,lb_03:5" dotnet test tests/Scripting.Tests --no-build --filter FullyQualifiedName~SeedSweep --logger "console;verbosity=detailed" | grep SWEEP</c>
-/// (<c>RTS_SWEEP_N</c> sets the seed count, default 12; <c>RTS_SWEEP_FROM</c> the first k, default 1).
+/// (<c>RTS_SWEEP_N</c> sets the seed count, default 12; <c>RTS_SWEEP_FROM</c> the first k, default 1; <c>RTS_SWEEP_OUT</c> also appends each line to a file).
 /// </summary>
 public sealed class SeedSweepTests
 {
@@ -44,7 +44,10 @@ public sealed class SeedSweepTests
                     if (ok) wins++;
                     ticks.Add(ok ? r.Tick.ToString() : "L");
                 }
-                _out.WriteLine($"SWEEP {id} t{tier} wins {wins}/{n} [{string.Join(" ", ticks)}]");
+                string line = $"SWEEP {id} t{tier} wins {wins}/{n} [{string.Join(" ", ticks)}]";
+                _out.WriteLine(line);
+                string? outFile = Environment.GetEnvironmentVariable("RTS_SWEEP_OUT");   // the laptop script collects lines here
+                if (!string.IsNullOrEmpty(outFile)) File.AppendAllText(outFile, line + Environment.NewLine);
             }
         }
         finally
@@ -53,33 +56,23 @@ public sealed class SeedSweepTests
         }
     }
 
-    /// <summary>A data folder that links everything in the real data folder except the missions, whose mission.toml files get seed k.</summary>
+    /// <summary>A data folder with copies of what a mission session reads (rules, maps, missions), whose mission.toml files get seed k.
+    /// S21: copies, not links, so it also runs on Windows without Developer Mode (tools/measure/run_s21_campaign_sweep.ps1).</summary>
     private static string SeedDir(string root, int k)
     {
         string dir = Path.Combine(root, "s" + k);
         if (Directory.Exists(dir)) return dir;
         string src = TestData.DataDir;
-        Directory.CreateDirectory(Path.Combine(dir, "missions"));
-        foreach (string e in Directory.EnumerateFileSystemEntries(src))
-        {
-            string name = Path.GetFileName(e);
-            if (name == "missions") continue;
-            if (Directory.Exists(e)) Directory.CreateSymbolicLink(Path.Combine(dir, name), e);
-            else File.CreateSymbolicLink(Path.Combine(dir, name), e);
-        }
-        foreach (string m in Directory.EnumerateDirectories(Path.Combine(src, "missions")))
-        {
-            string md = Path.Combine(dir, "missions", Path.GetFileName(m));
-            Directory.CreateDirectory(md);
-            foreach (string f in Directory.EnumerateFiles(m))
-            {
-                string target = Path.Combine(md, Path.GetFileName(f));
-                if (Path.GetFileName(f) == "mission.toml")
-                    File.WriteAllText(target, Regex.Replace(File.ReadAllText(f), @"(?m)^seed = \d+", $"seed = {SeedOf(k)}"));
-                else
-                    File.CreateSymbolicLink(target, f);
-            }
-        }
+        foreach (string sub in new[] { "rules", "maps", "missions" }) CopyTree(Path.Combine(src, sub), Path.Combine(dir, sub));
+        foreach (string toml in Directory.EnumerateFiles(Path.Combine(dir, "missions"), "mission.toml", SearchOption.AllDirectories))
+            File.WriteAllText(toml, Regex.Replace(File.ReadAllText(toml), @"(?m)^seed = \d+", $"seed = {SeedOf(k)}"));
         return dir;
+    }
+
+    private static void CopyTree(string from, string to)
+    {
+        Directory.CreateDirectory(to);
+        foreach (string f in Directory.EnumerateFiles(from)) File.Copy(f, Path.Combine(to, Path.GetFileName(f)), true);
+        foreach (string d in Directory.EnumerateDirectories(from)) CopyTree(d, Path.Combine(to, Path.GetFileName(d)));
     }
 }
