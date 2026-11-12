@@ -193,18 +193,8 @@ public class StartPlacementAuditTests(ITestOutputHelper output)
         Assert.Equal(a, b);
     }
 
-    // S18 audit: pins current behaviour of DATA-TOOLS-01; flip the assertion when fixed.
+    // M13-10 (D-205 item 11): the start kit is the half-turn image on a half-turn map.
     [Theory]
-    [InlineData(Faction.Directorate)]
-    [InlineData(Faction.LeftBehind)]
-    [InlineData(Faction.Expedition)]
-    public void Audit_StartKit_IsNotTheHalfTurnImage_OnMountainsLayout2(Faction faction)
-    {
-        (List<string> a, List<string> b) = Layouts(faction, 3UL);
-        Assert.NotEqual(a, b);
-    }
-
-    [Theory(Skip = "S18 DATA-TOOLS-01: awaiting owner decision")]
     [InlineData(Faction.Directorate)]
     [InlineData(Faction.LeftBehind)]
     [InlineData(Faction.Expedition)]

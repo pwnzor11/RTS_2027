@@ -30,16 +30,26 @@ public class PlacementTieBreakAuditTests(ITestOutputHelper output)
         return (cell.X - y.X, cell.Y - y.Y, rules.Buildings[power].FootprintW);
     }
 
-    // S18 audit: pins current behaviour of AI-08; flip the assertion when fixed.
+    // M13-10 (D-205 item 11, AI-08): ties break toward the map centre in a mirrored order, so mirrored yards place at mirrored offsets.
     [Fact]
-    public void Audit_MirroredYards_PlaceTheFirstStructureAtTheSameOffset_NotTheMirrorImage()
+    public void MirroredYards_PlaceTheFirstStructureAtTheMirrorImage_MirrorX()
     {
         var yard0 = new CellCoord(12, 30);
         var yard1 = new CellCoord(Size - 12 - 3, 30);   // mirror_x image of a 3x3 yard
         var a = FirstPower(yard0, yard1, 0);
         var b = FirstPower(yard0, yard1, 1);
-        Assert.Equal((a.Dx, a.Dy), (b.Dx, b.Dy));                 // translation
-        Assert.NotEqual(a.Dx, -b.Dx - b.W + 3);                    // not the mirror image (image offset = -dx - w + 3 for a 3-wide yard)
-        Assert.True(a.Dx <= 0 || a.Dy <= 0, "the tie goes north or west");
+        Assert.Equal(a.Dy, b.Dy);
+        Assert.Equal(-a.Dx - a.W + 3, b.Dx);
+    }
+
+    [Fact]
+    public void MirroredYards_PlaceTheFirstStructureAtTheHalfTurnImage()
+    {
+        var yard0 = new CellCoord(12, 20);
+        var yard1 = new CellCoord(Size - 12 - 3, Size - 20 - 3);
+        var a = FirstPower(yard0, yard1, 0);
+        var b = FirstPower(yard0, yard1, 1);
+        Assert.Equal(-a.Dx - a.W + 3, b.Dx);
+        Assert.Equal(-a.Dy - a.W + 3, b.Dy);   // power plant footprint is square
     }
 }
