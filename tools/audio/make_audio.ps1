@@ -58,6 +58,22 @@ function Run-Logged([string]$what, [scriptblock]$cmd) {
     Log ("{0} {1} ({2:mm\:ss})" -f $(if ($ok) { 'done  ' } else { 'FAILED' }), $what, ((Get-Date) - $t0))
     return $ok
 }
+function New-Py311Venv([string]$dir) {
+    # Kokoro needs Python 3.11 (3.13 builds numpy 1.26 from source and fails). Try the py launcher, then uv (installed with
+    # ACE-Step; it downloads 3.11 by itself), then winget's Python 3.11.
+    try { & py -3.11 -m venv $dir 2>$null } catch { }
+    if (Test-Path (Join-Path $dir 'Scripts\python.exe')) { return }
+    $uv = Get-Command uv -ErrorAction SilentlyContinue
+    if (-not $uv -and (Test-Path "$env:USERPROFILE\.local\bin\uv.exe")) { $uv = Get-Item "$env:USERPROFILE\.local\bin\uv.exe" }
+    if ($uv) {
+        Log "py launcher has no 3.11; using uv to fetch Python 3.11"
+        $uvPath = if ($uv.Source) { $uv.Source } else { $uv.FullName }
+        & $uvPath venv --seed --python 3.11 $dir
+        if (Test-Path (Join-Path $dir 'Scripts\python.exe')) { return }
+    }
+    $wp = "$env:LOCALAPPDATA\Programs\Python\Python311\python.exe"
+    if (Test-Path $wp) { & $wp -m venv $dir }
+}
 function Need-Venv { if (-not (Test-Path $py)) { throw ".venv-audio not found. Run with -Setup first." } }
 function Find-Espeak {
     $dll = @("$env:ProgramFiles\eSpeak NG\libespeak-ng.dll", "${env:ProgramFiles(x86)}\eSpeak NG\libespeak-ng.dll") | Where-Object { Test-Path $_ } | Select-Object -First 1
@@ -70,9 +86,9 @@ $failed = @(); $todo = @()
 
 if ($Setup) {
     if (-not (Test-Path $py)) {
-        Log "creating .venv-audio with Python 3.11 (py launcher)"
-        py -3.11 -m venv $venv
-        if (-not (Test-Path $py)) { throw "Could not create the venv. Install Python 3.11 (64-bit) from python.org, then run -Setup again." }
+        Log "creating .venv-audio with Python 3.11"
+        New-Py311Venv $venv
+        if (-not (Test-Path $py)) { throw "Could not create the venv. Run 'winget install --id Python.Python.3.11 -e', open a NEW PowerShell window, then run -Setup again." }
     }
     $ok = Run-Logged "pip install kokoro soundfile imageio-ffmpeg numpy" { & $py -m pip install --upgrade pip kokoro soundfile imageio-ffmpeg numpy }
     if (-not $ok) { $failed += 'setup' }
