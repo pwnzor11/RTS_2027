@@ -369,7 +369,9 @@ public sealed class LanSession : IDisposable
 
     private SimSnapshotSource MakeSource(Simulation sim)
     {
-        var source = new SimSnapshotSource(sim, _game.Map, _recording) { Local = (byte)Math.Max(0, LocalPlayer) };
+        // the replay writer is bound to the simulation it started with: after a resync the session records the bundles itself (no hashes)
+        ReplayRecording? recording = ReferenceEquals(sim, _game.Sim) ? _recording : null;
+        var source = new SimSnapshotSource(sim, _game.Map, recording) { Local = (byte)Math.Max(0, LocalPlayer) };
         source.SaveTemplate = null;   // a LAN game is never saved (Q-M9-i)
         source.Host.Spectator = IsSpectator;
         source.Host.SetViewer(IsSpectator ? -1 : LocalPlayer);
@@ -388,6 +390,8 @@ public sealed class LanSession : IDisposable
         if (_client is not null && _pendingResync is { Complete: true } r && r.Tick == tick) ApplyResync();
         if (_source.Tick != tick)
             throw new InvalidOperationException($"LAN lockstep out of step: the sim is at tick {_source.Tick} but bundle {tick} came to run.");
+        if (!ReferenceEquals(_source.Sim, _game.Sim))
+            foreach (Command c in bundle) _recording?.RecordCommand(c);   // resynced: the source records nothing itself
         _source.Host.StepWithBundle(bundle);
         foreach (Command c in bundle)
             if (c.Sequence + 1 > _nextSequence[c.Player]) _nextSequence[c.Player] = (ushort)(c.Sequence + 1);
