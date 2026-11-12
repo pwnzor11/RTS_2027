@@ -130,6 +130,16 @@ public sealed class LockstepHost
     /// <summary>Lets <paramref name="peer"/> (the host itself is peer 0) command <paramref name="player"/>.</summary>
     public void SetSlot(int peer, byte player) => _scheduler.SetSlot(peer, player);
 
+    /// <summary>
+    /// Registers a client the match expects (every human peer and spectator from the lobby's setup), connected or not. One that is not
+    /// connected when the match starts is dropped on the first update (an AI takes its slot), so a peer that left between the lobby's
+    /// Start and the match never leaves a dead slot behind (M9-14).
+    /// </summary>
+    public void AddPeer(int peer)
+    {
+        if (peer != HostPeer && !_started) _progress.TryAdd(peer, -1);
+    }
+
     /// <summary>Marks a client as a spectator: it gets every bundle but nobody waits for it, and it may not command.</summary>
     public void SetSpectator(int peer)
     {
@@ -213,6 +223,8 @@ public sealed class LockstepHost
         {
             _started = true;
             _nextTickUs = _now;
+            foreach (int peer in _progress.Keys.ToArray())
+                if (!_transport.Peers.Contains(peer)) Drop(peer, "disconnected");
         }
 
         int steps = 0;

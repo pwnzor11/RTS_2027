@@ -91,6 +91,9 @@ public sealed class LanSession : IDisposable
                 if (player >= 0) host.SetSlot(peer, (byte)player);
             }
             foreach (int peer in setup.Spectators) host.SetSpectator(peer);
+            // the match's peers come from the setup, not from who is connected now: a peer that left since the Start is dropped and
+            // its slot taken over instead of being left dead (M9-14)
+            foreach (int peer in setup.PeerSlots.Keys.Concat(setup.Spectators).Order()) host.AddPeer(peer);
             host.PeerDropped += OnHostDrop;
             host.Desynced += (_, _) => _reportDue = true;
             host.ChatReceived += AddChat;

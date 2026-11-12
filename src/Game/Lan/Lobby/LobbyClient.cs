@@ -71,13 +71,14 @@ public sealed class LobbyClient
     /// <summary>Percent of a custom map downloaded so far (0 when not downloading).</summary>
     public int MapPercent => _receiver.Total == 0 ? 0 : _receiver.Received * 100 / _receiver.Total;
 
-    /// <summary>Pumps the transport and handles what arrived.</summary>
+    /// <summary>Pumps the transport and handles what arrived. Whatever comes after the Start (messages and events) is left for the match.</summary>
     public void Poll(long nowMicroseconds)
     {
         if (State is LobbyClientState.Rejected or LobbyClientState.Disconnected or LobbyClientState.Started) return;
         _transport.Poll(nowMicroseconds);
         while (State is LobbyClientState.Connecting or LobbyClientState.InLobby && _transport.TryReceive(out _, out NetMessage message)) Handle(message);
-        while (_transport.TryGetEvent(out PeerEvent e))
+        // once Started, the events (a host that vanished right after its Start) belong to the match: leave them in the transport
+        while (State is LobbyClientState.Connecting or LobbyClientState.InLobby && _transport.TryGetEvent(out PeerEvent e))
         {
             if (e.Connected || e.Peer != 0) continue;
             if (State is LobbyClientState.Connecting or LobbyClientState.InLobby)
