@@ -93,7 +93,7 @@ public sealed class AudioComponent : GameComponent
 
         if (source is not null && source.Current.Tick != _lastTick)
         {
-            const byte local = SimSnapshotSource.LocalPlayer;
+            byte local = source.Local;
             PlayerHud hud = source.Sim.HudFor(local);
             int winner = source.Sim.WinningTeam;
             GameResult result = hud.Defeated ? GameResult.Lost
