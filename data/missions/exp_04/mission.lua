@@ -100,6 +100,7 @@ function CheckFuel()
       Media.MessageKey("e4.fuel")
       Dialogue.Say(SPEAKER, SPEAKER, "e4.radio.fuel")
       Dialogue.Say("leader_exp_roque", "leader_exp_roque", "e4.radio.roque")
+      Dialogue.Say(SPEAKER, SPEAKER, "e4.radio.march")
       -- The fuel is taken: the built-in AI now sends its whole army at the beachhead.
       AI.Attack(1, "beachhead")
     end
@@ -140,6 +141,7 @@ end
 function ColumnTwo()
   if state.phase == "done" then return end
   Media.MessageKey("e4.col2")
+  Dialogue.Say(SPEAKER, SPEAKER, "e4.radio.col2")
   Camera.Focus("flank", 100)
   Column(Pick({ 7, 9, 11, 15, 20 }), "dir_sapper", 2, "flank")
 end
