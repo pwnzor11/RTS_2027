@@ -30,7 +30,7 @@ internal sealed class LanSessionHarness : IDisposable
     public readonly List<(int Tick, Command Command)>[] Stepped = new List<(int, Command)>[Peers];
     public long Now;
 
-    public LanSessionHarness(ulong seed = 41, int latencyMs = 20, int jitterMs = 10, int lossPercent = 5, int delay = NetProtocol.DefaultDelay)
+    public LanSessionHarness(ulong seed = 41, int latencyMs = 20, int jitterMs = 10, int lossPercent = 5, int delay = NetProtocol.DefaultDelay, int goneBeforeStart = -1)
     {
         Directory.CreateDirectory(Folder);
         Net = new LoopbackNetwork(seed) { LatencyMs = latencyMs, JitterMs = jitterMs, UnreliableLossPercent = lossPercent };
@@ -50,13 +50,21 @@ internal sealed class LanSessionHarness : IDisposable
             seed);
         var peerSlots = new Dictionary<int, int> { [0] = 0, [1] = 1, [2] = 2 };
         var names = new Dictionary<int, string> { [0] = "Hana", [1] = "Ivo", [2] = "Jun", [3] = "Kit" };
+        if (goneBeforeStart > 0)
+        {
+            // M9-14: this peer left between the lobby's Start and the match; the lobby already took the disconnect event
+            Net.Disconnect(goneBeforeStart, "left before the match");
+            while (transports[0].TryGetEvent(out _)) { }
+            Frozen[goneBeforeStart] = true;
+        }
         for (int peer = 0; peer < Peers; peer++)
         {
+            Stepped[peer] = new List<(int, Command)>();
+            if (peer == goneBeforeStart) continue;
             var setup = new LanMatchSetup(transports[peer], peer == 0, peer, Settings, peerSlots, new[] { SpectatorPeer }, names, delay);
             string own = Path.Combine(Folder, "peer" + peer);
             Sessions[peer] = new LanSession(setup, RulesDir, new LanSessionOptions(null, Path.Combine(own, "lan_last.rpl"), Path.Combine(own, "desync")));
             int index = peer;
-            Stepped[peer] = new List<(int, Command)>();
             Sessions[peer].Stepped += (tick, bundle) => { foreach (Command c in bundle) Stepped[index].Add((tick, c)); };
         }
     }

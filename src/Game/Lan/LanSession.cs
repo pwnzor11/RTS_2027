@@ -185,6 +185,9 @@ public sealed class LanSession : IDisposable
     /// <summary>True on a client once the host left or was lost (Q-M9-j).</summary>
     public bool HostGone => _client?.HostLost ?? false;
 
+    /// <summary>Tests only: replaces the host's capture of the resync save (null in the game).</summary>
+    public Func<byte[]>? ResyncSaveOverride { get; set; }
+
     /// <summary>The host's state hashes compared with clients' so far (host only, else 0).</summary>
     public int HashesCompared => _host?.HashesCompared ?? 0;
 
@@ -269,6 +272,7 @@ public sealed class LanSession : IDisposable
             _reportDue = false;
             OnDesync();
         }
+        if (_client is not null && DesyncTick is not null && _client.Desync is null) DesyncTick = null;   // the host chose Continue and resumed
         if (_resyncRequested && _host is { Paused: true } h && h.Tick == h.SealedThrough + 1) SendResync(h);
         UpdateWaiting();
         RelayCommanderLines();
@@ -563,6 +567,7 @@ public sealed class LanSession : IDisposable
     // The state at the current tick in the ordinary save format (the resync payload). No AI slots: the host keeps running its own.
     private byte[] CaptureSave()
     {
+        if (ResyncSaveOverride is { } over) return over();
         GameSaveHeader template = _game.SaveTemplate(Settings) with { LocalPlayer = (byte)Math.Max(0, LocalPlayer), Ai = Array.Empty<SavedAi>() };
         _source.Host.RestoreQueue(_source.Host.Pending.ToArray(), Sequences());
         using var stream = new MemoryStream();
