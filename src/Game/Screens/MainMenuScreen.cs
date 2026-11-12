@@ -123,6 +123,7 @@ public sealed class MainMenuScreen : IScreen
             case MenuAction.MapEditor: _s.Screens.Push(new Editor.MapEditorScreen(_s, path => _s.Screens.Push(new SkirmishSetupScreen(_s, new MapChoice(path, null))))); break;
             case MenuAction.Replays: _s.Screens.Push(LoadGameScreen.CreateReplays(_s)); break;
             case MenuAction.Archive: _s.Screens.Push(new ArchiveScreen(_s)); break;
+            case MenuAction.Profile: _s.Screens.Push(new Profile.ProfileScreen(_s)); break;
             case MenuAction.HowToPlay: _s.Screens.Push(new HowToPlayScreen(_s)); break;
             case MenuAction.Settings: _s.Screens.Push(new SettingsScreen(_s)); break;
             case MenuAction.Quit: _s.Quit(); break;

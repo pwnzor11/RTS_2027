@@ -55,12 +55,15 @@ public sealed class DebriefModel
     /// <summary>True when this was the last mission of the faction's campaign (the ending follows).</summary>
     public bool FinalMission { get; }
 
+    /// <summary>M10-19: medals this win earned for the first time (empty when none).</summary>
+    public IReadOnlyList<string> NewMedals { get; init; } = Array.Empty<string>();
+
     /// <summary>The mission time as m:ss.</summary>
     public string TimeText => $"{Seconds / 60}:{Seconds % 60:D2}";
 
     /// <summary>Builds the debrief from the run and the progress before and after <see cref="CampaignService.RecordWin"/>.</summary>
     public static DebriefModel Build(string title, string missionId, int ticks, IEnumerable<MissionObjective> objectives, CampaignProgress before,
-        CampaignProgress after, int tier, bool finalMission, ArchiveCatalog catalog)
+        CampaignProgress after, int tier, bool finalMission, ArchiveCatalog catalog, IReadOnlyList<string>? newMedals = null)
     {
         var list = objectives.Where(o => !o.Hidden || o.Status == ObjectiveStatus.Completed).ToList();
         int pt = list.Count(o => o.Primary), pd = list.Count(o => o.Primary && o.Status == ObjectiveStatus.Completed);
@@ -68,7 +71,10 @@ public sealed class DebriefModel
         List<string> tech = after.TechSet.Where(t => !before.TechSet.Contains(t)).ToList();
         List<string> archive = before.IsCompleted(missionId) ? new List<string>()
             : catalog.Entries.Where(e => e.Unlock.Kind == ArchiveUnlockKind.Campaign && e.Unlock.Arg == missionId).Select(e => e.Title).ToList();
-        return new DebriefModel(title, ticks / SimConstants.TicksPerSecond, pd, pt, od, ot, tech, archive, tier, finalMission);
+        return new DebriefModel(title, ticks / SimConstants.TicksPerSecond, pd, pt, od, ot, tech, archive, tier, finalMission)
+        {
+            NewMedals = newMedals ?? Array.Empty<string>(),
+        };
     }
 
     /// <summary>The lines drawn on the screen.</summary>
@@ -82,6 +88,7 @@ public sealed class DebriefModel
         if (OptionalTotal > 0) lines.Add($"Optional objectives: {OptionalDone}/{OptionalTotal}");
         lines.Add("New tech: " + (NewTech.Count == 0 ? "none" : string.Join(", ", NewTech)));
         lines.Add("New Archive entries: " + (NewArchive.Count == 0 ? "none" : string.Join(", ", NewArchive)));
+        if (NewMedals.Count > 0) lines.Add("New medals: " + string.Join(", ", NewMedals));
         return lines;
     }
 }

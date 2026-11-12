@@ -19,6 +19,8 @@ public enum MenuAction
     Replays,
     /// <summary>The archive (lore) screen.</summary>
     Archive,
+    /// <summary>Medals and records (M10-19).</summary>
+    Profile,
     /// <summary>Paged controls and basics guide.</summary>
     HowToPlay,
     /// <summary>Settings and About.</summary>
@@ -53,6 +55,7 @@ public static class MainMenuModel
         new MainMenuEntry(MenuAction.MapEditor, "Map Editor", true),
         new MainMenuEntry(MenuAction.Replays, "Replays", true),
         new MainMenuEntry(MenuAction.Archive, "Archive", true),
+        new MainMenuEntry(MenuAction.Profile, "Profile", true),
         new MainMenuEntry(MenuAction.HowToPlay, "How to Play", true),
         new MainMenuEntry(MenuAction.Settings, "Settings", true),
         new MainMenuEntry(MenuAction.Quit, "Quit", true),
