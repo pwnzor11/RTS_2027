@@ -43,23 +43,23 @@ palette_slot = 3
 [hero.auth_bomber]
 faction = "authority"
 kind = "vehicle"
-script = ""
-module = ""
-status = "no_model"
+script = "tools/art/build_vehicle.py"
+module = "tools/art/vehicles/auth_bomber.py"
+status = "ok"
 
 [hero.auth_bulwark]
 faction = "authority"
 kind = "vehicle"
-script = ""
-module = ""
-status = "no_model"
+script = "tools/art/build_vehicle.py"
+module = "tools/art/vehicles/auth_bulwark.py"
+status = "ok"
 
 [hero.auth_carrier]
 faction = "authority"
 kind = "vehicle"
-script = ""
-module = ""
-status = "no_model"
+script = "tools/art/build_vehicle.py"
+module = "tools/art/vehicles/auth_carrier.py"
+status = "ok"
 
 [hero.auth_decon_truck]
 faction = "authority"
@@ -71,23 +71,23 @@ status = "ok"
 [hero.auth_foam_truck]
 faction = "authority"
 kind = "vehicle"
-script = ""
-module = ""
-status = "no_model"
+script = "tools/art/build_vehicle.py"
+module = "tools/art/vehicles/auth_foam_truck.py"
+status = "ok"
 
 [hero.auth_howitzer]
 faction = "authority"
 kind = "vehicle"
-script = ""
-module = ""
-status = "no_model"
+script = "tools/art/build_vehicle.py"
+module = "tools/art/vehicles/auth_howitzer.py"
+status = "ok"
 
 [hero.auth_interceptor]
 faction = "authority"
 kind = "vehicle"
-script = ""
-module = ""
-status = "no_model"
+script = "tools/art/build_vehicle.py"
+module = "tools/art/vehicles/auth_interceptor.py"
+status = "ok"
 
 [hero.auth_jeep]
 faction = "authority"
@@ -106,9 +106,9 @@ status = "ok"
 [hero.auth_seismic_mortar]
 faction = "authority"
 kind = "vehicle"
-script = ""
-module = ""
-status = "no_model"
+script = "tools/art/build_vehicle.py"
+module = "tools/art/vehicles/auth_seismic_mortar.py"
+status = "ok"
 
 [hero.auth_tank]
 faction = "authority"
@@ -121,16 +121,16 @@ pilot = true
 [hero.auth_engineer]
 faction = "authority"
 kind = "infantry"
-script = ""
-module = ""
-status = "no_model"
+script = "tools/art/build_infantry.py"
+module = "tools/art/infantry/auth_engineer.py"
+status = "ok"
 
 [hero.auth_marksman]
 faction = "authority"
 kind = "infantry"
-script = ""
-module = ""
-status = "no_model"
+script = "tools/art/build_infantry.py"
+module = "tools/art/infantry/auth_marksman.py"
+status = "ok"
 
 [hero.auth_rifleman]
 faction = "authority"
@@ -150,16 +150,16 @@ status = "ok"
 [hero.auth_airfield]
 faction = "authority"
 kind = "building"
-script = ""
-module = ""
-status = "no_model"
+script = "tools/art/build_structure.py"
+module = "tools/art/structures/auth_airfield.py"
+status = "ok"
 
 [hero.auth_atomic_battery]
 faction = "authority"
 kind = "building"
-script = ""
-module = ""
-status = "no_model"
+script = "tools/art/build_structure.py"
+module = "tools/art/structures/auth_atomic_battery.py"
+status = "ok"
 
 [hero.auth_barracks]
 faction = "authority"
@@ -171,9 +171,9 @@ status = "ok"
 [hero.auth_blockhouse]
 faction = "authority"
 kind = "building"
-script = ""
-module = ""
-status = "no_model"
+script = "tools/art/build_structure.py"
+module = "tools/art/structures/auth_blockhouse.py"
+status = "ok"
 
 [hero.auth_conyard]
 faction = "authority"
@@ -200,9 +200,9 @@ status = "ok"
 [hero.auth_flak]
 faction = "authority"
 kind = "building"
-script = ""
-module = ""
-status = "no_model"
+script = "tools/art/build_structure.py"
+module = "tools/art/structures/auth_flak.py"
+status = "ok"
 
 [hero.auth_gate]
 faction = "authority"
@@ -221,9 +221,9 @@ status = "ok"
 [hero.auth_ration_hall]
 faction = "authority"
 kind = "building"
-script = ""
-module = ""
-status = "no_model"
+script = "tools/art/build_structure.py"
+module = "tools/art/structures/auth_ration_hall.py"
+status = "ok"
 
 [hero.auth_refinery]
 faction = "authority"
@@ -249,9 +249,9 @@ status = "ok"
 [hero.auth_signals_hq]
 faction = "authority"
 kind = "building"
-script = ""
-module = ""
-status = "no_model"
+script = "tools/art/build_structure.py"
+module = "tools/art/structures/auth_signals_hq.py"
+status = "ok"
 
 [hero.auth_silo]
 faction = "authority"
@@ -284,9 +284,9 @@ status = "ok"
 [hero.dir_ash_sower]
 faction = "directorate"
 kind = "vehicle"
-script = ""
-module = ""
-status = "no_model"
+script = "tools/art/build_vehicle.py"
+module = "tools/art/vehicles/dir_ash_sower.py"
+status = "ok"
 
 [hero.dir_bore]
 faction = "directorate"
@@ -298,9 +298,9 @@ status = "ok"
 [hero.dir_delver]
 faction = "directorate"
 kind = "vehicle"
-script = ""
-module = ""
-status = "no_model"
+script = "tools/art/build_vehicle.py"
+module = "tools/art/vehicles/dir_delver.py"
+status = "ok"
 
 [hero.dir_dirigible]
 faction = "directorate"
@@ -312,9 +312,9 @@ status = "ok"
 [hero.dir_great_dirigible]
 faction = "directorate"
 kind = "vehicle"
-script = ""
-module = ""
-status = "no_model"
+script = "tools/art/build_vehicle.py"
+module = "tools/art/vehicles/dir_great_dirigible.py"
+status = "ok"
 
 [hero.dir_landtrain]
 faction = "directorate"
@@ -362,9 +362,9 @@ status = "ok"
 [hero.dir_assessor]
 faction = "directorate"
 kind = "infantry"
-script = ""
-module = ""
-status = "no_model"
+script = "tools/art/build_infantry.py"
+module = "tools/art/infantry/dir_assessor.py"
+status = "ok"
 
 [hero.dir_commissar]
 faction = "directorate"
@@ -398,9 +398,9 @@ status = "ok"
 [hero.dir_volunteer]
 faction = "directorate"
 kind = "infantry"
-script = ""
-module = ""
-status = "no_model"
+script = "tools/art/build_infantry.py"
+module = "tools/art/infantry/dir_volunteer.py"
+status = "ok"
 
 [hero.dir_assembly_bore]
 faction = "directorate"
@@ -419,9 +419,9 @@ status = "ok"
 [hero.dir_bunk_gallery]
 faction = "directorate"
 kind = "building"
-script = ""
-module = ""
-status = "no_model"
+script = "tools/art/build_structure.py"
+module = "tools/art/structures/dir_bunk_gallery.py"
+status = "ok"
 
 [hero.dir_bunker]
 faction = "directorate"
@@ -440,9 +440,9 @@ status = "ok"
 [hero.dir_committee_hall]
 faction = "directorate"
 kind = "building"
-script = ""
-module = ""
-status = "no_model"
+script = "tools/art/build_structure.py"
+module = "tools/art/structures/dir_committee_hall.py"
+status = "ok"
 
 [hero.dir_hatch]
 faction = "directorate"
@@ -503,9 +503,9 @@ status = "ok"
 [hero.dir_redoubt]
 faction = "directorate"
 kind = "building"
-script = ""
-module = ""
-status = "no_model"
+script = "tools/art/build_structure.py"
+module = "tools/art/structures/dir_redoubt.py"
+status = "ok"
 
 [hero.dir_rocket_nest]
 faction = "directorate"
@@ -752,9 +752,9 @@ status = "ok"
 [hero.lb_still_rig]
 faction = "left_behind"
 kind = "building"
-script = ""
-module = ""
-status = "no_model"
+script = "tools/art/build_structure.py"
+module = "tools/art/structures/lb_still_rig.py"
+status = "ok"
 
 [hero.lb_yard]
 faction = "left_behind"
@@ -1091,13 +1091,13 @@ status = "ok"
 [hero.neu_ruin_depot]
 faction = "neutral"
 kind = "building"
-script = ""
-module = ""
-status = "no_model"
+script = "tools/art/build_structure.py"
+module = "tools/art/structures/neu_ruin_depot.py"
+status = "ok"
 
 [hero.neu_ruin_tenement]
 faction = "neutral"
 kind = "building"
-script = ""
-module = ""
-status = "no_model"
+script = "tools/art/build_structure.py"
+module = "tools/art/structures/neu_ruin_tenement.py"
+status = "ok"

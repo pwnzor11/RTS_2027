@@ -74,7 +74,7 @@ public sealed class AuthorityMission03Tests
 
     [Theory]
     [InlineData(3)]
-    [InlineData(5)]
+    // S21 (D-221): tier 5 is measured over 12 seeds (SeedSweepTests); its fixed seed may lose, so no tier-5 case here.
     public void A_bot_escorts_the_convoy_clears_the_picket_and_wins(int tier)
     {
         MissionSession m = MissionSession.Create(TestData.DataDir, Mission);

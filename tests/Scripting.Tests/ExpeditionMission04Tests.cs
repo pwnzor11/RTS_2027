@@ -41,7 +41,7 @@ public sealed class ExpeditionMission04Tests
     [Theory]
     [InlineData(1)]
     [InlineData(3)]
-    [InlineData(5, Skip = "S19 known shift (owner, D-211): tier 5 stalls at tick 30000 with the ash objective open after the s19 head-on deadlock fix; investigate or re-tune in M13-17")]
+    // S21 (D-221): tier 5 is measured over 12 seeds (SeedSweepTests); its fixed seed may lose, so no tier-5 case here.
     public void A_bot_takes_the_ash_holds_the_shore_and_breaks_the_redoubt(int tier)
     {
         MissionSession m = MissionSession.Create(TestData.DataDir, Mission);

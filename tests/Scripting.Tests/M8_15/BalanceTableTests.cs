@@ -21,20 +21,12 @@ public sealed class BalanceTableTests
         return $"{s / 60}:{s % 60:00}";
     }
 
-    // S19 known shifts (owner, D-211): walked in KnownShift_ below (skipped) until the campaign retune M13-17.
-    internal static readonly (string Id, int Tier)[] KnownShifts = { ("lb_03", 5), ("exp_04", 5) };
-
     public static IEnumerable<object[]> MissionTiers() =>
-        CampaignWalks.AllMissions.SelectMany(id => CampaignWalks.Tiers(id).Where(t => !KnownShifts.Contains((id, t))).Select(t => new object[] { id, t }));
+        CampaignWalks.AllMissions.SelectMany(id => CampaignWalks.Tiers(id).Select(t => new object[] { id, t }));
 
-    [Theory(Skip = "S19 known shift (owner, D-211): lb_03 tier 5 loses the Mother Rig, exp_04 tier 5 stalls with the ash objective open (after the s19 head-on fix); re-tune or fix in M13-17")]
-    [InlineData("lb_03", 5)]
-    [InlineData("exp_04", 5)]
-    public void KnownShift_mission_tier_is_walked_and_reported(string id, int tier) => Every_mission_tier_is_walked_and_reported(id, tier);
-
-    // S18 MIS-03 (owner): the auth_01 tier-5 bot loses both scrapers in the survey phase, which is now a loss as the script intends
-    // (before MIS-03 the loss never fired and the bot won anyway).
-    internal static bool ExpectedLoss(string id, int tier) => id == "auth_01" && tier == 5;
+    /// <summary>S21 (D-221, owner): a tier-5 walk at the mission's one fixed seed only has to run cleanly; tier 5 aims at 3-12 wins in 12
+    /// seeds (Q-75), so one seed may lose. The balance gate for every tier is the 12-seed sweep (SeedSweepTests, D-218).</summary>
+    internal static bool MustWin(int tier) => tier < 5;
 
     [Theory]
     [MemberData(nameof(MissionTiers))]
@@ -49,13 +41,7 @@ public sealed class BalanceTableTests
         _out.WriteLine($"ROW | {id} | {tier} | {(r.Won ? "yes" : "NO")} | {r.Tick} | {Clock(r.Tick)} | {r.PlayerLosses} | {r.EnemyLosses} | {note} | {sw.ElapsedMilliseconds} ms");
         Assert.Empty(r.Errors);
         Assert.Equal(0, r.LocaleWarnings);
-        if (ExpectedLoss(id, tier))
-        {
-            Assert.False(r.Won, r.Diagnostics);
-            Assert.Contains("scrapers=Failed", r.Diagnostics, StringComparison.Ordinal);
-            return;
-        }
-
+        if (!MustWin(tier)) return;
         Assert.True(r.Won, r.Diagnostics);
         Assert.True(r.Tick < limit, r.Diagnostics);
     }

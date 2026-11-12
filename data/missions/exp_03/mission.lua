@@ -37,6 +37,7 @@ function OnInit()
   Trigger.AfterDelay(3800, AirRaid)
   Trigger.AfterDelay(5200, AuthorityTwo)
   Trigger.AfterDelay(6600, DirectorateTwo)
+  if Mission.Difficulty() >= 5 then Trigger.AfterDelay(6400, AirStraggler) end
   if Mission.Difficulty() >= 4 then Trigger.AfterDelay(8400, ThirdWave) end
   Trigger.Every(20, Poll)
 end
@@ -143,13 +144,22 @@ end
 -- The air raid: Authority bombers over the west sea, tier 4 and up (unit count only).
 function AirRaid()
   if state.phase == "done" then return end
-  local n = Pick({ 0, 0, 0, 2, 3 })
+  local n = Pick({ 0, 0, 0, 2, 2 })
   if n == 0 then return end
   Media.MessageKey("e3.raid")
   Dialogue.Say("leader_exp_kell", "leader_exp_kell", "e3.radio.raid")
   local types = {}
   for i = 1, n do types[i] = "auth_bomber" end
   local tags = Reinforce.Edge(1, types, AIR_EDGE, Map.Center("cove"))
+  for i, tag in pairs(tags) do
+    state.waveTags[#state.waveTags + 1] = tag
+  end
+end
+
+-- Tier 5: a second air sortie (three bombers from the south-west sea) follows the first pair (unit count only).
+function AirStraggler()
+  if state.phase == "done" then return end
+  local tags = Reinforce.Edge(1, { "auth_bomber", "auth_bomber", "auth_bomber" }, { x = 0, y = 58 }, Map.Center("cove"))
   for i, tag in pairs(tags) do
     state.waveTags[#state.waveTags + 1] = tag
   end

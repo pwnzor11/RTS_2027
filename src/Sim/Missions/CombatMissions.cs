@@ -54,7 +54,7 @@ internal static class CombatMissions
             }
             if (e.AttackTarget.Id.IsNone && sim.Tick >= e.ScanTick)
             {
-                e.AttackTarget = sim.AcquireTarget(owner, pos, w, AcquireReach(sim, kind, i, w));
+                e.AttackTarget = AcquireFor(sim, owner, pos, kind, i, w, stance);
                 e.ScanTick = sim.Tick + Simulation.ScanIntervalTicks;
                 e.RetargetTick = 0;
             }
@@ -130,8 +130,7 @@ internal static class CombatMissions
                 e.AttackTarget = default;   // a defensive marcher fires at what is in range and never chases it
             if (e.AttackTarget.Id.IsNone && sim.Tick >= e.ScanTick)
             {
-                e.AttackTarget = sim.AcquireTarget(owner, store.Position[i], sim.RulesOf(store.Player[i]).Weapons[weapon],
-                    AcquireReach(sim, kind, i, sim.RulesOf(store.Player[i]).Weapons[weapon]));
+                e.AttackTarget = AcquireFor(sim, owner, store.Position[i], kind, i, sim.RulesOf(store.Player[i]).Weapons[weapon], stance);
                 e.ScanTick = sim.Tick + AttackMoveScanTicks;
                 e.RetargetTick = 0;
             }
@@ -141,13 +140,38 @@ internal static class CombatMissions
                 return 1;
             }
         }
-        if (store.Position[i].ToCell() == e.GuardPoint)
+        CellCoord here = store.Position[i].ToCell();
+        if (here == e.GuardPoint)
         {
             e.GuardPending = true;                       // guard where we arrived
             ToGuard(sim, store, kind, i);
             return 1;
         }
+        // S21 (D-219): next to a goal cell that something else holds (a parked scraper, a friend already guarding it) and blocked at least
+        // once: the march is over, so guard here. The unit used to keep stepping toward the held cell for good, never guarding, so it
+        // never chased anything outside its weapon range.
+        if (LeptonMath.ChebyshevCells(here, e.GuardPoint) <= 1 && store.StuckCount[i] > 0)
+        {
+            e.GuardPoint = here;
+            e.GuardPending = true;
+            ToGuard(sim, store, kind, i);
+            return 1;
+        }
         return MoveMission.StepToward(sim, store, kind, i, e.GuardPoint);
+    }
+
+    /// <summary>
+    /// S21 (D-219, owner): the target search of a guarding or attack-moving unit. Aggressive (the default) engages hostile vehicles and
+    /// infantry anywhere in its sight (buildings only in weapon range) and the Guard leash walks it back to its post when they leave;
+    /// Defensive keeps to its weapon range (melee units: their sight, M13-11 item 19).
+    /// </summary>
+    private static ActorRef AcquireFor(Simulation sim, byte owner, LeptonCoord pos, ActorKind kind, int i, WeaponType w, UnitStance stance)
+    {
+        int melee = AcquireReach(sim, kind, i, w);
+        if (melee > 0) return sim.AcquireTarget(owner, pos, w, melee);
+        if (stance == UnitStance.Aggressive)
+            return sim.AcquireTarget(owner, pos, w, sim.SightOf(kind, i) * SimConstants.LeptonsPerCell, mobilesOnlyBeyondRange: true);
+        return sim.AcquireTarget(owner, pos, w);
     }
 
     /// <summary>Weapons with a reach of one cell or less are melee (M13-11 item 19): their owner acquires anything in sight and closes in.

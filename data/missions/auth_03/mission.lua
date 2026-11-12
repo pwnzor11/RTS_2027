@@ -107,7 +107,7 @@ function CoastCounter()
   state.coastHit = true
   Media.MessageKey("a3.coast")
   Dialogue.Say(SPEAKER, SPEAKER, "a3.radio.coast")
-  Reinforce.Zone(1, Squad("dir", Pick({ 4, 5, 8, 11, 14 }), Pick({ 2, 2, 3, 5, 6 }), Pick({ 0, 0, 2, 3, 4 })), "enemy_base", Map.Center("coast"))
+  Reinforce.Zone(1, Squad("dir", Pick({ 4, 5, 6, 7, 8 }), Pick({ 2, 2, 2, 3, 3 }), Pick({ 0, 0, 1, 1, 2 })), "enemy_base", Map.Center("coast"))
 end
 
 function CacheFound()

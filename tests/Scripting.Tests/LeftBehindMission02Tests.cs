@@ -73,7 +73,7 @@ public sealed class LeftBehindMission02Tests
     [Theory]
     [InlineData(1)]
     [InlineData(3)]
-    [InlineData(5)]
+    // S21 (D-221): tier 5 is measured over 12 seeds (SeedSweepTests); its fixed seed may lose, so no tier-5 case here.
     public void A_bot_builds_a_garage_strips_the_posts_and_wins(int tier)
     {
         MissionSession m = MissionSession.Create(TestData.DataDir, Mission);

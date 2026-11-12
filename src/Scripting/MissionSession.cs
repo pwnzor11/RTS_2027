@@ -49,20 +49,13 @@ public sealed class MissionSession
 
     /// <summary>The setup a mission uses: seed, map, one player per mission player with the mission's teams, and the given extension.</summary>
     public static SimSetup MakeSetup(MissionDef def, MapData map, RuleSet rules, MissionHost host) =>
-        new(def.Seed, map, def.Players.Count, CampaignRules(rules.Sim), rules.RulesHash)
+        new(def.Seed, map, def.Players.Count, rules.Sim, rules.RulesHash)
         {
             AllowDebug = false,
             Teams = def.Players.Select(p => p.Team).ToArray(),
             Factions = FactionsOf(def),
             Extensions = new[] { host },
         };
-
-    /// <summary>
-    /// S19 D-211: campaign and tutorial missions run without the ashfall hazard (no damage, so no step-off) and without the infantry ash
-    /// path cost, so they play as they were tuned until the campaign retune session (ROADMAP M13-17). Skirmish keeps all three.
-    /// </summary>
-    public static SimRules CampaignRules(SimRules r) =>
-        r with { Radiation = r.Radiation with { AshfallDamage = 0, AshPathPenalty = 1 } };
 
     /// <summary>
     /// S12: the sim faction per player slot, or null when every player is Authority (the old setup, so existing missions keep their hashes).

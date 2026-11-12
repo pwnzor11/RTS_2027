@@ -28,6 +28,9 @@
   Reuse the tool already built in balance_runs\s19after\bin.
 .PARAMETER Groups
   Row groups to run (1-4), default all four.
+.PARAMETER OutName
+  Output folder under balance_runs (default s19after). Use a new name to measure another commit, e.g. -OutName s21after;
+  finished rows in the folder are skipped, so the same name would skip everything.
 .PARAMETER DryRun
   Print the rows and the command lines without building or running anything.
 #>
@@ -35,7 +38,8 @@ param(
     [int]$Jobs = [Math]::Max(1, [int][Math]::Floor([Environment]::ProcessorCount / 2)),
     [switch]$SkipBuild,
     [int[]]$Groups = @(1, 2, 3, 4),
-    [switch]$DryRun
+    [switch]$DryRun,
+    [string]$OutName = 's19after'
 )
 $ErrorActionPreference = 'Stop'
 $root = (Get-Location).Path
@@ -46,7 +50,7 @@ $head = (git rev-parse --short HEAD).Trim()
 $dirty = git status --porcelain -- src data
 if ($dirty) { Write-Warning "src\ or data\ has local changes: the numbers will not match a clean main." }
 
-$outRel = 'balance_runs\s19after'
+$outRel = "balance_runs\$OutName"
 $out = Join-Path $root $outRel
 $bin = Join-Path $out 'bin'
 
@@ -212,7 +216,7 @@ foreach ($r in $all) {
 [void]$sb.AppendLine()
 [void]$sb.AppendLine("Shipment columns: both sides counted in a mirror; in a cross-faction row a non-Expedition side reports 0. In group 3 and 4 rows, read the start columns as start corners, not factions; the per-faction split is A v B in the first table.")
 if ($failed.Count -gt 0) { [void]$sb.AppendLine(); [void]$sb.AppendLine("Failed rows (see the .err file): " + ($failed -join ', ')) }
-$summary = Join-Path $out 's19after_summary.md'
+$summary = Join-Path $out ($OutName + '_summary.md')
 [System.IO.File]::WriteAllText($summary, $sb.ToString())
 Write-Host $sb.ToString()
 Write-Host "Summary written to $summary. Send that file back."

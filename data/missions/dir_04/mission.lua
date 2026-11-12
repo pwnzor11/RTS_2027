@@ -83,7 +83,6 @@ function Wave()
   local d = Mission.Difficulty()
   if state.waves == 1 and d >= 4 then types[#types + 1] = "auth_jeep" end
   if state.waves == 2 and d >= 3 then types[#types + 1] = "auth_jeep" end
-  if state.waves == 2 and d >= 5 then types[#types + 1] = "auth_tank" end
   Reinforce.Zone(1, types, "spawn", Map.Center("head"))
   state.waves = state.waves + 1
   Camera.Focus("head", 160)

@@ -58,7 +58,7 @@ power = 100
 prerequisites = ["auth_conyard"]
 provides = []
 
-[auth_ration_hall]   # PLACEHOLDER ART; supply building (SUP-2, design 13 §2.3): everyone is counted and owed a ration
+[auth_ration_hall]   # supply building (SUP-2, design 13 §2.3): everyone is counted and owed a ration
 faction = "authority"
 tier = 1
 footprint_w = 2
@@ -298,7 +298,7 @@ prerequisites = ["dir_smelter_vent"]
 provides = []
 storage = 1500  # ASSUMED (M3-07)
 
-[dir_bunk_gallery]   # PLACEHOLDER ART; supply building (SUP-2, design 13 §2.3): they sleep behind blast doors
+[dir_bunk_gallery]   # supply building (SUP-2, design 13 §2.3): they sleep behind blast doors
 faction = "directorate"
 tier = 1
 footprint_w = 2
@@ -492,10 +492,9 @@ provides = ["auth_tier2"]
 researches = true
 
 # M4-07 (design 08 §3, §4): tier-3 gates, the new Authority and Directorate structures and the neutral ruins.
-# PLACEHOLDER ART (M4-ART): new types have no sprite file yet and draw the generated placeholder until M4-ART-01..n.
 # Numbers marked ASSUMED (M4-07) are copies of the nearest existing type; design 08 §4 gives the rest. Tune in M4-16.
 
-[auth_signals_hq]   # PLACEHOLDER ART (M4-ART); Authority T3 gate (design 08 §4); minimap ping on spotted enemies is a sim concern
+[auth_signals_hq]   # Authority T3 gate (design 08 §4); minimap ping on spotted enemies is a sim concern
 tier = 3
 footprint_w = 3  # (tune) design 08 §4
 footprint_h = 3  # (tune) design 08 §4
@@ -509,7 +508,7 @@ prerequisites = ["auth_engineering"]
 provides = ["auth_tier3"]
 researches = true
 
-[auth_blockhouse]   # PLACEHOLDER ART (M4-ART); T1 garrison defence, no gun (design 08 §3, §4)
+[auth_blockhouse]   # T1 garrison defence, no gun (design 08 §3, §4)
 tier = 1
 footprint_w = 2  # (tune) design 08 §4
 footprint_h = 2  # (tune) design 08 §4
@@ -524,7 +523,7 @@ provides = []
 category = "defence"
 garrison = 5  # (tune) design 08 §3
 
-[auth_flak]   # PLACEHOLDER ART (M4-ART); T2 anti-air emplacement (design 08 §4)
+[auth_flak]   # T2 anti-air emplacement (design 08 §4)
 tier = 2
 footprint_w = 1  # ASSUMED (M4-07)
 footprint_h = 1  # ASSUMED (M4-07)
@@ -539,7 +538,7 @@ provides = []
 category = "defence"
 needs_power = true
 
-[auth_airfield]   # PLACEHOLDER ART (M4-ART); T2 aircraft producer (design 08 §4, Q-M4-c: no fuel or ammo in M4)
+[auth_airfield]   # T2 aircraft producer (design 08 §4, Q-M4-c: no fuel or ammo in M4)
 tier = 2
 footprint_w = 3  # ASSUMED (M4-07)
 footprint_h = 3  # ASSUMED (M4-07)
@@ -553,7 +552,7 @@ prerequisites = ["auth_factory"]
 provides = []
 produces = "aircraft"
 
-[auth_atomic_battery]   # PLACEHOLDER ART (M4-ART); T3 superweapon, blast warhead is auth_atomic_blast (design 08 §4)
+[auth_atomic_battery]   # T3 superweapon, blast warhead is auth_atomic_blast (design 08 §4)
 tier = 3
 footprint_w = 3  # ASSUMED (M4-07)
 footprint_h = 3  # ASSUMED (M4-07)
@@ -569,7 +568,7 @@ superweapon = "auth_atomic"
 superweapon_charge_ticks = 3000  # ASSUMED (M4-07)
 superweapon_entrance_range = 0  # D-205 (FAD-01): fires anywhere, like lb_second_drift (D-132(4))
 
-[dir_redoubt]   # PLACEHOLDER ART (M4-ART); T1 garrison defence, half-buried is flavour only (design 08 §3, §4)
+[dir_redoubt]   # T1 garrison defence, half-buried is flavour only (design 08 §3, §4)
 tier = 1
 footprint_w = 2  # (tune) design 08 §4
 footprint_h = 2  # (tune) design 08 §4
@@ -584,7 +583,7 @@ provides = []
 category = "defence"
 garrison = 5  # (tune) design 08 §3
 
-[dir_committee_hall]   # PLACEHOLDER ART (M4-ART); Directorate T3 gate (design 08 §4)
+[dir_committee_hall]   # Directorate T3 gate (design 08 §4)
 tier = 3
 footprint_w = 2  # (tune) design 08 §4
 footprint_h = 3  # (tune) design 08 §4
@@ -601,7 +600,7 @@ researches = true
 # Neutral ruins (design 08 §3, Q-M4-b, Q-37): map features only, placed at setup and never buildable. Faction "neutral" (passive
 # owner; nobody targets them; the first garrison takes one, an empty one reverts).
 
-[neu_ruin_tenement]   # PLACEHOLDER ART (M4-ART); neutral garrison ruin, 3x2 (design 08 §3)
+[neu_ruin_tenement]   # neutral garrison ruin, 3x2 (design 08 §3)
 faction = "neutral"
 tier = 1
 footprint_w = 3  # (tune) design 08 §3
@@ -617,7 +616,7 @@ provides = []
 garrison = 6  # (tune) design 08 §3
 buildable = false
 
-[neu_ruin_depot]   # PLACEHOLDER ART (M4-ART); neutral garrison ruin, 2x2 (design 08 §3)
+[neu_ruin_depot]   # neutral garrison ruin, 2x2 (design 08 §3)
 faction = "neutral"
 tier = 1
 footprint_w = 2  # (tune) design 08 §3
@@ -633,11 +632,11 @@ provides = []
 garrison = 4  # (tune) design 08 §3
 buildable = false
 
-# M6-08: Left Behind structures and rigs (design 06 §4-6, D-102). PLACEHOLDER ART: no sprite manifests yet, the generated
-# placeholder is drawn. Every number is (tune). Tier gates: lb_lookout provides lb_tier2 (needs the Garage Rig), lb_rotor_pad
+# M6-08: Left Behind structures and rigs (design 06 §4-6, D-102).
+# Every number is (tune). Tier gates: lb_lookout provides lb_tier2 (needs the Garage Rig), lb_rotor_pad
 # provides lb_tier3 (needs the Tinker's Bench). Packable rigs pack into the generic lb_mother_rig_packed.
 
-[lb_mother_rig]   # PLACEHOLDER ART; conyard that packs (no conyard building in the kit)
+[lb_mother_rig]   # conyard that packs (no conyard building in the kit)
 faction = "left_behind"
 tier = 1
 footprint_w = 3
@@ -657,7 +656,7 @@ packs_into = "lb_mother_rig_packed"
 pack_ticks = 200  # (tune)
 supply_provided = 20  # (tune) SUP-3
 
-[lb_yard]   # PLACEHOLDER ART; fixed cheap refinery and silo
+[lb_yard]   # fixed cheap refinery and silo
 faction = "left_behind"
 tier = 1
 footprint_w = 2
@@ -676,7 +675,7 @@ dock = [1, 2]
 free_unit = "lb_gleaner"
 build_time = 200  # (tune)
 
-[lb_refinery_rig]   # PLACEHOLDER ART; mobile refinery
+[lb_refinery_rig]   # mobile refinery
 faction = "left_behind"
 tier = 1
 footprint_w = 2
@@ -696,7 +695,7 @@ build_time = 300  # (tune)
 packs_into = "lb_mother_rig_packed"
 pack_ticks = 200  # (tune)
 
-[lb_dynamo_rig]   # PLACEHOLDER ART; cheap small power
+[lb_dynamo_rig]   # cheap small power
 faction = "left_behind"
 tier = 1
 footprint_w = 2
@@ -712,7 +711,7 @@ provides = []
 packs_into = "lb_mother_rig_packed"
 pack_ticks = 200  # (tune)
 
-[lb_still_rig]   # PLACEHOLDER ART; Water Still Rig, supply building (SUP-3, design 13 §2.3); a packed still gives 0
+[lb_still_rig]   # Water Still Rig, supply building (SUP-3, design 13 §2.3); a packed still gives 0
 faction = "left_behind"
 tier = 1
 footprint_w = 2
@@ -729,7 +728,7 @@ packs_into = "lb_mother_rig_packed"
 pack_ticks = 200  # (tune)
 supply_provided = 10  # (tune)
 
-[lb_muster_rig]   # PLACEHOLDER ART; infantry production
+[lb_muster_rig]   # infantry production
 faction = "left_behind"
 tier = 1
 footprint_w = 2
@@ -746,7 +745,7 @@ produces = "infantry"
 packs_into = "lb_mother_rig_packed"
 pack_ticks = 200  # (tune)
 
-[lb_garage_rig]   # PLACEHOLDER ART; vehicle production
+[lb_garage_rig]   # vehicle production
 faction = "left_behind"
 tier = 1
 footprint_w = 3
@@ -763,7 +762,7 @@ produces = "vehicle"
 packs_into = "lb_mother_rig_packed"
 pack_ticks = 200  # (tune)
 
-[lb_lookout]   # PLACEHOLDER ART; radar + minimap jam; T2 gate
+[lb_lookout]   # radar + minimap jam; T2 gate
 faction = "left_behind"
 tier = 2
 footprint_w = 1
@@ -780,7 +779,7 @@ jam_radius = 6  # (tune)
 packs_into = "lb_mother_rig_packed"
 pack_ticks = 200  # (tune)
 
-[lb_bench]   # PLACEHOLDER ART; Tinker's Bench: tech, researches upgrades
+[lb_bench]   # Tinker's Bench: tech, researches upgrades
 faction = "left_behind"
 tier = 2
 footprint_w = 2
@@ -795,7 +794,7 @@ prerequisites = ["lb_lookout"]
 provides = []
 researches = true
 
-[lb_rotor_pad]   # PLACEHOLDER ART; aircraft production; T3 gate
+[lb_rotor_pad]   # aircraft production; T3 gate
 faction = "left_behind"
 tier = 3
 footprint_w = 2
@@ -810,7 +809,7 @@ prerequisites = ["lb_bench"]
 provides = ["lb_tier3"]
 produces = "aircraft"
 
-[lb_spike_nest]   # PLACEHOLDER ART; basic defence
+[lb_spike_nest]   # basic defence
 faction = "left_behind"
 tier = 1
 footprint_w = 1
@@ -825,7 +824,7 @@ prerequisites = ["lb_mother_rig"]
 provides = []
 category = "defence"
 
-[lb_harpoon_post]   # PLACEHOLDER ART; anti-armour defence
+[lb_harpoon_post]   # anti-armour defence
 faction = "left_behind"
 tier = 2
 footprint_w = 1
@@ -841,7 +840,7 @@ provides = []
 category = "defence"
 needs_power = true
 
-[lb_flak_net]   # PLACEHOLDER ART; anti-air defence
+[lb_flak_net]   # anti-air defence
 faction = "left_behind"
 tier = 2
 footprint_w = 1
@@ -857,7 +856,7 @@ provides = []
 category = "defence"
 needs_power = true
 
-[lb_scrap_wall]   # PLACEHOLDER ART; cheap wall piece
+[lb_scrap_wall]   # cheap wall piece
 faction = "left_behind"
 tier = 1
 footprint_w = 1
@@ -873,7 +872,7 @@ provides = []
 category = "defence"
 wall = true
 
-[lb_second_drift]   # PLACEHOLDER ART; The Second Drift superweapon (ground-effect storm, design 06 §6)
+[lb_second_drift]   # The Second Drift superweapon (ground-effect storm, design 06 §6)
 faction = "left_behind"
 tier = 3
 footprint_w = 3
@@ -890,14 +889,14 @@ superweapon = "lb_second_drift"
 superweapon_charge_ticks = 4800  # (tune)
 superweapon_entrance_range = 0  # session 9: Left Behind has no entrance building, so 0 = fire anywhere (assumed — confirm)
 
-# M7-08: Expedition structures (docs/design/07_expedition.md §4-5, 13_supply_cap §2.3, 11_m7_plan §2.3, D-087, D-124, D-140). PLACEHOLDER ART:
-# no sprite manifests yet. The faction is NOT playable yet. Every number is (tune), assumed -- confirm (docs/balance/m7_08_expedition_data.md).
+# M7-08: Expedition structures (docs/design/07_expedition.md §4-5, 13_supply_cap §2.3, 11_m7_plan §2.3, D-087, D-124, D-140).
+# The faction is NOT playable yet. Every number is (tune), assumed -- confirm (docs/balance/m7_08_expedition_data.md).
 # Tier gates: exp_plotting_room provides exp_tier2 (needs the Hover Yard), exp_core_hall provides exp_tier3 (needs the Plotting Room).
 # Water buildings (quay, anchorage, shipyard, drydock) carry a row-major footprint `water` mask (1 = water cell) so they straddle the shore.
 # Dropped on purpose (landlocked rule, 11 §2.5): exp_airhead. Beachhead sources: depot 10, quay and shipyard 8, beacon 6 cells.
 # TODO M7-04: ships are produced from the shared "vehicle" lane (hover yard, quay, shipyard); see the note at the top of the Expedition block in vehicles.toml.
 
-[exp_landing_depot]   # PLACEHOLDER ART; conyard: the deployed Command Ship. Not buildable
+[exp_landing_depot]   # conyard: the deployed Command Ship. Not buildable
 faction = "expedition"
 tier = 1
 footprint_w = 3
@@ -917,7 +916,7 @@ supply_provided = 20  # (tune) SUP-3: main base building (design 13 §2.2)
 beachhead_source = true
 beachhead_radius = 10  # (tune) design 11 §2.3
 
-[exp_pile_house]   # PLACEHOLDER ART; power: lower output than the Authority plant, cheaper
+[exp_pile_house]   # power: lower output than the Authority plant, cheaper
 faction = "expedition"
 tier = 1
 footprint_w = 2
@@ -931,7 +930,7 @@ power = 80  # (tune)
 prerequisites = ["exp_landing_depot"]
 provides = []
 
-[exp_dredge_works]   # PLACEHOLDER ART; refinery; ships with one free Skimmer
+[exp_dredge_works]   # refinery; ships with one free Skimmer
 faction = "expedition"
 tier = 1
 footprint_w = 3
@@ -950,7 +949,7 @@ dock = [1, 2]  # cell south of the footprint, as dir_smelter_vent (3x2)
 free_unit = "exp_skimmer"
 build_time = 300  # (tune)
 
-[exp_tank_farm]   # PLACEHOLDER ART; silo
+[exp_tank_farm]   # silo
 faction = "expedition"
 tier = 1
 footprint_w = 1
@@ -965,7 +964,7 @@ prerequisites = ["exp_dredge_works"]
 provides = []
 storage = 1200  # (tune)
 
-[exp_provision_store]   # PLACEHOLDER ART; supply building (SUP-3, design 13 §2.3); +10 stocked, +5 unstocked
+[exp_provision_store]   # supply building (SUP-3, design 13 §2.3); +10 stocked, +5 unstocked
 faction = "expedition"
 tier = 1
 footprint_w = 1
@@ -982,7 +981,7 @@ supply_provided = 10  # (tune) stocked: a shipment arrived in the last stock_int
 supply_unstocked = 5  # (tune)
 # TODO M7-06: the stocked test (last shipment arrival within stock_intervals) is read from the shipments state by SUP-3/M7-06 code
 
-[exp_billet]   # PLACEHOLDER ART; infantry production
+[exp_billet]   # infantry production
 faction = "expedition"
 tier = 1
 footprint_w = 2
@@ -997,7 +996,7 @@ prerequisites = ["exp_pile_house"]
 provides = []
 produces = "infantry"
 
-[exp_hover_yard]   # PLACEHOLDER ART; hovercraft and tracked vehicle production
+[exp_hover_yard]   # hovercraft and tracked vehicle production
 faction = "expedition"
 tier = 1
 footprint_w = 3
@@ -1012,7 +1011,7 @@ prerequisites = ["exp_dredge_works"]
 provides = []
 produces = "vehicle"
 
-[exp_quay]   # PLACEHOLDER ART; small naval yard: patrol launches and landing craft; straddles the shoreline (row 0 land, row 1 water)
+[exp_quay]   # small naval yard: patrol launches and landing craft; straddles the shoreline (row 0 land, row 1 water)
 faction = "expedition"
 tier = 1
 footprint_w = 3
@@ -1031,7 +1030,7 @@ beachhead_source = true
 beachhead_radius = 8  # (tune) design 11 §2.3
 # TODO M7-04: exit cell on the water side (D-138 follow-up); no `exit` until the yard exit uses the move class
 
-[exp_anchorage]   # PLACEHOLDER ART; shipment receiver; straddles the shoreline
+[exp_anchorage]   # shipment receiver; straddles the shoreline
 faction = "expedition"
 tier = 1
 footprint_w = 2
@@ -1047,7 +1046,7 @@ provides = []
 water_building = true
 shipment_dock = true
 
-[exp_beacon]   # PLACEHOLDER ART; Landing Beacon: extends the build zone, fragile
+[exp_beacon]   # Landing Beacon: extends the build zone, fragile
 faction = "expedition"
 tier = 1
 footprint_w = 1
@@ -1065,7 +1064,7 @@ beachhead_source = true
 beachhead_radius = 6  # (tune) design 11 §2.3
 # TODO M7-04: delivery by landing craft or Skyhook to any soft land cell is not in data; placed from the structure queue
 
-[exp_pillbox]   # PLACEHOLDER ART; Seawall Emplacement: cheap turret
+[exp_pillbox]   # Seawall Emplacement: cheap turret
 faction = "expedition"
 tier = 1
 footprint_w = 1
@@ -1080,7 +1079,7 @@ prerequisites = ["exp_billet"]
 provides = []
 category = "defence"
 
-[exp_plotting_room]   # PLACEHOLDER ART; radar and tier-2 gate; researches the first upgrades
+[exp_plotting_room]   # radar and tier-2 gate; researches the first upgrades
 faction = "expedition"
 tier = 2
 footprint_w = 2
@@ -1095,7 +1094,7 @@ prerequisites = ["exp_hover_yard"]
 provides = ["exp_tier2"]
 researches = true
 
-[exp_shipyard]   # PLACEHOLDER ART; warships; straddles the shoreline (bottom row water)
+[exp_shipyard]   # warships; straddles the shoreline (bottom row water)
 faction = "expedition"
 tier = 2
 footprint_w = 3
@@ -1114,7 +1113,7 @@ beachhead_source = true
 beachhead_radius = 8  # (tune) design 11 §2.3
 # TODO M7-04: exit cell on the water side (see exp_quay)
 
-[exp_flight_deck]   # PLACEHOLDER ART; aircraft production
+[exp_flight_deck]   # aircraft production
 faction = "expedition"
 tier = 2
 footprint_w = 3
@@ -1129,7 +1128,7 @@ prerequisites = ["exp_hover_yard"]
 provides = []
 produces = "aircraft"
 
-[exp_gun_battery]   # PLACEHOLDER ART; coastal defence vs ships and ground
+[exp_gun_battery]   # coastal defence vs ships and ground
 faction = "expedition"
 tier = 2
 footprint_w = 2
@@ -1145,7 +1144,7 @@ provides = []
 category = "defence"
 needs_power = true
 
-[exp_picket]   # PLACEHOLDER ART; Sonar Picket: reveals the sea; unarmed
+[exp_picket]   # Sonar Picket: reveals the sea; unarmed
 faction = "expedition"
 tier = 2
 footprint_w = 1
@@ -1161,7 +1160,7 @@ provides = []
 category = "defence"
 sonar_radius = 9  # (tune) detects submerged ships for the team (simfu-4); sight 9 still lets it see the surface
 
-[exp_sam]   # PLACEHOLDER ART; SAM Mount: anti-air
+[exp_sam]   # SAM Mount: anti-air
 faction = "expedition"
 tier = 2
 footprint_w = 1
@@ -1177,7 +1176,7 @@ provides = []
 category = "defence"
 needs_power = true
 
-[exp_core_hall]   # PLACEHOLDER ART; tech: researches the later upgrades; tier-3 gate
+[exp_core_hall]   # tech: researches the later upgrades; tier-3 gate
 faction = "expedition"
 tier = 3
 footprint_w = 3
@@ -1192,7 +1191,7 @@ prerequisites = ["exp_plotting_room"]
 provides = ["exp_tier3"]
 researches = true
 
-[exp_drydock]   # PLACEHOLDER ART; heavy ships and repairs; straddles the shoreline (bottom row water)
+[exp_drydock]   # heavy ships and repairs; straddles the shoreline (bottom row water)
 faction = "expedition"
 tier = 3
 footprint_w = 4
@@ -1207,7 +1206,7 @@ prerequisites = ["exp_shipyard"]
 provides = []
 water_building = true
 
-[exp_salvo_array]   # PLACEHOLDER ART; Salvo Array superweapon (cruise-missile barrage)
+[exp_salvo_array]   # Salvo Array superweapon (cruise-missile barrage)
 faction = "expedition"
 tier = 3
 footprint_w = 3

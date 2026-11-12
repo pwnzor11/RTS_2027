@@ -94,10 +94,10 @@ aura_radius = 3  # D-205 (FAD-09): own fire-rate aura, +15 % rate = reload x0.87
 aura_rof_permille = 870  # D-205 (FAD-09)
 aura_targets = ["dir_conscript", "dir_ashthrower", "dir_sapper", "dir_volunteer"]  # D-205 (FAD-09): own infantry
 
-# M4-07 (design 08 §4): new infantry. PLACEHOLDER ART (M4-ART): no sprite file yet, draws the generated placeholder.
+# M4-07 (design 08 §4): new infantry.
 # Numbers marked ASSUMED (M4-07) copy the nearest existing type. Engineers have no weapon and do not garrison by default.
 
-[auth_engineer]   # PLACEHOLDER ART (M4-ART); Authority engineer (design 08 §4)
+[auth_engineer]   # Authority engineer (design 08 §4)
 tier = 1
 speed = 12  # ASSUMED (M4-07)
 max_health = 50  # ASSUMED (M4-07)
@@ -108,7 +108,7 @@ cost = 100  # ASSUMED (M4-07)
 prerequisites = ["auth_barracks"]
 engineer = true
 
-[auth_marksman]   # PLACEHOLDER ART (M4-ART); long-range anti-infantry, strong in garrisons (design 08 §4)
+[auth_marksman]   # long-range anti-infantry, strong in garrisons (design 08 §4)
 tier = 2
 speed = 10  # D-205 (FAD-14): 12 -> 10, trades speed for reach
 max_health = 50  # ASSUMED (M4-07)
@@ -118,7 +118,7 @@ primary_weapon = "auth_marksman_rifle"
 cost = 200  # D-205 (FAD-14): 100 -> 200
 prerequisites = ["auth_barracks"]
 
-[dir_assessor]   # PLACEHOLDER ART (M4-ART); Directorate engineer (design 08 §4)
+[dir_assessor]   # Directorate engineer (design 08 §4)
 faction = "directorate"
 tier = 1
 tunnel_size = "S"
@@ -132,7 +132,7 @@ prerequisites = ["dir_muster_hatch"]
 rad_resist_permille = 600  # ASSUMED (M4-07)
 engineer = true
 
-[dir_volunteer]   # PLACEHOLDER ART (M4-ART); irradiated runner with a radiation burst on death (design 08 §4)
+[dir_volunteer]   # irradiated runner with a radiation burst on death (design 08 §4)
 faction = "directorate"
 tier = 2
 tunnel_size = "S"
@@ -147,10 +147,10 @@ rad_resist_permille = 600  # ASSUMED (M4-07)
 irradiated = true
 death_weapon = "dir_volunteer_burst"
 
-# M6-08: Left Behind infantry (design 06 §5, D-102). PLACEHOLDER ART (M4-ART style): no sprite manifests yet, the generated
-# placeholder is drawn. Every number is (tune). Ash Wraps (upgrade) raises rad_resist_permille.
+# M6-08: Left Behind infantry (design 06 §5, D-102).
+# Every number is (tune). Ash Wraps (upgrade) raises rad_resist_permille.
 
-[lb_scavenger]   # PLACEHOLDER ART; cheap rifle infantry, slow salvage of wrecks
+[lb_scavenger]   # cheap rifle infantry, slow salvage of wrecks
 faction = "left_behind"
 tier = 1
 speed = 12  # (tune)
@@ -163,7 +163,7 @@ prerequisites = ["lb_muster_rig"]
 rad_resist_permille = 300  # (tune)
 salvage_rate = 4  # (tune) ash per 10 ticks
 
-[lb_hook_runner]   # PLACEHOLDER ART; fast raider, withdraws after a plunder
+[lb_hook_runner]   # fast raider, withdraws after a plunder
 faction = "left_behind"
 tier = 1
 speed = 18  # (tune)
@@ -176,7 +176,7 @@ prerequisites = ["lb_muster_rig"]
 rad_resist_permille = 300  # (tune)
 raider = true
 
-[lb_slinger]   # PLACEHOLDER ART; anti-armour thrown charge
+[lb_slinger]   # anti-armour thrown charge
 faction = "left_behind"
 tier = 2
 speed = 12  # (tune)
@@ -188,7 +188,7 @@ cost = 200  # (tune)
 prerequisites = ["lb_muster_rig"]
 rad_resist_permille = 300  # (tune)
 
-[lb_tinker]   # PLACEHOLDER ART; engineer + repair aura + salvage
+[lb_tinker]   # engineer + repair aura + salvage
 faction = "left_behind"
 tier = 2
 speed = 12  # (tune)
@@ -205,7 +205,7 @@ aura_radius = 3  # (tune)
 aura_repair_permille = 10  # (tune) permille of max HP per 10 ticks
 aura_targets = ["lb_gleaner", "lb_hauler", "lb_buggy", "lb_harpoon_wagon", "lb_organ", "lb_tow", "lb_dust_sail", "lb_rolling_fort", "lb_mother_rig_packed"]
 
-[lb_veilwalker]   # PLACEHOLDER ART; stealth scout and sniper, stealthier in ash
+[lb_veilwalker]   # stealth scout and sniper, stealthier in ash
 faction = "left_behind"
 tier = 3
 speed = 12  # (tune)
@@ -220,7 +220,7 @@ stealth = true
 ash_stealth_delay_ticks = 20  # (tune) shorter than [stealth] delay_ticks on ash cells
 ash_stealth_threshold = 4  # (tune) Ashfall overlay density scale 0..12 (lead note, M6-06)
 
-[lb_drifter_brute]   # PLACEHOLDER ART; heavy flame-hammer infantry that tanks the dust
+[lb_drifter_brute]   # heavy flame-hammer infantry that tanks the dust
 faction = "left_behind"
 tier = 2
 speed = 10  # (tune)
@@ -232,11 +232,11 @@ cost = 300  # (tune)
 prerequisites = ["lb_muster_rig"]
 rad_resist_permille = 700  # (tune)
 
-# M7-08: Expedition infantry (docs/design/07_expedition.md §5, D-087, D-124). PLACEHOLDER ART. The faction is NOT playable yet. Every number is
+# M7-08: Expedition infantry (docs/design/07_expedition.md §5, D-087, D-124). The faction is NOT playable yet. Every number is
 # (tune), assumed -- confirm (docs/balance/m7_08_expedition_data.md). Few, elite: more health and range per cost than the other factions.
 # Infantry cross Shallow at foot speed 40 % (terrain.toml), so every marine is "amphibious" without a field.
 
-[exp_marine]   # PLACEHOLDER ART; all-round rifle
+[exp_marine]   # all-round rifle
 faction = "expedition"
 tier = 1
 speed = 14  # (tune)
@@ -247,7 +247,7 @@ primary_weapon = "exp_marine_rifle"
 cost = 150  # (tune)
 prerequisites = ["exp_billet"]
 
-[exp_pioneer]   # PLACEHOLDER ART; engineer: capture and repair
+[exp_pioneer]   # engineer: capture and repair
 faction = "expedition"
 tier = 1
 speed = 12  # (tune)
@@ -260,7 +260,7 @@ prerequisites = ["exp_billet"]
 engineer = true
 # TODO M7-04: builds a Landing Beacon on soft land (design 07 §2.1); beacons are placed from the structure queue today
 
-[exp_diver]   # PLACEHOLDER ART; combat diver, plants charges on ships and quays
+[exp_diver]   # combat diver, plants charges on ships and quays
 faction = "expedition"
 tier = 1
 speed = 10  # (tune)
@@ -272,7 +272,7 @@ cost = 250  # (tune)
 prerequisites = ["exp_billet"]
 # TODO M7-05: swimming in deep water (foot units cannot enter Water today) and the sonar-picket counter
 
-[exp_pathfinder]   # PLACEHOLDER ART; spotter and long-range rifle, stealthy
+[exp_pathfinder]   # spotter and long-range rifle, stealthy
 faction = "expedition"
 tier = 2
 speed = 12  # (tune)
@@ -284,7 +284,7 @@ cost = 350  # (tune)
 prerequisites = ["exp_billet"]
 stealth = true
 
-[exp_ironbound]   # PLACEHOLDER ART; powered-suit heavy with an anti-air missile pod
+[exp_ironbound]   # powered-suit heavy with an anti-air missile pod
 faction = "expedition"
 tier = 3
 speed = 9  # (tune)

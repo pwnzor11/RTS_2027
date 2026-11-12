@@ -77,16 +77,13 @@ public sealed class PilotMissionTests
         Assert.All(m.Host.Objectives.Where(o => o.Primary), o => Assert.Equal(ObjectiveStatus.Completed, o.Status));
     }
 
-    // S18 MIS-03 (owner): at tier 5 this simple bot loses both scrapers in the survey phase; that is now a loss, as the script intends
-    // (before MIS-03 the second ScraperLost saw the dying scraper as alive, so the loss never fired and the bot won anyway).
+    // S21 (D-217, Q-71 (a)): with ash on the tier-5 bot wins auth_01; MIS-03's loss rule stays in the script (losing both scrapers loses).
     [Fact]
-    public void A_simple_player_that_loses_both_scrapers_at_tier_5_loses()
+    public void A_simple_player_wins_at_tier_5()
     {
         (MissionSession m, string diag) = Play(5);
         Assert.True(m.Host.Errors.Count == 0, diag);
-        Assert.True(m.Host.Outcome == MissionOutcome.Lost, diag);
-        Assert.Equal(ObjectiveStatus.Failed, m.Host.Objectives.Single(o => o.Id == "scrapers").Status);
-        Assert.True(m.Sim.Players.Defeated[0]);
+        Assert.True(m.Host.Outcome == MissionOutcome.Won, diag);
     }
 
     private static (MissionSession M, string Diag) Play(int tier)
