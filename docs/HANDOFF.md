@@ -2,8 +2,8 @@
 Last commit: `docs: Session 19 handoff` on wp/s19-docs, landed through its PR after PR #66 (all of M13). Check `git log -1 origin/main`.
 Where things stand: session 19 (2026-11-11/12) built the M13 batch (D-205) in waves A, B and C: see SESSION_LOG session 19 and ROADMAP M13.
 Decisions up to D-211. Campaign missions run with ash damage and the ash path cost OFF (`MissionSession.CampaignRules`, D-211) until M13-17;
-skirmish has the hazard, the infantry detour and the idle step-off. lb_03 tier 5 is a skipped known shift (BalanceTableTests.KnownShifts and
-LeftBehindMission03Tests). Open questions Q-71 (auth_01 tier 5 expectation with ash on) and Q-72 (assumed — confirm ash rules).
+skirmish has the hazard, the infantry detour and the idle step-off. lb_03 tier 5 and exp_04 tier 5 are skipped known shifts (BalanceTableTests.KnownShifts,
+LeftBehindMission03Tests, ExpeditionMission04Tests; exp_04 t5 stalls at tick 30000 with the ash objective open since the head-on fix b01a024: investigate first). Open questions Q-71 (auth_01 tier 5 expectation with ash on) and Q-72 (assumed — confirm ash rules).
 All 124 Field Manual hero renders are on main (art/booklet); the pilot PDF is docs/field_manual/RTS_2027_Field_Manual_pilot.pdf.
 
 ## Start here (shown to the user as the plan; nothing starts until they say go)
@@ -12,7 +12,7 @@ All 124 Field Manual hero renders are on main (art/booklet); the pilot PDF is do
    the option-only 2.3 numbers (D-208), the Glass Coast layout 2 fields (D-208), and whether start-side skew is solved (M13-10).
 2. M13-17 campaign retune: turn the hazard on in missions (remove CampaignRules' override mission by mission), walk the 16 missions + tutorial
    at tiers 1/3/5 with the bot tests, and fix escort routes / staging cells / script spawns standing on ash (lb_03 spawns its start force
-   on a field at (23,26)); un-skip lb_03 tier 5; ask Q-71. Owner rule: pilot one mission first, then fan out.
+   on a field at (23,26)); un-skip lb_03 and exp_04 tier 5 (exp_04 t5 may be a movement stall, not balance: check first); ask Q-71. Owner rule: pilot one mission first, then fan out.
 3. M13-11/13/18 follow-ups: melee acquire (item 19), harvester unreachable field + choke give-up (SP-03 Move half, SP-04), path leak
    (SIMDET-03), LB yard dock harvester livelock (HarvestMission Enter ~288-300), placement lanes south of exits (S18-AI-NEW-3), LB AI ~30
    Still Rigs in a corner base, ClearBuildArea keep or drop.

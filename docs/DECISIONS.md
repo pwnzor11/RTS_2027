@@ -1555,4 +1555,4 @@ pathing 22.6 s). **Why:** D-063(5)'s "answer one tick's requests together" is ke
 the Recruit AI's rally and wave staging cells step off ash, and idle infantry standing on ash step to the nearest clean cell within 3 (Q-72,
 assumed — confirm; ash-stealth infantry stay). That was not enough, so the owner then picked: campaign and tutorial missions run with ash
 damage and the ash path cost OFF (`MissionSession.CampaignRules`) until a campaign retune (M13-17); skirmish keeps all of it. lb_03 tier 5
-(a non-ash M13 shift) is a known, skipped case until the retune. **Status:** owner decision (session 19)
+and exp_04 tier 5 (non-ash M13 shifts) are known, skipped cases until the retune. **Status:** owner decision (session 19)

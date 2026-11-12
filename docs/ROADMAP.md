@@ -291,7 +291,7 @@ Source: docs/reviews/2026-11-07_owner_campaign_feedback.md. Audit: docs/reviews/
 - [x] M13-14 UI/wording/design list (section 2.4) incl. mission-script one-liners, naming pass from data/archive
 - [x] M13-15 QoL: game speed incl. slow; idle button and alerts; cameo hotkeys, repeat production, range rings, strong/weak line; handicap and starting conditions; stances and shift-queued waypoints
 - [~] M13-16 Re-pins done per merge batch (s19); owner laptop series before (s18audit, done) and after (`tools/measure/run_s19_after.ps1`, open)
-- [ ] M13-17 Campaign retune with the ashfall hazard on (missions run with ash damage and ash path cost off until then, D-211); lb_03 tier 5 known shift; auth_01 tier 5 now winnable (owner to confirm the S18 MIS-03 expectation)
+- [ ] M13-17 Campaign retune with the ashfall hazard on (missions run with ash damage and ash path cost off until then, D-211); lb_03 and exp_04 tier 5 known shifts; auth_01 tier 5 now winnable (owner to confirm the S18 MIS-03 expectation)
 - [ ] M13-18 Follow-ups found in s19: LB yard dock harvester livelock (HarvestMission Enter); placement lanes always south of exits (S18-AI-NEW-3); LB AI builds ~30 Still Rigs in a corner base; ClearBuildArea keep or drop; walls/gates hero renders re-angled to 3/4 (M14)
 
 ## M14 · Field Manual (D-206, docs/design/19_field_manual.md)

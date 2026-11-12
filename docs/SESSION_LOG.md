@@ -371,5 +371,5 @@ spoiler-free in the Gnomestead shape with the booklet link. Laptop: s18audit "be
 until the retune M13-17).
 **Helpers:** about 25 packages (Sonnet; Opus for path and the campaign bisect); several fix rounds; all reports kept in the session.
 **Problems / notes:** the 2-CPU box with 6-9 helpers queued every test run behind one lock (10-15 min each); local batches skipped the slow
-Scripting project, so Windows CI found the campaign regressions (ashfall, path) late. lb_03 tier 5 is a known skipped shift until M13-17.
+Scripting project, so Windows CI found the campaign regressions (ashfall, path) late. lb_03 and exp_04 tier 5 are known skipped shifts until M13-17.
 **Next session should:** see HANDOFF (campaign retune with ash on, after-series, follow-ups, then M14).
