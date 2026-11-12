@@ -4,13 +4,15 @@ Context and trade-offs for every question are in `docs/research/00_SYNTHESIS.md`
 file cited after each question. Recommendations are the lead's, from the research.
 
 ## Open
-- 🟡 **Q-70 · 2026-11-10 · Layout 2 income after v6.** Moving the main fields from about 4 to about 9 cells (D-199) moved income only a few percent:
-  the AI parks its refinery near the yard. On 16 sides per biome v6 is within 10 % of layout 1 at 3 minutes everywhere, but +13 % (rust_belt) and
-  +28 % (glass_coast) at 5 minutes. Decide after the owner's 64-game run (`tools/measure/run_s17_layout2.ps1`). Options: **(a) wait for the 64-game
-  numbers, then cut money per field cell on the biomes still over (recommended)**; (b) relax the layout check "100 field cells within 30 path cells"
-  for layout 2 so the main field can be halved (the only change that matched layout 1 in the probe); (c) accept the richer early economy on layout 2.
+
+- 🟡 **Q-71 · 2026-11-11 · auth_01 tier 5 after M13.** The S18 rule (MIS-03, D-203) expects the tier-5 bot to lose both scrapers; after the
+  M13 batch the bot wins auth_01 at tier 5 with ash on (tick 4601). With ash off in missions (D-211) re-check in the campaign retune (M13-17), then:
+  **(a) accept the easier tier 5 and update the expectation** / (b) retune the tier-5 raids so the loss returns.
+- 🟡 **Q-72 · 2026-11-11 · Assumed — confirm (ashfall, part of owner option a).** Idle infantry standing on ash step to the nearest clean cell
+  within 3 cells (skirmish; missions have ash off); ash-stealth infantry stay on ash (they hide there); foot ash path penalty 4. **Recommend keep.**
 
 ## Answered
+- Q-70 · 2026-11-10 · Owner (a): layout 2 money per field cell cut on Rust Belt (-9.8 % measured) and Glass Coast (-12.8 %, density floor); decide on Glass Coast fields after the after-series → D-208.
 - Q-68 · 2026-11-09 · Owner: (a) half-turn skeleton for Ash Plains, same crossing pair both sides → D-198.
 - Q-69 · 2026-11-09 · Owner: (a) move main/natural fields further from the refinery spot, fewer patches near the main → D-199.
 - Q-67 · 2026-11-08 · Owner: band 50-65 % (D-191); hold 18 landed, tier-5 ladder follow-up → D-194.
