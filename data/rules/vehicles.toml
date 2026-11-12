@@ -320,8 +320,8 @@ prerequisites = ["auth_factory"]
 [auth_bulwark]   # heavy armour, crusher (design 08 §4)
 tier = 3
 locomotion = "tracked"
-speed = 20  # ASSUMED (M4-07)
-max_health = 400  # ASSUMED (M4-07)
+speed = 18  # ASSUMED (M4-07) # s22 M13-13 (D-223): 20 -> 18
+max_health = 500  # ASSUMED (M4-07) # s22 M13-13 (D-223): 400 -> 500
 turn_rate = 6  # ASSUMED (M4-07)
 armor = "heavy"
 sight = 5  # ASSUMED (M4-07)
@@ -329,7 +329,7 @@ primary_weapon = "auth_tank_cannon"
 has_turret = true
 turret_turn_rate = 10  # ASSUMED (M4-07)
 crusher = true
-cost = 800  # ASSUMED (M4-07)
+cost = 900  # ASSUMED (M4-07) # s22 M13-13 (D-223): 800 -> 900
 prerequisites = ["auth_factory"]
 
 [dir_ash_sower]   # lays radiation with a contaminate-only weapon (design 08 §4)
