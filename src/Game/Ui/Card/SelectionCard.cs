@@ -76,7 +76,7 @@ public sealed class SelectionCard : IUiRegion
     /// <param name="building">The selected own building, or none.</param>
     public void Refresh(Rectangle mapView, float ui, EntityId building)
     {
-        Model = CardModelBuilder.Build(_source, _selection, SimSnapshotSource.LocalPlayer, building, Groups);
+        Model = CardModelBuilder.Build(_source, _selection, _source.Local, building, Groups);
         _scale = CardLayout.ScaleFor(mapView.Width, ui);
         int lh = BitmapFont.LineHeight(_scale, FontWeight.Regular);
         int width = Math.Max(120, Math.Min((int)MathF.Round(CardLayout.WidthUnits * _scale), mapView.Width - 2 * (int)MathF.Round(8f * _scale)));

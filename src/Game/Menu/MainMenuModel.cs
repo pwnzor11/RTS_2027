@@ -11,7 +11,7 @@ public enum MenuAction
     Campaign,
     /// <summary>Skirmish (New / Load).</summary>
     Skirmish,
-    /// <summary>LAN game (not built yet).</summary>
+    /// <summary>LAN game: the browser, host and join (M9).</summary>
     LanGame,
     /// <summary>The map editor.</summary>
     MapEditor,
@@ -51,7 +51,7 @@ public static class MainMenuModel
         new MainMenuEntry(MenuAction.Continue, "Continue", hasSave, hasSave ? null : NoSaves),
         new MainMenuEntry(MenuAction.Campaign, "Campaign", true),
         new MainMenuEntry(MenuAction.Skirmish, "Skirmish", true),
-        new MainMenuEntry(MenuAction.LanGame, "LAN Game", false, ComingLater),
+        new MainMenuEntry(MenuAction.LanGame, "LAN Game", true),
         new MainMenuEntry(MenuAction.MapEditor, "Map Editor", true),
         new MainMenuEntry(MenuAction.Replays, "Replays", true),
         new MainMenuEntry(MenuAction.Archive, "Archive", true),

@@ -69,7 +69,7 @@ public sealed class LockstepClient
     /// <summary>True once the host left or the connection to it was lost (Q-M9-j: the Game offers "Continue against AI").</summary>
     public bool HostLost { get; private set; }
 
-    /// <summary>The last desync notice (tick and peers), or null.</summary>
+    /// <summary>The open desync notice (tick and peers), or null; cleared when the host resumes the match.</summary>
     public (int Tick, int[] Peers)? Desync { get; private set; }
 
     /// <summary>Raised for each relayed chat line.</summary>
@@ -180,7 +180,11 @@ public sealed class LockstepClient
                 if (!Paused) { Paused = true; PauseChanged?.Invoke(true); }
                 break;
             case NetMessage.Resume resume:
-                if (Paused) _resumeAtUs = _now + Math.Max(0, resume.CountdownMs) * 1000L;
+                if (Paused)
+                {
+                    _resumeAtUs = _now + Math.Max(0, resume.CountdownMs) * 1000L;
+                    Desync = null;   // the host only resumes once it has answered a desync (Continue or a resync)
+                }
                 break;
             case NetMessage.Waiting waiting:
                 Waiting = (waiting.Peers, waiting.WaitedMs);

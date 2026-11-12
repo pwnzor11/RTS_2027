@@ -97,13 +97,16 @@ public sealed class LockstepHost
     /// <summary>Client hashes compared with the host's.</summary>
     public int HashesCompared { get; private set; }
 
+    /// <summary>Client hashes received but not yet compared (the host has not reached their tick).</summary>
+    public int PendingHashCount => _pendingHashes.Count;
+
     /// <summary>Client hashes that differed from the host's.</summary>
     public int HashMismatches { get; private set; }
 
     /// <summary>Client hashes that could not be checked (the host no longer had that tick).</summary>
     public int HashesUnchecked { get; private set; }
 
-    /// <summary>Commands refused: wrong slot, no slot, dropped sender, or an oversized Input.</summary>
+    /// <summary>Commands refused: wrong slot, no slot, dropped sender, an oversized Input, or too many waiting (input flood).</summary>
     public int RejectedCommands => _scheduler.Rejected + _oversizeInputs;
 
     /// <summary>The first unacknowledged desync: tick, peers, and the sub-hashes the first differing client sent.</summary>
@@ -126,6 +129,16 @@ public sealed class LockstepHost
 
     /// <summary>Lets <paramref name="peer"/> (the host itself is peer 0) command <paramref name="player"/>.</summary>
     public void SetSlot(int peer, byte player) => _scheduler.SetSlot(peer, player);
+
+    /// <summary>
+    /// Registers a client the match expects (every human peer and spectator from the lobby's setup), connected or not. One that is not
+    /// connected when the match starts is dropped on the first update (an AI takes its slot), so a peer that left between the lobby's
+    /// Start and the match never leaves a dead slot behind (M9-14).
+    /// </summary>
+    public void AddPeer(int peer)
+    {
+        if (peer != HostPeer && !_started) _progress.TryAdd(peer, -1);
+    }
 
     /// <summary>Marks a client as a spectator: it gets every bundle but nobody waits for it, and it may not command.</summary>
     public void SetSpectator(int peer)
@@ -153,7 +166,7 @@ public sealed class LockstepHost
     /// <summary>Pauses the match on behalf of the host player.</summary>
     public void RequestPause() => PauseBy(HostPeer);
 
-    /// <summary>Starts the resume countdown on behalf of the host player.</summary>
+    /// <summary>Starts the resume countdown on behalf of the host player. Ignored while a desync is open (<see cref="ContinueAfterDesync"/> first).</summary>
     public void RequestResume() => ResumeBy(HostPeer);
 
     /// <summary>Sends a chat line from the host player. Audience 0 = all, 1 = team.</summary>
@@ -210,6 +223,8 @@ public sealed class LockstepHost
         {
             _started = true;
             _nextTickUs = _now;
+            foreach (int peer in _progress.Keys.ToArray())
+                if (!_transport.Peers.Contains(peer)) Drop(peer, "disconnected");
         }
 
         int steps = 0;
@@ -247,7 +262,7 @@ public sealed class LockstepHost
         {
             _aiScratch.Clear();
             collect(t, _aiScratch);
-            foreach (Command c in _aiScratch) _scheduler.SubmitTrusted(c, t);
+            foreach (Command c in _aiScratch) _scheduler.TrySubmitTrusted(c, t, out _);
         }
         if (!Paused)
         {
@@ -280,7 +295,7 @@ public sealed class LockstepHost
                 if (_progress.TryGetValue(from, out int old) && progress.SteppedTick > old) _progress[from] = progress.SteppedTick;
                 break;
             case NetMessage.Hash hash:
-                if (_progress.ContainsKey(from)) _pendingHashes.Add((from, hash.Tick, hash.Value, hash.SubHashes));
+                if (_progress.ContainsKey(from) && PlausibleHash(from, hash.Tick)) _pendingHashes.Add((from, hash.Tick, hash.Value, hash.SubHashes));
                 CheckHashes();
                 break;
             case NetMessage.Chat chat:
@@ -299,6 +314,17 @@ public sealed class LockstepHost
                 _transport.Send(from, new NetMessage.Pong(ping.Stamp), reliable: false);
                 break;
         }
+    }
+
+    // M9-14: a hash is only kept for a tick on the hash interval, no further ahead than a client can be, and once per peer and tick,
+    // so a faulty or hostile client cannot grow the pending list
+    private bool PlausibleHash(int peer, int tick)
+    {
+        if (tick <= 0 || tick % SimConstants.HashIntervalTicks != 0) return false;
+        if (tick > Tick + Math.Max(MaxLead, Delay) + 1) return false;
+        foreach ((int Peer, int Tick, ulong, ulong[]) h in _pendingHashes)
+            if (h.Peer == peer && h.Tick == tick) return false;
+        return true;
     }
 
     private void CheckHashes()
@@ -338,7 +364,7 @@ public sealed class LockstepHost
 
     private void ResumeBy(int peer)
     {
-        if (!Paused || _resumeAtUs is not null) return;
+        if (!Paused || _resumeAtUs is not null || _desyncOpen) return;   // nobody resumes over an open desync: the host answers it first
         _resumeAtUs = _now + NetProtocol.ResumeCountdownMs * 1000L;
         _transport.Broadcast(new NetMessage.Resume(peer, NetProtocol.ResumeCountdownMs));
     }

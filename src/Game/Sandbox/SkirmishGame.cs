@@ -191,7 +191,33 @@ public sealed class SkirmishGame : IDisposable
     public static SkirmishGame Create(string rulesDir, SkirmishSettings settings, Settings? appSettings = null)
     {
         ArgumentNullException.ThrowIfNull(settings);
-        IReadOnlyList<string> errors = settings.Validate();
+        return Build(rulesDir, settings, settings, appSettings);
+    }
+
+    /// <summary>
+    /// M9: builds a LAN match exactly as <see cref="Create(string, SkirmishSettings, Settings)"/> builds a skirmish, except that several slots may
+    /// be Human (one per LAN player; they are players 0.. in slot order, before the AIs). Every peer calls it with the same settings and gets
+    /// the same simulation. The AI driver holds the AI slots only; a LAN peer's own player is not player 0 in general.
+    /// </summary>
+    /// <param name="rulesDir">The data/rules directory.</param>
+    /// <param name="settings">The match settings; apart from the number of Human slots, <see cref="SkirmishSettings.Validate"/> must pass.</param>
+    /// <param name="appSettings">The host's app settings for LLM commanders; null on clients (the host runs every AI, Q-M9-f).</param>
+    public static SkirmishGame CreateNetworked(string rulesDir, SkirmishSettings settings, Settings? appSettings = null)
+    {
+        ArgumentNullException.ThrowIfNull(settings);
+        // validate as if every Human slot after the first were an AI: the only rule a LAN match relaxes is "one Human slot"
+        int firstHuman = settings.Slots.ToList().FindIndex(s => s.Kind == SlotKind.Human);
+        var check = settings with
+        {
+            Slots = settings.Slots.Select((s, i) => s.Kind == SlotKind.Human && i != firstHuman
+                ? s with { Kind = SlotKind.Ai, AiTier = SkirmishSettings.DefaultAiTier } : s).ToArray(),
+        };
+        return Build(rulesDir, settings, check, appSettings);
+    }
+
+    private static SkirmishGame Build(string rulesDir, SkirmishSettings settings, SkirmishSettings validated, Settings? appSettings)
+    {
+        IReadOnlyList<string> errors = validated.Validate();
         if (errors.Count > 0) throw new InvalidOperationException(errors[0]);
 
         RuleSet rules = RulesLoader.Load(rulesDir);
