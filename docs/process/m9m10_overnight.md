@@ -36,3 +36,4 @@ ExpeditionMission04Tests). Not ours; reported to session 19 through the owner.
 - Independent review (Opus, fresh): 8 findings, all fixed with tests first (M9-14): shared network clock (HIGH), desync resolve on clients,
   per-tick command cap, failed-start latch + Bye, resume refused during desync, bounded pending hashes, late leavers dropped to AI, resync
   save failure handled. Decisions recorded as D-212..D-216; open questions Q-73, Q-74.
+- Landed: wave 1 PR #69 and wave 2 PR #71, both merged on green Windows CI (2026-11-12 morning).

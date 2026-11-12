@@ -422,7 +422,7 @@ Back up `%APPDATA%\RTS_2027` first (game saves gained control groups and the set
 
 ## Session 19p · M9 LAN + M10 polish (D-212..D-216)
 - **LAN (two PCs on one network):** main menu → LAN Game on both. PC 1: Host game. PC 2: the game appears in the list within about 2 s → Join,
-  pick a faction, Ready; PC 1: Start. Both play the same match. Press P on either: both show "Paused by <name>", Resume counts down 3 s.
+  pick a faction, Ready; PC 1: Start. Both play the same match. Press Space on either: both show "Paused by <name>", Resume counts down 3 s.
   Enter opens chat (Tab = All/Team). Pull PC 2's network cable: PC 1 shows "Waiting for <name>…", after 10 s a Drop button, then an AI plays that side.
 - **LAN lobby wait:** wait a minute in the lobby before Start: nobody is dropped at the handover (review fix 1).
 - **Firewall:** the first Host shows the Windows Firewall prompt: allow Private networks (or tick the firewall task in the installer).
