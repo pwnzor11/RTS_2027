@@ -21,7 +21,7 @@ public static class AiCommands
 {
     private const int DefaultTier = 2;
     private const string Usage =
-        "usage: ai match --a <aiId>[:<tier>] --b <aiId>[:<tier>] [--seeds 8] [--ticks 30000] [--size 64] [--out file.md] [--record-dir dir] [--flat 1] [--starts alt|slot|swap] [--start economy|army] [--first 1] [--faction-a authority|directorate|left_behind|expedition] [--faction-b ...] [--layout 1|2] [--biome rust_belt|glass_coast|mountains|ash_plains] [--income 1]\n" +
+        "usage: ai match --a <aiId>[:<tier>] --b <aiId>[:<tier>] [--seeds 8] [--ticks 30000] [--size 64] [--out file.md] [--record-dir dir] [--flat 1] [--starts alt|slot|swap] [--start economy|army] [--first 1] [--faction-a authority|directorate|left_behind|expedition] [--faction-b ...] [--layout 1|2] [--biome rust_belt|glass_coast|mountains|ash_plains] [--income 1] [--mopup on|off]\n" +
         "         --layout / --biome (M12-12) build the map with the biome generator (size 64 = small, 96 = medium, else large) instead of the synthetic map; layout 2 is the zoned layout, no flag = unchanged. --income prints harvested credits at 3/5/10 min.\n" +
         "         example (M7-10): ai match --a tiered:2 --b tiered:2 --faction-a expedition --faction-b authority --size 96 --seeds 4   (an Expedition side gets ocean north+south edges; 96 = medium)\n" +
         "       ai matrix --ai <aiId> [--faction authority|directorate] [--tiers 1-5] [--seeds 4] [--ticks 30000] [--size 64] [--layout 1|2] [--out file.md]\n" +
@@ -31,7 +31,7 @@ public static class AiCommands
         "       ai duel --a <spec> --b <spec> [--count 1] [--count-b N] [--ticks 3000] [--gap 12]   (spec = id[:n][,id[:n]...], e.g. auth_tank:3,auth_turret:1)\n" +
         "  <tier> is 1..5 or recruit|regular|veteran|elite|commissar (default regular). Seeds are first..first+N-1 (first defaults to 1).";
 
-    private static readonly string[] MatchOptions = ["a", "b", "seeds", "ticks", "size", "out", "record-dir", "flat", "starts", "start", "first", "faction-a", "faction-b", "trace", "game", "extras", "layout", "biome", "income"];
+    private static readonly string[] MatchOptions = ["a", "b", "seeds", "ticks", "size", "out", "record-dir", "flat", "starts", "start", "first", "faction-a", "faction-b", "trace", "game", "extras", "layout", "biome", "income", "mopup"];
     private static readonly string[] TimelineOptions = ["a", "b", "seed", "ticks", "size", "swap", "trace", "dump", "faction-a", "faction-b", "layout", "biome"];
     private static readonly string[] DuelOptions = ["a", "b", "count", "count-b", "ticks", "gap"];
     private static readonly string[] MatrixOptions = ["ai", "tiers", "seeds", "ticks", "size", "out", "faction", "players", "biome", "layout"];
@@ -72,6 +72,13 @@ public static class AiCommands
         if (flags.TryGetValue("faction-b", out string? fb) && !(Enum.TryParse(fb.Replace("_", ""), true, out Faction facB) && (b = b! with { Faction = facB }) is not null))
             return UsageError("--faction-b must be authority, directorate, left_behind or expedition");
 
+        // S22: --mopup on|off switches the mop-up (finishing a beaten enemy) for both sides; default = the profile's (on for tiers with respond_to_attacks)
+        if (flags.TryGetValue("mopup", out string? mopupArg))
+        {
+            if (mopupArg is not ("on" or "off")) return UsageError("--mopup must be on or off");
+            a = a! with { Profile = a.Profile.WithMopup(mopupArg == "on") };
+            b = b! with { Profile = b.Profile.WithMopup(mopupArg == "on") };
+        }
         if (!ParseMapChoice(flags, out MapChoice? choice, out error)) return UsageError(error!);
         _income = flags.ContainsKey("income");
         bool army = false;

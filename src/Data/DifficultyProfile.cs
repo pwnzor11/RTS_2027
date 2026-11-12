@@ -68,6 +68,19 @@ public sealed record DifficultyProfile(
     /// <summary>Harvesters wanted alive (1..6). With <see cref="ReplaceHarvesters"/> missing ones are built; expansion adds one.</summary>
     public int HarvesterTarget { get; init; } = 1;
 
+    /// <summary>S22: the mop-up (finishing a beaten enemy) is allowed for this tier. Takes effect only with <see cref="RespondToAttacks"/>; on by default, off for measurement (<c>ai match --mopup off</c>) and in missions.</summary>
+    public bool Mopup { get; init; } = true;
+
+    /// <summary>S22: a copy with <see cref="Mopup"/> set, in the faction versions too.</summary>
+    public DifficultyProfile WithMopup(bool on)
+    {
+        DifficultyProfile copy = this with { Mopup = on };
+        copy._byFaction = (DifficultyProfile?[])_byFaction.Clone();
+        for (int i = 0; i < copy._byFaction.Length; i++)
+            if (copy._byFaction[i] is { } f) copy._byFaction[i] = f with { Mopup = on };
+        return copy;
+    }
+
     /// <summary>S15 lbknob: credits an AI keeps in hand before it buys a unit (added to the build-order reserve; 0 = none). Slows the army build-up only.</summary>
     public int UnitReserve { get; init; }
 
