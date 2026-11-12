@@ -508,7 +508,9 @@ internal static class MoveMission
             arrived = settle;
             // M13-16: not when the blocked cell is the goal itself: an attack-mover whose final cell is held keeps waiting there, awake
             // (a no-way answer made it sleep 10 ticks out of every 140 with its guns idle, and campaign bots lost their hold fights).
-            if (settle || n == goal) return 1;
+            // Unless the goal's holder is head-on waiting for our cell (Mutual): a harvester entering the dock while the one on it
+            // tries to leave through us; nobody moves unless someone is told there is no way (M4AiTests Directorate tier climb).
+            if (settle || (n == goal && !b.Mutual)) return 1;
             // M13-05 (S18 SP-03, StepToward half): a caller that does not settle used to get 1 here on every later cycle, never a detour
             // or a repath, so two harvesters head-on at a dock waited for each other for good. Report "no way from here" instead
             // (callers pick another field, re-queue at the dock or retry) and start counting afresh with a new route.
