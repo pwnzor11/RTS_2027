@@ -35,6 +35,8 @@ cd ACE-Step-1.5
 uv sync
 uv run acestep
 ```
+If PowerShell then says `uv` is not recognised, the window was opened before uv was installed and has the old PATH: run
+`$env:Path = "$env:USERPROFILE\.local\bin;$env:Path"` in that window (or open a new one) and repeat `uv sync`.
 Python 3.11 or 3.12 (uv fetches it). Keep it **outside** the RTS_2027 folder; it is a tool, not part of the game.
 
 The first launch downloads the model weights (several GB; the 2B model is about 4.7 GB in memory, XL about 9 GB) into the user cache.
