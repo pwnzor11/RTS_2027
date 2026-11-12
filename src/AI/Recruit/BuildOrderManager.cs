@@ -175,7 +175,7 @@ internal sealed class BuildOrderManager
         // SUP-5 (design 13 §6): a supply structure next when used + queued supply reaches cap - margin (and the ceiling is not reached), above
         // the build order. If its prerequisite is missing, that prerequisite comes first; power first if it would brown out.
         _supplyPick = -1;
-        if (k.PackedRigs.Count == 0 && SupplyShort(k, SupplyMargin) && !SupplyInFlight(k))   // packed rigs: the cap is low only until they unpack
+        if (k.PackedRigs.Count == 0 && SupplyShort(k, SupplyMargin) && !SupplyInFlight(k) && SupplyStructureCount(k) < MaxSupplyStructures)   // packed rigs: the cap is low only until they unpack
         {
             int supply = SupplyType(k);
             if (supply >= 0)
@@ -200,6 +200,20 @@ internal sealed class BuildOrderManager
     private static readonly int[] Margins = [4, 5, 8, 10, 12];   // (tune) design 13 §6 says 4, 6, 8, 10, 12; tier 2 is 5 so the garrison fill is not late
 
     private int _supplyPick = -1;
+
+    /// <summary>M13-18: most supply structures (other than the yard) the AI owns or has queued. A cramped Left Behind corner base built 14 to 18 Still Rigs
+    /// (2x2, 10 supply each) in ten minutes to feed an army of 160 to 190 supply; 8 give a cap of 100, which is what the base holds. (tune)</summary>
+    public const int MaxSupplyStructures = 8;
+
+    /// <summary>M13-18: supply structures (not the yard) owned or queued.</summary>
+    private int SupplyStructureCount(RecruitKnowledge k)
+    {
+        SimRules rules = k.Rules;
+        int n = 0;
+        for (int t = 0; t < _queued.Length; t++)
+            if (rules.Buildings[t].SupplyProvided > 0 && rules.Buildings[t].Id != _yardId && rules.Buildings[t].Category == ProductionCategory.Structure) n += k.BuildingCount[t] + _queued[t];
+        return n;
+    }
 
     /// <summary>SUP-5: supply of the units waiting in the unit queues (the front item included).</summary>
     internal static int QueuedSupply(RecruitKnowledge k)
