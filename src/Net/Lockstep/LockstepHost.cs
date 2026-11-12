@@ -156,7 +156,7 @@ public sealed class LockstepHost
     /// <summary>Pauses the match on behalf of the host player.</summary>
     public void RequestPause() => PauseBy(HostPeer);
 
-    /// <summary>Starts the resume countdown on behalf of the host player.</summary>
+    /// <summary>Starts the resume countdown on behalf of the host player. Ignored while a desync is open (<see cref="ContinueAfterDesync"/> first).</summary>
     public void RequestResume() => ResumeBy(HostPeer);
 
     /// <summary>Sends a chat line from the host player. Audience 0 = all, 1 = team.</summary>
@@ -341,7 +341,7 @@ public sealed class LockstepHost
 
     private void ResumeBy(int peer)
     {
-        if (!Paused || _resumeAtUs is not null) return;
+        if (!Paused || _resumeAtUs is not null || _desyncOpen) return;   // nobody resumes over an open desync: the host answers it first
         _resumeAtUs = _now + NetProtocol.ResumeCountdownMs * 1000L;
         _transport.Broadcast(new NetMessage.Resume(peer, NetProtocol.ResumeCountdownMs));
     }
