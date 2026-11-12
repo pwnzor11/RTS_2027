@@ -29,6 +29,7 @@ public static class Cli
           Tools replay verify <file> [--rules <dir>] [--map <path>]
           Tools replay info <file>
           Tools ai match --a <aiId>[:<tier>] --b <aiId>[:<tier>] | ai matrix --ai <aiId> [--tiers 1-5]
+          Tools lan soak [--players 2..4] [--ticks <n>] [--latency-ms <a>] [--jitter-ms <b>] [--seed <s>]
           Tools help
 
         --rules defaults to the nearest data/rules found walking up from the current directory.
@@ -59,6 +60,8 @@ public static class Cli
                 return ReplayCommands.Run(args[1..]); // owned by M1-10
             case "ai":
                 return AiCommands.Run(args[1..]); // owned by M1.5-06
+            case "lan":
+                return LanCommands.Run(args[1..]); // owned by M9-03
             default:
                 Console.Error.WriteLine($"error: unknown command '{args[0]}'");
                 Console.Error.WriteLine(Usage);
