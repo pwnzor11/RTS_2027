@@ -3,6 +3,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using Rts.Game.Audio;
 using Rts.Game.Input;
 using Rts.Game.Render;
 using Rts.Game.Ui;
@@ -97,13 +98,18 @@ public sealed class BriefingScreen : IScreen
     public bool BlocksDrawBelow => true;
 
     /// <inheritdoc />
-    public void Enter() => _still = LoadStill();
+    public void Enter()
+    {
+        _still = LoadStill();
+        AudioBootstrap.Director?.RequestMusic(MusicState.Briefing, AudioDirector.FactionOf(_model.Faction));
+    }
 
     /// <inheritdoc />
     public void Exit()
     {
         _still?.Dispose();
         _still = null;
+        AudioBootstrap.Director?.ReleaseMusic();
     }
 
     /// <inheritdoc />

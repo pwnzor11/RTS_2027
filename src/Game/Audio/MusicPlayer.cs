@@ -7,7 +7,8 @@ namespace Rts.Game.Audio;
 /// <summary>
 /// Picks and fades music for a <see cref="MusicState"/>. When the state changes the current track fades out, the next one (random
 /// among those that match, never the same twice running) starts and fades in. With no matching file it stays silent; a battle with
-/// no battle track falls back to the tension track. Fades go through <see cref="IAudio.SetMusicFade"/>.
+/// no battle track falls back to the tension track, and a briefing or credits with no track of its own falls back to menu music.
+/// Fades go through <see cref="IAudio.SetMusicFade"/>.
 /// </summary>
 public sealed class MusicPlayer
 {
@@ -60,28 +61,52 @@ public sealed class MusicPlayer
         return ids;
     }
 
+    // The four factions named in music file names (lower case, no underscore: battle_leftbehind_1.ogg).
+    private static readonly string[] NamedFactions = { "authority", "directorate", "leftbehind", "expedition" };
+
     private IReadOnlyList<string> ComputeCandidates(MusicState state, Faction faction, out string group)
     {
-        string battle = "battle_" + faction.ToString().ToLowerInvariant();
-        (string Group, string Prefix)[] order = state switch
-        {
-            MusicState.Menu => new[] { ("menu", "menu") },
-            MusicState.Battle => new[] { (battle, battle), ("battle", "battle"), ("tension", "tension") },
-            MusicState.Tension => new[] { ("tension", "tension") },
-            MusicState.Victory => new[] { ("victory", "victory") },
-            _ => new[] { ("defeat", "defeat") },
-        };
+        string f = faction.ToString().ToLowerInvariant();
+        string battle = "battle_" + f;
+        string tension = "tension_" + f;
+        string briefing = "briefing_" + f;
 
-        foreach ((string g, string prefix) in order)
+        switch (state)
         {
-            IReadOnlyList<string> ids = _library.WithPrefix(prefix);
-            if (g == "battle")
-            {
-                // The generic battle group never borrows the other faction's tracks.
-                ids = ids.Where(id => !id.StartsWith("battle_authority", StringComparison.OrdinalIgnoreCase)
-                    && !id.StartsWith("battle_directorate", StringComparison.OrdinalIgnoreCase)).ToList();
-            }
+            case MusicState.Menu:
+                return Choose(out group, ("menu", WithPrefix("menu")));
+            case MusicState.Battle:
+                return Choose(out group,
+                    (battle, WithPrefix(battle)),
+                    ("battle", GenericBattle()),
+                    (tension, WithPrefix(tension)),
+                    ("tension", WithPrefix("tension")));
+            case MusicState.Tension:
+                return Choose(out group, (tension, WithPrefix(tension)), ("tension", WithPrefix("tension")));
+            case MusicState.Victory:
+                return Choose(out group, ("victory", WithPrefix("victory")));
+            case MusicState.Defeat:
+                return Choose(out group, ("defeat", WithPrefix("defeat")));
+            case MusicState.Briefing:
+                return Choose(out group, (briefing, WithPrefix(briefing)), ("menu", WithPrefix("menu")));
+            case MusicState.Credits:
+                return Choose(out group, ("credits", WithPrefix("credits")), ("menu", WithPrefix("menu")));
+            default:
+                return Choose(out group);
+        }
+    }
 
+    private IReadOnlyList<string> WithPrefix(string prefix) => _library.WithPrefix(prefix);
+
+    // The generic battle tracks: never a track named for any faction (so no faction borrows another's battle music).
+    private IReadOnlyList<string> GenericBattle() =>
+        WithPrefix("battle").Where(id => !NamedFactions.Any(n => id.StartsWith("battle_" + n, StringComparison.OrdinalIgnoreCase))).ToList();
+
+    // The first option with any track wins; its group names the fade target. Nothing at all is silence.
+    private static IReadOnlyList<string> Choose(out string group, params (string Group, IReadOnlyList<string> Ids)[] options)
+    {
+        foreach ((string g, IReadOnlyList<string> ids) in options)
+        {
             if (ids.Count > 0)
             {
                 group = g;
