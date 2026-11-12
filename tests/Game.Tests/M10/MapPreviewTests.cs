@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
 using Rts.Data;
+using Rts.Game.Render;
 using Rts.Game.Screens;
 using Rts.Game.Ui;
 using Rts.Sim.Core;
@@ -46,8 +47,8 @@ public sealed class MapPreviewTests
         var land = new LandType[n];
         Array.Fill(land, LandType.Water);
         var map = new MapData("w", "rust_belt", 16, 16, new ushort[n], land, new byte[n], new OverlayKind[n], new byte[n], new List<CellCoord>());
-        MapPreviewImage image = MapPreview.Render(map, 16, palette: null);
-        var expected = Minimap.TerrainColour(null, LandType.Water, OverlayKind.None, 0);
+        MapPreviewImage image = MapPreview.Render(map, 16);
+        var expected = Minimap.TerrainColour(TerrainPalette.ForMap(map), LandType.Water, OverlayKind.None, 0);
         uint want = ((uint)expected.R << 24) | ((uint)expected.G << 16) | ((uint)expected.B << 8) | 255;
         Assert.Equal(want, image.Pixel(3, 3));
         for (int i = 3; i < image.Rgba.Length; i += 4) Assert.Equal(255, image.Rgba[i]);

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
 using Rts.Game.Render;
+using Rts.Sim.Core;
 using Rts.Sim.Map;
 
 namespace Rts.Game.Ui;
@@ -25,7 +26,7 @@ public static class MapPreview
     /// <summary>The picture of a map, at most <paramref name="maxSide"/> pixels on its longer side.</summary>
     /// <param name="map">The map.</param>
     /// <param name="maxSide">Longer side limit in pixels (at least 8).</param>
-    /// <param name="palette">The theater palette, or null for the built-in colours (the default asks <see cref="TerrainPalette.ForMap"/> and falls back).</param>
+    /// <param name="palette">The theater palette, or null to ask <see cref="TerrainPalette.ForMap"/> (the built-in colours when that fails).</param>
     public static MapPreviewImage Render(MapData map, int maxSide = DefaultSide, TerrainPalette? palette = null)
     {
         ArgumentNullException.ThrowIfNull(map);
