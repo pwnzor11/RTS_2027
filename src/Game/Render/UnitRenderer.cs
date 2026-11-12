@@ -33,9 +33,10 @@ public static class UnitRenderer
     /// <param name="camera">View.</param>
     /// <param name="submerged">M7-14: the ship is dived. Its dived body frames are drawn (M7-17).</param>
     /// <param name="ownOrAllied">M7-17: the viewer owns or is allied with the ship; only then is a dived ship drawn semi-transparent.</param>
+    /// <param name="hitFlash">M10-14: the unit was just hit; its body is drawn again additively (white flash).</param>
     public static void Draw(SpriteBatch batch, Texture2D pixel, SpriteResolver sprites, SpritePainter painter,
         RenderMemory memory, int tick, SimRules? rules, RenderUnit unit, bool selected, Camera camera, bool submerged = false,
-        bool ownOrAllied = false)
+        bool ownOrAllied = false, bool hitFlash = false)
     {
         UnitView view = unit.View;
         bool infantry = view.Kind == UnitKind.Infantry;
@@ -64,6 +65,7 @@ public static class UnitRenderer
                 _ => sprite,
             };
             painter.Draw(batch, layerSprite, layer.Frame, at, house, camera.Zoom * drawScale, layerAlpha);
+            if (hitFlash && layer.Kind != UnitLayerKind.Shadow) painter.DrawFlash(batch, layerSprite, layer.Frame, at, camera.Zoom * drawScale);   // M10-14
         }
 
         if (!selected) return;

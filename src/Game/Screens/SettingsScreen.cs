@@ -50,6 +50,10 @@ public sealed class SettingsScreen : IScreen
                 new MenuButton("Toggle", ToggleHealthBars)),
             new MenuItem(() => $"Larger infantry (x1.25): {(_s.Settings.LargerInfantry ? "On" : "Off")}", ToggleLargerInfantry, _ => ToggleLargerInfantry(),
                 new MenuButton("Toggle", ToggleLargerInfantry)),   // D-184
+            new MenuItem(() => $"Weather: {(_s.Settings.Weather ? "On" : "Off")}", ToggleWeather, _ => ToggleWeather(),
+                new MenuButton("Toggle", ToggleWeather)),   // M10-12
+            new MenuItem(() => $"Screen shake: {(_s.Settings.ScreenShake ? "On" : "Off")}", ToggleScreenShake, _ => ToggleScreenShake(),
+                new MenuButton("Toggle", ToggleScreenShake)),   // M10-14
             Volume("Master volume", s => s.MasterVolume, (s, v) => s with { MasterVolume = v }),
             Volume("Music volume", s => s.MusicVolume, (s, v) => s with { MusicVolume = v }),
             Volume("Effects volume", s => s.SfxVolume, (s, v) => s with { SfxVolume = v }),
@@ -142,6 +146,10 @@ public sealed class SettingsScreen : IScreen
     }
 
     private void ToggleLargerInfantry() => _s.Settings = _s.Settings with { LargerInfantry = !_s.Settings.LargerInfantry };
+
+    private void ToggleWeather() => _s.Settings = _s.Settings with { Weather = !_s.Settings.Weather };
+
+    private void ToggleScreenShake() => _s.Settings = _s.Settings with { ScreenShake = !_s.Settings.ScreenShake };
 
     private void ToggleHealthBars() => _s.Settings = _s.Settings with { HealthBarsAlways = !_s.Settings.HealthBarsAlways };
 
