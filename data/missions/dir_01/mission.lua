@@ -126,6 +126,7 @@ end
 
 function WaveTwo()
   Media.MessageKey("d1.wave2")
+  Dialogue.Say(SPEAKER, SPEAKER, "d1.radio.wave2")
   local types = {}
   for i = 1, WaveTwoSize() do types[i] = "auth_rifleman" end
   if Mission.Difficulty() >= 4 then types[#types + 1] = "auth_jeep" end

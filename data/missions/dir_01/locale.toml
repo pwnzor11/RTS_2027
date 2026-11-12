@@ -9,6 +9,7 @@
 "d1.radio.muster" = "Four citizens stand at the hatch. Good. Hold."
 "d1.wave1" = "Tenancy riflemen from the east road!"
 "d1.wave2" = "The second response comes from the north!"
+"d1.radio.wave2" = "Another response, from the north. The tenancy is persistent, Commander."
 "d1.radio.wave1" = "The first response is on the east road. The weather is grim, Commander. The sky is not for them."
 "d1.response.beaten" = "The tenancy response is beaten. The hatch stands."
 "d1.radio.beaten" = "Both responses broken. Citizens, the hatch is yours."
