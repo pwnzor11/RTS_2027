@@ -25,7 +25,7 @@ internal static class MopupPlan
     public const int RatioPct = 400;   // (tune) s22
 
     /// <summary>Ticks the "beaten" test must hold without a break before a mop-up wave leaves (on top of the long enemy-value window).</summary>
-    public const int HoldTicks = 2400;   // (tune) s22
+    public const int HoldTicks = 1200;   // (tune) s22
 
     /// <summary>Ticks without a threat at home (own building hit, armed enemy unit near the base) before a mop-up wave leaves.</summary>
     public const int CalmTicks = 900;   // (tune) s22
@@ -38,6 +38,15 @@ internal static class MopupPlan
 
     /// <summary>Least ticks between two mop-up waves.</summary>
     public const int GapTicks = 1800;   // (tune) s22
+
+    /// <summary>Units per sweep party: a big army searching an empty map splits into parties of about this size, each with its own block.</summary>
+    public const int PartySize = 6;   // (tune) s22
+
+    /// <summary>Most sweep parties at once.</summary>
+    public const int MaxParties = 8;   // (tune) s22
+
+    /// <summary>Least distance (cells) between the goals of two sweep parties.</summary>
+    public const int PartySpacingCells = 16;   // (tune) s22
 
     /// <summary>Edge (cells) of a block of the fog memory / sweep grid.</summary>
     public const int BlockCells = 8;   // (tune) s22 (s14: the same 8-cell grid)
@@ -76,5 +85,31 @@ internal static class MopupPlan
             best = score; goal = c;
         }
         return goal;
+    }
+
+    /// <summary>Number of sweep parties for <paramref name="units"/> wave members: one party per <see cref="PartySize"/> units, at most <see cref="MaxParties"/>, at least 1.</summary>
+    public static int Parties(int units) => Math.Clamp(units / PartySize, 1, MaxParties);
+
+    /// <summary>
+    /// Up to <paramref name="count"/> sweep goals at least <see cref="PartySpacingCells"/> apart, best first (the first is what <see cref="PickSweep"/> returns).
+    /// Fewer when the stale blocks run out.
+    /// </summary>
+    public static List<CellCoord> PickSweeps(SimRules rules, int[] stamp, int blocksX, int mapW, int mapH, int tick, CellCoord from,
+        List<ViewActor> knownBuildings, Func<CellCoord, bool> passable, Func<CellCoord, bool> skip, int count)
+    {
+        var goals = new List<CellCoord>();
+        bool Apart(CellCoord c)
+        {
+            foreach (CellCoord g in goals)
+                if (Math.Max(Math.Abs(g.X - c.X), Math.Abs(g.Y - c.Y)) < PartySpacingCells) return false;
+            return true;
+        }
+        for (int i = 0; i < count; i++)
+        {
+            CellCoord? g = PickSweep(rules, stamp, blocksX, mapW, mapH, tick, from, knownBuildings, passable, c => skip(c) || !Apart(c));
+            if (g is not CellCoord found) break;
+            goals.Add(found);
+        }
+        return goals;
     }
 }

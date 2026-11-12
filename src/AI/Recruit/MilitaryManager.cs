@@ -360,7 +360,7 @@ internal sealed class MilitaryManager
     private static ulong Key(ViewActor a) => ((ulong)a.Id.Index << 16) | a.Id.Generation | ((ulong)(int)a.Kind << 48);
 
     /// <summary>M4-12 (diagnostics): the wave phase (0 gather, 1 stage, 2 assault), the scout-route stop and the last goal picked.</summary>
-    public string Debug => $"{(int)_phase}:{_scoutIdx}/{_scoutRoute.Count}@{(_scoutRoute.Count > 0 ? _scoutRoute[Math.Min(_scoutIdx, _scoutRoute.Count - 1)] : default)} goal {_lastGoal} stage {_stage} roster {_roster.Count} siege {(SiegeActive ? "wave" : _siegeOn ? "on" : "off")} need {_siegeNeed} waves {SiegeWaves} holds {SiegeHolds} tgt {(_siegeHave ? _siegeCell.ToString() : "-")}";
+    public string Debug => $"{(int)_phase}:{_scoutIdx}/{_scoutRoute.Count}@{(_scoutRoute.Count > 0 ? _scoutRoute[Math.Min(_scoutIdx, _scoutRoute.Count - 1)] : default)} goal {_lastGoal} stage {_stage} roster {_roster.Count} siege {(SiegeActive ? "wave" : _siegeOn ? "on" : "off")} need {_siegeNeed} waves {SiegeWaves} holds {SiegeHolds} tgt {(_siegeHave ? _siegeCell.ToString() : "-")} mopup {(MopupOn ? "on" : "off")} beaten {_beatenSince} mops {Mopups} found {_sweepFound} kb {_targetBuildings.Count}";
 
     /// <summary>M4-12: set by the AI while its income has stalled (map mined out): waves go out at <see cref="DesperateWave"/> units.</summary>
     public bool Broke { get; set; }
@@ -598,9 +598,13 @@ internal sealed class MilitaryManager
                 if (PickFocus(k.Visible, a.Cell, k.Rules) is ViewActor f && a.Target != f.Id)
                     sink.Issue(CommandKind.Attack, a.Id, a.Kind, default, f.Ref);
             }
+        List<CellCoord>? parties = _phase == Phase.Assault && siegeTarget is null && knownEnemyBuildings.Count == 0 && Sweeping && !_prong && !_hookWaveActive && HookAttack is null
+            ? SweepParties(k, tick, RosterAlive(k)) : null;   // S22: a big wave splits up to look in several places at once
+        int memberIdx = 0;
         foreach (ViewActor a in k.Army)
         {
             bool memberNow = _phase != Phase.Gather && _roster.Contains(Key(a));
+            int partyIdx = memberNow ? memberIdx++ : 0;
             if (!a.Idle && !(retarget && memberNow && !a.Underground)) continue;
             bool member = memberNow;
             bool prongB = member && _squadB.Contains(Key(a));
@@ -626,6 +630,7 @@ internal sealed class MilitaryManager
             else if (member)
             {
                 CellCoord target = prongB ? goalB : goal;
+                if (parties is { Count: > 1 }) target = parties[partyIdx % parties.Count];   // S22
                 if (Chebyshev(a.Cell, target) > ReissueDistanceCells) sink.Issue(CommandKind.AttackMove, a.Id, a.Kind, target);
             }
             else if (Chebyshev(a.Cell, rally) > HomeRadiusCells)
@@ -882,6 +887,21 @@ internal sealed class MilitaryManager
         while (_scoutIdx < _scoutRoute.Count - 1 && k.View.IsVisible(_scoutRoute[_scoutIdx])) _scoutIdx++;
         if (_scoutIdx >= _scoutRoute.Count - 1 && k.View.IsVisible(_scoutRoute[^1])) _scoutIdx = 0;
         return _scoutRoute[_scoutIdx];
+    }
+
+    /// <summary>S22: goals for the sweep parties of a big wave (empty when the wave sweeps as one group).</summary>
+    private List<CellCoord> SweepParties(RecruitKnowledge k, int tick, int alive)
+    {
+        var view = k.View;
+        long cx = 0, cy = 0; int c = 0;
+        foreach (ViewActor a in k.Army)
+            if (_roster.Contains(Key(a))) { cx += a.Position.X; cy += a.Position.Y; c++; }
+        if (c == 0) return new List<CellCoord>();
+        var from = new CellCoord((int)(cx / c / 256), (int)(cy / c / 256));
+        int parties = MopupPlan.Parties(alive);
+        if (parties < 2) return new List<CellCoord>();
+        return MopupPlan.PickSweeps(k.Rules, _stamp, _stampW, view.MapWidth, view.MapHeight, tick, from, _targetBuildings,
+            cell => view.IsPassable(cell, Locomotion.Tracked), cell => _avoid.Count > 0 && Avoided(cell, tick), parties);
     }
 
     /// <summary>S22 mop-up: the next block of the sweep (see <see cref="MopupPlan.PickSweep"/>), skipping goals a stalled wave could not reach. Null when the whole map is fresh.</summary>

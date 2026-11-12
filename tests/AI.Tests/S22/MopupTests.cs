@@ -77,6 +77,24 @@ public sealed class MopupTests
     }
 
     [Fact]
+    public void ABigArmySplitsIntoPartiesWithSeparateGoals()
+    {
+        Assert.Equal(1, MopupPlan.Parties(3));
+        Assert.Equal(2, MopupPlan.Parties(2 * MopupPlan.PartySize));
+        Assert.Equal(MopupPlan.MaxParties, MopupPlan.Parties(500));
+        int[] stamp = new int[12 * 12];   // a 96 x 96 map, nothing ever seen
+        var goals = MopupPlan.PickSweeps(Rules, stamp, 12, 96, 96, 20000, new CellCoord(4, 4), new List<ViewActor>(), _ => true, _ => false, 5);
+        Assert.Equal(5, goals.Count);
+        Assert.Equal(new CellCoord(4, 4), goals[0]);   // the first is the single-goal pick
+        for (int i = 0; i < goals.Count; i++)
+            for (int j = i + 1; j < goals.Count; j++)
+                Assert.True(Math.Max(Math.Abs(goals[i].X - goals[j].X), Math.Abs(goals[i].Y - goals[j].Y)) >= MopupPlan.PartySpacingCells);
+        // fewer stale blocks than parties: only what is left
+        var few = MopupPlan.PickSweeps(Rules, new[] { 0, 99999, 99999 }, 3, 24, 8, 100000, new CellCoord(4, 4), new List<ViewActor>(), _ => true, _ => false, 4);
+        Assert.Single(few);
+    }
+
+    [Fact]
     public void TheOptionFollowsTheProfileAndIsOffWithoutRespondToAttacks()
     {
         DifficultyProfile t1 = TestWorld.Tiers[0], t3 = TestWorld.Tiers[2];
