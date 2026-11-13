@@ -25,10 +25,12 @@ public sealed class MopupTests
     public void TheEnemyIsBeatenOnlyWhenOurArmyIsBigAndFarAheadOfWhatWasSeen()
     {
         Assert.True(MopupPlan.Beaten(5000, 0, 10));                       // nothing seen in the long window
-        Assert.True(MopupPlan.Beaten(5000, 1250, 10));                    // exactly four to one
-        Assert.False(MopupPlan.Beaten(5000, 1251, 10));                   // just short of it
-        Assert.False(MopupPlan.Beaten(5000, 0, MopupPlan.MinArmy - 1));   // too few units
-        Assert.False(MopupPlan.Beaten(MopupPlan.MinValue - 1, 0, 20));    // an army of cheap units is not a force
+        Assert.True(MopupPlan.Beaten(5000, 2000, 10));                    // exactly two and a half to one (s23)
+        Assert.False(MopupPlan.Beaten(5000, 2001, 10));                   // just short of it
+        Assert.False(MopupPlan.Beaten(5000, 1000, MopupPlan.MinArmy - 1));   // too few units while the enemy still has an army
+        Assert.False(MopupPlan.Beaten(MopupPlan.MinValue - 1, 100, 20));  // an army of cheap units is not a force against an army
+        Assert.True(MopupPlan.Beaten(600, 0, MopupPlan.MinArmyNoEnemy));  // s23: no enemy army left, a few units are enough
+        Assert.False(MopupPlan.Beaten(600, 0, MopupPlan.MinArmyNoEnemy - 1));
         Assert.False(MopupPlan.Beaten(0, 0, 0));
         Assert.False(MopupPlan.Beaten(int.MaxValue, int.MaxValue, 50));   // no overflow: equal values are not four to one
     }

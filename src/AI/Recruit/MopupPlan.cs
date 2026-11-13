@@ -13,7 +13,7 @@ namespace Rts.AI.Recruit;
 internal static class MopupPlan
 {
     /// <summary>The mop-up never starts before this tick (before first contact "no enemy army seen" is true too).</summary>
-    public const int FromTick = 9000;   // (tune) s22
+    public const int FromTick = 6000;   // (tune) s22; s23: 9000 -> 6000 (s22mopup: the trigger almost never fired)
 
     /// <summary>Our army must be worth at least this many credits (about eight real units).</summary>
     public const int MinValue = 3000;   // (tune) s22
@@ -21,11 +21,15 @@ internal static class MopupPlan
     /// <summary>Fewest army units a mop-up wave takes (plus the home guard).</summary>
     public const int MinArmy = 8;   // (tune) s22
 
+    /// <summary>s23: fewest army units for a mop-up when no enemy army was seen in the long window (s22mopup: exhausted endgames, one side with
+    /// no army and one building, the other with 4-5 units, stayed draws because of <see cref="MinArmy"/> and <see cref="MinValue"/>).</summary>
+    public const int MinArmyNoEnemy = 4;   // (tune) s23
+
     /// <summary>Percent of the enemy army value (biggest seen in the long window) our army must be worth for the enemy to count as beaten.</summary>
-    public const int RatioPct = 400;   // (tune) s22
+    public const int RatioPct = 250;   // (tune) s22; s23: 400 -> 250
 
     /// <summary>Ticks the "beaten" test must hold without a break before a mop-up wave leaves (on top of the long enemy-value window).</summary>
-    public const int HoldTicks = 1200;   // (tune) s22
+    public const int HoldTicks = 600;   // (tune) s22; s23: 1200 -> 600
 
     /// <summary>Ticks without a threat at home (own building hit, armed enemy unit near the base) before a mop-up wave leaves.</summary>
     public const int CalmTicks = 900;   // (tune) s22
@@ -57,7 +61,8 @@ internal static class MopupPlan
     /// <summary>True when the enemy counts as beaten right now: our army is a real force (value and units) and worth at least <see cref="RatioPct"/>
     /// percent of the biggest enemy army seen lately (0 seen = nothing left to fight with). Integer maths.</summary>
     public static bool Beaten(int ownValue, int enemyValueSeen, int armyUnits) =>
-        armyUnits >= MinArmy && ownValue >= MinValue && (long)ownValue * 100 >= (long)enemyValueSeen * RatioPct;
+        enemyValueSeen <= 0 ? armyUnits >= MinArmyNoEnemy   // s23: an enemy with no army left is beaten by whatever we still have
+            : armyUnits >= MinArmy && ownValue >= MinValue && (long)ownValue * 100 >= (long)enemyValueSeen * RatioPct;
 
     /// <summary>True when a block last in view at <paramref name="stamp"/> (tick + 1, 0 = never) is stale at <paramref name="tick"/>.</summary>
     public static bool Stale(int stamp, int tick) => stamp == 0 || tick + 1 - stamp > RevisitTicks;
