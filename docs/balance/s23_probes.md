@@ -44,3 +44,24 @@ Readings:
 ## Open (M13-22)
 Left Behind v Expedition (Rust Belt 48-9, Glass Coast 37-16 for LB): needs unit loss tables for the matchup (which Left Behind units kill which
 Expedition units) before choosing a matchup-specific change.
+
+## Round 2: Left Behind v Expedition (M13-22)
+
+Tool: `ai match --ledger 1` (new, tools only) prints units made and lost per type and side. 16 games each on main b1303bb (splash 1).
+
+| Row | Made / lost (main units) | Reading |
+|---|---|---|
+| LB v Exp, Rust Belt (11-2) | LB: Scavenger 2253 / 1599 (60 cr), Dune Buggy 611 / 428, Hook Runner 357 / 307; Exp: Marine 426 / 413, Sparker 231 / 217, Skimmer (harvester) 232 / 217, Glide Tank 77 / 50 | a cheap infantry swarm; the Expedition loses 93 % of its harvesters and has no splash unit at AI tier 3 |
+| Auth v Exp, Rust Belt | Exp: Sparker 316 / 252, Glide Tank 131 / 55, Skimmer 169 / 134 | the same Expedition army trades evenly with Authority tanks and riflemen |
+
+Expedition splash: only the Gunship (aircraft; AI tier 3 has `air = 0`, so never built) and the Barrage Lander (tier 3; 1 built in 16 games).
+Ledger caveats: tenders leaving the lane, packed rigs unpacking and the Command Ship deploying count as "lost".
+
+| Variant (16 games) | LB v Exp RB | Exp v LB GC | Auth v LB RB | Dir v LB RB |
+|---|---|---|---|---|
+| main | 11-2 | 4-10 | 4-9 (H probe) | 5-8 (D2 probe) |
+| V1: LB tier-3 `army_cap_until_tick` 3600 -> 6000 | 5-9 | 9-3 | 12-4 | |
+| V2: Scavenger cost 60 -> 80 | 7-6 | 10-5 | 12-2 | |
+| **V3: `army_cap_until_tick` 3600 -> 4800** | 10-5 | 8-3 | 9-6 | 8-5 |
+
+Applied V3 (D-230): an AI behaviour knob for Left Behind tier 3 only (D-186 already caps the early swarm); no unit numbers change.

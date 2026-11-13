@@ -1698,3 +1698,22 @@ without undoing the Authority fix; docs/balance/s23_probes.md). PR #76 (session 
 **Why:** cloud probes with splash 1: Dir v LB 5-8 and 7-6 (laptop 13-49), Auth v Dir 6-7 (laptop 34-19). **Alternatives:** truck damage 75 and
 range 6 cells (Dir v LB 1-14, and the truck would leave the AI's artillery class); shipments 1700 or floor 450 (no help for LB v Exp, hurts Auth v Exp).
 **Status:** owner decision ("apply my recommended fixes straight away and let the re-run confirm them"); confirm with the laptop re-run.
+
+### D-230 · 2026-11-13 · Left Behind tier-3 swarm cap until tick 4800 (M13-22)
+**Decision:** `[faction.left_behind.tier3] army_cap_until_tick` 3600 -> 4800 (D-186's early-swarm cap, AI tier 3 only; no unit, weapon or cost
+numbers change). **Why:** the new `ai match --ledger` shows Left Behind beating the Expedition with a 60-credit infantry swarm (2253 Scavengers in
+16 games) while the Expedition's AI fields no splash unit at tier 3; probes (docs/balance/s23_probes.md round 2): LB v Exp 11-2 -> 10-5, Exp v LB
+Glass Coast 4-10 -> 8-3, Auth v LB 9-6, Dir v LB 8-5. **Alternatives:** cap until 6000 (overshot: Auth v LB 12-4); Scavenger cost 80 (Auth v LB
+12-2). **Status:** owner asked for fixes applied straight away; confirm with the laptop series (s23after).
+
+### D-231 · 2026-11-13 · Left Behind and Expedition lore approved (M14-04)
+**Decision:** design 19 §6c and §6d approved "as written as long as it proves to be internally consistent". An independent fact-check against
+docs/lore, data/archive and the mission briefings found no hard break in §6c and one in §6d; fixes applied: fleet telexes open with RETURN WITH THE
+TIDE and the call-sign, the one-thing / TELEX ENDS rule is scoped to field telexes, "Fold what you can; build the rest cheap enough to leave", "a rig
+cut loose is a debt", the Tow Truck hauls a packed rig in, the Anchorage is "the fleet's one line home", the paint tin lives at the Hover Yard, and
+a spoiler-adjacent clause about hulls coming home was cut. **Status:** owner decision (session 23).
+
+### D-232 · 2026-11-13 · CI: rolling nightly pre-release instead of game artifacts
+**Decision:** CI no longer uploads the game folder or the zip/installer as artifacts (they filled the Actions storage quota). A push to main
+replaces the `nightly` pre-release (zip + installer, created by the workflow's own token); pull requests upload no game; versioned releases
+still come from release.yml on v* tags. **Status:** owner decision (session 23, "add it to this batch").

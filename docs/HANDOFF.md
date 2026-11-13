@@ -1,16 +1,16 @@
-# Handoff: Session 23 (in progress) — s23after re-run, mop-up and campaign reads, then M13-22 and M14
-Last commit: `docs: checkpoint session 23` on branch `integ-s23` (PR to main). Check `git log -1 origin/integ-s23` and `origin/main`.
-Where things stand: session 22 is on main (PR #76, merged 2026-11-13 on the owner's word). Session 23 read the laptop's s22after series
-(docs/balance/s23_probes.md): Authority fixed, LB mirror fixed; new outliers Dir v LB 13-49 and LB v Exp 48-9. Applied: Rocket Truck splash
-back to 1 (D-229). LB v Exp is open as M13-22. Decisions up to D-229. Open questions: Q-73 (par times).
+# Handoff: Session 23 (in progress) — s23after re-run, mop-up and campaign reads, then the booklet build
+Last commit: `docs: checkpoint session 23, round 2` on branch `integ-s23b` (PR to main). Check `git log -1 origin/main`.
+Where things stand: session 22 (PR #76) and session 23 round 1 (PR #77, Rocket Truck splash back to 1, D-229) are on main. Round 2 (this PR):
+`ai match --ledger` (units made/lost per type); Left Behind tier-3 swarm cap until tick 4800 (D-230, M13-22); Left Behind and Expedition lore
+approved after a fact-check (D-231, M14-04 done); booklet dry build ok with coverage check (M14-05 prep); CI publishes a rolling `nightly`
+pre-release instead of game artifacts (D-232). Decisions up to D-232. Open questions: Q-73 (par times).
 
 ## Start here (shown to the user as the plan; nothing starts until they say go)
-1. Read the laptop re-run `balance_runs\s23after\s23after_summary.md` (run_s19_after.ps1 -OutName s23after on integ-s23 or main after the merge)
-   against s22after; target 45-55 % per cross-faction pair, start share under 60 %.
-2. Read `balance_runs\s22mopup\s22mopup_summary.md` (keep mop-up only if it cuts draws without hurting 4v3) and the campaign sweep (D-229
-   puts the Rocket Truck back to the s21 value the 45/45 sweep was confirmed with).
-3. M13-22: loss tables for Left Behind v Expedition (Rust Belt and Glass Coast), then a matchup-specific option table.
-4. SFX picks (owner, make_sfx.ps1 -Audition / -Pick); M14 lore chapters and the booklet build once the numbers settle.
+1. Read the laptop re-run `balance_runs\s23after\s23after_summary.md` (run_s19_after.ps1 -OutName s23after on main after this PR) against
+   s22after; target 45-55 % per cross-faction pair, start share under 60 %. Watch LB v Exp, Exp v LB (Glass Coast), Auth v LB, Dir v LB.
+2. Read `balance_runs\s22mopup\s22mopup_summary.md` (keep mop-up only if it cuts draws without hurting 4v3) and the campaign sweep.
+3. After the first push to main with D-232: check Releases shows `nightly` with the zip and installer.
+4. M14-05: the full ~108-page booklet build (tools/booklet), once the numbers settle. SFX picks (owner).
 
 ## Half-finished work
 - SFX: 80 jobs generating on the owner's laptop (draft, then full run). Nothing picked or committed yet. `exp_rad_burst` has no event; flak has no job.
