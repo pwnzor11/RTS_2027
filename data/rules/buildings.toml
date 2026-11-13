@@ -684,7 +684,7 @@ max_health = 500  # (tune)
 armor = "structure"
 sight = 4  # (tune)
 primary_weapon = ""
-cost = 900  # (tune)
+cost = 700  # (tune) # s22 M13-13 (D-223): 900 -> 700
 power = -20  # (tune)
 prerequisites = ["lb_mother_rig"]
 provides = []
@@ -1220,6 +1220,6 @@ power = -80  # (tune)
 prerequisites = ["exp_core_hall"]
 provides = []
 superweapon = "exp_salvo_array"
-superweapon_charge_ticks = 7200  # (tune) 6 min
+superweapon_charge_ticks = 4800  # (tune) 6 min # s22 M13-13 (D-223): 7200 -> 4800
 superweapon_entrance_range = 0  # fire anywhere (no entrance building)
 # TODO M7-12: 12 missiles over 6 s in radius 4 cells and a 4 s warning; the blast warhead is a single flat hit today

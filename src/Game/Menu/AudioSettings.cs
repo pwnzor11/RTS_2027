@@ -8,7 +8,7 @@ namespace Rts.Game.Menu;
 public static class AudioSettings
 {
     /// <summary>
-    /// Sets music, effects and master volume from <paramref name="settings"/>. The master volume is a feature of the MonoGame backend
+    /// Sets music, effects, ambience (S22) and master volume from <paramref name="settings"/>. The master volume is a feature of the MonoGame backend
     /// (<see cref="MonoGameAudio.MasterVolume"/>); other backends (the silent one) have only music and effects, so for them the master
     /// level is folded into those two (music and effects scaled by master/100), which keeps the loudness the player chose.
     /// </summary>
@@ -18,9 +18,11 @@ public static class AudioSettings
         {
             mono.MusicVolume = settings.MusicVolume;
             mono.SfxVolume = settings.SfxVolume;
+            mono.AmbienceVolume = settings.AmbienceVolume;
             mono.MasterVolume = settings.MasterVolume;
             return;
         }
+        audio.AmbienceVolume = settings.AmbienceVolume * settings.MasterVolume / 100;
         audio.MusicVolume = settings.MusicVolume * settings.MasterVolume / 100;
         audio.SfxVolume = settings.SfxVolume * settings.MasterVolume / 100;
     }

@@ -1,8 +1,31 @@
-# Game events -> sounds (D-080). Files are relative to this folder. Generated sounds come from tools/audio/presets.toml.
+# Game events -> sounds (D-080). Files are relative to this folder. Generated sounds come from tools/audio/presets.toml and tools/audio/sfx/.
 # Variants: an event with several sounds picks one at random (game-side RNG, not the sim).
 # max_voices: at most this many copies of ONE sound play at once; extra plays are dropped.
 # cooldown_ms: least time between two plays of one event. positional: volume and pan follow the camera.
-# ASSUMED (M3-09): all numbers here are first guesses made without listening.
+#
+# QUALIFIED EVENTS (S22, M10-10). An event name may carry a class and a faction: [event.unit_died.infantry.directorate].
+# The game looks an event up most-specific-first and plays the first entry that exists:
+#     <event>.<class>.<faction>  ->  <event>.<class>  ->  <event>.<faction>  ->  <event>
+# and when none of them exists, the event's stand-in: unit_died -> explosion_small, building_destroyed -> explosion_large,
+# water_impact -> explosion_small (explosion_large for a splash of 3+ cells, class "large"), ship_horn -> unit_ready (class ship). The stand-in is
+# looked up the same way. Events with no stand-in (sonar, air_flyby, air_hover, rig_deploy, rig_pack) are silent without an entry. So the game plays
+# exactly what it played before when a qualified entry (or its sound file) is missing. A cooldown runs per entry (per resolved name).
+#   class   : unit_died / unit_ready: infantry | vehicle | ship | air.   fire_*: the weapon class of the [weapon] table below
+#             (small_arms sniper mg flame spray | cannon rail energy mortar howitzer flak naval_shell naval_heavy depth_charge | rocket salvo sam harpoon).
+#             explosion_large.bomb: a bomber's blast.   water_impact.large: a splash of 3+ cells.
+#   faction : authority | directorate | left_behind | expedition   (building_placed, construction_complete, building_destroyed, unit_ready,
+#             unit_died, fire_*, air_*, rig_*).
+# Raised by: building_placed (own building placed), construction_complete (own queue item ready), building_destroyed (a building removed with its
+# health gone), unit_died (a unit removed with its health gone; class and faction of the unit), unit_ready (an own new unit), ship_horn (an own new
+# ship, instead of unit_ready), fire_bullet / fire_shell / fire_missile (a shot; the weapon class qualifies it), explosion_*, water_impact (a blast on
+# an empty water cell), sonar (an enemy submarine comes into view), air_flyby (a moving aircraft of speed 40+, every 6 s each), air_hover (aircraft of
+# speed 20..39, every 4 s each), rig_deploy / rig_pack (a rig unfolds / packs; the building/vehicle swap is not reported as placed / ready / sold).
+#
+# AMBIENCE (S22): [ambience.<key>] sound = "<sound id>", volume = 0..1 plays a stereo loop while a game is on screen. Keys: glass_coast, rust_belt,
+# ash_plains, mountains (the map's theater) and open_sea (when over 60% of the cells around the camera are water). Cross-faded, off in menus,
+# scaled by the Ambience volume setting. No entry = that biome is silent.
+#
+# The sections below the "sfx-generated" marker at the end of the file are written by tools/audio/sfx/make_sfx.py --pick; do not edit them by hand.
 version = 1
 
 [settings]
@@ -289,11 +312,75 @@ volume = 1.0
 positional = false
 cooldown_ms = 8000
 
-# Weapon id -> event, for callers that know the weapon (a snapshot diff cannot see it, so the AudioDirector plays
-# the class events fire_bullet / fire_shell instead). Unlisted weapons use the class by projectile speed.
+# Weapon id -> sound class, for EVERY weapon in data/rules/weapons.toml (a test fails when a weapon has no class). S22 (M10-10).
+# The class picks the event family (small_arms, sniper, mg, flame, spray -> fire_bullet; cannon, rail, energy, mortar, howitzer, flak, naval_shell,
+# naval_heavy, depth_charge -> fire_shell; rocket, salvo, sam, harpoon -> fire_missile) and is the first qualifier of the lookup, for example
+# fire_shell.cannon.authority -> fire_shell.cannon -> fire_shell.authority -> fire_shell. 'silent' (death and self-destruct weapons) and 'bomb'
+# (the sound is the detonation, explosion_large.bomb) make no shot sound. Projectile weapons are named by the projectile's weapon; instant weapons by the
+# nearest armed enemy in range of the hit (a guess when several shoot at once). The faction qualifier comes from the weapon id prefix.
 [weapon]
-auth_rifle = "fire_bullet"
-auth_jeep_mg = "fire_bullet"
-auth_rocket = "fire_missile"
-auth_tank_cannon = "fire_shell"
-auth_turret_gun = "fire_shell"
+# Authority
+auth_rifle = "small_arms"
+auth_rocket = "rocket"
+auth_jeep_mg = "mg"
+auth_tank_cannon = "cannon"
+auth_turret_gun = "cannon"
+auth_decon_spray = "spray"
+auth_marksman_rifle = "sniper"
+auth_seismic_mortar_gun = "mortar"
+auth_foam_spray = "spray"
+auth_flak_gun = "flak"
+auth_interceptor_gun = "rocket"
+auth_howitzer_gun = "howitzer"
+auth_bomb = "bomb"
+# Directorate
+dir_rifle = "small_arms"
+dir_ash_spray = "spray"
+dir_collapse_charge = "silent"
+dir_pistol = "small_arms"
+dir_rad_cannon = "energy"
+dir_meltdown = "silent"
+dir_rocket_salvo = "salvo"
+dir_blackout_drop = "spray"
+dir_rail_gun = "rail"
+dir_rocket_nest_gun = "salvo"
+dir_pillbox_gun = "energy"
+dir_rad_mortar_shell = "mortar"
+dir_ash_sow = "spray"
+dir_volunteer_burst = "silent"
+dir_delver_gun = "energy"
+dir_rad_bomb = "bomb"
+# Left Behind
+lb_rifle = "small_arms"
+lb_sling_charge = "mortar"
+lb_flame_hammer = "flame"
+lb_veil_rifle = "sniper"
+lb_hook_pistol = "small_arms"
+lb_buggy_gun = "mg"
+lb_harpoon_gun = "harpoon"
+lb_organ_rack = "salvo"
+lb_dust_drop = "spray"
+lb_fort_cannon = "cannon"
+lb_rotor_gun = "mg"
+lb_kite_bomb = "silent"
+lb_spike_gun = "small_arms"
+lb_flak_gun = "flak"
+# Expedition
+exp_marine_rifle = "small_arms"
+exp_diver_charge = "silent"
+exp_pathfinder_rifle = "sniper"
+exp_ironbound_pod = "rocket"
+exp_glide_cannon = "cannon"
+exp_sparker_missile = "sam"
+exp_barrage_rockets = "salvo"
+exp_launch_charge = "depth_charge"
+exp_destroyer_gun = "naval_shell"
+exp_sub_missile = "rocket"
+exp_cruiser_gun = "naval_heavy"
+exp_carrier_aa = "sam"
+exp_jet_missile = "rocket"
+exp_gunship_rockets = "rocket"
+exp_bomb_run = "bomb"
+exp_pillbox_gun = "mg"
+exp_battery_gun = "naval_shell"
+exp_sam_missile = "sam"

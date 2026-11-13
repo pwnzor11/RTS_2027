@@ -100,6 +100,7 @@ function CheckFuel()
       Media.MessageKey("e4.fuel")
       Dialogue.Say(SPEAKER, SPEAKER, "e4.radio.fuel")
       Dialogue.Say("leader_exp_roque", "leader_exp_roque", "e4.radio.roque")
+      Dialogue.Say(SPEAKER, SPEAKER, "e4.radio.march")
       -- The fuel is taken: the built-in AI now sends its whole army at the beachhead.
       AI.Attack(1, "beachhead")
     end
@@ -140,6 +141,7 @@ end
 function ColumnTwo()
   if state.phase == "done" then return end
   Media.MessageKey("e4.col2")
+  Dialogue.Say(SPEAKER, SPEAKER, "e4.radio.col2")
   Camera.Focus("flank", 100)
   Column(Pick({ 7, 9, 11, 15, 20 }), "dir_sapper", 2, "flank")
 end
@@ -173,6 +175,8 @@ function Finale()
   -- S18 MIS-03 (owner decision): keep the tested balance, the guard marches on the SECOND blow (Shaft and Device both down).
   if Actor.Alive("shaft") or Actor.Alive("device") then return end
   state.finale = true
+  Media.MessageKey("e4.finale")
+  Dialogue.Say(SPEAKER, SPEAKER, "e4.radio.finale")
   local types = {}
   for i = 1, Pick({ 10, 12, 14, 22, 32 }) do types[#types + 1] = "dir_conscript" end
   for i = 1, Pick({ 3, 4, 5, 9, 14 }) do types[#types + 1] = "dir_ashthrower" end

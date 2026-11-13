@@ -159,6 +159,7 @@ end
 function WaveTwo()
   if state.phase ~= "ashore" then return end
   Media.MessageKey("e1.wave2")
+  Dialogue.Say(SPEAKER, SPEAKER, "e1.radio.wave2")
   Camera.Focus("west_track", 100)
   Wave(2, "west_track", WaveTwoSize(), "auth_jeep")
 end

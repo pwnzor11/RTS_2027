@@ -159,6 +159,8 @@ end
 -- Tier 5: a second air sortie (three bombers from the south-west sea) follows the first pair (unit count only).
 function AirStraggler()
   if state.phase == "done" then return end
+  Media.MessageKey("e3.raid2")
+  Dialogue.Say("leader_exp_kell", "leader_exp_kell", "e3.radio.raid2")
   local tags = Reinforce.Edge(1, { "auth_bomber", "auth_bomber", "auth_bomber" }, { x = 0, y = 58 }, Map.Center("cove"))
   for i, tag in pairs(tags) do
     state.waveTags[#state.waveTags + 1] = tag
@@ -168,6 +170,7 @@ end
 function AuthorityTwo()
   if state.phase == "done" then return end
   Media.MessageKey("e3.auth2")
+  Dialogue.Say(SPEAKER, SPEAKER, "e3.radio.auth2")
   Wave(1, "auth_rifleman", "north_road", Pick({ 3, 4, 6, 9, 12 }), "auth_rocketeer", 4)
 end
 
@@ -183,6 +186,10 @@ end
 -- Tiers 4-5: a last combined push from both fronts after the second pair of waves.
 function ThirdWave()
   if state.phase == "done" then return end
+  if Pick({ 0, 0, 0, 6, 9 }) > 0 then
+    Media.MessageKey("e3.third")
+    Dialogue.Say(SPEAKER, SPEAKER, "e3.radio.third")
+  end
   Wave(1, "auth_rifleman", "north_road", Pick({ 0, 0, 0, 6, 9 }), "auth_rocketeer", 4)
   Wave(2, "dir_conscript", "south_dunes", Pick({ 0, 0, 0, 6, 9 }), "dir_ashthrower", 4)
   state.waves = 5

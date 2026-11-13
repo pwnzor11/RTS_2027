@@ -85,6 +85,36 @@ behind them. Count your shells and your credits before every attack, because the
 build and cheaper to keep alive; repair them. Hold ground you can supply and give up ground you cannot. The Authority does not
 win quickly. It wins by still being there.
 
+## 6b. Directorate lore expansion (approved by the owner, session 22, D-228)
+Same shape as the approved Authority entries: four entries for the Directorate chapter, in-universe voice, no campaign secrets
+(the Director's death, Order Seven and the Sunrise Device stay out of the manual; premise only). Vocabulary from docs/lore and the
+Archive: the Annex, levels, shifts, the Voice, the Commissariat, service year, "the tenancy", Bores, Hatches, the Land-Train.
+
+**The Service Year.** Every citizen of the Interior is in service from the day they come of age, and a service year is not a year: it
+is however long the Commissariat needs. Conscripts are issued a number, a red armband and a ration of light, and they are told
+that each acre reclaimed pays down the debt the surface owes the Director. They march to the Voice, eat to the Voice and sleep to
+the lullaby. A conscript who comes back below is moved up one level, nearer the blast doors and the dim red lamps that pass for
+daylight. A conscript who does not come back is read out at dawn shift as "a redistribution of effort", and his level is given
+to someone else.
+
+**The Bores.** The Authority has roads. The Directorate has the dark. Forty years of digging have left the ground under the Rust
+Belt hollow as a honeycomb: service shafts, flooded galleries, and the new Bores, cutting heads that chew a tunnel in a night and
+leave a Hatch behind them like a seed. A Hatch is a steel lid in a field of ash; by morning it is a squad, by evening a
+pillbox. Supplies move below on the Land-Trains, ore comes up through the Smelter Vents, and the surface sees only what the
+Directorate chooses to show it. Authority patrols have learned to listen to the ground, and to distrust any field that is too quiet.
+
+**First Light.** Nothing below prepares a conscript for the sky. The first ones up were found standing still in the open,
+staring, until the Commissars walked the lines and reminded them where to look. Now every surfacing squad is told the sky is
+"unreclaimed ceiling" and is given a task for the first hour so that nobody has time to look up. It mostly works. The Agitprop
+Crawlers follow close behind with the Voice at full volume, and the Commissariat keeps a quiet count of the ones who still
+glance upward when they think no one is watching.
+
+**Doctrine for Commanders** (issued by the Commissariat of Order). The Interior does not attack; it reclaims. Open every
+operation from below: a Hatch you place is a front the tenancy cannot see. Numbers are the Directorate's armour. Conscripts are
+plentiful and the Annex is not, so spend the first and guard the second. Keep a Commissar with every company, because a company
+without one has been known to reconsider. Bury what you cannot hold and return for it later. Report losses in the approved form.
+Report doubts in person.
+
 ## 7. Questions (answered in session 18, see the top)
 - Q-B1 Art: sprite plates for every unit plus about 10 hero renders (recommended), or a full hero render of every unit and building
   (about 150 renders on the PC, many hours)?

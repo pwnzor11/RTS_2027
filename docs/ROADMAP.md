@@ -232,7 +232,7 @@ systems (water locomotion, ships, landings). Lore, roster, art, AI.
 - [x] M8-12 Fan-out: acts 2-4 for all four factions plus DRAFT ending slides (s12; owner review list docs/missions/s12_owner_review.md)
 - [x] M8-14 act-break stills (s13 hook + pilot; s14: style C mix v2/v3, D-169; all 12 stills rendered, tools/art/stills/)
 - [x] M8-15 Acceptance (s13): owner play-through ("everything looked great", D-164); bot play-through of all 16 missions in one run; mid-mission save/load for every mission; tier table docs/balance/m8_15_acceptance.md (all won; tier tuning → Q-62); bot-found balance table docs/balance/s13_campaign_balance.md (Q-60)
-- [ ] M8-18 Voiced radio lines (s14): Wyoming Piper batch tool (tools/voice/wyoming_batch.py, owner runs it on the NAS; its commit says M8-16 by mistake); voices chosen by the owner, licence checked per voice, credits in CREDITS.md; game must play the OGG voice files
+- [x] M8-18 Voiced radio lines (s14): Wyoming Piper batch tool (tools/voice/wyoming_batch.py, owner runs it on the NAS; its commit says M8-16 by mistake); voices chosen by the owner, licence checked per voice, credits in CREDITS.md; game must play the OGG voice files s22: switched to Kokoro on the laptop (D-226); 164 voice slots, all voiced and on integ-s22
 - [x] M8-01 Campaign plan (docs/design/12_m8_plan.md, plan only; story questions open) (session 9)
 Mission scripting/trigger system, briefing screens, tech gating, campaign flow; written once with all four factions.
 Wires Archive campaign unlocks.
@@ -287,22 +287,24 @@ Source: docs/reviews/2026-11-07_owner_campaign_feedback.md. Audit: docs/reviews/
 - [x] M13-10 Start-side tie-breaks (item 11): mirror-image placement tie-break and start kits; wider AI placement window (s19; confirmed by the after-series: worst start share 92 % -> 54 %, D-222)
 - [x] M13-11 Mechanics items 12-22, 25 (s19: 12-18, 20 harvester-after-rebuild, 21, 25, LE-14; s20: 19 melee acquire, 20 unreachable field (SP-04) + choke give-up (SP-03 Move half), 22 path leak (SIMDET-03), D-218)
 - [x] M13-12 Ashfall hazard (item 23), attack-ground order (item 24), hide/reword missing mechanics (item 26)
-- [~] M13-13 Numbers pass (s19, D-208: Agitprop, Tow, Marksman, ship warheads small-arms/AP, Directorate copy structures, Commissar aura, layout 2 money; option-only items wait for the after-series)
+- [~] M13-13 Numbers pass (s19, D-208: Agitprop, Tow, Marksman, ship warheads small-arms/AP, Directorate copy structures, Commissar aura, layout 2 money; option-only items wait for the after-series) s22: items 2-6, 8, 9, 11, 12, 14 applied (D-223); item 1 kept; item 13 waits for a hand check
 - [x] M13-14 UI/wording/design list (section 2.4) incl. mission-script one-liners, naming pass from data/archive
 - [x] M13-15 QoL: game speed incl. slow; idle button and alerts; cameo hotkeys, repeat production, range rings, strong/weak line; handicap and starting conditions; stances and shift-queued waypoints
 - [~] M13-16 Re-pins done per merge batch (s19); owner laptop series before (s18audit), after (s19after) and on the s21 code (s21after, docs/balance/s21_after_series.md): done
 - [x] M13-17 Campaign retune with the ashfall hazard on (missions run with ash damage and ash path cost off until then, D-211). s20: 12-seed win-rate baseline with ash on for all 45 mission-tiers (docs/balance/s20_campaign_seed_baseline.md, D-218 point 8); auth_01 tier 5 winnable accepted (D-217). s21: ash on in missions, D-219 stance rule, retunes of auth_01/03/04, dir_04, lb_03, exp_03 to the Q-75 targets (D-222, docs/balance/s21_campaign_retune.md); confirmed by the owner's laptop sweep on 8b418a2e: all 45 mission-tiers on target, identical to the cloud numbers
-- [~] M13-18 Follow-ups found in s19 (s20, D-218): placement lane outlet toward the map centre (S18-AI-NEW-3) done; ClearBuildArea removed; LB Still Rigs 14-18 and used, no cap; LB yard dock livelock not reproduced in the open, dead-end corridor case open (Q-76); walls/gates hero renders re-angled to 3/4 (M14) open
+- [x] M13-18 Follow-ups found in s19 (s20, D-218): placement lane outlet toward the map centre (S18-AI-NEW-3) done; ClearBuildArea removed; LB Still Rigs 14-18 and used, no cap; LB yard dock livelock not reproduced in the open, dead-end corridor case open (Q-76); walls/gates hero renders re-angled to 3/4 (M14) open s22: dead-end dock lane done (Q-76, D-225); walls/gates heroes re-angled and detailed (D-227)
 
-- [ ] M13-19 Skirmish balance after s21 (Q-77): Authority behind (v Directorate 17-36, v Expedition 12-51), Glass Coast Expedition 43-55 v 7-14,
+- [~] M13-19 Skirmish balance after s21 (Q-77): Authority behind (v Directorate 17-36, v Expedition 12-51), Glass Coast Expedition 43-55 v 7-14, s22: diagnosis docs/balance/s22_balance_options.md, all picks applied (D-223); laptop series pending
   Left Behind mirror Mountains L1 start corner -25 % income. First the owner's A/B (tools/measure/run_s21_ab.ps1), then tune (docs/balance/s21_after_series.md)
 
 ## M14 · Field Manual (D-206, docs/design/19_field_manual.md)
+- [x] M13-20 Mop-up AI fixed and on in skirmish (s22, D-224); laptop on/off series pending
+- [x] M13-21 Radio lines for every unannounced or announced enemy wave (s22, D-226 point 5)
 - [x] M14-01 Pilot: 9 pages, generator scripts (tools/booklet), design 19 (s18)
 - [x] M14-02 Hero render mode and laptop script (tools/booklet/render_heroes.ps1) (s18); s19: module cache fix (LB structures)
 - [x] M14-07 Pilot PDF and previews in docs/field_manual/, linked from the README (s19)
-- [x] M14-03 Hero renders: pilot approved, all 124 rendered on the laptop and on main (s19, D-210; PR #63). Open: walls/gates re-angle
-- [ ] M14-04 Directorate lore draft (Authority approved), then the other three faction chapters
+- [x] M14-03 Hero renders: pilot approved, all 124 rendered on the laptop and on main (s19, D-210; PR #63). Open: walls/gates re-angle s22: walls/gates re-angled -35 deg with half sky light and detail-passed models, laptop renders on integ-s22 (D-227)
+- [ ] M14-04 Directorate lore draft (Authority approved), then the other three faction chapters s22: Directorate draft approved (design 19 §6b, D-228); Left Behind and Expedition chapters next
 - [ ] M14-05 Full build (about 108 pages) after M13 lands; quick-reference card
 - [x] M14-06 Models and sprites for the 26 ids without art (scripts D-215; owner rendered on the laptop; landed in PR #74 s21; no rules id is left without art)
 
@@ -319,11 +321,11 @@ Plan: docs/design/20_m9_lan_plan.md (§9 = owner answers, D-213). Built overnigh
 
 ## M10 · Polish
 Plan: docs/design/21_m10_polish_plan.md (D-214). Code-only parts built overnight (D-216, PR #69):
-- [x] M10-09c Faction-aware music states (tension, briefing, credits); tracks: tools/audio/ace_step (owner's laptop, 20 tracks take 1 overnight)
+- [x] M10-09c Faction-aware music states (tension, briefing, credits); tracks: tools/audio/ace_step (owner's laptop, 20 tracks take 1 overnight) s22: take 1 of all 20 tracks exported to data/music (LFS)
 - [x] M10-12 Weather per biome (toggle) · [x] M10-13 Animated water, shore foam, ship wakes · [x] M10-14 Battle juice (shake toggle, hit flash, muzzle flash)
 - [x] M10-17 End-of-match graphs · [x] M10-18 Map preview thumbnails · [x] M10-19 Medals and records (Profile page; par medals Q-73)
 - [x] M10-20 Loading screen with tips, credits roll · [x] M10-22 Inno Setup installer + CI artifacts + release workflow · [x] M10-23 Update notice
-- [ ] M10-06 Warzone tracks on every tracked vehicle · [ ] M10-08 Building depth pipeline · [ ] M10-10 SFX pass · [ ] M10-11 Portraits, death frames
+- [ ] M10-06 Warzone tracks on every tracked vehicle · [ ] M10-08 Building depth pipeline · [~] M10-10 SFX pass (s22: Stable Audio Open laptop generator, 80 jobs, sound keys and ambience code done; laptop generation pending) · [ ] M10-11 Portraits, death frames
 - [ ] M10-15 Faction UI skin (pilot first) · [ ] M10-16 Portraits in the card · [ ] M10-14b Death animations (need frames) · [ ] M10-21 Final balance pass
 - [ ] M10-xx Building art: less flat, more depth (owner 2026-11-07, later polish run)
 - [x] M10-01 Damage smoke/fire tiers, rubble/wrecks/scorch, vehicle dust, biome mood tint, larger-infantry option (D-184, D-187, s15)

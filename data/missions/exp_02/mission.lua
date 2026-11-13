@@ -138,6 +138,7 @@ end
 function WaveTwo()
   if state.phase == "done" then return end
   Media.MessageKey("e2.wave2")
+  Dialogue.Say(SPEAKER, SPEAKER, "e2.radio.wave2")
   Camera.Focus("south_track", 100)
   Wave(2, "south_track", WaveTwoSize())
 end

@@ -114,7 +114,7 @@ tier3 = "exp_tier3"
 enabled = true  # master switch; M7-06 reads it, M7-14 turns it on with the faction (M7-10: on, only games with an exp_anchorage dock are affected)
 tender_type = "exp_supply_tender"  # M7-08: the convoy ship; inert while enabled = false and for any game without an exp_anchorage dock
 interval_ticks = 600  # (tune) assumed — confirm, S11 (was 1800)
-value = 2000  # (tune) assumed — confirm, S11 (was 1500)
+value = 1400  # (tune) assumed — confirm, S11 (was 1500) # s22 M13-19 (D-223): 2000 -> 1400
 decay_permille = 60  # (tune) assumed — confirm, S11 (was 40)
 floor_permille = 350  # (tune)
 charter_ticks = 1200  # (tune)

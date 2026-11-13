@@ -97,12 +97,14 @@ end
 
 function WaveTwo()
   Media.MessageKey("d4.wave2")
+  Dialogue.Say(SPEAKER, SPEAKER, "d4.radio.wave2")
   Wave()
   Mission.Timer("wave3", WaveGap({ 1000, 950, 900, 900, 900 }), WaveThree, "d4.timer.wave3")
 end
 
 function WaveThree()
   Media.MessageKey("d4.wave3")
+  Dialogue.Say(SPEAKER, SPEAKER, "d4.radio.wave3")
   Wave()
   -- The Authority throws the army it has built so far at the hatch.
   AI.Wave(1, "last_stand", "head")

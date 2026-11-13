@@ -30,6 +30,8 @@
 .PARAMETER Samples  Cycles samples (default 128).
 .PARAMETER LongSide Long side in pixels (default 1600).
 .PARAMETER Force    Re-render ids whose PNG already exists.
+.PARAMETER Yaw      Buildings only: turn the model this many degrees for the hero (default: the STRUCTURE_YAW table in render_heroes.py,
+                    -35 for the wall and gate pieces auth_gate, auth_wall, dir_bunker, lb_scrap_wall).
 #>
 param(
     [string[]]$Ids,
@@ -37,7 +39,8 @@ param(
     [switch]$All,
     [int]$Samples = 128,
     [int]$LongSide = 1600,
-    [switch]$Force
+    [switch]$Force,
+    [double]$Yaw = [double]::NaN
 )
 $ErrorActionPreference = 'Stop'
 $root = (Get-Location).Path
@@ -54,6 +57,7 @@ if ($Pilot) { $argsList += '--pilot' }
 elseif ($All) { $argsList += '--all' }
 else { $argsList += '--ids'; $argsList += (($Ids -join ',') -split ',' | Where-Object { $_ }) -join ',' }
 if ($Force) { $argsList += '--force' }
+if (-not [double]::IsNaN($Yaw)) { $argsList += '--yaw'; $argsList += $Yaw }
 
 $t0 = Get-Date
 Write-Host "Booklet hero renders: python $($argsList -join ' ')"

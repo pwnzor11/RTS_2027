@@ -36,6 +36,13 @@ ROOT = os.path.abspath(os.path.join(HERE, "..", ".."))
 ART = os.path.join(ROOT, "tools", "art")
 MANIFEST = os.path.join(HERE, "render_manifest.toml")
 FACING_DEG = 225.0       # clockwise from north: the south-west three-quarter view of the pilot pages
+# Structures are drawn from the fixed game camera, so a straight wall or gate piece faces it square-on and reads flat in the booklet.
+# These ids get their model turned about its centre for the hero only (degrees, positive = counter-clockwise seen from above);
+# the camera and sun stay as they are.  --yaw overrides the table for one run.  Negative: the sun is in the west (upper left), so
+# turning clockwise keeps the long face lit (s22: +35 put it in shade and it read flat).
+STRUCTURE_YAW = {"auth_gate": -35.0, "auth_wall": -35.0, "dir_bunker": -35.0, "lb_scrap_wall": -35.0}
+# Turned structures also get half the sprite pipeline's sky light (0.9 -> 0.45), so the sun gives the faces real contrast.
+TURNED_WORLD_STRENGTH = 0.45
 FACTION_ORDER = ("authority", "directorate", "left_behind", "expedition", "neutral")
 
 
@@ -135,8 +142,38 @@ def frame_camera(long_side, pad=0.04):
     sc.render.resolution_x, sc.render.resolution_y, sc.render.resolution_percentage = w_px, h_px, 100
 
 
+def turn_model(yaw_deg):
+    """Turn every top-level model object (not the ground, camera or lights) about the model's centre on the vertical axis."""
+    import bpy
+    import numpy as np
+    from mathutils import Matrix, Vector
+    sc = bpy.context.scene
+    bpy.context.view_layer.update()
+    roots = [o for o in sc.objects if o.parent is None and o.type in ("MESH", "EMPTY") and not o.name.startswith("ground")]
+    pts = []
+    for o in sc.objects:
+        if o.type != "MESH" or o.name.startswith("ground") or len(o.data.vertices) == 0:
+            continue
+        nv = len(o.data.vertices)
+        co = np.empty(nv * 3, dtype=np.float32)
+        o.data.vertices.foreach_get("co", co)
+        co = co.reshape(nv, 3).astype(np.float64)
+        W = np.array([list(r) for r in o.matrix_world])
+        pts.append(co @ W[:3, :3].T + W[:3, 3])
+    if not pts:
+        return
+    allp = np.concatenate(pts)
+    c = (allp.min(axis=0) + allp.max(axis=0)) / 2
+    pivot = Vector((float(c[0]), float(c[1]), 0.0))
+    m = Matrix.Translation(pivot) @ Matrix.Rotation(math.radians(yaw_deg), 4, "Z") @ Matrix.Translation(-pivot)
+    for o in roots:
+        o.matrix_world = m @ o.matrix_world
+    bpy.context.view_layer.update()
+
+
 class Hero:
     """Settings and state for the render hook."""
+    yaw = 0.0
     path = ""
     accent = "#E0A020"
     long_side = 1600
@@ -153,6 +190,10 @@ def hero_render(real_render):
     for o in sc.objects:
         if o.name.startswith("ground"):
             o.hide_render = True
+    if Hero.yaw:
+        turn_model(Hero.yaw)
+        if sc.world is not None and sc.world.use_nodes and "Background" in sc.world.node_tree.nodes:
+            sc.world.node_tree.nodes["Background"].inputs[1].default_value = TURNED_WORLD_STRENGTH
     frame_camera(Hero.long_side)
     sc.render.engine = "CYCLES"
     sc.cycles.device = "CPU"
@@ -345,6 +386,7 @@ def main():
     ap.add_argument("--force", action="store_true", help="re-render ids whose PNG already exists (default: skip them)")
     ap.add_argument("--out", default=os.path.join(ROOT, "art", "booklet"))
     ap.add_argument("--contact", default=None, help="contact sheet path (default <out>/contact_<date>.png; 'none' = skip)")
+    ap.add_argument("--yaw", type=float, default=None, help="structures only: turn the model this many degrees (overrides STRUCTURE_YAW)")
     ap.add_argument("--accent", default=None, help="override the faction accent for this run, e.g. #E0A020")
     a = ap.parse_args()
     if not (a.pilot or a.all or a.ids):
@@ -372,6 +414,7 @@ def main():
             h = heroes[rid]
             Hero.accent = a.accent or accents[h["faction"]]["color"]
             Hero.path = out_path(a.out, h, rid)
+            Hero.yaw = 0.0 if h["kind"] != "building" else (a.yaw if a.yaw is not None else STRUCTURE_YAW.get(rid, 0.0))
             t0 = time.time()
             print(f"[{n}/{len(todo)}] {rid} ({h['faction']} {h['kind']}, house {Hero.accent}) ...", flush=True)
             try:

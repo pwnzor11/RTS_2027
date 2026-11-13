@@ -7,6 +7,7 @@ public sealed class NullAudio : IAudio
 {
     private int _music = 100;
     private int _sfx = 100;
+    private int _ambience = 100;
 
     /// <summary>The shared instance.</summary>
     public static NullAudio Instance { get; } = new();
@@ -23,6 +24,13 @@ public sealed class NullAudio : IAudio
     {
         get => _sfx;
         set => _sfx = Math.Clamp(value, 0, 100);
+    }
+
+    /// <inheritdoc />
+    public int AmbienceVolume
+    {
+        get => _ambience;
+        set => _ambience = Math.Clamp(value, 0, 100);
     }
 
     /// <inheritdoc />

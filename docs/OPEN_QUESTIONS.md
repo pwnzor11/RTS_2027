@@ -5,20 +5,14 @@ file cited after each question. Recommendations are the lead's, from the researc
 
 ## Open
 
-- 🟡 **Q-77 · 2026-11-12 · Skirmish balance after s21 (docs/balance/s21_after_series.md).** On the session 21 code (PR #70 + D-219):
-  (1) the Authority is behind: Rust Belt v Directorate 17-36 (was 24-24), v Expedition 12-51; (2) Glass Coast: Expedition beats everyone
-  43-55 to 7-14; (3) Left Behind mirror on Mountains layout 1: start share 74 %, start 0 earns ~25 % less by 5 min. First step: the owner's A/B
-  `tools/measure/run_s21_ab.ps1` (D-219 reverted for those rows) splits "D-219" from "faction numbers". Then options per item: **(a) tune numbers
-  toward 45-55 % per pair (recommended)** / (b) for Glass Coast, accept a naval map favouring the naval faction / (c) leave until a play-test.
-- ⚪ **Q-76 · 2026-11-12 · Harvester dock in a dead-end corridor.** One-cell dead-end corridor to a dock: the harvester that unloaded cannot
-  leave because the next one waits behind it (pinned as skipped `YardDockLivelockTests.Desired_DeadEndCorridorToTheDock_KeepsDelivering`).
-  **(a) waiters stand back two cells off the dock approach until the dock is free** / (b) leave it (shipped yards have an open dock cell).
-
 - 🟡 **Q-73 · 2026-11-12 · Par-time medals (M10-19).** No campaign mission has a par time, so the Profile page awards only Completed and
   No losses. Options: **(a) the owner gives a par time per mission (recommended; the bot walk-through times in docs/balance are a starting point)**;
   (b) par = the bot's tier-3 win time + 50 %; (c) no par medal.
 
 ## Answered
+- Q-78 · 2026-11-12 · Owner: all four assumed items confirmed (Kokoro CC0, mop-up constants for now, Harpoon anti-air, horn/sonar) → D-228.
+- Q-77 · 2026-11-12 · Owner: take all recommendations (docs/balance/s22_balance_options.md); the A/B ruled out D-219 → D-223.
+  Q-76 · 2026-11-12 · Owner (a), "go ahead and fix this" → D-225.
 - Q-75 · 2026-11-12 · Owner: targets over 12 seeds with ash on are **tier 1 >= 10/12, tier 3 >= 8/12, tier 5 >= 3/12** (harder than the
   recommendation) → D-222. Q-74 · 2026-11-12 · Owner (a): chat block at the next replay format bump → D-222.
 - Session 21 · 2026-11-12 · Owner: default stance engages hostile units in sight and returns to its post → D-219; development saves and

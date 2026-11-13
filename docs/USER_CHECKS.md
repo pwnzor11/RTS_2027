@@ -460,3 +460,21 @@ Back up `%APPDATA%\RTS_2027` first: old development saves and replays may not lo
 - **lb_03 tier 5:** the Authority column arrives at ~3:35 with 7 riflemen, 3 jeeps and 2 tanks; the start force begins just west of the ash patch.
 - **lb_01 idle:** leave the mission running untouched: the start force shoots the passing convoy and the mission waits for you to deploy (no loss).
 - **Art:** every unit and building has a sprite (Authority bomber, carrier, howitzer, Directorate dirigible, ruins...): no grey placeholder boxes.
+
+## Session 22 · Balance round, mop-up AI, dock lanes, audio, wall art (D-223..D-228)
+Back up `%APPDATA%\RTS_2027` first (D-220: old development saves and replays may not load). Branch `integ-s22` until its PR lands on main.
+- **Music:** the menu plays a track; a skirmish switches between a battle track (when fighting) and a calm track; victory/defeat play once.
+- **Voices:** start any campaign mission: the first radio line is spoken (e.g. auth_01 Wrenfield) as well as shown; a mission whose voice file is
+  missing still shows the text silently.
+- **New radio lines:** exp_03 tier 5: "A second flight of Authority bombers, low over the south-west sea!" with Kell on the radio at ~5:20;
+  exp_04: after the Dredge Works, Strand warns "The Directorate army is on the march"; auth_01: the "Raiders from the east road!" ticker is followed by Wrenfield: "Riflemen on the east road. Keep the scrapers behind the line."
+- **Ambience:** Settings has an **Ambience volume** slider; in a skirmish nothing changes until the generated ambience loops land (falls back silently).
+- **Mop-up AI:** skirmish v a tier 2-5 AI, then wreck its army and leave a few outlying buildings: after about 7-8 minutes of game time the AI
+  sends small parties that search the map for your last buildings (it does the same to you). Tier 1 never does.
+- **Dead-end dock (Q-76):** wall a refinery or yard dock into a one-cell corridor and send 3+ harvesters: they wait at the corridor mouth and
+  each drives in, unloads and out without stopping.
+- **Mirror maps:** skirmish Left Behind v Left Behind on Mountains: both bases' units leave their factories and harvesters dock on the side
+  facing the centre (mirror images).
+- **Balance:** Expedition shipments pay 1400 (was 2000); the Directorate Rocket Truck has no splash; Bulwark 500 HP / 900; Howitzer hits harder;
+  the Dirigible moves twice as fast; Left Behind Harpoon wagons and posts shoot aircraft; Refinery Rig 700; tutorial starts with 4500.
+- **Wall art:** Authority wall/gate, Directorate bunker wall and Left Behind scrap wall show panels, grime and props in game and in the booklet heroes.

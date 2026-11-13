@@ -173,7 +173,7 @@ veteran = false  # VET-4: its weapon deals no damage (it lays foam/ash/blackout/
 tier = 2
 faction = "directorate"
 tunnel_size = "none"
-speed = 8  # ASSUMED (M3-07)
+speed = 16  # ASSUMED (M3-07) # s22 M13-13 (D-223): 8 -> 16
 max_health = 200  # ASSUMED (M3-07)
 locomotion = "air"
 turn_rate = 4  # ASSUMED (M3-07)
@@ -320,8 +320,8 @@ prerequisites = ["auth_factory"]
 [auth_bulwark]   # heavy armour, crusher (design 08 §4)
 tier = 3
 locomotion = "tracked"
-speed = 20  # ASSUMED (M4-07)
-max_health = 400  # ASSUMED (M4-07)
+speed = 18  # ASSUMED (M4-07) # s22 M13-13 (D-223): 20 -> 18
+max_health = 500  # ASSUMED (M4-07) # s22 M13-13 (D-223): 400 -> 500
 turn_rate = 6  # ASSUMED (M4-07)
 armor = "heavy"
 sight = 5  # ASSUMED (M4-07)
@@ -329,7 +329,7 @@ primary_weapon = "auth_tank_cannon"
 has_turret = true
 turret_turn_rate = 10  # ASSUMED (M4-07)
 crusher = true
-cost = 800  # ASSUMED (M4-07)
+cost = 900  # ASSUMED (M4-07) # s22 M13-13 (D-223): 800 -> 900
 prerequisites = ["auth_factory"]
 
 [dir_ash_sower]   # lays radiation with a contaminate-only weapon (design 08 §4)
@@ -691,7 +691,7 @@ crusher = false
 cost = 550  # (tune)
 prerequisites = ["exp_hover_yard"]
 aura_radius = 3  # (tune)
-aura_repair_permille = 10  # (tune) permille of max HP per 10 ticks
+aura_repair_permille = 5  # (tune) permille of max HP per 10 ticks # s22 M13-13 (D-223): 10 -> 5
 aura_targets = ["exp_skimmer", "exp_hoverlander", "exp_survey_hover", "exp_glide_tank", "exp_sparker", "exp_repair_hover", "exp_barrage_lander", "exp_launch", "exp_landing_craft", "exp_destroyer", "exp_missile_sub", "exp_cruiser", "exp_carrier", "exp_minelayer", "exp_command_ship"]
 # TODO M7-09: bay_repair (units inside a landing craft or Skyhook heal slowly) has no rules field yet
 

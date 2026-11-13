@@ -22,7 +22,7 @@ slot = 0
 name = "Authority"
 role = "human"
 team = 0
-cash = 3000
+cash = 4500  # s22 M13-13 (D-223): 3000 -> 4500
 tech = ["auth_power", "auth_refinery", "auth_barracks", "auth_rifleman"]
 
 [[players]]

@@ -1647,3 +1647,46 @@ exp_03 tier-5 air raid split into 2 bombers at 3800 and an unannounced 3-bomber 
 docs/balance/s21_campaign_retune.md. (4) Q-74 (a): LAN chat gets a block in the next replay format bump. (5) The s19 after-series confirms
 the start-side fix (M13-10). **Rejected:** auth_03 tier-5 tide 9000 -> 2780 (a visible countdown three times shorter). **Status:** owner
 decisions (targets, "fix all, show me after"); per-mission values are the lead's within those targets — confirm with the laptop sweep
+
+### D-223 · 2026-11-12 · Q-77 / M13-13 balance round (session 22)
+**Decision:** owner: "take all recommendations" from docs/balance/s22_balance_options.md. Row fixes: Expedition shipments `value` 2000 -> 1400;
+`dir_rocket` warhead splash 1 -> 0 (Rocket Truck; the air-only Rocket Nest shares the warhead); the skirmish start kit follows the biome's
+mirror symmetry (SkirmishStart.KitFlip); factory exits and refinery docks follow it too (Simulation.OrientedOffset; half-turn maps unchanged).
+M13-13: Bulwark 500 HP / 900 / speed 18; Howitzer damage 32; Dirigible speed 16; Reactor Crawler range 1280, damage 60; repair auras 5 permille;
+Left Behind Harpoon gun targets both; Refinery Rig 700; tut_01 cash 4500; Salvo Array charge 4800 ticks. Item 1 (non-Expedition HE/flame v
+ships) stays 100/100; item 13 waits for a hand check. The owner's A/B (balance_runs\s21ab_nod219) ruled out D-219 as the cause of the
+Authority's slide. **Why:** traced root causes (shipments economy, Rocket Truck splash, mirror-map handedness). **Status:** owner decision;
+numbers to be confirmed by the laptop series (tools/measure/run_s19_after.ps1, run_s22_mopup.ps1) and campaign sweep.
+
+### D-224 · 2026-11-12 · Mop-up AI on in skirmish (M13-20)
+**Decision:** the s14 mop-up returns with a "beaten enemy" trigger (MopupPlan: tick >= 9000, army >= 8 and >= 3000 worth and >= 4x the biggest
+enemy army seen in 3600 ticks for 1200 ticks, home calm 900 ticks), siege-style targets (D-174 SiegePlan) and fog-sweep parties of 6. On for
+tiers with respond_to_attacks; off at tier 1 and in campaign missions (MissionBot); `ai match --mopup on|off`. Constants are first guesses
+marked (tune). **Status:** owner asked for the fix (session 22); effect to be measured on the laptop (run_s22_mopup.ps1).
+
+### D-225 · 2026-11-12 · Q-76: harvesters queue outside a dead-end dock lane
+**Decision:** option (a) as "queue outside the lane": a dock with one way out gets a lane (cells whose loss cuts it off, within 8 cells);
+waiters stand at least 2 cells beyond its outer end and claim the dock only while the lane is empty. Open docks are unchanged (no hash moved).
+**Status:** owner decision (session 22, "go ahead and fix this")
+
+### D-226 · 2026-11-12 · Session 22 audio: music, voices, sound effects
+**Decision:** (1) Music: take 1 of all 20 ACE-Step tracks ships now (tools/audio/export_music.py, -16 LUFS, victory/defeat -14), any track
+can be swapped. (2) Voice: Kokoro-82M (Apache-2.0) on the owner's laptop, one preset voice per leader chosen by audition (tools/voice/
+leaders.json), every radio line voiced (164 slots); output released CC0 (owner confirmed, Q-78). (3) SFX: about 80 sounds generated on the
+owner's laptop with Stable Audio Open 1.0 (Stability AI Community License, free below USD 1M revenue, outputs ours; weights never in the
+repo); CREDITS: "Generated with Stable Audio Open 1.0 (Stability AI Community License); outputs owned by the project, shipped under the
+game's GPL v3" — no CC0 claim. One-shots 22 kHz mono, ambience loops stereo; data/audio WAVs and data/music OGGs go through Git LFS.
+(4) Audio code: sounds.toml keys by faction, unit class and weapon class with fallback to today's events; water, sonar, flyby/hover, rig
+events; biome ambience loops with an Ambience slider (view only, no sim change). (5) Every announced campaign wave gets a radio line
+(M13-21). **Status:** owner decisions (session 22)
+
+### D-227 · 2026-11-12 · Wall and gate heroes and models (M14-03)
+**Decision:** wall/gate pieces (auth_wall, auth_gate, dir_bunker, lb_scrap_wall) are turned -35 degrees for their booklet heroes with half the
+sky light (render_heroes.py STRUCTURE_YAW, TURNED_WORLD_STRENGTH), and their models got a detail pass (panels, seams, grime, props) that also
+changes the game sprites; rendered on the owner's laptop (tools/art/render_s22_walls.ps1). **Status:** owner decisions ("lighting + detail",
+"bolder, then fan out"; renders approved)
+
+### D-228 · 2026-11-12 · Session 22 sign-offs
+**Decision:** the owner approved the Directorate lore draft (design 19 §6b, M14-04) and confirmed Q-78: Kokoro output CC0; the mop-up
+constants stand until the laptop on/off series; the Harpoon Wagon counts as anti-air in the AI mix; ship-ready horn and sub sonar stay.
+**Status:** owner decision (session 22, "signoffs look great")

@@ -451,6 +451,29 @@ public sealed partial class Simulation
     /// </summary>
     internal CellCoord OrientedOffset(CellCoord rel, int footprintW, int footprintH, CellCoord topLeft)
     {
+        // S22 M13-19 (R4): on a mirror map the partner base is a reflection, not a point mirror. The symmetry is read from the two start
+        // positions, as SkirmishStart.KitFlip does (point mirror first, so every half-turn map keeps exactly the M4-16 rule). MirrorX
+        // (same row, columns mirrored): the east building uses the west rule reflected in X. MirrorY (same column, rows mirrored): the
+        // south building uses the north rule (unchanged) reflected in Y. Map geometry only; integer; no state.
+        int w = Setup.Map.Width, h = Setup.Map.Height;
+        IReadOnlyList<CellCoord> sp = Setup.Map.StartPositions;
+        if (sp.Count == 2 && !(sp[0].X + sp[1].X == w - 1 && sp[0].Y + sp[1].Y == h - 1))
+        {
+            if (sp[0].Y == sp[1].Y && sp[0].X + sp[1].X == w - 1 && topLeft.X * 2 + footprintW > w)
+            {
+                var westTl = new CellCoord(w - topLeft.X - footprintW, topLeft.Y);
+                CellCoord west = HalfTurnOffset(rel, footprintW, footprintH, westTl);
+                return new CellCoord(footprintW - 1 - west.X, west.Y);
+            }
+            if (sp[0].X == sp[1].X && sp[0].Y + sp[1].Y == h - 1)
+                return topLeft.Y * 2 + footprintH <= h ? rel : new CellCoord(rel.X, footprintH - 1 - rel.Y);
+        }
+        return HalfTurnOffset(rel, footprintW, footprintH, topLeft);
+    }
+
+    /// <summary>M4-16 rule: unchanged in the north half (or on the middle row), turned by 180 degrees in the south half.</summary>
+    private CellCoord HalfTurnOffset(CellCoord rel, int footprintW, int footprintH, CellCoord topLeft)
+    {
         if (topLeft.Y * 2 + footprintH <= Setup.Map.Height) return rel;
         return new CellCoord(footprintW - 1 - rel.X, footprintH - 1 - rel.Y);
     }

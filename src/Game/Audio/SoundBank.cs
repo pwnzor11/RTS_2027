@@ -11,15 +11,21 @@ public sealed record SoundDef(string Id, string File, float Volume, int MaxVoice
 /// <summary>An event's variants and how it is played. <see cref="CooldownMs"/> is the least time between two plays of the event.</summary>
 public sealed record EventDef(string Name, IReadOnlyList<string> Sounds, float Volume, bool Positional, int CooldownMs);
 
+/// <summary>A looping ambience: the sound that plays for a biome key (<c>glass_coast</c>, <c>open_sea</c> ...) and how loud.</summary>
+public sealed record AmbienceDef(string Key, string SoundId, float Volume);
+
 /// <summary>
 /// data/audio/sounds.toml: the sound files, and the mapping from game events to sound ids (several variants per event,
-/// one picked at random). Parsing throws <see cref="InvalidDataException"/> on a malformed file.
+/// one picked at random). Event names may be qualified (<c>unit_died.infantry.directorate</c>, S22): <see cref="Resolve"/> tries the most
+/// specific key first and falls back to the plain event. Parsing throws <see cref="InvalidDataException"/> on a malformed file.
 /// </summary>
 public sealed class SoundBank
 {
     private readonly Dictionary<string, SoundDef> _sounds = new(StringComparer.Ordinal);
     private readonly Dictionary<string, EventDef> _events = new(StringComparer.Ordinal);
     private readonly Dictionary<string, string> _weapons = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, AmbienceDef> _ambience = new(StringComparer.Ordinal);
+    private readonly Dictionary<(AudioEventKind, string?, string?), EventDef?> _resolved = new();
 
     private SoundBank()
     {
@@ -39,6 +45,15 @@ public sealed class SoundBank
 
     /// <summary>Every event, ordered by name.</summary>
     public IEnumerable<EventDef> Events => _events.Values.OrderBy(e => e.Name, StringComparer.Ordinal);
+
+    /// <summary>Every ambience loop, ordered by key.</summary>
+    public IEnumerable<AmbienceDef> Ambience => _ambience.Values.OrderBy(a => a.Key, StringComparer.Ordinal);
+
+    /// <summary>The ambience for a biome key, or null when sounds.toml has none (that biome is then silent).</summary>
+    public AmbienceDef? AmbienceFor(string key) => _ambience.GetValueOrDefault(key);
+
+    /// <summary>Weapon id and sound class of every entry of the [weapon] table, ordered by weapon id.</summary>
+    public IEnumerable<KeyValuePair<string, string>> WeaponClassTable => _weapons.OrderBy(w => w.Key, StringComparer.Ordinal);
 
     /// <summary>Loads and validates the file at <paramref name="path"/>.</summary>
     public static SoundBank Load(string path) => Parse(File.ReadAllText(path));
@@ -71,25 +86,35 @@ public sealed class SoundBank
                 Math.Max(1, (int)Num(t, "max_voices", bank.DefaultMaxVoices)));
         }
 
-        foreach ((string name, TomlTable t) in Tables(root, "event"))
+        if (root.TryGetValue("event", out object? eo) && eo is TomlTable eventGroup)
         {
-            var ids = new List<string>();
-            if (t.TryGetValue("sounds", out object? arr) && arr is TomlArray list)
+            foreach ((string name, TomlTable t) in FlattenEvents(eventGroup, ""))
             {
-                foreach (object? item in list)
+                var ids = new List<string>();
+                if (t.TryGetValue("sounds", out object? arr) && arr is TomlArray list)
                 {
-                    if (item is string s) ids.Add(s);
+                    foreach (object? item in list)
+                    {
+                        if (item is string s) ids.Add(s);
+                    }
                 }
-            }
 
-            if (ids.Count == 0) throw new InvalidDataException($"sounds.toml: event '{name}' lists no sounds");
-            foreach (string id in ids)
-            {
-                if (!bank._sounds.ContainsKey(id)) throw new InvalidDataException($"sounds.toml: event '{name}' names unknown sound '{id}'");
-            }
+                if (ids.Count == 0) throw new InvalidDataException($"sounds.toml: event '{name}' lists no sounds");
+                foreach (string id in ids)
+                {
+                    if (!bank._sounds.ContainsKey(id)) throw new InvalidDataException($"sounds.toml: event '{name}' names unknown sound '{id}'");
+                }
 
-            bool positional = t.TryGetValue("positional", out object? p) && p is bool b && b;
-            bank._events[name] = new EventDef(name, ids, (float)Num(t, "volume", 1.0), positional, (int)Num(t, "cooldown_ms", 0));
+                bool positional = t.TryGetValue("positional", out object? p) && p is bool b && b;
+                bank._events[name] = new EventDef(name, ids, (float)Num(t, "volume", 1.0), positional, (int)Num(t, "cooldown_ms", 0));
+            }
+        }
+
+        foreach ((string key, TomlTable t) in Tables(root, "ambience"))
+        {
+            string soundId = Str(t, "sound") ?? throw new InvalidDataException($"sounds.toml: ambience '{key}' has no sound");
+            if (!bank._sounds.ContainsKey(soundId)) throw new InvalidDataException($"sounds.toml: ambience '{key}' names unknown sound '{soundId}'");
+            bank._ambience[key] = new AmbienceDef(key, soundId, (float)Num(t, "volume", 1.0));
         }
 
         if (root.TryGetValue("weapon", out object? wo) && wo is TomlTable weapons)
@@ -110,16 +135,66 @@ public sealed class SoundBank
     public EventDef? Event(AudioEventKind kind) => _events.GetValueOrDefault(AudioEventNames.Of(kind));
 
     /// <summary>
-    /// The event a weapon id fires (the [weapon] table of sounds.toml, e.g. <c>auth_rocket = "fire_missile"</c>), or null when it
-    /// is not listed. A snapshot diff cannot name the weapon, so the director plays the class events; this lookup is for callers
-    /// that know the weapon.
+    /// The sound class of a weapon id (the [weapon] table of sounds.toml, e.g. <c>auth_rocket = "rocket"</c>; see <see cref="WeaponClasses"/>),
+    /// or null when the weapon is not listed. A table value that is an old event name (<c>fire_missile</c>) is not a class and gives null here;
+    /// <see cref="EventForWeapon"/> still understands it.
+    /// </summary>
+    public string? WeaponClassOf(string weaponId) =>
+        _weapons.TryGetValue(weaponId, out string? v) && WeaponClasses.IsKnown(v) ? v : null;
+
+    /// <summary>
+    /// The event family a weapon id fires: <see cref="AudioEventKind.FireBullet"/>, <see cref="AudioEventKind.FireShell"/> or
+    /// <see cref="AudioEventKind.FireMissile"/>, from its class (or from an old-style event name in the [weapon] table). Null when the weapon is not
+    /// listed or its class makes no shot sound (<c>silent</c>, <c>bomb</c>).
     /// </summary>
     public AudioEventKind? EventForWeapon(string weaponId)
     {
         if (!_weapons.TryGetValue(weaponId, out string? name)) return null;
+        if (WeaponClasses.IsKnown(name)) return WeaponClasses.FamilyOf(name);
         foreach (AudioEventKind kind in Enum.GetValues<AudioEventKind>())
         {
             if (AudioEventNames.Of(kind) == name) return kind;
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// The event definition to play for <paramref name="e"/> (S22). Keys are tried most specific first: <c>name.class.faction</c>,
+    /// <c>name.class</c>, <c>name.faction</c>, <c>name</c> (a missing class or faction is skipped). When none exists the event's stand-in
+    /// (<see cref="AudioFallbacks.Next"/>: unit_died to explosion_small ...) is tried the same way. Null means silence. The answer is cached.
+    /// </summary>
+    public EventDef? Resolve(AudioEvent e)
+    {
+        var key = (e.Kind, e.Class, e.Faction);
+        if (_resolved.TryGetValue(key, out EventDef? hit)) return hit;
+        EventDef? found = null;
+        for (AudioEvent? cur = e; cur is { } c && found is null; cur = AudioFallbacks.Next(c))
+        {
+            found = ResolveOne(c);
+        }
+
+        _resolved[key] = found;
+        return found;
+    }
+
+    /// <summary>The keys <see cref="Resolve"/> tries for one event (without its stand-ins), most specific first.</summary>
+    public static IReadOnlyList<string> LookupKeys(AudioEvent e)
+    {
+        string name = AudioEventNames.Of(e.Kind);
+        var keys = new List<string>(4);
+        if (e.Class is not null && e.Faction is not null) keys.Add($"{name}.{e.Class}.{e.Faction}");
+        if (e.Class is not null) keys.Add($"{name}.{e.Class}");
+        if (e.Faction is not null) keys.Add($"{name}.{e.Faction}");
+        keys.Add(name);
+        return keys;
+    }
+
+    private EventDef? ResolveOne(AudioEvent e)
+    {
+        foreach (string key in LookupKeys(e))
+        {
+            if (_events.TryGetValue(key, out EventDef? def)) return def;
         }
 
         return null;
@@ -131,6 +206,19 @@ public sealed class SoundBank
     /// <summary>Sound ids whose file is not under <paramref name="audioDir"/> (the folder holding sounds.toml).</summary>
     public IReadOnlyList<string> MissingFiles(string audioDir) =>
         _sounds.Values.Where(s => !System.IO.File.Exists(Path.Combine(audioDir, s.File))).Select(s => s.Id).OrderBy(s => s, StringComparer.Ordinal).ToList();
+
+    // [event.fire_shell] with a child table [event.fire_shell.cannon.authority] arrives as nested tables; a table with a "sounds" key is an event
+    // named by its path, and its child tables are searched too. (A quoted key [event."fire_shell.cannon"] works as well.)
+    private static IEnumerable<(string Name, TomlTable Table)> FlattenEvents(TomlTable group, string prefix)
+    {
+        foreach ((string key, object? value) in group)
+        {
+            if (value is not TomlTable t) continue;
+            string name = prefix.Length == 0 ? key : prefix + "." + key;
+            if (t.ContainsKey("sounds")) yield return (name, t);
+            foreach ((string, TomlTable) inner in FlattenEvents(t, name)) yield return inner;
+        }
+    }
 
     private static IEnumerable<(string Key, TomlTable Table)> Tables(TomlTable root, string name)
     {

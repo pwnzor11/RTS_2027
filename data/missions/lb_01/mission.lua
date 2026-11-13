@@ -139,6 +139,8 @@ function SendSecondRelief()
   local tags = Reinforce.Edge(1, types, { x = 44 + Random.Next(4), y = 0 }, Map.Center("ambush"))
   for i, tag in pairs(tags) do state.reliefTags[#state.reliefTags + 1] = tag end
   state.relief2 = true
+  Media.MessageKey("lb1.relief2")
+  Dialogue.Say(SPEAKER, SPEAKER, "lb1.radio.relief2")
 end
 
 function CacheFound()

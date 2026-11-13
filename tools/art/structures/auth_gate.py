@@ -59,6 +59,9 @@ def pier(S, sx, dmg):
     S.bb("trimA", x0, x1, ys - 0.03, ys, 0.88, 0.97, "dark", 0.0, nocast=True)
     S.bb("trimB", x0, x1, ys - 0.03, ys, 1.55, 1.64, "dark", 0.0, nocast=True)
     S.bb("band", x0, x1, ys - 0.05, ys, 0.97, 1.55, "house", 0.0, nocast=True)
+    # S22 detail pass: same cladding as the wall (panel tones, seams, bolts, grime, rust), laid out on the same grid
+    brk = (x0 + 0.05, x0 + 0.45) if (dmg and sx < 0) else None
+    W.detail(S, x0, x1, ys, brk, False)
     # inner pier face: steel jamb strip and a stop block
     ix = sx * PIER[0]
     S.bb("jamb", min(ix, ix - sx * 0.1), max(ix, ix - sx * 0.1), -WT - 0.06, WT + 0.06, 0.42, WZ, "steel", 0.0)
@@ -106,6 +109,13 @@ def finished(S, i, dmg, mode, opened=False):
             S.bb("lfv", xx, xx + 0.14, yl - 0.14, yl + 0.14, lz0, lz1, "steel2", 0.02)
         L.beam(S, "lbr", (a + 0.1, yl - 0.13, lz0 + 0.14), (b - 0.1, yl - 0.13, lz1 - 0.14), 0.07, "steel")
         L.beam(S, "lbr", (b - 0.1, yl - 0.13, lz0 + 0.14), (a + 0.1, yl - 0.13, lz1 - 0.14), 0.07, "steel")
+        for zz in (lz0 + 0.03, lz1 - 0.11):                      # bolt heads on the frame, grime and rust on the leaf
+            for k in range(5):
+                bx = a + 0.1 + k * (b - a - 0.2) / 4
+                S.bb("lbolt", bx - 0.04, bx + 0.04, yl - 0.16, yl - 0.14, zz, zz + 0.08, "bolt", 0.0, nocast=True)
+        S.bb("lgrime", a, b, yl - 0.16, yl - 0.14, lz0, lz0 + 0.3, "grime", 0.0, nocast=True)
+        for bx in (a + 0.3, b - 0.35):
+            S.bb("lrust", bx, bx + 0.1, yl - 0.16, yl - 0.14, 1.1, lz1 - 0.14, "rust2", 0.0, nocast=True)
         S.bb("lpanel", (a + b) / 2 - 0.3, (a + b) / 2 + 0.3, yl - 0.16, yl - 0.13, 0.7, 1.2, "house", 0.0, nocast=True)
         for k in range(4):
             xx = a + 0.2 + k * 0.18
