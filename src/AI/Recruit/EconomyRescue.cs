@@ -116,6 +116,13 @@ internal sealed class EconomyRescue
         if (!SellOne(k, sink, faction, keepProduction: false)) Saving = false;   // nothing left to sell: spend what there is (Recruit rule)
     }
 
+    /// <summary>s23 D-235 (B3): true while an own unit is on the EnterTunnel mission (walking to a hatch or tunnel entrance).</summary>
+    internal static bool AnyEnteringTunnel(RecruitKnowledge k)
+    {
+        foreach (ViewActor a in k.Own) if (a.Mission == MissionKind.EnterTunnel) return true;
+        return false;
+    }
+
     /// <summary>Sells the structure with the dearest refund that is not needed (yard, refinery, factory, last power plant, an occupied
     /// garrison; with <paramref name="keepProduction"/> also the barracks and any producer). False when there is none.</summary>
     private bool SellOne(RecruitKnowledge k, ICommandSink sink, RecruitFaction faction, bool keepProduction)
@@ -125,9 +132,11 @@ internal sealed class EconomyRescue
         foreach (ViewActor b in k.Buildings) if (rules.Buildings[b.TypeIndex].Power > 0) powerPlants++;
         ViewActor? pick = null;
         int bestRefund = 0;
+        bool entering = AnyEnteringTunnel(k);
         foreach (ViewActor b in k.Buildings)
         {
             BuildingType bt = rules.Buildings[b.TypeIndex];
+            if (entering && bt.Entrance != TunnelSize.None) continue;   // s23 D-235 (B3): units still walk to a hatch; selling it strands them (d13: 10 conscripts, 10 000 ticks)
             if (bt.Id == faction.YardId || bt.Id == faction.RefineryId || bt.Id == faction.FactoryId || bt.Wall || bt.Gate) continue;
             if (keepProduction && (bt.Produces != null || bt.Id == faction.BarracksId || bt.PrimaryWeapon >= 0)) continue;
             if (bt.Power > 0 && powerPlants <= 1) continue;
