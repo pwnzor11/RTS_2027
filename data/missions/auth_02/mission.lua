@@ -28,9 +28,9 @@ function OnInit()
 
   Mission.Timer("relief", 4800, ReliefArrives, "a2.timer.relief")
   Trigger.AfterDelay(Pick({ 700, 600, 500, 400, 300 }), WaveOne)
-  Trigger.AfterDelay(Pick({ 1700, 1600, 1500, 1300, 1100 }), WaveTwo)
-  Trigger.AfterDelay(Pick({ 2900, 2800, 2600, 2300, 2000 }), WaveThree)
-  Trigger.AfterDelay(Pick({ 3900, 3800, 3600, 3300, 3000 }), WaveFour)
+  Trigger.AfterDelay(Pick({ 1700, 1600, 1500, 1300, 900 }), WaveTwo)
+  Trigger.AfterDelay(Pick({ 2900, 2800, 2600, 2300, 1500 }), WaveThree)
+  Trigger.AfterDelay(Pick({ 3900, 3800, 3600, 3300, 2200 }), WaveFour)
   Trigger.Every(20, CheckFortify)
   Trigger.OnDestroyed("yard", YardLost)
   Trigger.OnSeen("mast", 0, MastSeen)
@@ -65,27 +65,27 @@ end
 
 function WaveOne()
   Media.MessageKey("a2.wave1")
-  Raid(Squad(Pick({ 2, 3, 4, 6, 8 }), 0, 0), EastEdge())
+  Raid(Squad(Pick({ 2, 3, 4, 6, 38 }), 0, 0), EastEdge())
   Dialogue.Say(SPEAKER, SPEAKER, "a2.radio.wave1")
 end
 
 function WaveTwo()
   Media.MessageKey("a2.wave2")
   Dialogue.Say(SPEAKER, SPEAKER, "a2.radio.wave2")
-  Raid(Squad(Pick({ 3, 4, 5, 7, 9 }), Pick({ 0, 0, 1, 2, 3 }), 0), NorthEdge())
+  Raid(Squad(Pick({ 3, 4, 5, 7, 42 }), Pick({ 0, 0, 1, 2, 15 }), 0), NorthEdge())
 end
 
 function WaveThree()
   Media.MessageKey("a2.wave3")
   Dialogue.Say(SPEAKER, SPEAKER, "a2.radio.wave3")
-  Raid(Squad(Pick({ 2, 2, 3, 4, 5 }), Pick({ 1, 1, 1, 2, 2 }), 0), EastEdge())
-  Raid(Squad(Pick({ 2, 2, 3, 4, 5 }), Pick({ 0, 0, 1, 1, 2 }), 0), NorthEdge())
+  Raid(Squad(Pick({ 2, 2, 3, 4, 21 }), Pick({ 1, 1, 1, 2, 8 }), 0), EastEdge())
+  Raid(Squad(Pick({ 2, 2, 3, 4, 21 }), Pick({ 0, 0, 1, 1, 8 }), 0), NorthEdge())
 end
 
 function WaveFour()
   Media.MessageKey("a2.wave4")
   Dialogue.Say(SPEAKER, SPEAKER, "a2.radio.wave4")
-  Raid(Squad(Pick({ 3, 4, 5, 7, 9 }), Pick({ 1, 1, 2, 3, 4 }), Pick({ 0, 0, 1, 2, 3 })), EastEdge())
+  Raid(Squad(Pick({ 3, 4, 5, 7, 42 }), Pick({ 1, 1, 2, 3, 17 }), Pick({ 0, 0, 1, 2, 15 })), EastEdge())
 end
 
 function CheckFortify()
