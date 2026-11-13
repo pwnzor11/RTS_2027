@@ -1769,3 +1769,8 @@ The tier-5 fixed-seed walks of auth_04, dir_02 and dir_03 now assert a clean run
 D-229 (Auth v Dir 16-37, Dir v Exp 55-8); cloud probes (docs/balance/s23_directorate.md): cost 950 moved Auth v Dir 3-9 -> 7-8 and Dir v Exp
 10-5 -> 6-6 with Dir v LB 7-5 -> 6-4. **Alternatives:** damage 90 -> 75 (Auth v Dir only); both (overshoots Dir v LB 2-11); Conscript cost
 (made it worse); leave the truck and fix AI responses. **Status:** owner decision (session 23); confirm with the laptop series s23d.
+
+### D-240 · 2026-11-13 · Grapeshot field note approved; par times wait for play
+**Decision:** the Grapeshot archive field note "GRAPESHOT 6 // SWEEP THE INFANTRY AT CLOSE RANGE. LEAVE THE TANKS ALONE. TELEX ENDS." is
+final (no longer a draft). Q-73 (par-time medals) stays open but deferred: the owner sets par times after he starts playing the campaign.
+**Why:** owner, session 24. **Alternatives:** reword the note; derive par from bot times now (Q-73 b). **Status:** owner decision (session 24).

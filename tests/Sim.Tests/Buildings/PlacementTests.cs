@@ -139,10 +139,17 @@ public class PlacementTests
     {
         var sim = NewSim(128, 128);
         sim.CanPlace(0, Hq, new CellCoord(10, 10)); // warm up
-        var sw = System.Diagnostics.Stopwatch.StartNew();
-        for (int i = 0; i < 10; i++) sim.CanPlace(0, Hq, new CellCoord(10 + i, 10));
-        sw.Stop();
-        Assert.True(sw.ElapsedMilliseconds / 10.0 < 5, $"CanPlace took {sw.ElapsedMilliseconds / 10.0} ms");
+        // Best of five batches: a busy CI runner can stall one batch (9.1 ms seen on Windows CI, s24),
+        // but a real regression (e.g. a whole-map scan per call) is slow in every batch.
+        double best = double.MaxValue;
+        for (int batch = 0; batch < 5; batch++)
+        {
+            var sw = System.Diagnostics.Stopwatch.StartNew();
+            for (int i = 0; i < 10; i++) sim.CanPlace(0, Hq, new CellCoord(10 + i, 10));
+            sw.Stop();
+            best = Math.Min(best, sw.Elapsed.TotalMilliseconds / 10.0);
+        }
+        Assert.True(best < 5, $"CanPlace took {best:F2} ms (best of 5 batches)");
     }
 
     [Fact]
