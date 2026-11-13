@@ -1,36 +1,49 @@
-# Handoff: Session 23 (in progress) — round 4 on integ-s23d: Grapeshot, draws fix, tier-5 raise, instructor voice; Directorate diagnosis
-Last commit: `docs: checkpoint session 23, round 4` on branch `integ-s23d` (PR to main).
-Round 4 checkpoint: owner answers D-234..D-238; s23after read (Directorate too strong after D-229: Auth v Dir 16-37, Dir v Exp 55-8);
-Grapeshot (exp_canister_skiff) data+AI+upgrades on integ-s23d, art on wp/art-s23-skiff waiting for the owner's LFS push (art_s23\push_art.ps1);
-draws fix D-235 (21 % -> 14 % in cloud); tier 5 raised in six missions (D-238); tut_01 instructor voice slots (audition on the laptop);
-Directorate diagnosis helper running (wp/s23-dirdiag, probes only). Check `git log -1 origin/main`.
-Where things stand: session 22 (PR #76) and session 23 round 1 (PR #77, Rocket Truck splash back to 1, D-229) are on main. Round 2 (PR #78):
-`ai match --ledger` (units made/lost per type); Left Behind tier-3 swarm cap until tick 4800 (D-230, M13-22); Left Behind and Expedition lore
-approved after a fact-check (D-231, M14-04 done); booklet dry build ok with coverage check (M14-05 prep); CI publishes a rolling `nightly`
-pre-release instead of game artifacts (D-232; worked on main, nightly has the zip and installer). Round 3: s22mopup read (no effect), mop-up
-trigger loosened (D-233); draws traced to attrition stalemates (M13-23). Campaign sweep (s21sweep, integ-s22 data): 45/45 on target. Decisions up to D-233. Open questions: Q-73, Q-79..Q-83 (owner answers in the morning).
+# Handoff: Session 24 — read the laptop runs (s23d series, campaign sweep), then the next balance round
+Last commit: `docs: Session 23 handoff` on `land/s23-r4` (PR #80 to main). Check `git log -1 origin/main` and whether PR #80 is merged.
+Where things stand: session 23 rounds 1-3 are on main (PRs #77-#79: Rocket Truck splash 1 D-229, `ai match --ledger`, Left Behind tier-3 cap
+D-230, lore D-231, nightly pre-release D-232, mop-up loosened D-233). Round 4 is PR #80 (`land/s23-r4` = integ-s23d): owner answers D-234;
+late-game draws diagnosed as mined-out maps plus AI endgame fixes D-235 (`ai match --econ 1`; cloud draws 21 % -> 14 %); Expedition tier-2 hover
+anti-infantry unit **Grapeshot** (`exp_canister_skiff`, D-236/D-237: data, AI use vs infantry, Glide Tank upgrades, draft field note);
+campaign tier 5 raised in auth_02, auth_04, dir_01-04 to 4-9/12 (D-238; lb_04, exp_02, exp_04 stay 12/12); tut_01 instructor voice slots
+(M10-24); Rocket Truck cost 800 -> 950 (D-239, M13-26) after the s23after read (docs/balance/s23_directorate.md). Decisions up to D-239.
+Open questions: Q-73 only.
 
 ## Start here (shown to the user as the plan; nothing starts until they say go)
-1. Read the laptop re-run `balance_runs\s23after\s23after_summary.md` (run_s19_after.ps1 -OutName s23after on main after this PR) against
-   s22after; target 45-55 % per cross-faction pair, start share under 60 %. Watch LB v Exp, Exp v LB (Glass Coast), Auth v LB, Dir v LB.
-2. Read the campaign sweep `balance_runs\s21sweep\s21sweep_summary.md` (main after PR #77: Rocket Truck splash back to the s21 value).
-3. M13-23: late-game stalemates (both sides exhausted); look at income and rebuild behaviour after tick 20000 before any rule change.
-4. M14-05: the full ~108-page booklet build (tools/booklet), once the numbers settle. SFX picks (owner).
+1. Check PR #80: Windows CI green? merged? (owner may have merged; else merge when green on his word).
+2. Read the laptop campaign sweep `balance_runs\s21sweep\s21sweep_summary.md` (on land/s23-r4 @ 8a3b4c9; old one renamed s21sweep_s22):
+   tier-5 targets 4-9/12 for the six raised missions, all other rows on Q-75 targets; the truck cost may have moved Directorate missions.
+3. Read the laptop series `balance_runs\s23d\s23d_summary.md` against `s23after`: Auth v Dir, Dir v Exp, Dir v LB (truck cost), LB v Exp and
+   Exp v LB (Grapeshot), draws per row (D-235), start share (Exp mirror Rust Belt 71 % and LB v Exp 66 % in s23after). Target 45-55 %.
+4. Grapeshot art: after the owner's push (art_s23\push_art.ps1 -> wp/art-s23-skiff), merge it (drops the Glide Tank sprite alias).
+5. Then the next balance round from the s23d table; if Expedition/Authority still lose to Conscript mass, look at their AI responses
+   (Expedition tender spending, Authority single-Scraper stall: docs/balance/s23_directorate.md option 3). M14-05 booklet waits for balance (D-234).
 
 ## Half-finished work
-- SFX: 80 jobs generating on the owner's laptop (draft, then full run). Nothing picked or committed yet. `exp_rad_burst` has no event; flak has no job.
-- Mop-up constants (MopupPlan.cs, "(tune) s22") wait for the s22mopup series.
-- Mop-up AI code in MilitaryManager is now ON in skirmish tiers 2-5 (was off); campaign missions keep it off.
-- Tier 5 wins 12/12 in eight missions (unchanged): a human play-test decides whether to raise it. M13-13 item 13 needs a hand check.
-- Unit barks (Piper/Kokoro per unit class, D-214) not started; the tutorial instructor has no voice (owner not asked).
+- Grapeshot art on `wp/art-s23-skiff` (local commits pushed by the owner with the LFS bundle; not on GitHub until then). Hull number 06.
+- Grapeshot field note "GRAPESHOT 6 // ..." is a draft: owner to approve or reword. Trigger (40 % enemy infantry, 2-3 skiffs) is "(tune)".
+- Tutorial instructor voice: owner runs the audition (make_audio.ps1 -VoiceAudition -Only leader_tut_instructor), picks, sets leaders.json, runs -Voice.
+- SFX: 80 jobs on the owner's laptop, nothing picked yet. Unit barks after SFX (D-234).
+- Remaining draws are mostly "attacker arrives late"; next levers: faster wave launch or adjudication at the time limit (s23_draws.md option D).
+- Tier 5 bands are narrow; later sim/bot changes will move them (D-238 note).
 
 ## Waiting on the user
-- Laptop: s22after, s22mopup, campaign sweep (commands in the session 22 wrap-up), then the full SFX run, audition and pick.
-- Merge PR #76 (session 22) when CI is green and the series looks right. Rotate the Hugging Face token that was pasted in chat (if not done).
-- Two-PC LAN test (M9-15) still open. Answer Q-73 (par times) when convenient.
-- Branch clean-up: wp/s22-* branches on GitHub after the merge (owner deletes).
+- Laptop: push art (`powershell -ExecutionPolicy Bypass -File art_s23\push_art.ps1`), then on `origin/land/s23-r4`: campaign sweep, then
+  `run_s19_after.ps1 -OutName s23d`; then `git checkout main`. Say "done".
+- Merge PR #80 if CI is green and you want it before the next session. Instructor audition and SFX picks when convenient. Q-73 (par times).
+- Two-PC LAN test (M9-15). Branch clean-up on GitHub (owner deletes): wp/s22-*, integ-s23, integ-s23b, integ-s23c, and after PR #80 integ-s23d.
 
 ## How to run this session
+- Session 23 lessons:
+  - add_repo can fail for a while ("service temporarily unavailable"); retry later in the session rather than switching to bundles at once.
+    Without it, gh, LFS and pushes are all refused (the anonymous clone still works).
+  - Files copied to the owner's PC with device_commit_files can be re-encoded by type (PNG LFS objects arrived with other hashes): ship LFS
+    objects inside a .zip and check SHA-256 against the oid in push_art.ps1.
+  - A server restart stops helpers mid-run and leaves their test processes orphaned and still holding the dotnet lock: kill them by pid
+    (never pkill -f), then SendMessage each helper to resume. Two tier-5 helpers had made no commits despite the brief: say "commit each
+    mission as soon as it is measured" and check `git status` in their worktrees after any restart.
+  - Campaign tier-5 sweeps are steep and some missions are all-or-nothing (one unit flips 12/12 to 0/12): budget 6-seed scouting, then a
+    12-seed confirm; when a band is unreachable, report the edge and leave the mission (owner accepted for lb_04/exp_02).
+  - `ai match --ledger` has no kill attribution and counts transforms (tenders, rigs, Command Ship) as losses; read loss rates with that in mind.
 - Session 20 lessons: (1) a single fixed-seed bot walk is not a balance measure: the campaign walks flip with the seed; judge a mission-tier
   by wins over 12 seeds (scratch/s20-ash-diag S20Sweep, ~2 h for all 45 on the 2-CPU box). (2) To split a rules effect, run the variants
   separately (ash damage only vs path cost only) before tuning. (3) Another session may land on main at any time: fetch main before opening

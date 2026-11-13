@@ -444,3 +444,19 @@ The owner pasted a Hugging Face token into chat; not stored anywhere, he was ask
 back to uv/winget); SFX setup missed torchsde (fixed). Helper cloud smoke (16 games/cell, figures from the helper report, not in the repo) after the picks: Auth v Exp Rust Belt 7-8, Glass Coast 8-8,
 Auth v Dir 8-6; LB mirror income ratio 0.78 before the OrientedOffset fix, 0.95 in its trial run.
 **Next session should:** see HANDOFF (read the laptop series s22after / s22mopup / campaign sweep, then SFX picks, PR to main).
+
+## Session 23 · 2026-11-13 (s22 series read, Rocket Truck splash, Left Behind cap, lore, nightly CI, mop-up, draws, Grapeshot, tier 5, Directorate)
+**Goal:** owner: read the s22 laptop runs and fix what they show; then (round 4) answer Q-79..Q-83 and act on them while the laptop re-ran s23after.
+**Done:** rounds 1-3 (PRs #77-#79 on main): Rocket Truck splash back to 1 (D-229), `ai match --ledger`, Left Behind tier-3 cap until 4800 (D-230),
+Left Behind and Expedition lore approved (D-231), rolling nightly pre-release (D-232), mop-up trigger loosened (D-233). Round 4 (PR #80,
+land/s23-r4): owner answers (D-234); draws diagnosed as mined-out maps (`ai match --econ 1`, docs/balance/s23_draws.md) and four AI endgame fixes
+(D-235; cloud draws 12/56 -> 8/56); Expedition tier-2 hover anti-infantry unit Grapeshot (exp_canister_skiff: data, AI use vs infantry-heavy
+enemies, Glide Tank upgrades, archive entry; D-236/D-237) and its art pilot (approved, waiting for the owner's LFS push); campaign tier 5 raised
+in six missions to 4-9/12 (D-238); tut_01 instructor voice slots for the Kokoro audition (M10-24); s23after read: Directorate too strong after
+D-229, diagnosis and probes (docs/balance/s23_directorate.md), Rocket Truck cost 950 (D-239).
+**Decisions:** D-229..D-239.
+**Helpers:** round 4: 8 packages (draws, endgame, skiff, art pilot, two tier-5, tutorial voice, Directorate diagnosis); Sonnet except the voice (Haiku).
+**Problems / notes:** add_repo failed for the first hours (no gh/LFS/push); a server restart stopped three helpers mid-run (resumed; orphaned test
+processes killed); two tier-5 helpers had not committed; PNG LFS objects copied to the owner's PC were re-encoded (shipped in a zip instead);
+lb_04 and exp_02 tier 5 are all-or-nothing for the bot and stay 12/12 (owner).
+**Next session should:** see HANDOFF (PR #80, laptop campaign sweep and s23d series, Grapeshot art merge, next balance round).
