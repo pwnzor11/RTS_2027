@@ -298,8 +298,9 @@ Source: docs/reviews/2026-11-07_owner_campaign_feedback.md. Audit: docs/reviews/
   Left Behind mirror Mountains L1 start corner -25 % income. First the owner's A/B (tools/measure/run_s21_ab.ps1), then tune (docs/balance/s21_after_series.md)
 
 ## M14 · Field Manual (D-206, docs/design/19_field_manual.md)
-- [x] M13-20 Mop-up AI fixed and on in skirmish (s22, D-224); laptop on/off series pending
+- [x] M13-20 Mop-up AI fixed and on in skirmish (s22, D-224); s23: s22mopup showed no effect; trigger loosened (D-233); the draws traced are attrition stalemates, not beaten enemies
 - [x] M13-21 Radio lines for every unannounced or announced enemy wave (s22, D-226 point 5)
+- [ ] M13-23 Late-game draws: both sides exhausted at tier 1 with no income, the last defended building outlasts the attacker (s23 trace, D-233)
 - [~] M13-22 Left Behind v Expedition after s22 (LB wins 48-9 Rust Belt, 37-16 Glass Coast): loss tables, then a matchup-specific change (s23 probes: docs/balance/s23_probes.md) s23: `ai match --ledger`; LB tier-3 cap until 4800 (D-230); laptop s23after pending
 - [x] M14-01 Pilot: 9 pages, generator scripts (tools/booklet), design 19 (s18)
 - [x] M14-02 Hero render mode and laptop script (tools/booklet/render_heroes.ps1) (s18); s19: module cache fix (LB structures)

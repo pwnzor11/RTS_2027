@@ -1717,3 +1717,12 @@ a spoiler-adjacent clause about hulls coming home was cut. **Status:** owner dec
 **Decision:** CI no longer uploads the game folder or the zip/installer as artifacts (they filled the Actions storage quota). A push to main
 replaces the `nightly` pre-release (zip + installer, created by the workflow's own token); pull requests upload no game; versioned releases
 still come from release.yml on v* tags. **Status:** owner decision (session 23, "add it to this batch").
+
+### D-233 · 2026-11-13 · Mop-up trigger loosened (M13-20, s22mopup)
+**Decision:** MopupPlan FromTick 9000 -> 6000, RatioPct 400 -> 250, HoldTicks 1200 -> 600, and a new MinArmyNoEnemy = 4: when no enemy army was
+seen in the long window, four units are enough (the 8-unit / 3000-credit minimums still apply while the enemy has an army). **Why:** the owner's
+s22mopup series (balance_runs\s22mopup, 9 rows x 64 games on/off) showed no draw reduction and no change in end ticks; the trigger almost never
+fired. Owner picked "loosen and re-measure". **Finding:** cloud probes (Directorate 3v3 and 4v3, 32 games on/off) still change little: the
+draws traced are attrition stalemates (both sides back at tier 1, the attacker's last 4-5 units die against the defended last building, no
+income to rebuild), which a mop-up cannot break. **Status:** kept on (no harm to 4v3: 40 % / 40 %); the next lever for draws is the late-game
+economy and rebuild behaviour, not the mop-up. Measured again in the laptop s23after run.

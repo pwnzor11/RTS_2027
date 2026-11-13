@@ -1,15 +1,16 @@
 # Handoff: Session 23 (in progress) — s23after re-run, mop-up and campaign reads, then the booklet build
-Last commit: `docs: checkpoint session 23, round 2` on branch `integ-s23b` (PR to main). Check `git log -1 origin/main`.
-Where things stand: session 22 (PR #76) and session 23 round 1 (PR #77, Rocket Truck splash back to 1, D-229) are on main. Round 2 (this PR):
+Last commit: `docs: checkpoint session 23, round 3` on branch `integ-s23c` (PR to main). Check `git log -1 origin/main`.
+Where things stand: session 22 (PR #76) and session 23 round 1 (PR #77, Rocket Truck splash back to 1, D-229) are on main. Round 2 (PR #78):
 `ai match --ledger` (units made/lost per type); Left Behind tier-3 swarm cap until tick 4800 (D-230, M13-22); Left Behind and Expedition lore
 approved after a fact-check (D-231, M14-04 done); booklet dry build ok with coverage check (M14-05 prep); CI publishes a rolling `nightly`
-pre-release instead of game artifacts (D-232). Decisions up to D-232. Open questions: Q-73 (par times).
+pre-release instead of game artifacts (D-232; worked on main, nightly has the zip and installer). Round 3: s22mopup read (no effect), mop-up
+trigger loosened (D-233); draws traced to attrition stalemates (M13-23). Decisions up to D-233. Open questions: Q-73 (par times).
 
 ## Start here (shown to the user as the plan; nothing starts until they say go)
 1. Read the laptop re-run `balance_runs\s23after\s23after_summary.md` (run_s19_after.ps1 -OutName s23after on main after this PR) against
    s22after; target 45-55 % per cross-faction pair, start share under 60 %. Watch LB v Exp, Exp v LB (Glass Coast), Auth v LB, Dir v LB.
-2. Read `balance_runs\s22mopup\s22mopup_summary.md` (keep mop-up only if it cuts draws without hurting 4v3) and the campaign sweep.
-3. After the first push to main with D-232: check Releases shows `nightly` with the zip and installer.
+2. Read the campaign sweep `balance_runs\s21sweep\s21sweep_summary.md` (main after PR #77: Rocket Truck splash back to the s21 value).
+3. M13-23: late-game stalemates (both sides exhausted); look at income and rebuild behaviour after tick 20000 before any rule change.
 4. M14-05: the full ~108-page booklet build (tools/booklet), once the numbers settle. SFX picks (owner).
 
 ## Half-finished work
