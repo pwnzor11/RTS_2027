@@ -146,6 +146,35 @@ workshop. Let the Authority come to you, and fight where the wind and the wrecks
 count before an action and again after it, aloud, from the flag. Spend scrap before you spend people. Never say goodbye
 to a crew; say you will see them at the next fire, and then be there.
 
+## 6d. Expedition lore expansion (DRAFT for sign-off, session 23)
+Same shape again: four entries for the Expedition chapter, in-universe voice, no campaign secrets (premise only; nothing from
+the leaders' private papers, nothing about the first relief fleet beyond what the Archive prints, and nothing about how the
+voyage ends). Each entry adds an angle the Archive pages do not carry: a custom, a day ashore, a working rule, doctrine.
+Vocabulary from docs/lore and the Archive: the Concordat, the Second Relief Fleet, the ministries, telex, the Anchorage, the
+Billet, the Landing Beacon, the Plotting Room, hull numbers, the roster.
+
+**Telex Discipline.** Every order in the fleet is typed, in capitals, in short sentences, and ends with the words TELEX ENDS,
+so that the operator at the far end, who is tired, damp and often seasick, knows the message is whole. A fleet telex opens with
+the call-sign of the sender and says one thing at a time. Officers who speak at
+length over the fleet circuit are said to be "talking to the sea". Cadets are taught that a telex is the one document
+aboard that can be read twice, by two people who disagree about it.
+
+**Hull Numbers.** A hull is not armed until it is painted. The number goes on first, in white, by a rating chosen from the
+crew, and the name follows in a smaller hand beneath it. Then the thin ribbon of the home port's colour is laid along the
+rail, though no hull in this fleet has been within a month of that port. Painters sign the inside of the hatch coaming where
+nobody will look. The fleet says a ship with a clean number comes home, and every sailor knows exactly how much that is
+worth.
+
+**Ship's Time.** Ashore, the fleet keeps ship's time. Bells are struck, watches are stood and the Billet serves soup at six
+whether or not the sun has been seen. The first thing a Landing Beacon does when it is lit is give the camp a clock to set
+by, and the Plotting Room corrects its own against the Anchorage. The crews do not trust a field that has no tide. They say
+that the only way to be sure of the hour on this continent is to carry it ashore with you.
+
+**Doctrine for Commanders** (issued by the Ministry of Passage, countersigned by the Office of Return). Light the Beacon before
+you land the guns. Hold the Anchorage; it is the fleet's only road home. Fire on the spotter's word and not before. Fight at
+range, break off early and mend what you can recover. A hull is a month of home production, and a crew is more than that, so
+spend fuel before you spend either. Report losses in tonnage and in names. The fleet was sent to return, and it returns with the tide.
+
 ## 7. Questions (answered in session 18, see the top)
 - Q-B1 Art: sprite plates for every unit plus about 10 hero renders (recommended), or a full hero render of every unit and building
   (about 150 renders on the PC, many hours)?
