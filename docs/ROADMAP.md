@@ -302,6 +302,9 @@ Source: docs/reviews/2026-11-07_owner_campaign_feedback.md. Audit: docs/reviews/
 - [x] M13-21 Radio lines for every unannounced or announced enemy wave (s22, D-226 point 5)
 - [ ] M13-23 Late-game draws: both sides exhausted at tier 1 with no income, the last defended building outlasts the attacker (s23 trace, D-233)
 - [~] M13-22 Left Behind v Expedition after s22 (LB wins 48-9 Rust Belt, 37-16 Glass Coast): loss tables, then a matchup-specific change (s23 probes: docs/balance/s23_probes.md) s23: `ai match --ledger`; LB tier-3 cap until 4800 (D-230); laptop s23after pending
+- [ ] M13-24 Campaign tier 5 raised where the bot wins 12/12 (D-234 point 4): band 4-9 of 12, tier-5 data only; laptop sweep to confirm
+- [ ] M13-25 Expedition tier-2 hover canister skiff (D-234 point 2, Q-80): data + AI use with a borrowed sprite; name, art pilot and lore wait on Q-84
+- [ ] M10-24 Tutorial instructor voice (D-234 point 5): tut_01 voice slots, Kokoro audition on the laptop, owner picks, batch
 - [x] M14-01 Pilot: 9 pages, generator scripts (tools/booklet), design 19 (s18)
 - [x] M14-02 Hero render mode and laptop script (tools/booklet/render_heroes.ps1) (s18); s19: module cache fix (LB structures)
 - [x] M14-07 Pilot PDF and previews in docs/field_manual/, linked from the README (s19)

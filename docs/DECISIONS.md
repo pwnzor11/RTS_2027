@@ -1726,3 +1726,14 @@ fired. Owner picked "loosen and re-measure". **Finding:** cloud probes (Director
 draws traced are attrition stalemates (both sides back at tier 1, the attacker's last 4-5 units die against the defended last building, no
 income to rebuild), which a mop-up cannot break. **Status:** kept on (no harm to 4v3: 40 % / 40 %); the next lever for draws is the late-game
 economy and rebuild behaviour, not the mop-up. Measured again in the laptop s23after run.
+
+### D-234 · 2026-11-13 · Owner answers Q-79..Q-83 (session 23, round 4)
+**Decision:** (1) Q-79: late-game draws are diagnosed first (income and rebuild after tick 20 000, M13-23); no rule change until the findings.
+(2) Q-80: the Expedition gets a new tier-2 ground anti-infantry unit, a hover canister skiff (M13-25): data and AI use first with a borrowed
+sprite and starting stats tagged "(tune) s23 Q-80"; name, art and lore wait on Q-84. Rejected: Barrage Lander to tier 2 (data only), a grenadier
+marine, Gunships at AI tier 3. (3) Q-81: the full Field Manual build (M14-05) waits until balance settles. (4) Q-82: raise campaign tier 5 now in
+the missions where the bot wins 12/12 (nine in the s21sweep laptop run: auth_02, auth_04, dir_01-04, lb_04, exp_02, exp_04), target band 4-9 of
+12 bot wins, tier-5 data only, no visible timer cuts (M13-24); all-or-nothing missions that cannot reach the band stay as they are and are
+reported. (5) Q-83: the tutorial instructor gets a Kokoro voice picked by audition on the laptop; unit barks after the SFX picks.
+**Why:** owner's choices (session 23: "1- a 2- c 3- wait on balance 4- raise now 5- sounds good"; Q-80 shape and the Q-82 band by question).
+**Status:** owner decision.
