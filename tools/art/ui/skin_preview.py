@@ -94,7 +94,7 @@ def main(argv):
     # minimap at the bottom
     ms = iw
     my = H - pad - ms
-    d.rectangle([ix + 10, my + 10, ix + ms - 11, my + ms - 11], fill=(30, 36, 28, 255))
+    d.rectangle([ix + 4, my + 4, ix + ms - 5, my + ms - 5], fill=(30, 36, 28, 255))
     canvas.alpha_composite(piece("minimap_frame", (ms, ms)), (ix, my))
     # selection card and a loose panel in the map area
     cx, cy = 40, 470

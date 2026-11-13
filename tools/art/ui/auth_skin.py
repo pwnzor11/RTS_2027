@@ -149,7 +149,7 @@ def render_all(out, samples):
         if kind == "disabled":
             steel = material("steel", base, metallic=0.2, rough=0.7)
         sunk = kind in ("pressed",)
-        bev = 1.2 * U
+        bev = 2.0 * U
         if kind == "back":
             box("base", 0, 0, 0, W, H, 3 * U, steel, bev)
             # vertical stamped seams and horizontal rails
@@ -178,7 +178,7 @@ def render_all(out, samples):
             box("lipR", W / 2 - s - lip / 2, 0, 0, lip, H - 2 * s, t + 1.5 * U, dark, 0.3 * U)
             for sx in (-1, 1):
                 for sy in (-1, 1):
-                    rivet(sx * (W / 2 - s / 2), sy * (H / 2 - s / 2), t, 1.7 * U, rivm)
+                    rivet(sx * (W / 2 - s / 2), sy * (H / 2 - s / 2), t, 2.6 * U, rivm)
             return W, H
         m = sl[0] * U if sl else 6 * U
         thick = 3 * U
@@ -187,13 +187,13 @@ def render_all(out, samples):
         inset = m * 0.55
         field = dark if sunk else (light if kind in ("hover", "tab_active") else steel)
         fz = thick if not sunk else thick - 0.01
-        box("field", 0, 0, fz, W - 2 * inset, H - 2 * inset, (1.2 if not sunk else 0.2) * U, field, 0.5 * U)
+        box("field", 0, 0, fz, W - 2 * inset, H - 2 * inset, (2.0 if not sunk else 0.2) * U, field, 0.7 * U)
         if kind in ("panel", "card"):
             # extra stamped border groove
             g = m * 0.9
             box("groove", 0, 0, thick, W - 2 * g, H - 2 * g, 0.6 * U, dark, 0.2 * U)
             box("field2", 0, 0, thick, W - 2 * g - 3 * U, H - 2 * g - 3 * U, 1.3 * U, steel, 0.4 * U)
-        rr = (1.6 if kind in ("panel", "card") else 1.2) * U
+        rr = (2.4 if kind in ("panel", "card") else 1.8) * U
         off = m * 0.5 + (0.5 * U if kind not in ("panel", "card") else 0)
         z = thick + 0.3 * U
         for sx in (-1, 1):
@@ -217,7 +217,7 @@ def render_all(out, samples):
         sc.camera = cam
         # sun upper left (D-184 sun rule), shallow so bevels read
         sun_d = bpy.data.lights.new("sun", "SUN")
-        sun_d.energy = 3.2
+        sun_d.energy = 4.5
         sun_d.angle = 0.1
         sun = bpy.data.objects.new("sun", sun_d)
         sc.collection.objects.link(sun)
@@ -226,7 +226,7 @@ def render_all(out, samples):
         w_ = bpy.data.worlds.new("w")
         w_.use_nodes = True
         w_.node_tree.nodes["Background"].inputs["Color"].default_value = (0.55, 0.57, 0.5, 1)
-        w_.node_tree.nodes["Background"].inputs["Strength"].default_value = 0.8
+        w_.node_tree.nodes["Background"].inputs["Strength"].default_value = 0.5
         sc.world = w_
         p = os.path.join(tmp, name + "_raw.png")
         sc.render.filepath = p
