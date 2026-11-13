@@ -124,12 +124,15 @@ public static class AiCommands
         sb.AppendLine();
         sb.AppendLine($"{seeds} seeds x 2 (start positions swapped), {ticks} ticks per game, map size {size}{(choice is null ? "" : $", {choice.Value.BiomeName} layout {choice.Value.Layout}")}.");
         sb.AppendLine();
-        sb.AppendLine("| Games | A wins | B wins | Draws | Avg end tick | A win % |");
-        sb.AppendLine("|---:|---:|---:|---:|---:|---:|");
-        sb.AppendLine($"| {t.Games} | {t.AWins} | {t.BWins} | {t.Draws} | {t.AvgEndTick} | {Pct(t.AWins, t.Games)} |");
+        sb.AppendLine("| Games | A wins | B wins | Draws | Avg end tick | A win % | AdjW | AdjL | AdjEven |");
+        sb.AppendLine("|---:|---:|---:|---:|---:|---:|---:|---:|---:|");
+        sb.AppendLine($"| {t.Games} | {t.AWins} | {t.BWins} | {t.Draws} | {t.AvgEndTick} | {Pct(t.AWins, t.Games)} | {t.AdjWins} | {t.AdjLosses} | {t.AdjEven} |");
         sb.AppendLine().AppendLine($"Wins by start corner: start 0 (4,4) {t.StartWins[0]}, start 1 (mirror) {t.StartWins[1]}. Wins by player slot: slot 0 {t.SlotWins[0]}, slot 1 {t.SlotWins[1]}.");
         if (t.Draws > 0)
+        {
             sb.AppendLine().AppendLine($"Draw tiebreak (remaining health): A ahead in {t.DrawsAAhead}, B ahead in {t.DrawsBAhead}, level in {t.Draws - t.DrawsAAhead - t.DrawsBAhead}.");
+            sb.AppendLine().AppendLine("Adjudicated draws (time limit, score = army + structures without walls + credits; a side wins at 10 % more, else even): AdjW A ahead, AdjL B ahead, AdjEven level. The W-L-D columns are unchanged.");
+        }
         return sb.ToString();
     }
 
@@ -859,12 +862,14 @@ public static class AiCommands
                 }
                 int slotOfA = aInSlot0 ? 0 : 1;
                 // S24 (M13-23, D-242): a draw at the tick limit gets a score adjudication; it stays a draw in the W-L-D columns
+                string adjNote = "";
                 if (r.Winner == -1 && r.EndTick >= ticks && endSim is not null)
                 {
                     long scoreA = MatchAdjudication.ScoreOf(endSim, (byte)slotOfA, w.Rules).Total;
                     long scoreB = MatchAdjudication.ScoreOf(endSim, (byte)(1 - slotOfA), w.Rules).Total;
                     int adj = MatchAdjudication.Adjudicate(scoreA, scoreB);
                     if (adj == 0) tally.AdjWins++; else if (adj == 1) tally.AdjLosses++; else tally.AdjEven++;
+                    adjNote = $" adj={MatchAdjudication.Label(adj)} score={scoreA}/{scoreB}";
                 }
                 if (lbx is not null)
                     for (int side = 0; side < 2; side++)
@@ -875,7 +880,7 @@ public static class AiCommands
                 if (verbose)
                 {
                     string result = r.Winner == 0 ? "A wins" : r.Winner == 1 ? "B wins" : "draw";
-                    Console.WriteLine($"seed {s} game {g + 1} (A in slot {(aInSlot0 ? 0 : 1)}, A at start {(aInSlot0 != swapSlots ? 0 : 1)}): {result} at tick {r.EndTick} (health A {r.ValueA}, B {r.ValueB})");
+                    Console.WriteLine($"seed {s} game {g + 1} (A in slot {(aInSlot0 ? 0 : 1)}, A at start {(aInSlot0 != swapSlots ? 0 : 1)}): {result} at tick {r.EndTick} (health A {r.ValueA}, B {r.ValueB}){adjNote}");
                     if (start == AiStartMode.Economy)
                         Console.WriteLine($"    A: {Stats(r.StatsA)} | B: {Stats(r.StatsB)}");
                     if (expo || _income)
