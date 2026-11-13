@@ -24,6 +24,6 @@ public sealed partial class Simulation
         (posture, focus, target, mix) = DirectiveCodec.Clamp(posture, focus, target, mix, c.Player, Setup.PlayerCount, _players.IsNeutral);
         CellCoord cell = c.Cell;
         if (!InMap(cell) || _vision.VisionAt(c.Player, cell) == 0) cell = Directive.NoCell;
-        _directives.Store(c.Player, posture, focus, target, mix, expand, cell, Tick);
+        _directives.Store(c.Player, posture, focus, target, mix, expand, cell, Tick, DirectiveCodec.IsStrong(c.Arg));
     }
 }
