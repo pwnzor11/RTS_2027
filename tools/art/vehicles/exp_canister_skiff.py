@@ -16,7 +16,7 @@ import exp_common as E
 
 ID = "exp_canister_skiff"
 TITLE = "Expedition Grapeshot (canister skiff)"
-K = 0.72          # whole-model scale: smaller than the Glide Tank (0.86) and the Hoverlander (0.84)
+K = 0.78          # whole-model scale: smaller than the Glide Tank (0.86) and the Hoverlander (0.84); 0.72 read too small at 1x
 LIFT = 0.14       # hull floats this far above the skirt
 CANVAS = 128
 TARGET = (0.0, 0.0, 0.8 * K)
@@ -86,9 +86,9 @@ def build(S0, state, k, n):
     box("breech", (0.44, 0.5, 0.3), (px, py + 0.4, pz + 0.24), "chrome2", 0.07)
     cyl("barrel", 0.13, 0.55, (px, py + 0.85, pz + 0.24), "chrome", "Y", 14)               # stubby
     cyl("collar", 0.17, 0.1, (px, py + 1.08, pz + 0.24), "copper", "Y", 14)
-    cone("flare", 0.14, 0.34, 0.42, (px, py + 1.3, pz + 0.24), "chrome", 18, rot=(-90, 0, 0))   # wide flared canister mouth
-    cyl("mouthring", 0.36, 0.05, (px, py + 1.52, pz + 0.24), "copper", "Y", 18)
-    cyl("mouth", 0.28, 0.04, (px, py + 1.54, pz + 0.24), "dark", "Y", 16)
+    cone("flare", 0.15, 0.38, 0.46, (px, py + 1.3, pz + 0.24), "chrome", 18, rot=(-90, 0, 0))   # wide flared canister mouth
+    cyl("mouthring", 0.4, 0.05, (px, py + 1.52, pz + 0.24), "copper", "Y", 18)
+    cyl("mouth", 0.32, 0.04, (px, py + 1.54, pz + 0.24), "dark", "Y", 16)
     cyl("mag", 0.2, 0.32, (px + 0.5, py + 0.1, pz + 0.3), "orange", "Y", 14)               # side canister magazine drum
     cyl("magband", 0.215, 0.06, (px + 0.5, py + 0.1, pz + 0.3), "copper", "Y", 14)
     box("shield", (0.5, 0.05, 0.26), (px, py - 0.5, pz + 0.38), "glass", 0.0, rot=(-15, 0, 0))
