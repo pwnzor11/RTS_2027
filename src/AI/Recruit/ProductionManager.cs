@@ -35,6 +35,10 @@ internal sealed class ProductionManager
     /// <summary>M4-12: while true only a wanted harvester is bought (the no-income rescue is saving up).</summary>
     public bool Hold { get; set; }
 
+    /// <summary>s23 D-235 (A): set by the AI each decision from <see cref="EconomyRescue.Broke"/> (income stalled, the map is mined out): the unit lanes
+    /// keep no reserve, buy the dearest affordable unit and give up a stalled front item for its refund.</summary>
+    public bool Broke { get; set; }
+
     /// <summary>M5-02: the commander's directive as knob values, set by the AI each decision (<see cref="DirectiveBias.Plain"/> = none).</summary>
     public DirectiveBias Bias { get; set; } = DirectiveBias.Plain;
 
@@ -90,8 +94,9 @@ internal sealed class ProductionManager
             Queued++;
             _tier!.HarvesterOrdered();
         }
-        _noIncome = k.Harvesters.Count == 0 && !holdForHarvester;
+        _noIncome = k.Harvesters.Count == 0 && !holdForHarvester || Broke;   // s23 D-235 (A): a mined-out side spends down like one with no harvester
         if (Hold) return;   // M4-12: the no-income rescue is saving for a harvester
+        if (Broke && CancelStalledUnit(k, sink)) return;
 
         // Vehicles first; infantry leaves the next vehicle's price in reserve so cheap riflemen cannot starve the factory.
         // No scraper left (it is never replaced): there is no income to wait for, so nothing is held back.
@@ -105,6 +110,25 @@ internal sealed class ProductionManager
         else if (Bias.Mix == DirectiveCodec.MixVehicles) vehicleReserve += MixLaneHold;
         Lane(k, sink, reserve + vehicleReserve, ProductionCategory.Infantry, _inf, ref _infIdx, t => rules.Infantry[t].Cost);
     }
+
+    /// <summary>s23 D-235 (A): when Broke, the front item of a unit lane that is stalled for lack of money is cancelled (the refund buys a cheaper unit
+    /// next decision). True when a Cancel was issued.</summary>
+    private static bool CancelStalledUnit(RecruitKnowledge k, ICommandSink sink)
+    {
+        foreach (ProductionCategory cat in BrokeLanes)
+        {
+            QueueView q = k.Queue(cat);
+            if (q.Items.Count == 0 || !IsMoneyStall(q.Items[0])) continue;
+            sink.Issue(CommandKind.Cancel, EntityId.None, (ActorKind)(int)cat);   // Arg = category, front item
+            return true;
+        }
+        return false;
+    }
+
+    /// <summary>s23 D-235 (A): a front item that is stalled and not yet paid in full (a finished item waiting for an exit cell, or one on hold, is not a money stall).</summary>
+    internal static bool IsMoneyStall(QueueItemView it) => it.Stalled && !it.Held && it.ProgressPermille < 1000;
+
+    private static readonly ProductionCategory[] BrokeLanes = [ProductionCategory.Vehicle, ProductionCategory.Infantry, ProductionCategory.Aircraft];
 
     private void Lane(RecruitKnowledge k, ICommandSink sink, int reserve, ProductionCategory cat, int[] mix, ref int idx,
         Func<int, int> cost)
