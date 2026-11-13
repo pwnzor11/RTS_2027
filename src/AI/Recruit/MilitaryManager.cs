@@ -396,7 +396,7 @@ internal sealed class MilitaryManager
     private static ulong Key(ViewActor a) => ((ulong)a.Id.Index << 16) | a.Id.Generation | ((ulong)(int)a.Kind << 48);
 
     /// <summary>M4-12 (diagnostics): the wave phase (0 gather, 1 stage, 2 assault), the scout-route stop and the last goal picked.</summary>
-    public string Debug => $"{(int)_phase}:{_scoutIdx}/{_scoutRoute.Count}@{(_scoutRoute.Count > 0 ? _scoutRoute[Math.Min(_scoutIdx, _scoutRoute.Count - 1)] : default)} goal {_lastGoal} stage {_stage} roster {_roster.Count} siege {(SiegeActive ? "wave" : _siegeOn ? "on" : "off")} need {_siegeNeed} waves {SiegeWaves} holds {SiegeHolds} tgt {(_siegeHave ? _siegeCell.ToString() : "-")} mopup {(MopupOn ? "on" : "off")} beaten {_beatenSince} mops {Mopups} found {_sweepFound} kb {_targetBuildings.Count}";
+    public string Debug => $"{(int)_phase}:{_scoutIdx}/{_scoutRoute.Count}@{(_scoutRoute.Count > 0 ? _scoutRoute[Math.Min(_scoutIdx, _scoutRoute.Count - 1)] : default)} goal {_lastGoal} stage {_stage} roster {_roster.Count} siege {(SiegeActive ? "wave" : _siegeOn ? "on" : "off")} need {_siegeNeed} waves {SiegeWaves} holds {SiegeHolds} tgt {(_siegeHave ? _siegeCell.ToString() : "-")} mopup {(MopupOn ? "on" : "off")} beaten {_beatenSince} mops {Mopups} nstall {NearStalls} found {_sweepFound} kb {_targetBuildings.Count}";
 
     /// <summary>M4-12: set by the AI while its income has stalled (map mined out): waves go out at <see cref="DesperateWave"/> units.</summary>
     public bool Broke { get; set; }
