@@ -81,6 +81,8 @@ CANDIDATES = {
     "leader_exp_kell":         ["af_bella", "af_nova", "af_alloy", "af_heart", "bf_isabella", "af_aoede", "af_jessica", "af_kore"],
     # loud rough man
     "leader_lb_calloway_ross": ["am_fenrir", "am_onyx", "am_michael", "am_adam", "am_echo", "am_eric", "bm_lewis", "am_santa"],
+    # unnamed tutorial instructor, calm and patient; the text gives no gender, so the list mixes men and women
+    "leader_tut_instructor":   ["bm_george", "bf_emma", "af_heart", "am_michael", "bm_daniel", "af_sarah", "bf_isabella", "am_adam"],
 }
 
 # A real line of each leader to audition with (falls back to the leader's line nearest 110 characters).
@@ -94,6 +96,7 @@ AUDITION_KEYS = {
     "leader_exp_roque": "e2.radio.roque",
     "leader_exp_kell": "e3.radio.kell",
     "leader_lb_calloway_ross": "lb2.radio.start",
+    "leader_tut_instructor": "intro",
 }
 
 

@@ -35,7 +35,7 @@ function OnInit()
   Mission.Timer("sunrise", 16000, SunriseFires, "a4.timer.sunrise")
   -- The Device belongs to the built-in AI: hold its real charge back to the timer so the AI cannot fire it before the scripted moment (S19 MIS-10).
   Actor.DelayCharge("device", 16000)
-  Trigger.AfterDelay(Pick({ 3600, 3300, 3000, 2400, 2400 }), HomeRaidOne)
+  Trigger.AfterDelay(Pick({ 3600, 3300, 3000, 2400, 2200 }), HomeRaidOne)
   Trigger.AfterDelay(Pick({ 7000, 6800, 6500, 4000, 3200 }), HomeRaidTwo)
   AddDefenders()
   Trigger.Every(20, CheckCrossing)
@@ -53,7 +53,7 @@ end
 function AddDefenders()
   local d = Mission.Difficulty()
   if d < 4 then return end
-  local types = Squad(Pick({ 0, 0, 0, 5, 8 }), Pick({ 0, 0, 0, 2, 4 }), Pick({ 0, 0, 0, 0, 2 }))
+  local types = Squad(Pick({ 0, 0, 0, 5, 12 }), Pick({ 0, 0, 0, 2, 6 }), Pick({ 0, 0, 0, 0, 3 }))
   Reinforce.Zone(1, types, "device_site", Map.Center("device_site"))
 end
 
@@ -70,14 +70,14 @@ function HomeRaidOne()
   if state.over then return end
   Media.MessageKey("a4.raid1")
   Dialogue.Say(SPEAKER, SPEAKER, "a4.radio.raid1")
-  Reinforce.Zone(1, Squad(Pick({ 4, 5, 7, 9, 11 }), Pick({ 0, 1, 2, 2, 3 }), 0), "spawn_w", Map.Center("home"))
+  Reinforce.Zone(1, Squad(Pick({ 4, 5, 7, 9, 18 }), Pick({ 0, 1, 2, 2, 5 }), 0), "spawn_w", Map.Center("home"))
 end
 
 function HomeRaidTwo()
   if state.over then return end
   Media.MessageKey("a4.raid2")
   Dialogue.Say(SPEAKER, SPEAKER, "a4.radio.raid2")
-  Reinforce.Zone(1, Squad(Pick({ 5, 6, 8, 10, 12 }), Pick({ 1, 2, 3, 3, 4 }), Pick({ 0, 0, 1, 2, 3 })), "spawn_w", Map.Center("home"))
+  Reinforce.Zone(1, Squad(Pick({ 5, 6, 8, 10, 16 }), Pick({ 1, 2, 3, 3, 6 }), Pick({ 0, 0, 1, 2, 5 })), "spawn_w", Map.Center("home"))
 end
 
 function CheckCrossing()

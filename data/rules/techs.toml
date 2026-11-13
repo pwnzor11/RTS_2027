@@ -378,6 +378,13 @@ attr = "rate_of_fire"
 value = 850
 
 [[effect]]
+id = "exp_fx_vacuum_cores_canister_gun"   # s23 D-237
+op = "mul"
+target = "weapon:exp_canister_gun"
+attr = "rate_of_fire"
+value = 850
+
+[[effect]]
 id = "exp_fx_vacuum_cores_barrage_rockets"
 op = "mul"
 target = "weapon:exp_barrage_rockets"
@@ -409,6 +416,13 @@ value = 1150
 id = "exp_fx_composite_glide_tank"
 op = "mul"
 target = "exp_glide_tank"
+attr = "max_health"
+value = 1150
+
+[[effect]]
+id = "exp_fx_composite_canister_skiff"   # s23 D-237: Grapeshot gets the hover upgrades
+op = "mul"
+target = "exp_canister_skiff"
 attr = "max_health"
 value = 1150
 
@@ -535,6 +549,13 @@ value = 800
 id = "exp_fx_veteran_drill_glide_tank"
 op = "mul"
 target = "exp_glide_tank"
+attr = "vet_threshold_permille"
+value = 800
+
+[[effect]]
+id = "exp_fx_veteran_drill_canister_skiff"   # s23 D-237
+op = "mul"
+target = "exp_canister_skiff"
 attr = "vet_threshold_permille"
 value = 800
 

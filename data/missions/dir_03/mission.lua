@@ -78,7 +78,7 @@ end
 
 -- Relief columns, by tier. Rifles; a jeep from tier 4. Column one goes to pad alpha, column two to pad beta.
 function ColumnSize()
-  local sizes = { 2, 3, 3, 4, 5 }
+  local sizes = { 2, 3, 3, 4, 11 }
   return sizes[Mission.Difficulty()]
 end
 

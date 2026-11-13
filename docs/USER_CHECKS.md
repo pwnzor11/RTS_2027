@@ -478,3 +478,15 @@ Back up `%APPDATA%\RTS_2027` first (D-220: old development saves and replays may
 - **Balance:** Expedition shipments pay 1400 (was 2000); the Directorate Rocket Truck has no splash; Bulwark 500 HP / 900; Howitzer hits harder;
   the Dirigible moves twice as fast; Left Behind Harpoon wagons and posts shoot aircraft; Refinery Rig 700; tutorial starts with 4500.
 - **Wall art:** Authority wall/gate, Directorate bunker wall and Left Behind scrap wall show panels, grime and props in game and in the booklet heroes.
+
+## Session 23 · Grapeshot, draws fix, tier 5, Rocket Truck cost (D-229..D-239)
+Back up `%APPDATA%\RTS_2027` first (D-220). Branch `land/s23-r4` until PR #80 lands on main.
+- **Grapeshot:** skirmish as the Expedition: build the Hover Yard and the Plotting Room (the tier-2 gate). The vehicle list shows the Grapeshot (650 credits) greyed until the Plotting Room stands. Until the art
+  branch lands it looks like a Glide Tank; afterwards an open skiff with a flared gun. Against massed infantry its shots hit several at once.
+  The Archive (Units, Expedition) has a "Grapeshot" entry with the field note "GRAPESHOT 6 // SWEEP THE INFANTRY AT CLOSE RANGE. LEAVE THE TANKS ALONE. TELEX ENDS."
+- **Expedition AI:** play Left Behind v an Expedition AI (tier 2+) and send infantry: the AI builds 2-3 Grapeshots once 40 % or more of the enemy units it sees are infantry.
+- **Rocket Truck:** costs 950 (was 800).
+- **Tier 5:** auth_02, auth_04, dir_01, dir_02, dir_03, dir_04 at tier 5 send larger enemy waves (visible timers unchanged).
+- **Endgame AI:** wreck an AI's army in a long skirmish and keep a building: an AI wave that stands near your base attacks your nearest building
+  instead of waiting, and a broke AI spends its last credits on units.
+- **Instructor voice:** after the audition and voice batch, tut_01's instructor lines are spoken; before that the tutorial stays silent (no error).

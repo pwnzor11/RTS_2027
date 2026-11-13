@@ -1726,3 +1726,46 @@ fired. Owner picked "loosen and re-measure". **Finding:** cloud probes (Director
 draws traced are attrition stalemates (both sides back at tier 1, the attacker's last 4-5 units die against the defended last building, no
 income to rebuild), which a mop-up cannot break. **Status:** kept on (no harm to 4v3: 40 % / 40 %); the next lever for draws is the late-game
 economy and rebuild behaviour, not the mop-up. Measured again in the laptop s23after run.
+
+### D-234 · 2026-11-13 · Owner answers Q-79..Q-83 (session 23, round 4)
+**Decision:** (1) Q-79: late-game draws are diagnosed first (income and rebuild after tick 20 000, M13-23); no rule change until the findings.
+(2) Q-80: the Expedition gets a new tier-2 ground anti-infantry unit, a hover canister skiff (M13-25): data and AI use first with a borrowed
+sprite and starting stats tagged "(tune) s23 Q-80"; name, art and lore wait on Q-84. Rejected: Barrage Lander to tier 2 (data only), a grenadier
+marine, Gunships at AI tier 3. (3) Q-81: the full Field Manual build (M14-05) waits until balance settles. (4) Q-82: raise campaign tier 5 now in
+the missions where the bot wins 12/12 (nine in the s21sweep laptop run: auth_02, auth_04, dir_01-04, lb_04, exp_02, exp_04), target band 4-9 of
+12 bot wins, tier-5 data only, no visible timer cuts (M13-24); all-or-nothing missions that cannot reach the band stay as they are and are
+reported. (5) Q-83: the tutorial instructor gets a Kokoro voice picked by audition on the laptop; unit barks after the SFX picks.
+**Why:** owner's choices (session 23: "1- a 2- c 3- wait on balance 4- raise now 5- sounds good"; Q-80 shape and the Q-82 band by question).
+**Status:** owner decision.
+
+### D-235 · 2026-11-13 · Late-game draws: AI endgame fixes first (M13-23)
+**Decision:** the draws are mined-out maps, not a rebuild failure (docs/balance/s23_draws.md). Fix them in the AI only: (A) spend down when
+Broke (dearest affordable unit, cancel stalled lanes for the refund); (B3) never sell a hatch/tunnel while units are entering it; (B2) a wave
+standing 1 500+ ticks within 8 cells of a known enemy structure attacks the nearest one; (B1) MopupDue uses MinArmyNoEnemy when no enemy army
+was seen. Re-measure the Authority mirror, Directorate mirror and Authority v Directorate. **Alternatives:** ore regrowth or richer fields
+(sim rule; later, only if A+B fall short); adjudicating at the time limit (fallback); leave as is. **Status:** owner decision (session 23).
+
+### D-236 · 2026-11-13 · The canister skiff is the Grapeshot (Q-84, M13-25)
+**Decision:** the Expedition's tier-2 hover canister skiff is named **Grapeshot** (id stays `exp_canister_skiff`). Archive text is a plain
+function line until the Field Manual lore pass. Art pilot approved now: one render and sprite sheet, contact sheet to the owner before commit,
+pushed by the owner with an LFS bundle (D-084). Cloud smoke (16 games/cell, tier 3): Exp v LB Rust Belt 4-10 -> 10-5, LB v Exp Glass Coast
+3-10 -> 2-12, Auth v Exp 7-9 -> 7-9, Dir v Exp 14-2 -> 10-5; to confirm on the laptop. **Status:** owner decision (session 23).
+
+### D-237 · 2026-11-13 · Grapeshot gets the Glide Tank's upgrades
+**Decision:** `exp_canister_skiff` joins the same Expedition upgrades as the Glide Tank: composite hulls (max health x1.15), vacuum cores
+(canister gun rate of fire x0.85) and veteran drill (veterancy threshold x0.8). **Status:** owner decision (session 23, "same upgrades").
+
+### D-238 · 2026-11-13 · Campaign tier 5 raised in six missions; lb_04, exp_02, exp_04 stay at 12/12 (M13-24)
+**Decision:** tier-5 data only (D-234 point 4, band 4-9 of 12 bot wins), 12-seed sweeps in the cloud: auth_02 8/12 (bigger, earlier hidden
+raids), auth_04 6/12 (device guard and home raids larger, raid 1 at 2200), dir_01 7/12 (waves of 10 riflemen), dir_02 6/12 (escort jeeps 5,
+reserve 10), dir_03 5/12 (relief column 11 riflemen), dir_04 5/12 (waves 11/11/12 riflemen, visible timers unchanged). Tier 3 stays 12/12.
+The tier-5 fixed-seed walks of auth_04, dir_02 and dir_03 now assert a clean run only (D-221). lb_04 and exp_02 are all-or-nothing for the bot
+(12/12 at one unit less, 0/6 at one unit more); the owner chose to leave them, and exp_04 (not attempted), at 12/12.
+**Note:** the band is narrow and the sweeps are steep (auth_02: 5/6 -> 0/6 on ~15 % more units); later sim or bot changes will move these.
+**Status:** owner decision (session 23); laptop campaign sweep to confirm.
+
+### D-239 · 2026-11-13 · Rocket Truck cost 800 -> 950 (M13-26)
+**Decision:** `dir_rocket_truck` cost 800 -> 950 (splash stays 1, damage stays 90). **Why:** s23after showed the Directorate too strong after
+D-229 (Auth v Dir 16-37, Dir v Exp 55-8); cloud probes (docs/balance/s23_directorate.md): cost 950 moved Auth v Dir 3-9 -> 7-8 and Dir v Exp
+10-5 -> 6-6 with Dir v LB 7-5 -> 6-4. **Alternatives:** damage 90 -> 75 (Auth v Dir only); both (overshoots Dir v LB 2-11); Conscript cost
+(made it worse); leave the truck and fix AI responses. **Status:** owner decision (session 23); confirm with the laptop series s23d.

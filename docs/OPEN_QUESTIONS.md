@@ -9,19 +9,13 @@ file cited after each question. Recommendations are the lead's, from the researc
   No losses. Options: **(a) the owner gives a par time per mission (recommended; the bot walk-through times in docs/balance are a starting point)**;
   (b) par = the bot's tier-3 win time + 50 %; (c) no par medal.
 
-- 🟡 **Q-79 · 2026-11-13 · Late-game draws (M13-23).** Traced draws are attrition stalemates (both bots at tier 1, no income, last defended
-  building outlasts the attacker). **(a) diagnose income/rebuild after tick 20 000 first (recommended)** / (b) score victory at the time limit / (c) leave.
-- 🟡 **Q-80 · 2026-11-13 · Expedition has no area-damage unit at AI tier 3.** **(a) wait for s23after (recommended)** / (b) Expedition-only air
-  (Gunships) from tier 3 / (c) a tier-2 ground anti-infantry option (new data, maybe art).
-- 🟡 **Q-81 · 2026-11-13 · Field Manual full build (M14-05).** When: **(a) now, rebuild after s23after (recommended)** / (b) after balance settles.
-  Accents for Directorate / Left Behind / Expedition: **(a) Claude proposes swatches, owner picks (recommended)** / (b) owner names them.
-  New Part II/IV/V text: **(a) all at once, reviewed in the PDF (recommended)** / (b) section by section.
-- ⚪ **Q-82 · 2026-11-13 · Campaign tier 5 wins 12/12 for the bot in eight missions.** **(a) wait for the owner's play-test (recommended)** /
-  (b) raise those eight now (tier-5 data only).
-- ⚪ **Q-83 · 2026-11-13 · Missing voices.** Tutorial instructor: **(a) Kokoro, preset by audition (recommended)** / (b) silent. Unit barks:
-  **(a) after SFX (recommended)** / (b) next session.
+
 
 ## Answered
+- Q-84 · 2026-11-13 · Owner: name Grapeshot; art pilot now → D-236.
+- Q-79..Q-83 · 2026-11-13 · Owner: Q-79 (a) diagnose late-game income/rebuild first; Q-80 (c) a new tier-2 ground anti-infantry unit, shape:
+  hover canister skiff; Q-81 (b) booklet waits until balance settles; Q-82 (b) raise tier 5 now, band 4-9 of 12; Q-83 (a) instructor on Kokoro by
+  audition, unit barks after SFX → D-234.
 - Q-78 · 2026-11-12 · Owner: all four assumed items confirmed (Kokoro CC0, mop-up constants for now, Harpoon anti-air, horn/sonar) → D-228.
 - Q-77 · 2026-11-12 · Owner: take all recommendations (docs/balance/s22_balance_options.md); the A/B ruled out D-219 → D-223.
   Q-76 · 2026-11-12 · Owner (a), "go ahead and fix this" → D-225.

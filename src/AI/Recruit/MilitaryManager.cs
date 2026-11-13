@@ -231,7 +231,43 @@ internal sealed class MilitaryManager
     /// <summary>S22: a mop-up wave may leave now (the thresholds and the strength gate do not apply; siege hold, retreat cooldown and scripted holds still do).</summary>
     private bool MopupDue(int tick, int n, int guard) =>
         MopupOn && _beatenSince >= 0 && tick - _beatenSince >= MopupPlan.HoldTicks && tick - _threatTick >= MopupPlan.CalmTicks
-        && n >= MopupPlan.MinArmy + guard && tick - _lastWave >= MopupPlan.GapTicks;
+        && n >= MopupPlan.MinUnits(EnemyValueSeen) + guard && tick - _lastWave >= MopupPlan.GapTicks;   // s23 D-235 (B1): the same minimum as Beaten()
+
+    // ---- s23 D-235 (B2): a wave that stands next to an enemy structure and attacks nothing is told to attack it ----
+    private int _idleNearSince = -1;
+
+    /// <summary>s23 D-235 (B2): waves that were given an explicit Attack on a structure after standing idle next to it.</summary>
+    public int NearStalls { get; private set; }
+
+    /// <summary>Ticks a wave must stand without a target within <see cref="NearStructureCells"/> of an enemy structure before it is ordered to attack it.</summary>
+    public const int NearStallTicks = 1500;   // (tune) s23 D-235
+
+    /// <summary>Cells (Chebyshev, from the wave's centre) within which a known enemy structure counts as "next to the wave".</summary>
+    public const int NearStructureCells = 8;   // (tune) s23 D-235
+
+    /// <summary>
+    /// s23 D-235 (B2): true while the roster has had no target for <see cref="NearStallTicks"/> within <see cref="NearStructureCells"/> of a known
+    /// enemy structure. The sim's AcquireTarget only takes buildings inside weapon range (D-219), so units that stopped a few cells short never fire.
+    /// </summary>
+    private bool NearStall(RecruitKnowledge k, List<ViewActor> known)
+    {
+        int tick = k.View.Tick;
+        long x = 0, y = 0; int c = 0; bool fighting = false;
+        foreach (ViewActor a in k.Army)
+        {
+            if (!_roster.Contains(Key(a)) || a.Underground) continue;
+            if (!a.Target.IsNone) fighting = true;
+            x += a.Position.X; y += a.Position.Y; c++;
+        }
+        bool near = false;
+        if (c > 0 && !fighting && !_hookWaveActive)
+        {
+            near = SiegePlan.NearStructure(k.Rules, known, new CellCoord((int)(x / c / 256), (int)(y / c / 256)), NearStructureCells);
+        }
+        if (!near) { _idleNearSince = -1; return false; }
+        if (_idleNearSince < 0) _idleNearSince = tick;
+        return tick - _idleNearSince >= NearStallTicks;
+    }
 
     // ---- S15 siege (Q-64, D-174): decisions in SiegePlan, memory here (saved at the end of Snapshot) ----
     private bool _siegeOn, _siegeWave, _siegeHave;
@@ -360,7 +396,7 @@ internal sealed class MilitaryManager
     private static ulong Key(ViewActor a) => ((ulong)a.Id.Index << 16) | a.Id.Generation | ((ulong)(int)a.Kind << 48);
 
     /// <summary>M4-12 (diagnostics): the wave phase (0 gather, 1 stage, 2 assault), the scout-route stop and the last goal picked.</summary>
-    public string Debug => $"{(int)_phase}:{_scoutIdx}/{_scoutRoute.Count}@{(_scoutRoute.Count > 0 ? _scoutRoute[Math.Min(_scoutIdx, _scoutRoute.Count - 1)] : default)} goal {_lastGoal} stage {_stage} roster {_roster.Count} siege {(SiegeActive ? "wave" : _siegeOn ? "on" : "off")} need {_siegeNeed} waves {SiegeWaves} holds {SiegeHolds} tgt {(_siegeHave ? _siegeCell.ToString() : "-")} mopup {(MopupOn ? "on" : "off")} beaten {_beatenSince} mops {Mopups} found {_sweepFound} kb {_targetBuildings.Count}";
+    public string Debug => $"{(int)_phase}:{_scoutIdx}/{_scoutRoute.Count}@{(_scoutRoute.Count > 0 ? _scoutRoute[Math.Min(_scoutIdx, _scoutRoute.Count - 1)] : default)} goal {_lastGoal} stage {_stage} roster {_roster.Count} siege {(SiegeActive ? "wave" : _siegeOn ? "on" : "off")} need {_siegeNeed} waves {SiegeWaves} holds {SiegeHolds} tgt {(_siegeHave ? _siegeCell.ToString() : "-")} mopup {(MopupOn ? "on" : "off")} beaten {_beatenSince} mops {Mopups} nstall {NearStalls} found {_sweepFound} kb {_targetBuildings.Count}";
 
     /// <summary>M4-12: set by the AI while its income has stalled (map mined out): waves go out at <see cref="DesperateWave"/> units.</summary>
     public bool Broke { get; set; }
@@ -577,7 +613,17 @@ internal sealed class MilitaryManager
 
         if (Options.Respond) Unstick(k, sink);
         // S15: a siege wave attacks one building at a time, outside-in; long-range units shoot it from where the defences cannot reach back
+        bool nearStall = _phase == Phase.Assault && Options.Respond && NearStall(k, knownEnemyBuildings);   // s23 D-235 (B2)
+        if (_phase != Phase.Assault) _idleNearSince = -1;
+        if (nearStall && !_siegeWave) { _siegeWave = true; _siegeHave = false; _siegeIssued = default; }   // the siege code picks the nearest structure
         ViewActor? siegeTarget = _siegeWave && _phase == Phase.Assault ? SiegeTarget(k, knownEnemyBuildings) : null;
+        if (nearStall && siegeTarget is ViewActor nst && !nst.Ghost)
+        {
+            NearStalls++;
+            foreach (ViewActor a in k.Army)
+                if (!a.Underground && _roster.Contains(Key(a)) && a.Target != nst.Id) sink.Issue(CommandKind.Attack, a.Id, a.Kind, default, nst.Ref);
+            _idleNearSince = -1;   // the units now carry a target; a failed order is tried again after another full wait
+        }
         CellCoord goal = _phase == Phase.Assault ? (siegeTarget is ViewActor stg ? stg.Cell : PickGoal(k, knownEnemyBuildings)) : default;
         if (siegeTarget is not null) _lastGoal = goal;
         bool retarget = siegeTarget is ViewActor stn && stn.Id != _siegeIssued;
@@ -1019,6 +1065,7 @@ internal sealed class MilitaryManager
         foreach (int v in _stamp) w.Write(v);
         w.Write(_siegeWave); w.Write(_siegeHave); w.Write(_failedWaves); w.Write(SiegeWaves); w.Write(SiegeHolds);   // S15
         AiSnapshot.WriteId(w, _siegeId); AiSnapshot.WriteId(w, _siegeIssued); AiSnapshot.WriteCell(w, _siegeCell);
+        w.Write(_idleNearSince); w.Write(NearStalls);   // s23 D-235 (layout 7 and later)
     }
 
     /// <summary>M8-06: writes the scripted-wave memory (only called when <see cref="HookDirty"/>).</summary>
@@ -1045,7 +1092,7 @@ internal sealed class MilitaryManager
     }
 
     /// <summary>M3-21: reads what <see cref="Snapshot"/> wrote. Call after Start.</summary>
-    internal void Restore(BinaryReader r, bool mopup = true)
+    internal void Restore(BinaryReader r, bool mopup = true, bool endgame = true)
     {
         _nextThreshold = r.ReadInt32(); _nextInterval = r.ReadInt32(); _bias = r.ReadInt32();
         AiSnapshot.ReadMap(r, _lastHealth, br => br.ReadInt32());
@@ -1076,6 +1123,7 @@ internal sealed class MilitaryManager
         }
         _siegeWave = r.ReadBoolean(); _siegeHave = r.ReadBoolean(); _failedWaves = r.ReadInt32(); SiegeWaves = r.ReadInt32(); SiegeHolds = r.ReadInt32();   // S15
         _siegeId = AiSnapshot.ReadId(r); _siegeIssued = AiSnapshot.ReadId(r); _siegeCell = AiSnapshot.ReadCell(r);
+        if (endgame) { _idleNearSince = r.ReadInt32(); NearStalls = r.ReadInt32(); }   // s23 D-235
         if (_scoutRoute.Count > 0) _scoutIdx = Math.Clamp(_scoutIdx, 0, _scoutRoute.Count - 1);
     }
 }

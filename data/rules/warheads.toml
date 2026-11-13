@@ -179,6 +179,11 @@ versus = [25, 85, 100, 60, 40, 90, 70, 0]
 splash = 0
 hits_allies = false
 
+[exp_canister]   # (tune) s23 Q-80: canister skiff shot: splash, great vs infantry, poor vs hulls and structures (ship columns as exp_small_arms)
+versus = [100, 40, 15, 10, 5, 70, 30, 0]
+splash = 1
+hits_allies = false
+
 [exp_aa_missile]   # (tune) Sparker, SAM, jet missiles, Carrier AA: against aircraft
 versus = [60, 100, 80, 40, 40, 80, 60, 0]
 splash = 0

@@ -65,9 +65,9 @@ end
 -- Waves cross the river to the hatch. Counts follow the tier; conscripts lose to riflemen, so the waves are small.
 function WaveSizes()
   local sizes = {
-    { 2, 3, 3, 4, 5 },
-    { 2, 3, 4, 4, 5 },
-    { 3, 3, 4, 5, 6 },
+    { 2, 3, 3, 4, 11 },
+    { 2, 3, 4, 4, 11 },
+    { 3, 3, 4, 5, 12 },
   }
   return sizes[state.waves + 1][Mission.Difficulty()]
 end

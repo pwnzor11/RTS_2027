@@ -58,6 +58,9 @@ internal static class MopupPlan
     /// <summary>A block not in view for this many ticks counts as stale and is swept again.</summary>
     public const int RevisitTicks = 6000;   // (tune) s22
 
+    /// <summary>s23 D-235 (B1): fewest army units a mop-up wave takes (before the home guard): the same minimum <see cref="Beaten"/> uses.</summary>
+    public static int MinUnits(int enemyValueSeen) => enemyValueSeen <= 0 ? MinArmyNoEnemy : MinArmy;
+
     /// <summary>True when the enemy counts as beaten right now: our army is a real force (value and units) and worth at least <see cref="RatioPct"/>
     /// percent of the biggest enemy army seen lately (0 seen = nothing left to fight with). Integer maths.</summary>
     public static bool Beaten(int ownValue, int enemyValueSeen, int armyUnits) =>

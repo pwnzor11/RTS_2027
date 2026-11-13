@@ -57,6 +57,18 @@ fields without stopping. It will outpace any tracked tank on the continent and l
 unlock = "open"
 
 [[entry]]
+id = "exp_canister_skiff"
+category = "Unit"
+faction = "expedition"
+title = "Grapeshot"
+subtitle = "Hover anti-infantry"
+field_note = "GRAPESHOT 6 // SWEEP THE INFANTRY AT CLOSE RANGE. LEAVE THE TANKS ALONE. TELEX ENDS."   # s23 draft, owner to approve (D-236)
+body = '''
+A light hover skiff with a canister gun that sweeps massed infantry at short range. Thin armour: keep it away from tanks.
+'''
+unlock = "open"
+
+[[entry]]
 id = "exp_landing_craft"
 category = "Unit"
 faction = "expedition"

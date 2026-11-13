@@ -371,6 +371,7 @@ exp_diver_charge = "silent"
 exp_pathfinder_rifle = "sniper"
 exp_ironbound_pod = "rocket"
 exp_glide_cannon = "cannon"
+exp_canister_gun = "cannon"   # s23 Q-80: reuses the glide tank key
 exp_sparker_missile = "sam"
 exp_barrage_rockets = "salvo"
 exp_launch_charge = "depth_charge"
