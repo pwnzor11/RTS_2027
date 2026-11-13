@@ -91,7 +91,9 @@ public sealed partial class Simulation
                 if (resist >= 1000) continue;
                 int dmg = level * rr.DamagePermille / 1000 * (1000 - Math.Max(0, resist)) / 1000;
                 if (dmg < 1) dmg = 1;   // ASSUMED (M3-05): a non-immune actor on a hot cell always takes at least 1
+                bool wasAlive = store.Health[i] > 0;
                 store.Health[i] -= dmg;
+                if (wasAlive && store.Health[i] <= 0) _killers.Add((new ActorRef(kind, store.Slots.IdOf(i)), FxEvent.RadiationCause));   // M10-14b
             }
         }
     }

@@ -26,7 +26,9 @@ public sealed partial class Simulation
             int resist = RulesOf(_infantry.Player[i]).Infantry[_infantry.TypeIndex[i]].RadResistPermille;
             if (resist >= 1000) continue;
             int dmg = rr.AshfallDamage * (1000 - Math.Max(0, resist)) / 1000;
+            bool wasAlive = _infantry.Health[i] > 0;
             _infantry.Health[i] -= dmg < 1 ? 1 : dmg;
+            if (wasAlive && _infantry.Health[i] <= 0) _killers.Add((new ActorRef(ActorKind.Infantry, _infantry.Slots.IdOf(i)), FxEvent.RadiationCause));   // M10-14b
         }
     }
 
