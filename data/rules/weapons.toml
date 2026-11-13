@@ -403,6 +403,14 @@ rate_of_fire = 38  # (tune)
 projectile_speed = 96
 warhead = "exp_guided_ap"
 
+[exp_canister_gun]   # PENDING Q-84: canister skiff, short-range splash against massed infantry (Q-80, s23)
+damage = 14  # (tune) s23 Q-80
+range = 896  # (tune) s23 Q-80
+min_range = 0
+rate_of_fire = 18  # (tune) s23 Q-80
+projectile_speed = 96
+warhead = "exp_canister"
+
 [exp_sparker_missile]   # Sparker: hover anti-air
 damage = 40  # (tune)
 range = 1536  # (tune)

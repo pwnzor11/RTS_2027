@@ -29,7 +29,7 @@ public sealed class ExpeditionDataTests
         Assert.All(s.Buildings.Where(b => b.Id.StartsWith("exp_", StringComparison.Ordinal)), b => Assert.Equal(Faction.Expedition, b.Faction));
         Assert.All(s.Upgrades.Where(u => u.Id.StartsWith("exp_", StringComparison.Ordinal)), u => Assert.Equal(Faction.Expedition, u.Faction));
         Assert.Equal(5, s.Infantry.Count(i => i.Faction == Faction.Expedition));
-        Assert.Equal(21, s.Vehicles.Count(v => v.Faction == Faction.Expedition));   // 7 hover/land + 9 ships + 5 aircraft
+        Assert.Equal(22, s.Vehicles.Count(v => v.Faction == Faction.Expedition));   // 8 hover/land (s23 Q-80: +1 canister skiff) + 9 ships + 5 aircraft
         Assert.Equal(20, s.Buildings.Count(b => b.Faction == Faction.Expedition));
         Assert.Equal(8, s.Upgrades.Count(u => u.Faction == Faction.Expedition));
         Assert.DoesNotContain(s.Vehicles, v => v.Id is "exp_skyfreighter");

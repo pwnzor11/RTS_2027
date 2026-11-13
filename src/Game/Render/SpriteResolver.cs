@@ -16,7 +16,7 @@ public sealed class SpriteResolver
 {
     /// <summary>Vehicle rules ids that map to a different sprite id. Rules id on the left, sprite id on the right.</summary>
     public static readonly IReadOnlyDictionary<string, string> VehicleAliases =
-        new Dictionary<string, string>(StringComparer.Ordinal) { ["auth_tank"] = "tank_v2" };
+        new Dictionary<string, string>(StringComparer.Ordinal) { ["auth_tank"] = "tank_v2", ["exp_canister_skiff"] = "exp_glide_tank" };   // s23 Q-80: the skiff borrows the Glide Tank art until the owner commissions its own
 
     private readonly SpriteLibrary? _library;
     private readonly SpriteSheet? _legacyVehicle;

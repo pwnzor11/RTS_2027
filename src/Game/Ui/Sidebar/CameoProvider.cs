@@ -14,7 +14,7 @@ namespace Rts.Game.Ui.Sidebar;
 public sealed class CameoProvider : IDisposable
 {
     // Rules id -> sprite id, where the art kept an earlier name.
-    private static readonly Dictionary<string, string> Aliases = new(StringComparer.Ordinal) { ["auth_tank"] = "tank_v2" };
+    private static readonly Dictionary<string, string> Aliases = new(StringComparer.Ordinal) { ["auth_tank"] = "tank_v2", ["exp_canister_skiff"] = "exp_glide_tank" };   // s23 Q-80: shares the Glide Tank art
 
     private readonly GraphicsDevice _device;
     private readonly SpriteLibrary? _library;

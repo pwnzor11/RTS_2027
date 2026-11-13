@@ -14,15 +14,16 @@ namespace Rts.AI.Recruit;
 /// <param name="SubHunt">Launches are bought and sent against enemy submarines.</param>
 /// <param name="SortieBuildings">A full carrier also launches against the nearest known enemy building, not only against enemies near the carrier.</param>
 /// <param name="WaveBonus">Extra units every land wave waits for.</param>
-internal readonly record struct ExpeditionPlan(int Fleet, int Cruisers, int Carriers, int Escorts, bool SubHunt, bool SortieBuildings, int WaveBonus)
+/// <param name="Skiffs">s23 (Q-80): Canister Skiffs (the tier-2 anti-infantry hover) wanted alive while the enemy fields mostly infantry (0 = none).</param>
+internal readonly record struct ExpeditionPlan(int Fleet, int Cruisers, int Carriers, int Escorts, bool SubHunt, bool SortieBuildings, int WaveBonus, int Skiffs)
 {
     private static readonly ExpeditionPlan[] Tiers =
     [
-        new(Fleet: 3, Cruisers: 0, Carriers: 0, Escorts: 1, SubHunt: false, SortieBuildings: false, WaveBonus: 2),   // tier 1
-        new(Fleet: 3, Cruisers: 0, Carriers: 0, Escorts: 1, SubHunt: true, SortieBuildings: false, WaveBonus: 2),    // tier 2
-        new(Fleet: 3, Cruisers: 0, Carriers: 0, Escorts: 1, SubHunt: true, SortieBuildings: false, WaveBonus: 2),    // tier 3
-        new(Fleet: 5, Cruisers: 1, Carriers: 1, Escorts: 2, SubHunt: true, SortieBuildings: true, WaveBonus: 2),     // tier 4
-        new(Fleet: 5, Cruisers: 2, Carriers: 1, Escorts: 2, SubHunt: true, SortieBuildings: true, WaveBonus: 2),     // tier 5
+        new(Fleet: 3, Cruisers: 0, Carriers: 0, Escorts: 1, SubHunt: false, SortieBuildings: false, WaveBonus: 2, Skiffs: 0),   // tier 1
+        new(Fleet: 3, Cruisers: 0, Carriers: 0, Escorts: 1, SubHunt: true, SortieBuildings: false, WaveBonus: 2, Skiffs: 2),    // tier 2
+        new(Fleet: 3, Cruisers: 0, Carriers: 0, Escorts: 1, SubHunt: true, SortieBuildings: false, WaveBonus: 2, Skiffs: 2),    // tier 3
+        new(Fleet: 5, Cruisers: 1, Carriers: 1, Escorts: 2, SubHunt: true, SortieBuildings: true, WaveBonus: 2, Skiffs: 3),     // tier 4
+        new(Fleet: 5, Cruisers: 2, Carriers: 1, Escorts: 2, SubHunt: true, SortieBuildings: true, WaveBonus: 2, Skiffs: 3),     // tier 5
     ];
 
     /// <summary>The plan for a profile tier 1..5 (clamped).</summary>
