@@ -294,12 +294,13 @@ Source: docs/reviews/2026-11-07_owner_campaign_feedback.md. Audit: docs/reviews/
 - [x] M13-17 Campaign retune with the ashfall hazard on (missions run with ash damage and ash path cost off until then, D-211). s20: 12-seed win-rate baseline with ash on for all 45 mission-tiers (docs/balance/s20_campaign_seed_baseline.md, D-218 point 8); auth_01 tier 5 winnable accepted (D-217). s21: ash on in missions, D-219 stance rule, retunes of auth_01/03/04, dir_04, lb_03, exp_03 to the Q-75 targets (D-222, docs/balance/s21_campaign_retune.md); confirmed by the owner's laptop sweep on 8b418a2e: all 45 mission-tiers on target, identical to the cloud numbers
 - [x] M13-18 Follow-ups found in s19 (s20, D-218): placement lane outlet toward the map centre (S18-AI-NEW-3) done; ClearBuildArea removed; LB Still Rigs 14-18 and used, no cap; LB yard dock livelock not reproduced in the open, dead-end corridor case open (Q-76); walls/gates hero renders re-angled to 3/4 (M14) open s22: dead-end dock lane done (Q-76, D-225); walls/gates heroes re-angled and detailed (D-227)
 
-- [~] M13-19 Skirmish balance after s21 (Q-77): Authority behind (v Directorate 17-36, v Expedition 12-51), Glass Coast Expedition 43-55 v 7-14, s22: diagnosis docs/balance/s22_balance_options.md, all picks applied (D-223); laptop series pending
+- [~] M13-19 Skirmish balance after s21 (Q-77): Authority behind (v Directorate 17-36, v Expedition 12-51), Glass Coast Expedition 43-55 v 7-14, s22: diagnosis docs/balance/s22_balance_options.md, all picks applied (D-223); laptop series pending s23: s22after read; Rocket Truck splash back to 1 (D-229); laptop re-run s23after pending
   Left Behind mirror Mountains L1 start corner -25 % income. First the owner's A/B (tools/measure/run_s21_ab.ps1), then tune (docs/balance/s21_after_series.md)
 
 ## M14 · Field Manual (D-206, docs/design/19_field_manual.md)
 - [x] M13-20 Mop-up AI fixed and on in skirmish (s22, D-224); laptop on/off series pending
 - [x] M13-21 Radio lines for every unannounced or announced enemy wave (s22, D-226 point 5)
+- [ ] M13-22 Left Behind v Expedition after s22 (LB wins 48-9 Rust Belt, 37-16 Glass Coast): loss tables, then a matchup-specific change (s23 probes: docs/balance/s23_probes.md)
 - [x] M14-01 Pilot: 9 pages, generator scripts (tools/booklet), design 19 (s18)
 - [x] M14-02 Hero render mode and laptop script (tools/booklet/render_heroes.ps1) (s18); s19: module cache fix (LB structures)
 - [x] M14-07 Pilot PDF and previews in docs/field_manual/, linked from the README (s19)
