@@ -98,12 +98,12 @@ end
 
 -- Response strength follows the difficulty tier (1..5); tier 3 is the base. Never cash or vision (D-061).
 function WaveOneSize()
-  local sizes = { 1, 2, 2, 3, 4 }
+  local sizes = { 1, 2, 2, 3, 10 }
   return sizes[Mission.Difficulty()]
 end
 
 function WaveTwoSize()
-  local sizes = { 2, 2, 3, 4, 5 }
+  local sizes = { 2, 2, 3, 4, 10 }
   return sizes[Mission.Difficulty()]
 end
 
