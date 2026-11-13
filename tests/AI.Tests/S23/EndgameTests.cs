@@ -22,4 +22,42 @@ public sealed class EndgameTests
         new(new EntityId((ushort)slot, 1), ActorKind.Infantry, 0, Relation.Self, 0, new CellCoord(5, 5), new LeptonCoord(5 * 256, 5 * 256),
             100, 100, m, false, EntityId.None, false, 1, 1);
 
+    [Fact]
+    public void B1_TheMopupMinimumIsFourWithNoEnemyArmySeenAndEightOtherwise()
+    {
+        Assert.Equal(MopupPlan.MinArmyNoEnemy, MopupPlan.MinUnits(0));
+        Assert.Equal(MopupPlan.MinArmy, MopupPlan.MinUnits(1));
+        Assert.True(MopupPlan.MinUnits(0) < MopupPlan.MinUnits(500));
+    }
+
+    [Fact]
+    public void B2_AStructureWithinEightCellsCountsAsNearButNotAGhostOrFarOne()
+    {
+        var centre = new CellCoord(10, 10);
+        var near = new List<ViewActor> { Bld(1, "dir_pillbox", 5, 5) };
+        Assert.True(SiegePlan.NearStructure(Rules, near, centre, MilitaryManager.NearStructureCells));
+        Assert.False(SiegePlan.NearStructure(Rules, new List<ViewActor> { Bld(1, "dir_pillbox", 5, 5, ghost: true) }, centre, MilitaryManager.NearStructureCells));
+        Assert.False(SiegePlan.NearStructure(Rules, new List<ViewActor> { Bld(1, "dir_pillbox", 30, 10) }, centre, MilitaryManager.NearStructureCells));
+        Assert.False(SiegePlan.NearStructure(Rules, new List<ViewActor>(), centre, MilitaryManager.NearStructureCells));
+        Assert.True(MilitaryManager.NearStallTicks >= 1500);
+    }
+
+    [Fact]
+    public void B3_TheRescueSeesUnitsWalkingToAHatch()
+    {
+        var k = new RecruitKnowledge();
+        k.Own.Add(Unit(1, MissionKind.Guard));
+        Assert.False(EconomyRescue.AnyEnteringTunnel(k));
+        k.Own.Add(Unit(2, MissionKind.EnterTunnel));
+        Assert.True(EconomyRescue.AnyEnteringTunnel(k));
+    }
+
+    [Fact]
+    public void A_OnlyAnUnpaidStalledFrontItemIsGivenUpForTheRefund()
+    {
+        Assert.True(ProductionManager.IsMoneyStall(new QueueItemView(0, 400, true)));
+        Assert.False(ProductionManager.IsMoneyStall(new QueueItemView(0, 400, false)));
+        Assert.False(ProductionManager.IsMoneyStall(new QueueItemView(0, 1000, true)));   // finished, waiting for an exit cell
+        Assert.False(ProductionManager.IsMoneyStall(new QueueItemView(0, 400, true, Held: true)));
+    }
 }

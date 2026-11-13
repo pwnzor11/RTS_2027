@@ -127,6 +127,18 @@ internal static class SiegePlan
         return n;
     }
 
+    /// <summary>s23 D-235 (B2): true when a known, seen (not ghost) enemy structure other than a wall or gate is within <paramref name="cells"/> (Chebyshev) of <paramref name="centre"/>.</summary>
+    public static bool NearStructure(SimRules rules, List<ViewActor> known, CellCoord centre, int cells)
+    {
+        foreach (ViewActor b in known)
+        {
+            BuildingType bt = rules.Buildings[b.TypeIndex];
+            if (b.Ghost || bt.Wall || bt.Gate) continue;
+            if (Cheb(centre, b.Cell) <= cells) return true;
+        }
+        return false;
+    }
+
     /// <summary>
     /// The next building the siege wave attacks, or null when none is known. Score (lower first): distance from the army in cells x 4, plus
     /// 0 for a defence, +14 for anything else, but -<see cref="ReachBonus"/> for a vital structure that no known defence covers (it is in
