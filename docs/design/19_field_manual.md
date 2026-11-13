@@ -115,7 +115,7 @@ plentiful and the Annex is not, so spend the first and guard the second. Keep a 
 without one has been known to reconsider. Bury what you cannot hold and return for it later. Report losses in the approved form.
 Report doubts in person.
 
-## 6c. Left Behind lore expansion (DRAFT for sign-off, session 23)
+## 6c. Left Behind lore expansion (approved by the owner, session 23, D-231)
 Same shape as the approved Authority and Directorate entries: four entries for the Left Behind chapter, in-universe voice, no
 campaign secrets (premise only; no mission outcomes, no quarrels inside the leadership, nothing about what happens to the caravans
 or their enemies). Each entry adds an angle the Archive pages do not carry: a custom, a day in camp, the weather, doctrine.
@@ -128,8 +128,8 @@ pause between them. A stranger who has eaten at the fire is asked for a name bef
 chalks it on the board. Nobody explains the count to outsiders. The caravans only say that a rig which has been counted has not
 been left, and that the count is what you do instead of a funeral when there is no time for one.
 
-**Making Camp.** A caravan arrives in an order. The Dune Buggy goes out to smell the place and comes back. The Tow Truck lifts a
-Packed Rig down off the road and the Mother Rig unfolds into a street. The Still Rig is turned to catch whatever rain there is,
+**Making Camp.** A caravan arrives in an order. The Dune Buggy goes out to smell the place and comes back. The Tow Truck hauls a
+Packed Rig in off the road and the Mother Rig unfolds into a street. The Still Rig is turned to catch whatever rain there is,
 because nobody works well before they have had water. Children stake the Spike Nest ring while their elders argue about the wind.
 The Scrap Wall goes up out of whatever is lying about, and if the camp will stay for the season, the Salvage Yard is laid out
 last, near the gate where the wrecks will come in.
@@ -140,30 +140,30 @@ the Authority has forms. The listeners at the Lookout Mast watch the signals; th
 read the ground; and when the Gleaners are called in from the field half full, nobody asks why. A caravan that loses an afternoon
 to weather is lucky. It has not yet lost a rig.
 
-**Doctrine for Commanders** (issued at the Gathering, in the Speaker's name). Keep the rigs together; a rig left behind is a debt,
-and the ledger remembers. Build nothing you cannot fold. Raise the Spike Nest before the wall, and the wall before the workshop.
-Let the Authority come to you, and fight where the wind and the wrecks are yours. Salvage what you break. Call the count before an
-action and again after it, aloud, from the flag. Spend scrap before you spend people. Never say goodbye to a crew; say you will
-see them at the next fire, and then be there.
+**Doctrine for Commanders** (issued at the Gathering, in the Speaker's name). Keep the rigs together; a rig cut loose is a debt,
+and the ledger remembers. Fold what you can; build the rest cheap enough to leave. Raise the Spike Nest before the wall, and the
+wall before the workshop. Let the Authority come to you, and fight where the wind and the wrecks are yours. Salvage what you
+break. Call the count before an action and again after it, aloud, from the flag. Spend scrap before you spend people. Never say
+goodbye to a crew; say you will see them at the next fire, and then be there.
 
-## 6d. Expedition lore expansion (DRAFT for sign-off, session 23)
+## 6d. Expedition lore expansion (approved by the owner, session 23, D-231)
 Same shape again: four entries for the Expedition chapter, in-universe voice, no campaign secrets (premise only; nothing from the
 leaders' private papers, nothing about the first relief fleet beyond what the Archive prints, and nothing about how the voyage
 ends). Each entry adds an angle the Archive pages do not carry: a custom, a day ashore, a working rule, doctrine. Vocabulary from
 docs/lore and the Archive: the Concordat, the Second Relief Fleet, the ministries, telex, the Anchorage, the Billet, the Landing
 Beacon, the Plotting Room, hull numbers, the roster.
 
-**Telex Discipline.** Every order in the fleet is typed, in capitals, in short sentences, and ends with the words TELEX ENDS, so
-that the operator at the far end, who is tired, damp and often seasick, knows the message is whole. A fleet telex opens with the
-call-sign of the sender and says one thing at a time, because a second thing is how a telex gets answered with a question.
-Officers who speak at length over the fleet circuit are said to be "talking to the sea". Cadets are taught that a telex is the one
-document aboard that can be read twice, by two people who disagree about it.
+**Telex Discipline.** Every order in the fleet is typed, in capitals, in short sentences, and a field telex ends with the words
+TELEX ENDS, so that the operator at the far end, who is tired, damp and often seasick, knows the message is whole. A fleet telex
+opens with RETURN WITH THE TIDE and the call-sign of the sender, and a field telex says one thing at a time, because a second
+thing is how a telex gets answered with a question. Officers who speak at length over the fleet circuit are said to be "talking to
+the sea". Cadets are taught that a telex is the one document aboard that can be read twice, by two people who disagree about it.
 
 **Hull Numbers.** A hull is not armed until it is painted. The number goes on first, in white, by a rating chosen from the crew,
 and the name follows in a smaller hand beneath it. Then the thin ribbon of the home port's colour is laid along the rail, though
 no hull in this fleet has been within a month of that port. Painters sign the inside of the hatch coaming where nobody will look,
-and the Billet keeps a tin of white paint for touching up numbers worn thin by salt. The fleet says a ship with a clean number
-comes home, and every sailor knows exactly how much that is worth.
+and the Hover Yard keeps a tin of white paint for touching up numbers worn thin by salt. The fleet says a ship with a clean number
+comes home.
 
 **Ship's Time.** Ashore, the fleet keeps ship's time. Bells are struck, watches are stood and the Billet serves soup at six
 whether or not the sun has been seen. The first thing a Landing Beacon does when it is lit is give the camp a clock to set by, and
@@ -171,10 +171,10 @@ the Plotting Room corrects its own against the Anchorage. The crews do not trust
 of one at night. They say that the only way to be sure of the hour on this continent is to carry it ashore with you.
 
 **Doctrine for Commanders** (issued by the Ministry of Passage, countersigned by the Office of Return). Light the Beacon before
-you land the guns. Hold the Anchorage; it is the fleet's only road home. Fire on the spotter's word and not before. Fight at
-range, break off early and mend what you can recover. A hull is a month of home production, and a crew is more than that, so spend
-fuel before you spend either. Report losses in tonnage and in names, and report them early, because the telex home takes longer
-than any of us. The fleet was sent to return, and it returns with the tide.
+you land the guns. Hold the Anchorage; it is the fleet's one line home. Fire on the spotter's word and not before. Fight at range,
+break off early and mend what you can recover. A hull is a month of home production, and a crew is more than that, so spend fuel
+before you spend either. Report losses in tonnage and in names, and report them early, because the telex home takes longer than
+any of us. The fleet was sent to return, and it returns with the tide.
 
 ## 7. Questions (answered in session 18, see the top)
 - Q-B1 Art: sprite plates for every unit plus about 10 hero renders (recommended), or a full hero render of every unit and building
