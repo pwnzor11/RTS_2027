@@ -11,7 +11,8 @@ never changed or reordered; running the script twice changes nothing.
 How the speaker and key are found (plain text scan of the Lua, no Lua runtime):
   - speaker: a quoted id, or a name declared in the same file as  local NAME = "leader_xxx"
   - key: a quoted literal, or a quoted prefix followed by  ..  (e.g. "lb2.radio.post" .. n): every locale key that starts with the
-    prefix and has no further dot is used. A key held in a variable (tut_01 `Say(key)`) cannot be resolved and is reported.
+    prefix and has no further dot is used. A key held in a variable (tut_01's wrapper `Say(key)`) cannot be resolved by the scan;
+    such a mission is listed by hand in EXPLICIT_KEYS, and a wrapper call missing from that list is reported.
   - a key with no text line in the locale file is reported and skipped (the game would show "[key]").
 
 Usage (from the repo root, Python 3.11+):
@@ -32,6 +33,21 @@ ROOT = os.path.abspath(os.path.join(HERE, "..", ".."))
 SAY_RE = re.compile(r'Dialogue\.Say\(\s*(?P<spk>"[^"]*"|[A-Za-z_]\w*)\s*,\s*(?P<por>"[^"]*"|[A-Za-z_]\w*)\s*,\s*'
                     r'(?P<key>"(?P<lit>[^"]*)"(?P<cat>\s*\.\.)?|[A-Za-z_]\w*)')
 CONST_RE = re.compile(r'^\s*local\s+([A-Za-z_]\w*)\s*=\s*"([^"]*)"\s*(?:--.*)?$', re.M)
+# A mission's own wrapper, e.g. tut_01's  function Say(key) Dialogue.Say("instructor", "instructor", key) end  called as Say("intro").
+# Its literal keys are checked against EXPLICIT_KEYS below; a call with a run-time suffix (Say("hint." .. StepId(n))) is a prefix.
+WRAPPER_CALL_RE = re.compile(r'(?<![.\w])Say\(\s*"(?P<lit>[^"]*)"(?P<cat>\s*\.\.)?')
+
+# Keys a mission passes to Dialogue.Say through a variable, which the scan above cannot resolve. Each entry lists the speaker (a
+# leader id in leaders.json) and every key the script can speak, written out by hand from mission.lua. The keys are checked
+# against the locale text, and a wrapper call whose key is not covered here is reported.
+EXPLICIT_KEYS = {
+    # tut_01: the instructor is unnamed on purpose (SpeakerNames shows "Instructor"); the Lua speaker id stays "instructor".
+    "tut_01": ("leader_tut_instructor", [
+        "intro", "done",
+        "step.move", "step.attack", "step.power", "step.barracks", "step.train", "step.harvest", "step.fight",
+        "hint.move", "hint.attack", "hint.power", "hint.barracks", "hint.train", "hint.harvest", "hint.fight",
+    ]),
+}
 
 
 def locale_keys(text):
@@ -54,7 +70,24 @@ def collect(mission_dir, leaders, problems):
         text_keys = [k for k, v in tomllib.load(f).items() if isinstance(v, str)]
     mission = os.path.basename(mission_dir)
     out = []
+    explicit = EXPLICIT_KEYS.get(mission)
+    if explicit:
+        spk, keys = explicit
+        if spk not in leaders:
+            problems.append(f"{mission}: EXPLICIT_KEYS speaker '{spk}' is not in leaders.json (no voice slot)")
+        for k in keys:
+            if k not in text_keys:
+                problems.append(f"{mission}: key '{k}' has no text line (skipped)")
+            else:
+                out.append((spk, k))
+        for m in WRAPPER_CALL_RE.finditer(lua):
+            lit = m.group("lit")
+            covered = any(k.startswith(lit) for k in keys) if m.group("cat") else lit in keys
+            if not covered:
+                problems.append(f"{mission}: Say(\"{lit}\") is not in EXPLICIT_KEYS (no voice slot)")
     for m in SAY_RE.finditer(lua):
+        if explicit and m.group("lit") is None:
+            continue   # a variable key, listed in EXPLICIT_KEYS above
         spk = m.group("spk")
         spk = spk.strip('"') if spk.startswith('"') else consts.get(spk)
         if spk is None:
