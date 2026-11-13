@@ -163,7 +163,8 @@ public sealed class RemainsBook
 /// <param name="Height">A building's footprint height in cells (0 for units).</param>
 /// <param name="Facing">A unit's last facing.</param>
 /// <param name="Tick">Tick of the snapshot that showed it gone.</param>
-public readonly record struct DeathRecord(RemainKind Kind, byte Player, int TypeIndex, LeptonCoord Pos, CellCoord Cell, int Width, int Height, byte Facing, int Tick);
+/// <param name="Cause">What killed it, for the soldier's death animation; <see cref="DeathCause.Unknown"/> while the sim does not report it (M10-14b).</param>
+public readonly record struct DeathRecord(RemainKind Kind, byte Player, int TypeIndex, LeptonCoord Pos, CellCoord Cell, int Width, int Height, byte Facing, int Tick, DeathCause Cause = DeathCause.Unknown);
 
 /// <summary>
 /// Finds deaths by comparing snapshots: a building or unit that was in the previous snapshot, is gone now and has a matching sim death
