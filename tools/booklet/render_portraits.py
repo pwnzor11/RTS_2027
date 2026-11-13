@@ -14,7 +14,7 @@ paint is the faction's default accent from tools/booklet/render_manifest.toml (t
 How it works: render_heroes.py's hook is reused unchanged (same builders, same recolouring, same camera angle and sun, same
 transparent film).  Only its camera framing is swapped (render_heroes.frame_camera -> portrait_camera below) and the image is
 rendered at 2 x 96 = 192 px, then box-filtered down to 96 px in premultiplied alpha (no dark fringes on the edge).
-Infantry framing: the camera is aimed at the top 38 % of the figure (helmet and shoulders) and squared to the larger of the two
+Infantry framing: the camera is aimed at the top 34 % of the figure (helmet and shoulders) and squared to the larger of the two
 extents; vehicles and buildings: the bounding box of the whole model, squared.  Missing portrait = the card is unchanged.
 """
 import argparse
@@ -30,8 +30,8 @@ import render_heroes as H  # noqa: E402
 OUT_PX = 96
 SUPERSAMPLE = 2
 PILOT_IDS = ["auth_rifleman", "auth_tank", "dir_conscript", "dir_rocket_truck"]   # one infantry and one vehicle per base faction
-BAND = 0.38        # infantry: the top fraction of the figure's height that counts as head and shoulders
-PAD = {"infantry": 0.10, "vehicle": 0.07, "building": 0.07}
+BAND = 0.34        # infantry: the top fraction of the figure's height that counts as head and shoulders
+PAD = {"infantry": 0.14, "vehicle": 0.07, "building": 0.07}
 
 
 class Portrait:
@@ -72,7 +72,11 @@ def portrait_camera(long_side, pad=None):
         world = world[world[:, 2] >= top - BAND * (top - bot)]
     p = world - origin
     xy = np.stack([p @ right, p @ up], axis=1)
-    lo, hi = xy.min(axis=0), xy.max(axis=0)
+    if Portrait.kind == "infantry":         # trimmed extents: a rifle barrel or radio whip must not decide the crop
+        lo, hi = xy.min(axis=0), xy.max(axis=0)
+        lo[0], hi[0] = np.percentile(xy[:, 0], 5), np.percentile(xy[:, 0], 95)     # (the vertical extent is the band itself)
+    else:
+        lo, hi = xy.min(axis=0), xy.max(axis=0)
     pad = PAD.get(Portrait.kind, 0.07) if pad is None else pad
     span = float((hi - lo).max()) * (1 + 2 * pad)
     centre = (lo + hi) / 2

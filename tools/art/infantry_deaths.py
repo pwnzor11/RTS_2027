@@ -16,7 +16,7 @@ DEATH_STATES = [("die_blast", 1, 8, 3), ("die_burn", 1, 8, 3), ("die_rad", 1, 8,
 DEATH_NAMES = [s[0] for s in DEATH_STATES]
 
 CHAR = (0.035, 0.03, 0.025)         # linear colour the burn blends towards
-GREEN = (0.20, 0.85, 0.12)          # linear colour the radiation blends towards
+GREEN = (0.10, 0.90, 0.05)          # linear colour the radiation blends towards
 FLAME_LEVEL = [1.0, 1.0, 1.0, 0.9, 0.7, 0.5, 0.3, 0.15]
 DISSOLVE = [0, 0, 0, 0, 0, 0, 0.35, 0.65]
 
@@ -98,7 +98,7 @@ def death_pose(orig, state, step, n):
             q = orig("die", min(k, 5), 6)
             p.update(q)
             p["flash"] = False
-        p["_tint"] = (GREEN, 0.18 + 0.52 * t)
+        p["_tint"] = (GREEN, 0.30 + 0.55 * t)
         p["_dissolve"] = DISSOLVE[k]
         return p
     raise KeyError(state)
