@@ -52,6 +52,9 @@ internal sealed class TierPlanner
     /// <summary>Percent (0..100) of the enemy units seen recently that are heavily armoured (0 until any were seen).</summary>
     public int HeavyShare { get; private set; }
 
+    /// <summary>s23 (Q-80): smoothed percent (0..100) of the enemy mobile units seen recently that are infantry (0 until any were seen).</summary>
+    public int InfantryShare { get; private set; }
+
     /// <summary>True once any enemy unit was seen.</summary>
     public bool SeenEnemy { get; private set; }
 
@@ -113,13 +116,14 @@ internal sealed class TierPlanner
             Behind = TechHoldEnabled && _p.UseUpgrades && (long)_enemyPeak * 100 > (long)own * (100 + BehindMarginPct);
         }
         Array.Clear(_cur);
-        int seen = 0;
+        int seen = 0, seenInf = 0;
         foreach (ViewActor e in k.Visible)
         {
             if (e.Relation != Relation.Enemy || !e.IsMobile) continue;
             ArmorClass ac = e.Kind == ActorKind.Vehicle ? rules.Vehicles[e.TypeIndex].Armor : rules.Infantry[e.TypeIndex].Armor;
             _cur[(int)ac]++;
             seen++;
+            if (e.Kind == ActorKind.Infantry) seenInf++;
             if (e.Kind == ActorKind.Vehicle && rules.Vehicles[e.TypeIndex].Locomotion == Locomotion.Air) SeenEnemyAir = true;
             if (e.Kind == ActorKind.Vehicle && rules.Vehicles[e.TypeIndex].HarvestCapacity > 0) Remember(e, k.View.Tick);
         }
@@ -134,6 +138,7 @@ internal sealed class TierPlanner
                 if (a == (int)ArmorClass.Heavy) heavy += _armor[a];
             }
             HeavyShare = all == 0 ? 0 : heavy * 100 / all;
+            InfantryShare = (InfantryShare * 3 + seenInf * 100 / seen) / 4;   // s23 (Q-80): quick to follow a swarm
         }
 
         Array.Clear(_defArmor);
@@ -412,7 +417,7 @@ internal sealed class TierPlanner
     {
         w.Write(_armor.Length); foreach (int v in _armor) w.Write(v);
         w.Write(_defArmor.Length); foreach (int v in _defArmor) w.Write(v);
-        w.Write(_defRange); w.Write(DefenceCount); w.Write(HeavyShare);
+        w.Write(_defRange); w.Write(DefenceCount); w.Write(HeavyShare); w.Write(InfantryShare);
         w.Write(SeenEnemy); w.Write(SeenEnemyAir); w.Write(HarvestersReplaced); w.Write(AircraftOrdered);
         w.Write(_sightings.Count);
         foreach (var s in _sightings)
@@ -430,7 +435,7 @@ internal sealed class TierPlanner
         for (int i = 0; i < n; i++) { int v = r.ReadInt32(); if (i < _armor.Length) _armor[i] = v; }
         n = AiSnapshot.Count(r);
         for (int i = 0; i < n; i++) { int v = r.ReadInt32(); if (i < _defArmor.Length) _defArmor[i] = v; }
-        _defRange = r.ReadInt32(); DefenceCount = r.ReadInt32(); HeavyShare = r.ReadInt32();
+        _defRange = r.ReadInt32(); DefenceCount = r.ReadInt32(); HeavyShare = r.ReadInt32(); InfantryShare = r.ReadInt32();
         SeenEnemy = r.ReadBoolean(); SeenEnemyAir = r.ReadBoolean(); HarvestersReplaced = r.ReadInt32(); AircraftOrdered = r.ReadInt32();
         n = AiSnapshot.Count(r);
         _sightings.Clear();

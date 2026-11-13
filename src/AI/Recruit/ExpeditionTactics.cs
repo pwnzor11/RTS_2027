@@ -94,6 +94,9 @@ internal sealed class ExpeditionTactics : IFactionTactics
     /// <summary>Sparkers wanted once enemy aircraft were seen.</summary>
     public const int SparkersWanted = 2;   // (tune) M7-10
 
+    /// <summary>s23 (Q-80): enemy infantry share (percent of the mobile enemy seen lately, see <see cref="TierPlanner.InfantryShare"/>) from which Canister Skiffs are wanted.</summary>
+    public const int SkiffInfantryPct = 40;   // (tune) s23 Q-80
+
     private readonly DifficultyProfile? _profile;
     private Squads? _squads;
     private MilitaryManager? _military;
@@ -104,7 +107,7 @@ internal sealed class ExpeditionTactics : IFactionTactics
     // resolved ids
     private bool _resolved;
     private int _depot = -1, _anchorage = -1, _beacon = -1, _commandShip = -1, _mender = -1, _destroyer = -1, _cruiser = -1, _carrier = -1,
-        _launch = -1, _sparker = -1, _tender = -1;
+        _launch = -1, _sparker = -1, _skiff = -1, _tender = -1;
 
     // establish
     private int _homeRegion;
@@ -202,6 +205,7 @@ internal sealed class ExpeditionTactics : IFactionTactics
         _carrier = SimRules.IndexOf(rules.Vehicles, "exp_carrier", v => v.Id);
         _launch = SimRules.IndexOf(rules.Vehicles, "exp_launch", v => v.Id);
         _sparker = SimRules.IndexOf(rules.Vehicles, "exp_sparker", v => v.Id);
+        _skiff = SimRules.IndexOf(rules.Vehicles, "exp_canister_skiff", v => v.Id);
         _tender = SimRules.IndexOf(rules.Vehicles, rules.Shipments.TenderType, v => v.Id);
     }
 
@@ -253,6 +257,9 @@ internal sealed class ExpeditionTactics : IFactionTactics
         if (_enemySubSeen && _launch >= 0 && k.Buildable(ProductionCategory.Vehicle, _launch) && Count(k, q, _launch) < SubHuntersWanted) return _launch;
         // Sparkers once enemy aircraft were seen
         if (_sparker >= 0 && _planner is { SeenEnemyAir: true } && k.Buildable(ProductionCategory.Vehicle, _sparker) && Count(k, q, _sparker) < SparkersWanted) return _sparker;
+        // s23 (Q-80): Canister Skiffs (ground splash) while the enemy fields mostly infantry, so a cheap swarm meets area fire
+        if (_skiff >= 0 && Plan.Skiffs > 0 && _planner is { } pl && pl.InfantryShare >= SkiffInfantryPct && k.Buildable(ProductionCategory.Vehicle, _skiff)
+            && Count(k, q, _skiff) < Plan.Skiffs) return _skiff;
         // one Mender to repair the dear units
         if (_mender >= 0 && k.Buildable(ProductionCategory.Vehicle, _mender) && ArmedVehicles(k) >= TanksBeforeNavy && ground + k.Fleet.Count >= ArmyBeforeMender && Count(k, q, _mender) < 1)
             return _mender;
