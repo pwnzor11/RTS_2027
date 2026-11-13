@@ -57,6 +57,7 @@ public sealed class MapEditorScreen : IScreen
     private List<EditorLabel> _labels = new();
     private Point _mouse;
     private bool _confirmQuit;
+    private bool _showDecor = true;   // H toggles the props and decals in the editor view, like the game's decor toggle
 
     /// <summary>Creates the editor on a blank 64 x 64 Rust Belt map.</summary>
     /// <param name="services">Shared services.</param>
@@ -130,11 +131,12 @@ public sealed class MapEditorScreen : IScreen
         else if (ctrl && input.Pressed(Keys.S)) Save(false);
         else if (!ctrl)
         {
-            Keys[] toolKeys = [Keys.D1, Keys.D2, Keys.D3, Keys.D4, Keys.D5, Keys.D6, Keys.D7];
+            Keys[] toolKeys = [Keys.D1, Keys.D2, Keys.D3, Keys.D4, Keys.D5, Keys.D6, Keys.D7, Keys.D8, Keys.D9];
             for (int i = 0; i < toolKeys.Length; i++) if (input.Pressed(toolKeys[i])) _session.Tool = (EditorTool)i;
             if (input.Pressed(Keys.OemOpenBrackets)) _session.BrushSize = BrushShape.Sizes[Math.Max(0, Array.IndexOf(BrushShape.Sizes, _session.BrushSize) - 1)];
             if (input.Pressed(Keys.OemCloseBrackets)) _session.BrushSize = BrushShape.Sizes[Math.Min(BrushShape.Sizes.Length - 1, Array.IndexOf(BrushShape.Sizes, _session.BrushSize) + 1)];
             if (input.Pressed(Keys.F5)) _revalidate = true;
+            if (input.Pressed(Keys.H)) { _showDecor = !_showDecor; _texDirty = true; }
         }
 
         int pan = (int)(600 * dt);
@@ -257,8 +259,8 @@ public sealed class MapEditorScreen : IScreen
         top.Add("Back", false, () => { if (!_session.Dirty || _confirmQuit) _s.Screens.Pop(); else { _confirmQuit = true; Say("Unsaved changes: click Back again to leave"); } });
 
         var tools = new FlowLayout(layout.Tools, scale);
-        string[] toolNames = ["Land", "Height", "Resource", "Feature", "Start", "Eraser", "Fill"];
-        tools.Label("Tool (1-7)");
+        string[] toolNames = ["Land", "Height", "Resource", "Feature", "Start", "Eraser", "Fill", "Props", "Decal"];
+        tools.Label("Tool (1-9)   H: show / hide props and decals");
         for (int i = 0; i < toolNames.Length; i++)
         {
             var tool = (EditorTool)i;
@@ -289,6 +291,20 @@ public sealed class MapEditorScreen : IScreen
                 tools.Label("Feature");
                 foreach (FeatureType f in _session.FeatureTypes) { FeatureType ft = f; tools.Add($"{f.Id[4..]} {f.Width}x{f.Height}", _session.Feature == ft, () => _session.Feature = ft); }
                 break;
+            case EditorTool.Props:
+                tools.Label("Prop");
+                foreach (OverlayKind k in PropKinds) { OverlayKind pk = k; tools.Add(pk.ToString(), _session.Prop == pk, () => _session.Prop = pk); }
+                tools.NewLine();
+                tools.Label("Size");
+                string[] sizeNames = ["Small", "Medium", "Large"];
+                for (int v = 0; v < sizeNames.Length; v++) { int pv = v; tools.Add(sizeNames[v], _session.PropVariant == pv, () => _session.PropVariant = pv); }
+                break;
+            case EditorTool.Decal:
+                tools.Label("Decal (biome " + (string.IsNullOrEmpty(_session.Document.Biome) ? "rust_belt" : _session.Document.Biome) + ")");
+                tools.Add("None (erase)", _session.DecalKind == 0, () => _session.DecalKind = 0);
+                IReadOnlyList<DecalRule> decals = DecorFor(_session.Document).Decals;
+                for (int d = 0; d < decals.Count && d < 255; d++) { byte id = (byte)(d + 1); tools.Add(decals[d].Name, _session.DecalKind == id, () => _session.DecalKind = id); }
+                break;
             case EditorTool.Start:
                 tools.Label("Start slot");
                 for (int n = 1; n <= EditorDocument.MaxStarts; n++) { int sv = n; tools.Add(n.ToString(), _session.StartSlot == sv, () => _session.StartSlot = sv); }
@@ -311,6 +327,19 @@ public sealed class MapEditorScreen : IScreen
         _labels = tools.Labels;
     }
 
+    private static readonly OverlayKind[] PropKinds = [OverlayKind.Tree, OverlayKind.Wreck, OverlayKind.Block, OverlayKind.Pylon, OverlayKind.Snag];
+
+    /// <summary>The current biome's decal table (empty when the theater file has no decor section).</summary>
+    private DecorTable DecorFor(EditorDocument d)
+    {
+        if (_palette is null)
+        {
+            try { _palette = TerrainPalette.ForMap(d.ToMapData(), d.ToMeta()); }
+            catch (Exception e) when (e is IOException or InvalidDataException or FormatException) { return DecorTable.Empty; }
+        }
+        return _palette.Decor;
+    }
+
     // ---- actions -----------------------------------------------------------------------------------------------
 
     private void Undo() { if (_session.Undo()) { _revalidate = true; _texDirty = true; } }
@@ -320,6 +349,7 @@ public sealed class MapEditorScreen : IScreen
     private void NewMap() => _s.Screens.Push(new NewMapScreen(_s, doc =>
     {
         _session = new EditorSession(doc, _featureTypes);
+        _palette = null;
         _framed = false;
         _texDirty = true;
         _revalidate = false;
@@ -353,6 +383,7 @@ public sealed class MapEditorScreen : IScreen
             _s.Screens.Pop();
             _session = new EditorSession(EditorDocument.From(map, meta), _featureTypes);
             _currentPath = entry.Path;
+            _palette = null;
             _saveToData = !entry.IsUser;
             _framed = false;
             _texDirty = true;
@@ -516,6 +547,7 @@ public sealed class MapEditorScreen : IScreen
             try { _palette = TerrainPalette.ForMap(d.ToMapData(), d.ToMeta()); }
             catch (Exception e) when (e is IOException or InvalidDataException or FormatException) { _palette = null; }
         }
+        IReadOnlyList<DecalRule> decalRules = _palette?.Decor.Decals ?? Array.Empty<DecalRule>();
         var data = new Color[d.Width * d.Height];
         for (int i = 0; i < data.Length; i++)
         {
@@ -525,10 +557,22 @@ public sealed class MapEditorScreen : IScreen
             if (d.Overlay[i] == OverlayKind.Ashfall) c = Color.Lerp(c, new Color(0xE0, 0xC0, 0x40), 0.35f + d.Density[i] * 0.04f);
             else if (d.Overlay[i] == OverlayKind.Pitchblende) c = Color.Lerp(c, new Color(0x50, 0xB0, 0xE0), 0.35f + d.Density[i] * 0.04f);
             else if (d.Overlay[i] == OverlayKind.Wall) c = new Color(0x90, 0x90, 0x90);
+            else if (_showDecor && OverlayKinds.IsProp(d.Overlay[i])) c = PropColour(d.Overlay[i]);
+            if (_showDecor && d.Decor[i] != 0 && d.Decor[i] <= decalRules.Count && !OverlayKinds.IsProp(d.Overlay[i]))
+            {
+                DecalRule rule = decalRules[d.Decor[i] - 1];
+                c = Color.Lerp(c, new Color(rule.Colour.R, rule.Colour.G, rule.Colour.B), Math.Clamp(rule.Alpha, 90, 255) / 255f * 0.8f);
+            }
             data[i] = c;
         }
         _tex.SetData(data);
     }
+
+    private static Color PropColour(OverlayKind k) => k switch
+    {
+        OverlayKind.Tree => new Color(0x3C, 0x58, 0x34), OverlayKind.Wreck => new Color(0x78, 0x40, 0x30), OverlayKind.Block => new Color(0xA0, 0xA0, 0x98),
+        OverlayKind.Pylon => new Color(0xD0, 0xB0, 0x40), _ => new Color(0x8A, 0x6A, 0x48),
+    };
 
     private Color LandColour(LandType land)
     {
