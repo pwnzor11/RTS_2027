@@ -1,5 +1,9 @@
-# Handoff: Session 23 (in progress) — s23after re-run, mop-up and campaign reads, then the booklet build
-Last commit: `docs: checkpoint session 23, round 3` on branch `integ-s23c` (PR to main). Check `git log -1 origin/main`.
+# Handoff: Session 23 (in progress) — round 4 on integ-s23d: Grapeshot, draws fix, tier-5 raise, instructor voice; Directorate diagnosis
+Last commit: `docs: checkpoint session 23, round 4` on branch `integ-s23d` (PR to main).
+Round 4 checkpoint: owner answers D-234..D-238; s23after read (Directorate too strong after D-229: Auth v Dir 16-37, Dir v Exp 55-8);
+Grapeshot (exp_canister_skiff) data+AI+upgrades on integ-s23d, art on wp/art-s23-skiff waiting for the owner's LFS push (art_s23\push_art.ps1);
+draws fix D-235 (21 % -> 14 % in cloud); tier 5 raised in six missions (D-238); tut_01 instructor voice slots (audition on the laptop);
+Directorate diagnosis helper running (wp/s23-dirdiag, probes only). Check `git log -1 origin/main`.
 Where things stand: session 22 (PR #76) and session 23 round 1 (PR #77, Rocket Truck splash back to 1, D-229) are on main. Round 2 (PR #78):
 `ai match --ledger` (units made/lost per type); Left Behind tier-3 swarm cap until tick 4800 (D-230, M13-22); Left Behind and Expedition lore
 approved after a fact-check (D-231, M14-04 done); booklet dry build ok with coverage check (M14-05 prep); CI publishes a rolling `nightly`
