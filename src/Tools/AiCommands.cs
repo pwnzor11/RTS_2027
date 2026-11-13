@@ -742,6 +742,7 @@ public static class AiCommands
         public int[] StartWins = new int[2];
         public int[] SlotWins = new int[2];
         public int Games, AWins, BWins, Draws, DrawsAAhead, DrawsBAhead;
+        public int AdjWins, AdjLosses, AdjEven;   // S24 (M13-23): draws at the tick limit, adjudicated by score (A's view)
         public long Ticks, EndTickSum;
         public long AvgEndTick => Games == 0 ? 0 : EndTickSum / Games;
     }
@@ -799,7 +800,9 @@ public static class AiCommands
                 var lbx = _extras ? new LeftBehindExtras(w.Rules) : null;
                 if (_ledgerOn) { _ledger ??= new UnitLedger(w.Rules); _ledger.NewGame(); }
                 MatchTrace? trace = _traceEvery > 0 ? new MatchTrace(w.Rules, _traceEvery) : null;
-                Action<Simulation, IAiPlayer, IAiPlayer, byte, byte>? obs = null;
+                // S24 (M13-23): the game's sim is kept for the end-state score; every game gets at least this observer
+                Simulation? endSim = null;
+                Action<Simulation, IAiPlayer, IAiPlayer, byte, byte>? obs = (sim, x, y, sa, sb) => endSim = sim;
                 var marks = new int[2, 3];
                 var firstRefinery = new[] { -1, -1 };      // M7-14: first tick the side owns a live refinery
                 var tendersSunk = new int[2];              // M7-14: tenders that left the lane without paying
@@ -811,6 +814,7 @@ public static class AiCommands
                 if (trace is not null || lbx is not null || expo || _income || _ledgerOn)
                     obs = (sim, x, y, sa, sb) =>
                     {
+                        endSim = sim;
                         _ledger?.Observe(sim, p => p == sa ? 0 : 1);
                         trace?.Observe(sim, x, y, sa, sb); lbx?.Observe(sim, x, y, sa, sb);
                         for (int q = 0; q < 2; q++)
@@ -854,6 +858,14 @@ public static class AiCommands
                     else if (r.ValueB > r.ValueA) tally.DrawsBAhead++;
                 }
                 int slotOfA = aInSlot0 ? 0 : 1;
+                // S24 (M13-23, D-242): a draw at the tick limit gets a score adjudication; it stays a draw in the W-L-D columns
+                if (r.Winner == -1 && r.EndTick >= ticks && endSim is not null)
+                {
+                    long scoreA = MatchAdjudication.ScoreOf(endSim, (byte)slotOfA, w.Rules).Total;
+                    long scoreB = MatchAdjudication.ScoreOf(endSim, (byte)(1 - slotOfA), w.Rules).Total;
+                    int adj = MatchAdjudication.Adjudicate(scoreA, scoreB);
+                    if (adj == 0) tally.AdjWins++; else if (adj == 1) tally.AdjLosses++; else tally.AdjEven++;
+                }
                 if (lbx is not null)
                     for (int side = 0; side < 2; side++)
                     {
