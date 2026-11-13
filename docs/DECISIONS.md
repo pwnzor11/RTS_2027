@@ -1754,3 +1754,12 @@ pushed by the owner with an LFS bundle (D-084). Cloud smoke (16 games/cell, tier
 ### D-237 · 2026-11-13 · Grapeshot gets the Glide Tank's upgrades
 **Decision:** `exp_canister_skiff` joins the same Expedition upgrades as the Glide Tank: composite hulls (max health x1.15), vacuum cores
 (canister gun rate of fire x0.85) and veteran drill (veterancy threshold x0.8). **Status:** owner decision (session 23, "same upgrades").
+
+### D-238 · 2026-11-13 · Campaign tier 5 raised in six missions; lb_04, exp_02, exp_04 stay at 12/12 (M13-24)
+**Decision:** tier-5 data only (D-234 point 4, band 4-9 of 12 bot wins), 12-seed sweeps in the cloud: auth_02 8/12 (bigger, earlier hidden
+raids), auth_04 6/12 (device guard and home raids larger, raid 1 at 2200), dir_01 7/12 (waves of 10 riflemen), dir_02 6/12 (escort jeeps 5,
+reserve 10), dir_03 5/12 (relief column 11 riflemen), dir_04 5/12 (waves 11/11/12 riflemen, visible timers unchanged). Tier 3 stays 12/12.
+The tier-5 fixed-seed walks of auth_04, dir_02 and dir_03 now assert a clean run only (D-221). lb_04 and exp_02 are all-or-nothing for the bot
+(12/12 at one unit less, 0/6 at one unit more); the owner chose to leave them, and exp_04 (not attempted), at 12/12.
+**Note:** the band is narrow and the sweeps are steep (auth_02: 5/6 -> 0/6 on ~15 % more units); later sim or bot changes will move these.
+**Status:** owner decision (session 23); laptop campaign sweep to confirm.
