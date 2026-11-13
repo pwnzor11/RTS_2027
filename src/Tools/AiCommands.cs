@@ -21,7 +21,7 @@ public static class AiCommands
 {
     private const int DefaultTier = 2;
     private const string Usage =
-        "usage: ai match --a <aiId>[:<tier>] --b <aiId>[:<tier>] [--seeds 8] [--ticks 30000] [--size 64] [--out file.md] [--record-dir dir] [--flat 1] [--starts alt|slot|swap] [--start economy|army] [--first 1] [--faction-a authority|directorate|left_behind|expedition] [--faction-b ...] [--layout 1|2] [--biome rust_belt|glass_coast|mountains|ash_plains] [--income 1] [--mopup on|off]\n" +
+        "usage: ai match --a <aiId>[:<tier>] --b <aiId>[:<tier>] [--seeds 8] [--ticks 30000] [--size 64] [--out file.md] [--record-dir dir] [--flat 1] [--starts alt|slot|swap] [--start economy|army] [--first 1] [--faction-a authority|directorate|left_behind|expedition] [--faction-b ...] [--layout 1|2] [--biome rust_belt|glass_coast|mountains|ash_plains] [--income 1] [--mopup on|off] [--ledger 1]\n" +
         "         --layout / --biome (M12-12) build the map with the biome generator (size 64 = small, 96 = medium, else large) instead of the synthetic map; layout 2 is the zoned layout, no flag = unchanged. --income prints harvested credits at 3/5/10 min.\n" +
         "         example (M7-10): ai match --a tiered:2 --b tiered:2 --faction-a expedition --faction-b authority --size 96 --seeds 4   (an Expedition side gets ocean north+south edges; 96 = medium)\n" +
         "       ai matrix --ai <aiId> [--faction authority|directorate] [--tiers 1-5] [--seeds 4] [--ticks 30000] [--size 64] [--layout 1|2] [--out file.md]\n" +
@@ -31,7 +31,7 @@ public static class AiCommands
         "       ai duel --a <spec> --b <spec> [--count 1] [--count-b N] [--ticks 3000] [--gap 12]   (spec = id[:n][,id[:n]...], e.g. auth_tank:3,auth_turret:1)\n" +
         "  <tier> is 1..5 or recruit|regular|veteran|elite|commissar (default regular). Seeds are first..first+N-1 (first defaults to 1).";
 
-    private static readonly string[] MatchOptions = ["a", "b", "seeds", "ticks", "size", "out", "record-dir", "flat", "starts", "start", "first", "faction-a", "faction-b", "trace", "game", "extras", "layout", "biome", "income", "mopup"];
+    private static readonly string[] MatchOptions = ["a", "b", "seeds", "ticks", "size", "out", "record-dir", "flat", "starts", "start", "first", "faction-a", "faction-b", "trace", "game", "extras", "layout", "biome", "income", "mopup", "ledger"];
     private static readonly string[] TimelineOptions = ["a", "b", "seed", "ticks", "size", "swap", "trace", "dump", "faction-a", "faction-b", "layout", "biome"];
     private static readonly string[] DuelOptions = ["a", "b", "count", "count-b", "ticks", "gap"];
     private static readonly string[] MatrixOptions = ["ai", "tiers", "seeds", "ticks", "size", "out", "faction", "players", "biome", "layout"];
@@ -92,6 +92,8 @@ public static class AiCommands
         // M4-16 round 3: --trace N --game G (with --first S --seeds 1) prints a per-side diagnostic line every N ticks for game G of the pair only
         if (!Int(flags, "trace", 0, out _traceEvery) || !Int(flags, "game", 0, out _traceGame)) return UsageError("--trace and --game must be integers");
         _extras = flags.ContainsKey("extras");
+        _ledger = null;   // S23: per-type made/lost (created on the first game)
+        _ledgerOn = flags.ContainsKey("ledger");
         _extraSum = new long[2, 4];
         var clock = Stopwatch.StartNew();
         MatchTally tally;
@@ -108,6 +110,8 @@ public static class AiCommands
         if (_extras)
             for (int side = 0; side < 2; side++)
                 Console.WriteLine($"Left Behind extras, side {(side == 0 ? "A" : "B")}: games with a Hauler {_extraSum[side, 0]}/{tally.Games}, salvage orders {_extraSum[side, 1]}, ash drained from wrecks {_extraSum[side, 2]}, Second Drift orders {_extraSum[side, 3]}");
+        if (_ledger is not null)
+            foreach (string line in _ledger.Lines(tally.Games)) Console.WriteLine(line);
         PrintSpeed(tally.Ticks, clock);
         return WriteOut(flags, table);
     }
@@ -792,6 +796,7 @@ public static class AiCommands
                     : File.Create(Path.Combine(recordDir, $"{a.FileLabel}_vs_{b.FileLabel}_seed{s}_g{g + 1}.rtsreplay"));
                 AiGameResult r;
                 var lbx = _extras ? new LeftBehindExtras(w.Rules) : null;
+                if (_ledgerOn) { _ledger ??= new UnitLedger(w.Rules); _ledger.NewGame(); }
                 MatchTrace? trace = _traceEvery > 0 ? new MatchTrace(w.Rules, _traceEvery) : null;
                 Action<Simulation, IAiPlayer, IAiPlayer, byte, byte>? obs = null;
                 var marks = new int[2, 3];
@@ -802,9 +807,10 @@ public static class AiCommands
                 var incomePrev = new int[2];
                 var shipMarks = new int[2, 3];             // M7-14: shipment credits paid by 3/5/10 min
                 bool expo = a.Faction == Faction.Expedition || b.Faction == Faction.Expedition;
-                if (trace is not null || lbx is not null || expo || _income)
+                if (trace is not null || lbx is not null || expo || _income || _ledgerOn)
                     obs = (sim, x, y, sa, sb) =>
                     {
+                        _ledger?.Observe(sim, p => p == sa ? 0 : 1);
                         trace?.Observe(sim, x, y, sa, sb); lbx?.Observe(sim, x, y, sa, sb);
                         for (int q = 0; q < 2; q++)
                         {
@@ -874,7 +880,8 @@ public static class AiCommands
     }
 
     private static int _traceEvery, _traceGame;
-    private static bool _extras, _income;
+    private static bool _extras, _income, _ledgerOn;
+    private static UnitLedger? _ledger;
     private static long[,] _extraSum = new long[2, 4];
 
     /// <summary>M4-16 round 3: per-side diagnostic lines for one game (tier, army count and value, scrapers, cash, income, structures, waves).</summary>
