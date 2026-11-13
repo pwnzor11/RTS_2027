@@ -300,7 +300,7 @@ Source: docs/reviews/2026-11-07_owner_campaign_feedback.md. Audit: docs/reviews/
 ## M14 · Field Manual (D-206, docs/design/19_field_manual.md)
 - [x] M13-20 Mop-up AI fixed and on in skirmish (s22, D-224); s23: s22mopup showed no effect; trigger loosened (D-233); the draws traced are attrition stalemates, not beaten enemies
 - [x] M13-21 Radio lines for every unannounced or announced enemy wave (s22, D-226 point 5)
-- [ ] M13-23 Late-game draws: both sides exhausted at tier 1 with no income, the last defended building outlasts the attacker (s23 trace, D-233)
+- [~] M13-23 Late-game draws: both sides exhausted at tier 1 with no income, the last defended building outlasts the attacker (s23 trace, D-233) s23: mined-out maps (docs/balance/s23_draws.md, `ai match --econ 1`); AI endgame fixes A+B (D-235)
 - [~] M13-22 Left Behind v Expedition after s22 (LB wins 48-9 Rust Belt, 37-16 Glass Coast): loss tables, then a matchup-specific change (s23 probes: docs/balance/s23_probes.md) s23: `ai match --ledger`; LB tier-3 cap until 4800 (D-230); laptop s23after pending
 - [ ] M13-24 Campaign tier 5 raised where the bot wins 12/12 (D-234 point 4): band 4-9 of 12, tier-5 data only; laptop sweep to confirm
 - [ ] M13-25 Expedition tier-2 hover canister skiff (D-234 point 2, Q-80): data + AI use with a borrowed sprite; name, art pilot and lore wait on Q-84

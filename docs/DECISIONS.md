@@ -1737,3 +1737,10 @@ the missions where the bot wins 12/12 (nine in the s21sweep laptop run: auth_02,
 reported. (5) Q-83: the tutorial instructor gets a Kokoro voice picked by audition on the laptop; unit barks after the SFX picks.
 **Why:** owner's choices (session 23: "1- a 2- c 3- wait on balance 4- raise now 5- sounds good"; Q-80 shape and the Q-82 band by question).
 **Status:** owner decision.
+
+### D-235 · 2026-11-13 · Late-game draws: AI endgame fixes first (M13-23)
+**Decision:** the draws are mined-out maps, not a rebuild failure (docs/balance/s23_draws.md). Fix them in the AI only: (A) spend down when
+Broke (dearest affordable unit, cancel stalled lanes for the refund); (B3) never sell a hatch/tunnel while units are entering it; (B2) a wave
+standing 1 500+ ticks within 8 cells of a known enemy structure attacks the nearest one; (B1) MopupDue uses MinArmyNoEnemy when no enemy army
+was seen. Re-measure the Authority mirror, Directorate mirror and Authority v Directorate. **Alternatives:** ore regrowth or richer fields
+(sim rule; later, only if A+B fall short); adjudicating at the time limit (fallback); leave as is. **Status:** owner decision (session 23).
