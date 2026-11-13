@@ -1,20 +1,16 @@
-# Handoff: Session 23 — read the laptop series, pick the sound effects, land session 22 on main
-Last commit: `docs: Session 22 handoff` on branch `integ-s22` (PR #76 to main, opened at wrap-up, not merged). Check `git log -1 origin/integ-s22`.
-Where things stand: session 22 (2026-11-12) finished on `integ-s22`, not yet on main: Q-77 balance picks (D-223), mop-up AI on in skirmish
-(D-224), dead-end dock lanes (D-225), audio (D-226: 20 music tracks, 164 Kokoro voice lines, SFX generator, sound keys, ambience), wall/gate
-art (D-227), sign-offs (D-228). Local test runs on the cloud box green on the combined branch, not CI (Sim 1811, AI 367, Scripting 388, Game 2061, Tools/Net/Llm all).
-Decisions up to D-228. Open questions: Q-73 (par times). The owner's laptop is running the series and the full SFX generation overnight.
+# Handoff: Session 23 (in progress) — s23after re-run, mop-up and campaign reads, then M13-22 and M14
+Last commit: `docs: checkpoint session 23` on branch `integ-s23` (PR to main). Check `git log -1 origin/integ-s23` and `origin/main`.
+Where things stand: session 22 is on main (PR #76, merged 2026-11-13 on the owner's word). Session 23 read the laptop's s22after series
+(docs/balance/s23_probes.md): Authority fixed, LB mirror fixed; new outliers Dir v LB 13-49 and LB v Exp 48-9. Applied: Rocket Truck splash
+back to 1 (D-229). LB v Exp is open as M13-22. Decisions up to D-229. Open questions: Q-73 (par times).
 
 ## Start here (shown to the user as the plan; nothing starts until they say go)
-1. Read the laptop results through the linked folder: `balance_runs\s22after\s22after_summary.md` (compare with `s21after`; target 45-55 % per
-   cross-faction pair, start share under 60 %; LB mirror Mountains L1 should be near even after the OrientedOffset fix), `balance_runs\s22mopup\
-   s22mopup_summary.md` (draws with mop-up on vs off; keep on only if it cuts draws without hurting 4v3), `balance_runs\s21sweep\s21sweep_summary.md`
-   (all 45 mission-tiers vs Q-75 targets; the old sweep is in `s21sweep_before`). Table first, owner picks any follow-up tweaks (Rust Belt Auth v
-   Exp may need a second shipments step; Glass Coast Exp v LB was 25 % in the probe).
-2. SFX: the owner runs `tools\audio\sfx\make_sfx.ps1 -Audition`, picks takes, `-Pick`, commits (LFS). Listen in game; tune volumes in sounds.toml.
-3. Land `integ-s22` on main via PR #76: refresh it (fetch main first), Windows CI green, owner merges (the auto-mode check refuses lead merges).
-4. M14: Left Behind and Expedition lore chapters in the approved voice (design 19 §6), then the full ~108-page booklet build (tools/booklet) once
-   the balance numbers settle (stat pages are generated from data/rules).
+1. Read the laptop re-run `balance_runs\s23after\s23after_summary.md` (run_s19_after.ps1 -OutName s23after on integ-s23 or main after the merge)
+   against s22after; target 45-55 % per cross-faction pair, start share under 60 %.
+2. Read `balance_runs\s22mopup\s22mopup_summary.md` (keep mop-up only if it cuts draws without hurting 4v3) and the campaign sweep (D-229
+   puts the Rocket Truck back to the s21 value the 45/45 sweep was confirmed with).
+3. M13-22: loss tables for Left Behind v Expedition (Rust Belt and Glass Coast), then a matchup-specific option table.
+4. SFX picks (owner, make_sfx.ps1 -Audition / -Pick); M14 lore chapters and the booklet build once the numbers settle.
 
 ## Half-finished work
 - SFX: 80 jobs generating on the owner's laptop (draft, then full run). Nothing picked or committed yet. `exp_rad_burst` has no event; flak has no job.

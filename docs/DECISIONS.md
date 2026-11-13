@@ -1690,3 +1690,11 @@ changes the game sprites; rendered on the owner's laptop (tools/art/render_s22_w
 **Decision:** the owner approved the Directorate lore draft (design 19 §6b, M14-04) and confirmed Q-78: Kokoro output CC0; the mop-up
 constants stand until the laptop on/off series; the Harpoon Wagon counts as anti-air in the AI mix; ship-ready horn and sub sonar stay.
 **Status:** owner decision (session 22, "signoffs look great")
+
+### D-229 · 2026-11-13 · Session 23: Rocket Truck splash back to 1; PR #76 landed
+**Decision:** after the owner's s22 laptop series (balance_runs\s22after), `dir_rocket` splash goes back 0 -> 1 (supersedes that part of D-223).
+Shipments 1400, repair auras 5 and the other D-223 items stay. Left Behind v Expedition stays open as M13-22 (no data lever found that fixes it
+without undoing the Authority fix; docs/balance/s23_probes.md). PR #76 (session 22) merged by the lead on the owner's word ("just land it now").
+**Why:** cloud probes with splash 1: Dir v LB 5-8 and 7-6 (laptop 13-49), Auth v Dir 6-7 (laptop 34-19). **Alternatives:** truck damage 75 and
+range 6 cells (Dir v LB 1-14, and the truck would leave the AI's artillery class); shipments 1700 or floor 450 (no help for LB v Exp, hurts Auth v Exp).
+**Status:** owner decision ("apply my recommended fixes straight away and let the re-run confirm them"); confirm with the laptop re-run.

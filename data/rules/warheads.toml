@@ -48,7 +48,7 @@ contaminate = 80  # ASSUMED (M3-07)
 
 [dir_rocket]
 versus = [25, 75, 100, 60, 40, 90, 70, 100]  # ASSUMED (M3-07) # D-205 (LE-07): ship columns copy exp_guided_ap (Submerged left at 100)
-splash = 0  # ASSUMED (M3-07) # s22 M13-19 (D-223): 1 -> 0
+splash = 1  # ASSUMED (M3-07) # s22 M13-19 (D-223): 1 -> 0; s23 (D-229): back to 1 (Dir v LB 13-49 on the s22 laptop series)
 hits_allies = false
 
 [dir_slug]
