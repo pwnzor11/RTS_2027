@@ -4,7 +4,7 @@ Where things stand: session 22 (PR #76) and session 23 round 1 (PR #77, Rocket T
 `ai match --ledger` (units made/lost per type); Left Behind tier-3 swarm cap until tick 4800 (D-230, M13-22); Left Behind and Expedition lore
 approved after a fact-check (D-231, M14-04 done); booklet dry build ok with coverage check (M14-05 prep); CI publishes a rolling `nightly`
 pre-release instead of game artifacts (D-232; worked on main, nightly has the zip and installer). Round 3: s22mopup read (no effect), mop-up
-trigger loosened (D-233); draws traced to attrition stalemates (M13-23). Decisions up to D-233. Open questions: Q-73 (par times).
+trigger loosened (D-233); draws traced to attrition stalemates (M13-23). Campaign sweep (s21sweep, integ-s22 data): 45/45 on target. Decisions up to D-233. Open questions: Q-73, Q-79..Q-83 (owner answers in the morning).
 
 ## Start here (shown to the user as the plan; nothing starts until they say go)
 1. Read the laptop re-run `balance_runs\s23after\s23after_summary.md` (run_s19_after.ps1 -OutName s23after on main after this PR) against
