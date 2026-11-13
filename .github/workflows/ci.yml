@@ -81,6 +81,8 @@ jobs:
     runs-on: windows-latest
     needs: build-test
     timeout-minutes: 30
+    permissions:
+      contents: write   # S23: the nightly pre-release
     steps:
       - uses: actions/checkout@v4
         with:
@@ -104,13 +106,6 @@ jobs:
           Write-Host "Smoke test exit code: $($p.ExitCode)"
           if ($p.ExitCode -ne 0) { throw "Published game failed the headless smoke test (exit $($p.ExitCode))." }
 
-      - name: Upload game
-        uses: actions/upload-artifact@v4
-        with:
-          name: RTS_2027-win-x64-${{ github.sha }}
-          path: publish/Game
-          retention-days: 7
-
       - name: Zip game
         shell: pwsh
         run: |
@@ -125,11 +120,19 @@ jobs:
           & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" "/DAppVersion=$ver" "/DSourceDir=$PWD\publish\Game" installer\rts_2027.iss
           if ($LASTEXITCODE -ne 0) { throw "Inno Setup failed (exit $LASTEXITCODE)." }
 
-      - name: Upload zip and installer
-        uses: actions/upload-artifact@v4
-        with:
-          name: RTS_2027-release-files-${{ github.sha }}
-          path: |
-            publish/out/*.zip
-            publish/installer/*.exe
-          retention-days: 7
+      # S23: no game artifacts (they filled the Actions storage quota). A push to main replaces the rolling "nightly" pre-release
+      # instead; release assets do not count against artifact storage and need no sign-in to download. Pull requests upload nothing.
+      # Versioned releases still come from release.yml (v* tags).
+      - name: Update the nightly pre-release (main only)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $files = @((Get-ChildItem publish/out/*.zip).FullName) + @((Get-ChildItem publish/installer/*.exe).FullName)
+          $stamp = (Get-Date).ToUniversalTime().ToString('yyyy-MM-dd HH:mm')
+          $notes = "Rolling build of main at ${{ github.sha }} ($stamp UTC). Not a versioned release: it is replaced on every push to main."
+          gh release view nightly --repo ${{ github.repository }} *> $null
+          if ($LASTEXITCODE -eq 0) { gh release delete nightly --repo ${{ github.repository }} --yes --cleanup-tag }
+          gh release create nightly --repo ${{ github.repository }} --target ${{ github.sha }} --prerelease --title "RTS_2027 nightly" --notes $notes $files
+          if ($LASTEXITCODE -ne 0) { throw "Could not create the nightly release (exit $LASTEXITCODE)." }

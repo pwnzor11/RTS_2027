@@ -31,7 +31,7 @@ VEHICLE_DEFAULTS = dict(MOBILE_V3, harvest_capacity=0, build_time=0, tunnel_size
                         unpacks_into="", pack_ticks=0, salvage_rate=0, raider=False, raider_one_use=False, drops_blackout_ticks=0,
                         aura_repair_permille=0, tow_bonus_permille=0, supply=-1, draw_scale_permille=1000, deep_only=False,
                         submerges=False, sonar_radius=0, aircraft_slots=0, sortie_ticks=0, ammo=0, rearm_ticks=0, unload_ticks=0,
-                        vehicle_slots=0)
+                        vehicle_slots=0, one_use=False, buildable=True)   # D-205 (M13-11) keys, as UnitRulesLoader
 INFANTRY_DEFAULTS = dict(MOBILE_V3, build_time=0, tunnel_size="S", engineer=False, tier=1, salvage_rate=0, raider=False,
                          raider_one_use=False, ash_stealth_delay_ticks=0, ash_stealth_threshold=0, aura_repair_permille=0, supply=-1)
 BUILDING_DEFAULTS = dict(category="structure", produces="", build_time=0, storage=0, refinery=False, dock=[0, 0], free_unit="",

@@ -300,13 +300,13 @@ Source: docs/reviews/2026-11-07_owner_campaign_feedback.md. Audit: docs/reviews/
 ## M14 · Field Manual (D-206, docs/design/19_field_manual.md)
 - [x] M13-20 Mop-up AI fixed and on in skirmish (s22, D-224); laptop on/off series pending
 - [x] M13-21 Radio lines for every unannounced or announced enemy wave (s22, D-226 point 5)
-- [ ] M13-22 Left Behind v Expedition after s22 (LB wins 48-9 Rust Belt, 37-16 Glass Coast): loss tables, then a matchup-specific change (s23 probes: docs/balance/s23_probes.md)
+- [~] M13-22 Left Behind v Expedition after s22 (LB wins 48-9 Rust Belt, 37-16 Glass Coast): loss tables, then a matchup-specific change (s23 probes: docs/balance/s23_probes.md) s23: `ai match --ledger`; LB tier-3 cap until 4800 (D-230); laptop s23after pending
 - [x] M14-01 Pilot: 9 pages, generator scripts (tools/booklet), design 19 (s18)
 - [x] M14-02 Hero render mode and laptop script (tools/booklet/render_heroes.ps1) (s18); s19: module cache fix (LB structures)
 - [x] M14-07 Pilot PDF and previews in docs/field_manual/, linked from the README (s19)
 - [x] M14-03 Hero renders: pilot approved, all 124 rendered on the laptop and on main (s19, D-210; PR #63). Open: walls/gates re-angle s22: walls/gates re-angled -35 deg with half sky light and detail-passed models, laptop renders on integ-s22 (D-227)
-- [ ] M14-04 Directorate lore draft (Authority approved), then the other three faction chapters s22: Directorate draft approved (design 19 §6b, D-228); Left Behind and Expedition chapters next
-- [ ] M14-05 Full build (about 108 pages) after M13 lands; quick-reference card
+- [x] M14-04 Directorate lore draft (Authority approved), then the other three faction chapters s22: Directorate draft approved (design 19 §6b, D-228); Left Behind and Expedition chapters next s23: Left Behind and Expedition approved after a fact-check (D-231)
+- [ ] M14-05 Full build (about 108 pages) after M13 lands; quick-reference card s23: dry build ok on today's data, 150/150 ids have name, hero render and sprite (tools/booklet/data/check_coverage.py); resolver and prep fixed
 - [x] M14-06 Models and sprites for the 26 ids without art (scripts D-215; owner rendered on the laptop; landed in PR #74 s21; no rules id is left without art)
 
 ## M9 · LAN multiplayer (was M5)
