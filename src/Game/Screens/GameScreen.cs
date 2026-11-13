@@ -46,6 +46,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
     private readonly bool _skirmishMode;
     private SidebarPanel? _sidebar;
     private CameoProvider? _cameos;
+    private Rts.Game.Ui.Card.PortraitProvider? _portraits;
     private Rts.Game.Ui.Card.SelectionCard? _card;   // M11-04: the bottom-centre selection card
     private EntityId _selectedBuilding = EntityId.None;
     private bool _selectedBuildingProduces;
@@ -347,6 +348,8 @@ public sealed class GameScreen : IScreen, IFocusPausable
         _sidebar.HiddenCursor = SoftwareCursor.MakeHidden(_s.Graphics);   // M11-10e
         _sidebar.Blurbs = LoadCameoBlurbs();                               // M11-10g
         _card = new Rts.Game.Ui.Card.SelectionCard(_sim, _selection, _cameos, PlayerColours.Base(Me));
+        _portraits = new Rts.Game.Ui.Card.PortraitProvider(_s.Graphics, Rts.Game.Ui.Card.PortraitFiles.RootFor(_s.RulesDir));   // M10-16
+        _card.Portraits = _portraits;
         CentreCameraOnOwnBase();
         _archive = new ArchiveTracker(ArchiveProgress.Load());
     }
@@ -361,6 +364,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
         PlayerColours.ResetAssignment();
         _sidebar?.Dispose();
         _cameos?.Dispose();
+        _portraits?.Dispose();
         if (_lan is not null)
         {
             if (!_lanHandoff) _lan.Dispose();   // M9: Bye, the replay, the transport; not when a resync only rebuilds this screen
