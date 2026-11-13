@@ -8,6 +8,7 @@ file cited after each question. Recommendations are the lead's, from the researc
 - 🟡 **Q-73 · 2026-11-12 · Par-time medals (M10-19).** No campaign mission has a par time, so the Profile page awards only Completed and
   No losses. Options: **(a) the owner gives a par time per mission (recommended; the bot walk-through times in docs/balance are a starting point)**;
   (b) par = the bot's tier-3 win time + 50 %; (c) no par medal.
+  **Deferred (owner, s24):** par times are set after the owner starts playing the campaign; nothing to do until then.
 
 
 
