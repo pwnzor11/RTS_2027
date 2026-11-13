@@ -1,7 +1,12 @@
 """Build a structure (building) procedurally in Blender (bpy), render every frame, then pixel-post-process it.
 
 Usage:  python3 tools/art/build_structure.py <id> [--samples 24] [--frames 0 5 ...] [--render-only | --post-only]
-        [--preview]     (preview = colour pass only, 2x supersample, writes art/pilot/work/struct_<id>/preview_XX.png)
+        [--preview] [--depth] [--out-dir DIR]
+        --depth    D-243 depth pass (M10-08): bevelled box edges, ambient occlusion, edge highlight, darker base band, a 1 px longer
+                   shadow, plus the modules' own S.depth detail.  OFF by default: without it every sheet renders exactly as before.
+                   Work files go to struct_<id>_depth, so a depth run never touches the normal work folder.
+        --out-dir  where the sheet and .sprite.toml are written (default data/sprites/buildings; use it for pilots)
+        (preview = colour pass only, 2x supersample, writes art/pilot/work/struct_<id>/preview_XX.png)
 <id> names a module in tools/art/structures/<id>.py (see auth_refinery.py for the contract).
 
 Pipeline = arm B of the tank (D-039/D-043): ortho camera, elevation 40 deg (the v2 tank camera), sun upper-left,
@@ -33,8 +38,8 @@ def load_module(sid):
     return m
 
 
-def work_dir(sid):
-    return os.path.join(C.WORK, f"struct_{sid}")
+def work_dir(sid, depth=False):
+    return os.path.join(C.WORK, f"struct_{sid}" + ("_depth" if depth else ""))
 
 
 def frame_list(mod):
@@ -46,7 +51,7 @@ def frame_list(mod):
 
 
 # ---------------------------------------------------------------------------------------------- Blender side
-def render(sid, mod, samples, only, preview):
+def render(sid, mod, samples, only, preview, depth=False):
     import bpy, bmesh
     from mathutils import Vector, Matrix
 
@@ -66,6 +71,19 @@ def render(sid, mod, samples, only, preview):
         b.inputs["Base Color"].default_value = lin(hexc)
         b.inputs["Roughness"].default_value = rough
         b.inputs["Metallic"].default_value = metal
+        if depth and not emit:      # D-243: contact shadow in creases and under overhangs (Cycles AO shader, multiplied into the base colour)
+            nt = m.node_tree
+            ao = nt.nodes.new("ShaderNodeAmbientOcclusion")
+            ao.inputs["Distance"].default_value = 0.55
+            ao.samples = 8
+            ao.inputs["Color"].default_value = lin(hexc)
+            mx = nt.nodes.new("ShaderNodeMix")
+            mx.data_type = "RGBA"
+            mx.blend_type = "MIX"
+            mx.inputs[0].default_value = 0.7
+            mx.inputs[6].default_value = lin(hexc)
+            nt.links.new(ao.outputs["Color"], mx.inputs[7])
+            nt.links.new(mx.outputs[2], b.inputs["Base Color"])
         if emit:
             b.inputs["Emission Color"].default_value = lin(emit)
             b.inputs["Emission Strength"].default_value = 2.0
@@ -110,6 +128,7 @@ def render(sid, mod, samples, only, preview):
 
     S = Ctx()
     S.YS = YS
+    S.depth = depth    # modules add their extra detail only when True
     S.CELL = CELL
     S.objs = []      # (obj, material name, flags)
     S.clip_z = None
@@ -145,8 +164,8 @@ def render(sid, mod, samples, only, preview):
         o.rotation_euler = [math.radians(r) for r in rot]
         if bevel:
             bm = o.modifiers.new("bev", "BEVEL")
-            bm.width = bevel
-            bm.segments = 1
+            bm.width = bevel * 1.8 if depth else bevel      # depth: wider, two-segment bevel so edges catch the sun
+            bm.segments = 2 if depth else 1
         return finish(o, m, nocast, noclip, False)
 
     def bb(name, x0, x1, y0, y1, z0, z1, m, bevel=0.03, **kw):
@@ -312,7 +331,7 @@ def render(sid, mod, samples, only, preview):
     gm.node_tree.nodes["Principled BSDF"].inputs["Roughness"].default_value = 1.0
     ground.data.materials.append(gm)
 
-    out = work_dir(sid)
+    out = work_dir(sid, depth)
     os.makedirs(out, exist_ok=True)
 
     def render_to(path):
@@ -360,13 +379,15 @@ def main():
     ap.add_argument("--render-only", action="store_true")
     ap.add_argument("--post-only", action="store_true")
     ap.add_argument("--preview", action="store_true")
+    ap.add_argument("--depth", action="store_true")
+    ap.add_argument("--out-dir", default=None)
     a = ap.parse_args()
     mod = load_module(a.id)
     if not a.post_only:
-        render(a.id, mod, a.samples, set(a.frames or []), a.preview)
+        render(a.id, mod, a.samples, set(a.frames or []), a.preview, a.depth)
     if not (a.render_only or a.preview):
         import structpost
-        structpost.run(a.id, mod, work_dir(a.id))
+        structpost.run(a.id, mod, work_dir(a.id, a.depth), depth=a.depth, outdir=a.out_dir, only=set(a.frames or []))
 
 
 if __name__ == "__main__":
