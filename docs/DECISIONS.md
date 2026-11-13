@@ -1774,3 +1774,24 @@ D-229 (Auth v Dir 16-37, Dir v Exp 55-8); cloud probes (docs/balance/s23_directo
 **Decision:** the Grapeshot archive field note "GRAPESHOT 6 // SWEEP THE INFANTRY AT CLOSE RANGE. LEAVE THE TANKS ALONE. TELEX ENDS." is
 final (no longer a draft). Q-73 (par-time medals) stays open but deferred: the owner sets par times after he starts playing the campaign.
 **Why:** owner, session 24. **Alternatives:** reword the note; derive par from bot times now (Q-73 b). **Status:** owner decision (session 24).
+
+### D-241 · 2026-11-13 · Stronger commander directives: all four ideas (M5-12)
+**Decision:** build timed orders (attack cell X at tick N with at least K army value; hold cell X), counter-building (mixes anti-armour and
+anti-infantry, plus a "strong" flag that makes production follow the mix), a separate raid group (size, target cell), and economy calls
+(expand to cell X, tech to tier N, keep a credit reserve) with a richer summary back to the model (recent fight results). Orders are a new
+command `CommanderOrder = 28` with four standing slots per player in a "commander_orders" state part (src/Sim/Core/CommanderOrder.cs); like
+directives they are AI inputs only (D-110), no cheats (D-061), all four factions, plain tier when unset. A random-directive control joins the
+32-game swap test so a gain is the model's. **Why:** owner, session 24 (design note 15). **Alternatives:** two of the four (recommended:
+timed orders and counter-building); leave as is. **Status:** owner decision (session 24).
+
+### D-242 · 2026-11-13 · Remaining draws: faster late launch plus a scored column, no rule change
+**Decision:** the AI launches its last waves sooner when both sides are broke (AI only), and `ai match` reports an adjudicated result for games
+that hit the time limit (army + structure value + credits) as a report column only; the game rules (D-173) do not change. Built now, merged
+after the s23d laptop series is read. **Why:** owner, session 24 (s23_draws.md option D). **Alternatives:** faster launch only; a sim
+adjudication rule. **Status:** owner decision (session 24).
+
+### D-243 · 2026-11-13 · Art pilots render on the owner's laptop; Authority UI skin and both yards first
+**Decision:** session 24 art (building depth pipeline, faction UI skin, portraits, death frames) is written as Blender scripts in the cloud and
+rendered on the owner's laptop ("it comes out much better"); the cloud only smoke-tests a script at low samples. Pilots: the Authority UI skin;
+building depth on auth_conyard and dir_shaft side by side with today's sheets; portraits and death frames on one unit per pilot. Fan-out waits
+for the owner's approval of each pilot. **Why:** owner, session 24. **Status:** owner decision (session 24).

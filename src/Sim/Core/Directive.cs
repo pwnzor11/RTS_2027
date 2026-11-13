@@ -34,6 +34,13 @@ public static class DirectiveCodec
     public const byte PostureTurtle = 0, PostureBalanced = 1, PostureAggressive = 2, PostureAllIn = 3;
     public const byte FocusEconomy = 0, FocusTech = 1, FocusArmy = 2, FocusAir = 3, FocusSuperweapon = 4;
     public const byte MixAuto = 0, MixInfantry = 1, MixVehicles = 2, MixAntiAir = 3, MixAntiStructure = 4;
+    /// <summary>S24 (M5-12, D-241) counter mixes: anti-armour and anti-infantry. The sim's clamp (wired by package s24-dsim) keeps 0..6.</summary>
+    public const byte MixAntiArmour = 5, MixAntiInfantry = 6;
+    /// <summary>S24 (M5-12): Arg bit 24 = strong mix (counter-building: production follows the mix at <c>StrongMixPermille</c> instead of the
+    /// normal preference). Packed by <see cref="PackStrong"/>; package s24-dsim adds it to <see cref="Directive"/> and the clamp.</summary>
+    public const int StrongMixBit = 1 << 24;
+    /// <summary>Adds the strong-mix bit to a packed Arg.</summary>
+    public static int PackStrong(int arg, bool strong) => strong ? arg | StrongMixBit : arg & ~StrongMixBit;
 
     /// <summary>TargetPlayer value meaning "the AI chooses".</summary>
     public const byte AnyTarget = 255;

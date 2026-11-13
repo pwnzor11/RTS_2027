@@ -35,6 +35,10 @@ public enum CommandKind : byte
     /// queue of at most <see cref="Combat.CombatState.MaxWaypoints"/> waypoints, run in order each time the unit would fall idle. Any plain
     /// order (Move, Stop, Attack, ...) clears the queue. Refused for an off-map cell or a full queue. Never sent by the AI.</summary>
     QueueOrder = 27,
+    /// <summary>S24 (M5-12, D-241): a commander order for one player (<see cref="CommanderOrder"/>, packed by <see cref="CommanderOrderCodec"/>).
+    /// Cell = the order's cell, Arg = <see cref="CommanderOrderCodec.Pack"/> (kind, slot, amount), Arg2 = the due tick (0 = at once).
+    /// Stored in the "commander_orders" state part and read by the tiered AI; the sim itself never acts on it. Sent by the LLM commander only.</summary>
+    CommanderOrder = 28,
 }
 
 /// <summary>
