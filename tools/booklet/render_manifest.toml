@@ -777,6 +777,13 @@ script = "tools/art/build_vehicle.py"
 module = "tools/art/vehicles/exp_bomber.py"
 status = "ok"
 
+[hero.exp_canister_skiff]
+faction = "expedition"
+kind = "vehicle"
+script = "tools/art/build_vehicle.py"
+module = "tools/art/vehicles/exp_canister_skiff.py"
+status = "ok"
+
 [hero.exp_carrier]
 faction = "expedition"
 kind = "vehicle"
