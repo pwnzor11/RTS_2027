@@ -182,7 +182,7 @@ cost = 1500  # (tune)
 build_time = 150  # (tune)
 prerequisites = []
 tier = 3
-effects = ["exp_fx_vacuum_cores_glide_cannon", "exp_fx_vacuum_cores_barrage_rockets", "exp_fx_vacuum_cores_gunship_rockets"]
+effects = ["exp_fx_vacuum_cores_glide_cannon", "exp_fx_vacuum_cores_canister_gun", "exp_fx_vacuum_cores_barrage_rockets", "exp_fx_vacuum_cores_gunship_rockets"]
 
 [exp_up_composite_armour]   # Composite Armour: hover and infantry +15 % health
 faction = "expedition"
@@ -190,7 +190,7 @@ cost = 1500  # (tune)
 build_time = 150  # (tune)
 prerequisites = []
 tier = 3
-effects = ["exp_fx_composite_skimmer", "exp_fx_composite_hoverlander", "exp_fx_composite_glide_tank", "exp_fx_composite_sparker", "exp_fx_composite_repair_hover", "exp_fx_composite_survey_hover", "exp_fx_composite_barrage_lander", "exp_fx_composite_marine", "exp_fx_composite_pioneer", "exp_fx_composite_diver", "exp_fx_composite_pathfinder", "exp_fx_composite_ironbound"]
+effects = ["exp_fx_composite_skimmer", "exp_fx_composite_hoverlander", "exp_fx_composite_glide_tank", "exp_fx_composite_canister_skiff", "exp_fx_composite_sparker", "exp_fx_composite_repair_hover", "exp_fx_composite_survey_hover", "exp_fx_composite_barrage_lander", "exp_fx_composite_marine", "exp_fx_composite_pioneer", "exp_fx_composite_diver", "exp_fx_composite_pathfinder", "exp_fx_composite_ironbound"]
 
 [exp_up_guided_shells]   # Guided Shells: heavier, longer guns
 faction = "expedition"
@@ -222,4 +222,4 @@ cost = 1200  # (tune)
 build_time = 120  # (tune)
 prerequisites = []
 tier = 3
-effects = ["exp_fx_veteran_drill_marine", "exp_fx_veteran_drill_ironbound", "exp_fx_veteran_drill_glide_tank", "exp_fx_veteran_drill_destroyer", "exp_fx_veteran_drill_cruiser", "exp_fx_veteran_drill_jet", "exp_fx_veteran_drill_bomber", "exp_fx_veteran_drill_missile_sub"]
+effects = ["exp_fx_veteran_drill_marine", "exp_fx_veteran_drill_ironbound", "exp_fx_veteran_drill_glide_tank", "exp_fx_veteran_drill_canister_skiff", "exp_fx_veteran_drill_destroyer", "exp_fx_veteran_drill_cruiser", "exp_fx_veteran_drill_jet", "exp_fx_veteran_drill_bomber", "exp_fx_veteran_drill_missile_sub"]

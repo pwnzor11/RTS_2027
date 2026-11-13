@@ -1750,3 +1750,7 @@ was seen. Re-measure the Authority mirror, Directorate mirror and Authority v Di
 function line until the Field Manual lore pass. Art pilot approved now: one render and sprite sheet, contact sheet to the owner before commit,
 pushed by the owner with an LFS bundle (D-084). Cloud smoke (16 games/cell, tier 3): Exp v LB Rust Belt 4-10 -> 10-5, LB v Exp Glass Coast
 3-10 -> 2-12, Auth v Exp 7-9 -> 7-9, Dir v Exp 14-2 -> 10-5; to confirm on the laptop. **Status:** owner decision (session 23).
+
+### D-237 · 2026-11-13 · Grapeshot gets the Glide Tank's upgrades
+**Decision:** `exp_canister_skiff` joins the same Expedition upgrades as the Glide Tank: composite hulls (max health x1.15), vacuum cores
+(canister gun rate of fire x0.85) and veteran drill (veterancy threshold x0.8). **Status:** owner decision (session 23, "same upgrades").
