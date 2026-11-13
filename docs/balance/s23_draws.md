@@ -42,3 +42,13 @@ changes Beaten().
   rule would change D-173.
 
 Recommendation (helper and lead): B (B3, B2, B1) plus A, re-measured on the same three pairs; C only after that; D as a fallback.
+
+## After the fixes (D-235, wp/s23-endgame, cloud)
+| Pair | Games | Before W-L-D (mean end) | After W-L-D (mean end) |
+|---|---|---|---|
+| Authority mirror, seeds 1-8 | 16 | 6-6-4 (20240) | 7-6-3 (19264) |
+| Directorate mirror, seeds 9-20 | 24 | 8-12-4 (18660) | 10-12-2 (18757) |
+| Authority v Directorate, seeds 1-8 | 16 | 3-9-4 (17717) | 4-9-3 (16981) |
+Draws 12/56 (21 %) -> 8/56 (14 %). B2 (idle wave attacks a nearby structure) and the mop-up fired in traced games that used to draw. The
+remaining draws are mostly "attacker arrives late" (e.g. Authority mirror s6g2: the last wave reaches the yard at ~27500 and the clock runs
+out), which needs a faster launch or adjudication (option D). Laptop series to confirm.
