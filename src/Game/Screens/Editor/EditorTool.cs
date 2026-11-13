@@ -15,8 +15,12 @@ public enum EditorTool
     Feature,
     /// <summary>Place a numbered start position (and its symmetric images).</summary>
     Start,
-    /// <summary>Clear resources, features and starts under the brush.</summary>
+    /// <summary>Clear resources, props, decals, features and starts under the brush.</summary>
     Eraser,
     /// <summary>Flood-fill a land type.</summary>
     Fill,
+    /// <summary>Paint a blocking prop (tree, wreck, block, pylon, snag) with the brush.</summary>
+    Props,
+    /// <summary>Paint a decal kind (0 = erase decals) with the brush.</summary>
+    Decal,
 }
