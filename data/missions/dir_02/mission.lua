@@ -83,7 +83,7 @@ end
 
 -- Convoys: tier 1..5 sets the escort by unit count only.
 function EscortSize()
-  local sizes = { 1, 1, 1, 2, 3 }
+  local sizes = { 1, 1, 1, 2, 5 }
   return sizes[Mission.Difficulty()]
 end
 
@@ -125,7 +125,7 @@ end
 
 -- The reserve answers the first fallen post. Rifles by tier; a jeep from tier 4.
 function ReserveSize()
-  local sizes = { 1, 2, 3, 5, 7 }
+  local sizes = { 1, 2, 3, 5, 10 }
   return sizes[Mission.Difficulty()]
 end
 
