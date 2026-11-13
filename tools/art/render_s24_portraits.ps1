@@ -62,6 +62,7 @@ bg = (126, 150, 120, 255)
 ports = sorted(f for f in os.listdir(pdir) if f.endswith(".png"))
 K = 3
 rows = [("portraits", [(f[:-4], Image.open(os.path.join(pdir, f)).convert("RGBA")) for f in ports])]
+rows[0] = ("portraits", [(n.split("/")[-1], im) for n, im in rows[0][1]])
 for st in man["state"]:
     if not st["name"].startswith("die"):
         continue
@@ -81,7 +82,7 @@ for name, items in rows:
         s = 2 if name == "portraits" else K
         im2 = im.resize((im.width * s, im.height * s), Image.NEAREST)
         out.paste(im2, (n * cell + (cell - im2.width) // 2, y + (cell - im2.height) // 2), im2)
-        d.text((n * cell + 4, y + cell + 2), f"{name} {lab}", fill=(20, 20, 20, 255))
+        d.text((n * cell + 4, y + cell + 2), f"{name} - {lab}", fill=(20, 20, 20, 255))
     y += cell + 18
 os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
 out.convert("RGB").save(path)

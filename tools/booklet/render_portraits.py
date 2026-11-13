@@ -8,7 +8,7 @@ On the owner's laptop use tools/art/render_s24_portraits.ps1.  On the shared clo
 `flock -o /home/claude/wt/blender.lock ...` (the script does not lock by itself).
 
 Contract (read by code package s24-card): data/portraits/<id>.png, 96 x 96, RGBA, transparent background; infantry = head and
-shoulders, vehicles and buildings = the whole model, square crop, 3/4 view (the south-west quarter of the booklet heroes); the house
+shoulders facing the camera, vehicles and buildings = the whole model, square crop, 3/4 view (the south-west quarter of the booklet heroes); the house
 paint is the faction's default accent from tools/booklet/render_manifest.toml (the same colour as the booklet hero), not the magenta ramp.
 
 How it works: render_heroes.py's hook is reused unchanged (same builders, same recolouring, same camera angle and sun, same
@@ -31,6 +31,7 @@ OUT_PX = 96
 SUPERSAMPLE = 2
 PILOT_IDS = ["auth_rifleman", "auth_tank", "dir_conscript", "dir_rocket_truck"]   # one infantry and one vehicle per base faction
 BAND = 0.34        # infantry: the top fraction of the figure's height that counts as head and shoulders
+INFANTRY_FACING_DEG = 180.0   # infantry face the camera (south); vehicles and buildings keep the hero's south-west 3/4 (225)
 PAD = {"infantry": 0.14, "vehicle": 0.07, "building": 0.07}
 
 
@@ -158,6 +159,7 @@ def main():
         for n, rid in enumerate(todo, 1):
             h = heroes[rid]
             Portrait.kind = h["kind"]
+            H.FACING_DEG = INFANTRY_FACING_DEG if h["kind"] == "infantry" else 225.0     # facing_index() reads it at call time
             H.Hero.accent = a.accent or accents[h["faction"]]["color"]
             H.Hero.path = os.path.join(tmp, rid + ".png")
             H.Hero.yaw = H.STRUCTURE_YAW.get(rid, 0.0) if h["kind"] == "building" else 0.0
