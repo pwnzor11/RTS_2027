@@ -351,6 +351,16 @@ def finished(S, i, dmg, mode):
         for k in range(4):
             S.bb(f"grille{k}", 1.3 + k * 0.28, 1.45 + k * 0.28, 2.58, 3.4, Z_ROOF + 0.4, Z_ROOF + 0.46, "dark", 0.0)
     S.bb("hatch", -3.9, -2.6, 2.7, 3.5, Z_ROOF, Z_ROOF + 0.18, "concrete2", 0.04)
+    if S.depth and not dmg:       # --depth only (D-243): roof vents, a pipe run with brackets and a rooftop duct for height cues
+        S.cyl("dvent0", 0.2, 0.5, (-1.7, 2.95, Z_ROOF + 0.25), "hull2", verts=12)
+        S.cyl("dventh0", 0.3, 0.1, (-1.7, 2.95, Z_ROOF + 0.55), "steel", verts=12)
+        S.cyl("dvent1", 0.2, 0.7, (-0.5, 2.95, Z_ROOF + 0.35), "hull2", verts=12)
+        S.cyl("dventh1", 0.3, 0.1, (-0.5, 2.95, Z_ROOF + 0.75), "steel", verts=12)
+        S.cyl("dpipe", 0.09, 3.2, (-0.8, 3.4, Z_ROOF + 0.26), "steel", axis="X", verts=10)
+        for k, bx in enumerate((-2.2, -1.1, 0.0, 0.9)):
+            S.bb(f"dbrk{k}", bx - 0.05, bx + 0.05, 3.32, 3.48, Z_ROOF, Z_ROOF + 0.2, "concrete2", 0.0)
+        S.bb("dduct", 3.7, 4.0, 1.0, 2.4, Z_ROOF, Z_ROOF + 0.32, "concrete2", 0.03)
+        S.cyl("dstack", 0.14, 0.45, (3.85, 1.0, Z_ROOF + 0.45), "hull2", verts=10)
     mx, my = 3.5, 3.0
     if dmg:      # the mast is sheared and leans over the pit
         for ax in (-0.12, 0.12):
