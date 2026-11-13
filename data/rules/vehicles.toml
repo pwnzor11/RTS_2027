@@ -165,7 +165,7 @@ primary_weapon = "dir_rocket_salvo"
 has_turret = true
 turret_turn_rate = 8  # ASSUMED (M3-07)
 crusher = false
-cost = 800  # ASSUMED (M3-07)
+cost = 950  # (tune) s23 D-239: 800 -> 950 (Directorate too strong after D-229, docs/balance/s23_directorate.md)
 prerequisites = ["dir_assembly_bore"]
 
 [dir_dirigible]

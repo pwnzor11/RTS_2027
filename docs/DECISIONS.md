@@ -1763,3 +1763,9 @@ The tier-5 fixed-seed walks of auth_04, dir_02 and dir_03 now assert a clean run
 (12/12 at one unit less, 0/6 at one unit more); the owner chose to leave them, and exp_04 (not attempted), at 12/12.
 **Note:** the band is narrow and the sweeps are steep (auth_02: 5/6 -> 0/6 on ~15 % more units); later sim or bot changes will move these.
 **Status:** owner decision (session 23); laptop campaign sweep to confirm.
+
+### D-239 · 2026-11-13 · Rocket Truck cost 800 -> 950 (M13-26)
+**Decision:** `dir_rocket_truck` cost 800 -> 950 (splash stays 1, damage stays 90). **Why:** s23after showed the Directorate too strong after
+D-229 (Auth v Dir 16-37, Dir v Exp 55-8); cloud probes (docs/balance/s23_directorate.md): cost 950 moved Auth v Dir 3-9 -> 7-8 and Dir v Exp
+10-5 -> 6-6 with Dir v LB 7-5 -> 6-4. **Alternatives:** damage 90 -> 75 (Auth v Dir only); both (overshoots Dir v LB 2-11); Conscript cost
+(made it worse); leave the truck and fix AI responses. **Status:** owner decision (session 23); confirm with the laptop series s23d.
