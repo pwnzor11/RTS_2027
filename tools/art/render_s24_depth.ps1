@@ -43,6 +43,6 @@ foreach ($id in $want) {
 $cmp = @('tools\art\depth_compare.py') + @($want | Where-Object { $failed -notcontains $_ }) + @('--depth-dir', $outDir)
 if ($Frames) { $cmp += '--frames'; $cmp += ($Frames | ForEach-Object { "$_" }) }
 python @cmp
-python tools\art\house_audit.py
+python tools\art\house_audit.py $outDir
 Write-Host ("Elapsed {0:hh\:mm\:ss}. Failed: {1}" -f ((Get-Date) - $t0), ($(if ($failed) { $failed -join ', ' } else { 'none' })))
 Write-Host "Compare sheet: $(Join-Path $root 'scratch\art_s24\depth_compare.png')"
