@@ -659,6 +659,22 @@ crusher = false
 cost = 900  # (tune)
 prerequisites = ["exp_hover_yard"]
 
+[exp_canister_skiff]   # PENDING Q-84 (owner names it): hover canister skiff, tier-2 ground anti-infantry splash (Q-80, s23)
+faction = "expedition"
+tier = 2
+speed = 30  # (tune) s23 Q-80
+max_health = 240  # (tune) s23 Q-80
+locomotion = "hover"
+turn_rate = 10  # (tune) s23 Q-80
+armor = "light"
+sight = 5  # (tune) s23 Q-80
+primary_weapon = "exp_canister_gun"
+has_turret = true
+turret_turn_rate = 14  # (tune) s23 Q-80
+crusher = false
+cost = 650  # (tune) s23 Q-80
+prerequisites = ["exp_hover_yard"]
+
 [exp_sparker]   # hover anti-air, guided missile
 faction = "expedition"
 tier = 2

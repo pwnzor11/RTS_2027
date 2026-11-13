@@ -57,6 +57,17 @@ fields without stopping. It will outpace any tracked tank on the continent and l
 unlock = "open"
 
 [[entry]]
+id = "exp_canister_skiff"
+category = "Unit"
+faction = "expedition"
+title = "PENDING Q-84 (name)"
+subtitle = "Hover anti-infantry"
+body = '''
+PENDING Q-84: description text to be written by the owner.
+'''
+unlock = "open"
+
+[[entry]]
 id = "exp_landing_craft"
 category = "Unit"
 faction = "expedition"
