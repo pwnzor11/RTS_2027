@@ -52,3 +52,13 @@ Recommendation (helper and lead): B (B3, B2, B1) plus A, re-measured on the same
 Draws 12/56 (21 %) -> 8/56 (14 %). B2 (idle wave attacks a nearby structure) and the mop-up fired in traced games that used to draw. The
 remaining draws are mostly "attacker arrives late" (e.g. Authority mirror s6g2: the last wave reaches the yard at ~27500 and the clock runs
 out), which needs a faster launch or adjudication (option D). Laptop series to confirm.
+
+## Session 24: endgame launch (D-242, wp/s24-draw, cloud)
+`EndgameLaunch` (AI only): when the economy rescue says Broke, or the tick is 18 000+ with no harvester alive, `MilitaryManager.Think` launches with 2+ units,
+home guard 0, no staging (straight to Assault), and later units join the running wave. Same flags as above (Authority seeds 1-8, tiered:3, rust_belt layout 1, size 96, 30 000 ticks).
+| Pair | Games | Before W-L-D (mean end) | After W-L-D (mean end) |
+|---|---|---|---|
+| Authority mirror | 16 | 7-6-3 (19264) | 8-5-3 (19982) |
+| Authority v Directorate | 16 | 4-9-3 (19267) | 4-8-4 (20308) |
+Result: no gain (draws 6 -> 7 of 32, mean end tick later). Games reshuffle (the AI is chaotic), so single draws move both ways. Traced mirror s6g2 after the change: the draw is
+not a late launch. Both sides end with 0 army; side A has 1345 credits, tier 2, a barracks and no harvester, and never spends it on infantry (production issue, not the launch).
