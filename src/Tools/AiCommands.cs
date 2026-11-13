@@ -21,7 +21,7 @@ public static class AiCommands
 {
     private const int DefaultTier = 2;
     private const string Usage =
-        "usage: ai match --a <aiId>[:<tier>] --b <aiId>[:<tier>] [--seeds 8] [--ticks 30000] [--size 64] [--out file.md] [--record-dir dir] [--flat 1] [--starts alt|slot|swap] [--start economy|army] [--first 1] [--faction-a authority|directorate|left_behind|expedition] [--faction-b ...] [--layout 1|2] [--biome rust_belt|glass_coast|mountains|ash_plains] [--income 1] [--mopup on|off] [--ledger 1]\n" +
+        "usage: ai match --a <aiId>[:<tier>] --b <aiId>[:<tier>] [--seeds 8] [--ticks 30000] [--size 64] [--out file.md] [--record-dir dir] [--flat 1] [--starts alt|slot|swap] [--start economy|army] [--first 1] [--faction-a authority|directorate|left_behind|expedition] [--faction-b ...] [--layout 1|2] [--biome rust_belt|glass_coast|mountains|ash_plains] [--income 1] [--mopup on|off] [--ledger 1] [--trace N --game G [--econ 1]]\n" +
         "         --layout / --biome (M12-12) build the map with the biome generator (size 64 = small, 96 = medium, else large) instead of the synthetic map; layout 2 is the zoned layout, no flag = unchanged. --income prints harvested credits at 3/5/10 min.\n" +
         "         example (M7-10): ai match --a tiered:2 --b tiered:2 --faction-a expedition --faction-b authority --size 96 --seeds 4   (an Expedition side gets ocean north+south edges; 96 = medium)\n" +
         "       ai matrix --ai <aiId> [--faction authority|directorate] [--tiers 1-5] [--seeds 4] [--ticks 30000] [--size 64] [--layout 1|2] [--out file.md]\n" +
@@ -31,7 +31,7 @@ public static class AiCommands
         "       ai duel --a <spec> --b <spec> [--count 1] [--count-b N] [--ticks 3000] [--gap 12]   (spec = id[:n][,id[:n]...], e.g. auth_tank:3,auth_turret:1)\n" +
         "  <tier> is 1..5 or recruit|regular|veteran|elite|commissar (default regular). Seeds are first..first+N-1 (first defaults to 1).";
 
-    private static readonly string[] MatchOptions = ["a", "b", "seeds", "ticks", "size", "out", "record-dir", "flat", "starts", "start", "first", "faction-a", "faction-b", "trace", "game", "extras", "layout", "biome", "income", "mopup", "ledger"];
+    private static readonly string[] MatchOptions = ["a", "b", "seeds", "ticks", "size", "out", "record-dir", "flat", "starts", "start", "first", "faction-a", "faction-b", "trace", "game", "extras", "layout", "biome", "income", "mopup", "ledger", "econ"];
     private static readonly string[] TimelineOptions = ["a", "b", "seed", "ticks", "size", "swap", "trace", "dump", "faction-a", "faction-b", "layout", "biome"];
     private static readonly string[] DuelOptions = ["a", "b", "count", "count-b", "ticks", "gap"];
     private static readonly string[] MatrixOptions = ["ai", "tiers", "seeds", "ticks", "size", "out", "faction", "players", "biome", "layout"];
@@ -94,6 +94,7 @@ public static class AiCommands
         _extras = flags.ContainsKey("extras");
         _ledger = null;   // S23: per-type made/lost (created on the first game)
         _ledgerOn = flags.ContainsKey("ledger");
+        _econ = flags.ContainsKey("econ");   // S23 (M13-23): with --trace, an economy line per side (EconDiag)
         _extraSum = new long[2, 4];
         var clock = Stopwatch.StartNew();
         MatchTally tally;
@@ -880,7 +881,7 @@ public static class AiCommands
     }
 
     private static int _traceEvery, _traceGame;
-    private static bool _extras, _income, _ledgerOn;
+    private static bool _extras, _income, _ledgerOn, _econ;
     private static UnitLedger? _ledger;
     private static long[,] _extraSum = new long[2, 4];
 
@@ -891,10 +892,17 @@ public static class AiCommands
         private readonly int[] _prev = new int[2], _waves = new int[2], _tier = new int[2];
         private readonly HashSet<string>[] _seen = [new(), new()];
         private bool _init;
+        private readonly CellCoord[] _home = new CellCoord[2];
 
         public void Observe(Simulation sim, IAiPlayer ai0, IAiPlayer ai1, byte slotA, byte slotB)
         {
-            if (!_init) { _init = true; _prev[0] = sim.Funds(0); _prev[1] = sim.Funds(1); }
+            if (!_init)
+            {
+                _init = true; _prev[0] = sim.Funds(0); _prev[1] = sim.Funds(1);
+                for (int p0 = 0; p0 < 2; p0++)
+                    for (int i = 1; i < sim.Buildings.Capacity; i++)
+                        if (sim.Buildings.Slots.IsIndexAlive(i) && sim.Buildings.Player[i] == p0) { _home[p0] = sim.Buildings.Cell[i]; break; }
+            }
             var ais = new IAiPlayer[2];
             ais[slotA] = ai0; ais[slotB] = ai1;
             for (int p = 0; p < 2; p++)
@@ -922,6 +930,7 @@ public static class AiCommands
                     if (sim.Buildings.Slots.IsIndexAlive(i) && sim.Buildings.Player[i] == p) b++;
                 string ai = ais[p] is RecruitAi r ? $"waves {r.Waves} up {r.UpgradesOrdered} sold {r.StructuresSold} [{r.MilitaryDebug}]" : "";
                 Console.WriteLine($"t{sim.Tick} P{p}{(p == slotA ? "(A)" : "(B)")} tier {sim.TierOf((byte)p)} army {n} value {val} scrapers {harv} cash {sim.Funds((byte)p)} income {_income[p]} bldg {b} {ai}");
+                if (_econ) Console.WriteLine($"    econ P{p}{(p == slotA ? "(A)" : "(B)")}: {EconDiag.Line(sim, rules, (byte)p, _home[p])}\n    where P{p}: {EconDiag.Where(sim, rules, (byte)p)}");
             }
         }
 
