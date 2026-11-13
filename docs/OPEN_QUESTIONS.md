@@ -10,11 +10,9 @@ file cited after each question. Recommendations are the lead's, from the researc
   (b) par = the bot's tier-3 win time + 50 %; (c) no par medal.
 
 
-- 🟡 **Q-84 · 2026-11-13 · Name, look and lore of the Expedition canister skiff (M13-25, D-234).** The unit plays with working id
-  `exp_canister_skiff` and a borrowed hover sprite. Needed from the owner: (1) its name (Claude proposes a short list); (2) approve an art pilot
-  (one Blender render, contact sheet first, D-084 LFS push by the owner); (3) a lore line for the Field Manual (Claude drafts, owner approves).
 
 ## Answered
+- Q-84 · 2026-11-13 · Owner: name Grapeshot; art pilot now → D-236.
 - Q-79..Q-83 · 2026-11-13 · Owner: Q-79 (a) diagnose late-game income/rebuild first; Q-80 (c) a new tier-2 ground anti-infantry unit, shape:
   hover canister skiff; Q-81 (b) booklet waits until balance settles; Q-82 (b) raise tier 5 now, band 4-9 of 12; Q-83 (a) instructor on Kokoro by
   audition, unit barks after SFX → D-234.

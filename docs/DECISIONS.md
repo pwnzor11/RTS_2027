@@ -1744,3 +1744,9 @@ Broke (dearest affordable unit, cancel stalled lanes for the refund); (B3) never
 standing 1 500+ ticks within 8 cells of a known enemy structure attacks the nearest one; (B1) MopupDue uses MinArmyNoEnemy when no enemy army
 was seen. Re-measure the Authority mirror, Directorate mirror and Authority v Directorate. **Alternatives:** ore regrowth or richer fields
 (sim rule; later, only if A+B fall short); adjudicating at the time limit (fallback); leave as is. **Status:** owner decision (session 23).
+
+### D-236 · 2026-11-13 · The canister skiff is the Grapeshot (Q-84, M13-25)
+**Decision:** the Expedition's tier-2 hover canister skiff is named **Grapeshot** (id stays `exp_canister_skiff`). Archive text is a plain
+function line until the Field Manual lore pass. Art pilot approved now: one render and sprite sheet, contact sheet to the owner before commit,
+pushed by the owner with an LFS bundle (D-084). Cloud smoke (16 games/cell, tier 3): Exp v LB Rust Belt 4-10 -> 10-5, LB v Exp Glass Coast
+3-10 -> 2-12, Auth v Exp 7-9 -> 7-9, Dir v Exp 14-2 -> 10-5; to confirm on the laptop. **Status:** owner decision (session 23).

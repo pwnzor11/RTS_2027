@@ -659,7 +659,7 @@ crusher = false
 cost = 900  # (tune)
 prerequisites = ["exp_hover_yard"]
 
-[exp_canister_skiff]   # PENDING Q-84 (owner names it): hover canister skiff, tier-2 ground anti-infantry splash (Q-80, s23)
+[exp_canister_skiff]   # Grapeshot (Q-84, D-236): hover canister skiff, tier-2 ground anti-infantry splash (Q-80, s23)
 faction = "expedition"
 tier = 2
 speed = 30  # (tune) s23 Q-80

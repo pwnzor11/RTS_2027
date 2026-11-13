@@ -60,10 +60,10 @@ unlock = "open"
 id = "exp_canister_skiff"
 category = "Unit"
 faction = "expedition"
-title = "PENDING Q-84 (name)"
+title = "Grapeshot"
 subtitle = "Hover anti-infantry"
 body = '''
-PENDING Q-84: description text to be written by the owner.
+A light hover skiff with a canister gun that sweeps massed infantry at short range. Thin armour: keep it away from tanks.
 '''
 unlock = "open"
 
