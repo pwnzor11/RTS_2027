@@ -20,7 +20,7 @@
 
 ## 2026-11-02 · Session 2
 - Clean clone on Windows, then `dotnet build RTS_2027.slnx` → `0 Warning(s)` and `0 Error(s)`.
-- GitHub → Actions → latest "CI" run on main is green with artifacts `test-results` and `RTS_2027-win-x64`.
+- GitHub → Actions → latest "CI" run on main is green with the artifact `test-results`, and Releases shows a `nightly` pre-release for that commit (S23).
 - Open `art/pilot/contact_sheet.png` (v1 pilot) and `art/pilot/contact_sheet_v2.png` (v2 tank, D-043).
 - `dotnet run --project src/Game -- --demo` → the old orbit demo (squares circling the centre).
 (Test counts, hashes and the default window changed during M1; current values are in the next block.)
@@ -56,7 +56,7 @@ Pull main first. Requires the .NET 10 SDK.
 3. **Debug console:** `dotnet run --project src/Game`, press F1, type `help`; with the mouse over open ground type
    `spawn vehicle test_tank 3` + Enter → three tanks appear (stacked on one cell). Esc closes the console without quitting.
    `reveal` toggles the full-map view; `speed 4` runs four times faster.
-4. **Published zip:** download the CI artifact `RTS_2027-win-x64-<sha>` from the latest main run, unzip anywhere, run `Game.exe`
+4. **Published zip:** download `RTS_2027-win-x64.zip` from the `nightly` pre-release on the Releases page (S23; was a CI artifact), unzip anywhere, run `Game.exe`
    → the sandbox opens. The folder contains `data\`, `LICENSE`, `NOTICE.md`, `THIRD_PARTY_NOTICES.md`.
 5. **Crash dialog:** in that unzipped folder rename `data` to `data_x` and run `Game.exe` → a message box says it crashed and
    `logs\crash-*.txt` exists. Rename it back.
