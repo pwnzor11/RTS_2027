@@ -231,7 +231,7 @@ internal sealed class MilitaryManager
     /// <summary>S22: a mop-up wave may leave now (the thresholds and the strength gate do not apply; siege hold, retreat cooldown and scripted holds still do).</summary>
     private bool MopupDue(int tick, int n, int guard) =>
         MopupOn && _beatenSince >= 0 && tick - _beatenSince >= MopupPlan.HoldTicks && tick - _threatTick >= MopupPlan.CalmTicks
-        && n >= MopupPlan.MinArmy + guard && tick - _lastWave >= MopupPlan.GapTicks;
+        && n >= MopupPlan.MinUnits(EnemyValueSeen) + guard && tick - _lastWave >= MopupPlan.GapTicks;   // s23 D-235 (B1): the same minimum as Beaten()
 
     // ---- S15 siege (Q-64, D-174): decisions in SiegePlan, memory here (saved at the end of Snapshot) ----
     private bool _siegeOn, _siegeWave, _siegeHave;
