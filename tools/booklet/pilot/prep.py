@@ -27,7 +27,7 @@ frame('data/sprites/buildings/auth_conyard.png',192,248,0,2,'auth_conyard.png')
 
 rr=json.load(open('tools/booklet/data/rules_resolved.json'))
 names={}
-for f in ['units_authority','structures_authority','upgrades']:
+for f in sorted(p.stem for p in __import__('pathlib').Path(R+'data/archive').glob('*.toml')):
     for e in tomllib.load(open(R+f'data/archive/{f}.toml','rb'))['entry']: names[e['id']]=e
 def title(i): return names[i]['title'] if i in names else i
 # unit stat cards
