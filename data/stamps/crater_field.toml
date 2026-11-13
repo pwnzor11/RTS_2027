@@ -1,0 +1,24 @@
+# Shell craters: rough rims around ash floors, a few wrecks and debris. Fully walkable except the props.
+id = "crater_field"
+name = "Crater field"
+width = 10
+height = 10
+biomes = []
+rows = [
+  "..........",
+  ".rrr......",
+  ".raar..rr.",
+  ".rrr..raar",
+  "...S..rrr.",
+  "..........",
+  ".rr...W...",
+  "raar......",
+  ".rr..rrr..",
+  "......rar.",
+]
+
+[legend]
+r = { land = "Rough", overlay = "None" }
+a = { land = "Ash", overlay = "None" }
+S = { overlay = "Snag", density = 0 }
+W = { overlay = "Wreck", density = 1 }
