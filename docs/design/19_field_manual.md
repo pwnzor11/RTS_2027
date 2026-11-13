@@ -115,6 +115,37 @@ plentiful and the Annex is not, so spend the first and guard the second. Keep a 
 without one has been known to reconsider. Bury what you cannot hold and return for it later. Report losses in the approved form.
 Report doubts in person.
 
+## 6c. Left Behind lore expansion (DRAFT for sign-off, session 23)
+Same shape as the approved Authority and Directorate entries: four entries for the Left Behind chapter, in-universe voice, no
+campaign secrets (premise only; no mission outcomes, no quarrels inside the leadership, nothing about what happens to the
+caravans or their enemies). Each entry adds an angle the Archive pages do not carry: a custom, a day in camp, the weather,
+doctrine. Vocabulary from docs/lore and the Archive: the Drift, rigs, the flag, the Gathering, the Speaker, the ledger, chalk
+boards, rig radio, Tern Point, the Mother Rig and its neighbours.
+
+**The Evening Count.** When the rigs stop for the night, somebody on every flatbed reads the flag aloud, oldest name first. The
+children answer for the ones too small to speak, and the names of the dead are read in the same breath as the living, with no
+pause between them. A stranger who has eaten at the fire is asked for a name before the plates are cleared, and the Muster Rig
+chalks it on the board. Nobody explains the count to outsiders. The caravans only say that a rig which has been counted has
+not been left, and that the count is what you do instead of a funeral when there is no time for one.
+
+**Making Camp.** A caravan arrives in an order. The Dune Buggy goes out to smell the place and comes back. The Tow Truck lifts a
+Packed Rig down off the road and the Mother Rig unfolds into a street. The Still Rig is turned to catch whatever rain there is,
+because nobody works well before they have had water. Children stake the Spike Nest ring while their elders argue about the
+wind. The Scrap Wall goes up out of whatever is lying about, and if the camp will stay for the season, the Salvage Yard is
+laid out last, near the gate where the wrecks will come in.
+
+**Reading the Weather.** Ash is a calendar, a map and a clock to the Drift. Children learn the sky before they learn to read:
+how a grey sky sounds when it is about to turn, and how the dunes smell before the wind changes. They have more words for grey
+than the Authority has forms. The listeners at the Lookout Mast watch the signals; the Veilwalkers wear the colour of the
+drifts and read the ground; and when the Gleaners are called in from the field half full, nobody asks why. A caravan that
+loses an afternoon to weather is lucky. It has not yet lost a rig.
+
+**Doctrine for Commanders** (issued at the Gathering, in the Speaker's name). Keep the rigs together; a rig left behind is a
+debt, and the ledger remembers. Build nothing you cannot fold. Raise the Spike Nest before the wall, and the wall before the
+workshop. Let the Authority come to you, and fight where the wind and the wrecks are yours. Salvage what you break. Call the
+count before an action and again after it, aloud, from the flag. Spend scrap before you spend people. Never say goodbye
+to a crew; say you will see them at the next fire, and then be there.
+
 ## 7. Questions (answered in session 18, see the top)
 - Q-B1 Art: sprite plates for every unit plus about 10 hero renders (recommended), or a full hero render of every unit and building
   (about 150 renders on the PC, many hours)?
