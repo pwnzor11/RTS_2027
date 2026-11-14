@@ -354,6 +354,8 @@ internal sealed class TierPlanner
 
     /// <summary>S24 (D-241 ExpandTo): the issue tick of the pending expand order (-1 = none); one more refinery step is inserted for it, right behind the first.</summary>
     public int ExpandOrderTick { get; set; } = -1;
+    /// <summary>S24: the expand order tick a refinery step was already inserted for (-1 = none); saved with the AI's order block.</summary>
+    internal int ExpandStepFor { get => _expandStepFor; set => _expandStepFor = value; }
     private int _expandStepFor = -1;
 
     /// <summary>M4-12: an enemy aircraft has been seen (anti-air is then wanted).</summary>
