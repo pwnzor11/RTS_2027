@@ -1795,3 +1795,9 @@ adjudication rule. **Status:** owner decision (session 24).
 rendered on the owner's laptop ("it comes out much better"); the cloud only smoke-tests a script at low samples. Pilots: the Authority UI skin;
 building depth on auth_conyard and dir_shaft side by side with today's sheets; portraits and death frames on one unit per pilot. Fan-out waits
 for the owner's approval of each pilot. **Why:** owner, session 24. **Status:** owner decision (session 24).
+
+### D-244 · 2026-11-14 · Grapeshot canister gun damage 14 -> 11
+**Decision:** `exp_canister_gun` damage 14 -> 11 (cost, range, rate of fire and the AI trigger unchanged). **Why:** the s23d laptop series
+(docs/balance/s23d_read.md) shows Grapeshot overshot: Expedition v Left Behind 50-5 on Glass Coast (was 35-13) and Left Behind v Expedition
+21-39 on Rust Belt (was 40-18); Expedition v Authority on Glass Coast 43-20 (was 34-27). **Alternatives:** probe three variants first (cost 850,
+damage 11, AI cap of 2 skiffs); cost 850; buff Left Behind. **Status:** owner decision (session 24); confirm with the next laptop series.
