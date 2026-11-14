@@ -1,38 +1,48 @@
-# Handoff: Session 24 — read the laptop runs (s23d series, campaign sweep), then the next balance round
-Last commit: `docs: Session 23 handoff` on `land/s23-r4` (PR #80 to main). Check `git log -1 origin/main` and whether PR #80 is merged.
-Where things stand: session 23 rounds 1-3 are on main (PRs #77-#79: Rocket Truck splash 1 D-229, `ai match --ledger`, Left Behind tier-3 cap
-D-230, lore D-231, nightly pre-release D-232, mop-up loosened D-233). Round 4 is PR #80 (`land/s23-r4` = integ-s23d): owner answers D-234;
-late-game draws diagnosed as mined-out maps plus AI endgame fixes D-235 (`ai match --econ 1`; cloud draws 21 % -> 14 %); Expedition tier-2 hover
-anti-infantry unit **Grapeshot** (`exp_canister_skiff`, D-236/D-237: data, AI use vs infantry, Glide Tank upgrades, draft field note);
-campaign tier 5 raised in auth_02, auth_04, dir_01-04 to 4-9/12 (D-238; lb_04, exp_02, exp_04 stay 12/12); tut_01 instructor voice slots
-(M10-24); Rocket Truck cost 800 -> 950 (D-239, M13-26) after the s23after read (docs/balance/s23_directorate.md). Decisions up to D-239.
-Open questions: Q-73 only.
+# Handoff: Session 25 — read the laptop runs (s24after series, SFX catch-up), install the approved art, next balance round
+Last commit: `docs: Session 24 handoff` on `land/s24-r3` (PR to main; round 2 is PR #82). Check `git log -1 origin/main` and whether both PRs are merged.
+Where things stand: session 24 on main via PRs #80 (s23 round 4), #81 (Grapeshot art, D-240) and #82 (round 2): editor Props/Decal/Stamp tools
+(M12-06b, M12-13), stamp library with a generator pass behind MapGenParams.Stamps (off), stronger commander directives (D-241: CommanderOrder = 28,
+"commander_orders" state part, LLM orders/counter mixes/recent fights, random-directive control, AI AttackAt/HoldCell/Raid/ExpandTo/TechTo/Reserve),
+UI skin loader (M10-15, no skin shipped yet), portraits in the card (M10-16), death animations by cause (M10-14b), `ai match` adjudication column
+(D-242), EconomyRescue stall fix (M13-23), Grapeshot damage 11 (D-244). Art pilots approved (D-245). Decisions up to D-245. Open questions: Q-73 (deferred
+until the owner plays the campaign).
 
 ## Start here (shown to the user as the plan; nothing starts until they say go)
-1. Check PR #80: Windows CI green? merged? (owner may have merged; else merge when green on his word).
-2. Read the laptop campaign sweep `balance_runs\s21sweep\s21sweep_summary.md` (on land/s23-r4 @ 8a3b4c9; old one renamed s21sweep_s22):
-   tier-5 targets 4-9/12 for the six raised missions, all other rows on Q-75 targets; the truck cost may have moved Directorate missions.
-3. Read the laptop series `balance_runs\s23d\s23d_summary.md` against `s23after`: Auth v Dir, Dir v Exp, Dir v LB (truck cost), LB v Exp and
-   Exp v LB (Grapeshot), draws per row (D-235), start share (Exp mirror Rust Belt 71 % and LB v Exp 66 % in s23after). Target 45-55 %.
-4. Grapeshot art: after the owner's push (art_s23\push_art.ps1 -> wp/art-s23-skiff), merge it (drops the Glide Tank sprite alias).
-5. Then the next balance round from the s23d table; if Expedition/Authority still lose to Conscript mass, look at their AI responses
-   (Expedition tender spending, Authority single-Scraper stall: docs/balance/s23_directorate.md option 3). M14-05 booklet waits for balance (D-234).
+1. Check PR #82 and the handoff PR: CI green? merged? (the owner allowed the lead to merge when green; add_repo with push access first).
+2. Read `balance_runs\s24after\s24after_summary.md` against s23d (docs/balance/s23d_read.md): Grapeshot at 11 (Expedition v Left Behind 91 % /
+   Left Behind v Expedition 35 % in s23d), draws (D-242 adjudication columns now in the table), start share, the Left Behind mirror slot bias (M13-27).
+   Target 45-55 %. Then the next balance round; Left Behind v Authority (72 % Authority) is M13-28 (owner: after the Grapeshot fix).
+3. Read the SFX catch-up (`tools\audio\sfx\run_s24_sfx.ps1`; out\make_sfx.log): rerun the screen (spectrogram sheet + flags, method in
+   tools\audio\sfx\out\review_s24.md, laptop only and git-ignored; the scripts were ad hoc in the bridge $HOME — rewrite as tools/audio/sfx/review_sfx.py), compare takes 4-6
+   with 1-3 for the 15 drone sounds and the full-window take 7 of wpn_sam / die_veh_auth, then the owner picks (make_sfx.ps1 -Audition / -Pick).
+4. Install the approved art on the laptop (D-245) and commit it from the owner's machine (LFS cannot be pushed from the cloud):
+   `tools\art\render_s24_skin.ps1 -Install`; portraits and deaths `tools\art\render_s24_portraits.ps1 -All` then `-Install`; building depth needs a
+   full-sheet `--depth` script for every building (write `tools\art\render_s24_depth_all.ps1`, several hours on the laptop). Review contact sheets first.
+5. UI skins for Directorate, Left Behind, Expedition with the tools/art/ui/auth_skin.py kit (pilot each); a settings-menu line for `ui_skin` (Faction / Classic).
+6. M5-13: measure the commander (32-game swap test vs `--random-directives`). M12-13b: lobby/skirmish switch for generator stamps. M12-14 maps from stamps.
 
 ## Half-finished work
-- Grapeshot art on `wp/art-s23-skiff` (local commits pushed by the owner with the LFS bundle; not on GitHub until then). Hull number 06.
-- Grapeshot field note "GRAPESHOT 6 // ..." is a draft: owner to approve or reword. Trigger (40 % enemy infantry, 2-3 skiffs) is "(tune)".
-- Tutorial instructor voice: owner runs the audition (make_audio.ps1 -VoiceAudition -Only leader_tut_instructor), picks, sets leaders.json, runs -Voice.
-- SFX: 80 jobs on the owner's laptop, nothing picked yet. Unit barks after SFX (D-234).
-- Remaining draws are mostly "attacker arrives late"; next levers: faster wave launch or adjudication at the time limit (s23_draws.md option D).
-- Tier 5 bands are narrow; later sim/bot changes will move them (D-238 note).
+- Approved art not yet in data/: Authority skin, 4 portraits + auth_rifleman death frames (scratch\art_s24 on the laptop), depth pass (pilots only).
+- SFX: 62/80 sounds have takes 1-3; the catch-up run (13 missing short sounds, takes 4-6 for 15 drone sounds, full-window test, 5 ambience loops) runs
+  on the laptop. Nothing picked yet. tools/audio/sfx/out/picks_suggested.toml (laptop only, git-ignored) holds the s24 screen's suggestions (drone sounds marked ?).
+- Editor props and decals draw as colour tints in the editor view (no sprites). Player-visible editor labels and the adjudication note are helper drafts.
+- Grapeshot AI trigger (40 % infantry, 2-3 skiffs) still "(tune)". Tutorial instructor voice audition and the two-PC LAN test are still waiting on the owner.
+- The ExpandTo save/load test passes even with the restore stubbed (the scripted game never re-expands); the fix is correct by construction.
 
 ## Waiting on the user
-- Laptop: push art (`powershell -ExecutionPolicy Bypass -File art_s23\push_art.ps1`), then on `origin/land/s23-r4`: campaign sweep, then
-  `run_s19_after.ps1 -OutName s23d`; then `git checkout main`. Say "done".
-- Merge PR #80 if CI is green and you want it before the next session. Instructor audition and SFX picks when convenient. Q-73 (par times).
-- Two-PC LAN test (M9-15). Branch clean-up on GitHub (owner deletes): wp/s22-*, integ-s23, integ-s23b, integ-s23c, and after PR #80 integ-s23d.
+- Laptop (running now): `run_s19_after.ps1 -OutName s24after`, then `tools\audio\sfx\run_s24_sfx.ps1`. Say "s24after done" / "sfx done".
+- Install and commit the approved art (step 4). Instructor audition. Two-PC LAN test (M9-15). Branch clean-up on GitHub (owner deletes):
+  integ-s24, land/s24-r1, land/s24-r2, land/s24-r3 after merge, and the older list in session 24's chat if not done.
 
 ## How to run this session
+- Session 24 lessons:
+  - Laptop art renders read the scripts from the working tree for 20-60 min: tell the owner not to switch branches until a render finishes (a
+    `git checkout main` mid-run swapped build_structure.py and the run failed halfway).
+  - Placeholder art committed by an art helper into data/ goes live as soon as the loader code lands (flat-colour skin): keep placeholders in
+    scratch or tests until the owner approves the real render.
+  - A new state part changes every pinned hash even when empty (its name is hashed): plan the re-pin into the package.
+  - The device bridge has numpy and Pillow (Python 3.10): audio/image screens can run there on the owner's files without staging 100+ files.
+  - Cloud measurements of AI tweaks on 8 seeds are noisy; keep a change only if it is not worse, and let the laptop series confirm.
 - Session 23 lessons:
   - add_repo can fail for a while ("service temporarily unavailable"); retry later in the session rather than switching to bundles at once.
     Without it, gh, LFS and pushes are all refused (the anonymous clone still works).

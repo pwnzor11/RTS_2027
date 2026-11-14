@@ -169,7 +169,7 @@ Built-in AI does micro; an LLM sets strategy every 30 s (D-103) and talks in cha
 - [x] M5-09 Setup + spectator: LLM kind per slot, LLM-vs-LLM (session 7; save header v4)
 - [x] M5-10 Replay/save tests with recorded directives; owner play-test (tests done session 7, loaded saves rebuild commanders; owner play-test with a real key open) — owner ran it with gpt-5.4-mini in session 12: 21/21 directives ok
 - [x] M5-11 Headless commander match (`ai match` with an LLM commander slot, key from an environment variable) for the owner's OpenAI test (D-153 (12))
-- [ ] M5-12 Stronger commander directives (design note docs/design/15_commander_directives.md, D-161): later milestone, not scheduled
+- [x] M5-12 Stronger commander directives (D-241, s24): CommanderOrder command + state part, LLM reply/prompt/recent-fights summary, random-directive control (`ai commander --random-directives`), AI carries out AttackAt/HoldCell/Raid/ExpandTo/TechTo/Reserve and strong counter mixes. Open: M5-13 measure model vs random with the 32-game swap test
 
 ## M6 · The Left Behind (D-087)
 Third faction: Glass Coast evacuees abandoned in 1990; nomadic scavengers, mobile crawler-rig bases, salvaged tech, raids.
@@ -268,10 +268,11 @@ Source: docs/reviews/2026-11-07_owner_campaign_feedback.md. Audit: docs/reviews/
 - [x] M12-04 Map format 4: decor layer, blocking prop overlay kinds, placement/harvest checks, hash coverage (s15)
 - [x] M12-05 Generator decoration pass with the map-study densities (D-183); replaces the old generator (D-180 D4); old saves refused with a message (s15)
 - [x] M12-06 `map report`, `map render --png` (s15)
-- [ ] M12-06b Editor Props tool and decal brush (skipped in s15)
+- [x] M12-06b Editor Props tool and decal brush (s24; props/decals drawn as tints in the editor view)
 - [~] M12-07..12 (s16: layout 2 built for all four biomes, off by default. s17: v6 = Ash half-turn D-198, fields further out D-199, Expedition start units fixed; open: 64-game fairness and income on v6, Q-70, Mountains skew is not the map) Zone skeleton, ~3 lanes and chokes, mixed start shapes (mostly soft shell, some walled with a ramp), natural expansion on about half the maps, 2v2 teammates side by side, fairness checks, income re-measure (design 16 wave 3, revised by D-183 / design 17)
 - [~] M12-12b `ai timeline` now plays the same map as `ai match` (s18). Open: Glass Coast layout 1 Expedition start skew: cause measured in s18 (tender spawn, M13-03)
-- [ ] M12-13..16 Stamps, rebuilt data maps, prop art (M10), optional extras (design doc wave 4)
+- [x] M12-13 Stamp library (5 stamps, data/stamps) + generator pass behind MapGenParams.Stamps (off) + editor Stamp tool (s24)
+- [ ] M12-14..16 Rebuilt data maps from stamps, prop art (M10), optional extras (design doc wave 4); M12-13b: lobby/skirmish setting for stamps
 
 ## M13 · Audit fix batch (session 18 audit, D-205; docs/reviews/2026-11-11_s18_audit/README.md)
 - [x] M13-00 Clear non-sim bugs fixed with tests: campaign/missions, in-match UI, menus/setup/tools, LLM key per provider, credits (s18 PR)
@@ -300,7 +301,7 @@ Source: docs/reviews/2026-11-07_owner_campaign_feedback.md. Audit: docs/reviews/
 ## M14 · Field Manual (D-206, docs/design/19_field_manual.md)
 - [x] M13-20 Mop-up AI fixed and on in skirmish (s22, D-224); s23: s22mopup showed no effect; trigger loosened (D-233); the draws traced are attrition stalemates, not beaten enemies
 - [x] M13-21 Radio lines for every unannounced or announced enemy wave (s22, D-226 point 5)
-- [~] M13-23 Late-game draws: both sides exhausted at tier 1 with no income, the last defended building outlasts the attacker (s23 trace, D-233) s23: mined-out maps (docs/balance/s23_draws.md, `ai match --econ 1`); AI endgame fixes A+B (D-235)
+- [~] M13-23 Late-game draws: both sides exhausted at tier 1 with no income, the last defended building outlasts the attacker (s23 trace, D-233) s23: mined-out maps (docs/balance/s23_draws.md, `ai match --econ 1`); AI endgame fixes A+B (D-235) S24: EconomyRescue no longer holds production for an unbuyable harvester/refinery (draws 6 -> 5 of 32 cloud); endgame launch and lost-factory rebuild tried and dropped; `ai match` adjudication column (D-242). Laptop s24after to confirm.
 - [~] M13-22 Left Behind v Expedition after s22 (LB wins 48-9 Rust Belt, 37-16 Glass Coast): loss tables, then a matchup-specific change (s23 probes: docs/balance/s23_probes.md) s23: `ai match --ledger`; LB tier-3 cap until 4800 (D-230); laptop s23after pending
 - [x] M13-24 Campaign tier 5 raised where the bot wins 12/12 (D-234 point 4): band 4-9 of 12, tier-5 data only; laptop sweep to confirm s23: six missions raised, lb_04/exp_02/exp_04 stay 12/12 (D-238)
 - [x] M13-25 Expedition tier-2 hover canister skiff Grapeshot (D-234 point 2, Q-80, D-236/D-237): data, AI use, own sprite and hero render (s24 merge), field note approved (D-240); AI trigger still "(tune)" with the s23d series
@@ -331,8 +332,8 @@ Plan: docs/design/21_m10_polish_plan.md (D-214). Code-only parts built overnight
 - [x] M10-12 Weather per biome (toggle) · [x] M10-13 Animated water, shore foam, ship wakes · [x] M10-14 Battle juice (shake toggle, hit flash, muzzle flash)
 - [x] M10-17 End-of-match graphs · [x] M10-18 Map preview thumbnails · [x] M10-19 Medals and records (Profile page; par medals Q-73)
 - [x] M10-20 Loading screen with tips, credits roll · [x] M10-22 Inno Setup installer + CI artifacts + release workflow · [x] M10-23 Update notice
-- [ ] M10-06 Warzone tracks on every tracked vehicle · [ ] M10-08 Building depth pipeline · [~] M10-10 SFX pass (s22: Stable Audio Open laptop generator, 80 jobs, sound keys and ambience code done; laptop generation pending) · [ ] M10-11 Portraits, death frames
-- [ ] M10-15 Faction UI skin (pilot first) · [ ] M10-16 Portraits in the card · [ ] M10-14b Death animations (need frames) · [ ] M10-21 Final balance pass
+- [ ] M10-06 Warzone tracks on every tracked vehicle · [~] M10-08 Building depth pipeline (s24: `--depth` pass, pilot v2 approved D-245; full re-render of all buildings on the laptop next) · [~] M10-10 SFX pass (s22: Stable Audio Open laptop generator, 80 jobs, sound keys and ambience code done; laptop generation pending) · [ ] M10-11 Portraits, death frames
+- [~] M10-15 Faction UI skin (s24: loader + 9-slice drawing + ui_skin setting; Authority pilot v2 approved D-245, install from the laptop; other three factions next) · [x] M10-16 Portraits in the card (s24; 4 pilot portraits approved, -All fan-out next) · [x] M10-14b Death animations by cause (s24; die_blast/die_burn/die_rad frames approved for auth_rifleman, fan-out next) · [ ] M10-21 Final balance pass
 - [ ] M10-xx Building art: less flat, more depth (owner 2026-11-07, later polish run)
 - [x] M10-01 Damage smoke/fire tiers, rubble/wrecks/scorch, vehicle dust, biome mood tint, larger-infantry option (D-184, D-187, s15)
 - [x] M10-02 All 18 infantry re-rendered at figure scale 1.25 with team-colour emphasis; tools/art/house_audit.py (D-185, s15)
@@ -342,3 +343,8 @@ Plan: docs/design/21_m10_polish_plan.md (D-214). Code-only parts built overnight
 - [ ] M10-06 Kitbash Warzone parts into our vehicles where they add detail (D-189); per-vehicle FX anchors in manifests
 - [ ] M10-07 Props still procedural: GlassCrest, IceSlab, WreckHulk, BrokenPylon (no fitting open art yet)
 Art pass, music/SFX, balance, installer.
+
+- [ ] M5-13 Measure the stronger commander: 32-game swap test, model vs `--random-directives` control (D-241)
+- [ ] M13-27 Left Behind mirror slot bias (side A 34-16 / 36-24 in an identical mirror with start swaps, s23after and s23d)
+- [ ] M13-28 Left Behind v Authority 28 % (unchanged since s23after): diagnose after the Grapeshot fix (owner, s24)
+- [ ] M10-10b SFX: 15 sounds' takes 1-3 droned; s24 anti-drone prompts give takes 4-6, plus a full-window test (tools/audio/sfx/run_s24_sfx.ps1)

@@ -460,3 +460,21 @@ D-229, diagnosis and probes (docs/balance/s23_directorate.md), Rocket Truck cost
 processes killed); two tier-5 helpers had not committed; PNG LFS objects copied to the owner's PC were re-encoded (shipped in a zip instead);
 lb_04 and exp_02 tier 5 are all-or-nothing for the bot and stay 12/12 (owner).
 **Next session should:** see HANDOFF (PR #80, laptop campaign sweep and s23d series, Grapeshot art merge, next balance round).
+
+## Session 24 · 2026-11-13/14 (s23d read, Grapeshot 11, editor props/decals/stamps, commander orders, UI skin, portraits, deaths, art pilots, SFX review)
+**Goal:** owner: merge PR #80 and the Grapeshot art, approve the field note, read the laptop runs, then work on everything not waiting on balance
+(editor props and stamps, art pipeline items rendered on the laptop, commander directives, draws) while the laptop ran.
+**Done:** PR #80 merged (CI flake re-run), PR #81 (Grapeshot art, field note approved, Q-73 deferred to play, D-240; CanPlace timing test made
+robust). Campaign sweep: all 45 mission-tiers on target. s23d read (docs/balance/s23d_read.md): Rocket Truck 950 worked; Grapeshot overshot ->
+damage 11 (D-244). Round 2 (PR #82): editor Props tool + decal brush (M12-06b), stamp library + generator pass (off) + editor Stamp tool (M12-13),
+commander orders all four ideas (D-241: CommanderOrder command and state part, LLM side, random control, AI military and economy orders, counter
+mixes), UI skin loader (M10-15), portraits in the card (M10-16), death animations by cause (M10-14b; death fx carries the warhead, not hashed),
+`ai match` adjudication column (D-242), EconomyRescue production-stall fix (M13-23). Art scripts for the laptop (D-243): depth pass, Authority skin,
+portraits, death frames; two laptop pilot rounds, all approved (D-245). SFX review of the laptop run: 62/80 sounds done, 15 drone-only; anti-drone
+prompts and a catch-up script.
+**Decisions:** D-240..D-245.
+**Helpers:** 13 packages (Sonnet; Haiku for the LLM side and the adjudication column); several resumed for fix rounds; one server restart (resumed).
+**Problems / notes:** the owner switched branches during the first laptop art render (files changed mid-run: rerun). Commander orders' new state part
+moved every pinned hash (re-pinned, D-220). Endgame launch and lost-factory rebuild were measured and dropped. Placeholder skin files kept out of data/.
+One helper made a stray read-only device-bridge call (no effect).
+**Next session should:** see HANDOFF (read s24after and the SFX run; install approved art from the laptop; next balance round).

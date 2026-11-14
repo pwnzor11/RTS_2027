@@ -490,3 +490,20 @@ Back up `%APPDATA%\RTS_2027` first (D-220). Branch `land/s23-r4` until PR #80 la
 - **Endgame AI:** wreck an AI's army in a long skirmish and keep a building: an AI wave that stands near your base attacks your nearest building
   instead of waiting, and a broke AI spends its last credits on units.
 - **Instructor voice:** after the audition and voice batch, tut_01's instructor lines are spoken; before that the tutorial stays silent (no error).
+
+## Session 24 · editor props and stamps, commander orders, UI skin, portraits, deaths, Grapeshot 11 (D-240..D-245)
+Back up `%APPDATA%\RTS_2027` first (D-220). On main after PR #82 (or branch integ-s24).
+- **Map editor:** key 8 = Props (Tree, Wreck, Block, Pylon, Snag; sizes), key 9 = Decal (biome list), T = Stamp (R rotates, M mirrors, white
+  outline follows the cursor; with a symmetry set, "All symmetric images" stamps the other half). H hides props and decals. Ctrl+Z undoes a stamp
+  in one step. Props are refused on water, cliffs, start squares and next to resources. Save, reopen: props and decals are still there.
+- **Generator stamps:** `dotnet run --project src/Tools -- map render --biome rust_belt --size m --players 2 --seed 7 --stamps --png out.png`
+  shows mirrored ruined blocks, groves, bridges or checkpoints. Without `--stamps` maps are unchanged.
+- **Commander orders:** in a commander game ask the LLM to "attack cell X at minute N": the AI holds and launches one wave at that minute;
+  "raid" peels off a small group at harvesters; "expand" puts the next refinery near the cell; "tech to tier 3" brings the gates forward.
+  `ai commander --random-directives --a skirmisher --b skirmisher --seed 1 --out .\rnd_run` runs the random control (no key needed).
+- **UI skin:** after installing the approved Authority skin (`tools\art\render_s24_skin.ps1 -Install`, then commit), an Authority skirmish shows the
+  olive riveted sidebar, buttons, minimap frame and card; `ui_skin = "classic"` in settings.toml brings back today's look. Other factions: today's look.
+- **Portraits:** after installing (render_s24_portraits.ps1 -Install), selecting one unit type shows its portrait in the card square.
+- **Deaths:** infantry with death frames play them (flame weapons: burn; explosives: blast; radiation/ash: rad), then leave the usual mark.
+- **Balance:** Grapeshot canister gun damage 11 (was 14). AI no longer sits on credits with an empty queue after losing its factory.
+- **ai match:** draws at the time limit show `adj=A|B|even score=a/b`; the table gains AdjW AdjL AdjEven.
