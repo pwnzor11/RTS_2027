@@ -161,6 +161,7 @@ public sealed class SceneRenderer : IDisposable
         }
 
         _look.DrawGround(batch, pixel, camera, viewport, snapshot.Tick, _wrecks);   // D-184: remains and dust, on the ground
+        _look.DrawDying(batch, _sprites, _painter, frame.Rules, camera, viewport, snapshot.Tick);   // M10-14b: soldiers playing their death state
         DrawSprites(batch, pixel, frame, camera);
         _look.DrawOverSprites(batch, _library, _sprites, frame, _memory, camera, viewport);   // D-184: damage smoke and fire
         GarrisonOverlay.Draw(batch, snapshot, camera);

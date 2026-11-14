@@ -150,15 +150,18 @@ public sealed class SpriteSheet : IDisposable
     /// <param name="house">House colour, for example <see cref="PlayerColours.Base"/>.</param>
     /// <param name="scale">Uniform scale (the camera zoom).</param>
     /// <param name="alpha">Opacity 0..1 (M3: stealthed and underground units). The textures are premultiplied, so this scales every channel.</param>
-    public void Draw(SpriteBatch batch, int frame, Vector2 position, Color house, float scale, float alpha = 1f)
+    /// <param name="flip">M10-14b: mirror the frame left to right about the origin pixel (west-facing deaths of east-drawn animations).</param>
+    public void Draw(SpriteBatch batch, int frame, Vector2 position, Color house, float scale, float alpha = 1f, bool flip = false)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
         ArgumentNullException.ThrowIfNull(batch);
         Rectangle rect = FrameRect(frame);
-        batch.Draw(_base, position, rect, alpha >= 1f ? Color.White : Color.White * alpha, 0f, Origin, scale, SpriteEffects.None, 0f);
+        Vector2 origin = flip ? new Vector2(FrameW - Origin.X, Origin.Y) : Origin;
+        SpriteEffects fx = flip ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
+        batch.Draw(_base, position, rect, alpha >= 1f ? Color.White : Color.White * alpha, 0f, origin, scale, fx, 0f);
         if (_mask != null)
         {
-            batch.Draw(_mask, position, rect, alpha >= 1f ? house : house * alpha, 0f, Origin, scale, SpriteEffects.None, 0f);
+            batch.Draw(_mask, position, rect, alpha >= 1f ? house : house * alpha, 0f, origin, scale, fx, 0f);
         }
     }
 

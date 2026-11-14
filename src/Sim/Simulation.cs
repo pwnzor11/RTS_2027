@@ -244,6 +244,7 @@ public sealed partial class Simulation
     private void StepCore(IReadOnlyList<Command> commands)
     {
         _fx.Clear();
+        _killers.Clear();
         ApplyInput(commands);
         RunCarriers();     // M7-09: Simulation.Carrier.cs — hangar rides, sortie timers (before missions)
         RunAircraftAmmo(); // D-156: Simulation.Carrier.cs — dry aircraft without a hangar place go home; hover rearm
@@ -703,7 +704,7 @@ public sealed partial class Simulation
                     RemoveBuilding(slots.IdOf(i));
                     continue;
                 }
-                _fx.Add(new FxEvent(FxKind.UnitDestroyed, PositionAt(kind, i), 1));
+                _fx.Add(new FxEvent(FxKind.UnitDestroyed, PositionAt(kind, i), 1, KillerWarhead(new ActorRef(kind, slots.IdOf(i)))));   // M10-14b: the lethal warhead, for the death animation
                 OnStatsLost(PlayerAt(kind, i), kind);   // M4-06
                 if (kind == ActorKind.Vehicle) SpawnWreckFor(kind, i);   // M6-04 (infantry leave no wreck)
                 OnM3MobileDying(kind, i);   // M3: death weapon, passengers (Simulation.M3.cs)

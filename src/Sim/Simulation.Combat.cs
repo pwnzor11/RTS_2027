@@ -47,10 +47,20 @@ public sealed partial class Simulation
     // This tick's effects events (cleared at the start of every Step); a renderer hint, not state (never hashed or saved).
     private readonly List<FxEvent> _fx = new();
 
+    // M10-14b: who landed the lethal hit this tick, by warhead index (FxEvent.RadiationCause for a radiation drain). A renderer hint like _fx:
+    // cleared with it, never hashed or saved, and only searched (never iterated for sim logic).
+    private readonly List<(ActorRef Target, int Warhead)> _killers = new();
+
+    private int KillerWarhead(ActorRef target)
+    {
+        for (int n = 0; n < _killers.Count; n++) if (_killers[n].Target == target) return _killers[n].Warhead;
+        return -1;
+    }
+
     /// <summary>Detonations and deaths of the last Step (valid until the next Step). Not state.</summary>
     public IReadOnlyList<FxEvent> FxEvents => _fx;
 
-    private readonly record struct PendingHit(ActorRef Target, int Amount, int Source, ActorRef Shooter);   // VET-2: Shooter = the actor that fired (none for death weapons, superweapons, radiation, storms)
+    private readonly record struct PendingHit(ActorRef Target, int Amount, int Source, ActorRef Shooter, int Warhead = -1);   // VET-2: Shooter = the actor that fired (none for death weapons, superweapons, radiation, storms)
 
     /// <summary>Per-actor combat data (reload, turret facing, attack target, guard point). Never mutate outside Step.</summary>
     public CombatState CombatData => _combat;
@@ -285,7 +295,8 @@ public sealed partial class Simulation
             int rank = RankOf(kind, i);   // VET-3: a ranked target takes less damage
             if (rank > 0) d = Math.Max(1, ScaleByRank(VetRules.TakenPermille, rank, d));
         }
-        QueueHit(new ActorRef(kind, IdAt(kind, i)), d, source, shooter);
+        int whIndex = WarheadIndexOf(wh, source);
+        QueueHit(new ActorRef(kind, IdAt(kind, i)), d, source, shooter, whIndex);
         if (kind == ActorKind.Building && wh.GarrisonDamagePercent > 0 && BuildingTypeAt(i).Garrison > 0)
         {
             // M4-05: a % of each hit on a garrisoned building also reaches every occupant (infantry in layer Garrisoned whose carrier
@@ -294,14 +305,21 @@ public sealed partial class Simulation
             int share = Math.Max(1, (int)((long)d * wh.GarrisonDamagePercent / 100));
             for (int s = 1; s < _infantry.Capacity; s++)
                 if (_infantry.Slots.IsIndexAlive(s) && _infantry.Health[s] > 0 && _tunnels.InfantryLayer[s] == ActorLayer.Garrisoned && _tunnels.InfantryCarrier[s] == bid)
-                    QueueHit(new ActorRef(ActorKind.Infantry, _infantry.Slots.IdOf(s)), share, source, shooter);
+                    QueueHit(new ActorRef(ActorKind.Infantry, _infantry.Slots.IdOf(s)), share, source, shooter, whIndex);
         }
     }
 
-    private void QueueHit(ActorRef target, int d, byte source, ActorRef shooter)
+    private int WarheadIndexOf(WarheadType wh, byte source)
+    {
+        IReadOnlyList<WarheadType> list = RulesOf(source).Warheads;
+        for (int n = 0; n < list.Count; n++) if (ReferenceEquals(list[n], wh) || string.Equals(list[n].Id, wh.Id, StringComparison.Ordinal)) return n;
+        return -1;
+    }
+
+    private void QueueHit(ActorRef target, int d, byte source, ActorRef shooter, int warhead = -1)
     {
         if (_pendingCount == _pendingDamage.Length) Array.Resize(ref _pendingDamage, _pendingCount * 2);
-        _pendingDamage[_pendingCount++] = new PendingHit(target, d, source, shooter);
+        _pendingDamage[_pendingCount++] = new PendingHit(target, d, source, shooter, warhead);
     }
 
     /// <summary>Apply every queued hit and empty the buffer. Health only ever decreases by the sum of the hits, so the result
@@ -323,6 +341,7 @@ public sealed partial class Simulation
             }
             if (before > 0 && HealthAt(kind, i) <= 0)
             {
+                _killers.Add((h.Target, h.Warhead));   // M10-14b
                 OnLethalHit(h.Target, (byte)h.Source);   // M4-06: kill attribution
                 OnSpoilsLethalHit(h.Target, (byte)h.Source);   // M6-05: Simulation.Raid.cs
                 OnVeterancyKill(h.Shooter, h.Target, (byte)h.Source);   // VET-2: Simulation.Veterancy.cs

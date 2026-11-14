@@ -25,4 +25,11 @@ public enum FxKind : byte
 /// is never hashed or saved, and lives only until the next Step. Pos = impact point or the actor's position (a building's
 /// centre). Size = splash radius in cells for a detonation (at least 1), the larger footprint side for a building, 1 for a unit.
 /// </summary>
-public readonly record struct FxEvent(FxKind Kind, LeptonCoord Pos, int Size);
+public readonly record struct FxEvent(FxKind Kind, LeptonCoord Pos, int Size, int Warhead = FxEvent.NoWarhead)
+{
+    /// <summary>No warhead known (every event but a <see cref="FxKind.UnitDestroyed"/> whose killing hit was a warhead or a radiation drain).</summary>
+    public const int NoWarhead = -1;
+
+    /// <summary>A <see cref="FxKind.UnitDestroyed"/> whose last health came off the ground radiation (or ashfall), not a warhead.</summary>
+    public const int RadiationCause = -2;
+}

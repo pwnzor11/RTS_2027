@@ -55,6 +55,9 @@ public sealed class SelectionCard : IUiRegion
     /// <summary>The control groups, so the group grid can number its cameos (null: no numbers).</summary>
     public ControlGroups? Groups { get; set; }
 
+    /// <summary>Portrait art (<c>data/portraits</c>), or null; a unit or building without a portrait file keeps the cameo (M10-16).</summary>
+    public PortraitProvider? Portraits { get; set; }
+
     /// <summary>True while the first Sell click is armed: the Sell button then reads "Confirm" and is highlighted (D-205).</summary>
     public bool SellArmed { get; set; }
 
@@ -128,7 +131,7 @@ public sealed class SelectionCard : IUiRegion
 
     private void DrawSingle(SpriteBatch batch, Texture2D pixel, CardLayout l, float s)
     {
-        DrawCameo(batch, pixel, l.Portrait, Model.PortraitId);
+        if (Portraits is null || !Portraits.TryDraw(batch, Model.PortraitId, l.Portrait)) DrawCameo(batch, pixel, l.Portrait, Model.PortraitId);
         Rectangle t = l.Text;
         int y = t.Y;
         void Line(string text, Color colour, FontWeight weight = FontWeight.Regular)
