@@ -194,9 +194,10 @@ internal sealed class ProductionManager
     /// faction) in <see cref="DirectiveBias.MixPermille"/> of the cases, else the bag's choice. Anti-air: a gun that can hit aircraft;
     /// anti-structure: the most structure damage per squared credit. Infantry / vehicles act on the lane money instead.
     /// </summary>
-    private int PreferMix(RecruitKnowledge k, ProductionCategory cat, int[] bag, int bagChoice)
+    internal int PreferMix(RecruitKnowledge k, ProductionCategory cat, int[] bag, int bagChoice)
     {
-        if (Bias.Mix != DirectiveCodec.MixAntiAir && Bias.Mix != DirectiveCodec.MixAntiStructure) return bagChoice;
+        if (Bias.Mix != DirectiveCodec.MixAntiAir && Bias.Mix != DirectiveCodec.MixAntiStructure
+            && Bias.Mix != DirectiveCodec.MixAntiArmour && Bias.Mix != DirectiveCodec.MixAntiInfantry) return bagChoice;   // S24: 5 / 6 counter the enemy's armour or infantry
         if (_rng!.Next(1000) >= Bias.MixPermille) return bagChoice;
         SimRules rules = k.Rules;
         int best = -1;
@@ -222,6 +223,7 @@ internal sealed class ProductionManager
         if (weaponIdx < 0 || cost <= 0) return 0;
         WeaponType w = rules.Weapons[weaponIdx];
         if (w.Damage <= 0) return 0;
+        if (Bias.Mix == DirectiveCodec.MixAntiArmour || Bias.Mix == DirectiveCodec.MixAntiInfantry) return Bias.CounterScore(rules, weaponIdx, cost);   // S24
         if (Bias.Mix == DirectiveCodec.MixAntiAir) return w.Targets == WeaponTargets.Ground ? 0 : 1_000_000 / cost;
         WarheadType wh = rules.Warheads[w.Warhead];
         long dmg = (long)w.Damage * wh.VersusPercent[(int)ArmorClass.Structure] * (wh.Splash > 0 ? 12 : 10);
