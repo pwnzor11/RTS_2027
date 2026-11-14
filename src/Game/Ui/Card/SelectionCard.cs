@@ -8,6 +8,7 @@ using Rts.Game.Render;
 using Rts.Game.Sandbox;
 using Rts.Game.Ui.Fonts;
 using Rts.Game.Ui.Sidebar;
+using Rts.Game.Ui.Skin;
 using Rts.Sim.Core;
 
 namespace Rts.Game.Ui.Card;
@@ -23,7 +24,7 @@ public sealed class SelectionCard : IUiRegion
 {
     private static readonly Color Fill = new(0x16, 0x18, 0x14, 242);
     private static readonly Color Frame = new(0xD8, 0x8A, 0x3A);
-    private static readonly Color TextColour = new(0xE2, 0xE4, 0xD8);
+    private static readonly Color DefaultText = new(0xE2, 0xE4, 0xD8);
     private static readonly Color DimText = new(0xA0, 0xA2, 0x94);
     private static readonly Color Gold = new(0xD8, 0xC8, 0x8A);
     private static readonly Color ButtonFill = new(0x2A, 0x2E, 0x26);
@@ -38,6 +39,11 @@ public sealed class SelectionCard : IUiRegion
     private readonly CameoProvider? _cameos;
     private readonly Color _house;
     private float _scale = 1f;
+
+    private Color TextColour => Skin?.Text(DefaultText) ?? DefaultText;   // S24
+
+    /// <summary>S24: the local faction's UI skin, or null for the procedural look.</summary>
+    public SkinKit? Skin { get; set; }
 
     /// <summary>Creates the card for the local player's selection.</summary>
     /// <param name="source">Sim source.</param>
@@ -97,7 +103,8 @@ public sealed class SelectionCard : IUiRegion
         CardLayout l = Layout;
         float s = _scale;
         Shapes.Fill(batch, pixel, l.Card, Fill);
-        Shapes.Outline(batch, pixel, l.Card, Frame, Math.Max(1, (int)MathF.Round(s)));
+        if (Skin is null || !Skin.TrySlice(batch, "card_frame", l.Card))
+            Shapes.Outline(batch, pixel, l.Card, Frame, Math.Max(1, (int)MathF.Round(s)));
 
         if (Model.Kind == CardKind.Multi) DrawGroup(batch, pixel, l, s, mouse);
         else DrawSingle(batch, pixel, l, s);
@@ -110,8 +117,14 @@ public sealed class SelectionCard : IUiRegion
             bool sellArmed = b.Kind == CardButtonKind.Sell && SellArmed;
             if (sellArmed) b = b with { Label = UiText.Get(UiText.SellConfirm) };
             bool active = sellArmed || b.Active || b.Kind == CardButtonKind.Order && b.Action == GameAction.AttackMove && attackMoveArmed;
-            Shapes.Fill(batch, pixel, r, active ? ActiveFill : hover == i ? ButtonHover : ButtonFill);
-            Shapes.Outline(batch, pixel, r, active ? Gold : Border);
+            bool down = hover == i && Microsoft.Xna.Framework.Input.Mouse.GetState().LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed;
+            SkinButtonState state = down ? SkinButtonState.Pressed : hover == i ? SkinButtonState.Hover : SkinButtonState.Normal;
+            if (Skin is null || !Skin.TryButton(batch, r, state, active: active))
+            {
+                Shapes.Fill(batch, pixel, r, active ? ActiveFill : hover == i ? ButtonHover : ButtonFill);
+                Shapes.Outline(batch, pixel, r, active ? Gold : Border);
+            }
+
             DrawButtonText(batch, pixel, r, b, s);
         }
     }

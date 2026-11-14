@@ -347,6 +347,10 @@ public sealed class GameScreen : IScreen, IFocusPausable
         _sidebar.HiddenCursor = SoftwareCursor.MakeHidden(_s.Graphics);   // M11-10e
         _sidebar.Blurbs = LoadCameoBlurbs();                               // M11-10g
         _card = new Rts.Game.Ui.Card.SelectionCard(_sim, _selection, _cameos, PlayerColours.Base(Me));
+        var skins = new Rts.Game.Ui.Skin.UiSkinLoader(Path.Combine(Path.GetDirectoryName(Path.GetFullPath(_s.RulesDir)) ?? ".", "ui", "skins"), _s.Graphics);
+        var skinKit = new Rts.Game.Ui.Skin.SkinKit(skins, _sim.Sim.Setup.FactionOf(Me), _s.Settings.UseFactionSkin);   // S24
+        _sidebar.Skin = skinKit;
+        _card.Skin = skinKit;
         CentreCameraOnOwnBase();
         _archive = new ArchiveTracker(ArchiveProgress.Load());
     }
