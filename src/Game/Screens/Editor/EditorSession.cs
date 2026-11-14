@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
 using Rts.Data;
+using Rts.Data.Stamps;
 using Rts.Sim.Core;
 using Rts.Sim.Rules;
 
@@ -22,13 +23,54 @@ public sealed class EditorSession
     private (int X, int Y)? _lastCell;
 
     /// <summary>Creates a session on <paramref name="document"/> with the given feature palette (null = <see cref="FeatureType.Defaults"/>).</summary>
-    public EditorSession(EditorDocument document, IReadOnlyList<FeatureType>? features = null, int historyCapacity = EditorHistory.DefaultCapacity)
+    public EditorSession(EditorDocument document, IReadOnlyList<FeatureType>? features = null, int historyCapacity = EditorHistory.DefaultCapacity, StampLibrary? stamps = null)
     {
+        StampLib = stamps;
         Document = document;
         FeatureTypes = features is { Count: > 0 } ? features : FeatureType.Defaults;
         History = new EditorHistory(historyCapacity);
         Feature = FeatureTypes[0];
     }
+
+    private StampLibrary? StampLib;
+
+    /// <summary>The stamp library (the shipped one unless a test gave another); empty when the data folder cannot be found.</summary>
+    public IReadOnlyList<Stamp> AllStamps
+    {
+        get
+        {
+            if (StampLib is null)
+            {
+                try { StampLib = StampLibrary.Default; }
+                catch (Exception e) when (e is InvalidOperationException or IOException or RulesException) { return Array.Empty<Stamp>(); }
+            }
+            return StampLib.All;
+        }
+    }
+
+    /// <summary>Stamps that suit the document's biome (a stamp with no biome list suits every map).</summary>
+    public IReadOnlyList<Stamp> StampsForBiome()
+    {
+        string biome = string.IsNullOrEmpty(Document.Biome) ? "rust_belt" : Document.Biome;
+        return AllStamps.Where(t => t.Biomes.Count == 0 || t.Biomes.Contains(biome)).ToList();
+    }
+
+    /// <summary>Stamp the Stamp tool places; null picks the first stamp that suits the biome.</summary>
+    public Stamp? Stamp { get => _stamp ?? StampsForBiome().FirstOrDefault(); set => _stamp = value; }
+    private Stamp? _stamp;
+
+    /// <summary>Quarter turns clockwise 0..3 applied after the optional mirror.</summary>
+    public int StampRotation { get => _stampRot; set => _stampRot = (value % 4 + 4) % 4; }
+    private int _stampRot;
+
+    /// <summary>Mirror the stamp left to right before rotating.</summary>
+    public bool StampMirror { get; set; }
+
+    /// <summary>When the map has a symmetry, also stamp every symmetric image (default on).</summary>
+    public bool StampSymmetric { get; set; } = true;
+
+    /// <summary>Size in cells of the stamp's footprint as currently rotated.</summary>
+    public (int W, int H) StampFootprint => Stamp is { } t ? StampLibrary.FootprintSize(t, StampRotation) : (0, 0);
 
     /// <summary>The map being edited.</summary>
     public EditorDocument Document { get; }
@@ -118,7 +160,7 @@ public sealed class EditorSession
         _strokeLabel = Tool switch
         {
             EditorTool.Land => "Paint land", EditorTool.Height => "Paint height", EditorTool.Resource => "Paint resource",
-            EditorTool.Feature => "Place feature", EditorTool.Start => "Place start", EditorTool.Eraser => "Erase", EditorTool.Props => "Paint prop", EditorTool.Decal => "Paint decal", _ => "Fill",
+            EditorTool.Feature => "Place feature", EditorTool.Start => "Place start", EditorTool.Eraser => "Erase", EditorTool.Props => "Paint prop", EditorTool.Decal => "Paint decal", EditorTool.Stamp => "Place stamp", _ => "Fill",
         };
     }
 
@@ -228,6 +270,9 @@ public sealed class EditorSession
                 break;
             case EditorTool.Feature:
                 PlaceFeatureSet(x, y);
+                break;
+            case EditorTool.Stamp:
+                PlaceStamp(x, y);
                 break;
         }
     }
@@ -367,6 +412,37 @@ public sealed class EditorSession
         int advance = first + images.Count + 1;
         StartSlot = advance <= EditorDocument.MaxStarts ? advance : 1;
         Status = $"Placed start {first + 1}" + (images.Count > 1 ? $"..{first + images.Count}" : "");
+    }
+
+    /// <summary>Applies the current stamp with its top-left footprint corner at the cell, as part of the open stroke (one undo step).
+    /// With a declared symmetry and <see cref="StampSymmetric"/> the changed cells are copied to their images (skipping cells near a start or on resources).
+    /// <see cref="Status"/> reports the refused cell count.</summary>
+    private void PlaceStamp(int x, int y)
+    {
+        if (Stamp is not { } t) { Status = "No stamp fits this biome"; return; }
+        EditorDocument d = Document;
+        var canvas = new StampCanvas(d.Width, d.Height, (LandType[])d.Land.Clone(), (byte[])d.HeightLevel.Clone(), (OverlayKind[])d.Overlay.Clone(),
+            (byte[])d.Density.Clone(), (byte[])d.Decor.Clone(), d.Starts);
+        StampResult res = StampLibrary.Apply(t, canvas, x, y, StampRotation, StampMirror);
+        var targets = new SortedSet<int>(res.Changed);
+        var symmetry = BrushShape.SymmetryFits(d.Symmetry, d.Width, d.Height) ? d.Symmetry : MapSymmetry.None;
+        int refused = res.Refused.Count;
+        if (StampSymmetric && symmetry != MapSymmetry.None)
+            foreach (int i in res.Changed)
+            {
+                var images = MapSymmetries.Images(symmetry, d.Width, d.Height, i % d.Width, i / d.Width);
+                for (int k = 1; k < images.Length; k++)
+                {
+                    int j = images[k].Y * d.Width + images[k].X;
+                    if (canvas.NearStart(images[k].X, images[k].Y) || OverlayKinds.IsResource(d.Overlay[j])) { refused++; continue; }
+                    canvas.Land[j] = canvas.Land[i]; canvas.HeightLevel[j] = canvas.HeightLevel[i]; canvas.Overlay[j] = canvas.Overlay[i];
+                    canvas.Density[j] = canvas.Density[i]; canvas.Decor![j] = canvas.Decor[i];
+                    targets.Add(j);
+                }
+            }
+        foreach (int i in targets)
+            Edit(i % d.Width, i / d.Width, canvas.Land[i], canvas.HeightLevel[i], canvas.Overlay[i], canvas.Density[i], canvas.Decor![i]);
+        Status = $"Stamped {t.Name}: {targets.Count} cell(s) changed" + (refused > 0 ? $", {refused} refused" : "");
     }
 
     /// <summary>Places the current feature (top-left at the cell) and, where its footprint still fits, its symmetric images.</summary>
