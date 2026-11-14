@@ -19,10 +19,10 @@ $t0 = Get-Date; $failed = @()
 $steps = @()
 if (-not $SkipDepth)     { $steps += ,@('depth',     'tools\art\render_s24_depth.ps1') }
 if (-not $SkipSkin)      { $steps += ,@('skin',      'tools\art\render_s24_skin.ps1') }
-if (-not $SkipPortraits) { $steps += ,@('portraits', 'tools\art\render_s24_portraits.ps1') }
+if (-not $SkipPortraits) { $steps += ,@('portraits', 'tools\art\render_s24_portraits.ps1', '-Force') }
 foreach ($s in $steps) {
     Write-Host ("===== {0}  {1:HH:mm:ss}" -f $s[0], (Get-Date))
-    try { & powershell -ExecutionPolicy Bypass -File $s[1]; if ($LASTEXITCODE -ne 0) { $failed += $s[0] } }
+    try { & powershell -ExecutionPolicy Bypass -File $s[1] @($s | Select-Object -Skip 2); if ($LASTEXITCODE -ne 0) { $failed += $s[0] } }
     catch { Write-Warning $_; $failed += $s[0] }
 }
 Write-Host ""
