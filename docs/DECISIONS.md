@@ -1808,3 +1808,33 @@ re-render of every building with `--depth`), the Authority UI skin pilot v2 (ins
 factions follow the same kit), the four portraits and the die_blast / die_burn / die_rad death frames (fan-out with
 render_s24_portraits.ps1 -All). New art is committed from the owner's machine (LFS). **Why:** owner, session 24 ("love it all").
 **Status:** owner decision (session 24).
+
+### D-246 · 2026-11-14 · Expedition shipment value 1400 -> 1200
+**Decision:** `[shipments] value` 1400 -> 1200 (data/rules/game.toml). **Why:** on Glass Coast the ore runs out by tick ~7500; land factions stall
+while shipments keep paying (s24after: Expedition 66-91 % there). 1000 overshot Rust Belt (Expedition 39 %). More ore on Glass Coast was tried and
+rejected (helps the Directorate most). **Status:** owner said "just fix it and test" (session 25); docs/balance/s25_balance.md; laptop series to confirm.
+
+### D-247 · 2026-11-14 · Left Behind tier-3 army cap until tick 3600 (supersedes the 4800 of D-230)
+**Decision:** `[faction.left_behind.tier3] army_cap_until_tick` 4800 -> 3600 (data/ai/difficulty.toml; 4500 was tried first). **Why:** under the
+cap the Left Behind hoarded 2-5k credits and lost the mid-game (Authority v Left Behind 72 %); Grapeshot (D-236) now answers the early swarm that
+D-230 guarded against. Cloud after: Auth v LB 56 %, Dir v LB 55 %, LB v Exp rust 53 %, Exp v LB glass 64 %. **Status:** session 25, fix-and-test.
+
+### D-248 · 2026-11-14 · AI late all-in: no retreats from tick 16000
+**Decision:** `RetreatManager.LateAllInTick = 16000` (tune): from that tick the AI stops retreating and returns home-guard and repairing units to
+the wave pool (scouts and raiders keep their duty). AI only. **Why:** Expedition mirrors drew because hurt marines (never healed) sat in repair for
+10 000+ ticks and waves launched with 4-6 units; Expedition mirror draws 19 -> 13 of 64, the control row did not move. **Status:** session 25.
+
+### D-249 · 2026-11-14 · AI random streams: per-slot seed mixed through the splitmix finaliser
+**Decision:** `AiRandom` seeds from `Mix(gameSeed) ^ Mix(C * (slot + 1))` instead of `gameSeed ^ gamma * (slot + 1)`. **Why:** the old scheme left slot 1
+one gamma step behind slot 0 for a quarter of even game seeds, so both AIs drew the same sequence shifted by one draw; identical mirrors skewed by
+seed parity (the "Left Behind slot bias", M13-27). Every AI game reshuffles; earlier per-seed numbers are not comparable (D-220). **Status:** session 25.
+
+### D-250 · 2026-11-14 · Authority refinery cost 2000 -> 1700
+**Decision:** `auth_refinery` cost 2000 -> 1700 (parity with the Directorate Smelter Vent). **Why:** the Authority fielded far fewer units before the
+first fights (army value 6.6k v the Directorate's 10.6k at tick 5000 on Glass Coast); Expedition v Authority on Glass Coast 68 % -> 53 % (64 games).
+Scraper 600 as well overshot Authority v Directorate. **Status:** session 25; Authority v Directorate rust 40 % is the edge row to watch.
+
+### D-251 · 2026-11-14 · Session 25 sound picks; over-cap one-shots are trimmed at pick time
+**Decision:** the owner accepted Claude's 65 recommended takes (tools/audio/sfx/picks_s25.toml). `make_sfx.py --pick` now cuts a one-shot over the
+270 000-byte cap to fit with a 250 ms fade-out. die_ship (8 s) is left out until it is re-picked with the trim. Tutorial instructor voice am_adam.
+**Status:** owner decision (session 25).

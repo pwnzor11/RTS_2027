@@ -345,6 +345,8 @@ Plan: docs/design/21_m10_polish_plan.md (D-214). Code-only parts built overnight
 Art pass, music/SFX, balance, installer.
 
 - [ ] M5-13 Measure the stronger commander: 32-game swap test, model vs `--random-directives` control (D-241)
-- [ ] M13-27 Left Behind mirror slot bias (side A 34-16 / 36-24 in an identical mirror with start swaps, s23after and s23d)
-- [ ] M13-28 Left Behind v Authority 28 % (unchanged since s23after): diagnose after the Grapeshot fix (owner, s24)
+- [x] M13-27 Left Behind mirror slot bias: a game-seed parity skew from correlated AI random streams; AiRandom per-slot seed mixed (D-249, s25)
+- [~] M13-28 Left Behind v Authority 28 %: tier-3 cap until 3600 (D-247, s25; cloud 44 % LB); laptop series to confirm
+- [~] M13-29 Expedition too strong on Glass Coast: shipment value 1200 (D-246), Authority refinery 1700 (D-250); more ore tried and dropped; laptop series to confirm
+- [x] M13-30 Laptop series summary: adjudication columns and -OutName title (s25)
 - [ ] M10-10b SFX: 15 sounds' takes 1-3 droned; s24 anti-drone prompts give takes 4-6, plus a full-window test (tools/audio/sfx/run_s24_sfx.ps1)
