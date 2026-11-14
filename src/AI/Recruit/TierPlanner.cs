@@ -371,7 +371,7 @@ internal sealed class TierPlanner
             _expandStepFor = ExpandOrderTick;
             int refType = SimRules.IndexOf(k.Rules.Buildings, _faction.RefineryId, b => b.Id);
             int have = refType >= 0 ? k.BuildingCount[refType] : 0;
-            if (build.StepsOf(_faction.RefineryId) <= have) build.InsertAfter(_faction.RefineryId, _faction.RefineryId);
+            if (build.StepsOf(_faction.RefineryId) <= Math.Max(have, 1)) build.InsertAfter(_faction.RefineryId, _faction.RefineryId);
         }
         bool techOrder = TechTier >= 2;   // S24 TechTo: the gates go in regardless of the clock and the army size
         if (((_p.ExpansionTick > 0 && tick >= _p.ExpansionTick) || Bias.Expand) && build.StepsOf(_faction.RefineryId) < 2)
