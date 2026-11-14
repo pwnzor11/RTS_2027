@@ -52,3 +52,25 @@ Recommendation (helper and lead): B (B3, B2, B1) plus A, re-measured on the same
 Draws 12/56 (21 %) -> 8/56 (14 %). B2 (idle wave attacks a nearby structure) and the mop-up fired in traced games that used to draw. The
 remaining draws are mostly "attacker arrives late" (e.g. Authority mirror s6g2: the last wave reaches the yard at ~27500 and the clock runs
 out), which needs a faster launch or adjudication (option D). Laptop series to confirm.
+
+## Session 24: endgame launch (D-242, wp/s24-draw, cloud)
+`EndgameLaunch` (AI only): when the economy rescue says Broke, or the tick is 18 000+ with no harvester alive, `MilitaryManager.Think` launches with 2+ units,
+home guard 0, no staging (straight to Assault), and later units join the running wave. Same flags as above (Authority seeds 1-8, tiered:3, rust_belt layout 1, size 96, 30 000 ticks).
+| Pair | Games | Before W-L-D (mean end) | After W-L-D (mean end) |
+|---|---|---|---|
+| Authority mirror | 16 | 7-6-3 (19264) | 8-5-3 (19982) |
+| Authority v Directorate | 16 | 4-9-3 (19267) | 4-8-4 (20308) |
+Result: no gain (draws 6 -> 7 of 32, mean end tick later). Games reshuffle (the AI is chaotic), so single draws move both ways. Traced mirror s6g2 after the change: the draw is
+not a late launch. Both sides end with 0 army; side A has 1345 credits, tier 2, a barracks and no harvester, and never spends it on infantry (production issue, not the launch).
+
+### Root cause and fix (s24, same session)
+Mirror s6g2: side A had no war factory left (factory destroyed), 0 harvesters, 2 refineries, 1345 credits. EconomyRescue wanted a harvester, which it could not buy
+without a factory, and kept `Saving` true for ever; that holds every unit lane, so the cash was never spent (D-235 spend-down never ran). Fix: no `Saving`
+when the harvester (or the refinery) is not buildable (`EconomyRescue.CanBuy`). The hook in MilitaryManager.Think was dropped (no gain).
+| Pair | Before | Hook only | Hook + fix | Fix only (kept) |
+|---|---|---|---|---|
+| Authority mirror | 7-6-3 (19264) | 8-5-3 (19982) | 8-6-2 (19490) | 7-7-2 (18756) |
+| Authority v Directorate | 4-9-3 (19267) | 4-8-4 (20308) | 4-8-4 (20309) | 4-9-3 (19149) |
+Draws 6 -> 5 of 32 with the fix alone, mean end tick earlier in both pairs. Small samples; laptop series to confirm.
+
+Rebuild of a lost barracks/factory while broke (held yard, not kept): mirror 7-7-2 (18817), Auth v Dir 4-8-4 (19454), against fix only 7-7-2 (18756) and 4-9-3 (19149). No gain, one more draw, so it was reverted.
