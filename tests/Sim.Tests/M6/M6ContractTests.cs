@@ -52,9 +52,9 @@ public sealed class M6ContractTests
     {
         var sim = ScriptedGame.NewSim(ScriptedGame.Setup());
         string[] names = sim.StateParts.Select(p => p.Name).ToArray();
-        Assert.Equal(new[] { "stats", "directive", "rigs", "salvage", "veterancy", "shipments", "beachhead", "naval" }, names[^8..]);   // VET-1 appended "veterancy", M7-02 the last three
-        Assert.Same(sim.Rigs, sim.StateParts[^6]);
-        Assert.Same(sim.Salvage, sim.StateParts[^5]);
+        Assert.Equal(new[] { "stats", "directive", "rigs", "salvage", "veterancy", "shipments", "beachhead", "naval", "commander_orders" }, names[^9..]);   // VET-1 appended "veterancy", M7-02 the last three
+        Assert.Same(sim.Rigs, sim.StateParts[^7]);
+        Assert.Same(sim.Salvage, sim.StateParts[^6]);
     }
 
     [Fact]

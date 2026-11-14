@@ -34,6 +34,7 @@ public sealed class Commander : IDirectiveSource, ICommanderChannel, IDisposable
     private readonly CancellationTokenSource _cts = new();
     private readonly object _gate = new();
     private readonly List<string> _heard = new();
+    private readonly List<OrderDraft> _orders = new();   // S24 (M5-12): game thread only, taken by TakeOrders
 
     // game thread only
     private int _nextCallTick = CadenceTicks;
@@ -141,12 +142,22 @@ public sealed class Commander : IDirectiveSource, ICommanderChannel, IDisposable
         CommanderReply reply = ReplyParser.Parse(result.Text);
         if (reply.Say is { } say && _chatOn)
             _chat.Add(new CommanderLine(tick, Player, Speaker, say));
+        _orders.AddRange(reply.OrderList);
         if (reply.Directive is not { } d) return false;
 
         _history.RecordDirective(d, tick);
-        packedArg = DirectiveCodec.Pack(d.Posture, d.Focus, d.TargetPlayer, d.Mix, d.Expand);
+        packedArg = DirectiveCodec.PackStrong(DirectiveCodec.Pack(d.Posture, d.Focus, d.TargetPlayer, d.Mix, d.Expand), d.StrongMix);
         focusCell = d.FocusX < 0 || d.FocusY < 0 ? Directive.NoCell : new CellCoord(d.FocusX, d.FocusY);
         return true;
+    }
+
+    /// <summary>S24 (M5-12): the standing orders parsed since the last call, oldest first, then cleared. Game thread only. The caller
+    /// turns them into commands with <see cref="DirectiveCommands.AddOrderCommands"/> (the driver emits only the directive).</summary>
+    public IReadOnlyList<OrderDraft> TakeOrders()
+    {
+        OrderDraft[] taken = _orders.ToArray();
+        _orders.Clear();
+        return taken;
     }
 
     private void TryStart(PlayerView view)

@@ -30,6 +30,7 @@ public sealed class AiDriver
         public byte[]? Saved;   // M3-21: a state blob from a save, applied once when the driver starts
         public CellCoord? SavedStart;
         public IDirectiveSource? Directives;   // M5: the LLM commander, polled every tick
+        public IOrderSource? Orders;   // S24 (M5-12): its standing orders, taken right after the directive poll
 
         public void Issue(CommandKind kind, EntityId subject, ActorKind subjectKind, CellCoord cell = default,
             ActorRef target = default, int arg2 = 0)
@@ -97,6 +98,8 @@ public sealed class AiDriver
                 outCommands.Add(new Command(tick + delay, s.Player, unchecked(s.Sequence++), CommandKind.Directive, EntityId.None, EntityId.None,
                     focus, packed));
             }
+            if (s.Orders is not null)   // S24 (M5-12): the commander's standing orders ride the same command stream as its directive
+                s.Orders.TakeOrderCommands(tick + Math.Max(1, CommandDelayOverride ?? s.Profile.CommandDelayTicks), s.Player, ref s.Sequence, outCommands);
             int interval = Math.Max(1, s.Profile.DecisionIntervalTicks);
             if (tick % interval != 0) continue;   // D-065: all slots think on the same tick (a per-slot stagger biased mirror matches)
             s.Tick = tick;
@@ -195,6 +198,15 @@ public sealed class AiDriver
     {
         foreach (Slot s in _slots)
             if (s.Player == player) { s.Directives = source; return; }
+        throw new ArgumentException($"Slot {player} has no AI.", nameof(player));
+    }
+
+    /// <summary>S24 (M5-12): gives slot <paramref name="player"/> a standing-order source (the LLM commander's orders); null removes it. The slot must already
+    /// have an AI. May be called at any time between ticks.</summary>
+    public void SetOrderSource(byte player, IOrderSource? source)
+    {
+        foreach (Slot s in _slots)
+            if (s.Player == player) { s.Orders = source; return; }
         throw new ArgumentException($"Slot {player} has no AI.", nameof(player));
     }
 

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
 using Rts.Sim.Core;
+using Rts.Sim.Rules;
 
 namespace Rts.AI.Recruit;
 
@@ -73,6 +74,9 @@ internal readonly record struct DirectiveBias
     /// <summary>Chance (permille) that a lane takes a unit of the preferred mix.</summary>
     public const int PreferredMixPermille = 750;   // (tune) M5-02
 
+    /// <summary>S24 (M5-12, D-241): chance (permille) that a lane takes a unit of the preferred mix when the directive is a strong mix.</summary>
+    public const int StrongMixPermille = 950;   // (tune)
+
     /// <summary>The knob values for a directive. <see cref="Directive.None"/> (not set) returns <see cref="Plain"/>.</summary>
     public static DirectiveBias For(Directive d)
     {
@@ -107,8 +111,25 @@ internal readonly record struct DirectiveBias
         }
         if (d.Expand) b = b with { Expand = true, GarrisonRadius = GarrisonManager.RadiusCells + 8 };
         if (d.TargetPlayer != DirectiveCodec.AnyTarget) b = b with { TargetPlayer = d.TargetPlayer };
-        if (d.Mix != DirectiveCodec.MixAuto && d.Mix <= DirectiveCodec.MixAntiStructure) b = b with { Mix = d.Mix, MixPermille = PreferredMixPermille };
+        if (d.Mix != DirectiveCodec.MixAuto && d.Mix <= DirectiveCodec.MixAntiInfantry)   // S24: 5 anti-armour and 6 anti-infantry join the preferred mixes
+            b = b with { Mix = d.Mix, MixPermille = d.Strong ? StrongMixPermille : PreferredMixPermille };
         return b;
+    }
+
+    /// <summary>
+    /// S24 (M5-12): how well a unit's primary weapon counters the preferred <see cref="Mix"/> per squared credit, for the counter mixes:
+    /// anti-armour = damage times the warhead's percent against heavy armour, anti-infantry = the same against unarmoured. 0 for other mixes
+    /// or an unarmed unit. The production manager's mix pick (<c>PreferMix</c>) reads it for <see cref="DirectiveCodec.MixAntiArmour"/> / <see cref="DirectiveCodec.MixAntiInfantry"/>.
+    /// </summary>
+    public long CounterScore(SimRules rules, int weaponIdx, int cost)
+    {
+        if (weaponIdx < 0 || cost <= 0 || (Mix != DirectiveCodec.MixAntiArmour && Mix != DirectiveCodec.MixAntiInfantry)) return 0;
+        WeaponType w = rules.Weapons[weaponIdx];
+        if (w.Damage <= 0) return 0;
+        WarheadType wh = rules.Warheads[w.Warhead];
+        int versus = wh.VersusPercent[(int)(Mix == DirectiveCodec.MixAntiArmour ? ArmorClass.Heavy : ArmorClass.Unarmored)];
+        long dmg = (long)w.Damage * versus * (wh.Splash > 0 && Mix == DirectiveCodec.MixAntiInfantry ? 12 : 10);
+        return dmg * 1_000_000L / ((long)Math.Max(1, w.RateOfFire) * cost);
     }
 
     /// <summary>The profile's retreat percent scaled by <see cref="RetreatPermille"/> (never above 100; 0 stays 0).</summary>

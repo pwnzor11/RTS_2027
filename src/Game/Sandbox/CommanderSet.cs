@@ -41,9 +41,23 @@ public sealed class CommanderSet : IDisposable
             var commander = new Commander(player, provider, PersonaCatalog.Pick(personas, faction, player), faction, app.LlmCallCap,
                 app.LlmChatOn, set.Chat);
             driver.SetDirectiveSource(player, commander);
+            driver.SetOrderSource(player, new CommanderOrders(commander));   // S24 (M5-12): its standing orders go out with the directive
             set._commanders.Add(commander);
         }
         return set;
+    }
+
+    /// <summary>S24 (M5-12): turns a commander's parsed orders into order commands for the <see cref="AiDriver"/>.</summary>
+    private sealed class CommanderOrders : IOrderSource
+    {
+        private readonly Commander _commander;
+        public CommanderOrders(Commander commander) => _commander = commander;
+
+        public void TakeOrderCommands(int execTick, byte player, ref ushort sequence, List<Rts.Sim.Core.Command> outCommands)
+        {
+            IReadOnlyList<OrderDraft> orders = _commander.TakeOrders();
+            if (orders.Count > 0) new CommanderReply(null, null, orders).AddOrderCommands(outCommands, execTick, player, ref sequence);
+        }
     }
 
     /// <inheritdoc />

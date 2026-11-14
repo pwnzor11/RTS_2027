@@ -36,6 +36,7 @@ public sealed class RecruitAi : IAiPlayer, IAiSnapshotable, IHookableAi
     private readonly ScatterManager _scatter = new();
     private readonly RetreatManager _retreat = new();
     private readonly HarassManager _harass = new();
+    private readonly RaidManager _raid = new();   // S24 (M5-12): the commander's Raid order
     private readonly ScoutManager _scout = new();
     private readonly UpgradeManager _upgrades = new();
     private readonly SuperweaponManager _superweapons = new();
@@ -82,6 +83,18 @@ public sealed class RecruitAi : IAiPlayer, IAiSnapshotable, IHookableAi
 
     /// <summary>Attack orders given by raiders.</summary>
     public int RaidStrikes => _harass.Strikes;
+
+    /// <summary>S24: raid groups formed for a commander's Raid order.</summary>
+    public int OrderRaidGroups => _raid.Groups;
+
+    /// <summary>S24: units in the commander-order raid group now.</summary>
+    public int OrderRaidSize => _raid.Size;
+
+    /// <summary>S24: orders given by commander-order raid groups.</summary>
+    public int OrderRaidStrikes => _raid.Strikes;
+
+    /// <summary>S24: commander-order raid groups that retreated.</summary>
+    public int OrderRaidRetreats => _raid.Retreats;
 
     /// <summary>Scouts sent.</summary>
     public int Scouts => _scout.Sent;
@@ -304,10 +317,14 @@ public sealed class RecruitAi : IAiPlayer, IAiSnapshotable, IHookableAi
         if (tier > MaxTier) MaxTier = tier;
         view.CopyKnownEnemyBuildings(_knownBuildings);
         _squads.Apply(_k);
+        _raid.Detach(_k);   // S24: a commander-order raid group is not part of the army
         // M5-02: the commander's directive, as knob values for this decision (Directive.None gives the values the managers always used)
         DirectiveBias bias = DirectiveBias.For(view.Directive);
         if (_hookAttack is CellCoord hookAttack) bias = bias with { AttackCell = hookAttack };   // M8-06: script hooks beat the directive
         if (_hookDefend is CellCoord hookDefend) bias = bias with { RallyCell = hookDefend };
+        IReadOnlyList<CommanderOrder> orders = view.CommanderOrders;   // S24 (M5-12): standing orders; all empty = nothing below changes
+        if (MilitaryManager.HoldCellOf(orders) is CellCoord holdCell && _hookDefend is null) bias = bias with { RallyCell = holdCell };   // HoldCell: the army rallies there
+        _military.Orders = orders;
         _military.HookAttack = _hookAttack;
         _military.HookHold = _hookDefend is not null && _hookAttack is null;   // Defend holds waves; an Attack hook (also set) wins
         _military.Bias = bias; _production!.Bias = bias; _planner!.Bias = bias; _upgrades.Bias = bias; _garrison.Bias = bias;
@@ -329,6 +346,7 @@ public sealed class RecruitAi : IAiPlayer, IAiSnapshotable, IHookableAi
         (_tactics as LeftBehindTactics)?.Early(_k, sink, _production.Rally, _knownBuildings, _planner);   // M6-10: unpack, salvage, raids
         if (_profile.ActiveScouting) _scout.Think(_k, sink, _squads);
         if (_profile.Harass && _tactics is not LeftBehindTactics) _harass.Think(_k, sink, _squads, _planner, _knownBuildings, _production.Rally, _profile.ScoutInfoAgeTicks);
+        _raid.Think(_k, sink, orders, _knownBuildings, _production.Rally);   // S24: Raid (ExpandTo / TechTo / Reserve: s24-dai2)
         _military.Broke = _rescue.Broke;
         _military.Ahead = _planner.Ahead;   // M4-16
         _military.OwnValue = _planner.OwnArmyValue; _military.EnemyValueSeen = _planner.EnemyArmyLong;
@@ -351,12 +369,16 @@ public sealed class RecruitAi : IAiPlayer, IAiSnapshotable, IHookableAi
     /// <summary>s23 D-235: MilitaryManager writes the near-stall timer. Versions 1 to 6 are still read (the timer starts empty).</summary>
     private const int EndgameStateVersion = 7, EndgameHookStateVersion = 8;
 
+    /// <summary>S24: set on the layout number when the commander-order block follows the other state (written only once an order was acted on, so other saves are unchanged).</summary>
+    private const int OrderStateFlag = 0x100;
+
     /// <inheritdoc />
     public void SaveState(BinaryWriter w)
     {
         bool thinking = _faction is not null && _build is not null && _production is not null && _planner is not null && _ctx is not null;
         bool hooked = thinking && (_servedWaveSeq != 0 || _military.HookDirty);
-        w.Write(hooked ? EndgameHookStateVersion : EndgameStateVersion);
+        bool ordered = thinking && (_military.OrdersDirty || _raid.Dirty);
+        w.Write((hooked ? EndgameHookStateVersion : EndgameStateVersion) | (ordered ? OrderStateFlag : 0));
         w.Write(_id);
         w.Write(thinking);
         if (!thinking) return;   // never decided anything: a fresh AI is the same AI
@@ -382,6 +404,7 @@ public sealed class RecruitAi : IAiPlayer, IAiSnapshotable, IHookableAi
         if (_tactics is LeftBehindTactics lb) lb.Snapshot(w);   // M6-10: only a Left Behind side writes (older blobs are unchanged)
         if (_tactics is ExpeditionTactics ex) ex.Snapshot(w);   // M7-10: likewise only an Expedition side
         if (hooked) { w.Write(_servedWaveSeq); _military.SnapshotHooks(w); }   // M8-06
+        if (ordered) { _military.SnapshotOrders(w); _raid.Snapshot(w); }   // S24
     }
 
     /// <inheritdoc />
@@ -389,6 +412,8 @@ public sealed class RecruitAi : IAiPlayer, IAiSnapshotable, IHookableAi
     {
         if (_ctx is null) throw new InvalidOperationException("LoadState needs Start first.");
         int version = r.ReadInt32();
+        bool ordered = (version & OrderStateFlag) != 0;   // S24
+        version &= ~OrderStateFlag;
         if (version is not (StateVersion or HookStateVersion or CancelStateVersion or CancelHookStateVersion or MopupStateVersion or MopupHookStateVersion or EndgameStateVersion or EndgameHookStateVersion)) throw new InvalidDataException("AI state of another layout");
         if (r.ReadString() != _id) throw new InvalidDataException("AI state of another AI");
         if (!r.ReadBoolean()) return;
@@ -413,5 +438,6 @@ public sealed class RecruitAi : IAiPlayer, IAiSnapshotable, IHookableAi
         if (_tactics is LeftBehindTactics lb) lb.Restore(r);
         if (_tactics is ExpeditionTactics ex) ex.Restore(r);
         if (version is HookStateVersion or CancelHookStateVersion or MopupHookStateVersion or EndgameHookStateVersion) { _servedWaveSeq = r.ReadInt32(); _military.RestoreHooks(r); }   // M8-06
+        if (ordered) { _military.RestoreOrders(r); _raid.Restore(r); }   // S24
     }
 }

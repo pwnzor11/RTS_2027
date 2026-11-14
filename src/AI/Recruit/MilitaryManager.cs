@@ -115,6 +115,64 @@ internal sealed class MilitaryManager
     /// <summary>True when hook memory differs from a fresh manager (decides whether a save carries it).</summary>
     internal bool HookDirty => _hookForce || _hookWaveActive;
 
+    /// <summary>S24 (M5-12): the commander's standing orders (set by the AI each decision; null or empty = none, the manager behaves as before).</summary>
+    public IReadOnlyList<CommanderOrder>? Orders { get; set; }
+
+    // S24: per slot, the IssuedTick of the AttackAt order whose wave was already launched (-1 = none). Long-lived: saved with the order block.
+    private readonly int[] _attackDone = { -1, -1, -1, -1 };
+    private bool _orderHold;
+
+    /// <summary>S24: true when an order memory differs from a fresh manager (decides whether a save carries the order block).</summary>
+    internal bool OrdersDirty => _attackDone[0] >= 0 || _attackDone[1] >= 0 || _attackDone[2] >= 0 || _attackDone[3] >= 0;
+
+    /// <summary>S24: the cell of the first standing HoldCell order, or null.</summary>
+    internal static CellCoord? HoldCellOf(IReadOnlyList<CommanderOrder>? orders)
+    {
+        if (orders is null) return null;
+        for (int i = 0; i < orders.Count; i++)
+            if (orders[i].Kind == CommanderOrderKind.HoldCell && orders[i].Cell.X >= 0) return orders[i].Cell;
+        return null;
+    }
+
+    /// <summary>
+    /// S24 (M5-12): AttackAt: while the order is pending the army only gathers (no timed or threshold waves); once the due tick has come and the own army value
+    /// covers Amount, one wave goes to the cell (<see cref="RequestWave"/>) and the slot is done until a new IssuedTick. HoldCell: no waves; idle army
+    /// units walk to the cell (the production rally is moved there by the AI) and defend it until the order is cleared.
+    /// </summary>
+    private void ApplyOrders(RecruitKnowledge k, ICommandSink sink, int n)
+    {
+        _orderHold = false;
+        IReadOnlyList<CommanderOrder>? orders = Orders;
+        if (orders is null || orders.Count == 0) return;
+        int tick = k.View.Tick;
+        for (int slot = 0; slot < orders.Count && slot < _attackDone.Length; slot++)
+        {
+            CommanderOrder o = orders[slot];
+            if (o.Kind == CommanderOrderKind.AttackAt)
+            {
+                if (_attackDone[slot] == o.IssuedTick || o.Cell.X < 0) continue;
+                _orderHold = true;
+                if (tick >= o.DueTick && OwnValue >= o.Amount && n >= 1 && _phase == Phase.Gather && !_hookForce)
+                {
+                    RequestWave(o.Cell);
+                    _attackDone[slot] = o.IssuedTick;
+                    _orderHold = false;
+                }
+            }
+            else if (o.Kind == CommanderOrderKind.HoldCell && o.Cell.X >= 0)
+            {
+                _orderHold = true;
+                if (_phase != Phase.Gather) continue;
+                foreach (ViewActor a in k.Army)
+                    if (a.Idle && Chebyshev(a.Cell, o.Cell) > HoldRadiusCells) sink.Issue(CommandKind.AttackMove, a.Id, a.Kind, o.Cell);
+            }
+            else if (_attackDone[slot] >= 0) _attackDone[slot] = -1;   // the slot now holds something else (or nothing): forget the old launch
+        }
+    }
+
+    /// <summary>S24: cells from a held cell at which an idle army unit counts as in place.</summary>
+    public const int HoldRadiusCells = 5;   // (tune)
+
     /// <summary>M7-10: while true no new wave launches (the Expedition's withdraw: the army stays at the beachhead).</summary>
     public bool Hold { get; set; }
 
@@ -474,6 +532,7 @@ internal sealed class MilitaryManager
         UpdateMopup(k, attacked, n);   // S22
 
         int alive = RosterAlive(k);
+        ApplyOrders(k, sink, n);   // S24
 
         // M4-12: a harvester only counts as attacked with a visible enemy near it (radiation also lowers its health)
         if (attacked is ViewActor hv && hv.Kind != ActorKind.Building && NearestEnemyTo(k, hv) is null) attacked = null;
@@ -515,12 +574,12 @@ internal sealed class MilitaryManager
             int needNow = _siegeOn ? (int)Math.Min(SiegePlan.NeedCap, (long)_siegeNeed * (100 + SiegePlan.GrowthPct * Math.Min(_failedWaves, SiegePlan.MaxFailureSteps)) / 100) : EnemyValueSeen == 0 && _targetPlayer >= 0 ? 0 : _required;   // S15: no enemy army seen for the whole long window and no defence worth a siege: nothing to wait for
             bool strong = WaveGate.Strong(Options.Respond, OwnValue, EnemyValueSeen, needNow, n, tick, _lastWave, Options.AttackRatioPct);   // M4-16 r4: no wave into a clearly bigger army
             bool hookWave = _hookForce && n >= 1;   // M8-06: AI.Wave, once
-            bool mop = !hookWave && !Hold && !HookHold && tick >= _cooldownUntil && MopupDue(tick, n, guard);   // S22: the enemy is beaten: go and finish it
+            bool mop = !hookWave && !Hold && !HookHold && !_orderHold && tick >= _cooldownUntil && MopupDue(tick, n, guard);   // S22: the enemy is beaten: go and finish it
             if (hookWave) { _hookForce = false; _hookWaveActive = true; _hookWaveCell = _hookForceCell; desperate = true; }
             // S15: the enemy base is defended: gather an army worth a share of its defences first (not when broke, scripted, or after a long wait)
             bool siegeHold = _siegeOn && !desperate && (OwnValue < _siegeNeed || n < SiegePlan.MinUnits(Options.Tier, _failedWaves)) && n < SiegePlan.CapUnits && tick - _lastWave < SiegePlan.WaitTicks;
             if (siegeHold && n >= Bias.Wave(_nextThreshold, 2) + guard) SiegeHolds++;
-            if (hookWave || tick >= _cooldownUntil && !Hold && !HookHold && !siegeHold && (strong || desperate || mop) && (n >= Bias.Wave(_nextThreshold, 2) + guard
+            if (hookWave || tick >= _cooldownUntil && !Hold && !HookHold && !_orderHold && !siegeHold && (strong || desperate || mop) && (n >= Bias.Wave(_nextThreshold, 2) + guard
                 || (n >= Bias.Wave(MinWave, 2) + guard && tick - _lastWave >= Bias.Wave(_nextInterval, 600)) || desperate || mop))
             {
                 _roster.Clear(); _squadB.Clear();
@@ -1067,6 +1126,12 @@ internal sealed class MilitaryManager
         AiSnapshot.WriteId(w, _siegeId); AiSnapshot.WriteId(w, _siegeIssued); AiSnapshot.WriteCell(w, _siegeCell);
         w.Write(_idleNearSince); w.Write(NearStalls);   // s23 D-235 (layout 7 and later)
     }
+
+    /// <summary>S24: writes the launched-order memory (only called when <see cref="OrdersDirty"/>).</summary>
+    internal void SnapshotOrders(BinaryWriter w) { foreach (int v in _attackDone) w.Write(v); }
+
+    /// <summary>S24: reads what <see cref="SnapshotOrders"/> wrote.</summary>
+    internal void RestoreOrders(BinaryReader r) { for (int i = 0; i < _attackDone.Length; i++) _attackDone[i] = r.ReadInt32(); }
 
     /// <summary>M8-06: writes the scripted-wave memory (only called when <see cref="HookDirty"/>).</summary>
     internal void SnapshotHooks(BinaryWriter w)
