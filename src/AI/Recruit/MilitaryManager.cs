@@ -454,7 +454,8 @@ internal sealed class MilitaryManager
     private static ulong Key(ViewActor a) => ((ulong)a.Id.Index << 16) | a.Id.Generation | ((ulong)(int)a.Kind << 48);
 
     /// <summary>M4-12 (diagnostics): the wave phase (0 gather, 1 stage, 2 assault), the scout-route stop and the last goal picked.</summary>
-    public string Debug => $"{(int)_phase}:{_scoutIdx}/{_scoutRoute.Count}@{(_scoutRoute.Count > 0 ? _scoutRoute[Math.Min(_scoutIdx, _scoutRoute.Count - 1)] : default)} goal {_lastGoal} stage {_stage} roster {_roster.Count} siege {(SiegeActive ? "wave" : _siegeOn ? "on" : "off")} need {_siegeNeed} waves {SiegeWaves} holds {SiegeHolds} tgt {(_siegeHave ? _siegeCell.ToString() : "-")} mopup {(MopupOn ? "on" : "off")} beaten {_beatenSince} mops {Mopups} nstall {NearStalls} found {_sweepFound} kb {_targetBuildings.Count}";
+    private int _dbgPool, _dbgHome, _dbgDet; private string _dbgDetTxt = "";   // s25: pool / home guard / detached counts of the last Think (trace only, not saved)
+    public string Debug => $"{(int)_phase}:{_scoutIdx}/{_scoutRoute.Count}@{(_scoutRoute.Count > 0 ? _scoutRoute[Math.Min(_scoutIdx, _scoutRoute.Count - 1)] : default)} goal {_lastGoal} stage {_stage} roster {_roster.Count} pool {_dbgPool} home {_dbgHome} det {_dbgDet} [{_dbgDetTxt}] siege {(SiegeActive ? "wave" : _siegeOn ? "on" : "off")} need {_siegeNeed} waves {SiegeWaves} holds {SiegeHolds} tgt {(_siegeHave ? _siegeCell.ToString() : "-")} mopup {(MopupOn ? "on" : "off")} beaten {_beatenSince} mops {Mopups} nstall {NearStalls} found {_sweepFound} kb {_targetBuildings.Count}";
 
     /// <summary>M4-12: set by the AI while its income has stalled (map mined out): waves go out at <see cref="DesperateWave"/> units.</summary>
     public bool Broke { get; set; }
@@ -529,6 +530,7 @@ internal sealed class MilitaryManager
         AssessSiege(k);   // S15
         ViewActor? attacked = FindAttacked(k);
         int n = k.Army.Count;
+        _dbgPool = n; _dbgHome = k.Home.Count; _dbgDet = k.Detached.Count; _dbgDetTxt = string.Join(",", k.Detached.Select(d => d.Kind == ActorKind.Vehicle ? k.Rules.Vehicles[d.TypeIndex].Id.Replace("exp_", "") + ":" + (d.Health * 100 / Math.Max(1, d.MaxHealth)) : "inf:" + (d.Health * 100 / Math.Max(1, d.MaxHealth))));   // s25 trace only
         UpdateMopup(k, attacked, n);   // S22
 
         int alive = RosterAlive(k);

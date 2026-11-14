@@ -71,4 +71,23 @@ public class MatchAdjudicationTests
         var b = new MatchAdjudication.Breakdown(Army: 1200, Structures: 800, Credits: 300);
         Assert.Equal(2300, b.Total);
     }
+
+    // M13-30: the laptop summary (run_s19_after.ps1) reads the AdjW / AdjL / AdjEven columns of each row's .md with its own pattern.
+    [Fact]
+    public void Laptop_summary_script_reads_the_adjudication_columns()
+    {
+        string root = AppContext.BaseDirectory;
+        while (root != null && !File.Exists(Path.Combine(root, "RTS_2027.slnx"))) root = Path.GetDirectoryName(root)!;
+        string script = File.ReadAllText(Path.Combine(root!, "tools", "measure", "run_s19_after.ps1"));
+        Assert.Contains("AdjW | AdjL | AdjEven", script);
+        Assert.DoesNotContain("Session 19 after series", script);
+        var line = script.Split('\n').First(l => l.StartsWith("$adjRow = ")).Trim();
+        string pattern = line.Substring(line.IndexOf('\'') + 1).TrimEnd('\'');
+        var m = System.Text.RegularExpressions.Regex.Match("| 64 | 20 | 18 | 26 | 25000 | 31% | 3 | 1 | 22 |", pattern);
+        Assert.True(m.Success);
+        Assert.Equal("3", m.Groups[1].Value);
+        Assert.Equal("1", m.Groups[2].Value);
+        Assert.Equal("22", m.Groups[3].Value);
+        Assert.DoesNotMatch(pattern, "| 64 | 20 | 18 | 26 | 25000 | 31% |");   // old rows: no adj columns
+    }
 }

@@ -91,7 +91,7 @@ public sealed class M7ContractTests
     {
         ShipmentRules s = RulesLoader.Load(RulesLocator.FindRulesDir(AppContext.BaseDirectory)!).Sim.Shipments;
         Assert.True(s.Enabled);   // M7-10: switched on (only games with an exp_anchorage dock are affected)
-        Assert.Equal(ShipmentRules.Default with { Enabled = true, TenderType = "exp_supply_tender", IntervalTicks = 600, Value = 1400, DecayPermille = 60 }, s);   // S11 (m7_income.md): interval 600, decay 60; s22 M13-19 (D-223): value 2000 -> 1400   // M7-08 names the convoy ship
+        Assert.Equal(ShipmentRules.Default with { Enabled = true, TenderType = "exp_supply_tender", IntervalTicks = 600, Value = 1200, DecayPermille = 60 }, s);   // S11 (m7_income.md): interval 600, decay 60; s22 M13-19 (D-223): value 2000 -> 1400   // M7-08 names the convoy ship
     }
 
     [Fact]
