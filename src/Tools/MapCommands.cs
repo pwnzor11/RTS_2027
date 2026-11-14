@@ -14,13 +14,13 @@ public static class MapCommands
 {
     private const string Usage =
         "usage: map new --size <n> --seed <s> --out <path>\n" +
-        "       map gen --biome rust_belt|glass_coast|mountains|ash_plains --size s|m|l --players 2|3|4 --seed <s> --out <path> [--ocean n|e|s|w letters, e.g. ns] [--layout 1|2] [--ascii]\n" +
+        "       map gen --biome rust_belt|glass_coast|mountains|ash_plains --size s|m|l --players 2|3|4 --seed <s> --out <path> [--ocean n|e|s|w letters, e.g. ns] [--layout 1|2] [--stamps] [--ascii]\n" +
         "       map validate <path> [--rules-dir <dir>]\n" +
         "       map info <path>\n" +
         "       map ascii <path>\n" +
         "       map report <path> | <gen options>        (measured table of design 16 section 1.2; gen options as for map gen, without --out)\n" +
         "       map render <path> | <gen options> --png <out.png> [--scale <px per cell, default 6>]\n" +
-        "       (report/render: --layout 1|2 picks the generator; --raw shows layout 2 seed as is, with no retry; --checks adds the layout checks to a layout 1 report)";
+        "       (report/render: --layout 1|2 picks the generator; --stamps adds 2-4 stamps (M12-13); --raw shows layout 2 seed as is, with no retry; --checks adds the layout checks to a layout 1 report)";
 
     public static int Run(string[] args)
     {
@@ -86,12 +86,13 @@ public static class MapCommands
     private static int Gen(string[] args)
     {
         Biome? biome = null; MapSize? size = null; int? players = null; ulong? seed = null; string? outPath = null; bool ascii = false;
-        int layout = MapGenerator.CurrentLayout;
+        int layout = MapGenerator.CurrentLayout; bool stamps = false;
         OceanEdges ocean = OceanEdges.None;   // M7-13: --ocean ns turns the north and south edges (and their symmetry images) into sea
         for (int i = 0; i < args.Length; i++)
         {
             string a = args[i];
             if (a == "--ascii") { ascii = true; continue; }
+            if (a == "--stamps") { stamps = true; continue; }
             if (i + 1 >= args.Length || a is not ("--biome" or "--size" or "--players" or "--seed" or "--out" or "--ocean" or "--layout")) { Console.Error.WriteLine(Usage); return 2; }
             string v = args[++i];
             switch (a)
@@ -128,7 +129,7 @@ public static class MapCommands
         if (biome is null || size is null || players is null || seed is null || outPath is null) { Console.Error.WriteLine(Usage); return 2; }
         try
         {
-            var p = new MapGenParams(biome.Value, size.Value, players.Value, seed.Value, null, ocean, layout);
+            var p = new MapGenParams(biome.Value, size.Value, players.Value, seed.Value, null, ocean, layout, stamps);
             long t0 = System.Diagnostics.Stopwatch.GetTimestamp();
             (MapData map, MapMeta meta) = MapGenerator.GenerateWithMeta(p);
             long ms = (long)System.Diagnostics.Stopwatch.GetElapsedTime(t0).TotalMilliseconds;
@@ -182,12 +183,13 @@ public static class MapCommands
     {
         string? path = null, png = null; int scale = 6;
         Biome? biome = null; MapSize? size = null; int? players = null; ulong? seed = null; OceanEdges ocean = OceanEdges.None;
-        int layout = MapGenerator.CurrentLayout; bool raw = false, checks = false;
+        int layout = MapGenerator.CurrentLayout; bool raw = false, checks = false, stamps = false;
         for (int i = 0; i < args.Length; i++)
         {
             string a = args[i];
             if (!a.StartsWith("--", StringComparison.Ordinal)) { if (path is not null) { Console.Error.WriteLine(Usage); return 2; } path = a; continue; }
             if (a == "--raw") { raw = true; continue; }
+            if (a == "--stamps") { stamps = true; continue; }
             if (a == "--checks") { checks = true; continue; }
             if (i + 1 >= args.Length) { Console.Error.WriteLine(Usage); return 2; }
             string v = args[++i];
@@ -218,7 +220,7 @@ public static class MapCommands
             MapData map; MapMeta meta; string? rawFailure = null; int attempts = 1;
             if (gen)
             {
-                var gp = new MapGenParams(biome!.Value, size!.Value, players!.Value, seed!.Value, null, ocean, layout);
+                var gp = new MapGenParams(biome!.Value, size!.Value, players!.Value, seed!.Value, null, ocean, layout, stamps);
                 if (raw && layout == MapGenerator.ZonedLayout) (map, meta) = MapGenerator.GenerateZonedRaw(gp, out rawFailure);
                 else (map, meta) = MapGenerator.GenerateWithMeta(gp, Rts.Data.MapGen.BiomeCatalog.For(gp.Biome), out attempts);
             }

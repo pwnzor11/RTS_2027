@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Rts.Data;
+using Rts.Data.Stamps;
 using Rts.Game.Input;
 using Rts.Game.Menu;
 using Rts.Game.Render;
@@ -136,6 +137,12 @@ public sealed class MapEditorScreen : IScreen
             if (input.Pressed(Keys.OemOpenBrackets)) _session.BrushSize = BrushShape.Sizes[Math.Max(0, Array.IndexOf(BrushShape.Sizes, _session.BrushSize) - 1)];
             if (input.Pressed(Keys.OemCloseBrackets)) _session.BrushSize = BrushShape.Sizes[Math.Min(BrushShape.Sizes.Length - 1, Array.IndexOf(BrushShape.Sizes, _session.BrushSize) + 1)];
             if (input.Pressed(Keys.F5)) _revalidate = true;
+            if (input.Pressed(Keys.T)) _session.Tool = EditorTool.Stamp;
+            if (_session.Tool == EditorTool.Stamp)
+            {
+                if (input.Pressed(Keys.R)) _session.StampRotation++;
+                if (input.Pressed(Keys.M)) _session.StampMirror = !_session.StampMirror;
+            }
             if (input.Pressed(Keys.H)) { _showDecor = !_showDecor; _texDirty = true; }
         }
 
@@ -259,8 +266,8 @@ public sealed class MapEditorScreen : IScreen
         top.Add("Back", false, () => { if (!_session.Dirty || _confirmQuit) _s.Screens.Pop(); else { _confirmQuit = true; Say("Unsaved changes: click Back again to leave"); } });
 
         var tools = new FlowLayout(layout.Tools, scale);
-        string[] toolNames = ["Land", "Height", "Resource", "Feature", "Start", "Eraser", "Fill", "Props", "Decal"];
-        tools.Label("Tool (1-9)   H: show / hide props and decals");
+        string[] toolNames = ["Land", "Height", "Resource", "Feature", "Start", "Eraser", "Fill", "Props", "Decal", "Stamp"];
+        tools.Label("Tool (1-9, T = stamp)   H: show / hide props and decals");
         for (int i = 0; i < toolNames.Length; i++)
         {
             var tool = (EditorTool)i;
@@ -304,6 +311,15 @@ public sealed class MapEditorScreen : IScreen
                 tools.Add("None (erase)", _session.DecalKind == 0, () => _session.DecalKind = 0);
                 IReadOnlyList<DecalRule> decals = DecorFor(_session.Document).Decals;
                 for (int d = 0; d < decals.Count && d < 255; d++) { byte id = (byte)(d + 1); tools.Add(decals[d].Name, _session.DecalKind == id, () => _session.DecalKind = id); }
+                break;
+            case EditorTool.Stamp:
+                tools.Label("Stamp (R rotate, M mirror)");
+                foreach (Stamp st in _session.StampsForBiome()) { Stamp sv = st; tools.Add(st.Name, _session.Stamp == sv, () => _session.Stamp = sv); }
+                tools.NewLine();
+                tools.Add($"Turn {_session.StampRotation * 90}", false, () => _session.StampRotation++);
+                tools.Add("Mirror", _session.StampMirror, () => _session.StampMirror = !_session.StampMirror);
+                tools.Add("All symmetric images", _session.StampSymmetric, () => _session.StampSymmetric = !_session.StampSymmetric,
+                    _session.Document.Symmetry != MapSymmetry.None);
                 break;
             case EditorTool.Start:
                 tools.Label("Start slot");
@@ -522,6 +538,21 @@ public sealed class MapEditorScreen : IScreen
                 Color hover = new(255, 255, 255, 70);
                 if (_session.Tool is EditorTool.Feature)
                     Shapes.Outline(sb, px, new Rectangle(_origin.X + hx * cell, _origin.Y + hy * cell, _session.Feature.Width * cell, _session.Feature.Height * cell), Color.White, 2);
+                else if (_session.Tool is EditorTool.Stamp)
+                {
+                    (int sw, int sh) = _session.StampFootprint;
+                    var rect = new Rectangle(_origin.X + hx * cell, _origin.Y + hy * cell, sw * cell, sh * cell);
+                    Shapes.Outline(sb, px, rect, Color.White, 2);
+                    var sym = BrushShape.SymmetryFits(d.Symmetry, d.Width, d.Height) ? d.Symmetry : MapSymmetry.None;
+                    if (_session.StampSymmetric && sym != MapSymmetry.None && sw > 0)
+                    {
+                        var a = MapSymmetries.Images(sym, d.Width, d.Height, hx, hy);
+                        var b = MapSymmetries.Images(sym, d.Width, d.Height, hx + sw - 1, hy + sh - 1);
+                        for (int k = 1; k < a.Length; k++)
+                            Shapes.Outline(sb, px, new Rectangle(_origin.X + Math.Min(a[k].X, b[k].X) * cell, _origin.Y + Math.Min(a[k].Y, b[k].Y) * cell,
+                                (Math.Abs(a[k].X - b[k].X) + 1) * cell, (Math.Abs(a[k].Y - b[k].Y) + 1) * cell), new Color(255, 255, 255, 140), 1);
+                    }
+                }
                 else if (_session.Tool is EditorTool.Start)
                     Shapes.Outline(sb, px, new Rectangle(_origin.X + (hx - 1) * cell, _origin.Y + (hy - 1) * cell, cell * 3, cell * 3), Color.White, 2);
                 else

@@ -1,0 +1,21 @@
+# A road checkpoint: barriers and a wreck narrow the road to a lane; the sides stay open.
+id = "checkpoint"
+name = "Checkpoint"
+width = 9
+height = 7
+biomes = []
+rows = [
+  ".........",
+  ".BB...BB.",
+  ".B.....b.",
+  "RRRRRRRRR",
+  ".b.....B.",
+  ".BB.W.BB.",
+  ".........",
+]
+
+[legend]
+B = { overlay = "Block", density = 0 }
+b = { overlay = "Block", density = 2 }
+W = { overlay = "Wreck", density = 2 }
+R = { land = "Road", overlay = "None" }

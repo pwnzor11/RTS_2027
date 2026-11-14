@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
 using Rts.Data.MapGen;
+using Rts.Data.Stamps;
 using Rts.Sim.Core;
 using Rts.Sim.Map;
 using Rts.Sim.Rules;
@@ -105,6 +106,7 @@ public static class MapGenerator
             var builder = new ProceduralBuilder(biome, n, symmetry, seed, p.OceanEdges);
             CellCoord[] orbit = builder.OrbitStarts;
             MapData full = builder.Build(name, orbit);
+            if (p.Stamps) full = StampPass.Run(full, symmetry, orbit, builder.Features, biome.Key, seed);   // M12-13
             var fullMeta = new MapMeta(biome.Key, symmetry, orbit.Length, null, builder.Features.ToArray())
                 { ConvoyEdge = builder.ConvoyEdge, Landing = builder.Landing };
             last = FirstFailure(full, fullMeta);
@@ -137,6 +139,7 @@ public static class MapGenerator
         var builder = new ProceduralBuilder(biome, n, p.Players, AttemptSeed(p.Seed, 0), rot2, p.OceanEdges != OceanEdges.None);
         CellCoord[] orbit = builder.OrbitStarts;
         MapData full = builder.Build(p.Name ?? DefaultName(p), orbit);
+        if (p.Stamps) full = StampPass.Run(full, rot2 ? MapSymmetry.Rot2 : MapSymmetry.MirrorDiag, orbit, builder.Features, biome.Key, AttemptSeed(p.Seed, 0));   // M12-13
         var meta = WithMarkers(new MapMeta(biome.Key, rot2 ? MapSymmetry.Rot2 : MapSymmetry.MirrorDiag, orbit.Length, null, builder.Features.ToArray()), full, p);
         failure = FirstFailure(full, meta) ?? LayoutChecks.FirstFailure(LayoutChecks.EvaluateCanonical(full, meta, rot2));
         return FinishZoned(p, biome, n, full, builder, rot2, t);
@@ -235,6 +238,7 @@ public static class MapGenerator
             var builder = new ProceduralBuilder(biome, n, p.Players, seed, rot2, p.OceanEdges != OceanEdges.None);
             CellCoord[] orbit = builder.OrbitStarts;
             MapData full = builder.Build(name, orbit);
+            if (p.Stamps) full = StampPass.Run(full, rot2 ? MapSymmetry.Rot2 : MapSymmetry.MirrorDiag, orbit, builder.Features, biome.Key, seed);   // M12-13
             var fullMeta = WithMarkers(new MapMeta(biome.Key, rot2 ? MapSymmetry.Rot2 : MapSymmetry.MirrorDiag, orbit.Length, null, builder.Features.ToArray()), full, p);
             last = FirstFailure(full, fullMeta);
             if (last is not null) continue;

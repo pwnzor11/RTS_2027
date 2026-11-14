@@ -23,4 +23,6 @@ public enum EditorTool
     Props,
     /// <summary>Paint a decal kind (0 = erase decals) with the brush.</summary>
     Decal,
+    /// <summary>Stamp a pre-made terrain patch (crater field, grove, bridge...) in one click.</summary>
+    Stamp,
 }
