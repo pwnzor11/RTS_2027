@@ -66,6 +66,7 @@ def leg_pt(k, z):
 
 def headframe(S, i, dmg):
     zt = 5.2 if dmg else TOP_Z
+    K = 1.5 if S.depth else 1.0       # --depth: thicker members so the lattice reads at 1x
     lv = [z for z in LEVELS if z <= zt + 0.01]
     # four strong legs leaning in to the sheave platform (the SE one is broken off in the damaged state)
     for k in range(4):
@@ -73,21 +74,21 @@ def headframe(S, i, dmg):
             continue
         x0, y0 = LEG_BASE[k]
         x1, y1 = leg_pt(k, zt)
-        L.beam(S, f"leg{k}", (x0, y0, COL_H), (x1, y1, zt), 0.32, "hull2")
+        L.beam(S, f"leg{k}", (x0, y0, COL_H), (x1, y1, zt), 0.32 * K, "hull2")
     # horizontal ties at each level, X braces in every panel on the front and both sides
     for z in lv[1:]:
         pts = [leg_pt(k, z) for k in range(4)]
         for a, b in ((0, 1), (2, 3), (0, 2), (1, 3)):
             if dmg and 1 in (a, b):
                 continue
-            L.beam(S, "tie", (pts[a][0], pts[a][1], z), (pts[b][0], pts[b][1], z), 0.14, "steel")
+            L.beam(S, "tie", (pts[a][0], pts[a][1], z), (pts[b][0], pts[b][1], z), 0.14 * K, "steel")
     for za, zb in zip(lv, lv[1:]):
         for a, b in ((0, 1), (0, 2), (1, 3)):
             if dmg and 1 in (a, b):
                 continue
             for (p, q) in ((a, b), (b, a)):
                 pa, pb = leg_pt(p, za), leg_pt(q, zb)
-                L.beam(S, "brace", (pa[0], pa[1], za), (pb[0], pb[1], zb), 0.08, "steel")
+                L.beam(S, "brace", (pa[0], pa[1], za), (pb[0], pb[1], zb), 0.08 * K * 1.2, "steel")
     # bone / oxide hazard bands on the legs (sparse, so the lattice still reads)
     if not dmg:
         for k in (0, 1):
@@ -141,8 +142,16 @@ def collar(S, i, dmg, mode):
     x0, x1, y0, y1 = COL
     S.bb("collar", x0, x1, y0, y1, 0.14, COL_H, "concrete", 0.05)
     S.bb("collarlip", x0 - 0.15, x1 + 0.15, y0 - 0.15, y1 + 0.15, 0.14, 0.45, "concrete2", 0.04)
-    S.bb("collartop", x0, x1, y0, y1, COL_H, COL_H + 0.1, "concrete2", 0.0)
-    S.bb("shaftmouth", x0 + 0.35, x1 - 0.35, y0 + 0.35, y1 - 0.35, COL_H + 0.05, COL_H + 0.14, "dark", 0.0)
+    if S.depth:       # --depth: raised rim round a deep dark opening (the rim's inner north face shows dark, its top edge catches the sun)
+        rw, rh = 0.4, COL_H + 0.55
+        S.bb("drimN", x0, x1, y1 - rw, y1, COL_H, rh, "concrete2", 0.06)
+        S.bb("drimS", x0, x1, y0, y0 + rw, COL_H, rh, "concrete2", 0.06)
+        S.bb("drimW", x0, x0 + rw, y0 + rw, y1 - rw, COL_H, rh, "concrete2", 0.06)
+        S.bb("drimE", x1 - rw, x1, y0 + rw, y1 - rw, COL_H, rh, "concrete2", 0.06)
+        S.bb("dpit", x0 + rw, x1 - rw, y0 + rw, y1 - rw, COL_H, COL_H + 0.02, "dark", 0.0)
+    else:
+        S.bb("collartop", x0, x1, y0, y1, COL_H, COL_H + 0.1, "concrete2", 0.0)
+        S.bb("shaftmouth", x0 + 0.35, x1 - 0.35, y0 + 0.35, y1 - 0.35, COL_H + 0.05, COL_H + 0.14, "dark", 0.0)
     lit = (mode != "build") and not dmg
     g = "redglow" if lit and (i % 2 == 0 or mode == "build") else ("oxide" if lit else "oxide2")
     S.bb("glowc", CX - 0.5, CX + 0.5, y0 + 0.9, y0 + 1.5, COL_H + 0.14, COL_H + 0.17, g, 0.0, nocast=True)
@@ -188,6 +197,16 @@ def finished(S, i, dmg, mode):
     # ------------------------------------------------------------------ shaft collar + winding tower (the centrepiece)
     collar(S, i, dmg, mode)
     headframe(S, i, dmg)
+    if S.depth and not dmg:       # --depth only (D-243): a stepped rim around the collar and gantry catwalk with rails
+        x0, x1, y0, y1 = COL
+        S.bb("drim", x0 - 0.5, x1 + 0.5, y0 - 0.5, y1 + 0.5, 0.14, 0.5, "concrete2", 0.05)
+        for k, (px, py) in enumerate(((x0 - 0.25, y0 - 0.25), (x1 + 0.25, y0 - 0.25), (x0 - 0.25, y1 + 0.25), (x1 + 0.25, y1 + 0.25))):
+            S.bb(f"dbol{k}", px - 0.17, px + 0.17, py - 0.17, py + 0.17, 0.5, 0.95, "steel", 0.03)
+        z = LEVELS[2]
+        xa, ya = leg_pt(0, z)
+        xb, yb = leg_pt(1, z)
+        S.bb("dwalk", xa - 0.3, xb + 0.3, ya - 0.75, ya, z - 0.12, z + 0.14, "steel", 0.03)
+        L.beam(S, "drail", (leg_pt(0, z + 0.45)[0], leg_pt(0, z + 0.45)[1] - 0.12, z + 0.45), (leg_pt(1, z + 0.45)[0], leg_pt(1, z + 0.45)[1] - 0.12, z + 0.45), 0.09, "steel", nocast=True)
     # ------------------------------------------------------------------ small winding house (north) and ash stack (east)
     x0, x1, y0, y1 = WIND
     S.bb("wind", x0, x1, y0, y1, 0.14, WIND_H, "concrete2", 0.04)

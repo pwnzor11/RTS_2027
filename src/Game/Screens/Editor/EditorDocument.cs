@@ -23,7 +23,7 @@ public sealed class EditorDocument
     {
         Name = name; Biome = biome; Width = width; Height = height;
         int n = width * height;
-        Template = new ushort[n]; Land = new LandType[n]; HeightLevel = new byte[n]; Overlay = new OverlayKind[n]; Density = new byte[n];
+        Template = new ushort[n]; Land = new LandType[n]; HeightLevel = new byte[n]; Overlay = new OverlayKind[n]; Density = new byte[n]; Decor = new byte[n];
     }
 
     /// <summary>Map name (part of the map hash).</summary>
@@ -62,6 +62,9 @@ public sealed class EditorDocument
     /// <summary>Resource density per cell.</summary>
     public byte[] Density { get; }
 
+    /// <summary>Decal layer (map format 4): 0 = none, otherwise a 1-based index into the theater's decal rules. Render only, not in the map hash.</summary>
+    public byte[] Decor { get; }
+
     /// <summary>Start positions in player order (contiguous, at most <see cref="MaxStarts"/>).</summary>
     public List<CellCoord> Starts { get; private set; } = new();
 
@@ -99,6 +102,7 @@ public sealed class EditorDocument
         {
             d.Template[i] = map.Template[i]; d.Land[i] = map.Land[i]; d.HeightLevel[i] = map.HeightLevel[i];
             d.Overlay[i] = map.Overlay[i]; d.Density[i] = map.Density[i];
+            if (map.Decor is { } decor) d.Decor[i] = decor[i];
         }
         d.Starts = new List<CellCoord>(map.StartPositions);
         d.Features = new List<MapFeature>(meta.Features);
@@ -110,7 +114,7 @@ public sealed class EditorDocument
     /// <summary>Builds the immutable sim map from the current state (copies the arrays).</summary>
     public MapData ToMapData() => new(Name, string.IsNullOrEmpty(Biome) ? "rust_belt" : Biome, Width, Height,
         (ushort[])Template.Clone(), (LandType[])Land.Clone(), (byte[])HeightLevel.Clone(), (OverlayKind[])Overlay.Clone(),
-        (byte[])Density.Clone(), Starts.ToArray());
+        (byte[])Density.Clone(), Starts.ToArray(), Decor.Any(b => b != 0) ? (byte[])Decor.Clone() : null);
 
     /// <summary>Builds the metadata for saving and validating.</summary>
     public MapMeta ToMeta() => new(Biome, Symmetry, Math.Max(1, Starts.Count), Generator, Features.ToArray())

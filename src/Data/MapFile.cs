@@ -170,6 +170,7 @@ public static class MapFile
             sb.Append("seed = ").Append(g.Seed <= long.MaxValue ? g.Seed.ToString(CultureInfo.InvariantCulture)
                 : Quote(g.Seed.ToString(CultureInfo.InvariantCulture))).Append('\n');
             if (g.OceanEdges != OceanEdges.None) sb.Append("ocean_edges = ").Append(Quote(OceanEdgeKeys(g.OceanEdges))).Append('\n');   // M7-13, only when on
+            if (g.Stamps) sb.Append("stamps = true\n");   // M12-13, only when on
             sb.Append("layout = ").Append(g.Layout.ToString(CultureInfo.InvariantCulture)).Append('\n');   // M12-05: generator version
         }
         foreach (MapFeature f in meta.Features)
@@ -245,7 +246,7 @@ public static class MapFile
                 }
             }
             int layout = g.ContainsKey("layout") ? Int(g, "layout", path) : 0;   // M12-05: files written before the version field name generator 0
-            generator = new MapGenParams((Biome)b, (MapSize)z, players, seed, null, ocean, layout);
+            generator = new MapGenParams((Biome)b, (MapSize)z, players, seed, null, ocean, layout, g.TryGetValue("stamps", out var stv) && stv is true);
         }
 
         var features = new List<MapFeature>();

@@ -15,14 +15,15 @@ public readonly record struct Directive(
     byte Mix,           // 0 auto, 1 infantry, 2 vehicles, 3 anti-air, 4 anti-structure
     bool Expand,
     CellCoord FocusCell,// Directive.NoCell = none; otherwise a cell the player had explored when the directive arrived
-    int Tick)           // the tick the directive was applied (0 when not Set)
+    int Tick,           // the tick the directive was applied (0 when not Set)
+    bool Strong = false) // S24 (M5-12, D-241): strong mix (Arg StrongMixBit): production follows the mix at StrongMixPermille
 {
     /// <summary>"No focus cell".</summary>
     public static readonly CellCoord NoCell = new(-1, -1);
 
     /// <summary>The value before any directive: plain tier behaviour.</summary>
     public static readonly Directive None = new(false, DirectiveCodec.PostureBalanced, DirectiveCodec.FocusArmy, DirectiveCodec.AnyTarget,
-        DirectiveCodec.MixAuto, false, NoCell, 0);
+        DirectiveCodec.MixAuto, false, NoCell, 0, false);
 
     /// <summary>True when <see cref="FocusCell"/> names a cell.</summary>
     public bool HasFocusCell => FocusCell.X >= 0;
@@ -34,6 +35,13 @@ public static class DirectiveCodec
     public const byte PostureTurtle = 0, PostureBalanced = 1, PostureAggressive = 2, PostureAllIn = 3;
     public const byte FocusEconomy = 0, FocusTech = 1, FocusArmy = 2, FocusAir = 3, FocusSuperweapon = 4;
     public const byte MixAuto = 0, MixInfantry = 1, MixVehicles = 2, MixAntiAir = 3, MixAntiStructure = 4;
+    /// <summary>S24 (M5-12, D-241) counter mixes: anti-armour and anti-infantry. The sim's clamp keeps 0..6 (mix &gt; 6 → auto).</summary>
+    public const byte MixAntiArmour = 5, MixAntiInfantry = 6;
+    /// <summary>S24 (M5-12): Arg bit 24 = strong mix (counter-building: production follows the mix at <c>StrongMixPermille</c> instead of the
+    /// normal preference). Packed by <see cref="PackStrong"/>; stored as <see cref="Directive.Strong"/>.</summary>
+    public const int StrongMixBit = 1 << 24;
+    /// <summary>Adds the strong-mix bit to a packed Arg.</summary>
+    public static int PackStrong(int arg, bool strong) => strong ? arg | StrongMixBit : arg & ~StrongMixBit;
 
     /// <summary>TargetPlayer value meaning "the AI chooses".</summary>
     public const byte AnyTarget = 255;
@@ -44,6 +52,9 @@ public static class DirectiveCodec
     /// </summary>
     public static int Pack(byte posture, byte focus, byte targetPlayer, byte mix, bool expand) =>
         (posture & 0xF) | (focus & 0xF) << 4 | (mix & 0xF) << 8 | (expand ? 1 : 0) << 12 | targetPlayer << 16;
+
+    /// <summary>True when <see cref="StrongMixBit"/> is set in a packed Arg.</summary>
+    public static bool IsStrong(int arg) => (arg & StrongMixBit) != 0;
 
     /// <summary>Unpacks <see cref="Pack"/> (no clamping).</summary>
     public static (byte Posture, byte Focus, byte TargetPlayer, byte Mix, bool Expand) Unpack(int arg) =>
@@ -58,7 +69,7 @@ public static class DirectiveCodec
         new(execTick, player, sequence, CommandKind.Directive, default, default, focusCell, Pack(posture, focus, targetPlayer, mix, expand));
 
     /// <summary>
-    /// The sim's clamp on apply (same defaults as the LLM reply parser): posture &gt; 3 → balanced, focus &gt; 4 → army, mix &gt; 4 → auto,
+    /// The sim's clamp on apply (same defaults as the LLM reply parser): posture &gt; 3 → balanced, focus &gt; 4 → army, mix &gt; 6 → auto,
     /// a target that is not another non-neutral slot → any. The focus cell is checked separately (on the map and explored).
     /// </summary>
     public static (byte Posture, byte Focus, byte TargetPlayer, byte Mix) Clamp(byte posture, byte focus, byte targetPlayer, byte mix,
@@ -67,7 +78,7 @@ public static class DirectiveCodec
         ArgumentNullException.ThrowIfNull(isNeutral);
         if (posture > PostureAllIn) posture = PostureBalanced;
         if (focus > FocusSuperweapon) focus = FocusArmy;
-        if (mix > MixAntiStructure) mix = MixAuto;
+        if (mix > MixAntiInfantry) mix = MixAuto;
         if (targetPlayer >= playerCount || targetPlayer == player || isNeutral(targetPlayer)) targetPlayer = AnyTarget;
         return (posture, focus, targetPlayer, mix);
     }

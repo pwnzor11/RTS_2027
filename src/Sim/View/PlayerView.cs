@@ -44,6 +44,10 @@ public readonly struct PlayerView
     /// The tiered AI reads it in Think (M5-02).</summary>
     public Directive Directive => _sim.DirectiveOf(Player);
 
+    /// <summary>S24 (M5-12, D-241): the viewing player's standing commander orders, one entry per slot (<see cref="CommanderOrderCodec.Slots"/>;
+    /// empty slots are <see cref="CommanderOrder.Empty"/>). Allocates; call once per decision.</summary>
+    public IReadOnlyList<CommanderOrder> CommanderOrders => _sim.CommanderOrdersOf(Player);
+
     /// <summary>The viewing player's cash.</summary>
     public int Cash => _sim.Players.Cash[Player];
 

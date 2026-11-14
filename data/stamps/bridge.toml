@@ -1,0 +1,21 @@
+# A road bridge over a short water channel (1 to 3 cells wide), shallow banks, pylons at the heads. Rows 0 and 6 stay open as a margin.
+id = "bridge"
+name = "Bridge"
+width = 10
+height = 7
+biomes = []
+rows = [
+  "..........",
+  "....w.....",
+  "..Psww....",
+  "RRRRRRRRRR",
+  "...wws.P..",
+  ".....w....",
+  "..........",
+]
+
+[legend]
+w = { land = "Water", overlay = "None" }
+s = { land = "Shallow", overlay = "None" }
+R = { land = "Road", overlay = "None" }
+P = { overlay = "Pylon", density = 0 }

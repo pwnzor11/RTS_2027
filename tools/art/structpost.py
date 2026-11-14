@@ -15,12 +15,12 @@ def is_h2(m):
     return (m[..., 0] > 127) & (m[..., 1] < 0.5 * m[..., 0])
 
 
-def calibrate(wd, nframes, h2_fixed=False):
+def calibrate(wd, nframes, h2_fixed=False, frames=None):
     """(lo, hi) luminance range of the house paint. With h2_fixed (module sets HOUSE2_MID = True) the range comes from
     plain `house` pixels only and a third value, the median luminance of the `house2` pixels, is returned too."""
     p = os.path.join(wd, "house_cal.txt")
     vals, v2 = [], []
-    for f in range(nframes):
+    for f in (frames if frames is not None else range(nframes)):
         c = np.asarray(Image.open(os.path.join(wd, f"col_{f:02d}.png")).convert("RGBA"), dtype=float)
         m = np.asarray(Image.open(os.path.join(wd, f"mask_{f:02d}.png")).convert("RGBA"), dtype=float)
         sel = (m[..., 0] > 127) & (c[..., 3] > 250)
@@ -61,7 +61,7 @@ def load_layers(wd, f, cal):
     return dict(rgb=c[..., :3], a=a, house=house, idx=idx, shadow=sh, rad=rad & ~house)
 
 
-def frame_b(wd, f, cal, w, h, pal=None, shadow=True):
+def frame_b(wd, f, cal, w, h, pal=None, shadow=True, depth=None):
     pal = C.PAL if pal is None else pal
     L = load_layers(wd, f, cal)
     base, A, hfrac, hidx, sh = C.downscale_layers(L, h)   # k = (h*SS)//h = SS
@@ -74,6 +74,8 @@ def frame_b(wd, f, cal, w, h, pal=None, shadow=True):
     radrgb = np.clip((radrgb - 128) * 1.12 + 128, 0, 255)
     base = np.clip((base - 128) * 1.12 + 128, 0, 255)
     solid = A >= 0.5
+    if depth:
+        base, hidx, sh = depth_pass(base, hidx, sh, solid, depth)
     out = np.zeros((h, w, 4), dtype=np.uint8)
     ys, xs = np.nonzero(solid)
     q = P.quantise(base[ys, xs], pal)
@@ -98,6 +100,48 @@ def frame_b(wd, f, cal, w, h, pal=None, shadow=True):
         shadowm = (~solid) & (~edge) & ((sh > 0.55) | ((sh > 0.25) & chk))
         out[shadowm] = (*pal[1], 255)
     return Image.fromarray(out, "RGBA")
+
+
+def depth_pass(base, hidx, sh, solid, ground_y):
+    """D-243 depth pass (only with --depth), second pilot.  All inside design 18 sec. 7 (sun unchanged, hard alpha, 1 px outline, dithered shadow):
+    lit 1 px rim on the upper-left edge of every face, dark 1 px rim on the lower-right edge (silhouette or a step down to a darker face),
+    a darker band where the body meets the ground, a cast shadow up to 3 px longer toward the lower right, and a solid (undithered)
+    contact shadow row just under the south edge of the footprint."""
+    h, w = solid.shape
+    lum = base.mean(axis=2)
+
+
+    def nb(a, dy, dx, fill):
+        """out[y, x] = a[y + dy, x + dx] (neighbour down-right for dy=dx=1), outside = fill."""
+        o = np.full_like(a, fill)
+        ys0, ys1 = max(0, -dy), min(h, h - dy)
+        xs0, xs1 = max(0, -dx), min(w, w - dx)
+        o[ys0:ys1, xs0:xs1] = a[ys0 + dy:ys1 + dy, xs0 + dx:xs1 + dx]
+        return o
+
+    T = 22
+    up_s, lf_s = nb(solid, -1, 0, False), nb(solid, 0, -1, False)
+    dn_s, rt_s = nb(solid, 1, 0, False), nb(solid, 0, 1, False)
+    up_l, lf_l = nb(lum, -1, 0, 0.0), nb(lum, 0, -1, 0.0)
+    dn_l, rt_l = nb(lum, 1, 0, 255.0), nb(lum, 0, 1, 255.0)
+    lit = solid & (~up_s | ~lf_s | ((lum - up_l) > T) | ((lum - lf_l) > T))
+    dark = solid & (~dn_s | ~rt_s | ((lum - dn_l) > T) | ((lum - rt_l) > T)) & ~lit
+    base = base.copy()
+    base[lit] = np.clip(base[lit] * 1.3 + 12, 0, 255)
+    base[dark] = base[dark] * 0.7
+    hidx = np.where(lit, np.minimum(hidx + 1, 7), hidx)
+    hidx = np.where(dark, np.maximum(hidx - 1, 0), hidx)
+    rows = np.arange(h)[:, None] * np.ones((1, w))
+    band = solid & (rows >= ground_y - 6) & (rows < ground_y + 3) & ~lit
+    base[band] = base[band] * 0.7
+    hidx = np.where(band, np.maximum(hidx - 1, 0), hidx)
+    sh2 = sh.copy()
+    for k in (1, 2, 3):          # longer cast shadow: same direction as the sun (right, slightly down), no new light
+        d, e = (k + 1) // 2, k
+        sh2[d:, e:] = np.maximum(sh2[d:, e:], sh[:h - d, :w - e])
+    contact = (~solid) & nb(solid, -2, 0, False) & (rows >= ground_y - 3) & (rows < ground_y + 6)
+    sh2[contact] = 1.0
+    return base, hidx, sh2
 
 
 def write_toml(path, mod, sheet_name):
@@ -130,11 +174,14 @@ def write_toml(path, mod, sheet_name):
     open(path, "w").write("\n".join(lines))
 
 
-def run(sid, mod, wd):
+def run(sid, mod, wd, depth=False, outdir=None, only=None):
     fw, fh = mod.CANVAS
     n = sum(s[1] for s in mod.STATES)
-    cal = calibrate(wd, n, getattr(mod, "HOUSE2_MID", False))
-    frames = [frame_b(wd, f, cal, fw, fh, getattr(mod, "PALETTE", None)) for f in range(n)]
+    todo = sorted(only) if (depth and only) else list(range(n))     # a partial depth (smoke) run packs only the frames that were rendered
+    cal = calibrate(wd, n, getattr(mod, "HOUSE2_MID", False), frames=todo)
+    gy = (mod.ORIGIN[1] + mod.FOOTPRINT[1] * 64) if depth else None
+    frames = [frame_b(wd, f, cal, fw, fh, getattr(mod, "PALETTE", None), depth=gy) for f in todo]
+    n = len(todo)
     for f, im in enumerate(frames):
         a = np.asarray(im)
         if a[0, :, 3].any():
@@ -143,7 +190,7 @@ def run(sid, mod, wd):
             print(f"WARNING frame {f}: art touches a side/bottom edge of the canvas")
     cols = 4
     sheet = C.pack_sheet(frames, cols, fw, fh)
-    outdir = os.path.join(C.ROOT, "data", "sprites", "buildings")
+    outdir = outdir or os.path.join(C.ROOT, "data", "sprites", "buildings")
     os.makedirs(outdir, exist_ok=True)
     png = os.path.join(outdir, f"{sid}.png")
     sheet.save(png)

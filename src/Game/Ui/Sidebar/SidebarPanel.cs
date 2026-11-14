@@ -10,6 +10,7 @@ using Rts.Game.Render;
 using Rts.Game.Sandbox;
 using Rts.Game.Sprites;
 using Rts.Game.Ui.Fonts;
+using Rts.Game.Ui.Skin;
 using Rts.Game.Veterancy;
 using Rts.Sim.Core;
 using Rts.Sim.Rules;
@@ -29,8 +30,8 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
 {
     private static readonly Color PanelFill = new(0x16, 0x18, 0x14, 255);
     private static readonly Color Border = new(0x6A, 0x72, 0x60);
-    private static readonly Color TextColour = new(0xE2, 0xE4, 0xD8);
-    private static readonly Color DimText = new(0x8A, 0x8C, 0x80);
+    private static readonly Color DefaultText = new(0xE2, 0xE4, 0xD8);
+    private static readonly Color DefaultDim = new(0x8A, 0x8C, 0x80);
     private static readonly Color Gold = new(0xD8, 0xC8, 0x8A);
     private static readonly Color ButtonFill = new(0x2A, 0x2E, 0x26);
     private static readonly Color ButtonHover = new(0x44, 0x56, 0x3E);
@@ -72,6 +73,13 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
     private Vector2 _cameraTopLeft;
     private Vector2 _viewSizeWorld;
     private Color _houseColour;
+    private SkinKit? _skin;
+
+    private Color TextColour => _skin?.Text(DefaultText) ?? DefaultText;   // S24: skin text colours
+    private Color DimText => _skin?.Dim(DefaultDim) ?? DefaultDim;
+
+    /// <summary>S24: the local faction's UI skin, or null for the procedural look.</summary>
+    public SkinKit? Skin { get => _skin; set => _skin = value; }
 
     /// <summary>Creates the sidebar for the local player.</summary>
     /// <param name="source">The sim source (commands go through its host; the sim answers placement questions).</param>
@@ -323,8 +331,11 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
     public void Draw(SpriteBatch batch, Texture2D pixel, SimSnapshot snapshot)
     {
         SidebarLayout l = _layout;
-        Shapes.Fill(batch, pixel, l.Panel, PanelFill);
-        Shapes.Outline(batch, pixel, l.Panel, Border);
+        if (_skin is null || !_skin.TryBack(batch, l.Panel))
+        {
+            Shapes.Fill(batch, pixel, l.Panel, PanelFill);
+            Shapes.Outline(batch, pixel, l.Panel, Border);
+        }
 
         DrawCredits(batch, pixel, l);
         if (_supplyShown) DrawSupply(batch, pixel, l);
@@ -338,12 +349,13 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
             string caption = SidebarTabs.KeyName(tab) + " " + SidebarTabs.Caption(tab);
             // Five or six tabs share the width: when the key letter does not fit, the bare caption does.
             if (BitmapFont.Measure(caption, _ui, FontWeight.Regular) > l.Tabs[i].Width - 4) caption = SidebarTabs.Caption(tab);
-            DrawButton(batch, pixel, l.Tabs[i], caption, tab == _tab, _ui);
+            DrawButton(batch, pixel, l.Tabs[i], caption, tab == _tab, _ui, isTab: true);
         }
 
         DrawGrid(batch, pixel, l);
         if (LeftBehindText.ShowUnpackHint(_hud, snapshot, _player)) DrawUnpackHint(batch, pixel, l);   // M6-09
         _minimap.Draw(batch, pixel, l.Minimap, snapshot, _cameraTopLeft, _viewSizeWorld);
+        _skin?.TrySlice(batch, "minimap_frame", l.Minimap);   // S24: drawn over the minimap's own outline
         DrawTooltip(batch, pixel);
     }
 
@@ -756,8 +768,12 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
 
     private void DrawCredits(SpriteBatch batch, Texture2D pixel, SidebarLayout l)
     {
-        Shapes.Fill(batch, pixel, l.Credits, ButtonFill);
-        Shapes.Outline(batch, pixel, l.Credits, Border);
+        if (_skin is null || !_skin.TrySlice(batch, "panel", l.Credits))
+        {
+            Shapes.Fill(batch, pixel, l.Credits, ButtonFill);
+            Shapes.Outline(batch, pixel, l.Credits, Border);
+        }
+
         string text = "$ " + _shownCredits;
         int w = BitmapFont.Measure(text, _ui, FontWeight.Bold), h = BitmapFont.LineHeight(_ui, FontWeight.Bold);
         Text(batch, pixel, text, new Vector2(l.Credits.Right - w - 4 * _ui, l.Credits.Y + (l.Credits.Height - h) / 2f), Gold, _ui, FontWeight.Bold);
@@ -837,12 +853,18 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
         Shapes.Outline(batch, pixel, r, Border);
     }
 
-    private void DrawButton(SpriteBatch batch, Texture2D pixel, Rectangle r, string label, bool active, float scale = -1f)
+    private void DrawButton(SpriteBatch batch, Texture2D pixel, Rectangle r, string label, bool active, float scale = -1f, bool isTab = false)
     {
         if (scale <= 0f) scale = _ui;
         bool hover = r.Contains(_mouse);
-        Shapes.Fill(batch, pixel, r, active ? ActiveFill : hover ? ButtonHover : ButtonFill);
-        Shapes.Outline(batch, pixel, r, active ? Gold : Border);
+        bool down = hover && Microsoft.Xna.Framework.Input.Mouse.GetState().LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed;
+        SkinButtonState state = down ? SkinButtonState.Pressed : hover ? SkinButtonState.Hover : SkinButtonState.Normal;
+        if (_skin is null || !_skin.TryButton(batch, r, state, isTab, active))
+        {
+            Shapes.Fill(batch, pixel, r, active ? ActiveFill : hover ? ButtonHover : ButtonFill);
+            Shapes.Outline(batch, pixel, r, active ? Gold : Border);
+        }
+
         (string fitted, float fs) = FitLabel(label, r.Width - 4, scale);
         int w = BitmapFont.Measure(fitted, fs, FontWeight.Regular), h = BitmapFont.LineHeight(fs, FontWeight.Regular);
         Text(batch, pixel, fitted, new Vector2(r.X + (r.Width - w) / 2f, r.Y + (r.Height - h) / 2f), active ? Color.White : TextColour, fs, FontWeight.Regular);

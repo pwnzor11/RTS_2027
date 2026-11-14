@@ -24,6 +24,8 @@ public sealed class FxLook : IDisposable
     private readonly PuffField _puffs = new();
     private readonly List<TierChange> _changes = new();
     private readonly List<DeathRecord> _dead = new();
+    private readonly DeathAnimBook _anims = new();   // M10-14b: soldiers playing their death state
+    private readonly List<DeathRecord> _animDone = new();
     private readonly Dictionary<(RemainKind Kind, int A, int B, int Faction, int Variant), Texture2D> _textures = new();
     private Texture2D? _puffTexture;
     private Texture2D? _smokeTexture;
@@ -42,6 +44,9 @@ public sealed class FxLook : IDisposable
 
     /// <summary>The remains that exist now (for tests and the contact sheet).</summary>
     public RemainsBook Remains => _remains;
+
+    /// <summary>The soldier death animations playing now (for tests).</summary>
+    public DeathAnimBook DeathAnims => _anims;
 
     /// <summary>The puffs alive now (for tests and the contact sheet).</summary>
     public PuffField Puffs => _puffs;
@@ -68,8 +73,14 @@ public sealed class FxLook : IDisposable
 
         _tiers.Observe(snapshot, rules, _changes);
         foreach (TierChange c in _changes) Burst(snapshot, rules, fx, c, sprites);
-        _deaths.Observe(snapshot, _dead);
-        foreach (DeathRecord d in _dead) Bury(rules, d);
+        _anims.Release(tick, _animDone);
+        foreach (DeathRecord d in _animDone) Bury(rules, d with { Tick = tick });   // the animation is over: leave the mark as without art
+        _deaths.Observe(snapshot, _dead, rules);
+        foreach (DeathRecord d in _dead)
+        {
+            if (!TryAnimate(rules, d, sprites)) Bury(rules, d);
+        }
+
         _dust.Observe(snapshot, rules, _puffs, mood.DustColour);
     }
 
@@ -118,6 +129,32 @@ public sealed class FxLook : IDisposable
 
     private void AddSmokePuff(float x, float y, int tick, float scale) =>
         _puffs.Add(new Puff(x, y, tick, 28, 0x3C3A38, 170, scale, 22, Smoke: true));
+
+    private bool TryAnimate(SimRules rules, DeathRecord d, SpriteResolver? sprites)
+    {
+        if (sprites is null || d.Kind != RemainKind.InfantryMark || (uint)d.TypeIndex >= (uint)rules.Infantry.Count) return false;
+        ResolvedSprite sprite = sprites.Resolve(SpriteKind.Infantry, rules.Infantry[d.TypeIndex].Id);
+        return sprite.Source == SpriteSource.Library && _anims.Add(d, sprite.Manifest);
+    }
+
+    /// <summary>Draws the soldiers that are playing a death state: on the ground, before the living sprites; east-drawn, mirrored for west facings.</summary>
+    public void DrawDying(SpriteBatch batch, SpriteResolver sprites, SpritePainter painter, SimRules? rules, Camera camera, Viewport viewport, int tick)
+    {
+        if (!Enabled || rules is null) return;
+        foreach (DeathAnim a in _anims.Items)
+        {
+            DeathRecord d = a.Death;
+            if ((uint)d.TypeIndex >= (uint)rules.Infantry.Count) continue;
+            ResolvedSprite sprite = sprites.Resolve(SpriteKind.Infantry, rules.Infantry[d.TypeIndex].Id);
+            if (sprite.Source != SpriteSource.Library) continue;
+            int frame = DeathAnimBook.Frame(sprite.Manifest, a, tick);
+            if (frame < 0) continue;
+            Vector2 origin = SpriteLayout.UnitOrigin(camera, Camera.WorldFromLepton(d.Pos));
+            float scale = camera.Zoom * SpriteLayout.UnitDrawScale * (sprite.Manifest is { FigureScalePermille: > 1000 } ? 1f : UnitRenderer.InfantryExtraScale);
+            if (origin.X < viewport.Bounds.Left - 128 || origin.X > viewport.Bounds.Right + 128 || origin.Y < viewport.Bounds.Top - 128 || origin.Y > viewport.Bounds.Bottom + 128) continue;
+            painter.Draw(batch, sprite, frame, origin, PlayerColours.Base(d.Player), scale, 1f, DeathStates.MirrorWest(d.Facing));
+        }
+    }
 
     // ---- remains -----------------------------------------------------------------------------------------------------------------
 

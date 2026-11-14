@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Aggregate BalProbe TSVs into per-faction SUP-6 / VET-7 rows. Usage: bal_agg.py <outdir>"""
-import csv, glob, os, statistics as st, sys
+import csv, glob, os, re, statistics as st, sys
 d = sys.argv[1]
 rows = {}   # (label, faction) -> list of row dicts ; games keyed per file
 games = {}  # (label, pair) -> list of (seed, game, rowA, rowB)
@@ -48,3 +48,30 @@ for (label, fac), r in sorted(rows.items()):
     g3_15 = sum(1 for x in n15 if int(x["r3_15"]) > 0)
     print(f"{label:8s} {fac:11s} min10 n={len(n10)} r1/r2/r3 per game={f(n10,'r1_10'):.2f}/{f(n10,'r2_10'):.2f}/{f(n10,'r3_10'):.2f} | min20 n={len(n20)} {f(n20,'r1_20'):.2f}/{f(n20,'r2_20'):.2f}/{f(n20,'r3_20'):.2f} "
           f"| rank3 share alive: min10 {s10:.1f}% min15 {s15:.1f}% min20 {s20:.1f}% | games with a rank3 by min15 {g3_15}/{len(n15)}, by min20 {g3}/{len(n20)}")
+
+# S24 (M13-23): `ai match --out` summaries carry the adjudication columns AdjW AdjL AdjEven after "A win %". Older summaries without
+# them are skipped, so every existing file still reads. The columns are A's view: AdjW = draws the score adjudication gave to A.
+def read_adj(path):
+    """(games, adjW, adjL, adjEven) from an ai match table with the S24 columns, else None."""
+    with open(path, encoding="utf-8", errors="replace") as fh:
+        lines = [ln.rstrip("\r\n") for ln in fh]
+    for i, ln in enumerate(lines):
+        if not re.match(r"^\|\s*Games\s*\|", ln) or "AdjW" not in ln or i + 2 >= len(lines):
+            continue
+        hdr = [c.strip() for c in ln.strip().strip("|").split("|")]
+        cells = [c.strip() for c in lines[i + 2].strip().strip("|").split("|")]
+        if len(cells) != len(hdr): return None
+        cell = dict(zip(hdr, cells))
+        try:
+            return int(cell["Games"]), int(cell["AdjW"]), int(cell["AdjL"]), int(cell["AdjEven"])
+        except (KeyError, ValueError):
+            return None
+    return None
+adj_rows = []
+for f in sorted(glob.glob(os.path.join(d, "*.md"))):
+    got = read_adj(f)
+    if got is not None: adj_rows.append((os.path.basename(f), got))
+if adj_rows:
+    print("== ai match adjudication (draws at the tick limit, A's view; a side wins at a 10 % score margin, else even)")
+    for name, (n, aw, al, ae) in adj_rows:
+        print(f"{name:40s} games={n} AdjW={aw} AdjL={al} AdjEven={ae}")

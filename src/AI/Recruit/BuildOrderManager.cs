@@ -54,6 +54,22 @@ internal sealed class BuildOrderManager
     /// -1 holds everything. Set by the no-income rescue.</summary>
     public int HoldExcept { get; set; } = int.MinValue;
 
+    /// <summary>S24 (D-241 Reserve): credits no structure start and no unit or research purchase may touch (set each decision from the commander orders; 0 = none).
+    /// Also part of <see cref="PendingCost"/>, which is the reserve the unit lanes and research keep.</summary>
+    public int OrderReserve { get; set; }
+
+    /// <summary>S24 (D-241 ExpandTo): where the pending expand order wants the next refinery (null = no pending order).</summary>
+    public CellCoord? ExpandCell { get; set; }
+
+    /// <summary>S24: <see cref="ExpandCell"/>'s order tick (-1 = none).</summary>
+    public int ExpandOrderTick { get; set; } = -1;
+
+    /// <summary>S24: the issue tick of the last expand order carried out (a refinery placed for it); only later orders count. Saved with the order block of the AI state, only once set.</summary>
+    public int ExpandDoneTick { get; private set; } = -1;
+
+    /// <summary>S24: puts back the saved <see cref="ExpandDoneTick"/>.</summary>
+    internal void RestoreExpand(int tick) => ExpandDoneTick = tick;
+
     /// <summary>M4-12: when true (tier 2+), <see cref="PendingCost"/> also counts what the structures in production still have to be paid,
     /// so units do not starve a 2500-credit tier gate that is already under way (it stalled for whole games).</summary>
     public bool ReserveInProgress { get; set; }
@@ -138,10 +154,11 @@ internal sealed class BuildOrderManager
         int next = NextType(k);
         if (HoldExcept != int.MinValue && next != HoldExcept) next = HoldExcept >= 0 && k.BuildingCount[HoldExcept] + _queued[HoldExcept] == 0 ? HoldExcept : -1;
         // SUP-5: a supply structure that cannot start yet (the lane is busy) does not hold units back: it is cheap, and a tier gate under way is reserved already
-        PendingCost = (next < 0 || (next == _supplyPick && laneBusy) ? 0 : rules.Buildings[next].Cost) + inProgress;
+        PendingCost = (next < 0 || (next == _supplyPick && laneBusy) ? 0 : rules.Buildings[next].Cost) + inProgress + OrderReserve;   // S24: the order reserve stays untouched by units and research
         if (laneBusy || next < 0) return;
         BuildingType bt = rules.Buildings[next];
         if (!k.Buildable(bt.Category, next)) return;
+        if (OrderReserve > 0 && HoldExcept == int.MinValue && k.Hud.Cash + k.Hud.Stored < bt.Cost + OrderReserve) return;   // S24 Reserve (the rescue's refinery is exempt)
         sink.Build(bt.Category, next);
     }
 
@@ -273,15 +290,24 @@ internal sealed class BuildOrderManager
     // at tier 1 and 5 (also with the supply-structure cap lifted) it was never reached, because the 24-cell wide search always found a site.
 
     /// <summary>Issues the Place for a ready structure; false when the search found no site or <c>CanPlace</c> refused it (both count as Unplaceable).</summary>
+    private bool _expandPlaced;
+
     private bool TryPlace(RecruitKnowledge k, ICommandSink sink, int type)
     {
         BuildingType bt = k.Rules.Buildings[type];
         bool front = bt.Category == ProductionCategory.Defence && bt.PrimaryWeapon >= 0;
         CellCoord cell;
         if (Placer is not null && Placer(k, type) is { Ok: true } chosen) cell = chosen.Cell;
+        else if (ExpandCell is CellCoord aim && bt.Refinery && k.BuildingCount[type] >= 1)
+        {
+            // S24 ExpandTo: the new refinery goes at the legal site nearest the order cell; with none there, the usual search
+            if (!_search.FindNear(k, type, aim, out cell) && !_search.Find(k, type, front, out cell)) { Unplaceable++; return false; }
+            _expandPlaced = true;
+        }
         else if (!_search.Find(k, type, front, out cell)) { Unplaceable++; return false; }   // M13-06: S18-AI-NEW-2, no site at all counts too
-        if (!k.View.CanPlace(type, cell)) { Unplaceable++; return false; }
+        if (!k.View.CanPlace(type, cell)) { Unplaceable++; _expandPlaced = false; return false; }
         sink.Place(type, cell);
+        if (_expandPlaced) { ExpandDoneTick = ExpandOrderTick; _expandPlaced = false; }
         Placed++;
         return true;
     }

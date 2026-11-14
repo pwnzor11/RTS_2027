@@ -8,7 +8,7 @@ namespace Rts.Game.Screens.Editor;
 
 /// <summary>One cell's before and after in an <see cref="EditorStep"/>.</summary>
 public readonly record struct CellEdit(int Index, LandType OldLand, LandType NewLand, byte OldHeight, byte NewHeight,
-    OverlayKind OldOverlay, OverlayKind NewOverlay, byte OldDensity, byte NewDensity);
+    OverlayKind OldOverlay, OverlayKind NewOverlay, byte OldDensity, byte NewDensity, byte OldDecor = 0, byte NewDecor = 0);
 
 /// <summary>One undoable step: a whole stroke or click. Starts and features are stored as full before/after lists (they are tiny).</summary>
 public sealed class EditorStep

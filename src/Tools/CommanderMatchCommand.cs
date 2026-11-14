@@ -25,7 +25,8 @@ public static class CommanderMatchCommand
 {
     private const string Usage =
         "usage: ai commander --a <aiId>[:<tier>] --b <aiId>[:<tier>] --provider openai|anthropic [--model <name>] [--seed 1] [--ticks 30000] [--size 64] [--out ./commander_run]\n" +
-        "       the key is read from OPENAI_API_KEY (openai) or ANTHROPIC_API_KEY (anthropic), never from a flag. --model defaults to the provider's default model.";
+        "       the key is read from OPENAI_API_KEY (openai) or ANTHROPIC_API_KEY (anthropic), never from a flag. --model defaults to the provider's default model.\n" +
+        "       ai commander --random-directives --a <aiId>[:<tier>] --b <aiId>[:<tier>] [--seed 1] ...   (S24: seeded random directives and orders, no model, no key)";
 
     private static readonly string[] Options = ["a", "b", "provider", "model", "seed", "ticks", "size", "out", "swap"];
     private const int DefaultTier = 2;
@@ -34,7 +35,8 @@ public static class CommanderMatchCommand
     // Names as ReplyParser reads them, so a directive in the log uses the words the model was asked for.
     private static readonly string[] PostureNames = ["turtle", "balanced", "aggressive", "allin"];
     private static readonly string[] FocusNames = ["economy", "tech", "army", "air", "superweapon"];
-    private static readonly string[] MixNames = ["auto", "infantry", "vehicles", "antiair", "antistructure"];
+    private static readonly string[] MixNames = ["auto", "infantry", "vehicles", "antiair", "antistructure", "antiarmour", "antiinfantry"];
+    private static readonly string[] OrderNames = ["clear", "attack", "hold", "raid", "expand", "tech", "reserve"];
 
     /// <summary>Runs `ai commander` (args are the options after the word "commander").</summary>
     public static int Run(string[] args) =>
@@ -43,18 +45,26 @@ public static class CommanderMatchCommand
     /// <summary>The command with its environment and provider injected (tests use a fake provider and a fake environment).</summary>
     internal static int RunWith(string[] args, Func<string, string?> env, Func<LlmConfig, string, IChatProvider?> makeProvider)
     {
+        // S24 (M5-12): a bare switch, so it is taken out before the --name value parser sees it
+        bool randomMode = args.Contains("--random-directives", StringComparer.Ordinal);
+        args = args.Where(a => a != "--random-directives").ToArray();
         if (!MatchSetup.TryParse(args, Options, out var flags, out var positional, out string? error) || positional.Count > 0)
             return UsageError(error ?? $"unexpected argument '{positional[0]}'");
         if (!flags.TryGetValue("a", out string? aArg) || !flags.TryGetValue("b", out string? bArg)) return UsageError("--a and --b are required");
-        if (!flags.TryGetValue("provider", out string? providerArg)) return UsageError("--provider is required (openai or anthropic)");
 
-        LlmProviderKind kind;
-        string keyVar;
-        switch (providerArg.Trim().ToLowerInvariant())
+        LlmProviderKind kind = LlmProviderKind.None;
+        string keyVar = "";
+        string providerLabel = "none (random directives, seeded)";
+        if (!randomMode)
         {
-            case "openai": kind = LlmProviderKind.OpenAiCompatible; keyVar = "OPENAI_API_KEY"; break;
-            case "anthropic": kind = LlmProviderKind.Anthropic; keyVar = "ANTHROPIC_API_KEY"; break;
-            default: return UsageError("--provider must be openai or anthropic");
+            if (!flags.TryGetValue("provider", out string? providerArg)) return UsageError("--provider is required (openai or anthropic)");
+            switch (providerArg.Trim().ToLowerInvariant())
+            {
+                case "openai": kind = LlmProviderKind.OpenAiCompatible; keyVar = "OPENAI_API_KEY"; break;
+                case "anthropic": kind = LlmProviderKind.Anthropic; keyVar = "ANTHROPIC_API_KEY"; break;
+                default: return UsageError("--provider must be openai or anthropic");
+            }
+            providerLabel = providerArg.Trim();
         }
         if (!Int(flags, "seed", 1, out int seed) || seed < 1) return UsageError("--seed must be a positive integer");
         if (!Int(flags, "ticks", 30000, out int ticks) || ticks < 1) return UsageError("--ticks must be a positive integer");
@@ -63,18 +73,23 @@ public static class CommanderMatchCommand
             return UsageError($"--size must be {MapGenerator.MinSize}..{SimConstants.MaxMapCells}");
         string outDir = flags.TryGetValue("out", out string? outArg) ? outArg : "commander_run";
 
-        // The key is checked before anything else runs; a missing key ends the command here.
-        string key = (env(keyVar) ?? "").Trim();
-        if (key.Length == 0)
+        // The key is checked before anything else runs; a missing key ends the command here. Random mode needs no key.
+        string key = randomMode ? "" : (env(keyVar) ?? "").Trim();
+        if (!randomMode && key.Length == 0)
         {
             Console.Error.WriteLine($"error: {keyVar} is not set. In this window only, set it with: $env:{keyVar} = \"<your key>\"");
             return 2;
         }
 
-        ProviderDefaults defaults = ProviderDefaults.Load(Path.Combine(AppContext.BaseDirectory, "data", "llm", "providers.toml"));
-        string model = flags.TryGetValue("model", out string? modelArg) && modelArg.Trim().Length > 0 ? modelArg.Trim() : defaults.ModelFor(kind);
-        if (model.Length == 0) return UsageError("--model is required (any chat model your account has)");
-        LlmConfig cfg = defaults.Resolve(kind, "", model);
+        string model = "none";
+        LlmConfig? cfg = null;
+        if (!randomMode)
+        {
+            ProviderDefaults defaults = ProviderDefaults.Load(Path.Combine(AppContext.BaseDirectory, "data", "llm", "providers.toml"));
+            model = flags.TryGetValue("model", out string? modelArg) && modelArg.Trim().Length > 0 ? modelArg.Trim() : defaults.ModelFor(kind);
+            if (model.Length == 0) return UsageError("--model is required (any chat model your account has)");
+            cfg = defaults.Resolve(kind, "", model);
+        }
 
         RuleSet? rules = MatchSetup.LoadRules(null, out string rulesDir);
         if (rules is null) return 1;
@@ -88,18 +103,20 @@ public static class CommanderMatchCommand
         if (!ParseSide(aArg, tiers, out AiSide? a, out error)) return UsageError(error!);
         if (!ParseSide(bArg, tiers, out AiSide? b, out error)) return UsageError(error!);
 
-        IChatProvider? provider = makeProvider(cfg, key);
-        if (provider is null)
+        IChatProvider? provider = randomMode ? null : makeProvider(cfg!, key);
+        if (!randomMode && provider is null)
         {
             Console.Error.WriteLine("error: could not create the provider");
             return 1;
         }
-        var recorder = new CallRecorder(provider);
+        CallRecorder? recorder = provider is null ? null : new CallRecorder(provider);
+        RandomCommanderSource? random = randomMode ? new RandomCommanderSource((ulong)seed, size) : null;
 
         // Side A is the commander's slot 0 with its persona and faction name, as the game gives a commander slot.
         const string faction = "Authority";
         IReadOnlyList<CommanderPersona> personas = PersonaCatalog.Load(Path.Combine(AppContext.BaseDirectory, "data", "llm", "personas.toml"));
-        using var commander = new Commander(0, recorder, PersonaCatalog.Pick(personas, faction, 0), faction, 0, true, new CommanderChatLog());
+        using Commander? commander = recorder is null ? null
+            : new Commander(0, recorder, PersonaCatalog.Pick(personas, faction, 0), faction, 0, true, new CommanderChatLog());
 
         string fullOut;
         try
@@ -118,8 +135,8 @@ public static class CommanderMatchCommand
         {
             using var replayStream = File.Create(Path.Combine(fullOut, replayName));
             using var log = new StreamWriter(Path.Combine(fullOut, "directives.log"), false, new UTF8Encoding(false)) { AutoFlush = true };
-            return Play(new PlayPlan(a!, b!, seed, ticks, size, rules, rulesDir, cfg, providerArg.Trim(), model, fullOut, replayName, swap == 1),
-                commander, recorder, replayStream, log, key);
+            return Play(new PlayPlan(a!, b!, seed, ticks, size, rules, rulesDir, cfg, providerLabel, model, fullOut, replayName, swap == 1, randomMode),
+                commander, recorder, random, replayStream, log, key);
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException)
         {
@@ -128,10 +145,14 @@ public static class CommanderMatchCommand
         }
     }
 
-    private sealed record PlayPlan(AiSide A, AiSide B, int Seed, int Ticks, int Size, RuleSet Rules, string RulesDir, LlmConfig Config,
-        string Provider, string Model, string OutDir, string ReplayName, bool Swap);
+    private sealed record PlayPlan(AiSide A, AiSide B, int Seed, int Ticks, int Size, RuleSet Rules, string RulesDir, LlmConfig? Config,
+        string Provider, string Model, string OutDir, string ReplayName, bool Swap, bool Random);
 
-    private static int Play(PlayPlan p, Commander commander, CallRecorder recorder, Stream replayStream, StreamWriter log, string key)
+    /// <param name="commander">The LLM commander, or null in random mode.</param>
+    /// <param name="recorder">The recording wrapper of the commander's provider, or null in random mode.</param>
+    /// <param name="random">The seeded random stand-in for the commander, or null in model mode.</param>
+    private static int Play(PlayPlan p, Commander? commander, CallRecorder? recorder, RandomCommanderSource? random, Stream replayStream,
+        StreamWriter log, string key)
     {
         // Redacts the key from everything written, as a second guard on top of the providers' own error texts.
         string Redact(string s) => key.Length == 0 ? s : s.Replace(key, "[redacted]", StringComparison.Ordinal);
@@ -154,7 +175,11 @@ public static class CommanderMatchCommand
         var driver = new AiDriver((ulong)p.Seed);
         driver.Add(0, aiA!, p.A.Profile);
         driver.Add(1, aiB!, p.B.Profile);
-        driver.SetDirectiveSource(0, commander);
+        driver.SetDirectiveSource(0, random is not null ? random : commander);
+        // Orders go in with the same delay as the directive the driver issues for this slot.
+        int orderDelay = Math.Max(1, driver.CommandDelayOverride ?? p.A.Profile.CommandDelayTicks);
+        ushort orderSequence = DirectiveCommands.OrderSequenceBase;
+        string speaker = random is not null ? "random directives" : commander!.Speaker;
 
         var replay = new ReplayWriter(replayStream, sim, BuildInfo.Version, RulesBundle.ReadDirectory(p.RulesDir));
         var pending = new List<Command>();
@@ -162,11 +187,17 @@ public static class CommanderMatchCommand
         for (int t = 0; t < p.Ticks; t++)
         {
             driver.Collect(sim, pending);
-            if (commander.CallsMade > callsSeen)
+            if (random?.TakeDecision() is { } decided)
+                log.WriteLine(Redact($"tick={sim.Tick} random {Describe(decided)}"));
+            // S24 (M5-12): the standing orders of this tick become order commands (none when the reply carried none)
+            IReadOnlyList<OrderDraft> orders = commander is not null ? commander.TakeOrders() : random!.TakeOrders();
+            if (orders.Count > 0)
+                new CommanderReply(null, null, orders).AddOrderCommands(pending, sim.Tick + orderDelay, 0, ref orderSequence);
+            if (commander is not null && commander.CallsMade > callsSeen)
             {
                 // A request started on this tick: wait for its reply so the game does not run past the 600-tick reply window.
                 callsSeen = commander.CallsMade;
-                CallRecord call = recorder.WaitForReply();
+                CallRecord call = recorder!.WaitForReply();
                 double ms = call.LatencyMs;
                 if (!call.Result.Ok)
                 {
@@ -199,9 +230,10 @@ public static class CommanderMatchCommand
         var md = new StringBuilder();
         md.AppendLine("# Commander match");
         md.AppendLine();
-        md.AppendLine($"- Side A (LLM commander {commander.Speaker}): {p.A.Label}");
+        md.AppendLine($"- Side A (LLM commander {speaker}): {p.A.Label}");
         md.AppendLine($"- Side B (standard AI): {p.B.Label}");
         md.AppendLine($"- Provider: {p.Provider}, model: {p.Model}");
+        if (p.Random) md.AppendLine("- Mode: --random-directives (seeded random directives and orders, same call schedule; no model calls)");
         md.AppendLine($"- Seed {p.Seed}, map {p.Size} cells, tick limit {p.Ticks}, starts {(p.Swap ? "swapped (commander at start 1)" : "normal (commander at start 0)")}");
         md.AppendLine($"- Winner: {winnerText}");
         md.AppendLine($"- Ended at tick {sim.Tick} ({sim.Tick / 20} s of game time)");
@@ -216,11 +248,18 @@ public static class CommanderMatchCommand
 
     private static string Describe(CommanderReply reply)
     {
-        if (reply.Directive is not { } d) return "directive: none (last one kept)";
-        string target = d.TargetPlayer == 255 ? "ai" : $"slot{d.TargetPlayer}";
-        string cell = d.FocusX < 0 || d.FocusY < 0 ? "none" : $"{d.FocusX},{d.FocusY}";
-        return $"directive: posture={Name(PostureNames, d.Posture)} focus={Name(FocusNames, d.Focus)} target={target} " +
-               $"mix={Name(MixNames, d.Mix)} expand={(d.Expand ? "yes" : "no")} cell={cell}";
+        string head;
+        if (reply.Directive is not { } d) head = "directive: none (last one kept)";
+        else
+        {
+            string target = d.TargetPlayer == 255 ? "ai" : $"slot{d.TargetPlayer}";
+            string cell = d.FocusX < 0 || d.FocusY < 0 ? "none" : $"{d.FocusX},{d.FocusY}";
+            head = $"directive: posture={Name(PostureNames, d.Posture)} focus={Name(FocusNames, d.Focus)} target={target} " +
+                   $"mix={Name(MixNames, d.Mix)} strong={(d.StrongMix ? "yes" : "no")} expand={(d.Expand ? "yes" : "no")} cell={cell}";
+        }
+        if (reply.OrderList.Count == 0) return head;
+        return head + " orders: " + string.Join("; ", reply.OrderList.Select(o =>
+            $"slot{o.Slot}={OrderNames[(int)o.Kind]} cell={(o.CellX < 0 ? "none" : $"{o.CellX},{o.CellY}")} amount={o.Amount} minute={o.Minute}"));
     }
 
     private static string Name(string[] names, byte index) => index < names.Length ? names[index] : "?";

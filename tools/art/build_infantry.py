@@ -1,6 +1,10 @@
 """Build an infantry sprite sheet: procedural Blender model -> 4x render -> arm-B pixel post-process.
 
 Usage:  python3 tools/art/build_infantry.py <id> [--samples 24] [--frames 0 5 ...] [--render-only | --post-only]
+                                            [--deaths] [--out DIR]
+--deaths (S24, M10-11) appends the states die_blast, die_burn, die_rad (8 frames each, see infantry_deaths.py) after the module's
+own rows and lists them in the manifest; without it the output is byte-identical to before.  --out writes the sheet and manifest
+to DIR instead of data/sprites/infantry (the work files get a "_deaths" suffix with --deaths).
 <id> names a module in tools/art/infantry/<id>.py (contract in the docstring of auth_rifleman.py).
 Wrap renders in `flock /home/claude/wt/blender.lock` yourself (one Blender render at a time, wave rule); the script does not lock.
 
@@ -22,6 +26,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 sys.path.insert(0, os.path.join(HERE, "infantry"))
 import common as C
+import infantry_deaths as D
 
 CELL = 3.4
 CELL_PX = 64
@@ -61,8 +66,49 @@ def apply_scale(mod, scale):
         mod.CANVAS, mod.ORIGIN = _probe_geometry() or geometry(scale)
 
 
+DEATHS = False        # set by --deaths (apply_deaths)
+_BASE_COL = {}        # material name -> original linear base colour, filled the first time a death tint is applied
+
+
+def apply_deaths(mod):
+    """Append the three death states to the module (its own STATES list is not modified) and route their poses and flames."""
+    global DEATHS
+    DEATHS = True
+    if mod.STATES and mod.STATES[-1][0] in D.DEATH_NAMES:
+        return
+    orig_pose, orig_build = mod.pose, mod.build
+    mod.STATES = list(mod.STATES) + list(D.DEATH_STATES)
+    mod.MATERIALS = {**mod.MATERIALS, **D.FIRE_MATERIALS}
+    mod.EMIT_STRENGTH = {**getattr(mod, "EMIT_STRENGTH", {}), **D.FIRE_EMIT}
+    mod.pose = lambda state, step, n: D.death_pose(orig_pose, state, step, n) if state in D.DEATH_NAMES else orig_pose(state, step, n)
+
+    def build(S, p):
+        orig_build(S, p)
+        if "_flames" in p:
+            D.add_flames(S, p)
+    mod.build = build
+
+
+def apply_tint(mats, tint):
+    """Blend every non-house, non-emissive material towards tint = (linear rgb, amount); None restores the originals."""
+    for name, m in mats.items():
+        if name == "house" or name == "house2":
+            continue
+        b = m.node_tree.nodes["Principled BSDF"]
+        if name not in _BASE_COL:
+            if tint is None:
+                continue
+            _BASE_COL[name] = tuple(b.inputs["Base Color"].default_value)
+        base = _BASE_COL[name]
+        if tint is None or b.inputs["Emission Strength"].default_value > 0 and tuple(b.inputs["Emission Color"].default_value)[:3] != (0, 0, 0):
+            b.inputs["Base Color"].default_value = base
+            continue
+        c, amt = tint
+        b.inputs["Base Color"].default_value = tuple(base[i] * (1 - amt) + c[i] * amt for i in range(3)) + (1.0,)
+
+
 def work_dir(sid):
-    return os.path.join(C.WORK, f"inf_{sid}")
+    return os.path.join(C.WORK, f"inf_{sid}_deaths" if DEATHS else f"inf_{sid}")
 
 
 def frame_list(mod):
@@ -170,7 +216,10 @@ def render(sid, mod, samples, only):
             if S:
                 S.destroy()
             S = R.Scene(mats)
-            mod.build(S, mod.pose(state, step, n))
+            pz = mod.pose(state, step, n)
+            if DEATHS:
+                apply_tint(mats, pz.get("_tint"))
+            mod.build(S, pz)
             last_pose = (state, step)
         face = getattr(mod, "DIE_FACING", 0) if nf == 1 else facing
         S.rig.rotation_euler = (0, 0, -math.radians(45.0 * face))   # 0 = north, clockwise
@@ -201,7 +250,7 @@ def render(sid, mod, samples, only):
 
 
 # ---------------------------------------------------------------------------------------------- post-process
-def post(sid, mod):
+def post(sid, mod, outdir=None):
     import numpy as np
     from PIL import Image
     import structpost as SP
@@ -211,10 +260,13 @@ def post(sid, mod):
     frames, firsts = frame_list(mod)
     total = len(frames)
     have = [i for i in range(total) if os.path.exists(os.path.join(wd, f"shadow_{i:02d}.png"))]
+    st_of = {f[0]: f[1] for f in frames}
+    # with --deaths the house calibration still comes from the module's own frames, so they match the plain sheet
+    cal_from = [i for i in have if st_of[i] not in D.DEATH_NAMES] or have
     # house calibration: the median house-paint luminance maps to ramp shade 4 (the "mid" colour), the 2..98 percentile
     # spread covers about shades 1..6, so remapped houses keep their hue and are not pastel (see README notes)
     vals = []
-    for i in have:
+    for i in cal_from:
         c = np.asarray(Image.open(os.path.join(wd, f"col_{i:02d}.png")).convert("RGBA"), dtype=float)
         m = np.asarray(Image.open(os.path.join(wd, f"mask_{i:02d}.png")).convert("RGBA"), dtype=float)
         sel = (m[..., 0] > 127) & (c[..., 3] > 250)
@@ -228,15 +280,25 @@ def post(sid, mod):
     imgs = []
     for i in range(total):
         if i in have:
-            imgs.append(SP.frame_b(wd, i, cal, w, h, getattr(mod, "PALETTE", None)))
+            pal = getattr(mod, "PALETTE", None)
+            if DEATHS and st_of[i] == "die_burn":      # fire ramp + char tones exist only for the burn frames
+                pal = list(pal if pal is not None else C.PAL) + D.FIRE_PALETTE
+            imgs.append(SP.frame_b(wd, i, cal, w, h, pal))
         else:
             imgs.append(Image.new("RGBA", (w, h), (0, 0, 0, 0)))
+    if DEATHS:       # die_rad: the last frames dissolve (ordered dither; alpha stays 0 or 255)
+        fr = {f[0]: f for f in frames}
+        for i in have:
+            if fr[i][1] == "die_rad" and D.DISSOLVE[fr[i][3]] > 0:
+                a = np.array(imgs[i])
+                a[D.dissolve_mask(w, h, D.DISSOLVE[fr[i][3]]), 3] = 0
+                imgs[i] = Image.fromarray(a)
     for i in have:
         a = np.asarray(imgs[i])
         if a[0, :, 3].any() or a[-1, :, 3].any() or a[:, 0, 3].any() or a[:, -1, 3].any():
             print(f"WARNING frame {i}: art touches the canvas edge (cropped?)")
     sheet = C.pack_sheet(imgs, COLS, w, h)
-    outdir = os.path.join(C.ROOT, "data", "sprites", "infantry")
+    outdir = outdir or os.path.join(C.ROOT, "data", "sprites", "infantry")
     os.makedirs(outdir, exist_ok=True)
     png = os.path.join(outdir, f"{sid}.png")
     sheet.save(png)
@@ -260,6 +322,7 @@ def write_toml(path, mod, sheet_name, firsts, total):
         "# Origin: the pixel the soldier's feet stand on, i.e. the sub-slot centre (up to 5 soldiers share a 64 px cell),",
         "# counted from the frame's top-left corner. The ground shadow falls to the right/below of it.",
         "# State \"die\" has one facing (drawn facing east: a forward fall to the right); mirror it in code if wanted.",
+        *(["# States die_blast, die_burn, die_rad (same rules as \"die\"): flung and tumbling, burning, radiation slump and fade."] if DEATHS else []),
         "",
         f'file = "{sheet_name}"',
         f"frame_w = {w}",
@@ -284,17 +347,21 @@ def main():
     ap.add_argument("--samples", type=int, default=24)
     ap.add_argument("--frames", type=int, nargs="*", default=None, help="sheet indices to render (default all)")
     ap.add_argument("--scale", type=float, default=None, help="figure scale (default: the module's SCALE, else 1.0)")
+    ap.add_argument("--deaths", action="store_true", help="append the states die_blast, die_burn, die_rad (S24)")
+    ap.add_argument("--out", default=None, help="folder for the sheet and manifest (default data/sprites/infantry)")
     ap.add_argument("--render-only", action="store_true")
     ap.add_argument("--post-only", action="store_true")
     a = ap.parse_args()
     mod = load_module(a.id)
     apply_scale(mod, a.scale if a.scale else getattr(mod, "SCALE", 1.0))
+    if a.deaths:
+        apply_deaths(mod)
     if not a.post_only:
         # No self-locking: callers wrap renders in `flock /home/claude/wt/blender.lock …` (wave rule). A self re-exec under
         # the same lock deadlocks when the caller already holds it (flock is not re-entrant across processes).
         render(a.id, mod, a.samples, set(a.frames) if a.frames else None)
     if not a.render_only:
-        post(a.id, mod)
+        post(a.id, mod, a.out)
 
 
 if __name__ == "__main__":
