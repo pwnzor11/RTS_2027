@@ -508,9 +508,8 @@ internal sealed class MilitaryManager
         if (_phase == Phase.Gather)
         {
             // with no scraper left there is no income to rebuild with: whatever is left goes out as soon as there are a few units
-            bool endgame = Options.Respond && EndgameLaunch.Launch(Broke, k.Harvesters.Count, tick, n);   // s24 D-242: no income left: go with what there is
-            bool desperate = ((k.Harvesters.Count == 0 || Broke) && n >= DesperateWave) || endgame;   // M4-12: also when income has stalled
-            int guard = _hookForce ? 0 : EndgameLaunch.Guard(endgame, Bias.HomeGuard);   // M5-02 (M8-06: a scripted wave takes everything): units that stay home (the wave waits for them too)
+            bool desperate = (k.Harvesters.Count == 0 || Broke) && n >= DesperateWave;   // M4-12: also when income has stalled
+            int guard = _hookForce ? 0 : Bias.HomeGuard;   // M5-02 (M8-06: a scripted wave takes everything): units that stay home (the wave waits for them too)
             // S15: against a defended base the escalated requirement of the last lost wave (200 percent of its value, up to 12 000, measured: 4 000 ticks of idling
             // at home against an enemy with no army) is replaced by the siege requirement: the defence value, a little more after each lost wave
             int needNow = _siegeOn ? (int)Math.Min(SiegePlan.NeedCap, (long)_siegeNeed * (100 + SiegePlan.GrowthPct * Math.Min(_failedWaves, SiegePlan.MaxFailureSteps)) / 100) : EnemyValueSeen == 0 && _targetPlayer >= 0 ? 0 : _required;   // S15: no enemy army seen for the whole long window and no defence worth a siege: nothing to wait for
@@ -563,7 +562,7 @@ internal sealed class MilitaryManager
                     if (Tactics != null) _stageB = Tactics.SafeCell(k, _stageB);
                     _stageB = AshCells.OffField(k.View, _stageB);   // S19 M13-12
                 }
-                _phase = endgame ? Phase.Assault : Phase.Stage;   // s24 D-242: an endgame wave does not stage
+                _phase = Phase.Stage;
                 alive = take;
                 _progressScore = int.MaxValue; _progressTick = tick;
             }
@@ -592,9 +591,6 @@ internal sealed class MilitaryManager
             _roster.Clear(); _squadB.Clear();
             _prong = false;
         }
-
-        if (_phase == Phase.Assault && Options.Respond && EndgameLaunch.Broke(Broke, k.Harvesters.Count, tick))
-            foreach (ViewActor a in k.Army) _roster.Add(Key(a));   // s24 D-242: reinforcements join the running wave instead of gathering
 
         if (_phase == Phase.Stage)
         {
