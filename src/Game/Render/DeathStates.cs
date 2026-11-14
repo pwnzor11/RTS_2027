@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
 using Rts.Game.Sprites;
+using Rts.Sim.Core;
 using Rts.Sim.Rules;
 
 namespace Rts.Game.Render;
@@ -31,6 +32,16 @@ public static class DeathStates
         if (Has(id, "flame") || Has(id, "incend") || Has(id, "napalm") || Has(id, "burn") || Has(id, "fire")) return DeathCause.Burn;
         if (warhead.Splash > 0 || Has(id, "blast") || Has(id, "bomb") || Has(id, "shell") || Has(id, "rocket") || id.EndsWith("_he", StringComparison.Ordinal)) return DeathCause.Blast;
         return DeathCause.Unknown;
+    }
+
+    /// <summary>The cause for a sim death event's <see cref="FxEvent.Warhead"/>: the warhead's class, Rad for <see cref="FxEvent.RadiationCause"/>, Unknown for no warhead or one outside the rules.</summary>
+    /// <param name="warhead">The event's warhead index.</param>
+    /// <param name="rules">Rules, or null.</param>
+    public static DeathCause CauseOfEvent(int warhead, SimRules? rules)
+    {
+        if (warhead == FxEvent.RadiationCause) return DeathCause.Rad;
+        if (rules is null || (uint)warhead >= (uint)rules.Warheads.Count) return DeathCause.Unknown;
+        return CauseOf(rules.Warheads[warhead]);
     }
 
     /// <summary>The state name for a cause, before the fallback.</summary>

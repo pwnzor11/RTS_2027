@@ -2,6 +2,7 @@
 // Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
 using Rts.Game.Sandbox;
 using Rts.Sim.Core;
+using Rts.Sim.Rules;
 
 namespace Rts.Game.Render;
 
@@ -182,7 +183,8 @@ public sealed class DeathWatcher
     private int _tick = int.MinValue;
 
     /// <summary>Records <paramref name="snapshot"/> and fills <paramref name="deaths"/> (cleared first) with what died since the last tick.</summary>
-    public void Observe(SimSnapshot snapshot, List<DeathRecord> deaths)
+    /// <param name="rules">Rules, to turn the killing warhead of a death event into a <see cref="DeathCause"/>; null = unknown causes.</param>
+    public void Observe(SimSnapshot snapshot, List<DeathRecord> deaths, SimRules? rules = null)
     {
         ArgumentNullException.ThrowIfNull(snapshot);
         ArgumentNullException.ThrowIfNull(deaths);
@@ -217,7 +219,7 @@ public sealed class DeathWatcher
                 if (e < 0) continue;
                 used[e] = true;
                 RemainKind kind = u.Kind == UnitKind.Vehicle ? RemainKind.VehicleWreck : RemainKind.InfantryMark;
-                deaths.Add(new DeathRecord(kind, u.Player, u.TypeIndex, u.Position, default, 0, 0, u.Facing, snapshot.Tick));
+                deaths.Add(new DeathRecord(kind, u.Player, u.TypeIndex, u.Position, default, 0, 0, u.Facing, snapshot.Tick, DeathStates.CauseOfEvent(events[e].Warhead, rules)));
             }
         }
 

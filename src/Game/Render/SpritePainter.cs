@@ -26,7 +26,8 @@ public sealed class SpritePainter : IDisposable
     /// <param name="house">House colour.</param>
     /// <param name="zoom">Camera zoom.</param>
     /// <param name="alpha">Opacity 0..1; 1 draws exactly as before M3.</param>
-    public void Draw(SpriteBatch batch, ResolvedSprite sprite, int frame, Vector2 origin, Color house, float zoom, float alpha = 1f)
+    /// <param name="flip">Mirror left to right (library sheets only).</param>
+    public void Draw(SpriteBatch batch, ResolvedSprite sprite, int frame, Vector2 origin, Color house, float zoom, float alpha = 1f, bool flip = false)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
         ArgumentNullException.ThrowIfNull(batch);
@@ -34,7 +35,7 @@ public sealed class SpritePainter : IDisposable
         switch (sprite.Source)
         {
             case SpriteSource.Library:
-                sprite.Library!.Sheet(sprite.Id).Draw(batch, frame, origin, house, zoom, alpha);
+                sprite.Library!.Sheet(sprite.Id).Draw(batch, frame, origin, house, zoom, alpha, flip);
                 break;
             case SpriteSource.Legacy:
                 sprite.Legacy!.Draw(batch, frame, origin, house, zoom, alpha);
