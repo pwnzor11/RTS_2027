@@ -36,12 +36,12 @@ PIECES = {
 
 TEXT_COLOR, TEXT_DIM, ACCENT = "#E4DDB8", "#9A9670", "#C8A838"
 
-OLIVE = (92, 100, 62)
+OLIVE = (80, 86, 54)
 GUNMETAL = (52, 58, 62)
 COLORS = {  # placeholder colours / paint colours per kind (sRGB)
-    "panel": OLIVE, "button": (104, 112, 70), "hover": (128, 136, 82), "pressed": (74, 80, 50),
-    "disabled": (88, 88, 80), "tab": (84, 92, 58), "tab_active": (120, 126, 76), "back": (70, 78, 50),
-    "frame": OLIVE, "card": (96, 104, 66),
+    "panel": OLIVE, "button": (92, 98, 60), "hover": (120, 126, 72), "pressed": (62, 66, 42),
+    "disabled": (84, 84, 78), "tab": (74, 80, 50), "tab_active": (112, 116, 68), "back": (66, 72, 46),
+    "frame": OLIVE, "card": (86, 92, 58),
 }
 
 # sidebar_back layout in 1x pixels from the top-left (SidebarLayout: pad 4, credits row 24 high)
@@ -241,7 +241,7 @@ def render_all(out, samples):
                 nt.links.new(v, m.inputs[i])
         return m.outputs[2]
 
-    def paint(name, rgb, bare=(168, 166, 156), edge=(0.02, 0.045), chip=0.78, grime=1.0, metal=0.1, rough=0.62,
+    def paint(name, rgb, bare=(168, 166, 156), edge=(0.02, 0.045), chip=0.70, grime=1.5, metal=0.1, rough=0.62,
               bump_noise=0.12, weld=False, wear=1.0):
         """Worn paint over bare steel: wear on bevelled edges and as random chips, grime in recesses (AO) plus a dirt noise."""
         m = bpy.data.materials.new(name)
@@ -258,7 +258,7 @@ def render_all(out, samples):
         nt.links.new(geo.outputs["Normal"], dot.inputs[0])
         tilt = mth(nt, "SUBTRACT", 1.0, dot.outputs["Value"])
         edge_m = ramp(nt, tilt, [(edge[0], 0.0), (edge[1], 1.0)])
-        patchy = ramp(nt, noise(nt, 38.0, 5.0), [(0.30, 0.15), (0.55, 1.0)])
+        patchy = ramp(nt, noise(nt, 38.0, 5.0), [(0.20, 0.35), (0.45, 1.0)])
         edge_w = mth(nt, "MULTIPLY", edge_m, patchy)
         flat_w = ramp(nt, noise(nt, 20.0, 4.0), [(chip, 0.0), (chip + 0.035, 1.0)])
         wear_m = mth(nt, "MULTIPLY", mth(nt, "MAXIMUM", edge_w, flat_w), wear, clamp=True)
@@ -268,7 +268,7 @@ def render_all(out, samples):
         ao = N(nt, "ShaderNodeAmbientOcclusion")
         ao.inputs["Distance"].default_value = 0.016
         occ = mth(nt, "SUBTRACT", 1.0, ao.outputs["AO"])
-        dirt = ramp(nt, noise(nt, 70.0, 6.0), [(0.45, 0.0), (0.8, 0.28)])
+        dirt = ramp(nt, noise(nt, 70.0, 6.0), [(0.40, 0.0), (0.75, 0.40)])
         gf = mth(nt, "ADD", mth(nt, "MULTIPLY", occ, 1.15 * grime), mth(nt, "MULTIPLY", dirt, grime), clamp=True)
         col = mixc(nt, gf, col, lin((26, 21, 13)))
         col = mixc(nt, wear_m, col, lin(bare))
@@ -340,6 +340,8 @@ def render_all(out, samples):
             pt = paint("olive", base, wear=0.35, grime=0.5, metal=0.05, rough=0.8)
         elif kind == "pressed":
             pt = paint("olive", base, wear=0.7, grime=1.5)
+        elif kind in ("panel", "card"):
+            pt = paint("olive", base, chip=1.2)  # no flat chips: the stretched middle would blow them up into blocks
         else:
             pt = paint("olive", base)
         gm = paint("gun", GUNMETAL, bare=(150, 154, 158), edge=(0.02, 0.05), chip=0.84, grime=0.8, metal=0.55, rough=0.5)
@@ -478,7 +480,7 @@ def render_all(out, samples):
         cam.location = (0, 0, 2.0)
         sc.camera = cam
         sun_d = bpy.data.lights.new("sun", "SUN")
-        sun_d.energy = 4.6
+        sun_d.energy = 3.6
         sun_d.angle = 0.1
         sun = bpy.data.objects.new("sun", sun_d)
         sc.collection.objects.link(sun)
