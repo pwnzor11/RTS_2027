@@ -38,6 +38,33 @@ public class MatchAdjudicationTests
         Assert.Equal("even", MatchAdjudication.Label(MatchAdjudication.Even));
     }
 
+    // The laptop summary script (tools/measure/run_s19_after.ps1) reads `ai match` output with these patterns. Old lines and the new
+    // lines (with the adjudication suffix and columns) must both match, so older result files keep parsing.
+    [Theory]
+    [InlineData("| 64 | 20 | 18 | 26 | 25000 | 31% |")]
+    [InlineData("| 64 | 20 | 18 | 26 | 25000 | 31% | 3 | 1 | 22 |")]
+    public void Laptop_table_pattern_reads_old_and_new_rows(string row)
+    {
+        var m = System.Text.RegularExpressions.Regex.Match(row, @"^\|\s*(\d+)\s*\|\s*(\d+)\s*\|\s*(\d+)\s*\|\s*(\d+)\s*\|\s*(\d+)\s*\|");
+        Assert.True(m.Success);
+        Assert.Equal("64", m.Groups[1].Value);
+        Assert.Equal("20", m.Groups[2].Value);
+        Assert.Equal("18", m.Groups[3].Value);
+        Assert.Equal("26", m.Groups[4].Value);
+        Assert.Equal("25000", m.Groups[5].Value);
+    }
+
+    [Theory]
+    [InlineData("seed 1 game 2 (A in slot 1, A at start 1): draw at tick 30000 (health A 3520, B 3520)")]
+    [InlineData("seed 1 game 2 (A in slot 1, A at start 1): draw at tick 30000 (health A 3520, B 3520) adj=even score=5428/5428")]
+    public void Laptop_game_line_pattern_reads_old_and_new_draw_lines(string line)
+    {
+        var m = System.Text.RegularExpressions.Regex.Match(line, @"^seed \d+ game \d+ \(A in slot \d, A at start (\d)\): .* at tick (\d+)");
+        Assert.True(m.Success);
+        Assert.Equal("1", m.Groups[1].Value);
+        Assert.Equal("30000", m.Groups[2].Value);
+    }
+
     [Fact]
     public void Breakdown_total_is_army_plus_structures_plus_credits()
     {
