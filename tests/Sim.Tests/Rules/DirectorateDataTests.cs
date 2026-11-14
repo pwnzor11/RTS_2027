@@ -362,7 +362,7 @@ public sealed class DirectorateDataTests
 
         Assert.Equal(100, s.Infantry.Single(i => i.Id == "auth_rifleman").Cost);
         Assert.Equal(800, s.Vehicles.Single(v => v.Id == "auth_tank").Cost);
-        Assert.Equal(2000, s.Buildings.Single(b => b.Id == "auth_refinery").Cost);
+        Assert.Equal(1700, s.Buildings.Single(b => b.Id == "auth_refinery").Cost);
         Assert.Equal(0, s.Buildings.Single(b => b.Id == "auth_conyard").Cost);
         UpgradeType grouting = s.Upgrades.Single(u => u.Id == "auth_grouting");
         Assert.Equal(Faction.Authority, grouting.Faction);

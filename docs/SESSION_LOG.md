@@ -478,3 +478,18 @@ prompts and a catch-up script.
 moved every pinned hash (re-pinned, D-220). Endgame launch and lost-factory rebuild were measured and dropped. Placeholder skin files kept out of data/.
 One helper made a stray read-only device-bridge call (no effect).
 **Next session should:** see HANDOFF (read s24after and the SFX run; install approved art from the laptop; next balance round).
+
+## Session 25 · 2026-11-14 (s24after read, balance round, AI seed fix, laptop art and sound picks, tutorial voice)
+**Goal:** owner: merge the s24 PRs, read the laptop runs, fix Glass Coast and the Left Behind ("just fix it and test"), give the art scripts for the
+laptop, accept the recommended sounds.
+**Done:** PRs #82/#83 merged; push access added. s24after read: Grapeshot 11 barely moved Expedition; Glass Coast was the Expedition problem.
+Laptop run script (run_s25_laptop.ps1, render_s25_depth_all.ps1, PR #84): sound picks, Authority skin, portraits for every unit, death frames
+(PR #85, with the owner's tutorial instructor voice am_adam), depth pass running overnight. Balance (docs/balance/s25_balance.md): shipment value
+1200 (D-246), Left Behind cap until 3600 (D-247), late all-in (D-248), Authority refinery 1700 (D-250); more ore on Glass Coast tried and dropped.
+The Left Behind "slot bias" was correlated AI random streams by game-seed parity: AiRandom per-slot seed mixed (D-249). Laptop summary
+adjudication columns (M13-30). die_ship left out (over the size cap); --pick trims long one-shots (D-251).
+**Decisions:** D-246..D-251.
+**Helpers:** 5 Sonnet packages (glass, lb, draw, glass2 probe, authglass); one server restart (all resumed).
+**Problems / notes:** PR #85 failed CI on die_ship's size and a test pinning pre-generated sound resolution (fixed in the cloud). The 4500 cap result
+did not survive the seed change (16-seed noise). Depth pass is ~20 h, not 3-6 h. The owner's voice commit needed a second try (staged, not committed).
+**Next session should:** see HANDOFF (laptop campaign sweep and s25after series, depth art PR, SFX catch-up, UI skins).

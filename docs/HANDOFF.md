@@ -1,40 +1,41 @@
-# Handoff: Session 25 — read the laptop runs (s24after series, SFX catch-up), install the approved art, next balance round
-Last commit: `docs: Session 24 handoff` on `land/s24-r3` (PR to main; round 2 is PR #82). Check `git log -1 origin/main` and whether both PRs are merged.
-Where things stand: session 24 on main via PRs #80 (s23 round 4), #81 (Grapeshot art, D-240) and #82 (round 2): editor Props/Decal/Stamp tools
-(M12-06b, M12-13), stamp library with a generator pass behind MapGenParams.Stamps (off), stronger commander directives (D-241: CommanderOrder = 28,
-"commander_orders" state part, LLM orders/counter mixes/recent fights, random-directive control, AI AttackAt/HoldCell/Raid/ExpandTo/TechTo/Reserve),
-UI skin loader (M10-15, no skin shipped yet), portraits in the card (M10-16), death animations by cause (M10-14b), `ai match` adjudication column
-(D-242), EconomyRescue stall fix (M13-23), Grapeshot damage 11 (D-244). Art pilots approved (D-245). Decisions up to D-245. Open questions: Q-73 (deferred
-until the owner plays the campaign).
+# Handoff: Session 26 — read the laptop series and campaign sweep after the s25 balance round; finish the depth pass and SFX
+Last commit: `docs: Session 25 handoff` on `land/s25-r2` (PR to main). Check `git log -1 origin/main` and whether that PR is merged.
+Where things stand: session 25 on main via PRs #82/#83 (s24), #84 (laptop run script), #85 (laptop art: sound picks, Authority skin, portraits,
+death frames, tutorial instructor voice am_adam), #86 (round 1) and the round-2 PR: Expedition shipment value 1200 (D-246), Left Behind tier-3 cap
+until 3600 (D-247), AI late all-in from tick 16000 (D-248), AI random seeds mixed per slot (D-249: fixes the mirror "slot bias"; every AI game
+reshuffled), Authority refinery 1700 (D-250), sound picks + pick-time trim (D-251), laptop summary adjudication columns (M13-30).
+Numbers: docs/balance/s25_balance.md (cloud, 16-32 seeds). Decisions up to D-251. Open questions: Q-73 (deferred until the owner plays the campaign).
 
 ## Start here (shown to the user as the plan; nothing starts until they say go)
-1. Check PR #82 and the handoff PR: CI green? merged? (the owner allowed the lead to merge when green; add_repo with push access first).
-2. Read `balance_runs\s24after\s24after_summary.md` against s23d (docs/balance/s23d_read.md): Grapeshot at 11 (Expedition v Left Behind 91 % /
-   Left Behind v Expedition 35 % in s23d), draws (D-242 adjudication columns now in the table), start share, the Left Behind mirror slot bias (M13-27).
-   Target 45-55 %. Then the next balance round; Left Behind v Authority (72 % Authority) is M13-28 (owner: after the Grapeshot fix).
-3. Read the SFX catch-up (`tools\audio\sfx\run_s24_sfx.ps1`; out\make_sfx.log): rerun the screen (spectrogram sheet + flags, method in
-   tools\audio\sfx\out\review_s24.md, laptop only and git-ignored; the scripts were ad hoc in the bridge $HOME — rewrite as tools/audio/sfx/review_sfx.py), compare takes 4-6
-   with 1-3 for the 15 drone sounds and the full-window take 7 of wpn_sam / die_veh_auth, then the owner picks (make_sfx.ps1 -Audition / -Pick).
-4. Install the approved art on the laptop (D-245) and commit it from the owner's machine (LFS cannot be pushed from the cloud):
-   `tools\art\render_s24_skin.ps1 -Install`; portraits and deaths `tools\art\render_s24_portraits.ps1 -All` then `-Install`; building depth needs a
-   full-sheet `--depth` script for every building (write `tools\art\render_s24_depth_all.ps1`, several hours on the laptop). Review contact sheets first.
-5. UI skins for Directorate, Left Behind, Expedition with the tools/art/ui/auth_skin.py kit (pilot each); a settings-menu line for `ui_skin` (Faction / Classic).
-6. M5-13: measure the commander (32-game swap test vs `--random-directives`). M12-13b: lobby/skirmish switch for generator stamps. M12-14 maps from stamps.
+1. Check the round-2 PR (CI green? merged?) and the owner's laptop: depth pass done (`scratch\art_s25\run_s25_laptop.log` says ALL DONE and art/s25
+   pushed)? Open a PR for the new art/s25 commits (PR #85 is already merged) and merge when green. Review scratch\art_s25\depth_compare.png.
+2. Laptop runs on main (owner): `tools\measure\run_s21_campaign_sweep.ps1` (the AI seed change and refinery cost move campaign bots), then
+   `tools\measure\run_s19_after.ps1 -OutName s25after`. Read both: target 45-55 % per row; campaign tiers on Q-75 targets.
+   Edge rows from the cloud: Authority v Directorate rust 40 %, Authority v Expedition rust 45 %, Expedition v Left Behind glass 64 %, LB mirror draws.
+3. SFX: owner reruns `tools\audio\sfx\run_s24_sfx.ps1 -From 2` (takes 4-6 for 9 drone sounds, full-window test, ambience). Then screen, pick
+   (die_ship again, now trimmed; gui_deny, wpn_flame and the 8 drone sounds), commit from the laptop.
+4. UI skins for Directorate, Left Behind, Expedition (pilot each with tools/art/ui/auth_skin.py kit) and a settings line for `ui_skin`.
+5. M5-13 commander measurement; M12-13b lobby switch for generator stamps; M12-14 maps from stamps.
 
 ## Half-finished work
-- Approved art not yet in data/: Authority skin, 4 portraits + auth_rifleman death frames (scratch\art_s24 on the laptop), depth pass (pilots only).
-- SFX: 62/80 sounds have takes 1-3; the catch-up run (13 missing short sounds, takes 4-6 for 15 drone sounds, full-window test, 5 ambience loops) runs
-  on the laptop. Nothing picked yet. tools/audio/sfx/out/picks_suggested.toml (laptop only, git-ignored) holds the s24 screen's suggestions (drone sounds marked ?).
-- Editor props and decals draw as colour tints in the editor view (no sprites). Player-visible editor labels and the adjudication note are helper drafts.
-- Grapeshot AI trigger (40 % infantry, 2-3 skiffs) still "(tune)". Tutorial instructor voice audition and the two-PC LAN test are still waiting on the owner.
-- The ExpandTo save/load test passes even with the restore stubbed (the scripted game never re-expands); the fix is correct by construction.
+- Building depth pass rendering overnight on the laptop (resumable; installs and pushes at the end). 5 rotating-head defences keep their sheets.
+- SFX: 65 of 80 picked; die_ship removed (8 s, over the cap) until re-picked; 9 drone sounds, gui_deny and 5 ambience loops not picked.
+- Balance changes are cloud-measured only (16-32 seeds); the laptop series is the confirmation.
+- Editor props and decals draw as tints (no sprites); Grapeshot AI trigger "(tune)"; two-PC LAN test waits on the owner.
 
 ## Waiting on the user
-- Laptop (running now): `run_s19_after.ps1 -OutName s24after`, then `tools\audio\sfx\run_s24_sfx.ps1`. Say "s24after done" / "sfx done".
-- Install and commit the approved art (step 4). Instructor audition. Two-PC LAN test (M9-15). Branch clean-up on GitHub (owner deletes):
-  integ-s24, land/s24-r1, land/s24-r2, land/s24-r3 after merge, and the older list in session 24's chat if not done.
+- Let the depth render finish; then the campaign sweep and the s25after series (step 2), then the SFX catch-up.
+- Two-PC LAN test (M9-15). Branch clean-up on GitHub: integ-s24, land/s24-r1..r3, land/s25-laptop, land/s25-r1, land/s25-r2 after merge, integ-s25.
 
 ## How to run this session
+- Session 25 lessons:
+  - A balance claim from 16 seeds can flip when the AI seeds change: the Left Behind cap 4500 gave 47 % LB on the old seeds and 33 % on new ones.
+    Use 32 seeds (64 games) for any row you keep a change on, and let the laptop series confirm.
+  - Data files are copied into src/Tools/bin at build time: rebuild Tools after every data edit or the run measures the old data.
+  - The building depth pass takes 10-35 min per building on the laptop (~20 h for 69), not minutes: plan it as an overnight run.
+  - SoundBankTests caps one-shots at 270 000 bytes (about 6 s at 22 kHz mono); make_sfx.py --pick now trims, but check new long sounds.
+  - Git in the device bridge is slow on this repo (git diff over the mount timed out at 120 s): use `git diff --cached --name-only` with a timeout.
+  - The owner's laptop can push LFS; the cloud cannot. If the owner's commit fails, read `git diff --cached --name-only` and hand him the two lines.
 - Session 24 lessons:
   - Laptop art renders read the scripts from the working tree for 20-60 min: tell the owner not to switch branches until a render finishes (a
     `git checkout main` mid-run swapped build_structure.py and the run failed halfway).
