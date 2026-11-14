@@ -67,7 +67,7 @@ def main(argv):
     pad, gap = 4, 3
     ix, iw = x0 + pad, SB - 2 * pad
     y = pad
-    canvas.alpha_composite(piece("panel", (iw, 24)), (ix, y))
+    # credits text sits directly on the stencil plate baked into sidebar_back
     d.text((ix + 8, y + 7), "CREDITS  12500", fill=tc, font=font)
     y += 24 + gap
     # sell / repair buttons: normal, hover, pressed, disabled shown across the row for judging
