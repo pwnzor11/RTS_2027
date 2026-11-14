@@ -325,6 +325,7 @@ public sealed class RecruitAi : IAiPlayer, IAiSnapshotable, IHookableAi
         IReadOnlyList<CommanderOrder> orders = view.CommanderOrders;   // S24 (M5-12): standing orders; all empty = nothing below changes
         if (MilitaryManager.HoldCellOf(orders) is CellCoord holdCell && _hookDefend is null) bias = bias with { RallyCell = holdCell };   // HoldCell: the army rallies there
         _military.Orders = orders;
+        EconomyOrders.Apply(orders, _planner!, _build!, _production!);   // S24 (s24-dai2): ExpandTo / TechTo / Reserve
         _military.HookAttack = _hookAttack;
         _military.HookHold = _hookDefend is not null && _hookAttack is null;   // Defend holds waves; an Attack hook (also set) wins
         _military.Bias = bias; _production!.Bias = bias; _planner!.Bias = bias; _upgrades.Bias = bias; _garrison.Bias = bias;
