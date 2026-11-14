@@ -188,6 +188,16 @@ def finished(S, i, dmg, mode):
     # ------------------------------------------------------------------ shaft collar + winding tower (the centrepiece)
     collar(S, i, dmg, mode)
     headframe(S, i, dmg)
+    if S.depth and not dmg:       # --depth only (D-243): a stepped rim around the collar and gantry catwalk with rails
+        x0, x1, y0, y1 = COL
+        S.bb("drim", x0 - 0.3, x1 + 0.3, y0 - 0.3, y1 + 0.3, 0.14, 0.3, "concrete2", 0.03)
+        for k, (px, py) in enumerate(((x0 - 0.25, y0 - 0.25), (x1 + 0.25, y0 - 0.25), (x0 - 0.25, y1 + 0.25), (x1 + 0.25, y1 + 0.25))):
+            S.bb(f"dbol{k}", px - 0.1, px + 0.1, py - 0.1, py + 0.1, 0.3, 0.55, "steel", 0.0)
+        z = LEVELS[2]
+        xa, ya = leg_pt(0, z)
+        xb, yb = leg_pt(1, z)
+        S.bb("dwalk", xa - 0.2, xb + 0.2, ya - 0.45, ya, z - 0.05, z + 0.07, "steel", 0.0)
+        L.beam(S, "drail", (leg_pt(0, z + 0.45)[0], leg_pt(0, z + 0.45)[1] - 0.12, z + 0.45), (leg_pt(1, z + 0.45)[0], leg_pt(1, z + 0.45)[1] - 0.12, z + 0.45), 0.05, "steel", nocast=True)
     # ------------------------------------------------------------------ small winding house (north) and ash stack (east)
     x0, x1, y0, y1 = WIND
     S.bb("wind", x0, x1, y0, y1, 0.14, WIND_H, "concrete2", 0.04)
