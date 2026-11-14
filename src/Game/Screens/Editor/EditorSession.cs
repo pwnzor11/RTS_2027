@@ -56,6 +56,17 @@ public sealed class EditorSession
     public int ResourceDensity { get => _density; set => _density = Math.Clamp(value, 1, 12); }
     private int _density = 8;
 
+    /// <summary>Blocking prop the Props tool paints (Tree, Wreck, Block, Pylon or Snag).</summary>
+    public OverlayKind Prop { get => _prop; set { if (OverlayKinds.IsProp(value)) _prop = value; } }
+    private OverlayKind _prop = OverlayKind.Tree;
+
+    /// <summary>Sprite variant 0..2 of the prop (stored in the density byte).</summary>
+    public int PropVariant { get => _propVariant; set => _propVariant = Math.Clamp(value, 0, 2); }
+    private int _propVariant;
+
+    /// <summary>Decal kind the Decal tool paints: 0 erases, otherwise a 1-based index into the theater's decal rules.</summary>
+    public byte DecalKind { get; set; } = 1;
+
     /// <summary>Feature the Feature tool places.</summary>
     public FeatureType Feature { get; set; }
 
@@ -107,7 +118,7 @@ public sealed class EditorSession
         _strokeLabel = Tool switch
         {
             EditorTool.Land => "Paint land", EditorTool.Height => "Paint height", EditorTool.Resource => "Paint resource",
-            EditorTool.Feature => "Place feature", EditorTool.Start => "Place start", EditorTool.Eraser => "Erase", _ => "Fill",
+            EditorTool.Feature => "Place feature", EditorTool.Start => "Place start", EditorTool.Eraser => "Erase", EditorTool.Props => "Paint prop", EditorTool.Decal => "Paint decal", _ => "Fill",
         };
     }
 
@@ -117,7 +128,7 @@ public sealed class EditorSession
     {
         if (!Document.Contains(x, y)) return;
         if (!_inStroke) BeginStroke();
-        bool drag = Tool is EditorTool.Land or EditorTool.Height or EditorTool.Resource or EditorTool.Eraser;
+        bool drag = Tool is EditorTool.Land or EditorTool.Height or EditorTool.Resource or EditorTool.Eraser or EditorTool.Props or EditorTool.Decal;
         if (drag && _lastCell is { } last && (last.X != x || last.Y != y))
         {
             foreach (var (lx, ly) in BrushShape.Line(last.X, last.Y, x, y).Skip(1)) ApplyOne(lx, ly);
@@ -190,6 +201,7 @@ public sealed class EditorSession
         Document.HeightLevel[e.Index] = undo ? e.OldHeight : e.NewHeight;
         Document.Overlay[e.Index] = undo ? e.OldOverlay : e.NewOverlay;
         Document.Density[e.Index] = undo ? e.OldDensity : e.NewDensity;
+        Document.Decor[e.Index] = undo ? e.OldDecor : e.NewDecor;
     }
 
     // ---- tools -------------------------------------------------------------------------------------------------
@@ -201,6 +213,8 @@ public sealed class EditorSession
             case EditorTool.Land:
             case EditorTool.Height:
             case EditorTool.Resource:
+            case EditorTool.Props:
+            case EditorTool.Decal:
                 foreach (var (cx, cy) in BrushShape.Stroke(Document.Symmetry, Document.Width, Document.Height, x, y, BrushSize)) PaintCell(cx, cy);
                 break;
             case EditorTool.Eraser:
@@ -221,23 +235,41 @@ public sealed class EditorSession
     /// <summary>True when resources cannot lie on this land type.</summary>
     public static bool BlocksResources(LandType land) => land is LandType.Water or LandType.Rock or LandType.Cliff;
 
-    private void Edit(int x, int y, LandType? land = null, byte? height = null, OverlayKind? overlay = null, byte? density = null)
+    /// <summary>True when blocking props cannot lie on this land type.</summary>
+    public static bool BlocksProps(LandType land) => land is LandType.Water or LandType.Cliff;
+
+    /// <summary>Why a prop cannot go on this cell, or null when it can: water or cliff, inside a start's 5x5 square, or on / beside a resource cell
+    /// (the same rules the validator enforces as prop_in_start_square and prop_on_resource).</summary>
+    public string? PropRefusal(int x, int y)
+    {
+        if (BlocksProps(Document.Land[Document.IndexOf(x, y)])) return "Props cannot go on water or cliffs";
+        foreach (CellCoord s in Document.Starts)
+            if (Math.Abs(s.X - x) <= 2 && Math.Abs(s.Y - y) <= 2) return "Props cannot go inside a start square";
+        for (int dy = -1; dy <= 1; dy++)
+            for (int dx = -1; dx <= 1; dx++)
+                if (Document.Contains(x + dx, y + dy) && OverlayKinds.IsResource(Document.Overlay[Document.IndexOf(x + dx, y + dy)]))
+                    return "Props cannot go on or beside resources";
+        return null;
+    }
+
+    private void Edit(int x, int y, LandType? land = null, byte? height = null, OverlayKind? overlay = null, byte? density = null, byte? decor = null)
     {
         int i = Document.IndexOf(x, y);
-        LandType oldLand = Document.Land[i]; byte oldH = Document.HeightLevel[i]; OverlayKind oldO = Document.Overlay[i]; byte oldD = Document.Density[i];
-        LandType newLand = land ?? oldLand; byte newH = height ?? oldH; OverlayKind newO = overlay ?? oldO; byte newD = density ?? oldD;
+        LandType oldLand = Document.Land[i]; byte oldH = Document.HeightLevel[i]; OverlayKind oldO = Document.Overlay[i]; byte oldD = Document.Density[i]; byte oldDec = Document.Decor[i];
+        LandType newLand = land ?? oldLand; byte newH = height ?? oldH; OverlayKind newO = overlay ?? oldO; byte newD = density ?? oldD; byte newDec = decor ?? oldDec;
         if (BlocksResources(newLand) && newO is OverlayKind.Ashfall or OverlayKind.Pitchblende) { newO = OverlayKind.None; newD = 0; }
-        if (newLand == oldLand && newH == oldH && newO == oldO && newD == oldD) return;
-        Document.Land[i] = newLand; Document.HeightLevel[i] = newH; Document.Overlay[i] = newO; Document.Density[i] = newD;
+        if (BlocksProps(newLand) && OverlayKinds.IsProp(newO)) { newO = OverlayKind.None; newD = 0; }
+        if (newLand == oldLand && newH == oldH && newO == oldO && newD == oldD && newDec == oldDec) return;
+        Document.Land[i] = newLand; Document.HeightLevel[i] = newH; Document.Overlay[i] = newO; Document.Density[i] = newD; Document.Decor[i] = newDec;
         if (_strokeIndex.TryGetValue(i, out int at))
         {
             CellEdit first = _strokeCells[at];
-            _strokeCells[at] = first with { NewLand = newLand, NewHeight = newH, NewOverlay = newO, NewDensity = newD };
+            _strokeCells[at] = first with { NewLand = newLand, NewHeight = newH, NewOverlay = newO, NewDensity = newD, NewDecor = newDec };
         }
         else
         {
             _strokeIndex[i] = _strokeCells.Count;
-            _strokeCells.Add(new CellEdit(i, oldLand, newLand, oldH, newH, oldO, newO, oldD, newD));
+            _strokeCells.Add(new CellEdit(i, oldLand, newLand, oldH, newH, oldO, newO, oldD, newD, oldDec, newDec));
         }
     }
 
@@ -247,6 +279,11 @@ public sealed class EditorSession
         {
             case EditorTool.Land: Edit(x, y, land: Land); break;
             case EditorTool.Height: Edit(x, y, height: (byte)HeightLevel); break;
+            case EditorTool.Props:
+                if (PropRefusal(x, y) is { } why) { Status = why; break; }
+                Edit(x, y, overlay: Prop, density: (byte)PropVariant);
+                break;
+            case EditorTool.Decal: Edit(x, y, decor: DecalKind); break;
             case EditorTool.Resource:
                 if (BlocksResources(Document.Land[Document.IndexOf(x, y)])) { Status = "Resources cannot go on water, rock or cliffs"; break; }
                 Edit(x, y, overlay: Resource, density: (byte)ResourceDensity);
@@ -260,7 +297,8 @@ public sealed class EditorSession
         foreach (var (cx, cy) in BrushShape.Stroke(Document.Symmetry, Document.Width, Document.Height, x, y, BrushSize))
         {
             int i = Document.IndexOf(cx, cy);
-            if (Document.Overlay[i] is OverlayKind.Ashfall or OverlayKind.Pitchblende) Edit(cx, cy, overlay: OverlayKind.None, density: 0);
+            if (Document.Overlay[i] is OverlayKind.Ashfall or OverlayKind.Pitchblende || OverlayKinds.IsProp(Document.Overlay[i])) Edit(cx, cy, overlay: OverlayKind.None, density: 0);
+            if (Document.Decor[i] != 0) Edit(cx, cy, decor: 0);
             Document.Starts.RemoveAll(s => s.X == cx && s.Y == cy);
             Document.Features.RemoveAll(f => Covers(f, cx, cy));
         }
