@@ -158,15 +158,22 @@ public sealed class SoundKeyTests
     }
 
     [Fact]
-    public void TheShippedSoundsTomlResolvesEveryOriginalEventExactlyAsBefore()
+    public void TheShippedSoundsTomlResolvesEveryOriginalEventToItsStandInOrItsGeneratedSound()
     {
-        // with only today's files the new keys all fall back: a death is explosion_small, a destroyed building explosion_large, and so on
+        // s25: generated sounds (make_sfx.py --pick) now ship for some keys. Each event resolves either to today's stand-in (no generated file)
+        // or to its own qualified event (generated file present); never to anything else, and never to silence.
         SoundBank bank = AudioRulesFixture.Bank;
-        Assert.Equal(AudioEventNames.Of(AudioEventKind.ExplosionSmall), bank.Resolve(new AudioEvent(AudioEventKind.UnitDied, null, "infantry", "directorate"))!.Name);
-        Assert.Equal(AudioEventNames.Of(AudioEventKind.ExplosionLarge), bank.Resolve(new AudioEvent(AudioEventKind.BuildingDestroyed, null, null, "expedition"))!.Name);
-        Assert.Equal(AudioEventNames.Of(AudioEventKind.UnitReady), bank.Resolve(new AudioEvent(AudioEventKind.ShipHorn, null, "ship", "expedition"))!.Name);
-        Assert.Equal(AudioEventNames.Of(AudioEventKind.FireShell), bank.Resolve(new AudioEvent(AudioEventKind.FireShell, null, "cannon", "authority"))!.Name);
-        Assert.Equal(AudioEventNames.Of(AudioEventKind.BuildingPlaced), bank.Resolve(new AudioEvent(AudioEventKind.BuildingPlaced, null, null, "left_behind"))!.Name);
+        void Check(AudioEvent e, AudioEventKind standIn, string qualifiedPrefix)
+        {
+            string? name = bank.Resolve(e)?.Name;
+            Assert.NotNull(name);
+            Assert.True(name == AudioEventNames.Of(standIn) || name!.StartsWith(qualifiedPrefix, StringComparison.Ordinal), $"{e.Kind}: {name}");
+        }
+        Check(new AudioEvent(AudioEventKind.UnitDied, null, "infantry", "directorate"), AudioEventKind.ExplosionSmall, "unit_died");
+        Check(new AudioEvent(AudioEventKind.BuildingDestroyed, null, null, "expedition"), AudioEventKind.ExplosionLarge, "building_destroyed");
+        Check(new AudioEvent(AudioEventKind.ShipHorn, null, "ship", "expedition"), AudioEventKind.UnitReady, "ship_horn");
+        Check(new AudioEvent(AudioEventKind.FireShell, null, "cannon", "authority"), AudioEventKind.FireShell, "fire_shell");
+        Check(new AudioEvent(AudioEventKind.BuildingPlaced, null, null, "left_behind"), AudioEventKind.BuildingPlaced, "building_placed");
     }
 
     [Fact]

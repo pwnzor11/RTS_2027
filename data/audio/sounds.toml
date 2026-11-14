@@ -589,11 +589,6 @@ file = "sfx/die_veh_lb.wav"
 volume = 1
 max_voices = 2
 
-[sound.die_ship]
-file = "sfx/die_ship.wav"
-volume = 1
-max_voices = 2
-
 [sound.prod_ready_auth]
 file = "sfx/prod_ready_auth.wav"
 volume = 1
@@ -989,12 +984,6 @@ cooldown_ms = 60
 
 [event.unit_died.infantry.expedition]
 sounds = ["die_inf_exp"]
-volume = 0.9
-positional = true
-cooldown_ms = 60
-
-[event.unit_died.ship]
-sounds = ["die_ship"]
 volume = 0.9
 positional = true
 cooldown_ms = 60
