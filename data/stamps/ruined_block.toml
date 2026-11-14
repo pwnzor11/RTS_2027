@@ -1,0 +1,22 @@
+# A collapsed city block: broken walls of concrete blocks around a yard with a wreck, rubble on the approach.
+id = "ruined_block"
+name = "Ruined block"
+width = 10
+height = 8
+biomes = []
+rows = [
+  "..........",
+  ".BBB.BbBB.",
+  ".B..r...B.",
+  ".b..W...B.",
+  ".B......b.",
+  ".BB.BBB.B.",
+  "..rr..rr..",
+  "..........",
+]
+
+[legend]
+B = { overlay = "Block", density = 0 }
+b = { overlay = "Block", density = 1 }
+W = { overlay = "Wreck", density = 0 }
+r = { land = "Rough", overlay = "None" }

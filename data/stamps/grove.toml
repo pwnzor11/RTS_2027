@@ -1,0 +1,19 @@
+# A stand of dead trees on ash and rough ground, loose enough to path through.
+id = "grove"
+name = "Grove"
+width = 7
+height = 7
+biomes = ["rust_belt", "ash_plains", "mountains"]
+rows = [
+  ".a.a.a.",
+  "aaTaaTa",
+  ".aT.aaa",
+  "aaaTaT.",
+  ".aTaaaa",
+  "aaaaTa.",
+  ".a.a.a.",
+]
+
+[legend]
+a = { land = "Ash", overlay = "None" }
+T = { land = "Ash", overlay = "Tree", density = 1 }
