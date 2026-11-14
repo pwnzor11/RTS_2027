@@ -50,4 +50,33 @@ public class FxEventTests
     }
 
     private static int Count(Simulation sim, FxKind k) => sim.FxEvents.Count(e => e.Kind == k);
+
+    /// <summary>M10-14b: the death event names the warhead of the lethal hit; a death with no hit (health zeroed) names none.</summary>
+    [Fact]
+    public void UnitDestroyed_CarriesTheLethalWarheadIndex()
+    {
+        var sim = NewSim();
+        var tank = sim.SpawnVehicle(0, Veh("test_tank"), new CellCoord(10, 10));
+        var victim = sim.SpawnInfantry(1, Inf("test_rifleman"), new CellCoord(10, 6), 1);
+        sim.Infantry.Health[victim.Index] = 1;
+        sim.Step(new[] { Attack(sim, 0, ActorKind.Vehicle, tank, ActorKind.Infantry, victim) });
+        FxEvent? death = null;
+        for (int t = 0; t < 200 && death is null; t++)
+        {
+            sim.Step(None);
+            foreach (FxEvent e in sim.FxEvents) if (e.Kind == FxKind.UnitDestroyed) death = e;
+        }
+        Assert.NotNull(death);
+        Assert.InRange(death!.Value.Warhead, 0, Loaded.Sim.Warheads.Count - 1);
+    }
+
+    [Fact]
+    public void UnitDestroyed_WithoutAHit_HasNoWarhead()
+    {
+        var sim = NewSim();
+        var inf = sim.SpawnInfantry(1, Inf("test_rifleman"), new CellCoord(5, 5), 1);
+        sim.Infantry.Health[inf.Index] = 0;
+        sim.Step(None);
+        Assert.Equal(FxEvent.NoWarhead, Assert.Single(sim.FxEvents, e => e.Kind == FxKind.UnitDestroyed).Warhead);
+    }
 }
