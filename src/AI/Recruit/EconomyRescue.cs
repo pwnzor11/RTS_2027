@@ -97,6 +97,9 @@ internal sealed class EconomyRescue
             }
         // a refinery brings a free harvester; with one standing a harvester is bought at the factory
         int need = unpaid >= 0 ? unpaid : k.BuildingCount[_refinery] > 0 ? rules.Vehicles[_harv].Cost : rules.Buildings[_refinery].Cost;
+        // s24 D-242: nothing to save for when the thing cannot be bought at all (the factory that builds the harvester is gone: s23 draw mirror s6g2,
+        // 1345 credits unspent to the end because Saving held every lane)
+        if (!CanBuy(k, _harv, _refinery, k.BuildingCount[_refinery] > 0)) { Saving = false; return; }
         Saving = true;
         if (funds >= need) return;
         // money already sunk into a structure or unit in production comes back when it is cancelled (front items only)
@@ -115,6 +118,10 @@ internal sealed class EconomyRescue
 
         if (!SellOne(k, sink, faction, keepProduction: false)) Saving = false;   // nothing left to sell: spend what there is (Recruit rule)
     }
+
+    /// <summary>s24 D-242: true when the harvester (refinery standing) or the refinery (none standing) can be bought now: its producer exists and its tech is met.</summary>
+    internal static bool CanBuy(RecruitKnowledge k, int harvester, int refinery, bool haveRefinery) =>
+        haveRefinery ? k.Buildable(ProductionCategory.Vehicle, harvester) : k.Buildable(ProductionCategory.Structure, refinery);
 
     /// <summary>s23 D-235 (B3): true while an own unit is on the EnterTunnel mission (walking to a hatch or tunnel entrance).</summary>
     internal static bool AnyEnteringTunnel(RecruitKnowledge k)
