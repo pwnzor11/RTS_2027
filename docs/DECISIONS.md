@@ -1801,3 +1801,10 @@ for the owner's approval of each pilot. **Why:** owner, session 24. **Status:** 
 (docs/balance/s23d_read.md) shows Grapeshot overshot: Expedition v Left Behind 50-5 on Glass Coast (was 35-13) and Left Behind v Expedition
 21-39 on Rust Belt (was 40-18); Expedition v Authority on Glass Coast 43-20 (was 34-27). **Alternatives:** probe three variants first (cost 850,
 damage 11, AI cap of 2 skiffs); cost 850; buff Left Behind. **Status:** owner decision (session 24); confirm with the next laptop series.
+
+### D-245 · 2026-11-14 · Session 24 art pilots approved
+**Decision:** the owner approved the second laptop renders: the building depth pass (pilot v2 on auth_conyard and dir_shaft; next a full
+re-render of every building with `--depth`), the Authority UI skin pilot v2 (install with render_s24_skin.ps1 -Install; the other three
+factions follow the same kit), the four portraits and the die_blast / die_burn / die_rad death frames (fan-out with
+render_s24_portraits.ps1 -All). New art is committed from the owner's machine (LFS). **Why:** owner, session 24 ("love it all").
+**Status:** owner decision (session 24).
