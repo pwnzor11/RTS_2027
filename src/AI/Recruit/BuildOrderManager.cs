@@ -64,8 +64,11 @@ internal sealed class BuildOrderManager
     /// <summary>S24: <see cref="ExpandCell"/>'s order tick (-1 = none).</summary>
     public int ExpandOrderTick { get; set; } = -1;
 
-    /// <summary>S24: the issue tick of the last expand order carried out (a refinery placed for it); only later orders count. Not saved: a restored AI may repeat one order once.</summary>
+    /// <summary>S24: the issue tick of the last expand order carried out (a refinery placed for it); only later orders count. Saved with the order block of the AI state, only once set.</summary>
     public int ExpandDoneTick { get; private set; } = -1;
+
+    /// <summary>S24: puts back the saved <see cref="ExpandDoneTick"/>.</summary>
+    internal void RestoreExpand(int tick) => ExpandDoneTick = tick;
 
     /// <summary>M4-12: when true (tier 2+), <see cref="PendingCost"/> also counts what the structures in production still have to be paid,
     /// so units do not starve a 2500-credit tier gate that is already under way (it stalled for whole games).</summary>

@@ -102,4 +102,37 @@ public sealed class EconomyOrdersTests(ITestOutputHelper log)
         Assert.True(best <= plainBest, $"nearest refinery to the order cell: {best} vs plain {plainBest}");
         Assert.True(ordered.Refineries >= plain.Refineries);
     }
+
+    [Theory]
+    [InlineData(300)]
+    [InlineData(3500)]
+    public void SaveAndLoadWithAnExpandOrderGivesTheSameGame(int runBeforeSave)
+    {
+        OrderRig Start()
+        {
+            var r = new OrderRig();
+            CellCoord cell = r.NearYard(5);
+            r.Sim.Players.Cash[0] = 6000;
+            r.Run(40);
+            r.Order(0, CommanderOrderKind.ExpandTo, cell);
+            r.Run(runBeforeSave);
+            return r;
+        }
+        OrderRig straight = Start();
+        OrderRig resumed = Start();
+        resumed.ResumeWithBlob(resumed.CaptureAi()!);
+        straight.Run(3000);
+        resumed.Run(3000);
+        Assert.Equal(straight.Sim.ComputeStateHash(), resumed.Sim.ComputeStateHash());
+        log.WriteLine("refineries " + Refineries(straight.Sim) + " / " + Refineries(resumed.Sim));
+        Assert.True(Refineries(straight.Sim) >= 2, "the expansion refinery stands");
+    }
+
+    private static int Refineries(Simulation sim)
+    {
+        int refinery = SimRules.IndexOf(TestWorld.Rules.Sim.Buildings, "auth_refinery", b => b.Id), n = 0;
+        for (int i = 1; i < sim.Buildings.Capacity; i++)
+            if (sim.Buildings.Slots.IsIndexAlive(i) && sim.Buildings.Player[i] == 0 && sim.Buildings.TypeIndex[i] == refinery) n++;
+        return n;
+    }
 }

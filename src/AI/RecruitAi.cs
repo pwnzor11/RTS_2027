@@ -378,7 +378,7 @@ public sealed class RecruitAi : IAiPlayer, IAiSnapshotable, IHookableAi
     {
         bool thinking = _faction is not null && _build is not null && _production is not null && _planner is not null && _ctx is not null;
         bool hooked = thinking && (_servedWaveSeq != 0 || _military.HookDirty);
-        bool ordered = thinking && (_military.OrdersDirty || _raid.Dirty);
+        bool ordered = thinking && (_military.OrdersDirty || _raid.Dirty || _build!.ExpandDoneTick >= 0 || _planner!.ExpandStepFor >= 0);
         w.Write((hooked ? EndgameHookStateVersion : EndgameStateVersion) | (ordered ? OrderStateFlag : 0));
         w.Write(_id);
         w.Write(thinking);
@@ -405,7 +405,7 @@ public sealed class RecruitAi : IAiPlayer, IAiSnapshotable, IHookableAi
         if (_tactics is LeftBehindTactics lb) lb.Snapshot(w);   // M6-10: only a Left Behind side writes (older blobs are unchanged)
         if (_tactics is ExpeditionTactics ex) ex.Snapshot(w);   // M7-10: likewise only an Expedition side
         if (hooked) { w.Write(_servedWaveSeq); _military.SnapshotHooks(w); }   // M8-06
-        if (ordered) { _military.SnapshotOrders(w); _raid.Snapshot(w); }   // S24
+        if (ordered) { _military.SnapshotOrders(w); _raid.Snapshot(w); w.Write(_build!.ExpandDoneTick); w.Write(_planner!.ExpandStepFor); }   // S24 (s24-dai2: the expand order memory)
     }
 
     /// <inheritdoc />
@@ -439,6 +439,6 @@ public sealed class RecruitAi : IAiPlayer, IAiSnapshotable, IHookableAi
         if (_tactics is LeftBehindTactics lb) lb.Restore(r);
         if (_tactics is ExpeditionTactics ex) ex.Restore(r);
         if (version is HookStateVersion or CancelHookStateVersion or MopupHookStateVersion or EndgameHookStateVersion) { _servedWaveSeq = r.ReadInt32(); _military.RestoreHooks(r); }   // M8-06
-        if (ordered) { _military.RestoreOrders(r); _raid.Restore(r); }   // S24
+        if (ordered) { _military.RestoreOrders(r); _raid.Restore(r); _build.RestoreExpand(r.ReadInt32()); _planner.ExpandStepFor = r.ReadInt32(); }   // S24
     }
 }
