@@ -199,7 +199,8 @@ events = ["fire_shell", "fire_shell.cannon", "fire_shell.cannon.authority"]
 
 [job.wpn_cannon_dir]
 category = "weapons"
-prompt = "heavy energy cannon shot, deep thump with a rising electrical hum and a crackling discharge, industrial, short tail"
+negative_extra = "continuous drone, sustained hum, constant static, steady noise floor, endless loop"   # s24: earlier takes droned
+prompt = "heavy energy cannon shot, deep thump with a rising electrical hum and a crackling discharge, industrial, short tail, one single event with a sharp start that dies away quickly into silence"
 seconds = 3.0
 events = ["fire_shell.energy", "fire_shell.energy.directorate"]
 
@@ -223,7 +224,8 @@ events = ["fire_shell.naval_shell"]
 
 [job.wpn_naval_cruiser]
 category = "weapons"
-prompt = "very heavy naval gun firing, enormous low boom with a long rolling echo over open water, rumbling tail"
+negative_extra = "continuous drone, sustained hum, constant static, steady noise floor, endless loop"   # s24: earlier takes droned
+prompt = "very heavy naval gun firing, enormous low boom with a long rolling echo over open water, rumbling tail, one single event with a sharp start that dies away quickly into silence"
 seconds = 5.0
 events = ["fire_shell.naval_heavy"]
 
@@ -241,7 +243,8 @@ events = ["fire_missile.salvo.left_behind"]
 
 [job.wpn_rocket_auth]
 category = "weapons"
-prompt = "single rocket launch from a shoulder launcher, sharp ignition then a hissing whoosh fading away, outdoors"
+negative_extra = "continuous drone, sustained hum, constant static, steady noise floor, endless loop"   # s24: earlier takes droned
+prompt = "single rocket launch from a shoulder launcher, sharp ignition then a hissing whoosh fading away, outdoors, one single event with a sharp start that dies away quickly into silence"
 seconds = 2.5
 events = ["fire_missile", "fire_missile.rocket", "fire_missile.rocket.authority"]
 
@@ -253,13 +256,15 @@ events = ["fire_missile.salvo", "fire_missile.salvo.directorate"]
 
 [job.wpn_pod_exp]
 category = "weapons"
-prompt = "small missile pod launching two missiles, quick crisp hiss and pop, clean electronic tail"
+negative_extra = "continuous drone, sustained hum, constant static, steady noise floor, endless loop"   # s24: earlier takes droned
+prompt = "small missile pod launching two missiles, quick crisp hiss and pop, clean electronic tail, one single event with a sharp start that dies away quickly into silence"
 seconds = 2.0
 events = ["fire_missile.rocket.expedition"]
 
 [job.wpn_sam]
 category = "weapons"
-prompt = "surface-to-air missile launch, loud ignition roar rising and moving away, thin smoke hiss"
+negative_extra = "continuous drone, sustained hum, constant static, steady noise floor, endless loop"   # s24: earlier takes droned
+prompt = "surface-to-air missile launch, loud ignition roar rising and moving away, thin smoke hiss, one single event with a sharp start that dies away quickly into silence"
 seconds = 3.0
 events = ["fire_missile.sam"]
 
@@ -271,19 +276,22 @@ events = ["fire_missile.harpoon"]
 
 [job.wpn_flame]
 category = "weapons"
-prompt = "flamethrower burst, a roaring whoosh of burning gas with crackling fire, close microphone"
+negative_extra = "continuous drone, sustained hum, constant static, steady noise floor, endless loop"   # s24: earlier takes droned
+prompt = "flamethrower burst, a roaring whoosh of burning gas with crackling fire, close microphone, a short burst that stops cleanly, then silence"
 seconds = 3.0
 events = ["fire_bullet.flame"]
 
 [job.wpn_spray]
 category = "weapons"
-prompt = "pressurised chemical spray from a nozzle, a steady strong hiss with liquid spatter, short burst"
+negative_extra = "continuous drone, sustained hum, constant static, steady noise floor, endless loop"   # s24: earlier takes droned
+prompt = "pressurised chemical spray from a nozzle, a steady strong hiss with liquid spatter, short burst, a short burst that stops cleanly, then silence"
 seconds = 3.0
 events = ["fire_bullet.spray"]
 
 [job.wpn_depth_charge]
 category = "weapons"
-prompt = "depth charge launched from a ship, a dull launcher thump then a heavy plop into water and a bubbling fizz"
+negative_extra = "continuous drone, sustained hum, constant static, steady noise floor, endless loop"   # s24: earlier takes droned
+prompt = "depth charge launched from a ship, a dull launcher thump then a heavy plop into water and a bubbling fizz, one single event with a sharp start that dies away quickly into silence"
 seconds = 3.0
 events = ["fire_shell.depth_charge"]
 
@@ -318,13 +326,15 @@ events = ["explosion_large"]
 
 [job.exp_bomb_heavy]
 category = "explosions"
-prompt = "heavy aircraft bomb detonation, a violent thunderclap then a long deep rumbling shockwave"
+negative_extra = "continuous drone, sustained hum, constant static, steady noise floor, endless loop"   # s24: earlier takes droned
+prompt = "heavy aircraft bomb detonation, a violent thunderclap then a long deep rumbling shockwave, one single event with a sharp start that dies away quickly into silence"
 seconds = 6.0
 events = ["explosion_large.bomb"]
 
 [job.exp_rad_burst]
 category = "explosions"
-prompt = "radioactive burst, a low dull thump with a swelling electrical crackle and a sizzling rising hiss"
+negative_extra = "continuous drone, sustained hum, constant static, steady noise floor, endless loop"   # s24: earlier takes droned
+prompt = "radioactive burst, a low dull thump with a swelling electrical crackle and a sizzling rising hiss, one single event with a sharp start that dies away quickly into silence"
 seconds = 4.0
 planned = "not wired: no sim signal tells a radiation burst from another blast; plays nowhere yet (a future explosion_small.radiation)"
 
@@ -424,10 +434,10 @@ negative_extra = "scream, shout, words"
 
 [job.die_inf_lb]
 category = "deaths"
-prompt = "person collapsing in sand and gravel, loose scrap gear clattering, a dull thump, wind"
+prompt = "person collapsing in sand and gravel, loose scrap gear clattering, a dull thump, wind, one single event with a sharp start that dies away quickly into silence"
 seconds = 2.0
 events = ["unit_died.infantry.left_behind"]
-negative_extra = "scream, shout, words"
+negative_extra = "scream, shout, words, continuous drone, sustained hum, constant static, steady noise floor, endless loop"
 
 [job.die_inf_exp]
 category = "deaths"
@@ -438,13 +448,15 @@ negative_extra = "scream, shout, words"
 
 [job.die_veh_auth]
 category = "deaths"
-prompt = "armoured vehicle blowing up, sharp blast, ringing steel, a turret clanging down, crackling flames"
+negative_extra = "continuous drone, sustained hum, constant static, steady noise floor, endless loop"   # s24: earlier takes droned
+prompt = "armoured vehicle blowing up, sharp blast, ringing steel, a turret clanging down, crackling flames, one single event with a sharp start that dies away quickly into silence"
 seconds = 4.0
 events = ["unit_died.vehicle.authority"]
 
 [job.die_veh_dir]
 category = "deaths"
-prompt = "heavy industrial vehicle destroyed, a dull blast, groaning metal, a gush of steam and a fizzing electrical discharge"
+negative_extra = "continuous drone, sustained hum, constant static, steady noise floor, endless loop"   # s24: earlier takes droned
+prompt = "heavy industrial vehicle destroyed, a dull blast, groaning metal, a gush of steam and a fizzing electrical discharge, one single event with a sharp start that dies away quickly into silence"
 seconds = 4.0
 events = ["unit_died.vehicle.directorate"]
 
@@ -456,7 +468,8 @@ events = ["unit_died.vehicle.left_behind"]
 
 [job.die_veh_exp]
 category = "deaths"
-prompt = "hovercraft destroyed, a sharp electric pop, a rush of air venting, a hiss and metal debris splashing into water"
+negative_extra = "continuous drone, sustained hum, constant static, steady noise floor, endless loop"   # s24: earlier takes droned
+prompt = "hovercraft destroyed, a sharp electric pop, a rush of air venting, a hiss and metal debris splashing into water, one single event with a sharp start that dies away quickly into silence"
 seconds = 4.0
 events = ["unit_died.vehicle.expedition"]
 
@@ -468,7 +481,8 @@ events = ["unit_died.ship"]
 
 [job.die_air_crash]
 category = "deaths"
-prompt = "aircraft crashing, a falling engine whine then a heavy crunch and a rolling explosion, debris scattering"
+negative_extra = "continuous drone, sustained hum, constant static, steady noise floor, endless loop"   # s24: earlier takes droned
+prompt = "aircraft crashing, a falling engine whine then a heavy crunch and a rolling explosion, debris scattering, one single event with a sharp start that dies away quickly into silence"
 seconds = 5.0
 events = ["unit_died.air"]
 
