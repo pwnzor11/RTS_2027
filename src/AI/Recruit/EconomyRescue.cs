@@ -70,7 +70,7 @@ internal sealed class EconomyRescue
             Saving = false;
             if (tick - _last < GapTicks) return;
             foreach (ProductionCategory cat in BuildLanes)
-                if (k.Queue(cat).Items.Count > 0)
+                if (k.Queue(cat).Items.Count > 0 && !IsProducerStep(k, cat, faction))   // s24 D-242: a rebuilt barracks / factory is not cancelled again
                 {
                     _last = tick; Cancelled++;
                     sink.Issue(CommandKind.Cancel, EntityId.None, (ActorKind)(int)cat);
@@ -117,6 +117,13 @@ internal sealed class EconomyRescue
         }
 
         if (!SellOne(k, sink, faction, keepProduction: false)) Saving = false;   // nothing left to sell: spend what there is (Recruit rule)
+    }
+
+    private static bool IsProducerStep(RecruitKnowledge k, ProductionCategory cat, RecruitFaction faction)
+    {
+        if (cat != ProductionCategory.Structure) return false;
+        string id = k.Rules.Buildings[k.Queue(cat).Items[0].TypeIndex].Id;
+        return id == faction.BarracksId || id == faction.FactoryId;
     }
 
     /// <summary>s24 D-242: true when the harvester (refinery standing) or the refinery (none standing) can be bought now: its producer exists and its tech is met.</summary>
