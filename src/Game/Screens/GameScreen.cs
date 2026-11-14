@@ -350,6 +350,10 @@ public sealed class GameScreen : IScreen, IFocusPausable
         _card = new Rts.Game.Ui.Card.SelectionCard(_sim, _selection, _cameos, PlayerColours.Base(Me));
         _portraits = new Rts.Game.Ui.Card.PortraitProvider(_s.Graphics, Rts.Game.Ui.Card.PortraitFiles.RootFor(_s.RulesDir));   // M10-16
         _card.Portraits = _portraits;
+        var skins = new Rts.Game.Ui.Skin.UiSkinLoader(Path.Combine(Path.GetDirectoryName(Path.GetFullPath(_s.RulesDir)) ?? ".", "ui", "skins"), _s.Graphics);
+        var skinKit = new Rts.Game.Ui.Skin.SkinKit(skins, _sim.Sim.Setup.FactionOf(Me), _s.Settings.UseFactionSkin);   // S24
+        _sidebar.Skin = skinKit;
+        _card.Skin = skinKit;
         CentreCameraOnOwnBase();
         _archive = new ArchiveTracker(ArchiveProgress.Load());
     }
