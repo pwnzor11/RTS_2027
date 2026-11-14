@@ -87,6 +87,9 @@ public sealed class RecruitAi : IAiPlayer, IAiSnapshotable, IHookableAi
     /// <summary>S24: raid groups formed for a commander's Raid order.</summary>
     public int OrderRaidGroups => _raid.Groups;
 
+    /// <summary>S24: units in the commander-order raid group now.</summary>
+    public int OrderRaidSize => _raid.Size;
+
     /// <summary>S24: orders given by commander-order raid groups.</summary>
     public int OrderRaidStrikes => _raid.Strikes;
 
