@@ -74,13 +74,13 @@ def render(sid, mod, samples, only, preview, depth=False):
         if depth and not emit:      # D-243: contact shadow in creases and under overhangs (Cycles AO shader, multiplied into the base colour)
             nt = m.node_tree
             ao = nt.nodes.new("ShaderNodeAmbientOcclusion")
-            ao.inputs["Distance"].default_value = 0.55
-            ao.samples = 8
+            ao.inputs["Distance"].default_value = 0.9
+            ao.samples = 16
             ao.inputs["Color"].default_value = lin(hexc)
             mx = nt.nodes.new("ShaderNodeMix")
             mx.data_type = "RGBA"
             mx.blend_type = "MIX"
-            mx.inputs[0].default_value = 0.7
+            mx.inputs[0].default_value = 0.97
             mx.inputs[6].default_value = lin(hexc)
             nt.links.new(ao.outputs["Color"], mx.inputs[7])
             nt.links.new(mx.outputs[2], b.inputs["Base Color"])
@@ -164,7 +164,7 @@ def render(sid, mod, samples, only, preview, depth=False):
         o.rotation_euler = [math.radians(r) for r in rot]
         if bevel:
             bm = o.modifiers.new("bev", "BEVEL")
-            bm.width = bevel * 1.8 if depth else bevel      # depth: wider, two-segment bevel so edges catch the sun
+            bm.width = max(bevel * 3.0, 0.09) if depth else bevel      # depth: ~2 px bevel (1 px = 0.053 units) so every edge catches the sun
             bm.segments = 2 if depth else 1
         return finish(o, m, nocast, noclip, False)
 
@@ -297,10 +297,10 @@ def render(sid, mod, samples, only, preview, depth=False):
     w = bpy.data.worlds.new("w")
     w.use_nodes = True
     w.node_tree.nodes["Background"].inputs[0].default_value = (0.55, 0.6, 0.65, 1)
-    w.node_tree.nodes["Background"].inputs[1].default_value = 0.9
+    w.node_tree.nodes["Background"].inputs[1].default_value = 0.5 if depth else 0.9
     sc.world = w
     sun = bpy.data.lights.new("sun", "SUN")
-    sun.energy = 4.5
+    sun.energy = 5.2 if depth else 4.5      # depth: dimmer sky + brighter sun = a clear value step between roofs (sun) and walls (sky only); direction unchanged
     sun.angle = math.radians(4)
     so = bpy.data.objects.new("sun", sun)
     sc.collection.objects.link(so)
@@ -361,7 +361,7 @@ def render(sid, mod, samples, only, preview, depth=False):
             wbg.default_value = 0.0
             sc.cycles.samples = 1
             render_to(os.path.join(out, f"mask_{fi:02d}.png"))
-            wbg.default_value = 0.9
+            wbg.default_value = 0.5 if depth else 0.9
             ground.hide_render = False
             for o, m, _c in S.objs:
                 o.visible_camera = False

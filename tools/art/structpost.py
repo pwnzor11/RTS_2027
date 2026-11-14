@@ -103,25 +103,44 @@ def frame_b(wd, f, cal, w, h, pal=None, shadow=True, depth=None):
 
 
 def depth_pass(base, hidx, sh, solid, ground_y):
-    """D-243 depth pass (only with --depth).  All inside design 18 sec. 7: highlight on the upper-left edge, a darker band where the
-    body meets the ground, and a shadow one pixel longer toward the lower right (same sun, same direction, still 1-bit)."""
+    """D-243 depth pass (only with --depth), second pilot.  All inside design 18 sec. 7 (sun unchanged, hard alpha, 1 px outline, dithered shadow):
+    lit 1 px rim on the upper-left edge of every face, dark 1 px rim on the lower-right edge (silhouette or a step down to a darker face),
+    a darker band where the body meets the ground, a cast shadow up to 3 px longer toward the lower right, and a solid (undithered)
+    contact shadow row just under the south edge of the footprint."""
+    h, w = solid.shape
     lum = base.mean(axis=2)
-    up = np.zeros_like(solid)
-    up[1:, :] = solid[:-1, :]
-    left = np.zeros_like(solid)
-    left[:, 1:] = solid[:, :-1]
-    lup = np.zeros_like(lum)
-    lup[1:, :] = lum[:-1, :]
-    hl = solid & (~up | ~left | ((lum - lup) > 28))          # silhouette top/left edge, or a lit face meeting a darker one above
+
+
+    def nb(a, dy, dx, fill):
+        """out[y, x] = a[y + dy, x + dx] (neighbour down-right for dy=dx=1), outside = fill."""
+        o = np.full_like(a, fill)
+        ys0, ys1 = max(0, -dy), min(h, h - dy)
+        xs0, xs1 = max(0, -dx), min(w, w - dx)
+        o[ys0:ys1, xs0:xs1] = a[ys0 + dy:ys1 + dy, xs0 + dx:xs1 + dx]
+        return o
+
+    T = 22
+    up_s, lf_s = nb(solid, -1, 0, False), nb(solid, 0, -1, False)
+    dn_s, rt_s = nb(solid, 1, 0, False), nb(solid, 0, 1, False)
+    up_l, lf_l = nb(lum, -1, 0, 0.0), nb(lum, 0, -1, 0.0)
+    dn_l, rt_l = nb(lum, 1, 0, 255.0), nb(lum, 0, 1, 255.0)
+    lit = solid & (~up_s | ~lf_s | ((lum - up_l) > T) | ((lum - lf_l) > T))
+    dark = solid & (~dn_s | ~rt_s | ((lum - dn_l) > T) | ((lum - rt_l) > T)) & ~lit
     base = base.copy()
-    base[hl] = np.clip(base[hl] * 1.18 + 8, 0, 255)
-    hidx = np.where(hl, np.minimum(hidx + 1, 7), hidx)
-    rows = np.arange(base.shape[0])[:, None] * np.ones((1, base.shape[1]))
-    band = solid & (rows >= ground_y - 4) & (rows < ground_y + 3) & ~hl
-    base[band] = base[band] * 0.78
+    base[lit] = np.clip(base[lit] * 1.3 + 12, 0, 255)
+    base[dark] = base[dark] * 0.7
+    hidx = np.where(lit, np.minimum(hidx + 1, 7), hidx)
+    hidx = np.where(dark, np.maximum(hidx - 1, 0), hidx)
+    rows = np.arange(h)[:, None] * np.ones((1, w))
+    band = solid & (rows >= ground_y - 6) & (rows < ground_y + 3) & ~lit
+    base[band] = base[band] * 0.7
     hidx = np.where(band, np.maximum(hidx - 1, 0), hidx)
     sh2 = sh.copy()
-    sh2[1:, 1:] = np.maximum(sh[1:, 1:], sh[:-1, :-1])
+    for k in (1, 2, 3):          # longer cast shadow: same direction as the sun (right, slightly down), no new light
+        d, e = (k + 1) // 2, k
+        sh2[d:, e:] = np.maximum(sh2[d:, e:], sh[:h - d, :w - e])
+    contact = (~solid) & nb(solid, -2, 0, False) & (rows >= ground_y - 3) & (rows < ground_y + 6)
+    sh2[contact] = 1.0
     return base, hidx, sh2
 
 
