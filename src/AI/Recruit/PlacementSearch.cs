@@ -33,7 +33,12 @@ internal sealed class PlacementSearch
     private readonly List<(long Score, long Centre, int X, int Y)> _cands = new();
 
     /// <summary>Finds a legal top-left for <paramref name="type"/> near the yard, or false if none exists.</summary>
-    public bool Find(RecruitKnowledge k, int type, bool towardCentre, out CellCoord cell)
+    public bool Find(RecruitKnowledge k, int type, bool towardCentre, out CellCoord cell) => Find(k, type, towardCentre, null, out cell);
+
+    /// <summary>s24 (D-241 ExpandTo): the legal site nearest <paramref name="target"/> within the wide window around the yard (the sim's build radius still decides what is legal).</summary>
+    public bool FindNear(RecruitKnowledge k, int type, CellCoord target, out CellCoord cell) => Find(k, type, false, target, out cell);
+
+    private bool Find(RecruitKnowledge k, int type, bool towardCentre, CellCoord? target, out CellCoord cell)
     {
         SimRules rules = k.Rules;
         BuildingType bt = rules.Buildings[type];
@@ -48,15 +53,17 @@ internal sealed class PlacementSearch
         }
 
         // M13-10: a base that has filled the window around the yard (a corner base, 30 supply structures) searches a wider window before giving up
+        if (target is CellCoord to) return Search(k, type, bt, false, WideSearchRadius, out cell, to);
         return Search(k, type, bt, towardCentre, SearchRadius, out cell) || Search(k, type, bt, towardCentre, WideSearchRadius, out cell);
     }
 
-    private bool Search(RecruitKnowledge k, int type, BuildingType bt, bool towardCentre, int radius, out CellCoord cell)
+    private bool Search(RecruitKnowledge k, int type, BuildingType bt, bool towardCentre, int radius, out CellCoord cell, CellCoord? target = null)
     {
         PlayerView view = k.View;
         int w = bt.FootprintW, h = bt.FootprintH;
         long cx2 = k.Yard.X * 2L + 3, cy2 = k.Yard.Y * 2L + 3;   // yard centre in half cells (3x3 yard)
         if (towardCentre) { cx2 = view.MapWidth; cy2 = view.MapHeight; }
+        if (target is CellCoord aim) { cx2 = aim.X * 2L + 1; cy2 = aim.Y * 2L + 1; }
         // M13-10 / AI-08: ties are broken toward the map centre, then in an order that is flipped for a yard on the far side of the
         // centre (x when east of it, y when south of it), so under a mirror or half turn of the map the other start's first pick
         // is the image of this start's pick instead of a translation of it.

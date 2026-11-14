@@ -39,6 +39,9 @@ internal sealed class ProductionManager
     /// keep no reserve, buy the dearest affordable unit and give up a stalled front item for its refund.</summary>
     public bool Broke { get; set; }
 
+    /// <summary>S24 (D-241 Reserve): credits every unit purchase leaves untouched (the harvester replacement is exempt); 0 = none.</summary>
+    public int OrderReserve { get; set; }
+
     /// <summary>M5-02: the commander's directive as knob values, set by the AI each decision (<see cref="DirectiveBias.Plain"/> = none).</summary>
     public DirectiveBias Bias { get; set; } = DirectiveBias.Plain;
 
@@ -100,7 +103,7 @@ internal sealed class ProductionManager
 
         // Vehicles first; infantry leaves the next vehicle's price in reserve so cheap riflemen cannot starve the factory.
         // No scraper left (it is never replaced): there is no income to wait for, so nothing is held back.
-        if (_noIncome) reserve = 0;
+        if (_noIncome) reserve = OrderReserve;   // S24: a Reserve order holds even when broke (PendingCost already carries it otherwise)
         else reserve += Bias.UnitReserve + (_tier?.Profile.UnitReserve ?? 0);   // M5-02: economy / tech first (the rescue above is never held back); S15 lbknob: per-faction pacing
         if (holdForHarvester) reserve += rules.Vehicles[harv].Cost;
         else Lane(k, sink, reserve + (Bias.Mix == DirectiveCodec.MixInfantry ? MixLaneHold : 0), ProductionCategory.Vehicle, _veh, ref _vehIdx, t => rules.Vehicles[t].Cost);
@@ -152,7 +155,7 @@ internal sealed class ProductionManager
             // M3-10: a special order (a Bore for a new entrance, an Agitprop for the wave) goes ahead of the bag and does not advance it
             ProductionCategory lane = aircraft ? ProductionCategory.Aircraft : cat;   // M4-04: aircraft have their own lane
             if (aircraft && k.Queue(lane).Items.Count > 0) return;
-            if (!k.Buildable(lane, wanted) || k.Hud.Cash + k.Hud.Stored < cost(wanted)) return;
+            if (!k.Buildable(lane, wanted) || k.Hud.Cash + k.Hud.Stored < cost(wanted) + OrderReserve) return;
             sink.Build(lane, wanted);
             if (aircraft) _tier!.AircraftQueued();
             Queued++;
@@ -166,7 +169,7 @@ internal sealed class ProductionManager
             // no income left: take the dearest bag item the money still covers instead of waiting for the planned one
             int best = -1;
             foreach (int t in mix)
-                if (k.Buildable(cat, t) && cost(t) <= funds && (best < 0 || cost(t) > cost(best))) best = t;
+                if (k.Buildable(cat, t) && cost(t) + OrderReserve <= funds && (best < 0 || cost(t) > cost(best))) best = t;
             if (best < 0) return;
             sink.Build(cat, best);
             Queued++;

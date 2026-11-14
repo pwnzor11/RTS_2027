@@ -349,6 +349,13 @@ internal sealed class TierPlanner
     /// <summary>M5-02: the commander's directive as knob values, set by the AI each decision (<see cref="DirectiveBias.Plain"/> = none).</summary>
     public DirectiveBias Bias { get; set; } = DirectiveBias.Plain;
 
+    /// <summary>S24 (D-241 TechTo): the tier the commander ordered (2..5), 0 = no order. The gates up to it join the build order at once.</summary>
+    public int TechTier { get; set; }
+
+    /// <summary>S24 (D-241 ExpandTo): the issue tick of the pending expand order (-1 = none); one more refinery step is inserted for it, right behind the first.</summary>
+    public int ExpandOrderTick { get; set; } = -1;
+    private int _expandStepFor = -1;
+
     /// <summary>M4-12: an enemy aircraft has been seen (anti-air is then wanted).</summary>
     public bool SeenEnemyAir { get; private set; }
 
@@ -358,6 +365,15 @@ internal sealed class TierPlanner
         int tick = k.View.Tick;
         int funds = k.Hud.Cash + k.Hud.Stored;
         bool up = _p.UseUpgrades || Bias.ForceTech;   // M5-02: a tech focus climbs even on a profile without research
+        if (ExpandOrderTick >= 0 && _expandStepFor != ExpandOrderTick)
+        {
+            // S24 ExpandTo: one refinery more than stands now, right behind the first one (ahead of the tech steps)
+            _expandStepFor = ExpandOrderTick;
+            int refType = SimRules.IndexOf(k.Rules.Buildings, _faction.RefineryId, b => b.Id);
+            int have = refType >= 0 ? k.BuildingCount[refType] : 0;
+            if (build.StepsOf(_faction.RefineryId) <= have) build.InsertAfter(_faction.RefineryId, _faction.RefineryId);
+        }
+        bool techOrder = TechTier >= 2;   // S24 TechTo: the gates go in regardless of the clock and the army size
         if (((_p.ExpansionTick > 0 && tick >= _p.ExpansionTick) || Bias.Expand) && build.StepsOf(_faction.RefineryId) < 2)
         {
             // Q-65 (D-182): the high-tier Directorate (air flag) bought its second Smelter Vent behind the whole tech list and ran on one Scraper
@@ -366,14 +382,14 @@ internal sealed class TierPlanner
             else build.Extend(_faction.RefineryId);
         }
         bool armyWait = _faction.Faction != Faction.LeftBehind;   // LeftBehind's supply chain needs the tech structures early (SupplyAiTests)
-        bool techArmy = !armyWait || k.Army.Count >= ArmyBeforeTech || Bias.ForceTech;   // s12: no tech spending before there is an army
-        if (up && techArmy && _faction.ResearchId is string research && build.StepsOf(research) < 1)
+        bool techArmy = !armyWait || k.Army.Count >= ArmyBeforeTech || Bias.ForceTech || techOrder;   // s12: no tech spending before there is an army
+        if ((up && techArmy || TechTier >= 4) && _faction.ResearchId is string research && build.StepsOf(research) < 1)
             build.Extend(research);
         // M4-12: tier climbing on a schedule (flag UseUpgrades): the tier-2 gate, then the tier-3 gate. A lost gate is rebuilt (the build
         // order counts owned structures), so the tier comes back.
-        if (up && techArmy && _faction.Tier2GateId is string g2 && tick >= Tier2GateTick * Bias.GatePermille / 1000 && build.StepsOf(g2) < 1) build.Extend(g2);
-        if (up && _faction.Tier3GateId is string g3 && k.View.Tier >= 2
-            && tick >= Tier3GateTick * Bias.GatePermille / 1000 && k.Army.Count >= ArmyBeforeTier3 * Bias.Tier3ArmyPermille / 1000 && build.StepsOf(g3) < 1) build.Extend(g3);   // (tune) M4-12 round 2: time AND army
+        if ((up && techArmy && tick >= Tier2GateTick * Bias.GatePermille / 1000 || techOrder) && _faction.Tier2GateId is string g2 && build.StepsOf(g2) < 1) build.Extend(g2);
+        if ((up && tick >= Tier3GateTick * Bias.GatePermille / 1000 && k.Army.Count >= ArmyBeforeTier3 * Bias.Tier3ArmyPermille / 1000 || TechTier >= 3) && _faction.Tier3GateId is string g3
+            && k.View.Tier >= 2 && build.StepsOf(g3) < 1) build.Extend(g3);   // (tune) M4-12 round 2: time AND army
         // M4-12: a garrisonable defence near the base (flag RespondToAttacks: tier 2+); the garrison manager fills it with idle infantry
         if (_p.RespondToAttacks && _faction.GarrisonId is string gar && k.Army.Count >= ArmyBeforeGarrison && build.StepsOf(gar) < 1) build.Extend(gar);
         // M4-12: anti-air once enemy aircraft were seen
