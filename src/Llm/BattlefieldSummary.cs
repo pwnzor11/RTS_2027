@@ -58,6 +58,8 @@ public static class BattlefieldSummary
         sections.Add(Others(view, rules, visible, known, history));
         string naval = NavalThreat(view, rules, visible);
         if (naval.Length > 0) sections.Add(naval);
+        string fights = Fights(history);
+        if (fights.Length > 0) sections.Add(fights);
         sections.Add(Events(view, rules, history));
         if (!string.IsNullOrWhiteSpace(playerChat))
             sections.Add("PLAYER CHAT (to you): \"" + Clean(playerChat!, MaxChatChars) + "\"");
@@ -216,6 +218,19 @@ public static class BattlefieldSummary
             if (view.RelationOf(t.Owner) == Relation.Enemy) enemyTel++;
         if (enemyTel > 0) lines.Add("Enemy surfacing telegraphs seen: " + enemyTel);
         return lines.Count == 0 ? "OTHER PLAYERS: none" : "OTHER PLAYERS (only what you can see or remember):\n" + string.Join("\n", lines);
+    }
+
+    /// <summary>S24 (M5-12): "RECENT FIGHTS" for the last intervals: army value lost on each side and whether we held or lost ground.
+    /// Empty before the second observation. The enemy figure is army seen gone, not confirmed kills.</summary>
+    private static string Fights(SummaryHistory h)
+    {
+        if (h.Fights.Count == 0) return "";
+        var sb = new StringBuilder("RECENT FIGHTS (army value; enemy = seen gone, not confirmed kills):");
+        foreach (SummaryHistory.FightInterval f in h.Fights)
+            sb.Append("\n- ").Append(Clock(f.FromTick)).Append('-').Append(Clock(f.ToTick))
+              .Append(": you lost ").Append(f.OwnLost).Append("cr, enemy seen gone ").Append(f.EnemyLost).Append("cr; ")
+              .Append(f.LostGround ? "lost ground" : "held ground");
+        return sb.ToString();
     }
 
     private static string Events(PlayerView view, SimRules rules, SummaryHistory h)

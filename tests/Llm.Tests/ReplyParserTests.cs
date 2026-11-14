@@ -57,7 +57,7 @@ public class ReplyParserTests
     public void Out_of_range_clamps()
     {
         var r = ReplyParser.Parse("{\"directive\":{\"posture\":99,\"focus\":-4,\"mix\":17,\"target\":300,\"focus_cell\":[-1,5]}}");
-        Assert.Equal(new DirectiveDraft(3, 0, 255, 4, false, -1, -1), r.Directive);
+        Assert.Equal(new DirectiveDraft(3, 0, 255, 6, false, -1, -1), r.Directive);
     }
 
     [Fact]

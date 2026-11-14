@@ -14,8 +14,19 @@ public static class CommanderPrompt
     /// <summary>The JSON reply schema shown to the model.</summary>
     public const string Schema =
         "{\"directive\":{\"posture\":\"turtle|balanced|aggressive|allin\",\"focus\":\"economy|tech|army|air|superweapon\"," +
-        "\"target\":<enemy player slot number or 255>,\"mix\":\"auto|infantry|vehicles|antiair|antistructure\"," +
-        "\"expand\":true|false,\"focus_cell\":[x,y] or null},\"say\":\"<= 200 chars\"}";
+        "\"target\":<enemy player slot number or 255>,\"mix\":\"auto|infantry|vehicles|antiair|antistructure|antiarmour|antiinfantry\"," +
+        "\"strong_mix\":true|false,\"expand\":true|false,\"focus_cell\":[x,y] or null}," +
+        "\"orders\":[{\"slot\":0-3,\"kind\":\"attack|hold|raid|expand|tech|reserve|clear\",\"cell\":[x,y] or null," +
+        "\"amount\":<number>,\"minute\":<game minute, attack only>}],\"say\":\"<= 200 chars\"}";
+
+    /// <summary>S24 (M5-12): the standing orders and the counter mixes, appended to the rules. Short lines, like the rest.</summary>
+    private const string Orders =
+        "Orders (optional, at most 4, each keeps its slot until you clear it; a slot you leave out stays as it is):\n" +
+        "attack = hit cell at minute with at least amount army credits; hold = keep the main army on cell; " +
+        "raid = send amount units to cell; expand = found a base at cell; tech = reach tier amount (2-5); " +
+        "reserve = keep amount credits in hand; clear = empty the slot.\n" +
+        "Counter mixes: antiarmour builds against tanks, antiinfantry against infantry. strong_mix true makes production " +
+        "follow the mix more firmly.";
 
     private const string Rules =
         "You command one side in a real-time strategy game against other players. Every 30 seconds of game time you set your " +
@@ -34,7 +45,7 @@ public static class CommanderPrompt
     {
         ArgumentNullException.ThrowIfNull(persona);
         var sb = new StringBuilder();
-        sb.Append(Rules).Append("\n\n");
+        sb.Append(Rules).Append("\n\n").Append(Orders).Append("\n\n");
         sb.Append("You lead the ").Append(faction).Append(" faction.\n\n");
         sb.Append("Reply with ONE JSON object and nothing else, in exactly this shape:\n").Append(Schema).Append("\n\n");
         sb.Append("\"say\" is one short in-character line to the player (omit or leave empty to stay silent). ");
