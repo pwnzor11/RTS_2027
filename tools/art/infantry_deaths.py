@@ -15,9 +15,9 @@ import math
 DEATH_STATES = [("die_blast", 1, 8, 3), ("die_burn", 1, 8, 3), ("die_rad", 1, 8, 3)]
 DEATH_NAMES = [s[0] for s in DEATH_STATES]
 
-CHAR = (0.035, 0.03, 0.025)         # linear colour the burn blends towards
+CHAR = (0.019, 0.013, 0.010)         # linear colour the burn blends towards
 GREEN = (0.10, 0.90, 0.05)          # linear colour the radiation blends towards
-FLAME_LEVEL = [1.0, 1.0, 1.0, 0.9, 0.7, 0.5, 0.3, 0.15]
+FLAME_LEVEL = [1.0, 1.0, 1.0, 1.0, 0.85, 0.5, 0.0, 0.0]
 DISSOLVE = [0, 0, 0, 0, 0, 0, 0.35, 0.65]
 
 
@@ -79,8 +79,10 @@ def death_pose(orig, state, step, n):
                 q = orig("die", k - 2, 6)
                 p.update(q)
                 p["flash"] = False
-            p["_tint"] = (CHAR, 0.12 + 0.78 * t)
+            p["_tint"] = (CHAR, 0.25 + 0.72 * t)
             p["_flames"] = FLAME_LEVEL[k]
+            p["_smoke"] = SMOKE[k]
+            p["_k"] = k
             return p
         # die_rad
         S = [
@@ -104,16 +106,33 @@ def death_pose(orig, state, step, n):
     raise KeyError(state)
 
 
+FIRE_MATERIALS = {"flame_o": ("#FF6A10", 0.5, 0.0, "#FF6A10"), "flame_y": ("#FFC030", 0.5, 0.0, "#FFC030"), "smoke": ("#6B6B66", 0.95, 0.0, None)}
+FIRE_EMIT = {"flame_o": 1.3, "flame_y": 1.0}
+# Extra palette entries for the die_burn frames only (the 32-colour sheet palette has no orange): fire ramp and two char tones.
+FIRE_PALETTE = [(0x7A, 0x1E, 0x0A), (0xC8, 0x40, 0x0F), (0xFF, 0x7A, 0x14), (0xFF, 0xB0, 0x2E), (0xFF, 0xE4, 0x6A),
+                (0x0F, 0x0C, 0x0A), (0x1D, 0x16, 0x12)]
+SMOKE = [0, 0, 0, 0, 0.35, 0.6, 1.0, 1.0]
+
+
 def add_flames(S, p):
-    """Orange flame cones on the body (emissive 'flash' material when the module has one)."""
-    lvl = p.get("_flames", 0.0)
-    mat = "flash" if "flash" in S.mats else ("lens" if "lens" in S.mats else None)
-    if lvl < 0.2 or mat is None:
-        return
-    for i, loc in enumerate(((0.20, 0.0, 0.30), (-0.20, 0.05, 0.12), (0.0, -0.22, 0.45), (0.0, 0.08, 0.66), (-0.16, 0.0, 0.50))):
-        a = _anchor(p, loc)
-        h = (0.20 + 0.06 * (i % 3)) * lvl
-        S.cyl(0.07 * lvl + 0.02, h, (a[0], a[1], a[2] + h * 0.45), mat, "Z", None, verts=6, r2=0.0)
+    """Fire on the body (orange cone with a smaller yellow core) and, in the last frames, a few grey smoke puffs above it."""
+    lvl, k = p.get("_flames", 0.0), p.get("_k", 0)
+    if lvl >= 0.2:
+        spots = ((0.20, 0.0, 0.30), (-0.20, 0.05, 0.12), (0.0, -0.24, 0.45), (0.0, 0.10, 0.62), (-0.18, 0.0, 0.52), (0.22, 0.05, 0.55),
+                 (0.0, 0.14, 0.25))
+        for i, loc in enumerate(spots):
+            a = _anchor(p, loc)
+            h = (0.26 + 0.07 * ((i + k) % 3)) * lvl
+            r = 0.10 * lvl + 0.02
+            S.cyl(r, h, (a[0], a[1], a[2] + h * 0.45), "flame_o", "Z", None, verts=6, r2=0.0)
+            S.cyl(r * 0.55, h * 0.65, (a[0], a[1], a[2] + h * 0.30), "flame_y", "Z", None, verts=6, r2=0.0)
+    sm = p.get("_smoke", 0.0)
+    if sm > 0:
+        for i, loc in enumerate(((0.0, 0.0, 0.2), (0.12, -0.1, 0.1), (-0.1, 0.1, 0.05))):
+            a = _anchor(p, loc)
+            z = a[2] + 0.25 + 0.2 * i * sm
+            r = 0.07 + 0.05 * sm + 0.02 * i
+            S.sphere((r, r, r), (a[0] + 0.04 * i, a[1], z), "smoke", None, seg=8)
 
 
 def dissolve_mask(w, h, frac):
