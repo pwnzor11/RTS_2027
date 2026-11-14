@@ -45,5 +45,5 @@ public static class DirectiveCommands
     public static DirectiveDraft? ToDraft(Directive d) => !d.Set
         ? null
         : new DirectiveDraft(d.Posture, d.Focus, d.TargetPlayer, d.Mix, d.Expand,
-            (short)(d.HasFocusCell ? d.FocusCell.X : -1), (short)(d.HasFocusCell ? d.FocusCell.Y : -1));
+            (short)(d.HasFocusCell ? d.FocusCell.X : -1), (short)(d.HasFocusCell ? d.FocusCell.Y : -1), d.Strong);   // S24: strong mix survives the round trip
 }
