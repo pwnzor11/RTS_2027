@@ -54,19 +54,6 @@ internal sealed class BuildOrderManager
     /// -1 holds everything. Set by the no-income rescue.</summary>
     public int HoldExcept { get; set; } = int.MinValue;
 
-    /// <summary>s24 D-242: while the economy is broke (everything else held) the one structure still worth paying for: a lost barracks, else a lost factory,
-    /// when it is buildable and the funds cover it (units are the only thing left to buy with them). The type index, or -1.</summary>
-    internal static int LostProducer(RecruitKnowledge k, string barracksId, string factoryId, int funds)
-    {
-        foreach (string id in new[] { barracksId, factoryId })
-        {
-            int t = SimRules.IndexOf(k.Rules.Buildings, id, b => b.Id);
-            if (t < 0 || k.BuildingCount[t] > 0) continue;
-            if (k.Buildable(k.Rules.Buildings[t].Category, t) && funds >= k.Rules.Buildings[t].Cost) return t;
-        }
-        return -1;
-    }
-
     /// <summary>M4-12: when true (tier 2+), <see cref="PendingCost"/> also counts what the structures in production still have to be paid,
     /// so units do not starve a 2500-credit tier gate that is already under way (it stalled for whole games).</summary>
     public bool ReserveInProgress { get; set; }

@@ -314,7 +314,7 @@ public sealed class RecruitAi : IAiPlayer, IAiSnapshotable, IHookableAi
         _planner.Observe(_k, _knownBuildings);
         _planner.ExtendBuild(_k, _build!);
         if (_profile.ReplaceHarvesters) _rescue.Think(_k, sink, _faction);   // M4-12: no harvester and no money: sell for one
-        _build!.HoldExcept = _rescue.Saving ? _rescue.RefineryType : _rescue.Broke ? BuildOrderManager.LostProducer(_k, _faction!.BarracksId, _faction.FactoryId, _k.Hud.Cash + _k.Hud.Stored) : int.MinValue;   // s24 D-242: a broke side still rebuilds a lost barracks / factory it can pay for
+        _build!.HoldExcept = _rescue.Saving ? _rescue.RefineryType : _rescue.Broke ? -1 : int.MinValue;
         _production!.Hold = _rescue.Saving;
         _production.Broke = _rescue.Broke;   // s23 D-235 (A)
         _build.Think(_k, sink);
