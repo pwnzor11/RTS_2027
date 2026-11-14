@@ -39,10 +39,10 @@ public sealed class M3ContractTests
     {
         var sim = ScriptedGame.NewSim(ScriptedGame.Setup());
         string[] names = sim.StateParts.Select(p => p.Name).ToArray();
-        Assert.Equal(new[] { "production", "tunnels", "ground", "effects" }, names[^13..^9]);   // M7-02: shipments, beachhead, naval; M4-01: garrison, stats follow; M5-01: directive; M6-02: rigs, salvage; VET-1: veterancy
-        Assert.Same(sim.Tunnels, sim.StateParts[^12]);
-        Assert.Same(sim.Ground, sim.StateParts[^11]);
-        Assert.Same(sim.Effects, sim.StateParts[^10]);
+        Assert.Equal(new[] { "production", "tunnels", "ground", "effects" }, names[^14..^10]);   // M7-02: shipments, beachhead, naval; M4-01: garrison, stats follow; M5-01: directive; M6-02: rigs, salvage; VET-1: veterancy
+        Assert.Same(sim.Tunnels, sim.StateParts[^13]);
+        Assert.Same(sim.Ground, sim.StateParts[^12]);
+        Assert.Same(sim.Effects, sim.StateParts[^11]);
     }
 
     [Fact]
