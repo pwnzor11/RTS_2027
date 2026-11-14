@@ -29,10 +29,15 @@ internal sealed class RetreatManager
     /// <summary>M7-10: every retreating unit goes to repair (a Mender) and rejoins when healed, not only rank-3 ones (Expedition: few, dear units).</summary>
     public bool RepairAll { get; set; }
 
+    /// <summary>s25 (M13-23): from this tick on nobody retreats any more and every retreated or repairing unit rejoins the pool. The maps are mined out by then,
+    /// hurt infantry never heals (the Mender only repairs vehicles) and the pool shrank to 2-8 units while 8-12 stayed away for good, so neither side could finish.</summary>
+    public const int LateAllInTick = 16000;   // (tune) s25
+
     public void Think(RecruitKnowledge k, ICommandSink sink, Squads squads, CellCoord rally, int pct)
     {
         if (pct <= 0) return;
         int tick = k.View.Tick;
+        if (tick >= LateAllInTick) { squads.ReleaseRetreated(k); return; }
         foreach (ViewActor a in k.Detached)   // VET-6: healed (or waited long enough) rank-3 units go back to the pool
             if (squads.IsRepairing(a) && (a.Health * 100 >= a.MaxHealth * Math.Max(RepairDonePct, Math.Min(100, Threshold(a, pct) + 5))
                 || tick - squads.RepairSince(a) >= RepairMaxTicks)) squads.Release(a);

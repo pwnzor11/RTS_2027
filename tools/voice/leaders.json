@@ -10,5 +10,5 @@
   "leader_exp_roque":        { "voice": "am_echo", "speed": 1.0, "who": "Dr. Anselm Roque (Expedition): chief engineer, gentle, distracted, talks to valves" },
   "leader_exp_kell":         { "voice": "bf_isabella", "speed": 1.0, "who": "Air Marshal Perpetua Kell (Expedition): fleet air arm commander, loud and affectionate, rescue pilot" },
   "leader_lb_calloway_ross": { "voice": "am_onyx", "speed": 1.0, "who": "War-captain Jessup Calloway-Ross (Left Behind): rig-master, loud, rough, best driver on the Drift" },
-  "leader_tut_instructor":   { "voice": "", "speed": 1.0, "who": "Tutorial instructor, unnamed (Basic Training, northern range): walks the Commander through each lesson one step at a time, patient and reassuring (\"Nothing here can hurt you, so take your time\")" }
+  "leader_tut_instructor":   { "voice": "am_adam", "speed": 1.0, "who": "Tutorial instructor, unnamed (Basic Training, northern range): walks the Commander through each lesson one step at a time, patient and reassuring (\"Nothing here can hurt you, so take your time\")" }
 }

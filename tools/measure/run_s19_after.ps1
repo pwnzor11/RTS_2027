@@ -85,6 +85,8 @@ $rows = @(
 ) | Where-Object { $Groups -contains $_.Group }
 
 $dataRow = '^\|\s*(\d+)\s*\|\s*(\d+)\s*\|\s*(\d+)\s*\|\s*(\d+)\s*\|\s*(\d+)\s*\|'
+# D-242 rows also carry `| A win % | AdjW | AdjL | AdjEven |` after the first five numbers (older .md files do not: shown as '-').
+$adjRow = '^\|\s*\d+\s*\|\s*\d+\s*\|\s*\d+\s*\|\s*\d+\s*\|\s*\d+\s*\|\s*[^|]*\|\s*(\d+)\s*\|\s*(\d+)\s*\|\s*(\d+)\s*\|'
 $queue = New-Object System.Collections.Queue
 $all = @()
 foreach ($r in $rows) {
@@ -180,27 +182,30 @@ function Read-Income($log) {
 function Mean($sum, $n) { if ($n -gt 0) { return [string][int][Math]::Round($sum / $n) } else { return '-' } }
 
 $sb = New-Object System.Text.StringBuilder
-[void]$sb.AppendLine("# Session 19 after series (M13 fixes): start skew, tender spawn, faction references (owner's laptop)")
+[void]$sb.AppendLine("# Series $OutName summary (owner's laptop)")
 [void]$sb.AppendLine()
 [void]$sb.AppendLine(("Commit {0}, {1} logical CPUs, {2} jobs, finished {3:yyyy-MM-dd HH:mm}, wall time {4:N0} min. " -f $head, [Environment]::ProcessorCount, $Jobs, (Get-Date), ((Get-Date) - $t0).TotalMinutes) +
     "``ai match`` tiered AI tier 3, 32 seeds x 2 start swaps = 64 games per row, size 96, --income 1. Start share = larger of the two start-corner win counts / decisive games.")
 [void]$sb.AppendLine()
-[void]$sb.AppendLine("| Group | Biome | Layout | Match (A v B) | A wins | B wins | Draws | Avg end tick | Start 0 wins | Start 1 wins | Larger start share |")
-[void]$sb.AppendLine("|---:|---|---:|---|---:|---:|---:|---:|---:|---:|---:|")
+[void]$sb.AppendLine("| Group | Biome | Layout | Match (A v B) | A wins | B wins | Draws | AdjW | AdjL | AdjEven | Avg end tick | Start 0 wins | Start 1 wins | Larger start share |")
+[void]$sb.AppendLine("|---:|---|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|")
 foreach ($r in $all) {
     $m = $null
     if (Test-Path $r.Md) { $m = Select-String -Path $r.Md -Pattern $dataRow | Select-Object -First 1 }
     $label = "{0} {1} v {2} {3}" -f $r.FA, $r.TA, $r.FB, $r.TB
-    if ($null -eq $m) { [void]$sb.AppendLine("| $($r.Group) | $($r.Biome) | $($r.Layout) | $label | - | - | - | - | - | - | missing |"); continue }
+    if ($null -eq $m) { [void]$sb.AppendLine("| $($r.Group) | $($r.Biome) | $($r.Layout) | $label | - | - | - | - | - | - | - | - | - | missing |"); continue }
     $g = $m.Matches[0].Groups
     $a = [int]$g[2].Value; $b = [int]$g[3].Value; $d = [int]$g[4].Value; $end = [int]$g[5].Value
     $s0 = '-'; $s1 = '-'; $share = 'n/a'
+    $adjW = '-'; $adjL = '-'; $adjE = '-'
+    $am = Select-String -Path $r.Md -Pattern $adjRow | Select-Object -First 1
+    if ($null -ne $am) { $adjW = $am.Matches[0].Groups[1].Value; $adjL = $am.Matches[0].Groups[2].Value; $adjE = $am.Matches[0].Groups[3].Value }
     $sm = Select-String -Path $r.Md -Pattern 'start 0 \(\d+,\d+\) (\d+), start 1 \(mirror\) (\d+)' | Select-Object -First 1
     if ($null -ne $sm) {
         $s0 = [int]$sm.Matches[0].Groups[1].Value; $s1 = [int]$sm.Matches[0].Groups[2].Value
         if ($s0 + $s1 -gt 0) { $share = "{0} %" -f [int][Math]::Round(100.0 * [Math]::Max($s0, $s1) / ($s0 + $s1)) }
     }
-    [void]$sb.AppendLine("| $($r.Group) | $($r.Biome) | $($r.Layout) | $label | $a | $b | $d | $end | $s0 | $s1 | $share |")
+    [void]$sb.AppendLine("| $($r.Group) | $($r.Biome) | $($r.Layout) | $label | $a | $b | $d | $adjW | $adjL | $adjE | $end | $s0 | $s1 | $share |")
 }
 [void]$sb.AppendLine()
 [void]$sb.AppendLine("## Income by start corner (mean per side; 10 min over games still running at tick 12 000)")

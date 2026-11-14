@@ -395,11 +395,20 @@ def run_pick(args, data: dict) -> int:
         if not src.exists():
             missing.append(j["id"])
             continue
-        shutil.copyfile(src, args.sfx_dir / f"{j['id']}.wav")
-        copied.append(j["id"])
+        dst = args.sfx_dir / f"{j['id']}.wav"
         cap = MAX_LOOP_BYTES if j["loop"] else MAX_ONESHOT_BYTES
-        if src.stat().st_size > cap:
-            print(f"warning: {j['id']} is {src.stat().st_size} bytes, over the {cap} byte cap SoundBankTests allows; regenerate with a lower --rate or --seconds-scale")
+        if src.stat().st_size > cap and not j["loop"]:
+            # s25: a one-shot over the SoundBankTests cap is cut to fit with a 250 ms fade-out instead of failing CI
+            pcm, rate = read_wav(src)
+            keep = (cap - 64) // (2 * pcm.shape[1])
+            x = apply_fades(pcm[:keep].T.astype(np.float32), rate, 0, 250)
+            write_wav(dst, np.round(x.T).astype("<i2"), rate)
+            print(f"note: {j['id']} trimmed to {keep / rate:.2f} s to fit the {cap} byte one-shot cap")
+        else:
+            shutil.copyfile(src, dst)
+            if src.stat().st_size > cap:
+                print(f"warning: {j['id']} is {src.stat().st_size} bytes, over the {cap} byte cap SoundBankTests allows; regenerate with a lower --rate or --seconds-scale")
+        copied.append(j["id"])
     present = [j["id"] for j in data["jobs"] if (args.sfx_dir / f"{j['id']}.wav").exists()]
     text = args.sounds.read_text(encoding="utf-8")
     new, notes = update_sounds_toml(text, data["jobs"], set(present), args.mix, args.replace_sfxr, data.get("event_defaults"))

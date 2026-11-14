@@ -59,6 +59,17 @@ internal sealed class Squads
     /// <summary>VET-6: a repaired unit rejoins the wave pool at the next <see cref="Apply"/>.</summary>
     public void Release(ViewActor a) => _repair.Remove(RecruitKnowledge.KeyOf(a));
 
+    /// <summary>s25: sends every retreated and repairing unit back to the wave pool (scouts and raiders stay on their duty).</summary>
+    public void ReleaseRetreated(RecruitKnowledge k)
+    {
+        if (_home.Count == 0 && _repair.Count == 0) return;
+        _home.Clear(); _repair.Clear();
+        for (int i = k.Home.Count - 1; i >= 0; i--) k.Army.Add(k.Home[i]);
+        k.Home.Clear();
+        for (int i = k.Detached.Count - 1; i >= 0; i--)
+            if (!_scout.Contains(RecruitKnowledge.KeyOf(k.Detached[i])) && !_raiders.Contains(RecruitKnowledge.KeyOf(k.Detached[i]))) { k.Army.Add(k.Detached[i]); k.Detached.RemoveAt(i); }
+    }
+
     public void AssignScout(ViewActor a) => _scout.Add(RecruitKnowledge.KeyOf(a));
     public void AssignRaider(ViewActor a) => _raiders.Add(RecruitKnowledge.KeyOf(a));
 
