@@ -72,3 +72,5 @@ when the harvester (or the refinery) is not buildable (`EconomyRescue.CanBuy`). 
 | Authority mirror | 7-6-3 (19264) | 8-5-3 (19982) | 8-6-2 (19490) | 7-7-2 (18756) |
 | Authority v Directorate | 4-9-3 (19267) | 4-8-4 (20308) | 4-8-4 (20309) | 4-9-3 (19149) |
 Draws 6 -> 5 of 32 with the fix alone, mean end tick earlier in both pairs. Small samples; laptop series to confirm.
+
+Rebuild of a lost barracks/factory while broke (held yard, not kept): mirror 7-7-2 (18817), Auth v Dir 4-8-4 (19454), against fix only 7-7-2 (18756) and 4-9-3 (19149). No gain, one more draw, so it was reverted.
