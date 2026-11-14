@@ -59,7 +59,7 @@ harass_min_army = 30
 # fine; its cheap Buggy / Hook Runner bags snowball to 40+ units by t3000. A cap on the early swarm (see docs/balance/s15_lbknob.md) brings tier 3 down.
 [faction.left_behind.tier3]
 army_cap = 20  # (tune) s15
-army_cap_until_tick = 4500  # (tune) s15: the early snowball only; a longer cap cost it the Expedition games. s23 (D-230): 3600 -> 4800 (LB v Exp 48-9 on the s22 laptop series; 6000 overshot)
+army_cap_until_tick = 3600  # (tune) s15: the early snowball only; a longer cap cost it the Expedition games. s23 (D-230): 3600 -> 4800 (LB v Exp 48-9 on the s22 laptop series; 6000 overshot)
 
 [faction.expedition]
 harass_min_army = 30
