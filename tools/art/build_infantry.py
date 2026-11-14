@@ -78,6 +78,8 @@ def apply_deaths(mod):
         return
     orig_pose, orig_build = mod.pose, mod.build
     mod.STATES = list(mod.STATES) + list(D.DEATH_STATES)
+    mod.MATERIALS = {**mod.MATERIALS, **D.FIRE_MATERIALS}
+    mod.EMIT_STRENGTH = {**getattr(mod, "EMIT_STRENGTH", {}), **D.FIRE_EMIT}
     mod.pose = lambda state, step, n: D.death_pose(orig_pose, state, step, n) if state in D.DEATH_NAMES else orig_pose(state, step, n)
 
     def build(S, p):
@@ -278,7 +280,10 @@ def post(sid, mod, outdir=None):
     imgs = []
     for i in range(total):
         if i in have:
-            imgs.append(SP.frame_b(wd, i, cal, w, h, getattr(mod, "PALETTE", None)))
+            pal = getattr(mod, "PALETTE", None)
+            if DEATHS and st_of[i] == "die_burn":      # fire ramp + char tones exist only for the burn frames
+                pal = list(pal if pal is not None else C.PAL) + D.FIRE_PALETTE
+            imgs.append(SP.frame_b(wd, i, cal, w, h, pal))
         else:
             imgs.append(Image.new("RGBA", (w, h), (0, 0, 0, 0)))
     if DEATHS:       # die_rad: the last frames dissolve (ordered dither; alpha stays 0 or 255)
