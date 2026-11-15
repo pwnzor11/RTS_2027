@@ -27,7 +27,7 @@ public static class MapPreviewCache
     public static string? KeyOf(string rulesDir, MapChoice choice, int side = MapPreview.DefaultSide)
     {
         if (choice.Generated is { } g)
-            return $"gen:{(int)g.Biome}:{(int)g.Size}:{g.Players}:{g.Seed}:{(int)g.OceanEdges}:{g.Layout}:{side}";
+            return $"gen:{(int)g.Biome}:{(int)g.Size}:{g.Players}:{g.Seed}:{(int)g.OceanEdges}:{g.Layout}:{(g.Stamps ? 1 : 0)}:{side}";
         if (choice.File is not { } file) return null;
         string path = Path.GetFullPath(MapPicker.ResolveFile(rulesDir, file));
         return File.Exists(path) ? $"file:{path}:{File.GetLastWriteTimeUtc(path).Ticks}:{side}" : null;

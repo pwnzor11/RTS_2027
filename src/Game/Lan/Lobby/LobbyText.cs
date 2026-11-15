@@ -12,7 +12,7 @@ public static class LobbyText
     /// <summary>"Rust Belt (yours)", "Generated Glass Coast Medium seed 12" ...</summary>
     public static string MapLabel(LobbyMap map)
     {
-        if (map.Generated is { } g) return $"Generated {MapPicker.BiomeName(g.Biome)} {MapPicker.SizeName(g.Size)} seed {g.Seed}";
+        if (map.Generated is { } g) return $"Generated {MapPicker.BiomeName(g.Biome)} {MapPicker.SizeName(g.Size)} seed {g.Seed}" + (g.Stamps ? " with stamps" : "");   // M12-13b: guests see the host's choice
         string name = DisplayNamesOrPlain(MapPicker.LabelOf(map.File ?? "?"));
         return map.IsCustom ? name + " (yours)" : name;
     }
