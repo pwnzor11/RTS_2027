@@ -54,6 +54,8 @@ public sealed class SettingsScreen : IScreen
                 new MenuButton("Toggle", ToggleWeather)),   // M10-12
             new MenuItem(() => $"Screen shake: {(_s.Settings.ScreenShake ? "On" : "Off")}", ToggleScreenShake, _ => ToggleScreenShake(),
                 new MenuButton("Toggle", ToggleScreenShake)),   // M10-14
+            new MenuItem(() => SkinLine(_s.Settings), ToggleUiSkin, _ => ToggleUiSkin(),
+                new MenuButton("Toggle", ToggleUiSkin)),   // M10-15 (s27)
             Volume("Master volume", s => s.MasterVolume, (s, v) => s with { MasterVolume = v }),
             Volume("Music volume", s => s.MusicVolume, (s, v) => s with { MusicVolume = v }),
             Volume("Effects volume", s => s.SfxVolume, (s, v) => s with { SfxVolume = v }),
@@ -157,6 +159,12 @@ public sealed class SettingsScreen : IScreen
     private void ToggleWeather() => _s.Settings = _s.Settings with { Weather = !_s.Settings.Weather };
 
     private void ToggleScreenShake() => _s.Settings = _s.Settings with { ScreenShake = !_s.Settings.ScreenShake };
+
+    /// <summary>M10-15 (s27): the settings line for <see cref="Settings.UiSkin"/>; the skin is chosen when a match starts.</summary>
+    public static string SkinLine(Settings s) => $"Interface skin: {(s.UseFactionSkin ? "Faction art" : "Classic")}";
+
+    private void ToggleUiSkin() =>
+        _s.Settings = _s.Settings with { UiSkin = _s.Settings.UseFactionSkin ? Settings.UiSkinClassic : Settings.UiSkinFaction };
 
     private void ToggleHealthBars() => _s.Settings = _s.Settings with { HealthBarsAlways = !_s.Settings.HealthBarsAlways };
 
