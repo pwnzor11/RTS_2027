@@ -60,3 +60,19 @@ one and pushes glass_coast up. Round 2 offsets glass with the shipment value and
 | Left Behind v Expedition rust | 37-21-6 (64 %) | 45-15-4 (75 %) |
 | Expedition v Left Behind glass | 24-17-23 (59 %) | 19-29-16 (LB 60 %) |
 Barely moves the Authority row and lifts Left Behind against everyone else.
+
+### Round 2
+| Row | Baseline | VE (VA + shipments 1100) | VF (VE + Directorate harass 22) |
+|---|---|---|---|
+| Authority v Directorate rust | 19-31-14 (38 %) | 19-31-14 (38 %) | same as VE |
+| Authority v Left Behind rust | 39-20-5 (66 %) | 39-20-5 (66 %) | same |
+| Authority v Expedition rust | 26-34-4 (43 %) | 25-36-3 (41 %) | same |
+| Directorate v Left Behind rust | 29-30-5 (49 %) | 29-30-5 (49 %) | same |
+| Directorate v Expedition rust | 45-10-9 (82 %) | 35-13-16 (73 %) | same |
+| Left Behind v Expedition rust | 37-21-6 (64 %) | 31-24-9 (56 %) | same |
+| Expedition v Authority glass | 32-28-4 (53 %) | 34-25-5 (58 %) | same |
+| Expedition v Directorate glass | 34-18-12 (65 %) | 24-22-18 (52 %) | same |
+| Expedition v Left Behind glass | 24-17-23 (59 %) | 27-18-19 (60 %) | same |
+VF is identical to VE game for game: the tier-3 table has no `harass` flag, so `harass_min_army` does nothing at tier 3 (the Skimmer losses
+come from waves, not raiders). VE: total distance from 50 % over the six Expedition rows 80 -> 58 points.
+Round 3 (on VE): Directorate tier-3 early army cap, VG cap 22 until tick 4200, VH cap 26 until tick 6000 (`bal/s27-vg`, `bal/s27-vh`).
