@@ -44,7 +44,7 @@ phase = 0
 [[fx]]
 state = "damaged"
 kind = "fire_small"
-x = 127
+x = 128
 y = 188
 phase = 4
 
