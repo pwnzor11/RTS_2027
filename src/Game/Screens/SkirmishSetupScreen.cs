@@ -34,6 +34,7 @@ public sealed class SkirmishSetupScreen : IScreen
     private MapSize _size = MapSize.Small;
     private ulong _seed = DefaultGeneratedSeed;
     private OceanEdges _ocean = OceanEdges.None;   // M7-14
+    private bool _stamps;   // M12-13b: generator stamps (ruins, groves, craters); off by default
     private readonly List<SkirmishSlot> _slots;
     private int _layout = MapGenerator.CurrentLayout;   // generator layout of the generated map (a layout-2 map defaults 4 players to teams 1+2 vs 3+4)
     private int _seedRow = -1;
@@ -68,6 +69,7 @@ public sealed class SkirmishSetupScreen : IScreen
             _seed = g.Seed;
             _ocean = g.OceanEdges;
             _layout = g.Layout;
+            _stamps = g.Stamps;
         }
         _tierNames = LoadTierNames(services.RulesDir);
         _slots = new List<SkirmishSlot>(SkirmishSettings.Default.Slots);
@@ -124,7 +126,7 @@ public sealed class SkirmishSetupScreen : IScreen
             MapEntry entry = _maps[_mapIndex];
             int open = _slots.Count(x => x.Kind != SlotKind.Closed);
             MapChoice map = entry.IsGenerated
-                ? new MapChoice(null, new MapGenParams(_biome, _size, Math.Clamp(open, SkirmishSettings.MinPlayers, SkirmishSettings.MaxSlots), _seed, null, ResolvedOcean(out _), _layout))
+                ? new MapChoice(null, new MapGenParams(_biome, _size, Math.Clamp(open, SkirmishSettings.MinPlayers, SkirmishSettings.MaxSlots), _seed, null, ResolvedOcean(out _), _layout, _stamps))
                 : new MapChoice(entry.File, null);
             ulong simSeed = entry.IsGenerated ? _seed : SkirmishGame.CuratedSimSeed;
             return new SkirmishSettings(map, _slots.ToArray(), simSeed);
@@ -233,6 +235,9 @@ public sealed class SkirmishSetupScreen : IScreen
             rows.Add(new(() => OceanChoices.Label(_ocean), null, d => _ocean = OceanChoices.Step(_ocean, d),
                 new MenuButton("<", () => _ocean = OceanChoices.Step(_ocean, -1)), new MenuButton(">", () => _ocean = OceanChoices.Step(_ocean, 1)))
             { WidthTexts = OceanChoices.All.Select(OceanChoices.Label).ToArray() });
+            rows.Add(new(() => StampChoice.Label(_stamps), null, d => _stamps = StampChoice.Step(_stamps, d),
+                new MenuButton("<", () => _stamps = StampChoice.Step(_stamps, -1)), new MenuButton(">", () => _stamps = StampChoice.Step(_stamps, 1)))
+            { WidthTexts = new[] { StampChoice.Label(false), StampChoice.Label(true) } });
             _seedRow = rows.Count;
             rows.Add(new(() => $"Seed: {_seed}", null, d => StepSeed(d),
                 new MenuButton("-", () => StepSeed(-1)), new MenuButton("+", () => StepSeed(1)), new MenuButton("Reroll", RerollSeed))

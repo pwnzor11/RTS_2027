@@ -27,7 +27,7 @@ public static class LobbyCodec
             w.U8(0);
             w.U8((int)g.Biome); w.U8((int)g.Size); w.U8(g.Players); w.U64(g.Seed);
             w.Bool(g.Name is not null); if (g.Name is not null) w.Str(g.Name, MaxFileBytes);
-            w.U8((int)g.OceanEdges); w.I32(g.Layout);
+            w.U8((int)g.OceanEdges); w.I32(g.Layout); w.Bool(g.Stamps);   // M12-13b: the stamp switch rides with the other generator parameters
         }
         else
         {
@@ -50,7 +50,8 @@ public static class LobbyCodec
             int ocean = r.Ranged(15, "ocean edges");
             int layout = r.I32();
             if (layout < 0 || layout > 100) throw new InvalidDataException("Bad layout.");
-            return LobbyMap.FromGenerated(new MapGenParams((Biome)biome, (MapSize)size, players, seed, name, (OceanEdges)ocean, layout));
+            bool stamps = r.Bool();
+            return LobbyMap.FromGenerated(new MapGenParams((Biome)biome, (MapSize)size, players, seed, name, (OceanEdges)ocean, layout, stamps));
         }
 
         string file = r.Str(MaxFileBytes);

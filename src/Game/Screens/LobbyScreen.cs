@@ -40,6 +40,7 @@ public sealed class LobbyScreen : IScreen
     private Biome _biome = Biome.RustBelt;
     private MapSize _size = MapSize.Small;
     private ulong _seed = 1;
+    private bool _stamps;   // M12-13b: the host's "Map features" choice; it travels in the lobby blob with the other generator parameters
     private string _chat = "";
     private string _status = "";
     private int _shownRevision = -1;
@@ -285,6 +286,9 @@ public sealed class LobbyScreen : IScreen
                 new MenuButton("<", () => { _biome = (Biome)(((int)_biome + 3) % 4); ApplyGenerated(); }), new MenuButton(">", () => { _biome = (Biome)(((int)_biome + 1) % 4); ApplyGenerated(); })));
             rows.Add(new(() => $"Size: {MapPicker.SizeName(_size)}", null, d2 => { _size = (MapSize)(((int)_size + d2 + 3) % 3); ApplyGenerated(); },
                 new MenuButton("<", () => { _size = (MapSize)(((int)_size + 2) % 3); ApplyGenerated(); }), new MenuButton(">", () => { _size = (MapSize)(((int)_size + 1) % 3); ApplyGenerated(); })));
+            rows.Add(new(() => StampChoice.Label(_stamps), null, d2 => { _stamps = StampChoice.Step(_stamps, d2); ApplyGenerated(); },
+                new MenuButton("<", () => { _stamps = StampChoice.Step(_stamps, -1); ApplyGenerated(); }), new MenuButton(">", () => { _stamps = StampChoice.Step(_stamps, 1); ApplyGenerated(); }))
+            { WidthTexts = new[] { StampChoice.Label(false), StampChoice.Label(true) } });
             _seedRow = rows.Count;
             rows.Add(new(() => $"Seed: {_seed}", null, d2 => { _seed = d2 < 0 ? (_seed > 0 ? _seed - 1 : 0) : Math.Min(MaxSeed, _seed + 1); ApplyGenerated(); },
                 new MenuButton("Reroll", () => { _seed = (ulong)Random.Shared.NextInt64(1, (long)MaxSeed + 1); ApplyGenerated(); }))
@@ -375,7 +379,7 @@ public sealed class LobbyScreen : IScreen
     private void ApplyGenerated()
     {
         int players = Math.Clamp(_host!.Data.Slots.Count(x => x.Slot.Kind != SlotKind.Closed), SkirmishSettings.MinPlayers, SkirmishSettings.MaxSlots);
-        _host.SetMap(LobbyMap.FromGenerated(new MapGenParams(_biome, _size, players, _seed)));
+        _host.SetMap(LobbyMap.FromGenerated(StampChoice.Params(_biome, _size, players, _seed, _stamps)));
     }
 
     private void StartGame()
