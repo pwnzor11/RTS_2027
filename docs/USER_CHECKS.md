@@ -507,3 +507,12 @@ Back up `%APPDATA%\RTS_2027` first (D-220). On main after PR #82 (or branch inte
 - **Deaths:** infantry with death frames play them (flame weapons: burn; explosives: blast; radiation/ash: rad), then leave the usual mark.
 - **Balance:** Grapeshot canister gun damage 11 (was 14). AI no longer sits on credits with an empty queue after losing its factory.
 - **ai match:** draws at the time limit show `adj=A|B|even score=a/b`; the table gains AdjW AdjL AdjEven.
+
+## Session 27 (2026-11-15)
+On main after PR #90 and PR #91.
+- **Faction UI skins:** start a skirmish as the Directorate, the Left Behind and the Expedition (Settings → "Interface skin: Faction art"). Directorate:
+  dark concrete panels, oxblood buttons with a red lamp strip on hover, red-and-bone warning bands, loudspeaker emblem. Left Behind: faded teal sheet
+  metal, ochre road-sign buttons with rope lashings, dark lettering, wheel-and-sail mark. Expedition: navy enamel, chrome bezels, orange landing-light
+  strip on hover, anchor-and-compass roundel. Toggle the line to "Interface skin: Classic" and the next match uses the procedural look.
+- **Balance (D-254):** Expedition Skimmers have 360 hp (were 220); each Expedition shipment is worth 1100 (was 1200). In an Expedition v Directorate
+  skirmish on Rust Belt the Expedition keeps more Skimmers alive.

@@ -505,3 +505,18 @@ and smoke-tested pattern (not yet run on RTS rows).
 **Helpers:** none.
 **Problems / notes:** bpy has no Linux-arm64 wheel, so Blender renders cannot use the cluster. The router keeps managing IPs.
 **Next session should:** see HANDOFF (merge PR #88, s25after on the cluster, campaign sweep, SFX, UI skins).
+
+## Session 27 · 2026-11-15 (cluster offload, faction UI skins, balance round)
+**Goal:** owner: resume, offload what can go to the Pi cluster, laptop script for the rest, then the cloud work; later a full balance round.
+**Done:** s25after series (17 rows x 64 games, ~65 min) and the campaign sweep (45 x 12, ~25 min, all on target) ran on the Pi k3s cluster;
+arm64 results identical to x64. Laptop: SFX catch-up command handed over (`run_s24_sfx.ps1 -From 2`, after `git checkout main; git pull`).
+Faction UI skins: three Sonnet pilots (dir/lb/exp_skin.py), owner approved, 128-sample renders made on the cluster with Debian Blender 4.3,
+installed (PR #90, D-252); "Interface skin" settings line. Balance round (cluster, 64 games per row): cause = Expedition Skimmers dying
+(~12 per game v Directorate rust); variants VA/VB/VD/VE/VF/VG/VH measured; owner chose VE: Skimmer 360 hp + shipments 1100 (D-254, PR #91),
+nine-row distance 109 -> 87; campaign re-swept after it, all 45 on target. Cluster (k3s-cluster-code): dev tools for jobs (audio, image,
+Blender, Piper, git), Argo CD wired to the repo with Headlamp at .104, grumpy rejoined (7 workers), pi-cluster skill updated (owner saved it).
+**Decisions:** D-252, D-253, D-254.
+**Helpers:** 3 Sonnet (skin pilots), each about 10 min; no fix rounds.
+**Problems / notes:** Windows CI Net.Tests UDP timing flake once (rerun passed). `harass_min_army` is inert at tier 3. Busy Pis made MetalLB
+pods restart (CPU reservation for system pods still to do in the cluster repo).
+**Next session should:** see HANDOFF (Directorate v Expedition traces, remaining rows, SFX picks, cluster art passes).

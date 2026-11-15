@@ -1,35 +1,45 @@
-# Handoff: Session 27 — merge the depth art, run the s25after series on the Pi cluster, campaign sweep, SFX
-Last commit: `docs: Session 26 handoff` on `land/s26-docs` (PR to main). Depth art is PR #88 (`art/s25`). Check both merged.
-Where things stand: session 25 on main via PRs #82/#83 (s24), #84 (laptop run script), #85 (laptop art: sound picks, Authority skin, portraits,
-death frames, tutorial instructor voice am_adam), #86 (round 1) and the round-2 PR: Expedition shipment value 1200 (D-246), Left Behind tier-3 cap
-until 3600 (D-247), AI late all-in from tick 16000 (D-248), AI random seeds mixed per slot (D-249: fixes the mirror "slot bias"; every AI game
-reshuffled), Authority refinery 1700 (D-250), sound picks + pick-time trim (D-251), laptop summary adjudication columns (M13-30).
-Numbers: docs/balance/s25_balance.md (cloud, 16-32 seeds). Decisions up to D-251. Open questions: Q-73 (deferred until the owner plays the campaign).
+# Handoff: Session 28 — Directorate v Expedition traces, remaining balance rows, SFX picks, art passes on the cluster
+Last commit: `docs: Session 27 handoff` on `land/s27-balance` (PR #91, balance D-254 + docs). Check it merged.
+Where things stand: session 27 landed PR #90 (Directorate, Left Behind, Expedition UI skins, rendered on the Pi cluster; "Interface skin"
+settings line; D-252) and PR #91 (Expedition Skimmer 360 hp, shipment value 1100, D-254; D-253 cluster for CPU work). The s25after series and
+the campaign sweep ran on the Pi cluster (all 45 mission-tiers on target at 43d4388; re-swept after D-254 at 84a218d: all 45 still on target). Decisions up to D-254.
+Numbers: docs/balance/s27_balance.md (cluster, 64 games per row). Open questions: Q-73 (deferred until the owner plays the campaign).
 
 ## Start here (shown to the user as the plan; nothing starts until they say go)
-1. PR #88 (building depth pass, art/s25 at 623a111, finished and pushed overnight 2026-11-15): CI green? merge. Review
-   scratch\art_s25\depth_compare.png on the laptop first. The owner's folder is on branch art/s25: after merging, he pulls main.
-2. s25after series and campaign sweep: run them on the **Pi cluster** (skill `pi-cluster`, repo pwnzor11/k3s-cluster-code,
-   `claude/examples/rts-build.sh` + `rts-ai-series.sh`; smoke with SEEDS=1 TICKS=3000 first), or on the laptop
-   (`tools\measure\run_s21_campaign_sweep.ps1`, `run_s19_after.ps1 -OutName s25after`). Copy the cluster's .md rows into
-   balance_runs\s25after\ and run `run_s19_after.ps1 -OutName s25after` to write the summary. Target 45-55 % per row; edge rows
-   from the cloud: Authority v Directorate rust 40 %, Authority v Expedition rust 45 %, Expedition v Left Behind glass 64 %, LB mirror draws.
-   A campaign-sweep cluster script does not exist yet (write one in the same build-once/fan-out pattern).
-3. SFX: owner reruns `tools\audio\sfx\run_s24_sfx.ps1 -From 2` on the laptop (GPU work stays off the cluster), then screen and pick.
-4. UI skins for Directorate, Left Behind, Expedition (pilot each with tools/art/ui/auth_skin.py kit) and a settings line for `ui_skin`.
-5. M5-13 commander measurement (a good cluster job); M12-13b lobby switch for generator stamps; M12-14 maps from stamps.
+1. PR #91: CI green? merged? (the owner approved D-254 in chat; Claude may merge once Windows CI is green).
+2. Balance, remaining rows (cluster, 64 games each): Directorate v Expedition rust 73 % (not its early swarm: a tier-3 cap left it at 74 %;
+   trace per unit with `ai match --trace 1200 --game G --econ 1 --ledger 1`), Authority v Left Behind 66 %, Authority v Directorate 38 %
+   (Directorate tier-3 cap 22 until 4200 fixes it to 50 % but costs Dir v LB 49 -> 40 % and Exp v Dir glass 52 -> 62 %). Mirror start-corner
+   shares up to 67 % and Left Behind mirror draws (20/64 on Mountains l1) are also open.
+3. SFX: the owner runs `tools\audio\sfx\run_s24_sfx.ps1 -From 2` on the laptop (it was given in session 27; check `tools\audio\sfx\out`
+   for takes 4-6 and amb_*), then audition and pick (+ a trimmed die_ship).
+4. Art on the cluster (D-253): Blender scripts run inside Debian Blender 4.3 (`claude/examples/rts27/skins27.sh` pattern); candidates are the
+   portrait/death-frame fan-outs and any re-render the owner asks for. Pilot one asset and compare with the laptop version first.
+5. M5-13 commander measurement (cluster job), M12-13b lobby switch for generator stamps, M12-14 maps from stamps.
 
 ## Half-finished work
-- Depth pass done and pushed (PR #88); 5 rotating-head defences keep their sheets.
-- SFX: 65 of 80 picked; die_ship removed (8 s, over the cap) until re-picked; 9 drone sounds, gui_deny and 5 ambience loops not picked.
-- Balance changes are cloud-measured only (16-32 seeds); the laptop series is the confirmation.
+- Balance: three rows outside 45-55 % (above). Variant branches bal/s27-va..vh are measurement-only (owner can delete them).
+- SFX: 65 of 80 picked; die_ship, 9 drone sounds, gui_deny and 5 ambience loops not picked; laptop catch-up run handed over in session 27.
 - Editor props and decals draw as tints (no sprites); Grapeshot AI trigger "(tune)"; two-PC LAN test waits on the owner.
 
 ## Waiting on the user
-- Let the depth render finish; then the campaign sweep and the s25after series (step 2), then the SFX catch-up.
-- Two-PC LAN test (M9-15). Branch clean-up on GitHub: integ-s24, land/s24-r1..r3, land/s25-laptop, land/s25-r1, land/s25-r2 after merge, integ-s25.
+- SFX catch-up run on the laptop, then "sfx done". Two-PC LAN test (M9-15).
+- Branch clean-up on GitHub: integ-s24, land/s24-r1..r3, land/s25-laptop, land/s25-r1, land/s25-r2, integ-s25, art/s25, land/s26-docs,
+  integ-s27, land/s27-skins, land/s27-balance (after merge), wp/s27-skin-*, bal/s27-va, -vb, -vd, -ve, -vf, -vg, -vh.
 
 ## How to run this session
+- Session 27 lessons:
+  - Cluster (D-253): the k3s-cluster-code repo has `claude/examples/rts27/` (build-any.sh, var27.sh + mkvar.py for rows x seed chunks,
+    sweep27.sh, skins27.sh, summarize.py, varsum.py-style tallies). A 17-row x 64-game series takes ~65 min on 24-28 cores, the 45 x 12 campaign
+    sweep ~25 min, a 9-row variant ~35-50 min when two variants share the cluster. Results are seed-for-seed identical to x64.
+  - Run `Tools.dll` from the source tree (`cd /work/src/rts/<sha>`): it looks for data/rules above the working directory.
+  - The Pi Blender (Debian 4.3) renders our bpy scripts through a runpy wrapper and matched Blender 5.3 to <1/255; a 128-sample skin took ~32 min
+    on a shared Pi. Skin PNGs are not LFS, so they push from the cloud.
+  - `harass_min_army` does nothing at tier 3 (the veteran table has no `harass` flag): check the tier's flags before tuning a per-faction knob.
+  - A per-faction tier-3 army cap moves the target row a lot and the neighbours too; always measure all nine cross rows.
+  - Windows CI: `UdpTransportTests.ByeEndsTheConnectionAndSilenceTimesOut` failed once on timing; a job rerun
+    (`gh api -X POST repos/pwnzor11/RTS_2027/actions/jobs/<id>/rerun`) passed.
+  - Merging PRs: the owner approves in chat ("send it" / picking "Land VE"), then `gh api -X PUT .../pulls/<n>/merge` after CI is green.
 - Session 26 lessons:
   - Compute: CPU batch work (ai match series, campaign sweeps, test shards) can run on the owner's Pi cluster (7 Pi 4 nodes, 24
     worker cores, arm64, no GPU); use the `pi-cluster` skill. GPU work uses Anthropic-side resources or the laptop. Blender bpy

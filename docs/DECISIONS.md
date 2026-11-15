@@ -1838,3 +1838,23 @@ Scraper 600 as well overshot Authority v Directorate. **Status:** session 25; Au
 **Decision:** the owner accepted Claude's 65 recommended takes (tools/audio/sfx/picks_s25.toml). `make_sfx.py --pick` now cuts a one-shot over the
 270 000-byte cap to fit with a 250 ms fade-out. die_ship (8 s) is left out until it is re-picked with the trim. Tutorial instructor voice am_adam.
 **Status:** owner decision (session 25).
+
+### D-252 · 2026-11-15 · Faction UI skins for Directorate, Left Behind and Expedition approved and installed
+**Decision:** the owner approved the three pilots ("love the art pilots, send it"): Directorate dark board-form concrete with oxblood enamel and a
+loudspeaker emblem (dark panels instead of bone-white so the light text reads), Left Behind faded teal sheet metal with ochre road-sign buttons
+and dark text, Expedition navy enamel with chrome bezels and an anchor-and-compass roundel. Final 128-sample renders made on the Pi k3s cluster
+with Debian Blender 4.3 (matched Blender 5.3 to <1/255 on the Authority skin). A settings screen line toggles `ui_skin` (Faction art / Classic).
+**Status:** owner decision (session 27), landed in PR #90.
+
+### D-253 · 2026-11-15 · CPU batch work and Blender renders can run on the Pi cluster
+**Decision:** the owner asked to offload what can go to the cluster: AI series, campaign sweeps and Blender CPU renders now run there
+(k3s-cluster-code `claude/examples/rts27/`); results are seed-for-seed identical to x64. Laptop stays for GPU work (SFX generation) and Blender
+5.x-only features. Supersedes the "long measurement runs go to the owner's laptop" line of D-220/S21 where the cluster is available.
+**Status:** owner decision (session 27).
+
+### D-254 · 2026-11-15 · Expedition Skimmer 360 hp, shipment value 1100 (session 27 balance round)
+**Decision:** owner chose the recommended variant VE: `exp_skimmer` max_health 220 -> 360 (Skimmers were lost ~12 per game against the Directorate
+on rust_belt, 1-3 for other factions' harvesters) and the Expedition shipment value 1200 -> 1100 to offset the glass_coast gain. 64-game rows:
+sum of distances from 50 % over the nine cross-faction rows 109 -> 87 (table: docs/balance/s27_balance.md). Alternatives measured and dropped:
+Skimmer capacity 8 (worse everywhere), Left Behind cap until 3000, Directorate harass 22 (no effect at tier 3), Directorate tier-3 cap 22/26.
+**Status:** owner decision (session 27). Open: Directorate v Expedition rust 73 %, Authority v Left Behind 66 %, Authority v Directorate 38 %.
