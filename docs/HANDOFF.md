@@ -1,5 +1,5 @@
-# Handoff: Session 26 — read the laptop series and campaign sweep after the s25 balance round; finish the depth pass and SFX
-Last commit: `docs: Session 25 handoff` on `land/s25-r2` (PR to main). Check `git log -1 origin/main` and whether that PR is merged.
+# Handoff: Session 27 — merge the depth art, run the s25after series on the Pi cluster, campaign sweep, SFX
+Last commit: `docs: Session 26 handoff` on `land/s26-docs` (PR to main). Depth art is PR #88 (`art/s25`). Check both merged.
 Where things stand: session 25 on main via PRs #82/#83 (s24), #84 (laptop run script), #85 (laptop art: sound picks, Authority skin, portraits,
 death frames, tutorial instructor voice am_adam), #86 (round 1) and the round-2 PR: Expedition shipment value 1200 (D-246), Left Behind tier-3 cap
 until 3600 (D-247), AI late all-in from tick 16000 (D-248), AI random seeds mixed per slot (D-249: fixes the mirror "slot bias"; every AI game
@@ -7,18 +7,20 @@ reshuffled), Authority refinery 1700 (D-250), sound picks + pick-time trim (D-25
 Numbers: docs/balance/s25_balance.md (cloud, 16-32 seeds). Decisions up to D-251. Open questions: Q-73 (deferred until the owner plays the campaign).
 
 ## Start here (shown to the user as the plan; nothing starts until they say go)
-1. Check the round-2 PR (CI green? merged?) and the owner's laptop: depth pass done (`scratch\art_s25\run_s25_laptop.log` says ALL DONE and art/s25
-   pushed)? Open a PR for the new art/s25 commits (PR #85 is already merged) and merge when green. Review scratch\art_s25\depth_compare.png.
-2. Laptop runs on main (owner): `tools\measure\run_s21_campaign_sweep.ps1` (the AI seed change and refinery cost move campaign bots), then
-   `tools\measure\run_s19_after.ps1 -OutName s25after`. Read both: target 45-55 % per row; campaign tiers on Q-75 targets.
-   Edge rows from the cloud: Authority v Directorate rust 40 %, Authority v Expedition rust 45 %, Expedition v Left Behind glass 64 %, LB mirror draws.
-3. SFX: owner reruns `tools\audio\sfx\run_s24_sfx.ps1 -From 2` (takes 4-6 for 9 drone sounds, full-window test, ambience). Then screen, pick
-   (die_ship again, now trimmed; gui_deny, wpn_flame and the 8 drone sounds), commit from the laptop.
+1. PR #88 (building depth pass, art/s25 at 623a111, finished and pushed overnight 2026-11-15): CI green? merge. Review
+   scratch\art_s25\depth_compare.png on the laptop first. The owner's folder is on branch art/s25: after merging, he pulls main.
+2. s25after series and campaign sweep: run them on the **Pi cluster** (skill `pi-cluster`, repo pwnzor11/k3s-cluster-code,
+   `claude/examples/rts-build.sh` + `rts-ai-series.sh`; smoke with SEEDS=1 TICKS=3000 first), or on the laptop
+   (`tools\measure\run_s21_campaign_sweep.ps1`, `run_s19_after.ps1 -OutName s25after`). Copy the cluster's .md rows into
+   balance_runs\s25after\ and run `run_s19_after.ps1 -OutName s25after` to write the summary. Target 45-55 % per row; edge rows
+   from the cloud: Authority v Directorate rust 40 %, Authority v Expedition rust 45 %, Expedition v Left Behind glass 64 %, LB mirror draws.
+   A campaign-sweep cluster script does not exist yet (write one in the same build-once/fan-out pattern).
+3. SFX: owner reruns `tools\audio\sfx\run_s24_sfx.ps1 -From 2` on the laptop (GPU work stays off the cluster), then screen and pick.
 4. UI skins for Directorate, Left Behind, Expedition (pilot each with tools/art/ui/auth_skin.py kit) and a settings line for `ui_skin`.
-5. M5-13 commander measurement; M12-13b lobby switch for generator stamps; M12-14 maps from stamps.
+5. M5-13 commander measurement (a good cluster job); M12-13b lobby switch for generator stamps; M12-14 maps from stamps.
 
 ## Half-finished work
-- Building depth pass rendering overnight on the laptop (resumable; installs and pushes at the end). 5 rotating-head defences keep their sheets.
+- Depth pass done and pushed (PR #88); 5 rotating-head defences keep their sheets.
 - SFX: 65 of 80 picked; die_ship removed (8 s, over the cap) until re-picked; 9 drone sounds, gui_deny and 5 ambience loops not picked.
 - Balance changes are cloud-measured only (16-32 seeds); the laptop series is the confirmation.
 - Editor props and decals draw as tints (no sprites); Grapeshot AI trigger "(tune)"; two-PC LAN test waits on the owner.
@@ -28,6 +30,14 @@ Numbers: docs/balance/s25_balance.md (cloud, 16-32 seeds). Decisions up to D-251
 - Two-PC LAN test (M9-15). Branch clean-up on GitHub: integ-s24, land/s24-r1..r3, land/s25-laptop, land/s25-r1, land/s25-r2 after merge, integ-s25.
 
 ## How to run this session
+- Session 26 lessons:
+  - Compute: CPU batch work (ai match series, campaign sweeps, test shards) can run on the owner's Pi cluster (7 Pi 4 nodes, 24
+    worker cores, arm64, no GPU); use the `pi-cluster` skill. GPU work uses Anthropic-side resources or the laptop. Blender bpy
+    has no Linux-arm64 wheel, so art renders stay on the laptop.
+  - The owner's folder can lag main by a whole session (it was on art/s25 with the session 24 HANDOFF): read the handoff from
+    origin/main, and check the laptop branch before giving him commands.
+  - A laptop render that stops silently (sleep) shows as no new file in scratch for more than 35 min: check the output folder's
+    newest file time, and give `powercfg /change standby-timeout-ac 0` with overnight runs.
 - Session 25 lessons:
   - A balance claim from 16 seeds can flip when the AI seeds change: the Left Behind cap 4500 gave 47 % LB on the old seeds and 33 % on new ones.
     Use 32 seeds (64 games) for any row you keep a change on, and let the laptop series confirm.

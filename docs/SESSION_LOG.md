@@ -493,3 +493,15 @@ adjudication columns (M13-30). die_ship left out (over the size cap); --pick tri
 **Problems / notes:** PR #85 failed CI on die_ship's size and a test pinning pre-generated sound resolution (fixed in the cloud). The 4500 cap result
 did not survive the seed change (16-seed noise). Depth pass is ~20 h, not 3-6 h. The owner's voice commit needed a second try (staged, not committed).
 **Next session should:** see HANDOFF (laptop campaign sweep and s25after series, depth art PR, SFX catch-up, UI skins).
+
+## Session 26 · 2026-11-14/15 (resume, depth pass restart, Pi cluster built for CPU work)
+**Goal:** owner: resume, decide CPU-cluster vs GPU offload for slow work, keep the art going overnight, then build his Pi k3s cluster.
+**Done:** briefing from origin/main (owner's folder was one session behind). The stalled depth pass (laptop slept) restarted with
+`run_s25_laptop.ps1 -Skip sfx,skin,portraits`; it finished and pushed art/s25 (PR #88). Pi cluster (pwnzor11/k3s-cluster-code):
+reflash, 7 of 8 nodes up, k3s + Longhorn + MetalLB + Portainer + Argo CD, owner handed it to Claude for all projects; batch-job
+base and the project-agnostic `pi-cluster` skill (saved by the owner). k3s Indexed-Job scripts for the s19-style AI series written
+and smoke-tested pattern (not yet run on RTS rows).
+**Decisions:** none for RTS_2027 (cluster decisions live in the k3s repo, D-015..D-023).
+**Helpers:** none.
+**Problems / notes:** bpy has no Linux-arm64 wheel, so Blender renders cannot use the cluster. The router keeps managing IPs.
+**Next session should:** see HANDOFF (merge PR #88, s25after on the cluster, campaign sweep, SFX, UI skins).
