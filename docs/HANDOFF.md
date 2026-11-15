@@ -2,7 +2,7 @@
 Last commit: `docs: Session 27 handoff` on `land/s27-balance` (PR #91, balance D-254 + docs). Check it merged.
 Where things stand: session 27 landed PR #90 (Directorate, Left Behind, Expedition UI skins, rendered on the Pi cluster; "Interface skin"
 settings line; D-252) and PR #91 (Expedition Skimmer 360 hp, shipment value 1100, D-254; D-253 cluster for CPU work). The s25after series and
-the campaign sweep ran on the Pi cluster (all 45 mission-tiers on target at 43d4388; re-swept after D-254, see SESSION_LOG). Decisions up to D-254.
+the campaign sweep ran on the Pi cluster (all 45 mission-tiers on target at 43d4388; re-swept after D-254 at 84a218d: all 45 still on target). Decisions up to D-254.
 Numbers: docs/balance/s27_balance.md (cluster, 64 games per row). Open questions: Q-73 (deferred until the owner plays the campaign).
 
 ## Start here (shown to the user as the plan; nothing starts until they say go)
