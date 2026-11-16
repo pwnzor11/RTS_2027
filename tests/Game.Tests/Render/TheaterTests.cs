@@ -14,7 +14,7 @@ namespace Rts.Game.Tests.Render;
 public sealed class TheaterTests
 {
     /// <summary>Same pin as TerrainPaletteTests: the Rust Belt bake of the shipped M2 map.</summary>
-    private const string RustBeltM2BakeSha256 = "4d07c4e3a9e3f58928b3f165e8040c5f955434546d3087b69dbcfb88bdeb7c0e";
+    private const string RustBeltM2BakeSha256 = "65bb6c54a079528f2cbd9ce191d46b1af8706e3e6a70f58a7b935c077137192f";
 
     public static readonly string[] Theaters = { "rustbelt", "glasscoast", "mountains", "ashplains" };
 
