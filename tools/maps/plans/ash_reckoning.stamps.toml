@@ -286,3 +286,74 @@ rect = [78, 46, 84, 52]
 [[keep]]
 rect = [85, 9, 87, 11]
 
+# --- burnt groves, crater fields and a tank graveyard on the open plain (each also lands on its mirror image) ---
+[[stamp]]
+id = "grove"
+x = 65
+y = 15
+
+[[stamp]]
+id = "crater_field"
+x = 70
+y = 8
+
+[[stamp]]
+id = "ruined_block"
+x = 80
+y = 22
+mirror = true
+
+[[stamp]]
+id = "crater_field"
+x = 31
+y = 26
+rot = 1
+
+[[stamp]]
+id = "grove"
+x = 15
+y = 35
+
+[[stamp]]
+id = "ruined_block"
+x = 0
+y = 31
+rot = 1
+
+[[stamp]]
+id = "grove"
+x = 84
+y = 33
+
+[[stamp]]
+id = "ruined_block"
+x = 70
+y = 30
+
+# --- a yard for the ruin at (28,10): wrecks, blocks and a snag within four cells ---
+[[prop]]
+overlay = "Wreck"
+x = 26
+y = 9
+[[prop]]
+overlay = "Block"
+x = 27
+y = 12
+[[prop]]
+overlay = "Block"
+x = 32
+y = 12
+density = 1
+[[prop]]
+overlay = "Wreck"
+x = 32
+y = 9
+density = 1
+[[prop]]
+overlay = "Snag"
+x = 29
+y = 13
+[[prop]]
+overlay = "Pylon"
+x = 25
+y = 11
