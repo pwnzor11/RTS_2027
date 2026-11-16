@@ -261,6 +261,7 @@ public sealed class RecruitAi : IAiPlayer, IAiSnapshotable, IHookableAi
             _military.ShiftFirstTrigger(bp.AttackThreshold - _baseProfile.AttackThreshold);   // the first trigger was drawn in Start from the shared threshold
         }
         _profile = _profile.ForFaction((int)faction);
+        _military.CommitRatioPct = bp.FactionKeys.CommitRatio((int)faction);   // s29 siege_commit_ratio (0 = today's behaviour)
         _tactics = _faction.CreateTactics(bp);
         _build = new BuildOrderManager(_faction.OrderFor(bp.BuildRepertoire), _faction.PowerId, _faction.YardId)
         { ReserveInProgress = bp.RespondToAttacks, SupplyMargin = BuildOrderManager.MarginForTier(bp.Tier) };   // M4-12 (tier 2+); SUP-5 margin by tier

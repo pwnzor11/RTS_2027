@@ -895,6 +895,7 @@ internal sealed class MilitaryManager
             else if (e.Kind == ActorKind.Building && rules.Buildings[e.TypeIndex].PrimaryWeapon >= 0) enemy += rules.Buildings[e.TypeIndex].Cost;
         }
         if (!WaveGate.Losing(own, enemy, Options.RetreatRatioPct)) return false;
+        if (Committed(k)) return false;   // s29
         foreach (ViewActor a in k.Army)
             if (_roster.Contains(Key(a))) sink.Issue(CommandKind.Move, a.Id, a.Kind, rally);
         _roster.Clear(); _squadB.Clear();
@@ -906,12 +907,26 @@ internal sealed class MilitaryManager
         return true;
     }
 
+    /// <summary>s29 (<c>siege_commit_ratio</c> in [faction.&lt;id&gt;], percent, 0 = off, set at init): a wave is never called off while our army value is at least
+    /// this percent of the biggest enemy army seen lately plus the known defences of the target (s29 trace: Expedition waves worth 3-18x the Directorate's
+    /// army walked home at 50 percent health, every ~1200 ticks, 8 times, and never killed a structure). Config, not state: not saved.</summary>
+    public int CommitRatioPct { get; set; }
+
+    /// <summary>s29: true when the wave must press on whatever its health (see <see cref="CommitRatioPct"/>). Integer maths.</summary>
+    private bool Committed(RecruitKnowledge k)
+    {
+        if (CommitRatioPct <= 0) return false;
+        long enemy = (long)EnemyValueSeen + SiegePlan.DefenceValue(k.Rules, _targetBuildings, out _);
+        return (long)OwnValue * 100 >= enemy * CommitRatioPct;
+    }
+
     /// <summary>Calls the wave off when its health fell below the retreat line: every roster member walks home. True when it did.</summary>
     private bool CallOff(RecruitKnowledge k, ICommandSink sink, CellCoord rally, int retreatPct)
     {
         long now = 0;
         foreach (ViewActor a in k.Army) if (_roster.Contains(Key(a))) now += a.Health;
         if (now * 100 >= _launchHealth * (retreatPct + GroupRetreatMarginPct)) return false;
+        if (Committed(k)) return false;   // s29
         foreach (ViewActor a in k.Army)
             if (_roster.Contains(Key(a))) sink.Issue(CommandKind.Move, a.Id, a.Kind, rally);
         _roster.Clear(); _squadB.Clear();
