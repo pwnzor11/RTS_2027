@@ -551,3 +551,15 @@ were judgement-heavy). One fix round each for props (2) and none for the others.
 requests stayed Pending behind a full 1-CPU series for 30+ min (lower the series' parallelism first). LFS upload from the cloud WORKED this session
 (push access attached). The auto-mode check went without a verdict a few times; waiting and retrying worked.
 **Next session should:** see HANDOFF (Expedition strength pass with aa_needs_air, Expedition retreat floor key, Mother Rig mop-up, M5-13 model run).
+
+## Session 30 · 2026-11-16 (rustbelt_m2 full dressing, Expedition strength pass on the cluster)
+**Goal:** owner: resume; answers: attach the repo with push access, Q-85 (b), skip M5-13; then "go".
+**Done:** PR #97 merged: rustbelt_m2 full showcase dressing with tier-5 retunes of auth_01 (raid 1 5 -> 4) and lb_01 (second relief 4 -> 3), all six
+missions on the map meet D-222 (D-262); new unset AI keys `aa_cap_before_air`, `retreat_floor_pct`, `mopup_hunt`. Balance: three cluster screens,
+16 variants x 64 games per touched row; none meets D-257, no change (D-263, docs/balance/s30_balance.md).
+**Decisions:** D-262, D-263. **Questions:** Q-85 answered.
+**Helpers:** 2 Sonnet (s30-rust2 ~85 min, s30-mopup ~120 min); no fix rounds.
+**Problems / notes:** the soft anti-air mode (one Sparker) was as strong as none, so it was replaced by a cap key before landing. The mop-up hunt helps
+little: most glass draws are an Expedition collapse or a self-repairing Mother Rig, not a search failure.
+**Next session should:** see HANDOFF (Directorate-side or siege levers for Directorate v Expedition; M5-13 when a key is set).
+

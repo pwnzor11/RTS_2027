@@ -1909,3 +1909,20 @@ whose own baseline is 58-51-19 (53 %). The M5-12 levers are strong enough to los
 The AI keys stay in the code, unset. `aa_needs_air` fixes real AI waste but makes the Expedition the strongest faction; it needs an Expedition
 strength pass before it can land (docs/balance/s29_balance.md).
 **Status:** measurement (session 29), under D-257.
+
+### D-262 · 2026-11-16 · Session 30 owner answers (push access, Q-85, M5-13)
+**Decision:** (1) the repo was attached with push access at the owner's request; (2) Q-85 (b): rustbelt_m2 gets the full showcase dressing
+(north-road checkpoint, ruined blocks, grove, props) and the tier-5 bot walks of the missions on it are re-walked and retuned: auth_01 tier-5 raid 1
+is 4 riflemen (was 5), lb_01 tier-5 second relief 3 (was 4); every mission on the map (auth_01, auth_02, dir_01, dir_02, lb_01, lb_02) meets the
+D-222 sweep targets and the fixed-seed walks pass; (3) the M5-13 model run is skipped this session (no API key set). Supersedes D-259's "rustbelt_m2
+ended up the lightest". **Why:** owner answers at the session 30 briefing. **Status:** decided (owner), landed in PR #97.
+
+### D-263 · 2026-11-16 · Session 30 balance: no change lands; three new AI keys stay unset
+**Decision:** none of 16 screened variants (Sparker caps 1/3/5/8, cap + mop-up hunt 6/8/10, retreat floor 25 alone or with the anti-air keys, Glide Tank
+cost/health, two Left Behind tier-3 cap variants, mop-up hunt alone) meets the D-257 landing rule on the 64-game screen, so main stays as is. New keys,
+all unset: `aa_cap_before_air` (replaces the session's first `aa_needs_air` = 2 soft mode before it landed), `retreat_floor_pct`, `mopup_hunt`.
+**Why:** every Expedition-wide strengthening that helps Directorate v Expedition rust moves Authority v Expedition and the Expedition glass rows more
+than 3 points the wrong way; the Left Behind levers pull Directorate v Left Behind down 11-19 points (docs/balance/s30_balance.md).
+**Alternatives:** land cap 5 (Dir v Exp 50 %) and accept Auth v Exp 28 % (breaks D-257); Directorate-side or siege levers next session.
+**Status:** measurement (session 30), under D-257.
+
