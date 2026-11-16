@@ -383,7 +383,7 @@ rect = [85, 81, 87, 83]
 
 # Full showcase dressing (Q-85 option b, s30): ruined blocks, a checkpoint on the north road, groves on the west strip (each also lands on its
 # half-turn image), road-side and bridge-head props. The missions' own cells are kept clear by the keeps above; the tier-5 bot walks of auth_01,
-# lb_01 and dir_01 were re-walked and retuned for it (docs/balance/s30_rustbelt_m2.md).
+# lb_01 and dir_01 were re-walked and retuned for it.
 [[stamp]]
 id = "checkpoint"
 x = 28
