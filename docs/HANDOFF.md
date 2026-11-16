@@ -7,11 +7,11 @@ docs/balance/s28_balance.md; main 0f467f2c reproduces those games exactly). Deci
 ## Start here (shown to the user as the plan; nothing starts until they say go)
 1. Session 29 handoff PR: CI green? merged? (Claude may merge once Windows CI is green.)
 2. Expedition pass (docs/balance/s29_balance.md): `aa_needs_air` (no air-only Sparkers before enemy aircraft) fixes real AI waste but swings every
-   Expedition row 20-35 points its way; shipments 600-750 pull the glass rows back, not Expedition v Directorate glass (72-75 %) or the rust rows.
+   Expedition row 19-34 points its way; shipments 600-750 pull the glass rows back, not Expedition v Directorate glass (72-75 %) or the rust rows.
    Options to screen: a softer key (one Sparker per bag cycle), Glide Tank cost/strength, Directorate anti-armour. All nine rows, 64 then 128 games.
-3. Make the Expedition 40 % retreat floor a data key (ExpeditionTactics.RetreatPct, forced in RecruitAi.cs at two sites) and a mop-up fix for
+3. Make the Expedition 40 % retreat floor a data key (ExpeditionTactics.RetreatPct, used in RecruitAi.cs Retune/Options/RetreatBase and MilitaryManager) and a mop-up fix for
    relocating bases (Mother Rig) for the Expedition v Left Behind glass draws.
-4. Authority v Left Behind 70 %: the Authority build/tech levers all weaken the Authority everywhere (worst v Directorate); look at the Left Behind
+4. Authority v Left Behind 70 %: the Authority build/tech levers weaken the Authority on most rows (worst v Directorate, 9-22 %); look at the Left Behind
    side (tier-3 army cap leaves ~3k unspent; adapt_build alone moved the row 5 points but raised Exp v LB glass 10).
 5. M5-13 model run: needs the owner's ANTHROPIC_API_KEY or OPENAI_API_KEY set on the laptop (never in chat); read against D-260 (21 % / 53 %).
 6. Q-85 rustbelt_m2 showcase; mirror start-corner bias (owner: later).
@@ -26,7 +26,7 @@ docs/balance/s28_balance.md; main 0f467f2c reproduces those games exactly). Deci
 - Pull main on the laptop (`git checkout main; git pull`) after the handoff PR (the new prop atlases are LFS; `git lfs pull` if they show as text).
 - Q-85; two-PC LAN test (M9-15); API key on the laptop for M5-13 (optional). Branch clean-up on GitHub: integ-s24, land/s24-r1..r3, land/s25-laptop,
   land/s25-r1, land/s25-r2, integ-s25, art/s25, land/s26-docs, integ-s27, land/s27-skins, land/s27-balance, wp/s27-skin-*, bal/s27-*, land/s28-sfx,
-  integ-s28, land/s28, bal/s28-*, integ-s29, land/s29-r1, land/s29-r2 (after merge), art/s29-props, bal/s29-*.
+  integ-s28, land/s28, bal/s28-*, integ-s29, integ-s29b, land/s29-r1, land/s29-r2 (after merge), art/s29-props, bal/s29-* (wp/s29-* were never pushed).
 
 ## How to run this session
 - Session 29 lessons:

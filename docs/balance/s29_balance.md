@@ -30,7 +30,7 @@ Per faction, in `[faction.<id>]` of data/ai/difficulty.toml: `army_before_tech`,
 | a6 | adapt_build 1, army_before_adapt 0, adapt_cash 1200, max production 4 | Auth v Dir 10 %, Auth v LB 30 %, Exp v Auth glass 83 % |
 | l1 | Left Behind adapt_build 1 | Auth v LB 61 % (66), Exp v LB glass 70 % (60), Dir v LB 46 % (49) |
 | l2 | l1 + adapt_cash 1000, max production 3 | Auth v LB 65 %, Exp v LB glass 84 %, LB v Exp 62 % (56) |
-| r4 / r5 / r6 | Expedition siege_commit_ratio 150 / 200 / 300 | Dir v Exp 69 / 72 / 73 % (73); glass rows up 2-13 points |
+| r4 / r5 / r6 | Expedition siege_commit_ratio 150 / 200 / 300 | Dir v Exp 69 / 72 / 73 % (73); glass rows up 0-13 points |
 | e3 | Expedition aa_needs_air 1 | Dir v Exp 39 %, Auth v Exp 19 % (41), LB v Exp 27 % (56), Exp glass rows 75-81 % |
 | e4 | e3 + siege_commit_ratio 300 | as e3, Dir v Exp 32 % |
 | c1 | e3 + shipments value 900 (from 1100) | Dir v Exp 40 %, Auth v Exp 30 %, LB v Exp 32 %, glass 66-79 % |
@@ -41,11 +41,12 @@ Earlier miss: r1-r3 and e1-e2 had the key written into a comment line's position
 r4-r6 and e3-e4 (lesson in HANDOFF).
 
 ## Decision
-No balance change landed (D-261). Every Authority lever weakens the Authority on all rows (tier 2 earlier or more production = a smaller army at the
-first fights), worst against the Directorate. The Left Behind adapt variants help Authority v Left Behind by at most 5 points and push Expedition v Left
+No balance change landed (D-261). Every Authority lever weakens the Authority on most rows (tier 2 earlier or more production = a smaller army at the
+first fights), worst against the Directorate (a4 9 %, a6 10 %); only a1/a5 lift Authority v Expedition (41 to 48 %). The Left Behind adapt variants help Authority v Left Behind by at most 5 points and push Expedition v Left
 Behind glass up 10. The siege key alone does not move Directorate v Expedition. `aa_needs_air` fixes a real AI waste (air-only units against an enemy
-with no aircraft) and turns the Expedition from the weakest to the strongest faction: Directorate v Expedition overshoots to 39 %, and lower shipment
-values pull the glass rows back but leave Expedition v Directorate glass at 72-75 % and the rust rows Expedition-favoured.
+with no aircraft) and turns the Expedition from the weakest to the strongest faction: Directorate v Expedition overshoots to 39 %, and shipment
+values 750 and 600 pull the other glass rows back but leave Expedition v Directorate glass at 72-75 % (66 % at 900, where the other
+glass rows stay high) and the rust rows Expedition-favoured.
 
 Next steps (HANDOFF): land `aa_needs_air` together with an Expedition strength pass aimed at the Directorate matchups (Glide Tank numbers or the
 Directorate's anti-armour), measured on all nine rows; or a softer version (one Sparker per bag cycle instead of none). Make the Expedition 40 %
