@@ -52,6 +52,7 @@
 #   adapt_cash              0..100000: funds (cash + stored) at which AdaptBuild adds a barracks / factory; default 1500 (TierPlanner.FloatingCash).
 #   adapt_max_production    2..6: the most barracks and the most factories AdaptBuild grows to; default 2.
 #   tier2_gate_tick         0..100000: tick from which the tier-2 gate is added; default 3600 (TierPlanner.Tier2GateTick).
+#   adapt_build             0/1: force the adapt_build flag for this faction at every tier (only the commissar table sets it); missing = the tier's own flag.
 
 [faction.authority]
 harass_min_army = 30

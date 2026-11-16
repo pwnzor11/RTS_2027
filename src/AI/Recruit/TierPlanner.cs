@@ -403,7 +403,7 @@ internal sealed class TierPlanner
             build.Extend(air);
         if (_p.Superweapons && _faction.SuperweaponBuildingId is string sw && SuperweaponUsable(k.Rules, sw) && lateOk && (k.View.Tier >= 3 || !up)
             && build.StepsOf(sw) < 1) build.Extend(sw);
-        if (!_p.AdaptBuild || (armyWait && k.Army.Count < tune.ArmyBeforeAdapt)) return;
+        if (!(tune.AdaptBuild < 0 ? _p.AdaptBuild : tune.AdaptBuild == 1) || (armyWait && k.Army.Count < tune.ArmyBeforeAdapt)) return;
         if (funds >= tune.AdaptCash)
         {
             if (build.StepsOf(_faction.BarracksId) < tune.AdaptMaxProduction) build.Extend(_faction.BarracksId);

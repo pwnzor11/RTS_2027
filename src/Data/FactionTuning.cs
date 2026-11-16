@@ -11,8 +11,9 @@ namespace Rts.Data;
 /// <param name="AdaptCash">Funds at which AdaptBuild adds a barracks / factory (<c>adapt_cash</c>).</param>
 /// <param name="AdaptMaxProduction">Most barracks and most factories AdaptBuild grows to (<c>adapt_max_production</c>).</param>
 /// <param name="Tier2GateTick">Tick from which the tier-2 gate is added (<c>tier2_gate_tick</c>).</param>
-public sealed record FactionTuning(int ArmyBeforeTech, int ArmyBeforeAdapt, int AdaptCash, int AdaptMaxProduction, int Tier2GateTick)
+/// <param name="AdaptBuild">0 or 1 forces the AdaptBuild flag for this faction at every tier; -1 (key missing) keeps the tier's own flag (<c>adapt_build</c>; only the tier-5 table sets it).</param>
+public sealed record FactionTuning(int ArmyBeforeTech, int ArmyBeforeAdapt, int AdaptCash, int AdaptMaxProduction, int Tier2GateTick, int AdaptBuild = -1)
 {
     /// <summary>The former constants: 30, 30, 1500, 2, 3600.</summary>
-    public static FactionTuning Default { get; } = new(30, 30, 1500, 2, 3600);
+    public static FactionTuning Default { get; } = new(30, 30, 1500, 2, 3600, -1);
 }

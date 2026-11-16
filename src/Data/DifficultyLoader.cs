@@ -94,7 +94,7 @@ public static class DifficultyLoader
     public static readonly IReadOnlyList<string> FactionIds = ["authority", "directorate", "left_behind", "expedition"];
 
     /// <summary>S29: the per-faction build lever keys allowed besides <c>harass_min_army</c>.</summary>
-    private static readonly string[] TuningKeys = ["army_before_tech", "army_before_adapt", "adapt_cash", "adapt_max_production", "tier2_gate_tick"];
+    private static readonly string[] TuningKeys = ["army_before_tech", "army_before_adapt", "adapt_cash", "adapt_max_production", "tier2_gate_tick", "adapt_build"];
 
     private static FactionAiKeys ParseFactions(TomlTable root, string file, List<RulesProblem> problems, List<(int Faction, int Tier, TomlTable Table, string Id)> overrides)
     {
@@ -119,7 +119,8 @@ public static class DifficultyLoader
                 Opt(t, id, "army_before_adapt", 0, 1000, d.ArmyBeforeAdapt, file, problems) ?? d.ArmyBeforeAdapt,
                 Opt(t, id, "adapt_cash", 0, 100000, d.AdaptCash, file, problems) ?? d.AdaptCash,
                 Opt(t, id, "adapt_max_production", 2, 6, d.AdaptMaxProduction, file, problems) ?? d.AdaptMaxProduction,
-                Opt(t, id, "tier2_gate_tick", 0, 100000, d.Tier2GateTick, file, problems) ?? d.Tier2GateTick);
+                Opt(t, id, "tier2_gate_tick", 0, 100000, d.Tier2GateTick, file, problems) ?? d.Tier2GateTick,
+                Opt(t, id, "adapt_build", 0, 1, d.AdaptBuild, file, problems) ?? d.AdaptBuild);
             foreach (var key in t)
             {
                 int tier = TierOf(key.Key);
