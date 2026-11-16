@@ -538,3 +538,12 @@ On main after PR #95 and the session 29 handoff PR.
   glass_coast_e1 has three drowned-suburb blocks and wreck clusters; rustbelt_m2 has a grove on the west strip, fallen pylons and a wreck yard by the
   bridge heads (deliberately light, Q-85). The campaign missions on these maps play as before.
 - **Balance:** no change this session (D-261). The new AI keys in data/ai/difficulty.toml are documented in its comment block and not set.
+
+## Session 30 (2026-11-16)
+On main after PR #97 and the session 30 handoff PR.
+- **rustbelt_m2 full dressing (D-262):** play auth_01 (or lb_01 / dir_01): the map now shows a checkpoint on the north road, a ruined block at the
+  north edge, a grove, fallen pylons beside the west road, a wreck yard on the south road and props by the bridge head. On tier 5, auth_01's first raid is 4 riflemen (was 5) and
+  lb_01's second relief group is 3 riflemen (was 4); the missions should still feel hard but winnable.
+- **Balance:** no change this session (D-263). New AI keys `aa_cap_before_air`, `retreat_floor_pct` and `mopup_hunt` are documented in the comment
+  block of data/ai/difficulty.toml and not set; skirmish AI plays as in session 29.
+

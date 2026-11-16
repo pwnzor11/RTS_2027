@@ -1,34 +1,38 @@
-# Handoff: Session 30 — Expedition strength pass with aa_needs_air, retreat-floor key, Mother Rig mop-up; M5-13 model run when the key is set
-Last commit: `docs: Session 29 handoff` on `land/s29-r2` (PR to main). Check it merged; PR #95 (prop art, stamped maps, AI keys) is merged.
-Where things stand: session 29 landed PR #95. No balance change (D-261): 16 src-lever variants screened on the cluster, none meets the D-257 landing
-rule (target row toward 50 % on 128 games, no other row more than 3 points the wrong way). Main at 128 games is unchanged from session 28 (table in
-docs/balance/s28_balance.md; main 0f467f2c reproduces those games exactly). Decisions up to D-261. Open questions: Q-73 (deferred), Q-85.
+# Handoff: Session 31 — Directorate v Expedition from the Directorate/siege side; M5-13 model run when the key is set
+Last commit: `docs: Session 30 handoff` on `land/s30-r2` (PR to main). Check it merged; PR #97 (rustbelt_m2 dressing, AI keys) is merged.
+Where things stand: session 30 landed PR #97 (rustbelt_m2 full showcase, Q-85 (b), D-262). No balance change (D-263): 16 variants screened on the
+cluster, none meets D-257. Main at 128 games is unchanged from session 28 (table in docs/balance/s28_balance.md). Decisions up to D-263. Open
+questions: Q-73 (deferred).
 
 ## Start here (shown to the user as the plan; nothing starts until they say go)
-1. Session 29 handoff PR: CI green? merged? (Claude may merge once Windows CI is green.)
-2. Expedition pass (docs/balance/s29_balance.md): `aa_needs_air` (no air-only Sparkers before enemy aircraft) fixes real AI waste but swings every
-   Expedition row 19-34 points its way; shipments 600-750 pull the glass rows back, not Expedition v Directorate glass (72-75 %) or the rust rows.
-   Options to screen: a softer key (one Sparker per bag cycle), Glide Tank cost/strength, Directorate anti-armour. All nine rows, 64 then 128 games.
-3. Make the Expedition 40 % retreat floor a data key (ExpeditionTactics.RetreatPct, used in RecruitAi.cs Retune/Options/RetreatBase and MilitaryManager) and a mop-up fix for
-   relocating bases (Mother Rig) for the Expedition v Left Behind glass draws.
-4. Authority v Left Behind 70 %: the Authority build/tech levers weaken the Authority on most rows (worst v Directorate, 9-22 %); look at the Left Behind
-   side (tier-3 army cap leaves ~3k unspent; adapt_build alone moved the row 5 points but raised Exp v LB glass 10).
-5. M5-13 model run: needs the owner's ANTHROPIC_API_KEY or OPENAI_API_KEY set on the laptop (never in chat); read against D-260 (21 % / 53 %).
-6. Q-85 rustbelt_m2 showcase; mirror start-corner bias (owner: later).
+1. Session 30 handoff PR: CI green? merged? (Claude may merge once Windows CI is green.)
+2. Directorate v Expedition rust (70 % on 128 games, 30 draws; 73 % on the 64-game screen baseline): Expedition-wide levers are exhausted (docs/balance/s30_balance.md: any help costs
+   Authority v Expedition and the glass rows). Look at the Directorate side (base defences, repair between waves) or the Expedition siege against
+   defences (traces of the draws first; siege_commit_ratio did nothing alone in s29). Measure all nine rows, 64 then 128 games.
+3. Authority v Left Behind 70 %: neither the Authority levers (s29) nor the Left Behind cap (s30) pass; an Authority-v-LB-specific cause is needed
+   (trace first).
+4. M5-13 model run: needs the owner's ANTHROPIC_API_KEY or OPENAI_API_KEY set on the laptop (never in chat); read against D-260 (21 % / 53 %).
+5. Mirror start-corner bias (owner: later).
 
 ## Half-finished work
-- Variant branches bal/s29-* (a1-a6, l1-l2, r1-r6, e1-e4, c1-c3) are measurement only (delete on GitHub); r1-r3 and e1-e2 are broken (key outside
-  the table). art/s29-props is merged.
+- Variant branches bal/s30-* (s1-s3, f1, g1-g3, h1-h4, k3, k5, k8, l3, l4, m1, n6, n8, n10) are measurement only (delete on GitHub); h1-h4 were never
+  measured. The keys `aa_cap_before_air`, `retreat_floor_pct`, `mopup_hunt` are in the code and unset; the Sparker cap is a smooth dial (8-10 near
+  main) if a later change makes room for it.
 - exp_rad_burst is installed but no event plays it. Editor props/decals draw as tints in the editor view; Grapeshot AI trigger "(tune)";
   two-PC LAN test waits on the owner.
 
 ## Waiting on the user
-- Pull main on the laptop (`git checkout main; git pull`) after the handoff PR (the new prop atlases are LFS; `git lfs pull` if they show as text).
-- Q-85; two-PC LAN test (M9-15); API key on the laptop for M5-13 (optional). Branch clean-up on GitHub: integ-s24, land/s24-r1..r3, land/s25-laptop,
-  land/s25-r1, land/s25-r2, integ-s25, art/s25, land/s26-docs, integ-s27, land/s27-skins, land/s27-balance, wp/s27-skin-*, bal/s27-*, land/s28-sfx,
-  integ-s28, land/s28, bal/s28-*, integ-s29, integ-s29b, land/s29-r1, land/s29-r2 (after merge), art/s29-props, bal/s29-* (wp/s29-* were never pushed).
+- Pull main on the laptop (`git checkout main; git pull`; the laptop folder was still on the session 28 merge at the start of session 30).
+- Two-PC LAN test (M9-15); API key on the laptop for M5-13 (optional). Branch clean-up on GitHub: the session 29 list (integ-s24 ... bal/s29-*),
+  plus integ-s30, land/s30-r1, land/s30-r2 (after merge), bal/s30-*.
 
 ## How to run this session
+- Session 30 lessons:
+  - Screen a new key's smallest setting first: the "one Sparker allowed" mode behaved like the full key, so a cap (dial) was the useful form.
+  - A rule-change screen of 9 variants x 4-6 rows (200 indices) takes ~2 h on 22 cluster cores; drop the series' parallelism to 16 before submitting
+    builds (3-CPU build pods then schedule at once), and restore it after.
+  - Merge helpers that add per-faction keys one at a time: FactionAiKeys/DifficultyLoader conflict every time (new ctor params at the end).
+  - The sum28.py baseline is the 64-game main table (seeds 1-32); it is enough to reject variants on the screen.
 - Session 29 lessons:
   - With push access attached (owner asked in chat), LFS uploads from the cloud worked: a branch with 4 new atlas PNGs pushed, and the LFS batch
     API listed all objects. Check with a "download" batch request before assuming the bundle route is needed.
