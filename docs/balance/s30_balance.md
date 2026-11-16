@@ -28,8 +28,8 @@ Rows: Auth v Exp rust 41, Dir v Exp rust 73, LB v Exp rust 56, Exp v Auth glass 
 | n6 / n8 / n10 | cap 6 / 8 / 10 + mopup_hunt | Dir v Exp 65 / 69 / 72, Auth v Exp 30 / 31 / 38, Exp v Auth glass 62 in all three |
 
 ## Findings
-- The Sparker waste is what holds the Expedition back: with none (or even one) air-only unit before enemy air it is 20-30 points too strong on
-  almost every row. The cap is a smooth dial (cap 8-10 is close to main, cap 3 close to none).
+- The Sparker waste is what holds the Expedition back: with none (or even one) air-only unit before enemy air it gains 17-38 points on the rust
+  rows and 8-18 on the glass rows. The cap is a smooth dial (cap 8-10 is close to main, cap 3 close to none).
 - Every Expedition-wide strengthening that helps Directorate v Expedition costs Authority v Expedition (and Exp v Auth / Exp v Dir glass) more than
   3 points. Directorate v Expedition rust is a matchup problem (the Expedition cannot break the Directorate base; ~16-18 draws of 64), not a
   faction-strength problem; the next lever should act on the Directorate side or on the Expedition's siege against Directorate defences.

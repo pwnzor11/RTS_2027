@@ -6,7 +6,7 @@ questions: Q-73 (deferred).
 
 ## Start here (shown to the user as the plan; nothing starts until they say go)
 1. Session 30 handoff PR: CI green? merged? (Claude may merge once Windows CI is green.)
-2. Directorate v Expedition rust (73 %, ~16-18 draws of 64): Expedition-wide levers are exhausted (docs/balance/s30_balance.md: any help costs
+2. Directorate v Expedition rust (70 % on 128 games, 30 draws; 73 % on the 64-game screen baseline): Expedition-wide levers are exhausted (docs/balance/s30_balance.md: any help costs
    Authority v Expedition and the glass rows). Look at the Directorate side (base defences, repair between waves) or the Expedition siege against
    defences (traces of the draws first; siege_commit_ratio did nothing alone in s29). Measure all nine rows, 64 then 128 games.
 3. Authority v Left Behind 70 %: neither the Authority levers (s29) nor the Left Behind cap (s30) pass; an Authority-v-LB-specific cause is needed
