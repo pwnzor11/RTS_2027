@@ -45,6 +45,14 @@
 # D-167 (per faction, optional): tables [faction.authority], [faction.directorate], [faction.left_behind], [faction.expedition]
 #   harass_min_army         1..1000: army size before the raiding party (flag harass) is formed; missing key or table = 30.
 #                           Directorate 14, the others 30 (s13 ladder: Authority raiders pulled out of a small army cost it the wave)
+# S29 (BAL-S29, per faction, optional; none is set in the faction tables below, so every default applies):
+#   army_before_tech        1..1000: army size before the research structure and the tier-2 gate are added; default 30 (TierPlanner.ArmyBeforeTech).
+#                           Left Behind ignores it (it never waits for an army).
+#   army_before_adapt       0..1000: army size before AdaptBuild adds production / defence; default 30 (TierPlanner.ArmyBeforeAdapt).
+#   adapt_cash              0..100000: funds (cash + stored) at which AdaptBuild adds a barracks / factory; default 1500 (TierPlanner.FloatingCash).
+#   adapt_max_production    2..6: the most barracks and the most factories AdaptBuild grows to; default 2.
+#   tier2_gate_tick         0..100000: tick from which the tier-2 gate is added; default 3600 (TierPlanner.Tier2GateTick).
+#   adapt_build             0/1: force the adapt_build flag for this faction at every tier (only the commissar table sets it); missing = the tier's own flag.
 
 [faction.authority]
 harass_min_army = 30
