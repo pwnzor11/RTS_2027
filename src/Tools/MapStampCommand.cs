@@ -15,7 +15,7 @@ namespace Rts.Tools;
 /// ground patches to an existing map file, deterministically (same base and plan give a byte-identical file). Plan file (TOML):
 /// <c>symmetry</c> (optional key such as rot2 or mirror_y: every op is copied to its images; default none), <c>[[keep]] rect = [x0,y0,x1,y1]</c>
 /// (cells no op may change), <c>[[stamp]] id, x, y, rot, mirror, sym</c>, <c>[[prop]] overlay, x, y, density, sym</c> and
-/// <c>[[patch]] land, rect, sym</c>. An op that touches a start square, a resource cell, a keep rect, or whose image does, is an error, so a plan
+/// <c>[[patch]] land, rect, sym</c> (keep every entry of one kind together: a TOML array of tables that is reopened after another table loses its earlier entries). An op that touches a start square, a resource cell, a keep rect, or whose image does, is an error, so a plan
 /// that loads is safe by construction; the result is also run through the map validator and any error fails the command.</summary>
 public static class MapStampCommand
 {
