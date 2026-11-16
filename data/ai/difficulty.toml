@@ -49,6 +49,9 @@
 #                           retreat) while our army value is at least this percent of the enemy army seen lately plus the known defences of its target.
 #                           Why: the Expedition retreat floor (40 percent health, +10 margin) walked every wave home at half health, 8 waves in a row, v a Directorate
 #                           base worth 1-3k credits of defences and no army, while it held 12k of army.
+#   aa_needs_air            0/1 (s29, missing key = 0 = off): 1 = the faction builds no vehicle whose gun only hits aircraft (the Expedition Sparker) until an
+#                           enemy aircraft has been seen. Why: a third of the Expedition tier-2 bag is Sparkers (600 each); traced games held 6-15 of them
+#                           (up to 9000 credits, over half the army value) against a Directorate with no aircraft, and none of it can shoot a base.
 
 [faction.authority]
 harass_min_army = 30

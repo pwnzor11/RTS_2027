@@ -44,4 +44,19 @@ public class SiegeCommitKeyTests
         }
         finally { File.Delete(bad); }
     }
+
+    [Fact]
+    public void AaNeedsAirKeyIsOffByDefaultAndReadPerFaction()
+    {
+        Assert.False(TestWorld.Tiers[2].FactionKeys.AaNeedsAir((int)Faction.Expedition));
+        string text = File.ReadAllText(DifficultyLoader.PathBesideRules(TestWorld.RulesDir));
+        string path = Write(text.Replace("\n[faction.expedition]\n", "\n[faction.expedition]\naa_needs_air = 1\n"));
+        try
+        {
+            var keys = DifficultyLoader.Load(path)[2].FactionKeys;
+            Assert.True(keys.AaNeedsAir((int)Faction.Expedition));
+            Assert.False(keys.AaNeedsAir((int)Faction.Directorate));
+        }
+        finally { File.Delete(path); }
+    }
 }
