@@ -76,7 +76,7 @@ def mats():
         "steel": make_mat("w_steel", "#3c3f41", "#7d8184", "#6b6f78", 2.0, metal=0.2),
         "soot": solid_mat("w_soot", "#141211"),
         "tyre": solid_mat("w_tyre", "#1b1b1b"),
-        "pylon": make_mat("w_pylon", "#4a2e20", "#6f7173", "#8a4a2a", 2.4, metal=0.2),
+        "pylon": make_mat("w_pylon", "#1d1b1a", "#3a3836", "#8a4a2a", 1.8, metal=0.1),
         "glass": make_mat("g_glass", "#3f8f88", "#7fd0c4", "#d5fbf3", 2.4, rough=0.12),
         "glassdark": make_mat("g_dark", "#27655f", "#3f8f88", "#7fd0c4", 3.0, rough=0.2),
         "ice": make_mat("i_ice", "#8fb8d0", "#bcdcec", "#eef9ff", 2.0, rough=0.2),
@@ -224,47 +224,41 @@ def ice2(m):
     slab(m, (0.02 * CELL, -0.26 * CELL, 0.40), (0.34 * CELL, 0.26 * CELL, 0.12), (18, 12, 35))
 
 
-def pylon(m, height, lean, legs_cut, seed):
-    """Snapped lattice pylon: four thick slanted legs, one zig-zag brace per visible face, ragged break at the top, a fallen cross-arm, cable stubs."""
+def pylon(m, height, lean, side, seed):
+    """Snapped lattice stub that reads as one solid dark shape at 1x: two thick legs standing (one bent over at the break), two legs snapped near the
+    base, one brace and one rung, and two dangling cable stubs. Members are >= 2 px thick at 1x (0.11 world units); `side` picks which pair stands."""
     rnd = random.Random(seed)
-    bw, tw = 0.30 * CELL, 0.13 * CELL
+    bw, tw = 0.30 * CELL, 0.16 * CELL
     steel = m["pylon"]
     corners = [(-1, -1), (1, -1), (1, 1), (-1, 1)]
-    cut = [height * (0.80 + 0.2 * rnd.random()) for _ in corners]
-    cut[legs_cut % 4] = height * 0.58
     W = lambda z: bw + (tw - bw) * z / height
+    standing = [(0 + side) % 4, (1 + side) % 4]
     for i, (sx, sy) in enumerate(corners):
-        z = cut[i]; w = W(z)
-        strut(steel, (sx * bw, sy * bw, 0), (sx * w, sy * w, z), 0.13)
-        strut(steel, (sx * w, sy * w, z), (sx * w + lean * sx * 0.6 + rnd.uniform(-0.1, 0.3), sy * w * 0.8, z + 0.22), 0.10)    # bent stump
-    zb = min(cut) * 0.9
-    for (sx, sy), (nx, ny) in zip(corners[:2], corners[1:3]):                         # the two faces the camera sees get a zig-zag
-        z1, z2 = zb * 0.45, zb
-        strut(steel, (sx * W(0), sy * W(0), 0.05), (nx * W(z1), ny * W(z1), z1), 0.08)
-        strut(steel, (sx * W(z1), sy * W(z1), z1), (nx * W(z2), ny * W(z2), z2), 0.08)
-    for z in (0.35 * zb, zb):                                                         # two horizontal rungs
-        for (sx, sy), (nx, ny) in zip(corners, corners[1:] + corners[:1]):
-            strut(steel, (sx * W(z), sy * W(z), z), (nx * W(z), ny * W(z), z), 0.09)
-    ax, ay = 0.30 * CELL, 0.10 * CELL                                                  # fallen cross-arm with two insulators
-    strut(steel, (ax - 0.50 * CELL, ay, 0.08), (ax + 0.18 * CELL, ay + 0.15, 0.12), 0.13)
-    strut(steel, (ax - 0.50 * CELL, ay + 0.2, 0.08), (ax + 0.18 * CELL, ay + 0.35, 0.12), 0.09)
-    for dx in (-0.30, 0.02):
-        cyl(m["glassdark"], (ax + dx * CELL, ay + 0.3, 0.2), 0.1, 0.12)
-    for j in range(2 + (legs_cut % 2)):                                                # dangling cable stubs (black), broken ends touching the ground
-        i = (legs_cut + j) % 4; sx, sy = corners[i]; z = cut[i]; w = W(z)
-        strut(m["soot"], (sx * w, sy * w, z), (sx * (w + 0.7 + 0.4 * j), -abs(sy) * (w + 0.9), 0.06), 0.06)
+        z = height if i in standing else height * 0.22
+        w = W(z)
+        strut(steel, (sx * bw, sy * bw, 0), (sx * w, sy * w, z), 0.24)
+    i0, i1 = standing
+    (sx0, sy0), (sx1, sy1) = corners[i0], corners[i1]
+    w = W(height)
+    strut(steel, (sx0 * w, sy0 * w, height), (sx0 * w + 0.5 + lean, sy0 * w - 0.25, height - 0.35), 0.20)   # the bent top of one leg
+    zb = height * 0.5
+    strut(steel, (sx0 * W(0), sy0 * W(0), 0.05), (sx1 * W(zb), sy1 * W(zb), zb), 0.17)                     # one brace across the standing pair
+    strut(steel, (sx0 * W(zb), sy0 * W(zb), zb), (sx1 * W(zb), sy1 * W(zb), zb), 0.20)                    # one rung
+    for j, i in enumerate((i1, (i1 + 1) % 4)):                                                             # dangling cables
+        sx, sy = corners[i]; z = height if i == i1 else height * 0.22; ww = W(z)
+        strut(m["soot"], (sx * ww, sy * ww, z), (sx * (ww + 0.5 + 0.4 * j), sy * (ww + 0.6), 0.05), 0.14)
 
 
-def pylon0(m): pylon(m, 1.25, 0.2, 0, 5)
-def pylon1(m): pylon(m, 1.95, 0.3, 1, 8)
-def pylon2(m): pylon(m, 2.6, 0.4, 2, 13)
+def pylon0(m): pylon(m, 1.3, 0.2, 0, 5)
+def pylon1(m): pylon(m, 2.0, 0.3, 0, 8)
+def pylon2(m): pylon(m, 2.7, 0.4, 0, 13)
 
 
 KINDS = {
     "GlassCrest": dict(fns=[crest0, crest1, crest2], yaw=(0, 25, -15), scale=(1.0, 1.0, 0.9), weather=False, glass=True, scorch=False, exp=0.95),
     "IceSlab": dict(fns=[ice0, ice1, ice2], yaw=(0, 0, 0), scale=(1.0, 0.88, 0.78), weather=False, glass=True, scorch=False, exp=0.92),
-    "WreckHulk": dict(fns=[wreck_car, wreck_truck, wreck_tank], yaw=(-18, 12, -8), scale=(1.0, 0.85, 0.78), weather=True, glass=False, scorch=True, exp=0.72),
-    "BrokenPylon": dict(fns=[pylon0, pylon1, pylon2], yaw=(0, 8, -6), scale=(0.85, 0.72, 0.68), weather=True, glass=False, scorch=False, exp=0.70),
+    "WreckHulk": dict(fns=[wreck_car, wreck_truck, wreck_tank], yaw=(-18, 12, -8), scale=(1.0, 0.85, 0.78), weather=True, lift=True, glass=False, scorch=True, exp=0.72),
+    "BrokenPylon": dict(fns=[pylon0, pylon1, pylon2], yaw=(0, 8, -6), scale=(0.85, 0.72, 0.62), weather=False, lift=True, glass=False, scorch=False, exp=1.2),
 }
 ROW = {"GlassCrest": 0, "IceSlab": 1, "WreckHulk": 2, "BrokenPylon": 3}   # atlas rows = manifest rows
 
@@ -306,7 +300,7 @@ def render(kinds, samples):
     tm = bpy.data.materials.new("topmask"); tm.use_nodes = True
     nt = tm.node_tree; nt.nodes.clear()
     g = nt.nodes.new("ShaderNodeNewGeometry"); sp = nt.nodes.new("ShaderNodeSeparateXYZ"); gt = nt.nodes.new("ShaderNodeMath"); gt.operation = "GREATER_THAN"
-    gt.inputs[1].default_value = 0.72
+    gt.inputs[1].default_value = 0.88
     em = nt.nodes.new("ShaderNodeEmission"); out = nt.nodes.new("ShaderNodeOutputMaterial")
     nt.links.new(g.outputs["Normal"], sp.inputs[0]); nt.links.new(sp.outputs["Z"], gt.inputs[0])
     nt.links.new(gt.outputs[0], em.inputs["Strength"]); nt.links.new(em.outputs[0], out.inputs["Surface"])
@@ -344,10 +338,10 @@ def render(kinds, samples):
 # Base colours never change per theater (rust / charcoal / steel, glass, ice); the grade is weather only:
 #   snow / dust on top faces (Bayer-dithered, hard pixels), a coat over everything, a value gain.
 GRADE = {
-    "rustbelt":   dict(cover=0.20, cover_col="#dfe4e6", coat=0.10, coat_col="#5c5753", sat=0.90, gain=1.00),   # a little snow on top faces + ash
-    "glasscoast": dict(cover=0.40, cover_col="#d9c996", coat=0.06, coat_col="#d9c996", sat=0.70, gain=1.06),   # sun-bleached, sand-dusted
-    "mountains":  dict(cover=0.75, cover_col="#e8eef2", coat=0.00, coat_col="#ffffff", sat=0.85, gain=1.00),   # snow on top faces
-    "ashplains":  dict(cover=0.60, cover_col="#8f8a87", coat=0.30, coat_col="#6f6a68", sat=0.55, gain=0.88),   # grey ash coat, darker
+    "rustbelt":   dict(cover=0.15, soft=0.40, cover_col="#dfe4e6", coat=0.10, coat_col="#5c5753", sat=0.90, gain=1.00),   # a little snow on top faces + ash
+    "glasscoast": dict(cover=0.15, soft=0.38, cover_col="#d9c996", coat=0.06, coat_col="#d9c996", sat=0.70, gain=1.06),   # sun-bleached, sand-dusted
+    "mountains":  dict(cover=0.15, soft=0.40, cover_col="#e8eef2", coat=0.00, coat_col="#ffffff", sat=0.85, gain=1.00),   # snow on top faces
+    "ashplains":  dict(cover=0.0, soft=0.0, cover_col="#8f8a87", coat=0.30, coat_col="#6f6a68", sat=0.55, gain=0.88),   # grey ash coat, darker
 }
 LEVELS = 4
 
@@ -399,7 +393,7 @@ def post_frame(kind, var, theater):
     lab = np.zeros((H, W), dtype=np.int64)
     for y, x in zip(*np.nonzero(solid)):
         h, s, v = colorsys.rgb_to_hsv(*base[y, x])
-        v = min(1.0, v * g["gain"] * spec["exp"] + (0.10 if topm[y, x] and spec["weather"] else 0.0))
+        v = min(1.0, v * g["gain"] * spec["exp"] + (0.10 if topm[y, x] and spec.get("lift") else 0.0))
         v = round(v * (LEVELS - 1)) / (LEVELS - 1)
         s = round(min(1, s * g["sat"]) * 3) / 3
         r, gg, b = colorsys.hsv_to_rgb(h, s, v)
@@ -415,11 +409,14 @@ def post_frame(kind, var, theater):
     cover = g["cover"] if spec["weather"] else g["cover"] * 0.0
     coatmix = g["coat"] if spec["weather"] else g["coat"] * 0.5
     out = np.zeros((FRAME, FRAME, 4), dtype=np.uint8)
+    dusted = 0
     for y, x in zip(*np.nonzero(solid)):
         c = rgb[y, x] * (1 - coatmix) + coat * coatmix
         if topm[y, x] and blob(x // 3, y // 3, var) < cover:
-            c = cc
+            c = c * (1 - g["soft"]) + cc * g["soft"]       # soft dust / snow tint on upward faces only: the rust / char / steel base stays dominant
+            dusted += 1
         out[y, x] = (*np.clip(c, 0, 255).astype(np.uint8), 255)
+    assert dusted <= 0.2 * solid.sum(), f"{kind}/{var}/{theater}: dust covers {dusted} of {solid.sum()} px"
     # 3) glints on glass / ice: the brightest pixels of the object become a bright spark, spread out (never adjacent)
     if spec["glass"]:
         lum = np.where(solid, out[..., :3].mean(axis=2), 0)
