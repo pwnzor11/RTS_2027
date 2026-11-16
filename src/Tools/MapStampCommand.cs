@@ -80,7 +80,11 @@ public static class MapStampCommand
         }
     }
 
-    private sealed record Ctx(StampCanvas Canvas, MapSymmetry Sym, List<int[]> Keep);
+    private sealed record Ctx(StampCanvas Canvas, MapSymmetry Sym, List<int[]> Keep)
+    {
+        /// <summary>Cells already written by an earlier op (an op may not overwrite another).</summary>
+        public bool[] Touched { get; } = new bool[Canvas.Width * Canvas.Height];
+    }
 
     private static void DoStamp(Ctx ctx, TomlTable t)
     {
@@ -127,16 +131,24 @@ public static class MapStampCommand
         {
             int x = i % c.Width, y = i / c.Width;
             Check(ctx, x, y, what);
+            Touch(ctx, i, what);
             if (!sym || ctx.Sym == MapSymmetry.None) continue;
             (int, int)[] im = MapSymmetries.Images(ctx.Sym, c.Width, c.Height, x, y);
             for (int k = 1; k < im.Length; k++)
             {
                 Check(ctx, im[k].Item1, im[k].Item2, what + " (image)");
                 int j = im[k].Item2 * c.Width + im[k].Item1;
+                Touch(ctx, j, what + " (image)");
                 c.Land[j] = c.Land[i]; c.HeightLevel[j] = c.HeightLevel[i]; c.Overlay[j] = c.Overlay[i]; c.Density[j] = c.Density[i];
                 if (c.Decor is not null) c.Decor[j] = c.Decor[i];
             }
         }
+    }
+
+    private static void Touch(Ctx ctx, int i, string what)
+    {
+        if (ctx.Touched[i]) throw new InvalidOperationException($"{what}: cell ({i % ctx.Canvas.Width},{i / ctx.Canvas.Width}) was already written by an earlier op");
+        ctx.Touched[i] = true;
     }
 
     private static void Check(Ctx ctx, int x, int y, string what)
