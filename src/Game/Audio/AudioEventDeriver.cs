@@ -67,6 +67,12 @@ public sealed class AudioEventDeriver
             foreach (FxEvent e in fx)
             {
                 if (e.Kind == FxKind.InstantHit) continue;   // M3-12: small-arms hits sound as FireBullet below
+                if (e.Kind == FxKind.PropDestroyed)          // M12-16 (D-264): a fallen tree or wreck: the small explosion sound, where it stood
+                {
+                    events.Add(new AudioEvent(AudioEventKind.ExplosionSmall, e.Pos));
+                    continue;
+                }
+
                 if (rules is not null && e.Kind == FxKind.UnitDestroyed)
                 {
                     events.Add(UnitDeath(rules, prev, curUnitIds, e.Pos));

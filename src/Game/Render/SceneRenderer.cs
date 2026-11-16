@@ -299,6 +299,7 @@ public sealed class SceneRenderer : IDisposable
             PropInstance p = props[i];
             if (p.CellY > y1 + 1) break;
             if (p.CellX < x0 - 1 || p.CellX > x1 + 1) continue;
+            if (frame.Sim is { } sim && !PropPlanner.StillStands(p, sim.Map)) continue;   // M12-16: destroyed or crushed props vanish at once
             _items.Add(new DrawItem(DrawKind.Prop, i, (p.CellY + 1) * Camera.CellPx, p.CellX * Camera.CellPx));
         }
     }
