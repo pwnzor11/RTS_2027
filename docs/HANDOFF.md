@@ -4,6 +4,11 @@ Where things stand: session 30 landed PR #97 (rustbelt_m2 full showcase, Q-85 (b
 cluster, none meets D-257. Main at 128 games is unchanged from session 28 (table in docs/balance/s28_balance.md). Decisions up to D-263. Open
 questions: Q-73 (deferred).
 
+> **Session 31 in progress (checkpoint).** Integration branch `integ-s31`. Owner answers D-264 (5-point landing rule, map work, M12-16 rules,
+> exp_rad_burst wiring landed on integ-s31). Running: cluster screen `s31s1` (bal/s31-d1..d5 Directorate tier-3 keys, k10, kd; 64 games, all rows;
+> scripts in the laptop k3s-cluster folder claude/rts/s31/); helpers wp/s31-destruct (M12-16), wp/s31-editor, wp/s31-glass, wp/s31-ash
+> (worktrees /home/claude/wt). If this session died: re-read D-264, check those branches, re-run the screen summary with s31/sum28.py.
+
 ## Start here (shown to the user as the plan; nothing starts until they say go)
 1. Session 30 handoff PR: CI green? merged? (Claude may merge once Windows CI is green.)
 2. Directorate v Expedition rust (70 % on 128 games, 30 draws; 73 % on the 64-game screen baseline): Expedition-wide levers are exhausted (docs/balance/s30_balance.md: any help costs
