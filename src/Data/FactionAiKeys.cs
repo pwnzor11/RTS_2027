@@ -18,6 +18,16 @@ public sealed record FactionAiKeys(int HarassDirectorate, int HarassAuthority, i
     /// <summary>All keys at their fallback.</summary>
     public static FactionAiKeys Default { get; } = new(DefaultHarassMinArmy, DefaultHarassMinArmy, DefaultHarassMinArmy, DefaultHarassMinArmy);
 
+    /// <summary>S29 (BAL-S29): the optional per-faction build levers, indexed like <c>DifficultyLoader.FactionIds</c> (authority, directorate, left_behind, expedition); null = all defaults.</summary>
+    public FactionTuning[]? Tuning { get; init; }
+
+    /// <summary>S29: the build levers of a faction (<paramref name="faction"/> is the <c>Faction</c> enum value: 0 Authority, 1 Directorate, 3 LeftBehind, 4 Expedition).</summary>
+    public FactionTuning TuningOf(int faction)
+    {
+        int i = faction switch { 0 => 0, 1 => 1, 3 => 2, 4 => 3, _ => -1 };
+        return i >= 0 && Tuning is { } t && i < t.Length ? t[i] : FactionTuning.Default;
+    }
+
     /// <summary>The raiding-party army threshold for a faction (<paramref name="faction"/> is the <c>Faction</c> enum value: 0 Authority, 1 Directorate, 3 LeftBehind, 4 Expedition).</summary>
     public int HarassMinArmy(int faction) => faction switch
     {

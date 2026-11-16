@@ -23,7 +23,7 @@ internal sealed class TierPlanner
     /// <summary>Defences the enemy must be known to have before long range is favoured.</summary>
     public const int DefencesForSiege = 2;
     /// <summary>Credits above which a rich AI with AdaptBuild adds production structures.</summary>
-    public const int FloatingCash = 1500;
+    public const int FloatingCash = 1500;   // S29: also the default of the per-faction key adapt_cash (FactionTuning.Default)
     /// <summary>Army size before the superweapon / air tech is added to the build order.</summary>
     public const int ArmyBeforeLateTech = 8;
 
@@ -304,7 +304,7 @@ internal sealed class TierPlanner
     // ---- build order growth -------------------------------------------------------------------------
 
     /// <summary>M4-12 (flag UseUpgrades): tick from which the tier-2 gate is added to the build order.</summary>
-    public const int Tier2GateTick = 3600;   // (tune) 3 min
+    public const int Tier2GateTick = 3600;   // (tune) 3 min; S29: default of the per-faction key tier2_gate_tick
     /// <summary>M4-12 (flag UseUpgrades): tick from which the tier-3 gate is added (design 08 §8: tier 3 by 15 min).</summary>
     public const int Tier3GateTick = 8400;   // (tune) 7 min
     /// <summary>M4-12: army size that also brings the tier-3 gate forward (a rich side climbs early).</summary>
@@ -320,10 +320,10 @@ internal sealed class TierPlanner
 
     /// <summary>M4-16 s12 tier-5 fix (flag UseUpgrades): army size before the research structure and the tier-2 gate are added to the build order. The
     /// tier-5 trace showed the tech spending at 3 minutes leaving the army half the size of a recruit's, so the first wave and then the base were lost.</summary>
-    public const int ArmyBeforeTech = 30;   // (tune) s12 tier 5
+    public const int ArmyBeforeTech = 30;   // (tune) s12 tier 5; S29: default of the per-faction key army_before_tech
 
     /// <summary>M4-16 s12 tier-5 fix (flag AdaptBuild): army size before extra production or defence structures are added.</summary>
-    public const int ArmyBeforeAdapt = 30;   // (tune) s12 tier 5
+    public const int ArmyBeforeAdapt = 30;   // (tune) s12 tier 5; S29: default of the per-faction key army_before_adapt
 
     /// <summary>S16 (Q-67): army size (units alive, harvesters excluded) the Directorate at tiers 2-3 needs before the Isotope Works and Rad Mortar are bought.
     /// 16 games: hold 16 left Left Behind 3 v Directorate 3 at 71 % decisive, 20 broke Expedition 3 (30 %) and pushed Authority 3 to 77 %; 18 is the compromise.</summary>
@@ -366,6 +366,7 @@ internal sealed class TierPlanner
     {
         int tick = k.View.Tick;
         int funds = k.Hud.Cash + k.Hud.Stored;
+        var tune = _p.FactionKeys.TuningOf((int)_faction.Faction);   // S29: per-faction levers (defaults = the constants)
         bool up = _p.UseUpgrades || Bias.ForceTech;   // M5-02: a tech focus climbs even on a profile without research
         if (ExpandOrderTick >= 0 && _expandStepFor != ExpandOrderTick)
         {
@@ -384,12 +385,12 @@ internal sealed class TierPlanner
             else build.Extend(_faction.RefineryId);
         }
         bool armyWait = _faction.Faction != Faction.LeftBehind;   // LeftBehind's supply chain needs the tech structures early (SupplyAiTests)
-        bool techArmy = !armyWait || k.Army.Count >= ArmyBeforeTech || Bias.ForceTech || techOrder;   // s12: no tech spending before there is an army
+        bool techArmy = !armyWait || k.Army.Count >= tune.ArmyBeforeTech || Bias.ForceTech || techOrder;   // s12: no tech spending before there is an army
         if ((up && techArmy || TechTier >= 4) && _faction.ResearchId is string research && build.StepsOf(research) < 1)
             build.Extend(research);
         // M4-12: tier climbing on a schedule (flag UseUpgrades): the tier-2 gate, then the tier-3 gate. A lost gate is rebuilt (the build
         // order counts owned structures), so the tier comes back.
-        if ((up && techArmy && tick >= Tier2GateTick * Bias.GatePermille / 1000 || techOrder) && _faction.Tier2GateId is string g2 && build.StepsOf(g2) < 1) build.Extend(g2);
+        if ((up && techArmy && tick >= tune.Tier2GateTick * Bias.GatePermille / 1000 || techOrder) && _faction.Tier2GateId is string g2 && build.StepsOf(g2) < 1) build.Extend(g2);
         if ((up && tick >= Tier3GateTick * Bias.GatePermille / 1000 && k.Army.Count >= ArmyBeforeTier3 * Bias.Tier3ArmyPermille / 1000 || TechTier >= 3) && _faction.Tier3GateId is string g3
             && k.View.Tier >= 2 && build.StepsOf(g3) < 1) build.Extend(g3);   // (tune) M4-12 round 2: time AND army
         // M4-12: a garrisonable defence near the base (flag RespondToAttacks: tier 2+); the garrison manager fills it with idle infantry
@@ -402,11 +403,11 @@ internal sealed class TierPlanner
             build.Extend(air);
         if (_p.Superweapons && _faction.SuperweaponBuildingId is string sw && SuperweaponUsable(k.Rules, sw) && lateOk && (k.View.Tier >= 3 || !up)
             && build.StepsOf(sw) < 1) build.Extend(sw);
-        if (!_p.AdaptBuild || (armyWait && k.Army.Count < ArmyBeforeAdapt)) return;
-        if (funds >= FloatingCash)
+        if (!_p.AdaptBuild || (armyWait && k.Army.Count < tune.ArmyBeforeAdapt)) return;
+        if (funds >= tune.AdaptCash)
         {
-            if (build.StepsOf(_faction.BarracksId) < 2) build.Extend(_faction.BarracksId);
-            else if (build.StepsOf(_faction.FactoryId) < 2) build.Extend(_faction.FactoryId);
+            if (build.StepsOf(_faction.BarracksId) < tune.AdaptMaxProduction) build.Extend(_faction.BarracksId);
+            else if (build.StepsOf(_faction.FactoryId) < tune.AdaptMaxProduction) build.Extend(_faction.FactoryId);
         }
         if (SeenEnemy && HeavyShare >= 50 && build.StepsOf(_faction.DefenceId) < 3 && build.StepsOf(_faction.DefenceId) <= DefenceTotalBuilt(k))
             build.Extend(_faction.DefenceId);

@@ -82,6 +82,33 @@ public class DifficultyLoaderTests
         finally { File.Delete(bad); }
     }
 
+    [Fact]
+    public void FactionTuningKeysAreReadValidatedAndDefaultToTheConstants()
+    {
+        var real = TestWorld.Tiers[3].FactionKeys;
+        Assert.Equal(new Rts.Data.FactionTuning(30, 30, 1500, 2, 3600), real.TuningOf((int)Rts.Sim.Rules.Faction.Authority));
+        string text = File.ReadAllText(DifficultyLoader.PathBesideRules(TestWorld.RulesDir));
+        string edited = text.Replace("[faction.authority]\n", "[faction.authority]\narmy_before_tech = 18\narmy_before_adapt = 0\nadapt_cash = 1200\nadapt_max_production = 4\ntier2_gate_tick = 2400\n");
+        string path = Write(edited);
+        try
+        {
+            var keys = DifficultyLoader.Load(path)[4].FactionKeys;
+            Assert.Equal(new Rts.Data.FactionTuning(18, 0, 1200, 4, 2400), keys.TuningOf(Authority));
+            Assert.Equal(Rts.Data.FactionTuning.Default, keys.TuningOf(LeftBehind));
+            Assert.Equal(30, keys.HarassMinArmy(Authority));
+        }
+        finally { File.Delete(path); }
+        string bad = Write(text.Replace("[faction.authority]\n", "[faction.authority]\narmy_before_tech = 0\nadapt_max_production = 7\ntier2_gate_tick = -1\n"));
+        try
+        {
+            var ex = Assert.Throws<RulesException>(() => DifficultyLoader.Load(bad));
+            Assert.Contains(ex.Problems, p => p.Key == "faction.authority.army_before_tech");
+            Assert.Contains(ex.Problems, p => p.Key == "faction.authority.adapt_max_production");
+            Assert.Contains(ex.Problems, p => p.Key == "faction.authority.tier2_gate_tick");
+        }
+        finally { File.Delete(bad); }
+    }
+
     private const int LeftBehind = (int)Rts.Sim.Rules.Faction.LeftBehind;
     private const int Authority = (int)Rts.Sim.Rules.Faction.Authority;
 
