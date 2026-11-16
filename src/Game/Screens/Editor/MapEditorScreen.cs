@@ -50,6 +50,7 @@ public sealed class MapEditorScreen : IScreen
     private Texture2D? _tex;
     private bool _texDirty = true;
     private TerrainPalette? _palette;
+    private readonly EditorSprites _sprites = new();   // the game view's decals and props, drawn over the land colours (S31)
     private bool _stroking;
     private bool _erasingWithRight;
     private int _issueScroll;
@@ -93,7 +94,7 @@ public sealed class MapEditorScreen : IScreen
     public void Enter() { }
 
     /// <inheritdoc />
-    public void Exit() { _tex?.Dispose(); _tex = null; }
+    public void Exit() { _tex?.Dispose(); _tex = null; _sprites.Dispose(); }
 
     // ---- update ------------------------------------------------------------------------------------------------
 
@@ -498,6 +499,7 @@ public sealed class MapEditorScreen : IScreen
         Texture2D px = _s.Pixel;
         EnsureTexture(d);
         if (_tex is not null) sb.Draw(_tex, new Rectangle(_origin.X, _origin.Y, d.Width * cell, d.Height * cell), Color.White);
+        _sprites.Draw(sb, _origin, cell, _showDecor, _showDecor);   // the same decals and sprites as the game view (S31)
 
         if (cell >= 12)
         {
@@ -578,7 +580,8 @@ public sealed class MapEditorScreen : IScreen
             try { _palette = TerrainPalette.ForMap(d.ToMapData(), d.ToMeta()); }
             catch (Exception e) when (e is IOException or InvalidDataException or FormatException) { _palette = null; }
         }
-        IReadOnlyList<DecalRule> decalRules = _palette?.Decor.Decals ?? Array.Empty<DecalRule>();
+        try { _sprites.Rebuild(_s.Graphics, d.ToMapData()); }   // decals and props are planned from the map, like the game view (S31)
+        catch (Exception e) when (e is IOException or InvalidDataException or FormatException) { _sprites.Dispose(); }
         var data = new Color[d.Width * d.Height];
         for (int i = 0; i < data.Length; i++)
         {
@@ -588,22 +591,10 @@ public sealed class MapEditorScreen : IScreen
             if (d.Overlay[i] == OverlayKind.Ashfall) c = Color.Lerp(c, new Color(0xE0, 0xC0, 0x40), 0.35f + d.Density[i] * 0.04f);
             else if (d.Overlay[i] == OverlayKind.Pitchblende) c = Color.Lerp(c, new Color(0x50, 0xB0, 0xE0), 0.35f + d.Density[i] * 0.04f);
             else if (d.Overlay[i] == OverlayKind.Wall) c = new Color(0x90, 0x90, 0x90);
-            else if (_showDecor && OverlayKinds.IsProp(d.Overlay[i])) c = PropColour(d.Overlay[i]);
-            if (_showDecor && d.Decor[i] != 0 && d.Decor[i] <= decalRules.Count && !OverlayKinds.IsProp(d.Overlay[i]))
-            {
-                DecalRule rule = decalRules[d.Decor[i] - 1];
-                c = Color.Lerp(c, new Color(rule.Colour.R, rule.Colour.G, rule.Colour.B), Math.Clamp(rule.Alpha, 90, 255) / 255f * 0.8f);
-            }
             data[i] = c;
         }
         _tex.SetData(data);
     }
-
-    private static Color PropColour(OverlayKind k) => k switch
-    {
-        OverlayKind.Tree => new Color(0x3C, 0x58, 0x34), OverlayKind.Wreck => new Color(0x78, 0x40, 0x30), OverlayKind.Block => new Color(0xA0, 0xA0, 0x98),
-        OverlayKind.Pylon => new Color(0xD0, 0xB0, 0x40), _ => new Color(0x8A, 0x6A, 0x48),
-    };
 
     private Color LandColour(LandType land)
     {
