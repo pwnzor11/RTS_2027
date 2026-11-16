@@ -44,7 +44,7 @@ public sealed class M6ContractTests
     {
         Assert.Equal(13, SimWriter.SaveVersion);   // VET-1 took 11, M7-02 12
         Assert.Equal(13, ReplayWriter.Version);
-        Assert.Equal(11, RulesHash.FormatVersion);
+        Assert.Equal(12, RulesHash.FormatVersion);
     }
 
     [Fact]
@@ -52,9 +52,9 @@ public sealed class M6ContractTests
     {
         var sim = ScriptedGame.NewSim(ScriptedGame.Setup());
         string[] names = sim.StateParts.Select(p => p.Name).ToArray();
-        Assert.Equal(new[] { "stats", "directive", "rigs", "salvage", "veterancy", "shipments", "beachhead", "naval", "commander_orders" }, names[^9..]);   // VET-1 appended "veterancy", M7-02 the last three
-        Assert.Same(sim.Rigs, sim.StateParts[^7]);
-        Assert.Same(sim.Salvage, sim.StateParts[^6]);
+        Assert.Equal(new[] { "stats", "directive", "rigs", "salvage", "veterancy", "shipments", "beachhead", "naval", "commander_orders", "props" }, names[^10..]);   // VET-1 appended "veterancy", M7-02 the last three
+        Assert.Same(sim.Rigs, sim.StateParts[^8]);
+        Assert.Same(sim.Salvage, sim.StateParts[^7]);
     }
 
     [Fact]

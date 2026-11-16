@@ -260,7 +260,7 @@ public sealed class M7ContractTests
     [Fact]
     public void EveryNewRulesField_ChangesTheRulesHash()
     {
-        Assert.Equal(11, RulesHash.FormatVersion);
+        Assert.Equal(12, RulesHash.FormatVersion);
         ulong baseline = Load().RulesHash;
         var seen = new HashSet<ulong> { baseline };
         void Add(RuleSet r, string what) => Assert.True(seen.Add(r.RulesHash), what + " does not change the rules hash");
@@ -319,10 +319,10 @@ public sealed class M7ContractTests
         Assert.Equal(7, ReplayWriter.OldestReadableVersion);
         var sim = ScriptedGame.NewSim(ScriptedGame.Setup());
         string[] names = sim.StateParts.Select(p => p.Name).ToArray();
-        Assert.Equal(new[] { "salvage", "veterancy", "shipments", "beachhead", "naval", "commander_orders" }, names[^6..]);
-        Assert.Same(sim.Shipments, sim.StateParts[^4]);
-        Assert.Same(sim.Beachhead, sim.StateParts[^3]);
-        Assert.Same(sim.Naval, sim.StateParts[^2]);
+        Assert.Equal(new[] { "salvage", "veterancy", "shipments", "beachhead", "naval", "commander_orders", "props" }, names[^7..]);
+        Assert.Same(sim.Shipments, sim.StateParts[^5]);
+        Assert.Same(sim.Beachhead, sim.StateParts[^4]);
+        Assert.Same(sim.Naval, sim.StateParts[^3]);
     }
 
     [Fact]
