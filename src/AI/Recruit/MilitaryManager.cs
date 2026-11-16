@@ -259,6 +259,32 @@ internal sealed class MilitaryManager
     /// <summary>S22: the enemy counts as beaten and the mop-up may sweep for the last buildings.</summary>
     internal bool Sweeping => MopupOn && _beatenSince >= 0;
 
+    /// <summary>s30 <c>mopup_hunt</c> (set once at init from the faction's key, not saved): the mop-up also hunts a relocating base (see <see cref="MopupPlan.HuntHints"/>).</summary>
+    public bool MopupHunt { get; set; }
+
+    /// <summary>s30: the hunt is in force (the key is on and the mop-up rules are).</summary>
+    private bool Hunting => MopupHunt && MopupOn;
+
+    /// <summary>s30: per block (same grid as <see cref="_stamp"/>), non-zero once an enemy structure of the target player was seen in it. Saved with the hunt block.</summary>
+    private byte[] _site = Array.Empty<byte>();
+    /// <summary>s30: cell and tick (-1 = never) where a deployable enemy vehicle (packed rig, MCV-like) was last seen; peak value of such vehicles in view in the long window, and its tick. Saved with the hunt block.</summary>
+    private CellCoord _huntCell;
+    private int _huntTick = -1, _depVal, _depTick = int.MinValue;
+    private bool _huntTouched;
+
+    /// <summary>s30: true once the hunt has remembered anything (the AI save then carries the hunt block; other saves are unchanged).</summary>
+    internal bool HuntDirty => _huntTouched;
+
+    /// <summary>s30: the enemy army value the mop-up tests use: with the hunt, deployable vehicles (a packed Mother Rig is not an army) are taken out of it.</summary>
+    private int EnemyForMopup => Hunting ? Math.Max(0, EnemyValueSeen - _depVal) : EnemyValueSeen;
+
+    private static bool Deployable(RecruitKnowledge k, ViewActor e) =>
+        e.Kind == ActorKind.Vehicle && k.Rules.Vehicles[e.TypeIndex] is { } v && (v.UnpacksInto >= 0 || v.DeploysInto >= 0);
+
+    /// <summary>s30: the hints for the sweep (null without the hunt, so the sweep is unchanged).</summary>
+    private MopupPlan.HuntHints? HuntHints(int tick) =>
+        Hunting ? new MopupPlan.HuntHints(_site, _huntTick >= 0 && tick - _huntTick <= MopupPlan.ChaseTicks ? _huntCell : null) : null;
+
     private void UpdateMopup(RecruitKnowledge k, ViewActor? attacked, int armyCount)
     {
         if (!MopupOn) { _beatenSince = -1; return; }
@@ -266,15 +292,30 @@ internal sealed class MilitaryManager
         // fog memory
         int gw = (k.View.MapWidth + MopupPlan.BlockCells - 1) / MopupPlan.BlockCells, gh = (k.View.MapHeight + MopupPlan.BlockCells - 1) / MopupPlan.BlockCells;
         if (_stamp.Length != gw * gh) { _stamp = new int[gw * gh]; _stampW = gw; }
+        bool hunt = Hunting;
+        if (hunt && _site.Length != _stamp.Length) _site = new byte[_stamp.Length];
         for (int by = 0; by < gh; by++)
             for (int bx = 0; bx < gw; bx++)
             {
                 var c = new CellCoord(bx * MopupPlan.BlockCells + MopupPlan.BlockCells / 2, by * MopupPlan.BlockCells + MopupPlan.BlockCells / 2);
                 if (c.X >= k.View.MapWidth || c.Y >= k.View.MapHeight || !k.View.IsVisible(c)) continue;
                 int i = by * gw + bx;
-                if (MopupPlan.Stale(_stamp[i], tick)) _sweepFound++;
+                if (MopupPlan.Stale(_stamp[i], tick, hunt)) _sweepFound++;
                 _stamp[i] = tick + 1;
             }
+        if (hunt)   // s30: where enemy structures stood (a relocating base comes back to them), and the deployable vehicles in view now
+        {
+            foreach (ViewActor b in _targetBuildings)
+            {
+                if (b.Cell.X >= k.View.MapWidth || b.Cell.Y >= k.View.MapHeight) continue;
+                int bi = b.Cell.Y / MopupPlan.BlockCells * gw + b.Cell.X / MopupPlan.BlockCells;
+                if (bi >= 0 && bi < _site.Length && _site[bi] == 0 && !k.Rules.Buildings[b.TypeIndex].Wall && !k.Rules.Buildings[b.TypeIndex].Gate) { _site[bi] = 1; _huntTouched = true; }
+            }
+            int dep = 0;
+            foreach (ViewActor e in k.Visible)
+                if (e.Relation == Relation.Enemy && Deployable(k, e)) { dep += VeterancyValue.Of(k.Rules, e); _huntCell = e.Cell; _huntTick = tick; _huntTouched = true; }
+            if (dep >= _depVal || tick - _depTick > TierPlanner.WaveGateMemoryTicks) { _depVal = dep; _depTick = tick; }
+        }
         // threats at home
         if (attacked is not null) _threatTick = tick;
         else
@@ -282,14 +323,14 @@ internal sealed class MilitaryManager
                 if (e.Relation == Relation.Enemy && e.IsMobile && Chebyshev(e.Cell, _home) <= MopupPlan.HomeThreatCells && !(e.Kind == ActorKind.Vehicle && k.Rules.Vehicles[e.TypeIndex].HarvestCapacity > 0))
                 { _threatTick = tick; break; }
         // beaten
-        if (tick >= MopupPlan.FromTick && MopupPlan.Beaten(OwnValue, EnemyValueSeen, armyCount)) { if (_beatenSince < 0) _beatenSince = tick; }
+        if (tick >= MopupPlan.FromTick && MopupPlan.Beaten(OwnValue, EnemyForMopup, armyCount)) { if (_beatenSince < 0) _beatenSince = tick; }
         else _beatenSince = -1;
     }
 
     /// <summary>S22: a mop-up wave may leave now (the thresholds and the strength gate do not apply; siege hold, retreat cooldown and scripted holds still do).</summary>
     private bool MopupDue(int tick, int n, int guard) =>
         MopupOn && _beatenSince >= 0 && tick - _beatenSince >= MopupPlan.HoldTicks && tick - _threatTick >= MopupPlan.CalmTicks
-        && n >= MopupPlan.MinUnits(EnemyValueSeen) + guard && tick - _lastWave >= MopupPlan.GapTicks;   // s23 D-235 (B1): the same minimum as Beaten()
+        && n >= MopupPlan.MinUnits(EnemyForMopup) + guard && tick - _lastWave >= MopupPlan.GapTicks;   // s23 D-235 (B1): the same minimum as Beaten()
 
     // ---- s23 D-235 (B2): a wave that stands next to an enemy structure and attacks nothing is told to attack it ----
     private int _idleNearSince = -1;
@@ -455,7 +496,7 @@ internal sealed class MilitaryManager
 
     /// <summary>M4-12 (diagnostics): the wave phase (0 gather, 1 stage, 2 assault), the scout-route stop and the last goal picked.</summary>
     private int _dbgPool, _dbgHome, _dbgDet; private string _dbgDetTxt = "";   // s25: pool / home guard / detached counts of the last Think (trace only, not saved)
-    public string Debug => $"{(int)_phase}:{_scoutIdx}/{_scoutRoute.Count}@{(_scoutRoute.Count > 0 ? _scoutRoute[Math.Min(_scoutIdx, _scoutRoute.Count - 1)] : default)} goal {_lastGoal} stage {_stage} roster {_roster.Count} pool {_dbgPool} home {_dbgHome} det {_dbgDet} [{_dbgDetTxt}] siege {(SiegeActive ? "wave" : _siegeOn ? "on" : "off")} need {_siegeNeed} waves {SiegeWaves} holds {SiegeHolds} tgt {(_siegeHave ? _siegeCell.ToString() : "-")} mopup {(MopupOn ? "on" : "off")} beaten {_beatenSince} mops {Mopups} nstall {NearStalls} found {_sweepFound} kb {_targetBuildings.Count}";
+    public string Debug => $"{(int)_phase}:{_scoutIdx}/{_scoutRoute.Count}@{(_scoutRoute.Count > 0 ? _scoutRoute[Math.Min(_scoutIdx, _scoutRoute.Count - 1)] : default)} goal {_lastGoal} stage {_stage} roster {_roster.Count} pool {_dbgPool} home {_dbgHome} det {_dbgDet} [{_dbgDetTxt}] siege {(SiegeActive ? "wave" : _siegeOn ? "on" : "off")} need {_siegeNeed} waves {SiegeWaves} holds {SiegeHolds} tgt {(_siegeHave ? _siegeCell.ToString() : "-")} mopup {(MopupOn ? "on" : "off")} beaten {_beatenSince} mops {Mopups} nstall {NearStalls} found {_sweepFound} kb {_targetBuildings.Count}{(Hunting ? $" hunt {_huntCell}@{_huntTick} dep {_depVal}" : "")}";
 
     /// <summary>M4-12: set by the AI while its income has stalled (map mined out): waves go out at <see cref="DesperateWave"/> units.</summary>
     public bool Broke { get; set; }
@@ -1004,6 +1045,8 @@ internal sealed class MilitaryManager
             }
         if (found) { _lastGoal = goal; return goal; }
         // S22 mop-up: the enemy is beaten and no structure is known (a stray tunnel hatch keeps a player alive): sweep the map, never-seen blocks first, then blocks not in view for a long time
+        if (Sweeping && Hunting && _huntTick >= 0 && tick - _huntTick <= MopupPlan.ChaseTicks && Chebyshev(new CellCoord(centre.X / 256, centre.Y / 256), _huntCell) > 3)   // s30: a deployable enemy vehicle was just seen: go where it was
+        { _lastGoal = _huntCell; return _huntCell; }
         if (Sweeping && SweepGoal(k, centre, tick) is CellCoord sweep) { _lastGoal = sweep; return sweep; }
         // nothing known: look at the route stops in turn; a stop that is in view and shows no building is crossed off
         while (_scoutIdx < _scoutRoute.Count - 1 && k.View.IsVisible(_scoutRoute[_scoutIdx])) _scoutIdx++;
@@ -1020,10 +1063,10 @@ internal sealed class MilitaryManager
             if (_roster.Contains(Key(a))) { cx += a.Position.X; cy += a.Position.Y; c++; }
         if (c == 0) return new List<CellCoord>();
         var from = new CellCoord((int)(cx / c / 256), (int)(cy / c / 256));
-        int parties = MopupPlan.Parties(alive);
+        int parties = MopupPlan.Parties(alive, Hunting);
         if (parties < 2) return new List<CellCoord>();
         return MopupPlan.PickSweeps(k.Rules, _stamp, _stampW, view.MapWidth, view.MapHeight, tick, from, _targetBuildings,
-            cell => view.IsPassable(cell, Locomotion.Tracked), cell => _avoid.Count > 0 && Avoided(cell, tick), parties);
+            cell => view.IsPassable(cell, Locomotion.Tracked), cell => _avoid.Count > 0 && Avoided(cell, tick), parties, HuntHints(tick));
     }
 
     /// <summary>S22 mop-up: the next block of the sweep (see <see cref="MopupPlan.PickSweep"/>), skipping goals a stalled wave could not reach. Null when the whole map is fresh.</summary>
@@ -1031,7 +1074,7 @@ internal sealed class MilitaryManager
     {
         var view = k.View;
         return MopupPlan.PickSweep(k.Rules, _stamp, _stampW, view.MapWidth, view.MapHeight, tick, new CellCoord(centre.X / 256, centre.Y / 256),
-            _targetBuildings, c => view.IsPassable(c, Locomotion.Tracked), c => _avoid.Count > 0 && Avoided(c, tick));
+            _targetBuildings, c => view.IsPassable(c, Locomotion.Tracked), c => _avoid.Count > 0 && Avoided(c, tick), HuntHints(tick));
     }
 
     /// <summary>The own building (in slot order) whose health fell since the previous decision, if any; with the Respond option
@@ -1142,6 +1185,22 @@ internal sealed class MilitaryManager
         w.Write(_siegeWave); w.Write(_siegeHave); w.Write(_failedWaves); w.Write(SiegeWaves); w.Write(SiegeHolds);   // S15
         AiSnapshot.WriteId(w, _siegeId); AiSnapshot.WriteId(w, _siegeIssued); AiSnapshot.WriteCell(w, _siegeCell);
         w.Write(_idleNearSince); w.Write(NearStalls);   // s23 D-235 (layout 7 and later)
+    }
+
+    /// <summary>s30: writes the hunt memory (only called when <see cref="HuntDirty"/>, so saves of games without <c>mopup_hunt</c> are unchanged).</summary>
+    internal void SnapshotHunt(BinaryWriter w)
+    {
+        w.Write(_site.Length); w.Write(_site);
+        AiSnapshot.WriteCell(w, _huntCell); w.Write(_huntTick); w.Write(_depVal); w.Write(_depTick);
+    }
+
+    /// <summary>s30: reads what <see cref="SnapshotHunt"/> wrote.</summary>
+    internal void RestoreHunt(BinaryReader r)
+    {
+        int n = AiSnapshot.Count(r);
+        _site = r.ReadBytes(n);
+        _huntCell = AiSnapshot.ReadCell(r); _huntTick = r.ReadInt32(); _depVal = r.ReadInt32(); _depTick = r.ReadInt32();
+        _huntTouched = true;
     }
 
     /// <summary>S24: writes the launched-order memory (only called when <see cref="OrdersDirty"/>).</summary>

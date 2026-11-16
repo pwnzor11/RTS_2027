@@ -26,11 +26,16 @@ namespace Rts.Data;
 /// <param name="AaCapAuthority">Same for Authority.</param>
 /// <param name="AaCapLeftBehind">Same for LeftBehind.</param>
 /// <param name="AaCapExpedition">Same for Expedition.</param>
+/// <param name="HuntDirectorate">s30: <c>mopup_hunt</c> for Directorate (0 = off, 1 = the mop-up hunts a relocating base).</param>
+/// <param name="HuntAuthority">Same for Authority.</param>
+/// <param name="HuntLeftBehind">Same for LeftBehind.</param>
+/// <param name="HuntExpedition">Same for Expedition.</param>
 public sealed record FactionAiKeys(int HarassDirectorate, int HarassAuthority, int HarassLeftBehind, int HarassExpedition,
     int CommitDirectorate = 0, int CommitAuthority = 0, int CommitLeftBehind = 0, int CommitExpedition = 0,
     int AaDirectorate = 0, int AaAuthority = 0, int AaLeftBehind = 0, int AaExpedition = 0,
     int RetreatFloorDirectorate = -1, int RetreatFloorAuthority = -1, int RetreatFloorLeftBehind = -1, int RetreatFloorExpedition = -1,
-    int AaCapDirectorate = 0, int AaCapAuthority = 0, int AaCapLeftBehind = 0, int AaCapExpedition = 0)
+    int AaCapDirectorate = 0, int AaCapAuthority = 0, int AaCapLeftBehind = 0, int AaCapExpedition = 0,
+    int HuntDirectorate = 0, int HuntAuthority = 0, int HuntLeftBehind = 0, int HuntExpedition = 0)
 {
     /// <summary>Fallback for <c>harass_min_army</c>.</summary>
     public const int DefaultHarassMinArmy = 30;
@@ -79,4 +84,11 @@ public sealed record FactionAiKeys(int HarassDirectorate, int HarassAuthority, i
     {
         0 => RetreatFloorAuthority, 1 => RetreatFloorDirectorate, 3 => RetreatFloorLeftBehind, 4 => RetreatFloorExpedition, _ => -1,
     };
+
+    /// <summary>s30 <c>mopup_hunt</c> (0/1): when 1 the faction's mop-up also hunts a relocating base (a Mother Rig that packs and unpacks elsewhere):
+    /// packed rigs no longer count as an enemy army, former enemy structure sites and the last-seen rig cell are swept first, and stale blocks are revisited sooner.</summary>
+    public bool MopupHunt(int faction) => faction switch
+    {
+        0 => HuntAuthority, 1 => HuntDirectorate, 3 => HuntLeftBehind, 4 => HuntExpedition, _ => 0,
+    } == 1;
 }
