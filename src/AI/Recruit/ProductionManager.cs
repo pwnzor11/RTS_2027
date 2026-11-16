@@ -191,8 +191,11 @@ internal sealed class ProductionManager
     private bool AirOnlyVetoed(RecruitKnowledge k, int type)
     {
         if (_tier is not { SeenEnemyAir: false } t || !AirOnly(k.Rules, type)) return false;
-        int mode = t.Profile.FactionKeys.AaMode((int)_faction.Faction);
-        return mode == 1 || mode == 2 && AirOnlyOwned(k) >= 1;   // s30: mode 2 lets one air-only vehicle live (or wait in the queue) at a time
+        var keys = t.Profile.FactionKeys;
+        int f = (int)_faction.Faction;
+        if (keys.AaNeedsAir(f)) return true;
+        int cap = keys.AaCapBeforeAir(f);   // s30 aa_cap_before_air
+        return cap > 0 && AirOnlyOwned(k) >= cap;
     }
 
     /// <summary>s30: own air-only vehicles alive (army, home, detached) plus those in the vehicle queue.</summary>

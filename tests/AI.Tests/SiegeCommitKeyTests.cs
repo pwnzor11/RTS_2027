@@ -61,18 +61,19 @@ public class SiegeCommitKeyTests
     }
 
     [Fact]
-    public void AaNeedsAirSoftModeAndRetreatFloorAreReadPerFaction()
+    public void AaCapBeforeAirAndRetreatFloorAreReadPerFaction()
     {
         var shipped = TestWorld.Tiers[2].FactionKeys;
         foreach (Faction f in new[] { Faction.Authority, Faction.Directorate, Faction.LeftBehind, Faction.Expedition })
             Assert.Equal(-1, shipped.RetreatFloor((int)f));   // s30: the built-in floor everywhere
         string text = File.ReadAllText(DifficultyLoader.PathBesideRules(TestWorld.RulesDir));
-        string path = Write(text.Replace("\n[faction.expedition]\n", "\n[faction.expedition]\naa_needs_air = 2\nretreat_floor_pct = 25\n"));
+        string path = Write(text.Replace("\n[faction.expedition]\n", "\n[faction.expedition]\naa_cap_before_air = 4\nretreat_floor_pct = 25\n"));
         try
         {
             var keys = DifficultyLoader.Load(path)[2].FactionKeys;
-            Assert.Equal(2, keys.AaMode((int)Faction.Expedition));
-            Assert.True(keys.AaNeedsAir((int)Faction.Expedition));
+            Assert.Equal(4, keys.AaCapBeforeAir((int)Faction.Expedition));
+            Assert.False(keys.AaNeedsAir((int)Faction.Expedition));
+            Assert.Equal(0, keys.AaCapBeforeAir((int)Faction.Directorate));
             Assert.Equal(25, keys.RetreatFloor((int)Faction.Expedition));
             Assert.Equal(-1, keys.RetreatFloor((int)Faction.Directorate));
         }

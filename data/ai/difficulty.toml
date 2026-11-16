@@ -60,7 +60,8 @@
 #   aa_needs_air            0/1 (s29, missing key = 0 = off): 1 = the faction builds no vehicle whose gun only hits aircraft (the Expedition Sparker) until an
 #                           enemy aircraft has been seen. Why: a third of the Expedition tier-2 bag is Sparkers (600 each); traced games held 6-15 of them
 #                           (up to 9000 credits, over half the army value) against a Directorate with no aircraft, and none of it can shoot a base.
-#                           2 (s30) = softer: one such vehicle may be alive or queued at a time until enemy aircraft are seen.
+#   aa_cap_before_air       0..100 (s30, missing key = 0 = off): softer aa_needs_air: until an enemy aircraft is seen, at most this many anti-air-only
+#                           vehicles may be alive or queued (aa_needs_air = 1 wins when both are set).
 #   retreat_floor_pct       0..100 (s30, missing key = the built-in floor: 40 for the Expedition (ExpeditionTactics.RetreatPct), none for the others):
 #                           waves of this faction are called home below this health percent, whatever the tier's retreat_health_pct says.
 

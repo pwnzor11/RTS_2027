@@ -103,7 +103,7 @@ public static class DifficultyLoader
         var tuning = new FactionTuning[FactionIds.Count];
         Array.Fill(tuning, FactionTuning.Default);
         int[] harass = [FactionAiKeys.DefaultHarassMinArmy, FactionAiKeys.DefaultHarassMinArmy, FactionAiKeys.DefaultHarassMinArmy, FactionAiKeys.DefaultHarassMinArmy];
-        int[] commit = [0, 0, 0, 0], aa = [0, 0, 0, 0], floor = [-1, -1, -1, -1];   // s29 siege_commit_ratio, aa_needs_air; s30 retreat_floor_pct
+        int[] commit = [0, 0, 0, 0], aa = [0, 0, 0, 0], floor = [-1, -1, -1, -1], aacap = [0, 0, 0, 0];   // s29 siege_commit_ratio, aa_needs_air; s30 retreat_floor_pct, aa_cap_before_air
         foreach (var kv in group)
         {
             int i = Array.IndexOf(FactionIds.ToArray(), kv.Key);
@@ -111,7 +111,7 @@ public static class DifficultyLoader
             if (i < 0) { problems.Add(new RulesProblem(file, id, "unknown faction id (expected authority, directorate, left_behind or expedition)")); continue; }
             if (kv.Value is not TomlTable t) { problems.Add(new RulesProblem(file, id, "expected a [table]")); continue; }
             foreach (var key in t)
-                if (Array.IndexOf(TuningKeys, key.Key) < 0 && key.Key != "harass_min_army" && key.Key != "siege_commit_ratio" && key.Key != "aa_needs_air" && key.Key != "retreat_floor_pct" && !(key.Value is TomlTable && TierOf(key.Key) > 0)) problems.Add(new RulesProblem(file, id + "." + key.Key, "unknown key"));
+                if (Array.IndexOf(TuningKeys, key.Key) < 0 && key.Key != "harass_min_army" && key.Key != "siege_commit_ratio" && key.Key != "aa_needs_air" && key.Key != "retreat_floor_pct" && key.Key != "aa_cap_before_air" && !(key.Value is TomlTable && TierOf(key.Key) > 0)) problems.Add(new RulesProblem(file, id + "." + key.Key, "unknown key"));
             int? v = Opt(t, id, "harass_min_army", 1, 1000, FactionAiKeys.DefaultHarassMinArmy, file, problems);
             if (v is int x) harass[i] = x;
             var d = FactionTuning.Default;
@@ -124,10 +124,12 @@ public static class DifficultyLoader
                 Opt(t, id, "adapt_build", 0, 1, d.AdaptBuild, file, problems) ?? d.AdaptBuild);
             int? cr = Opt(t, id, "siege_commit_ratio", 0, 10000, 0, file, problems);   // s29
             if (cr is int cx) commit[i] = cx;
-            int? an = Opt(t, id, "aa_needs_air", 0, 2, 0, file, problems);   // s29 (2 = s30 soft mode)
+            int? an = Opt(t, id, "aa_needs_air", 0, 1, 0, file, problems);   // s29
             if (an is int ax) aa[i] = ax;
             int? rf = Opt(t, id, "retreat_floor_pct", 0, 100, -1, file, problems);   // s30
             if (rf is int fx) floor[i] = fx;
+            int? ac = Opt(t, id, "aa_cap_before_air", 0, 100, 0, file, problems);   // s30
+            if (ac is int acx) aacap[i] = acx;
             foreach (var key in t)
             {
                 int tier = TierOf(key.Key);
@@ -138,7 +140,7 @@ public static class DifficultyLoader
                 overrides.Add((i, tier, over, oid));
             }
         }
-        return new FactionAiKeys(harass[1], harass[0], harass[2], harass[3], commit[1], commit[0], commit[2], commit[3], aa[1], aa[0], aa[2], aa[3], floor[1], floor[0], floor[2], floor[3]) { Tuning = tuning };
+        return new FactionAiKeys(harass[1], harass[0], harass[2], harass[3], commit[1], commit[0], commit[2], commit[3], aa[1], aa[0], aa[2], aa[3], floor[1], floor[0], floor[2], floor[3], aacap[1], aacap[0], aacap[2], aacap[3]) { Tuning = tuning };
     }
 
     /// <summary>1..5 for "tier1".."tier5", else 0.</summary>
