@@ -11,7 +11,7 @@ public static class PropAtlases
     /// <summary>Set to 1 to skip every data-backed source and draw the procedural placeholders (for before/after screenshots).</summary>
     public const string ProceduralOnlyVariable = "RTS_PROCEDURAL_PROPS";
 
-    /// <summary>Builds the prop atlas for a theater: 0 A.D.-derived renders where they exist (Boulder, Rubble, Snag), then the LPC atlas, which falls back to the procedural art.</summary>
+    /// <summary>Builds the prop atlas for a theater: Blender renders (GlassCrest, IceSlab, WreckHulk, BrokenPylon), then 0 A.D.-derived renders where they exist (Boulder, Rubble, Snag), then the LPC atlas, which falls back to the procedural art.</summary>
     /// <param name="palette">The theater palette (colours the procedural fallback).</param>
     /// <param name="theater">The theater id (<see cref="TerrainPalette.TheaterIdFor"/>), which picks the graded 0 A.D. atlas.</param>
     public static IPropAtlas Create(TerrainPalette palette, string theater)
@@ -20,6 +20,8 @@ public static class PropAtlases
         var sources = new List<IPropAtlas>();
         if (Environment.GetEnvironmentVariable(ProceduralOnlyVariable) != "1")
         {
+            BlenderPropAtlas? blender = BlenderPropAtlas.TryLoad(theater);   // S29: Blender renders of GlassCrest, IceSlab, WreckHulk, BrokenPylon
+            if (blender is not null) sources.Add(blender);
             ZeroAdPropAtlas? zeroAd = ZeroAdPropAtlas.TryLoad(theater);
             if (zeroAd is not null) sources.Add(zeroAd);
         }
