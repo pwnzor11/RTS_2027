@@ -52,6 +52,7 @@ cells were used to screen, and the candidates were re-measured on 128 games (see
 | V3 | Authority tier-3 harvester_target 2 (helper) | Auth v LB 54 %, Auth v Dir 41 %, Auth v Exp 57 %, Exp v Auth glass 69 % |
 | Z1 | conscript 95 + V3 | as V3 and X4 combined |
 | W1 | Skimmer armour heavy | LB v Exp 30 %, Dir v Exp 70 %: no |
+| W2 | Z1 + Skimmer armour heavy | stopped after 32 games of one row once W1 failed (not counted in the 15) |
 
 Helper-only 32-game checks (not on the cluster): Authority Tank cost 650 (Auth v Dir 54 % but lifts the Authority everywhere), expansion_tick
 2400, attack_threshold 14, rifleman 85/90: dropped.
