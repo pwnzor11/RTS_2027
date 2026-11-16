@@ -18,9 +18,14 @@ namespace Rts.Data;
 /// <param name="AaAuthority">Same for Authority.</param>
 /// <param name="AaLeftBehind">Same for LeftBehind.</param>
 /// <param name="AaExpedition">Same for Expedition.</param>
+/// <param name="RetreatFloorDirectorate">s30: <c>retreat_floor_pct</c> for Directorate (-1 = built-in: 40 for the Expedition, none for the others).</param>
+/// <param name="RetreatFloorAuthority">Same for Authority.</param>
+/// <param name="RetreatFloorLeftBehind">Same for LeftBehind.</param>
+/// <param name="RetreatFloorExpedition">Same for Expedition.</param>
 public sealed record FactionAiKeys(int HarassDirectorate, int HarassAuthority, int HarassLeftBehind, int HarassExpedition,
     int CommitDirectorate = 0, int CommitAuthority = 0, int CommitLeftBehind = 0, int CommitExpedition = 0,
-    int AaDirectorate = 0, int AaAuthority = 0, int AaLeftBehind = 0, int AaExpedition = 0)
+    int AaDirectorate = 0, int AaAuthority = 0, int AaLeftBehind = 0, int AaExpedition = 0,
+    int RetreatFloorDirectorate = -1, int RetreatFloorAuthority = -1, int RetreatFloorLeftBehind = -1, int RetreatFloorExpedition = -1)
 {
     /// <summary>Fallback for <c>harass_min_army</c>.</summary>
     public const int DefaultHarassMinArmy = 30;
@@ -50,9 +55,20 @@ public sealed record FactionAiKeys(int HarassDirectorate, int HarassAuthority, i
         0 => CommitAuthority, 1 => CommitDirectorate, 3 => CommitLeftBehind, 4 => CommitExpedition, _ => 0,
     };
 
-    /// <summary>s29 <c>aa_needs_air</c> (0/1): when 1 the faction's unit bags skip vehicles whose gun only hits aircraft until an enemy aircraft has been seen.</summary>
-    public bool AaNeedsAir(int faction) => faction switch
+    /// <summary>s29/s30 <c>aa_needs_air</c> (0/1/2) for a faction: 0 off; 1 the unit bags skip vehicles whose gun only hits aircraft until an enemy aircraft has
+    /// been seen; 2 (s30, softer) the same, but one such vehicle may be alive (or queued) at a time.</summary>
+    public int AaMode(int faction) => faction switch
     {
         0 => AaAuthority, 1 => AaDirectorate, 3 => AaLeftBehind, 4 => AaExpedition, _ => 0,
-    } == 1;
+    };
+
+    /// <summary>s29 <c>aa_needs_air</c>: true when the key is set (1 or 2) for the faction.</summary>
+    public bool AaNeedsAir(int faction) => AaMode(faction) > 0;
+
+    /// <summary>s30 <c>retreat_floor_pct</c>: the health percent below which the faction's waves never fight, or -1 for the built-in floor
+    /// (<c>ExpeditionTactics.RetreatPct</c> for the Expedition, none for the others).</summary>
+    public int RetreatFloor(int faction) => faction switch
+    {
+        0 => RetreatFloorAuthority, 1 => RetreatFloorDirectorate, 3 => RetreatFloorLeftBehind, 4 => RetreatFloorExpedition, _ => -1,
+    };
 }

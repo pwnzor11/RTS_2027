@@ -221,7 +221,7 @@ public sealed class RecruitAi : IAiPlayer, IAiSnapshotable, IHookableAi
         {
             _profile = profile;
             _planner?.SetProfile(profile);
-            _military.Retune(profile, _tactics is ExpeditionTactics, ExpeditionTactics.RetreatPct);
+            _military.Retune(profile, _tactics is ExpeditionTactics || FloorPct > 0, FloorPct);   // s30 retreat_floor_pct
         }
         _military.MissionBot = true;   // S22: a mission AI (the driver reads script hooks) never mops up: campaign behaviour unchanged
         _hookAttack = hooks.AttackCell; _hookDefend = hooks.DefendCell;
@@ -289,12 +289,18 @@ public sealed class RecruitAi : IAiPlayer, IAiSnapshotable, IHookableAi
             _retreat.RepairAll = true;
             _military.ThresholdBonus = ExpeditionTactics.WaveBonus;
             _military.RerollNow();
-            _military.Options = _military.Options with { RetreatPct = Math.Max(_military.Options.RetreatPct, ExpeditionTactics.RetreatPct) };
+            _military.Options = _military.Options with { RetreatPct = Math.Max(_military.Options.RetreatPct, FloorPct) };
         }
+        else if (FloorPct > 0) _military.Options = _military.Options with { RetreatPct = Math.Max(_military.Options.RetreatPct, FloorPct) };   // s30 retreat_floor_pct
     }
 
-    /// <summary>The retreat health percent in force (the Expedition never fights below <see cref="ExpeditionTactics.RetreatPct"/>).</summary>
-    private int RetreatBase => _tactics is ExpeditionTactics ? Math.Max(_profile.RetreatHealthPct, ExpeditionTactics.RetreatPct) : _profile.RetreatHealthPct;
+    /// <summary>s30: the retreat floor in force: the faction's <c>retreat_floor_pct</c> when set, else <see cref="ExpeditionTactics.RetreatPct"/> for the
+    /// Expedition and 0 (no floor) for the others.</summary>
+    private int FloorPct => _faction is { } f && _profile.FactionKeys.RetreatFloor((int)f.Faction) is >= 0 and var v ? v
+        : _tactics is ExpeditionTactics ? ExpeditionTactics.RetreatPct : 0;
+
+    /// <summary>The retreat health percent in force (never below <see cref="FloorPct"/>: 40 for the Expedition unless <c>retreat_floor_pct</c> says otherwise).</summary>
+    private int RetreatBase => Math.Max(_profile.RetreatHealthPct, FloorPct);
 
     /// <summary>M4-12: no harvester alive and the funds do not cover a new one: only an attack can still win the game.</summary>
     private bool AllIn()
