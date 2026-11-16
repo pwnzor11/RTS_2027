@@ -181,7 +181,7 @@ volume = 0.5
 max_voices = 2
 
 [sound.ui_deny]
-file = "sfx/low_funds.wav"
+file = "sfx/gui_deny.wav"   # was sfx/low_funds.wav (sfxr, M10-10)
 volume = 0.5
 max_voices = 1
 
@@ -484,8 +484,18 @@ file = "sfx/wpn_harpoon_lb.wav"
 volume = 1
 max_voices = 4
 
+[sound.wpn_flame]
+file = "sfx/wpn_flame.wav"
+volume = 1
+max_voices = 4
+
 [sound.wpn_spray]
 file = "sfx/wpn_spray.wav"
+volume = 1
+max_voices = 4
+
+[sound.wpn_depth_charge]
+file = "sfx/wpn_depth_charge.wav"
 volume = 1
 max_voices = 4
 
@@ -506,6 +516,16 @@ max_voices = 3
 
 [sound.exp_large_b]
 file = "sfx/exp_large_b.wav"
+volume = 1
+max_voices = 3
+
+[sound.exp_bomb_heavy]
+file = "sfx/exp_bomb_heavy.wav"
+volume = 1
+max_voices = 3
+
+[sound.exp_rad_burst]
+file = "sfx/exp_rad_burst.wav"
 volume = 1
 max_voices = 3
 
@@ -579,13 +599,43 @@ file = "sfx/die_inf_dir.wav"
 volume = 1
 max_voices = 2
 
+[sound.die_inf_lb]
+file = "sfx/die_inf_lb.wav"
+volume = 1
+max_voices = 2
+
 [sound.die_inf_exp]
 file = "sfx/die_inf_exp.wav"
 volume = 1
 max_voices = 2
 
+[sound.die_veh_auth]
+file = "sfx/die_veh_auth.wav"
+volume = 1
+max_voices = 2
+
+[sound.die_veh_dir]
+file = "sfx/die_veh_dir.wav"
+volume = 1
+max_voices = 2
+
 [sound.die_veh_lb]
 file = "sfx/die_veh_lb.wav"
+volume = 1
+max_voices = 2
+
+[sound.die_veh_exp]
+file = "sfx/die_veh_exp.wav"
+volume = 1
+max_voices = 2
+
+[sound.die_ship]
+file = "sfx/die_ship.wav"
+volume = 1
+max_voices = 2
+
+[sound.die_air_crash]
+file = "sfx/die_air_crash.wav"
 volume = 1
 max_voices = 2
 
@@ -694,6 +744,31 @@ file = "sfx/evt_blackout_hum.wav"
 volume = 1
 max_voices = 2
 
+[sound.amb_glass_coast]
+file = "sfx/amb_glass_coast.wav"
+volume = 1
+max_voices = 1
+
+[sound.amb_rust_belt]
+file = "sfx/amb_rust_belt.wav"
+volume = 1
+max_voices = 1
+
+[sound.amb_ash_plains]
+file = "sfx/amb_ash_plains.wav"
+volume = 1
+max_voices = 1
+
+[sound.amb_mountains]
+file = "sfx/amb_mountains.wav"
+volume = 1
+max_voices = 1
+
+[sound.amb_open_sea]
+file = "sfx/amb_open_sea.wav"
+volume = 1
+max_voices = 1
+
 [event.air_flyby]
 sounds = ["air_jet_flyby"]
 volume = 0.7
@@ -777,6 +852,18 @@ sounds = ["bld_done_lb"]
 volume = 1
 positional = false
 cooldown_ms = 1000
+
+[event.explosion_large.bomb]
+sounds = ["exp_bomb_heavy"]
+volume = 1
+positional = true
+cooldown_ms = 150
+
+[event.fire_bullet.flame]
+sounds = ["wpn_flame"]
+volume = 0.8
+positional = true
+cooldown_ms = 70
 
 [event.fire_bullet.mg]
 sounds = ["wpn_mg_auth"]
@@ -898,6 +985,12 @@ volume = 0.9
 positional = true
 cooldown_ms = 90
 
+[event.fire_shell.depth_charge]
+sounds = ["wpn_depth_charge"]
+volume = 0.9
+positional = true
+cooldown_ms = 90
+
 [event.fire_shell.energy]
 sounds = ["wpn_cannon_dir"]
 volume = 0.9
@@ -970,6 +1063,12 @@ volume = 0.8
 positional = true
 cooldown_ms = 4000
 
+[event.unit_died.air]
+sounds = ["die_air_crash"]
+volume = 0.9
+positional = true
+cooldown_ms = 60
+
 [event.unit_died.infantry.authority]
 sounds = ["die_inf_auth"]
 volume = 0.9
@@ -984,6 +1083,36 @@ cooldown_ms = 60
 
 [event.unit_died.infantry.expedition]
 sounds = ["die_inf_exp"]
+volume = 0.9
+positional = true
+cooldown_ms = 60
+
+[event.unit_died.infantry.left_behind]
+sounds = ["die_inf_lb"]
+volume = 0.9
+positional = true
+cooldown_ms = 60
+
+[event.unit_died.ship]
+sounds = ["die_ship"]
+volume = 0.9
+positional = true
+cooldown_ms = 60
+
+[event.unit_died.vehicle.authority]
+sounds = ["die_veh_auth"]
+volume = 0.9
+positional = true
+cooldown_ms = 60
+
+[event.unit_died.vehicle.directorate]
+sounds = ["die_veh_dir"]
+volume = 0.9
+positional = true
+cooldown_ms = 60
+
+[event.unit_died.vehicle.expedition]
+sounds = ["die_veh_exp"]
 volume = 0.9
 positional = true
 cooldown_ms = 60
@@ -1029,5 +1158,25 @@ sounds = ["nav_splash_shell"]
 volume = 0.9
 positional = true
 cooldown_ms = 100
+
+[ambience.glass_coast]
+sound = "amb_glass_coast"
+volume = 0.5
+
+[ambience.rust_belt]
+sound = "amb_rust_belt"
+volume = 0.5
+
+[ambience.ash_plains]
+sound = "amb_ash_plains"
+volume = 0.5
+
+[ambience.mountains]
+sound = "amb_mountains"
+volume = 0.5
+
+[ambience.open_sea]
+sound = "amb_open_sea"
+volume = 0.5
 
 # END sfx-generated
