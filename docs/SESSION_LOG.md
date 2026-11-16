@@ -535,3 +535,19 @@ Cluster series scripts kept in tools/measure/cluster/.
 resubmitted. A Scripting.Tests build script that `rm -rf`s the source tree must never run while a series uses that tree (caught and stopped).
 M5-13 needs an LLM API key (not available in the cloud). No art pass: the portrait and death-frame fan-outs are already done.
 **Next session should:** see HANDOFF (src-level AI levers for the Authority, Directorate v Expedition rust, Expedition v Left Behind glass).
+
+## Session 29 · 2026-11-16 (prop art, stamped data maps, AI balance levers, M5-13 control)
+**Goal:** owner: resume; answers: landing rule for AI balance changes, M5-13 random control now, attach the repo with push access, Claude picks
+the props (D-257). Then "go".
+**Done:** PR #95 merged: M12-15/M10-07 Blender prop atlas (GlassCrest, IceSlab, WreckHulk, BrokenPylon; 3 variants x 4 theaters; D-258, three
+lead review rounds); M12-14 data maps rebuilt from stamp plans (`map stamp`, D-259; rustbelt_m2 kept light, Q-85); per-faction AI keys, all unset
+(army_before_tech, army_before_adapt, adapt_cash, adapt_max_production, tier2_gate_tick, adapt_build, siege_commit_ratio, aa_needs_air); M5-13
+random-directive control on 128 games (21 % v the plain baseline 53 %, D-260). Balance: 16 variants screened on the cluster, none meets the landing
+rule, no change (D-261, docs/balance/s29_balance.md). Full local suite 5018 passed / 5 skipped / 0 failed; Windows CI green.
+**Decisions:** D-257..D-261. **Questions:** Q-85 (rustbelt_m2 showcase).
+**Helpers:** 4 Sonnet (s29-auth ~100 min, s29-rust ~115 min, s29-maps ~150 min, s29-props ~70 min over 3 rounds); no Haiku packages (all four
+were judgement-heavy). One fix round each for props (2) and none for the others.
+**Problems / notes:** a variant script wrote the Expedition keys into the comment block (5 branches failed to load; rebuilt). Build pods with 3-CPU
+requests stayed Pending behind a full 1-CPU series for 30+ min (lower the series' parallelism first). LFS upload from the cloud WORKED this session
+(push access attached). The auto-mode check went without a verdict a few times; waiting and retrying worked.
+**Next session should:** see HANDOFF (Expedition strength pass with aa_needs_air, Expedition retreat floor key, Mother Rig mop-up, M5-13 model run).

@@ -527,3 +527,14 @@ On main after PR #92 (sounds) and the session 28 PR (stamps switch).
   depth charges, heavy bombs, Left Behind infantry deaths, vehicle deaths for Authority/Directorate/Expedition, air crashes and ship deaths play
   their generated sounds; a refused menu action plays the new deny buzz. exp_rad_burst is installed but plays nowhere yet (no sim signal for it).
 - **Balance:** no change this session (D-255).
+
+## Session 29 (2026-11-16)
+On main after PR #95 and the session 29 handoff PR.
+- **Prop art (D-258):** start a skirmish on a generated Rust Belt map with "Map features: Stamps" (or open ash_reckoning / glass_coast_e1 in the
+  editor): wrecked cars, trucks and tank hulls are rust/charcoal with a little snow on top (sand on Glass Coast, grey ash on Ash Plains), broken
+  pylons are tapered rusty lattice stubs with the fallen top beside them, glass crests are teal crystals, ice slabs pale blue-white. Press H (decor
+  toggle) to compare. None of the wrecks should look like a live unit.
+- **Stamped data maps (D-259):** ash_reckoning shows mirrored dead-tree groves, crater fields, a tank graveyard and a prop yard round the ruin;
+  glass_coast_e1 has three drowned-suburb blocks and wreck clusters; rustbelt_m2 has a grove on the west strip, fallen pylons and a wreck yard by the
+  bridge heads (deliberately light, Q-85). The campaign missions on these maps play as before.
+- **Balance:** no change this session (D-261). The new AI keys in data/ai/difficulty.toml are documented in its comment block and not set.

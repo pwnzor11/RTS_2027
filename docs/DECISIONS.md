@@ -1902,3 +1902,10 @@ road, ruined blocks on the roads) flips the auth_01, lb_01 and dir_01 tier-5 bot
 whose own baseline is 58-51-19 (53 %). The M5-12 levers are strong enough to lose games on their own; a model run is read against both numbers
 (docs/balance/s29_commander_control.md).
 **Status:** measurement (session 29).
+
+### D-261 · 2026-11-16 · Session 29 balance: no change lands
+**Decision:** none of the 16 screened variants (6 Authority build/tech, 2 Left Behind adapt, 3 Expedition siege-commit, 2 Expedition anti-air,
+3 anti-air + lower shipments; a5 identical to a1) meets the D-257 landing rule on the 64-game screen, so none went to 128 games and main stays as is.
+The AI keys stay in the code, unset. `aa_needs_air` fixes real AI waste but makes the Expedition the strongest faction; it needs an Expedition
+strength pass before it can land (docs/balance/s29_balance.md).
+**Status:** measurement (session 29), under D-257.
