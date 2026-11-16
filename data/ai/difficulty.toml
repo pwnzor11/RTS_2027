@@ -45,6 +45,10 @@
 # D-167 (per faction, optional): tables [faction.authority], [faction.directorate], [faction.left_behind], [faction.expedition]
 #   harass_min_army         1..1000: army size before the raiding party (flag harass) is formed; missing key or table = 30.
 #                           Directorate 14, the others 30 (s13 ladder: Authority raiders pulled out of a small army cost it the wave)
+#   siege_commit_ratio      0..10000 (s29, percent, missing key = 0 = off): a wave is never called off by the health retreat (or the predicted-loss
+#                           retreat) while our army value is at least this percent of the enemy army seen lately plus the known defences of its target.
+#                           Why: the Expedition retreat floor (40 percent health, +10 margin) walked every wave home at half health, 8 waves in a row, v a Directorate
+#                           base worth 1-3k credits of defences and no army, while it held 12k of army.
 
 [faction.authority]
 harass_min_army = 30
