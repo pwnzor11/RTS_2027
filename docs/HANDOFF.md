@@ -1,31 +1,45 @@
-# Handoff: Session 29 — src-level AI levers for the open balance rows, M12-14 maps from stamps, M5-13 with a key
-Last commit: `docs: Session 28 handoff` on `land/s28` (PR to main: stamps switch M12-13b, cluster scripts, docs). Check it merged.
-Where things stand: session 28 landed PR #92 (16 sound picks, D-256; all 80 SFX jobs have a sound) and the session 28 PR. No balance change: none of
-15 variants beat main on 128 games (D-255, docs/balance/s28_balance.md). Main at 128 games (seeds 1-64): Authority v Directorate 44 %, Authority v
-Left Behind 70 %, Authority v Expedition 43 %, Directorate v Left Behind 46 %, Directorate v Expedition rust 70 %, Left Behind v Expedition 54 %,
-Expedition v Authority glass 56 %, Expedition v Directorate glass 53 %, Expedition v Left Behind glass 67 %. Decisions up to D-256. Open questions: Q-73.
+# Handoff: Session 30 — Expedition strength pass with aa_needs_air, retreat-floor key, Mother Rig mop-up; M5-13 model run when the key is set
+Last commit: `docs: Session 29 handoff` on `land/s29-r2` (PR to main). Check it merged; PR #95 (prop art, stamped maps, AI keys) is merged.
+Where things stand: session 29 landed PR #95. No balance change (D-261): 16 src-lever variants screened on the cluster, none meets the D-257 landing
+rule (target row toward 50 % on 128 games, no other row more than 3 points the wrong way). Main at 128 games is unchanged from session 28 (table in
+docs/balance/s28_balance.md; main 0f467f2c reproduces those games exactly). Decisions up to D-261. Open questions: Q-73 (deferred), Q-85.
 
 ## Start here (shown to the user as the plan; nothing starts until they say go)
-1. Session 28 PR: CI green? merged? (Claude may merge once Windows CI is green.)
-2. Balance with src levers (data knobs are exhausted, D-255): per-faction `adapt_build` (the Authority hoards 2-3.5k credits at tick 7200 with one
-   barracks and one factory) and a per-faction tier-2 gate (`ArmyBeforeTech` 30 in src/AI/Recruit/TierPlanner; the Authority reaches tier 2 at
-   4100-9200). Aim: Authority v Left Behind 70 % without moving Authority v Directorate. Then Directorate v Expedition rust (30 of 128 games are draws;
-   in two traced draws the Expedition led army value 3-4x but could not break the Directorate base) and Expedition v Left Behind glass. Judge on 128 games.
-3. M12-14 rebuilt data maps from stamps (design 16, wave 4); M12-15 prop art (pilot one prop first).
-4. M5-13 commander measurement: needs the owner's ANTHROPIC_API_KEY or OPENAI_API_KEY on the laptop (never in chat); the random control runs anywhere.
-5. Mirror start-corner bias (owner: later) and Left Behind mirror draws.
+1. Session 29 handoff PR: CI green? merged? (Claude may merge once Windows CI is green.)
+2. Expedition pass (docs/balance/s29_balance.md): `aa_needs_air` (no air-only Sparkers before enemy aircraft) fixes real AI waste but swings every
+   Expedition row 20-35 points its way; shipments 600-750 pull the glass rows back, not Expedition v Directorate glass (72-75 %) or the rust rows.
+   Options to screen: a softer key (one Sparker per bag cycle), Glide Tank cost/strength, Directorate anti-armour. All nine rows, 64 then 128 games.
+3. Make the Expedition 40 % retreat floor a data key (ExpeditionTactics.RetreatPct, forced in RecruitAi.cs at two sites) and a mop-up fix for
+   relocating bases (Mother Rig) for the Expedition v Left Behind glass draws.
+4. Authority v Left Behind 70 %: the Authority build/tech levers all weaken the Authority everywhere (worst v Directorate); look at the Left Behind
+   side (tier-3 army cap leaves ~3k unspent; adapt_build alone moved the row 5 points but raised Exp v LB glass 10).
+5. M5-13 model run: needs the owner's ANTHROPIC_API_KEY or OPENAI_API_KEY set on the laptop (never in chat); read against D-260 (21 % / 53 %).
+6. Q-85 rustbelt_m2 showcase; mirror start-corner bias (owner: later).
 
 ## Half-finished work
-- Balance variant branches bal/s28-x1..x7, y1..y4, z1, v3, w1, w2, f1 are measurement only (delete on GitHub).
-- exp_rad_burst is installed but no event plays it (no sim signal for a radiation burst).
-- Editor props and decals draw as tints in the editor view; Grapeshot AI trigger "(tune)"; two-PC LAN test waits on the owner.
+- Variant branches bal/s29-* (a1-a6, l1-l2, r1-r6, e1-e4, c1-c3) are measurement only (delete on GitHub); r1-r3 and e1-e2 are broken (key outside
+  the table). art/s29-props is merged.
+- exp_rad_burst is installed but no event plays it. Editor props/decals draw as tints in the editor view; Grapeshot AI trigger "(tune)";
+  two-PC LAN test waits on the owner.
 
 ## Waiting on the user
-- Pull main on the laptop (`git checkout main; git pull`) once the session 28 PR is merged.
-- Two-PC LAN test (M9-15). Branch clean-up on GitHub: integ-s24, land/s24-r1..r3, land/s25-laptop, land/s25-r1, land/s25-r2, integ-s25, art/s25,
-  land/s26-docs, integ-s27, land/s27-skins, land/s27-balance, wp/s27-skin-*, bal/s27-*, land/s28-sfx, integ-s28, land/s28 (after merge), bal/s28-*.
+- Pull main on the laptop (`git checkout main; git pull`) after the handoff PR (the new prop atlases are LFS; `git lfs pull` if they show as text).
+- Q-85; two-PC LAN test (M9-15); API key on the laptop for M5-13 (optional). Branch clean-up on GitHub: integ-s24, land/s24-r1..r3, land/s25-laptop,
+  land/s25-r1, land/s25-r2, integ-s25, art/s25, land/s26-docs, integ-s27, land/s27-skins, land/s27-balance, wp/s27-skin-*, bal/s27-*, land/s28-sfx,
+  integ-s28, land/s28, bal/s28-*, integ-s29, land/s29-r1, land/s29-r2 (after merge), art/s29-props, bal/s29-*.
 
 ## How to run this session
+- Session 29 lessons:
+  - With push access attached (owner asked in chat), LFS uploads from the cloud worked: a branch with 4 new atlas PNGs pushed, and the LFS batch
+    API listed all objects. Check with a "download" batch request before assuming the bundle route is needed.
+  - Variant scripts: insert keys after the exact header line, never after a text match (the comment block names `[faction.expedition]`); check one
+    variant's file before building nine.
+  - Cluster: build pods (3 CPU) stay Pending behind a series of 1-CPU pods; drop the series' parallelism (kubectl patch job, via `cl.py run
+    snowwhite`) before submitting builds, and set a waiting series to parallelism 0 until its build finishes (pods give up after 30 min).
+  - 64-game screens of 16 variants took ~4 h of cluster time in three batches; screen only rows the change can touch.
+  - Land finished non-balance work in its own PR while the balance series runs (PR #95 merged mid-session).
+  - Sonnet helpers on the 2-CPU box with traces took 100-150 min each; ask for the default-identical proof and one trace per lever, then measure
+    on the cluster yourself instead of waiting for the helper's variant step.
 - Session 28 lessons:
   - A 64-game `ai match` row moved up to 7 points between seed sets on rows a variant could not touch: screen on 64, decide on 128 games (seeds 1-64,
     `CHUNKS=8`) against a 128-game main table. Rows untouched by a variant reproduce main game for game, a free consistency check.
