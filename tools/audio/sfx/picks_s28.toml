@@ -1,0 +1,20 @@
+# Session 28 sound picks (Claude's screen of the s24 catch-up run: attack strength, decay, active share, loop seam and stationarity).
+# Applied with:  make_sfx.ps1 -Pick -Only <the ids below> -Picks <id=take,...>   (scratch\s28_sfx.ps1 does it). die_ship is trimmed to the
+# one-shot cap at pick time (D-251).
+[picks]
+wpn_flame = 2
+wpn_depth_charge = 2
+exp_bomb_heavy = 6
+exp_rad_burst = 5
+die_inf_lb = 4
+die_veh_auth = 6
+die_veh_dir = 4
+die_veh_exp = 6
+die_air_crash = 6
+gui_deny = 2
+amb_glass_coast = 1
+amb_rust_belt = 1
+amb_ash_plains = 2
+amb_mountains = 1
+amb_open_sea = 1
+die_ship = 2
