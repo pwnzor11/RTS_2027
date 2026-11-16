@@ -5,6 +5,11 @@ file cited after each question. Recommendations are the lead's, from the researc
 
 ## Open
 
+- ⚪ **Q-85 · 2026-11-16 · rustbelt_m2 showcase dressing (M12-14).** The stamped rustbelt_m2 is light, because a checkpoint on the north road
+  (28,5) and ruined blocks at (38,1) / (27,0) flip the tier-5 bot walk-throughs of auth_01, lb_01 and dir_01 (D-259). Options: **(a) keep it light
+  (recommended until you have played those missions)**; (b) dress it fully and re-walk / retune the three tier-5 bots; (c) dress it and let the tier-5
+  walks fail (they only test the bot, not you).
+
 - 🟡 **Q-73 · 2026-11-12 · Par-time medals (M10-19).** No campaign mission has a par time, so the Profile page awards only Completed and
   No losses. Options: **(a) the owner gives a par time per mission (recommended; the bot walk-through times in docs/balance are a starting point)**;
   (b) par = the bot's tier-3 win time + 50 %; (c) no par medal.

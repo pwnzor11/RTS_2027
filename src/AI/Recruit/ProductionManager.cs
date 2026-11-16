@@ -162,6 +162,7 @@ internal sealed class ProductionManager
             return;
         }
         if (Bias.MixPermille > 0 && !(cat == ProductionCategory.Vehicle && _first)) type = PreferMix(k, cat, mix, type);   // M5-02
+        if (cat == ProductionCategory.Vehicle && AirOnlyVetoed(k, type)) type = FirstGroundVehicle(k, mix, idx, type);   // s29 aa_needs_air
         if (!k.Buildable(cat, type)) return;
         int funds = k.Hud.Cash + k.Hud.Stored;
         if (_noIncome && funds < cost(type) + reserve)
@@ -184,6 +185,27 @@ internal sealed class ProductionManager
             if (idx % mix.Length == 0) Shuffle(mix);
         }
         Queued++;
+    }
+
+    /// <summary>s29 (<c>aa_needs_air</c>): true when <paramref name="type"/> is a vehicle whose gun only hits aircraft and the faction asked not to build those before it has seen enemy aircraft.</summary>
+    private bool AirOnlyVetoed(RecruitKnowledge k, int type) =>
+        _tier is { SeenEnemyAir: false } t && t.Profile.FactionKeys.AaNeedsAir((int)_faction.Faction) && AirOnly(k.Rules, type);
+
+    private static bool AirOnly(SimRules rules, int vehicle)
+    {
+        int w = rules.Vehicles[vehicle].PrimaryWeapon;
+        return w >= 0 && rules.Weapons[w].Targets == WeaponTargets.Air;
+    }
+
+    /// <summary>s29: the next buildable bag entry (from <paramref name="idx"/> on) that is not air-only; <paramref name="fallback"/> when there is none.</summary>
+    private static int FirstGroundVehicle(RecruitKnowledge k, int[] mix, int idx, int fallback)
+    {
+        for (int n = 0; n < mix.Length; n++)
+        {
+            int t = mix[(idx + n) % mix.Length];
+            if (k.Buildable(ProductionCategory.Vehicle, t) && !AirOnly(k.Rules, t)) return t;
+        }
+        return fallback;
     }
 
     /// <summary>M5-02: credits the less wanted lane leaves in hand when the commander prefers infantry or vehicles.</summary>

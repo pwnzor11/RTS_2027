@@ -1874,3 +1874,31 @@ scratch\s28_sfx.ps1 with the recommendations and pushed (PR #92): wpn_flame 2, w
 die_inf_lb 4, die_veh_auth 6, die_veh_dir 4, die_veh_exp 6, die_air_crash 6, gui_deny 2, amb_glass_coast 1, amb_rust_belt 1, amb_ash_plains 2,
 amb_mountains 1, amb_open_sea 1, die_ship 2 (trimmed to the one-shot cap). Recorded in tools/audio/sfx/picks_s28.toml. All 80 jobs now have a sound.
 **Status:** owner decision (session 28).
+
+### D-257 · 2026-11-16 · Session 29 owner answers (balance landing rule, M5-13, GitHub access, props)
+**Decision:** (1) An AI src balance change lands when its target row moves toward 50 % over 128 games (seeds 1-64) and no other cross-faction row
+moves more than 3 points away from 50 %. (2) M5-13: the random-directive control runs now; the model run waits until the owner sets his API key on
+the laptop himself (never in chat). (3) The repo was attached to the session with push access at the owner's request. (4) Prop art: Claude picks the
+props by judgement; one pilot reviewed by the lead, then the fan-out without another owner gate.
+**Status:** owner decision (session 29 briefing).
+
+### D-258 · 2026-11-16 · Blender prop atlas for the four procedural-only props (M12-15, M10-07)
+**Decision:** GlassCrest, IceSlab, WreckHulk and BrokenPylon get Blender art (tools/art/props/build_props.py, bpy primitives only, no third-party
+art): 3 variants each, one 192x256 atlas per theater in data/sprites/props/blender/ (same manifest format as the 0 A.D. atlas), loaded by
+BlenderPropAtlas ahead of the 0 A.D. and LPC atlases; PropArt stays as the fallback. Wrecks are generic and faction-less (rust, char, bare steel)
+so they never read as live units, are darker than the ground by design (readable by outline and a lighter top band), and get theater weather on
+upward faces only. Lead reviewed three rounds (olive camouflage removed, weather limited, pylon rebuilt as a tapered lattice stub).
+**Status:** decided by Claude under D-257 (4).
+
+### D-259 · 2026-11-16 · Data maps rebuilt from stamp plans (M12-14)
+**Decision:** rustbelt_m2, glass_coast_e1 and ash_reckoning are now base map + stamp plan (`map stamp`, tools/maps/base and tools/maps/plans;
+MapStampPlanTests keeps data/maps equal to base + plan). Ids, sizes, starts, fields and mission cells are kept; plans stay off mission routes and
+the cells the bot walk-throughs use, so every mission tier still wins. rustbelt_m2 ended up the lightest: a fuller showcase (checkpoint on the north
+road, ruined blocks on the roads) flips the auth_01, lb_01 and dir_01 tier-5 bot walks (Q-85).
+**Status:** decided by Claude (design 16 wave 4).
+
+### D-260 · 2026-11-16 · M5-13 random-directive control result
+**Decision:** On 128 games (seeds 1-64, both starts, map 64, tier 3 v tier 3) random directives and orders win 25-94-9 (21 %) against the plain AI,
+whose own baseline is 58-51-19 (53 %). The M5-12 levers are strong enough to lose games on their own; a model run is read against both numbers
+(docs/balance/s29_commander_control.md).
+**Status:** measurement (session 29).

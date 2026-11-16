@@ -45,6 +45,21 @@
 # D-167 (per faction, optional): tables [faction.authority], [faction.directorate], [faction.left_behind], [faction.expedition]
 #   harass_min_army         1..1000: army size before the raiding party (flag harass) is formed; missing key or table = 30.
 #                           Directorate 14, the others 30 (s13 ladder: Authority raiders pulled out of a small army cost it the wave)
+# S29 (BAL-S29, per faction, optional; none is set in the faction tables below, so every default applies):
+#   army_before_tech        1..1000: army size before the research structure and the tier-2 gate are added; default 30 (TierPlanner.ArmyBeforeTech).
+#                           Left Behind ignores it (it never waits for an army).
+#   army_before_adapt       0..1000: army size before AdaptBuild adds production / defence; default 30 (TierPlanner.ArmyBeforeAdapt).
+#   adapt_cash              0..100000: funds (cash + stored) at which AdaptBuild adds a barracks / factory; default 1500 (TierPlanner.FloatingCash).
+#   adapt_max_production    2..6: the most barracks and the most factories AdaptBuild grows to; default 2.
+#   tier2_gate_tick         0..100000: tick from which the tier-2 gate is added; default 3600 (TierPlanner.Tier2GateTick).
+#   adapt_build             0/1: force the adapt_build flag for this faction at every tier (only the commissar table sets it); missing = the tier's own flag.
+#   siege_commit_ratio      0..10000 (s29, percent, missing key = 0 = off): a wave is never called off by the health retreat (or the predicted-loss
+#                           retreat) while our army value is at least this percent of the enemy army seen lately plus the known defences of its target.
+#                           Why: the Expedition retreat floor (40 percent health, +10 margin) walked every wave home at half health, 8 waves in a row, v a Directorate
+#                           base worth 1-3k credits of defences and no army, while it held 12k of army.
+#   aa_needs_air            0/1 (s29, missing key = 0 = off): 1 = the faction builds no vehicle whose gun only hits aircraft (the Expedition Sparker) until an
+#                           enemy aircraft has been seen. Why: a third of the Expedition tier-2 bag is Sparkers (600 each); traced games held 6-15 of them
+#                           (up to 9000 credits, over half the army value) against a Directorate with no aircraft, and none of it can shoot a base.
 
 [faction.authority]
 harass_min_army = 30

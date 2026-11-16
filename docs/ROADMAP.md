@@ -272,7 +272,7 @@ Source: docs/reviews/2026-11-07_owner_campaign_feedback.md. Audit: docs/reviews/
 - [~] M12-07..12 (s16: layout 2 built for all four biomes, off by default. s17: v6 = Ash half-turn D-198, fields further out D-199, Expedition start units fixed; open: 64-game fairness and income on v6, Q-70, Mountains skew is not the map) Zone skeleton, ~3 lanes and chokes, mixed start shapes (mostly soft shell, some walled with a ramp), natural expansion on about half the maps, 2v2 teammates side by side, fairness checks, income re-measure (design 16 wave 3, revised by D-183 / design 17)
 - [~] M12-12b `ai timeline` now plays the same map as `ai match` (s18). Open: Glass Coast layout 1 Expedition start skew: cause measured in s18 (tender spawn, M13-03)
 - [x] M12-13 Stamp library (5 stamps, data/stamps) + generator pass behind MapGenParams.Stamps (off) + editor Stamp tool (s24)
-- [ ] M12-14..16 Rebuilt data maps from stamps, prop art (M10), optional extras (design doc wave 4) · [x] M12-13b lobby/skirmish setting for stamps (s28: "Map features: Off / Stamps" on Skirmish Setup and the LAN host lobby; save header version 9)
+- [ ] M12-16 optional extras (design doc wave 4) · [x] M12-14 data maps rebuilt from stamp plans (s29, D-259; fuller rustbelt_m2 showcase waits on Q-85) · [x] M12-15 Blender prop art (s29, D-258) · [x] M12-13b lobby/skirmish setting for stamps (s28: "Map features: Off / Stamps" on Skirmish Setup and the LAN host lobby; save header version 9)
 
 ## M13 · Audit fix batch (session 18 audit, D-205; docs/reviews/2026-11-11_s18_audit/README.md)
 - [x] M13-00 Clear non-sim bugs fixed with tests: campaign/missions, in-match UI, menus/setup/tools, LLM key per provider, credits (s18 PR)
@@ -341,10 +341,10 @@ Plan: docs/design/21_m10_polish_plan.md (D-214). Code-only parts built overnight
 - [x] M10-04 Warzone 2100 .pie importer and kitbash tooling (D-189, s15)
 - [x] M10-05 (closed, D-214: D-192 left 0 of 138 flagged) Team-colour audit fixes for vehicles (11 of 45 hulls, 8 of 13 turrets under 10 px; tools/art/house_audit.py)
 - [ ] M10-06 Kitbash Warzone parts into our vehicles where they add detail (D-189); per-vehicle FX anchors in manifests
-- [ ] M10-07 Props still procedural: GlassCrest, IceSlab, WreckHulk, BrokenPylon (no fitting open art yet)
+- [x] M10-07 GlassCrest, IceSlab, WreckHulk, BrokenPylon: Blender prop atlas, 3 variants x 4 theaters (s29, D-258)
 Art pass, music/SFX, balance, installer.
 
-- [ ] M5-13 Measure the stronger commander: 32-game swap test, model vs `--random-directives` control (D-241)
+- [ ] M5-13 Measure the stronger commander: 32-game swap test, model vs `--random-directives` control (D-241) · [x] random control on 128 games (s29, D-260: 21 % v plain baseline 53 %); model run waits on the owner's key
 - [x] M13-27 Left Behind mirror slot bias: a game-seed parity skew from correlated AI random streams; AiRandom per-slot seed mixed (D-249, s25)
 - [~] M13-28 Left Behind v Authority 28 %: tier-3 cap until 3600 (D-247, s25; cloud 44 % LB); laptop series to confirm
 - [~] M13-29 Expedition too strong on Glass Coast: shipment value 1200 (D-246), Authority refinery 1700 (D-250); more ore tried and dropped; laptop series to confirm

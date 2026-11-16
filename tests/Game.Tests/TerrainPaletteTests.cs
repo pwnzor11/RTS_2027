@@ -13,7 +13,7 @@ namespace Rts.Game.Tests;
 public sealed class TerrainPaletteTests
 {
     /// <summary>SHA-256 of the baked texture for data/maps/rustbelt_m2.map.toml. Python prints the same value.</summary>
-    private const string RustBeltM2BakeSha256 = "54353962097f3604278995490275fa4ff90cb3787050691d1685fb3537517118";
+    private const string RustBeltM2BakeSha256 = "4d07c4e3a9e3f58928b3f165e8040c5f955434546d3087b69dbcfb88bdeb7c0e";
 
     [Fact]
     public void PaletteFileParses()
