@@ -1,33 +1,41 @@
-# Handoff: Session 28 — Directorate v Expedition traces, remaining balance rows, SFX picks, art passes on the cluster
-Last commit: `docs: Session 27 handoff` on `land/s27-balance` (PR #91, balance D-254 + docs). Check it merged.
-Where things stand: session 27 landed PR #90 (Directorate, Left Behind, Expedition UI skins, rendered on the Pi cluster; "Interface skin"
-settings line; D-252) and PR #91 (Expedition Skimmer 360 hp, shipment value 1100, D-254; D-253 cluster for CPU work). The s25after series and
-the campaign sweep ran on the Pi cluster (all 45 mission-tiers on target at 43d4388; re-swept after D-254 at 84a218d: all 45 still on target). Decisions up to D-254.
-Numbers: docs/balance/s27_balance.md (cluster, 64 games per row). Open questions: Q-73 (deferred until the owner plays the campaign).
+# Handoff: Session 29 — src-level AI levers for the open balance rows, M12-14 maps from stamps, M5-13 with a key
+Last commit: `docs: Session 28 handoff` on `land/s28` (PR to main: stamps switch M12-13b, cluster scripts, docs). Check it merged.
+Where things stand: session 28 landed PR #92 (16 sound picks, D-256; all 80 SFX jobs have a sound) and the session 28 PR. No balance change: none of
+15 variants beat main on 128 games (D-255, docs/balance/s28_balance.md). Main at 128 games (seeds 1-64): Authority v Directorate 44 %, Authority v
+Left Behind 70 %, Authority v Expedition 43 %, Directorate v Left Behind 46 %, Directorate v Expedition rust 70 %, Left Behind v Expedition 54 %,
+Expedition v Authority glass 56 %, Expedition v Directorate glass 53 %, Expedition v Left Behind glass 67 %. Decisions up to D-256. Open questions: Q-73.
 
 ## Start here (shown to the user as the plan; nothing starts until they say go)
-1. PR #91: CI green? merged? (the owner approved D-254 in chat; Claude may merge once Windows CI is green).
-2. Balance, remaining rows (cluster, 64 games each): Directorate v Expedition rust 73 % (not its early swarm: a tier-3 cap left it at 74 %;
-   trace per unit with `ai match --trace 1200 --game G --econ 1 --ledger 1`), Authority v Left Behind 66 %, Authority v Directorate 38 %
-   (Directorate tier-3 cap 22 until 4200 fixes it to 50 % but costs Dir v LB 49 -> 40 % and Exp v Dir glass 52 -> 62 %). Mirror start-corner
-   shares up to 67 % and Left Behind mirror draws (20/64 on Mountains l1) are also open.
-3. SFX: the owner runs `tools\audio\sfx\run_s24_sfx.ps1 -From 2` on the laptop (it was given in session 27; check `tools\audio\sfx\out`
-   for takes 4-6 and amb_*), then audition and pick (+ a trimmed die_ship).
-4. Art on the cluster (D-253): Blender scripts run inside Debian Blender 4.3 (`claude/examples/rts27/skins27.sh` pattern); candidates are the
-   portrait/death-frame fan-outs and any re-render the owner asks for. Pilot one asset and compare with the laptop version first.
-5. M5-13 commander measurement (cluster job), M12-13b lobby switch for generator stamps, M12-14 maps from stamps.
+1. Session 28 PR: CI green? merged? (Claude may merge once Windows CI is green.)
+2. Balance with src levers (data knobs are exhausted, D-255): per-faction `adapt_build` (the Authority hoards 2-3.5k credits at tick 7200 with one
+   barracks and one factory) and a per-faction tier-2 gate (`ArmyBeforeTech` 30 in src/AI/Recruit/TierPlanner; the Authority reaches tier 2 at
+   4100-9200). Aim: Authority v Left Behind 70 % without moving Authority v Directorate. Then Directorate v Expedition rust (30 of 128 games are draws;
+   in two traced draws the Expedition led army value 3-4x but could not break the Directorate base) and Expedition v Left Behind glass. Judge on 128 games.
+3. M12-14 rebuilt data maps from stamps (design 16, wave 4); M12-15 prop art (pilot one prop first).
+4. M5-13 commander measurement: needs the owner's ANTHROPIC_API_KEY or OPENAI_API_KEY on the laptop (never in chat); the random control runs anywhere.
+5. Mirror start-corner bias (owner: later) and Left Behind mirror draws.
 
 ## Half-finished work
-- Balance: three rows outside 45-55 % (above). Variant branches bal/s27-va..vh are measurement-only (owner can delete them).
-- SFX: 65 of 80 picked; die_ship, 9 drone sounds, gui_deny and 5 ambience loops not picked; laptop catch-up run handed over in session 27.
-- Editor props and decals draw as tints (no sprites); Grapeshot AI trigger "(tune)"; two-PC LAN test waits on the owner.
+- Balance variant branches bal/s28-x1..x7, y1..y4, z1, v3, w1, w2, f1 are measurement only (delete on GitHub).
+- exp_rad_burst is installed but no event plays it (no sim signal for a radiation burst).
+- Editor props and decals draw as tints in the editor view; Grapeshot AI trigger "(tune)"; two-PC LAN test waits on the owner.
 
 ## Waiting on the user
-- SFX catch-up run on the laptop, then "sfx done". Two-PC LAN test (M9-15).
-- Branch clean-up on GitHub: integ-s24, land/s24-r1..r3, land/s25-laptop, land/s25-r1, land/s25-r2, integ-s25, art/s25, land/s26-docs,
-  integ-s27, land/s27-skins, land/s27-balance (after merge), wp/s27-skin-*, bal/s27-va, -vb, -vd, -ve, -vf, -vg, -vh.
+- Pull main on the laptop (`git checkout main; git pull`) once the session 28 PR is merged.
+- Two-PC LAN test (M9-15). Branch clean-up on GitHub: integ-s24, land/s24-r1..r3, land/s25-laptop, land/s25-r1, land/s25-r2, integ-s25, art/s25,
+  land/s26-docs, integ-s27, land/s27-skins, land/s27-balance, wp/s27-skin-*, bal/s27-*, land/s28-sfx, integ-s28, land/s28 (after merge), bal/s28-*.
 
 ## How to run this session
+- Session 28 lessons:
+  - A 64-game `ai match` row moved up to 7 points between seed sets on rows a variant could not touch: screen on 64, decide on 128 games (seeds 1-64,
+    `CHUNKS=8`) against a 128-game main table. Rows untouched by a variant reproduce main game for game, a free consistency check.
+  - The cloud box plays a 16-game row in ~2.5 min per core (one game ~10 s), about 5x a Pi core; use it for traces and quick checks.
+  - Per-faction tier keys: `attack_ratio_pct` is inert for the Expedition (identical games); `attack_threshold`, `harvester_target`,
+    `expansion_tick` work. Check a knob changes games before measuring it on every row.
+  - Cluster: build first, then submit the series (pods wait 30 min for Tools.dll, then fail). Never run a script that `rm -rf`s
+    /work/src/rts/<sha> while a series uses that tree; build Scripting.Tests in place (`tools/measure/cluster/README.md`).
+  - The owner's laptop pushes LFS: for new sounds hand him one script that pulls main, picks on a branch and pushes (scratch\s28_sfx.ps1 pattern),
+    then open the PR from the cloud.
 - Session 27 lessons:
   - Cluster (D-253): the k3s-cluster-code repo has `claude/examples/rts27/` (build-any.sh, var27.sh + mkvar.py for rows x seed chunks,
     sweep27.sh, skins27.sh, summarize.py, varsum.py-style tallies). A 17-row x 64-game series takes ~65 min on 24-28 cores, the 45 x 12 campaign

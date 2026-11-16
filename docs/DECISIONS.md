@@ -1858,3 +1858,19 @@ on rust_belt, 1-3 for other factions' harvesters) and the Expedition shipment va
 sum of distances from 50 % over the nine cross-faction rows 109 -> 87 (table: docs/balance/s27_balance.md). Alternatives measured and dropped:
 Skimmer capacity 8 (worse everywhere), Left Behind cap until 3000, Directorate harass 22 (no effect at tier 3), Directorate tier-3 cap 22/26.
 **Status:** owner decision (session 27). Open: Directorate v Expedition rust 73 %, Authority v Left Behind 66 %, Authority v Directorate 38 %.
+
+### D-255 · 2026-11-16 · Session 28 balance round: no change lands; keep-or-drop on 128 games per row
+**Decision:** the owner let Claude land balance fixes without asking. Fifteen variants were screened on the Pi cluster (64 games per row) and the
+three best re-measured with main on 128 games (seeds 1-64). None beat main (sum of distances from 50 % over the nine rows: main 87, conscript 95 +
+Directorate tier-3 attack_ratio_pct 130 92, Authority tier-3 harvester_target 2 88, both 88), so nothing was landed. 64-game cells moved up to
+7 points on rows a variant could not touch: from now on a balance change is kept only on 128 games per row against a 128-game main table.
+Table and diagnosis: docs/balance/s28_balance.md. Open at 128 games: Authority v Left Behind 70 %, Directorate v Expedition rust 70 %,
+Expedition v Left Behind glass 67 %. Per-faction tier-3 `attack_ratio_pct` has no effect on the Expedition (identical games).
+**Status:** Claude decision under the owner's standing go-ahead (session 28). Supersedes the 64-game rule of the session 25 lessons.
+
+### D-256 · 2026-11-16 · Session 28 sound picks
+**Decision:** Claude screened the s24 catch-up takes (attack, decay, active share, loop seam, stationarity) and picked 16 sounds; the owner ran
+scratch\s28_sfx.ps1 with the recommendations and pushed (PR #92): wpn_flame 2, wpn_depth_charge 2, exp_bomb_heavy 6, exp_rad_burst 5,
+die_inf_lb 4, die_veh_auth 6, die_veh_dir 4, die_veh_exp 6, die_air_crash 6, gui_deny 2, amb_glass_coast 1, amb_rust_belt 1, amb_ash_plains 2,
+amb_mountains 1, amb_open_sea 1, die_ship 2 (trimmed to the one-shot cap). Recorded in tools/audio/sfx/picks_s28.toml. All 80 jobs now have a sound.
+**Status:** owner decision (session 28).

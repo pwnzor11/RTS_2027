@@ -520,3 +520,18 @@ Blender, Piper, git), Argo CD wired to the repo with Headlamp at .104, grumpy re
 **Problems / notes:** Windows CI Net.Tests UDP timing flake once (rerun passed). `harass_min_army` is inert at tier 3. Busy Pis made MetalLB
 pods restart (CPU reservation for system pods still to do in the cluster repo).
 **Next session should:** see HANDOFF (Directorate v Expedition traces, remaining rows, SFX picks, cluster art passes).
+
+## Session 28 · 2026-11-15/16 (balance round on the cluster, stamps switch, SFX picks)
+**Goal:** owner: resume; "just do the balance and land the fixes", leave the mirror bias for later, run what can go on the cluster, take the rest.
+**Done:** Balance (docs/balance/s28_balance.md): traces of Directorate v Expedition rust, helper s28-auth traced the Authority rows; 15 data variants
+screened on the Pi cluster (64 games per row), then main and the best three on 128 games: none beats main (row distance main 87, best 88), so no
+balance change landed (D-255) and 128 games per row is now the bar. Main at 128 games: Authority v Directorate 44 %, Directorate v Expedition 70 %,
+Authority v Left Behind 70 %, Expedition v Left Behind glass 67 %. M12-13b: "Map features: Off / Stamps" lobby switch (Skirmish Setup and LAN
+host lobby; save header version 9). SFX: screened the catch-up run, owner pushed the 16 picks (PR #92, D-256); all 80 jobs have a sound.
+Cluster series scripts kept in tools/measure/cluster/.
+**Decisions:** D-255, D-256.
+**Helpers:** 2 Sonnet (s28-auth diagnosis ~90 min, s28-stamps ~50 min); no fix rounds.
+**Problems / notes:** one cloud restart (nothing lost). A series job whose pods waited on a slow build failed its first pods (30-min wait loop);
+resubmitted. A Scripting.Tests build script that `rm -rf`s the source tree must never run while a series uses that tree (caught and stopped).
+M5-13 needs an LLM API key (not available in the cloud). No art pass: the portrait and death-frame fan-outs are already done.
+**Next session should:** see HANDOFF (src-level AI levers for the Authority, Directorate v Expedition rust, Expedition v Left Behind glass).

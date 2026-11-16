@@ -516,3 +516,14 @@ On main after PR #90 and PR #91.
   strip on hover, anchor-and-compass roundel. Toggle the line to "Interface skin: Classic" and the next match uses the procedural look.
 - **Balance (D-254):** Expedition Skimmers have 360 hp (were 220); each Expedition shipment is worth 1100 (was 1200). In an Expedition v Directorate
   skirmish on Rust Belt the Expedition keeps more Skimmers alive.
+
+## Session 28 (2026-11-16)
+On main after PR #92 (sounds) and the session 28 PR (stamps switch).
+- **Stamps switch:** Skirmish Setup, choose a generated map: a new row between "Ocean" and "Seed" reads "Map features: Off"; `<` / `>` flips it to
+  "Map features: Stamps (ruins, groves, craters)". Start the game: mirrored ruined blocks, groves, craters, bridges or checkpoints appear in the
+  neutral ground. Save and reload: the same stamps come back. In the LAN host lobby the row sits between "Size" and "Seed"; guests' Map line ends
+  in "... with stamps". All players must run the same build (the lobby message gained a field).
+- **New sounds (D-256):** each biome plays its new ambience loop (Rust Belt, Glass Coast, Ash Plains, Mountains, open sea); flame weapons,
+  depth charges, heavy bombs, Left Behind infantry deaths, vehicle deaths for Authority/Directorate/Expedition, air crashes and ship deaths play
+  their generated sounds; a refused menu action plays the new deny buzz. exp_rad_burst is installed but plays nowhere yet (no sim signal for it).
+- **Balance:** no change this session (D-255).

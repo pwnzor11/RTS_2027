@@ -272,7 +272,7 @@ Source: docs/reviews/2026-11-07_owner_campaign_feedback.md. Audit: docs/reviews/
 - [~] M12-07..12 (s16: layout 2 built for all four biomes, off by default. s17: v6 = Ash half-turn D-198, fields further out D-199, Expedition start units fixed; open: 64-game fairness and income on v6, Q-70, Mountains skew is not the map) Zone skeleton, ~3 lanes and chokes, mixed start shapes (mostly soft shell, some walled with a ramp), natural expansion on about half the maps, 2v2 teammates side by side, fairness checks, income re-measure (design 16 wave 3, revised by D-183 / design 17)
 - [~] M12-12b `ai timeline` now plays the same map as `ai match` (s18). Open: Glass Coast layout 1 Expedition start skew: cause measured in s18 (tender spawn, M13-03)
 - [x] M12-13 Stamp library (5 stamps, data/stamps) + generator pass behind MapGenParams.Stamps (off) + editor Stamp tool (s24)
-- [ ] M12-14..16 Rebuilt data maps from stamps, prop art (M10), optional extras (design doc wave 4); M12-13b: lobby/skirmish setting for stamps
+- [ ] M12-14..16 Rebuilt data maps from stamps, prop art (M10), optional extras (design doc wave 4) · [x] M12-13b lobby/skirmish setting for stamps (s28: "Map features: Off / Stamps" on Skirmish Setup and the LAN host lobby; save header version 9)
 
 ## M13 · Audit fix batch (session 18 audit, D-205; docs/reviews/2026-11-11_s18_audit/README.md)
 - [x] M13-00 Clear non-sim bugs fixed with tests: campaign/missions, in-match UI, menus/setup/tools, LLM key per provider, credits (s18 PR)
@@ -333,7 +333,7 @@ Plan: docs/design/21_m10_polish_plan.md (D-214). Code-only parts built overnight
 - [x] M10-17 End-of-match graphs · [x] M10-18 Map preview thumbnails · [x] M10-19 Medals and records (Profile page; par medals Q-73)
 - [x] M10-20 Loading screen with tips, credits roll · [x] M10-22 Inno Setup installer + CI artifacts + release workflow · [x] M10-23 Update notice
 - [ ] M10-06 Warzone tracks on every tracked vehicle · [~] M10-08 Building depth pipeline (s24: `--depth` pass, pilot v2 approved D-245; full re-render of all buildings on the laptop next) · [~] M10-10 SFX pass (s22: Stable Audio Open laptop generator, 80 jobs, sound keys and ambience code done; laptop generation pending) · [ ] M10-11 Portraits, death frames
-- [x] M10-15 Faction UI skin (s24: loader + 9-slice drawing + ui_skin setting; Authority pilot v2 approved D-245, install from the laptop; s27: Directorate, Left Behind, Expedition pilots approved, rendered on the Pi cluster and installed (PR #90); settings screen line) · [x] M10-16 Portraits in the card (s24; 4 pilot portraits approved, -All fan-out next) · [x] M10-14b Death animations by cause (s24; die_blast/die_burn/die_rad frames approved for auth_rifleman, fan-out next) · [ ] M10-21 Final balance pass
+- [x] M10-15 Faction UI skin (s24: loader + 9-slice drawing + ui_skin setting; Authority pilot v2 approved D-245, install from the laptop; s27: Directorate, Left Behind, Expedition pilots approved, rendered on the Pi cluster and installed (PR #90); settings screen line) · [x] M10-16 Portraits in the card (s24; 4 pilot portraits approved, -All fan-out next) · [x] M10-14b Death animations by cause (s24; die_blast/die_burn/die_rad frames approved for auth_rifleman, fan-out next) · [ ] M10-21 Final balance pass (s28: 15 variants, none beat main on 128 games, D-255; next: per-faction adapt_build and tier gate in src/AI/Recruit)
 - [ ] M10-xx Building art: less flat, more depth (owner 2026-11-07, later polish run)
 - [x] M10-01 Damage smoke/fire tiers, rubble/wrecks/scorch, vehicle dust, biome mood tint, larger-infantry option (D-184, D-187, s15)
 - [x] M10-02 All 18 infantry re-rendered at figure scale 1.25 with team-colour emphasis; tools/art/house_audit.py (D-185, s15)
@@ -349,4 +349,4 @@ Art pass, music/SFX, balance, installer.
 - [~] M13-28 Left Behind v Authority 28 %: tier-3 cap until 3600 (D-247, s25; cloud 44 % LB); laptop series to confirm
 - [~] M13-29 Expedition too strong on Glass Coast: shipment value 1200 (D-246), Authority refinery 1700 (D-250); more ore tried and dropped; laptop series to confirm
 - [x] M13-30 Laptop series summary: adjudication columns and -OutName title (s25)
-- [ ] M10-10b SFX: 15 sounds' takes 1-3 droned; s24 anti-drone prompts give takes 4-6, plus a full-window test (tools/audio/sfx/run_s24_sfx.ps1)
+- [x] M10-10b SFX: 15 sounds' takes 1-3 droned; s24 anti-drone prompts give takes 4-6, plus a full-window test (tools/audio/sfx/run_s24_sfx.ps1) (s28: catch-up run done, 16 picks landed in PR #92, D-256)
