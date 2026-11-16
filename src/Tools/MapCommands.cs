@@ -16,6 +16,7 @@ public static class MapCommands
         "usage: map new --size <n> --seed <s> --out <path>\n" +
         "       map gen --biome rust_belt|glass_coast|mountains|ash_plains --size s|m|l --players 2|3|4 --seed <s> --out <path> [--ocean n|e|s|w letters, e.g. ns] [--layout 1|2] [--stamps] [--ascii]\n" +
         "       map validate <path> [--rules-dir <dir>]\n" +
+        "       map stamp --base <map> --plan <plan.toml> --out <map>   (M12-14: applies a stamp/prop/patch plan; see MapStampCommand)\n" +
         "       map info <path>\n" +
         "       map ascii <path>\n" +
         "       map report <path> | <gen options>        (measured table of design 16 section 1.2; gen options as for map gen, without --out)\n" +
@@ -31,6 +32,7 @@ public static class MapCommands
             case "info": return Info(args[1..]);
             case "gen": return Gen(args[1..]);
             case "validate": return ValidateMap(args[1..]);
+            case "stamp": return MapStampCommand.Run(args[1..]);
             case "ascii": return Ascii(args[1..]);
             case "report": return Report(args[1..], render: false);
             case "render": return Report(args[1..], render: true);
