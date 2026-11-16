@@ -85,6 +85,11 @@ name = "This project"
 credit = "The original procedural effect sheets."
 match = ["Pre-import procedural effect sheets"]
 
+[[section.entry]]
+name = "This project"
+credit = "The original Blender prop renders (wrecks, glass crests, ice slabs, pylons)."
+match = ["data/sprites/props/blender/"]
+
 [[section]]
 heading = "Sound and music"
 
