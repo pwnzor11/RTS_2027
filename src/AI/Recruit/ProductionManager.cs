@@ -188,8 +188,27 @@ internal sealed class ProductionManager
     }
 
     /// <summary>s29 (<c>aa_needs_air</c>): true when <paramref name="type"/> is a vehicle whose gun only hits aircraft and the faction asked not to build those before it has seen enemy aircraft.</summary>
-    private bool AirOnlyVetoed(RecruitKnowledge k, int type) =>
-        _tier is { SeenEnemyAir: false } t && t.Profile.FactionKeys.AaNeedsAir((int)_faction.Faction) && AirOnly(k.Rules, type);
+    private bool AirOnlyVetoed(RecruitKnowledge k, int type)
+    {
+        if (_tier is not { SeenEnemyAir: false } t || !AirOnly(k.Rules, type)) return false;
+        var keys = t.Profile.FactionKeys;
+        int f = (int)_faction.Faction;
+        if (keys.AaNeedsAir(f)) return true;
+        int cap = keys.AaCapBeforeAir(f);   // s30 aa_cap_before_air
+        return cap > 0 && AirOnlyOwned(k) >= cap;
+    }
+
+    /// <summary>s30: own air-only vehicles alive (army, home, detached) plus those in the vehicle queue.</summary>
+    private static int AirOnlyOwned(RecruitKnowledge k)
+    {
+        int n = 0;
+        foreach (var list in new[] { k.Army, k.Home, k.Detached })
+            foreach (var a in list)
+                if (a.Kind == ActorKind.Vehicle && AirOnly(k.Rules, a.TypeIndex)) n++;
+        foreach (var q in k.Queue(ProductionCategory.Vehicle).Items)
+            if (AirOnly(k.Rules, q.TypeIndex)) n++;
+        return n;
+    }
 
     private static bool AirOnly(SimRules rules, int vehicle)
     {

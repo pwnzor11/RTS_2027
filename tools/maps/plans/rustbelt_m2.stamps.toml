@@ -381,25 +381,42 @@ rect = [71, 69, 73, 71]
 [[keep]]
 rect = [85, 81, 87, 83]
 
-# Dressed so every mission bot walk-through (tiers 1 to 5) still wins: no checkpoint on the north road (flips auth_01 tier 5), no ruined block
-# on the north approach (flips lb_01 tier 5 and dir_01 tier 5 together with the grove). The missions' own cells are kept clear by the keeps above.
-# --- a dead-tree grove on the west strip (its half-turn image sits on the east strip) ---
+# Full showcase dressing (Q-85 option b, s30): ruined blocks, a checkpoint on the north road, groves on the west strip (each also lands on its
+# half-turn image), road-side and bridge-head props. The missions' own cells are kept clear by the keeps above; the tier-5 bot walks of auth_01,
+# lb_01 and dir_01 were re-walked and retuned for it.
+[[stamp]]
+id = "checkpoint"
+x = 28
+y = 5
+
+[[stamp]]
+id = "ruined_block"
+x = 38
+y = 1
+
 [[stamp]]
 id = "grove"
 x = 0
 y = 37
 
-# --- fallen pylons beside the west road ---
+# --- road-side and bridge-head props (small clusters) ---
 [[prop]]
 overlay = "Pylon"
-x = 5
-y = 20
-[[prop]]
-overlay = "Pylon"
-x = 5
-y = 18
+x = 44
+y = 17
 
-# --- a wreck yard on the south road shoulder (and, by symmetry, the north) ---
+[[prop]]
+overlay = "Wreck"
+x = 44
+y = 20
+density = 1
+
+[[prop]]
+overlay = "Block"
+x = 45
+y = 21
+
+# a wreck yard on the south road shoulder
 [[prop]]
 overlay = "Wreck"
 x = 28
@@ -415,17 +432,32 @@ x = 29
 y = 62
 density = 1
 
-# --- road-side props at the bridge head ---
+# fallen pylons beside the west road
 [[prop]]
 overlay = "Pylon"
-x = 44
-y = 17
-[[prop]]
-overlay = "Wreck"
-x = 44
+x = 5
 y = 20
+
+[[prop]]
+overlay = "Pylon"
+x = 5
+y = 18
+
+# a few dead trees north of the checkpoint
+[[prop]]
+overlay = "Tree"
+x = 25
+y = 1
+[[prop]]
+overlay = "Tree"
+x = 27
+y = 2
 density = 1
 [[prop]]
-overlay = "Block"
-x = 45
-y = 21
+overlay = "Snag"
+x = 24
+y = 3
+[[prop]]
+overlay = "Wreck"
+x = 30
+y = 2

@@ -18,9 +18,24 @@ namespace Rts.Data;
 /// <param name="AaAuthority">Same for Authority.</param>
 /// <param name="AaLeftBehind">Same for LeftBehind.</param>
 /// <param name="AaExpedition">Same for Expedition.</param>
+/// <param name="RetreatFloorDirectorate">s30: <c>retreat_floor_pct</c> for Directorate (-1 = built-in: 40 for the Expedition, none for the others).</param>
+/// <param name="RetreatFloorAuthority">Same for Authority.</param>
+/// <param name="RetreatFloorLeftBehind">Same for LeftBehind.</param>
+/// <param name="RetreatFloorExpedition">Same for Expedition.</param>
+/// <param name="AaCapDirectorate">s30: <c>aa_cap_before_air</c> for Directorate (0 = off).</param>
+/// <param name="AaCapAuthority">Same for Authority.</param>
+/// <param name="AaCapLeftBehind">Same for LeftBehind.</param>
+/// <param name="AaCapExpedition">Same for Expedition.</param>
+/// <param name="HuntDirectorate">s30: <c>mopup_hunt</c> for Directorate (0 = off, 1 = the mop-up hunts a relocating base).</param>
+/// <param name="HuntAuthority">Same for Authority.</param>
+/// <param name="HuntLeftBehind">Same for LeftBehind.</param>
+/// <param name="HuntExpedition">Same for Expedition.</param>
 public sealed record FactionAiKeys(int HarassDirectorate, int HarassAuthority, int HarassLeftBehind, int HarassExpedition,
     int CommitDirectorate = 0, int CommitAuthority = 0, int CommitLeftBehind = 0, int CommitExpedition = 0,
-    int AaDirectorate = 0, int AaAuthority = 0, int AaLeftBehind = 0, int AaExpedition = 0)
+    int AaDirectorate = 0, int AaAuthority = 0, int AaLeftBehind = 0, int AaExpedition = 0,
+    int RetreatFloorDirectorate = -1, int RetreatFloorAuthority = -1, int RetreatFloorLeftBehind = -1, int RetreatFloorExpedition = -1,
+    int AaCapDirectorate = 0, int AaCapAuthority = 0, int AaCapLeftBehind = 0, int AaCapExpedition = 0,
+    int HuntDirectorate = 0, int HuntAuthority = 0, int HuntLeftBehind = 0, int HuntExpedition = 0)
 {
     /// <summary>Fallback for <c>harass_min_army</c>.</summary>
     public const int DefaultHarassMinArmy = 30;
@@ -54,5 +69,26 @@ public sealed record FactionAiKeys(int HarassDirectorate, int HarassAuthority, i
     public bool AaNeedsAir(int faction) => faction switch
     {
         0 => AaAuthority, 1 => AaDirectorate, 3 => AaLeftBehind, 4 => AaExpedition, _ => 0,
+    } == 1;
+
+    /// <summary>s30 <c>aa_cap_before_air</c> (0 = off): until an enemy aircraft has been seen, at most this many vehicles whose gun only hits aircraft
+    /// may be alive or queued (a softer <c>aa_needs_air</c>, which wins when both are set).</summary>
+    public int AaCapBeforeAir(int faction) => faction switch
+    {
+        0 => AaCapAuthority, 1 => AaCapDirectorate, 3 => AaCapLeftBehind, 4 => AaCapExpedition, _ => 0,
+    };
+
+    /// <summary>s30 <c>retreat_floor_pct</c>: the health percent below which the faction's waves never fight, or -1 for the built-in floor
+    /// (<c>ExpeditionTactics.RetreatPct</c> for the Expedition, none for the others).</summary>
+    public int RetreatFloor(int faction) => faction switch
+    {
+        0 => RetreatFloorAuthority, 1 => RetreatFloorDirectorate, 3 => RetreatFloorLeftBehind, 4 => RetreatFloorExpedition, _ => -1,
+    };
+
+    /// <summary>s30 <c>mopup_hunt</c> (0/1): when 1 the faction's mop-up also hunts a relocating base (a Mother Rig that packs and unpacks elsewhere):
+    /// packed rigs no longer count as an enemy army, former enemy structure sites and the last-seen rig cell are swept first, and stale blocks are revisited sooner.</summary>
+    public bool MopupHunt(int faction) => faction switch
+    {
+        0 => HuntAuthority, 1 => HuntDirectorate, 3 => HuntLeftBehind, 4 => HuntExpedition, _ => 0,
     } == 1;
 }

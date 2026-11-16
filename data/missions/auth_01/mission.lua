@@ -77,13 +77,13 @@ function CheckConvoy()
   end
 end
 
--- Raid strength and arrival time follow the difficulty tier (1..5); tier 3 is the original raid. Never cash or vision (D-061).
+-- Raid strength and arrival time follow the difficulty tier (1..5); tier 3 is the original raid. S30 (Q-85): tier-5 raid 1 is 4 (was 5) on the fully dressed map. Never cash or vision (D-061).
 function Pick(sizes)
   return sizes[Mission.Difficulty()]
 end
 
 function RaidOneSize()
-  return Pick({ 2, 2, 3, 4, 5 })
+  return Pick({ 2, 2, 3, 4, 4 })
 end
 
 function RaidTwoSize()
