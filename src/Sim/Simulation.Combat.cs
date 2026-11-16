@@ -378,7 +378,7 @@ public sealed partial class Simulation
             return;
         }
         int radius = wh.Splash < 0 ? 0 : wh.Splash;
-        _fx.Add(new FxEvent(FxKind.Detonation, impact, Math.Max(1, radius)));
+        _fx.Add(new FxEvent(FxKind.Detonation, impact, Math.Max(1, radius), warheadIndex));   // S31: the warhead tells audio a radiation burst
         CellCoord ic = impact.ToCell();
         bool single = wh.Splash <= 0;           // M2-19: a splash-0 shell hurts one actor of the impact cell
         ActorRef first = default;

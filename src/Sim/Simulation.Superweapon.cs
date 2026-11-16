@@ -95,7 +95,7 @@ public sealed partial class Simulation
         }
         ApplyPendingDamage();   // at once, as OnDeathWeapon does: the buffer is empty between ticks and must not carry into a save
 
-        _fx.Add(new FxEvent(FxKind.Detonation, impact, radius));
+        _fx.Add(new FxEvent(FxKind.Detonation, impact, radius, WarheadIndexOf(wh, c.Player)));   // S31
         _fx.Add(new FxEvent(FxKind.Superweapon, impact, radius));
         _effects.BuildingCharge[b] = 0;
     }
@@ -162,7 +162,7 @@ public sealed partial class Simulation
                 Hurt(kind, i, wh.SalvoDamage, wh, d > 0, owner);
             }
         }
-        _fx.Add(new FxEvent(FxKind.Detonation, CellCentre(cell), splash));
+        _fx.Add(new FxEvent(FxKind.Detonation, CellCentre(cell), splash, WarheadIndexOf(wh, owner)));   // S31
     }
 
     /// <summary>

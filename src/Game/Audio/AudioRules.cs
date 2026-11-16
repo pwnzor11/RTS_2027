@@ -24,10 +24,19 @@ public sealed class AudioRules
     /// <summary>Aircraft at least this fast but slower than <see cref="FlybySpeed"/> sound as hovering rotors; slower ones (airships) make no sound.</summary>
     public const int HoverSpeed = 20;
 
+    /// <summary>A detonation whose warhead lays at least this much radiation sounds as a radiation burst (<c>explosion_*.radiation</c>):
+    /// the Directorate rad shell (80), Meltdown (200) and both superweapon blasts (255). ASSUMED (S31): the Ash Sower spray (60) and the ash
+    /// infantry (20) stay plain, so a sower laying a field does not play a burst on every shot.</summary>
+    public const int RadiationBurstContaminate = 80;
+
+    /// <summary>The event qualifier of a radiation burst: <c>explosion_small.radiation</c> / <c>explosion_large.radiation</c>.</summary>
+    public const string RadiationQualifier = "radiation";
+
     private readonly AudioUnitInfo[] _vehicles;
     private readonly AudioUnitInfo[] _infantry;
     private readonly AudioBuildingInfo[] _buildings;
     private readonly string?[] _weaponClass;
+    private bool[] _radiationWarhead = System.Array.Empty<bool>();
     private readonly string?[] _weaponFaction;
     private readonly int[] _weaponSpeed;
     private readonly int[] _weaponRange;
@@ -98,8 +107,13 @@ public sealed class AudioRules
             range[i] = w.Range;
         }
 
-        return new AudioRules(vehicles, infantry, buildings, cls2, fac, speed, range);
+        var rad = new bool[rules.Warheads.Count];
+        for (int w = 0; w < rad.Length; w++) rad[w] = rules.Warheads[w].Contaminate >= RadiationBurstContaminate;
+        return new AudioRules(vehicles, infantry, buildings, cls2, fac, speed, range) { _radiationWarhead = rad };
     }
+
+    /// <summary>True if <paramref name="warhead"/> (an index into the rules' warheads, as in <see cref="FxEvent.Warhead"/>) is a radiation burst.</summary>
+    public bool IsRadiationBurst(int warhead) => (uint)warhead < (uint)_radiationWarhead.Length && _radiationWarhead[warhead];
 
     /// <summary>Class, faction and weapon of a unit type (a default unit info when the index is out of range).</summary>
     public AudioUnitInfo Unit(UnitKind kind, int typeIndex)

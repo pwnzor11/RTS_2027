@@ -96,7 +96,8 @@ public sealed class AudioEventDeriver
                     }
                 }
 
-                events.Add(new AudioEvent(large ? AudioEventKind.ExplosionLarge : AudioEventKind.ExplosionSmall, e.Pos));
+                string? qualifier = rules is not null && e.Kind == FxKind.Detonation && rules.IsRadiationBurst(e.Warhead) ? AudioRules.RadiationQualifier : null;   // S31
+                events.Add(new AudioEvent(large ? AudioEventKind.ExplosionLarge : AudioEventKind.ExplosionSmall, e.Pos, qualifier));
             }
 
             // Shells: projectiles that exist now and did not before (count change plus the ones that just landed).
