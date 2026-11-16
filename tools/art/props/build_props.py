@@ -76,7 +76,8 @@ def mats():
         "steel": make_mat("w_steel", "#3c3f41", "#7d8184", "#6b6f78", 2.0, metal=0.2),
         "soot": solid_mat("w_soot", "#141211"),
         "tyre": solid_mat("w_tyre", "#1b1b1b"),
-        "pylon": make_mat("w_pylon", "#1d1b1a", "#3a3836", "#8a4a2a", 1.8, metal=0.1),
+        "leg": make_mat("w_leg", "#4a2a1a", "#8a4a2a", "#b8703a", 2.0, metal=0.1),
+        "brace": make_mat("w_brace", "#1c1b1a", "#3a3836", "#55524e", 2.0, metal=0.1),
         "glass": make_mat("g_glass", "#3f8f88", "#7fd0c4", "#d5fbf3", 2.4, rough=0.12),
         "glassdark": make_mat("g_dark", "#27655f", "#3f8f88", "#7fd0c4", 3.0, rough=0.2),
         "ice": make_mat("i_ice", "#8fb8d0", "#bcdcec", "#eef9ff", 2.0, rough=0.2),
@@ -224,41 +225,68 @@ def ice2(m):
     slab(m, (0.02 * CELL, -0.26 * CELL, 0.40), (0.34 * CELL, 0.26 * CELL, 0.12), (18, 12, 35))
 
 
-def pylon(m, height, lean, side, seed):
-    """Snapped lattice stub that reads as one solid dark shape at 1x: two thick legs standing (one bent over at the break), two legs snapped near the
-    base, one brace and one rung, and two dangling cable stubs. Members are >= 2 px thick at 1x (0.11 world units); `side` picks which pair stands."""
+def lattice(m, T, w0, w1, h, cuts=None, levels=3, faces=(0, 1, 2, 3), seed=1, bend=True, brace_h=None):
+    """A tapered lattice tower section in its own frame (local +z up, wide square end at z=0, half-width w0 narrowing to w1 at z=h), placed by the 4x4
+    matrix T. Four rust-brown corner legs (cut at `cuts` heights, with a bent jagged stub on each cut end), dark steel X braces and rungs on the
+    chosen faces: partly filled, with 1-2 px gaps at 1x, so it reads as a solid tapered shape."""
+    from mathutils import Vector
     rnd = random.Random(seed)
-    bw, tw = 0.30 * CELL, 0.16 * CELL
-    steel = m["pylon"]
+    cuts = cuts or [h] * 4
+    W = lambda z: w0 + (w1 - w0) * z / h
+    P = lambda x, y, z: T @ Vector((x, y, z))
     corners = [(-1, -1), (1, -1), (1, 1), (-1, 1)]
-    W = lambda z: bw + (tw - bw) * z / height
-    standing = [(0 + side) % 4, (1 + side) % 4]
     for i, (sx, sy) in enumerate(corners):
-        z = height if i in standing else height * 0.22
-        w = W(z)
-        strut(steel, (sx * bw, sy * bw, 0), (sx * w, sy * w, z), 0.24)
-    i0, i1 = standing
-    (sx0, sy0), (sx1, sy1) = corners[i0], corners[i1]
-    w = W(height)
-    strut(steel, (sx0 * w, sy0 * w, height), (sx0 * w + 0.5 + lean, sy0 * w - 0.25, height - 0.35), 0.20)   # the bent top of one leg
-    zb = height * 0.5
-    strut(steel, (sx0 * W(0), sy0 * W(0), 0.05), (sx1 * W(zb), sy1 * W(zb), zb), 0.17)                     # one brace across the standing pair
-    strut(steel, (sx0 * W(zb), sy0 * W(zb), zb), (sx1 * W(zb), sy1 * W(zb), zb), 0.20)                    # one rung
-    for j, i in enumerate((i1, (i1 + 1) % 4)):                                                             # dangling cables
-        sx, sy = corners[i]; z = height if i == i1 else height * 0.22; ww = W(z)
-        strut(m["soot"], (sx * ww, sy * ww, z), (sx * (ww + 0.5 + 0.4 * j), sy * (ww + 0.6), 0.05), 0.14)
+        c = cuts[i]
+        strut(m["leg"], P(sx * w0, sy * w0, 0), P(sx * W(c), sy * W(c), c), 0.22)
+        if bend and c < h * 0.999 or (bend and i % 2 == 0):
+            top = (sx * W(c), sy * W(c), c)
+            strut(m["leg"], P(*top), P(top[0] + sx * rnd.uniform(0.1, 0.3), top[1] + sy * rnd.uniform(0.05, 0.25), c + rnd.uniform(0.15, 0.3)), 0.17)
+    zmax = brace_h if brace_h else min(cuts)
+    zs = [zmax * k / levels for k in range(levels + 1)]
+    for f in faces:
+        (ax, ay), (bx, by) = corners[f], corners[(f + 1) % 4]
+        for k in range(levels):
+            z0, z1 = zs[k], zs[k + 1]
+            strut(m["brace"], P(ax * W(z0), ay * W(z0), z0), P(bx * W(z1), by * W(z1), z1), 0.13)
+            strut(m["brace"], P(bx * W(z0), by * W(z0), z0), P(ax * W(z1), ay * W(z1), z1), 0.13)
+        for z in zs[1:]:
+            strut(m["brace"], P(ax * W(z), ay * W(z), z), P(bx * W(z), by * W(z), z), 0.13)
 
 
-def pylon0(m): pylon(m, 1.3, 0.2, 0, 5)
-def pylon1(m): pylon(m, 2.0, 0.3, 0, 8)
-def pylon2(m): pylon(m, 2.7, 0.4, 0, 13)
+def _T(loc=(0, 0, 0), rz=0.0, ry=0.0):
+    from mathutils import Matrix
+    return Matrix.Translation(loc) @ Matrix.Rotation(math.radians(rz), 4, "Z") @ Matrix.Rotation(math.radians(ry), 4, "Y")
+
+
+def cable(m, p0, p1):
+    strut(m["soot"], p0, p1, 0.12)
+
+
+def pylon0(m):
+    """v0: short stub (snapped at ~1.3) with the fallen, tapered top section lying to the right; two cables sag to the ground."""
+    lattice(m, _T((-0.95, 0.0, 0)), 0.55, 0.30, 1.45, cuts=[1.45, 1.2, 1.0, 1.35], seed=3)
+    lattice(m, _T((0.05, -0.05, 0.62), rz=-8, ry=90), 0.42, 0.18, 1.7, seed=4, faces=(0, 1, 2, 3))
+    cable(m, (-0.7, -0.5, 1.15), (0.0, -0.85, 0.06)); cable(m, (-0.6, 0.4, 1.3), (0.9, 0.6, 0.06))
+
+
+def pylon1(m):
+    """v1: tall stub leaning, top missing (jagged ends); cables hang down and lie on the ground."""
+    lattice(m, _T((-0.55, 0.0, 0), rz=0, ry=-7), 0.56, 0.24, 2.4, cuts=[2.4, 2.0, 1.6, 2.2], seed=7, levels=4)
+    cable(m, (0.2, -0.45, 2.1), (1.2, -0.9, 0.06)); cable(m, (0.1, -0.3, 1.75), (0.9, 0.5, 0.06))
+
+
+def pylon2(m):
+    """v2: a base with only two legs standing, the tower lying across the ground in front of it."""
+    lattice(m, _T((-0.8, 0.45, 0)), 0.50, 0.30, 1.2, cuts=[1.2, 1.2, 0.18, 0.18], seed=11, faces=(0,), brace_h=1.0)
+    lattice(m, _T((-0.2, -0.45, 0.5), rz=14, ry=90), 0.40, 0.17, 2.0, seed=12)
+    cable(m, (-0.5, 0.0, 1.1), (0.3, 0.3, 0.06))
 
 
 KINDS = {
     "GlassCrest": dict(fns=[crest0, crest1, crest2], yaw=(0, 25, -15), scale=(1.0, 1.0, 0.9), weather=False, glass=True, scorch=False, exp=0.95),
     "IceSlab": dict(fns=[ice0, ice1, ice2], yaw=(0, 0, 0), scale=(1.0, 0.88, 0.78), weather=False, glass=True, scorch=False, exp=0.92),
     "WreckHulk": dict(fns=[wreck_car, wreck_truck, wreck_tank], yaw=(-18, 12, -8), scale=(1.0, 0.85, 0.78), weather=True, lift=True, glass=False, scorch=True, exp=0.72),
-    "BrokenPylon": dict(fns=[pylon0, pylon1, pylon2], yaw=(0, 8, -6), scale=(0.85, 0.72, 0.62), weather=False, lift=True, glass=False, scorch=False, exp=1.2),
+    "BrokenPylon": dict(fns=[pylon0, pylon1, pylon2], yaw=(0, 8, -6), scale=(0.7, 1.0, 0.78), dx=(-0.2, 0.0, -0.45), weather=False, lift=True, glass=False, scorch=False, exp=1.1),
 }
 ROW = {"GlassCrest": 0, "IceSlab": 1, "WreckHulk": 2, "BrokenPylon": 3}   # atlas rows = manifest rows
 
@@ -316,7 +344,7 @@ def render(kinds, samples):
             new = [o for o in bpy.data.objects if o not in before]
             root = bpy.data.objects.new("root", None); sc.collection.objects.link(root)
             for o in new: o.parent = root
-            root.rotation_euler = (0, 0, math.radians(spec["yaw"][var])); root.scale = (spec["scale"][var],) * 3   # keeps every frame clear of the 64 px edge
+            root.rotation_euler = (0, 0, math.radians(spec["yaw"][var])); root.scale = (spec["scale"][var],) * 3; root.location = (spec.get("dx", (0, 0, 0))[var], 0, 0)   # keeps every frame clear of the 64 px edge
             bpy.context.view_layer.update()
             ground.hide_render = True
             for o in new: o.visible_camera = True
