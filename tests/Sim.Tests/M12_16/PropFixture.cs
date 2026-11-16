@@ -38,13 +38,17 @@ internal static class PropFixture
         return new TerrainTable(speed, buildable);
     }
 
-    /// <summary>Vehicle types: 0 heavy tracked crusher ("tank"), 1 wheeled light jeep, 2 heavy tracked non-crusher ("hauler"), 3 air.</summary>
+    /// <summary>Vehicle type indexes of <see cref="Vehicles"/>.</summary>
+    public const int Tank = 0, Jeep = 1, Hauler = 2, Plane = 3, Truck = 4;
+
+    /// <summary>Vehicle types: 0 heavy tracked crusher ("tank"), 1 wheeled light jeep, 2 heavy tracked non-crusher ("hauler"), 3 air, 4 wheeled crusher ("truck").</summary>
     public static VehicleType[] Vehicles() => new[]
     {
         new VehicleType("tank", Locomotion.Tracked, 40, 8, 400, ArmorClass.Heavy, 5, -1, false, 0, true, 0, Array.Empty<string>()),
         new VehicleType("jeep", Locomotion.Wheeled, 60, 8, 150, ArmorClass.Light, 5, -1, false, 0, false, 0, Array.Empty<string>()),
         new VehicleType("hauler", Locomotion.Tracked, 40, 8, 350, ArmorClass.Heavy, 5, -1, false, 0, false, 0, Array.Empty<string>()),
         new VehicleType("plane", Locomotion.Air, 60, 8, 100, ArmorClass.Light, 5, -1, false, 0, false, 0, Array.Empty<string>()),
+        new VehicleType("truck", Locomotion.Wheeled, 40, 8, 300, ArmorClass.Heavy, 5, -1, false, 0, true, 0, Array.Empty<string>()),   // wheeled with the crusher flag: still never crushes a prop
     };
 
     /// <summary>Rules with <see cref="Vehicles"/>, one infantry type, the fixture terrain and two warheads (small arms, splash).</summary>

@@ -16,7 +16,7 @@ namespace Rts.Sim.Pathing;
 /// </summary>
 public sealed class RegionCache
 {
-    private const int Slots = 8;   // Locomotion 0..6 and NavalDeep
+    private const int Slots = 9;   // Locomotion 0..6, NavalDeep and TrackedCrusher
     private readonly MapState _map;
     private readonly TerrainTable _terrain;
     private readonly int[] _version = new int[Slots];
@@ -31,7 +31,7 @@ public sealed class RegionCache
         Array.Fill(_version, -1);
     }
 
-    private static int Slot(Locomotion c) => c == MoveClass.NavalDeep ? 7 : (int)c;
+    private static int Slot(Locomotion c) => c == MoveClass.NavalDeep ? 7 : c == MoveClass.TrackedCrusher ? 8 : (int)c;
 
     /// <summary>
     /// The labels for a movement class, recomputed first if the land changed since last time. <paramref name="epoch"/> changes when a

@@ -121,9 +121,11 @@ public sealed class MapState : ISimStatePart
     public int SpeedPercent(CellCoord c, Locomotion loco, TerrainTable table)
     {
         if (!In(c)) return 0;
-        if (loco != Locomotion.Air && OverlayKinds.BlocksGround(_overlay[Idx(c)])) return 0;   // M12-04: walls and blocking props
+        OverlayKind o = _overlay[Idx(c)];
+        if (loco != Locomotion.Air && OverlayKinds.BlocksGround(o)
+            && !(loco == Pathing.MoveClass.TrackedCrusher && OverlayKinds.IsCrushable(o))) return 0;   // M12-04: walls and blocking props; M12-16: a heavy crusher drives into a Tree or Snag
         if (loco == Pathing.MoveClass.NavalDeep) return _land[Idx(c)] == LandType.Shallow ? 0 : table.SpeedPercent(_land[Idx(c)], Locomotion.Naval);   // M7-03: large ships
-        return table.SpeedPercent(_land[Idx(c)], loco);
+        return table.SpeedPercent(_land[Idx(c)], Pathing.MoveClass.Table(loco));
     }
 
     /// <summary>Terrain-only passability (walls count as terrain); ignores units and buildings.</summary>

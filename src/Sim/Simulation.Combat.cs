@@ -370,6 +370,7 @@ public sealed partial class Simulation
         WarheadType wh = RulesOf(owner).Warheads[warheadIndex];
         ApplyWarheadGround(wh, impact.ToCell(), wh.Splash < 0 ? 0 : wh.Splash);   // M3-05: contaminate / decontaminate / Blackout
         ApplyWarheadFoam(wh, impact.ToCell(), wh.Splash < 0 ? 0 : wh.Splash);     // M4-05: Quick-Set Foam
+        if (wh.Splash >= 1) DamageProps(impact.ToCell(), wh.Splash, damage, wh, 0);   // M12-16: splash destroys Tree, Snag, Wreck; splash 0 never touches a prop
         if (instant && wh.Splash <= 0)
         {
             _fx.Add(new FxEvent(FxKind.InstantHit, impact, 1));   // M3-12: a hitscan hit shows its impact, like a shell's landing
