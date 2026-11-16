@@ -63,6 +63,10 @@
 #                           2 (s30) = softer: one such vehicle may be alive or queued at a time until enemy aircraft are seen.
 #   retreat_floor_pct       0..100 (s30, missing key = the built-in floor: 40 for the Expedition (ExpeditionTactics.RetreatPct), none for the others):
 #                           waves of this faction are called home below this health percent, whatever the tier's retreat_health_pct says.
+#   mopup_hunt              0/1 (s30, missing key = 0 = off): 1 = the faction's mop-up (tier 2+, never in missions) also hunts a relocating base such as the
+#                           Left Behind Mother Rig that packs, drives off and unpacks elsewhere. While on: packed rigs and other deployable vehicles do not count
+#                           as an enemy army for the "beaten" test, the last cell where one was seen is chased for a while, blocks where enemy structures stood
+#                           are swept first, stale blocks are revisited after 3000 instead of 6000 ticks, and sweep parties are 3 units instead of 6.
 
 [faction.authority]
 harass_min_army = 30
