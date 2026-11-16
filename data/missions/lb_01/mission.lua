@@ -130,10 +130,10 @@ function SendRelief()
   Camera.Focus(tags[1], 120)
 end
 
--- Tiers 4-5: a second group arrives from the opposite edge of the north road.
+-- Tiers 4-5: a second group of 3 riflemen arrives from the opposite edge of the north road (S30, Q-85: tier 5 was 4 before the fully dressed map).
 function SendSecondRelief()
   if state.done then return end
-  local n = Mission.Difficulty() - 1
+  local n = math.min(Mission.Difficulty() - 1, 3)
   local types = {}
   for i = 1, n do types[i] = "auth_rifleman" end
   local tags = Reinforce.Edge(1, types, { x = 44 + Random.Next(4), y = 0 }, Map.Center("ambush"))
