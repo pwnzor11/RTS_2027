@@ -92,8 +92,8 @@ public sealed class ZeroAdPropAtlasTests
         IPropAtlas atlas = PropAtlases.Create(TerrainPalette.Load("rustbelt"), "rustbelt");
         if (Environment.GetEnvironmentVariable(PropAtlases.ProceduralOnlyVariable) == "1") return;
         var layered = Assert.IsType<LayeredPropAtlas>(atlas);
-        Assert.Equal(0, layered.SourceOf(PropKind.Boulder));
-        Assert.Equal(1, layered.SourceOf(PropKind.GlassCrest));
+        Assert.Equal(0, layered.SourceOf(PropKind.GlassCrest));   // S29: the Blender atlas is the first source, 0 A.D. the second, LPC/procedural the last
+        Assert.Equal(1, layered.SourceOf(PropKind.Boulder));
     }
 
     [Fact]
