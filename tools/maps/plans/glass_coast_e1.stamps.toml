@@ -438,7 +438,7 @@ rect = [84, 80, 88, 84]
 [[keep]]
 rect = [85, 81, 87, 83]
 
-# --- drowned-suburb blocks inland of the lagoons ---
+# --- drowned-suburb blocks inland of the lagoons (no crater field: it slowed the bots in auth_03 tier 3) ---
 [[stamp]]
 id = "ruined_block"
 x = 60
@@ -451,13 +451,6 @@ y = 25
 mirror = true
 
 # --- a shell-crater field on the open dunes in the middle ---
-[[stamp]]
-id = "crater_field"
-x = 50
-y = 55
-rot = 1
-
-# a second drowned-suburb block on the south dunes
 [[stamp]]
 id = "ruined_block"
 x = 31
