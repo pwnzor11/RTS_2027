@@ -253,11 +253,11 @@ def kettle_rig(loc, yaw=0.0, rng=None, lit=False, steam=True, horn_yaw=0.0):
     pole(p, F(0.2, 0, 5.4), 0.1, mat("ash", LB["ash"]))
     cyl("spout", F(0.25, 0, 5.45), 0.18, 0.4, mat("ochre", LB["ochre"]), rot=(0.3, 0, -yaw), verts=8)
     if steam:
-        for i in range(7):
-            t = i / 6
-            q = F(0.4 + t * 1.6, 0, 5.8 + t * 3.0)
-            sphere("steam", (q[0] + rng.uniform(-.2, .2), q[1] + rng.uniform(-.2, .2), q[2]), 0.35 + t * 0.9,
-                   mat("#E6D6BC", rough=1.0, emit="#FFE2B0", estr=0.9), scale=(1, 1, 0.85))
+        q0, q1 = F(0.4, 0, 5.8), F(2.0, 0, 8.8)
+        for _ in range(14):
+            rng.uniform(-.2, .2)    # keep the rng stream of the old puff stack
+        K.smoke_volume((q0[0], q0[1]), h=3.2, r0=0.35, n=2, tint="#E6D6BC", rng=random.Random(11), drift=q0[0] - q1[0], growth=2.4,
+                       z0=q0[2], glow="#FFE2B0", glow_str=0.9, density=1.4)
     # mast with loudspeaker horns (retuned Voice)
     mp = F(-4.2, 0.9, 1.4)
     pole(mp, (mp[0], mp[1], 7.2), 0.09, mat("ash_d", LB["ash_d"]))
