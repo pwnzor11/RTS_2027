@@ -5,6 +5,14 @@ file cited after each question. Recommendations are the lead's, from the researc
 
 ## Open
 
+- 🟡 **Q-86 · 2026-11-17 · Field Manual full draft review (M14-05).** The owner reviews one full draft PDF (tools/booklet/full/out, branch
+  integ-s32m; sent in chat, session 32). Points to settle: (1) length 144 pages v the planned 108: the field-guide entries take 72 pages; **keep
+  (recommended for a reference manual)** or cut to ~108 with smaller type / no field notes; (2) spoilers: Order Seven left off the upgrades page and
+  shown as "Classified upgrade" in the tech tree; the cover painting shows the Sunrise Device obelisk; (3) facts to confirm: supply cap and
+  veterancy pages follow design 13/14 (still "assumed, confirm"); the map design page calls layout-2 features "where the generator is going";
+  keyboard page set at 5.7 pt; the HUD diagram is schematic; (4) the 36 DRAFT pages' new text (Getting Started, campaign teasers, theatre
+  captions, glossary, commander's notes). After the review: revise, merge integ-s32m, put the PDF in docs/field_manual.
+
 - 🟡 **Q-73 · 2026-11-12 · Par-time medals (M10-19).** No campaign mission has a par time, so the Profile page awards only Completed and
   No losses. Options: **(a) the owner gives a par time per mission (recommended; the bot walk-through times in docs/balance are a starting point)**;
   (b) par = the bot's tier-3 win time + 50 %; (c) no par medal.
