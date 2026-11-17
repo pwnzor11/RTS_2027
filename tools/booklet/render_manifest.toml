@@ -31,9 +31,9 @@ name = "purple"
 palette_slot = 4
 
 [accent.expedition]
-color = "#E06AA8"
-name = "pink"
-palette_slot = 7
+color = "#D0702A"
+name = "orange"
+palette_slot = 6
 
 [accent.neutral]
 color = "#E6E6DE"
