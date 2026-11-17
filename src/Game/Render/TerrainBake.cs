@@ -40,50 +40,85 @@ public static class TerrainBake
     public static Result Bake(MapData map, TerrainPalette palette)
     {
         ArgumentNullException.ThrowIfNull(map);
+        return Bake(CellGrid.FromMap(map), palette);
+    }
+
+    /// <summary>Bakes the whole map from its cell inputs (M12-16: the renderers bake from their own copy of the live state).</summary>
+    public static Result Bake(CellGrid grid, TerrainPalette palette)
+    {
+        ArgumentNullException.ThrowIfNull(grid);
         ArgumentNullException.ThrowIfNull(palette);
 
         int s = palette.TexelCells;
-        int w = map.Width, h = map.Height;
-        int tw = w * s, th = h * s;
+        int tw = grid.Width * s, th = grid.Height * s;
         var rgba = new byte[tw * th * 4];
-        TerrainPalette.TerrainStyle style = palette.Style;
-        bool fields = style.Ashfall is not null || style.Pitchblende is not null;
-        bool edges = style.HasEdgeEffects;
-
         for (int ty = 0; ty < th; ty++)
-        {
-            int cy = ty / s, sy = ty % s;
             for (int tx = 0; tx < tw; tx++)
             {
-                int cx = tx / s, sx = tx % s;
-                int k = cy * w + cx;
-                LandType land = map.Land[k];
-                OverlayKind overlay = map.Overlay[k];
-                int dens = palette.NormalDensity(map.Density[k]);
-
-                TerrainPalette.Rgb col = Texel(palette, land, overlay, dens, tx, ty, fields);
-                if (fields && overlay is OverlayKind.Ashfall or OverlayKind.Pitchblende)
-                {
-                    TerrainPalette.FieldLook? look = overlay == OverlayKind.Ashfall ? style.Ashfall : style.Pitchblende;
-                    if (look is not null) col = FieldTexel(palette, look, map, k, cx, cy, sx, sy, overlay, dens, col, palette.PitchGlint);
-                }
-
-                if (sx == 0 && cx > 0 && map.Land[k - 1] != land) col = Average(col, palette.ShadesFor(map.Land[k - 1]).Base);
-                if (sx == s - 1 && cx < w - 1 && map.Land[k + 1] != land) col = Average(col, palette.ShadesFor(map.Land[k + 1]).Base);
-                if (sy == 0 && cy > 0 && map.Land[k - w] != land) col = Average(col, palette.ShadesFor(map.Land[k - w]).Base);
-                if (sy == s - 1 && cy < h - 1 && map.Land[k + w] != land) col = Average(col, palette.ShadesFor(map.Land[k + w]).Base);
-
-                if (edges) col = Decorate(col, map, style, cx, cy, sx, sy, s);
-
+                TerrainPalette.Rgb col = TexelColour(palette, grid, tx, ty);
                 int o = (ty * tw + tx) * 4;
                 rgba[o] = col.R;
                 rgba[o + 1] = col.G;
                 rgba[o + 2] = col.B;
                 rgba[o + 3] = 255;
             }
-        }
 
         return new Result(tw, th, rgba);
+    }
+
+    /// <summary>
+    /// The RGBA bytes of one cell's texels (<c>TexelCells</c> square, row-major within the cell), exactly as <see cref="Bake(CellGrid, TerrainPalette)"/>
+    /// writes them into the cell's place. Repaints a cell whose inputs changed (M12-16); its edge neighbours need repainting too.
+    /// </summary>
+    public static byte[] PaintCell(TerrainPalette palette, CellGrid grid, int cx, int cy)
+    {
+        ArgumentNullException.ThrowIfNull(palette);
+        ArgumentNullException.ThrowIfNull(grid);
+        int s = palette.TexelCells;
+        var rgba = new byte[s * s * 4];
+        for (int sy = 0; sy < s; sy++)
+            for (int sx = 0; sx < s; sx++)
+            {
+                TerrainPalette.Rgb col = TexelColour(palette, grid, cx * s + sx, cy * s + sy);
+                int o = (sy * s + sx) * 4;
+                rgba[o] = col.R;
+                rgba[o + 1] = col.G;
+                rgba[o + 2] = col.B;
+                rgba[o + 3] = 255;
+            }
+
+        return rgba;
+    }
+
+    /// <summary>The colour of texel (<paramref name="tx"/>, <paramref name="ty"/>): the same rules, in the same order, for the whole map and for one cell.</summary>
+    public static TerrainPalette.Rgb TexelColour(TerrainPalette palette, CellGrid map, int tx, int ty)
+    {
+        int s = palette.TexelCells;
+        int w = map.Width, h = map.Height;
+        TerrainPalette.TerrainStyle style = palette.Style;
+        bool fields = style.Ashfall is not null || style.Pitchblende is not null;
+        bool edges = style.HasEdgeEffects;
+
+        int cx = tx / s, sx = tx % s, cy = ty / s, sy = ty % s;
+        int k = cy * w + cx;
+        LandType land = map.Land[k];
+        OverlayKind overlay = map.Overlay[k];
+        int dens = palette.NormalDensity(map.Density[k]);
+
+        TerrainPalette.Rgb col = Texel(palette, land, overlay, dens, tx, ty, fields);
+        if (fields && overlay is OverlayKind.Ashfall or OverlayKind.Pitchblende)
+        {
+            TerrainPalette.FieldLook? look = overlay == OverlayKind.Ashfall ? style.Ashfall : style.Pitchblende;
+            if (look is not null) col = FieldTexel(palette, look, map, k, cx, cy, sx, sy, overlay, dens, col, palette.PitchGlint);
+        }
+
+        if (sx == 0 && cx > 0 && map.Land[k - 1] != land) col = Average(col, palette.ShadesFor(map.Land[k - 1]).Base);
+        if (sx == s - 1 && cx < w - 1 && map.Land[k + 1] != land) col = Average(col, palette.ShadesFor(map.Land[k + 1]).Base);
+        if (sy == 0 && cy > 0 && map.Land[k - w] != land) col = Average(col, palette.ShadesFor(map.Land[k - w]).Base);
+        if (sy == s - 1 && cy < h - 1 && map.Land[k + w] != land) col = Average(col, palette.ShadesFor(map.Land[k + w]).Base);
+
+        if (edges) col = Decorate(col, map, style, cx, cy, sx, sy, s);
+        return col;
     }
 
     private static TerrainPalette.Rgb Texel(TerrainPalette palette, LandType land, OverlayKind overlay, int dens, int tx, int ty, bool fields)
@@ -172,11 +207,11 @@ public static class TerrainBake
             (byte)((a.B * (1000 - permille) + b.B * permille) / 1000));
     }
 
-    private static int LandAt(MapData map, int cx, int cy) =>
+    private static int LandAt(CellGrid map, int cx, int cy) =>
         cx < 0 || cy < 0 || cx >= map.Width || cy >= map.Height ? -1 : (int)map.Land[cy * map.Width + cx];
 
     /// <summary>Road edge lines, shore band, cliff lip highlight and drop shadow for one texel.</summary>
-    private static TerrainPalette.Rgb Decorate(TerrainPalette.Rgb col, MapData map, TerrainPalette.TerrainStyle st, int cx, int cy, int sx, int sy, int s)
+    private static TerrainPalette.Rgb Decorate(TerrainPalette.Rgb col, CellGrid map, TerrainPalette.TerrainStyle st, int cx, int cy, int sx, int sy, int s)
     {
         LandType land = map.Land[cy * map.Width + cx];
         int nW = LandAt(map, cx - 1, cy), nE = LandAt(map, cx + 1, cy), nN = LandAt(map, cx, cy - 1), nS = LandAt(map, cx, cy + 1);
@@ -226,7 +261,7 @@ public static class TerrainBake
     /// ground, and 1..<c>FieldMaxHeaps</c> heaps (ashfall: round slag, lit north-west) or crystals (pitchblende: tall diamonds with a lit
     /// and a shaded facet) whose count and size grow with density. A heap casts a one-texel contact shadow.
     /// </summary>
-    private static TerrainPalette.Rgb FieldTexel(TerrainPalette palette, TerrainPalette.FieldLook look, MapData map, int k, int cx, int cy,
+    private static TerrainPalette.Rgb FieldTexel(TerrainPalette palette, TerrainPalette.FieldLook look, CellGrid map, int k, int cx, int cy,
         int sx, int sy, OverlayKind overlay, int dens, TerrainPalette.Rgb ground, TerrainPalette.Rgb glint)
     {
         TerrainPalette.TerrainStyle st = palette.Style;
