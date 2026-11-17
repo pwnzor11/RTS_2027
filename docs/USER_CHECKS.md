@@ -561,3 +561,5 @@ On main after the session 31 PR. Back up nothing: development saves and replays 
   on the eastern plain (84,36), a new grove (65,44), a crater field and more props.
 - **Radiation burst sound:** a Directorate Rad Shell, a Meltdown, or either superweapon blast plays the new crackling radiation burst instead of the
   plain explosion. The Ash Sower's spray stays quiet.
+- **Balance (D-265):** Directorate tier-3 (Veteran) skirmish AI waits for a bigger army edge before attacking. Play Expedition v Directorate on a
+  Rust Belt map at tier 3: the Directorate should push less often early; fewer games should end in a 30 000-tick draw.
