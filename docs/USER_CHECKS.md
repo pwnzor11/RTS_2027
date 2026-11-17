@@ -557,9 +557,9 @@ On main after the session 31 PR. Back up nothing: development saves and replays 
 - **Map editor sprites:** Main menu, Map Editor, New map (Rust Belt). Props tool (key 8), Tree, click a few cells; Decal tool (key 9), paint: real
   dead-tree sprites and decal art appear, not flat squares. H hides and shows them.
 - **glass_coast_e1 / ash_reckoning dressing:** play a mission-3 (glass_coast_e1) or mission-4 (ash_reckoning): glass_coast_e1 has a checkpoint near
-  the centre (40,40) with its mirror, a dead-tree grove on the eastern dunes, another ruined block, wreck and snag yards; ash_reckoning a checkpoint
+  the centre (40,40) with its mirror, a dead-tree grove just south-east of the centre (50,57) with its mirror, another ruined block, wreck and snag yards; ash_reckoning a checkpoint
   on the eastern plain (84,36), a new grove (65,44), a crater field and more props.
 - **Radiation burst sound:** a Directorate Rad Shell, a Meltdown, or either superweapon blast plays the new crackling radiation burst instead of the
   plain explosion. The Ash Sower's spray stays quiet.
 - **Balance (D-265):** Directorate tier-3 (Veteran) skirmish AI waits for a bigger army edge before attacking. Play Expedition v Directorate on a
-  Rust Belt map at tier 3: the Directorate should push less often early; fewer games should end in a 30 000-tick draw.
+  Rust Belt map at tier 3: the Directorate should push less often early and wait until its army is clearly bigger.

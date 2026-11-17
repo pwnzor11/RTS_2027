@@ -30,7 +30,7 @@ cluster job s31base) and d4 re-measured on top (s31d4i):
 
 | Row | Baseline with M12-16 (128) | d4 with M12-16 (128) | Away from 50 |
 |---|---|---|---|
-| Authority v Directorate rust | 47-58-23 (44.8 %) | 50-55-23 (47.6 %) | -2.9 toward |
+| Authority v Directorate rust | 47-58-23 (44.8 %) | 50-55-23 (47.6 %) | -2.8 toward |
 | Authority v Left Behind rust | 82-36-10 (69.5 %) | identical (control) | 0 |
 | Authority v Expedition rust | 52-72-4 (41.9 %) | (untouched) | |
 | Directorate v Left Behind rust | 53-60-15 (46.9 %) | 54-59-15 (47.8 %) | -0.9 toward |
