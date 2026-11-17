@@ -1965,6 +1965,12 @@ field, or map-side ore near the Left Behind's corner. **Status:** measurement (s
 **Alternatives:** an escort/route rule for Left Behind harvesters (code), or accept Authority v Left Behind ~66-70 % as faction asymmetry for now.
 **Status:** measurement (session 32).
 
+### D-269 · 2026-11-17 · Session 32: no Left Behind harvester shepherd; Authority v Left Behind accepted for now
+**Decision:** the harvester shepherd (safe own-half fields) does not land; its code stays on `integ-s32c`. Authority v Left Behind (~66-70 %) is
+accepted as it is for now (owner, session 32: "if not then we will live with Authority v Left Behind at about 66-70 % for now").
+**Why:** 128 games: Auth v LB 69.5 -> 68.1 % (s1) / 68.6 % (s2), Dir v LB 47.8 -> 41.8 / 42.2 % (5.6-6 points away, fails D-264)
+(docs/balance/s32_balance.md). Together with D-267 and D-268 the three Left Behind economy levers all failed. **Alternatives:** none queued.
+**Status:** decided (owner).
 ### D-270 · 2026-11-17 · Session 32: AI rally before the first yard; start-corner bias probe
 **Decision:** the skirmish AI rallies at its start cell until its first yard stands (it rallied to the unset (0,0), the top-left corner, while
 a Left Behind Mother Rig was packed or an Expedition Command Ship undeployed). New diagnostic `Tools ai mirror`. **Why:** the bug gave the
