@@ -450,7 +450,7 @@ def notes_page(f, A):
     body = (f'<div class="kicker">{E(sp)} · Commander&rsquo;s notes</div><h2>First Hour, {E(sp)}</h2><div class="p3-notes">'
             f'<p style="font-size:8.2pt">Practical advice for a new commander. The costs are the game&rsquo;s own.</p><ul>'
             + ''.join(f'<li>{x}</li>' for x in li) + '</ul>' + table + '</div>')
-    return Page(body, runhead=f'{sp} · Notes', draft=True, faction=f)
+    return Page(body, runhead=f'{sp} · Notes', draft=False, faction=f)
 
 
 def tree_pages(f, A):
@@ -491,7 +491,7 @@ def part_opener():
             '<p>Four powers fight for the surface. Each has its own people, its own way of building and its own way of fighting. '
             'This part gives each faction the same chapter: an opening spread, its society and leaders, a page of commander&rsquo;s notes, '
             'the field guide to its units and structures, and its technology tree.</p>' + f'<div class="p3-parts">{rows}</div>')
-    return Page(body, runhead='Part III', toc='Part III · The Factions', draft=True)
+    return Page(body, runhead='Part III', toc='Part III · The Factions', draft=False)
 
 
 def pages():

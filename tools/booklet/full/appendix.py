@@ -172,7 +172,7 @@ def counter_html():
 def counter_page():
     body = (f'<style>{CSS}</style><h2>Counter chart</h2>'
             f'<p>Percent of a warhead&rsquo;s damage that reaches each armour class.</p>{counter_html()}')
-    return Page(body, runhead='Appendices', toc='Appendices', draft=True)
+    return Page(body, runhead='Appendices', toc='Appendices', draft=False)
 
 
 # ---- page 2: keyboard reference -------------------------------------------------------------------------------------------
@@ -189,7 +189,7 @@ def keyboard_page():
             parts.append(f'<div class="ap-kr"><span class="ap-kk">{E(key)}</span><span class="ap-kd">{E(desc)}</span></div>')
     body = (f'<h2>Keyboard reference</h2><p>Default keys. Most of them can be rebound on the Controls page.</p>'
             f'<div class="ap-kb">{"".join(parts)}</div>')
-    return Page(body, runhead='Appendices', draft=True)
+    return Page(body, runhead='Appendices', draft=False)
 
 
 # ---- page 3: glossary -----------------------------------------------------------------------------------------------------
@@ -225,7 +225,7 @@ GLOSSARY = [
 def glossary_page():
     items = ''.join(f'<p><b>{E(t)}.</b> {E(d)}</p>' for t, d in sorted(GLOSSARY, key=lambda x: x[0].lower()))
     body = f'<style>{CSS}</style><h2>Glossary</h2><div class="cols2 ap-gl">{items}</div>'
-    return Page(body, runhead='Appendices', draft=True)
+    return Page(body, runhead='Appendices', draft=False)
 
 
 # ---- page 4: credits and licences ----------------------------------------------------------------------------------------
@@ -243,7 +243,7 @@ def credits_page():
             f'<h3>Assets and artwork</h3>'
             f'<p>The credits file lists {imported} imported asset groups, {audio} audio sources and {art} AI-assisted artwork '
             f'entries, each with its source and licence. Full notices and licence texts ship with every copy of the game.</p></div>')
-    return Page(body, runhead='Appendices', draft=True)
+    return Page(body, runhead='Appendices', draft=False)
 
 
 def pages():

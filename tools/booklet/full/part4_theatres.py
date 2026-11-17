@@ -37,7 +37,7 @@ def biome_page(key, first=False):
 <h3>What the ground does</h3>{ground}
 <div class="p4-box"><b>Resources</b><p>{E(b['resources'].format(**vals))}</p></div>
 <div class="p4-box"><b>What the theatre rewards</b><p>{E(b['rewards'])}</p></div></div>"""
-    return Page(body, runhead=RUN, toc=RUN if first else None, draft=True)
+    return Page(body, runhead=RUN, toc=RUN if first else None, draft=False)
 
 
 def design_page():
@@ -54,7 +54,7 @@ def design_page():
 <p><b>Lanes.</b> {E(d['lanes'])}</p><p><b>Starts.</b> {E(d['starts'])}</p><p><b>Expansions.</b> {E(d['expansions'])}</p>
 <div class="p4-box"><b>Where the generator is going</b><p>{E(d['note'])}</p></div>
 <h3>Reading a map</h3><p>{E(d['legend'])}</p><ul>{tips}</ul></div>"""
-    return Page(body, runhead=RUN, draft=True)
+    return Page(body, runhead=RUN, draft=False)
 
 
 def editor_page():
@@ -68,7 +68,7 @@ def editor_page():
 <h3>Tools</h3><p style="margin-bottom:1pt">{E(e['tools_note'])}</p><table class="p4-tab">{tr}</table>
 <h3>Keys</h3><table class="p4-tab">{kr}</table>
 <h3>Symmetry</h3><p>{E(e['symmetry'])}</p><p>{E(e['save'])}</p></div>"""
-    return Page(body, runhead=RUN, draft=True)
+    return Page(body, runhead=RUN, draft=False)
 
 
 def pages():

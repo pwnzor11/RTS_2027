@@ -83,7 +83,7 @@ def page_hotkeys():
             f'<h2 style="margin-top:8pt">Counter chart</h2>'
             f'<p style="font-size:6.8pt;margin:0 0 2pt">Warhead percent against each armour class, one tile per weapon, '
             f'grouped by faction.</p>{miniature_html()}')
-    return Page(body, runhead='Quick reference', draft=True)
+    return Page(body, runhead='Quick reference', draft=False)
 
 
 def _tier_list(faction):
@@ -110,7 +110,7 @@ def page_factions():
     body = (f'<style>{CSS}</style><h2>Tech trees</h2>'
             f'<p style="font-size:6.8pt;margin:0 0 4pt">Buildings in roman type, main units in italics, by tier.</p>'
             f'<div class="cd-tech">{"".join(cols)}</div>')
-    return Page(body, runhead='Quick reference', draft=True)
+    return Page(body, runhead='Quick reference', draft=False)
 
 
 def pages():

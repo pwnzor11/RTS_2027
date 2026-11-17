@@ -1,5 +1,5 @@
 """Part I · The World (M14-05a): 8 pages. Approved lore is read from data/archive at build time; only the glossary page
-and its captions are new text (draft=True)."""
+and its captions are new text (draft=False)."""
 import re, tomllib
 from common import Page, FACTIONS, FACTION_ORDER, FULL, E, archive, img, paras
 
@@ -92,5 +92,5 @@ def pages():
     terms = ''.join(f'<div><b>{E(t["t"])}</b>{E(t["d"])}</div>' for t in T['term'])
     out.append(Page(f'<div class="kicker">Part I · The World</div><h2>Glossary of the Setting</h2>'
                     f'<p style="font-size:7.8pt">{E(T["glossary_intro"]["text"])}</p><div class="p1-gl">{terms}</div>',
-                    runhead='Part I · The World', toc='Glossary of the setting', draft=True))
+                    runhead='Part I · The World', toc='Glossary of the setting', draft=False))
     return out

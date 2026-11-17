@@ -45,7 +45,7 @@ Skorpio, Sharm, Kenney, the Liberated Pixel Cup artists and the 0 A.D. project, 
 Every asset, author and licence is listed in <b>docs/CREDITS.md</b>.</p>
 <h3>Names</h3>
 <p>All factions, places and people in this book are invented. The game claims no affiliation with any other game or company.</p>
-</div>""", runhead='Front matter', draft=True)
+</div>""", runhead='Front matter', draft=False)
 
     contents = Page('<h2>Contents</h2><!--TOC-->', runhead='Front matter')
 
@@ -62,5 +62,5 @@ Every asset, author and licence is listed in <b>docs/CREDITS.md</b>.</p>
 <h3>Guide to the parts</h3>
 <p>Plain rules and numbers are set in the manual's plain type. Lore, briefings and field notes are set in the voice of the
 faction that wrote them. Every number comes from the game data of this build.</p>
-<table class="fr-parts">{rows}</table>""", runhead='Front matter', toc='How to use this manual', draft=True)
+<table class="fr-parts">{rows}</table>""", runhead='Front matter', toc='How to use this manual', draft=False)
     return [cover, inside, contents, how]

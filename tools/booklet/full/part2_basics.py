@@ -104,7 +104,7 @@ def table(head, rows, cls='p2-t'):
     return f'<table class="{cls}"><tr>{h}</tr>{b}</table>'
 
 
-def pg(body, toc, first=False, draft=True):
+def pg(body, toc, first=False, draft=False):
     css = CSS if first else ''
     return Page(f'{css}<div class="p2">{body}</div>', runhead=RH, toc=toc, draft=draft)
 

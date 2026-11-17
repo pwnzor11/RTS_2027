@@ -45,7 +45,7 @@ def tutorial_page():
 <h3>You will learn to</h3><ol>{lessons}</ol>
 <div class="p5-box"><p>{E(setup)}</p></div>
 <p style="margin-top:6pt">{E(t['shared'])}</p></div>"""
-    return Page(body, runhead=RUN, toc=RUN, draft=True)
+    return Page(body, runhead=RUN, toc=RUN, draft=False)
 
 
 def campaign_page(fac):
@@ -58,7 +58,7 @@ def campaign_page(fac):
     body = CSS + f"""<div class="p5"><div class="kicker">Campaign</div><h2>{E(f['name'])}</h2>
 <p class="p5-lead">{E(T['campaign'][fac]['premise'])}</p>
 <h3>Missions</h3><table class="ops">{rows}</table></div>"""
-    return Page(body, runhead=RUN, faction=fac, draft=True)
+    return Page(body, runhead=RUN, faction=fac, draft=False)
 
 
 def tech_page():
@@ -78,7 +78,7 @@ def tech_page():
 <p>{E(t['lead'])}</p><ul>{how}</ul>
 <h3>Rewards, mission by mission</h3><table class="p5-tab">{rows}</table>
 <p style="font-size:8pt"><i>{E(t['spoiler_note'])}</i></p></div>"""
-    return Page(body, runhead=RUN, draft=True)
+    return Page(body, runhead=RUN, draft=False)
 
 
 def pages():
