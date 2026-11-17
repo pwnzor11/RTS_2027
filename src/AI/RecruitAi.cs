@@ -276,6 +276,7 @@ public sealed class RecruitAi : IAiPlayer, IAiSnapshotable, IHookableAi
             _build.HoldStep = id => prev(id) || TierPlanner.IsDirectorateEarlyTech(id) && _k.Army.Count + _k.Home.Count + _k.Detached.Count < holdArmy;
         }
         _production = new ProductionManager(_faction, _tactics, _planner);
+        if (_ctx is not null) _production.StartAt(_ctx.StartCell);   // s32 start-corner bias: never rally to the unset (0,0)
         _production.Start(_ctx!.Rng);
         if (!ReferenceEquals(_profile, bp)) _planner.SetProfile(_profile);   // M8-06: a tier forced before the first decision
         _military.Tactics = _tactics;

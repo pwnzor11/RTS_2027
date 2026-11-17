@@ -29,10 +29,13 @@ public static class AiCommands
         "       ai timeline --a <aiId>[:<tier>] --b <aiId>[:<tier>] [--seed 1] [--ticks 30000] [--size 64] [--swap 0|1] [--trace N] [--dump 1] [--layout 1|2] [--biome ...]\n" +
         "       ai commander --a <aiId>[:<tier>] --b <aiId>[:<tier>] --provider openai|anthropic [--model <name>] [--seed 1] [--ticks 30000] [--size 64] [--swap 0|1] [--out dir]   (side A = LLM commander; key from OPENAI_API_KEY or ANTHROPIC_API_KEY)\n" +
         "       ai duel --a <spec> --b <spec> [--count 1] [--count-b N] [--ticks 3000] [--gap 12]   (spec = id[:n][,id[:n]...], e.g. auth_tank:3,auth_turret:1)\n" +
+        "       ai mirror --a <aiId>[:<tier>] [--faction authority|...] [--seed 1] [--ticks 6000] [--size 96] [--layout 1] [--biome rust_belt] [--show 12]\n" +
+        "         (s32) a mirror game, both AIs on one random stream: prints the first tick at which player 0 is no longer the 180-degree image of player 1\n" +
         "  <tier> is 1..5 or recruit|regular|veteran|elite|commissar (default regular). Seeds are first..first+N-1 (first defaults to 1).";
 
     private static readonly string[] MatchOptions = ["a", "b", "seeds", "ticks", "size", "out", "record-dir", "flat", "starts", "start", "first", "faction-a", "faction-b", "trace", "game", "extras", "layout", "biome", "income", "mopup", "ledger", "econ"];
     private static readonly string[] TimelineOptions = ["a", "b", "seed", "ticks", "size", "swap", "trace", "dump", "faction-a", "faction-b", "layout", "biome"];
+    private static readonly string[] MirrorOptions = ["a", "seed", "ticks", "size", "faction", "layout", "biome", "show"];
     private static readonly string[] DuelOptions = ["a", "b", "count", "count-b", "ticks", "gap"];
     private static readonly string[] MatrixOptions = ["ai", "tiers", "seeds", "ticks", "size", "out", "faction", "players", "biome", "layout"];
 
@@ -46,6 +49,7 @@ public static class AiCommands
             "match" => Match(rest),
             "matrix" => Matrix(rest),
             "timeline" => Timeline(rest),
+            "mirror" => Mirror(rest),
             "commander" => CommanderMatchCommand.Run(rest),
             "duel" => Duel(rest),
             "ffa" => Ffa(rest),
@@ -365,6 +369,106 @@ public static class AiCommands
         }
     }
 
+
+    // ---- ai mirror (s32) ----------------------------------------------------------------------
+
+    /// <summary>s32 start-corner bias probe: plays a mirror game (same faction, same AI, same random stream for both) on a point-symmetric
+    /// generated map and reports the first tick at which the two sides stop being 180-degree images of each other (map, money, buildings,
+    /// vehicles, infantry), with the differing entries.</summary>
+    private static int Mirror(string[] args)
+    {
+        if (!MatchSetup.TryParse(args, MirrorOptions, out var flags, out var positional, out string? error) || positional.Count > 0)
+            return UsageError(error ?? $"unexpected argument '{positional[0]}'");
+        if (!Int(flags, "seed", 1, out int seed) || seed < 1) return UsageError("--seed must be a positive integer");
+        if (!Int(flags, "ticks", 6000, out int ticks) || !Int(flags, "size", 96, out int size) || !Int(flags, "show", 12, out int show))
+            return UsageError("--ticks, --size and --show must be integers");
+        if (!flags.TryGetValue("a", out string? aArg)) return UsageError("--a is required");
+        if (!LoadData(out var world, out var tiers)) return 1;
+        if (!ParseSide(aArg, tiers!, out AiSide? a, out error)) return UsageError(error!);
+        Faction f = Faction.Authority;
+        if (flags.TryGetValue("faction", out string? fArg) && !Enum.TryParse(fArg.Replace("_", ""), true, out f))
+            return UsageError("--faction must be authority, directorate, left_behind or expedition");
+        if (!flags.ContainsKey("layout")) flags["layout"] = "1";
+        if (!flags.ContainsKey("biome")) flags["biome"] = "rust_belt";
+        if (!ParseMapChoice(flags, out MapChoice? choice, out error)) return UsageError(error!);
+        SimRules rules = world!.Rules;
+        (MapData map, IReadOnlyList<CellCoord>? landing) = BuildMatchMap(choice, f, f, size, seed);
+        int W = map.Width, H = map.Height, n = W * H, mapDiff = 0;
+        for (int i = 0; i < n; i++)
+            if (map.Land[i] != map.Land[n - 1 - i] || map.Overlay[i] != map.Overlay[n - 1 - i] || map.Density[i] != map.Density[n - 1 - i]
+                || map.HeightLevel[i] != map.HeightLevel[n - 1 - i]) mapDiff++;
+        Console.WriteLine($"# mirror {f} {a!.Label} seed {seed}, {W}x{H}: map cells not equal to their 180-degree image: {mapDiff}; starts {string.Join(" ", map.StartPositions)}");
+        var sim = new Simulation(new SimSetup((ulong)seed, map, 2, rules, world.RulesHash)
+        {
+            Factions = f == Faction.Authority ? null : [f, f], NoRebuildDefeat = true,
+            LandingMarkers = landing ?? Array.Empty<CellCoord>(),
+        });
+        SkirmishStart.Apply(sim);
+        var driver = new AiDriver((ulong)seed) { SharedRandomForMirrorProbe = true };
+        if (!AiRegistry.TryCreate(a.AiId, a.Profile, out IAiPlayer? aiA) || !AiRegistry.TryCreate(a.AiId, a.Profile, out IAiPlayer? aiB)) return UsageError("unknown AI");
+        driver.Add(0, aiA!, a.Profile);
+        driver.Add(1, aiB!, a.Profile);
+        List<string> Side(int p, bool image)
+        {
+            var list = new List<string>();
+            int pw = W * 256, ph = H * 256;
+            for (int i = 1; i < sim.Buildings.Capacity; i++)
+            {
+                if (!sim.Buildings.Slots.IsIndexAlive(i) || sim.Buildings.Player[i] != p) continue;
+                BuildingType bt = rules.Buildings[sim.Buildings.TypeIndex[i]];
+                CellCoord c = sim.Buildings.Cell[i];
+                if (image) c = new CellCoord(W - c.X - bt.FootprintW, H - c.Y - bt.FootprintH);
+                list.Add($"B {bt.Id} {c.X},{c.Y} hp{sim.Buildings.Health[i]}");
+            }
+            void Mob(MobileStore st, string kind, Func<int, string> id)
+            {
+                for (int i = 1; i < st.Capacity; i++)
+                {
+                    if (!st.Slots.IsIndexAlive(i) || st.Player[i] != p) continue;
+                    LeptonCoord q = st.Position[i];
+                    if (image) q = new LeptonCoord(pw - q.X, ph - q.Y);
+                    list.Add($"{kind} {id(st.TypeIndex[i])} {q.X},{q.Y} hp{st.Health[i]} {st.Mission[i]}");
+                }
+            }
+            Mob(sim.Units, "V", t => rules.Vehicles[t].Id);
+            Mob(sim.Infantry, "I", t => rules.Infantry[t].Id);
+            list.Sort(StringComparer.Ordinal);
+            list.Add($"$ cash {sim.Players.Cash[p]} stored {sim.Players.Stored[p]}");
+            return list;
+        }
+        var pending = new List<Command>();
+        var history = new List<(int Tick, Command C)>();
+        string Cmd(Command c) => $"{c.Kind} subj {SubjectName(c.Subject)} cell {(c.Player == 1 && c.Cell.X >= 0 ? new CellCoord(W - 1 - c.Cell.X, H - 1 - c.Cell.Y) : c.Cell)} arg {c.Arg}";
+        string SubjectName(EntityId id)
+        {
+            if (id.IsNone) return "-";
+            foreach (MobileStore st in new MobileStore[] { sim.Units, sim.Infantry })
+                if (st.Slots.IsAlive(id)) return (st == sim.Units ? rules.Vehicles[st.TypeIndex[id.Index]].Id : rules.Infantry[st.TypeIndex[id.Index]].Id);
+            if (sim.Buildings.Slots.IsAlive(id)) return rules.Buildings[sim.Buildings.TypeIndex[id.Index]].Id;
+            return "?";
+        }
+        for (int t = 0; t < ticks; t++)
+        {
+            int before = pending.Count;
+            driver.Collect(sim, pending);
+            for (int i = before; i < pending.Count; i++) history.Add((sim.Tick, pending[i]));
+            sim.Step(pending);
+            pending.RemoveAll(c => c.ExecTick < sim.Tick);
+            List<string> s0 = Side(0, false), s1 = Side(1, true);
+            if (s0.SequenceEqual(s1)) continue;
+            Console.WriteLine($"first divergence at tick {sim.Tick} (player 0 at {map.StartPositions[0]} v the image of player 1):");
+            var h0 = history.Where(x => x.C.Player == 0 && x.Tick >= sim.Tick - 60).Select(x => $"t{x.Tick} {Cmd(x.C)}").ToList();
+            var h1 = history.Where(x => x.C.Player == 1 && x.Tick >= sim.Tick - 60).Select(x => $"t{x.Tick} {Cmd(x.C)}").ToList();
+            foreach (string x in h0.Except(h1).Take(show)) Console.WriteLine("  p0 cmd only: " + x);
+            foreach (string x in h1.Except(h0).Take(show)) Console.WriteLine("  p1 cmd only (imaged): " + x);
+            var only0 = s0.Except(s1).Take(show).ToList(); var only1 = s1.Except(s0).Take(show).ToList();
+            foreach (string x in only0) Console.WriteLine("  p0 only: " + x);
+            foreach (string x in only1) Console.WriteLine("  p1 only (imaged): " + x);
+            return 0;
+        }
+        Console.WriteLine($"no divergence in {ticks} ticks");
+        return 0;
+    }
 
     // ---- ai timeline --------------------------------------------------------------------------
 

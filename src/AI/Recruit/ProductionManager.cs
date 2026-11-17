@@ -51,6 +51,10 @@ internal sealed class ProductionManager
     /// <summary>Rally cell in front of the base (set after the first Think with a yard).</summary>
     public CellCoord Rally { get; private set; }
 
+    /// <summary>s32 (start-corner bias): the rally before the first yard stands (a packed Mother Rig, an undeployed Command Ship) is the start
+    /// cell. It was the unset (0,0): the top-left player's army stayed home while the bottom-right player's walked to the far corner.</summary>
+    internal void StartAt(CellCoord start) { if (Rally == default) Rally = start; }
+
     /// <summary>Takes the AI's seeded generator (variation in the unit mix).</summary>
     public void Start(AiRandom rng) => _rng = rng;
 
