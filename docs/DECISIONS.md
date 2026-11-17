@@ -1945,3 +1945,10 @@ Auth v Dir 45 -> 48 %, Exp v Dir glass 58 -> 54 %, Dir v LB 47 -> 48 %; rows wit
 (docs/balance/s31_balance.md). **Why:** meets D-264 (every touched row moves toward 50 %). **Alternatives:** army caps (d2/d3), unit reserve (d1),
 attack threshold (d5), Sparker caps (k10, kd) all failed D-264 on the screen. **Status:** measurement under D-264 (owner rule), campaign sweep
 re-run with it.
+
+### D-266 · 2026-11-17 · Session 32 balance: Expedition Sparker cap 10 on top of D-265
+**Decision:** `[faction.expedition] aa_cap_before_air = 10`: until it has seen an enemy aircraft, the Expedition skirmish AI keeps at most 10 vehicles
+whose gun only hits aircraft (Sparkers). **Why:** 128 games per row on main with M12-16 and D-265: Directorate v Expedition rust 62.1 -> 58.0 %,
+Left Behind v Expedition 53.5 -> 48.7 %, Authority v Expedition 41.9 -> 37.6 % (4.3 points away, under D-264's 5), glass rows within 1 point; campaign
+sweep 45/45 meets D-222 (docs/balance/s32_balance.md). **Alternatives:** cap 9 (Auth v Exp 6.5 points away: fails D-264); cap 8 + Directorate army
+cap (s31 kd: Auth v Exp 7.7 away). **Status:** lands in the session 32 PR (D-264 owner rule).
