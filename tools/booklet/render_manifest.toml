@@ -26,9 +26,9 @@ name = "blue"
 palette_slot = 2
 
 [accent.left_behind]
-color = "#9360C8"
-name = "purple"
-palette_slot = 4
+color = "#3F7C7A"
+name = "teal"
+palette_slot = 5
 
 [accent.expedition]
 color = "#D0702A"
