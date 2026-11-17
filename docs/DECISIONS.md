@@ -1938,3 +1938,10 @@ cost; the AI never targets props on purpose. Applies everywhere (skirmish, LAN, 
 `explosion_small.radiation` / `explosion_large.radiation`; detonation fx events now carry the warhead index.
 **Why:** owner answers at the session 31 briefing; (4) owner asked to wire the sound, threshold ASSUMED by Claude so the Ash Sower spray (60) stays plain.
 **Status:** decided (owner); (4) threshold assumed — confirm.
+
+### D-265 · 2026-11-17 · Session 31 balance: Directorate tier-3 attack ratio 140 lands
+**Decision:** `[faction.directorate.tier3] attack_ratio_pct = 140` (shared veteran table 110). On 128 games with M12-16 in: Dir v Exp 70 -> 62 %,
+Auth v Dir 45 -> 48 %, Exp v Dir glass 58 -> 54 %, Dir v LB 47 -> 48 %; rows without the Directorate unchanged; distance from 50 89 -> 73
+(docs/balance/s31_balance.md). **Why:** meets D-264 (every touched row moves toward 50 %). **Alternatives:** army caps (d2/d3), unit reserve (d1),
+attack threshold (d5), Sparker caps (k10, kd) all failed D-264 on the screen. **Status:** measurement under D-264 (owner rule), campaign sweep
+re-run with it.
