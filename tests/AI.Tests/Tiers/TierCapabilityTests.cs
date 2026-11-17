@@ -184,8 +184,18 @@ public class TierCapabilityTests(ITestOutputHelper log)
 
     /// <summary>Scenario for the wave tests: a big idle-army at home next to two enemy structures 14 cells apart (both seen at once, so
     /// both are remembered); waves launch by the timer, not by army size.</summary>
+    // S31: the rig's edits must reach the faction's own tier table too ([faction.<id>.tier<N>], e.g. the Directorate tier 3 of D-265), or the AI
+    // plays the data table and attacks at once with a small army.
+    private static DifficultyProfile WaveProfile(Faction f, DifficultyProfile profile)
+    {
+        static DifficultyProfile Edit(DifficultyProfile p) => p with { AttackThreshold = 500, ExpansionTick = 0, ActiveScouting = false, Harass = false };
+        DifficultyProfile own = profile.ForFaction((int)f);
+        DifficultyProfile edited = Edit(profile);
+        return ReferenceEquals(own, profile) ? edited : edited.WithFactionOverride((int)f, Edit(own));
+    }
+
     private static TierRig WaveRig(Faction f, DifficultyProfile profile, int soldiers = 16) =>
-        new(f, profile with { AttackThreshold = 500, ExpansionTick = 0, ActiveScouting = false, Harass = false }, r =>
+        new(f, WaveProfile(f, profile), r =>
         {
             CellCoord yard = r.Yard(0);
             r.SpawnHarvester(0, f, yard);
