@@ -1964,3 +1964,10 @@ field, or map-side ore near the Left Behind's corner. **Status:** measurement (s
 (64 games): no setting moves Authority v Left Behind toward 50 % without another row moving 5+ points away (docs/balance/s32_balance.md).
 **Alternatives:** an escort/route rule for Left Behind harvesters (code), or accept Authority v Left Behind ~66-70 % as faction asymmetry for now.
 **Status:** measurement (session 32).
+
+### D-269 · 2026-11-17 · Session 32: no Left Behind harvester shepherd; Authority v Left Behind accepted for now
+**Decision:** the harvester shepherd (safe own-half fields) does not land; its code stays on `integ-s32c`. Authority v Left Behind (~66-70 %) is
+accepted as it is for now (owner, session 32: "if not then we will live with Authority v Left Behind at about 66-70 % for now").
+**Why:** 128 games: Auth v LB 69.5 -> 68.1 % (s1) / 68.6 % (s2), Dir v LB 47.8 -> 41.8 / 42.2 % (5.6-6 points away, fails D-264)
+(docs/balance/s32_balance.md). Together with D-267 and D-268 the three Left Behind economy levers all failed. **Alternatives:** none queued.
+**Status:** decided (owner).

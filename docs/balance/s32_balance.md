@@ -71,3 +71,17 @@ Data-only: `[faction.left_behind.tier3] harvester_target` (shared veteran table:
 No setting moves the target row toward 50 % without another row failing (h4: Auth v LB -4.7 but Exp v LB glass +8.5); h2 is within noise.
 Keeping more harvesters alive does not fix the Left Behind's mid-game stall either (more of them die on the same long trips, and the money held
 for them slows the army).
+
+## Harvester shepherd screen and decision runs (rejected)
+Rule (branch `integ-s32c`, f65057b): at tier 3+, a Left Behind harvester on the enemy half (s1) or near enemy guns/defences (s1, s2 = danger only)
+is sent to the richest safe ore field on the own half, at most once per 450 ticks (s3: fields of 6+, 300 ticks). Expedition v Left Behind glass is
+game-for-game unchanged by every variant (the rule never fires there).
+
+| Row (LB side) | main (128) | s1 screen (64) | s1 (128) | s2 screen (64) | s2 (128) | s3 screen (64) |
+|---|---|---|---|---|---|---|
+| Authority v Left Behind | 69.5 % | 59.0 % | 68.1 % | 60.7 % | 68.6 % | 65.6 % |
+| Directorate v Left Behind | 47.8 % | 43.1 % | 41.8 % (FAIL) | 43.1 % | 42.2 % (FAIL) | 42.1 % |
+| Left Behind v Expedition | 48.7 % | 47.5 % | 43.1 % (FAIL) | 52.5 % | 47.1 % | 49.1 % |
+
+The 64-game gain on Authority v Left Behind (-7 points) shrank to 1-1.5 points over 128 games, while Directorate v Left Behind moved 5.6-6 points
+away from 50 %. Owner's call (session 32): with the escort/route rule failing too, Authority v Left Behind stays at ~66-70 % for now.
