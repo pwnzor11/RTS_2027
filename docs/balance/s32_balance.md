@@ -71,3 +71,33 @@ Data-only: `[faction.left_behind.tier3] harvester_target` (shared veteran table:
 No setting moves the target row toward 50 % without another row failing (h4: Auth v LB -4.7 but Exp v LB glass +8.5); h2 is within noise.
 Keeping more harvesters alive does not fix the Left Behind's mid-game stall either (more of them die on the same long trips, and the money held
 for them slows the army).
+
+## Start-corner bias (D-270)
+Across the s31 baseline and s32 series (about 1 000 decisive games), the side that starts in the top-left corner (4,4) won 57-60 %; player
+slot was even (49 %). Worst: Left Behind mirror 70 %, Left Behind v Expedition 67 %, Expedition v Left Behind glass 63 %.
+
+Probe: `Tools ai mirror --a tiered:3 --faction <f> --seed N` plays a mirror game with both AIs on one random stream and prints the first tick
+at which player 0 stops being the 180-degree image of player 1 (generated maps are exact point mirrors). Findings:
+- AI bug (fixed): before the first yard stands (a packed Mother Rig, an undeployed Command Ship) the rally cell was the unset (0,0). The
+  top-left army was already there; the bottom-right army was sent across the map toward the far corner (tick 0 Move orders only for player 1).
+  Now the rally is the start cell until a yard exists.
+- Inherent: every building faces the same way (exits and refinery docks point south), so the top-left base opens toward the map centre and the
+  bottom-right base toward the edge; the first refinery lands on different sides (tick 512-602). Not fixable without mirrored building art.
+- Sim: one-lepton movement rounding differences (tick 19-20). Small; not touched.
+- A mirror-safe rounding of the AI start cell was tried and dropped: it changed nothing in the probe but moved Directorate v Expedition
+  58 -> 64 % and broke VeteranClimbsToTierThreeAndBuildsTierTypes(Directorate).
+
+Rally fix alone (commit 697408c), 128 games per row; rows without the Left Behind or the Expedition cannot change:
+
+| Row | Top-left wins main | fix | Row win % main | fix |
+|---|---|---|---|---|
+| Left Behind mirror rust | 69.7 % | 58.5 % | 45.0 | 50.0 |
+| Authority v Left Behind rust | 57.6 % | 54.6 % | 69.5 | 64.7 (toward) |
+| Directorate v Left Behind rust | 49.6 % | 51.8 % | 46.9 | 47.4 |
+| Left Behind v Expedition rust | 66.7 % | 67.2 % | 48.7 | 49.1 |
+| Authority v Expedition rust | 54.4 % | 55.2 % | 37.6 | 36.8 (+0.8) |
+| Expedition mirror rust | 55.5 % | 54.6 % | 58.0 | 57.1 |
+| Directorate v Expedition rust, all three glass rows | unchanged | game for game | | |
+| All rows | 58.2 % | 57.0 % | distance 70.9 | 66.1 |
+
+Campaign sweep with the fix (job s32swr): 45/45 meet D-222. Lands under D-264 (no row moves 5 points away).

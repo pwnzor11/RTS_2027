@@ -21,7 +21,7 @@ Open questions: Q-73 (deferred).
 2. Left Behind economy: relocating for ore (D-267) and a higher harvester target (D-268) were screened and rejected. Left: an escort or
    route rule for its harvesters, an earlier second refinery toward the next field, or accept Auth v LB ~66-70 % for now (owner's call).
 3. M5-13 model run: needs the owner's API key on the laptop (never in chat).
-4. Mirror start-corner bias (owner: later).
+4. Start-corner bias: D-270 landed (rally bug); about 57 % top-left remains, mostly from south-facing buildings. Probe: `Tools ai mirror`.
 
 ## Half-finished work
 - Variant branches bal/s31-* (d1-d7, k10, kd, dk, d4i) are measurement only (delete on GitHub); dk (d4 + Sparker cap 10) was screened on the old

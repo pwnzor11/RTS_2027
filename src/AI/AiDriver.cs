@@ -61,6 +61,10 @@ public sealed class AiDriver
     /// <summary>Creates a driver for a game with the given seed (AI generators derive from it).</summary>
     public AiDriver(ulong gameSeed) => _seed = gameSeed;
 
+    /// <summary>s32 diagnostics only (`ai mirror`): every AI draws from slot 0's random stream, so a mirror game of two identical AIs stays a
+    /// point mirror until the simulation or the AI breaks the symmetry. Never set in play.</summary>
+    public bool SharedRandomForMirrorProbe { get; set; }
+
     /// <summary>When set, replaces every profile's command delay (ticks, at least 1).</summary>
     public int? CommandDelayOverride { get; set; }
 
@@ -134,7 +138,7 @@ public sealed class AiDriver
             s.Ai.Start(new AiContext
             {
                 Player = s.Player, PlayerCount = view.PlayerCount, GameSeed = _seed, Profile = s.Profile,
-                Rng = new AiRandom(_seed, s.Player), MapWidth = view.MapWidth, MapHeight = view.MapHeight, StartCell = start,
+                Rng = new AiRandom(_seed, SharedRandomForMirrorProbe ? 0 : s.Player), MapWidth = view.MapWidth, MapHeight = view.MapHeight, StartCell = start,
                 StartPositions = sim.Setup.Map.StartPositions,   // M4-12: public map data (scouting for 2-4 starts)
             });
             if (s.Saved is { Length: > 0 } && s.Ai is IAiSnapshotable restorable)
