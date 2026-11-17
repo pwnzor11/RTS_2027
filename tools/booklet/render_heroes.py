@@ -46,6 +46,16 @@ TURNED_WORLD_STRENGTH = 0.45
 FACTION_ORDER = ("authority", "directorate", "left_behind", "expedition", "neutral")
 
 
+# Hero polish (S33): the game sprites are low-poly on purpose; the booklet blows them up, so the hero path only rounds them off.
+POLISH_ANGLE_DEG = 30.0      # smooth-by-angle threshold: edges sharper than this stay crisp
+POLISH_BEVEL_FRAC = 0.08     # bevel width as a fraction of the object's smallest bounding-box side ...
+POLISH_BEVEL_CAP = 0.035     # ... capped at this fraction of its longest side
+POLISH_BEVEL_SEGMENTS = 3
+POLISH_RES_MULT = 3          # curved primitives: cylinder/cone vertices, sphere segments/rings x this
+POLISH_MIN_VERTS = 48
+POLISH_SKIP = ("ground", "shadow", "cam", "light", "sun")
+
+
 class HeroDone(Exception):
     """Raised by the render hook once the hero image is written, to stop the sprite builder before its mask and shadow passes."""
 
@@ -95,6 +105,60 @@ def set_house_colours(accent_hex):
         b = m.node_tree.nodes.get("Principled BSDF")
         if b is not None:
             b.inputs["Base Color"].default_value = srgb_to_lin([min(1.0, c * k) for c in base]) + [1.0]
+
+
+def polish_scene():
+    """Hero-only polish of the built scene: smooth-by-angle shading, a small angle-limited bevel and Weighted Normal on every
+    mesh (skipping ground / shadow / helpers).  Bevel width scales with the object's smallest side so small parts (infantry
+    limbs, rivets) do not melt.  Imported .pie meshes (names starting 'pie') get smooth-by-angle only."""
+    import bpy
+    sc = bpy.context.scene
+    bpy.context.view_layer.update()
+    meshes = [o for o in sc.objects if o.type == "MESH" and len(o.data.vertices) > 0
+              and not o.name.lower().startswith(POLISH_SKIP) and "shadow" not in o.name.lower()]
+    if not meshes:
+        return 0
+    for o in sc.objects:
+        o.select_set(False)
+    done = set()
+    for o in meshes:
+        if o.data.name in done:
+            continue
+        done.add(o.data.name)
+        for p in o.data.polygons:
+            p.use_smooth = True
+    # smooth by angle (operator works on the selected meshes; one call for all)
+    for o in meshes:
+        o.select_set(True)
+    bpy.context.view_layer.objects.active = meshes[0]
+    try:
+        bpy.ops.object.shade_smooth_by_angle(angle=math.radians(POLISH_ANGLE_DEG))
+    except Exception:
+        bpy.ops.object.shade_auto_smooth(angle=math.radians(POLISH_ANGLE_DEG))
+    for o in meshes:
+        o.select_set(False)
+    n = 0
+    for o in meshes:
+        if o.name.lower().startswith("pie"):
+            continue
+        d = o.dimensions
+        side = min(x for x in (d.x, d.y, d.z) if x > 1e-5) if any(x > 1e-5 for x in d) else 0.0
+        side = min(side, max(d) * 0.5)
+        w = min(side * POLISH_BEVEL_FRAC, max(d) * POLISH_BEVEL_CAP)
+        if w < 1e-4 or len(o.data.polygons) > 20000:
+            continue
+        b = o.modifiers.new("hero_bevel", "BEVEL")
+        b.width = w
+        b.segments = POLISH_BEVEL_SEGMENTS
+        b.limit_method = "ANGLE"
+        b.angle_limit = math.radians(POLISH_ANGLE_DEG)
+        b.harden_normals = True
+        b.use_clamp_overlap = True
+        wn = o.modifiers.new("hero_wn", "WEIGHTED_NORMAL")
+        wn.keep_sharp = True
+        wn.weight = 50
+        n += 1
+    return n
 
 
 def frame_camera(long_side, pad=0.04):
@@ -180,6 +244,7 @@ class Hero:
     samples = 128
     denoise = True
     threads = 0
+    polish = True
     done = False
 
 
@@ -190,6 +255,8 @@ def hero_render(real_render):
     for o in sc.objects:
         if o.name.startswith("ground"):
             o.hide_render = True
+    if Hero.polish:
+        polish_scene()
     if Hero.yaw:
         turn_model(Hero.yaw)
         if sc.world is not None and sc.world.use_nodes and "Background" in sc.world.node_tree.nodes:
@@ -240,13 +307,36 @@ def install_hook():
             hero_render(self._sub.render)
             raise HeroDone()
 
+    class MeshSub:
+        """Hero polish: curved primitives get a finer tessellation (the sprite builders ask for ~12-16 sides)."""
+        def __init__(self, sub):
+            self._sub = sub
+
+        def __getattr__(self, n):
+            f = getattr(self._sub, n)
+            if not Hero.polish or not n.startswith("primitive_"):
+                return f
+
+            def wrapped(*a, **kw):
+                if n in ("primitive_cylinder_add", "primitive_cone_add", "primitive_circle_add"):
+                    kw["vertices"] = max(POLISH_MIN_VERTS, kw.get("vertices", 32) * POLISH_RES_MULT)
+                elif n == "primitive_uv_sphere_add":
+                    kw["segments"] = max(POLISH_MIN_VERTS, kw.get("segments", 32) * POLISH_RES_MULT)
+                    kw["ring_count"] = max(POLISH_MIN_VERTS // 2, kw.get("ring_count", 16) * POLISH_RES_MULT)
+                elif n == "primitive_ico_sphere_add":
+                    kw["subdivisions"] = min(5, kw.get("subdivisions", 2) + 2)
+                return f(*a, **kw)
+            return wrapped
+
     class OpsProxy:
         def __init__(self, real):
             self._real = real
 
         def __getattr__(self, n):
             sub = getattr(self._real, n)
-            return RenderSub(sub) if n == "render" else sub
+            if n == "render":
+                return RenderSub(sub)
+            return MeshSub(sub) if n == "mesh" else sub
 
     bpy.ops = OpsProxy(bpy.ops)
 
@@ -387,6 +477,7 @@ def main():
     ap.add_argument("--out", default=os.path.join(ROOT, "art", "booklet"))
     ap.add_argument("--contact", default=None, help="contact sheet path (default <out>/contact_<date>.png; 'none' = skip)")
     ap.add_argument("--yaw", type=float, default=None, help="structures only: turn the model this many degrees (overrides STRUCTURE_YAW)")
+    ap.add_argument("--no-polish", action="store_true", help="skip the hero polish (smooth-by-angle, bevel, finer curves): the old look")
     ap.add_argument("--accent", default=None, help="override the faction accent for this run, e.g. #E0A020")
     a = ap.parse_args()
     if not (a.pilot or a.all or a.ids):
@@ -410,6 +501,7 @@ def main():
         import bpy  # noqa: F401  (fails here, early, if the venv has no bpy)
         install_hook()
         Hero.long_side, Hero.samples, Hero.denoise, Hero.threads = a.long_side, a.samples, not a.no_denoise, a.threads
+        Hero.polish = not a.no_polish
         for n, rid in enumerate(todo, 1):
             h = heroes[rid]
             Hero.accent = a.accent or accents[h["faction"]]["color"]
