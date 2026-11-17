@@ -297,6 +297,7 @@ Source: docs/reviews/2026-11-07_owner_campaign_feedback.md. Audit: docs/reviews/
 
 - [~] M13-19 Skirmish balance after s21 (Q-77): Authority behind (v Directorate 17-36, v Expedition 12-51), Glass Coast Expedition 43-55 v 7-14, s22: diagnosis docs/balance/s22_balance_options.md, all picks applied (D-223); laptop series pending s23: s22after read; Rocket Truck splash back to 1 (D-229); laptop re-run s23after pending
   Left Behind mirror Mountains L1 start corner -25 % income. First the owner's A/B (tools/measure/run_s21_ab.ps1), then tune (docs/balance/s21_after_series.md)
+- [x] S32 balance and AI (session 32): BAL-S32 Expedition Sparker cap 10 (D-266); BAL-S32b/c Left Behind economy screens rejected (D-267 relocation, D-268 harvester target, D-269 shepherd; Auth v LB accepted for now); S32-BIAS AI rally before the first yard + `Tools ai mirror` probe (D-270)
 
 ## M14 · Field Manual (D-206, docs/design/19_field_manual.md)
 - [x] M13-20 Mop-up AI fixed and on in skirmish (s22, D-224); s23: s22mopup showed no effect; trigger loosened (D-233); the draws traced are attrition stalemates, not beaten enemies
@@ -312,7 +313,7 @@ Source: docs/reviews/2026-11-07_owner_campaign_feedback.md. Audit: docs/reviews/
 - [x] M14-07 Pilot PDF and previews in docs/field_manual/, linked from the README (s19)
 - [x] M14-03 Hero renders: pilot approved, all 124 rendered on the laptop and on main (s19, D-210; PR #63). Open: walls/gates re-angle s22: walls/gates re-angled -35 deg with half sky light and detail-passed models, laptop renders on integ-s22 (D-227)
 - [x] M14-04 Directorate lore draft (Authority approved), then the other three faction chapters s22: Directorate draft approved (design 19 §6b, D-228); Left Behind and Expedition chapters next s23: Left Behind and Expedition approved after a fact-check (D-231)
-- [ ] M14-05 Full build (about 108 pages) after M13 lands; quick-reference card s23: dry build ok on today's data, 150/150 ids have name, hero render and sprite (tools/booklet/data/check_coverage.py); resolver and prep fixed
+- [ ] M14-05 Full build (about 108 pages) after M13 lands; quick-reference card s32: full draft built (tools/booklet/full, branch integ-s32m, 144 pages + 2-page card, 36 draft pages), waiting for the owner's review (Q-86); s23: dry build ok on today's data, 150/150 ids have name, hero render and sprite (tools/booklet/data/check_coverage.py); resolver and prep fixed
 - [x] M14-06 Models and sprites for the 26 ids without art (scripts D-215; owner rendered on the laptop; landed in PR #74 s21; no rules id is left without art)
 
 ## M9 · LAN multiplayer (was M5)

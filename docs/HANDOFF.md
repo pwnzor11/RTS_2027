@@ -1,47 +1,41 @@
-# Handoff: Session 32 — Authority v Left Behind and Expedition v Left Behind glass; Sparker cap on top of D-265; M5-13 when a key is set
-Last commit: `docs: Session 31 handoff` on `integ-s31` (PR #99 to main). Check it merged.
-Where things stand: session 31 landed (PR #99) M12-16 destructible props (D-264: crushers flatten Tree/Snag, splash breaks Tree/Snag/Wreck, Rough
-left behind, crusher pathing) with M12-16b live ground/minimap repaint, real prop/decal sprites in the map editor, the full showcase dressing of
-glass_coast_e1 and ash_reckoning, exp_rad_burst on radiation blasts (contaminate >= 80, threshold assumed — confirm), and the first balance change
-since s27: Directorate tier-3 attack_ratio_pct 140 (D-265). Landing rule is now D-264 (5 points). Campaign sweep with all of it: 45/45 tiers meet
-D-222. Main at 128 games WITH M12-16 (new baseline, docs/balance/s31_balance.md): Auth v Dir 47.6 %, Auth v LB 69.5 %, Auth v Exp 41.9 %, Dir v LB
-47.8 %, Dir v Exp rust 62.1 %, LB v Exp 53.5 %, Exp v Auth glass 52.8 %, Exp v Dir glass 53.8 %, Exp v LB glass 69 %. Decisions up to D-265.
-Open questions: Q-73 (deferred).
-
-## Checkpoint (session 32, 2026-11-17, mid-session)
-- Cluster pass done: s31s3 read (dk best on the old rules), s29s deleted, 88 old jobs pruned; pi-cluster skill rewritten and saved by the owner
-  (kjob prune/--keep-days/--quicksync/800m, setup-tools blender5/bpy/video/build/pydata/node; repo k3s-cluster-code edc2f1c+).
-- Balance: k10 (Expedition aa_cap_before_air 10 on top of D-265) passes D-264 on 128 games, campaign sweep 45/45 -> D-266, PR #101 (integ-s32),
-  Windows CI green, waiting for the owner's merge OK (the safety check refused the merge call). k9 fails.
-- Left Behind diagnosis (docs/balance/s32_balance.md): home ore near the Mother Rig is empty by tick ~3000, the rig relocates late or never, income
-  stalls; LB losses track that (Auth v LB and Dir v LB alike).
+# Handoff: Session 33 — Field Manual review and revisions; balance parked
+Last commit: `docs: Session 32 handoff` on `land/s32-handoff` (PR to main; main was 74ff251 = PR #106). Check it merged.
+Where things stand: session 32 landed D-266 (Expedition `aa_cap_before_air = 10` on top of D-265; Dir v Exp 62 -> 58 %) and D-270 (the AI rallies
+at its start cell until its first yard stands; Left Behind mirror top-left share 70 -> 58.5 %, Auth v LB 69.5 -> 64.7 %). Three Left Behind economy
+levers were screened and rejected (D-267 relocation for ore, D-268 harvester target, D-269 harvester shepherd); the owner accepted Auth v LB as it
+is. Campaign sweep 45/45 after each landing. Field Manual: full draft built (tools/booklet/full on branch `integ-s32m`, NOT on main), 144 pages +
+2-page quick-reference card, sent to the owner for one full review (Q-86). Decisions up to D-270. Open questions: Q-73 (deferred), Q-86.
+Current 128-game table (main): Auth v Dir 47.6, Auth v LB 64.7, Auth v Exp 36.8, Dir v LB 47.4, Dir v Exp 58.0, LB v Exp 49.1, Exp v Auth glass
+52.8, Exp v Dir glass 54.8, Exp v LB glass 69.0 (docs/balance/s31_balance.md, s32_balance.md).
 
 ## Start here (shown to the user as the plan; nothing starts until they say go)
-1. PR #101 merged (main 89ef2ef). Docs PR land/s32-docs (D-267) merged?
-2. Balance is parked: Authority v Left Behind ~66-70 % accepted for now (D-269, after D-267/D-268/D-269 all failed); Directorate v Expedition
-   58 % after D-266; Expedition v Left Behind glass 69 %. Measurement branches integ-s32b/s32c and bal/s32-* can be deleted.
+1. Handoff PR merged? Laptop: `git checkout main; git pull`.
+2. Field Manual (Q-86): take the owner's review notes, revise on `integ-s32m` (`python3 tools/booklet/full/book.py` rebuilds in ~40 s; one part
+   alone: `book.py <module>`), resend the PDF; once approved, merge integ-s32m and put the PDF in docs/field_manual (check its size first: 18 MB).
 3. M5-13 model run: needs the owner's API key on the laptop (never in chat).
-4. Start-corner bias: D-270 landed (rally bug); about 57 % top-left remains, mostly from south-facing buildings. Probe: `Tools ai mirror`.
+4. Balance is parked (owner, D-269). Remaining start-corner bias ~57 % top-left, mostly south-facing buildings (D-270); probe `Tools ai mirror`.
 
 ## Half-finished work
-- Variant branches bal/s31-* (d1-d7, k10, kd, dk, d4i) are measurement only (delete on GitHub); dk (d4 + Sparker cap 10) was screened on the old
-  rules only partly (cluster job s31s3, results in the laptop folder claude/rts/s31/out if fetched).
-- Grapeshot AI trigger "(tune)"; two-PC LAN test waits on the owner. PropDust (dust puffs) can miss a PropDestroyed event that happens in a middle
-  sim step at speed > 1 (the ground repaint does not: it diffs the live map).
+- Field Manual draft on `integ-s32m` (merged helper branches wp/s32-m-*): module owners in tools/booklet/full/COMMON.md. Helper notes worth a
+  look in revision: part3_entries packs pages by measuring heights with Playwright (needs Chromium); the Directorate hazard bar was changed to
+  oxblood stripes (owner picked oxblood + black); the "DRAFT" stamp now sits at the page foot.
+- Measurement branches to delete on GitHub: integ-s32, integ-s32b, integ-s32c, integ-s32d, integ-s32r, bal/s32-*, land/s32-docs*, land/s32-handoff (after merge), wp/s32-m-* (after
+  the manual merges), plus the session 31 list.
 
 ## Waiting on the user
-- Pull main on the laptop (`git checkout main; git pull`; the laptop folder was on the session 28 merge at the start of session 31).
-- Confirm the exp_rad_burst threshold (Ash Sower spray stays quiet). Delete the failed cluster job `s29s` (216 red pods in Headlamp; the safety
-  check refused the delete): `kubectl -n work delete job s29s` on snowwhite. Two-PC LAN test (M9-15); API key for M5-13 (optional).
-- Branch clean-up on GitHub: the session 30 list, plus integ-s31 (after merge), wp/s31-*, bal/s31-*.
+- Field Manual review (Q-86). Two-PC LAN test (M9-15). API key for M5-13 (optional). Branch clean-up on GitHub (list above).
 
 ## How to run this session
 - Session 32 lessons:
-  - Cluster: submit builds first and let them start before series or traces that wait on them (trace pods took huntsman and starved the main
-    build); one huntsman core runs an ai match game in ~14 s (Pi ~45 s); a 135-index campaign sweep takes ~14 min at par 30.
-  - k9/k10 builds and the Expedition-only rows: a variant that changes one faction's key leaves the other rows game-for-game identical to main;
-    run only the rows it can touch.
-  - Merging a PR needs the owner's OK in this chat (the safety check refused it without one this session).
+  - The owner gave Claude rights to delete cluster jobs ("give yourself access"); `kjob.py prune` at session start, jobs self-delete after 2 days.
+  - Cluster: Pis fit 4 x 800m pods (Longhorn takes 444m); submit a build and let it start BEFORE series or traces that wait on it (trace pods on
+    huntsman starved their own build); `--cpu 100m` for single-thread side jobs on a full cluster. A 135-index campaign sweep takes ~14 min.
+  - device_commit_files called in parallel with the Bash edit that writes the file can upload the old version: commit in a later call.
+  - A variant that changes one faction's key leaves rows without that faction game-for-game identical: run only the rows it can touch, and a
+    code variant with the rule switched off (e0) is a free control (it matched main game for game).
+  - 64-game screens can mislead by ~7 points (shepherd s1: -7 on 64, -1.4 on 128): decide on 128.
+  - Built-in Agent worktree isolation is refused: create worktrees under /home/claude/wt yourself and give each helper its path.
+  - Merging a PR needs the owner's OK in chat ("merge N" / "land it").
 - Session 31 lessons:
   - Cluster changed at the end of s31 (pi-cluster skill updated): x86 node **huntsman** (6 fast cores, 15 GB) joined; `kjob.py submit` now runs
     on every node by default (`--arch any`; `--arch arm64|amd64`, `--fast` to prefer huntsman for builds, `--scratch` for its 234 GB NVMe at

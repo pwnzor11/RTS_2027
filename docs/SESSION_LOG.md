@@ -577,3 +577,18 @@ on the cluster, before and after D-265. Windows CI on PR #99.
 **Problems / notes:** laptop two sessions behind main (replanned after the clone); three server restarts (helpers resumed); 3-CPU build pods
 starved behind a series (resubmitted at 1 CPU); the safety check refused deleting the old failed cluster job s29s.
 **Next session should:** see HANDOFF.
+
+## Session 32 · 2026-11-17 (cluster skill pass, Sparker cap, Left Behind screens, start-corner rally fix, Field Manual draft)
+**Goal:** owner: resume; cluster skill pass (the s31 add/subtract list); then the balance plan; Left Behind levers one by one ("if not, live with
+Auth v LB ~66-70 %"); start-corner bias; finish the game manual (accents: owner picks; review: one full draft PDF).
+**Done:** s31s3 read; cluster: kjob prune/--keep-days/--quicksync/800m packing fix, Intel GPU plugin, setup-tools blender5/bpy/video/build/
+pydata/node, measured speeds, pi-cluster skill rewritten (owner saved it), k3s-cluster-code docs (OPERATIONS.md, session 5+6 log). Balance:
+k10 Sparker cap on top of D-265 lands (D-266, PR #101); Left Behind relocation, harvester target and harvester shepherd screened and rejected
+(D-267, D-268, D-269; PRs #102, #103, #106). Start-corner bias: `Tools ai mirror` probe; AI rally bug fixed (D-270, PR #105). Field Manual:
+full-build framework tools/booklet/full + six helper parts; 144-page draft and quick-reference card sent for review (branch integ-s32m, Q-86).
+**Decisions:** D-266, D-267, D-268, D-269, D-270.
+**Helpers:** 6 for the manual (5 Sonnet, 1 Haiku), 3-9 min each, no fix rounds; built-in worktree isolation was refused, so the lead made the
+worktrees under /home/claude/wt.
+**Problems / notes:** a series' trace pods took huntsman and starved the build they waited on (deadlock; resubmitted after the build); two
+device_commit_files raced a parallel edit (resubmitted); the start-cell rounding change broke an AI test and moved Dir v Exp 6 points (dropped).
+**Next session should:** see HANDOFF.
