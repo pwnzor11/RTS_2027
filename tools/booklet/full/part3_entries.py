@@ -162,7 +162,7 @@ def full(c):
     return f"""<div class="unit p3e-f">
 <div class="head"><h2>{E(c['title'])}</h2><div class="cost">{c['cost']}</div></div>
 <div class="sub">{sub}</div>
-<div class="art" style="height:{h}in"><span class="plate">PLATE {E(c['id'].split('_')[0].upper())}-{E(c['id'][-4:].upper())}</span>{art(c['id'], h, 700)}</div>
+<div class="art" style="height:{h}in"><span class="plate">PLATE {E(c['id'].split('_')[0].upper())}-{E(c['id'][-4:].upper())}</span>{art(c['id'], h, 1100)}</div>
 <div class="mini" style="margin-top:6pt"><div>{stat_rows(c)}{versus(c)}</div>
 <div><p>{E(c['body'])}</p><div class="fieldnote">{E(c['note'])}</div>{use_line(c)}</div></div></div>"""
 
@@ -173,7 +173,7 @@ def half(c, compact=False):
     return f"""<div class="unit {'p3e-c' if compact else 'p3e-h'} p3e-vs">
 <div class="head"><h2 style="font-size:12pt">{E(c['title'])}</h2><div class="cost" style="font-size:11pt">{c['cost']}</div></div>
 <div class="sub" style="margin-bottom:2pt">{sub}</div>
-<div class="p3e-b"><div><div class="art" style="height:{h}in">{art(c['id'], h, 360)}</div>{stat_rows(c)}</div>
+<div class="p3e-b"><div><div class="art" style="height:{h}in">{art(c['id'], h, 700)}</div>{stat_rows(c)}</div>
 <div><p>{E(c['body'])}</p><div class="fieldnote">{E(c['note'])}</div>{versus(c)}{use_line(c) if not compact else ''}</div></div></div>"""
 
 
