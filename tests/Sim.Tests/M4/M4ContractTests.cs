@@ -64,15 +64,15 @@ public sealed class M4ContractTests
     {
         var sim = ScriptedGame.NewSim(ScriptedGame.Setup());
         string[] names = sim.StateParts.Select(p => p.Name).ToArray();
-        Assert.Equal(new[] { "tunnels", "ground", "effects", "garrison", "stats", "directive", "rigs", "salvage", "veterancy", "shipments", "beachhead", "naval", "commander_orders" }, names[^13..]);   // M5-01 appended "directive", M6-02 "rigs" and "salvage"
-        Assert.Same(sim.Garrison, sim.StateParts[^10]);
-        Assert.Same(sim.Stats, sim.StateParts[^9]);
+        Assert.Equal(new[] { "tunnels", "ground", "effects", "garrison", "stats", "directive", "rigs", "salvage", "veterancy", "shipments", "beachhead", "naval", "commander_orders", "props" }, names[^14..]);   // M5-01 appended "directive", M6-02 "rigs" and "salvage"
+        Assert.Same(sim.Garrison, sim.StateParts[^11]);
+        Assert.Same(sim.Stats, sim.StateParts[^10]);
     }
 
     [Fact]
     public void FormatVersions_ArePinned()
     {
-        Assert.Equal(11, RulesHash.FormatVersion);   // M6-02 took 8, VET-1 9, SUP-1 10, M7-02 11
+        Assert.Equal(12, RulesHash.FormatVersion);   // M6-02 took 8, VET-1 9, SUP-1 10, M7-02 11, M12-16 12
         Assert.Equal(13, SimWriter.SaveVersion);   // M5-01 took 9, M6-02 10, VET-1 11, M7-02 12
         Assert.Equal(13, ReplayWriter.Version);           // M3-19 had already taken 8 for the mission block, M6-02 took 10, VET-1 11, M7-02 12, M4-17 13
         Assert.Equal(7, ReplayWriter.OldestReadableVersion);

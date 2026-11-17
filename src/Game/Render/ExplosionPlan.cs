@@ -39,6 +39,7 @@ public static class ExplosionPlan
     /// <summary>The explosions for one effects event, in a fixed order.</summary>
     public static IReadOnlyList<ExplosionSpot> For(FxEvent e)
     {
+        if (e.Kind == FxKind.PropDestroyed) return Array.Empty<ExplosionSpot>();   // M12-16: a fallen tree is dust (PropDust) and a sound, not a blast
         if (e.Kind != FxKind.BuildingDestroyed)
             return new[] { new ExplosionSpot("explosion_small", 0f, 0f, 1f) };
 

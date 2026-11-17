@@ -49,7 +49,7 @@ internal static class MoveMission
         if (kind == ActorKind.Vehicle)
         {
             VehicleType t = sim.RulesOf(store.Player[i]).Vehicles[store.TypeIndex[i]];
-            return new Stats(MoveClass.Of(t), (int)((long)t.Speed * sim.MoveSpeedPermille(kind, i) / 1000), t.TurnRate, t.Crusher);   // M3-06: aura speed
+            return new Stats(MoveClass.Mover(t), (int)((long)t.Speed * sim.MoveSpeedPermille(kind, i) / 1000), t.TurnRate, t.Crusher);   // M3-06: aura speed
         }
         return new Stats(Locomotion.Foot, (int)((long)sim.RulesOf(store.Player[i]).Infantry[store.TypeIndex[i]].Speed * sim.MoveSpeedPermille(kind, i) / 1000), 0, false);   // M3-06: aura speed
     }
@@ -360,6 +360,7 @@ internal static class MoveMission
                     if (Occupancy.LiveInfantry(sim, id) && sim.CanAttackOwnedBy(store.Player[i], sim.Infantry.Player[id.Index])) sim.Infantry.Health[id.Index] = 0;
                 }
             sim.Map.SetVehicle(n, me);
+            if (st.Loco == MoveClass.TrackedCrusher) sim.CrushPropAt(n);   // M12-16 (D-264): a heavy tracked crusher flattens a Tree or Snag on entry
         }
         else
         {

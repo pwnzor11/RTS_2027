@@ -94,6 +94,7 @@ public sealed partial class Simulation
             }
         }
         ApplyPendingDamage();   // at once, as OnDeathWeapon does: the buffer is empty between ticks and must not carry into a save
+        DamageProps(c.Cell, radius, SuperweaponDamage, wh, radius / 2);   // M12-16: the blast levels Tree, Snag and Wreck (full inside half the radius, as the actors)
 
         _fx.Add(new FxEvent(FxKind.Detonation, impact, radius, WarheadIndexOf(wh, c.Player)));   // S31
         _fx.Add(new FxEvent(FxKind.Superweapon, impact, radius));
@@ -162,6 +163,7 @@ public sealed partial class Simulation
                 Hurt(kind, i, wh.SalvoDamage, wh, d > 0, owner);
             }
         }
+        DamageProps(cell, splash, wh.SalvoDamage, wh, 0);   // M12-16: a missile levels props like a splash shell
         _fx.Add(new FxEvent(FxKind.Detonation, CellCentre(cell), splash, WarheadIndexOf(wh, owner)));   // S31
     }
 

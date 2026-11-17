@@ -188,7 +188,7 @@ public sealed partial class Simulation
     }
 
     private Locomotion LocoOf(PendingMove pm) =>
-        pm.Kind == ActorKind.Vehicle ? Pathing.MoveClass.Of(Setup.Rules.Vehicles[_units.TypeIndex[pm.Id.Index]]) : Locomotion.Foot;   // M7-03: large ships
+        pm.Kind == ActorKind.Vehicle ? Pathing.MoveClass.Mover(Setup.Rules.Vehicles[_units.TypeIndex[pm.Id.Index]]) : Locomotion.Foot;   // M7-03: large ships; M12-16: a crusher may path through Tree and Snag cells
 
     // Spiral spreading: members in command order each take the first spiral cell that is walkable for them and not yet used
     // (a vehicle needs a cell nobody else was given, infantry share a cell up to 5 and never with a vehicle). A cell held by a
@@ -201,7 +201,7 @@ public sealed partial class Simulation
         {
             PendingMove pm = _members[m];
             bool vehicle = pm.Kind == ActorKind.Vehicle;
-            Locomotion loco = LocoOf(pm);
+            Locomotion loco = Pathing.MoveClass.Table(LocoOf(pm));   // M12-16: a destination is never a prop cell, whoever is sent (the route may cross one)
             dest[m] = target;
             for (int n = 0; Spiral.Cell(target, n, out CellCoord c); n++)
             {

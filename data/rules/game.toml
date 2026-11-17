@@ -120,3 +120,13 @@ floor_permille = 350  # (tune)
 charter_ticks = 1200  # (tune)
 tenders_max = 3  # (tune)
 local_ash_bonus_permille = 0  # (tune) balance knob, see 11 section 4
+
+# M12-16 (D-264 (3)): destructible blocking props (design 16 D1 option C). Splash damage destroys Tree, Snag and Wreck; a heavy crusher (a tracked
+# vehicle with crusher = true) destroys Tree and Snag by driving into the cell; Block and Pylon never break. A destroyed prop leaves Rough ground.
+# Every number is (tune); splash_armor is ASSUMED (S31): props are hit as the Structure armour class, whatever the warhead.
+[props]
+tree_health = 40  # (tune) a splash-1 shell does 36 to 60 against Structure at the impact cell, half beside it: one or two shells
+snag_health = 40  # (tune) as a tree
+wreck_health = 160  # (tune) 4 times a tree: four or five shells
+splash_armor = "structure"  # ASSUMED (S31)
+crush_path_penalty = 3  # (tune) a crusher's path pays this many normal cells to enter a Tree or Snag cell (it will go round a short gap)
