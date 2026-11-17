@@ -17,9 +17,9 @@ Open questions: Q-73 (deferred).
   stalls; LB losses track that (Auth v LB and Dir v LB alike).
 
 ## Start here (shown to the user as the plan; nothing starts until they say go)
-1. PR #101 merged? (owner OK, then `gh api -X PUT .../pulls/101/merge` after CI is green).
-2. Left Behind relocation rule: pack the Mother Rig (or send a new rig) toward the nearest rich field when near-base ore drops below a threshold;
-   screen on the four Left Behind rows (128 games), campaign sweep before landing.
+1. PR #101 merged (main 89ef2ef). Docs PR land/s32-docs (D-267) merged?
+2. Left Behind economy (D-267: relocating for ore was screened and rejected, 6-25 points worse): try harvester protection/replacement or an
+   earlier second refinery toward the next field; screen on the four Left Behind rows (64 games), then 128 + campaign sweep before landing.
 3. M5-13 model run: needs the owner's API key on the laptop (never in chat).
 4. Mirror start-corner bias (owner: later).
 

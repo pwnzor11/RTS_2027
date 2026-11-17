@@ -1952,3 +1952,9 @@ whose gun only hits aircraft (Sparkers). **Why:** 128 games per row on main with
 Left Behind v Expedition 53.5 -> 48.7 %, Authority v Expedition 41.9 -> 37.6 % (4.3 points away, under D-264's 5), glass rows within 1 point; campaign
 sweep 45/45 meets D-222 (docs/balance/s32_balance.md). **Alternatives:** cap 9 (Auth v Exp 6.5 points away: fails D-264); cap 8 + Directorate army
 cap (s31 kd: Auth v Exp 7.7 away). **Status:** lands in the session 32 PR (D-264 owner rule).
+
+### D-267 · 2026-11-17 · Session 32: no economic relocation for the Left Behind AI
+**Decision:** the "move the Mother Rig to the next ore field when the home field is mined out" rule does not land; its code stays on the
+measurement branch `integ-s32b`. **Why:** all four settings screened (64 games per Left Behind row) weaken the Left Behind by 6-25 points on every
+row (docs/balance/s32_balance.md). **Alternatives:** next session, harvester protection or replacement, an earlier second refinery toward the next
+field, or map-side ore near the Left Behind's corner. **Status:** measurement (session 32).
