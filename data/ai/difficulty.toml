@@ -91,6 +91,7 @@ army_cap_until_tick = 3600  # (tune) s15: the early snowball only; a longer cap 
 
 [faction.expedition]
 harass_min_army = 30
+aa_cap_before_air = 10   # (tune) s32 D-266: at most 10 anti-air-only vehicles until an enemy aircraft is seen (Dir v Exp rust 62 -> 58 %, docs/balance/s32_balance.md)
 
 [recruit]
 tier = 1

@@ -66,7 +66,11 @@ public class SiegeCommitKeyTests
         var shipped = TestWorld.Tiers[2].FactionKeys;
         foreach (Faction f in new[] { Faction.Authority, Faction.Directorate, Faction.LeftBehind, Faction.Expedition })
             Assert.Equal(-1, shipped.RetreatFloor((int)f));   // s30: the built-in floor everywhere
-        string text = File.ReadAllText(DifficultyLoader.PathBesideRules(TestWorld.RulesDir));
+        Assert.Equal(10, shipped.AaCapBeforeAir((int)Faction.Expedition));   // s32 D-266
+        Assert.Equal(0, shipped.AaCapBeforeAir((int)Faction.Directorate));
+        // drop the shipped cap line so the edit below does not write the key twice
+        string text = System.Text.RegularExpressions.Regex.Replace(File.ReadAllText(DifficultyLoader.PathBesideRules(TestWorld.RulesDir)),
+            @"(?m)^aa_cap_before_air\s*=.*\r?\n", "");
         string path = Write(text.Replace("\n[faction.expedition]\n", "\n[faction.expedition]\naa_cap_before_air = 4\nretreat_floor_pct = 25\n"));
         try
         {

@@ -563,3 +563,8 @@ On main after the session 31 PR. Back up nothing: development saves and replays 
   plain explosion. The Ash Sower's spray stays quiet.
 - **Balance (D-265):** Directorate tier-3 (Veteran) skirmish AI waits for a bigger army edge before attacking. Play Expedition v Directorate on a
   Rust Belt map at tier 3: the Directorate should push less often early and wait until its army is clearly bigger.
+
+## Session 32 (2026-11-17)
+- **Balance (D-266):** the Expedition skirmish AI stops building Sparkers (anti-air only) past 10 until it sees an enemy aircraft. Play Directorate v
+  Expedition on a Rust Belt map at tier 3: count the Expedition's Sparkers before you build any aircraft; there should never be more than 10, and
+  the rest of its army should be ground units.
