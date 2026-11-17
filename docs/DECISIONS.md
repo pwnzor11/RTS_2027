@@ -1978,3 +1978,9 @@ top-left start a head start in Left Behind and Expedition games; with the fix th
 Authority v Left Behind moves 69.5 -> 64.7 %, no row moves away from 50 % by more than 0.8, campaign 45/45 (docs/balance/s32_balance.md).
 The remaining bias (about 57 % top-left) is mostly inherent: all buildings face south. **Alternatives:** a mirror-safe start-cell rounding
 (dropped: no probe effect, moved Dir v Exp 6 points). **Status:** lands in the session 32 PR (owner: "Land the rally bug fix and remeasure").
+
+### D-271 · 2026-11-17 · Field Manual approved as drafted (Q-86)
+**Decision:** the full Field Manual draft is approved unchanged: 144 pages (not the planned 108), Order Seven stays "Classified upgrade" and
+the cover keeps the Sunrise Device obelisk, the supply-cap and veterancy pages follow design 13/14 as written, and the 36 pages of new text
+are approved (draft stamps removed). The PDF and the 2-page quick-reference card go in docs/field_manual. **Why:** owner, session 33 ("love the
+draft"). **Alternatives:** cut to ~108 pages with smaller type and no field notes; hide the obelisk. **Status:** owner decision
