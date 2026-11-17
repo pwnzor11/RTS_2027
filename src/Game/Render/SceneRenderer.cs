@@ -127,7 +127,7 @@ public sealed class SceneRenderer : IDisposable
         _viewport = viewport;
         if (map is not null)
         {
-            _terrain.Draw(batch, pixel, map, camera);
+            _terrain.Draw(batch, pixel, map, camera, frame.Sim?.Map, snapshot.Tick);
             _decor.Draw(batch, pixel, map, camera, viewport);
         }
         else
