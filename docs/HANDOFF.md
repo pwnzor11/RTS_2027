@@ -1,29 +1,17 @@
-# Handoff: Session 33 — Field Manual review and revisions; balance parked
-Last commit: `docs: Session 32 handoff` on `land/s32-handoff` (PR to main; main was 74ff251 = PR #106). Check it merged.
-Where things stand: session 32 landed D-266 (Expedition `aa_cap_before_air = 10` on top of D-265; Dir v Exp 62 -> 58 %) and D-270 (the AI rallies
-at its start cell until its first yard stands; Left Behind mirror top-left share 70 -> 58.5 %, Auth v LB 69.5 -> 64.7 %). Three Left Behind economy
-levers were screened and rejected (D-267 relocation for ore, D-268 harvester target, D-269 harvester shepherd); the owner accepted Auth v LB as it
-is. Campaign sweep 45/45 after each landing. Field Manual: full draft built (tools/booklet/full on branch `integ-s32m`, NOT on main), 144 pages +
-2-page quick-reference card, sent to the owner for one full review (Q-86). Decisions up to D-270. Open questions: Q-73 (deferred), Q-86.
-Current 128-game table (main): Auth v Dir 47.6, Auth v LB 64.7, Auth v Exp 36.8, Dir v LB 47.4, Dir v Exp 58.0, LB v Exp 49.1, Exp v Auth glass
-52.8, Exp v Dir glass 54.8, Exp v LB glass 69.0 (docs/balance/s31_balance.md, s32_balance.md).
+# Handoff: Session 33 (in progress) — Field Manual look pass; renders running on the cluster
+Last commit: integ-s33 (session 33 checkpoint; main is e4018940 = PR #107). PR #108 (land/s33-manual) holds the approved manual WITHOUT the look pass.
+Where things stand (checkpoint): owner approved the manual (D-271), then asked for a look pass (D-273): booklet colour grade (no pink),
+volumetric smoke in the 10 smoke stills, hero polish + detail renders, Expedition orange / Left Behind teal accents. Warzone tracks dropped (D-272).
+M10 roadmap items that were already done are ticked. Cluster jobs on huntsman (amd64, bpy 5.3, OIDN): `s33heroes` (151 hero renders, 1200 px,
+96 spp, script k3s-cluster claude/rts/h33-all.sh, branch wp/s33-hero; ~145 s per id, ~6 h) and `s33stills` (10 stills, claude/rts/stills33.sh,
+branch wp/s33-smoke). The Pis were too slow for these (2 h per hero at 3 cores, no OIDN).
 
 ## Start here (shown to the user as the plan; nothing starts until they say go)
-1. Handoff PR merged? Laptop: `git checkout main; git pull`.
-2. Field Manual (Q-86): take the owner's review notes, revise on `integ-s32m` (`python3 tools/booklet/full/book.py` rebuilds in ~40 s; one part
-   alone: `book.py <module>`), resend the PDF; once approved, merge integ-s32m and put the PDF in docs/field_manual (check its size first: 18 MB).
-3. M5-13 model run: needs the owner's API key on the laptop (never in chat).
-4. Balance is parked (owner, D-269). Remaining start-corner bias ~57 % top-left, mostly south-facing buildings (D-270); probe `Tools ai mirror`.
-
-## Half-finished work
-- Field Manual draft on `integ-s32m` (merged helper branches wp/s32-m-*): module owners in tools/booklet/full/COMMON.md. Helper notes worth a
-  look in revision: part3_entries packs pages by measuring heights with Playwright (needs Chromium); the Directorate hazard bar was changed to
-  oxblood stripes (owner picked oxblood + black); the "DRAFT" stamp now sits at the page foot.
-- Measurement branches to delete on GitHub: integ-s32, integ-s32b, integ-s32c, integ-s32d, integ-s32r, bal/s32-*, land/s32-docs*, land/s32-handoff (after merge), wp/s32-m-* (after
-  the manual merges), plus the session 31 list.
-
-## Waiting on the user
-- Field Manual review (Q-86). Two-PC LAN test (M9-15). API key for M5-13 (optional). Branch clean-up on GitHub (list above).
+1. Fetch both jobs (`kjob.py fetch s33heroes|s33stills <dir>`), check `times.txt` and logs for FAILED ids, rerun failures.
+2. Copy renders into art/booklet/<faction>/ and data/images/stills/ on integ-s33 (both may be LFS: check .gitattributes; push LFS from the
+   cloud with push access, else the owner's bundle route), contact sheet check, `python3 tools/booklet/full/book.py`, copy the PDF and card
+   to docs/field_manual, send the owner the PDF, refresh land/s33-manual or open a new land branch, PR, CI green, owner OK to merge.
+3. Then wrap up (session 33 log, handoff).
 
 ## How to run this session
 - Session 32 lessons:
