@@ -568,3 +568,5 @@ On main after the session 31 PR. Back up nothing: development saves and replays 
 - **Balance (D-266):** the Expedition skirmish AI stops building Sparkers (anti-air only) past 10 until it sees an enemy aircraft. Play Directorate v
   Expedition on a Rust Belt map at tier 3: count the Expedition's Sparkers before you build any aircraft; there should never be more than 10, and
   the rest of its army should be ground units.
+- **AI rally before deploying (D-270):** start a skirmish against a Left Behind or Expedition AI from the bottom-right start. In the first
+  seconds its starting units stay near their own start instead of walking toward the top-left corner of the map.

@@ -1964,3 +1964,11 @@ field, or map-side ore near the Left Behind's corner. **Status:** measurement (s
 (64 games): no setting moves Authority v Left Behind toward 50 % without another row moving 5+ points away (docs/balance/s32_balance.md).
 **Alternatives:** an escort/route rule for Left Behind harvesters (code), or accept Authority v Left Behind ~66-70 % as faction asymmetry for now.
 **Status:** measurement (session 32).
+
+### D-270 · 2026-11-17 · Session 32: AI rally before the first yard; start-corner bias probe
+**Decision:** the skirmish AI rallies at its start cell until its first yard stands (it rallied to the unset (0,0), the top-left corner, while
+a Left Behind Mother Rig was packed or an Expedition Command Ship undeployed). New diagnostic `Tools ai mirror`. **Why:** the bug gave the
+top-left start a head start in Left Behind and Expedition games; with the fix the Left Behind mirror's top-left share falls 70 -> 58.5 % and
+Authority v Left Behind moves 69.5 -> 64.7 %, no row moves away from 50 % by more than 0.8, campaign 45/45 (docs/balance/s32_balance.md).
+The remaining bias (about 57 % top-left) is mostly inherent: all buildings face south. **Alternatives:** a mirror-safe start-cell rounding
+(dropped: no probe effect, moved Dir v Exp 6 points). **Status:** lands in the session 32 PR (owner: "Land the rally bug fix and remeasure").
