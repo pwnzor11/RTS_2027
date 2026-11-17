@@ -175,6 +175,50 @@ public sealed class AudioDeriverKeysTests
         Assert.Contains(new AudioEvent(AudioEventKind.ExplosionSmall, at), e);
     }
 
+    private static int Warhead(string id)
+    {
+        for (int w = 0; w < Rules.Warheads.Count; w++) if (Rules.Warheads[w].Id == id) return w;
+        throw new InvalidOperationException(id);
+    }
+
+    [Theory]   // S31: exp_rad_burst plays for heavy radiation blasts
+    [InlineData("dir_rad_shell", 1, AudioEventKind.ExplosionSmall)]
+    [InlineData("dir_meltdown_blast", 1, AudioEventKind.ExplosionSmall)]
+    [InlineData("auth_atomic_blast", 5, AudioEventKind.ExplosionLarge)]
+    [InlineData("dir_sunrise_blast", 5, AudioEventKind.ExplosionLarge)]
+    public void AHeavyRadiationBlastIsARadiationBurst(string warhead, int size, AudioEventKind kind)
+    {
+        LeptonCoord at = Cell(8, 8);
+        List<AudioEvent> e = Derive(Snap(1), Snap(2, fx: new[] { new FxEvent(FxKind.Detonation, at, size, Warhead(warhead)) }));
+        Assert.Contains(new AudioEvent(kind, at, AudioRules.RadiationQualifier), e);
+    }
+
+    [Theory]
+    [InlineData("dir_sow")]
+    [InlineData("dir_ash")]
+    [InlineData("auth_seismic")]
+    public void ALightOrCleanBlastIsAPlainExplosion(string warhead)
+    {
+        LeptonCoord at = Cell(8, 8);
+        List<AudioEvent> e = Derive(Snap(1), Snap(2, fx: new[] { new FxEvent(FxKind.Detonation, at, 1, Warhead(warhead)) }));
+        Assert.Contains(new AudioEvent(AudioEventKind.ExplosionSmall, at), e);
+    }
+
+    [Fact]
+    public void TheRadiationBurstEventsPlayTheRadBurstSound()
+    {
+        string toml = File.ReadAllText(Path.Combine(RepoRoot(), "data", "audio", "sounds.toml"));
+        Assert.Contains("[event.explosion_small.radiation]\nsounds = [\"exp_rad_burst\"]", toml.Replace("\r\n", "\n"));
+        Assert.Contains("[event.explosion_large.radiation]\nsounds = [\"exp_rad_burst\"]", toml.Replace("\r\n", "\n"));
+    }
+
+    private static string RepoRoot()
+    {
+        string? d = AppContext.BaseDirectory;
+        while (d is not null && !File.Exists(Path.Combine(d, "RTS_2027.slnx"))) d = Path.GetDirectoryName(d);
+        return d ?? throw new InvalidOperationException("repo root");
+    }
+
     [Fact]
     public void ABlastBelowABomberIsABombExplosion()
     {

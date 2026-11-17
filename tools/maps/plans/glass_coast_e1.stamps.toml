@@ -499,3 +499,50 @@ density = 2
 overlay = "Wreck"
 x = 34
 y = 72
+
+# === Full showcase dressing (D-264 (2), s31): a checkpoint on the central dunes, a dead-tree grove on the eastern dunes, another ruined block, ===
+# === more wreck yards, driftwood snags and fence posts. Every op also lands on its half-turn image. Mission cells stay clear (keeps above). ===
+[[stamp]]
+id = "checkpoint"
+x = 40
+y = 40
+
+[[stamp]]
+id = "grove"
+x = 50
+y = 57
+
+[[stamp]]
+id = "ruined_block"
+x = 10
+y = 68
+
+[[prop]]
+overlay = "Snag"
+x = 12
+y = 64
+[[prop]]
+overlay = "Snag"
+x = 14
+y = 65
+density = 1
+[[prop]]
+overlay = "Pylon"
+x = 13
+y = 63
+density = 1
+
+[[prop]]
+overlay = "Wreck"
+x = 22
+y = 60
+density = 2
+[[prop]]
+overlay = "Block"
+x = 23
+y = 60
+density = 1
+[[prop]]
+overlay = "Wreck"
+x = 22
+y = 62

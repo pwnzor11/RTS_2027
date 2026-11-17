@@ -18,6 +18,9 @@ public enum FxKind : byte
     InstantHit = 4,
     /// <summary>M4: soldiers left a garrisoned building (Unload, death, sale or capture). Pos = the building centre, Size = soldiers ejected.</summary>
     GarrisonExit = 5,
+    /// <summary>M12-16 (D-264): a destructible prop (Tree, Snag, Wreck) was destroyed by splash or crushed by a heavy vehicle this tick. Pos = the cell centre, Size = 1.
+    /// The overlay is already cleared and the cell is Rough when the renderer sees this.</summary>
+    PropDestroyed = 6,
 }
 
 /// <summary>

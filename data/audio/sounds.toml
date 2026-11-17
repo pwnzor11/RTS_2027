@@ -859,6 +859,19 @@ volume = 1
 positional = true
 cooldown_ms = 150
 
+# S31: a blast whose warhead lays radiation >= 80 (rad shell, Meltdown, the superweapon blasts); AudioRules.RadiationBurstContaminate.
+[event.explosion_small.radiation]
+sounds = ["exp_rad_burst"]
+volume = 1
+positional = true
+cooldown_ms = 150
+
+[event.explosion_large.radiation]
+sounds = ["exp_rad_burst"]
+volume = 1
+positional = true
+cooldown_ms = 150
+
 [event.fire_bullet.flame]
 sounds = ["wpn_flame"]
 volume = 0.8

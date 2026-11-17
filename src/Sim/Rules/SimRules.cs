@@ -43,6 +43,9 @@ public sealed record SimRules(
     /// <summary>Home shipment constants (game.toml [shipments], M7-02). Disabled and design defaults when the table is absent.</summary>
     public ShipmentRules Shipments { get; init; } = ShipmentRules.Default;
 
+    /// <summary>Destructible prop constants (game.toml [props], M12-16, D-264). Defaults when the table is absent.</summary>
+    public PropRules Props { get; init; } = PropRules.Default;
+
     /// <summary>Start kit per faction, indexed by <c>(int)</c><see cref="Faction"/> (game.toml [faction.&lt;name&gt;], M3).
     /// Always <see cref="RuleCounts.Factions"/> entries; ids are validated lazily by <see cref="ResolveStartKit"/>.</summary>
     public IReadOnlyList<FactionStartKit> StartKits { get; init; } =

@@ -133,6 +133,10 @@ public sealed class PathService : ISimStatePart
     /// Simulation from the rules. A penalty only adds cost, so the MinFactor heuristic stays admissible.</summary>
     public int AshPathPenalty { get; set; } = 1;
 
+    /// <summary>M12-16 (D-264): path-cost multiplier for a <see cref="MoveClass.TrackedCrusher"/> request entering a Tree or Snag cell (1 = none). Set by
+    /// the Simulation from the rules ([props] crush_path_penalty). A penalty only adds cost, so the MinFactor heuristic stays admissible.</summary>
+    public int CrushPathPenalty { get; set; } = 1;
+
     /// <summary>Test hook: when false the cache is bypassed. Results and costs must be identical either way.</summary>
     internal bool CacheEnabled { get; set; } = true;
 
@@ -286,6 +290,7 @@ public sealed class PathService : ISimStatePart
         int f = 10000 / sp;
         if (f < 1) f = 1;
         if (loco == Locomotion.Foot && AshPathPenalty > 1 && OverlayKinds.IsResource(_map.OverlayAt(c))) f *= AshPathPenalty;   // S19 M13-12: soldiers skirt fields
+        if (loco == MoveClass.TrackedCrusher && CrushPathPenalty > 1 && OverlayKinds.IsCrushable(_map.OverlayAt(c))) f *= CrushPathPenalty;   // M12-16: crushing is a small detour's worth
         return f;
     }
 

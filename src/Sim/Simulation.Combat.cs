@@ -370,6 +370,7 @@ public sealed partial class Simulation
         WarheadType wh = RulesOf(owner).Warheads[warheadIndex];
         ApplyWarheadGround(wh, impact.ToCell(), wh.Splash < 0 ? 0 : wh.Splash);   // M3-05: contaminate / decontaminate / Blackout
         ApplyWarheadFoam(wh, impact.ToCell(), wh.Splash < 0 ? 0 : wh.Splash);     // M4-05: Quick-Set Foam
+        if (wh.Splash >= 1) DamageProps(impact.ToCell(), wh.Splash, damage, wh, 0);   // M12-16: splash destroys Tree, Snag, Wreck; splash 0 never touches a prop
         if (instant && wh.Splash <= 0)
         {
             _fx.Add(new FxEvent(FxKind.InstantHit, impact, 1));   // M3-12: a hitscan hit shows its impact, like a shell's landing
@@ -378,7 +379,7 @@ public sealed partial class Simulation
             return;
         }
         int radius = wh.Splash < 0 ? 0 : wh.Splash;
-        _fx.Add(new FxEvent(FxKind.Detonation, impact, Math.Max(1, radius)));
+        _fx.Add(new FxEvent(FxKind.Detonation, impact, Math.Max(1, radius), warheadIndex));   // S31: the warhead tells audio a radiation burst
         CellCoord ic = impact.ToCell();
         bool single = wh.Splash <= 0;           // M2-19: a splash-0 shell hurts one actor of the impact cell
         ActorRef first = default;

@@ -1926,3 +1926,22 @@ than 3 points the wrong way; the Left Behind levers pull Directorate v Left Behi
 **Alternatives:** land cap 5 (Dir v Exp 50 %) and accept Auth v Exp 28 % (breaks D-257); Directorate-side or siege levers next session.
 **Status:** measurement (session 30), under D-257.
 
+
+### D-264 · 2026-11-16 · Session 31 owner answers (landing rule, map work, destructible props)
+**Decision:** (1) Supersedes D-257 (1): an AI balance change lands when its target row moves toward 50 % over 128 games (seeds 1-64) and no other
+cross-faction row moves 5 points or more away from 50 % (was 3). (2) Map work this session: full showcase dressing of glass_coast_e1 and ash_reckoning
+(missions on them re-walked and retuned, as D-262 did for rustbelt_m2), real prop and decal sprites in the map editor view, and M12-16 destructible
+props. (3) M12-16 rules (design 16 D1 option C): tiered. Heavy ground vehicles crush Tree and Snag by driving over them; splash damage destroys Tree,
+Snag and Wreck (Wreck tough); Block and Pylon never break. A destroyed prop leaves Rough ground. AI: crushers path through crushable props at a small
+cost; the AI never targets props on purpose. Applies everywhere (skirmish, LAN, campaign); missions on the three data maps are re-walked after it lands.
+(4) exp_rad_burst plays for detonations whose warhead lays radiation >= 80 (rad shell, Meltdown, both superweapon blasts) as
+`explosion_small.radiation` / `explosion_large.radiation`; detonation fx events now carry the warhead index.
+**Why:** owner answers at the session 31 briefing; (4) owner asked to wire the sound, threshold ASSUMED by Claude so the Ash Sower spray (60) stays plain.
+**Status:** decided (owner); (4) threshold assumed — confirm.
+
+### D-265 · 2026-11-17 · Session 31 balance: Directorate tier-3 attack ratio 140 lands
+**Decision:** `[faction.directorate.tier3] attack_ratio_pct = 140` (shared veteran table 110). On 128 games with M12-16 in: Dir v Exp 70 -> 62 %,
+Auth v Dir 45 -> 48 %, Exp v Dir glass 58 -> 54 %, Dir v LB 47 -> 48 %; rows without the Directorate unchanged; distance from 50 89 -> 73
+(docs/balance/s31_balance.md). **Why:** meets D-264 (every touched row moves toward 50 %). **Alternatives:** army caps (d2/d3), unit reserve (d1),
+attack threshold (d5), Sparker caps (k10, kd) all failed D-264 on the screen. **Status:** measurement under D-264 (owner rule), campaign sweep
+re-run with it.

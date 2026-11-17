@@ -563,3 +563,17 @@ missions on the map meet D-222 (D-262); new unset AI keys `aa_cap_before_air`, `
 little: most glass draws are an Expedition collapse or a self-repairing Mother Rig, not a search failure.
 **Next session should:** see HANDOFF (Directorate-side or siege levers for Directorate v Expedition; M5-13 when a key is set).
 
+
+## Session 31 · 2026-11-16/17 (destructible props, two maps dressed, editor sprites, rad burst, first balance change since s27)
+**Goal:** owner: resume; Headlamp token location; answers: balance and maps both, landing rule 5 points (D-264), offload to the cluster, wire
+exp_rad_burst; map work = dress glass_coast_e1 and ash_reckoning, editor sprites, M12-16 destructible props (tiered, Rough, pathing only, everywhere).
+**Done:** exp_rad_burst on radiation blasts (detonation fx carry the warhead). M12-16 destructible props + M12-16b repaint (helpers s31-destruct,
+s31-redraw). Editor sprites (s31-editor). glass_coast_e1 and ash_reckoning full dressing (s31-glass, s31-ash; no retune). Balance: 10 variants
+screened on the cluster, d4 (Directorate tier-3 attack_ratio_pct 140) passed on 128 games on old and new rules, lands (D-265). Campaign sweep 45/45
+on the cluster, before and after D-265. Windows CI on PR #99.
+**Decisions:** D-264, D-265.
+**Helpers:** 3 Sonnet (destruct ~110 min, glass ~70 min, ash ~100 min), 2 Haiku (editor ~13 min, redraw ~9 min); no fix rounds. One lead test fix
+(faction tier override in a test rig).
+**Problems / notes:** laptop two sessions behind main (replanned after the clone); three server restarts (helpers resumed); 3-CPU build pods
+starved behind a series (resubmitted at 1 CPU); the safety check refused deleting the old failed cluster job s29s.
+**Next session should:** see HANDOFF.

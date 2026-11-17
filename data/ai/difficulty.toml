@@ -75,6 +75,11 @@ harass_min_army = 30
 [faction.directorate]
 harass_min_army = 14
 
+# D-265 (s31): the Directorate tier-3 AI waits for a bigger edge before it attacks (shared veteran table: 110). On 128 games with destructible props
+# every Directorate row moved toward 50 % (Dir v Exp 70 -> 62, Auth v Dir 45 -> 48, Exp v Dir glass 58 -> 54, Dir v LB 47 -> 48); docs/balance/s31_balance.md.
+[faction.directorate.tier3]
+attack_ratio_pct = 140  # (tune) s31
+
 [faction.left_behind]
 harass_min_army = 30
 

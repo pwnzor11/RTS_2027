@@ -20,9 +20,10 @@ internal static class GameRulesLoader
     private const string VeterancySection = "veterancy"; // VET-1
     private const string SupplySection = "supply";       // SUP-1
     private const string ShipmentsSection = "shipments"; // M7-02
+    private const string PropsSection = "props";         // M12-16
 
     private static readonly string[] TopLevel =
-        [Section, EconomySection, TunnelsSection, RadiationSection, StealthSection, FactionSection, GarrisonSection, FoamSection, VeterancySection, SupplySection, ShipmentsSection];
+        [Section, EconomySection, TunnelsSection, RadiationSection, StealthSection, FactionSection, GarrisonSection, FoamSection, VeterancySection, SupplySection, ShipmentsSection, PropsSection];
 
     /// <summary>Parses the [game] table. Returns null when any problem was recorded.</summary>
     public static GameRules? Parse(TomlTable root, string file, List<RulesProblem> problems)
@@ -236,6 +237,25 @@ internal static class GameRulesLoader
         f.CheckKeys("speed_permille");
         int? speed = f.OptInt("speed_permille", 0, 1000, FoamRules.Default.SpeedPermille);
         return speed is null ? null : new FoamRules(speed.Value);
+    }
+
+    /// <summary>Parses the optional [props] table (M12-16, D-264); every key optional with the <see cref="PropRules.Default"/> value. Null after a problem.</summary>
+    public static PropRules? ParseProps(TomlTable root, string file, List<RulesProblem> problems)
+    {
+        PropRules d = PropRules.Default;
+        RulesFields? f = OptionalTable(root, PropsSection, file, problems);
+        if (f is null)
+        {
+            return root.ContainsKey(PropsSection) ? null : d;
+        }
+        f.CheckKeys("tree_health", "snag_health", "wreck_health", "splash_armor", "crush_path_penalty");
+        int? tree = f.OptInt("tree_health", 1, ushort.MaxValue, d.TreeHealth);
+        int? snag = f.OptInt("snag_health", 1, ushort.MaxValue, d.SnagHealth);
+        int? wreck = f.OptInt("wreck_health", 1, ushort.MaxValue, d.WreckHealth);
+        ArmorClass? armor = f.OptChoice("splash_armor", RulesEnums.ParseArmor, RulesEnums.ArmorKeys, d.SplashArmor);
+        int? penalty = f.OptInt("crush_path_penalty", 1, 100, d.CrushPathPenalty);
+        if (tree is null || snag is null || wreck is null || armor is null || penalty is null) return null;
+        return new PropRules(tree.Value, snag.Value, wreck.Value, armor.Value, penalty.Value);
     }
 
     /// <summary>Parses the optional [veterancy] table (VET-1, docs/design/14_veterancy.md §3); every key optional with the design default,

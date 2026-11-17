@@ -64,6 +64,7 @@ public sealed partial class RulesOfSweepGrepTests
         ("Simulation.Shipments.cs", "Setup.Rules.Shipments"), ("Simulation.Shipments.cs", "Setup.Rules.Vehicles"),
         ("Simulation.Shipments.cs", "Setup.Rules.Terrain"), ("Simulation.VehiclePassengers.cs", "Setup.Rules.Terrain"), ("Simulation.VehiclePassengers.cs", "Setup.Rules.Terrain.Landing"),   // M7-04b: terrain is not upgradable
          ("View/PlayerView.cs", "Setup.Rules.Shipments.Enabled"),
+        ("Simulation.Props.cs", "Setup.Rules.Props"),   // M12-16: the [props] block is global (not upgradable); one accessor (PropRulesOf) reads it
         ("Simulation.Landing.cs", "Setup.Rules.Terrain"),   // M7-04: terrain table lookups, not upgradable
     };
 

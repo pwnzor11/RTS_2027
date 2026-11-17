@@ -51,3 +51,11 @@ units = []
 [faction.directorate]
 conyard = "dir_shaft"
 units = []
+
+# M12-16 (D-264 (3)): destructible blocking props (same values as data/rules/game.toml).
+[props]
+tree_health = 40
+snag_health = 40
+wreck_health = 160
+splash_armor = "structure"
+crush_path_penalty = 3

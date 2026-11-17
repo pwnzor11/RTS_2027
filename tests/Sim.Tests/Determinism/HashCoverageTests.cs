@@ -183,6 +183,7 @@ public class HashCoverageTests
         ["PathService.CacheEnabled"] = "a switch for tests and benchmarks; results do not depend on it",
         ["PathService._passer"] = "passer of the request being solved, set at the start of every solve (M3-04 scratch)",
         ["PathService.GateOpen"] = "gate rule delegate wired by the Simulation constructor; a pure function of hashed state (M3-04)",
+        ["PathService.CrushPathPenalty"] = "M12-16: copied from the rules ([props] crush_path_penalty, in RulesHash) by the Simulation constructor",
         ["PathService.AshPathPenalty"] = "S19 M13-12: copied from the rules ([radiation] ash_path_penalty, in RulesHash) by the Simulation constructor",
         ["PathService.LastProcessCount"] = "diagnostics for tests: requests solved by the last Process call; never read by the sim (M13-05)",
         ["PathService.LastProcessCost"] = "diagnostics for tests: expansions charged by the last Process call; never read by the sim (M13-05)",

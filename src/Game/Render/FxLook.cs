@@ -20,6 +20,7 @@ public sealed class FxLook : IDisposable
     private readonly DamageTierTracker _tiers = new();
     private readonly DeathWatcher _deaths = new();
     private readonly DustEmitter _dust = new();
+    private readonly PropDust _propDust = new();   // M12-16: the cloud where a prop fell
     private readonly RemainsBook _remains = new();
     private readonly PuffField _puffs = new();
     private readonly List<TierChange> _changes = new();
@@ -82,6 +83,7 @@ public sealed class FxLook : IDisposable
         }
 
         _dust.Observe(snapshot, rules, _puffs, mood.DustColour);
+        _propDust.Observe(snapshot, _puffs, mood.DustColour);
     }
 
     // ---- bursts ------------------------------------------------------------------------------------------------------------------

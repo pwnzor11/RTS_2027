@@ -490,6 +490,27 @@ id = "grove"
 x = 20
 y = 55
 
+# --- S31 (D-264 2) showcase additions: a checkpoint on the plain, more ruined blocks, groves and crater fields ---
+[[stamp]]
+id = "checkpoint"
+x = 84
+y = 36
+
+[[stamp]]
+id = "ruined_block"
+x = 70
+y = 8
+
+[[stamp]]
+id = "grove"
+x = 65
+y = 44
+
+[[stamp]]
+id = "crater_field"
+x = 70
+y = 32
+
 # --- a yard for the ruin at (28,10): wrecks, blocks and a snag within four cells ---
 [[prop]]
 overlay = "Wreck"
@@ -517,3 +538,24 @@ y = 13
 overlay = "Pylon"
 x = 25
 y = 11
+
+
+# --- S31: a wreck and snag yard beside the checkpoint, a pylon line and a lone tree row ---
+[[prop]]
+overlay = "Snag"
+x = 68
+y = 22
+density = 1
+[[prop]]
+overlay = "Pylon"
+x = 52
+y = 4
+[[prop]]
+overlay = "Tree"
+x = 80
+y = 30
+density = 1
+[[prop]]
+overlay = "Snag"
+x = 82
+y = 32

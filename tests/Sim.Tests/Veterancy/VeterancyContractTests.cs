@@ -35,11 +35,11 @@ public sealed class VeterancyContractTests
         Assert.Equal(13, SimWriter.SaveVersion);   // M7-02 took 12 (VET-1: 11)
         Assert.Equal(13, ReplayWriter.Version);
         Assert.Equal(7, ReplayWriter.OldestReadableVersion);
-        Assert.Equal(11, RulesHash.FormatVersion);
+        Assert.Equal(12, RulesHash.FormatVersion);
         var sim = ScriptedGame.NewSim(ScriptedGame.Setup());
         string[] names = sim.StateParts.Select(p => p.Name).ToArray();
-        Assert.Equal(new[] { "rigs", "salvage", "veterancy", "shipments", "beachhead", "naval", "commander_orders" }, names[^7..]);
-        Assert.Same(sim.Veterancy, sim.StateParts[^5]);
+        Assert.Equal(new[] { "rigs", "salvage", "veterancy", "shipments", "beachhead", "naval", "commander_orders", "props" }, names[^8..]);
+        Assert.Same(sim.Veterancy, sim.StateParts[^6]);
     }
 
     [Fact]

@@ -28,6 +28,9 @@ public sealed class Minimap : IDisposable
     private readonly Simulation? _sim;
     private readonly byte _local;
     private Texture2D? _terrain;
+    private MinimapTerrain? _cells;            // M12-16: the terrain pixels, kept in step with the live sim
+    private MapState? _cellsSynced;
+    private int _cellsTick = int.MinValue;
     private Texture2D? _fog;
     private int _fogTick = -1;
     private readonly Color[] _fogPixels;
@@ -61,6 +64,7 @@ public sealed class Minimap : IDisposable
         if (m.Image.IsEmpty) return;
         GraphicsDevice device = pixel.GraphicsDevice;
         _terrain ??= BakeTerrain(device);
+        SyncTerrain(snapshot.Tick);
         batch.Draw(_terrain, m.Image, Color.White);
 
         foreach (BuildingView b in snapshot.Buildings)
@@ -147,12 +151,23 @@ public sealed class Minimap : IDisposable
             palette = null;
         }
 
-        var pixels = new Color[_map.Width * _map.Height];
-        for (int i = 0; i < pixels.Length; i++)
-            pixels[i] = TerrainColour(palette, _map.Land[i], _map.Overlay[i], _map.Density[i]);
+        _cells = new MinimapTerrain(_map, palette);
         var texture = new Texture2D(device, _map.Width, _map.Height);
-        texture.SetData(pixels);
+        texture.SetData(_cells.Pixels);
         return texture;
+    }
+
+    /// <summary>Once per sim tick: re-uploads only the pixels of the cells the live sim changed (M12-16, a destroyed prop).</summary>
+    private void SyncTerrain(int tick)
+    {
+        MapState? live = _sim?.Map;
+        if (_cells is null || _terrain is null || live is null) return;
+        if (ReferenceEquals(live, _cellsSynced) && tick == _cellsTick) return;
+        _cellsSynced = live;
+        _cellsTick = tick;
+        int w = _cells.Width;
+        foreach (int i in _cells.Sync(live))
+            _terrain.SetData(0, new Rectangle(i % w, i / w, 1, 1), new[] { _cells.Pixels[i] }, 0, 1);
     }
 
     /// <summary>The minimap colour of a cell. With a theater palette: the land's base shade, tinted by ashfall or pitchblende.</summary>

@@ -54,6 +54,7 @@ namespace Rts.Data;
 /// CharterTicks, TendersMax, LocalAshBonusPermille, TenderType (M7-06); per vehicle DrawScalePermille, DeepOnly, Submerges, SonarRadius, AircraftSlots,
 /// SortieTicks, UnloadTicks, VehicleSlots (M7-04b), then Ammo and RearmTicks only for a type with either set (D-156); per building WaterBuilding, WaterMask (count, then cells), BeachheadSource, BeachheadRadius, ShipmentDock (M7-06), SonarRadius (simfu-4); then per warhead SalvoMissiles, SalvoTicks, SalvoRadius, SalvoDamage, SalvoWarnTicks, SalvoSplash (M7-12). The terrain
 /// table above grows with the land and locomotion counts (Coast, Naval).</item>
+/// <item>Schema v9 block (M12-16, format 12): Props TreeHealth, SnagHealth, WreckHealth, SplashArmor (byte), CrushPathPenalty.</item>
 /// </list>
 /// Hashed with XxHash64. Whitespace, comments and key order in the TOML do not affect it. The loader sorts each
 /// list by id before this runs.
@@ -61,7 +62,7 @@ namespace Rts.Data;
 public static class RulesHash
 {
     /// <summary>Canonical layout version. Bump only with a DECISIONS entry.</summary>
-    public const byte FormatVersion = 11;   // 11: schema v8 block (M7-02); 10: schema v7 block (SUP-1); 9: schema v6 block (VET-1); 6: schema v3 block (M3-01); 7: schema v4 block + Shallow land (M4-01); 8: schema v5 block (M6-02)
+    public const byte FormatVersion = 12;   // 12: schema v9 block (M12-16, D-264); 11: schema v8 block (M7-02); 10: schema v7 block (SUP-1); 9: schema v6 block (VET-1); 6: schema v3 block (M3-01); 7: schema v4 block + Shallow land (M4-01); 8: schema v5 block (M6-02)
 
     /// <summary>Computes the rules hash over the game constants and every sim type table.</summary>
     public static ulong Compute(GameRules game, SimRules sim)
@@ -202,6 +203,7 @@ public static class RulesHash
             WriteSchemaV6(w, sim);
             WriteSchemaV7(w, sim);
             WriteSchemaV8(w, sim);
+            WriteSchemaV9(w, sim);
         }
         return XxHash64.HashToUInt64(ms.GetBuffer().AsSpan(0, (int)ms.Length));
     }
@@ -291,6 +293,12 @@ public static class RulesHash
         foreach (VehicleType x in sim.Vehicles) w.Write(x.Supply);
         foreach (InfantryType x in sim.Infantry) w.Write(x.Supply);
         foreach (BuildingType x in sim.Buildings) { w.Write(x.SupplyProvided); w.Write(x.SupplyUnstocked); }
+    }
+
+    private static void WriteSchemaV9(BinaryWriter w, SimRules sim)
+    {
+        PropRules p = sim.Props;   // M12-16 (D-264)
+        w.Write(p.TreeHealth); w.Write(p.SnagHealth); w.Write(p.WreckHealth); w.Write((byte)p.SplashArmor); w.Write(p.CrushPathPenalty);
     }
 
     private static void WriteSchemaV8(BinaryWriter w, SimRules sim)

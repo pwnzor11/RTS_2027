@@ -1,32 +1,43 @@
-# Handoff: Session 31 — Directorate v Expedition from the Directorate/siege side; M5-13 model run when the key is set
-Last commit: `docs: Session 30 handoff` on `land/s30-r2` (PR to main). Check it merged; PR #97 (rustbelt_m2 dressing, AI keys) is merged.
-Where things stand: session 30 landed PR #97 (rustbelt_m2 full showcase, Q-85 (b), D-262). No balance change (D-263): 16 variants screened on the
-cluster, none meets D-257. Main at 128 games is unchanged from session 28 (table in docs/balance/s28_balance.md). Decisions up to D-263. Open
-questions: Q-73 (deferred).
+# Handoff: Session 32 — Authority v Left Behind and Expedition v Left Behind glass; Sparker cap on top of D-265; M5-13 when a key is set
+Last commit: `docs: Session 31 handoff` on `integ-s31` (PR #99 to main). Check it merged.
+Where things stand: session 31 landed (PR #99) M12-16 destructible props (D-264: crushers flatten Tree/Snag, splash breaks Tree/Snag/Wreck, Rough
+left behind, crusher pathing) with M12-16b live ground/minimap repaint, real prop/decal sprites in the map editor, the full showcase dressing of
+glass_coast_e1 and ash_reckoning, exp_rad_burst on radiation blasts (contaminate >= 80, threshold assumed — confirm), and the first balance change
+since s27: Directorate tier-3 attack_ratio_pct 140 (D-265). Landing rule is now D-264 (5 points). Campaign sweep with all of it: 45/45 tiers meet
+D-222. Main at 128 games WITH M12-16 (new baseline, docs/balance/s31_balance.md): Auth v Dir 47.6 %, Auth v LB 69.5 %, Auth v Exp 41.9 %, Dir v LB
+47.8 %, Dir v Exp rust 62.1 %, LB v Exp 53.5 %, Exp v Auth glass 52.8 %, Exp v Dir glass 53.8 %, Exp v LB glass 69 %. Decisions up to D-265.
+Open questions: Q-73 (deferred).
 
 ## Start here (shown to the user as the plan; nothing starts until they say go)
-1. Session 30 handoff PR: CI green? merged? (Claude may merge once Windows CI is green.)
-2. Directorate v Expedition rust (70 % on 128 games, 30 draws; 73 % on the 64-game screen baseline): Expedition-wide levers are exhausted (docs/balance/s30_balance.md: any help costs
-   Authority v Expedition and the glass rows). Look at the Directorate side (base defences, repair between waves) or the Expedition siege against
-   defences (traces of the draws first; siege_commit_ratio did nothing alone in s29). Measure all nine rows, 64 then 128 games.
-3. Authority v Left Behind 70 %: neither the Authority levers (s29) nor the Left Behind cap (s30) pass; an Authority-v-LB-specific cause is needed
-   (trace first).
-4. M5-13 model run: needs the owner's ANTHROPIC_API_KEY or OPENAI_API_KEY set on the laptop (never in chat); read against D-260 (21 % / 53 %).
-5. Mirror start-corner bias (owner: later).
+1. PR #99: CI green? merged? (Claude may merge once Windows CI is green.)
+2. Balance on the s31 baseline (Auth v Exp, LB v Exp, Exp v Auth/LB glass rows of the s31 baseline were measured without D-265; they have no
+   Directorate so they stand): Sparker cap 9-10 on top of D-265 (kd showed cap 8 + a Directorate cap reaches Dir v Exp ~50 but costs the
+   Authority 8 points); Authority v Left Behind 69.5 % and Expedition v Left Behind glass 69 % need a matchup-specific cause (trace first).
+3. M5-13 model run: needs the owner's API key on the laptop (never in chat).
+4. Mirror start-corner bias (owner: later).
 
 ## Half-finished work
-- Variant branches bal/s30-* (s1-s3, f1, g1-g3, h1-h4, k3, k5, k8, l3, l4, m1, n6, n8, n10) are measurement only (delete on GitHub); h1-h4 were never
-  measured. The keys `aa_cap_before_air`, `retreat_floor_pct`, `mopup_hunt` are in the code and unset; the Sparker cap is a smooth dial (8-10 near
-  main) if a later change makes room for it.
-- exp_rad_burst is installed but no event plays it. Editor props/decals draw as tints in the editor view; Grapeshot AI trigger "(tune)";
-  two-PC LAN test waits on the owner.
+- Variant branches bal/s31-* (d1-d7, k10, kd, dk, d4i) are measurement only (delete on GitHub); dk (d4 + Sparker cap 10) was screened on the old
+  rules only partly (cluster job s31s3, results in the laptop folder claude/rts/s31/out if fetched).
+- Grapeshot AI trigger "(tune)"; two-PC LAN test waits on the owner. PropDust (dust puffs) can miss a PropDestroyed event that happens in a middle
+  sim step at speed > 1 (the ground repaint does not: it diffs the live map).
 
 ## Waiting on the user
-- Pull main on the laptop (`git checkout main; git pull`; the laptop folder was still on the session 28 merge at the start of session 30).
-- Two-PC LAN test (M9-15); API key on the laptop for M5-13 (optional). Branch clean-up on GitHub: the session 29 list (integ-s24 ... bal/s29-*),
-  plus integ-s30, land/s30-r1, land/s30-r2 (after merge), bal/s30-*.
+- Pull main on the laptop (`git checkout main; git pull`; the laptop folder was on the session 28 merge at the start of session 31).
+- Confirm the exp_rad_burst threshold (Ash Sower spray stays quiet). Delete the failed cluster job `s29s` (216 red pods in Headlamp; the safety
+  check refused the delete): `kubectl -n work delete job s29s` on snowwhite. Two-PC LAN test (M9-15); API key for M5-13 (optional).
+- Branch clean-up on GitHub: the session 30 list, plus integ-s31 (after merge), wp/s31-*, bal/s31-*.
 
 ## How to run this session
+- Session 31 lessons:
+  - The laptop folder lagged main by two sessions; always read HANDOFF from origin/main (clone first) before briefing.
+  - Destructible props change generated skirmish maps (props are on them): any sim change that touches props or land voids the balance baseline.
+    Re-measure main with the change before judging variants (s31base pattern, 72 indices x 8 seeds).
+  - A per-faction tier table ([faction.<id>.tier<N>]) replaces the whole tier for that faction: tests that edit a profile with `with { }` must
+    apply the edit to `ForFaction` too (TierCapabilityTests.WaveProfile).
+  - Build pods: request 1 CPU (not 3) while a series fills the cluster, or they stay Pending; a 1-CPU Tools build takes ~15 min.
+  - Campaign sweep on the cluster: 135 indices in ~70 min at 8-22 parallel; sweeps on the 2-CPU box time out (helpers: walks + 6-seed scouting only).
+  - Three server restarts this session: helpers resumed by themselves; nothing committed was lost. Check worktrees with git log/status after each.
 - Session 30 lessons:
   - Screen a new key's smallest setting first: the "one Sparker allowed" mode behaved like the full key, so a cap (dial) was the useful form.
   - A rule-change screen of 9 variants x 4-6 rows (200 indices) takes ~2 h on 22 cluster cores; drop the series' parallelism to 16 before submitting

@@ -67,6 +67,12 @@ public sealed class AudioEventDeriver
             foreach (FxEvent e in fx)
             {
                 if (e.Kind == FxKind.InstantHit) continue;   // M3-12: small-arms hits sound as FireBullet below
+                if (e.Kind == FxKind.PropDestroyed)          // M12-16 (D-264): a fallen tree or wreck: the small explosion sound, where it stood
+                {
+                    events.Add(new AudioEvent(AudioEventKind.ExplosionSmall, e.Pos));
+                    continue;
+                }
+
                 if (rules is not null && e.Kind == FxKind.UnitDestroyed)
                 {
                     events.Add(UnitDeath(rules, prev, curUnitIds, e.Pos));
@@ -96,7 +102,8 @@ public sealed class AudioEventDeriver
                     }
                 }
 
-                events.Add(new AudioEvent(large ? AudioEventKind.ExplosionLarge : AudioEventKind.ExplosionSmall, e.Pos));
+                string? qualifier = rules is not null && e.Kind == FxKind.Detonation && rules.IsRadiationBurst(e.Warhead) ? AudioRules.RadiationQualifier : null;   // S31
+                events.Add(new AudioEvent(large ? AudioEventKind.ExplosionLarge : AudioEventKind.ExplosionSmall, e.Pos, qualifier));
             }
 
             // Shells: projectiles that exist now and did not before (count change plus the ones that just landed).

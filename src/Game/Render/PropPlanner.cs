@@ -63,6 +63,16 @@ public static class PropPlanner
         return list.ToArray();   // already in (row, column) order: the scan is row-major
     }
 
+    /// <summary>
+    /// M12-16: true while the blocking prop <paramref name="p"/> (planned once from the starting map) still stands on the live map. A tree
+    /// crushed or shelled clears its overlay in the sim, so the renderer checks this per visible prop and stops drawing it that tick.
+    /// </summary>
+    public static bool StillStands(PropInstance p, MapState live)
+    {
+        ArgumentNullException.ThrowIfNull(live);
+        return OverlayKinds.IsProp(live.OverlayAt(new CellCoord(p.CellX, p.CellY)));
+    }
+
     /// <summary>The sprite kind that draws a blocking overlay kind.</summary>
     public static PropKind KindOf(OverlayKind overlay) => overlay switch
     {
