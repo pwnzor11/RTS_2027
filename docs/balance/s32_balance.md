@@ -39,3 +39,20 @@ k10 lands (D-266): `[faction.expedition] aa_cap_before_air = 10`. Remaining outl
   Authority because Authority waves arrive while the Left Behind is starved; against the Expedition (weak early) it costs less.
 - Next: an AI rule that packs the Mother Rig (or sends a new rig) toward the nearest rich field when "near" ore drops below a threshold, measured on
   the Left Behind rows (Auth v LB, Dir v LB, LB v Exp, Exp v LB glass). Code change in the Left Behind AI; screen before landing.
+
+## Economic relocation screen (64 games, seeds 1-32; rejected)
+Rule (branch `integ-s32b`, commit 3c87b32): at tier 3+, with no armed enemy near the base and harvesters alive, when fewer than N ore cells lie
+within R cells of the Mother Rig, the rigs pack and move to the richest ore field (>= F cells within 6) on the own half, 14-44 cells away; only
+the refineries left behind are sold. e0 = the code with the rule off (game-for-game main: Auth v LB 39-20-5 on these seeds, same as s31base).
+
+| Row (LB side) | e0 (off) | e1 N4 R12 F10 | e2 N4 R12 F6 | e3 N8 R14 F6 | e4 N2 R10 F6 |
+|---|---|---|---|---|---|
+| Authority v Left Behind | 66.1 % | 78.3 % | 83.6 % | 81.4 % | 85.0 % |
+| Directorate v Left Behind | 51.7 % | 72.9 % | 76.3 % | 70.2 % | 67.7 % |
+| Left Behind v Expedition | 52.6 % | 46.4 % | 41.0 % | 31.6 % | 38.3 % |
+| Expedition v Left Behind glass | 64.4 % | 82.9 % | 86.7 % | 71.7 % | 77.4 % |
+
+Every setting makes the Left Behind 6-25 points weaker on every row. Moving the base for ore costs more than the shorter harvester trips give
+back: the rigs stop producing while packed and the new refinery has to be rebuilt. The diagnosis stands (Left Behind losses follow its income
+stalling once its corner is mined out and its harvesters die on long trips), but relocation is the wrong lever. Untried levers: protecting or
+replacing the Left Behind's harvesters, an earlier second refinery placed toward the next field, or more starting ore near its corner (map data).
