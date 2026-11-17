@@ -13,13 +13,13 @@ OUT = os.path.join(ROOT, "tools", "booklet", "render_manifest.toml")
 
 # Booklet accent per faction (the colour that the house paint is rendered in).  Values are PlayerColours.cs palette entries
 # (src/Game/Sprites/PlayerColours.cs, D-068): Authority keeps amber (slot 0, as in the pilot pages); the others are picked to
-# contrast their own body paint: Directorate warm greys and oxide red -> blue; Left Behind ochre, rust and teal -> purple;
-# Expedition navy, lagoon white and signal orange -> pink.  Change a value here and re-run; nothing else needs to know.
+# contrast their own body paint: Directorate warm greys and oxide red -> blue; Left Behind ochre, rust and teal -> teal (S33);
+# Expedition navy, lagoon white, copper and signal orange -> signal orange (S33: the mauve read pink).  Change a value here and re-run; nothing else needs to know.
 ACCENTS = {
     "authority": ("#E0A020", "amber", 0),
     "directorate": ("#2F76C0", "blue", 2),
-    "left_behind": ("#9360C8", "purple", 4),
-    "expedition": ("#E06AA8", "pink", 7),
+    "left_behind": ("#3F7C7A", "teal", 5),
+    "expedition": ("#D0702A", "orange", 6),
     "neutral": ("#E6E6DE", "white", 3),
 }
 PREFIX = {"auth": "authority", "dir": "directorate", "lb": "left_behind", "exp": "expedition", "neu": "neutral"}
