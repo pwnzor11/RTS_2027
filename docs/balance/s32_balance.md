@@ -56,3 +56,18 @@ Every setting makes the Left Behind 6-25 points weaker on every row. Moving the 
 back: the rigs stop producing while packed and the new refinery has to be rebuilt. The diagnosis stands (Left Behind losses follow its income
 stalling once its corner is mined out and its harvesters die on long trips), but relocation is the wrong lever. Untried levers: protecting or
 replacing the Left Behind's harvesters, an earlier second refinery placed toward the next field, or more starting ore near its corner (map data).
+
+## Harvester replacement screen (64 games, seeds 1-32; rejected)
+Data-only: `[faction.left_behind.tier3] harvester_target` (shared veteran table: 1, +1 after the expansion refinery; the Left Behind starts with
+3 and rebuilds only up to the target). Branches `bal/s32-h2..h4`; e0 as above.
+
+| Row (LB side) | e0 | h2 = 2 | h3 = 3 | h4 = 4 |
+|---|---|---|---|---|
+| Authority v Left Behind | 66.1 % | 67.9 % | 74.2 % | 61.4 % |
+| Directorate v Left Behind | 51.7 % | 48.3 % | 47.5 % | 45.8 % |
+| Left Behind v Expedition | 52.6 % | 50.9 % | 51.9 % | 54.5 % |
+| Expedition v Left Behind glass | 64.4 % | 63.0 % | 70.4 % | 72.9 % |
+
+No setting moves the target row toward 50 % without another row failing (h4: Auth v LB -4.7 but Exp v LB glass +8.5); h2 is within noise.
+Keeping more harvesters alive does not fix the Left Behind's mid-game stall either (more of them die on the same long trips, and the money held
+for them slows the army).

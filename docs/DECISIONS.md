@@ -1958,3 +1958,9 @@ cap (s31 kd: Auth v Exp 7.7 away). **Status:** lands in the session 32 PR (D-264
 measurement branch `integ-s32b`. **Why:** all four settings screened (64 games per Left Behind row) weaken the Left Behind by 6-25 points on every
 row (docs/balance/s32_balance.md). **Alternatives:** next session, harvester protection or replacement, an earlier second refinery toward the next
 field, or map-side ore near the Left Behind's corner. **Status:** measurement (session 32).
+
+### D-268 · 2026-11-17 · Session 32: no Left Behind harvester-target change
+**Decision:** `[faction.left_behind.tier3] harvester_target` stays unset (shared target). **Why:** 2, 3 and 4 screened on the four Left Behind rows
+(64 games): no setting moves Authority v Left Behind toward 50 % without another row moving 5+ points away (docs/balance/s32_balance.md).
+**Alternatives:** an escort/route rule for Left Behind harvesters (code), or accept Authority v Left Behind ~66-70 % as faction asymmetry for now.
+**Status:** measurement (session 32).
