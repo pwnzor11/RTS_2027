@@ -18,8 +18,8 @@ Open questions: Q-73 (deferred).
 
 ## Start here (shown to the user as the plan; nothing starts until they say go)
 1. PR #101 merged (main 89ef2ef). Docs PR land/s32-docs (D-267) merged?
-2. Left Behind economy: relocating for ore (D-267) and a higher harvester target (D-268) were screened and rejected. Left: an escort or
-   route rule for its harvesters, an earlier second refinery toward the next field, or accept Auth v LB ~66-70 % for now (owner's call).
+2. Balance is parked: Authority v Left Behind ~66-70 % accepted for now (D-269, after D-267/D-268/D-269 all failed); Directorate v Expedition
+   58 % after D-266; Expedition v Left Behind glass 69 %. Measurement branches integ-s32b/s32c and bal/s32-* can be deleted.
 3. M5-13 model run: needs the owner's API key on the laptop (never in chat).
 4. Start-corner bias: D-270 landed (rally bug); about 57 % top-left remains, mostly from south-facing buildings. Probe: `Tools ai mirror`.
 
