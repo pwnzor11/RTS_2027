@@ -83,6 +83,6 @@ def build(mods, name, html_only):
 if __name__ == '__main__':
     html_only = '--html-only' in sys.argv
     only = [a for a in sys.argv[1:] if not a.startswith('--')]   # e.g. book.py part2_basics: build one part alone for review
-    mods = [m for m in PARTS if not only or m[0] in only]
+    mods = [m for m in PARTS if m[0] in only] + [(o, o) for o in only if o not in dict(PARTS)] if only else PARTS   # any module can be previewed alone
     build(mods, 'RTS_2027_Field_Manual' if not only else 'part_' + '_'.join(only), html_only)
     if not only and (FULL / 'card.py').exists(): build([('card', 'Quick-reference card')], 'RTS_2027_Quick_Reference', html_only)

@@ -37,7 +37,7 @@ FACTIONS = {
     'authority':   {'name': 'The Continental Reconstruction Authority', 'short': 'Authority', 'prefix': 'auth_',
                     'accent': '#55633a', 'accent_d': '#3b4628', 'second': '#d99a1e'},
     'directorate': {'name': 'The Directorate of the Interior', 'short': 'Directorate', 'prefix': 'dir_',
-                    'accent': '#6e1f1f', 'accent_d': '#4a1414', 'second': '#1e1b16'},
+                    'accent': '#6e1f1f', 'accent_d': '#4a1414', 'second': '#8e2a2a'},
     'left_behind': {'name': 'The Left Behind', 'short': 'Left Behind', 'prefix': 'lb_',
                     'accent': '#a04a1c', 'accent_d': '#6e3212', 'second': '#3f7c7a'},
     'expedition':  {'name': 'The Overseas Expedition', 'short': 'Expedition', 'prefix': 'exp_',

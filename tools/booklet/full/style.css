@@ -112,7 +112,7 @@ p { margin: 0 0 5pt; text-align: justify; hyphens: auto; }
 
 /* ---- full build additions (lead) ---- */
 .page.f-authority   { --olive:#55633a; --olive-d:#3b4628; --amber:#d99a1e; }
-.page.f-directorate { --olive:#6e1f1f; --olive-d:#4a1414; --amber:#1e1b16; }
+.page.f-directorate { --olive:#6e1f1f; --olive-d:#4a1414; --amber:#8e2a2a; }   /* oxblood + black: the hazard bar stripes oxblood on ink */
 .page.f-left_behind { --olive:#a04a1c; --olive-d:#6e3212; --amber:#3f7c7a; }
 .page.f-expedition  { --olive:#22344f; --olive-d:#152238; --amber:#b08d3c; }
 .toc { width:100%; border-collapse:collapse; margin-top:6pt; }
@@ -122,3 +122,6 @@ p { margin: 0 0 5pt; text-align: justify; hyphens: auto; }
 .notes .lines { position:absolute; left:.6in; right:.6in; top:1.3in; bottom:.9in;
   background: repeating-linear-gradient(180deg, transparent 0 21pt, #b9ad8f 21pt 21.6pt); }
 .placeholder { border:1.5pt dashed var(--muted); padding:1in .3in; text-align:center; font-family:'TeX Gyre Heros Cn',sans-serif; color:var(--muted); }
+
+/* the DRAFT stamp sits at the foot of the page, clear of the running head */
+.draft { top:auto !important; bottom:.24in; }
