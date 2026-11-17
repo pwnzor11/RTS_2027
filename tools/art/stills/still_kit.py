@@ -839,25 +839,174 @@ def fire(loc, size=3.0, rng=None, light=True):
 
 
 # ------------------------------------------------------------------------------------------------ atmosphere
-def smoke_column(loc, h=45, r0=2.5, n=9, tint="#3A3733", rng=None):
-    """Stack of dark puffs drifting to the west (towards camera-left)."""
-    import random
-    rng = rng or random.Random(5)
+def _smoke_spheres(loc, h, r0, n, tint, rng, drift):
+    """Old sphere-stack smoke; only used for the non-Cycles styles (game / poster), which cannot render volumes."""
     x, y = loc
     for i in range(n):
         t = i / (n - 1)
-        sm = mat(tint, rough=1.0)
-        if STYLE == "mix":
-            # dark soot at the base -> ash grey-brown at the top, with the lower puffs lit from the fire below
-            a, b = (0x0A, 0x08, 0x08), (0x3C, 0x36, 0x34)
-            cc = "#%02X%02X%02X" % tuple(int(a[k] + (b[k] - a[k]) * min(1.0, t * 1.15) ** 0.8) for k in range(3))
-            lo = max(2, n // 2)
-            if i < lo:
-                sm = mat(cc, rough=1.0, emit="#FF6A20", estr=1.1 * (1 - i / lo) ** 1.5 + 0.05)
+        o = sphere("smoke", (x - t * t * drift + rng.uniform(-1.5, 1.5), y + rng.uniform(-1.5, 1.5), 2 + t * h),
+                   r0 * (1 + t * 2.2), mat(tint, rough=1.0), scale=(1, 1, 0.8))
+
+
+def _smoke_material(x0, y0, h, r0, z0, drift, growth, tint, glow, glow_str, density, seed, soft):
+    """Volume material: noise-broken density inside a drifting, widening column, fire-lit near the base."""
+    m = bpy.data.materials.new("smoke_vol")
+    m.use_nodes = True
+    nt = m.node_tree
+    for n_ in list(nt.nodes):
+        nt.nodes.remove(n_)
+    N, L = nt.nodes.new, nt.links.new
+
+    def math(op, a=None, b=None, c=None, clamp=False):
+        n_ = N("ShaderNodeMath")
+        n_.operation = op
+        n_.use_clamp = clamp
+        for k, v in enumerate((a, b, c)):
+            if v is None:
+                continue
+            if isinstance(v, (int, float)):
+                n_.inputs[k].default_value = v
             else:
-                sm = mat(cc, rough=1.0)
-        o = sphere("smoke", (x - t * t * 18 + rng.uniform(-1.5, 1.5), y + rng.uniform(-1.5, 1.5), 2 + t * h),
-                   r0 * (1 + t * 2.2), sm, scale=(1, 1, 0.8))
+                L(v, n_.inputs[k])
+        return n_.outputs[0]
+
+    def vmath(op, a, b=None):
+        n_ = N("ShaderNodeVectorMath")
+        n_.operation = op
+        for k, v in enumerate((a, b)):
+            if v is None:
+                continue
+            if isinstance(v, (tuple, list)):
+                n_.inputs[k].default_value = v
+            else:
+                L(v, n_.inputs[k])
+        return n_
+
+    geo = N("ShaderNodeNewGeometry")
+    pos = geo.outputs["Position"]
+    sep = N("ShaderNodeSeparateXYZ")
+    L(pos, sep.inputs[0])
+    # height fraction t along the column (0 at the base, 1 at the top)
+    t = math("DIVIDE", math("SUBTRACT", sep.outputs[2], z0), h, clamp=True)
+    # domain warp: low-frequency vector noise pushes the sample point about so the column billows and wanders
+    warp = N("ShaderNodeTexNoise")
+    warp.noise_dimensions = "3D"
+    warp.inputs["Scale"].default_value = 0.55 / max(r0, 0.5) / 2.2
+    warp.inputs["Detail"].default_value = 2.0
+    off = vmath("ADD", pos, (seed * 13.7, seed * 7.3, seed * 3.1))
+    L(off.outputs[0], warp.inputs["Vector"])
+    wv = vmath("SUBTRACT", warp.outputs["Color"], (0.5, 0.5, 0.5))
+    rad = math("MULTIPLY", math("ADD", 1.0, math("MULTIPLY", t, growth)), r0)   # column radius at this height
+    wscale = vmath("SCALE", wv.outputs[0])
+    L(math("MULTIPLY", rad, 2.4), wscale.inputs[3])
+    wp = vmath("ADD", pos, wscale.outputs[0])
+    sepw = N("ShaderNodeSeparateXYZ")
+    L(wp.outputs[0], sepw.inputs[0])
+    # centre line drifts west with t^2 (same law as the old puffs)
+    cx = math("SUBTRACT", x0, math("MULTIPLY", math("MULTIPLY", t, t), drift))
+    dx = math("SUBTRACT", sepw.outputs[0], cx)
+    dy = math("SUBTRACT", sepw.outputs[1], y0)
+    d = math("DIVIDE", math("SQRT", math("ADD", math("MULTIPLY", dx, dx), math("MULTIPLY", dy, dy))), rad)
+    # soft radial falloff: 1 at the core, 0 at the rim
+    fall = N("ShaderNodeMapRange")
+    fall.interpolation_type = "SMOOTHSTEP"
+    fall.inputs[1].default_value = 1.0
+    fall.inputs[2].default_value = 0.1
+    fall.inputs[3].default_value = 0.0
+    fall.inputs[4].default_value = 1.0
+    fall.clamp = True
+    L(d, fall.inputs[0])
+    # fine billow detail: wisps break the rim, thin the core a little
+    det = N("ShaderNodeTexNoise")
+    det.noise_dimensions = "3D"
+    det.inputs["Scale"].default_value = 1.6 / max(r0, 0.5) / 2.2
+    det.inputs["Detail"].default_value = 6.0
+    det.inputs["Roughness"].default_value = 0.62
+    off2 = vmath("ADD", wp.outputs[0], (seed * 5.9, seed * 11.1, seed * 2.3))
+    L(off2.outputs[0], det.inputs["Vector"])
+    dm = N("ShaderNodeMapRange")
+    dm.interpolation_type = "SMOOTHSTEP"
+    dm.inputs[1].default_value = 0.30
+    dm.inputs[2].default_value = 0.72
+    dm.inputs[3].default_value = 0.0
+    dm.inputs[4].default_value = 1.0
+    dm.clamp = True
+    L(det.outputs["Factor"], dm.inputs[0])
+    # the noise bites harder at the rim than in the core
+    bite = math("ADD", math("MULTIPLY", dm.outputs[0], math("SUBTRACT", 1.0, math("MULTIPLY", fall.outputs[0], soft))),
+                math("MULTIPLY", fall.outputs[0], soft))
+    # fade in above the base and out near the top so the column has no hard ends
+    tin = math("MULTIPLY", t, 8.0, clamp=True)
+    tout = math("SUBTRACT", 1.0, math("MULTIPLY", math("SUBTRACT", t, 0.7), 3.3), clamp=True)
+    dens = math("MULTIPLY", math("MULTIPLY", math("MULTIPLY", fall.outputs[0], bite), math("MULTIPLY", tin, tout)), density)
+    # colour: soot at the base to the lighter tint above
+    ramp = N("ShaderNodeMix")
+    ramp.data_type = "RGBA"
+    ramp.inputs[6].default_value = [c * 0.35 for c in lin(tint)[:3]] + [1.0]
+    ramp.inputs[7].default_value = lin(tint)
+    L(math("MULTIPLY", t, 1.3, clamp=True), ramp.inputs[0])
+    # fire glow near the base
+    gl = math("MULTIPLY", math("SUBTRACT", 1.0, math("MULTIPLY", t, 2.6), clamp=True), glow_str)
+    out = N("ShaderNodeOutputMaterial")
+    pv = N("ShaderNodeVolumePrincipled")
+    L(ramp.outputs[2], pv.inputs["Color"])
+    L(dens, pv.inputs["Density"])
+    pv.inputs["Anisotropy"].default_value = 0.35
+    pv.inputs["Emission Color"].default_value = lin(glow)
+    L(gl, pv.inputs["Emission Strength"])
+    L(pv.outputs[0], out.inputs["Volume"])
+    return m
+
+
+def _smoke_hull(x0, y0, z0, h, r0, drift, growth, pad, segs=18, ring=10):
+    """Tapered tube following the drift curve, used only as the bounded volume domain."""
+    import bmesh
+    me = bpy.data.meshes.new("smoke_hull")
+    bm = bmesh.new()
+    rings = []
+    for k in range(segs + 1):
+        t = k / segs
+        r = r0 * (1 + t * growth) * pad
+        cx, cz = x0 - t * t * drift, z0 + t * h
+        rings.append([bm.verts.new((cx + r * math.cos(a), y0 + r * math.sin(a), cz))
+                      for a in (2 * math.pi * j / ring for j in range(ring))])
+    for k in range(segs):
+        for j in range(ring):
+            bm.faces.new((rings[k][j], rings[k][(j + 1) % ring], rings[k + 1][(j + 1) % ring], rings[k + 1][j]))
+    bm.faces.new(rings[0][::-1])
+    bm.faces.new(rings[-1])
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    bm.to_mesh(me)
+    bm.free()
+    o = bpy.data.objects.new("smoke", me)
+    bpy.context.scene.collection.objects.link(o)
+    return o
+
+
+def smoke_volume(loc, h=45, r0=2.5, n=9, tint="#3A3733", rng=None, drift=18.0, growth=2.2, z0=2.0,
+                 glow="#FF6A20", glow_str=1.0, density=2.2, soft=0.7):
+    """The one shared smoke builder: a soft billowing volumetric column (Cycles), drifting west by `drift` m at the top.
+
+    Radius grows from r0 to r0*(1+growth); `tint` is the ash colour (soot-dark at the base); `glow` / `glow_str` lights the base
+    from the fire below (glow_str 0 for none).  `n` only keeps the caller's rng stream identical to the old puff stack so the
+    rest of each scene is unchanged.  Styles without Cycles volumes (game / poster) fall back to the old sphere stack."""
+    import random
+    rng = rng or random.Random(5)
+    x, y = loc
+    jit = [(rng.uniform(-1.5, 1.5), rng.uniform(-1.5, 1.5)) for _ in range(n)]   # same draws as the old puffs
+    if STYLE != "mix":
+        return _smoke_spheres(loc, h, r0, n, tint, rng, drift)
+    seed = (jit[0][0] * 7.1 + jit[-1][1] * 3.3 + x * 0.173 + y * 0.291)
+    m = _smoke_material(x, y, h, r0, z0, drift, growth, tint, glow, glow_str, density, seed, soft)
+    o = _smoke_hull(x, y, z0, h, r0, drift, growth, 2.1)
+    o.data.materials.append(m)
+    o.visible_shadow = True
+    return nolines(o)
+
+
+def smoke_column(loc, h=45, r0=2.5, n=9, tint="#3A3733", rng=None):
+    """Volumetric smoke column drifting to the west (towards camera-left); see smoke_volume."""
+    return smoke_volume(loc, h=h, r0=r0, n=n, tint=tint, rng=rng, drift=18.0, glow_str=0.35)
 
 
 def dust_cloud(loc, n=7, length=12, rng=None, tint="#A08C6A"):
