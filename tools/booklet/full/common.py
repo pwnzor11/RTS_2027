@@ -41,12 +41,16 @@ FACTIONS = {
     'left_behind': {'name': 'The Left Behind', 'short': 'Left Behind', 'prefix': 'lb_',
                     'accent': '#a04a1c', 'accent_d': '#6e3212', 'second': '#3f7c7a'},
     'expedition':  {'name': 'The Overseas Expedition', 'short': 'Expedition', 'prefix': 'exp_',
-                    'accent': '#22344f', 'accent_d': '#152238', 'second': '#b08d3c'},
+                    'accent': '#22344f', 'accent_d': '#152238', 'second': '#b08d3c',
+                    'house': '#d0702a'},
 }
 FACTION_ORDER = ['authority', 'directorate', 'left_behind', 'expedition']
 
 
 # ---- images --------------------------------------------------------------------------------------------------------------
+GRADE_VERSION = 1
+
+
 def img(path, max_px=900, jpeg=False):
     """Data URI for a repo-relative (or absolute) image path, downscaled so its longer side is at most max_px (cached).
     SVG files are embedded as they are. jpeg=True for full-bleed paintings (smaller PDF); sprites and renders stay PNG."""
@@ -54,7 +58,8 @@ def img(path, max_px=900, jpeg=False):
     if not p.is_absolute(): p = ROOT / p
     if p.suffix == '.svg':
         return 'data:image/svg+xml;base64,' + base64.b64encode(p.read_bytes()).decode()
-    key = hashlib.sha1(f'{p}:{p.stat().st_mtime_ns}:{max_px}:{jpeg}'.encode()).hexdigest()[:16]
+    grade = _grade_for(p)
+    key = hashlib.sha1(f'{p}:{p.stat().st_mtime_ns}:{max_px}:{jpeg}:{grade}:{GRADE_VERSION}'.encode()).hexdigest()[:16]
     CACHE.mkdir(exist_ok=True)
     out = CACHE / (key + ('.jpg' if jpeg else '.png'))
     if not out.exists():
@@ -62,10 +67,23 @@ def img(path, max_px=900, jpeg=False):
         if max(im.size) > max_px:
             s = max_px / max(im.size)
             im = im.resize((max(1, round(im.width * s)), max(1, round(im.height * s))), Image.LANCZOS)
+        if grade == 'paint':
+            import grade as G; im = G.paint(im)
+        elif grade:
+            import grade as G; im = G.house(im, grade)
         if jpeg: im.convert('RGB').save(out, 'JPEG', quality=86)
         else: im.save(out, 'PNG', optimize=True)
     mime = 'image/jpeg' if jpeg else 'image/png'
     return f'data:{mime};base64,' + base64.b64encode(out.read_bytes()).decode()
+
+
+def _grade_for(p):
+    """Booklet colour grade for an image: 'paint' for the painted stills, a hex colour for hero renders whose house panels are
+    magenta (the faction's display colour), None otherwise."""
+    parts = p.parts
+    if 'stills' in parts: return 'paint'
+    if 'booklet' in parts and p.parent.name in FACTIONS: return FACTIONS[p.parent.name].get('house')
+    return None
 
 
 def hero(uid):
