@@ -9,12 +9,17 @@ D-222. Main at 128 games WITH M12-16 (new baseline, docs/balance/s31_balance.md)
 Open questions: Q-73 (deferred).
 
 ## Start here (shown to the user as the plan; nothing starts until they say go)
-1. PR #99: CI green? merged? (Claude may merge once Windows CI is green.)
-2. Balance on the s31 baseline (Auth v Exp, LB v Exp, Exp v Auth/LB glass rows of the s31 baseline were measured without D-265; they have no
+1. PR #99 merged (main f5c2763); check this docs PR (land/s31-docs) merged too.
+2. **Check the cluster results first (owner asked):** job `s31s3` was still running at wrap-up (kd = Sparker cap 8 + Directorate army_cap 30,
+   k10, dk = D-265 + Sparker cap 10; seeds 33-64 for kd/k10, 1-64 for dk). In the laptop k3s-cluster folder: `python3 kjob.py status s31s3`,
+   `python3 kjob.py fetch s31s3 rts/s31/out/s31s3`, then `python3 rts/s31/sum31.py rts/s31/out/s31s1/s31s1 rts/s31/out/s31s3/s31s3`.
+   Caveat: these ran on the rules BEFORE M12-16 (destructible props), so compare them with the s28 128-game table (sum31.py does), and treat dk
+   only as a hint for a Sparker-cap screen on top of D-265 measured against the s31 baseline (s31base). Also confirm s29s was deleted (owner).
+3. Balance on the s31 baseline (Auth v Exp, LB v Exp, Exp v Auth/LB glass rows of the s31 baseline were measured without D-265; they have no
    Directorate so they stand): Sparker cap 9-10 on top of D-265 (kd showed cap 8 + a Directorate cap reaches Dir v Exp ~50 but costs the
    Authority 8 points); Authority v Left Behind 69.5 % and Expedition v Left Behind glass 69 % need a matchup-specific cause (trace first).
-3. M5-13 model run: needs the owner's API key on the laptop (never in chat).
-4. Mirror start-corner bias (owner: later).
+4. M5-13 model run: needs the owner's API key on the laptop (never in chat).
+5. Mirror start-corner bias (owner: later).
 
 ## Half-finished work
 - Variant branches bal/s31-* (d1-d7, k10, kd, dk, d4i) are measurement only (delete on GitHub); dk (d4 + Sparker cap 10) was screened on the old
@@ -30,6 +35,9 @@ Open questions: Q-73 (deferred).
 
 ## How to run this session
 - Session 31 lessons:
+  - Cluster changed at the end of s31 (pi-cluster skill updated): x86 node **huntsman** (6 fast cores, 15 GB) joined; `kjob.py submit` now runs
+    on every node by default (`--arch any`; `--arch arm64|amd64`, `--fast` to prefer huntsman for builds, `--scratch` for its 234 GB NVMe at
+    `$SCRATCH`, deleted after 7 idle days). Series scripts work unchanged (portable Tools.dll); give the Tools/Scripting build `--fast`.
   - The laptop folder lagged main by two sessions; always read HANDOFF from origin/main (clone first) before briefing.
   - Destructible props change generated skirmish maps (props are on them): any sim change that touches props or land voids the balance baseline.
     Re-measure main with the change before judging variants (s31base pattern, 72 indices x 8 seeds).
