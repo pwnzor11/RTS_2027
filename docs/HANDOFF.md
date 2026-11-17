@@ -19,7 +19,8 @@ Current 128-game table (main): Auth v Dir 47.6, Auth v LB 64.7, Auth v Exp 36.8,
 - Field Manual draft on `integ-s32m` (merged helper branches wp/s32-m-*): module owners in tools/booklet/full/COMMON.md. Helper notes worth a
   look in revision: part3_entries packs pages by measuring heights with Playwright (needs Chromium); the Directorate hazard bar was changed to
   oxblood stripes (owner picked oxblood + black); the "DRAFT" stamp now sits at the page foot.
-- Measurement branches to delete on GitHub: integ-s32b, integ-s32c, integ-s32d, bal/s32-*, land/s32-docs*, plus the session 31 list.
+- Measurement branches to delete on GitHub: integ-s32, integ-s32b, integ-s32c, integ-s32d, integ-s32r, bal/s32-*, land/s32-docs*, land/s32-handoff (after merge), wp/s32-m-* (after
+  the manual merges), plus the session 31 list.
 
 ## Waiting on the user
 - Field Manual review (Q-86). Two-PC LAN test (M9-15). API key for M5-13 (optional). Branch clean-up on GitHub (list above).
@@ -35,12 +36,6 @@ Current 128-game table (main): Auth v Dir 47.6, Auth v LB 64.7, Auth v Exp 36.8,
   - 64-game screens can mislead by ~7 points (shepherd s1: -7 on 64, -1.4 on 128): decide on 128.
   - Built-in Agent worktree isolation is refused: create worktrees under /home/claude/wt yourself and give each helper its path.
   - Merging a PR needs the owner's OK in chat ("merge N" / "land it").
-- Session 32 lessons:
-  - Cluster: submit builds first and let them start before series or traces that wait on them (trace pods took huntsman and starved the main
-    build); one huntsman core runs an ai match game in ~14 s (Pi ~45 s); a 135-index campaign sweep takes ~14 min at par 30.
-  - k9/k10 builds and the Expedition-only rows: a variant that changes one faction's key leaves the other rows game-for-game identical to main;
-    run only the rows it can touch.
-  - Merging a PR needs the owner's OK in this chat (the safety check refused it without one this session).
 - Session 31 lessons:
   - Cluster changed at the end of s31 (pi-cluster skill updated): x86 node **huntsman** (6 fast cores, 15 GB) joined; `kjob.py submit` now runs
     on every node by default (`--arch any`; `--arch arm64|amd64`, `--fast` to prefer huntsman for builds, `--scratch` for its 234 GB NVMe at

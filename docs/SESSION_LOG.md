@@ -592,4 +592,3 @@ worktrees under /home/claude/wt.
 **Problems / notes:** a series' trace pods took huntsman and starved the build they waited on (deadlock; resubmitted after the build); two
 device_commit_files raced a parallel edit (resubmitted); the start-cell rounding change broke an AI test and moved Dir v Exp 6 points (dropped).
 **Next session should:** see HANDOFF.
-
