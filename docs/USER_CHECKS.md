@@ -547,3 +547,17 @@ On main after PR #97 and the session 30 handoff PR.
 - **Balance:** no change this session (D-263). New AI keys `aa_cap_before_air`, `retreat_floor_pct` and `mopup_hunt` are documented in the comment
   block of data/ai/difficulty.toml and not set; skirmish AI plays as in session 29.
 
+
+## Session 31 (2026-11-17)
+On main after the session 31 PR. Back up nothing: development saves and replays from before this session will not load (new "props" state part, D-220).
+- **Destructible props (M12-16, D-264):** start a skirmish on a generated Rust Belt map with "Map features: Stamps" (or play auth_01 on rustbelt_m2).
+  Drive an Authority Tank or Bulwark (Directorate: Land Train, Reactor Crawler) into a dead-tree grove: each tree or snag it enters vanishes with a dust
+  puff. Shell a tree with artillery: 1-2 shells; a wreck takes about 4-5. Blocks and pylons never break; jeeps and infantry still walk around props.
+  Known gap: the ground under a destroyed prop still looks like the old ground and the minimap keeps its dot (the cell plays as Rough).
+- **Map editor sprites:** Main menu, Map Editor, New map (Rust Belt). Props tool (key 8), Tree, click a few cells; Decal tool (key 9), paint: real
+  dead-tree sprites and decal art appear, not flat squares. H hides and shows them.
+- **glass_coast_e1 / ash_reckoning dressing:** play a mission-3 (glass_coast_e1) or mission-4 (ash_reckoning): glass_coast_e1 has a checkpoint near
+  the centre (40,40) with its mirror, a dead-tree grove on the eastern dunes, another ruined block, wreck and snag yards; ash_reckoning a checkpoint
+  on the eastern plain (84,36), a new grove (65,44), a crater field and more props.
+- **Radiation burst sound:** a Directorate Rad Shell, a Meltdown, or either superweapon blast plays the new crackling radiation burst instead of the
+  plain explosion. The Ash Sower's spray stays quiet.
