@@ -68,7 +68,7 @@ p { margin: 0 0 5pt; text-align: justify; hyphens: auto; }
 .unit .sub { font-style:italic; color: var(--muted); margin-bottom:4pt; }
 .unit .art { background: radial-gradient(ellipse at 50% 70%, #e9dfc4 0%, #d8cba8 70%, #cbbd96 100%);
              border:1pt solid var(--rule); display:flex; align-items:center; justify-content:center; position:relative; }
-.unit .art img { image-rendering: pixelated; }
+.unit .art img { image-rendering: auto; }   /* s33: smooth scaling for the hero renders (was pixelated) */
 .unit .art .plate { position:absolute; left:4pt; top:3pt; font-family:'TeX Gyre Heros Cn',sans-serif; font-size:6.5pt; letter-spacing:.18em; color:var(--muted); }
 .stats { width:100%; border-collapse:collapse; font-family:'TeX Gyre Heros Cn',sans-serif; font-size:8pt; margin: 5pt 0; }
 .stats td { border-bottom:.6pt solid #a99d7f; padding:1.4pt 2pt; }
