@@ -570,3 +570,13 @@ On main after the session 31 PR. Back up nothing: development saves and replays 
   the rest of its army should be ground units.
 - **AI rally before deploying (D-270):** start a skirmish against a Left Behind or Expedition AI from the bottom-right start. In the first
   seconds its starting units stay near their own start instead of walking toward the top-left corner of the map.
+
+## Session 33 (2026-11-17/18)
+On main after the session 33 PR.
+- **Field Manual (D-271, D-273):** open docs/field_manual/RTS_2027_Field_Manual.pdf (and RTS_2027_Quick_Reference.pdf). No red DRAFT
+  stamps. Skies in the paintings (cover, faction openers, World pages) are amber and grey, not pink. Smoke columns are soft volumetric
+  plumes, not stacks of balls. Field-guide pictures show bevelled edges, panel seams, rivets and worn edges; zoom to 200 %: they stay sharp.
+  Expedition team colour panels are orange, Left Behind teal.
+- **Briefing stills in game:** start any campaign mission briefing that shows a painting (e.g. Authority act 2): the smoke is the new soft plume.
+- **No change in game sprites:** unit and building sprites in a skirmish look as before (the polish and detail apply to the manual only).
+

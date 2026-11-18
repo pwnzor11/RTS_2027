@@ -1,19 +1,40 @@
-# Handoff: Session 33 (in progress) — Field Manual look pass; renders running on the cluster
-Last commit: integ-s33 (session 33 checkpoint; main is e4018940 = PR #107). PR #108 (land/s33-manual) holds the approved manual WITHOUT the look pass.
-Where things stand (checkpoint): owner approved the manual (D-271), then asked for a look pass (D-273): booklet colour grade (no pink),
-volumetric smoke in the 10 smoke stills, hero polish + detail renders, Expedition orange / Left Behind teal accents. Warzone tracks dropped (D-272).
-M10 roadmap items that were already done are ticked. Cluster jobs on huntsman (amd64, bpy 5.3, OIDN): `s33heroes` (151 hero renders, 1200 px,
-96 spp, script k3s-cluster claude/rts/h33-all.sh, branch wp/s33-hero; ~145 s per id, ~6 h) and `s33stills` (10 stills, claude/rts/stills33.sh,
-branch wp/s33-smoke). The Pis were too slow for these (2 h per hero at 3 cores, no OIDN).
+# Handoff: Session 34 — open choice (manual done); M10-06b kitbash, LAN test, M5-13 optional
+Last commit: `docs: Session 33 handoff` on `land/s33` (PR to main; main was e4018940 = PR #107). Check it merged. PR #108 (land/s33-manual)
+is superseded by the land/s33 PR: close it unmerged if still open.
+Where things stand: the Field Manual is approved and finished (D-271) with the session 33 look pass (D-273): amber skies instead of pink
+(booklet-only grade), volumetric smoke in the 10 smoke stills (also used in game briefings), 151 hero renders with polish and detail,
+Expedition orange / Left Behind teal accents, smooth picture scaling; 144 pages + 2-page card in docs/field_manual (38.6 MB). M10 is done except
+M10-06b (kitbash Warzone parts) and the FX-anchor note; Warzone tracks were dropped (D-272). Balance stays parked (D-269).
+Decisions up to D-273. Open questions: Q-73 (deferred).
 
 ## Start here (shown to the user as the plan; nothing starts until they say go)
-1. Fetch both jobs (`kjob.py fetch s33heroes|s33stills <dir>`), check `times.txt` and logs for FAILED ids, rerun failures.
-2. Copy renders into art/booklet/<faction>/ and data/images/stills/ on integ-s33 (both may be LFS: check .gitattributes; push LFS from the
-   cloud with push access, else the owner's bundle route), contact sheet check, `python3 tools/booklet/full/book.py`, copy the PDF and card
-   to docs/field_manual, send the owner the PDF, refresh land/s33-manual or open a new land branch, PR, CI green, owner OK to merge.
-3. Then wrap up (session 33 log, handoff).
+1. Handoff PR merged? Laptop: `git checkout main; git pull` (the PR adds LFS hero renders; the laptop pulls them with git-lfs).
+2. Ask the owner what is next: candidates are M10-06b kitbash Warzone parts (pilot one vehicle first), the two-PC LAN test (M9-15, owner),
+   M5-13 model run (owner's API key on the laptop), balance (parked), or new work.
+3. Cluster rule (owner, s33): use the Pis too, even when x86 pieces are 3x faster: split work into a shared list both arches pull from
+   (pi-cluster skill "Use the whole cluster", if the owner saved the proposal).
+
+## Half-finished work
+- None in code. Cluster outputs from s33 stay on /work/out/s33heroes, s33stills, s33dir (jobs self-delete after 3 days).
+- Branches to delete on GitHub after the merge: integ-s32m, integ-s33, land/s33-manual, land/s33, wp/s33-hero, wp/s33-smoke, wp/s33-wz,
+  and the wp/s32-m-* branches if any remain. Owner's folder: scratch_s33/ and delete_branches_s33.ps1 can be deleted.
+
+## Waiting on the user
+- "land it" for the land/s33 PR. Two-PC LAN test (M9-15). API key for M5-13 (optional). Save or skip the pi-cluster skill proposal.
 
 ## How to run this session
+- Session 33 lessons:
+  - Read the roadmap critically: four "open" M10 items were already done in earlier sessions (session logs and decisions said so). Grep
+    SESSION_LOG/DECISIONS for an item before planning work on it.
+  - With push access attached, LFS uploads from the cloud worked again (151 hero PNGs; checked with an LFS batch "download" request).
+  - Cluster Blender: `bpy-python` needs `pip install pillow numpy` for our tools; a 5-CPU pod cannot schedule beside another 5-CPU pod on one
+    x86 node (allocatable 6 / 4): use 2-3 CPU pods or the second node; prince has 4 cores. Directorate still scripts write to scratch/stills.
+  - kjob.py has no --env: prepend `export VAR=...` to a copy of the script. A fixed ids[IDX::N] split under-uses mixed-speed nodes.
+  - Fetching large outputs through the device bridge is slow (~150 KB/s): split on snowwhite into 1 MB parts and pull with several sftp
+    threads in <170 s calls (resume by .ok markers), then stage one .tar into the cloud.
+  - Booklet: `.unit .art img` was `image-rendering: pixelated`, which made the hero renders look blocky when zoomed; fixed. The PDF is plain
+    git (38.6 MB): keep embedded pictures at 900/560 px.
+  - The owner reviews art by before/after sheets and answers quickly; "full send" = finish without another review gate.
 - Session 32 lessons:
   - The owner gave Claude rights to delete cluster jobs ("give yourself access"); `kjob.py prune` at session start, jobs self-delete after 2 days.
   - Cluster: Pis fit 4 x 800m pods (Longhorn takes 444m); submit a build and let it start BEFORE series or traces that wait on it (trace pods on

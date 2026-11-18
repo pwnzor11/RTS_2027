@@ -592,3 +592,22 @@ worktrees under /home/claude/wt.
 **Problems / notes:** a series' trace pods took huntsman and starved the build they waited on (deadlock; resubmitted after the build); two
 device_commit_files raced a parallel edit (resubmitted); the start-cell rounding change broke an AI test and moved Dir v Exp 6 points (dropped).
 **Next session should:** see HANDOFF.
+
+## Session 33 · 2026-11-17/18 (Field Manual approved and given a look pass; M10 audit; renders on the cluster)
+**Goal:** owner: resume; Field Manual review (Q-86: love the draft, 144 pages, keep spoilers, accept design 13/14); "all the M10 items" on the
+cluster; then "no pink", "the smoke looks terrible", "sprites look low poly"; branch clean-up commands; "full send"; wrap up.
+**Done:** Q-86 answered (D-271). M10 audit: M10-08, M10-10, M10-11, M10-24 and the building-depth item were already done (ticked); M10-06
+Warzone tracks piloted on auth_howitzer and dir_mole and dropped (D-272; helper tools/art/wz/wz_tracks.py kept). Manual look pass (D-273):
+booklet-only colour grade (tools/booklet/full/grade.py), volumetric smoke in the 10 smoke stills (still_kit smoke_volume / cloud_volume),
+hero polish + detail step in tools/booklet/render_heroes.py, booklet accents Expedition orange #D0702A and Left Behind teal #3F7C7A, smooth
+picture scaling in the field guide (was `image-rendering: pixelated`). Cluster: 151 hero renders (1200 px, 96 spp, bpy 5.3 + OIDN) on huntsman
+and the new x86 node prince (job re-split from another chat), 10 stills on huntsman/prince. Manual rebuilt: 144 pages + card, 38.6 MB.
+Branch clean-up script for the owner (119 branches deleted on GitHub). pi-cluster skill change proposed: use the Pis too (owner rule).
+**Decisions:** D-271, D-272, D-273. **Questions:** Q-86 answered.
+**Helpers:** 3 Sonnet (s33-smoke ~80 min, s33-hero ~25 min in two rounds, s33-wz ~14 min); no fix rounds.
+**Problems / notes:** the Directorate stills write to scratch/stills (not data/images/stills), so the first cluster run lost them (rerun);
+a 5-CPU pod cannot schedule beside a running 5-CPU pod (the second still waited 35 min until resubmitted at 900m on prince); fetching 155 MB from
+the cluster through the device bridge ran at ~150 KB/s (kjob fetch timed out; 1 MB split parts over 6 sftp threads, ~20 min); the Pis were
+left idle for the hero renders (no OIDN, ~2 h per hero at 3 CPUs) and the owner then set the rule to use them anyway.
+**Next session should:** see HANDOFF.
+
