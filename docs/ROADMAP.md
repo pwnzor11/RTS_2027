@@ -313,7 +313,7 @@ Source: docs/reviews/2026-11-07_owner_campaign_feedback.md. Audit: docs/reviews/
 - [x] M14-07 Pilot PDF and previews in docs/field_manual/, linked from the README (s19)
 - [x] M14-03 Hero renders: pilot approved, all 124 rendered on the laptop and on main (s19, D-210; PR #63). Open: walls/gates re-angle s22: walls/gates re-angled -35 deg with half sky light and detail-passed models, laptop renders on integ-s22 (D-227)
 - [x] M14-04 Directorate lore draft (Authority approved), then the other three faction chapters s22: Directorate draft approved (design 19 §6b, D-228); Left Behind and Expedition chapters next s23: Left Behind and Expedition approved after a fact-check (D-231)
-- [x] M14-05 Full build (about 108 pages) s33: owner approved the full draft unchanged (D-271, Q-86); 144-page PDF and card in docs/field_manual, PR from integ-s33; after M13 lands; quick-reference card s32: full draft built (tools/booklet/full, branch integ-s32m, 144 pages + 2-page card, 36 draft pages), waiting for the owner's review (Q-86); s23: dry build ok on today's data, 150/150 ids have name, hero render and sprite (tools/booklet/data/check_coverage.py); resolver and prep fixed
+- [x] M14-05 Full build: done s33. Owner approved the full draft unchanged (D-271, Q-86); look pass D-273 (no pink, volumetric smoke, hero polish + detail renders); 144-page PDF + 2-page quick-reference card in docs/field_manual (built by tools/booklet/full/book.py)
 - [x] M14-06 Models and sprites for the 26 ids without art (scripts D-215; owner rendered on the laptop; landed in PR #74 s21; no rules id is left without art)
 
 ## M9 · LAN multiplayer (was M5)
