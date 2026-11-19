@@ -106,7 +106,7 @@ public sealed class SceneComposer
                 continue;
             }
 
-            float s = item.Scale * m.K;
+            float s = item.Scale * m.K * man.ArtScale;   // D-275: scene scales are in world pixels; an 80 px unit sheet keeps its size
             float w = man.FrameW * s;
             if (sx + w < 0 || sx - w > m.ViewW) continue; // well off screen
             if (item.Shadow)

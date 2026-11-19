@@ -83,7 +83,7 @@ public sealed class FxPlayer
                 bool smoke = a.Kind.StartsWith("smoke", StringComparison.Ordinal);
                 if (smoke != (pass == 1) || (!smoke && !fire) || !library.Has(a.Kind)) continue;
                 SpriteManifest m = library.Manifest(a.Kind);
-                Vector2 at = origin + new Vector2(a.X - building.OriginX, a.Y - building.OriginY) * zoom;
+                Vector2 at = origin + new Vector2(a.X - building.OriginX, a.Y - building.OriginY) * (zoom * building.ArtScale);
                 library.Sheet(a.Kind).Draw(batch, FxFrames.Anchored(m, tick, a.Phase), at, Color.White, zoom);
             }
         }

@@ -343,6 +343,7 @@ Plan: docs/design/21_m10_polish_plan.md (D-214). Code-only parts built overnight
 - [x] M10-05 (closed, D-214: D-192 left 0 of 138 flagged) Team-colour audit fixes for vehicles (11 of 45 hulls, 8 of 13 turrets under 10 px; tools/art/house_audit.py)
 - [x] M10-06b Kitbash Warzone parts: closed without rollout (s34, D-274): pilot on auth_bulwark (Warzone cannon; cannon + cupola MG) read as less detail than our own geometry; candidates on branch wp/s34-kitbash. Per-vehicle FX anchors move to the next art pass that opens the vehicle scripts
 - [x] M10-07 GlassCrest, IceSlab, WreckHulk, BrokenPylon: Blender prop atlas, 3 variants x 4 theaters (s29, D-258)
+- [x] M10-25 Unit sheets rendered at 80 px per cell (the x1.25 drawn size) and drawn 1:1: `px_per_cell` manifests, ArtScale in the renderer, all 82 vehicle and 22 infantry sheets re-rendered on the cluster (s35, D-275)
 Art pass, music/SFX, balance, installer.
 
 - [ ] M5-13 Measure the stronger commander: 32-game swap test, model vs `--random-directives` control (D-241) · [x] random control on 128 games (s29, D-260: 21 % v plain baseline 53 %); model run waits on the owner's key

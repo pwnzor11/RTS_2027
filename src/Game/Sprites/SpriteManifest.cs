@@ -24,7 +24,7 @@ public sealed class SpriteManifest
     private static readonly string[] TopKeys =
     {
         "file", "frame_w", "frame_h", "origin_x", "origin_y", "house", "state", "fx", "shadow_dx", "shadow_dy",
-        "layer", "pivot_x", "pivot_y", "pivot_z", "altitude", "figure_scale_permille",
+        "layer", "pivot_x", "pivot_y", "pivot_z", "altitude", "figure_scale_permille", "px_per_cell",
     };
     private static readonly string[] PivotKeys = { "pivot_x", "pivot_y", "pivot_z" };
     private static readonly string[] Layers = { "body", "turret", "shadow" };
@@ -82,6 +82,18 @@ public sealed class SpriteManifest
 
     /// <summary>D-184: how much larger than the original art the figure was rendered, in per mille (1000 = original; optional key <c>figure_scale_permille</c>). The renderer's "Larger infantry" step is skipped for sprites already rendered larger.</summary>
     public int FigureScalePermille { get; private init; } = 1000;
+
+    /// <summary>The map cell size this sheet was rendered for, in sheet pixels (optional key <c>px_per_cell</c>, default
+    /// <see cref="WorldPxPerCell"/> = 64). D-275: unit sheets are rendered at 80 px per cell, the size the renderer's x1.25 unit scale
+    /// (D-172) draws them at, so they reach the screen 1:1 instead of being stretched by a non-integer factor.</summary>
+    public int PxPerCell { get; private init; } = WorldPxPerCell;
+
+    /// <summary>Pixels per map cell of the game world at zoom 1 (<c>Camera.CellPx</c>).</summary>
+    public const int WorldPxPerCell = 64;
+
+    /// <summary>World pixels per sheet pixel: <see cref="WorldPxPerCell"/> / <see cref="PxPerCell"/> (1 for 64 px sheets, 0.8 for 80 px).
+    /// Multiply every sheet-pixel quantity (frame size, origin, shadow offset, FX anchor) by this before the world/zoom scale.</summary>
+    public float ArtScale => WorldPxPerCell / (float)PxPerCell;
 
     /// <summary>Sprite id, the manifest's file stem.</summary>
     public string Id { get; }
@@ -180,6 +192,7 @@ public sealed class SpriteManifest
             layer, pivot, altitude)
         {
             FigureScalePermille = root.ContainsKey("figure_scale_permille") ? Positive(root, "figure_scale_permille", sourcePath) : 1000,
+            PxPerCell = root.ContainsKey("px_per_cell") ? Positive(root, "px_per_cell", sourcePath) : WorldPxPerCell,
         };
     }
 

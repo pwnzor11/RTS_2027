@@ -290,6 +290,7 @@ public sealed class HowToPlayScreen : IScreen
         try
         {
             SpriteSheet sheet = _s.Sprites.Sheet(id);
+            scale *= sheet.Manifest.ArtScale;   // D-275: page scales are in world pixels
             int frame = sheet.FrameIndex(state, facing, tick);
             var pos = new Vector2(x, y);
             if (bottomAnchor)

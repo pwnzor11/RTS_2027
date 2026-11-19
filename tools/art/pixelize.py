@@ -102,6 +102,36 @@ def main():
         print("wrote B_pixel", cell, "colours used:", len(cols))
 
 
+def main_unit(cell=None):
+    """D-275: the Authority medium tank (tank_v2 / auth_tank, plain v2 look) at the unit pixel size (common.UNIT_PX = 80 px per cell).
+    Needs ART_TAG=_v2 and the raw renders of `build_tank.py --sizes <canvas * 4> --tag _v2` (480 for 80 px).  Writes the sheets and
+    rewrites the two manifests' frame size, origin and px_per_cell (the comments and states are kept)."""
+    import re
+    cell = cell or C.UNIT_PX
+    cv = C.canvas(cell)
+    sheet = C.pack_sheet([frame_b(cell, f) for f in range(16)], 4, cv, cv)
+    arr = np.asarray(sheet).reshape(-1, 4)
+    assert set(np.unique(arr[:, 3])) <= {0, 255}
+    ox, oy = C.anchor_px(cell)
+    vdir = os.path.join(C.ROOT, "data", "sprites", "vehicles")
+    for sid in ("tank_v2", "auth_tank"):
+        sheet.save(os.path.join(vdir, f"{sid}.png"))
+        tp = os.path.join(vdir, f"{sid}.sprite.toml")
+        t = open(tp).read()
+        t = re.sub(r"^frame_w = \d+$", f"frame_w = {cv}", t, flags=re.M)
+        t = re.sub(r"^frame_h = \d+$", f"frame_h = {cv}", t, flags=re.M)
+        t = re.sub(r"^origin_x = \d+$", f"origin_x = {ox}", t, flags=re.M)
+        t = re.sub(r"^origin_y = \d+$", f"origin_y = {oy}", t, flags=re.M)
+        t = re.sub(r"^px_per_cell = \d+\n", "", t, flags=re.M)
+        t = re.sub(r"^(origin_y = \d+\n)", rf"\1px_per_cell = {cell}\n", t, flags=re.M)
+        t = re.sub(r"Sheet: \d+ x \d+ px, 4 x 4 cells of \d+ px", f"Sheet: {cv * 4} x {cv * 4} px, 4 x 4 cells of {cv} px", t)
+        open(tp, "w").write(t)
+        print("wrote", sid, f"{cv}px frames, origin ({ox}, {oy}), px_per_cell {cell}")
+
+
 if __name__ == "__main__":
     import sys
-    main_v2() if "v2" in sys.argv[1:] else main()
+    if "unit" in sys.argv[1:]:
+        main_unit()
+    else:
+        main_v2() if "v2" in sys.argv[1:] else main()

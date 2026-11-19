@@ -79,6 +79,9 @@ def make_ramp(dark, mid, light):
 
 
 CELL_SIZES = (48, 64)
+# D-275: unit sheets (vehicles, infantry) are rendered at 80 px per map cell: the 64 px world cell times the renderer's 1.25 unit draw
+# scale (D-172), so they reach the screen 1:1 instead of being stretched by a non-integer factor.  Manifests say px_per_cell = 80.
+UNIT_PX = 80
 TAG = os.environ.get("ART_TAG", "")  # "_v2" selects the v2 raw renders
 SS = 4  # supersample factor
 
@@ -95,13 +98,14 @@ def house_index(vals, lo, hi):
     return np.clip(np.rint((vals - lo) / max(hi - lo, 1e-6) * 7), 0, 7).astype(int)
 
 
-def calibration():
-    """Luminance range of the magenta house paint across all 4x frames (cached)."""
-    p = os.path.join(WORK, f"house_cal{TAG}.txt")
+def calibration(cell=64):
+    """Luminance range of the magenta house paint across all 4x frames (cached).  D-275: calibrated on the renders of the cell size
+    being processed (the 80 px tank has no 64 px renders beside it); 64 keeps the original cache name."""
+    p = os.path.join(WORK, f"house_cal{TAG}.txt" if cell == 64 else f"house_cal{TAG}_{cell}.txt")
     if os.path.exists(p):
         lo, hi = open(p).read().split()
         return float(lo), float(hi)
-    d = raw_dir(64)
+    d = raw_dir(cell)
     vals = []
     for f in range(16):
         c = np.asarray(Image.open(os.path.join(d, f"col_{f:02d}.png")).convert("RGBA"), dtype=float)
@@ -122,7 +126,7 @@ def load_layers(cell, f):
     s = np.asarray(Image.open(os.path.join(d, f"shadow_{f:02d}.png")).convert("RGBA"), dtype=float)
     a = c[..., 3] / 255
     house = (m[..., 0] > 127) & (a > 0.5)
-    lo, hi = calibration()
+    lo, hi = calibration(64 if cell in CELL_SIZES else cell)   # 48 and 64 share the original 64 px calibration
     idx = house_index((c[..., 0] + c[..., 2]) / 2, lo, hi)
     lum = s[..., :3].mean(axis=2) / 255
     lit = np.percentile(lum, 99.5)

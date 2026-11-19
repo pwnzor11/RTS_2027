@@ -30,8 +30,9 @@ public static class DamageFx
     // ASSUMED: tuned on the Authority tank; other vehicles share the rule until they get their own anchor.
     public const int HullLiftPermille = 230;
 
-    /// <summary>Pixels (zoom 1, before the unit scale) a vehicle's effect point is above its ground point.</summary>
-    public static float HullLift(SpriteManifest manifest) => manifest.FrameH * HullLiftPermille / 1000f;
+    /// <summary>World pixels (zoom 1, before the unit scale) a vehicle's effect point is above its ground point; D-275: the frame height is in
+    /// sheet pixels, so it is converted with <see cref="SpriteManifest.ArtScale"/>.</summary>
+    public static float HullLift(SpriteManifest manifest) => manifest.FrameH * manifest.ArtScale * HullLiftPermille / 1000f;
 
     /// <summary>Draws the effects of a damaged vehicle. <paramref name="origin"/> is its ground point on screen, <paramref name="scale"/> its sprite scale (unit scale times zoom).</summary>
     public static void DrawVehicle(SpriteBatch batch, SpriteLibrary library, SpriteManifest manifest, DamageTier tier, Vector2 origin, float scale, int tick, uint seed)
@@ -61,7 +62,7 @@ public static class DamageFx
         {
             any = true;
             if (tier != DamageTier.Fire) continue;
-            Vector2 at = origin + new Vector2(a.X - manifest.OriginX, a.Y - manifest.OriginY) * zoom;
+            Vector2 at = origin + new Vector2(a.X - manifest.OriginX, a.Y - manifest.OriginY) * (zoom * manifest.ArtScale);
             bool smoke = a.Kind.StartsWith("smoke", StringComparison.Ordinal);
             float side = (a.X + a.Y) % 2 == 0 ? 1 : -1;
             if (smoke) Draw(batch, library, Smoke, at + new Vector2(-8 * side, -6) * zoom, zoom * 1.2f, tick, a.Phase + 6);

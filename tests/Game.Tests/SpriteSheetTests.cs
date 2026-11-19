@@ -313,10 +313,11 @@ public sealed class SpriteManifestTests
 
         Assert.Equal("tank_v2", m.Id);
         Assert.Equal("tank_v2.png", m.SheetFile);
-        Assert.Equal(96, m.FrameW);
-        Assert.Equal(96, m.FrameH);
-        Assert.Equal(48, m.OriginX);
-        Assert.Equal(64, m.OriginY);
+        Assert.Equal(120, m.FrameW);   // D-275: rendered at 80 px per cell (96 at 64 px)
+        Assert.Equal(120, m.FrameH);
+        Assert.Equal(60, m.OriginX);
+        Assert.Equal(80, m.OriginY);
+        Assert.Equal(80, m.PxPerCell);
         Assert.Equal(8, m.HouseRamp.Count);
         SpriteState idle = Assert.Single(m.States);
         Assert.Equal(new SpriteState("idle", 16, 1, 0, 1), idle);

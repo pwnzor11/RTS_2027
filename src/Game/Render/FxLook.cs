@@ -100,7 +100,7 @@ public sealed class FxLook : IDisposable
                 SpriteManifest m = sprites.ForBuilding(rules, b).Manifest;
                 int n = 0, sx = 0, sy = 0;
                 foreach (FxAnchor a in m.FxFor(SpriteStates.Damaged)) { n++; sx += a.X - m.OriginX; sy += a.Y - m.OriginY; }
-                if (n > 0) { cx = b.Cell.X * Camera.CellPx + sx / (float)n; cy = b.Cell.Y * Camera.CellPx + sy / (float)n; }
+                if (n > 0) { cx = b.Cell.X * Camera.CellPx + sx * m.ArtScale / n; cy = b.Cell.Y * Camera.CellPx + sy * m.ArtScale / n; }
             }
 
             float spread = 10 * Math.Max(b.FootprintW, b.FootprintH);
@@ -152,7 +152,8 @@ public sealed class FxLook : IDisposable
             int frame = DeathAnimBook.Frame(sprite.Manifest, a, tick);
             if (frame < 0) continue;
             Vector2 origin = SpriteLayout.UnitOrigin(camera, Camera.WorldFromLepton(d.Pos));
-            float scale = camera.Zoom * SpriteLayout.UnitDrawScale * (sprite.Manifest is { FigureScalePermille: > 1000 } ? 1f : UnitRenderer.InfantryExtraScale);
+            float scale = camera.Zoom * SpriteLayout.UnitDrawScale * (sprite.Manifest is { FigureScalePermille: > 1000 } ? 1f : UnitRenderer.InfantryExtraScale)
+                * sprite.Manifest.ArtScale;   // D-275: an 80 px sheet is drawn 1:1
             if (origin.X < viewport.Bounds.Left - 128 || origin.X > viewport.Bounds.Right + 128 || origin.Y < viewport.Bounds.Top - 128 || origin.Y > viewport.Bounds.Bottom + 128) continue;
             painter.Draw(batch, sprite, frame, origin, PlayerColours.Base(d.Player), scale, 1f, DeathStates.MirrorWest(d.Facing));
         }
