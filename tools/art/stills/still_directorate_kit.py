@@ -580,14 +580,8 @@ def sandbags(p0, p1, rows=3, rng=None):
 
 
 def grey_smoke(loc, h=40, r0=2.4, n=10, tint="#4A4642", rng=None, drift=14):
-    rng = rng or random.Random(5)
-    x, y = loc
-    for i in range(n):
-        t = i / (n - 1)
-        sm = M(tint, rough=1.0)
-        if i < max(2, n // 3):
-            sm = M("#3A2A22", rough=1.0, emit="#FF6A20", estr=0.12 * (1 - i / max(2, n // 3)))
-        sphere("smoke", (x - t * t * drift + rng.uniform(-1.5, 1.5), y + rng.uniform(-1.5, 1.5), 2 + t * h), r0 * (1 + t * 2.2), sm, scale=(1, 1, 0.8))
+    """Grey smoke column: the shared volumetric builder (K.smoke_volume), faintly fire-lit at the base."""
+    return K.smoke_volume(loc, h=h, r0=r0, n=n, tint=tint, rng=rng or random.Random(5), drift=drift, glow="#FF6A20", glow_str=0.15)
 
 
 # ------------------------------------------------------------------------------------------------ render driver

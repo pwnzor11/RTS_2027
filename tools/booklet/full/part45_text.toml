@@ -1,0 +1,159 @@
+# Part IV and V text for the Field Manual (M14-05e). ALL of it is NEW TEXT (draft pages). Numbers in {braces} are filled from
+# data/mapgen/biomes.toml at build time. Facts come from data/mapgen/biomes.toml, docs/design/08 and 16, and the mission files.
+
+[biome.rust_belt]
+name = "Rust Belt"
+runhead = "Part IV · Theatres of War"
+map = "map_rust_belt.png"
+caption = "A Medium Rust Belt map. Two starts (red), the river across the middle, the road grid."
+lead = "A ruined industrial city under snow and black ash. The old streets are still there, and so are the people who fight over them."
+ground = [
+ "Roads run in a grid, one every {road_grid} cells. Between the roads lie blocks of rubble: rough ground with rock cores. Rough ground slows units. Rock stops ground units completely.",
+ "One frozen river crosses the map. A crossing comes about every {ford_spacing} cells, and the crossings alternate between a road bridge and a shallow ford. Shallow water is slow going for infantry and closed to wheels and tracks.",
+ "Dead trees, wrecked vehicles, concrete barriers and broken pylons stand in clusters. They block ground units like a wall. They do not block sight or shots. Pits, cracks, oil and soot stains, snow patches and small craters are only paint on the ground.",
+]
+resources = "Each start has {ash_fields_per_start} ashfall fields and {pitch_fields_per_start} pitchblende pit. {extra_fields} more small ashfall fields lie away from the starts. About {ruins} neutral ruins stand on the map; you can garrison them."
+rewards = "Many routes and few walls. Watch the river crossings and hold the ruins near them. A line of barriers or a wreck yard can close a street, so check your path before you send a column."
+
+[biome.glass_coast]
+name = "Glass Coast"
+runhead = "Part IV · Theatres of War"
+map = "map_glass_coast.png"
+caption = "A Medium Glass Coast map. Sea on every edge, dunes between the two starts."
+lead = "Fused sand, drowned suburbs and a sea that wraps the whole map. Every start is a shore start."
+ground = [
+ "Deep ocean runs along all four edges, about {ocean_width} cells wide on a Medium map. Shallow lagoons lie inland. Ground units cannot cross deep water. Hover craft and ships can.",
+ "Dunes are bands of rough ground. Along their crests the sand has fused to glass: rock that ground units cannot enter. Thin crests are hard to see, so look for them before you plan a route.",
+ "Half-buried cars, driftwood, concrete slabs and rusted pylons stand in clusters and block ground units. Sand ripples, glints, shells and salt crust are paint only.",
+]
+resources = "Ore is thin here. Each start has {ash_fields_per_start} ashfall fields and {pitch_fields_per_start} pitchblende pit, and the pits are sparse. There are no neutral ruins on generated Glass Coast maps."
+rewards = "Control of the water. The Expedition's campaign lands from the sea on these shores, and a force that ignores the coast can be outflanked from it."
+
+[biome.mountains]
+name = "Mountains"
+runhead = "Part IV · Theatres of War"
+map = "map_mountains.png"
+caption = "A Medium Mountains map. The big octagons are plateaus ringed by cliff."
+lead = "Ridges, plateaus and narrow passes. The ground itself does most of the defending."
+ground = [
+ "Plateaus rise one or two levels above the valley floor. Each is ringed by cliff, and cliffs stop ground units. Only the ramps, 2 to 4 cells wide, lead up. Air units ignore cliffs.",
+ "Rock spurs wall off the valleys. The passes between them are narrow, so a handful of defenders can hold one. There are {cliff_plateaus} plateaus per symmetry image, little water, and no neutral ruins.",
+ "Dead pines, wrecks, boulders and concrete blocks stand in clusters. Scree, pebbles, snow patches and frost cracks are paint only.",
+]
+resources = "Fields sit in the valleys. Each start has {ash_fields_per_start} ashfall fields and {pitch_fields_per_start} pitchblende pit, plus {extra_fields} extra small field."
+rewards = "Few routes, so chokepoints decide games. Take the passes that matter. Air units ignore ramps and passes, so keep some answer to them."
+
+[biome.ash_plains]
+name = "Ash Plains"
+runhead = "Part IV · Theatres of War"
+map = "map_ash_plains.png"
+caption = "A Medium Ash Plains map. Open ground, wandering rivers, many small fields."
+lead = "A wide, open drift of grey ash. Nothing grows here, and nothing hides you."
+ground = [
+ "Most of the map is open ash ground, which every unit crosses at full speed. Wandering rivers cross it. Shallow fords and road bridges let ground units over, about every {ford_spacing} cells.",
+ "Rock and rough ground are rare, so the cover comes from props: charred trunks, burnt-out hulls, fence stubs and broken pylons. Ash drifts, cracked earth, craters, burnt grass and bones are paint only.",
+]
+resources = "The richest theatre. Each start has {ash_fields_per_start} ashfall fields and {pitch_fields_per_start} pitchblende pit, and {extra_fields} more fields lie scattered across the plain. Field density runs from {field_density_min} to {field_density_max}. About {ruins} neutral ruin stands on the map."
+rewards = "Income, and the nerve to spend it. Rich fields near the middle are open to your enemy as well, so defend the harvesters or lose them."
+
+[design]
+intro = "Every generated map starts as four numbers: biome, size, player count and a seed. The same four always give the same map."
+sizes = "Sizes are Small, Medium and Large: {small}, {medium} and {large} cells on a side. Two to four players can start on any of them."
+checks = [
+ "Every start can reach every other start, on foot and with tracked vehicles.",
+ "Every start should reach at least {min_fields} resource fields within {field_dist} cells of path.",
+ "The path to the nearest field, to the map centre and to each other start is the same length for every player.",
+ "Every start has a clear 5 by 5 square to build on.",
+ "No two starts are closer than 12 cells.",
+]
+fair = "Maps are built in one section and copied by symmetry (a half turn, a quarter turn, or a mirror), so every player gets the same ground."
+lanes = "A lane is a route between bases. Wide lanes carry armies, narrow ones are chokepoints a few units can hold."
+starts = "A start is the clear square where your first yard stands, with room to build around it. A start with cliff, rock or water behind it is easier to defend."
+expansions = "An expansion is a field away from your start, usually with a flat pad for a second refinery. A good one is close enough to reach and far enough to be a risk."
+note = "The generator is being reworked to build lanes, walled starts with one wide entrance, and natural expansions on purpose. Until that layout is switched on, expect the grid, rivers and plateaus described on the theatre pages."
+legend = "Red circles mark starting positions. Yellow is an ashfall field, green a rich pitchblende pit, magenta a neutral ruin you can garrison. Small discs are rubble and wrecks that block movement; blue is water."
+tips = [
+ "Find the starts first, then your nearest fields, then the routes between.",
+ "Look for water, cliffs and rock. They decide where an army can go.",
+ "Count the crossings. Few crossings means few places to defend.",
+ "Fields near the middle are open to both sides.",
+]
+
+[editor]
+intro = "The map editor builds maps for skirmish and for sharing. Open it from the main menu, paint with the left button, erase with the right."
+view = "Pan with W, A, S, D or the arrow keys, or drag with the middle button. The wheel zooms. The right panel lists problems; click one to jump to it."
+tools_note = "Keys 1 to 9 pick the first nine tools in order. T picks Stamp."
+tool_rows = [
+ ["1", "Land", "Paint a land type"],
+ ["2", "Height", "Paint a height level, 0 to 3"],
+ ["3", "Resource", "Paint ashfall or pitchblende, density 1 to 12"],
+ ["4", "Feature", "Place a neutral ruin"],
+ ["5", "Start", "Place a numbered start (up to {max_starts})"],
+ ["6", "Eraser", "Clear resources, props, decals, features and starts"],
+ ["7", "Fill", "Flood-fill a land type"],
+ ["8", "Props", "Paint a tree, wreck, block, pylon or snag; size small, medium or large"],
+ ["9", "Decal", "Paint a decal from the biome's list"],
+ ["T", "Stamp", "Place a ready-made terrain patch; R turns it, M mirrors it"],
+]
+keys = [
+ ["[ and ]", "Smaller and larger brush (sizes {brushes})"],
+ ["H", "Show or hide props and decals"],
+ ["F5", "Check the map for problems"],
+ ["Ctrl+Z", "Undo (add Shift to redo)"],
+ ["Ctrl+Y", "Redo"],
+ ["Ctrl+S", "Save"],
+ ["Esc", "Leave (press twice if you have unsaved changes)"],
+]
+symmetry = "The Symmetry buttons are None, Rot2, Rot4, Mirror X, Mirror Y and Mirror diag. With one set, every stroke is copied to its images, so a fair map takes half the work. A symmetry that does not fit the map size is greyed out."
+save = "Validate checks the map the same way the generator does. Save is refused while there are errors. Play this map saves it first."
+
+[tutorial]
+title_note = "Every commander starts here."
+lead = "A short, safe drill with no clock. An Instructor talks you through each lesson over the radio and marks your current objective."
+lessons = [
+ "Select soldiers and move them.",
+ "Attack a target.",
+ "Build a Power Plant, then a Barracks.",
+ "Train infantry.",
+ "Collect pitchblende with a Refinery and a Scraper.",
+ "Defeat a small enemy camp.",
+]
+setup = "You begin with a Construction Yard and four riflemen. The map is {w} by {h} cells. Your base is in the north-west corner, the practice target is due east, and the enemy camp is in the far north-east. You start with {cash} in cash and may build only {tech}."
+shared = "The tutorial is shared by every faction's menu. You learn on Authority units, then carry the lessons into any campaign."
+
+[campaign.authority]
+premise = "The Continental Reconstruction Authority rebuilds the continent one road and one pit at a time. You command its field forces in 2001, as the first Directorate raiders appear on Authority roads."
+[campaign.directorate]
+premise = "The Directorate of the Interior has waited underground since 1962. In 2001 it surfaces openly. You command a forward shift, one shaft and a handful of citizens, and take the surface back one site at a time."
+[campaign.left_behind]
+premise = "The Left Behind are the people the Authority never evacuated. They live on the road in rigs and caravans, and nobody is coming to help them. You command the forward rigs from spring 2001."
+[campaign.expedition]
+premise = "The Second Relief Fleet crosses the sea in 2001 to a coast it has only seen on charts. You command its landing force, from the first beachhead onward."
+
+[teaser]
+auth_01 = "Two scrapers, one jeep, four riflemen and a pitchblende claim. The scrapers are the mission."
+auth_02 = "All the grain and all the fuel cross one road junction. The relief column will not enter it open."
+auth_03 = "Get the survey parties to the Glass Coast before the window closes. The dunes are not empty."
+auth_04 = "An old weapon of the Exchange is awake on the south bank, and the countdown has started."
+dir_01 = "A shaft has broken the surface on the old rail bed. Open a hatch on the marked ground and hold it."
+dir_02 = "Three road posts watch the convoy roads. Remove them and meet the convoys that feed them."
+dir_03 = "Two old launch sites on the Glass Coast, two fronts. Take both and hold them."
+dir_04 = "The last mission of the campaign, fought on the Ash Plains. The briefing tells the rest."
+lb_01 = "An Authority convoy goes up the ash road with two scrapers. The scrapers are the prize."
+lb_02 = "Three Authority posts cut the old roads. Take them one at a time."
+lb_03 = "A Directorate hatch field in the middle of the dunes, and an Authority column coming from the north."
+lb_04 = "The last mission of the campaign, on the Ash Plains in winter. Strangers have come by sea."
+exp_01 = "Put the Command Ship ashore on the east beach, raise a beachhead and hold it."
+exp_02 = "A second landing on the north shore. Raise the Anchorage so home shipments can find the fleet."
+exp_03 = "Hold a cove on the west coast so the carrier can lie up. Two powers are looking at you."
+exp_04 = "The fleet is off the Ash Plains. Put a Dredge Works on the ash field east of the landing."
+
+[tech]
+lead = "Campaign missions do not give you the whole tech tree. Each mission names the buildings and units you may build, and winning a mission adds to the list for the next one."
+how = [
+ "Each mission opens with a fixed list. Only items on it can be built, and the usual prerequisites still apply: a factory before a tank, power before anything.",
+ "Win a mission and its reward items are added to the starting list of the next mission in the same campaign.",
+ "Some missions also hand out extra items while you play.",
+ "Skirmish is different: there the full tree is open from the start.",
+]
+spoiler_note = "The reward for each campaign's last mission is not listed. Win it and see."

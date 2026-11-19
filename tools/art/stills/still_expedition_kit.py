@@ -352,12 +352,19 @@ def jet(loc, yaw=0.0, z=0.0, s=1.0, bank=0.0):
 
 
 def contrail(p0, p1, n=14, r=0.45, rng=None):
+    """White jet trail: a few overlapping soft volume blobs along p0 -> p1, widening with distance."""
     rng = rng or random.Random(8)
-    for i in range(n):
-        t = i / (n - 1)
-        p = (p0[0] + (p1[0] - p0[0]) * t, p0[1] + (p1[1] - p0[1]) * t, p0[2] + (p1[2] - p0[2]) * t)
-        o = K.sphere("trail", p, r * (0.6 + 1.6 * t), m("#F1ECEA", 1.0, emit="#FFD8B8", estr=0.35), scale=(1, 1, 0.8))
-        K.nolines(o)
+    d = Vector((p1[0] - p0[0], p1[1] - p0[1], p1[2] - p0[2]))
+    ln = d.length
+    rot = d.to_track_quat("X", "Z").to_euler()
+    k = max(3, n // 3)
+    for j in range(k):
+        t0, t1 = j / k, (j + 1) / k
+        tm = (t0 + t1) / 2
+        c = tuple(p0[i] + d[i] * tm for i in range(3))
+        w = r * (1.2 + 2.6 * tm)
+        K.cloud_volume(c, (ln / k * 0.75, w, w * 0.8), tint="#F1ECEA", rot=rot, glow="#FFD8B8", glow_str=0.25,
+                       density=0.7, seed=j * 2.1 + p0[0] * 0.01, lobes=2.0)
 
 
 # ------------------------------------------------------------------------------------------------ people and structures

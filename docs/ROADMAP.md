@@ -307,13 +307,13 @@ Source: docs/reviews/2026-11-07_owner_campaign_feedback.md. Audit: docs/reviews/
 - [x] M13-24 Campaign tier 5 raised where the bot wins 12/12 (D-234 point 4): band 4-9 of 12, tier-5 data only; laptop sweep to confirm s23: six missions raised, lb_04/exp_02/exp_04 stay 12/12 (D-238)
 - [x] M13-25 Expedition tier-2 hover canister skiff Grapeshot (D-234 point 2, Q-80, D-236/D-237): data, AI use, own sprite and hero render (s24 merge), field note approved (D-240); AI trigger still "(tune)" with the s23d series
 - [~] M13-26 Directorate too strong after D-229 (s23after): diagnosis and probes (docs/balance/s23_directorate.md); Rocket Truck cost 950 (D-239); laptop s23d to confirm
-- [ ] M10-24 Tutorial instructor voice (D-234 point 5): tut_01 voice slots, Kokoro audition on the laptop, owner picks, batch
+- [x] M10-24 Tutorial instructor voice (D-234 point 5): tut_01 voice slots, Kokoro audition on the laptop, owner picks, batch (s25: owner picked am_adam, PR #85; ticked s33)
 - [x] M14-01 Pilot: 9 pages, generator scripts (tools/booklet), design 19 (s18)
 - [x] M14-02 Hero render mode and laptop script (tools/booklet/render_heroes.ps1) (s18); s19: module cache fix (LB structures)
 - [x] M14-07 Pilot PDF and previews in docs/field_manual/, linked from the README (s19)
 - [x] M14-03 Hero renders: pilot approved, all 124 rendered on the laptop and on main (s19, D-210; PR #63). Open: walls/gates re-angle s22: walls/gates re-angled -35 deg with half sky light and detail-passed models, laptop renders on integ-s22 (D-227)
 - [x] M14-04 Directorate lore draft (Authority approved), then the other three faction chapters s22: Directorate draft approved (design 19 §6b, D-228); Left Behind and Expedition chapters next s23: Left Behind and Expedition approved after a fact-check (D-231)
-- [ ] M14-05 Full build (about 108 pages) after M13 lands; quick-reference card s32: full draft built (tools/booklet/full, branch integ-s32m, 144 pages + 2-page card, 36 draft pages), waiting for the owner's review (Q-86); s23: dry build ok on today's data, 150/150 ids have name, hero render and sprite (tools/booklet/data/check_coverage.py); resolver and prep fixed
+- [x] M14-05 Full build: done s33. Owner approved the full draft unchanged (D-271, Q-86); look pass D-273 (no pink, volumetric smoke, hero polish + detail renders); 144-page PDF + 2-page quick-reference card in docs/field_manual (built by tools/booklet/full/book.py)
 - [x] M14-06 Models and sprites for the 26 ids without art (scripts D-215; owner rendered on the laptop; landed in PR #74 s21; no rules id is left without art)
 
 ## M9 · LAN multiplayer (was M5)
@@ -333,15 +333,15 @@ Plan: docs/design/21_m10_polish_plan.md (D-214). Code-only parts built overnight
 - [x] M10-12 Weather per biome (toggle) · [x] M10-13 Animated water, shore foam, ship wakes · [x] M10-14 Battle juice (shake toggle, hit flash, muzzle flash)
 - [x] M10-17 End-of-match graphs · [x] M10-18 Map preview thumbnails · [x] M10-19 Medals and records (Profile page; par medals Q-73)
 - [x] M10-20 Loading screen with tips, credits roll · [x] M10-22 Inno Setup installer + CI artifacts + release workflow · [x] M10-23 Update notice
-- [ ] M10-06 Warzone tracks on every tracked vehicle · [~] M10-08 Building depth pipeline (s24: `--depth` pass, pilot v2 approved D-245; full re-render of all buildings on the laptop next) · [~] M10-10 SFX pass (s22: Stable Audio Open laptop generator, 80 jobs, sound keys and ambience code done; laptop generation pending; s31: exp_rad_burst wired to radiation blasts, all 80 jobs play) · [ ] M10-11 Portraits, death frames
+- [x] M10-06 Warzone tracks on every tracked vehicle (s33: piloted on auth_howitzer and dir_mole, dropped by the owner, D-272; helper tools/art/wz/wz_tracks.py kept) · [x] M10-08 Building depth pipeline (s26: full depth re-render landed, PR #88; s24: `--depth` pass, pilot v2 approved D-245; full re-render of all buildings on the laptop next) · [x] M10-10 SFX pass (s25/s28: all 80 sounds generated on the laptop and picked, D-251, D-256; s22: Stable Audio Open laptop generator, 80 jobs, sound keys and ambience code done; laptop generation pending; s31: exp_rad_burst wired to radiation blasts, all 80 jobs play) · [x] M10-11 Portraits, death frames (s25: portraits for every unit and death frames, PR #85)
 - [x] M10-15 Faction UI skin (s24: loader + 9-slice drawing + ui_skin setting; Authority pilot v2 approved D-245, install from the laptop; s27: Directorate, Left Behind, Expedition pilots approved, rendered on the Pi cluster and installed (PR #90); settings screen line) · [x] M10-16 Portraits in the card (s24; 4 pilot portraits approved, -All fan-out next) · [x] M10-14b Death animations by cause (s24; die_blast/die_burn/die_rad frames approved for auth_rifleman, fan-out next) · [ ] M10-21 Final balance pass (s28: 15 variants, none beat main on 128 games, D-255; next: per-faction adapt_build and tier gate in src/AI/Recruit)
-- [ ] M10-xx Building art: less flat, more depth (owner 2026-11-07, later polish run)
+- [x] M10-xx Building art: less flat, more depth (owner 2026-11-07; done as the M10-08 depth pass, s26)
 - [x] M10-01 Damage smoke/fire tiers, rubble/wrecks/scorch, vehicle dust, biome mood tint, larger-infantry option (D-184, D-187, s15)
 - [x] M10-02 All 18 infantry re-rendered at figure scale 1.25 with team-colour emphasis; tools/art/house_audit.py (D-185, s15)
 - [x] M10-03 Imported FX (Skorpio, LPC flames, Kenney puffs) and props (0 A.D., LPC) with credits and licence texts (D-188, s15)
 - [x] M10-04 Warzone 2100 .pie importer and kitbash tooling (D-189, s15)
 - [x] M10-05 (closed, D-214: D-192 left 0 of 138 flagged) Team-colour audit fixes for vehicles (11 of 45 hulls, 8 of 13 turrets under 10 px; tools/art/house_audit.py)
-- [ ] M10-06 Kitbash Warzone parts into our vehicles where they add detail (D-189); per-vehicle FX anchors in manifests
+- [ ] M10-06b Kitbash Warzone parts into our vehicles (open; tracks dropped s33, D-272) where they add detail (D-189); per-vehicle FX anchors in manifests
 - [x] M10-07 GlassCrest, IceSlab, WreckHulk, BrokenPylon: Blender prop atlas, 3 variants x 4 theaters (s29, D-258)
 Art pass, music/SFX, balance, installer.
 

@@ -1978,3 +1978,24 @@ top-left start a head start in Left Behind and Expedition games; with the fix th
 Authority v Left Behind moves 69.5 -> 64.7 %, no row moves away from 50 % by more than 0.8, campaign 45/45 (docs/balance/s32_balance.md).
 The remaining bias (about 57 % top-left) is mostly inherent: all buildings face south. **Alternatives:** a mirror-safe start-cell rounding
 (dropped: no probe effect, moved Dir v Exp 6 points). **Status:** lands in the session 32 PR (owner: "Land the rally bug fix and remeasure").
+
+### D-271 · 2026-11-17 · Field Manual approved as drafted (Q-86)
+**Decision:** the full Field Manual draft is approved unchanged: 144 pages (not the planned 108), Order Seven stays "Classified upgrade" and
+the cover keeps the Sunrise Device obelisk, the supply-cap and veterancy pages follow design 13/14 as written, and the 36 pages of new text
+are approved (draft stamps removed). The PDF and the 2-page quick-reference card go in docs/field_manual. **Why:** owner, session 33 ("love the
+draft"). **Alternatives:** cut to ~108 pages with smaller type and no field notes; hide the obelisk. **Status:** owner decision
+
+### D-272 · 2026-11-17 · M10-06 Warzone tracks dropped after the pilot
+**Decision:** the Warzone 2100 tracks are not rolled out. On the pilot (auth_howitzer, dir_mole) the Warzone tread read at game size as a darker,
+smoother belt and lost the road wheels the procedural tracks show. The shared helper tools/art/wz/wz_tracks.py stays for later use; no sprite
+changes. **Why:** owner, session 33 (picked "drop it, keep old tracks"). **Alternatives:** roll out to all ~17 tracked vehicles; a heavier variant.
+**Status:** owner decision
+
+### D-273 · 2026-11-17 · Field Manual look pass: no pink, volumetric smoke, polished and detailed hero renders
+**Decision:** (1) booklet-only colour grade (tools/booklet/full/grade.py): pink and magenta dusk casts in the painted stills become warm ash amber;
+the game's images are unchanged. (2) Hero renders get a hero-only polish step (smooth by angle, bevels, weighted normals, finer curved
+primitives) and a detail step (bevel-node edge wear, AO grime, colour and roughness variation, panel seams, rivets, hatches), rendered on the
+cluster node huntsman at 1200 px; the game sprites are unchanged. (3) Booklet house accents: Expedition signal orange #D0702A (was mauve),
+Left Behind teal #3F7C7A (was violet). (4) The stills' smoke columns and dust puffs become volumetric smoke (still_kit smoke_volume).
+**Why:** owner, session 33 ("I don't like all the pink", "the smoke looks terrible", "sprites look really low poly"; picked polish and detail,
+teal). **Alternatives:** higher resolution only (does not add geometry); smaller pictures. **Status:** owner decision

@@ -1,0 +1,113 @@
+# Part I text written for the Field Manual (NEW TEXT, pages that use it carry draft=True).
+# Approved lore (history_*, faction_*) is read straight from data/archive by part1_world.py, never copied here.
+
+[glossary_intro]
+text = "Words you will meet in the field. Plain meanings only; the lore is in the chapters."
+
+[[term]]
+t = "Annex, the Interior"
+d = "The sealed government complex under a mountain range. The Directorate was formed there. Rooms are numbered by depth."
+
+[[term]]
+t = "Ashfall"
+d = "The grey radioactive drift that kept falling for decades after the Exchange. It poisons fields. Scrapers collect it and centrifuges refine it into fuel."
+
+[[term]]
+t = "Authority"
+d = "The Continental Reconstruction Authority, formed under the Charter in 1963. Run by councils of engineers, dispatchers and clerks."
+
+[[term]]
+t = "Bores"
+d = "Cutting heads that dig tunnels under the Rust Belt in a night. Each leaves a Hatch behind it."
+
+[[term]]
+t = "Charter of Reconstruction"
+d = "The single page signed in February 1963. Its last clause says the Authority must one day dissolve itself."
+
+[[term]]
+t = "Commissariat of Order"
+d = "The Directorate body that policed the shifts and, after 1994, took over its planning."
+
+[[term]]
+t = "Concordat"
+d = "The Tidewater Concordat: the council of surviving ministries across the ocean that sent the Expedition."
+
+[[term]]
+t = "Convoy Roads"
+d = "The roads declared open across the Rust Belt in 1979. Trade, surveying and census work followed."
+
+[[term]]
+t = "Decon"
+d = "Decontamination. Ash gets into everything, so the Authority washes it off: decon showers, decon crews, decon trucks."
+
+[[term]]
+t = "Exchange, the"
+d = "The nine days of October 1962 in which the major cities of the continent were struck."
+
+[[term]]
+t = "Gathering, the"
+d = "The Left Behind assembly where disputes are settled and a Speaker is chosen."
+
+[[term]]
+t = "Great Drift"
+d = "The heavy ashfall of the winter of 1990. It buried the Glass Coast and exposed old launch sites."
+
+[[term]]
+t = "Hatch"
+d = "A steel lid in a field of ash. It is the way up from a Bore, and a squad comes out of it."
+
+[[term]]
+t = "Labour year"
+d = "One year in twelve that every Authority citizen owes to road crews, decon teams, grain convoys or the militia."
+
+[[term]]
+t = "Land-Train"
+d = "The Directorate's way of moving supplies below ground."
+
+[[term]]
+t = "Pitchblende"
+d = "Ore exposed under the richest ash drifts. Pitchblende pits were guarded like granaries."
+
+[[term]]
+t = "Reclamation"
+d = "The Directorate's doctrine that the surface is held in trust and must be taken back, acre by acre."
+
+[[term]]
+t = "Rig"
+d = "A Left Behind home built on a stranded train or truck: a family, a trade and a town. Its flag carries the names of everyone aboard."
+
+[[term]]
+t = "Rust Belt"
+d = "The region crossed by the Convoy Roads, and the ground the Directorate bores beneath."
+
+[[term]]
+t = "Scraper"
+d = "The armoured vehicle that takes ash from a field. The first one worked in 1968."
+
+[[term]]
+t = "Second Relief Fleet"
+d = "The Expedition: forty-one ships and a hundred aircraft, sailed in spring 2000."
+
+[[term]]
+t = "Service year"
+d = "Directorate conscription. It lasts as long as the Commissariat needs."
+
+[[term]]
+t = "Speaker"
+d = "The Left Behind leader chosen at each Gathering. Carries messages between rigs and holds the ledger of debts."
+
+[[term]]
+t = "Telex"
+d = "How the Expedition sends orders: typed in capitals, one thing at a time, ending TELEX ENDS."
+
+[[term]]
+t = "Tenancy, the"
+d = "The Directorate's name for the Authority."
+
+[[term]]
+t = "Tern Point"
+d = "The railhead where four thousand people were left in the winter of 1990. The Left Behind began there."
+
+[[term]]
+t = "Voice, the"
+d = "The broadcast heard in every Directorate corridor, shaft and hatch. It speaks for the Director."

@@ -196,9 +196,8 @@ def rig_bus(loc, yaw=0.0, body="teal", trim="red", length=9.0, height=2.3, rng=N
         cyl("chimney", c, 0.2, 1.7, mat("ash", LB["ash"]), verts=8)
         cyl("chimcap", (c[0], c[1], c[2] + 0.95), 0.3, 0.1, mat("red", LB["red_d"]), verts=8)
         if smoke:
-            for i in range(5):
-                sphere("steam", (c[0] - i * 0.35 + rng.uniform(-.1, .1), c[1] + rng.uniform(-.1, .1), c[2] + 1.3 + i * 0.75),
-                       0.3 + i * 0.22, mat("#CFC4B0", rough=1.0, emit="#FFD9A0", estr=0.5), scale=(1, 1, 0.8))
+            K.smoke_volume((c[0], c[1]), h=3.6, r0=0.3, n=5, tint="#CFC4B0", rng=rng, drift=1.4, growth=2.6, z0=c[2] + 1.3,
+                           glow="#FFD9A0", glow_str=0.5, density=1.4)
     # wheels
     for fx in (L * 0.36, -L * 0.3, -L * 0.4):
         for sd in (-1, 1):
@@ -254,11 +253,11 @@ def kettle_rig(loc, yaw=0.0, rng=None, lit=False, steam=True, horn_yaw=0.0):
     pole(p, F(0.2, 0, 5.4), 0.1, mat("ash", LB["ash"]))
     cyl("spout", F(0.25, 0, 5.45), 0.18, 0.4, mat("ochre", LB["ochre"]), rot=(0.3, 0, -yaw), verts=8)
     if steam:
-        for i in range(7):
-            t = i / 6
-            q = F(0.4 + t * 1.6, 0, 5.8 + t * 3.0)
-            sphere("steam", (q[0] + rng.uniform(-.2, .2), q[1] + rng.uniform(-.2, .2), q[2]), 0.35 + t * 0.9,
-                   mat("#E6D6BC", rough=1.0, emit="#FFE2B0", estr=0.9), scale=(1, 1, 0.85))
+        q0, q1 = F(0.4, 0, 5.8), F(2.0, 0, 8.8)
+        for _ in range(14):
+            rng.uniform(-.2, .2)    # keep the rng stream of the old puff stack
+        K.smoke_volume((q0[0], q0[1]), h=3.2, r0=0.35, n=2, tint="#E6D6BC", rng=random.Random(11), drift=q0[0] - q1[0], growth=2.4,
+                       z0=q0[2], glow="#FFE2B0", glow_str=0.9, density=1.4)
     # mast with loudspeaker horns (retuned Voice)
     mp = F(-4.2, 0.9, 1.4)
     pole(mp, (mp[0], mp[1], 7.2), 0.09, mat("ash_d", LB["ash_d"]))
@@ -494,10 +493,7 @@ def vent_tower(loc, h=20.0, glow="#9BE04A"):
         cyl("ring", (x, y, z), 2.55 - z * 0.03, 0.4, mat("steel", "#555B61"), verts=12)
     cyl("throat", (x, y, h + 0.1), 1.9, 0.5, mat(glow, glow, emit=glow, estr=30.0), verts=12)
     K.point_light((x, y, h + 2), 9000.0, tuple(lin(glow)[:3]), 1.5)
-    for i in range(7):
-        t = i / 6
-        sphere("plume", (x - t * t * 8, y + t * 2, h + 2 + t * 22), 1.8 + t * 4.2,
-               mat("#5C7A4A", rough=1.0, emit=glow, estr=0.5 * (1 - t) + 0.05), scale=(1, 1, 0.8))
+    K.smoke_volume((x, y), h=22.0, r0=1.8, n=7, tint="#5C7A4A", drift=8.0, growth=2.3, z0=h + 2, glow=glow, glow_str=0.6)
     beam((x, y), h + 30, 1.8, glow, 0.45, 0.08)
     box("ladder", (x + 2.1, y, h / 2), (0.1, 0.5, h), mat("steel_d", "#24272A"))
 

@@ -1,31 +1,40 @@
-# Handoff: Session 33 — Field Manual review and revisions; balance parked
-Last commit: `docs: Session 32 handoff` on `land/s32-handoff` (PR to main; main was 74ff251 = PR #106). Check it merged.
-Where things stand: session 32 landed D-266 (Expedition `aa_cap_before_air = 10` on top of D-265; Dir v Exp 62 -> 58 %) and D-270 (the AI rallies
-at its start cell until its first yard stands; Left Behind mirror top-left share 70 -> 58.5 %, Auth v LB 69.5 -> 64.7 %). Three Left Behind economy
-levers were screened and rejected (D-267 relocation for ore, D-268 harvester target, D-269 harvester shepherd); the owner accepted Auth v LB as it
-is. Campaign sweep 45/45 after each landing. Field Manual: full draft built (tools/booklet/full on branch `integ-s32m`, NOT on main), 144 pages +
-2-page quick-reference card, sent to the owner for one full review (Q-86). Decisions up to D-270. Open questions: Q-73 (deferred), Q-86.
-Current 128-game table (main): Auth v Dir 47.6, Auth v LB 64.7, Auth v Exp 36.8, Dir v LB 47.4, Dir v Exp 58.0, LB v Exp 49.1, Exp v Auth glass
-52.8, Exp v Dir glass 54.8, Exp v LB glass 69.0 (docs/balance/s31_balance.md, s32_balance.md).
+# Handoff: Session 34 — open choice (manual done); M10-06b kitbash, LAN test, M5-13 optional
+Last commit: `docs: Session 33 handoff` on `land/s33` (PR to main; main was e4018940 = PR #107). Check it merged. PR #108 (land/s33-manual)
+is superseded by the land/s33 PR: close it unmerged if still open.
+Where things stand: the Field Manual is approved and finished (D-271) with the session 33 look pass (D-273): amber skies instead of pink
+(booklet-only grade), volumetric smoke in the 10 smoke stills (also used in game briefings), 151 hero renders with polish and detail,
+Expedition orange / Left Behind teal accents, smooth picture scaling; 144 pages + 2-page card in docs/field_manual (38.6 MB). M10 is done except
+M10-06b (kitbash Warzone parts) and the FX-anchor note; Warzone tracks were dropped (D-272). Balance stays parked (D-269).
+Decisions up to D-273. Open questions: Q-73 (deferred).
 
 ## Start here (shown to the user as the plan; nothing starts until they say go)
-1. Handoff PR merged? Laptop: `git checkout main; git pull`.
-2. Field Manual (Q-86): take the owner's review notes, revise on `integ-s32m` (`python3 tools/booklet/full/book.py` rebuilds in ~40 s; one part
-   alone: `book.py <module>`), resend the PDF; once approved, merge integ-s32m and put the PDF in docs/field_manual (check its size first: 18 MB).
-3. M5-13 model run: needs the owner's API key on the laptop (never in chat).
-4. Balance is parked (owner, D-269). Remaining start-corner bias ~57 % top-left, mostly south-facing buildings (D-270); probe `Tools ai mirror`.
+1. Handoff PR merged? Laptop: `git checkout main; git pull` (the PR adds LFS hero renders; the laptop pulls them with git-lfs).
+2. Ask the owner what is next: candidates are M10-06b kitbash Warzone parts (pilot one vehicle first), the two-PC LAN test (M9-15, owner),
+   M5-13 model run (owner's API key on the laptop), balance (parked), or new work.
+3. Cluster rule (owner, s33): use the Pis too, even when x86 pieces are 3x faster: split work into a shared list both arches pull from
+   (pi-cluster skill "Use the whole cluster", if the owner saved the proposal).
 
 ## Half-finished work
-- Field Manual draft on `integ-s32m` (merged helper branches wp/s32-m-*): module owners in tools/booklet/full/COMMON.md. Helper notes worth a
-  look in revision: part3_entries packs pages by measuring heights with Playwright (needs Chromium); the Directorate hazard bar was changed to
-  oxblood stripes (owner picked oxblood + black); the "DRAFT" stamp now sits at the page foot.
-- Measurement branches to delete on GitHub: integ-s32, integ-s32b, integ-s32c, integ-s32d, integ-s32r, bal/s32-*, land/s32-docs*, land/s32-handoff (after merge), wp/s32-m-* (after
-  the manual merges), plus the session 31 list.
+- None in code. Cluster outputs from s33 stay on /work/out/s33heroes, s33stills, s33dir (jobs self-delete after 3 days).
+- Branches to delete on GitHub after the merge: integ-s32m, integ-s33, land/s33-manual, land/s33, wp/s33-hero, wp/s33-smoke, wp/s33-wz,
+  and the wp/s32-m-* branches if any remain. Owner's folder: scratch_s33/ and delete_branches_s33.ps1 can be deleted.
 
 ## Waiting on the user
-- Field Manual review (Q-86). Two-PC LAN test (M9-15). API key for M5-13 (optional). Branch clean-up on GitHub (list above).
+- "land it" for the land/s33 PR. Two-PC LAN test (M9-15). API key for M5-13 (optional). Save or skip the pi-cluster skill proposal.
 
 ## How to run this session
+- Session 33 lessons:
+  - Read the roadmap critically: four "open" M10 items were already done in earlier sessions (session logs and decisions said so). Grep
+    SESSION_LOG/DECISIONS for an item before planning work on it.
+  - With push access attached, LFS uploads from the cloud worked again (151 hero PNGs; checked with an LFS batch "download" request).
+  - Cluster Blender: `bpy-python` needs `pip install pillow numpy` for our tools; a 5-CPU pod cannot schedule beside another 5-CPU pod on one
+    x86 node (allocatable 6 / 4): use 2-3 CPU pods or the second node; prince has 4 cores. Directorate still scripts write to scratch/stills.
+  - kjob.py has no --env: prepend `export VAR=...` to a copy of the script. A fixed ids[IDX::N] split under-uses mixed-speed nodes.
+  - Fetching large outputs through the device bridge is slow (~150 KB/s): split on snowwhite into 1 MB parts and pull with several sftp
+    threads in <170 s calls (resume by .ok markers), then stage one .tar into the cloud.
+  - Booklet: `.unit .art img` was `image-rendering: pixelated`, which made the hero renders look blocky when zoomed; fixed. The PDF is plain
+    git (38.6 MB): keep embedded pictures at 900/560 px.
+  - The owner reviews art by before/after sheets and answers quickly; "full send" = finish without another review gate.
 - Session 32 lessons:
   - The owner gave Claude rights to delete cluster jobs ("give yourself access"); `kjob.py prune` at session start, jobs self-delete after 2 days.
   - Cluster: Pis fit 4 x 800m pods (Longhorn takes 444m); submit a build and let it start BEFORE series or traces that wait on it (trace pods on
