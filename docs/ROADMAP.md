@@ -347,7 +347,7 @@ Plan: docs/design/21_m10_polish_plan.md (D-214). Code-only parts built overnight
 - [x] M10-26 Vehicles 32 facings, infantry 16 (D-276, changes D-032): pipeline, pilot (auth_bulwark, auth_rifleman), all 84 vehicle and 22 infantry sheets re-rendered on the cluster (s35b); shared facings match the old sheets pixel for pixel
 Art pass, music/SFX, balance, installer.
 
-- [ ] M5-13 Measure the stronger commander: 32-game swap test, model vs `--random-directives` control (D-241) · [x] random control on 128 games (s29, D-260: 21 % v plain baseline 53 %); model run waits on the owner's key
+- [x] M5-13 Measure the stronger commander: 32-game swap test, model vs `--random-directives` control (D-241) · [x] random control on 128 games (s29, D-260: 21 % v plain baseline 53 %); [x] model run with qwen3:30b on the NAS, no key (s35b: 6-19-7, control 6-24-2, plain 13-12-7; docs/balance/s35_balance.md)
 - [x] M13-27 Left Behind mirror slot bias: a game-seed parity skew from correlated AI random streams; AiRandom per-slot seed mixed (D-249, s25)
 - [~] M13-28 Left Behind v Authority 28 %: tier-3 cap until 3600 (D-247, s25; cloud 44 % LB); laptop series to confirm; s35 table on main (docs/balance/s35_balance.md) = s32 final game for game, remaining gap listed there
 - [~] M13-29 Expedition too strong on Glass Coast: shipment value 1200 (D-246), Authority refinery 1700 (D-250); more ore tried and dropped; laptop series to confirm; s35 table on main (docs/balance/s35_balance.md) = s32 final game for game, remaining gap listed there

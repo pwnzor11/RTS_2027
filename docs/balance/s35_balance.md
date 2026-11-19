@@ -52,3 +52,29 @@ swaps (64 games per cell, 256 per map layout). In a mirror the factions cancel, 
 - Glass Coast layout 1 leans the same way, more mildly (57 %, z +2.1): worth a second look after Ash Plains.
 - Every other map layout is within 2 standard errors of 50 % overall (44-52 %). Single faction cells swing 34-65 % on 50-60 decided games,
   which is within the noise of one cell (one standard error is about 6.5 points); none of them is flagged.
+
+## M5-13: LLM commander with a local model (jobs cmod, cctl, cbase)
+Setup as in s29 (docs/balance/s29_commander_control.md): tier 3 v tier 3, default factions, map 64, 30 000 ticks, seeds 1-16 x swap 0/1
+(32 games, D-241). Side A is commanded, side B is the plain AI.
+- **Model:** qwen3:30b on the NAS's Ollama (CPU only, no API key), through a localhost proxy that turns the OpenAI chat call into
+  Ollama `/api/chat` with reasoning off and `format: "json"` (laptop folder `claude/rts/s35b/cmd_model.sh`). `timeout_seconds = 180` in
+  providers.toml (new option, this PR). Without JSON mode qwen3 wrote until the 1200-token cap (about 2 minutes a call); with it, replies
+  are 130-250 tokens of valid JSON.
+- **Control:** `--random-directives` on the same 32 games. **Base:** plain v plain on the same seeds.
+
+| Side A | W-L-D | Win % of decided | Score (draw = 0.5) |
+|---|---|---|---|
+| qwen3:30b commander | 6-19-7 | 24 % | 29.7 % |
+| Random directives (control) | 6-24-2 | 20 % | 21.9 % |
+| Plain AI (base) | 13-12-7 | 52 % | 51.6 % |
+
+- Paired game for game (win > draw > loss), the model did better than the control in 10 games and worse in 6. That is no significant
+  difference (sign test p about 0.45). Most of the gain is draws: the model held on to the tick limit in 7 games where the control lost 5
+  of the same games. Wins are equal (6 and 6).
+- **Both commanded sides are far below the plain AI** (about 22-30 % v 52 %), as in s29 (control 21 % v plain 53 % on 128 games). So
+  steering the tier-3 AI with directives costs it more than a 30B local model's choices give back. The bottleneck is how the AI carries
+  out directives and orders, not the model's JSON.
+- Calls: 865, mean 31 s, slowest 72.5 s. 10 calls (1.2 %) got an HTTP 500 from Ollama; the commander logged the error and the game went
+  on. The NAS also hosts the queen VM, which ran cluster jobs during the series and shares its CPU with Ollama.
+- Next (M5-14 candidates): find which directive or order kinds lose games (per-kind outcomes from the replays), so the AI follows a
+  directive only where it does not undercut its own plan; then rerun this same 32-game set (model and control) to measure.
