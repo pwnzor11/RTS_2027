@@ -94,4 +94,21 @@ public sealed class ArtScaleTests
         }
         Assert.True(seen >= 100, $"only {seen} unit manifests found under {root}");
     }
+
+    [Fact]
+    public void Vehicle_sheets_carry_32_facings_and_infantry_16()
+    {
+        string root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "data", "sprites"));
+        foreach ((string kind, int want) in new[] { ("vehicles", 32), ("infantry", 16) })
+        {
+            foreach (string path in Directory.GetFiles(Path.Combine(root, kind), "*.sprite.toml"))
+            {
+                foreach (SpriteState st in SpriteManifest.Load(path).States)
+                {
+                    if (st.Facings != 1)
+                        Assert.True(st.Facings == want, $"{path}: state {st.Name} has {st.Facings} facings, expected {want} (D-276)");
+                }
+            }
+        }
+    }
 }
