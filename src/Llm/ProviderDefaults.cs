@@ -24,6 +24,17 @@ public sealed record ProviderDefaults(
     /// <summary>Anthropic <c>output_config.effort</c> ("low" keeps thinking short so a decision comes back fast; "" = do not send).</summary>
     public string AnthropicEffort { get; init; } = "low";
 
+    /// <summary>Seconds an Anthropic request may take before it fails (optional key <c>timeout_seconds</c>, 5..600, default
+    /// <see cref="DefaultTimeoutSeconds"/>).</summary>
+    public int AnthropicTimeoutSeconds { get; init; } = DefaultTimeoutSeconds;
+
+    /// <summary>Seconds an OpenAI-compatible request may take (optional key <c>timeout_seconds</c>, 5..600, default
+    /// <see cref="DefaultTimeoutSeconds"/>). A model on a local CPU server can need far longer than a hosted one.</summary>
+    public int OpenAiTimeoutSeconds { get; init; } = DefaultTimeoutSeconds;
+
+    /// <summary>The request timeout when providers.toml does not set one.</summary>
+    public const int DefaultTimeoutSeconds = 20;
+
     /// <summary>Loads <paramref name="path"/>; never throws.</summary>
     public static ProviderDefaults Load(string path)
     {
@@ -58,7 +69,12 @@ public sealed record ProviderDefaults(
             Str(a, "default_model", d.AnthropicModel),
             Str(a, "strong_model", d.AnthropicStrongModel),
             Str(o, "base_url", d.OpenAiBaseUrl),
-            Str(o, "default_model", d.OpenAiModel)) { AnthropicEffort = Str(a, "effort", d.AnthropicEffort) };
+            Str(o, "default_model", d.OpenAiModel))
+        {
+            AnthropicEffort = Str(a, "effort", d.AnthropicEffort),
+            AnthropicTimeoutSeconds = Seconds(a, "timeout_seconds"),
+            OpenAiTimeoutSeconds = Seconds(o, "timeout_seconds"),
+        };
     }
 
     /// <summary>The base URL a provider uses when the settings leave it empty ("" for <see cref="LlmProviderKind.None"/>).</summary>
@@ -82,10 +98,16 @@ public sealed record ProviderDefaults(
         new(kind,
             string.IsNullOrWhiteSpace(baseUrl) ? BaseUrlFor(kind) : baseUrl.Trim(),
             string.IsNullOrWhiteSpace(model) ? ModelFor(kind) : model.Trim(),
+            TimeoutSeconds: kind == LlmProviderKind.Anthropic ? AnthropicTimeoutSeconds
+                : kind == LlmProviderKind.OpenAiCompatible ? OpenAiTimeoutSeconds : DefaultTimeoutSeconds,
             Effort: kind == LlmProviderKind.Anthropic ? AnthropicEffort : "");
 
     private static TomlTable Table(TomlTable root, string key) =>
         root.TryGetValue(key, out object? v) && v is TomlTable t ? t : new TomlTable();
+
+    // An integer 5..600; anything else (absent, not an integer, out of range) keeps the default.
+    private static int Seconds(TomlTable t, string key) =>
+        t.TryGetValue(key, out object? v) && v is long n && n >= 5 && n <= 600 ? (int)n : DefaultTimeoutSeconds;
 
     private static string Str(TomlTable t, string key, string fallback) =>
         t.TryGetValue(key, out object? v) && v is string s ? s.Trim() : fallback;
