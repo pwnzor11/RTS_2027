@@ -344,7 +344,7 @@ Plan: docs/design/21_m10_polish_plan.md (D-214). Code-only parts built overnight
 - [x] M10-06b Kitbash Warzone parts: closed without rollout (s34, D-274): pilot on auth_bulwark (Warzone cannon; cannon + cupola MG) read as less detail than our own geometry; candidates on branch wp/s34-kitbash. Per-vehicle FX anchors move to the next art pass that opens the vehicle scripts
 - [x] M10-07 GlassCrest, IceSlab, WreckHulk, BrokenPylon: Blender prop atlas, 3 variants x 4 theaters (s29, D-258)
 - [x] M10-25 Unit sheets rendered at 80 px per cell (the x1.25 drawn size) and drawn 1:1: `px_per_cell` manifests, ArtScale in the renderer, all 82 vehicle and 22 infantry sheets re-rendered on the cluster (s35, D-275)
-- [ ] M10-26 Vehicles 32 facings, infantry 16 (D-276, changes D-032): pipeline on `land/s35-compute`, pilot auth_bulwark + auth_rifleman (s35b); full re-render on the cluster, then PR
+- [x] M10-26 Vehicles 32 facings, infantry 16 (D-276, changes D-032): pipeline, pilot (auth_bulwark, auth_rifleman), all 84 vehicle and 22 infantry sheets re-rendered on the cluster (s35b); shared facings match the old sheets pixel for pixel
 Art pass, music/SFX, balance, installer.
 
 - [ ] M5-13 Measure the stronger commander: 32-game swap test, model vs `--random-directives` control (D-241) · [x] random control on 128 games (s29, D-260: 21 % v plain baseline 53 %); model run waits on the owner's key
@@ -352,4 +352,5 @@ Art pass, music/SFX, balance, installer.
 - [~] M13-28 Left Behind v Authority 28 %: tier-3 cap until 3600 (D-247, s25; cloud 44 % LB); laptop series to confirm; s35 table on main (docs/balance/s35_balance.md) = s32 final game for game, remaining gap listed there
 - [~] M13-29 Expedition too strong on Glass Coast: shipment value 1200 (D-246), Authority refinery 1700 (D-250); more ore tried and dropped; laptop series to confirm; s35 table on main (docs/balance/s35_balance.md) = s32 final game for game, remaining gap listed there
 - [x] M13-30 Laptop series summary: adjudication columns and -OutName title (s25)
+- [ ] M13-31 Ash Plains layout 1 favours the top-left start (69 % over 239 mirror games, every faction; s35 screen in docs/balance/s35_balance.md): trace, map-data fix, rescreen; Glass Coast l1 milder (57 %)
 - [x] M10-10b SFX: 15 sounds' takes 1-3 droned; s24 anti-drone prompts give takes 4-6, plus a full-window test (tools/audio/sfx/run_s24_sfx.ps1) (s28: catch-up run done, 16 picks landed in PR #92, D-256)

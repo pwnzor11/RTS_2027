@@ -29,3 +29,26 @@ The same nine rows, seeds 1-8 x 2 swaps (144 games, about 2.1 million simulated 
 on amd64 (i5 nodes) with `--record-dir`. All 144 replay files and all nine result tables are byte-identical; only the timing lines in the run
 logs differ (for example 233 752 ticks in 666 s on a Pi core v 202 s on an x86 core). The deterministic-sim rule (D-006: no float, seeded RNG) holds across CPU
 architectures, so lockstep multiplayer between ARM and x86 machines needs no extra work.
+
+## Map fairness screen (job fair35)
+Mirror matches (same faction both sides, tiered:3 v tiered:3, size 96, 30 000 ticks) on all four biomes x both layouts, seeds 1-32 x 2 start
+swaps (64 games per cell, 256 per map layout). In a mirror the factions cancel, so any lean is the map: the cell shows wins from start 0
+(top-left, 4,4) v start 1 (the mirror corner), draws left out. ** = more than 2.6 standard errors from 50 %.
+
+| Map | Layout | Authority | Directorate | Expedition | Left Behind | All four (start 0 share, z) |
+|---|---|---|---|---|---|---|
+| Ash Plains | 1 | 44-18 (71 %) ** | 36-17 (68 %) ** | 42-22 (66 %) | 43-17 (72 %) ** | 69.0 % (z +5.9) ** |
+| Ash Plains | 2 | 39-23 (63 %) | 25-34 (42 %) | 30-31 (49 %) | 21-41 (34 %) | 47.1 % (z -0.9) |
+| Glass Coast | 1 | 25-26 (49 %) | 29-16 (64 %) | 35-23 (60 %) | 25-20 (56 %) | 57.3 % (z +2.1) |
+| Glass Coast | 2 | 25-33 (43 %) | 30-27 (53 %) | 34-28 (55 %) | 32-32 (50 %) | 50.2 % (z +0.1) |
+| Mountains | 1 | 31-24 (56 %) | 22-28 (44 %) | 30-25 (55 %) | 19-24 (44 %) | 50.2 % (z +0.1) |
+| Mountains | 2 | 32-26 (55 %) | 29-29 (50 %) | 21-38 (36 %) | 24-37 (39 %) | 44.9 % (z -1.6) |
+| Rust Belt | 1 | 28-30 (48 %) | 19-35 (35 %) | 33-25 (57 %) | 36-19 (65 %) | 51.6 % (z +0.5) |
+| Rust Belt | 2 | 25-37 (40 %) | 25-34 (42 %) | 30-28 (52 %) | 26-37 (41 %) | 43.8 % (z -1.9) |
+
+- **Ash Plains layout 1 favours the top-left start: 69 % over 239 decided games (z +5.9), and the lean is in every faction (66-72 %).** This
+  is a map problem, not an AI one; the next step is a trace of a few Ash Plains l1 games to find what the top-left base gets (nearer ore,
+  shorter path to the middle, a choke) and a map-data fix, screened with this same cell.
+- Glass Coast layout 1 leans the same way, more mildly (57 %, z +2.1): worth a second look after Ash Plains.
+- Every other map layout is within 2 standard errors of 50 % overall (44-52 %). Single faction cells swing 34-65 % on 50-60 decided games,
+  which is within the noise of one cell (one standard error is about 6.5 points); none of them is flagged.
