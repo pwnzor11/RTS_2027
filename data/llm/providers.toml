@@ -15,3 +15,4 @@ effort = "low"
 base_url = "https://api.openai.com"
 # No default model: the player types the model name their server offers (OpenAI, LM Studio, Ollama, llama.cpp ...).
 default_model = ""
+# Optional for either provider: timeout_seconds = 20 (5..600). Raise it for a model on a local CPU server, which can take far longer to reply.

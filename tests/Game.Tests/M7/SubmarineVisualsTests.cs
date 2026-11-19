@@ -39,23 +39,23 @@ public sealed class SubmarineVisualsTests
     }
 
     [Fact]
-    public void The_missile_submarine_manifest_has_16_dived_facings_after_the_surfaced_frames()
+    public void The_missile_submarine_manifest_has_32_dived_facings_after_the_surfaced_frames()
     {
         SpriteManifest m = SpriteManifest.Load(RepoFile("data/sprites/vehicles/exp_missile_sub.sprite.toml"));
         Assert.True(SpriteStates.HasState(m, UnitVisuals.DivedState));
         SpriteState dived = m.State(UnitVisuals.DivedState);
-        Assert.Equal(16, dived.Facings);
-        Assert.Equal(16, dived.First);
-        Assert.Equal(16, m.FrameIndex(UnitVisuals.DivedState, 0, 0));
-        Assert.Equal(20, m.FrameIndex(UnitVisuals.DivedState, 64, 0));   // byte 64 is facing 4 of 16 (east)
-        Assert.Equal(4, m.FrameIndex("idle", 64, 0));                    // the surfaced body keeps frames 0..15
+        Assert.Equal(32, dived.Facings);                                 // D-276
+        Assert.Equal(32, dived.First);
+        Assert.Equal(32, m.FrameIndex(UnitVisuals.DivedState, 0, 0));
+        Assert.Equal(40, m.FrameIndex(UnitVisuals.DivedState, 64, 0));   // byte 64 is facing 8 of 32 (east)
+        Assert.Equal(8, m.FrameIndex("idle", 64, 0));                    // the surfaced body keeps frames 0..31
     }
 
     [Fact]
     public void A_dived_ship_draws_the_dived_frame_for_its_facing_and_a_surfaced_one_does_not()
     {
         SpriteManifest m = SpriteManifest.Load(RepoFile("data/sprites/vehicles/exp_missile_sub.sprite.toml"));
-        Assert.Equal(20, UnitVisuals.DivedBodyFrame(m, 64, tick: 0, submerged: true));
+        Assert.Equal(40, UnitVisuals.DivedBodyFrame(m, 64, tick: 0, submerged: true));
         Assert.Equal(-1, UnitVisuals.DivedBodyFrame(m, 64, tick: 0, submerged: false));
     }
 

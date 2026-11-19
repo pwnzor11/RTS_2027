@@ -104,12 +104,13 @@ def main():
 
 def main_unit(cell=None):
     """D-275: the Authority medium tank (tank_v2 / auth_tank, plain v2 look) at the unit pixel size (common.UNIT_PX = 80 px per cell).
-    Needs ART_TAG=_v2 and the raw renders of `build_tank.py --sizes <canvas * 4> --tag _v2` (480 for 80 px).  Writes the sheets and
+    Needs ART_TAG=_v2 and the raw renders of `build_tank.py --sizes <canvas * 4> --tag _v2 --facings 32` (480 for 80 px).  Writes the sheets and
     rewrites the two manifests' frame size, origin and px_per_cell (the comments and states are kept)."""
     import re
     cell = cell or C.UNIT_PX
     cv = C.canvas(cell)
-    sheet = C.pack_sheet([frame_b(cell, f) for f in range(16)], 4, cv, cv)
+    n = C.VEH_FACINGS   # D-276: build_tank.py --facings 32
+    sheet = C.pack_sheet([frame_b(cell, f) for f in range(n)], C.sheet_cols(n), cv, cv)
     arr = np.asarray(sheet).reshape(-1, 4)
     assert set(np.unique(arr[:, 3])) <= {0, 255}
     ox, oy = C.anchor_px(cell)
@@ -124,7 +125,10 @@ def main_unit(cell=None):
         t = re.sub(r"^origin_y = \d+$", f"origin_y = {oy}", t, flags=re.M)
         t = re.sub(r"^px_per_cell = \d+\n", "", t, flags=re.M)
         t = re.sub(r"^(origin_y = \d+\n)", rf"\1px_per_cell = {cell}\n", t, flags=re.M)
-        t = re.sub(r"Sheet: \d+ x \d+ px, 4 x 4 cells of \d+ px", f"Sheet: {cv * 4} x {cv * 4} px, 4 x 4 cells of {cv} px", t)
+        cols = C.sheet_cols(n); rows = (n + cols - 1) // cols
+        t = re.sub(r"Sheet: \d+ x \d+ px, \d+ x \d+ cells of \d+ px", f"Sheet: {cv * cols} x {cv * rows} px, {cols} x {rows} cells of {cv} px", t)
+        t = re.sub(r"^facings = \d+$", f"facings = {n}", t, flags=re.M)
+        t = re.sub(r"\b16 facings\b", f"{n} facings", t)
         open(tp, "w").write(t)
         print("wrote", sid, f"{cv}px frames, origin ({ox}, {oy}), px_per_cell {cell}")
 

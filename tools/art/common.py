@@ -82,6 +82,16 @@ CELL_SIZES = (48, 64)
 # D-275: unit sheets (vehicles, infantry) are rendered at 80 px per map cell: the 64 px world cell times the renderer's 1.25 unit draw
 # scale (D-172), so they reach the screen 1:1 instead of being stretched by a non-integer factor.  Manifests say px_per_cell = 80.
 UNIT_PX = 80
+# D-276: facings in the rendered sheets.  Vehicle modules list 16 and infantry modules 8 (D-032); the builders render 32 and 16 so units
+# turn smoothly.  The renderer reads the count from each manifest (Facing.ToFacings takes 8, 16 or 32).
+VEH_FACINGS = 32
+INF_FACINGS = 16
+
+
+def sheet_cols(n):
+    """Columns for a sheet of n frames: roughly square, so a 160-frame sheet stays far below the 8192 px texture limit."""
+    import math
+    return max(1, int(math.ceil(math.sqrt(n))))
 TAG = os.environ.get("ART_TAG", "")  # "_v2" selects the v2 raw renders
 SS = 4  # supersample factor
 

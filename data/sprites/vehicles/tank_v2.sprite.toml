@@ -1,7 +1,7 @@
 # Sprite manifest for the Authority medium tank (id "tank_v2", sheet tank_v2.png, the v2 pilot from art/pilot).
-# Migrated from tank_v2.toml (format v1). The tank has one state, "idle": 16 facings, 1 frame each.
+# Migrated from tank_v2.toml (format v1). The tank has one state, "idle": 32 facings, 1 frame each.
 #
-# Sheet: 480 x 480 px, 4 x 4 cells of 120 px, row-major. Frame 0 faces north, facings run clockwise in 22.5 deg steps.
+# Sheet: 720 x 720 px, 6 x 6 cells of 120 px, row-major. Frame 0 faces north, facings run clockwise in 22.5 deg steps.
 # Camera: orthographic, elevation 40 deg, sun upper-left (see art/pilot/README.md, v2 section).
 #
 # Origin: for a vehicle, the pixel that sits on the ground contact point, i.e. the cell centre, counted from the
@@ -20,7 +20,7 @@ ramp = ["#400040", "#5B125B", "#772577", "#923792", "#AD49AD", "#C85BC8", "#E46E
 
 [[state]]
 name = "idle"
-facings = 16
+facings = 32
 frames = 1
 first = 0
 ticks_per_frame = 1

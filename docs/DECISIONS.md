@@ -2022,3 +2022,16 @@ reproduces the old sheets. A test checks every unit manifest says 80.
 send it". A 96 px cell (more detail, but 1.5x larger units or less map on screen) and more Cycles samples (128 v 24 changed 3 % of pixels as
 isolated palette flips, no visible gain) were measured first and set aside. **Alternatives:** 96 px cell with zoom/UI rework; drop the x1.25
 unit scale; keep 64 px. **Status:** owner decision
+
+### D-276 · 2026-11-19 · M10-26 Vehicles 32 facings, infantry 16 (changes D-032)
+**Decision:** unit sheets carry 32 facings for vehicles (hull and turret layers, 11.25 deg steps) and 16 for infantry walk/idle/fire
+(22.5 deg); one-facing states (deaths) are unchanged. This replaces the "16 facings for vehicles, 8 for infantry" part of D-032; the rest of
+D-032 stands. No engine change: `Facing.ToFacings` already maps the sim's 256-step facing to 8, 16 or 32, the renderer reads the count per
+state from each manifest, and SpriteSheet takes columns from the sheet width. Pipeline: `common.VEH_FACINGS = 32` / `INF_FACINGS = 16`;
+build_vehicle.py maps a module's 16 to 32 and build_infantry.py its 8 to 16 (modules unchanged); rotation in 360 / facings steps; sheets
+pack roughly square (`common.sheet_cols`, ceil(sqrt(n)) columns) so the largest sheet (dir_bore) is about 2.6k px a side rather than
+800 x 8000; the medium tank via `build_tank.py --facings 32` + `pixelize.py unit`. Rendered on the cluster (s35b), pilot first
+(auth_bulwark hull and turret, auth_rifleman).
+**Why:** owner, session 35, "do all of this" on the list of compute upgrades that named smoother turning (32 / 16 facings). The new cluster
+makes the doubled render cost (about 2x frames) an afternoon. **Alternatives:** keep 16 / 8; 32 for turrets only; 64 facings (sheet size and
+little visible gain at 80 px). **Status:** owner decision

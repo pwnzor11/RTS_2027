@@ -320,7 +320,7 @@ public sealed class SpriteManifestTests
         Assert.Equal(80, m.PxPerCell);
         Assert.Equal(8, m.HouseRamp.Count);
         SpriteState idle = Assert.Single(m.States);
-        Assert.Equal(new SpriteState("idle", 16, 1, 0, 1), idle);
+        Assert.Equal(new SpriteState("idle", 32, 1, 0, 1), idle);   // D-276: 32 vehicle facings
     }
 
     /// <summary>Path of a file under the repository root, found by walking up from the test binaries.</summary>
