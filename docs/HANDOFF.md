@@ -1,26 +1,43 @@
-# Handoff: Session 35 — open choice; LAN test, M5-13 and Expedition play-test wait on the owner
-Last commit: `docs: Session 34 handoff` on `land/s34-handoff` (PR to main; main was the README PR #111). Check it merged.
-Where things stand: session 34 landed session 33 (PR #109), closed M10-06b without rollout (D-274, PR #110: the Warzone weapon kitbash pilot on
-auth_bulwark read as less detail than our own geometry) and refreshed the README (PR #111: status table, full Field Manual and quick-reference
-links). The owner's laptop folder was tidied: 126 leftovers (1.3 GB) moved to `_to_delete/` (git-excluded) for him to delete. Everything on the
-plan is built; what is left is testing and tuning. Balance stays parked (D-269). Decisions up to D-274. Open questions: Q-73 (deferred).
+# Handoff: Session 36 — open choice; Ash Plains start bias (M13-31) is the newest concrete item
+Last commit: `docs: Session 35 handoff` on `land/s35-handoff` (PR to main; main was 6393fb12, PR #114). Check it merged.
+Where things stand: session 35 rendered every unit sheet at 80 px per cell (D-275, PR #113) and then at 32 vehicle / 16 infantry facings
+(D-276, PR #114), and used the bigger cluster for checks (docs/balance/s35_balance.md): the balance table on main equals the s32 final table
+game for game; arm64 and x86 replays are byte-identical; Ash Plains layout 1 favours the top-left start (69 %); M5-13 is closed with a local
+model (qwen3:30b on the owner's NAS, no API key): about as weak as random directives, both far below the plain AI. Decisions up to D-276.
+Open questions: Q-73 (deferred).
 
 ## Start here (shown to the user as the plan; nothing starts until they say go)
 1. Handoff PR merged? Laptop: `git checkout main; git pull`.
-2. Ask the owner what is next: the two-PC LAN test (M9-15, owner), M5-13 model run (owner's API key on the laptop), the Expedition final
-   acceptance and play-test (M7-14), balance (parked, D-269), the later dedicated art pass, or new work. Per-vehicle FX anchors (left over from
-   M10-06b) go into whichever art pass next opens the vehicle scripts.
+2. Ask the owner what is next. Concrete candidates:
+   - M13-31 Ash Plains layout 1 start bias: trace a few mirror games (what the top-left base gets: ore distance, path to the centre,
+     a choke), fix the map data, rescreen with the same 256-game cell (fair.sh in the laptop folder `claude/rts/s35b/`). Glass Coast l1
+     is milder (57 %).
+   - Commander follow-up (M5-14 candidate): per-kind outcomes of directives/orders from the replays, so the AI follows a directive only
+     where it does not undercut its own plan; rerun the same 32 games (model and control).
+   - Owner items: two-PC LAN test (M9-15), Expedition play-test (M7-14); balance stays parked (D-269).
 
 ## Half-finished work
-- None. The kitbash candidates (auth_bulwark_wz, auth_bulwark_wz_c) stay on branch wp/s34-kitbash, not merged (D-274).
-- Branches to delete on GitHub: integ-s32m, integ-s33, land/s33, land/s33-manual, wp/s33-hero, wp/s33-smoke, land/s34-m10-06b, land/s34-readme,
-  land/s34-handoff (after merge), wp/s34-kitbash (optional). The owner was given `git push origin --delete ...` and `git branch -D ...` lines
-  (31 stale local branches from sessions 4-28).
+- None. Branches to delete on GitHub: land/s35-unit80, land/s35-compute, land/s35-handoff (after merge), plus the session 33/34 list
+  (integ-s32m, integ-s33, land/s33, land/s33-manual, wp/s33-hero, wp/s33-smoke, land/s34-m10-06b, land/s34-readme, land/s34-handoff,
+  wp/s34-kitbash).
 
 ## Waiting on the user
-- Delete `_to_delete/` in his folder and run the branch lines. Two-PC LAN test (M9-15). API key for M5-13 (optional). Expedition play-test.
+- Merge the handoff PR. Commit the cluster fix to the k3s-cluster-code repo (laptop folder `claude/tools/setup-tools.sh` and
+  `claude/skill/SKILL.md`: the Debian Blender wrapper). Two-PC LAN test (M9-15). Expedition play-test (M7-14).
 
 ## How to run this session
+- Session 35 lessons:
+  - The cluster now includes queen (8-vCPU VM on the TrueNAS box) and /work lives on the NAS (file locks work there). The NAS's Ollama
+    (port 30068) runs local models: the commander needs a localhost proxy (KeyPolicy only sends a key over http to loopback) that maps the
+    OpenAI chat call to `/api/chat` with `think: false` and `format: "json"`, plus `timeout_seconds = 180` in providers.toml
+    (`claude/rts/s35b/cmd_model.sh`). Without JSON mode qwen3 writes until the token cap.
+  - Debian Blender (Pis) in the `python:3.13-slim` image could not import numpy (it took /usr/local's Python); setup-tools.sh now installs
+    a wrapper, and Pi sheets match x86 ones. setup-tools.sh runs under `set -e`: a failing pipe in the job script ends the job.
+  - Unit sheet re-render: one shared claim list for x86 and Pi jobs (`claude/rts/s35b/u32/units32.sh`); 77 items took ~2 h on the x86
+    nodes alone. Verify against the previous sheets by script (states, origin, px_per_cell, shared facings' alpha).
+  - Files committed to the laptop folder through device_commit_files can be read one version late by the next device_bash call (twice
+    this session): edit job scripts in place on the device with sed/python, or check the content before submitting.
+  - kjob gives each job its own `$OUT`: jobs sharing a claim list set `OUT` themselves; setup-tools sets `ARCH`, so use `MYARCH`.
 - Session 34 lessons:
   - `build_vehicle.py <id> --facings ...` writes straight into data/sprites/vehicles, even for an existing id and a facing subset: it
     overwrote the live auth_bulwark sheets. Copy the outputs to scratch, then `git checkout -- data/sprites/...` and remove candidate sheets.

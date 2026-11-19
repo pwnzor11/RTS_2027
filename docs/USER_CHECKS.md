@@ -585,3 +585,9 @@ On main after the session 33 PR.
 - README on GitHub: "Where it stands" says *Updated 2026-11-18 (session 34).*; the Field Manual links open
   `docs/field_manual/RTS_2027_Field_Manual.pdf` (144 pages) and `docs/field_manual/RTS_2027_Quick_Reference.pdf` (2 pages).
 - In game, the Authority Bulwark looks as before (procedural cannon with a slotted muzzle brake): the kitbash candidates were not merged (D-274).
+
+## Session 35 (2026-11-19)
+- Skirmish: units look sharper than before at the same size on screen (sheets rendered at 80 px per cell, D-275).
+- Skirmish: order a tank (any faction) to drive in a slow circle, and a rifleman to walk around a building. Vehicles turn through 32
+  steps and infantry through 16, with no jumps between neighbouring frames (D-276). Turrets turn smoothly on their own.
+- `data/llm/providers.toml`: an optional `timeout_seconds = <5..600>` line under a provider is accepted (default 20 s).
