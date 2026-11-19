@@ -97,6 +97,10 @@ internal sealed class TierPlanner
     /// <summary>M4-16: the known enemy army is worth more than ours by <see cref="BehindMarginPct"/>: tech, research and tier gates wait (flag UseUpgrades).</summary>
     public bool Behind { get; private set; }
 
+    /// <summary>S36 (M5-14, D-278): the known enemy army is worth more than ours by <see cref="BehindMarginPct"/>, whatever the profile: while true
+    /// the AI ignores the commander directives and orders that hold credits or the army back (<see cref="DirectiveGuard"/>).</summary>
+    public bool CommandBehind { get; private set; }
+
     /// <summary>Records what is in view this decision.</summary>
     public void Observe(RecruitKnowledge k, List<ViewActor> knownEnemyBuildings)
     {
@@ -113,7 +117,8 @@ internal sealed class TierPlanner
             if (enemy >= _longPeak || now - _longPeakTick > WaveGateMemoryTicks) { _longPeak = enemy; _longPeakTick = now; }
             EnemyArmyLong = _longPeak;
             Ahead = k.Army.Count >= AheadMinUnits && (long)own * 100 >= (long)_enemyPeak * (100 + AheadMarginPct);
-            Behind = TechHoldEnabled && _p.UseUpgrades && (long)_enemyPeak * 100 > (long)own * (100 + BehindMarginPct);
+            CommandBehind = (long)_enemyPeak * 100 > (long)own * (100 + BehindMarginPct);
+            Behind = TechHoldEnabled && _p.UseUpgrades && CommandBehind;
         }
         Array.Clear(_cur);
         int seen = 0, seenInf = 0;

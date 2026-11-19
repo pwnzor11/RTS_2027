@@ -327,18 +327,19 @@ public sealed class RecruitAi : IAiPlayer, IAiSnapshotable, IHookableAi
         view.CopyKnownEnemyBuildings(_knownBuildings);
         _squads.Apply(_k);
         _raid.Detach(_k);   // S24: a commander-order raid group is not part of the army
+        _planner!.Observe(_k, _knownBuildings);   // s36: before the directive (it reads no directive value), so the guard below sees this decision's armies
         // M5-02: the commander's directive, as knob values for this decision (Directive.None gives the values the managers always used)
         DirectiveBias bias = DirectiveBias.For(view.Directive);
         if (_hookAttack is CellCoord hookAttack) bias = bias with { AttackCell = hookAttack };   // M8-06: script hooks beat the directive
         if (_hookDefend is CellCoord hookDefend) bias = bias with { RallyCell = hookDefend };
         IReadOnlyList<CommanderOrder> orders = view.CommanderOrders;   // S24 (M5-12): standing orders; all empty = nothing below changes
+        if (_planner.CommandBehind) (bias, orders) = DirectiveGuard.WhileBehind(bias, orders);   // s36 (M5-14, D-278)
         if (MilitaryManager.HoldCellOf(orders) is CellCoord holdCell && _hookDefend is null) bias = bias with { RallyCell = holdCell };   // HoldCell: the army rallies there
         _military.Orders = orders;
         EconomyOrders.Apply(orders, _planner!, _build!, _production!);   // S24 (s24-dai2): ExpandTo / TechTo / Reserve
         _military.HookAttack = _hookAttack;
         _military.HookHold = _hookDefend is not null && _hookAttack is null;   // Defend holds waves; an Attack hook (also set) wins
         _military.Bias = bias; _production!.Bias = bias; _planner!.Bias = bias; _upgrades.Bias = bias; _garrison.Bias = bias;
-        _planner.Observe(_k, _knownBuildings);
         _planner.ExtendBuild(_k, _build!);
         if (_profile.ReplaceHarvesters) _rescue.Think(_k, sink, _faction);   // M4-12: no harvester and no money: sell for one
         _build!.HoldExcept = _rescue.Saving ? _rescue.RefineryType : _rescue.Broke ? -1 : int.MinValue;
