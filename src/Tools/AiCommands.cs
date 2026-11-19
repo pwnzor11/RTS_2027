@@ -393,11 +393,25 @@ public static class AiCommands
         if (!ParseMapChoice(flags, out MapChoice? choice, out error)) return UsageError(error!);
         SimRules rules = world!.Rules;
         (MapData map, IReadOnlyList<CellCoord>? landing) = BuildMatchMap(choice, f, f, size, seed);
-        int W = map.Width, H = map.Height, n = W * H, mapDiff = 0;
-        for (int i = 0; i < n; i++)
-            if (map.Land[i] != map.Land[n - 1 - i] || map.Overlay[i] != map.Overlay[n - 1 - i] || map.Density[i] != map.Density[n - 1 - i]
-                || map.HeightLevel[i] != map.HeightLevel[n - 1 - i]) mapDiff++;
-        Console.WriteLine($"# mirror {f} {a!.Label} seed {seed}, {W}x{H}: map cells not equal to their 180-degree image: {mapDiff}; starts {string.Join(" ", map.StartPositions)}");
+        int W = map.Width, H = map.Height, n = W * H;
+        // s36 (M13-31): the probe images player 1 by the map's own symmetry (rot2, mirror_x or mirror_y): the one with the fewest differing cells.
+        int Diff(Func<int, int, int> img)
+        {
+            int d = 0;
+            for (int y = 0; y < H; y++)
+                for (int x = 0; x < W; x++)
+                {
+                    int i = y * W + x, j = img(x, y);
+                    if (map.Land[i] != map.Land[j] || map.Overlay[i] != map.Overlay[j] || map.Density[i] != map.Density[j] || map.HeightLevel[i] != map.HeightLevel[j]) d++;
+                }
+            return d;
+        }
+        var syms = new (string Name, bool FlipX, bool FlipY)[] { ("180-degree", true, true), ("mirror_x", true, false), ("mirror_y", false, true) };
+        int[] diffs = syms.Select(sy => Diff((x, y) => (sy.FlipY ? H - 1 - y : y) * W + (sy.FlipX ? W - 1 - x : x))).ToArray();
+        int best = Array.IndexOf(diffs, diffs.Min());
+        (string symName, bool fx, bool fy) = syms[best];
+        int mapDiff = diffs[best];
+        Console.WriteLine($"# mirror {f} {a!.Label} seed {seed}, {W}x{H}: map cells not equal to their {symName} image: {mapDiff} (180-degree {diffs[0]}, mirror_x {diffs[1]}, mirror_y {diffs[2]}); starts {string.Join(" ", map.StartPositions)}");
         var sim = new Simulation(new SimSetup((ulong)seed, map, 2, rules, world.RulesHash)
         {
             Factions = f == Faction.Authority ? null : [f, f], NoRebuildDefeat = true,
@@ -417,7 +431,7 @@ public static class AiCommands
                 if (!sim.Buildings.Slots.IsIndexAlive(i) || sim.Buildings.Player[i] != p) continue;
                 BuildingType bt = rules.Buildings[sim.Buildings.TypeIndex[i]];
                 CellCoord c = sim.Buildings.Cell[i];
-                if (image) c = new CellCoord(W - c.X - bt.FootprintW, H - c.Y - bt.FootprintH);
+                if (image) c = new CellCoord(fx ? W - c.X - bt.FootprintW : c.X, fy ? H - c.Y - bt.FootprintH : c.Y);
                 list.Add($"B {bt.Id} {c.X},{c.Y} hp{sim.Buildings.Health[i]}");
             }
             void Mob(MobileStore st, string kind, Func<int, string> id)
@@ -426,7 +440,7 @@ public static class AiCommands
                 {
                     if (!st.Slots.IsIndexAlive(i) || st.Player[i] != p) continue;
                     LeptonCoord q = st.Position[i];
-                    if (image) q = new LeptonCoord(pw - q.X, ph - q.Y);
+                    if (image) q = new LeptonCoord(fx ? pw - q.X : q.X, fy ? ph - q.Y : q.Y);
                     list.Add($"{kind} {id(st.TypeIndex[i])} {q.X},{q.Y} hp{st.Health[i]} {st.Mission[i]}");
                 }
             }
@@ -438,7 +452,7 @@ public static class AiCommands
         }
         var pending = new List<Command>();
         var history = new List<(int Tick, Command C)>();
-        string Cmd(Command c) => $"{c.Kind} subj {SubjectName(c.Subject)} cell {(c.Player == 1 && c.Cell.X >= 0 ? new CellCoord(W - 1 - c.Cell.X, H - 1 - c.Cell.Y) : c.Cell)} arg {c.Arg}";
+        string Cmd(Command c) => $"{c.Kind} subj {SubjectName(c.Subject)} cell {(c.Player == 1 && c.Cell.X >= 0 && (c.Cell.X | c.Cell.Y) != 0 ? new CellCoord(fx ? W - 1 - c.Cell.X : c.Cell.X, fy ? H - 1 - c.Cell.Y : c.Cell.Y) : c.Cell)} arg {c.Arg}";
         string SubjectName(EntityId id)
         {
             if (id.IsNone) return "-";
@@ -456,7 +470,7 @@ public static class AiCommands
             pending.RemoveAll(c => c.ExecTick < sim.Tick);
             List<string> s0 = Side(0, false), s1 = Side(1, true);
             if (s0.SequenceEqual(s1)) continue;
-            Console.WriteLine($"first divergence at tick {sim.Tick} (player 0 at {map.StartPositions[0]} v the image of player 1):");
+            Console.WriteLine($"first divergence at tick {sim.Tick} (player 0 at {map.StartPositions[0]} v the {symName} image of player 1):");
             var h0 = history.Where(x => x.C.Player == 0 && x.Tick >= sim.Tick - 60).Select(x => $"t{x.Tick} {Cmd(x.C)}").ToList();
             var h1 = history.Where(x => x.C.Player == 1 && x.Tick >= sim.Tick - 60).Select(x => $"t{x.Tick} {Cmd(x.C)}").ToList();
             foreach (string x in h0.Except(h1).Take(show)) Console.WriteLine("  p0 cmd only: " + x);
