@@ -623,3 +623,22 @@ and quick-reference links, still-to-come list. Play commands given to the owner.
 **Helpers:** none (lead-only small session).
 **Problems / notes:** the pilot render overwrote the live auth_bulwark sheets (restored before any commit); the first PR checks needed push access.
 **Next session should:** see HANDOFF.
+
+
+## Session 35 · 2026-11-19 (M10-25: unit sheets at 80 px per cell, drawn 1:1)
+**Goal:** owner asked whether the bigger cluster (new nodes queen and the TrueNAS box, Pis at 2.0 GHz) could raise sprite quality.
+**Done:** measured on auth_scraper (cluster renders, before/after sheets sent): 128 v 24 Cycles samples changed 3 % of pixels as isolated
+palette flips (no visible gain); a 96 px cell adds detail but needs 1.5x larger units or a zoom/UI rework (set aside); units are drawn at
+x1.25 (D-172) with point sampling, which doubles every fourth pixel row and column. Owner: "just do the full batch, send it" (D-275).
+Renderer: optional manifest key `px_per_cell`, `SpriteManifest.ArtScale` applied wherever unit-sheet pixels become world pixels;
+ArtScaleTests. Pipeline: `common.UNIT_PX = 80`, build_vehicle.py / build_infantry.py / `pixelize.py unit` (tank) at 80 px, `--px-cell 64`
+reproduces the old sheets. All 82 vehicle and 22 infantry sheets re-rendered on the cluster (77 jobs from one shared list in ~45 min:
+44 on the Pis with Debian Blender 4.3, 33 on huntsman/prince/queen with bpy 5.3) and checked against the 64 px sheets (states, origin
+x1.25, pivots, painted area x1.45-1.65, centroid within 2.7 world px). Whole test suite on the cluster (sdk:10.0 image): green apart from the
+new data test before the sheets landed.
+**Decisions:** D-275. **Questions:** none new.
+**Helpers:** none (lead-only; renders and tests on the cluster).
+**Problems / notes:** setup-tools.sh sets its own `ARCH` (dpkg name), so a job script must not use that name for `uname -m`; a deleted pod
+left `/work/cache/apt/.lockdir` behind (removed by hand; the lock breaks itself after 20 min); kjob gives each job its own `$OUT`, so two
+jobs sharing a claim list set `OUT` themselves. The cluster test kit is `claude/examples/rts-test.sh` in the owner's k3s-cluster folder.
+**Next session should:** see HANDOFF.

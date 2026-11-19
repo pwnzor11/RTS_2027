@@ -2007,3 +2007,18 @@ cannon is 8 points) and carry their detail in page-17-droid-weapons.png, which i
 plain tubes and lose the sleeve and muzzle brake our procedural cannon has. Our own geometry stays; tools/art/wz stays for reference. Candidate
 modules on branch wp/s34-kitbash (not merged). **Why:** owner, session 34 ("close m10-06b"), after the before/after sheet.
 **Alternatives:** roll out C; a cupola MG in our own style. **Status:** owner decision
+
+### D-275 · 2026-11-19 · M10-25 Unit sheets rendered at 80 px per cell and drawn 1:1
+**Decision:** every vehicle and infantry sheet is rendered at 80 px per map cell, the size the x1.25 unit draw scale (D-172) puts it on
+screen, and carries the new optional manifest key `px_per_cell = 80`. The renderer converts sheet pixels with
+`SpriteManifest.ArtScale` = 64 / px_per_cell wherever unit art becomes world pixels (layers, turret pivots, shadow offsets, infantry deaths,
+health-bar frame tops, damage lift and anchors, menu scenes, How to Play), so an 80 px sheet lands 1:1 exactly where the 64 px sheet was
+stretched x1.25 with point sampling (every fourth pixel row and column doubled). Units keep their on-screen size; map, zoom levels,
+terrain and buildings are unchanged (buildings were already 1:1). Pipeline: `common.UNIT_PX = 80`; build_vehicle.py frames =
+round(CANVAS * 80 / 64) (module CANVAS stays in 64 px units); build_infantry.py renders the 1.25 figures at 1.25 x 80 / 64 (60 px frames,
+figure_scale_permille unchanged); the Authority medium tank via `build_tank.py --sizes 480 --tag _v2` + `pixelize.py unit`. `--px-cell 64`
+reproduces the old sheets. A test checks every unit manifest says 80.
+**Why:** owner, session 35, after the before/after sheet (scraper: today's 64 px art at x1.25 v rendered at 80 px): "just do the full batch,
+send it". A 96 px cell (more detail, but 1.5x larger units or less map on screen) and more Cycles samples (128 v 24 changed 3 % of pixels as
+isolated palette flips, no visible gain) were measured first and set aside. **Alternatives:** 96 px cell with zoom/UI rework; drop the x1.25
+unit scale; keep 64 px. **Status:** owner decision
