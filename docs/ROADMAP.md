@@ -306,7 +306,7 @@ Source: docs/reviews/2026-11-07_owner_campaign_feedback.md. Audit: docs/reviews/
 - [~] M13-22 Left Behind v Expedition after s22 (LB wins 48-9 Rust Belt, 37-16 Glass Coast): loss tables, then a matchup-specific change (s23 probes: docs/balance/s23_probes.md) s23: `ai match --ledger`; LB tier-3 cap until 4800 (D-230); laptop s23after pending
 - [x] M13-24 Campaign tier 5 raised where the bot wins 12/12 (D-234 point 4): band 4-9 of 12, tier-5 data only; laptop sweep to confirm s23: six missions raised, lb_04/exp_02/exp_04 stay 12/12 (D-238)
 - [x] M13-25 Expedition tier-2 hover canister skiff Grapeshot (D-234 point 2, Q-80, D-236/D-237): data, AI use, own sprite and hero render (s24 merge), field note approved (D-240); AI trigger still "(tune)" with the s23d series
-- [~] M13-26 Directorate too strong after D-229 (s23after): diagnosis and probes (docs/balance/s23_directorate.md); Rocket Truck cost 950 (D-239); laptop s23d to confirm
+- [~] M13-26 Directorate too strong after D-229 (s23after): diagnosis and probes (docs/balance/s23_directorate.md); Rocket Truck cost 950 (D-239); laptop s23d to confirm; s35 table on main (docs/balance/s35_balance.md) = s32 final game for game, remaining gap listed there
 - [x] M10-24 Tutorial instructor voice (D-234 point 5): tut_01 voice slots, Kokoro audition on the laptop, owner picks, batch (s25: owner picked am_adam, PR #85; ticked s33)
 - [x] M14-01 Pilot: 9 pages, generator scripts (tools/booklet), design 19 (s18)
 - [x] M14-02 Hero render mode and laptop script (tools/booklet/render_heroes.ps1) (s18); s19: module cache fix (LB structures)
@@ -349,7 +349,7 @@ Art pass, music/SFX, balance, installer.
 
 - [ ] M5-13 Measure the stronger commander: 32-game swap test, model vs `--random-directives` control (D-241) · [x] random control on 128 games (s29, D-260: 21 % v plain baseline 53 %); model run waits on the owner's key
 - [x] M13-27 Left Behind mirror slot bias: a game-seed parity skew from correlated AI random streams; AiRandom per-slot seed mixed (D-249, s25)
-- [~] M13-28 Left Behind v Authority 28 %: tier-3 cap until 3600 (D-247, s25; cloud 44 % LB); laptop series to confirm
-- [~] M13-29 Expedition too strong on Glass Coast: shipment value 1200 (D-246), Authority refinery 1700 (D-250); more ore tried and dropped; laptop series to confirm
+- [~] M13-28 Left Behind v Authority 28 %: tier-3 cap until 3600 (D-247, s25; cloud 44 % LB); laptop series to confirm; s35 table on main (docs/balance/s35_balance.md) = s32 final game for game, remaining gap listed there
+- [~] M13-29 Expedition too strong on Glass Coast: shipment value 1200 (D-246), Authority refinery 1700 (D-250); more ore tried and dropped; laptop series to confirm; s35 table on main (docs/balance/s35_balance.md) = s32 final game for game, remaining gap listed there
 - [x] M13-30 Laptop series summary: adjudication columns and -OutName title (s25)
 - [x] M10-10b SFX: 15 sounds' takes 1-3 droned; s24 anti-drone prompts give takes 4-6, plus a full-window test (tools/audio/sfx/run_s24_sfx.ps1) (s28: catch-up run done, 16 picks landed in PR #92, D-256)
