@@ -15,7 +15,7 @@ namespace Rts.AI.Recruit;
 internal static class DirectiveGuard
 {
     /// <summary>A HoldCell order stops the AI's own waves (S24 behaviour) when true; when false it only moves the rally and the idle army there.</summary>
-    public const bool HoldBlocksWaves = true;   // (tune) s36 variant G1 = true, G2 = false
+    public const bool HoldBlocksWaves = false;   // (tune) s36 variant G1 = true, G2 = false
 
     /// <summary>The directive knobs and orders for a decision in which the AI is behind.</summary>
     public static (DirectiveBias Bias, IReadOnlyList<CommanderOrder> Orders) WhileBehind(DirectiveBias bias, IReadOnlyList<CommanderOrder> orders)
