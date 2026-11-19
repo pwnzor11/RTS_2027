@@ -76,7 +76,7 @@ public sealed class MapGenFairnessTests
 
     [Theory]
     [InlineData(Biome.RustBelt, 2, MapSymmetry.Rot2)]
-    [InlineData(Biome.GlassCoast, 2, MapSymmetry.MirrorX)]   // s36 D-277
+    [InlineData(Biome.GlassCoast, 2, MapSymmetry.Rot2)]
     [InlineData(Biome.Mountains, 2, MapSymmetry.MirrorX)]
     [InlineData(Biome.AshPlains, 2, MapSymmetry.MirrorX)]   // s36 D-277
     [InlineData(Biome.Mountains, 3, MapSymmetry.Rot4)]

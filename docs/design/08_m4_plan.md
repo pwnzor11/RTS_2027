@@ -52,7 +52,7 @@ hash, so the parameters stay out of RulesHash.
 | Biome (`biome` key) | Theater | Default symmetry 2p / 4p | Character |
 |---|---|---|---|
 | `rust_belt` | `rustbelt` | Rot2 / Rot4 | Road grid (Road land), rubble blocks (Rough + Rock), frozen canals (Water) with Shallow fords, ruined neutral buildings (features), rich ashfall along roads |
-| `glass_coast` | `glasscoast` | MirrorX / Rot4 (Rot2 until s36, D-277) | Ocean on **all four edges** (Water, deep), Shallow lagoons, dune ridges (Rough with impassable Rock "glass" crests), sparse Pitchblende. Every start is a shore start (M7-ready; Q-M4-d) |
+| `glass_coast` | `glasscoast` | Rot2 / Rot4 | Ocean on **all four edges** (Water, deep), Shallow lagoons, dune ridges (Rough with impassable Rock "glass" crests), sparse Pitchblende. Every start is a shore start (M7-ready; Q-M4-d) |
 | `mountains` | `mountains` | MirrorX / Rot4 | Plateaus (HeightLevel 1–2) ringed by Cliff, 2–4 cell passes as chokes, Rock spurs, little water, fields in valleys |
 | `ash_plains` | `ashplains` | MirrorX / Rot4 (MirrorY until s36, D-277) | Open Ash land, 1–2 rivers (Water) crossing the symmetry axis with Shallow fords and Road bridges every 16–24 cells (tune), dense Ashfall |
 
