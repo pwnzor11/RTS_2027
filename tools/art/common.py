@@ -79,6 +79,9 @@ def make_ramp(dark, mid, light):
 
 
 CELL_SIZES = (48, 64)
+# D-275: unit sheets (vehicles, infantry) are rendered at 80 px per map cell: the 64 px world cell times the renderer's 1.25 unit draw
+# scale (D-172), so they reach the screen 1:1 instead of being stretched by a non-integer factor.  Manifests say px_per_cell = 80.
+UNIT_PX = 80
 TAG = os.environ.get("ART_TAG", "")  # "_v2" selects the v2 raw renders
 SS = 4  # supersample factor
 
