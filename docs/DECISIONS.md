@@ -1999,3 +1999,11 @@ cluster node huntsman at 1200 px; the game sprites are unchanged. (3) Booklet ho
 Left Behind teal #3F7C7A (was violet). (4) The stills' smoke columns and dust puffs become volumetric smoke (still_kit smoke_volume).
 **Why:** owner, session 33 ("I don't like all the pink", "the smoke looks terrible", "sprites look really low poly"; picked polish and detail,
 teal). **Alternatives:** higher resolution only (does not add geometry); smaller pictures. **Status:** owner decision
+
+### D-274 · 2026-11-18 · M10-06b Warzone kitbash closed without rollout
+**Decision:** no Warzone 2100 parts are kitbashed into our vehicles. Pilot (session 34) on auth_bulwark: B swapped our cannon for the Warzone
+hyper-velocity cannon (gnhvcan.pie), C added a Warzone heavy MG (gnmmg1.pie) on the cupola. Warzone weapon models are very low-poly (the heavy
+cannon is 8 points) and carry their detail in page-17-droid-weapons.png, which is CC BY-SA 3.0 and unusable (D-189); painted flat they read as
+plain tubes and lose the sleeve and muzzle brake our procedural cannon has. Our own geometry stays; tools/art/wz stays for reference. Candidate
+modules on branch wp/s34-kitbash (not merged). **Why:** owner, session 34 ("close m10-06b"), after the before/after sheet.
+**Alternatives:** roll out C; a cupola MG in our own style. **Status:** owner decision

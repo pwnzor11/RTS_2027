@@ -341,7 +341,7 @@ Plan: docs/design/21_m10_polish_plan.md (D-214). Code-only parts built overnight
 - [x] M10-03 Imported FX (Skorpio, LPC flames, Kenney puffs) and props (0 A.D., LPC) with credits and licence texts (D-188, s15)
 - [x] M10-04 Warzone 2100 .pie importer and kitbash tooling (D-189, s15)
 - [x] M10-05 (closed, D-214: D-192 left 0 of 138 flagged) Team-colour audit fixes for vehicles (11 of 45 hulls, 8 of 13 turrets under 10 px; tools/art/house_audit.py)
-- [ ] M10-06b Kitbash Warzone parts into our vehicles (open; tracks dropped s33, D-272) where they add detail (D-189); per-vehicle FX anchors in manifests
+- [x] M10-06b Kitbash Warzone parts: closed without rollout (s34, D-274): pilot on auth_bulwark (Warzone cannon; cannon + cupola MG) read as less detail than our own geometry; candidates on branch wp/s34-kitbash. Per-vehicle FX anchors move to the next art pass that opens the vehicle scripts
 - [x] M10-07 GlassCrest, IceSlab, WreckHulk, BrokenPylon: Blender prop atlas, 3 variants x 4 theaters (s29, D-258)
 Art pass, music/SFX, balance, installer.
 
