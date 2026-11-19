@@ -14,6 +14,11 @@ namespace Rts.Llm;
 /// </summary>
 public sealed class RandomCommanderSource : IDirectiveSource
 {
+    /// <summary>S36 (M5-14): which random fields reach the game; the rest are set to the plain values (balanced, army, auto mix, no strong
+    /// mix, no expand, no focus cell) and orders of a kind left out are dropped. Every value is still drawn, so the random stream and every
+    /// kept field are the same as with <see cref="RandomFields.All"/>: games with different masks are paired seed for seed.</summary>
+    public RandomFields Keep { get; init; } = RandomFields.All;
+
     /// <summary>The stream of <see cref="SimRandom"/> this source draws from (separate from the match's own streams).</summary>
     private const ulong Stream = 0x5A24UL;
 
@@ -84,6 +89,20 @@ public sealed class RandomCommanderSource : IDirectiveSource
         var orders = new List<OrderDraft>();
         int count = _rng.Next(CommanderOrderCodec.Slots + 1);
         for (int i = 0; i < count; i++) orders.Add(RandomOrder());
+        if (Keep != RandomFields.All)
+        {
+            directive = directive with
+            {
+                Posture = (Keep & RandomFields.Posture) != 0 ? directive.Posture : DirectiveCodec.PostureBalanced,
+                Focus = (Keep & RandomFields.Focus) != 0 ? directive.Focus : DirectiveCodec.FocusArmy,
+                Mix = (Keep & RandomFields.Mix) != 0 ? directive.Mix : DirectiveCodec.MixAuto,
+                StrongMix = (Keep & RandomFields.Strong) != 0 && directive.StrongMix,
+                Expand = (Keep & RandomFields.Expand) != 0 && directive.Expand,
+                FocusX = (Keep & RandomFields.Cell) != 0 ? directive.FocusX : (short)-1,
+                FocusY = (Keep & RandomFields.Cell) != 0 ? directive.FocusY : (short)-1,
+            };
+            orders.RemoveAll(o => (Keep & RandomFieldsOf.Order(o.Kind)) == 0);
+        }
         return new CommanderReply(directive, null, orders);
     }
 
@@ -108,5 +127,55 @@ public sealed class RandomCommanderSource : IDirectiveSource
         };
         int minute = kind == CommanderOrderKind.AttackAt ? _rng.Next(MaxMinute + 1) : 0;
         return new OrderDraft(slot, kind, x, y, amount, minute);
+    }
+}
+
+/// <summary>S36 (M5-14): fields of a random decision that <see cref="RandomCommanderSource.Keep"/> lets through (`ai commander --random-only`).</summary>
+[Flags]
+public enum RandomFields
+{
+    None = 0,
+    Posture = 1, Focus = 2, Mix = 4, Strong = 8, Expand = 16, Cell = 32,
+    OrderClear = 64, OrderAttack = 128, OrderHold = 256, OrderRaid = 512, OrderExpand = 1024, OrderTech = 2048, OrderReserve = 4096,
+    Directive = Posture | Focus | Mix | Strong | Expand | Cell,
+    Orders = OrderClear | OrderAttack | OrderHold | OrderRaid | OrderExpand | OrderTech | OrderReserve,
+    All = Directive | Orders,
+}
+
+/// <summary>S36 (M5-14): names and order kinds of <see cref="RandomFields"/>.</summary>
+public static class RandomFieldsOf
+{
+    /// <summary>The flag of an order kind.</summary>
+    public static RandomFields Order(CommanderOrderKind kind) => kind switch
+    {
+        CommanderOrderKind.None => RandomFields.OrderClear,
+        CommanderOrderKind.AttackAt => RandomFields.OrderAttack,
+        CommanderOrderKind.HoldCell => RandomFields.OrderHold,
+        CommanderOrderKind.Raid => RandomFields.OrderRaid,
+        CommanderOrderKind.ExpandTo => RandomFields.OrderExpand,
+        CommanderOrderKind.TechTo => RandomFields.OrderTech,
+        _ => RandomFields.OrderReserve,
+    };
+
+    /// <summary>Parses a comma list (posture, focus, mix, strong, expand, cell, directive, orders, clear, attack, hold, raid, expandto, tech,
+    /// reserve, all, none); false on an unknown name.</summary>
+    public static bool TryParse(string text, out RandomFields fields)
+    {
+        fields = RandomFields.None;
+        foreach (string raw in text.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            RandomFields f = raw.ToLowerInvariant() switch
+            {
+                "none" => RandomFields.None, "posture" => RandomFields.Posture, "focus" => RandomFields.Focus, "mix" => RandomFields.Mix,
+                "strong" => RandomFields.Strong, "expand" => RandomFields.Expand, "cell" => RandomFields.Cell, "directive" => RandomFields.Directive,
+                "orders" => RandomFields.Orders, "clear" => RandomFields.OrderClear, "attack" => RandomFields.OrderAttack, "hold" => RandomFields.OrderHold,
+                "raid" => RandomFields.OrderRaid, "expandto" => RandomFields.OrderExpand, "tech" => RandomFields.OrderTech,
+                "reserve" => RandomFields.OrderReserve, "all" => RandomFields.All,
+                _ => (RandomFields)(-1),
+            };
+            if ((int)f == -1) return false;
+            fields |= f;
+        }
+        return true;
     }
 }
