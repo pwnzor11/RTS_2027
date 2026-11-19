@@ -642,3 +642,23 @@ new data test before the sheets landed.
 left `/work/cache/apt/.lockdir` behind (removed by hand; the lock breaks itself after 20 min); kjob gives each job its own `$OUT`, so two
 jobs sharing a claim list set `OUT` themselves. The cluster test kit is `claude/examples/rts-test.sh` in the owner's k3s-cluster folder.
 **Next session should:** see HANDOFF.
+
+## Session 35b · 2026-11-19 (compute upgrades: 32/16 facings, determinism, balance table, map fairness, M5-13 with a local model)
+**Goal:** owner: "anything else in the game we can upgrade or improve with all this new compute?", then "do all of this" for five items.
+**Done (PR #114, merged):**
+- M10-26 / D-276 (changes D-032): vehicles 32 facings, infantry 16. Pipeline (`common.VEH_FACINGS` / `INF_FACINGS`, square sheets via
+  `common.sheet_cols`, `build_tank.py --facings`); pilot (auth_bulwark, auth_rifleman) shown; all 84 vehicle and 22 infantry sheets
+  re-rendered on the cluster x86 nodes; the facings both versions share match the 80 px sheets to 0.08 % of alpha pixels. Tests: new
+  `Vehicle_sheets_carry_32_facings_and_infantry_16`; shipped tank and missile-sub tests now expect 32.
+- `providers.toml` `timeout_seconds` (5-600, default 20) + ProviderTimeoutTests.
+- docs/balance/s35_balance.md: balance table on main = s32 final game for game (no balance change, D-269); arm64 v x86 replays
+  byte-identical (144 games); map fairness: Ash Plains layout 1 favours the top-left start (69 %, every faction) -> M13-31; M5-13 closed:
+  qwen3:30b on the NAS's Ollama (no key) 6-19-7 v random control 6-24-2 v plain 13-12-7 on the same 32 games.
+**Decisions:** D-276. **Questions:** none new.
+**Helpers:** none (lead-only; renders, series and model run on the cluster).
+**Problems / notes:** Ollama's qwen3 ran to the 1200-token cap until the proxy sent `format: "json"` (then ~20-30 s a call, 1.2 % HTTP 500).
+Pi renders failed on "No module named numpy": Debian Blender takes its Python prefix from the first `python3` on PATH, which in the
+`python:3.13-slim` image is /usr/local; fixed in the cluster's setup-tools.sh (a `blender` wrapper) and checked with real Pi renders, which
+match the x86 sheets visibly (2-3 % one-shade palette flips). setup-tools.sh runs under `set -e`. Files committed to the owner's laptop
+folder through the bridge can land one version late: edit job scripts there in place.
+**Next session should:** see HANDOFF.
