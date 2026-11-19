@@ -14,45 +14,46 @@ RTS_2027 is not affiliated with or endorsed by Electronic Arts; no EA code, art 
 
 > **New session? Start with [`docs/00_START_HERE.md`](docs/00_START_HERE.md).**
 > **Setup and run: see [Run it](#run-it) below.**
-> **The game booklet: [`docs/field_manual/RTS_2027_Field_Manual_pilot.pdf`](docs/field_manual/RTS_2027_Field_Manual_pilot.pdf)**
-> (the pilot pages of the 1990s-style game booklet; the full manual comes with M14). It names the Authority campaign
-> missions with a one-line premise each, but no plot.
+> **The Field Manual: [`docs/field_manual/RTS_2027_Field_Manual.pdf`](docs/field_manual/RTS_2027_Field_Manual.pdf)**
+> (144 pages, the 1990s-style game booklet) and the **[quick-reference card](docs/field_manual/RTS_2027_Quick_Reference.pdf)**
+> (2 pages). The manual lists each faction's campaign missions with a one-line premise, but no plot and no endings.
 
 ---
 
 ## Where it stands
 
-*Updated 2026-11-11 (session 19).*
+*Updated 2026-11-18 (session 34).*
 
-**Everything on the plan except LAN play is built and playable**: the simulation, skirmish with all four factions, a
-tutorial and sixteen campaign missions, the Archive, the map editor, replays and the optional LLM commander. The current
-work is a fix pass from the session 18 audit (M13) and the printed Field Manual (M14).
+**Everything on the plan is built**: the simulation, skirmish with all four factions, a tutorial and sixteen campaign
+missions, the Archive, the map editor, replays, the optional LLM commander, LAN multiplayer and the printed Field Manual.
+What is left is testing and tuning: a two-PC LAN test, the AI difficulty ladder and start-corner balance (parked for now),
+and a slow dedicated art pass later.
 
 | Milestone | Status |
 |---|---|
 | M1 / M1.5 Deterministic simulation core (20 Hz, integer maths, seeded RNG, replays) | Done |
 | M2 / M3 Playable skirmish: Authority and Directorate, full tech trees, tunnels and burrowing, superweapon, audio, main menu, Archive | Done |
-| M4 Skirmish depth: procedural maps (4 biomes, 3 sizes, 2 to 4 players), garrisons, three-tier tech, upgrades, spectator mode, map editor | Done except the AI difficulty ladder balance |
-| M5 LLM commander: an optional language model sets strategy and talks in character (your own API key) | Done; owner play-test with a real key pending |
+| M4 Skirmish depth: procedural maps (4 biomes, 3 sizes, 2 to 4 players), garrisons, three-tier tech, upgrades, spectator mode, map editor | Done; AI difficulty ladder balance parked |
+| M5 LLM commander: an optional language model sets strategy and talks in character (your own API key) | Done; a measured run with a real model is pending |
 | M6 The Left Behind: mobile rig bases, wrecks and salvage, raids, the Second Drift, AI, art | Done |
-| M7 The Overseas Expedition: ships, submarines, landings, carriers, home shipments, beachheads, floating docks, AI, art | Playable in skirmish; final acceptance and owner play-test open |
-| M8 Campaign for all four factions | Done: tutorial and 16 missions with endings; owner review of the later acts and the voiced radio lines open |
-| M9 LAN multiplayer | Not started |
-| M10 Polish (art pass, music, balance, installer) | Started: damage effects, imported effects and props, infantry re-render |
+| M7 The Overseas Expedition: ships, submarines, landings, carriers, home shipments, beachheads, floating docks, AI, art | Done; final acceptance and owner play-test open |
+| M8 Campaign for all four factions | Done: tutorial and 16 missions with endings |
+| M9 LAN multiplayer (2 to 4 players plus AI on a home network) | Built; owner two-PC test open |
+| M10 Polish: art depth pass, portraits and death frames, sound effects, music, weather, water, battle effects, medals, installer, update notice | Done (Warzone tracks and part kitbash tried and dropped) |
 | M11 UI and input overhaul | Done |
-| M12 Maps overhaul | Waves 1 to 3 built (decals, props, generator decoration, map tools); map layout 2 exists but is off by default; the Editor props tool is open |
-| M13 Audit fixes | In progress: audit fixes |
-| M14 Field Manual | Pilot built (9 pages); the full booklet follows M13 |
+| M12 Maps overhaul | Done: decals, props, generator decoration, map tools; map layout 2 exists but is off by default |
+| M13 Audit fixes | Done |
+| M14 Field Manual | Done: 144-page manual and a 2-page quick-reference card |
 
 **Today's game:** four playable factions with 76 units (infantry, vehicles, ships and aircraft), 72 structures and
 28 upgrades between them. A tutorial and 16 campaign missions (four acts for each faction). Four map biomes in three
 sizes (64, 96 and 128 cells square), five AI difficulty tiers, a 243-entry Archive, three veterancy ranks and a supply
-cap of 200. About 2,800 automated tests (`[Fact]` and `[Theory]` methods) guard the simulation, the AI, the data files,
+cap of 200. About 3,400 automated tests (`[Fact]` and `[Theory]` methods) guard the simulation, the AI, the data files,
 the scripting and the tools.
 
-**Known gaps:** the AI difficulty tiers are not yet evenly spaced, map layout 2 is not the default yet, there is no
-multiplayer, and the art is a first pass (some units and buildings still use placeholder art; the polish milestone
-revisits them).
+**Known gaps:** the AI difficulty tiers are not yet evenly spaced and the AI still shows a small start-corner bias,
+map layout 2 is not the default yet, LAN play has not yet been tested between two real PCs, and the in-game art is the
+first full pass (a slow dedicated art pass comes after the game is finished).
 
 ---
 
@@ -500,13 +501,21 @@ technology and the leaders. Entries unlock as you play (some are open from the s
 
 ## The Field Manual
 
-A printed-style game booklet in the manner of a 1990s strategy-game manual: how to play, the factions, and every unit and
-structure with an illustration and its stats. The first nine pages are built as a pilot:
+A printed-style game booklet in the manner of a 1990s strategy-game manual (half-letter, print-ready): how to play, the
+world, each faction's lore and tech tree, every unit and structure with an illustration and its stats, the theatres and
+the campaigns (premises only, no spoilers).
 
-**[`docs/field_manual/RTS_2027_Field_Manual_pilot.pdf`](docs/field_manual/RTS_2027_Field_Manual_pilot.pdf)**
+- **[`docs/field_manual/RTS_2027_Field_Manual.pdf`](docs/field_manual/RTS_2027_Field_Manual.pdf)**: the full manual, 144 pages (about 39 MB).
+- **[`docs/field_manual/RTS_2027_Quick_Reference.pdf`](docs/field_manual/RTS_2027_Quick_Reference.pdf)**: the 2-page quick-reference card.
 
 | Cover | Inside page |
 |---|---|
+| ![Field Manual cover](docs/field_manual/img/page01_cover.png) | ![Field Manual inside page](docs/field_manual/img/page04_vehicles.png) |
+
+The generator scripts are in `tools/booklet/full` (`python3 tools/booklet/full/book.py` rebuilds it), and the plan is
+[`docs/design/19_field_manual.md`](docs/design/19_field_manual.md).
+
+---|---|
 | ![Field Manual cover](docs/field_manual/img/page01_cover.png) | ![Field Manual inside page](docs/field_manual/img/page04_vehicles.png) |
 
 The full manual (about 108 pages, with a chapter for each faction) is milestone M14. The generator scripts are in
@@ -518,6 +527,13 @@ The full manual (about 108 pages, with a chapter for each faction) is milestone 
 
 | What | Where |
 |---|---|
+| Two-PC LAN test (and a Wi-Fi test) | M9 |
+| AI difficulty ladder and start-corner balance; making map layout 2 (zones and lanes) the default | M4, M12 (parked) |
+| Final acceptance and play-test of the Expedition | M7 |
+| A measured run of the LLM commander with a real model | M5 |
+| A slow, dedicated art pass over every unit and building | after the game is finished |
+
+---|---|
 | Audit fixes (pathing, rigs, shipments, wording, quality of life such as game speed, idle alerts, stances) | M13, in progress |
 | The full Field Manual and a quick-reference card | M14 |
 | Finishing the AI difficulty ladder balance and making map layout 2 (zones and lanes) the default | M4 and M12 |
