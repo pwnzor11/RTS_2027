@@ -75,7 +75,7 @@ yard_kinds = ["wreck:3", "block:3", "pylon:1"]
 [biome.glass_coast]
 theater = "glasscoast"
 base_land = "clear"
-symmetry_2p = "rot2"
+symmetry_2p = "mirror_x"
 symmetry_4p = "rot4"
 water_permille = 0
 shallow_permille = 25
@@ -159,7 +159,7 @@ yard_kinds = ["wreck:3", "block:2"]
 [biome.ash_plains]
 theater = "ashplains"
 base_land = "ash"
-symmetry_2p = "mirror_y"
+symmetry_2p = "mirror_x"
 symmetry_4p = "rot4"
 water_permille = 0
 shallow_permille = 0
