@@ -580,3 +580,8 @@ On main after the session 33 PR.
 - **Briefing stills in game:** start any campaign mission briefing that shows a painting (e.g. Authority act 2): the smoke is the new soft plume.
 - **No change in game sprites:** unit and building sprites in a skirmish look as before (the polish and detail apply to the manual only).
 
+
+## Session 34 (2026-11-18)
+- README on GitHub: "Where it stands" says *Updated 2026-11-18 (session 34).*; the Field Manual links open
+  `docs/field_manual/RTS_2027_Field_Manual.pdf` (144 pages) and `docs/field_manual/RTS_2027_Quick_Reference.pdf` (2 pages).
+- In game, the Authority Bulwark looks as before (procedural cannon with a slotted muzzle brake): the kitbash candidates were not merged (D-274).
