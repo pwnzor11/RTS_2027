@@ -88,7 +88,7 @@ public static class UnitLayerPlan
         {
             int hullFacings = manifest.States[0].Facings;
             double hullAngle = hullFacings == 1 ? 0 : 360.0 * Facing.ToFacings(facing, hullFacings) / hullFacings;
-            (int dx, int dy) = PivotOffset(pivot, hullAngle);
+            (int dx, int dy) = PivotOffset(pivot, hullAngle, turretSheet.PxPerCell);   // D-275: in the turret sheet's own pixels
             layers.Add(new UnitLayer(UnitLayerKind.Turret, turretSheet.FrameIndex(turretSheet.States[0].Name, turretFacing ?? facing, t),
                 dx, dy, UnitLayerSheet.TurretCompanion));
         }
@@ -96,16 +96,18 @@ public static class UnitLayerPlan
     }
 
     /// <summary>
-    /// Pixel offset (zoom 1) from a unit's origin to a turret's origin, for a hull at <paramref name="hullAngleDeg"/>. The pivot is
+    /// Pixel offset (sheet pixels; zoom 1 for a 64 px sheet) from a unit's origin to a turret's origin, for a hull at <paramref name="hullAngleDeg"/>. The pivot is
     /// in cells at hull facing 0 (east and forward); it is rotated by the hull angle (0 = north, clockwise). Screen y falls with
     /// forward distance by the 40 degree elevation. Height is not used: the turret sheet's origin is already the ground point under
     /// the pivot.
     /// </summary>
     /// <param name="pivot">Turret pivot in cells.</param>
     /// <param name="hullAngleDeg">Hull facing in degrees, 0 = north, clockwise.</param>
-    public static (int Dx, int Dy) PivotOffset(TurretPivot pivot, double hullAngleDeg)
+    /// <param name="pxPerCell">D-275: the turret sheet's <c>px_per_cell</c> (64 for older sheets, 80 for units rendered at the drawn size); the
+    /// result is in that sheet's pixels, so the caller scales it like the sheet (zoom x unit scale x <see cref="SpriteManifest.ArtScale"/>).</param>
+    public static (int Dx, int Dy) PivotOffset(TurretPivot pivot, double hullAngleDeg, int pxPerCell = SpriteManifest.WorldPxPerCell)
     {
-        const double PxPerCell = 64;
+        double PxPerCell = pxPerCell;
         double theta = hullAngleDeg * Math.PI / 180.0;
         double sin = Math.Sin(theta);
         double cos = Math.Cos(theta);

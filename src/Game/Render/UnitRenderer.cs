@@ -56,7 +56,6 @@ public static class UnitRenderer
         foreach (UnitLayer planned in layers)
         {
             UnitLayer layer = divedFrame >= 0 && planned.Kind == UnitLayerKind.Body ? planned with { Frame = divedFrame } : planned;
-            Vector2 at = origin + new Vector2(layer.OffsetX, layer.OffsetY) * (camera.Zoom * drawScale);
             float layerAlpha = layer.Kind == UnitLayerKind.Shadow ? alpha * UnitLayerPlan.ShadowAlpha : alpha;
             ResolvedSprite layerSprite = layer.Sheet switch
             {
@@ -64,8 +63,11 @@ public static class UnitRenderer
                 UnitLayerSheet.ShadowCompanion => sprite.ShadowSheet!,
                 _ => sprite,
             };
-            painter.Draw(batch, layerSprite, layer.Frame, at, house, camera.Zoom * drawScale, layerAlpha);
-            if (hitFlash && layer.Kind != UnitLayerKind.Shadow) painter.DrawFlash(batch, layerSprite, layer.Frame, at, camera.Zoom * drawScale);   // M10-14
+            // D-275: layer offsets and frames are in the layer sheet's own pixels; ArtScale (64 / px_per_cell) makes an 80 px sheet land 1:1.
+            float sheetScale = camera.Zoom * drawScale * layerSprite.Manifest.ArtScale;
+            Vector2 at = origin + new Vector2(layer.OffsetX, layer.OffsetY) * sheetScale;
+            painter.Draw(batch, layerSprite, layer.Frame, at, house, sheetScale, layerAlpha);
+            if (hitFlash && layer.Kind != UnitLayerKind.Shadow) painter.DrawFlash(batch, layerSprite, layer.Frame, at, sheetScale);   // M10-14
         }
 
         if (!selected) return;

@@ -40,7 +40,8 @@ public static class SpriteLayout
     /// point does not move.
     /// </summary>
     public static (Vector2 TopLeft, Vector2 Size) UnitFrameRect(Vector2 origin, SpriteManifest manifest, float scale) =>
-        (origin - new Vector2(manifest.OriginX, manifest.OriginY) * scale, new Vector2(manifest.FrameW, manifest.FrameH) * scale);
+        (origin - new Vector2(manifest.OriginX, manifest.OriginY) * (scale * manifest.ArtScale),
+         new Vector2(manifest.FrameW, manifest.FrameH) * (scale * manifest.ArtScale));   // D-275: sheet pixels -> world pixels
 
     /// <summary>Screen position of a unit's origin: its ground contact point, whole pixels.</summary>
     /// <param name="camera">View.</param>
@@ -53,9 +54,9 @@ public static class SpriteLayout
     /// </summary>
     /// <param name="origin">Screen position of the origin pixel.</param>
     /// <param name="manifest">Manifest with the origin inside the frame.</param>
-    /// <param name="zoom">Camera zoom.</param>
+    /// <param name="zoom">Camera zoom (times any unit scale); the manifest's <see cref="SpriteManifest.ArtScale"/> is applied here.</param>
     public static Vector2 FrameTopLeft(Vector2 origin, SpriteManifest manifest, float zoom) =>
-        origin - new Vector2(manifest.OriginX, manifest.OriginY) * zoom;
+        origin - new Vector2(manifest.OriginX, manifest.OriginY) * (zoom * manifest.ArtScale);   // D-275: sheet pixels -> world pixels
 
     private static Vector2 Round(Vector2 v) => new(MathF.Round(v.X), MathF.Round(v.Y));
 }
