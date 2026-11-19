@@ -611,3 +611,15 @@ the cluster through the device bridge ran at ~150 KB/s (kjob fetch timed out; 1 
 left idle for the hero renders (no OIDN, ~2 h per hero at 3 CPUs) and the owner then set the rule to use them anyway.
 **Next session should:** see HANDOFF.
 
+
+## Session 34 · 2026-11-18 (session 33 landed, M10-06b closed, README refreshed, laptop folder tidied)
+**Goal:** resume, land session 33, clean up branches and the owner's folder, kitbash pilot (M10-06b).
+**Done:** PR #109 (session 33) merged after green CI; #108 was already closed. 126 leftovers (1.3 GB: t1/t1b/t3/t3b runs, commander runs, art
+push packs, scratch_s19/s33) moved to `_to_delete/` in the owner's folder; branch-delete commands handed over. M10-06b pilot on auth_bulwark:
+B = Warzone hyper-velocity cannon (gnhvcan) for our sleeve/barrel/brake, C = B + Warzone MG (gnmmg1) on the cupola; sheet sent; owner closed
+M10-06b (D-274, PR #110); candidates on wp/s34-kitbash. README refreshed (PR #111): status table as of session 34, known gaps, full Field Manual
+and quick-reference links, still-to-come list. Play commands given to the owner.
+**Decisions:** D-274. **Questions:** none new.
+**Helpers:** none (lead-only small session).
+**Problems / notes:** the pilot render overwrote the live auth_bulwark sheets (restored before any commit); the first PR checks needed push access.
+**Next session should:** see HANDOFF.

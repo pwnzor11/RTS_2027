@@ -1,28 +1,35 @@
-# Handoff: Session 34 — open choice (manual done); M10-06b kitbash, LAN test, M5-13 optional
-Last commit: `docs: Session 33 handoff` on `land/s33` (PR to main; main was e4018940 = PR #107). Check it merged. PR #108 (land/s33-manual)
-is superseded by the land/s33 PR: close it unmerged if still open.
-Where things stand: the Field Manual is approved and finished (D-271) with the session 33 look pass (D-273): amber skies instead of pink
-(booklet-only grade), volumetric smoke in the 10 smoke stills (also used in game briefings), 151 hero renders with polish and detail,
-Expedition orange / Left Behind teal accents, smooth picture scaling; 144 pages + 2-page card in docs/field_manual (38.6 MB). M10 is done except
-M10-06b (kitbash Warzone parts) and the FX-anchor note; Warzone tracks were dropped (D-272). Balance stays parked (D-269).
-Decisions up to D-273. Open questions: Q-73 (deferred).
+# Handoff: Session 35 — open choice; LAN test, M5-13 and Expedition play-test wait on the owner
+Last commit: `docs: Session 34 handoff` on `land/s34-handoff` (PR to main; main was the README PR #111). Check it merged.
+Where things stand: session 34 landed session 33 (PR #109), closed M10-06b without rollout (D-274, PR #110: the Warzone weapon kitbash pilot on
+auth_bulwark read as less detail than our own geometry) and refreshed the README (PR #111: status table, full Field Manual and quick-reference
+links). The owner's laptop folder was tidied: 126 leftovers (1.3 GB) moved to `_to_delete/` (git-excluded) for him to delete. Everything on the
+plan is built; what is left is testing and tuning. Balance stays parked (D-269). Decisions up to D-274. Open questions: Q-73 (deferred).
 
 ## Start here (shown to the user as the plan; nothing starts until they say go)
-1. Handoff PR merged? Laptop: `git checkout main; git pull` (the PR adds LFS hero renders; the laptop pulls them with git-lfs).
-2. Ask the owner what is next: candidates are M10-06b kitbash Warzone parts (pilot one vehicle first), the two-PC LAN test (M9-15, owner),
-   M5-13 model run (owner's API key on the laptop), balance (parked), or new work.
-3. Cluster rule (owner, s33): use the Pis too, even when x86 pieces are 3x faster: split work into a shared list both arches pull from
-   (pi-cluster skill "Use the whole cluster", if the owner saved the proposal).
+1. Handoff PR merged? Laptop: `git checkout main; git pull`.
+2. Ask the owner what is next: the two-PC LAN test (M9-15, owner), M5-13 model run (owner's API key on the laptop), the Expedition final
+   acceptance and play-test (M7-14), balance (parked, D-269), the later dedicated art pass, or new work. Per-vehicle FX anchors (left over from
+   M10-06b) go into whichever art pass next opens the vehicle scripts.
 
 ## Half-finished work
-- None in code. Cluster outputs from s33 stay on /work/out/s33heroes, s33stills, s33dir (jobs self-delete after 3 days).
-- Branches to delete on GitHub after the merge: integ-s32m, integ-s33, land/s33-manual, land/s33, wp/s33-hero, wp/s33-smoke, wp/s33-wz,
-  and the wp/s32-m-* branches if any remain. Owner's folder: scratch_s33/ and delete_branches_s33.ps1 can be deleted.
+- None. The kitbash candidates (auth_bulwark_wz, auth_bulwark_wz_c) stay on branch wp/s34-kitbash, not merged (D-274).
+- Branches to delete on GitHub: integ-s32m, integ-s33, land/s33, land/s33-manual, wp/s33-hero, wp/s33-smoke, land/s34-m10-06b, land/s34-readme,
+  land/s34-handoff (after merge), wp/s34-kitbash (optional). The owner was given `git push origin --delete ...` and `git branch -D ...` lines
+  (31 stale local branches from sessions 4-28).
 
 ## Waiting on the user
-- "land it" for the land/s33 PR. Two-PC LAN test (M9-15). API key for M5-13 (optional). Save or skip the pi-cluster skill proposal.
+- Delete `_to_delete/` in his folder and run the branch lines. Two-PC LAN test (M9-15). API key for M5-13 (optional). Expedition play-test.
 
 ## How to run this session
+- Session 34 lessons:
+  - `build_vehicle.py <id> --facings ...` writes straight into data/sprites/vehicles, even for an existing id and a facing subset: it
+    overwrote the live auth_bulwark sheets. Copy the outputs to scratch, then `git checkout -- data/sprites/...` and remove candidate sheets.
+  - The anonymous git lane cannot see PRs or CI (api.github.com refuses unattached repos): attach push access (owner asked in chat) to read
+    PR state and merge.
+  - Warzone weapon .pie models are very low-poly (gnhcan 8 points, gnhvcan 14) and carry their detail in the CC BY-SA weapon page: not worth
+    another kitbash attempt (D-274). Cloud Blender (pip bpy 5.3) renders a 4-facing two-layer vehicle preview in ~20 s.
+  - A docs-only PR's Windows CI takes 10-15 min: poll check-runs in one foreground loop under 600 s, then poll again; do not end the turn on it.
+  - The owner's folder had ~170 untracked run/transfer leftovers at the root: future laptop scripts should write into scratch/ (git-ignored).
 - Session 33 lessons:
   - Read the roadmap critically: four "open" M10 items were already done in earlier sessions (session logs and decisions said so). Grep
     SESSION_LOG/DECISIONS for an item before planning work on it.
