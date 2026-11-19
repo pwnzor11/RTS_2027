@@ -224,6 +224,7 @@ def main():
     ap.add_argument("--samples", type=int, default=24)
     ap.add_argument("--tag", default="", help="suffix for the work dir, e.g. _v2")
     ap.add_argument("--frames", type=int, nargs="*", default=None)
+    ap.add_argument("--facings", type=int, default=16, help="facings (D-276: 32 for the game sheet)")
     args = ap.parse_args(sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else sys.argv[1:])
     rig, objs, M = build()
     sc, ground, world = setup_scene(args.sizes[0], args.samples)
@@ -231,13 +232,13 @@ def main():
     mask_off = emission_mat("m0", 0.0)
     orig = {o: list(o.data.materials) for o in objs}
     t0 = time.time()
-    frames = args.frames if args.frames else range(16)
+    frames = args.frames if args.frames else range(args.facings)
     for size in args.sizes:
         sc.render.resolution_x = sc.render.resolution_y = size
         out = os.path.join(WORK, f"raw_{size}{args.tag}")
         os.makedirs(out, exist_ok=True)
         for f in frames:
-            rig.rotation_euler = (0, 0, -math.radians(22.5 * f))
+            rig.rotation_euler = (0, 0, -math.radians(360.0 / args.facings * f))
             bpy.context.view_layer.update()
             ground.hide_render = True
             for o in objs:
