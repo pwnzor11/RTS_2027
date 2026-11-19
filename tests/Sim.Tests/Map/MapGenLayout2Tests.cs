@@ -217,8 +217,8 @@ public sealed class MapGenLayout2Tests
     private static ulong L1Hash(Biome b) => b switch
     {
         Biome.RustBelt => 0x09378d3102f55d9dUL,
-        Biome.AshPlains => 0xc7d912b969e88e28UL,
+        Biome.AshPlains => 0x4156797b42c99c51UL,   // s36 D-277: mirror_x
         Biome.Mountains => 0x3750ac7cfc2dc9c6UL,
-        _ => 0xf1241fd4cdaa5a6bUL,
+        _ => 0x47c492d86c1de3a5UL,   // s36 D-277: Glass Coast mirror_x
     };
 }
