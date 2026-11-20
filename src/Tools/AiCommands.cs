@@ -1065,7 +1065,6 @@ public static class AiCommands
                     if (sim.Buildings.Slots.IsIndexAlive(i) && sim.Buildings.Player[i] == p) b++;
                 string ai = ais[p] is RecruitAi r ? $"waves {r.Waves} up {r.UpgradesOrdered} sold {r.StructuresSold} [{r.MilitaryDebug}]{(r.ExpeditionSite.Length > 0 ? " " + r.ExpeditionSite : "")}" : "";
                 Console.WriteLine($"t{sim.Tick} P{p}{(p == slotA ? "(A)" : "(B)")} tier {sim.TierOf((byte)p)} army {n} value {val} scrapers {harv} cash {sim.Funds((byte)p)} income {_income[p]} bldg {b} {ai}");
-                if (_econ && p == 1 && Environment.GetEnvironmentVariable("GRIDDBG") is not null) Console.WriteLine(EconDiag.Grid(sim, rules, default, 84, 95, 14, 36));
                 if (_econ) Console.WriteLine($"    econ P{p}{(p == slotA ? "(A)" : "(B)")}: {EconDiag.Line(sim, rules, (byte)p, _home[p])}\n    where P{p}: {EconDiag.Where(sim, rules, (byte)p)}\n    {EconDiag.Harvesters(sim, rules, (byte)p)}\n{EconDiag.Grid(sim, rules, default, sim.Setup.Map.StartPositions[p].X - 8, sim.Setup.Map.StartPositions[p].X + 12, sim.Setup.Map.StartPositions[p].Y - 10, sim.Setup.Map.StartPositions[p].Y + 12)}");
             }
         }
