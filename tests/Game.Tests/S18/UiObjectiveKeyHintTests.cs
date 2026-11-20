@@ -17,7 +17,7 @@ public sealed class UiObjectiveKeyHintTests
         try
         {
             GameKeys.Active = KeyBindings.Default;
-            Assert.Equal("J jump to objective   Tab next objective   O list", ObjectiveKeyHints.Bar());
+            Assert.Equal("O objectives | J go to | Tab next", ObjectiveKeyHints.Bar());
             Assert.Equal("J: jump there", ObjectiveKeyHints.Jump());
         }
         finally { GameKeys.Active = saved; }
@@ -30,7 +30,7 @@ public sealed class UiObjectiveKeyHintTests
         try
         {
             GameKeys.Active = KeyBindings.Default.With(GameAction.ObjJump, Keys.F7).With(GameAction.ObjList, Keys.L);
-            Assert.Equal("F7 jump to objective   Tab next objective   L list", ObjectiveKeyHints.Bar());
+            Assert.Equal("L objectives | F7 go to | Tab next", ObjectiveKeyHints.Bar());
             Assert.Equal("F7: jump there", ObjectiveKeyHints.Jump());
         }
         finally { GameKeys.Active = saved; }
