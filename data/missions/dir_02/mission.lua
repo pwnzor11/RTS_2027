@@ -94,6 +94,7 @@ function Convoy(edge, dest)
   for i, tag in pairs(tags) do
     state.convoyTags[#state.convoyTags + 1] = tag
   end
+  if tags[1] then Objective.SetTarget("convoy", tags[1]) end   -- the HUD follows the newest convoy's lead truck
   state.convoys = state.convoys + 1
 end
 
