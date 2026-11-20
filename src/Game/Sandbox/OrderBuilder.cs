@@ -21,6 +21,8 @@ public static class OrderBuilder
         {
             CommandKind.Attack or CommandKind.Enter => new Command(execTick, player, sequence, kind, subject.Id, target.Id, default,
                 subjectKind | ((int)target.Kind << 8)),
+            // M13-32: a Return carries the clicked refinery in Target (Arg stays the subject kind, as the salvage routing expects)
+            CommandKind.Return when !target.Id.IsNone => new Command(execTick, player, sequence, kind, subject.Id, target.Id, default, subjectKind),
             _ => new Command(execTick, player, sequence, kind, subject.Id, EntityId.None, cell, subjectKind),
         };
     }
