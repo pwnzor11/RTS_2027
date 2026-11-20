@@ -195,7 +195,8 @@ internal sealed class DirectorateTactics : IFactionTactics
             long d = Dist(b.Cell, goal);
             if (d + gain >= yardDist || d >= best) continue;
             best = d; _fwdId = b.Id; _fwdType = b.TypeIndex;
-            _fwdExit = new CellCoord(b.Cell.X + bt.Exit.X, b.Cell.Y + bt.Exit.Y);
+            CellCoord oe = k.View.OrientedOffset(bt.Exit, bt.FootprintW, bt.FootprintH, b.Cell);   // M13-34: as the sim turns it
+            _fwdExit = new CellCoord(b.Cell.X + oe.X, b.Cell.Y + oe.Y);
         }
         return _fwdId.IsNone ? null : _fwdExit;
     }
