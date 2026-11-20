@@ -2035,3 +2035,23 @@ pack roughly square (`common.sheet_cols`, ceil(sqrt(n)) columns) so the largest 
 **Why:** owner, session 35, "do all of this" on the list of compute upgrades that named smoother turning (32 / 16 facings). The new cluster
 makes the doubled render cost (about 2x frames) an afternoon. **Alternatives:** keep 16 / 8; 32 for turrets only; 64 facings (sheet size and
 little visible gain at 80 px). **Status:** owner decision
+
+### D-277 · 2026-11-19 · Session 36: Ash Plains 2-player layout 1 uses mirror_x (left/right starts) (M13-31)
+**Decision:** `[biome.ash_plains] symmetry_2p = "mirror_x"` (was mirror_y). Glass Coast stays rot2. Layout 2 and 4-player maps are unchanged.
+**Why:** every building exits and docks to the south, so on a top/bottom map the top base's lanes face the enemy and the bottom base's face
+the edge; start 0 won 67.2 % of 473 decided Ash Plains mirror games (z +7.5), with mirror_x 50.6 % (z +0.2); rot2 only halved it (57.6 %).
+Glass Coast mirror_x also removes its milder lean (54.4 % -> 48.7 %) but moves Expedition v Authority on Glass Coast from 52.8 % to 19.8 %
+(balance parked, D-269), so Glass Coast was left on rot2. docs/balance/s36_balance.md. **Alternatives:** rot2 for Ash Plains; buildings
+that face the map centre (sim and art change); a placement rule in the AI (no effect on the exits themselves). **Status:** assumed — confirm
+(owner asked for the map-data fix in session 36; the look of Ash Plains skirmish maps changes: starts at the left and right edges).
+
+### D-278 · 2026-11-19 · Session 36: commander directives that hold the army back wait for the AI's army (M5-14)
+**Decision:** `DirectiveGuard` in the tiered AI: until the AI has its own `army_before_tech` army (Left Behind always counts as ready), or while
+its army is 20 % behind the enemy army it has seen, the HoldCell, Reserve and TechTo orders and the unit-reserve and early-gate parts of a
+focus are ignored for the decision; once they apply, HoldCell only moves the rally and no longer stops waves. Posture, mix, expand, target,
+focus cell, AttackAt, Raid and ExpandTo always apply. New `ai commander --random-only <fields>` (paired ablation of the random commander).
+**Why:** the s36 paired ablation (128 games per row) found exactly those parts cost the commanded AI its games (hold 34.8 %, reserve 32.8 %,
+tech 41.0 %, focus 37.9 % v 57.4 % for plain-valued directives); with the guard the full random commander scores 53.1 % (was 23.0 %; plain AI
+52.7 %), and games without a commander are unchanged. **Alternatives:** guard only while behind (G1: triggers rarely, no clear gain); hold as rally
+only without the army gate (G2/G3: hold 44 %); dropping the orders altogether. **Status:** owner asked for the M5-14 follow-up in session 36
+("do both"); the model rerun on the guarded build is running.

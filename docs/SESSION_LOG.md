@@ -662,3 +662,19 @@ Pi renders failed on "No module named numpy": Debian Blender takes its Python pr
 match the x86 sheets visibly (2-3 % one-shade palette flips). setup-tools.sh runs under `set -e`. Files committed to the owner's laptop
 folder through the bridge can land one version late: edit job scripts there in place.
 **Next session should:** see HANDOFF.
+
+## Session 36 · 2026-11-19/20 (Ash Plains start bias fixed; commander directive guard; cluster fix committed)
+**Goal:** owner: resume; "do both" (M13-31 Ash Plains start bias and the M5-14 commander follow-up); push access to RTS_2027 and
+k3s-cluster-code (commit the cluster Blender wrapper fix); "give whatever you can to the cluster".
+**Done:** PR #115 (session 35 handoff) merged. k3s-cluster-code main afbd978: the laptop-only s34-s35 cluster changes (setup-tools.sh
+Blender wrapper and download-only lock, kjob.py threads, tn.py, win.py, tuning manifests, s34 change note, pi-cluster skill note).
+M13-31: `ai mirror` now images by the map's own symmetry; cause found (buildings exit south; top/bottom starts); 160-piece screen: Ash Plains
+mirror_x 50.6 % v 67.2 % (D-277); Glass Coast mirror_x tried and taken back (Exp v Auth glass 52.8 -> 19.8 %). M5-14: `ai commander
+--random-only` paired ablation (17 rows x 128 games): hold, reserve, tech and focus cost the games; DirectiveGuard G1-G4 screened, G4 kept
+(D-278): random control 23.0 -> 53.1 % (plain 52.7 %). docs/balance/s36_balance.md.
+**Decisions:** D-277 (assumed — confirm), D-278. **Questions:** none new.
+**Helpers:** none (lead-only; all measurement on the cluster: about 7 700 games across 10 nodes, Pis included, plus three full test runs).
+**Problems / notes:** a full-suite pod (3 CPU, x86) waits until a series leaves an x86 slot free; `kjob.py fetch` into an existing folder fails
+on overwrite (fetch into a new folder); `git cherry-pick -q` is not a valid flag (the chain stopped; edits re-applied by hand); a job
+`scr36` from elsewhere ran on the cluster during the session. The model rerun (cm36, ~4 h on the NAS's Ollama) was still running at wrap-up.
+**Next session should:** see HANDOFF.

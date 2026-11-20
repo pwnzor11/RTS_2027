@@ -78,7 +78,7 @@ public sealed class MapGenFairnessTests
     [InlineData(Biome.RustBelt, 2, MapSymmetry.Rot2)]
     [InlineData(Biome.GlassCoast, 2, MapSymmetry.Rot2)]
     [InlineData(Biome.Mountains, 2, MapSymmetry.MirrorX)]
-    [InlineData(Biome.AshPlains, 2, MapSymmetry.MirrorY)]
+    [InlineData(Biome.AshPlains, 2, MapSymmetry.MirrorX)]   // s36 D-277
     [InlineData(Biome.Mountains, 3, MapSymmetry.Rot4)]
     [InlineData(Biome.AshPlains, 4, MapSymmetry.Rot4)]
     public void Map_IsExactlySymmetric_AndStartsAreImages(Biome biome, int players, MapSymmetry expected)

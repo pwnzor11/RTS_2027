@@ -69,22 +69,22 @@ public sealed class EconomyOrdersTests(ITestOutputHelper log)
     private static int Dist(CellCoord a, CellCoord b) => Math.Max(Math.Abs(a.X - b.X), Math.Abs(a.Y - b.Y));
 
     [Fact]
-    public void TechToBringsTheTierGatesForward()
+    public void TechToWaitsForTheArmyBeforeTech()
     {
+        // s36 (M5-14, D-278): TechTo used to put the gates in at once; before the AI has its army_before_tech army the order is ignored now
         Outcome plain = Play(2, null, 0, null, 4000);
         Outcome ordered = Play(2, CommanderOrderKind.TechTo, 3, null, 4000);
-        int p2 = plain.Tier2Tick < 0 ? int.MaxValue : plain.Tier2Tick;
-        Assert.True(ordered.Tier2Tick >= 0, "the tier-2 gate is built under a TechTo order");
-        Assert.True(ordered.Tier2Tick < p2, $"tier 2 earlier: {ordered.Tier2Tick} vs plain {plain.Tier2Tick}");
+        Assert.Equal(plain.Tier2Tick, ordered.Tier2Tick);
     }
 
     [Fact]
-    public void ReserveKeepsTheCreditsUntouched()
+    public void ReserveWaitsForTheArmyBeforeTech()
     {
+        // s36 (M5-14, D-278): a Reserve order no longer holds credits back while the AI is still building its first army
         Outcome plain = Play(2, null, 0, null, 3000, cash: 6000);
         Outcome ordered = Play(2, CommanderOrderKind.Reserve, 2500, null, 3000, cash: 6000);
         Assert.True(plain.MinCash < 2000, $"the plain AI spends below 2000 (min {plain.MinCash})");
-        Assert.True(ordered.MinCash >= 2500 - 150, $"the ordered AI keeps about 2500 (min {ordered.MinCash})");
+        Assert.Equal(plain.MinCash, ordered.MinCash);
     }
 
     [Fact]

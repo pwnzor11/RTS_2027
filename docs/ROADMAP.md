@@ -348,9 +348,10 @@ Plan: docs/design/21_m10_polish_plan.md (D-214). Code-only parts built overnight
 Art pass, music/SFX, balance, installer.
 
 - [x] M5-13 Measure the stronger commander: 32-game swap test, model vs `--random-directives` control (D-241) · [x] random control on 128 games (s29, D-260: 21 % v plain baseline 53 %); [x] model run with qwen3:30b on the NAS, no key (s35b: 6-19-7, control 6-24-2, plain 13-12-7; docs/balance/s35_balance.md)
+- [~] M5-14 Commander follow-up (s36): paired ablation `ai commander --random-only`; DirectiveGuard (D-278): hold/reserve/tech/focus-reserve wait for the army_before_tech army, hold = rally only; random control 23.0 -> 53.1 % (plain 52.7 %). Open: model rerun (qwen3:30b, job cm36) on the guarded build
 - [x] M13-27 Left Behind mirror slot bias: a game-seed parity skew from correlated AI random streams; AiRandom per-slot seed mixed (D-249, s25)
 - [~] M13-28 Left Behind v Authority 28 %: tier-3 cap until 3600 (D-247, s25; cloud 44 % LB); laptop series to confirm; s35 table on main (docs/balance/s35_balance.md) = s32 final game for game, remaining gap listed there
 - [~] M13-29 Expedition too strong on Glass Coast: shipment value 1200 (D-246), Authority refinery 1700 (D-250); more ore tried and dropped; laptop series to confirm; s35 table on main (docs/balance/s35_balance.md) = s32 final game for game, remaining gap listed there
 - [x] M13-30 Laptop series summary: adjudication columns and -OutName title (s25)
-- [ ] M13-31 Ash Plains layout 1 favours the top-left start (69 % over 239 mirror games, every faction; s35 screen in docs/balance/s35_balance.md): trace, map-data fix, rescreen; Glass Coast l1 milder (57 %)
+- [x] M13-31 Ash Plains layout 1 favours the top-left start (69 % over 239 mirror games; s35): cause = every building exits south on a top/bottom map; Ash Plains 2p layout 1 now mirror_x, 67.2 -> 50.6 % (D-277, s36, docs/balance/s36_balance.md). Glass Coast l1 (54.4 %) stays rot2: mirror_x moved Exp v Auth glass 52.8 -> 19.8 %
 - [x] M10-10b SFX: 15 sounds' takes 1-3 droned; s24 anti-drone prompts give takes 4-6, plus a full-window test (tools/audio/sfx/run_s24_sfx.ps1) (s28: catch-up run done, 16 picks landed in PR #92, D-256)

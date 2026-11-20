@@ -161,7 +161,7 @@ internal sealed class MilitaryManager
             }
             else if (o.Kind == CommanderOrderKind.HoldCell && o.Cell.X >= 0)
             {
-                _orderHold = true;
+                _orderHold = DirectiveGuard.HoldBlocksWaves;
                 if (_phase != Phase.Gather) continue;
                 foreach (ViewActor a in k.Army)
                     if (a.Idle && Chebyshev(a.Cell, o.Cell) > HoldRadiusCells) sink.Issue(CommandKind.AttackMove, a.Id, a.Kind, o.Cell);

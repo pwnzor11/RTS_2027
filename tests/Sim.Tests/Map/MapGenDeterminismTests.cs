@@ -65,7 +65,7 @@ public sealed class MapGenDeterminismTests
         Assert.Equal(4, all.Count);
         Assert.Equal(MapFile.BiomeKeys, all.Select(b => b.Key));
         Assert.Equal(new[] { "rustbelt", "glasscoast", "mountains", "ashplains" }, all.Select(b => b.Theater));
-        Assert.Equal(new[] { MapSymmetry.Rot2, MapSymmetry.Rot2, MapSymmetry.MirrorX, MapSymmetry.MirrorY }, all.Select(b => b.Symmetry2p));
+        Assert.Equal(new[] { MapSymmetry.Rot2, MapSymmetry.Rot2, MapSymmetry.MirrorX, MapSymmetry.MirrorX }, all.Select(b => b.Symmetry2p));   // s36 D-277: ash plains mirror_x
         Assert.All(all, b => Assert.Equal(MapSymmetry.Rot4, b.Symmetry4p));
         Assert.True(BiomeCatalog.For(Biome.GlassCoast).OceanWidth > 0);
         Assert.True(BiomeCatalog.For(Biome.RustBelt).RoadGrid > 0);

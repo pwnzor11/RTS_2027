@@ -591,3 +591,13 @@ On main after the session 33 PR.
 - Skirmish: order a tank (any faction) to drive in a slow circle, and a rifleman to walk around a building. Vehicles turn through 32
   steps and infantry through 16, with no jumps between neighbouring frames (D-276). Turrets turn smoothly on their own.
 - `data/llm/providers.toml`: an optional `timeout_seconds = <5..600>` line under a provider is accepted (default 20 s).
+
+## Session 36 (2026-11-19)
+- Skirmish, 2 players, Ash Plains, layout 1 (the default generator): the two bases start at the left and right edges, half-way down, with
+  the river running top to bottom between them (D-277; was top and bottom). Layout 2 and 4-player Ash Plains maps look as before. Glass Coast
+  is unchanged.
+- Skirmish with an LLM commander (or `Tools ai commander --random-directives ...`): a HoldCell order no longer stops the AI's attacks, and
+  Reserve / TechTo orders do nothing until the AI has its first real army (D-278). Posture, mix and attack orders work as before.
+- `Tools ai commander --random-directives --random-only posture,mix --a tiered:3 --b tiered:3 --seed 3 --size 64 --out run` writes
+  `summary.md` with the line "fields kept: Posture, Mix".
+- `Tools ai mirror --a tiered:3 --biome ash_plains --seed 1` prints "map cells not equal to their mirror_x image: 0".
