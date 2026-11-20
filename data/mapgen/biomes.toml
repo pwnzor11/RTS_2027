@@ -182,6 +182,7 @@ extra_fields = 4
 field_density_min = 5
 field_density_max = 12
 ruins = 1
+start_row_shift = 6   # M13-33: same mirror_x start row as mountains (see there)
 
 
 [biome.ash_plains.decor]
