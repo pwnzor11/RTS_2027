@@ -9,6 +9,9 @@ namespace Rts.Data.MapGen;
 /// identified by their map hash, so these stay out of RulesHash. Permille values are shares of the map area; counts are per symmetry
 /// orbit (each placement is copied to every image), so a 4-player map gets four times the features of one fundamental domain.
 /// <see cref="RockStyle"/> is one of rubble, dunes, spurs, blobs. <see cref="Decor"/> (M12-05) holds the blocking-prop rules.
+/// <see cref="StartRowShift"/> (M13-33, optional, 0 = off, mirror_x only): the two starts sit this many cells above the middle row. The sim turns a
+/// refinery dock 180 degrees for a building in the south half (M4-16) while the AI places its lanes by the unturned dock, so a base that straddles the
+/// middle row gets a dock facing its own conyard; the shift keeps the base in the north half.
 /// </summary>
 public sealed record BiomeParams(
     string Key,
@@ -35,4 +38,5 @@ public sealed record BiomeParams(
     int FieldDensityMin,
     int FieldDensityMax,
     int Ruins,
-    DecorParams Decor);
+    DecorParams Decor,
+    int StartRowShift = 0);

@@ -1063,9 +1063,9 @@ public static class AiCommands
                     if (sim.Units.Slots.IsIndexAlive(i) && sim.Units.Player[i] == p && rules.Vehicles[sim.Units.TypeIndex[i]].HarvestCapacity > 0) harv++;
                 for (int i = 1; i < sim.Buildings.Capacity; i++)
                     if (sim.Buildings.Slots.IsIndexAlive(i) && sim.Buildings.Player[i] == p) b++;
-                string ai = ais[p] is RecruitAi r ? $"waves {r.Waves} up {r.UpgradesOrdered} sold {r.StructuresSold} [{r.MilitaryDebug}]" : "";
+                string ai = ais[p] is RecruitAi r ? $"waves {r.Waves} up {r.UpgradesOrdered} sold {r.StructuresSold} [{r.MilitaryDebug}]{(r.ExpeditionSite.Length > 0 ? " " + r.ExpeditionSite : "")}" : "";
                 Console.WriteLine($"t{sim.Tick} P{p}{(p == slotA ? "(A)" : "(B)")} tier {sim.TierOf((byte)p)} army {n} value {val} scrapers {harv} cash {sim.Funds((byte)p)} income {_income[p]} bldg {b} {ai}");
-                if (_econ) Console.WriteLine($"    econ P{p}{(p == slotA ? "(A)" : "(B)")}: {EconDiag.Line(sim, rules, (byte)p, _home[p])}\n    where P{p}: {EconDiag.Where(sim, rules, (byte)p)}");
+                if (_econ) Console.WriteLine($"    econ P{p}{(p == slotA ? "(A)" : "(B)")}: {EconDiag.Line(sim, rules, (byte)p, _home[p])}\n    where P{p}: {EconDiag.Where(sim, rules, (byte)p)}\n    {EconDiag.Harvesters(sim, rules, (byte)p)}\n{EconDiag.Grid(sim, rules, default, sim.Setup.Map.StartPositions[p].X - 8, sim.Setup.Map.StartPositions[p].X + 12, sim.Setup.Map.StartPositions[p].Y - 10, sim.Setup.Map.StartPositions[p].Y + 12)}");
             }
         }
 

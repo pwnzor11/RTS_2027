@@ -33,6 +33,7 @@ public static class MapCommands
             case "gen": return Gen(args[1..]);
             case "validate": return ValidateMap(args[1..]);
             case "stamp": return MapStampCommand.Run(args[1..]);
+            case "econ": return MapEconCommand.Run(args[1..]);
             case "ascii": return Ascii(args[1..]);
             case "report": return Report(args[1..], render: false);
             case "render": return Report(args[1..], render: true);
