@@ -1,5 +1,5 @@
-# Handoff: Session 37 — read the commander model rerun (cm36), owner confirms D-277; then open choice
-Last commit: `docs: Session 36 handoff` on `integ-s36` (PR to main; main was a4db81a = PR #115). Check it merged.
+# Handoff: Session 37 — read the commander model rerun (cm36); then open choice
+Last commit: `docs: D-277 confirmed (session 36)` on `land/s36-confirm` (PR to main; session 36 landed as PR #116). Check it merged.
 Where things stand: session 36 fixed the Ash Plains start bias (D-277: 2-player layout 1 is mirror_x, start 0 share 67.2 % -> 50.6 %; Glass
 Coast left on rot2 because mirror_x moved Expedition v Authority there to 19.8 %) and made commander directives stop costing the AI its
 games (D-278 DirectiveGuard: the full random commander 23.0 % -> 53.1 %, plain AI 52.7 %). docs/balance/s36_balance.md. The model rerun
@@ -7,22 +7,21 @@ games (D-278 DirectiveGuard: the full random commander 23.0 % -> 53.1 %, plain A
 Open questions: Q-73 (deferred).
 
 ## Start here (shown to the user as the plan; nothing starts until they say go)
-1. Session 36 PR merged? Laptop: `git checkout main; git pull`.
+1. D-277 PR merged? Laptop: `git checkout main; git pull`.
 2. Read the commander rerun: cluster jobs cm36 (model) and cc36 (control), outputs `/work/out/s36cmd/{model,control}/s<seed>_w<swap>/summary.md`
    (fetch through the toolbox pod; scripts in the laptop k3s-cluster folder `claude/rts/s36/cmd_*.sh`). Compare with s35 (model 6-19-7,
    control 6-24-2, plain 13-12-7; s36 control on the guarded build 14-13-5) and add the table to docs/balance/s36_balance.md; tick M5-14.
-3. Owner: confirm D-277 (Ash Plains starts left/right) after a look at a skirmish map (USER_CHECKS session 36).
-4. Ask the owner what is next: the two-PC LAN test (M9-15, owner), the Expedition play-test (M7-14), a commander with a stronger model,
+3. Ask the owner what is next: the two-PC LAN test (M9-15, owner), the Expedition play-test (M7-14), a commander with a stronger model,
    balance (parked, D-269; Glass Coast left/right is a lead if it reopens), or new work.
 
 ## Half-finished work
 - M5-14: the model rerun (above). Nothing else.
-- Branches to delete on GitHub after the merge: integ-s36, wp/s36-fair-ax, wp/s36-fair-ar, wp/s36-fair-gx, wp/s36-guard-g2, wp/s36-guard-g4,
+- Branches to delete on GitHub: land/s36, land/s36-confirm (after merge), integ-s36, wp/s36-fair-ax, wp/s36-fair-ar, wp/s36-fair-gx, wp/s36-guard-g2, wp/s36-guard-g4,
   plus the older list (integ-s32m, integ-s33, land/s33, land/s33-manual, wp/s33-hero, wp/s33-smoke, land/s34-m10-06b, land/s34-readme,
   land/s34-handoff, wp/s34-kitbash, land/s35-unit80, land/s35-compute, land/s35-handoff).
 
 ## Waiting on the user
-- "land it" for the session 36 PR. Confirm D-277. Two-PC LAN test (M9-15). Expedition play-test (M7-14). Branch deletes.
+- Two-PC LAN test (M9-15). Expedition play-test (M7-14). Branch deletes.
 
 ## How to run this session
 - Session 36 lessons:
