@@ -35,9 +35,10 @@ public sealed class DisplayNamesTests
     }
 
     [Fact]
-    public void A_players_own_map_name_and_an_unknown_mission_are_left_alone()
+    public void A_players_own_map_name_is_left_alone_and_an_unknown_mission_reads_as_words()
     {
         Assert.Equal("My Map", DisplayNames.Map("My Map"));
-        Assert.Equal("nope_99", DisplayNames.Mission("nope_99"));
+        Assert.Equal("Nope 99", DisplayNames.Mission("nope_99"));
+        Assert.Equal("Authority, mission 3", DisplayNames.Tidy("auth_03"));
     }
 }

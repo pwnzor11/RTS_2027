@@ -168,13 +168,13 @@ public sealed class LlmSettingsTests
     {
         var (model, _, _) = Build((_, _, _) => throw new InvalidOperationException("sk-LEAK"), new Rts.Game.Settings(LlmProvider: "openai"));
         model.StartTest();
-        for (int i = 0; i < 200 && model.TestResult == "Testing..."; i++)
+        for (int i = 0; i < 200 && model.TestResult == Rts.Game.Ui.Llm.LlmUiText.Testing; i++)
         {
             await Task.Delay(10);
             model.Poll();
         }
 
-        Assert.Equal("Test failed.", model.TestResult);
+        Assert.Equal("Check failed.", model.TestResult);
     }
 
     [Fact]

@@ -55,6 +55,6 @@ public sealed class BuildingUpgradeOfferTests
         if (missing is null) return;   // data has no extra prerequisite: nothing to check
         BuildingUpgradeOffer offer = BuildingUpgradeOffer.For(Rules, hatch, 99999, new[] { "dir_hatch" })!.Value;
         Assert.False(offer.Enabled);
-        Assert.Equal($"Needs {missing}", offer.Reason);
+        Assert.Equal($"Needs {Rts.Game.Ui.Sidebar.CameoNames.Display(missing)}", offer.Reason);
     }
 }
