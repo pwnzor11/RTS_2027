@@ -110,6 +110,9 @@ internal static class EconDiag
         for (int i = 1; i < sim.Infantry.Capacity; i++)
             if (sim.Infantry.Slots.IsIndexAlive(i) && sim.Infantry.Player[i] == p) { Add(sim.Infantry.Position[i].ToCell()); string id = rules.Infantry[sim.Infantry.TypeIndex[i]].Id + "/" + sim.Infantry.Mission[i]; types[id] = types.GetValueOrDefault(id) + 1; }
         var b = new StringBuilder();
+        for (int i = 1; i < sim.Units.Capacity; i++)   // M13-35: where the convoy ships are (a tender that stops short of the dock is never paid)
+            if (sim.Units.Slots.IsIndexAlive(i) && sim.Units.Player[i] == p && rules.Vehicles[sim.Units.TypeIndex[i]].Id == rules.Shipments.TenderType)
+                b.Append($" tender@{sim.Units.Position[i].ToCell().X},{sim.Units.Position[i].ToCell().Y}/{sim.Units.Mission[i]}");
         for (int i = 1; i < sim.Buildings.Capacity; i++)
             if (sim.Buildings.Slots.IsIndexAlive(i) && sim.Buildings.Player[i] == p && sim.Buildings.Health[i] > 0)
                 b.Append($" {rules.Buildings[sim.Buildings.TypeIndex[i]].Id}@{sim.Buildings.Cell[i].X},{sim.Buildings.Cell[i].Y}:{sim.Buildings.Health[i]}hp");

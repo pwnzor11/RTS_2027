@@ -123,14 +123,19 @@ internal sealed class OceanEdgePass
         if (goal < 0) return;   // walled in: the validator and SkirmishStart's whole-map fallback cover it
         var path = new List<int>();
         for (int i = goal; i >= 0 && !edge[i]; i = parent[i]) path.Add(i);
-        foreach (int i in path)
-            for (int dy = -1; dy <= 1; dy++)
-                for (int dx = -1; dx <= 1; dx++)
+        // M13-35: the last BayCells cells before the base are carved BayHalf wide each side (a landing bay): the Expedition's Anchorage, Quay and
+        // Shipyard are all water buildings, and in a bare three-wide channel the 3x3 Shipyard or the Quay closed it and sealed the supply tenders out.
+        for (int pi = 0; pi < path.Count; pi++)
+        {
+            int i = path[pi], half = pi < BayCells ? BayHalf : 1;
+            for (int dy = -half; dy <= half; dy++)
+                for (int dx = -half; dx <= half; dx++)
                 {
                     int x = i % n + dx, y = i / n + dy;
                     if (!_g.In(x, y) || !Carvable(_g.Idx(x, y))) continue;
                     _g.SetLand(_g.Idx(x, y), LandType.Shallow);
                 }
+        }
         foreach (int i in path)
             for (int dy = -CoastWidth - 1; dy <= CoastWidth + 1; dy++)
                 for (int dx = -CoastWidth - 1; dx <= CoastWidth + 1; dx++)
@@ -146,6 +151,9 @@ internal sealed class OceanEdgePass
 
     /// <summary>The Command Ship wants edge-connected sea this close to the start (SkirmishStart's ring-16 fallback).</summary>
     private const int NearSea = 16, ChannelEnd = 10;
+
+    /// <summary>M13-35: the cells of the channel nearest the base that are carved as a bay, and the bay's half width (7 wide).</summary>
+    private const int BayCells = 14, BayHalf = 3;
 
     /// <summary>Flood the edge sea, then make the two rings of plain free land beside it Coast (the landing beach). Run after every
     /// other terrain step so rivers, ruins and start squares are already in place.</summary>
