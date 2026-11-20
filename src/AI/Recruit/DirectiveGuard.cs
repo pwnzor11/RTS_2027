@@ -37,5 +37,5 @@ internal static class DirectiveGuard
     }
 
     private static bool Dropped(CommanderOrderKind kind) =>
-        kind is CommanderOrderKind.Reserve or CommanderOrderKind.TechTo || (kind == CommanderOrderKind.HoldCell && HoldBlocksWaves);
+        kind is CommanderOrderKind.Reserve or CommanderOrderKind.TechTo or CommanderOrderKind.HoldCell;
 }
