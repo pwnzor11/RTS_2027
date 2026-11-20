@@ -35,3 +35,7 @@ the mission most likely ends on a timer; a par time makes no sense there (medal 
 `Tools lan soak`, 54 configurations x 2 seeds = 108 runs of 12 000 ticks: 2/3/4 players, AI tier 1/3/5, packet loss 0/5/15 % with jitter
 40/120/250 ms on 30 ms latency, input delay 2 and 3, real UDP sockets on loopback for the loss-free second seed. **108 of 108 in sync**
 (all peers agree, bundle replay matches), on both Pi and x86 nodes.
+
+## Cross-architecture determinism (jobs det37a on the Pis, det37x on x86)
+All 10 faction pairs (4 mirrors + 6 cross) x 4 biomes, layout 1, seeds 1-2 x 2 swaps, with `--record-dir`: 160 games, run once on arm64 and
+once on amd64. **All 160 replay files and all 40 result tables are byte-identical** across the two architectures (sha256 compared).
