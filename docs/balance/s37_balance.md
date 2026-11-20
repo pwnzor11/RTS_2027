@@ -132,3 +132,35 @@ Ollama (CPU only, no API key) through the localhost proxy.
   limit and its first load takes about 7 minutes (the 30b model must be unloaded first). A 16-game set took 4 h 12 min.
 - **Reading:** directives steer an AI that already plays its own plan; a better model cannot add strength the tier-3 AI does not have. A
   "super hard LLM opponent" therefore needs something other than directives (see HANDOFF: options for the owner).
+
+## Packages and the landed change (jobs pk37, pk237, pk337, bp37; D-280)
+Packages were screened on the map-fixed build at 128 games on all 24 cross rows. Summary over the 24 rows (MAD = mean distance from 50 %):
+
+| Build | MAD | Rows in 40-60 % | Rows in 35-65 % | Worst row |
+|---|---|---|---|---|
+| main d3dd95d (base37) | 17.0 | 8 | 12 | 87.6 % |
+| map/AI fixes e90dff9 (bc37) | 15.3 | 8 | 11 | 80.8 % |
+| + Rocket Truck 1050, Scavenger 48, Tank health 460 (p1) | - | - | - | Directorate collapses (Dir v Exp glass 15 %) |
+| + Rocket Truck 985 / 1000 / 1015, Scavenger 48, Tank 460, Glide 960 | 13.1 / 14.3 / 15.0 | 11 / 10 / 8 | 17 / 16 / 15 | 84-86 % |
+| + Rocket Truck 950, Scavenger 54, Tank 460, Glide 960 (r950) | 13.0 | 11 | 14 | 89.7 % |
+| **Landed: map/AI fixes + Ash decks + Rocket Truck 970, Scavenger 54, Tank 460, Glide 960 (bp37, `61fdf21`)** | **13.3** | **11** | **15** | 86.9 % |
+
+The Rocket Truck cost is a cliff: +3.7 % already moved Authority v Directorate on Glass Coast by 30 points, +10 % broke the Directorate everywhere,
+so the landed step is +2 %. Landed table (128 games per row):
+
+| Row | Rust Belt | Glass Coast | Mountains | Ash Plains |
+|---|---|---|---|---|
+| Auth v Dir | 52.7 % | 51.1 % | 20.4 % | 20.5 % |
+| Auth v LB | 64.3 % | 57.4 % | 61.7 % | 52.9 % |
+| Auth v Exp | 42.3 % | 45.4 % | 62.1 % | 48.8 % |
+| Dir v LB | 26.5 % | 39.8 % | 53.9 % | 76.2 % |
+| Dir v Exp | 56.9 % | 20.9 % | 66.3 % | 86.9 % |
+| LB v Exp | 52.7 % | 34.4 % | 42.9 % | 33.8 % |
+
+Campaign sweep on `61fdf21` (job swp37): all 45 mission-tiers meet D-222 (moves at tier 5 only, e.g. exp_03 9 -> 3 of 12, exactly the floor).
+
+**What is left (next session's levers):** the remaining outliers are map-specific, not faction-wide. (1) The Directorate dominates the Authority
+on Mountains and Ash Plains (20 %) while it is even on Rust Belt and Glass Coast: look at what the Directorate's tunnels/Bores gain on those
+two maps (left/right starts, decks). (2) The Expedition is strong on Glass Coast (Dir 20.9 %, LB 34.4 %) and weak against the Directorate on Ash.
+(3) Directorate v Left Behind swings from 26.5 % (Rust) to 76.2 % (Ash). A per-biome sweep of these three with traces, then map-side fixes,
+is the plan; faction-wide cost knobs cannot fix rows that point in opposite directions on different maps.

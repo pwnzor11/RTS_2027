@@ -601,3 +601,19 @@ On main after the session 33 PR.
 - `Tools ai commander --random-directives --random-only posture,mix --a tiered:3 --b tiered:3 --seed 3 --size 64 --out run` writes
   `summary.md` with the line "fields kept: Posture, Mix".
 - `Tools ai mirror --a tiered:3 --biome ash_plains --seed 1` prints "map cells not equal to their mirror_x image: 0".
+
+## Session 37 (2026-11-19/20)
+Pull main first (your folder was on eda0f0e3, two sessions behind), then rebuild.
+- **Scrapers:** in a campaign mission, send a scraper somewhere with a plain move: about 3 s after it stops it goes back to harvesting. Right-click
+  a far refinery with an empty scraper: it starts harvesting at once and brings its next load to that refinery, not the nearest one.
+- **Objectives:** the objective bar lists every active objective with a "> " on the guided one; Tab moves the "> ", and the map diamond / edge
+  arrow and minimap ping follow it. A new objective shows "NEW OBJECTIVE: ..." for about 6 s; finishing one shows "OBJECTIVE COMPLETE: ...".
+- **Text:** win a mission: the debrief "New tech" line names units by their Archive titles (no ids such as auth_turret). Archive > Technology:
+  every entry has text (no "[draft pending]").
+- **Voice:** play the opening of Survey Convoy (auth_01). Then open `%APPDATA%\RTS_2027\logs\rts_2027.log`: it now has a line starting
+  "audio: voice voice/leader_auth_wrenfield/a1.radio.start.ogg" (with the state the sound reached) or a line saying why a radio line was silent.
+- **Skirmish maps:** a 2-player Mountains or Ash Plains map (layout 1) puts the bases a little above the middle of the left and right edges.
+  An Ash Plains river has road crossings that tanks can use (no foot-only fords). An Expedition start on an inland map gets a wide bay at the end
+  of its channel.
+- **Balance (assumed — confirm):** Directorate Rocket Truck costs 970, Left Behind Scavenger 54, Expedition Glide Tank 960; the Authority Tank
+  has 460 health.

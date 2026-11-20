@@ -2105,3 +2105,11 @@ control (14-13-5; 10-5-1 on the same 16). A "super hard LLM opponent" needs a di
 path logs every voice start and every silent line with its reason; the voice could not be reproduced as silent on Linux (it plays through the full
 game path into a recorded sink). **Why:** docs/balance/s37_balance.md; owner reported a silent voice line on an older build (eda0f0e3).
 **Status:** decided by the lead; voice root cause open until the owner's next log.
+
+### D-280 · 2026-11-20 · Session 37: unit package — Rocket Truck 970, Scavenger 54, Authority Tank health 460, Glide Tank 960 (M10-21)
+**Decision:** dir_rocket_truck cost 950 -> 970, lb_scavenger cost 60 -> 54, auth_tank max_health 400 -> 460, exp_glide_tank cost 900 -> 960.
+**Why:** 27-knob sensitivity screen plus five package screens at 128 games on all 24 cross rows (docs/balance/s37_balance.md): with the D-281 map
+fixes the table goes from MAD 17.0 / 8 rows inside 40-60 % (main) to 13.3 / 11; the worst rows of main (82-88 %) are gone; campaign 45/45 meets
+D-222. The Rocket Truck cost is a cliff (+10 % broke the Directorate), so only +2 % lands. **Alternatives:** Rocket Truck 985-1050 (Directorate
+collapses on Rust/Glass), no Rocket Truck change (r950, same MAD, worse 35-65 count). **Status:** assumed — confirm (owner asked for the balance pass;
+numbers are the owner's to confirm). The remaining outliers are map-specific (next steps in s37_balance.md).
