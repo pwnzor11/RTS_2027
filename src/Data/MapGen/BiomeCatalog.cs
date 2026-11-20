@@ -20,7 +20,7 @@ public static class BiomeCatalog
     [
         "theater", "base_land", "symmetry_2p", "symmetry_4p", "water_permille", "shallow_permille", "rock_permille", "rough_permille",
         "rock_style", "cliff_plateaus", "rivers", "river_width", "river_wander_permille", "ford_spacing", "road_grid", "ocean_width",
-        "ash_fields_per_start", "pitch_fields_per_start", "contested_fields", "extra_fields", "field_density_min", "field_density_max", "ruins", "decor",
+        "ash_fields_per_start", "pitch_fields_per_start", "contested_fields", "extra_fields", "field_density_min", "field_density_max", "ruins", "decor", "start_row_shift",
     ];
 
     private static readonly string[] DecorKeys =
@@ -186,6 +186,11 @@ public static class BiomeCatalog
             problems.Add(new RulesProblem(file, prefix + k, "missing or not an integer"));
             return min;
         }
+        int OptionalInt(string k, int min, int max)   // M13-33: absent = 0
+        {
+            if (!t.ContainsKey(k)) return 0;
+            return Int(k, min, max);
+        }
         MapSymmetry Sym(string k, params MapSymmetry[] allowed)
         {
             string s = Str(k);
@@ -216,7 +221,7 @@ public static class BiomeCatalog
             Int("water_permille", 0, 300), Int("shallow_permille", 0, 300), Int("rock_permille", 0, 300), Int("rough_permille", 0, 400),
             style, Int("cliff_plateaus", 0, 6), Int("rivers", 0, 2), Int("river_width", 1, 4), Int("river_wander_permille", 0, 1000),
             Int("ford_spacing", 8, 64), roadGrid, Int("ocean_width", 0, 16), ash, pitch, Int("contested_fields", 0, 8),
-            Int("extra_fields", 0, 16), dMin, dMax, Int("ruins", 0, 4), ParseDecor(t, prefix, file, problems));
+            Int("extra_fields", 0, 16), dMin, dMax, Int("ruins", 0, 4), ParseDecor(t, prefix, file, problems), OptionalInt("start_row_shift", 0, 24));
         return problems.Count > before ? null : p;
     }
 }

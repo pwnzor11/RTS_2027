@@ -18,6 +18,7 @@
 #   ocean_width             ocean band on all four edges at Medium (scaled with size), 0 = none   # ASSUMED (M4-02)
 #   extra_fields            small Ashfall fields scattered away from the starts                    # ASSUMED (M4-02)
 #   ruins                   neutral neu_ruin_* features (Q-M4-b)
+#   start_row_shift         optional (default 0, mirror_x only): starts sit this many cells (at 96, scaled) above the middle row (M13-33)
 #
 # [biome.<key>.decor] (M12-05, design 16 s2.5; defaults from the community-map study, design 17): the blocking-prop pass. Props block
 # ground units like walls, never sight or shots. Weights are per mille (1000 = neutral).
@@ -138,6 +139,7 @@ extra_fields = 1
 field_density_min = 3
 field_density_max = 12
 ruins = 0
+start_row_shift = 6   # M13-33: bases straddling the middle row got a refinery dock facing their own conyard (sim turns docks in the south half, AI lanes do not)
 
 
 [biome.mountains.decor]

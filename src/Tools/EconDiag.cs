@@ -75,6 +75,30 @@ internal static class EconDiag
             + $"harv {harv} (loaded {loaded} return {ret} other {idle} noRef {noRef}) cash {sim.Funds(p)} queue[{q.ToString().Trim()}] ore map {ore.Cells}c/{ore.Density}d near {ore.NearCells}c/{ore.NearDensity}d";
     }
 
+    /// <summary>M13-33: a character grid of the cells around <paramref name="c"/> (B building, o ore, # blocked terrain or prop, V vehicle, i infantry, . free); rows y0..y1.</summary>
+    internal static string Grid(Simulation sim, SimRules rules, CellCoord c, int x0, int x1, int y0, int y1)
+    {
+        var sb = new StringBuilder();
+        for (int y = y0; y <= y1; y++)
+        {
+            sb.Append($"      y{y,2} ");
+            for (int x = x0; x <= x1; x++)
+            {
+                var cc = new CellCoord(x, y);
+                char ch;
+                if (!sim.Setup.Map.Contains(cc)) ch = ' ';
+                else if (!sim.Map.BuildingAt(cc).IsNone) ch = 'B';
+                else if (!sim.Map.VehicleAt(cc).IsNone) ch = 'V';
+                else if (!sim.Map.IsPassableTerrain(cc, Locomotion.Tracked, rules.Terrain) || Rts.Sim.Rules.OverlayKinds.BlocksGround(sim.Map.OverlayAt(cc))) ch = '#';
+                else if (sim.Map.OverlayAt(cc) is OverlayKind.Ashfall or OverlayKind.Pitchblende && sim.Map.DensityAt(cc) > 0) ch = 'o';
+                else ch = '.';
+                sb.Append(ch);
+            }
+            sb.Append('\n');
+        }
+        return sb.ToString();
+    }
+
     /// <summary>Where the side stands: its non-harvester units (count, bounding box) and its structure cells.</summary>
     internal static string Where(Simulation sim, SimRules rules, byte p)
     {

@@ -52,7 +52,7 @@ internal sealed partial class ProceduralBuilder
         }
         (int sx, int sy) = symmetry switch
         {
-            MapSymmetry.MirrorX => (inset, n / 2 - 1),
+            MapSymmetry.MirrorX => (inset, n / 2 - 1 - biome.StartRowShift * n / 96),   // M13-33: shift scaled with the map
             MapSymmetry.MirrorY => (n / 2 - 1, inset),
             _ => (inset, inset),
         };
