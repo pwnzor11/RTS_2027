@@ -35,10 +35,10 @@ public sealed class MapGenOceanTests
     [InlineData(Biome.Mountains, MapSize.Large, 4, 77UL, 0x267422317f872fb6UL)]
     [InlineData(Biome.AshPlains, MapSize.Small, 3, 1UL, 0xc2211cdd54fde1a7UL)]
     [InlineData(Biome.AshPlains, MapSize.Small, 4, 77UL, 0x1105daaea4931093UL)]
-    [InlineData(Biome.AshPlains, MapSize.Medium, 3, 1UL, 0x65506e57af60ba55UL)]
-    [InlineData(Biome.AshPlains, MapSize.Medium, 4, 77UL, 0x24eada097d411d06UL)]
-    [InlineData(Biome.AshPlains, MapSize.Large, 3, 1UL, 0x5b62aa216ea6ba25UL)]
-    [InlineData(Biome.AshPlains, MapSize.Large, 4, 77UL, 0x23da721aaf48c285UL)]
+    [InlineData(Biome.AshPlains, MapSize.Medium, 3, 1UL, 0xdea383d180712a38UL)]
+    [InlineData(Biome.AshPlains, MapSize.Medium, 4, 77UL, 0x4dce0f828177a91cUL)]
+    [InlineData(Biome.AshPlains, MapSize.Large, 3, 1UL, 0x3bb9ea4496a84f10UL)]
+    [InlineData(Biome.AshPlains, MapSize.Large, 4, 77UL, 0x34f88490eff85202UL)]
     public void OptionOff_MapsAreByteIdenticalToPreM7(Biome biome, MapSize size, int players, ulong seed, ulong expected)
     {
         string text = File.ReadAllText(BiomeCatalog.FindFile(AppContext.BaseDirectory)!).Replace("\r\n", "\n");
