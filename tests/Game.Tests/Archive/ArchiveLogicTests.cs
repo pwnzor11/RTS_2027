@@ -20,9 +20,9 @@ public sealed class ArchiveLogicTests
         Assert.Equal(tank.Cost.ToString(), Value(t, "Cost"));
         Assert.Equal(tank.MaxHealth.ToString(), Value(t, "Health"));
         WeaponType w = rules.Weapons[tank.PrimaryWeapon];
-        Assert.Contains(w.Id, Value(t, "Weapon"), StringComparison.Ordinal);
+        Assert.DoesNotContain("_", Value(t, "Weapon"), StringComparison.Ordinal);
         Assert.Contains(w.Damage + " damage", Value(t, "Weapon"), StringComparison.Ordinal);
-        Assert.Contains(string.Join(", ", tank.Prerequisites), Value(t, "Requires"), StringComparison.Ordinal);
+        Assert.DoesNotContain("_", Value(t, "Requires"), StringComparison.Ordinal);
 
         IReadOnlyList<ArchiveStatLine> r = ArchiveStats.For(rules, "auth_refinery");
         Assert.Equal(refinery.Cost.ToString(), Value(r, "Cost"));

@@ -232,7 +232,7 @@ public sealed class LobbyScreen : IScreen
         LobbyData? d = Data;
         if (d is null)
         {
-            rows.Add(new(() => "Connecting to the host ...") { Info = true });
+            rows.Add(new(() => "Connecting to the host") { Info = true });
             rows.Add(new(() => "Leave", Leave));
             return Panel(rows);
         }
@@ -271,7 +271,7 @@ public sealed class LobbyScreen : IScreen
     {
         if (_host is not null)
             return _host.CanStart(out string? why) ? "Everyone is ready. Start when you like." : SkirmishSetupScreen.Shorten(why ?? "", 60);
-        if (!_client!.HasMap) return $"Downloading the map from the host ... {_client.MapPercent}%";
+        if (!_client!.HasMap) return $"Downloading the map from the host: {_client.MapPercent}%";
         return d.SlotOf(_client.LocalPeer) < 0 ? "You are watching this game." : "Choose your side, then press Ready.";
     }
 

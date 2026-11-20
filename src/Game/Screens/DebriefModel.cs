@@ -58,6 +58,9 @@ public sealed class DebriefModel
     /// <summary>M10-19: medals this win earned for the first time (empty when none).</summary>
     public IReadOnlyList<string> NewMedals { get; init; } = Array.Empty<string>();
 
+    /// <summary>The Archive title of a rules id for the "New tech" line; null leaves the id to be tidied (see <c>CameoNames.Display</c>).</summary>
+    public Func<string, string?>? TechTitle { get; init; }
+
     /// <summary>The mission time as m:ss.</summary>
     public string TimeText => $"{Seconds / 60}:{Seconds % 60:D2}";
 
@@ -74,6 +77,7 @@ public sealed class DebriefModel
         return new DebriefModel(title, ticks / SimConstants.TicksPerSecond, pd, pt, od, ot, tech, archive, tier, finalMission)
         {
             NewMedals = newMedals ?? Array.Empty<string>(),
+            TechTitle = id => catalog.Find(id)?.Title,
         };
     }
 
@@ -86,7 +90,7 @@ public sealed class DebriefModel
             $"Primary objectives: {PrimaryDone}/{PrimaryTotal}",
         };
         if (OptionalTotal > 0) lines.Add($"Optional objectives: {OptionalDone}/{OptionalTotal}");
-        lines.Add("New tech: " + (NewTech.Count == 0 ? "none" : string.Join(", ", NewTech)));
+        lines.Add("New tech: " + (NewTech.Count == 0 ? "none" : string.Join(", ", NewTech.Select(t => Rts.Game.Ui.Sidebar.CameoNames.Display(t, TechTitle)))));
         lines.Add("New Archive entries: " + (NewArchive.Count == 0 ? "none" : string.Join(", ", NewArchive)));
         if (NewMedals.Count > 0) lines.Add("New medals: " + string.Join(", ", NewMedals));
         return lines;

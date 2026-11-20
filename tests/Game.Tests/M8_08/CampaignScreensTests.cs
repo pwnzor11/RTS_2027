@@ -83,11 +83,11 @@ public sealed class CampaignScreensTests : IDisposable
         MissionSelectRow first = dir[0];
         Assert.False(first.Exists);
         Assert.False(first.CanStart);
-        Assert.Equal("not written yet", first.StateText);
+        Assert.Equal("no orders yet", first.StateText);
         MissionSelectRow second = dir[1];
         Assert.Equal(CampaignMissionState.Locked, second.State);
         Assert.False(second.CanStart);
-        Assert.Contains("not written yet", second.Hint);
+        Assert.Contains("No orders have been issued", second.Hint);
     }
 
     [Fact]
@@ -179,7 +179,8 @@ public sealed class CampaignScreensTests : IDisposable
         Assert.Equal(new[] { "auth_tank" }, d.NewTech);
         Assert.Equal(new[] { "Hidden Person" }, d.NewArchive);
         Assert.True(d.FinalMission);
-        Assert.Contains("New tech: auth_tank", d.Lines());
+        Assert.DoesNotContain("auth_tank", string.Join(" ", d.Lines()));
+        Assert.Contains("New tech: Heavy Tank", d.Lines());
 
         // A replay of the same mission gives no new Archive entries and no new tech.
         DebriefModel again = DebriefModel.Build("Survey Convoy", "auth_01", 100, objectives, after, after.WithWin("auth_01", 3, new[] { "auth_tank" }), 3, true, cat);

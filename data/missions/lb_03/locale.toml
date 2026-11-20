@@ -6,7 +6,7 @@
 "lb3.wave" = "Soldiers are coming out of the hatches."
 "lb3.radio.wave" = "Hatches are pouring. Keep the camp guard at home."
 "lb3.radio.thrall" = "Hatch field, report. Surface vermin on the dunes. Note the faces. Register what is left of them."
-"lb3.vent.down" = "The reactor vent is down. The pillboxes are dark."
+"lb3.vent.down" = "The Reactor Vent is down. The pillboxes are dark."
 "lb3.radio.vent" = "Vent is burning. The pillboxes are walls now. Go in and close the hatches."
 "lb3.hatch.down" = "A hatch is closed."
 "lb3.radio.hatches" = "Last hatch gone. The hole is a hole again."
@@ -24,7 +24,7 @@
 "lb3.radio.warn" = "The hatches keep pouring. Every wave is bigger. Close them or lose the camp."
 
 # Objective and timer labels (the HUD shows the locale text when a label is a key)
-"lb3.obj.vent" = "Destroy the hatch field's reactor vent"
+"lb3.obj.vent" = "Destroy the hatch field's Reactor Vent"
 "lb3.obj.hatches" = "Close all three hatches"
 "lb3.obj.column" = "Break the Authority column at the camp"
 "lb3.obj.mast" = "Pull down the Directorate loudspeaker mast"
