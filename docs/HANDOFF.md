@@ -1,31 +1,41 @@
-# Handoff: Session 36 — open choice; Ash Plains start bias (M13-31) is the newest concrete item
-Last commit: `docs: Session 35 handoff` on `land/s35-handoff` (PR to main; main was 6393fb12, PR #114). Check it merged.
-Where things stand: session 35 rendered every unit sheet at 80 px per cell (D-275, PR #113) and then at 32 vehicle / 16 infantry facings
-(D-276, PR #114), and used the bigger cluster for checks (docs/balance/s35_balance.md): the balance table on main equals the s32 final table
-game for game; arm64 and x86 replays are byte-identical; Ash Plains layout 1 favours the top-left start (69 %); M5-13 is closed with a local
-model (qwen3:30b on the owner's NAS, no API key): about as weak as random directives, both far below the plain AI. Decisions up to D-276.
+# Handoff: Session 37 — read the commander model rerun (cm36), owner confirms D-277; then open choice
+Last commit: `docs: Session 36 handoff` on `integ-s36` (PR to main; main was a4db81a = PR #115). Check it merged.
+Where things stand: session 36 fixed the Ash Plains start bias (D-277: 2-player layout 1 is mirror_x, start 0 share 67.2 % -> 50.6 %; Glass
+Coast left on rot2 because mirror_x moved Expedition v Authority there to 19.8 %) and made commander directives stop costing the AI its
+games (D-278 DirectiveGuard: the full random commander 23.0 % -> 53.1 %, plain AI 52.7 %). docs/balance/s36_balance.md. The model rerun
+(qwen3:30b on the NAS, the s35 32-game set, guarded build 2bba3fe) and its control were still running at wrap-up. Decisions up to D-278.
 Open questions: Q-73 (deferred).
 
 ## Start here (shown to the user as the plan; nothing starts until they say go)
-1. Handoff PR merged? Laptop: `git checkout main; git pull`.
-2. Ask the owner what is next. Concrete candidates:
-   - M13-31 Ash Plains layout 1 start bias: trace a few mirror games (what the top-left base gets: ore distance, path to the centre,
-     a choke), fix the map data, rescreen with the same 256-game cell (fair.sh in the laptop folder `claude/rts/s35b/`). Glass Coast l1
-     is milder (57 %).
-   - Commander follow-up (M5-14 candidate): per-kind outcomes of directives/orders from the replays, so the AI follows a directive only
-     where it does not undercut its own plan; rerun the same 32 games (model and control).
-   - Owner items: two-PC LAN test (M9-15), Expedition play-test (M7-14); balance stays parked (D-269).
+1. Session 36 PR merged? Laptop: `git checkout main; git pull`.
+2. Read the commander rerun: cluster jobs cm36 (model) and cc36 (control), outputs `/work/out/s36cmd/{model,control}/s<seed>_w<swap>/summary.md`
+   (fetch through the toolbox pod; scripts in the laptop k3s-cluster folder `claude/rts/s36/cmd_*.sh`). Compare with s35 (model 6-19-7,
+   control 6-24-2, plain 13-12-7) and add the table to docs/balance/s36_balance.md; tick M5-14.
+3. Owner: confirm D-277 (Ash Plains starts left/right) after a look at a skirmish map (USER_CHECKS session 36).
+4. Ask the owner what is next: the two-PC LAN test (M9-15, owner), the Expedition play-test (M7-14), a commander with a stronger model,
+   balance (parked, D-269; Glass Coast left/right is a lead if it reopens), or new work.
 
 ## Half-finished work
-- None. Branches to delete on GitHub: land/s35-unit80, land/s35-compute, land/s35-handoff (after merge), plus the session 33/34 list
-  (integ-s32m, integ-s33, land/s33, land/s33-manual, wp/s33-hero, wp/s33-smoke, land/s34-m10-06b, land/s34-readme, land/s34-handoff,
-  wp/s34-kitbash).
+- M5-14: the model rerun (above). Nothing else.
+- Branches to delete on GitHub after the merge: integ-s36, wp/s36-fair-ax, wp/s36-fair-ar, wp/s36-fair-gx, wp/s36-guard-g2, wp/s36-guard-g4,
+  plus the older list (integ-s32m, integ-s33, land/s33, land/s33-manual, wp/s33-hero, wp/s33-smoke, land/s34-m10-06b, land/s34-readme,
+  land/s34-handoff, wp/s34-kitbash, land/s35-unit80, land/s35-compute, land/s35-handoff).
 
 ## Waiting on the user
-- Merge the handoff PR. Commit the cluster fix to the k3s-cluster-code repo (laptop folder `claude/tools/setup-tools.sh` and
-  `claude/skill/SKILL.md`: the Debian Blender wrapper). Two-PC LAN test (M9-15). Expedition play-test (M7-14).
+- "land it" for the session 36 PR. Confirm D-277. Two-PC LAN test (M9-15). Expedition play-test (M7-14). Branch deletes.
 
 ## How to run this session
+- Session 36 lessons:
+  - `Tools ai mirror` now follows the map's symmetry; a first divergence on an early building placement points at a map/exit asymmetry.
+  - Every building exits and docks south: any top/bottom start layout leans to the top base. Check a new map layout with the mirror probe
+    and a 4-faction mirror screen (128 games per faction) before shipping it.
+  - Map changes move balance rows that play on that map: re-run those rows before landing (Glass Coast mirror_x looked fair in mirrors but
+    broke Expedition v Authority).
+  - `ai commander --random-only <fields>` gives paired ablations (same random stream): 128 games per row resolve a 10-point effect; compare
+    each row game for game with the "none" row. Many small cluster jobs (16 games per index) on all nodes finish 2 000 games in ~40 min.
+  - A full-suite test pod (3 CPU x86) stays Pending while a series fills the x86 slots: submit it before the series or lower the series'
+    parallelism. `kjob.py fetch` into an existing folder fails on overwrite (no delete permission in the bridge): fetch into a new folder.
+  - The NAS's Ollama runs one commander game set in ~4 h: start the model run early in a session.
 - Session 35 lessons:
   - The cluster now includes queen (8-vCPU VM on the TrueNAS box) and /work lives on the NAS (file locks work there). The NAS's Ollama
     (port 30068) runs local models: the commander needs a localhost proxy (KeyPolicy only sends a key over http to loopback) that maps the

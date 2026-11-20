@@ -67,3 +67,22 @@ old control byte for byte. Score = (wins + draws/2) / games for side A.
   or slightly useful.
 
 ## M5-14: the guard (jobs gd36, gd36c)
+Same paired set and rows; each variant is a code change in `src/AI/Recruit/DirectiveGuard.cs` (s36). Score and paired counts v the unguarded
+row of the same fields (a36) and v "none".
+
+| Variant | hold | reserve | tech | focus | everything |
+|---|---|---|---|---|---|
+| unguarded (S24) | 34.8 % | 32.8 % | 41.0 % | 37.9 % | 23.0 % |
+| G1: drop hold/reserve/tech/focus-reserve while the army is **behind** the seen enemy army | 35.9 % | 39.5 % | 41.0 % (no game changed) | 39.5 % | 23.8 % |
+| G2: G1, and HoldCell only moves the rally (never stops waves) | 44.8 % | 39.5 % | 42.6 % | 39.2 % | (cut short) |
+| G3: G2, and the parts also wait for the AI's own **army_before_tech** army | 43.8 % | **57.8 %** | **56.6 %** | **56.6 %** | 50.8 % |
+| **G4 (kept)**: G3, and HoldCell also waits for that army | **57.4 %** | (= G3) | (= G3) | (= G3) | **53.1 %** |
+
+- G1 hardly ever triggers: the costly parts do their damage early, before the AI has seen an enemy army (TechTo games were identical).
+- The AI's own rule (s12: no tech spending before `army_before_tech` units; Left Behind exempt) is the right gate. G3 paired v unguarded:
+  reserve 49 better / 12 worse, tech 47 / 22, focus 50 / 20, everything 53 / 11 (z +5.2). G4 v G3 on hold: 34 better / 9 worse (z +3.8).
+- With G4 the full random commander scores 53.1 %, level with the plain AI (52.7 %) instead of 23 % below it: a commander's directives no
+  longer cost the AI games by themselves, so a model's choices can now show whether they help.
+- Plain AI games (no directive, no orders) are unchanged game for game (the base row of the guarded build equals a36's).
+- The model rerun (qwen3:30b on the NAS, the s35 32-game set, job cm36) and its control (cc36) were started at the end of the session; results
+  in the next session (`/work/out/s36cmd/`).
