@@ -6,7 +6,7 @@ namespace Rts.AI.Recruit;
 
 /// <summary>
 /// S36 (M5-14, D-278): the commander's directives are followed only where they do not undercut the AI's own plan. The s36 paired ablation
-/// (docs/balance/s36_commander_ablation.md) found that the parts which hold credits or the army back cost the most: a HoldCell order
+/// (docs/balance/s36_balance.md) found that the parts which hold credits or the army back cost the most: a HoldCell order
 /// (no waves), a Reserve order, a TechTo order and the focus values that keep a unit reserve and pull the tier gates forward. So a HoldCell
 /// order only moves the rally (the AI's own waves still launch), and until the AI has the army its own plan wants before tech spending
 /// (<see cref="TierPlanner.CommandArmyReady"/>), or while its army is behind the enemy army it has seen (<see cref="TierPlanner.CommandBehind"/>),
