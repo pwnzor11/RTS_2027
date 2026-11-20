@@ -8,6 +8,7 @@ using Rts.Sim;
 using Rts.Sim.Core;
 using Rts.Sim.Missions;
 using Rts.Sim.Rules;
+using Rts.Sim.View;
 
 namespace Rts.Game.Tests.Controls;
 
@@ -82,10 +83,12 @@ public sealed class HarvestOrdersTests : IDisposable
 
     // ---- controller routing --------------------------------------------------------------------
 
-    private (SimSnapshotSource Source, OrderController Orders, Selection Selection, Camera Camera, EntityId Scraper, CellCoord Field) Rig()
+    private (SimSnapshotSource Source, OrderController Orders, Selection Selection, Camera Camera, EntityId Scraper, CellCoord Field) Rig(Action<Simulation, EntityId>? beforeStep = null)
     {
         (SkirmishGame game, EntityId scraper) = StarterHarvestTests.Setup();
         var source = Source(game);
+        beforeStep?.Invoke(game.Sim, scraper);
+        source.StepTicks(2);   // vision is computed on the first ticks
         var selection = new Selection();
         selection.Replace(new[] { new UnitKey(ActorKind.Vehicle, scraper) });
         var orders = new OrderController(source, selection);
@@ -93,11 +96,12 @@ public sealed class HarvestOrdersTests : IDisposable
         Simulation sim = game.Sim;
         CellCoord at = sim.Units.Position[scraper.Index].ToCell();
         CellCoord field = default;
-        for (int r = 5; r < 12 && field == default; r++)
+        for (int r = 2; r < 12 && field == default; r++)
             for (int dx = -r; dx <= r && field == default; dx++)
             {
                 var c = new CellCoord(at.X + dx, at.Y + r);
-                if (sim.Setup.Map.Contains(c) && sim.Map.BuildingAt(c).IsNone && sim.Map.IsPassableTerrain(c, Locomotion.Tracked, sim.Setup.Rules.Terrain))
+                if (sim.Setup.Map.Contains(c) && sim.Map.BuildingAt(c).IsNone && sim.Map.IsPassableTerrain(c, Locomotion.Tracked, sim.Setup.Rules.Terrain)
+                    && sim.ViewFor(0).VisionAt(c) > 0)   // M13-32: only explored cells count as a field
                     field = c;
             }
         Assert.NotEqual(default, field);
@@ -128,6 +132,7 @@ public sealed class HarvestOrdersTests : IDisposable
         BuildingView view = r.Source.Current.Buildings.First(b => b.TypeIndex == refinery && b.Player == 0);
         r.Orders.RightClick(Screen(r.Camera, view.Cell), r.Camera, Array.Empty<RenderUnit>());
         Assert.Equal(CommandKind.Return, Last(r.Source).Kind);
+        Assert.Equal(view.Id, Last(r.Source).Target);   // M13-32: the clicked refinery travels in the command
 
         CellCoord open = new(r.Field.X + 1, r.Field.Y);
         sim.Map.SetOverlay(open, OverlayKind.None, 0);
@@ -138,19 +143,20 @@ public sealed class HarvestOrdersTests : IDisposable
     [Fact]
     public void In_a_mixed_selection_only_harvesters_harvest()
     {
-        var r = Rig();
-        Simulation sim = r.Source.Sim;
-        int jeep = VehicleIndex(sim.Setup.Rules, "auth_jeep");
-        CellCoord at = sim.Units.Position[r.Scraper.Index].ToCell();
         EntityId other = EntityId.None;
-        for (int dx = -4; dx <= 4 && other.IsNone; dx++)
-            for (int dy = -4; dy <= 4 && other.IsNone; dy++)
-            {
-                var c = new CellCoord(at.X + dx, at.Y + dy);
-                if (sim.Setup.Map.Contains(c) && sim.Map.BuildingAt(c).IsNone && sim.Map.VehicleAt(c).IsNone
-                    && sim.Map.IsPassableTerrain(c, Locomotion.Wheeled, sim.Setup.Rules.Terrain))
-                    other = sim.SpawnVehicle(0, jeep, c);
-            }
+        var r = Rig((sim, scraper) =>
+        {
+            int jeep = VehicleIndex(sim.Setup.Rules, "auth_jeep");
+            CellCoord at = sim.Units.Position[scraper.Index].ToCell();
+            for (int dx = -4; dx <= 4 && other.IsNone; dx++)
+                for (int dy = -4; dy <= 4 && other.IsNone; dy++)
+                {
+                    var c = new CellCoord(at.X + dx, at.Y + dy);
+                    if (sim.Setup.Map.Contains(c) && sim.Map.BuildingAt(c).IsNone && sim.Map.VehicleAt(c).IsNone
+                        && sim.Map.IsPassableTerrain(c, Locomotion.Wheeled, sim.Setup.Rules.Terrain))
+                        other = sim.SpawnVehicle(0, jeep, c);
+                }
+        });
         r.Selection.Replace(new[] { new UnitKey(ActorKind.Vehicle, r.Scraper), new UnitKey(ActorKind.Vehicle, other) });
         r.Source.Host.RefreshSnapshots();
         int before = r.Source.Host.Pending.Count;
@@ -165,9 +171,9 @@ public sealed class HarvestOrdersTests : IDisposable
     {
         var r = Rig();
         Simulation sim = r.Source.Sim;
-        // Move it: afterwards it is not harvesting any more and the sim does not start it again by itself.
+        // Move it: while it travels it is not harvesting (M13-32: once it has stood idle for 3 s the sim starts it again by itself).
         r.Source.Order(CommandKind.Move, new UnitKey(ActorKind.Vehicle, r.Scraper), new CellCoord(r.Field.X, r.Field.Y));
-        r.Source.StepTicks(400);
+        r.Source.StepTicks(5);
         Assert.NotEqual(MissionKind.Harvest, sim.Units.Mission[r.Scraper.Index]);
         int before = sim.Funds(0);
 
@@ -176,5 +182,34 @@ public sealed class HarvestOrdersTests : IDisposable
         Assert.Equal(MissionKind.Harvest, sim.Units.Mission[r.Scraper.Index]);
         r.Source.StepTicks(3000);
         Assert.True(sim.Funds(0) > before, "the scraper delivered after the click");
+    }
+
+    [Fact]
+    public void Right_click_on_an_unexplored_resource_cell_moves_and_does_not_harvest()
+    {   // M13-32: the order side uses the same explored-cell rule as the cursor
+        var r = Rig();
+        Simulation sim = r.Source.Sim;
+        PlayerView view = sim.ViewFor(0);
+        CellCoord hidden = default;
+        for (int y = sim.Setup.Map.Height - 3; y > 2 && hidden == default; y--)
+            for (int x = sim.Setup.Map.Width - 3; x > 2 && hidden == default; x--)
+            {
+                var c = new CellCoord(x, y);
+                if (view.VisionAt(c) == 0 && sim.Map.BuildingAt(c).IsNone && sim.Map.IsPassableTerrain(c, Locomotion.Tracked, sim.Setup.Rules.Terrain)) hidden = c;
+            }
+        Assert.NotEqual(default, hidden);
+        sim.Map.SetOverlay(hidden, OverlayKind.Ashfall, 200);
+        r.Orders.RightClick(Screen(r.Camera, hidden), r.Camera, Array.Empty<RenderUnit>());
+        Assert.Equal(CommandKind.Move, Last(r.Source).Kind);
+    }
+
+    [Fact]
+    public void Return_order_carries_the_refinery_in_Target_and_keeps_the_subject_kind_in_Arg()
+    {
+        var refinery = new ActorRef(ActorKind.Building, new EntityId(7, 1));
+        Command c = OrderBuilder.Build(5, 0, 0, CommandKind.Return, new UnitKey(ActorKind.Vehicle, new EntityId(3, 1)), default, refinery);
+        Assert.Equal(refinery.Id, c.Target);
+        Assert.Equal((int)ActorKind.Vehicle, c.Arg);
+        Assert.Equal(EntityId.None, OrderBuilder.Build(5, 0, 0, CommandKind.Return, new UnitKey(ActorKind.Vehicle, new EntityId(3, 1)), default, default).Target);
     }
 }

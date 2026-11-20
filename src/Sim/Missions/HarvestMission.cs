@@ -275,7 +275,8 @@ internal static class HarvestMission
         {
             case DockStep.Pick:
             {
-                EntityId rid = PickRefinery(sim, player, cur);
+                EntityId rid = eco.HomeRefinery[i];
+                if (!RefineryOk(sim, rid, player)) { eco.HomeRefinery[i] = default; rid = PickRefinery(sim, player, cur); }   // M13-32: the home refinery while it stands
                 if (rid.IsNone) { eco.NoRefinery[i] = 1; return ToGuard(sim, store, kind, i); }   // D-205: resumes when a refinery is rebuilt
                 eco.DockTarget[i] = rid; eco.Ticket[i] = 0;
                 eco.DockState[i] = (byte)DockStep.Go;
@@ -381,6 +382,12 @@ internal static class HarvestMission
     private static bool RefineryOk(Simulation sim, EntityId rid, byte player) =>
         !rid.IsNone && sim.Buildings.Slots.IsAlive(rid) && sim.Buildings.Health[rid.Index] > 0 && sim.Buildings.Player[rid.Index] == player
         && sim.RulesOf(player).Buildings[sim.Buildings.TypeIndex[rid.Index]].Refinery;
+
+    /// <summary>M13-32: true when <paramref name="rid"/> is a live refinery of <paramref name="player"/>.</summary>
+    internal static bool IsRefineryOf(Simulation sim, EntityId rid, byte player) => RefineryOk(sim, rid, player);
+
+    /// <summary>M13-32: the dock cell of a refinery.</summary>
+    internal static CellCoord DockCellOf(Simulation sim, EntityId rid) => DockCell(sim, rid);
 
     private static CellCoord DockCell(Simulation sim, EntityId rid)
     {
