@@ -147,14 +147,20 @@ public sealed class ReplayViewerScreen : IScreen
         string view = _play.Viewer < 0 ? "all" : "player " + _play.Viewer;
         var lines = new List<string>
         {
-            $"REPLAY  {state}   tick {clock.Tick} / {clock.FinalTick} ({Percent(clock.Progress)})   view {view}",
+            $"REPLAY  {state}   time {Clock(clock.Tick)} / {Clock(clock.FinalTick)} ({Percent(clock.Progress)})   view {view}",
             "Space pause  1-4 speed  . step  F skip 10s  F2 view  G graphs  R restart  Esc back",
         };
-        if (_play.ShowDesyncWarning) lines.Add($"WARNING: the replay no longer matches the game data (differs from tick {_play.DesyncTick})");
+        if (_play.ShowDesyncWarning) lines.Add($"WARNING: the replay no longer matches the game data (differs from {Clock(_play.DesyncTick)})");
         if (_play.IsMissionReplay) lines.Add(Rts.Scripting.MissionReplay.WatchableOnlyNote);   // S18 GS-03 (owner): watchable only
         Hud.Panel(sb, _s.Pixel, new Point(8, 8), lines, scale);
         DrawProgressBar(sb, scale);
         if (clock.Ended) DrawEndBanner(sb, scale);
+    }
+
+    private static string Clock(long tick)
+    {
+        long seconds = tick / Rts.Sim.Core.SimConstants.TicksPerSecond;
+        return FormattableString.Invariant($"{seconds / 60}:{seconds % 60:D2}");
     }
 
     private static string Percent(float progress) => FormattableString.Invariant($"{(int)(progress * 100)}%");

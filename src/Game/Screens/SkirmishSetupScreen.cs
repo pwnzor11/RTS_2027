@@ -562,7 +562,7 @@ public sealed class SkirmishSetupScreen : IScreen
         if (!_maps[_mapIndex].IsGenerated && settings.Map.File is { } handMade && MapErrors(handMade) is { Count: > 0 } mapErrors)
         {
             _s.Screens.Push(new NoticeScreen(_s, "This map cannot be played",
-                $"{_maps[_mapIndex].Label}\n" + string.Join("\n", mapErrors.Take(4)) + (mapErrors.Count > 4 ? $"\n... and {mapErrors.Count - 4} more" : "")));
+                $"{_maps[_mapIndex].Label}\n" + string.Join("\n", mapErrors.Take(4)) + (mapErrors.Count > 4 ? $"\nand {mapErrors.Count - 4} more" : "")));
             return;
         }
 

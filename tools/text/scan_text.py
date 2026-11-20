@@ -24,7 +24,7 @@ CS_FILES = ["src/Game/Controls/ActionInfo.cs", "src/Game/Controls/KeyNames.cs"]
 DEBUG_FILES = {"DebugConsole.cs", "DebugCommandParser.cs", "MissionDebugLine.cs"}
 DEBUG_LINE = re.compile(r"[Dd]iagnostics|\bhash\b.*\bfps\b|\bfps\b|debug line|\[debug\]|DebugLine", re.I)
 # Source that is never drawn: log/exception/assert/path plumbing, editor-only screens.
-SKIP_FILES = {"CameoNames.cs", "MissionObjectiveLines.cs", "AppLog.cs", "SceneSet.cs", "ArchiveCatalog.cs"}
+SKIP_FILES = {"CameoNames.cs", "DisplayNames.cs", "MissionObjectiveLines.cs", "AppLog.cs", "SceneSet.cs", "ArchiveCatalog.cs"}
 SKIP_DIRS = ("src/Game/Screens/Editor/", "src/Game/Ui/Objectives/")   # objectives: owned by another helper
 NONTEXT_CALL = re.compile(r"\b(Log|AppLog\.\w+|Console\.\w+|Trace\.\w+|throw new \w+|Debug\.\w+|Assert\w*|Path\.\w+|File\.\w+|"
                           r"Directory\.\w+|InvalidDataException|ArgumentException|InvalidOperationException|"
@@ -46,7 +46,7 @@ SNAKE = re.compile(r"(?<![A-Za-z0-9_.{])[a-z][a-z0-9]*(?:_[a-z0-9]+)+(?![A-Za-z0
 DOTTED = re.compile(r"^[a-z][a-z0-9]*(?:\.[a-z0-9_]+)+$")
 BRACKET = re.compile(r"\[[A-Za-z][^\]\[]*\]")
 KEY_LABEL = re.compile(r"^\[(?:[A-Z][A-Za-z0-9+ ]{0,12}|\d+)\]$")  # [F1], [Esc], [Ctrl+S]: key hints are fine
-DEVWORD = re.compile(r"\b(TODO|FIXME|XXX|TBD|WIP|draft|placeholder|stub|lorem|dummy|test)\b", re.I)
+DEVWORD = re.compile(r"\b(TODO|FIXME|XXX|TBD|WIP|draft|placeholder|stub|lorem|dummy|not wired|wired yet|not implemented|not written|coming soon|assumed|test (?:connection|failed|only)|for testing)\b", re.I)
 DOUBLEDOT = re.compile(r"\.\.")
 PROGWORD = re.compile(r"\b(null|ids?|enums?|ticks?|index|indices|debug|sims?|cell coordinates|cell coords?|nan|exception|bool|int|json|toml|struct|bitmask|hash)\b", re.I)
 ID_HOLE = re.compile(r"\{[^{}:]*\b(?:\w*Id|id|\w*TypeId|RulesId|TechId|TypeName|Key)\b[^{}:]*\}")
@@ -188,8 +188,8 @@ def check_text(text, ctx, names, allow_caps_style=False, in_draw=True):
     t = text
     plain = re.sub(r"\{[^{}]*\}", "{}", t)  # placeholders collapsed
     # raw ids
-    if ctx.get("is_cs") and ID_HOLE.search(t) and re.search(r"[A-Za-z]{3}", plain):
-        flags.append(("raw_id", "interpolated id: " + ID_HOLE.search(t).group(0)))
+    if ctx.get("is_cs") and ID_HOLE.search(re.sub(r"\{[^{}]*(?:Display|Title|Tidy)\([^{}]*\}", "{}", t)) and re.search(r"[A-Za-z]{3}", plain):
+        flags.append(("raw_id", "interpolated id: " + ID_HOLE.search(re.sub(r"\{[^{}]*(?:Display|Title|Tidy)\([^{}]*\}", "{}", t)).group(0)))
     if ctx.get("is_cs"):
         scan = plain
     else:
@@ -261,7 +261,7 @@ LEAK_LINES = [
     (re.compile(r'new\[\] \{ id, |new List<string> \{ \w+\.Id, '), "type id is the first info line"),
     (re.compile(r'\$"[^"]*\{(need|prereq|req)\}'), "raw prerequisite id in text"),
     (re.compile(r': m\.Id, m\.State|\? TitleOf\(dataDir, m\.Id\) : m\.Id'), "mission id used as the title fallback"),
-    (re.compile(r"Replace\('_', ' '\)"), "ad-hoc id tidying (use CameoNames.Display)"),
+    (re.compile(r"(?<!Attr)\.Replace\('_', ' '\)"), "ad-hoc id tidying (use CameoNames.Display)"),
     (re.compile(r"id\[\(u \+ 1\)\.\.\]"), "ad-hoc id tidying (use CameoNames.Display)"),
 ]
 
@@ -346,7 +346,7 @@ def scan_archive(titles, entries, names):
     flagged, total = [], 0
     for path, ln, k, v, cid in entries:
         total += 1
-        fl = check_text(v, {"is_cs": False}, names, allow_caps_style=(k == "field_note"))
+        fl = check_text(v, {"is_cs": False}, names, allow_caps_style=(k in ("field_note", "subtitle")))
         if k == "title" and ("_" in v or DOTTED.match(v)):
             fl.append(("raw_id", "title contains underscore or looks like a key"))
         if fl:

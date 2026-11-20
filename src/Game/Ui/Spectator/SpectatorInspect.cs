@@ -3,6 +3,7 @@
 using Microsoft.Xna.Framework;
 using Rts.Game.Controls;
 using Rts.Game.Render;
+using Rts.Game.Ui.Sidebar;
 using Rts.Sim.Core;
 using Rts.Sim.Rules;
 
@@ -46,14 +47,14 @@ public static class SpectatorInspect
         (string id, int max) = u.Kind == UnitKind.Vehicle
             ? (rules.Vehicles[u.TypeIndex].Id, rules.Vehicles[u.TypeIndex].MaxHealth)
             : (rules.Infantry[u.TypeIndex].Id, rules.Infantry[u.TypeIndex].MaxHealth);
-        return new[] { id, $"P{u.Player + 1}  health {u.Health}/{max}" };
+        return new[] { CameoNames.Display(id), $"P{u.Player + 1}  health {u.Health}/{max}" };
     }
 
     /// <summary>Info lines for a structure.</summary>
     public static IReadOnlyList<string> Describe(BuildingView b, SimRules rules)
     {
         BuildingType t = rules.Buildings[b.TypeIndex];
-        var lines = new List<string> { t.Id, $"P{b.Player + 1}  health {b.Health}/{t.MaxHealth}" + (b.Ghost ? "  (last seen)" : "") };
+        var lines = new List<string> { CameoNames.Display(t.Id), $"P{b.Player + 1}  health {b.Health}/{t.MaxHealth}" + (b.Ghost ? "  (last seen)" : "") };
         if (b.Occupants > 0) lines.Add($"garrison {b.Occupants}");
         return lines;
     }

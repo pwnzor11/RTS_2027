@@ -68,7 +68,6 @@ public static class SuperweaponButtons
     /// <summary>Upper-case caption from a superweapon id: the part after the faction prefix ("dir_sunrise" gives "SUNRISE").</summary>
     public static string CaptionOf(string id)
     {
-        int u = id.IndexOf('_');
-        return (u >= 0 && u + 1 < id.Length ? id[(u + 1)..] : id).ToUpperInvariant();
+        return Rts.Game.Ui.Sidebar.CameoNames.Display(id, null).ToUpperInvariant();
     }
 }
