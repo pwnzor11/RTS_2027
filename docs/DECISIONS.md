@@ -2042,8 +2042,8 @@ little visible gain at 80 px). **Status:** owner decision
 the edge; start 0 won 67.2 % of 473 decided Ash Plains mirror games (z +7.5), with mirror_x 50.6 % (z +0.2); rot2 only halved it (57.6 %).
 Glass Coast mirror_x also removes its milder lean (54.4 % -> 48.7 %) but moves Expedition v Authority on Glass Coast from 52.8 % to 19.8 %
 (balance parked, D-269), so Glass Coast was left on rot2. docs/balance/s36_balance.md. **Alternatives:** rot2 for Ash Plains; buildings
-that face the map centre (sim and art change); a placement rule in the AI (no effect on the exits themselves). **Status:** assumed — confirm
-(owner asked for the map-data fix in session 36; the look of Ash Plains skirmish maps changes: starts at the left and right edges).
+that face the map centre (sim and art change); a placement rule in the AI (no effect on the exits themselves). **Status:** owner confirmed
+(session 36, "confirm d277"; Ash Plains skirmish maps now start at the left and right edges).
 
 ### D-278 · 2026-11-19 · Session 36: commander directives that hold the army back wait for the AI's army (M5-14)
 **Decision:** `DirectiveGuard` in the tiered AI: until the AI has its own `army_before_tech` army (Left Behind always counts as ready), or while
