@@ -113,11 +113,17 @@ internal static class EconDiag
         for (int i = 1; i < sim.Buildings.Capacity; i++)
             if (sim.Buildings.Slots.IsIndexAlive(i) && sim.Buildings.Player[i] == p && sim.Buildings.Health[i] > 0)
                 b.Append($" {rules.Buildings[sim.Buildings.TypeIndex[i]].Id}@{sim.Buildings.Cell[i].X},{sim.Buildings.Cell[i].Y}:{sim.Buildings.Health[i]}hp");
-        var hv = new StringBuilder();   // M13-33: each harvester's cell, mission, cargo and dock/harvest step
+        return $"units {n}{(n > 0 ? $" box ({x0},{y0})-({x1},{y1}) [{string.Join(",", types.Select(t => t.Key + "=" + t.Value))}]" : "")} bldgs{b}";
+    }
+
+    /// <summary>M13-33: each harvester of <paramref name="p"/>: cell, mission, cargo, dock and harvest step, goal, ticket and dock target.</summary>
+    internal static string Harvesters(Simulation sim, SimRules rules, byte p)
+    {
+        var hv = new StringBuilder();   // each harvester's cell, mission, cargo and dock/harvest step
         for (int i = 1; i < sim.Units.Capacity; i++)
             if (sim.Units.Slots.IsIndexAlive(i) && sim.Units.Player[i] == p && rules.Vehicles[sim.Units.TypeIndex[i]].HarvestCapacity > 0)
             { CellCoord c = sim.Units.Position[i].ToCell(); hv.Append($" {rules.Vehicles[sim.Units.TypeIndex[i]].Id}@{c.X},{c.Y}/{sim.Units.Mission[i]}/cargo{sim.Economy.Cargo[i]}/dock{sim.Economy.DockState[i]}/hv{sim.Economy.HarvestState[i]}/goal{sim.Economy.Goal[i].X},{sim.Economy.Goal[i].Y}/bad{sim.Economy.BadCell[i].X},{sim.Economy.BadCell[i].Y}/t{sim.Economy.Timer[i]}/tk{sim.Economy.Ticket[i]}/dt{sim.Economy.DockTarget[i]}"); }
-        return $"harvesters{hv} | units {n}{(n > 0 ? $" box ({x0},{y0})-({x1},{y1}) [{string.Join(",", types.Select(t => t.Key + "=" + t.Value))}]" : "")} bldgs{b}";
+        return $"harvesters{hv}";
     }
 
     private static string Name(SimRules rules, ProductionCategory cat, int type) => cat switch
