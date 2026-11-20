@@ -333,7 +333,7 @@ public sealed class RecruitAi : IAiPlayer, IAiSnapshotable, IHookableAi
         if (_hookAttack is CellCoord hookAttack) bias = bias with { AttackCell = hookAttack };   // M8-06: script hooks beat the directive
         if (_hookDefend is CellCoord hookDefend) bias = bias with { RallyCell = hookDefend };
         IReadOnlyList<CommanderOrder> orders = view.CommanderOrders;   // S24 (M5-12): standing orders; all empty = nothing below changes
-        if (_planner.CommandBehind) (bias, orders) = DirectiveGuard.WhileBehind(bias, orders);   // s36 (M5-14, D-278)
+        if (_planner.CommandBehind || !_planner.CommandArmyReady) (bias, orders) = DirectiveGuard.WhileBehind(bias, orders);   // s36 (M5-14, D-278)
         if (MilitaryManager.HoldCellOf(orders) is CellCoord holdCell && _hookDefend is null) bias = bias with { RallyCell = holdCell };   // HoldCell: the army rallies there
         _military.Orders = orders;
         EconomyOrders.Apply(orders, _planner!, _build!, _production!);   // S24 (s24-dai2): ExpandTo / TechTo / Reserve

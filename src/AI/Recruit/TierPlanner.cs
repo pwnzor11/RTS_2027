@@ -101,6 +101,10 @@ internal sealed class TierPlanner
     /// the AI ignores the commander directives and orders that hold credits or the army back (<see cref="DirectiveGuard"/>).</summary>
     public bool CommandBehind { get; private set; }
 
+    /// <summary>S36 (M5-14, D-278): the army is big enough for the AI's own tech spending (the s12 rule: <c>army_before_tech</c> units; Left Behind
+    /// always). Until then the AI ignores the commander parts that hold credits or the army back (<see cref="DirectiveGuard"/>).</summary>
+    public bool CommandArmyReady { get; private set; }
+
     /// <summary>Records what is in view this decision.</summary>
     public void Observe(RecruitKnowledge k, List<ViewActor> knownEnemyBuildings)
     {
@@ -119,6 +123,7 @@ internal sealed class TierPlanner
             Ahead = k.Army.Count >= AheadMinUnits && (long)own * 100 >= (long)_enemyPeak * (100 + AheadMarginPct);
             CommandBehind = (long)_enemyPeak * 100 > (long)own * (100 + BehindMarginPct);
             Behind = TechHoldEnabled && _p.UseUpgrades && CommandBehind;
+            CommandArmyReady = _faction.Faction == Faction.LeftBehind || k.Army.Count >= _p.FactionKeys.TuningOf((int)_faction.Faction).ArmyBeforeTech;
         }
         Array.Clear(_cur);
         int seen = 0, seenInf = 0;
