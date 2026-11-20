@@ -10,7 +10,7 @@ Open questions: Q-73 (deferred).
 1. Session 36 PR merged? Laptop: `git checkout main; git pull`.
 2. Read the commander rerun: cluster jobs cm36 (model) and cc36 (control), outputs `/work/out/s36cmd/{model,control}/s<seed>_w<swap>/summary.md`
    (fetch through the toolbox pod; scripts in the laptop k3s-cluster folder `claude/rts/s36/cmd_*.sh`). Compare with s35 (model 6-19-7,
-   control 6-24-2, plain 13-12-7) and add the table to docs/balance/s36_balance.md; tick M5-14.
+   control 6-24-2, plain 13-12-7; s36 control on the guarded build 14-13-5) and add the table to docs/balance/s36_balance.md; tick M5-14.
 3. Owner: confirm D-277 (Ash Plains starts left/right) after a look at a skirmish map (USER_CHECKS session 36).
 4. Ask the owner what is next: the two-PC LAN test (M9-15, owner), the Expedition play-test (M7-14), a commander with a stronger model,
    balance (parked, D-269; Glass Coast left/right is a lead if it reopens), or new work.

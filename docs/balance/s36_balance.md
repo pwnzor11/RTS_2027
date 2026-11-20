@@ -84,5 +84,6 @@ row of the same fields (a36) and v "none".
 - With G4 the full random commander scores 53.1 %, level with the plain AI (52.7 %) instead of 23 % below it: a commander's directives no
   longer cost the AI games by themselves, so a model's choices can now show whether they help.
 - Plain AI games (no directive, no orders) are unchanged game for game (the base row of the guarded build equals a36's).
-- The model rerun (qwen3:30b on the NAS, the s35 32-game set, job cm36) and its control (cc36) were started at the end of the session; results
-  in the next session (`/work/out/s36cmd/`).
+- On the s35 32-game set (seeds 1-16 x swap, job cc36) the random control on the guarded build goes 14-13-5 (s35: 6-24-2; plain AI 13-12-7).
+- The model rerun (qwen3:30b on the NAS, the same 32 games, job cm36) was still running at the end of the session; results in the next
+  session (`/work/out/s36cmd/model/`).
