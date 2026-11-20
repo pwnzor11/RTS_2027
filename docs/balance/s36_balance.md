@@ -1,7 +1,7 @@
 # Session 36: Ash Plains start bias (M13-31) and the commander ablation (M5-14)
 
 All runs on the home cluster (laptop k3s-cluster folder `claude/rts/s36/`: build*.sh, fair.sh, glass.sh, abl.sh, guard*.sh, test.sh), every
-node including the Pis (the Pis played 62 of the 160 fairness pieces). Mirror probe and ablation option: commits f987d15 and f47b748 on integ-s36.
+node including the Pis (the Pis played 62 of the 158 fairness pieces that logged a time). Mirror probe and ablation option: commits f987d15 and f47b748 on integ-s36.
 
 ## M13-31: why Ash Plains layout 1 favours one start
 `Tools ai mirror` (s32) imaged player 1 by a half turn only; it now images by the map's own symmetry (rot2, mirror_x or mirror_y, the one with
@@ -74,11 +74,11 @@ row of the same fields (a36) and v "none".
 |---|---|---|---|---|---|
 | unguarded (S24) | 34.8 % | 32.8 % | 41.0 % | 37.9 % | 23.0 % |
 | G1: drop hold/reserve/tech/focus-reserve while the army is **behind** the seen enemy army | 35.9 % | 39.5 % | 41.0 % (no game changed) | 39.5 % | 23.8 % |
-| G2: G1, and HoldCell only moves the rally (never stops waves) | 44.8 % | 39.5 % | 42.6 % | 39.2 % | (cut short) |
+| G2: G1, and HoldCell only moves the rally (never stops waves); run cut short: hold 125, tech 101, focus 106 games | 44.8 % | 39.5 % | 42.6 % | 39.2 % | (cut short) |
 | G3: G2, and the parts also wait for the AI's own **army_before_tech** army | 43.8 % | **57.8 %** | **56.6 %** | **56.6 %** | 50.8 % |
 | **G4 (kept)**: G3, and HoldCell also waits for that army | **57.4 %** | (= G3) | (= G3) | (= G3) | **53.1 %** |
 
-- G1 hardly ever triggers: the costly parts do their damage early, before the AI has seen an enemy army (TechTo games were identical).
+- G1 triggers rarely and with no clear gain (paired v unguarded z +0.2 to +1.8; TechTo games identical): the costly parts do their damage early, before the AI has seen an enemy army.
 - The AI's own rule (s12: no tech spending before `army_before_tech` units; Left Behind exempt) is the right gate. G3 paired v unguarded:
   reserve 49 better / 12 worse, tech 47 / 22, focus 50 / 20, everything 53 / 11 (z +5.2). G4 v G3 on hold: 34 better / 9 worse (z +3.8).
 - With G4 the full random commander scores 53.1 %, level with the plain AI (52.7 %) instead of 23 % below it: a commander's directives no

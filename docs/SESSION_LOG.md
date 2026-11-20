@@ -673,7 +673,7 @@ mirror_x 50.6 % v 67.2 % (D-277); Glass Coast mirror_x tried and taken back (Exp
 --random-only` paired ablation (17 rows x 128 games): hold, reserve, tech and focus cost the games; DirectiveGuard G1-G4 screened, G4 kept
 (D-278): random control 23.0 -> 53.1 % (plain 52.7 %). docs/balance/s36_balance.md.
 **Decisions:** D-277 (assumed — confirm), D-278. **Questions:** none new.
-**Helpers:** none (lead-only; all measurement on the cluster: about 5 300 games across 10 nodes, Pis included, plus three full test runs).
+**Helpers:** none (lead-only; all measurement on the cluster: about 7 700 games across 10 nodes, Pis included, plus three full test runs).
 **Problems / notes:** a full-suite pod (3 CPU, x86) waits until a series leaves an x86 slot free; `kjob.py fetch` into an existing folder fails
 on overwrite (fetch into a new folder); `git cherry-pick -q` is not a valid flag (the chain stopped; edits re-applied by hand); a job
 `scr36` from elsewhere ran on the cluster during the session. The model rerun (cm36, ~4 h on the NAS's Ollama) was still running at wrap-up.

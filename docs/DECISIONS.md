@@ -2052,6 +2052,6 @@ focus are ignored for the decision; once they apply, HoldCell only moves the ral
 focus cell, AttackAt, Raid and ExpandTo always apply. New `ai commander --random-only <fields>` (paired ablation of the random commander).
 **Why:** the s36 paired ablation (128 games per row) found exactly those parts cost the commanded AI its games (hold 34.8 %, reserve 32.8 %,
 tech 41.0 %, focus 37.9 % v 57.4 % for plain-valued directives); with the guard the full random commander scores 53.1 % (was 23.0 %; plain AI
-52.7 %), and games without a commander are unchanged. **Alternatives:** guard only while behind (G1: almost never triggers); hold as rally
+52.7 %), and games without a commander are unchanged. **Alternatives:** guard only while behind (G1: triggers rarely, no clear gain); hold as rally
 only without the army gate (G2/G3: hold 44 %); dropping the orders altogether. **Status:** owner asked for the M5-14 follow-up in session 36
 ("do both"); the model rerun on the guarded build is running.
