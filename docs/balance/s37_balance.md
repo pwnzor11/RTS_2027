@@ -112,3 +112,23 @@ win share (one cell's noise is about +/-9 points; a 12-row mean about +/-2.5):
 
 Per-opponent effects that matter for the package: the Rocket Truck cost hits the Directorate hardest against the Authority (-20 on average);
 the Scavenger cost hits the Left Behind hardest against the Authority (-8.5) and least against the Directorate (-2.5).
+
+## LLM commander (M5-14, item 6): qwen3:30b rerun and gpt-oss:120b
+Same 32-game swap set as s35/s36 (tier 3 v tier 3, default factions, map 64, 30 000 ticks; side A commanded, side B plain), models on the NAS's
+Ollama (CPU only, no API key) through the localhost proxy.
+
+| Side A | Build | Games | W-L-D |
+|---|---|---|---|
+| qwen3:30b commander (job cm36) | 2bba3fe (DirectiveGuard, D-278) | 32 | 14-13-5 |
+| Random directives (control, cc36) | 2bba3fe | 32 | 14-13-5 |
+| Plain AI (s35 base) | - | 32 | 13-12-7 |
+| gpt-oss:120b commander (job cg37b, seeds 1-8) | bb973be | 16 | 9-5-2 |
+| Random directives, same 16 games | 2bba3fe | 16 | 10-5-1 |
+| qwen3:30b, same 16 games | 2bba3fe | 16 | 7-6-3 |
+
+- With the DirectiveGuard the commanded AI is no longer worse than the plain AI, but neither model makes it stronger: game for game, qwen3:30b
+  was better than the random control in 11 games and worse in 11 (32 games); gpt-oss:120b matches the control on its 16 games.
+- gpt-oss:120b on the NAS: 383 calls, mean 74 s per call, no errors (reasoning "low", JSON mode); it needs about 62 GB of the Ollama app's 80 GB
+  limit and its first load takes about 7 minutes (the 30b model must be unloaded first). A 16-game set took 4 h 12 min.
+- **Reading:** directives steer an AI that already plays its own plan; a better model cannot add strength the tier-3 AI does not have. A
+  "super hard LLM opponent" therefore needs something other than directives (see HANDOFF: options for the owner).
