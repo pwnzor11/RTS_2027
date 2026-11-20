@@ -97,8 +97,10 @@ public class CommanderOrderAiTests(ITestOutputHelper log)
     }
 
     [Fact]
-    public void HoldCellStopsWavesAndGathersTheArmyAtTheCell()
+    public void HoldCellNeverStopsTheAisOwnWaves()
     {
+        // s36 (M5-14, D-278): a HoldCell order used to stop every wave while it stood (the s36 ablation: 34.8 % v 57.4 % without it); it now
+        // waits for the army_before_tech army and then only moves the rally, so the AI attacks as the plain AI does
         var plain = new OrderRig();
         plain.Run(8000);
         Assert.True(plain.Ai.Waves > 0, "the plain AI attacks in the window");
@@ -108,22 +110,8 @@ public class CommanderOrderAiTests(ITestOutputHelper log)
         rig.Run(5);
         rig.Order(1, CommanderOrderKind.HoldCell, cell);
         rig.Run(8000 - 5);
-        Assert.Equal(CommanderOrderKind.HoldCell, rig.Sim.CommanderOrdersOf(0)[1].Kind);
-        Assert.Equal(0, rig.Ai.Waves);
-        int near = 0, far = 0;
-        for (int i = 1; i < rig.Sim.Infantry.Capacity; i++)
-            if (rig.Sim.Infantry.Slots.IsIndexAlive(i) && rig.Sim.Infantry.Player[i] == 0)
-            { var c = new CellCoord(rig.Sim.Infantry.Position[i].X / 256, rig.Sim.Infantry.Position[i].Y / 256); if (Math.Max(Math.Abs(c.X - cell.X), Math.Abs(c.Y - cell.Y)) <= 12) near++; else far++; }
-        for (int i = 1; i < rig.Sim.Units.Capacity; i++)
-            if (rig.Sim.Units.Slots.IsIndexAlive(i) && rig.Sim.Units.Player[i] == 0)
-            { var c = new CellCoord(rig.Sim.Units.Position[i].X / 256, rig.Sim.Units.Position[i].Y / 256); if (Math.Max(Math.Abs(c.X - cell.X), Math.Abs(c.Y - cell.Y)) <= 12) near++; else far++; }
-        log.WriteLine($"near {near} far {far}");
-        Assert.True(near > far, $"{near} units near the held cell, {far} elsewhere");
-
-        // clearing the slot lets the AI attack again
-        rig.Order(1, CommanderOrderKind.None, Directive.NoCell);
-        rig.Run(6000);
-        Assert.True(rig.Ai.Waves > 0, "waves resume once the hold is cleared");
+        Assert.Equal(CommanderOrderKind.HoldCell, rig.Sim.CommanderOrdersOf(0)[1].Kind);   // the order is stored in the sim as before
+        Assert.True(rig.Ai.Waves > 0, "waves still launch under a standing HoldCell order");
     }
 
     [Fact]

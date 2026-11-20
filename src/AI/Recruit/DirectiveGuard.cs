@@ -7,11 +7,11 @@ namespace Rts.AI.Recruit;
 /// <summary>
 /// S36 (M5-14, D-278): the commander's directives are followed only where they do not undercut the AI's own plan. The s36 paired ablation
 /// (docs/balance/s36_balance.md) found that the parts which hold credits or the army back cost the most: a HoldCell order
-/// (no waves), a Reserve order, a TechTo order and the focus values that keep a unit reserve and pull the tier gates forward. So a HoldCell
-/// order only moves the rally (the AI's own waves still launch), and until the AI has the army its own plan wants before tech spending
-/// (<see cref="TierPlanner.CommandArmyReady"/>), or while its army is behind the enemy army it has seen (<see cref="TierPlanner.CommandBehind"/>),
-/// the reserve, tech and early-gate parts are dropped for the decision and the AI plays its plain values; posture, mix, expand, target,
-/// focus cell, AttackAt, Raid and ExpandTo always stay. Stateless: a pure function of
+/// (no waves), a Reserve order, a TechTo order and the focus values that keep a unit reserve and pull the tier gates forward. So until the AI
+/// has the army its own plan wants before tech spending (<see cref="TierPlanner.CommandArmyReady"/>), or while its army is behind the enemy
+/// army it has seen (<see cref="TierPlanner.CommandBehind"/>), HoldCell, Reserve, TechTo and the reserve/early-gate parts of the focus are
+/// dropped for the decision and the AI plays its plain values; once they apply, a HoldCell order only moves the rally (the AI's own waves
+/// still launch). Posture, mix, expand, target, focus cell, AttackAt, Raid and ExpandTo always stay. Stateless: a pure function of
 /// this decision's directive, orders and armies, so nothing is saved.
 /// </summary>
 internal static class DirectiveGuard
@@ -32,10 +32,13 @@ internal static class DirectiveGuard
         foreach (CommanderOrder o in orders) drop |= Dropped(o.Kind);
         if (!drop) return (bias, orders);
         var kept = new CommanderOrder[orders.Count];
-        for (int i = 0; i < orders.Count; i++) kept[i] = Dropped(orders[i].Kind) ? default : orders[i];   // same slots, so slot memories stay aligned
+        for (int i = 0; i < orders.Count; i++) kept[i] = Dropped(orders[i].Kind) ? CommanderOrder.Empty : orders[i];   // same slots, so slot memories stay aligned
         return (bias, kept);
     }
 
+    /// <summary>True for the order kinds dropped while the guard holds.</summary>
+    internal static bool IsHeldBack(CommanderOrderKind kind) => Dropped(kind);
+
     private static bool Dropped(CommanderOrderKind kind) =>
-        kind is CommanderOrderKind.Reserve or CommanderOrderKind.TechTo || (kind == CommanderOrderKind.HoldCell && HoldBlocksWaves);
+        kind is CommanderOrderKind.Reserve or CommanderOrderKind.TechTo or CommanderOrderKind.HoldCell;
 }
