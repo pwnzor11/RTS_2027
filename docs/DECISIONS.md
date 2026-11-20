@@ -2055,3 +2055,53 @@ tech 41.0 %, focus 37.9 % v 57.4 % for plain-valued directives); with the guard 
 52.7 %), and games without a commander are unchanged. **Alternatives:** guard only while behind (G1: triggers rarely, no clear gain); hold as rally
 only without the army gate (G2/G3: hold 44 %); dropping the orders altogether. **Status:** owner asked for the M5-14 follow-up in session 36
 ("do both"); the model rerun on the guarded build is running.
+
+### D-279 · 2026-11-20 · Session 37: skirmish balance un-parked; measure every biome, tune rules and maps (supersedes D-269's "accepted for now")
+**Decision:** skirmish balance is reopened (owner: "un-park skirmish balance and finally fix it ... tests various cost and effect changes on the
+units and maps"). Target: every cross-faction row of layout 1 (6 pairs x 4 biomes, tier 3 v tier 3, size 96, 128 games) inside 40-60 %; mirror
+start share inside 40-60 %; the campaign still meets D-222. Rule and map changes land when they move the table toward that target (D-264 still
+guards each step) and are marked "(tune) s37 ... assumed — confirm". Plan and results: docs/balance/s37_balance_plan.md, s37_balance.md.
+**Why:** owner request; the cluster makes 128-game rows on all four biomes cheap. **Alternatives:** AI keys only (s27-s32, exhausted).
+**Status:** decided (owner); target values assumed — confirm.
+
+### D-281 · 2026-11-20 · Session 37: map and AI fixes for mid-row starts and the Expedition supply lane (M13-33..M13-36)
+**Decision:** (1) M13-34: one shared dock/exit orientation rule (`BuildingOrientation`) used by the sim and, through `PlayerView.OrientedOffset`,
+by the AI's PlacementSearch and Directorate staging (the AI used unturned offsets for south-half buildings). (2) M13-33: new biome key
+`start_row_shift` (default 0, mirror_x only); 6 for mountains and ash_plains, so 2-player layout-1 starts sit 6 cells above the middle row.
+(3) M13-35: the carved channel to an inland Expedition base ends in a 7-wide landing bay (last 14 cells), and the Expedition AI parks the start
+Landing Craft off the dock water until its Anchorage stands (dock fit uses the build radius). (4) M13-36: on ash_plains every river crossing is a
+road deck (was alternating bridges and foot-only shallow fords). Rust Belt and Glass Coast maps stay byte-identical (pinned).
+**Why:** Mountains/Ash Plains layout 1 starved the Left Behind (harvesters deadlocked at a walled-in dock) and the Expedition (tenders stranded
+behind its own Quay/Shipyard; Anchorage site blocked): rows of 77-88 % on main; after the fixes incomes are level on every biome and those rows are
+54-69 % (docs/balance/s37_balance.md). Ash fords split Left Behind infantry from its vehicles: Authority v LB on ash 79.5 -> 47 %.
+**Alternatives:** unit stat changes for those factions (would break the other biomes); field placement margin (tried, no gain).
+**Status:** decided by the lead under D-279; assumed — confirm (start shift and ash decks change how those maps look).
+
+### D-282 · 2026-11-20 · Session 37: scraper orders (M13-32, owner play-test)
+**Decision:** a right-click on an own refinery carries that refinery (Command.Target): a loaded harvester docks there; an empty one takes it as its
+home refinery and starts harvesting at once (no empty trip). Any harvester left idle in Guard for 3 s resumes harvesting by itself (every player,
+AI included; NoRefinery harvesters excepted). A Harvest click clears old unreachable-field marks; the order side needs an explored cell, as the
+cursor does. **Why:** owner: scrapers "didn't seem to want to do it automatically if you right clicked to assign them to a refinery". AI skirmish
+results unchanged (job bi37: Rust/Glass rows identical to main). **Status:** decided (owner request); 3 s assumed — confirm.
+
+### D-283 · 2026-11-20 · Session 37: objective guidance (M11-30, owner play-test)
+**Decision:** the collapsed objective bar lists every active objective (up to 4, optional ones marked), one highlighted row that the world marker,
+edge arrow and minimap ping always follow (Tab moves it; a row with no location says "(no map marker)"); banners NEW OBJECTIVE (6 s),
+OBJECTIVE COMPLETE (4 s) and OBJECTIVE FAILED, queued; minimap flash 4 s; an actor target keeps its last seen cell after the actor dies; six
+objectives that had no location got one (dir_02, dir_03, exp_01..exp_04), and a test lists any objective without a SetTarget.
+**Why:** owner: "it was really hard to know what the next objective was". **Status:** decided (owner request); wording assumed — confirm.
+
+### D-284 · 2026-11-20 · Session 37: in-universe on-screen text (M11-31, owner play-test)
+**Decision:** no raw ids on screen (debrief "New tech", spectator inspect, Archive weapon/Requires rows, upgrade and superweapon captions use
+Archive titles); the 13 "[draft pending]" Technology entries written; developer wording removed (e.g. "Test connection", "not wired yet", "tick N"
+-> m:ss); a scanner (tools/text/scan_text.py) and tests keep it that way (locale completeness, no '_' or dotted keys in player text). Telegram
+briefings and STOP field notes are kept as they are pending the owner's choice (docs/reviews/2026-11-19_text_audit.md has both styles).
+**Why:** owner: "the on screen text is mostly like development stuff ... make it in-universe consistent". **Status:** decided (owner request);
+new Technology lore and the briefing style are the owner's to confirm.
+
+### D-285 · 2026-11-20 · Session 37: LLM commander does not make the AI stronger; voice-line diagnostics (M5-14, M10-27)
+**Decision:** M5-14 closes: on the guarded build qwen3:30b (14-13-5 over 32 games) and gpt-oss:120b (9-5-2 over 16) equal the random-directive
+control (14-13-5; 10-5-1 on the same 16). A "super hard LLM opponent" needs a different design (owner options in HANDOFF). M10-27: the radio voice
+path logs every voice start and every silent line with its reason; the voice could not be reproduced as silent on Linux (it plays through the full
+game path into a recorded sink). **Why:** docs/balance/s37_balance.md; owner reported a silent voice line on an older build (eda0f0e3).
+**Status:** decided by the lead; voice root cause open until the owner's next log.
