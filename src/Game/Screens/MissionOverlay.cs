@@ -79,9 +79,24 @@ internal sealed class MissionOverlay
     {
         _tick = tick;
         _dialogue.Advance(_host.Dialogue, tick);
-        if (_dialogue.Started && _dialogue.Current is { } line && MissionDialoguePresenter.VoiceToPlay(line, audio.HasVoice) is { } voice)
-            audio.PlayVoice(voice);
+        if (_dialogue.Started && _dialogue.Current is { } line)
+        {
+            if (MissionDialoguePresenter.VoiceToPlay(line, audio.HasVoice) is { } voice) audio.PlayVoice(voice);
+            else ReportNoVoice(line, audio);
+        }
+
         return _cameraCue.Take(_host.CameraHint, tick);
+    }
+
+    private readonly HashSet<string> _noVoiceReported = new(StringComparer.Ordinal);
+
+    // One log line per key when a line shows as text only, so a silent radio line can be explained from the log.
+    private void ReportNoVoice(MissionDialogue line, IAudio audio)
+    {
+        if (!_noVoiceReported.Add(line.Key)) return;
+        Console.Error.WriteLine(string.IsNullOrEmpty(line.Voice)
+            ? $"audio: line {line.Key} has no voice path (no [voice] entry in the mission's locale file)"
+            : $"audio: voice {line.Voice} for line {line.Key} not played: {audio.GetType().Name} reports it unavailable");
     }
 
     /// <summary>The dialogue line as HUD text: "Speaker name: text", wrapped (empty when no line is up). The name comes from the Archive (S19 MIS-12).</summary>

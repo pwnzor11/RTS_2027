@@ -29,6 +29,7 @@ public sealed class MonoGameAudio : IAudio
     private const int MaxSimultaneousSfx = 40;   // S22: no new one-shot starts while this many are playing
     private float _fade = 1f;
     private bool _broken;
+    private readonly HashSet<string> _voiceReported = new(StringComparer.Ordinal);   // one diagnostic line per voice and kind per session
 
     /// <summary>Creates the backend and checks that the audio device works; throws if it does not (use <see cref="AudioBootstrap"/> for the fallback).</summary>
     public MonoGameAudio(SoundBank bank, string audioDir, MusicLibrary music)
@@ -204,16 +205,31 @@ public sealed class MonoGameAudio : IAudio
     }
 
     /// <inheritdoc />
-    public bool HasVoice(string relativePath) => !_broken && File.Exists(Path.Combine(_audioDir, relativePath));
+    public bool HasVoice(string relativePath)
+    {
+        if (_broken) return false;
+        if (File.Exists(Path.Combine(_audioDir, relativePath))) return true;
+        if (_voiceReported.Add("missing:" + relativePath))
+            Console.Error.WriteLine($"audio: voice file missing {relativePath} (looked in {_audioDir})");
+        return false;
+    }
 
     /// <inheritdoc />
     public void PlayVoice(string relativePath)
     {
-        if (_broken || _sfxVolume == 0 || _masterVolume == 0 || !HasVoice(relativePath)) return;
+        if (_broken || _sfxVolume == 0 || _masterVolume == 0)
+        {
+            if (_voiceReported.Add("muted:" + relativePath))
+                Console.Error.WriteLine($"audio: voice {relativePath} not played (broken={_broken}, sfx volume {_sfxVolume}, master volume {_masterVolume})");
+            return;
+        }
+
+        if (!HasVoice(relativePath)) return;
         try
         {
             using FileStream stream = File.OpenRead(Path.Combine(_audioDir, relativePath));
             SoundEffect effect;
+            int sampleRate = 0;
             if (relativePath.EndsWith(".ogg", StringComparison.OrdinalIgnoreCase))
             {
                 // Voice lines are OGG (MissionLocale); FromStream reads WAV only, so decode with NVorbis first.
@@ -223,6 +239,7 @@ public sealed class MonoGameAudio : IAudio
                     return;
                 }
 
+                sampleRate = rate;
                 effect = new SoundEffect(pcm, rate, channels == 1 ? AudioChannels.Mono : AudioChannels.Stereo);
             }
             else
@@ -234,6 +251,8 @@ public sealed class MonoGameAudio : IAudio
             voice.Volume = Math.Clamp(_sfxVolume / 100f * (_masterVolume / 100f), 0f, 1f);
             voice.Play();
             _active.Add(voice);
+            if (_voiceReported.Add("played:" + relativePath))
+                Console.Error.WriteLine($"audio: voice {relativePath} {sampleRate} Hz {(int)effect.Duration.TotalMilliseconds} ms (volume {voice.Volume:0.##}, state {voice.State})");
         }
         catch (Exception e) when (e is IOException or InvalidOperationException or ArgumentException or NotSupportedException or InvalidDataException)
         {
