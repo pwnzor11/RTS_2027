@@ -75,7 +75,7 @@ public static class LobbyCodec
         int colour = r.Ranged(PlayerColours.Count - 1, "colour");
         int team = r.Ranged(SkirmishSettings.MaxSlots - 1, "team");
         bool commander = r.Bool();
-        int handicap = r.Ranged(100, "handicap");
+        int handicap = r.Ranged(Rts.Sim.Core.SimSetup.MaxHandicap, "handicap");
         int credits = r.Ranged(SlotOptions.CreditsPresets.Count - 1, "credits");
         bool army = r.Bool();
         return new SkirmishSlot((SlotKind)kind, (Faction)faction, tier, colour, team, commander, handicap, credits, army);
