@@ -79,6 +79,7 @@ respond_to_attacks = 0  # (tune) s38
 
 [faction.authority.tier3]
 respond_to_attacks = 0  # (tune) s38
+army_cap = 40  # (tune) s38 D-288: with respond_to_attacks off the tier-3 Authority overran LB/Exp on Rust Belt (75 %); 128 games per row, docs/balance/s38_balance.md
 
 [faction.authority.tier4]
 respond_to_attacks = 0  # (tune) s38
