@@ -1,33 +1,42 @@
-# Handoff: Session 38 — merge PR #118 (owner OK), read the voice log, then the map-specific balance rows
-Last commit: `docs: Session 37 handoff` on `integ-s37` (draft PR #118 to main; Windows CI green on the UX build e90dff9, rerun on the final head).
-Where things stand: session 37 fixed the owner's four campaign complaints (in-universe text D-284, objective guidance D-283, scraper orders D-282,
-voice-line diagnostics D-285), found and fixed why Mountains/Ash Plains broke the Left Behind and Expedition (AI placement used unturned docks,
-mid-row starts, Expedition supply lane, Ash foot-only fords: D-281), and landed a small unit package (D-280). Balance MAD 17.0 -> 13.3.
-Cluster: campaign 45/45, 108 LAN soaks in sync, 160 replays identical on Pi and x86. LLM commander: no model makes the AI stronger (D-285).
-Decisions up to D-285. Open questions: Q-73 (deferred; suggested par table in docs/balance/s37_balance.md).
+# Handoff: Session 39 — confirm D-286..D-288; then map-specific balance (Directorate Bores, Mountains/Ash harvesters) or open choice
+Last commit: `docs: Session 38 handoff` on `integ-s38` (PR to main; session 37 landed as PR #118 this session). Check it merged.
+Where things stand: session 38 merged session 37 (cluster suite green), fixed the inverted Authority AI ladder (D-287: respond_to_attacks off for
+Authority tiers 2-5; D-288: tier-3 army cap 40), added the "Super hard (LLM)" skirmish preset (D-286: tier 5 + LLM + 150 % edge), measured layout 2
+(stays off), the Expedition AI at every tier and the draws, and screened the map-specific balance rows (nothing map-side landed).
+docs/balance/s38_balance.md. Decisions up to D-288. Open questions: Q-73 (deferred).
 
 ## Start here (shown to the user as the plan; nothing starts until they say go)
-1. PR #118 merged? (merges need the owner's OK in chat). Laptop: `git checkout main; git pull`, rebuild.
-2. Voice (M10-27): read `%APPDATA%/RTS_2027/logs/rts_2027.log` (folder Roaming--RTS_2027 when connected) after the owner plays auth_01's opening.
-   "audio: voice ... state Playing" = OpenAL on his PC; "no voice path"/"file missing" = data. Fix accordingly.
-3. Owner answers to ask: confirm D-280/D-281 numbers; briefing style (telegram v plain, docs/reviews/2026-11-19_text_audit.md); par times
-   (table in s37_balance.md); the "super hard LLM opponent" design (below).
-4. Balance next (M10-21): the map-specific rows — Directorate v Authority on Mountains/Ash (20 %), Expedition on Glass Coast (Dir 20.9 %, LB 34.4 %),
-   Directorate v Left Behind Rust 26.5 % v Ash 76.2 %. Trace a few games per row, find the map-side cause, screen at 128 games (s37 kit).
+1. Session 38 PR merged? Laptop: `git checkout main; git pull`, rebuild.
+2. Ask the owner to confirm (assumed — confirm): D-286 (+50 % edge), D-287 (Authority respond_to_attacks off), D-288 (army cap 40; tier-3 table about
+   14.4 from 50 % v 13.3 in s37). Also still from s37: D-280/D-281 numbers, briefing style, par times, voice log (M10-27).
+3. Balance next (M13-37): (a) Directorate Bore AI (buys ~3 a game, loses 94-99 %; removing them = +5..33 points for the Directorate) with a matching
+   Directorate nerf in small steps (Rocket Truck cost is a cliff); (b) why Directorate harvesters survive and Authority ones die on Mountains/Ash
+   (trace a few games: raid paths, refinery placement); (c) Authority tier 5 v 1 is 66.7 % (target 90); (d) Expedition ladder flat/draw-heavy at 4-5.
+4. Then: M13-38 (Directorate gains little from a handicap edge), the two-PC LAN test (M9-15), the Expedition play-test (M7-14).
 
 ## Half-finished work
-- M10-21 balance: above. M10-27 voice: waits for the owner's log.
-- Layout 2 rows were not re-measured this session (layout 1 is the skirmish default).
-- Super hard LLM opponent (owner wants it, "not the end of the world"): directives cannot add strength (D-285). Options to offer: (a) LLM commander
-  on a tier-5 AI as a flavour "adaptive" opponent, labelled as such; (b) a "Hard + LLM" mode that also gives the commanded AI a resource bonus;
-  (c) let the LLM pick build orders/army compositions per game from a list the AI executes (new design). Recommendation: (a) now, (c) as a design round.
-- Branches to delete on GitHub: integ-s37 and wp/s37-mtn after merge, plus the older list from session 36's handoff
+- Cluster jobs still running at wrap-up (outputs on /work/out, jobs self-delete): l238 (layout-2 table, Mountains/Ash rows missing), vp38 (map variants,
+  noisy). Read with `python3 /work/in/tally.py /work/out/l238/l2` and `python3 /work/in/cmp.py /work/out/vp38` through the toolbox pod.
+- Branches to delete on GitHub after the merge: integ-s38, wp/s38-llm, wp/s38-ladder, wp/s38-glass, integ-s37, wp/s37-mtn, plus the older list
   (land/s36, land/s36-confirm, integ-s36, wp/s36-*, integ-s32m, integ-s33, land/s33*, wp/s33-*, land/s34-*, wp/s34-kitbash, land/s35-*).
 
 ## Waiting on the user
-- OK to merge PR #118. Voice test + log. Two-PC LAN test (M9-15). Expedition play-test (M7-14). Branch deletes. Answers in "Start here" 3.
+- Merge OK for the session 38 PR. Confirm D-286..D-288. Voice log (M10-27). Two-PC LAN test (M9-15). Expedition play-test (M7-14). Branch deletes.
 
 ## How to run this session
+- Session 38 lessons:
+  - Check for an unlanded earlier session before planning: session 37 ran overnight on integ-s37 and sat as a draft PR (`git ls-remote origin '*s37*'`,
+    open PRs). Read its HANDOFF from that branch. Undraft with `gh api -X POST repos/pwnzor11/RTS_2027/pulls/<n>/ccr/ready_for_review` (GraphQL is blocked).
+  - GitHub shows no Windows CI runs since Nov 12 (check-runs empty for every recent commit): verify with a cluster full suite (`claude/rts/s38/test_*.sh`,
+    `--fast --cpu 3 --mem 6Gi`, ~18 min) before merging.
+  - Map-generator data (`data/mapgen/biomes.toml`) is read next to Tools.dll, not from the working tree: a variant needs its own copy of the binary folder
+    (`claude/rts/s38/var2.sh` does it). Rules and AI data come from the working tree. Check a variant moves at least one row before trusting "no effect".
+  - `claude/rts/s38/var2.sh` takes per-line tiers ("tag biome FA TA FB TB"); `/work/in/s37/mkvar.py` now edits `mapgen` and string values
+    (`symmetry_2p =rot2`). Helpers on the toolbox pod: tally.py, cmp.py (v the s37 table), cmp2.py (v any reference dir), inc.py (income), led.py (ledgers), sw.py (sweep).
+  - Per-faction tier tables MERGE with the shared tier (keys not set keep the shared value); `respond_to_attacks` is now an allowed key.
+  - `attack_ratio_pct` is inert for the Authority (as for the Expedition, s28). The Rocket Truck cost is a cliff.
+  - A build pod waits behind series pods that wait for it: set the waiting job's parallelism to 0 until the build finishes.
+  - Throughput: ~5 pieces (16 games) a minute on the whole cluster; plan ~25 000 games for a full day.
 - Session 37 lessons:
   - The laptop folder mounts are named by path now (`$HOME/mnt/Documents--RTS_2027`, `$HOME/mnt/Roaming--RTS_2027`, `$HOME/mnt/k3s-cluster`).
   - Data-only variants need no build: `claude/rts/s37/mkvar.py` copies data/ from a built tree and edits keys; `var.sh` runs `ai match` from that

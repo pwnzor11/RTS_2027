@@ -692,3 +692,18 @@ M5-14 closed: qwen3:30b and gpt-oss:120b equal the random control. docs/balance/
 Two server restarts; helpers resumed. About 25 000 games on the cluster.
 **Problems / notes:** voice silence not reproduced (owner on an old build); rocket truck cost is a cliff; remaining balance outliers are map-specific.
 **Next session should:** see HANDOFF.
+
+## Session 38 · 2026-11-21 (session 37 merged; Authority ladder fixed; Super hard (LLM) opponent; layout 2, Expedition per tier, draws; map balance screens)
+**Goal:** owner: resume; "everything is just sitting idle today" — all pending/on-hold work the cluster can do; answers: unpark balance and fix it after
+the health check, attach push access, "do all 8, full send"; "yes merge" for PR #118.
+**Done:** found the unlanded session 37 (draft PR #118); cluster full suite on its head (0 failed) and merged it. Items 1-2 (commander rerun, health
+check) were already done by session 37 on the same code. Item 3: 128-game AI ladder, Authority inverted, cause respond_to_attacks, fixed (D-287) +
+tier-3 army cap 40 (D-288). Item 4: layout-2 table (stays off). Item 5: draws read from the s37 table (15.4 %, Glass Coast). Item 6: Expedition AI at every
+tier on 4 maps. Item 7: map-specific rows screened (economy snowball, Bore waste, Glass Coast ore; tunnels, layout, navy ruled out or mixed); nothing
+map-side landed. Item 8: "Super hard (LLM)" preset (D-286), calibrated at +50 %. Campaign sweep 45/45 on the Authority change. docs/balance/s38_balance.md.
+**Decisions:** D-286, D-287, D-288. **Questions:** none new; confirm D-286..D-288.
+**Helpers:** 3 Sonnet (s38-llm ~8 min, s38-glass ~50 min no commits, s38-ladder ~63 min); no fix rounds. About 25 000 cluster games.
+**Problems / notes:** GitHub shows no Windows CI runs since Nov 12 (cluster suite used instead); map-generator variants were inert at first
+(biomes.toml is read next to Tools.dll) and were rerun; a build waited behind pods that wait for it (paused the series); `attack_ratio_pct` is inert for
+the Authority.
+**Next session should:** see HANDOFF.

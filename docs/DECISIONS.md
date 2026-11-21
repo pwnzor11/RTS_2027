@@ -2131,3 +2131,10 @@ mop-up, bag growth ...) as the cause (tier 2 without it: 76 %); the wave regroup
 59.1, 5 v 4 52.2, 5 v 3 56.3, 5 v 1 66.7. Keeping tier 3 unchanged was screened and rejected (3 v 2 falls to 19 %). Campaign sweep 45/45 meets D-222.
 **Alternatives:** fix the regroup and keep the flag (several leaks, no single sub-fix worked), flag off for every faction (moves the Directorate/LB
 ladders and Authority v LB to 93 %). **Status:** session 38, owner: "unpark and fix it"; assumed — confirm.
+
+### D-288 · 2026-11-21 · Session 38: Authority tier-3 army cap 40 (M4-16, M13-37)
+**Decision:** `[faction.authority.tier3] army_cap = 40` (data/ai/difficulty.toml). **Why:** with respond_to_attacks off (D-287) the tier-3 Authority
+overran the Left Behind and the Expedition on Rust Belt (75 %). Screens of its allowed tier-3 keys (64 games, six rows): attack_ratio_pct is inert for the
+Authority, attack_threshold 6/11 and expansion_tick 7200 did less; the cap took the 12 Authority rows from a mean distance of 14.6 to 12.7 points (s37:
+10.4) on 128 games and keeps the ladder (3 v 2 46.8, 4 v 3 64.8, 5 v 3 62.8 on 80 games). Over all 24 cross rows the tier-3 table is about 14.4 from 50 %
+(s37 13.3): a small step back for a working ladder. **Status:** session 38; assumed — confirm (the owner can ask for D-287 without the cap, or neither).
