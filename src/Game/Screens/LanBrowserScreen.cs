@@ -127,7 +127,7 @@ public sealed class LanBrowserScreen : IScreen
         _nameRow = rows.Count;
         rows.Add(new(() => $"Your name: {_name}_", null) { WidthTexts = new[] { "Your name: " + new string('W', LobbyData.MaxNameBytes) } });
         rows.Add(new(() => "Host game", HostGame));
-        rows.Add(new(() => _hosts.Count == 0 ? "Looking for games on the network ..." : "Games found (Enter joins):") { Info = true });
+        rows.Add(new(() => _hosts.Count == 0 ? "Looking for games on the network" : "Games found (Enter joins):") { Info = true });
         foreach (DiscoveredHost host in _hosts)
         {
             DiscoveredHost h = host;

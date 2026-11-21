@@ -29,7 +29,7 @@ match = ["NVorbis"]
 
 [[section.entry]]
 name = "Tomlyn"
-credit = "TOML parsing of rules and maps. BSD-2-Clause."
+credit = "Reading the rules and map files. BSD-2-Clause."
 match = ["Tomlyn"]
 
 [[section.entry]]

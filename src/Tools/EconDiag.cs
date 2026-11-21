@@ -75,6 +75,30 @@ internal static class EconDiag
             + $"harv {harv} (loaded {loaded} return {ret} other {idle} noRef {noRef}) cash {sim.Funds(p)} queue[{q.ToString().Trim()}] ore map {ore.Cells}c/{ore.Density}d near {ore.NearCells}c/{ore.NearDensity}d";
     }
 
+    /// <summary>M13-33: a character grid of the cells around <paramref name="c"/> (B building, o ore, # blocked terrain or prop, V vehicle, i infantry, . free); rows y0..y1.</summary>
+    internal static string Grid(Simulation sim, SimRules rules, CellCoord c, int x0, int x1, int y0, int y1)
+    {
+        var sb = new StringBuilder();
+        for (int y = y0; y <= y1; y++)
+        {
+            sb.Append($"      y{y,2} ");
+            for (int x = x0; x <= x1; x++)
+            {
+                var cc = new CellCoord(x, y);
+                char ch;
+                if (!sim.Setup.Map.Contains(cc)) ch = ' ';
+                else if (!sim.Map.BuildingAt(cc).IsNone) ch = 'B';
+                else if (!sim.Map.VehicleAt(cc).IsNone) ch = 'V';
+                else if (!sim.Map.IsPassableTerrain(cc, Locomotion.Tracked, rules.Terrain) || Rts.Sim.Rules.OverlayKinds.BlocksGround(sim.Map.OverlayAt(cc))) ch = '#';
+                else if (sim.Map.OverlayAt(cc) is OverlayKind.Ashfall or OverlayKind.Pitchblende && sim.Map.DensityAt(cc) > 0) ch = 'o';
+                else ch = '.';
+                sb.Append(ch);
+            }
+            sb.Append('\n');
+        }
+        return sb.ToString();
+    }
+
     /// <summary>Where the side stands: its non-harvester units (count, bounding box) and its structure cells.</summary>
     internal static string Where(Simulation sim, SimRules rules, byte p)
     {
@@ -86,10 +110,23 @@ internal static class EconDiag
         for (int i = 1; i < sim.Infantry.Capacity; i++)
             if (sim.Infantry.Slots.IsIndexAlive(i) && sim.Infantry.Player[i] == p) { Add(sim.Infantry.Position[i].ToCell()); string id = rules.Infantry[sim.Infantry.TypeIndex[i]].Id + "/" + sim.Infantry.Mission[i]; types[id] = types.GetValueOrDefault(id) + 1; }
         var b = new StringBuilder();
+        for (int i = 1; i < sim.Units.Capacity; i++)   // M13-35: where the convoy ships are (a tender that stops short of the dock is never paid)
+            if (sim.Units.Slots.IsIndexAlive(i) && sim.Units.Player[i] == p && rules.Vehicles[sim.Units.TypeIndex[i]].Id == rules.Shipments.TenderType)
+                b.Append($" tender@{sim.Units.Position[i].ToCell().X},{sim.Units.Position[i].ToCell().Y}/{sim.Units.Mission[i]}");
         for (int i = 1; i < sim.Buildings.Capacity; i++)
             if (sim.Buildings.Slots.IsIndexAlive(i) && sim.Buildings.Player[i] == p && sim.Buildings.Health[i] > 0)
                 b.Append($" {rules.Buildings[sim.Buildings.TypeIndex[i]].Id}@{sim.Buildings.Cell[i].X},{sim.Buildings.Cell[i].Y}:{sim.Buildings.Health[i]}hp");
         return $"units {n}{(n > 0 ? $" box ({x0},{y0})-({x1},{y1}) [{string.Join(",", types.Select(t => t.Key + "=" + t.Value))}]" : "")} bldgs{b}";
+    }
+
+    /// <summary>M13-33: each harvester of <paramref name="p"/>: cell, mission, cargo, dock and harvest step, goal, ticket and dock target.</summary>
+    internal static string Harvesters(Simulation sim, SimRules rules, byte p)
+    {
+        var hv = new StringBuilder();   // each harvester's cell, mission, cargo and dock/harvest step
+        for (int i = 1; i < sim.Units.Capacity; i++)
+            if (sim.Units.Slots.IsIndexAlive(i) && sim.Units.Player[i] == p && rules.Vehicles[sim.Units.TypeIndex[i]].HarvestCapacity > 0)
+            { CellCoord c = sim.Units.Position[i].ToCell(); hv.Append($" {rules.Vehicles[sim.Units.TypeIndex[i]].Id}@{c.X},{c.Y}/{sim.Units.Mission[i]}/cargo{sim.Economy.Cargo[i]}/dock{sim.Economy.DockState[i]}/hv{sim.Economy.HarvestState[i]}/goal{sim.Economy.Goal[i].X},{sim.Economy.Goal[i].Y}/bad{sim.Economy.BadCell[i].X},{sim.Economy.BadCell[i].Y}/t{sim.Economy.Timer[i]}/tk{sim.Economy.Ticket[i]}/dt{sim.Economy.DockTarget[i]}"); }
+        return $"harvesters{hv}";
     }
 
     private static string Name(SimRules rules, ProductionCategory cat, int type) => cat switch

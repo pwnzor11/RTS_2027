@@ -159,7 +159,9 @@ public sealed class OrderController
             wreckHere = SalvageOrders.WreckAt(_wrecks, cell);
         }
 
-        OverlayKind overlay = !armed && _source.Map.Contains(cell) ? _source.Sim.ViewFor(_source.Local).OverlayAt(cell) : OverlayKind.None;
+        // M13-32: only a cell the player has explored counts as a field (the cursor, CursorPreview.Probe, uses the same rule)
+        PlayerView fieldView = _source.Sim.ViewFor(_source.Local);
+        OverlayKind overlay = !armed && _source.Map.Contains(cell) && fieldView.VisionAt(cell) > 0 ? fieldView.OverlayAt(cell) : OverlayKind.None;
         bool ownBuilding = building is BuildingView ob && ob.Player == _source.Local;
 
         OrderMarkKind? mark = null;   // O1: one ring per click, not one per unit
@@ -190,7 +192,8 @@ public sealed class OrderController
                 && HarvestOrders.Classify(_source.Rules, unit.Kind, harvester, overlay, building, ownBuilding) is var harvest and not HarvestClick.None)
             {
                 // M11-10a: a harvester on a resource field works it (even after the player moved it away), on an own refinery it delivers
-                _source.Order(harvest == HarvestClick.Return ? CommandKind.Return : CommandKind.Harvest, unit, harvest == HarvestClick.Harvest ? cell : default);
+                if (harvest == HarvestClick.Return) _source.Order(CommandKind.Return, unit, default, new ActorRef(ActorKind.Building, buildingId));   // M13-32: dock at THAT refinery
+                else _source.Order(CommandKind.Harvest, unit, cell);
                 mark ??= OrderMarkKind.Move;
             }
             else if (wreckHere && _source.TryGetTypeIndex(unit, out int salvager) && SalvageOrders.CanSalvage(_source.Rules, unit.Kind, salvager))

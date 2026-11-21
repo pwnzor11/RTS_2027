@@ -25,17 +25,27 @@ public static class DisplayNames
     /// <summary>The name of a shipped map for its stored name; any other name (a map the player made) is returned unchanged.</summary>
     public static string Map(string rawName) => Maps.TryGetValue(rawName, out string? name) ? name : rawName;
 
+    /// <summary>A mission id read as a name when no title can be loaded: "auth_03" gives "Authority, mission 3". Any other id is read as words ("nope_99" gives "Nope 99").</summary>
+    public static string Tidy(string missionId)
+    {
+        string[] parts = missionId.Split('_');
+        string? faction = parts[0] switch { "auth" => "Authority", "dir" => "Directorate", "lb" => "Left Behind", "exp" => "Expedition", "tut" => "Training", _ => null };
+        if (faction is not null && parts.Length == 2 && int.TryParse(parts[1], out int n)) return $"{faction}, mission {n}";
+        return System.Globalization.CultureInfo.InvariantCulture.TextInfo.ToTitleCase(missionId.Replace('_', ' '));
+    }
+
     /// <summary>The title of a mission from its mission.toml, or the id when it cannot be read.</summary>
     public static string Mission(string missionId)
     {
-        if (string.IsNullOrEmpty(missionId) || DataDir is null) return missionId;
+        if (string.IsNullOrEmpty(missionId)) return missionId;
+        if (DataDir is null) return Tidy(missionId);
         lock (MissionCache)
         {
             if (MissionCache.TryGetValue(missionId, out string? cached)) return cached;
             string title;
             try { title = MissionLoader.Load(MissionLoader.FolderOf(DataDir, missionId)).Title; }
-            catch (Exception e) when (e is InvalidDataException or IOException or UnauthorizedAccessException) { title = missionId; }
-            if (string.IsNullOrWhiteSpace(title)) title = missionId;
+            catch (Exception e) when (e is InvalidDataException or IOException or UnauthorizedAccessException) { title = Tidy(missionId); }
+            if (string.IsNullOrWhiteSpace(title)) title = Tidy(missionId);
             MissionCache[missionId] = title;
             return title;
         }

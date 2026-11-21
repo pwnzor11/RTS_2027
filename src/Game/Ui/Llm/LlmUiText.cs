@@ -7,7 +7,7 @@ namespace Rts.Game.Ui.Llm;
 public static class LlmUiText
 {
     /// <summary>Row in the main Settings screen that opens the LLM screen.</summary>
-    public const string SectionRow = "AI commander (LLM)...";
+    public const string SectionRow = "AI commander (LLM)";
     /// <summary>Title of the LLM settings panel.</summary>
     public const string Title = "AI commander (LLM)";
     /// <summary>Provider row label.</summary>
@@ -43,17 +43,17 @@ public static class LlmUiText
     /// <summary>Key state: none.</summary>
     public const string NoKey = "no key";
     /// <summary>Set key row.</summary>
-    public const string SetKey = "Set API key...";
+    public const string SetKey = "Set API key";
     /// <summary>Clear key row.</summary>
     public const string ClearKey = "Clear key";
     /// <summary>Test row.</summary>
-    public const string TestConnection = "Test connection";
+    public const string TestConnection = "Check connection";
     /// <summary>Test running.</summary>
-    public const string Testing = "Testing...";
+    public const string Testing = "Checking";
     /// <summary>Default test result before the real test is wired.</summary>
-    public const string NotWired = "not wired yet";
+    public const string NotWired = "not checked yet";
     /// <summary>Test failed without a message.</summary>
-    public const string TestFailed = "Test failed.";
+    public const string TestFailed = "Check failed.";
     /// <summary>Test needs a provider.</summary>
     public const string NeedProvider = "Choose a provider first.";
     /// <summary>Key could not be saved.</summary>

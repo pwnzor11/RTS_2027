@@ -19,7 +19,7 @@
 "a3.radio.shore" = "Surveyors are ashore. Clear the picket off the beach and the boats can come in."
 "a3.picket.down" = "The Directorate picket is destroyed."
 "a3.lost.carriers" = "Both carriers are lost. The survey parties will not reach the coast."
-"a3.lost.yard" = "The yard is lost. There is nothing left behind to build from."
+"a3.lost.yard" = "The yard is lost. There is nothing left standing to build from."
 "a3.lost.tide" = "The tide has turned. The window to land is closed."
 "a3.win" = "The coast is open. The survey parties are ashore."
 "a3.radio.win" = "They are ashore. That was a long road. Well done, Commander."

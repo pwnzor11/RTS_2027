@@ -199,6 +199,7 @@ public sealed partial class MissionHost : ISimExtension
         }
 
         RunArrivals(sim);   // M8-04: queued Reinforce.Delayed / Reinforce.Transport work
+        TrackActorTargets(sim);   // M11-30: tag targets remember the last cell their actor was seen on
 
         int count = _triggers.Count;   // triggers added by callbacks start next tick
         for (int i = 0; i < count && !_halted; i++)

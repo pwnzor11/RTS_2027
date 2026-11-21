@@ -72,6 +72,10 @@ public readonly struct PlayerView
     /// <summary>Map height in cells.</summary>
     public int MapHeight => _sim.Setup.Map.Height;
 
+    /// <summary>M13-34: a building's footprint-relative exit or dock cell as the sim applies it at <paramref name="topLeft"/> (turned in the south half, reflected on mirror maps). Public map geometry only.</summary>
+    public CellCoord OrientedOffset(CellCoord rel, int footprintW, int footprintH, CellCoord topLeft) =>
+        BuildingOrientation.Oriented(rel, footprintW, footprintH, topLeft, _sim.Setup.Map.Width, _sim.Setup.Map.Height, _sim.Setup.Map.StartPositions);
+
     /// <summary>True if the cell is on the map.</summary>
     public bool InMap(CellCoord c) => _sim.Setup.Map.Contains(c);
 

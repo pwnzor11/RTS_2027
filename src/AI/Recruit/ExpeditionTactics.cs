@@ -107,7 +107,7 @@ internal sealed class ExpeditionTactics : IFactionTactics
     // resolved ids
     private bool _resolved;
     private int _depot = -1, _anchorage = -1, _beacon = -1, _commandShip = -1, _mender = -1, _destroyer = -1, _cruiser = -1, _carrier = -1,
-        _launch = -1, _sparker = -1, _skiff = -1, _tender = -1;
+        _launch = -1, _sparker = -1, _skiff = -1, _tender = -1, _craft = -1;
 
     // establish
     private int _homeRegion;
@@ -147,6 +147,8 @@ internal sealed class ExpeditionTactics : IFactionTactics
 
     /// <summary>Diagnostics: the last site / state line.</summary>
     public string Debug { get; private set; } = "";
+    /// <summary>The last landing-site choice (for traces).</summary>
+    public string SiteInfo { get; private set; } = "";
     /// <summary>Deploy orders given to the Command Ship.</summary>
     public int Deploys { get; private set; }
     /// <summary>Move orders given to the Command Ship.</summary>
@@ -207,6 +209,7 @@ internal sealed class ExpeditionTactics : IFactionTactics
         _sparker = SimRules.IndexOf(rules.Vehicles, "exp_sparker", v => v.Id);
         _skiff = SimRules.IndexOf(rules.Vehicles, "exp_canister_skiff", v => v.Id);
         _tender = SimRules.IndexOf(rules.Vehicles, rules.Shipments.TenderType, v => v.Id);
+        _craft = SimRules.IndexOf(rules.Vehicles, "exp_landing_craft", v => v.Id);
     }
 
     // ---- IFactionTactics --------------------------------------------------------------------------------
@@ -368,9 +371,39 @@ internal sealed class ExpeditionTactics : IFactionTactics
         v.CopyOwnTenders(_tenders);
         foreach (ViewActor e in k.Visible) if (e.Relation == Relation.Enemy && e.Submerged) _enemySubSeen = true;
         _known = knownEnemy;
+        ClearDockWater(k, sink);
         if (_military is not null) _military.ThresholdBonus = Plan.WaveBonus;
         EvaluateWithdraw(k, sink, rally, planner);
         Fleet(k, sink, knownEnemy);
+    }
+
+    /// <summary>Cells from the depot inside which an idle Landing Craft is moved off the water before the Anchorage stands, and the nearest distance it is sent to.</summary>
+    public const int DockClearCells = 6, DockParkCells = 11;   // (tune) M13-35
+
+    /// <summary>
+    /// M13-35: the start kit's Landing Craft idles where it spawned, which on a channel map (Mountains, Ash Plains: a 3-wide shallow channel) is in
+    /// the middle column beside the depot, and a 2x2 dock cannot be placed without that column. The Anchorage is then never placeable inside the
+    /// build radius until later buildings extend it (first shipment after 5 minutes, or none). While there is no Anchorage the craft is parked
+    /// <see cref="DockParkCells"/> cells away (stateless: it is only ordered while idle and near the depot).
+    /// </summary>
+    private void ClearDockWater(RecruitKnowledge k, ICommandSink sink)
+    {
+        if (_craft < 0 || _anchorage < 0 || k.BuildingCount[_anchorage] > 0) return;
+        PlayerView v = k.View;
+        foreach (ViewActor u in k.Utility)
+        {
+            if (u.TypeIndex != _craft || !u.Idle || Cheb(u.Cell, k.Yard) > DockClearCells) continue;
+            CellCoord? best = null; long bd = long.MaxValue;
+            for (int y = k.Yard.Y - DockParkCells - 5; y <= k.Yard.Y + DockParkCells + 5; y++)
+                for (int x = k.Yard.X - DockParkCells - 5; x <= k.Yard.X + DockParkCells + 5; x++)
+                {
+                    var c = new CellCoord(x, y);
+                    if (!v.InMap(c) || Cheb(c, k.Yard) < DockParkCells || v.NavalRegionAt(c) != _homeRegion) continue;
+                    long d = Dist2(c, k.Yard);
+                    if (d < bd) { bd = d; best = c; }
+                }
+            if (best is CellCoord to) MoveShip(k, sink, u, to);
+        }
     }
 
     // ---- establish --------------------------------------------------------------------------------------
@@ -441,7 +474,7 @@ internal sealed class ExpeditionTactics : IFactionTactics
                 if (new CellCoord(_cands[i].X, _cands[i].Y) == ship.Cell || v.CanOwnShipReach(ship.Id, new CellCoord(_cands[i].X, _cands[i].Y))) { pick = i; bestTier = 2; }
         if (pick < 0) return false;
         _siteCell = new CellCoord(_cands[pick].X, _cands[pick].Y); _siteSet = true; _siteSince = v.Tick; _deployTries = 0; _deployTick = -100000; _moveTick = -100000;
-        Debug = $"site {_siteCell} depot {_cands[pick].Tx},{_cands[pick].Ty} tier {bestTier} markers {v.LandingMarkers.Count}";
+        Debug = SiteInfo = $"site {_siteCell} depot {_cands[pick].Tx},{_cands[pick].Ty} tier {bestTier} markers {v.LandingMarkers.Count} at {v.Tick}";
         return true;
     }
 
@@ -490,12 +523,15 @@ internal sealed class ExpeditionTactics : IFactionTactics
     {
         int w = dock.FootprintW, h = dock.FootprintH;
         bool mask = dock.WaterMask.Count == w * h;
-        for (int ty = depotTl.Y - AnchorageReach - h; ty <= depotTl.Y + depot.FootprintH + AnchorageReach; ty++)
-            for (int tx = depotTl.X - AnchorageReach - w; tx <= depotTl.X + depot.FootprintW + AnchorageReach; tx++)
+        // M13-35: the Anchorage is the third structure, so the only own building near it is the depot: the sim's build radius (D-062, 2 cells from any
+        // own building) limits it as much as the beachhead does. Counting 8 cells chose depot sites whose channel lay out of reach for thousands of ticks.
+        int reach = Math.Min(AnchorageReach, rules.Economy.BuildRadius);
+        for (int ty = depotTl.Y - reach - h; ty <= depotTl.Y + depot.FootprintH + reach; ty++)
+            for (int tx = depotTl.X - reach - w; tx <= depotTl.X + depot.FootprintW + reach; tx++)
             {
                 int gx = Math.Max(0, Math.Max(depotTl.X - (tx + w - 1), tx - (depotTl.X + depot.FootprintW - 1)));
                 int gy = Math.Max(0, Math.Max(depotTl.Y - (ty + h - 1), ty - (depotTl.Y + depot.FootprintH - 1)));
-                if (Math.Max(gx, gy) > AnchorageReach || (gx == 0 && gy == 0)) continue;
+                if (Math.Max(gx, gy) > reach || (gx == 0 && gy == 0)) continue;
                 bool ok = true;
                 bool touches = mask;   // D-156 (1): an unmasked dock is all water and must touch the shore
                 for (int dy = 0; dy < h && ok; dy++)

@@ -28,6 +28,9 @@ public enum ObjectiveTargetKind : byte
 /// <param name="Y">Cell Y for a <see cref="ObjectiveTargetKind.Cell"/>, else 0.</param>
 public readonly record struct ObjectiveTarget(ObjectiveTargetKind Kind, string Name = "", int X = 0, int Y = 0)
 {
+    /// <summary>Marks a tag target whose actor has not been seen yet (M11-30). Never a real cell coordinate.</summary>
+    public const int Unknown = -1;
+
     /// <summary>True when the objective has a location.</summary>
     public bool IsSet => Kind != ObjectiveTargetKind.None;
 }

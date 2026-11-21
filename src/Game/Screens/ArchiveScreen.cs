@@ -398,7 +398,7 @@ public sealed class ArchiveScreen : IScreen
         int noteWidth = Math.Max(1, _geo.Inner - 3 * scale);
         IReadOnlyList<ArchiveMarkup.Line> noteLines = note.Length == 0 ? Array.Empty<ArchiveMarkup.Line>()
             : ArchiveMarkup.Wrap(ArchiveMarkup.Parse(note), noteWidth, measure);
-        string bodyText = unlocked ? (entry.Body.Length > 0 ? entry.Body : "[no text]") : "This entry is locked. " + _browser.Hint(entry);
+        string bodyText = unlocked ? (entry.Body.Length > 0 ? entry.Body : "No record has been filed for this entry.") : "This entry is locked. " + _browser.Hint(entry);
         IReadOnlyList<ArchiveMarkup.Line> body = ArchiveMarkup.Wrap(ArchiveMarkup.Parse(bodyText), width, measure);
 
         var stats = new List<(string, IReadOnlyList<ArchiveMarkup.Line>)>();

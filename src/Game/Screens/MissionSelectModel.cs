@@ -7,7 +7,7 @@ namespace Rts.Game.Screens;
 
 /// <summary>One row of the mission select.</summary>
 /// <param name="Id">Mission id.</param>
-/// <param name="Title">Mission title (the id when the mission is not written yet).</param>
+/// <param name="Title">Mission title (a tidied name when the mission has no file yet).</param>
 /// <param name="State">Completed, next or locked.</param>
 /// <param name="Exists">False for a placeholder id with no mission folder.</param>
 public sealed record MissionSelectRow(string Id, string Title, CampaignMissionState State, bool Exists, string Hint = "")
@@ -16,7 +16,7 @@ public sealed record MissionSelectRow(string Id, string Title, CampaignMissionSt
     public bool CanStart => Exists && State != CampaignMissionState.Locked;
 
     /// <summary>The state word shown after the title.</summary>
-    public string StateText => !Exists ? "not written yet" : State switch
+    public string StateText => !Exists ? "no orders yet" : State switch
     {
         CampaignMissionState.Completed => "completed",
         CampaignMissionState.Next => "next",
@@ -32,11 +32,11 @@ public static class MissionSelectModel
 {
     /// <summary>The rows in play order.</summary>
     public static IReadOnlyList<MissionSelectRow> Build(CampaignService service, string dataDir, string faction) =>
-        service.Missions(faction).Select(m => new MissionSelectRow(m.Id, m.Exists ? TitleOf(dataDir, m.Id) : m.Id, m.State, m.Exists, HintOf(service, faction, m))).ToList();
+        service.Missions(faction).Select(m => new MissionSelectRow(m.Id, m.Exists ? TitleOf(dataDir, m.Id) : Rts.Game.Ui.DisplayNames.Tidy(m.Id), m.State, m.Exists, HintOf(service, faction, m))).ToList();
 
     private static string HintOf(CampaignService service, string faction, CampaignMissionEntry m)
     {
-        if (!m.Exists) return "This mission is not written yet.";
+        if (!m.Exists) return "No orders have been issued for this mission yet.";
         if (m.State == CampaignMissionState.Completed) return "Completed. You can replay it.";
         if (m.State == CampaignMissionState.Next) return "Ready to play.";
         CampaignProgress p = service.Progress(faction);
@@ -51,6 +51,6 @@ public static class MissionSelectModel
     private static string TitleOf(string dataDir, string id)
     {
         try { return MissionLoader.Load(MissionLoader.FolderOf(dataDir, id)).Title; }
-        catch (Exception e) when (e is InvalidDataException or IOException) { return id; }
+        catch (Exception e) when (e is InvalidDataException or IOException) { return Rts.Game.Ui.DisplayNames.Tidy(id); }
     }
 }

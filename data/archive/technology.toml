@@ -1,4 +1,4 @@
-# Archive entries (M3-17). Body text is a placeholder: the approved lore from docs/lore/ is pasted in later.
+# Archive entries (M3-17). Technology bodies are in-universe notes written for M11-31 (the other categories carry the approved lore from docs/lore/).
 # Keys: id, category, faction, title, subtitle, body, sprite (optional), unlock (open | campaign:<mission> | encounter:<rules id> | research:<upgrade id>).
 # Unit, Structure and Upgrade entries use the rules id as their id; their stats are read live from data/rules.
 
@@ -8,7 +8,9 @@ category = "Technology"
 faction = "neutral"
 title = "Ashfall"
 subtitle = "Technology"
-body = "[draft pending]"
+body = '''
+Ashfall is what is left of the cities: fine radioactive ash that still drifts down from the dust belt and from reactor towns nobody put out. It poisons fields and unprotected lungs alike, which is why every Authority patrol carries a decon schedule and every Directorate conscript is told the cough is normal. It is also the only fuel on the continent that comes in quantity. Scrapers rake it off the drifts, refineries concentrate it, and everything that still moves, shoots or lights a window runs on the result.
+'''
 # ASSUMED (M3-17)
 unlock = "open"
 
@@ -18,7 +20,9 @@ category = "Technology"
 faction = "neutral"
 title = "Pitchblende"
 subtitle = "Technology"
-body = "[draft pending]"
+body = '''
+Where ashfall has settled onto exposed ore, the drift is richer than anything a scraper can find on open ground. Survey crews call these places pitchblende pits. A load from a pit is worth twice a load of plain ash, and for that reason the pits are guarded like granaries and fought over like borders. A pit does not last forever. Whoever holds one is expected to empty it before somebody else does.
+'''
 # ASSUMED (M3-17)
 unlock = "open"
 
@@ -28,7 +32,9 @@ category = "Technology"
 faction = "neutral"
 title = "Vacuum-Tube Industry"
 subtitle = "Technology"
-body = "[draft pending]"
+body = '''
+Nobody on the continent can make a transistor, and nobody has tried since the plants went dark. What survives is the vacuum tube: glass, filament and hand-wound coil, repaired from salvage and rewound by candlelight. Radios, radar, fire control and reactor regulators all run on tubes, which is why they are large, warm and loud, and why a good technician can fix one with a screwdriver and a bad temper. The old rule holds: if it glows, it is working.
+'''
 # ASSUMED (M3-17)
 unlock = "open"
 
@@ -38,7 +44,9 @@ category = "Technology"
 faction = "authority"
 title = "Decontamination"
 subtitle = "Technology"
-body = "[draft pending]"
+body = '''
+Ash gets into hair, cuffs and rations, so the Authority built a routine around removing it. Decon crews follow the army in blue overalls with tankers of neutralising rinse, and a cleaned cell is a cell where infantry can stand again. Every town has a decon shower at the gate and every sealed transport has a hatch seal worth checking twice. The Charter lists the work under public health. The soldiers call it the second uniform.
+'''
 # ASSUMED (M3-17)
 unlock = "open"
 
@@ -48,7 +56,9 @@ category = "Technology"
 faction = "authority"
 title = "Grouting and Hardened Ground"
 subtitle = "Technology"
-body = "[draft pending]"
+body = '''
+The Directorate digs, so the Authority pours. Grouting fills the soft ground inside a base with quick-curing concrete slurry until nothing can surface or tunnel through it. The method is slow, dull and sound, and engineers prefer it to any weapon. It has one flaw. A seal is only as good as the wall around it, and a single broken panel lets the ground breathe again.
+'''
 # ASSUMED (M3-17)
 unlock = "research:auth_grouting"
 
@@ -58,7 +68,9 @@ category = "Technology"
 faction = "authority"
 title = "Seismic Detection"
 subtitle = "Technology"
-body = "[draft pending]"
+body = '''
+A burrowing machine makes a trace on moving paper long before anyone sees a hatch. Authority technicians learned to read it within a season of the first sightings: the long slow swell of a bore head, the fine tremor of a crew at work. A seismograph station gives a base warning of where the ground is about to open. The warning does not stop the tunnel. It only gives the garrison time to be standing in the right place.
+'''
 # ASSUMED (M3-17)
 unlock = "encounter:auth_seismograph"
 
@@ -68,7 +80,9 @@ category = "Technology"
 faction = "directorate"
 title = "The Tunnel Network"
 subtitle = "Technology"
-body = "[draft pending]"
+body = '''
+Under the Rust Belt the Directorate has bored a web of galleries that joins every hatch and vent to the Annex and to each other. A unit that goes in at one entrance can come out at another with no road between them, and reinforcements surface where nobody has built a wall. The network has a price. Every entrance is a surface structure with hitpoints, and a hatch that falls cuts one more thread of the web.
+'''
 # ASSUMED (M3-17)
 unlock = "encounter:dir_hatch"
 
@@ -78,7 +92,9 @@ category = "Technology"
 faction = "directorate"
 title = "Radiation Denial"
 subtitle = "Technology"
-body = "[draft pending]"
+body = '''
+The Directorate does not mind poisoning ground it means to take back later. Radiation mortars, ash throwers and the bare cores of its crawlers leave patches that sicken anything standing on them, and the patches stay after the fighting has moved on. Authority infantry must be pulled back or carried through in sealed transports, and the decon bill for a single contested road runs to weeks. The Voice describes this as the ground remembering.
+'''
 # ASSUMED (M3-17)
 unlock = "encounter:dir_rad_mortar"
 
@@ -88,7 +104,9 @@ category = "Technology"
 faction = "directorate"
 title = "Blackout"
 subtitle = "Technology"
-body = "[draft pending]"
+body = '''
+A dirigible rises slowly, sees far, and can release canisters of dense smoke that blind the scouts and sensors beneath it. The Directorate calls this Blackout. Under it, a force cannot see its own flank and a column loses its way within a hundred yards. The answer is light. A searchlight tower on a clear mast burns through the smoke and shows the enemy where he stands.
+'''
 # ASSUMED (M3-17)
 unlock = "encounter:dir_dirigible"
 
@@ -98,7 +116,9 @@ category = "Technology"
 faction = "directorate"
 title = "Static Broadcast"
 subtitle = "Technology"
-body = "[draft pending]"
+body = '''
+The tall mast with the ring of horns does two jobs. It watches the sky for aircraft, and it fills the bands with static until enemy radio is noise and enemy maps stop updating. A commander under Static Broadcast hears the Voice between the crackles and nothing else. The lullaby at lights-out plays from the same horns, which many in the Annex find comforting and a few find difficult to explain.
+'''
 # ASSUMED (M3-17)
 unlock = "encounter:dir_mast"
 
@@ -108,7 +128,9 @@ category = "Technology"
 faction = "directorate"
 title = "The Sunrise Device"
 subtitle = "Technology"
-body = "[draft pending]"
+body = '''
+Deep under the Directorate's keep sits a recovered warhead on a launch cradle, fed by its own reactor vent and lowered by tunnel to a point beneath whatever the Director names. The Directorate calls it the Sunrise and treats it as holy. The Authority calls it a second Exchange in the making. It takes a long time to charge, it needs a tunnel head near the target, and it can be slowed by killing the vent that feeds it.
+'''
 # ASSUMED (M3-17)
 unlock = "encounter:dir_sunrise"
 
@@ -118,7 +140,9 @@ category = "Technology"
 faction = "directorate"
 title = "Broadcast"
 subtitle = "Technology"
-body = "[draft pending]"
+body = '''
+The Voice is always on, and the Directorate has found that if every horn on a mast is driven at once, it can be made to say a very great deal in a very short time. A Broadcast surge floods a district with orders, lullaby and rumour until the infantry inside it stop listening to their own officers. For a few minutes they march for the Interior. When the surge ends, the ones who remember it do not like to say what they did.
+'''
 # ASSUMED (M3-17)
 unlock = "campaign:dir_04"
 
@@ -128,7 +152,9 @@ category = "Technology"
 faction = "authority"
 title = "Atomic Artillery"
 subtitle = "Technology"
-body = "[draft pending]"
+body = '''
+Atomic Artillery is a single railway-gun shell, fired from a hardened battery after a long charge, with a crew that counts the cost aloud before every order. The Authority did not want such a weapon. It built one because the Directorate was building the same thing in the dark, and nobody wanted to be second to finish.
+'''
 # ASSUMED (M3-17)
 unlock = "campaign:auth_04"
 

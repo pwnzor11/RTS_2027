@@ -33,11 +33,11 @@ public readonly record struct BuildingUpgradeOffer(int TargetType, string Captio
         BuildingType to = rules.Buildings[target];
         if (to.FootprintW != from.FootprintW || to.FootprintH != from.FootprintH) return null;
         int cost = Math.Max(0, to.Cost - from.Cost);
-        string caption = $"UPGRADE {CaptionOf(to.Id)} ${cost}";
+        string caption = $"UPGRADE {CameoNames.Display(to.Id).ToUpperInvariant()} ${cost}";
         foreach (string need in to.Prerequisites)
         {
             if (!ownedBuildingIds.Contains(need) && !string.Equals(need, from.Id, StringComparison.Ordinal))
-                return new BuildingUpgradeOffer(target, caption, cost, false, $"Needs {need}");
+                return new BuildingUpgradeOffer(target, caption, cost, false, $"Needs {CameoNames.Display(need)}");
         }
         if (cash < cost) return new BuildingUpgradeOffer(target, caption, cost, false, $"Needs ${cost - cash} more cash");
         return new BuildingUpgradeOffer(target, caption, cost, true, "");
@@ -46,10 +46,4 @@ public readonly record struct BuildingUpgradeOffer(int TargetType, string Captio
     /// <summary>The Upgrade command for this offer.</summary>
     public Command Command(byte player, EntityId building) =>
         new(0, player, 0, CommandKind.Upgrade, building, EntityId.None, default, TargetType);
-
-    private static string CaptionOf(string id)
-    {
-        int u = id.IndexOf('_');
-        return (u >= 0 && u + 1 < id.Length ? id[(u + 1)..] : id).Replace('_', ' ').ToUpperInvariant();
-    }
 }

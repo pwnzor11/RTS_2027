@@ -4,6 +4,7 @@ using Rts.Sim.Core;
 using Rts.Sim.Economy;
 using Rts.Sim.Missions;
 using Rts.Sim.Rules;
+using Rts.Sim.Tunnels;
 
 namespace Rts.Sim;
 
@@ -68,7 +69,11 @@ public sealed partial class Simulation
         return cap <= 0 || _economy.Owner[i] != vehicle ? 0 : Math.Min(1000, _economy.Cargo[i] * 1000 / cap);
     }
 
-    /// <summary>Harvest / Return commands (Subject = the player's own harvester). Harvest's Cell, when not (0,0), is the field to work near.</summary>
+    /// <summary>
+    /// Harvest / Return commands (Subject = the player's own harvester). Harvest's Cell, when not (0,0), is the field to work near (a click on a
+    /// resource cell is worked first; earlier skip marks are forgotten). Return's Target, when an own refinery (M13-32), becomes the harvester's
+    /// home: a loaded harvester docks there; an empty one goes straight to work near it (its last field, else the field nearest that refinery).
+    /// </summary>
     private void ApplyEconomyCommand(Command c)
     {
         if (!_units.Slots.IsAlive(c.Subject) || _units.Player[c.Subject.Index] != c.Player) return;
@@ -77,11 +82,29 @@ public sealed partial class Simulation
         _economy.Touch(i, c.Subject);
         if (c.Kind == CommandKind.Harvest)
         {
-            if (c.Cell != default && InMap(c.Cell)) _economy.LastFieldCell[i] = c.Cell;
+            if (c.Cell != default && InMap(c.Cell))
+            {
+                _economy.LastFieldCell[i] = c.Cell;
+                _economy.SkipUntil[i] = 0; _economy.SkipCell[i] = default; _economy.BadCell[i] = default;   // a fresh click: forget old unreachable marks
+            }
             Queue(_units, i, MissionKind.Harvest, default, default);
+            return;
         }
-        else Queue(_units, i, MissionKind.Return, default, default);
+        if (HarvestMission.IsRefineryOf(this, c.Target, c.Player))
+        {
+            _economy.HomeRefinery[i] = c.Target;
+            if (_economy.Cargo[i] <= 0)
+            {   // empty: no trip to the dock; work the field nearest this refinery unless a last field is known
+                if (_economy.LastFieldCell[i] == default) _economy.LastFieldCell[i] = HarvestMission.DockCellOf(this, c.Target);
+                Queue(_units, i, MissionKind.Harvest, default, default);
+                return;
+            }
+        }
+        Queue(_units, i, MissionKind.Return, default, default);
     }
+
+    /// <summary>Ticks a harvester must stand idle (Guard, nothing queued) before it resumes harvesting by itself (M13-32).</summary>
+    internal const int HarvesterIdleResumeTicks = SimConstants.TicksPerSecond * 3;
 
     /// <summary>
     /// The economy system, once per tick after missions: harvesters that never got a mission start Harvest; dead harvesters' data
@@ -107,7 +130,27 @@ public sealed partial class Simulation
                     continue;
                 }
             }
-            if (_units.Mission[i] != MissionKind.None || _units.NextMission[i] != MissionKind.None) continue;
+            if (_units.Mission[i] != MissionKind.None || _units.NextMission[i] != MissionKind.None)
+            {   // M13-32: an idle harvester (Guard, nothing queued, nothing to carry, no waypoints) resumes work after 3 seconds
+                if (_units.Mission[i] != MissionKind.Guard || _units.NextMission[i] != MissionKind.None || _economy.NoRefinery[i] != 0 || _tunnels.VehicleLayer[i] != ActorLayer.Surface)
+                {
+                    _economy.IdleSince[i] = 0;
+                    continue;
+                }
+                if (_economy.IdleSince[i] == 0)
+                {
+                    if (RulesOf(_units.Player[i]).Vehicles[_units.TypeIndex[i]].HarvestCapacity <= 0 || _combat.WaypointCount(ActorKind.Vehicle, i) > 0) continue;
+                    _economy.Touch(i, _units.Slots.IdOf(i));
+                    _economy.IdleSince[i] = Tick + 1;
+                }
+                else if (Tick + 1 - _economy.IdleSince[i] >= HarvesterIdleResumeTicks)
+                {
+                    _economy.IdleSince[i] = 0;
+                    if (_combat.WaypointCount(ActorKind.Vehicle, i) == 0 && PassengersIn(_units.Slots.IdOf(i)) == 0)
+                        Queue(_units, i, MissionKind.Harvest, default, default);
+                }
+                continue;
+            }
             if (RulesOf(_units.Player[i]).Vehicles[_units.TypeIndex[i]].HarvestCapacity <= 0) continue;
             _economy.Touch(i, _units.Slots.IdOf(i));
             Queue(_units, i, MissionKind.Harvest, default, default);

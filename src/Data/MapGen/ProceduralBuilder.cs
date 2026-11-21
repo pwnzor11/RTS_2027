@@ -52,7 +52,7 @@ internal sealed partial class ProceduralBuilder
         }
         (int sx, int sy) = symmetry switch
         {
-            MapSymmetry.MirrorX => (inset, n / 2 - 1),
+            MapSymmetry.MirrorX => (inset, n / 2 - 1 - biome.StartRowShift * n / 96),   // M13-33: shift scaled with the map
             MapSymmetry.MirrorY => (n / 2 - 1, inset),
             _ => (inset, inset),
         };
@@ -270,7 +270,7 @@ internal sealed partial class ProceduralBuilder
         if (positions.Count == 0) positions.Add(length / 2);
         for (int k = 0; k < positions.Count; k++)
         {
-            bool bridge = k % 2 == 0;
+            bool bridge = k % 2 == 0 || _b.Key == "ash_plains";   // S37 M13-36: Ash Plains' fords are decks too (a shallow ford is foot-only at 40 %: infantry crossed it under fire while the vehicles took a bridge, splitting waves)
             int at = positions[k];
             int la = path.Last(p => p.Along == at).Lat;
             int width = bridge ? 2 : 3;

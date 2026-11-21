@@ -11,8 +11,8 @@
 "a4.radio.crossed" = "You are over. They will throw everything at the bank. Dig in and push."
 "a4.radio.thrall" = "Commander. Order Seven is older than your Charter. You are very late."
 "a4.device.seen" = "The Sunrise Device is in sight."
-"a4.radio.dray" = "Dray. The device draws from the reactor vent east of it. Kill the vent and the charge slows. The tunnel head is under the cradle. Do not stand on it."
-"a4.vent.down" = "Reactor vent destroyed. The device is losing its charge."
+"a4.radio.dray" = "Dray. The device draws from the Reactor Vent east of it. Kill the Reactor Vent and the charge slows. The tunnel head is under the cradle. Do not stand on it."
+"a4.vent.down" = "Reactor Vent destroyed. The device is losing its charge."
 "a4.lost.yard" = "The yard is lost. There is no one left to give the order."
 "a4.lost.sunrise" = "The Sunrise has fired. The device was not stopped in time."
 "a4.win" = "The Sunrise Device is destroyed."
@@ -23,7 +23,7 @@
 "a4.obj.ford" = "Cross the river with a bridgehead of six units on the south bank"
 "a4.obj.device" = "Destroy the Sunrise Device in the Directorate base"
 "a4.obj.home" = "Keep the forward yard standing"
-"a4.obj.vent" = "Destroy the reactor vent that feeds the device"
+"a4.obj.vent" = "Destroy the Reactor Vent that feeds the device"
 "a4.timer.sunrise" = "Sunrise primed"
 
 [voice]

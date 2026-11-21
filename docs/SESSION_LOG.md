@@ -678,3 +678,17 @@ mirror_x 50.6 % v 67.2 % (D-277); Glass Coast mirror_x tried and taken back (Exp
 on overwrite (fetch into a new folder); `git cherry-pick -q` is not a valid flag (the chain stopped; edits re-applied by hand); a job
 `scr36` from elsewhere ran on the cluster during the session. The model rerun (cm36, ~4 h on the NAS's Ollama) was still running at wrap-up.
 **Next session should:** see HANDOFF.
+
+## Session 37 · 2026-11-19/20 (campaign play-test fixes; Mountains/Ash Plains fixed; balance un-parked; cluster checks; LLM commander)
+**Goal:** owner: briefing items 1-6 "go" (determinism soak, un-park and fix skirmish balance with cost/effect changes, all map fixes, campaign
+sweep, par times, a stronger LLM after cm36), plus four campaign play-test complaints (dev-looking text, silent voice line, unclear objectives,
+scrapers not harvesting after a refinery right-click); push access to both repos.
+**Done:** M11-31 text pass (D-284), M11-30 objective guidance (D-283), M13-32 scraper orders (D-282), M10-27 voice diagnostics (not reproducible on
+Linux; D-285). Cluster: campaign 45/45 and par table; 108 LAN soaks in sync; 160 replays identical arm64/x86; 80-row baseline on all four biomes
+(found Mountains/Ash breaking LB/Exp); M13-33..36 map/AI fixes (D-281); 27-knob sensitivity screen; 5 packages; D-280 package (MAD 17.0 -> 13.3).
+M5-14 closed: qwen3:30b and gpt-oss:120b equal the random control. docs/balance/s37_balance.md.
+**Decisions:** D-279..D-285. **Questions:** none new in OPEN_QUESTIONS (owner asks listed in HANDOFF). Draft PR #118 (integ-s37).
+**Helpers:** 9 (Sonnet: harvest, text, voice, mountains, dock orientation, Expedition lane, LB on ash; Haiku: objectives; Explore scouts x3 Haiku).
+Two server restarts; helpers resumed. About 25 000 games on the cluster.
+**Problems / notes:** voice silence not reproduced (owner on an old build); rocket truck cost is a cliff; remaining balance outliers are map-specific.
+**Next session should:** see HANDOFF.

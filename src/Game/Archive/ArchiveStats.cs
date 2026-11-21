@@ -98,11 +98,11 @@ public static class ArchiveStats
         string range = w.MinRange > 0
             ? $"{Tenths(w.MinRange * 10 / LeptonsPerCell)}-{Tenths(w.Range * 10 / LeptonsPerCell)}"
             : Tenths(w.Range * 10 / LeptonsPerCell);
-        return $"{w.Id}: {w.Damage} damage, range {range} cells, reload {Seconds(w.RateOfFire)}";
+        return $"{Rts.Game.Ui.Sidebar.CameoNames.Display(w.Id)}: {w.Damage} damage, range {range} cells, reload {Seconds(w.RateOfFire)}";
     }
 
     private static string Requires(IReadOnlyList<string> prerequisites) =>
-        prerequisites.Count == 0 ? "nothing" : string.Join(", ", prerequisites);
+        prerequisites.Count == 0 ? "nothing" : string.Join(", ", prerequisites.Select(Rts.Game.Ui.Sidebar.CameoNames.Display));
 
     private static string Credits(int cost) => cost.ToString(CultureInfo.InvariantCulture);
 

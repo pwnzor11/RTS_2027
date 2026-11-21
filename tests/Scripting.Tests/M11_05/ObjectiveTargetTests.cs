@@ -33,7 +33,7 @@ public sealed class ObjectiveTargetTests
     }
 
     [Fact]
-    public void An_actor_target_follows_the_actor_and_ends_when_it_dies()
+    public void An_actor_target_follows_the_actor_and_keeps_its_last_cell_when_it_dies()
     {
         var (sim, host) = TestData.Tiny("function OnInit() Actor.Create('auth_rifleman', 1, {x=40, y=40}, 'v'); Objective.Add('o1', 'x', true); Objective.SetTarget('o1', 'v') end");
         TestData.Run(sim, 2);
@@ -41,7 +41,8 @@ public sealed class ObjectiveTargetTests
         Assert.Equal(new CellCoord(40, 40), c);
         sim.Infantry.Health[sim.Infantry.Slots.IdOf(1).Index] = 0;   // test-only direct kill, as TriggerTests does
         TestData.Run(sim, 3);
-        Assert.False(host.TryObjectiveCell(O1(host), out _));
+        Assert.True(host.TryObjectiveCell(O1(host), out CellCoord last));   // M11-30: the marker stays at the last cell
+        Assert.Equal(new CellCoord(40, 40), last);
     }
 
     [Fact]
@@ -88,7 +89,7 @@ public sealed class ObjectiveTargetTests
         var loadedHost = new MissionHost(host.Def, lua);
         M8_03.SaveLoad.Reload(sim, host.Def, lua, loadedHost);
         Assert.Equal(new ObjectiveTarget(ObjectiveTargetKind.Zone, "z"), O1(loadedHost).Target);
-        Assert.Equal(new ObjectiveTarget(ObjectiveTargetKind.Actor, "t1"), loadedHost.Objectives[1].Target);
+        Assert.Equal(new ObjectiveTarget(ObjectiveTargetKind.Actor, "t1", 20, 22), loadedHost.Objectives[1].Target);   // M11-30: last seen cell is stored
     }
 }
 

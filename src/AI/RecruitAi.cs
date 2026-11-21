@@ -204,7 +204,8 @@ public sealed class RecruitAi : IAiPlayer, IAiSnapshotable, IHookableAi
     public int DroppedShipOrders => (_tactics as ExpeditionTactics)?.Dropped ?? 0;
     /// <summary>M7-10: carrier sorties ordered.</summary>
     public int Sorties => (_tactics as ExpeditionTactics)?.Sorties ?? 0;
-    /// <summary>M7-10 (diagnostics): the Expedition landing-site line.</summary>
+    /// <summary>M13-35 (diagnostics): the Expedition landing-site line.</summary>
+    public string ExpeditionSite => (_tactics as ExpeditionTactics)?.SiteInfo ?? "";
     public string ExpeditionDebug => (_tactics as ExpeditionTactics)?.Debug ?? "";
 
     /// <summary>

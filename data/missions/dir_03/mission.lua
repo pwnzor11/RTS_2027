@@ -90,6 +90,7 @@ function Column(zone, dest)
   for i, tag in pairs(tags) do
     state.colTags[#state.colTags + 1] = tag
   end
+  if tags[1] then Objective.SetTarget("relief", tags[1]) end   -- the HUD follows the newest column's lead unit
   state.columns = state.columns + 1
 end
 

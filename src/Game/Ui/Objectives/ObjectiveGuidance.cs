@@ -45,7 +45,7 @@ internal sealed class ObjectiveGuidance
 
     private bool HasCell(MissionObjective o) => _host.TryObjectiveCell(o, out _);
 
-    private MissionObjective? Guided() => Model.Guided(Visible(), HasCell);
+    private MissionObjective? Guided() => Model.Guided(Visible());
 
     /// <summary>
     /// Per frame: reads J (jump to the objective), Tab (next objective with a target, and jump) and O (full list), watches for new
@@ -65,7 +65,7 @@ internal sealed class ObjectiveGuidance
         Vector2? jump = null;
         if (input.ConsumePressed(GameAction.ObjList)) Model.ToggleExpanded();
         if (input.ConsumePressed(GameAction.ObjJump) && Guided() is { } g && _host.TryObjectiveCell(g, out CellCoord jc)) jump = Camera.CentreOf(jc);
-        if (input.ConsumePressed(GameAction.ObjCycle) && Model.Cycle(visible, HasCell) is { } next && _host.TryObjectiveCell(next, out CellCoord tc)) jump = Camera.CentreOf(tc);
+        if (input.ConsumePressed(GameAction.ObjCycle) && Model.Cycle(visible) is { } next && _host.TryObjectiveCell(next, out CellCoord tc)) jump = Camera.CentreOf(tc);
         if (Model.TakeArrival() is { } id && cueEnabled && !scriptCue && visible.Find(o => o.Id == id) is { } arrived
             && _host.TryObjectiveCell(arrived, out CellCoord ac))
             _pan.Start(cameraCentre, Camera.CentreOf(ac));
@@ -76,10 +76,14 @@ internal sealed class ObjectiveGuidance
 
     // ---- the one-line bar and the banner ----
 
-    /// <summary>The lines of the collapsed bar: the objective line, the key hint, then any timer lines. Fitted to <paramref name="maxWidthPx"/>.</summary>
+    /// <summary>
+    /// The lines of the collapsed bar (M11-30): the active objective rows (at most four), the key hint, then any timer lines. Fitted to
+    /// <paramref name="maxWidthPx"/>.
+    /// </summary>
     public List<string> BarLines(List<string> timerLines, UiUnit scale, int maxWidthPx)
     {
-        var lines = new List<string> { Fit(Model.OneLine(Visible(), _host.Label), scale, maxWidthPx), ObjectiveKeyHints.Bar() };
+        var lines = Model.BarRows(Visible(), _host.Label, HasCell).Select(l => Fit(l, scale, maxWidthPx)).ToList();
+        lines.Add(Fit(ObjectiveKeyHints.Bar(), scale, maxWidthPx));
         lines.AddRange(timerLines);
         return lines;
     }

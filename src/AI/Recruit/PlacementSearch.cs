@@ -47,9 +47,10 @@ internal sealed class PlacementSearch
         {
             BuildingType t = rules.Buildings[b.TypeIndex];
             _blocks.Add(new Rect(b.Cell.X, b.Cell.Y, b.Cell.X + t.FootprintW - 1, b.Cell.Y + t.FootprintH - 1));
-            if (HasLane(t)) AddLanes(t, b.Cell, _lanes, k.View.MapWidth);
-            if (t.Produces != null) _mouths.Add(new Rect(b.Cell.X + t.Exit.X, b.Cell.Y + t.Exit.Y, b.Cell.X + t.Exit.X, b.Cell.Y + t.Exit.Y));
-            if (t.Refinery) _mouths.Add(new Rect(b.Cell.X + t.Dock.X, b.Cell.Y + t.Dock.Y, b.Cell.X + t.Dock.X, b.Cell.Y + t.Dock.Y));
+            if (HasLane(t)) AddLanes(t, b.Cell, _lanes, k.View);
+            // M13-34: exits and docks as the sim turns them (south half, mirror maps), not as authored
+            if (t.Produces != null) { CellCoord e = Oriented(k.View, t, t.Exit, b.Cell); _mouths.Add(new Rect(e.X, e.Y, e.X, e.Y)); }
+            if (t.Refinery) { CellCoord d = Oriented(k.View, t, t.Dock, b.Cell); _mouths.Add(new Rect(d.X, d.Y, d.X, d.Y)); }
         }
 
         // M13-10: a base that has filled the window around the yard (a corner base, 30 supply structures) searches a wider window before giving up
@@ -104,22 +105,36 @@ internal sealed class PlacementSearch
 
     private static bool HasLane(BuildingType t) => t.Produces != null || t.Refinery;
 
-    private static void AddLanes(BuildingType t, CellCoord topLeft, List<Rect> into, int mapWidth)
+    /// <summary>M13-34: the absolute cell of an exit or dock, oriented by the sim's own rule (<see cref="PlayerView.OrientedOffset"/>).</summary>
+    private static CellCoord Oriented(PlayerView view, BuildingType t, CellCoord rel, CellCoord topLeft)
     {
-        if (t.Produces != null) AddLane(topLeft.X + t.Exit.X, topLeft.Y + t.Exit.Y, mapWidth, into);
-        if (t.Refinery) AddLane(topLeft.X + t.Dock.X, topLeft.Y + t.Dock.Y, mapWidth, into);
+        CellCoord o = view.OrientedOffset(rel, t.FootprintW, t.FootprintH, topLeft);
+        return new CellCoord(topLeft.X + o.X, topLeft.Y + o.Y);
+    }
+
+    /// <summary>M13-34: true when the sim turned the building so its exit/dock faces north (lane runs toward smaller y).</summary>
+    private static bool FacesNorth(PlayerView view, BuildingType t, CellCoord topLeft) =>
+        t.FootprintH > 1 && view.OrientedOffset(new CellCoord(0, 0), t.FootprintW, t.FootprintH, topLeft).Y != 0;
+
+    private static void AddLanes(BuildingType t, CellCoord topLeft, List<Rect> into, PlayerView view)
+    {
+        bool north = FacesNorth(view, t, topLeft);
+        if (t.Produces != null) { CellCoord e = Oriented(view, t, t.Exit, topLeft); AddLane(e.X, e.Y, view.MapWidth, north, into); }
+        if (t.Refinery) { CellCoord d = Oriented(view, t, t.Dock, topLeft); AddLane(d.X, d.Y, view.MapWidth, north, into); }
     }
 
     /// <summary>The lane straight out of an exit or dock (3 wide, 4 deep: the exit itself is fixed by the sim), plus an outlet beside its far end
     /// on the side facing the map centre, so units and harvesters can turn toward the open side. S18-AI-NEW-3: the side follows the base, so a
     /// mirrored or half-turned start keeps the image of the same outlet (an exit exactly on the centre line takes the east side).</summary>
-    private static void AddLane(int x, int y, int mapWidth, List<Rect> into)
+    private static void AddLane(int x, int y, int mapWidth, bool north, List<Rect> into)
     {
-        into.Add(new Rect(x - LaneHalfWidth, y, x + LaneHalfWidth, y + LaneDepth - 1));
+        // north: the mouth is the lane's last row (y1) and the lane runs up the map; otherwise the mouth is its first row
+        int y0 = north ? y - LaneDepth + 1 : y, y1 = north ? y : y + LaneDepth - 1;
+        into.Add(new Rect(x - LaneHalfWidth, y0, x + LaneHalfWidth, y1));
         bool west = x * 2L + 1 < mapWidth;   // the exit is west of the centre line: the open side is east
-        int far = LaneDepth - OutletRows;
-        into.Add(west ? new Rect(x + LaneHalfWidth + 1, y + far, x + LaneHalfWidth + OutletWidth, y + LaneDepth - 1)
-                      : new Rect(x - LaneHalfWidth - OutletWidth, y + far, x - LaneHalfWidth - 1, y + LaneDepth - 1));
+        int oy0 = north ? y0 : y + LaneDepth - OutletRows, oy1 = north ? y0 + OutletRows - 1 : y1;   // outlet rows at the lane's far end
+        into.Add(west ? new Rect(x + LaneHalfWidth + 1, oy0, x + LaneHalfWidth + OutletWidth, oy1)
+                      : new Rect(x - LaneHalfWidth - OutletWidth, oy0, x - LaneHalfWidth - 1, oy1));
     }
 
     private bool GapOk(Rect foot)
@@ -136,11 +151,11 @@ internal sealed class PlacementSearch
             if (foot.Intersects(lane)) return false;
         if (!HasLane(bt)) return true;
         var mine = new List<Rect>(4);
-        AddLanes(bt, new CellCoord(x, y), mine, view.MapWidth);
+        AddLanes(bt, new CellCoord(x, y), mine, view);
         for (int li = 0; li < mine.Count; li += 2)   // each lane is its main rectangle followed by its outlet
         {
             Rect lane = mine[li];
-            int ex = (lane.X0 + lane.X1) / 2, ey = lane.Y0;
+            int ex = (lane.X0 + lane.X1) / 2, ey = FacesNorth(view, bt, new CellCoord(x, y)) ? lane.Y1 : lane.Y0;
             if (!view.InMap(new CellCoord(ex, ey)) || !view.IsPassable(new CellCoord(ex, ey), Locomotion.Tracked)) return false;
             foreach (Rect b in _blocks)
                 if (lane.Intersects(b)) return false;

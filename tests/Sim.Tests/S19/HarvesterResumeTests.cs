@@ -41,12 +41,14 @@ public sealed class HarvesterResumeTests
     }
 
     [Fact]
-    public void HarvesterParkedByStop_StaysParked()
-    {
+    public void HarvesterParkedByStop_ResumesAfterThreeSecondsIdle()
+    {   // M13-32 (owner complaint): a stopped or moved harvester no longer stays parked for good; it goes back to work after 3 s idle
         var (sim, h) = GaveUp(playerStop: true);
         Rebuild(sim);
-        EconomyFixture.Run(sim, 300);
+        EconomyFixture.Run(sim, 30);
+        Assert.Equal(MissionKind.Guard, sim.Units.Mission[h.Index]);   // not yet: under 3 s
+        EconomyFixture.Run(sim, 60);
         Assert.Equal(0, sim.Economy.NoRefinery[h.Index]);
-        Assert.Equal(MissionKind.Guard, sim.Units.Mission[h.Index]);
+        Assert.NotEqual(MissionKind.Guard, sim.Units.Mission[h.Index]);
     }
 }

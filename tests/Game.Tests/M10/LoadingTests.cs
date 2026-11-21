@@ -80,7 +80,7 @@ public sealed class LoadingTests
     {
         string guide = string.Join("\n", Rts.Game.Menu.HowToPlayContent.Pages.SelectMany(p => p.Lines));
         foreach (string phrase in new[] { "Q Structures, W Defences, E Infantry, R Vehicles, T Upgrades", "Press A, then right-click ground", "S stops. G guards", "X scatters",
-                     "Right-click a cameo to cancel", "Home centres on your base", "Ctrl+F5..F8 store a view", "F1 or ? lists every key", "Space pause the game", "press D, then right-click the cell" })
+                     "Right-click a cameo to cancel", "Home centres on your base", "Ctrl+F5 to F8 store a view", "F1 or ? lists every key", "Space pause the game", "press D, then right-click the cell" })
             Assert.Contains(phrase, guide);
     }
 

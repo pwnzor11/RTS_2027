@@ -131,7 +131,9 @@ public sealed partial class MissionHost
         else
         {
             string name = ZoneOrTagArg(a, 1);
-            t = new ObjectiveTarget(Def.ZoneNamed(name) != null ? ObjectiveTargetKind.Zone : ObjectiveTargetKind.Actor, name);
+            t = Def.ZoneNamed(name) != null
+                ? new ObjectiveTarget(ObjectiveTargetKind.Zone, name)
+                : new ObjectiveTarget(ObjectiveTargetKind.Actor, name, ObjectiveTarget.Unknown, ObjectiveTarget.Unknown);   // cell filled in by TrackActorTargets
         }
 
         _objectives[i] = _objectives[i] with { Target = t };
@@ -156,11 +158,28 @@ public sealed partial class MissionHost
                 cell = new CellCoord((z.X0 + z.X1) / 2, (z.Y0 + z.Y1) / 2);
                 return true;
             case ObjectiveTargetKind.Actor:
-                if (_sim == null || !TryTag(t.Name, out ActorRef r) || !IsStanding(_sim, r)) return false;   // S18 MIS-03: a dying actor is gone
-                cell = CellOfActor(_sim, r);
+                // M11-30: the last cell the tagged actor was seen alive on (kept after it dies); unknown until it has been seen once.
+                if (t.X == ObjectiveTarget.Unknown || t.Y == ObjectiveTarget.Unknown) return false;
+                cell = new CellCoord(t.X, t.Y);
                 return true;
             default:
                 return false;
+        }
+    }
+
+    /// <summary>
+    /// Stores each tag target's current cell while its actor is alive (M11-30), once per tick and before the scripts run. The stored cell
+    /// is saved and hashed with the target, so a dead actor's last cell is part of the mission state and a loaded game agrees.
+    /// </summary>
+    private void TrackActorTargets(Simulation sim)
+    {
+        for (int i = 0; i < _objectives.Count; i++)
+        {
+            ObjectiveTarget t = _objectives[i].Target;
+            if (t.Kind != ObjectiveTargetKind.Actor || !TryTag(t.Name, out ActorRef r) || !IsStanding(sim, r)) continue;
+            CellCoord c = CellOfActor(sim, r);
+            if (c.X == t.X && c.Y == t.Y) continue;
+            _objectives[i] = _objectives[i] with { Target = t with { X = c.X, Y = c.Y } };
         }
     }
 

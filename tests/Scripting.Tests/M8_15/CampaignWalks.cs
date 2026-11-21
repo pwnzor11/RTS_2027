@@ -445,7 +445,7 @@ internal static class CampaignWalks
         return done();
     }
 
-    private static int PowerDown(MissionBot bot) => bot.Host.Messages.Count(x => x.Text.Contains("power plant"));
+    private static int PowerDown(MissionBot bot) => bot.Host.Messages.Count(x => x.Text.Contains("Power Plant", StringComparison.Ordinal));
 
     private static int PostsDown(MissionBot bot) => bot.Host.Messages.Count(x => x.Text.Contains("road post is down"));
 

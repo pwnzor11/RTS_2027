@@ -1,29 +1,45 @@
-# Handoff: Session 37 — read the commander model rerun (cm36); then open choice
-Last commit: `docs: D-277 confirmed (session 36)` on `land/s36-confirm` (PR to main; session 36 landed as PR #116). Check it merged.
-Where things stand: session 36 fixed the Ash Plains start bias (D-277: 2-player layout 1 is mirror_x, start 0 share 67.2 % -> 50.6 %; Glass
-Coast left on rot2 because mirror_x moved Expedition v Authority there to 19.8 %) and made commander directives stop costing the AI its
-games (D-278 DirectiveGuard: the full random commander 23.0 % -> 53.1 %, plain AI 52.7 %). docs/balance/s36_balance.md. The model rerun
-(qwen3:30b on the NAS, the s35 32-game set, guarded build 2bba3fe) and its control were still running at wrap-up. Decisions up to D-278.
-Open questions: Q-73 (deferred).
+# Handoff: Session 38 — merge PR #118 (owner OK), read the voice log, then the map-specific balance rows
+Last commit: `docs: Session 37 handoff` on `integ-s37` (draft PR #118 to main; Windows CI green on the UX build e90dff9, rerun on the final head).
+Where things stand: session 37 fixed the owner's four campaign complaints (in-universe text D-284, objective guidance D-283, scraper orders D-282,
+voice-line diagnostics D-285), found and fixed why Mountains/Ash Plains broke the Left Behind and Expedition (AI placement used unturned docks,
+mid-row starts, Expedition supply lane, Ash foot-only fords: D-281), and landed a small unit package (D-280). Balance MAD 17.0 -> 13.3.
+Cluster: campaign 45/45, 108 LAN soaks in sync, 160 replays identical on Pi and x86. LLM commander: no model makes the AI stronger (D-285).
+Decisions up to D-285. Open questions: Q-73 (deferred; suggested par table in docs/balance/s37_balance.md).
 
 ## Start here (shown to the user as the plan; nothing starts until they say go)
-1. D-277 PR merged? Laptop: `git checkout main; git pull`.
-2. Read the commander rerun: cluster jobs cm36 (model) and cc36 (control), outputs `/work/out/s36cmd/{model,control}/s<seed>_w<swap>/summary.md`
-   (fetch through the toolbox pod; scripts in the laptop k3s-cluster folder `claude/rts/s36/cmd_*.sh`). Compare with s35 (model 6-19-7,
-   control 6-24-2, plain 13-12-7; s36 control on the guarded build 14-13-5) and add the table to docs/balance/s36_balance.md; tick M5-14.
-3. Ask the owner what is next: the two-PC LAN test (M9-15, owner), the Expedition play-test (M7-14), a commander with a stronger model,
-   balance (parked, D-269; Glass Coast left/right is a lead if it reopens), or new work.
+1. PR #118 merged? (merges need the owner's OK in chat). Laptop: `git checkout main; git pull`, rebuild.
+2. Voice (M10-27): read `%APPDATA%/RTS_2027/logs/rts_2027.log` (folder Roaming--RTS_2027 when connected) after the owner plays auth_01's opening.
+   "audio: voice ... state Playing" = OpenAL on his PC; "no voice path"/"file missing" = data. Fix accordingly.
+3. Owner answers to ask: confirm D-280/D-281 numbers; briefing style (telegram v plain, docs/reviews/2026-11-19_text_audit.md); par times
+   (table in s37_balance.md); the "super hard LLM opponent" design (below).
+4. Balance next (M10-21): the map-specific rows — Directorate v Authority on Mountains/Ash (20 %), Expedition on Glass Coast (Dir 20.9 %, LB 34.4 %),
+   Directorate v Left Behind Rust 26.5 % v Ash 76.2 %. Trace a few games per row, find the map-side cause, screen at 128 games (s37 kit).
 
 ## Half-finished work
-- M5-14: the model rerun (above). Nothing else.
-- Branches to delete on GitHub: land/s36, land/s36-confirm (after merge), integ-s36, wp/s36-fair-ax, wp/s36-fair-ar, wp/s36-fair-gx, wp/s36-guard-g2, wp/s36-guard-g4,
-  plus the older list (integ-s32m, integ-s33, land/s33, land/s33-manual, wp/s33-hero, wp/s33-smoke, land/s34-m10-06b, land/s34-readme,
-  land/s34-handoff, wp/s34-kitbash, land/s35-unit80, land/s35-compute, land/s35-handoff).
+- M10-21 balance: above. M10-27 voice: waits for the owner's log.
+- Layout 2 rows were not re-measured this session (layout 1 is the skirmish default).
+- Super hard LLM opponent (owner wants it, "not the end of the world"): directives cannot add strength (D-285). Options to offer: (a) LLM commander
+  on a tier-5 AI as a flavour "adaptive" opponent, labelled as such; (b) a "Hard + LLM" mode that also gives the commanded AI a resource bonus;
+  (c) let the LLM pick build orders/army compositions per game from a list the AI executes (new design). Recommendation: (a) now, (c) as a design round.
+- Branches to delete on GitHub: integ-s37 and wp/s37-mtn after merge, plus the older list from session 36's handoff
+  (land/s36, land/s36-confirm, integ-s36, wp/s36-*, integ-s32m, integ-s33, land/s33*, wp/s33-*, land/s34-*, wp/s34-kitbash, land/s35-*).
 
 ## Waiting on the user
-- Two-PC LAN test (M9-15). Expedition play-test (M7-14). Branch deletes.
+- OK to merge PR #118. Voice test + log. Two-PC LAN test (M9-15). Expedition play-test (M7-14). Branch deletes. Answers in "Start here" 3.
 
 ## How to run this session
+- Session 37 lessons:
+  - The laptop folder mounts are named by path now (`$HOME/mnt/Documents--RTS_2027`, `$HOME/mnt/Roaming--RTS_2027`, `$HOME/mnt/k3s-cluster`).
+  - Data-only variants need no build: `claude/rts/s37/mkvar.py` copies data/ from a built tree and edits keys; `var.sh` runs `ai match` from that
+    tree with the same Tools.dll (rules are found by walking up from the working directory). One job per variant set (`SET=`), CHUNKS 4 screen /
+    8 decide. `sum.py`, `pivot.py`, `ana.py` (variant v baseline per row), `/tmp/mad.py`-style table metrics.
+  - Patch a running job's script by patching its configmap (`job-<name>`, key run.sh) with kubectl `--patch-file`; new pods read it.
+  - A build pod (2 CPU) stays Pending behind a series on x86: lower the series' parallelism first (`kubectl patch job ... parallelism`).
+  - gpt-oss:120b runs on the NAS's Ollama (80 GB limit): unload qwen3:30b first (`/api/generate` keep_alive 0); first load ~7 min; ~74 s per
+    commander call; one 16-game set ~4 h. The proxy sends `"think": "low"`.
+  - The Rocket Truck cost is a cliff lever; screen cost steps of 2-4 %, not 15 %.
+  - Mirror-x maps with mid-row starts exposed an AI bug the diagonal maps hid: test new layouts with incomes per faction (`--income 1`), not only
+    win rates.
 - Session 36 lessons:
   - `Tools ai mirror` now follows the map's symmetry; a first divergence on an early building placement points at a map/exit asymmetry.
   - Every building exits and docks south: any top/bottom start layout leans to the top base. Check a new map layout with the mirror probe

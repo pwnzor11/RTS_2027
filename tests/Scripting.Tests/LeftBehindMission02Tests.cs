@@ -143,7 +143,7 @@ public sealed class LeftBehindMission02Tests
         return r;
     }
 
-    private static int PowerDown(MissionSession m) => m.Host.Messages.Count(x => x.Text.Contains("power plant"));
+    private static int PowerDown(MissionSession m) => m.Host.Messages.Count(x => x.Text.Contains("Power Plant", StringComparison.Ordinal));
 
     private static int PostsDown(MissionSession m) => m.Host.Messages.Count(x => x.Text.Contains("road post is down"));
 }

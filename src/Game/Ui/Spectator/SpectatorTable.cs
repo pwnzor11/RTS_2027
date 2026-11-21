@@ -58,7 +58,7 @@ public static class SpectatorTable
         + (r.Defeated ? "  OUT" : "");
 
     /// <summary>Header for <see cref="Detail"/> and <see cref="Final"/>.</summary>
-    public const string DetailHeader = "PLAYER  FACTION    TIER  CASH  INCOME/M  ARMY  STRUCT  POWER  BUILT  LOST  KILLS  UPG";
+    public const string DetailHeader = "PLAYER  FACTION    TIER  CASH  INCOME/M  ARMY  BASE   POWER  BUILT  LOST  KILLS  UPG";
 
     /// <summary>Detail line (Tab): every column of the design table.</summary>
     public static string Detail(SpectatorRow r) =>
@@ -74,7 +74,7 @@ public static class SpectatorTable
     };
 
     private static readonly string[] HeaderCells =
-        { "PLAYER", "FACTION", "TIER", "CASH", "INCOME/M", "ARMY", "STRUCT", "POWER", "BUILT", "LOST", "KILLS", "UPG", "" };
+        { "PLAYER", "FACTION", "TIER", "CASH", "INCOME/M", "ARMY", "BASE", "POWER", "BUILT", "LOST", "KILLS", "UPG", "" };
 
     /// <summary>
     /// S18 UXG-10: the final table with its columns lined up in a proportional font. Each cell is followed by as many spaces as bring the
