@@ -17,7 +17,7 @@ public static class SlotOptions
     public static readonly IReadOnlyList<int> AiHandicapSteps = new[] { 50, 75, 100, 125, 150 };
 
     /// <summary>The edge the "Super hard (LLM)" preset gives its AI slot, in percent of production speed and income.</summary>
-    public const int SuperHardEdge = 150; // PENDING s38 calibration (lead sets the final value)
+    public const int SuperHardEdge = 150;   // s38 (D-287): tier 5 at 150 v plain tier 5 won 85-100 % of decided games (Authority, Left Behind, Expedition; Directorate 68 %)
 
     /// <summary>The AI tier the "Super hard (LLM)" preset sets.</summary>
     public const int SuperHardTier = 5;
