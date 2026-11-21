@@ -28,7 +28,7 @@ public static class SetupText
 
     /// <summary>S38 (M5-15): one-line description of the preset for an edge of <paramref name="edgePercent"/> percent above normal.</summary>
     public static string SuperHardDescription(int edgePercent) =>
-        $"Elite AI led by the LLM commander, with +{edgePercent}% income and build speed";
+        $"Tier-5 AI led by the LLM commander, with +{edgePercent}% income and build speed";
 
     /// <summary>S38 (M5-15): the description of the preset at <see cref="SlotOptions.SuperHardEdge"/>.</summary>
     public static string SuperHardHint => SuperHardDescription(SlotOptions.SuperHardEdge - SlotOptions.NoHandicap);

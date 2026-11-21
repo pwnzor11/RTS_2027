@@ -207,7 +207,7 @@ systems (water locomotion, ships, landings). Lore, roster, art, AI.
 - [x] M7-09 Carrier and air (session 10, D-147; no ammo system, no hangar UI)
 - [x] M7-10 AI Expedition (session 11, PR #26: establish, convoy escorts, strikes, withdraw; naval deploy + tender lane fixes D-150/D-151; Archive entries; LLM naval fields) — naval strikes and income tuning continue in M7-14
 - [x] M7-11 Art (owner PC, D-084): all 46 Expedition sprites (PR #28, variant A, D-149) and the four floating docks (PR #34, variant C, D-158)
-- [ ] M7-14 Game layer + acceptance — game layer done (PR #26); income tuned (D-152, docs/balance/m7_income.md: medium/large pass, small +12..22 %); golden replay + 210-game soak 0 desyncs (docs/balance/m7_14_acceptance.md); open: §6 bullet 1 (win vs every tier), Q-55 docks, owner play-test s38: Expedition AI per tier v each faction on 4 maps (32 games, docs/balance/s38_balance.md): wins at every tier except tier 1 v Authority.
+- [ ] M7-14 Game layer + acceptance — game layer done (PR #26); income tuned (D-152, docs/balance/m7_income.md: medium/large pass, small +12..22 %); golden replay + 210-game soak 0 desyncs (docs/balance/m7_14_acceptance.md); open: §6 bullet 1 (win vs every tier), Q-55 docks, owner play-test s38: Expedition AI per tier v each faction on 4 maps (32 games, docs/balance/s38_balance.md): wins at least some games at every tier except tier 1 v Authority.
 
 - [x] M7-15 Floating docks (Q-55 (a), D-153, D-156): wholly-on-water docks touching the shore, AI siting, drop the South stop-gap; redraw the four dock sprites (pilot first)
 - [x] M7-16 Aircraft ammo (D-156): 4-5 rounds, rearm at the carrier, carrier balance table

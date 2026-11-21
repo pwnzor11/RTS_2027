@@ -620,7 +620,7 @@ Pull main first (your folder was on eda0f0e3, two sessions behind), then rebuild
 
 ## Session 38 (2026-11-21)
 - **Super hard (LLM):** in skirmish setup, an AI slot's options row has a "Super" button. It sets the slot to tier 5 with the LLM commander and
-  "Edge +50%"; the slot row reads like "2 AI LLM - Elite +50% Authority T2". Without an LLM provider/key the usual commander notice shows. The HC button on an
+  "Edge +50%"; the slot row reads like "2 AI LLM - Commissar +50% Authority T1" (T = team). Without an LLM provider/key the usual commander notice shows. The HC button on an
   AI slot now cycles 50 / 75 / none / Edge +25% / Edge +50%; a human slot still stops at none.
 - **Authority AI:** a tier 4 or 5 Authority AI should now feel clearly harder than tier 1-2 (before, higher Authority tiers played worse). It no longer
   garrisons ruins or builds the Blockhouse at tiers 2-5.

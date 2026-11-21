@@ -47,7 +47,7 @@ allowed up to 150 % for AI slots). `ai match --handicap-a 125|150|175`, tier 5 w
 | Left Behind | 86.2 | 85.7 (16) | - |
 | Expedition | 85.2 (58 % draws) | 100 (16) | - |
 
-The edge is +50 % (D-286). The Directorate gains least: its funds sit at the 4 989 storage cap and its army stays the same size, so something other than
+The edge is +50 % (D-286). The Directorate gains least: its funds peak at the storage limit (4 989 in the logs) and its army stays the same size, so something other than
 money (supply, its own caps) limits it; follow-up.
 
 ## Layout 2 (M12-07..12; job l238)
@@ -65,7 +65,7 @@ Layout 2 is off by default. 128 games per row, tier 3 v 3:
 
 "-" = not finished at wrap-up (job l238 keeps running; outputs in `/work/out/l238/l2`).
 
-Layout 2 is far from fair (Authority v Left Behind 84-89 %, Directorate v Expedition 86 %, Directorate v Left Behind 78-83 %); it stays off. The layout-1
+Layout 2 is far from fair (Authority v Left Behind 84-89 %, Directorate v Expedition 86 %, Directorate v Left Behind 78-88 %); it stays off. The layout-1
 rows that the job also ran reproduce the session 37 table game for game (a free determinism check).
 
 ## Expedition at every tier (M7-14 §6 bullet 1; job tr38)
@@ -88,7 +88,7 @@ Expedition tier N v each faction at tier N, layout 1, 32 games (16 seeds x 2), W
 
 (Measured on `1e2cbb8`, before D-287; Authority tiers 2-5 changed since.)
 
-The Expedition AI wins games against every faction at every tier except tier 1 v the Authority (2-3 of 32 on three maps, 0 on Rust Belt). The bullet
+The Expedition AI wins at least some games against every faction at every tier except tier 1 v the Authority (2-3 of 32 on three maps, 0 on Rust Belt). The bullet
 itself asks for a human win, so it stays with the owner's play-test.
 
 ## Late-game draws (M13-23; from the s37 final table bp37)

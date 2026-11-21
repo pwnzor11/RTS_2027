@@ -76,7 +76,7 @@ public sealed class SuperHardTests
         Assert.Equal("2 AI Elite Authority T2", SkirmishSetupScreen.SlotLabel(s with { Commander = false, Handicap = 100 }, 1, Tiers));
         Assert.StartsWith("2 Edge +50%", SkirmishSetupScreen.OptionsLabel(s, 1));
         Assert.Equal("Super hard (LLM)", SetupText.SuperHardLabel);
-        Assert.Equal("Elite AI led by the LLM commander, with +50% income and build speed", SetupText.SuperHardHint);
+        Assert.Equal("Tier-5 AI led by the LLM commander, with +50% income and build speed", SetupText.SuperHardHint);
         Assert.Contains("Super", SetupText.SuperHardOptionsHint);
         // the setup panel is sized for the widest slot text, edge included
         Assert.Contains(SkirmishSetupScreen.WidestSlotTexts(Tiers), t => t.Contains(" +50% "));
