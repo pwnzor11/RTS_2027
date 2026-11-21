@@ -115,17 +115,33 @@ public class DifficultyLoaderTests
     [Fact]
     public void LeftBehindTierThreeOverrideAppliesToThatFactionAndTierOnly()
     {
-        var tiers = TestWorld.Tiers;
+        var tiers = TestWorld.LoadedTiers;
         var shared = tiers[2];
         var lb = shared.ForFaction(LeftBehind);
         Assert.NotSame(shared, lb);
         Assert.True(lb.ArmyCap > 0);
         Assert.Equal(0, shared.ArmyCap);                              // the shared tier 3 table is untouched
-        Assert.Same(shared, shared.ForFaction(Authority));            // other factions play the shared profile
+        Assert.Same(shared, shared.ForFaction(4));                    // the Expedition plays the shared profile
         Assert.Same(lb, shared.ForFaction(LeftBehind));               // same instance every call (the AI compares by reference)
         Assert.Equal(shared.AttackThreshold, lb.AttackThreshold);     // keys the table does not name keep the tier value
         Assert.Equal(shared.Tier, lb.Tier);
         foreach (int t in new[] { 0, 1, 3, 4 }) Assert.Same(tiers[t], tiers[t].ForFaction(LeftBehind));   // other tiers have no override
+    }
+
+    [Fact]
+    public void AuthorityTiersTwoToFivePlayWithoutRespondToAttacks()
+    {
+        // M4-16 s38: the Authority ladder fix; the shared tiers and the other factions keep the flag, the Authority keeps every other number of the tier
+        for (int t = 1; t < 5; t++)
+        {
+            var shared = TestWorld.LoadedTiers[t];
+            Assert.True(shared.RespondToAttacks);
+            Assert.False(shared.ForFaction(Authority).RespondToAttacks);
+            Assert.True(shared.ForFaction(1).RespondToAttacks);
+            Assert.Equal(shared.AttackThreshold, shared.ForFaction(Authority).AttackThreshold);
+            Assert.Equal(shared.Repair, shared.ForFaction(Authority).Repair);
+        }
+        Assert.Same(TestWorld.LoadedTiers[0], TestWorld.LoadedTiers[0].ForFaction(Authority));
     }
 
     [Fact]
