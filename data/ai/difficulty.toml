@@ -36,7 +36,7 @@
 #   use_upgrades            also: tier climbing (tier-2 gate at 3 min, tier-3 gate at 7 min or a 12-unit army) and, at the
 #                           matching tier, the Airfield / Mooring (air) and the superweapon (superweapons)
 # S15 lbknob (D-186, per faction AND tier, optional): tables [faction.<id>.tier1] .. [faction.<id>.tier5] override some numbers of that one tier for
-#   that one faction (the other factions and tiers keep the shared tier table). Allowed keys: attack_threshold, attack_ratio_pct, expansion_tick,
+#   that one faction (the other factions and tiers keep the shared tier table; keys not set keep the shared value). Allowed keys: respond_to_attacks (0/1, s38), attack_threshold, attack_ratio_pct, expansion_tick,
 #   harvester_target, retreat_health_pct, retreat_ratio_pct, unit_reserve, army_cap. Behaviour only, never unit/building/weapon/cost numbers.
 #   army_cap       0..1000: army units alive (home, on a wave, detached; harvesters excluded) at which unit production pauses until losses make room
 #                  (0 = no cap; also allowed in a tier table). The one lever found that cut Left Behind tier 3 without touching its tier 5.
@@ -71,6 +71,20 @@
 
 [faction.authority]
 harass_min_army = 30
+
+# M4-16 s38: the Authority ladder was inverted (2 v 1 30 %, 5 v 3 40 %, 128 games): respond_to_attacks (garrison and Blockhouse, wave regroup, mop-up, bag growth ...)
+# made every higher Authority tier play worse than the fixed tier-1 order; with the flag off at tier 2 it wins 76-84 % of the same cell.
+[faction.authority.tier2]
+respond_to_attacks = 0  # (tune) s38
+
+[faction.authority.tier3]
+respond_to_attacks = 0  # (tune) s38
+
+[faction.authority.tier4]
+respond_to_attacks = 0  # (tune) s38
+
+[faction.authority.tier5]
+respond_to_attacks = 0  # (tune) s38
 
 [faction.directorate]
 harass_min_army = 14
