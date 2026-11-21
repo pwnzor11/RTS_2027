@@ -114,7 +114,7 @@ public class MopupHuntKeyTests
     {
         string text = File.ReadAllText(DifficultyLoader.PathBesideRules(TestWorld.RulesDir));
         string path = Write(text.Replace("\n[faction.authority]\n", "\n[faction.authority]\nmopup_hunt = 1\n"));
-        try { return DifficultyLoader.Load(path)[3].ForFaction((int)Faction.Authority); }
+        try { return DifficultyLoader.Load(path)[3].WithoutFactionOverride((int)Faction.Authority); }
         finally { File.Delete(path); }
     }
 

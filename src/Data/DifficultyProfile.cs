@@ -97,6 +97,16 @@ public sealed record DifficultyProfile(
     /// instance every call when a <c>[faction.&lt;id&gt;.tier&lt;N&gt;]</c> table overrides some numbers.</summary>
     public DifficultyProfile ForFaction(int faction) => faction >= 0 && faction < _byFaction.Length && _byFaction[faction] is { } p ? p : this;
 
+    /// <summary>M4-16 s38: a copy of this profile without the <paramref name="faction"/> override (that faction plays the shared tier); the same instance when it has none.</summary>
+    public DifficultyProfile WithoutFactionOverride(int faction)
+    {
+        if (faction < 0 || faction >= _byFaction.Length || _byFaction[faction] is null) return this;
+        DifficultyProfile copy = this with { };
+        copy._byFaction = (DifficultyProfile?[])_byFaction.Clone();
+        copy._byFaction[faction] = null;
+        return copy;
+    }
+
     /// <summary>S15 lbknob: a copy of this profile that plays as <paramref name="over"/> for <paramref name="faction"/>.</summary>
     public DifficultyProfile WithFactionOverride(int faction, DifficultyProfile over)
     {
