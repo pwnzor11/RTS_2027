@@ -197,7 +197,7 @@ public sealed record SkirmishSettings(MapChoice Map, IReadOnlyList<SkirmishSlot>
             if (s.Team < 0 || s.Team >= MaxSlots) errors.Add($"Slot {i + 1}: team must be 1 to {MaxSlots}.");
             teams.Add(s.Team);
             if (!Enum.IsDefined(s.Faction) || !RuleCounts.IsPlayable(s.Faction)) errors.Add($"Slot {i + 1}: unknown faction.");
-            if (s.Handicap < Rts.Sim.Core.SimSetup.MinHandicap || s.Handicap > 100) errors.Add($"Slot {i + 1}: handicap must be {Rts.Sim.Core.SimSetup.MinHandicap} to 100 percent.");
+            if (s.Handicap < Rts.Sim.Core.SimSetup.MinHandicap || s.Handicap > Rts.Sim.Core.SimSetup.MaxHandicap) errors.Add($"Slot {i + 1}: handicap must be {Rts.Sim.Core.SimSetup.MinHandicap} to {Rts.Sim.Core.SimSetup.MaxHandicap} percent.");
             if (s.CreditsPreset < 0 || s.CreditsPreset >= SlotOptions.CreditsPresets.Count) errors.Add($"Slot {i + 1}: unknown starting credits.");
         }
         if (open < MinPlayers) errors.Add("At least two slots must be open.");

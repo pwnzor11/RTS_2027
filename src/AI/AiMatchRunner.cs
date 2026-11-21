@@ -45,6 +45,7 @@ public static class AiMatchRunner
             Factions = sideA.Faction == Faction.Authority && sideB.Faction == Faction.Authority ? null : factions,
             NoRebuildDefeat = true,   // M4-17 (D-173)
             LandingMarkers = landing ?? Array.Empty<CellCoord>(),   // M7-10: public map data for the Expedition AI
+            Handicap = HandicapList(sideA.Handicap, sideB.Handicap, slotA),   // S38 (M5-15): follows the side, not the slot; null at 100/100 keeps the old bytes
         };
         var sim = new Simulation(setup);
         ReplayWriter? recorder = replay is null ? null : new ReplayWriter(replay, sim, build, rulesFiles ?? Array.Empty<(string, string)>());
@@ -218,6 +219,15 @@ public static class AiMatchRunner
         for (int t = 0; t < ticks; t++) { sim.Step(cmds); afterStep?.Invoke(sim, armies); }
         int pOfStart0 = swapStarts ? 1 : 0;
         return (ValueOf(sim, (byte)pOfStart0), ValueOf(sim, (byte)(1 - pOfStart0)), sim.ComputeStateHash());
+    }
+
+    /// <summary>The per-slot handicap list for a pair (A's percent goes to A's slot), or null when both are 100.</summary>
+    public static int[]? HandicapList(int handicapA, int handicapB, byte slotA)
+    {
+        if (handicapA == SimSetup.DefaultHandicap && handicapB == SimSetup.DefaultHandicap) return null;
+        var h = new int[2];
+        h[slotA] = handicapA; h[1 - slotA] = handicapB;
+        return h;
     }
 
     private static IAiPlayer Create(AiSide side)

@@ -33,7 +33,7 @@ public static class AiCommands
         "         (s32) a mirror game, both AIs on one random stream: prints the first tick at which player 0 is no longer the 180-degree image of player 1\n" +
         "  <tier> is 1..5 or recruit|regular|veteran|elite|commissar (default regular). Seeds are first..first+N-1 (first defaults to 1).";
 
-    private static readonly string[] MatchOptions = ["a", "b", "seeds", "ticks", "size", "out", "record-dir", "flat", "starts", "start", "first", "faction-a", "faction-b", "trace", "game", "extras", "layout", "biome", "income", "mopup", "ledger", "econ"];
+    private static readonly string[] MatchOptions = ["a", "b", "seeds", "ticks", "size", "out", "record-dir", "flat", "starts", "start", "first", "faction-a", "faction-b", "trace", "game", "extras", "layout", "biome", "income", "mopup", "ledger", "econ", "handicap-a", "handicap-b"];
     private static readonly string[] TimelineOptions = ["a", "b", "seed", "ticks", "size", "swap", "trace", "dump", "faction-a", "faction-b", "layout", "biome"];
     private static readonly string[] MirrorOptions = ["a", "seed", "ticks", "size", "faction", "layout", "biome", "show"];
     private static readonly string[] DuelOptions = ["a", "b", "count", "count-b", "ticks", "gap"];
@@ -83,6 +83,9 @@ public static class AiCommands
             a = a! with { Profile = a.Profile.WithMopup(mopupArg == "on") };
             b = b! with { Profile = b.Profile.WithMopup(mopupArg == "on") };
         }
+        // S38 (M5-15): --handicap-a / --handicap-b (10..200, default 100) belong to the A/B side and follow it when the start sides swap
+        if (!ParseHandicap(flags, "handicap-a", out int handicapA, out error) || !ParseHandicap(flags, "handicap-b", out int handicapB, out error)) return UsageError(error!);
+        a = a! with { Handicap = handicapA }; b = b! with { Handicap = handicapB };
         if (!ParseMapChoice(flags, out MapChoice? choice, out error)) return UsageError(error!);
         _income = flags.ContainsKey("income");
         bool army = false;
@@ -121,10 +124,25 @@ public static class AiCommands
         return WriteOut(flags, table);
     }
 
+    /// <summary>Reads an integer handicap flag (10..200, default 100).</summary>
+    internal static bool ParseHandicap(Dictionary<string, string> flags, string name, out int percent, out string? error)
+    {
+        percent = SimSetup.DefaultHandicap; error = null;
+        if (!flags.TryGetValue(name, out string? text)) return true;
+        if (int.TryParse(text, NumberStyles.None, CultureInfo.InvariantCulture, out percent) && percent >= SimSetup.MinHandicap && percent <= SimSetup.MaxHandicap) return true;
+        error = $"--{name} must be an integer {SimSetup.MinHandicap} to {SimSetup.MaxHandicap}";
+        return false;
+    }
+
     private static string MatchTable(AiSide a, AiSide b, MatchTally t, int seeds, int ticks, int size, MapChoice? choice = null)
     {
         var sb = new StringBuilder();
         sb.AppendLine($"# AI match: {a.Label} (A) vs {b.Label} (B)");
+        if (a.Handicap != SimSetup.DefaultHandicap || b.Handicap != SimSetup.DefaultHandicap)
+        {
+            sb.AppendLine();
+            sb.AppendLine($"Handicap (percent of production speed and income): A {a.Handicap}, B {b.Handicap}.");
+        }
         sb.AppendLine();
         sb.AppendLine($"{seeds} seeds x 2 (start positions swapped), {ticks} ticks per game, map size {size}{(choice is null ? "" : $", {choice.Value.BiomeName} layout {choice.Value.Layout}")}.");
         sb.AppendLine();
