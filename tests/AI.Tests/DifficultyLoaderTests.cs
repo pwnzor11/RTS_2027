@@ -88,11 +88,13 @@ public class DifficultyLoaderTests
         var d = Rts.Data.FactionTuning.Default;
         Assert.Equal((0, 3), (d.AdaptRichCash, d.AdaptRichMax));
         string text = File.ReadAllText(DifficultyLoader.PathBesideRules(TestWorld.RulesDir)).Replace("\r\n", "\n");
-        Assert.Equal(0, DifficultyLoader.Load(DifficultyLoader.PathBesideRules(TestWorld.RulesDir))[3].FactionKeys.TuningOf(1).AdaptRichCash);
-        string path = Write(text.Replace("[faction.directorate]\n", "[faction.directorate]\nadapt_rich_cash = 2000\nadapt_rich_max = 4\n"));
+        var shipped = DifficultyLoader.Load(DifficultyLoader.PathBesideRules(TestWorld.RulesDir))[3].FactionKeys;
+        Assert.Equal(2000, shipped.TuningOf(1).AdaptRichCash);   // s39: on for the Directorate (applies only with a handicap above 100)
+        Assert.Equal(0, shipped.TuningOf(0).AdaptRichCash);
+        string path = Write(text.Replace("[faction.authority]\n", "[faction.authority]\nadapt_rich_cash = 2000\nadapt_rich_max = 4\n"));
         try
         {
-            var t = DifficultyLoader.Load(path)[3].FactionKeys.TuningOf(1);
+            var t = DifficultyLoader.Load(path)[3].FactionKeys.TuningOf(0);
             Assert.Equal((2000, 4), (t.AdaptRichCash, t.AdaptRichMax));
         }
         finally { File.Delete(path); }
