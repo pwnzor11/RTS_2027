@@ -95,7 +95,8 @@ public static class DifficultyLoader
     public static readonly IReadOnlyList<string> FactionIds = ["authority", "directorate", "left_behind", "expedition"];
 
     /// <summary>S29: the per-faction build lever keys allowed besides <c>harass_min_army</c>.</summary>
-    private static readonly string[] TuningKeys = ["army_before_tech", "army_before_adapt", "adapt_cash", "adapt_max_production", "tier2_gate_tick", "adapt_build"];
+    private static readonly string[] TuningKeys = ["army_before_tech", "army_before_adapt", "adapt_cash", "adapt_max_production", "tier2_gate_tick", "adapt_build",
+        "bore_max", "bore_army", "bore_gap_ticks", "bore_dig_short", "bore_sites", "bore_min_cash"];   // s39: Directorate Bore levers
 
     private static FactionAiKeys ParseFactions(TomlTable root, string file, List<RulesProblem> problems, List<(int Faction, int Tier, TomlTable Table, string Id)> overrides)
     {
@@ -122,7 +123,15 @@ public static class DifficultyLoader
                 Opt(t, id, "adapt_cash", 0, 100000, d.AdaptCash, file, problems) ?? d.AdaptCash,
                 Opt(t, id, "adapt_max_production", 2, 6, d.AdaptMaxProduction, file, problems) ?? d.AdaptMaxProduction,
                 Opt(t, id, "tier2_gate_tick", 0, 100000, d.Tier2GateTick, file, problems) ?? d.Tier2GateTick,
-                Opt(t, id, "adapt_build", 0, 1, d.AdaptBuild, file, problems) ?? d.AdaptBuild);
+                Opt(t, id, "adapt_build", 0, 1, d.AdaptBuild, file, problems) ?? d.AdaptBuild)
+            {
+                BoreMax = Opt(t, id, "bore_max", 0, 20, d.BoreMax, file, problems) ?? d.BoreMax,
+                BoreArmy = Opt(t, id, "bore_army", 0, 1000, d.BoreArmy, file, problems) ?? d.BoreArmy,
+                BoreGapTicks = Opt(t, id, "bore_gap_ticks", 0, 100000, d.BoreGapTicks, file, problems) ?? d.BoreGapTicks,
+                BoreDigShort = Opt(t, id, "bore_dig_short", 0, 60, d.BoreDigShort, file, problems) ?? d.BoreDigShort,
+                BoreSites = Opt(t, id, "bore_sites", 0, 2, d.BoreSites, file, problems) ?? d.BoreSites,
+                BoreMinCash = Opt(t, id, "bore_min_cash", 0, 100000, d.BoreMinCash, file, problems) ?? d.BoreMinCash,
+            };
             int? cr = Opt(t, id, "siege_commit_ratio", 0, 10000, 0, file, problems);   // s29
             if (cr is int cx) commit[i] = cx;
             int? an = Opt(t, id, "aa_needs_air", 0, 1, 0, file, problems);   // s29

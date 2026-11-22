@@ -68,6 +68,13 @@
 #                           Left Behind Mother Rig that packs, drives off and unpacks elsewhere. While on: packed rigs and other deployable vehicles do not count
 #                           as an enemy army for the "beaten" test, the last cell where one was seen is chased for a while, blocks where enemy structures stood
 #                           are swept first, stale blocks are revisited after 3000 instead of 6000 ticks, and sweep parties are 3 units instead of 6.
+# s39 (M13-37, per faction, optional; only the Directorate has Bores): the Directorate Bore levers of DirectorateTactics; missing keys = the former constants.
+#   bore_max        0..20 (default 5): Bores bought over a whole game; 0 = the AI never buys one.
+#   bore_army       0..1000 (default 4): army size before the first Bore.
+#   bore_gap_ticks  0..100000 (default 1500): ticks between Bore purchases.
+#   bore_dig_short  0..60 (default 15): cells short of the enemy target at which the enemy-side Hatch is dug.
+#   bore_sites      0..2 (default 0): 0 = alternate enemy side and ore field, 1 = ore field only, 2 = enemy side only.
+#   bore_min_cash   0..100000 (default 200): funds needed beyond the Bore's cost before one is bought.
 
 [faction.authority]
 harass_min_army = 30

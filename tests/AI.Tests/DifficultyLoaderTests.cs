@@ -83,6 +83,30 @@ public class DifficultyLoaderTests
     }
 
     [Fact]
+    public void BoreKeysAreReadAndDefaultToTheFormerConstants()   // s39 M13-37
+    {
+        var d = Rts.Data.FactionTuning.Default;
+        Assert.Equal((5, 4, 1500, 15, 0, 200), (d.BoreMax, d.BoreArmy, d.BoreGapTicks, d.BoreDigShort, d.BoreSites, d.BoreMinCash));
+        Assert.Equal(Rts.AI.Recruit.DirectorateTactics.MaxBoresBuilt, d.BoreMax);
+        Assert.Equal(Rts.AI.Recruit.DirectorateTactics.ArmyBeforeBore, d.BoreArmy);
+        Assert.Equal(Rts.AI.Recruit.DirectorateTactics.BoreGapTicks, d.BoreGapTicks);
+        Assert.Equal(Rts.AI.Recruit.DirectorateTactics.DigShortCells, d.BoreDigShort);
+        Assert.Equal(Rts.AI.Recruit.DirectorateTactics.BoreCushion, d.BoreMinCash);
+        string text = File.ReadAllText(DifficultyLoader.PathBesideRules(TestWorld.RulesDir)).Replace("\r\n", "\n");
+        string edited = text.Replace("[faction.directorate]\n", "[faction.directorate]\nbore_max = 2\nbore_army = 9\nbore_gap_ticks = 3000\nbore_dig_short = 25\nbore_sites = 1\nbore_min_cash = 900\n");
+        string path = Write(edited);
+        try
+        {
+            var t = DifficultyLoader.Load(path)[3].FactionKeys.TuningOf(1);
+            Assert.Equal((2, 9, 3000, 25, 1, 900), (t.BoreMax, t.BoreArmy, t.BoreGapTicks, t.BoreDigShort, t.BoreSites, t.BoreMinCash));
+        }
+        finally { File.Delete(path); }
+        string bad = Write(text.Replace("[faction.directorate]\n", "[faction.directorate]\nbore_sites = 3\n"));
+        try { Assert.ThrowsAny<Exception>(() => DifficultyLoader.Load(bad)); }
+        finally { File.Delete(bad); }
+    }
+
+    [Fact]
     public void FactionTuningKeysAreReadValidatedAndDefaultToTheConstants()
     {
         var real = TestWorld.Tiers[3].FactionKeys;
