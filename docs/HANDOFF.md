@@ -1,17 +1,28 @@
-# Handoff: Session 40 — confirm D-290..D-293; then the remaining map rows (Ash Plains), M13-39, or open choice
-Last commit: `docs: Session 39 handoff` on `integ-s39` (PR to main; merged by the lead once the cluster suite was green — owner allowed it). Check it merged.
-Where things stand: session 39 stopped the Directorate AI buying Bores and took the strength back with a Rocket salvo nerf (D-290: 24-row MAD 14.7 -> 11.9),
-fixed the Expedition ladder (D-291), nudged the Authority tier 5 (D-292, 5 v 1 72 %, target 90 not reached), let a rich Directorate with an income edge grow
-production (D-293, Super hard Directorate 68 -> 79 %), and added the par-time medal (D-289). docs/balance/s39_balance.md. Decisions up to D-293. Open questions: none.
+# Handoff: Session 40 CHECKPOINT (session still running or cut off) — map balance screens on the cluster
+Last commit: `docs: session 40 checkpoint` on `integ-s40` (pushed, no PR yet). main = e162498 (session 39).
+Where things stand: owner confirmed D-290..D-293 (2026-11-22, commit 9495d3e). Owner's ask: "use the cluster ... map side or AI side changes or unit
+changes, just finish the balance issues". On integ-s40: M13-39 fix (a18d0f1, AI: no power-short sales), M13-40 fix (674270b, sim: harvester steps off a
+dock cell), grow_bags key (4390655, default = old behaviour; NOT set anywhere: Authority grow_bags made it weaker, Rust Auth v LB 72 -> 66, ladder 5 v 1
+76 -> 68). Full suite on 4390655 in the cloud: Sim 1919 (+2 skip), Game 2209 (+2 skip), AI 422 (+1), Net 175, Llm 174, Scripting 438, Tools 67, 0 failed.
 
-## Start here (shown to the user as the plan; nothing starts until they say go)
-1. Laptop: `git checkout main; git pull`, rebuild. Owner to confirm D-290..D-293 (numbers in USER_CHECKS session 39).
-2. Remaining table outliers (s39 table): Authority v Directorate Ash 13 % / Mountains 36 %, Directorate v Expedition Glass 18 % / Ash 76 %, Directorate v
-   Left Behind Rust 20 %, Authority v LB Rust 73 %, LB v Expedition Ash 28 % / Glass 34 %. Cause on Ash/Mountains (s39 trace): Directorate waves reach the
-   mid-row Authority base ~2 000 ticks earlier; levers to try: map-side (a barrier on the middle row, start_row_shift), an Authority early-defence AI change.
-3. M13-39: the rich enemy-less Directorate test rig sells its Reactor Vents into a power collapse once it buys no Bores; check real games.
-4. Authority tier 5 v 1 to 90 %: needs an AI code change (data keys top out ~72-75 %).
-5. Then: two-PC LAN test (M9-15), Expedition play-test (M7-14), voice log (M10-27).
+## Session 40 screen results so far (64 games per row, variant v same seeds; laptop k3s-cluster `claude/rts/s40/`, outputs /work/out/<job>)
+- Baseline b40 = main e162498, 128 games: reproduces the s39 table (MAD 11.9, 13 rows in 40-60). Baseline b41 = 4390655 (with the two fixes): running.
+- **Ore richness is the Ash Plains lever** (v40a a1: ash_fields_per_start 4 -> 3, extra_fields 4 -> 2): Auth v Dir 13 -> 35, Dir v Exp 76 -> 61, Auth v Exp
+  50 -> 63, others +-6; 6-row MAD 14.0 -> 10.3. Less ore: Authority and LB up, Directorate down. v41a re-measures a1 on 4390655 with a3 (extra 0) and a4
+  (+ density_min 3).
+- **Rust Belt road_grid 0** (v40a r1): Dir v LB 19 -> 31, Dir v Exp 60 -> 51, Auth v Dir 45 -> 51; 6-row MAD 13.3 -> 9.9. Candidate.
+- No use: shipments floor 200 / decay 100 / value 1000 (e1-e3: Glass rows barely move, Rust Auth v Exp worse), Ash rough 90 (a2), Mountains rough 100 (m1),
+  Glass density_max 8 (g1), no ash damage (h2: 24-row MAD 12.8 -> 11.8, small), Glass shallow 0 (g2, Exp stronger).
+- Running when the laptop dropped (results on /work/out): v41a (gb + a1/a3/a4), v41b (Rust more ore r2/r3, Glass more ore g5/g6, Mountains less ore
+  m2), v41c (Expedition: decay 100 + Glide Tank health x1.15 / Skimmer x1.10 on its 12 rows). Read with
+  `python3 /work/in/s39/cmp39.py /work/out/v41a,/work/out/v41b,/work/out/v41c /work/out/b41` and `python3 /work/in/s40/tab40.py /work/out/b41`.
+
+## Start here
+1. Read the running screens (above). Pick per-biome ore/road settings (Ash a1-ish, Rust r1 and/or more ore, Glass/Mountains from v41b), combine, run the
+   full 24-row table at 128 games on the combined data (b40.sh pattern with a variant tag), iterate once.
+2. Glass Coast Dir v Exp (16-18 %) has not moved with any lever yet; v41b g5/g6 and v41c are the next reads.
+3. Land: cluster campaign sweep (sim fix M13-40 changes campaign games), PR integ-s40, merge on owner OK.
+4. Authority tier 5 v 1 to 90 % (task left): tier units do not help (grow_bags); needs another idea.
 
 ## Half-finished work
 - Nothing in code. Cluster outputs on /work/out (b39 baseline, v39b..v39h variants, e39 handicap, sw39 sweep, t39 suite); jobs self-delete.
