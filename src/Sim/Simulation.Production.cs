@@ -327,6 +327,9 @@ public sealed partial class Simulation
 
     /// <summary>S19 (M13-15): what a delivery of <paramref name="amount"/> credits is worth to <paramref name="player"/> after the handicap
     /// (rounded to the nearest credit; unchanged at 100 percent).</summary>
+    /// <summary>s39 (M13-38): the player's handicap percent (100 = none), for the AI's view.</summary>
+    internal int HandicapPercentOf(byte player) => player < _players.HandicapPercent.Length ? _players.HandicapPercent[player] : SimSetup.DefaultHandicap;
+
     internal int HandicapIncome(byte player, int amount)
     {
         int h = _players.HandicapPercent[player];

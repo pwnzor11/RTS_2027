@@ -111,7 +111,11 @@ public class M4AiTests(ITestOutputHelper log)
     {
         // a rich economy so the schedule, not the money, decides: the AI must build both gates and field tier-2/3 units
         Assert.True(Tier(3).UseUpgrades, "tier climbing is on at tier-3 difficulty");
-        var rig = new TierRig(f, Tier(3) with { AttackThreshold = 500 }, r =>
+        // s39 (D-290): with no Bore purchases this rich, enemy-less rig spends into a power collapse (sold Reactor Vents) and never builds the
+        // tier-3 gate (follow-up M13-39); the Directorate case keeps the former Bore default so the schedule, not that collapse, is tested.
+        var profile = Tier(3) with { AttackThreshold = 500 };
+        if (f == Faction.Directorate) profile = AI.Tests.Directorate.DirectorateMatch.WithBores(profile);
+        var rig = new TierRig(f, profile, r =>
         {
             CellCoord yard = r.Yard(0);
             r.SpawnHarvester(0, f, yard);

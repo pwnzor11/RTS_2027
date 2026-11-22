@@ -83,6 +83,52 @@ public class DifficultyLoaderTests
     }
 
     [Fact]
+    public void AdaptRichKeysAreOffByDefaultAndRead()   // s39 M13-38
+    {
+        var d = Rts.Data.FactionTuning.Default;
+        Assert.Equal((0, 3), (d.AdaptRichCash, d.AdaptRichMax));
+        string text = File.ReadAllText(DifficultyLoader.PathBesideRules(TestWorld.RulesDir)).Replace("\r\n", "\n");
+        var shipped = DifficultyLoader.Load(DifficultyLoader.PathBesideRules(TestWorld.RulesDir))[3].FactionKeys;
+        Assert.Equal(2000, shipped.TuningOf(1).AdaptRichCash);   // s39: on for the Directorate (applies only with a handicap above 100)
+        Assert.Equal(0, shipped.TuningOf(0).AdaptRichCash);
+        string path = Write(text.Replace("[faction.authority]\n", "[faction.authority]\nadapt_rich_cash = 2000\nadapt_rich_max = 4\n"));
+        try
+        {
+            var t = DifficultyLoader.Load(path)[3].FactionKeys.TuningOf(0);
+            Assert.Equal((2000, 4), (t.AdaptRichCash, t.AdaptRichMax));
+        }
+        finally { File.Delete(path); }
+        string bad = Write(text.Replace("[faction.directorate]\n", "[faction.directorate]\nadapt_rich_max = 1\n"));
+        try { Assert.ThrowsAny<Exception>(() => DifficultyLoader.Load(bad)); }
+        finally { File.Delete(bad); }
+    }
+
+    [Fact]
+    public void BoreKeysAreReadAndDefaultToTheFormerConstants()   // s39 M13-37
+    {
+        var d = Rts.Data.FactionTuning.Default;
+        Assert.Equal((5, 4, 1500, 15, 0, 200), (d.BoreMax, d.BoreArmy, d.BoreGapTicks, d.BoreDigShort, d.BoreSites, d.BoreMinCash));
+        Assert.Equal(Rts.AI.Recruit.DirectorateTactics.MaxBoresBuilt, d.BoreMax);
+        Assert.Equal(Rts.AI.Recruit.DirectorateTactics.ArmyBeforeBore, d.BoreArmy);
+        Assert.Equal(Rts.AI.Recruit.DirectorateTactics.BoreGapTicks, d.BoreGapTicks);
+        Assert.Equal(Rts.AI.Recruit.DirectorateTactics.DigShortCells, d.BoreDigShort);
+        Assert.Equal(Rts.AI.Recruit.DirectorateTactics.BoreCushion, d.BoreMinCash);
+        string text = File.ReadAllText(DifficultyLoader.PathBesideRules(TestWorld.RulesDir)).Replace("\r\n", "\n");
+        Assert.Equal(0, DifficultyLoader.Load(DifficultyLoader.PathBesideRules(TestWorld.RulesDir))[3].FactionKeys.TuningOf(1).BoreMax);   // D-290
+        string edited = text.Replace("[faction.authority]\n", "[faction.authority]\nbore_max = 2\nbore_army = 9\nbore_gap_ticks = 3000\nbore_dig_short = 25\nbore_sites = 1\nbore_min_cash = 900\n");
+        string path = Write(edited);
+        try
+        {
+            var t = DifficultyLoader.Load(path)[3].FactionKeys.TuningOf(0);
+            Assert.Equal((2, 9, 3000, 25, 1, 900), (t.BoreMax, t.BoreArmy, t.BoreGapTicks, t.BoreDigShort, t.BoreSites, t.BoreMinCash));
+        }
+        finally { File.Delete(path); }
+        string bad = Write(text.Replace("[faction.authority]\n", "[faction.authority]\nbore_sites = 3\n"));
+        try { Assert.ThrowsAny<Exception>(() => DifficultyLoader.Load(bad)); }
+        finally { File.Delete(bad); }
+    }
+
+    [Fact]
     public void FactionTuningKeysAreReadValidatedAndDefaultToTheConstants()
     {
         var real = TestWorld.Tiers[3].FactionKeys;
@@ -138,9 +184,11 @@ public class DifficultyLoaderTests
             Assert.True(shared.RespondToAttacks);
             Assert.False(shared.ForFaction(Authority).RespondToAttacks);
             Assert.True(shared.ForFaction(1).RespondToAttacks);
-            Assert.Equal(shared.AttackThreshold, shared.ForFaction(Authority).AttackThreshold);
+            if (t < 4) Assert.Equal(shared.AttackThreshold, shared.ForFaction(Authority).AttackThreshold);   // s39 D-292: tier 5 sets its own
             Assert.Equal(shared.Repair, shared.ForFaction(Authority).Repair);
+            Assert.Equal(t < 3, shared.ForFaction(4).RespondToAttacks);   // s39 D-291: Expedition tiers 4-5 without the flag
         }
+        Assert.Equal((4, 14), (TestWorld.LoadedTiers[4].ForFaction(Authority).HarvesterTarget, TestWorld.LoadedTiers[4].ForFaction(Authority).AttackThreshold));
         Assert.Same(TestWorld.LoadedTiers[0], TestWorld.LoadedTiers[0].ForFaction(Authority));
     }
 

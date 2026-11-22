@@ -47,6 +47,11 @@ internal sealed class DirectorateTactics : IFactionTactics
     public const int ArmyBeforeAgitprop = 6;   // ASSUMED (M3-10)
     private const int CleanSearchRadius = 6, TransitReorderTicks = 600, SupportSlack = 2;
 
+    private readonly Rts.Data.FactionTuning _tune;
+
+    /// <summary>s39: Bore levers from the profile (null = the defaults, which equal the constants above).</summary>
+    public DirectorateTactics(Rts.Data.FactionTuning? tune = null) { _tune = tune ?? Rts.Data.FactionTuning.Default; }
+
     private int _bore = -1, _agitprop = -1;
     private int _mapW, _mapH;
     private int _dugOrders, _boresBought, _lastBoreBuy = -BoreGapTicks;
@@ -138,10 +143,10 @@ internal sealed class DirectorateTactics : IFactionTactics
         // an Agitprop for the wave: one at a time
         if (_agitprop >= 0 && army >= ArmyBeforeAgitprop && k.Support.Count == 0 && k.Buildable(ProductionCategory.Vehicle, _agitprop))
             return _agitprop;
-        if (_bore < 0 || army < ArmyBeforeBore || k.Harvesters.Count == 0) return -1;
-        if (k.Bores.Count > 0 || _boresBought >= MaxBoresBuilt || ForwardCount(k) >= MaxForward) return -1;
-        if (_tick - _lastBoreBuy < BoreGapTicks || !k.Buildable(ProductionCategory.Vehicle, _bore)) return -1;
-        if (k.Hud.Cash + k.Hud.Stored < k.Rules.Vehicles[_bore].Cost + BoreCushion) return -1;
+        if (_bore < 0 || army < _tune.BoreArmy || k.Harvesters.Count == 0) return -1;
+        if (k.Bores.Count > 0 || _boresBought >= _tune.BoreMax || ForwardCount(k) >= MaxForward) return -1;
+        if (_tick - _lastBoreBuy < _tune.BoreGapTicks || !k.Buildable(ProductionCategory.Vehicle, _bore)) return -1;
+        if (k.Hud.Cash + k.Hud.Stored < k.Rules.Vehicles[_bore].Cost + _tune.BoreMinCash) return -1;
         _boresBought++;
         _lastBoreBuy = _tick;
         return _bore;
@@ -165,13 +170,15 @@ internal sealed class DirectorateTactics : IFactionTactics
     /// yard, shifted sideways for later ones), odd n beside the ore field (or halfway to the target when no field is known).</summary>
     private CellCoord Site(RecruitKnowledge k, CellCoord goal, int n)
     {
+        if (_tune.BoreSites == 1) n = 2 * n + 1;   // s39 bore_sites 1: ore field only (falls back to halfway when no field is known)
+        else if (_tune.BoreSites == 2) n = 2 * n;   // s39 bore_sites 2: enemy side only
         if (n % 2 == 1)
         {
             if (_haveField) return Clamp(new CellCoord(_field.X + Math.Sign(k.Yard.X - _field.X) * 2, _field.Y + Math.Sign(k.Yard.Y - _field.Y) * 2));
         }
         long dx = k.Yard.X - goal.X, dy = k.Yard.Y - goal.Y;
         long len = Math.Max(1, (long)Rts.Sim.Numerics.LeptonMath.ISqrt((ulong)(dx * dx + dy * dy)));
-        int back = n % 2 == 1 ? (int)(len / 2) : DigShortCells;
+        int back = n % 2 == 1 ? (int)(len / 2) : _tune.BoreDigShort;
         int side = n / 2 * 4 * (n / 2 % 2 == 0 ? 1 : -1);
         int x = (int)(goal.X + dx * back / len - dy * side / len), y = (int)(goal.Y + dy * back / len + dx * side / len);
         return Clamp(new CellCoord(x, y));

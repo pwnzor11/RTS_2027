@@ -94,7 +94,7 @@ projectile_speed = 0  # ASSUMED (M3-07)
 warhead = "dir_meltdown_blast"
 
 [dir_rocket_salvo]
-damage = 90  # ASSUMED (M3-07)
+damage = 84  # (tune) s39 M13-37 D-290: 90 -> 84 with the AI Bore stop, assumed — confirm (was ASSUMED (M3-07))
 range = 2048  # ASSUMED (M3-07)
 min_range = 512  # ASSUMED (M3-07)
 rate_of_fire = 60  # ASSUMED (M3-07)

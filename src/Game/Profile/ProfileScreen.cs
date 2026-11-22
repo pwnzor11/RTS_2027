@@ -8,6 +8,7 @@ using Rts.Game.Render;
 using Rts.Game.Screens;
 using Rts.Game.Ui;
 using Rts.Game.Ui.Fonts;
+using Rts.Scripting;
 
 namespace Rts.Game.Profile;
 
@@ -24,7 +25,23 @@ public sealed class ProfileScreen : IScreen
     public ProfileScreen(GameServices services)
     {
         _s = services;
-        _lines = ProfileModel.Lines(PlayerProfile.Load(ProfileRecorder.PathFor(services)));
+        _lines = ProfileModel.Lines(PlayerProfile.Load(ProfileRecorder.PathFor(services)), ParLookup(services));
+    }
+
+    /// <summary>The par time of each shipped mission (D-289), read from data/missions; a mission that does not load has no par.</summary>
+    private static Func<string, int> ParLookup(GameServices services)
+    {
+        var pars = new Dictionary<string, int>(StringComparer.Ordinal);
+        string missions = Path.Combine(CampaignFlow.DataDir(services), "missions");
+        if (Directory.Exists(missions))
+        {
+            foreach (string folder in Directory.EnumerateDirectories(missions))
+            {
+                try { pars[Path.GetFileName(folder)] = MissionLoader.Load(folder).ParSeconds; }
+                catch (Exception e) when (e is InvalidDataException or IOException) { }
+            }
+        }
+        return id => pars.TryGetValue(id, out int par) ? par : 0;
     }
 
     /// <inheritdoc />

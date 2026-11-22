@@ -2138,3 +2138,46 @@ overran the Left Behind and the Expedition on Rust Belt (75 %). Screens of its a
 Authority, attack_threshold 6/11 and expansion_tick 7200 did less; the cap took the 12 Authority rows from a mean distance of 14.6 to 12.7 points (s37:
 10.4) on 128 games and keeps the ladder (3 v 2 46.8, 4 v 3 64.8, 5 v 3 62.8 on 80 games). Over all 24 cross rows the tier-3 table is about 14.4 from 50 %
 (s37 13.3): a small step back for a working ladder. **Status:** confirmed by the owner (2026-11-21, session 38).
+
+### Session 39 confirmations · 2026-11-21
+The owner confirmed every session-37 "assumed — confirm" item ("confirm all"): D-280 (unit package numbers), D-281 (map and AI fixes for mid-row
+starts and the Expedition lane), D-283 / D-284 (objective guidance and the briefing/text style). Their status lines stand as confirmed from this date.
+
+### D-289 · 2026-11-21 · Session 39: par times = the bot's tier-3 median win x 2.5 (Q-73, M10-19)
+**Decision:** a mission may carry `par_seconds` in its `[mission]` table (60-36000; missing = no par). The Profile page and the debrief award a
+"Par time" medal when the best winning time is at or under par. Values = the session-37 suggestion (docs/balance/s37_balance.md): the bot's tier-3
+median win time x 2.5, rounded up to a whole minute, for 12 missions; auth_02, dir_03, dir_04 and lb_03 end on a timer and get no par. **Why:** owner
+answer to Q-73 (s39). The par is derived from the stored best time, so no profile format change. **Alternatives:** bot time + 50 % (Q-73 b; far too
+tight for a person: auth_01 would be 5 min against the owner's 8:35), hand-set times (deferred until play). **Status:** confirmed by the owner (2026-11-21).
+
+### D-290 · 2026-11-21 · Session 39: the Directorate AI buys no Bores; Rocket Truck salvo damage 90 -> 84 (M13-37)
+**Decision:** new per-faction difficulty keys for the Directorate Bore AI (`bore_max`, `bore_army`, `bore_gap_ticks`, `bore_dig_short`, `bore_sites`,
+`bore_min_cash`; defaults = the former DirectorateTactics constants). Shipped: `[faction.directorate] bore_max = 0` (the AI never buys a Bore; a human
+player's Bores are unchanged) and `dir_rocket_salvo damage = 84` (was 90). **Why:** owner: fix the AI's Bore use first, fall back to a cap, pair it with a
+small Directorate nerf. Five placement/timing variants were screened on the 12 Directorate cross rows (64 games): Hatch beside the ore field only,
+digging 30 cells short of the target, 1 Bore, a later and richer first Bore; none made Bores pay (every one left the Directorate weaker than no Bores at
+all, which is +15..32 points for it). So the AI stops buying them, and the strength it gains is taken back with a weapon nerf (Rocket Truck cost +1 %
+overshot against the Expedition and left the Authority rows at 20 %, the known cliff). 128 games per row: the 12 Directorate rows' mean distance from 50 %
+goes 19.2 -> 13.6, rows inside 40-60 % 4 -> 7 (docs/balance/s39_balance.md). Left as they were: Authority v Directorate on Ash Plains (11 -> 13 %),
+Directorate v Left Behind Rust (26.5 -> 19.7 %) and Directorate v Expedition Glass Coast (20.9 -> 17.9 %). **Alternatives:** damage 80 (MAD 17.0) or 86,
+cost 980 (MAD 22.5), Directorate tier-3 attack_ratio_pct 170/200 (no effect on the map rows), bore_sites = 1 (MAD 16.0). **Status:** assumed — confirm.
+
+### D-291 · 2026-11-21 · Session 39: the Expedition AI plays tiers 4-5 without respond_to_attacks (M4-16)
+**Decision:** `[faction.expedition.tier4]` and `[faction.expedition.tier5]` set `respond_to_attacks = 0`. **Why:** the Expedition ladder was flat and
+draw-heavy at tiers 4-5 (128 games, rust_belt: 4 v 3 40.9 %, 5 v 3 65.9 %, 5 v 1 60.3 % with 43 % draws). Screens of harvester_target 3, attack_threshold
+10 and expansion_tick 1200 at tiers 4-5 moved nothing; the flag that inverted the Authority ladder (D-287) is the cause here too. After: 4 v 3 94.6 %
+(80 games), 5 v 3 94.0 %, 5 v 1 96.7 % (draws 5-9 %), 5 v 4 58.5 % (still 68 % draws: both sides play the same way). The tier-3 table is untouched.
+**Alternatives:** tier 5 only (4 v 3 stays 41 %). **Status:** assumed — confirm.
+
+### D-292 · 2026-11-21 · Session 39: Authority tier 5 harvester_target 4, attack_threshold 14 (M4-16)
+**Decision:** `[faction.authority.tier5] harvester_target = 4`, `attack_threshold = 14`. **Why:** the target is tier 5 v tier 1 = 90 %; it was 66.7 %
+(128 games). Screened at tier 5 (64 games, then 128 for the best): harvester_target 3, attack_threshold 10, expansion_tick 1200 and three combinations.
+None reaches 90: the best, this pair, gives 5 v 1 72.0 %, 5 v 3 58.1 %, 5 v 4 64.8 % (96 games; was 52.2). The ladder climbs a little more; the tier-1
+fixed build order stays hard to beat with data keys alone (an AI code change is the next lever). **Status:** assumed — confirm.
+
+### D-293 · 2026-11-21 · Session 39: a rich AI with an income edge grows production (M13-38)
+**Decision:** new per-faction keys `adapt_rich_cash` (0 = off) and `adapt_rich_max` (default 3): when funds reach adapt_rich_cash AND the side's own
+handicap is above 100 % (the "Super hard (LLM)" edge), AdaptBuild skips the army gate and grows factories and barracks to adapt_rich_max. Shipped for the
+Directorate: `adapt_rich_cash = 2000`. Normal games (handicap 100) cannot change: checked game for game on two rows. **Why:** the Directorate gained least
+from the D-286 edge: not storage or supply (traces), but production (one Assembly Bore, AdaptBuild waits for an army of 30 its waves never keep). After,
+tier 5 at +50 % v plain tier 5: 67.8 % (s38, 64 games) -> 79.0 % (128); at +25 %: 53.3 -> 68.9 %. **Status:** assumed — confirm.

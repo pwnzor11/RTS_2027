@@ -54,4 +54,7 @@ internal sealed class DirectorateRecruitFaction : RecruitFaction
     }
 
     public override IFactionTactics? CreateTactics() => new DirectorateTactics();
+
+    /// <summary>s39: the profile's per-faction Bore levers (FactionTuning; defaults = the former constants).</summary>
+    public override IFactionTactics? CreateTactics(Rts.Data.DifficultyProfile profile) => new DirectorateTactics(profile.FactionKeys.TuningOf((int)Faction.Directorate));
 }

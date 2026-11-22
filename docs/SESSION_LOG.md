@@ -707,3 +707,17 @@ map-side landed. Item 8: "Super hard (LLM)" preset (D-286), calibrated at +50 %.
 (biomes.toml is read next to Tools.dll) and were rerun; a build waited behind pods that wait for it (paused the series); `attack_ratio_pct` is inert for
 the Authority.
 **Next session should:** see HANDOFF.
+
+## Session 39 · 2026-11-21 (Directorate Bores off + nerf; Expedition and Authority ladders; Directorate handicap edge; par times)
+**Goal:** owner: resume; confirm all s37 assumed items; do the map-specific balance (read s38 leftovers, trace harvesters, Bore AI + Directorate nerf,
+Authority/Expedition ladders), M13-38, par times ("bot time x"), everything on the cluster (queen cordoned), cluster full suite, PR, merge when green;
+branch-delete commands; clear stale pods.
+**Done:** cleared 20 finished jobs / ~300 pods. Leftovers read (layout 2 stays off; map variants mixed). Harvester trace (helper): losses are a symptom of
+lopsided mid-map fights on mirror_x maps. Bore levers as data keys; no placement paid, so the AI buys none + Rocket salvo 84 (D-290): 24-row MAD 14.7 -> 11.9,
+13 rows in 40-60 %. Expedition tiers 4-5 respond_to_attacks off (D-291), Authority tier 5 h4/t14 (D-292, 5 v 1 72 %, 90 not reached). M13-38: production
+growth with an income edge only (D-293, +50 % 67.8 -> 79.0 %). Par-time medal (D-289). docs/balance/s39_balance.md.
+**Decisions:** D-289..D-293; s37 items confirmed. **Questions:** Q-73 answered; none new.
+**Helpers:** 3 (Sonnet: harvester trace ~36 min, M13-38 ~44 min; Haiku: par medal ~5 min); no fix rounds. About 13 000 cluster games.
+**Problems / notes:** push access to k3s-cluster-code was refused (cluster scripts stay laptop-only); pods of new jobs sat Pending behind over-committed
+parallelism (sum of --par > slots): keep the sum <= ~36 without queen; a weapons.toml edit by script emptied the file once (restored from git before commit).
+**Next session should:** see HANDOFF.

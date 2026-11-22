@@ -68,6 +68,19 @@
 #                           Left Behind Mother Rig that packs, drives off and unpacks elsewhere. While on: packed rigs and other deployable vehicles do not count
 #                           as an enemy army for the "beaten" test, the last cell where one was seen is chased for a while, blocks where enemy structures stood
 #                           are swept first, stale blocks are revisited after 3000 instead of 6000 ticks, and sweep parties are 3 units instead of 6.
+# s39 (M13-38, per faction, optional): production growth for a side that banks money. s39 trace of the Directorate at +50 % (--handicap-a 150): the funds never sat at the
+#   storage cap (the 4 989 peak is the starting cash) nor at the supply cap; the side banked 2-3k for 1 000+ ticks while one Bore and one Muster Hatch worked, because
+#   AdaptBuild waits for an army of 30 and stops at 2 of each. Off by default (no game changes); 2000 / 3 took the +50 % side from 15-13-4 to 24-6-2 (16 seeds, Rust Belt).
+#   adapt_rich_cash  0..100000 (default 0 = off): funds (cash + stored) at which AdaptBuild skips army_before_adapt and grows production (factory first) to adapt_rich_max.
+#                    s39: only for a side whose handicap is above 100 (an income edge, e.g. the Super hard (LLM) preset), so normal games never change.
+#   adapt_rich_max   2..6 (default 3): the most barracks and factories a rich side grows to (never below adapt_max_production).
+# s39 (M13-37, per faction, optional; only the Directorate has Bores): the Directorate Bore levers of DirectorateTactics; missing keys = the former constants.
+#   bore_max        0..20 (default 5): Bores bought over a whole game; 0 = the AI never buys one.
+#   bore_army       0..1000 (default 4): army size before the first Bore.
+#   bore_gap_ticks  0..100000 (default 1500): ticks between Bore purchases.
+#   bore_dig_short  0..60 (default 15): cells short of the enemy target at which the enemy-side Hatch is dug.
+#   bore_sites      0..2 (default 0): 0 = alternate enemy side and ore field, 1 = ore field only, 2 = enemy side only.
+#   bore_min_cash   0..100000 (default 200): funds needed beyond the Bore's cost before one is bought.
 
 [faction.authority]
 harass_min_army = 30
@@ -86,9 +99,13 @@ respond_to_attacks = 0  # (tune) s38
 
 [faction.authority.tier5]
 respond_to_attacks = 0  # (tune) s38
+harvester_target = 4  # (tune) s39 D-292: tier 5 v 1 66.7 -> 72.0 %, 5 v 4 52 -> 65 % (128 games); assumed — confirm
+attack_threshold = 14  # (tune) s39 D-292 (with harvester_target 4)
 
 [faction.directorate]
 harass_min_army = 14
+bore_max = 0  # (tune) s39 M13-37 D-290: the AI bought ~3 Bores a game and lost them; no Hatch placement paid (docs/balance/s39_balance.md), assumed — confirm
+adapt_rich_cash = 2000  # (tune) s39 M13-38: with an income edge the Directorate grows a 3rd factory/barracks instead of banking (Dir t5 +50 % v t5: 46 -> 75 %, 32 games)
 
 # D-265 (s31): the Directorate tier-3 AI waits for a bigger edge before it attacks (shared veteran table: 110). On 128 games with destructible props
 # every Directorate row moved toward 50 % (Dir v Exp 70 -> 62, Auth v Dir 45 -> 48, Exp v Dir glass 58 -> 54, Dir v LB 47 -> 48); docs/balance/s31_balance.md.
@@ -107,6 +124,14 @@ army_cap_until_tick = 3600  # (tune) s15: the early snowball only; a longer cap 
 [faction.expedition]
 harass_min_army = 30
 aa_cap_before_air = 10   # (tune) s32 D-266: at most 10 anti-air-only vehicles until an enemy aircraft is seen (Dir v Exp rust 62 -> 58 %, docs/balance/s32_balance.md)
+
+# M4-16 s39 (D-291): the Expedition ladder was flat and draw-heavy at tiers 4-5 (5 v 1 60 %, 43 % draws; 4 v 3 41 %, 128 games, rust_belt) for the same
+# reason as the Authority's (D-287): respond_to_attacks. Off at tiers 4-5: 5 v 1 96 %, 5 v 3 94 %, 4 v 3 95 %, draws 3-9 % (docs/balance/s39_balance.md).
+[faction.expedition.tier4]
+respond_to_attacks = 0  # (tune) s39, assumed — confirm
+
+[faction.expedition.tier5]
+respond_to_attacks = 0  # (tune) s39, assumed — confirm
 
 [recruit]
 tier = 1
