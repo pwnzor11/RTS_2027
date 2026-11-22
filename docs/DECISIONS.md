@@ -2121,7 +2121,7 @@ lobby accept 10-200 %; a human slot stays at 100 % or below. `ai match --handica
 opponent; D-285 showed directives cannot add strength, so the strength comes from an honest, labelled edge and the LLM gives it its personality.
 Calibration (docs/balance/s38_balance.md): tier 5 at +50 % v plain tier 5 wins 85-100 % of decided games for the Authority, Left Behind and Expedition,
 68 % for the Directorate (its army is capped by something other than money; follow-up). **Alternatives:** LLM on tier 5 with no edge (no stronger than
-tier 5), an LLM-chosen build plan (new design round, later). **Status:** owner asked for it (session 38, "full send"); assumed — confirm the +50 %.
+tier 5), an LLM-chosen build plan (new design round, later). **Status:** confirmed by the owner (2026-11-21, session 38).
 
 ### D-287 · 2026-11-21 · Session 38: the Authority AI plays tiers 2-5 without respond_to_attacks (M4-16)
 **Decision:** `[faction.authority.tier2]` .. `[faction.authority.tier5]` set `respond_to_attacks = 0` (data/ai/difficulty.toml; the key is now allowed
@@ -2130,11 +2130,11 @@ in per-faction tier tables, src/Data/DifficultyLoader.cs). Other factions keep t
 mop-up, bag growth ...) as the cause (tier 2 without it: 76 %); the wave regroup is the largest of several leaks. After: 2 v 1 70.9, 3 v 2 50.0, 4 v 3
 59.1, 5 v 4 52.2, 5 v 3 56.3, 5 v 1 66.7. Keeping tier 3 unchanged was screened and rejected (3 v 2 falls to 19 %). Campaign sweep 45/45 meets D-222.
 **Alternatives:** fix the regroup and keep the flag (several leaks, no single sub-fix worked), flag off for every faction (moves the Directorate/LB
-ladders and Authority v LB to 93 %). **Status:** session 38, owner: "unpark and fix it"; assumed — confirm.
+ladders and Authority v LB to 93 %). **Status:** confirmed by the owner (2026-11-21, session 38).
 
 ### D-288 · 2026-11-21 · Session 38: Authority tier-3 army cap 40 (M4-16, M13-37)
 **Decision:** `[faction.authority.tier3] army_cap = 40` (data/ai/difficulty.toml). **Why:** with respond_to_attacks off (D-287) the tier-3 Authority
 overran the Left Behind and the Expedition on Rust Belt (75 %). Screens of its allowed tier-3 keys (64 games, six rows): attack_ratio_pct is inert for the
 Authority, attack_threshold 6/11 and expansion_tick 7200 did less; the cap took the 12 Authority rows from a mean distance of 14.6 to 12.7 points (s37:
 10.4) on 128 games and keeps the ladder (3 v 2 46.8, 4 v 3 64.8, 5 v 3 62.8 on 80 games). Over all 24 cross rows the tier-3 table is about 14.4 from 50 %
-(s37 13.3): a small step back for a working ladder. **Status:** session 38; assumed — confirm (the owner can ask for D-287 without the cap, or neither).
+(s37 13.3): a small step back for a working ladder. **Status:** confirmed by the owner (2026-11-21, session 38).
