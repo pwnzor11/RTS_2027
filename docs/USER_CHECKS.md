@@ -625,3 +625,14 @@ Pull main first (your folder was on eda0f0e3, two sessions behind), then rebuild
 - **Authority AI:** a tier 4 or 5 Authority AI should now feel clearly harder than tier 1-2 (before, higher Authority tiers played worse). It no longer
   garrisons ruins or builds the Blockhouse at tiers 2-5.
 - **Balance (confirmed by the owner, 2026-11-21):** D-287 / D-288 change only the Authority AI (data/ai/difficulty.toml), no unit numbers.
+
+## Session 39 (2026-11-21)
+- **Par time medal (D-289):** Profile page (main menu) mission lines show the par next to the best time, e.g. "best 7:12, par 8:00" for auth_01; win
+  auth_01 in 8:00 or less and the debrief lists "Par time" as a new medal. auth_02, dir_03, dir_04 and lb_03 have no par (they end on a timer).
+- **Directorate AI (D-290):** a Directorate AI no longer builds Bores (no Hatches dug near your base); its Rocket Trucks hit a little softer (salvo 84,
+  was 90). Your own Directorate Bores work as before.
+- **Expedition AI tier 4-5 (D-291):** should feel clearly harder than tier 3 and finish games instead of stalling into draws.
+- **Super hard (LLM) Directorate (D-293):** with "Edge +50%" the Directorate AI now builds a third Assembly Bore / Muster Hatch when it banks 2 000 or
+  more; a normal (no edge) Directorate AI plays exactly as before.
+- **Balance numbers to confirm:** D-290 (Bores off, salvo 84), D-291, D-292 (Authority tier 5 harvester_target 4, attack_threshold 14), D-293
+  (adapt_rich_cash 2000), all in data/ai/difficulty.toml and data/rules/weapons.toml.

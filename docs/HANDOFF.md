@@ -1,28 +1,34 @@
-# Handoff: Session 39 — confirm D-286..D-288; then map-specific balance (Directorate Bores, Mountains/Ash harvesters) or open choice
-Last commit: `docs: owner confirmed D-286..D-288` on `land/s38-confirm` (PR to main; session 38 merged as PR #119, session 37 as PR #118). Check it merged.
-Where things stand: session 38 merged session 37 (cluster suite green), fixed the inverted Authority AI ladder (D-287: respond_to_attacks off for
-Authority tiers 2-5; D-288: tier-3 army cap 40), added the "Super hard (LLM)" skirmish preset (D-286: tier 5 + LLM + 150 % edge), measured layout 2
-(stays off), the Expedition AI at every tier and the draws, and screened the map-specific balance rows (nothing map-side landed).
-docs/balance/s38_balance.md. Decisions up to D-288. Open questions: Q-73 (deferred).
+# Handoff: Session 40 — confirm D-290..D-293; then the remaining map rows (Ash Plains), M13-39, or open choice
+Last commit: `docs: Session 39 handoff` on `integ-s39` (PR to main; merged by the lead once the cluster suite was green — owner allowed it). Check it merged.
+Where things stand: session 39 stopped the Directorate AI buying Bores and took the strength back with a Rocket salvo nerf (D-290: 24-row MAD 14.7 -> 11.9),
+fixed the Expedition ladder (D-291), nudged the Authority tier 5 (D-292, 5 v 1 72 %, target 90 not reached), let a rich Directorate with an income edge grow
+production (D-293, Super hard Directorate 68 -> 79 %), and added the par-time medal (D-289). docs/balance/s39_balance.md. Decisions up to D-293. Open questions: none.
 
 ## Start here (shown to the user as the plan; nothing starts until they say go)
-1. Laptop: `git checkout main; git pull`, rebuild. D-286..D-288 were confirmed by the owner (2026-11-21).
-2. Still to confirm from s37: D-280/D-281 numbers, briefing style, par times, voice log (M10-27).
-3. Balance next (M13-37): (a) Directorate Bore AI (buys ~3 a game, loses 94-99 %; removing them = +5..33 points for the Directorate) with a matching
-   Directorate nerf in small steps (Rocket Truck cost is a cliff); (b) why Directorate harvesters survive and Authority ones die on Mountains/Ash
-   (trace a few games: raid paths, refinery placement); (c) Authority tier 5 v 1 is 66.7 % (target 90); (d) Expedition ladder flat/draw-heavy at 4-5.
-4. Then: M13-38 (Directorate gains little from a handicap edge), the two-PC LAN test (M9-15), the Expedition play-test (M7-14).
+1. Laptop: `git checkout main; git pull`, rebuild. Owner to confirm D-290..D-293 (numbers in USER_CHECKS session 39).
+2. Remaining table outliers (s39 table): Authority v Directorate Ash 13 % / Mountains 36 %, Directorate v Expedition Glass 18 % / Ash 76 %, Directorate v
+   Left Behind Rust 20 %, Authority v LB Rust 73 %, LB v Expedition Ash 28 % / Glass 34 %. Cause on Ash/Mountains (s39 trace): Directorate waves reach the
+   mid-row Authority base ~2 000 ticks earlier; levers to try: map-side (a barrier on the middle row, start_row_shift), an Authority early-defence AI change.
+3. M13-39: the rich enemy-less Directorate test rig sells its Reactor Vents into a power collapse once it buys no Bores; check real games.
+4. Authority tier 5 v 1 to 90 %: needs an AI code change (data keys top out ~72-75 %).
+5. Then: two-PC LAN test (M9-15), Expedition play-test (M7-14), voice log (M10-27).
 
 ## Half-finished work
-- Cluster jobs still running at wrap-up (outputs on /work/out, jobs self-delete): l238 (layout-2 table, Mountains/Ash rows missing), vp38 (map variants,
-  noisy). Read with `python3 /work/in/tally.py /work/out/l238/l2` and `python3 /work/in/cmp.py /work/out/vp38` through the toolbox pod.
-- Branches to delete on GitHub: land/s38-confirm, integ-s38, wp/s38-llm, wp/s38-ladder, wp/s38-glass, integ-s37, wp/s37-mtn, plus the older list
-  (land/s36, land/s36-confirm, integ-s36, wp/s36-*, integ-s32m, integ-s33, land/s33*, wp/s33-*, land/s34-*, wp/s34-kitbash, land/s35-*).
+- Nothing in code. Cluster outputs on /work/out (b39 baseline, v39b..v39h variants, e39 handicap, sw39 sweep, t39 suite); jobs self-delete.
+- Branches to delete on GitHub after merge: integ-s39, plus the list given to the owner in session 39 if not yet run.
 
 ## Waiting on the user
-- Voice log (M10-27). Two-PC LAN test (M9-15). Expedition play-test (M7-14). Branch deletes.
+- Confirm D-290..D-293. Voice log (M10-27). Two-PC LAN test (M9-15). Expedition play-test (M7-14). Branch deletes.
 
 ## How to run this session
+- Session 39 lessons:
+  - Keep the sum of all running jobs' parallelism at or below the free slots (~36 with queen cordoned): over-committed jobs left new jobs' pods
+    Pending for 30+ min (scheduler backoff); a --fast build landed on a Pi once slots were freed. Lower parallelism, then restore.
+  - Per-faction AI constants as data keys (FactionTuning init properties, defaults = the constants) make every variant data-only: one build per round.
+    `/work/in/s39/mkvar.py` appends a missing `[section]` (e.g. `[faction.expedition.tier4]`).
+  - Screen 64, decide 128 by running chunks 4-7 of the same seeds in a second job (`CH=$((CH + 4))` after the `read` line, see v39f.sh); cmp39.py merges dirs.
+  - A per-tier ladder change touches no tier-3 table row and a handicap-gated change touches no handicap-100 game: prove it with two rows game for game.
+  - Never write a file from a Python expression that can be None (`open(p,'w')` truncates first); a weapons.toml edit emptied the file once.
 - Session 38 lessons:
   - Check for an unlanded earlier session before planning: session 37 ran overnight on integ-s37 and sat as a draft PR (`git ls-remote origin '*s37*'`,
     open PRs). Read its HANDOFF from that branch. Undraft with `gh api -X POST repos/pwnzor11/RTS_2027/pulls/<n>/ccr/ready_for_review` (GraphQL is blocked).

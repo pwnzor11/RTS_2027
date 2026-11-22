@@ -5,14 +5,10 @@ file cited after each question. Recommendations are the lead's, from the researc
 
 ## Open
 
-- 🟡 **Q-73 · 2026-11-12 · Par-time medals (M10-19).** No campaign mission has a par time, so the Profile page awards only Completed and
-  No losses. Options: **(a) the owner gives a par time per mission (recommended; the bot walk-through times in docs/balance are a starting point)**;
-  (b) par = the bot's tier-3 win time + 50 %; (c) no par medal.
-  **Deferred (owner, s24):** par times are set after the owner starts playing the campaign; nothing to do until then.
-
-
+(none)
 
 ## Answered
+- Q-73 · 2026-11-21 · Owner (s39): par = the bot's tier-3 median win x 2.5 (the s37 table), none on timer missions → D-289.
 - Q-86 · 2026-11-17 · Owner: love the draft; keep 144 pages; keep the spoiler handling and the cover; accept the design 13/14 pages as written → D-271.
 - Q-85 · 2026-11-16 · Owner (b): dress rustbelt_m2 fully and retune the tier-5 bots → D-262.
 - Q-84 · 2026-11-13 · Owner: name Grapeshot; art pilot now → D-236.

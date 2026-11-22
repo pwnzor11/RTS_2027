@@ -184,9 +184,11 @@ public class DifficultyLoaderTests
             Assert.True(shared.RespondToAttacks);
             Assert.False(shared.ForFaction(Authority).RespondToAttacks);
             Assert.True(shared.ForFaction(1).RespondToAttacks);
-            Assert.Equal(shared.AttackThreshold, shared.ForFaction(Authority).AttackThreshold);
+            if (t < 4) Assert.Equal(shared.AttackThreshold, shared.ForFaction(Authority).AttackThreshold);   // s39 D-292: tier 5 sets its own
             Assert.Equal(shared.Repair, shared.ForFaction(Authority).Repair);
+            Assert.Equal(t < 3, shared.ForFaction(4).RespondToAttacks);   // s39 D-291: Expedition tiers 4-5 without the flag
         }
+        Assert.Equal((4, 14), (TestWorld.LoadedTiers[4].ForFaction(Authority).HarvesterTarget, TestWorld.LoadedTiers[4].ForFaction(Authority).AttackThreshold));
         Assert.Same(TestWorld.LoadedTiers[0], TestWorld.LoadedTiers[0].ForFaction(Authority));
     }
 
