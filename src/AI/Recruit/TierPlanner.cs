@@ -415,7 +415,7 @@ internal sealed class TierPlanner
             && build.StepsOf(sw) < 1) build.Extend(sw);
         // s39 (M13-38): adapt_rich_cash (0 = off): funds this high mean the production lines, not the income, limit the AI (a handicapped or lucky side banks
         // 2-3k while one Bore and one Hatch work), so the army gate is skipped and production grows to adapt_rich_max, the factory first.
-        bool rich = tune.AdaptRichCash > 0 && funds >= tune.AdaptRichCash;
+        bool rich = tune.AdaptRichCash > 0 && funds >= tune.AdaptRichCash && k.View.Handicap > Rts.Sim.Core.SimSetup.DefaultHandicap;   // only a side with an income edge
         if (!(tune.AdaptBuild < 0 ? _p.AdaptBuild : tune.AdaptBuild == 1) || (armyWait && k.Army.Count < tune.ArmyBeforeAdapt && !rich)) return;
         if (rich)
         {

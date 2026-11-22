@@ -72,6 +72,7 @@
 #   storage cap (the 4 989 peak is the starting cash) nor at the supply cap; the side banked 2-3k for 1 000+ ticks while one Bore and one Muster Hatch worked, because
 #   AdaptBuild waits for an army of 30 and stops at 2 of each. Off by default (no game changes); 2000 / 3 took the +50 % side from 15-13-4 to 24-6-2 (16 seeds, Rust Belt).
 #   adapt_rich_cash  0..100000 (default 0 = off): funds (cash + stored) at which AdaptBuild skips army_before_adapt and grows production (factory first) to adapt_rich_max.
+#                    s39: only for a side whose handicap is above 100 (an income edge, e.g. the Super hard (LLM) preset), so normal games never change.
 #   adapt_rich_max   2..6 (default 3): the most barracks and factories a rich side grows to (never below adapt_max_production).
 # s39 (M13-37, per faction, optional; only the Directorate has Bores): the Directorate Bore levers of DirectorateTactics; missing keys = the former constants.
 #   bore_max        0..20 (default 5): Bores bought over a whole game; 0 = the AI never buys one.
@@ -101,6 +102,7 @@ respond_to_attacks = 0  # (tune) s38
 
 [faction.directorate]
 harass_min_army = 14
+adapt_rich_cash = 2000  # (tune) s39 M13-38: with an income edge the Directorate grows a 3rd factory/barracks instead of banking (Dir t5 +50 % v t5: 46 -> 75 %, 32 games)
 
 # D-265 (s31): the Directorate tier-3 AI waits for a bigger edge before it attacks (shared veteran table: 110). On 128 games with destructible props
 # every Directorate row moved toward 50 % (Dir v Exp 70 -> 62, Auth v Dir 45 -> 48, Exp v Dir glass 58 -> 54, Dir v LB 47 -> 48); docs/balance/s31_balance.md.
