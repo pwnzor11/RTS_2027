@@ -68,6 +68,11 @@
 #                           Left Behind Mother Rig that packs, drives off and unpacks elsewhere. While on: packed rigs and other deployable vehicles do not count
 #                           as an enemy army for the "beaten" test, the last cell where one was seen is chased for a while, blocks where enemy structures stood
 #                           are swept first, stale blocks are revisited after 3000 instead of 6000 ticks, and sweep parties are 3 units instead of 6.
+# s39 (M13-38, per faction, optional): production growth for a side that banks money. s39 trace of the Directorate at +50 % (--handicap-a 150): the funds never sat at the
+#   storage cap (the 4 989 peak is the starting cash) nor at the supply cap; the side banked 2-3k for 1 000+ ticks while one Bore and one Muster Hatch worked, because
+#   AdaptBuild waits for an army of 30 and stops at 2 of each. Off by default (no game changes); 2000 / 3 took the +50 % side from 15-13-4 to 24-6-2 (16 seeds, Rust Belt).
+#   adapt_rich_cash  0..100000 (default 0 = off): funds (cash + stored) at which AdaptBuild skips army_before_adapt and grows production (factory first) to adapt_rich_max.
+#   adapt_rich_max   2..6 (default 3): the most barracks and factories a rich side grows to (never below adapt_max_production).
 # s39 (M13-37, per faction, optional; only the Directorate has Bores): the Directorate Bore levers of DirectorateTactics; missing keys = the former constants.
 #   bore_max        0..20 (default 5): Bores bought over a whole game; 0 = the AI never buys one.
 #   bore_army       0..1000 (default 4): army size before the first Bore.

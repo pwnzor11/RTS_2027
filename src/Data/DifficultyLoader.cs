@@ -96,7 +96,7 @@ public static class DifficultyLoader
 
     /// <summary>S29: the per-faction build lever keys allowed besides <c>harass_min_army</c>.</summary>
     private static readonly string[] TuningKeys = ["army_before_tech", "army_before_adapt", "adapt_cash", "adapt_max_production", "tier2_gate_tick", "adapt_build",
-        "bore_max", "bore_army", "bore_gap_ticks", "bore_dig_short", "bore_sites", "bore_min_cash"];   // s39: Directorate Bore levers
+        "bore_max", "bore_army", "bore_gap_ticks", "bore_dig_short", "bore_sites", "bore_min_cash", "adapt_rich_cash", "adapt_rich_max"];   // s39: Directorate Bore levers
 
     private static FactionAiKeys ParseFactions(TomlTable root, string file, List<RulesProblem> problems, List<(int Faction, int Tier, TomlTable Table, string Id)> overrides)
     {
@@ -125,6 +125,8 @@ public static class DifficultyLoader
                 Opt(t, id, "tier2_gate_tick", 0, 100000, d.Tier2GateTick, file, problems) ?? d.Tier2GateTick,
                 Opt(t, id, "adapt_build", 0, 1, d.AdaptBuild, file, problems) ?? d.AdaptBuild)
             {
+                AdaptRichCash = Opt(t, id, "adapt_rich_cash", 0, 100000, d.AdaptRichCash, file, problems) ?? d.AdaptRichCash,
+                AdaptRichMax = Opt(t, id, "adapt_rich_max", 2, 6, d.AdaptRichMax, file, problems) ?? d.AdaptRichMax,
                 BoreMax = Opt(t, id, "bore_max", 0, 20, d.BoreMax, file, problems) ?? d.BoreMax,
                 BoreArmy = Opt(t, id, "bore_army", 0, 1000, d.BoreArmy, file, problems) ?? d.BoreArmy,
                 BoreGapTicks = Opt(t, id, "bore_gap_ticks", 0, 100000, d.BoreGapTicks, file, problems) ?? d.BoreGapTicks,
