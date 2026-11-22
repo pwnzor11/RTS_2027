@@ -123,6 +123,14 @@ army_cap_until_tick = 3600  # (tune) s15: the early snowball only; a longer cap 
 harass_min_army = 30
 aa_cap_before_air = 10   # (tune) s32 D-266: at most 10 anti-air-only vehicles until an enemy aircraft is seen (Dir v Exp rust 62 -> 58 %, docs/balance/s32_balance.md)
 
+# M4-16 s39 (D-291): the Expedition ladder was flat and draw-heavy at tiers 4-5 (5 v 1 60 %, 43 % draws; 4 v 3 41 %, 128 games, rust_belt) for the same
+# reason as the Authority's (D-287): respond_to_attacks. Off at tiers 4-5: 5 v 1 96 %, 5 v 3 94 %, 4 v 3 95 %, draws 3-9 % (docs/balance/s39_balance.md).
+[faction.expedition.tier4]
+respond_to_attacks = 0  # (tune) s39, assumed — confirm
+
+[faction.expedition.tier5]
+respond_to_attacks = 0  # (tune) s39, assumed — confirm
+
 [recruit]
 tier = 1
 decision_interval_ticks = 60
