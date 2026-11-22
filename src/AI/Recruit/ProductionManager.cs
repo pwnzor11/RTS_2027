@@ -69,7 +69,7 @@ internal sealed class ProductionManager
             _first = true;
         }
         // M4-12: tier-2/3 types join the bags once the player reaches that tech tier (tier 2+ profiles: the Recruit keeps its M3 mix)
-        if (_tier != null && _tier.Profile.RespondToAttacks && k.View.Tier > _bagTier) GrowBags(k);
+        if (_tier != null && _tier.Profile.GrowsBags && k.View.Tier > _bagTier) GrowBags(k);   // s40: grow_bags key (default: respond_to_attacks)
         if (!k.HaveYard) return;
         Rally = RallyCell(k);
         if (Bias.HasRallyCell && k.View.IsPassable(Bias.RallyCell, Locomotion.Tracked)) Rally = Bias.RallyCell;   // M5-02: a turtle defends where the commander says

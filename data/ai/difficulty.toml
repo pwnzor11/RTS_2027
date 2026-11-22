@@ -81,6 +81,9 @@
 #   bore_dig_short  0..60 (default 15): cells short of the enemy target at which the enemy-side Hatch is dug.
 #   bore_sites      0..2 (default 0): 0 = alternate enemy side and ore field, 1 = ore field only, 2 = enemy side only.
 #   bore_min_cash   0..100000 (default 200): funds needed beyond the Bore's cost before one is bought.
+# s40 (M4-16, shared tier or per faction and tier, optional): grow_bags 0/1 (missing = follow respond_to_attacks): tier-2/3 unit types join the
+#   production bags once the tech tier is reached. Before s40 only respond_to_attacks did this, so the Authority (tiers 2-5, D-287) and the Expedition
+#   (tiers 4-5, D-291) fought with tier-1 units all game.
 
 [faction.authority]
 harass_min_army = 30
