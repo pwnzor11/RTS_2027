@@ -413,8 +413,19 @@ internal sealed class TierPlanner
             build.Extend(air);
         if (_p.Superweapons && _faction.SuperweaponBuildingId is string sw && SuperweaponUsable(k.Rules, sw) && lateOk && (k.View.Tier >= 3 || !up)
             && build.StepsOf(sw) < 1) build.Extend(sw);
-        if (!(tune.AdaptBuild < 0 ? _p.AdaptBuild : tune.AdaptBuild == 1) || (armyWait && k.Army.Count < tune.ArmyBeforeAdapt)) return;
-        if (funds >= tune.AdaptCash)
+        // s39 (M13-38): adapt_rich_cash (0 = off): funds this high mean the production lines, not the income, limit the AI (a handicapped or lucky side banks
+        // 2-3k while one Bore and one Hatch work), so the army gate is skipped and production grows to adapt_rich_max, the factory first.
+        bool rich = tune.AdaptRichCash > 0 && funds >= tune.AdaptRichCash;
+        if (!(tune.AdaptBuild < 0 ? _p.AdaptBuild : tune.AdaptBuild == 1) || (armyWait && k.Army.Count < tune.ArmyBeforeAdapt && !rich)) return;
+        if (rich)
+        {
+            int max = Math.Max(tune.AdaptMaxProduction, tune.AdaptRichMax);
+            int bar = build.StepsOf(_faction.BarracksId), fac = build.StepsOf(_faction.FactoryId);
+            if (fac < max && fac <= bar) build.Extend(_faction.FactoryId);
+            else if (bar < max) build.Extend(_faction.BarracksId);
+            else if (fac < max) build.Extend(_faction.FactoryId);
+        }
+        else if (funds >= tune.AdaptCash)
         {
             if (build.StepsOf(_faction.BarracksId) < tune.AdaptMaxProduction) build.Extend(_faction.BarracksId);
             else if (build.StepsOf(_faction.FactoryId) < tune.AdaptMaxProduction) build.Extend(_faction.FactoryId);
