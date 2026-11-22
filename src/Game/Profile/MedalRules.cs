@@ -11,22 +11,20 @@ public static class MedalRules
     public static MissionRecord ForWin(int ticks, int ownUnitsLost) =>
         new(true, ownUnitsLost <= 0, Math.Max(1, ticks / Rts.Sim.Core.SimConstants.TicksPerSecond));
 
-    // PENDING Q-M10C-1: no par medal. No campaign mission carries a par time yet (data/missions/*/mission.toml and data/campaigns/*.toml
-    // have no such value), so the owner has to say what the par times are, or whether to derive them. Add a Par medal here then.
-
-    /// <summary>The medal names a record shows, in display order.</summary>
-    public static IReadOnlyList<string> Names(MissionRecord record)
+    /// <summary>The medal names a record shows, in display order. Par time needs the mission's par (0 = the mission has none, D-289).</summary>
+    public static IReadOnlyList<string> Names(MissionRecord record, int parSeconds = 0)
     {
         var names = new List<string>();
         if (record.Completed) names.Add("Completed");
         if (record.NoLosses) names.Add("No losses");
+        if (record.Completed && parSeconds > 0 && record.BestSeconds > 0 && record.BestSeconds <= parSeconds) names.Add("Par time");
         return names;
     }
 
     /// <summary>The medals this win earned that the player did not have before (for the debrief).</summary>
-    public static IReadOnlyList<string> NewNames(MissionRecord before, MissionRecord win)
+    public static IReadOnlyList<string> NewNames(MissionRecord before, MissionRecord win, int parSeconds = 0)
     {
         MissionRecord merged = before.Merge(win);
-        return Names(merged).Where(n => !Names(before).Contains(n)).ToList();
+        return Names(merged, parSeconds).Where(n => !Names(before, parSeconds).Contains(n)).ToList();
     }
 }

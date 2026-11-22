@@ -52,6 +52,44 @@ public sealed class ProfileTests : IDisposable
     }
 
     [Fact]
+    public void Par_time_is_awarded_at_the_par_second_and_not_one_over()
+    {
+        MissionRecord onPar = MedalRules.ForWin(20 * 480, 0);
+        MissionRecord oneOver = MedalRules.ForWin(20 * 481, 0);
+        Assert.Contains("Par time", MedalRules.Names(onPar, 480));
+        Assert.Equal(new[] { "Completed", "No losses", "Par time" }, MedalRules.Names(onPar, 480));
+        Assert.DoesNotContain("Par time", MedalRules.Names(oneOver, 480));
+    }
+
+    [Fact]
+    public void Par_time_is_never_awarded_without_a_par()
+    {
+        MissionRecord fast = MedalRules.ForWin(20 * 10, 0);
+        Assert.DoesNotContain("Par time", MedalRules.Names(fast));
+        Assert.DoesNotContain("Par time", MedalRules.Names(fast, 0));
+        Assert.DoesNotContain("Par time", MedalRules.NewNames(default, fast, 0));
+    }
+
+    [Fact]
+    public void New_par_medal_is_reported_once_for_the_debrief()
+    {
+        MissionRecord slow = MedalRules.ForWin(20 * 600, 0);
+        Assert.Equal(new[] { "Completed", "No losses" }, MedalRules.NewNames(default, slow, 480));
+        Assert.Equal(new[] { "Par time" }, MedalRules.NewNames(slow, MedalRules.ForWin(20 * 400, 0), 480));
+        Assert.Empty(MedalRules.NewNames(MedalRules.ForWin(20 * 400, 0), MedalRules.ForWin(20 * 450, 0), 480));
+    }
+
+    [Fact]
+    public void Page_line_shows_par_next_to_the_best_time()
+    {
+        PlayerProfile p = PlayerProfile.Empty.WithMission("auth_01", MedalRules.ForWin(20 * 432, 0));
+        IReadOnlyList<string> lines = ProfileModel.Lines(p, id => id == "auth_01" ? 480 : 0);
+        Assert.Contains("  auth_01: Completed, No losses, Par time   best 7:12, par 8:00", lines);
+        IReadOnlyList<string> plain = ProfileModel.Lines(p);
+        Assert.Contains("  auth_01: Completed, No losses   best 7:12", plain);
+    }
+
+    [Fact]
     public void Round_trips_through_a_file()
     {
         PlayerProfile p = PlayerProfile.Empty

@@ -83,6 +83,9 @@ public sealed class MissionDef
     /// <summary>Schema 2: type ids added to the campaign tech set when the mission is won (<c>[unlocks_on_win] tech</c>).</summary>
     public IReadOnlyList<string> UnlocksOnWin { get; init; } = Array.Empty<string>();
 
+    /// <summary>The par time in seconds (<c>par_seconds</c> in [mission], 60..36000, D-289), or 0 = no par (the timer missions and the tutorial).</summary>
+    public int ParSeconds { get; init; }
+
     /// <summary>The mission's folder (<c>data/missions/&lt;id&gt;</c>) as loaded; empty for a hand-made definition. S19 MIS-12 uses it to find the data folder's Archive.</summary>
     public string Folder { get; init; } = "";
 

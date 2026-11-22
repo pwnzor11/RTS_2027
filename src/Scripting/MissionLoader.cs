@@ -81,6 +81,7 @@ public static class MissionLoader
             Id = id, Folder = folder, Title = Str(m, "title"), MapFile = Str(m, "map"), ScriptFile = Str(m, "script"), BriefingFile = Str(m, "briefing"),
             Seed = (ulong)Int(m, "seed"), Players = players, Zones = zones, Actors = actors,
             Schema = schema,
+            ParSeconds = m.ContainsKey("par_seconds") ? IntIn(m, "par_seconds", 60, 36000) : 0,
             Act = schema >= 2 && m.ContainsKey("act") ? IntIn(m, "act", 1, 4) : 0,
             Faction = schema >= 2 && m.ContainsKey("faction") ? Faction(m) : "",
             Next = schema >= 2 && m.ContainsKey("next") ? NextIds(m) : System.Array.Empty<string>(),

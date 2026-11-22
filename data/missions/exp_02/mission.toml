@@ -11,6 +11,8 @@ briefing = "briefing.md"
 seed = 2027
 schema = 2
 act = 2
+# D-289: bot tier-3 median win x 2.5 (docs/balance/s37_balance.md)
+par_seconds = 1020
 faction = "expedition"
 next = "exp_03"
 locale = "locale.toml"
