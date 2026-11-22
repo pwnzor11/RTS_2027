@@ -71,6 +71,7 @@ internal static class HarvestMission
         if (eco.Cargo[i] >= capacity) return Assign(sim, store, kind, i, MissionKind.Return);
 
         CellCoord cur = store.Position[i].ToCell();
+        if (ClearDockFor(sim, store, kind, i, cur, me)) return 1;   // M13-40: never sit on a dock cell a returning harvester is waiting to enter
         EconomyRules er = rules.Economy;
         switch ((HarvestStep)eco.HarvestState[i])
         {
@@ -153,6 +154,39 @@ internal static class HarvestMission
                 return interval;
             }
         }
+    }
+
+    /// <summary>
+    /// M13-40: a harvester that stands on the dock cell of one of its refineries (it has just unloaded and found nothing to do, or is
+    /// blocked head-on by the returner that holds the dock claim) steps onto a free neighbour while a returning harvester holds that dock's
+    /// claim and waits to enter. Without it the returner (Enter, n == goal) waits for ever for a cell an idle or head-on harvester never
+    /// leaves, and the side's income freezes. True while a step off the dock is being driven.
+    /// </summary>
+    private static bool ClearDockFor(Simulation sim, MobileStore store, ActorKind kind, int i, CellCoord cur, EntityId me)
+    {
+        EconomyState eco = sim.Economy;
+        byte player = store.Player[i];
+        BuildingStore b = sim.Buildings;
+        bool onDock = false;
+        for (int k = 1; k < b.Capacity && !onDock; k++)
+        {
+            if (!b.Slots.IsIndexAlive(k)) continue;
+            EntityId rid = b.Slots.IdOf(k);
+            if (!RefineryOk(sim, rid, player) || DockCell(sim, rid) != cur) continue;
+            EntityId occ = eco.DockOccupant[k];
+            if (occ.IsNone || occ == me || !sim.Units.Slots.IsAlive(occ)) continue;
+            int o = occ.Index;
+            if (sim.Units.Mission[o] == MissionKind.Return && eco.DockTarget[o] == rid && (DockStep)eco.DockState[o] == DockStep.Enter) onDock = true;
+        }
+        if (!onDock) return false;
+        for (int d = 0; d < 8; d++)
+        {
+            if (!Occupancy.NeighbourFree(sim, kind, store, i, cur, d)) continue;
+            var to = new CellCoord(cur.X + Occupancy.Dx[d], cur.Y + Occupancy.Dy[d]);
+            MoveMission.StepToward(sim, store, kind, i, to);
+            return true;
+        }
+        return false;
     }
 
     /// <summary>True for a map cell holding harvestable resource.</summary>
