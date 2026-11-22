@@ -317,7 +317,7 @@ public sealed class LobbyScreen : IScreen
             int slot = i;
             if (d.Slots[slot].Slot.Kind == SlotKind.Closed) continue;
             rows.Add(new(() => LobbyText.OptionsLine(_host!.Data.Slots[slot], slot), null, null,
-                new MenuButton(UiText.Get(UiText.OptHandicapButton), () => _host!.UpdateSlot(slot, s => s with { Handicap = SlotOptions.NextHandicap(s.Handicap) })),
+                new MenuButton(UiText.Get(UiText.OptHandicapButton), () => _host!.UpdateSlot(slot, s => s with { Handicap = SlotOptions.NextHandicap(s.Handicap, s.Kind == SlotKind.Ai) })),
                 new MenuButton(UiText.Get(UiText.OptCreditsButton), () => _host!.UpdateSlot(slot, s => s with { CreditsPreset = SlotOptions.NextCredits(s.CreditsPreset) })),
                 new MenuButton(UiText.Get(UiText.OptStartButton), () => _host!.UpdateSlot(slot, s => s with { SmallArmy = !s.SmallArmy }))));
         }

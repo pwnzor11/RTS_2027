@@ -13,7 +13,11 @@ internal static class TestWorld
 {
     public static readonly string RulesDir = RulesLocator.FindRulesDir(AppContext.BaseDirectory)!;
     public static readonly RuleSet Rules = RulesLoader.Load(RulesDir);
-    public static readonly IReadOnlyList<DifficultyProfile> Tiers = DifficultyLoader.Load(DifficultyLoader.PathBesideRules(RulesDir));
+    /// <summary>The tiers exactly as data/ai/difficulty.toml loads them (with the per-faction tier overrides).</summary>
+    public static readonly IReadOnlyList<DifficultyProfile> LoadedTiers = DifficultyLoader.Load(DifficultyLoader.PathBesideRules(RulesDir));
+
+    /// <summary>The shared tier tables for the capability tests, which are written against the shared flags: the Authority tier overrides (M4-16 s38: respond_to_attacks off) are stripped.</summary>
+    public static readonly IReadOnlyList<DifficultyProfile> Tiers = LoadedTiers.Select(p => p.WithoutFactionOverride((int)Rts.Sim.Rules.Faction.Authority)).ToList();
 
     public static int Vehicle(string id) => Array.FindIndex(Rules.Sim.Vehicles.ToArray(), v => v.Id == id);
 

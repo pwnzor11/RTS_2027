@@ -19,4 +19,23 @@ public static class SetupText
 
     /// <summary>Marker next to a spectator row's player name.</summary>
     public const string SpectatorTag = "LLM";
+
+    /// <summary>S38 (M5-15): caption of the button that turns an AI slot into the "Super hard (LLM)" preset.</summary>
+    public const string SuperHardButton = "Super";
+
+    /// <summary>S38 (M5-15): the name of the preset.</summary>
+    public const string SuperHardLabel = "Super hard (LLM)";
+
+    /// <summary>S38 (M5-15): one-line description of the preset for an edge of <paramref name="edgePercent"/> percent above normal.</summary>
+    public static string SuperHardDescription(int edgePercent) =>
+        $"Tier-5 AI led by the LLM commander, with +{edgePercent}% income and build speed";
+
+    /// <summary>S38 (M5-15): the description of the preset at <see cref="SlotOptions.SuperHardEdge"/>.</summary>
+    public static string SuperHardHint => SuperHardDescription(SlotOptions.SuperHardEdge - SlotOptions.NoHandicap);
+
+    /// <summary>S38 (M5-15): what the options row hint says about the preset button.</summary>
+    public const string SuperHardOptionsHint = "(HC handicap/edge, Cash credits, Army units, Super = super hard LLM)";
+
+    /// <summary>S38 (M5-15): shown after the tier of an AI slot that has an income edge, e.g. "+50%".</summary>
+    public static string EdgeTag(int handicap) => handicap > SlotOptions.NoHandicap ? $" +{handicap - SlotOptions.NoHandicap}%" : "";
 }

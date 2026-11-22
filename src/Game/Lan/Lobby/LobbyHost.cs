@@ -267,6 +267,7 @@ public sealed class LobbyHost
         if (cur.IsTaken) Kick(cur.Peer, "The host closed your slot.");
         slots = _data.Slots.ToList();
         SkirmishSlot s = slots[index].Slot with { Kind = kind };
+        if (kind == SlotKind.Human) s = s with { Handicap = SlotOptions.ForHuman(s.Handicap) };   // S38 (M5-15): an edge above 100 is for AI slots only
         if (kind != SlotKind.Closed && slots.Where((x, i) => i != index && x.Slot.Kind != SlotKind.Closed).Any(x => x.Slot.Colour == s.Colour))
             s = s with { Colour = FreeColour(slots, index) };
         slots[index] = new LobbySlotState(s);

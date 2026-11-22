@@ -253,7 +253,7 @@ public sealed record GameSaveHeader
             {
                 int handicap = r.ReadByte(), credits = r.ReadByte();
                 bool army = r.ReadBoolean();
-                if (handicap < SimSetup.MinHandicap || handicap > 100) throw new InvalidDataException($"bad slot handicap {handicap}");
+                if (handicap < SimSetup.MinHandicap || handicap > SimSetup.MaxHandicap) throw new InvalidDataException($"bad slot handicap {handicap}");
                 if (credits >= SlotOptions.CreditsPresets.Count) throw new InvalidDataException($"bad slot credits preset {credits}");
                 withOptions.Add(slot with { Handicap = handicap, CreditsPreset = credits, SmallArmy = army });
             }

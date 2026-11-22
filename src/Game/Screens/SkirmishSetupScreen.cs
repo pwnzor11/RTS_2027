@@ -270,7 +270,8 @@ public sealed class SkirmishSetupScreen : IScreen
             rows.Add(new(() => OptionsText(slot), null, null,
                 new MenuButton(UiText.Get(UiText.OptHandicapButton), () => StepSlotHandicap(slot)),
                 new MenuButton(UiText.Get(UiText.OptCreditsButton), () => StepSlotCredits(slot)),
-                new MenuButton(UiText.Get(UiText.OptStartButton), () => ToggleSlotArmy(slot)))
+                new MenuButton(UiText.Get(UiText.OptStartButton), () => ToggleSlotArmy(slot)),
+                new MenuButton(SetupText.SuperHardButton, () => ApplySlotSuperHard(slot)))
             { WidthTexts = WidestOptionsTexts() });
         }
 
@@ -332,7 +333,7 @@ public sealed class SkirmishSetupScreen : IScreen
     // The highlighted slot says when its LLM commander has no key (it used to be appended to the row, which made the row grow).
     private string HintText() =>
         _panel is not null && _panel.Selected >= _firstSlotRow + _slots.Count && _panel.Selected < _firstSlotRow + 2 * _slots.Count
-            ? UiText.Get(UiText.OptHint)
+            ? (IsSuperHard(_slots[_panel.Selected - _firstSlotRow - _slots.Count]) ? SetupText.SuperHardHint : SetupText.SuperHardOptionsHint)
             : _panel is not null && _panel.Selected >= _firstSlotRow && _panel.Selected < _firstSlotRow + _slots.Count && NoKeyFor(_slots[_panel.Selected - _firstSlotRow])
             ? SetupText.NoKeyHint
             : IsSpectate ? "(no Human slot: you will watch)" : "(Kind Fac Tier Cmdr Team Col cycle each choice)";
@@ -348,7 +349,7 @@ public sealed class SkirmishSetupScreen : IScreen
         foreach (Faction f in RuleCounts.PlayableOrder)
             foreach (bool commander in new[] { false, true })
                 foreach (string tier in tierNames)
-                    texts.Add($"4 AI {(commander ? SetupText.CommanderLabel + " " : "")}{tier} {FactionName(f)} T4");
+                    texts.Add($"4 AI {(commander ? SetupText.CommanderLabel + " " : "")}{tier}{SetupText.EdgeTag(SlotOptions.AiHandicapSteps[^1])} {FactionName(f)} T4");
         return texts;
     }
 
@@ -364,6 +365,23 @@ public sealed class SkirmishSetupScreen : IScreen
     public static bool NeedsNoKeyNotice(SkirmishSlot before, SkirmishSlot after, bool hasKey) =>
         before.Kind == SlotKind.Ai && !before.Commander && after.Commander && !hasKey;
 
+    /// <summary>S38 (M5-15): true for an AI slot that is the "Super hard (LLM)" preset (top tier, commander, an edge above 100).</summary>
+    public static bool IsSuperHard(SkirmishSlot slot) =>
+        slot.Kind == SlotKind.Ai && slot.Commander && slot.AiTier >= SlotOptions.SuperHardTier && slot.Handicap > SlotOptions.NoHandicap;
+
+    /// <summary>S38 (M5-15): the slot as the "Super hard (LLM)" preset: tier 5, Commander on, Handicap = <see cref="SlotOptions.SuperHardEdge"/>.
+    /// Human and Closed slots come back unchanged.</summary>
+    public static SkirmishSlot ApplySuperHard(SkirmishSlot slot) =>
+        slot.Kind == SlotKind.Ai ? slot with { AiTier = SlotOptions.SuperHardTier, Commander = true, Handicap = SlotOptions.SuperHardEdge } : slot;
+
+    private void ApplySlotSuperHard(int i)
+    {
+        SkirmishSlot before = _slots[i];
+        _slots[i] = ApplySuperHard(before);
+        if (NeedsNoKeyNotice(before, _slots[i], _hasKey))
+            _s.Screens.Push(new NoticeScreen(_s, SetupText.NoKeyNoticeTitle, SetupText.NoKeyNotice));
+    }
+
     private void ToggleSlotCommander(int i)
     {
         SkirmishSlot before = _slots[i];
@@ -378,6 +396,7 @@ public sealed class SkirmishSetupScreen : IScreen
         string head = $"{index + 1} ";
         string tier = tierNames[Math.Clamp(slot.AiTier, 1, tierNames.Count) - 1];
         if (slot.Commander) tier = SetupText.CommanderLabel + " " + tier;
+        if (slot.Kind == SlotKind.Ai) tier += SetupText.EdgeTag(slot.Handicap);
         return slot.Kind switch
         {
             SlotKind.Closed => head + "Closed",
@@ -464,6 +483,7 @@ public sealed class SkirmishSetupScreen : IScreen
             for (int k = 0; k < _slots.Count; k++)
                 if (k != i && _slots[k].Kind == SlotKind.Human) _slots[k] = _slots[k] with { Kind = SlotKind.Ai };
         _slots[i] = _slots[i] with { Kind = next };
+        if (next == SlotKind.Human) _slots[i] = _slots[i] with { Handicap = SlotOptions.ForHuman(_slots[i].Handicap) };   // S38: an edge is for AI slots only
         if (next != SlotKind.Closed && _slots.Where((x, k) => k != i && x.Kind != SlotKind.Closed).Any(x => x.Colour == _slots[i].Colour))
             _slots[i] = _slots[i] with { Colour = FreeColour(_slots[i].Colour, i) };
         _error = "";
@@ -480,11 +500,11 @@ public sealed class SkirmishSetupScreen : IScreen
     private string OptionsText(int i) => OptionsLabel(_slots[i], i);
 
     private static IReadOnlyList<string> WidestOptionsTexts() =>
-        new[] { OptionsLabel(new SkirmishSlot(SlotKind.Ai, Faction.Authority, 1, 0, 0, false, 50, 3, true), 3) };
+        new[] { OptionsLabel(new SkirmishSlot(SlotKind.Ai, Faction.Authority, 1, 0, 0, false, 50, 3, true), 3), OptionsLabel(new SkirmishSlot(SlotKind.Ai, Faction.Authority, 1, 0, 0, false, SlotOptions.AiHandicapSteps[^1], 3, true), 3) };
 
     private void StepSlotHandicap(int i)
     {
-        if (_slots[i].Kind != SlotKind.Closed) _slots[i] = _slots[i] with { Handicap = SlotOptions.NextHandicap(_slots[i].Handicap) };
+        if (_slots[i].Kind != SlotKind.Closed) _slots[i] = _slots[i] with { Handicap = SlotOptions.NextHandicap(_slots[i].Handicap, _slots[i].Kind == SlotKind.Ai) };
     }
 
     private void StepSlotCredits(int i)

@@ -5,7 +5,7 @@ using Rts.Sim.Rules;
 namespace Rts.AI;
 
 /// <summary>One side of an AI-vs-AI game: an AI id, the difficulty profile it plays with and the faction it plays (default Authority).</summary>
-public sealed record AiSide(string AiId, DifficultyProfile Profile, Faction Faction = Faction.Authority)
+public sealed record AiSide(string AiId, DifficultyProfile Profile, Faction Faction = Faction.Authority, int Handicap = 100)
 {
     /// <summary>Label such as "skirmisher:veteran".</summary>
     public string Label => AiId + ":" + Profile.Id + (Faction == Faction.Authority ? "" : "/" + Faction.ToString().ToLowerInvariant());
