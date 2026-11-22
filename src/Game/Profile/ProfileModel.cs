@@ -8,14 +8,20 @@ namespace Rts.Game.Profile;
 public static class ProfileModel
 {
     /// <summary>The page lines: campaign medals, then skirmish records.</summary>
-    public static IReadOnlyList<string> Lines(PlayerProfile profile)
+    /// <param name="parOf">The par time in seconds of a mission id (0 or unknown = no par); null = no mission has a par.</param>
+    public static IReadOnlyList<string> Lines(PlayerProfile profile, Func<string, int>? parOf = null)
     {
         var lines = new List<string> { "Campaign medals" };
         if (profile.Missions.Count == 0) lines.Add("  None yet. Win a mission to earn the first.");
         foreach ((string id, MissionRecord r) in profile.Missions)
         {
-            string medals = MedalRules.Names(r).Count == 0 ? "no medals" : string.Join(", ", MedalRules.Names(r));
-            lines.Add("  " + id + ": " + medals + (r.BestSeconds > 0 ? "   best " + Clock(r.BestSeconds) : ""));
+            int par = parOf?.Invoke(id) ?? 0;
+            IReadOnlyList<string> names = MedalRules.Names(r, par);
+            string medals = names.Count == 0 ? "no medals" : string.Join(", ", names);
+            var times = new List<string>();
+            if (r.BestSeconds > 0) times.Add("best " + Clock(r.BestSeconds));
+            if (par > 0) times.Add("par " + Clock(par));
+            lines.Add("  " + id + ": " + medals + (times.Count > 0 ? "   " + string.Join(", ", times) : ""));
         }
 
         lines.Add("");

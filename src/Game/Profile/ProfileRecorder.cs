@@ -13,13 +13,14 @@ public static class ProfileRecorder
         s.SaveRoot is { } root ? Path.Combine(root, "profile.toml") : PlayerProfile.DefaultPath;
 
     /// <summary>Records a won campaign mission and returns the medals that are new, for the debrief.</summary>
-    public static IReadOnlyList<string> RecordMissionWin(string path, string missionId, int ticks, int ownUnitsLost)
+    /// <param name="parSeconds">The mission's par time (D-289), or 0 when it has none.</param>
+    public static IReadOnlyList<string> RecordMissionWin(string path, string missionId, int ticks, int ownUnitsLost, int parSeconds = 0)
     {
         PlayerProfile profile = PlayerProfile.Load(path);
         MissionRecord win = MedalRules.ForWin(ticks, ownUnitsLost);
         MissionRecord before = profile.Missions.TryGetValue(missionId, out MissionRecord old) ? old : default;
         profile.WithMission(missionId, win).Save(path);
-        return MedalRules.NewNames(before, win);
+        return MedalRules.NewNames(before, win, parSeconds);
     }
 
     /// <summary>Records a finished skirmish against the AI.</summary>
