@@ -102,6 +102,7 @@ respond_to_attacks = 0  # (tune) s38
 
 [faction.directorate]
 harass_min_army = 14
+bore_max = 0  # (tune) s39 M13-37 D-290: the AI bought ~3 Bores a game and lost them; no Hatch placement paid (docs/balance/s39_balance.md), assumed — confirm
 adapt_rich_cash = 2000  # (tune) s39 M13-38: with an income edge the Directorate grows a 3rd factory/barracks instead of banking (Dir t5 +50 % v t5: 46 -> 75 %, 32 games)
 
 # D-265 (s31): the Directorate tier-3 AI waits for a bigger edge before it attacks (shared veteran table: 110). On 128 games with destructible props

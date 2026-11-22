@@ -114,15 +114,16 @@ public class DifficultyLoaderTests
         Assert.Equal(Rts.AI.Recruit.DirectorateTactics.DigShortCells, d.BoreDigShort);
         Assert.Equal(Rts.AI.Recruit.DirectorateTactics.BoreCushion, d.BoreMinCash);
         string text = File.ReadAllText(DifficultyLoader.PathBesideRules(TestWorld.RulesDir)).Replace("\r\n", "\n");
-        string edited = text.Replace("[faction.directorate]\n", "[faction.directorate]\nbore_max = 2\nbore_army = 9\nbore_gap_ticks = 3000\nbore_dig_short = 25\nbore_sites = 1\nbore_min_cash = 900\n");
+        Assert.Equal(0, DifficultyLoader.Load(DifficultyLoader.PathBesideRules(TestWorld.RulesDir))[3].FactionKeys.TuningOf(1).BoreMax);   // D-290
+        string edited = text.Replace("[faction.authority]\n", "[faction.authority]\nbore_max = 2\nbore_army = 9\nbore_gap_ticks = 3000\nbore_dig_short = 25\nbore_sites = 1\nbore_min_cash = 900\n");
         string path = Write(edited);
         try
         {
-            var t = DifficultyLoader.Load(path)[3].FactionKeys.TuningOf(1);
+            var t = DifficultyLoader.Load(path)[3].FactionKeys.TuningOf(0);
             Assert.Equal((2, 9, 3000, 25, 1, 900), (t.BoreMax, t.BoreArmy, t.BoreGapTicks, t.BoreDigShort, t.BoreSites, t.BoreMinCash));
         }
         finally { File.Delete(path); }
-        string bad = Write(text.Replace("[faction.directorate]\n", "[faction.directorate]\nbore_sites = 3\n"));
+        string bad = Write(text.Replace("[faction.authority]\n", "[faction.authority]\nbore_sites = 3\n"));
         try { Assert.ThrowsAny<Exception>(() => DifficultyLoader.Load(bad)); }
         finally { File.Delete(bad); }
     }

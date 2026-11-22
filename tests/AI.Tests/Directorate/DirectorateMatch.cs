@@ -19,6 +19,18 @@ internal static class DirectorateMatch
 {
     public static readonly string Hatch = "dir_hatch";
 
+    /// <summary>s39 (D-290): the shipped Directorate AI buys no Bores (bore_max 0); tests of the Bore / Hatch / network code play the profile with
+    /// the former default (5 Bores a game) so that code stays covered.</summary>
+    public static Rts.Data.DifficultyProfile WithBores(Rts.Data.DifficultyProfile p)
+    {
+        Rts.Data.DifficultyProfile bp = p.ForFaction((int)Faction.Directorate);
+        Rts.Data.FactionAiKeys k = bp.FactionKeys;
+        var tuning = new Rts.Data.FactionTuning[4];
+        for (int i = 0; i < 4; i++) tuning[i] = k.Tuning is { } t && i < t.Length ? t[i] : Rts.Data.FactionTuning.Default;
+        tuning[1] = tuning[1] with { BoreMax = Rts.Data.FactionTuning.Default.BoreMax };
+        return p.WithFactionOverride((int)Faction.Directorate, bp with { FactionKeys = k with { Tuning = tuning } });
+    }
+
     public static DirectorateOutcome Play(MapData map, ulong seed, int ticks, Faction otherFaction = Faction.Authority, bool dirInSlot0 = true,
         int dirTier = 0, int otherTier = 0, string otherAi = "recruit")
     {
@@ -29,8 +41,9 @@ internal static class DirectorateMatch
         var sim = new Simulation(new SimSetup(seed, map, 2, rules, TestWorld.Rules.RulesHash) { Factions = factions });
         SkirmishStart.Apply(sim);
         var driver = new AiDriver(seed);
-        var dirAi = new RecruitAi(TestWorld.Tiers[dirTier]);
-        driver.Add(dir, dirAi, TestWorld.Tiers[dirTier]);
+        Rts.Data.DifficultyProfile dirProfile = WithBores(TestWorld.Tiers[dirTier]);   // s39 D-290: exercise the Bore code
+        var dirAi = new RecruitAi(dirProfile);
+        driver.Add(dir, dirAi, dirProfile);
         AiRegistry.TryCreate(otherAi, TestWorld.Tiers[otherTier], out IAiPlayer? foe);
         driver.Add(other, foe!, TestWorld.Tiers[otherTier]);
 
