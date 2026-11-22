@@ -99,6 +99,8 @@ respond_to_attacks = 0  # (tune) s38
 
 [faction.authority.tier5]
 respond_to_attacks = 0  # (tune) s38
+harvester_target = 4  # (tune) s39 D-292: tier 5 v 1 66.7 -> 72.0 %, 5 v 4 52 -> 65 % (128 games); assumed — confirm
+attack_threshold = 14  # (tune) s39 D-292 (with harvester_target 4)
 
 [faction.directorate]
 harass_min_army = 14
