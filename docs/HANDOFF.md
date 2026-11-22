@@ -1,14 +1,13 @@
 # Handoff: Session 39 — confirm D-286..D-288; then map-specific balance (Directorate Bores, Mountains/Ash harvesters) or open choice
-Last commit: `docs: Session 38 handoff` on `integ-s38` (PR to main; session 37 landed as PR #118 this session). Check it merged.
+Last commit: `docs: owner confirmed D-286..D-288` on `land/s38-confirm` (PR to main; session 38 merged as PR #119, session 37 as PR #118). Check it merged.
 Where things stand: session 38 merged session 37 (cluster suite green), fixed the inverted Authority AI ladder (D-287: respond_to_attacks off for
 Authority tiers 2-5; D-288: tier-3 army cap 40), added the "Super hard (LLM)" skirmish preset (D-286: tier 5 + LLM + 150 % edge), measured layout 2
 (stays off), the Expedition AI at every tier and the draws, and screened the map-specific balance rows (nothing map-side landed).
 docs/balance/s38_balance.md. Decisions up to D-288. Open questions: Q-73 (deferred).
 
 ## Start here (shown to the user as the plan; nothing starts until they say go)
-1. Session 38 PR merged? Laptop: `git checkout main; git pull`, rebuild.
-2. Ask the owner to confirm (assumed — confirm): D-286 (+50 % edge), D-287 (Authority respond_to_attacks off), D-288 (army cap 40; tier-3 table about
-   14.4 from 50 % v 13.3 in s37). Also still from s37: D-280/D-281 numbers, briefing style, par times, voice log (M10-27).
+1. Laptop: `git checkout main; git pull`, rebuild. D-286..D-288 were confirmed by the owner (2026-11-21).
+2. Still to confirm from s37: D-280/D-281 numbers, briefing style, par times, voice log (M10-27).
 3. Balance next (M13-37): (a) Directorate Bore AI (buys ~3 a game, loses 94-99 %; removing them = +5..33 points for the Directorate) with a matching
    Directorate nerf in small steps (Rocket Truck cost is a cliff); (b) why Directorate harvesters survive and Authority ones die on Mountains/Ash
    (trace a few games: raid paths, refinery placement); (c) Authority tier 5 v 1 is 66.7 % (target 90); (d) Expedition ladder flat/draw-heavy at 4-5.
@@ -17,11 +16,11 @@ docs/balance/s38_balance.md. Decisions up to D-288. Open questions: Q-73 (deferr
 ## Half-finished work
 - Cluster jobs still running at wrap-up (outputs on /work/out, jobs self-delete): l238 (layout-2 table, Mountains/Ash rows missing), vp38 (map variants,
   noisy). Read with `python3 /work/in/tally.py /work/out/l238/l2` and `python3 /work/in/cmp.py /work/out/vp38` through the toolbox pod.
-- Branches to delete on GitHub after the merge: integ-s38, wp/s38-llm, wp/s38-ladder, wp/s38-glass, integ-s37, wp/s37-mtn, plus the older list
+- Branches to delete on GitHub: land/s38-confirm, integ-s38, wp/s38-llm, wp/s38-ladder, wp/s38-glass, integ-s37, wp/s37-mtn, plus the older list
   (land/s36, land/s36-confirm, integ-s36, wp/s36-*, integ-s32m, integ-s33, land/s33*, wp/s33-*, land/s34-*, wp/s34-kitbash, land/s35-*).
 
 ## Waiting on the user
-- Merge OK for the session 38 PR. Confirm D-286..D-288. Voice log (M10-27). Two-PC LAN test (M9-15). Expedition play-test (M7-14). Branch deletes.
+- Voice log (M10-27). Two-PC LAN test (M9-15). Expedition play-test (M7-14). Branch deletes.
 
 ## How to run this session
 - Session 38 lessons:

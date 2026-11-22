@@ -624,4 +624,4 @@ Pull main first (your folder was on eda0f0e3, two sessions behind), then rebuild
   AI slot now cycles 50 / 75 / none / Edge +25% / Edge +50%; a human slot still stops at none.
 - **Authority AI:** a tier 4 or 5 Authority AI should now feel clearly harder than tier 1-2 (before, higher Authority tiers played worse). It no longer
   garrisons ruins or builds the Blockhouse at tiers 2-5.
-- **Balance (assumed — confirm):** D-287 / D-288 change only the Authority AI (data/ai/difficulty.toml), no unit numbers.
+- **Balance (confirmed by the owner, 2026-11-21):** D-287 / D-288 change only the Authority AI (data/ai/difficulty.toml), no unit numbers.

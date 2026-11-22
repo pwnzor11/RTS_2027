@@ -701,7 +701,7 @@ check) were already done by session 37 on the same code. Item 3: 128-game AI lad
 tier-3 army cap 40 (D-288). Item 4: layout-2 table (stays off). Item 5: draws read from the s37 table (15.4 %, Glass Coast). Item 6: Expedition AI at every
 tier on 4 maps. Item 7: map-specific rows screened (economy snowball, Bore waste, Glass Coast ore; tunnels, layout, navy ruled out or mixed); nothing
 map-side landed. Item 8: "Super hard (LLM)" preset (D-286), calibrated at +50 %. Campaign sweep 45/45 on the Authority change. docs/balance/s38_balance.md.
-**Decisions:** D-286, D-287, D-288. **Questions:** none new; confirm D-286..D-288.
+**Decisions:** D-286, D-287, D-288. **Questions:** none new. Owner merged-OK PR #119 and confirmed D-286..D-288 (2026-11-21).
 **Helpers:** 3 Sonnet (s38-llm ~8 min, s38-glass ~50 min no commits, s38-ladder ~63 min); no fix rounds. About 25 000 cluster games.
 **Problems / notes:** GitHub shows no Windows CI runs since Nov 12 (cluster suite used instead); map-generator variants were inert at first
 (biomes.toml is read next to Tools.dll) and were rerun; a build waited behind pods that wait for it (paused the series); `attack_ratio_pct` is inert for
