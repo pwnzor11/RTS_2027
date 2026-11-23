@@ -36,6 +36,7 @@ public static class AiCommands
     private static readonly string[] MatchOptions = ["a", "b", "seeds", "ticks", "size", "out", "record-dir", "flat", "starts", "start", "first", "faction-a", "faction-b", "trace", "game", "extras", "layout", "biome", "income", "mopup", "ledger", "econ", "handicap-a", "handicap-b"];
     private static readonly string[] TimelineOptions = ["a", "b", "seed", "ticks", "size", "swap", "trace", "dump", "faction-a", "faction-b", "layout", "biome"];
     private static readonly string[] MirrorOptions = ["a", "seed", "ticks", "size", "faction", "layout", "biome", "show"];
+    private static readonly string[] DuelsOptions = ["units", "a", "b", "budget", "seeds", "ticks", "out", "shard", "mirror"];
     private static readonly string[] DuelOptions = ["a", "b", "count", "count-b", "ticks", "gap"];
     private static readonly string[] MatrixOptions = ["ai", "tiers", "seeds", "ticks", "size", "out", "faction", "players", "biome", "layout"];
 
@@ -52,6 +53,7 @@ public static class AiCommands
             "mirror" => Mirror(rest),
             "commander" => CommanderMatchCommand.Run(rest),
             "duel" => Duel(rest),
+            "duels" => Duels(rest),   // s41 M13-43
             "ffa" => Ffa(rest),
             _ => UsageError($"unknown subcommand '{args[0]}'"),
         };
@@ -800,6 +802,56 @@ public static class AiCommands
         int aliveA = Alive(sim, 0), aliveB = Alive(sim, 1);
         string result = aliveA > 0 && aliveB == 0 ? "A wins" : aliveB > 0 && aliveA == 0 ? "B wins" : aliveA == 0 ? "mutual kill" : "no result";
         Console.WriteLine($"| {specA} x{countA} vs {specB} x{countB} | {result} | tick {end} ({end / 20}s) | A left {aliveA} ({Health(sim, 0)}/{hpA0} hp) | B left {aliveB} ({Health(sim, 1)}/{hpB0} hp) |");
+        return 0;
+    }
+
+    /// <summary>
+    /// s41 (M13-43): `ai duels` plays equal-cost unit-v-unit matchups without AI (<see cref="DuelMatrix"/>). <c>--units</c> is a ';'-separated
+    /// list of side specs (<c>id[:w][+id[:w]]</c>; default every armed ground unit); every pair of different factions is played (<c>--mirror 1</c>
+    /// also plays same-faction pairs), or just <c>--a</c> v <c>--b</c>. <c>--shard i/n</c> plays every n-th pair (cluster fan-out).
+    /// Prints one line per matchup and writes CSV to <c>--out</c>.
+    /// </summary>
+    private static int Duels(string[] args)
+    {
+        if (!MatchSetup.TryParse(args, DuelsOptions, out var flags, out var positional, out string? error) || positional.Count > 0)
+            return UsageError(error ?? $"unexpected argument '{positional[0]}'");
+        if (!Int(flags, "budget", 3000, out int budget) || budget < 100) return UsageError("--budget must be at least 100");
+        if (!Int(flags, "seeds", 4, out int seeds) || seeds < 1) return UsageError("--seeds must be positive");
+        if (!Int(flags, "ticks", 3000, out int ticks) || ticks < 1) return UsageError("--ticks must be positive");
+        if (!Int(flags, "mirror", 0, out int mirror)) return UsageError("--mirror must be 0 or 1");
+        int shard = 0, shards = 1;
+        if (flags.TryGetValue("shard", out string? sh))
+        {
+            string[] p = sh.Split('/');
+            if (p.Length != 2 || !int.TryParse(p[0], out shard) || !int.TryParse(p[1], out shards) || shards < 1 || shard < 0 || shard >= shards)
+                return UsageError("--shard must be i/n");
+        }
+        if (!LoadData(out var world, out _)) return 1;
+        SimRules rules = world!.Rules;
+        var pairs = new List<(string A, string B)>();
+        try
+        {
+            if (flags.TryGetValue("a", out string? a) && flags.TryGetValue("b", out string? b)) pairs.Add((a, b));
+            else
+            {
+                List<string> units = flags.TryGetValue("units", out string? list)
+                    ? list.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList()
+                    : DuelMatrix.DefaultRoster(rules);
+                for (int i = 0; i < units.Count; i++)
+                    for (int j = i + 1; j < units.Count; j++)
+                        if (mirror == 1 || DuelMatrix.FactionOfSpec(rules, units[i]) != DuelMatrix.FactionOfSpec(rules, units[j]))
+                            pairs.Add((units[i], units[j]));
+            }
+            var rows = new List<DuelMatrix.Summary>();
+            for (int k = shard; k < pairs.Count; k += shards)
+            {
+                var s = DuelMatrix.Play(rules, world.RulesHash, pairs[k].A, pairs[k].B, budget, seeds, ticks);
+                rows.Add(s);
+                Console.WriteLine($"| {s.A} | {s.B} | {s.MeanScore,5} | {s.WinsA}-{s.WinsB}-{s.Draws} | {s.MeanEndTick / 20}s | {s.SpentA} v {s.SpentB} |");
+            }
+            if (flags.TryGetValue("out", out string? outPath)) File.WriteAllText(outPath, DuelMatrix.Csv(rows));
+        }
+        catch (ArgumentException ex) { return UsageError(ex.Message); }
         return 0;
     }
 
