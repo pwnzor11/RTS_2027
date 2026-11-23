@@ -21,9 +21,10 @@ internal static class GameRulesLoader
     private const string SupplySection = "supply";       // SUP-1
     private const string ShipmentsSection = "shipments"; // M7-02
     private const string PropsSection = "props";         // M12-16
+    private const string MovementSection = "movement";   // S41 M13-44
 
     private static readonly string[] TopLevel =
-        [Section, EconomySection, TunnelsSection, RadiationSection, StealthSection, FactionSection, GarrisonSection, FoamSection, VeterancySection, SupplySection, ShipmentsSection, PropsSection];
+        [Section, EconomySection, TunnelsSection, RadiationSection, StealthSection, FactionSection, GarrisonSection, FoamSection, VeterancySection, SupplySection, ShipmentsSection, PropsSection, MovementSection];
 
     /// <summary>Parses the [game] table. Returns null when any problem was recorded.</summary>
     public static GameRules? Parse(TomlTable root, string file, List<RulesProblem> problems)
@@ -237,6 +238,20 @@ internal static class GameRulesLoader
         f.CheckKeys("speed_permille");
         int? speed = f.OptInt("speed_permille", 0, 1000, FoamRules.Default.SpeedPermille);
         return speed is null ? null : new FoamRules(speed.Value);
+    }
+
+    /// <summary>Parses the optional [movement] table (S41 M13-44); <c>stuck_recovery</c> 0 = off (default), 1 = on. Null after a problem.</summary>
+    public static MovementRules? ParseMovement(TomlTable root, string file, List<RulesProblem> problems)
+    {
+        MovementRules d = MovementRules.Default;
+        RulesFields? f = OptionalTable(root, MovementSection, file, problems);
+        if (f is null)
+        {
+            return root.ContainsKey(MovementSection) ? null : d;
+        }
+        f.CheckKeys("stuck_recovery");
+        int? stuck = f.OptInt("stuck_recovery", 0, 1, d.StuckRecovery);
+        return stuck is null ? null : new MovementRules(stuck.Value);
     }
 
     /// <summary>Parses the optional [props] table (M12-16, D-264); every key optional with the <see cref="PropRules.Default"/> value. Null after a problem.</summary>

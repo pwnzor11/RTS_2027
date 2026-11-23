@@ -124,6 +124,7 @@ public static class RulesLoader
         SupplyRules? supply = gameRoot is null ? null : GameRulesLoader.ParseSupply(gameRoot, GameFile, problems);            // SUP-1
         ShipmentRules? shipments = gameRoot is null ? null : GameRulesLoader.ParseShipments(gameRoot, GameFile, problems);    // M7-02
         PropRules? props = gameRoot is null ? null : GameRulesLoader.ParseProps(gameRoot, GameFile, problems);                // M12-16
+        MovementRules? movement = gameRoot is null ? null : GameRulesLoader.ParseMovement(gameRoot, GameFile, problems);      // S41 M13-44
 
         var typeIds = new HashSet<string>(
             vehicleEntries.Concat(infantryEntries).Concat(buildingEntries).Concat(upgradeEntries).Select(e => e.Id), StringComparer.Ordinal);
@@ -144,7 +145,7 @@ public static class RulesLoader
         ValidateNeutral(vehicles, infantry, buildings, upgrades, problems);   // Q-37
 
         if (problems.Count > 0 || game is null || terrain is null || economy is null || tunnels is null || radiation is null
-            || stealth is null || kits is null || garrison is null || foam is null || veterancy is null || supply is null || shipments is null || props is null)
+            || stealth is null || kits is null || garrison is null || foam is null || veterancy is null || supply is null || shipments is null || props is null || movement is null)
         {
             throw new RulesException(problems);
         }
@@ -155,7 +156,7 @@ public static class RulesLoader
         var sim = new SimRules(vehicles, infantry, buildings, weapons, warheads, terrain, effects)
         {
             Economy = economy, Tunnels = tunnels, Radiation = radiation, Stealth = stealth, StartKits = kits, Upgrades = upgrades,
-            Garrison = garrison, Foam = foam, Veterancy = veterancy, Supply = supply, Shipments = shipments, Props = props,
+            Garrison = garrison, Foam = foam, Veterancy = veterancy, Supply = supply, Shipments = shipments, Props = props, Movement = movement,
         };
         return new RuleSet(game, sim, RulesHash.Compute(game, sim));
     }

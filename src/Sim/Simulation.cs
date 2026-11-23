@@ -81,6 +81,7 @@ public sealed partial class Simulation
         _rng = new SimRandom(setup.Seed);
         _units = new UnitStore(setup.Limits.Vehicles);
         _infantry = new InfantryStore(setup.Limits.Infantry);
+        _units.StuckClock = _infantry.StuckClock = setup.Rules.Movement.StuckRecovery != 0;   // S41 M13-44
         _buildings = new BuildingStore(setup.Limits.Buildings);
         _players = new PlayerStore(setup);
         for (int p = 0; p < setup.PlayerCount; p++) if (!_players.IsNeutral((byte)p)) _players.Cash[p] = setup.StartingCashOf((byte)p);   // M2-07; S19 (M13-15): a per-slot amount when the setup carries one

@@ -29,6 +29,8 @@ internal static class MoveMission
     public const int MaxStuck = 12;
     /// <summary>A blocked wait behind an allied mover counts as stuck only once in this many wait cycles (a moving queue is progress).</summary>
     public const int QueueSlowdown = 8;
+    /// <summary>S41 M13-44: a pause longer than this many ticks between locomotor calls means the unit was not trying to move, so its stuck clock restarts.</summary>
+    private const int StuckGapTicks = 30;   // (tune) s41
 
     private readonly struct Stats
     {
@@ -158,6 +160,9 @@ internal static class MoveMission
         Stats st = StatsOf(sim, kind, store, i);
         if (st.Speed <= 0) return 1;
 
+        // S41 M13-44: stuck clock (only with [movement] stuck_recovery = 1; with 0 nothing below is touched)
+        if (store.StuckClock) StuckTouch(sim, store, kind, i, goal);
+
         // 1. finish the step that was already started
         if (store.NextCellReserved[i]) return AdvanceAndCheck(sim, store, kind, i, st, goal, settle, out arrived);
 
@@ -178,6 +183,13 @@ internal static class MoveMission
         {
             DriveWithin(sim, store, kind, i, st, cur, home);
             return 1;
+        }
+
+        // S41 M13-44: recovery ladder
+        if (store.StuckClock)
+        {
+            StuckAction act = StuckDecide(sim, store, i);
+            if (act != StuckAction.None && StuckAct(sim, store, kind, i, cur, goal, settle, act, out arrived)) return arrived ? 1 : act == StuckAction.Abandon ? WaitTicks : 1;
         }
 
         // 3. a route is needed
@@ -250,6 +262,88 @@ internal static class MoveMission
         store.StuckCount[i] = 0;
         Reserve(sim, store, kind, i, st, n, b);
         return AdvanceAndCheck(sim, store, kind, i, st, goal, settle, out arrived);
+    }
+
+    // ---- stuck clock + recovery ladder (S41 M13-44) ---------------------------------------------
+
+    /// <summary>Every locomotor call: restart the clock after a pause in trying to move, in the goal cell, or after net displacement of 2 cells.</summary>
+    private static void StuckTouch(Simulation sim, MobileStore store, ActorKind kind, int i, CellCoord goal)
+    {
+        int now = sim.Tick + 1;
+        CellCoord cur = Occupancy.CurCell(kind, store, i);
+        if (cur == goal || store.StuckAnchorTick[i] == 0 || now - store.StuckLastTick[i] > StuckGapTicks
+            || Occupancy.Chebyshev(cur, store.StuckAnchor[i]) >= StuckLadder.ProgressDistance)
+        {
+            store.StuckAnchor[i] = cur;
+            store.StuckAnchorTick[i] = now;
+            store.StuckRung[i] = 0;
+        }
+        store.StuckLastTick[i] = now;
+    }
+
+    private static StuckAction StuckDecide(Simulation sim, MobileStore store, int i)
+    {
+        int rung = store.StuckRung[i];
+        StuckAction a = StuckLadder.Decide(sim.Tick + 1 - store.StuckAnchorTick[i], ref rung);
+        store.StuckRung[i] = (byte)rung;
+        return a;
+    }
+
+    /// <summary>Carry out a ladder rung. True = the tick is used up (the caller returns); false = go on with the normal logic (a fresh route is requested right after Replan).</summary>
+    private static bool StuckAct(Simulation sim, MobileStore store, ActorKind kind, int i, CellCoord cur, CellCoord goal, bool settle,
+        StuckAction act, out bool arrived)
+    {
+        arrived = false;
+        CellCoord[]? cells = store.PathCells[i];
+        CellCoord n = cells != null && store.PathPos[i] < cells.Length ? cells[store.PathPos[i]] : goal;
+        switch (act)
+        {
+            case StuckAction.Replan:
+                DropRequest(sim, store, i);
+                store.PathCells[i] = null;
+                store.PathPos[i] = 0;
+                store.BlockedTicks[i] = 0;
+                return false;
+            case StuckAction.Sidestep:
+                return StuckSidestep(sim, store, kind, i, cur, n);
+            case StuckAction.Relax:
+                if (Occupancy.Chebyshev(n, cur) == 1) Shove(sim, store, kind, i, n);   // idle friends in the way scatter
+                if (settle && Occupancy.Chebyshev(cur, goal) <= StuckLadder.RelaxRadius) { arrived = true; return true; }   // near enough: arrived
+                return false;
+            default:   // Abandon
+                if (settle) { arrived = true; return true; }   // the Move ends here (Arrive); a harvester's logic re-issues its order
+                // StepToward callers get the "no way from here" answer and start afresh (they pick another field or retry)
+                DropRequest(sim, store, i);
+                store.PathCells[i] = null;
+                store.PathPos[i] = 0;
+                store.BlockedTicks[i] = 0;
+                store.StuckCount[i] = 0;
+                store.StuckAnchor[i] = cur;
+                store.StuckAnchorTick[i] = sim.Tick + 1;
+                store.StuckRung[i] = 0;
+                return true;
+        }
+    }
+
+    /// <summary>The free neighbour (not the blocked cell <paramref name="n"/>) farthest from the blocker: never one nearer than where we stand; ties by squared distance, then scan order.</summary>
+    private static bool StuckSidestep(Simulation sim, MobileStore store, ActorKind kind, int i, CellCoord cur, CellCoord n)
+    {
+        int best = -1, bestDist = -1, bestSq = -1;
+        for (int d = 0; d < 8; d++)
+        {
+            var c = new CellCoord(cur.X + Occupancy.Dx[d], cur.Y + Occupancy.Dy[d]);
+            if (c == n || !Occupancy.NeighbourFree(sim, kind, store, i, cur, d)) continue;
+            int dist = Occupancy.Chebyshev(c, n);
+            if (dist < Occupancy.Chebyshev(cur, n)) continue;
+            int sq = (c.X - n.X) * (c.X - n.X) + (c.Y - n.Y) * (c.Y - n.Y);
+            if (dist > bestDist || (dist == bestDist && sq > bestSq)) { best = d; bestDist = dist; bestSq = sq; }
+        }
+        if (best < 0) return false;
+        store.PathCells[i] = new[] { new CellCoord(cur.X + Occupancy.Dx[best], cur.Y + Occupancy.Dy[best]) };
+        store.PathPos[i] = 0;
+        store.PathVersion[i] = sim.Map.Version;
+        store.BlockedTicks[i] = 0;
+        return true;
     }
 
     private static LeptonCoord HomeOf(MobileStore store, ActorKind kind, int i, CellCoord cell) =>
