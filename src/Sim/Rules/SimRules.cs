@@ -46,6 +46,9 @@ public sealed record SimRules(
     /// <summary>Destructible prop constants (game.toml [props], M12-16, D-264). Defaults when the table is absent.</summary>
     public PropRules Props { get; init; } = PropRules.Default;
 
+    /// <summary>Movement options (game.toml [movement], S41 M13-44). Off when the table is absent.</summary>
+    public MovementRules Movement { get; init; } = MovementRules.Default;
+
     /// <summary>Start kit per faction, indexed by <c>(int)</c><see cref="Faction"/> (game.toml [faction.&lt;name&gt;], M3).
     /// Always <see cref="RuleCounts.Factions"/> entries; ids are validated lazily by <see cref="ResolveStartKit"/>.</summary>
     public IReadOnlyList<FactionStartKit> StartKits { get; init; } =

@@ -130,3 +130,7 @@ snag_health = 40  # (tune) as a tree
 wreck_health = 160  # (tune) 4 times a tree: four or five shells
 splash_armor = "structure"  # ASSUMED (S31)
 crush_path_penalty = 3  # (tune) a crusher's path pays this many normal cells to enter a Tree or Snag cell (it will go round a short gap)
+
+[movement]
+# S41 M13-44: 0 = off (movement as in every earlier session), 1 = stuck clock (net displacement) + recovery ladder replan -> sidestep -> relax -> abandon.
+stuck_recovery = 0
