@@ -117,7 +117,7 @@ public sealed class AudioProvenanceTests
         Assert.Empty(bad);
     }
 
-    [Fact(Skip = "PENDING Q-87: owner to confirm the sources of the files listed in data/audio/PROVENANCE.toml as unknown")]
+    [Fact(Skip = "owner to confirm the sources of the files listed in data/audio/PROVENANCE.toml as unknown")]
     public void UnknownSourcesAreReported()
     {
         List<string> unknown = LoadEntries()

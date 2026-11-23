@@ -102,4 +102,32 @@ Confirmation (job f41, fresh seeds 65-128, never used by any screen): main and f
 every faction's ladder for fin41. Ash map screen on top of fin41 (job a41, 64 games, seeds 65-96): contested_fields 1, decor prop_permille 32,
 rough_permille 60, extra_fields 3.
 
-(confirmation results follow)
+### 5a. Confirmation on fresh seeds 65-128 (job f41, 128 games per row)
+**fin41 is rejected.** 24 rows: Authority v Directorate Rust 35.6, Glass 39.2, Mountains 9.7, Ash 13.9; Authority v Left Behind Mountains 23.6, Ash 24.2;
+Directorate v Expedition Rust 85.2; Directorate v Left Behind Rust 22.5. The anchored model overstated what the package does.
+Ladders under fin41 (Rust mirrors): Authority 2 v 1 54.3, 3 v 2 59.2, 4 v 3 53.7, 5 v 1 62.4, 5 v 3 69.2; Directorate 3 v 2 85.0, 5 v 1 69.7; Left Behind 3 v 2 81.1,
+5 v 1 93.5; Expedition 3 v 2 44.0 (out of order), 5 v 1 95.2.
+
+### 5b. The map pool is the measurement problem
+Main on seeds 1-64 (ref41) v seeds 65-128 (f41), same build:
+| row | s1-64 | s65-128 | 256 games |
+|---|---|---|---|
+| Rust Directorate v Expedition | 57.8 | 79.5 | 67.9 |
+| Rust Directorate v Left Behind | 39.3 | 21.2 | 30.6 |
+| Mountains Authority v Directorate | 43.0 | 26.6 | 34.8 |
+| Rust Left Behind v Expedition | 47.5 | 61.7 | 54.5 |
+| Glass Directorate v Expedition | 34.0 | 21.7 | 27.3 |
+| Ash Authority v Directorate | 33.0 | 21.7 | 27.3 |
+Mean |difference| over 24 rows 7.6 points (binomial noise alone ~5.7); six rows differ by 2-3 standard errors. Each seed is a different generated map and
+maps tilt particular pairings, so 128 games (64 maps) cannot place a row reliably inside a 30-point band. On 256 games main is **MAD 11.4, 15 rows in
+35-65 %** (s40's 9.7 was seeds 1-64 only). Pooled over the four biomes every pairing is inside 40-60 %: Authority v Directorate 40.5, v Expedition 59.5,
+v Left Behind 54.5; Directorate v Expedition 53.0, v Left Behind 42.2; Left Behind v Expedition 41.4. The remaining imbalance is pairing x map, which
+unit levers cannot target (§5 finding 3) and the four Ash map variants did not fix:
+
+### 5c. Ash map screen on top of fin41 (job a41, seeds 65-96, 64 games)
+Authority v Directorate Ash: fin41 10 % -> contested_fields 1: 10, prop_permille 32: 14, rough_permille 60: 17, extra_fields 3: 5. None works.
+
+### 5d. Outcome
+- Kept: the duel harness and fixtures, the unit-list keys, the Authority tier-2 army_cap 28 (ladder; confirmed alone on fresh seeds, job c41).
+- Not kept: any unit number change, any Ash map change, the Authority grown lists.
+- Open for the owner (Q-87): how to define "finished" given the map noise.
