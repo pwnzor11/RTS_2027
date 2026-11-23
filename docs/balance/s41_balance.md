@@ -77,4 +77,29 @@ Tier 2's strength has a cliff between 25 and 30. l41c (128 games):
 | tier-2 cap 30, tier-3 cap 50 | 79-48 (62.2 %) | 67-58 (53.6 %) | 67-51 (56.8 %) |
 Candidate: **tier-2 army_cap 28** (touches no tier-3 table row). 3 v 2 is only 3.7 points above even: confirm on fresh seeds with the final run.
 
-(sweep results follow)
+## 5. Joint lever sweep (job w41; 64 variants x 24 rows x 16 games = 24 576 games, seeds 1-8)
+15 levers in a balanced design (14 at three levels, max pairwise correlation 0.14; auth_grow on/off): Authority Tank health 432/488, Rifleman cost
+92/108, Rocketeer damage 92/108; Directorate Rocket salvo 81/87, Conscript cost 74/86, Reactor Crawler cost 1380/1620; Left Behind Scavenger cost
+50/58, Hook Runner cost 110/130, Buggy health 110/130, Slinger damage 64/76; Expedition Marine cost 141/159, Glide Tank health 357/403, Glide cannon
+damage 61/69; ashfall interval 38/22; Authority grown lists (gA3). Fit: per-row binomial logistic model, ridge on the levers (tools: laptop
+k3s-cluster folder claude/rts/s41: mksweep.py, tally41.py, fit41.py).
+
+Findings:
+1. **Seeds 1-8 are not the 128-game table.** With the same rules, rows on seeds 1-8 differ from the 128-game reference by 12.7 points on average
+   (e.g. Directorate v Expedition Rust 14 % v 58 %): each seed is a different generated map, and single maps tilt a row far more than any lever
+   step here. Running every variant on the same 8 seeds was a design flaw: the fit's intercepts belong to those 8 maps. The slopes are still
+   usable, so rows are anchored at their 128-game value (fit41.py --anchor).
+2. **Levers are weak.** One step (4-8 %) moves a row 1.5-4 points on average (mean |b| 0.06-0.17 logit, se ~0.10). The strongest: Rocket salvo
+   (0.17), Conscript cost (0.15), Glide Tank health (0.13), Rocketeer damage and Glide cannon (0.12), Authority lists (0.11, se 0.16).
+3. **Ash Plains Authority v Directorate cannot be fixed with unit levers.** The Directorate needs help against the Left Behind and Expedition on
+   three maps but already beats the Authority on Ash (33 %); every Directorate lever moves both. Solved packages keep sacrificing that row
+   (predicted 15-19 %). It needs an Ash-only lever (map).
+4. Solved package (steps limited to the tested range, |step| < 0.3 left unchanged, Authority lists left off: weak evidence): Tank health 445,
+   Rifleman 106, salvo 86, Conscript 76, Reactor Crawler 1620, Scavenger 50, Hook Runner 130, Buggy health 130, Slinger 73, Marine 159, Glide Tank
+   health 389, ashfall interval 38. Predicted (anchored): 23 of 24 rows inside 35-65 %, MAD 9.6 -> 8.9, Ash Auth v Dir the exception.
+
+Confirmation (job f41, fresh seeds 65-128, never used by any screen): main and fin41 (package + Authority tier-2 army_cap 28) on all 24 rows, plus
+every faction's ladder for fin41. Ash map screen on top of fin41 (job a41, 64 games, seeds 65-96): contested_fields 1, decor prop_permille 32,
+rough_permille 60, extra_fields 3.
+
+(confirmation results follow)
