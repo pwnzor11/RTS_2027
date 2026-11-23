@@ -636,3 +636,10 @@ Pull main first (your folder was on eda0f0e3, two sessions behind), then rebuild
   more; a normal (no edge) Directorate AI plays exactly as before.
 - **Balance numbers to confirm:** D-290 (Bores off, salvo 84), D-291, D-292 (Authority tier 5 harvester_target 4, attack_threshold 14), D-293
   (adapt_rich_cash 2000), all in data/ai/difficulty.toml and data/rules/weapons.toml.
+
+## Session 40 (2026-11-22/23)
+- **Skirmish maps (D-294):** Ash Plains bases have 3 ore fields nearby (was 4) and fewer extra fields; Mountains bases 2 (was 3); Rust Belt bases 4 (was
+  3); Glass Coast bases 3 (was 2) and the fields are denser. Start a 2-player skirmish on each and look at the fields around your base.
+- **Directorate AI power (D-295):** a Directorate AI whose income stalls no longer sells its Reactor Vents into low power (its base lights stay on).
+- **Harvesters (D-296):** a harvester that finished unloading and found no ore no longer parks on the refinery's unloading cell and blocks the next one.
+- **Balance numbers to confirm:** D-294 (the five biomes.toml values above).
