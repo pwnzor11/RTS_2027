@@ -97,6 +97,7 @@ harass_min_army = 30
 # made every higher Authority tier play worse than the fixed tier-1 order; with the flag off at tier 2 it wins 76-84 % of the same cell.
 [faction.authority.tier2]
 respond_to_attacks = 0  # (tune) s38
+army_cap = 28  # (tune) s41 D-304: the tier-3 Authority (cap 40) lost to an uncapped tier 2 (3 v 2 37.5-40.7 %); 256 games: 2 v 1 60.4, 3 v 2 52.6, 4 v 3 60.5; docs/balance/s41_balance.md
 
 [faction.authority.tier3]
 respond_to_attacks = 0  # (tune) s38

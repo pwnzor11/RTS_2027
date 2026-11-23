@@ -128,6 +128,7 @@ unit levers cannot target (§5 finding 3) and the four Ash map variants did not 
 Authority v Directorate Ash: fin41 10 % -> contested_fields 1: 10, prop_permille 32: 14, rough_permille 60: 17, extra_fields 3: 5. None works.
 
 ### 5d. Outcome
-- Kept: the duel harness and fixtures, the unit-list keys, the Authority tier-2 army_cap 28 (ladder; confirmed alone on fresh seeds, job c41).
+- Kept: the duel harness and fixtures, the unit-list keys, the Authority tier-2 army_cap 28 (D-304). Confirmed alone on fresh seeds 65-128 (job c41,
+  128 games): 2 v 1 57.0 (main 69.5), 3 v 2 51.6 (main 40.7), 4 v 3 60.5 (main 60.5). Main's Expedition 3 v 2 is 49.2 % (a ladder item for later).
 - Not kept: any unit number change, any Ash map change, the Authority grown lists.
 - Open for the owner (Q-87): how to define "finished" given the map noise.
