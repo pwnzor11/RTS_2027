@@ -1,15 +1,14 @@
-# Handoff: Session 42 — owner answers Q-87 (how to measure "finished"), then map-specific causes or the off-by-default features
+# Handoff: Session 42 — confirm the pooled finish line (D-305) on 512 games, fix the Expedition ladder, then map-specific causes
 Last commit: `docs: Session 41 handoff` on `integ-s41` (PR to main; check it merged). Laptop folder was on session 39 at the start of s41: `git pull`.
 Where things stand: session 41 set the balance finish line (D-298), built unit-v-unit duels and fixtures (D-299), made the AI unit lists data keys
 (D-300), built Standard of Iron's ideas (stuck recovery D-301 and committed waves D-302, both off by default; map start-room test and audio provenance
 D-303), ran a 24 576-game joint lever sweep, and landed only the Authority tier-2 army_cap 28 (D-304, ladder in order). The sweep's package failed on
 fresh seeds and the same build differs by 7.6 points per row between seed halves: generated maps tilt pairings, so the finish line's measurement is
-Q-87. docs/balance/s41_balance.md. Decisions up to D-304. Open: Q-87 (🔴).
+Q-87, answered (c): D-305. docs/balance/s41_balance.md. Decisions up to D-305. Open questions: none.
 
 ## Start here (shown to the user as the plan; nothing starts until they say go)
-1. Owner: answer Q-87 (recommended: judge the six pairings over the map pool, >= 256 games per map row, no map row outside 25-75 %). Laptop:
-   `git checkout main; git pull`, rebuild.
-2. If Q-87 (a): measure main on 512 games per row (seeds 1-256; about 12 000 games, ~10 h on the cluster without queen), list rows outside 25-75 %
+1. Laptop: `git checkout main; git pull`, rebuild. D-305 (owner, Q-87 c): pooled pairings 40-60 % now, 24 per-map rows later.
+2. Confirm D-305 on main: measure 512 games per row (seeds 1-256; about 12 000 games, ~10 h on the cluster without queen), list rows outside 25-75 %
    (s41 256-game table: Ash Auth v Dir 27.3, Glass Dir v Exp 27.3, Ash LB v Exp 30.0, Rust Dir v LB 30.6) and fix those by map cause, not unit numbers:
    the mirror_x maps (Mountains, Ash) let the Directorate's early wave land first (s39 harvester trace); Glass Coast ore (s38).
 3. Expedition ladder: 3 v 2 is 49 % in main (seeds 65-128); Authority 5 v 1 76 % v target 90 — screen `wave_reinforce_ticks` / `wave_search` (D-302) there.
@@ -22,7 +21,7 @@ Q-87. docs/balance/s41_balance.md. Decisions up to D-304. Open: Q-87 (🔴).
   (mksweep.py, fit41.py, tally41.py, bags.py, duelsum.py, mkvar.py with the `~` raw-array op, v41.sh pattern with OFF=).
 
 ## Waiting on the user
-- Q-87. Confirm D-298..D-304. Delete branches `integ-s40` and `integ-s41` on GitHub after the merge.
+- Confirm D-298..D-304. Delete branches `integ-s40` and `integ-s41` on GitHub after the merge.
 
 ## How to run this session
 - Session 41 lessons:

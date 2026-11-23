@@ -2250,3 +2250,11 @@ checked by tools/audio/check_provenance.py and AudioProvenanceTests. **Why:** id
 3 v 2 52.6 %, 4 v 3 60.5 %; caps 20/25 broke 2 v 1 (25 / 50 %), 30-40 left 3 v 2 at 44-50 %. It touches no tier-3 table row. The sweep's solved package
 failed on fresh seeds (Authority v Directorate Mountains 9.7 %, Ash 13.9 %), and the same build differs by 7.6 points per row between seed halves
 (map pool), so the finish line's measurement is an owner question (Q-87). Supersedes nothing; D-300's Authority lists stay unset.
+
+### D-305 · 2026-11-23 · Session 41: how the finish line is measured (owner, Q-87 option c)
+**Decision:** amends D-298 point 1. Now: each of the six faction pairings, pooled over the four biomes, inside 40-60 %, with at least 256 games per
+map row (seeds 1-128), and no single map row outside 25-75 %; ladders in order and D-222 unchanged. Later: once the map-specific causes are fixed in
+the generator (mirror_x rush distance on Mountains/Ash, Glass Coast ore), move to all 24 per-map rows inside 35-65 % on 512+ games per row.
+**Why:** generated maps tilt pairings: the same build differs by 7.6 points per row between seed halves, so 128 games cannot place a row inside a
+30-point band. On s41's 256-game table main meets the pooled test (pairings 40.5-59.5 %, worst map row 27.3 %); open: Expedition ladder 3 v 2 (49 %).
+**Alternatives:** (a) pooled only; (b) 24 per-map rows on 512+ games now.

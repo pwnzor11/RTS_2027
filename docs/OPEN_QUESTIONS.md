@@ -5,14 +5,10 @@ file cited after each question. Recommendations are the lead's, from the researc
 
 ## Open
 
-- 🔴 Q-87 · 2026-11-23 · **How should the balance finish line (D-298) be measured?** s41 found that generated maps tilt particular pairings: the same build
-  differs by 7.6 points per row between seeds 1-64 and 65-128, so 128 games cannot place a row inside 35-65 % reliably; on 256 games main has 15 of
-  24 rows inside, while every pairing pooled over the four maps is inside 40-60 %. Options: **(a, recommended) per pairing over the map pool**: the six
-  pairings inside 40-60 % on >= 256 games per map row, and no single map row outside 25-75 % (no unplayable map), ladders in order, D-222; (b) keep
-  the 24 per-map rows inside 35-65 %, measured on 512+ games per row (about 12 000 games per check), accepting map-specific fixes in the generator;
-  (c) (a) now and (b) later, once map-specific causes (mirror_x rush distance on Mountains/Ash) are fixed in the generator.
+(none)
 
 ## Answered
+- Q-87 · 2026-11-23 · Owner: (c) judge the six pairings over the map pool now, the 24 per-map rows later once map-specific causes are fixed → D-305.
 - Q-73 · 2026-11-21 · Owner (s39): par = the bot's tier-3 median win x 2.5 (the s37 table), none on timer missions → D-289.
 - Q-86 · 2026-11-17 · Owner: love the draft; keep 144 pages; keep the spoiler handling and the cover; accept the design 13/14 pages as written → D-271.
 - Q-85 · 2026-11-16 · Owner (b): dress rustbelt_m2 fully and retune the tier-5 bots → D-262.
