@@ -37,6 +37,8 @@ Full notices, licence texts and the list of native files are in `THIRD_PARTY_NOT
 | Music tracks (`data/music/*.ogg`) | Music generated with ACE-Step 1.5 (MIT). Released CC0 / no rights claimed (D-080). Exported by `tools/audio/export_music.py` | CC0 | Menu and in-game music |
 | Radio voice lines (`data/audio/voice/<leader>/<key>.ogg`) | Voices generated locally with Kokoro-82M (`hexgrad/Kokoro-82M`, code and weights Apache-2.0) by `tools/voice/kokoro_batch.py`; one preset voice per leader (`tools/voice/leaders.json`). Generated locally from Kokoro-82M (Apache-2.0). No cloned or third-party voice | Apache-2.0 model; output released CC0 / no rights claimed (ASSUMED, M8-18: owner to confirm) | Spoken radio lines in the campaign missions (text-only fallback when a file is missing) |
 
+Per-file sources: data/audio/PROVENANCE.toml (checked by tools/audio/check_provenance.py and AudioProvenanceTests).
+
 ## AI-assisted artwork
 | Asset | Tool | Human work done | Notes |
 |---|---|---|---|
