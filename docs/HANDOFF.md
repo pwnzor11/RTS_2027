@@ -1,5 +1,5 @@
 # Handoff: Session 41 — confirm D-294; then the pairwise rows (Left Behind v Expedition, Authority on Rust/Glass), M13-42, or open choice
-Last commit: `docs: Session 40 handoff` on `integ-s40` (PR to main; merged by the lead once the owner OKs it). Check it merged.
+Last commit: `docs: Session 40 handoff` on `integ-s40`, merged to main as PR #122 (owner OK 2026-11-22). Check it merged.
 Where things stand: session 40 balanced the map-specific rows with per-biome ore amounts (D-294: 24-row MAD 14.6 -> 9.7, all rows 29.5-69 %), fixed the
 Directorate AI selling its power (D-295) and a harvester dock jam that froze income (D-296, sim), and added an unused grow_bags AI key (D-297).
 docs/balance/s40_balance.md. Decisions up to D-297. Open questions: none.
@@ -26,7 +26,7 @@ latch members, call up idle troops after 60 s and search the map when no target 
 - Nothing in code. Cluster: no jobs left; outputs on /work/out (b41, fin40, ref41, v41a-h) for comparisons.
 
 ## Waiting on the user
-- Merge OK for the integ-s40 PR; confirm D-294; branch deletes listed in the PR body.
+- Confirm D-294; delete branch `integ-s40` on GitHub.
 
 ## How to run this session
 - s40: biome keys only change their own biome: screen biomes separately and compose (no combined screen needed). Screen winners regress on fresh

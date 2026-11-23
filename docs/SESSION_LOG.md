@@ -730,7 +730,7 @@ the Authority/Expedition AIs build tier-1 units only; grow_bags key (D-297) test
 lever; per-biome ore (D-294): 24-row MAD 14.6 -> 9.7, rows in 40-60 9 -> 15, all rows 29.5-69 %. Unit tweaks (Slinger, Grapeshot, Harpoon, Glide Tank,
 Skimmer) and shipment rules screened: no gain. Full suite in the cloud on the final code (Sim, Game, AI, Scripting, Net, Llm, Tools: 0 failed). Standard of
 Iron reviewed (MIT C++/Qt 3D: ideas, not code; summary in HANDOFF). docs/balance/s40_balance.md.
-**Decisions:** D-294..D-297. **Questions:** none new in OPEN_QUESTIONS. PR from integ-s40.
+**Decisions:** D-294..D-297. **Questions:** none new in OPEN_QUESTIONS. PR #122 (integ-s40); owner OK to merge 2026-11-22, merged by the lead.
 **Helpers:** 2 Sonnet (M13-39 ~30 min, harvester freeze ~49 min); no fix rounds. About 9 000 cluster games, ~1 000 cloud games.
 **Problems / notes:** the laptop dropped off the bridge three times (hours once); cluster jobs carried on. Biome keys only touch their own biome, so
 per-biome screens compose exactly (a combined screen re-ran identical games). Screen winners regress on new seeds (MAD 8.1 on screen seeds, 11.7 fresh).
