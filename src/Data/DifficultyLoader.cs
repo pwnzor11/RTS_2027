@@ -29,6 +29,8 @@ public static class DifficultyLoader
         "attack_ratio_pct", "predicted_retreat", "retreat_ratio_pct",
         // S15 lbknob: credits kept in hand before a unit is bought (pacing)
         "unit_reserve", "army_cap", "army_cap_until_tick",
+        // s40 (M4-16): tier-2/3 unit types join the bags without respond_to_attacks
+        "grow_bags",
     ];
 
     /// <summary>S15 lbknob: the profile keys a <c>[faction.&lt;id&gt;.tier&lt;N&gt;]</c> table may override (numbers the AI reads at run time; the driver's
@@ -37,6 +39,7 @@ public static class DifficultyLoader
     [
         "attack_threshold", "attack_ratio_pct", "expansion_tick", "harvester_target", "retreat_health_pct", "retreat_ratio_pct", "unit_reserve", "army_cap", "army_cap_until_tick",
         "respond_to_attacks",   // M4-16 s38: Authority tiers 2+ do better without the defence-response code path
+        "grow_bags",   // s40: tier-2/3 unit types without respond_to_attacks
     ];
 
     /// <summary>The data/ai/difficulty.toml beside the nearest data/rules above <paramref name="startDirectory"/>, or null.</summary>
@@ -184,12 +187,13 @@ public static class DifficultyLoader
             int? cap = Opt(table, id, "army_cap", 0, 1000, b.ArmyCap, file, problems);
             int? capUntil = Opt(table, id, "army_cap_until_tick", 0, 10000000, b.ArmyCapUntilTick, file, problems);
             int? respond = Opt(table, id, "respond_to_attacks", 0, 1, b.RespondToAttacks ? 1 : 0, file, problems);
+            int? grow = Opt(table, id, "grow_bags", -1, 1, b.GrowBags, file, problems);
             if (problems.Count > before) continue;
             DifficultyProfile o = b with
             {
                 AttackThreshold = thr!.Value, AttackRatioPct = ratio!.Value, ExpansionTick = exp!.Value, HarvesterTarget = harv!.Value,
                 RetreatHealthPct = ret!.Value, RetreatRatioPct = rr!.Value, UnitReserve = res!.Value, ArmyCap = cap!.Value, ArmyCapUntilTick = capUntil!.Value,
-                RespondToAttacks = respond!.Value == 1,
+                RespondToAttacks = respond!.Value == 1, GrowBags = grow!.Value,
             };
             result[idx] = b.WithFactionOverride(FactionEnum[f], o);
         }
@@ -233,6 +237,7 @@ public static class DifficultyLoader
         int? reserve = Opt(table, id, "unit_reserve", 0, 100000, 0, file, problems);
         int? armyCap = Opt(table, id, "army_cap", 0, 1000, 0, file, problems);
         int? armyCapUntil = Opt(table, id, "army_cap_until_tick", 0, 10000000, 0, file, problems);
+        int? growBags = Opt(table, id, "grow_bags", -1, 1, -1, file, problems);
 
         if (problems.Count > before) return null;
         return new DifficultyProfile(id, tier!.Value, interval!.Value, delay!.Value, infoAge!.Value, threshold!.Value,
@@ -243,7 +248,7 @@ public static class DifficultyLoader
             ActiveScouting = scouting == 1, Harass = harass == 1, UseUpgrades = upgrades == 1, AdaptBuild = adapt == 1,
             HarvesterTarget = harvesters!.Value,
             AttackRatioPct = ratio!.Value, PredictedRetreat = predicted == 1, RetreatRatioPct = retreatRatio!.Value,
-            UnitReserve = reserve!.Value, ArmyCap = armyCap!.Value, ArmyCapUntilTick = armyCapUntil!.Value,
+            UnitReserve = reserve!.Value, ArmyCap = armyCap!.Value, ArmyCapUntilTick = armyCapUntil!.Value, GrowBags = growBags!.Value,
         };
     }
 

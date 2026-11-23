@@ -32,4 +32,13 @@ public sealed class RescueSavingTests
         Assert.False(EconomyRescue.CanBuy(With((ProductionCategory.Vehicle, 3)), harvester: 3, refinery: 7, haveRefinery: false));
         Assert.True(EconomyRescue.CanBuy(With((ProductionCategory.Structure, 7)), harvester: 3, refinery: 7, haveRefinery: false));
     }
+
+    [Theory]
+    [InlineData(300, 170, 100, true)]    // surplus survives the sale
+    [InlineData(300, 200, 100, true)]    // exactly enough
+    [InlineData(300, 240, 100, false)]   // would drop below use
+    [InlineData(100, 190, 100, false)]   // already short: never sell more power
+    [InlineData(100, 190, 0, true)]      // not a power structure
+    public void SaleKeepsThePowerGrid(int powerOut, int powerUse, int buildingPower, bool allowed) =>
+        Assert.Equal(allowed, EconomyRescue.KeepsPower(powerOut, powerUse, buildingPower));
 }

@@ -721,3 +721,17 @@ growth with an income edge only (D-293, +50 % 67.8 -> 79.0 %). Par-time medal (D
 **Problems / notes:** push access to k3s-cluster-code was refused (cluster scripts stay laptop-only); pods of new jobs sat Pending behind over-committed
 parallelism (sum of --par > slots): keep the sum <= ~36 without queen; a weapons.toml edit by script emptied the file once (restored from git before commit).
 **Next session should:** see HANDOFF.
+
+## Session 40 · 2026-11-22/23 (D-290..D-293 confirmed; per-biome ore balance; Directorate power sales and harvester dock jam fixed; grow_bags key)
+**Goal:** owner: resume; confirm all 4 (D-290..D-293); "use the cluster ... map side or AI side changes or unit changes, just finish the balance issues";
+queen stays cordoned ("nas is busy"); mid-session: look at github.com/djeada/Standard-of-Iron for anything usable.
+**Done:** D-290..D-293 confirmed. M13-39: real games affected; sales keep power (D-295). M13-40 (new): harvester dock-cell jam fixed (D-296, sim). Found
+the Authority/Expedition AIs build tier-1 units only; grow_bags key (D-297) tested and not set (made the Authority weaker). Map balance: ore richness is the
+lever; per-biome ore (D-294): 24-row MAD 14.6 -> 9.7, rows in 40-60 9 -> 15, all rows 29.5-69 %. Unit tweaks (Slinger, Grapeshot, Harpoon, Glide Tank,
+Skimmer) and shipment rules screened: no gain. Full suite in the cloud on the final code (Sim, Game, AI, Scripting, Net, Llm, Tools: 0 failed). Standard of
+Iron reviewed (MIT C++/Qt 3D: ideas, not code; summary in HANDOFF). docs/balance/s40_balance.md.
+**Decisions:** D-294..D-297. **Questions:** none new in OPEN_QUESTIONS. PR #122 (integ-s40); owner OK to merge 2026-11-22, merged by the lead.
+**Helpers:** 2 Sonnet (M13-39 ~30 min, harvester freeze ~49 min); no fix rounds. About 9 000 cluster games, ~1 000 cloud games.
+**Problems / notes:** the laptop dropped off the bridge three times (hours once); cluster jobs carried on. Biome keys only touch their own biome, so
+per-biome screens compose exactly (a combined screen re-ran identical games). Screen winners regress on new seeds (MAD 8.1 on screen seeds, 11.7 fresh).
+**Next session should:** see HANDOFF.

@@ -81,6 +81,9 @@
 #   bore_dig_short  0..60 (default 15): cells short of the enemy target at which the enemy-side Hatch is dug.
 #   bore_sites      0..2 (default 0): 0 = alternate enemy side and ore field, 1 = ore field only, 2 = enemy side only.
 #   bore_min_cash   0..100000 (default 200): funds needed beyond the Bore's cost before one is bought.
+# s40 (M4-16, shared tier or per faction and tier, optional): grow_bags 0/1 (missing = follow respond_to_attacks): tier-2/3 unit types join the
+#   production bags once the tech tier is reached. Before s40 only respond_to_attacks did this, so the Authority (tiers 2-5, D-287) and the Expedition
+#   (tiers 4-5, D-291) fought with tier-1 units all game.
 
 [faction.authority]
 harass_min_army = 30
@@ -99,12 +102,12 @@ respond_to_attacks = 0  # (tune) s38
 
 [faction.authority.tier5]
 respond_to_attacks = 0  # (tune) s38
-harvester_target = 4  # (tune) s39 D-292: tier 5 v 1 66.7 -> 72.0 %, 5 v 4 52 -> 65 % (128 games); assumed — confirm
+harvester_target = 4  # (tune) s39 D-292: tier 5 v 1 66.7 -> 72.0 %, 5 v 4 52 -> 65 % (128 games); owner-confirmed s40
 attack_threshold = 14  # (tune) s39 D-292 (with harvester_target 4)
 
 [faction.directorate]
 harass_min_army = 14
-bore_max = 0  # (tune) s39 M13-37 D-290: the AI bought ~3 Bores a game and lost them; no Hatch placement paid (docs/balance/s39_balance.md), assumed — confirm
+bore_max = 0  # (tune) s39 M13-37 D-290: the AI bought ~3 Bores a game and lost them; no Hatch placement paid (docs/balance/s39_balance.md), owner-confirmed s40
 adapt_rich_cash = 2000  # (tune) s39 M13-38: with an income edge the Directorate grows a 3rd factory/barracks instead of banking (Dir t5 +50 % v t5: 46 -> 75 %, 32 games)
 
 # D-265 (s31): the Directorate tier-3 AI waits for a bigger edge before it attacks (shared veteran table: 110). On 128 games with destructible props
@@ -128,10 +131,10 @@ aa_cap_before_air = 10   # (tune) s32 D-266: at most 10 anti-air-only vehicles u
 # M4-16 s39 (D-291): the Expedition ladder was flat and draw-heavy at tiers 4-5 (5 v 1 60 %, 43 % draws; 4 v 3 41 %, 128 games, rust_belt) for the same
 # reason as the Authority's (D-287): respond_to_attacks. Off at tiers 4-5: 5 v 1 96 %, 5 v 3 94 %, 4 v 3 95 %, draws 3-9 % (docs/balance/s39_balance.md).
 [faction.expedition.tier4]
-respond_to_attacks = 0  # (tune) s39, assumed — confirm
+respond_to_attacks = 0  # (tune) s39, owner-confirmed s40
 
 [faction.expedition.tier5]
-respond_to_attacks = 0  # (tune) s39, assumed — confirm
+respond_to_attacks = 0  # (tune) s39, owner-confirmed s40
 
 [recruit]
 tier = 1

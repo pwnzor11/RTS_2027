@@ -1,26 +1,37 @@
-# Handoff: Session 40 — confirm D-290..D-293; then the remaining map rows (Ash Plains), M13-39, or open choice
-Last commit: `docs: Session 39 handoff` on `integ-s39` (PR to main; merged by the lead once the cluster suite was green — owner allowed it). Check it merged.
-Where things stand: session 39 stopped the Directorate AI buying Bores and took the strength back with a Rocket salvo nerf (D-290: 24-row MAD 14.7 -> 11.9),
-fixed the Expedition ladder (D-291), nudged the Authority tier 5 (D-292, 5 v 1 72 %, target 90 not reached), let a rich Directorate with an income edge grow
-production (D-293, Super hard Directorate 68 -> 79 %), and added the par-time medal (D-289). docs/balance/s39_balance.md. Decisions up to D-293. Open questions: none.
+# Handoff: Session 41 — confirm D-294; then the pairwise rows (Left Behind v Expedition, Authority on Rust/Glass), M13-42, or open choice
+Last commit: `docs: Session 40 handoff` on `integ-s40`, merged to main as PR #122 (owner OK 2026-11-22). Check it merged.
+Where things stand: session 40 balanced the map-specific rows with per-biome ore amounts (D-294: 24-row MAD 14.6 -> 9.7, all rows 29.5-69 %), fixed the
+Directorate AI selling its power (D-295) and a harvester dock jam that froze income (D-296, sim), and added an unused grow_bags AI key (D-297).
+docs/balance/s40_balance.md. Decisions up to D-297. Open questions: none.
 
 ## Start here (shown to the user as the plan; nothing starts until they say go)
-1. Laptop: `git checkout main; git pull`, rebuild. Owner to confirm D-290..D-293 (numbers in USER_CHECKS session 39).
-2. Remaining table outliers (s39 table): Authority v Directorate Ash 13 % / Mountains 36 %, Directorate v Expedition Glass 18 % / Ash 76 %, Directorate v
-   Left Behind Rust 20 %, Authority v LB Rust 73 %, LB v Expedition Ash 28 % / Glass 34 %. Cause on Ash/Mountains (s39 trace): Directorate waves reach the
-   mid-row Authority base ~2 000 ticks earlier; levers to try: map-side (a barrier on the middle row, start_row_shift), an Authority early-defence AI change.
-3. M13-39: the rich enemy-less Directorate test rig sells its Reactor Vents into a power collapse once it buys no Bores; check real games.
-4. Authority tier 5 v 1 to 90 %: needs an AI code change (data keys top out ~72-75 %).
-5. Then: two-PC LAN test (M9-15), Expedition play-test (M7-14), voice log (M10-27).
+1. Laptop: `git checkout main; git pull`, rebuild. Owner to confirm D-294 (map values in USER_CHECKS session 40); try a skirmish per biome.
+2. Rows still outside 35-65 % (s40 §4): Left Behind v Expedition Glass 32.5 / Ash 29.5; Authority v LB Rust 68.7 / Glass 69.0; Authority v Expedition
+   Rust 68.9; Directorate v Expedition Glass 34.0; Ash Authority v Directorate 33.0 / v LB 34.7. Pairwise, not one faction: study the LB v Expedition unit
+   mix (ledgers) before more knobs; screen at 128 games (64-game unit screens were erratic).
+3. M13-42: Authority tier-2/3 units are worth less than tier-1 spam (grow_bags made it weaker); a unit value pass, then set grow_bags for the Authority
+   (tiers 2-5) and the Expedition (tiers 4-5). Might also be the lever for Authority tier 5 v 1 (76 %, target 90).
+4. M13-40 leftovers: head-on harvester jams in 1-wide corridors between AI buildings (AI could keep 2-wide lanes by refineries, or a sidestep rung in
+   MoveMission.Blocked; Standard of Iron's "stuck clock + recovery ladder" is a good model, docs/PATHFINDING_ARCHITECTURE.md there).
+5. Owner: M9-15 two-PC LAN test; M7-14 Expedition play-test; M10-27 voice log from the owner's machine.
+
+## Standard of Iron (github.com/djeada/Standard-of-Iron, reviewed s40)
+MIT-licensed C++20/Qt 6 3D RTS (Rome v Carthage). Code is not portable to our C#/MonoGame 2D sim, but these ideas fit: (1) the stuck clock and recovery
+ladder (replan -> sidestep -> relax -> abandon) for wedged units, measured against net displacement so route churn cannot reset it; (2) balance
+fixtures: unit-v-unit matchups in data with expected outcome bounds, gated by a test (we have only whole-game tables); (3) committed AI attack waves that
+latch members, call up idle troops after 60 s and search the map when no target is known; (4) a map test that every start has room for its fields;
+(5) an audio provenance manifest checked by a script (97 CC0 entries, mostly ancient-war themed; ElevenLabs renders are licensed to their author, not reusable).
 
 ## Half-finished work
-- Nothing in code. Cluster outputs on /work/out (b39 baseline, v39b..v39h variants, e39 handicap, sw39 sweep, t39 suite); jobs self-delete.
-- Branches to delete on GitHub after merge: integ-s39, plus the list given to the owner in session 39 if not yet run.
+- Nothing in code. Cluster: no jobs left; outputs on /work/out (b41, fin40, ref41, v41a-h) for comparisons.
 
 ## Waiting on the user
-- Confirm D-290..D-293. Voice log (M10-27). Two-PC LAN test (M9-15). Expedition play-test (M7-14). Branch deletes.
+- Confirm D-294; delete branch `integ-s40` on GitHub.
 
 ## How to run this session
+- s40: biome keys only change their own biome: screen biomes separately and compose (no combined screen needed). Screen winners regress on fresh
+  seeds; decide on chunks 4-7. Use `/work/in/s40/tab40.py <dir> <tag> [chmin chmax]` and `cmp39.py var ref` (ref dir with main__ names, e.g. ref41).
+- s40: the laptop can drop off the bridge for hours; cluster jobs carry on. Keep cloud work (tests, ladder runs) going meanwhile; checkpoint early.
 - Session 39 lessons:
   - Keep the sum of all running jobs' parallelism at or below the free slots (~36 with queen cordoned): over-committed jobs left new jobs' pods
     Pending for 30+ min (scheduler backoff); a --fast build landed on a Pi once slots were freed. Lower parallelism, then restore.

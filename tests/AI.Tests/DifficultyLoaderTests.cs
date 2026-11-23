@@ -193,6 +193,24 @@ public class DifficultyLoaderTests
     }
 
     [Fact]
+    public void GrowBagsKeyFollowsRespondToAttacksUnlessSet()   // s40 M4-16
+    {
+        string text = File.ReadAllText(DifficultyLoader.PathBesideRules(TestWorld.RulesDir));
+        var plain = DifficultyLoader.Load(Write(text));
+        Assert.All(plain.Skip(1), t => Assert.Equal(-1, t.GrowBags));
+        Assert.True(plain[2].ForFaction(1).GrowsBags);   // missing key: the respond_to_attacks flag decides
+        Assert.Equal(plain[2].ForFaction(Authority).RespondToAttacks, plain[2].ForFaction(Authority).GrowsBags);
+        var set = DifficultyLoader.Load(Write(text.Replace("[faction.authority.tier3]\n", "[faction.authority.tier3]\ngrow_bags = 1\n")
+            .Replace("[regular]\n", "[regular]\ngrow_bags = 0\n")));
+        Assert.True(set[2].ForFaction(Authority).GrowsBags);
+        Assert.False(set[2].ForFaction(Authority).RespondToAttacks);
+        Assert.False(set[1].GrowsBags);
+        Assert.True(set[1].RespondToAttacks);
+        string bad = Write(text.Replace("[faction.authority.tier3]\n", "[faction.authority.tier3]\ngrow_bags = 2\n"));
+        Assert.Throws<RulesException>(() => DifficultyLoader.Load(bad));
+    }
+
+    [Fact]
     public void TierOverrideTableIsValidated()
     {
         string text = File.ReadAllText(DifficultyLoader.PathBesideRules(TestWorld.RulesDir)).Replace("\r\n", "\n");

@@ -128,6 +128,24 @@ public class HarvesterTests
     }
 
     [Fact]
+    public void IdleHarvesterOnDockCell_StepsOffSoTheReturnerCanUnload()
+    {
+        // M13-40: the ore is gone, so a harvester that unloaded sleeps on the dock cell in Harvest; the loaded one that holds the claim
+        // used to wait for that cell for ever (AI tier-3 games: income frozen, structures sold).
+        var sim = NewSim(PaintMap(OverlayKind.None, 0));
+        sim.PlaceBuilding(0, Bld("test_refinery"), Refinery);
+        EntityId idle = sim.SpawnVehicle(0, Harvester, Dock);
+        EntityId loaded = sim.SpawnVehicle(0, Harvester, new CellCoord(5, 9));
+        sim.Economy.Touch(loaded.Index, loaded);
+        sim.Economy.Cargo[loaded.Index] = 20;
+        sim.Economy.CargoValue[loaded.Index] = 20 * 25;
+        sim.AssignMission(new ActorRef(ActorKind.Vehicle, loaded), MissionKind.Return);
+        RunUntil(sim, () => sim.Players.Stored[0] > 0, 1500);
+        RunUntil(sim, () => sim.Economy.Cargo[loaded.Index] == 0 && MissionOf(sim, loaded) == MissionKind.Harvest, 1500);
+        Assert.True(sim.Units.Slots.IsAlive(idle));
+    }
+
+    [Fact]
     public void RefineryDestroyedMidDock_HarvesterUsesAnotherRefinery()
     {
         var (sim, h) = Basic(silo: true);

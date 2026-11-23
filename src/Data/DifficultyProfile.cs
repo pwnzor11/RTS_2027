@@ -90,6 +90,14 @@ public sealed record DifficultyProfile(
     /// <summary>S15 lbknob: with <see cref="ArmyCap"/>, the cap holds only before this tick (0 = for the whole game).</summary>
     public int ArmyCapUntilTick { get; init; }
 
+    /// <summary>s40 (M4-16): -1 (key missing) = tier-2/3 unit types join the production bags only with <see cref="RespondToAttacks"/> (the M4-12 rule);
+    /// 0/1 = off/on whatever that flag says. Why: D-287/D-291 switched respond_to_attacks off for the Authority (tiers 2-5) and the Expedition (tiers 4-5),
+    /// and with it the bag growth, so those AIs fought the whole game with tier-1 units (s40 ledgers: no Authority Marksman, Mortar, Bulwark or Howitzer).</summary>
+    public int GrowBags { get; init; } = -1;
+
+    /// <summary>s40: true when tier-2/3 unit types join the production bags (<see cref="GrowBags"/>, else <see cref="RespondToAttacks"/>).</summary>
+    public bool GrowsBags => GrowBags < 0 ? RespondToAttacks : GrowBags == 1;
+
     // S15 lbknob: per-faction versions of this tier (index = Faction enum value), from the [faction.<id>.tier<N>] tables; null = the shared profile.
     private DifficultyProfile?[] _byFaction = new DifficultyProfile?[5];
 

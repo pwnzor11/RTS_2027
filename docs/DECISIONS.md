@@ -2181,3 +2181,28 @@ handicap is above 100 % (the "Super hard (LLM)" edge), AdaptBuild skips the army
 Directorate: `adapt_rich_cash = 2000`. Normal games (handicap 100) cannot change: checked game for game on two rows. **Why:** the Directorate gained least
 from the D-286 edge: not storage or supply (traces), but production (one Assembly Bore, AdaptBuild waits for an army of 30 its waves never keep). After,
 tier 5 at +50 % v plain tier 5: 67.8 % (s38, 64 games) -> 79.0 % (128); at +25 %: 53.3 -> 68.9 %. **Status:** assumed — confirm.
+
+### D-294 · 2026-11-23 · Session 40: per-biome ore amounts balance the map-specific rows (M13-41)
+**Decision:** data/mapgen/biomes.toml: Ash Plains `ash_fields_per_start` 4 -> 3 and `extra_fields` 4 -> 2; Mountains `ash_fields_per_start` 3 -> 2;
+Rust Belt `ash_fields_per_start` 3 -> 4; Glass Coast `ash_fields_per_start` 2 -> 3 and `field_density_min` 3 -> 5. Map hash pins re-pinned (D-220);
+two decor bounds relaxed for small 3-4 player maps (clusters >= 300, dead <= 100 per mille, as the existing "cramped" exemption). **Why:** ore richness
+drives the map-specific rows: less ore lifts the Authority and the Left Behind and drops the Directorate. 24-row table at 128 games (tier 3): MAD 14.6
+-> 9.7, rows in 40-60 % 9 -> 15, range 13.5-74.4 -> 29.5-69.0 % (docs/balance/s40_balance.md). Owner's ask: "map side or AI side changes or unit
+changes, just finish the balance issues". **Alternatives:** rough terrain, roads, shallows, ashfall damage, shipment rules, unit stats (Slinger,
+Grapeshot, Harpoon, Glide Tank, Skimmer), Authority tier units (grow_bags): no gain or erratic at 64 games. **Status:** assumed — confirm.
+
+### D-295 · 2026-11-22 · Session 40: an AI sale never leaves power short (M13-39)
+**Decision:** EconomyRescue.SellOne skips a power structure whose sale would leave power made below power used (`KeepsPower`); applies to rescue and
+"Broke" sales. **Why:** real Directorate games sold Reactor Vents with harvesters alive (15 of 24) and sat in low power (5 games 3 000+ ticks) since it
+buys no Bores (D-290); only the last power plant was protected. The M4 test rig keeps its WithBores workaround (40 000 credits wall its harvesters in).
+
+### D-296 · 2026-11-22 · Session 40: an idle harvester steps off its refinery's dock cell (M13-40)
+**Decision:** HarvestMission.ClearDockFor: a harvester standing on an own refinery's dock cell steps to a free neighbour while a returning harvester in
+Enter holds that dock's claim. Integer only, no new state. **Why:** the returner was blocked for the rest of the game (income frozen; all factions).
+Not fixed: head-on jams in 1-wide corridors between AI buildings; late ore exhaustion is the main freeze cause on 96 maps.
+
+### D-297 · 2026-11-22 · Session 40: grow_bags key, not used (M4-16)
+**Decision:** new optional AI key `grow_bags` (shared tier or per faction and tier; missing = follow respond_to_attacks): tier-2/3 unit types join the
+production bags once that tech tier is reached. Not set anywhere, so behaviour is unchanged. **Why:** since D-287/D-291 the Authority (tiers 2-5) and the
+Expedition (tiers 4-5) build tier-1 units only. Set for the Authority it made it weaker (Rust v LB 72 -> 66 %, ladder 5 v 1 76 -> 68 %): its tier-2/3
+units lose value for cost against tier-1 spam. Kept as a lever for a unit-value pass.

@@ -130,6 +130,12 @@ internal sealed class EconomyRescue
         return false;
     }
 
+    /// <summary>M13-39: false when selling a structure that makes <paramref name="buildingPower"/> would leave the grid short
+    /// (power made below power used): the income-stall sale (<see cref="Broke"/>) used to sell Reactor Vents into a power collapse
+    /// (slow production, no tier-3 gate) while the harvesters were merely stuck. Structures that make no power are always fine.</summary>
+    internal static bool KeepsPower(int powerOut, int powerUse, int buildingPower) =>
+        buildingPower <= 0 || powerOut - buildingPower >= powerUse;
+
     /// <summary>Sells the structure with the dearest refund that is not needed (yard, refinery, factory, last power plant, an occupied
     /// garrison; with <paramref name="keepProduction"/> also the barracks and any producer). False when there is none.</summary>
     private bool SellOne(RecruitKnowledge k, ICommandSink sink, RecruitFaction faction, bool keepProduction)
@@ -147,6 +153,7 @@ internal sealed class EconomyRescue
             if (bt.Id == faction.YardId || bt.Id == faction.RefineryId || bt.Id == faction.FactoryId || bt.Wall || bt.Gate) continue;
             if (keepProduction && (bt.Produces != null || bt.Id == faction.BarracksId || bt.PrimaryWeapon >= 0)) continue;
             if (bt.Power > 0 && powerPlants <= 1) continue;
+            if (!KeepsPower(k.Hud.PowerOut, k.Hud.PowerUse, bt.Power)) continue;   // M13-39: a sale must not push the base into low power
             if (bt.Cost <= 0 || bt.Garrison > 0 && k.View.OccupantsOf(b.Id) > 0) continue;
             int refund = (int)((long)bt.Cost * rules.Economy.SellRefundPermille / 1000);
             if (refund > bestRefund) { bestRefund = refund; pick = b; }
