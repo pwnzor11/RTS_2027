@@ -49,4 +49,27 @@ needs a decision.
 New `[faction.<id>]` keys `infantry_bag`, `vehicle_bag`, `infantry_tier2`, `vehicle_tier2`, `vehicle_tier3` (arrays of unit ids; missing = the built-in
 list, so default games are unchanged). Every list variant is now data-only on the cluster.
 
-(results of g41a and the sweep follow)
+## 3. In-game list screen (job g41a, 64 games per row, v ref41 on the same seeds)
+Variants (data only): gA0 Authority grow_bags at tiers 2-5 with the built-in lists; gA3 grow_bags with tier-2 Mortar + Tank, tier-3 Howitzer x2,
+Rocketeer for the Marksman; gA4 artillery-only tier-2/3 vehicles; gE Expedition grow_bags at tiers 4-5. The new build replayed main game for game
+(Authority v Directorate Rust, chunk 0).
+- 12 Authority rows: MAD gA0 10.8, gA3 13.1, gA4 11.3 v 8.5-9.2 for main on the same seeds; single rows move up to 14 points both ways (e.g. gA3 Rust
+  Auth v Dir 47.9 -> 34.0, Ash Auth v Exp 49.2 -> 62.7). No list improves the table on its own; gA3 is the sweep's 15th lever (auth_grow).
+- Expedition ladder (rust_belt mirrors): main 4 v 3 58-4, 5 v 1 58-3, 5 v 3 59-5; gE 15-9, 33-5, 22-11. Rejected.
+- Authority ladder, main: 2 v 1 43-20, 3 v 1 41-23, **3 v 2 24-40 (37.5 %, out of order)**, 4 v 3 24-19, 5 v 1 39-24, 5 v 3 34-23. The grown lists do
+  not fix 3 v 2 (gA0 21-41, gA3 21-27, gA4 23-40).
+
+## 4. Authority ladder: tier 3 v tier 2 (jobs l41, l41b, l41c; rust_belt, 128 games)
+Cause: since D-288 tier 3 carries army_cap 40 and tier 2 has no cap. Tier-2 army_cap screen:
+| tier-2 cap | 2 v 1 | 3 v 2 |
+|---|---|---|
+| none (main) | 76-35 (68 %) | 37.5 % (64 games) |
+| 40 | 89-38 (70 %) | 55-71 (43.7 %) |
+| 35 | 85-42 (67 %) | 59-65 (47.6 %) |
+| 30 | 79-48 (62 %) | 62-61 (50.4 %) |
+| 25 | 64-64 (50 %) | 79-45 (63.7 %) |
+| 20 | 32-94 (25 %) | 98-29 (77.2 %) |
+Tier 2's strength has a cliff between 25 and 30; a tier-2 cap alone cannot put both pairs clearly in order. l41c: cap 28; cap 30 + tier-3 cap 45 / 50
+(rows 2 v 1, 3 v 2, 4 v 3).
+
+(sweep results follow)
