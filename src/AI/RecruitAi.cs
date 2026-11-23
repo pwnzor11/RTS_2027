@@ -144,6 +144,12 @@ public sealed class RecruitAi : IAiPlayer, IAiSnapshotable, IHookableAi
     /// <summary>M4-12 (diagnostics): the wave manager's state in one line.</summary>
     public string MilitaryDebug => _military.Debug;
 
+    /// <summary>s41 (tests): the army manager.</summary>
+    internal MilitaryManager Military => _military;
+
+    /// <summary>s41 (tests): the production rally cell (default before the first decision).</summary>
+    internal CellCoord RallyCell => _production?.Rally ?? default;
+
     /// <summary>M4-12: units sent after a wave already on the attack.</summary>
     public int Reinforcements => _military.Reinforcements;
 
@@ -385,6 +391,8 @@ public sealed class RecruitAi : IAiPlayer, IAiSnapshotable, IHookableAi
     private const int OrderStateFlag = 0x100;
     /// <summary>s30: set on the layout number when the mop-up hunt memory follows (written only once <c>mopup_hunt</c> remembered something, so other saves are unchanged).</summary>
     private const int HuntStateFlag = 0x200;
+    /// <summary>s41 (M13-45): set when the committed-wave memory (call-up timer, searched sectors) follows (written only while it holds something, so other saves are unchanged).</summary>
+    private const int WaveStateFlag = 0x400;
 
     /// <inheritdoc />
     public void SaveState(BinaryWriter w)
@@ -393,7 +401,8 @@ public sealed class RecruitAi : IAiPlayer, IAiSnapshotable, IHookableAi
         bool hooked = thinking && (_servedWaveSeq != 0 || _military.HookDirty);
         bool ordered = thinking && (_military.OrdersDirty || _raid.Dirty || _build!.ExpandDoneTick >= 0 || _planner!.ExpandStepFor >= 0);
         bool hunted = thinking && _military.HuntDirty;
-        w.Write((hooked ? EndgameHookStateVersion : EndgameStateVersion) | (ordered ? OrderStateFlag : 0) | (hunted ? HuntStateFlag : 0));
+        bool waved = thinking && _military.WaveDirty;   // s41
+        w.Write((hooked ? EndgameHookStateVersion : EndgameStateVersion) | (ordered ? OrderStateFlag : 0) | (hunted ? HuntStateFlag : 0) | (waved ? WaveStateFlag : 0));
         w.Write(_id);
         w.Write(thinking);
         if (!thinking) return;   // never decided anything: a fresh AI is the same AI
@@ -421,6 +430,7 @@ public sealed class RecruitAi : IAiPlayer, IAiSnapshotable, IHookableAi
         if (hooked) { w.Write(_servedWaveSeq); _military.SnapshotHooks(w); }   // M8-06
         if (ordered) { _military.SnapshotOrders(w); _raid.Snapshot(w); w.Write(_build!.ExpandDoneTick); w.Write(_planner!.ExpandStepFor); }   // S24 (s24-dai2: the expand order memory)
         if (hunted) _military.SnapshotHunt(w);   // s30
+        if (waved) _military.SnapshotWave(w);   // s41
     }
 
     /// <inheritdoc />
@@ -430,7 +440,8 @@ public sealed class RecruitAi : IAiPlayer, IAiSnapshotable, IHookableAi
         int version = r.ReadInt32();
         bool ordered = (version & OrderStateFlag) != 0;   // S24
         bool hunted = (version & HuntStateFlag) != 0;   // s30
-        version &= ~(OrderStateFlag | HuntStateFlag);
+        bool waved = (version & WaveStateFlag) != 0;   // s41
+        version &= ~(OrderStateFlag | HuntStateFlag | WaveStateFlag);
         if (version is not (StateVersion or HookStateVersion or CancelStateVersion or CancelHookStateVersion or MopupStateVersion or MopupHookStateVersion or EndgameStateVersion or EndgameHookStateVersion)) throw new InvalidDataException("AI state of another layout");
         if (r.ReadString() != _id) throw new InvalidDataException("AI state of another AI");
         if (!r.ReadBoolean()) return;
@@ -457,5 +468,6 @@ public sealed class RecruitAi : IAiPlayer, IAiSnapshotable, IHookableAi
         if (version is HookStateVersion or CancelHookStateVersion or MopupHookStateVersion or EndgameHookStateVersion) { _servedWaveSeq = r.ReadInt32(); _military.RestoreHooks(r); }   // M8-06
         if (ordered) { _military.RestoreOrders(r); _raid.Restore(r); _build.RestoreExpand(r.ReadInt32()); _planner.ExpandStepFor = r.ReadInt32(); }   // S24
         if (hunted) _military.RestoreHunt(r);   // s30
+        if (waved) _military.RestoreWave(r);   // s41
     }
 }

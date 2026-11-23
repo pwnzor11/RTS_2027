@@ -98,6 +98,12 @@ public sealed record DifficultyProfile(
     /// <summary>s40: true when tier-2/3 unit types join the production bags (<see cref="GrowBags"/>, else <see cref="RespondToAttacks"/>).</summary>
     public bool GrowsBags => GrowBags < 0 ? RespondToAttacks : GrowBags == 1;
 
+    /// <summary>s41 (M13-45) <c>wave_reinforce_ticks</c> (0 = off, 1200 = 60 s suggested): while a wave is out, every this many ticks idle army units at home that are not in it join it and attack-move to its goal.</summary>
+    public int WaveReinforceTicks { get; init; }
+
+    /// <summary>s41 (M13-45) <c>wave_search</c>: a wave in assault that knows no enemy sweeps the map sector by sector instead of ending (false = off).</summary>
+    public bool WaveSearch { get; init; }
+
     // S15 lbknob: per-faction versions of this tier (index = Faction enum value), from the [faction.<id>.tier<N>] tables; null = the shared profile.
     private DifficultyProfile?[] _byFaction = new DifficultyProfile?[5];
 

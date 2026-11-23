@@ -211,6 +211,25 @@ public class DifficultyLoaderTests
     }
 
     [Fact]
+    public void WaveCommitKeysDefaultOffAndLoadSharedAndPerFaction()   // s41 M13-45
+    {
+        string text = File.ReadAllText(DifficultyLoader.PathBesideRules(TestWorld.RulesDir)).Replace("\r\n", "\n");
+        var plain = DifficultyLoader.Load(Write(text));
+        Assert.All(plain, t => { Assert.Equal(0, t.WaveReinforceTicks); Assert.False(t.WaveSearch); });
+        var set = DifficultyLoader.Load(Write(text.Replace("[regular]\n", "[regular]\nwave_reinforce_ticks = 1200\nwave_search = 1\n")
+            .Replace("[faction.authority.tier3]\n", "[faction.authority.tier3]\nwave_reinforce_ticks = 600\nwave_search = 1\n")));
+        Assert.Equal(1200, set[1].WaveReinforceTicks);
+        Assert.True(set[1].WaveSearch);
+        Assert.Equal(0, set[2].WaveReinforceTicks);   // the shared tier 3 keeps the default
+        Assert.False(set[2].WaveSearch);
+        Assert.Equal(600, set[2].ForFaction(Authority).WaveReinforceTicks);
+        Assert.True(set[2].ForFaction(Authority).WaveSearch);
+        Assert.Throws<RulesException>(() => DifficultyLoader.Load(Write(text.Replace("[regular]\n", "[regular]\nwave_reinforce_ticks = 100001\n"))));
+        Assert.Throws<RulesException>(() => DifficultyLoader.Load(Write(text.Replace("[regular]\n", "[regular]\nwave_search = 2\n"))));
+        Assert.Throws<RulesException>(() => DifficultyLoader.Load(Write(text.Replace("[faction.authority.tier3]\n", "[faction.authority.tier3]\nwave_search = -1\n"))));
+    }
+
+    [Fact]
     public void TierOverrideTableIsValidated()
     {
         string text = File.ReadAllText(DifficultyLoader.PathBesideRules(TestWorld.RulesDir)).Replace("\r\n", "\n");
