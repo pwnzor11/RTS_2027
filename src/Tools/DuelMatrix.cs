@@ -51,8 +51,8 @@ public static class DuelMatrix
             total += w;
         }
         if (parts.Count == 0) throw new ArgumentException("empty side spec");
-        // floor counts (at least one of each), then fill: the part furthest below its share buys one more while it still fits the budget,
-        // so both sides of a duel spend within one unit of the budget
+        // floor counts (at least one of each), then fill: the part furthest below its share buys one more while that brings the spend
+        // nearer the budget, so both sides of a duel spend within half a unit of the budget
         var counts = new int[parts.Count];
         long spent = 0;
         for (int k = 0; k < parts.Count; k++)
@@ -68,7 +68,7 @@ public static class DuelMatrix
             for (int k = 0; k < parts.Count; k++)
             {
                 int cost = Math.Max(1, Cost(rules, parts[k].Item1, parts[k].Item2));
-                if (spent + cost > budget) continue;
+                if (spent + cost - budget > budget - spent) continue;   // one more only while it brings the spend nearer the budget
                 long deficit = (long)budget * parts[k].Weight / total - (long)counts[k] * cost;
                 if (deficit > bestDeficit) { bestDeficit = deficit; best = k; }
             }
@@ -231,5 +231,24 @@ public static class DuelMatrix
         foreach (Summary s in rows)
             sb.Append(CultureInfo.InvariantCulture, $"{s.A},{s.B},{s.Games},{s.MeanScore},{s.WinsA},{s.WinsB},{s.Draws},{s.MeanEndTick},{s.SpentA},{s.SpentB}\n");
         return sb.ToString();
+    }
+}
+
+/// <summary>s41 (M13-43): one entry of <c>data/balance/duels.toml</c>.</summary>
+public sealed record DuelFixture(string A, string B, int Budget, int Min, int Max, string Why)
+{
+    /// <summary>Path of the fixtures file beside a rules folder.</summary>
+    public static string PathBesideRules(string rulesDir) => System.IO.Path.Combine(rulesDir, "..", "balance", "duels.toml");
+
+    /// <summary>Reads every <c>[[duel]]</c>.</summary>
+    public static List<DuelFixture> Load(string path)
+    {
+        var model = Tomlyn.TomlSerializer.Deserialize<Tomlyn.Model.TomlTable>(File.ReadAllText(path))!;
+        var r = new List<DuelFixture>();
+        if (!model.TryGetValue("duel", out object? raw) || raw is not Tomlyn.Model.TomlTableArray arr) return r;
+        foreach (Tomlyn.Model.TomlTable t in arr)
+            r.Add(new DuelFixture((string)t["a"], (string)t["b"], (int)(long)t["budget"], (int)(long)t["min"], (int)(long)t["max"],
+                t.TryGetValue("why", out object? w) ? (string)w : ""));
+        return r;
     }
 }

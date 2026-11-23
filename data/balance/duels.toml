@@ -1,0 +1,94 @@
+# s41 (M13-43): unit-v-unit balance fixtures, checked by tests/Tools.Tests/DuelFixtureTests.
+# Each [[duel]] plays two equal-cost armies (budget credits each, split by weight) on a flat map with no AI: they attack-move at each other and
+# the score is the share of its army value A keeps minus B's share, permille (-1000..1000), averaged over 3 layouts x both sides
+# (Tools ai duels --a <a> --b <b> --budget <budget> --seeds 3). A fixture states design intent; a change that breaks one needs a decision.
+# Side specs: id[:weight][+id[:weight]...]. The Expedition's grown v tier-1 lists are left out: the result flips with army size (s41: +381 at 8 000,
+# -448 at 12 000), so it is not a stable intent.
+
+[[duel]]
+a = "auth_rocketeer"
+b = "auth_tank"
+budget = 8000
+min = 300
+max = 1000
+why = "anti-tank infantry beats tanks for the same money"
+
+[[duel]]
+a = "auth_tank"
+b = "auth_rifleman"
+budget = 8000
+min = 200
+max = 1000
+why = "tanks beat rifle infantry"
+
+[[duel]]
+a = "auth_rocketeer"
+b = "exp_glide_tank"
+budget = 8000
+min = 300
+max = 1000
+why = "anti-tank infantry beats the Glide Tank"
+
+[[duel]]
+a = "lb_slinger"
+b = "auth_tank"
+budget = 8000
+min = 200
+max = 1000
+why = "the Slinger is the Left Behind's anti-tank answer"
+
+[[duel]]
+a = "exp_marine"
+b = "lb_hook_runner"
+budget = 8000
+min = 300
+max = 1000
+why = "Marines beat Hook Runners"
+
+[[duel]]
+a = "auth_rifleman"
+b = "dir_conscript"
+budget = 8000
+min = 300
+max = 1000
+why = "Riflemen beat Conscripts (Conscripts are cheap fodder)"
+
+[[duel]]
+a = "auth_howitzer"
+b = "lb_buggy"
+budget = 8000
+min = 300
+max = 1000
+why = "artillery behind its own range kills light raiders that run at it"
+
+[[duel]]
+a = "dir_conscript"
+b = "lb_hook_runner"
+budget = 8000
+min = 300
+max = 1000
+why = "Conscripts beat Hook Runners"
+
+[[duel]]
+a = "auth_rifleman:666+auth_rocketeer:2000+auth_marksman:1332+auth_tank:2612+auth_jeep:285+auth_seismic_mortar:653+auth_foam_truck:326+auth_bulwark:1468+auth_howitzer:653"
+b = "auth_rifleman:1000+auth_rocketeer:3000+auth_tank:5235+auth_jeep:763"
+budget = 8000
+min = 0
+max = 1000
+why = "Authority: the AI's grown tier-3 lists beat its tier-1 lists for the same money (M13-42)"
+
+[[duel]]
+a = "dir_conscript:714+dir_ashthrower:597+dir_sapper:746+dir_volunteer:746+dir_commissar:1194+dir_rocket_truck:1692+dir_reactor_crawler:1744+dir_delver:930+dir_ash_sower:465+dir_landtrain:1163"
+b = "dir_conscript:2181+dir_ashthrower:1818+dir_rocket_truck:3957+dir_reactor_crawler:2040"
+budget = 8000
+min = 0
+max = 1000
+why = "Directorate: grown lists beat tier-1 lists"
+
+[[duel]]
+a = "lb_hook_runner:800+lb_scavenger:360+lb_slinger:1334+lb_drifter_brute:1001+lb_buggy:1200+lb_harpoon_wagon:1866+lb_organ:1066+lb_rolling_fort:1866"
+b = "lb_hook_runner:2758+lb_scavenger:1240+lb_buggy:6000"
+budget = 8000
+min = 0
+max = 1000
+why = "Left Behind: grown lists beat tier-1 lists"
