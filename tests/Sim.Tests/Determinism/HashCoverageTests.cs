@@ -25,6 +25,14 @@ public class HashCoverageTests
         ["PathService._floodQueue"] = "M13-05: flood-fill scratch for the region labels",
         ["ProductionState.NoRebuildTicks"] = "M4-17: written only when SimSetup.NoRebuildDefeat is on (so other games keep their bytes); covered by NoRebuildDefeatTests.ClockIsHashed",
         ["PlayerStore.HandicapPercent"] = "S19 D-205: written only when SimSetup.Handicap has a player off 100 (so other games keep their bytes); covered by HandicapTests.ADefaultSlotOptions_SetupKeepsTheOldHashAndHeaderBytes",
+        ["UnitStore.StuckAnchor"] = "S41 M13-44: written only when [movement] stuck_recovery = 1 (so other games keep their bytes); covered by StuckRecoveryTests.RuleOn_StuckClockIsHashed_RuleOffIsNot",
+        ["UnitStore.StuckAnchorTick"] = "S41 M13-44: written only when [movement] stuck_recovery = 1 (so other games keep their bytes); covered by StuckRecoveryTests.RuleOn_StuckClockIsHashed_RuleOffIsNot",
+        ["UnitStore.StuckLastTick"] = "S41 M13-44: written only when [movement] stuck_recovery = 1 (so other games keep their bytes); covered by StuckRecoveryTests.RuleOn_StuckClockIsHashed_RuleOffIsNot",
+        ["UnitStore.StuckRung"] = "S41 M13-44: written only when [movement] stuck_recovery = 1 (so other games keep their bytes); covered by StuckRecoveryTests.RuleOn_StuckClockIsHashed_RuleOffIsNot",
+        ["InfantryStore.StuckAnchor"] = "S41 M13-44: written only when [movement] stuck_recovery = 1 (so other games keep their bytes); covered by StuckRecoveryTests.RuleOn_StuckClockIsHashed_RuleOffIsNot",
+        ["InfantryStore.StuckAnchorTick"] = "S41 M13-44: written only when [movement] stuck_recovery = 1 (so other games keep their bytes); covered by StuckRecoveryTests.RuleOn_StuckClockIsHashed_RuleOffIsNot",
+        ["InfantryStore.StuckLastTick"] = "S41 M13-44: written only when [movement] stuck_recovery = 1 (so other games keep their bytes); covered by StuckRecoveryTests.RuleOn_StuckClockIsHashed_RuleOffIsNot",
+        ["InfantryStore.StuckRung"] = "S41 M13-44: written only when [movement] stuck_recovery = 1 (so other games keep their bytes); covered by StuckRecoveryTests.RuleOn_StuckClockIsHashed_RuleOffIsNot",
         ["VisionState._ghosts"] = "ghost data is written only where _ghostPresent is set; an absent slot is not state. "
             + "GhostHealth_IsSerialisedWhenPresent covers it with a present ghost.",
     };

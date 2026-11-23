@@ -735,3 +735,18 @@ Iron reviewed (MIT C++/Qt 3D: ideas, not code; summary in HANDOFF). docs/balance
 **Problems / notes:** the laptop dropped off the bridge three times (hours once); cluster jobs carried on. Biome keys only touch their own biome, so
 per-biome screens compose exactly (a combined screen re-ran identical games). Screen winners regress on new seeds (MAD 8.1 on screen seeds, 11.7 fresh).
 **Next session should:** see HANDOFF.
+
+## Session 41 · 2026-11-22/23 (finish line; unit duels + fixtures; AI lists as data; Standard of Iron ideas; joint sweep; Authority ladder cap)
+**Goal:** owner: resume, "sort out balance for good" — took the recommendations (finish line 35-65 % + ladder + D-222; AI unit choice and unit tests
+first, then a joint sweep; cluster without queen; push access, merge when green); mid-session: "implement those 5 ideas too" (Standard of Iron).
+**Done:** found session 40 already merged (laptop folder behind). M13-43 `Tools ai duels` + data/balance/duels.toml + DuelFixtureTests (D-299).
+M13-42: duels show grown AI lists beat tier-1 lists (D-297's reading was wrong); unit lists as data keys (D-300); Expedition lists rejected in games.
+Standard of Iron: stuck clock + recovery ladder (D-301, off), committed-wave keys (D-302, off), map start-room test and audio provenance (D-303).
+Authority ladder: tier 3 lost to tier 2 (37.5 %); tier-2 army_cap 28 (D-304, 256 games 3 v 2 52.6 %). Joint sweep w41 (64 variants x 24 rows, 24 576
+games) + fit: package failed on fresh seeds; the same build differs 7.6 points per row between seed halves (map pool) -> Q-87. docs/balance/s41_balance.md.
+**Decisions:** D-298..D-304. **Questions:** Q-87 (🔴, finish-line measurement).
+**Helpers:** 4 (Sonnet: stuck recovery ~9 min, waves ~6.5 min; Haiku: map test ~3 min, audio ~4 min); no fix rounds. The map-test helper made one
+read-only device call its brief forbade (no change). About 37 000 cluster games.
+**Problems / notes:** I first passed a guessed full SHA to the cluster build (not our ref; fixed); all sweep variants ran on the same 8 seeds (design
+flaw, anchored fit used instead); Game.Tests need `git lfs pull` in the cloud clone.
+**Next session should:** see HANDOFF.

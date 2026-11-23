@@ -84,6 +84,11 @@
 # s40 (M4-16, shared tier or per faction and tier, optional): grow_bags 0/1 (missing = follow respond_to_attacks): tier-2/3 unit types join the
 #   production bags once the tech tier is reached. Before s40 only respond_to_attacks did this, so the Authority (tiers 2-5, D-287) and the Expedition
 #   (tiers 4-5, D-291) fought with tier-1 units all game.
+# s41 (M13-45, shared tier or per faction and tier, optional, default off): committed attack waves.
+#   wave_reinforce_ticks 0..100000 (default 0 = off; 1200 = 60 s suggested): while a wave is out, every this many ticks since its launch (or since the last
+#     call-up) idle army units at home that are not in the wave (and beyond the home guard) join it and attack-move to its goal.
+#   wave_search 0/1 (default 0): a wave in assault that knows no enemy sweeps an 8x8 grid of map sectors (nearest unvisited first) instead of ending,
+#     until it sees an enemy or has visited every sector; then the old end-of-wave rule applies.
 
 [faction.authority]
 harass_min_army = 30
@@ -92,6 +97,7 @@ harass_min_army = 30
 # made every higher Authority tier play worse than the fixed tier-1 order; with the flag off at tier 2 it wins 76-84 % of the same cell.
 [faction.authority.tier2]
 respond_to_attacks = 0  # (tune) s38
+army_cap = 28  # (tune) s41 D-304: the tier-3 Authority (cap 40) lost to an uncapped tier 2 (3 v 2 37.5-40.7 %); 256 games: 2 v 1 60.4, 3 v 2 52.6, 4 v 3 60.5; docs/balance/s41_balance.md
 
 [faction.authority.tier3]
 respond_to_attacks = 0  # (tune) s38

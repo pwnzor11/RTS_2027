@@ -8,6 +8,7 @@ file cited after each question. Recommendations are the lead's, from the researc
 (none)
 
 ## Answered
+- Q-87 · 2026-11-23 · Owner: (c) judge the six pairings over the map pool now, the 24 per-map rows later once map-specific causes are fixed → D-305.
 - Q-73 · 2026-11-21 · Owner (s39): par = the bot's tier-3 median win x 2.5 (the s37 table), none on timer missions → D-289.
 - Q-86 · 2026-11-17 · Owner: love the draft; keep 144 pages; keep the spoiler handling and the cover; accept the design 13/14 pages as written → D-271.
 - Q-85 · 2026-11-16 · Owner (b): dress rustbelt_m2 fully and retune the tier-5 bots → D-262.

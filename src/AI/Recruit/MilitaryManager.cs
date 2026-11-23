@@ -425,6 +425,128 @@ internal sealed class MilitaryManager
         return null;
     }
 
+    // ---- s41 (M13-45): committed waves (keys wave_reinforce_ticks / wave_search, default off; with both off none of this runs) ----
+
+    /// <summary>s41: the map is searched in an 8 x 8 grid of sectors.</summary>
+    public const int SearchGrid = 8;
+    /// <summary>s41: longest a searching wave works on one sector before it counts as visited (an unreachable cell).</summary>
+    public const int SearchSectorTimeoutTicks = 1500;   // (tune)
+
+    // Long-lived (saved in the wave block): tick of the next call-up (0 = none), bit set of visited sectors, the sector being searched (-1 = none), its cell and start tick.
+    private int _callAt, _searchSector = -1, _searchSince;
+    private ulong _secVisited;
+    private CellCoord _searchCell;
+
+    /// <summary>s41 (tests): wave phase (0 gather, 1 stage, 2 assault) and roster size.</summary>
+    internal int PhaseNumber => (int)_phase;
+    internal int RosterCount => _roster.Count;
+
+    /// <summary>s41: idle units that joined a wave through the call-up.</summary>
+    public int CalledUp { get; private set; }
+
+    /// <summary>s41: sectors the current wave has visited (diagnostics and tests).</summary>
+    internal int SectorsVisited => System.Numerics.BitOperations.PopCount(_secVisited);
+
+    /// <summary>s41: the sector cell a searching wave is heading for, or null.</summary>
+    internal CellCoord? SearchGoal => _searchSector >= 0 ? _searchCell : null;
+
+    /// <summary>s41: true when the committed-wave memory differs from a fresh manager (decides whether a save carries it).</summary>
+    internal bool WaveDirty => _callAt != 0 || _secVisited != 0 || _searchSector >= 0;
+
+    /// <summary>s41 wave_reinforce_ticks: when the call-up is due, idle army units at the rally that are not in the wave (beyond the home guard) join its roster; the
+    /// member loop then sends them to the wave's goal. Not while the base is under attack (those units are the defence).</summary>
+    private void CallUp(RecruitKnowledge k, int tick, CellCoord rally, int guard)
+    {
+        if (_phase == Phase.Gather || _callAt == 0 || tick < _callAt || Options.WaveReinforceTicks <= 0) return;
+        _callAt = tick + Options.WaveReinforceTicks;
+        int kept = 0;
+        foreach (ViewActor a in k.Army)
+        {
+            if (!a.Idle || a.Underground || _roster.Contains(Key(a)) || Chebyshev(a.Cell, rally) > HomeRadiusCells) continue;
+            if (kept < guard) { kept++; continue; }
+            _roster.Add(Key(a));
+            _launchHealth += a.Health;
+            _launchSize++;
+            CalledUp++;
+        }
+    }
+
+    private CellCoord? SectorCell(RecruitKnowledge k, int i)
+    {
+        var view = k.View;
+        int sw = (view.MapWidth + SearchGrid - 1) / SearchGrid, sh = (view.MapHeight + SearchGrid - 1) / SearchGrid;
+        int x0 = i % SearchGrid * sw, y0 = i / SearchGrid * sh;
+        if (x0 >= view.MapWidth || y0 >= view.MapHeight) return null;
+        int cx = Math.Min(view.MapWidth - 1, x0 + sw / 2), cy = Math.Min(view.MapHeight - 1, y0 + sh / 2);
+        int reach = Math.Max(sw, sh) / 2;
+        for (int r = 0; r <= reach; r++)
+            for (int dy = -r; dy <= r; dy++)
+                for (int dx = -r; dx <= r; dx++)
+                {
+                    if (Math.Max(Math.Abs(dx), Math.Abs(dy)) != r) continue;
+                    int x = cx + dx, y = cy + dy;
+                    if (x < 0 || y < 0 || x >= view.MapWidth || y >= view.MapHeight) continue;
+                    var c = new CellCoord(x, y);
+                    if (view.IsPassable(c, Locomotion.Tracked)) return c;
+                }
+        return null;
+    }
+
+    /// <summary>s41 wave_search: while a wave in assault knows no enemy (no known building of the target, no enemy in view) it heads for the nearest sector it has not
+    /// visited (distance from the wave's centre, ties by sector index); a sector counts as visited once its centre has been in view (or after
+    /// <see cref="SearchSectorTimeoutTicks"/>). With every sector visited, or an enemy in view, <see cref="_searchSector"/> is -1 and the old rules decide.</summary>
+    private void UpdateSearch(RecruitKnowledge k, int tick, List<ViewActor> known)
+    {
+        if (!Options.WaveSearch || _phase != Phase.Assault || known.Count > 0 || Sweeping || _hookWaveActive || HookAttack is not null) { _searchSector = -1; return; }
+        foreach (ViewActor e in k.Visible)
+            if (e.Relation == Relation.Enemy) { _searchSector = -1; return; }
+        var view = k.View;
+        int sw = (view.MapWidth + SearchGrid - 1) / SearchGrid, sh = (view.MapHeight + SearchGrid - 1) / SearchGrid;
+        for (int i = 0; i < SearchGrid * SearchGrid; i++)
+        {
+            if ((_secVisited >> i & 1UL) != 0) continue;
+            int cx = Math.Min(view.MapWidth - 1, i % SearchGrid * sw + sw / 2), cy = Math.Min(view.MapHeight - 1, i / SearchGrid * sh + sh / 2);
+            if (i % SearchGrid * sw >= view.MapWidth || i / SearchGrid * sh >= view.MapHeight || view.IsVisible(new CellCoord(cx, cy))) _secVisited |= 1UL << i;
+        }
+        if (_searchSector >= 0)
+        {
+            if (tick - _searchSince >= SearchSectorTimeoutTicks) _secVisited |= 1UL << _searchSector;
+            if ((_secVisited >> _searchSector & 1UL) != 0) { _searchSector = -1; _progressTick = tick; }
+        }
+        if (_searchSector >= 0) return;
+        LeptonCoord? wc = WaveCentre(k);
+        var from = wc is LeptonCoord w ? new CellCoord(w.X / 256, w.Y / 256) : _home;
+        while (true)
+        {
+            int best = -1; long bestD = long.MaxValue;
+            for (int i = 0; i < SearchGrid * SearchGrid; i++)
+            {
+                if ((_secVisited >> i & 1UL) != 0) continue;
+                long dx = Math.Min(view.MapWidth - 1, i % SearchGrid * sw + sw / 2) - from.X, dy = Math.Min(view.MapHeight - 1, i / SearchGrid * sh + sh / 2) - from.Y, d = dx * dx + dy * dy;
+                if (d < bestD) { bestD = d; best = i; }
+            }
+            if (best < 0) return;   // every sector visited: the old end-of-wave rule applies
+            if (SectorCell(k, best) is CellCoord cell)
+            {
+                _searchSector = best; _searchCell = cell; _searchSince = tick; _progressTick = tick;
+                return;
+            }
+            _secVisited |= 1UL << best;   // nothing passable in it
+        }
+    }
+
+    /// <summary>s41: writes the committed-wave memory (only called when <see cref="WaveDirty"/>).</summary>
+    internal void SnapshotWave(BinaryWriter w)
+    {
+        w.Write(_callAt); w.Write(_secVisited); w.Write(_searchSector); w.Write(_searchSince); AiSnapshot.WriteCell(w, _searchCell); w.Write(CalledUp);
+    }
+
+    /// <summary>s41: reads what <see cref="SnapshotWave"/> wrote.</summary>
+    internal void RestoreWave(BinaryReader r)
+    {
+        _callAt = r.ReadInt32(); _secVisited = r.ReadUInt64(); _searchSector = r.ReadInt32(); _searchSince = r.ReadInt32(); _searchCell = AiSnapshot.ReadCell(r); CalledUp = r.ReadInt32();
+    }
+
     public MilitaryManager(int attackThreshold) => _threshold = Math.Max(1, attackThreshold);
 
     /// <summary>M3-11 capabilities (from the profile). The default is the original Recruit behaviour: defend, one prong, never retreat.</summary>
@@ -607,6 +729,7 @@ internal sealed class MilitaryManager
         }
 
         if (_phase == Phase.Gather) _hookWaveActive = false;   // M8-06: a scripted wave's goal lasts only for that wave
+        if (_phase == Phase.Gather && WaveDirty) { _callAt = 0; _secVisited = 0; _searchSector = -1; }   // s41: the memory lasts only for that wave
         if (_phase == Phase.Gather)
         {
             // with no scraper left there is no income to rebuild with: whatever is left goes out as soon as there are a few units
@@ -649,6 +772,7 @@ internal sealed class MilitaryManager
                 _launchValue = OwnValue;
                 _lastWave = tick;
                 _stageSince = tick;
+                _callAt = Options.WaveReinforceTicks > 0 ? tick + Options.WaveReinforceTicks : 0; _secVisited = 0; _searchSector = -1;   // s41
                 Waves++;
                 Reroll();
                 CellCoord launchGoal = PickGoal(k, knownEnemyBuildings);
@@ -713,6 +837,7 @@ internal sealed class MilitaryManager
             if (ready || tick - _stageSince >= (_aheadWave ? AheadStageTimeoutTicks : StageTimeoutTicks)) _phase = Phase.Assault;
         }
 
+        if (Options.WaveReinforceTicks > 0 && attacked is null) CallUp(k, tick, rally, _hookForce ? 0 : Bias.HomeGuard);   // s41
         if (Options.Respond) Unstick(k, sink);
         // S15: a siege wave attacks one building at a time, outside-in; long-range units shoot it from where the defences cannot reach back
         bool nearStall = _phase == Phase.Assault && Options.Respond && NearStall(k, knownEnemyBuildings);   // s23 D-235 (B2)
@@ -726,6 +851,7 @@ internal sealed class MilitaryManager
                 if (!a.Underground && _roster.Contains(Key(a)) && a.Target != nst.Id) sink.Issue(CommandKind.Attack, a.Id, a.Kind, default, nst.Ref);
             _idleNearSince = -1;   // the units now carry a target; a failed order is tried again after another full wait
         }
+        UpdateSearch(k, tick, knownEnemyBuildings);   // s41
         CellCoord goal = _phase == Phase.Assault ? (siegeTarget is ViewActor stg ? stg.Cell : PickGoal(k, knownEnemyBuildings)) : default;
         if (siegeTarget is not null) _lastGoal = goal;
         bool retarget = siegeTarget is ViewActor stn && stn.Id != _siegeIssued;
@@ -830,6 +956,7 @@ internal sealed class MilitaryManager
     /// <see cref="AvoidTicks"/>.</summary>
     private bool Stalled(RecruitKnowledge k, List<ViewActor> known)
     {
+        if (known.Count == 0 && _searchSector >= 0) return false;   // s41: a searching wave is making progress (every sector times out, so this ends)
         if (known.Count == 0 && Sweeping)
         {
             // S22: a sweep has nothing to destroy; it makes progress while blocks of the map come into view again
@@ -1048,6 +1175,7 @@ internal sealed class MilitaryManager
         if (Sweeping && Hunting && _huntTick >= 0 && tick - _huntTick <= MopupPlan.ChaseTicks && Chebyshev(new CellCoord(centre.X / 256, centre.Y / 256), _huntCell) > 3)   // s30: a deployable enemy vehicle was just seen: go where it was
         { _lastGoal = _huntCell; return _huntCell; }
         if (Sweeping && SweepGoal(k, centre, tick) is CellCoord sweep) { _lastGoal = sweep; return sweep; }
+        if (_searchSector >= 0 && _phase == Phase.Assault) { _lastGoal = _searchCell; return _searchCell; }   // s41 wave_search
         // nothing known: look at the route stops in turn; a stop that is in view and shows no building is crossed off
         while (_scoutIdx < _scoutRoute.Count - 1 && k.View.IsVisible(_scoutRoute[_scoutIdx])) _scoutIdx++;
         if (_scoutIdx >= _scoutRoute.Count - 1 && k.View.IsVisible(_scoutRoute[^1])) _scoutIdx = 0;

@@ -36,4 +36,16 @@ public sealed record FactionTuning(int ArmyBeforeTech, int ArmyBeforeAdapt, int 
     public int BoreSites { get; init; } = 0;
     /// <summary>Funds (cash + stored) needed beyond the Bore's cost before one is bought (<c>bore_min_cash</c>; the built-in cushion is 200).</summary>
     public int BoreMinCash { get; init; } = 200;
+
+    // s41 (M13-42): unit lists as data. null (key missing) keeps the faction's built-in list (RecruitFaction), so a faction without the keys plays as before.
+    /// <summary>Tier-1 infantry bag (<c>infantry_bag</c>); null = built-in.</summary>
+    public IReadOnlyList<string>? InfantryBag { get; init; }
+    /// <summary>Tier-1 vehicle bag (<c>vehicle_bag</c>); null = built-in.</summary>
+    public IReadOnlyList<string>? VehicleBag { get; init; }
+    /// <summary>Infantry added at tech tier 2 (<c>infantry_tier2</c>); null = built-in.</summary>
+    public IReadOnlyList<string>? InfantryTier2 { get; init; }
+    /// <summary>Vehicles added at tech tier 2 (<c>vehicle_tier2</c>); null = built-in.</summary>
+    public IReadOnlyList<string>? VehicleTier2 { get; init; }
+    /// <summary>Vehicles added at tech tier 3 (<c>vehicle_tier3</c>); null = built-in.</summary>
+    public IReadOnlyList<string>? VehicleTier3 { get; init; }
 }

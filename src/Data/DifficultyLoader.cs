@@ -31,6 +31,8 @@ public static class DifficultyLoader
         "unit_reserve", "army_cap", "army_cap_until_tick",
         // s40 (M4-16): tier-2/3 unit types join the bags without respond_to_attacks
         "grow_bags",
+        // s41 (M13-45): committed waves call up idle troops and search the map
+        "wave_reinforce_ticks", "wave_search",
     ];
 
     /// <summary>S15 lbknob: the profile keys a <c>[faction.&lt;id&gt;.tier&lt;N&gt;]</c> table may override (numbers the AI reads at run time; the driver's
@@ -40,6 +42,7 @@ public static class DifficultyLoader
         "attack_threshold", "attack_ratio_pct", "expansion_tick", "harvester_target", "retreat_health_pct", "retreat_ratio_pct", "unit_reserve", "army_cap", "army_cap_until_tick",
         "respond_to_attacks",   // M4-16 s38: Authority tiers 2+ do better without the defence-response code path
         "grow_bags",   // s40: tier-2/3 unit types without respond_to_attacks
+        "wave_reinforce_ticks", "wave_search",   // s41 (M13-45)
     ];
 
     /// <summary>The data/ai/difficulty.toml beside the nearest data/rules above <paramref name="startDirectory"/>, or null.</summary>
@@ -99,7 +102,8 @@ public static class DifficultyLoader
 
     /// <summary>S29: the per-faction build lever keys allowed besides <c>harass_min_army</c>.</summary>
     private static readonly string[] TuningKeys = ["army_before_tech", "army_before_adapt", "adapt_cash", "adapt_max_production", "tier2_gate_tick", "adapt_build",
-        "bore_max", "bore_army", "bore_gap_ticks", "bore_dig_short", "bore_sites", "bore_min_cash", "adapt_rich_cash", "adapt_rich_max"];   // s39: Directorate Bore levers
+        "bore_max", "bore_army", "bore_gap_ticks", "bore_dig_short", "bore_sites", "bore_min_cash", "adapt_rich_cash", "adapt_rich_max",   // s39: Directorate Bore levers
+        "infantry_bag", "vehicle_bag", "infantry_tier2", "vehicle_tier2", "vehicle_tier3"];   // s41 M13-42: unit lists
 
     private static FactionAiKeys ParseFactions(TomlTable root, string file, List<RulesProblem> problems, List<(int Faction, int Tier, TomlTable Table, string Id)> overrides)
     {
@@ -136,6 +140,11 @@ public static class DifficultyLoader
                 BoreDigShort = Opt(t, id, "bore_dig_short", 0, 60, d.BoreDigShort, file, problems) ?? d.BoreDigShort,
                 BoreSites = Opt(t, id, "bore_sites", 0, 2, d.BoreSites, file, problems) ?? d.BoreSites,
                 BoreMinCash = Opt(t, id, "bore_min_cash", 0, 100000, d.BoreMinCash, file, problems) ?? d.BoreMinCash,
+                InfantryBag = Ids(t, id, "infantry_bag", file, problems),   // s41
+                VehicleBag = Ids(t, id, "vehicle_bag", file, problems),
+                InfantryTier2 = Ids(t, id, "infantry_tier2", file, problems),
+                VehicleTier2 = Ids(t, id, "vehicle_tier2", file, problems),
+                VehicleTier3 = Ids(t, id, "vehicle_tier3", file, problems),
             };
             int? cr = Opt(t, id, "siege_commit_ratio", 0, 10000, 0, file, problems);   // s29
             if (cr is int cx) commit[i] = cx;
@@ -188,12 +197,15 @@ public static class DifficultyLoader
             int? capUntil = Opt(table, id, "army_cap_until_tick", 0, 10000000, b.ArmyCapUntilTick, file, problems);
             int? respond = Opt(table, id, "respond_to_attacks", 0, 1, b.RespondToAttacks ? 1 : 0, file, problems);
             int? grow = Opt(table, id, "grow_bags", -1, 1, b.GrowBags, file, problems);
+            int? reinforce = Opt(table, id, "wave_reinforce_ticks", 0, 100000, b.WaveReinforceTicks, file, problems);   // s41
+            int? search = Opt(table, id, "wave_search", 0, 1, b.WaveSearch ? 1 : 0, file, problems);   // s41
             if (problems.Count > before) continue;
             DifficultyProfile o = b with
             {
                 AttackThreshold = thr!.Value, AttackRatioPct = ratio!.Value, ExpansionTick = exp!.Value, HarvesterTarget = harv!.Value,
                 RetreatHealthPct = ret!.Value, RetreatRatioPct = rr!.Value, UnitReserve = res!.Value, ArmyCap = cap!.Value, ArmyCapUntilTick = capUntil!.Value,
                 RespondToAttacks = respond!.Value == 1, GrowBags = grow!.Value,
+                WaveReinforceTicks = reinforce!.Value, WaveSearch = search!.Value == 1,
             };
             result[idx] = b.WithFactionOverride(FactionEnum[f], o);
         }
@@ -238,6 +250,8 @@ public static class DifficultyLoader
         int? armyCap = Opt(table, id, "army_cap", 0, 1000, 0, file, problems);
         int? armyCapUntil = Opt(table, id, "army_cap_until_tick", 0, 10000000, 0, file, problems);
         int? growBags = Opt(table, id, "grow_bags", -1, 1, -1, file, problems);
+        int? waveReinforce = Opt(table, id, "wave_reinforce_ticks", 0, 100000, 0, file, problems);   // s41
+        int? waveSearch = Opt(table, id, "wave_search", 0, 1, 0, file, problems);   // s41
 
         if (problems.Count > before) return null;
         return new DifficultyProfile(id, tier!.Value, interval!.Value, delay!.Value, infoAge!.Value, threshold!.Value,
@@ -249,7 +263,22 @@ public static class DifficultyLoader
             HarvesterTarget = harvesters!.Value,
             AttackRatioPct = ratio!.Value, PredictedRetreat = predicted == 1, RetreatRatioPct = retreatRatio!.Value,
             UnitReserve = reserve!.Value, ArmyCap = armyCap!.Value, ArmyCapUntilTick = armyCapUntil!.Value, GrowBags = growBags!.Value,
+            WaveReinforceTicks = waveReinforce!.Value, WaveSearch = waveSearch == 1,
         };
+    }
+
+    /// <summary>s41: an optional non-empty array of unit ids (the AI checks them against the rules when it builds its bags); null when the key is missing.</summary>
+    private static IReadOnlyList<string>? Ids(TomlTable t, string id, string key, string file, List<RulesProblem> problems)
+    {
+        if (!t.TryGetValue(key, out object? raw)) return null;
+        if (raw is not TomlArray arr || arr.Count == 0) { problems.Add(new RulesProblem(file, id + "." + key, "expected a non-empty array of unit ids")); return null; }
+        var r = new List<string>();
+        foreach (object? o in arr)
+        {
+            if (o is not string s || s.Length == 0) { problems.Add(new RulesProblem(file, id + "." + key, "expected unit id strings")); return null; }
+            r.Add(s);
+        }
+        return r;
     }
 
     private static int? Opt(TomlTable t, string id, string key, int min, int max, int fallback, string file, List<RulesProblem> problems) =>

@@ -204,6 +204,7 @@ public static class RulesHash
             WriteSchemaV7(w, sim);
             WriteSchemaV8(w, sim);
             WriteSchemaV9(w, sim);
+            if (sim.Movement.StuckRecovery != 0) { w.Write((byte)0xA1); w.Write(sim.Movement.StuckRecovery); }   // S41 M13-44: only when on, so every other rule set keeps its hash
         }
         return XxHash64.HashToUInt64(ms.GetBuffer().AsSpan(0, (int)ms.Length));
     }

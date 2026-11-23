@@ -52,6 +52,18 @@ public abstract class MobileStore : ISimStatePart
     public readonly int[] BlockedTicks;
     public readonly int[] StuckCount;
 
+    // ---- stuck clock (S41 M13-44). Allocated always, but read, written, saved and hashed only while StuckClock is set. ----
+    /// <summary>Set by the Simulation from <c>[movement] stuck_recovery</c>; while false the three arrays below are neither saved nor hashed (old saves and hashes stay valid).</summary>
+    public bool StuckClock;
+    /// <summary>Cell the unit last stood at Chebyshev distance 2 or more from its previous anchor.</summary>
+    public readonly CellCoord[] StuckAnchor;
+    /// <summary>Tick + 1 when the anchor was set; 0 = no anchor.</summary>
+    public readonly int[] StuckAnchorTick;
+    /// <summary>Tick + 1 of the last locomotor call; a long gap means the unit was not trying to move, so the clock restarts.</summary>
+    public readonly int[] StuckLastTick;
+    /// <summary>Highest ladder rung used since the anchor (0 to 4).</summary>
+    public readonly byte[] StuckRung;
+
     protected MobileStore(int capacity)
     {
         Slots = new SlotArray(capacity);
@@ -81,6 +93,10 @@ public abstract class MobileStore : ISimStatePart
         PathVersion = new int[capacity];
         BlockedTicks = new int[capacity];
         StuckCount = new int[capacity];
+        StuckAnchor = new CellCoord[capacity];
+        StuckAnchorTick = new int[capacity];
+        StuckLastTick = new int[capacity];
+        StuckRung = new byte[capacity];
     }
 
     public abstract string Name { get; }
@@ -97,6 +113,7 @@ public abstract class MobileStore : ISimStatePart
         NextCellReserved[i] = false; ReservedCell[i] = default; ReservedSlot[i] = 0;
         PathActive[i] = false; PathGoal[i] = default; PathId[i] = 0; PathIndex[i] = 0; PathIsGroup[i] = false;
         PathCells[i] = null; PathPos[i] = 0; PathVersion[i] = 0; BlockedTicks[i] = 0; StuckCount[i] = 0;
+        StuckAnchor[i] = default; StuckAnchorTick[i] = 0; StuckLastTick[i] = 0; StuckRung[i] = 0;
     }
 
     internal void Remove(EntityId id)
@@ -137,6 +154,7 @@ public abstract class MobileStore : ISimStatePart
             w.Write(cells?.Length ?? -1);
             if (cells != null) for (int k = 0; k < cells.Length; k++) { w.Write(cells[k].X); w.Write(cells[k].Y); }
             w.Write(PathPos[i]); w.Write(PathVersion[i]); w.Write(BlockedTicks[i]); w.Write(StuckCount[i]);
+            if (StuckClock) { w.Write(StuckAnchor[i].X); w.Write(StuckAnchor[i].Y); w.Write(StuckAnchorTick[i]); w.Write(StuckLastTick[i]); w.Write(StuckRung[i]); }
             WriteExtra(w, i);
         }
     }
@@ -173,6 +191,7 @@ public abstract class MobileStore : ISimStatePart
                 PathCells[i] = cells;
             }
             PathPos[i] = r.ReadInt32(); PathVersion[i] = r.ReadInt32(); BlockedTicks[i] = r.ReadInt32(); StuckCount[i] = r.ReadInt32();
+            if (StuckClock) { StuckAnchor[i] = new CellCoord(r.ReadInt32(), r.ReadInt32()); StuckAnchorTick[i] = r.ReadInt32(); StuckLastTick[i] = r.ReadInt32(); StuckRung[i] = r.ReadByte(); }
             ReadExtra(r, i);
         }
     }
