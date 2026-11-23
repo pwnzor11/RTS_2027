@@ -63,8 +63,8 @@ internal sealed class ProductionManager
         SimRules rules = k.Rules;
         if (_inf.Length == 0)
         {
-            _inf = Resolve(_faction.InfantryBag, rules.Infantry, i => i.Id);
-            _veh = Resolve(_faction.VehicleBag, rules.Vehicles, v => v.Id);
+            _inf = Resolve(List(t => t.InfantryBag, _faction.InfantryBag), rules.Infantry, i => i.Id);   // s41: data lists override the built-in ones
+            _veh = Resolve(List(t => t.VehicleBag, _faction.VehicleBag), rules.Vehicles, v => v.Id);
             Shuffle(_inf); Shuffle(_veh);
             _first = true;
         }
@@ -280,14 +280,22 @@ internal sealed class ProductionManager
     private void GrowBags(RecruitKnowledge k)
     {
         _bagTier = Math.Min(3, k.View.Tier);
-        var inf = new List<string>(_faction.InfantryBag);
-        var veh = new List<string>(_faction.VehicleBag);
-        if (_bagTier >= 2) { inf.AddRange(_faction.InfantryTier2); veh.AddRange(_faction.VehicleTier2); }
-        if (_bagTier >= 3) veh.AddRange(_faction.VehicleTier3);
+        var inf = new List<string>(List(t => t.InfantryBag, _faction.InfantryBag));
+        var veh = new List<string>(List(t => t.VehicleBag, _faction.VehicleBag));
+        if (_bagTier >= 2) { inf.AddRange(List(t => t.InfantryTier2, _faction.InfantryTier2)); veh.AddRange(List(t => t.VehicleTier2, _faction.VehicleTier2)); }
+        if (_bagTier >= 3) veh.AddRange(List(t => t.VehicleTier3, _faction.VehicleTier3));
         _inf = Resolve(inf.ToArray(), k.Rules.Infantry, i => i.Id);
         _veh = Resolve(veh.ToArray(), k.Rules.Vehicles, v => v.Id);
         _infIdx = 0; _vehIdx = 0;
         Shuffle(_inf); Shuffle(_veh);
+    }
+
+    /// <summary>s41 (M13-42): a unit list from the faction's data keys (<c>[faction.&lt;id&gt;] infantry_bag</c> ...) or the built-in one.</summary>
+    private string[] List(Func<Rts.Data.FactionTuning, IReadOnlyList<string>?> pick, string[] builtIn)
+    {
+        if (_tier == null) return builtIn;
+        IReadOnlyList<string>? data = pick(_tier.Profile.FactionKeys.TuningOf((int)_faction.Faction));
+        return data == null ? builtIn : data.ToArray();
     }
 
     /// <summary>The next vehicle to build: a tank first, then the shuffled bag.</summary>

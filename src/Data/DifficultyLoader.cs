@@ -99,7 +99,8 @@ public static class DifficultyLoader
 
     /// <summary>S29: the per-faction build lever keys allowed besides <c>harass_min_army</c>.</summary>
     private static readonly string[] TuningKeys = ["army_before_tech", "army_before_adapt", "adapt_cash", "adapt_max_production", "tier2_gate_tick", "adapt_build",
-        "bore_max", "bore_army", "bore_gap_ticks", "bore_dig_short", "bore_sites", "bore_min_cash", "adapt_rich_cash", "adapt_rich_max"];   // s39: Directorate Bore levers
+        "bore_max", "bore_army", "bore_gap_ticks", "bore_dig_short", "bore_sites", "bore_min_cash", "adapt_rich_cash", "adapt_rich_max",   // s39: Directorate Bore levers
+        "infantry_bag", "vehicle_bag", "infantry_tier2", "vehicle_tier2", "vehicle_tier3"];   // s41 M13-42: unit lists
 
     private static FactionAiKeys ParseFactions(TomlTable root, string file, List<RulesProblem> problems, List<(int Faction, int Tier, TomlTable Table, string Id)> overrides)
     {
@@ -136,6 +137,11 @@ public static class DifficultyLoader
                 BoreDigShort = Opt(t, id, "bore_dig_short", 0, 60, d.BoreDigShort, file, problems) ?? d.BoreDigShort,
                 BoreSites = Opt(t, id, "bore_sites", 0, 2, d.BoreSites, file, problems) ?? d.BoreSites,
                 BoreMinCash = Opt(t, id, "bore_min_cash", 0, 100000, d.BoreMinCash, file, problems) ?? d.BoreMinCash,
+                InfantryBag = Ids(t, id, "infantry_bag", file, problems),   // s41
+                VehicleBag = Ids(t, id, "vehicle_bag", file, problems),
+                InfantryTier2 = Ids(t, id, "infantry_tier2", file, problems),
+                VehicleTier2 = Ids(t, id, "vehicle_tier2", file, problems),
+                VehicleTier3 = Ids(t, id, "vehicle_tier3", file, problems),
             };
             int? cr = Opt(t, id, "siege_commit_ratio", 0, 10000, 0, file, problems);   // s29
             if (cr is int cx) commit[i] = cx;
@@ -250,6 +256,20 @@ public static class DifficultyLoader
             AttackRatioPct = ratio!.Value, PredictedRetreat = predicted == 1, RetreatRatioPct = retreatRatio!.Value,
             UnitReserve = reserve!.Value, ArmyCap = armyCap!.Value, ArmyCapUntilTick = armyCapUntil!.Value, GrowBags = growBags!.Value,
         };
+    }
+
+    /// <summary>s41: an optional non-empty array of unit ids (the AI checks them against the rules when it builds its bags); null when the key is missing.</summary>
+    private static IReadOnlyList<string>? Ids(TomlTable t, string id, string key, string file, List<RulesProblem> problems)
+    {
+        if (!t.TryGetValue(key, out object? raw)) return null;
+        if (raw is not TomlArray arr || arr.Count == 0) { problems.Add(new RulesProblem(file, id + "." + key, "expected a non-empty array of unit ids")); return null; }
+        var r = new List<string>();
+        foreach (object? o in arr)
+        {
+            if (o is not string s || s.Length == 0) { problems.Add(new RulesProblem(file, id + "." + key, "expected unit id strings")); return null; }
+            r.Add(s);
+        }
+        return r;
     }
 
     private static int? Opt(TomlTable t, string id, string key, int min, int max, int fallback, string file, List<RulesProblem> problems) =>
