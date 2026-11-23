@@ -643,3 +643,13 @@ Pull main first (your folder was on eda0f0e3, two sessions behind), then rebuild
 - **Directorate AI power (D-295):** a Directorate AI whose income stalls no longer sells its Reactor Vents into low power (its base lights stay on).
 - **Harvesters (D-296):** a harvester that finished unloading and found no ore no longer parks on the refinery's unloading cell and blocks the next one.
 - **Balance numbers to confirm:** D-294 (the five biomes.toml values above).
+
+## Session 41 (2026-11-22/23)
+- **Authority AI tier 2 (D-304):** a "Hard"-tier (tier 2) Authority AI now stops growing its army at 28 units; tier 3 should feel at least as hard as
+  tier 2 (it lost to tier 2 before). Setting: `[faction.authority.tier2] army_cap = 28` in data/ai/difficulty.toml.
+- **Unit duels (D-299):** in a terminal in the repo, `dotnet run --project src/Tools -c Release -- ai duels --a auth_rocketeer --b auth_tank --budget 8000
+  --seeds 3` prints one line `| auth_rocketeer | auth_tank | <score> | ...` with a positive score (Rocketeers win). The fixtures are data/balance/duels.toml.
+- **Off by default, nothing changes in play:** `[movement] stuck_recovery = 0` (data/rules/game.toml) and the AI keys `wave_reinforce_ticks`,
+  `wave_search` (not set in data/ai/difficulty.toml). Your games play exactly as before.
+- **Audio list (D-303):** `python3 tools/audio/check_provenance.py` prints `provenance: 306 files, 306 entries, ok (...)`.
+- **Balance numbers to confirm:** D-304 only; no unit cost, health or damage changed this session.

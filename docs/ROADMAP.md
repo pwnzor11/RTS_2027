@@ -370,7 +370,7 @@ Art pass, music/SFX, balance, installer.
 - [ ] M13-45 Committed waves: wave_reinforce_ticks, wave_search (D-302): built, off by default; screen on the ladder
 - [x] M13-46 Map start-room test (D-303, s41)
 - [x] M13-47 Audio provenance manifest + checker + test (D-303, s41)
-- [ ] M13-48 Balance finish line (D-298): joint lever sweep w41, fit, confirm on fresh seeds; Authority ladder 3 v 2 inverted (37.5 %) — tier-2 army cap screen l41
+- [ ] M13-48 Balance finish line (D-298): s41 sweep + fresh-seed confirm: no unit change kept; map pool noise -> Q-87 (how to measure); Authority ladder fixed (tier-2 army_cap 28, D-304); Expedition 3 v 2 49 % open
 - [x] M13-35 Expedition supply lane: 7-wide landing bay, Landing Craft parks off the dock water (s37, D-281)
 - [x] M13-36 Ash Plains river crossings are road decks (s37, D-281)
 - [x] M11-30 Objective guidance: every active objective in the bar, one guided highlight, complete/failed banners, markers for every objective (s37, D-283)

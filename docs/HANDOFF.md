@@ -1,34 +1,39 @@
-# Handoff: Session 41 — confirm D-294; then the pairwise rows (Left Behind v Expedition, Authority on Rust/Glass), M13-42, or open choice
-Last commit: `docs: Session 40 handoff` on `integ-s40`, merged to main as PR #122 (owner OK 2026-11-22). Check it merged.
-Where things stand: session 40 balanced the map-specific rows with per-biome ore amounts (D-294: 24-row MAD 14.6 -> 9.7, all rows 29.5-69 %), fixed the
-Directorate AI selling its power (D-295) and a harvester dock jam that froze income (D-296, sim), and added an unused grow_bags AI key (D-297).
-docs/balance/s40_balance.md. Decisions up to D-297. Open questions: none.
+# Handoff: Session 42 — owner answers Q-87 (how to measure "finished"), then map-specific causes or the off-by-default features
+Last commit: `docs: Session 41 handoff` on `integ-s41` (PR to main; check it merged). Laptop folder was on session 39 at the start of s41: `git pull`.
+Where things stand: session 41 set the balance finish line (D-298), built unit-v-unit duels and fixtures (D-299), made the AI unit lists data keys
+(D-300), built Standard of Iron's ideas (stuck recovery D-301 and committed waves D-302, both off by default; map start-room test and audio provenance
+D-303), ran a 24 576-game joint lever sweep, and landed only the Authority tier-2 army_cap 28 (D-304, ladder in order). The sweep's package failed on
+fresh seeds and the same build differs by 7.6 points per row between seed halves: generated maps tilt pairings, so the finish line's measurement is
+Q-87. docs/balance/s41_balance.md. Decisions up to D-304. Open: Q-87 (🔴).
 
 ## Start here (shown to the user as the plan; nothing starts until they say go)
-1. Laptop: `git checkout main; git pull`, rebuild. Owner to confirm D-294 (map values in USER_CHECKS session 40); try a skirmish per biome.
-2. Rows still outside 35-65 % (s40 §4): Left Behind v Expedition Glass 32.5 / Ash 29.5; Authority v LB Rust 68.7 / Glass 69.0; Authority v Expedition
-   Rust 68.9; Directorate v Expedition Glass 34.0; Ash Authority v Directorate 33.0 / v LB 34.7. Pairwise, not one faction: study the LB v Expedition unit
-   mix (ledgers) before more knobs; screen at 128 games (64-game unit screens were erratic).
-3. M13-42: Authority tier-2/3 units are worth less than tier-1 spam (grow_bags made it weaker); a unit value pass, then set grow_bags for the Authority
-   (tiers 2-5) and the Expedition (tiers 4-5). Might also be the lever for Authority tier 5 v 1 (76 %, target 90).
-4. M13-40 leftovers: head-on harvester jams in 1-wide corridors between AI buildings (AI could keep 2-wide lanes by refineries, or a sidestep rung in
-   MoveMission.Blocked; Standard of Iron's "stuck clock + recovery ladder" is a good model, docs/PATHFINDING_ARCHITECTURE.md there).
-5. Owner: M9-15 two-PC LAN test; M7-14 Expedition play-test; M10-27 voice log from the owner's machine.
-
-## Standard of Iron (github.com/djeada/Standard-of-Iron, reviewed s40)
-MIT-licensed C++20/Qt 6 3D RTS (Rome v Carthage). Code is not portable to our C#/MonoGame 2D sim, but these ideas fit: (1) the stuck clock and recovery
-ladder (replan -> sidestep -> relax -> abandon) for wedged units, measured against net displacement so route churn cannot reset it; (2) balance
-fixtures: unit-v-unit matchups in data with expected outcome bounds, gated by a test (we have only whole-game tables); (3) committed AI attack waves that
-latch members, call up idle troops after 60 s and search the map when no target is known; (4) a map test that every start has room for its fields;
-(5) an audio provenance manifest checked by a script (97 CC0 entries, mostly ancient-war themed; ElevenLabs renders are licensed to their author, not reusable).
+1. Owner: answer Q-87 (recommended: judge the six pairings over the map pool, >= 256 games per map row, no map row outside 25-75 %). Laptop:
+   `git checkout main; git pull`, rebuild.
+2. If Q-87 (a): measure main on 512 games per row (seeds 1-256; about 12 000 games, ~10 h on the cluster without queen), list rows outside 25-75 %
+   (s41 256-game table: Ash Auth v Dir 27.3, Glass Dir v Exp 27.3, Ash LB v Exp 30.0, Rust Dir v LB 30.6) and fix those by map cause, not unit numbers:
+   the mirror_x maps (Mountains, Ash) let the Directorate's early wave land first (s39 harvester trace); Glass Coast ore (s38).
+3. Expedition ladder: 3 v 2 is 49 % in main (seeds 65-128); Authority 5 v 1 76 % v target 90 — screen `wave_reinforce_ticks` / `wave_search` (D-302) there.
+4. Measure `stuck_recovery = 1` (D-301): 24 rows + income (`--income 1`) on 256 games; turn on only if nothing moves or income rises.
+5. Owner: M9-15 two-PC LAN test; M7-14 Expedition play-test; M10-27 voice log; confirm D-294 and D-304 in a skirmish; delete `integ-s40`, `integ-s41`.
 
 ## Half-finished work
-- Nothing in code. Cluster: no jobs left; outputs on /work/out (b41, fin40, ref41, v41a-h) for comparisons.
+- Nothing in code. Cluster outputs on /work/out: w41 (sweep), f41 (fresh-seed confirm: main and fin41 on seeds 65-128), ref41 (main seeds 1-64),
+  a41, c41, g41a, l41*, sw41 (campaign sweep on the landed commit), t41 (full suite). Laptop k3s-cluster folder `claude/rts/s41/`: scripts and tools
+  (mksweep.py, fit41.py, tally41.py, bags.py, duelsum.py, mkvar.py with the `~` raw-array op, v41.sh pattern with OFF=).
 
 ## Waiting on the user
-- Confirm D-294; delete branch `integ-s40` on GitHub.
+- Q-87. Confirm D-298..D-304. Delete branches `integ-s40` and `integ-s41` on GitHub after the merge.
 
 ## How to run this session
+- Session 41 lessons:
+  - **One seed set is one set of maps.** Rows differ by ~13 points between seeds 1-8 and the 128-game table, and by 7.6 between seeds 1-64 and 65-128.
+    Never run a sweep's variants all on the same seeds; spread variants over different seed chunks (or anchor at a many-seed reference) and decide
+    on >= 256 games. Unit levers of 4-8 % move a row only 1.5-4 points.
+  - `Tools ai duels` answers "is this unit worth its money" in ~0.2 s per fight in the cloud; use it before any game screen of unit numbers.
+  - mkvar.py (s41 copy at /work/in/s41/mkvar.py) has op `~` for raw TOML values (arrays): `ai difficulty.toml [faction.authority] vehicle_tier2 ~["a","b"]`.
+  - v41.sh takes OFF= (chunk offset) so fresh seeds are one variable away; tally41.py dumps tag,row,w,l,d for scripts.
+  - Background runs in the cloud container stop when a reply ends: use send_later check-ins for long cluster jobs and keep cloud work inside a turn.
+  - Git LFS: the cloud clone skips smudge; `git lfs pull` (~1 min) before Game.Tests or 28 art/audio tests fail on pointer files.
 - s40: biome keys only change their own biome: screen biomes separately and compose (no combined screen needed). Screen winners regress on fresh
   seeds; decide on chunks 4-7. Use `/work/in/s40/tab40.py <dir> <tag> [chmin chmax]` and `cmp39.py var ref` (ref dir with main__ names, e.g. ref41).
 - s40: the laptop can drop off the bridge for hours; cluster jobs carry on. Keep cloud work (tests, ladder runs) going meanwhile; checkpoint early.
