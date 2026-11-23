@@ -69,7 +69,12 @@ Cause: since D-288 tier 3 carries army_cap 40 and tier 2 has no cap. Tier-2 army
 | 30 | 79-48 (62 %) | 62-61 (50.4 %) |
 | 25 | 64-64 (50 %) | 79-45 (63.7 %) |
 | 20 | 32-94 (25 %) | 98-29 (77.2 %) |
-Tier 2's strength has a cliff between 25 and 30; a tier-2 cap alone cannot put both pairs clearly in order. l41c: cap 28; cap 30 + tier-3 cap 45 / 50
-(rows 2 v 1, 3 v 2, 4 v 3).
+Tier 2's strength has a cliff between 25 and 30. l41c (128 games):
+| setting | 2 v 1 | 3 v 2 | 4 v 3 |
+|---|---|---|---|
+| tier-2 cap 28 | 81-46 (63.8 %) | 66-57 (53.7 %) | 76-42 (64.4 %) |
+| tier-2 cap 30, tier-3 cap 45 | 79-48 (62.2 %) | 65-60 (52.0 %) | 73-45 (61.9 %) |
+| tier-2 cap 30, tier-3 cap 50 | 79-48 (62.2 %) | 67-58 (53.6 %) | 67-51 (56.8 %) |
+Candidate: **tier-2 army_cap 28** (touches no tier-3 table row). 3 v 2 is only 3.7 points above even: confirm on fresh seeds with the final run.
 
 (sweep results follow)
