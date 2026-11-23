@@ -1,37 +1,37 @@
-# Handoff: Session 40 CHECKPOINT (session still running or cut off) — map balance screens on the cluster
-Last commit: `docs: session 40 checkpoint` on `integ-s40` (pushed, no PR yet). main = e162498 (session 39).
-Where things stand: owner confirmed D-290..D-293 (2026-11-22, commit 9495d3e). Owner's ask: "use the cluster ... map side or AI side changes or unit
-changes, just finish the balance issues". On integ-s40: M13-39 fix (a18d0f1, AI: no power-short sales), M13-40 fix (674270b, sim: harvester steps off a
-dock cell), grow_bags key (4390655, default = old behaviour; NOT set anywhere: Authority grow_bags made it weaker, Rust Auth v LB 72 -> 66, ladder 5 v 1
-76 -> 68). Full suite on 4390655 in the cloud: Sim 1919 (+2 skip), Game 2209 (+2 skip), AI 422 (+1), Net 175, Llm 174, Scripting 438, Tools 67, 0 failed.
+# Handoff: Session 41 — confirm D-294; then the pairwise rows (Left Behind v Expedition, Authority on Rust/Glass), M13-42, or open choice
+Last commit: `docs: Session 40 handoff` on `integ-s40` (PR to main; merged by the lead once the owner OKs it). Check it merged.
+Where things stand: session 40 balanced the map-specific rows with per-biome ore amounts (D-294: 24-row MAD 14.6 -> 9.7, all rows 29.5-69 %), fixed the
+Directorate AI selling its power (D-295) and a harvester dock jam that froze income (D-296, sim), and added an unused grow_bags AI key (D-297).
+docs/balance/s40_balance.md. Decisions up to D-297. Open questions: none.
 
-## Session 40 screen results so far (64 games per row, variant v same seeds; laptop k3s-cluster `claude/rts/s40/`, outputs /work/out/<job>)
-- Baseline b40 = main e162498, 128 games: reproduces the s39 table (MAD 11.9, 13 rows in 40-60). Baseline b41 = 4390655 (with the two fixes): running.
-- **Ore richness is the Ash Plains lever** (v40a a1: ash_fields_per_start 4 -> 3, extra_fields 4 -> 2): Auth v Dir 13 -> 35, Dir v Exp 76 -> 61, Auth v Exp
-  50 -> 63, others +-6; 6-row MAD 14.0 -> 10.3. Less ore: Authority and LB up, Directorate down. v41a re-measures a1 on 4390655 with a3 (extra 0) and a4
-  (+ density_min 3).
-- **Rust Belt road_grid 0** (v40a r1): Dir v LB 19 -> 31, Dir v Exp 60 -> 51, Auth v Dir 45 -> 51; 6-row MAD 13.3 -> 9.9. Candidate.
-- No use: shipments floor 200 / decay 100 / value 1000 (e1-e3: Glass rows barely move, Rust Auth v Exp worse), Ash rough 90 (a2), Mountains rough 100 (m1),
-  Glass density_max 8 (g1), no ash damage (h2: 24-row MAD 12.8 -> 11.8, small), Glass shallow 0 (g2, Exp stronger).
-- Running when the laptop dropped (results on /work/out): v41a (gb + a1/a3/a4), v41b (Rust more ore r2/r3, Glass more ore g5/g6, Mountains less ore
-  m2), v41c (Expedition: decay 100 + Glide Tank health x1.15 / Skimmer x1.10 on its 12 rows). Read with
-  `python3 /work/in/s39/cmp39.py /work/out/v41a,/work/out/v41b,/work/out/v41c /work/out/b41` and `python3 /work/in/s40/tab40.py /work/out/b41`.
+## Start here (shown to the user as the plan; nothing starts until they say go)
+1. Laptop: `git checkout main; git pull`, rebuild. Owner to confirm D-294 (map values in USER_CHECKS session 40); try a skirmish per biome.
+2. Rows still outside 35-65 % (s40 §4): Left Behind v Expedition Glass 32.5 / Ash 29.5; Authority v LB Rust 68.7 / Glass 69.0; Authority v Expedition
+   Rust 68.9; Directorate v Expedition Glass 34.0; Ash Authority v Directorate 33.0 / v LB 34.7. Pairwise, not one faction: study the LB v Expedition unit
+   mix (ledgers) before more knobs; screen at 128 games (64-game unit screens were erratic).
+3. M13-42: Authority tier-2/3 units are worth less than tier-1 spam (grow_bags made it weaker); a unit value pass, then set grow_bags for the Authority
+   (tiers 2-5) and the Expedition (tiers 4-5). Might also be the lever for Authority tier 5 v 1 (76 %, target 90).
+4. M13-40 leftovers: head-on harvester jams in 1-wide corridors between AI buildings (AI could keep 2-wide lanes by refineries, or a sidestep rung in
+   MoveMission.Blocked; Standard of Iron's "stuck clock + recovery ladder" is a good model, docs/PATHFINDING_ARCHITECTURE.md there).
+5. Owner: M9-15 two-PC LAN test; M7-14 Expedition play-test; M10-27 voice log from the owner's machine.
 
-## Start here
-1. Read the running screens (above). Pick per-biome ore/road settings (Ash a1-ish, Rust r1 and/or more ore, Glass/Mountains from v41b), combine, run the
-   full 24-row table at 128 games on the combined data (b40.sh pattern with a variant tag), iterate once.
-2. Glass Coast Dir v Exp (16-18 %) has not moved with any lever yet; v41b g5/g6 and v41c are the next reads.
-3. Land: cluster campaign sweep (sim fix M13-40 changes campaign games), PR integ-s40, merge on owner OK.
-4. Authority tier 5 v 1 to 90 % (task left): tier units do not help (grow_bags); needs another idea.
+## Standard of Iron (github.com/djeada/Standard-of-Iron, reviewed s40)
+MIT-licensed C++20/Qt 6 3D RTS (Rome v Carthage). Code is not portable to our C#/MonoGame 2D sim, but these ideas fit: (1) the stuck clock and recovery
+ladder (replan -> sidestep -> relax -> abandon) for wedged units, measured against net displacement so route churn cannot reset it; (2) balance
+fixtures: unit-v-unit matchups in data with expected outcome bounds, gated by a test (we have only whole-game tables); (3) committed AI attack waves that
+latch members, call up idle troops after 60 s and search the map when no target is known; (4) a map test that every start has room for its fields;
+(5) an audio provenance manifest checked by a script (97 CC0 entries, mostly ancient-war themed; ElevenLabs renders are licensed to their author, not reusable).
 
 ## Half-finished work
-- Nothing in code. Cluster outputs on /work/out (b39 baseline, v39b..v39h variants, e39 handicap, sw39 sweep, t39 suite); jobs self-delete.
-- Branches to delete on GitHub after merge: integ-s39, plus the list given to the owner in session 39 if not yet run.
+- Nothing in code. Cluster: no jobs left; outputs on /work/out (b41, fin40, ref41, v41a-h) for comparisons.
 
 ## Waiting on the user
-- Confirm D-290..D-293. Voice log (M10-27). Two-PC LAN test (M9-15). Expedition play-test (M7-14). Branch deletes.
+- Merge OK for the integ-s40 PR; confirm D-294; branch deletes listed in the PR body.
 
 ## How to run this session
+- s40: biome keys only change their own biome: screen biomes separately and compose (no combined screen needed). Screen winners regress on fresh
+  seeds; decide on chunks 4-7. Use `/work/in/s40/tab40.py <dir> <tag> [chmin chmax]` and `cmp39.py var ref` (ref dir with main__ names, e.g. ref41).
+- s40: the laptop can drop off the bridge for hours; cluster jobs carry on. Keep cloud work (tests, ladder runs) going meanwhile; checkpoint early.
 - Session 39 lessons:
   - Keep the sum of all running jobs' parallelism at or below the free slots (~36 with queen cordoned): over-committed jobs left new jobs' pods
     Pending for 30+ min (scheduler backoff); a --fast build landed on a Pi once slots were freed. Lower parallelism, then restore.
