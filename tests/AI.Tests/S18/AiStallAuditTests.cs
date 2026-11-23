@@ -42,7 +42,10 @@ public class AiStallAuditTests(ITestOutputHelper output)
     public void GlassCoastSeed4_ExpeditionAi_CancelsAnUnplaceableReadyStructure_AndKeepsBuilding()
     {
         const ulong seed = 4;
-        var gen = MapGenerator.GenerateWithMeta(new MapGenParams(Biome.GlassCoast, MapSize.Medium, 2, seed, null, OceanEdges.North | OceanEdges.South, 1));
+        // s40 (D-294): Glass Coast got more ore (ash_fields_per_start 3, field_density_min 5) and its seed-4 base is no longer cramped; the rig keeps
+        // the pre-s40 field values so the unplaceable-structure situation it audits still arises.
+        var glass = Rts.Data.MapGen.BiomeCatalog.For(Biome.GlassCoast) with { AshFieldsPerStart = 2, FieldDensityMin = 3 };
+        var gen = MapGenerator.GenerateWithMeta(new MapGenParams(Biome.GlassCoast, MapSize.Medium, 2, seed, null, OceanEdges.North | OceanEdges.South, 1), glass);
         var side = new AiSide(AiRegistry.TieredId, TestWorld.Tiers[2], Faction.Expedition);
         var readySince = new[] { -1, -1 };
         var readyType = new[] { -1, -1 };
