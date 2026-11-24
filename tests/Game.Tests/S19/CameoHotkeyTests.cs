@@ -54,6 +54,19 @@ public sealed class CameoHotkeyTests : IDisposable
     }
 
     [Fact]
+    public void A_refused_cameo_hotkey_raises_the_refuse_cue()
+    {
+        // GAMEUI-07: a hotkey that does nothing (empty or locked slot) raises Refused, which the game turns into the existing ui_deny cue.
+        int refused = 0;
+        _panel.Refused += () => refused++;
+        int falses = 0;
+        for (int i = 0; i < CameoHotkeys.Actions.Count; i++)
+            if (!_panel.ActivateCameoSlot(i, shift: false)) falses++;
+        Assert.True(falses > 0, "a fresh base has empty cameo slots");
+        Assert.Equal(falses, refused);
+    }
+
+    [Fact]
     public void The_twelve_slots_map_to_three_columns_by_four_rows()
     {
         Assert.Equal(12, CameoHotkeys.Actions.Count);

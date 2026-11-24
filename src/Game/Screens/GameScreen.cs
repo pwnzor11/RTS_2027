@@ -344,6 +344,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
         // D-068: the local player draws in the chosen colour; the AI takes the next palette entry that differs.
         PlayerColours.Assign(Skirmish is { } sk && sk.PlayerCount >= 2 ? ColoursOf(sk) : new[] { colour, colour == 1 ? 0 : 1 });
         _sidebar = new SidebarPanel(_sim, Me, _selection, _cameos, PlayerColours.Base(Me));
+        _sidebar.Refused += () => Rts.Game.Menu.MenuSounds.Play(_s.Audio, Rts.Game.Menu.MenuSounds.Deny);   // GAMEUI-07
         _sidebar.Orders = _orders;                                         // S18 GAMEUI-05
         _sidebar.HiddenCursor = SoftwareCursor.MakeHidden(_s.Graphics);   // M11-10e
         _sidebar.Blurbs = LoadCameoBlurbs();                               // M11-10g
@@ -675,7 +676,9 @@ public sealed class GameScreen : IScreen, IFocusPausable
         _card.Refresh(mapView, _s.UiFactor, _selectedBuilding);
         _card.SellArmed = _sellConfirm.IsArmed(_selectedBuilding, _nowMs);   // D-205
         if (!_card.Visible || !input.LeftPressed || _dragStart is not null) return;
-        Rts.Game.Ui.Card.CardAction action = _card.Click(input.MousePosition, input.IsDown(Keys.LeftShift) || input.IsDown(Keys.RightShift));
+        // GAMEUI-01: the corner map buttons are drawn over the card at large UI scales, so they get the click where they overlap.
+        Rectangle[] over = { _upgradeRegion.Bounds, _packRegion.Bounds, _diveRegion.Bounds, _idleHarvesterRegion.Bounds, _idleFactoryRegion.Bounds };
+        Rts.Game.Ui.Card.CardAction action = _card.Click(input.MousePosition, input.IsDown(Keys.LeftShift) || input.IsDown(Keys.RightShift), over);
         if (!action.Consumed) return;
         input.ConsumeLeft();
         switch (action.Kind)

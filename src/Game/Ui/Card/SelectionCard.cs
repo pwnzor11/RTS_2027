@@ -93,7 +93,8 @@ public sealed class SelectionCard : IUiRegion
     }
 
     /// <summary>Routes a left click (see <see cref="CardRouting.Click"/>).</summary>
-    public CardAction Click(Point at, bool shift) => CardRouting.Click(Layout, Model, at, shift);
+    /// <param name="above">Regions drawn over the card that take a click first (GAMEUI-01); see <see cref="CardRouting.Click"/>.</param>
+    public CardAction Click(Point at, bool shift, IReadOnlyList<Rectangle>? above = null) => CardRouting.Click(Layout, Model, at, shift, above);
 
     /// <summary>Paints the card.</summary>
     /// <param name="batch">Sprite batch (already begun).</param>
@@ -120,12 +121,13 @@ public sealed class SelectionCard : IUiRegion
             bool sellArmed = b.Kind == CardButtonKind.Sell && SellArmed;
             if (sellArmed) b = b with { Label = UiText.Get(UiText.SellConfirm) };
             bool active = sellArmed || b.Active || b.Kind == CardButtonKind.Order && b.Action == GameAction.AttackMove && attackMoveArmed;
-            bool down = hover == i && Microsoft.Xna.Framework.Input.Mouse.GetState().LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed;
-            SkinButtonState state = down ? SkinButtonState.Pressed : hover == i ? SkinButtonState.Hover : SkinButtonState.Normal;
-            if (Skin is null || !Skin.TryButton(batch, r, state, active: active))
+            bool down = b.Enabled && hover == i && Microsoft.Xna.Framework.Input.Mouse.GetState().LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed;
+            bool lit = b.Enabled && hover == i;
+            SkinButtonState state = !b.Enabled ? SkinButtonState.Disabled : down ? SkinButtonState.Pressed : lit ? SkinButtonState.Hover : SkinButtonState.Normal;
+            if (Skin is null || !Skin.TryButton(batch, r, state, active: active && b.Enabled))
             {
-                Shapes.Fill(batch, pixel, r, active ? ActiveFill : hover == i ? ButtonHover : ButtonFill);
-                Shapes.Outline(batch, pixel, r, active ? Gold : Border);
+                Shapes.Fill(batch, pixel, r, active && b.Enabled ? ActiveFill : lit ? ButtonHover : ButtonFill);
+                Shapes.Outline(batch, pixel, r, active && b.Enabled ? Gold : Border);
             }
 
             DrawButtonText(batch, pixel, r, b, s);
@@ -139,7 +141,8 @@ public sealed class SelectionCard : IUiRegion
         while (fs > 1f && BitmapFont.Measure(text, fs, FontWeight.Regular) > r.Width - 4) fs = Math.Max(1f, fs - 0.25f);
         if (BitmapFont.Measure(text, fs, FontWeight.Regular) > r.Width - 2) text = b.Label;   // the key text no longer fits: the label alone
         int w = BitmapFont.Measure(text, fs, FontWeight.Regular), h = BitmapFont.LineHeight(fs, FontWeight.Regular);
-        BitmapFont.Draw(batch, pixel, text, new Vector2(r.X + (r.Width - w) / 2f, r.Y + (r.Height - h) / 2f), TextColour, fs, FontWeight.Regular);
+        Color colour = b.Enabled ? TextColour : Skin?.Dim(DimText) ?? DimText;   // GAMEUI-05: a disabled button's text is dimmed
+        BitmapFont.Draw(batch, pixel, text, new Vector2(r.X + (r.Width - w) / 2f, r.Y + (r.Height - h) / 2f), colour, fs, FontWeight.Regular);
     }
 
     private void DrawSingle(SpriteBatch batch, Texture2D pixel, CardLayout l, float s)

@@ -3,6 +3,7 @@
 using System.Diagnostics;
 using Rts.Data;
 using Rts.Game.Host;
+using Rts.Game.Menu;
 using Rts.Game.Saves;
 using Rts.Scripting;
 using Rts.Sim;
@@ -28,30 +29,30 @@ public sealed class SimSnapshotSource : ISnapshotSource
     /// <summary>Tick at which player 1's units attack-move toward player 0's start (sandbox only).</summary>
     public const int AttackScriptTick = 40;
 
-    /// <summary>Where the session replay is written, relative to the working directory.</summary>
-    public const string ReplayPath = "replays/sandbox_last.rpl";
+    /// <summary>Where the session replay is written: the replays folder under application data (REPO-01).</summary>
+    public static string ReplayPath => Path.Combine(ReplayCatalog.DefaultFolder, "sandbox_last.rpl");
 
     /// <summary>The previous session's replay: <see cref="ReplayPath"/> is moved here when a new session starts.</summary>
-    public const string PreviousReplayPath = "replays/sandbox_prev.rpl";
+    public static string PreviousReplayPath => Path.Combine(ReplayCatalog.DefaultFolder, "sandbox_prev.rpl");
 
     /// <summary>The command that checks the session replay.</summary>
-    public const string VerifyCommand =
-        "dotnet run --project src/Tools -- replay verify replays/sandbox_last.rpl --map data/maps/test_32.map.toml";
+    public static string VerifyCommand =>
+        $"dotnet run --project src/Tools -- replay verify \"{ReplayPath}\" --map data/maps/test_32.map.toml";
 
     /// <summary>The seed the sandbox has always used.</summary>
     public const ulong DefaultSeed = 2027;
 
     /// <summary>Where a menu skirmish writes its replay.</summary>
-    public const string SkirmishReplayPath = "replays/skirmish_last.rpl";
+    public static string SkirmishReplayPath => Path.Combine(ReplayCatalog.DefaultFolder, "skirmish_last.rpl");
 
     /// <summary>The previous skirmish's replay.</summary>
-    public const string SkirmishPreviousReplayPath = "replays/skirmish_prev.rpl";
+    public static string SkirmishPreviousReplayPath => Path.Combine(ReplayCatalog.DefaultFolder, "skirmish_prev.rpl");
 
     /// <summary>Where a campaign mission writes its replay.</summary>
-    public const string MissionReplayPath = "replays/mission_last.rpl";
+    public static string MissionReplayPath => Path.Combine(ReplayCatalog.DefaultFolder, "mission_last.rpl");
 
     /// <summary>The previous mission's replay.</summary>
-    public const string MissionPreviousReplayPath = "replays/mission_prev.rpl";
+    public static string MissionPreviousReplayPath => Path.Combine(ReplayCatalog.DefaultFolder, "mission_prev.rpl");
 
     private readonly SimHost _host;
     private readonly string? _verifyCommand = VerifyCommand;
