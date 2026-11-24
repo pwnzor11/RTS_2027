@@ -162,7 +162,7 @@ blackout_ticks = 200
 storm_radius = 6   # (tune) cells
 storm_ticks = 800   # (tune) 40 s at 20 ticks/s
 storm_contaminate_step = 4   # (tune) low steps, never above the cap
-storm_contaminate_cap = 64   # design 06 §6: denies building but does not kill
+storm_contaminate_cap = 31   # design 06 §6: denies building but does not kill (A43 SIMECON-02: kept below [radiation] damage_threshold = 32; was 64)
 storm_speed_permille = 600   # (tune) enemy vehicles slowed to 60 percent
 
 # M7-08: Expedition warheads (design 07 §6.4). versus order: Unarmored, Light, Heavy, Structure, Fortified, ShipLight, ShipHeavy, Submerged.
