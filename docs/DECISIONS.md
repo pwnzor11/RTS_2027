@@ -2283,3 +2283,10 @@ two 256-game confirms), so those biomes are unchanged. docs/balance/s42_balance.
 Behind 30.6 -> 18.1 %, Glass Directorate v Expedition 27.3 -> 18.4 %, and moved Authority v Directorate about 6 points toward the Directorate on
 Mountains and Glass (rows already below 50 %). **Alternatives:** on (D-301 left it
 for a measured series; this was it).
+
+### D-310 · 2026-11-24 · Session 43: finish line met; balance numbers frozen (Q-88 (a), D-298)
+**Decision:** The owner answered Q-88 (a): the D-305 finish line counts as met within measurement error, and balance numbers (unit, AI and map data
+keys) are frozen per D-298. Ash Plains Authority v Directorate 23.6 % and Rust Belt Authority v Left Behind 75.1 % stay as they are. Later changes
+that move a match outcome need a new decision. The 24-row 35-65 % goal stays as later work. **Why:** both rows are within one standard error (~2
+points) of the band; all six pairings pass, ladders are in order, the campaign meets D-222. **Alternatives:** (b) one AI-code round for the
+Authority's early defence and re-measure; (c) widen the row band.
