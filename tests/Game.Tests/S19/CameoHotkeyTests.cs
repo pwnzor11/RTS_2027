@@ -88,9 +88,9 @@ public sealed class CameoHotkeyTests : IDisposable
     [Fact]
     public void A_cameo_key_can_be_rebound_to_a_letter_that_is_free()
     {
-        KeyBindings rebound = KeyBindings.Default.With(GameAction.CameoSlot1, Keys.Z);
-        Assert.Equal(Keys.Z, rebound.Get(GameAction.CameoSlot1));
-        Assert.Null(rebound.ConflictOf(GameAction.CameoSlot1, Keys.Z));
+        KeyBindings rebound = KeyBindings.Default.With(GameAction.CameoSlot1, Keys.V);
+        Assert.Equal(Keys.V, rebound.Get(GameAction.CameoSlot1));
+        Assert.Null(rebound.ConflictOf(GameAction.CameoSlot1, Keys.V));
         Assert.Equal(GameAction.TabStructures, KeyBindings.Default.ConflictOf(GameAction.CameoSlot1, Keys.Q));   // a letter in use is refused (or swapped)
     }
 

@@ -111,12 +111,12 @@ public sealed class OptionsTests
     {
         KeyBindings b = KeyBindings.Default;
         Assert.Equal(Keys.None, b.GetAlt(GameAction.AttackMove));
-        KeyBindings two = b.WithAlt(GameAction.AttackMove, Keys.Insert);
+        KeyBindings two = b.WithAlt(GameAction.AttackMove, Keys.V);
         Assert.Equal(Keys.A, two.Get(GameAction.AttackMove));
-        Assert.Equal(Keys.Insert, two.GetAlt(GameAction.AttackMove));
-        Assert.True(two.Uses(GameAction.AttackMove, Keys.A) && two.Uses(GameAction.AttackMove, Keys.Insert));
+        Assert.Equal(Keys.V, two.GetAlt(GameAction.AttackMove));
+        Assert.True(two.Uses(GameAction.AttackMove, Keys.A) && two.Uses(GameAction.AttackMove, Keys.V));
         Assert.False(two.IsAllDefault);
-        Assert.Equal(GameAction.AttackMove, two.ConflictOf(GameAction.Stop, Keys.Insert));   // the second key counts as taken
+        Assert.Equal(GameAction.AttackMove, two.ConflictOf(GameAction.Stop, Keys.V));   // the second key counts as taken
         Assert.Equal(b, two.WithAlt(GameAction.AttackMove, Keys.None));   // clearing gives the defaults back
         Assert.Equal(two, two.WithAlt(GameAction.AttackMove, Keys.A));   // the action's own first key is no second key
         Assert.Empty(two.Conflicts());
@@ -125,14 +125,14 @@ public sealed class OptionsTests
     [Fact]
     public void Second_keys_are_saved_in_keys_alt_and_a_clashing_file_falls_back_to_the_defaults()
     {
-        Settings s = Settings.Default.WithBindings(KeyBindings.Default.WithAlt(GameAction.Stop, Keys.Insert));
+        Settings s = Settings.Default.WithBindings(KeyBindings.Default.WithAlt(GameAction.Stop, Keys.V));
         string toml = s.ToToml();
         Assert.Contains("[keys_alt]", toml);
-        Assert.Equal(Keys.Insert, Settings.Parse(toml).Bindings.GetAlt(GameAction.Stop));
+        Assert.Equal(Keys.V, Settings.Parse(toml).Bindings.GetAlt(GameAction.Stop));
         Assert.DoesNotContain("[keys_alt]", Settings.Default.ToToml());
 
-        // Insert as the second key of two actions: both are dropped, no clash survives
-        Settings clash = Settings.Parse("version = 2\n[keys_alt]\nstop = \"Insert\"\nattack_move = \"Insert\"");
+        // V as the second key of two actions: both are dropped, no clash survives
+        Settings clash = Settings.Parse("version = 2\n[keys_alt]\nstop = \"V\"\nattack_move = \"V\"");
         Assert.Empty(clash.Bindings.Conflicts());
         Assert.Equal(Keys.None, clash.Bindings.GetAlt(GameAction.Stop));
         // a second key equal to the first is ignored
@@ -144,8 +144,8 @@ public sealed class OptionsTests
     {
         var session = new RebindSession();
         session.Begin(GameAction.Stop, second: true);
-        KeyBindings? set = session.Press(KeyBindings.Default, Keys.Insert);
-        Assert.Equal(Keys.Insert, set!.GetAlt(GameAction.Stop));
+        KeyBindings? set = session.Press(KeyBindings.Default, Keys.V);
+        Assert.Equal(Keys.V, set!.GetAlt(GameAction.Stop));
         Assert.Equal(RebindSession.Phase.Idle, session.State);
 
         session.Begin(GameAction.Stop, second: true);
@@ -163,6 +163,6 @@ public sealed class OptionsTests
     {
         var row = new ControlRow("Orders", "Stop", GameAction.Stop);
         Assert.Equal("S", row.LabelFor(KeyBindings.Default));
-        Assert.Equal("S / Insert", row.LabelFor(KeyBindings.Default.WithAlt(GameAction.Stop, Keys.Insert)));
+        Assert.Equal("S / V", row.LabelFor(KeyBindings.Default.WithAlt(GameAction.Stop, Keys.V)));
     }
 }
