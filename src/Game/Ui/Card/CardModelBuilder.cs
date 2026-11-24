@@ -17,15 +17,16 @@ namespace Rts.Game.Ui.Card;
 /// </summary>
 public static class CardModelBuilder
 {
-    /// <summary>The order buttons of a unit or group, in order; Deploy only when <paramref name="deployApplies"/>.</summary>
-    public static IReadOnlyList<CardButton> UnitButtons(bool deployApplies)
+    /// <summary>The order buttons of a unit or group, in order; Deploy only when <paramref name="deployApplies"/>. Attack is
+    /// disabled unless <paramref name="attackArmed"/> (some selected unit has a weapon, GAMEUI-05).</summary>
+    public static IReadOnlyList<CardButton> UnitButtons(bool deployApplies, bool attackArmed = true)
     {
         var list = new List<CardButton>(5)
         {
             OrderButton(GameAction.Stop, "Stop"),
             OrderButton(GameAction.Guard, "Guard"),
             OrderButton(GameAction.Scatter, "Scatter"),
-            OrderButton(GameAction.AttackMove, "Attack"),
+            OrderButton(GameAction.AttackMove, "Attack") with { Enabled = attackArmed },
         };
         if (deployApplies) list.Add(OrderButton(GameAction.Deploy, "Deploy"));
         return list;
@@ -98,7 +99,7 @@ public static class CardModelBuilder
         }
 
         if (cameos.Count == 0) return CardModel.Empty;
-        if (cameos.Count == 1 && single is UnitView only) return ForUnit(source, only, cameos[0], deploy, armed ? StanceButtons(shared) : Array.Empty<CardButton>());
+        if (cameos.Count == 1 && single is UnitView only) return ForUnit(source, only, cameos[0], deploy, armed, armed ? StanceButtons(shared) : Array.Empty<CardButton>());
 
         IReadOnlyList<CardCameo> ordered = CardGrouping.Order(cameos);
         IReadOnlyList<CardGroup> groups = CardGrouping.Groups(ordered, CameoNames.Display);
@@ -108,7 +109,7 @@ public static class CardModelBuilder
             Title = CardGrouping.Header(ordered.Count, groups),
             Cameos = ordered,
             Groups = groups,
-            Buttons = armed ? UnitButtons(deploy).Concat(StanceButtons(shared)).ToList() : UnitButtons(deploy),
+            Buttons = armed ? UnitButtons(deploy, armed).Concat(StanceButtons(shared)).ToList() : UnitButtons(deploy, armed),
         };
     }
 
@@ -117,7 +118,7 @@ public static class CardModelBuilder
             ? (rules.Vehicles[u.TypeIndex].Id, rules.Vehicles[u.TypeIndex].MaxHealth)
             : (rules.Infantry[u.TypeIndex].Id, rules.Infantry[u.TypeIndex].MaxHealth);
 
-    private static CardModel ForUnit(SimSnapshotSource source, UnitView unit, CardCameo cameo, bool deploy, IReadOnlyList<CardButton> stances)
+    private static CardModel ForUnit(SimSnapshotSource source, UnitView unit, CardCameo cameo, bool deploy, bool armed, IReadOnlyList<CardButton> stances)
     {
         SimRules r = source.Rules;
         UnitKey key = cameo.Key;
@@ -181,7 +182,7 @@ public static class CardModelBuilder
             Stats = stats,
             Lines = lines,
             Cameos = new[] { cameo },
-            Buttons = stances.Count == 0 ? UnitButtons(deploy) : UnitButtons(deploy).Concat(stances).ToList(),
+            Buttons = stances.Count == 0 ? UnitButtons(deploy, armed) : UnitButtons(deploy, armed).Concat(stances).ToList(),
         };
     }
 

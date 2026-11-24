@@ -51,6 +51,26 @@ public sealed class CardRoutingTests
     }
 
     [Fact]
+    public void Attack_with_no_armed_unit_is_disabled_and_its_click_does_nothing()
+    {
+        // GAMEUI-05: Attack cannot arm for unarmed units (Scraper, Engineer, MCV), so the button is drawn disabled and ignores clicks.
+        var m = new CardModel
+        {
+            Kind = CardKind.Multi,
+            Cameos = Group(2).Cameos,
+            Buttons = CardModelBuilder.UnitButtons(deployApplies: false, attackArmed: false),
+        };
+        CardLayout l = CardLayout.Compute(Map, 1.25f, 18, m.Kind, m.Buttons.Count, m.Cameos.Count);
+        int attack = m.Buttons.ToList().FindIndex(b => b.Action == GameAction.AttackMove);
+        Assert.False(m.Buttons[attack].Enabled);
+        Assert.True(m.Buttons[0].Enabled);   // Stop still works
+
+        CardAction click = CardRouting.Click(l, m, l.Buttons[attack].Center, shift: false);
+        Assert.Equal(CardActionKind.Swallow, click.Kind);
+        Assert.Equal(CardActionKind.Order, CardRouting.Click(l, m, l.Buttons[0].Center, shift: false).Kind);
+    }
+
+    [Fact]
     public void A_click_on_empty_card_space_is_swallowed_not_passed_to_the_map()
     {
         CardModel m = Group(2);

@@ -23,6 +23,7 @@ public static class CardRouting
         {
             if (!layout.Buttons[i].Contains(point)) continue;
             CardButton b = model.Buttons[i];
+            if (!b.Enabled) return new CardAction(CardActionKind.Swallow);   // GAMEUI-05: cannot act now; the click does nothing
             return b.Kind switch
             {
                 CardButtonKind.Sell => new CardAction(CardActionKind.Sell),
