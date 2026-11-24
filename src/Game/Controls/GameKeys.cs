@@ -122,6 +122,9 @@ public static class GameKeys
         new(GameAction.CentreOnSelection, "centre_on_selection", Camera, "Centre the view on the selection", Keys.OemComma),
         new(GameAction.CycleProductionBuilding, "cycle_production", Selection, "Jump to the next production building (selects and centres it)", Keys.PageUp),
         new(GameAction.AutoTypeGroups, "auto_type_groups", Selection, "Control groups select every unit of their types (toggle)", Keys.Insert),
+        new(GameAction.PlaceLast, "place_last", System, "Place the last structure again (Shift + drag lays a row)", Keys.B),
+        new(GameAction.RepairAll, "repair_all", System, "Repair every damaged building", Keys.OemSemicolon),
+        new(GameAction.SellMarked, "sell_marked", System, "Sell the marked buildings (Shift + click marks; press twice)", Keys.Delete),
     };
 
     /// <summary>The Controls page lines, grouped in <see cref="Groups"/> order: rebindable actions and fixed inputs shown for reference.</summary>
@@ -184,6 +187,9 @@ public static class GameKeys
             A(GameAction.TabUpgrades), A(GameAction.TabAircraft),
             A(GameAction.CameoSlot1), A(GameAction.CameoSlot2), A(GameAction.CameoSlot3), A(GameAction.CameoSlot4), A(GameAction.CameoSlot5), A(GameAction.CameoSlot6), A(GameAction.CameoSlot7), A(GameAction.CameoSlot8), A(GameAction.CameoSlot9), A(GameAction.CameoSlot10), A(GameAction.CameoSlot11), A(GameAction.CameoSlot12),
             A(GameAction.RangeRings),
+            A(GameAction.PlaceLast), A(GameAction.RepairAll), A(GameAction.SellMarked),
+            F(Orders, "Alt + click (map or minimap)", "Ping: a marker for you and, in a LAN game, your team"),
+            F(Orders, "Right drag", "Spread the selection along the line you draw (one Move each)"),
             F(System, "Esc", "Leave a mode, then open the pause menu"),
             A(GameAction.Pause), A(GameAction.QuickSave), A(GameAction.QuickLoad), A(GameAction.GameSpeedUp), A(GameAction.GameSpeedDown),
             F(System, "F1 or ?", "This list (F1 opens the console in the sandbox)"),

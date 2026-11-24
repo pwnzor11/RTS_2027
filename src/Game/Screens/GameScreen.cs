@@ -65,6 +65,12 @@ public sealed class GameScreen : IScreen, IFocusPausable
     private readonly Selection _selection = new();
     private readonly OrderController? _orders; // null with --demo
     private readonly OrderFeedback _feedback = new();   // O1: order rings
+    private readonly PingBoard _pings = new();           // A43-QOL-09: map pings
+    private readonly BuildingBulk _bulk = new();         // A43-QOL-15: repair-all bookkeeping
+    private readonly List<EntityId> _marked = new();     // A43-QOL-15: Shift + click marks buildings for the sell key
+    private List<PausedOrder> _pausedOrders = new();     // A43-QOL-08: the orders waiting while paused
+    private Point? _rightStart;                          // A43-QOL-16: where a right-button press began
+    private bool _rightStartArmed;                       // ... and whether it was an armed attack-move
     private readonly OverlayToggles _overlays = new();
     private readonly Camera _camera = new();
     private readonly DebugConsole? _console; // null with --demo
@@ -325,6 +331,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
     public void Enter()
     {
         if (_lan is not null) _lan.SourceReplaced += OnLanSourceReplaced;   // M9-10
+        if (_lan is not null) _lan.PingReceived += OnPingReceived;           // A43-QOL-09
         _s.Scene.Reset();   // S18 GAMEREND-01: the shared renderer must not remember the previous game's buildings
         if (_spectatorMode && _sim is not null)
         {
@@ -346,6 +353,8 @@ public sealed class GameScreen : IScreen, IFocusPausable
         _sidebar = new SidebarPanel(_sim, Me, _selection, _cameos, PlayerColours.Base(Me));
         _sidebar.Refused += () => Rts.Game.Menu.MenuSounds.Play(_s.Audio, Rts.Game.Menu.MenuSounds.Deny);   // GAMEUI-07
         _sidebar.Orders = _orders;                                         // S18 GAMEUI-05
+        _sidebar.MinimapPinged += PingAt;                                  // A43-QOL-09
+        _sidebar.RepairToggled += b => _bulk.NoteRepair(b.Id, b.Health);   // A43-QOL-15
         _sidebar.HiddenCursor = SoftwareCursor.MakeHidden(_s.Graphics);   // M11-10e
         _sidebar.Blurbs = LoadCameoBlurbs();                               // M11-10g
         _card = new Rts.Game.Ui.Card.SelectionCard(_sim, _selection, _cameos, PlayerColours.Base(Me));
@@ -366,6 +375,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
     public void Exit()
     {
         if (_lan is not null) _lan.SourceReplaced -= OnLanSourceReplaced;
+        if (_lan is not null) _lan.PingReceived -= OnPingReceived;
         PlayerColours.ResetAssignment();
         _sidebar?.Dispose();
         _cameos?.Dispose();
@@ -485,6 +495,8 @@ public sealed class GameScreen : IScreen, IFocusPausable
 
         _sidebar?.Update(input, _camera, _s.Viewport.Width, _s.Viewport.Height, _s.UiFactor);
         HandlePackKeyAndPlacement(input);   // M6-09: K, and the unpack footprint on the map
+        HandleBulkKeys(input, typing || chatTyping);   // A43-QOL-15: repair all, sell marked
+        UpdatePausedOrders();   // A43-QOL-08
 
         bool debugKeys = _lan is null && GameKeys.DebugKeysAllowed(_skirmishMode);   // M9: never a local step in a LAN match
         if (_sim is not null)
@@ -639,9 +651,11 @@ public sealed class GameScreen : IScreen, IFocusPausable
         _s.Scene.ShakeEnabled = _s.Settings.ScreenShake;   // M10-14
         _s.Scene.ReduceFlashes = _s.Settings.ReduceFlashes;   // QOL-20
         _s.Scene.Draw(sb, _s.Pixel, frame, _camera, _s.Viewport);
+        DrawPausedPlan(sb);   // A43-QOL-08
         DrawSelectedBuilding(sb, snapshot);
         DrawQueuedPaths(sb);   // M13-15: the waypoints of the selected units
         _feedback.Draw(sb, _s.Pixel, _camera);
+        DrawPings(sb, snapshot, true);   // A43-QOL-09
         DrawPackProgress(sb, snapshot);
         DrawUnpackGhost(sb);
         _sidebar?.DrawMapOverlay(sb, _s.Pixel, _camera, snapshot, _s.Scene);
@@ -653,6 +667,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
         _sidebar?.Draw(sb, _s.Pixel, snapshot);
         if (_mission is not null && _sidebar is not null) _mission.Guidance.DrawMinimap(sb, _s.Pixel, _sidebar.Layout.Minimap, snapshot.MapWidth, snapshot.MapHeight);   // M11-05
         if (_sidebar is not null) _alerts.DrawMinimapPings(sb, _s.Pixel, _sidebar.Layout.Minimap, snapshot.MapWidth, snapshot.MapHeight, snapshot.Tick);   // M11-10d
+        DrawPings(sb, snapshot, false);   // A43-QOL-09
         DrawSuperweapon(sb, snapshot.Tick);
         DrawUpgradeButton(sb);
         DrawPackButton(sb);
@@ -700,6 +715,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
                 break;
             case Rts.Game.Ui.Card.CardActionKind.Repair when _sim is not null && !_selectedBuilding.IsNone:
                 _sim.Host.Issue(SidebarCommands.Repair(Me, _selectedBuilding));
+                _bulk.NoteRepair(_selectedBuilding, HealthOfBuilding(_selectedBuilding));   // A43-QOL-15
                 break;
         }
     }
@@ -995,7 +1011,12 @@ public sealed class GameScreen : IScreen, IFocusPausable
         }
 
         Point mouse = input.MousePosition;
-        if (input.LeftPressed && _orders is { AttackMoveArmed: true } && _console is not { IsOpen: true } && MapViewport().Bounds.Contains(mouse))
+        if (input.LeftPressed && input.IsAltDown() && _console is not { IsOpen: true } && MapViewport().Bounds.Contains(mouse))
+        {
+            PingAt(Camera.CellAt(_camera.WorldFromScreen(mouse)));   // A43-QOL-09: Alt + click pings, it never selects or orders
+            input.ConsumeLeft();
+        }
+        else if (input.LeftPressed && _orders is { AttackMoveArmed: true } && _console is not { IsOpen: true } && MapViewport().Bounds.Contains(mouse))
         {
             _orders.RightClick(mouse, _camera, _renderUnits, queue: ShiftHeld(input));   // O2: a left click commits an armed attack-move (right click is the alias below)
             input.ConsumeLeft();
@@ -1051,6 +1072,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
                 else if (addClick)
                 {
                     _clickTap.Reset();   // Shift+click on the ground keeps the selection
+                    ToggleMark(Camera.CellAt(_camera.WorldFromScreen(mouse)));   // A43-QOL-15: Shift + click on an own building marks it for the sell key
                 }
                 else
                 {
@@ -1079,8 +1101,17 @@ public sealed class GameScreen : IScreen, IFocusPausable
             }
             else
             {
+                _rightStartArmed = _orders.AttackMoveArmed;
+                _rightStart = ShiftHeld(input) || CtrlHeld(input) ? null : mouse;   // A43-QOL-16: a plain right press may become a line drag
                 _orders.RightClick(mouse, _camera, _renderUnits, CtrlHeld(input), ShiftHeld(input));   // S19 FAD-05: Ctrl + right-click = attack ground; M13-15: Shift = queue a waypoint
             }
+        }
+        else if (_rightStart is Point pressed && input.Mouse.RightButton == ButtonState.Released)
+        {
+            // A43-QOL-16: the right button went up after a drag: spread the selection along the line (the press already gave the plain order)
+            _rightStart = null;
+            if (_orders is not null && input.PreviousMouse.RightButton == ButtonState.Pressed && ClickDrag.IsDrag(pressed, mouse, _s.UiFactor))
+                _orders.LineMove(pressed, mouse, _camera, queue: false, attackMove: _rightStartArmed);
         }
     }
 
@@ -1550,6 +1581,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
 
     private void ClearBuildingSelection()
     {
+        _marked.Clear();   // A43-QOL-15
         _selectedBuilding = EntityId.None;
         _selectedBuildingProduces = false;
         _selectedBuildingType = -1;
@@ -1557,6 +1589,8 @@ public sealed class GameScreen : IScreen, IFocusPausable
 
     private void PruneBuildingSelection()
     {
+        if (_marked.Count > 0)   // A43-QOL-15: a marked building that is sold or destroyed is unmarked
+            _marked.RemoveAll(id => !_source.Current.Buildings.Any(b => !b.Ghost && b.Id == id));
         if (_selectedBuilding.IsNone) return;
         foreach (BuildingView b in _source.Current.Buildings)
             if (!b.Ghost && b.Id == _selectedBuilding) return;
@@ -1565,6 +1599,14 @@ public sealed class GameScreen : IScreen, IFocusPausable
 
     private void DrawSelectedBuilding(SpriteBatch sb, SimSnapshot snapshot)
     {
+        foreach (EntityId id in _marked)   // A43-QOL-15: marked buildings (gold) wait for the sell key
+            foreach (BuildingView m in snapshot.Buildings)
+            {
+                if (m.Ghost || m.Id != id) continue;
+                float ml = m.Cell.X * Camera.CellPx, mt = m.Cell.Y * Camera.CellPx;
+                Shapes.Outline(sb, _s.Pixel, _camera.ScreenRect(ml, mt, ml + m.FootprintW * Camera.CellPx, mt + m.FootprintH * Camera.CellPx), new Color(0xF0, 0xB0, 0x40), 2);
+            }
+
         if (_selectedBuilding.IsNone) return;
         foreach (BuildingView b in snapshot.Buildings)
         {
@@ -1592,6 +1634,135 @@ public sealed class GameScreen : IScreen, IFocusPausable
             var actor = new ActorRef(unit.Kind, unit.Id);
             if (_sim.Sim.WaypointCountOf(actor) == 0 || !_sim.TryGetPosition(unit, out LeptonCoord at)) continue;
             OrderFeedback.DrawWaypointPath(sb, _s.Pixel, _camera, Camera.WorldFromLepton(at), _sim.Sim.WaypointsOf(actor));
+        }
+    }
+
+    // ---- A43 QoL: pause plan, pings, repair all, sell several --------------------------------------
+
+    // QOL-08: single-player pause already holds every issued command until the first tick after unpause (SimHost.Issue stamps ExecTick = Tick + 1
+    // and nothing steps while paused); this only reads that queue so the screen can show it. A LAN game has its own pause and no local queue.
+    private void UpdatePausedOrders()
+    {
+        if (_sim is { Paused: true } && _lan is null && !_spectatorMode) _pausedOrders = PausedOrders.Collect(_sim.Host.Pending, Me);
+        else if (_pausedOrders.Count > 0) _pausedOrders = new List<PausedOrder>();
+    }
+
+    private void DrawPausedPlan(SpriteBatch sb)
+    {
+        if (_sim is not { Paused: true } || _lan is not null || _spectatorMode) return;
+        Rectangle view = MapViewport().Bounds;
+        Shapes.Fill(sb, _s.Pixel, view, new Color(20, 30, 70, 46));   // a cool tint: the game is held, orders are being planned
+        var one = new List<(CellCoord Cell, bool AttackMove)>(1) { default };
+        foreach (PausedOrder o in _pausedOrders)
+        {
+            if (!_sim.TryGetPosition(new UnitKey(o.SubjectKind, o.Subject), out LeptonCoord at)) continue;
+            CellCoord to = o.Cell;
+            if (!o.Target.IsNone)
+            {
+                if (o.TargetKind is not (ActorKind.Vehicle or ActorKind.Infantry) || !_sim.TryGetPosition(new UnitKey(o.TargetKind, o.Target), out LeptonCoord there)) continue;
+                to = there.ToCell();
+            }
+
+            one[0] = (to, o.Attack);
+            OrderFeedback.DrawWaypointPath(sb, _s.Pixel, _camera, Camera.WorldFromLepton(at), one);
+        }
+    }
+
+    // QOL-09: Alt + click on the map or the minimap. LAN: a team message that comes back through OnPingReceived; solo: a marker for yourself.
+    private void PingAt(CellCoord cell)
+    {
+        if (_sim is null || _spectatorMode || !_sim.Map.Contains(cell)) return;
+        if (_lan is not null) _lan.SendPing(cell);
+        else _pings.Add(cell, Me, _nowMs);
+    }
+
+    private void OnPingReceived(int player, CellCoord cell)
+    {
+        if (_sim is null || !_sim.Map.Contains(cell)) return;
+        _pings.Add(cell, player, _nowMs);
+        if (player != Me) Audio.AudioBootstrap.Director?.Notify(Audio.AudioEventKind.UnitReady, LeptonCoord.CenterOf(cell));
+    }
+
+    // world = true: the rings on the map; false: the dots on the minimap (drawn after the sidebar so the panel does not cover them)
+    private void DrawPings(SpriteBatch sb, SimSnapshot snapshot, bool world)
+    {
+        _pings.Prune(_nowMs);
+        if (_pings.Pings.Count == 0) return;
+        MinimapMath? mini = world || _sidebar is null ? null : MinimapMath.Fit(_sidebar.Layout.Minimap, snapshot.MapWidth, snapshot.MapHeight);
+        foreach (MapPing p in _pings.Pings)
+        {
+            Color c = p.Player == Me ? new Color(0xF0, 0xD0, 0x40) : new Color(0x60, 0xD0, 0xF0);
+            float age = PingBoard.Age(p, _nowMs);
+            float pulse = (_nowMs - p.StartMs) / 1000f % 1f;
+            byte fade = (byte)(255 * (1f - age * 0.5f));
+            if (world)
+            {
+                Vector2 at = _camera.ScreenFromWorld(Camera.CentreOf(p.Cell));
+                float r = (14f + 22f * pulse) * Math.Max(1f, _camera.Zoom);
+                Shapes.Circle(sb, _s.Pixel, at, r, Shapes.Alpha(c, (byte)(fade * (1f - pulse))), 3, 28);
+                Shapes.Circle(sb, _s.Pixel, at, 9f * Math.Max(1f, _camera.Zoom), Shapes.Alpha(c, fade), 3, 20);
+                Shapes.Line(sb, _s.Pixel, at + new Vector2(0, -34), at + new Vector2(0, -10), Shapes.Alpha(c, fade), 3);
+            }
+
+            if (mini is { Image.IsEmpty: false } m)
+            {
+                Vector2 mp = m.PointFromCell(new Vector2(p.Cell.X + 0.5f, p.Cell.Y + 0.5f));
+                Shapes.Circle(sb, _s.Pixel, mp, 3f + 8f * pulse, Shapes.Alpha(c, (byte)(fade * (1f - pulse))), 2, 24);
+                Shapes.Circle(sb, _s.Pixel, mp, 3f, Shapes.Alpha(c, fade), 2, 24);
+            }
+        }
+    }
+
+    private int HealthOfBuilding(EntityId id)
+    {
+        foreach (BuildingView b in _source.Current.Buildings)
+            if (b.Id == id) return b.Health;
+        return 0;
+    }
+
+    // QOL-15: Shift + click on an own building marks (or unmarks) it for the sell key.
+    private void ToggleMark(CellCoord cell)
+    {
+        if (_sim is null || !_skirmishMode || _spectatorMode) return;
+        foreach (BuildingView b in _source.Current.Buildings)
+        {
+            if (b.Ghost || b.Player != Me) continue;
+            if (cell.X < b.Cell.X || cell.X >= b.Cell.X + b.FootprintW || cell.Y < b.Cell.Y || cell.Y >= b.Cell.Y + b.FootprintH) continue;
+            if (!_marked.Remove(b.Id)) _marked.Add(b.Id);
+            return;
+        }
+    }
+
+    private void HandleBulkKeys(InputFrame input, bool typing)
+    {
+        if (_sim is null || !_skirmishMode || _spectatorMode || typing) return;
+        if (_lan is null) _bulk.Observe(_source.Current.Buildings, _sim.Rules, Me, _sim.Tick);
+        if (input.ConsumePressed(GameAction.RepairAll))
+        {
+            // QOL-15: one ordinary Repair command per damaged own building that is not already repairing
+            List<BuildingView> targets = _bulk.RepairTargets(_source.Current.Buildings, _sim.Rules, Me);
+            foreach (BuildingView b in targets) _sim.Host.Issue(SidebarCommands.Repair(Me, b.Id));
+            _bulk.Started(targets);
+            _toast.Show(targets.Count == 0 ? QolText.NothingToRepair : QolText.RepairsStarted(targets.Count), _nowMs);
+        }
+
+        if (input.ConsumePressed(GameAction.SellMarked))
+        {
+            var targets = new List<EntityId>(_marked);
+            if (!_selectedBuilding.IsNone && !targets.Contains(_selectedBuilding)) targets.Add(_selectedBuilding);
+            if (targets.Count == 0)
+            {
+                _toast.Show(QolText.NothingToSell, _nowMs);
+                return;
+            }
+
+            targets.Sort((x, y) => x.Index.CompareTo(y.Index));
+            if (_sellConfirm.Click(targets[0], _nowMs))   // the same two-press rule as the card's Sell button
+            {
+                foreach (EntityId id in targets) _sim.Host.Issue(SidebarCommands.Sell(Me, id));
+                _marked.Clear();
+            }
+            else _toast.Show(QolText.SellPrompt(targets.Count), _nowMs);
         }
     }
 
@@ -1874,6 +2045,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
         if (_s.Settings.ShowDiagnostics)
             lines.Add($"tick {snapshot.Tick}  hash {snapshot.StateHash:x16}  fps {_s.Fps}  zoom {_camera.ZoomLabel}");
         if (_sim is { Paused: true }) lines.Add(debugMode ? "PAUSED (. = step)" : "PAUSED");
+        if (_sim is { Paused: true } && _pausedOrders.Count > 0) lines.Add(QolText.OrdersHeld(_pausedOrders.Count));   // A43-QOL-08
         else if (SpeedAllowed && _sim is { } speedSim && speedSim.SpeedPercent != GameSpeed.Normal)
             lines.Add(UiText.Format(UiText.SpeedHud, "speed", GameSpeed.Label(speedSim.SpeedPercent)));   // M13-15
 
