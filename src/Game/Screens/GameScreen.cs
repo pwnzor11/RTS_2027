@@ -1146,7 +1146,54 @@ public sealed class GameScreen : IScreen, IFocusPausable
             Command? command = _superweapon.ClickMap(local, cell, (b, c) => _sim.Sim.CanFireSuperweapon(local, b, c));
             input.ConsumeLeft();   // never also select or box-drag
             if (command is Command fire) _sim.Host.Issue(fire);
+            else RefuseSuperweapon(local, cell);   // A43 GAMEUI-03: targeting stays armed; say why and play the deny sound
         }
+    }
+
+    // A43 GAMEUI-03: a refused click names its reason in a short toast and plays the deny sound.
+    private void RefuseSuperweapon(byte local, CellCoord cell)
+    {
+        int range = _superweapon.ArmedRange;
+        bool outOfRange = range > 0 && _sim is not null && !_sim.Sim.HasEntranceInRange(local, cell, range);
+        _toast.Show(SuperweaponText.Placeholder(outOfRange ? SuperweaponText.OutOfRangeKey : SuperweaponText.CannotFireKey, ""), _nowMs);
+        MenuSounds.Play(_s.Audio, MenuSounds.Deny);
+    }
+
+    // A43 GAMEUI-03: the legal area of an armed entrance-range superweapon, shaded around the own entrance buildings.
+    private void DrawSuperweaponRange(SpriteBatch sb)
+    {
+        int range = _superweapon.ArmedRange;
+        if (range <= 0 || _sim is not { } sim) return;
+        SimSnapshot snap = _source.Current;
+        IReadOnlyList<EntranceFootprint> origins = SuperweaponRange.OriginsOf(snap.Buildings, Me, t => sim.Rules.Buildings[t].Entrance != TunnelSize.None);
+        if (origins.Count == 0) return;
+
+        // Only the cells on screen that lie within range of an origin: the box of the origins grown by the range, clipped to the view.
+        int minX = origins.Min(o => o.X) - range, minY = origins.Min(o => o.Y) - range;
+        int maxX = origins.Max(o => o.X + o.W - 1) + range, maxY = origins.Max(o => o.Y + o.H - 1) + range;
+        Rectangle map = MapViewport().Bounds;
+        CellCoord topLeft = Camera.CellAt(_camera.WorldFromScreen(new Point(map.Left, map.Top)));
+        CellCoord bottomRight = Camera.CellAt(_camera.WorldFromScreen(new Point(map.Right - 1, map.Bottom - 1)));
+        minX = Math.Max(minX, Math.Max(topLeft.X, 0));
+        minY = Math.Max(minY, Math.Max(topLeft.Y, 0));
+        maxX = Math.Min(maxX, Math.Min(bottomRight.X, snap.MapWidth - 1));
+        maxY = Math.Min(maxY, Math.Min(bottomRight.Y, snap.MapHeight - 1));
+
+        Color fill = new(0x60, 0xC0, 0xFF);
+        const int edge = 2;
+        for (int y = minY; y <= maxY; y++)
+            for (int x = minX; x <= maxX; x++)
+            {
+                if (!SuperweaponRange.Covers(origins, range, new CellCoord(x, y))) continue;
+                float left = x * Camera.CellPx, top = y * Camera.CellPx;
+                Rectangle r = _camera.ScreenRect(left, top, left + Camera.CellPx, top + Camera.CellPx);
+                Shapes.Fill(sb, _s.Pixel, r, Shapes.Alpha(fill, 40));
+                // The outline runs along the edge of the legal area only.
+                if (!SuperweaponRange.Covers(origins, range, new CellCoord(x - 1, y))) Shapes.Fill(sb, _s.Pixel, new Rectangle(r.X, r.Y, edge, r.Height), Shapes.Alpha(fill, 160));
+                if (!SuperweaponRange.Covers(origins, range, new CellCoord(x + 1, y))) Shapes.Fill(sb, _s.Pixel, new Rectangle(r.Right - edge, r.Y, edge, r.Height), Shapes.Alpha(fill, 160));
+                if (!SuperweaponRange.Covers(origins, range, new CellCoord(x, y - 1))) Shapes.Fill(sb, _s.Pixel, new Rectangle(r.X, r.Y, r.Width, edge), Shapes.Alpha(fill, 160));
+                if (!SuperweaponRange.Covers(origins, range, new CellCoord(x, y + 1))) Shapes.Fill(sb, _s.Pixel, new Rectangle(r.X, r.Bottom - edge, r.Width, edge), Shapes.Alpha(fill, 160));
+            }
     }
 
     private void DrawSuperweapon(SpriteBatch sb, int tick)
@@ -1167,6 +1214,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
             BitmapFont.Draw(sb, _s.Pixel, $"{b.Caption}  {b.Status}", new Vector2(r.X + 8, r.Y + 4), text, scale);
         }
 
+        if (_superweapon.IsArmed) DrawSuperweaponRange(sb);   // A43 GAMEUI-03
         if (_superweapon.IsArmed && MapViewport().Bounds.Contains(_mouse))
         {
             CellCoord cell = Camera.CellAt(_camera.WorldFromScreen(_mouse));
