@@ -244,29 +244,29 @@ def plume_material(bpy):
     bite = g.math("ADD", g.math("MULTIPLY", detm, g.math("SUBTRACT", 1.0, g.math("MULTIPLY", fall, 0.6))),
                   g.math("MULTIPLY", fall, 0.6))                                              # the noise bites harder at the rim
     tin = g.math("MULTIPLY", tt, 8.0, clamp=True)                                              # no hard base
-    tout = g.math("SUBTRACT", 1.0, g.math("MULTIPLY", g.math("SUBTRACT", tt, 0.7), 3.3), clamp=True)   # dissolves at the top
+    tout = g.math("SUBTRACT", 1.0, g.math("MULTIPLY", g.math("SUBTRACT", tt, 0.6), 2.0), clamp=True)   # dissolves at the top
     shape = g.math("MULTIPLY", g.math("MULTIPLY", fall, bite), g.math("MULTIPLY", tin, tout))
-    dens = g.math("MULTIPLY", g.math("MULTIPLY", shape, 5.0), g.math("SUBTRACT", 1.5, g.math("MULTIPLY", tt, 0.9)))
-    g.volume(dens, 0.85)
+    dens = g.math("MULTIPLY", g.math("MULTIPLY", shape, 2.2), g.math("SUBTRACT", 1.4, g.math("MULTIPLY", tt, 0.8)))
+    g.volume(dens, 0.95)
     return m, t_value
 
 
-def puff_material(bpy, name, r, cx_off, flat, dens0, albedo, warp, seed, breakup):
+def puff_material(bpy, name, r, cx_off, flat, dens0, albedo, warp, seed, breakup, stretch=1.0):
     """One billowing puff at the origin: an ellipsoid falloff broken by noise; density falls to zero at the rim."""
     m = new_material(bpy, name)
     g = Nodes(m)
     pos = g.position()
     x, y, z = g.sep(pos)
-    ex = g.math("DIVIDE", g.math("SUBTRACT", x, cx_off), r)
+    ex = g.math("DIVIDE", g.math("SUBTRACT", x, cx_off), r * stretch)
     ey = g.math("DIVIDE", y, r)
     ez = g.math("DIVIDE", z, r * flat)
     d0 = g.math("SQRT", g.math("ADD", g.math("ADD", g.math("MULTIPLY", ex, ex), g.math("MULTIPLY", ey, ey)),
                                g.math("MULTIPLY", ez, ez)))
     wn = g.noise(g.vmath("ADD", pos, (seed * 3.1, seed * 5.3, seed * 1.7)), 1.0 / r, 3.0, 0.6, 0.4)
     d = g.math("ADD", d0, g.math("MULTIPLY", g.math("SUBTRACT", wn, 0.5), warp))
-    fall = g.map(d, 0.45, 1.0, 1.0, 0.0)
+    fall = g.map(d, 0.3, 1.0, 1.0, 0.0)
     det = g.noise(g.vmath("ADD", pos, (seed * 5.9, seed * 11.1, seed * 2.3)), breakup / r, 6.0, 0.6)
-    detm = g.map(det, 0.3, 0.62)
+    detm = g.map(det, 0.36, 0.6)
     bite = g.math("ADD", g.math("MULTIPLY", detm, g.math("SUBTRACT", 1.0, g.math("MULTIPLY", fall, 0.5))),
                   g.math("MULTIPLY", fall, 0.5))
     g.volume(g.math("MULTIPLY", g.math("MULTIPLY", fall, bite), dens0), albedo)
@@ -328,10 +328,10 @@ def render_puff(bpy, samples, kind, f, tmp):
     place_origin(bpy, sc, cam, (0.5, 0.5))
     r = PUFF_RADII[f]
     if kind == "smoke":
-        m = puff_material(bpy, "puff_smoke", r, -0.25 * f / 3.0, 0.85, PUFF_DENS["smoke"][f], 0.55, 0.6, 2.0 + f, 2.0)
+        m = puff_material(bpy, "puff_smoke", r, -0.25 * f / 3.0, 0.85, PUFF_DENS["smoke"][f], 0.55, 1.2, 2.0 + f, 1.2, stretch=1.3)
         hull_sphere(bpy, m, (r * 1.6, r * 1.6, r * 1.6 * 0.85))
     else:
-        m = puff_material(bpy, "puff_dust", r, 0.0, 0.6, PUFF_DENS["dust"][f], 0.9, 0.5, 5.0 + f, 2.5)
+        m = puff_material(bpy, "puff_dust", r, 0.0, 0.6, PUFF_DENS["dust"][f], 0.9, 1.0, 5.0 + f, 1.0, stretch=1.2)
         hull_sphere(bpy, m, (r * 1.6, r * 1.6, r * 1.6 * 0.6))
     return render(bpy, os.path.join(tmp, f"{kind}_{f}.png"))
 
@@ -363,7 +363,7 @@ def plume_sheet(frames):
     out = np.zeros((PLUME_H, PLUME_W * len(frames), 4), dtype=np.uint8)
     for i, (a, lw) in enumerate(frames):
         v = np.clip((lw - lo) / max(hi - lo, 1e-3), 0.0, 1.0)
-        s = 0.6 * v + 0.4 * hf + 0.2 * shade_dither
+        s = 0.4 * v + 0.45 * hf + 0.3 + 0.2 * shade_dither
         idx = np.clip(np.floor(s * 5.0), 0, 4).astype(int)
         keep = a >= thr
         cell = np.zeros((PLUME_H, PLUME_W, 4), dtype=np.uint8)
