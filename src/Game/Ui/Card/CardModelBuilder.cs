@@ -47,10 +47,11 @@ public static class CardModelBuilder
         new(CardButtonKind.Order, action, UiText.Get(key), KeyNames.Of(GameKeys.Active.Get(action))) { Active = active };
 
     /// <summary>The buttons of a building: Sell and Repair.</summary>
-    public static IReadOnlyList<CardButton> BuildingButtons() => new[]
+    /// <param name="repairing">True while a repair is on: the Repair button is drawn active (GAMEUI-06).</param>
+    public static IReadOnlyList<CardButton> BuildingButtons(bool repairing = false) => new[]
     {
         new CardButton(CardButtonKind.Sell, default, "Sell", ""),
-        new CardButton(CardButtonKind.Repair, default, "Repair", ""),
+        new CardButton(CardButtonKind.Repair, default, "Repair", "") { Active = repairing },
     };
 
     private static CardButton OrderButton(GameAction action, string label) =>
@@ -220,6 +221,7 @@ public static class CardModelBuilder
         }
 
         if (b.Occupants > 0) lines.Add("Garrison " + b.Occupants.ToString(CultureInfo.InvariantCulture));
+        if (b.Repairing) lines.Add("Repairing");   // GAMEUI-06
 
         return new CardModel
         {
@@ -230,7 +232,7 @@ public static class CardModelBuilder
             Health = b.Health,
             MaxHealth = t.MaxHealth,
             Lines = lines,
-            Buttons = BuildingButtons(),
+            Buttons = BuildingButtons(b.Repairing),
         };
     }
 
