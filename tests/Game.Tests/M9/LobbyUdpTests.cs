@@ -79,4 +79,23 @@ public sealed class LobbyUdpTests : IDisposable
         Assert.Equal(1, host.Data.People);
         bad.Transport.Dispose();
     }
+
+    [Fact]
+    public void PeerIdsAreReusedAfterALeaveAndNotBurnedByARejectedHello()
+    {
+        using UdpTransport transport = UdpTransport.Host(0, 20_000, IPAddress.Loopback);
+        var host = new LobbyHost(transport, "Hosty", 5UL, "v", LobbyMap.Curated, Path.Combine(_root, "h"), Path.Combine(_root, "h", "d"));
+        LobbyClient bad = Connect(transport, "Bad", 6UL, "v");
+        Assert.True(Pump(() => bad.State == LobbyClientState.Rejected, host, bad));
+        bad.Transport.Dispose();
+        for (int round = 0; round < 3; round++)
+        {
+            LobbyClient ann = Connect(transport, "Ann", 5UL, "v");
+            Assert.True(Pump(() => ann.State == LobbyClientState.InLobby && ann.Data is not null, host, ann), "joined");
+            Assert.Equal(1, ann.LocalPeer);
+            ann.Leave();
+            Assert.True(Pump(() => host.Data.People == 1, host, ann), "left");
+            ann.Transport.Dispose();
+        }
+    }
 }
