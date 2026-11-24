@@ -93,7 +93,8 @@ public sealed class SelectionCard : IUiRegion
     }
 
     /// <summary>Routes a left click (see <see cref="CardRouting.Click"/>).</summary>
-    public CardAction Click(Point at, bool shift) => CardRouting.Click(Layout, Model, at, shift);
+    /// <param name="above">Regions drawn over the card that take a click first (GAMEUI-01); see <see cref="CardRouting.Click"/>.</param>
+    public CardAction Click(Point at, bool shift, IReadOnlyList<Rectangle>? above = null) => CardRouting.Click(Layout, Model, at, shift, above);
 
     /// <summary>Paints the card.</summary>
     /// <param name="batch">Sprite batch (already begun).</param>

@@ -675,7 +675,9 @@ public sealed class GameScreen : IScreen, IFocusPausable
         _card.Refresh(mapView, _s.UiFactor, _selectedBuilding);
         _card.SellArmed = _sellConfirm.IsArmed(_selectedBuilding, _nowMs);   // D-205
         if (!_card.Visible || !input.LeftPressed || _dragStart is not null) return;
-        Rts.Game.Ui.Card.CardAction action = _card.Click(input.MousePosition, input.IsDown(Keys.LeftShift) || input.IsDown(Keys.RightShift));
+        // GAMEUI-01: the corner map buttons are drawn over the card at large UI scales, so they get the click where they overlap.
+        Rectangle[] over = { _upgradeRegion.Bounds, _packRegion.Bounds, _diveRegion.Bounds, _idleHarvesterRegion.Bounds, _idleFactoryRegion.Bounds };
+        Rts.Game.Ui.Card.CardAction action = _card.Click(input.MousePosition, input.IsDown(Keys.LeftShift) || input.IsDown(Keys.RightShift), over);
         if (!action.Consumed) return;
         input.ConsumeLeft();
         switch (action.Kind)

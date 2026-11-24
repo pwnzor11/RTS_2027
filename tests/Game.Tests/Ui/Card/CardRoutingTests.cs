@@ -32,6 +32,25 @@ public sealed class CardRoutingTests
     }
 
     [Fact]
+    public void A_corner_button_drawn_over_the_card_takes_the_click_before_the_card()
+    {
+        // GAMEUI-01: at UI scale 125 % the map's corner buttons overlap the card's button block. They are drawn on top,
+        // so a click on the overlap must go to the corner button, not to the card button underneath.
+        CardModel m = Group(5);
+        CardLayout l = CardLayout.Compute(Map, 1.25f, 18, m.Kind, m.Buttons.Count, m.Cameos.Count);
+        Rectangle under = l.Buttons[1];
+        var corner = new Rectangle(under.X - 4, under.Y, 120, under.Height);
+        Assert.True(corner.Intersects(under));
+
+        CardAction card = CardRouting.Click(l, m, corner.Center, shift: false);
+        Assert.Equal(CardActionKind.Order, card.Kind);
+
+        CardAction top = CardRouting.Click(l, m, corner.Center, shift: false, above: new[] { corner });
+        Assert.Equal(CardActionKind.None, top.Kind);
+        Assert.False(top.Consumed);
+    }
+
+    [Fact]
     public void A_click_on_empty_card_space_is_swallowed_not_passed_to_the_map()
     {
         CardModel m = Group(2);

@@ -13,10 +13,12 @@ public static class CardRouting
     /// <summary>
     /// A left click at <paramref name="point"/>. Off the card: <see cref="CardActionKind.None"/>. On a button: its order, Sell or Repair.
     /// On a unit cameo: select only that unit, or with Shift remove it. Anywhere else on the card (including the "+N" tile): swallowed.
+    /// <paramref name="above"/> lists map buttons drawn over the card (GAMEUI-01): a click on one of them is not the card's.
     /// </summary>
-    public static CardAction Click(CardLayout layout, CardModel model, Point point, bool shift)
+    public static CardAction Click(CardLayout layout, CardModel model, Point point, bool shift, IReadOnlyList<Rectangle>? above = null)
     {
         if (!Over(layout, point)) return new CardAction(CardActionKind.None);
+        if (above is not null && above.Any(r => r.Contains(point))) return new CardAction(CardActionKind.None);
         for (int i = 0; i < layout.Buttons.Count && i < model.Buttons.Count; i++)
         {
             if (!layout.Buttons[i].Contains(point)) continue;
