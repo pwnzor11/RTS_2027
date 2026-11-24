@@ -24,7 +24,7 @@ DOCK = (0, 1)
 CAP_MATERIAL = "dust"
 PALETTE = K.PALETTE
 MATERIALS = K.MATERIALS
-STATES = [("idle", 4, 5), ("damaged", 4, 5), ("build", 8, 5)]
+STATES = [("idle", 8, 2), ("damaged", 8, 2), ("build", 8, 5)]  # S43: 8-frame loops at tpf 2 (owner choice)
 TOP = 6.6
 FX = [
     K.fx(FOOTPRINT, ORIGIN, "damaged", "fire_small", 0.0, 0.0, 3.2, 0),
@@ -74,7 +74,7 @@ def g_mast(S, dmg, i):
     S.cyl("lamp", 0.16, 0.3, (0.7, -0.1, zp + 0.25), "ash2", verts=10)
     S.sphere("lamplens", 0.12, (0.7, -0.35, zp + 0.28), "lamp" if i % 2 == 0 else "lamp_off")
     S.cyl("hubpost", 0.05, 0.4, (0.5, 0.0, top + 0.2), "dark", verts=6)
-    a = i * 45.0
+    a = i * 22.5          # paddle is 180-degree symmetric: 8 frames x 22.5 = one seamless turn
     S.box("paddle", (1.7, 0.1, 0.7), (0.5, 0.0, top + 0.5), "ash", 0.02, rot=(0, 0, a), stretch=False)
     S.box("paddle2", (1.7, 0.12, 0.2), (0.5, 0.0, top + 0.3), "rust", 0.0, rot=(0, 0, a), stretch=False, nocast=True)
     S.box("paddlefeed", (0.1, 0.5, 0.1), (0.5, 0.0, top + 0.5), "dark", 0.0, rot=(0, 0, a), stretch=False, nocast=True)
@@ -90,7 +90,7 @@ def g_extras(S, dmg, i):
     K.post(S, "sp2", 0.0, -1.5, 0.1, 1.5, 0.08, "wood")
     S.box("shade", (1.6, 0.9, 0.06), (-0.7, -1.2, 1.55), "canvas" if not dmg else "canvas_s", 0.0, rot=(-8, 0, 0))
     S.bb("shadefr", -1.4, 0.0, -1.66, -1.6, 1.3, 1.5, "house", 0.0, nocast=True)
-    K.flag(S, "flag", -1.35, 0.75, 3.7 if not dmg else 2.8, i, w=0.9, h=0.6, dmg=dmg)
+    K.flag(S, "flag", -1.35, 0.75, 3.7 if not dmg else 2.8, i / 2.0, w=0.9, h=0.6, dmg=dmg)
     K.drum(S, "d0", 1.2, 1.2, 0.1, m="rust", band="hazard", h=0.6, r=0.3)
 
 

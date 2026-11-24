@@ -19,10 +19,27 @@ def main():
     ap.add_argument("--out", required=True)
     ap.add_argument("--samples", type=int, default=24)
     ap.add_argument("--depth", action="store_true")
+    ap.add_argument("--preview", action="store_true",
+                    help="cheap check: colour pass only, low samples, a few sheet frames (idle 0/2/4/6, damaged 0/4); copies previews to --out")
+    ap.add_argument("--preview-frames", type=int, nargs="*", default=[0, 2, 4, 6, 8, 12], help="sheet frame indices for --preview")
     a = ap.parse_args()
     ids = open(os.path.join(HERE, "bld_pass_ids.txt")).read().split()
     if a.id not in ids:
         sys.exit(f"unknown asset id {a.id!r}; see tools/art/bld_pass_ids.txt")
+    if a.preview:
+        import glob, shutil
+        sys.path.insert(0, HERE)
+        import common as C
+        samples = min(a.samples, 8)
+        cmd = [sys.executable, os.path.join(HERE, "build_structure.py"), a.id, "--samples", str(samples), "--preview",
+               "--frames", *[str(f) for f in a.preview_frames]]
+        t0 = time.time()
+        subprocess.run(cmd, check=True)
+        os.makedirs(os.path.abspath(a.out), exist_ok=True)
+        for src in glob.glob(os.path.join(C.WORK, f"struct_{a.id}", "preview_*.png")):
+            shutil.copy(src, os.path.join(os.path.abspath(a.out), f"{a.id}_{os.path.basename(src)}"))
+        print(f"SECONDS_PER_PREVIEW {a.id} {time.time() - t0:.1f}")
+        return
     cmd = [sys.executable, os.path.join(HERE, "build_structure.py"), a.id, "--samples", str(a.samples), "--out-dir", os.path.abspath(a.out)]
     if a.depth:
         cmd.append("--depth")

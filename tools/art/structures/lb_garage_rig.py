@@ -25,7 +25,7 @@ DOCK = (1, 3)
 CAP_MATERIAL = "dust"
 PALETTE = K.PALETTE
 MATERIALS = K.MATERIALS
-STATES = [("idle", 4, 5), ("damaged", 4, 5), ("build", 8, 5)]
+STATES = [("idle", 8, 2), ("damaged", 8, 2), ("build", 8, 5)]  # S43: 8-frame loops at tpf 2 (owner choice)
 FX = [
     K.fx(FOOTPRINT, ORIGIN, "damaged", "fire_large", 2.2, 1.6, 3.6, 0),      # fallen roof
     K.fx(FOOTPRINT, ORIGIN, "damaged", "smoke_plume", 2.2, 1.6, 3.9, 2),
@@ -85,7 +85,7 @@ def g_roof(S, dmg, i):
         K.post(S, "rpost", px, -0.3, 1.45, zf + 0.05, 0.12, "wood")
     for k in range(6):
         x = -1.3 + k * 1.05
-        S.bb(f"fringe{k}", x, x + 0.5, -0.46 + 0.04 * math.sin(i + k), -0.4 + 0.04 * math.sin(i + k), zf - 0.3, zf, "house" if k == 2 else ("canvas2" if k % 2 else "rust"), 0.0, nocast=True)
+        S.bb(f"fringe{k}", x, x + 0.5, -0.46 + 0.04 * math.sin((i + k) * math.pi / 4), -0.4 + 0.04 * math.sin((i + k) * math.pi / 4), zf - 0.3, zf, "house" if k == 2 else ("canvas2" if k % 2 else "rust"), 0.0, nocast=True)
 
 
 def g_gear(S, dmg, i):
@@ -108,7 +108,7 @@ def g_gear(S, dmg, i):
         K.beam(S, "gbeam", (-0.3, -3.0, 4.2), (4.4, -3.0, 3.4), 0.28, "hazard")
     else:
         K.beam(S, "gbeam", (-0.3, -3.0, 4.2), (4.4, -3.0, 4.2), 0.28, "hazard")
-        sw = 0.25 * math.sin(i * math.pi / 2)
+        sw = 0.25 * math.sin(i * math.pi / 4)
         K.beam(S, "chain", (2.1, -3.0, 4.1), (2.1 + sw, -2.7, 2.9), 0.05, "dark", nocast=True)
         S.bb("hook", 2.0 + sw, 2.3 + sw, -2.8, -2.6, 2.6, 2.9, "hazard", 0.0)
     for k in range(3):
@@ -126,7 +126,7 @@ def g_extras(S, dmg, i):
     K.stovepipe(S, "p2", 0.3, 2.2, 3.9, 5.0, i + 2, smoke=False)
     S.cyl("hornpole", 0.05, 0.8, (-3.6, 0.6, 4.1), "ash2", verts=6)
     S.sphere("worklamp", 0.12, (-1.4, -3.0, 3.0), "lamp" if (i % 2 == 0 and not dmg) else "lamp_off", nocast=True)
-    K.flag(S, "flag", -4.6, -3.0, 6.4 if not dmg else 5.0, i, w=1.5, h=1.0, dmg=dmg)
+    K.flag(S, "flag", -4.6, -3.0, 6.4 if not dmg else 5.0, i / 2.0, w=1.5, h=1.0, dmg=dmg)
     # boom crane on the north-east corner
     K.post(S, "crane", 4.4, 3.0, 1.45, 4.6, 0.2, "rust2")
     if dmg:

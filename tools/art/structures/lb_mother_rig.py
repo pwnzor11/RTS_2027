@@ -22,7 +22,7 @@ ORIGIN = (0, 56)
 DOCK = (1, 3)
 CAP_MATERIAL = "dust"
 HOUSE2_MID = False
-STATES = [("idle", 4, 5), ("damaged", 4, 5), ("build", 8, 5)]
+STATES = [("idle", 8, 2), ("damaged", 8, 2), ("build", 8, 5)]  # S43: 8-frame loops at tpf 2 (owner choice)
 
 import os
 import sys
@@ -236,10 +236,7 @@ def stovepipes(S, dmg, anim, lvl):
     else:
         S.cyl("pipe1cap", 0.34, 0.12, (px, py, top + 0.06), "rust2", verts=12)
         S.cyl("pipe1cap2", 0.12, 0.2, (px, py, top + 0.2), "ash", verts=8)
-        for q in range(3):
-            ph = ((anim / 4) + q / 3) % 1
-            r = 0.14 + 0.36 * math.sin(math.pi * ph) ** 0.7
-            S.sphere(f"puff{q}", r, (px + ph * 0.9, py, top + 0.5 + ph * 0.8), "smoke2" if q != 1 else "smoke", squash=0.85)
+        # S43: no baked smoke puffs (owner call); the pipe keeps its cap and its stack
     qx, qy = 0.25, -0.7
     S.cyl("pipe2", 0.15, 1.35, (qx, qy, 4.4), "rust", verts=10)
     beam(S, "pipe2b", (qx, qy, 5.0), (qx + 0.7, qy, 5.5), 0.26, "rust" if not dmg else "ash")
@@ -253,7 +250,7 @@ def awning(S, dmg, anim):
     if dmg:
         rise = 1.9
     else:
-        rise += 0.12 * math.sin(anim * math.pi / 2)
+        rise += 0.12 * math.sin(anim * math.pi / 4)
     run = (AWN_Y0 - AWN_Y1)
     ang = math.atan2(rise, run * YS)
     ln = math.hypot(run * YS, rise) / YS
@@ -272,7 +269,7 @@ def awning(S, dmg, anim):
         x = -3.6 + k * 0.52
         if dmg and k in (1, 3):
             continue
-        sway = 0.04 * math.sin((anim + k) * 1.7)
+        sway = 0.04 * math.sin(anim * math.pi / 4 + k * 1.7)
         hz = 0.32 if not dmg else 0.15
         S.bb(f"fringe{k}", x, x + 0.34, AWN_Y1 - 0.06 + sway, AWN_Y1 + 0.0 + sway, zf - hz, zf, "house" if k == 2 else ("canvas2" if k % 2 else "rust"), 0.0, nocast=True)
     # poles
@@ -374,7 +371,7 @@ def mast_flag(S, dmg, anim):
     post(S, "mast", mx, my, 1.45, top, 0.12, "wood")
     S.sphere("mastknob", 0.12, (mx, my, top + 0.1), "hazard")
     beam(S, "mastbrace", (mx, my + 0.6, 1.45), (mx, my, 3.4), 0.07, "wood")
-    ph = anim * math.pi / 2
+    ph = anim * math.pi / 4
     if not dmg:
         fw = 1.5 + 0.2 * math.sin(ph)
         fh = 1.05
