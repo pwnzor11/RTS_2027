@@ -87,7 +87,7 @@ public sealed partial class Simulation
             {
                 if (!slots.IsIndexAlive(i) || HealthAt(kind, i) <= 0) continue;
                 if (IsFriendly(c.Player, PlayerAt(kind, i))) continue;
-                if (kind != ActorKind.Building && IsUnderground(kind, i)) continue;
+                if (SuperweaponSpares(kind, i)) continue;
                 int d = kind == ActorKind.Building ? FootprintDistance(i, c.Cell) : LeptonMath.ChebyshevCells(c.Cell, PositionAt(kind, i).ToCell());
                 if (d > radius) continue;
                 Hurt(kind, i, SuperweaponDamage, wh, d > radius / 2, c.Player);
@@ -145,6 +145,11 @@ public sealed partial class Simulation
         if (hurt) ApplyPendingDamage();
     }
 
+    /// <summary>D-311 (A43 SIMCOMBAT-02/03): blast and Salvo area damage spare underground actors, garrisoned soldiers (like every
+    /// other area effect, D-205) and dived submarines (D-142). Buildings are never spared.</summary>
+    private bool SuperweaponSpares(ActorKind kind, int i) =>
+        kind != ActorKind.Building && (IsUnderground(kind, i) || ActorLayers.IsCarried(_tunnels.LayerOf(kind, i)) || IsHiddenSub(kind, i));
+
     private void SalvoImpact(byte owner, CellCoord cell, WarheadType wh)
     {
         int splash = wh.SalvoSplash;
@@ -156,8 +161,7 @@ public sealed partial class Simulation
             {
                 if (!slots.IsIndexAlive(i) || HealthAt(kind, i) <= 0) continue;
                 if (IsFriendly(owner, PlayerAt(kind, i))) continue;
-                if (kind != ActorKind.Building && IsUnderground(kind, i)) continue;
-                if (IsHiddenSub(kind, i)) continue;   // M7-05/M7-12: a dived submarine is spared, like splash (D-142)
+                if (SuperweaponSpares(kind, i)) continue;   // underground, garrisoned or dived: spared, like splash (D-142, D-205, D-311)
                 int d = kind == ActorKind.Building ? FootprintDistance(i, cell) : LeptonMath.ChebyshevCells(cell, PositionAt(kind, i).ToCell());
                 if (d > splash) continue;
                 Hurt(kind, i, wh.SalvoDamage, wh, d > 0, owner);

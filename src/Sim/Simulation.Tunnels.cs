@@ -238,9 +238,10 @@ public sealed partial class Simulation
                     t.TicksLeft = rules.TransitTicks;
                     break;
                 case ActorLayer.Tunnel:
-                    // ASSUMED (M3-02): with no free exit cell (ring search of 8) the unit waits underground, still counting
-                    // against the cap, and retries every tick.
-                    if (t.TicksLeft == 0 && TrySurface(t, store, i)) t.TicksLeft = rules.TelegraphTicks;
+                    // ASSUMED (M3-02, D-311 A43 SIMMOVE-02): with no free exit cell (ring search of 8) the unit waits underground, still
+                    // counting against the cap. TicksLeft <= 0 then holds minus the ticks waited (no extra state to save).
+                    if (t.TicksLeft > 0) break;
+                    if (TrySurfaceOrWait(ref t, store, i)) t.TicksLeft = rules.TelegraphTicks;
                     break;
                 case ActorLayer.Surfacing:
                     SyncTelegraph(t.Unit, t.TicksLeft);
@@ -295,6 +296,38 @@ public sealed partial class Simulation
         store.Position[i] = BuildingCentre(dest.Index);
         store.Destination[i] = store.Position[i];
         SetLayer(kind, i, ActorLayer.Tunnel);
+    }
+
+    /// <summary>Ticks an underground unit waits for a free cell at its exit before it tries another entrance (D-311).</summary>
+    internal const int TunnelExitWaitTicks = 10 * SimConstants.TicksPerSecond;
+    /// <summary>After <see cref="TunnelExitWaitTicks"/> the ring search (up to 289 cells) runs only every this many ticks.</summary>
+    internal const int TunnelExitBackoffTicks = 2 * SimConstants.TicksPerSecond;
+
+    /// <summary>One try to leave the network for a unit that has reached its exit. Within <see cref="TunnelExitWaitTicks"/> it
+    /// retries every tick at the destination. After that, every <see cref="TunnelExitBackoffTicks"/> ticks, it tries the destination
+    /// again and then the nearest other own entrance that fits (the unit is re-routed there for good). Failing, it keeps waiting.
+    /// On failure TicksLeft is set to minus the ticks waited so far.</summary>
+    private bool TrySurfaceOrWait(ref TunnelTransit t, MobileStore store, int i)
+    {
+        int waited = -t.TicksLeft;
+        bool bounded = waited >= TunnelExitWaitTicks;
+        if (!bounded || (waited - TunnelExitWaitTicks) % TunnelExitBackoffTicks == 0)
+        {
+            if (TrySurface(t, store, i)) return true;
+            if (bounded)
+            {
+                TunnelSize size = TunnelSizeOf(t.Unit.Kind, i);
+                EntityId alt = NearestTunnelNode(t.Owner, BuildingCentre(t.Destination.Index), size, t.Destination);
+                if (!alt.IsNone)
+                {
+                    TunnelTransit via = t;
+                    via.Destination = alt;
+                    if (TrySurface(via, store, i)) { t = via; return true; }
+                }
+            }
+        }
+        t.TicksLeft = -Math.Min(waited + 1, int.MaxValue / 2);
+        return false;
     }
 
     /// <summary>Claim the exit cell of the destination (normal unit exit search) and start the Unit telegraph there.</summary>
