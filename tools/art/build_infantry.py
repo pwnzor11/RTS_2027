@@ -40,6 +40,8 @@ LOCK = "/home/claude/wt/blender.lock"
 def geometry(scale):
     """Frame size and feet origin for a figure scale (1.0 keeps the module's own 32 x 32, origin (16, 27))."""
     cv = int(math.ceil(38 * scale / 2.0)) * 2      # more room than 32 * scale: the radio whip and the long shadow reach the edges
+    import boost
+    cv += boost.canvas_extra()                      # S43: boosted rifle + muzzle flash need 4 px more
     return (cv, cv), (cv // 2, cv - int(round(5 * scale)))
 
 
@@ -70,6 +72,8 @@ def apply_scale(mod, scale):
 
 
 DEATHS = False        # set by --deaths (apply_deaths)
+HOUSE_LIFT = 0.0      # --house-lift (S43)
+STYLE = None          # --style (S43): dict for structpost.infantry_style
 _BASE_COL = {}        # material name -> original linear base colour, filled the first time a death tint is applied
 
 
@@ -111,7 +115,8 @@ def apply_tint(mats, tint):
 
 
 def work_dir(sid):
-    return os.path.join(C.WORK, f"inf_{sid}_deaths" if DEATHS else f"inf_{sid}")
+    base = os.environ.get("ART_WORK") or C.WORK            # S43: cluster jobs point this at a per-job scratch folder
+    return os.path.join(base, f"inf_{sid}_deaths" if DEATHS else f"inf_{sid}")
 
 
 def frame_list(mod):
@@ -279,6 +284,7 @@ def post(sid, mod, outdir=None):
     med, lo98, hi98 = np.median(v), np.percentile(v, 2), np.percentile(v, 98)
     span = max((hi98 - lo98) * 1.15, 24.0)
     lo = med - 0.57 * span
+    lo -= HOUSE_LIFT * span      # S43: lift > 0 moves the median house pixel to a brighter ramp shade (0.15 = about one shade)
     cal = (lo, lo + span)
     print("house calibration", cal)
     imgs = []
@@ -287,7 +293,7 @@ def post(sid, mod, outdir=None):
             pal = getattr(mod, "PALETTE", None)
             if DEATHS and st_of[i] == "die_burn":      # fire ramp + char tones exist only for the burn frames
                 pal = list(pal if pal is not None else C.PAL) + D.FIRE_PALETTE
-            imgs.append(SP.frame_b(wd, i, cal, w, h, pal))
+            imgs.append(SP.frame_b(wd, i, cal, w, h, pal, style=dict(STYLE, flash=(STYLE.get('flash') if st_of[i] == 'fire' and frames[i][3] == frames[i][4] - 1 else None)) if STYLE else None))
         else:
             imgs.append(Image.new("RGBA", (w, h), (0, 0, 0, 0)))
     if DEATHS:       # die_rad: the last frames dissolve (ordered dither; alpha stays 0 or 255)
@@ -355,18 +361,32 @@ def main():
     ap.add_argument("--scale", type=float, default=None, help="figure scale (default: the module's SCALE, else 1.0)")
     ap.add_argument("--deaths", action="store_true", help="append the states die_blast, die_burn, die_rad (S24)")
     ap.add_argument("--out", default=None, help="folder for the sheet and manifest (default data/sprites/infantry)")
+    ap.add_argument("--boost", default=None, help='silhouette boost: "pilot" or "head=1.25,gun=1.3,..." (infantry/boost.py); default none')
+    ap.add_argument("--walk-frames", type=int, default=None, help="frames per walk facing (default: the module's, 6)")
+    ap.add_argument("--style", default="", help="post options, comma list of: keyline, rim, flash, contrast=1.15 (S43)")
+    ap.add_argument("--house-lift", type=float, default=0.0, help="brighter house shades: shift of the calibration in spans (S43)")
     ap.add_argument("--render-only", action="store_true")
     ap.add_argument("--post-only", action="store_true")
     ap.add_argument("--px-cell", type=int, default=C.UNIT_PX, help="sheet pixels per map cell (D-275: 80; 64 = the old size)")
     a = ap.parse_args()
-    global PX
+    global PX, HOUSE_LIFT, STYLE
     PX = a.px_cell
+    if a.boost:
+        os.environ["RTS_INF_BOOST"] = a.boost
+    HOUSE_LIFT = a.house_lift
+    if a.style:
+        STYLE = {}
+        for t in a.style.split(","):
+            k, _, v = t.partition("=")
+            STYLE[k] = float(v) if v else True
     mod = load_module(a.id)
     apply_scale(mod, a.scale if a.scale else getattr(mod, "SCALE", 1.0))
     if a.deaths:
         apply_deaths(mod)
     # D-276: modules list 8 facings for walk/idle; the sheet carries INF_FACINGS (one-facing states stay one)
-    mod.STATES = [(n, C.INF_FACINGS if nf == 8 else nf, k, t) for n, nf, k, t in mod.STATES]
+    mod.STATES = [(n, C.INF_FACINGS if nf == 8 else nf, a.walk_frames if (a.walk_frames and n == "walk") else k, t) for n, nf, k, t in mod.STATES]
+    if a.walk_frames and a.walk_frames != 6:      # keep the walk speed: ticks_per_frame scales with the frame count (6 x 3 = 18 ticks a cycle)
+        mod.STATES = [(n, nf, k, max(1, round(18 / a.walk_frames)) if n == "walk" else t) for n, nf, k, t in mod.STATES]
     if not a.post_only:
         # No self-locking: callers wrap renders in `flock /home/claude/wt/blender.lock …` (wave rule). A self re-exec under
         # the same lock deadlocks when the caller already holds it (flock is not re-entrant across processes).
