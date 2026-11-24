@@ -207,6 +207,7 @@ public sealed partial class Simulation
     {
         byte oldOwner = _buildings.Player[b];   // M7-07
         _buildings.Player[b] = newOwner;
+        _effects.BuildingCharge[b] = 0;   // D-311 (A43 SIMCOMBAT-01): the captor starts uncharged
         SupplyChanged();   // SUP-1
         _emittersDirty = true;   // M3-INT
         _combat.At(ActorKind.Building, b) = new Combat.CombatEntry { Generation = _buildings.Slots.GenerationOf(b) };
