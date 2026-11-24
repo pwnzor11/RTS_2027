@@ -521,6 +521,16 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
     /// <summary>Does what a left click on the cameo at hotkey position <paramref name="index"/> (0..11) of the active tab does. False when the position is empty or locked.</summary>
     public bool ActivateCameoSlot(int index, bool shift)
     {
+        bool done = ActivateSlot(index, shift);
+        if (!done) Refused?.Invoke();   // GAMEUI-07: an empty or locked position refuses the hotkey
+        return done;
+    }
+
+    /// <summary>GAMEUI-07: raised when a cameo click or hotkey is refused (a blocked option, an empty or locked position). The game plays the refuse sound.</summary>
+    public event Action? Refused;
+
+    private bool ActivateSlot(int index, bool shift)
+    {
         if (_tab == SidebarTab.Upgrades)
         {
             int slot = (index / CameoHotkeys.Columns) * _layout.Columns + index % CameoHotkeys.Columns;
@@ -556,6 +566,9 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
             case CameoClick.EnterPlacement:
                 Mode = SidebarMode.Placement;
                 _placementType = option.TypeIndex;
+                break;
+            case CameoClick.None:
+                Refused?.Invoke();   // GAMEUI-07: a blocked cameo (no cash, supply cap, missing prerequisite, full queue)
                 break;
         }
     }

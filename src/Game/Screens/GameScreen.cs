@@ -344,6 +344,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
         // D-068: the local player draws in the chosen colour; the AI takes the next palette entry that differs.
         PlayerColours.Assign(Skirmish is { } sk && sk.PlayerCount >= 2 ? ColoursOf(sk) : new[] { colour, colour == 1 ? 0 : 1 });
         _sidebar = new SidebarPanel(_sim, Me, _selection, _cameos, PlayerColours.Base(Me));
+        _sidebar.Refused += () => Rts.Game.Menu.MenuSounds.Play(_s.Audio, Rts.Game.Menu.MenuSounds.Deny);   // GAMEUI-07
         _sidebar.Orders = _orders;                                         // S18 GAMEUI-05
         _sidebar.HiddenCursor = SoftwareCursor.MakeHidden(_s.Graphics);   // M11-10e
         _sidebar.Blurbs = LoadCameoBlurbs();                               // M11-10g
