@@ -127,10 +127,7 @@ def yard(S, dmg, i):
     else:
         S.box("rag", (1.0 + sw, 0.05, 0.65), (pxx + 0.55 + sw / 2, (pyy - 0.05) * S.YS, Z0 + top - 0.35), "house", 0.0,
               rot=(0, 0, 5 * math.sin(i * math.pi / 2)), stretch=False, nocast=True)
-        for q in range(3):
-            ph = ((i / 4) + q / 3) % 1
-            r = 0.1 + 0.26 * math.sin(math.pi * ph) ** 0.7
-            S.sphere(f"wisp{q}", r, (1.5 + ph * 0.6, Y1 - 0.5, H + 1.7 + ph * 1.2), "smoke2", squash=0.85)
+        # S43: no baked smoke wisp (owner call); the rag sway stays
 
 
 FX = [

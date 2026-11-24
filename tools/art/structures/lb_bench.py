@@ -23,7 +23,7 @@ DOCK = (0, 2)
 CAP_MATERIAL = "dust"
 PALETTE = K.PALETTE
 MATERIALS = K.MATERIALS
-STATES = [("idle", 4, 5), ("damaged", 4, 5), ("build", 8, 5)]
+STATES = [("idle", 8, 2), ("damaged", 8, 2), ("build", 8, 5)]  # S43: 8-frame loops at tpf 2 (owner choice)
 FX = [
     K.fx(FOOTPRINT, ORIGIN, "damaged", "fire_large", 0.4, 1.0, 2.8, 0),      # fallen lean-to
     K.fx(FOOTPRINT, ORIGIN, "damaged", "smoke_plume", 0.4, 1.0, 3.1, 3),
@@ -52,8 +52,8 @@ def g_bench(S, dmg, i):
     S.bb("vise", 0.4, 0.8, 0.7, 1.0, 1.14, 1.5, "rust2", 0.02)
     S.bb("chassis", 1.0, 1.9, 0.9, 1.6, 1.14, 1.4, "ash", 0.03)
     S.bb("chassist", 1.1, 1.8, 1.0, 1.5, 1.4, 1.43, "dark", 0.0, nocast=True)
-    for k in range(3):
-        S.cyl(f"tube{k}", 0.07, 0.3, (1.2 + k * 0.25, 1.25, 1.55), "glass", verts=8)
+    for k in range(3):     # welding tubes flicker: lit on 2 of every 3 frames, a different tube each time round
+        S.cyl(f"tube{k}", 0.07, 0.3, (1.2 + k * 0.25, 1.25, 1.55), "lamp" if (not dmg and (i + k) % 3 != 1) else "glass", verts=8)
     if not dmg and i % 2 == 0:
         K.spark(S, 0.1, 1.2, 1.8, i)
     S.bb("scope", -0.4, 0.1, 1.5, 1.8, 1.14, 1.6, "teal2", 0.03)
@@ -96,7 +96,7 @@ def g_roof(S, dmg, i):
         K.post(S, "rpost", x, 1.5, 0.1, zr - rise + 0.05, 0.12, "wood")
     for k in range(5):
         x = -1.1 + k * 0.8
-        S.bb(f"fringe{k}", x, x + 0.4, 1.5 + 0.04 * math.sin(i + k), 1.56 + 0.04 * math.sin(i + k), zr - rise - 0.3, zr - rise, "house" if k == 2 else ("canvas2" if k % 2 else "rust"), 0.0, nocast=True)
+        S.bb(f"fringe{k}", x, x + 0.4, 1.5 + 0.04 * math.sin((i + k) * math.pi / 4), 1.56 + 0.04 * math.sin((i + k) * math.pi / 4), zr - rise - 0.3, zr - rise, "house" if k == 2 else ("canvas2" if k % 2 else "rust"), 0.0, nocast=True)
     # bulb string under the roof edge
     for k in range(4):
         lit = (i + k) % 2 == 0 and not dmg
@@ -127,7 +127,7 @@ def g_yard(S, dmg, i):
     S.cyl("antpole", 0.07, top, (ax, ay, top / 2 + 0.1), "wood", verts=8)
     if not dmg:
         S.cyl("dish", 0.4, 0.06, (ax - 0.3, ay - 0.2, 3.0), "canvas2", verts=14)
-    K.flag(S, "flag", -2.9, -0.9, 4.2 if not dmg else 3.0, i, w=1.2, h=0.8, dmg=dmg)
+    K.flag(S, "flag", -2.9, -0.9, 4.2 if not dmg else 3.0, i / 2.0, w=1.2, h=0.8, dmg=dmg)
 
 
 GROUPS = [g_ground, g_bench, g_rack, g_roof, g_yard]

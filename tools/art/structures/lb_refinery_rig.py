@@ -24,7 +24,7 @@ DOCK = (0, 2)
 CAP_MATERIAL = "dust"
 PALETTE = K.PALETTE
 MATERIALS = K.MATERIALS
-STATES = [("idle", 4, 5), ("damaged", 4, 5), ("build", 8, 5)]
+STATES = [("idle", 8, 2), ("damaged", 8, 2), ("build", 8, 5)]  # S43: 8-frame loops at tpf 2 (owner choice)
 COL = (1.7, 0.8)
 FX = [
     K.fx(FOOTPRINT, ORIGIN, "damaged", "fire_large", 1.7, 0.8, 3.2, 0),      # column crack
@@ -109,7 +109,7 @@ def g_extras(S, dmg, i):
     K.drum(S, "d0", 2.5, -1.9, 1.28, m="rust", band="hazard")
     K.drum(S, "d1", 2.5, -1.2, 1.28, m="ochre")
     S.sphere("gaugelamp", 0.1, (cx_gauge(), -0.2, 2.9), "lamp" if (i % 2 == 0 and not dmg) else "lamp_off")
-    K.flag(S, "flag", 1.7, 2.4, 5.0 if not dmg else 3.6, i, w=1.2, h=0.8, dmg=dmg)
+    K.flag(S, "flag", 1.7, 2.4, 5.0 if not dmg else 3.6, i / 2.0, w=1.2, h=0.8, dmg=dmg)
     S.bb("sack", -0.6, 0.4, 1.8, 2.5, 1.28, 1.7, "canvas2", 0.12)
 
 

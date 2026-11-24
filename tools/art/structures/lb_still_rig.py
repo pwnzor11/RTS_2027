@@ -26,7 +26,7 @@ DOCK = (0, 2)
 CAP_MATERIAL = "dust"
 PALETTE = K.PALETTE
 MATERIALS = K.MATERIALS
-STATES = [("idle", 4, 5), ("damaged", 4, 5), ("build", 8, 5)]
+STATES = [("idle", 8, 2), ("damaged", 8, 2), ("build", 8, 5)]  # S43: 8-frame loops at tpf 2 (owner choice)
 PX, PY = -1.7, 0.15          # still pot centre
 CX, CY = 1.5, 0.15           # condenser centre
 FX = [
@@ -76,13 +76,11 @@ def g_still(S, dmg, i):
     S.cone("shoulder", 1.05, 0.42, 0.75, (PX, PY, z0 + 1.52), "ochre", verts=20, nocast=False)
     S.cyl("neck", 0.4, 0.55, (PX, PY, z0 + 2.15), "ochre", verts=14)
     S.cyl("neckr", 0.46, 0.1, (PX, PY, z0 + 1.95), "rust", verts=14)
-    S.sphere("cap", 0.5, (PX, PY, z0 + 2.65), "ochre", nocast=False)
+    # the pot lid lifts and settles with the boil (8-frame loop, no round bubbles)
+    S.sphere("cap", 0.5, (PX, PY + 0.03 * math.sin(i * math.pi / 4), z0 + 2.65), "ochre", nocast=False)
     S.cyl("capk", 0.12, 0.2, (PX, PY, z0 + 3.2), "rust2", verts=8)
     S.bb("hatch", PX - 0.32, PX + 0.32, PY - 1.1, PY - 1.0, z0 + 0.5, z0 + 0.9, "ash2", 0.02)
-    for q in range(3):
-        ph = ((i / 4) + q / 3) % 1
-        rr = 0.12 + 0.3 * math.sin(math.pi * ph) ** 0.7
-        S.sphere(f"steam{q}", rr, (PX + 0.2 + ph * 0.9, PY - 0.1, z0 + 3.35 + ph * 1.0), "smoke" if q != 1 else "smoke2", squash=0.85)
+    # S43: no baked steam puffs; the lid rocks instead
 
 
 def g_condenser(S, dmg, i):
@@ -111,7 +109,7 @@ def g_condenser(S, dmg, i):
 
 
 def g_awning(S, dmg, i):
-    K.awning(S, "awn", 0.5, 3.0, -1.75, -3.05, 2.7, 0.7, i, dmg, mats=("canvas2", "teal"), strip=0.85)
+    K.awning(S, "awn", 0.5, 3.0, -1.75, -3.05, 2.7, 0.7, i / 2.0, dmg, mats=("canvas2", "teal"), strip=0.85)
     K.drum(S, "rainb", 2.6, -2.75, 1.28, m="rust", band="ash2", h=0.7, r=0.36)
 
 
@@ -122,7 +120,7 @@ def g_extras(S, dmg, i):
     K.post(S, "boardp", -0.4, -3.0, 0.1, 1.0, 0.08, "wood")
     S.bb("board", -0.9, 0.1, -3.08, -3.0, 0.7, 1.4, "dark", 0.0)
     S.bb("boardc", -0.8, 0.0, -3.1, -3.08, 0.85, 1.25, "bone", 0.0, nocast=True)
-    K.flag(S, "flag", 2.8, 1.9, 5.0 if not dmg else 3.9, i, w=1.2, h=0.8, dmg=dmg)
+    K.flag(S, "flag", 2.8, 1.9, 5.0 if not dmg else 3.9, i / 2.0, w=1.2, h=0.8, dmg=dmg)
 
 
 GROUPS = [g_chassis, g_firebox, g_condenser, g_still, g_awning, g_extras]
