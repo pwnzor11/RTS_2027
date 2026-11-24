@@ -22,7 +22,7 @@ RTS_2027 is not affiliated with or endorsed by Electronic Arts; no EA code, art 
 
 ## Where it stands
 
-*Updated 2026-11-18 (session 34).*
+*Updated 2026-11-24 (session 43).*
 
 **Everything on the plan is built**: the simulation, skirmish with all four factions, a tutorial and sixteen campaign
 missions, the Archive, the map editor, replays, the optional LLM commander, LAN multiplayer and the printed Field Manual.
@@ -51,7 +51,7 @@ sizes (64, 96 and 128 cells square), five AI difficulty tiers, a 244-entry Archi
 cap of 200. About 3,400 automated tests (`[Fact]` and `[Theory]` methods) guard the simulation, the AI, the data files,
 the scripting and the tools.
 
-**Known gaps:** the AI difficulty tiers are not yet evenly spaced and the AI still shows a small start-corner bias,
+**Known gaps:** sessions 35 to 42 added per-faction AI tier overrides and map-generator fairness fixes, but the AI difficulty tiers are not yet evenly spaced and the AI still shows a small start-corner bias,
 map layout 2 is not the default yet, LAN play has not yet been tested between two real PCs, and the in-game art is the
 first full pass (a slow dedicated art pass comes after the game is finished).
 
