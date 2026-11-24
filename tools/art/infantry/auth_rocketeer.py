@@ -159,8 +159,8 @@ def build(S, p):
         S.cyl(0.0, 0.42, (0, 0.98, 0), "flash", "Y", GM, verts=8, r2=0.17)           # launch flame ahead of the nose
         S.sphere((0.10, 0.10, 0.10), (0, 0.86, 0), "flash", GM, seg=8)
         S.sphere((0.05, 0.05, 0.05), (0, 0.84, 0), "hot", GM, seg=8)              # hot core (small)
-        S.sphere((0.13, 0.20, 0.13), (0, -0.64, 0), "puff", GM, seg=8)               # backblast puff behind the tube
-        S.sphere((0.09, 0.11, 0.09), (0, -0.82, 0.02), "puff", GM, seg=8)
+        S.cyl(0.0, 0.30, (0, -0.66, 0), "puff", "Y", GM, verts=6, r2=0.13)           # S43: torn backblast cone (faceted, no sphere)
+        S.cyl(0.0, 0.16, (0, -0.86, 0.02), "puff", "Y", GM, verts=5, r2=0.07)        # the stepped tail of the cone
 
     # ---------------- arms: shoulder -> elbow -> wrist; house band on the upper arm
     for side, hand_spec in ((-1, p["hands"][0]), (1, p["hands"][1])):
