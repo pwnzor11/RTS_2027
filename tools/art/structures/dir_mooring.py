@@ -5,7 +5,8 @@ near the top, a mooring cone and a magenta pennant streamer, hazard bands on the
 low HANGAR on the west whose south face is a wide ramp-mouth bay (hood with magenta band, blast doors folded back, ember glow) where
 dirigibles are inflated; a gas-bag tank and ash stack on the east, bone / oxide hazard bar along the south edge.  "The most cheerful
 building": bunting-coloured oxide / bone stripes on the ring.  The dirigible itself is NOT part of this sprite.
-Idle loop: the ring beacons blink round, the pennant waves, the stack puffs, furnace slits flicker.  Damage is structural only (D-069):
+Idle loop (8 frames): the ring beacons blink round, the pennant waves, furnace slits flicker.  No stack smoke is baked (the separate
+smoke pass adds it).  Damaged: a furnace slit flickers.  Damage is structural only (D-069):
 the mast has snapped below the ring (ring lies on the pad), the hood end has fallen, the stack is snapped.
 Contract: see auth_refinery.py.  Units: 3.4 per cell, x east, y NORTH, z up, footprint centred on (0, 0): x, y in [-5.1, 5.1].
 """
@@ -27,7 +28,7 @@ DOCK = (1, 3)
 CAP_MATERIAL = D.CAP_MATERIAL
 HOUSE2_MID = True
 PALETTE = D.PALETTE
-STATES = [("idle", 4, 5), ("damaged", 4, 5), ("build", 8, 5)]
+STATES = [("idle", 8, 2), ("damaged", 8, 2), ("build", 8, 5)]     # idle/damaged: 8-frame loops at tpf 2 (S43 fan)
 MATERIALS = D.MATERIALS
 SOOT_SKIN = D.SOOT_SKIN
 PRIMER_SKIN = D.PRIMER_SKIN
@@ -145,8 +146,10 @@ def finished(S, i, dmg, mode):
     sx, sy = STACK
     S.bb("furn", sx - 0.8, sx + 0.8, sy - 0.7, sy + 0.7, 0.14, 1.1, "concrete2", 0.04)
     S.bb("furnroof", sx - 0.9, sx + 0.9, sy - 0.8, sy + 0.8, 1.1, 1.24, "roof", 0.04)
-    D.furnace_slits(S, sx - 0.5, sy - 0.8, 0.3, 0.7, 3, i + 1, (idle or mode == "build") and not dmg, step=0.4, w=0.22)
-    D.chimney(S, sx, sy, 1.24, 3.0 if dmg else 3.9, dmg, idle or mode == "build", i, rise=1.4, lean_len=1.2)
+    D.furnace_slits(S, sx - 0.5, sy - 0.8, 0.3, 0.7, 3, i + 1, (idle or mode == "build") and not dmg, step=0.4, w=0.22, period=4)
+    if dmg:
+        S.bb("dfurn", sx - 0.5, sx - 0.28, sy - 0.8, sy - 0.7, 0.3, 0.7, "redglow" if i % 4 < 2 else "oxide2", 0.0, nocast=True)
+    D.chimney(S, sx, sy, 1.24, 3.0 if dmg else 3.9, dmg, False, i, rise=1.4, lean_len=1.2)
     D.ash_drift(S, ((1.0, -3.8, 1.2), (-4.2, 4.3, 0.8)))
     if dmg:
         L.R.scorch(S, "scH", -2.4, -2.25, 2.0, 1.5, 0.5)

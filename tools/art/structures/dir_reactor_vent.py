@@ -4,7 +4,8 @@ The read is a fat COOLING STACK: a waisted umber concrete tower (bone / oxide ba
 a dark ring with a deep ember glow and a pale heat haze pouring out.  A squat reactor hall sits to the west (magenta house panel on its
 south face, service door with an ember strip, intake louvres, loudspeaker pair on the roof), two coolant pipes cross to the stack, and a
 low heat-exchanger block with ember slits to the south-east.  Bone / oxide hazard bar along the south edge.
-Idle loop: haze rises and swells, ember glow pulses.  Damage is structural only (D-069): the stack top has snapped off (a chunk lies on
+Idle loop (8 frames): the reactor mouth glow pulses dim -> bright -> dim, the base ember slits flicker.  No haze or smoke is baked
+(the separate smoke pass adds it).  Damage is structural only (D-069): the stack top has snapped off (a chunk lies on
 the pad), a coolant pipe is torn out, the panel is hanging; fire / smoke are FX anchors.  Build stages: the shared L.stages() driver.
 Contract: see auth_refinery.py.  Units: 3.4 per cell, x east, y NORTH, z up, footprint centred on (0, 0): x, y in [-3.4, 3.4].
 """
@@ -25,7 +26,8 @@ ORIGIN = (0, 88)        # headroom for the cooling stack and its haze
 DOCK = (0, 0)           # no dock (power)
 CAP_MATERIAL = D.CAP_MATERIAL
 PALETTE = D.PALETTE
-STATES = [("idle", 4, 5), ("damaged", 4, 5), ("build", 8, 5)]
+STATES = [("idle", 8, 2), ("damaged", 8, 2), ("build", 8, 5)]     # idle/damaged: 8-frame loops at tpf 2 (S43 fan)
+GLOW3 = ("oxide2", "oxide", "redglow")      # reactor glow pulse levels, existing palette materials
 MATERIALS = D.MATERIALS
 SOOT_SKIN = D.SOOT_SKIN
 PRIMER_SKIN = D.PRIMER_SKIN
@@ -74,7 +76,7 @@ def stack(S, i, dmg, lit, mode):
     for k in range(5):
         dx = -0.9 + k * 0.45
         y = SY - math.sqrt(max(rad(0.5) ** 2 - dx * dx, 0.01)) - 0.02
-        on = lit and ((k + i) % 3 != 0)
+        on = lit and ((k + i) % 4 != 0)
         S.bb(f"glow{k}", SX + dx - 0.12, SX + dx + 0.12, y - 0.06, y + 0.06, 0.3, 0.7, "redglow" if on else "oxide2", 0.0, nocast=True)
     if dmg:
         # jagged broken top and the fallen chunk lying on the pad
@@ -88,12 +90,8 @@ def stack(S, i, dmg, lit, mode):
     # mouth: steel collar, dark throat, deep ember glow, haze
     S.cyl("collar", 1.22, 0.22, (SX, SY, TOP + 0.11), "steel", verts=22)
     S.cyl("throat", 1.0, 0.08, (SX, SY, TOP + 0.24), "dark", verts=20)
-    S.cyl("glowm", 0.72, 0.06, (SX, SY, TOP + 0.27), "redglow" if (i % 2 == 0 or mode == "build") else "oxide", verts=16, nocast=True)
-    if mode != "build":
-        for q in range(4):
-            ph = ((i / 4) + q / 4) % 1
-            r = 0.2 + 0.4 * math.sin(math.pi * ph) ** 0.6
-            S.sphere(f"puff{q}", r, (SX + 0.1 + ph * 0.9, SY, TOP + 0.5 + ph * 1.6), "smoke2", squash=0.6)
+    glow = GLOW3[1 + round(math.sin(2 * math.pi * i / 8))] if mode == "idle" else ("redglow" if mode == "build" else "oxide")
+    S.cyl("glowm", 0.72, 0.06, (SX, SY, TOP + 0.27), glow, verts=16, nocast=True)
 
 
 def finished(S, i, dmg, mode):
@@ -122,7 +120,7 @@ def finished(S, i, dmg, mode):
         S.bb("hpaneltrim", px0, px1, y0 - 0.12, y0 - 0.1, 1.35, 1.5, "oxide", 0.0)
         S.bb("hpaneltrimb", px0, px1, y0 - 0.12, y0 - 0.1, 0.6, 0.73, "bone", 0.0)
     S.bb("door", x0 + 0.3, x0 + 0.95, y0 - 0.06, y0, 0.5, 1.35, "dark", 0.0)
-    S.bb("doorglow", x0 + 0.35, x0 + 0.9, y0 - 0.1, y0 - 0.06, 0.5, 0.62, "oxide2" if dmg or not lit else "redglow", 0.0, nocast=True)
+    S.bb("doorglow", x0 + 0.35, x0 + 0.9, y0 - 0.1, y0 - 0.06, 0.5, 0.62, ("redglow" if i % 4 < 2 else "oxide2") if dmg else ("redglow" if lit else "oxide2"), 0.0, nocast=True)
     S.bb("doorhood", x0 + 0.2, x0 + 1.05, y0 - 0.3, y0 - 0.0, 1.35, 1.5, "concrete2", 0.03)
     # intake louvres and roof vents, loudspeaker
     S.bb("intake", x0 + 0.2, x0 + 1.9, 1.0, 2.5, zr, zr + 0.4, "concrete2", 0.04)
@@ -144,7 +142,7 @@ def finished(S, i, dmg, mode):
     S.bb("exch", ex0, ex1, ey0, ey1, 0.14, 1.0, "concrete2", 0.04)
     S.bb("exroof", ex0 - 0.08, ex1 + 0.08, ey0 - 0.1, ey1 + 0.08, 1.0, 1.15, "roof", 0.04)
     S.bb("exband", ex0, ex1, ey0 - 0.04, ey0, 0.7, 0.88, "oxide", 0.0)
-    D.furnace_slits(S, ex0 + 0.3, ey0 - 0.1, 0.25, 0.6, 4, i, lit, step=0.5, w=0.25)
+    D.furnace_slits(S, ex0 + 0.3, ey0 - 0.1, 0.25, 0.6, 4, i, lit, step=0.5, w=0.25, period=4)
     for k in range(4):
         S.bb(f"exlouv{k}", ex0 + 0.3 + k * 0.5, ex0 + 0.45 + k * 0.5, ey0 + 0.2, ey1 - 0.2, 1.15, 1.22, "dark", 0.0)
     stack(S, i, dmg, lit, mode)

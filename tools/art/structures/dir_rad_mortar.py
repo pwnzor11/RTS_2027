@@ -5,7 +5,8 @@ around a dark pit, out of which a fat mortar tube rises at a steep angle, pitche
 muzzle).  A small sickly-green glow sits inside the muzzle and in a sight-glass on the slurry tank beside it (kept small; the
 rest is umber and ember red).  Around the pit: a low control block with a magenta house panel and a hazard-striped hatch, two
 slurry drums with hazard rings (green sight-glass), a shell rack and a stub vent that breathes ash; bone / oxide hazard bar south.
-Static (fixed buried tube, no turret given by the rules).  Idle loop: the muzzle glow pulses, the sight-glass pulses, ash puffs.
+Static (fixed buried tube, no turret given by the rules).  Idle loop (8 frames): the muzzle glow pulses through three existing ember tones, the sight-glass pulses, the damaged breach
+flickers.  No smoke is baked: the vent stub stays clean and smoke comes from the separate smoke pass.
 Damage is structural only (D-069): the tube is cracked off and lies across the collar, the collar is breached, a drum is split
 (dark slurry spill), the control block roof has caved; fire / smoke are FX anchors.
 Contract: see auth_refinery.py.  Units: 3.4 per cell, x east, y NORTH, z up, footprint centred on (0, 0): x, y in [-3.4, 3.4].
@@ -20,7 +21,8 @@ import dir_def as DD
 D = DD.D
 L = DD.L
 
-ID = "dir_rad_mortar"
+CANVAS = (128, 184)
+GLOW3 = ("oxide2", "oxide", "redglow")   # muzzle pulse levels, all existing palette materials
 TITLE = "Directorate Radiation Mortar"
 FOOTPRINT = (2, 2)
 CANVAS = (128, 184)
@@ -30,7 +32,7 @@ CAP_MATERIAL = D.CAP_MATERIAL
 HOUSE2_MID = True
 PALETTE = D.PALETTE
 RAD_MATERIALS = ("sickly", "sickly_dim")   # D-099: only these may use the radiation-green ramp (blue mask channel in build_structure)
-STATES = [("idle", 4, 5), ("damaged", 4, 5), ("build", 8, 5)]
+STATES = [("idle", 8, 2), ("damaged", 8, 2), ("build", 8, 5)]     # idle/damaged: 8-frame loops at tpf 2 (S43 fan)
 MATERIALS = DD.MATERIALS
 SOOT_SKIN = DD.SOOT_SKIN
 PRIMER_SKIN = DD.PRIMER_SKIN
@@ -67,9 +69,9 @@ def tube(S, i, dmg, idle):
     p3(S, "mring1", (1.02, 0.12, 1.02), PIV, (0.0, 2.05, 0.0), "bone", PITCH, 0.0, 0.0, nocast=True)
     p3(S, "mring2", (1.02, 0.12, 1.02), PIV, (0.0, 2.42, 0.0), "bone", PITCH, 0.0, 0.0, nocast=True)
     p3(S, "mouthrim", (0.8, 0.06, 0.8), PIV, (0.0, 2.49, 0.0), "dark", PITCH, 0.0, 0.0, nocast=True)
-    on = idle and (i % 2 == 0)
-    p3(S, "glowm", (0.56, 0.06, 0.56), PIV, (0.0, 2.53, 0.0), "redglow" if (idle and i % 4 < 3) else "oxide2", PITCH, 0.0, 0.0, nocast=True)
-    p3(S, "glowg", (0.36, 0.07, 0.36), PIV, (0.0, 2.62, 0.0), "sickly" if on else "sickly_dim", PITCH, 0.0, 0.0, nocast=True)
+    glow = GLOW3[1 + round(math.sin(2 * math.pi * i / 8))] if idle else "oxide2"     # muzzle pulse: dim, mid, bright, 8-frame loop
+    p3(S, "glowm", (0.56, 0.06, 0.56), PIV, (0.0, 2.53, 0.0), glow, PITCH, 0.0, 0.0, nocast=True)
+    p3(S, "glowg", (0.36, 0.07, 0.36), PIV, (0.0, 2.62, 0.0), "sickly" if (idle and i % 2 == 0) else "sickly_dim", PITCH, 0.0, 0.0, nocast=True)
     p3(S, "breech", (0.9, 0.35, 0.9), PIV, (0.0, -0.1, 0.0), "gunmetal", PITCH, 0.0, 0.05)
 
 
@@ -124,7 +126,7 @@ def finished(S, i, dmg, mode):
         S.cyl(f"drumr{k}", 0.52, 0.14, (dx, dy, 0.45), "oxide" if k == 0 else "bone", verts=14)
         S.cyl(f"drumr2{k}", 0.52, 0.14, (dx, dy, 0.95), "bone" if k == 0 else "oxide", verts=14)
         S.cyl(f"drumc{k}", 0.4, 0.06, (dx, dy, 1.17), "steel", verts=12)
-        S.bb(f"glass{k}", dx - 0.22, dx + 0.22, dy - 0.56, dy - 0.48, 0.55, 0.92, "sickly" if (idle and (i + k) % 2 == 1) else "sickly", 0.0, nocast=True)
+        S.bb(f"glass{k}", dx - 0.22, dx + 0.22, dy - 0.56, dy - 0.48, 0.55, 0.92, "sickly" if (not idle or (i + 4 * k) % 8 < 4) else "sickly_dim", 0.0, nocast=True)
     # shell rack: three upright shells in a frame, west of the pit
     sx0 = -2.9
     for k in range(3):
@@ -139,16 +141,12 @@ def finished(S, i, dmg, mode):
     S.cyl("vband", 0.24, 0.12, (vx, vy, 0.55), "oxide", verts=12)
     S.cyl("vcap", 0.32, 0.1, (vx, vy, 1.3), "steel", verts=12)
     S.cyl("vmouth", 0.2, 0.05, (vx, vy, 1.36), "dark", verts=10)
-    if idle and not dmg:
-        for q in range(3):
-            ph = ((i / 4) + q / 3) % 1
-            r = 0.12 + 0.3 * math.sin(math.pi * ph) ** 0.7
-            S.sphere(f"puff{q}", r, (vx + ph * 0.7, vy, 1.6 + ph * 0.6), "smoke2" if q != 1 else "smoke", squash=0.85)
     D.ash_drift(S, ((-2.2, 1.0, 0.8), (2.5, 0.4, 0.8)))
     if dmg:
         S.bb("breach", cx + 0.9, cx + 1.9, cy - 0.7, cy + 0.2, 0.66, 0.74, "dark", 0.0)
         for k, (x, y, w, h) in enumerate(((cx + 1.7, cy + 1.7, 0.45, 0.3), (cx - 1.7, cy - 1.3, 0.4, 0.26), (cx + 2.3, cy + 0.3, 0.35, 0.24))):
             S.box(f"rub{k}", (w, w * 0.8, h), (x, y * YS, 0.14 + h / 2), "concrete_s", 0.0, rot=(0, 0, 33 * k), stretch=False)
+        S.bb("breachglow", cx + 1.1, cx + 1.7, cy - 0.45, cy - 0.15, 0.66, 0.7, "redglow" if i % 4 < 2 else "oxide2", 0.0, nocast=True)
         L.R.scorch(S, "scM", cx, cy - 0.2, 2.2, 2.2, 0.8)
 
 

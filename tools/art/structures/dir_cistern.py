@@ -3,7 +3,7 @@
 Almost all of it is underground: what shows is a broad round concrete lid flush with the pad (bone / oxide rim bands, a cross of
 ribs, a magenta house plate), a small gatehouse at the south-west corner with a narrow dark hatch door under a magenta-banded
 hood, two snorkel vents (one breathes ash), a fill pipe with a valve wheel on the east side and a level gauge whose lamp blinks.
-Idle loop: ash puffs from a vent, the gauge lamp blinks, the hatch ember flickers.  Damage is structural only (D-069): the lid has
+Idle loop (8 frames): the fill valve handwheel turns, the gauge lamp blinks, the hatch ember flickers.  No vent smoke is baked.  Damage is structural only (D-069): the lid has
 caved in on the east half (dark pit, an upturned slab, rebar), the hood end has fallen, one vent is snapped, the fill pipe is
 broken and the gauge leans; fire / smoke are FX anchors.  Build stages: the shared L.stages() driver.
 Contract: see auth_refinery.py.  Units: 3.4 per cell, x east, y NORTH, z up, footprint centred on (0, 0): x, y in [-3.4, 3.4].
@@ -27,7 +27,7 @@ DOCK = (0, 0)
 CAP_MATERIAL = D.CAP_MATERIAL
 HOUSE2_MID = True
 PALETTE = D.PALETTE
-STATES = [("idle", 4, 5), ("damaged", 4, 5), ("build", 8, 5)]
+STATES = [("idle", 8, 2), ("damaged", 8, 2), ("build", 8, 5)]     # idle/damaged: 8-frame loops at tpf 2 (S43 fan)
 MATERIALS = DD.MATERIALS
 SOOT_SKIN = DD.SOOT_SKIN
 PRIMER_SKIN = DD.PRIMER_SKIN
@@ -96,11 +96,6 @@ def finished(S, i, dmg, mode):
         S.cyl(f"vcap{k}", 0.3, 0.12, (vx, vy, LZ + h + 0.06), "steel", verts=12)
         S.cyl(f"vmouth{k}", 0.2, 0.05, (vx, vy, LZ + h + 0.13), "dark", verts=10)
         S.cyl(f"vband2{k}", 0.22, 0.12, (vx, vy, LZ + 1.0), "bone", verts=12)
-        if k == 0 and idle:
-            for q in range(3):
-                ph = ((i / 4) + q / 3) % 1
-                r = 0.12 + 0.34 * math.sin(math.pi * ph) ** 0.7
-                S.sphere(f"puff{q}", r, (vx + ph * 0.9, vy, LZ + h + 0.4 + ph * 0.6), "smoke2" if q != 1 else "smoke", squash=0.85)
     # ---- fill pipe and valve on the east side
     px = 3.0
     if dmg:
@@ -111,6 +106,8 @@ def finished(S, i, dmg, mode):
         S.cyl("flange", 0.24, 0.1, (3.25, cy - 0.5, 0.5), "rust", axis="X", verts=10)
         S.bb("valve", 2.5, 2.8, cy - 0.7, cy - 0.3, 0.14, 0.8, "hull2", 0.03)
         S.cyl("wheel", 0.24, 0.06, (2.65, cy - 0.75, 0.62), "bone", axis="Y", verts=14)
+        for q in range(2):     # fill valve handwheel turns a quarter spoke per frame (2 spokes: 90-degree loop)
+            S.box(f"wspk{q}", (0.42, 0.08, 0.06), (2.65, cy - 0.75, 0.62), "oxide", 0.0, rot=(0, i * 11.25 + q * 90, 0), stretch=False, nocast=True)
     # ---- level gauge: post with a scale plate and a blinking lamp
     gx, gy = GAUGE
     if dmg:
@@ -126,7 +123,7 @@ def finished(S, i, dmg, mode):
     D.ash_drift(S, ((2.9, -1.0, 0.9), (-3.0, 2.6, 0.8), (0.6, -2.7, 0.9)))
     if dmg:
         S.bb("pit", cx + 0.2, cx + 2.0, cy - 0.3, cy + 1.9, LZ, LZ + 0.06, "dark", 0.0)
-        S.bb("pitg", cx + 0.6, cx + 1.4, cy + 0.1, cy + 0.6, LZ + 0.06, LZ + 0.08, "oxide2", 0.0, nocast=True)
+        S.bb("pitg", cx + 0.6, cx + 1.4, cy + 0.1, cy + 0.6, LZ + 0.06, LZ + 0.08, "redglow" if i % 4 < 2 else "oxide2", 0.0, nocast=True)
         S.box("slab", (1.4, 1.0, 0.2), (cx + 0.7, (cy + 0.1) * YS, LZ + 0.35), "concrete2", 0.0, rot=(0, 20, -18), stretch=False)
         S.box("slab2", (0.9, 0.7, 0.18), (cx + 1.9, (cy - 0.6) * YS, LZ + 0.25), "concrete", 0.0, rot=(18, 0, 30), stretch=False)
         S.bb("plated", cx + 0.2, cx + 0.9, cy - 1.2, cy - 0.4, LZ, LZ + 0.05, "house2", 0.0)

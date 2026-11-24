@@ -4,7 +4,8 @@ The read is a squat LEAD-ROOFED LAB BLOCK across the north of the pad with a BAN
 south face (a row of vertical ember tubes behind a bone / oxide frame), a fat shielded cooling vent (finned lead drum on a stack) at the
 north-east, and a ramp mouth under a small hood (magenta band, blast doors folded back, ember glow) at the south-west.  Two lead
 containment drums with hazard rings stand on the pad, a roof dish and a loudspeaker; bone / oxide hazard bar on the south edge.
-Idle loop: the tubes pulse in turn, the vent breathes ash, furnace slits flicker.  Damage is structural only (D-069): the tube bay is
+Idle loop (8 frames): the tubes pulse in turn, the vent's warning lamp blinks.  No vent smoke is baked (the separate smoke pass adds it).
+Damaged: one surviving tube flickers.  Damage is structural only (D-069): the tube bay is
 smashed (tubes snapped, a drum overturned), the hood end has fallen, the vent drum has slumped off its stack; fire / smoke are FX anchors.
 Contract: see auth_refinery.py.  Units: 3.4 per cell, x east, y NORTH, z up, footprint centred on (0, 0): x, y in [-3.4, 3.4].
 """
@@ -26,7 +27,7 @@ DOCK = (0, 2)
 CAP_MATERIAL = D.CAP_MATERIAL
 HOUSE2_MID = True
 PALETTE = D.PALETTE
-STATES = [("idle", 4, 5), ("damaged", 4, 5), ("build", 8, 5)]
+STATES = [("idle", 8, 2), ("damaged", 8, 2), ("build", 8, 5)]     # idle/damaged: 8-frame loops at tpf 2 (S43 fan)
 MATERIALS = D.MATERIALS
 SOOT_SKIN = D.SOOT_SKIN
 PRIMER_SKIN = D.PRIMER_SKIN
@@ -60,7 +61,7 @@ def tubes(S, i, dmg, mode):
         if dmg and k in (1, 3, 4):
             S.cyl(f"tubeD{k}", 0.15, 0.4 + 0.1 * k, (x, yf - 0.3, 0.7), "oxide2", verts=10)
             continue
-        on = lit and ((k + i) % 3 != 0)
+        on = (lit and ((k + i) % 4 != 0)) or (dmg and k == 0 and i % 4 < 2)
         h = 1.0 if not dmg else 0.8
         S.cyl(f"glow{k}", 0.17, h, (x, yf - 0.3, 0.55 + h / 2 + 0.05), "redglow" if on else "oxide2", verts=10, nocast=True)
         S.cyl(f"tubecap{k}", 0.2, 0.08, (x, yf - 0.3, 0.55 + h + 0.12), "steel", verts=10)
@@ -88,10 +89,7 @@ def vent(S, i, dmg, idle):
     S.cyl("vcap", 0.78, 0.14, (vx, vy, zt + 1.97), "steel", verts=16)
     S.cyl("vmouth", 0.5, 0.06, (vx, vy, zt + 2.06), "dark", verts=14)
     if idle:
-        for q in range(3):
-            ph = ((i / 4) + q / 3) % 1
-            r = 0.14 + 0.38 * math.sin(math.pi * ph) ** 0.7
-            S.sphere(f"puff{q}", r, (vx + ph * 0.9, vy, zt + 2.35 + ph * 1.2 + r * 0.3), "smoke2" if q != 1 else "smoke", squash=0.85)
+        S.cyl("vlamp", 0.1, 0.12, (vx + 0.5, vy - 0.5, zt + 2.1), "redglow" if i % 4 < 2 else "oxide2", verts=8, nocast=True)
 
 
 def finished(S, i, dmg, mode):
