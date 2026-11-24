@@ -24,7 +24,7 @@ DOCK = (1, 3)
 CAP_MATERIAL = "pad2"
 PALETTE = K.PALETTE
 MATERIALS = K.MATERIALS
-STATES = [("idle", 4, 5), ("damaged", 4, 5), ("build", 8, 5)]
+STATES = [("idle", 8, 2), ("damaged", 8, 2), ("build", 8, 5)]     # session 43: 8-frame loops at tpf 2 (owner choice)
 FX = [
     K.fx(FOOTPRINT, ORIGIN, "damaged", "fire_large", 3.9, 3.3, 5.3, 0),
     K.fx(FOOTPRINT, ORIGIN, "damaged", "fire_small", 3.2, -1.2, 1.3, 4),
@@ -72,7 +72,7 @@ def g_tower(S, dmg, i):
     if dmg:
         S.box("cabx", (0.9, 0.5, 0.1), (cx - 0.1, (cy - 0.6) * S.YS, 4.55), "navy2", 0.0, rot=(0, 25, 10), stretch=False, nocast=True)
     else:
-        a = i * 90
+        a = i * 45          # beacon arm turns 45 deg a frame: one full turn per 8-frame loop
         S.box("beacon", (0.7, 0.14, 0.14), (cx, cy * S.YS, 5.55), "orange", 0.0, rot=(0, 0, a), stretch=False)
         S.sphere("blamp", 0.11, (cx + 0.3 * math.cos(math.radians(a)), cy + 0.3 * math.sin(math.radians(a)), 5.55), "lamp")
     K.flag(S, "flag", 2.4, 4.7, 3.8 if not dmg else 2.6, i, w=1.2, h=0.75, dmg=dmg)
@@ -90,7 +90,7 @@ def g_hangar(S, dmg, i):
         S.bb("hvent", -4.2, -3.4, -1.9, -1.1, 1.78, 1.9, "chrome2", 0.03)
     # windsock
     K.post(S, "wmast", -1.4, -0.2, 0.12, 2.3, 0.07, "chrome2")
-    sw = 0.3 * math.sin(i * math.pi / 2)
+    sw = 0.3 * math.sin(i * math.pi / 4)     # windsock swings through one full cycle per loop
     K.beam(S, "sock", (-1.4, -0.2, 2.2), (-0.5 + sw * 0.4, -0.2 + sw, 2.1), 0.28, "orange" if i % 2 == 0 else "white")
 
 
@@ -114,6 +114,8 @@ def site(S):
 
 def dmg_extra(S, i):
     P.scorch(S, "sc1", 1.0, 3.8, -1.0, -0.2, 0.12)
+    if i in (2, 6):         # broken tower cab flickers
+        S.sphere("tspark", 0.09, (3.5, 3.0, 4.7), "spark")
 
 
 def build(S, state, i, n):

@@ -23,7 +23,7 @@ DOCK = (0, 0)
 CAP_MATERIAL = "pad2"
 PALETTE = K.PALETTE
 MATERIALS = K.MATERIALS
-STATES = [("idle", 4, 5), ("damaged", 4, 5), ("build", 8, 5)]
+STATES = [("idle", 8, 2), ("damaged", 8, 2), ("build", 8, 5)]     # session 43: 8-frame loops at tpf 2 (owner choice)
 FX = [
     K.fx(FOOTPRINT, ORIGIN, "damaged", "fire_small", 0.0, 0.0, 1.5, 0),
     K.fx(FOOTPRINT, ORIGIN, "damaged", "smoke_plume", 0.0, 0.0, 1.8, 0),
@@ -59,8 +59,9 @@ def g_turret(S, dmg, i):
     if dmg:
         K.beam(S, "gun", (0.0, -0.4, 1.75), (0.0, -1.5, 1.35), 0.2, "chrome2")
     else:
-        K.beam(S, "gun", (0.0, -0.4, 1.8), (0.0, -1.8, 1.8), 0.18, "chrome2")
-        S.cyl("muz", 0.14, 0.2, (0.0, -1.85, 1.8), "dark", axis="Y", verts=10)
+        yaw = 0.2 * math.sin(i * math.pi / 4)      # slight traverse, one swing per 8-frame loop
+        K.beam(S, "gun", (0.0, -0.4, 1.8), (yaw, -1.8, 1.8), 0.18, "chrome2")
+        S.cyl("muz", 0.14, 0.2, (yaw, -1.85, 1.8), "dark", axis="Y", verts=10)
         P.bubble_lamp(S, "sl", -0.3, 0.1, 2.05, i % 2 == 0)
 
 
@@ -73,6 +74,8 @@ def site(S):
 
 def dmg_extra(S, i):
     S.bb("scorch", -0.8, 0.8, 0.2, 1.0, 1.3, 1.32, "char", 0.0, nocast=True)
+    if i in (2, 6):         # cut cable on the rubble sparks
+        S.sphere("psp", 0.07, (0.8, 0.0, 1.25), "spark")
 
 
 def build(S, state, i, n):

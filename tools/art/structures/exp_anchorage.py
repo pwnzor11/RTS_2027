@@ -27,7 +27,7 @@ VAR = os.environ.get("ANCH_VARIANT", "C").upper()
 CAP_MATERIAL = "pad2"
 PALETTE = K.PALETTE
 MATERIALS = K.MATERIALS
-STATES = [("idle", 4, 5), ("damaged", 4, 5), ("build", 8, 5)]
+STATES = [("idle", 8, 2), ("damaged", 8, 2), ("build", 8, 5)]     # session 43: 8-frame loops at tpf 2 (owner choice)
 FX = [
     K.fx(FOOTPRINT, ORIGIN, "damaged", "fire_large", 1.6, -1.6, 0.8, 0),
     K.fx(FOOTPRINT, ORIGIN, "damaged", "smoke_plume", 1.6, -1.6, 1.2, 0),
@@ -130,7 +130,7 @@ def _crane(S, dmg, i):
         K.beam(S, "jib", (cx, cy, 3.8), (cx - 0.8, cy - 1.0, 2.7), 0.2, "copper")
     else:
         K.beam(S, "jib", (cx, cy, 3.8), (cx - 0.2, cy - 2.3, 3.8), 0.2, "copper")
-        sw = 0.18 * math.sin(i * math.pi / 2)
+        sw = 0.18 * math.sin(i * math.pi / 4)
         K.beam(S, "cable", (cx - 0.2, cy - 2.1, 3.75), (cx - 0.2 + sw, cy - 2.1, 1.7), 0.04, "dark", nocast=True)
         S.bb("hook", cx - 0.3 + sw, cx - 0.1 + sw, cy - 2.2, cy - 2.0, 1.5, 1.7, "orange", 0.0)
 
@@ -151,7 +151,7 @@ def _gantry(S, dmg, i):
     S.bb("pump", gx - 0.9, gx - 0.3, -0.5, 0.0, DECK, DECK + 1.0, "house", 0.05)
     S.bb("pwin", gx - 0.8, gx - 0.4, -0.52, -0.5, DECK + 0.55, DECK + 0.85, "glass", 0.0, nocast=True)
     S.cyl("reel", 0.38, 0.5, (gx + 0.3, -0.7, 3.4), "orange", axis="X", verts=14)
-    sw = 0.12 * math.sin(i * math.pi / 2)
+    sw = 0.12 * math.sin(i * math.pi / 4)
     K.beam(S, "hose", (gx + 0.3, -0.7, 3.25), (gx + 0.3 + sw, -1.1, 1.5), 0.07, "dark", nocast=True)
     S.bb("nozzle", gx + 0.2 + sw, gx + 0.4 + sw, -1.2, -1.0, 1.2, 1.55, "chrome", 0.0)
     P.bubble_lamp(S, "gl", gx + 1.0, -1.6, 3.15, i % 2 == 0)
@@ -167,7 +167,7 @@ def _davit(S, dmg, i):
     else:
         K.beam(S, "boom", (cx, cy, DECK + 1.3), (cx, cy, 3.2), 0.2, "chrome2")
         K.beam(S, "arm", (cx, cy, 3.2), (cx - 0.2, cy - 2.0, 3.5), 0.18, "copper")
-        sw = 0.18 * math.sin(i * math.pi / 2)
+        sw = 0.18 * math.sin(i * math.pi / 4)
         K.beam(S, "cable", (cx - 0.2, cy - 1.9, 3.45), (cx - 0.2 + sw, cy - 1.9, 1.8), 0.04, "dark", nocast=True)
         S.bb("hook", cx - 0.3 + sw, cx - 0.1 + sw, cy - 2.0, cy - 1.8, 1.6, 1.8, "orange", 0.0)
     mx, my, top = -1.0, -1.6, 3.4
@@ -219,6 +219,8 @@ def dmg_extra(S, i):
     S.bb("hole", 0.9, 2.6, -2.6, -1.0, DECK, DECK + 0.02, "char", 0.0, nocast=True)
     S.bb("scorch", -2.4, -0.8, 1.0, 2.3, DECK + 1.41, DECK + 1.43, "char", 0.0, nocast=True)
     S.box("slab", (1.5, 1.4, 0.12), (2.0, -2.0 * S.YS, 0.35), "pad_s", 0.0, rot=(0, 18, 0), stretch=False)
+    if i in (2, 6):         # arcing cable at the breach edge, one flash per half loop
+        S.sphere("arc", 0.1, (0.9, -1.0, DECK + 0.1), "spark")
 
 
 def build(S, state, i, n):

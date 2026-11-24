@@ -25,7 +25,7 @@ DOCK = (1, 3)
 CAP_MATERIAL = "pad2"
 PALETTE = K.PALETTE
 MATERIALS = K.MATERIALS
-STATES = [("idle", 4, 5), ("damaged", 4, 5), ("build", 8, 5)]
+STATES = [("idle", 8, 2), ("damaged", 8, 2), ("build", 8, 5)]     # session 43: 8-frame loops at tpf 2 (owner choice)
 FX = [
     K.fx(FOOTPRINT, ORIGIN, "damaged", "fire_large", -1.0, -1.2, 1.6, 0),
     K.fx(FOOTPRINT, ORIGIN, "damaged", "fire_small", 2.0, 2.0, 2.4, 4),
@@ -61,6 +61,8 @@ def g_glass(S, dmg, i):
     S.bb("sill", -3.2, 2.1, -2.55, -2.4, 0.55, 0.7, "copper", 0.0, nocast=True)
     if dmg:
         S.bb("smash", -1.5, -0.4, -2.46, -2.42, 0.7, 1.75, "char", 0.0, nocast=True)
+        if i in (3, 7):      # flickering live wire in the smashed frame
+            S.sphere("gspark", 0.08, (-0.9, -2.5, 1.2), "spark")
 
 
 def g_roof(S, dmg, i):
@@ -71,7 +73,7 @@ def g_roof(S, dmg, i):
         S.cyl(f"cowl{k}", 0.62, 0.3, (x, 0.9, 2.65), "chrome", verts=18)
         S.cyl(f"cowlr{k}", 0.65, 0.07, (x, 0.9, 2.78), "copper", verts=18, nocast=True)
         S.cyl(f"hub{k}", 0.1, 0.1, (x, 0.9, 2.82), "dark", verts=8)
-        a = (i * 30 + k * 20) % 180
+        a = i * 22.5 + k * 20          # fan turns 22.5 deg a frame: half a turn (the blades' 180-degree period) per 8-frame loop
         S.box(f"blade{k}", (1.0, 0.14, 0.05), (x, 0.9 * S.YS, 2.84), "chrome2", 0.0, rot=(0, 0, a), stretch=False, nocast=True)
         S.box(f"bladeb{k}", (1.0, 0.14, 0.05), (x, 0.9 * S.YS, 2.84), "chrome2", 0.0, rot=(0, 0, a + 90), stretch=False, nocast=True)
 
@@ -83,8 +85,6 @@ def g_stack(S, dmg, i):
     S.cyl("stkhouse", 0.53, 0.3, (-4.1, 3.9, top - 0.4), "house", verts=20)
     S.cyl("stkcap", 0.48, 0.06, (-4.1, 3.9, top), "dark", verts=16)
     S.cyl("stktide", 0.54, 0.3, (-4.1, 3.9, 0.3), "ash", verts=20)
-    if not dmg:
-        K.puffs(S, "stk", -4.1, 3.9, top + 0.2, i, drift=0.9)
     # copper bus pipes on the east wall, cooling plant wing
     for k in range(3):
         S.bb(f"bus{k}", 3.4, 4.5, -1.6 + k * 1.8 - 0.1, -1.6 + k * 1.8 + 0.1, 0.9 + 0.0, 1.05, "copper", 0.0, nocast=True)
