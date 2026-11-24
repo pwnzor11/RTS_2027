@@ -637,6 +637,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
         _s.Scene.LargerInfantry = _s.Settings.LargerInfantry;   // D-184
         _s.Scene.WeatherEnabled = _s.Settings.Weather;   // M10-12
         _s.Scene.ShakeEnabled = _s.Settings.ScreenShake;   // M10-14
+        _s.Scene.ReduceFlashes = _s.Settings.ReduceFlashes;   // QOL-20
         _s.Scene.Draw(sb, _s.Pixel, frame, _camera, _s.Viewport);
         DrawSelectedBuilding(sb, snapshot);
         DrawQueuedPaths(sb);   // M13-15: the waypoints of the selected units
@@ -780,7 +781,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
         IdleFinder.Factories(_ownScratch, _sim.Rules, hud, _idleFactories);
         _idleAlerts.Clear();
         _idleWatch.Observe(_source.Current.Tick, _ownScratch, _sim.Rules, hud, _idleAlerts);
-        foreach (GameAlert a in _idleAlerts) _alerts.Log.Add(a);
+        foreach (GameAlert a in _idleAlerts) if (!Rts.Game.Ui.Alerts.AlertMix.Active.IsMuted(Rts.Game.Ui.Alerts.AlertMix.CategoryOf(a.Kind))) _alerts.Log.Add(a);   // QOL-12
 
         if (_idleHarvesters.Count > 0) _idleHarvesterRegion.Bounds = IdleButtonRect(0, IdleHarvesterCaption());
         if (_idleFactories.Count > 0) _idleFactoryRegion.Bounds = IdleButtonRect(1, IdleFactoryCaption());

@@ -54,6 +54,9 @@ public sealed class SettingsScreen : IScreen
                 new MenuButton("Toggle", ToggleWeather)),   // M10-12
             new MenuItem(() => $"Screen shake: {(_s.Settings.ScreenShake ? "On" : "Off")}", ToggleScreenShake, _ => ToggleScreenShake(),
                 new MenuButton("Toggle", ToggleScreenShake)),   // M10-14
+            new MenuItem(() => $"Reduce flashes: {(_s.Settings.ReduceFlashes ? "On" : "Off")}", ToggleReduceFlashes, _ => ToggleReduceFlashes(),
+                new MenuButton("Toggle", ToggleReduceFlashes)),   // QOL-20
+            new MenuItem(() => "Alerts", () => _s.Screens.Push(new AlertsSettingsScreen(_s, _path))),   // QOL-12
             new MenuItem(() => SkinLine(_s.Settings), ToggleUiSkin, _ => ToggleUiSkin(),
                 new MenuButton("Toggle", ToggleUiSkin)),   // M10-15 (s27)
             Volume("Master volume", s => s.MasterVolume, (s, v) => s with { MasterVolume = v }),
@@ -157,6 +160,8 @@ public sealed class SettingsScreen : IScreen
     private void ToggleLargerInfantry() => _s.Settings = _s.Settings with { LargerInfantry = !_s.Settings.LargerInfantry };
 
     private void ToggleWeather() => _s.Settings = _s.Settings with { Weather = !_s.Settings.Weather };
+
+    private void ToggleReduceFlashes() => _s.Settings = _s.Settings with { ReduceFlashes = !_s.Settings.ReduceFlashes };
 
     private void ToggleScreenShake() => _s.Settings = _s.Settings with { ScreenShake = !_s.Settings.ScreenShake };
 

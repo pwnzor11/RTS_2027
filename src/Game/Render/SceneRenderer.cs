@@ -38,6 +38,9 @@ public sealed class SceneRenderer : IDisposable
     /// <summary>M10-14: shake the world view on big blasts (the "Screen shake" setting); the game screen sets it each frame.</summary>
     public bool ShakeEnabled { get; set; } = true;
 
+    /// <summary>QOL-20 (D-313): the "Reduce flashes" setting: no white hit flash on units, no promotion flash, no muzzle sparks. View only; separate from <see cref="ShakeEnabled"/>.</summary>
+    public bool ReduceFlashes { get; set; }
+
     private readonly Stopwatch _clock = Stopwatch.StartNew();   // presentation time only: weather drift and shake decay, never the sim
     private double _lastSeconds;
     private readonly JuiceShake _shake = new();
@@ -187,7 +190,7 @@ public sealed class SceneRenderer : IDisposable
         _rankMap.Clear();
         foreach ((RankKey key, int rank) in _ranks) _rankMap[key] = rank;
         _promotions.Update(snapshot.Tick, _ranks, _promoted);
-        PromotionFlash.Draw(batch, pixel, frame.Units, camera, _promotions, snapshot.Tick);
+        if (!ReduceFlashes) PromotionFlash.Draw(batch, pixel, frame.Units, camera, _promotions, snapshot.Tick);   // QOL-20
         HealthBars.Draw(batch, pixel, frame, camera, _sprites, _rankMap, HealthBarsAlways);
         NoPowerOverlay.Draw(batch, pixel, frame, camera);   // D-170: blinking marker over a building stopped for lack of power
         if (frame.DragRect is Rectangle box) Shapes.Outline(batch, pixel, box, DragColour);
@@ -220,7 +223,7 @@ public sealed class SceneRenderer : IDisposable
         {
             Vector2 at = Camera.WorldFromLepton(frame.Projectiles[count - 1 - i]);
             if (!InView(at, camera, viewport)) continue;
-            _fx.Spawn("sparks", at, snapshot.Tick, 1.1f);
+            if (!ReduceFlashes) _fx.Spawn("sparks", at, snapshot.Tick, 1.1f);   // QOL-20: no muzzle sparks
             _look.Puffs.Add(new Puff(at.X, at.Y - 6, snapshot.Tick, 14, 0x8F8B86, 130, 0.4f, 9, Smoke: true));
         }
     }
@@ -358,7 +361,7 @@ public sealed class SceneRenderer : IDisposable
                 bool selected = frame.Selection.Contains(UnitKey.Of(unit.View));
                 UnitRenderer.Draw(batch, pixel, _sprites, _painter, _memory, snapshot.Tick, frame.Rules, unit,
                     selected, camera, unit.View.Kind == UnitKind.Vehicle && _submerged.Contains(unit.View.Id),
-                    _ownOrAllied.Contains(unit.View.Id), _hits.IsFlashing(unit.View.Id, snapshot.Tick, _frame));
+                    _ownOrAllied.Contains(unit.View.Id), !ReduceFlashes && _hits.IsFlashing(unit.View.Id, snapshot.Tick, _frame));
             }
         }
     }
