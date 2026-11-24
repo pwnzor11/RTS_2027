@@ -162,7 +162,7 @@ title = "Heavy Bomber"
 subtitle = "Four-engine ground-attack aircraft"
 field_note = "WING 9 // BOMBS AWAY ON THE MARKED GRID. RETURN FOR REARMING. STOP."
 body = '''
-A four-engined bomber that drops a stick of splash bombs on whatever the district marks on the map. It is the Authority's most expensive aircraft and flies only with fighter cover. The crews are decorated before they leave the ground.
+A four-engined bomber that drops a stick of splash bombs on whatever the district marks on the map. It flies only with fighter cover. The crews are decorated before they leave the ground.
 '''
 # Approved by the owner 2026-11-04 (Q-38). Replace the open unlock with a mission id when known.
 unlock = "open"
