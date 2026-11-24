@@ -14,6 +14,9 @@ backpack with bedroll and filter canister, 1960s battle rifle (wood stock).  Hou
 a ridge stripe over the helmet, a panel on the back of the pack (all material "house", rendered magenta).
 """
 import math
+import os, sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import boost
 
 SCALE = 1.25                  # D-185: figure 1.25 x, frame 48 x 48, house pads / helmet band / pack panel
 ID = "auth_rifleman"
@@ -94,6 +97,7 @@ def pose(state, step, n):
 
 
 def build(S, p):
+    B = boost.params()
     from mathutils import Matrix      # Blender-side imports stay lazy so the manifest data loads without bpy
     import rig as R
     U = R.tr(0, p["dy"], 0.62 + p["bob"]) @ R.rz(p["twist"]) @ R.rx(-p["lean"])
@@ -108,29 +112,42 @@ def build(S, p):
     S.box((0.42, 0.27, 0.05), (0, 0, 0.05), "rust", U)                               # belt
     S.box((0.12, 0.05, 0.13), (0.1, 0.14, 0.2), "rust", U)                           # chest pouches
     S.box((0.12, 0.05, 0.13), (-0.1, 0.14, 0.2), "rust", U)
+    if B["house"] > 1.0:                                                                # S43 chest panel (front read)
+        S.box((0.26, 0.03, 0.10 * B["house"]), (0, 0.135, 0.33), "house", U, bevel=0)
     S.box((0.42, 0.28, 0.06), (0, -0.02, 0.43), "cloth", U, bevel=0.03)             # ash mantle over the shoulders
     for sx in (-1, 1):                                                                  # D-185 house shoulder pads
-        S.box((0.09, 0.22, 0.12), (sx * 0.255, 0.0, 0.43), "house", U, bevel=0)
+        S.box((0.09 * (1 + 0.5 * (B["house"] - 1)), 0.22 * (1 + 0.3 * (B["house"] - 1)), 0.12 * B["house"]), (sx * (0.255 + 0.02 * (B["house"] - 1)), 0.0, 0.43), "house", U, bevel=0)
         # ---------------- backpack: bedroll, filter canister, house panel on the back
     S.box((0.30, 0.17, 0.36), (0, -0.26, 0.24), "pack", U, bevel=0.02)
-    S.box((0.26, 0.03, 0.24), (0, -0.355, 0.27), "house", U, bevel=0)
+    S.box((0.26 * (1 + 0.15 * (B["house"] - 1)), 0.03, 0.24 * B["house"]), (0, -0.355, 0.27 + 0.02 * (B["house"] - 1)), "house", U, bevel=0)
     S.cyl(0.06, 0.40, (0, -0.27, 0.46), "rust", "X", U, verts=10)
     S.cyl(0.07, 0.30, (-0.21, -0.25, 0.16), "steel", "Z", U, verts=10)
     S.cyl(0.075, 0.04, (-0.21, -0.25, 0.30), "dark", "Z", U, verts=10)
-    # ---------------- head: helmet + ridge stripe, visor, goggles, respirator
-    hc = (0, 0.0, 0.54)
+    # ---------------- head: helmet + ridge stripe, visor, goggles, respirator (S43: scaled about the head centre by B["head"])
+    h = B["head"]
+    HC = (0.0, 0.05, 0.50)
+
+    def hb(size, loc, mat, **kw):
+        return S.box(tuple(x * h for x in size), tuple(HC[i] + (loc[i] - HC[i]) * h for i in range(3)), mat, U, **kw)
+
+    def hs(r, loc, mat):
+        return S.sphere(tuple(x * h for x in r), tuple(HC[i] + (loc[i] - HC[i]) * h for i in range(3)), mat, U)
+
+    def hc_(r, ln, loc, mat, axis, verts):
+        return S.cyl(r * h, ln * h, tuple(HC[i] + (loc[i] - HC[i]) * h for i in range(3)), mat, axis, U, verts=verts)
     S.box((0.10, 0.10, 0.07), (0, 0, 0.46), "dark", U)                               # neck
-    S.box((0.20, 0.07, 0.05), (0, 0.0, 0.625), "house", U, bevel=0)                       # D-185 house band over the helmet crown
-    S.sphere((0.17, 0.18, 0.14), (0, 0, 0.56), "helm", U)                                     # helmet
-    S.sphere((0.055, 0.19, 0.152), (0, 0, 0.56), "house", U)                                   # ridge stripe over the crown
-    S.box((0.19, 0.12, 0.12), (0, 0.075, 0.47), "skin", U, bevel=0.03)               # sealed face hood
-    S.box((0.30, 0.12, 0.035), (0, 0.10, 0.545), "dark", U, bevel=0.01)               # helmet peak
-    S.box((0.085, 0.04, 0.06), (0.058, 0.15, 0.50), "lens", U, bevel=0)             # goggles
-    S.box((0.085, 0.04, 0.06), (-0.058, 0.15, 0.50), "lens", U, bevel=0)
-    S.cyl(0.05, 0.10, (0, 0.17, 0.43), "dark", "Y", U, verts=10)                    # respirator snout
-    S.cyl(0.035, 0.07, (0, 0.24, 0.425), "dark", "Y", U, verts=8)
+    hb((0.20, 0.07, 0.05), (0, 0.0, 0.625), "house", bevel=0) if B["house"] <= 1.0 else hb((0.20 * 1.15, 0.07, 0.05 * B["house"]), (0, 0.0, 0.625), "house", bevel=0)  # D-185 band over the crown
+    hs((0.17, 0.18, 0.14), (0, 0, 0.56), "helm")                                      # helmet
+    hs((0.055 * B["house"], 0.19, 0.152), (0, 0, 0.56), "house")                       # ridge stripe over the crown
+    hb((0.19, 0.12, 0.12), (0, 0.075, 0.47), "skin", bevel=0.03)                     # sealed face hood
+    hb((0.30, 0.12, 0.035), (0, 0.10, 0.545), "dark", bevel=0.01)                     # helmet peak
+    hb((0.085, 0.04, 0.06), (0.058, 0.15, 0.50), "lens", bevel=0)                    # goggles
+    hb((0.085, 0.04, 0.06), (-0.058, 0.15, 0.50), "lens", bevel=0)
+    hc_(0.05, 0.10, (0, 0.17, 0.43), "dark", "Y", 10)                                 # respirator snout
+    hc_(0.035, 0.07, (0, 0.24, 0.425), "dark", "Y", 8)
     # ---------------- rifle
-    GM = (U if p["gun_space"] == "u" else Matrix.Identity(4)) @ R.tr(*p["gun"][0]) @ R.rz(p["gun"][1]) @ R.rx(p["gun"][2])
+    GM0 = (U if p["gun_space"] == "u" else Matrix.Identity(4)) @ R.tr(*p["gun"][0]) @ R.rz(p["gun"][1]) @ R.rx(p["gun"][2])
+    GM = GM0 @ Matrix.Diagonal((B["gunw"], B["gun"], B["gunw"], 1.0))            # S43: weapon scale (grips below are in the scaled frame too)
     S.box((0.05, 0.27, 0.10), (0, -0.25, -0.01), "wood", GM, rot=(-6, 0, 0))         # stock
     S.box((0.06, 0.25, 0.09), (0, 0, 0), "steel", GM)                                # receiver
     S.box((0.055, 0.30, 0.07), (0, 0.26, -0.005), "wood", GM)                        # handguard
@@ -139,14 +156,15 @@ def build(S, p):
     S.box((0.04, 0.05, 0.09), (0, -0.10, -0.07), "dark", GM)                         # pistol grip
     S.box((0.02, 0.04, 0.04), (0, 0.04, 0.065), "dark", GM)                          # sight
     if p["flash"]:
-        S.cyl(0.07, 0.24, (0, 0.76, 0.005), "flash", "Y", GM, verts=8, r2=0.0)
-        S.sphere((0.09, 0.09, 0.09), (0, 0.64, 0.005), "flash", GM, seg=8)
+        fl, flw = B["flash"] / B["gun"], B["flash"] / B["gunw"]
+        S.cyl(0.07 * flw, 0.24 * fl, (0, 0.50 + 0.26 * fl, 0.005), "flash", "Y", GM, verts=8, r2=0.0)
+        S.sphere((0.09 * flw, 0.09 * fl, 0.09 * flw), (0, 0.50 + 0.14 * fl, 0.005), "flash", GM, seg=8)
 
     # ---------------- arms: shoulder -> elbow -> wrist; house band on the upper arm
     for side, hand_spec in ((-1, p["hands"][0]), (1, p["hands"][1])):
         sh = R.Vector(up((side * SHOULDER[0], SHOULDER[1], SHOULDER[2])))
         if hand_spec == "gun":
-            tgt = R.Vector(tuple(GM @ R.Vector(GRIP_R if side > 0 else GRIP_L)))
+            tgt = R.Vector(tuple(GM0 @ (R.Vector(tuple(a * b for a, b in zip(GRIP_R if side > 0 else GRIP_L, (B["gunw"], B["gun"], B["gunw"])))))))
         elif hand_spec[0] == "w":
             tgt = R.Vector(hand_spec[1])
         elif hand_spec[0] == "u":
@@ -155,15 +173,15 @@ def build(S, p):
             tgt = R.Vector(up(hand_spec))
         pole = U.to_3x3() @ R.Vector((side * 1.2, -0.3, -0.6))
         elbow, wrist = R.ik2(sh, tgt, L_UPPER, L_FORE, pole)
-        S.limb(sh, elbow, 0.10, "hull")
-        S.limb(sh, sh.lerp(elbow, 0.55), 0.135, "house", bevel=0.0)
-        S.limb(elbow, wrist, 0.085, "hull2")
+        S.limb(sh, elbow, 0.10 * B["limb"], "hull")
+        S.limb(sh, sh.lerp(elbow, 0.55 + 0.1 * (B["house"] - 1)), 0.135 * B["limb"] * (1 + 0.2 * (B["house"] - 1)), "house", bevel=0.0)
+        S.limb(elbow, wrist, 0.085 * B["limb"], "hull2")
         S.box((0.08, 0.09, 0.08), tuple(wrist), "dark", None, bevel=0.01)
     # ---------------- legs: hip -> knee -> ankle, boots
     for side, ft in ((-1, p["feet"][0]), (1, p["feet"][1])):
-        hip = R.Vector((side * 0.115, pel[1], pel[2] - 0.04))
-        ank = R.Vector(ft)
+        hip = R.Vector((side * 0.115 * B["stance"], pel[1], pel[2] - 0.04))
+        ank = R.Vector((ft[0] * B["stance"], ft[1], ft[2]))
         knee, ank = R.ik2(hip, ank, L_THIGH, L_SHIN, R.Vector((0, 1, 0)))
-        S.limb(hip, knee, 0.13, "pants")
-        S.limb(knee, ank, 0.11, "pants")
+        S.limb(hip, knee, 0.13 * B["limb"], "pants")
+        S.limb(knee, ank, 0.11 * B["limb"], "pants")
         S.box((0.13, 0.27, 0.10), (ank.x, ank.y + 0.04, ank.z - 0.035), "dark", None, bevel=0.015)
