@@ -23,7 +23,7 @@ DOCK = (0, 0)
 CAP_MATERIAL = "pad2"
 PALETTE = K.PALETTE
 MATERIALS = K.MATERIALS
-STATES = [("idle", 4, 5), ("damaged", 4, 5), ("build", 6, 5)]
+STATES = [("idle", 8, 2), ("damaged", 8, 2), ("build", 6, 5)]     # session 43: 8-frame loops at tpf 2 (owner choice)
 FX = [
     K.fx(FOOTPRINT, ORIGIN, "damaged", "fire_small", 0.0, 0.0, 3.2, 0),
     K.fx(FOOTPRINT, ORIGIN, "damaged", "smoke_plume", 0.0, 0.0, 3.5, 0),
@@ -54,9 +54,11 @@ def g_mast(S, dmg, i):
         K.post(S, "mast", 0, 0, 1.2, 3.0, 0.13, "chrome")
     for k in range(4):
         a = math.radians(k * 90 + 45)
-        lit = (i == k) and not dmg
+        lit = (i // 2 == k) and not dmg      # the four cans light in turn, two frames each, over the 8-frame loop
         S.cyl(f"can{k}", 0.15, 0.4, (0.5 * math.cos(a), 0.5 * math.sin(a), 1.55), "orange" if lit else "copper", verts=10)
     S.cyl("ring", 0.55, 0.06, (0, 0, 1.4), "chrome2", verts=16, nocast=True)
+    if dmg and i in (2, 6):     # bent mast top shorts out
+        S.sphere("psp", 0.08, (0.5, 0.0, 3.1), "spark")
 
 
 def g_dome(S, dmg, i):
