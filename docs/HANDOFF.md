@@ -5,6 +5,17 @@ Coast ocean 3), measured the finish line on 512 games per row and left stuck rec
 (40.6-58.6), ladders are in order, the campaign meets D-222; Ash Plains Authority v Directorate 23.6 % and Rust Belt Authority v Left Behind 75.1 % are
 1.4 and 0.1 points outside 25-75 %, within one standard error of the edge -> Q-88. docs/balance/s42_balance.md. Decisions up to D-309. Open questions: Q-88.
 
+## CHECKPOINT (session 43 in progress, 2026-11-24) — read this first if the session ended early
+- Branch integ-s43 (PR mode). Merged so far: D-310 freeze docs, art pilots ter/inf/bld/mot, text fixes (wp/a43-text). Audit wave1 findings:
+  docs/reviews/2026-11-24_s43_audit/wave1/. Owner decisions so far: docs/reviews/2026-11-24_s43_audit/decisions_scratch.md (D-311..D-315, to be
+  written into DECISIONS.md at wrap-up).
+- Unmerged branches (pushed to origin as wp/*): a43-net, a43-sys, a43-simA (cluster tests running), a43-simB and a43-data (cluster failures sent
+  back to helpers), a43-ai (AI-01 unproven; needs cluster suite + balance re-measure of the 24-row table before landing, D-311 9-11).
+  QoL wave (wp/a43-q1..q4, ui, perf) based on local branch qolbase = integ-s43 + a43-sys. Art fan-outs wp/fan-* (code only; renders run on the cluster).
+  Smoke pass pilot wp/art-smoke (owner: smoke looks like bubbles; volumetric re-render pending approval).
+- Container lesson: 2 CPUs / 7 GB — never run dotnet tests in parallel helpers; run full suites on the cluster with
+  k3s-cluster claude/rts/s43/test43.sh (REF=<sha>, --arch any --cpu 3 --mem 6Gi, sdk image; trx results in $OUT/trx).
+
 ## Start here (shown to the user as the plan; nothing starts until they say go)
 1. Laptop: `git checkout main; git pull`, rebuild. Owner: answer Q-88 (recommended (a): call the finish line met, freeze balance numbers per D-298);
    confirm D-306..D-309 (USER_CHECKS session 42).
