@@ -73,9 +73,9 @@ public sealed class M4ContractTests
     public void FormatVersions_ArePinned()
     {
         Assert.Equal(12, RulesHash.FormatVersion);   // M6-02 took 8, VET-1 9, SUP-1 10, M7-02 11, M12-16 12
-        Assert.Equal(13, SimWriter.SaveVersion);   // M5-01 took 9, M6-02 10, VET-1 11, M7-02 12
-        Assert.Equal(13, ReplayWriter.Version);           // M3-19 had already taken 8 for the mission block, M6-02 took 10, VET-1 11, M7-02 12, M4-17 13
-        Assert.Equal(7, ReplayWriter.OldestReadableVersion);
+        Assert.Equal(14, SimWriter.SaveVersion);   // M5-01 took 9, M6-02 10, VET-1 11, M7-02 12
+        Assert.Equal(14, ReplayWriter.Version);           // M3-19 had already taken 8 for the mission block, M6-02 took 10, VET-1 11, M7-02 12, M4-17 13
+        Assert.Equal(14, ReplayWriter.OldestReadableVersion);
         Assert.Equal(4, MapFile.FormatVersion);   // M7-02: format 3 (Coast, convoy_edge, landing); M12-04: format 4 (props, decor)
         Assert.Equal(1, MapFile.OldestReadableVersion);
     }
@@ -127,14 +127,14 @@ public sealed class M4ContractTests
     }
 
     [Fact]
-    public void ReplayVersion8_IsStillRead()
+    public void ReplayVersion8_IsRefusedSinceTheV14Bump()
     {
         var sim = ScriptedGame.NewSim(ScriptedGame.Setup());
         var ms = new MemoryStream();
         new ReplayWriter(ms, sim, "b", Array.Empty<(string, string)>()).Finish();
         byte[] bytes = ms.ToArray();
         bytes[4] = 8;   // 8 and 9 share a layout
-        Assert.Equal(8, ReplayReader.Read(new MemoryStream(bytes)).Version);
+        Assert.Throws<InvalidDataException>(() => ReplayReader.Read(new MemoryStream(bytes)));   // A43 SIMCORE-02: old replays cannot reproduce their hashes
     }
 
     // ---- stubs keep M3 behaviour ------------------------------------------------------------------
