@@ -39,7 +39,7 @@ public sealed class CommanderSet : IDisposable
             personas ??= PersonaCatalog.Load(Path.Combine(AppContext.BaseDirectory, "data", "llm", "personas.toml"));
             string faction = slot.Faction.ToString();
             var commander = new Commander(player, provider, PersonaCatalog.Pick(personas, faction, player), faction, app.LlmCallCap,
-                app.LlmChatOn, set.Chat);
+                app.LlmChatOn, set.Chat, cfg.TimeoutSeconds);
             driver.SetDirectiveSource(player, commander);
             driver.SetOrderSource(player, new CommanderOrders(commander));   // S24 (M5-12): its standing orders go out with the directive
             set._commanders.Add(commander);
