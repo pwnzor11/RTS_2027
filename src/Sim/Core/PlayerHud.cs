@@ -27,6 +27,8 @@ public enum QueueBlockReason : byte
     QueueFull = 5,
     /// <summary>Supply cap (SUP-1, D-125): used + queued supply + this unit would exceed the cap. Units only.</summary>
     SupplyCap = 6,
+    /// <summary>QOL-07 (D-313): the skirmish superweapon limit is reached (built plus queued). Structures only.</summary>
+    SuperweaponLimit = 7,
 }
 
 /// <summary>A player's supply (SUP-1): units' supply in use, the cap from buildings (at most <see cref="Ceiling"/>) and the hard ceiling.

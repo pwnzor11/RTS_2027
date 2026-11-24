@@ -83,6 +83,10 @@ public sealed class VisionState : ISimStatePart
         _actorSight = new int[slots];
     }
 
+    /// <summary>QOL-07 (D-313): the reveal-map rule. When set every query reports every on-map cell visible (2) to every player. Derived from the
+    /// game setup (not saved: the header carries the rule); the counts and explored sets stay as they were.</summary>
+    public bool RevealAll { get; set; }
+
     /// <summary>Stable part name, persisted in saves.</summary>
     public string Name => "vision";
 
@@ -132,6 +136,7 @@ public sealed class VisionState : ISimStatePart
     {
         CheckPlayer(player);
         if (!InBounds(cell)) return 0;
+        if (RevealAll) return 2;
         int i = CellIndex(cell.X, cell.Y);
         if (_counts[player][i] > 0) return 2;
         return IsExplored(player, i) ? (byte)1 : (byte)0;
@@ -145,6 +150,7 @@ public sealed class VisionState : ISimStatePart
     {
         CheckPlayer(player);
         if (dest.Length < _cells) throw new ArgumentException("Destination is too small.", nameof(dest));
+        if (RevealAll) { Array.Fill(dest, (byte)2, 0, _cells); return; }
         ushort[] counts = _counts[player];
         for (int i = 0; i < _cells; i++)
         {
@@ -163,6 +169,7 @@ public sealed class VisionState : ISimStatePart
     public byte VisionAtAny(ReadOnlySpan<byte> players, CellCoord cell)
     {
         if (!InBounds(cell)) return 0;
+        if (RevealAll) return 2;
         int i = CellIndex(cell.X, cell.Y);
         byte best = 0;
         for (int k = 0; k < players.Length; k++)
@@ -179,6 +186,7 @@ public sealed class VisionState : ISimStatePart
     public bool IsVisibleToAny(ReadOnlySpan<byte> players, CellCoord cell)
     {
         if (!InBounds(cell)) return false;
+        if (RevealAll) return true;
         int i = CellIndex(cell.X, cell.Y);
         for (int k = 0; k < players.Length; k++)
         {
@@ -193,6 +201,7 @@ public sealed class VisionState : ISimStatePart
     public void FillVisionAny(ReadOnlySpan<byte> players, byte[] dest)
     {
         if (dest.Length < _cells) throw new ArgumentException("Destination is too small.", nameof(dest));
+        if (RevealAll) { Array.Fill(dest, (byte)2, 0, _cells); return; }
         for (int i = 0; i < _cells; i++)
         {
             byte best = 0;
