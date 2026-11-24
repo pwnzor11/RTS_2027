@@ -67,21 +67,33 @@ public sealed class UpgradeTextAuditTests
     // ---- Sonar Nets -------------------------------------------------------------------------------------------
 
     [Fact]
-    public void Audit_SonarNets_RaisesPicketSight_ButNotItsSonarRadius()
+    public void SonarNets_RaisesPicketSightAndSonarRadius_AndExtendsSubmarineDetection()
     {
-        // S18 audit: pins current behaviour of FACTION-LE-13 (Sonar Nets); flip the assertion when fixed.
+        // A43-ROSTER-LE-01: sonar_radius is an effect attribute; Sonar Nets x1.3 on both sight and sonar (9 -> 11).
         var w = new S18World(Faction.Expedition, Faction.Authority, waterFromX: 40, keepAlive: false);
         w.Place(1, "auth_conyard", 10, 50);
         w.Place(0, "exp_picket", 38, 30);
         int picket = w.B("exp_picket");
         Assert.Equal(9, w.Sim.RulesOf(0).Buildings[picket].Sight);
         Assert.Equal(9, w.Sim.RulesOf(0).Buildings[picket].SonarRadius);
+        Assert.False(w.Sim.IsSonarRevealed(0, new CellCoord(49, 30)));   // 11 cells out: not covered yet
         w.Run(1, w.Grant(0, "exp_up_sonar_nets"));
         w.Run(1);
         Assert.Equal(11, w.Sim.RulesOf(0).Buildings[picket].Sight);
-        Assert.Equal(9, w.Sim.RulesOf(0).Buildings[picket].SonarRadius);
+        Assert.Equal(11, w.Sim.RulesOf(0).Buildings[picket].SonarRadius);
+        Assert.Equal(9, w.Sim.RulesOf(1).Buildings[picket].SonarRadius);   // other player unchanged
         Assert.True(w.Sim.IsSonarRevealed(0, new CellCoord(47, 30)));    // 9 cells out: covered before and after
-        Assert.False(w.Sim.IsSonarRevealed(0, new CellCoord(48, 30)));   // 10 cells out: still not covered with the upgrade
+        Assert.True(w.Sim.IsSonarRevealed(0, new CellCoord(49, 30)));    // 11 cells out: covered with the upgrade
+        Assert.False(w.Sim.IsSonarRevealed(0, new CellCoord(50, 30)));   // 12 cells out: not
+    }
+
+    [Fact]
+    public void SonarRadiusEffect_NeverGivesSonarToABuildingWithout()
+    {
+        var w = new S18World(Faction.Expedition, Faction.Authority, waterFromX: 40, keepAlive: false);
+        w.Run(1, w.Grant(0, "exp_up_sonar_nets"));
+        w.Run(1);
+        Assert.All(w.Sim.RulesOf(0).Buildings.Where(b => b.Id != "exp_picket"), b => Assert.Equal(w.Sim.RulesOf(1).Buildings[w.B(b.Id)].SonarRadius, b.SonarRadius));
     }
 
     // ---- Scrap Plate: "armour" --------------------------------------------------------------------------------

@@ -207,6 +207,50 @@ public sealed partial class MissionHost
 
     // ---- Reinforce.Delayed (and the block layout of Reinforce.Edge) ----
 
+    /// <summary>A43 CAMPAIGN-01: the cell an Edge-block unit spawns on. The block cell itself when an actor of this type can stand there now
+    /// (right terrain, no prop, no building, no unit), else the nearest such cell around it (the overflow rule Reinforce.Zone got in S18 MIS-07),
+    /// searching ring by ring and, inside a ring, the cells nearer the map edge first, never inward before outward. A building type keeps the
+    /// block cell (it is placed unchecked, as before).</summary>
+    private CellCoord EdgeSpawnCell(string typeId, CellCoord blockCell, CellCoord edge)
+    {
+        (ActorKind kind, int ix) = ResolveType(typeId);
+        if (kind == ActorKind.Building) return blockCell;
+        Locomotion loco = LocomotionOf(kind, ix);
+        Simulation sim = _sim!;
+        int w = sim.Setup.Map.Width, h = sim.Setup.Map.Height;
+        bool alongX = edge.Y == 0 || edge.Y == h - 1;   // the edge runs along X: depth is the Y distance from it
+        int Depth(CellCoord c) => alongX ? Math.Min(c.Y, h - 1 - c.Y) : Math.Min(c.X, w - 1 - c.X);
+        for (int r = 0; r <= FreeCellRing; r++)
+        {
+            CellCoord? best = null;
+            int bestDepth = int.MaxValue;
+            for (int dy = -r; dy <= r; dy++)
+                for (int dx = -r; dx <= r; dx++)
+                {
+                    if (Math.Max(Math.Abs(dx), Math.Abs(dy)) != r) continue;
+                    var c = new CellCoord(blockCell.X + dx, blockCell.Y + dy);
+                    if (!CellFree(c, loco)) continue;
+                    int d = Depth(c);
+                    if (d < bestDepth) { best = c; bestDepth = d; }   // strict: row-major order breaks ties
+                }
+
+            if (best is { } found) return found;
+        }
+
+        throw Err("no free cell near (" + blockCell.X + "," + blockCell.Y + ") for " + typeId);
+    }
+
+    /// <summary>True when an actor of this locomotion can be placed on the cell now: in the map, right terrain, no prop, building, vehicle or soldier.</summary>
+    private bool CellFree(CellCoord c, Locomotion loco)
+    {
+        Simulation sim = _sim!;
+        if (!sim.Setup.Map.Contains(c)) return false;
+        if (!sim.Map.IsPassableTerrain(c, loco, sim.Setup.Rules.Terrain) || !sim.Map.BuildingAt(c).IsNone || !sim.Map.VehicleAt(c).IsNone) return false;
+        for (int s = 0; s < MapState.InfantrySlots; s++)
+            if (!sim.Map.InfantryAt(c, s).IsNone) return false;
+        return true;
+    }
+
     /// <summary>The same spawn as Reinforce.Edge (small block just inside the edge, then attack-move) for a queued arrival.</summary>
     private List<string> SpawnEdgeBlock(int player, List<string> types, CellCoord edge, CellCoord dest)
     {
@@ -219,7 +263,7 @@ public sealed partial class MissionHost
         {
             int depth = k / 3, along = k % 3 - 1;
             var cell = new CellCoord(Math.Clamp(edge.X + ix * depth + ax * along, 0, w - 1), Math.Clamp(edge.Y + iy * depth + ay * along, 0, h - 1));
-            string tag = SpawnActor(sim, types[k], player, cell, null);
+            string tag = SpawnActor(sim, types[k], player, EdgeSpawnCell(types[k], cell, edge), null);
             if (RefOf(tag).Kind != ActorKind.Building) sim.AssignAttackMove(RefOf(tag), dest);
             tags.Add(tag);
         }

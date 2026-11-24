@@ -10,7 +10,7 @@ namespace Rts.Llm;
 /// M5-05: one LLM commander (one per LLM slot). A directive source for <see cref="AiDriver"/> and the chat channel of the panel.
 /// All timing is in ticks (20 per second): the first decision is requested at the first poll at or after tick 600, then one every 600
 /// ticks, never more than one request in flight. The network call runs on the thread pool; only its result crosses threads (under a lock).
-/// A reply older than 600 ticks is dropped. Failure, a missing provider or the call cap switch the commander offline: the slot plays its
+/// A reply older than the stale window (600 ticks, or the configured call timeout if that is longer) is dropped. Failure, a missing provider or the call cap switch the commander offline: the slot plays its
 /// plain tier and one system chat line says so. Typed player chat goes into the next prompt and never changes the directive by itself.
 /// </summary>
 public sealed class Commander : IDirectiveSource, ICommanderChannel, IDisposable
@@ -29,6 +29,7 @@ public sealed class Commander : IDirectiveSource, ICommanderChannel, IDisposable
     private readonly string _faction;
     private readonly int _callCap;
     private readonly bool _chatOn;
+    private readonly int _staleTicks;
     private readonly CommanderChatLog _chat;
     private readonly SummaryHistory _history = new();
     private readonly CancellationTokenSource _cts = new();
@@ -58,7 +59,9 @@ public sealed class Commander : IDirectiveSource, ICommanderChannel, IDisposable
     /// <param name="callCap">Most calls per game; 0 = no cap.</param>
     /// <param name="chatOn">Whether the commander's say-lines go to the chat.</param>
     /// <param name="chat">The shared chat log.</param>
-    public Commander(byte player, IChatProvider? provider, CommanderPersona persona, string faction, int callCap, bool chatOn, CommanderChatLog chat)
+    /// <param name="timeoutSeconds">The provider's configured call timeout (A43-NETLLM-04): a reply that arrives inside it is never stale; 0 = none known.</param>
+    public Commander(byte player, IChatProvider? provider, CommanderPersona persona, string faction, int callCap, bool chatOn, CommanderChatLog chat,
+        int timeoutSeconds = 0)
     {
         ArgumentNullException.ThrowIfNull(persona);
         ArgumentNullException.ThrowIfNull(chat);
@@ -68,6 +71,7 @@ public sealed class Commander : IDirectiveSource, ICommanderChannel, IDisposable
         _faction = faction ?? "";
         _callCap = Math.Max(0, callCap);
         _chatOn = chatOn;
+        _staleTicks = Math.Max(CadenceTicks, (int)Math.Min(int.MaxValue, Math.Max(0, timeoutSeconds) * 20L));   // 20 ticks per second
         _chat = chat;
         _online = provider is not null;
     }
@@ -137,7 +141,7 @@ public sealed class Commander : IDirectiveSource, ICommanderChannel, IDisposable
         }
         _online = true;
         _offlineNoticePosted = false;
-        if (tick - _requestTick > CadenceTicks) return false;   // stale
+        if (tick - _requestTick > _staleTicks) return false;   // stale
 
         CommanderReply reply = ReplyParser.Parse(result.Text);
         if (reply.Say is { } say && _chatOn)

@@ -71,6 +71,7 @@ public sealed class AuthorityMission02Tests
         for (int i = 0; i < 6; i++) bot.Train("auth_rifleman");
         bot.Train("auth_tank");
         bot.Train("auth_tank");
+        if (tier >= 5) for (int i = 0; i < 4; i++) bot.Train("auth_tank");   // A43 CAMPAIGN-01: tier-5 raiders no longer spawn inert on props, so the bot needs a bigger force
         for (int t = 0; t < TickLimit && !m.Sim.GameOver; t += 100)
         {
             bot.OrderAll(CommandKind.AttackMove, new CellCoord(39, 18));

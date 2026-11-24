@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
+using Rts.Sim;
 using Rts.Sim.Core;
+using Rts.Sim.Rules;
 
 namespace Rts.Scripting.Tests;
 
@@ -102,5 +104,30 @@ public sealed class TriggerTests
         Assert.Equal(1, sim.Units.Slots.Count);
         Assert.Equal(1, sim.Infantry.Slots.Count);
         Assert.True(sim.Units.Position[1].ToCell().X >= 60);
+    }
+
+    // A43-CAMPAIGN-01: the Edge block avoids blocking props and occupied cells (overflow to the nearest free cell).
+    private static List<CellCoord> EdgeCells(Simulation sim)
+    {
+        var cells = new List<CellCoord>();
+        for (int i = 1; i < sim.Infantry.Capacity; i++)
+            if (sim.Infantry.Slots.IsIndexAlive(i) && sim.Infantry.Player[i] == 1) cells.Add(sim.Infantry.Position[i].ToCell());
+        return cells;
+    }
+
+    [Theory]
+    [InlineData("Reinforce.Edge(1, {'auth_rifleman','auth_rifleman','auth_rifleman','auth_rifleman','auth_rifleman','auth_rifleman'}, {x = 63, y = 20}, {x = 30, y = 30})", 2)]
+    [InlineData("Reinforce.Delayed(1, 1, {'auth_rifleman','auth_rifleman','auth_rifleman','auth_rifleman','auth_rifleman','auth_rifleman'}, {x = 63, y = 20}, {x = 30, y = 30})", 4)]
+    public void Reinforce_edge_block_skips_props_and_occupied_cells(string call, int ticks)
+    {
+        var (sim, host) = TestData.Tiny("function OnInit() Actor.Create('auth_rifleman', 1, {x = 63, y = 21}) " + call + " end");
+        sim.Map.SetOverlay(new CellCoord(63, 19), OverlayKind.Block, 1);
+        sim.Map.SetOverlay(new CellCoord(63, 20), OverlayKind.Block, 1);
+        TestData.Run(sim, ticks);
+        Assert.Empty(host.Errors);
+        List<CellCoord> cells = EdgeCells(sim);
+        Assert.Equal(7, cells.Count);
+        foreach (CellCoord c in cells) Assert.NotEqual(OverlayKind.Block, sim.Map.OverlayAt(c));
+        Assert.Equal(7, cells.Select(c => c.Y * 1000 + c.X).Distinct().Count());   // nobody shares the pre-placed soldier's cell or another's
     }
 }
