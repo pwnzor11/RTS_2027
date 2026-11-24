@@ -10,6 +10,7 @@ House colour: band on each upper arm, hard-hat band, panel on the satchel flap, 
 import math, os, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import auth_rifleman as AR
+import boost
 
 SCALE = 1.25                  # D-185: figure 1.25 x, frame 48 x 48
 ID = "auth_engineer"
@@ -40,6 +41,8 @@ def pose(state, step, n):
 def build(S, p):
     from mathutils import Matrix
     import rig as R
+    B = boost.params()                                   # S43 pilot boost (head, gun, stance, limb, house)
+    H = B["house"]
     U = R.tr(0, p["dy"], 0.62 + p["bob"]) @ R.rz(p["twist"]) @ R.rx(-p["lean"])
     pel = (0, p["dy"], 0.62 + p["bob"])
 
@@ -54,30 +57,42 @@ def build(S, p):
     S.box((0.34, 0.05, 0.09), (0, 0.145, 0.06), "dark", U)                             # tool apron along the belt
     for x in (-0.11, 0.0, 0.11):
         S.box((0.035, 0.04, 0.12), (x, 0.17, 0.13), "steel", U, bevel=0)               # tool handles in the apron pockets
-    for sx in (-1, 1):
-        S.box((0.09, 0.22, 0.12), (sx * 0.255, 0.0, 0.43), "house", U, bevel=0)
+    for sx in (-1, 1):                                                                 # S43: larger house shoulder pads
+        S.box((0.09 * (1 + 0.5 * (H - 1)), 0.22 * (1 + 0.3 * (H - 1)), 0.12 * H), (sx * (0.255 + 0.02 * (H - 1)), 0.0, 0.43), "house", U, bevel=0)
     # satchel on the back (house flap), rolled tripod legs above it, filter canister kept from the standard kit
     S.box((0.34, 0.19, 0.30), (0, -0.27, 0.16), "pack", U, bevel=0.02)
-    S.box((0.30, 0.03, 0.24), (0, -0.375, 0.20), "house", U, bevel=0)
+    S.box((0.30 * (1 + 0.15 * (H - 1)), 0.03, 0.24 * H), (0, -0.375, 0.20 + 0.02 * (H - 1)), "house", U, bevel=0)
     S.box((0.36, 0.20, 0.03), (0, -0.27, 0.32), "rust", U)
     for sx, lean in ((-0.07, -4), (0.0, 0), (0.07, 4)):                                # tripod legs poking above the satchel
         S.cyl(0.026, 0.52, (sx, -0.27, 0.56), "steel", "Z", U, verts=6)
     S.box((0.20, 0.07, 0.07), (0, -0.27, 0.36), "hull2", U, bevel=0.01)                # strap holding them
     S.cyl(0.07, 0.28, (-0.21, -0.22, 0.14), "steel", "Z", U, verts=10)
-    # head: hard hat with house band, goggles pushed up, respirator
+    # head: hard hat with house band, goggles pushed up, respirator (S43: scaled about the head centre by B["head"])
+    h = B["head"]
+    HC = (0.0, 0.05, 0.50)
+
+    def hb(size, loc, mat, **kw):
+        return S.box(tuple(x * h for x in size), tuple(HC[i] + (loc[i] - HC[i]) * h for i in range(3)), mat, U, **kw)
+
+    def hs(r, loc, mat):
+        return S.sphere(tuple(x * h for x in r), tuple(HC[i] + (loc[i] - HC[i]) * h for i in range(3)), mat, U)
+
+    def hc_(r, ln, loc, mat, axis, verts):
+        return S.cyl(r * h, ln * h, tuple(HC[i] + (loc[i] - HC[i]) * h for i in range(3)), mat, axis, U, verts=verts)
     S.box((0.10, 0.10, 0.07), (0, 0, 0.46), "dark", U)
-    S.sphere((0.175, 0.185, 0.14), (0, 0, 0.56), "hat", U)                              # hard hat shell
-    S.box((0.18, 0.20, 0.03), (0, 0.0, 0.69), "hat", U, bevel=0)                      # centre ridge
-    S.box((0.27, 0.05, 0.075), (0, 0.0, 0.595), "house", U, bevel=0)                  # house band across the hat
-    S.box((0.34, 0.10, 0.03), (0, 0.14, 0.535), "hat", U, bevel=0.01)                  # front brim
-    S.box((0.19, 0.12, 0.12), (0, 0.075, 0.47), "skin", U, bevel=0.03)
-    S.box((0.085, 0.04, 0.06), (0.058, 0.17, 0.55), "lens", U, bevel=0)               # goggles pushed up onto the brim
-    S.box((0.085, 0.04, 0.06), (-0.058, 0.17, 0.55), "lens", U, bevel=0)
-    S.box((0.19, 0.03, 0.03), (0, 0.15, 0.50), "dark", U, bevel=0)                       # goggle strap line
-    S.cyl(0.05, 0.10, (0, 0.17, 0.43), "dark", "Y", U, verts=10)
-    S.cyl(0.035, 0.07, (0, 0.24, 0.425), "dark", "Y", U, verts=8)
-    # wrench (gun coords: y along the shaft)
-    GM = (U if p["gun_space"] == "u" else Matrix.Identity(4)) @ R.tr(*p["gun"][0]) @ R.rz(p["gun"][1]) @ R.rx(p["gun"][2])
+    hs((0.175, 0.185, 0.14), (0, 0, 0.56), "hat")                                       # hard hat shell
+    hb((0.18, 0.20, 0.03), (0, 0.0, 0.69), "hat", bevel=0)                            # centre ridge
+    hb((0.27, 0.05, 0.075 * H), (0, 0.0, 0.595), "house", bevel=0)                    # house band across the hat
+    hb((0.34, 0.10, 0.03), (0, 0.14, 0.535), "hat", bevel=0.01)                        # front brim
+    hb((0.19, 0.12, 0.12), (0, 0.075, 0.47), "skin", bevel=0.03)
+    hb((0.085, 0.04, 0.06), (0.058, 0.17, 0.55), "lens", bevel=0)                     # goggles pushed up onto the brim
+    hb((0.085, 0.04, 0.06), (-0.058, 0.17, 0.55), "lens", bevel=0)
+    hb((0.19, 0.03, 0.03), (0, 0.15, 0.50), "dark", bevel=0)                             # goggle strap line
+    hc_(0.05, 0.10, (0, 0.17, 0.43), "dark", "Y", 10)
+    hc_(0.035, 0.07, (0, 0.24, 0.425), "dark", "Y", 8)
+    # wrench (gun coords: y along the shaft; S43: longer and thicker by B["gun"] / B["gunw"], hands follow via GM)
+    GM0 = (U if p["gun_space"] == "u" else Matrix.Identity(4)) @ R.tr(*p["gun"][0]) @ R.rz(p["gun"][1]) @ R.rx(p["gun"][2])
+    GM = GM0 @ Matrix.Diagonal((B["gunw"], B["gun"], B["gunw"], 1.0))
     S.box((0.05, 0.62, 0.035), (0, -0.02, 0), "chrome", GM, bevel=0.008)                 # shaft
     S.box((0.054, 0.20, 0.04), (0, -0.20, 0), "rust", GM, bevel=0)                      # taped grip
     S.box((0.13, 0.10, 0.04), (0, 0.33, 0), "chrome", GM, bevel=0)                       # jaw block
@@ -101,14 +116,14 @@ def build(S, p):
             tgt = R.Vector(up(hand_spec))
         pole = U.to_3x3() @ R.Vector((side * 1.2, -0.3, -0.6))
         elbow, wrist = R.ik2(sh, tgt, L_UPPER, L_FORE, pole)
-        S.limb(sh, elbow, 0.10, "hull")
-        S.limb(sh, sh.lerp(elbow, 0.55), 0.135, "house", bevel=0.0)
-        S.limb(elbow, wrist, 0.085, "hull2")
+        S.limb(sh, elbow, 0.10 * B["limb"], "hull")
+        S.limb(sh, sh.lerp(elbow, 0.55 + 0.1 * (H - 1)), 0.135 * B["limb"] * (1 + 0.2 * (H - 1)), "house", bevel=0.0)
+        S.limb(elbow, wrist, 0.085 * B["limb"], "hull2")
         S.box((0.085, 0.09, 0.085), tuple(wrist), "rust", None, bevel=0.01)              # work gloves
     for side, ft in ((-1, p["feet"][0]), (1, p["feet"][1])):
-        hip = R.Vector((side * 0.115, pel[1], pel[2] - 0.04))
-        ank = R.Vector(ft)
+        hip = R.Vector((side * 0.115 * B["stance"], pel[1], pel[2] - 0.04))
+        ank = R.Vector((ft[0] * B["stance"], ft[1], ft[2]))
         knee, ank = R.ik2(hip, ank, L_THIGH, L_SHIN, R.Vector((0, 1, 0)))
-        S.limb(hip, knee, 0.13, "pants")
-        S.limb(knee, ank, 0.11, "pants")
+        S.limb(hip, knee, 0.13 * B["limb"], "pants")
+        S.limb(knee, ank, 0.11 * B["limb"], "pants")
         S.box((0.13, 0.27, 0.10), (ank.x, ank.y + 0.04, ank.z - 0.035), "dark", None, bevel=0.015)

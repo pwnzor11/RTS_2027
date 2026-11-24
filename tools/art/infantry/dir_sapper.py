@@ -9,6 +9,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import common as C
 import auth_rifleman as AR
 import dir_conscript as DC
+import boost
 
 SCALE = 1.25                  # D-185: figure 1.25 x, frame 48 x 48, house shoulder boards / back panel
 ID = "dir_sapper"
@@ -33,6 +34,9 @@ def build(S, p):
     from mathutils import Matrix
     import rig as R
     import dir_parts as P
+    B = boost.params()                                   # S43 pilot boost
+    H, LB, SB = B["house"], B["limb"], B["stance"]
+    pp = dict(p, feet=tuple((f[0] * SB, f[1], f[2]) for f in p["feet"]))   # wider stance for the legs helper
     U = R.tr(0, p["dy"], 0.62 + p["bob"]) @ R.rz(p["twist"]) @ R.rx(-p["lean"]) @ R.rz(p["roll"])
     pel = (0, p["dy"], 0.62 + p["bob"])
 
@@ -46,11 +50,11 @@ def build(S, p):
     S.cyl(0.206, 0.04, (0, 0, 0.03), "dark", "Z", U, verts=8)                               # belt
     S.box((0.07, 0.04, 0.05), (0, 0.205, 0.03), "bone", U, bevel=0)
     S.cyl(0.215, 0.07, (0, 0.0, 0.345), "hood", "Z", U, verts=8, r2=0.17)
-    for sx in (-1, 1):                                                                 # D-185 house shoulder boards
-        S.box((0.13, 0.17, 0.04), (sx * 0.19, 0.0, 0.395), "house", U, rot=(0, sx * -8, 0), bevel=0)
+    for sx in (-1, 1):                                                                 # D-185 house shoulder boards, S43 larger
+        S.box((0.13 * (1 + 0.5 * (H - 1)), 0.17 * (1 + 0.3 * (H - 1)), 0.04 * (1 + 0.6 * (H - 1))), (sx * (0.19 + 0.02 * (H - 1)), 0.0, 0.395), "house", U, rot=(0, sx * -8, 0), bevel=0)
     # harness strap (house) shoulder to hip, bone strap crossing it
-    S.limb(up((-0.09, 0.19, 0.32)), up((0.13, 0.225, -0.02)), 0.09, "house", d=0.04, bevel=0)
-    S.limb(up((-0.17, 0.02, 0.32)), up((-0.09, 0.19, 0.32)), 0.09, "house", d=0.04, bevel=0)
+    S.limb(up((-0.09, 0.19, 0.32)), up((0.13, 0.225, -0.02)), 0.09 * H, "house", d=0.04 * H, bevel=0)
+    S.limb(up((-0.17, 0.02, 0.32)), up((-0.09, 0.19, 0.32)), 0.09 * H, "house", d=0.04 * H, bevel=0)
     S.limb(up((0.09, 0.19, 0.32)), up((-0.13, 0.225, -0.02)), 0.05, "bone", d=0.035, bevel=0)
     for sx in (-1, 1):
         S.box((0.11, 0.09, 0.13), (sx * 0.075, 0.245, 0.20), "bone", U, bevel=0.01)
@@ -61,7 +65,7 @@ def build(S, p):
     S.cyl(0.20, 0.05, (-0.10, -0.30, 0.16), "coat3", "X", U, verts=12)
     S.cyl(0.20, 0.05, (0.10, -0.30, 0.16), "coat3", "X", U, verts=12)
     S.cyl(0.07, 0.40, (0, -0.30, 0.16), "dark", "X", U, verts=8)
-    S.box((0.24, 0.03, 0.22), (0, -0.495, 0.16), "house", U, bevel=0)
+    S.box((0.24 * (1 + 0.15 * (H - 1)), 0.03, 0.22 * H), (0, -0.495, 0.16), "house", U, bevel=0)
     # fat pale-bone drill bit rising diagonally up and out over the right shoulder: tapering segments
     A0, A1 = R.Vector((0.10, -0.28, 0.30)), R.Vector((0.40, -0.02, 0.86))
     for t0, t1, w in ((0.0, 0.3, 0.13), (0.3, 0.55, 0.115), (0.55, 0.78, 0.09), (0.78, 1.0, 0.055)):
@@ -69,26 +73,34 @@ def build(S, p):
     for t in (0.18, 0.42, 0.66):
         S.limb(up(A0.lerp(A1, t - 0.04)), up(A0.lerp(A1, t + 0.04)), 0.16 - 0.1 * t, "coat3", d=0.16 - 0.1 * t, bevel=0)
     # head: round hood-helmet (no peak), bone plate, goggles, brass headlamp
+    # head: hood-helmet, bone plate, goggles, brass headlamp (S43: scaled about the head centre by B["head"])
+    h = B["head"]
+    HC = (0.0, 0.12, 0.52)
+
+    def hp(loc):
+        return tuple(HC[i] + (loc[i] - HC[i]) * h for i in range(3))
     S.box((0.08, 0.09, 0.07), (0, 0.07, 0.44), "dark", U)
-    S.sphere((0.14, 0.15, 0.14), (0, 0.10, 0.565), "hood", U)
-    S.box((0.20, 0.09, 0.20), (0, 0.255, 0.49), "bone", U, bevel=0.03)
-    S.box((0.23, 0.05, 0.075), (0, 0.285, 0.545), "dark", U, bevel=0.01)
+    S.sphere((0.14 * h, 0.15 * h, 0.14 * h), hp((0, 0.10, 0.565)), "hood", U)
+    S.box((0.20 * h, 0.09 * h, 0.20 * h), hp((0, 0.255, 0.49)), "bone", U, bevel=0.03)
+    S.box((0.23 * h, 0.05 * h, 0.075 * h), hp((0, 0.285, 0.545)), "dark", U, bevel=0.01)
     for sx in (-1, 1):
-        S.box((0.075, 0.04, 0.06), (sx * 0.058, 0.32, 0.545), "lens", U, bevel=0)
-    S.cyl(0.05, 0.06, (0, 0.31, 0.46), "dark", "Y", U, verts=10)
-    S.box((0.075, 0.05, 0.075), (0, 0.235, 0.655), "lens", U, bevel=0)                     # brass headlamp
-    # short carbine
-    GM = (U if p["gun_space"] == "u" else Matrix.Identity(4)) @ R.tr(*p["gun"][0]) @ R.rz(p["gun"][1]) @ R.rx(p["gun"][2])
+        S.box((0.075 * h, 0.04 * h, 0.06 * h), hp((sx * 0.058, 0.32, 0.545)), "lens", U, bevel=0)
+    S.cyl(0.05 * h, 0.06 * h, hp((0, 0.31, 0.46)), "dark", "Y", U, verts=10)
+    S.box((0.075 * h, 0.05 * h, 0.075 * h), hp((0, 0.235, 0.655)), "lens", U, bevel=0)     # brass headlamp
+    # short carbine (S43: longer and thicker by B["gun"] / B["gunw"]; GM carries the scale, grips stay unscaled)
+    GM0 = (U if p["gun_space"] == "u" else Matrix.Identity(4)) @ R.tr(*p["gun"][0]) @ R.rz(p["gun"][1]) @ R.rx(p["gun"][2])
+    GM = GM0 @ Matrix.Diagonal((B["gunw"], B["gun"], B["gunw"], 1.0))
     S.box((0.05, 0.20, 0.09), (0, -0.19, -0.01), "wood", GM, rot=(-6, 0, 0))
     S.box((0.055, 0.22, 0.08), (0, 0.0, 0), "wood", GM)
     S.cyl(0.021, 0.22, (0, 0.20, 0.01), "steel", "Y", GM, verts=6)
     S.box((0.035, 0.07, 0.10), (0, 0.02, -0.08), "dark", GM, rot=(8, 0, 0))
     S.box((0.02, 0.03, 0.03), (0, 0.30, 0.04), "dark", GM)
     if p["flash"]:
-        S.cyl(0.07, 0.24, (0, 0.54, 0.01), "flash", "Y", GM, verts=8, r2=0.0)
-        S.sphere((0.09, 0.09, 0.09), (0, 0.42, 0.01), "flash", GM, seg=8)
-    P.arms(S, p, U, up, GM, SHOULDER, (GRIP_R, GRIP_L), ("coat2", "coat3"))
-    P.legs(S, p, pel, thick=(0.10, 0.085))
+        fl, flw = B["flash"] / B["gun"], B["flash"] / B["gunw"]
+        S.cyl(0.07 * flw, 0.24 * fl, (0, 0.54, 0.01), "flash", "Y", GM, verts=8, r2=0.0)
+        S.sphere((0.09 * flw, 0.09 * fl, 0.09 * flw), (0, 0.42, 0.01), "flash", GM, seg=8)
+    P.arms(S, p, U, up, GM, SHOULDER, (GRIP_R, GRIP_L), ("coat2", "coat3"), thick=(0.085 * LB, 0.072 * LB), band=0.12 * LB * (1 + 0.2 * (H - 1)))
+    P.legs(S, pp, pel, spread=0.095 * SB, thick=(0.10 * LB, 0.085 * LB))
     if p["spread"]:
         S.cyl(0.30, 0.03, (0.0, p["dy"] + 0.12, 0.03), "coat2", "Z", None, verts=8)
         S.cyl(0.24, 0.035, (0.05, p["dy"] + 0.12, 0.05), "coat", "Z", None, verts=8)
