@@ -59,6 +59,8 @@ public sealed class SettingsScreen : IScreen
             new MenuItem(() => $"Reduce flashes: {(_s.Settings.ReduceFlashes ? "On" : "Off")}", ToggleReduceFlashes, _ => ToggleReduceFlashes(),
                 new MenuButton("Toggle", ToggleReduceFlashes)),   // QOL-20
             new MenuItem(() => "Alerts", () => _s.Screens.Push(new AlertsSettingsScreen(_s, _path))),   // QOL-12
+            new MenuItem(() => $"Order lines: {(_s.Settings.ShowOrderLines ? "On" : "Off")}", ToggleOrderLines, _ => ToggleOrderLines(),
+                new MenuButton("Toggle", ToggleOrderLines)),   // QOL-10
             new MenuItem(() => SkinLine(_s.Settings), ToggleUiSkin, _ => ToggleUiSkin(),
                 new MenuButton("Toggle", ToggleUiSkin)),   // M10-15 (s27)
             Volume("Master volume", s => s.MasterVolume, (s, v) => s with { MasterVolume = v }),
@@ -170,6 +172,8 @@ public sealed class SettingsScreen : IScreen
     private void ToggleReduceFlashes() => _s.Settings = _s.Settings with { ReduceFlashes = !_s.Settings.ReduceFlashes };
 
     private void ToggleScreenShake() => _s.Settings = _s.Settings with { ScreenShake = !_s.Settings.ScreenShake };
+
+    private void ToggleOrderLines() => _s.Settings = _s.Settings with { ShowOrderLines = !_s.Settings.ShowOrderLines };   // QOL-10
 
     /// <summary>M10-15 (s27): the settings line for <see cref="Settings.UiSkin"/>; the skin is chosen when a match starts.</summary>
     public static string SkinLine(Settings s) => $"Interface skin: {(s.UseFactionSkin ? "Faction art" : "Classic")}";

@@ -832,6 +832,8 @@ public sealed partial class Simulation
                 {
                     Occupants = bt.Garrison > 0 ? OccupantsIn(_buildings.Slots.IdOf(i)) : 0,   // M4: listed only when known (own/allied or visible now)
                     GateOpen = bt.Gate && IsGateOpenNow(i, viewer),   // M3-21
+                    Repairing = _production.RepairGen[i] != 0 && _production.RepairGen[i] == _buildings.Slots.GenerationOf(i) + 1
+                        && (viewer < 0 || IsFriendly((byte)viewer, _buildings.Player[i])),   // GAMEUI-06: read only
                 });
             }
         FxEvent[] fx = FxFor(viewer);

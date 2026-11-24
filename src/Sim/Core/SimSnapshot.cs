@@ -54,6 +54,10 @@ public readonly record struct BuildingView(EntityId Id, byte Player, int TypeInd
     /// <summary>M3-21: a gate that is open right now: a unit of the owner's team stands in its footprint (the sim has no stored
     /// open/closed state; D-076 gates are passable for the owner's team and a wall for everyone else). False for any non-gate and on ghosts.</summary>
     public bool GateOpen { get; init; }
+
+    /// <summary>GAMEUI-06: a repair is switched on for this building and it is still damaged. Read only: set for the owner's and allied
+    /// buildings (and the omniscient view), always false on a ghost or an enemy building.</summary>
+    public bool Repairing { get; init; }
 }
 
 /// <summary>What kind of actor a UnitView is.</summary>

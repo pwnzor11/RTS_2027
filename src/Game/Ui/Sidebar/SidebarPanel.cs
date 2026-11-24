@@ -184,6 +184,7 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
         _layout = SidebarLayout.Compute(windowWidth, windowHeight, _ui, SidebarTabs.CountFor(_hasAircraft), _supplyShown, _shipmentShown, _source.Map.Width, _source.Map.Height, UiScale.TextFactor);
         _mouse = input.MousePosition;
         _tooltip = null;
+        HoveredArchiveId = null;   // QOL-19
         if (_shownCredits < 0) _shownCredits = _hud.Cash + _hud.Stored;
         else _shownCredits = SidebarMetrics.CreditStep(_shownCredits, _hud.Cash + _hud.Stored);
 
@@ -459,11 +460,13 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
                 {
                     _tooltip = CameoTooltip.Head(_source.Rules, entry.Option.Category, entry.Option.TypeIndex, entry.Option.Cost, Blurbs);
                     _tooltip.Add(TierGrouping.NeedsText(entry));
+                    HoveredArchiveId = IdOf(entry.Option);   // QOL-19
                 }
                 else
                 {
                     BuildOption option = entry.Option;
                     _tooltip = TooltipFor(option);
+                    HoveredArchiveId = IdOf(option);   // QOL-19
                     if (left && input.IsAltDown() && RepeatProduction.CanLoop(option.Category)) _repeat.Toggle(option.Category, option.TypeIndex);   // M13-15
                     else if (left) LeftClickCameo(option, input.IsDown(Keys.LeftShift) || input.IsDown(Keys.RightShift));
                     else if (right) RightClickCameo(option);
@@ -864,6 +867,9 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
         return null;
     }
 
+    /// <summary>QOL-19: the rules id of the cameo under the mouse this frame (its Archive entry id), or null when none is hovered.</summary>
+    public string? HoveredArchiveId { get; private set; }
+
     private string IdOf(BuildOption o)
     {
         SimRules rules = _source.Rules;
@@ -918,6 +924,7 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
         bool ready = SidebarCommands.LeftClick(_hud, o) == CameoClick.EnterPlacement;
         if (RepeatProduction.CanLoop(o.Category))
             lines.Add(UiText.Format(_repeat.IsOn(o.Category, o.TypeIndex) ? UiText.RepeatOnHint : UiText.RepeatHint, "key", "Alt"));   // M13-15
+        lines.Add(KeyNames.Of(GameKeys.Active.Get(GameAction.CameoArchive)) + ": open its Archive entry");   // QOL-19
         if (ready) lines.Add("Ready: click to place");
         else if (o.Blocked != QueueBlockReason.None) lines.Add(BlockReasonText.Of(o.Blocked, SupplyBuildingName()));
         else if (ShipWithoutShipyard(o)) lines.Add(BlockReasonText.NeedsShipyardOnWater);   // M7-14: the ship would wait at the dock

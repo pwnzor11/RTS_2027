@@ -106,6 +106,14 @@ public sealed class OrderFeedback
         }
     }
 
+    /// <summary>QOL-10: a thin line from a selected unit to its order point, red for an attack target and green for a move.</summary>
+    public static void DrawOrderLine(SpriteBatch batch, Texture2D pixel, Camera camera, Vector2 unitWorld, Vector2 targetWorld, bool attack)
+    {
+        Vector2 from = camera.ScreenFromWorld(unitWorld);
+        Vector2 to = camera.ScreenFromWorld(targetWorld);
+        Shapes.Line(batch, pixel, from, to, Shapes.Alpha(attack ? AttackColour : MoveColour, 120), 1);
+    }
+
     /// <summary>Draws a flag at <paramref name="rallyCell"/> and a thin line to it from <paramref name="buildingCentreWorld"/> (O4).</summary>
     public static void DrawRally(SpriteBatch batch, Texture2D pixel, Camera camera, Vector2 buildingCentreWorld, Rts.Sim.Core.CellCoord rallyCell)
     {

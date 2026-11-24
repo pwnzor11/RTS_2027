@@ -125,6 +125,8 @@ public static class GameKeys
         new(GameAction.PlaceLast, "place_last", System, "Place the last structure again (Shift + drag lays a row)", Keys.OemQuestion),
         new(GameAction.RepairAll, "repair_all", System, "Repair every damaged building", Keys.OemSemicolon),
         new(GameAction.SellMarked, "sell_marked", System, "Sell the marked buildings (Shift + click marks; press twice)", Keys.Delete),
+        new(GameAction.HideHud, "hide_hud", System, "Hide or show the HUD (panels, cards, sidebar, minimap; for screenshots)", Keys.F11),
+        new(GameAction.CameoArchive, "cameo_archive", System, "While a sidebar cameo is hovered: open its Archive entry", Keys.OemQuotes),
     };
 
     /// <summary>The Controls page lines, grouped in <see cref="Groups"/> order: rebindable actions and fixed inputs shown for reference.</summary>
@@ -198,7 +200,7 @@ public static class GameKeys
             A(GameAction.DebugStep), A(GameAction.DebugSpectator),
             A(GameAction.SpecView), A(GameAction.SpecSpeed1), A(GameAction.SpecSpeed2), A(GameAction.SpecSpeed4), A(GameAction.SpecSpeed8),
             A(GameAction.SpecDetail),
-            A(GameAction.ObjJump), A(GameAction.ObjCycle), A(GameAction.ObjList), A(GameAction.DecorToggle),
+            A(GameAction.ObjJump), A(GameAction.ObjCycle), A(GameAction.ObjList), A(GameAction.DecorToggle), A(GameAction.HideHud), A(GameAction.CameoArchive),
         };
     }
 }
