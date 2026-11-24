@@ -23,7 +23,7 @@ DOCK = (0, 0)
 CAP_MATERIAL = "pad2"
 PALETTE = K.PALETTE
 MATERIALS = K.MATERIALS
-STATES = [("idle", 4, 5), ("damaged", 4, 5), ("build", 8, 5)]
+STATES = [("idle", 8, 2), ("damaged", 8, 2), ("build", 8, 5)]     # session 43: 8-frame loops at tpf 2 (owner choice)
 FX = [
     K.fx(FOOTPRINT, ORIGIN, "damaged", "fire_large", 1.6, 0.8, 1.6, 0),
     K.fx(FOOTPRINT, ORIGIN, "damaged", "smoke_plume", 1.6, 0.8, 1.9, 0),
@@ -60,7 +60,6 @@ def g_east(S, dmg, i):
     if not dmg:
         S.cyl("pipe", 0.12, 1.2, (2.4, 1.8, 2.25), "chrome", verts=10)
         S.cyl("pipecap", 0.2, 0.08, (2.4, 1.8, 2.9), "copper", verts=12)
-        K.puffs(S, "pp", 2.4, 1.8, 3.0, i, drift=0.5)
     else:
         S.cyl("pipe", 0.12, 0.5, (2.4, 1.8, 1.9), "chrome", verts=10)
 
@@ -95,6 +94,8 @@ def site(S):
 
 def dmg_extra(S, i):
     S.bb("scorch", 1.2, 2.8, 0.4, 1.8, 1.65, 1.67, "char", 0.0, nocast=True)
+    if i in (1, 5):         # live cable at the snapped stovepipe, one flicker per half loop
+        S.sphere("pspark", 0.08, (2.55, 1.8, 2.2), "spark")
 
 
 def build(S, state, i, n):

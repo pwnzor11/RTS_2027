@@ -22,7 +22,7 @@ DOCK = (0, 0)
 CAP_MATERIAL = "pad2"
 PALETTE = K.PALETTE
 MATERIALS = K.MATERIALS
-STATES = [("idle", 4, 5), ("damaged", 4, 5), ("build", 8, 5)]
+STATES = [("idle", 8, 2), ("damaged", 8, 2), ("build", 8, 5)]     # session 43: 8-frame loops at tpf 2 (owner choice)
 FX = [
     K.fx(FOOTPRINT, ORIGIN, "damaged", "fire_small", 0.2, 0.2, 1.2, 0),
     K.fx(FOOTPRINT, ORIGIN, "damaged", "smoke_plume", 0.2, 0.2, 1.5, 0),
@@ -65,6 +65,10 @@ def g_lamp(S, dmg, i):
     S.sphere("lamp", 0.3 if pulse else 0.26, (0.0, 0.2, 2.0), "lamp", nocast=False)
     S.cyl("hood", 0.36, 0.1, (0.0, 0.2, 2.35), "copper", verts=14)
     S.cyl("band", 0.3, 0.12, (0.0, 0.2, 1.8), "orange2", verts=12)
+    # lens beam turns one 45-degree step per frame: a full turn in the 8-frame loop
+    a = math.radians(45.0 * i)
+    S.box("lens", (1.1, 0.14, 0.14), (0.62 * math.cos(a), 0.2 + 0.62 * math.sin(a), 2.0), "lamp", 0.0,
+          rot=(0, 0, math.degrees(a)), stretch=False, nocast=True)
     K.post(S, "aer", 0.0, 0.2, 2.4, 3.4, 0.05, "chrome")
     K.flag(S, "pen", 0.0, 0.2, 3.4, i, w=0.8, h=0.45)
 
@@ -78,6 +82,8 @@ def site(S):
 
 def dmg_extra(S, i):
     S.bb("scorch", -0.4, 1.0, -0.2, 0.9, 0.1, 0.12, "char", 0.0, nocast=True)
+    if i in (1, 4, 5):      # broken lamp housing sparks on a 8-frame loop
+        S.sphere("bspark", 0.09, (0.9, 0.6, 0.85), "spark")
 
 
 def build(S, state, i, n):
