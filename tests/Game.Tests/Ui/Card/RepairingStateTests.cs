@@ -27,7 +27,7 @@ public sealed class RepairingStateTests
         Assert.False(yard.Repairing);
         _source.Sim.Buildings.Health[yard.Id.Index] = 1;   // damaged, so the repair does not finish at once
         _source.Host.Issue(SidebarCommands.Repair(0, yard.Id));
-        _source.StepTicks(1);
+        _source.StepTicks(4);   // the host executes an issued order on a later tick
 
         BuildingView after = _source.Current.Buildings.First(b => b.Id == yard.Id);
         Assert.True(after.Repairing);

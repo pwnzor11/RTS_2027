@@ -21,11 +21,11 @@ public sealed class MatchClockHideHudTests
     }
 
     [Fact]
-    public void The_cameo_archive_key_is_z_and_free()
+    public void The_cameo_archive_key_is_the_apostrophe_and_free()
     {
         Assert.Equal(GameAction.CameoArchive, GameKeys.Infos[(int)GameAction.CameoArchive].Action);
-        Assert.Equal(Keys.Z, GameKeys.InfoOf(GameAction.CameoArchive).Default);
-        Assert.Equal(1, GameKeys.Infos.Count(i => i.Default == Keys.Z));
+        Assert.Equal(Keys.OemQuotes, GameKeys.InfoOf(GameAction.CameoArchive).Default);
+        Assert.Equal(1, GameKeys.Infos.Count(i => i.Default == Keys.OemQuotes));
         Assert.Empty(KeyBindings.Default.Conflicts());
     }
 

@@ -84,8 +84,8 @@ public sealed class AutosaveQuicksaveTests
     [Fact]
     public void Quick_keys_can_be_rebound()
     {
-        KeyBindings b = KeyBindings.Default.With(GameAction.QuickSave, Keys.F11);
-        Assert.Equal(Keys.F11, b.Get(GameAction.QuickSave));
+        KeyBindings b = KeyBindings.Default.With(GameAction.QuickSave, Keys.F1);
+        Assert.Equal(Keys.F1, b.Get(GameAction.QuickSave));
         Assert.Empty(b.Conflicts());
     }
 
