@@ -20,7 +20,7 @@ public sealed class ReplayLocationTests
     [Fact]
     public void Recorded_replays_are_written_under_app_data()
     {
-        string root = Path.Combine(Path.GetDirectoryName(Settings.DefaultPath)!, "replays") + Path.DirectorySeparatorChar;
+        string root = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(Settings.DefaultPath)!, "replays")) + Path.DirectorySeparatorChar;
         string[] paths =
         {
             SimSnapshotSource.ReplayPath,
