@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
 using Rts.Game.Sprites;
+using Rts.Sim.Numerics;
 
 namespace Rts.Game.Render;
 
@@ -29,6 +30,9 @@ public static class SpriteStates
 
     /// <summary>Infantry state while moving, when the manifest has one.</summary>
     public const string Walk = "walk";
+
+    /// <summary>Vehicle state while moving, when the manifest has one (wheels, tread links and suspension). Advances by distance travelled.</summary>
+    public const string Move = "move";
 
     /// <summary>
     /// R3: idle and damaged building loops run this many times slower than the manifest's <c>ticks_per_frame</c> says (the art is
@@ -85,21 +89,38 @@ public static class SpriteStates
     }
 
     /// <summary>
-    /// The frame for a unit. Vehicles always use idle (the snapshot does not carry a mission, so no harvest state).
-    /// Infantry use walk while moving, when the manifest has it, and idle otherwise. Facing rounds to the state's
-    /// facing count inside the manifest.
+    /// The frame for a unit. Infantry use walk while moving, when the manifest has it, and idle otherwise. Vehicles use <c>move</c>
+    /// while moving when the manifest has that state, and idle otherwise (so every vehicle sheet without move art draws as before).
+    /// Facing rounds to the state's facing count inside the manifest.
     /// </summary>
     /// <param name="manifest">The unit's manifest.</param>
     /// <param name="infantry">True for infantry, false for vehicles.</param>
     /// <param name="moving">Whether the unit's position changed since the previous snapshot.</param>
     /// <param name="facing">Facing byte, 0 = north, clockwise.</param>
     /// <param name="tick">Simulation tick.</param>
-    public static int UnitFrame(SpriteManifest manifest, bool infantry, bool moving, byte facing, int tick)
+    /// <param name="travelLeptons">Distance the unit has travelled in total, in leptons (<see cref="RenderMemory.Travel"/>). A <c>move</c> state with
+    /// <c>step_px</c> advances one frame per that much ground distance; with no step it advances by ticks.</param>
+    public static int UnitFrame(SpriteManifest manifest, bool infantry, bool moving, byte facing, int tick, long travelLeptons = 0)
     {
         ArgumentNullException.ThrowIfNull(manifest);
+        if (!infantry && moving && HasState(manifest, Move))
+        {
+            SpriteState move = manifest.State(Move);
+            if (move.StepPx > 0)
+            {
+                long step = (long)(Math.Max(0, travelLeptons) * (double)manifest.PxPerCell / SimLeptonsPerCell / SpriteLayout.UnitDrawScale / move.StepPx);
+                int facingIndex = move.Facings == 1 ? 0 : Facing.ToFacings(facing, move.Facings);
+                return move.First + facingIndex * move.Frames + (int)(step % move.Frames);
+            }
+            return manifest.FrameIndex(Move, facing, Math.Max(0, tick));
+        }
         string state = infantry && moving && HasState(manifest, Walk) ? Walk : Idle;
         return manifest.FrameIndex(state, facing, Math.Max(0, tick));
     }
+
+    // Ground distance is measured in sheet pixels as drawn: a cell is 256 leptons = 64 world px, and the sheet (80 px per cell) is drawn
+    // UnitDrawScale (1.25) times larger than the world, so one lepton of travel is PxPerCell / 256 / UnitDrawScale sheet pixels (D-172, D-275).
+    private const int SimLeptonsPerCell = 256;
 
     /// <summary>Whether a manifest has a state with this name.</summary>
     public static bool HasState(SpriteManifest manifest, string name)

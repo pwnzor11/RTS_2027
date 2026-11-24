@@ -28,7 +28,7 @@ public sealed class SpriteManifest
     };
     private static readonly string[] PivotKeys = { "pivot_x", "pivot_y", "pivot_z" };
     private static readonly string[] Layers = { "body", "turret", "shadow" };
-    private static readonly string[] StateKeys = { "name", "facings", "frames", "first", "ticks_per_frame", "loop" };
+    private static readonly string[] StateKeys = { "name", "facings", "frames", "first", "ticks_per_frame", "loop", "step_px" };
     private static readonly string[] FxKeys = { "state", "kind", "x", "y", "phase" };
 
     private SpriteManifest(string id, string sourcePath, string sheetFile, int frameW, int frameH, int originX, int originY,
@@ -337,7 +337,9 @@ public sealed class SpriteManifest
                 loop = loopRaw as bool? ?? throw new InvalidDataException(
                     $"{sourcePath}: state '{name}' loop must be true or false, found {loopRaw}");
             }
-            var state = new SpriteState(name, facings, frames, first, ticks, loop);
+            double stepPx = Number(block, "step_px", sourcePath) ?? 0;
+            if (stepPx < 0) throw new InvalidDataException($"{sourcePath}: state '{name}' step_px must not be negative");
+            var state = new SpriteState(name, facings, frames, first, ticks, loop, stepPx);
             states.Add(state);
             cursor = first + state.CellCount;
         }

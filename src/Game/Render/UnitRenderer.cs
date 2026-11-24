@@ -52,7 +52,7 @@ public static class UnitRenderer
         // M3-18: shadow under the body, turret on top, dive replaces the body. M3-21: the snapshot carries the turret facing and the dive flag.
         // Companion sheets (<id>_turret, <id>_shadow) supply a layer when the body sheet has no such state.
         IReadOnlyList<UnitLayer> layers = UnitLayerPlan.For(sprite.Manifest, infantry, moving, view.Facing, UnitVisuals.TurretFacing(view),
-            view.Diving, tick, sprite.TurretSheet?.Manifest, sprite.ShadowSheet?.Manifest);
+            view.Diving, tick, sprite.TurretSheet?.Manifest, sprite.ShadowSheet?.Manifest, memory.Travel(UnitKey.Of(view)));
         foreach (UnitLayer planned in layers)
         {
             UnitLayer layer = divedFrame >= 0 && planned.Kind == UnitLayerKind.Body ? planned with { Frame = divedFrame } : planned;

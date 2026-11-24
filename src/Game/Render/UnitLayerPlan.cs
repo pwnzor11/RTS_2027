@@ -59,8 +59,9 @@ public static class UnitLayerPlan
     /// <param name="tick">Simulation tick.</param>
     /// <param name="turretSheet">Companion turret sheet (a <c>turret</c> layer with a pivot), used when the body has no turret state; or null.</param>
     /// <param name="shadowSheet">Companion shadow sheet, used when the body has no shadow state; or null.</param>
+    /// <param name="travelLeptons">Total distance the unit has travelled, in leptons; drives the <c>move</c> frames (see <see cref="SpriteStates.UnitFrame"/>).</param>
     public static IReadOnlyList<UnitLayer> For(SpriteManifest manifest, bool infantry, bool moving, byte facing, byte? turretFacing,
-        bool diving, int tick, SpriteManifest? turretSheet = null, SpriteManifest? shadowSheet = null)
+        bool diving, int tick, SpriteManifest? turretSheet = null, SpriteManifest? shadowSheet = null, long travelLeptons = 0)
     {
         ArgumentNullException.ThrowIfNull(manifest);
         int t = Math.Max(0, tick);
@@ -78,7 +79,7 @@ public static class UnitLayerPlan
         if (diving && SpriteStates.HasState(manifest, Dive))
             layers.Add(new UnitLayer(UnitLayerKind.Dive, manifest.FrameIndex(Dive, facing, t), 0, 0));
         else
-            layers.Add(new UnitLayer(UnitLayerKind.Body, SpriteStates.UnitFrame(manifest, infantry, moving, facing, tick), 0, 0));
+            layers.Add(new UnitLayer(UnitLayerKind.Body, SpriteStates.UnitFrame(manifest, infantry, moving, facing, tick, travelLeptons), 0, 0));
 
         if (SpriteStates.HasState(manifest, Turret))
         {
