@@ -146,7 +146,7 @@ cost = 800  # (tune)
 build_time = 150  # (tune)
 prerequisites = []
 tier = 3
-salvage_permille = 1500  # (tune) wreck value x1.5
+salvage_permille = 1500  # (tune) salvage drain speed x1.5
 
 [lb_up_patchwork]
 faction = "left_behind"
