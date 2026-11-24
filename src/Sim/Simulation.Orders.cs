@@ -75,6 +75,18 @@ public sealed partial class Simulation
             if (IssueWaypoint(store, kind, i, cell, attackMove)) return;
     }
 
+    // A43 SIMCORE-03: these orders queue a mission only when their handler accepts them (Simulation.Queue), so the waypoint queue is cleared after.
+    private static bool ClearsQueueAfterAccept(CommandKind k) =>
+        k is CommandKind.Move or CommandKind.Stop or CommandKind.Scatter or CommandKind.Attack or CommandKind.AttackMove
+            or CommandKind.Guard or CommandKind.AttackGround;
+
+    private MobileStore? SubjectStoreOf(Command c)
+    {
+        var kind = (ActorKind)(c.Arg & 0xFF);
+        if (kind > ActorKind.Infantry || StoreOf(kind) is not { } s || !s.Slots.IsAlive(c.Subject) || s.Player[c.Subject.Index] != c.Player) return null;
+        return s;
+    }
+
     // A plain unit order replaces the queue (Shift orders and stance changes do not).
     private void ClearQueueForPlainOrder(Command c)
     {

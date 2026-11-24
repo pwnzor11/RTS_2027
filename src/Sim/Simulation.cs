@@ -324,7 +324,18 @@ public sealed partial class Simulation
     {
         if (c.Player >= Setup.PlayerCount || _players.Defeated[c.Player]) return;   // defeated players' commands are ignored (D-062)
         if (IsOrderToCarriedUnit(c)) return;   // S19 D-205: a soldier inside a building or a passenger in a vehicle obeys no unit order
-        ClearQueueForPlainOrder(c);            // S19 (M13-15): a plain order replaces the unit's waypoint queue
+        // S19 (M13-15): a plain order replaces the unit's waypoint queue. A43 SIMCORE-03: only once the order took; the orders that
+        // validate inside their handler clear afterwards, so a refused order leaves the shift-queue intact.
+        bool clearAfter = ClearsQueueAfterAccept(c.Kind);
+        MobileStore? stamped = clearAfter ? SubjectStoreOf(c) : null;
+        int stamp = stamped?.QueueStamp ?? 0;
+        if (!clearAfter) ClearQueueForPlainOrder(c);
+        ApplyCore(c);
+        if (clearAfter && stamped != null && stamped.QueueStamp != stamp) ClearQueueForPlainOrder(c);
+    }
+
+    private void ApplyCore(Command c)
+    {
         switch (c.Kind)
         {
             case CommandKind.Move:
@@ -450,6 +461,7 @@ public sealed partial class Simulation
     private static void Queue(MobileStore store, int i, MissionKind kind, CellCoord cell, EntityId target)
     {
         store.NextMission[i] = kind; store.NextCell[i] = cell; store.NextTarget[i] = target;
+        store.QueueStamp++;
     }
 
     // ---- buildings ---------------------------------------------------------------------------
