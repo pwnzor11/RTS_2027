@@ -86,6 +86,9 @@ def base(S, dmg=False, raw=False):
         a = math.radians(k * 45 + 22.5)
         S.box(f"tick{k}", (0.3, 0.12, 0.04), (1.4 * math.sin(a), 1.4 * math.cos(a), 0.41), "yellow" if k % 2 == 0 else "dark", 0.0,
               rot=(0, 0, -math.degrees(a)), stretch=False, nocast=True)
+    for k in range(12):      # detail: bolt ring on the top of the ring
+        a = math.radians(k * 30)
+        S.cyl(f"rbolt{k}", 0.05, 0.05, (1.2 * math.sin(a), 1.2 * math.cos(a), 0.12 + 0.62 + 0.02), "steel", verts=6, stretch=False, nocast=True)
     S.cyl("track", 1.1, 0.1, (0, 0, ZH - 0.05 + 0.03), "steel", verts=32, stretch=False)
     S.cyl("trackd", 1.0, 0.04, (0, 0, ZH + 0.02 + 0.03), "dark", verts=32, stretch=False)
     # ammunition box and a cable duct on the pad corners, off the barrel's sweep
