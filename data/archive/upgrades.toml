@@ -34,7 +34,7 @@ id = "auth_up_convoy_drill"
 category = "Upgrade"
 faction = "authority"
 title = "Convoy Drill"
-subtitle = "Faster light vehicles"
+subtitle = "Faster scout cars, scrapers and carriers"
 field_note = "BULLETIN 15 // KEEP STATION. KEEP SPEED. KEEP THE INTERVAL. STOP."
 body = '''
 A standard drill that trains drivers to keep a tight interval at speed. Scout cars, scrapers and carriers all move faster. The drill sergeants paint the interval on the road.
@@ -128,7 +128,7 @@ title = "Hot Cores"
 subtitle = "More radiation per shell"
 field_note = "VOICE: \"A HOTTER CORE GIVES A LONGER MEMORY. LET THE GROUND REMEMBER.\""
 body = '''
-Reactor slag packed into the crawler's rounds so each shell leaves more radiation behind. The ground stays deadly for longer. Handlers use tongs.
+Reactor slag packed into the rounds of every radiation gun so each shell leaves more radiation behind. The ground stays deadly for longer. Handlers use tongs.
 '''
 # Approved by the owner 2026-11-04 (Q-38). Replace the open unlock with a mission id when known.
 unlock = "open"

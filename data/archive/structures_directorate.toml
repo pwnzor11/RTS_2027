@@ -152,10 +152,10 @@ id = "dir_mast"
 category = "Structure"
 faction = "directorate"
 title = "Broadcast Mast"
-subtitle = "Radar and Static Broadcast tower"
+subtitle = "Static Broadcast tower"
 field_note = "VOICE: \"LISTEN. THE INTERIOR SPEAKS ON EVERY BAND, AND NO OTHER VOICE IS NEEDED.\""
 body = '''
-A tall lattice mast with a rotating dish and a ring of horns. It watches the sky and drowns enemy radio and maps in static. The Voice's lullaby plays from it at lights-out.
+A tall lattice mast with a rotating dish and a ring of horns. It drowns enemy radio and maps in static. The Voice's lullaby plays from it at lights-out.
 '''
 unlock = "campaign:dir_01" # M8-13 (tune)
 

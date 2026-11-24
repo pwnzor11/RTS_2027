@@ -136,7 +136,7 @@ title = "Quick-Set Foam Layer"
 subtitle = "Ground-sealing support vehicle"
 field_note = "FOAM 3 // LAY IT, LEAVE IT, LET IT SET. DO NOT STAND IN IT. STOP."
 body = '''
-A tanker truck with a spray boom that lays quick-setting foam across the ground. Nothing can surface or break through the coated cells, and every unit on foot or wheel crawls through them at half pace. It is the engineers' tidy, portable cousin of Foundation Grouting.
+A tanker truck with a spray boom that lays quick-setting foam across the ground. Nothing can surface or break through the coated cells, and every unit that is not in the air crawls through them at half pace. It is the engineers' tidy, portable cousin of Foundation Grouting.
 '''
 # Approved by the owner 2026-11-04 (Q-38). Replace the open unlock with a mission id when known.
 unlock = "open"
