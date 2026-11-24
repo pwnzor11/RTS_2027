@@ -14,8 +14,8 @@ namespace Rts.Game.Saves;
 /// </summary>
 public sealed record GameSaveHeader
 {
-    /// <summary>The header version this build writes and reads. Bump it when the layout changes. Version 1 (two-player skirmish settings) is still read; M4-11 wrote version 2 (map choice, 2 to 4 slots); M3-21 wrote version 3 (appends each AI's saved memory after its slot record; versions 1 and 2 load with the AI starting fresh); M5-09 wrote version 4 (appends one commander byte, 0 or 1, per skirmish slot at the end; versions 1 to 3 load with no commander); M7-14 wrote version 5 (appends one ocean-edge flags byte after the commander bytes when the skirmish map is generated; versions 1 to 4 load with no ocean); M12-05 wrote version 6 (appends one generator-layout byte after the ocean-edge byte when the skirmish map is generated; versions 1 to 5 load as layout 0, the pre-M12 generator, which this build cannot rebuild, so <see cref="GameLoader"/> refuses them with a friendly message); D-205 wrote version 7 (appends the nine control groups at the very end; versions 1 to 6 load with no groups); M13-15 wrote version 8 (appends three bytes per skirmish slot after the groups: handicap percent, starting-credits preset, small-army flag; versions 1 to 7 load with every slot at the defaults); M12-13b wrote version 9 (appends one stamps byte, 0 or 1, at the very end when the skirmish map is generated; versions 1 to 8 load with stamps off).</summary>
-    public const int CurrentVersion = 9;
+    /// <summary>The header version this build writes and reads. Bump it when the layout changes. Version 1 (two-player skirmish settings) is still read; M4-11 wrote version 2 (map choice, 2 to 4 slots); M3-21 wrote version 3 (appends each AI's saved memory after its slot record; versions 1 and 2 load with the AI starting fresh); M5-09 wrote version 4 (appends one commander byte, 0 or 1, per skirmish slot at the end; versions 1 to 3 load with no commander); M7-14 wrote version 5 (appends one ocean-edge flags byte after the commander bytes when the skirmish map is generated; versions 1 to 4 load with no ocean); M12-05 wrote version 6 (appends one generator-layout byte after the ocean-edge byte when the skirmish map is generated; versions 1 to 5 load as layout 0, the pre-M12 generator, which this build cannot rebuild, so <see cref="GameLoader"/> refuses them with a friendly message); D-205 wrote version 7 (appends the nine control groups at the very end; versions 1 to 6 load with no groups); M13-15 wrote version 8 (appends three bytes per skirmish slot after the groups: handicap percent, starting-credits preset, small-army flag; versions 1 to 7 load with every slot at the defaults); M12-13b wrote version 9 (appends one stamps byte, 0 or 1, at the very end when the skirmish map is generated; versions 1 to 8 load with stamps off); QOL-07 (D-313) wrote version 10 (appends the superweapon-limit byte, 255 = unlimited, and the reveal-map flag at the very end of a skirmish save; versions 1 to 9 load with the default rules).</summary>
+    public const int CurrentVersion = 10;
 
     private const int MaxAiStateBytes = 1 << 22;
 
@@ -136,6 +136,11 @@ public sealed record GameSaveHeader
                 w.Write(slot.SmallArmy);
             }
         if (Version >= 9 && Skirmish?.Map.Generated is { } gen9) w.Write(gen9.Stamps);   // M12-13b
+        if (Version >= 10 && Skirmish is { } rules)   // QOL-07 (D-313): the match rules
+        {
+            w.Write((byte)(rules.Rules.SuperweaponLimit < 0 ? 255 : rules.Rules.SuperweaponLimit));
+            w.Write(rules.Rules.RevealMap);
+        }
     }
 
     private void WriteGroups(BinaryWriter w)
@@ -261,6 +266,13 @@ public sealed record GameSaveHeader
         }
         if (version >= 9 && skirmish?.Map.Generated is { } stamped)   // M12-13b: the stamp switch; older saves keep false
             skirmish = new SkirmishSettings(new MapChoice(null, stamped with { Stamps = r.ReadBoolean() }), skirmish.Slots, skirmish.SimSeed);
+        if (version >= 10 && skirmish is not null)   // QOL-07 (D-313)
+        {
+            int limit = r.ReadByte();
+            bool reveal = r.ReadBoolean();
+            if (limit != 255 && limit > SimSetup.MaxSuperweaponLimit) throw new InvalidDataException($"bad superweapon limit {limit}");
+            skirmish = skirmish with { Rules = new MatchRules(limit == 255 ? SimSetup.NoSuperweaponLimit : limit, reveal) };
+        }
         return new GameSaveHeader
         {
             Version = version, Mode = mode, MapId = mapId, MapName = mapName, RulesHash = rulesHash, LocalPlayer = local, Tick = tick,

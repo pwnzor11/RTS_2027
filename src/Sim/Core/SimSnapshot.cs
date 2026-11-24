@@ -118,6 +118,24 @@ public sealed record SimSetup(ulong Seed, Map.MapData Map, int PlayerCount, SimR
     /// themselves are ordinary state in the "players" part.</summary>
     public IReadOnlyList<int>? StartingCash { get; init; }
 
+    /// <summary>QOL-07 (D-313): the most superweapon structures (a building type whose Superweapon id is set) each player may own or have in the
+    /// queue at once; <see cref="NoSuperweaponLimit"/> (-1, the default) = no limit, 0 = none at all. An opt-in skirmish rule: the default setup plays
+    /// exactly as before. Part of the game's identity (saved in the header, written to the "players" part when set).</summary>
+    public int SuperweaponLimit { get; init; } = NoSuperweaponLimit;
+
+    /// <summary>QOL-07 (D-313): the "reveal map" rule: every cell is visible to every player for the whole game (no fog, no shroud; the AIs see
+    /// it too). Opt-in, default off. Part of the game's identity (saved in the header, written to the "players" part when on).</summary>
+    public bool RevealMap { get; init; }
+
+    /// <summary>The <see cref="SuperweaponLimit"/> that means "no limit".</summary>
+    public const int NoSuperweaponLimit = -1;
+
+    /// <summary>Highest superweapon limit a setup may carry.</summary>
+    public const int MaxSuperweaponLimit = 99;
+
+    /// <summary>True when either QOL-07 rule is off its default (the header then carries them).</summary>
+    public bool HasMatchRules => RevealMap || SuperweaponLimit != NoSuperweaponLimit;
+
     /// <summary>The neutral handicap, in percent.</summary>
     public const int DefaultHandicap = 100;
 

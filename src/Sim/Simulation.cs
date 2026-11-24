@@ -108,7 +108,7 @@ public sealed partial class Simulation
         _paths.AshPathPenalty = setup.Rules.Radiation.AshPathPenalty;   // S19 M13-12: soldiers skirt ash fields
         _paths.CrushPathPenalty = setup.Rules.Props.CrushPathPenalty;   // M12-16: a crusher pays this much to go through a Tree or Snag cell
         _vision = new VisionState(setup.Map.Width, setup.Map.Height, setup.PlayerCount,
-            Math.Max(setup.Limits.Vehicles, setup.Limits.Infantry));
+            Math.Max(setup.Limits.Vehicles, setup.Limits.Infantry)) { RevealAll = setup.RevealMap };   // QOL-07 (D-313)
         // Parts after vision come from the partial files in canonical order: combat (M1-09) first.
         var extra = CombatParts();
         // M1.5: "players" is appended after the combat parts (append-only order).

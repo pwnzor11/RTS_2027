@@ -20,6 +20,9 @@ namespace Rts.Game.Screens;
 /// <param name="SimSeed">Seed of the simulation and of the AI driver.</param>
 public sealed record SkirmishSettings(MapChoice Map, IReadOnlyList<SkirmishSlot> Slots, ulong SimSeed)
 {
+    /// <summary>QOL-07 (D-313): the opt-in match rules (superweapon limit, reveal map); the default is today's game. Written into <c>SimSetup</c>.</summary>
+    public MatchRules Rules { get; init; } = MatchRules.Default;
+
     /// <summary>Most slots a skirmish has.</summary>
     public const int MaxSlots = 4;
 
@@ -200,6 +203,7 @@ public sealed record SkirmishSettings(MapChoice Map, IReadOnlyList<SkirmishSlot>
             if (s.Handicap < Rts.Sim.Core.SimSetup.MinHandicap || s.Handicap > Rts.Sim.Core.SimSetup.MaxHandicap) errors.Add($"Slot {i + 1}: handicap must be {Rts.Sim.Core.SimSetup.MinHandicap} to {Rts.Sim.Core.SimSetup.MaxHandicap} percent.");
             if (s.CreditsPreset < 0 || s.CreditsPreset >= SlotOptions.CreditsPresets.Count) errors.Add($"Slot {i + 1}: unknown starting credits.");
         }
+        if (!Rules.IsValid) errors.Add("Superweapon limit is out of range.");
         if (open < MinPlayers) errors.Add("At least two slots must be open.");
         if (humans > maxHumans) errors.Add(maxHumans == 1 ? "Only one slot can be Human." : $"At most {maxHumans} slots can be Human.");
         if (open >= MinPlayers && teams.Count < 2) errors.Add("All players are on one team: there is nobody to fight.");
@@ -217,7 +221,7 @@ public sealed record SkirmishSettings(MapChoice Map, IReadOnlyList<SkirmishSlot>
 
     /// <summary>Value equality that compares the slots one by one (a record would compare the list by reference).</summary>
     public bool Equals(SkirmishSettings? other) =>
-        other is not null && Map == other.Map && SimSeed == other.SimSeed && Slots.SequenceEqual(other.Slots);
+        other is not null && Map == other.Map && SimSeed == other.SimSeed && Rules == other.Rules && Slots.SequenceEqual(other.Slots);
 
     /// <inheritdoc />
     public override int GetHashCode()
@@ -225,6 +229,7 @@ public sealed record SkirmishSettings(MapChoice Map, IReadOnlyList<SkirmishSlot>
         var h = new HashCode();
         h.Add(Map);
         h.Add(SimSeed);
+        h.Add(Rules);
         foreach (SkirmishSlot s in Slots) h.Add(s);
         return h.ToHashCode();
     }

@@ -278,7 +278,8 @@ public sealed class SkirmishGame : IDisposable
         IReadOnlyList<int>? handicap = settings.Handicaps, cash = settings.StartingCash;   // S19 (M13-15): per-slot options; the neutral slot (last) has none
         if (neutral && handicap is not null) handicap = handicap.Append(SimSetup.DefaultHandicap).ToArray();
         if (neutral && cash is not null) cash = cash.Append(-1).ToArray();
-        return new SimSetup(settings.SimSeed, map, total, rules.Sim, rules.RulesHash) { AllowDebug = false, Factions = factions, Teams = teams, LandingMarkers = meta.Landing, NoRebuildDefeat = true, Handicap = handicap, StartingCash = cash };   // S12: landing markers are public map data (D-151 (2))
+        return new SimSetup(settings.SimSeed, map, total, rules.Sim, rules.RulesHash) { AllowDebug = false, Factions = factions, Teams = teams, LandingMarkers = meta.Landing, NoRebuildDefeat = true, Handicap = handicap, StartingCash = cash,
+            SuperweaponLimit = settings.Rules.SuperweaponLimit, RevealMap = settings.Rules.RevealMap };   // QOL-07 (D-313); S12: landing markers are public map data (D-151 (2))
     }
 
     /// <summary>The id a save or replay uses for a generated map: <c>gen:BIOME:SIZE:PLAYERS:SEED</c>.</summary>
