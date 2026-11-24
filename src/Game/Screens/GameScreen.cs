@@ -763,6 +763,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
     private readonly IdleWatch _idleWatch = new();
     private readonly List<ViewActor> _ownScratch = new();
     private readonly List<ViewActor> _idleHarvesters = new();
+    private int _harvestersTotal, _harvestersWorking;   // QOL-04: the economy line of the HUD (skirmish only)
     private readonly List<ViewActor> _idleFactories = new();
     private readonly List<GameAlert> _idleAlerts = new();
     private EntityId _lastIdleHarvester, _lastIdleFactory;
@@ -773,10 +774,13 @@ public sealed class GameScreen : IScreen, IFocusPausable
         _idleFactories.Clear();
         _idleHarvesterRegion.Bounds = Rectangle.Empty;
         _idleFactoryRegion.Bounds = Rectangle.Empty;
+        _harvestersTotal = _harvestersWorking = 0;
         if (_sim is null || !_skirmishMode || _spectatorMode || _gameOverShown) return;
         _sim.Sim.ViewFor(Me).CopyOwn(_ownScratch);
         PlayerHud hud = _sim.Sim.HudFor(Me);
         IdleFinder.Harvesters(_ownScratch, _sim.Rules, _idleHarvesters);
+        foreach (ViewActor a in _ownScratch) if (IdleFinder.IsHarvester(a, _sim.Rules)) _harvestersTotal++;   // QOL-04
+        _harvestersWorking = Math.Max(0, _harvestersTotal - _idleHarvesters.Count);
         IdleFinder.Factories(_ownScratch, _sim.Rules, hud, _idleFactories);
         _idleAlerts.Clear();
         _idleWatch.Observe(_source.Current.Tick, _ownScratch, _sim.Rules, hud, _idleAlerts);
@@ -1748,6 +1752,8 @@ public sealed class GameScreen : IScreen, IFocusPausable
         bool debugMode = GameKeys.DebugKeysAllowed(_skirmishMode);
         if (_s.Settings.ShowDiagnostics)
             lines.Add($"tick {snapshot.Tick}  hash {snapshot.StateHash:x16}  fps {_s.Fps}  zoom {_camera.ZoomLabel}");
+        if (_skirmishMode && !_spectatorMode && _sim is not null)
+            lines.Add(EconomyReadout.Line(_income.IncomePerMinute(Me), _harvestersWorking, _harvestersTotal));   // QOL-04
         if (_sim is { Paused: true }) lines.Add(debugMode ? "PAUSED (. = step)" : "PAUSED");
         else if (SpeedAllowed && _sim is { } speedSim && speedSim.SpeedPercent != GameSpeed.Normal)
             lines.Add(UiText.Format(UiText.SpeedHud, "speed", GameSpeed.Label(speedSim.SpeedPercent)));   // M13-15
