@@ -432,7 +432,7 @@ Upgrades: Scrap Plate, Ash Wraps, Quick Pack, Grapple Hooks, Salvage Rights, Pat
 | Sonar Picket | Submarine detection post |
 | SAM Mount | Surface-to-air battery |
 | Core Hall | Valve-computer research hall (tier 3 gate) |
-| Drydock | Unlocks the Cruiser, Carrier and Command Ship |
+| Drydock | Unlocks the Cruiser and Carrier |
 | Salvo Array | Fleet missile barrage (superweapon) |
 
 Upgrades: Sonar Nets, Hardened Hulls, Vacuum Cores, Composite Armour, Guided Shells, Fast Charging, Deep Survey, Veteran Drill.

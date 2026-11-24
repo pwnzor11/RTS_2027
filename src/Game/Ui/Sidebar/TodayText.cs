@@ -13,7 +13,7 @@ public static class TodayText
     {
         ["exp_minelayer"] = "Unarmed sea hull. It cannot lay mines yet.",
         ["exp_diver"] = "Plants charges on ships and quays from the shore. It cannot swim yet.",
-        ["exp_drydock"] = "Unlocks the Cruiser, Carrier and Command Ship. It does not build or repair ships itself yet.",
+        ["exp_drydock"] = "Unlocks the Cruiser and Carrier. It does not build or repair ships itself yet.",
         ["exp_destroyer"] = "Gun warship that detects submarines. It has no depth charge yet.",
         ["lb_harpoon_wagon"] = "Anti-armour harpoon gun. It does not tether or slow targets yet.",
     };
