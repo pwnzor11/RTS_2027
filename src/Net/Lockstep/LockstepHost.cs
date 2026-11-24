@@ -252,7 +252,7 @@ public sealed class LockstepHost
     private bool IsBlocked(int tick)
     {
         foreach ((int peer, int stepped) in _progress)
-            if (IsActive(peer) && tick > stepped + MaxLead) return true;
+            if (IsActive(peer) && (long)tick > (long)stepped + MaxLead) return true;
         return false;
     }
 
@@ -292,7 +292,12 @@ public sealed class LockstepHost
                 foreach (Command c in input.Commands) _scheduler.Submit(from, c, Tick);
                 break;
             case NetMessage.Progress progress:
-                if (_progress.TryGetValue(from, out int old) && progress.SteppedTick > old) _progress[from] = progress.SteppedTick;
+                if (_progress.TryGetValue(from, out int old))
+                {
+                    // A client cannot have stepped past what the host has sealed (NETLLM-02): clamp so a hostile value cannot wedge or hide lag.
+                    int reported = Math.Min(progress.SteppedTick, _scheduler.SealedThrough + 1);
+                    if (reported > old) _progress[from] = reported;
+                }
                 break;
             case NetMessage.Hash hash:
                 if (_progress.ContainsKey(from) && PlausibleHash(from, hash.Tick)) _pendingHashes.Add((from, hash.Tick, hash.Value, hash.SubHashes));
@@ -387,7 +392,7 @@ public sealed class LockstepHost
         _blockers.Clear();
         if (!Paused && !(EndTick is int end && Tick >= end))
             foreach ((int peer, int stepped) in _progress)
-                if (IsActive(peer) && Tick > stepped + MaxLead) _blockers.Add(peer);
+                if (IsActive(peer) && (long)Tick > (long)stepped + MaxLead) _blockers.Add(peer);
 
         foreach (int peer in _lagSince.Keys.ToArray())
             if (!_blockers.Contains(peer)) _lagSince.Remove(peer);

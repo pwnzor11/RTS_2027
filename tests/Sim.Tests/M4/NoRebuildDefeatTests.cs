@@ -264,16 +264,14 @@ public sealed class NoRebuildDefeatTests
         var rw = new ReplayWriter(ms, sim, "t", Array.Empty<(string, string)>());
         rw.Finish();
         ReplayData d = ReplayReader.Read(new MemoryStream(ms.ToArray()));
-        Assert.Equal(13, d.Version);
+        Assert.Equal(14, d.Version);
         Assert.True(d.Header.NoRebuildDefeat);
         // a format-12 replay is the same bytes without the flags byte: build one by hand
         byte[] b = ms.ToArray();
         int flagsAt = FindFlagsByte(b, sim);
         var old = new List<byte>(b); old.RemoveAt(flagsAt);
         old[4] = 12; old[5] = 0; old[6] = 0; old[7] = 0;
-        ReplayData o = ReplayReader.Read(new MemoryStream(old.ToArray()));
-        Assert.Equal(12, o.Version);
-        Assert.False(o.Header.NoRebuildDefeat);
+        Assert.Throws<InvalidDataException>(() => ReplayReader.Read(new MemoryStream(old.ToArray())));   // A43 SIMCORE-02: formats before 14 are refused
     }
 
     /// <summary>The flags byte is the last byte of the header: find it by writing the header alone and measuring its length.</summary>

@@ -31,19 +31,20 @@ internal static class ProviderHttp
         try
         {
             using HttpRequestMessage req = build();
-            using HttpResponseMessage resp = await http.SendAsync(req, cts.Token).ConfigureAwait(false);
+            using HttpResponseMessage resp = await http.SendAsync(req, HttpCompletionOption.ResponseHeadersRead, cts.Token).ConfigureAwait(false);
             if (!resp.IsSuccessStatusCode)
             {
                 int code = (int)resp.StatusCode;
                 if (code is 400 or 404 or 422)
                 {
-                    string err = await resp.Content.ReadAsStringAsync(cts.Token).ConfigureAwait(false);
-                    string? detail = ErrorMessage(err);
+                    string? err = await ReadLimitedAsync(resp.Content, cts.Token).ConfigureAwait(false);
+                    string? detail = err is null ? null : ErrorMessage(err);
                     if (detail is not null) return Fail("HTTP " + code + ": " + detail);
                 }
                 return Fail("HTTP " + code);
             }
-            string body = await resp.Content.ReadAsStringAsync(cts.Token).ConfigureAwait(false);
+            string? body = await ReadLimitedAsync(resp.Content, cts.Token).ConfigureAwait(false);
+            if (body is null) return Fail("bad response");
             using JsonDocument doc = JsonDocument.Parse(body);
             return parse(doc.RootElement);
         }
@@ -55,6 +56,25 @@ internal static class ProviderHttp
         catch (JsonException) { return Fail("bad response"); }
         catch (HttpRequestException) { return Fail("network error"); }
         catch (Exception) { return Fail("request failed"); }
+    }
+
+    /// <summary>The most response body bytes read (NETLLM-05); a normal reply is about 5 KB.</summary>
+    internal const int MaxBodyBytes = 64 * 1024;
+
+    /// <summary>Reads at most <see cref="MaxBodyBytes"/> bytes of the body as UTF-8; null when the body is longer.</summary>
+    internal static async Task<string?> ReadLimitedAsync(HttpContent content, CancellationToken token)
+    {
+        await using Stream stream = await content.ReadAsStreamAsync(token).ConfigureAwait(false);
+        using var ms = new MemoryStream();
+        byte[] buf = new byte[8192];
+        while (true)
+        {
+            int n = await stream.ReadAsync(buf.AsMemory(), token).ConfigureAwait(false);
+            if (n <= 0) break;
+            if (ms.Length + n > MaxBodyBytes) return null;
+            ms.Write(buf, 0, n);
+        }
+        return Encoding.UTF8.GetString(ms.GetBuffer(), 0, (int)ms.Length);
     }
 
     /// <summary>The <c>error.message</c> (or string <c>error</c>) of an API error body, one line, at most 200 chars; null if absent.</summary>
