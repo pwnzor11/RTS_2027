@@ -81,6 +81,7 @@ cliff_shadow_texels = 4
 [detail]
 # S43 art pass (terrain pilot): 1 = rich detail (noise, pebbles, grass, cracks, oil, ash drifts, soft land blends, ragged shore/kerb/cliff lip); 2 = calm (no cracks or grass, half the pebbles); 0 = the plain D-181 look.
 level = 1
+kit = "rust"
 
 [field]
 # Resource cells as deposits: a darker bed, a rim where the field meets other ground, 1..4 heaps per cell (more and bigger when richer).
