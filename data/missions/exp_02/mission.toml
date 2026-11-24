@@ -18,7 +18,7 @@ next = "exp_03"
 locale = "locale.toml"
 
 [starts_with]
-tech = ["exp_pile_house", "exp_billet", "exp_marine", "exp_pillbox", "exp_beacon", "exp_anchorage", "exp_dredge_works", "exp_skimmer", "exp_hover_yard", "exp_hoverlander", "exp_provision_store", "exp_plotting_room", "exp_glide_tank", "exp_gun_battery"]
+tech = ["exp_pile_house", "exp_billet", "exp_marine", "exp_pillbox", "exp_beacon", "exp_anchorage", "exp_dredge_works", "exp_tank_farm", "exp_skimmer", "exp_hover_yard", "exp_hoverlander", "exp_provision_store", "exp_plotting_room", "exp_glide_tank", "exp_gun_battery"]
 
 [unlocks_on_win]
 tech = ["exp_quay", "exp_landing_craft", "exp_launch", "exp_shipyard", "exp_destroyer", "exp_sparker"]
@@ -29,7 +29,7 @@ name = "Second Relief Fleet"
 role = "human"
 team = 0
 cash = 4000
-tech = ["exp_pile_house", "exp_billet", "exp_marine", "exp_pillbox", "exp_beacon", "exp_anchorage", "exp_dredge_works", "exp_skimmer", "exp_hover_yard", "exp_hoverlander", "exp_provision_store", "exp_plotting_room", "exp_glide_tank", "exp_gun_battery"]
+tech = ["exp_pile_house", "exp_billet", "exp_marine", "exp_pillbox", "exp_beacon", "exp_anchorage", "exp_dredge_works", "exp_tank_farm", "exp_skimmer", "exp_hover_yard", "exp_hoverlander", "exp_provision_store", "exp_plotting_room", "exp_glide_tank", "exp_gun_battery"]
 
 [[players]]
 slot = 1

@@ -476,7 +476,7 @@ public sealed partial class Simulation
         BuildingType bt = Setup.Rules.Buildings[buildingType];
         int w = bt.FootprintW, h = bt.FootprintH;
         int x0 = topLeft.X, y0 = topLeft.Y;
-        if (x0 < 0 || y0 < 0 || x0 + w > Setup.Map.Width || y0 + h > Setup.Map.Height) return PlacementResult.OutOfMap;
+        if (x0 < 0 || y0 < 0 || (long)x0 + w > Setup.Map.Width || (long)y0 + h > Setup.Map.Height) return PlacementResult.OutOfMap;   // long: a hostile huge cell must not wrap (A43 SIMCORE-01)
         TerrainTable table = Setup.Rules.Terrain;
         PlacementResult m7 = CheckBeachheadAndWater(player, bt, x0, y0, table);   // M7-07: terrain per cell (water buildings) and the beachhead zone
         if (m7 != PlacementResult.Ok) return m7;

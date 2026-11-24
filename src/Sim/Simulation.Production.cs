@@ -231,7 +231,7 @@ public sealed partial class Simulation
 
     private void ApplyPlace(Command c)
     {
-        if (_players.IsNeutral(c.Player) || c.Arg < 0 || c.Arg >= BuildingTypeCount) return;
+        if (_players.IsNeutral(c.Player) || c.Arg < 0 || c.Arg >= BuildingTypeCount || !InMap(c.Cell)) return;   // A43 SIMCORE-01: a cell outside the map is never a placement
         BuildingType bt = Setup.Rules.Buildings[c.Arg];
         int lane = ProductionState.Lane(c.Player, bt.Category);
         EntityId id;

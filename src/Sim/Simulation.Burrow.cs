@@ -36,6 +36,7 @@ public sealed partial class Simulation
                 if (!_units.Slots.IsAlive(g.Subject.Id)) { list.RemoveAt(t--); continue; }
                 int i = g.Subject.Id.Index;
                 if (_tunnels.VehicleLayer[i] != ActorLayer.Surfacing) continue;   // not ours
+                if (TransitIndexOf(g.Subject) >= 0) continue;   // A43 SIMMOVE-01: a tunnel exit; AdvanceTunnelTransit owns that countdown
                 g.TicksLeft--;
                 if (g.TicksLeft > 0) { list[t] = g; continue; }
                 list.RemoveAt(t--);

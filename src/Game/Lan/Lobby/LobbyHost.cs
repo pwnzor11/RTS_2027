@@ -28,7 +28,6 @@ public sealed class LobbyHost
     private readonly Func<ulong> _seedSource;
     private readonly List<string> _lines = new();
     private LobbyData _data;
-    private int _nextPeer = 1;
     private int _nextTransfer;
     private bool _started;
 
@@ -136,6 +135,13 @@ public sealed class LobbyHost
         return _data.OpenSlots == 0 ? "The lobby is full." : null;
     }
 
+    private int LowestFreePeerId()
+    {
+        int id = 1;
+        while (_data.Slots.Any(s => s.IsTaken && s.Peer == id) || _data.Spectators.Any(s => s.Peer == id)) id++;
+        return id;
+    }
+
     private void HandleHello(int from, NetMessage.Hello hello)
     {
         string? reason = Handshake(hello);
@@ -149,10 +155,10 @@ public sealed class LobbyHost
         int id = from;
         if (from < 0)
         {
-            id = _nextPeer++;
+            // The lowest id nobody in the lobby holds; ids are reused so the 1000 cap of the codecs cannot be reached by joining and leaving (NETLLM-03).
+            id = LowestFreePeerId();
             if (_udp is null || !_udp.Accept(from, id)) return;
         }
-        else _nextPeer = Math.Max(_nextPeer, from + 1);
 
         var taken = _data.Slots.Where(s => s.IsTaken).Select(s => s.Name).Concat(_data.Spectators.Select(s => s.Name)).ToList();
         string name = LobbyNames.Unique(LobbyNames.Resolve(hello.PlayerName, LobbyNames.Fallback), taken);

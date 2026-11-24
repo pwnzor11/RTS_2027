@@ -2290,3 +2290,40 @@ keys) are frozen per D-298. Ash Plains Authority v Directorate 23.6 % and Rust B
 that move a match outcome need a new decision. The 24-row 35-65 % goal stays as later work. **Why:** both rows are within one standard error (~2
 points) of the band; all six pairings pass, ladders are in order, the campaign meets D-222. **Alternatives:** (b) one AI-code round for the
 Authority's early defence and re-measure; (c) widen the row band.
+
+### D-311 · 2026-11-24 · Session 43: audit fixes 1-19 approved as recommended (s43 audit README §2)
+**Decision:** owner: "take all" for the session 43 adversarial audit items 1-19: tunnel vehicles surface once (no phantom claim); a unit stuck
+underground re-routes to another own entrance after 10 s; garrisoned soldiers are spared radiation and superweapon damage and dived subs the
+superweapon blast (as D-205 for splash); capture resets a superweapon charge; production pauses (progress kept, nothing spent) while its
+prerequisite is missing, like classic C&C; the Second Drift storm is non-lethal as designed (contamination cap 31 < damage threshold 32) and
+denies building at `no_build_threshold`; a Bore is not a base for defeat; a refused order keeps the shift-queue; AI: rebuild a lost refinery or
+factory while broke, mop-up no longer tied to respond_to_attacks, Directorate builds anti-air (all three re-measured on 512 games before
+landing); Sonar Nets also extends sonar range; campaign edge reinforcements spawn on free cells; auth_04 gets its aircraft and the Cistern and
+Tank Farm are unlocked; the commander's stale window follows its timeout; Authority aircraft text no longer says "fast"; stale text fixed to
+match data (manual rebuilt); superweapon button sized to its label and shows its range; a Repairing line on the card.
+**Why:** docs/reviews/2026-11-24_s43_audit. **Alternatives:** per-item choices in the audit README. **Status:** owner decision
+
+### D-312 · 2026-11-24 · Session 43: update check off by default (supersedes D-214's default)
+**Decision:** `check_for_updates` defaults to false; a "Check now" button in Settings runs one check. Stored settings keep their value.
+**Why:** private game; nothing goes online unless the player asks. **Alternatives:** keep on (D-214). **Status:** owner decision
+
+### D-313 · 2026-11-24 · Session 43: all 20 QoL items from the s43 list
+**Decision:** build the 20 main QoL items (docs/reviews/2026-11-24_s43_audit/wave1/QOL.md); anything that changes how a match plays is opt-in
+with defaults that reproduce today's game byte for byte. **Why:** owner. **Alternatives:** top 6; none. **Status:** owner decision
+
+### D-314 · 2026-11-24 · Session 43: sim spatial index later, render speed-ups now
+**Decision:** render allocation and culling fixes now; the sim targeting spatial index waits for its own session (determinism risk).
+**Status:** owner decision
+
+### D-315 · 2026-11-24 · Session 43: art pass pilots approved, fan-out to every asset
+**Decision:** buildings: the auth_power pilot look, 8-frame idle and damaged loops at ticks_per_frame 2 (0.4 s per frame), every building gets
+the detail pass and its own idle motion (turret-facing sheets and walls detail only). Vehicles: a 4-frame `move` state stepped by distance
+(`step_px`) on all 24 tracked and wheeled vehicles; idle carries move-frame-0 detail. Infantry: variant C (keyline plus rim light), the pilot
+boost, 64 px frames, 8 walk frames, a flash star. Terrain: `[detail] level 1` ("rich", cracks toned down) on all four biomes; old decor road
+and frost crack decals dropped where detail is on. Renders run on the k3s cluster. **Why:** owner, after before/after sheets. **Status:** owner decision
+
+### D-316 · 2026-11-24 · Session 43: smoke without bubbles
+**Decision:** smoke_plume and the smoke/dust puffs are rendered as volumetric smoke (tools/art/fx/build_smoke_vol.py): lighter, wispier,
+torn edges, west drift; no baked sphere smoke on any building, vehicle or infantry sheet; round soft map decals (snow, soot, oil, ash, salt)
+become noise-broken shapes; Mountains snow about half. **Why:** owner: "a lot of the smoke effects still look like bubbles". **Status:** owner decision
+

@@ -10,6 +10,8 @@ namespace Rts.Llm;
 /// Never throws. Defaults for unknown values: posture 1, focus 2, target 255, mix 0, expand false, no focus cell.</summary>
 public static class ReplyParser
 {
+    /// <summary>The most `{` start points tried (NETLLM-05: keeps the scan cheap on runaway text; the body itself is capped in ProviderHttp).</summary>
+    private const int MaxStarts = 64;
     private const int MaxSay = 200;
     private const int MaxCell = 4095;
     private const int MaxOrders = 4;
@@ -28,7 +30,7 @@ public static class ReplyParser
         {
             if (string.IsNullOrEmpty(text)) return new CommanderReply(null, null);
             int from = 0;
-            while (true)
+            for (int tries = 0; tries < MaxStarts; tries++)
             {
                 int start = text.IndexOf('{', from);
                 if (start < 0) return new CommanderReply(null, null);
@@ -44,6 +46,8 @@ public static class ReplyParser
                 }
                 from = start + 1;
             }
+
+            return new CommanderReply(null, null);
         }
         catch (Exception)
         {

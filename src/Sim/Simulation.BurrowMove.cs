@@ -272,6 +272,7 @@ public sealed partial class Simulation
             return;
         }
         // The cell was taken, built next to or hardened during the telegraph: back underground, look again (new telegraph).
+        Occupancy.Release(this, ActorKind.Vehicle, _units, i);   // A43 SIMMOVE-01: never leave a claim on a cell it is not standing in
         _tunnels.VehicleLayer[i] = ActorLayer.Burrowed;
         _units.Mission[i] = MissionKind.Surface; _units.Status[i] = MissionStatus.Init; _units.WakeTick[i] = 0;
     }
