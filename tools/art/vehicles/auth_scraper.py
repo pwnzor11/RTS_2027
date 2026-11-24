@@ -5,18 +5,27 @@ reactor exhaust stack, beacon.  Big house panels: hull flanks, cab doors, hopper
 States: idle (16 facings x 1) and harvest (16 facings x 4: conveyor cleats run, blade shudders, ash puff, beacon blinks).
 The frame is 1.75 cells wide so the blade and stack may overhang the cell; the scale is still 64 px per cell.
 """
-import math
+import math, os, sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import mot_track as MT
 
 ID = "auth_scraper"
 TITLE = "Authority armoured scraper (ashfall harvester)"
 CANVAS = 112
 TARGET = (0.0, 0.2, 0.9)
-STATES = [("idle", 16, 1, 1), ("harvest", 16, 4, 3)]
+STATES = [("idle", 16, 1, 1), ("harvest", 16, 4, 3), ("move", 16, 4, 1)]
+# "move": 4 frames per facing; track links run one pitch per 4 frames, road-wheel bolts roll (auth_tank.py). Idle = move frame 0.
+LOOP = MT.Loop(yc=-0.05, h=1.55, r=0.46, zc=0.47)     # idlers at y 1.5 / -1.6 (box centre -0.05), idler radius 0.45
+STEP_PX = {"move": LOOP.step_px()}
+
+
+MATERIALS = {"link": MT.LINK}
 
 
 def build(S, state, k, n):
     box, cyl, sph = S.box, S.cyl, S.sphere
     harvest = state == "harvest"
+    move = state in ("idle", "move")
     ph = k / n if harvest else 0.0
     shake = (0.0, 0.035, 0.0, -0.035)[k % 4] if harvest else 0.0
     # ---- tracks: wide, with road wheels and big idlers
@@ -29,6 +38,10 @@ def build(S, state, k, n):
             y = -1.3 + i * 0.52
             cyl(f"wh{side}{i}", 0.3, 0.1, (x + s * 0.37, y, 0.42), "steel", "X", 16)
             cyl(f"hb{side}{i}", 0.11, 0.08, (x + s * 0.43, y, 0.42), "rust", "X", 8)
+            if move:
+                MT.bolts(S, f"bolt{side}{i}", x + s * 0.41, y, 0.42, 0.3, k)
+        if move:
+            MT.links(S, f"link{side}", x, LOOP, 0.66, k)
         box("skirt" + side, (0.08, 3.1, 0.36), (x + s * 0.38, -0.05, 0.92), "hull2", 0.03)
     # ---- hull with big house flank panels
     box("hull", (2.0, 3.2, 0.7), (0, -0.05, 1.0), "hull", 0.1)

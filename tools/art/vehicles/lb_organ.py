@@ -9,17 +9,20 @@ House paint: hull flank panels, the rack side panels, the cab roof stripe.
 import math, os, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import lb_common as L
+import mot_track as MT
 
 ID = "lb_organ"
 TITLE = "Left Behind Organ (rocket rack)"
 CANVAS = 192
 TARGET = (0.0, 0.0, 1.2)
-STATES = [("idle", 16, 1, 1)]
+STATES = [("idle", 16, 1, 1), ("move", 16, 4, 1)]
+# "move": 4 frames per facing, track links one pitch per 4 frames, road-wheel bolts roll (auth_tank.py). Idle = move frame 0.
+STEP_PX = {"move": round((MT.lb_loop(-2.4, 2.2).step_px() + MT.lb_loop(-2.1, 2.6).step_px()) / 2, 2)}
 LAYERS = ["body", "turret"]
 PIVOT = (0.0, -0.6, 1.3)
 MOUNT = dict(deck_z=1.18, r_lip=0.85, r_well=0.0, r_shadow=1.1, soft_r=1.0, lip="rust2", well="dark")
 PALETTE = L.PALETTE
-MATERIALS = L.MATERIALS
+MATERIALS = dict(L.MATERIALS, link=MT.LINK)
 TILT = 32.0
 
 
@@ -28,6 +31,9 @@ def build(S, state, k, n):
     S.begin("body")
     L.tracks(S, -1.3, -2.4, 2.2, "L", "hull2", n=5)
     L.tracks(S, 1.3, -2.1, 2.6, "R", "rust", n=5)
+    if state in ("idle", "move"):
+        MT.lb_track_move(S, "L", -1.3, -2.4, 2.2, 5, k)
+        MT.lb_track_move(S, "R", 1.3, -2.1, 2.6, 5, k)
     box("hull", (3.0, 4.9, 0.3), (0, -0.1, 1.15), "ash2", 0.04)
     box("deck", (2.7, 2.9, 0.12), (0, -1.0, 1.28), "wood", 0.03)
     for s, nm in ((-1, "L"), (1, "R")):

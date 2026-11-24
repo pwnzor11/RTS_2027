@@ -4,15 +4,26 @@ Tracked, lead-lined slab-sided box (same hull greens, house panels and finish as
 cluster and a driver's vision slit, gasket-banded hatches, a rear decon hatch with hazard chevrons, filtered air intake on the
 roof rear.  No weapon, no turret: one body layer with the whole-vehicle shadow.  House paint: big flank panels, roof stripe.
 """
+import os, sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import mot_track as MT
+
 ID = "auth_carrier"
 TITLE = "Authority sealed carrier"
 CANVAS = 112
 TARGET = (0.0, 0.0, 1.0)
-STATES = [("idle", 16, 1, 1)]
+STATES = [("idle", 16, 1, 1), ("move", 16, 4, 1)]
+# "move": 4 frames per facing, track links one pitch per 4 frames, road-wheel bolts roll (auth_tank.py). Idle = move frame 0.
+LOOP = MT.Loop(yc=-0.05, h=1.47, r=0.43, zc=0.44)    # idlers at y 1.42 / -1.52, idler radius 0.42
+STEP_PX = {"move": LOOP.step_px()}
+
+
+MATERIALS = {"link": MT.LINK}
 
 
 def build(S, state, k, n):
     box, cyl, sph = S.box, S.cyl, S.sphere
+    move = state in ("idle", "move")
     # ---- tracks with road wheels and idlers
     for s, side in ((-1, "L"), (1, "R")):
         x = s * 1.0
@@ -23,6 +34,10 @@ def build(S, state, k, n):
             y = -1.2 + i * 0.58
             cyl(f"wh{side}{i}", 0.28, 0.1, (x + s * 0.32, y, 0.4), "steel", "X", 14)
             cyl(f"hb{side}{i}", 0.1, 0.08, (x + s * 0.38, y, 0.4), "rust", "X", 8)
+            if move:
+                MT.bolts(S, f"bolt{side}{i}", x + s * 0.37, y, 0.4, 0.28, k)
+        if move:
+            MT.links(S, f"link{side}", x, LOOP, 0.6, k)
         box("skirt" + side, (0.08, 3.0, 0.3), (x + s * 0.34, -0.05, 0.86), "hull2", 0.03)
     # ---- sealed hull: tall slab box, sloped glacis (faked with a stepped nose), roof
     box("hull", (1.8, 3.1, 0.95), (0, -0.05, 1.05), "hull", 0.1)

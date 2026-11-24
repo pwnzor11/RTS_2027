@@ -9,20 +9,32 @@ House paint: the skirt stripe on each side, the platform ring, the platform side
 """
 import math
 
+import os, sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import mot_track as MT
+
 ID = "auth_howitzer"
 TITLE = "Authority Field Howitzer"
 CANVAS = 160
 TARGET = (0.0, 0.3, 1.6)
-STATES = [("idle", 16, 1, 1)]
+STATES = [("idle", 16, 1, 1), ("move", 16, 4, 1)]
+# "move": 4 frames per facing, track links one pitch per 4 frames, road-wheel bolts roll (auth_tank.py). Idle = move frame 0.
+LOOP = MT.Loop(yc=0.0, h=1.45, r=0.41, zc=0.4)       # idlers at y 1.45 / -1.45, idler radius 0.4
+STEP_PX = {"move": LOOP.step_px()}
 LAYERS = ["body", "turret"]
+
 DECK = 1.22
 PIVOT = (0.0, -0.1, 1.3)
 MOUNT = dict(deck_z=DECK, r_lip=0.6, r_well=0.0, r_shadow=0.85, shadow_z=DECK + 0.02, soft_r=0.65, lip="hull2")
 
 
+MATERIALS = {"link": MT.LINK}
+
+
 def build(S, state, k, n):
     box, cyl = S.box, S.cyl
     S.begin("body")
+    move = state in ("idle", "move")
     for s, side in ((-1, "L"), (1, "R")):
         x = s * 1.12
         box("track" + side, (0.66, 2.9, 0.7), (x, 0, 0.4), "track", 0.12)
@@ -32,6 +44,10 @@ def build(S, state, k, n):
             y = -1.25 + i * 0.5
             cyl(f"wheel{side}{i}", 0.3, 0.1, (x + s * 0.35, y, 0.38), "steel", "X", 18)
             cyl(f"hub{side}{i}", 0.12, 0.08, (x + s * 0.41, y, 0.38), "rust", "X", 10)
+            if move:
+                MT.bolts(S, f"bolt{side}{i}", x + s * 0.4, y, 0.38, 0.3, k)
+        if move:
+            MT.links(S, f"link{side}", x, LOOP, 0.66, k)
         cyl("sprocket" + side, 0.3, 0.1, (x + s * 0.35, -1.45, 0.45), "rust", "X", 12)
         box("skirt" + side, (0.08, 2.7, 0.4), (x + s * 0.36, 0.0, 0.8), "hull", 0.03)
         box("stripe" + side, (0.1, 2.3, 0.26), (x + s * 0.38, 0.0, 0.82), "house", 0.0)

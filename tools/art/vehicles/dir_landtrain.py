@@ -10,17 +10,23 @@ House paint: big flank panels on both cars, rail-gun housing top plates, command
 import math, sys, os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import dir_common as D
+import os, sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import mot_track as MT
 
 ID = "dir_landtrain"
 TITLE = "Directorate Land-Train (mobile HQ)"
 CANVAS = 176
 TARGET = (0.0, 0.0, 1.2)
-STATES = [("idle", 16, 1, 1)]
+STATES = [("idle", 16, 1, 1), ("move", 16, 4, 1)]
+# "move": 4 frames per facing, track links one pitch per 4 frames, road-wheel bolts roll (auth_tank.py). Idle = move frame 0.
+STEP_PX = {"move": MT.Loop(yc=1.65, h=1.1, r=0.46, zc=0.45).step_px()}   # both cars: same loop length
 PALETTE = D.PALETTE
-MATERIALS = D.MATERIALS
+MATERIALS = dict(D.MATERIALS, link=MT.LINK)
 
 
-def tracks(S, y0, y1, tag):
+def tracks(S, y0, y1, tag, k=None):
+    """k = move frame for the link ring and wheel bolts of this car's track; None = no move detail."""
     box, cyl = S.box, S.cyl
     yc, ln = (y0 + y1) / 2, y1 - y0
     for s, side in ((-1, "L"), (1, "R")):
@@ -32,14 +38,19 @@ def tracks(S, y0, y1, tag):
             y = y0 + 0.5 + i * (ln - 1.0) / 4
             cyl(f"wh{tag}{side}{i}", 0.3, 0.1, (x + s * 0.38, y, 0.42), "steel", "X", 14)
             cyl(f"hb{tag}{side}{i}", 0.11, 0.08, (x + s * 0.44, y, 0.42), "rust", "X", 8)
+            if k is not None:
+                MT.bolts(S, f"bolt{tag}{side}{i}", x + s * 0.42, y, 0.42, 0.3, k)
         box(f"skirt{tag}{side}", (0.07, ln - 0.2, 0.32), (x + s * 0.37, yc, 0.95), "hull2", 0.02)
+        if k is not None:
+            MT.links(S, f"link{tag}{side}", x, MT.Loop(yc=yc, h=ln / 2 - 0.35, r=0.46, zc=0.45), 0.66, k)
 
 
 def build(S, state, k, n):
     box, cyl, cone = S.box, S.cyl, S.cone
     S.begin("body")
+    move = state in ("idle", "move")
     # ---- lead car: y 0.2 .. 3.1
-    tracks(S, 0.2, 3.1, "A")
+    tracks(S, 0.2, 3.1, "A", k if move else None)
     box("hullA", (2.1, 2.9, 0.9), (0, 1.65, 1.1), "hull", 0.1)
     box("deckA", (2.1, 2.9, 0.1), (0, 1.65, 1.6), "hull2", 0.04)
     box("noseA", (2.1, 0.5, 0.5), (0, 3.0, 1.0), "oxide", 0.08, rot=(0, 0, 0))
@@ -66,7 +77,7 @@ def build(S, state, k, n):
         box(f"fold{i}", (1.6, 0.06, 0.9), (0, -0.15 + i * 0.15, 1.15), "hull2", 0.0)
     box("coupling", (0.6, 0.6, 0.12), (0, 0.0, 0.7), "steel", 0.03)
     # ---- rear command car: y -3.1 .. -0.2
-    tracks(S, -3.1, -0.2, "B")
+    tracks(S, -3.1, -0.2, "B", k if move else None)
     box("hullB", (2.1, 2.9, 1.0), (0, -1.65, 1.15, ), "hull", 0.1)
     box("cabinB", (1.9, 2.3, 0.7), (0, -1.6, 1.95), "hull2", 0.1)
     box("roofB", (1.95, 2.4, 0.08), (0, -1.6, 2.33), "hull", 0.03)
