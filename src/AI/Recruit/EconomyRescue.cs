@@ -19,7 +19,7 @@ internal sealed class EconomyRescue
     /// <summary>Ticks between two sales.</summary>
     public const int GapTicks = 60;
     private int _last = -GapTicks;
-    private int _harv = -2, _refinery = -2;
+    private int _harv = -2, _refinery = -2, _factory = -2;
     private bool _hadHarvester;
     private static readonly ProductionCategory[] Lanes =
         [ProductionCategory.Structure, ProductionCategory.Defence, ProductionCategory.Vehicle, ProductionCategory.Infantry, ProductionCategory.Aircraft];
@@ -48,6 +48,17 @@ internal sealed class EconomyRescue
     /// (see <see cref="GarrisonManager"/>).</summary>
     public bool Broke { get; private set; }
 
+    /// <summary>s43 (A43-AI-01): while <see cref="Broke"/> the lifeline structure (the refinery, else the war factory) that is missing and can be built, or -1.
+    /// Only that one structure is exempt from the stalled-income freeze; set by <see cref="Think"/>.</summary>
+    public int LifelineType { get; private set; } = -1;
+
+    /// <summary>s43 (A43-AI-01): true when <see cref="LifelineType"/> can be paid for now, so the build order may start it.</summary>
+    public bool LifelineAffordable { get; private set; }
+
+    /// <summary>s43 (A43-AI-01): true while a lifeline rebuild is wanted: the unit lanes hold back so the credits are not spent on units first.
+    /// Released when there is nothing left to sell for it and it cannot be paid.</summary>
+    public bool LifelineSaving { get; private set; }
+
     private int _lastUnload;
     private readonly Dictionary<ulong, MissionKind> _harvMission = new();
 
@@ -64,18 +75,36 @@ internal sealed class EconomyRescue
         }
         if (!_hadHarvester) _lastUnload = tick;
         Broke = _hadHarvester && tick - _lastUnload >= StalledIncomeTicks;
-        if (Broke && k.Harvesters.Count > 0)
+        LifelineType = -1; LifelineAffordable = false; LifelineSaving = false;
+        if (AiFixes.BrokeRebuildsEconomy && Broke && k.HaveYard) FindLifeline(k, faction);
+        if (Broke && (k.Harvesters.Count > 0 || LifelineType >= 0))
         {
             // income has stalled: stop paying for structures (cancel them for the refund), sell what the army does not need, units only
             Saving = false;
+            LifelineSaving = LifelineType >= 0;
             if (tick - _last < GapTicks) return;
+            bool lifelineQueued = false, lifelineStalled = false;
             foreach (ProductionCategory cat in BuildLanes)
                 if (k.Queue(cat).Items.Count > 0)
                 {
+                    if (LifelineType >= 0 && k.Queue(cat).Items[0].TypeIndex == LifelineType) { lifelineQueued = true; lifelineStalled = k.Queue(cat).Items[0].Stalled; continue; }   // s43: the rebuild is not cancelled
                     _last = tick; Cancelled++;
                     sink.Issue(CommandKind.Cancel, EntityId.None, (ActorKind)(int)cat);
                     return;
                 }
+            if (LifelineType >= 0 && (lifelineQueued ? lifelineStalled : !LifelineAffordable))
+            {
+                // s43 (A43-AI-01): the rebuild is saved for like the harvester rescue does: unit production is cancelled for its refund, then structures are sold
+                foreach (ProductionCategory cat in Lanes)
+                {
+                    if (cat == ProductionCategory.Structure || cat == ProductionCategory.Defence || k.Queue(cat).Items.Count == 0) continue;
+                    _last = tick; Cancelled++;
+                    sink.Issue(CommandKind.Cancel, EntityId.None, (ActorKind)(int)cat);
+                    return;
+                }
+                if (!SellOne(k, sink, faction, keepProduction: false)) LifelineSaving = false;   // nothing left to sell: spend what there is
+                return;
+            }
             if (tick - _last >= GapTicks * 5) SellOne(k, sink, faction, keepProduction: true);
             return;
         }
@@ -117,6 +146,18 @@ internal sealed class EconomyRescue
         }
 
         if (!SellOne(k, sink, faction, keepProduction: false)) Saving = false;   // nothing left to sell: spend what there is (Recruit rule)
+    }
+
+    /// <summary>s43 (A43-AI-01): sets <see cref="LifelineType"/> (refinery first, then the war factory) when it is missing and buildable.</summary>
+    private void FindLifeline(RecruitKnowledge k, RecruitFaction faction)
+    {
+        SimRules rules = k.Rules;
+        if (_refinery == -2) _refinery = SimRules.IndexOf(rules.Buildings, faction.RefineryId, b => b.Id);
+        if (_factory == -2) _factory = SimRules.IndexOf(rules.Buildings, faction.FactoryId, b => b.Id);
+        int pick = _refinery >= 0 && k.BuildingCount[_refinery] == 0 ? _refinery : _factory >= 0 && k.BuildingCount[_factory] == 0 ? _factory : -1;
+        if (pick < 0 || !k.Buildable(rules.Buildings[pick].Category, pick)) return;
+        LifelineType = pick;
+        LifelineAffordable = k.Hud.Cash + k.Hud.Stored >= rules.Buildings[pick].Cost;
     }
 
     /// <summary>s24 D-242: true when the harvester (refinery standing) or the refinery (none standing) can be bought now: its producer exists and its tech is met.</summary>
