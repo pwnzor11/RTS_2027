@@ -21,6 +21,15 @@ public sealed class MatchClockHideHudTests
     }
 
     [Fact]
+    public void The_cameo_archive_key_is_z_and_free()
+    {
+        Assert.Equal(GameAction.CameoArchive, GameKeys.Infos[(int)GameAction.CameoArchive].Action);
+        Assert.Equal(Keys.Z, GameKeys.InfoOf(GameAction.CameoArchive).Default);
+        Assert.Equal(1, GameKeys.Infos.Count(i => i.Default == Keys.Z));
+        Assert.Empty(KeyBindings.Default.Conflicts());
+    }
+
+    [Fact]
     public void The_hide_hud_action_has_its_own_row_in_the_table_order_and_a_free_default_key()
     {
         Assert.Equal(GameAction.HideHud, GameKeys.Infos[(int)GameAction.HideHud].Action);

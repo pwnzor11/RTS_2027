@@ -44,11 +44,16 @@ public sealed class ArchiveScreen : IScreen
     private Geometry _geo = new();
 
     /// <summary>Creates the screen. The data is read when the screen is entered.</summary>
-    public ArchiveScreen(GameServices s)
+    /// <param name="s">The game services.</param>
+    /// <param name="openId">QOL-19: the entry id to open on (its tab and row are selected when the screen is entered); null keeps the default.</param>
+    public ArchiveScreen(GameServices s, string? openId = null)
     {
         _s = s;
+        _openId = openId;
         _browser = new ArchiveBrowser(_catalog, new ArchiveProgress());
     }
+
+    private readonly string? _openId;   // QOL-19
 
     /// <inheritdoc />
     public bool BlocksUpdateBelow => true;
@@ -78,10 +83,24 @@ public sealed class ArchiveScreen : IScreen
             _rules = null;   // entries still read, only the live stats block is missing
         }
         _browser = new ArchiveBrowser(_catalog, ArchiveProgress.Load());
+        SelectOpenEntry();
         _sprites = new ArchiveSprites(_s.Graphics, Path.Combine(dataDir, "sprites"), _rules);
         _content = null;
         _bodyScroll = 0;
         _listTop = 0;
+    }
+
+    // QOL-19: open on the requested entry's tab and row; an unknown id or a tab that is not shown leaves the default selection.
+    private void SelectOpenEntry()
+    {
+        if (_openId is null || _catalog.Find(_openId) is not { } entry || !_browser.AllTabs.Contains(entry.Category)) return;
+        _browser.Tab = entry.Category;
+        for (int i = 0; i < _browser.Entries.Count; i++)
+        {
+            if (_browser.Entries[i].Id != entry.Id) continue;
+            _browser.Selected = i;
+            return;
+        }
     }
 
     /// <inheritdoc />

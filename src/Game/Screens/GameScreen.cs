@@ -522,6 +522,8 @@ public sealed class GameScreen : IScreen, IFocusPausable
 
         if (input.ConsumePressed(GameAction.DecorToggle)) Rts.Game.Render.DecorSettings.Enabled = !Rts.Game.Render.DecorSettings.Enabled;   // M12-03
         if (!(typing || chatTyping) && input.ConsumePressed(GameAction.HideHud)) _hudHidden = !_hudHidden;   // QOL-18
+        if (!(typing || chatTyping) && _sidebar?.HoveredArchiveId is { } archiveId && input.ConsumePressed(GameAction.CameoArchive))
+            _s.Screens.Push(new ArchiveScreen(_s, archiveId));   // QOL-19
         HandleSaveKeys(input, typing || chatTyping);   // D-205: F5 quicksave, F9 quickload
         TickAutosave();                                // D-205
         TickStartCue();                                // D-205

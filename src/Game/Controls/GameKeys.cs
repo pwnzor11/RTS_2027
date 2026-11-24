@@ -117,6 +117,7 @@ public static class GameKeys
         new(GameAction.StanceDefensive, "stance_defensive", Orders, "Stance: defensive (fire in range, chase a few cells, walk back)", Keys.N),
         new(GameAction.StanceHoldFire, "stance_hold_fire", Orders, "Stance: hold fire (fire only at what you order)", Keys.U),
         new(GameAction.HideHud, "hide_hud", System, "Hide or show the HUD (panels, cards, sidebar, minimap; for screenshots)", Keys.F11),
+        new(GameAction.CameoArchive, "cameo_archive", System, "While a sidebar cameo is hovered: open its Archive entry", Keys.Z),
     };
 
     /// <summary>The Controls page lines, grouped in <see cref="Groups"/> order: rebindable actions and fixed inputs shown for reference.</summary>
@@ -182,7 +183,7 @@ public static class GameKeys
             A(GameAction.DebugStep), A(GameAction.DebugSpectator),
             A(GameAction.SpecView), A(GameAction.SpecSpeed1), A(GameAction.SpecSpeed2), A(GameAction.SpecSpeed4), A(GameAction.SpecSpeed8),
             A(GameAction.SpecDetail),
-            A(GameAction.ObjJump), A(GameAction.ObjCycle), A(GameAction.ObjList), A(GameAction.DecorToggle), A(GameAction.HideHud),
+            A(GameAction.ObjJump), A(GameAction.ObjCycle), A(GameAction.ObjList), A(GameAction.DecorToggle), A(GameAction.HideHud), A(GameAction.CameoArchive),
         };
     }
 }

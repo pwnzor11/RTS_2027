@@ -9,7 +9,7 @@ namespace Rts.Game.Ui.Sidebar;
 /// <summary>
 /// The tooltip text of a build cameo (M11-10g, audit P4): name, a "cost, time, power" line and a one-line description. Pure, so it is
 /// unit-tested. The time is the sim's own build time (<see cref="SimRules.BuildTicks"/>) in whole seconds; power is shown for buildings
-/// that make or use any (positive makes, negative uses). Cameos have no hotkeys of their own (the tab letters are on the tabs), so none is shown.
+/// that make or use any (positive makes, negative uses). The cameo's own hotkey (its row and column, Shift to queue five) is on the sidebar, and the key that opens its Archive entry is shown in the sidebar tooltip.
 /// </summary>
 public static class CameoTooltip
 {

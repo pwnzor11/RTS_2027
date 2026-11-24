@@ -155,4 +155,6 @@ public enum GameAction
     StanceHoldFire,
     /// <summary>QOL-18: hide or show the HUD panels, the selection card, the sidebar, the minimap and the map buttons (for screenshots).</summary>
     HideHud,
+    /// <summary>QOL-19: while a sidebar cameo is hovered, open its Archive entry.</summary>
+    CameoArchive,
 }
