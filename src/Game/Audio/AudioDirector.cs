@@ -70,7 +70,12 @@ public sealed class AudioDirector
     public void Process(AudioFrame frame)
     {
         int tick = frame.Current.Tick;
-        if (tick < _lastTick) _lastPlayedMs.Clear(); // a new game started
+        if (tick < _lastTick)
+        {
+            // a new game started (GAMESYS-01: its last-fight tick must not carry over from the previous game)
+            _lastPlayedMs.Clear();
+            _lastCombatTick = int.MinValue / 2;
+        }
         _lastTick = tick;
         _nowMs = (long)tick * MsPerTick;
         _faction = frame.CurrentHud?.Faction ?? _faction;
