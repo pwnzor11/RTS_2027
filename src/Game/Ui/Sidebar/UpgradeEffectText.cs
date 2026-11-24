@@ -30,7 +30,7 @@ public static class UpgradeEffectText
     public static string Describe(EffectDef e)
     {
         string target = TargetText(e.Target);
-        string attr = e.Attr.Replace('_', ' ');
+        string attr = e.Attr == "rate_of_fire" ? "reload time" : e.Attr.Replace('_', ' ');
         string change = e.Op switch
         {
             "mul" => "x" + Permille(e.Value),

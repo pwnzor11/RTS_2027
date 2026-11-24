@@ -34,7 +34,7 @@ id = "auth_up_convoy_drill"
 category = "Upgrade"
 faction = "authority"
 title = "Convoy Drill"
-subtitle = "Faster light vehicles"
+subtitle = "Faster scout cars, scrapers and carriers"
 field_note = "BULLETIN 15 // KEEP STATION. KEEP SPEED. KEEP THE INTERVAL. STOP."
 body = '''
 A standard drill that trains drivers to keep a tight interval at speed. Scout cars, scrapers and carriers all move faster. The drill sergeants paint the interval on the road.
@@ -128,7 +128,7 @@ title = "Hot Cores"
 subtitle = "More radiation per shell"
 field_note = "VOICE: \"A HOTTER CORE GIVES A LONGER MEMORY. LET THE GROUND REMEMBER.\""
 body = '''
-Reactor slag packed into the crawler's rounds so each shell leaves more radiation behind. The ground stays deadly for longer. Handlers use tongs.
+Reactor slag packed into the rounds of every radiation gun so each shell leaves more radiation behind. The ground stays deadly for longer. Handlers use tongs.
 '''
 # Approved by the owner 2026-11-04 (Q-38). Replace the open unlock with a mission id when known.
 unlock = "open"
@@ -193,10 +193,10 @@ id = "lb_up_scrap_plate"
 category = "Upgrade"
 faction = "left_behind"
 title = "Scrap Plate"
-subtitle = "Armour from the wreck yard"
+subtitle = "Plate from the wreck yard"
 field_note = "CHALK BOARD // PLATE ON. IT RATTLES. IT STAYS ON."
 body = '''
-Rolled sheets from a dozen wrecks, each a different thickness, welded over the vehicle's weak points. The plate adds to the armour of every vehicle in the camp. It makes the machine heavier and noisier, and drivers complain they can hear themselves coming. The Speaker says a noisy vehicle is a vehicle that lives, and she has not yet been wrong about it.
+Rolled sheets from a dozen wrecks, each a different thickness, welded over the vehicle's weak points. The plate adds a fifth to the hit points of every vehicle in the camp. It makes the machine heavier and noisier, and drivers complain they can hear themselves coming. The Speaker says a noisy vehicle is a vehicle that lives, and she has not yet been wrong about it.
 '''
 unlock = "research:lb_up_scrap_plate"
 
@@ -248,7 +248,7 @@ title = "Salvage Rights"
 subtitle = "Every wreck counts"
 field_note = "CHALK BOARD // SALVAGE RIGHTS SIGNED. EVERY WRECK IS OURS. EVERY ONE."
 body = '''
-A written claim, signed at the Gathering, that the caravan has first right to every wreck on the Drift. In practice it means better paperwork for the crews who find the wrecks, faster hauling with the Salvage Hauler, and more value for every scrap that comes home. Three other camps dispute the claim. The caravans have never bothered to answer them, because the wrecks keep coming home.
+A written claim, signed at the Gathering, that the caravan has first right to every wreck on the Drift. In practice it means better paperwork for the crews who find the wrecks and faster hauling with the Salvage Hauler. Three other camps dispute the claim. The caravans have never bothered to answer them, because the wrecks keep coming home.
 '''
 unlock = "research:lb_up_salvage_rights"
 
@@ -297,10 +297,10 @@ id = "exp_up_vacuum_cores"
 category = "Upgrade"
 faction = "expedition"
 title = "Vacuum Cores"
-subtitle = "Faster vehicle reloads"
+subtitle = "Faster reloads for hover and rocket guns"
 field_note = "CARROW DOWN 3 // NEW TUBES FITTED. THEY GLOW FAINTER AND THE GUNS FIRE OFTEN. DO NOT ADMIRE THEM. TELEX ENDS."
 body = '''
-Improved valve tubes that run cooler under load, so the guns of every fleet vehicle can fire more often. Crews notice at once, since the new tubes glow a fainter colour and need less attention between engagements. The engineers at Carrow Down remain modest about the work, though privately they believe these are the finest tubes they have ever built.
+Improved valve tubes that run cooler under load, so the glide cannons, canister guns and rocket guns of the fleet can fire more often. Crews notice at once, since the new tubes glow a fainter colour and need less attention between engagements. The engineers at Carrow Down remain modest about the work, though privately they believe these are the finest tubes they have ever built.
 '''
 unlock = "campaign:auth_03" # M8-13 (tune)
 

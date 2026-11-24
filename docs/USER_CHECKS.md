@@ -300,7 +300,7 @@ Every faction now has four missions and an ending. Play each campaign start to f
 
 ## Session 14 · UI overhaul, act-break stills, mission tiers, defeat rule (M11, M8-14, M8-15, M4-17)
 Pull first: `git pull --ff-only origin main` (git-lfs is installed on the PC now). Settings are kept; new options get defaults.
-- **Camera:** mouse at any screen edge scrolls; hold Shift for double speed; Home centres on your base; Ctrl+F5..F8 stores a view, F5..F8 recalls it.
+- **Camera:** mouse at any screen edge scrolls; hold Shift for double speed; Home centres on your base; Ctrl+F6, F7, F8 or F12 stores a view, the same keys recall it.
 - **Clean HUD:** no tick/hash/fps line and no key hints on screen. Settings > Controls > "Show diagnostics" brings the line back.
 - **Controls page:** F1 or `?` in a game (in the sandbox F1 is the console, so use `?`), or Pause > Settings > Controls. Opaque panel, scrollbar, Back inside the panel. Click a key and press
   a new one; a taken key offers Enter to swap / Esc to cancel; "Reset all keys to defaults". Quit and restart: rebinds are kept.

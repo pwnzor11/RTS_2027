@@ -53,7 +53,7 @@ public static class GameKeys
         new(GameAction.Bookmark2, "bookmark_2", Camera, "Camera bookmark 2 (Ctrl + key stores it)", Keys.F7),
         new(GameAction.Bookmark3, "bookmark_3", Camera, "Camera bookmark 3 (Ctrl + key stores it)", Keys.F8),
         new(GameAction.Bookmark4, "bookmark_4", Camera, "Camera bookmark 4 (Ctrl + key stores it)", Keys.F12),
-        new(GameAction.AttackMove, "attack_move", Orders, "Attack-move: press, then click the ground", Keys.A),
+        new(GameAction.AttackMove, "attack_move", Orders, "Attack-move: press, then right-click the ground", Keys.A),
         new(GameAction.Stop, "stop", Orders, "Stop", Keys.S),
         new(GameAction.Guard, "guard", Orders, "Guard here", Keys.G),
         new(GameAction.Scatter, "scatter", Orders, "Scatter", Keys.X),

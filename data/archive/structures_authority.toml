@@ -154,9 +154,9 @@ category = "Structure"
 faction = "authority"
 title = "Signals Headquarters"
 subtitle = "Tier 3 command and communications centre"
-field_note = "SIGNALS 1 // EVERY MESSAGE LOGGED, EVERY ENEMY MARKED. STOP."
+field_note = "SIGNALS 1 // EVERY MESSAGE LOGGED. STOP."
 body = '''
-A squat concrete building bristling with aerials, where the district's operators relay orders and listen to the wireless bands. It opens the Authority's third tier of equipment and pings the map whenever an enemy is spotted. Its research staff work three shifts.
+A squat concrete building bristling with aerials, where the district's operators relay orders and listen to the wireless bands. It opens the Authority's third tier of equipment. Its research staff work three shifts.
 '''
 # Approved by the owner 2026-11-04 (Q-38). Replace the open unlock with a mission id when known.
 unlock = "open"

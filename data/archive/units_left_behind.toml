@@ -161,7 +161,7 @@ title = "Tow Truck"
 subtitle = "Transport and rig-tow"
 field_note = "RIG RADIO // TOW IS HOOKED ON. SIX ABOARD AND ONE SULKING MOTHER RIG. HOLD THE LINE."
 body = '''
-A heavy bus chassis with a rear troop bay for six and a tow-arm that lifts a packed rig onto its bed. The Tow Truck is the caravan's ferry: it carries the families who cannot walk, the spares that cannot be lost, and the rigs that must move in a hurry. Its drivers are the only people on the Drift trusted with everyone's children at once, and they say so with a straight face.
+A heavy bus chassis with a rear troop bay for six and a tow-arm that gets the packed rigs around it moving faster. The Tow Truck is the caravan's ferry: it carries the families who cannot walk, the spares that cannot be lost, and the rigs that must move in a hurry. Its drivers are the only people on the Drift trusted with everyone's children at once, and they say so with a straight face.
 '''
 unlock = "encounter:lb_tow"
 

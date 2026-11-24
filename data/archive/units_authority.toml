@@ -136,7 +136,7 @@ title = "Quick-Set Foam Layer"
 subtitle = "Ground-sealing support vehicle"
 field_note = "FOAM 3 // LAY IT, LEAVE IT, LET IT SET. DO NOT STAND IN IT. STOP."
 body = '''
-A tanker truck with a spray boom that lays quick-setting foam across the ground. Nothing can surface or break through the coated cells, and every unit on foot or wheel crawls through them at half pace. It is the engineers' tidy, portable cousin of Foundation Grouting.
+A tanker truck with a spray boom that lays quick-setting foam across the ground. Nothing can surface or break through the coated cells, and every unit that is not in the air crawls through them at half pace. It is the engineers' tidy, portable cousin of Foundation Grouting.
 '''
 # Approved by the owner 2026-11-04 (Q-38). Replace the open unlock with a mission id when known.
 unlock = "open"
@@ -149,7 +149,7 @@ title = "Interceptor"
 subtitle = "Prop fighter"
 field_note = "WING 2 // CLEAR THE SKY OVER THE DISTRICT. LAND ON TIME. STOP."
 body = '''
-A single-seat propeller fighter built at the Airfield for one job, which is to keep the sky empty of Directorate dirigibles. It is fast, lightly armoured and flown by volunteers from the old aero clubs. Ground crews paint a tally on the cowling for every airship brought down.
+A single-seat propeller fighter built at the Airfield for one job, which is to keep the sky empty of Directorate dirigibles. It is lightly armoured and flown by volunteers from the old aero clubs. Ground crews paint a tally on the cowling for every airship brought down.
 '''
 # Approved by the owner 2026-11-04 (Q-38). Replace the open unlock with a mission id when known.
 unlock = "open"
@@ -162,7 +162,7 @@ title = "Heavy Bomber"
 subtitle = "Four-engine ground-attack aircraft"
 field_note = "WING 9 // BOMBS AWAY ON THE MARKED GRID. RETURN FOR REARMING. STOP."
 body = '''
-A four-engined bomber that drops a stick of splash bombs on whatever the district marks on the map. It is the Authority's most expensive aircraft and flies only with fighter cover. The crews are decorated before they leave the ground.
+A four-engined bomber that drops a stick of splash bombs on whatever the district marks on the map. It flies only with fighter cover. The crews are decorated before they leave the ground.
 '''
 # Approved by the owner 2026-11-04 (Q-38). Replace the open unlock with a mission id when known.
 unlock = "open"

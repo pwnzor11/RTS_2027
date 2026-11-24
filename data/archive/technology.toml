@@ -117,7 +117,7 @@ faction = "directorate"
 title = "Static Broadcast"
 subtitle = "Technology"
 body = '''
-The tall mast with the ring of horns does two jobs. It watches the sky for aircraft, and it fills the bands with static until enemy radio is noise and enemy maps stop updating. A commander under Static Broadcast hears the Voice between the crackles and nothing else. The lullaby at lights-out plays from the same horns, which many in the Annex find comforting and a few find difficult to explain.
+The tall mast with the ring of horns does one job. It fills the bands with static until enemy radio is noise and enemy maps stop updating. A commander under Static Broadcast hears the Voice between the crackles and nothing else. The lullaby at lights-out plays from the same horns, which many in the Annex find comforting and a few find difficult to explain.
 '''
 # ASSUMED (M3-17)
 unlock = "encounter:dir_mast"

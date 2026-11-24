@@ -131,7 +131,7 @@ title = "Rocket Truck"
 subtitle = "Mobile rocket artillery"
 field_note = "VOICE: \"SKY AND GROUND ALIKE ARE OURS TO RECLAIM. FIRE WHEN THE LAMP TURNS RED.\""
 body = '''
-A fast truck with a rack of unguided rockets that can be aimed at ground or aircraft. Crews chalk a tally of kills on the cab, and the Commissariat does not stop them. The rockets are loaded at the Muster Hatch from a supply that is shorter than the Voice admits.
+A fast truck with a rack of unguided rockets that can be aimed at ground or aircraft. Crews chalk a tally of kills on the cab, and the Commissariat does not stop them. The rockets are loaded at the Assembly Bore from a supply that is shorter than the Voice admits.
 '''
 unlock = "campaign:dir_03" # M8-13 (tune)
 
@@ -143,7 +143,7 @@ title = "Dirigible"
 subtitle = "Scouting airship"
 field_note = "VOICE: \"THE INTERIOR HAS EYES UPON THE HEAVENS. THE SKY IS NO LONGER A STRANGER.\""
 body = '''
-A slow, fragile envelope hung with a gondola, launched from a Mooring Tower. It sees farther than any ground unit and can drop canisters of Blackout smoke that blind the enemy's own scouts. It is the closest the Directorate has to an air force, and crews who fly it do so mostly to see the sky.
+A fragile envelope hung with a gondola, launched from a Mooring Tower. It sees farther than any ground unit and can drop canisters of Blackout smoke that blind the enemy's own scouts. It is the closest the Directorate has to an air force, and crews who fly it do so mostly to see the sky.
 '''
 unlock = "campaign:dir_04" # M8-13 (tune)
 
@@ -182,7 +182,7 @@ title = "Volunteer"
 subtitle = "Irradiated runner"
 field_note = "VOICE: \"THE VOLUNTEER GIVES WHAT THE ANNEX ASKED FOR. THE REST IS A GIFT.\""
 body = '''
-A runner who has stood too long beside the reactor vents and now carries the glow in his blood. He charges the enemy line and, when he falls, bursts into a cloud of radiation. The Directorate calls it a gift, since he was always going to die anyway.
+A runner who has stood too long beside the reactor vents and now carries the glow in his blood. He runs at the enemy line and, when he falls, bursts into a cloud of radiation. The Directorate calls it a gift, since he was always going to die anyway.
 '''
 # Approved by the owner 2026-11-04 (Q-38). Replace the open unlock with a mission id when known.
 unlock = "open"
@@ -195,7 +195,7 @@ title = "Ash Sower"
 subtitle = "Radiation-laying vehicle"
 field_note = "VOICE: \"WHERE THE SOWER PASSES, NOTHING GROWS. THIS IS THE POINT.\""
 body = '''
-A tracked vehicle with a hopper of reactor slag and a spray bar. It harms no one directly, but leaves a field of lingering radiation that does the work for it. Drivers wear lead aprons and are paid in sealed rations.
+A wheeled vehicle with a hopper of reactor slag and a spray bar. It harms no one directly, but leaves a field of lingering radiation that does the work for it. Drivers wear lead aprons and are paid in sealed rations.
 '''
 # Approved by the owner 2026-11-04 (Q-38). Replace the open unlock with a mission id when known.
 unlock = "open"
