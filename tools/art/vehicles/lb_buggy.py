@@ -8,12 +8,14 @@ House paint: both door panels, the bonnet patch, the pennant.
 import os, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import lb_common as L
+import mot_roll as M
 
 ID = "lb_buggy"
 TITLE = "Left Behind Dune Buggy"
 CANVAS = 128
 TARGET = (0.0, 0.0, 0.8)
-STATES = [("idle", 16, 1, 1)]
+STATES = [("idle", 16, 1, 1), ("move", 16, 4, 1)]   # move: 4 frames per facing (hub bars roll, body bobs); idle = move frame 0
+STEP_PX = M.roll_step(0.44)
 PALETTE = L.PALETTE
 MATERIALS = L.MATERIALS
 
@@ -23,9 +25,13 @@ def build(S, state, k, n):
     S.begin("body")
     for s, side in ((-1, "L"), (1, "R")):
         L.wheel(S, side + "F", s * 0.95, 1.05, 0.42, 0.36, "rust" if s < 0 else "ash")
-        L.wheel(S, side + "R", s * 0.95, -0.95, 0.5 if s > 0 else 0.42, 0.42, "hazard" if s > 0 else "rust")
+        M.hub_bar(S, side + "F", s, s * 0.95, 1.05, 0.42, 0.36, k)
+        rr = 0.5 if s > 0 else 0.42
+        L.wheel(S, side + "R", s * 0.95, -0.95, rr, 0.42, "hazard" if s > 0 else "rust")
+        M.hub_bar(S, side + "R", s, s * 0.95, -0.95, rr, 0.42, k)
     box("axleF", (1.8, 0.1, 0.1), (0, 1.05, 0.42), "dark", 0)
     box("axleR", (1.8, 0.1, 0.1), (0, -0.95, 0.46), "dark", 0)
+    M.sprung(S, k)
     box("chassis", (1.3, 3.0, 0.2), (0, 0.0, 0.62), "ash2", 0.02)
     # lopsided tub: teal left half, rust right half
     box("tubL", (0.7, 1.9, 0.6), (-0.3, -0.35, 0.95), "hull", 0.06)
