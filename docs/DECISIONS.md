@@ -2258,3 +2258,28 @@ the generator (mirror_x rush distance on Mountains/Ash, Glass Coast ore), move t
 **Why:** generated maps tilt pairings: the same build differs by 7.6 points per row between seed halves, so 128 games cannot place a row inside a
 30-point band. On s41's 256-game table main meets the pooled test (pairings 40.5-59.5 %, worst map row 27.3 %); open: Expedition ladder 3 v 2 (49 %).
 **Alternatives:** (a) pooled only; (b) 24 per-map rows on 512+ games now.
+
+### D-306 · 2026-11-23 · Session 42: the Authority ladder needs only to be in order (owner)
+**Decision:** the Authority tier 5 v 1 target of 90 % (s39, D-292) is dropped; D-298's ladder test (a higher tier beats a lower tier of the same faction)
+is the whole requirement. The map-specific fixes were scheduled for this session; queen stays cordoned. **Why:** owner, at the s42 briefing ("in order
+is enough"). Main's Authority 5 v 1 was 76 % in the s41 handoff (not re-measured in s42). **Alternatives:** keep chasing 90 % with an AI code change.
+
+### D-307 · 2026-11-24 · Session 42: Expedition tier-1 army_cap 10, tier-2 army_cap 14 (M13-49)
+**Decision:** `[faction.expedition.tier1] army_cap = 10`, `[faction.expedition.tier2] army_cap = 14` (data/ai/difficulty.toml). **Why:** Expedition tiers
+1-3 played alike (rust_belt, 256 games: 2 v 1 48.1 %, 3 v 2 44.3 %). The tier-2 cap alone is a cliff (20+ never binds, 12 makes tier 2 lose 91 % to tier 1),
+and weakening one tier cannot order three, so tier 1 is capped below tier 2. Fresh seeds 193-320, 256 games: 2 v 1 76.3 %, 3 v 2 67.6 %, 4 v 3 92 %,
+5 v 1 96 %. No tier-3 row moves; the campaign sweep is identical to s41 (45/45). The D-302 wave keys did nothing measurable for the Expedition at tier 3.
+**Alternatives:** tier-1/2 caps 12/16 (3 v 2 62 %), 9/12 (3 v 2 84 %, 2 v 1 76 %); tier-3 respond_to_attacks off (moves every Expedition table row).
+
+### D-308 · 2026-11-24 · Session 42: Mountains 4 plateaus, Glass Coast ocean width 3 (M13-50)
+**Decision:** data/mapgen/biomes.toml: Mountains `cliff_plateaus` 2 -> 4; Glass Coast `ocean_width` 6 -> 3. Map hash pins re-pinned (D-220); the Glass
+Coast seed-4 stall rig keeps the old ocean width. **Why:** 512 games per row (seeds 1-256): Mountains rows 34.0/55.5/39.7/53.6/41.9/45.4 ->
+31.5/56.7/43.1/50.5/51.0/46.9; Glass 46.4/53.7/63.3/28.0/52.3/34.2 -> 54.4/54.8/62.9/27.2/44.3/44.0. With them all six pairings pooled over the four
+biomes are inside 40-60 % (Authority v Directorate 39.2 -> 40.6 %); MAD 11.5 -> 10.9. No Ash Plains or Rust Belt map key helped (28 one-key variants across the four biomes plus round-2 combinations,
+two 256-game confirms), so those biomes are unchanged. docs/balance/s42_balance.md. **Alternatives:** Glass ocean 2/4, Mountains plateaus 3/5 (screened).
+
+### D-309 · 2026-11-24 · Session 42: stuck_recovery stays off (D-301)
+**Decision:** `[movement] stuck_recovery` stays 0. **Why:** on the same seeds (1-128) it lowered the Directorate's two weakest rows: Rust Directorate v Left
+Behind 30.6 -> 18.1 %, Glass Directorate v Expedition 27.3 -> 18.4 %, and moved Authority v Directorate about 6 points toward the Directorate on
+Mountains and Glass (rows already below 50 %). **Alternatives:** on (D-301 left it
+for a measured series; this was it).

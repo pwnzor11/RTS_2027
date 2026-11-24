@@ -136,6 +136,12 @@ aa_cap_before_air = 10   # (tune) s32 D-266: at most 10 anti-air-only vehicles u
 
 # M4-16 s39 (D-291): the Expedition ladder was flat and draw-heavy at tiers 4-5 (5 v 1 60 %, 43 % draws; 4 v 3 41 %, 128 games, rust_belt) for the same
 # reason as the Authority's (D-287): respond_to_attacks. Off at tiers 4-5: 5 v 1 96 %, 5 v 3 94 %, 4 v 3 95 %, draws 3-9 % (docs/balance/s39_balance.md).
+[faction.expedition.tier1]
+army_cap = 10  # (tune) s42: Expedition tiers 1-3 played alike (2 v 1 51 %, 3 v 2 46 %); caps on tiers 1 and 2 only, no tier-3 row moves
+
+[faction.expedition.tier2]
+army_cap = 14  # (tune) s42 (with tier 1 cap 10)
+
 [faction.expedition.tier4]
 respond_to_attacks = 0  # (tune) s39, owner-confirmed s40
 

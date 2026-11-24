@@ -1,29 +1,36 @@
-# Handoff: Session 42 — confirm the pooled finish line (D-305) on 512 games, fix the Expedition ladder, then map-specific causes
-Last commit: `docs: Session 41 handoff` on `integ-s41` (PR to main; check it merged). Laptop folder was on session 39 at the start of s41: `git pull`.
-Where things stand: session 41 set the balance finish line (D-298), built unit-v-unit duels and fixtures (D-299), made the AI unit lists data keys
-(D-300), built Standard of Iron's ideas (stuck recovery D-301 and committed waves D-302, both off by default; map start-room test and audio provenance
-D-303), ran a 24 576-game joint lever sweep, and landed only the Authority tier-2 army_cap 28 (D-304, ladder in order). The sweep's package failed on
-fresh seeds and the same build differs by 7.6 points per row between seed halves: generated maps tilt pairings, so the finish line's measurement is
-Q-87, answered (c): D-305. docs/balance/s41_balance.md. Decisions up to D-305. Open questions: none.
+# Handoff: Session 43 — owner answers Q-88 (two rows just outside the band); then freeze balance (D-298) or one AI-code round
+Last commit: `docs: Session 42 handoff` on `integ-s42` (PR to main, merged by the lead). Laptop folder was on session 39 at the start of s42: `git pull`.
+Where things stand: session 42 put the Expedition ladder in order (D-307, tier-1/2 army caps), kept two map fixes (D-308: Mountains 4 plateaus, Glass
+Coast ocean 3), measured the finish line on 512 games per row and left stuck recovery off (D-309). All six pairings pooled are inside 40-60 %
+(40.6-58.6), ladders are in order, the campaign meets D-222; Ash Plains Authority v Directorate 23.6 % and Rust Belt Authority v Left Behind 75.1 % are
+1.4 and 0.1 points outside 25-75 %, within one standard error of the edge -> Q-88. docs/balance/s42_balance.md. Decisions up to D-309. Open questions: Q-88.
 
 ## Start here (shown to the user as the plan; nothing starts until they say go)
-1. Laptop: `git checkout main; git pull`, rebuild. D-305 (owner, Q-87 c): pooled pairings 40-60 % now, 24 per-map rows later.
-2. Confirm D-305 on main: measure 512 games per row (seeds 1-256; about 12 000 games, ~10 h on the cluster without queen), list rows outside 25-75 %
-   (s41 256-game table: Ash Auth v Dir 27.3, Glass Dir v Exp 27.3, Ash LB v Exp 30.0, Rust Dir v LB 30.6) and fix those by map cause, not unit numbers:
-   the mirror_x maps (Mountains, Ash) let the Directorate's early wave land first (s39 harvester trace); Glass Coast ore (s38).
-3. Expedition ladder: 3 v 2 is 49 % in main (seeds 65-128); Authority 5 v 1 76 % v target 90 — screen `wave_reinforce_ticks` / `wave_search` (D-302) there.
-4. Measure `stuck_recovery = 1` (D-301): 24 rows + income (`--income 1`) on 256 games; turn on only if nothing moves or income rises.
-5. Owner: M9-15 two-PC LAN test; M7-14 Expedition play-test; M10-27 voice log; confirm D-294 and D-304 in a skirmish; delete `integ-s40`, `integ-s41`.
+1. Laptop: `git checkout main; git pull`, rebuild. Owner: answer Q-88 (recommended (a): call the finish line met, freeze balance numbers per D-298);
+   confirm D-306..D-309 (USER_CHECKS session 42).
+2. If Q-88 (a): mark M13-51 done, write the freeze into DECISIONS, and move on to the non-balance items below. If (b): one AI-code round for the
+   Authority's early defence against an early first wave (Ash), plus a small Rust Auth v LB nudge; re-measure the 24 rows on seeds 1-256 (the s42 table
+   is the reference: laptop k3s-cluster `claude/rts/s42/tab42.sh`, `fin42.py`).
+3. Owner items: M9-15 two-PC LAN test; M7-14 Expedition play-test; M10-27 voice log; try D-307/D-308 in a skirmish; delete branches `integ-s40`,
+   `integ-s41`, `integ-s42` on GitHub.
 
 ## Half-finished work
-- Nothing in code. Cluster outputs on /work/out: w41 (sweep), f41 (fresh-seed confirm: main and fin41 on seeds 65-128), ref41 (main seeds 1-64),
-  a41, c41, g41a, l41*, sw41 (campaign sweep on the landed commit), t41 (full suite). Laptop k3s-cluster folder `claude/rts/s41/`: scripts and tools
-  (mksweep.py, fit41.py, tally41.py, bags.py, duelsum.py, mkvar.py with the `~` raw-array op, v41.sh pattern with OFF=).
+- Nothing in code. Cluster outputs on /work/out: m42/m42b/m42c (map screens), l42..l42d (ladder), f42r/f42m/f42v/f42w/fg42/fr42 (512-game table),
+  as42/as42b (Ash confirms, stopped early), sr42 (stuck recovery, stopped at 16/24 rows, 14 complete), sw42 (campaign). Laptop k3s-cluster folder `claude/rts/s42/`:
+  scripts, tab42.sh (merges chunk ranges across jobs into tab42.csv), fin42.py (24-row and pooled verdict), piv.py, swcmp.py-style sweep compare (swcmp.sh).
 
 ## Waiting on the user
-- Confirm D-298..D-304. Delete branches `integ-s40` and `integ-s41` on GitHub after the merge.
+- Q-88. Confirm D-306..D-309. Branch deletes (integ-s40, integ-s41, integ-s42).
 
 ## How to run this session
+- Session 42 lessons:
+  - `start_row_shift` accepts 0..24 only; check a key's range in BiomeCatalog.cs before screening (a variant fails at once, not silently).
+  - Lowering a running job's parallelism kills running pods (their pieces rerun); prefer submitting new jobs with a small --par and raising them.
+  - The 3-CPU full-suite pod cannot land while series pods and the `whisper` app fill huntsman/prince: the cloud box ran the full suite per project in
+    ~75 min (`/tmp/suite.sh` pattern: build once, `dotnet test tests/<P>.Tests --no-build` per project, sums in one file) — keep the turn alive with sleeps.
+  - Reuse earlier tables: s41's ref41 + f41 (main, seeds 1-128) plus new chunks made the 512-game table; tab42.sh merges by chunk range and tag.
+  - 64-game map screens swing up to ~24 points on the same build between seed sets; take screen winners only as candidates and decide on 256-512 games.
+  - Map-hash pins are hex in MapGenOceanTests/OtherBiomePinTests/Layout2Tests: convert the decimal Actual from the test log before replacing.
 - Session 41 lessons:
   - **One seed set is one set of maps.** Rows differ by ~13 points between seeds 1-8 and the 128-game table, and by 7.6 between seeds 1-64 and 65-128.
     Never run a sweep's variants all on the same seeds; spread variants over different seed chunks (or anchor at a many-seed reference) and decide

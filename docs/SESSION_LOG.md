@@ -750,3 +750,18 @@ read-only device call its brief forbade (no change). About 37 000 cluster games.
 **Problems / notes:** I first passed a guessed full SHA to the cluster build (not our ref; fixed); all sweep variants ran on the same 8 seeds (design
 flaw, anchored fit used instead); Game.Tests need `git lfs pull` in the cloud clone.
 **Next session should:** see HANDOFF.
+
+## Session 42 · 2026-11-23/24 (Expedition ladder fixed; Mountains and Glass Coast map fixes; 512-game finish-line table; stuck recovery off)
+**Goal:** owner: resume, "finally fix the balance issues"; answers: Authority ladder in order is enough (D-306), map fixes this session, queen stays
+cordoned, attach push access and merge.
+**Done:** found sessions 40 and 41 merged (laptop folder on s39). Expedition ladder: tiers 1-3 played alike; tier-2 caps alone are a cliff; tier-1 cap 10 +
+tier-2 cap 14 (D-307): 256 fresh games 2 v 1 76.3 %, 3 v 2 67.6 %. Map screens: 28 one-key variants + 12 combinations over the four biomes (64 games),
+two Ash confirms (256); Mountains plateaus 4 and Glass ocean 3 kept (D-308); no Ash or Rust key helped. 512-game table (seeds 1-256): all six pairings
+40.6-58.6 % pooled; Ash Auth v Dir 23.6 % and Rust Auth v LB 75.1 % just outside 25-75 % -> Q-88. stuck_recovery measured, stays off (D-309). Campaign
+sweep identical to s41 (45/45). Cloud full suite: 0 failed after one rig fix. docs/balance/s42_balance.md.
+**Decisions:** D-306..D-309. **Questions:** Q-88 (🔴, the two rows). PR from integ-s42, merged by the lead (owner allowed).
+**Helpers:** 1 (fact-check of the wrap-up docs); measurement lead-only on the cluster. About 38 000 cluster games.
+**Problems / notes:** start_row_shift tops out at 24 (two variants failed at 34 and were rerun); the 3-CPU test pod could not schedule beside full x86
+nodes (a `whisper` app also runs there), so the suite ran in the cloud; lowering a running job's parallelism kills its running pods (lost pieces rerun);
+over-committed parallelism slowed the cluster to ~3.5 pieces a minute; 64-game map screens swung up to 24 points on the same build (seed sets).
+**Next session should:** see HANDOFF.

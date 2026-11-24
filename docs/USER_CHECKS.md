@@ -653,3 +653,15 @@ Pull main first (your folder was on eda0f0e3, two sessions behind), then rebuild
   `wave_search` (not set in data/ai/difficulty.toml). Your games play exactly as before.
 - **Audio list (D-303):** `python3 tools/audio/check_provenance.py` prints `provenance: 306 files, 306 entries, ok (...)`.
 - **Balance numbers to confirm:** D-304 only; no unit cost, health or damage changed this session.
+
+## Session 42 (2026-11-24)
+- **Expedition AI tiers (D-307):** start a skirmish against an Expedition AI at difficulty tier 1, then tier 2, then tier 3: each should feel a
+  bit harder than the one before (before s42 tiers 1-3 played alike). Settings: `[faction.expedition.tier1] army_cap = 10` and
+  `[faction.expedition.tier2] army_cap = 14` in data/ai/difficulty.toml. Tier 3 and up are unchanged.
+- **Mountains maps (D-308):** a new 2-player Mountains skirmish map shows about twice as many raised cliff plateaus (with ramps) as before.
+  Setting: `[biome.mountains] cliff_plateaus = 4` in data/mapgen/biomes.toml.
+- **Glass Coast maps (D-308):** the sea band along the map edges is about half as wide as before, so the bases sit closer to the edge.
+  Setting: `[biome.glass_coast] ocean_width = 3`.
+- **Unchanged:** Ash Plains and Rust Belt maps, every unit's cost/health/damage, the campaign (sweep identical to session 41), and
+  `[movement] stuck_recovery = 0` (D-309).
+- **Balance numbers to confirm:** D-306 (your answer), D-307, D-308, D-309; and Q-88 (how to treat the two rows just outside the band).
