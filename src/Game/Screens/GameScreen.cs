@@ -442,6 +442,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
             if (_mission is not null) input.ConsumeMouseOver(_mission.ObjectivesRegion);
         }
 
+        UpdateHover(input);   // QOL-06
         if (_console is { } console)
         {
             if (input.ConsumePressed(Keys.F1)) console.Toggle();
@@ -668,6 +669,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
             Rectangle mapView = _sidebar?.Layout.MapView ?? new Rectangle(0, 0, _s.Viewport.Width, _s.Viewport.Height);
             _lanOverlay.Draw(sb, _s.Pixel, _lan, mapView, _s.UiScale, _mouse, LanChatAnchor());
         }
+        DrawHoverInfo(sb);   // QOL-06
         DrawMapCursor(sb);   // last, so it sits above everything
     }
 
@@ -769,6 +771,10 @@ public sealed class GameScreen : IScreen, IFocusPausable
     private readonly List<ViewActor> _idleHarvesters = new();
     private int _harvestersTotal, _harvestersWorking;   // QOL-04: the economy line of the HUD (skirmish only)
     private bool _hudHidden;   // QOL-18: the HUD key hides the overlays for a clean screenshot
+    private readonly record struct HoverKey(ActorKind Kind, EntityId Id, bool Ghost);   // QOL-06
+    private HoverKey? _hoverKey;
+    private long _hoverSinceMs;
+    private List<string>? _hoverLines;
     private readonly List<ViewActor> _idleFactories = new();
     private readonly List<GameAlert> _idleAlerts = new();
     private EntityId _lastIdleHarvester, _lastIdleFactory;
@@ -1777,6 +1783,70 @@ public sealed class GameScreen : IScreen, IFocusPausable
         }
 
         return lines;
+    }
+
+    // QOL-06: the unit or building under the mouse, once the mouse has rested on it for the dwell time. Only the viewer's own snapshot is
+    // read (fog already applied), so an enemy shows only while it is visible and a building only as its last-seen image otherwise.
+    private void UpdateHover(InputFrame input)
+    {
+        _hoverLines = null;
+        SimSnapshot snap = _source.Current;
+        bool shown = _sim is not null && snap.Viewer >= 0 && !_spectatorMode && !_gameOverShown && !_hudHidden && !_dragging
+            && _console is not { IsOpen: true } && MapViewport().Bounds.Contains(_mouse)
+            && !(_card is { Visible: true } && _card.HitTest(_mouse)) && !_hudRegion.HitTest(_mouse);
+        if (!shown) { _hoverKey = null; return; }
+        var hit = HoverAt(snap, _camera.WorldFromScreen(_mouse));
+        if (hit is not { } h) { _hoverKey = null; return; }
+        if (h.Key != _hoverKey) { _hoverKey = h.Key; _hoverSinceMs = _nowMs; }
+        if (_nowMs - _hoverSinceMs >= HoverInfo.DwellMs) _hoverLines = h.Lines;
+    }
+
+    private (HoverKey Key, List<string> Lines)? HoverAt(SimSnapshot snap, Vector2 world)
+    {
+        const float PickWorldPx = 24f;   // 3/8 of a cell
+        SimRules r = _sim!.Rules;
+        UnitView? bestUnit = null;
+        float best = PickWorldPx * PickWorldPx;
+        foreach (UnitView u in snap.Units)
+        {
+            float d = Vector2.DistanceSquared(Camera.WorldFromLepton(u.Position), world);
+            if (d <= best) { best = d; bestUnit = u; }
+        }
+
+        if (bestUnit is UnitView unit)
+        {
+            bool vehicle = unit.Kind == UnitKind.Vehicle;
+            if ((uint)unit.TypeIndex >= (uint)(vehicle ? r.Vehicles.Count : r.Infantry.Count)) return null;
+            string id = vehicle ? r.Vehicles[unit.TypeIndex].Id : r.Infantry[unit.TypeIndex].Id;
+            int max = vehicle ? r.Vehicles[unit.TypeIndex].MaxHealth : r.Infantry[unit.TypeIndex].MaxHealth;
+            var kind = vehicle ? ActorKind.Vehicle : ActorKind.Infantry;
+            return (new HoverKey(kind, unit.Id, false),
+                HoverInfo.Lines(CameoNames.Display(id), HoverInfo.OwnerLine(unit.Player, Me), unit.Health, max, lastSeen: false));
+        }
+
+        float cell = Camera.CellPx;
+        foreach (BuildingView b in snap.Buildings)
+        {
+            float left = b.Cell.X * cell, top = b.Cell.Y * cell;
+            if (world.X < left || world.Y < top || world.X >= left + b.FootprintW * cell || world.Y >= top + b.FootprintH * cell) continue;
+            if ((uint)b.TypeIndex >= (uint)r.Buildings.Count) continue;
+            BuildingType t = r.Buildings[b.TypeIndex];
+            return (new HoverKey(ActorKind.Building, b.Id, b.Ghost),
+                HoverInfo.Lines(CameoNames.Display(t.Id), HoverInfo.OwnerLine(b.Player, Me), b.Health, t.MaxHealth, lastSeen: b.Ghost));
+        }
+
+        return null;
+    }
+
+    private void DrawHoverInfo(SpriteBatch sb)
+    {
+        if (_hoverLines is not { Count: > 0 } lines) return;
+        var scale = _s.UiScale;
+        int width = lines.Max(line => BitmapFont.Measure(line, scale)) + 16;
+        Rectangle map = MapViewport().Bounds;
+        int x = Math.Min(_mouse.X + 18, map.Right - width - 4);
+        int y = Math.Min(_mouse.Y + 18, map.Bottom - Hud.HeightOf(lines.Count, scale) - 4);
+        Hud.Panel(sb, _s.Pixel, new Point(Math.Max(map.X, x), Math.Max(map.Y, y)), lines, scale);
     }
 
     // The HUD panels are UI regions: clicks on them never reach the map.
