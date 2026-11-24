@@ -22,7 +22,7 @@ BOB = (0.0, 0.05, 0.10, 0.05)
 
 def build(S, state, k, n):
     box, cyl = S.box, S.cyl
-    move = state == "move"
+    move = state in ("idle", "move")   # idle = move frame 0 detail, so the wheels do not pop when stopping
     # wheels: 4, big knobbly tyres with steel hubs
     for s, side in ((-1, "L"), (1, "R")):
         for y, tag in ((0.78, "F"), (-0.72, "R")):
