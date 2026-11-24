@@ -116,6 +116,7 @@ def build(S, state, k, n):
         for i in range(3):
             t = (ph + i / 3.0) % 1.0
             r = 0.16 + 0.3 * t
-            sph(f"puff{i}", r, (-0.5 + 0.5 * i + 0.1 * math.sin(t * 6), 2.5 - 0.35 * t, 0.35 + 1.0 * t), "puff", nocast=True)
+            # S43 smoke pass: faceted flat discs instead of spheres (no bubble silhouette); they tilt back with the drift
+            cyl(f"puff{i}", r, 0.05, (-0.5 + 0.5 * i + 0.1 * math.sin(t * 6), 2.5 - 0.35 * t, 0.35 + 1.0 * t), "puff", "Z", verts=6, nocast=True)
     # ---- tool box on the deck
     box("toolbox", (0.34, 0.5, 0.2), (0.55, -0.15, 1.52), "rust", 0.03)

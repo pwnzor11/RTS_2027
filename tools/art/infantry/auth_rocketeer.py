@@ -172,13 +172,13 @@ def build(S, p):
     S.box((0.03, 0.40, 0.025), (0, 0.09, 0.19), "steel", GM)                         # frame rail
     S.box((0.05, 0.05, 0.12), (0, -0.04, -0.12), "dark", GM)                         # trigger grip
     S.box((0.05, 0.05, 0.10), (0, 0.22, -0.11), "dark", GM)                          # front grip
-    if p["flash"]:      # D-072: smaller, warm flame; a 1-2 px hot core; a short grey-brown backblast puff (S43: sizes follow B["flash"])
+    if p["flash"]:      # D-072: smaller, warm flame; a 1-2 px hot core; S43: sizes follow B["flash"]; backblast is a torn faceted cone (D-316, no sphere)
         fl, flw = B["flash"] / B["gun"], B["flash"] / B["gunw"]
         S.cyl(0.0, 0.42 * fl, (0, 0.98, 0), "flash", "Y", GM, verts=8, r2=0.17 * flw)  # launch flame ahead of the nose
         S.sphere((0.10 * flw, 0.10 * fl, 0.10 * flw), (0, 0.86, 0), "flash", GM, seg=8)
         S.sphere((0.05 * flw, 0.05 * fl, 0.05 * flw), (0, 0.84, 0), "hot", GM, seg=8)   # hot core (small)
-        S.sphere((0.13 * flw, 0.20 * fl, 0.13 * flw), (0, -0.64, 0), "puff", GM, seg=8)  # backblast puff behind the tube
-        S.sphere((0.09 * flw, 0.11 * fl, 0.09 * flw), (0, -0.82, 0.02), "puff", GM, seg=8)
+        S.cyl(0.0, 0.30 * fl, (0, -0.66, 0), "puff", "Y", GM, verts=6, r2=0.13 * flw)  # backblast cone
+        S.cyl(0.0, 0.16 * fl, (0, -0.86, 0.02), "puff", "Y", GM, verts=5, r2=0.07 * flw)  # stepped tail
 
     # ---------------- arms: shoulder -> elbow -> wrist; house band on the upper arm
     for side, hand_spec in ((-1, p["hands"][0]), (1, p["hands"][1])):
