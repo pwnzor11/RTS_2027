@@ -54,6 +54,8 @@ public sealed class SettingsScreen : IScreen
                 new MenuButton("Toggle", ToggleWeather)),   // M10-12
             new MenuItem(() => $"Screen shake: {(_s.Settings.ScreenShake ? "On" : "Off")}", ToggleScreenShake, _ => ToggleScreenShake(),
                 new MenuButton("Toggle", ToggleScreenShake)),   // M10-14
+            new MenuItem(() => $"Order lines: {(_s.Settings.ShowOrderLines ? "On" : "Off")}", ToggleOrderLines, _ => ToggleOrderLines(),
+                new MenuButton("Toggle", ToggleOrderLines)),   // QOL-10
             new MenuItem(() => SkinLine(_s.Settings), ToggleUiSkin, _ => ToggleUiSkin(),
                 new MenuButton("Toggle", ToggleUiSkin)),   // M10-15 (s27)
             Volume("Master volume", s => s.MasterVolume, (s, v) => s with { MasterVolume = v }),
@@ -159,6 +161,8 @@ public sealed class SettingsScreen : IScreen
     private void ToggleWeather() => _s.Settings = _s.Settings with { Weather = !_s.Settings.Weather };
 
     private void ToggleScreenShake() => _s.Settings = _s.Settings with { ScreenShake = !_s.Settings.ScreenShake };
+
+    private void ToggleOrderLines() => _s.Settings = _s.Settings with { ShowOrderLines = !_s.Settings.ShowOrderLines };   // QOL-10
 
     /// <summary>M10-15 (s27): the settings line for <see cref="Settings.UiSkin"/>; the skin is chosen when a match starts.</summary>
     public static string SkinLine(Settings s) => $"Interface skin: {(s.UseFactionSkin ? "Faction art" : "Classic")}";

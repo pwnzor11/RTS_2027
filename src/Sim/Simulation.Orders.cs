@@ -32,6 +32,26 @@ public sealed partial class Simulation
         return list;
     }
 
+    /// <summary>QOL-10 (read only): the point a live vehicle or soldier is heading for. While it has an attack target, the target's aim point
+    /// (<paramref name="attack"/> true); otherwise its move destination while it is moving (false). False when neither applies. Changes no state.</summary>
+    public bool TryOrderPoint(ActorRef actor, out LeptonCoord point, out bool attack)
+    {
+        point = default;
+        attack = false;
+        if (actor.Kind > ActorKind.Infantry || StoreOf(actor.Kind) is not { } s || !s.Slots.IsAlive(actor.Id)) return false;
+        int i = actor.Id.Index;
+        ActorRef target = _combat.At(actor.Kind, i).AttackTarget;
+        if (!target.Id.IsNone)
+        {
+            attack = true;
+            return TargetPoint(target, CombatPositionAt(actor.Kind, i), out point);
+        }
+
+        if (s.Mission[i] is not (MissionKind.Move or MissionKind.AttackMove) || s.Destination[i] == default) return false;
+        point = s.Destination[i];
+        return true;
+    }
+
     private void ApplySetStance(Command c)
     {
         if (!OwnsSubject(c with { Arg = c.Arg & 0xFF }, out var store)) return;

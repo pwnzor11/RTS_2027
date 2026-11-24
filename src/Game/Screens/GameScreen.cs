@@ -642,6 +642,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
         _s.Scene.Draw(sb, _s.Pixel, frame, _camera, _s.Viewport);
         DrawSelectedBuilding(sb, snapshot);
         DrawQueuedPaths(sb);   // M13-15: the waypoints of the selected units
+        DrawOrderLines(sb);   // QOL-10
         _feedback.Draw(sb, _s.Pixel, _camera);
         DrawPackProgress(sb, snapshot);
         DrawUnpackGhost(sb);
@@ -1527,6 +1528,18 @@ public sealed class GameScreen : IScreen, IFocusPausable
             var actor = new ActorRef(unit.Kind, unit.Id);
             if (_sim.Sim.WaypointCountOf(actor) == 0 || !_sim.TryGetPosition(unit, out LeptonCoord at)) continue;
             OrderFeedback.DrawWaypointPath(sb, _s.Pixel, _camera, Camera.WorldFromLepton(at), _sim.Sim.WaypointsOf(actor));
+        }
+    }
+
+    // QOL-10: a thin line from each selected unit to its attack target (red) or move destination (green); Settings > Order lines.
+    private void DrawOrderLines(SpriteBatch sb)
+    {
+        if (_sim is null || !_s.Settings.ShowOrderLines || _spectatorMode || _selection.Count == 0) return;
+        foreach (UnitKey unit in _selection.Units)
+        {
+            var actor = new ActorRef(unit.Kind, unit.Id);
+            if (!_sim.TryGetPosition(unit, out LeptonCoord at) || !_sim.Sim.TryOrderPoint(actor, out LeptonCoord to, out bool attack)) continue;
+            OrderFeedback.DrawOrderLine(sb, _s.Pixel, _camera, Camera.WorldFromLepton(at), Camera.WorldFromLepton(to), attack);
         }
     }
 

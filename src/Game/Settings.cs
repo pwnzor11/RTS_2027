@@ -39,6 +39,7 @@ namespace Rts.Game;
 /// <param name="Weather">M10 design 21 §4: view-only weather particles per biome. Default true; files without the key get true.</param>
 /// <param name="ScreenShake">M10 design 21 §4: light screen shake on big blasts. Default true.</param>
 /// <param name="CheckForUpdates">M10 design 21 §5: check GitHub Releases once at start and show "new version available". Default true.</param>
+/// <param name="ShowOrderLines">QOL-10: thin lines from each selected unit to its attack target (red) or move destination (green). Default true.</param>
 /// <param name="UiSkin">S24: "faction" (default) draws the sidebar and card with the local faction's skin art where it exists; "classic" always draws the procedural look.</param>
 /// <param name="PlayerName">M9 LAN player name; empty = the Windows user name (design 20 §8 item 4).</param>
 /// <param name="LanGamePort">M9 LAN game port (UDP), 1024..65535. Default <see cref="Rts.Net.NetProtocol.DefaultGamePort"/>.</param>
@@ -74,7 +75,8 @@ public sealed record Settings(
     int LanGamePort = Rts.Net.NetProtocol.DefaultGamePort,
     int LanDiscoveryPort = Rts.Net.NetProtocol.DefaultDiscoveryPort,
     int AmbienceVolume = 100,
-    string UiSkin = Settings.UiSkinFaction)
+    string UiSkin = Settings.UiSkinFaction,
+    bool ShowOrderLines = true)
 {
     /// <summary>The <c>UiSkin</c> value for faction skins.</summary>
     public const string UiSkinFaction = "faction";
@@ -200,7 +202,8 @@ public sealed record Settings(
             Int(root, "lan_game_port", d.LanGamePort, 1024, 65535),
             Int(root, "lan_discovery_port", d.LanDiscoveryPort, 1024, 65535),
             Int(root, "ambience_volume", d.AmbienceVolume, 0, 100),
-            root.TryGetValue("ui_skin", out object? us) && us is string uss && uss.Trim().ToLowerInvariant() == UiSkinClassic ? UiSkinClassic : UiSkinFaction);
+            root.TryGetValue("ui_skin", out object? us) && us is string uss && uss.Trim().ToLowerInvariant() == UiSkinClassic ? UiSkinClassic : UiSkinFaction,
+            root.TryGetValue("show_order_lines", out object? sol) && sol is bool solb ? solb : d.ShowOrderLines);
     }
 
     /// <summary>The settings as TOML text.</summary>
@@ -250,6 +253,8 @@ public sealed record Settings(
         sb.AppendLine(FormattableString.Invariant($"lan_discovery_port = {Math.Clamp(LanDiscoveryPort, 1024, 65535)}"));
         sb.AppendLine("# UI skin: faction (art of your faction where it exists) | classic (always the plain look)");
         sb.AppendLine(FormattableString.Invariant($"ui_skin = {Quote(UseFactionSkin ? UiSkinFaction : UiSkinClassic)}"));
+        sb.AppendLine("# Thin lines from selected units to their attack target or move destination (view only).");
+        sb.AppendLine(FormattableString.Invariant($"show_order_lines = {(ShowOrderLines ? "true" : "false")}"));
         sb.AppendLine("# Pan the camera to a new mission objective's target (M11-05)");
         sb.AppendLine(FormattableString.Invariant($"camera_cue_on_new_objective = {(CameraCueOnNewObjective ? "true" : "false")}"));
         IReadOnlyList<(string Id, string Key)> rebound = Bindings.Overrides();
