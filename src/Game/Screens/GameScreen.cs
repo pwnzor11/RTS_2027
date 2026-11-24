@@ -687,7 +687,8 @@ public sealed class GameScreen : IScreen, IFocusPausable
                 _orders?.KeyPressed(action.Action);
                 break;
             case Rts.Game.Ui.Card.CardActionKind.SelectOnly:
-                _selection.Replace(new[] { action.Unit });
+                if (CtrlHeld(input)) _selection.Replace(Selection.SameTypeAmong(_selection.Units, _renderUnits, action.Unit));   // QOL-17: Ctrl+cameo keeps the selected units of that type
+                else _selection.Replace(new[] { action.Unit });
                 Audio.AudioBootstrap.Director?.Notify(Audio.AudioEventKind.UnitSelect);
                 break;
             case Rts.Game.Ui.Card.CardActionKind.Remove:
@@ -828,6 +829,28 @@ public sealed class GameScreen : IScreen, IFocusPausable
         }
 
         _lastIdleFactory = f.Id;
+        SelectBuildingAt(f.Cell);
+        CentreCameraOn(new Vector2((f.Cell.X + f.FootprintW / 2f) * Camera.CellPx, (f.Cell.Y + f.FootprintH / 2f) * Camera.CellPx));
+    }
+
+    // QOL-05: selects the next own production building (slot order, wrapping) and centres the view on it.
+    private readonly List<ViewActor> _productionBuildings = new();
+    private EntityId _lastProduction;
+
+    private void CycleProduction()
+    {
+        if (_sim is null || _spectatorMode) return;
+        _sim.Sim.ViewFor(Me).CopyOwn(_ownScratch);
+        _productionBuildings.Clear();
+        ProductionCycle.Buildings(_ownScratch, _sim.Rules, _productionBuildings);
+        if (IdleFinder.Next(_productionBuildings, _lastProduction) is not { } f)
+        {
+            _toast.Show(UiText.Get(UiText.NoProductionBuilding), _nowMs);
+            return;
+        }
+
+        _lastProduction = f.Id;
+        _selection.Clear();
         SelectBuildingAt(f.Cell);
         CentreCameraOn(new Vector2((f.Cell.X + f.FootprintW / 2f) * Camera.CellPx, (f.Cell.Y + f.FootprintH / 2f) * Camera.CellPx));
     }
@@ -992,7 +1015,11 @@ public sealed class GameScreen : IScreen, IFocusPausable
                 Vector2 a = _camera.WorldFromScreen(begin);
                 Vector2 b = _camera.WorldFromScreen(mouse);
                 bool addBox = ShiftHeld(input);   // M11-10c: Shift+box adds to the selection
-                _selection.Apply(Selection.Inside(_renderUnits, Vector2.Min(a, b), Vector2.Max(a, b), Me), addBox);
+                Vector2 lo = Vector2.Min(a, b), hi = Vector2.Max(a, b);
+                IEnumerable<UnitKey> boxed = input.IsAltDown()   // QOL-03: Alt+box takes the fighters only, when any are in the box
+                    ? Selection.InsideFightersFirst(_renderUnits, lo, hi, Me, IsFighter)
+                    : Selection.Inside(_renderUnits, lo, hi, Me);
+                _selection.Apply(boxed, addBox);
                 if (!addBox || _selection.Count > 0) ClearBuildingSelection();
                 _clickTap.Reset();
                 if (_selection.Count > 0) Audio.AudioBootstrap.Director?.Notify(Audio.AudioEventKind.UnitSelect);   // M3-INT
@@ -1006,10 +1033,14 @@ public sealed class GameScreen : IScreen, IFocusPausable
                     // M11-10c: Ctrl+click or a double-click takes every unit of that type on screen; Shift+click toggles one unit.
                     if (CtrlHeld(input) || _clickTap.Tap(key, _nowMs))
                     {
-                        Viewport map = MapViewport();
-                        Vector2 topLeft = _camera.WorldFromScreen(new Point(0, 0));
-                        Vector2 bottomRight = _camera.WorldFromScreen(new Point(map.Width, map.Height));
-                        _selection.Apply(Selection.SameTypeInside(_renderUnits, topLeft, bottomRight, Me, key), addClick);
+                        if (input.IsAltDown()) _selection.Apply(Selection.SameTypeAnywhere(_renderUnits, Me, key), addClick);   // QOL-02: Alt = the whole map
+                        else
+                        {
+                            Viewport map = MapViewport();
+                            Vector2 topLeft = _camera.WorldFromScreen(new Point(0, 0));
+                            Vector2 bottomRight = _camera.WorldFromScreen(new Point(map.Width, map.Height));
+                            _selection.Apply(Selection.SameTypeInside(_renderUnits, topLeft, bottomRight, Me, key), addClick);
+                        }
                     }
                     else if (addClick) _selection.Toggle(key);
                     else _selection.Replace(new[] { key });
@@ -1600,6 +1631,20 @@ public sealed class GameScreen : IScreen, IFocusPausable
             if (_selection.Count > 0) Audio.AudioBootstrap.Director?.Notify(Audio.AudioEventKind.UnitSelect);
         }
 
+        if (input.ConsumePressed(GameAction.SelectTypeMapWide) && _selection.Count > 0)   // QOL-02
+        {
+            SelectMapWide(Selection.SameTypeAnywhere(_renderUnits, Me, _selection.Units[0]).ToList(), input);
+        }
+
+        if (input.ConsumePressed(GameAction.SelectVehicles)) SelectMapWide(Selection.Army(_renderUnits, Me, v => v.Kind == UnitKind.Vehicle && IsFighter(v)).ToList(), input);   // QOL-11
+        if (input.ConsumePressed(GameAction.SelectInfantry)) SelectMapWide(Selection.Army(_renderUnits, Me, v => v.Kind == UnitKind.Infantry && IsFighter(v)).ToList(), input);   // QOL-11
+        if (input.ConsumePressed(GameAction.CycleProductionBuilding)) CycleProduction();   // QOL-05
+        if (input.ConsumePressed(GameAction.AutoTypeGroups))   // QOL-17
+        {
+            _groups.AutoByType = !_groups.AutoByType;
+            _toast.Show(UiText.Format(UiText.AutoTypeGroupsToast, "state", _groups.AutoByType ? "on" : "off"), _nowMs);
+        }
+
         for (int i = 0; i < GroupActions.Length; i++)
         {
             if (!input.ConsumePressed(GroupActions[i])) continue;
@@ -1609,11 +1654,23 @@ public sealed class GameScreen : IScreen, IFocusPausable
             IReadOnlyList<UnitKey> members = _groups.Members(number);
             if (members.Count == 0) continue;
             bool twice = _groupTap.Tap(number, _nowMs);
+            if (_groups.AutoByType) members = Selection.OfTypesOf(members, _renderUnits, Me).ToList();   // QOL-17: every unit of the group's types
             _selection.Replace(Selection.WithoutCarried(members, _renderUnits));   // S19 D-205: carried members stay in the group but are not selected
             ClearBuildingSelection();
             Audio.AudioBootstrap.Director?.Notify(Audio.AudioEventKind.UnitSelect);
             if (twice && GroupCentre(members) is { } centre) CentreCameraOn(centre);
         }
+    }
+
+    // QOL-03 / QOL-11: a combat unit by the rules (harvesters, builders, engineers and salvagers are not).
+    private bool IsFighter(UnitView v) => _sim is not null && Selection.IsCombatUnit(_sim.Rules, v);
+
+    // QOL-02 / QOL-11: a map-wide select replaces the selection, or joins it with Shift; the building selection goes.
+    private void SelectMapWide(IReadOnlyList<UnitKey> keys, InputFrame input)
+    {
+        _selection.Apply(keys, ShiftHeld(input));
+        ClearBuildingSelection();
+        if (_selection.Count > 0) Audio.AudioBootstrap.Director?.Notify(Audio.AudioEventKind.UnitSelect);
     }
 
     private Vector2? GroupCentre(IReadOnlyList<UnitKey> members)
@@ -1639,6 +1696,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
     {
         if (_sim is null) return;
         if (input.ConsumePressed(GameAction.CentreBase)) CentreCameraOnOwnBase();
+        if (input.ConsumePressed(GameAction.CentreOnSelection)) CentreOnSelection();   // QOL-05
         if (input.ConsumePressed(GameAction.LastAlert) && _alerts.JumpTarget(_source.Current.Tick) is { } alertAt) CentreCameraOn(alertAt);   // M11-10d
         bool ctrl = input.IsDown(Keys.LeftControl) || input.IsDown(Keys.RightControl);
         GameAction[] keys = { GameAction.Bookmark1, GameAction.Bookmark2, GameAction.Bookmark3, GameAction.Bookmark4 };
@@ -1648,6 +1706,24 @@ public sealed class GameScreen : IScreen, IFocusPausable
             Viewport map = MapViewport();
             if (ctrl) _bookmarks[i] = _camera.WorldFromScreen(new Point(map.Width / 2, map.Height / 2));
             else if (_bookmarks[i] is { } at) CentreCameraOn(at);
+        }
+    }
+
+    // QOL-05: the centre of the selected units, or of the selected building when no unit is selected.
+    private void CentreOnSelection()
+    {
+        if (_sim is null) return;
+        if (_selection.Count > 0)
+        {
+            if (GroupCentre(_selection.Units) is { } c) CentreCameraOn(c);
+            return;
+        }
+
+        foreach (BuildingView b in _source.Current.Buildings)
+        {
+            if (b.Id != _selectedBuilding) continue;
+            CentreCameraOn(new Vector2((b.Cell.X + b.FootprintW / 2f) * Camera.CellPx, (b.Cell.Y + b.FootprintH / 2f) * Camera.CellPx));
+            return;
         }
     }
 
