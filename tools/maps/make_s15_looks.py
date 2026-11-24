@@ -157,6 +157,8 @@ def read_shipped(path):
     return open(path).read()
 
 
+# S43 detail kit per biome (palette [detail] kit): the biome's extras on top of the shared detail features.
+KIT = {"rust_belt": "rust", "glass_coast": "coast", "mountains": "mountains", "ash_plains": "ash"}
 COMMENTS = dict(clear="Open ground.", road="Roads: lighter than the ground around them.", rough="Rubble and scrub.", ash="Ash ground: its own hue.",
                 water="Deep water: clearly blue.", rock="Rock outcrops.", cliff="Cliffs: dark face (B and C add a light lip).", shallow="Fords and lagoon: lighter blue-green than deep water.")
 
@@ -197,6 +199,9 @@ def toml_for(biome, look):
                 f'shore = "{hexc(b["foam"])}"', "shore_texels = 3",
                 f'cliff_top = "{hexc(b["cliff_top"])}"', "cliff_top_texels = 1", "cliff_shadow_permille = 500", "cliff_shadow_texels = 4", ""]
     if look == "c":
+        out += ["[detail]", "# S43 terrain detail pass: 1 = rich (noise, pebbles, grass, faint cracks, oil, soft land blends, ragged shore/kerb/cliff lip); 2 = calm; 0 = the plain D-181 look.",
+                "# kit = the biome's extras: rust | coast (beach ripples, wet sand, tidal foam) | mountains (rock strata, scree, snow) | ash (bigger drifts, ember cinders).",
+                "level = 1", f'kit = "{KIT[biome]}"', ""]
         out += ["[field]", "# Resource cells as deposits: a darker bed, a rim where the field meets other ground, 1..4 heaps per cell (more and bigger when richer).",
                 "rim_texels = 1", "bed_permille = 200", "max_heaps = 4", ""]
         for key, cols in (("ashfall", b["ash_f"]), ("pitchblende", b["pit_f"])):

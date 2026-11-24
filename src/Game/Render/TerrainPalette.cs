@@ -336,7 +336,7 @@ public sealed class TerrainPalette
         }
 
         if (root.TryGetValue("detail", out object? dv) && dv is TomlTable dt)
-            st = st with { Detail = OptInt(dt, "level", 0, 0, 2) };
+            st = st with { Detail = OptInt(dt, "level", 0, 0, 2), Kit = ParseKit(dt) };
 
         if (root.TryGetValue("field", out object? fv) && fv is TomlTable f)
         {
@@ -357,6 +357,20 @@ public sealed class TerrainPalette
     {
         if (!parent.TryGetValue(key, out object? v) || v is not TomlTable t) return null;
         return new FieldLook(Colour(t, "body"), Colour(t, "light"), Colour(t, "shade"), Colour(t, "rim"));
+    }
+
+    private static DetailKit ParseKit(TomlTable detail)
+    {
+        if (!detail.TryGetValue("kit", out object? v)) return DetailKit.Rust;
+        if (v is not string s) throw new InvalidDataException("palette [detail] kit must be a string");
+        return s switch
+        {
+            "rust" => DetailKit.Rust,
+            "coast" => DetailKit.Coast,
+            "mountains" => DetailKit.Mountains,
+            "ash" => DetailKit.Ash,
+            _ => throw new InvalidDataException($"palette [detail] kit '{s}' must be rust, coast, mountains or ash"),
+        };
     }
 
     private static int OptInt(TomlTable parent, string key, int fallback, int min, int max)
@@ -403,6 +417,10 @@ public sealed class TerrainPalette
     /// <param name="Base">The shade most texels use, and the colour a neighbour blends toward.</param>
     /// <param name="Light">The lightest shade.</param>
     public readonly record struct LandShades(Rgb Dark, Rgb Base, Rgb Light);
+
+    /// <summary>The biome extras the S43 detail pass adds (<c>[detail] kit</c>): rust (the default), coast (beach ripples, wet sand, tidal foam),
+    /// mountains (rock strata, scree, snow patches) or ash (bigger drifts, ember-glow cinders).</summary>
+    public enum DetailKit { Rust, Coast, Mountains, Ash }
 
     /// <summary>How a resource overlay is drawn as a deposit: body colour, lit side, shaded side and the dark rim/contact shadow.</summary>
     /// <param name="Body">Main colour of a heap or crystal.</param>
@@ -473,6 +491,9 @@ public sealed class TerrainPalette
 
         /// <summary>Terrain detail level (S43): 0 = the D-181 look; 1 = multi-octave noise, per-land features, soft land-to-land blends, ragged shore, road edge and cliff lip (see <see cref="TerrainDetail"/>); 2 = the same, calmer (no cracks or grass, half the pebbles).</summary>
         public int Detail { get; init; }
+
+        /// <summary>Biome extras of the detail pass (<c>[detail] kit</c>, default rust). Only read when <see cref="Detail"/> is above 0.</summary>
+        public DetailKit Kit { get; init; }
 
         /// <summary>True when any shore, road-edge or cliff option is on.</summary>
         public bool HasEdgeEffects => RoadEdge is not null || Shore is not null || CliffTop is not null || CliffShadowPermille > 0;

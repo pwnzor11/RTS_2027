@@ -42,6 +42,8 @@ public static class DecorBake
         int tw = w * s, th = h * s;
         var rgba = new byte[tw * th * 4];
         IReadOnlyList<DecalRule> rules = palette.Decor.Decals;
+        // With the S43 detail pass on, its own fainter hairline cracks replace these two old decals.
+        if (palette.Style.Detail > 0) rules = rules.Where(r => r.Name is not ("road crack" or "frost crack")).ToList();
         if (rules.Count == 0) return new Result(tw, th, rgba, 0);
 
         bool[] nearStart = new bool[w * h];
