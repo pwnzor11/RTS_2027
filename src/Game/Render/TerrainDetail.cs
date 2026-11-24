@@ -85,7 +85,7 @@ public static class TerrainDetail
                     col = lift >= 0 ? TerrainBake.Mix(col, White, lift) : TerrainBake.Mix(col, Black, -lift);
 
                     if (land == LandType.Rock && palette.Style.Kit == DetailKit.Mountains) col = Strata(sh, col, tx, ty, s, salt);
-                    if (palette.Style.Kit == DetailKit.Mountains && (land == LandType.Rock || land == LandType.Clear)) col = Snow(col, tx, ty, s, k, salt);
+                    if (palette.Style.Kit == DetailKit.Mountains && (land == LandType.Rock || land == LandType.Clear)) col = Snow(col, tx, ty, s, k, salt, land == LandType.Rock);
                     if (features) col = Features(palette.Style.Detail >= 2, palette.Style.Kit, land, sh, col, tx, ty, cx, cy, sx, sy, s, k, salt);
                     break;
                 }
@@ -126,10 +126,11 @@ public static class TerrainDetail
     }
 
     /// <summary>Snow patches (mountains kit): broad drifts that thin into a dithered rim, laid over rock and open ground.</summary>
-    private static TerrainPalette.Rgb Snow(TerrainPalette.Rgb col, int tx, int ty, int s, int k, uint salt)
+    private static TerrainPalette.Rgb Snow(TerrainPalette.Rgb col, int tx, int ty, int s, int k, uint salt, bool rock)
     {
+        // Snow favours high, rocky ground: the threshold is lower on rock than on open ground (about half the old coverage overall).
         int m = Fbm(tx, ty, s, salt + 12) + (int)(H(tx / k, ty / k, 13u) % 80u) - 40;
-        if (m < 650) return col;
+        if (m < (rock ? 690 : 760)) return col;
         return TerrainBake.Mix(col, SnowWhite, m >= 700 ? 700 : 450);
     }
 
