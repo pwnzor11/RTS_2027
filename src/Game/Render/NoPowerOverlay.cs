@@ -73,8 +73,10 @@ public static class NoPowerOverlay
         SimSnapshot snapshot = frame.Snapshot;
         int s = Math.Max(1, (int)MathF.Round(camera.Zoom * 2f));   // a bolt cell is 2 screen px at zoom 1: about 12 x 16 px
         int w = BoltCols * s, h = BoltRows * s;
-        foreach (BuildingView b in snapshot.Buildings)
+        IReadOnlyList<BuildingView> lstB = snapshot.Buildings;
+        for (int iBIx = 0; iBIx < lstB.Count; iBIx++)
         {
+            BuildingView b = lstB[iBIx];
             bool alive = !b.Ghost && b.Health > 0;
             bool needsPower = alive && sim.RulesOf(b.Player).Buildings[b.TypeIndex].NeedsPower;
             bool local = snapshot.Viewer < 0 || b.Player == snapshot.Viewer;

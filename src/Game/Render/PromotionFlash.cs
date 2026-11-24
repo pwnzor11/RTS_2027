@@ -21,8 +21,10 @@ public static class PromotionFlash
     /// <summary>Draws a box around each unit in <paramref name="units"/> whose promotion flash is running at <paramref name="tick"/>.</summary>
     public static void Draw(SpriteBatch batch, Texture2D pixel, IReadOnlyList<RenderUnit> units, Camera camera, PromotionTracker tracker, int tick)
     {
-        foreach (RenderUnit unit in units)
+        IReadOnlyList<RenderUnit> lstUnit = units;
+        for (int iUnitIx = 0; iUnitIx < lstUnit.Count; iUnitIx++)
         {
+            RenderUnit unit = lstUnit[iUnitIx];
             var key = new RankKey(unit.View.Kind, unit.View.Id);
             if (!tracker.IsFlashing(key, tick)) continue;
             Vector2 centre = SpriteLayout.UnitOrigin(camera, unit.World);

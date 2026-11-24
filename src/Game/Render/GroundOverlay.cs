@@ -45,7 +45,11 @@ public static class GroundOverlay
     /// The grout lines of a hardened cell, as rectangles in the cell's own zoom-1 pixels (64 x 64): three courses of bricks with
     /// the vertical joints staggered between courses. Thin and drawn faintly, so the ground still reads as ground.
     /// </summary>
-    public static IReadOnlyList<Rectangle> GroutRects()
+    public static IReadOnlyList<Rectangle> GroutRects() => _grout ??= BuildGroutRects();
+
+    private static IReadOnlyList<Rectangle>? _grout;   // fixed shape: built once, not per frame
+
+    private static IReadOnlyList<Rectangle> BuildGroutRects()
     {
         const int cell = Camera.CellPx;
         const int course = cell / 3;

@@ -15,8 +15,10 @@ public static class ProjectileRenderer
     /// <summary>Draws one dot per projectile.</summary>
     public static void Draw(SpriteBatch batch, Texture2D pixel, IReadOnlyList<LeptonCoord> projectiles, Camera camera)
     {
-        foreach (LeptonCoord position in projectiles)
+        IReadOnlyList<LeptonCoord> lstPosition = projectiles;
+        for (int iPositionIx = 0; iPositionIx < lstPosition.Count; iPositionIx++)
         {
+            LeptonCoord position = lstPosition[iPositionIx];
             Vector2 screen = camera.ScreenFromWorld(Camera.WorldFromLepton(position));
             int x = (int)MathF.Round(screen.X);
             int y = (int)MathF.Round(screen.Y);

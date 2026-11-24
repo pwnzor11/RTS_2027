@@ -93,6 +93,7 @@ public sealed class DustEmitter
     public const int PuffLife = 20;
 
     private Dictionary<UnitKey, LeptonCoord> _positions = new();
+    private Dictionary<UnitKey, LeptonCoord> _positionsSpare = new();   // built into each tick, then swapped in
     private int _tick = int.MinValue;
 
     /// <summary>Records <paramref name="snapshot"/> and adds the puffs that are due to <paramref name="field"/>.</summary>
@@ -109,9 +110,12 @@ public sealed class DustEmitter
         bool silent = snapshot.Tick < _tick || _tick == int.MinValue;
         _tick = snapshot.Tick;
 
-        var positions = new Dictionary<UnitKey, LeptonCoord>();
-        foreach (UnitView u in snapshot.Units)
+        Dictionary<UnitKey, LeptonCoord> positions = _positionsSpare;
+        positions.Clear();
+        IReadOnlyList<UnitView> lstU = snapshot.Units;
+        for (int iUIx = 0; iUIx < lstU.Count; iUIx++)
         {
+            UnitView u = lstU[iUIx];
             if (u.Kind != UnitKind.Vehicle) continue;
             var key = UnitKey.Of(u);
             positions[key] = u.Position;
@@ -130,6 +134,7 @@ public sealed class DustEmitter
             field.Add(Make(u, type, snapshot.Tick, dust));
         }
 
+        _positionsSpare = _positions;
         _positions = positions;
     }
 
