@@ -241,7 +241,7 @@ internal sealed class MilitaryManager
     public bool MissionBot { get; set; }
 
     /// <summary>S22: true while the mop-up rules are in force for this AI.</summary>
-    internal bool MopupOn => Options.Respond && Options.Mopup && !MissionBot;
+    internal bool MopupOn => Options.Mopup && !MissionBot;   // s43 (A43-AI-02): MilitaryOptions.From already ties it to respond_to_attacks or tier 2+
 
     /// <summary>S14/S22: waves launched by the mop-up rule.</summary>
     public int Mopups { get; private set; }
