@@ -154,7 +154,7 @@ public sealed class RenderPerfTests
     public void Grout_rects_are_built_once()
     {
         Assert.Same(GroundOverlay.GroutRects(), GroundOverlay.GroutRects());
-        Assert.Equal(5, GroundOverlay.GroutRects().Count);
+        Assert.Equal(6, GroundOverlay.GroutRects().Count);   // three courses: 1 + (joint line + 2) + (joint line + 1)
     }
 
     // A fixed reach for every sprite; the test picks it larger than anything it places on the screen edge by accident.
@@ -210,6 +210,10 @@ public sealed class RenderPerfTests
         SpriteCull.Collect(culled, buildings, units, reach, camera, vp);
         all.Sort(DrawOrder.Instance);
         culled.Sort(DrawOrder.Instance);
+        var viaStatic = new List<DrawItem>(culled.Count);
+        SpriteCull.Collect(viaStatic, buildings, units, reach, camera, vp);
+        DrawOrder.Sort(viaStatic);
+        Assert.Equal(culled, viaStatic);   // the allocation-free sort gives the comparer's order
 
         List<DrawItem> expected = all.Where(i => Touches(i, buildings, reach.Unit, reach.Building, camera, vp)).ToList();
         Assert.Equal(expected, culled);   // same items, same draw order
@@ -247,7 +251,7 @@ public sealed class RenderPerfTests
         var reach = new FixedReach();
         var items = new List<DrawItem>();
 
-        long bytes = Allocated(() => { items.Clear(); SpriteCull.Collect(items, buildings, units, reach, camera, vp); items.Sort(DrawOrder.Instance); });
+        long bytes = Allocated(() => { items.Clear(); SpriteCull.Collect(items, buildings, units, reach, camera, vp); DrawOrder.Sort(items); });
 
         Assert.True(bytes == 0, $"draw list allocated {bytes} bytes");
     }

@@ -382,7 +382,7 @@ public sealed class SceneRenderer : IDisposable
         _items.Clear();
         SpriteCull.Collect(_items, snapshot.Buildings, frame.Units, _extents, camera, _viewport);   // A43 FOLLOWUP-12: only what can touch the screen
         AddBlockingProps(frame, camera);
-        _items.Sort(DrawOrder.Instance);
+        DrawOrder.Sort(_items);
 
         foreach (DrawItem item in _items)
         {
