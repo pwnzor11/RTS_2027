@@ -153,4 +153,16 @@ public enum GameAction
     StanceDefensive,
     /// <summary>M13-15: set the selected units' stance to hold fire (fire only at what they are ordered to attack).</summary>
     StanceHoldFire,
+    /// <summary>QOL-02: select every own unit of the first selected unit's type, map-wide (Shift adds).</summary>
+    SelectTypeMapWide,
+    /// <summary>QOL-11: select every own combat vehicle, map-wide (Shift adds). Harvesters and builders are left out.</summary>
+    SelectVehicles,
+    /// <summary>QOL-11: select every own combat infantry, map-wide (Shift adds). Engineers are left out.</summary>
+    SelectInfantry,
+    /// <summary>QOL-05: centre the view on the centre of the selection.</summary>
+    CentreOnSelection,
+    /// <summary>QOL-05: select and centre the next own production building (cycles through all of them).</summary>
+    CycleProductionBuilding,
+    /// <summary>QOL-17: toggle control groups that select every unit of their members' types (off by default).</summary>
+    AutoTypeGroups,
 }
