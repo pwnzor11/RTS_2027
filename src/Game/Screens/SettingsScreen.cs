@@ -5,8 +5,10 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Rts.Game.Input;
 using Rts.Game.Menu;
+using Rts.Data;
 using Rts.Game.Saves;
 using Rts.Game.Ui;
+using Rts.Game.Update;
 
 namespace Rts.Game.Screens;
 
@@ -65,7 +67,8 @@ public sealed class SettingsScreen : IScreen
             new MenuItem(() => $"Camera cue on new objective: {(_s.Settings.CameraCueOnNewObjective ? "On" : "Off")}", ToggleCameraCue, _ => ToggleCameraCue(),
                 new MenuButton("Toggle", ToggleCameraCue)),   // M11-05
             new MenuItem(() => $"Check for updates at start: {(_s.Settings.CheckForUpdates ? "On" : "Off")}", ToggleCheckForUpdates, _ => ToggleCheckForUpdates(),
-                new MenuButton("Toggle", ToggleCheckForUpdates)),   // M10-23
+                new MenuButton("Toggle", ToggleCheckForUpdates), new MenuButton("Check now", CheckForUpdatesNow)),   // M10-23, A43 GAMESYS-02
+            new MenuItem(() => UpdateCheck.StatusText(_s.Updates.Status, _s.Updates.Found, BuildInfo.Version)) { Info = true },   // A43 GAMESYS-02: the result of "Check now"
             new MenuItem(() => Rts.Game.Ui.Llm.LlmUiText.SectionRow, () => _s.Screens.Push(new Rts.Game.Ui.Llm.LlmSettingsScreen(_s, _path))),
             new MenuItem(() => "About", () => _s.Screens.Push(new AboutScreen(_s))),
             new MenuItem(() => "Credits", () => _s.Screens.Push(new CreditsScreen(_s))),   // M10-20
@@ -142,6 +145,9 @@ public sealed class SettingsScreen : IScreen
 
     private void ToggleCheckForUpdates() =>
         _s.Settings = _s.Settings with { CheckForUpdates = !_s.Settings.CheckForUpdates };
+
+    // A43 GAMESYS-02 (D-312): one check on request, whatever the start-up setting says; the result shows on the row below.
+    private void CheckForUpdatesNow() => _s.Updates.CheckNow(BuildInfo.Version);
 
     private void StepAutosave(int d) =>
         _s.Settings = _s.Settings with { AutosaveMinutes = Autosave.StepMinutes(_s.Settings.AutosaveMinutes, d) };

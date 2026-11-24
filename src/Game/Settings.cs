@@ -38,7 +38,7 @@ namespace Rts.Game;
 /// <param name="LargerInfantry">D-184 pilot: draw infantry (sprites, selection brackets, health bars) 1.25 times larger than today. Render only. Default true for the pilot screenshots; files without the key get true.</param>
 /// <param name="Weather">M10 design 21 §4: view-only weather particles per biome. Default true; files without the key get true.</param>
 /// <param name="ScreenShake">M10 design 21 §4: light screen shake on big blasts. Default true.</param>
-/// <param name="CheckForUpdates">M10 design 21 §5: check GitHub Releases once at start and show "new version available". Default true.</param>
+/// <param name="CheckForUpdates">M10 design 21 §5: check GitHub Releases once at start and show "new version available". Default false (A43 GAMESYS-02, D-312: no network call until the player turns it on or presses "Check now"); files that store a value keep it.</param>
 /// <param name="UiSkin">S24: "faction" (default) draws the sidebar and card with the local faction's skin art where it exists; "classic" always draws the procedural look.</param>
 /// <param name="PlayerName">M9 LAN player name; empty = the Windows user name (design 20 §8 item 4).</param>
 /// <param name="LanGamePort">M9 LAN game port (UDP), 1024..65535. Default <see cref="Rts.Net.NetProtocol.DefaultGamePort"/>.</param>
@@ -69,7 +69,7 @@ public sealed record Settings(
     int GameSpeedPercent = Rts.Game.Host.GameSpeed.Normal,
     bool Weather = true,
     bool ScreenShake = true,
-    bool CheckForUpdates = true,
+    bool CheckForUpdates = false,
     string PlayerName = "",
     int LanGamePort = Rts.Net.NetProtocol.DefaultGamePort,
     int LanDiscoveryPort = Rts.Net.NetProtocol.DefaultDiscoveryPort,
