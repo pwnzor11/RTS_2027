@@ -94,7 +94,9 @@ public sealed class TheaterTests
     [InlineData("ash_plains")]
     public void ShippedPaletteIsVariantCAndRustBeltAliasesAgree(string file)
     {
-        string Body(string path) => string.Join("\n", File.ReadAllText(RepoFile(path)).Replace("\r\n", "\n").Split('\n').Skip(2));
+        // S43: the shipped file may add a [detail] table (the terrain detail pass); everything else is still variant C.
+        string Body(string path) => System.Text.RegularExpressions.Regex.Replace(
+            string.Join("\n", File.ReadAllText(RepoFile(path)).Replace("\r\n", "\n").Split('\n').Skip(2)), @"\[detail\]\n(?:[^\n]*\n)*?level = \d\n\n", "");
         Assert.Equal(Body($"data/theaters/variants/c/{file}.toml"), Body($"data/theaters/{file}.toml"));
 
         Assert.Same(TerrainPalette.Load("rustbelt"), TerrainPalette.Load("rust_belt"));
