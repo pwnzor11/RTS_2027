@@ -21,7 +21,7 @@ import dir_def as DD
 D = DD.D
 L = DD.L
 
-CANVAS = (128, 184)
+ID = "dir_rad_mortar"
 GLOW3 = ("oxide2", "oxide", "redglow")   # muzzle pulse levels, all existing palette materials
 TITLE = "Directorate Radiation Mortar"
 FOOTPRINT = (2, 2)
