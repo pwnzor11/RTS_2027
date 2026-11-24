@@ -22,7 +22,7 @@ DOCK = (0, 0)
 CAP_MATERIAL = "pad2"
 PALETTE = K.PALETTE
 MATERIALS = K.MATERIALS
-STATES = [("idle", 4, 5), ("damaged", 4, 5), ("build", 8, 5)]
+STATES = [("idle", 8, 2), ("damaged", 8, 2), ("build", 8, 5)]     # session 43: 8-frame loops at tpf 2 (owner choice)
 FX = [
     K.fx(FOOTPRINT, ORIGIN, "damaged", "fire_large", 0.0, 1.6, 1.6, 0),
     K.fx(FOOTPRINT, ORIGIN, "damaged", "smoke_plume", 0.0, 1.6, 1.9, 0),
@@ -81,6 +81,8 @@ def site(S):
 
 def dmg_extra(S, i):
     S.bb("spill", -0.8, 0.8, 1.9, 2.8, 0.1, 0.12, "char", 0.0, nocast=True)
+    if i in (2, 6):         # split tank seam sparks
+        S.sphere("tsp", 0.08, (0.55, 0.6, 1.35), "spark")
 
 
 def build(S, state, i, n):

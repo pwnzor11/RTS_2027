@@ -23,7 +23,7 @@ DOCK = (1, 3)
 CAP_MATERIAL = "pad2"
 PALETTE = K.PALETTE
 MATERIALS = K.MATERIALS
-STATES = [("idle", 4, 5), ("damaged", 4, 5), ("build", 8, 5)]
+STATES = [("idle", 8, 2), ("damaged", 8, 2), ("build", 8, 5)]     # session 43: 8-frame loops at tpf 2 (owner choice)
 D = F.DECK
 FX = [
     K.fx(FOOTPRINT, ORIGIN, "damaged", "fire_large", -0.5, 1.0, 3.6, 0),
@@ -87,7 +87,6 @@ def g_hull(S, dmg, i):
     else:
         S.cyl("fun", 0.3, 0.9, (0, 1.9, D + 2.35), "chrome", verts=14)
         S.cyl("funb", 0.32, 0.12, (0, 1.9, D + 2.6), "house", verts=14)
-        K.puffs(S, "fun", 0, 1.9, D + 2.9, i, n=2, drift=0.5)
     S.cyl("tur", 0.5, 0.35, (0, -1.8, D + 2.0), "navy", verts=16)
     K.beam(S, "gun", (0, -1.9, D + 2.2), (0, -3.0, D + 2.4), 0.16, "chrome")
     for k in range(4):
@@ -102,7 +101,7 @@ def g_crane(S, dmg, i):
     if dmg:
         K.beam(S, "jib", (0, -0.3, top + 0.7), (0.9, -0.8, D + 2.8), 0.14, "chrome2")
     else:
-        sw = 0.22 * math.sin(i * math.pi / 2)
+        sw = 0.22 * math.sin(i * math.pi / 4)     # hook: one full swing cycle per loop
         K.beam(S, "cable", (sw * 0.3, -0.3, top + 0.2), (sw, -0.3, D + 2.8), 0.05, "dark", nocast=True)
         S.bb("hook", sw - 0.18, sw + 0.18, -0.5, -0.1, D + 2.5, D + 2.85, "orange", 0.0)
     if not dmg and i % 2 == 0:
@@ -126,6 +125,8 @@ def site(S):
 def dmg_extra(S, i):
     F.breach(S, 1.9, 3.4, 0.4, 1.8)
     S.bb("sc1", -3.6, -2.0, 0.2, 1.4, D + 0.01, D + 0.03, "char", 0.0, nocast=True)
+    if i in (2, 6):         # shorn-off crane cable sparks
+        S.sphere("ssp", 0.08, (0.9, -0.8, D + 2.8), "spark")
 
 
 def build(S, state, i, n):
