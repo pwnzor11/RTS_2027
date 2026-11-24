@@ -45,9 +45,9 @@ and a slow dedicated art pass later.
 | M13 Audit fixes | Done |
 | M14 Field Manual | Done: 144-page manual and a 2-page quick-reference card |
 
-**Today's game:** four playable factions with 76 units (infantry, vehicles, ships and aircraft), 72 structures and
+**Today's game:** four playable factions with 77 units (infantry, vehicles, ships and aircraft), 72 structures and
 28 upgrades between them. A tutorial and 16 campaign missions (four acts for each faction). Four map biomes in three
-sizes (64, 96 and 128 cells square), five AI difficulty tiers, a 243-entry Archive, three veterancy ranks and a supply
+sizes (64, 96 and 128 cells square), five AI difficulty tiers, a 244-entry Archive, three veterancy ranks and a supply
 cap of 200. About 3,400 automated tests (`[Fact]` and `[Theory]` methods) guard the simulation, the AI, the data files,
 the scripting and the tools.
 
@@ -153,7 +153,7 @@ All four are playable in skirmish and have their own campaign. They are built to
 | Movement | Roads, ramps, heavy tracks | Burrowing and tunnel networks | Wheels, sails, rotors | Sea, shallows, hover and air |
 | Strong at | Holding ground, armour, artillery, air | Swarms, surprise, radiation | Mobility, raids, income from wrecks | Naval power, air, accurate light units |
 | Weak at | Slow to move and rebuild | Fragile, short range | Light armour, no hardened walls | Inland, cost, low numbers, a raidable supply line |
-| Units / structures / upgrades | 15 / 18 / 7 | 18 / 19 / 7 | 17 / 15 / 6 | 26 / 20 / 8 |
+| Units / structures / upgrades | 15 / 18 / 7 | 18 / 19 / 7 | 17 / 15 / 6 | 27 / 20 / 8 |
 
 (See [The world](#the-world) above for who each faction is.)
 
@@ -251,7 +251,7 @@ Names are the in-game names. Cost is in credits; tier is the tech tier that unlo
 | Rifleman | 100 | 1 | Citizen-army infantry |
 | Rocketeer | 300 | 1 | Anti-armour infantry |
 | Field Engineer | 100 | 1 | Repair and capture |
-| Marksman | 100 | 2 | Long-range anti-infantry |
+| Marksman | 200 | 2 | Long-range anti-infantry |
 | Scraper | 700 | 1 | Armoured ashfall harvester |
 | Scout Car | 350 | 1 | Light recon vehicle |
 | Heavy Tank | 800 | 1 | Main battle armour |
@@ -262,14 +262,14 @@ Names are the in-game names. Cost is in credits; tier is the tech tier that unlo
 | Interceptor | 600 | 2 | Prop fighter |
 | Heavy Bomber | 600 | 3 | Four-engine ground-attack aircraft |
 | Field Howitzer | 800 | 3 | Long-range artillery |
-| Bulwark Heavy Tank | 800 | 3 | Heavy armour |
+| Bulwark Heavy Tank | 900 | 3 | Heavy armour |
 
 | Structures | Cost | Tier | Role |
 |---|---|---|---|
 | Construction Yard | start | 1 | Base seat of an Authority district |
 | Power Plant | 300 | 1 | Reactor and turbine hall |
 | Ration Hall | 200 | 1 | Everyone counted, everyone fed (supply) |
-| Ashfall Refinery | 2000 | 1 | Centrifuge plant |
+| Ashfall Refinery | 1700 | 1 | Centrifuge plant |
 | Barracks | 300 | 1 | Infantry muster hall |
 | Vehicle Factory | 2000 | 1 | Armoured vehicle works |
 | Storage Silo | 150 | 1 | Concentrate store |
@@ -301,7 +301,7 @@ Upgrades: Foundation Grouting, Composite Armour, Convoy Drill, Flak Vests, Signa
 | Commissar | 400 | 2 | Officer of Order |
 | Burrowing Scraper | 600 | 1 | Tunnel-borne ashfall harvester |
 | Bore | 800 | 1 | Entrance digger |
-| Rocket Truck | 800 | 1 | Mobile rocket artillery |
+| Rocket Truck | 970 | 1 | Mobile rocket artillery |
 | Mole | 900 | 2 | Burrowing transport |
 | Agitprop Crawler | 700 | 2 | Loudspeaker support vehicle |
 | Ash Sower | 800 | 2 | Radiation-laying vehicle |
@@ -314,15 +314,15 @@ Upgrades: Foundation Grouting, Composite Armour, Convoy Drill, Flak Vests, Signa
 | Structures | Cost | Tier | Role |
 |---|---|---|---|
 | Command Shaft | start | 1 | Seat of an advance post |
-| Reactor Vent | 300 | 1 | Power source |
-| Smelter Vent | 2000 | 1 | Ashfall processing outlet |
-| Muster Hatch | 300 | 1 | Conscript barracks |
-| Assembly Bore | 2000 | 1 | Vehicle works |
+| Reactor Vent | 260 | 1 | Power source |
+| Smelter Vent | 1700 | 1 | Ashfall processing outlet |
+| Muster Hatch | 260 | 1 | Conscript barracks |
+| Assembly Bore | 1700 | 1 | Vehicle works |
 | Hatch / Bore Head | 150 / 400 | 1 | Small and large tunnel entrances |
-| Cistern | 150 | 1 | Concentrate store |
+| Cistern | 130 | 1 | Concentrate store |
 | Bunk Gallery | 150 | 1 | Tiers of cots behind blast doors (supply) |
-| Bunker Wall | 50 | 1 | Defensive wall piece |
-| Pillbox | 400 | 1 | Small defensive gun |
+| Bunker Wall | 40 | 1 | Defensive wall piece |
+| Pillbox | 340 | 1 | Small defensive gun |
 | Rocket Nest | 450 | 1 | Anti-aircraft battery |
 | Redoubt | 300 | 1 | Garrison strongpoint |
 | Radiation Mortar | 700 | 2 | Area denial battery |
@@ -340,7 +340,7 @@ Upgrades: Blackout Canisters, Fervour, Hot Cores, Lead Lining, Mass Conscription
 
 | Units | Cost | Tier | Role |
 |---|---|---|---|
-| Scavenger | 60 | 1 | Caravan rifleman |
+| Scavenger | 54 | 1 | Caravan rifleman |
 | Hook Runner | 120 | 1 | Raider on a line |
 | Tinker | 150 | 2 | Field mechanic |
 | Slinger | 200 | 2 | Shaped-charge thrower |
@@ -356,7 +356,7 @@ Upgrades: Blackout Canisters, Fervour, Hot Cores, Lead Lining, Mass Conscription
 | Rolling Fort | 1400 | 3 | The caravans' heavy |
 | Rotor | 1000 | 3 | Autogyro gunship |
 | Kite | 500 | 3 | One-use glider bomber |
-| Packed Rig | 4000 | 1 | A rig in transit |
+| Packed Rig | 1500 | 1 | A rig in transit |
 
 | Structures | Role |
 |---|---|
@@ -392,19 +392,20 @@ Upgrades: Scrap Plate, Ash Wraps, Quick Pack, Grapple Hooks, Salvage Rights, Pat
 | Hover Skimmer | 500 | 1 | Amphibious harvester |
 | Hoverlander | 450 | 1 | Amphibious personnel carrier |
 | Survey Hover | 250 | 1 | Fast reconnaissance craft |
-| Glide Tank | 900 | 2 | Hover medium armour |
+| Glide Tank | 960 | 2 | Hover medium armour |
 | Sparker | 600 | 2 | Hover anti-air carrier |
 | Mender | 550 | 2 | Field repair hover |
+| Grapeshot | 650 | 2 | Hover anti-infantry |
 | Barrage Lander | 1100 | 3 | Tracked rocket artillery |
 | Patrol Launch | 300 | 1 | Light scout boat |
 | Landing Craft | 500 | 1 | Beachable transport |
-| Supply Tender | 6000 | 1 | Convoy freighter |
+| Supply Tender | 1500 | 1 | Convoy freighter |
 | Destroyer | 900 | 2 | Gun warship that detects submarines |
 | Missile Submarine | 1100 | 2 | Silent striker |
 | Minelayer | 500 | 2 | Unarmed sea hull (mines come later) |
 | Cruiser | 1700 | 3 | Bombardment ship |
 | Carrier | 2200 | 3 | Floating airbase |
-| Command Ship | 6000 | 1 | Expedition flagship |
+| Command Ship | 1500 | 1 | Expedition flagship |
 | Gyro Scout | 350 | 2 | Rotary spotter |
 | Skyhook | 700 | 2 | VTOL troop transport |
 | Jet Fighter | 1000 | 2 | Air superiority fighter |
@@ -494,7 +495,7 @@ Every key can be rebound in Settings; **F1** or **?** lists them in game.
 
 ## The Archive
 
-An in-game encyclopaedia with 243 entries on history, the four factions, their units, structures and upgrades, the
+An in-game encyclopaedia with 244 entries on history, the four factions, their units, structures and upgrades, the
 technology and the leaders. Entries unlock as you play (some are open from the start), so it is safe to open without reading ahead.
 
 ---
