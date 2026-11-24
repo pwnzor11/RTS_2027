@@ -384,10 +384,10 @@ Upgrades: Scrap Plate, Ash Wraps, Quick Pack, Grapple Hooks, Salvage Rights, Pat
 
 | Units | Cost | Tier | Role |
 |---|---|---|---|
-| Marine | 150 | 1 | Amphibious infantry |
+| Marine | 150 | 1 | Landing infantry |
 | Pioneer | 200 | 1 | Field engineer |
 | Combat Diver | 250 | 1 | Saboteur (swimming comes later) |
-| Pathfinder | 350 | 2 | Spotter and designator |
+| Pathfinder | 350 | 2 | Shore spotter |
 | Ironbound Trooper | 900 | 3 | Powered-suit heavy infantry |
 | Hover Skimmer | 500 | 1 | Amphibious harvester |
 | Hoverlander | 450 | 1 | Amphibious personnel carrier |
@@ -406,7 +406,7 @@ Upgrades: Scrap Plate, Ash Wraps, Quick Pack, Grapple Hooks, Salvage Rights, Pat
 | Cruiser | 1700 | 3 | Bombardment ship |
 | Carrier | 2200 | 3 | Floating airbase |
 | Command Ship | 1500 | 1 | Expedition flagship |
-| Gyro Scout | 350 | 2 | Rotary spotter |
+| Gyro Scout | 350 | 2 | Rotary scout |
 | Skyhook | 700 | 2 | VTOL troop transport |
 | Jet Fighter | 1000 | 2 | Air superiority fighter |
 | Gunship | 900 | 2 | Rotary ground attack |
