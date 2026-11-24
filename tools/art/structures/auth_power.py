@@ -1,9 +1,9 @@
 """Authority Power Plant: a compact atomic plant (2x2 cells). Original design, no franchise references.
 
-Squat containment dome (house band), control annex with glowing amber tube windows, a tapered cooling stack that puffs,
+Squat containment dome (house band), control annex with glowing amber tube windows, a tapered cooling stack,
 and a fenced transformer yard with insulators.  Session 43 art pass: panel seams, rivets, pipe runs, vents, rails, a stack
 catwalk, ground clutter, and an 8-frame idle loop (spinning cooling-fan turbine, pulsing reactor glow band, blinking beacons,
-window chase, transformer arcs, three-puff smoke loop).  Damaged frames share the same loop.  Damage is structural only (D-069): cracked dome with a breach, snapped stack, a toppled transformer,
+window chase, transformer arcs).  Smoke is not baked: a separate smoke pass adds it.  Damaged frames share the same loop.  Damage is structural only (D-069): cracked dome with a breach, snapped stack, a toppled transformer,
 caved annex roof, dark windows; fire / smoke are FX anchors.
 Contract: see auth_refinery.py; build-site helpers come from auth_conyard.py.
 Units: 3.4 per cell, x east, y NORTH, z up, footprint centred on (0, 0): x, y in [-3.4, 3.4].
@@ -26,9 +26,9 @@ ORIGIN = (0, 48)
 DOCK = (0, 0)           # no dock (not a refinery)
 CAP_MATERIAL = "concrete2"
 HOUSE2_MID = True        # D-072: roof house2 panels pinned to mid ramp shades (structpost)
-# 8-frame idle/damaged loops.  The renderer runs building idle loops 4x slower than ticks_per_frame (SpriteStates.BuildingIdleSlowdown),
-# so tpf 1 = 4 ticks = 0.2 s per frame, a 1.6 s loop.  (Was 4 frames at tpf 5 = 1 s per frame.)
-STATES = [("idle", 8, 1), ("damaged", 8, 1), ("build", 8, 5)]
+# 8-frame idle/damaged loops at tpf 2 (the renderer runs building idle loops 4x slower than ticks_per_frame, SpriteStates.BuildingIdleSlowdown,
+# so tpf 2 = 8 ticks = 0.4 s per frame, a 3.2 s loop).
+STATES = [("idle", 8, 2), ("damaged", 8, 2), ("build", 8, 5)]
 MATERIALS = dict(L.MATERIALS)
 MATERIALS.update({       # reactor-glow pulse levels, dim to bright (the fixed palette snaps these to yellows / rust)
     "glow0": ("#4A2E12", dict(rough=0.5)),
@@ -248,11 +248,6 @@ def finished(S, i, dmg, mode):
             for zz, rr in ((0.7, 0.8), (1.5, 0.74), (2.3, 0.68)):
                 S.cyl(f"sstud{k}", 0.035, 0.05, (sx + (rr + 0.07) * math.cos(a), sy + (rr + 0.07) * math.sin(a) / S.YS, zz), "steel", verts=6, nocast=True)
         S.cyl("sbeacon", 0.09, 0.14, (sx - 0.5, sy - 0.28, 3.68), "red" if (idle and i % 4 >= 2) else "dark", verts=8, nocast=True)
-        if idle:
-            for k in range(2):     # two staggered puffs rising and drifting east, one loop per 8 frames
-                ph = ((i / 8) + k / 2) % 1
-                r = 0.08 + 0.32 * math.sin(math.pi * ph) ** 0.7
-                S.sphere(f"puff{k}", r, (sx + 0.1 + ph * 0.6, sy, 3.75 + ph * 1.25 + r * 0.3), "smoke" if k == 0 else "smoke2", squash=0.85)
     S.bb("sladder", sx - 0.86, sx - 0.8, sy - 0.12, sy + 0.12, 0.14, 1.8 if not dmg else 1.2, "dark", 0.0, nocast=True)
     S.bb("sbase", sx - 1.0, sx + 1.0, sy - 1.0, sy + 1.0, 0.14, 0.3, "concrete2", 0.03)
     # ---- pipes dome -> stack, dome -> annex

@@ -18,7 +18,7 @@ CANVAS = (192, 224)
 ORIGIN = (0, 32)        # footprint top-left corner inside the frame (32 px of headroom for the drum and the stack)
 DOCK = (1, 3)           # harvester parks in the cell just below the middle of the footprint
 CAP_MATERIAL = "concrete2"   # material of the faces made by the build-state cut
-STATES = [("idle", 4, 5), ("damaged", 4, 5), ("build", 8, 5)]
+STATES = [("idle", 8, 2), ("damaged", 8, 2), ("build", 8, 5)]     # 8-frame loops at tpf 2 (0.4 s a frame)
 # Effect anchors (D-069), pixels in frame space: the effect's base-centre (explosions: centre) lands here.
 # Derived from the old baked fire positions: px = 96 + x*18.8, py = 128 - y*18.8 - z*14.4 (game units).
 FX = [
@@ -452,7 +452,7 @@ def build(S, state, i, n):
         return
     if building and i == 6:           # almost done: the finished model, unpainted (primer) and without the drum plates
         S.skin.update(PRIMER_SKIN)
-        S.hide = lambda nm: nm.startswith(("plate", "sten", "puff"))
+        S.hide = lambda nm: nm.startswith(("plate", "sten"))
     if dmg:
         S.skin.update(SOOT_SKIN)
 
@@ -604,12 +604,7 @@ def build(S, state, i, n):
         # gash in the drum
         S.box("gash", (0.9, 0.1, 0.5), (dx, dy, zb + 1.2), "char", 0.0, wo=(-0.3, -DRUM_R * 0.98), stretch=False, rot=(0, 0, 0))
         S.bb("rubble1", -0.9, -0.3, -4.6, -4.1, 0.14, 0.4, "concrete2", 0.04)
-    else:
-        if not building or i == 7:
-            for k in range(2):
-                ph = ((i_anim / 4) + k / 2) % 1
-                r = 0.06 + 0.34 * math.sin(math.pi * ph) ** 0.7
-                S.sphere(f"puff{k}", r, (sx_ + ph * 0.5, sy_, stack_top + 0.35 + ph * 1.4 + r * 0.3), "smoke", squash=0.85)
+    # (no baked smoke: a separate smoke pass adds it; the damaged frames carry only structural detail)
 
     # ------------------------------------------------------------------ stage 6: scaffold coming down, leftovers on the pad
     if building and i == 6:

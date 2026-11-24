@@ -24,7 +24,7 @@ CANVAS = (192, 224)
 ORIGIN = (0, 32)        # footprint top-left corner inside the frame (32 px of headroom for the chimney and crane)
 DOCK = (1, 3)           # exit: the cell just below the middle of the footprint (rules: factory exit below the middle)
 CAP_MATERIAL = "concrete2"
-STATES = [("idle", 4, 5), ("damaged", 4, 5), ("build", 8, 5), ("active", 4, 3)]
+STATES = [("idle", 8, 2), ("damaged", 8, 2), ("build", 8, 5), ("active", 4, 3)]     # idle/damaged: 8-frame loops at tpf 2
 
 HALL_X = 4.1
 HALL_Y0, HALL_Y1 = -2.6, 2.2
@@ -238,7 +238,8 @@ def chimney(S, dmg):
             o.rotation_euler = (0, tl, 0)
 
 
-def crane_rail(S, dmg, i, anim):
+def crane_rail(S, dmg, i, anim, period=8):
+    """Crane trolley and hook.  period = frames per trolley sweep: 8 for the idle loop, 4 for the active cycle (unchanged)."""
     """Overhead crane: two lattice pylons on the pad, a yellow rail along x over the roof, a trolley with hoist and hook."""
     zt = RAIL_Z
     for sx in (-1, 1):
@@ -264,19 +265,19 @@ def crane_rail(S, dmg, i, anim):
         # sagging rail: west end on its pylon, the east end dropped onto the roof edge
         beam(S, "rail", (-4.62, RAIL_Y, zt + 0.18), (4.3, RAIL_Y - 0.15, ZR + 0.7), 0.3, "yellow")
         beam(S, "rail2", (-4.62, RAIL_Y, zt + 0.32), (4.3, RAIL_Y - 0.15, ZR + 0.84), 0.1, "steel")
-        tx = 1.0 + 0.25 * math.sin(i * 1.57)
+        tx = 1.0 + 0.25 * math.sin(i * 2 * math.pi / 8)
         tz = zt + 0.18 + (ZR + 0.7 - zt - 0.18) * (tx + 4.62) / 8.92
         S.bb("trolley", tx - 0.45, tx + 0.45, RAIL_Y - 0.28, RAIL_Y + 0.28, tz - 0.42, tz - 0.05, "yellow", 0.02)
-        sway = 0.2 * math.sin(i * 1.57 + 0.6)
+        sway = 0.2 * math.sin(i * 2 * math.pi / 8 + 0.6)
         beam(S, "cable", (tx, RAIL_Y, tz - 0.4), (tx + sway, RAIL_Y, tz - 1.55), 0.045, "dark")
         S.bb("hook", tx + sway - 0.12, tx + sway + 0.12, RAIL_Y - 0.12, RAIL_Y + 0.12, tz - 1.75, tz - 1.5, "dark", 0.0)
         return
     S.bb("rail", -4.8, 4.8, RAIL_Y - 0.15, RAIL_Y + 0.15, zt, zt + 0.3, "yellow", 0.02)
     S.bb("rail2", -4.8, 4.8, RAIL_Y - 0.1, RAIL_Y + 0.1, zt + 0.3, zt + 0.4, "steel", 0.02)
-    tx = 1.6 * math.sin(2 * math.pi * anim / 4) if anim is not None else 0.0
+    tx = 1.6 * math.sin(2 * math.pi * anim / period) if anim is not None else 0.0
     S.bb("trolley", tx - 0.5, tx + 0.5, RAIL_Y - 0.3, RAIL_Y + 0.3, zt - 0.4, zt, "yellow", 0.02)
     S.bb("motor", tx - 0.15, tx + 0.35, RAIL_Y - 0.26, RAIL_Y + 0.26, zt - 0.6, zt - 0.4, "dark", 0.0)
-    hz = zt - 1.8 + 0.12 * math.sin(2 * math.pi * anim / 4 * 2) if anim is not None else zt - 1.8
+    hz = zt - 1.8 + 0.12 * math.sin(2 * math.pi * anim / period * 2) if anim is not None else zt - 1.8
     beam(S, "cable", (tx, RAIL_Y, zt - 0.6), (tx, RAIL_Y, hz + 0.3), 0.045, "dark")
     S.bb("hook", tx - 0.14, tx + 0.14, RAIL_Y - 0.14, RAIL_Y + 0.14, hz, hz + 0.3, "dark", 0.0)
     S.bb("block", tx - 0.1, tx + 0.1, RAIL_Y - 0.1, RAIL_Y + 0.1, hz + 0.3, hz + 0.4, "yellow", 0.0)
@@ -354,7 +355,7 @@ def finished(S, i, anim, dmg=False, active=False):
     yw = south_face(S, dmg, active, i)
     sawtooth(S, dmg)
     chimney(S, dmg)
-    crane_rail(S, dmg, i, anim if not dmg else i)
+    crane_rail(S, dmg, i, anim if not dmg else i, 4 if active else 8)
     work_lights(S, active)
     # east side service tank and pipe run (northeast, hidden behind the hall mostly), a fuel bowser by the door on the pad
     S.cyl("tankE", 0.45, 3.2, (4.62, 1.2, 0.65), "steel", axis="Y", verts=16)
@@ -369,7 +370,7 @@ def finished(S, i, anim, dmg=False, active=False):
 
 
 def frame_state(state, i):
-    """(anim index 0..3 for the idle loop or None, damaged, active) for a frame."""
+    """(anim index 0..7 for the idle loop, or 0..3 for active; damaged, active) for a frame."""
     if state == "damaged":
         return i, True, False
     if state == "active":

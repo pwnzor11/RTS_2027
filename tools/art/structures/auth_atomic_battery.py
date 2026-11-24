@@ -30,7 +30,7 @@ ORIGIN = (0, 64)
 DOCK = (1, 3)
 CAP_MATERIAL = "concrete2"
 HOUSE2_MID = True
-STATES = [("idle", 4, 5), ("damaged", 4, 5), ("build", 8, 5), ("active", 4, 3)]
+STATES = [("idle", 8, 2), ("damaged", 8, 2), ("build", 8, 5), ("active", 4, 3)]     # idle/damaged: 8-frame loops at tpf 2
 MATERIALS = dict(L.MATERIALS)
 MATERIALS.update({
     "steel2": ("#979EA3", dict(rough=0.4, metal=0.5)),
@@ -156,10 +156,10 @@ def finished(S, i, dmg, mode):
     S.bb("door", dx - 0.32, dx + 0.32, yf - 0.16, yf - 0.1, 0.14, 1.0, "steel", 0.02)
     S.bb("dhouse", dx - 0.62, dx - 0.42, yf - 0.12, yf - 0.06, 0.2, 1.05, "house", 0.0)
     keylamp = act or (idle and i % 2 == 0 and False)
-    S.cyl("keylamp", 0.1, 0.12, (dx, yf - 0.2, 1.2), "glow" if act else "amber_dim", verts=8, nocast=True)
+    S.cyl("keylamp", 0.1, 0.12, (dx, yf - 0.2, 1.2), "glow" if act else ("amber" if (idle and not dmg and i % 4 < 2) else "amber_dim"), verts=8, nocast=True)
     if not dmg:
         S.cyl("pscope", 0.07, 0.5, (x0 + 0.8, y1 - 0.8, BH + 0.65), "steel", verts=8)
-        a = (i * 90) if idle else 0
+        a = (i * 45) if idle else 0      # scope head turns once per 8-frame loop
         S.box("pshead", (0.34, 0.14, 0.14), (x0 + 0.8, (y1 - 0.8) * YS, BH + 0.95), "gunmetal", 0.0, rot=(0, 0, -a), stretch=False)
         S.cyl("whip", 0.025, 1.4, (x1 - 0.5, y1 - 0.6, BH + 0.4 + 0.7), "steel", verts=6)
         S.bb("bvent", x0 + 1.6, x0 + 2.3, y1 - 1.0, y1 - 0.4, BH + 0.4, BH + 0.62, "concrete2", 0.04)
@@ -169,6 +169,8 @@ def finished(S, i, dmg, mode):
             S.bb(f"bjag{k}", jx - 0.25, jx + 0.25, y1 - 1.0, y1 - 0.7, BH + 0.4, BH + 0.4 + jz, "concrete", 0.0, rot=(0, 0, 14 * k))
         S.bb("bsplit", x0 + 1.5, x0 + 1.6, yf - 0.12, yf - 0.08, 0.15, 1.5, "crack", 0.0, nocast=True)
         R.scorch(S, "scB", x0 + 1.2, yf - 0.16, 0.9, 1.4, 0.9)
+        if i in (2, 6):                          # a dead feed arcs in the breached roof on two frames of the loop
+            L.spark(S, x0 + 1.5, yf - 0.25, 1.1, i, 2)
     # cable trench from bunker to pit
     S.bb("trench", -0.2, 1.35, -1.3, -1.1, 0.14, 0.17, "cable", 0.0, nocast=True)
     S.bb("trench2", -0.2, 0.0, -1.3, 0.2, 0.14, 0.17, "cable", 0.0, nocast=True)

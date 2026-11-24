@@ -100,6 +100,9 @@ def base(S, dmg=False):
     S.bb("ammo2", -1.5, -1.05, -1.5, -1.15, 0.5, 0.75, "crate", 0.03, rot=(0, 0, 14))
     S.bb("ammol", -1.5, -1.05, -1.57, -1.55, 0.25, 0.4, "dark", 0.0, nocast=True)
     S.bb("duct", 1.0, 1.55, -1.55, -1.4, 0.12, 0.22, "steel", 0.02)
+    for k in range(12):    # detail: bolt ring on the floor slab round the pedestal
+        a = math.radians(k * 30)
+        S.cyl(f"fbolt{k}", 0.05, 0.05, (1.0 * math.sin(a), 1.0 * math.cos(a), 0.2), "steel", verts=6, stretch=False, nocast=True)
     for k in range(4):     # spent brass beside the ring
         S.cyl(f"brass{k}", 0.05, 0.2, (1.0 + 0.14 * k, -1.2 + 0.05 * (k % 2), 0.22), "brass", verts=6, stretch=False, nocast=True)
     if dmg:

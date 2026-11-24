@@ -25,7 +25,7 @@ ORIGIN = (0, 28)
 DOCK = (0, 0)
 CAP_MATERIAL = "concrete2"
 HOUSE2_MID = True
-STATES = [("idle", 4, 5), ("damaged", 4, 5), ("build", 8, 5)]
+STATES = [("idle", 8, 2), ("damaged", 8, 2), ("build", 8, 5)]     # 8-frame loops at tpf 2 (0.4 s a frame)
 MATERIALS = dict(L.MATERIALS)
 MATERIALS.update({
     "paper": ("#C2BAA0", dict(rough=0.8)),      # warm cream chart paper (not white, so the shading reads)
@@ -83,6 +83,12 @@ def finished(S, i, dmg, mode):
     for k, wx in enumerate((-2.3, -1.5)):
         S.bb(f"wf{k}", wx - 0.3, wx + 0.3, yw - 0.06, yw + 0.04, 0.6, 1.1, "dark", 0.0)
         S.bb(f"win{k}", wx - 0.24, wx + 0.24, yw - 0.1, yw - 0.06, 0.66, 1.04, "amber" if (idle and not dmg) else "amber_dim", 0.0, nocast=True)
+    if not dmg:      # detail: rivet row on the band, a conduit run down the wall, a louvred vent by the door
+        for k in range(10):
+            S.cyl(f"hrv{k}", 0.03, 0.04, (x0 + 0.15 + k * 0.3, yw - 0.12, 1.3), "steel", verts=6, nocast=True)
+        S.cyl("hconduit", 0.04, 0.9, (x1 - 0.18, yw - 0.1, 0.5), "pipeblue", verts=8, nocast=True)
+        for k in range(4):
+            S.bb(f"hvent{k}", -2.9, -2.6, yw - 0.1, yw - 0.06, 0.5 + 0.08 * k, 0.54 + 0.08 * k, "dark", 0.0, nocast=True)
     S.bb("doorf", -0.6, 0.4, yw - 0.1, yw + 0.04, 0.14, 1.12, "dark", 0.0)
     S.bb("door", -0.5, 0.3, yw - 0.14, yw - 0.1, 0.2, 1.06, "steel", 0.02)
     S.bb("sign", -0.3, 0.1, yw - 0.16, yw - 0.14, 0.8, 0.95, "yellow", 0.0, nocast=True)
@@ -133,7 +139,7 @@ def finished(S, i, dmg, mode):
         for sx in (-1.0, 1.0):
             S.bb("railpost", dx + sx - 0.05, dx + sx + 0.05, dy - 0.05, dy + 0.05, za, zr, "steel", 0.0)
         S.bb("penrail", dx - 1.05, dx + 1.05, dy - 0.04, dy + 0.04, zr, zr + 0.07, "steel", 0.0)
-        px = dx + (PEN[i % 4] if idle else 0.0)
+        px = dx + (0.3 * math.sin(2 * math.pi * i / 8) if idle else 0.0)     # pen trace wanders over the 8-frame loop
         S.bb("penblock", px - 0.1, px + 0.1, dy - 0.08, dy + 0.08, zr - 0.12, zr + 0.07, "steeld", 0.0)
         S.bb("penarm", px - 0.035, px + 0.035, dy - 0.035, dy + 0.035, dz + 0.55, zr - 0.1, "steel", 0.0)
         S.bb("pen", px - 0.07, px + 0.07, dy - 0.07, dy + 0.07, dz + 0.46, dz + 0.6, "red", 0.0)
@@ -158,7 +164,7 @@ def finished(S, i, dmg, mode):
         for z in (1.0, 1.9):
             S.bb("mstay", mx - 0.4, mx + 0.4, my - 0.03, my + 0.03, z, z + 0.05, "steel", 0.0, nocast=True)
         S.bb("flag", mx + 0.06, mx + 0.62, my - 0.02, my + 0.02, 2.5, 2.9, "house", 0.0, nocast=True)
-        S.bb("lamp", mx - 0.12, mx + 0.12, my - 0.12, my + 0.12, 3.0, 3.25, "amber" if (idle and i % 2 == 0) else "amber_dim", 0.02)
+        S.bb("lamp", mx - 0.12, mx + 0.12, my - 0.12, my + 0.12, 3.0, 3.25, "amber" if (idle and i % 4 < 2) else "amber_dim", 0.02)
     S.bb("mbase", mx - 0.3, mx + 0.3, my - 0.3, my + 0.3, 0.14, 0.35, "concrete2", 0.03)
     if dmg:
         R.scorch(S, "scA", -1.2, yw - 0.14, 1.0, 1.6, 0.7)
