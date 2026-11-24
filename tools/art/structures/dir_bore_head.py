@@ -3,7 +3,8 @@
 Same pad, collar footprint, plinth, hazard bar and house colours as dir_hatch (the shared base lives in dir_hatch.base), but the head
 is bigger: a taller collar, a wide ramp mouth under a heavy magenta-banded hood, and on the roof an A-frame carrying a big toothed
 CUTTER WHEEL (bone disc, oxide teeth, spokes) with a magenta banner hanging below it, plus a vent stack.  Ember glow in the mouth.
-Idle loop: the cutter wheel turns, vent puffs, glow flickers.  Damage is structural only (D-069): hood end fallen, wheel hanging off one
+Idle loop (8 frames): the cutter wheel turns a quarter tooth per frame (a 90-degree loop that closes on the 8 teeth and 2 spokes).
+No vent smoke is baked (the separate smoke pass adds it).  Damaged: the wheel hangs still and a spark flickers on the broken post.  Damage is structural only (D-069): hood end fallen, wheel hanging off one
 post.  Contract: see auth_refinery.py.  Units: 3.4 per cell, x east, y NORTH, z up, footprint x, y in [-1.7, 1.7].
 """
 import importlib.util
@@ -27,7 +28,7 @@ ORIGIN = (0, 68)
 DOCK = (0, 0)
 CAP_MATERIAL = D.CAP_MATERIAL
 PALETTE = D.PALETTE
-STATES = [("idle", 4, 5), ("damaged", 4, 5), ("build", 8, 5)]
+STATES = [("idle", 8, 2), ("damaged", 8, 2), ("build", 8, 5)]     # idle/damaged: 8-frame loops at tpf 2 (S43 fan)
 MATERIALS = D.MATERIALS
 SOOT_SKIN = D.SOOT_SKIN
 PRIMER_SKIN = D.PRIMER_SKIN
@@ -56,10 +57,10 @@ def head(S, i, dmg, mode, zr):
     S.cyl("wheel", WR, 0.2, (cx, WY, cz), "bone", axis="Y", verts=18)
     S.cyl("wheeld", WR - 0.1, 0.24, (cx, WY, cz), "dark", axis="Y", verts=16)
     for q in range(2):
-        ang = i * 22.5 + q * 90
+        ang = i * 11.25 + q * 90
         S.box(f"spoke{q}", (2 * WR - 0.1, 0.26, 0.1), (cx, (WY - 0.06) * S.YS, cz), "bone", 0.0, rot=(0, ang, 0), stretch=False)
     for k in range(8):
-        a = math.radians(k * 45 + i * 22.5)
+        a = math.radians(k * 45 + i * 11.25)
         S.bb(f"tooth{k}", cx + (WR + 0.02) * math.cos(a) - 0.07, cx + (WR + 0.02) * math.cos(a) + 0.07, WY - 0.13, WY + 0.0,
              cz + (WR + 0.02) * math.sin(a) - 0.07, cz + (WR + 0.02) * math.sin(a) + 0.07, "oxide", 0.0)
     S.cyl("hub", 0.14, 0.3, (cx, WY - 0.04, cz), "oxide", axis="Y", verts=10)
@@ -69,11 +70,8 @@ def head(S, i, dmg, mode, zr):
     # vent stack at the back
     S.cyl("vent", 0.22, 0.9, (0.9, 1.0, zr + 0.45), "hull2", verts=10)
     S.cyl("venth", 0.3, 0.1, (0.9, 1.0, zr + 0.95), "steel", verts=10)
-    if mode != "build" and not dmg:
-        for q in range(2):
-            ph = ((i / 4) + q / 2) % 1
-            r = 0.1 + 0.25 * math.sin(math.pi * ph) ** 0.7
-            S.sphere(f"puff{q}", r, (0.9 + ph * 0.6, 1.0, zr + 1.2 + ph * 0.9), "smoke2", squash=0.85)
+    if dmg and i % 4 == 0:
+        S.bb("dspark", 0.78, 1.0, WY - 0.24, WY - 0.16, zr + 0.5, zr + 0.62, "spark", 0.0, nocast=True)
 
 
 def finished(S, i, dmg, mode):

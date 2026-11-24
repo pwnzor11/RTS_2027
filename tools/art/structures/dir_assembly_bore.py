@@ -4,7 +4,8 @@ The read is a HANGAR-SIZED CAVERN MOUTH under a portal gantry: a wide low umber 
 band, blast doors folded back, ember glow) and sawtooth skylight ribs glowing along the roof.  A bone / oxide bridge-crane gantry
 straddles the whole hall from the pad, its trolley running along the girder with a hanging vehicle chassis; a magenta banner hangs
 from the girder.  Roof vents, loudspeaker, parts stacks on the pad, hazard bar along the south edge.
-Idle loop: the trolley and its hanging chassis travel along the girder, skylight slits flicker.  Damage is structural only (D-069): the
+Idle loop (8 frames): the trolley and its hanging chassis travel the girder and back, skylight slits flicker.  Damaged: a spark
+flickers on the stub leg.  Damage is structural only (D-069): the
 east half of the girder has fallen with its leg, the chassis lies on the pad, hood end down.
 Contract: see auth_refinery.py.  Units: 3.4 per cell, x east, y NORTH, z up, footprint x, y in [-5.1, 5.1].
 """
@@ -25,7 +26,7 @@ ORIGIN = (0, 80)
 DOCK = (1, 3)
 CAP_MATERIAL = D.CAP_MATERIAL
 PALETTE = D.PALETTE
-STATES = [("idle", 4, 5), ("damaged", 4, 5), ("build", 8, 5)]
+STATES = [("idle", 8, 2), ("damaged", 8, 2), ("build", 8, 5)]     # idle/damaged: 8-frame loops at tpf 2 (S43 fan)
 MATERIALS = D.MATERIALS
 SOOT_SKIN = D.SOOT_SKIN
 PRIMER_SKIN = D.PRIMER_SKIN
@@ -50,6 +51,8 @@ def gantry(S, i, dmg, mode):
     for sgn in (-1, 1):
         if dmg and sgn == 1:
             S.bb("legstub", sgn * LEGX - 0.2, sgn * LEGX + 0.2, 1.2, 1.8, 0.14, 1.6, "hull2", 0.02)
+            if i % 4 == 0:
+                S.bb("dspark", sgn * LEGX - 0.12, sgn * LEGX + 0.12, 1.3, 1.7, 1.6, 1.72, "spark", 0.0, nocast=True)
             continue
         S.bb(f"leg{sgn}", sgn * LEGX - 0.2, sgn * LEGX + 0.2, 1.2, 1.8, 0.14, GZ + 0.3, "concrete2", 0.02)
         for zz, m in ((1.0, "bone"), (2.4, "oxide"), (3.8, "bone")):
@@ -71,7 +74,7 @@ def gantry(S, i, dmg, mode):
     S.bb("banner", -4.2, -3.4, GY0 - 0.1, GY0 - 0.06, GZ - 1.8, GZ - 0.05, "house", 0.0)
     S.bb("bannertrimB", -4.2, -3.4, GY0 - 0.12, GY0 - 0.1, GZ - 1.8, GZ - 1.6, "bone", 0.0)
     # trolley, cable, hanging chassis
-    tx = 2.4 * math.sin(2 * math.pi * i / 4) if mode != "build" else 0.0
+    tx = 2.4 * math.sin(2 * math.pi * i / 8) if mode != "build" else 0.0
     S.bb("trolley", tx - 0.5, tx + 0.5, GY0 - 0.12, GY1 + 0.12, GZ - 0.35, GZ, "oxide", 0.02)
     cz = 4.1
     for ox in (-0.4, 0.4):
@@ -97,7 +100,7 @@ def roof_form(S, i, dmg, lit):
     nwin = int((cx1 + 2.3) / 0.8)
     for q in range(nwin):
         xa = -2.2 + q * 0.8
-        on = lit and ((q + i) % 3 != 0)
+        on = lit and ((q + i) % 4 != 0)
         S.bb(f"win{q}", xa, xa + 0.55, 0.0, 0.06, ZR + 0.32, ZR + 0.6, "redglow" if on else "oxide2", 0.0, nocast=True)
         S.bb(f"winf{q}", xa - 0.05, xa + 0.6, 0.02, 0.07, ZR + 0.28, ZR + 0.32, "brass_dim", 0.0, nocast=True)
     if dmg:
@@ -145,7 +148,7 @@ def finished(S, i, dmg, mode):
         if k >= 1 and not (dmg and k == 3):
             for q in range(6):
                 xa = -3.4 + q * 1.2
-                on = lit and ((q + k + i) % 3 != 0)
+                on = lit and ((q + k + i) % 4 != 0)
                 S.bb(f"glow{k}{q}", xa, xa + 0.7, a - 0.04, a, ZR + 0.15, ZR + 0.38, "redglow" if on else "oxide2", 0.0, nocast=True)
     D.roof_vents(S, ZR, ((-3.4, 3.7, 0.8), (3.0, 3.7, 0.8)))
     roof_plant(S, dmg)
