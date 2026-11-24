@@ -25,8 +25,8 @@ public sealed class ReplayCatalog
     /// <summary>Creates a catalog over a folder.</summary>
     public ReplayCatalog(string folder) => _folder = folder;
 
-    /// <summary>The folder the game records into: <c>replays</c> in the working directory (see ReplayRecording).</summary>
-    public static string DefaultFolder => System.IO.Path.GetFullPath("replays");
+    /// <summary>The folder the game records into: <c>replays</c> beside the saves in the per-user application-data folder (REPO-01).</summary>
+    public static string DefaultFolder => System.IO.Path.Combine(System.IO.Path.GetDirectoryName(Settings.DefaultPath) ?? ".", "replays");
 
     /// <summary>Replays, newest first (at most 60). Never throws.</summary>
     public IReadOnlyList<ReplayEntry> List()
