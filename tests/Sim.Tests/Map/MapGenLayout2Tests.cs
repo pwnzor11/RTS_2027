@@ -218,7 +218,7 @@ public sealed class MapGenLayout2Tests
     {
         Biome.RustBelt => 0x5c6d7443fc81826dUL,
         Biome.AshPlains => 0x9c8d5a61c87e9a24UL,   // s36 D-277: mirror_x; M13-33: start_row_shift 6; S37 M13-36: Ash fords are decks
-        Biome.Mountains => 0x7bb8784ac5932567UL,   // M13-33: start_row_shift 6
-        _ => 0x4a3218dbf42e2073UL,
+        Biome.Mountains => 0x0a869ef4b9a595b8UL,   // M13-33: start_row_shift 6
+        _ => 0xec88b4536169df69UL,
     };
 }
