@@ -51,7 +51,7 @@ public static class UnitRenderer
         if (UnitVisuals.ShowDiveMarker(view)) DrawDiveMarker(batch, pixel, origin, house, tick, camera.Zoom * SpriteLayout.UnitDrawScale);
         // M3-18: shadow under the body, turret on top, dive replaces the body. M3-21: the snapshot carries the turret facing and the dive flag.
         // Companion sheets (<id>_turret, <id>_shadow) supply a layer when the body sheet has no such state.
-        IReadOnlyList<UnitLayer> layers = UnitLayerPlan.For(sprite.Manifest, infantry, moving, view.Facing, UnitVisuals.TurretFacing(view),
+        UnitLayers layers = UnitLayerPlan.Plan(sprite.Manifest, infantry, moving, view.Facing, UnitVisuals.TurretFacing(view),
             view.Diving, tick, sprite.TurretSheet?.Manifest, sprite.ShadowSheet?.Manifest, memory.Travel(UnitKey.Of(view)));
         foreach (UnitLayer planned in layers)
         {

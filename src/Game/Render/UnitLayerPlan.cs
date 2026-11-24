@@ -33,6 +33,67 @@ public enum UnitLayerSheet
 public readonly record struct UnitLayer(UnitLayerKind Kind, int Frame, int OffsetX, int OffsetY, UnitLayerSheet Sheet = UnitLayerSheet.Own);
 
 /// <summary>
+/// A unit's layers back to front, held inline (at most three: shadow, body or dive, turret), so planning a unit allocates nothing.
+/// Enumerate it with <c>foreach</c> (a struct enumerator, no boxing) or index it.
+/// </summary>
+public struct UnitLayers
+{
+    /// <summary>The most layers a unit can have.</summary>
+    public const int Capacity = 3;
+
+    private UnitLayer _a;
+    private UnitLayer _b;
+    private UnitLayer _c;
+
+    /// <summary>How many layers are set.</summary>
+    public int Count { get; private set; }
+
+    /// <summary>The layer at <paramref name="index"/>, back to front.</summary>
+    public readonly UnitLayer this[int index]
+    {
+        get
+        {
+            if ((uint)index >= (uint)Count) throw new ArgumentOutOfRangeException(nameof(index));
+            return index == 0 ? _a : index == 1 ? _b : _c;
+        }
+    }
+
+    internal void Add(UnitLayer layer)
+    {
+        switch (Count)
+        {
+            case 0: _a = layer; break;
+            case 1: _b = layer; break;
+            case 2: _c = layer; break;
+            default: throw new InvalidOperationException("A unit has at most three layers.");
+        }
+        Count++;
+    }
+
+    /// <summary>Struct enumerator for <c>foreach</c>.</summary>
+    public readonly Enumerator GetEnumerator() => new(this);
+
+    /// <summary>Allocation-free enumerator over a <see cref="UnitLayers"/>.</summary>
+    public struct Enumerator
+    {
+        private readonly UnitLayers _layers;
+        private int _i;
+
+        internal Enumerator(UnitLayers layers)
+        {
+            _layers = layers;
+            _i = -1;
+        }
+
+        /// <summary>The current layer.</summary>
+        public readonly UnitLayer Current => _layers[_i];
+
+        /// <summary>Steps to the next layer.</summary>
+        public bool MoveNext() => ++_i < _layers.Count;
+    }
+}
+
+/// <summary>
 /// Which layers a unit sprite is drawn with, back to front (M3-18). The extra layers are manifest states named
 /// <c>shadow</c>, <c>turret</c> and <c>dive</c>; a manifest without them yields exactly one Body layer, the frame the renderer
 /// has always used. A body without a turret or shadow state may instead get them from companion sheets (<c>&lt;id&gt;_turret</c>,
@@ -60,12 +121,12 @@ public static class UnitLayerPlan
     /// <param name="turretSheet">Companion turret sheet (a <c>turret</c> layer with a pivot), used when the body has no turret state; or null.</param>
     /// <param name="shadowSheet">Companion shadow sheet, used when the body has no shadow state; or null.</param>
     /// <param name="travelLeptons">Total distance the unit has travelled, in leptons; drives the <c>move</c> frames (see <see cref="SpriteStates.UnitFrame"/>).</param>
-    public static IReadOnlyList<UnitLayer> For(SpriteManifest manifest, bool infantry, bool moving, byte facing, byte? turretFacing,
+    public static UnitLayers Plan(SpriteManifest manifest, bool infantry, bool moving, byte facing, byte? turretFacing,
         bool diving, int tick, SpriteManifest? turretSheet = null, SpriteManifest? shadowSheet = null, long travelLeptons = 0)
     {
         ArgumentNullException.ThrowIfNull(manifest);
         int t = Math.Max(0, tick);
-        var layers = new List<UnitLayer>(3);
+        var layers = new UnitLayers();
         if (SpriteStates.HasState(manifest, Shadow))
         {
             layers.Add(new UnitLayer(UnitLayerKind.Shadow, manifest.FrameIndex(Shadow, facing, t), manifest.ShadowDx, manifest.ShadowDy));
@@ -94,6 +155,26 @@ public static class UnitLayerPlan
                 dx, dy, UnitLayerSheet.TurretCompanion));
         }
         return layers;
+    }
+
+    /// <summary>The layers as a list (allocates; the renderer uses <see cref="Plan"/>). Same content and order as <see cref="Plan"/>.</summary>
+    /// <param name="manifest">The unit's manifest.</param>
+    /// <param name="infantry">True for infantry.</param>
+    /// <param name="moving">Whether the unit moved since the previous snapshot.</param>
+    /// <param name="facing">Body facing byte.</param>
+    /// <param name="turretFacing">Turret facing byte, or null to use the body facing.</param>
+    /// <param name="diving">True while an aircraft dives or attacks.</param>
+    /// <param name="tick">Simulation tick.</param>
+    /// <param name="turretSheet">Companion turret sheet, or null.</param>
+    /// <param name="shadowSheet">Companion shadow sheet, or null.</param>
+    /// <param name="travelLeptons">Total distance travelled, in leptons.</param>
+    public static IReadOnlyList<UnitLayer> For(SpriteManifest manifest, bool infantry, bool moving, byte facing, byte? turretFacing,
+        bool diving, int tick, SpriteManifest? turretSheet = null, SpriteManifest? shadowSheet = null, long travelLeptons = 0)
+    {
+        UnitLayers planned = Plan(manifest, infantry, moving, facing, turretFacing, diving, tick, turretSheet, shadowSheet, travelLeptons);
+        var list = new List<UnitLayer>(planned.Count);
+        foreach (UnitLayer layer in planned) list.Add(layer);
+        return list;
     }
 
     /// <summary>
