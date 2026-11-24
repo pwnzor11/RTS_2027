@@ -25,7 +25,7 @@ DOCK = (1, 3)
 CAP_MATERIAL = "pad2"
 PALETTE = K.PALETTE
 MATERIALS = K.MATERIALS
-STATES = [("idle", 4, 5), ("damaged", 4, 5), ("build", 8, 5)]
+STATES = [("idle", 8, 2), ("damaged", 8, 2), ("build", 8, 5)]     # session 43: 8-frame loops at tpf 2 (owner choice)
 D = F.DECK
 BX = 2.0     # basin half width
 FX = [
@@ -77,7 +77,6 @@ def g_hull(S, dmg, i):
         K.beam(S, "gun", (0, -2.5, z + 2.15), (0, -3.7, z + 2.4), 0.18, "chrome")
         S.cyl("fun", 0.32, 1.0, (0, 2.2, z + 2.3), "chrome", verts=14)
         S.cyl("funb", 0.34, 0.14, (0, 2.2, z + 2.7), "house", verts=14)
-        K.puffs(S, "fun", 0, 2.2, z + 3.0, i, n=2, drift=0.5)
     K.EV.digits(S, "hn", "07", 0.0, -4.62, z + 1.1, 0.11, "white", flat=False)
 
 
@@ -89,7 +88,7 @@ def crane(S, name, side, y, i):
     S.bb(name + "beam", -BX - 0.8, BX + 0.8, y - 0.25, y + 0.25, top, top + 0.3, "copper", 0.03)
     S.bb(name + "trol", -0.4, 0.4, y - 0.3, y + 0.3, top + 0.3, top + 0.6, "orange2", 0.03)
     S.bb(name + "band", -BX - 0.8, BX + 0.8, y - 0.27, y - 0.25, top + 0.02, top + 0.28, "house", 0.0, nocast=True)
-    sw = 0.2 * math.sin((i + (0 if side < 0 else 2)) * math.pi / 2)
+    sw = 0.2 * math.sin((i + (0 if side < 0 else 4)) * math.pi / 4)    # hook swing: one full cycle per 8-frame loop
     K.beam(S, name + "cab", (sw * 0.3, y, top + 0.3), (sw, y, D + 2.2), 0.05, "dark", nocast=True)
     S.bb(name + "hook", sw - 0.15, sw + 0.15, y - 0.12, y + 0.12, D + 1.9, D + 2.25, "orange", 0.0)
 
@@ -109,7 +108,6 @@ def g_pump(S, dmg, i):
     if not dmg:
         S.cyl("pstack", 0.28, 1.2, (-3.6, 2.3, D + 1.7), "chrome", verts=12)
         S.cyl("pstkc", 0.3, 0.1, (-3.6, 2.3, D + 2.3), "copper", verts=12)
-        K.puffs(S, "pmp", -3.6, 2.3, D + 2.4, i, n=2, drift=0.7)
     for k in range(3):
         S.cyl(f"pdrum{k}", 0.3, 0.8, (-5.0 + k * 0.7, -1.0, D + 0.4), "orange2" if k != 1 else "white2", verts=12)
     K.flag(S, "flag", 4.6, 3.0, 3.4 if not dmg else 2.4, i, w=1.3, h=0.8, dmg=dmg)
@@ -130,6 +128,8 @@ def site(S):
 def dmg_extra(S, i):
     F.breach(S, 3.4, 5.0, -2.8, -1.6)
     S.bb("sc1", -5.2, -3.4, -2.2, -1.0, D + 0.01, D + 0.03, "char", 0.0, nocast=True)
+    if i in (3, 7):         # live end of the fallen crane jib sparks
+        S.sphere("dspark", 0.09, (-1.4, -1.8, D + 2.75), "spark")
 
 
 def build(S, state, i, n):
