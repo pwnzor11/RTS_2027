@@ -366,11 +366,14 @@ Art pass, music/SFX, balance, installer.
 - [x] M13-41 Map-specific balance rows (s39 leftovers): per-biome ore amounts (D-294): 24-row MAD 14.6 -> 9.7, all rows 29.5-69 % (s40). Open: Rust/Glass Auth v LB and Auth v Exp ~69, LB v Exp Glass/Ash ~30, Ash Auth v Dir 33 (docs/balance/s40_balance.md §4)
 - [ ] M13-42 Authority tier-2/3 units are worth less than tier-1 spam (grow_bags made the Authority weaker, D-297): unit value pass, then set grow_bags (s40) — s41: wrong diagnosis (duels: grown lists beat tier-1 lists); unit lists are data keys (D-300); Expedition lists rejected; Authority lists measured in the w41 sweep
 - [x] M13-43 Unit-v-unit duels (`Tools ai duels`) and fixtures in data/balance/duels.toml (D-299, s41)
-- [ ] M13-44 Stuck clock + recovery ladder (D-301): built, off by default; measure with stuck_recovery = 1 before turning it on
-- [ ] M13-45 Committed waves: wave_reinforce_ticks, wave_search (D-302): built, off by default; screen on the ladder
+- [x] M13-44 Stuck clock + recovery ladder (D-301): built, off by default; measured s42: costs the Directorate 6-12 points, stays off (D-309)
+- [x] M13-45 Committed waves: wave_reinforce_ticks, wave_search (D-302): built, off by default; screened on the Expedition ladder s42, no effect (stays off)
 - [x] M13-46 Map start-room test (D-303, s41)
 - [x] M13-47 Audio provenance manifest + checker + test (D-303, s41)
-- [ ] M13-48 Balance finish line (D-298): s41 sweep + fresh-seed confirm: no unit change kept; map pool noise -> Q-87 (how to measure); Authority ladder fixed (tier-2 army_cap 28, D-304); Expedition 3 v 2 49 % open
+- [ ] M13-48 Balance finish line (D-298): s41 sweep + fresh-seed confirm: no unit change kept; map pool noise -> Q-87 (how to measure); Authority ladder fixed (tier-2 army_cap 28, D-304); Expedition 3 v 2 49 % open -> closed by M13-49 (s42); superseded by M13-51
+- [x] M13-49 Expedition ladder in order: tier-1 army_cap 10, tier-2 army_cap 14 (D-307, s42)
+- [x] M13-50 Map fixes: Mountains 4 plateaus, Glass Coast ocean width 3 (D-308, s42); Ash Plains / Rust Belt: no map key helped
+- [ ] M13-51 Finish line on 512 games (D-305, s42): pairings and ladders pass; Ash Auth v Dir 23.6 % and Rust Auth v LB 75.1 % outside 25-75 % -> Q-88
 - [x] M13-35 Expedition supply lane: 7-wide landing bay, Landing Craft parks off the dock water (s37, D-281)
 - [x] M13-36 Ash Plains river crossings are road decks (s37, D-281)
 - [x] M11-30 Objective guidance: every active objective in the bar, one guided highlight, complete/failed banners, markers for every objective (s37, D-283)

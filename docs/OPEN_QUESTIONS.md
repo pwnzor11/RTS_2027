@@ -5,7 +5,13 @@ file cited after each question. Recommendations are the lead's, from the researc
 
 ## Open
 
-(none)
+- 🔴 Q-88 · 2026-11-24 · Two map rows sit just outside D-305's 25-75 % band on 512 games; everything else meets the finish line.
+  With D-307/D-308 on main: all six pairings pooled over the biomes are inside 40-60 % (40.6-58.6 %), the ladders are in order, the campaign meets D-222.
+  The exceptions are Ash Plains Authority v Directorate 23.6 % and Rust Belt Authority v Left Behind 75.1 %, 1.4 and 0.1 points
+  outside the band, both within about one standard error (~2 points). Five kinds of Ash map change failed on the first (docs/balance/s42_balance.md §2); unit levers cannot target a single map (s41).
+  Options: **(a) call the finish line met within measurement error and freeze balance numbers (D-298); the 24-row 35-65 % goal stays as later work** /
+  (b) one more session on an AI code change (Authority early defence when the enemy's first wave lands early, as on Ash) and a small Rust nudge, then
+  re-measure 512 games / (c) widen the row band (e.g. 22-78 %). Recommendation: (a) — the remaining gaps are inside the measurement's own noise.
 
 ## Answered
 - Q-87 · 2026-11-23 · Owner: (c) judge the six pairings over the map pool now, the 24 per-map rows later once map-specific causes are fixed → D-305.
