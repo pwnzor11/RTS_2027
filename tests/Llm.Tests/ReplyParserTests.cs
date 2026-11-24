@@ -11,6 +11,17 @@ public class ReplyParserTests
     private static readonly DirectiveDraft FullDraft = new(2, 2, 2, 3, true, 10, 20);
 
     [Fact]
+    public void A_runaway_reply_of_open_braces_is_cheap_and_empty()
+    {
+        string text = new string('{', 100_000);
+        var sw = System.Diagnostics.Stopwatch.StartNew();
+        var r = ReplyParser.Parse(text);
+        Assert.True(sw.ElapsedMilliseconds < 1000, "took " + sw.ElapsedMilliseconds + " ms");
+        Assert.Null(r.Directive);
+        Assert.Null(r.Say);
+    }
+
+    [Fact]
     public void Plain_json()
     {
         var r = ReplyParser.Parse(Full);
