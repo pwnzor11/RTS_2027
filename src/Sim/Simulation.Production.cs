@@ -572,7 +572,7 @@ public sealed partial class Simulation
             // S19 M13-02 (D-173/D-205): a live founder (Command Ship, MCV) is a base too, but only if it deploys into a base-capable building
             // (A43 SIMECON-04: the Directorate Bore deploys into a Hatch, a tunnel entrance, which is not a base).
             int into = RulesOf(_units.Player[v]).Vehicles[_units.TypeIndex[v]].DeploysInto;
-            if (_rigs.IsPackedRig(v) || (into >= 0 && into < rootBuilding.Length && rootBuilding[into]))
+            if (_rigs.IsPackedRig(v) || (into >= 0 && (into < rootBuilding.Length && rootBuilding[into])))
                 has[_units.Player[v]] = true;
         }
         for (int p = 0; p < n; p++)

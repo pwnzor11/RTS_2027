@@ -101,6 +101,9 @@ internal sealed class BuildOrderManager
     /// <summary>M13-06: ready structures cancelled because no site was found.</summary>
     public int Cancelled { get; private set; }
 
+    /// <summary>A43 SIMECON-01: thinks a front item may stay paused (its prerequisite building lost) before the AI cancels it and re-plans.</summary>
+    public const int CancelAfterHeldThinks = 3;
+    private readonly int[] _heldThinks = new int[2];   // per lane (Structure, Defence)
     private readonly int[] _failedSearches = new int[2];   // M13-06: per lane (Structure, Defence)
     private int _banType = -1, _banLeft;                   // M13-06: the last cancelled type and its remaining cooldown
 
@@ -129,8 +132,22 @@ internal sealed class BuildOrderManager
         {
             QueueView q = k.Queue(cat);
             int lane = cat == ProductionCategory.Structure ? 0 : 1;
+            // A43 SIMECON-01: the AI never holds a lane, so a held front item is one paused by a lost prerequisite: cancel it (refund) so the
+            // order can rebuild the prerequisite instead of waiting on it for ever.
+            bool dropFront = false;
+            if (q.Items.Count > 0 && q.Items[0].Held)
+            {
+                if (++_heldThinks[lane] >= CancelAfterHeldThinks)
+                {
+                    sink.Issue(CommandKind.Cancel, EntityId.None, (ActorKind)(int)cat);   // Arg = category, front item
+                    _heldThinks[lane] = 0; dropFront = true;
+                }
+            }
+            else _heldThinks[lane] = 0;
+            int itemNo = 0;
             foreach (QueueItemView it in q.Items)
             {
+                if (dropFront && itemNo++ == 0) continue;
                 _queued[it.TypeIndex]++; laneBusy = true;
                 if (ReserveInProgress) inProgress += (int)((long)rules.Buildings[it.TypeIndex].Cost * Math.Max(0, 1000 - it.ProgressPermille) / 1000);
             }

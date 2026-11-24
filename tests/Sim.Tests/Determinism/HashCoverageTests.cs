@@ -25,6 +25,7 @@ public class HashCoverageTests
         ["PathService._floodQueue"] = "M13-05: flood-fill scratch for the region labels",
         ["ProductionState.NoRebuildTicks"] = "M4-17: written only when SimSetup.NoRebuildDefeat is on (so other games keep their bytes); covered by NoRebuildDefeatTests.ClockIsHashed",
         ["PlayerStore.HandicapPercent"] = "S19 D-205: written only when SimSetup.Handicap has a player off 100 (so other games keep their bytes); covered by HandicapTests.ADefaultSlotOptions_SetupKeepsTheOldHashAndHeaderBytes",
+        ["MobileStore.QueueStamp"] = "A43 SIMCORE-03: counts missions queued, read only inside one Apply call to tell whether an order was accepted; never saved, never read across ticks",
         ["UnitStore.StuckAnchor"] = "S41 M13-44: written only when [movement] stuck_recovery = 1 (so other games keep their bytes); covered by StuckRecoveryTests.RuleOn_StuckClockIsHashed_RuleOffIsNot",
         ["UnitStore.StuckAnchorTick"] = "S41 M13-44: written only when [movement] stuck_recovery = 1 (so other games keep their bytes); covered by StuckRecoveryTests.RuleOn_StuckClockIsHashed_RuleOffIsNot",
         ["UnitStore.StuckLastTick"] = "S41 M13-44: written only when [movement] stuck_recovery = 1 (so other games keep their bytes); covered by StuckRecoveryTests.RuleOn_StuckClockIsHashed_RuleOffIsNot",
