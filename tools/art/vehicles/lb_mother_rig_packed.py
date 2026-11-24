@@ -14,14 +14,19 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import common as C
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import mot_track as MT
 
 ID = "lb_mother_rig_packed"
 TITLE = "Left Behind Mother Rig (packed)"
 CANVAS = 192
 TARGET = (0.0, 0.0, 1.4)
-STATES = [("idle", 16, 1, 1)]
+STATES = [("idle", 16, 1, 1), ("move", 16, 4, 1)]
+# "move": 4 frames per facing, track links one pitch per 4 frames, road-wheel bolts roll (auth_tank.py). Idle = move frame 0.
+STEP_PX = {"move": round((MT.Loop(yc=0.0, h=2.5, r=0.51, zc=0.55).step_px() + MT.Loop(yc=0.65, h=2.45, r=0.51, zc=0.55).step_px()) / 2, 2)}
 PALETTE = C.PAL_LB
 MATERIALS = {
+    "link": MT.LINK,
     "hull": ("#4F746E", dict(rough=0.8)), "hull2": ("#34524E", dict(rough=0.8)),
     "dust": ("#54402A", dict(rough=1.0)), "canvas": ("#D6C8A2", dict(rough=1.0)), "canvas2": ("#B5A57C", dict(rough=1.0)),
     "ochre": ("#B38A44", dict(rough=0.9)), "rust": ("#8A3E24", dict(rough=0.95)), "rust2": ("#5A2A1A", dict(rough=0.95)),
@@ -33,7 +38,8 @@ MATERIALS = {
 }
 
 
-def track(S, x, y0, y1, tag, m_skirt):
+def track(S, x, y0, y1, tag, m_skirt, mk=None):
+    """mk = move frame for the link ring and wheel bolts; None = no move detail."""
     ln, yc = y1 - y0, (y0 + y1) / 2
     S.box(f"trk{tag}", (0.85, ln - 0.7, 0.9), (x, yc, 0.55), "track", 0.12)
     for yy, nm in ((y1 - 0.4, "A"), (y0 + 0.4, "B")):
@@ -43,6 +49,10 @@ def track(S, x, y0, y1, tag, m_skirt):
         y = y0 + 0.55 + k * (ln - 1.1) / (n - 1)
         r = 0.34 if k != 2 else 0.28                     # mismatched road wheel
         S.cyl(f"wh{tag}{k}", r, 0.1, (x + math.copysign(0.45, x), y, 0.5), "steel" if k % 2 == 0 else "rust", "X", 14)
+        if mk is not None:
+            MT.bolts(S, f"bolt{tag}{k}", x + math.copysign(0.49, x), y, 0.5, r, mk)
+    if mk is not None:
+        MT.links(S, f"link{tag}", x, MT.Loop(yc=yc, h=ln / 2 - 0.4, r=0.51, zc=0.55), 0.8, mk)
     S.box(f"skirt{tag}", (0.08, ln - 0.5, 0.4), (x + math.copysign(0.44, x), yc, 1.05), m_skirt, 0.02)
     S.box(f"skirtpatch{tag}", (0.1, 0.9, 0.3), (x + math.copysign(0.45, x), yc + 0.6, 1.08), "ochre" if tag == "L" else "ash", 0.0)
 
@@ -50,8 +60,9 @@ def track(S, x, y0, y1, tag, m_skirt):
 def build(S, state, k, n):
     box, cyl, cone, sphere = S.box, S.cyl, S.cone, S.sphere
     S.begin("body")
-    track(S, -1.55, -2.9, 2.9, "L", "rust")
-    track(S, 1.55, -2.2, 3.5, "R", "hull2")
+    mk = k if state in ("idle", "move") else None
+    track(S, -1.55, -2.9, 2.9, "L", "rust", mk)
+    track(S, 1.55, -2.2, 3.5, "R", "hull2", mk)
     # flatbed deck, bumpers, hitch
     box("deck", (4.4, 6.4, 0.2), (0, 0.15, 1.12), "wood", 0.03)
     box("frameL", (0.2, 6.4, 0.3), (-2.2, 0.15, 1.0), "ash2", 0.02)

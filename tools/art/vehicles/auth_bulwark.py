@@ -9,20 +9,31 @@ House paint: the skirt stripe on each side, the turret flank panels, a glacis fl
 """
 import math
 
+import os, sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import mot_track as MT
+
 ID = "auth_bulwark"
 TITLE = "Authority Bulwark heavy tank"
 CANVAS = 160
 TARGET = (0.0, 0.1, 1.5)
-STATES = [("idle", 16, 1, 1)]
+STATES = [("idle", 16, 1, 1), ("move", 16, 4, 1)]
+# "move": 4 frames per facing, track links one pitch per 4 frames, road-wheel bolts roll (auth_tank.py). Idle = move frame 0.
+LOOP = MT.Loop(yc=0.0, h=1.75, r=0.49, zc=0.5)       # idlers at y +-1.75, idler radius 0.48
+STEP_PX = {"move": LOOP.step_px()}
 LAYERS = ["body", "turret"]
 DECK = 1.62
 PIVOT = (0.0, -0.15, 1.7)
 MOUNT = dict(deck_z=DECK, r_lip=0.85, r_well=0.0, r_shadow=1.15, shadow_z=DECK + 0.02, soft_r=0.9, lip="hull2")
 
 
+MATERIALS = {"link": MT.LINK}
+
+
 def build(S, state, k, n):
     box, cyl = S.box, S.cyl
     S.begin("body")
+    move = state in ("idle", "move")
     # ---- tracks: very broad, long, with raised front idler and rear sprocket, 7 road wheels, skirt plate with house stripe
     for s, side in ((-1, "L"), (1, "R")):
         x = s * 1.55
@@ -33,6 +44,10 @@ def build(S, state, k, n):
             y = -1.5 + i * 0.5
             cyl(f"wheel{side}{i}", 0.34, 0.1, (x + s * 0.48, y, 0.44), "steel", "X", 18)
             cyl(f"hub{side}{i}", 0.14, 0.08, (x + s * 0.54, y, 0.44), "rust", "X", 10)
+            if move:
+                MT.bolts(S, f"bolt{side}{i}", x + s * 0.53, y, 0.44, 0.34, k)
+        if move:
+            MT.links(S, f"link{side}", x, LOOP, 0.95, k)
         cyl("sprocket" + side, 0.34, 0.1, (x + s * 0.48, -1.78, 0.5), "rust", "X", 12)
         box("skirt" + side, (0.1, 3.3, 0.62), (x + s * 0.5, 0.0, 1.0), "hull", 0.04)
         box("stripe" + side, (0.12, 2.7, 0.3), (x + s * 0.53, 0.0, 1.02), "house", 0.0)
