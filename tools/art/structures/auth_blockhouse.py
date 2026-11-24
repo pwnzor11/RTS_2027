@@ -27,7 +27,7 @@ ORIGIN = (0, 24)
 DOCK = (1, 2)
 CAP_MATERIAL = "concrete2"
 HOUSE2_MID = True
-STATES = [("idle", 4, 5), ("damaged", 4, 5), ("build", 8, 5)]
+STATES = [("idle", 8, 2), ("damaged", 8, 2), ("build", 8, 5)]     # 8-frame loops at tpf 2 (0.4 s a frame)
 MATERIALS = dict(L.MATERIALS)
 MATERIALS["steel2"] = ("#979EA3", dict(rough=0.4, metal=0.5))
 MATERIALS["gunmetal"] = ("#2A2E31", dict(rough=0.35, metal=0.7))
@@ -86,17 +86,28 @@ def finished(S, i, dmg, mode):
     dx = 2.05
     S.bb("doorf", dx - 0.4, dx + 0.4, yf - 0.1, yf + 0.04, 0.14, 1.0, "dark", 0.0)
     S.bb("door", dx - 0.32, dx + 0.32, yf - 0.16, yf - 0.1, 0.14, 0.95, "steel", 0.02)
-    lamp = idle and not dmg and i % 2 == 0
+    lamp = idle and not dmg and i % 4 < 2
     S.cyl("lamp", 0.08, 0.1, (dx, yf - 0.2, 1.05), "amber" if lamp else "amber_dim", verts=8, nocast=True)
     # ---- roof hatch with periscope and whip
     S.bb("hatch", -1.9, -1.2, 0.5, 1.2, H + RT, H + RT + 0.2, "steel", 0.03) if not dmg else None
     if not dmg:
         S.cyl("pscope", 0.07, 0.6, (-1.55, 0.85, H + RT + 0.5), "steel", verts=8)
-        a = math.radians((i * 90) if idle else 0)
+        a = math.radians((i * 45) if idle else 0)      # one full turn over the 8-frame loop
         S.box("pshead", (0.34, 0.14, 0.14), (-1.55 + 0.1 * math.sin(a), 0.85 * YS, H + RT + 0.85), "gunmetal" if "gunmetal" in MATERIALS else "dark", 0.0, rot=(0, 0, -math.degrees(a)), stretch=False)
         S.cyl("whip", 0.025, 1.3, (1.2, 1.6, H + RT + 0.65), "steel", verts=6)
-        S.sphere("whiptip", 0.06, (1.2, 1.6, H + RT + 1.33), "beacon" if (idle and i % 2) else "dark", nocast=True) if "beacon" in MATERIALS else None
+        S.sphere("whiptip", 0.06, (1.2, 1.6, H + RT + 1.33), "beacon" if (idle and i % 4 >= 2) else "dark", nocast=True) if "beacon" in MATERIALS else None
         S.bb("vent", 0.0, 0.6, 1.3, 1.9, H + RT, H + RT + 0.25, "concrete2", 0.04)
+        for k in range(3):     # louvre slats on the vent
+            S.bb(f"vslat{k}", 0.05, 0.55, 1.3 - 0.02, 1.9 + 0.02, H + RT + 0.05 + 0.06 * k, H + RT + 0.09 + 0.06 * k, "dark", 0.0, nocast=True)
+    # ---- detail: door handle, fascia rivets, roof downspout, slit sills
+    S.bb("dhandle", dx + 0.22, dx + 0.36, yf - 0.24, yf - 0.2, 0.5, 0.56, "steel", 0.0, nocast=True)
+    for k in range(9):
+        S.cyl(f"frv{k}", 0.03, 0.05, (X0 + 0.15 + k * 0.3, yf - 0.12, 1.22), "steel", verts=6, nocast=True)
+    S.bb("downs", X1 - 0.12, X1 - 0.04, yf - 0.02, yf + 0.06, 0.2, H + 0.18, "steel2", 0.0, nocast=True)
+    for k in range(5):
+        sx = -2.1 + k * 0.78
+        if sx <= 1.5:
+            S.bb(f"sill{k}", sx - 0.38, sx + 0.38, yf - 0.1, yf + 0.0, 0.5, 0.52, "concrete2", 0.0, nocast=True)
     # ---- sandbag aprons at the front corners and a berm of spoil behind
     sandbags(S, -3.2, -1.7, -1.75, 2, dmg, 0)
     sandbags(S, 1.0, 1.5, -1.75, 2, dmg, 2) if False else None
