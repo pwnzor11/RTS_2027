@@ -207,6 +207,17 @@ public sealed partial class MissionHost
 
     // ---- Reinforce.Delayed (and the block layout of Reinforce.Edge) ----
 
+    /// <summary>A43 CAMPAIGN-01: the cell an Edge-block unit spawns on. The block cell itself when an actor of this type can stand there now
+    /// (right terrain, no prop, no building, no unit), else the nearest such cell around it (the overflow rule Reinforce.Zone got in S18 MIS-07).
+    /// A building type keeps the block cell (it is placed unchecked, as before).</summary>
+    private CellCoord EdgeSpawnCell(string typeId, CellCoord blockCell)
+    {
+        (ActorKind kind, int ix) = ResolveType(typeId);
+        if (kind == ActorKind.Building) return blockCell;
+        return FreeCellNear(blockCell, LocomotionOf(kind, ix), FreeCellRing)
+            ?? throw Err("no free cell near (" + blockCell.X + "," + blockCell.Y + ") for " + typeId);
+    }
+
     /// <summary>The same spawn as Reinforce.Edge (small block just inside the edge, then attack-move) for a queued arrival.</summary>
     private List<string> SpawnEdgeBlock(int player, List<string> types, CellCoord edge, CellCoord dest)
     {
@@ -219,7 +230,7 @@ public sealed partial class MissionHost
         {
             int depth = k / 3, along = k % 3 - 1;
             var cell = new CellCoord(Math.Clamp(edge.X + ix * depth + ax * along, 0, w - 1), Math.Clamp(edge.Y + iy * depth + ay * along, 0, h - 1));
-            string tag = SpawnActor(sim, types[k], player, cell, null);
+            string tag = SpawnActor(sim, types[k], player, EdgeSpawnCell(types[k], cell), null);
             if (RefOf(tag).Kind != ActorKind.Building) sim.AssignAttackMove(RefOf(tag), dest);
             tags.Add(tag);
         }
