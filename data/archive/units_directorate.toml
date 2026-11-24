@@ -143,7 +143,7 @@ title = "Dirigible"
 subtitle = "Scouting airship"
 field_note = "VOICE: \"THE INTERIOR HAS EYES UPON THE HEAVENS. THE SKY IS NO LONGER A STRANGER.\""
 body = '''
-A slow, fragile envelope hung with a gondola, launched from a Mooring Tower. It sees farther than any ground unit and can drop canisters of Blackout smoke that blind the enemy's own scouts. It is the closest the Directorate has to an air force, and crews who fly it do so mostly to see the sky.
+A fragile envelope hung with a gondola, launched from a Mooring Tower. It sees farther than any ground unit and can drop canisters of Blackout smoke that blind the enemy's own scouts. It is the closest the Directorate has to an air force, and crews who fly it do so mostly to see the sky.
 '''
 unlock = "campaign:dir_04" # M8-13 (tune)
 

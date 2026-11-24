@@ -149,7 +149,7 @@ title = "Interceptor"
 subtitle = "Prop fighter"
 field_note = "WING 2 // CLEAR THE SKY OVER THE DISTRICT. LAND ON TIME. STOP."
 body = '''
-A single-seat propeller fighter built at the Airfield for one job, which is to keep the sky empty of Directorate dirigibles. It is fast, lightly armoured and flown by volunteers from the old aero clubs. Ground crews paint a tally on the cowling for every airship brought down.
+A single-seat propeller fighter built at the Airfield for one job, which is to keep the sky empty of Directorate dirigibles. It is lightly armoured and flown by volunteers from the old aero clubs. Ground crews paint a tally on the cowling for every airship brought down.
 '''
 # Approved by the owner 2026-11-04 (Q-38). Replace the open unlock with a mission id when known.
 unlock = "open"
