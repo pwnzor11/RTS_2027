@@ -1108,7 +1108,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
     private Rectangle SuperweaponButtonRect(int index)
     {
         var scale = _s.UiScale;
-        int w = BitmapFont.Measure("SUNRISE  PAUSED", scale) + 16;
+        int w = SuperweaponButtons.ButtonWidth(_superweapon.Buttons[index].Caption, s => BitmapFont.Measure(s, scale));   // A43 GAMEUI-02
         int h = Hud.HeightOf(1, scale) + 6;
         return new Rectangle(MapViewport().Width - w - 8, 8 + index * (h + 4), w, h);
     }
