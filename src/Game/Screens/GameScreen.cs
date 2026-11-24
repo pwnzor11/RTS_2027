@@ -1581,9 +1581,9 @@ public sealed class GameScreen : IScreen, IFocusPausable
 
     private Rts.Game.Ui.Alerts.AlertController? _alertsBacking;   // M11-10d
     private Rts.Game.Ui.Alerts.AlertController _alerts => _alertsBacking ??= new Rts.Game.Ui.Alerts.AlertController(u => u.Kind == UnitKind.Vehicle && _sim is not null && _sim.Rules.Vehicles[u.TypeIndex].HarvestCapacity > 0);
-    private readonly Vector2?[] _bookmarks = new Vector2?[4];   // M11-02: camera bookmarks F5..F8 (Ctrl+key stores, key recalls)
+    private readonly Vector2?[] _bookmarks = new Vector2?[4];   // M11-02: camera bookmarks F6, F7, F8, F12 (Ctrl+key stores, key recalls)
 
-    // Home centres on the player's base; Ctrl+F5..F8 store the view centre, F5..F8 recall it.
+    // Home centres on the player's base; Ctrl+F6, F7, F8, F12 store the view centre, the same keys recall it.
     private void HandleCameraKeys(InputFrame input)
     {
         if (_sim is null) return;
