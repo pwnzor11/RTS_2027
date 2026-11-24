@@ -30,6 +30,7 @@ public sealed class AiDriver
         public byte[]? Saved;   // M3-21: a state blob from a save, applied once when the driver starts
         public CellCoord? SavedStart;
         public IDirectiveSource? Directives;   // M5: the LLM commander, polled every tick
+        public bool Faulted;   // A43 AI-07: Think threw (bad data id); this AI stays idle for the rest of the match
         public IOrderSource? Orders;   // S24 (M5-12): its standing orders, taken right after the directive poll
 
         public void Issue(CommandKind kind, EntityId subject, ActorKind subjectKind, CellCoord cell = default,
@@ -110,7 +111,16 @@ public sealed class AiDriver
             s.Delay = Math.Max(1, CommandDelayOverride ?? s.Profile.CommandDelayTicks);
             s.Out = outCommands;
             if (_hooks is not null && s.Ai is IHookableAi hookable) hookable.ApplyHooks(hooks, s.Profile);
-            s.Ai.Think(sim.ViewFor(s.Player), s);
+            if (s.Faulted) { s.Out = null!; continue; }
+            int before = outCommands.Count;
+            try { s.Ai.Think(sim.ViewFor(s.Player), s); }
+            catch (Exception e) when (e is not OutOfMemoryException)
+            {
+                // A43 AI-07: edited data can name an unknown unit or structure; log it and idle this AI instead of ending the match.
+                s.Faulted = true;
+                if (outCommands.Count > before) outCommands.RemoveRange(before, outCommands.Count - before);
+                Console.Error.WriteLine($"AI player {s.Player} stopped: {e.GetType().Name}: {e.Message}");
+            }
             s.Out = null!;
         }
     }
@@ -144,7 +154,7 @@ public sealed class AiDriver
             if (s.Saved is { Length: > 0 } && s.Ai is IAiSnapshotable restorable)
             {
                 try { using var br = new BinaryReader(new MemoryStream(s.Saved)); restorable.LoadState(br); }
-                catch (Exception e) when (e is EndOfStreamException or InvalidDataException or InvalidOperationException or IOException)
+                catch (Exception e) when (e is not OutOfMemoryException)
                 {
                     Restored = false;   // a half-read AI is not trusted: the caller can see it and tell the player
                 }
