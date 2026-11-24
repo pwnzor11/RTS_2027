@@ -153,4 +153,6 @@ public enum GameAction
     StanceDefensive,
     /// <summary>M13-15: set the selected units' stance to hold fire (fire only at what they are ordered to attack).</summary>
     StanceHoldFire,
+    /// <summary>QOL-18: hide or show the HUD panels, the selection card, the sidebar, the minimap and the map buttons (for screenshots).</summary>
+    HideHud,
 }

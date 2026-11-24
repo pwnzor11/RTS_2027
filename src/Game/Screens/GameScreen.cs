@@ -520,6 +520,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
         }
 
         if (input.ConsumePressed(GameAction.DecorToggle)) Rts.Game.Render.DecorSettings.Enabled = !Rts.Game.Render.DecorSettings.Enabled;   // M12-03
+        if (!(typing || chatTyping) && input.ConsumePressed(GameAction.HideHud)) _hudHidden = !_hudHidden;   // QOL-18
         HandleSaveKeys(input, typing || chatTyping);   // D-205: F5 quicksave, F9 quickload
         TickAutosave();                                // D-205
         TickStartCue();                                // D-205
@@ -645,18 +646,21 @@ public sealed class GameScreen : IScreen, IFocusPausable
         DrawUnpackGhost(sb);
         _sidebar?.DrawMapOverlay(sb, _s.Pixel, _camera, snapshot, _s.Scene);
         _mission?.Guidance.DrawWorld(sb, _s.Pixel, _camera, MapViewport().Bounds, _s.UiScale);   // M11-05
-        DrawHud(sb, snapshot);
-        _card?.Draw(sb, _s.Pixel, _mouse, _orders is { AttackMoveArmed: true });   // M11-04
-        DrawToast(sb);   // D-205
+        if (!_hudHidden) DrawHud(sb, snapshot);   // QOL-18
+        if (!_hudHidden) _card?.Draw(sb, _s.Pixel, _mouse, _orders is { AttackMoveArmed: true });   // M11-04
+        if (!_hudHidden) DrawToast(sb);   // D-205
         _chat.Draw(sb, _s.Pixel, _s.UiScale, new Point(8, _s.Viewport.Height - Hud.HeightOf(1, _s.UiScale) - 12), _s.Viewport.Width - 16);
-        _sidebar?.Draw(sb, _s.Pixel, snapshot);
-        if (_mission is not null && _sidebar is not null) _mission.Guidance.DrawMinimap(sb, _s.Pixel, _sidebar.Layout.Minimap, snapshot.MapWidth, snapshot.MapHeight);   // M11-05
-        if (_sidebar is not null) _alerts.DrawMinimapPings(sb, _s.Pixel, _sidebar.Layout.Minimap, snapshot.MapWidth, snapshot.MapHeight, snapshot.Tick);   // M11-10d
-        DrawSuperweapon(sb, snapshot.Tick);
-        DrawUpgradeButton(sb);
-        DrawPackButton(sb);
-        DrawDiveButton(sb);
-        DrawIdleButtons(sb);
+        if (!_hudHidden) _sidebar?.Draw(sb, _s.Pixel, snapshot);   // QOL-18
+        if (!_hudHidden && _mission is not null && _sidebar is not null) _mission.Guidance.DrawMinimap(sb, _s.Pixel, _sidebar.Layout.Minimap, snapshot.MapWidth, snapshot.MapHeight);   // M11-05
+        if (!_hudHidden && _sidebar is not null) _alerts.DrawMinimapPings(sb, _s.Pixel, _sidebar.Layout.Minimap, snapshot.MapWidth, snapshot.MapHeight, snapshot.Tick);   // M11-10d
+        if (!_hudHidden)   // QOL-18: the map buttons go with the HUD
+        {
+            DrawSuperweapon(sb, snapshot.Tick);
+            DrawUpgradeButton(sb);
+            DrawPackButton(sb);
+            DrawDiveButton(sb);
+            DrawIdleButtons(sb);
+        }
         DrawSpectator(sb);
         _console?.Draw(sb, _s.Pixel, _s.Viewport);
         if (_lan is not null && _lanOverlay is not null)   // M9-08
@@ -764,6 +768,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
     private readonly List<ViewActor> _ownScratch = new();
     private readonly List<ViewActor> _idleHarvesters = new();
     private int _harvestersTotal, _harvestersWorking;   // QOL-04: the economy line of the HUD (skirmish only)
+    private bool _hudHidden;   // QOL-18: the HUD key hides the overlays for a clean screenshot
     private readonly List<ViewActor> _idleFactories = new();
     private readonly List<GameAlert> _idleAlerts = new();
     private EntityId _lastIdleHarvester, _lastIdleFactory;
@@ -1754,6 +1759,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
             lines.Add($"tick {snapshot.Tick}  hash {snapshot.StateHash:x16}  fps {_s.Fps}  zoom {_camera.ZoomLabel}");
         if (_skirmishMode && !_spectatorMode && _sim is not null)
             lines.Add(EconomyReadout.Line(_income.IncomePerMinute(Me), _harvestersWorking, _harvestersTotal));   // QOL-04
+        if (_sim is not null) lines.Add(MatchClock.Format(snapshot.Tick));   // QOL-18: elapsed game time
         if (_sim is { Paused: true }) lines.Add(debugMode ? "PAUSED (. = step)" : "PAUSED");
         else if (SpeedAllowed && _sim is { } speedSim && speedSim.SpeedPercent != GameSpeed.Normal)
             lines.Add(UiText.Format(UiText.SpeedHud, "speed", GameSpeed.Label(speedSim.SpeedPercent)));   // M13-15
@@ -1778,7 +1784,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
     {
         var scale = _s.UiScale;
         List<string> lines = HudLines(_source.Current);
-        _hudRegion.Bounds = lines.Count == 0 ? Rectangle.Empty : PanelRect(new Point(8, 8), lines, scale);
+        _hudRegion.Bounds = lines.Count == 0 || _hudHidden ? Rectangle.Empty : PanelRect(new Point(8, 8), lines, scale);
         if (_specPanel is not null)
         {
             _specPanel.Origin = new Point(8, 8 + Hud.HeightOf(lines.Count, scale) + 4);
