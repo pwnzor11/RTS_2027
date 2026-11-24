@@ -153,4 +153,10 @@ public enum GameAction
     StanceDefensive,
     /// <summary>M13-15: set the selected units' stance to hold fire (fire only at what they are ordered to attack).</summary>
     StanceHoldFire,
+    /// <summary>A43-QOL-14: place the structure or defence placed last once more (placement mode when one is finished, else queue one).</summary>
+    PlaceLast,
+    /// <summary>A43-QOL-15: switch repair on for every damaged own building (one ordinary Repair command each).</summary>
+    RepairAll,
+    /// <summary>A43-QOL-15: sell the marked buildings (Shift + click marks more than one); press twice within two seconds to confirm.</summary>
+    SellMarked,
 }
