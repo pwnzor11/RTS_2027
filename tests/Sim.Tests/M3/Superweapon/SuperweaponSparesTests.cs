@@ -45,7 +45,7 @@ public sealed class SuperweaponSparesTests
         EntityId bunker = sim.PlaceBuilding(1, Bunker, new CellCoord(25, 14));
         Assert.False(bunker.IsNone);
         EntityId soldier = sim.SpawnInfantry(1, Rifle, new CellCoord(24, 16));
-        var x = new Extras(sim.SpawnVehicle(1, Brute, new CellCoord(35, 12)), sim.SpawnVehicle(1, Brute, new CellCoord(35, 14)),
+        var x = new Extras(sim.SpawnVehicle(1, Brute, new CellCoord(28, 12)), sim.SpawnVehicle(1, Brute, new CellCoord(28, 14)),
             sim.SpawnInfantry(1, Rifle, new CellCoord(30, 30)), sim.PlaceBuilding(1, Sun, new CellCoord(5, 30)),
             sim.SpawnInfantry(0, Engineer, new CellCoord(5, 33)));
         var enter = new Command(sim.Tick, 1, 900, CommandKind.Enter, soldier, bunker, default, (int)ActorKind.Infantry | ((int)ActorKind.Building << 8));
@@ -86,7 +86,7 @@ public sealed class SuperweaponSparesTests
         sim.Naval.Submerged[dived.Index] = true;
         sim.Effects.BuildingCharge[sun.Index] = Total;
         sim.Step(None);
-        Run(sim, 1, Fire(sim, 0, sun, 35, 13));
+        Run(sim, 1, Fire(sim, 0, sun, 28, 13));
         Assert.Equal(2000, sim.Units.Health[dived.Index]);
         Assert.True(sim.Units.Health[surf.Index] < 2000);
     }
