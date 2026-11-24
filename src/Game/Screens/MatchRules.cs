@@ -13,6 +13,12 @@ namespace Rts.Game.Screens;
 /// <param name="RevealMap">True: every cell is visible to everyone all game.</param>
 public readonly record struct MatchRules(int SuperweaponLimit = SimSetup.NoSuperweaponLimit, bool RevealMap = false)
 {
+    /// <summary>
+    /// A record struct's implicit parameterless constructor zeroes every field and ignores the optional-parameter defaults, so a bare
+    /// <c>new()</c> used to mean "no superweapons" (limit 0). This explicit one makes it the default game (unlimited, fog on).
+    /// </summary>
+    public MatchRules() : this(SimSetup.NoSuperweaponLimit, false) { }
+
     /// <summary>The limits the setup row cycles through, in order.</summary>
     public static readonly IReadOnlyList<int> LimitSteps = new[] { SimSetup.NoSuperweaponLimit, 0, 1, 2 };
 

@@ -55,7 +55,7 @@ public sealed class SkirmishCommanderSaveTests
     {
         SkirmishSettings s = FourSlot();
         GameSaveHeader back = Read(Bytes(WithSettings(s)), GameSaveHeader.CurrentVersion);
-        Assert.Equal(9, back.Version);
+        Assert.Equal(10, back.Version);
         Assert.Equal(s, back.Skirmish);
         Assert.False(back.Skirmish!.Slots[0].Commander);
         Assert.True(back.Skirmish.Slots[1].Commander);
