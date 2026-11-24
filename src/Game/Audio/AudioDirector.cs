@@ -192,7 +192,7 @@ public sealed class AudioDirector
         bool fight = !wall && IsFightSound(e.Kind);
         if (fight && _combatPlaysThisStep >= MaxCombatPlaysPerStep) return;
 
-        float gain = def.Volume;
+        float gain = def.Volume * Rts.Game.Ui.Alerts.AlertMix.Active.GainOf(e.Kind);   // QOL-12: the alert categories have their own volume (1 for every other sound)
         float pan = 0f;
         if (def.Positional && e.Pos is { } pos && _listener() is { } listener)
         {
