@@ -50,6 +50,17 @@ public sealed class LobbyContentHashTests : IDisposable
     }
 
     [Fact]
+    public void StampChangeChangesHash()
+    {
+        ulong before = ContentHash.Compute(_dir);
+        Write("stamps/bridge.toml", "w = 3\n");
+        ulong added = ContentHash.Compute(_dir);
+        Assert.NotEqual(before, added);
+        Write("stamps/bridge.toml", "w = 4\n");
+        Assert.NotEqual(added, ContentHash.Compute(_dir));
+    }
+
+    [Fact]
     public void AudioIsIgnored()
     {
         ulong before = ContentHash.Compute(_dir);
