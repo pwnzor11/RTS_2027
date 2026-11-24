@@ -22,7 +22,7 @@ BOB = (0.0, 0.05, 0.10, 0.05)
 
 def build(S, state, k, n):
     box, cyl = S.box, S.cyl
-    move = state == "move"
+    # idle carries move frame 0's detail (k = 0: bar at rest, no bob), so the sprite does not pop when the jeep stops
     # wheels: 4, big knobbly tyres with steel hubs
     for s, side in ((-1, "L"), (1, "R")):
         for y, tag in ((0.78, "F"), (-0.72, "R")):
@@ -30,13 +30,11 @@ def build(S, state, k, n):
             cyl(f"tyre{side}{tag}", 0.31, 0.24, (x, y, 0.31), "track", "X", 16)
             cyl(f"hub{side}{tag}", 0.15, 0.27, (x, y, 0.31), "steel", "X", 12)
             cyl(f"nut{side}{tag}", 0.05, 0.3, (x, y, 0.31), "dark", "X", 6)
-            if move:      # hub bar on the outer face, rolling forward (+y) 45 deg per frame
-                a = math.radians(-45 * k)
-                box(f"bar{side}{tag}", (0.03, 0.30, 0.05), (x + s * 0.145, y, 0.31), "dark", 0.0, rot=(math.degrees(a), 0, 0))
+            # hub bar on the outer face, rolling forward (+y) 45 deg per frame
+            box(f"bar{side}{tag}", (0.03, 0.30, 0.05), (x + s * 0.145, y, 0.31), "dark", 0.0, rot=(-45 * k, 0, 0))
     box("axleF", (1.2, 0.1, 0.1), (0, 0.78, 0.31), "dark", 0)
     box("axleR", (1.2, 0.1, 0.1), (0, -0.72, 0.31), "dark", 0)
-    if move:
-        S.set_pose(dz=-BOB[k])       # everything from here on is the sprung body: raised by BOB[k]
+    S.set_pose(dz=-BOB[k])           # everything from here on is the sprung body: raised by BOB[k] (k = 0 clears)
     # tub, hood, rear deck
     box("tub", (1.12, 1.7, 0.5), (0, -0.2, 0.68), "hull", 0.06)
     box("hood", (1.0, 0.95, 0.42), (0, 0.9, 0.74), "hull2", 0.07)

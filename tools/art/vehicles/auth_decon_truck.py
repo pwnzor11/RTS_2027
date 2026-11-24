@@ -5,13 +5,16 @@ decontaminant tank on the bed (light shell, house band, yellow filler cap), haza
 roof-mounted spray boom with a flared nozzle that swings on its own turret layer (pivot on top of the tank).
 Layers: body (truck + whole-vehicle shadow) + turret (boom).  House paint: cab doors, bonnet panel, tank band, boom collar.
 """
-import math
+import math, os, sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import mot_roll as M
 
 ID = "auth_decon_truck"
 TITLE = "Authority decontamination truck"
 CANVAS = 112
 TARGET = (0.0, 0.0, 1.5)     # raised: the spray boom at facing 0 needs headroom in the turret frame
-STATES = [("idle", 16, 1, 1)]
+STATES = [("idle", 16, 1, 1), ("move", 16, 4, 1)]   # move: 4 frames per facing (hub bars roll, body bobs); idle = move frame 0
+STEP_PX = M.roll_step(0.38)
 LAYERS = ["body", "turret"]
 PIVOT = (0.0, -0.75, 2.04)    # = top of the pedestal collar = top of the tank at the pivot
 MOUNT = dict(deck_z=1.8, r_lip=0.5, r_well=0.0, r_shadow=0.58, shadow_z=2.05, soft_r=0.55, lip="hull")
@@ -26,10 +29,13 @@ def build(S, state, k, n):
             cyl(f"tyre{side}{tag}", 0.38, 0.28, (x, y, 0.38), "track", "X", 16)
             cyl(f"hub{side}{tag}", 0.18, 0.31, (x, y, 0.38), "steel", "X", 12)
             cyl(f"nut{side}{tag}", 0.06, 0.34, (x, y, 0.38), "dark", "X", 6)
-        box(f"guardF{side}", (0.4, 0.95, 0.05), (s * 0.8, 1.05, 0.86), "hull2", 0.02)
-        box(f"guardR{side}", (0.4, 0.95, 0.05), (s * 0.8, -1.0, 0.86), "hull2", 0.02)
+            M.hub_bar(S, f"{side}{tag}", s, x, y, 0.38, 0.28, k)
     box("axleF", (1.5, 0.1, 0.1), (0, 1.05, 0.38), "dark", 0)
     box("axleR", (1.5, 0.1, 0.1), (0, -1.0, 0.38), "dark", 0)
+    M.sprung(S, k)
+    for s, side in ((-1, "L"), (1, "R")):
+        box(f"guardF{side}", (0.4, 0.95, 0.05), (s * 0.8, 1.05, 0.86), "hull2", 0.02)
+        box(f"guardR{side}", (0.4, 0.95, 0.05), (s * 0.8, -1.0, 0.86), "hull2", 0.02)
     box("frame", (1.3, 3.2, 0.24), (0, 0, 0.68), "hull2", 0.04)
     # ---- cab
     box("hood", (1.35, 0.8, 0.5), (0, 1.35, 0.98), "hull2", 0.07)
