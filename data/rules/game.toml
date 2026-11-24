@@ -100,8 +100,7 @@ tier2 = "lb_tier2"
 tier3 = "lb_tier3"
 
 # Expedition kit (M7-08, design 07 §2.1): no conyard building, a Command Ship at sea that Deploys into exp_landing_depot on a landing coast,
-# 1 Landing Craft, 3 Marines, 1 Skimmer. The faction is NOT playable yet (RuleCounts.PlayableFactions stays 3): nothing resolves this kit
-# until M7-14. All of it is (tune), assumed -- confirm. T2 gate exp_plotting_room (exp_tier2), T3 gate exp_core_hall (exp_tier3).
+# 1 Landing Craft, 3 Marines, 1 Skimmer. All of it is (tune), assumed -- confirm. T2 gate exp_plotting_room (exp_tier2), T3 gate exp_core_hall (exp_tier3).
 [faction.expedition]
 conyard = ""
 units = ["exp_command_ship", "exp_landing_craft", "exp_marine", "exp_marine", "exp_marine", "exp_skimmer"]
