@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><OutputType>Exe</OutputType><TreatWarningsAsErrors>false</TreatWarningsAsErrors><RootNamespace>TerrainDump</RootNamespace></PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/Game/Game.csproj" />
+    <ProjectReference Include="../../src/Data/Data.csproj" />
+  </ItemGroup>
+</Project>

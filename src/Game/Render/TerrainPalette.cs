@@ -335,6 +335,9 @@ public sealed class TerrainPalette
             };
         }
 
+        if (root.TryGetValue("detail", out object? dv) && dv is TomlTable dt)
+            st = st with { Detail = OptInt(dt, "level", 0, 0, 2) };
+
         if (root.TryGetValue("field", out object? fv) && fv is TomlTable f)
         {
             st = st with
@@ -467,6 +470,9 @@ public sealed class TerrainPalette
 
         /// <summary>Crystal look for pitchblende; null keeps the chunk speckle.</summary>
         public FieldLook? Pitchblende { get; init; }
+
+        /// <summary>Terrain detail level (S43): 0 = the D-181 look; 1 = multi-octave noise, per-land features, soft land-to-land blends, ragged shore, road edge and cliff lip (see <see cref="TerrainDetail"/>); 2 = the same, calmer (no cracks or grass, half the pebbles).</summary>
+        public int Detail { get; init; }
 
         /// <summary>True when any shore, road-edge or cliff option is on.</summary>
         public bool HasEdgeEffects => RoadEdge is not null || Shore is not null || CliffTop is not null || CliffShadowPermille > 0;

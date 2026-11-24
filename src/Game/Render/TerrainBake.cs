@@ -52,7 +52,8 @@ public static class TerrainBake
         int s = palette.TexelCells;
         int tw = grid.Width * s, th = grid.Height * s;
         var rgba = new byte[tw * th * 4];
-        for (int ty = 0; ty < th; ty++)
+        void Row(int ty)
+        {
             for (int tx = 0; tx < tw; tx++)
             {
                 TerrainPalette.Rgb col = TexelColour(palette, grid, tx, ty);
@@ -62,6 +63,11 @@ public static class TerrainBake
                 rgba[o + 2] = col.B;
                 rgba[o + 3] = 255;
             }
+        }
+
+        // Every texel is a pure function of the grid, so rows can bake in parallel with identical bytes.
+        if (palette.Style.Detail > 0) Parallel.For(0, th, Row);
+        else for (int ty = 0; ty < th; ty++) Row(ty);
 
         return new Result(tw, th, rgba);
     }
@@ -112,6 +118,13 @@ public static class TerrainBake
             if (look is not null) col = FieldTexel(palette, look, map, k, cx, cy, sx, sy, overlay, dens, col, palette.PitchGlint);
         }
 
+        if (style.Detail > 0)
+        {
+            if (!(fields && overlay is OverlayKind.Ashfall or OverlayKind.Pitchblende)) col = TerrainDetail.Blend(palette, map, land, col, cx, cy, tx, ty);
+            if (edges) col = TerrainDetail.Decorate(col, map, style, cx, cy, sx, sy, s);
+            return col;
+        }
+
         if (sx == 0 && cx > 0 && map.Land[k - 1] != land) col = Average(col, palette.ShadesFor(map.Land[k - 1]).Base);
         if (sx == s - 1 && cx < w - 1 && map.Land[k + 1] != land) col = Average(col, palette.ShadesFor(map.Land[k + 1]).Base);
         if (sy == 0 && cy > 0 && map.Land[k - w] != land) col = Average(col, palette.ShadesFor(map.Land[k - w]).Base);
@@ -128,7 +141,7 @@ public static class TerrainBake
         if (fields && ((overlay == OverlayKind.Ashfall && palette.Style.Ashfall is not null)
             || (overlay == OverlayKind.Pitchblende && palette.Style.Pitchblende is not null)))
         {
-            return Shade(palette, land, tx, ty);   // the field look paints the cell
+            return Shade(palette, land, tx, ty, false);   // the field look paints the cell
         }
 
         if (overlay == OverlayKind.Pitchblende)
@@ -139,9 +152,9 @@ public static class TerrainBake
                 pitched = true;
                 col = Hash3((uint)tx, (uint)ty, 5) % (uint)palette.GlintOneIn == 0 ? palette.PitchGlint : palette.PitchChunk;
             }
-            else col = Shade(palette, land, tx, ty);
+            else col = Shade(palette, land, tx, ty, true);
         }
-        else col = Shade(palette, land, tx, ty);
+        else col = Shade(palette, land, tx, ty, true);
 
         if (!pitched && overlay == OverlayKind.Ashfall
             && (int)(Hash3((uint)tx, (uint)ty, 3) % 1000u) < dens * palette.AshfallMaxPermille / 255)
@@ -152,9 +165,21 @@ public static class TerrainBake
         return col;
     }
 
-    private static TerrainPalette.Rgb Shade(TerrainPalette palette, LandType land, int tx, int ty)
+    private static TerrainPalette.Rgb Shade(TerrainPalette palette, LandType land, int tx, int ty, bool features)
     {
         TerrainPalette.TerrainStyle st = palette.Style;
+        if (st.Detail > 0)
+        {
+            TerrainPalette.Rgb g = TerrainDetail.Ground(palette, land, tx, ty, features);
+            if (st.ToneAmp > 0 && land is not (LandType.Water or LandType.Shallow or LandType.Cliff or LandType.Road))
+            {
+                int off = Tone(tx, ty, st.ToneCells * palette.TexelCells, st.ToneAmp);
+                g = new TerrainPalette.Rgb(Clamp(g.R + off), Clamp(g.G + off), Clamp(g.B + off));
+            }
+
+            return g;
+        }
+
         int c = (int)(Hash3((uint)(tx >> st.BlotchShift), (uint)(ty >> st.BlotchShift), 1) % 8u) switch
         {
             0 => -1,
@@ -320,7 +345,7 @@ public static class TerrainBake
     private static TerrainPalette.Rgb Average(TerrainPalette.Rgb a, TerrainPalette.Rgb b) =>
         new((byte)((a.R + b.R) / 2), (byte)((a.G + b.G) / 2), (byte)((a.B + b.B) / 2));
 
-    private static uint Hash3(uint a, uint b, uint salt)
+    internal static uint Hash3(uint a, uint b, uint salt)
     {
         unchecked
         {

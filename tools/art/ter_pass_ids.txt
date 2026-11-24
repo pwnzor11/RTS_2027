@@ -1,0 +1,12 @@
+# Terrain pass asset ids (one per invocation of tools/art/ter_pass.py). Rust Belt is the pilot; the rest wait for the owner's pick.
+map:data/maps/rustbelt_m2.map.toml
+gen:rust_belt:m:2:1
+gen:rust_belt:m:2:2
+gen:rust_belt:l:4:7
+gen:rust_belt:l:4:8
+# After fan-out approval (each needs its own [detail] palette and land-type features, see the pilot report):
+# map:data/maps/glass_coast_e1.map.toml
+# map:data/maps/ash_reckoning.map.toml
+# gen:glass_coast:m:2:1
+# gen:mountains:m:2:1
+# gen:ash_plains:m:2:1
