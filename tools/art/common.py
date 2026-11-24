@@ -5,7 +5,7 @@ from PIL import Image, ImageFilter
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 PILOT = os.path.join(ROOT, "art", "pilot")
-WORK = os.path.join(PILOT, "work")
+WORK = os.environ.get("ART_WORK") or os.path.join(PILOT, "work")   # ART_WORK: per-job scratch folder for batch runs (tools/art/mot_pass.py)
 
 
 def hx(s):

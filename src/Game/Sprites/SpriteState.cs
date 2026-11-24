@@ -12,7 +12,10 @@ namespace Rts.Game.Sprites;
 /// <param name="First">Index of the block's first frame in the sheet, row-major from 0.</param>
 /// <param name="TicksPerFrame">Simulation ticks each animation frame is shown for, at least 1.</param>
 /// <param name="Loop">True (the default) when the animation wraps; false holds the last frame (one-shot effects).</param>
-public sealed record SpriteState(string Name, int Facings, int Frames, int First, int TicksPerFrame, bool Loop = true)
+/// <param name="StepPx">Optional (manifest key <c>step_px</c>, 0 = absent): ground distance in sheet pixels one frame stands for. A moving vehicle's
+/// <c>move</c> state advances a frame per this much travel (so wheels and tread links do not slide on the ground); without it the state
+/// advances by ticks like any other.</param>
+public sealed record SpriteState(string Name, int Facings, int Frames, int First, int TicksPerFrame, bool Loop = true, double StepPx = 0)
 {
     /// <summary>Number of sheet cells this state occupies.</summary>
     public int CellCount => Facings * Frames;

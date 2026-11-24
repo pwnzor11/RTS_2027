@@ -1,0 +1,26 @@
+# Ground vehicles (tracked or wheeled, data/rules/vehicles.toml) that get a 'move' state in the motion pass.
+# Pilot: auth_tank, auth_jeep (done). The others need a 'move' branch in tools/art/vehicles/<id>.py first (see auth_tank.py / auth_jeep.py).
+auth_scraper
+auth_jeep
+auth_tank
+dir_agitprop
+dir_reactor_crawler
+dir_rocket_truck
+dir_landtrain
+auth_decon_truck
+auth_carrier
+auth_seismic_mortar
+auth_foam_truck
+auth_howitzer
+auth_bulwark
+dir_ash_sower
+lb_gleaner
+lb_hauler
+lb_buggy
+lb_harpoon_wagon
+lb_organ
+lb_tow
+lb_dust_sail
+lb_rolling_fort
+lb_mother_rig_packed
+exp_barrage_lander
