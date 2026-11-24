@@ -25,7 +25,7 @@ DOCK = (0, 2)
 CAP_MATERIAL = "dust"
 PALETTE = K.PALETTE
 MATERIALS = K.MATERIALS
-STATES = [("idle", 4, 5), ("damaged", 4, 5), ("build", 8, 5)]
+STATES = [("idle", 8, 2), ("damaged", 8, 2), ("build", 8, 5)]  # S43: 8-frame loops at tpf 2 (owner choice)
 GX, GY = -0.3, -0.3
 HUB_Z = 3.1
 FX = [
@@ -108,7 +108,7 @@ def g_gyro(S, dmg, i):
 def g_extras(S, dmg, i):
     # windsock in the house colour, fuel drums, tyre stack, pad lamp
     K.post(S, "sockpole", 2.5, -2.4, 0.1, 3.6 if not dmg else 2.2, 0.1, "wood")
-    ph = i * math.pi / 2
+    ph = i * math.pi / 4
     if dmg:
         S.box("sock", (0.3, 0.7, 0.3), (2.5, -2.5 * S.YS, 2.0), "house", 0.0, rot=(60, 0, 0), stretch=False)
     else:
