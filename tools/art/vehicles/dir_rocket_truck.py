@@ -7,12 +7,14 @@ House paint: cab door panels, cab roof stripe, rack side panels and pod-block to
 import math, sys, os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import dir_common as D
+import mot_roll as M
 
 ID = "dir_rocket_truck"
 TITLE = "Directorate Rocket Truck"
 CANVAS = 112
 TARGET = (0.0, 0.0, 0.9)
-STATES = [("idle", 16, 1, 1)]
+STATES = [("idle", 16, 1, 1), ("move", 16, 4, 1)]   # move: 4 frames per facing (hub bars roll, body bobs); idle = move frame 0
+STEP_PX = M.roll_step(0.37)
 LAYERS = ["body", "turret"]
 PIVOT = (0.0, -0.85, 0.92)    # = top of the mount collar (deck top is 0.86)
 MOUNT = dict(deck_z=0.86, r_lip=0.8, r_well=0.0, r_shadow=1.0, soft_r=0.95, lip="hull", well="dark")
@@ -31,10 +33,13 @@ def build(S, state, k, n):
             cyl(f"tyre{side}{i}", 0.37, 0.3, (s * X, y, 0.37), "track", "X", 16)
             cyl(f"hub{side}{i}", 0.18, 0.33, (s * X, y, 0.37), "steel", "X", 10)
             cyl(f"nut{side}{i}", 0.06, 0.36, (s * X, y, 0.37), "dark", "X", 6)
-        box(f"guardF{side}", (0.42, 0.9, 0.06), (s * X, 1.15, 0.8), "hull2", 0.02)
-        box(f"guardR{side}", (0.42, 1.9, 0.06), (s * X, -0.92, 0.8), "hull2", 0.02)
+            M.hub_bar(S, f"{side}{i}", s, s * X, y, 0.37, 0.3, k)
     for i, y in enumerate(axles):
         box(f"axle{i}", (1.5, 0.1, 0.1), (0, y, 0.37), "dark", 0)
+    M.sprung(S, k)
+    for s, side in ((-1, "L"), (1, "R")):
+        box(f"guardF{side}", (0.42, 0.9, 0.06), (s * X, 1.15, 0.8), "hull2", 0.02)
+        box(f"guardR{side}", (0.42, 1.9, 0.06), (s * X, -0.92, 0.8), "hull2", 0.02)
     box("frame", (1.25, 3.9, 0.2), (0, -0.1, 0.66), "hull2", 0.03)
     # ---- cab-over: bone box, red stripes, glass, house door panels
     box("cab", (1.55, 1.15, 1.0), (0, 1.1, 1.25), "bone", 0.08)

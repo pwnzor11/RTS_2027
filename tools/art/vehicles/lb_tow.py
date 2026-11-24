@@ -8,12 +8,14 @@ House paint: both cab doors, the canvas hood's side flaps, the mast flag.
 import os, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import lb_common as L
+import mot_roll as M
 
 ID = "lb_tow"
 TITLE = "Left Behind Tow Truck"
 CANVAS = 208
 TARGET = (0.0, 0.0, 1.2)
-STATES = [("idle", 16, 1, 1)]
+STATES = [("idle", 16, 1, 1), ("move", 16, 4, 1)]   # move: 4 frames per facing (hub bars roll, body bobs); idle = move frame 0
+STEP_PX = M.roll_step(0.55)
 PALETTE = L.PALETTE
 MATERIALS = L.MATERIALS
 
@@ -23,10 +25,14 @@ def build(S, state, k, n):
     S.begin("body")
     for s, side in ((-1, "L"), (1, "R")):
         for i, y in enumerate((2.0, -0.7, -1.9)):
-            L.wheel(S, f"{side}{i}", s * 1.2, y, 0.56 if i != 2 or s > 0 else 0.5, 0.44, "rust" if i != 1 else "ash")
-        box(f"guardF{side}", (0.55, 1.3, 0.07), (s * 1.2, 2.0, 1.2), "hull2", 0.02)
+            r = 0.56 if i != 2 or s > 0 else 0.5
+            L.wheel(S, f"{side}{i}", s * 1.2, y, r, 0.44, "rust" if i != 1 else "ash")
+            M.hub_bar(S, f"{side}{i}", s, s * 1.2, y, r, 0.44, k)
     for i, y in enumerate((2.0, -0.7, -1.9)):
         box(f"axle{i}", (2.4, 0.12, 0.12), (0, y, 0.56), "dark", 0)
+    M.sprung(S, k)
+    for s, side in ((-1, "L"), (1, "R")):
+        box(f"guardF{side}", (0.55, 1.3, 0.07), (s * 1.2, 2.0, 1.2), "hull2", 0.02)
     box("frame", (1.9, 5.6, 0.26), (0, -0.2, 0.92), "ash2", 0.03)
     # cab
     L.cab(S, 0, 2.0, 1.05, w=2.0, d=1.7, h=1.4, body="hull", roof="rust2")

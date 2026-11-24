@@ -8,12 +8,14 @@ House paint: cab door panels, the bin sides, the mast flag.
 import math, os, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import lb_common as L
+import mot_roll as M
 
 ID = "lb_hauler"
 TITLE = "Left Behind Salvage Hauler"
 CANVAS = 208
 TARGET = (0.0, 0.0, 1.1)
-STATES = [("idle", 16, 1, 1)]
+STATES = [("idle", 16, 1, 1), ("move", 16, 4, 1)]   # move: 4 frames per facing (hub bars roll, body bobs); idle = move frame 0
+STEP_PX = M.roll_step(0.48)
 PALETTE = L.PALETTE
 MATERIALS = L.MATERIALS
 
@@ -24,8 +26,10 @@ def build(S, state, k, n):
     for s, side in ((-1, "L"), (1, "R")):
         for i, (y, r) in enumerate(((1.6, 0.5), (-0.9, 0.5), (-2.0, 0.44 if s < 0 else 0.5))):
             L.wheel(S, f"{side}{i}", s * 1.1, y, r, 0.4, "rust" if i != 1 else "ash")
+            M.hub_bar(S, f"{side}{i}", s, s * 1.1, y, r, 0.4, k)
     for i, y in enumerate((1.6, -0.9, -2.0)):
         box(f"axle{i}", (2.2, 0.12, 0.12), (0, y, 0.5), "dark", 0)
+    M.sprung(S, k)
     box("frame", (1.8, 5.2, 0.24), (0, -0.2, 0.85), "ash2", 0.03)
     # cab (teal) front, with a rust hood and a patched door
     L.cab(S, 0, 1.75, 1.0, w=1.9, d=1.5, h=1.3, body="hull", roof="rust2")

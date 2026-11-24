@@ -9,12 +9,14 @@ House paint: cab doors, bed side panels, the gun shield.
 import math, os, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import lb_common as L
+import mot_roll as M
 
 ID = "lb_harpoon_wagon"
 TITLE = "Left Behind Harpoon Wagon"
 CANVAS = 192
 TARGET = (0.0, 0.0, 1.0)
-STATES = [("idle", 16, 1, 1)]
+STATES = [("idle", 16, 1, 1), ("move", 16, 4, 1)]   # move: 4 frames per facing (hub bars roll, body bobs); idle = move frame 0
+STEP_PX = M.roll_step(0.52)
 LAYERS = ["body", "turret"]
 PIVOT = (0.0, -0.7, 1.12)
 MOUNT = dict(deck_z=1.0, r_lip=0.75, r_well=0.0, r_shadow=1.0, soft_r=0.95, lip="rust2", well="dark")
@@ -27,11 +29,16 @@ def build(S, state, k, n):
     S.begin("body")
     for s, side in ((-1, "L"), (1, "R")):
         L.wheel(S, side + "F", s * 1.1, 1.4, 0.52, 0.4, "rust")
-        L.wheel(S, side + "R", s * 1.1, -1.6, 0.52 if s < 0 else 0.46, 0.4, "ash" if s < 0 else "hazard")
-        box(f"guard{side}", (0.5, 1.3, 0.07), (s * 1.1, 1.4, 1.08), "hull2", 0.02)
-        box(f"guardR{side}", (0.5, 1.3, 0.07), (s * 1.1, -1.6, 1.08), "rust2", 0.02)
+        M.hub_bar(S, side + "F", s, s * 1.1, 1.4, 0.52, 0.4, k)
+        rr = 0.52 if s < 0 else 0.46
+        L.wheel(S, side + "R", s * 1.1, -1.6, rr, 0.4, "ash" if s < 0 else "hazard")
+        M.hub_bar(S, side + "R", s, s * 1.1, -1.6, rr, 0.4, k)
     box("axleF", (2.2, 0.12, 0.12), (0, 1.4, 0.52), "dark", 0)
     box("axleR", (2.2, 0.12, 0.12), (0, -1.6, 0.52), "dark", 0)
+    M.sprung(S, k)
+    for s, side in ((-1, "L"), (1, "R")):
+        box(f"guard{side}", (0.5, 1.3, 0.07), (s * 1.1, 1.4, 1.08), "hull2", 0.02)
+        box(f"guardR{side}", (0.5, 1.3, 0.07), (s * 1.1, -1.6, 1.08), "rust2", 0.02)
     box("frame", (1.7, 4.6, 0.24), (0, -0.1, 0.8), "ash2", 0.03)
     L.cab(S, 0, 1.55, 0.95, w=1.8, d=1.4, h=1.2, body="hull", roof="rust2")
     box("hood", (1.6, 0.9, 0.75), (0, 2.55, 1.25), "rust", 0.07)

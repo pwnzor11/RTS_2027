@@ -9,17 +9,21 @@ collar top.  The horns can traverse independently of the hull.
 import os, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import dir_dig_common as D
+import mot_roll as M
 
 ID = "dir_agitprop"
 TITLE = "Directorate agitprop loudspeaker unit"
 CANVAS = 120
 TARGET = (0.0, 0.0, 1.3)
-STATES = [("idle", 16, 1, 1)]
+# move: 4 frames per facing, tank approach (road-wheel bolts roll, a ring of link plates runs round each track); idle = move frame 0
+STATES = [("idle", 16, 1, 1), ("move", 16, 4, 1)]
+TRACK_H, TRACK_R = 1.2, 0.347          # D.tracks geometry: idler centres at y = +/-1.2, radius h*0.56 with h = 0.62
+STEP_PX = M.track_step(TRACK_H, TRACK_R)
 LAYERS = ["body", "turret"]
 PIVOT = (0.0, 0.05, 1.22)     # = top of the mount collar (deck top is 1.155)
 MOUNT = dict(deck_z=1.155, r_lip=0.42, r_well=0.0, r_shadow=0.5, soft_r=0.65, lip="steel2")
 PALETTE = D.PALETTE
-MATERIALS = D.MATERIALS
+MATERIALS = dict(D.MATERIALS, link=M.LINK_MAT)
 
 
 def horn(S, name, x, y, z, r, depth, yaw, up=0.0):
@@ -39,6 +43,12 @@ def build(S, state, k, n):
     box, cyl = S.box, S.cyl
     S.begin("body")
     D.tracks(S, 0.78, 2.5, 0.5, 0.62, y0=0.0, nwheel=4)
+    for s in (-1, 1):
+        cx = s * 0.78
+        for i in range(4):                       # road wheels as D.tracks places them (r = 0.248, width 0.1, z = 0.31)
+            yy = -2.5 / 2 + 0.35 + i * (2.5 - 0.7) / 3
+            M.road_bolts(S, f"{'L' if s < 0 else 'R'}{i}", s, cx + s * 0.27, yy, 0.31, 0.248, 0.1, k)
+        M.track_links(S, "LK" if s < 0 else "RK", cx, 0.0, TRACK_H, 0.367, TRACK_R, k, width=0.485)
     box("hull", (1.4, 2.3, 0.5), (0, 0.0, 0.84), "red", 0.09)
     box("deck", (1.4, 2.3, 0.07), (0, 0.0, 1.12), "conc2", 0.03)
     box("nose", (1.4, 0.4, 0.42), (0, 1.25, 0.82), "conc2", 0.08, rot=(-12, 0, 0))

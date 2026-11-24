@@ -10,19 +10,24 @@ import os, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import exp_common as E
 import exp_parts_art_exp_b as P
+import mot_roll as M
 
 ID = "exp_barrage_lander"
 TITLE = "Expedition Barrage Lander"
 K = 0.82
 CANVAS = 128
 TARGET = (0.0, 0.0, 0.9 * K)
-STATES = [("idle", 16, 1, 1)]
+# move: 4 frames per facing.  Tracked, so no bob (the tank approach), but the link ring is on the outer side face of each pod:
+# the pod top is under the fender and the road wheels sit inside the belt, so the side is the only track face that shows the ring.
+STATES = [("idle", 16, 1, 1), ("move", 16, 4, 1)]
+RING_H, RING_R = 2.0 - 0.225, 0.22     # ring half-spacing and radius inside the 4.0-long, 0.55-high belt (unscaled units)
+STEP_PX = M.track_step(RING_H, RING_R, scale=K)
 LAYERS = ["body", "turret"]
 PIVOT_U = (0.0, -0.2, 1.1)
 PIVOT = tuple(v * K for v in PIVOT_U)
 MOUNT = dict(deck_z=1.05 * K, r_lip=0.75 * K, r_well=0.0, r_shadow=1.0 * K, soft_r=0.9 * K, lip="chrome2", well="dark")
 PALETTE = E.PALETTE
-MATERIALS = dict(E.MATERIALS)
+MATERIALS = dict(E.MATERIALS, link=M.LINK_MAT)
 
 
 def build(S0, state, k, n):
@@ -30,6 +35,8 @@ def build(S0, state, k, n):
     box, cyl, sph = S.box, S.cyl, S.sphere
     S.begin("body")
     P.tracks(S, 2.6, 4.0, 0.0, 0.55)
+    for s in (-1, 1):                  # link ring on each pod's outer side face (plates 0.12 deep across the belt, unscaled)
+        M.track_links(S, f"LK{s}", s * 1.32, 0.0, RING_H, 0.275, RING_R, k, side=True)
     box("hullL", (1.7, 3.6, 0.5), (0, 0, 0.62), "navy2", 0.15)
     box("hullU", (1.8, 3.0, 0.3), (0, -0.2, 0.88), "navy", 0.14)
     box("prow", (1.7, 1.0, 0.4), (0, 1.7, 0.72), "navy", 0.13, rot=(-26, 0, 0))
