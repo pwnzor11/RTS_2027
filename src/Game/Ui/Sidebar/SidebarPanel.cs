@@ -67,6 +67,14 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
     private bool _hasGhost;
     private CellProblem[] _ghostCells = Array.Empty<CellProblem>();   // M11-10f: why each footprint cell is refused
     private string? _ghostReason;
+    // A43-QOL-14: drag-line placement and "place the last structure again"
+    private CellCoord? _lineStart;                                    // Shift + left press while placing
+    private readonly List<CellCoord> _linePreview = new();            // the capped row under the cursor
+    private readonly List<bool> _linePreviewValid = new();
+    private readonly Queue<CellCoord> _lineRest = new();              // cells waiting for the next finished structure
+    private int _lineType = -1;
+    private int _lineWaitTick;
+    private int _lastPlacedType = -1;
     private List<string>? _tooltip;
     private Point _mouse;
     private MouseCursor? _cursor;
@@ -143,10 +151,14 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
     /// <summary>Leaves placement, sell and repair mode. Returns true if a mode was active.</summary>
     public bool CancelMode()
     {
-        bool was = Mode != SidebarMode.None;
+        bool was = Mode != SidebarMode.None || _lineRest.Count > 0;
         Mode = SidebarMode.None;
         _placementType = -1;
         _hasGhost = false;
+        _lineStart = null;
+        _lineRest.Clear();
+        _linePreview.Clear();
+        _linePreviewValid.Clear();
         return was;
     }
 
@@ -172,6 +184,7 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
         _layout = SidebarLayout.Compute(windowWidth, windowHeight, _ui, SidebarTabs.CountFor(_hasAircraft), _supplyShown, _shipmentShown, _source.Map.Width, _source.Map.Height, UiScale.TextFactor);
         _mouse = input.MousePosition;
         _tooltip = null;
+        HoveredArchiveId = null;   // QOL-19
         if (_shownCredits < 0) _shownCredits = _hud.Cash + _hud.Stored;
         else _shownCredits = SidebarMetrics.CreditStep(_shownCredits, _hud.Cash + _hud.Stored);
 
@@ -179,7 +192,8 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
         _cameraTopLeft = topLeft;
         _viewSizeWorld = new Vector2(_layout.MapView.Width, _layout.MapView.Height) / camera.Zoom;
 
-        if (Mode == SidebarMode.Placement && ReadyOf(_placementType) != _placementType) CancelMode();
+        if (Mode == SidebarMode.Placement && ReadyOf(_placementType) != _placementType) EndPlacementKeepingLine();
+        FollowLine();   // A43-QOL-14
         BuildVisibleList();
         foreach (Command again in _repeat.Due(_player, _hud, _source.Sim.Tick)) _source.Host.Issue(again);   // M13-15: repeat production
 
@@ -188,6 +202,7 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
         if (input.ConsumePressed(GameAction.TabInfantry)) SelectTab(SidebarTab.Infantry);
         if (input.ConsumePressed(GameAction.TabVehicles)) SelectTab(SidebarTab.Vehicles);
         if (input.ConsumePressed(GameAction.TabUpgrades)) SelectTab(SidebarTab.Upgrades);
+        if (input.ConsumePressed(GameAction.PlaceLast)) PlaceLast();   // A43-QOL-14
         if (_hasAircraft && input.ConsumePressed(GameAction.TabAircraft)) SelectTab(SidebarTab.Aircraft);
         HandleCameoKeys(input);   // M13-15
 
@@ -204,6 +219,13 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
         if (_layout.Panel.Contains(_mouse))
         {
             _hasGhost = false;
+            if (_lineStart is not null && !input.LeftDown)   // A43-QOL-14: a line released over the panel is dropped
+            {
+                _lineStart = null;
+                _linePreview.Clear();
+                _linePreviewValid.Clear();
+            }
+
             UpdatePanel(input, camera);
             input.ConsumeMouse();
         }
@@ -238,6 +260,14 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
                 }
 
             Shapes.Outline(batch, pixel, r, c, 2);
+            for (int li = 0; li < _linePreview.Count; li++)   // A43-QOL-14: the row a Shift + drag would place
+            {
+                float cl = _linePreview[li].X * Camera.CellPx, ct = _linePreview[li].Y * Camera.CellPx;
+                Rectangle lr = camera.ScreenRect(cl, ct, cl + bt.FootprintW * Camera.CellPx, ct + bt.FootprintH * Camera.CellPx);
+                Shapes.Fill(batch, pixel, lr, Shapes.Alpha(_linePreviewValid[li] ? GoodGreen : BadRed, 80));
+                Shapes.Outline(batch, pixel, lr, _linePreviewValid[li] ? GoodGreen : BadRed, 2);
+            }
+
             if (_ghostReason is not null)
             {
                 int w = BitmapFont.Measure(_ghostReason, _ui, FontWeight.Bold);
@@ -430,11 +460,13 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
                 {
                     _tooltip = CameoTooltip.Head(_source.Rules, entry.Option.Category, entry.Option.TypeIndex, entry.Option.Cost, Blurbs);
                     _tooltip.Add(TierGrouping.NeedsText(entry));
+                    HoveredArchiveId = IdOf(entry.Option);   // QOL-19
                 }
                 else
                 {
                     BuildOption option = entry.Option;
                     _tooltip = TooltipFor(option);
+                    HoveredArchiveId = IdOf(option);   // QOL-19
                     if (left && input.IsAltDown() && RepeatProduction.CanLoop(option.Category)) _repeat.Toggle(option.Category, option.TypeIndex);   // M13-15
                     else if (left) LeftClickCameo(option, input.IsDown(Keys.LeftShift) || input.IsDown(Keys.RightShift));
                     else if (right) RightClickCameo(option);
@@ -445,7 +477,11 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
         MinimapMath m = MinimapMath.Fit(l.Minimap, _source.Map.Width, _source.Map.Height);
         if (m.Contains(_mouse))
         {
-            if (left)
+            if (left && input.IsAltDown())
+            {
+                MinimapPinged?.Invoke(m.OrderCell(_mouse));   // A43-QOL-09: Alt + click pings instead of moving the view
+            }
+            else if (left)
             {
                 _minimapDrag = true;
                 MoveCameraToMinimap(camera, _mouse);
@@ -456,6 +492,97 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
         {
             CancelMode();
         }
+    }
+
+    // ---- A43-QOL-14: drag-line placement and "place last again" ------------------------------------
+
+    private int QueuedOf(int buildingType)
+    {
+        if (buildingType < 0 || buildingType >= _source.Rules.Buildings.Count) return 0;
+        int n = 0;
+        if (QueueOf(_source.Rules.Buildings[buildingType].Category) is QueueView q)
+            foreach (QueueItemView item in q.Items)
+                if (item.TypeIndex == buildingType) n++;
+        return n;
+    }
+
+    private void UpdateLinePreview(CellCoord start, BuildingType bt)
+    {
+        int allowed = PlacementLine.Allowed(ReadyOf(_placementType) == _placementType, QueuedOf(_placementType));
+        _linePreview.Clear();
+        _linePreviewValid.Clear();
+        foreach (CellCoord c in PlacementLine.Cap(PlacementLine.TopLefts(start, _ghostTopLeft, bt.FootprintW, bt.FootprintH), allowed))
+        {
+            _linePreview.Add(c);
+            _linePreviewValid.Add(_source.Sim.CanPlaceReady(_player, _placementType, c));
+        }
+    }
+
+    // The button went up: the first cell is placed now (the finished structure is waiting), the others go to _lineRest and are placed one by
+    // one as the queued structures finish. Every placement is an ordinary Place command that the sim validates.
+    private void CommitLine(BuildingType bt)
+    {
+        UpdateLinePreview(_lineStart!.Value, bt);
+        int type = _placementType;
+        CancelMode();
+        _lineType = type;
+        _lastPlacedType = type;
+        for (int i = 0; i < _linePreview.Count; i++)
+        {
+            if (i == 0)
+            {
+                if (_linePreviewValid[0]) _source.Host.Issue(SidebarCommands.Place(_player, type, _linePreview[0]));
+                _lineWaitTick = _source.Sim.Tick + 2;
+            }
+            else _lineRest.Enqueue(_linePreview[i]);
+        }
+
+        _linePreview.Clear();
+        _linePreviewValid.Clear();
+    }
+
+    // Placement ended by itself (the finished structure was placed): the rest of a line stays.
+    private void EndPlacementKeepingLine()
+    {
+        Mode = SidebarMode.None;
+        _placementType = -1;
+        _hasGhost = false;
+        _lineStart = null;
+    }
+
+    private void FollowLine()
+    {
+        if (_lineRest.Count == 0 || Mode == SidebarMode.Placement) return;
+        if (_source.Sim.Tick < _lineWaitTick) return;
+        if (ReadyOf(_lineType) != _lineType)
+        {
+            if (QueuedOf(_lineType) == 0) _lineRest.Clear();   // nothing left that could be placed
+            return;
+        }
+
+        CellCoord next = _lineRest.Dequeue();
+        _lineWaitTick = _source.Sim.Tick + 2;
+        if (_source.Sim.CanPlaceReady(_player, _lineType, next)) _source.Host.Issue(SidebarCommands.Place(_player, _lineType, next));
+    }
+
+    /// <summary>
+    /// A43-QOL-14: the "place last structure again" key. Takes the structure or defence placed last: a finished one enters placement mode,
+    /// otherwise one more is queued by the ordinary cameo rule (refused when blocked). Returns false when nothing was placed yet.
+    /// </summary>
+    public bool PlaceLast()
+    {
+        if (_lastPlacedType < 0 || _lastPlacedType >= _source.Rules.Buildings.Count) return false;
+        ProductionCategory category = _source.Rules.Buildings[_lastPlacedType].Category;
+        foreach (BuildOption o in _hud.Options)
+        {
+            if (o.Category != category || o.TypeIndex != _lastPlacedType) continue;
+            CancelMode();
+            LeftClickCameo(o, false);
+            return true;
+        }
+
+        Refused?.Invoke();
+        return false;
     }
 
     private void UpdateMapMode(InputFrame input, Camera camera)
@@ -469,11 +596,28 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
             ExplainGhost(bt);
             // M7-07: CanPlace also refuses a footprint outside an Expedition player's beachhead zone, so the ghost turns red there.
             _hasGhost = true;
-            if (input.LeftPressed)
+            if (_lineStart is CellCoord lineStart)
             {
-                if (_ghostValid)
+                UpdateLinePreview(lineStart, bt);
+                if (!input.LeftDown)
+                {
+                    CommitLine(bt);
+                    _lineStart = null;
+                }
+                else input.ConsumeLeft();
+            }
+            else if (input.LeftPressed)
+            {
+                bool shift = input.IsDown(Keys.LeftShift) || input.IsDown(Keys.RightShift);
+                if (_ghostValid && shift)
+                {
+                    _lineStart = _ghostTopLeft;   // A43-QOL-14: Shift + drag lays a row; a Shift + click without a drag is one structure
+                    UpdateLinePreview(_ghostTopLeft, bt);
+                }
+                else if (_ghostValid)
                 {
                     _source.Host.Issue(SidebarCommands.Place(_player, _placementType, _ghostTopLeft));
+                    _lastPlacedType = _placementType;
                     CancelMode();
                 }
 
@@ -487,6 +631,7 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
                 _source.Host.Issue(Mode == SidebarMode.Sell
                     ? SidebarCommands.Sell(_player, hit.Id)
                     : SidebarCommands.Repair(_player, hit.Id));
+                if (Mode == SidebarMode.Repair) RepairToggled?.Invoke(hit);   // A43-QOL-15
             }
 
             input.ConsumeLeft();
@@ -520,6 +665,22 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
 
     /// <summary>Does what a left click on the cameo at hotkey position <paramref name="index"/> (0..11) of the active tab does. False when the position is empty or locked.</summary>
     public bool ActivateCameoSlot(int index, bool shift)
+    {
+        bool done = ActivateSlot(index, shift);
+        if (!done) Refused?.Invoke();   // GAMEUI-07: an empty or locked position refuses the hotkey
+        return done;
+    }
+
+    /// <summary>GAMEUI-07: raised when a cameo click or hotkey is refused (a blocked option, an empty or locked position). The game plays the refuse sound.</summary>
+    public event Action? Refused;
+
+    /// <summary>A43-QOL-09: raised on Alt + left click on the minimap, with the map cell. The game screen shows (and, in LAN, sends) the ping.</summary>
+    public event Action<CellCoord>? MinimapPinged;
+
+    /// <summary>A43-QOL-15: raised when repair mode toggles a building's repair, so repair-all knows about it.</summary>
+    public event Action<BuildingView>? RepairToggled;
+
+    private bool ActivateSlot(int index, bool shift)
     {
         if (_tab == SidebarTab.Upgrades)
         {
@@ -556,6 +717,9 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
             case CameoClick.EnterPlacement:
                 Mode = SidebarMode.Placement;
                 _placementType = option.TypeIndex;
+                break;
+            case CameoClick.None:
+                Refused?.Invoke();   // GAMEUI-07: a blocked cameo (no cash, supply cap, missing prerequisite, full queue)
                 break;
         }
     }
@@ -703,6 +867,9 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
         return null;
     }
 
+    /// <summary>QOL-19: the rules id of the cameo under the mouse this frame (its Archive entry id), or null when none is hovered.</summary>
+    public string? HoveredArchiveId { get; private set; }
+
     private string IdOf(BuildOption o)
     {
         SimRules rules = _source.Rules;
@@ -757,6 +924,7 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
         bool ready = SidebarCommands.LeftClick(_hud, o) == CameoClick.EnterPlacement;
         if (RepeatProduction.CanLoop(o.Category))
             lines.Add(UiText.Format(_repeat.IsOn(o.Category, o.TypeIndex) ? UiText.RepeatOnHint : UiText.RepeatHint, "key", "Alt"));   // M13-15
+        lines.Add(KeyNames.Of(GameKeys.Active.Get(GameAction.CameoArchive)) + ": open its Archive entry");   // QOL-19
         if (ready) lines.Add("Ready: click to place");
         else if (o.Blocked != QueueBlockReason.None) lines.Add(BlockReasonText.Of(o.Blocked, SupplyBuildingName()));
         else if (ShipWithoutShipyard(o)) lines.Add(BlockReasonText.NeedsShipyardOnWater);   // M7-14: the ship would wait at the dock

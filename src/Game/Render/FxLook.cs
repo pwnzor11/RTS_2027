@@ -323,8 +323,10 @@ public sealed class FxLook : IDisposable
         int tick = frame.Snapshot.Tick;
         Rectangle view = viewport.Bounds;
         view.Inflate(160, 160);
-        foreach (BuildingView b in frame.Snapshot.Buildings)
+        IReadOnlyList<BuildingView> lstB = frame.Snapshot.Buildings;
+        for (int iBIx = 0; iBIx < lstB.Count; iBIx++)
         {
+            BuildingView b = lstB[iBIx];
             if (b.Ghost || (uint)b.TypeIndex >= (uint)rules.Buildings.Count) continue;
             BuildingType bt = rules.Buildings[b.TypeIndex];
             DamageTier tier = DamageTiers.For(b.Health, bt.MaxHealth);
@@ -335,8 +337,10 @@ public sealed class FxLook : IDisposable
             DamageFx.DrawBuilding(batch, library, sprites.ForBuilding(rules, b).Manifest, tier, origin, camera.Zoom, tick, b.FootprintW, b.FootprintH, DecorHash.Mix(0x4246_5853UL, b.Id.Index, b.Cell.X, (uint)b.Cell.Y));
         }
 
-        foreach (RenderUnit unit in frame.Units)
+        IReadOnlyList<RenderUnit> lstUnit = frame.Units;
+        for (int iUnitIx = 0; iUnitIx < lstUnit.Count; iUnitIx++)
         {
+            RenderUnit unit = lstUnit[iUnitIx];
             UnitView v = unit.View;
             if (v.Kind != UnitKind.Vehicle || v.Underground || (uint)v.TypeIndex >= (uint)rules.Vehicles.Count) continue;
             VehicleType vt = rules.Vehicles[v.TypeIndex];

@@ -257,9 +257,9 @@ public sealed class SpriteManifest
     /// <exception cref="KeyNotFoundException">The sprite has no state with that name. The message lists the names it has.</exception>
     public SpriteState State(string name)
     {
-        foreach (SpriteState state in States)
+        for (int i = 0; i < States.Count; i++)   // indexed, not foreach: enumerating the interface boxes an enumerator per call
         {
-            if (string.Equals(state.Name, name, StringComparison.Ordinal)) return state;
+            if (string.Equals(States[i].Name, name, StringComparison.Ordinal)) return States[i];
         }
         string known = string.Join(", ", States.Select(s => s.Name));
         throw new KeyNotFoundException($"sprite '{Id}' has no state '{name}' (states: {known})");

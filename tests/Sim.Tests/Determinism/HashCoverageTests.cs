@@ -208,6 +208,7 @@ public class HashCoverageTests
         ["VisionState._width"] = "constant for the game", ["VisionState._height"] = "constant for the game",
         ["VisionState._cells"] = "width * height, constant", ["VisionState._playerCount"] = "constant for the game",
         ["VisionState._capacity"] = "constant for the game",
+        ["VisionState.RevealAll"] = "QOL-07 (D-313): the reveal-map rule, copied from SimSetup.RevealMap at construction (a query switch, not stored state); the rule itself is written to the players part when on and checked against the save header",
     };
 
     private sealed class WalkReport

@@ -48,7 +48,8 @@ public sealed class AlertController
         _alerts.Clear();
         _audio.Derive(frame, _events);
         _deriver.Derive(frame, _events, _alerts);
-        foreach (GameAlert a in _alerts) Log.Add(a);
+        foreach (GameAlert a in _alerts)
+            if (!AlertMix.Active.IsMuted(AlertMix.CategoryOf(a.Kind))) Log.Add(a);   // QOL-12: a muted category shows no line and no ping
     }
 
     /// <summary>The last-alert key: the world point (zoom-1 pixels) to centre the camera on, or null when there is nothing to go to.</summary>

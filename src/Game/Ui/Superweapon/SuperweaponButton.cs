@@ -54,6 +54,24 @@ public static class SuperweaponButtons
         return list;
     }
 
+    /// <summary>A43 GAMEUI-02: the status words a button can show (the percentage at its widest is "100%").</summary>
+    public static readonly string[] StatusWords = { "READY", "PAUSED", "100%" };
+
+    /// <summary>Blank space kept on the two sides of a button's label, in screen pixels (8 each side).</summary>
+    public const int LabelPadding = 16;
+
+    /// <summary>
+    /// A43 GAMEUI-02: the width of one button for <paramref name="caption"/>: the widest "{caption}  {status}" over every status the
+    /// button can show, so the text never leaves the button and the width does not change when the status does.
+    /// <paramref name="measure"/> gives a string's width in screen pixels at the current UI scale.
+    /// </summary>
+    public static int ButtonWidth(string caption, Func<string, int> measure)
+    {
+        int widest = 0;
+        foreach (string status in StatusWords) widest = Math.Max(widest, measure($"{caption}  {status}"));
+        return widest + LabelPadding;
+    }
+
     /// <summary>Length in ticks of one pulse of a READY button's highlight.</summary>
     public const int PulseTicks = 20;
 

@@ -295,6 +295,14 @@ public sealed class LobbyScreen : IScreen
             { WidthTexts = new[] { $"Seed: {MaxSeed}" } });
         }
 
+        // QOL-07 (D-313): the host's match rules (opt-in; the defaults are the usual game). Guests see them as a line below.
+        rows.Add(new(() => MatchRules.LimitLabel(_host!.Data.Rules.SuperweaponLimit), null, d2 => _host!.SetRules(_host.Data.Rules.StepSuperweapons(d2)),
+            new MenuButton("<", () => _host!.SetRules(_host.Data.Rules.StepSuperweapons(-1))), new MenuButton(">", () => _host!.SetRules(_host.Data.Rules.StepSuperweapons(1))))
+        { WidthTexts = MatchRules.LimitSteps.Select(MatchRules.LimitLabel).ToArray() });
+        rows.Add(new(() => MatchRules.RevealLabel(_host!.Data.Rules.RevealMap), null, _ => _host!.SetRules(_host.Data.Rules.ToggleReveal()),
+            new MenuButton("Toggle", () => _host!.SetRules(_host.Data.Rules.ToggleReveal())))
+        { WidthTexts = new[] { MatchRules.RevealLabel(false), MatchRules.RevealLabel(true) } });
+
         for (int i = 0; i < d.Slots.Count; i++)
         {
             int slot = i;
@@ -326,6 +334,8 @@ public sealed class LobbyScreen : IScreen
     private void AddGuestRows(List<MenuItem> rows, LobbyData d)
     {
         rows.Add(new(() => $"Map: {LobbyText.MapLabel(d.Map)}" + (_client!.HasMap ? "" : $" (downloading {_client.MapPercent}%)")) { Info = true });
+        if (!d.Rules.IsDefault)   // QOL-07 (D-313): say what the host changed
+            rows.Add(new(() => $"{MatchRules.LimitLabel(d.Rules.SuperweaponLimit)}, {MatchRules.RevealLabel(d.Rules.RevealMap)}") { Info = true });
         int me = d.SlotOf(_client!.LocalPeer);
         for (int i = 0; i < d.Slots.Count; i++)
         {

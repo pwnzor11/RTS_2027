@@ -14,6 +14,12 @@ public sealed class ControlGroups
     /// <summary>Number of groups (1..9).</summary>
     public const int Count = 9;
 
+    /// <summary>
+    /// QOL-17: when true, recalling a group selects every unit of the group's types, map-wide (the membership itself is unchanged). UI
+    /// state, not saved; off by default, so a recall selects exactly the members as before.
+    /// </summary>
+    public bool AutoByType { get; set; }
+
     private readonly List<UnitKey>[] _groups = Enumerable.Range(0, Count).Select(_ => new List<UnitKey>()).ToArray();
 
     /// <summary>The members of group <paramref name="number"/> (1..9), empty for an out-of-range number.</summary>

@@ -65,6 +65,12 @@ public sealed class GameScreen : IScreen, IFocusPausable
     private readonly Selection _selection = new();
     private readonly OrderController? _orders; // null with --demo
     private readonly OrderFeedback _feedback = new();   // O1: order rings
+    private readonly PingBoard _pings = new();           // A43-QOL-09: map pings
+    private readonly BuildingBulk _bulk = new();         // A43-QOL-15: repair-all bookkeeping
+    private readonly List<EntityId> _marked = new();     // A43-QOL-15: Shift + click marks buildings for the sell key
+    private List<PausedOrder> _pausedOrders = new();     // A43-QOL-08: the orders waiting while paused
+    private Point? _rightStart;                          // A43-QOL-16: where a right-button press began
+    private bool _rightStartArmed;                       // ... and whether it was an armed attack-move
     private readonly OverlayToggles _overlays = new();
     private readonly Camera _camera = new();
     private readonly DebugConsole? _console; // null with --demo
@@ -325,6 +331,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
     public void Enter()
     {
         if (_lan is not null) _lan.SourceReplaced += OnLanSourceReplaced;   // M9-10
+        if (_lan is not null) _lan.PingReceived += OnPingReceived;           // A43-QOL-09
         _s.Scene.Reset();   // S18 GAMEREND-01: the shared renderer must not remember the previous game's buildings
         if (_spectatorMode && _sim is not null)
         {
@@ -344,7 +351,10 @@ public sealed class GameScreen : IScreen, IFocusPausable
         // D-068: the local player draws in the chosen colour; the AI takes the next palette entry that differs.
         PlayerColours.Assign(Skirmish is { } sk && sk.PlayerCount >= 2 ? ColoursOf(sk) : new[] { colour, colour == 1 ? 0 : 1 });
         _sidebar = new SidebarPanel(_sim, Me, _selection, _cameos, PlayerColours.Base(Me));
+        _sidebar.Refused += () => Rts.Game.Menu.MenuSounds.Play(_s.Audio, Rts.Game.Menu.MenuSounds.Deny);   // GAMEUI-07
         _sidebar.Orders = _orders;                                         // S18 GAMEUI-05
+        _sidebar.MinimapPinged += PingAt;                                  // A43-QOL-09
+        _sidebar.RepairToggled += b => _bulk.NoteRepair(b.Id, b.Health);   // A43-QOL-15
         _sidebar.HiddenCursor = SoftwareCursor.MakeHidden(_s.Graphics);   // M11-10e
         _sidebar.Blurbs = LoadCameoBlurbs();                               // M11-10g
         _card = new Rts.Game.Ui.Card.SelectionCard(_sim, _selection, _cameos, PlayerColours.Base(Me));
@@ -365,6 +375,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
     public void Exit()
     {
         if (_lan is not null) _lan.SourceReplaced -= OnLanSourceReplaced;
+        if (_lan is not null) _lan.PingReceived -= OnPingReceived;
         PlayerColours.ResetAssignment();
         _sidebar?.Dispose();
         _cameos?.Dispose();
@@ -441,6 +452,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
             if (_mission is not null) input.ConsumeMouseOver(_mission.ObjectivesRegion);
         }
 
+        UpdateHover(input);   // QOL-06
         if (_console is { } console)
         {
             if (input.ConsumePressed(Keys.F1)) console.Toggle();
@@ -484,6 +496,8 @@ public sealed class GameScreen : IScreen, IFocusPausable
 
         _sidebar?.Update(input, _camera, _s.Viewport.Width, _s.Viewport.Height, _s.UiFactor);
         HandlePackKeyAndPlacement(input);   // M6-09: K, and the unpack footprint on the map
+        HandleBulkKeys(input, typing || chatTyping);   // A43-QOL-15: repair all, sell marked
+        UpdatePausedOrders();   // A43-QOL-08
 
         bool debugKeys = _lan is null && GameKeys.DebugKeysAllowed(_skirmishMode);   // M9: never a local step in a LAN match
         if (_sim is not null)
@@ -519,6 +533,9 @@ public sealed class GameScreen : IScreen, IFocusPausable
         }
 
         if (input.ConsumePressed(GameAction.DecorToggle)) Rts.Game.Render.DecorSettings.Enabled = !Rts.Game.Render.DecorSettings.Enabled;   // M12-03
+        if (!(typing || chatTyping) && input.ConsumePressed(GameAction.HideHud)) _hudHidden = !_hudHidden;   // QOL-18
+        if (!(typing || chatTyping) && _sidebar?.HoveredArchiveId is { } archiveId && input.ConsumePressed(GameAction.CameoArchive))
+            _s.Screens.Push(new ArchiveScreen(_s, archiveId));   // QOL-19
         HandleSaveKeys(input, typing || chatTyping);   // D-205: F5 quicksave, F9 quickload
         TickAutosave();                                // D-205
         TickStartCue();                                // D-205
@@ -636,26 +653,34 @@ public sealed class GameScreen : IScreen, IFocusPausable
         _s.Scene.LargerInfantry = _s.Settings.LargerInfantry;   // D-184
         _s.Scene.WeatherEnabled = _s.Settings.Weather;   // M10-12
         _s.Scene.ShakeEnabled = _s.Settings.ScreenShake;   // M10-14
+        _s.Scene.ReduceFlashes = _s.Settings.ReduceFlashes;   // QOL-20
         _s.Scene.Draw(sb, _s.Pixel, frame, _camera, _s.Viewport);
+        DrawPausedPlan(sb);   // A43-QOL-08
         DrawSelectedBuilding(sb, snapshot);
         DrawQueuedPaths(sb);   // M13-15: the waypoints of the selected units
+        DrawOrderLines(sb);   // QOL-10
         _feedback.Draw(sb, _s.Pixel, _camera);
+        DrawPings(sb, snapshot, true);   // A43-QOL-09
         DrawPackProgress(sb, snapshot);
         DrawUnpackGhost(sb);
         _sidebar?.DrawMapOverlay(sb, _s.Pixel, _camera, snapshot, _s.Scene);
         _mission?.Guidance.DrawWorld(sb, _s.Pixel, _camera, MapViewport().Bounds, _s.UiScale);   // M11-05
-        DrawHud(sb, snapshot);
-        _card?.Draw(sb, _s.Pixel, _mouse, _orders is { AttackMoveArmed: true });   // M11-04
-        DrawToast(sb);   // D-205
+        if (!_hudHidden) DrawHud(sb, snapshot);   // QOL-18
+        if (!_hudHidden) _card?.Draw(sb, _s.Pixel, _mouse, _orders is { AttackMoveArmed: true });   // M11-04
+        if (!_hudHidden) DrawToast(sb);   // D-205
         _chat.Draw(sb, _s.Pixel, _s.UiScale, new Point(8, _s.Viewport.Height - Hud.HeightOf(1, _s.UiScale) - 12), _s.Viewport.Width - 16);
-        _sidebar?.Draw(sb, _s.Pixel, snapshot);
-        if (_mission is not null && _sidebar is not null) _mission.Guidance.DrawMinimap(sb, _s.Pixel, _sidebar.Layout.Minimap, snapshot.MapWidth, snapshot.MapHeight);   // M11-05
-        if (_sidebar is not null) _alerts.DrawMinimapPings(sb, _s.Pixel, _sidebar.Layout.Minimap, snapshot.MapWidth, snapshot.MapHeight, snapshot.Tick);   // M11-10d
-        DrawSuperweapon(sb, snapshot.Tick);
-        DrawUpgradeButton(sb);
-        DrawPackButton(sb);
-        DrawDiveButton(sb);
-        DrawIdleButtons(sb);
+        if (!_hudHidden) _sidebar?.Draw(sb, _s.Pixel, snapshot);   // QOL-18
+        if (!_hudHidden && _mission is not null && _sidebar is not null) _mission.Guidance.DrawMinimap(sb, _s.Pixel, _sidebar.Layout.Minimap, snapshot.MapWidth, snapshot.MapHeight);   // M11-05
+        if (!_hudHidden && _sidebar is not null) _alerts.DrawMinimapPings(sb, _s.Pixel, _sidebar.Layout.Minimap, snapshot.MapWidth, snapshot.MapHeight, snapshot.Tick);   // M11-10d
+        if (!_hudHidden) DrawPings(sb, snapshot, false);   // A43-QOL-09
+        if (!_hudHidden)   // QOL-18: the map buttons go with the HUD
+        {
+            DrawSuperweapon(sb, snapshot.Tick);
+            DrawUpgradeButton(sb);
+            DrawPackButton(sb);
+            DrawDiveButton(sb);
+            DrawIdleButtons(sb);
+        }
         DrawSpectator(sb);
         _console?.Draw(sb, _s.Pixel, _s.Viewport);
         if (_lan is not null && _lanOverlay is not null)   // M9-08
@@ -663,6 +688,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
             Rectangle mapView = _sidebar?.Layout.MapView ?? new Rectangle(0, 0, _s.Viewport.Width, _s.Viewport.Height);
             _lanOverlay.Draw(sb, _s.Pixel, _lan, mapView, _s.UiScale, _mouse, LanChatAnchor());
         }
+        DrawHoverInfo(sb);   // QOL-06
         DrawMapCursor(sb);   // last, so it sits above everything
     }
 
@@ -675,7 +701,9 @@ public sealed class GameScreen : IScreen, IFocusPausable
         _card.Refresh(mapView, _s.UiFactor, _selectedBuilding);
         _card.SellArmed = _sellConfirm.IsArmed(_selectedBuilding, _nowMs);   // D-205
         if (!_card.Visible || !input.LeftPressed || _dragStart is not null) return;
-        Rts.Game.Ui.Card.CardAction action = _card.Click(input.MousePosition, input.IsDown(Keys.LeftShift) || input.IsDown(Keys.RightShift));
+        // GAMEUI-01: the corner map buttons are drawn over the card at large UI scales, so they get the click where they overlap.
+        Rectangle[] over = { _upgradeRegion.Bounds, _packRegion.Bounds, _diveRegion.Bounds, _idleHarvesterRegion.Bounds, _idleFactoryRegion.Bounds };
+        Rts.Game.Ui.Card.CardAction action = _card.Click(input.MousePosition, input.IsDown(Keys.LeftShift) || input.IsDown(Keys.RightShift), over);
         if (!action.Consumed) return;
         input.ConsumeLeft();
         switch (action.Kind)
@@ -684,7 +712,8 @@ public sealed class GameScreen : IScreen, IFocusPausable
                 _orders?.KeyPressed(action.Action);
                 break;
             case Rts.Game.Ui.Card.CardActionKind.SelectOnly:
-                _selection.Replace(new[] { action.Unit });
+                if (CtrlHeld(input)) _selection.Replace(Selection.SameTypeAmong(_selection.Units, _renderUnits, action.Unit));   // QOL-17: Ctrl+cameo keeps the selected units of that type
+                else _selection.Replace(new[] { action.Unit });
                 Audio.AudioBootstrap.Director?.Notify(Audio.AudioEventKind.UnitSelect);
                 break;
             case Rts.Game.Ui.Card.CardActionKind.Remove:
@@ -695,6 +724,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
                 break;
             case Rts.Game.Ui.Card.CardActionKind.Repair when _sim is not null && !_selectedBuilding.IsNone:
                 _sim.Host.Issue(SidebarCommands.Repair(Me, _selectedBuilding));
+                _bulk.NoteRepair(_selectedBuilding, HealthOfBuilding(_selectedBuilding));   // A43-QOL-15
                 break;
         }
     }
@@ -760,6 +790,12 @@ public sealed class GameScreen : IScreen, IFocusPausable
     private readonly IdleWatch _idleWatch = new();
     private readonly List<ViewActor> _ownScratch = new();
     private readonly List<ViewActor> _idleHarvesters = new();
+    private int _harvestersTotal, _harvestersWorking;   // QOL-04: the economy line of the HUD (skirmish only)
+    private bool _hudHidden;   // QOL-18: the HUD key hides the overlays for a clean screenshot
+    private readonly record struct HoverKey(ActorKind Kind, EntityId Id, bool Ghost);   // QOL-06
+    private HoverKey? _hoverKey;
+    private long _hoverSinceMs;
+    private List<string>? _hoverLines;
     private readonly List<ViewActor> _idleFactories = new();
     private readonly List<GameAlert> _idleAlerts = new();
     private EntityId _lastIdleHarvester, _lastIdleFactory;
@@ -770,14 +806,17 @@ public sealed class GameScreen : IScreen, IFocusPausable
         _idleFactories.Clear();
         _idleHarvesterRegion.Bounds = Rectangle.Empty;
         _idleFactoryRegion.Bounds = Rectangle.Empty;
+        _harvestersTotal = _harvestersWorking = 0;
         if (_sim is null || !_skirmishMode || _spectatorMode || _gameOverShown) return;
         _sim.Sim.ViewFor(Me).CopyOwn(_ownScratch);
         PlayerHud hud = _sim.Sim.HudFor(Me);
         IdleFinder.Harvesters(_ownScratch, _sim.Rules, _idleHarvesters);
+        foreach (ViewActor a in _ownScratch) if (IdleFinder.IsHarvester(a, _sim.Rules)) _harvestersTotal++;   // QOL-04
+        _harvestersWorking = Math.Max(0, _harvestersTotal - _idleHarvesters.Count);
         IdleFinder.Factories(_ownScratch, _sim.Rules, hud, _idleFactories);
         _idleAlerts.Clear();
         _idleWatch.Observe(_source.Current.Tick, _ownScratch, _sim.Rules, hud, _idleAlerts);
-        foreach (GameAlert a in _idleAlerts) _alerts.Log.Add(a);
+        foreach (GameAlert a in _idleAlerts) if (!Rts.Game.Ui.Alerts.AlertMix.Active.IsMuted(Rts.Game.Ui.Alerts.AlertMix.CategoryOf(a.Kind))) _alerts.Log.Add(a);   // QOL-12
 
         if (_idleHarvesters.Count > 0) _idleHarvesterRegion.Bounds = IdleButtonRect(0, IdleHarvesterCaption());
         if (_idleFactories.Count > 0) _idleFactoryRegion.Bounds = IdleButtonRect(1, IdleFactoryCaption());
@@ -825,6 +864,28 @@ public sealed class GameScreen : IScreen, IFocusPausable
         }
 
         _lastIdleFactory = f.Id;
+        SelectBuildingAt(f.Cell);
+        CentreCameraOn(new Vector2((f.Cell.X + f.FootprintW / 2f) * Camera.CellPx, (f.Cell.Y + f.FootprintH / 2f) * Camera.CellPx));
+    }
+
+    // QOL-05: selects the next own production building (slot order, wrapping) and centres the view on it.
+    private readonly List<ViewActor> _productionBuildings = new();
+    private EntityId _lastProduction;
+
+    private void CycleProduction()
+    {
+        if (_sim is null || _spectatorMode) return;
+        _sim.Sim.ViewFor(Me).CopyOwn(_ownScratch);
+        _productionBuildings.Clear();
+        ProductionCycle.Buildings(_ownScratch, _sim.Rules, _productionBuildings);
+        if (IdleFinder.Next(_productionBuildings, _lastProduction) is not { } f)
+        {
+            _toast.Show(UiText.Get(UiText.NoProductionBuilding), _nowMs);
+            return;
+        }
+
+        _lastProduction = f.Id;
+        _selection.Clear();
         SelectBuildingAt(f.Cell);
         CentreCameraOn(new Vector2((f.Cell.X + f.FootprintW / 2f) * Camera.CellPx, (f.Cell.Y + f.FootprintH / 2f) * Camera.CellPx));
     }
@@ -968,7 +1029,12 @@ public sealed class GameScreen : IScreen, IFocusPausable
         }
 
         Point mouse = input.MousePosition;
-        if (input.LeftPressed && _orders is { AttackMoveArmed: true } && _console is not { IsOpen: true } && MapViewport().Bounds.Contains(mouse))
+        if (input.LeftPressed && input.IsAltDown() && _console is not { IsOpen: true } && MapViewport().Bounds.Contains(mouse))
+        {
+            PingAt(Camera.CellAt(_camera.WorldFromScreen(mouse)));   // A43-QOL-09: Alt + click pings, it never selects or orders
+            input.ConsumeLeft();
+        }
+        else if (input.LeftPressed && _orders is { AttackMoveArmed: true } && _console is not { IsOpen: true } && MapViewport().Bounds.Contains(mouse))
         {
             _orders.RightClick(mouse, _camera, _renderUnits, queue: ShiftHeld(input));   // O2: a left click commits an armed attack-move (right click is the alias below)
             input.ConsumeLeft();
@@ -989,7 +1055,11 @@ public sealed class GameScreen : IScreen, IFocusPausable
                 Vector2 a = _camera.WorldFromScreen(begin);
                 Vector2 b = _camera.WorldFromScreen(mouse);
                 bool addBox = ShiftHeld(input);   // M11-10c: Shift+box adds to the selection
-                _selection.Apply(Selection.Inside(_renderUnits, Vector2.Min(a, b), Vector2.Max(a, b), Me), addBox);
+                Vector2 lo = Vector2.Min(a, b), hi = Vector2.Max(a, b);
+                IEnumerable<UnitKey> boxed = input.IsAltDown()   // QOL-03: Alt+box takes the fighters only, when any are in the box
+                    ? Selection.InsideFightersFirst(_renderUnits, lo, hi, Me, IsFighter)
+                    : Selection.Inside(_renderUnits, lo, hi, Me);
+                _selection.Apply(boxed, addBox);
                 if (!addBox || _selection.Count > 0) ClearBuildingSelection();
                 _clickTap.Reset();
                 if (_selection.Count > 0) Audio.AudioBootstrap.Director?.Notify(Audio.AudioEventKind.UnitSelect);   // M3-INT
@@ -1003,10 +1073,14 @@ public sealed class GameScreen : IScreen, IFocusPausable
                     // M11-10c: Ctrl+click or a double-click takes every unit of that type on screen; Shift+click toggles one unit.
                     if (CtrlHeld(input) || _clickTap.Tap(key, _nowMs))
                     {
-                        Viewport map = MapViewport();
-                        Vector2 topLeft = _camera.WorldFromScreen(new Point(0, 0));
-                        Vector2 bottomRight = _camera.WorldFromScreen(new Point(map.Width, map.Height));
-                        _selection.Apply(Selection.SameTypeInside(_renderUnits, topLeft, bottomRight, Me, key), addClick);
+                        if (input.IsAltDown()) _selection.Apply(Selection.SameTypeAnywhere(_renderUnits, Me, key), addClick);   // QOL-02: Alt = the whole map
+                        else
+                        {
+                            Viewport map = MapViewport();
+                            Vector2 topLeft = _camera.WorldFromScreen(new Point(0, 0));
+                            Vector2 bottomRight = _camera.WorldFromScreen(new Point(map.Width, map.Height));
+                            _selection.Apply(Selection.SameTypeInside(_renderUnits, topLeft, bottomRight, Me, key), addClick);
+                        }
                     }
                     else if (addClick) _selection.Toggle(key);
                     else _selection.Replace(new[] { key });
@@ -1016,6 +1090,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
                 else if (addClick)
                 {
                     _clickTap.Reset();   // Shift+click on the ground keeps the selection
+                    ToggleMark(Camera.CellAt(_camera.WorldFromScreen(mouse)));   // A43-QOL-15: Shift + click on an own building marks it for the sell key
                 }
                 else
                 {
@@ -1044,8 +1119,17 @@ public sealed class GameScreen : IScreen, IFocusPausable
             }
             else
             {
+                _rightStartArmed = _orders.AttackMoveArmed;
+                _rightStart = ShiftHeld(input) || CtrlHeld(input) ? null : mouse;   // A43-QOL-16: a plain right press may become a line drag
                 _orders.RightClick(mouse, _camera, _renderUnits, CtrlHeld(input), ShiftHeld(input));   // S19 FAD-05: Ctrl + right-click = attack ground; M13-15: Shift = queue a waypoint
             }
+        }
+        else if (_rightStart is Point pressed && input.Mouse.RightButton == ButtonState.Released)
+        {
+            // A43-QOL-16: the right button went up after a drag: spread the selection along the line (the press already gave the plain order)
+            _rightStart = null;
+            if (_orders is not null && input.PreviousMouse.RightButton == ButtonState.Pressed && ClickDrag.IsDrag(pressed, mouse, _s.UiFactor))
+                _orders.LineMove(pressed, mouse, _camera, queue: false, attackMove: _rightStartArmed);
         }
     }
 
@@ -1105,7 +1189,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
     private Rectangle SuperweaponButtonRect(int index)
     {
         var scale = _s.UiScale;
-        int w = BitmapFont.Measure("SUNRISE  PAUSED", scale) + 16;
+        int w = SuperweaponButtons.ButtonWidth(_superweapon.Buttons[index].Caption, s => BitmapFont.Measure(s, scale));   // A43 GAMEUI-02
         int h = Hud.HeightOf(1, scale) + 6;
         return new Rectangle(MapViewport().Width - w - 8, 8 + index * (h + 4), w, h);
     }
@@ -1143,7 +1227,54 @@ public sealed class GameScreen : IScreen, IFocusPausable
             Command? command = _superweapon.ClickMap(local, cell, (b, c) => _sim.Sim.CanFireSuperweapon(local, b, c));
             input.ConsumeLeft();   // never also select or box-drag
             if (command is Command fire) _sim.Host.Issue(fire);
+            else RefuseSuperweapon(local, cell);   // A43 GAMEUI-03: targeting stays armed; say why and play the deny sound
         }
+    }
+
+    // A43 GAMEUI-03: a refused click names its reason in a short toast and plays the deny sound.
+    private void RefuseSuperweapon(byte local, CellCoord cell)
+    {
+        int range = _superweapon.ArmedRange;
+        bool outOfRange = range > 0 && _sim is not null && !_sim.Sim.HasEntranceInRange(local, cell, range);
+        _toast.Show(SuperweaponText.Placeholder(outOfRange ? SuperweaponText.OutOfRangeKey : SuperweaponText.CannotFireKey, ""), _nowMs);
+        MenuSounds.Play(_s.Audio, MenuSounds.Deny);
+    }
+
+    // A43 GAMEUI-03: the legal area of an armed entrance-range superweapon, shaded around the own entrance buildings.
+    private void DrawSuperweaponRange(SpriteBatch sb)
+    {
+        int range = _superweapon.ArmedRange;
+        if (range <= 0 || _sim is not { } sim) return;
+        SimSnapshot snap = _source.Current;
+        IReadOnlyList<EntranceFootprint> origins = SuperweaponRange.OriginsOf(snap.Buildings, Me, t => sim.Rules.Buildings[t].Entrance != TunnelSize.None);
+        if (origins.Count == 0) return;
+
+        // Only the cells on screen that lie within range of an origin: the box of the origins grown by the range, clipped to the view.
+        int minX = origins.Min(o => o.X) - range, minY = origins.Min(o => o.Y) - range;
+        int maxX = origins.Max(o => o.X + o.W - 1) + range, maxY = origins.Max(o => o.Y + o.H - 1) + range;
+        Rectangle map = MapViewport().Bounds;
+        CellCoord topLeft = Camera.CellAt(_camera.WorldFromScreen(new Point(map.Left, map.Top)));
+        CellCoord bottomRight = Camera.CellAt(_camera.WorldFromScreen(new Point(map.Right - 1, map.Bottom - 1)));
+        minX = Math.Max(minX, Math.Max(topLeft.X, 0));
+        minY = Math.Max(minY, Math.Max(topLeft.Y, 0));
+        maxX = Math.Min(maxX, Math.Min(bottomRight.X, snap.MapWidth - 1));
+        maxY = Math.Min(maxY, Math.Min(bottomRight.Y, snap.MapHeight - 1));
+
+        Color fill = new(0x60, 0xC0, 0xFF);
+        const int edge = 2;
+        for (int y = minY; y <= maxY; y++)
+            for (int x = minX; x <= maxX; x++)
+            {
+                if (!SuperweaponRange.Covers(origins, range, new CellCoord(x, y))) continue;
+                float left = x * Camera.CellPx, top = y * Camera.CellPx;
+                Rectangle r = _camera.ScreenRect(left, top, left + Camera.CellPx, top + Camera.CellPx);
+                Shapes.Fill(sb, _s.Pixel, r, Shapes.Alpha(fill, 40));
+                // The outline runs along the edge of the legal area only.
+                if (!SuperweaponRange.Covers(origins, range, new CellCoord(x - 1, y))) Shapes.Fill(sb, _s.Pixel, new Rectangle(r.X, r.Y, edge, r.Height), Shapes.Alpha(fill, 160));
+                if (!SuperweaponRange.Covers(origins, range, new CellCoord(x + 1, y))) Shapes.Fill(sb, _s.Pixel, new Rectangle(r.Right - edge, r.Y, edge, r.Height), Shapes.Alpha(fill, 160));
+                if (!SuperweaponRange.Covers(origins, range, new CellCoord(x, y - 1))) Shapes.Fill(sb, _s.Pixel, new Rectangle(r.X, r.Y, r.Width, edge), Shapes.Alpha(fill, 160));
+                if (!SuperweaponRange.Covers(origins, range, new CellCoord(x, y + 1))) Shapes.Fill(sb, _s.Pixel, new Rectangle(r.X, r.Bottom - edge, r.Width, edge), Shapes.Alpha(fill, 160));
+            }
     }
 
     private void DrawSuperweapon(SpriteBatch sb, int tick)
@@ -1164,6 +1295,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
             BitmapFont.Draw(sb, _s.Pixel, $"{b.Caption}  {b.Status}", new Vector2(r.X + 8, r.Y + 4), text, scale);
         }
 
+        if (_superweapon.IsArmed) DrawSuperweaponRange(sb);   // A43 GAMEUI-03
         if (_superweapon.IsArmed && MapViewport().Bounds.Contains(_mouse))
         {
             CellCoord cell = Camera.CellAt(_camera.WorldFromScreen(_mouse));
@@ -1467,6 +1599,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
 
     private void ClearBuildingSelection()
     {
+        _marked.Clear();   // A43-QOL-15
         _selectedBuilding = EntityId.None;
         _selectedBuildingProduces = false;
         _selectedBuildingType = -1;
@@ -1474,6 +1607,8 @@ public sealed class GameScreen : IScreen, IFocusPausable
 
     private void PruneBuildingSelection()
     {
+        if (_marked.Count > 0)   // A43-QOL-15: a marked building that is sold or destroyed is unmarked
+            _marked.RemoveAll(id => !_source.Current.Buildings.Any(b => !b.Ghost && b.Id == id));
         if (_selectedBuilding.IsNone) return;
         foreach (BuildingView b in _source.Current.Buildings)
             if (!b.Ghost && b.Id == _selectedBuilding) return;
@@ -1482,6 +1617,14 @@ public sealed class GameScreen : IScreen, IFocusPausable
 
     private void DrawSelectedBuilding(SpriteBatch sb, SimSnapshot snapshot)
     {
+        foreach (EntityId id in _marked)   // A43-QOL-15: marked buildings (gold) wait for the sell key
+            foreach (BuildingView m in snapshot.Buildings)
+            {
+                if (m.Ghost || m.Id != id) continue;
+                float ml = m.Cell.X * Camera.CellPx, mt = m.Cell.Y * Camera.CellPx;
+                Shapes.Outline(sb, _s.Pixel, _camera.ScreenRect(ml, mt, ml + m.FootprintW * Camera.CellPx, mt + m.FootprintH * Camera.CellPx), new Color(0xF0, 0xB0, 0x40), 2);
+            }
+
         if (_selectedBuilding.IsNone) return;
         foreach (BuildingView b in snapshot.Buildings)
         {
@@ -1509,6 +1652,147 @@ public sealed class GameScreen : IScreen, IFocusPausable
             var actor = new ActorRef(unit.Kind, unit.Id);
             if (_sim.Sim.WaypointCountOf(actor) == 0 || !_sim.TryGetPosition(unit, out LeptonCoord at)) continue;
             OrderFeedback.DrawWaypointPath(sb, _s.Pixel, _camera, Camera.WorldFromLepton(at), _sim.Sim.WaypointsOf(actor));
+        }
+    }
+
+    // ---- A43 QoL: pause plan, pings, repair all, sell several --------------------------------------
+
+    // QOL-08: single-player pause already holds every issued command until the first tick after unpause (SimHost.Issue stamps ExecTick = Tick + 1
+    // and nothing steps while paused); this only reads that queue so the screen can show it. A LAN game has its own pause and no local queue.
+    private void UpdatePausedOrders()
+    {
+        if (_sim is { Paused: true } && _lan is null && !_spectatorMode) _pausedOrders = PausedOrders.Collect(_sim.Host.Pending, Me);
+        else if (_pausedOrders.Count > 0) _pausedOrders = new List<PausedOrder>();
+    }
+
+    private void DrawPausedPlan(SpriteBatch sb)
+    {
+        if (_sim is not { Paused: true } || _lan is not null || _spectatorMode) return;
+        Rectangle view = MapViewport().Bounds;
+        Shapes.Fill(sb, _s.Pixel, view, new Color(20, 30, 70, 46));   // a cool tint: the game is held, orders are being planned
+        var one = new List<(CellCoord Cell, bool AttackMove)>(1) { default };
+        foreach (PausedOrder o in _pausedOrders)
+        {
+            if (!_sim.TryGetPosition(new UnitKey(o.SubjectKind, o.Subject), out LeptonCoord at)) continue;
+            CellCoord to = o.Cell;
+            if (!o.Target.IsNone)
+            {
+                if (o.TargetKind is not (ActorKind.Vehicle or ActorKind.Infantry) || !_sim.TryGetPosition(new UnitKey(o.TargetKind, o.Target), out LeptonCoord there)) continue;
+                to = there.ToCell();
+            }
+
+            one[0] = (to, o.Attack);
+            OrderFeedback.DrawWaypointPath(sb, _s.Pixel, _camera, Camera.WorldFromLepton(at), one);
+        }
+    }
+
+    // QOL-09: Alt + click on the map or the minimap. LAN: a team message that comes back through OnPingReceived; solo: a marker for yourself.
+    private void PingAt(CellCoord cell)
+    {
+        if (_sim is null || _spectatorMode || !_sim.Map.Contains(cell)) return;
+        if (_lan is not null) _lan.SendPing(cell);
+        else _pings.Add(cell, Me, _nowMs);
+    }
+
+    private void OnPingReceived(int player, CellCoord cell)
+    {
+        if (_sim is null || !_sim.Map.Contains(cell)) return;
+        _pings.Add(cell, player, _nowMs);
+        if (player != Me) Audio.AudioBootstrap.Director?.Notify(Audio.AudioEventKind.UnitReady, LeptonCoord.CenterOf(cell));
+    }
+
+    // world = true: the rings on the map; false: the dots on the minimap (drawn after the sidebar so the panel does not cover them)
+    private void DrawPings(SpriteBatch sb, SimSnapshot snapshot, bool world)
+    {
+        _pings.Prune(_nowMs);
+        if (_pings.Pings.Count == 0) return;
+        MinimapMath? mini = world || _sidebar is null ? null : MinimapMath.Fit(_sidebar.Layout.Minimap, snapshot.MapWidth, snapshot.MapHeight);
+        foreach (MapPing p in _pings.Pings)
+        {
+            Color c = p.Player == Me ? new Color(0xF0, 0xD0, 0x40) : new Color(0x60, 0xD0, 0xF0);
+            float age = PingBoard.Age(p, _nowMs);
+            float pulse = (_nowMs - p.StartMs) / 1000f % 1f;
+            byte fade = (byte)(255 * (1f - age * 0.5f));
+            if (world)
+            {
+                Vector2 at = _camera.ScreenFromWorld(Camera.CentreOf(p.Cell));
+                float r = (14f + 22f * pulse) * Math.Max(1f, _camera.Zoom);
+                Shapes.Circle(sb, _s.Pixel, at, r, Shapes.Alpha(c, (byte)(fade * (1f - pulse))), 3, 28);
+                Shapes.Circle(sb, _s.Pixel, at, 9f * Math.Max(1f, _camera.Zoom), Shapes.Alpha(c, fade), 3, 20);
+                Shapes.Line(sb, _s.Pixel, at + new Vector2(0, -34), at + new Vector2(0, -10), Shapes.Alpha(c, fade), 3);
+            }
+
+            if (mini is { Image.IsEmpty: false } m)
+            {
+                Vector2 mp = m.PointFromCell(new Vector2(p.Cell.X + 0.5f, p.Cell.Y + 0.5f));
+                Shapes.Circle(sb, _s.Pixel, mp, 3f + 8f * pulse, Shapes.Alpha(c, (byte)(fade * (1f - pulse))), 2, 24);
+                Shapes.Circle(sb, _s.Pixel, mp, 3f, Shapes.Alpha(c, fade), 2, 24);
+            }
+        }
+    }
+
+    private int HealthOfBuilding(EntityId id)
+    {
+        foreach (BuildingView b in _source.Current.Buildings)
+            if (b.Id == id) return b.Health;
+        return 0;
+    }
+
+    // QOL-15: Shift + click on an own building marks (or unmarks) it for the sell key.
+    private void ToggleMark(CellCoord cell)
+    {
+        if (_sim is null || !_skirmishMode || _spectatorMode) return;
+        foreach (BuildingView b in _source.Current.Buildings)
+        {
+            if (b.Ghost || b.Player != Me) continue;
+            if (cell.X < b.Cell.X || cell.X >= b.Cell.X + b.FootprintW || cell.Y < b.Cell.Y || cell.Y >= b.Cell.Y + b.FootprintH) continue;
+            if (!_marked.Remove(b.Id)) _marked.Add(b.Id);
+            return;
+        }
+    }
+
+    private void HandleBulkKeys(InputFrame input, bool typing)
+    {
+        if (_sim is null || !_skirmishMode || _spectatorMode || typing) return;
+        if (_lan is null) _bulk.Observe(_source.Current.Buildings, _sim.Rules, Me, _sim.Tick);
+        if (input.ConsumePressed(GameAction.RepairAll))
+        {
+            // QOL-15: one ordinary Repair command per damaged own building that is not already repairing
+            List<BuildingView> targets = _bulk.RepairTargets(_source.Current.Buildings, _sim.Rules, Me);
+            foreach (BuildingView b in targets) _sim.Host.Issue(SidebarCommands.Repair(Me, b.Id));
+            _bulk.Started(targets);
+            _toast.Show(targets.Count == 0 ? QolText.NothingToRepair : QolText.RepairsStarted(targets.Count), _nowMs);
+        }
+
+        if (input.ConsumePressed(GameAction.SellMarked))
+        {
+            var targets = new List<EntityId>(_marked);
+            if (!_selectedBuilding.IsNone && !targets.Contains(_selectedBuilding)) targets.Add(_selectedBuilding);
+            if (targets.Count == 0)
+            {
+                _toast.Show(QolText.NothingToSell, _nowMs);
+                return;
+            }
+
+            targets.Sort((x, y) => x.Index.CompareTo(y.Index));
+            if (_sellConfirm.Click(targets[0], _nowMs))   // the same two-press rule as the card's Sell button
+            {
+                foreach (EntityId id in targets) _sim.Host.Issue(SidebarCommands.Sell(Me, id));
+                _marked.Clear();
+            }
+            else _toast.Show(QolText.SellPrompt(targets.Count), _nowMs);
+        }
+    }
+
+    // QOL-10: a thin line from each selected unit to its attack target (red) or move destination (green); Settings > Order lines.
+    private void DrawOrderLines(SpriteBatch sb)
+    {
+        if (_sim is null || !_s.Settings.ShowOrderLines || _spectatorMode || _selection.Count == 0) return;
+        foreach (UnitKey unit in _selection.Units)
+        {
+            var actor = new ActorRef(unit.Kind, unit.Id);
+            if (!_sim.TryGetPosition(unit, out LeptonCoord at) || !_sim.Sim.TryOrderPoint(actor, out LeptonCoord to, out bool attack)) continue;
+            OrderFeedback.DrawOrderLine(sb, _s.Pixel, _camera, Camera.WorldFromLepton(at), Camera.WorldFromLepton(to), attack);
         }
     }
 
@@ -1549,6 +1833,20 @@ public sealed class GameScreen : IScreen, IFocusPausable
             if (_selection.Count > 0) Audio.AudioBootstrap.Director?.Notify(Audio.AudioEventKind.UnitSelect);
         }
 
+        if (input.ConsumePressed(GameAction.SelectTypeMapWide) && _selection.Count > 0)   // QOL-02
+        {
+            SelectMapWide(Selection.SameTypeAnywhere(_renderUnits, Me, _selection.Units[0]).ToList(), input);
+        }
+
+        if (input.ConsumePressed(GameAction.SelectVehicles)) SelectMapWide(Selection.Army(_renderUnits, Me, v => v.Kind == UnitKind.Vehicle && IsFighter(v)).ToList(), input);   // QOL-11
+        if (input.ConsumePressed(GameAction.SelectInfantry)) SelectMapWide(Selection.Army(_renderUnits, Me, v => v.Kind == UnitKind.Infantry && IsFighter(v)).ToList(), input);   // QOL-11
+        if (input.ConsumePressed(GameAction.CycleProductionBuilding)) CycleProduction();   // QOL-05
+        if (input.ConsumePressed(GameAction.AutoTypeGroups))   // QOL-17
+        {
+            _groups.AutoByType = !_groups.AutoByType;
+            _toast.Show(UiText.Format(UiText.AutoTypeGroupsToast, "state", _groups.AutoByType ? "on" : "off"), _nowMs);
+        }
+
         for (int i = 0; i < GroupActions.Length; i++)
         {
             if (!input.ConsumePressed(GroupActions[i])) continue;
@@ -1558,11 +1856,23 @@ public sealed class GameScreen : IScreen, IFocusPausable
             IReadOnlyList<UnitKey> members = _groups.Members(number);
             if (members.Count == 0) continue;
             bool twice = _groupTap.Tap(number, _nowMs);
+            if (_groups.AutoByType) members = Selection.OfTypesOf(members, _renderUnits, Me).ToList();   // QOL-17: every unit of the group's types
             _selection.Replace(Selection.WithoutCarried(members, _renderUnits));   // S19 D-205: carried members stay in the group but are not selected
             ClearBuildingSelection();
             Audio.AudioBootstrap.Director?.Notify(Audio.AudioEventKind.UnitSelect);
             if (twice && GroupCentre(members) is { } centre) CentreCameraOn(centre);
         }
+    }
+
+    // QOL-03 / QOL-11: a combat unit by the rules (harvesters, builders, engineers and salvagers are not).
+    private bool IsFighter(UnitView v) => _sim is not null && Selection.IsCombatUnit(_sim.Rules, v);
+
+    // QOL-02 / QOL-11: a map-wide select replaces the selection, or joins it with Shift; the building selection goes.
+    private void SelectMapWide(IReadOnlyList<UnitKey> keys, InputFrame input)
+    {
+        _selection.Apply(keys, ShiftHeld(input));
+        ClearBuildingSelection();
+        if (_selection.Count > 0) Audio.AudioBootstrap.Director?.Notify(Audio.AudioEventKind.UnitSelect);
     }
 
     private Vector2? GroupCentre(IReadOnlyList<UnitKey> members)
@@ -1588,6 +1898,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
     {
         if (_sim is null) return;
         if (input.ConsumePressed(GameAction.CentreBase)) CentreCameraOnOwnBase();
+        if (input.ConsumePressed(GameAction.CentreOnSelection)) CentreOnSelection();   // QOL-05
         if (input.ConsumePressed(GameAction.LastAlert) && _alerts.JumpTarget(_source.Current.Tick) is { } alertAt) CentreCameraOn(alertAt);   // M11-10d
         bool ctrl = input.IsDown(Keys.LeftControl) || input.IsDown(Keys.RightControl);
         GameAction[] keys = { GameAction.Bookmark1, GameAction.Bookmark2, GameAction.Bookmark3, GameAction.Bookmark4 };
@@ -1597,6 +1908,24 @@ public sealed class GameScreen : IScreen, IFocusPausable
             Viewport map = MapViewport();
             if (ctrl) _bookmarks[i] = _camera.WorldFromScreen(new Point(map.Width / 2, map.Height / 2));
             else if (_bookmarks[i] is { } at) CentreCameraOn(at);
+        }
+    }
+
+    // QOL-05: the centre of the selected units, or of the selected building when no unit is selected.
+    private void CentreOnSelection()
+    {
+        if (_sim is null) return;
+        if (_selection.Count > 0)
+        {
+            if (GroupCentre(_selection.Units) is { } c) CentreCameraOn(c);
+            return;
+        }
+
+        foreach (BuildingView b in _source.Current.Buildings)
+        {
+            if (b.Id != _selectedBuilding) continue;
+            CentreCameraOn(new Vector2((b.Cell.X + b.FootprintW / 2f) * Camera.CellPx, (b.Cell.Y + b.FootprintH / 2f) * Camera.CellPx));
+            return;
         }
     }
 
@@ -1745,7 +2074,11 @@ public sealed class GameScreen : IScreen, IFocusPausable
         bool debugMode = GameKeys.DebugKeysAllowed(_skirmishMode);
         if (_s.Settings.ShowDiagnostics)
             lines.Add($"tick {snapshot.Tick}  hash {snapshot.StateHash:x16}  fps {_s.Fps}  zoom {_camera.ZoomLabel}");
+        if (_skirmishMode && !_spectatorMode && _sim is not null)
+            lines.Add(EconomyReadout.Line(_income.IncomePerMinute(Me), _harvestersWorking, _harvestersTotal));   // QOL-04
+        if (_sim is not null) lines.Add(MatchClock.Format(snapshot.Tick));   // QOL-18: elapsed game time
         if (_sim is { Paused: true }) lines.Add(debugMode ? "PAUSED (. = step)" : "PAUSED");
+        if (_sim is { Paused: true } && _pausedOrders.Count > 0) lines.Add(QolText.OrdersHeld(_pausedOrders.Count));   // A43-QOL-08
         else if (SpeedAllowed && _sim is { } speedSim && speedSim.SpeedPercent != GameSpeed.Normal)
             lines.Add(UiText.Format(UiText.SpeedHud, "speed", GameSpeed.Label(speedSim.SpeedPercent)));   // M13-15
 
@@ -1764,12 +2097,76 @@ public sealed class GameScreen : IScreen, IFocusPausable
         return lines;
     }
 
+    // QOL-06: the unit or building under the mouse, once the mouse has rested on it for the dwell time. Only the viewer's own snapshot is
+    // read (fog already applied), so an enemy shows only while it is visible and a building only as its last-seen image otherwise.
+    private void UpdateHover(InputFrame input)
+    {
+        _hoverLines = null;
+        SimSnapshot snap = _source.Current;
+        bool shown = _sim is not null && snap.Viewer >= 0 && !_spectatorMode && !_gameOverShown && !_hudHidden && !_dragging
+            && _console is not { IsOpen: true } && MapViewport().Bounds.Contains(_mouse)
+            && !(_card is { Visible: true } && _card.HitTest(_mouse)) && !_hudRegion.HitTest(_mouse);
+        if (!shown) { _hoverKey = null; return; }
+        var hit = HoverAt(snap, _camera.WorldFromScreen(_mouse));
+        if (hit is not { } h) { _hoverKey = null; return; }
+        if (h.Key != _hoverKey) { _hoverKey = h.Key; _hoverSinceMs = _nowMs; }
+        if (_nowMs - _hoverSinceMs >= HoverInfo.DwellMs) _hoverLines = h.Lines;
+    }
+
+    private (HoverKey Key, List<string> Lines)? HoverAt(SimSnapshot snap, Vector2 world)
+    {
+        const float PickWorldPx = 24f;   // 3/8 of a cell
+        SimRules r = _sim!.Rules;
+        UnitView? bestUnit = null;
+        float best = PickWorldPx * PickWorldPx;
+        foreach (UnitView u in snap.Units)
+        {
+            float d = Vector2.DistanceSquared(Camera.WorldFromLepton(u.Position), world);
+            if (d <= best) { best = d; bestUnit = u; }
+        }
+
+        if (bestUnit is UnitView unit)
+        {
+            bool vehicle = unit.Kind == UnitKind.Vehicle;
+            if ((uint)unit.TypeIndex >= (uint)(vehicle ? r.Vehicles.Count : r.Infantry.Count)) return null;
+            string id = vehicle ? r.Vehicles[unit.TypeIndex].Id : r.Infantry[unit.TypeIndex].Id;
+            int max = vehicle ? r.Vehicles[unit.TypeIndex].MaxHealth : r.Infantry[unit.TypeIndex].MaxHealth;
+            var kind = vehicle ? ActorKind.Vehicle : ActorKind.Infantry;
+            return (new HoverKey(kind, unit.Id, false),
+                HoverInfo.Lines(CameoNames.Display(id), HoverInfo.OwnerLine(unit.Player, Me), unit.Health, max, lastSeen: false));
+        }
+
+        float cell = Camera.CellPx;
+        foreach (BuildingView b in snap.Buildings)
+        {
+            float left = b.Cell.X * cell, top = b.Cell.Y * cell;
+            if (world.X < left || world.Y < top || world.X >= left + b.FootprintW * cell || world.Y >= top + b.FootprintH * cell) continue;
+            if ((uint)b.TypeIndex >= (uint)r.Buildings.Count) continue;
+            BuildingType t = r.Buildings[b.TypeIndex];
+            return (new HoverKey(ActorKind.Building, b.Id, b.Ghost),
+                HoverInfo.Lines(CameoNames.Display(t.Id), HoverInfo.OwnerLine(b.Player, Me), b.Health, t.MaxHealth, lastSeen: b.Ghost));
+        }
+
+        return null;
+    }
+
+    private void DrawHoverInfo(SpriteBatch sb)
+    {
+        if (_hoverLines is not { Count: > 0 } lines) return;
+        var scale = _s.UiScale;
+        int width = lines.Max(line => BitmapFont.Measure(line, scale)) + 16;
+        Rectangle map = MapViewport().Bounds;
+        int x = Math.Min(_mouse.X + 18, map.Right - width - 4);
+        int y = Math.Min(_mouse.Y + 18, map.Bottom - Hud.HeightOf(lines.Count, scale) - 4);
+        Hud.Panel(sb, _s.Pixel, new Point(Math.Max(map.X, x), Math.Max(map.Y, y)), lines, scale);
+    }
+
     // The HUD panels are UI regions: clicks on them never reach the map.
     private void UpdateHudRegions()
     {
         var scale = _s.UiScale;
         List<string> lines = HudLines(_source.Current);
-        _hudRegion.Bounds = lines.Count == 0 ? Rectangle.Empty : PanelRect(new Point(8, 8), lines, scale);
+        _hudRegion.Bounds = lines.Count == 0 || _hudHidden ? Rectangle.Empty : PanelRect(new Point(8, 8), lines, scale);
         if (_specPanel is not null)
         {
             _specPanel.Origin = new Point(8, 8 + Hud.HeightOf(lines.Count, scale) + 4);

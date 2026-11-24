@@ -125,9 +125,10 @@ public static class SpriteStates
     /// <summary>Whether a manifest has a state with this name.</summary>
     public static bool HasState(SpriteManifest manifest, string name)
     {
-        foreach (SpriteState state in manifest.States)
+        IReadOnlyList<SpriteState> states = manifest.States;   // indexed, not foreach: enumerating the interface boxes an enumerator per call
+        for (int i = 0; i < states.Count; i++)
         {
-            if (string.Equals(state.Name, name, StringComparison.Ordinal)) return true;
+            if (string.Equals(states[i].Name, name, StringComparison.Ordinal)) return true;
         }
         return false;
     }

@@ -46,8 +46,10 @@ public static class HealthBars
         float zoom = camera.Zoom;
         int height = Math.Max(2, (int)MathF.Round(BarHeightPx * zoom));
         int gap = (int)MathF.Round(GapPx * zoom);
-        foreach (RenderUnit unit in frame.Units)
+        IReadOnlyList<RenderUnit> lstUnit = frame.Units;
+        for (int iUnitIx = 0; iUnitIx < lstUnit.Count; iUnitIx++)
         {
+            RenderUnit unit = lstUnit[iUnitIx];
             UnitView view = unit.View;
             bool vehicle = view.Kind == UnitKind.Vehicle;
             int max = vehicle ? frame.Rules.Vehicles[view.TypeIndex].MaxHealth : frame.Rules.Infantry[view.TypeIndex].MaxHealth;
@@ -65,8 +67,10 @@ public static class HealthBars
             if (frame.Groups?.GroupOf(UnitKey.Of(view)) is > 0 and int group && (showBar || rank > 0)) DrawGroupNumber(batch, pixel, r, group, zoom);   // M11-10c
         }
 
-        foreach (BuildingView building in frame.Snapshot.Buildings)
+        IReadOnlyList<BuildingView> lstBuilding = frame.Snapshot.Buildings;
+        for (int iBuildingIx = 0; iBuildingIx < lstBuilding.Count; iBuildingIx++)
         {
+            BuildingView building = lstBuilding[iBuildingIx];
             if (building.Ghost) continue;
             int max = frame.Rules.Buildings[building.TypeIndex].MaxHealth;
             if (!ShouldShow(always, false, building.Health < max)) continue;

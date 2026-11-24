@@ -6,6 +6,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Rts.Game.Sandbox;
 using Rts.Game.Sprites;
 using Rts.Game.Veterancy;
+using Rts.Sim;
 using Rts.Sim.Core;
 using Rts.Sim.Map;
 using Rts.Sim.Rules;
@@ -37,6 +38,9 @@ public sealed class SceneRenderer : IDisposable
 
     /// <summary>M10-14: shake the world view on big blasts (the "Screen shake" setting); the game screen sets it each frame.</summary>
     public bool ShakeEnabled { get; set; } = true;
+
+    /// <summary>QOL-20 (D-313): the "Reduce flashes" setting: no white hit flash on units, no promotion flash, no muzzle sparks. View only; separate from <see cref="ShakeEnabled"/>.</summary>
+    public bool ReduceFlashes { get; set; }
 
     private readonly Stopwatch _clock = Stopwatch.StartNew();   // presentation time only: weather drift and shake decay, never the sim
     private double _lastSeconds;
@@ -75,6 +79,14 @@ public sealed class SceneRenderer : IDisposable
     private readonly Dictionary<RankKey, int> _rankMap = new();
     private readonly List<RankKey> _promoted = new();
     private readonly PromotionTracker _promotions = new();
+    private readonly SceneSpriteExtents _extents;                              // A43 FOLLOWUP-12: view culling reach of each sprite
+    private SimRules? _wallRules;                                               // A43 FOLLOWUP-11: read by the cached wall predicate
+    private readonly Func<int, bool> _isWallType;
+    private Simulation? _cacheSim;                                              // per-tick caches (A43 FOLLOWUP-12): the sim data below only changes with a sim tick
+    private int _cacheSimTick = int.MinValue;
+    private int _cacheSnapTick = int.MinValue;
+    private int _cacheViewer = int.MinValue;
+    private bool _wrecksDirty = true, _stormsDirty = true, _submergedDirty = true, _ranksDirty = true;
 
     /// <summary>
     /// Creates a renderer that draws every vehicle with one sheet (the debug view's tank) and placeholders for the rest.
@@ -96,6 +108,24 @@ public sealed class SceneRenderer : IDisposable
     private SceneRenderer(SpriteResolver resolver)
     {
         _sprites = resolver;
+        _extents = new SceneSpriteExtents(resolver);
+        _isWallType = IsWallType;
+    }
+
+    private bool IsWallType(int t) => _wallRules is { } r && (uint)t < (uint)r.Buildings.Count && r.Buildings[t].Wall;
+
+    // True when the sim data cached below is still the data of this snapshot: same sim, same sim tick, same snapshot tick.
+    // Once per frame, first thing: marks the caches below stale when the sim, its tick, the snapshot or the viewer changed.
+    private void RefreshCaches(SceneFrame frame)
+    {
+        int simTick = frame.Sim?.Tick ?? int.MinValue;
+        if (frame.Sim is not null && ReferenceEquals(_cacheSim, frame.Sim) && _cacheSimTick == simTick
+            && _cacheSnapTick == frame.Snapshot.Tick && _cacheViewer == frame.Snapshot.Viewer) return;
+        _cacheSim = frame.Sim;
+        _cacheSimTick = simTick;
+        _cacheSnapTick = frame.Snapshot.Tick;
+        _cacheViewer = frame.Snapshot.Viewer;
+        _wrecksDirty = _stormsDirty = _submergedDirty = _ranksDirty = true;
     }
 
     /// <summary>Draws the frame. <paramref name="pixel"/> is a 1x1 white texture; the batch is already begun.</summary>
@@ -125,6 +155,7 @@ public sealed class SceneRenderer : IDisposable
         SimSnapshot snapshot = frame.Snapshot;
         MapData? map = frame.Sim?.Setup.Map;
         _viewport = viewport;
+        RefreshCaches(frame);
         if (map is not null)
         {
             _terrain.Draw(batch, pixel, map, camera, frame.Sim?.Map, snapshot.Tick);
@@ -156,7 +187,11 @@ public sealed class SceneRenderer : IDisposable
         _look.Observe(snapshot, frame.Rules, _fx, _mood, _sprites);   // D-184
         if (frame.Sim is not null && frame.Rules is not null)   // M6-09: wrecks lie on the ground, under buildings and units
         {
-            WreckStormOverlay.PlanWrecks(frame.Sim.ViewFor(0), frame.Rules.Economy.WreckTicks, _wreckViews, _wrecks);
+            if (_wrecksDirty)
+            {
+                WreckStormOverlay.PlanWrecks(frame.Sim.ViewFor(0), frame.Rules.Economy.WreckTicks, _wreckViews, _wrecks);
+                _wrecksDirty = false;
+            }
             WreckStormOverlay.DrawWrecks(batch, pixel, _wrecks, camera);
         }
 
@@ -171,7 +206,11 @@ public sealed class SceneRenderer : IDisposable
         GroundOverlay.DrawBlackout(batch, pixel, snapshot, camera, viewport);
         if (frame.Sim is not null)   // M6-09: ash storms over the sprites, under the fog
         {
-            WreckStormOverlay.PlanStorms(frame.Sim.ViewFor(0), snapshot.Tick, snapshot.MapWidth, snapshot.MapHeight, _stormViews, _storms);
+            if (_stormsDirty)
+            {
+                WreckStormOverlay.PlanStorms(frame.Sim.ViewFor(0), snapshot.Tick, snapshot.MapWidth, snapshot.MapHeight, _stormViews, _storms);
+                _stormsDirty = false;
+            }
             WreckStormOverlay.DrawStorms(batch, pixel, _storms, camera);
         }
 
@@ -182,12 +221,16 @@ public sealed class SceneRenderer : IDisposable
         if (frame.Overlays.Paths) PathOverlay.Draw(batch, pixel, frame, camera);
         if (frame.Overlays.Ranges) RangeOverlay.Draw(batch, pixel, frame, camera);
         // VET-5: ranks come from the viewer's view only (fog-honest); the flash comes from the client-side tracker.
-        if (frame.Sim is not null) RankLookup.Fill(frame.Sim.ViewFor((byte)Math.Max(0, snapshot.Viewer)), _rankScratch, _ranks);
-        else _ranks.Clear();
-        _rankMap.Clear();
-        foreach ((RankKey key, int rank) in _ranks) _rankMap[key] = rank;
-        _promotions.Update(snapshot.Tick, _ranks, _promoted);
-        PromotionFlash.Draw(batch, pixel, frame.Units, camera, _promotions, snapshot.Tick);
+        if (_ranksDirty || frame.Sim is null)   // A43 FOLLOWUP-12: the ranks only change with a sim tick, so they are read once per tick
+        {
+            if (frame.Sim is not null) RankLookup.Fill(frame.Sim.ViewFor((byte)Math.Max(0, snapshot.Viewer)), _rankScratch, _ranks);
+            else _ranks.Clear();
+            _rankMap.Clear();
+            foreach ((RankKey key, int rank) in _ranks) _rankMap[key] = rank;
+            _promotions.Update(snapshot.Tick, _ranks, _promoted);
+            _ranksDirty = false;
+        }
+        if (!ReduceFlashes) PromotionFlash.Draw(batch, pixel, frame.Units, camera, _promotions, snapshot.Tick);   // QOL-20
         HealthBars.Draw(batch, pixel, frame, camera, _sprites, _rankMap, HealthBarsAlways);
         NoPowerOverlay.Draw(batch, pixel, frame, camera);   // D-170: blinking marker over a building stopped for lack of power
         if (frame.DragRect is Rectangle box) Shapes.Outline(batch, pixel, box, DragColour);
@@ -220,7 +263,7 @@ public sealed class SceneRenderer : IDisposable
         {
             Vector2 at = Camera.WorldFromLepton(frame.Projectiles[count - 1 - i]);
             if (!InView(at, camera, viewport)) continue;
-            _fx.Spawn("sparks", at, snapshot.Tick, 1.1f);
+            if (!ReduceFlashes) _fx.Spawn("sparks", at, snapshot.Tick, 1.1f);   // QOL-20: no muzzle sparks
             _look.Puffs.Add(new Puff(at.X, at.Y - 6, snapshot.Tick, 14, 0x8F8B86, 130, 0.4f, 9, Smoke: true));
         }
     }
@@ -276,6 +319,8 @@ public sealed class SceneRenderer : IDisposable
         _shake.Clear();
         _juiceTick = int.MinValue;
         _prevProjectiles = 0;
+        _cacheSim = null;
+        _wrecksDirty = _stormsDirty = _submergedDirty = _ranksDirty = true;
     }
 
     /// <inheritdoc />
@@ -308,13 +353,15 @@ public sealed class SceneRenderer : IDisposable
     {
         SimSnapshot snapshot = frame.Snapshot;
         _memory.Observe(snapshot);
-        _walls.Observe(snapshot.Tick, snapshot.Buildings,
-            t => frame.Rules is { } r && (uint)t < (uint)r.Buildings.Count && r.Buildings[t].Wall);
+        _wallRules = frame.Rules;
+        _walls.Observe(snapshot.Tick, snapshot.Buildings, _isWallType);   // cached delegate: no closure per frame
+        _extents.Rules = frame.Rules;
 
-        _submerged.Clear();
-        _ownOrAllied.Clear();
-        if (frame.Sim is not null)
+        if (_submergedDirty && frame.Sim is not null)   // A43 FOLLOWUP-12: the dived-ship sets only change with a sim tick
         {
+            _submerged.Clear();
+            _ownOrAllied.Clear();
+            _submergedDirty = false;
             PlayerView sees = frame.Sim.ViewFor((byte)Math.Max(0, snapshot.Viewer));
             sees.CopyOwn(_subScratch, includeBuildings: false);
             foreach (ViewActor a in _subScratch) if (a.Submerged) { _submerged.Add(a.Id); _ownOrAllied.Add(a.Id); }
@@ -326,20 +373,16 @@ public sealed class SceneRenderer : IDisposable
             }
         }
 
+        else if (frame.Sim is null)
+        {
+            _submerged.Clear();
+            _ownOrAllied.Clear();
+        }
+
         _items.Clear();
-        for (int i = 0; i < snapshot.Buildings.Count; i++)
-        {
-            BuildingView b = snapshot.Buildings[i];
-            float bottom = (b.Cell.Y + b.FootprintH) * Camera.CellPx;
-            _items.Add(new DrawItem(DrawKind.Building, i, bottom, b.Cell.X * Camera.CellPx));
-        }
-        for (int i = 0; i < frame.Units.Count; i++)
-        {
-            RenderUnit unit = frame.Units[i];
-            _items.Add(new DrawItem(DrawKind.Unit, i, unit.World.Y, unit.World.X));
-        }
+        SpriteCull.Collect(_items, snapshot.Buildings, frame.Units, _extents, camera, _viewport);   // A43 FOLLOWUP-12: only what can touch the screen
         AddBlockingProps(frame, camera);
-        _items.Sort(DrawOrder.Instance);
+        DrawOrder.Sort(_items);
 
         foreach (DrawItem item in _items)
         {
@@ -358,7 +401,7 @@ public sealed class SceneRenderer : IDisposable
                 bool selected = frame.Selection.Contains(UnitKey.Of(unit.View));
                 UnitRenderer.Draw(batch, pixel, _sprites, _painter, _memory, snapshot.Tick, frame.Rules, unit,
                     selected, camera, unit.View.Kind == UnitKind.Vehicle && _submerged.Contains(unit.View.Id),
-                    _ownOrAllied.Contains(unit.View.Id), _hits.IsFlashing(unit.View.Id, snapshot.Tick, _frame));
+                    _ownOrAllied.Contains(unit.View.Id), !ReduceFlashes && _hits.IsFlashing(unit.View.Id, snapshot.Tick, _frame));
             }
         }
     }

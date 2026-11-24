@@ -232,6 +232,9 @@ public sealed class ControlsScreen : IScreen
             case ItemKind.Binding when direction > 0 && item.Row?.Action is { } action:
                 _rebind.Begin(action);
                 break;
+            case ItemKind.Binding when direction < 0 && item.Row?.Action is { } second:   // QOL-20: Left or right-click sets the second key
+                _rebind.Begin(second, second: true);
+                break;
         }
     }
 
@@ -252,7 +255,7 @@ public sealed class ControlsScreen : IScreen
         _scroll = Math.Clamp(_scroll, 0, Math.Max(0, AllItems.Count - _visibleLines));
         int keyCol = 0;
         foreach (ControlRow r in GameKeys.Rows) keyCol = Math.Max(keyCol, BitmapFont.Measure(r.LabelFor(KeyBindings.Default), scale));
-        keyCol = Math.Max(keyCol, BitmapFont.Measure("Left click (attack-move armed)", scale)) + 12 * scale;
+        keyCol = Math.Max(keyCol, BitmapFont.Measure("Left click (attack-move armed)", scale)) + 12 * scale + BitmapFont.Measure(" / Insert", scale);   // QOL-20: room for a second key
         for (int i = 0; i < _visibleLines && _scroll + i < AllItems.Count; i++)
         {
             int index = _scroll + i;
@@ -287,8 +290,8 @@ public sealed class ControlsScreen : IScreen
         }
 
         string message = _rebind.Message;
-        if (_rebind.State == RebindSession.Phase.Listening && message.Length == 0) message = "Press the new key for this action.  Esc: cancel.";
-        string hint = message.Length > 0 ? message : "Up/Down select   Enter or click: change / rebind   Wheel: scroll   Esc: back";
+        if (_rebind.State == RebindSession.Phase.Listening && message.Length == 0) message = _rebind.IsSecond ? "Press the second key for this action.  Delete: clear it.  Esc: cancel." : "Press the new key for this action.  Esc: cancel.";
+        string hint = message.Length > 0 ? message : "Up/Down select   Enter or click: rebind   Left or right-click: second key   Wheel: scroll   Esc: back";
         if (maxScroll > 0 && _scroll < maxScroll && message.Length == 0) hint = "More below.  " + hint;
         int room = back.X - panel.X - 2 * pad;
         while (BitmapFont.Measure(hint, scale) > room && hint.LastIndexOf("   ", StringComparison.Ordinal) is var cut and > 0) hint = hint[..cut];

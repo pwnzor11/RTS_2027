@@ -70,7 +70,12 @@ public sealed class AudioDirector
     public void Process(AudioFrame frame)
     {
         int tick = frame.Current.Tick;
-        if (tick < _lastTick) _lastPlayedMs.Clear(); // a new game started
+        if (tick < _lastTick)
+        {
+            // a new game started (GAMESYS-01: its last-fight tick must not carry over from the previous game)
+            _lastPlayedMs.Clear();
+            _lastCombatTick = int.MinValue / 2;
+        }
         _lastTick = tick;
         _nowMs = (long)tick * MsPerTick;
         _faction = frame.CurrentHud?.Faction ?? _faction;
@@ -187,7 +192,7 @@ public sealed class AudioDirector
         bool fight = !wall && IsFightSound(e.Kind);
         if (fight && _combatPlaysThisStep >= MaxCombatPlaysPerStep) return;
 
-        float gain = def.Volume;
+        float gain = def.Volume * Rts.Game.Ui.Alerts.AlertMix.Active.GainOf(e.Kind);   // QOL-12: the alert categories have their own volume (1 for every other sound)
         float pan = 0f;
         if (def.Positional && e.Pos is { } pos && _listener() is { } listener)
         {

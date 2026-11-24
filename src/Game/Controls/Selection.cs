@@ -170,6 +170,92 @@ public sealed class Selection
         }
     }
 
+    /// <summary>The first unit in <paramref name="units"/> with the key, or null when it is not in the list.</summary>
+    private static UnitView? ViewOf(IReadOnlyList<RenderUnit> units, UnitKey key)
+    {
+        foreach (RenderUnit unit in units)
+        {
+            if (UnitKey.Of(unit.View) == key) return unit.View;
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// QOL-02: every unit of <paramref name="localPlayer"/> that has the same kind and type as <paramref name="like"/>, anywhere on the map
+    /// (not only on screen). Carried units are left out. Empty when <paramref name="like"/> is not in <paramref name="units"/>.
+    /// </summary>
+    public static IEnumerable<UnitKey> SameTypeAnywhere(IReadOnlyList<RenderUnit> units, byte localPlayer, UnitKey like)
+    {
+        if (ViewOf(units, like) is not UnitView model) yield break;
+        foreach (RenderUnit unit in units)
+        {
+            UnitView v = unit.View;
+            if (v.Player == localPlayer && !v.Carried && v.Kind == model.Kind && v.TypeIndex == model.TypeIndex) yield return UnitKey.Of(v);
+        }
+    }
+
+    /// <summary>
+    /// QOL-17 (Ctrl+click on a selection cameo): the units of <paramref name="selected"/> that have the same kind and type as
+    /// <paramref name="like"/>, in selection order. Only the selection is narrowed; nothing else is added.
+    /// </summary>
+    public static IEnumerable<UnitKey> SameTypeAmong(IReadOnlyList<UnitKey> selected, IReadOnlyList<RenderUnit> units, UnitKey like)
+    {
+        if (ViewOf(units, like) is not UnitView model)
+        {
+            yield return like;
+            yield break;
+        }
+
+        foreach (UnitKey key in selected)
+        {
+            if (ViewOf(units, key) is UnitView v && v.Kind == model.Kind && v.TypeIndex == model.TypeIndex) yield return key;
+        }
+    }
+
+    /// <summary>
+    /// QOL-17 (auto control groups by type): every unit of <paramref name="localPlayer"/> whose kind and type match a member of
+    /// <paramref name="members"/>, anywhere on the map, in slot order. Members that are not in <paramref name="units"/> add no type.
+    /// </summary>
+    public static IEnumerable<UnitKey> OfTypesOf(IReadOnlyList<UnitKey> members, IReadOnlyList<RenderUnit> units, byte localPlayer)
+    {
+        var types = new List<(UnitKind Kind, int TypeIndex)>();
+        foreach (UnitKey key in members)
+        {
+            if (ViewOf(units, key) is not UnitView v) continue;
+            if (!types.Contains((v.Kind, v.TypeIndex))) types.Add((v.Kind, v.TypeIndex));
+        }
+
+        if (types.Count == 0) yield break;
+        foreach (RenderUnit unit in units)
+        {
+            UnitView v = unit.View;
+            if (v.Player == localPlayer && !v.Carried && types.Contains((v.Kind, v.TypeIndex))) yield return UnitKey.Of(v);
+        }
+    }
+
+    /// <summary>
+    /// QOL-03 (Alt + box): the units of <paramref name="localPlayer"/> inside the box [min, max], but only the combat ones (per
+    /// <paramref name="isCombat"/>) when at least one combat unit is inside; otherwise every unit inside. Plain box select is unchanged.
+    /// </summary>
+    public static IEnumerable<UnitKey> InsideFightersFirst(IReadOnlyList<RenderUnit> units, Vector2 min, Vector2 max, byte localPlayer, Func<UnitView, bool> isCombat)
+    {
+        var fighters = new List<UnitKey>();
+        var all = new List<UnitKey>();
+        foreach (RenderUnit unit in units)
+        {
+            UnitView v = unit.View;
+            if (v.Player != localPlayer || v.Carried) continue;
+            Vector2 p = unit.World;
+            if (p.X < min.X || p.X > max.X || p.Y < min.Y || p.Y > max.Y) continue;
+            UnitKey key = UnitKey.Of(v);
+            all.Add(key);
+            if (isCombat(v)) fighters.Add(key);
+        }
+
+        return fighters.Count > 0 ? fighters : all;
+    }
+
     /// <summary>
     /// True for a unit that fights: it has a primary weapon and is not a harvester, a deployable builder (MCV type), a salvager or an engineer.
     /// </summary>

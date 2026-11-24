@@ -82,4 +82,15 @@ public static class UpdateCheck
 
     /// <summary>The menu line for a found update, for example "New version 0.2.0 available: https://github.com/...".</summary>
     public static string NoticeText(UpdateInfo info) => $"New version {info.Version} available: {info.Url}";
+
+    /// <summary>The Settings line under "Check now" (A43 GAMESYS-02): empty before any check, otherwise what the last check found.</summary>
+    public static string StatusText(UpdateCheckStatus status, UpdateInfo? found, string current) => status switch
+    {
+        UpdateCheckStatus.Checking => "Checking GitHub for a newer version...",
+        UpdateCheckStatus.UpToDate => $"Up to date: version {current} is the latest release.",
+        UpdateCheckStatus.Available when found is not null => NoticeText(found),
+        UpdateCheckStatus.Failed => "Could not reach GitHub. Try again later.",
+        UpdateCheckStatus.NoVersion => "This build has no version to compare.",
+        _ => "",
+    };
 }

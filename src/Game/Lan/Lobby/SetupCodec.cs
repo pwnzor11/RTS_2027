@@ -17,6 +17,7 @@ public static class SetupCodec
         LobbyCodec.WriteMap(w, d.Map);
         w.U64(d.SimSeed);
         w.U8(d.CommandDelay);
+        LobbyCodec.WriteRules(w, d.Rules);
         w.U8(d.Slots.Count);
         foreach (SkirmishSlot s in d.Slots) LobbyCodec.WriteSlot(w, s);
         w.U8(d.PeerSlots.Count);
@@ -37,6 +38,7 @@ public static class SetupCodec
         ulong seed = r.U64();
         int delay = r.U8();
         if (!NetProtocol.DelayChoices.Contains(delay)) throw new InvalidDataException("Bad command delay.");
+        MatchRules rules = LobbyCodec.ReadRules(r);
         int n = r.U8();
         if (n < SkirmishSettings.MinPlayers || n > SkirmishSettings.MaxSlots) throw new InvalidDataException("Bad slot count.");
         var slots = new List<SkirmishSlot>(n);
@@ -75,6 +77,6 @@ public static class SetupCodec
 
         r.End();
         foreach (int p in peerSlots.Keys.Concat(specs)) if (!names.ContainsKey(p)) throw new InvalidDataException("A peer has no name.");
-        return new SetupData(map, slots, seed, peerSlots, specs, names, delay);
+        return new SetupData(map, slots, seed, peerSlots, specs, names, delay) { Rules = rules };
     }
 }

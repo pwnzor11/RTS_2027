@@ -129,7 +129,11 @@ public sealed class RtsGame : Microsoft.Xna.Framework.Game
         _services.Updates.Start(_settings.CheckForUpdates, BuildInfo.Version);   // M10-23: once, in the background, never blocks
         if (_demo) _screens.Push(GameScreen.CreateDemo(_services));
         else if (_direct) _screens.Push(GameScreen.CreateSandbox(_services, _empty, null));
-        else _screens.Push(new MainMenuScreen(_services));
+        else
+        {
+            _screens.Push(new MainMenuScreen(_services));
+            FirstRunOffer.Show(_services, new SaveCatalog(SaveCatalog.DefaultRoot).Newest() is not null);   // QOL-13: once, for a new player
+        }
     }
 
     // Settings > Full screen / Window size: apply to the live window.

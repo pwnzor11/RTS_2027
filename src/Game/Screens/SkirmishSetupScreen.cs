@@ -36,6 +36,8 @@ public sealed class SkirmishSetupScreen : IScreen
     private OceanEdges _ocean = OceanEdges.None;   // M7-14
     private bool _stamps;   // M12-13b: generator stamps (ruins, groves, craters); off by default
     private readonly List<SkirmishSlot> _slots;
+    private MatchRules _rules = MatchRules.Default;   // QOL-07 (D-313): superweapon limit and reveal map; opt-in, the default is the usual game
+    private readonly string? _lastPath;               // QOL-01 (D-313): where the last setup is kept; null = nothing is remembered (tests)
     private int _layout = MapGenerator.CurrentLayout;   // generator layout of the generated map (a layout-2 map defaults 4 players to teams 1+2 vs 3+4)
     private int _seedRow = -1;
     private int _firstSlotRow;
@@ -47,20 +49,24 @@ public sealed class SkirmishSetupScreen : IScreen
     private Settings? _keyFor;            // the settings value _hasKey was read for; a new value (Settings changed) reads it again
 
     /// <summary>Creates the screen with <see cref="SkirmishSettings.Default"/> values (curated map, a human against a Regular AI).</summary>
-    public SkirmishSetupScreen(GameServices services) : this(services, MapPicker.List(services.RulesDir))
+    public SkirmishSetupScreen(GameServices services) : this(services, MapPicker.List(services.RulesDir), null, LastSkirmish.DefaultPath)
     {
     }
 
     /// <summary>Creates the screen with <paramref name="preselect"/> chosen as the map (M4-INT2: the editor's "Play this map"). A map file
     /// that is not in the list is added to it; generator parameters set the Generated entry's biome, size and seed.</summary>
-    public SkirmishSetupScreen(GameServices services, MapChoice preselect) : this(services, MapPicker.List(services.RulesDir), preselect)
+    public SkirmishSetupScreen(GameServices services, MapChoice preselect) : this(services, MapPicker.List(services.RulesDir), preselect, LastSkirmish.DefaultPath)
     {
     }
 
-    /// <summary>Creates the screen over a given map list (tests).</summary>
-    public SkirmishSetupScreen(GameServices services, IReadOnlyList<MapEntry> maps, MapChoice? preselect = null)
+    /// <summary>Creates the screen over a given map list (tests). <paramref name="lastSetupPath"/> is the file the last started setup is read from
+    /// and written to (QOL-01); null remembers nothing, so the screen starts from the defaults.</summary>
+    public SkirmishSetupScreen(GameServices services, IReadOnlyList<MapEntry> maps, MapChoice? preselect = null, string? lastSetupPath = null)
     {
         _s = services;
+        _lastPath = lastSetupPath;
+        SkirmishSettings? last = lastSetupPath is null ? null : LastSkirmish.Load(lastSetupPath);
+        if (last is not null && preselect is null) preselect = RememberedMap(services.RulesDir, maps, last);   // an editor "Play this map" keeps its own map
         _maps = preselect is null ? maps : PreselectMap(services.RulesDir, maps, preselect, out _mapIndex);
         if (preselect?.Generated is { } g)
         {
@@ -72,9 +78,30 @@ public sealed class SkirmishSetupScreen : IScreen
             _stamps = g.Stamps;
         }
         _tierNames = LoadTierNames(services.RulesDir);
-        _slots = new List<SkirmishSlot>(SkirmishSettings.Default.Slots);
+        _slots = new List<SkirmishSlot>(last?.Slots ?? SkirmishSettings.Default.Slots);   // QOL-01
+        if (last is not null) _rules = last.Rules;
+        if (last?.Slots is { } lastSlots && lastSlots.Any(x => x.Kind == SlotKind.Ai && x.AiTier > _tierNames.Length))
+            for (int i = 0; i < _slots.Count; i++) _slots[i] = _slots[i] with { AiTier = Math.Min(_slots[i].AiTier, _tierNames.Length) };   // a tier list that got shorter
         RefreshKey();
         _panel = BuildPanel();
+    }
+
+    // QOL-01: the remembered map as a choice the list can select: a generated map always, a file only when it is still in the list.
+    private static MapChoice? RememberedMap(string rulesDir, IReadOnlyList<MapEntry> maps, SkirmishSettings last)
+    {
+        if (last.Map.Generated is not null) return last.Map;
+        if (last.Map.File is not { } file) return null;
+        try
+        {
+            foreach (MapEntry m in maps)
+                if (m.File is { } f && SameFile(rulesDir, f, file)) return last.Map;
+        }
+        catch (Exception e) when (e is ArgumentException or NotSupportedException or PathTooLongException)
+        {
+            // a damaged file name in skirmish.toml: start from the default map
+        }
+
+        return null;
     }
 
     /// <summary>The map list with <paramref name="choice"/> selected: its index in <paramref name="index"/>, and the list with the map added
@@ -129,7 +156,7 @@ public sealed class SkirmishSetupScreen : IScreen
                 ? new MapChoice(null, new MapGenParams(_biome, _size, Math.Clamp(open, SkirmishSettings.MinPlayers, SkirmishSettings.MaxSlots), _seed, null, ResolvedOcean(out _), _layout, _stamps))
                 : new MapChoice(entry.File, null);
             ulong simSeed = entry.IsGenerated ? _seed : SkirmishGame.CuratedSimSeed;
-            return new SkirmishSettings(map, _slots.ToArray(), simSeed);
+            return new SkirmishSettings(map, _slots.ToArray(), simSeed) { Rules = _rules };
         }
     }
 
@@ -275,12 +302,21 @@ public sealed class SkirmishSetupScreen : IScreen
             { WidthTexts = WidestOptionsTexts() });
         }
 
+        // QOL-07 (D-313): opt-in match rules; the defaults (unlimited, fog of war) are the usual game.
+        rows.Add(new(() => MatchRules.LimitLabel(_rules.SuperweaponLimit), null, d => _rules = _rules.StepSuperweapons(d),
+            new MenuButton("<", () => _rules = _rules.StepSuperweapons(-1)), new MenuButton(">", () => _rules = _rules.StepSuperweapons(1)))
+        { WidthTexts = MatchRules.LimitSteps.Select(MatchRules.LimitLabel).ToArray() });
+        rows.Add(new(() => MatchRules.RevealLabel(_rules.RevealMap), null, _ => _rules = _rules.ToggleReveal(),
+            new MenuButton("Toggle", () => _rules = _rules.ToggleReveal()))
+        { WidthTexts = new[] { MatchRules.RevealLabel(false), MatchRules.RevealLabel(true) } });
+
         rows.Add(new(() => UiText.Format(UiText.SpeedSetup, "speed", GameSpeed.Label(_s.Settings.GameSpeedPercent)), null, StepSpeed,   // M13-15
             new MenuButton("<", () => StepSpeed(-1)), new MenuButton(">", () => StepSpeed(1)))
         {
             WidthTexts = GameSpeed.Percents.Select(p => UiText.Format(UiText.SpeedSetup, "speed", GameSpeed.Label(p))).ToArray(),
         });
         rows.Add(new(() => _error.Length > 0 ? _error : NoteText() ?? HintText()) { Info = true });
+        if (_lastPath is not null) rows.Add(new(() => "Reset setup", ResetSetup));   // QOL-01
         rows.Add(new(() => IsSpectate ? "Spectate" : "Start", Start));
         rows.Add(new(() => "Back", () => _s.Screens.Pop()));
 
@@ -290,6 +326,18 @@ public sealed class SkirmishSetupScreen : IScreen
     }
 
     private void Rebuild() => _panel = BuildPanel();
+
+    // QOL-01: back to the defaults (slots, match rules, the first map) and forget what was kept.
+    private void ResetSetup()
+    {
+        _slots.Clear();
+        _slots.AddRange(SkirmishSettings.Default.Slots);
+        _rules = MatchRules.Default;
+        _mapIndex = 0;
+        _error = "";
+        if (_lastPath is not null) LastSkirmish.Clear(_lastPath);
+        Rebuild();
+    }
 
     // M13-15: the single-player game speed is a setting (kept for the next game); keys + and - change it in play.
     private void StepSpeed(int delta)
@@ -588,6 +636,7 @@ public sealed class SkirmishSetupScreen : IScreen
 
         // M10-20: a loading screen builds the game (it draws one frame first); a data error comes back here, as it did before (S18 GS-10).
         SaveSpeed();
+        if (_lastPath is not null) LastSkirmish.Save(settings, _lastPath);   // QOL-01: remembered for the next time the screen opens
         _error = "";
         var factions = settings.Slots.Where(x => x.Kind != SlotKind.Closed).Select(x => LoadingArt.IdOf(x.Faction)).OfType<string>().Distinct().ToArray();
         _s.Screens.Push(LoadingScreen.For(_s, SkirmishGame.DescribeMap(settings.Map), factions, null,

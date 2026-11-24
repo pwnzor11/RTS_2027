@@ -19,8 +19,11 @@ namespace Rts.Game.Lan.Lobby;
 public sealed record SetupData(LobbyMap Map, IReadOnlyList<SkirmishSlot> Slots, ulong SimSeed, IReadOnlyDictionary<int, int> PeerSlots,
     IReadOnlyList<int> Spectators, IReadOnlyDictionary<int, string> Names, int CommandDelay)
 {
+    /// <summary>QOL-07 (D-313): the match rules the host chose.</summary>
+    public MatchRules Rules { get; init; } = MatchRules.Default;
+
     /// <summary>The settings these choices make, with the map resolved to a path this machine can load.</summary>
-    public SkirmishSettings ToSettings(MapChoice map) => new(map, Slots, SimSeed);
+    public SkirmishSettings ToSettings(MapChoice map) => new(map, Slots, SimSeed) { Rules = Rules };
 
     /// <summary>The <see cref="LanMatchSetup"/> that hands the match to the in-game LAN code.</summary>
     public LanMatchSetup ToMatch(INetTransport transport, bool isHost, int localPeer, MapChoice map) =>
