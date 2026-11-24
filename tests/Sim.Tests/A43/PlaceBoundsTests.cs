@@ -3,6 +3,7 @@
 using Rts.Sim;
 using Rts.Sim.Core;
 using Rts.Sim.Tests.Determinism;
+using Rts.Sim.World;
 using Xunit;
 
 namespace Rts.Sim.Tests.A43;
