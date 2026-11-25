@@ -178,7 +178,7 @@ public sealed class SecondWeaponTests
         Assert.Equal(WeaponTargets.Submerged, r.Weapons[launch.PrimaryWeapon].Targets);
         Assert.Equal("exp_launch_gun", r.Weapons[launch.SecondaryWeapon].Id);
         Assert.Equal(-1, launch.TertiaryWeapon);
-        Assert.All(r.Vehicles.Where(v => v.Id is not ("exp_destroyer" or "exp_launch")), v => Assert.True(v.SecondaryWeapon < 0 && v.TertiaryWeapon < 0));
+        Assert.All(r.Vehicles.Where(v => v.Id is not ("exp_destroyer" or "exp_launch" or "exp_missile_sub")), v => Assert.True(v.SecondaryWeapon < 0 && v.TertiaryWeapon < 0));   // exp_missile_sub: torpedo slot (S44 M-18)
     }
 
     // ---- M-26 ----------------------------------------------------------------------------------

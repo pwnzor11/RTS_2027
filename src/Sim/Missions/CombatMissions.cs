@@ -95,6 +95,7 @@ internal static class CombatMissions
         LeptonCoord pos = store.Position[i];
         LeptonCoord tp = store.Destination[i];
         if (sim.GroundEffectDone(store.Player[i], w, tp.ToCell())) { ToGuard(sim, store, kind, i); return 1; }
+        if (w.NeedsSpotter && !sim.IsVisibleTo(store.Player[i], tp.ToCell())) { ToGuard(sim, store, kind, i); return 1; }   // S44 (M-17): the spotter is gone, the designation lapses
         int dist = LeptonMath.Distance(pos, tp);
         if (dist > w.Range)
         {

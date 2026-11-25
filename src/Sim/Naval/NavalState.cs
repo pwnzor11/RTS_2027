@@ -23,7 +23,8 @@ namespace Rts.Sim.Naval;
 /// without carriers hash as before) appends (slot, hangarOf, airState, sortieLeft) for every slot with any non-zero hangar field, 0-terminated.
 /// Version 3 (written only while some slot has ammo or rearm progress, D-156) writes the hangar list (possibly empty) and then appends
 /// (slot, ammoLeft, rearmProgress) for every slot with either non-zero, 0-terminated. Version 4 (written only while a firing submarine is
-/// revealed, D-205) writes the hangar and ammo lists (possibly empty) and appends (slot, revealLeft), 0-terminated.
+/// revealed, D-205) writes the hangar and ammo lists (possibly empty) and appends (slot, revealLeft), 0-terminated. Version 5 (written only while
+/// some submarine is mid-dive or mid-surfacing, S44 M-18) writes the lists above (possibly empty) and appends (slot, diveLeft), 0-terminated.
 /// </summary>
 public sealed class NavalState : ISimStatePart
 {
@@ -31,6 +32,7 @@ public sealed class NavalState : ISimStatePart
     private const byte VersionHangar = 2;
     private const byte VersionAmmo = 3;
     private const byte VersionReveal = 4;
+    private const byte VersionDive = 5;
 
     /// <summary><see cref="AirState"/>: the aircraft sits in its carrier's hangar (layer Passenger, rearming and repairing).</summary>
     public const byte AirDocked = 1;
@@ -51,6 +53,9 @@ public sealed class NavalState : ISimStatePart
     public readonly bool[] Submerged;
     /// <summary>Ticks left in which a dived submarine that has just fired stays visible and targetable, per vehicle slot (D-205, FACTION-LE-05).</summary>
     public readonly int[] RevealLeft;
+    /// <summary>Ticks left before a submarine's dive or surfacing completes, per vehicle slot (0 = none running; S44 M-18). The direction is implied:
+    /// a boat that is not yet <see cref="Submerged"/> is diving, a submerged one is surfacing; <see cref="Submerged"/> flips when this reaches 0.</summary>
+    public readonly int[] DiveLeft;
     /// <summary>Carrier vehicle slot an aircraft holds a hangar place in, per vehicle slot (0 = none).</summary>
     public readonly int[] HangarOf;
     /// <summary>Hangar state per aircraft slot (0 = none, else <see cref="AirDocked"/>, <see cref="AirOnSortie"/>, <see cref="AirReturning"/>).</summary>
@@ -74,7 +79,7 @@ public sealed class NavalState : ISimStatePart
         int v = setup.Limits.Vehicles;
         UnloadTicksLeft = new int[v]; UnloadX = new int[v]; UnloadY = new int[v]; Submerged = new bool[v];
         HangarOf = new int[v]; AirState = new byte[v]; SortieLeft = new int[v];
-        AmmoLeft = new int[v]; RearmProgress = new int[v]; RevealLeft = new int[v];
+        AmmoLeft = new int[v]; RearmProgress = new int[v]; RevealLeft = new int[v]; DiveLeft = new int[v];
     }
 
     /// <inheritdoc />
@@ -85,7 +90,7 @@ public sealed class NavalState : ISimStatePart
     {
         UnloadTicksLeft[i] = 0; UnloadX[i] = 0; UnloadY[i] = 0; Submerged[i] = false;
         HangarOf[i] = 0; AirState[i] = 0; SortieLeft[i] = 0;
-        AmmoLeft[i] = 0; RearmProgress[i] = 0; RevealLeft[i] = 0;
+        AmmoLeft[i] = 0; RearmProgress[i] = 0; RevealLeft[i] = 0; DiveLeft[i] = 0;
     }
 
     private bool HasHangarData(int i) => HangarOf[i] != 0 || AirState[i] != 0 || SortieLeft[i] != 0;
@@ -101,7 +106,9 @@ public sealed class NavalState : ISimStatePart
         for (int i = 1; i < AmmoLeft.Length && !ammo; i++) ammo = HasAmmoData(i);
         bool reveal = false;
         for (int i = 1; i < RevealLeft.Length && !reveal; i++) reveal = RevealLeft[i] != 0;
-        w.Write(reveal ? VersionReveal : ammo ? VersionAmmo : hangar ? VersionHangar : Version);
+        bool dive = false;
+        for (int i = 1; i < DiveLeft.Length && !dive; i++) dive = DiveLeft[i] != 0;
+        w.Write(dive ? VersionDive : reveal ? VersionReveal : ammo ? VersionAmmo : hangar ? VersionHangar : Version);
         w.Write(NavalRegion.Length); w.Write(UnloadTicksLeft.Length);
         int n = 0;
         foreach (ushort x in NavalRegion) if (x != 0) n++;
@@ -113,25 +120,32 @@ public sealed class NavalState : ISimStatePart
             w.Write(i); w.Write(UnloadTicksLeft[i]); w.Write(UnloadX[i]); w.Write(UnloadY[i]); w.Write(Submerged[i]);
         }
         w.Write(0);
-        if (!hangar && !ammo && !reveal) return;
+        if (!hangar && !ammo && !reveal && !dive) return;
         for (int i = 1; i < HangarOf.Length; i++)
         {
             if (!HasHangarData(i)) continue;
             w.Write(i); w.Write(HangarOf[i]); w.Write(AirState[i]); w.Write(SortieLeft[i]);
         }
         w.Write(0);
-        if (!ammo && !reveal) return;
+        if (!ammo && !reveal && !dive) return;
         for (int i = 1; i < AmmoLeft.Length; i++)
         {
             if (!HasAmmoData(i)) continue;
             w.Write(i); w.Write(AmmoLeft[i]); w.Write(RearmProgress[i]);
         }
         w.Write(0);
-        if (!reveal) return;
+        if (!reveal && !dive) return;
         for (int i = 1; i < RevealLeft.Length; i++)
         {
             if (RevealLeft[i] == 0) continue;
             w.Write(i); w.Write(RevealLeft[i]);
+        }
+        w.Write(0);
+        if (!dive) return;
+        for (int i = 1; i < DiveLeft.Length; i++)
+        {
+            if (DiveLeft[i] == 0) continue;
+            w.Write(i); w.Write(DiveLeft[i]);
         }
         w.Write(0);
     }
@@ -140,7 +154,7 @@ public sealed class NavalState : ISimStatePart
     public void Read(BinaryReader r)
     {
         byte version = r.ReadByte();
-        if (version != Version && version != VersionHangar && version != VersionAmmo && version != VersionReveal) throw new InvalidDataException("naval version mismatch.");
+        if (version != Version && version != VersionHangar && version != VersionAmmo && version != VersionReveal && version != VersionDive) throw new InvalidDataException("naval version mismatch.");
         LoadEpoch++;
         if (r.ReadInt32() != NavalRegion.Length || r.ReadInt32() != UnloadTicksLeft.Length) throw new InvalidDataException("naval capacity mismatch.");
         Array.Clear(NavalRegion);
@@ -157,7 +171,7 @@ public sealed class NavalState : ISimStatePart
             int s = StateIo.Slot(i, UnloadTicksLeft.Length, Name);
             UnloadTicksLeft[s] = r.ReadInt32(); UnloadX[s] = r.ReadInt32(); UnloadY[s] = r.ReadInt32(); Submerged[s] = r.ReadBoolean();
         }
-        Array.Clear(HangarOf); Array.Clear(AirState); Array.Clear(SortieLeft); Array.Clear(AmmoLeft); Array.Clear(RearmProgress); Array.Clear(RevealLeft);
+        Array.Clear(HangarOf); Array.Clear(AirState); Array.Clear(SortieLeft); Array.Clear(AmmoLeft); Array.Clear(RearmProgress); Array.Clear(RevealLeft); Array.Clear(DiveLeft);
         if (version < VersionHangar) return;
         for (int i = r.ReadInt32(); i != 0; i = r.ReadInt32())
         {
@@ -177,6 +191,12 @@ public sealed class NavalState : ISimStatePart
         {
             int s = StateIo.Slot(i, RevealLeft.Length, Name);
             RevealLeft[s] = r.ReadInt32();
+        }
+        if (version < VersionDive) return;
+        for (int i = r.ReadInt32(); i != 0; i = r.ReadInt32())
+        {
+            int s = StateIo.Slot(i, DiveLeft.Length, Name);
+            DiveLeft[s] = r.ReadInt32();
         }
     }
 }

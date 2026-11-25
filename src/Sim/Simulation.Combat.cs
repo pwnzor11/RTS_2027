@@ -465,6 +465,7 @@ public sealed partial class Simulation
                 if (kind > ActorKind.Infantry || !InMap(c.Cell) || WeaponOf(kind, i) < 0) return;
                 WeaponTargets wt = RulesOf(c.Player).Weapons[WeaponOf(kind, i)].Targets;
                 if (wt is WeaponTargets.Air or WeaponTargets.Submerged) return;
+                if (RulesOf(c.Player).Weapons[WeaponOf(kind, i)].NeedsSpotter && !IsVisibleTo(c.Player, c.Cell)) return;   // S44 (M-17): naval gunfire needs a designated (seen) cell
                 e.AttackTarget = default;
                 Queue(store!, i, MissionKind.AttackGround, c.Cell, default);
                 break;

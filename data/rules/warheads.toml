@@ -220,6 +220,11 @@ versus = [0, 0, 0, 150, 100, 150, 150, 0]
 splash = 0
 hits_allies = false
 
+[exp_torpedo]   # (ASSUMED, S44 M-18) Missile Submarine torpedo: heavy vs ships, full on a dived hull, nothing on land targets
+versus = [0, 0, 0, 0, 0, 120, 130, 100]
+splash = 0
+hits_allies = false
+
 [exp_depth_charge]   # (tune) Patrol Launch: only a submerged vessel feels it fully
 versus = [0, 0, 0, 0, 0, 40, 30, 100]
 splash = 1

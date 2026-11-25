@@ -134,6 +134,10 @@ public sealed record VehicleType(string Id, Locomotion Locomotion, int Speed, in
     /// <summary>Submarine: can dive out of sight (TOML <c>submerges</c>, naval only).</summary>
     public bool Submerges { get; init; }
 
+    /// <summary>S44 (M-18): ticks a submarine needs to dive or to surface after a Deploy order (TOML <c>dive_ticks</c>, default 0 = instant). While the
+    /// change runs the boat keeps its old state: a diving boat is still seen and uses surfaced armour, a surfacing one is still hidden.</summary>
+    public int DiveTicks { get; init; }
+
     /// <summary>Radius in cells in which this ship detects submerged vessels (TOML <c>sonar_radius</c>, 0 = none).</summary>
     public int SonarRadius { get; init; }
 

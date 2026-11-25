@@ -223,7 +223,7 @@ public static class RulesHash
         w.Write(sim.StartKits.Count);
         foreach (FactionStartKit k in sim.StartKits) { WriteString(w, k.Conyard); WriteStrings(w, k.Units); }
 
-        foreach (WeaponType x in sim.Weapons) w.Write((byte)x.Targets);
+        foreach (WeaponType x in sim.Weapons) { w.Write((byte)x.Targets); if (x.NeedsSpotter) w.Write((byte)0xD5); }   // S44 M-17: only spotter weapons, so other hashes keep
         foreach (WarheadType x in sim.Warheads)
         {
             w.Write(x.Contaminate); w.Write(x.Decontaminate); w.Write(x.BlackoutTicks);
@@ -319,6 +319,7 @@ public static class RulesHash
                 w.Write(x.MineCapacity); w.Write(x.MineLayTicks); w.Write(x.MineDamage); w.Write(x.MineWarhead); w.Write(x.MineTriggerRadius);
                 w.Write(x.MineSweepRadius); w.Write(x.MineSweepTicks); w.Write(x.MineRestockTicks);
             }
+            if (x.DiveTicks > 0) { w.Write((byte)0xD6); w.Write(x.DiveTicks); }   // S44 M-18: only types with a dive delay
             if (x.BuiltAt.Length > 0 || x.BayRepairPermille > 0) { w.Write((byte)0xD4); w.Write(x.BuiltAt); w.Write(x.BayRepairPermille); }   // S44 M-03/M-12: only types that set either
         }
         foreach (BuildingType x in sim.Buildings)

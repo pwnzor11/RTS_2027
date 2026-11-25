@@ -33,7 +33,7 @@ public sealed class SubmarineAuditTests
         Assert.DoesNotContain(r.Vehicles, v => v.Faction != Faction.Expedition && v.SonarRadius > 0);
         Assert.DoesNotContain(r.Buildings, b => b.Faction != Faction.Expedition && b.SonarRadius > 0);
         // the whole anti-submarine kit in the game: one weapon, two sonar carriers, all Expedition
-        Assert.Equal(new[] { "exp_launch_charge" }, r.Weapons.Where(w => w.Targets is WeaponTargets.Submerged or WeaponTargets.NavalAndSubmerged).Select(w => w.Id));
+        Assert.Equal(new[] { "exp_launch_charge", "exp_sub_torpedo" }, r.Weapons.Where(w => w.Targets is WeaponTargets.Submerged or WeaponTargets.NavalAndSubmerged).Select(w => w.Id));   // S44 M-18: plus the sub torpedo
         Assert.Equal(new[] { "exp_destroyer" }, r.Vehicles.Where(v => v.SonarRadius > 0).Select(v => v.Id));
         Assert.Equal(new[] { "exp_picket" }, r.Buildings.Where(b => b.SonarRadius > 0).Select(b => b.Id));
     }
