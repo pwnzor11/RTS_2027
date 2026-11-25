@@ -475,17 +475,11 @@ public sealed class LanSession : IDisposable
         else AddNotice((PlayerOfPeer(drop.Peer) >= 0 ? LanText.PeerLeft : LanText.SpectatorLeft).Replace("{name}", PeerName(drop.Peer)));
     }
 
+    /// <exception cref="RulesException">data/ai/difficulty.toml is missing or invalid (the message names the file and key).</exception>
     private DifficultyProfile LoadProfile(int tier)
     {
-        try
-        {
-            IReadOnlyList<DifficultyProfile> all = DifficultyLoader.Load(DifficultyLoader.PathBesideRules(_rulesDir));
-            return all[Math.Clamp(tier, 1, all.Count) - 1];
-        }
-        catch (RulesException)
-        {
-            return DifficultyProfile.Default;
-        }
+        IReadOnlyList<DifficultyProfile> all = DifficultyLoader.Load(DifficultyLoader.PathBesideRules(_rulesDir));
+        return all[Math.Clamp(tier, 1, all.Count) - 1];
     }
 
     // PENDING Q-M9-g-replay: chat is "kept in the replay" (Q-M9-g) but the replay format has no chat block and may not change in this
