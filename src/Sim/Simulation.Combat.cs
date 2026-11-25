@@ -299,7 +299,6 @@ public sealed partial class Simulation
         if (d <= 0) return;   // D-205 (FAD-13)
         if (kind == ActorKind.Building && wh.BonusVsEntrancePercent != 100 && BuildingTypeAt(i).Entrance != TunnelSize.None)
             d = Math.Max(1, (int)((long)d * wh.BonusVsEntrancePercent / 100));   // M4-05: bonus vs tunnel entrances
-        if (wh.BonusVsIrradiatedPercent != 100 && IsIrradiatedTarget(kind, i)) d = Math.Max(1, (int)((long)d * wh.BonusVsIrradiatedPercent / 100));   // M3-05
         if (half) { d /= 2; if (d < 1) d = 1; }
         if (kind != ActorKind.Building)
         {
@@ -414,7 +413,7 @@ public sealed partial class Simulation
                     if (targets != WeaponTargets.Both && !(shooter.Kind == kind && shooter.Id.Index == i && shooter.Id == IdAt(kind, i)) && IsAirUnit(kind, i) != (targets == WeaponTargets.Air)) continue;
                     if ((layer == ActorLayer.Burrowed || layer == ActorLayer.Surfacing) && !wh.HitsBurrowed) continue;
                 }
-                if (!wh.HitsAllies && IsFriendly(owner, PlayerAt(kind, i))) continue;
+                if ((!wh.HitsAllies || targets == WeaponTargets.Air) && IsFriendly(owner, PlayerAt(kind, i))) continue;   // M-22 (ROSTER-AD-07): an anti-air burst never hurts its own team's aircraft, whatever the warhead says
                 if (kind == ActorKind.Building && targets == WeaponTargets.Air) continue;   // D-205 (FAD-06): flak never hurts buildings
                 int d;
                 if (kind == ActorKind.Building)

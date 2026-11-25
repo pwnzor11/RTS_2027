@@ -35,6 +35,7 @@ armor = "unarmored"
 sight = 4  # ASSUMED (M3-07)
 primary_weapon = "dir_rifle"
 cost = 80  # ASSUMED (M3-07)
+build_time = 32  # M-21: explicit (= 80 * 40 / 100, same as derived) so dir_up_mass_conscription's build_time x0.8 acts on it
 prerequisites = ["dir_muster_hatch"]
 rad_resist_permille = 600
 
@@ -144,7 +145,6 @@ primary_weapon = "dir_pistol"
 cost = 250  # ASSUMED (M4-07)
 prerequisites = ["dir_muster_hatch"]
 rad_resist_permille = 600  # ASSUMED (M4-07)
-irradiated = true
 death_weapon = "dir_volunteer_burst"
 
 # M6-08: Left Behind infantry (design 06 §5, D-102).

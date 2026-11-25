@@ -12,7 +12,7 @@ internal static class WeaponRulesLoader
     public const int MaxVersusPercent = 1000;
 
     private static readonly string[] WarheadKeys =
-        ["versus", "splash", "hits_allies", "contaminate", "decontaminate", "bonus_vs_irradiated_percent", "blackout_ticks",
+        ["versus", "splash", "hits_allies", "contaminate", "decontaminate", "blackout_ticks",
          // schema v4 (M4-01)
          "hits_burrowed", "bonus_vs_entrance_percent", "foam_ticks", "garrison_damage_percent",
          // schema v5 (M6-02)
@@ -48,7 +48,6 @@ internal static class WeaponRulesLoader
         bool? hitsAllies = f.Bool("hits_allies");
         int? contaminate = f.OptInt("contaminate", 0, 255, 0);
         int? decontaminate = f.OptInt("decontaminate", 0, 255, 0);
-        int? bonus = f.OptInt("bonus_vs_irradiated_percent", 0, MaxVersusPercent, 100);
         int? blackout = f.OptInt("blackout_ticks", 0, 1_000_000, 0);
         bool? hitsBurrowed = f.OptBool("hits_burrowed", false);
         int? bonusEntrance = f.OptInt("bonus_vs_entrance_percent", 0, MaxVersusPercent, 100);
@@ -68,7 +67,7 @@ internal static class WeaponRulesLoader
         if (salvoMissiles is null || salvoTicks is null || salvoRadius is null || salvoDamage is null || salvoWarn is null || salvoSplash is null) return null;
         if (stormRadius is null || stormTicks is null || stormStep is null || stormCap is null || stormSpeed is null) return null;
         if (versus is null || splash is null || hitsAllies is null || contaminate is null || decontaminate is null
-            || bonus is null || blackout is null || hitsBurrowed is null || bonusEntrance is null || foam is null || garrisonDamage is null)
+            || blackout is null || hitsBurrowed is null || bonusEntrance is null || foam is null || garrisonDamage is null)
         {
             return null;
         }
@@ -76,7 +75,6 @@ internal static class WeaponRulesLoader
         {
             Contaminate = contaminate.Value,
             Decontaminate = decontaminate.Value,
-            BonusVsIrradiatedPercent = bonus.Value,
             BlackoutTicks = blackout.Value,
             HitsBurrowed = hitsBurrowed.Value,
             BonusVsEntrancePercent = bonusEntrance.Value,

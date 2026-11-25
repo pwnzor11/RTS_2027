@@ -46,9 +46,6 @@ public sealed record VehicleType(string Id, Locomotion Locomotion, int Speed, in
     /// <summary>Radiation resistance per mille: damage is scaled by (1000 - this)/1000; 1000 = immune, 0 = full damage.</summary>
     public int RadResistPermille { get; init; }
 
-    /// <summary>Reactor-cored: takes the warhead's <see cref="WarheadType.BonusVsIrradiatedPercent"/>.</summary>
-    public bool Irradiated { get; init; }
-
     /// <summary>Becomes invisible to enemies after <see cref="StealthRules.DelayTicks"/> without moving or firing.</summary>
     public bool Stealth { get; init; }
 

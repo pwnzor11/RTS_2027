@@ -26,7 +26,7 @@ LEPTONS_PER_CELL = 256
 
 # ---- defaults, copied from the loaders (optional keys only; required keys have no default) -------------------
 MOBILE_V3 = dict(aura_radius=0, aura_rof_permille=1000, aura_speed_permille=1000, aura_targets=[], rad_resist_permille=0,
-                 irradiated=False, stealth=False, death_weapon="", jam_radius=0, seismic_radius=0)
+                 stealth=False, death_weapon="", jam_radius=0, seismic_radius=0)
 VEHICLE_DEFAULTS = dict(MOBILE_V3, harvest_capacity=0, build_time=0, tunnel_size="none", passengers=0, deploys_into="", tier=1,
                         unpacks_into="", pack_ticks=0, salvage_rate=0, raider=False, raider_one_use=False, drops_blackout_ticks=0,
                         aura_repair_permille=0, tow_bonus_permille=0, supply=-1, draw_scale_permille=1000, deep_only=False,
@@ -41,7 +41,7 @@ BUILDING_DEFAULTS = dict(category="structure", produces="", build_time=0, storag
                          garrison=0, garrison_range_bonus=256, garrison_rof_permille=750, packs_into="", pack_ticks=0,
                          supply_provided=0, supply_unstocked=-1, water_building=False, beachhead_source=False,
                          beachhead_radius=0, shipment_dock=False, sonar_radius=0)
-WARHEAD_DEFAULTS = dict(contaminate=0, decontaminate=0, bonus_vs_irradiated_percent=100, blackout_ticks=0, hits_burrowed=False,
+WARHEAD_DEFAULTS = dict(contaminate=0, decontaminate=0, blackout_ticks=0, hits_burrowed=False,
                         bonus_vs_entrance_percent=100, foam_ticks=0, garrison_damage_percent=0, storm_radius=0, storm_ticks=0,
                         storm_contaminate_step=0, storm_contaminate_cap=64, storm_speed_permille=0, salvo_missiles=0,
                         salvo_ticks=0, salvo_radius=0, salvo_damage=0, salvo_warn_ticks=0, salvo_splash=1)

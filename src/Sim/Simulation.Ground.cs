@@ -52,18 +52,6 @@ public sealed partial class Simulation
             }
     }
 
-    /// <summary>True if the mobile or building actor counts as irradiated for warhead bonuses: an Irradiated type, or standing on
-    /// a cell at or above the radiation damage threshold (design 05 §3).</summary>
-    internal bool IsIrradiatedTarget(ActorKind kind, int i)
-    {
-        SimRules r = RulesOf(PlayerAt(kind, i));
-        bool typed = kind == ActorKind.Vehicle ? r.Vehicles[_units.TypeIndex[i]].Irradiated
-            : kind == ActorKind.Infantry && r.Infantry[_infantry.TypeIndex[i]].Irradiated;
-        if (typed) return true;
-        CellCoord cell = kind == ActorKind.Building ? _buildings.Cell[i] : PositionAt(kind, i).ToCell();
-        return _ground.RadiationAt(cell) >= Setup.Rules.Radiation.DamageThreshold;
-    }
-
     /// <summary>Per tick (in RunGround): radiation decay every DecayTicks, damage every DamageIntervalTicks.</summary>
     private void RunRadiation()
     {

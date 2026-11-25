@@ -32,9 +32,6 @@ public sealed record InfantryType(string Id, int Speed, int MaxHealth, ArmorClas
     /// <summary>Radiation resistance per mille (1000 = immune, 0 = full damage).</summary>
     public int RadResistPermille { get; init; }
 
-    /// <summary>Reactor-cored: takes the warhead's bonus vs irradiated.</summary>
-    public bool Irradiated { get; init; }
-
     /// <summary>Becomes invisible to enemies after standing still (see <see cref="StealthRules"/>).</summary>
     public bool Stealth { get; init; }
 

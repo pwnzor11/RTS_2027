@@ -28,9 +28,9 @@ namespace Rts.Data;
 /// <item>Schema v3 block (M3-01, format 6): the soft flag for every land; tunnels (TransitTicks, NetworkCapPoints, PointsS,
 /// PointsM, DiveTicks, TelegraphTicks, EntranceTelegraphTicks, EmergingHealthPermille, SurfacingRing); radiation (DecayTicks,
 /// DamageIntervalTicks, DamageThreshold, DamagePermille, NoBuildThreshold); stealth DelayTicks; start kits (count, then per
-/// faction: conyard, units); then per weapon Targets (byte); per warhead Contaminate, Decontaminate, BonusVsIrradiatedPercent,
+/// faction: conyard, units); then per weapon Targets (byte); per warhead Contaminate, Decontaminate,
 /// BlackoutTicks; per vehicle the mobile v3 fields (Faction, TunnelSize, AuraRadius, AuraRofPermille, AuraSpeedPermille,
-/// AuraTargets, RadResistPermille, Irradiated, Stealth, DeathWeapon, JamRadius, SeismicRadius) then Passengers, DeploysInto;
+/// AuraTargets, RadResistPermille, Stealth, DeathWeapon, JamRadius, SeismicRadius) then Passengers, DeploysInto;
 /// per infantry the mobile v3 fields then Engineer; per building Faction, Entrance, TicksPerPoint, Researches, Gate,
 /// SeismicRadius, SeesThroughBlackout, JamRadius, Superweapon, SuperweaponChargeTicks, SuperweaponEntranceRange, MorphsInto, MorphTicks; then upgrades
 /// (count, then per upgrade in id order: id, Faction, Cost, BuildTime, prerequisites, Effect). Lists are in the same id order as
@@ -226,18 +226,18 @@ public static class RulesHash
         foreach (WeaponType x in sim.Weapons) w.Write((byte)x.Targets);
         foreach (WarheadType x in sim.Warheads)
         {
-            w.Write(x.Contaminate); w.Write(x.Decontaminate); w.Write(x.BonusVsIrradiatedPercent); w.Write(x.BlackoutTicks);
+            w.Write(x.Contaminate); w.Write(x.Decontaminate); w.Write(x.BlackoutTicks);
         }
         foreach (VehicleType x in sim.Vehicles)
         {
             WriteMobile(w, x.Faction, x.TunnelSize, x.AuraRadius, x.AuraRofPermille, x.AuraSpeedPermille, x.AuraTargets,
-                x.RadResistPermille, x.Irradiated, x.Stealth, x.DeathWeapon, x.JamRadius, x.SeismicRadius);
+                x.RadResistPermille, x.Stealth, x.DeathWeapon, x.JamRadius, x.SeismicRadius);
             w.Write(x.Passengers); w.Write(x.DeploysInto);
         }
         foreach (InfantryType x in sim.Infantry)
         {
             WriteMobile(w, x.Faction, x.TunnelSize, x.AuraRadius, x.AuraRofPermille, x.AuraSpeedPermille, x.AuraTargets,
-                x.RadResistPermille, x.Irradiated, x.Stealth, x.DeathWeapon, x.JamRadius, x.SeismicRadius);
+                x.RadResistPermille, x.Stealth, x.DeathWeapon, x.JamRadius, x.SeismicRadius);
             w.Write(x.Engineer);
         }
         foreach (BuildingType x in sim.Buildings)
@@ -372,10 +372,10 @@ public static class RulesHash
     }
 
     private static void WriteMobile(BinaryWriter w, Faction faction, TunnelSize size, int auraRadius, int auraRof, int auraSpeed,
-        IReadOnlyList<string> auraTargets, int radResist, bool irradiated, bool stealth, int deathWeapon, int jam, int seismic)
+        IReadOnlyList<string> auraTargets, int radResist, bool stealth, int deathWeapon, int jam, int seismic)
     {
         w.Write((byte)faction); w.Write((byte)size); w.Write(auraRadius); w.Write(auraRof); w.Write(auraSpeed);
-        WriteStrings(w, auraTargets); w.Write(radResist); w.Write(irradiated); w.Write(stealth); w.Write(deathWeapon);
+        WriteStrings(w, auraTargets); w.Write(radResist); w.Write(stealth); w.Write(deathWeapon);
         w.Write(jam); w.Write(seismic);
     }
 
