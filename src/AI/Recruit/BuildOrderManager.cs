@@ -228,6 +228,9 @@ internal sealed class BuildOrderManager
     /// <summary>The supply margin for a difficulty tier 1..5.</summary>
     public static int MarginForTier(int tier) => Margins[Math.Clamp(tier, 1, 5) - 1];
 
+    /// <summary>s44 (A-02): the margin a profile asks for: its <c>supply_margin</c> key, else the tier table.</summary>
+    public static int MarginFor(Rts.Data.DifficultyProfile p) => p.SupplyMargin > 0 ? p.SupplyMargin : MarginForTier(p.Tier);
+
     private static readonly int[] Margins = [4, 5, 8, 10, 12];   // (tune) design 13 §6 says 4, 6, 8, 10, 12; tier 2 is 5 so the garrison fill is not late
 
     private int _supplyPick = -1;

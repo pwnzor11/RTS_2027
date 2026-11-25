@@ -33,6 +33,8 @@ public static class DifficultyLoader
         "grow_bags",
         // s41 (M13-45): committed waves call up idle troops and search the map
         "wave_reinforce_ticks", "wave_search",
+        // s44 (A-02): supply margin moved from a code table to data
+        "supply_margin",
     ];
 
     /// <summary>S15 lbknob: the profile keys a <c>[faction.&lt;id&gt;.tier&lt;N&gt;]</c> table may override (numbers the AI reads at run time; the driver's
@@ -252,6 +254,7 @@ public static class DifficultyLoader
         int? growBags = Opt(table, id, "grow_bags", -1, 1, -1, file, problems);
         int? waveReinforce = Opt(table, id, "wave_reinforce_ticks", 0, 100000, 0, file, problems);   // s41
         int? waveSearch = Opt(table, id, "wave_search", 0, 1, 0, file, problems);   // s41
+        int? supplyMargin = Opt(table, id, "supply_margin", 0, 100, 0, file, problems);   // s44 A-02
 
         if (problems.Count > before) return null;
         return new DifficultyProfile(id, tier!.Value, interval!.Value, delay!.Value, infoAge!.Value, threshold!.Value,
@@ -263,7 +266,7 @@ public static class DifficultyLoader
             HarvesterTarget = harvesters!.Value,
             AttackRatioPct = ratio!.Value, PredictedRetreat = predicted == 1, RetreatRatioPct = retreatRatio!.Value,
             UnitReserve = reserve!.Value, ArmyCap = armyCap!.Value, ArmyCapUntilTick = armyCapUntil!.Value, GrowBags = growBags!.Value,
-            WaveReinforceTicks = waveReinforce!.Value, WaveSearch = waveSearch == 1,
+            WaveReinforceTicks = waveReinforce!.Value, WaveSearch = waveSearch == 1, SupplyMargin = supplyMargin!.Value,
         };
     }
 

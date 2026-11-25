@@ -7,13 +7,26 @@
 #   command_delay_ticks     ticks between an order being issued and executed (>= 1)
 #   scout_info_age_ticks    how long a last-seen enemy position (harvester, building) is trusted
 #   attack_threshold        army size at which the AI starts a wave
-#   focus_fire              0/1: explicit Attack orders on the weakest enemy in range (skirmisher AI)
+#   focus_fire              0/1: explicit Attack orders on the weakest enemy unit in range. s44 (A-02): all factions (the Recruit AI wave, the Expedition
+#                           fleet and the M1 skirmisher AI); a visible rank-3 enemy is still focused first at every tier, flag or not
 #   retreat_health_pct      0..100: units below this health percent leave the fight and guard home (0 = never); a wave whose
 #                           total health falls below (this + 20) percent of its launch health is called off
 #   expansion_tick          0 = never; from this tick the build order adds a second refinery and one more harvester is wanted
 #   superweapons            0/1: build a superweapon structure (if the faction has one) and fire it when ready
 #   multi_front             0/1: two squads stage on opposite flanks and assault together (needs two_pronged)
+#   supply_margin           s44 (A-02) optional 0..100: free supply kept before another power / supply structure is built (0 = missing = the old code table
+#                           4, 5, 8, 10, 12 by tier; the shipped tier tables set these same numbers). Higher = builds earlier.
 #   build_repertoire        structure ids in build order (recruit: its fixed order; empty = the faction's built-in order)
+# s44 (A-02, AI-05) KEYS NOT SET BY ANY SHIPPED TIER OR FACTION: each is read by the AI code and kept as a tuning lever (tests and `ai match` use them); the
+#   shipped data leaves them at their defaults, so setting one is the only thing that changes play: retreat_ratio_pct, unit_reserve, grow_bags (follows
+#   respond_to_attacks), wave_reinforce_ticks, wave_search, army_before_tech, army_before_adapt, adapt_cash, adapt_max_production, tier2_gate_tick,
+#   bore_army, bore_gap_ticks, bore_dig_short, bore_sites, bore_min_cash, adapt_rich_max, infantry_bag, vehicle_bag, infantry_tier2, vehicle_tier2,
+#   vehicle_tier3, siege_commit_ratio, aa_needs_air, retreat_floor_pct, mopup_hunt. retreat_health_pct = 0 on every shipped tier: the health retreat
+#   is off (only the Expedition keeps its built-in 40 percent floor). `harass` does nothing for Left Behind (it has no raiding party, so no
+#   harass_min_army either). A malformed file is an error, never ignored: the loader raises a RulesException naming this file and the key.
+# s44 (A-02, AI-04) NUMBERS STILL HELD IN CODE, keyed on the tier number (not data-driven; tuning them needs a code change): the Directorate tech hold at
+#   tiers 2-3 (TierPlanner.HoldsDirectorateTech / DirectorateTechArmyFor), the Left Behind relocate / salvager / party caps at tiers 3-4 (LeftBehindTactics),
+#   the per-tier Expedition plan (ExpeditionPlan.Tiers; tiers 2 and 3 are the same row) and the siege plan by tier (SiegePlan).
 # Capability flags added in M3-11 (all optional, default 0; harvester_target default 1):
 #   repair                  0/1: repair damaged structures
 #   replace_harvesters      0/1: rebuild a harvester that was lost (up to harvester_target, +1 after expansion_tick)
@@ -122,7 +135,7 @@ adapt_rich_cash = 2000  # (tune) s39 M13-38: with an income edge the Directorate
 attack_ratio_pct = 140  # (tune) s31
 
 [faction.left_behind]
-harass_min_army = 30
+# no harass_min_army: Left Behind forms no raiding party (s44 A-02)
 
 # D-186: Left Behind tier 3 out-produced every tier-3 opponent (68 % decisive v Authority 3, 87 % v Directorate 3 at 32 games, 96x96) while tier 5 was
 # fine; its cheap Buggy / Hook Runner bags snowball to 40+ units by t3000. A cap on the early swarm (see docs/balance/s15_lbknob.md) brings tier 3 down.
@@ -149,6 +162,7 @@ respond_to_attacks = 0  # (tune) s39, owner-confirmed s40
 respond_to_attacks = 0  # (tune) s39, owner-confirmed s40
 
 [recruit]
+supply_margin = 4  # s44 A-02: was the code table (same number)
 tier = 1
 decision_interval_ticks = 60
 command_delay_ticks = 2
@@ -162,6 +176,7 @@ multi_front = 0
 build_repertoire = ["auth_power", "auth_refinery", "auth_barracks", "auth_power", "auth_factory", "auth_silo", "auth_turret"]
 
 [regular]
+supply_margin = 5  # s44 A-02: was the code table (same number)
 tier = 2
 decision_interval_ticks = 40
 command_delay_ticks = 2
@@ -180,6 +195,7 @@ respond_to_attacks = 1
 scatter = 1
 
 [veteran]
+supply_margin = 8  # s44 A-02: was the code table (same number)
 tier = 3
 decision_interval_ticks = 30
 command_delay_ticks = 1
@@ -202,6 +218,7 @@ counter_defences = 1
 use_upgrades = 1  # (tune) M4-12: tier climbing at tier-3 difficulty (design 08 §8)
 
 [elite]
+supply_margin = 10  # s44 A-02: was the code table (same number)
 tier = 4
 decision_interval_ticks = 20
 command_delay_ticks = 1
@@ -228,6 +245,7 @@ harass = 1
 use_upgrades = 1
 
 [commissar]
+supply_margin = 12  # s44 A-02: was the code table (same number)
 tier = 5
 decision_interval_ticks = 10
 command_delay_ticks = 1

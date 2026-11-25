@@ -272,7 +272,7 @@ public sealed class RecruitAi : IAiPlayer, IAiSnapshotable, IHookableAi
         _military.MopupHunt = bp.FactionKeys.MopupHunt((int)faction);   // s30 mopup_hunt (off = today's behaviour)
         _tactics = _faction.CreateTactics(bp);
         _build = new BuildOrderManager(_faction.OrderFor(bp.BuildRepertoire), _faction.PowerId, _faction.YardId)
-        { ReserveInProgress = bp.RespondToAttacks, SupplyMargin = BuildOrderManager.MarginForTier(bp.Tier) };   // M4-12 (tier 2+); SUP-5 margin by tier
+        { ReserveInProgress = bp.RespondToAttacks, SupplyMargin = BuildOrderManager.MarginFor(bp) };   // M4-12 (tier 2+); SUP-5 margin by tier
         _planner = new TierPlanner(bp, _faction);
         _build.HoldStep = id => _planner.Behind && _planner.IsTech(id);   // M4-16
         // S16 (Q-67): the Directorate at tiers 2-3 keeps its tech spending (Isotope Works, Rad Mortar) until it has an early army.
