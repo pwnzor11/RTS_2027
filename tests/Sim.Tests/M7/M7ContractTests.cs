@@ -314,9 +314,9 @@ public sealed class M7ContractTests
     [Fact]
     public void Formats_AndPartOrder_ArePinned()
     {
-        Assert.Equal(14, SimWriter.SaveVersion);
-        Assert.Equal(14, ReplayWriter.Version);
-        Assert.Equal(14, ReplayWriter.OldestReadableVersion);
+        Assert.Equal(15, SimWriter.SaveVersion);
+        Assert.Equal(15, ReplayWriter.Version);
+        Assert.Equal(15, ReplayWriter.OldestReadableVersion);
         var sim = ScriptedGame.NewSim(ScriptedGame.Setup());
         string[] names = sim.StateParts.Select(p => p.Name).ToArray();
         Assert.Equal(new[] { "salvage", "veterancy", "shipments", "beachhead", "naval", "commander_orders", "props", "mines" }, names[^8..]);   // S44 M-01: "mines" appended
@@ -384,7 +384,7 @@ public sealed class M7ContractTests
         var rep = new MemoryStream();
         new ReplayWriter(rep, sim, "b", Array.Empty<(string, string)>()).Finish();
         byte[] r = rep.ToArray();
-        Assert.Equal(14, ReplayReader.Read(new MemoryStream(r)).Version);
+        Assert.Equal(15, ReplayReader.Read(new MemoryStream(r)).Version);
         r[ReplayWriter.Magic.Length] = 11;   // the version byte follows the magic
         Assert.Throws<InvalidDataException>(() => ReplayReader.Read(new MemoryStream(r)));   // A43 SIMCORE-02
     }

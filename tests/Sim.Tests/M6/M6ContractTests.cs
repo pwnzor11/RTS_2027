@@ -42,8 +42,8 @@ public sealed class M6ContractTests
     [Fact]
     public void FormatVersions_ArePinned()
     {
-        Assert.Equal(14, SimWriter.SaveVersion);   // VET-1 took 11, M7-02 12
-        Assert.Equal(14, ReplayWriter.Version);
+        Assert.Equal(15, SimWriter.SaveVersion);   // VET-1 took 11, M7-02 12
+        Assert.Equal(15, ReplayWriter.Version);
         Assert.Equal(12, RulesHash.FormatVersion);
     }
 
@@ -421,11 +421,11 @@ public sealed class M6ContractTests
     }
 
     [Fact]
-    public void EffectsVersion4_IsRejected()
+    public void EffectsVersion5_IsRejected()
     {
         var sim = ScriptedGame.NewSim(ScriptedGame.Setup());
         byte[] bytes = Bytes(sim.Effects);
-        bytes[0] = 4;   // M7-12: version 3 (salvos) now exists
+        bytes[0] = 5;   // M7-12: version 3 (salvos); S44: version 4 (tether and breach timers) now exists
         Assert.Throws<InvalidDataException>(() => ReadBack(sim.Effects, bytes));
     }
 

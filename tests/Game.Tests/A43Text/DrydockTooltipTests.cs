@@ -11,7 +11,7 @@ public sealed class DrydockTooltipTests
     public void Drydock_tooltip_does_not_promise_the_Command_Ship()
     {
         string tip = TodayText.Cameo("exp_drydock") ?? throw new InvalidOperationException("no Drydock tooltip");
-        Assert.Contains("Unlocks the Cruiser and Carrier.", tip);
+        Assert.Contains("Builds the Cruiser and Carrier", tip);   // S44 M-03: the Drydock builds them
         Assert.DoesNotContain("Command Ship", tip);
     }
 }
