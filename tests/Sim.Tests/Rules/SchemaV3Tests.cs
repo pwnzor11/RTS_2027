@@ -37,7 +37,6 @@ public sealed class SchemaV3Tests
         Assert.Equal(1000, tank.AuraSpeedPermille);
         Assert.Empty(tank.AuraTargets);
         Assert.Equal(0, tank.RadResistPermille);
-        Assert.False(tank.Irradiated);
         Assert.False(tank.Stealth);
         Assert.Equal(-1, tank.DeathWeapon);
         Assert.Equal(0, tank.JamRadius);
@@ -74,7 +73,6 @@ public sealed class SchemaV3Tests
         WarheadType ap = r.Sim.Warheads.Single(w => w.Id == "test_ap");
         Assert.Equal(0, ap.Contaminate);
         Assert.Equal(0, ap.Decontaminate);
-        Assert.Equal(100, ap.BonusVsIrradiatedPercent);
         Assert.Equal(0, ap.BlackoutTicks);
     }
 
@@ -130,7 +128,7 @@ public sealed class SchemaV3Tests
         RuleSet r = Load(
             ("vehicles.toml", TempRules.RealWith("vehicles.toml", "[test_tank]", "[test_tank]\nfaction = \"directorate\"\ntunnel_size = \"M\"\n"
                 + "aura_radius = 3\naura_rof_permille = 800\naura_speed_permille = 1200\naura_targets = [\"test_jeep\", \"class:infantry\"]\n"
-                + "rad_resist_permille = 600\nirradiated = true\nstealth = true\ndeath_weapon = \"test_cannon\"\njam_radius = 4\n"
+                + "rad_resist_permille = 600\nstealth = true\ndeath_weapon = \"test_cannon\"\njam_radius = 4\n"
                 + "seismic_radius = 5\npassengers = 5\ndeploys_into = \"test_silo\"")),
             ("infantry.toml", TempRules.RealWith("infantry.toml", "[test_engineer]", "[test_engineer]\nengineer = true\ntunnel_size = \"none\"")));
         VehicleType t = r.Sim.Vehicles.Single(v => v.Id == "test_tank");
@@ -141,7 +139,6 @@ public sealed class SchemaV3Tests
         Assert.Equal(1200, t.AuraSpeedPermille);
         Assert.Equal(new[] { "test_jeep", "class:infantry" }, t.AuraTargets);
         Assert.Equal(600, t.RadResistPermille);
-        Assert.True(t.Irradiated);
         Assert.True(t.Stealth);
         Assert.Equal("test_cannon", r.Sim.Weapons[t.DeathWeapon].Id);
         Assert.Equal(4, t.JamRadius);
@@ -163,7 +160,7 @@ public sealed class SchemaV3Tests
                 .Replace("[test_wall]", "[test_wall]\ngate = true")),
             ("weapons.toml", TempRules.RealWith("weapons.toml", "warhead = \"test_ap\"", "warhead = \"test_ap\"\ntargets = \"both\"")),
             ("warheads.toml", TempRules.RealWith("warheads.toml", "[test_ap]", "[test_ap]\ncontaminate = 40\ndecontaminate = 10\n"
-                + "bonus_vs_irradiated_percent = 300\nblackout_ticks = 200")));
+                + "blackout_ticks = 200")));
         BuildingType hq = r.Sim.Buildings.Single(b => b.Id == "test_hq");
         Assert.Equal(Faction.Directorate, hq.Faction);
         Assert.Equal(TunnelSize.M, hq.Entrance);
@@ -184,7 +181,6 @@ public sealed class SchemaV3Tests
         WarheadType ap = r.Sim.Warheads.Single(w => w.Id == "test_ap");
         Assert.Equal(40, ap.Contaminate);
         Assert.Equal(10, ap.Decontaminate);
-        Assert.Equal(300, ap.BonusVsIrradiatedPercent);
         Assert.Equal(200, ap.BlackoutTicks);
     }
 
@@ -293,7 +289,6 @@ public sealed class SchemaV3Tests
     [InlineData("vehicles.toml", "[test_tank]", "[test_tank]\naura_speed_permille = 999")]
     [InlineData("vehicles.toml", "[test_tank]", "[test_tank]\naura_targets = [\"test_jeep\"]")]
     [InlineData("vehicles.toml", "[test_tank]", "[test_tank]\nrad_resist_permille = 1")]
-    [InlineData("vehicles.toml", "[test_tank]", "[test_tank]\nirradiated = true")]
     [InlineData("vehicles.toml", "[test_tank]", "[test_tank]\nstealth = true")]
     [InlineData("vehicles.toml", "[test_tank]", "[test_tank]\ndeath_weapon = \"test_cannon\"")]
     [InlineData("vehicles.toml", "[test_tank]", "[test_tank]\njam_radius = 1")]
@@ -319,7 +314,6 @@ public sealed class SchemaV3Tests
     [InlineData("weapons.toml", "warhead = \"test_ap\"", "warhead = \"test_ap\"\ntargets = \"air\"")]
     [InlineData("warheads.toml", "[test_ap]", "[test_ap]\ncontaminate = 1")]
     [InlineData("warheads.toml", "[test_ap]", "[test_ap]\ndecontaminate = 1")]
-    [InlineData("warheads.toml", "[test_ap]", "[test_ap]\nbonus_vs_irradiated_percent = 101")]
     [InlineData("warheads.toml", "[test_ap]", "[test_ap]\nblackout_ticks = 1")]
     [InlineData("terrain.toml", "road = false\nrough = true", "road = true\nrough = true")]
     [InlineData("game.toml", "transit_ticks = 40", "transit_ticks = 41")]

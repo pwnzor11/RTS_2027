@@ -211,14 +211,13 @@ public sealed class DirectorateDataTests
     }
 
     [Fact]
-    public void ReactorCrawler_IsLargeIrradiatedImmune_AndMeltsDownOnDeath()
+    public void ReactorCrawler_IsLargeImmune_AndMeltsDownOnDeath()
     {
         SimRules s = LoadReal();
 
         VehicleType crawler = s.Vehicles.Single(v => v.Id == "dir_reactor_crawler");
         Assert.Equal(Locomotion.Tracked, crawler.Locomotion);
         Assert.Equal(TunnelSize.L, crawler.TunnelSize);
-        Assert.True(crawler.Irradiated);
         Assert.Equal(1000, crawler.RadResistPermille);
         Assert.Equal(SimRules.IndexOf(s.Weapons, "dir_meltdown", w => w.Id), crawler.DeathWeapon);
     }

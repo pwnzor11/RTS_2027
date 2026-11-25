@@ -15,7 +15,7 @@ internal static class UnitRulesLoader
         "harvest_capacity", "build_time",
         // schema v3 (M3-01)
         "faction", "tunnel_size", "aura_radius", "aura_rof_permille", "aura_speed_permille", "aura_targets",
-        "rad_resist_permille", "irradiated", "stealth", "death_weapon", "jam_radius", "seismic_radius",
+        "rad_resist_permille", "stealth", "death_weapon", "jam_radius", "seismic_radius",
         "passengers", "deploys_into",
         // schema v4 (M4-01)
         "tier",
@@ -39,7 +39,7 @@ internal static class UnitRulesLoader
         "speed", "max_health", "armor", "sight", "primary_weapon", "cost", "prerequisites", "build_time",
         // schema v3 (M3-01)
         "faction", "tunnel_size", "aura_radius", "aura_rof_permille", "aura_speed_permille", "aura_targets",
-        "rad_resist_permille", "irradiated", "stealth", "death_weapon", "jam_radius", "seismic_radius",
+        "rad_resist_permille", "stealth", "death_weapon", "jam_radius", "seismic_radius",
         "engineer",
         // schema v4 (M4-01)
         "tier", "can_garrison",
@@ -53,7 +53,7 @@ internal static class UnitRulesLoader
 
     /// <summary>The schema v3 keys vehicles and infantry share (all optional).</summary>
     private sealed record MobileV3(Faction Faction, TunnelSize TunnelSize, int AuraRadius, int AuraRof, int AuraSpeed,
-        IReadOnlyList<string> AuraTargets, int RadResist, bool Irradiated, bool Stealth, int DeathWeapon, int JamRadius,
+        IReadOnlyList<string> AuraTargets, int RadResist, bool Stealth, int DeathWeapon, int JamRadius,
         int SeismicRadius);
 
     /// <summary>Reads the shared v3 keys; null after a recorded problem. Aura targets are checked as references.</summary>
@@ -67,19 +67,18 @@ internal static class UnitRulesLoader
         int? auraSpeed = f.OptInt("aura_speed_permille", 1, 100_000, 1000);
         List<string>? auraTargets = f.OptStrList("aura_targets");
         int? radResist = f.OptInt("rad_resist_permille", 0, 1000, 0);
-        bool? irradiated = f.OptBool("irradiated", false);
         bool? stealth = f.OptBool("stealth", false);
         int? deathWeapon = f.OptIndex("death_weapon", WeaponIds(weapons), "weapon");
         int? jam = f.OptInt("jam_radius", 0, SimConstants.MaxMapCells, 0);
         int? seismic = f.OptInt("seismic_radius", 0, SimConstants.MaxMapCells, 0);
         if (faction is null || size is null || auraRadius is null || auraRof is null || auraSpeed is null || auraTargets is null
-            || radResist is null || irradiated is null || stealth is null || deathWeapon is null || jam is null || seismic is null)
+            || radResist is null || stealth is null || deathWeapon is null || jam is null || seismic is null)
         {
             return null;
         }
         refs.AddAll(f, "aura_targets", auraTargets);
         return new MobileV3(faction.Value, size.Value, auraRadius.Value, auraRof.Value, auraSpeed.Value, auraTargets,
-            radResist.Value, irradiated.Value, stealth.Value, deathWeapon.Value, jam.Value, seismic.Value);
+            radResist.Value, stealth.Value, deathWeapon.Value, jam.Value, seismic.Value);
     }
 
     private static IReadOnlyList<string> WeaponIds(IReadOnlyList<WeaponType> weapons)
@@ -168,7 +167,6 @@ internal static class UnitRulesLoader
             AuraSpeedPermille = v3.AuraSpeed,
             AuraTargets = v3.AuraTargets,
             RadResistPermille = v3.RadResist,
-            Irradiated = v3.Irradiated,
             Stealth = v3.Stealth,
             DeathWeapon = v3.DeathWeapon,
             JamRadius = v3.JamRadius,
@@ -247,7 +245,6 @@ internal static class UnitRulesLoader
             AuraSpeedPermille = v3.AuraSpeed,
             AuraTargets = v3.AuraTargets,
             RadResistPermille = v3.RadResist,
-            Irradiated = v3.Irradiated,
             Stealth = v3.Stealth,
             DeathWeapon = v3.DeathWeapon,
             JamRadius = v3.JamRadius,

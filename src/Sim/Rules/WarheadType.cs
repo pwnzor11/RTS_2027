@@ -12,9 +12,6 @@ public sealed record WarheadType(string Id, IReadOnlyList<int> VersusPercent, in
     /// <summary>Radiation level (0..255) removed from every cell in the splash (M3-05).</summary>
     public int Decontaminate { get; init; }
 
-    /// <summary>Damage percent against irradiated (reactor-cored) units; 100 = no bonus.</summary>
-    public int BonusVsIrradiatedPercent { get; init; } = 100;
-
     /// <summary>Ticks of Blackout cloud left on every cell in the splash (0 = none).</summary>
     public int BlackoutTicks { get; init; }
 

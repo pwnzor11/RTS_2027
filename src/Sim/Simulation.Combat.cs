@@ -288,7 +288,6 @@ public sealed partial class Simulation
         if (d <= 0) return;   // D-205 (FAD-13)
         if (kind == ActorKind.Building && wh.BonusVsEntrancePercent != 100 && BuildingTypeAt(i).Entrance != TunnelSize.None)
             d = Math.Max(1, (int)((long)d * wh.BonusVsEntrancePercent / 100));   // M4-05: bonus vs tunnel entrances
-        if (wh.BonusVsIrradiatedPercent != 100 && IsIrradiatedTarget(kind, i)) d = Math.Max(1, (int)((long)d * wh.BonusVsIrradiatedPercent / 100));   // M3-05
         if (half) { d /= 2; if (d < 1) d = 1; }
         if (kind != ActorKind.Building)
         {
