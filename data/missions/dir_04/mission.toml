@@ -37,10 +37,10 @@ cash = 4000
 [zones.keep]
 rect = [38, 8, 58, 23]
 
-[zones.device]
+[zones.zone_device]
 rect = [48, 15, 54, 21]
 
-[zones.head]
+[zones.zone_head]
 rect = [55, 54, 65, 61]
 
 [zones.ridge]
@@ -52,7 +52,7 @@ rect = [50, 72, 60, 75]
 [zones.home]
 rect = [40, 74, 56, 88]
 
-[zones.west_post]
+[zones.zone_west_post]
 rect = [8, 54, 14, 60]
 
 # The Directorate keep on the north shore, with the Sunrise Device in its deep chamber.
