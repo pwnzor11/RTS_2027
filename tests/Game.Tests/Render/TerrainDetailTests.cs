@@ -58,7 +58,7 @@ public sealed class TerrainDetailTests
     {
         TerrainPalette detail = TerrainPalette.Load(RepoFile("data/theaters/rustbelt.toml"));
         Assert.True(detail.Style.Detail > 0);
-        TerrainPalette plain = TerrainPalette.Load(RepoFile("data/theaters/variants/c/rustbelt.toml"));
+        TerrainPalette plain = PlainCopy("data/theaters/variants/c/rustbelt.toml");   // S43: variant C now carries [detail]; level 0 is the plain D-181 look
         Assert.Equal(0, plain.Style.Detail);
         MapData map = Mixed();
         TerrainBake.Result a = TerrainBake.Bake(map, detail), b = TerrainBake.Bake(map, detail), p = TerrainBake.Bake(map, plain);
@@ -113,5 +113,14 @@ public sealed class TerrainDetailTests
 
         Assert.True(ash.Count > 20 && clear.Count > 20, "ground should carry many tones, not three flat shades");
         Assert.Empty(ash.Intersect(clear));
+    }
+
+    /// <summary>A copy of a palette file with the detail pass switched off (level 0), loaded from a temp file.</summary>
+    internal static TerrainPalette PlainCopy(string repoPath)
+    {
+        string text = System.Text.RegularExpressions.Regex.Replace(File.ReadAllText(RepoFile(repoPath)), @"(?m)^level = \d", "level = 0");
+        string tmp = Path.Combine(Path.GetTempPath(), $"rts_plain_{Guid.NewGuid():N}.toml");
+        File.WriteAllText(tmp, text);
+        try { return TerrainPalette.Load(tmp); } finally { File.Delete(tmp); }
     }
 }

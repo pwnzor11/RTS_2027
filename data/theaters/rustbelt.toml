@@ -79,7 +79,8 @@ cliff_shadow_permille = 500
 cliff_shadow_texels = 4
 
 [detail]
-# S43 art pass (terrain pilot): 1 = rich detail (noise, pebbles, grass, cracks, oil, ash drifts, soft land blends, ragged shore/kerb/cliff lip); 2 = calm (no cracks or grass, half the pebbles); 0 = the plain D-181 look.
+# S43 terrain detail pass: 1 = rich (noise, pebbles, grass, faint cracks, oil, soft land blends, ragged shore/kerb/cliff lip); 2 = calm; 0 = the plain D-181 look.
+# kit = the biome's extras: rust | coast (beach ripples, wet sand, tidal foam) | mountains (rock strata, scree, snow) | ash (bigger drifts, ember cinders).
 level = 1
 kit = "rust"
 
