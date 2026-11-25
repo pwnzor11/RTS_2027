@@ -80,9 +80,9 @@ Pooled (f44): Authority v Directorate 33.6 (OUT), Authority v Expedition 75.0 (O
 | rust belt directorate v left behind | 29.7 | 27.8 | 27.8 |
 | rust belt left behind v expedition | 54.8 | 84.8 | 75.6 (OUT) |
 
-Pooled (final, wins over all four biomes): authority v directorate 33.6 (OUT), authority v expedition 69.7 (OUT), authority v left behind 50.2,
+Pooled (final; wins and losses summed over the four biomes, so it can differ by about a point from the mean of the four rows): authority v directorate 33.6 (OUT), authority v expedition 69.7 (OUT), authority v left behind 50.2,
 directorate v expedition 56.1, directorate v left behind 44.8, left behind v expedition 66.3 (OUT). Rows outside 25-75: 4.
-**Gate D-305: not met.** Turning the naval plan off won back 0-12 points per Expedition row (rust 6-9, ash 2-15, mountains 1-8, glass 0-2).
+**Gate D-305: not met.** Turning the naval plan off won back 0-12 points per Expedition row (rust 6-9, ash 2-12, mountains 1-8, glass 0-2).
 
 ## Campaign sweep (sw44, D-222; 45 cases x 12 runs, f44 build)
 All 45 cases meet their targets (tier 1 >= 10/12, tier 3 >= 8/12, tier 5 >= 3/12). Changed v s42: auth_01 t5 10 -> 9, auth_02 t5 9 -> 7, dir_01 t5

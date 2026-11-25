@@ -12,7 +12,7 @@ The s43 audit ids (e.g. SIMECON-07) are kept in each row so the audit README §5
 ## Status after session 44 (2026-11-25)
 Done on main (D-317..D-322): B-00; M-01..M-18 (M-14 overlay, M-16 rule, M-13 already worked), M-20..M-26 (M-26 three off-by-ones), A-02, A-03,
 U-05, U-11, C-08, C-09, O-04, O-05, O-06, B-06, B-07, T-08/A-04 (closed under D-310), M-19 (kept, D-319), A-06 (parked). O-09: 16 of 17 briefings
-were already telegram style; tut_01 stays plain (assumed). T-04 not applied (D-321). AI naval use (Drydock, heavy ships, Minelayer) added.
+were already telegram style; tut_01 stays plain (assumed). T-04 not applied (D-321). AI naval use (Drydock, heavy ships, Minelayer) added, off by default (D-323).
 Still open: everything else below, including the correctness wave rows not listed here, the art wave, and the owner-only tests (O-01..O-03, O-08, O-10).
 
 ## 0. Before any of it: the balance gate and the freeze

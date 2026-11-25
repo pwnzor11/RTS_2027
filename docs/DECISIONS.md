@@ -2370,7 +2370,7 @@ ticks within 2 cells at the global repair cost, landing craft and Skyhook bay re
 leash); breach 100 ticks, cooldown 400, Hook Runner soldiers only; Salvage Rights wrecks pay x1.5 (design); Patchwork +6 cells and heal x4; Scrap
 Plate turns Light vehicles, Rotors and Kites to Heavy armour (already-Heavy keep +20 % health); ash damage proportional to (1000 - resist);
 naval gunfire needs a seen cell (Destroyer/Cruiser guns); Missile Sub dives in 60 ticks and carries a torpedo (140 damage, 7 cells, 5 s); beacon
-delivery: vehicles drop in reach, infantry build in 200 ticks, 100 credits at placement; Expedition AI from tier 3: one Drydock, +1 Cruiser
+delivery: vehicles drop in reach, infantry build in 200 ticks, 100 credits at placement; Expedition AI from tier 3 (switched off by D-323): one Drydock, +1 Cruiser
 +1 Carrier, one Minelayer, ships under 50 % go to the Drydock; lb_03 tier 5 ColumnDelay 3600, riflemen 9; tut_01 briefing stays plain prose.
 **Status:** assumed — confirm (USER_CHECKS session 44)
 

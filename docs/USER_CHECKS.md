@@ -686,7 +686,8 @@ Pull main first (your folder was on eda0f0e3, two sessions behind), then rebuild
 
 
 ## Session 44 (2026-11-24/25)
-- **Back up first?** No. Old development saves and replays (format 14) are refused ("Unsupported save version 14; this build reads version 15"); nothing else is rewritten.
+- **Back up first?** No. Old development saves (format 14) are refused ("Unsupported save version 14; this build reads version 15. ...") and old
+  replays too ("Unsupported replay format version 14; this build reads versions 15 to 15. ..."); nothing else is rewritten.
 - **Laptop:** `git checkout main; git pull`, rebuild (the laptop folder was still on session 39 at the start of s44).
 - **Sea mines (M-01):** Expedition skirmish, build a Minelayer, select it: the button reads "Lay mine (D) 6 left"; press D. A green diamond marks the
   mine; an enemy ship sailing over it takes about 250 damage and the mine is gone. Enemy mines show red only inside your sonar.
@@ -706,7 +707,8 @@ Pull main first (your folder was on eda0f0e3, two sessions behind), then rebuild
 - **Beacon delivery (M-15):** select a Skyhook, Landing Craft, Pioneer or Combat Diver: "Drop beacon", then click a land cell outside the build zone.
 - **Survey Hover (M-14):** select one next to an ash field: the field cells tint by richness.
 - **Rule fixes:** Flak no longer damages your own aircraft (M-22); Lead Lining visibly reduces ashfall damage (M-25); the `irradiated` tag is gone (M-20).
-- **AI:** tier 3+ Expedition AI builds a Drydock, a Cruiser or Carrier and one Minelayer; its damaged ships go to the Drydock. AI repair no longer flips
+- **AI:** the Expedition AI naval plan (Drydock, heavy ships, a Minelayer) is built but OFF by default (D-323: `naval_min_tier = 0` in
+  data/ai/difficulty.toml); set it to 3 to try it. AI repair no longer flips
   on and off under fire (A-03). A broken `data/ai/difficulty.toml` now shows an error naming the file and key instead of playing with defaults.
 - **Controls (U-05):** select a Barracks, Ctrl+1; press 1 to select it again (twice centres). Shift+right-click an enemy building queues an attack.
 - **Text:** the Authority refinery is "Ashfall Refinery" in the tutorial, tips and How to Play (the auth_01 voice line still says "Refinery").
