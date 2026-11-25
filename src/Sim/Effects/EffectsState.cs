@@ -26,10 +26,13 @@ namespace Rts.Sim.Effects;
 /// <para>Version 3 (M7-12, Salvo Array) is written only while a salvo is in flight (so every other game saves and hashes as version 2):
 /// after the version-2 body, the salvo table (<see cref="MaxSalvos"/> fixed slots, written as (slot + 1, x, y, owner, building type + 1,
 /// ticks elapsed) for every live slot, 0-terminated). Versions 1 and 2 read with no salvos.</para>
+/// <para>Version 4 (S44 M-05/M-06) is written only while a tether or a wall breach is live (every other game saves and hashes as before):
+/// after the salvo table (written, possibly empty, in version 4) come (slot, ticks, speed permille) runs for <see cref="VehicleTetherTicks"/>
+/// and <see cref="InfantryTetherTicks"/>, then (slot, breach, owner) for <see cref="BuildingBreach"/>, each run 0-terminated.</para>
 /// </summary>
 public sealed class EffectsState : ISimStatePart
 {
-    private const byte Version = 3;
+    private const byte Version = 4;
 
     /// <summary>Fixed salvo capacity (Salvo Array, M7-12).</summary>
     public const int MaxSalvos = 4;
@@ -55,6 +58,31 @@ public sealed class EffectsState : ISimStatePart
     public readonly byte[] VehicleWithdraw;
     /// <summary>1 while a raider soldier is withdrawing, per infantry slot (v2; M6-05).</summary>
     public readonly byte[] InfantryWithdraw;
+    /// <summary>Ticks of harpoon tether left per vehicle slot (v4; M-05). 0 = not tethered.</summary>
+    public readonly int[] VehicleTetherTicks;
+    /// <summary>Tether speed multiplier per mille per vehicle slot (v4; meaningful only while the ticks are above 0).</summary>
+    public readonly int[] VehicleTetherPermille;
+    /// <summary>Ticks of harpoon tether left per infantry slot (v4; M-05).</summary>
+    public readonly int[] InfantryTetherTicks;
+    /// <summary>Tether speed multiplier per mille per infantry slot (v4).</summary>
+    public readonly int[] InfantryTetherPermille;
+    /// <summary>Wall breach timer per building slot (v4; M-06): above 0 = the segment is open for <see cref="BuildingBreachOwner"/>'s team and counts down; below 0 = cooling down, counts up to 0.</summary>
+    public readonly int[] BuildingBreach;
+    /// <summary>Player whose raider opened the breach, per building slot (v4).</summary>
+    public readonly byte[] BuildingBreachOwner;
+
+    /// <summary>True while any tether or breach timer is non-zero.</summary>
+    public bool AnyTether
+    {
+        get
+        {
+            for (int i = 1; i < VehicleTetherTicks.Length; i++) if (VehicleTetherTicks[i] != 0 || VehicleTetherPermille[i] != 0) return true;
+            for (int i = 1; i < InfantryTetherTicks.Length; i++) if (InfantryTetherTicks[i] != 0 || InfantryTetherPermille[i] != 0) return true;
+            for (int i = 1; i < BuildingBreach.Length; i++) if (BuildingBreach[i] != 0 || BuildingBreachOwner[i] != 0) return true;
+            return false;
+        }
+    }
+
     /// <summary>Storm centre cell X per storm slot (v2; M6-07).</summary>
     public readonly int[] StormX = new int[MaxStorms];
     /// <summary>Storm centre cell Y per storm slot.</summary>
@@ -91,6 +119,8 @@ public sealed class EffectsState : ISimStatePart
         InfantryRofPermille = new int[n]; InfantrySpeedPermille = new int[n]; InfantryStill = new int[n];
         BuildingCharge = new int[setup.Limits.Buildings];
         VehicleWithdraw = new byte[v]; InfantryWithdraw = new byte[n];
+        VehicleTetherTicks = new int[v]; VehicleTetherPermille = new int[v]; InfantryTetherTicks = new int[n]; InfantryTetherPermille = new int[n];
+        BuildingBreach = new int[setup.Limits.Buildings]; BuildingBreachOwner = new byte[setup.Limits.Buildings];
     }
 
     /// <inheritdoc />
@@ -117,18 +147,19 @@ public sealed class EffectsState : ISimStatePart
     /// <summary>Reset a mobile slot (spawn / removal).</summary>
     public void ClearMobile(ActorKind kind, int i)
     {
-        if (kind == ActorKind.Vehicle) { VehicleRofPermille[i] = 0; VehicleSpeedPermille[i] = 0; VehicleStill[i] = 0; VehicleWithdraw[i] = 0; }
-        else if (kind == ActorKind.Infantry) { InfantryRofPermille[i] = 0; InfantrySpeedPermille[i] = 0; InfantryStill[i] = 0; InfantryWithdraw[i] = 0; }
+        if (kind == ActorKind.Vehicle) { VehicleRofPermille[i] = 0; VehicleSpeedPermille[i] = 0; VehicleStill[i] = 0; VehicleWithdraw[i] = 0; VehicleTetherTicks[i] = 0; VehicleTetherPermille[i] = 0; }
+        else if (kind == ActorKind.Infantry) { InfantryRofPermille[i] = 0; InfantrySpeedPermille[i] = 0; InfantryStill[i] = 0; InfantryWithdraw[i] = 0; InfantryTetherTicks[i] = 0; InfantryTetherPermille[i] = 0; }
     }
 
     /// <summary>Reset a building slot (removal).</summary>
-    public void ClearBuilding(int i) => BuildingCharge[i] = 0;
+    public void ClearBuilding(int i) { BuildingCharge[i] = 0; BuildingBreach[i] = 0; BuildingBreachOwner[i] = 0; }
 
     /// <inheritdoc />
     public void Write(BinaryWriter w)
     {
         bool salvo = AnySalvo;
-        w.Write(salvo ? Version : (byte)2);
+        bool tether = AnyTether;
+        w.Write(tether ? Version : salvo ? (byte)3 : (byte)2);
         w.Write(VehicleStill.Length); w.Write(InfantryStill.Length); w.Write(BuildingCharge.Length);
         WriteMobiles(w, VehicleRofPermille, VehicleSpeedPermille, VehicleStill);
         WriteMobiles(w, InfantryRofPermille, InfantrySpeedPermille, InfantryStill);
@@ -143,13 +174,35 @@ public sealed class EffectsState : ISimStatePart
             w.Write(s + 1); w.Write(StormX[s]); w.Write(StormY[s]); w.Write(StormRadius[s]); w.Write(StormTicks[s]); w.Write(StormOwner[s]);
         }
         w.Write(0);
-        if (!salvo) return;
+        if (!salvo && !tether) return;
         for (int s = 0; s < MaxSalvos; s++)
         {
             if (!SalvoUsed(s)) continue;
             w.Write(s + 1); w.Write(SalvoX[s]); w.Write(SalvoY[s]); w.Write(SalvoOwner[s]); w.Write(SalvoType[s]); w.Write(SalvoElapsed[s]);
         }
         w.Write(0);
+        if (!tether) return;
+        WriteTethers(w, VehicleTetherTicks, VehicleTetherPermille);
+        WriteTethers(w, InfantryTetherTicks, InfantryTetherPermille);
+        for (int i = 1; i < BuildingBreach.Length; i++)
+            if (BuildingBreach[i] != 0 || BuildingBreachOwner[i] != 0) { w.Write(i); w.Write(BuildingBreach[i]); w.Write(BuildingBreachOwner[i]); }
+        w.Write(0);
+    }
+
+    private static void WriteTethers(BinaryWriter w, int[] ticks, int[] permille)
+    {
+        for (int i = 1; i < ticks.Length; i++)
+            if (ticks[i] != 0 || permille[i] != 0) { w.Write(i); w.Write(ticks[i]); w.Write(permille[i]); }
+        w.Write(0);
+    }
+
+    private void ReadTethers(BinaryReader r, int[] ticks, int[] permille)
+    {
+        for (int i = r.ReadInt32(); i != 0; i = r.ReadInt32())
+        {
+            int s = StateIo.Slot(i, ticks.Length, Name);
+            ticks[s] = r.ReadInt32(); permille[s] = r.ReadInt32();
+        }
     }
 
     private static void WriteFlags(BinaryWriter w, byte[] flags)
@@ -177,6 +230,8 @@ public sealed class EffectsState : ISimStatePart
         for (int i = r.ReadInt32(); i != 0; i = r.ReadInt32()) BuildingCharge[StateIo.Slot(i, BuildingCharge.Length, Name)] = r.ReadInt32();
         Array.Clear(VehicleWithdraw); Array.Clear(InfantryWithdraw);
         Array.Clear(SalvoX); Array.Clear(SalvoY); Array.Clear(SalvoOwner); Array.Clear(SalvoType); Array.Clear(SalvoElapsed);
+        Array.Clear(VehicleTetherTicks); Array.Clear(VehicleTetherPermille); Array.Clear(InfantryTetherTicks); Array.Clear(InfantryTetherPermille);
+        Array.Clear(BuildingBreach); Array.Clear(BuildingBreachOwner);
         Array.Clear(StormX); Array.Clear(StormY); Array.Clear(StormRadius); Array.Clear(StormTicks); Array.Clear(StormOwner);
         if (version == 1) return;   // M6-02: version-1 data has no raiders and no storms
         ReadFlags(r, VehicleWithdraw);
@@ -194,6 +249,14 @@ public sealed class EffectsState : ISimStatePart
             if (i > MaxSalvos) throw new InvalidDataException("effects salvo slot out of range.");
             int s = i - 1;
             SalvoX[s] = r.ReadInt32(); SalvoY[s] = r.ReadInt32(); SalvoOwner[s] = r.ReadByte(); SalvoType[s] = r.ReadInt32(); SalvoElapsed[s] = r.ReadInt32();
+        }
+        if (version < 4) return;
+        ReadTethers(r, VehicleTetherTicks, VehicleTetherPermille);
+        ReadTethers(r, InfantryTetherTicks, InfantryTetherPermille);
+        for (int i = r.ReadInt32(); i != 0; i = r.ReadInt32())
+        {
+            int s = StateIo.Slot(i, BuildingBreach.Length, Name);
+            BuildingBreach[s] = r.ReadInt32(); BuildingBreachOwner[s] = r.ReadByte();
         }
     }
 

@@ -133,10 +133,12 @@ versus = [100, 70, 30, 40, 20, 100, 100, 100]
 splash = 1
 hits_allies = false
 
-[lb_harpoon]   # (tune) tether: the slow is a later sim hook, the hit is anti-armour
+[lb_harpoon]   # (tune) tether: the hit is anti-armour and slows the target (S44 M-05)
 versus = [25, 75, 100, 50, 40, 90, 70, 100]   # D-205 (LE-07): ship columns copy exp_guided_ap (Submerged left at 100)
 splash = 0
 hits_allies = false
+tether_ticks = 60            # (tune) ASSUMED: 3 s at 20 ticks per second, refreshed by every hit
+tether_speed_permille = 500  # (tune) ASSUMED: half speed
 
 [lb_rocket]   # (tune) Organ rocket rack: area, good vs structures
 versus = [100, 80, 50, 100, 60, 100, 100, 100]

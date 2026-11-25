@@ -441,7 +441,7 @@ cost = 300  # (tune)
 prerequisites = ["lb_garage_rig"]
 raider = true
 
-[lb_harpoon_wagon]   # anti-armour, tethers (slow is a later sim hook)
+[lb_harpoon_wagon]   # anti-armour, tethers (the lb_harpoon warhead slows its target, S44 M-05)
 faction = "left_behind"
 tier = 2
 speed = 20  # (tune)

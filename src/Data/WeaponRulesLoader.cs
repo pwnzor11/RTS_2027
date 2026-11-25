@@ -16,7 +16,7 @@ internal static class WeaponRulesLoader
          // schema v4 (M4-01)
          "hits_burrowed", "bonus_vs_entrance_percent", "foam_ticks", "garrison_damage_percent",
          // schema v5 (M6-02)
-         "storm_radius", "storm_ticks", "storm_contaminate_step", "storm_contaminate_cap", "storm_speed_permille",
+         "storm_radius", "storm_ticks", "storm_contaminate_step", "storm_contaminate_cap", "storm_speed_permille", "tether_ticks", "tether_speed_permille",
          // schema v8 (M7-12)
          "salvo_missiles", "salvo_ticks", "salvo_radius", "salvo_damage", "salvo_warn_ticks", "salvo_splash"];
     private static readonly string[] WeaponKeys =
@@ -59,6 +59,9 @@ internal static class WeaponRulesLoader
         int? stormStep = f.OptInt("storm_contaminate_step", 0, 255, 0);
         int? stormCap = f.OptInt("storm_contaminate_cap", 0, 255, 64);
         int? stormSpeed = f.OptInt("storm_speed_permille", 0, 1000, 0);
+        int? tetherTicks = f.OptInt("tether_ticks", 0, 1_000_000, 0);   // S44 M-05
+        int? tetherSpeed = f.OptInt("tether_speed_permille", 1, 1000, 1000);
+        if (tetherTicks is null || tetherSpeed is null) return null;
         int? salvoMissiles = f.OptInt("salvo_missiles", 0, 1000, 0);   // M7-12
         int? salvoTicks = f.OptInt("salvo_ticks", 0, 1_000_000, 0);
         int? salvoRadius = f.OptInt("salvo_radius", 0, SimConstants.MaxMapCells, 0);
@@ -87,6 +90,8 @@ internal static class WeaponRulesLoader
             StormContaminateStep = stormStep.Value,
             StormContaminateCap = stormCap.Value,
             StormSpeedPermille = stormSpeed.Value,
+            TetherTicks = tetherTicks.Value,
+            TetherSpeedPermille = tetherSpeed.Value,
             SalvoMissiles = salvoMissiles.Value,
             SalvoTicks = salvoTicks.Value,
             SalvoRadius = salvoRadius.Value,
