@@ -294,7 +294,7 @@ public sealed record Settings(
         sb.AppendLine("# Water shimmer: a slow band of sparkles over visible water (view only).");
         sb.AppendLine(FormattableString.Invariant($"water_shimmer = {(WaterShimmer ? "true" : "false")}"));
         sb.AppendLine("# Cloud shadows: soft shadows drifting over the map (view only).");
-        sb.AppendLine(FormattableString.Invariant($"cloud_shadows = {(CloudShadows ? "true" : "false")}"),
+        sb.AppendLine(FormattableString.Invariant($"cloud_shadows = {(CloudShadows ? "true" : "false")}"));
         sb.AppendLine("# Battle effects (view only, S45 V-04): tread marks on soft ground, debris chunks from deaths.");
         sb.AppendLine(FormattableString.Invariant($"tread_marks = {(TreadMarks ? "true" : "false")}"));
         sb.AppendLine(FormattableString.Invariant($"debris_chunks = {(DebrisChunks ? "true" : "false")}"));
