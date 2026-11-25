@@ -314,7 +314,7 @@ public sealed class M7ContractTests
     [Fact]
     public void Formats_AndPartOrder_ArePinned()
     {
-        Assert.Equal(15, SimWriter.SaveVersion);
+        Assert.Equal(16, SimWriter.SaveVersion);
         Assert.Equal(15, ReplayWriter.Version);
         Assert.Equal(15, ReplayWriter.OldestReadableVersion);
         var sim = ScriptedGame.NewSim(ScriptedGame.Setup());
