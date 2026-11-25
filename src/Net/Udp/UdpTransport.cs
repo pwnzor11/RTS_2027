@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
+using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
 
@@ -35,6 +36,7 @@ public sealed class UdpTransport : INetTransport
         public bool Pending, Connected, HelloSurfaced, Closing, Started;
         public long CloseDeadline;
         public long CreatedMicros;
+        public long CreatedTicks;   // Stopwatch time, see PendingExpired
     }
 
     private readonly Socket _socket;
@@ -129,7 +131,7 @@ public sealed class UdpTransport : INetTransport
         {
             if (!_peers.Contains(p)) continue;
             if (p.Channel.Faulted) { DropWithBye(p, "protocol violation"); continue; }
-            if (p.Pending && !p.Closing && nowMicroseconds - p.CreatedMicros > _pendingTimeoutMicros) { Drop(p, "handshake timeout"); continue; }
+            if (PendingExpired(p, nowMicroseconds)) { Drop(p, "handshake timeout"); continue; }
             if (p.Closing)
             {
                 if (p.CloseDeadline == 0) p.CloseDeadline = nowMicroseconds + ClosingGraceMicros;
@@ -142,6 +144,20 @@ public sealed class UdpTransport : INetTransport
             }
             Flush(p, nowMicroseconds);
         }
+    }
+
+    /// <summary>
+    /// A pending peer expires only when BOTH the caller's clock and real time say it has been pending too long, and never while its Hello
+    /// sits unread in the inbox. The caller's clock may be a virtual one that a fast loop advances by seconds per real second (tests, a stalled
+    /// frame); expiring on it alone could drop a joiner whose datagram is still in flight, and the dropped peer's resends would then start a
+    /// fresh channel that can never complete the handshake (M16-N-02).
+    /// </summary>
+    private bool PendingExpired(Peer p, long now)
+    {
+        if (!p.Pending || p.Closing || now - p.CreatedMicros <= _pendingTimeoutMicros) return false;
+        if ((Stopwatch.GetTimestamp() - p.CreatedTicks) * 1_000_000 / Stopwatch.Frequency <= _pendingTimeoutMicros) return false;
+        foreach ((int from, _) in _inbox) if (from == p.Id) return false;
+        return true;
     }
 
     private static void StartPeer(Peer p, long now)
@@ -259,7 +275,7 @@ public sealed class UdpTransport : INetTransport
             {
                 if (!_isHost || _peers.Count(x => x.Pending) >= MaxPending) continue;
                 if (_peers.Exists(x => x.Pending && x.EndPoint.Address.Equals(ep.Address))) continue;   // one pending slot per source address (NETLLM-07)
-                var fresh = new Peer { Id = _nextPendingId--, EndPoint = ep, Channel = new ReliableChannel(now), Pending = true, Started = true, CreatedMicros = now };
+                var fresh = new Peer { Id = _nextPendingId--, EndPoint = ep, Channel = new ReliableChannel(now), Pending = true, Started = true, CreatedMicros = now, CreatedTicks = Stopwatch.GetTimestamp() };
                 if (!fresh.Channel.OnPacket(now, _recvBuf.AsSpan(0, n))) continue;
                 _peers.Add(fresh);
                 peer = fresh;

@@ -35,11 +35,13 @@ public class NetHardeningTests
     [Fact]
     public void PendingPeerExpiresWithoutHandshakeProgress()
     {
-        using var host = UdpTransport.Host(0, 60_000, IPAddress.Loopback, pendingTimeoutMs: 10_000);
+        // Expiry needs both the poll clock and real time past the limit, so use a short real limit.
+        using var host = UdpTransport.Host(0, 60_000, IPAddress.Loopback, pendingTimeoutMs: 100);
         using var client = Join(host);
         long t0 = 1_000_000;
         // Hello arrives and is surfaced, but nobody accepts it: the peer sits pending.
         PumpUntil(() => host.TryReceive(out int _, out NetMessage _), t0, host, client);
+        Thread.Sleep(250);
         host.Poll(t0 + 11_000_000);
         Assert.False(host.Accept(-2, 1));   // expired: no pending peer left
     }
@@ -51,6 +53,16 @@ public class NetHardeningTests
         using var client = Join(host);
         PumpUntil(() => host.TryReceive(out int _, out NetMessage _), 1_000_000, host, client);
         host.Poll(1_000_000 + 9_000_000);
+        Assert.True(host.Accept(-2, 1));
+    }
+
+    [Fact]
+    public void FastVirtualClockDoesNotExpireAPendingPeer()
+    {
+        using var host = UdpTransport.Host(0, 60_000, IPAddress.Loopback, pendingTimeoutMs: 10_000);
+        using var client = Join(host);
+        PumpUntil(() => host.TryReceive(out int _, out NetMessage _), 1_000_000, host, client);
+        host.Poll(1_000_000 + 11_000_000);   // 11 s on the poll clock, milliseconds of real time
         Assert.True(host.Accept(-2, 1));
     }
 
