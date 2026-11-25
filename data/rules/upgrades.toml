@@ -138,7 +138,9 @@ cost = 800  # (tune)
 build_time = 150  # (tune)
 prerequisites = []
 tier = 3
-plunder_permille = 1500  # (tune) Hook Runner steals more (the brief wall-breaking is a later sim hook)
+plunder_permille = 1500  # (tune) Hook Runner steals more (x1.5 is applied before the plunder cap, Simulation.Raid.cs)
+breach_ticks = 100          # (tune) ASSUMED: a Hook Runner beside an enemy wall opens that segment for its team for 5 s (S44 M-06)
+breach_cooldown_ticks = 400  # (tune) ASSUMED: the same segment cannot be breached again for 20 s
 
 [lb_up_salvage_rights]
 faction = "left_behind"

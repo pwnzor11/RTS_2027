@@ -109,6 +109,8 @@ public sealed partial class Simulation
     internal int MoveSpeedPermille(ActorKind kind, int i)
     {
         int aura = _effects.SpeedPermille(kind, i);
+        int tether = TetherPermille(kind, i);   // S44 M-05: harpoon tether slow (Simulation.Tether.cs)
+        if (tether != 1000) aura = Math.Max(1, (int)((long)aura * tether / 1000));
         int rank = RankOf(kind, i);
         return rank == 0 ? aura : ScaleByRank(VetRules.SpeedPermille, rank, aura);
     }

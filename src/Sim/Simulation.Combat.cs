@@ -349,6 +349,7 @@ public sealed partial class Simulation
                 case ActorKind.Infantry: _infantry.Health[i] -= h.Amount; WakeOnHit(_infantry, kind, i); MarkCombat(kind, i); break;
                 default: _buildings.Health[i] -= h.Amount; break;
             }
+            if (kind != ActorKind.Building && h.Warhead >= 0 && HealthAt(kind, i) > 0) OnTetherHit(kind, i, h.Warhead, (byte)h.Source);   // S44 M-05: Simulation.Tether.cs
             if (before > 0 && HealthAt(kind, i) <= 0)
             {
                 _killers.Add((h.Target, h.Warhead));   // M10-14b

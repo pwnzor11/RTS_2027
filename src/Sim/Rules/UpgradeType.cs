@@ -41,4 +41,10 @@ public sealed record UpgradeType(string Id, Faction Faction, int Cost, int Build
 
     /// <summary>Multiplies the heal amount of the owner's repair auras, permille (TOML <c>repair_rate_permille</c>, 0 = none). S44 M-09.</summary>
     public int RepairRatePermille { get; init; }
+
+    /// <summary>S44 M-06: ticks an enemy wall segment stays open to the owner's team after one of its raider soldiers (Hook Runner) reaches it (TOML <c>breach_ticks</c>, 0 = no breaching).</summary>
+    public int BreachTicks { get; init; }
+
+    /// <summary>S44 M-06: ticks after a breach closes before the same wall segment can be breached again (TOML <c>breach_cooldown_ticks</c>).</summary>
+    public int BreachCooldownTicks { get; init; }
 }

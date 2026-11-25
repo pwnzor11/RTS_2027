@@ -333,6 +333,17 @@ public static class RulesHash
             w.Write(x.SalvoMissiles); w.Write(x.SalvoTicks); w.Write(x.SalvoRadius); w.Write(x.SalvoDamage);
             w.Write(x.SalvoWarnTicks); w.Write(x.SalvoSplash);
         }
+        // S44 (M-05, M-06): written only for warheads / upgrades that set them, so a rules set without tether or breach keeps its hash.
+        for (int i = 0; i < sim.Warheads.Count; i++)
+        {
+            WarheadType x = sim.Warheads[i];
+            if (x.TetherTicks > 0) { w.Write((byte)0xA5); w.Write(i); w.Write(x.TetherTicks); w.Write(x.TetherSpeedPermille); }
+        }
+        for (int i = 0; i < sim.Upgrades.Count; i++)
+        {
+            UpgradeType u = sim.Upgrades[i];
+            if (u.BreachTicks > 0) { w.Write((byte)0xA6); w.Write(i); w.Write(u.BreachTicks); w.Write(u.BreachCooldownTicks); }
+        }
     }
 
     private static void WriteInts(BinaryWriter w, IReadOnlyList<int> values)

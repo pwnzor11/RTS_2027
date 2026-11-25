@@ -62,6 +62,7 @@ public sealed partial class Simulation
     {
         if (building.IsNone || !_buildings.Slots.IsAlive(building)) return false;
         int i = building.Index;
+        if (BreachOpenFor(i, player)) return true;   // S44 M-06: a wall segment breached by a Hook Runner (Simulation.Tether.cs)
         return BuildingTypeAt(i).Gate && IsFriendly(player, _buildings.Player[i]);
     }
 
@@ -74,6 +75,9 @@ public sealed partial class Simulation
             IReadOnlyList<BuildingType>? types = Setup.Rules.Buildings;
             if (types != null)
                 for (int t = 0; t < types.Count; t++) if (types[t].Gate) { _anyGateType = true; break; }
+            IReadOnlyList<UpgradeType>? ups = Setup.Rules.Upgrades;   // S44 M-06: a breach upgrade also needs the passer in path requests
+            if (!_anyGateType && ups != null)
+                for (int u = 0; u < ups.Count; u++) if (ups[u].BreachTicks > 0) { _anyGateType = true; break; }
             _gateTypesResolved = true;
         }
         return _anyGateType && player != PathService.NoPasser ? player : PathService.NoPasser;
