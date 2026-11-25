@@ -371,6 +371,9 @@ internal sealed class TierPlanner
     /// <summary>M4-12: an enemy aircraft has been seen (anti-air is then wanted).</summary>
     public bool SeenEnemyAir { get; private set; }
 
+    /// <summary>s44 (M16-M-03): the Expedition's Drydock id.</summary>
+    internal const string DrydockId = "exp_drydock";
+
     /// <summary>Appends the structures this tier's capabilities need to the build order (each at most once per count wanted).</summary>
     public void ExtendBuild(RecruitKnowledge k, BuildOrderManager build)
     {
@@ -393,6 +396,13 @@ internal sealed class TierPlanner
             // for 6 000+ ticks; the expansion refinery now goes right after the Assembly Bore, like the other factions' economy-first order.
             if (_faction.Faction == Faction.Directorate && _p.Air) build.InsertAfter(_faction.RefineryId, _faction.FactoryId);
             else build.Extend(_faction.RefineryId);
+        }
+        // s44 (M16-M-03): the Expedition builds one Drydock (heavy ships, ship repair) once a Shipyard stands and the tech allows it; data keys, default off
+        if (_faction.Faction == Faction.Expedition && tune.NavalMinTier > 0 && _p.Tier >= tune.NavalMinTier && (tune.NavalCruisers + tune.NavalCarriers > 0 || tune.NavalReturnPct > 0)
+            && build.StepsOf(DrydockId) < 1)
+        {
+            int yard = SimRules.IndexOf(k.Rules.Buildings, "exp_shipyard", b => b.Id), dock = SimRules.IndexOf(k.Rules.Buildings, DrydockId, b => b.Id);
+            if (yard >= 0 && dock >= 0 && k.BuildingCount[yard] > 0 && k.Buildable(ProductionCategory.Structure, dock)) build.Extend(DrydockId);
         }
         bool armyWait = _faction.Faction != Faction.LeftBehind;   // LeftBehind's supply chain needs the tech structures early (SupplyAiTests)
         bool techArmy = !armyWait || k.Army.Count >= tune.ArmyBeforeTech || Bias.ForceTech || techOrder;   // s12: no tech spending before there is an army

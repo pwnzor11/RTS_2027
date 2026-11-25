@@ -55,6 +55,8 @@
 #                  (0 = no cap; also allowed in a tier table). The one lever found that cut Left Behind tier 3 without touching its tier 5.
 #   army_cap_until_tick  0..: the cap holds only before this tick (0 = the whole game)
 #   unit_reserve   0..100000: credits a unit purchase leaves in hand (0 = none; also allowed in a tier table)
+# s44 M16-M-03 (per faction, optional; only [faction.expedition] sets them): naval_min_tier 0..5 (0 = off), naval_cruisers 0..6, naval_carriers 0..4,
+#   naval_minelayers 0..3, naval_return_pct 0..100 (0 = off). See ExpeditionTactics / TierPlanner.ExtendBuild.
 # D-167 (per faction, optional): tables [faction.authority], [faction.directorate], [faction.left_behind], [faction.expedition]
 #   harass_min_army         1..1000: army size before the raiding party (flag harass) is formed; missing key or table = 30.
 #                           Directorate 14, the others 30 (s13 ladder: Authority raiders pulled out of a small army cost it the wave)
@@ -146,6 +148,12 @@ army_cap_until_tick = 3600  # (tune) s15: the early snowball only; a longer cap 
 [faction.expedition]
 harass_min_army = 30
 aa_cap_before_air = 10   # (tune) s32 D-266: at most 10 anti-air-only vehicles until an enemy aircraft is seen (Dir v Exp rust 62 -> 58 %, docs/balance/s32_balance.md)
+# s44 M16-M-03 (assumed, confirm): the Expedition AI uses the wave-1 naval mechanics from the profile tier naval_min_tier up (0 / missing = never, the old play).
+naval_min_tier = 3      # Drydock (one, once a Shipyard stands), heavy ships and the Minelayer from tier 3; tiers 1-2 play as before
+naval_cruisers = 1      # Cruisers wanted once the Drydock stands (the tier plan's own number applies when higher: tier 5 wants 2)
+naval_carriers = 1      # Carriers wanted once the Drydock stands (same rule)
+naval_minelayers = 1    # at most one Minelayer, built while a Shipyard stands
+naval_return_pct = 50   # an idle ship below 50 % health sails to the Drydock, back to the fleet at 90 %
 
 # M4-16 s39 (D-291): the Expedition ladder was flat and draw-heavy at tiers 4-5 (5 v 1 60 %, 43 % draws; 4 v 3 41 %, 128 games, rust_belt) for the same
 # reason as the Authority's (D-287): respond_to_attacks. Off at tiers 4-5: 5 v 1 96 %, 5 v 3 94 %, 4 v 3 95 %, draws 3-9 % (docs/balance/s39_balance.md).
