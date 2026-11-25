@@ -282,8 +282,19 @@ public sealed class LockstepHost
         CheckHashes();
     }
 
+    /// <summary>The Reject reason sent to a Hello that arrives after the match started (same wording as the lobby's).</summary>
+    public const string MatchInProgressText = "The game has already started.";
+
     private void Handle(int from, NetMessage message)
     {
+        if (from < 0 && message is NetMessage.Hello)
+        {
+            // A Hello that reaches the host after the match started (the lobby no longer polls): answer it so the joiner shows a message
+            // instead of waiting out the timeout. Owner decision: no joining or reconnecting a running match (NETLLM-08).
+            if (_transport is Rts.Net.Udp.UdpTransport udp) udp.Reject(from, MatchInProgressText);
+            else _transport.Send(from, new NetMessage.Reject(MatchInProgressText));
+            return;
+        }
         if (from == HostPeer || _dropped.Contains(from)) return;   // a dropped peer stays dropped (Q-M9-m)
         switch (message)
         {
