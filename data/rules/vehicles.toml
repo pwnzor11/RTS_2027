@@ -760,6 +760,7 @@ passengers = 8  # design 07 §5 (8 infantry)
 unload_ticks = 10  # (tune) one passenger onto the shore every half second
 vehicle_slots = 2  # design 07 §6.3: carries 2 vehicles beside the infantry; vehicles land only on `landing` (Coast) cells
 bay_repair = 5  # (assumed) S44 M-12: permille of max HP per 10 ticks for units carried inside
+beacon_drop = "exp_beacon"   # S44 M-15: drops a Landing Beacon on a soft land cell next to the shore it beaches at
 
 [exp_supply_tender]   # convoy ship spawned by [shipments]; unarmed. Not meant to be built: gated behind the Anchorage at a prohibitive cost
 faction = "expedition"
@@ -940,7 +941,7 @@ cost = 700  # (tune)
 prerequisites = ["exp_flight_deck"]
 passengers = 6  # design 07 §5
 bay_repair = 5  # (assumed) S44 M-12: permille of max HP per 10 ticks for units carried inside
-# TODO M7-04: airlift of 2 light vehicles and beacon delivery
+beacon_drop = "exp_beacon"   # S44 M-15: drops a Landing Beacon on any soft land cell it flies to (the airlift of 2 light vehicles stays a TODO M7-04)
 
 [exp_jet]   # air-superiority fighter
 faction = "expedition"

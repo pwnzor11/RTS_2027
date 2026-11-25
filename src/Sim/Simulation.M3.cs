@@ -127,6 +127,7 @@ public sealed partial class Simulation
         _tunnels.ClearMobile(kind, i);
         _effects.ClearMobile(kind, i);
         if (kind == ActorKind.Vehicle) { _rigs.ClearVehicle(i); _mines.ClearVehicle(i); }   // M6-02; S44 M-01
+        _beaconOrders.Clear(kind, i);                           // S44 M-15
         _veterancy.ClearMobile(kind, i);                        // VET-1
         if (kind == ActorKind.Vehicle) { _naval.ClearVehicle(i); _naval.AmmoLeft[i] = RulesOf(_units.Player[i]).Vehicles[_units.TypeIndex[i]].Ammo; }   // M7-02, D-156: starts full
         SupplyChanged();                                        // SUP-1
@@ -146,6 +147,7 @@ public sealed partial class Simulation
         _tunnels.ClearMobile(kind, i);
         _effects.ClearMobile(kind, i);
         if (kind == ActorKind.Vehicle) { _rigs.ClearVehicle(i); _mines.ClearVehicle(i); }   // M6-02; S44 M-01
+        _beaconOrders.Clear(kind, i);                           // S44 M-15
         _veterancy.ClearMobile(kind, i);                        // VET-1
         if (kind == ActorKind.Vehicle) _naval.ClearVehicle(i);   // M7-02
         SupplyChanged();                                        // SUP-1

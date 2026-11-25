@@ -25,7 +25,7 @@ public sealed class M4ContractTests
     public void SimEnumValues_ArePinned()
     {
         Assert.Equal(22, (int)CommandKind.Unload);
-        Assert.Equal(29, Enum.GetValues<CommandKind>().Length);   // S24 CommanderOrder = 28; S19 AttackGround = 26, QueueOrder = 27; no other new CommandKind in M4; M5-01 added Directive = 23, M6-02 Pack = 24, M11-10i Hold = 25
+        Assert.Equal(30, Enum.GetValues<CommandKind>().Length);   // S44 M-15 DropBeacon = 29; S24 CommanderOrder = 28; S19 AttackGround = 26, QueueOrder = 27; no other new CommandKind in M4; M5-01 added Directive = 23, M6-02 Pack = 24, M11-10i Hold = 25
         Assert.Equal(7, (int)ActorLayer.Garrisoned);
         Assert.Equal(15, (int)MissionKind.Garrisoned);
         Assert.Equal(14, (int)MissionKind.Capture);
@@ -64,9 +64,9 @@ public sealed class M4ContractTests
     {
         var sim = ScriptedGame.NewSim(ScriptedGame.Setup());
         string[] names = sim.StateParts.Select(p => p.Name).ToArray();
-        Assert.Equal(new[] { "tunnels", "ground", "effects", "garrison", "stats", "directive", "rigs", "salvage", "veterancy", "shipments", "beachhead", "naval", "commander_orders", "props", "mines" }, names[^15..]);   // M5-01 appended "directive", M6-02 "rigs" and "salvage"
-        Assert.Same(sim.Garrison, sim.StateParts[^12]);
-        Assert.Same(sim.Stats, sim.StateParts[^11]);
+        Assert.Equal(new[] { "tunnels", "ground", "effects", "garrison", "stats", "directive", "rigs", "salvage", "veterancy", "shipments", "beachhead", "naval", "commander_orders", "props", "mines", "beacon_orders" }, names[^16..]);   // M5-01 appended "directive", M6-02 "rigs" and "salvage"
+        Assert.Same(sim.Garrison, sim.StateParts[^13]);
+        Assert.Same(sim.Stats, sim.StateParts[^12]);
     }
 
     [Fact]

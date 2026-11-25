@@ -258,7 +258,7 @@ primary_weapon = ""
 cost = 200  # (tune)
 prerequisites = ["exp_billet"]
 engineer = true
-# TODO M7-04: builds a Landing Beacon on soft land (design 07 §2.1); beacons are placed from the structure queue today
+beacon_build = "exp_beacon"   # S44 M-15: builds a Landing Beacon on a soft cell it stands next to (cost and build time of exp_beacon)
 
 [exp_diver]   # combat diver, plants charges on ships and quays
 faction = "expedition"
@@ -270,6 +270,7 @@ sight = 4  # (tune)
 primary_weapon = "exp_diver_charge"
 cost = 250  # (tune)
 prerequisites = ["exp_billet"]
+beacon_build = "exp_beacon"   # S44 M-15
 swims = true   # S44 M-02: walks and swims Water and Shallow (speed from the terrain table: the better of the foot and naval columns); hidden like a dived sub in deep Water, revealed by sonar
 
 [exp_pathfinder]   # spotter and long-range rifle, stealthy
