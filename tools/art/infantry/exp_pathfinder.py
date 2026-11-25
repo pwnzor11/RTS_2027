@@ -27,9 +27,9 @@ def pack(S, U, R):
 
 
 def extra(S, U, up, R, p):
-    S.cyl(0.045, 0.22, (0.15, 0.10, 0.60), "chrome", "Y", U, verts=10)                       # range finder on the helmet side
-    S.cyl(0.05, 0.03, (0.15, 0.22, 0.60), "lens", "Y", U, verts=10)
-    S.cyl(0.05, 0.04, (0.15, 0.03, 0.60), "copper", "Y", U, verts=10)
+    S.cyl(EP.hs(0.045), EP.hs(0.22), EP.hp((0.15, 0.10, 0.60)), "chrome", "Y", U, verts=10)      # range finder on the helmet side
+    S.cyl(EP.hs(0.05), EP.hs(0.03), EP.hp((0.15, 0.22, 0.60)), "lens", "Y", U, verts=10)
+    S.cyl(EP.hs(0.05), EP.hs(0.04), EP.hp((0.15, 0.03, 0.60)), "copper", "Y", U, verts=10)
 
 
 def weapon(S, GM, p, R):
@@ -41,8 +41,7 @@ def weapon(S, GM, p, R):
     S.cyl(0.04, 0.03, (0, 0.18, 0.09), "lens", "Y", GM, verts=8)
     S.box((0.04, 0.07, 0.12), (0, 0.02, -0.10), "dark", GM, rot=(8, 0, 0))
     if p["flash"]:
-        S.cyl(0.07, 0.24, (0, 0.98, 0.005), "flash", "Y", GM, verts=8, r2=0.0)
-        S.sphere((0.09, 0.09, 0.09), (0, 0.88, 0.005), "flash", GM, seg=8)
+        EP.flash_fx(S, GM, 0.72, (0.07, 0.24, 0.98), (0.09, 0.88), z=0.005)
 
 
 SPEC = dict(house_boost=True, shoulder=(0.22, 0.0, 0.37), grips=((0, -0.10, -0.075), (0, 0.20, -0.05)), bulk=0.9,

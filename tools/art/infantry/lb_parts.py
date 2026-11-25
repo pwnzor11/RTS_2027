@@ -10,6 +10,7 @@ sys.path.insert(0, HERE)
 sys.path.insert(0, os.path.dirname(HERE))
 import common as C
 import auth_rifleman as AR
+import boost
 
 CANVAS, ORIGIN, STATES, DIE_FACING = AR.CANVAS, AR.ORIGIN, AR.STATES, AR.DIE_FACING
 PALETTE = C.PAL_LB
@@ -26,6 +27,32 @@ MATERIALS = {
     "house": ("#E000E0", 0.75, 0.0, None),
 }
 EMIT_STRENGTH = {"lens": 2.2, "flash": 8.0}
+
+
+HEAD_C = (0.0, 0.12, 0.52)      # S45: the head's scaling centre (hood / respirator / goggles), like dir_conscript
+
+
+def hp(loc, hc=None):
+    """S45 boost: a head part's position scaled about the head centre (identity when RTS_INF_BOOST is unset)."""
+    h, c = boost.params()["head"], hc or HEAD_C
+    return tuple(c[i] + (loc[i] - c[i]) * h for i in range(3))
+
+
+def hs(v):
+    """S45 boost: a head part's size (number or tuple) scaled by the head factor."""
+    h = boost.params()["head"]
+    return tuple(x * h for x in v) if isinstance(v, (tuple, list)) else v * h
+
+
+def flash_fx(S, GM, tip, cone, ball=None, z=0.005):
+    """Muzzle flash at the weapon tip `tip` (y in gun coords).  cone = (radius, length, centre y), ball = (radius, centre y) or None.
+    The gun frame is scaled by gun / gunw, so the flash is counter-scaled to follow B["flash"] (neutral: unchanged geometry)."""
+    B = boost.params()
+    fl, flw = B["flash"] / B["gun"], B["flash"] / B["gunw"]
+    cy = lambda y: y if fl == 1.0 else tip + (y - tip) * fl
+    S.cyl(cone[0] * flw, cone[1] * fl, (0, cy(cone[2]), z), "flash", "Y", GM, verts=8, r2=0.0)
+    if ball:
+        S.sphere((ball[0] * flw, ball[0] * fl, ball[0] * flw), (0, cy(ball[1]), z), "flash", GM, seg=8)
 
 
 def make_pose(lean=14.0, stride=0.27, hold=((0.03, 0.17, 0.10), 24.0, 60.0), fire=((0.07, 0.30, 0.36), 12.0, 10.0),
@@ -65,6 +92,8 @@ def build_figure(S, p, spec):
     import rig as R
     import dir_parts as P
     b = spec.get("bulk", 1.0)
+    B = boost.params()
+    Hh, h = B["house"], B["head"]
     U = R.tr(0, p["dy"], 0.62 + p["bob"]) @ R.rz(p["twist"]) @ R.rx(-p["lean"]) @ R.rz(p["roll"])
     pel = (0, p["dy"], 0.62 + p["bob"])
 
@@ -89,37 +118,42 @@ def build_figure(S, p, spec):
     # ---- head
     hm, ph_, pb = spec["hood"]
     S.box((0.08, 0.09, 0.07), (0, 0.07, 0.44), "dark", U)
-    S.sphere((0.135, 0.145, 0.14), (0, 0.10, 0.565), hm, U)                                        # hood
-    S.cyl(0.115, ph_, (0, 0.10 - pb * 0.5, 0.60 + ph_ / 2), hm, "Z", U, verts=8, r2=0.0)           # tall pointed peak
-    S.cyl(0.14, 0.04, (0, 0.10, 0.50), c_wrap, "Z", U, verts=8)                                   # hood hem wrap
-    S.box((0.18, 0.08, 0.10), (0, 0.255, 0.475), "ashB", U, bevel=0.015)                         # face cloth
-    S.cyl(0.06, spec.get("tin_len", 0.09), (0, 0.325, 0.46), "steel", "Y", U, verts=10)           # filter-tin respirator
-    S.cyl(0.068, 0.03, (0, 0.30, 0.46), "rust", "Y", U, verts=10)
+    S.sphere(hs((0.135, 0.145, 0.14)), hp((0, 0.10, 0.565)), hm, U)                                # hood
+    S.cyl(0.115 * h, ph_ * h, hp((0, 0.10 - pb * 0.5, 0.60 + ph_ / 2)), hm, "Z", U, verts=8, r2=0.0)   # tall pointed peak
+    S.cyl(0.14 * h, 0.04 * h, hp((0, 0.10, 0.50)), c_wrap, "Z", U, verts=8)                       # hood hem wrap
+    S.box(hs((0.18, 0.08, 0.10)), hp((0, 0.255, 0.475)), "ashB", U, bevel=0.015)                 # face cloth
+    S.cyl(0.06 * h, spec.get("tin_len", 0.09) * h, hp((0, 0.325, 0.46)), "steel", "Y", U, verts=10)   # filter-tin respirator
+    S.cyl(0.068 * h, 0.03 * h, hp((0, 0.30, 0.46)), "rust", "Y", U, verts=10)
     for sx in (-1, 1):
-        S.box((0.085, 0.04, 0.065), (sx * 0.06, 0.29, 0.55), "lens", U, bevel=0)               # goggles
-        S.box((0.075, 0.03, 0.02), (sx * 0.055, 0.28, 0.58), "dark", U, bevel=0)
-    S.box((0.23, 0.03, 0.025), (0, 0.255, 0.545), "dark", U, bevel=0)                             # goggle strap
+        S.box(hs((0.085, 0.04, 0.065)), hp((sx * 0.06, 0.29, 0.55)), "lens", U, bevel=0)       # goggles
+        S.box(hs((0.075, 0.03, 0.02)), hp((sx * 0.055, 0.28, 0.58)), "dark", U, bevel=0)
+    S.box(hs((0.23, 0.03, 0.025)), hp((0, 0.255, 0.545)), "dark", U, bevel=0)                     # goggle strap
     # ---- back load and extras
     if spec.get("pack"):
         spec["pack"](S, U, R)
     if spec.get("house_boost"):          # D-185: scavenged team colour: painted rag sash, patched shoulder cloth, painted pack panel
-        S.limb(up((0.15 * b, 0.19 * b, 0.38)), up((-0.17 * b, 0.235 * b, 0.03)), 0.12 * b, "house", d=0.04, bevel=0)   # painted rag sash
+        S.limb(up((0.15 * b, 0.19 * b, 0.38)), up((-0.17 * b, 0.235 * b, 0.03)), 0.12 * b * Hh, "house", d=0.04, bevel=0)   # painted rag sash
         for sx in (-1, 1):
-            S.box((0.13, 0.20 * b, 0.05), (sx * (0.21 * b + 0.02), 0.0, 0.395), "house", U, rot=(0, sx * -10, 0), bevel=0)   # patched shoulder cloth
+            S.box((0.13 * (1 + 0.5 * (Hh - 1)), 0.20 * b * (1 + 0.3 * (Hh - 1)), 0.05 * (1 + 0.6 * (Hh - 1))), (sx * (0.21 * b + 0.02 * Hh), 0.0, 0.395), "house", U, rot=(0, sx * -10, 0), bevel=0)   # patched shoulder cloth
         if spec.get("panel"):
             sz_, ps_ = spec["panel"]
-            S.box(sz_, ps_, "house", U, bevel=0)                      # painted panel on the pack
+            S.box((sz_[0] * (1 + 0.15 * (Hh - 1)), sz_[1], sz_[2] * Hh), ps_, "house", U, bevel=0)                      # painted panel on the pack
     if spec.get("extra"):
         spec["extra"](S, U, up, R)
     # ---- held item
-    GM = (U if p["gun_space"] == "u" else Matrix.Identity(4)) @ R.tr(*p["gun"][0]) @ R.rz(p["gun"][1]) @ R.rx(p["gun"][2])
+    GM0 = (U if p["gun_space"] == "u" else Matrix.Identity(4)) @ R.tr(*p["gun"][0]) @ R.rz(p["gun"][1]) @ R.rx(p["gun"][2])
+    GM = GM0 @ Matrix.Diagonal((B["gunw"], B["gun"], B["gunw"], 1.0))                  # S45 weapon scale (hands follow the grips below)
     spec["weapon"](S, GM, p, R)
     # ---- arms and legs (shared two-bone IK builders)
     su, sf, sc_ = spec.get("sleeves", ("wrapB", "wrapA", "rope"))
-    P.arms(S, p, U, up, GM, spec["shoulder"], spec["grips"], (su, sf), thick=(0.085 * b, 0.072 * b), band=0.12 * b,
+    gs = (B["gunw"], B["gun"], B["gunw"])
+    grips = tuple(tuple(a * k for a, k in zip(g, gs)) for g in spec["grips"])
+    lb_ = B["limb"]
+    P.arms(S, p, U, up, GM0, spec["shoulder"], grips, (su, sf), thick=(0.085 * b * lb_, 0.072 * b * lb_), band=0.12 * b * lb_ * (1 + 0.25 * (Hh - 1)),
            band_mat="house", cuff_mat=sc_, hand_mat="dark", hand_size=0.07, cuff_len=0.28)
     lm, lsp, lth = spec.get("legs", ("pants", 0.095, (0.095, 0.08)))
-    P.legs(S, p, pel, spread=lsp, thick=lth, mat=lm, boot="dark")
+    pf = dict(p, feet=tuple((f[0] * B["stance"],) + tuple(f[1:]) for f in p["feet"]))      # S45 wider stance
+    P.legs(S, pf, pel, spread=lsp * B["stance"], thick=(lth[0] * lb_, lth[1] * lb_), mat=lm, boot="dark")
     if p["spread"]:
         S.cyl(0.40 * b, 0.03, (0.0, p["dy"] + 0.12, 0.03), c_mid, "Z", None, verts=8)
         S.cyl(0.28 * b, 0.035, (0.05, p["dy"] + 0.12, 0.05), c_up, "Z", None, verts=8)

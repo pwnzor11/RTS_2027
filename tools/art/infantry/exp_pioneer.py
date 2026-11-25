@@ -29,7 +29,7 @@ def extra(S, U, up, R, p):
     S.box((0.17, 0.12, 0.15), (0.20, 0.06, -0.08), "white", U, bevel=0.02)                   # valve crate
     S.box((0.175, 0.04, 0.05), (0.20, 0.06, -0.05), "house", U, bevel=0)
     S.cyl(0.03, 0.04, (0.20, 0.06, 0.0), "copper", "Z", U, verts=8)
-    S.box((0.19, 0.04, 0.12), (0, 0.145, 0.62), "chrome3", U, bevel=0.01, rot=(35, 0, 0))     # flip-up welding visor
+    S.box(EP.hs((0.19, 0.04, 0.12)), EP.hp((0, 0.145, 0.62)), "chrome3", U, bevel=0.01, rot=(35, 0, 0))     # flip-up welding visor
     S.cyl(0.02, 0.22, (-0.20, 0.10, -0.06), "chrome", "Y", U, verts=6)                       # torch on the hip
     S.cyl(0.03, 0.04, (-0.20, 0.23, -0.06), "orange", "Y", U, verts=6)
 
