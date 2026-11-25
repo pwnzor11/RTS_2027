@@ -129,4 +129,16 @@ public sealed class ExpeditionMechanicsTests
         Assert.Equal(0, Depots(sim));
         Assert.True(sim.Units.Slots.IsAlive(ship));
     }
+
+    [Fact]
+    public void TheCommandShipDeploysOnAShoreCellNextToShallowWater()
+    {
+        // sea x < 10 deep, x = 10..11 shallow (the ship sits there), plain buildable ground from x = 12: no Coast anywhere
+        Simulation sim = New(Map(30, 20, (x, _) => x < 10 ? LandType.Water : x < 12 ? LandType.Shallow : LandType.Clear));
+        EntityId ship = sim.SpawnVehicle(0, V("exp_command_ship"), new CellCoord(11, 10));
+        Assert.False(ship.IsNone);
+        sim.Step(new[] { new Command(sim.Tick, 0, 1, CommandKind.Deploy, ship, default, new CellCoord(11, 10), 0) });
+        for (int i = 0; i < 5; i++) sim.Step(Array.Empty<Command>());
+        Assert.Equal(1, Depots(sim));
+    }
 }

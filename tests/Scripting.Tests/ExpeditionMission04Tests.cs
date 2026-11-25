@@ -65,6 +65,8 @@ public sealed class ExpeditionMission04Tests
         bool pushed = false;
         for (int guard = 0; m.Sim.Tick < TickLimit && !m.Sim.GameOver; guard++)
         {
+            // M-10: a Provision Store is only fully stocked while tenders keep docking; this bot has no Anchorage, so it stands in for the convoy
+            if (guard % 60 == 0) m.Sim.Shipments.LastArrivalTick[0] = m.Sim.Tick;
             if (guard % 40 == 0) bot.Train(bot.Count("exp_glide_tank") < 12 || bot.Count("exp_marine") >= 12 ? "exp_glide_tank" : "exp_marine");
             if (guard % 60 == 0)
             {

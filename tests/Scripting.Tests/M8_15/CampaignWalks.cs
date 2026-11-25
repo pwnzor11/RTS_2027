@@ -705,6 +705,7 @@ internal static class CampaignWalks
         bool pushed = false;
         for (int guard = 0; bot.Sim.Tick < limit && !bot.Sim.GameOver; guard++)
         {
+            if (guard % 60 == 0) bot.Sim.Shipments.LastArrivalTick[0] = bot.Sim.Tick;   // M-10: stands in for the convoy that keeps the stores stocked (no Anchorage here)
             if (guard % 40 == 0) bot.Train(bot.Count("exp_glide_tank") < 12 || bot.Count("exp_marine") >= 12 ? "exp_glide_tank" : "exp_marine");
             if (guard % 60 == 0)
             {

@@ -511,7 +511,16 @@ internal sealed class ExpeditionTactics : IFactionTactics
     {
         for (int y = y0; y < y0 + h; y++)
             for (int x = x0; x < x0 + w; x++)
-                if (v.InMap(new CellCoord(x, y)) && rules.Terrain.Landing(v.LandAt(new CellCoord(x, y)))) return true;
+            {
+                if (!v.InMap(new CellCoord(x, y))) continue;
+                if (rules.Terrain.Landing(v.LandAt(new CellCoord(x, y)))) return true;
+                for (int dy = -1; dy <= 1; dy++)
+                    for (int dx = -1; dx <= 1; dx++)
+                    {
+                        var n = new CellCoord(x + dx, y + dy);
+                        if (v.InMap(n) && v.LandAt(n) == LandType.Shallow) return true;
+                    }
+            }
         return false;
     }
 
