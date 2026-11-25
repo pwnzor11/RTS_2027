@@ -1032,12 +1032,17 @@ public sealed class GameScreen : IScreen, IFocusPausable
     {
         if (_toast.Current(_nowMs) is not { } text) return;
         UiUnit unit = _s.UiScale;
-        int w = BitmapFont.Measure(text, unit) + 8 * unit;
-        int h = BitmapFont.LineHeight(unit, Rts.Game.Ui.Fonts.FontWeight.Regular) + 4 * unit;
         Viewport map = MapViewport();
+        // U-03: a long line (a save error) wraps inside the map view instead of running off it; a short line is drawn as before.
+        int maxText = Math.Max(160 * unit, map.Width * 3 / 5 - 8 * unit);
+        List<string> lines = TextWrap.Wrap(text, maxText, t => BitmapFont.Measure(t, unit));
+        int lineH = BitmapFont.LineHeight(unit, Rts.Game.Ui.Fonts.FontWeight.Regular);
+        int w = lines.Max(l => BitmapFont.Measure(l, unit)) + 8 * unit;
+        int h = lines.Count * lineH + 4 * unit;
         var box = new Rectangle((map.Width - w) / 2, 6 * unit, w, h);
         sb.Draw(_s.Pixel, box, new Color(0, 0, 0, 190));
-        BitmapFont.Draw(sb, _s.Pixel, text, new Vector2(box.X + 4 * unit, box.Y + 2 * unit), Color.White, unit);
+        for (int i = 0; i < lines.Count; i++)
+            BitmapFont.Draw(sb, _s.Pixel, lines[i], new Vector2(box.X + 4 * unit, box.Y + 2 * unit + i * lineH), Color.White, unit);
     }
 
     private void HandleMouse(InputFrame input)
@@ -1926,9 +1931,14 @@ public sealed class GameScreen : IScreen, IFocusPausable
         if (input.ConsumePressed(GameAction.SelectAll))
         {
             SimRules rules = _sim.Rules;
-            _selection.Replace(Selection.Army(_renderUnits, Me, unit => Selection.IsCombatUnit(rules, unit)));
-            ClearBuildingSelection();
-            if (_selection.Count > 0) Audio.AudioBootstrap.Director?.Notify(Audio.AudioEventKind.UnitSelect);
+            List<UnitKey> army = Selection.Army(_renderUnits, Me, unit => Selection.IsCombatUnit(rules, unit)).ToList();
+            if (army.Count == 0) _toast.Show(SelectionFeedbackText.NoArmy(), _nowMs);   // U-02: say so and keep the selection, rather than clearing it silently
+            else
+            {
+                _selection.Replace(army);
+                ClearBuildingSelection();
+                if (_selection.Count > 0) Audio.AudioBootstrap.Director?.Notify(Audio.AudioEventKind.UnitSelect);
+            }
         }
 
         if (input.ConsumePressed(GameAction.SelectTypeMapWide) && _selection.Count > 0)   // QOL-02
@@ -1953,7 +1963,14 @@ public sealed class GameScreen : IScreen, IFocusPausable
             if (!_selectedBuilding.IsNone) structures.Add(_selectedBuilding);
             foreach (EntityId marked in _marked) if (!structures.Contains(marked)) structures.Add(marked);
             GroupPress press = _groups.Press(number, CtrlHeld(input), ShiftHeld(input), _selection.Units, structures);   // S18 GAMEUI-07: an empty selection keeps the group
-            if (press is GroupPress.Set) _groupTap.Reset();
+            if (press is GroupPress.Set)
+            {
+                _groupTap.Reset();
+                int setCount = _groups.Members(number).Count;   // U-02: the toast says what the group now holds
+                if (setCount == 0) setCount = _groups.Structures(number).Count;
+                _toast.Show(SelectionFeedbackText.GroupSet(number, setCount), _nowMs);
+            }
+
             if (press is GroupPress.None or GroupPress.Set or GroupPress.Added) continue;
             bool twice = _groupTap.Tap(number, _nowMs);
             if (press == GroupPress.RecallStructures)

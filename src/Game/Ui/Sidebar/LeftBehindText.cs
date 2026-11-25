@@ -27,8 +27,8 @@ public static class LeftBehindText
     /// <summary>Button tooltip while the rig is already packing or unpacking (key).</summary>
     public const string BusyKey = "hud.command.pack_busy";
 
-    /// <summary>The hotkey of the Pack / Unpack command (K is free: A S G X D orders, Q W E R T Y tabs, V in spectate).</summary>
-    public const string HotkeyLetter = "K";
+    /// <summary>The hotkey of the Pack / Unpack command as the player has it bound now (K by default; U-01 reads it from the bindings at draw time).</summary>
+    public static string HotkeyLetter => Rts.Game.Controls.KeyNames.Of(Rts.Game.Controls.GameKeys.Active.Get(Rts.Game.Controls.GameAction.Pack));
 
     /// <summary>Placeholder text for a key. Unknown keys return the key.</summary>
     public static string Placeholder(string key) => key switch
