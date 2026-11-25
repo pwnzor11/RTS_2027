@@ -48,4 +48,16 @@ public sealed record FactionTuning(int ArmyBeforeTech, int ArmyBeforeAdapt, int 
     public IReadOnlyList<string>? VehicleTier2 { get; init; }
     /// <summary>Vehicles added at tech tier 3 (<c>vehicle_tier3</c>); null = built-in.</summary>
     public IReadOnlyList<string>? VehicleTier3 { get; init; }
+
+    // s44 (M16-M-03): Expedition naval levers (ExpeditionTactics, TierPlanner). All default to 0 = the old behaviour; see data/ai/difficulty.toml [faction.expedition].
+    /// <summary>First profile tier that uses the Drydock, heavy ships and the Minelayer (<c>naval_min_tier</c>; 0 = never).</summary>
+    public int NavalMinTier { get; init; } = 0;
+    /// <summary>Cruisers wanted once a Drydock stands (<c>naval_cruisers</c>); raises the tier's own plan, never lowers it.</summary>
+    public int NavalCruisers { get; init; } = 0;
+    /// <summary>Carriers wanted once a Drydock stands (<c>naval_carriers</c>); raises the tier's own plan, never lowers it.</summary>
+    public int NavalCarriers { get; init; } = 0;
+    /// <summary>Minelayers wanted at most (<c>naval_minelayers</c>; built only while a Shipyard stands).</summary>
+    public int NavalMinelayers { get; init; } = 0;
+    /// <summary>An idle ship below this health percent sails to an own Drydock and returns repaired (<c>naval_return_pct</c>; 0 = off).</summary>
+    public int NavalReturnPct { get; init; } = 0;
 }

@@ -105,7 +105,8 @@ public static class DifficultyLoader
     /// <summary>S29: the per-faction build lever keys allowed besides <c>harass_min_army</c>.</summary>
     private static readonly string[] TuningKeys = ["army_before_tech", "army_before_adapt", "adapt_cash", "adapt_max_production", "tier2_gate_tick", "adapt_build",
         "bore_max", "bore_army", "bore_gap_ticks", "bore_dig_short", "bore_sites", "bore_min_cash", "adapt_rich_cash", "adapt_rich_max",   // s39: Directorate Bore levers
-        "infantry_bag", "vehicle_bag", "infantry_tier2", "vehicle_tier2", "vehicle_tier3"];   // s41 M13-42: unit lists
+        "infantry_bag", "vehicle_bag", "infantry_tier2", "vehicle_tier2", "vehicle_tier3",   // s41 M13-42: unit lists
+        "naval_min_tier", "naval_cruisers", "naval_carriers", "naval_minelayers", "naval_return_pct"];   // s44 M16-M-03: Expedition naval use
 
     private static FactionAiKeys ParseFactions(TomlTable root, string file, List<RulesProblem> problems, List<(int Faction, int Tier, TomlTable Table, string Id)> overrides)
     {
@@ -147,6 +148,11 @@ public static class DifficultyLoader
                 InfantryTier2 = Ids(t, id, "infantry_tier2", file, problems),
                 VehicleTier2 = Ids(t, id, "vehicle_tier2", file, problems),
                 VehicleTier3 = Ids(t, id, "vehicle_tier3", file, problems),
+                NavalMinTier = Opt(t, id, "naval_min_tier", 0, 5, d.NavalMinTier, file, problems) ?? d.NavalMinTier,   // s44 M16-M-03
+                NavalCruisers = Opt(t, id, "naval_cruisers", 0, 6, d.NavalCruisers, file, problems) ?? d.NavalCruisers,
+                NavalCarriers = Opt(t, id, "naval_carriers", 0, 4, d.NavalCarriers, file, problems) ?? d.NavalCarriers,
+                NavalMinelayers = Opt(t, id, "naval_minelayers", 0, 3, d.NavalMinelayers, file, problems) ?? d.NavalMinelayers,
+                NavalReturnPct = Opt(t, id, "naval_return_pct", 0, 100, d.NavalReturnPct, file, problems) ?? d.NavalReturnPct,
             };
             int? cr = Opt(t, id, "siege_commit_ratio", 0, 10000, 0, file, problems);   // s29
             if (cr is int cx) commit[i] = cx;
