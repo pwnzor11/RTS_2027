@@ -39,6 +39,9 @@ public sealed class SceneRenderer : IDisposable
     /// <summary>M16-V-04: draw drifting cloud shadows over the world (the "Cloud shadows" setting); the game screen sets it each frame.</summary>
     public bool CloudShadowsEnabled { get; set; } = true;
 
+    /// <summary>M16-V-04: draw the sweeping sparkle band on visible water (the "Water shimmer" setting); the game screen sets it each frame.</summary>
+    public bool WaterShimmerEnabled { get; set; } = true;
+
     /// <summary>M10-14: shake the world view on big blasts (the "Screen shake" setting); the game screen sets it each frame.</summary>
     public bool ShakeEnabled { get; set; } = true;
 
@@ -67,6 +70,7 @@ public sealed class SceneRenderer : IDisposable
     private readonly List<DrawItem> _items = new();
     private readonly ThemedTerrainLook _terrain = new();
     private readonly CloudShadowLayer _clouds = new();   // M16-V-04: soft shadows drifting over the world
+    private readonly WaterShimmerLayer _shimmer = new();   // M16-V-04: sparkle band over visible water
     private readonly WaterOverlay _water = new();   // M10-13: animated water, shore foam, ship wakes
     private readonly DecorLayer _decor = new();   // M12: decals and land-linked sprites on the terrain
     private readonly List<WreckView> _wreckViews = new();      // M6-09: wreck and storm layers
@@ -180,6 +184,7 @@ public sealed class SceneRenderer : IDisposable
         TelegraphRenderer.Draw(batch, pixel, snapshot.Telegraphs, snapshot.Tick, camera, viewport);
         if (frame.Sim is not null) FoamOverlay.Draw(batch, frame.Sim, snapshot.Viewer, camera);
         if (map is not null) _water.Draw(batch, pixel, map, frame, camera, viewport);   // M10-13
+        if (WaterShimmerEnabled && map is not null) _shimmer.Draw(batch, pixel, map, snapshot, camera, viewport);   // M16-V-04
 
         if (!ReferenceEquals(map, _moodMap))
         {

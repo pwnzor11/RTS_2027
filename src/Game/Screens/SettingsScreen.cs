@@ -58,6 +58,8 @@ public sealed class SettingsScreen : IScreen
                 new MenuButton("Toggle", ToggleScreenShake)),   // M10-14
             new MenuItem(() => $"Cloud shadows: {(_s.Settings.CloudShadows ? "On" : "Off")}", ToggleCloudShadows, _ => ToggleCloudShadows(),
                 new MenuButton("Toggle", ToggleCloudShadows)),   // M16-V-04
+            new MenuItem(() => $"Water shimmer: {(_s.Settings.WaterShimmer ? "On" : "Off")}", ToggleWaterShimmer, _ => ToggleWaterShimmer(),
+                new MenuButton("Toggle", ToggleWaterShimmer)),   // M16-V-04
             new MenuItem(() => $"Reduce flashes: {(_s.Settings.ReduceFlashes ? "On" : "Off")}", ToggleReduceFlashes, _ => ToggleReduceFlashes(),
                 new MenuButton("Toggle", ToggleReduceFlashes)),   // QOL-20
             new MenuItem(() => "Alerts", () => _s.Screens.Push(new AlertsSettingsScreen(_s, _path))),   // QOL-12
@@ -182,6 +184,8 @@ public sealed class SettingsScreen : IScreen
     private void ToggleWeather() => _s.Settings = _s.Settings with { Weather = !_s.Settings.Weather };
 
     private void ToggleCloudShadows() => _s.Settings = _s.Settings with { CloudShadows = !_s.Settings.CloudShadows };   // M16-V-04
+
+    private void ToggleWaterShimmer() => _s.Settings = _s.Settings with { WaterShimmer = !_s.Settings.WaterShimmer };   // M16-V-04
 
     private void ToggleReduceFlashes() => _s.Settings = _s.Settings with { ReduceFlashes = !_s.Settings.ReduceFlashes };
 
