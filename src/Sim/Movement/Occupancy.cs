@@ -22,7 +22,7 @@ internal static class Occupancy
     public static readonly int[] Dy = { -1, -1, 0, 1, 1, 1, 0, -1 };
 
     public static Locomotion LocoOf(Simulation sim, ActorKind kind, MobileStore store, int i) =>
-        kind == ActorKind.Vehicle ? MoveClass.Of(sim.Setup.Rules.Vehicles[store.TypeIndex[i]]) : Locomotion.Foot;   // M7-03: large ships
+        kind == ActorKind.Vehicle ? MoveClass.Of(sim.Setup.Rules.Vehicles[store.TypeIndex[i]]) : MoveClass.OfInfantry(sim.RulesOf(store.Player[i]).Infantry[store.TypeIndex[i]]);   // M7-03: large ships
 
     /// <summary>The cell the actor currently stands in: Position's cell for vehicles, the held sub-slot's cell for infantry.</summary>
     public static CellCoord CurCell(ActorKind kind, MobileStore store, int i) =>
@@ -53,9 +53,9 @@ internal static class Occupancy
     }
 
     /// <summary>An infantry soldier could enter the cell right now (no vehicle, a free sub-slot).</summary>
-    public static bool FreeForInfantry(Simulation sim, CellCoord c, byte passer = PathService.NoPasser)
+    public static bool FreeForInfantry(Simulation sim, CellCoord c, byte passer = PathService.NoPasser, Locomotion loco = Locomotion.Foot)
     {
-        if (!TerrainOk(sim, c, Locomotion.Foot, passer) || !sim.Map.VehicleAt(c).IsNone) return false;   // M3-04: passer
+        if (!TerrainOk(sim, c, loco, passer) || !sim.Map.VehicleAt(c).IsNone) return false;   // M3-04: passer
         return sim.Map.FreeInfantrySlot(c) >= 0;
     }
 
@@ -76,7 +76,7 @@ internal static class Occupancy
         Locomotion loco = LocoOf(sim, kind, store, i);
         byte passer = store.Player[i];   // M3-04: own-team gates are open to this actor
         if (!CornersOk(sim, from, dir, loco, passer)) return false;
-        return kind == ActorKind.Vehicle ? FreeForVehicle(sim, c, loco, store.Slots.IdOf(i), passer) : FreeForInfantry(sim, c, passer);
+        return kind == ActorKind.Vehicle ? FreeForVehicle(sim, c, loco, store.Slots.IdOf(i), passer) : FreeForInfantry(sim, c, passer, loco);
     }
 
     /// <summary>First free adjacent cell in the order N..NW starting at <paramref name="startDir"/>.</summary>

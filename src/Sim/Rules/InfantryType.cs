@@ -47,6 +47,10 @@ public sealed record InfantryType(string Id, int Speed, int MaxHealth, ArmorClas
     /// <summary>Seismograph radius in cells (0 = none).</summary>
     public int SeismicRadius { get; init; }
 
+    /// <summary>S44 M-02: swims in Water and Shallow as well as walking (TOML <c>swims</c>, default false). A swimmer standing in deep Water is hidden like a dived
+    /// submarine and revealed by sonar (<see cref="Rts.Sim.Simulation"/> IsHiddenSub).</summary>
+    public bool Swims { get; init; }
+
     /// <summary>Engineer: Enter on an enemy building below half health captures it, on a friendly one repairs it (M3-06).</summary>
     public bool Engineer { get; init; }
 
