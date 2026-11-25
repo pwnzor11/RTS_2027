@@ -82,7 +82,7 @@ public sealed class FxLook : IDisposable
             if (!TryAnimate(rules, d, sprites)) Bury(rules, d);
         }
 
-        _dust.Observe(snapshot, rules, _puffs, mood.DustColour);
+        _dust.Observe(snapshot, rules, _puffs, mood.DustColour, sprites);
         _propDust.Observe(snapshot, _puffs, mood.DustColour);
     }
 
