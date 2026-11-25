@@ -30,6 +30,9 @@ public static class UiText
     /// <summary>M7-14: caption of the Dive/Surface button while the ship is dived (the click surfaces).</summary>
     public const string SurfaceCaption = "ui.dive.surface";
 
+    /// <summary>S44 M-01: caption of the Lay mine button for a selected minelayer. Placeholder: <c>{stock}</c> (mines aboard).</summary>
+    public const string MineCaption = "ui.mine.lay";
+
     /// <summary>D-205: toast after a quicksave.</summary>
     public const string Quicksaved = "ui.save.quicksaved";
 
@@ -152,6 +155,7 @@ public static class UiText
         [SupplyWaiting] = "Waiting for supply",
         [DiveCaption] = "Dive (D)",
         [SurfaceCaption] = "Surface (D)",
+        [MineCaption] = "Lay mine (D) {stock} left",
         [ShipmentTimer] = "Shipment in {time} +{payload}",
         [Quicksaved] = "Quicksaved.",
         [QuicksaveFailed] = "Quicksave failed: {reason}",

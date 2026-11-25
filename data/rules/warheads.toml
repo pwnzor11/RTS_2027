@@ -224,6 +224,11 @@ versus = [0, 0, 0, 0, 0, 40, 30, 100]
 splash = 1
 hits_allies = false
 
+[exp_sea_mine]   # (tune) S44 M-01: sea mine, hits surface ships only (a dived submarine passes under it); versus ship armour
+versus = [0, 0, 0, 0, 0, 100, 80, 0]
+splash = 0
+hits_allies = false
+
 [exp_salvo_array_blast]   # (tune) Salvo Array (superweapon "exp_salvo_array" reads "<superweapon>_blast"): a cruise-missile salvo (M7-12, D-142)
 versus = [100, 100, 100, 100, 100, 100, 100, 0]   # dived submarines are spared
 splash = 1

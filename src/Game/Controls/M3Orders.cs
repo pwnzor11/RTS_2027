@@ -48,6 +48,10 @@ public static class M3Orders
     public static bool IsDiver(SimRules rules, ActorKind kind, int typeIndex) =>
         kind == ActorKind.Vehicle && (uint)typeIndex < (uint)rules.Vehicles.Count && rules.Vehicles[typeIndex].Submerges;
 
+    /// <summary>S44 M-01: true if the vehicle type lays sea mines (<c>mine_capacity</c> above 0), so Deploy lays one.</summary>
+    public static bool IsMinelayer(SimRules rules, ActorKind kind, int typeIndex) =>
+        kind == ActorKind.Vehicle && (uint)typeIndex < (uint)rules.Vehicles.Count && rules.Vehicles[typeIndex].MineCapacity > 0;
+
     /// <summary>The tunnel size of a unit type (None for Authority units and unknown types).</summary>
     public static TunnelSize TunnelSizeOf(SimRules rules, ActorKind kind, int typeIndex)
     {

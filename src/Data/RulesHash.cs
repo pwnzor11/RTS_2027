@@ -52,7 +52,7 @@ namespace Rts.Data;
 /// infantry Supply; per building SupplyProvided and SupplyUnstocked.</item>
 /// <item>Schema v8 block (M7-02, format 11): per land type Landing; Shipments Enabled, IntervalTicks, Value, DecayPermille, FloorPermille,
 /// CharterTicks, TendersMax, LocalAshBonusPermille, TenderType (M7-06); per vehicle DrawScalePermille, DeepOnly, Submerges, SonarRadius, AircraftSlots,
-/// SortieTicks, UnloadTicks, VehicleSlots (M7-04b), then Ammo and RearmTicks only for a type with either set (D-156); per building WaterBuilding, WaterMask (count, then cells), BeachheadSource, BeachheadRadius, ShipmentDock (M7-06), SonarRadius (simfu-4); then per warhead SalvoMissiles, SalvoTicks, SalvoRadius, SalvoDamage, SalvoWarnTicks, SalvoSplash (M7-12). The terrain
+/// SortieTicks, UnloadTicks, VehicleSlots (M7-04b), then Ammo and RearmTicks only for a type with either set (D-156); then the eight mine fields only for a type with MineCapacity or MineSweepRadius set (S44 M-01); per building WaterBuilding, WaterMask (count, then cells), BeachheadSource, BeachheadRadius, ShipmentDock (M7-06), SonarRadius (simfu-4); then per warhead SalvoMissiles, SalvoTicks, SalvoRadius, SalvoDamage, SalvoWarnTicks, SalvoSplash (M7-12). The terrain
 /// table above grows with the land and locomotion counts (Coast, Naval).</item>
 /// <item>Schema v9 block (M12-16, format 12): Props TreeHealth, SnagHealth, WreckHealth, SplashArmor (byte), CrushPathPenalty.</item>
 /// </list>
@@ -314,6 +314,11 @@ public static class RulesHash
             w.Write(x.DrawScalePermille); w.Write(x.DeepOnly); w.Write(x.Submerges); w.Write(x.SonarRadius);
             w.Write(x.AircraftSlots); w.Write(x.SortieTicks); w.Write(x.UnloadTicks); w.Write(x.VehicleSlots);
             if (x.Ammo > 0 || x.RearmTicks > 0) { w.Write(x.Ammo); w.Write(x.RearmTicks); }   // D-156: only types with ammo, so old hashes keep
+            if (x.MineCapacity > 0 || x.MineSweepRadius > 0)   // S44 M-01: only minelayers, so other hashes keep
+            {
+                w.Write(x.MineCapacity); w.Write(x.MineLayTicks); w.Write(x.MineDamage); w.Write(x.MineWarhead); w.Write(x.MineTriggerRadius);
+                w.Write(x.MineSweepRadius); w.Write(x.MineSweepTicks); w.Write(x.MineRestockTicks);
+            }
         }
         foreach (BuildingType x in sim.Buildings)
         {

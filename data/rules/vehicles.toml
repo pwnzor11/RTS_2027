@@ -834,7 +834,14 @@ turret_turn_rate = 0
 crusher = false
 cost = 500  # (tune)
 prerequisites = ["exp_shipyard"]
-# TODO M7-05: sea-mine laying and sweeping have no rules fields; unarmed until the mine mechanic exists
+mine_capacity = 6  # (assumed S44 M-01) mines carried
+mine_lay_ticks = 30  # (assumed) 2 s between two mines
+mine_damage = 250  # (assumed) over half of a destroyer (450 hp); ship_heavy takes 80%
+mine_warhead = "exp_sea_mine"
+mine_trigger_radius = 0  # the mine's own cell
+mine_sweep_radius = 3  # (assumed) clears enemy mines within 3 cells
+mine_sweep_ticks = 60  # (assumed) one sweep per 4 s
+mine_restock_ticks = 90  # (assumed) one mine per 6 s beside an own naval building
 
 [exp_cruiser]   # large ship, shore bombardment, 1-cell body drawn 2x
 faction = "expedition"

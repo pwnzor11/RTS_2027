@@ -319,10 +319,10 @@ public sealed class M7ContractTests
         Assert.Equal(14, ReplayWriter.OldestReadableVersion);
         var sim = ScriptedGame.NewSim(ScriptedGame.Setup());
         string[] names = sim.StateParts.Select(p => p.Name).ToArray();
-        Assert.Equal(new[] { "salvage", "veterancy", "shipments", "beachhead", "naval", "commander_orders", "props" }, names[^7..]);
-        Assert.Same(sim.Shipments, sim.StateParts[^5]);
-        Assert.Same(sim.Beachhead, sim.StateParts[^4]);
-        Assert.Same(sim.Naval, sim.StateParts[^3]);
+        Assert.Equal(new[] { "salvage", "veterancy", "shipments", "beachhead", "naval", "commander_orders", "props", "mines" }, names[^8..]);   // S44 M-01: "mines" appended
+        Assert.Same(sim.Shipments, sim.StateParts[^6]);
+        Assert.Same(sim.Beachhead, sim.StateParts[^5]);
+        Assert.Same(sim.Naval, sim.StateParts[^4]);
     }
 
     [Fact]
