@@ -665,3 +665,22 @@ Pull main first (your folder was on eda0f0e3, two sessions behind), then rebuild
 - **Unchanged:** Ash Plains and Rust Belt maps, every unit's cost/health/damage, the campaign (sweep identical to session 41), and
   `[movement] stuck_recovery = 0` (D-309).
 - **Balance numbers to confirm:** D-306 (your answer), D-307, D-308, D-309; and Q-88 (how to treat the two rows just outside the band).
+
+## Session 43 (2026-11-24/25)
+- **Back up first?** No: old development saves and replays (format 13) are refused with "Unsupported ... version" (save/replay format 14); nothing else is rewritten.
+- **Art:** start a skirmish: buildings have idle motion (Power Plant fan, beacons, window chase); tanks and jeeps roll their tracks/wheels when moving and
+  stop cleanly; Authority/Directorate infantry are bigger and easier to read; smoke columns are soft and wispy (no bubbles); Rust Belt/Glass Coast/Mountains/
+  Ash Plains ground has pebbles, drifts and soft blends; snow and soot patches are irregular, not round.
+- **Update check (D-312):** Settings shows the update toggle off on a fresh install; "Check now" shows "Up to date: version ... is the latest release."
+  or "Could not reach GitHub. Try again later."
+- **QoL keys (defaults, rebindable):** Z select that unit type map-wide; F all combat vehicles; PageDown all combat infantry; comma centre on selection;
+  PageUp cycle production buildings; Insert auto type groups; / place last structure (Shift+drag lays a row of walls); ; repair all damaged;
+  Shift+click marks a building and Delete sells marked ("Sell N? Press again"); F11 hide HUD; ' open a hovered cameo's Archive entry;
+  Alt+click ping; right-drag spreads the selection along a line. Skirmish setup is remembered ("Reset setup" row).
+- **Skirmish rules (opt-in):** setup rows "Superweapons: unlimited / none / N each" and "Map: fog of war / revealed"; defaults play exactly as before.
+- **Superweapon:** while targeting, the legal area is shaded; an out-of-range click says "Out of range".
+- **HUD:** "Income +N/min   Harvesters W/T" in skirmish; match clock; hover any unit for name/owner/health; Settings "Order lines: On/Off".
+- **Repair:** a building under repair shows "Repairing" on its card.
+- **Tutorial:** the train step says the Infantry tab; the loading tip says bookmarks are F6/F7/F8/F12 (F5 is Quicksave).
+- **Balance numbers to confirm:** D-311 (Second Drift storm cap 31, no_build_threshold 24 — assumed), BAL_CONFIRM.
+

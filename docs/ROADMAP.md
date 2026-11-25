@@ -316,6 +316,19 @@ Source: docs/reviews/2026-11-07_owner_campaign_feedback.md. Audit: docs/reviews/
 - [x] M14-05 Full build: done s33. Owner approved the full draft unchanged (D-271, Q-86); look pass D-273 (no pink, volumetric smoke, hero polish + detail renders); 144-page PDF + 2-page quick-reference card in docs/field_manual (built by tools/booklet/full/book.py)
 - [x] M14-06 Models and sprites for the 26 ids without art (scripts D-215; owner rendered on the laptop; landed in PR #74 s21; no rules id is left without art)
 
+## M15 · Session 43: audit fixes, QoL, art pass (D-310..D-316; docs/reviews/2026-11-24_s43_audit/README.md)
+- [x] M15-01 Adversarial audit, 15 reviewers, 135 findings, accounted by script (README §5)
+- [x] M15-02 Safe fixes: LAN hardening, placement bounds, save/replay v14, AI fault isolation, music reset, replays in AppData, release version + tests, card/corner clicks, deny cue, licence docs
+- [x] M15-03 Approved sim fixes (D-311): tunnel surfacing, stuck-underground reroute, garrison/dived spared, capture resets charge
+- [~] M15-04 Approved economy + AI fixes (D-311 items 5-11): production pause, non-lethal storm + no-build, Bore not a base, refused order keeps queue, AI rebuild / mop-up / Directorate anti-air — BAL_STATUS
+- [x] M15-05 Data and campaign (D-311): Sonar Nets sonar range, edge reinforcements on free cells, auth_04 aircraft, Cistern and Tank Farm, commander stale window
+- [x] M15-06 Text matches data; Field Manual and quick reference rebuilt (D-311)
+- [x] M15-07 20 QoL items (D-313) + superweapon button/range + Repairing line + update check off by default (D-312)
+- [x] M15-08 Render allocations and culling (D-314); [ ] M15-09 sim spatial index (later, own session)
+- [x] M15-10 Art pass (D-315): 66 buildings detail + 8-frame idle, 24 vehicles move state, 11 Authority/Directorate infantry variant C, terrain detail on four biomes
+- [ ] M15-11 Expedition + Left Behind infantry fan-out (11 units; helper stopped by a safeguard; pilot method in tools/art/infantry/boost.py)
+- [x] M15-12 Smoke without bubbles (D-316): volumetric plume and puffs, no baked sphere smoke, noise-broken decals, half the Mountains snow
+
 ## M9 · LAN multiplayer (was M5)
 Plan: docs/design/20_m9_lan_plan.md (§9 = owner answers, D-213). Built overnight (D-216). User can try: two PCs → LAN Game → host / join → play.
 - [x] M9-00 Contracts: src/Net, NetMessage/INetTransport/NetProtocol, SimHost Outbox + StepWithBundle
