@@ -151,10 +151,33 @@ public sealed class ReplayViewerScreen : IScreen
             "Space pause  1-4 speed  . step  F skip 10s  F2 view  G graphs  R restart  Esc back",
         };
         if (_play.ShowDesyncWarning) lines.Add($"WARNING: the replay no longer matches the game data (differs from {Clock(_play.DesyncTick)})");
+        List<string> chat = ChatLinesAt(_play.Data.Chat, clock.Tick);   // N-01
+        if (chat.Count > 0) Hud.Panel(sb, _s.Pixel, new Point(8, _s.Viewport.Height - Hud.HeightOf(chat.Count, scale) - 16), chat, scale);
         if (_play.IsMissionReplay) lines.Add(Rts.Scripting.MissionReplay.WatchableOnlyNote);   // S18 GS-03 (owner): watchable only
         Hud.Panel(sb, _s.Pixel, new Point(8, 8), lines, scale);
         DrawProgressBar(sb, scale);
         if (clock.Ended) DrawEndBanner(sb, scale);
+    }
+
+    /// <summary>Seconds a chat line stays on screen after its tick.</summary>
+    public const int ChatShowSeconds = 12;
+
+    /// <summary>Most chat lines shown at once.</summary>
+    public const int ChatShowLines = 5;
+
+    /// <summary>The chat lines to show at <paramref name="tick"/> (N-01): the latest few from the last <see cref="ChatShowSeconds"/>, oldest first.</summary>
+    public static List<string> ChatLinesAt(IReadOnlyList<Rts.Sim.Replay.ReplayChatLine> chat, long tick)
+    {
+        var shown = new List<string>();
+        long from = tick - ChatShowSeconds * Rts.Sim.Core.SimConstants.TicksPerSecond;
+        for (int i = chat.Count - 1; i >= 0 && shown.Count < ChatShowLines; i--)
+        {
+            Rts.Sim.Replay.ReplayChatLine c = chat[i];
+            if (c.Tick > tick || c.Tick <= from) continue;
+            string who = c.Slot == Rts.Sim.Replay.ReplayWriter.NoSlot ? "Spectator" : "Player " + (c.Slot + 1);
+            shown.Insert(0, who + ": " + c.Text);
+        }
+        return shown;
     }
 
     private static string Clock(long tick)
