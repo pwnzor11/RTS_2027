@@ -187,31 +187,8 @@ public class AiStallAuditTests(ITestOutputHelper output)
     // ---- AI-09 ------------------------------------------------------------------------------------
 
     // S18 audit: pins current behaviour of AI-09; flip the assertion when fixed.
-    // The sim's Repair command toggles (Simulation.Production ApplyRepair), so a second Repair order switches repair OFF.
+    // s44 A-03 (owner decision): once on, repair stays on while the building keeps losing health.
     [Fact]
-    public void Audit_RepairManager_TogglesRepairAgain_WhileHealthKeepsFalling()
-    {
-        int power = SimRules.IndexOf(Rules.Buildings, "auth_power", b => b.Id);
-        var id = new EntityId(7, 1);
-        ViewActor At(int health) => new(id, ActorKind.Building, 0, Relation.Self, power, new CellCoord(10, 10), new LeptonCoord(10 * 256, 10 * 256),
-            health, 1000, MissionKind.None, true, EntityId.None, false, 2, 2);
-        var repair = new RepairManager();
-        var sink = new Log();
-        var orderAt = new List<int>();
-        int health = 700;
-        for (int decision = 0; decision < 10; decision++, health -= 30)   // under fire: loses more than it repairs every decision
-        {
-            var k = new RecruitKnowledge { Rules = Rules };
-            k.Buildings.Add(At(health));
-            int before = sink.Orders.Count;
-            repair.Think(k, sink);
-            if (sink.Orders.Count > before) orderAt.Add(decision);
-        }
-        output.WriteLine($"Repair orders at decisions {string.Join(", ", orderAt)}");
-        Assert.Equal(new[] { 0, 4, 8 }, orderAt);   // on, off after 4 decisions, on again after 4 more
-    }
-
-    [Fact(Skip = "S18 AI-09: awaiting owner decision")]
     public void RepairManager_KeepsRepairOn_WhileHealthKeepsFalling()
     {
         int power = SimRules.IndexOf(Rules.Buildings, "auth_power", b => b.Id);

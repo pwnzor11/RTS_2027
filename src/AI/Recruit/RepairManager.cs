@@ -9,14 +9,16 @@ namespace Rts.AI.Recruit;
 /// <summary>
 /// M3-11 (flag Repair): switches repair on for a structure that is below <see cref="StartBelowPct"/> percent health. The sim's Repair
 /// command toggles and stops by itself at full health, so the manager remembers which structures it switched on and forgets them when
-/// they are whole again. A structure that is still not healing a few decisions later (the sim stops repairs when the player is broke)
-/// is toggled once more.
+/// they are whole again. A-03 (s44): once repair is on for a structure the manager never sends the second (switching-off) order while the
+/// structure keeps losing health: under fire it stays on until the structure is whole or destroyed. Only a structure whose health has not
+/// moved for <see cref="StuckDecisions"/> decisions (not healing and not hit: the sim stopped the repair because the player was broke) gets
+/// the order again, which then switches repair back on.
 /// </summary>
 internal sealed class RepairManager
 {
     /// <summary>Health percent below which repair is started.</summary>
     public const int StartBelowPct = 75;
-    /// <summary>Decisions without healing before a repair is toggled again.</summary>
+    /// <summary>Decisions with unchanged health (no healing, no damage) before the repair order is given again.</summary>
     public const int StuckDecisions = 4;
 
     private readonly Dictionary<ulong, (int Health, int Stuck)> _on = new();
@@ -44,7 +46,7 @@ internal sealed class RepairManager
             ulong key = RecruitKnowledge.KeyOf(b);
             if (_on.TryGetValue(key, out var st))
             {
-                if (b.Health > st.Health) { _on[key] = (b.Health, 0); continue; }
+                if (b.Health != st.Health) { _on[key] = (b.Health, 0); continue; }   // healing, or still under fire: repair is on, leave it
                 if (st.Stuck + 1 < StuckDecisions) { _on[key] = (b.Health, st.Stuck + 1); continue; }
                 _on[key] = (b.Health, 0);   // not healing: toggle again
                 Orders++;
