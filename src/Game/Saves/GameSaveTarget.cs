@@ -14,6 +14,7 @@ public sealed class GameSaveTarget
     private readonly SimHost _host;
     private readonly string _rulesDir;
     private readonly Func<IReadOnlyList<IReadOnlyList<UnitKey>>>? _controlGroups;
+    private readonly Func<Rts.Game.Stats.MatchTimeline?>? _timeline;
 
     /// <summary>Creates the target.</summary>
     /// <param name="catalog">The save folders.</param>
@@ -21,10 +22,13 @@ public sealed class GameSaveTarget
     /// <param name="host">The host whose simulation and command queue are saved.</param>
     /// <param name="rulesDir">The data/rules directory (its files are embedded in the save).</param>
     /// <param name="controlGroups">Reads the player's control groups at save time (D-205); null = none are saved.</param>
+    /// <param name="timeline">Reads the end-of-match graph samples at save time (U-09); null = none are saved.</param>
     public GameSaveTarget(SaveCatalog catalog, GameSaveHeader template, SimHost host, string rulesDir,
-        Func<IReadOnlyList<IReadOnlyList<UnitKey>>>? controlGroups = null)
+        Func<IReadOnlyList<IReadOnlyList<UnitKey>>>? controlGroups = null,
+        Func<Rts.Game.Stats.MatchTimeline?>? timeline = null)
     {
         _controlGroups = controlGroups;
+        _timeline = timeline;
         _catalog = catalog;
         _template = template;
         _host = host;
@@ -45,7 +49,7 @@ public sealed class GameSaveTarget
     {
         try
         {
-            GameSaver.Save(_catalog, _template, _host, _rulesDir, slotName, _controlGroups?.Invoke());
+            GameSaver.Save(_catalog, _template, _host, _rulesDir, slotName, _controlGroups?.Invoke(), _timeline?.Invoke());
             return null;
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException)

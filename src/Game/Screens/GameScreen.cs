@@ -298,6 +298,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
             mission._gameOverOverride = campaign?.GameOver;
             mission._lastAutosaveTick = loaded.Header.Tick;   // D-205
             mission._groups.Restore(loaded.Header.ControlGroups);
+            mission._sampler.Restore(loaded.Timeline);   // U-09
             mission._startCueDone = true;
             return mission;
         }
@@ -311,6 +312,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
         screen.IsGameOver = () => sim.Sim.GameOver;
         screen._lastAutosaveTick = loaded.Header.Tick;   // D-205: a loaded game waits a full interval for its first autosave
         screen._groups.Restore(loaded.Header.ControlGroups);   // D-205
+        screen._sampler.Restore(loaded.Timeline);   // U-09: the graphs keep their earlier samples
         screen._startCueDone = true;
         return screen;
     }
@@ -796,7 +798,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
 
     // What Save game writes to: only a skirmish or mission (the sandbox has no save header). Never a LAN match (Q-M9-i).
     private GameSaveTarget? SaveTarget() =>
-        _lan is null && _sim is { SaveTemplate: { } template } ? new GameSaveTarget(new SaveCatalog(_s.SaveRoot ?? SaveCatalog.DefaultRoot), template, _sim.Host, _s.RulesDir, _groups.Snapshot) : null;   // D-205: groups are saved
+        _lan is null && _sim is { SaveTemplate: { } template } ? new GameSaveTarget(new SaveCatalog(_s.SaveRoot ?? SaveCatalog.DefaultRoot), template, _sim.Host, _s.RulesDir, _groups.Snapshot, () => _sampler.Timeline) : null;   // D-205: groups are saved
 
     // ---- D-205 (S18 GS-06): quicksave / quickload keys, single-player autosave, and the one-line toast they report with ----
     private readonly GameToast _toast = new();

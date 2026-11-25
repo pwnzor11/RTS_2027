@@ -66,7 +66,7 @@ public static class GameLoader
         SimSetup setup = SkirmishGame.MakeSetup(rules, settings, map, meta);
         Simulation sim = Simulation.Load(input, setup);
         AiDriver? ai = BuildAi(rulesDir, header.Ai);
-        return new LoadedGame(header, sim, map, ai, null, rulesDir, NoteFor(header));
+        return new LoadedGame(header, sim, map, ai, null, rulesDir, NoteFor(header), GameSaveFile.ReadStatsBlock(input));
     }
 
     private static LoadedGame LoadMission(Stream input, GameSaveHeader header, RuleSet rules, string rulesDir, string dataDir)
@@ -82,7 +82,7 @@ public static class GameLoader
         MapData map = MapFile.Load(Path.Combine(dataDir, "maps", def.MapFile));
         Simulation sim = Simulation.Load(input, MissionSession.MakeSetup(def, map, rules, host));
         AiDriver? ai = BuildAi(rulesDir, header.Ai);
-        return new LoadedGame(header, sim, map, ai, host, rulesDir, NoteFor(header));
+        return new LoadedGame(header, sim, map, ai, host, rulesDir, NoteFor(header), GameSaveFile.ReadStatsBlock(input));
     }
 
     private static string NoteFor(GameSaveHeader header) =>
