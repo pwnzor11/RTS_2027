@@ -2,6 +2,7 @@
 // Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
 using System.Globalization;
 using System.Text;
+using Rts.Net.Diagnostics;
 
 namespace Rts.Game.Lan;
 
@@ -78,6 +79,7 @@ public static class LanDesyncReport
                 using var to = new FileStream(Path.Combine(folder, "replay.rpl"), FileMode.Create, FileAccess.Write);
                 from.CopyTo(to);
             }
+            DesyncReportFolders.Prune(root);   // keep the newest few (NETLLM-10)
             return folder;
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)

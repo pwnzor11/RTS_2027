@@ -11,19 +11,20 @@ local FENN = "leader_auth_fenn"
 function OnInit()
   state.waves = 0
   state.charged = false
+  state.shot = false
   state.done = false
 
   Objective.Add("hold", "d4.obj.hold", true)
   Objective.Add("fire", "d4.obj.fire", true)
   Objective.AddHidden("west", "d4.obj.west", false)
   -- Objective targets (M11-05): where the HUD points.
-  Objective.SetTarget("hold", "device")
+  Objective.SetTarget("hold", "zone_device")
   Objective.SetTarget("fire", "hq")
-  Objective.SetTarget("west", "west_post")
+  Objective.SetTarget("west", "zone_west_post")
   Media.MessageKey("d4.start")
   Dialogue.Say(THRALL, THRALL, "d4.radio.thrall")
   Dialogue.Say(SPEAKER, SPEAKER, "d4.radio.start")
-  Camera.Focus("device", 120)
+  Camera.Focus("zone_device", 120)
 
   -- The enemy base stays home and builds; the pressure comes from the script, by unit count only (D-061).
   AI.SetTier(1, Mission.Difficulty())
@@ -32,9 +33,10 @@ function OnInit()
   Trigger.OnDestroyed("shaft", ShaftLost)
   Trigger.OnDestroyed("device", DeviceLost)
   Trigger.OnDestroyed("head", HeadLost)
+  Trigger.OnSuperweaponFired(0, SunriseShot)   -- S45 C-05: registered before the hq trigger so a shot is known the tick its target dies
   Trigger.OnDestroyed("hq", SunriseFired)
   Trigger.OnDestroyed("west_post", WestDown)
-  Trigger.OnSeen("west_post", 0, WestSeen)
+  Trigger.OnSeen("zone_west_post", 0, WestSeen)
   Mission.Timer("charge", 3050, Charged, "d4.timer.charge")
   Mission.Timer("wave1", WaveGap({ 400, 350, 300, 300, 300 }), WaveOne, "d4.timer.wave1")
   Trigger.AfterDelay(1800, FennRadio)
@@ -84,9 +86,9 @@ function Wave()
   local d = Mission.Difficulty()
   if state.waves == 1 and d >= 4 then types[#types + 1] = "auth_jeep" end
   if state.waves == 2 and d >= 3 then types[#types + 1] = "auth_jeep" end
-  Reinforce.Zone(1, types, "spawn", Map.Center("head"))
+  Reinforce.Zone(1, types, "spawn", Map.Center("zone_head"))
   state.waves = state.waves + 1
-  Camera.Focus("head", 160)
+  Camera.Focus("zone_head", 160)
 end
 
 function WaveOne()
@@ -108,7 +110,7 @@ function WaveThree()
   Dialogue.Say(SPEAKER, SPEAKER, "d4.radio.wave3")
   Wave()
   -- The Authority throws the army it has built so far at the hatch.
-  AI.Wave(1, "last_stand", "head")
+  AI.Wave(1, "last_stand", "zone_head")
 end
 
 -- The Device is charged: the player fires it (Special command at the Ash Ridge command).
@@ -123,10 +125,15 @@ function Charged()
   Objective.Complete("hold")
   Media.MessageKey("d4.charged")
   Dialogue.Say(SPEAKER, SPEAKER, "d4.radio.charged")
-  Camera.Focus("device", 160)
+  Camera.Focus("zone_device", 160)
 end
 
--- Only the charged Device's shot razes the Authority command post for the win; razing it earlier loses the mission (S19 MIS-09).
+-- The Device's shot (S45 C-05: the sim's superweapon-fired event). Detection only: state.shot records it; the win rule below does not depend on it.
+function SunriseShot()
+  state.shot = true
+end
+
+-- Once charged, the command post falling wins (old rule, kept for the D-222 sweep); razing it before the charge loses the mission (S19 MIS-09).
 function SunriseFired()
   if state.done then return end
   if not state.charged then

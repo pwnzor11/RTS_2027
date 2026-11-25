@@ -24,13 +24,13 @@ public static class UiText
     /// <summary>M7-14: the shipment timer row ("Shipment in 1:05 +300"). Placeholders: <c>{time}</c> (m:ss) and <c>{payload}</c>.</summary>
     public const string ShipmentTimer = "ui.shipment.timer";
 
-    /// <summary>M7-14: caption of the Dive/Surface button while the ship is surfaced (the click dives).</summary>
+    /// <summary>M7-14: caption of the Dive/Surface button while the ship is surfaced (the click dives). Placeholder: <c>{key}</c> (the Deploy key, from the bindings).</summary>
     public const string DiveCaption = "ui.dive.dive";
 
-    /// <summary>M7-14: caption of the Dive/Surface button while the ship is dived (the click surfaces).</summary>
+    /// <summary>M7-14: caption of the Dive/Surface button while the ship is dived (the click surfaces). Placeholder: <c>{key}</c> (the Deploy key).</summary>
     public const string SurfaceCaption = "ui.dive.surface";
 
-    /// <summary>S44 M-01: caption of the Lay mine button for a selected minelayer. Placeholder: <c>{stock}</c> (mines aboard).</summary>
+    /// <summary>S44 M-01: caption of the Lay mine button for a selected minelayer. Placeholders: <c>{key}</c> (the Deploy key) and <c>{stock}</c> (mines aboard).</summary>
     public const string MineCaption = "ui.mine.lay";
 
     /// <summary>S44 M-15: caption of the Drop beacon button for a selected landing craft, Skyhook, Pioneer or Combat Diver.</summary>
@@ -138,6 +138,15 @@ public static class UiText
     /// <summary>QOL-17: toast when the auto type-groups toggle changes. Placeholder: <c>{state}</c> (on / off).</summary>
     public const string AutoTypeGroupsToast = "ui.groups.auto_toast";
 
+    /// <summary>U-02: toast when the select-army key finds no combat unit (the selection is kept).</summary>
+    public const string NoArmySelection = "ui.select.no_army";
+
+    /// <summary>U-02: toast after Ctrl+number sets a group. Placeholders: <c>{number}</c> (1..9) and <c>{count}</c> (units or structures, two or more).</summary>
+    public const string GroupSetToast = "ui.groups.set_toast";
+
+    /// <summary>U-02: toast after Ctrl+number sets a group of one. Placeholder: <c>{number}</c> (1..9).</summary>
+    public const string GroupSetOneToast = "ui.groups.set_one_toast";
+
     /// <summary>QOL-05: toast when the production-building key finds none.</summary>
     public const string NoProductionBuilding = "ui.production.none";
 
@@ -159,9 +168,9 @@ public static class UiText
         [SupplyCapReached] = "Supply cap reached. Build more {supplyBuilding}.",
         [SupplyCapReachedPlain] = "Supply cap reached.",
         [SupplyWaiting] = "Waiting for supply",
-        [DiveCaption] = "Dive (D)",
-        [SurfaceCaption] = "Surface (D)",
-        [MineCaption] = "Lay mine (D) {stock} left",
+        [DiveCaption] = "Dive ({key})",
+        [SurfaceCaption] = "Surface ({key})",
+        [MineCaption] = "Lay mine ({key}) {stock} left",
         [BeaconCaption] = "Drop beacon",
         [BeaconArmedCaption] = "Click a soft land cell",
         [ShipmentTimer] = "Shipment in {time} +{payload}",
@@ -198,6 +207,9 @@ public static class UiText
         [StanceDefensive] = "Defend",
         [StanceHoldFire] = "Hold",
         [AutoTypeGroupsToast] = "Control groups by type {state}",
+        [NoArmySelection] = "No army units to select",
+        [GroupSetToast] = "Group {number} set ({count} units)",
+        [GroupSetOneToast] = "Group {number} set (1 unit)",
         [NoProductionBuilding] = "No production building",
         [OptHandicapButton] = "HC",
         [OptCreditsButton] = "Cash",

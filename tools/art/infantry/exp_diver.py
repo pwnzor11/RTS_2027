@@ -27,8 +27,8 @@ def pack(S, U, R):
 
 
 def extra(S, U, up, R, p):
-    S.box((0.21, 0.06, 0.09), (0, 0.15, 0.525), "glass", U, bevel=0.02)                      # big dive mask
-    S.box((0.23, 0.04, 0.03), (0, 0.14, 0.58), "chrome2", U, bevel=0)
+    S.box(EP.hs((0.21, 0.06, 0.09)), EP.hp((0, 0.15, 0.525)), "glass", U, bevel=0.02)         # big dive mask
+    S.box(EP.hs((0.23, 0.04, 0.03)), EP.hp((0, 0.14, 0.58)), "chrome2", U, bevel=0)
     S.limb(up((0.06, 0.13, 0.46)), up((0.15, -0.12, 0.46)), 0.03, "rubber", bevel=0)         # hose
 
 

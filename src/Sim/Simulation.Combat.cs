@@ -300,6 +300,11 @@ public sealed partial class Simulation
         if (kind == ActorKind.Building && wh.BonusVsEntrancePercent != 100 && BuildingTypeAt(i).Entrance != TunnelSize.None)
             d = Math.Max(1, (int)((long)d * wh.BonusVsEntrancePercent / 100));   // M4-05: bonus vs tunnel entrances
         if (half) { d /= 2; if (d < 1) d = 1; }
+        if (kind == ActorKind.Vehicle)
+        {
+            int taken = RulesOf(PlayerAt(kind, i)).Vehicles[_units.TypeIndex[i]].DamageTakenPermille;   // S45 Q-89 (Scrap Plate)
+            if (taken != 1000) d = Math.Max(1, (int)((long)d * taken / 1000));
+        }
         if (kind != ActorKind.Building)
         {
             int rank = RankOf(kind, i);   // VET-3: a ranked target takes less damage

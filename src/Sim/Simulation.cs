@@ -260,6 +260,7 @@ public sealed partial class Simulation
     private void StepCore(IReadOnlyList<Command> commands)
     {
         _fx.Clear();
+        _superweaponShots.Clear();   // S45 C-05
         _killers.Clear();
         ApplyInput(commands);
         RunCarriers();     // M7-09: Simulation.Carrier.cs — hangar rides, sortie timers (before missions)
@@ -912,7 +913,8 @@ public sealed partial class Simulation
     public static Simulation Load(Stream input, SimSetup setup)
     {
         ArgumentNullException.ThrowIfNull(setup);
-        using var r = new BinaryReader(input, System.Text.Encoding.UTF8, leaveOpen: true);
+        using var outer = new BinaryReader(input, System.Text.Encoding.UTF8, leaveOpen: true);
+        using BinaryReader r = SimReader.OpenSave(outer);   // M-27: length, end marker and checksum are checked before anything is parsed
         SetupHeader header = ReadSaveHeader(r);
         var sim = new Simulation(setup);
         header.CheckMatches(setup, sim.MapHash, "Save", checkSeed: false);
@@ -929,7 +931,8 @@ public sealed partial class Simulation
     {
         ArgumentNullException.ThrowIfNull(rulesFromBlob);
         ArgumentNullException.ThrowIfNull(map);
-        using var r = new BinaryReader(input, System.Text.Encoding.UTF8, leaveOpen: true);
+        using var outer = new BinaryReader(input, System.Text.Encoding.UTF8, leaveOpen: true);
+        using BinaryReader r = SimReader.OpenSave(outer);
         SetupHeader header = ReadSaveHeader(r);
         (SimRules rules, ulong hash) = rulesFromBlob(header.RulesFiles);
         return new Simulation(header.ToSetup(map, rules, hash)).FinishLoad(r);

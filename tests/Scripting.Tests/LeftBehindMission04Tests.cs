@@ -22,8 +22,8 @@ public sealed class LeftBehindMission04Tests
         Assert.Empty(m.Host.Errors);
         Assert.Empty(m.Def.Locale.Warnings);
         Assert.NotEqual(MissionOutcome.Won, m.Host.Outcome);
-        Assert.Equal(4, m.Host.Objectives.Count);
-        Assert.Equal(3, m.Host.VisibleObjectives.Count());   // the wreck bonus is hidden
+        Assert.Equal(5, m.Host.Objectives.Count);
+        Assert.Equal(4, m.Host.VisibleObjectives.Count());   // the wreck bonus is hidden; the Second Drift bonus (S45 C-05) is visible
         Assert.Equal("left_behind", m.Def.Faction);
         Assert.Equal(4, m.Def.Act);
         Assert.Equal(2, m.Def.Schema);

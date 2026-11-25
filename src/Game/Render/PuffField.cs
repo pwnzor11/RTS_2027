@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
+using Microsoft.Xna.Framework;
 using Rts.Game.Sandbox;
+using Rts.Game.Sprites;
 using Rts.Sim.Core;
 using Rts.Sim.Rules;
 
@@ -101,7 +103,8 @@ public sealed class DustEmitter
     /// <param name="rules">Rules (vehicle locomotion), or null for no dust.</param>
     /// <param name="field">Where the puffs go.</param>
     /// <param name="dust">Dust colour 0xRRGGBB (the theater's mood dust).</param>
-    public void Observe(SimSnapshot snapshot, SimRules? rules, PuffField field, uint dust)
+    /// <param name="sprites">Sprite resolver, to read the vehicles' dust anchors (<c>[anchors] dust</c>); null or a manifest without them = the old generic offset behind the hull.</param>
+    public void Observe(SimSnapshot snapshot, SimRules? rules, PuffField field, uint dust, SpriteResolver? sprites = null)
     {
         ArgumentNullException.ThrowIfNull(snapshot);
         ArgumentNullException.ThrowIfNull(field);
@@ -131,14 +134,21 @@ public sealed class DustEmitter
             CellCoord cell = u.Position.ToCell();
             int i = cell.Y * snapshot.MapWidth + cell.X;
             if (cell.X < 0 || cell.Y < 0 || cell.X >= snapshot.MapWidth || i >= snapshot.Land.Count || !DustRate.DustyGround(snapshot.Land[i])) continue;
-            field.Add(Make(u, type, snapshot.Tick, dust));
+            field.Add(Make(u, type, snapshot.Tick, dust, sprites is null ? null : AnchoredDust(sprites, rules, u)));
         }
 
         _positionsSpare = _positions;
         _positions = positions;
     }
 
-    private static Puff Make(UnitView u, VehicleType type, int tick, uint dust)
+    // V-05: the dust anchor of this vehicle's sprite as an offset from its ground point (zoom-1 world pixels), or null.
+    private static Vector2? AnchoredDust(SpriteResolver sprites, SimRules rules, UnitView u)
+    {
+        SpriteManifest m = sprites.ForUnit(rules, u).Manifest;
+        return AnchorOffsets.Dust(m, u.Facing, UnitRenderer.DrawScale(rules, u, m) * SpriteLayout.UnitDrawScale);
+    }
+
+    private static Puff Make(UnitView u, VehicleType type, int tick, uint dust, Vector2? anchor)
     {
         // behind the hull: against the facing (0 = north, clockwise, 256 steps), a little to either side
         double a = u.Facing * Math.PI * 2 / 256;
@@ -149,6 +159,12 @@ public sealed class DustEmitter
         float x = u.Position.X * Camera.CellPx / (float)SimConstants.LeptonsPerCell + bx * back - by * side;
         float y = u.Position.Y * Camera.CellPx / (float)SimConstants.LeptonsPerCell + by * back * 0.75f + bx * side * 0.75f;
         float scale = type.Locomotion == Locomotion.Tracked ? 1.0f : 0.75f;
+        if (anchor is { } rear)
+        {
+            // the sprite's own rear contact point (already in screen pixels, so no 0.75 squash) with half the usual spread to either side
+            x = u.Position.X * Camera.CellPx / (float)SimConstants.LeptonsPerCell + rear.X - by * side * 0.5f;
+            y = u.Position.Y * Camera.CellPx / (float)SimConstants.LeptonsPerCell + rear.Y - 6 + bx * side * 0.375f;
+        }
         return new Puff(x, y + 6, tick, PuffLife, dust, 190, scale, 12);
     }
 }

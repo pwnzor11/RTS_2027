@@ -705,7 +705,7 @@ cost = 550  # (tune)
 prerequisites = ["exp_hover_yard"]
 aura_radius = 3  # (tune)
 aura_repair_permille = 5  # (tune) permille of max HP per 10 ticks # s22 M13-13 (D-223): 10 -> 5
-aura_targets = ["exp_skimmer", "exp_hoverlander", "exp_survey_hover", "exp_glide_tank", "exp_sparker", "exp_repair_hover", "exp_barrage_lander", "exp_launch", "exp_landing_craft", "exp_destroyer", "exp_missile_sub", "exp_cruiser", "exp_carrier", "exp_minelayer", "exp_command_ship"]
+aura_targets = ["exp_canister_skiff", "exp_supply_tender", "exp_skimmer", "exp_hoverlander", "exp_survey_hover", "exp_glide_tank", "exp_sparker", "exp_repair_hover", "exp_barrage_lander", "exp_launch", "exp_landing_craft", "exp_destroyer", "exp_missile_sub", "exp_cruiser", "exp_carrier", "exp_minelayer", "exp_command_ship"]  # s45: the Canister Skiff and Supply Tender (added after this list was written) are healed again (S44 M-11 had dropped them)
 
 [exp_barrage_lander]   # tracked rocket artillery, loads onto a landing craft
 faction = "expedition"
@@ -883,7 +883,6 @@ draw_scale_permille = 2400  # (tune) D-124
 deep_only = true
 aircraft_slots = 4  # design 07 §5
 sortie_ticks = 200  # (tune)
-# TODO M7-09: which aircraft fit the hangar, build-in-hangar and return/repair missions
 
 [exp_command_ship]   # start unit, Deploy ashore turns it into the Landing Depot. Not meant to be built: gated behind the Drydock at a prohibitive cost
 faction = "expedition"

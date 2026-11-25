@@ -1,6 +1,6 @@
 """Act-3 opener still for the Authority campaign (auth_03 The Coast Road): two carriers on the dune road to the sea.
 
-Usage:  flock -o /home/claude/wt/blender.lock python3 tools/art/stills/still_authority_act3.py
+Usage:  flock -o $BLENDER_LOCK python3 tools/art/stills/still_authority_act3.py
 Env: STILL_PREVIEW=1 (640x360, 24 samples).  Writes data/images/stills/still_authority_act3.png.
 Glass Coast, clear late afternoon: high camera on a dune, hard side light from the left, pale sand and glass,
 teal sea ahead with the Directorate picket on the beach, Left Behind riders on the left crest.  No text.

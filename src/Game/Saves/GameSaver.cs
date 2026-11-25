@@ -31,7 +31,8 @@ public static class GameSaver
     /// failed write never destroys an older save. Returns the path.
     /// </summary>
     /// <exception cref="IOException">The folder or file could not be written.</exception>
-    public static string Save(SaveCatalog catalog, GameSaveHeader template, SimHost host, string rulesDir, string slotName, IReadOnlyList<IReadOnlyList<UnitKey>>? controlGroups = null)
+    public static string Save(SaveCatalog catalog, GameSaveHeader template, SimHost host, string rulesDir, string slotName, IReadOnlyList<IReadOnlyList<UnitKey>>? controlGroups = null,
+        Stats.MatchTimeline? timeline = null)
     {
         string path = SaveSlots.PathFor(catalog, SaveSlots.KindOf(template.Mode), slotName);
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
@@ -39,7 +40,10 @@ public static class GameSaver
         try
         {
             using (var file = new FileStream(temp, FileMode.Create, FileAccess.Write, FileShare.None))
-                GameSaveFile.Write(file, Capture(template, host, controlGroups), host.Sim, RulesBundle.ReadDirectory(rulesDir));
+                {
+                GameSaveFile.Write(file, Capture(template, host, controlGroups), host.Sim, RulesBundle.ReadDirectory(rulesDir), timeline);
+                file.Flush(flushToDisk: true);   // U-10: on the disk before the rename
+            }
             File.Move(temp, path, overwrite: true);
         }
         finally

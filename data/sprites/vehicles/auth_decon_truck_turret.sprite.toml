@@ -39,3 +39,14 @@ frames = 4
 first = 32
 ticks_per_frame = 1
 step_px = 7.02
+
+# FX anchors (BACKLOG V-05), written by `build_vehicle.py <id> --anchors-only` (builds the model, renders nothing, leaves the sheet alone).
+# [dx, dy] in sheet pixels from this sheet's origin pixel (x right, y down; scale like origin_x, i.e. by 64 / px_per_cell), one per
+# facing of the first state (index = facing, 0 = north, clockwise), taken through the same camera as the sheet.
+# muzzle: where a shot leaves the barrel tip. On a <id>_turret sheet it is relative to the turret origin (the ground point under the
+# pivot, add the pivot offset of the hull facing) and the index is the TURRET facing; on a body sheet it is a fixed gun, index = hull facing.
+# dust: where the ground contact ends at the back (centre of the rear of the tracks or wheels); body sheet only.
+# Absent table or key = the renderer's default offsets.
+# muzzle source: guess: nozzle (relative to the turret origin, index = turret facing)
+[anchors]
+muzzle = [[0, -83], [9, -82], [17, -80], [25, -78], [31, -74], [37, -70], [41, -65], [43, -60], [44, -54], [43, -49], [41, -43], [37, -38], [31, -34], [25, -30], [17, -28], [9, -26], [0, -26], [-9, -26], [-17, -28], [-25, -30], [-31, -34], [-37, -38], [-41, -43], [-43, -49], [-44, -54], [-43, -60], [-41, -65], [-37, -70], [-31, -74], [-25, -78], [-17, -80], [-9, -82]]

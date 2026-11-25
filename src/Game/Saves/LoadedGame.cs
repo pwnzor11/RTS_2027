@@ -10,7 +10,7 @@ namespace Rts.Game.Saves;
 /// <summary>A save read back into a running simulation, with the AI re-attached and (for a mission) the script host restored. Made by <see cref="GameLoader"/>.</summary>
 public sealed class LoadedGame
 {
-    internal LoadedGame(GameSaveHeader header, Simulation sim, MapData map, AiDriver? ai, MissionHost? host, string rulesDir, string note)
+    internal LoadedGame(GameSaveHeader header, Simulation sim, MapData map, AiDriver? ai, MissionHost? host, string rulesDir, string note, Stats.MatchTimeline? timeline = null)
     {
         Header = header;
         Sim = sim;
@@ -19,6 +19,7 @@ public sealed class LoadedGame
         Host = host;
         RulesDir = rulesDir;
         Note = note;
+        Timeline = timeline;
     }
 
     /// <summary>The save's game header.</summary>
@@ -41,4 +42,7 @@ public sealed class LoadedGame
 
     /// <summary>A line to tell the player about the load, or empty (for example that the AI restarts fresh).</summary>
     public string Note { get; }
+
+    /// <summary>The end-of-match graph samples saved with the game (U-09), or null for a save that carries none.</summary>
+    public Stats.MatchTimeline? Timeline { get; }
 }

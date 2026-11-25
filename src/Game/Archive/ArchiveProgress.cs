@@ -45,7 +45,6 @@ public sealed class ArchiveProgress
     /// <summary>
     /// Records that a campaign mission was completed. Returns true if it was new.
     /// </summary>
-    // TODO (M3-17): M4 wires this to the campaign (call it when a mission is won, then Save()).
     public bool MarkCampaignMission(string missionId) => Add(_missions, missionId);
 
     /// <summary>Whether an entry is readable under this progress.</summary>
@@ -124,9 +123,7 @@ public sealed class ArchiveProgress
             string file = path ?? DefaultPath;
             string? dir = Path.GetDirectoryName(file);
             if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
-            string tmp = file + ".tmp";   // S18 GS-05: write through a temporary file, as CampaignProgress does
-            File.WriteAllText(tmp, ToToml());
-            File.Move(tmp, file, overwrite: true);
+            AtomicFile.WriteAllText(file, ToToml());   // U-10: flushed before the rename
             Dirty = false;
             return true;
         }

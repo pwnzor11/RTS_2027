@@ -117,6 +117,11 @@ credit = "Rendered in Blender from scenes written in code with Claude. Style cho
 match = ["data/images/stills"]
 
 [[section.entry]]
+name = "Ending slides"
+credit = "Rendered in Blender from scenes written in code with Claude, in the style of the act stills."
+match = ["data/images/endings"]
+
+[[section.entry]]
 name = "This project"
 credit = "Vehicle, building and infantry sprites: procedural Blender renders, AI-assisted authoring."
 match = ["data/sprites/vehicles/", "data/sprites/buildings/", "data/sprites/infantry/"]

@@ -1,6 +1,6 @@
 """Act-4 opener still for the Expedition (exp_04 The Fuel): red dusk on the Ash Reckoning.
 
-Usage:  flock -o /home/claude/wt/blender.lock python3 tools/art/stills/still_expedition_act4.py
+Usage:  flock -o $BLENDER_LOCK python3 tools/art/stills/still_expedition_act4.py
         (STILL_PREVIEW=1 for a 640x360 look).  Writes data/images/stills/still_expedition_act4.png.
 Scene: the last shipment lands on the south shore.  The Command Ship's bow is run up on the beach with its ramp down,
 crews walk onto the grey ash field, a Dredge Works rises on the plain with survey hovers skimming ahead, and far inland

@@ -83,7 +83,7 @@ public sealed class PathStallPerfProbe
         Line($"  bystander ordered at +5 started moving {bystanderMoved} ticks later; queue length at the end {Queued(sim.Paths)}");
     }
 
-    [Fact]
+    [ProbeFact("RTS_PERF")]
     public void Sp01_TwentyTanks_AttackABuilding_AcrossA128Map()
     {
         if (!Enabled) return;
@@ -93,7 +93,7 @@ public sealed class PathStallPerfProbe
         Scenario("ATTACK the building, 1 tank", attack: true, tanks: 1);
     }
 
-    [Fact]
+    [ProbeFact("RTS_PERF")]
     public void Sp09_StateHash_Cost()
     {
         if (!Enabled) return;

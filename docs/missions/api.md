@@ -34,6 +34,7 @@ Common argument kinds: `id` = 1-64 characters, no spaces. `fn` = global function
 | `Trigger.OnHold(zone, player, ticks, fn)` | as above plus ticks 1..1e9 | nil | as above; fires once when a mobile unit of player has been in the zone `ticks` ticks in a row (counter resets when the zone empties; counting starts the tick the trigger is made) | implemented (M8-03) |
 | `Trigger.OnSeen(zoneOrTag, player, fn)` | zone name or actor tag, slot, fn | nil | target is a zone or a known tag; fires once when any cell of the zone (or the tagged actor's cell) is visible to the player or a teammate; a tag whose actor died unseen is dropped | implemented (M8-03) |
 | `Trigger.OnIdle(tag, ticks, fn)` | actor tag, ticks 1..1e9, fn | nil | tag known; fires once after the actor has had no mission (none, guard, sleep) and nothing queued for `ticks` ticks in a row; dropped if the actor dies | implemented (M8-03) |
+| `Trigger.OnSuperweaponFired(player, fn)` | slot, callback | nil | player valid, fn global; repeating (not removed after a shot); calls `fn(player, buildingTag, cell)` once for each superweapon shot the sim accepted from that player this tick, in command order. `buildingTag` is the firing building's tag, or `""` if it has none; `cell` is `{x=, y=}`, the target. The shot is accepted (charged, in range of an entrance where the rules need one) before the callback runs; a salvo or a storm counts when ordered, not when it lands. Fires on the same tick as a blast's kills, in registration order with `OnDestroyed` triggers. Stores nothing new (an ordinary trigger record), so the mission state format is unchanged | implemented (S45 C-05) |
 | `Objective.AddHidden(id, text, primary)` | id, text, boolean | nil | primary must be a boolean; id unused | implemented (M8-03) |
 | `Objective.Reveal(id)` | id | nil | objective exists | implemented (M8-03) |
 | `Objective.Status(id)` | id | "active"/"completed"/"failed" | objective exists | implemented (M8-03) |
@@ -64,7 +65,7 @@ Hidden objectives (`AddHidden`) are saved in the version-2 tail; the difficulty 
 | `Reinforce.Transport(player, {types}, edgeCell, destCell)` | as Edge; arrives by a transport | list of tags | edge cell on the map edge | implemented |
 | `Reinforce.Delayed(ticks, player, {types}, edgeCell, destCell)` | ticks 1..1e9, then as Edge | nil | as Edge | implemented |
 | `Reinforce.Naval(player, {types}, edgeCell, destCell)` | Expedition ships arrive from the sea edge | list of tags | edge cell on the map edge | implemented |
-| `Reinforce.Rig(player, edgeCell, destCell)` | Left Behind rig arrives and may deploy | tag | edge cell on the map edge | implemented |
+| `Reinforce.Rig(player, edgeCell, destCell[, parkOnly])` | Left Behind rig arrives and may deploy; with `parkOnly = true` it only parks | tag | edge cell on the map edge; `parkOnly` (if given) must be a boolean | implemented (parkOnly: S45 C-06) |
 | `Actor.CreateGroup({types}, player, cell[, opts])` | opts `{formation="line"\|"column"\|"box"\|"scatter", rank=0..3, tagPrefix="x"}` | list of tags | opts keys validated | implemented |
 
 Behaviour (M8-04). Every spawn uses the pilot path (`Simulation.SpawnVehicle` / `SpawnInfantry`) plus the scripting orders the pilot uses; the
@@ -88,7 +89,8 @@ is free the call is a script error and the units spawned before it stay.
   such types; air and burrowing types are rejected.
 - `Reinforce.Rig`: spawns the faction's packed rig (the packed rig of the Left Behind start kit) on the edge. If `destCell` is a legal unpack
   site now it drives there and unpacks (a normal Pack order, so the unpack timer and site rules apply); otherwise it only moves to `destCell`
-  and stays packed for the script to deal with. Returns the rig's tag.
+  and stays packed for the script to deal with. With the optional fourth argument `parkOnly = true` it never unpacks: it drives to `destCell` and waits
+  packed there for the player to deploy it (S45 C-06). Returns the rig's tag.
 - `Actor.CreateGroup`: formations around `cell`: `line` along x, `column` along y (each alternating right/left or down/up of the centre), `box`
   a square filling row by row, `scatter` a random offset of -3..3 per axis from the script's own generator (`Random.Next`'s stream, so it is
   saved and replays). `box` is the default. `rank` raises every member's veterancy to that level (0..3) the way kills would (it needs

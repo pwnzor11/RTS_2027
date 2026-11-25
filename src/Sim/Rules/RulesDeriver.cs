@@ -171,6 +171,7 @@ public static class RulesDeriver
         "rad_resist_permille" => x with { RadResistPermille = Op(e, x.RadResistPermille, 0, 1000) },
         "vet_threshold_permille" => x with { VetThresholdPermille = Op(e, x.VetThresholdPermille, 1, 100_000) },   // VET-1
         "armor" => x with { Armor = (ArmorClass)Op(e, (int)x.Armor, 0, (int)ArmorClass.Submerged) },   // S44 M-08: value = ArmorClass index
+        "damage_taken_permille" => x with { DamageTakenPermille = Op(e, x.DamageTakenPermille, 100, 2000) },   // S45 Q-89
         "harvest_capacity" => x with { HarvestCapacity = Op(e, x.HarvestCapacity, x.HarvestCapacity > 0 ? 1 : 0, 1000) },   // simfu-3: never turns a harvester off or a fighter into one
         _ => x,
     };

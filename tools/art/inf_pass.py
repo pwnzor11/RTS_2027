@@ -8,7 +8,7 @@ contrast 1.15, muzzle-flash star on the last fire frame, and the variant's outli
     A = keyline (dark line where a house panel meets cloth), B = rim light (1 px lit upper-left rim), C = both (default).
 Writes DIR/<id>.png + DIR/<id>.sprite.toml.  Work files go to --work (default DIR/_work/) so parallel jobs never collide.
 Needs `bpy` (5.3) or Blender 4.3 through a runpy runner; no OpenImageDenoise is used.  The caller wraps it in flock/nice when sharing a box.
-Only modules that import infantry/boost.py react to the preset (done: auth_rifleman, dir_conscript); the others render unchanged geometry
+Only modules that import infantry/boost.py react to the preset (done: auth_rifleman, dir_conscript and, via exp_parts.py / lb_parts.py, the 11 Expedition and Left Behind modules); the rest render unchanged geometry
 but still get 8 walk frames, outline/rim, brighter house shades and the flash star.  ids: tools/art/inf_pass_ids.txt.
 """
 import argparse, os, subprocess, sys, time

@@ -21,8 +21,8 @@ pose = LP.make_pose(lean=10.0, stride=0.25, hold=((0.06, 0.16, 0.12), 20.0, 55.0
 def extra(S, U, up, R):
     S.box((0.20, 0.04, 0.26), (0.0, 0.215, 0.0), "wrapA", U, bevel=0)               # apron
     S.box((0.20, 0.03, 0.05), (0.0, 0.225, 0.11), "rust", U, bevel=0)               # pocket
-    S.cyl(0.075, 0.05, (0.07, 0.31, 0.57), "hazard", "Y", U, verts=10)              # magnifier lens frame
-    S.cyl(0.055, 0.055, (0.07, 0.315, 0.57), "lens", "Y", U, verts=10)
+    S.cyl(LP.hs(0.075), LP.hs(0.05), LP.hp((0.07, 0.31, 0.57)), "hazard", "Y", U, verts=10)   # magnifier lens frame
+    S.cyl(LP.hs(0.055), LP.hs(0.055), LP.hp((0.07, 0.315, 0.57)), "lens", "Y", U, verts=10)
 
 
 def pack(S, U, R):

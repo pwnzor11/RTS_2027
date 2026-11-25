@@ -27,7 +27,7 @@ MOUNT = dict(deck_z=30 * SC, r_lip=0.5, r_well=0.0, r_shadow=0.95, shadow_z=30 *
 BODY_HOUSE = {22, 23, 30, 31}
 MOUNT_HOUSE = {0, 1, 8, 9}
 
-COMP = "/home/claude/ref/wz2100/data/base/components/"
+COMP = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../../../ref/wz2100/data/base/components/")
 
 
 def build(S, state, k, n):

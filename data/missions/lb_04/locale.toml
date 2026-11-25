@@ -17,6 +17,7 @@
 "lb4.radio.kellout" = "Depot lost. All hands to the ships. Count twice. The coast is not worth the names."
 "lb4.radio.fleet" = "Second wave in sight of the coast. Hold the sand, however you can."
 "lb4.radio.warn" = "Their second wave is on the water. Break that depot or we lose the coast."
+"lb4.drift" = "The Second Drift is loosed. The coast will remember it."
 "lb4.wreck" = "The wreck of the supply lander: crates and two tinkers."
 "lb4.radio.wreck" = "Crates from their lander, and two tinkers who knew how to open them. Good eyes, Commander."
 "lb4.win" = "The Expedition is driven off the coast. The banner flies over the Drift."
@@ -29,6 +30,7 @@
 "lb4.obj.power" = "Destroy both pile houses at the east end of the beachhead"
 "lb4.obj.depot" = "Destroy the Landing Depot"
 "lb4.obj.wreck" = "Reach the wreck of the supply lander on the east plains"
+"lb4.obj.drift" = "Bonus: fire the Second Drift"
 "lb4.timer.landing" = "Expedition counter-landing"
 "lb4.timer.fleet" = "Expedition second wave arrives"
 

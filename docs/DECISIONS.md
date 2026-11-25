@@ -2381,3 +2381,36 @@ an assumed value of D-322), cost ~9 points per row and is switched off (`naval_m
 The other two (Left Behind upgrades, the A-02/rule-fix merge for the Authority) are owner balance calls: Q-89, Q-90. Nothing else is re-tuned
 this session. **Why:** the naval plan was the lead's own assumed value and a clear regression; balance numbers stay frozen (D-310/D-317) until
 the owner decides. **Status:** lead (reported to the owner)
+
+### D-324 · 2026-11-25 · Session 45: owner answers to the s44 questions
+**Decision:** the owner took every recommendation (chat, session 45 start): Q-89 screen Scrap Plate as a damage-taken percent (about -20 %) and
+confirm Patchwork (+6 cells, heal x4); Q-90 isolate M-22 and focus fire in a probe, then tune on 512 games; D-322 values confirmed as built; delete
+the merged branches; scope = balance, Authority v Directorate, correctness wave and art wave. **Note:** the branch deletes were refused by the
+session's GitHub access (push --delete 403, REST "not permitted"); the owner deletes them. **Status:** owner decision
+
+### D-325 · 2026-11-25 · Session 45: Scrap Plate stays Heavy armour; the Repair Hover list fix lands
+**Decision:** paired screens (docs/balance/s45_balance.md) show Scrap Plate is not the cause of the Expedition drop and that the recommended
+damage-taken version (-20 %) makes the Left Behind stronger (Authority and Directorate rows -11 to -15). Scrap Plate stays as built (D-322,
+confirmed by D-324); the `damage_taken_permille` effect attribute (B-08) stays in code, unused by data. The cause found is M-11 dropping the
+Canister Skiff and Supply Tender from the Repair Hover's `aura_targets` (the list predates them): both are added back (a data fix, +3..+13 per
+Expedition row). M-22 has no effect (identical games); tier-3 focus fire off is mixed and small: not changed. **Supersedes:** the Q-89 softening.
+**Status:** lead (reported to the owner; Q-93)
+
+### D-326 · 2026-11-25 · Session 45: correctness-wave choices
+**Decision:** (1) dir_04 keeps its old win rule (hq death once charged); the new superweapon-fired event only drives the script's reaction, so
+mission difficulty is unchanged (D-222). (2) The lb_04 bonus objective "fire the Second Drift" points the HUD at the depot; any shot counts.
+(3) The LAN lobby and discovery name defaults to "Player", never the Windows user name (N-04). (4) CI also runs build-test on `integ-*` pushes
+and on pull requests to any branch; the publish job stays on main and pull requests (T-03). (5) Values chosen by the packages (assumed — confirm):
+pending LAN peers expire after 10 s, one pending slot per source address; discovery answers private/link-local/loopback sources, 1 reply/s each;
+10 desync report folders kept; at most 2 voice lines at once (a third is dropped), 32 decoded clips cached; window size saved about 1 s after a
+resize; save files carry a FNV-1a checksum and an end marker (SaveVersion 16); replays keep chat (replay format 16, lines labelled Player N /
+Spectator); a damaged graphs block fails the load. (6) Not done, waiting: U-06 laptop cameo preset (Q-91), C-06 `Player.KeepAlive` (needs a sim
+hook, later), T-04 (D-321). **Status:** assumed — confirm (USER_CHECKS session 45)
+
+### D-327 · 2026-11-25 · Session 45: art wave
+**Decision:** (1) Expedition and Left Behind infantry get the s43 readability pass (boost, 8 walk frames, keyline + rim, 64 px frames; neutral
+geometry unchanged). (2) 18 ending slides in the act-still style (D-169), procedural Blender scenes, no text, 1280x720 (plain PNGs like the
+stills). (3) V-04: tread marks, debris chunks, an effect budget (40 new / 260 alive, protected superweapons and selected units), additive glow,
+cloud shadows, water shimmer and road junction/end-cap pieces, each a Settings toggle, default on; values marked ASSUMED in code. (4) V-05: FX
+anchors (muzzle per facing, dust) in the vehicle sprite manifests, read by the game with the old offsets as fallback. **Status:** assumed —
+confirm (the owner reviews the ending slides and the effects in a skirmish)

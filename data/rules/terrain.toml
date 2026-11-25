@@ -1,6 +1,6 @@
-# placeholder fixture, not balance
-# TEST FIXTURE: values equal the former built-in DefaultTerrain table. Speed percent per locomotion
-# (0 = impassable, 0..1000). [buildable] lists the land types a structure may be placed on.
+# Terrain rules: land speed per locomotion, plus the landing, buildable and soft land lists.
+# Speed percent per locomotion (0 = impassable, 0..1000). [buildable] lists the land types a structure
+# may be placed on. The initial values matched the former built-in DefaultTerrain table.
 
 [speed.clear]
 foot = 100

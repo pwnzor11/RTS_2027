@@ -482,8 +482,7 @@ public sealed class LanSession : IDisposable
         return all[Math.Clamp(tier, 1, all.Count) - 1];
     }
 
-    // PENDING Q-M9-g-replay: chat is "kept in the replay" (Q-M9-g) but the replay format has no chat block and may not change in this
-    // package; chat lines are shown only.
+    // N-01 (Q-M9-g, D-110/D-222): chat is kept in the replay (format 16 chat record, outside the sim: never hashed, never played back as a command).
     private void AddChat(NetMessage.Chat chat)
     {
         if (LanPing.IsPing(chat.Text))
@@ -493,6 +492,7 @@ public sealed class LanSession : IDisposable
             return;
         }
 
+        _recording?.RecordChat(_source.Tick, PlayerOfPeer(chat.FromPeer), chat.Text);   // N-01: what this peer saw (team chat only if it was on the team)
         AddLine(new LanChatLine(chat.FromPeer, PlayerOfPeer(chat.FromPeer), PeerName(chat.FromPeer), chat.Text, chat.Audience == 1, _now));
     }
 
@@ -544,6 +544,8 @@ public sealed class LanSession : IDisposable
 
     // ---- desync (M9-10) ----
 
+    private readonly Rts.Net.Diagnostics.DesyncReportFolders _desyncReports = new();
+
     private void OnDesync()
     {
         int tick;
@@ -563,6 +565,7 @@ public sealed class LanSession : IDisposable
             tick = d.Tick;
         }
         DesyncTick = tick;
+        if (!_desyncReports.IsFirstReport(tick)) return;   // one report per desync tick (NETLLM-10)
         IReadOnlyList<(string Part, ulong Hash)>? own = _subHashes.TryGetValue(tick, out var subs) ? subs : null;
         string text = LanDesyncReport.SubHashText(tick, own, other, otherName);
         DesyncReportFolder = LanDesyncReport.Write(_options.DesyncRoot, DateTime.Now, _recording?.FilePath, TryCaptureSave(), text);

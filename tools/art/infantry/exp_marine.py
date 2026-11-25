@@ -28,8 +28,8 @@ def pack(S, U, R):
 
 
 def extra(S, U, up, R, p):
-    S.cyl(0.05, 0.12, (0, 0.20, 0.43), "chrome", "Y", U, verts=10)                       # rebreather canister on the face plate
-    S.cyl(0.058, 0.03, (0, 0.265, 0.43), "copper", "Y", U, verts=10)
+    S.cyl(EP.hs(0.05), EP.hs(0.12), EP.hp((0, 0.20, 0.43)), "chrome", "Y", U, verts=10)      # rebreather canister on the face plate
+    S.cyl(EP.hs(0.058), EP.hs(0.03), EP.hp((0, 0.265, 0.43)), "copper", "Y", U, verts=10)
     S.limb(up((-0.10, 0.12, 0.40)), up((-0.17, -0.10, 0.45)), 0.03, "rubber", bevel=0)    # breathing hose to the pack
 
 
@@ -43,8 +43,7 @@ def weapon(S, GM, p, R):
     S.box((0.04, 0.05, 0.09), (0, -0.10, -0.07), "dark", GM)                             # grip
     S.box((0.02, 0.04, 0.04), (0, 0.04, 0.065), "orange", GM)                            # sight
     if p["flash"]:
-        S.cyl(0.07, 0.24, (0, 0.76, 0.005), "flash", "Y", GM, verts=8, r2=0.0)
-        S.sphere((0.09, 0.09, 0.09), (0, 0.64, 0.005), "flash", GM, seg=8)
+        EP.flash_fx(S, GM, 0.50, (0.07, 0.24, 0.76), (0.09, 0.64), z=0.005)
 
 
 SPEC = dict(shoulder=(0.245, 0.0, 0.37), grips=((0, -0.10, -0.075), (0, 0.20, -0.05)), bulk=1.0,

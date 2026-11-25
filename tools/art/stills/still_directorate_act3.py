@@ -1,6 +1,6 @@
 """Act-3 opener still for the Directorate campaign (dir_03 The Launch Sites): bright cold day on the Glass Coast.
 
-Usage:  flock -o /home/claude/wt/blender.lock python3 tools/art/stills/still_directorate_act3.py
+Usage:  flock -o $BLENDER_LOCK python3 tools/art/stills/still_directorate_act3.py
 High vantage over the fused-glass shore: a column of conscripts and a speaker crawler marches down to Pad Seven, its gantry and
 a toppled Authority searchlight mast beyond, the Expedition fleet standing off on the glassy sea.  Pale glass-coloured sky, ash on the wind.
 """

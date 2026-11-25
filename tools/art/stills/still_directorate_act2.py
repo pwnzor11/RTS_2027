@@ -1,6 +1,6 @@
 """Act-2 opener still for the Directorate campaign (dir_02 The Convoy Roads): wet dusk on the Rust Belt road.
 
-Usage:  flock -o /home/claude/wt/blender.lock python3 tools/art/stills/still_directorate_act2.py
+Usage:  flock -o $BLENDER_LOCK python3 tools/art/stills/still_directorate_act2.py
 Conscripts crouch in the roadside ditch while an Authority convoy burns on the road and a searchlight post sweeps the dark;
 a Directorate hatch and speaker crawler glow behind.  Drizzle, low sun through a cloud slit.  No text in the image.
 """

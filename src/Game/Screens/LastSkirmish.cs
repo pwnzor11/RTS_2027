@@ -127,9 +127,7 @@ public static class LastSkirmish
             string file = path ?? DefaultPath;
             string? dir = Path.GetDirectoryName(file);
             if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
-            string tmp = file + ".tmp";
-            File.WriteAllText(tmp, ToToml(settings));
-            File.Move(tmp, file, overwrite: true);
+            AtomicFile.WriteAllText(file, ToToml(settings));   // U-10: flushed before the rename
             return true;
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException)

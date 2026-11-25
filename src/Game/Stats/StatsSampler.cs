@@ -54,6 +54,60 @@ public sealed class StatsSampler
     /// <summary>Takes a last sample of <paramref name="sim"/>.</summary>
     public void Finish(Simulation sim, IncomeTracker? income = null) => Finish(sim.Tick, () => SpectatorTable.Collect(sim, income));
 
+    /// <summary>Starts from a timeline restored from a save (U-09), so the graphs of a loaded game keep their earlier samples and the next sample is due at the next interval.</summary>
+    public void Restore(MatchTimeline? timeline)
+    {
+        Timeline = timeline;
+        _lastSeen = timeline?.LastTick ?? -1;
+        _nextTick = timeline is null ? 0 : (timeline.LastTick / IntervalTicks + 1) * IntervalTicks;
+    }
+
+    /// <summary>Largest sample or slot count read back from a save (guards against a damaged block).</summary>
+    private const int MaxCount = 1 << 20;
+
+    private static readonly GraphMetric[] Metrics = Enum.GetValues<GraphMetric>();
+
+    /// <summary>Writes <paramref name="timeline"/> (slots, then each sample's tick and every player's numbers) for the game save's trailing block.</summary>
+    public static void Write(BinaryWriter w, MatchTimeline timeline)
+    {
+        w.Write(timeline.Slots.Count);
+        foreach (int slot in timeline.Slots) w.Write(slot);
+        w.Write(timeline.Count);
+        for (int i = 0; i < timeline.Count; i++)
+        {
+            w.Write(timeline.Ticks[i]);
+            for (int c = 0; c < timeline.Slots.Count; c++)
+                foreach (GraphMetric m in Metrics) w.Write(timeline.Value(i, c, m));
+        }
+    }
+
+    /// <summary>Reads what <see cref="Write"/> wrote.</summary>
+    /// <exception cref="InvalidDataException">The counts are out of range.</exception>
+    public static MatchTimeline Read(BinaryReader r)
+    {
+        int slotCount = r.ReadInt32();
+        if (slotCount < 0 || slotCount > 64) throw new InvalidDataException("Stats block: bad player count.");
+        var slots = new int[slotCount];
+        for (int i = 0; i < slotCount; i++) slots[i] = r.ReadInt32();
+        var timeline = new MatchTimeline(slots);
+        int count = r.ReadInt32();
+        if (count < 0 || count > MaxCount) throw new InvalidDataException("Stats block: bad sample count.");
+        for (int i = 0; i < count; i++)
+        {
+            int tick = r.ReadInt32();
+            var row = new PlayerSample[slotCount];
+            for (int c = 0; c < slotCount; c++)
+            {
+                var v = new int[Metrics.Length];
+                for (int k = 0; k < v.Length; k++) v[k] = r.ReadInt32();
+                row[c] = new PlayerSample(v[(int)GraphMetric.ArmyValue], v[(int)GraphMetric.Income], v[(int)GraphMetric.Kills],
+                    v[(int)GraphMetric.Buildings], v[(int)GraphMetric.Upgrades]);
+            }
+            timeline.Add(tick, row);
+        }
+        return timeline;
+    }
+
     private void Take(int tick, IReadOnlyList<SpectatorRow> rows)
     {
         Timeline ??= new MatchTimeline(rows.Select(r => r.Player).ToArray());

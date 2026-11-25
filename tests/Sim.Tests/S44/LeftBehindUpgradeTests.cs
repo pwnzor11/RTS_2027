@@ -163,6 +163,10 @@ public sealed class LeftBehindUpgradeTests
         VehicleType mender = r.Vehicles.Single(v => v.Id == "exp_repair_hover");
         Assert.NotEmpty(mender.AuraTargets);
         Assert.All(mender.AuraTargets, id => Assert.StartsWith("exp_", id));
+        // s45: every Expedition vehicle that is not an aircraft is on the Repair Hover's list (the Canister Skiff and Supply Tender
+        // were missing after M-11 and the Expedition lost 3-13 points per balance row).
+        foreach (VehicleType v in r.Vehicles)
+            if (v.Faction == mender.Faction && v.Locomotion != Locomotion.Air) Assert.Contains(v.Id, mender.AuraTargets);
         UpgradeType p = Up(r, "lb_up_patchwork");
         Assert.True(p.RepairsVehiclesAtRange);
         Assert.True(p.RepairRangeCells > 2);

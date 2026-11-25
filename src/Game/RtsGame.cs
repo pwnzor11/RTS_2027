@@ -40,6 +40,9 @@ public sealed class RtsGame : Microsoft.Xna.Framework.Game
     private MouseState _previousMouse;
     private int _framesCounted;
     private double _fpsWindowSeconds;
+    private bool _sizeDirty;                  // U-07: a resized window that is not yet written to settings.toml
+    private TimeSpan _sizeChangedAt;
+    private TimeSpan _elapsed;
 
     /// <summary>
     /// Creates the window. With <paramref name="demo"/> it opens the fabricated demo source instead of the sim. With
@@ -74,6 +77,7 @@ public sealed class RtsGame : Microsoft.Xna.Framework.Game
         Window.AllowUserResizing = true;
         IsMouseVisible = true;
         Window.TextInput += (_, e) => _typed.Add(e.Character);
+        Window.ClientSizeChanged += (_, _) => RememberWindowSize();   // U-07: the size the player leaves the window at is kept
 
         IsFixedTimeStep = true;
         TargetElapsedTime = TimeSpan.FromTicks(166_667); // 60 Hz draw
@@ -154,9 +158,31 @@ public sealed class RtsGame : Microsoft.Xna.Framework.Game
         _graphics.PreferredBackBufferHeight = plan.Height;
     }
 
+    // U-07: a windowed resize is kept in the settings at once and written to settings.toml about a second after the last change
+    // (a drag fires many events), and at exit.
+    private void RememberWindowSize()
+    {
+        if (_services is null) return;
+        Settings updated = WindowSizeRule.Remember(_services.Settings, _graphics.IsFullScreen, Window.ClientBounds.Width, Window.ClientBounds.Height);
+        if (ReferenceEquals(updated, _services.Settings)) return;
+        _services.Settings = updated;
+        _sizeDirty = true;
+        _sizeChangedAt = _elapsed;
+    }
+
+    private void SaveWindowSize()
+    {
+        if (_services is null || !_sizeDirty) return;
+        _services.Settings.Save();
+        _sizeDirty = false;
+    }
+
     /// <inheritdoc />
     protected override void Update(GameTime gameTime)
     {
+        _elapsed = gameTime.TotalGameTime;
+        if (_sizeDirty && _elapsed - _sizeChangedAt >= TimeSpan.FromSeconds(1)) SaveWindowSize();
+
         KeyboardState keys = Keyboard.GetState();
         MouseState mouse = Mouse.GetState();
         var input = new InputFrame(keys, _previousKeys, mouse, _previousMouse, _typed);
@@ -195,6 +221,8 @@ public sealed class RtsGame : Microsoft.Xna.Framework.Game
     protected override void OnExiting(object sender, ExitingEventArgs args)
     {
         _screens.Clear(); // every screen gets its Exit; a running game saves its replay
+        SaveWindowSize();
+        if (_services?.Audio is IDisposable audio) audio.Dispose();   // V-06: releases the music track at shutdown
         base.OnExiting(sender, args);
     }
 }

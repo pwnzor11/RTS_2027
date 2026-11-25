@@ -298,6 +298,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
             mission._gameOverOverride = campaign?.GameOver;
             mission._lastAutosaveTick = loaded.Header.Tick;   // D-205
             mission._groups.Restore(loaded.Header.ControlGroups);
+            mission._sampler.Restore(loaded.Timeline);   // U-09
             mission._startCueDone = true;
             return mission;
         }
@@ -311,6 +312,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
         screen.IsGameOver = () => sim.Sim.GameOver;
         screen._lastAutosaveTick = loaded.Header.Tick;   // D-205: a loaded game waits a full interval for its first autosave
         screen._groups.Restore(loaded.Header.ControlGroups);   // D-205
+        screen._sampler.Restore(loaded.Timeline);   // U-09: the graphs keep their earlier samples
         screen._startCueDone = true;
         return screen;
     }
@@ -670,6 +672,13 @@ public sealed class GameScreen : IScreen, IFocusPausable
         _s.Scene.WeatherEnabled = _s.Settings.Weather;   // M10-12
         _s.Scene.ShakeEnabled = _s.Settings.ScreenShake;   // M10-14
         _s.Scene.ReduceFlashes = _s.Settings.ReduceFlashes;   // QOL-20
+        _s.Scene.RoadPiecesEnabled = _s.Settings.RoadPieces;   // M16-V-04
+        _s.Scene.WaterShimmerEnabled = _s.Settings.WaterShimmer;   // M16-V-04
+        _s.Scene.CloudShadowsEnabled = _s.Settings.CloudShadows;   // M16-V-04
+        _s.Scene.TreadMarksEnabled = _s.Settings.TreadMarks;   // S45 V-04
+        _s.Scene.DebrisEnabled = _s.Settings.DebrisChunks;   // S45 V-04
+        _s.Scene.FxBudgetEnabled = _s.Settings.EffectBudget;   // S45 V-04
+        _s.Scene.GlowEnabled = _s.Settings.AdditiveGlow;   // S45 V-04
         _s.Scene.Draw(sb, _s.Pixel, frame, _camera, _s.Viewport);
         DrawPausedPlan(sb);   // A43-QOL-08
         DrawSelectedBuilding(sb, snapshot);
@@ -796,7 +805,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
 
     // What Save game writes to: only a skirmish or mission (the sandbox has no save header). Never a LAN match (Q-M9-i).
     private GameSaveTarget? SaveTarget() =>
-        _lan is null && _sim is { SaveTemplate: { } template } ? new GameSaveTarget(new SaveCatalog(_s.SaveRoot ?? SaveCatalog.DefaultRoot), template, _sim.Host, _s.RulesDir, _groups.Snapshot) : null;   // D-205: groups are saved
+        _lan is null && _sim is { SaveTemplate: { } template } ? new GameSaveTarget(new SaveCatalog(_s.SaveRoot ?? SaveCatalog.DefaultRoot), template, _sim.Host, _s.RulesDir, _groups.Snapshot, () => _sampler.Timeline) : null;   // D-205: groups are saved
 
     // ---- D-205 (S18 GS-06): quicksave / quickload keys, single-player autosave, and the one-line toast they report with ----
     private readonly GameToast _toast = new();
@@ -1030,12 +1039,17 @@ public sealed class GameScreen : IScreen, IFocusPausable
     {
         if (_toast.Current(_nowMs) is not { } text) return;
         UiUnit unit = _s.UiScale;
-        int w = BitmapFont.Measure(text, unit) + 8 * unit;
-        int h = BitmapFont.LineHeight(unit, Rts.Game.Ui.Fonts.FontWeight.Regular) + 4 * unit;
         Viewport map = MapViewport();
+        // U-03: a long line (a save error) wraps inside the map view instead of running off it; a short line is drawn as before.
+        int maxText = Math.Max(160 * unit, map.Width * 3 / 5 - 8 * unit);
+        List<string> lines = TextWrap.Wrap(text, maxText, t => BitmapFont.Measure(t, unit));
+        int lineH = BitmapFont.LineHeight(unit, Rts.Game.Ui.Fonts.FontWeight.Regular);
+        int w = lines.Max(l => BitmapFont.Measure(l, unit)) + 8 * unit;
+        int h = lines.Count * lineH + 4 * unit;
         var box = new Rectangle((map.Width - w) / 2, 6 * unit, w, h);
         sb.Draw(_s.Pixel, box, new Color(0, 0, 0, 190));
-        BitmapFont.Draw(sb, _s.Pixel, text, new Vector2(box.X + 4 * unit, box.Y + 2 * unit), Color.White, unit);
+        for (int i = 0; i < lines.Count; i++)
+            BitmapFont.Draw(sb, _s.Pixel, lines[i], new Vector2(box.X + 4 * unit, box.Y + 2 * unit + i * lineH), Color.White, unit);
     }
 
     private void HandleMouse(InputFrame input)
@@ -1924,9 +1938,14 @@ public sealed class GameScreen : IScreen, IFocusPausable
         if (input.ConsumePressed(GameAction.SelectAll))
         {
             SimRules rules = _sim.Rules;
-            _selection.Replace(Selection.Army(_renderUnits, Me, unit => Selection.IsCombatUnit(rules, unit)));
-            ClearBuildingSelection();
-            if (_selection.Count > 0) Audio.AudioBootstrap.Director?.Notify(Audio.AudioEventKind.UnitSelect);
+            List<UnitKey> army = Selection.Army(_renderUnits, Me, unit => Selection.IsCombatUnit(rules, unit)).ToList();
+            if (army.Count == 0) _toast.Show(SelectionFeedbackText.NoArmy(), _nowMs);   // U-02: say so and keep the selection, rather than clearing it silently
+            else
+            {
+                _selection.Replace(army);
+                ClearBuildingSelection();
+                if (_selection.Count > 0) Audio.AudioBootstrap.Director?.Notify(Audio.AudioEventKind.UnitSelect);
+            }
         }
 
         if (input.ConsumePressed(GameAction.SelectTypeMapWide) && _selection.Count > 0)   // QOL-02
@@ -1951,7 +1970,14 @@ public sealed class GameScreen : IScreen, IFocusPausable
             if (!_selectedBuilding.IsNone) structures.Add(_selectedBuilding);
             foreach (EntityId marked in _marked) if (!structures.Contains(marked)) structures.Add(marked);
             GroupPress press = _groups.Press(number, CtrlHeld(input), ShiftHeld(input), _selection.Units, structures);   // S18 GAMEUI-07: an empty selection keeps the group
-            if (press is GroupPress.Set) _groupTap.Reset();
+            if (press is GroupPress.Set)
+            {
+                _groupTap.Reset();
+                int setCount = _groups.Members(number).Count;   // U-02: the toast says what the group now holds
+                if (setCount == 0) setCount = _groups.Structures(number).Count;
+                _toast.Show(SelectionFeedbackText.GroupSet(number, setCount), _nowMs);
+            }
+
             if (press is GroupPress.None or GroupPress.Set or GroupPress.Added) continue;
             bool twice = _groupTap.Tap(number, _nowMs);
             if (press == GroupPress.RecallStructures)

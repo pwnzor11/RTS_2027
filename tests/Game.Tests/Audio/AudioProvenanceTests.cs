@@ -117,7 +117,7 @@ public sealed class AudioProvenanceTests
         Assert.Empty(bad);
     }
 
-    [Fact(Skip = "owner to confirm the sources of the files listed in data/audio/PROVENANCE.toml as unknown")]
+    [Fact]
     public void UnknownSourcesAreReported()
     {
         List<string> unknown = LoadEntries()

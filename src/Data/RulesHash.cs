@@ -233,6 +233,7 @@ public static class RulesHash
             WriteMobile(w, x.Faction, x.TunnelSize, x.AuraRadius, x.AuraRofPermille, x.AuraSpeedPermille, x.AuraTargets,
                 x.RadResistPermille, x.Stealth, x.DeathWeapon, x.JamRadius, x.SeismicRadius);
             w.Write(x.Passengers); w.Write(x.DeploysInto);
+            if (x.DamageTakenPermille != 1000) { w.Write((byte)0xD7); w.Write(x.DamageTakenPermille); }   // S45 Q-89: only when set, so other hashes keep
         }
         foreach (InfantryType x in sim.Infantry)
         {

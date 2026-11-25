@@ -56,8 +56,22 @@ public sealed class SettingsScreen : IScreen
                 new MenuButton("Toggle", ToggleWeather)),   // M10-12
             new MenuItem(() => $"Screen shake: {(_s.Settings.ScreenShake ? "On" : "Off")}", ToggleScreenShake, _ => ToggleScreenShake(),
                 new MenuButton("Toggle", ToggleScreenShake)),   // M10-14
+            new MenuItem(() => $"Cloud shadows: {(_s.Settings.CloudShadows ? "On" : "Off")}", ToggleCloudShadows, _ => ToggleCloudShadows(),
+                new MenuButton("Toggle", ToggleCloudShadows)),   // M16-V-04
+            new MenuItem(() => $"Water shimmer: {(_s.Settings.WaterShimmer ? "On" : "Off")}", ToggleWaterShimmer, _ => ToggleWaterShimmer(),
+                new MenuButton("Toggle", ToggleWaterShimmer)),   // M16-V-04
+            new MenuItem(() => $"Road junctions: {(_s.Settings.RoadPieces ? "On" : "Off")}", ToggleRoadPieces, _ => ToggleRoadPieces(),
+                new MenuButton("Toggle", ToggleRoadPieces)),   // M16-V-04
             new MenuItem(() => $"Reduce flashes: {(_s.Settings.ReduceFlashes ? "On" : "Off")}", ToggleReduceFlashes, _ => ToggleReduceFlashes(),
                 new MenuButton("Toggle", ToggleReduceFlashes)),   // QOL-20
+            new MenuItem(() => $"Tread marks: {(_s.Settings.TreadMarks ? "On" : "Off")}", ToggleTreadMarks, _ => ToggleTreadMarks(),
+                new MenuButton("Toggle", ToggleTreadMarks)),   // S45 V-04
+            new MenuItem(() => $"Debris chunks: {(_s.Settings.DebrisChunks ? "On" : "Off")}", ToggleDebrisChunks, _ => ToggleDebrisChunks(),
+                new MenuButton("Toggle", ToggleDebrisChunks)),   // S45 V-04
+            new MenuItem(() => $"Effect budget: {(_s.Settings.EffectBudget ? "On" : "Off")}", ToggleEffectBudget, _ => ToggleEffectBudget(),
+                new MenuButton("Toggle", ToggleEffectBudget)),   // S45 V-04
+            new MenuItem(() => $"Additive glow: {(_s.Settings.AdditiveGlow ? "On" : "Off")}", ToggleAdditiveGlow, _ => ToggleAdditiveGlow(),
+                new MenuButton("Toggle", ToggleAdditiveGlow)),   // S45 V-04
             new MenuItem(() => "Alerts", () => _s.Screens.Push(new AlertsSettingsScreen(_s, _path))),   // QOL-12
             new MenuItem(() => $"Order lines: {(_s.Settings.ShowOrderLines ? "On" : "Off")}", ToggleOrderLines, _ => ToggleOrderLines(),
                 new MenuButton("Toggle", ToggleOrderLines)),   // QOL-10
@@ -96,6 +110,16 @@ public sealed class SettingsScreen : IScreen
             if (WindowSizes[k] == (width, height)) i = k;
         if (i < 0) return WindowSizes[direction >= 0 ? 0 : WindowSizes.Count - 1];
         return WindowSizes[(i + direction + WindowSizes.Count) % WindowSizes.Count];
+    }
+
+    /// <summary>U-07: the next window size that fits a desktop of the given size (wraps; a size that does not fit starts at the first that does).</summary>
+    public static (int W, int H) NextWindowSize(int width, int height, int direction, int desktopWidth, int desktopHeight)
+    {
+        var fit = WindowSizes.Where(s => WindowSizeRule.Fits(s.W, s.H, desktopWidth, desktopHeight)).ToList();
+        if (fit.Count == 0) return WindowSizes[0];   // no preset fits the desktop: the smallest one (the window is clamped to the desktop)
+        int i = fit.IndexOf((width, height));
+        if (i < 0) return fit[direction >= 0 ? 0 : fit.Count - 1];
+        return fit[(i + direction + fit.Count) % fit.Count];
     }
 
     /// <inheritdoc />
@@ -169,7 +193,21 @@ public sealed class SettingsScreen : IScreen
 
     private void ToggleWeather() => _s.Settings = _s.Settings with { Weather = !_s.Settings.Weather };
 
+    private void ToggleCloudShadows() => _s.Settings = _s.Settings with { CloudShadows = !_s.Settings.CloudShadows };   // M16-V-04
+
+    private void ToggleWaterShimmer() => _s.Settings = _s.Settings with { WaterShimmer = !_s.Settings.WaterShimmer };   // M16-V-04
+
+    private void ToggleRoadPieces() => _s.Settings = _s.Settings with { RoadPieces = !_s.Settings.RoadPieces };   // M16-V-04
+
     private void ToggleReduceFlashes() => _s.Settings = _s.Settings with { ReduceFlashes = !_s.Settings.ReduceFlashes };
+
+    private void ToggleTreadMarks() => _s.Settings = _s.Settings with { TreadMarks = !_s.Settings.TreadMarks };   // S45 V-04
+
+    private void ToggleDebrisChunks() => _s.Settings = _s.Settings with { DebrisChunks = !_s.Settings.DebrisChunks };   // S45 V-04
+
+    private void ToggleEffectBudget() => _s.Settings = _s.Settings with { EffectBudget = !_s.Settings.EffectBudget };   // S45 V-04
+
+    private void ToggleAdditiveGlow() => _s.Settings = _s.Settings with { AdditiveGlow = !_s.Settings.AdditiveGlow };   // S45 V-04
 
     private void ToggleScreenShake() => _s.Settings = _s.Settings with { ScreenShake = !_s.Settings.ScreenShake };
 
@@ -185,7 +223,8 @@ public sealed class SettingsScreen : IScreen
 
     private void StepWindow(int d)
     {
-        (int w, int h) = NextWindowSize(_s.Settings.WindowWidth, _s.Settings.WindowHeight, d);
+        DisplayMode desktop = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode;   // U-07: only sizes that fit this desktop are offered
+        (int w, int h) = NextWindowSize(_s.Settings.WindowWidth, _s.Settings.WindowHeight, d, desktop.Width, desktop.Height);
         _s.Settings = _s.Settings with { WindowWidth = w, WindowHeight = h };
         _s.ApplyDisplay?.Invoke(_s.Settings);
     }

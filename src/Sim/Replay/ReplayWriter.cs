@@ -18,11 +18,17 @@ namespace Rts.Sim.Replay;
 public sealed class ReplayWriter
 {
     public static readonly byte[] Magic = "RTSR"u8.ToArray();
-    public const int Version = 15;   // S44: "mines" part and part-version moves change the recorded hashes. M4-17: header gains a rule-flags byte (NoRebuildDefeat); a skirmish with the rule on also hashes the no-rebuild clocks   // M6-02: new state parts change the hashes recorded in the replay; VET-1: "veterancy" part; M7-02: "shipments", "beachhead", "naval" parts
+    public const int Version = 16;   // S45 N-01: 16 = chat record (type 4) outside the sim, never hashed (D-220: older dev replays need not load). S44: "mines" part and part-version moves change the recorded hashes. M4-17: header gains a rule-flags byte (NoRebuildDefeat); a skirmish with the rule on also hashes the no-rebuild clocks   // M6-02: new state parts change the hashes recorded in the replay; VET-1: "veterancy" part; M7-02: "shipments", "beachhead", "naval" parts
 
     /// <summary>Oldest format version <see cref="ReplayReader"/> still reads (7 has no mission block; 8..12 share a layout; 13 adds the rule-flags byte to the header).</summary>
-    public const int OldestReadableVersion = 15;   // S44: older replays cannot reproduce the new hashes (D-220). A43 SIMCORE-02: replays before the "commander_orders"/"props" parts cannot reproduce their hashes (owner: old dev files need not load)
-    public const byte TypeEnd = 0, TypeCommand = 1, TypeHashCheck = 2, TypeSpawn = 3;
+    public const int OldestReadableVersion = 16;   // S45: 16 is the chat-record format; older dev replays are refused (D-220). S44: older replays cannot reproduce the new hashes (D-220). A43 SIMCORE-02: replays before the "commander_orders"/"props" parts cannot reproduce their hashes (owner: old dev files need not load)
+    public const byte TypeEnd = 0, TypeCommand = 1, TypeHashCheck = 2, TypeSpawn = 3, TypeChat = 4;
+
+    /// <summary>The slot written for a chat line from a spectator or an unknown sender.</summary>
+    public const byte NoSlot = 255;
+
+    /// <summary>Longest chat text kept in a replay, in characters.</summary>
+    public const int MaxChatChars = 512;
 
     /// <summary>Ticks between stream flushes.</summary>
     public const int FlushIntervalTicks = 64;
@@ -78,6 +84,19 @@ public sealed class ReplayWriter
         _w.Write(c.Subject.Index); _w.Write(c.Subject.Generation);
         _w.Write(c.Target.Index); _w.Write(c.Target.Generation);
         _w.Write(c.Cell.X); _w.Write(c.Cell.Y); _w.Write(c.Arg); _w.Write(c.Arg2);
+    }
+
+    /// <summary>
+    /// Records a chat line (N-01): the sim tick it arrived at, the sender's player slot (<see cref="NoSlot"/> for a spectator) and the text,
+    /// cut to <see cref="MaxChatChars"/>. Chat lives beside the sim records: it is never hashed and never changes playback.
+    /// </summary>
+    public void RecordChat(int tick, int slot, string text)
+    {
+        ArgumentNullException.ThrowIfNull(text);
+        Sync();
+        _w.Write(TypeChat); _w.Write(tick);
+        _w.Write(slot is >= 0 and < NoSlot ? (byte)slot : NoSlot);
+        _w.Write(text.Length > MaxChatChars ? text[..MaxChatChars] : text);
     }
 
     /// <summary>Records the state hash (and sub-hashes if <see cref="RecordSubHashes"/>) of the sim at its current tick,

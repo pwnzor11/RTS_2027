@@ -36,7 +36,7 @@ def extra(S, U, up, R, p):
             S.cyl(0.04, 0.34, (sx * 0.33 + k * 0.045, 0.06, 0.64), "white2", "Y", U, verts=8)  # missile tubes
             S.cyl(0.042, 0.08, (sx * 0.33 + k * 0.045, 0.26, 0.64), "orange", "Y", U, verts=8, r2=0.0)
     S.box((0.34, 0.10, 0.08), (0, 0.14, 0.34), "white", U, bevel=0.01)                      # chest plate edging
-    S.box((0.19, 0.04, 0.045), (0, 0.17, 0.52), "glass", U, bevel=0.01, )                    # helmet slit (over visor)
+    S.box(EP.hs((0.19, 0.04, 0.045)), EP.hp((0, 0.17, 0.52)), "glass", U, bevel=0.01, )                    # helmet slit (over visor)
 
 
 def weapon(S, GM, p, R):
@@ -44,7 +44,7 @@ def weapon(S, GM, p, R):
     S.cyl(0.03, 0.30, (0.07, -0.08, 0.0), "copper", "Y", GM, verts=6)                        # piston
     S.box((0.17, 0.05, 0.17), (0, 0.20, 0), "chrome3", GM, bevel=0.01)
     if p["flash"]:
-        S.cyl(0.08, 0.36, (0.0, 0.62, 0.0), "flash", "Y", GM, verts=8, r2=0.0)
+        EP.flash_fx(S, GM, 0.44, (0.08, 0.36, 0.62), None, z=0.0)
 
 
 SPEC = dict(house_boost=True, shoulder=(0.32, 0.0, 0.36), grips=((0, 0.10, 0.0), (0, 0.10, 0.0)), bulk=1.35,

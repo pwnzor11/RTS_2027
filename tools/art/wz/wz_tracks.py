@@ -16,7 +16,7 @@ Returns [left, right] objects.  Both are plain 'track' meshes without a house ma
 """
 import os
 
-COMP = "/home/claude/ref/wz2100/data/base/components/"
+COMP = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../../../ref/wz2100/data/base/components/")
 WEIGHTS = {"light": "prop/prltrk1.pie", "medium": "prop/prmtrk2.pie", "heavy": "prop/prhtrk3.pie"}
 
 
