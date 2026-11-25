@@ -98,6 +98,16 @@ public sealed class SettingsScreen : IScreen
         return WindowSizes[(i + direction + WindowSizes.Count) % WindowSizes.Count];
     }
 
+    /// <summary>U-07: the next window size that fits a desktop of the given size (wraps; a size that does not fit starts at the first that does).</summary>
+    public static (int W, int H) NextWindowSize(int width, int height, int direction, int desktopWidth, int desktopHeight)
+    {
+        var fit = WindowSizes.Where(s => WindowSizeRule.Fits(s.W, s.H, desktopWidth, desktopHeight)).ToList();
+        if (fit.Count == 0) return WindowSizes[0];   // no preset fits the desktop: the smallest one (the window is clamped to the desktop)
+        int i = fit.IndexOf((width, height));
+        if (i < 0) return fit[direction >= 0 ? 0 : fit.Count - 1];
+        return fit[(i + direction + fit.Count) % fit.Count];
+    }
+
     /// <inheritdoc />
     public bool BlocksUpdateBelow => true;
 
@@ -185,7 +195,8 @@ public sealed class SettingsScreen : IScreen
 
     private void StepWindow(int d)
     {
-        (int w, int h) = NextWindowSize(_s.Settings.WindowWidth, _s.Settings.WindowHeight, d);
+        DisplayMode desktop = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode;   // U-07: only sizes that fit this desktop are offered
+        (int w, int h) = NextWindowSize(_s.Settings.WindowWidth, _s.Settings.WindowHeight, d, desktop.Width, desktop.Height);
         _s.Settings = _s.Settings with { WindowWidth = w, WindowHeight = h };
         _s.ApplyDisplay?.Invoke(_s.Settings);
     }

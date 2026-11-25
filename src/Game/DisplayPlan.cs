@@ -15,8 +15,17 @@ public readonly record struct DisplayPlan(bool Fullscreen, int Width, int Height
     public const bool HardwareModeSwitch = false;
 
     /// <summary>The plan for <paramref name="settings"/> on a desktop of the given size (0 = unknown, the saved window size is used).</summary>
-    public static DisplayPlan For(Settings settings, int desktopWidth, int desktopHeight) =>
-        settings.Fullscreen && desktopWidth > 0 && desktopHeight > 0
-            ? new DisplayPlan(true, desktopWidth, desktopHeight)
-            : new DisplayPlan(settings.Fullscreen, settings.WindowWidth, settings.WindowHeight);
+    public static DisplayPlan For(Settings settings, int desktopWidth, int desktopHeight)
+    {
+        if (settings.Fullscreen && desktopWidth > 0 && desktopHeight > 0) return new DisplayPlan(true, desktopWidth, desktopHeight);
+        // U-07: a saved window size larger than the desktop (say, after moving to a smaller monitor) is clamped to the desktop.
+        int w = settings.WindowWidth, h = settings.WindowHeight;
+        if (desktopWidth > 0 && desktopHeight > 0)
+        {
+            w = Math.Min(w, desktopWidth);
+            h = Math.Min(h, desktopHeight);
+        }
+
+        return new DisplayPlan(settings.Fullscreen, w, h);
+    }
 }
