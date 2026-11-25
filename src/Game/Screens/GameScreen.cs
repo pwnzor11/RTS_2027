@@ -604,6 +604,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
             _selection.Prune(key => live.IsOwnedAlive(key, Me));
             _selection.DropCarried(_renderUnits);   // S19 D-205 (NEW-2): a soldier ordered to Enter leaves the selection once inside
             _groups.Prune(key => live.IsOwnedAlive(key, Me));   // groups keep carried members; recall skips them
+            _groups.PruneStructures(id => _source.Current.Buildings.Any(b => !b.Ghost && b.Id == id && b.Player == Me));   // U-05
         }
         else
         {
@@ -1851,17 +1852,52 @@ public sealed class GameScreen : IScreen, IFocusPausable
         {
             if (!input.ConsumePressed(GroupActions[i])) continue;
             int number = i + 1;
-            if (CtrlHeld(input)) { _groups.TrySet(number, _selection.Units); _groupTap.Reset(); continue; }   // S18 GAMEUI-07: an empty selection keeps the group
-            if (ShiftHeld(input)) { _groups.Add(number, _selection.Units); continue; }
-            IReadOnlyList<UnitKey> members = _groups.Members(number);
-            if (members.Count == 0) continue;
+            var structures = new List<EntityId>();   // U-05: the selected building plus the Shift-marked ones
+            if (!_selectedBuilding.IsNone) structures.Add(_selectedBuilding);
+            foreach (EntityId marked in _marked) if (!structures.Contains(marked)) structures.Add(marked);
+            GroupPress press = _groups.Press(number, CtrlHeld(input), ShiftHeld(input), _selection.Units, structures);   // S18 GAMEUI-07: an empty selection keeps the group
+            if (press is GroupPress.Set) _groupTap.Reset();
+            if (press is GroupPress.None or GroupPress.Set or GroupPress.Added) continue;
             bool twice = _groupTap.Tap(number, _nowMs);
+            if (press == GroupPress.RecallStructures)
+            {
+                RecallStructures(_groups.Structures(number).ToList(), twice);
+                continue;
+            }
+
+            IReadOnlyList<UnitKey> members = _groups.Members(number);
             if (_groups.AutoByType) members = Selection.OfTypesOf(members, _renderUnits, Me).ToList();   // QOL-17: every unit of the group's types
             _selection.Replace(Selection.WithoutCarried(members, _renderUnits));   // S19 D-205: carried members stay in the group but are not selected
             ClearBuildingSelection();
             Audio.AudioBootstrap.Director?.Notify(Audio.AudioEventKind.UnitSelect);
             if (twice && GroupCentre(members) is { } centre) CentreCameraOn(centre);
         }
+    }
+
+    // U-05: recalling a structure group selects its first building (production tabs, rally right-click and so on work as for a click) and marks the rest.
+    private void RecallStructures(List<EntityId> ids, bool twice)
+    {
+        if (_sim is null) return;
+        BuildingView? first = null;
+        foreach (EntityId id in ids)
+        {
+            foreach (BuildingView b in _source.Current.Buildings)
+            {
+                if (b.Ghost || b.Id != id || b.Player != Me) continue;
+                first ??= b;
+                break;
+            }
+        }
+
+        if (first is not { } f) return;
+        _selection.Clear();
+        ClearBuildingSelection();
+        _selectedBuilding = f.Id;
+        _selectedBuildingProduces = _sim.Rules.Buildings[f.TypeIndex].Produces is not null;
+        _selectedBuildingType = f.TypeIndex;
+        foreach (EntityId id in ids) if (id != f.Id) _marked.Add(id);
+        Audio.AudioBootstrap.Director?.Notify(Audio.AudioEventKind.UnitSelect);
+        if (twice) CentreOnSelection();
     }
 
     // QOL-03 / QOL-11: a combat unit by the rules (harvesters, builders, engineers and salvagers are not).
