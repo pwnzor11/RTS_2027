@@ -141,6 +141,17 @@ public sealed record BuildingType(string Id, int FootprintW, int FootprintH, int
     /// cell on water.</summary>
     public IReadOnlyList<bool> WaterMask { get; init; } = Array.Empty<bool>();
 
+    /// <summary>M-03: a Drydock: a vehicle producer that builds only the ships naming it in <see cref="VehicleType.BuiltAt"/>, and is no general
+    /// vehicle factory (TOML <c>heavy_yard</c>, default false; needs <c>produces = "vehicle"</c>).</summary>
+    public bool HeavyYard { get; init; }
+
+    /// <summary>M-03: friendly ships within <see cref="ShipRepairRadius"/> cells of the footprint heal this many permille of their max HP per
+    /// 10 ticks, at the economy's repair cost (TOML <c>ship_repair_permille</c>, default 0 = none).</summary>
+    public int ShipRepairPermille { get; init; }
+
+    /// <summary>M-03: reach in cells beyond the footprint of the ship repair (TOML <c>ship_repair_radius</c>, default 2).</summary>
+    public int ShipRepairRadius { get; init; } = 2;
+
     /// <summary>Counts as a beachhead source: Expedition structures may be placed within <see cref="BeachheadRadius"/> cells of a live one
     /// (TOML <c>beachhead_source</c>).</summary>
     public bool BeachheadSource { get; init; }

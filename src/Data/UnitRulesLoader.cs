@@ -29,7 +29,7 @@ internal static class UnitRulesLoader
         // schema v7 (SUP-1)
         "supply",
         // schema v8 (M7-02)
-        "draw_scale_permille", "deep_only", "submerges", "sonar_radius", "aircraft_slots", "sortie_ticks", "ammo", "rearm_ticks", "unload_ticks",
+        "draw_scale_permille", "built_at", "bay_repair", "deep_only", "submerges", "sonar_radius", "aircraft_slots", "sortie_ticks", "ammo", "rearm_ticks", "unload_ticks",
         // schema v8 (M7-04b)
         "vehicle_slots",
     ];
@@ -128,6 +128,9 @@ internal static class UnitRulesLoader
         int? supply = f.OptInt("supply", -1, 1000, -1);   // SUP-1: -1 = cost bands
         int? drawScale = f.OptInt("draw_scale_permille", 100, 10_000, 1000);   // M7-02
         bool? deepOnly = f.OptBool("deep_only", false);
+        string? builtAt = f.OptStr("built_at", "");   // S44 M-03
+        int? bayRepair = f.OptInt("bay_repair", 0, 1000, 0);   // S44 M-12
+        if (builtAt is null || bayRepair is null) return null;
         bool? submerges = f.OptBool("submerges", false);
         int? sonar = f.OptInt("sonar_radius", 0, SimConstants.MaxMapCells, 0);
         int? aircraftSlots = f.OptInt("aircraft_slots", 0, 32, 0);
@@ -190,6 +193,8 @@ internal static class UnitRulesLoader
             Supply = supply.Value,
             DrawScalePermille = drawScale.Value,
             DeepOnly = deepOnly.Value,
+            BuiltAt = builtAt,
+            BayRepairPermille = bayRepair.Value,
             Submerges = submerges.Value,
             SonarRadius = sonar.Value,
             AircraftSlots = aircraftSlots.Value,

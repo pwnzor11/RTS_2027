@@ -313,6 +313,7 @@ public static class RulesHash
             w.Write(x.DrawScalePermille); w.Write(x.DeepOnly); w.Write(x.Submerges); w.Write(x.SonarRadius);
             w.Write(x.AircraftSlots); w.Write(x.SortieTicks); w.Write(x.UnloadTicks); w.Write(x.VehicleSlots);
             if (x.Ammo > 0 || x.RearmTicks > 0) { w.Write(x.Ammo); w.Write(x.RearmTicks); }   // D-156: only types with ammo, so old hashes keep
+            if (x.BuiltAt.Length > 0 || x.BayRepairPermille > 0) { w.Write((byte)0xD4); w.Write(x.BuiltAt); w.Write(x.BayRepairPermille); }   // S44 M-03/M-12: only types that set either
         }
         foreach (BuildingType x in sim.Buildings)
         {
@@ -321,6 +322,7 @@ public static class RulesHash
             foreach (bool b in x.WaterMask) w.Write(b);
             w.Write(x.BeachheadSource); w.Write(x.BeachheadRadius); w.Write(x.ShipmentDock);   // M7-06
             w.Write(x.SonarRadius);   // simfu-4
+            if (x.HeavyYard || x.ShipRepairPermille > 0) { w.Write((byte)0xD5); w.Write(x.HeavyYard); w.Write(x.ShipRepairPermille); w.Write(x.ShipRepairRadius); }   // S44 M-03
         }
         foreach (WarheadType x in sim.Warheads)   // M7-12: Salvo Array
         {
