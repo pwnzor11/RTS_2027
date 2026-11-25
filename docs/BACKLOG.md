@@ -16,7 +16,7 @@ were already telegram style; tut_01 stays plain (assumed). T-04 not applied (D-3
 Still open: everything else below, including the correctness wave rows not listed here, the art wave, and the owner-only tests (O-01..O-03, O-08, O-10).
 
 ## Status after session 45 (2026-11-25)
-Done on main with PR (D-324..D-327): M-27, M-30, M-31 (Salvo Array and Carrier hangar comments; exit cells kept), C-01, C-05, C-06 (park-only Rig; KeepAlive
+Done on integ-s45, landed by the session 45 PR (D-324..D-327): M-27, M-30, M-31 (Salvo Array and Carrier hangar comments; exit cells kept), C-01, C-05, C-06 (park-only Rig; KeepAlive
 needs a sim hook, later), C-07, C-10, U-01..U-04, U-07..U-10, U-14, V-03, V-04, V-05, V-06, N-01..N-05, T-01..T-03, T-05..T-07 (T-06: ArchiveProgress
 TODO and ComingLater removed; SuperweaponManager PENDING and ExitNotImplemented kept, still used). New: B-08 `damage_taken_permille` attribute;
 the Repair Hover list fix (D-325). Waiting: U-06 (Q-91), T-04 (D-321), balance gate (Q-93).
