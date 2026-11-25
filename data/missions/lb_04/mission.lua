@@ -28,6 +28,7 @@ function OnInit()
   Objective.SetTarget("power", "pile1")
   Objective.SetTarget("depot", "depot")
   Objective.SetTarget("wreck", "wreck")
+  Objective.SetTarget("drift", "depot")   -- S45 C-05: the HUD points at the natural target; any shot counts
   Media.MessageKey("lb4.start")
   Dialogue.Say(SPEAKER, SPEAKER, "lb4.radio.start")
 

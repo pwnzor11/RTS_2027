@@ -23,6 +23,6 @@ internal static class CampaignTestKit
     {
         var script = (MoonSharp.Interpreter.Script)typeof(MissionHost).GetField("_script", BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(host)!;
         MethodInfo invoke = typeof(MissionHost).GetMethod("Invoke", BindingFlags.NonPublic | BindingFlags.Instance)!;
-        invoke.Invoke(host, new object[] { name, script.Globals.Get(name) });
+        invoke.Invoke(host, new object[] { name, script.Globals.Get(name), Array.Empty<MoonSharp.Interpreter.DynValue>() });   // S45: Invoke(name, fn, params args)
     }
 }

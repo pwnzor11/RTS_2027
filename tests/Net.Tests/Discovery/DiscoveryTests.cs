@@ -56,12 +56,13 @@ public class DiscoveryTests
         var target = new IPEndPoint(IPAddress.Loopback, responder.LocalEndPoint.Port);
         using var probe = new DiscoveryProbe(0, new[] { target });
         responder.Info = Info("Changed", 3, open: false);
-        probe.Start(0, 1000);
+        long t0 = Now;   // S45: the window starts now (the class clock can pass 1 s once N-04 rate-limits replies in earlier tests)
+        probe.Start(t0, 1000);
         Assert.True(Pump(responder, probe, () => probe.Results.Count == 1));
         Assert.Equal("Changed", probe.Results[0].Info.LobbyName);
         Assert.False(probe.Results[0].Info.Open);
         Assert.False(probe.IsComplete);
-        probe.Poll(2_000_000);
+        probe.Poll(t0 + 2_000_000);
         Assert.True(probe.IsComplete);
     }
 
