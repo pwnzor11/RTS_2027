@@ -17,10 +17,8 @@ def paras(text):
 
 try:
     from part3_entries import faction_entries
-except ImportError:
-    def faction_entries(faction):
-        return [Page('<div class="placeholder">Entries for %s are not built yet.</div>' % E(FACTIONS[faction]['short']),
-                     runhead=FACTIONS[faction]['short'] + ' · Field Guide', faction=faction)]
+except ImportError as e:
+    sys.exit(f"Field Manual Part III needs part3_entries.faction_entries(faction); the build stops here ({e}).")
 
 IMG = FULL / 'img'
 INK, PAPER = '#1e1b16', '#efe7d3'

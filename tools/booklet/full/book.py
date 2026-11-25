@@ -20,11 +20,11 @@ def collect(mods):
     pages = []
     for mod, label in mods:
         try:
-            got = importlib.import_module(mod).pages()
+            part = importlib.import_module(mod)
         except ModuleNotFoundError as e:
             if e.name != mod: raise
-            got = [Page(f'<div class="kicker">{E(label)}</div><div class="placeholder">This part is not built yet ({mod}.py).</div>', toc=label)]
-        pages.extend(got)
+            sys.exit(f"Field Manual build stopped: part module {mod}.py ({label}) is missing. Each part must provide pages() -> list[Page].")
+        pages.extend(part.pages())
     return pages
 
 
