@@ -99,21 +99,25 @@ public sealed class UpgradeTextAuditTests
     // ---- Scrap Plate: "armour" --------------------------------------------------------------------------------
 
     [Fact]
-    public void Audit_ScrapPlate_Adds20PercentHealth_NoArmourChange_AndSkipsTheAircraft()
+    public void Audit_ScrapPlate_StepsLightToHeavyIncludingAircraft_HeavyKeepTheHealthBonus()
     {
-        // S18 audit: pins current behaviour of FACTION-LE-13 (Scrap Plate); flip the assertion when fixed.
+        // S44 M-08: re-pinned (was: +20 % health only, aircraft skipped).
         var w = new S18World(Faction.LeftBehind, Faction.Authority);
         SimRules before = w.Sim.RulesOf(0);
         w.Run(1, w.Grant(0, "lb_up_scrap_plate"));
         w.Run(1);
         SimRules after = w.Sim.RulesOf(0);
-        foreach (string id in new[] { "lb_gleaner", "lb_hauler", "lb_buggy", "lb_harpoon_wagon", "lb_organ", "lb_tow", "lb_dust_sail", "lb_rolling_fort", "lb_mother_rig_packed" })
+        foreach (string id in new[] { "lb_gleaner", "lb_rolling_fort", "lb_mother_rig_packed" })
         {
             Assert.Equal(before.Vehicles[w.V(id)].MaxHealth * 12 / 10, after.Vehicles[w.V(id)].MaxHealth);
-            Assert.Equal(before.Vehicles[w.V(id)].Armor, after.Vehicles[w.V(id)].Armor);
+            Assert.Equal(ArmorClass.Heavy, after.Vehicles[w.V(id)].Armor);
         }
-        foreach (string id in new[] { "lb_rotor", "lb_kite" })
+        foreach (string id in new[] { "lb_hauler", "lb_buggy", "lb_harpoon_wagon", "lb_organ", "lb_tow", "lb_dust_sail", "lb_rotor", "lb_kite" })
+        {
+            Assert.Equal(ArmorClass.Light, before.Vehicles[w.V(id)].Armor);
+            Assert.Equal(ArmorClass.Heavy, after.Vehicles[w.V(id)].Armor);
             Assert.Equal(before.Vehicles[w.V(id)].MaxHealth, after.Vehicles[w.V(id)].MaxHealth);
+        }
         Assert.Equal(1200, after.Vehicles[w.V("lb_mother_rig_packed")].MaxHealth);   // every packed rig, whatever it carries
     }
 
@@ -132,16 +136,16 @@ public sealed class UpgradeTextAuditTests
     }
 
     [Fact]
-    public void Audit_Patchwork_OnlyAddsTwoCells_TinkersAlreadyRepairAtThreeWithoutIt()
+    public void Audit_Patchwork_ReachesSixCellsAndHealsFaster()
     {
-        // S18 audit: pins current behaviour of FACTION-LE-13 (Patchwork); flip the assertion when fixed.
+        // S44 M-09: re-pinned (was: only +2 cells, same speed). Radius 3 -> 9, heal x4.
         int[] plain = TinkerHeals(false), upgraded = TinkerHeals(true);
         Assert.True(plain[0] > 0, "3 cells: repaired without the upgrade");
         Assert.Equal(0, plain[1]);
         Assert.Equal(0, plain[2]);
         Assert.True(upgraded[0] > 0);
         Assert.True(upgraded[1] > 0, "5 cells: repaired with the upgrade");
-        Assert.Equal(0, upgraded[2]);
-        Assert.Equal(plain[0], upgraded[0]);   // no faster, only further
+        Assert.True(upgraded[2] > 0, "6 cells: repaired with the upgrade");
+        Assert.True(upgraded[0] > plain[0]);   // faster as well as further
     }
 }

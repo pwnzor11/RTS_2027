@@ -23,7 +23,9 @@ namespace Rts.Sim;
 // M6-06 ADDITIONS (same recompute, same 10-tick boundary):
 //  * REPAIR (AuraRepairPermille, vehicle or infantry source): heals friendly VEHICLES (packed rigs are vehicles) within the source's
 //    repair radius by max(1, MaxHealth * permille / 1000), never above MaxHealth, never itself. Best single source wins (no stacking).
-//    It ignores AuraTargets. The upgrade flag RepairsVehiclesAtRange (owner of the source) widens the radius by RepairRangeBonusCells;
+//    S44 M-11: it heals only vehicles matching the source's AuraTargets (a source with no targets heals every friendly vehicle, the old
+//    behaviour, kept for the Engineer fallback below). The upgrade flag RepairsVehiclesAtRange (owner of the source) widens the radius by
+//    the largest RepairRangeCells of the owner's upgrades (RepairRangeBonusCells when none sets it) and RepairRatePermille scales the heal (M-09);
 //    an Engineer-flagged infantry source with no AuraRepairPermille of its own then also gains RangeRepairPermille over
 //    RangeRepairRadiusCells (so a Tinker works even if its data has no aura).
 //  * TOW (VehicleType.TowBonusPermille): a speed multiplier given ONLY to friendly packed rigs within AuraRadius, folded into the speed
@@ -55,6 +57,15 @@ public sealed partial class Simulation
     internal const int RangeRepairPermille = 15;
     /// <summary>Repair radius of that fallback aura, in cells.</summary>
     internal const int RangeRepairRadiusCells = 4;
+
+    /// <summary>Repair radius bonus (cells) from the owner's repair-range upgrades: the largest RepairRangeCells, else the legacy 2.</summary>
+    private int RepairRangeBonusOf(byte player)
+    {
+        IReadOnlyList<UpgradeType> ups = RulesOf(player).Upgrades;
+        int best = 0;
+        for (int u = 0; u < ups.Count; u++) if (HasUpgrade(player, u) && ups[u].RepairRangeCells > best) best = ups[u].RepairRangeCells;
+        return best > 0 ? best : RepairRangeBonusCells;
+    }
 
     /// <summary>Folds a storm slow into the aura speed result. <paramref name="bestBuff"/> and <paramref name="worstDebuff"/> are 0 when
     /// absent. Any buff wins outright; otherwise the lower of the worst debuff and the storm slow (1000 = no storm) is used.</summary>
@@ -103,8 +114,10 @@ public sealed partial class Simulation
             {
                 if (HasUpgradeFlag(store.Player[i], u => u.RepairsVehiclesAtRange))
                 {
-                    if (repair > 0) repairRadius = radius + RepairRangeBonusCells;
-                    else if (engineer) { repair = RangeRepairPermille; repairRadius = Math.Max(radius, RangeRepairRadiusCells); }
+                    int bonus = RepairRangeBonusOf(store.Player[i]);
+                    if (repair > 0) repairRadius = radius + bonus;
+                    else if (engineer) { repair = RangeRepairPermille; repairRadius = Math.Max(radius, RangeRepairRadiusCells) + (bonus - RepairRangeBonusCells); }
+                    if (repair > 0) repair = (int)Math.Max(1, (long)repair * UpgradePermille(store.Player[i], u => u.RepairRatePermille) / 1000);
                 }
             }
             if (repair <= 0 || repairRadius <= 0) repair = 0;
@@ -146,7 +159,7 @@ public sealed partial class Simulation
                 if (!IsFriendly(a.Owner, store.Player[i])) continue;
                 long dx = pos.X - a.Pos.X, dy = pos.Y - a.Pos.Y;
                 long d2 = dx * dx + dy * dy;
-                if (kind == ActorKind.Vehicle && a.Repair > bestRepair && d2 <= a.RepairRadiusSq) bestRepair = a.Repair;
+                if (kind == ActorKind.Vehicle && a.Repair > bestRepair && d2 <= a.RepairRadiusSq && (a.Targets.Count == 0 || AuraTargetMatches(a.Targets, kind, typeId))) bestRepair = a.Repair;   // S44 M-11
                 if (packedRig && a.Tow != 0 && d2 <= a.RadiusSq)
                 {
                     if (a.Tow > 1000) { if (a.Tow > bestSpeedBuff) bestSpeedBuff = a.Tow; }
