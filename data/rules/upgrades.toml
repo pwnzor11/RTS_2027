@@ -114,7 +114,7 @@ cost = 500  # (tune)
 build_time = 100  # (tune)
 prerequisites = []
 tier = 2
-effects = ["lb_fx_scrap_plate_gleaner", "lb_fx_scrap_plate_hauler", "lb_fx_scrap_plate_buggy", "lb_fx_scrap_plate_harpoon_wagon", "lb_fx_scrap_plate_organ", "lb_fx_scrap_plate_tow", "lb_fx_scrap_plate_dust_sail", "lb_fx_scrap_plate_rolling_fort", "lb_fx_scrap_plate_mother_rig_packed"]
+effects = ["lb_fx_scrap_plate_gleaner", "lb_fx_scrap_plate_hauler", "lb_fx_scrap_plate_buggy", "lb_fx_scrap_plate_harpoon_wagon", "lb_fx_scrap_plate_organ", "lb_fx_scrap_plate_tow", "lb_fx_scrap_plate_dust_sail", "lb_fx_scrap_plate_rolling_fort", "lb_fx_scrap_plate_mother_rig_packed", "lb_fx_scrap_plate_rotor", "lb_fx_scrap_plate_kite"]
 
 [lb_up_ash_wraps]
 faction = "left_behind"
@@ -147,6 +147,7 @@ build_time = 150  # (tune)
 prerequisites = []
 tier = 3
 salvage_permille = 1500  # (tune) salvage drain speed x1.5
+wreck_value_permille = 1500  # S44 M-07: wreck credits x1.5 (design 06 §5)
 
 [lb_up_patchwork]
 faction = "left_behind"
@@ -155,6 +156,8 @@ build_time = 150  # (tune)
 prerequisites = []
 tier = 3
 repairs_vehicles_at_range = true
+repair_range_cells = 6  # S44 M-09 (assumed): Tinker repair radius 3 -> 9 cells
+repair_rate_permille = 4000  # S44 M-09 (assumed): Tinker heal 5 -> 20 permille per 10 ticks (x4; a 5 permille heal rounds to the 1 HP floor on most vehicles)
 
 # M7-08: Expedition upgrades (design 07 §5), researched at exp_plotting_room (tier 2) and exp_core_hall (tier 3). Costs and effects are (tune),
 # assumed -- confirm. Tier provides are appended by tier sugar.

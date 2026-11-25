@@ -208,45 +208,45 @@ value = 1200
 
 [[effect]]
 id = "lb_fx_scrap_plate_hauler"
-op = "mul"
+op = "set"
 target = "lb_hauler"
-attr = "max_health"
-value = 1200
+attr = "armor"
+value = 2  # S44 M-08: Light -> Heavy
 
 [[effect]]
 id = "lb_fx_scrap_plate_buggy"
-op = "mul"
+op = "set"
 target = "lb_buggy"
-attr = "max_health"
-value = 1200
+attr = "armor"
+value = 2  # S44 M-08: Light -> Heavy
 
 [[effect]]
 id = "lb_fx_scrap_plate_harpoon_wagon"
-op = "mul"
+op = "set"
 target = "lb_harpoon_wagon"
-attr = "max_health"
-value = 1200
+attr = "armor"
+value = 2  # S44 M-08: Light -> Heavy
 
 [[effect]]
 id = "lb_fx_scrap_plate_organ"
-op = "mul"
+op = "set"
 target = "lb_organ"
-attr = "max_health"
-value = 1200
+attr = "armor"
+value = 2  # S44 M-08: Light -> Heavy
 
 [[effect]]
 id = "lb_fx_scrap_plate_tow"
-op = "mul"
+op = "set"
 target = "lb_tow"
-attr = "max_health"
-value = 1200
+attr = "armor"
+value = 2  # S44 M-08: Light -> Heavy
 
 [[effect]]
 id = "lb_fx_scrap_plate_dust_sail"
-op = "mul"
+op = "set"
 target = "lb_dust_sail"
-attr = "max_health"
-value = 1200
+attr = "armor"
+value = 2  # S44 M-08: Light -> Heavy
 
 [[effect]]
 id = "lb_fx_scrap_plate_rolling_fort"
@@ -261,6 +261,20 @@ op = "mul"
 target = "lb_mother_rig_packed"
 attr = "max_health"
 value = 1200
+
+[[effect]]
+id = "lb_fx_scrap_plate_rotor"
+op = "set"
+target = "lb_rotor"
+attr = "armor"
+value = 2  # S44 M-08: Light -> Heavy
+
+[[effect]]
+id = "lb_fx_scrap_plate_kite"
+op = "set"
+target = "lb_kite"
+attr = "armor"
+value = 2  # S44 M-08: Light -> Heavy
 
 [[effect]]
 id = "lb_fx_ash_wraps_scavenger"

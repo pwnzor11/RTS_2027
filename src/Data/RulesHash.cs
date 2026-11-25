@@ -44,7 +44,7 @@ namespace Rts.Data;
 /// SpoilsPermille; per warhead StormRadius, StormTicks, StormContaminateStep, StormContaminateCap, StormSpeedPermille; per vehicle
 /// UnpacksInto, PackTicks, SalvageRate, Raider, RaiderOneUse, DropsBlackoutTicks, AuraRepairPermille, TowBonusPermille, OneUse, Buildable; per infantry
 /// SalvageRate, Raider, RaiderOneUse, AshStealthDelayTicks, AshStealthThreshold, AuraRepairPermille; per building PacksInto, PackTicks;
-/// per upgrade PackTicksPermille, SalvagePermille, PlunderPermille, RepairsVehiclesAtRange.</item>
+/// per upgrade PackTicksPermille, SalvagePermille, PlunderPermille, RepairsVehiclesAtRange, then (S44) WreckValuePermille, RepairRangeCells, RepairRatePermille.</item>
 /// <item>Schema v6 block (VET-1, format 9): Veterancy Enabled, Thresholds, KillPermilleUnit, KillPermilleBuilding, DamagePermille,
 /// TakenPermille, ReloadPermille, SpeedPermille, HealIntervalTicks, HealPermille, HealQuietTicks; per vehicle and infantry CanRank
 /// (the resolved <c>veteran</c> flag) and VetThresholdPermille.</item>
@@ -360,6 +360,7 @@ public static class RulesHash
         foreach (UpgradeType u in sim.Upgrades)
         {
             w.Write(u.PackTicksPermille); w.Write(u.SalvagePermille); w.Write(u.PlunderPermille); w.Write(u.RepairsVehiclesAtRange);
+            w.Write(u.WreckValuePermille); w.Write(u.RepairRangeCells); w.Write(u.RepairRatePermille);   // S44
         }
     }
 
