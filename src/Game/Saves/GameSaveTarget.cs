@@ -50,7 +50,8 @@ public sealed class GameSaveTarget
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException)
         {
-            return "The game could not be saved: " + e.Message;
+            AppLog.Line("save failed (slot " + slotName + "): " + e);   // U-03: the full exception goes to the log, the player gets the short reason
+            return Rts.Game.Ui.SaveFailureText.Reason(e);
         }
     }
 }
