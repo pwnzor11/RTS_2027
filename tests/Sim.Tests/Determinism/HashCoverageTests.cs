@@ -129,6 +129,7 @@ public class HashCoverageTests
     private static readonly Dictionary<string, string> NotHashed = new(StringComparer.Ordinal)
     {
         // Simulation
+        ["MobileStore.QueueStamp"] = "A43 SIMCORE-03: counts missions queued, read only inside one Apply call to tell whether an order was accepted; never saved, never read across ticks",
         ["NavalState.LoadEpoch"] = "M7-03: counts loads so the derived region cache recomputes; not state",
         ["Simulation._lifelineBuilding"] = "M4-17: lazy per-building-type table derived from the immutable Rules",
         ["Simulation._lifelineVehicle"] = "M4-17: lazy per-vehicle-type table derived from the immutable Rules",

@@ -55,7 +55,8 @@ public sealed partial class Simulation
         if (player >= _players.Count || _players.IsNeutral(player)) return false;
         if (buildingType < 0 || buildingType >= BuildingTypeCount) return false;
         return CanPlace(player, buildingType, topLeft) == PlacementResult.Ok
-            && WithinBuildRadius(player, Setup.Rules.Buildings[buildingType], topLeft);
+            && WithinBuildRadius(player, Setup.Rules.Buildings[buildingType], topLeft)
+            && !RadiationDeniesBuilding(Setup.Rules.Buildings[buildingType], topLeft);   // A43 SIMECON-03
     }
 
     /// <summary>The winning team once <see cref="GameOver"/>, else -1 (also -1 if every player was defeated).</summary>

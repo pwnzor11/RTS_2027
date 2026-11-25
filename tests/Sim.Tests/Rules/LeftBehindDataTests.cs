@@ -177,7 +177,7 @@ public sealed class LeftBehindDataTests
         Assert.True(w.StormRadius > 0);
         Assert.True(w.StormTicks > 0);
         Assert.True(w.StormContaminateStep > 0);
-        Assert.Equal(64, w.StormContaminateCap);
+        Assert.Equal(31, w.StormContaminateCap);   // A43 SIMECON-02: below the radiation damage_threshold (32), so the storm denies building without killing
         Assert.InRange(w.StormSpeedPermille, 1, 999);
         Assert.True(w.BlackoutTicks > 0);
         Assert.True(b.SuperweaponChargeTicks > 0);

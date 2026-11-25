@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
+using Rts.AI;
 using Rts.Sim.Rules;
 
 namespace Rts.AI.Recruit;
@@ -44,6 +45,7 @@ internal sealed class DirectorateRecruitFaction : RecruitFaction
     public override string? Tier2GateId => "dir_isotope_works";
     public override string? Tier3GateId => "dir_committee_hall";
     public override string? GarrisonId => "dir_redoubt";
+    public override string? AntiAirId => AiFixes.DirectorateAntiAir ? "dir_rocket_nest" : null;   // s43 (A43-ROSTER-AD-06)
 
     /// <summary>A repertoire that names Directorate structures is used as is; Authority ids in a shared profile are ignored.</summary>
     public override string[] OrderFor(IReadOnlyList<string> repertoire)

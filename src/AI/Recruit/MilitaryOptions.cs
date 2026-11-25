@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
+using Rts.AI;
 using Rts.Data;
 
 namespace Rts.AI.Recruit;
@@ -12,5 +13,5 @@ internal readonly record struct MilitaryOptions(bool Respond, bool TwoPronged, b
 
     /// <summary>The options a profile asks for.</summary>
     public static MilitaryOptions From(DifficultyProfile p) =>
-        new(p.RespondToAttacks, p.TwoPronged, p.MultiFront && p.TwoPronged, p.RetreatHealthPct, p.AttackRatioPct, p.PredictedRetreat, p.RetreatRatioPct, p.Tier, p.CounterDefences, p.RespondToAttacks && p.Mopup, p.WaveReinforceTicks, p.WaveSearch);
+        new(p.RespondToAttacks, p.TwoPronged, p.MultiFront && p.TwoPronged, p.RetreatHealthPct, p.AttackRatioPct, p.PredictedRetreat, p.RetreatRatioPct, p.Tier, p.CounterDefences, (p.RespondToAttacks || AiFixes.MopupWithoutRespond && p.Tier >= 2) && p.Mopup, p.WaveReinforceTicks, p.WaveSearch);
 }

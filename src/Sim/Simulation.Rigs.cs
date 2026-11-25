@@ -86,6 +86,7 @@ public sealed partial class Simulation
             if (v != self && _units.Slots.IsIndexAlive(v) && InRect(_units.Position[v].ToCell(), x0, y0, w, h) && !IsAirUnit(ActorKind.Vehicle, v)) return false;
         for (int n = 1; n < _infantry.Capacity; n++)
             if (_infantry.Slots.IsIndexAlive(n) && InRect(_infantry.Position[n].ToCell(), x0, y0, w, h)) return false;
+        if (RadiationDeniesBuilding(bt, topLeft)) return false;   // A43 SIMECON-03
         if (bt.Wall || bt.Gate) return true;
         return !SealsRegion(x0, y0, w, h);
     }

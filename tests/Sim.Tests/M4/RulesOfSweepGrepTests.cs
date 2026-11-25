@@ -52,6 +52,7 @@ public sealed partial class RulesOfSweepGrepTests
         ("Simulation.Production.cs", "Setup.Rules.Buildings["), ("Simulation.Production.cs", "Setup.Rules.Economy"),   // owner: Simulation.Production.cs, follow-up
         ("Simulation.Production.cs", "Setup.Rules.Economy.BuildRadius"), ("Simulation.Production.cs", "Setup.Rules.Economy.MaxQueue"),
         ("Simulation.Production.cs", "Setup.Rules.Economy.SellRefundPermille"), ("Simulation.Production.cs", "Setup.Rules.Infantry"),
+        ("Simulation.Production.cs", "Setup.Rules.Upgrades"), ("Simulation.Production.cs", "Setup.Rules.Radiation"), ("Simulation.Production.cs", "Setup.Rules.Radiation.NoBuildThreshold"),   // A43 SIMECON-03: global [radiation] block, not upgradable
         ("Simulation.Production.cs", "Setup.Rules.Terrain"), ("Simulation.Production.cs", "Setup.Rules.Vehicles.Count"),
         ("Simulation.Superweapon.cs", "Setup.Rules.Economy.LowPowerSlowdownPermille"),
         ("Simulation.Upgrades.cs", "Setup.Rules.Economy.MaxQueue"), ("Simulation.Upgrades.cs", "Setup.Rules.UpgradeIndex"),   // owner: Simulation.Upgrades.cs, follow-up

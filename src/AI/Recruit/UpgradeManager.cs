@@ -27,8 +27,24 @@ internal sealed class UpgradeManager
     /// <summary>Upgrades ordered.</summary>
     public int Ordered { get; private set; }
 
+    /// <summary>A43 SIMECON-01: thinks the research front may stay paused (its prerequisite building lost) before the AI cancels it.</summary>
+    public const int CancelAfterHeldThinks = 3;
+    private int _heldThinks;
+
     public void Think(RecruitKnowledge k, ICommandSink sink, int reserve, bool hold = false)
     {
+        // The AI never holds research, so a held front item is one paused by a lost prerequisite: cancel it (refund) so research re-plans.
+        QueueView uq = k.Queue(ProductionCategory.Upgrade);
+        if (uq.Items.Count > 0 && uq.Items[0].Held)
+        {
+            if (++_heldThinks >= CancelAfterHeldThinks)
+            {
+                _heldThinks = 0;
+                sink.Issue(CommandKind.Cancel, EntityId.None, (ActorKind)(int)ProductionCategory.Upgrade);
+                return;
+            }
+        }
+        else _heldThinks = 0;
         int tick = k.View.Tick;
         if (hold || tick - _last < GapTicks || k.Army.Count < Bias.UpgradeMinArmy || k.Hud.BuildableUpgrades.Count == 0) return;
         int best = -1;

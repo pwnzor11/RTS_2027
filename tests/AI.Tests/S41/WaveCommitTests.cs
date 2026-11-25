@@ -107,9 +107,10 @@ public sealed class WaveCommitTests
             new AiSide("recruit", Tier), new AiSide("recruit", Tier), true, 9000, start: AiStartMode.Army,
             observe: (s, a, b, pa, pb) => waves = ((RecruitAi)a).Waves + ((RecruitAi)b).Waves);
         Assert.True(waves >= 1);   // the game really sent waves
-        Assert.Equal(4844, r.EndTick);
+        // A43 (D-311) re-pin: 4844 / 6724706220407738216 -> 3344 / 8381130536209904247 (approved SIMECON/SIMCORE behaviour changes move this pinned game)
+        Assert.Equal(3344, r.EndTick);
         Assert.Equal(0, r.Winner);
-        Assert.Equal(6724706220407738216UL, r.FinalHash);
+        Assert.Equal(8381130536209904247UL, r.FinalHash);
     }
 
     // (b) reinforce on: a unit idle at the rally when the call-up falls due joins the roster

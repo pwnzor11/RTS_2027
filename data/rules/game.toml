@@ -37,7 +37,7 @@ decay_ticks = 40
 damage_interval_ticks = 20
 damage_threshold = 32
 damage_permille = 100
-no_build_threshold = 64
+no_build_threshold = 24   # A43 SIMECON-03: now enforced; must stay <= the Second Drift cap (31) so the storm can deny building (was 64, unreachable)
 # S19 D-028 (M13-12): soldiers standing on an ashfall or pitchblende field cell take this much damage every interval, before their
 # rad resistance. Vehicles and buildings are unaffected.
 ashfall_damage = 2  # owner-confirmed S19 (D-207)

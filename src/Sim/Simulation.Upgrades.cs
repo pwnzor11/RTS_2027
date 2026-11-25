@@ -89,6 +89,7 @@ public sealed partial class Simulation
             }
             if (s.Held[lane] || !OwnsResearchBuilding(player)) continue;   // S15: a held research pays nothing
             UpgradeType u = upgrades[type];
+            if (!UpgradePrerequisitesMet(player, u.Prerequisites)) { s.Stalled[lane] = false; continue; }   // A43 SIMECON-01: prerequisite lost, pause (progress kept, nothing spent)
             int total = ProductionTotalTicks(player, u.Cost, u.BuildTime, 1);
             if (s.Total[lane] != total)
             {
