@@ -24,6 +24,7 @@ function OnInit()
   Camera.Focus("junction", 120)
 
   -- the Directorate base stays home; the raids below are the pressure (scripted, so every tier is the same story)
+  AI.SetTier(1, Mission.Difficulty())
   AI.Defend(1, "enemy_base")
 
   Mission.Timer("relief", 4800, ReliefArrives, "a2.timer.relief")

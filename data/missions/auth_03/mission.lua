@@ -27,6 +27,7 @@ function OnInit()
   Dialogue.Say(SPEAKER, SPEAKER, "a3.radio.start")
   Camera.Focus("carrier1", 120)
 
+  AI.SetTier(1, Mission.Difficulty())
   AI.Defend(1, "enemy_base")
 
   Mission.Timer("tide", 9000, TideTurns, "a3.timer.tide")

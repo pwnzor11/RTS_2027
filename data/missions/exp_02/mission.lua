@@ -29,6 +29,7 @@ function OnInit()
   Camera.Focus("shore", 120)
 
   -- The garrison stays home; the response comes from the script (unit count by tier, D-061).
+  AI.SetTier(1, Mission.Difficulty())
   AI.Defend(1, "garrison")
   GarrisonExtras()
 
