@@ -1,7 +1,9 @@
-# placeholder fixture, not balance
-# TEST FIXTURE: synthetic effects. Each [[effect]] has id (unique across all rules files), op (enable, set,
-# add or mul; mul is per-mille), target (a type id, a provides name, or class:vehicle|infantry|building),
-# attr (may be "" for enable) and value (integer).
+# Tech and upgrade effects: the faction A/D, LB and Exp effects that upgrades apply.
+# Each [[effect]] has id (unique across all rules files), op (enable, set, add or mul; mul is per-mille),
+# target (a type id, a provides name, or class:vehicle|infantry|building), attr (may be "" for enable)
+# and value (integer).
+# test_armor_up and test_unlock_turret are kept on purpose: RulesValidationTests edits them to check
+# validation errors. No upgrade references them.
 
 [[effect]]
 id = "test_armor_up"
