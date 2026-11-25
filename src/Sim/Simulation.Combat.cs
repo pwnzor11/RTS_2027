@@ -402,7 +402,7 @@ public sealed partial class Simulation
                     if (targets != WeaponTargets.Both && !(shooter.Kind == kind && shooter.Id.Index == i && shooter.Id == IdAt(kind, i)) && IsAirUnit(kind, i) != (targets == WeaponTargets.Air)) continue;
                     if ((layer == ActorLayer.Burrowed || layer == ActorLayer.Surfacing) && !wh.HitsBurrowed) continue;
                 }
-                if (!wh.HitsAllies && IsFriendly(owner, PlayerAt(kind, i))) continue;
+                if ((!wh.HitsAllies || targets == WeaponTargets.Air) && IsFriendly(owner, PlayerAt(kind, i))) continue;   // M-22 (ROSTER-AD-07): an anti-air burst never hurts its own team's aircraft, whatever the warhead says
                 if (kind == ActorKind.Building && targets == WeaponTargets.Air) continue;   // D-205 (FAD-06): flak never hurts buildings
                 int d;
                 if (kind == ActorKind.Building)
