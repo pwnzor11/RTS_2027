@@ -13,6 +13,13 @@ sessions; ROADMAP M16). The owner: "these are not small issues; some of them are
    If integ43 is already low, the drop came from s43 work merged before bal-s43 branched (bisect a43-net, a43-simA, a43-data; QoL, art and smoke are not in bal-s43). If only aioff43 is
    normal, an AI fix did it (switch it off in src/AI/AiFixes.cs). If both are normal, the economy items (wp/a43-simB) did it. Land what passes
    (merge bal-s43 or its parts into a new integ branch after a cluster suite).
+   **Result (probes finished at hand-off, 512 games per row, seeds 1-256):** integ-s43 alone = s42 (rust 52.7 / glass 54.0 / mountains 31.4 /
+   ash 24.0 = 40.5 % pooled), so nothing already merged moved it. Economy fixes only (wp/a43-simB, AiFixes off) = 47.3 / 52.0 / 31.0 / 23.6 =
+   38.5 %; economy + AI fixes (bal-s43) = 36.5 %. DirectorateAntiAir alone: no effect. So the economy batch costs Authority ~2 points (mostly Rust
+   Belt) and BrokeRebuildsEconomy or MopupWithoutRespond another ~2. No subset of the batch passes as is. Next: bisect the five economy items
+   (production pause, AI cancel of held items, storm/no-build, Bore not a base, refused order keeps queue) and the two AI switches on these
+   four rows (128 pieces each, ~1 h at par 30), then ask the owner: land the correctness items and give Authority v Directorate a small
+   compensating change (needs a freeze exception), or keep a behaviour off.
 2. **Owner decision batch (one round, recommendations first; BACKLOG §0 and the "owner?" column):**
    - Allow mechanic work under the D-310 freeze with one 512-game re-measure at the end (recommended), or keep the freeze.
    - Build or drop each s18 "built later" mechanic: M-01 Minelayer mines, M-02 Diver swimming, M-03 Drydock production/repair, M-04 second
