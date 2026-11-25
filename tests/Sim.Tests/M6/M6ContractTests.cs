@@ -43,7 +43,7 @@ public sealed class M6ContractTests
     public void FormatVersions_ArePinned()
     {
         Assert.Equal(16, SimWriter.SaveVersion);   // VET-1 took 11, M7-02 12
-        Assert.Equal(15, ReplayWriter.Version);
+        Assert.Equal(16, ReplayWriter.Version);
         Assert.Equal(12, RulesHash.FormatVersion);
     }
 

@@ -16,6 +16,9 @@ public readonly record struct ReplayRecord(long Offset, byte Type, Command Comma
 /// Tick is the sim tick it happened at (0 for normal setup).</summary>
 public readonly record struct ReplaySpawn(ActorKind Kind, byte Player, int Type, CellCoord Cell, int SubSlot, int Tick = 0);
 
+/// <summary>One chat line kept in a replay (N-01): the sim tick it arrived at, the sender's player slot (<see cref="ReplayWriter.NoSlot"/> for a spectator) and the text.</summary>
+public readonly record struct ReplayChatLine(int Tick, byte Slot, string Text);
+
 /// <summary>Parsed replay file. Truncated is true when the end record is missing (the game crashed or was killed): every
 /// complete record was read, and FinalTick is then the tick of the last hash record (0 if none).</summary>
 public sealed record ReplayData(
@@ -24,6 +27,9 @@ public sealed record ReplayData(
 {
     /// <summary>The scripted mission this replay was recorded on (id and script hash), or null (formats before 8, and every non-mission game).</summary>
     public ReplayMission? Mission { get; init; }
+
+    /// <summary>The chat lines in file order (N-01). Not part of <see cref="Records"/>: playback ignores them.</summary>
+    public IReadOnlyList<ReplayChatLine> Chat { get; init; } = Array.Empty<ReplayChatLine>();
 
     public string Build => Header.Build;
     public ulong RulesHash => Header.RulesHash;
@@ -62,6 +68,7 @@ public static class ReplayReader
 
         var spawns = new List<ReplaySpawn>();
         var records = new List<ReplayRecord>();
+        var chat = new List<ReplayChatLine>();
         int lastHashTick = 0;
         bool truncated = false;
         int finalTick = 0;
@@ -86,6 +93,13 @@ public static class ReplayReader
                     int typeIndex = r.ReadInt32();
                     var cell = new CellCoord(r.ReadInt32(), r.ReadInt32());
                     spawns.Add(new ReplaySpawn(kind, player, typeIndex, cell, r.ReadByte(), tick));
+                }
+                else if (type == ReplayWriter.TypeChat)
+                {
+                    int tick = r.ReadInt32(); byte slot = r.ReadByte();
+                    string text = r.ReadString();
+                    if (text.Length > ReplayWriter.MaxChatChars) throw new InvalidDataException("Chat line too long.");
+                    chat.Add(new ReplayChatLine(tick, slot, text));
                 }
                 else if (type == ReplayWriter.TypeCommand)
                 {
@@ -127,6 +141,6 @@ public static class ReplayReader
                 break;
             }
         }
-        return new ReplayData(version, header, spawns, records, truncated ? lastHashTick : finalTick, truncated) { Mission = mission };
+        return new ReplayData(version, header, spawns, records, truncated ? lastHashTick : finalTick, truncated) { Mission = mission, Chat = chat };
     }
 }

@@ -68,6 +68,7 @@ public class ReplayTests
     [InlineData(7)]
     [InlineData(13)]
     [InlineData(14)]
+    [InlineData(15)]
     public void OldFormatVersions_AreRejectedWithAClearMessage(int version)
     {
         var setup = ScriptedGame.Setup();
@@ -75,7 +76,7 @@ public class ReplayTests
         bytes[4] = (byte)version; // version is a little-endian int32 right after the magic
         var ex = Assert.Throws<InvalidDataException>(() => ReplayReader.Read(new MemoryStream(bytes)));
         Assert.Contains($"version {version}", ex.Message);
-        Assert.Contains("reads versions 15 to 15", ex.Message);
+        Assert.Contains("reads versions 16 to 16", ex.Message);
     }
 
     [Fact]
@@ -86,7 +87,7 @@ public class ReplayTests
             Teams = new byte[] { 0, 0 }, Limits = new SimLimits(300, 200, 100, 64), AllowDebug = true,
         };
         var data = ReplayReader.Read(new MemoryStream(Record(setup, 40)));
-        Assert.Equal(15, data.Version);
+        Assert.Equal(16, data.Version);
         Assert.Null(data.Mission);
         Assert.Equal("test-build", data.Build);
         Assert.Equal(setup.Seed, data.Seed);

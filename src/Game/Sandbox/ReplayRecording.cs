@@ -50,6 +50,9 @@ public sealed class ReplayRecording : IDisposable
     /// <summary>Records a command at the moment it is queued, so the replay carries exactly what the sim saw.</summary>
     public void RecordCommand(Command command) => Guard(() => _writer?.RecordCommand(command));
 
+    /// <summary>Records a chat line (N-01) at <paramref name="tick"/> from player slot <paramref name="slot"/> (negative = a spectator).</summary>
+    public void RecordChat(int tick, int slot, string text) => Guard(() => _writer?.RecordChat(tick, slot, text));
+
     /// <summary>Records the state hash and sub-hashes at the sim's current tick (one serialisation pass).</summary>
     public void RecordHash(Simulation sim) => Guard(() => _writer?.RecordHash(sim));
 

@@ -74,8 +74,8 @@ public sealed class M4ContractTests
     {
         Assert.Equal(12, RulesHash.FormatVersion);   // M6-02 took 8, VET-1 9, SUP-1 10, M7-02 11, M12-16 12
         Assert.Equal(16, SimWriter.SaveVersion);   // M5-01 took 9, M6-02 10, VET-1 11, M7-02 12
-        Assert.Equal(15, ReplayWriter.Version);           // M3-19 had already taken 8 for the mission block, M6-02 took 10, VET-1 11, M7-02 12, M4-17 13
-        Assert.Equal(15, ReplayWriter.OldestReadableVersion);
+        Assert.Equal(16, ReplayWriter.Version);           // M3-19 had already taken 8 for the mission block, M6-02 took 10, VET-1 11, M7-02 12, M4-17 13
+        Assert.Equal(16, ReplayWriter.OldestReadableVersion);
         Assert.Equal(4, MapFile.FormatVersion);   // M7-02: format 3 (Coast, convoy_edge, landing); M12-04: format 4 (props, decor)
         Assert.Equal(1, MapFile.OldestReadableVersion);
     }
