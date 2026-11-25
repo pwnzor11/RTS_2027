@@ -67,7 +67,7 @@ heal_quiet_ticks = 100  # (tune) 5 s without firing or being hit
 
 # Supply cap (SUP-1, D-125, design 13). On by default in skirmish per D-129; the D-133 hold was lifted in session 10 (SUP-5 AI fix). Unit supply = band of its cost (cost <= band1_max: first
 # value, <= band2_max: second, above: third) unless the type sets `supply`; the cap is the sum of supply_provided over completed,
-# unpacked, alive own buildings, at most `ceiling`. stock_intervals is parsed for the Expedition store only (no behaviour yet).
+# unpacked, alive own buildings, at most `ceiling`. stock_intervals: an Expedition store gives supply_provided while a shipment docked within that many shipment intervals, else supply_unstocked.
 [supply]
 enabled = true
 ceiling = 200  # (tune)

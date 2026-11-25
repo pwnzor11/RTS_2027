@@ -501,8 +501,17 @@ internal sealed class ExpeditionTactics : IFactionTactics
     {
         for (int ty = sea.Y - depot.FootprintH; ty <= sea.Y + 1; ty++)
             for (int tx = sea.X - depot.FootprintW; tx <= sea.X + 1; tx++)
-                if (LandFree(v, rules, tx, ty, depot.FootprintW, depot.FootprintH)) { topLeft = new CellCoord(tx, ty); return true; }
+                if (LandFree(v, rules, tx, ty, depot.FootprintW, depot.FootprintH) && HasLanding(v, rules, tx, ty, depot.FootprintW, depot.FootprintH)) { topLeft = new CellCoord(tx, ty); return true; }
         topLeft = default;
+        return false;
+    }
+
+    /// <summary>M-16: the sim only deploys onto a footprint that holds a landing-coast cell, so the site picker asks the same.</summary>
+    private static bool HasLanding(PlayerView v, SimRules rules, int x0, int y0, int w, int h)
+    {
+        for (int y = y0; y < y0 + h; y++)
+            for (int x = x0; x < x0 + w; x++)
+                if (v.InMap(new CellCoord(x, y)) && rules.Terrain.Landing(v.LandAt(new CellCoord(x, y)))) return true;
         return false;
     }
 

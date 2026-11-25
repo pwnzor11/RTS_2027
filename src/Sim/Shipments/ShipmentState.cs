@@ -19,15 +19,17 @@ public readonly record struct Tender(int Id, byte Player, int CellX, int CellY, 
 /// reached (<see cref="DecayStep"/>) and the charter progress in ticks (<see cref="CharterProgress"/>); plus the tenders in flight, in
 /// creation order. The spawn cell of a tender is a deterministic index into the map's ocean-edge cells (no SimRandom). Named
 /// "shipments" so it is not confused with the supply cap, which has no state (13 §3). All zero and empty by default.
-/// Layout: version, player count, then (nextShipmentTick, decayStep, charterProgress) per player, nextTenderId, tender count and
+/// Layout: version, player count, then (nextShipmentTick, decayStep, charterProgress, lastArrivalTick) per player, nextTenderId, tender count and
 /// (id, player, cellX, cellY, payload, vehicle) per tender.
 /// </summary>
 public sealed class ShipmentState : ISimStatePart
 {
-    private const byte Version = 1;
+    private const byte Version = 2;
 
     /// <summary>Tick of the next shipment per player (0 = none scheduled).</summary>
     public readonly int[] NextShipmentTick;
+    /// <summary>Tick the player's last tender docked and paid (M-10; 0 = none yet). Read by the Provision Store stocked test.</summary>
+    public readonly int[] LastArrivalTick;
     /// <summary>Decay steps taken per player.</summary>
     public readonly int[] DecayStep;
     /// <summary>Ticks of charter progress toward winning back a decay step, per player.</summary>
@@ -42,6 +44,7 @@ public sealed class ShipmentState : ISimStatePart
     {
         ArgumentNullException.ThrowIfNull(setup);
         NextShipmentTick = new int[setup.PlayerCount];
+        LastArrivalTick = new int[setup.PlayerCount];
         DecayStep = new int[setup.PlayerCount];
         CharterProgress = new int[setup.PlayerCount];
     }
@@ -54,7 +57,7 @@ public sealed class ShipmentState : ISimStatePart
     {
         w.Write(Version);
         w.Write(NextShipmentTick.Length);
-        for (int p = 0; p < NextShipmentTick.Length; p++) { w.Write(NextShipmentTick[p]); w.Write(DecayStep[p]); w.Write(CharterProgress[p]); }
+        for (int p = 0; p < NextShipmentTick.Length; p++) { w.Write(NextShipmentTick[p]); w.Write(DecayStep[p]); w.Write(CharterProgress[p]); w.Write(LastArrivalTick[p]); }
         w.Write(NextTenderId);
         w.Write(Tenders.Count);
         foreach (Tender t in Tenders) { w.Write(t.Id); w.Write(t.Player); w.Write(t.CellX); w.Write(t.CellY); w.Write(t.Payload); w.Write(t.Vehicle); }
@@ -65,7 +68,7 @@ public sealed class ShipmentState : ISimStatePart
     {
         if (r.ReadByte() != Version) throw new InvalidDataException("shipments version mismatch.");
         if (r.ReadInt32() != NextShipmentTick.Length) throw new InvalidDataException("shipments player count mismatch.");
-        for (int p = 0; p < NextShipmentTick.Length; p++) { NextShipmentTick[p] = r.ReadInt32(); DecayStep[p] = r.ReadInt32(); CharterProgress[p] = r.ReadInt32(); }
+        for (int p = 0; p < NextShipmentTick.Length; p++) { NextShipmentTick[p] = r.ReadInt32(); DecayStep[p] = r.ReadInt32(); CharterProgress[p] = r.ReadInt32(); LastArrivalTick[p] = r.ReadInt32(); }
         NextTenderId = r.ReadInt32();
         int n = StateIo.Count(r, Name);
         Tenders.Clear();
