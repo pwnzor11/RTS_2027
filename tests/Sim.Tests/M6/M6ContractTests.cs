@@ -33,7 +33,7 @@ public sealed class M6ContractTests
         Assert.True(RuleCounts.IsPlayable(Faction.Expedition));   // M7-14
         Assert.False(RuleCounts.IsPlayable(Faction.Neutral));
         Assert.Equal(24, (int)CommandKind.Pack);
-        Assert.Equal(29, Enum.GetValues<CommandKind>().Length);   // S24: CommanderOrder = 28; S15: Hold = 25; S19: AttackGround = 26, QueueOrder = 27
+        Assert.Equal(30, Enum.GetValues<CommandKind>().Length);   // S44 M-15: DropBeacon = 29; S24: CommanderOrder = 28; S15: Hold = 25; S19: AttackGround = 26, QueueOrder = 27
         Assert.Equal((16, 17, 18), ((int)MissionKind.Salvage, (int)MissionKind.Pack, (int)MissionKind.Withdraw));
         Assert.Equal(24, Enum.GetValues<MissionKind>().Length);   // M7-02 appended Unload..ConvoySail; S19 AttackGround = 23
         Assert.Equal(Faction.LeftBehind, SimRules.FactionFromId("lb_mother_rig"));
@@ -42,8 +42,8 @@ public sealed class M6ContractTests
     [Fact]
     public void FormatVersions_ArePinned()
     {
-        Assert.Equal(14, SimWriter.SaveVersion);   // VET-1 took 11, M7-02 12
-        Assert.Equal(14, ReplayWriter.Version);
+        Assert.Equal(15, SimWriter.SaveVersion);   // VET-1 took 11, M7-02 12
+        Assert.Equal(15, ReplayWriter.Version);
         Assert.Equal(12, RulesHash.FormatVersion);
     }
 
@@ -52,9 +52,9 @@ public sealed class M6ContractTests
     {
         var sim = ScriptedGame.NewSim(ScriptedGame.Setup());
         string[] names = sim.StateParts.Select(p => p.Name).ToArray();
-        Assert.Equal(new[] { "stats", "directive", "rigs", "salvage", "veterancy", "shipments", "beachhead", "naval", "commander_orders", "props" }, names[^10..]);   // VET-1 appended "veterancy", M7-02 the last three
-        Assert.Same(sim.Rigs, sim.StateParts[^8]);
-        Assert.Same(sim.Salvage, sim.StateParts[^7]);
+        Assert.Equal(new[] { "stats", "directive", "rigs", "salvage", "veterancy", "shipments", "beachhead", "naval", "commander_orders", "props", "mines", "beacon_orders" }, names[^12..]);   // S44 M-15 appended "beacon_orders", M-01 "mines"; VET-1 appended "veterancy", M7-02 the last three
+        Assert.Same(sim.Rigs, sim.StateParts[^10]);
+        Assert.Same(sim.Salvage, sim.StateParts[^9]);
     }
 
     [Fact]
@@ -421,11 +421,11 @@ public sealed class M6ContractTests
     }
 
     [Fact]
-    public void EffectsVersion4_IsRejected()
+    public void EffectsVersion5_IsRejected()
     {
         var sim = ScriptedGame.NewSim(ScriptedGame.Setup());
         byte[] bytes = Bytes(sim.Effects);
-        bytes[0] = 4;   // M7-12: version 3 (salvos) now exists
+        bytes[0] = 5;   // M7-12: version 3 (salvos); S44: version 4 (tether and breach timers) now exists
         Assert.Throws<InvalidDataException>(() => ReadBack(sim.Effects, bytes));
     }
 

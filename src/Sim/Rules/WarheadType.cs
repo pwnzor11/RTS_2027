@@ -12,9 +12,6 @@ public sealed record WarheadType(string Id, IReadOnlyList<int> VersusPercent, in
     /// <summary>Radiation level (0..255) removed from every cell in the splash (M3-05).</summary>
     public int Decontaminate { get; init; }
 
-    /// <summary>Damage percent against irradiated (reactor-cored) units; 100 = no bonus.</summary>
-    public int BonusVsIrradiatedPercent { get; init; } = 100;
-
     /// <summary>Ticks of Blackout cloud left on every cell in the splash (0 = none).</summary>
     public int BlackoutTicks { get; init; }
 
@@ -48,6 +45,12 @@ public sealed record WarheadType(string Id, IReadOnlyList<int> VersusPercent, in
 
     /// <summary>Speed multiplier per mille on enemy vehicles inside the storm (TOML <c>storm_speed_permille</c>, 0 = none).</summary>
     public int StormSpeedPermille { get; init; }
+
+    /// <summary>S44 M-05: ticks a surviving vehicle or soldier hit by this warhead stays tethered (TOML <c>tether_ticks</c>, 0 = no tether).</summary>
+    public int TetherTicks { get; init; }
+
+    /// <summary>S44 M-05: speed multiplier per mille on a tethered actor (TOML <c>tether_speed_permille</c>, 1..1000; only read when <c>tether_ticks</c> is above 0).</summary>
+    public int TetherSpeedPermille { get; init; } = 1000;
 
     // ---- schema v8 (M7-12): the Salvo Array. SalvoMissiles 0 = not a salvo. ---------------------------------------------
 

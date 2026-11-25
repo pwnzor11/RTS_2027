@@ -138,6 +138,8 @@ public sealed partial class Simulation
             if (DockNextTo(t.Player, c, out _))
             {
                 Refund(t.Player, t.Payload);
+                _shipments.LastArrivalTick[t.Player] = Tick;
+                SupplyChanged();   // M-10: a store may become stocked
                 OnStatsShipment(t.Player, t.Payload);
                 OnActorRemoving(ActorKind.Vehicle, v);
                 OnM3MobileRemoving(ActorKind.Vehicle, v);

@@ -8,6 +8,14 @@ public sealed record VehicleType(string Id, Locomotion Locomotion, int Speed, in
     ArmorClass Armor, int Sight, int PrimaryWeapon, bool HasTurret, int TurretTurnRate, bool Crusher, int Cost,
     IReadOnlyList<string> Prerequisites)
 {
+    /// <summary>S44 (M-04): second weapon slot, an index into SimRules.Weapons or -1 (TOML <c>secondary_weapon</c>). It reloads on its own
+    /// cooldown, needs no aiming and picks its own target, independent of <see cref="PrimaryWeapon"/>.</summary>
+    public int SecondaryWeapon { get; init; } = -1;
+
+    /// <summary>S44 (M-04): third weapon slot, same rules as <see cref="SecondaryWeapon"/> (TOML <c>tertiary_weapon</c>; the Destroyer carries a
+    /// depth charge and an anti-air mount besides its gun).</summary>
+    public int TertiaryWeapon { get; init; } = -1;
+
     /// <summary>Credits a harvester carries (0 = not a harvester).</summary>
     public int HarvestCapacity { get; init; }
 
@@ -37,9 +45,6 @@ public sealed record VehicleType(string Id, Locomotion Locomotion, int Speed, in
 
     /// <summary>Radiation resistance per mille: damage is scaled by (1000 - this)/1000; 1000 = immune, 0 = full damage.</summary>
     public int RadResistPermille { get; init; }
-
-    /// <summary>Reactor-cored: takes the warhead's <see cref="WarheadType.BonusVsIrradiatedPercent"/>.</summary>
-    public bool Irradiated { get; init; }
 
     /// <summary>Becomes invisible to enemies after <see cref="StealthRules.DelayTicks"/> without moving or firing.</summary>
     public bool Stealth { get; init; }
@@ -119,11 +124,50 @@ public sealed record VehicleType(string Id, Locomotion Locomotion, int Speed, in
     /// <summary>Large ship: cannot enter <see cref="LandType.Shallow"/> (TOML <c>deep_only</c>, naval only).</summary>
     public bool DeepOnly { get; init; }
 
+    /// <summary>M-03: id of the one building type that produces this ship (TOML <c>built_at</c>, default "" = the ordinary vehicle factories).</summary>
+    public string BuiltAt { get; init; } = "";
+
+    /// <summary>M-12: passengers carried inside this vehicle (a landing craft or Skyhook) heal this many permille of their max HP per 10 ticks
+    /// (TOML <c>bay_repair</c>, default 0 = none).</summary>
+    public int BayRepairPermille { get; init; }
+
     /// <summary>Submarine: can dive out of sight (TOML <c>submerges</c>, naval only).</summary>
     public bool Submerges { get; init; }
 
+    /// <summary>S44 (M-18): ticks a submarine needs to dive or to surface after a Deploy order (TOML <c>dive_ticks</c>, default 0 = instant). While the
+    /// change runs the boat keeps its old state: a diving boat is still seen and uses surfaced armour, a surfacing one is still hidden.</summary>
+    public int DiveTicks { get; init; }
+
     /// <summary>Radius in cells in which this ship detects submerged vessels (TOML <c>sonar_radius</c>, 0 = none).</summary>
     public int SonarRadius { get; init; }
+
+    /// <summary>Minelayer: mines carried (TOML <c>mine_capacity</c>, 0 = cannot lay mines; S44 M-01). A Deploy order lays one on a sea cell.</summary>
+    public int MineCapacity { get; init; }
+
+    /// <summary>Minelayer: ticks between two mines (TOML <c>mine_lay_ticks</c>; S44 M-01).</summary>
+    public int MineLayTicks { get; init; }
+
+    /// <summary>Minelayer: base damage of one mine (TOML <c>mine_damage</c>); the warhead's armour table scales it (S44 M-01).</summary>
+    public int MineDamage { get; init; }
+
+    /// <summary>Minelayer: id of the warhead a mine detonates with (TOML <c>mine_warhead</c>; S44 M-01).</summary>
+    public string MineWarhead { get; init; } = "";
+
+    /// <summary>Minelayer: a mine goes off when an enemy ship comes within this many cells (Chebyshev; TOML <c>mine_trigger_radius</c>, default 0 = same cell).</summary>
+    public int MineTriggerRadius { get; init; }
+
+    /// <summary>Minelayer: radius in cells in which it clears enemy mines (TOML <c>mine_sweep_radius</c>, 0 = does not sweep; S44 M-01).</summary>
+    public int MineSweepRadius { get; init; }
+
+    /// <summary>Minelayer: ticks between two sweeps (TOML <c>mine_sweep_ticks</c>; S44 M-01).</summary>
+    public int MineSweepTicks { get; init; }
+
+    /// <summary>Minelayer: ticks to restock one mine next to an own naval building (TOML <c>mine_restock_ticks</c>; S44 M-01).</summary>
+    public int MineRestockTicks { get; init; }
+
+    /// <summary>Transport: id of the building (a beachhead source such as <c>exp_beacon</c>) it can drop on a soft land cell next to it (TOML
+    /// <c>beacon_drop</c>, "" = none; S44 M-15). The player pays the building's cost at the drop.</summary>
+    public string BeaconDrop { get; init; } = "";
 
     /// <summary>Carrier hangar: aircraft it can hold (TOML <c>aircraft_slots</c>, 0 = none).</summary>
     public int AircraftSlots { get; init; }

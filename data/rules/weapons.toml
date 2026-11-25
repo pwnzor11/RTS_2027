@@ -437,6 +437,23 @@ projectile_speed = 48
 warhead = "exp_depth_charge"
 targets = "submerged"
 
+[exp_launch_gun]   # Patrol Launch: deck gun in its second slot (S44 M-04). ASSUMED -- confirm: Marine rifle numbers, small-arms warhead
+damage = 10  # ASSUMED (S44 M-04), as exp_marine_rifle
+range = 832  # ASSUMED
+min_range = 0
+rate_of_fire = 14  # ASSUMED
+projectile_speed = 0
+warhead = "exp_small_arms"
+
+[exp_destroyer_aa]   # Destroyer: anti-air mount in its third slot (S44 M-04). ASSUMED -- confirm: Carrier AA numbers
+damage = 20  # ASSUMED (S44 M-04), as exp_carrier_aa
+range = 1280  # ASSUMED
+min_range = 0
+rate_of_fire = 24  # ASSUMED
+projectile_speed = 128
+warhead = "exp_aa_missile"
+targets = "air"
+
 [exp_destroyer_gun]   # Destroyer
 damage = 30  # (tune)
 range = 1408  # (tune)
@@ -444,6 +461,7 @@ min_range = 0
 rate_of_fire = 30  # (tune)
 projectile_speed = 80
 warhead = "exp_naval_shell"
+needs_spotter = true  # S44 M-17: fires at a ground cell only while the team sees it (design 07 §2.5)
 
 [exp_sub_missile]   # Missile Submarine: guided strike on ships and land
 damage = 110  # (tune)
@@ -453,6 +471,15 @@ rate_of_fire = 90  # (tune)
 projectile_speed = 96
 warhead = "exp_missile_strike"
 
+[exp_sub_torpedo]   # Missile Submarine: torpedo in its second slot (S44 M-18). ASSUMED -- confirm: every number
+damage = 140  # ASSUMED (S44 M-18)
+range = 1792  # ASSUMED 7 cells, shorter than the missile
+min_range = 0
+rate_of_fire = 100  # ASSUMED 5 s
+projectile_speed = 64
+warhead = "exp_torpedo"
+targets = "naval_submerged"   # surface ships and dived boats (a hidden boat must still be sonar-detected to be a target)
+
 [exp_cruiser_gun]   # Cruiser: shore bombardment
 damage = 90  # (tune)
 range = 3072  # (tune)
@@ -460,6 +487,7 @@ min_range = 768  # (tune)
 rate_of_fire = 70  # (tune)
 projectile_speed = 80
 warhead = "exp_naval_shell_he"
+needs_spotter = true  # S44 M-17: shore bombardment of a cell seen by a Pathfinder, Gyro or the ship itself (design 07 §6.4)
 
 [exp_carrier_aa]   # Carrier: close anti-air
 damage = 20  # (tune)

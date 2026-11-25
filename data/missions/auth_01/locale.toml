@@ -10,10 +10,10 @@
 "a1.radio.raid2" = "More of them, out of the north. They want the site, Commander."
 "a1.radio.civilians" = "Two surveyors are still out there. Keep them alive if you can."
 "a1.radio.civilians_lost" = "We lost a surveyor. Keep going."
-"a1.raiders.beaten" = "Raiders beaten. A forward Construction Yard has been airlifted to the pit. Power first, then the Refinery."
-"a1.radio.build" = "Yard is on the pit. Power, then the Refinery. Quickly."
+"a1.raiders.beaten" = "Raiders beaten. A forward Construction Yard has been airlifted to the pit. Power first, then the Ashfall Refinery."
+"a1.radio.build" = "Yard is on the pit. Power, then the Ashfall Refinery. Quickly."
 "a1.lost" = "Both scrapers are lost. The survey is over."
-"a1.win" = "Refinery online. Pitchblende is ours. Well done, Commander."
+"a1.win" = "Ashfall Refinery online. Pitchblende is ours. Well done, Commander."
 "a1.radio.win" = "Good work. The convoys will eat this winter."
 
 
@@ -22,7 +22,7 @@
 "a1.obj.scrapers" = "Keep at least one scraper alive"
 "a1.obj.surveyors" = "Bring both civilian surveyors through alive"
 "a1.obj.hold" = "Hold the survey site until the raiders are beaten"
-"a1.obj.refinery" = "Build a Refinery beside the pitchblende pit"
+"a1.obj.refinery" = "Build an Ashfall Refinery beside the pitchblende pit"
 "a1.timer.raid2" = "Second raid"
 
 [voice]

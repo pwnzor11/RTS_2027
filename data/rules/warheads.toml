@@ -2,8 +2,7 @@
 # Keys: versus = damage percent (0..1000) per armour class, in the order Unarmored, Light, Heavy, Structure,
 # Fortified, ShipLight, ShipHeavy, Submerged (M7-02: the last three are padded with 100, or 0 for the all-zero warheads; a shorter
 # five-entry list is padded with 100 by the loader). splash: 0 = target only, 1 = 3x3 block with falloff. hits_allies: whether splash hurts allies (D-054).
-# Schema v3 (M3, all optional): contaminate, decontaminate (radiation 0..255 in the splash), bonus_vs_irradiated_percent
-# (default 100), blackout_ticks.
+# Schema v3 (M3, all optional): contaminate, decontaminate (radiation 0..255 in the splash), blackout_ticks.
 
 [auth_small_arms]
 versus = [100, 50, 15, 10, 5, 70, 30, 100]   # D-205 (LE-07): ship columns copy exp_small_arms (Submerged left at 100)
@@ -133,10 +132,12 @@ versus = [100, 70, 30, 40, 20, 100, 100, 100]
 splash = 1
 hits_allies = false
 
-[lb_harpoon]   # (tune) tether: the slow is a later sim hook, the hit is anti-armour
+[lb_harpoon]   # (tune) tether: the hit is anti-armour and slows the target (S44 M-05)
 versus = [25, 75, 100, 50, 40, 90, 70, 100]   # D-205 (LE-07): ship columns copy exp_guided_ap (Submerged left at 100)
 splash = 0
 hits_allies = false
+tether_ticks = 60            # (tune) ASSUMED: 3 s at 20 ticks per second, refreshed by every hit
+tether_speed_permille = 500  # (tune) ASSUMED: half speed
 
 [lb_rocket]   # (tune) Organ rocket rack: area, good vs structures
 versus = [100, 80, 50, 100, 60, 100, 100, 100]
@@ -162,7 +163,7 @@ blackout_ticks = 200
 storm_radius = 6   # (tune) cells
 storm_ticks = 800   # (tune) 40 s at 20 ticks/s
 storm_contaminate_step = 4   # (tune) low steps, never above the cap
-storm_contaminate_cap = 64   # design 06 §6: denies building but does not kill
+storm_contaminate_cap = 31   # design 06 §6: denies building but does not kill (A43 SIMECON-02: kept below [radiation] damage_threshold = 32; was 64)
 storm_speed_permille = 600   # (tune) enemy vehicles slowed to 60 percent
 
 # M7-08: Expedition warheads (design 07 §6.4). versus order: Unarmored, Light, Heavy, Structure, Fortified, ShipLight, ShipHeavy, Submerged.
@@ -219,9 +220,19 @@ versus = [0, 0, 0, 150, 100, 150, 150, 0]
 splash = 0
 hits_allies = false
 
+[exp_torpedo]   # (ASSUMED, S44 M-18) Missile Submarine torpedo: heavy vs ships, full on a dived hull, nothing on land targets
+versus = [0, 0, 0, 0, 0, 120, 130, 100]
+splash = 0
+hits_allies = false
+
 [exp_depth_charge]   # (tune) Patrol Launch: only a submerged vessel feels it fully
 versus = [0, 0, 0, 0, 0, 40, 30, 100]
 splash = 1
+hits_allies = false
+
+[exp_sea_mine]   # (tune) S44 M-01: sea mine, hits surface ships only (a dived submarine passes under it); versus ship armour
+versus = [0, 0, 0, 0, 0, 100, 80, 0]
+splash = 0
 hits_allies = false
 
 [exp_salvo_array_blast]   # (tune) Salvo Array (superweapon "exp_salvo_array" reads "<superweapon>_blast"): a cruise-missile salvo (M7-12, D-142)

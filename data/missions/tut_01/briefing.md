@@ -11,7 +11,7 @@ You will learn to:
 2. Attack a target.
 3. Build a Power Plant, then a Barracks.
 4. Train infantry.
-5. Collect pitchblende with a Refinery and a Scraper.
+5. Collect pitchblende with an Ashfall Refinery and a Scraper.
 6. Defeat a small enemy camp.
 
 You begin with a Construction Yard and four riflemen. The range is small: your base sits in the north-west corner, the practice

@@ -272,7 +272,7 @@ public sealed class RecruitAi : IAiPlayer, IAiSnapshotable, IHookableAi
         _military.MopupHunt = bp.FactionKeys.MopupHunt((int)faction);   // s30 mopup_hunt (off = today's behaviour)
         _tactics = _faction.CreateTactics(bp);
         _build = new BuildOrderManager(_faction.OrderFor(bp.BuildRepertoire), _faction.PowerId, _faction.YardId)
-        { ReserveInProgress = bp.RespondToAttacks, SupplyMargin = BuildOrderManager.MarginForTier(bp.Tier) };   // M4-12 (tier 2+); SUP-5 margin by tier
+        { ReserveInProgress = bp.RespondToAttacks, SupplyMargin = BuildOrderManager.MarginFor(bp) };   // M4-12 (tier 2+); SUP-5 margin by tier
         _planner = new TierPlanner(bp, _faction);
         _build.HoldStep = id => _planner.Behind && _planner.IsTech(id);   // M4-16
         // S16 (Q-67): the Directorate at tiers 2-3 keeps its tech spending (Isotope Works, Rad Mortar) until it has an early army.
@@ -349,8 +349,8 @@ public sealed class RecruitAi : IAiPlayer, IAiSnapshotable, IHookableAi
         _military.Bias = bias; _production!.Bias = bias; _planner!.Bias = bias; _upgrades.Bias = bias; _garrison.Bias = bias;
         _planner.ExtendBuild(_k, _build!);
         if (_profile.ReplaceHarvesters) _rescue.Think(_k, sink, _faction);   // M4-12: no harvester and no money: sell for one
-        _build!.HoldExcept = _rescue.Saving ? _rescue.RefineryType : _rescue.Broke ? -1 : int.MinValue;
-        _production!.Hold = _rescue.Saving;
+        _build!.HoldExcept = _rescue.Saving ? _rescue.RefineryType : _rescue.Broke ? (_rescue.LifelineAffordable ? _rescue.LifelineType : -1) : int.MinValue;   // s43 (A43-AI-01): a broke side may still rebuild its refinery / factory
+        _production!.Hold = _rescue.Saving || _rescue.LifelineSaving;
         _production.Broke = _rescue.Broke;   // s23 D-235 (A)
         _build.Think(_k, sink);
         _economy.Think(_k, sink);

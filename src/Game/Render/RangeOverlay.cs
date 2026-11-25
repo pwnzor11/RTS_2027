@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Rts.Game.Controls;
 using Rts.Game.Sandbox;
+using Rts.Game.Ui;
 using Rts.Sim;
 using Rts.Sim.Core;
 using Rts.Sim.Rules;
@@ -27,18 +28,31 @@ public static class RangeOverlay
         if (frame.Sim is null) return;
         foreach (UnitKey key in frame.Selection.Units)
         {
-            WeaponType? weapon = WeaponOf(frame.Sim, key);
-            if (weapon is null || !frame.TryFind(key, out Vector2 world)) continue;
+            IReadOnlyList<WeaponType> weapons = WeaponsOf(frame.Sim, key);
+            if (weapons.Count == 0 || !frame.TryFind(key, out Vector2 world)) continue;
 
             Vector2 centre = camera.ScreenFromWorld(world);
-            float range = LeptonsToScreen(weapon.Range, camera);
-            Shapes.Circle(batch, pixel, centre, range, RangeColour, LinePx, Segments);
-            if (weapon.MinRange > 0)
+            for (int slot = 0; slot < weapons.Count; slot++)   // S44 (M-04): one ring per weapon slot, tinted by slot
             {
-                Shapes.Circle(batch, pixel, centre, LeptonsToScreen(weapon.MinRange, camera), MinRangeColour, LinePx, Segments);
+                WeaponType weapon = weapons[slot];
+                Shapes.Circle(batch, pixel, centre, LeptonsToScreen(weapon.Range, camera), SlotColour(slot), LinePx, Segments);
+                if (weapon.MinRange > 0)
+                {
+                    Shapes.Circle(batch, pixel, centre, LeptonsToScreen(weapon.MinRange, camera), MinRangeColour, LinePx, Segments);
+                }
             }
         }
     }
+
+    /// <summary>S44 (M-04): the ring colour of weapon slot <paramref name="slot"/> (0 keeps the classic blue; the others are distinct).</summary>
+    public static Color SlotColour(int slot) => slot switch { 0 => RangeColour, 1 => new Color(0xFF, 0xD8, 0x6A), _ => new Color(0xA8, 0xFF, 0x9A) };
+
+    /// <summary>
+    /// S44 (M-04): the weapons of a vehicle type that get a range ring, in slot order (primary, secondary, tertiary), skipping empty slots and
+    /// weapons with no range. One entry for every one-weapon unit, so their overlay does not change.
+    /// </summary>
+    public static IReadOnlyList<WeaponType> VehicleRings(SimRules rules, int typeIndex) =>
+        WeaponSlots.OfVehicle(rules, typeIndex).Where(w => rules.Weapons[w].Range > 0).Select(w => rules.Weapons[w]).ToList();
 
     /// <summary>
     /// M13-15: the weapon range and minimum range in leptons of a building type's primary weapon (a defence), or null when it has none.
@@ -63,20 +77,16 @@ public static class RangeOverlay
     private static float LeptonsToScreen(int leptons, Camera camera) =>
         leptons * Camera.CellPx / (float)SimConstants.LeptonsPerCell * camera.Zoom;
 
-    private static WeaponType? WeaponOf(Simulation sim, UnitKey key)
+    private static IReadOnlyList<WeaponType> WeaponsOf(Simulation sim, UnitKey key)
     {
         SimRules rules = sim.Setup.Rules;
-        int weapon;
         if (key.Kind == ActorKind.Vehicle)
         {
-            if (!sim.Units.Slots.IsAlive(key.Id)) return null;
-            weapon = rules.Vehicles[sim.Units.TypeIndex[key.Id.Index]].PrimaryWeapon;
+            if (!sim.Units.Slots.IsAlive(key.Id)) return Array.Empty<WeaponType>();
+            return VehicleRings(rules, sim.Units.TypeIndex[key.Id.Index]);
         }
-        else
-        {
-            if (!sim.Infantry.Slots.IsAlive(key.Id)) return null;
-            weapon = rules.Infantry[sim.Infantry.TypeIndex[key.Id.Index]].PrimaryWeapon;
-        }
-        return weapon >= 0 && weapon < rules.Weapons.Count ? rules.Weapons[weapon] : null;
+        if (!sim.Infantry.Slots.IsAlive(key.Id)) return Array.Empty<WeaponType>();
+        int weapon = rules.Infantry[sim.Infantry.TypeIndex[key.Id.Index]].PrimaryWeapon;
+        return weapon >= 0 && weapon < rules.Weapons.Count ? new[] { rules.Weapons[weapon] } : Array.Empty<WeaponType>();
     }
 }

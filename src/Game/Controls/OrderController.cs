@@ -121,7 +121,7 @@ public sealed class OrderController
     /// <summary>Handles a right-click at a screen point, using the units as drawn this frame for picking. <paramref name="forceFire"/>
     /// (Ctrl held, S19 FAD-05) sends the whole selection an attack-ground order on the clicked cell instead of any other order.
     /// <paramref name="queue"/> (Shift held, S19 M13-15) makes a plain move or attack-move on the ground a queued waypoint instead; every
-    /// other kind of click is an ordinary order.</summary>
+    /// other kind of click is an ordinary order, except that (U-05) Shift on an enemy appends an attack-move waypoint on it.</summary>
     public void RightClick(Point screen, Camera camera, IReadOnlyList<RenderUnit> units, bool forceFire = false, bool queue = false)
     {
         bool armed = AttackMoveArmed;
@@ -181,7 +181,10 @@ public sealed class OrderController
             }
             else if (click == BuildingClick.Attack || (building is null && enemy is not null))
             {
-                _source.Order(CommandKind.Attack, unit, default, enemy!.Value);
+                // U-05: Shift + right-click on an enemy appends the attack (an attack-move waypoint on it) instead of replacing the queue
+                if (queue && QueuedAttack.CellFor(enemy!.Value, _source.Current.Units, _source.Current.Buildings) is { } targetCell)
+                    _source.OrderQueued(unit, targetCell, true);
+                else _source.Order(CommandKind.Attack, unit, default, enemy!.Value);
                 mark = OrderMarkKind.Attack;
             }
             else if (own is { Target.Kind: ActorKind.Vehicle } mine && M3Orders.CanBoard(_source.Rules, unit.Kind, mine.TypeIndex))

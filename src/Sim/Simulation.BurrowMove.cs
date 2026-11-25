@@ -358,11 +358,12 @@ public sealed partial class Simulation
         {
             // M7-10 (D-149): a ship sits on water, which is not buildable, so the footprint cannot be centred on it. It goes ashore instead:
             // the first top-left (rows, then columns) whose footprint is buildable and touches the ship's cell (within one cell of it).
+            // M-16: and whose footprint holds a landing-coast cell (terrain [landing], the beach), design 07 §2.1; otherwise the Deploy is refused.
             bool found = false;
             topLeft = default;
             for (int ty = at.Y - bt.FootprintH; ty <= at.Y + 1 && !found; ty++)
                 for (int tx = at.X - bt.FootprintW; tx <= at.X + 1 && !found; tx++)
-                    if (DeployFootprintFree(new CellCoord(tx, ty), bt, self)) { topLeft = new CellCoord(tx, ty); found = true; }
+                    if (DeployFootprintFree(new CellCoord(tx, ty), bt, self) && FootprintHasLanding(new CellCoord(tx, ty), bt, _units.Player[i])) { topLeft = new CellCoord(tx, ty); found = true; }
             if (!found) return false;
         }
         else
@@ -376,6 +377,26 @@ public sealed partial class Simulation
         RemoveVehicleForDeploy(i);
         PlaceBuildingNow(owner, vt.DeploysInto, topLeft, health);
         return true;
+    }
+
+    /// <summary>M-16: true when the footprint holds a landing-coast cell (terrain <c>[landing]</c>) or a cell next to Shallow water
+    /// (design 07 §2.1: "a shore cell adjacent to shallow water").</summary>
+    private bool FootprintHasLanding(CellCoord topLeft, BuildingType bt, byte owner)
+    {
+        TerrainTable terrain = RulesOf(owner).Terrain;
+        for (int y = topLeft.Y; y < topLeft.Y + bt.FootprintH; y++)
+            for (int x = topLeft.X; x < topLeft.X + bt.FootprintW; x++)
+            {
+                if (!InMap(new CellCoord(x, y))) continue;
+                if (terrain.Landing(_map.LandAt(new CellCoord(x, y)))) return true;
+                for (int dy = -1; dy <= 1; dy++)
+                    for (int dx = -1; dx <= 1; dx++)
+                    {
+                        var n = new CellCoord(x + dx, y + dy);
+                        if (InMap(n) && _map.LandAt(n) == LandType.Shallow) return true;
+                    }
+            }
+        return false;
     }
 
     /// <summary>True when every footprint cell is on the map, buildable, free of overlay and buildings, and holds no actor other than <paramref name="self"/>.</summary>

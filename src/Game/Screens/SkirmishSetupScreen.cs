@@ -77,7 +77,8 @@ public sealed class SkirmishSetupScreen : IScreen
             _layout = g.Layout;
             _stamps = g.Stamps;
         }
-        _tierNames = LoadTierNames(services.RulesDir);
+        _tierNames = LoadTierNames(services.RulesDir, out string? tierProblem);
+        if (tierProblem is not null) _error = Shorten(tierProblem, 56);   // a broken difficulty.toml is shown here, and starting the game reports it again
         _slots = new List<SkirmishSlot>(last?.Slots ?? SkirmishSettings.Default.Slots);   // QOL-01
         if (last is not null) _rules = last.Rules;
         if (last?.Slots is { } lastSlots && lastSlots.Any(x => x.Kind == SlotKind.Ai && x.AiTier > _tierNames.Length))
@@ -453,10 +454,12 @@ public sealed class SkirmishSetupScreen : IScreen
         };
     }
 
-    private static string[] LoadTierNames(string rulesDir)
+    /// <summary>The tier labels; when difficulty.toml is broken the labels fall back to "Tier N" and <paramref name="problem"/> carries the message.</summary>
+    private static string[] LoadTierNames(string rulesDir, out string? problem)
     {
         var names = new string[DifficultyLoader.TierIds.Count];
         for (int i = 0; i < names.Length; i++) names[i] = $"Tier {i + 1}";
+        problem = null;
         try
         {
             foreach (DifficultyProfile profile in DifficultyLoader.Load(DifficultyLoader.PathBesideRules(rulesDir)))
@@ -465,9 +468,9 @@ public sealed class SkirmishSetupScreen : IScreen
                     names[profile.Tier - 1] = char.ToUpperInvariant(profile.Id[0]) + profile.Id[1..];
             }
         }
-        catch (RulesException)
+        catch (RulesException e)
         {
-            // Keep "Tier N" names.
+            problem = e.Message;
         }
         return names;
     }

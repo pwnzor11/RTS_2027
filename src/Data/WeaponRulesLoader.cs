@@ -12,15 +12,17 @@ internal static class WeaponRulesLoader
     public const int MaxVersusPercent = 1000;
 
     private static readonly string[] WarheadKeys =
-        ["versus", "splash", "hits_allies", "contaminate", "decontaminate", "bonus_vs_irradiated_percent", "blackout_ticks",
+        ["versus", "splash", "hits_allies", "contaminate", "decontaminate", "blackout_ticks",
          // schema v4 (M4-01)
          "hits_burrowed", "bonus_vs_entrance_percent", "foam_ticks", "garrison_damage_percent",
          // schema v5 (M6-02)
-         "storm_radius", "storm_ticks", "storm_contaminate_step", "storm_contaminate_cap", "storm_speed_permille",
+         "storm_radius", "storm_ticks", "storm_contaminate_step", "storm_contaminate_cap", "storm_speed_permille", "tether_ticks", "tether_speed_permille",
          // schema v8 (M7-12)
          "salvo_missiles", "salvo_ticks", "salvo_radius", "salvo_damage", "salvo_warn_ticks", "salvo_splash"];
     private static readonly string[] WeaponKeys =
-        ["damage", "range", "min_range", "rate_of_fire", "projectile_speed", "warhead", "targets"];
+        ["damage", "range", "min_range", "rate_of_fire", "projectile_speed", "warhead", "targets",
+         // S44 (M-17)
+         "needs_spotter"];
 
     /// <summary>The armour classes that existed before M7-02 (unarmored..fortified); a shorter <c>versus</c> list of at least this length is padded.</summary>
     private const int LegacyArmorClasses = 5;
@@ -48,7 +50,6 @@ internal static class WeaponRulesLoader
         bool? hitsAllies = f.Bool("hits_allies");
         int? contaminate = f.OptInt("contaminate", 0, 255, 0);
         int? decontaminate = f.OptInt("decontaminate", 0, 255, 0);
-        int? bonus = f.OptInt("bonus_vs_irradiated_percent", 0, MaxVersusPercent, 100);
         int? blackout = f.OptInt("blackout_ticks", 0, 1_000_000, 0);
         bool? hitsBurrowed = f.OptBool("hits_burrowed", false);
         int? bonusEntrance = f.OptInt("bonus_vs_entrance_percent", 0, MaxVersusPercent, 100);
@@ -59,6 +60,9 @@ internal static class WeaponRulesLoader
         int? stormStep = f.OptInt("storm_contaminate_step", 0, 255, 0);
         int? stormCap = f.OptInt("storm_contaminate_cap", 0, 255, 64);
         int? stormSpeed = f.OptInt("storm_speed_permille", 0, 1000, 0);
+        int? tetherTicks = f.OptInt("tether_ticks", 0, 1_000_000, 0);   // S44 M-05
+        int? tetherSpeed = f.OptInt("tether_speed_permille", 1, 1000, 1000);
+        if (tetherTicks is null || tetherSpeed is null) return null;
         int? salvoMissiles = f.OptInt("salvo_missiles", 0, 1000, 0);   // M7-12
         int? salvoTicks = f.OptInt("salvo_ticks", 0, 1_000_000, 0);
         int? salvoRadius = f.OptInt("salvo_radius", 0, SimConstants.MaxMapCells, 0);
@@ -68,7 +72,7 @@ internal static class WeaponRulesLoader
         if (salvoMissiles is null || salvoTicks is null || salvoRadius is null || salvoDamage is null || salvoWarn is null || salvoSplash is null) return null;
         if (stormRadius is null || stormTicks is null || stormStep is null || stormCap is null || stormSpeed is null) return null;
         if (versus is null || splash is null || hitsAllies is null || contaminate is null || decontaminate is null
-            || bonus is null || blackout is null || hitsBurrowed is null || bonusEntrance is null || foam is null || garrisonDamage is null)
+            || blackout is null || hitsBurrowed is null || bonusEntrance is null || foam is null || garrisonDamage is null)
         {
             return null;
         }
@@ -76,7 +80,6 @@ internal static class WeaponRulesLoader
         {
             Contaminate = contaminate.Value,
             Decontaminate = decontaminate.Value,
-            BonusVsIrradiatedPercent = bonus.Value,
             BlackoutTicks = blackout.Value,
             HitsBurrowed = hitsBurrowed.Value,
             BonusVsEntrancePercent = bonusEntrance.Value,
@@ -87,6 +90,8 @@ internal static class WeaponRulesLoader
             StormContaminateStep = stormStep.Value,
             StormContaminateCap = stormCap.Value,
             StormSpeedPermille = stormSpeed.Value,
+            TetherTicks = tetherTicks.Value,
+            TetherSpeedPermille = tetherSpeed.Value,
             SalvoMissiles = salvoMissiles.Value,
             SalvoTicks = salvoTicks.Value,
             SalvoRadius = salvoRadius.Value,
@@ -108,6 +113,8 @@ internal static class WeaponRulesLoader
         string? warhead = f.Str("warhead");
         WeaponTargets? targets = f.OptChoice("targets", RulesEnums.ParseWeaponTargets, RulesEnums.WeaponTargetKeys, WeaponTargets.Ground);
         if (targets is null) return null;
+        bool? needsSpotter = f.OptBool("needs_spotter", false);   // S44 M-17
+        if (needsSpotter is null) return null;
         if (damage is null || range is null || minRange is null || rateOfFire is null || projectileSpeed is null
             || warhead is null)
         {
@@ -125,6 +132,6 @@ internal static class WeaponRulesLoader
             return null;
         }
         return new WeaponType(f.Id, damage.Value, range.Value, minRange.Value, rateOfFire.Value,
-            projectileSpeed.Value, warheadIndex) { Targets = targets.Value };
+            projectileSpeed.Value, warheadIndex) { Targets = targets.Value, NeedsSpotter = needsSpotter.Value };
     }
 }

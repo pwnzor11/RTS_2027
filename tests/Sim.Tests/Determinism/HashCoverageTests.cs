@@ -129,6 +129,7 @@ public class HashCoverageTests
     private static readonly Dictionary<string, string> NotHashed = new(StringComparer.Ordinal)
     {
         // Simulation
+        ["MobileStore.QueueStamp"] = "A43 SIMCORE-03: counts missions queued, read only inside one Apply call to tell whether an order was accepted; never saved, never read across ticks",
         ["NavalState.LoadEpoch"] = "M7-03: counts loads so the derived region cache recomputes; not state",
         ["Simulation._lifelineBuilding"] = "M4-17: lazy per-building-type table derived from the immutable Rules",
         ["Simulation._lifelineVehicle"] = "M4-17: lazy per-vehicle-type table derived from the immutable Rules",
@@ -137,6 +138,7 @@ public class HashCoverageTests
         ["Simulation.UnlockFilter"] = "delegate a mission extension installs in OnSetup (M2-15): code, not state; the state it reads is the extension's own hashed part",
         ["Simulation.LateCommandCount"] = "diagnostic counter of commands that arrived after their tick; not state, resets on load (M1.5-02)",
         ["Simulation._teamMembers"] = "lazy cache derived from Setup.Teams (hashed via the players part); rebuilt identically after load (M1.5-01)",
+        ["Simulation._beaconIgnoresZone"] = "S44 M-15: true only inside PlaceBeacon's CanPlace call; always false when a hash or save is taken",
         ["Simulation._inStep"] = "true only while Step runs; always false when a hash or save is taken",
         ["Simulation._recentHashes"] = "ring of already-computed hashes for diagnostics and snapshots; derived from state, not state",
         ["Simulation._scratch"] = "command sort buffer, rewritten on every ApplyInput",
@@ -167,6 +169,7 @@ public class HashCoverageTests
         ["Simulation._emittersDirty"] = "invalidation flag for _emitters (M3-INT)",
         ["Simulation.UseEmitterCache"] = "test switch for the _emitters speed-up; results do not depend on it (M3-INT)",
         ["Simulation._pendingCount"] = "fill level of _pendingDamage; always 0 between ticks",
+        ["Simulation._firedThisTick"] = "S44 M-26: which mobile slots fired this tick; cleared at the start of every RunMissions, read by RunStealth in the same tick",
         ["Simulation._tickPosVeh"] = "start-of-tick vehicle positions for combat decisions, rewritten at the start of every RunMissions",
         ["Simulation._tickPosInf"] = "start-of-tick infantry positions for combat decisions, rewritten at the start of every RunMissions",
         ["Simulation._supplyUsed"] = "SUP-1 per-player supply in use: a pure function of the units/infantry parts, rewritten by EnsureSupply (tick-stamped scratch cache)",

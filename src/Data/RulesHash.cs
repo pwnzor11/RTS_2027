@@ -28,9 +28,9 @@ namespace Rts.Data;
 /// <item>Schema v3 block (M3-01, format 6): the soft flag for every land; tunnels (TransitTicks, NetworkCapPoints, PointsS,
 /// PointsM, DiveTicks, TelegraphTicks, EntranceTelegraphTicks, EmergingHealthPermille, SurfacingRing); radiation (DecayTicks,
 /// DamageIntervalTicks, DamageThreshold, DamagePermille, NoBuildThreshold); stealth DelayTicks; start kits (count, then per
-/// faction: conyard, units); then per weapon Targets (byte); per warhead Contaminate, Decontaminate, BonusVsIrradiatedPercent,
+/// faction: conyard, units); then per weapon Targets (byte); per warhead Contaminate, Decontaminate,
 /// BlackoutTicks; per vehicle the mobile v3 fields (Faction, TunnelSize, AuraRadius, AuraRofPermille, AuraSpeedPermille,
-/// AuraTargets, RadResistPermille, Irradiated, Stealth, DeathWeapon, JamRadius, SeismicRadius) then Passengers, DeploysInto;
+/// AuraTargets, RadResistPermille, Stealth, DeathWeapon, JamRadius, SeismicRadius) then Passengers, DeploysInto;
 /// per infantry the mobile v3 fields then Engineer; per building Faction, Entrance, TicksPerPoint, Researches, Gate,
 /// SeismicRadius, SeesThroughBlackout, JamRadius, Superweapon, SuperweaponChargeTicks, SuperweaponEntranceRange, MorphsInto, MorphTicks; then upgrades
 /// (count, then per upgrade in id order: id, Faction, Cost, BuildTime, prerequisites, Effect). Lists are in the same id order as
@@ -44,7 +44,7 @@ namespace Rts.Data;
 /// SpoilsPermille; per warhead StormRadius, StormTicks, StormContaminateStep, StormContaminateCap, StormSpeedPermille; per vehicle
 /// UnpacksInto, PackTicks, SalvageRate, Raider, RaiderOneUse, DropsBlackoutTicks, AuraRepairPermille, TowBonusPermille, OneUse, Buildable; per infantry
 /// SalvageRate, Raider, RaiderOneUse, AshStealthDelayTicks, AshStealthThreshold, AuraRepairPermille; per building PacksInto, PackTicks;
-/// per upgrade PackTicksPermille, SalvagePermille, PlunderPermille, RepairsVehiclesAtRange.</item>
+/// per upgrade PackTicksPermille, SalvagePermille, PlunderPermille, RepairsVehiclesAtRange, then (S44) WreckValuePermille, RepairRangeCells, RepairRatePermille.</item>
 /// <item>Schema v6 block (VET-1, format 9): Veterancy Enabled, Thresholds, KillPermilleUnit, KillPermilleBuilding, DamagePermille,
 /// TakenPermille, ReloadPermille, SpeedPermille, HealIntervalTicks, HealPermille, HealQuietTicks; per vehicle and infantry CanRank
 /// (the resolved <c>veteran</c> flag) and VetThresholdPermille.</item>
@@ -52,7 +52,7 @@ namespace Rts.Data;
 /// infantry Supply; per building SupplyProvided and SupplyUnstocked.</item>
 /// <item>Schema v8 block (M7-02, format 11): per land type Landing; Shipments Enabled, IntervalTicks, Value, DecayPermille, FloorPermille,
 /// CharterTicks, TendersMax, LocalAshBonusPermille, TenderType (M7-06); per vehicle DrawScalePermille, DeepOnly, Submerges, SonarRadius, AircraftSlots,
-/// SortieTicks, UnloadTicks, VehicleSlots (M7-04b), then Ammo and RearmTicks only for a type with either set (D-156); per building WaterBuilding, WaterMask (count, then cells), BeachheadSource, BeachheadRadius, ShipmentDock (M7-06), SonarRadius (simfu-4); then per warhead SalvoMissiles, SalvoTicks, SalvoRadius, SalvoDamage, SalvoWarnTicks, SalvoSplash (M7-12). The terrain
+/// SortieTicks, UnloadTicks, VehicleSlots (M7-04b), then Ammo and RearmTicks only for a type with either set (D-156); then the eight mine fields only for a type with MineCapacity or MineSweepRadius set (S44 M-01); per building WaterBuilding, WaterMask (count, then cells), BeachheadSource, BeachheadRadius, ShipmentDock (M7-06), SonarRadius (simfu-4); then per warhead SalvoMissiles, SalvoTicks, SalvoRadius, SalvoDamage, SalvoWarnTicks, SalvoSplash (M7-12). The terrain
 /// table above grows with the land and locomotion counts (Coast, Naval).</item>
 /// <item>Schema v9 block (M12-16, format 12): Props TreeHealth, SnagHealth, WreckHealth, SplashArmor (byte), CrushPathPenalty.</item>
 /// </list>
@@ -131,6 +131,7 @@ public static class RulesHash
                 WriteStrings(w, v.Prerequisites);
                 w.Write(v.HarvestCapacity);
                 w.Write(v.BuildTime);
+                if (v.SecondaryWeapon >= 0 || v.TertiaryWeapon >= 0) { w.Write(v.SecondaryWeapon); w.Write(v.TertiaryWeapon); }   // S44 (M-04): absent = unchanged bytes
             }
 
             w.Write(sim.Infantry.Count);
@@ -222,21 +223,21 @@ public static class RulesHash
         w.Write(sim.StartKits.Count);
         foreach (FactionStartKit k in sim.StartKits) { WriteString(w, k.Conyard); WriteStrings(w, k.Units); }
 
-        foreach (WeaponType x in sim.Weapons) w.Write((byte)x.Targets);
+        foreach (WeaponType x in sim.Weapons) { w.Write((byte)x.Targets); if (x.NeedsSpotter) w.Write((byte)0xD5); }   // S44 M-17: only spotter weapons, so other hashes keep
         foreach (WarheadType x in sim.Warheads)
         {
-            w.Write(x.Contaminate); w.Write(x.Decontaminate); w.Write(x.BonusVsIrradiatedPercent); w.Write(x.BlackoutTicks);
+            w.Write(x.Contaminate); w.Write(x.Decontaminate); w.Write(x.BlackoutTicks);
         }
         foreach (VehicleType x in sim.Vehicles)
         {
             WriteMobile(w, x.Faction, x.TunnelSize, x.AuraRadius, x.AuraRofPermille, x.AuraSpeedPermille, x.AuraTargets,
-                x.RadResistPermille, x.Irradiated, x.Stealth, x.DeathWeapon, x.JamRadius, x.SeismicRadius);
+                x.RadResistPermille, x.Stealth, x.DeathWeapon, x.JamRadius, x.SeismicRadius);
             w.Write(x.Passengers); w.Write(x.DeploysInto);
         }
         foreach (InfantryType x in sim.Infantry)
         {
             WriteMobile(w, x.Faction, x.TunnelSize, x.AuraRadius, x.AuraRofPermille, x.AuraSpeedPermille, x.AuraTargets,
-                x.RadResistPermille, x.Irradiated, x.Stealth, x.DeathWeapon, x.JamRadius, x.SeismicRadius);
+                x.RadResistPermille, x.Stealth, x.DeathWeapon, x.JamRadius, x.SeismicRadius);
             w.Write(x.Engineer);
         }
         foreach (BuildingType x in sim.Buildings)
@@ -313,6 +314,14 @@ public static class RulesHash
             w.Write(x.DrawScalePermille); w.Write(x.DeepOnly); w.Write(x.Submerges); w.Write(x.SonarRadius);
             w.Write(x.AircraftSlots); w.Write(x.SortieTicks); w.Write(x.UnloadTicks); w.Write(x.VehicleSlots);
             if (x.Ammo > 0 || x.RearmTicks > 0) { w.Write(x.Ammo); w.Write(x.RearmTicks); }   // D-156: only types with ammo, so old hashes keep
+            if (x.MineCapacity > 0 || x.MineSweepRadius > 0)   // S44 M-01: only minelayers, so other hashes keep
+            {
+                w.Write(x.MineCapacity); w.Write(x.MineLayTicks); w.Write(x.MineDamage); w.Write(x.MineWarhead); w.Write(x.MineTriggerRadius);
+                w.Write(x.MineSweepRadius); w.Write(x.MineSweepTicks); w.Write(x.MineRestockTicks);
+            }
+            if (x.DiveTicks > 0) { w.Write((byte)0xD6); w.Write(x.DiveTicks); }   // S44 M-18: only types with a dive delay
+            if (x.BeaconDrop.Length > 0) { w.Write(true); WriteString(w, x.BeaconDrop); }   // S44 M-15: only a beacon carrier, so other hashes keep
+            if (x.BuiltAt.Length > 0 || x.BayRepairPermille > 0) { w.Write((byte)0xD4); w.Write(x.BuiltAt); w.Write(x.BayRepairPermille); }   // S44 M-03/M-12: only types that set either
         }
         foreach (BuildingType x in sim.Buildings)
         {
@@ -321,11 +330,23 @@ public static class RulesHash
             foreach (bool b in x.WaterMask) w.Write(b);
             w.Write(x.BeachheadSource); w.Write(x.BeachheadRadius); w.Write(x.ShipmentDock);   // M7-06
             w.Write(x.SonarRadius);   // simfu-4
+            if (x.HeavyYard || x.ShipRepairPermille > 0) { w.Write((byte)0xD5); w.Write(x.HeavyYard); w.Write(x.ShipRepairPermille); w.Write(x.ShipRepairRadius); }   // S44 M-03
         }
         foreach (WarheadType x in sim.Warheads)   // M7-12: Salvo Array
         {
             w.Write(x.SalvoMissiles); w.Write(x.SalvoTicks); w.Write(x.SalvoRadius); w.Write(x.SalvoDamage);
             w.Write(x.SalvoWarnTicks); w.Write(x.SalvoSplash);
+        }
+        // S44 (M-05, M-06): written only for warheads / upgrades that set them, so a rules set without tether or breach keeps its hash.
+        for (int i = 0; i < sim.Warheads.Count; i++)
+        {
+            WarheadType x = sim.Warheads[i];
+            if (x.TetherTicks > 0) { w.Write((byte)0xA5); w.Write(i); w.Write(x.TetherTicks); w.Write(x.TetherSpeedPermille); }
+        }
+        for (int i = 0; i < sim.Upgrades.Count; i++)
+        {
+            UpgradeType u = sim.Upgrades[i];
+            if (u.BreachTicks > 0) { w.Write((byte)0xA6); w.Write(i); w.Write(u.BreachTicks); w.Write(u.BreachCooldownTicks); }
         }
     }
 
@@ -355,19 +376,22 @@ public static class RulesHash
         {
             w.Write(x.SalvageRate); w.Write(x.Raider); w.Write(x.RaiderOneUse); w.Write(x.AshStealthDelayTicks);
             w.Write(x.AshStealthThreshold); w.Write(x.AuraRepairPermille);
+            if (x.Swims) w.Write(true);   // S44 M-02: written only for a swimmer, so rules without one hash exactly as before
+            if (x.BeaconBuild.Length > 0) { w.Write(true); WriteString(w, x.BeaconBuild); }   // S44 M-15
         }
         foreach (BuildingType x in sim.Buildings) { w.Write(x.PacksInto); w.Write(x.PackTicks); }
         foreach (UpgradeType u in sim.Upgrades)
         {
             w.Write(u.PackTicksPermille); w.Write(u.SalvagePermille); w.Write(u.PlunderPermille); w.Write(u.RepairsVehiclesAtRange);
+            w.Write(u.WreckValuePermille); w.Write(u.RepairRangeCells); w.Write(u.RepairRatePermille);   // S44
         }
     }
 
     private static void WriteMobile(BinaryWriter w, Faction faction, TunnelSize size, int auraRadius, int auraRof, int auraSpeed,
-        IReadOnlyList<string> auraTargets, int radResist, bool irradiated, bool stealth, int deathWeapon, int jam, int seismic)
+        IReadOnlyList<string> auraTargets, int radResist, bool stealth, int deathWeapon, int jam, int seismic)
     {
         w.Write((byte)faction); w.Write((byte)size); w.Write(auraRadius); w.Write(auraRof); w.Write(auraSpeed);
-        WriteStrings(w, auraTargets); w.Write(radResist); w.Write(irradiated); w.Write(stealth); w.Write(deathWeapon);
+        WriteStrings(w, auraTargets); w.Write(radResist); w.Write(stealth); w.Write(deathWeapon);
         w.Write(jam); w.Write(seismic);
     }
 

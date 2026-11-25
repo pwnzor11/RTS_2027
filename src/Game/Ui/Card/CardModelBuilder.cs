@@ -152,6 +152,17 @@ public static class CardModelBuilder
             stats.Add(new CardStat("Weapon", "none"));
         }
 
+        if (unit.Kind == UnitKind.Vehicle && WeaponSlots.Of(r, r.Vehicles[unit.TypeIndex]) is { Count: > 1 } weaponSlots)
+        {
+            // S44 (M-04): the second and third slots, one stat each: name, damage, range and what it hits
+            for (int k = 1; k < weaponSlots.Count; k++)
+            {
+                WeaponType extra = r.Weapons[weaponSlots[k]];
+                stats.Add(new CardStat(CameoNames.Display(extra.Id),
+                    $"{extra.Damage} / {CardGrouping.Tenths(extra.Range * 10 / 256)} ({WeaponSlots.TargetsText(extra.Targets)})"));
+            }
+        }
+
         stats.Add(new CardStat("Speed", CardGrouping.Tenths(speed * SimConstants.TicksPerSecond * 10 / 256)));
         stats.Add(new CardStat("Armour", CardGrouping.ArmourText(armor)));
         stats.Add(new CardStat("Sight", sight.ToString(CultureInfo.InvariantCulture)));

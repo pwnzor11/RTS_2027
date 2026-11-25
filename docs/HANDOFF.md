@@ -1,55 +1,51 @@
-# Handoff: Session 44 — B-00 (the held economy/AI fixes), the owner decision batch, then the backlog mechanics wave (docs/BACKLOG.md)
-Last commit: `docs: Session 43 handoff` on `integ-s43` (PR to main, merged by the lead). Laptop folder: `git pull` before building.
-Where things stand: session 43 met the finish line (D-310, balance frozen), ran a 15-reviewer audit (71 fixes on integ-s43, 8 held on
-`bal-s43`), built 20 QoL items, rendered the art pass on the cluster (D-315) and removed bubble smoke (D-316). A sweep of all 43 sessions found 108
-parked items: docs/BACKLOG.md, ROADMAP M16. Decisions up to D-316. OPEN_QUESTIONS has nothing open; the owner decision batch is step 2 below.
+# Handoff: Session 45 — balance re-tune after the mechanics wave (Expedition), then the correctness wave (docs/BACKLOG.md)
+Last commit: `docs: Session 44 handoff` on `integ-s44` (PR to main, merged by the lead). Laptop folder: `git checkout main; git pull` before building
+(it was still on session 39 when s44 started).
+Where things stand: session 44 landed the held s43 economy/AI fixes (D-318) and built every M16 mechanic the owner approved (D-317..D-320:
+sea mines, Diver swimming, Drydock production/repair, second and third weapon slots, harpoon tether, grapple breach, Left Behind upgrade
+effects, Provision Store stock, hover harvester on Shallow, beach-only deploy, beacon delivery, naval gunfire, sub dive time + torpedo, survey
+overlay, the rule fixes, AI key/repair fixes, C&C control habits, refinery name, campaign tiers). Save/replay format 15. The 512-game re-measure
+FAILED the D-305 gate: the Expedition fell 8-37 points in every row (docs/balance/s44_balance.md). One cause (the AI naval plan) is switched off
+(D-323); with it off the table is still out of the gate (pooled Authority v Expedition 69.7, Left Behind v Expedition 66.3, Authority v Directorate 33.6; 4 rows outside 25-75). The campaign sweep meets every D-222 target (45/45). Decisions up to D-323. OPEN_QUESTIONS: Q-89, Q-90 (below).
 
-## Start here (session 44; shown to the user as the plan; nothing starts until they say go)
-Main has session 43 (PR from integ-s43). The theme for session 44 onward is **docs/BACKLOG.md** (108 parked items found by a sweep of all 43
-sessions; ROADMAP M16). The owner: "these are not small issues; some of them are fundamental parts of gameplay and unit mechanics."
-1. **B-00, first (small):** read the Authority v Directorate probes on the cluster: `aioff43` (bal-s43 with all three AiFixes off, 7303903c) and
-   `integ43` (integ-s43 at efa11ef, neither branch); tally with `/work/in/s41/tally41.py /work/out/<job> 0 31` (pooled = mean of the four biome
-   rows). Reference: bal43 (all items in) rust 45.1 / glass 51.1 / mountains 28.1 / ash 21.5 = 36.5 %; s42 final 52.7 / 54.4 / 31.5 / 23.6 = 40.6 %.
-   If integ43 is already low, the drop came from s43 work merged before bal-s43 branched (bisect a43-net, a43-simA, a43-data; QoL, art and smoke are not in bal-s43). If only aioff43 is
-   normal, an AI fix did it (switch it off in src/AI/AiFixes.cs). If both are normal, the economy items (wp/a43-simB) did it. Land what passes
-   (merge bal-s43 or its parts into a new integ branch after a cluster suite).
-   **Result (probes finished at hand-off, 512 games per row, seeds 1-256):** integ-s43 alone = s42 (rust 52.7 / glass 54.0 / mountains 31.4 /
-   ash 24.0 = 40.5 % pooled), so nothing already merged moved it. Economy fixes only (wp/a43-simB, AiFixes off) = 47.3 / 52.0 / 31.0 / 23.6 =
-   38.5 %; economy + AI fixes (bal-s43) = 36.5 %. DirectorateAntiAir alone: no effect. So the economy batch costs Authority ~2 points (mostly Rust
-   Belt) and BrokeRebuildsEconomy or MopupWithoutRespond another ~2. No subset of the batch passes as is. Next: bisect the five economy items
-   (production pause, AI cancel of held items, storm/no-build, Bore not a base, refused order keeps queue) and the two AI switches on these
-   four rows (128 pieces each, ~1 h at par 30), then ask the owner: land the correctness items and give Authority v Directorate a small
-   compensating change (needs a freeze exception), or keep a behaviour off.
-2. **Owner decision batch (one round, recommendations first; BACKLOG §0 and the "owner?" column):**
-   - Allow mechanic work under the D-310 freeze with one 512-game re-measure at the end (recommended), or keep the freeze.
-   - Build or drop each s18 "built later" mechanic: M-01 Minelayer mines, M-02 Diver swimming, M-03 Drydock production/repair, M-04 second
-     weapon slot (Destroyer depth charge + AA, Patrol Launch gun), M-05 Harpoon tether, M-06 Grapple breach, M-07 Salvage Rights value,
-     M-08 Scrap Plate armour, M-09 Patchwork range; also M-12 bay repair, M-13 hover harvester on Shallow, M-15 beacon delivery.
-   - M-19 Left Behind Yard + free Gleaner money loop; M-20 `irradiated` (give it a consumer or drop it); M-22 Flak hurts own aircraft;
-     M-25 ash resist granularity; U-05 C&C habits (structure control groups, Shift+number); U-11 the refinery's name; C-08/C-09 campaign
-     tiers; A-03 AI repair flip-flop; O-04 D-033 v D-188 licences; O-06 the s43 assumptions (no_build_threshold 24, QoL key defaults, drag move).
-3. **Mechanics wave (big):** M-01..M-09 first (the s18 list), then M-10..M-18, M-20, M-22, M-25, M-26. One package per mechanic: sim rule +
-   data + AI use + tooltip/Archive text (delete the "cannot ... yet" lines in src/Game/Ui/Sidebar/TodayText.cs) + art if needed + tests + a campaign
-   check. Sonnet for sim/AI packages (determinism, hashes), Haiku for data/text. Then a 512-game re-measure (gate D-305).
-4. **Correctness wave (no outcome change):** BACKLOG M-21, M-23, M-24, M-27, M-30, M-31, C-05..C-07, C-10, A-02, U-01..U-04, U-06..U-10, U-14,
-   V-06, N-01..N-05, T-01..T-08.
-5. **Art wave (cluster):** V-03 Expedition + Left Behind infantry (11; method in tools/art/infantry/boost.py + tools/art/inf_pass.py), C-01 the 18 ending
-   slides, V-04/V-05.
-6. Owner items still waiting: M9-15 two-PC LAN test; M7-14 Expedition play-test; M10-27 voice log; review the s43 art in a skirmish; delete
-   branches `integ-s40..s42` and the s43 work branches (list below).
+## Start here (session 45; shown to the user as the plan; nothing starts until they say go)
+1. **Owner balance calls first (Q-89, Q-90):** the s44 bisect found two more causes of the Expedition drop besides the naval plan:
+   the Left Behind upgrades merge (Scrap Plate Light -> Heavy armour, D-322) and the A-02/rule-fix merge for the Authority (most likely M-22,
+   Flak sparing Authority aircraft). Options per item: keep / soften (e.g. Scrap Plate as a damage-taken percent, Patchwork x2) / revert.
+   Then screen variants (128 games, fresh seed chunks) and decide on 512 games; re-run the campaign sweep (D-222) after any change.
+2. **Authority v Directorate pooled 33.6 %** (s42 40.6, bal43 36.5): the held D-311 items cost ~4 points (D-318); tune with the Expedition pass.
+3. **Correctness wave (no outcome change):** BACKLOG M-27, M-30, M-31, C-05..C-07, C-10, U-01..U-04, U-06..U-10, U-14, V-06, N-01..N-05, T-01..T-08.
+4. **Art wave (cluster):** V-03 Expedition + Left Behind infantry, C-01 ending slides, V-04/V-05.
+5. Owner items still waiting: M9-15 two-PC LAN test; M7-14 Expedition play-test (now with the new naval mechanics); M10-27 voice log; the s43
+   art in a skirmish; the auth_01 voice line still says "Refinery"; D-321 LFS migration (needs its own decision); confirm D-322 values;
+   delete merged branches (list below).
 
 ## Half-finished work
-- `bal-s43` (= integ-s43 at 819a2fd — before the QoL, licence, smoke and art merges — + wp/a43-simB + wp/a43-ai, 8ea64f7, full suite green; rebase on main before landing): held (B-00). Probe branches
-  `bal-s43-noaa`, `bal-s43-aioff` (never merge).
-- Expedition + Left Behind infantry fan-out (V-03): stopped by a safeguard; nothing committed.
-- Cluster: /work/out/bal43 (512-game table with items 5-11), noaa43, aioff43, integ43 (Auth v Dir probes), a43art (renders; sheets.tar).
-  Laptop k3s-cluster folder `claude/rts/s43/`: test43.sh (full suite by REF, trx), art43.sh + collect_art.sh + rget.py, bal43.sh, bal43.csv.
-- Branches to delete after the PR merges: integ-s43, qol-s43, qolbase, art-s43, bal-s43, bal-s43-noaa, bal-s43-aioff, wp/a43-*, wp/art-*, wp/fan-*.
+- Balance: D-305 gate not met (above). Probe branch `probe-s44-nom16`, `probe-s44-noa03` (never merge).
+- AI naval plan: levers kept in data (naval_min_tier 0 = off); AiNavalUseTests switch it on at tier 3.
+- Pathing does not plan through a closed enemy wall for a Grapple breach (re-issue the move once it opens); the Skyhook 2-vehicle airlift TODO.
+- Cluster: /work/out/f44 (24 rows, 5cd0c80), g44 (12 Expedition rows, d01a89c), sw44 (campaign sweep, 45/45 meet D-222), p44 / q44 / m16b /
+  a03b / bis0..7 (probes). Laptop k3s-cluster folder `claude/rts/s44/`: t-integ1.sh (suite by REF), f44.sh, g44.sh, sw44.sh, bld*.sh, CSVs.
+- Branches to delete after the PR merges: integ-s44, bal-s43, bal-s43-noaa, bal-s43-aioff, probe-s44-*, wp/s44-* (local worktrees only), and the
+  older integ-s40..s43.
 
 ## Waiting on the user
-- The decision batch above; B-00 outcome; M9-15; M7-14; M10-27; branch deletes.
+- Q-89, Q-90; D-322 confirmations; M9-15; M7-14; M10-27; branch deletes; D-321.
 
 ## How to run this session
+- Session 44 lessons:
+  - Orphan `VBCSCompiler` servers inherit a `flock` file descriptor and hold the lock forever: use `flock -o <lock>` plus
+    `--disable-build-servers`, `DOTNET_CLI_USE_MSBUILD_SERVER=0`, `UseSharedCompilation=false` (docs/process/s44_wave_rules.md). With that, 12
+    helpers built and tested one at a time on the 2-CPU box without starving.
+  - Pre-add step hooks and stub partial files for every new sim system before the wave; helpers then only touch their own files. Expect
+    conflicts in RulesHash.cs, UnitRulesLoader key lists and UpgradeType: keep both sides.
+  - Every new state part shifts tail-indexed part-order pins (M3/M4 contract tests use `^n`), the save and replay versions, and the golden/
+    ScriptedBattle/SkirmishDefaultHash/WaveCommit pins: re-pin once after the last merge (RTS_UPDATE_GOLDEN=1 for goldens).
+  - A blanket .gitattributes LFS pattern re-flags every tracked non-LFS file of that type (D-321).
+  - Series pods waiting for a binary hold the x86 slots their own build needs (and a piece that waits 30 min "completes" with no result): submit
+    builds first, wait for them, then the series; if stuck, set the series parallelism to 0 until the build is done and re-run the job clean.
+  - Bisect a balance regression over the merge commits (first-parent), 2 rows x 128 games per commit, 8 commits in one round (~45 min).
+  - A mechanic that looks neutral can move balance a lot through the AI: measure AI-use changes separately from the rule itself.
 - Session 43 lessons:
   - The cloud box has 2 CPUs / 7 GB. Never let helpers run dotnet test in parallel: they starve on one lock and their runs are killed at 30 min.
     Helpers compile once at most; the lead runs full suites on the cluster (`claude/rts/s43/test43.sh`, `--arch any --cpu 3 --mem 6Gi`, or

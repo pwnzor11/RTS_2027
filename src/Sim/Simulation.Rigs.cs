@@ -68,6 +68,7 @@ public sealed partial class Simulation
     /// <paramref name="self"/> may stand on it): no build radius, otherwise the CanPlace rules.</summary>
     internal bool UnpackSiteOk(byte player, int type, CellCoord topLeft, int self)
     {
+        if (BuildingStoreFull) return false;   // M-24 (SIMECON-07): no free building slot, so the order is refused at once
         BuildingType bt = RulesOf(player).Buildings[type];
         int w = bt.FootprintW, h = bt.FootprintH, x0 = topLeft.X, y0 = topLeft.Y;
         if (x0 < 0 || y0 < 0 || (long)x0 + w > Setup.Map.Width || (long)y0 + h > Setup.Map.Height) return false;
@@ -86,6 +87,7 @@ public sealed partial class Simulation
             if (v != self && _units.Slots.IsIndexAlive(v) && InRect(_units.Position[v].ToCell(), x0, y0, w, h) && !IsAirUnit(ActorKind.Vehicle, v)) return false;
         for (int n = 1; n < _infantry.Capacity; n++)
             if (_infantry.Slots.IsIndexAlive(n) && InRect(_infantry.Position[n].ToCell(), x0, y0, w, h)) return false;
+        if (RadiationDeniesBuilding(bt, topLeft)) return false;   // A43 SIMECON-03
         if (bt.Wall || bt.Gate) return true;
         return !SealsRegion(x0, y0, w, h);
     }

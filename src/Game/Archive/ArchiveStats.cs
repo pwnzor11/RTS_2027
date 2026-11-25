@@ -20,7 +20,7 @@ public static class ArchiveStats
         foreach (VehicleType v in rules.Vehicles)
         {
             if (v.Id != id) continue;
-            var list = Mobile(rules, v.Cost, v.MaxHealth, v.Armor, v.Speed, v.Sight, v.PrimaryWeapon, v.Prerequisites, v.BuildTime);
+            var list = Mobile(rules, v.Cost, v.MaxHealth, v.Armor, v.Speed, v.Sight, v.PrimaryWeapon, v.Prerequisites, v.BuildTime, Rts.Game.Ui.WeaponSlots.Of(rules, v));
             if (v.Passengers > 0) list.Add(new("Carries", $"{v.Passengers} infantry"));
             if (v.TunnelSize != TunnelSize.None) list.Add(new("Tunnel size", v.TunnelSize.ToString()));
             return list;
@@ -57,7 +57,7 @@ public static class ArchiveStats
         || rules.Buildings.Any(b => b.Id == id) || rules.Upgrades.Any(u => u.Id == id);
 
     private static List<ArchiveStatLine> Mobile(SimRules rules, int cost, int health, ArmorClass armor, int speed, int sight,
-        int weapon, IReadOnlyList<string> prerequisites, int buildTime)
+        int weapon, IReadOnlyList<string> prerequisites, int buildTime, IReadOnlyList<int>? slots = null)
     {
         var list = new List<ArchiveStatLine>
         {
@@ -68,8 +68,14 @@ public static class ArchiveStats
             new("Speed", Tenths(speed * TicksPerSecond * 10 / LeptonsPerCell) + " cells/s"),
             new("Sight", sight.ToString(CultureInfo.InvariantCulture) + " cells"),
             new("Weapon", WeaponText(rules, weapon)),
-            new("Requires", Requires(prerequisites)),
         };
+        if (slots is { Count: > 1 })   // S44 (M-04): several slots get one line each, with what they hit; a one-weapon unit keeps its old rows
+        {
+            list[^1] = new("Weapon", WeaponText(rules, slots[0]) + SlotTargets(rules, slots[0]));
+            for (int k = 1; k < slots.Count; k++)
+                list.Add(new($"Weapon {k + 1}", WeaponText(rules, slots[k]) + SlotTargets(rules, slots[k])));
+        }
+        list.Add(new("Requires", Requires(prerequisites)));
         return list;
     }
 
@@ -100,6 +106,9 @@ public static class ArchiveStats
             : Tenths(w.Range * 10 / LeptonsPerCell);
         return $"{Rts.Game.Ui.Sidebar.CameoNames.Display(w.Id)}: {w.Damage} damage, range {range} cells, reload {Seconds(w.RateOfFire)}";
     }
+
+    private static string SlotTargets(SimRules rules, int index) =>
+        $", hits {Rts.Game.Ui.WeaponSlots.TargetsText(rules.Weapons[index].Targets)}";
 
     private static string Requires(IReadOnlyList<string> prerequisites) =>
         prerequisites.Count == 0 ? "nothing" : string.Join(", ", prerequisites.Select(Rts.Game.Ui.Sidebar.CameoNames.Display));

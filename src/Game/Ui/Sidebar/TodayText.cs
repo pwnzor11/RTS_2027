@@ -11,20 +11,20 @@ public static class TodayText
 {
     private static readonly Dictionary<string, string> Cameos = new(StringComparer.Ordinal)
     {
-        ["exp_minelayer"] = "Unarmed sea hull. It cannot lay mines yet.",
-        ["exp_diver"] = "Plants charges on ships and quays from the shore. It cannot swim yet.",
-        ["exp_drydock"] = "Unlocks the Cruiser and Carrier. It does not build or repair ships itself yet.",
-        ["exp_destroyer"] = "Gun warship that detects submarines. It has no depth charge yet.",
-        ["lb_harpoon_wagon"] = "Anti-armour harpoon gun. It does not tether or slow targets yet.",
+        ["exp_minelayer"] = "Lays up to 6 sea mines (D). Sweeps enemy mines within 3 cells. Restocks beside a naval yard.",
+        ["exp_diver"] = "Plants charges on ships and quays. Swims in deep water, hidden from all but sonar.",
+        ["exp_drydock"] = "Builds the Cruiser and Carrier and slowly repairs friendly ships beside it.",
+        ["exp_destroyer"] = "Gun warship that detects submarines, with depth charges and an anti-air mount.",
+        ["lb_harpoon_wagon"] = "Anti-armour harpoon gun. A hit tethers the target at half speed for 3 seconds.",
     };
 
     private static readonly Dictionary<string, string[]> Upgrades = new(StringComparer.Ordinal)
     {
-        ["lb_up_scrap_plate"] = new[] { "+20% health for ground vehicles and packed rigs.", "No armour change. Rotors and Kites are not covered." },
-        ["lb_up_patchwork"] = new[] { "Tinkers repair vehicles from 5 cells away (3 without it)." },
+        ["lb_up_scrap_plate"] = new[] { "Light vehicles, Rotors and Kites become Heavy armour.", "Gleaners, Rolling Forts and packed rigs get +20% health." },
+        ["lb_up_patchwork"] = new[] { "Tinkers repair vehicles from 9 cells away (3 without it), four times as fast." },
         ["lb_up_quick_pack"] = new[] { "Rigs pack 40% faster." },
-        ["lb_up_grapple"] = new[] { "Hook Runners plunder x1.5, up to the 1000 credit limit.", "They cannot breach walls yet." },
-        ["lb_up_salvage_rights"] = new[] { "Salvage crews drain a wreck 1.5x faster.", "The wreck's value is unchanged." },
+        ["lb_up_grapple"] = new[] { "Hook Runners plunder x1.5, up to the 1000 credit limit.", "A Hook Runner beside an enemy wall opens it for your side for 5 seconds." },
+        ["lb_up_salvage_rights"] = new[] { "Salvage crews drain a wreck 1.5x faster.", "Wrecks pay 1.5x the credits." },
         ["exp_up_sonar_nets"] = new[] { "Pickets see and listen 2 cells further." },
     };
 

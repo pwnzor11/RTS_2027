@@ -61,16 +61,17 @@ internal static class SalvageMission
         if (d <= 0) return Simulation.SalvageDrainTicks;
         s.Value[w] -= d;
         if (s.Value[w] <= 0) s.Clear(w);
+        int credit = (int)Math.Min(int.MaxValue, (long)d * sim.UpgradePermille(player, u => u.WreckValuePermille) / 1000);   // S44 M-07: Salvage Rights pays more per wreck point
         if (cap > 0)
         {
             eco.Cargo[i] += (d + unitValue - 1) / unitValue;
-            eco.CargoValue[i] += d;
+            eco.CargoValue[i] += credit;
             if (eco.Cargo[i] >= cap) return ToDock(sim, store, kind, i);
         }
         else
         {
             int space = Math.Max(0, sim.StorageCap(player) - sim.Players.Stored[player]);
-            int paid = Math.Min(sim.HandicapIncome(player, d), space);   // the overflow is lost, as for an unload; S19 (M13-15): handicap
+            int paid = Math.Min(sim.HandicapIncome(player, credit), space);   // the overflow is lost, as for an unload; S19 (M13-15): handicap
             sim.Players.Stored[player] += paid;
             sim.OnStatsHarvested(player, paid);
         }

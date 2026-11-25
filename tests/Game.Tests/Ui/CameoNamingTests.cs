@@ -46,11 +46,11 @@ public sealed class CameoNamingTests
     [InlineData("exp_drydock", "repair")]
     [InlineData("exp_destroyer", "depth charge")]
     [InlineData("lb_harpoon_wagon", "tether")]
-    public void Unbuilt_mechanics_are_worded_as_not_there_yet(string id, string word)
+    public void Built_mechanics_are_worded_as_working(string id, string word)   // S44: the five s18 "build later" mechanics shipped
     {
         string text = TodayText.Cameo(id)!;
         Assert.Contains(word, text, StringComparison.OrdinalIgnoreCase);
-        Assert.Matches("not|cannot|no ", text);   // every one says what is missing
+        Assert.DoesNotMatch("cannot|not .* yet|no .* yet", text);
     }
 
     [Fact]

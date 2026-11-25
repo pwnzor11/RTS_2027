@@ -53,7 +53,7 @@ internal static class MoveMission
             VehicleType t = sim.RulesOf(store.Player[i]).Vehicles[store.TypeIndex[i]];
             return new Stats(MoveClass.Mover(t), (int)((long)t.Speed * sim.MoveSpeedPermille(kind, i) / 1000), t.TurnRate, t.Crusher);   // M3-06: aura speed
         }
-        return new Stats(Locomotion.Foot, (int)((long)sim.RulesOf(store.Player[i]).Infantry[store.TypeIndex[i]].Speed * sim.MoveSpeedPermille(kind, i) / 1000), 0, false);   // M3-06: aura speed
+        return new Stats(MoveClass.OfInfantry(sim.RulesOf(store.Player[i]).Infantry[store.TypeIndex[i]]), (int)((long)sim.RulesOf(store.Player[i]).Infantry[store.TypeIndex[i]].Speed * sim.MoveSpeedPermille(kind, i) / 1000), 0, false);   // M3-06: aura speed
     }
 
     // ---- handlers -----------------------------------------------------------------------------

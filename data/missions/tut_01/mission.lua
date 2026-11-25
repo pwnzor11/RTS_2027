@@ -19,7 +19,7 @@ function OnInit()
   Objective.AddHidden("power", "Build a Power Plant", true)
   Objective.AddHidden("barracks", "Build a Barracks", true)
   Objective.AddHidden("train", "Train a Rifleman", true)
-  Objective.AddHidden("harvest", "Build a Refinery and collect pitchblende", true)
+  Objective.AddHidden("harvest", "Build an Ashfall Refinery and collect pitchblende", true)
   Objective.AddHidden("fight", "Destroy the enemy camp", true)
 
   -- M11-05: where the HUD points for each lesson (arrow, ground marker, minimap ping; J jumps there).

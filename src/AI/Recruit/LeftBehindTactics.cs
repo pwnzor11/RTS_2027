@@ -581,7 +581,7 @@ internal sealed class LeftBehindTactics : IFactionTactics
             // pack the Mother Rig first, then the other rigs in slot order
             foreach (ViewActor b in k.Buildings)
                 if (rules.Buildings[b.TypeIndex].PacksInto >= 0 && b.TypeIndex == _mother) sink.Issue(CommandKind.Pack, b.Id, ActorKind.Building);
-            bool capNear = BuildOrderManager.SupplyShort(k, BuildOrderManager.MarginForTier(Tier));   // SUP-5: a still is not packed while the cap is near
+            bool capNear = BuildOrderManager.SupplyShort(k, _profile is null ? BuildOrderManager.MarginForTier(Tier) : BuildOrderManager.MarginFor(_profile));   // SUP-5: a still is not packed while the cap is near
             foreach (ViewActor b in k.Buildings)
                 if (rules.Buildings[b.TypeIndex].PacksInto >= 0 && b.TypeIndex != _mother && !(capNear && rules.Buildings[b.TypeIndex].SupplyProvided > 0))
                     sink.Issue(CommandKind.Pack, b.Id, ActorKind.Building);

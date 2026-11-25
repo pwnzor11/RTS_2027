@@ -23,15 +23,14 @@ internal static class GroundFixture
             new("g_cont", Versus, 1, true) { Contaminate = 100 },
             new("g_decon", Versus, 1, true) { Decontaminate = 60 },
             new("g_black", Versus, 1, true) { BlackoutTicks = 30 },
-            new("g_bonus", Versus, 0, false) { BonusVsIrradiatedPercent = 200 },
             new("g_plain", Versus, 0, false),
         };
         int w0 = b.Warheads.Count;
         var wp = new List<WeaponType>(b.Weapons)
         {
-            new("g_ground", 10, 2048, 0, 5, 0, w0 + 4),
-            new("g_aa", 10, 2048, 0, 5, 0, w0 + 4) { Targets = WeaponTargets.Air },
-            new("g_both", 10, 2048, 0, 5, 0, w0 + 4) { Targets = WeaponTargets.Both },
+            new("g_ground", 10, 2048, 0, 5, 0, w0 + 3),
+            new("g_aa", 10, 2048, 0, 5, 0, w0 + 3) { Targets = WeaponTargets.Air },
+            new("g_both", 10, 2048, 0, 5, 0, w0 + 3) { Targets = WeaponTargets.Both },
         };
         int p0 = b.Weapons.Count;
         var pre = Array.Empty<string>();
@@ -40,7 +39,6 @@ internal static class GroundFixture
             new("g_gun", Locomotion.Tracked, 20, 6, 500, ArmorClass.Heavy, 8, p0, false, 0, false, 0, pre),
             new("g_aa_unit", Locomotion.Tracked, 20, 6, 500, ArmorClass.Heavy, 8, p0 + 1, false, 0, false, 0, pre),
             new("g_plane", Locomotion.Air, 20, 6, 500, ArmorClass.Light, 4, -1, false, 0, false, 0, pre),
-            new("g_irr", Locomotion.Tracked, 20, 6, 500, ArmorClass.Heavy, 4, -1, false, 0, false, 0, pre) { Irradiated = true },
             new("g_immune", Locomotion.Tracked, 20, 6, 500, ArmorClass.Heavy, 4, -1, false, 0, false, 0, pre) { RadResistPermille = 1000 },
             new("g_jam", Locomotion.Tracked, 20, 6, 500, ArmorClass.Heavy, 4, -1, false, 0, false, 0, pre) { JamRadius = 5 },
             new("g_plain_veh", Locomotion.Tracked, 20, 6, 500, ArmorClass.Heavy, 4, -1, false, 0, false, 0, pre),

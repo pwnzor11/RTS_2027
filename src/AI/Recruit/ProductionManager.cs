@@ -103,6 +103,7 @@ internal sealed class ProductionManager
         }
         _noIncome = k.Harvesters.Count == 0 && !holdForHarvester || Broke;   // s23 D-235 (A): a mined-out side spends down like one with no harvester
         if (Hold) return;   // M4-12: the no-income rescue is saving for a harvester
+        if (CancelHeldUnit(k, sink)) return;
         if (Broke && CancelStalledUnit(k, sink)) return;
 
         // Vehicles first; infantry leaves the next vehicle's price in reserve so cheap riflemen cannot starve the factory.
@@ -116,6 +117,26 @@ internal sealed class ProductionManager
         if (Bias.Mix == DirectiveCodec.MixInfantry) vehicleReserve = 0;   // M5-02: infantry first
         else if (Bias.Mix == DirectiveCodec.MixVehicles) vehicleReserve += MixLaneHold;
         Lane(k, sink, reserve + vehicleReserve, ProductionCategory.Infantry, _inf, ref _infIdx, t => rules.Infantry[t].Cost);
+    }
+
+    /// <summary>A43 SIMECON-01: thinks a unit lane's front item may stay paused (its prerequisite building lost) before the AI cancels it.</summary>
+    public const int CancelAfterHeldThinks = 3;
+    private readonly int[] _heldThinks = new int[BrokeLanes.Length];
+
+    /// <summary>A43 SIMECON-01: the AI never holds a lane, so a held front item of a unit lane is one paused by a lost prerequisite; cancel it after
+    /// a few thinks (refund) so the lane re-plans. True when a Cancel was issued.</summary>
+    private bool CancelHeldUnit(RecruitKnowledge k, ICommandSink sink)
+    {
+        for (int i = 0; i < BrokeLanes.Length; i++)
+        {
+            QueueView q = k.Queue(BrokeLanes[i]);
+            if (q.Items.Count == 0 || !q.Items[0].Held) { _heldThinks[i] = 0; continue; }
+            if (++_heldThinks[i] < CancelAfterHeldThinks) continue;
+            _heldThinks[i] = 0;
+            sink.Issue(CommandKind.Cancel, EntityId.None, (ActorKind)(int)BrokeLanes[i]);
+            return true;
+        }
+        return false;
     }
 
     /// <summary>s23 D-235 (A): when Broke, the front item of a unit lane that is stalled for lack of money is cancelled (the refund buys a cheaper unit

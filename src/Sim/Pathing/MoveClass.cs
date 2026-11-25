@@ -20,6 +20,14 @@ public static class MoveClass
     /// use <see cref="Of"/>, so nothing is ever placed on a prop.</summary>
     public const Locomotion TrackedCrusher = (Locomotion)66;
 
+    /// <summary>S44 M-02: a swimming infantry type (<c>swims = true</c>, the Expedition Combat Diver). Value 65 = Wheeled (1) with bit 6, so it fits the 7 bits
+    /// the saved path request keeps and collides with no other class. It walks every cell a foot soldier walks and also swims Water and Shallow: the speed on a
+    /// cell is the better of the Foot and Naval terrain columns (see <see cref="Map.MapState.SpeedPercent"/>). Land infantry keep <see cref="Locomotion.Foot"/>.</summary>
+    public const Locomotion Swimmer = (Locomotion)65;
+
+    /// <summary>The movement class of an infantry type: <see cref="Swimmer"/> if it swims, else <see cref="Locomotion.Foot"/>.</summary>
+    public static Locomotion OfInfantry(InfantryType t) => t.Swims ? Swimmer : Locomotion.Foot;
+
     /// <summary>The movement class of a vehicle type.</summary>
     public static Locomotion Of(VehicleType t) => t.Locomotion == Locomotion.Naval && t.DeepOnly ? NavalDeep : t.Locomotion;
 

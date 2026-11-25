@@ -220,6 +220,7 @@ public sealed class SceneRenderer : IDisposable
             WeatherLayer.Draw(batch, pixel, _weather, viewport.Bounds, seconds, _homeCamera.X * camera.Zoom, _homeCamera.Y * camera.Zoom);
         if (frame.Overlays.Paths) PathOverlay.Draw(batch, pixel, frame, camera);
         if (frame.Overlays.Ranges) RangeOverlay.Draw(batch, pixel, frame, camera);
+        SurveyOverlay.Draw(batch, pixel, frame, camera);   // S44 M-14: field richness while a Survey Hover is selected
         // VET-5: ranks come from the viewer's view only (fog-honest); the flash comes from the client-side tracker.
         if (_ranksDirty || frame.Sim is null)   // A43 FOLLOWUP-12: the ranks only change with a sim tick, so they are read once per tick
         {

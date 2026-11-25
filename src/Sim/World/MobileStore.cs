@@ -26,6 +26,9 @@ public abstract class MobileStore : ISimStatePart
     public readonly MissionKind[] NextMission;
     public readonly CellCoord[] NextCell;
     public readonly EntityId[] NextTarget;
+    /// <summary>A43 SIMCORE-03: counts every mission queued through <c>Simulation.Queue</c>, so a command handler can tell whether it took.
+    /// Transient: not saved, not hashed.</summary>
+    internal int QueueStamp;
 
     // ---- movement state (M1-08). All persisted and hashed. ----
     /// <summary>True while the actor is moving into a cell it has claimed (see <see cref="ReservedCell"/>). Vehicles hold the

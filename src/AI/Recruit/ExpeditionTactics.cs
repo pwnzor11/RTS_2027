@@ -143,6 +143,18 @@ internal sealed class ExpeditionTactics : IFactionTactics
 
     /// <summary>S12: the per-tier Expedition flags (see <see cref="ExpeditionPlan"/>); every tier-dependent choice below reads this, never the tier number.</summary>
     private ExpeditionPlan Plan => ExpeditionPlan.For(Tier);
+
+    private int _minelayer = -1, _drydock = -1;
+
+    /// <summary>s44 (M16-M-03): the per-faction naval levers when this profile's tier reaches <c>naval_min_tier</c>, else the all-off default (the old play).</summary>
+    private FactionTuning Naval
+    {
+        get
+        {
+            FactionTuning t = _profile?.FactionKeys.TuningOf((int)Faction.Expedition) ?? FactionTuning.Default;
+            return t.NavalMinTier > 0 && Tier >= t.NavalMinTier ? t : FactionTuning.Default;
+        }
+    }
     private List<ViewActor> _known = new();
 
     /// <summary>Diagnostics: the last site / state line.</summary>
@@ -210,6 +222,8 @@ internal sealed class ExpeditionTactics : IFactionTactics
         _skiff = SimRules.IndexOf(rules.Vehicles, "exp_canister_skiff", v => v.Id);
         _tender = SimRules.IndexOf(rules.Vehicles, rules.Shipments.TenderType, v => v.Id);
         _craft = SimRules.IndexOf(rules.Vehicles, "exp_landing_craft", v => v.Id);
+        _minelayer = SimRules.IndexOf(rules.Vehicles, "exp_minelayer", v => v.Id);   // s44 M16-M-03
+        _drydock = SimRules.IndexOf(rules.Buildings, TierPlanner.DrydockId, b => b.Id);
     }
 
     // ---- IFactionTactics --------------------------------------------------------------------------------
@@ -270,12 +284,18 @@ internal sealed class ExpeditionTactics : IFactionTactics
         if (ground >= ArmyBeforeShips && k.Harvesters.Count > 0)
         {
             int fleet = k.Fleet.Count;
-            foreach (QueueItemView it in q.Items) if (rules.Vehicles[it.TypeIndex].Locomotion == Locomotion.Naval) fleet++;
+            foreach (QueueItemView it in q.Items) if (rules.Vehicles[it.TypeIndex].Locomotion == Locomotion.Naval && it.TypeIndex != _minelayer) fleet++;
             ExpeditionPlan plan = Plan;
-            if (fleet < plan.Fleet)
+            FactionTuning nav = Naval;
+            int carriers = Math.Max(plan.Carriers, nav.NavalCarriers), cruisers = Math.Max(plan.Cruisers, nav.NavalCruisers);   // s44: data raises the plan, never lowers it
+            int fleetCap = plan.Fleet + (carriers - plan.Carriers) + (cruisers - plan.Cruisers);
+            // s44 (M16-M-03): at most nav.NavalMinelayers Minelayers, once a ship escorts the yard
+            if (nav.NavalMinelayers > 0 && _minelayer >= 0 && k.Fleet.Count >= 1 && k.Buildable(ProductionCategory.Vehicle, _minelayer) && Count(k, q, _minelayer) < nav.NavalMinelayers)
+                return _minelayer;
+            if (fleet < fleetCap)
             {
-                if (plan.Carriers > 0 && _carrier >= 0 && k.Buildable(ProductionCategory.Vehicle, _carrier) && Count(k, q, _carrier) < plan.Carriers) return _carrier;
-                if (plan.Cruisers > 0 && _cruiser >= 0 && k.Buildable(ProductionCategory.Vehicle, _cruiser) && Count(k, q, _cruiser) < plan.Cruisers) return _cruiser;
+                if (carriers > 0 && _carrier >= 0 && k.Buildable(ProductionCategory.Vehicle, _carrier) && Count(k, q, _carrier) < carriers) return _carrier;
+                if (cruisers > 0 && _cruiser >= 0 && k.Buildable(ProductionCategory.Vehicle, _cruiser) && Count(k, q, _cruiser) < cruisers) return _cruiser;
                 if (_destroyer >= 0 && k.Buildable(ProductionCategory.Vehicle, _destroyer)) return _destroyer;
             }
         }
@@ -501,8 +521,26 @@ internal sealed class ExpeditionTactics : IFactionTactics
     {
         for (int ty = sea.Y - depot.FootprintH; ty <= sea.Y + 1; ty++)
             for (int tx = sea.X - depot.FootprintW; tx <= sea.X + 1; tx++)
-                if (LandFree(v, rules, tx, ty, depot.FootprintW, depot.FootprintH)) { topLeft = new CellCoord(tx, ty); return true; }
+                if (LandFree(v, rules, tx, ty, depot.FootprintW, depot.FootprintH) && HasLanding(v, rules, tx, ty, depot.FootprintW, depot.FootprintH)) { topLeft = new CellCoord(tx, ty); return true; }
         topLeft = default;
+        return false;
+    }
+
+    /// <summary>M-16: the sim only deploys onto a footprint that holds a landing-coast cell, so the site picker asks the same.</summary>
+    private static bool HasLanding(PlayerView v, SimRules rules, int x0, int y0, int w, int h)
+    {
+        for (int y = y0; y < y0 + h; y++)
+            for (int x = x0; x < x0 + w; x++)
+            {
+                if (!v.InMap(new CellCoord(x, y))) continue;
+                if (rules.Terrain.Landing(v.LandAt(new CellCoord(x, y)))) return true;
+                for (int dy = -1; dy <= 1; dy++)
+                    for (int dx = -1; dx <= 1; dx++)
+                    {
+                        var n = new CellCoord(x + dx, y + dy);
+                        if (v.InMap(n) && v.LandAt(n) == LandType.Shallow) return true;
+                    }
+            }
         return false;
     }
 
@@ -596,10 +634,13 @@ internal sealed class ExpeditionTactics : IFactionTactics
         if (homeSea is not CellCoord hw) return;
 
         // retreat and repair
+        int returnPct = Naval.NavalReturnPct;
         foreach (ViewActor s in k.Fleet)
         {
             ulong key = RecruitKnowledge.KeyOf(s);
             bool weak = s.MaxHealth > 0 && s.Health * 100 < s.MaxHealth * RetreatPct;
+            // s44 (M16-M-03): with an own Drydock standing, an idle ship below naval_return_pct also goes to be repaired (it rejoins at RepairDonePct like any hurt ship)
+            if (!weak && s.Idle && returnPct > 0 && s.MaxHealth > 0 && s.Health * 100 < s.MaxHealth * returnPct && !_hurt.Contains(key) && DrydockSea(k, s) is not null) weak = true;
             if (_hurt.Contains(key))
             {
                 if (s.Health * 100 >= s.MaxHealth * RepairDonePct) _hurt.Remove(key);
@@ -635,6 +676,7 @@ internal sealed class ExpeditionTactics : IFactionTactics
             if (s.Idle && Cheb(s.Cell, hw) > 6) MoveShip(k, sink, s, hw);
 
         SubHunt(k, sink);
+        LayMines(k, sink, hw);   // S44 M-01
         Debug = $"fleet {k.Fleet.Count} pool {_pool.Count} group {_group.Count} escort {_escort.Count} hurt {_hurt.Count} withdraw {_withdraw} strike {_strikeSet}/{_probe} strikes {Strikes} withdrawals {Withdrawals}";
         if (_withdraw || _group.Count < StrikeMin)
         {
@@ -650,6 +692,7 @@ internal sealed class ExpeditionTactics : IFactionTactics
     /// <summary>The sea cell a hurt ship goes to: next to a Mender when one is on the water's edge, else home.</summary>
     private CellCoord RepairSea(RecruitKnowledge k, ViewActor ship, CellCoord homeSea)
     {
+        if (Naval.NavalReturnPct > 0 && DrydockSea(k, ship) is CellCoord dd) return dd;   // s44 (M16-M-03)
         long best = long.MaxValue;
         CellCoord spot = homeSea;
         foreach (ViewActor m in k.Support)
@@ -661,6 +704,31 @@ internal sealed class ExpeditionTactics : IFactionTactics
             if (d < best) { best = d; spot = c; }
         }
         return spot;
+    }
+
+    /// <summary>s44 (M16-M-03): the sea cell beside the nearest own Drydock (one cell off its footprint, inside its repair radius); null when none stands or none borders the home sea.</summary>
+    private CellCoord? DrydockSea(RecruitKnowledge k, ViewActor ship)
+    {
+        if (_drydock < 0 || k.BuildingCount[_drydock] == 0) return null;
+        PlayerView v = k.View;
+        long best = long.MaxValue;
+        CellCoord? pick = null;
+        foreach (ViewActor b in k.Buildings)
+        {
+            if (b.TypeIndex != _drydock) continue;
+            BuildingType bt = k.Rules.Buildings[b.TypeIndex];
+            for (int y = b.Cell.Y - 1; y <= b.Cell.Y + bt.FootprintH; y++)
+                for (int x = b.Cell.X - 1; x <= b.Cell.X + bt.FootprintW; x++)
+                {
+                    var c = new CellCoord(x, y);
+                    if (!v.InMap(c)) continue;
+                    int r = v.NavalRegionAt(c);
+                    if (r <= 0 || (_homeRegion != 0 && r != _homeRegion)) continue;
+                    long d = Dist2(c, ship.Cell);
+                    if (d < best) { best = d; pick = c; }
+                }
+        }
+        return pick;
     }
 
     private void Prune(HashSet<ulong> set, List<ViewActor> alive)
@@ -981,6 +1049,35 @@ internal sealed class ExpeditionTactics : IFactionTactics
     }
 
     /// <summary>The sea cell nearest to <paramref name="from"/> (rings outward, rows then columns) in sea <paramref name="region"/> (0: any sea).</summary>
+    /// <summary>Offsets from the home sea cell where a minelayer lays its mines, one per mine aboard (a few cells off the yard, spread out).</summary>
+    private static readonly (int Dx, int Dy)[] MineOffsets = { (4, 0), (0, 4), (-4, 0), (0, -4), (4, 4), (-4, -4), (4, -4), (-4, 4) };
+
+    /// <summary>S44 M-01: an idle own minelayer with mines aboard sails to the next spot near the yard and lays one there (Deploy with a cell);
+    /// an empty one goes home, where the sim restocks it beside the naval yard. Only runs when the side owns a minelayer.</summary>
+    private void LayMines(RecruitKnowledge k, ICommandSink sink, CellCoord homeSea)
+    {
+        PlayerView v = k.View;
+        foreach (ViewActor u in k.Utility)
+        {
+            VehicleType vt = k.Rules.Vehicles[u.TypeIndex];
+            if (vt.MineCapacity <= 0 || !u.Idle) continue;
+            int stock = v.MineStock(u.Id);
+            if (stock <= 0)
+            {
+                if (Cheb(u.Cell, homeSea) > 3) MoveShip(k, sink, u, homeSea);
+                continue;
+            }
+            (int dx, int dy) = MineOffsets[(vt.MineCapacity - stock) % MineOffsets.Length];
+            CellCoord? spot = NearestSea(v, new CellCoord(homeSea.X + dx, homeSea.Y + dy), _homeRegion, 3, false);
+            if (spot is not CellCoord to) continue;
+            MineOrders++;
+            sink.Issue(CommandKind.Deploy, u.Id, ActorKind.Vehicle, to, default, 1);
+        }
+    }
+
+    /// <summary>Lay-mine orders given to minelayers.</summary>
+    public int MineOrders { get; private set; }
+
     private static CellCoord? NearestSea(PlayerView v, CellCoord from, int region, int maxRadius, bool deep)
     {
         for (int r = 0; r <= maxRadius; r++)

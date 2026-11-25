@@ -52,18 +52,6 @@ public sealed partial class Simulation
             }
     }
 
-    /// <summary>True if the mobile or building actor counts as irradiated for warhead bonuses: an Irradiated type, or standing on
-    /// a cell at or above the radiation damage threshold (design 05 §3).</summary>
-    internal bool IsIrradiatedTarget(ActorKind kind, int i)
-    {
-        SimRules r = RulesOf(PlayerAt(kind, i));
-        bool typed = kind == ActorKind.Vehicle ? r.Vehicles[_units.TypeIndex[i]].Irradiated
-            : kind == ActorKind.Infantry && r.Infantry[_infantry.TypeIndex[i]].Irradiated;
-        if (typed) return true;
-        CellCoord cell = kind == ActorKind.Building ? _buildings.Cell[i] : PositionAt(kind, i).ToCell();
-        return _ground.RadiationAt(cell) >= Setup.Rules.Radiation.DamageThreshold;
-    }
-
     /// <summary>Per tick (in RunGround): radiation decay every DecayTicks, damage every DamageIntervalTicks.</summary>
     private void RunRadiation()
     {
@@ -135,6 +123,7 @@ public sealed partial class Simulation
     {
         int delay = Setup.Rules.Stealth.DelayTicks;   // the still counter caps here; readers compare with StealthDelayFor
         for (int i = 1; i < _naval.RevealLeft.Length; i++) if (_naval.RevealLeft[i] > 0) _naval.RevealLeft[i]--;   // D-205: a firing sub's reveal runs out
+        TickDives();   // S44 (M-18): Simulation.Submerge.cs
         for (int k = 0; k < 2; k++)
         {
             var kind = (ActorKind)k;
@@ -145,13 +134,7 @@ public sealed partial class Simulation
             {
                 if (!store.Slots.IsIndexAlive(i) || !IsStealthType(kind, i)) { if (still[i] != 0 && store.Slots.IsIndexAlive(i)) still[i] = 0; continue; }
                 bool moved = _useTickPos && i < start.Length && store.Position[i] != start[i];
-                bool fired = false;
-                int weapon = WeaponOf(kind, i);
-                if (weapon >= 0)
-                {
-                    int rof = RulesOf(store.Player[i]).Weapons[weapon].RateOfFire;
-                    fired = _combat.At(kind, i).ReloadTicks >= Math.Max(1, rof);   // Fire set the reload this tick
-                }
+                bool fired = _firedThisTick[k].Length > i && _firedThisTick[k][i];   // S44 (M-26, SIMCOMBAT-06): Fire marked it, whatever the reload became
                 if (moved || fired) still[i] = 0;
                 else if (still[i] < delay) still[i]++;
             }

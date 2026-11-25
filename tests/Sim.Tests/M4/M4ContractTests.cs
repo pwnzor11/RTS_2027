@@ -25,7 +25,7 @@ public sealed class M4ContractTests
     public void SimEnumValues_ArePinned()
     {
         Assert.Equal(22, (int)CommandKind.Unload);
-        Assert.Equal(29, Enum.GetValues<CommandKind>().Length);   // S24 CommanderOrder = 28; S19 AttackGround = 26, QueueOrder = 27; no other new CommandKind in M4; M5-01 added Directive = 23, M6-02 Pack = 24, M11-10i Hold = 25
+        Assert.Equal(30, Enum.GetValues<CommandKind>().Length);   // S44 M-15 DropBeacon = 29; S24 CommanderOrder = 28; S19 AttackGround = 26, QueueOrder = 27; no other new CommandKind in M4; M5-01 added Directive = 23, M6-02 Pack = 24, M11-10i Hold = 25
         Assert.Equal(7, (int)ActorLayer.Garrisoned);
         Assert.Equal(15, (int)MissionKind.Garrisoned);
         Assert.Equal(14, (int)MissionKind.Capture);
@@ -64,18 +64,18 @@ public sealed class M4ContractTests
     {
         var sim = ScriptedGame.NewSim(ScriptedGame.Setup());
         string[] names = sim.StateParts.Select(p => p.Name).ToArray();
-        Assert.Equal(new[] { "tunnels", "ground", "effects", "garrison", "stats", "directive", "rigs", "salvage", "veterancy", "shipments", "beachhead", "naval", "commander_orders", "props" }, names[^14..]);   // M5-01 appended "directive", M6-02 "rigs" and "salvage"
-        Assert.Same(sim.Garrison, sim.StateParts[^11]);
-        Assert.Same(sim.Stats, sim.StateParts[^10]);
+        Assert.Equal(new[] { "tunnels", "ground", "effects", "garrison", "stats", "directive", "rigs", "salvage", "veterancy", "shipments", "beachhead", "naval", "commander_orders", "props", "mines", "beacon_orders" }, names[^16..]);   // M5-01 appended "directive", M6-02 "rigs" and "salvage"
+        Assert.Same(sim.Garrison, sim.StateParts[^13]);
+        Assert.Same(sim.Stats, sim.StateParts[^12]);
     }
 
     [Fact]
     public void FormatVersions_ArePinned()
     {
         Assert.Equal(12, RulesHash.FormatVersion);   // M6-02 took 8, VET-1 9, SUP-1 10, M7-02 11, M12-16 12
-        Assert.Equal(14, SimWriter.SaveVersion);   // M5-01 took 9, M6-02 10, VET-1 11, M7-02 12
-        Assert.Equal(14, ReplayWriter.Version);           // M3-19 had already taken 8 for the mission block, M6-02 took 10, VET-1 11, M7-02 12, M4-17 13
-        Assert.Equal(14, ReplayWriter.OldestReadableVersion);
+        Assert.Equal(15, SimWriter.SaveVersion);   // M5-01 took 9, M6-02 10, VET-1 11, M7-02 12
+        Assert.Equal(15, ReplayWriter.Version);           // M3-19 had already taken 8 for the mission block, M6-02 took 10, VET-1 11, M7-02 12, M4-17 13
+        Assert.Equal(15, ReplayWriter.OldestReadableVersion);
         Assert.Equal(4, MapFile.FormatVersion);   // M7-02: format 3 (Coast, convoy_edge, landing); M12-04: format 4 (props, decor)
         Assert.Equal(1, MapFile.OldestReadableVersion);
     }

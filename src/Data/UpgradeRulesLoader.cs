@@ -13,7 +13,11 @@ internal static class UpgradeRulesLoader
         // schema v4 (M4-01)
         "tier", "effects",
         // schema v5 (M6-02)
-        "pack_ticks_permille", "salvage_permille", "plunder_permille", "repairs_vehicles_at_range"];
+        "pack_ticks_permille", "salvage_permille", "plunder_permille", "repairs_vehicles_at_range",
+        // S44 (M-07, M-09)
+        "wreck_value_permille", "repair_range_cells", "repair_rate_permille",
+        // S44 M-06
+        "breach_ticks", "breach_cooldown_ticks"];
 
     /// <summary>Parses one upgrade.</summary>
     public static UpgradeType? ParseUpgrade(RulesFields f, RulesReferences refs)
@@ -30,8 +34,15 @@ internal static class UpgradeRulesLoader
         int? salvagePermille = f.OptInt("salvage_permille", 0, 100_000, 0);
         int? plunderPermille = f.OptInt("plunder_permille", 0, 100_000, 0);
         bool? repairsAtRange = f.OptBool("repairs_vehicles_at_range", false);
+        int? wreckValue = f.OptInt("wreck_value_permille", 0, 100_000, 0);
+        int? repairRange = f.OptInt("repair_range_cells", 0, 64, 0);
+        int? repairRate = f.OptInt("repair_rate_permille", 0, 100_000, 0);
+        int? breachTicks = f.OptInt("breach_ticks", 0, 1_000_000, 0);   // S44 M-06
+        int? breachCooldown = f.OptInt("breach_cooldown_ticks", 0, 1_000_000, 0);
+        if (breachTicks is null || breachCooldown is null) return null;
         if (faction is null || cost is null || buildTime is null || prerequisites is null || effect is null || tier is null || effects is null
-            || packPermille is null || salvagePermille is null || plunderPermille is null || repairsAtRange is null)
+            || packPermille is null || salvagePermille is null || plunderPermille is null || repairsAtRange is null
+            || wreckValue is null || repairRange is null || repairRate is null)
         {
             return null;
         }
@@ -39,6 +50,8 @@ internal static class UpgradeRulesLoader
         return new UpgradeType(f.Id, faction.Value, cost.Value, buildTime.Value, prerequisites, effect) {
             Tier = tier.Value, Effects = effects, PackTicksPermille = packPermille.Value, SalvagePermille = salvagePermille.Value,
             PlunderPermille = plunderPermille.Value, RepairsVehiclesAtRange = repairsAtRange.Value,
+            WreckValuePermille = wreckValue.Value, RepairRangeCells = repairRange.Value, RepairRatePermille = repairRate.Value,
+            BreachTicks = breachTicks.Value, BreachCooldownTicks = breachCooldown.Value,
         };
     }
 }

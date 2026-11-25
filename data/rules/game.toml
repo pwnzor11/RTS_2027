@@ -37,7 +37,7 @@ decay_ticks = 40
 damage_interval_ticks = 20
 damage_threshold = 32
 damage_permille = 100
-no_build_threshold = 64
+no_build_threshold = 24   # A43 SIMECON-03: now enforced; must stay <= the Second Drift cap (31) so the storm can deny building (was 64, unreachable)
 # S19 D-028 (M13-12): soldiers standing on an ashfall or pitchblende field cell take this much damage every interval, before their
 # rad resistance. Vehicles and buildings are unaffected.
 ashfall_damage = 2  # owner-confirmed S19 (D-207)
@@ -67,7 +67,7 @@ heal_quiet_ticks = 100  # (tune) 5 s without firing or being hit
 
 # Supply cap (SUP-1, D-125, design 13). On by default in skirmish per D-129; the D-133 hold was lifted in session 10 (SUP-5 AI fix). Unit supply = band of its cost (cost <= band1_max: first
 # value, <= band2_max: second, above: third) unless the type sets `supply`; the cap is the sum of supply_provided over completed,
-# unpacked, alive own buildings, at most `ceiling`. stock_intervals is parsed for the Expedition store only (no behaviour yet).
+# unpacked, alive own buildings, at most `ceiling`. stock_intervals: an Expedition store gives supply_provided while a shipment docked within that many shipment intervals, else supply_unstocked.
 [supply]
 enabled = true
 ceiling = 200  # (tune)

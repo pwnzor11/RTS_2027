@@ -23,6 +23,7 @@ function OnInit()
   Camera.Focus("site", 120)
 
   -- The enemy base stays home; every pressure on the player comes from the script (unit count by tier, D-061).
+  AI.SetTier(1, Mission.Difficulty())
   AI.Defend(1, "home")
   AddGarrison()
 

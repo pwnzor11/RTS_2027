@@ -283,6 +283,10 @@ public readonly struct PlayerView
     /// <summary>M6: true if the vehicle is a packed rig (its type shows it anyway, so this is not hidden information).</summary>
     public bool IsPackedRig(EntityId vehicle) => _sim.Units.Slots.IsAlive(vehicle) && _sim.Rigs.IsPackedRig(vehicle.Index);
 
+    /// <summary>S44 M-01: mines still aboard an own minelayer (0 for anything else, or a vehicle that is not own).</summary>
+    public int MineStock(EntityId vehicle) =>
+        _sim.Units.Slots.IsAlive(vehicle) && _sim.Units.Player[vehicle.Index] == Player ? _sim.MineStockOf(vehicle) : 0;
+
     /// <summary>M6: pack/unpack progress of an own actor in permille (0 = idle, not a rig, or not own).</summary>
     public int PackProgressPermille(ActorRef own) => _sim.PackProgressOf(Player, own);
 

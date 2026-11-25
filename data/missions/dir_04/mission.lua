@@ -26,6 +26,7 @@ function OnInit()
   Camera.Focus("device", 120)
 
   -- The enemy base stays home and builds; the pressure comes from the script, by unit count only (D-061).
+  AI.SetTier(1, Mission.Difficulty())
   AI.Defend(1, "home")
 
   Trigger.OnDestroyed("shaft", ShaftLost)

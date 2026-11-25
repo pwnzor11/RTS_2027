@@ -18,10 +18,10 @@ namespace Rts.Sim.Replay;
 public sealed class ReplayWriter
 {
     public static readonly byte[] Magic = "RTSR"u8.ToArray();
-    public const int Version = 14;   // M4-17: header gains a rule-flags byte (NoRebuildDefeat); a skirmish with the rule on also hashes the no-rebuild clocks   // M6-02: new state parts change the hashes recorded in the replay; VET-1: "veterancy" part; M7-02: "shipments", "beachhead", "naval" parts
+    public const int Version = 15;   // S44: "mines" part and part-version moves change the recorded hashes. M4-17: header gains a rule-flags byte (NoRebuildDefeat); a skirmish with the rule on also hashes the no-rebuild clocks   // M6-02: new state parts change the hashes recorded in the replay; VET-1: "veterancy" part; M7-02: "shipments", "beachhead", "naval" parts
 
     /// <summary>Oldest format version <see cref="ReplayReader"/> still reads (7 has no mission block; 8..12 share a layout; 13 adds the rule-flags byte to the header).</summary>
-    public const int OldestReadableVersion = 14;   // A43 SIMCORE-02: replays before the "commander_orders"/"props" parts cannot reproduce their hashes (owner: old dev files need not load)
+    public const int OldestReadableVersion = 15;   // S44: older replays cannot reproduce the new hashes (D-220). A43 SIMCORE-02: replays before the "commander_orders"/"props" parts cannot reproduce their hashes (owner: old dev files need not load)
     public const byte TypeEnd = 0, TypeCommand = 1, TypeHashCheck = 2, TypeSpawn = 3;
 
     /// <summary>Ticks between stream flushes.</summary>

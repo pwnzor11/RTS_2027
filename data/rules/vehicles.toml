@@ -3,7 +3,7 @@
 # primary_weapon ("" = none), has_turret, turret_turn_rate, crusher, cost, prerequisites.
 # Optional: harvest_capacity (scraper), build_time.
 # Schema v3 (M3, all optional): faction, tunnel_size ("none"|"S"|"M"|"L"; vehicles default none), aura_radius,
-# aura_rof_permille (1000), aura_speed_permille (1000), aura_targets (type ids), rad_resist_permille, irradiated, stealth,
+# aura_rof_permille (1000), aura_speed_permille (1000), aura_targets (type ids), rad_resist_permille, stealth,
 # death_weapon (weapon id or ""), jam_radius, seismic_radius, passengers, deploys_into (building id or "").
 
 [auth_scraper]
@@ -148,7 +148,6 @@ crusher = true
 cost = 1500  # ASSUMED (M3-07)
 prerequisites = ["dir_isotope_works"]
 rad_resist_permille = 1000
-irradiated = true
 death_weapon = "dir_meltdown"
 
 [dir_rocket_truck]
@@ -441,7 +440,7 @@ cost = 300  # (tune)
 prerequisites = ["lb_garage_rig"]
 raider = true
 
-[lb_harpoon_wagon]   # anti-armour, tethers (slow is a later sim hook)
+[lb_harpoon_wagon]   # anti-armour, tethers (the lb_harpoon warhead slows its target, S44 M-05)
 faction = "left_behind"
 tier = 2
 speed = 20  # (tune)
@@ -607,7 +606,6 @@ cost = 500  # (tune)
 prerequisites = ["exp_dredge_works"]
 harvest_capacity = 5  # (tune) a quarter of a Scraper (20); fast, so the round trip is short
 supply = 1  # (tune) harvesters cost 1 supply (design 13 §2.1)
-# TODO M7-04: harvesting ash in shallow water needs the sim to let a hover harvester work Shallow cells (not data)
 
 [exp_hoverlander]   # amphibious APC
 faction = "expedition"
@@ -641,7 +639,6 @@ turret_turn_rate = 0
 crusher = false
 cost = 250  # (tune)
 prerequisites = ["exp_hover_yard"]
-# TODO M7-14: "reveals ash richness" is a view/UI feature, no rules field
 
 [exp_glide_tank]   # fast hover medium tank, guided cannon (pilot unit for art, M7-11)
 faction = "expedition"
@@ -709,7 +706,6 @@ prerequisites = ["exp_hover_yard"]
 aura_radius = 3  # (tune)
 aura_repair_permille = 5  # (tune) permille of max HP per 10 ticks # s22 M13-13 (D-223): 10 -> 5
 aura_targets = ["exp_skimmer", "exp_hoverlander", "exp_survey_hover", "exp_glide_tank", "exp_sparker", "exp_repair_hover", "exp_barrage_lander", "exp_launch", "exp_landing_craft", "exp_destroyer", "exp_missile_sub", "exp_cruiser", "exp_carrier", "exp_minelayer", "exp_command_ship"]
-# TODO M7-09: bay_repair (units inside a landing craft or Skyhook heal slowly) has no rules field yet
 
 [exp_barrage_lander]   # tracked rocket artillery, loads onto a landing craft
 faction = "expedition"
@@ -743,7 +739,7 @@ turret_turn_rate = 0
 crusher = false
 cost = 300  # (tune)
 prerequisites = ["exp_quay"]
-# TODO M7-05: a second (gun) weapon slot for the Launch does not exist; only the depth charge is wired
+secondary_weapon = "exp_launch_gun"   # S44 (M-04): deck gun beside the depth charge (ASSUMED numbers, see weapons.toml)
 
 [exp_landing_craft]   # transport, beachable
 faction = "expedition"
@@ -763,6 +759,8 @@ prerequisites = ["exp_quay"]
 passengers = 8  # design 07 §5 (8 infantry)
 unload_ticks = 10  # (tune) one passenger onto the shore every half second
 vehicle_slots = 2  # design 07 §6.3: carries 2 vehicles beside the infantry; vehicles land only on `landing` (Coast) cells
+bay_repair = 5  # (assumed) S44 M-12: permille of max HP per 10 ticks for units carried inside
+beacon_drop = "exp_beacon"   # S44 M-15: drops a Landing Beacon on a soft land cell next to the shore it beaches at
 
 [exp_supply_tender]   # convoy ship spawned by [shipments]; unarmed. Not meant to be built: gated behind the Anchorage at a prohibitive cost
 faction = "expedition"
@@ -798,7 +796,8 @@ crusher = false
 cost = 900  # (tune)
 prerequisites = ["exp_shipyard"]
 sonar_radius = 6  # (tune) detects submerged vessels (M7-05 machinery)
-# TODO M7-05: depth charge and AA secondary weapons (design 07 §5) need a second weapon slot
+secondary_weapon = "exp_launch_charge"   # S44 (M-04): depth charge (same entry as the Patrol Launch)
+tertiary_weapon = "exp_destroyer_aa"     # S44 (M-04): anti-air mount
 
 [exp_missile_sub]   # Missile Submarine, dive toggle via Deploy
 faction = "expedition"
@@ -817,7 +816,9 @@ cost = 1100  # (tune)
 prerequisites = ["exp_shipyard"]
 deep_only = true
 submerges = true
-# TODO M7-05: surfaced vs submerged armour class (one `armor` field only), dive timing, torpedoes
+# M7-05 / S44 M-18: surfaced armour is `armor` above (ship_light, s18 item 14); a dived and unseen boat uses the Submerged armour class (ArmorAt, D-205).
+dive_ticks = 60  # ASSUMED (S44 M-18) 3 s to dive or to surface; the boat keeps its old state and armour meanwhile
+secondary_weapon = "exp_sub_torpedo"   # S44 M-18: torpedo in the second slot; hits surface ships and dived (sonar-detected) boats
 
 [exp_minelayer]   # lays sea mines (optional, cut last, D-124)
 faction = "expedition"
@@ -834,7 +835,14 @@ turret_turn_rate = 0
 crusher = false
 cost = 500  # (tune)
 prerequisites = ["exp_shipyard"]
-# TODO M7-05: sea-mine laying and sweeping have no rules fields; unarmed until the mine mechanic exists
+mine_capacity = 6  # (assumed S44 M-01) mines carried
+mine_lay_ticks = 30  # (assumed) 2 s between two mines
+mine_damage = 250  # (assumed) over half of a destroyer (450 hp); ship_heavy takes 80%
+mine_warhead = "exp_sea_mine"
+mine_trigger_radius = 0  # the mine's own cell
+mine_sweep_radius = 3  # (assumed) clears enemy mines within 3 cells
+mine_sweep_ticks = 60  # (assumed) one sweep per 4 s
+mine_restock_ticks = 90  # (assumed) one mine per 6 s beside an own naval building
 
 [exp_cruiser]   # large ship, shore bombardment, 1-cell body drawn 2x
 faction = "expedition"
@@ -851,6 +859,7 @@ turret_turn_rate = 6  # (tune)
 crusher = false
 cost = 1700  # (tune)
 prerequisites = ["exp_drydock"]
+built_at = "exp_drydock"   # S44 M-03
 draw_scale_permille = 2000  # (tune) D-124
 deep_only = true
 
@@ -869,6 +878,7 @@ turret_turn_rate = 8  # (tune)
 crusher = false
 cost = 2200  # (tune)
 prerequisites = ["exp_drydock"]
+built_at = "exp_drydock"   # S44 M-03
 draw_scale_permille = 2400  # (tune) D-124
 deep_only = true
 aircraft_slots = 4  # design 07 §5
@@ -894,7 +904,6 @@ buildable = false
 draw_scale_permille = 1800  # (tune) D-124
 deploys_into = "exp_landing_depot"
 supply = 0  # (tune) the base amount comes from the depot (design 13 §2.4)
-# TODO M7-04: Deploy only on a landing-coast cell (shore cell next to shallow water); not enforced by data
 
 # Aircraft: built at exp_flight_deck (tier 2), so the T1 scout of the design (Gyro) is tier 2 here.
 [exp_gyro]   # rotary scout and designator
@@ -912,7 +921,8 @@ turret_turn_rate = 0
 crusher = false
 cost = 350  # (tune)
 prerequisites = ["exp_flight_deck"]
-# TODO M7-14: designating a ground cell for naval gunfire uses Attack on a cell (no rules field)
+# M7-14 / S44 M-17: designating a ground cell for naval gunfire needs no field here: the pathfinder or Gyro simply sees the cell, and a ship
+# whose gun has `needs_spotter` (Destroyer, Cruiser) accepts an AttackGround order on a cell the team sees (Ctrl + right-click).
 
 [exp_skyhook]   # VTOL transport
 faction = "expedition"
@@ -930,7 +940,8 @@ crusher = false
 cost = 700  # (tune)
 prerequisites = ["exp_flight_deck"]
 passengers = 6  # design 07 §5
-# TODO M7-04: airlift of 2 light vehicles and beacon delivery
+bay_repair = 5  # (assumed) S44 M-12: permille of max HP per 10 ticks for units carried inside
+beacon_drop = "exp_beacon"   # S44 M-15: drops a Landing Beacon on any soft land cell it flies to (the airlift of 2 light vehicles stays a TODO M7-04)
 
 [exp_jet]   # air-superiority fighter
 faction = "expedition"

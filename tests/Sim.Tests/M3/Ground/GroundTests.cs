@@ -73,23 +73,6 @@ public sealed class GroundTests
         Assert.Equal(0, sim.Ground.RadiationAt(new CellCoord(10, 10)));
     }
 
-    [Fact]
-    public void BonusVsIrradiated_AppliesToIrradiatedTypesAndToTargetsInRadiation()
-    {
-        var sim = Fresh();
-        var irr = sim.SpawnVehicle(1, Veh("g_irr"), new CellCoord(10, 10));
-        var normal = sim.SpawnVehicle(1, Veh("g_plain_veh"), new CellCoord(14, 10));
-        var inRad = sim.SpawnVehicle(1, Veh("g_immune"), new CellCoord(18, 10));   // immune to radiation damage itself
-        Ready(sim);
-        sim.Ground.Radiation[sim.Ground.IndexOf(new CellCoord(18, 10))] = 64;
-        foreach (var (t, x) in new[] { (irr, 10), (normal, 14), (inRad, 18) })
-            sim.Detonate(0, 10, Wh("g_bonus"), Centre(x, 10), new ActorRef(ActorKind.Vehicle, t), true);
-        sim.Step(CF.None);
-        Assert.Equal(500 - 20, sim.Units.Health[irr.Index]);
-        Assert.Equal(500 - 10, sim.Units.Health[normal.Index]);
-        Assert.Equal(500 - 20, sim.Units.Health[inRad.Index]);
-    }
-
     // ---- Blackout ---------------------------------------------------------------------------
 
     [Fact]

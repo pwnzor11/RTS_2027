@@ -33,6 +33,8 @@ public static class DifficultyLoader
         "grow_bags",
         // s41 (M13-45): committed waves call up idle troops and search the map
         "wave_reinforce_ticks", "wave_search",
+        // s44 (A-02): supply margin moved from a code table to data
+        "supply_margin",
     ];
 
     /// <summary>S15 lbknob: the profile keys a <c>[faction.&lt;id&gt;.tier&lt;N&gt;]</c> table may override (numbers the AI reads at run time; the driver's
@@ -103,7 +105,8 @@ public static class DifficultyLoader
     /// <summary>S29: the per-faction build lever keys allowed besides <c>harass_min_army</c>.</summary>
     private static readonly string[] TuningKeys = ["army_before_tech", "army_before_adapt", "adapt_cash", "adapt_max_production", "tier2_gate_tick", "adapt_build",
         "bore_max", "bore_army", "bore_gap_ticks", "bore_dig_short", "bore_sites", "bore_min_cash", "adapt_rich_cash", "adapt_rich_max",   // s39: Directorate Bore levers
-        "infantry_bag", "vehicle_bag", "infantry_tier2", "vehicle_tier2", "vehicle_tier3"];   // s41 M13-42: unit lists
+        "infantry_bag", "vehicle_bag", "infantry_tier2", "vehicle_tier2", "vehicle_tier3",   // s41 M13-42: unit lists
+        "naval_min_tier", "naval_cruisers", "naval_carriers", "naval_minelayers", "naval_return_pct"];   // s44 M16-M-03: Expedition naval use
 
     private static FactionAiKeys ParseFactions(TomlTable root, string file, List<RulesProblem> problems, List<(int Faction, int Tier, TomlTable Table, string Id)> overrides)
     {
@@ -145,6 +148,11 @@ public static class DifficultyLoader
                 InfantryTier2 = Ids(t, id, "infantry_tier2", file, problems),
                 VehicleTier2 = Ids(t, id, "vehicle_tier2", file, problems),
                 VehicleTier3 = Ids(t, id, "vehicle_tier3", file, problems),
+                NavalMinTier = Opt(t, id, "naval_min_tier", 0, 5, d.NavalMinTier, file, problems) ?? d.NavalMinTier,   // s44 M16-M-03
+                NavalCruisers = Opt(t, id, "naval_cruisers", 0, 6, d.NavalCruisers, file, problems) ?? d.NavalCruisers,
+                NavalCarriers = Opt(t, id, "naval_carriers", 0, 4, d.NavalCarriers, file, problems) ?? d.NavalCarriers,
+                NavalMinelayers = Opt(t, id, "naval_minelayers", 0, 3, d.NavalMinelayers, file, problems) ?? d.NavalMinelayers,
+                NavalReturnPct = Opt(t, id, "naval_return_pct", 0, 100, d.NavalReturnPct, file, problems) ?? d.NavalReturnPct,
             };
             int? cr = Opt(t, id, "siege_commit_ratio", 0, 10000, 0, file, problems);   // s29
             if (cr is int cx) commit[i] = cx;
@@ -252,6 +260,7 @@ public static class DifficultyLoader
         int? growBags = Opt(table, id, "grow_bags", -1, 1, -1, file, problems);
         int? waveReinforce = Opt(table, id, "wave_reinforce_ticks", 0, 100000, 0, file, problems);   // s41
         int? waveSearch = Opt(table, id, "wave_search", 0, 1, 0, file, problems);   // s41
+        int? supplyMargin = Opt(table, id, "supply_margin", 0, 100, 0, file, problems);   // s44 A-02
 
         if (problems.Count > before) return null;
         return new DifficultyProfile(id, tier!.Value, interval!.Value, delay!.Value, infoAge!.Value, threshold!.Value,
@@ -263,7 +272,7 @@ public static class DifficultyLoader
             HarvesterTarget = harvesters!.Value,
             AttackRatioPct = ratio!.Value, PredictedRetreat = predicted == 1, RetreatRatioPct = retreatRatio!.Value,
             UnitReserve = reserve!.Value, ArmyCap = armyCap!.Value, ArmyCapUntilTick = armyCapUntil!.Value, GrowBags = growBags!.Value,
-            WaveReinforceTicks = waveReinforce!.Value, WaveSearch = waveSearch == 1,
+            WaveReinforceTicks = waveReinforce!.Value, WaveSearch = waveSearch == 1, SupplyMargin = supplyMargin!.Value,
         };
     }
 

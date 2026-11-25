@@ -78,9 +78,17 @@ public sealed partial class Simulation
     {
         int n = 0;
         for (int i = 1; i < _buildings.Capacity; i++)
-            if (_buildings.Slots.IsIndexAlive(i) && _buildings.Player[i] == player && BuildingTypeAt(i).Produces == category
+            if (_buildings.Slots.IsIndexAlive(i) && _buildings.Player[i] == player && IsGeneralFactory(i, category)
                 && _rigs.PackTicksLeft[i] == 0) n++;   // M6-03: a packing rig does not produce
         return n;
+    }
+
+    /// <summary>S44 M-03: building slot <paramref name="i"/> produces the category for ordinary units (a Drydock is a heavy yard: it builds only
+    /// the ships naming it, so it is neither counted nor chosen as a general factory).</summary>
+    private bool IsGeneralFactory(int i, ProductionCategory category)
+    {
+        BuildingType bt = BuildingTypeAt(i);
+        return bt.Produces == category && !bt.HeavyYard;
     }
 
     /// <summary>The factory units of a category leave from: the chosen primary if alive, else the lowest-slot factory. None if no factory.</summary>
@@ -88,9 +96,9 @@ public sealed partial class Simulation
     {
         EntityId chosen = _production.Primary[ProductionState.Lane(player, category)];
         if (!chosen.IsNone && _buildings.Slots.IsAlive(chosen) && _buildings.Player[chosen.Index] == player
-            && BuildingTypeAt(chosen.Index).Produces == category && _rigs.PackTicksLeft[chosen.Index] == 0) return chosen;   // M6-03
+            && IsGeneralFactory(chosen.Index, category) && _rigs.PackTicksLeft[chosen.Index] == 0) return chosen;   // M6-03
         for (int i = 1; i < _buildings.Capacity; i++)
-            if (_buildings.Slots.IsIndexAlive(i) && _buildings.Player[i] == player && BuildingTypeAt(i).Produces == category
+            if (_buildings.Slots.IsIndexAlive(i) && _buildings.Player[i] == player && IsGeneralFactory(i, category)
                 && _rigs.PackTicksLeft[i] == 0)   // M6-03
                 return _buildings.Slots.IdOf(i);
         return EntityId.None;
@@ -237,7 +245,7 @@ public sealed partial class Simulation
         EntityId id;
         if (_production.Ready[lane] == c.Arg)
         {
-            if (CanPlace(c.Player, c.Arg, c.Cell) != PlacementResult.Ok || !WithinBuildRadius(c.Player, bt, c.Cell)) return;
+            if (CanPlace(c.Player, c.Arg, c.Cell) != PlacementResult.Ok || !WithinBuildRadius(c.Player, bt, c.Cell) || RadiationDeniesBuilding(bt, c.Cell)) return;
             id = PlaceBuilding(c.Player, c.Arg, c.Cell);
             if (id.IsNone) return;
             _production.Ready[lane] = -1;
@@ -253,6 +261,18 @@ public sealed partial class Simulation
         OnStatsBuilt(c.Player, ActorKind.Building);   // M4-06
         if (bt.FreeUnit >= 0 && bt.FreeUnit < Setup.Rules.Vehicles.Count)
             SpawnProducedVehicle(c.Player, bt.FreeUnit, c.Cell, bt, false, default);
+    }
+
+    /// <summary>A43 SIMECON-03: true if any footprint cell holds contamination at or above <c>[radiation] no_build_threshold</c> (the Second Drift
+    /// storm and other radiation deny building there). Read-only; kept out of CanPlace so the placement core is unchanged.</summary>
+    internal bool RadiationDeniesBuilding(BuildingType bt, CellCoord topLeft)
+    {
+        int threshold = Setup.Rules.Radiation.NoBuildThreshold;
+        if (threshold <= 0) return false;
+        for (int y = topLeft.Y; y < topLeft.Y + bt.FootprintH; y++)
+            for (int x = topLeft.X; x < topLeft.X + bt.FootprintW; x++)
+                if (_ground.RadiationAt(new CellCoord(x, y)) >= threshold) return true;
+        return false;
     }
 
     /// <summary>
@@ -299,7 +319,7 @@ public sealed partial class Simulation
         ProductionCategory? produces = BuildingTypeAt(c.Subject.Index).Produces;
         if (produces == null) return;
         int lane = ProductionState.Lane(c.Player, produces.Value);
-        _production.Primary[lane] = c.Subject;
+        if (!BuildingTypeAt(c.Subject.Index).HeavyYard) _production.Primary[lane] = c.Subject;   // S44 M-03: a heavy yard sets the lane rally only
         _production.RallySet[lane] = true;
         _production.Rally[lane] = c.Cell;
     }
@@ -366,7 +386,10 @@ public sealed partial class Simulation
     {
         ProductionState s = _production;
         int type = s.QueueType[lane * s.MaxQueue];
-        if (!TryTypeInfo(player, category, type, out int cost, out int buildTime, out _)) { PopQueue(lane, 0); return; }
+        if (!TryTypeInfo(player, category, type, out int cost, out int buildTime, out IReadOnlyList<string> prereq)) { PopQueue(lane, 0); return; }
+        // A43 SIMECON-01 (D-311): losing the tech building that unlocked the front item pauses it like classic C&C: progress is kept, nothing
+        // is spent, and it resumes when the prerequisite exists again.
+        if (!HasPrerequisites(player, prereq)) { s.Stalled[lane] = false; return; }
         // SUP-1: a unit that does not fit under the supply cap pauses the lane: no spending, no progress, no refund; a finished unit
         // waits here until it fits (the same lane position as a blocked exit).
         if (IsUnitCategory(category) && SupplyEnabled && !SupplyFits(player, SupplyOfType(category, type))) return;
@@ -389,6 +412,7 @@ public sealed partial class Simulation
             s.Ticks[lane]++;
         }
         if (s.Ticks[lane] < total) return;
+        if (s.Spent[lane] > cost) { Refund(player, s.Spent[lane] - cost); s.Spent[lane] = cost; }   // M-23 (SIMECON-06): the cost fell mid-build; give the difference back once
         if (!CompleteItem(player, category, type)) { s.Stalled[lane] = true; return; }   // no free exit cell: retry next tick
         PopQueue(lane, 0);
         if (!IsUnitCategory(category)) s.Ready[lane] = type;
@@ -398,7 +422,9 @@ public sealed partial class Simulation
     private bool CompleteItem(byte player, ProductionCategory category, int type)
     {
         if (!IsUnitCategory(category)) return true;
-        EntityId factory = category == ProductionCategory.Vehicle && IsNavalVehicle(player, type)
+        EntityId factory = category == ProductionCategory.Vehicle && RulesOf(player).Vehicles[type].BuiltAt.Length > 0
+            ? HeavyYardOf(player, type)   // S44 M-03: a heavy ship leaves only from its named yard
+            : category == ProductionCategory.Vehicle && IsNavalVehicle(player, type)
             ? ShipFactoryOf(player, type) : PrimaryFactoryOf(player, category);
         if (factory.IsNone) return false;
         BuildingType fbt = BuildingTypeAt(factory.Index);
@@ -426,8 +452,21 @@ public sealed partial class Simulation
         EntityId primary = PrimaryFactoryOf(player, ProductionCategory.Vehicle);
         if (!primary.IsNone && FactoryReaches(primary.Index, cls)) return primary;
         for (int i = 1; i < _buildings.Capacity; i++)
-            if (_buildings.Slots.IsIndexAlive(i) && _buildings.Player[i] == player && BuildingTypeAt(i).Produces == ProductionCategory.Vehicle
+            if (_buildings.Slots.IsIndexAlive(i) && _buildings.Player[i] == player && IsGeneralFactory(i, ProductionCategory.Vehicle)
                 && _rigs.PackTicksLeft[i] == 0 && FactoryReaches(i, cls))
+                return _buildings.Slots.IdOf(i);
+        return EntityId.None;
+    }
+
+    /// <summary>S44 M-03: the lowest-slot alive, unpacked building of the player whose id is the ship's <c>built_at</c> and whose exit or footprint
+    /// reaches the ship's move class. None when there is none (the finished ship waits).</summary>
+    private EntityId HeavyYardOf(byte player, int type)
+    {
+        VehicleType vt = RulesOf(player).Vehicles[type];
+        Locomotion cls = MoveClass.Of(vt);
+        for (int i = 1; i < _buildings.Capacity; i++)
+            if (_buildings.Slots.IsIndexAlive(i) && _buildings.Player[i] == player && _buildings.Health[i] > 0 && _rigs.PackTicksLeft[i] == 0
+                && string.Equals(BuildingTypeAt(i).Id, vt.BuiltAt, StringComparison.Ordinal) && FactoryReaches(i, cls))
                 return _buildings.Slots.IdOf(i);
         return EntityId.None;
     }
@@ -575,10 +614,17 @@ public sealed partial class Simulation
         for (int i = 1; i < _buildings.Capacity; i++)
             if (_buildings.Slots.IsIndexAlive(i) && _garrison.HomeOwner[i] == GarrisonState.NoOwner   // M4-15: a flipped ruin is no base
                 && !(BuildingTypeAt(i).Wall || BuildingTypeAt(i).Gate)) has[_buildings.Player[i]] = true;
+        EnsureLifelineTypes();   // A43 SIMECON-04: the same root-type test as the no-rebuild rule
+        bool[] rootBuilding = _lifelineBuilding!;
         for (int v = 1; v < _units.Capacity; v++)   // M6-03: a packed rig is a base in transit, not a lost one
-            if (_units.Slots.IsIndexAlive(v) && _units.Health[v] > 0
-                && (_rigs.IsPackedRig(v) || RulesOf(_units.Player[v]).Vehicles[_units.TypeIndex[v]].DeploysInto >= 0))   // S19 M13-02 (D-173/D-205): a live founder (Command Ship, MCV) is a base too
+        {
+            if (!_units.Slots.IsIndexAlive(v) || _units.Health[v] <= 0) continue;
+            // S19 M13-02 (D-173/D-205): a live founder (Command Ship, MCV) is a base too, but only if it deploys into a base-capable building
+            // (A43 SIMECON-04: the Directorate Bore deploys into a Hatch, a tunnel entrance, which is not a base).
+            int into = RulesOf(_units.Player[v]).Vehicles[_units.TypeIndex[v]].DeploysInto;
+            if (_rigs.IsPackedRig(v) || (into >= 0 && (into < rootBuilding.Length && rootBuilding[into])))
                 has[_units.Player[v]] = true;
+        }
         for (int p = 0; p < n; p++)
         {
             if (_players.IsNeutral((byte)p) || _players.Defeated[p]) continue;
@@ -607,6 +653,21 @@ public sealed partial class Simulation
 
     // ---- HUD -------------------------------------------------------------------------------------
 
+    /// <summary>A43 SIMECON-01: the front item of the lane is paused because its prerequisite building is gone.</summary>
+    private bool FrontPausedByPrerequisite(byte player, ProductionCategory category, int lane)
+    {
+        if (_production.QueueCount[lane] == 0) return false;
+        int type = _production.QueueType[lane * _production.MaxQueue];
+        if (category == ProductionCategory.Upgrade)
+        {
+            IReadOnlyList<UpgradeType> upgrades = Setup.Rules.Upgrades;
+            return type >= 0 && type < upgrades.Count && !UpgradePrerequisitesMet(player, upgrades[type].Prerequisites);
+        }
+        if (category == ProductionCategory.Structure || category == ProductionCategory.Defence)
+            if (_production.Ready[lane] >= 0) return false;
+        return TryTypeInfo(player, category, type, out _, out _, out IReadOnlyList<string> prereq) && !HasPrerequisites(player, prereq);
+    }
+
     private IReadOnlyList<QueueView> BuildQueueViews(byte player)
     {
         var views = new List<QueueView>(ProductionState.Categories);
@@ -618,7 +679,8 @@ public sealed partial class Simulation
             var items = new List<QueueItemView>(count);
             for (int j = 0; j < count; j++)
                 items.Add(new QueueItemView(_production.QueueType[lane * _production.MaxQueue + j],
-                    j == 0 ? _production.ProgressPermille(lane) : 0, j == 0 && _production.Stalled[lane], j == 0 && _production.Held[lane]));
+                    j == 0 ? _production.ProgressPermille(lane) : 0, j == 0 && _production.Stalled[lane] && !FrontPausedByPrerequisite(player, category, lane),
+                    j == 0 && (_production.Held[lane] || FrontPausedByPrerequisite(player, category, lane))));   // A43 SIMECON-01: a prerequisite pause shows as on hold
             views.Add(new QueueView(category, items, _production.Ready[lane]));
         }
         return views;

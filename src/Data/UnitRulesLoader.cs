@@ -15,7 +15,7 @@ internal static class UnitRulesLoader
         "harvest_capacity", "build_time",
         // schema v3 (M3-01)
         "faction", "tunnel_size", "aura_radius", "aura_rof_permille", "aura_speed_permille", "aura_targets",
-        "rad_resist_permille", "irradiated", "stealth", "death_weapon", "jam_radius", "seismic_radius",
+        "rad_resist_permille", "stealth", "death_weapon", "jam_radius", "seismic_radius",
         "passengers", "deploys_into",
         // schema v4 (M4-01)
         "tier",
@@ -29,9 +29,14 @@ internal static class UnitRulesLoader
         // schema v7 (SUP-1)
         "supply",
         // schema v8 (M7-02)
-        "draw_scale_permille", "deep_only", "submerges", "sonar_radius", "aircraft_slots", "sortie_ticks", "ammo", "rearm_ticks", "unload_ticks",
+        "draw_scale_permille", "built_at", "bay_repair", "deep_only", "submerges", "dive_ticks", "sonar_radius", "aircraft_slots", "sortie_ticks", "ammo", "rearm_ticks", "unload_ticks",
         // schema v8 (M7-04b)
         "vehicle_slots",
+        // S44 (M-04)
+        "secondary_weapon", "tertiary_weapon",
+        // S44 M-01
+        "mine_capacity", "mine_lay_ticks", "mine_damage", "mine_warhead", "mine_trigger_radius", "mine_sweep_radius", "mine_sweep_ticks", "mine_restock_ticks",
+        "beacon_drop",   // S44 M-15
     ];
 
     private static readonly string[] InfantryKeys =
@@ -39,8 +44,9 @@ internal static class UnitRulesLoader
         "speed", "max_health", "armor", "sight", "primary_weapon", "cost", "prerequisites", "build_time",
         // schema v3 (M3-01)
         "faction", "tunnel_size", "aura_radius", "aura_rof_permille", "aura_speed_permille", "aura_targets",
-        "rad_resist_permille", "irradiated", "stealth", "death_weapon", "jam_radius", "seismic_radius",
-        "engineer",
+        "rad_resist_permille", "stealth", "death_weapon", "jam_radius", "seismic_radius",
+        "engineer", "swims",   // S44 M-02: swims (M-20 removed "irradiated")
+        "beacon_build",   // S44 M-15
         // schema v4 (M4-01)
         "tier", "can_garrison",
         // schema v5 (M6-02)
@@ -53,7 +59,7 @@ internal static class UnitRulesLoader
 
     /// <summary>The schema v3 keys vehicles and infantry share (all optional).</summary>
     private sealed record MobileV3(Faction Faction, TunnelSize TunnelSize, int AuraRadius, int AuraRof, int AuraSpeed,
-        IReadOnlyList<string> AuraTargets, int RadResist, bool Irradiated, bool Stealth, int DeathWeapon, int JamRadius,
+        IReadOnlyList<string> AuraTargets, int RadResist, bool Stealth, int DeathWeapon, int JamRadius,
         int SeismicRadius);
 
     /// <summary>Reads the shared v3 keys; null after a recorded problem. Aura targets are checked as references.</summary>
@@ -67,19 +73,18 @@ internal static class UnitRulesLoader
         int? auraSpeed = f.OptInt("aura_speed_permille", 1, 100_000, 1000);
         List<string>? auraTargets = f.OptStrList("aura_targets");
         int? radResist = f.OptInt("rad_resist_permille", 0, 1000, 0);
-        bool? irradiated = f.OptBool("irradiated", false);
         bool? stealth = f.OptBool("stealth", false);
         int? deathWeapon = f.OptIndex("death_weapon", WeaponIds(weapons), "weapon");
         int? jam = f.OptInt("jam_radius", 0, SimConstants.MaxMapCells, 0);
         int? seismic = f.OptInt("seismic_radius", 0, SimConstants.MaxMapCells, 0);
         if (faction is null || size is null || auraRadius is null || auraRof is null || auraSpeed is null || auraTargets is null
-            || radResist is null || irradiated is null || stealth is null || deathWeapon is null || jam is null || seismic is null)
+            || radResist is null || stealth is null || deathWeapon is null || jam is null || seismic is null)
         {
             return null;
         }
         refs.AddAll(f, "aura_targets", auraTargets);
         return new MobileV3(faction.Value, size.Value, auraRadius.Value, auraRof.Value, auraSpeed.Value, auraTargets,
-            radResist.Value, irradiated.Value, stealth.Value, deathWeapon.Value, jam.Value, seismic.Value);
+            radResist.Value, stealth.Value, deathWeapon.Value, jam.Value, seismic.Value);
     }
 
     private static IReadOnlyList<string> WeaponIds(IReadOnlyList<WeaponType> weapons)
@@ -128,7 +133,11 @@ internal static class UnitRulesLoader
         int? supply = f.OptInt("supply", -1, 1000, -1);   // SUP-1: -1 = cost bands
         int? drawScale = f.OptInt("draw_scale_permille", 100, 10_000, 1000);   // M7-02
         bool? deepOnly = f.OptBool("deep_only", false);
+        string? builtAt = f.OptStr("built_at", "");   // S44 M-03
+        int? bayRepair = f.OptInt("bay_repair", 0, 1000, 0);   // S44 M-12
+        if (builtAt is null || bayRepair is null) return null;
         bool? submerges = f.OptBool("submerges", false);
+        int? diveTicks = f.OptInt("dive_ticks", 0, 1_000_000, 0);   // S44 M-18
         int? sonar = f.OptInt("sonar_radius", 0, SimConstants.MaxMapCells, 0);
         int? aircraftSlots = f.OptInt("aircraft_slots", 0, 32, 0);
         int? sortieTicks = f.OptInt("sortie_ticks", 0, 1_000_000, 0);
@@ -136,7 +145,25 @@ internal static class UnitRulesLoader
         int? rearmTicks = f.OptInt("rearm_ticks", 0, 1_000_000, 0);
         int? unloadTicks = f.OptInt("unload_ticks", 0, 1_000_000, 0);
         int? vehicleSlots = f.OptInt("vehicle_slots", 0, 16, 0);
-        if (drawScale is null || deepOnly is null || submerges is null || sonar is null || aircraftSlots is null || sortieTicks is null
+        int? secondaryWeapon = f.OptIndex("secondary_weapon", WeaponIds(weapons), "weapon");   // S44 (M-04)
+        int? tertiaryWeapon = f.OptIndex("tertiary_weapon", WeaponIds(weapons), "weapon");
+        if (secondaryWeapon is null || tertiaryWeapon is null) return null;
+        string beaconDrop = f.Has("beacon_drop") ? f.Str("beacon_drop") ?? "" : "";   // S44 M-15
+        int? mineCapacity = f.OptInt("mine_capacity", 0, 255, 0);   // S44 M-01
+        int? mineLayTicks = f.OptInt("mine_lay_ticks", 0, 1_000_000, 0);
+        int? mineDamage = f.OptInt("mine_damage", 0, 1_000_000, 0);
+        string mineWarhead = f.Has("mine_warhead") ? f.Str("mine_warhead") ?? "" : "";
+        int? mineTrigger = f.OptInt("mine_trigger_radius", 0, 8, 0);
+        int? mineSweep = f.OptInt("mine_sweep_radius", 0, SimConstants.MaxMapCells, 0);
+        int? mineSweepTicks = f.OptInt("mine_sweep_ticks", 0, 1_000_000, 0);
+        int? mineRestock = f.OptInt("mine_restock_ticks", 0, 1_000_000, 0);
+        if (mineCapacity is null || mineLayTicks is null || mineDamage is null || mineTrigger is null || mineSweep is null
+            || mineSweepTicks is null || mineRestock is null) return null;
+        if (mineCapacity.Value > 0 && (mineDamage.Value == 0 || mineWarhead.Length == 0))
+        { f.Problem("mine_capacity", "a minelayer needs mine_damage > 0 and a mine_warhead"); return null; }
+        if (mineSweep.Value > 0 && mineSweepTicks.Value == 0) { f.Problem("mine_sweep_ticks", "a sweeper (mine_sweep_radius > 0) needs mine_sweep_ticks > 0"); return null; }
+        if (mineCapacity.Value > 0 && locomotion is { } locoM && locoM != Locomotion.Naval) { f.Problem("mine_capacity", "only a naval vehicle can lay sea mines"); return null; }
+        if (drawScale is null || deepOnly is null || submerges is null || diveTicks is null || sonar is null || aircraftSlots is null || sortieTicks is null
             || unloadTicks is null || vehicleSlots is null || ammo is null || rearmTicks is null) return null;
         if (veteran is null || supply is null) return null;
         if (locomotion is { } loco0 && loco0 != Locomotion.Naval)
@@ -168,7 +195,6 @@ internal static class UnitRulesLoader
             AuraSpeedPermille = v3.AuraSpeed,
             AuraTargets = v3.AuraTargets,
             RadResistPermille = v3.RadResist,
-            Irradiated = v3.Irradiated,
             Stealth = v3.Stealth,
             DeathWeapon = v3.DeathWeapon,
             JamRadius = v3.JamRadius,
@@ -190,7 +216,10 @@ internal static class UnitRulesLoader
             Supply = supply.Value,
             DrawScalePermille = drawScale.Value,
             DeepOnly = deepOnly.Value,
+            BuiltAt = builtAt,
+            BayRepairPermille = bayRepair.Value,
             Submerges = submerges.Value,
+            DiveTicks = diveTicks.Value,
             SonarRadius = sonar.Value,
             AircraftSlots = aircraftSlots.Value,
             SortieTicks = sortieTicks.Value,
@@ -198,6 +227,17 @@ internal static class UnitRulesLoader
             RearmTicks = rearmTicks.Value,
             UnloadTicks = unloadTicks.Value,
             VehicleSlots = vehicleSlots.Value,
+            SecondaryWeapon = secondaryWeapon.Value,
+            TertiaryWeapon = tertiaryWeapon.Value,
+            MineCapacity = mineCapacity.Value,
+            MineLayTicks = mineLayTicks.Value,
+            MineDamage = mineDamage.Value,
+            MineWarhead = mineWarhead,
+            MineTriggerRadius = mineTrigger.Value,
+            MineSweepRadius = mineSweep.Value,
+            MineSweepTicks = mineSweepTicks.Value,
+            MineRestockTicks = mineRestock.Value,
+            BeaconDrop = beaconDrop,
         };
     }
 
@@ -215,6 +255,8 @@ internal static class UnitRulesLoader
         int? buildTime = f.OptInt("build_time", 0, int.MaxValue, 0);
         MobileV3? v3 = ParseMobileV3(f, weapons, refs, TunnelSize.S);
         bool? engineer = f.OptBool("engineer", false);
+        bool? swims = f.OptBool("swims", false);   // S44 M-02
+        string beaconBuild = f.Has("beacon_build") ? f.Str("beacon_build") ?? "" : "";   // S44 M-15
         int? tier = f.OptInt("tier", 1, RulesLoader.MaxTier, 1);
         bool? canGarrison = engineer is null ? null : f.OptBool("can_garrison", !engineer.Value);   // engineers stay out unless set
         int? salvageRate = f.OptInt("salvage_rate", 0, 10_000, 0);   // M6-02
@@ -229,7 +271,7 @@ internal static class UnitRulesLoader
         if (veteran is null || supply is null) return null;
         if (salvageRate is null || raider is null || raiderOneUse is null || ashDelay is null || ashThreshold is null || auraRepair is null)
             return null;
-        if (v3 is null || engineer is null || tier is null || canGarrison is null) return null;
+        if (v3 is null || engineer is null || swims is null || tier is null || canGarrison is null) return null;
         if (buildTime is null || speed is null || maxHealth is null || armor is null || sight is null || weapon is null
             || cost is null || prerequisites is null)
         {
@@ -247,12 +289,13 @@ internal static class UnitRulesLoader
             AuraSpeedPermille = v3.AuraSpeed,
             AuraTargets = v3.AuraTargets,
             RadResistPermille = v3.RadResist,
-            Irradiated = v3.Irradiated,
             Stealth = v3.Stealth,
             DeathWeapon = v3.DeathWeapon,
             JamRadius = v3.JamRadius,
             SeismicRadius = v3.SeismicRadius,
             Engineer = engineer.Value,
+            Swims = swims.Value,
+            BeaconBuild = beaconBuild,
             Tier = tier.Value,
             CanGarrison = canGarrison.Value,
             SalvageRate = salvageRate.Value,

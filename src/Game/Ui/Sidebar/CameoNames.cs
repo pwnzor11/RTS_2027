@@ -12,7 +12,7 @@ public static class CameoNames
     {
         ["conyard"] = "Construction Yard",
         ["power"] = "Power Plant",
-        ["refinery"] = "Refinery",
+        ["refinery"] = "Ashfall Refinery",
         ["barracks"] = "Barracks",
         ["factory"] = "War Factory",
         ["silo"] = "Silo",

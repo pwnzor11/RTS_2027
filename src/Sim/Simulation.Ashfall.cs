@@ -12,7 +12,7 @@ public sealed partial class Simulation
 {
     /// <summary>Per tick (in RunGround): every interval, each soldier on a field cell loses <c>AshfallDamage</c> scaled by
     /// (1000 - rad resistance) / 1000. Vehicles, buildings, underground and carried soldiers are unaffected; a soldier with full
-    /// resistance takes nothing; anyone else takes at least 1.</summary>
+    /// resistance takes nothing; others take a proportional share (fractions accumulate across intervals, M-25).</summary>
     private void RunAshfall()
     {
         RadiationRules rr = Setup.Rules.Radiation;
@@ -25,9 +25,14 @@ public sealed partial class Simulation
             if (field != OverlayKind.Ashfall && field != OverlayKind.Pitchblende) continue;
             int resist = RulesOf(_infantry.Player[i]).Infantry[_infantry.TypeIndex[i]].RadResistPermille;
             if (resist >= 1000) continue;
-            int dmg = rr.AshfallDamage * (1000 - Math.Max(0, resist)) / 1000;
+            // M-25 (SIMECON-08): damage scales in proportion to (1000 - resist)/1000. A stateless running remainder spreads the
+            // fraction over successive intervals: the hit on interval n is floor((n+1)*D*k/1000) - floor(n*D*k/1000), k = 1000 - resist.
+            long per = (long)rr.AshfallDamage * (1000 - Math.Max(0, resist));
+            long n = Tick / rr.AshfallIntervalTicks;
+            int dmg = (int)((n + 1) * per / 1000 - n * per / 1000);
+            if (dmg <= 0) continue;
             bool wasAlive = _infantry.Health[i] > 0;
-            _infantry.Health[i] -= dmg < 1 ? 1 : dmg;
+            _infantry.Health[i] -= dmg;
             if (wasAlive && _infantry.Health[i] <= 0) _killers.Add((new ActorRef(ActorKind.Infantry, _infantry.Slots.IdOf(i)), FxEvent.RadiationCause));   // M10-14b
         }
     }

@@ -35,6 +35,7 @@ armor = "unarmored"
 sight = 4  # ASSUMED (M3-07)
 primary_weapon = "dir_rifle"
 cost = 80  # ASSUMED (M3-07)
+build_time = 32  # M-21: explicit (= 80 * 40 / 100, same as derived) so dir_up_mass_conscription's build_time x0.8 acts on it
 prerequisites = ["dir_muster_hatch"]
 rad_resist_permille = 600
 
@@ -144,7 +145,6 @@ primary_weapon = "dir_pistol"
 cost = 250  # ASSUMED (M4-07)
 prerequisites = ["dir_muster_hatch"]
 rad_resist_permille = 600  # ASSUMED (M4-07)
-irradiated = true
 death_weapon = "dir_volunteer_burst"
 
 # M6-08: Left Behind infantry (design 06 §5, D-102).
@@ -258,7 +258,7 @@ primary_weapon = ""
 cost = 200  # (tune)
 prerequisites = ["exp_billet"]
 engineer = true
-# TODO M7-04: builds a Landing Beacon on soft land (design 07 §2.1); beacons are placed from the structure queue today
+beacon_build = "exp_beacon"   # S44 M-15: builds a Landing Beacon on a soft cell it stands next to (cost and build time of exp_beacon)
 
 [exp_diver]   # combat diver, plants charges on ships and quays
 faction = "expedition"
@@ -270,7 +270,8 @@ sight = 4  # (tune)
 primary_weapon = "exp_diver_charge"
 cost = 250  # (tune)
 prerequisites = ["exp_billet"]
-# TODO M7-05: swimming in deep water (foot units cannot enter Water today) and the sonar-picket counter
+beacon_build = "exp_beacon"   # S44 M-15
+swims = true   # S44 M-02: walks and swims Water and Shallow (speed from the terrain table: the better of the foot and naval columns); hidden like a dived sub in deep Water, revealed by sonar
 
 [exp_pathfinder]   # spotter and long-range rifle, stealthy
 faction = "expedition"

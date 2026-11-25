@@ -299,7 +299,7 @@ public sealed class PathService : ISimStatePart
         int best = 100;
         for (int l = 0; l < RuleCounts.LandTypes; l++)
         {
-            int sp = _terrain.SpeedPercent((LandType)l, MoveClass.Table(loco));   // M7-03: NavalDeep reads the naval column
+            int sp = loco == MoveClass.Swimmer ? Math.Max(_terrain.SpeedPercent((LandType)l, Locomotion.Foot), _terrain.SpeedPercent((LandType)l, Locomotion.Naval)) : _terrain.SpeedPercent((LandType)l, MoveClass.Table(loco));   // M7-03: NavalDeep reads the naval column
             if (sp > 0 && 10000 / sp < best) best = 10000 / sp;
         }
         return best < 1 ? 1 : best;
