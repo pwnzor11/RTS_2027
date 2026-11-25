@@ -21,6 +21,8 @@ public sealed class SubRevealTests
         return (w, sub, turret);
     }
 
+    private static int DiveTicks(S18World w) => w.Rules.Vehicles[w.V("exp_missile_sub")].DiveTicks;
+
     [Fact]
     public void RevealConstant_IsFiveSeconds() => Assert.Equal(100, Simulation.SubRevealTicks);
 
@@ -31,6 +33,8 @@ public sealed class SubRevealTests
         Assert.Equal(ArmorClass.ShipLight, w.Rules.Vehicles[w.V("exp_missile_sub")].Armor);
         Assert.Equal(ArmorClass.ShipLight, w.Sim.ArmorAt(ActorKind.Vehicle, sub.Index));
         w.Run(1, w.Cmd(0, CommandKind.Deploy, sub, default, default, (int)ActorKind.Vehicle));
+        Assert.Equal(ArmorClass.ShipLight, w.Sim.ArmorAt(ActorKind.Vehicle, sub.Index));   // S44 M-18: the dive takes dive_ticks, surfaced armour until then
+        w.Run(w.Rules.Vehicles[w.V("exp_missile_sub")].DiveTicks);
         Assert.Equal(ArmorClass.Submerged, w.Sim.ArmorAt(ActorKind.Vehicle, sub.Index));
     }
 
@@ -39,6 +43,7 @@ public sealed class SubRevealTests
     {
         var (w, sub, turret) = Coast();
         w.Run(1, w.Cmd(0, CommandKind.Deploy, sub, default, default, (int)ActorKind.Vehicle));
+        w.Run(DiveTicks(w));   // S44 M-18: the dive takes dive_ticks
         var subRef = new ActorRef(ActorKind.Vehicle, sub);
         Assert.False(w.Sim.IsValidTarget(1, subRef));
         w.Run(1, w.Attack(0, ActorKind.Vehicle, sub, ActorKind.Building, turret));
@@ -57,6 +62,7 @@ public sealed class SubRevealTests
         var (w, sub, _) = Coast();
         EntityId far = w.Veh(0, "exp_missile_sub", 60, 10);
         w.Run(1, w.Cmd(0, CommandKind.Deploy, far, default, default, (int)ActorKind.Vehicle));
+        w.Run(DiveTicks(w));   // S44 M-18: the dive takes dive_ticks
         w.Sim.Naval.RevealLeft[far.Index] = Simulation.SubRevealTicks;
         w.Run(Simulation.SubRevealTicks - 1);
         Assert.Equal(1, w.Sim.Naval.RevealLeft[far.Index]);
@@ -70,6 +76,7 @@ public sealed class SubRevealTests
     {
         var (w, sub, _) = Coast();
         w.Run(1, w.Cmd(0, CommandKind.Deploy, sub, default, default, (int)ActorKind.Vehicle));
+        w.Run(DiveTicks(w));   // S44 M-18: the dive takes dive_ticks
         var l = new List<Rts.Sim.View.ViewActor>();
         w.Sim.ViewFor(1).CopyVisible(l);
         Assert.DoesNotContain(l, a => a.Id == sub);   // dived and silent: not listed

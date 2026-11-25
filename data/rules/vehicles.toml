@@ -816,6 +816,10 @@ cost = 1100  # (tune)
 prerequisites = ["exp_shipyard"]
 deep_only = true
 submerges = true
+# M7-05 / S44 M-18: surfaced armour is `armor` above (ship_light, s18 item 14); a dived and unseen boat uses the Submerged armour class (ArmorAt, D-205).
+dive_ticks = 60  # ASSUMED (S44 M-18) 3 s to dive or to surface; the boat keeps its old state and armour meanwhile
+secondary_weapon = "exp_sub_torpedo"   # S44 M-18: torpedo in the second slot; hits surface ships and dived (sonar-detected) boats
+
 [exp_minelayer]   # lays sea mines (optional, cut last, D-124)
 faction = "expedition"
 tier = 2

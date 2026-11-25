@@ -319,6 +319,7 @@ public static class RulesHash
                 w.Write(x.MineCapacity); w.Write(x.MineLayTicks); w.Write(x.MineDamage); w.Write(x.MineWarhead); w.Write(x.MineTriggerRadius);
                 w.Write(x.MineSweepRadius); w.Write(x.MineSweepTicks); w.Write(x.MineRestockTicks);
             }
+            if (x.DiveTicks > 0) { w.Write((byte)0xD6); w.Write(x.DiveTicks); }   // S44 M-18: only types with a dive delay
             if (x.BuiltAt.Length > 0 || x.BayRepairPermille > 0) { w.Write((byte)0xD4); w.Write(x.BuiltAt); w.Write(x.BayRepairPermille); }   // S44 M-03/M-12: only types that set either
         }
         foreach (BuildingType x in sim.Buildings)

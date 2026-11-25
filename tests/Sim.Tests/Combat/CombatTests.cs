@@ -333,7 +333,7 @@ public class CombatTests
         Assert.Equal(casualtiesA, casualtiesB);
         Assert.True(casualtiesA.Sum() > 0, "the battle should actually kill something");
         Assert.Equal(new[] { 4, 4 }, casualtiesA);                 // exact losses per player for seed 1 (M13-05: 6,4 before the path retarget/heuristic change)
-        Assert.Equal(0xCDCB418F51BF481DUL, a[^1]);                  // exact final tick hash for seed 1 (S21 D-219: Aggressive engages in sight; M13-05: path retarget, cap, heuristic; M13-11: economy v4 NoRefinery, rules hash OneUse/Buildable; M2-19: single-hit shells; M3-01, M4-01, M5-01: appended parts; M4-06: live stats counters; M6-02: rigs/salvage parts, effects v2; VET-1: veterancy part; VET-2: shooter column; M7-02: shipments, beachhead, naval parts; S24 M5-12: commander_orders part; M12-16: props part, was 0xEABD07972D88C8C3)
+        Assert.Equal(0x3A2E009C5FFEA437UL, a[^1]);                  // exact final tick hash for seed 1 (S44 M-17/M-18: new weapon/warhead entries and rules-hash bytes move the shipped-rules hash, was 0xCDCB418F51BF481D; S21 D-219: Aggressive engages in sight; M13-05: path retarget, cap, heuristic; M13-11: economy v4 NoRefinery, rules hash OneUse/Buildable; M2-19: single-hit shells; M3-01, M4-01, M5-01: appended parts; M4-06: live stats counters; M6-02: rigs/salvage parts, effects v2; VET-1: veterancy part; VET-2: shooter column; M7-02: shipments, beachhead, naval parts; S24 M5-12: commander_orders part; M12-16: props part, was 0xEABD07972D88C8C3)
         Assert.NotEqual(a[^1], c[^1]);
     }
 

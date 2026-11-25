@@ -471,6 +471,15 @@ rate_of_fire = 90  # (tune)
 projectile_speed = 96
 warhead = "exp_missile_strike"
 
+[exp_sub_torpedo]   # Missile Submarine: torpedo in its second slot (S44 M-18). ASSUMED -- confirm: every number
+damage = 140  # ASSUMED (S44 M-18)
+range = 1792  # ASSUMED 7 cells, shorter than the missile
+min_range = 0
+rate_of_fire = 100  # ASSUMED 5 s
+projectile_speed = 64
+warhead = "exp_torpedo"
+targets = "naval_submerged"   # surface ships and dived boats (a hidden boat must still be sonar-detected to be a target)
+
 [exp_cruiser_gun]   # Cruiser: shore bombardment
 damage = 90  # (tune)
 range = 3072  # (tune)

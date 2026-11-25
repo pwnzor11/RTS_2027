@@ -29,7 +29,7 @@ internal static class UnitRulesLoader
         // schema v7 (SUP-1)
         "supply",
         // schema v8 (M7-02)
-        "draw_scale_permille", "built_at", "bay_repair", "deep_only", "submerges", "sonar_radius", "aircraft_slots", "sortie_ticks", "ammo", "rearm_ticks", "unload_ticks",
+        "draw_scale_permille", "built_at", "bay_repair", "deep_only", "submerges", "dive_ticks", "sonar_radius", "aircraft_slots", "sortie_ticks", "ammo", "rearm_ticks", "unload_ticks",
         // schema v8 (M7-04b)
         "vehicle_slots",
         // S44 (M-04)
@@ -135,6 +135,7 @@ internal static class UnitRulesLoader
         int? bayRepair = f.OptInt("bay_repair", 0, 1000, 0);   // S44 M-12
         if (builtAt is null || bayRepair is null) return null;
         bool? submerges = f.OptBool("submerges", false);
+        int? diveTicks = f.OptInt("dive_ticks", 0, 1_000_000, 0);   // S44 M-18
         int? sonar = f.OptInt("sonar_radius", 0, SimConstants.MaxMapCells, 0);
         int? aircraftSlots = f.OptInt("aircraft_slots", 0, 32, 0);
         int? sortieTicks = f.OptInt("sortie_ticks", 0, 1_000_000, 0);
@@ -159,7 +160,7 @@ internal static class UnitRulesLoader
         { f.Problem("mine_capacity", "a minelayer needs mine_damage > 0 and a mine_warhead"); return null; }
         if (mineSweep.Value > 0 && mineSweepTicks.Value == 0) { f.Problem("mine_sweep_ticks", "a sweeper (mine_sweep_radius > 0) needs mine_sweep_ticks > 0"); return null; }
         if (mineCapacity.Value > 0 && locomotion is { } locoM && locoM != Locomotion.Naval) { f.Problem("mine_capacity", "only a naval vehicle can lay sea mines"); return null; }
-        if (drawScale is null || deepOnly is null || submerges is null || sonar is null || aircraftSlots is null || sortieTicks is null
+        if (drawScale is null || deepOnly is null || submerges is null || diveTicks is null || sonar is null || aircraftSlots is null || sortieTicks is null
             || unloadTicks is null || vehicleSlots is null || ammo is null || rearmTicks is null) return null;
         if (veteran is null || supply is null) return null;
         if (locomotion is { } loco0 && loco0 != Locomotion.Naval)
@@ -215,6 +216,7 @@ internal static class UnitRulesLoader
             BuiltAt = builtAt,
             BayRepairPermille = bayRepair.Value,
             Submerges = submerges.Value,
+            DiveTicks = diveTicks.Value,
             SonarRadius = sonar.Value,
             AircraftSlots = aircraftSlots.Value,
             SortieTicks = sortieTicks.Value,

@@ -79,12 +79,32 @@ public sealed partial class Simulation
     internal bool SplashSparesSubmerged(ActorKind kind, int i, ActorRef primary) =>
         IsHiddenSub(kind, i) && !(primary.Kind == kind && primary.Id == IdAt(kind, i));
 
-    /// <summary>Deploy on a ship with <c>submerges</c>: toggles dive and surface at once. Subject is an own live ship.</summary>
+    /// <summary>Deploy on a ship with <c>submerges</c>: starts a dive or a surfacing. With <c>dive_ticks</c> = 0 it flips at once (as before M-18); otherwise
+    /// the boat keeps its old state for <c>dive_ticks</c> ticks (<see cref="TickDives"/> flips it), and a Deploy during the change is ignored.
+    /// Subject is an own live ship.</summary>
     private void ApplySubmerge(Command c)
     {
         int i = c.Subject.Index;
         if (!_units.Slots.IsAlive(c.Subject) || _units.Player[i] != c.Player || _units.Health[i] <= 0) return;
         if (!RulesOf(c.Player).Vehicles[_units.TypeIndex[i]].Submerges || _tunnels.VehicleLayer[i] != ActorLayer.Surface) return;
-        _naval.Submerged[i] = !_naval.Submerged[i];   // assumed — confirm (M7-05): instant, no dive animation or delay; no automatic dive
+        if (_naval.DiveLeft[i] > 0) return;   // S44 (M-18): already diving or surfacing
+        int ticks = RulesOf(c.Player).Vehicles[_units.TypeIndex[i]].DiveTicks;
+        if (ticks <= 0) { _naval.Submerged[i] = !_naval.Submerged[i]; return; }   // no automatic dive
+        _naval.DiveLeft[i] = ticks;
     }
+
+    /// <summary>S44 (M-18): per tick (from RunStealth), count down every running dive or surfacing and flip <see cref="NavalState.Submerged"/> at the end.
+    /// A surfacing boat that is still hidden stays hidden until then; a diving boat stays visible with surfaced armour until then.</summary>
+    private void TickDives()
+    {
+        for (int i = 1; i < _naval.DiveLeft.Length; i++)
+        {
+            if (_naval.DiveLeft[i] <= 0) continue;
+            if (!_units.Slots.IsIndexAlive(i)) { _naval.DiveLeft[i] = 0; continue; }
+            if (--_naval.DiveLeft[i] == 0) _naval.Submerged[i] = !_naval.Submerged[i];
+        }
+    }
+
+    /// <summary>S44 (M-18): ticks left of a dive or surfacing (0 = none), for the UI and tests.</summary>
+    internal int DiveTicksLeft(int vehicleSlot) => _naval.DiveLeft[vehicleSlot];
 }
