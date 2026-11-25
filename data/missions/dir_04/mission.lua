@@ -11,6 +11,7 @@ local FENN = "leader_auth_fenn"
 function OnInit()
   state.waves = 0
   state.charged = false
+  state.shot = false
   state.done = false
 
   Objective.Add("hold", "d4.obj.hold", true)
@@ -32,6 +33,7 @@ function OnInit()
   Trigger.OnDestroyed("shaft", ShaftLost)
   Trigger.OnDestroyed("device", DeviceLost)
   Trigger.OnDestroyed("head", HeadLost)
+  Trigger.OnSuperweaponFired(0, SunriseShot)   -- S45 C-05: registered before the hq trigger so a shot is known the tick its target dies
   Trigger.OnDestroyed("hq", SunriseFired)
   Trigger.OnDestroyed("west_post", WestDown)
   Trigger.OnSeen("zone_west_post", 0, WestSeen)
@@ -126,10 +128,15 @@ function Charged()
   Camera.Focus("zone_device", 160)
 end
 
--- Only the charged Device's shot razes the Authority command post for the win; razing it earlier loses the mission (S19 MIS-09).
+-- The Device's shot (S45 C-05: the sim's superweapon-fired event; the shot used to be inferred from the command post dying).
+function SunriseShot()
+  state.shot = true
+end
+
+-- Only the Device's shot razes the Authority command post for the win; losing it any other way (before the shot) loses the mission (S19 MIS-09).
 function SunriseFired()
   if state.done then return end
-  if not state.charged then
+  if not (state.charged and state.shot) then
     -- The command post fell to anything but the Device: the order cannot be carried out, a loss (owner pick, S19 MIS-09).
     state.done = true
     Objective.Fail("fire")

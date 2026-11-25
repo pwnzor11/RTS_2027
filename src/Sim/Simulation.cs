@@ -260,6 +260,7 @@ public sealed partial class Simulation
     private void StepCore(IReadOnlyList<Command> commands)
     {
         _fx.Clear();
+        _superweaponShots.Clear();   // S45 C-05
         _killers.Clear();
         ApplyInput(commands);
         RunCarriers();     // M7-09: Simulation.Carrier.cs — hangar rides, sortie timers (before missions)

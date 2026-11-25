@@ -34,7 +34,9 @@ public sealed partial class MissionHost
             ("OnLeave", a => AddTrigger(TriggerKind.Leave, PlayerArg(a, 1), ZoneName(a, 0), a, 2, 0)),
             ("OnHold", a => AddAreaTrigger(TriggerKind.Hold, PlayerArg(a, 1), ZoneName(a, 0), a, 3, Int(a, 2, 1, 1_000_000_000))),
             ("OnSeen", a => AddTrigger(TriggerKind.Seen, PlayerArg(a, 1), ZoneOrTagArg(a, 0), a, 2, 0)),
-            ("OnIdle", a => AddAreaTrigger(TriggerKind.Idle, 0, KnownTag(a, 0), a, 2, Int(a, 1, 1, 1_000_000_000))));
+            ("OnIdle", a => AddAreaTrigger(TriggerKind.Idle, 0, KnownTag(a, 0), a, 2, Int(a, 1, 1, 1_000_000_000))),
+            // S45 C-05: Trigger.OnSuperweaponFired(player, fn): fn(player, buildingTag, cell) once per accepted shot of that player's superweapon.
+            ("OnSuperweaponFired", a => AddTrigger(TriggerKind.SuperweaponFired, PlayerArg(a, 0), "", a, 1, 0)));
 
         NewApiTable(s, "Objective",
             ("AddHidden", a =>

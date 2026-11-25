@@ -15,6 +15,7 @@ public sealed class ApiContractTests
         ("Trigger.OnHold", "'z', 0, 10, 'CbA'", "'z', 0, 0, 'CbA'"),
         ("Trigger.OnSeen", "'t1', 1, 'CbA'", "'nope', 1, 'CbA'"),
         ("Trigger.OnIdle", "'t1', 20, 'CbA'", "'t1', 0, 'CbA'"),
+        ("Trigger.OnSuperweaponFired", "0, 'CbA'", "9, 'CbA'"),
         ("Objective.AddHidden", "'h1', 'Text', true", "'h1', 'Text', 'yes'"),
         ("Objective.Reveal", "'o1'", "'zz'"),
         ("Objective.Status", "'o1'", "'zz'"),

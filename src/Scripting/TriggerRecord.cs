@@ -3,13 +3,13 @@
 namespace Rts.Scripting;
 
 /// <summary>Kinds of trigger (persisted as a byte; append only).</summary>
-internal enum TriggerKind : byte { After = 0, Every = 1, Enter = 2, Destroyed = 3, AllDestroyed = 4, Leave = 5, Hold = 6, Seen = 7, Idle = 8 }
+internal enum TriggerKind : byte { After = 0, Every = 1, Enter = 2, Destroyed = 3, AllDestroyed = 4, Leave = 5, Hold = 6, Seen = 7, Idle = 8, SuperweaponFired = 9 }
 
 /// <summary>One live trigger. Callbacks are stored by global function name so a loaded game can find them again.</summary>
 internal sealed class TriggerRecord
 {
     public TriggerKind Kind;
-    /// <summary>Period (Every) or player (Enter, AllDestroyed).</summary>
+    /// <summary>Period (Every) or player (Enter, AllDestroyed, SuperweaponFired).</summary>
     public int A;
     /// <summary>Zone name (Enter) or actor tag (Destroyed).</summary>
     public string Name = "";

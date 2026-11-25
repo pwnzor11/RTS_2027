@@ -16,11 +16,13 @@ function OnInit()
   state.wreck = false
   state.done = false
   state.rigGone = 0
+  state.drift = false
 
   Objective.Add("counter", "lb4.obj.counter", true)
   Objective.Add("power", "lb4.obj.power", true)
   Objective.Add("depot", "lb4.obj.depot", true)
   Objective.AddHidden("wreck", "lb4.obj.wreck", false)
+  Objective.Add("drift", "lb4.obj.drift", false)   -- S45 C-05: bonus only, never required
   -- Objective targets (M11-05): where the HUD points.
   Objective.SetTarget("counter", "camp")
   Objective.SetTarget("power", "pile1")
@@ -42,6 +44,7 @@ function OnInit()
   Trigger.AfterDelay(1800, HintRadio)
   Trigger.Every(20, CheckMission)
   Trigger.OnEnter("wreck", 0, WreckFound)
+  Trigger.OnSuperweaponFired(0, DriftFired)
   Trigger.OnDestroyed("pile1", PileDown)
   Trigger.OnDestroyed("pile2", PileDown)
   Trigger.OnDestroyed("depot", DepotDown)
@@ -168,6 +171,14 @@ function WreckFound()
   Player.AddCash(0, 700)
   Media.MessageKey("lb4.wreck")
   Dialogue.Say(SPEAKER, SPEAKER, "lb4.radio.wreck")
+end
+
+-- Bonus (S45 C-05): any shot of the player's Second Drift counts; the objective is not primary, so it never gates the win.
+function DriftFired()
+  if state.drift or state.done then return end
+  state.drift = true
+  Objective.Complete("drift")
+  Media.MessageKey("lb4.drift")
 end
 
 function LandingAlive()
