@@ -16,29 +16,29 @@ ramp = ["#400040", "#5B125B", "#772577", "#923792", "#AD49AD", "#C85BC8", "#E46E
 [[state]]
 name = "idle"
 facings = 1
-frames = 4
+frames = 8
 first = 0
-ticks_per_frame = 5
+ticks_per_frame = 2
 
 [[state]]
 name = "damaged"
 facings = 1
-frames = 4
-first = 4
-ticks_per_frame = 5
+frames = 8
+first = 8
+ticks_per_frame = 2
 
 [[state]]
 name = "build"
 facings = 1
 frames = 8
-first = 8
+first = 16
 ticks_per_frame = 5
 
 [[state]]
 name = "active"
 facings = 1
 frames = 4
-first = 16
+first = 24
 ticks_per_frame = 3
 
 [[fx]]

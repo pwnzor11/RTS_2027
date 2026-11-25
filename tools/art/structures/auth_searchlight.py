@@ -25,7 +25,7 @@ ORIGIN = (16, 88)
 DOCK = (0, 1)
 CAP_MATERIAL = "concrete2"
 HOUSE2_MID = True
-STATES = [("idle", 4, 5), ("damaged", 4, 5), ("build", 8, 5)]
+STATES = [("idle", 8, 2), ("damaged", 8, 2), ("build", 8, 5)]     # 8-frame loops at tpf 2 (0.4 s a frame)
 MATERIALS = dict(L.MATERIALS)
 MATERIALS.update({
     "steel2": ("#979EA3", dict(rough=0.4, metal=0.5)),
@@ -118,8 +118,9 @@ def finished(S, i, dmg, mode):
     if dmg:
         lamp(S, "lamp", ox, 0.0, TOP + 0.95, 40, 38, 0.52, 0.8, "dark")
     else:
-        lamp(S, "lamp", ox, 0.0, TOP + 0.95, YAW[i % 4] if idle else 0.0, 22, 0.52, 0.8,
-             "lensbright" if (not idle or i % 4 != 3) else "lamp")
+        # the beam sweeps 35 degrees either side and returns over the 8-frame loop; one frame flickers dim
+        lamp(S, "lamp", ox, 0.0, TOP + 0.95, 35.0 * math.sin(2 * math.pi * i / 8) if idle else 0.0, 22, 0.52, 0.8,
+             "lensbright" if (not idle or i != 6) else "lamp")
     for sx in (-1, 1):
         S.bb("arm", ox + sx * 0.5 - 0.04, ox + sx * 0.5 + 0.04, -0.06, 0.06, TOP + 0.55, TOP + 1.2, "steel", 0.0)
     S.bb("housemark", ox - 0.2, ox + 0.2, -0.15, 0.15, TOP + 0.55, TOP + 0.6, "house", 0.0)
@@ -127,6 +128,10 @@ def finished(S, i, dmg, mode):
     S.bb("cab", 0.55, 1.45, -0.5, 0.45, 0.42, 1.25, "concrete", 0.04)
     S.bb("cabr", 0.5, 1.5, -0.55, 0.5, 1.25, 1.35, "roof", 0.03)
     S.bb("cabp", 0.7, 1.3, -0.54, -0.5, 0.58, 1.1, "house", 0.0)
+    if not dmg:      # detail: status lamp blinks over the loop, rivets
+        S.bb("cablt", 1.0, 1.1, -0.56, -0.52, 0.9, 1.0, "amber" if (idle and i % 4 < 2) else "amber_dim", 0.0, nocast=True)
+        for k in range(4):
+            S.cyl(f"cabrv{k}", 0.03, 0.04, (0.62 + 0.25 * k, -0.52, 0.5), "steel", verts=6, nocast=True)
     if dmg:
         S.box("cabdoor", (0.5, 0.05, 0.6), (0.7, -0.85 * YS, 0.7), "steel", 0.0, rot=(0, 0, 50), stretch=False)
         S.bb("cabdark", 0.85, 1.25, -0.55, -0.5, 0.55, 1.1, "dark", 0.0)

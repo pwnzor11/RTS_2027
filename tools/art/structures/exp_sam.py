@@ -24,12 +24,14 @@ DOCK = (0, 0)
 CAP_MATERIAL = "pad2"
 PALETTE = K.PALETTE
 MATERIALS = K.MATERIALS
-STATES = [("idle", 4, 5), ("damaged", 4, 5), ("build", 6, 5)]
+STATES = [("idle", 8, 2), ("damaged", 8, 2), ("build", 6, 5)]     # session 43: 8-frame loops at tpf 2 (owner choice)
 FX = [
     K.fx(FOOTPRINT, ORIGIN, "damaged", "fire_small", 0.0, 0.0, 2.0, 0),
     K.fx(FOOTPRINT, ORIGIN, "damaged", "smoke_plume", 0.0, 0.0, 2.3, 0),
 ]
-SWEEP = (-14, -5, 5, 14)
+def sweep(i):
+    """Mount yaw in degrees for idle frame i of the 8-frame loop: a smooth left-right sine, 14 deg either side."""
+    return round(14 * math.sin(2 * math.pi * i / 8), 2)
 
 
 def g_ground(S, dmg, i):
@@ -46,14 +48,14 @@ def g_drum(S, dmg, i):
 
 
 def g_cradle(S, dmg, i):
-    yaw = SWEEP[i % 4] if not dmg else 40
+    yaw = sweep(i) if not dmg else 40
     S.box("cradle", (1.0, 0.8, 0.28), (0, 0, 1.0), "white2", 0.06, rot=(0, 0, yaw), stretch=False)
     S.box("cradlec", (1.05, 0.2, 0.1), (0, 0, 1.17), "copper", 0.0, rot=(0, 0, yaw), stretch=False, nocast=True)
     K.post(S, "tower", 0, 0, 1.0, 1.3, 0.3, "navy2")
 
 
 def g_missiles(S, dmg, i):
-    yaw = math.radians(SWEEP[i % 4] if not dmg else 40)
+    yaw = math.radians(sweep(i) if not dmg else 40)
     for k, s in enumerate((-1, 1)):
         px, py = -math.sin(yaw) * 0.28 * s, math.cos(yaw) * 0.28 * s
         # missiles point north-ish and up (rotate the launch direction by the mount yaw)
@@ -71,6 +73,8 @@ def g_missiles(S, dmg, i):
     else:
         S.bb("box", 0.9, 1.4, -1.2, -0.7, 0.12, 0.65, "white", 0.05)
         K.beam(S, "whip", (1.15, -0.95, 0.65), (1.5, -0.95, 1.4), 0.04, "chrome2")
+        if i in (2, 6):     # bent aerial arcs where it touches the box
+            S.sphere("mspark", 0.08, (1.5, -0.95, 1.45), "spark")
 
 
 GROUPS = [g_ground, g_drum, g_cradle, g_missiles]

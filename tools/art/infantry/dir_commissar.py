@@ -9,6 +9,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import common as C
 import auth_rifleman as AR
+import boost
 
 SCALE = 1.25                  # D-184 pilot: figure 1.25 x, frame 48 x 48, house boards / back panel / cap piping
 ID = "dir_commissar"
@@ -60,6 +61,9 @@ def build(S, p):
     from mathutils import Matrix
     import rig as R
     import dir_parts as P
+    B = boost.params()                                   # S43 pilot boost
+    H, LB, SB = B["house"], B["limb"], B["stance"]
+    pp = dict(p, feet=tuple((f[0] * SB, f[1], f[2]) for f in p["feet"]))   # wider stance for the legs helper
     z = Z0 + p["bob"]
     U = R.tr(0, p["dy"], z) @ R.rz(p["twist"]) @ R.rx(-p["lean"]) @ R.rz(p["roll"])
     pel = (0, p["dy"], z)
@@ -78,40 +82,55 @@ def build(S, p):
     # leather cross-belt and house sash at the waist
     S.cyl(0.212, 0.06, (0, 0, 0.03), "leather", "Z", U, verts=8)
     S.limb(up((0.12, 0.18, 0.40)), up((-0.14, 0.215, 0.04)), 0.05, "leather", d=0.035, bevel=0)
-    S.limb(up((-0.12, 0.17, 0.41)), up((0.17, 0.225, 0.00)), 0.12, "house", d=0.05, bevel=0)      # house sash across the chest
-    S.limb(up((-0.19, 0.0, 0.41)), up((-0.12, 0.17, 0.41)), 0.11, "house", d=0.05, bevel=0)
+    S.limb(up((-0.12, 0.17, 0.41)), up((0.17, 0.225, 0.00)), 0.12 * H, "house", d=0.05 * H, bevel=0)      # house sash across the chest
+    S.limb(up((-0.19, 0.0, 0.41)), up((-0.12, 0.17, 0.41)), 0.11 * H, "house", d=0.05 * H, bevel=0)
     S.box((0.05, 0.035, 0.05), (0.0, 0.225, 0.05), "brass", U, bevel=0)
-    # shoulder boards (house) and back stencil
+    # shoulder boards (house) and back stencil (S43: larger house panels)
     for sx in (-1, 1):
-        S.box((0.14, 0.18, 0.045), (sx * 0.20, 0.0, 0.455), "house", U, rot=(0, sx * -8, 0), bevel=0)   # D-184 house shoulder boards
-    S.box((0.20, 0.025, 0.16), (0, -0.218, 0.22), "house", U, bevel=0)                    # D-184 house panel on the back of the coat
+        S.box((0.14 * (1 + 0.5 * (H - 1)), 0.18 * (1 + 0.3 * (H - 1)), 0.045 * (1 + 0.6 * (H - 1))), (sx * (0.20 + 0.02 * (H - 1)), 0.0, 0.455), "house", U, rot=(0, sx * -8, 0), bevel=0)   # D-184 house shoulder boards
+    S.box((0.20 * (1 + 0.15 * (H - 1)), 0.025, 0.16 * H), (0, -0.218, 0.22), "house", U, bevel=0)                    # D-184 house panel on the back of the coat
     # megaphone slung at the left hip: bone cone, dark mouthpiece, strap
     S.cyl(0.085, 0.30, (-0.25, 0.10, -0.05), "bone", "Y", U, verts=8, r2=0.035)
     S.cyl(0.095, 0.03, (-0.25, 0.25, -0.05), "trim", "Y", U, verts=8)
     S.cyl(0.04, 0.05, (-0.25, -0.06, -0.05), "dark", "Y", U, verts=8)
     S.limb(up((-0.11, 0.18, 0.40)), up((-0.25, 0.02, 0.0)), 0.025, "leather", d=0.02, bevel=0)
     # head: tall, pale face, dark peaked cap: red-brown band, wide flat crown, dark visor, 1 px house dot badge
+    # head: tall, pale face, cap (S43: scaled about the head centre by B["head"], so the cap and face read bigger)
+    h = B["head"]
+    HC = (0.0, 0.03, 0.68)
+
+    def hb(size, loc, mat, **kw):
+        return S.box(tuple(x * h for x in size), tuple(HC[i] + (loc[i] - HC[i]) * h for i in range(3)), mat, U, **kw)
+
+    def hc_(r, ln, loc, mat, axis, verts, r2=None):
+        return S.cyl(r * h, ln * h, tuple(HC[i] + (loc[i] - HC[i]) * h for i in range(3)), mat, axis, U, verts=verts,
+                     r2=None if r2 is None else r2 * h)
+
+    def hs(r, loc, mat):
+        return S.sphere(tuple(x * h for x in r), tuple(HC[i] + (loc[i] - HC[i]) * h for i in range(3)), mat, U)
     S.box((0.08, 0.08, 0.07), (0, 0.01, 0.52), "dark", U)
-    S.box((0.15, 0.13, 0.14), (0, 0.03, 0.63), "face", U, bevel=0.02)
-    S.box((0.11, 0.03, 0.025), (0, 0.10, 0.65), "dark", U, bevel=0)
-    S.cyl(0.12, 0.05, (0, 0.03, 0.725), "trim", "Z", U, verts=10)                           # cap band
-    S.cyl(0.125, 0.09, (0, 0.03, 0.795), "cap", "Z", U, verts=10, r2=0.195)                 # wide flaring crown
-    S.cyl(0.195, 0.02, (0, 0.03, 0.845), "cap", "Z", U, verts=10)                           # flat top
-    S.box((0.17, 0.12, 0.022), (0, 0.15, 0.745), "dark", U, rot=(-12, 0, 0), bevel=0)      # visor
-    S.box((0.07, 0.03, 0.06), (0, 0.108, 0.795), "house", U, bevel=0)                       # house cap badge (D-184: larger)
-    S.cyl(0.13, 0.025, (0, 0.03, 0.765), "house", "Z", U, verts=10)                         # D-184 thin house piping under the crown
-    # pistol (fire only), raised in the right hand
-    GM = (U if p["gun_space"] == "u" else Matrix.Identity(4)) @ R.tr(*p["gun"][0]) @ R.rz(p["gun"][1]) @ R.rx(p["gun"][2])
+    hb((0.15, 0.13, 0.14), (0, 0.03, 0.63), "face", bevel=0.02)
+    hb((0.11, 0.03, 0.025), (0, 0.10, 0.65), "dark", bevel=0)
+    hc_(0.12, 0.05, (0, 0.03, 0.725), "trim", "Z", 10)                                      # cap band
+    hc_(0.125, 0.09, (0, 0.03, 0.795), "cap", "Z", 10, r2=0.195)                            # wide flaring crown
+    hc_(0.195, 0.02, (0, 0.03, 0.845), "cap", "Z", 10)                                      # flat top
+    hb((0.17, 0.12, 0.022), (0, 0.15, 0.745), "dark", rot=(-12, 0, 0), bevel=0)           # visor
+    hb((0.07, 0.03, 0.06 * H), (0, 0.108, 0.795), "house", bevel=0)                         # house cap badge (D-184: larger)
+    hc_(0.13, 0.025, (0, 0.03, 0.765), "house", "Z", 10)                                    # D-184 thin house piping under the crown
+    # pistol (fire only), raised in the right hand (S43: longer and thicker by B["gun"] / B["gunw"]; GM carries the scale)
+    GM0 = (U if p["gun_space"] == "u" else Matrix.Identity(4)) @ R.tr(*p["gun"][0]) @ R.rz(p["gun"][1]) @ R.rx(p["gun"][2])
+    GM = GM0 @ Matrix.Diagonal((B["gunw"], B["gun"], B["gunw"], 1.0))
     if p["pistol"]:
         S.box((0.05, 0.17, 0.08), (0, 0.04, 0.0), "steel", GM)
         S.box((0.04, 0.05, 0.10), (0, -0.04, -0.07), "dark", GM, rot=(10, 0, 0))
         S.cyl(0.02, 0.10, (0, 0.17, 0.01), "steel", "Y", GM, verts=6)
         if p["flash"]:
-            S.cyl(0.07, 0.24, (0, 0.33, 0.01), "flash", "Y", GM, verts=8, r2=0.0)
-            S.sphere((0.09, 0.09, 0.09), (0, 0.22, 0.01), "flash", GM, seg=8)
-    P.arms(S, p, U, up, GM, SHOULDER, ((0, -0.03, -0.04), (0, 0, -0.04)), ("coat2", "coat"), thick=(0.09, 0.078), band=0,
+            fl, flw = B["flash"] / B["gun"], B["flash"] / B["gunw"]
+            S.cyl(0.07 * flw, 0.24 * fl, (0, 0.33, 0.01), "flash", "Y", GM, verts=8, r2=0.0)
+            S.sphere((0.09 * flw, 0.09 * fl, 0.09 * flw), (0, 0.22, 0.01), "flash", GM, seg=8)
+    P.arms(S, p, U, up, GM, SHOULDER, ((0, -0.03, -0.04), (0, 0, -0.04)), ("coat2", "coat"), thick=(0.09 * LB, 0.078 * LB), band=0,
            cuff_mat="trim", hand_mat="leather", hand_size=0.07, cuff_len=0.22)
-    P.legs(S, p, pel, spread=0.09, thick=(0.095, 0.085), boot="leather")
+    P.legs(S, pp, pel, spread=0.09 * SB, thick=(0.095 * LB, 0.085 * LB), boot="leather")
     if p["spread"]:
         S.cyl(0.42, 0.03, (0.0, p["dy"] + 0.12, 0.03), "coat2", "Z", None, verts=8)
         S.cyl(0.30, 0.035, (0.05, p["dy"] + 0.12, 0.05), "coat", "Z", None, verts=8)

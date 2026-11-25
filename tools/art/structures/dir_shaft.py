@@ -5,7 +5,8 @@ vertical magenta banner hanging down its front.  Two low wings flank it: a west 
 mouth under a small hood with a magenta band, blast doors folded back, ember glow at the bottom) and a small winding house to the
 north.  An ash stack on the east side, a loudspeaker pair on the hall roof, bone / oxide hazard bar along the south edge.
 House colour (magenta, remapped in game): the hanging banner and the hood band.
-Idle loop: sheaves turn, the cage bobs, ash puffs, furnace slits flicker.  Damage is structural only (D-069): the tower top has
+Idle loop (8 frames): sheaves turn, the cage bobs, furnace slits flicker and the collar glow pulses.  No ash smoke is baked (the
+separate smoke pass adds it).  Damage is structural only (D-069): the tower top has
 snapped off (a leg lies on the pad, a sheave wheel lies flat), the hood end has fallen, the stack is snapped, a blast door buckled;
 fire / smoke are FX anchors.  Build stages: the shared L.stages() driver (auth_conyard).
 Contract: see auth_refinery.py.  Units: 3.4 per cell, x east, y NORTH, z up, footprint centred on (0, 0): x, y in [-5.1, 5.1].
@@ -28,7 +29,7 @@ DOCK = (1, 3)
 CAP_MATERIAL = D.CAP_MATERIAL
 HOUSE2_MID = True
 PALETTE = D.PALETTE
-STATES = [("idle", 4, 5), ("damaged", 4, 5), ("build", 8, 5)]
+STATES = [("idle", 8, 2), ("damaged", 8, 2), ("build", 8, 5)]     # idle/damaged: 8-frame loops at tpf 2 (S43 fan)
 MATERIALS = D.MATERIALS
 SOOT_SKIN = D.SOOT_SKIN
 PRIMER_SKIN = D.PRIMER_SKIN
@@ -153,7 +154,7 @@ def collar(S, i, dmg, mode):
         S.bb("collartop", x0, x1, y0, y1, COL_H, COL_H + 0.1, "concrete2", 0.0)
         S.bb("shaftmouth", x0 + 0.35, x1 - 0.35, y0 + 0.35, y1 - 0.35, COL_H + 0.05, COL_H + 0.14, "dark", 0.0)
     lit = (mode != "build") and not dmg
-    g = "redglow" if lit and (i % 2 == 0 or mode == "build") else ("oxide" if lit else "oxide2")
+    g = "redglow" if (lit and (i % 2 == 0 or mode == "build")) or (dmg and i % 4 < 2) else ("oxide" if lit else "oxide2")
     S.bb("glowc", CX - 0.5, CX + 0.5, y0 + 0.9, y0 + 1.5, COL_H + 0.14, COL_H + 0.17, g, 0.0, nocast=True)
     for k in range(7):
         xx = x0 + 0.5 + k * ((x1 - x0 - 1.0) / 6)
@@ -215,13 +216,13 @@ def finished(S, i, dmg, mode):
     S.bb("windplate", x0 + 0.3, x0 + 1.9, y0 - 0.08, y0 - 0.04, 0.35, 0.9, "bone", 0.0)
     for k in range(2):
         S.bb(f"sten_w{k}", x0 + 0.4, x0 + 1.8, y0 - 0.1, y0 - 0.08, 0.45 + k * 0.22, 0.56 + k * 0.22, "dark", 0.0, nocast=True)
-    D.furnace_slits(S, x0 + 2.4, y0 - 0.1, 0.35, 0.8, 3, i, (idle or mode == "build") and not dmg, step=0.55, w=0.28)
+    D.furnace_slits(S, x0 + 2.4, y0 - 0.1, 0.35, 0.8, 3, i, (idle or mode == "build") and not dmg, step=0.55, w=0.28, period=4)
     sx, sy = STACK
     S.bb("furn", sx - 0.9, sx + 0.9, sy - 0.8, sy + 0.8, 0.14, 1.3, "concrete2", 0.04)
     S.bb("furnroof", sx - 1.0, sx + 1.0, sy - 0.9, sy + 0.9, 1.3, 1.45, "roof", 0.04)
     S.bb("furnband", sx - 0.9, sx + 0.9, sy - 0.84, sy - 0.8, 0.9, 1.1, "oxide", 0.0)
-    D.furnace_slits(S, sx - 0.6, sy - 0.9, 0.35, 0.75, 3, i + 1, (idle or mode == "build") and not dmg, step=0.45, w=0.25)
-    D.chimney(S, sx, sy, 1.45, 3.2 if dmg else 4.0, dmg, idle or mode == "build", i, rise=1.5, lean_len=1.3)
+    D.furnace_slits(S, sx - 0.6, sy - 0.9, 0.35, 0.75, 3, i + 1, (idle or mode == "build") and not dmg, step=0.45, w=0.25, period=4)
+    D.chimney(S, sx, sy, 1.45, 3.2 if dmg else 4.0, dmg, False, i, rise=1.5, lean_len=1.3)
     D.ash_drift(S, ((3.8, -2.6, 1.3), (-4.4, 3.9, 0.8), (3.9, 0.0, 0.8)))
     if dmg:
         L.R.scorch(S, "scH", -2.4, -2.3, 2.1, 1.6, 0.5)

@@ -9,22 +9,29 @@ House paint: hull flank panels, glacis stripe, turret top plate and side bands. 
 import math, sys, os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import dir_common as D
+import os, sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import mot_track as MT
 
 ID = "dir_reactor_crawler"
 TITLE = "Directorate Reactor Crawler"
 CANVAS = 160
 TARGET = (0.0, 0.1, 1.2)
-STATES = [("idle", 16, 1, 1)]
+STATES = [("idle", 16, 1, 1), ("move", 16, 4, 1)]
+# "move": 4 frames per facing, track links one pitch per 4 frames, road-wheel bolts roll (auth_tank.py). Idle = move frame 0.
+POD = MT.Loop(yc=0.0, h=1.0, r=0.51, zc=0.55)     # each pod: idlers at +-1.0 from the pod centre, idler radius 0.5
+STEP_PX = {"move": POD.step_px()}
 LAYERS = ["body", "turret"]
 PIVOT = (0.0, 0.95, 2.07)     # = top of the mount collar (deck top is 2.02)
 MOUNT = dict(deck_z=2.02, r_lip=0.95, r_well=1.05, r_shadow=1.25, soft_r=1.3, lip="hull", well="dark")
 PALETTE = D.PALETTE
-MATERIALS = D.MATERIALS
+MATERIALS = dict(D.MATERIALS, link=MT.LINK)
 
 
 def build(S, state, k, n):
     box, cyl = S.box, S.cyl
     S.begin("body")
+    move = state in ("idle", "move")
     # ---- four track pods
     for s, side in ((-1, "L"), (1, "R")):
         x = s * 1.6
@@ -32,10 +39,14 @@ def build(S, state, k, n):
             box(f"pod{side}{tag}", (0.85, 2.0, 1.0), (x, y, 0.55), "track", 0.14)
             cyl(f"idlA{side}{tag}", 0.5, 0.85, (x, y + 1.0, 0.55), "track", "X")
             cyl(f"idlB{side}{tag}", 0.5, 0.85, (x, y - 1.0, 0.55), "track", "X")
+            if move:
+                MT.links(S, f"link{side}{tag}", x, MT.Loop(yc=y, h=1.0, r=0.51, zc=0.55, n=POD.n), 0.8, k)
             for i in range(3):
                 yy = y - 0.6 + i * 0.6
                 cyl(f"wh{side}{tag}{i}", 0.33, 0.1, (x + s * 0.45, yy, 0.5), "steel", "X", 14)
                 cyl(f"hb{side}{tag}{i}", 0.12, 0.08, (x + s * 0.51, yy, 0.5), "rust", "X", 8)
+                if move:
+                    MT.bolts(S, f"bolt{side}{tag}{i}", x + s * 0.5, yy, 0.5, 0.33, k)
             box(f"guard{side}{tag}", (0.9, 2.2, 0.08), (x, y, 1.13), "hull2", 0.03)
     # ---- hull slung between the pods, slab deck, glacis, tail
     box("hull", (2.6, 4.6, 1.1), (0, 0, 1.35), "hull", 0.12)

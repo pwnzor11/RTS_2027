@@ -27,6 +27,41 @@ public static class DecorBake
     /// <param name="Count">Decals stamped.</param>
     public readonly record struct Result(int Width, int Height, byte[] Rgba, int Count);
 
+    /// <summary>
+    /// Coverage 0..255 of a round decal (<see cref="DecalShape.Soft"/> or <see cref="DecalShape.Blob"/>) at offset (<paramref name="dx"/>, <paramref name="dy"/>)
+    /// from its centre. The outline is noise-broken (S43 art pass): the radius is warped by deterministic low-frequency value noise seeded per decal,
+    /// the edge of a blob is dithered, and two lobes overlap the body. Pure integer maths: the same decal bakes the same on every machine.
+    /// </summary>
+    public static int RoundCoverage(DecalShape shape, int dx, int dy, int r, ulong seed, int cx, int cy)
+    {
+        uint salt = DecorHash.Mix(seed, cx, cy, 9);
+        int ox = 4096 + (int)(salt & 0xFFu), oy = 4096 + (int)(salt >> 8 & 0xFFu);   // positive lattice coordinates, different per decal
+        int period = Math.Max(2, r / 2), fine = Math.Max(2, r / 4);
+        int w = 1000 + (TerrainDetail.Vn(dx + ox, dy + oy, period, period, salt) - 512) * 2 / 5
+                     + (TerrainDetail.Vn(dx + ox, dy + oy, fine, fine, salt + 1) - 512) / 5;
+        int best = Disc(shape, dx, dy, Math.Max(1, r), w, seed, 0);
+        for (int i = 0; i < 2; i++)
+        {
+            uint h = DecorHash.Mix(seed, cx * 3 + i, cy, 10);
+            int lx = Dx[(int)(h % 8u)] * r * 55 / 100, ly = Dy[(int)(h % 8u)] * r * 55 / 100;
+            int lw = 1000 + (TerrainDetail.Vn(dx + ox, dy + oy, fine, fine, salt + 2 + (uint)i) - 512) / 3;
+            best = Math.Max(best, Disc(shape, dx - lx, dy - ly, Math.Max(1, r / 2), lw, seed, 1 + i));
+        }
+
+        return best;
+    }
+
+    /// <summary>One warped disc: radius <paramref name="rad"/> times <paramref name="w"/> permille. Soft fades to the edge; a blob is solid, dithered over its outer tenth.</summary>
+    private static int Disc(DecalShape shape, int x, int y, int rad, int w, ulong seed, int part)
+    {
+        long rw = (long)rad * w, rw2 = rw * rw;
+        long d2 = ((long)x * x + (long)y * y) * 1_000_000L;   // squared distance in the same units as rw2
+        if (d2 > rw2) return 0;
+        if (shape == DecalShape.Soft) return (int)(255 * (rw2 - d2) / rw2);
+        if (d2 > rw2 * 81 / 100 && DecorHash.Mix(seed, x, y, 11u + (uint)part) % 3u == 0) return 0;
+        return 255;
+    }
+
     private static readonly int[] Dx = { 0, 1, 1, 1, 0, -1, -1, -1 };
     private static readonly int[] Dy = { -1, -1, 0, 1, 1, 1, 0, -1 };
 
@@ -42,6 +77,8 @@ public static class DecorBake
         int tw = w * s, th = h * s;
         var rgba = new byte[tw * th * 4];
         IReadOnlyList<DecalRule> rules = palette.Decor.Decals;
+        // With the S43 detail pass on, its own fainter hairline cracks replace these two old decals.
+        if (palette.Style.Detail > 0) rules = rules.Where(r => r.Name is not ("road crack" or "frost crack")).ToList();
         if (rules.Count == 0) return new Result(tw, th, rgba, 0);
 
         bool[] nearStart = new bool[w * h];
@@ -113,20 +150,16 @@ public static class DecorBake
             switch (rule.Shape)
             {
                 case DecalShape.Blob:
-                    for (int dy = -r - 1; dy <= r + 1; dy++)
-                        for (int dx = -r - 1; dx <= r + 1; dx++)
-                        {
-                            int n = (int)(DecorHash.Mix(seed, px + dx >> 1, py + dy >> 1, 7) % 5u) - 2;
-                            if (dx * dx + dy * dy <= r * r + r * n) Put(px + dx, py + dy, col, 255);
-                        }
-                    break;
                 case DecalShape.Soft:
-                    for (int dy = -r; dy <= r; dy++)
-                        for (int dx = -r; dx <= r; dx++)
-                        {
-                            int d2 = dx * dx + dy * dy, r2 = r * r;
-                            if (d2 < r2) Put(px + dx, py + dy, col, 255 * (r2 - d2) / r2);
-                        }
+                    {
+                        int rr = r * 13 / 10 + 2;   // the warped outline and the lobes reach a little past the radius
+                        for (int dy = -rr; dy <= rr; dy++)
+                            for (int dx = -rr; dx <= rr; dx++)
+                            {
+                                int a = RoundCoverage(rule.Shape, dx, dy, r, seed, cx, cy);
+                                if (a > 0) Put(px + dx, py + dy, col, a);
+                            }
+                    }
                     break;
                 case DecalShape.Ring:
                     {

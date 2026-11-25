@@ -4,7 +4,7 @@ The read is a STEPPED, EARTH-BANKED CONCRETE TERRACE rising to the north: three 
 recess, oxide door band) and a row of small lamp slits above them that are never fully out, a magenta house band across the front of
 every tier's roof slab, earth banked against both flanks.  On the top tier a loudspeaker pair, two roof vents and a short ash stack.
 Bone / oxide hazard bar along the south edge of the pad, a bone stencil board at the foot of the lowest tier.
-Idle loop: lamp slits flicker in turn, the stack breathes ash.  Damage is structural only (D-069): the top slab's east end has
+Idle loop (8 frames): lamp slits flicker in turn.  No stack smoke is baked (the separate smoke pass adds it).  Damage is structural only (D-069): the top slab's east end has
 fallen, one door is buckled, the stack is snapped; fire / smoke are FX anchors.
 Contract: see auth_refinery.py.  Units: 3.4 per cell, x east, y NORTH, z up, footprint x, y in [-3.4, 3.4].
 """
@@ -25,7 +25,7 @@ DOCK = (1, 2)
 CAP_MATERIAL = D.CAP_MATERIAL
 HOUSE2_MID = True
 PALETTE = D.PALETTE
-STATES = [("idle", 4, 5), ("damaged", 4, 5), ("build", 8, 5)]
+STATES = [("idle", 8, 2), ("damaged", 8, 2), ("build", 8, 5)]     # idle/damaged: 8-frame loops at tpf 2 (S43 fan)
 MATERIALS = D.MATERIALS
 SOOT_SKIN = D.SOOT_SKIN
 PRIMER_SKIN = D.PRIMER_SKIN
@@ -73,7 +73,10 @@ def finished(S, i, dmg, mode):
                 S.box("doorbuck", (0.5, 0.1, 0.55), (x + 0.1, (ya - 0.2) * S.YS, 0.65), "door", 0.0, rot=(0, 0, 24), stretch=False)
             else:
                 S.bb(f"door{t}{k}", x - 0.42, x + 0.42, ya - 0.1, ya - 0.06, 0.38, 0.34 + dh - 0.04, "door", 0.0)
-            D.furnace_slits(S, x - 0.35, ya - 0.1, 0.34 + dh + 0.2, 0.34 + dh + 0.4, 3, i + t + k, lit, step=0.28, w=0.18)
+            if dmg and t == 0 and k == 0:      # damaged: one ember over the lowest door flickers (the slits are dark)
+                S.bb("dslit", x - 0.35, x - 0.17, ya - 0.1, ya, 0.34 + dh + 0.2, 0.34 + dh + 0.4, "redglow" if i % 4 < 2 else "oxide2", 0.0, nocast=True)
+            else:
+                D.furnace_slits(S, x - 0.35, ya - 0.1, 0.34 + dh + 0.2, 0.34 + dh + 0.4, 3, i + t + k, lit, step=0.28, w=0.18, period=4)
     # stencil board at the foot of the lowest tier
     ya0 = TIERS[0][0]
     S.bb("sboard", -0.55, 0.55, ya0 - 0.1, ya0 - 0.04, 0.3, 0.95, "bone", 0.0)
@@ -81,7 +84,7 @@ def finished(S, i, dmg, mode):
         S.bb(f"sten{k}", -0.4, 0.4, ya0 - 0.12, ya0 - 0.1, 0.4 + 0.18 * k, 0.5 + 0.18 * k, "dark", 0.0, nocast=True)
     D.loudspeaker(S, 1.8, 1.4, TOPZ, dmg, height=1.5)
     D.roof_vents(S, TOPZ, ((-0.6, 2.3, 0.5), (0.4, 1.0, 0.45)))
-    D.chimney(S, STK[0], STK[1], TOPZ - 0.1, STK_TOP - (0.5 if dmg else 0.0), dmg, lit, i, rise=1.0, lean_len=1.0)
+    D.chimney(S, STK[0], STK[1], TOPZ - 0.1, STK_TOP - (0.5 if dmg else 0.0), dmg, False, i, rise=1.0, lean_len=1.0)
     D.ash_drift(S, ((2.6, -2.2, 0.8), (-2.9, -2.0, 0.6)))
     if dmg:
         S.box("slabfall", (1.6, 0.9, 0.3), (2.2, 0.0, 0.3), "roof_s", 0.02, rot=(0, 0, 18), stretch=False)

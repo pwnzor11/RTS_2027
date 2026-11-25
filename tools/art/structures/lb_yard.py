@@ -24,7 +24,7 @@ DOCK = (0, 2)
 CAP_MATERIAL = "dust"
 PALETTE = K.PALETTE
 MATERIALS = K.MATERIALS
-STATES = [("idle", 4, 5), ("damaged", 4, 5), ("build", 8, 5)]
+STATES = [("idle", 8, 2), ("damaged", 8, 2), ("build", 8, 5)]  # S43: 8-frame loops at tpf 2 (owner choice)
 FX = [
     K.fx(FOOTPRINT, ORIGIN, "damaged", "fire_large", 2.2, 0.6, 1.8, 0),      # shed roof
     K.fx(FOOTPRINT, ORIGIN, "damaged", "fire_small", -1.8, 1.4, 3.4, 4),     # silo breach
@@ -120,10 +120,10 @@ def g_extras(S, dmg, i):
         K.beam(S, "boom", (dx, dy, top), (dx - 1.1, dy + 0.6, top - 0.9), 0.2, "rust")
     else:
         K.beam(S, "boom", (dx, dy, top), (dx - 1.9, dy, top + 0.4), 0.2, "rust")
-        sw = 0.18 * math.sin(i * math.pi / 2)
+        sw = 0.18 * math.sin(i * math.pi / 4)
         K.beam(S, "cable", (dx - 1.9, dy, top + 0.35), (dx - 1.9 + sw, dy, 2.0), 0.04, "dark", nocast=True)
         S.bb("hook", dx - 2.0 + sw, dx - 1.8 + sw, dy - 0.1, dy + 0.1, 1.8, 2.0, "hazard", 0.0)
-    K.flag(S, "flag", -3.0, -2.4, 4.4 if not dmg else 3.2, i, dmg=dmg)
+    K.flag(S, "flag", -3.0, -2.4, 4.4 if not dmg else 3.2, i / 2.0, dmg=dmg)
     S.sphere("lamp", 0.1, (-3.0, -2.2, 1.0), "lamp" if (i % 2 == 0 and not dmg) else "lamp_off")
 
 

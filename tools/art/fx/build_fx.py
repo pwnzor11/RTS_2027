@@ -318,7 +318,7 @@ EFFECTS = {
 
 # Sheets replaced by art imported with import_scifi_fx.py (S15). `--classic` writes ALL the procedural sheets to data/sprites_classic/fx
 # (the RTS_FX=classic comparison set) and leaves data/sprites/fx alone.
-IMPORTED = {"explosion_small", "explosion_large", "fire_small", "fire_large"}
+IMPORTED = {"explosion_small", "explosion_large", "fire_small", "fire_large", "smoke_plume"}   # smoke_plume: build_smoke_vol.py (S43 pilot)
 CLASSIC = "--classic" in sys.argv
 if CLASSIC:
     OUT = os.path.join(ROOT, "data", "sprites_classic", "fx")

@@ -23,7 +23,7 @@ DOCK = (1, 2)
 CAP_MATERIAL = "pad2"
 PALETTE = K.PALETTE
 MATERIALS = K.MATERIALS
-STATES = [("idle", 4, 5), ("damaged", 4, 5), ("build", 8, 5)]
+STATES = [("idle", 8, 2), ("damaged", 8, 2), ("build", 8, 5)]     # session 43: 8-frame loops at tpf 2 (owner choice)
 FX = [
     K.fx(FOOTPRINT, ORIGIN, "damaged", "fire_large", -1.6, 1.0, 1.9, 0),
     K.fx(FOOTPRINT, ORIGIN, "damaged", "smoke_plume", -1.6, 1.0, 2.2, 0),
@@ -70,8 +70,6 @@ def g_flue(S, dmg, i):
     S.cyl("flueband", 0.45, 0.14, (-3.4, 2.3, 2.5), "copper", verts=18)
     S.cyl("fluehouse", 0.45, 0.3, (-3.4, 2.3, top - 0.4), "house", verts=18)
     S.cyl("fluecap", 0.46, 0.07, (-3.4, 2.3, top), "orange", verts=18)
-    if not dmg:
-        K.puffs(S, "fl", -3.4, 2.3, top + 0.2, i, drift=0.7)
 
 
 def g_conv(S, dmg, i):
@@ -85,7 +83,7 @@ def g_conv(S, dmg, i):
     if not dmg:
         S.box("belt", (0.6, ln, 0.12), (0.6, -1.2 + run / 2 - 0.0, 0.5 + rise / 2), "chrome2", 0.02, rot=(-ang, 0, 0))
         for k in range(4):
-            ph = ((i / 4) + k / 4) % 1
+            ph = ((i / 8) + k / 4) % 1      # the chain moves one run-length per 8-frame loop (4 cleats, so the loop closes)
             S.bb("cleat", 0.35, 0.85, -1.2 + ph * run - 0.05, -1.2 + ph * run + 0.05, 0.55 + ph * rise + 0.08, 0.55 + ph * rise + 0.16, "orange", 0.0, nocast=True)
     else:
         S.box("belt", (0.6, ln * 0.5, 0.12), (0.6, -1.0, 0.8), "chrome2", 0.02, rot=(-ang, 0, 0))
@@ -109,6 +107,8 @@ def site(S):
 def dmg_extra(S, i):
     S.bb("scorch1", -2.4, -0.8, 0.2, 1.4, 1.95, 1.97, "char", 0.0, nocast=True)
     S.bb("scorch2", 2.0, 4.2, -1.0, 0.2, 0.12, 0.14, "char", 0.0, nocast=True)
+    if i in (2, 6):         # broken belt drive sparks
+        S.sphere("bspark", 0.08, (0.9, -0.8, 1.0), "spark")
 
 
 def build(S, state, i, n):

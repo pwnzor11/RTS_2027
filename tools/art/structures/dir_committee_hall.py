@@ -4,7 +4,7 @@ The read is a TALL WINDOWLESS CHAMBER BLOCK behind a MONUMENTAL PORTAL: a stair-
 band, blast doors folded back) flanked by two squat pylons with house banners; behind it the chamber rises with a long clerestory of
 amber lamp slits (the late-night sessions), a heavy flat roof slab with a parapet, a ribbed roof lantern with a lit ring, a research
 dish and a loudspeaker pair on the roof, and one banded stack.  Bone / oxide hazard bar on the pad edge.
-States: idle (4: clerestory slits flicker, ash puffs), damaged (4, STRUCTURAL only: hood end fallen, lantern slumped, stack snapped,
+States: idle (8: clerestory slits flicker, lantern ring blinks; no smoke is baked), damaged (8, STRUCTURAL only: hood end fallen, lantern slumped, stack snapped,
 a pylon cracked), build (8, same recipe as the other Directorate buildings), active (4: clerestory fully lit, lantern ring pulses,
 dish turns; played while research runs).  Fire / smoke are FX anchors.
 Contract: see auth_refinery.py.  Units: 3.4 per cell, x east, y NORTH, z up, footprint x in [-3.4, 3.4], y in [-5.1, 5.1].
@@ -27,7 +27,7 @@ DOCK = (1, 3)
 CAP_MATERIAL = D.CAP_MATERIAL
 HOUSE2_MID = True
 PALETTE = D.PALETTE
-STATES = [("idle", 4, 5), ("damaged", 4, 5), ("build", 8, 5), ("active", 4, 3)]
+STATES = [("idle", 8, 2), ("damaged", 8, 2), ("build", 8, 5), ("active", 4, 3)]     # idle/damaged: 8-frame loops at tpf 2 (S43 fan)
 MATERIALS = D.MATERIALS
 SOOT_SKIN = D.SOOT_SKIN
 PRIMER_SKIN = D.PRIMER_SKIN
@@ -113,7 +113,7 @@ def finished(S, i, dmg, mode):
         xa = 1.25 if sgn > 0 else -2.8
         S.bb(f"clerb{sgn}", xa, xa + 1.6, y0 - 0.06, y0, 1.7, 2.5, "oxide", 0.0)
         for k in range(5):
-            on = active or (lit and (k + i + (0 if sgn > 0 else 2)) % 4 != 0)
+            on = active or (lit and (k + i + (0 if sgn > 0 else 2)) % 4 != 0) or (dmg and sgn > 0 and k == 0 and i % 4 < 2)
             S.bb(f"glowc{sgn}{k}", xa + 0.1 + 0.3 * k, xa + 0.3 + 0.3 * k, y0 - 0.1, y0 - 0.06, 1.85, 2.35,
                  ("lamp" if active and (k + i) % 2 == 0 else "redglow") if on else "oxide2", 0.0, nocast=True)
     # wide cantilevered hood with the magenta band, two pylons with banners
@@ -132,7 +132,7 @@ def finished(S, i, dmg, mode):
     dish(S, i, dmg, "active" if active else "idle")
     D.loudspeaker(S, 1.9, 0.6, ZR, dmg, height=1.7)
     D.roof_vents(S, ZR, ((-2.2, 0.8, 0.5), (-0.6, 4.2, 0.5)))
-    D.chimney(S, STK[0], STK[1], ZR, STK_TOP - (0.6 if dmg else 0.0), dmg, lit, i, rise=1.0, lean_len=1.1)
+    D.chimney(S, STK[0], STK[1], ZR, STK_TOP - (0.6 if dmg else 0.0), dmg, False, i, rise=1.0, lean_len=1.1)
     D.ash_drift(S, ((2.6, -4.3, 0.8), (-2.9, -3.9, 0.6)))
     if dmg:
         L.R.scorch(S, "scC", -1.8, y0 - 0.08, 1.5, 1.2, 0.8)

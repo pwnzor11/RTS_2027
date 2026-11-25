@@ -22,7 +22,7 @@ DOCK = (1, 2)
 CAP_MATERIAL = "pad2"
 PALETTE = K.PALETTE
 MATERIALS = K.MATERIALS
-STATES = [("idle", 4, 5), ("damaged", 4, 5), ("build", 8, 5)]
+STATES = [("idle", 8, 2), ("damaged", 8, 2), ("build", 8, 5)]     # session 43: 8-frame loops at tpf 2 (owner choice)
 FX = [
     K.fx(FOOTPRINT, ORIGIN, "damaged", "fire_large", -3.4, 1.2, 1.8, 0),
     K.fx(FOOTPRINT, ORIGIN, "damaged", "smoke_plume", -3.4, 1.2, 2.1, 0),
@@ -76,6 +76,8 @@ def site(S):
 def dmg_extra(S, i):
     F.breach(S, 0.4, 2.0, -2.0, -0.9)
     S.bb("scorch", -4.3, -2.8, 0.6, 1.8, D + 1.41, D + 1.43, "char", 0.0, nocast=True)
+    if i in (4,):           # one spark off the broken davit cable, once per loop
+        S.sphere("qspark", 0.08, (-1.6, -1.0, 2.6), "spark")
 
 
 def build(S, state, i, n):

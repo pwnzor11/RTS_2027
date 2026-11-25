@@ -99,6 +99,9 @@ def drum(S, name, x, y, z, m="rust", band="ash2", h=0.9, r=0.42):
     S.cyl(name + "b", r + 0.02, 0.1, (x, y, z + h * 0.55), band, verts=12)
 
 
+BAKED_SMOKE = False      # S43 owner call: no round smoke puffs baked into any building; a separate smoke pass adds smoke later
+
+
 def stovepipe(S, name, x, y, z0, z1, anim=0, smoke=True, m="ash", r=0.2, broken=False):
     S.cyl(name, r, z1 - z0, (x, y, (z0 + z1) / 2), m, verts=12)
     S.cyl(name + "r", r + 0.04, 0.14, (x, y, z0 + (z1 - z0) * 0.4), "rust", verts=12)
@@ -106,7 +109,7 @@ def stovepipe(S, name, x, y, z0, z1, anim=0, smoke=True, m="ash", r=0.2, broken=
         S.cyl(name + "x", r, 0.1, (x, y, z1 + 0.03), "dark", verts=10)
         return
     S.cyl(name + "c", r + 0.12, 0.12, (x, y, z1 + 0.06), "rust2", verts=12)
-    if smoke:
+    if smoke and BAKED_SMOKE:
         for q in range(3):
             ph = ((anim / 4) + q / 3) % 1
             rr = 0.14 + 0.36 * math.sin(math.pi * ph) ** 0.7
@@ -114,7 +117,7 @@ def stovepipe(S, name, x, y, z0, z1, anim=0, smoke=True, m="ash", r=0.2, broken=
 
 
 def flag(S, name, mx, my, ztop, anim, w=1.4, h=0.95, dmg=False, mast=True):
-    """House-colour canvas flag on a pole; flaps with anim (0..3)."""
+    """House-colour canvas flag on a pole; flaps with anim (a quarter turn per unit: pass i / 2 for an 8-frame loop)."""
     ph = anim * math.pi / 2
     if mast:
         post(S, name + "mast", mx, my, 0.0, ztop, 0.1, "wood")
@@ -156,7 +159,7 @@ def awning(S, name, x0, x1, y_wall, y_far, z_wall, rise, anim=0, dmg=False, mats
             if dmg and k % 3 == 1:
                 continue
             x = x0 + k * sw / 2
-            sway = 0.04 * math.sin((anim + k) * 1.7)
+            sway = 0.04 * math.sin(anim * math.pi / 2 + k * 1.7)
             S.bb(f"{name}fr{k}", x, x + sw * 0.4, y_far - 0.06 + sway, y_far + sway, zf - (0.28 if not dmg else 0.12), zf,
                  "house" if k == 2 else ("canvas2" if k % 2 else "rust"), 0.0, nocast=True)
     for px in (x0 + 0.05, x1 - 0.05):

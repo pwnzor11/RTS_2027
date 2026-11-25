@@ -12,6 +12,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import common as C
 import auth_rifleman as AR
 import dir_conscript as DC
+import boost
 
 SCALE = 1.25                  # D-185: figure 1.25 x, frame 48 x 48
 ID = "dir_volunteer"
@@ -61,6 +62,9 @@ def build(S, p):
     from mathutils import Matrix
     import rig as R
     import dir_parts as P
+    B = boost.params()                                   # S43 pilot boost
+    H, LB, SB = B["house"], B["limb"], B["stance"]
+    pp = dict(p, feet=tuple((f[0] * SB, f[1], f[2]) for f in p["feet"]))   # wider stance for the legs helper
     U = R.tr(0, p["dy"], 0.62 + p["bob"]) @ R.rz(p["twist"]) @ R.rx(-p["lean"]) @ R.rz(p["roll"])
     pel = (0, p["dy"], 0.62 + p["bob"])
 
@@ -72,10 +76,10 @@ def build(S, p):
     S.cyl(0.21, 0.16, (0, -0.02, 0.06), "coat3", "Z", U, verts=8, r2=0.19)             # ragged skirt
     S.cyl(0.19, 0.04, (0, 0, 0.05), "dark", "Z", U, verts=8)
     S.box((0.34, 0.20, 0.06), (0, -0.01, 0.39), "coat2", U, bevel=0.01)                 # ragged yoke
-    for sx in (-1, 1):
-        S.box((0.12, 0.17, 0.04), (sx * 0.19, 0.0, 0.40), "house", U, rot=(0, sx * -8, 0), bevel=0)
-    S.limb(up((-0.10, 0.17, 0.35)), up((0.14, 0.20, -0.04)), 0.10, "house", d=0.04, bevel=0)      # sash
-    S.limb(up((-0.17, 0.02, 0.35)), up((-0.10, 0.17, 0.35)), 0.09, "house", d=0.04, bevel=0)
+    for sx in (-1, 1):                                                                 # S43: larger house shoulder boards
+        S.box((0.12 * (1 + 0.5 * (H - 1)), 0.17 * (1 + 0.3 * (H - 1)), 0.04 * (1 + 0.6 * (H - 1))), (sx * (0.19 + 0.02 * (H - 1)), 0.0, 0.40), "house", U, rot=(0, sx * -8, 0), bevel=0)
+    S.limb(up((-0.10, 0.17, 0.35)), up((0.14, 0.20, -0.04)), 0.10 * H, "house", d=0.04 * H, bevel=0)      # sash
+    S.limb(up((-0.17, 0.02, 0.35)), up((-0.10, 0.17, 0.35)), 0.09 * H, "house", d=0.04 * H, bevel=0)
     # reactor cells across the chest: three cylinders, brass lamps on top
     for i, x in enumerate((-0.09, 0.0, 0.09)):
         S.cyl(0.05, 0.17, (x, 0.20, 0.18 - 0.02 * (i % 2)), "cell", "Z", U, verts=8)
@@ -83,26 +87,34 @@ def build(S, p):
     S.box((0.28, 0.05, 0.04), (0, 0.19, 0.10), "dark", U, bevel=0)                      # strap
     # back cell-pack with a house panel and a larger lamp
     S.box((0.28, 0.14, 0.30), (0, -0.25, 0.20), "coat3", U, bevel=0.02)
-    S.box((0.22, 0.03, 0.22), (0, -0.325, 0.22), "house", U, bevel=0)
+    S.box((0.22 * (1 + 0.15 * (H - 1)), 0.03, 0.22 * H), (0, -0.325, 0.22), "house", U, bevel=0)
     S.cyl(0.06, 0.30, (0.0, -0.25, 0.46), "cell", "Z", U, verts=8)
     S.cyl(0.05, 0.03, (0.0, -0.25, 0.625), "lamp", "Z", U, verts=6)
     # head: bandaged skull cap, one dark goggle, gaunt pale face
+    # head: bandaged skull cap, one dark goggle, gaunt pale face (S43: scaled about the head centre by B["head"])
+    h = B["head"]
+    HC = (0.0, 0.11, 0.55)
+
+    def hp(loc):
+        return tuple(HC[i] + (loc[i] - HC[i]) * h for i in range(3))
     S.box((0.08, 0.09, 0.07), (0, 0.08, 0.44), "dark", U)
-    S.sphere((0.135, 0.145, 0.13), (0, 0.11, 0.56), "wrap", U)
-    S.box((0.17, 0.13, 0.11), (0, 0.205, 0.50), "skin", U, bevel=0.03)
-    S.box((0.075, 0.04, 0.07), (-0.05, 0.28, 0.53), "dark", U, bevel=0)                  # goggle (left eye)
-    S.box((0.05, 0.035, 0.04), (0.05, 0.28, 0.53), "lamp", U, bevel=0)                    # glowing right eye
-    S.box((0.20, 0.03, 0.05), (0, 0.115, 0.62), "dark", U, bevel=0)                      # head strap
-    # pistol
-    GM = (U if p["gun_space"] == "u" else Matrix.Identity(4)) @ R.tr(*p["gun"][0]) @ R.rz(p["gun"][1]) @ R.rx(p["gun"][2])
+    S.sphere((0.135 * h, 0.145 * h, 0.13 * h), hp((0, 0.11, 0.56)), "wrap", U)
+    S.box((0.17 * h, 0.13 * h, 0.11 * h), hp((0, 0.205, 0.50)), "skin", U, bevel=0.03)
+    S.box((0.075 * h, 0.04 * h, 0.07 * h), hp((-0.05, 0.28, 0.53)), "dark", U, bevel=0)     # goggle (left eye)
+    S.box((0.05 * h, 0.035 * h, 0.04 * h), hp((0.05, 0.28, 0.53)), "lamp", U, bevel=0)     # glowing right eye
+    S.box((0.20 * h, 0.03 * h, 0.05 * h), hp((0, 0.115, 0.62)), "dark", U, bevel=0)       # head strap
+    # pistol (S43: longer and thicker by B["gun"] / B["gunw"]; GM carries the scale, grips stay unscaled)
+    GM0 = (U if p["gun_space"] == "u" else Matrix.Identity(4)) @ R.tr(*p["gun"][0]) @ R.rz(p["gun"][1]) @ R.rx(p["gun"][2])
+    GM = GM0 @ Matrix.Diagonal((B["gunw"], B["gun"], B["gunw"], 1.0))
     S.box((0.05, 0.18, 0.06), (0, 0.04, 0.02), "steel", GM)
     S.box((0.045, 0.05, 0.11), (0, -0.03, -0.05), "dark", GM, rot=(10, 0, 0))
     S.cyl(0.02, 0.10, (0, 0.19, 0.02), "steel", "Y", GM, verts=6)
     if p["flash"]:
-        S.cyl(0.07, 0.22, (0, 0.34, 0.02), "flash", "Y", GM, verts=8, r2=0.0)
-        S.sphere((0.09, 0.09, 0.09), (0, 0.26, 0.02), "flash", GM, seg=8)
-    P.arms(S, p, U, up, GM, SHOULDER, (GRIP_R, GRIP_L), ("skin", "skin"), thick=(0.07, 0.06), band=0.105,
+        fl, flw = B["flash"] / B["gun"], B["flash"] / B["gunw"]
+        S.cyl(0.07 * flw, 0.22 * fl, (0, 0.34, 0.02), "flash", "Y", GM, verts=8, r2=0.0)
+        S.sphere((0.09 * flw, 0.09 * fl, 0.09 * flw), (0, 0.26, 0.02), "flash", GM, seg=8)
+    P.arms(S, p, U, up, GM, SHOULDER, (GRIP_R, GRIP_L), ("skin", "skin"), thick=(0.07 * LB, 0.06 * LB), band=0.105 * LB * (1 + 0.2 * (H - 1)),
            cuff_mat="wrap", cuff_len=0.4, hand_mat="skin", hand_size=0.07)
-    P.legs(S, p, pel, spread=0.09, thick=(0.085, 0.07))
+    P.legs(S, pp, pel, spread=0.09 * SB, thick=(0.085 * LB, 0.07 * LB))
     if p["spread"]:
         S.cyl(0.32, 0.03, (0.0, p["dy"] + 0.12, 0.03), "coat3", "Z", None, verts=8)

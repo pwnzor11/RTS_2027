@@ -6,7 +6,8 @@ above the lip.  A control bunker block with a magenta roof panel and a loudspeak
 the north-east, a short hooded service door on the west, bone / oxide hazard bar along the south edge and rays of oxide / bone
 paving radiating from the collar.  The Directorate treats it as holy: a magenta banner hangs on a mast beside the cradle.
 Charge state: the engine only knows idle / damaged / build, so there is no separate "ready" state.  Idle is an 8-frame SLOW CHARGE
-GLOW: the pit and warhead tip pulse dim -> bright -> dim, the collar's ray segments light up one after another, ash puffs.
+GLOW: the pit and warhead tip pulse dim -> bright -> dim, the collar's ray segments light up one after another.  No stack smoke is
+baked (the separate smoke pass adds it).  Damaged: the pit ember flickers.
 Damage is structural only (D-069): hatch half fallen in, cradle arm snapped, nose tilted, stack snapped; fire / smoke are FX anchors.
 Contract: see auth_refinery.py.  Units: 3.4 per cell, x east, y NORTH, z up, footprint centred on (0, 0): x, y in [-5.1, 5.1].
 """
@@ -28,7 +29,7 @@ DOCK = (1, 3)
 CAP_MATERIAL = D.CAP_MATERIAL
 HOUSE2_MID = True
 PALETTE = D.PALETTE
-STATES = [("idle", 8, 6), ("damaged", 4, 5), ("build", 8, 5)]
+STATES = [("idle", 8, 2), ("damaged", 8, 2), ("build", 8, 5)]     # idle/damaged: 8-frame loops at tpf 2 (S43 fan)
 MATERIALS = D.MATERIALS
 SOOT_SKIN = D.SOOT_SKIN
 PRIMER_SKIN = D.PRIMER_SKIN
@@ -68,7 +69,7 @@ def silo(S, i, dmg, mode):
         lit = (mode == "idle") and (not dmg) and ((k - lit_n) % 20 < 3)
         L.beam(S, f"cr{k}", (x0, y0, COL_H + 0.18), (x1, y1, COL_H + 0.18), 0.38, "redglow" if lit else ("oxide" if k % 2 == 0 else "bone"), nocast=lit)
     S.cyl("pit", R_IN + 0.1, 0.1, (CX, CY, 0.3), "dark", verts=24)
-    g = GLOW_CYCLE[i % 8] if (mode != "build" and not dmg) else "oxide2"
+    g = GLOW_CYCLE[i % 8] if (mode != "build" and not dmg) else (("redglow" if i % 4 < 2 else "oxide2") if dmg else "oxide2")
     S.cyl("glowpit", R_IN - 0.35, 0.06, (CX, CY, 0.36), g, verts=24, nocast=True)
     S.cyl("glowpit2", R_IN - 0.8, 0.07, (CX, CY, 0.4), "redglow" if g == "redglow" else g, verts=20, nocast=True)
     # hatch halves slid apart (north / south), each a thick half-disc made of slabs
@@ -150,7 +151,7 @@ def finished(S, i, dmg, mode):
     S.bb("furnroof", sx - 1.0, sx + 1.0, sy - 0.9, sy + 0.9, 1.3, 1.45, "roof", 0.04)
     S.bb("furnband", sx - 0.9, sx + 0.9, sy - 0.84, sy - 0.8, 0.9, 1.1, "oxide", 0.0)
     D.furnace_slits(S, sx - 0.6, sy - 0.9, 0.35, 0.75, 3, i + 1, (idle or mode == "build") and not dmg, step=0.45, w=0.25)
-    D.chimney(S, sx, sy, 1.45, 3.3 if dmg else 4.4, dmg, idle or mode == "build", i % 4, rise=1.5, lean_len=1.3)
+    D.chimney(S, sx, sy, 1.45, 3.3 if dmg else 4.4, dmg, False, i, rise=1.5, lean_len=1.3)
     # banner mast beside the cradle
     if not dmg:
         S.cyl("bmast", 0.07, 4.2, (2.6, -0.9, 2.2), "steel", verts=8)

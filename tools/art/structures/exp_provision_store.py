@@ -22,7 +22,7 @@ DOCK = (0, 0)
 CAP_MATERIAL = "pad2"
 PALETTE = K.PALETTE
 MATERIALS = K.MATERIALS
-STATES = [("idle", 4, 5), ("damaged", 4, 5), ("build", 8, 5)]
+STATES = [("idle", 8, 2), ("damaged", 8, 2), ("build", 8, 5)]     # session 43: 8-frame loops at tpf 2 (owner choice)
 FX = [
     K.fx(FOOTPRINT, ORIGIN, "damaged", "fire_large", 0.0, 1.0, 1.7, 0),
     K.fx(FOOTPRINT, ORIGIN, "damaged", "smoke_plume", 0.0, 1.0, 2.0, 0),
@@ -72,7 +72,7 @@ def g_hoist(S, dmg, i):
         K.beam(S, "hb", (x, 2.4, 3.0), (x - 1.0, 2.4, 2.4), 0.12, "copper")
     else:
         K.beam(S, "hb", (x, 2.4, 3.0), (x - 1.4, 2.4, 3.0), 0.12, "copper")
-        sw = 0.15 * math.sin(i * math.pi / 2)
+        sw = 0.15 * math.sin(i * math.pi / 4)     # hoist: one full swing cycle per loop
         K.beam(S, "cab", (x - 1.2, 2.4, 2.95), (x - 1.2 + sw, 2.4, 2.1), 0.04, "dark", nocast=True)
         S.bb("hook", x - 1.3 + sw, x - 1.1 + sw, 2.3, 2.5, 1.9, 2.1, "orange", 0.0)
     K.flag(S, "flag", 1.3, -2.2, 3.4 if not dmg else 2.6, i, w=1.0, h=0.6, dmg=dmg)
@@ -87,6 +87,8 @@ def site(S):
 
 def dmg_extra(S, i):
     S.bb("scorch", -0.8, 0.6, 0.6, 1.6, 0.1, 0.12, "char", 0.0, nocast=True)
+    if i in (2, 6):         # shorted lamp in the wrecked shed
+        S.sphere("psp", 0.08, (-0.8, -0.9, 1.5), "spark")
 
 
 def build(S, state, i, n):

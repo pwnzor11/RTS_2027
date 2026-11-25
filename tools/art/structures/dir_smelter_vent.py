@@ -4,7 +4,8 @@ The Directorate lives underground, so its refinery is mostly a hole: a brutalist
 below ground to a pair of blast doors, a furnace block feeding a tall smelter chimney that vents ash, short roof vents, and a
 loudspeaker pair on a pole.  House colour (magenta, remapped in game): the broad banding across the hood front and the roof
 panel.  Fixed Directorate oxide red and bone-white stencil panels are body paint (Directorate palette PAL_DIR).
-Idle loop: ash puffs rise from the chimney, furnace slits flicker.  Damage is structural only (D-069): collapsed hood corner,
+Idle loop (8 frames): furnace slits flicker and the chimney's warning lamp blinks.  No chimney smoke is baked (the separate smoke
+pass adds it).  Damaged: one furnace slit flickers.  Damage is structural only (D-069): collapsed hood corner,
 snapped chimney, toppled loudspeaker pole, buckled blast door; fire / smoke are FX anchors.  Build stages come from the shared
 `stages()` driver of auth_conyard (primer model cut at a rising height inside a steel skeleton).
 Contract: see auth_refinery.py.  Units: 3.4 per cell, x east, y NORTH, z up, footprint centred on (0, 0): x in [-5.1, 5.1],
@@ -31,7 +32,7 @@ DOCK = (1, 2)           # harvesters park in the cell below the middle and drive
 CAP_MATERIAL = "concrete2"
 HOUSE2_MID = True
 PALETTE = _C.PAL_DIR
-STATES = [("idle", 4, 5), ("damaged", 4, 5), ("build", 8, 5)]
+STATES = [("idle", 8, 2), ("damaged", 8, 2), ("build", 8, 5)]     # idle/damaged: 8-frame loops at tpf 2 (S43 fan)
 
 MATERIALS = dict(L.MATERIALS)
 MATERIALS.update({
@@ -178,7 +179,7 @@ def finished(S, i, dmg, mode):
     S.bb("furnroof", 2.25, 4.5, 0.0, 2.8, 1.5, 1.65, "roof", 0.04)
     S.bb("furnband", 2.35, 4.4, 0.04, 0.1, 1.2, 1.4, "oxide", 0.0)
     for k in range(3):
-        lit = (idle or mode == "build") and not dmg and ((k + i) % 3 != 0)
+        lit = ((idle or mode == "build") and not dmg and ((k + i) % 4 != 0)) or (dmg and k == 0 and i % 4 < 2)
         S.bb(f"glow{k}", 2.6 + k * 0.55, 2.9 + k * 0.55, 0.0, 0.1, 0.45, 0.9, "redglow" if lit else "oxide2", 0.0, nocast=True)
     S.bb("chbase", sx_ - 0.7, sx_ + 0.7, sy_ - 0.7, sy_ + 0.7, 1.65, 2.0, "concrete2", 0.03)
     top = 4.0 if dmg else 5.7
@@ -190,11 +191,8 @@ def finished(S, i, dmg, mode):
     if not dmg:
         S.cyl("ccollar", 0.55, 0.2, (sx_, sy_, top + 0.1), "steel", verts=16)
         S.cyl("cmouth", 0.4, 0.08, (sx_, sy_, top + 0.21), "dark", verts=12)
-        if idle or mode == "build":
-            for k in range(3):
-                ph = ((i / 4) + k / 3) % 1
-                r = 0.14 + 0.42 * math.sin(math.pi * ph) ** 0.7
-                S.sphere(f"puff{k}", r, (sx_ + ph * 1.1, sy_, top + 0.45 + ph * 1.9 + r * 0.3), "smoke2" if k != 1 else "smoke", squash=0.85)
+        if idle:
+            S.cyl("cbeacon", 0.09, 0.14, (sx_ + 0.35, sy_ + 0.2, top + 0.27), "redglow" if i % 4 < 2 else "oxide2", verts=8, nocast=True)
     else:
         S.cyl("cstump", 0.45, 0.18, (sx_, sy_, top + 0.05), "concrete2", verts=12)
         S.cyl("cmouthd", 0.32, 0.06, (sx_, sy_, top + 0.15), "dark", verts=10)

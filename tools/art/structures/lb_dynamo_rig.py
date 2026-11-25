@@ -24,7 +24,7 @@ DOCK = (0, 2)
 CAP_MATERIAL = "dust"
 PALETTE = K.PALETTE
 MATERIALS = K.MATERIALS
-STATES = [("idle", 4, 5), ("damaged", 4, 5), ("build", 8, 5)]
+STATES = [("idle", 8, 2), ("damaged", 8, 2), ("build", 8, 5)]  # S43: 8-frame loops at tpf 2 (owner choice)
 MX, MY = 1.7, 0.3        # mast foot
 MAST_H = 4.6
 FX = [
@@ -97,7 +97,7 @@ def g_mast(S, dmg, i):
     hz = top + 0.2
     S.cyl("hubcyl", 0.18, 0.4, (MX, (MY - 0.35) * S.YS, hz), "ochre", axis="Y", verts=12, stretch=False)
     S.sphere("hubn", 0.2, (MX, MY - 0.6, hz), "rust")
-    a0 = i * 30.0
+    a0 = i * 15.0         # three blades (120-degree symmetry): 8 frames x 15 = one seamless turn
     for b in range(3):
         a = math.radians(a0 + b * 120)
         L = 1.55
@@ -114,7 +114,7 @@ def g_mast(S, dmg, i):
 def g_extras(S, dmg, i):
     K.beam(S, "cable", (MX, MY - 0.1, 1.5), (0.4, -0.9, 3.0), 0.05, "dark", nocast=True)
     K.beam(S, "cable2", (0.4, -0.9, 3.0), (-0.5, -1.0, 3.1), 0.05, "dark", nocast=True)
-    K.flag(S, "flag", -2.9, -1.6, 4.8 if not dmg else 3.8, i, w=1.2, h=0.8, dmg=dmg)
+    K.flag(S, "flag", -2.9, -1.6, 4.8 if not dmg else 3.8, i / 2.0, w=1.2, h=0.8, dmg=dmg)
     K.drum(S, "drum0", 2.5, -1.9, 1.28, m="rust", band="hazard")
     K.drum(S, "drum1", 2.4, -0.9, 1.28, m="teal")
     S.bb("pedalshed", 1.9, 3.0, 1.2, 2.3, 1.28, 2.3, "rust2", 0.04)

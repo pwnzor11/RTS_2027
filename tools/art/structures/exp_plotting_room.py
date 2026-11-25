@@ -24,7 +24,7 @@ DOCK = (0, 0)
 CAP_MATERIAL = "pad2"
 PALETTE = K.PALETTE
 MATERIALS = K.MATERIALS
-STATES = [("idle", 4, 5), ("damaged", 4, 5), ("build", 8, 5)]
+STATES = [("idle", 8, 2), ("damaged", 8, 2), ("build", 8, 5)]     # session 43: 8-frame loops at tpf 2 (owner choice)
 FX = [
     K.fx(FOOTPRINT, ORIGIN, "damaged", "fire_large", 0.8, 1.2, 2.8, 0),
     K.fx(FOOTPRINT, ORIGIN, "damaged", "fire_small", -1.6, 0.6, 2.6, 4),
@@ -56,7 +56,6 @@ def g_block(S, dmg, i):
         S.bb("hatch", -0.6, 0.6, 0.2, 1.2, 2.4, 2.5, "chrome2", 0.04)
         for k in range(3):
             S.bb(f"vent{k}", -2.2 + k * 0.5, -1.9 + k * 0.5, 1.4, 2.0, 2.4, 2.55, "chrome2", 0.02)
-        K.puffs(S, "vap", -1.0, 1.7, 2.7, i, n=2, drift=0.6)
 
 
 def g_radar(S, dmg, i):
@@ -107,6 +106,8 @@ def site(S):
 def dmg_extra(S, i):
     P.scorch(S, "sc1", -0.2, 1.4, -1.8, -1.2, 0.12)
     S.bb("sc2", 1.6, 2.0, -1.62, -1.6, 0.8, 1.4, "char", 0.0, nocast=True)
+    if i in (3, 7):         # radar feed short sparks
+        S.sphere("rsp", 0.08, (2.2, 1.9, 2.95), "spark")
 
 
 def build(S, state, i, n):

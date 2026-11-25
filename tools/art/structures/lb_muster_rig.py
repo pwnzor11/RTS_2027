@@ -24,7 +24,7 @@ DOCK = (0, 2)
 CAP_MATERIAL = "dust"
 PALETTE = K.PALETTE
 MATERIALS = K.MATERIALS
-STATES = [("idle", 4, 5), ("damaged", 4, 5), ("build", 8, 5)]
+STATES = [("idle", 8, 2), ("damaged", 8, 2), ("build", 8, 5)]  # S43: 8-frame loops at tpf 2 (owner choice)
 FX = [
     K.fx(FOOTPRINT, ORIGIN, "damaged", "fire_large", -0.6, 0.2, 2.2, 0),     # holed bus side
     K.fx(FOOTPRINT, ORIGIN, "damaged", "fire_small", 0.6, -2.4, 0.5, 4),     # overturned pot
@@ -75,11 +75,11 @@ def g_roofgear(S, dmg, i):
 
 
 def g_tent(S, dmg, i):
-    K.awning(S, "awn", -0.1, 2.7, -1.45, -3.1, 2.9, 0.8, i, dmg, mats=("canvas2", "teal"), strip=1.4)
+    K.awning(S, "awn", -0.1, 2.7, -1.45, -3.1, 2.9, 0.8, i / 2.0, dmg, mats=("canvas2", "teal"), strip=1.4)
     # laundry line under the awning
     for k in range(4):
         x = 0.1 + k * 0.6
-        S.bb(f"cloth{k}", x, x + 0.4, -2.6 + 0.04 * math.sin(i + k), -2.56 + 0.04 * math.sin(i + k), 1.9 if not dmg else 1.2, 2.4 if not dmg else 1.7,
+        S.bb(f"cloth{k}", x, x + 0.4, -2.6 + 0.04 * math.sin((i + k) * math.pi / 4), -2.56 + 0.04 * math.sin((i + k) * math.pi / 4), 1.9 if not dmg else 1.2, 2.4 if not dmg else 1.7,
              ("canvas", "ochre", "bone", "rust")[k] if not dmg else "canvas_s", 0.0, nocast=True)
 
 
@@ -91,15 +91,13 @@ def g_extras(S, dmg, i):
         S.cyl("potlegs", 0.28, 0.4, (1.3, -2.4, 0.3), "dark", verts=6)
         S.cyl("pot", 0.38, 0.5, (1.3, -2.4, 0.75), "ash2", verts=12)
         S.cyl("flamel", 0.3, 0.05, (1.3, -2.4, 0.12), "flame" if i % 2 == 0 else "flame2", verts=8, nocast=True)
-        for q in range(2):
-            ph = ((i / 4) + q / 2) % 1
-            S.sphere(f"steam{q}", 0.1 + 0.18 * ph, (1.3 + ph * 0.3, -2.4, 1.1 + ph * 0.9), "smoke", squash=0.9)
+        # S43: the pot's steam is no longer baked (owner call: no round smoke); the flame flicker stays
     S.bb("bench1", -1.8, -0.6, -2.8, -2.55, 0.1, 0.45, "wood", 0.02)
     S.bb("bench2", 1.5, 2.6, -2.8, -2.55, 0.1, 0.45, "wood", 0.02)
     K.post(S, "boardp", 2.5, -3.0, 0.1, 1.0, 0.08, "wood")
     S.bb("board", 2.0, 3.0, -3.08, -3.0, 0.7, 1.4, "dark", 0.0)
     S.bb("boardc", 2.15, 2.85, -3.1, -3.08, 0.85, 1.25, "bone", 0.0, nocast=True)
-    K.flag(S, "flag", 2.0, 1.6, 5.2 if not dmg else 4.0, i, w=1.2, h=0.8, dmg=dmg)
+    K.flag(S, "flag", 2.0, 1.6, 5.2 if not dmg else 4.0, i / 2.0, w=1.2, h=0.8, dmg=dmg)
 
 
 GROUPS = [g_chassis, g_bus, g_roofgear, g_tent, g_extras]

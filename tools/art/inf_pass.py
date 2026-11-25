@@ -15,6 +15,10 @@ import argparse, os, subprocess, sys, time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 STYLE = {"A": "keyline", "B": "rim", "C": "keyline,rim"}
+NO_FLASH = {"auth_engineer", "dir_assessor"}      # S43 fan: unarmed units (tool bag, ledger) get no muzzle-flash star
+# --preview (S43 fan): one south-ish facing (16 facings, south = 8), every walk step, both fire steps, every die step,
+# no deaths, 6 samples. Sheet indices: idle 8; walk 80..87; fire 160..161; die 176..181 (the module's STATES layout, 16 facings).
+PREVIEW_FRAMES = [8] + list(range(80, 88)) + [160, 161] + list(range(176, 182))
 
 
 def main():
@@ -22,15 +26,22 @@ def main():
     ap.add_argument("id")
     ap.add_argument("--out", required=True)
     ap.add_argument("--variant", default="C", choices=sorted(STYLE))
-    ap.add_argument("--samples", type=int, default=24)
+    ap.add_argument("--samples", type=int, default=None, help="default 24, or 6 with --preview")
     ap.add_argument("--work", default=None)
     ap.add_argument("--post-only", action="store_true")
+    ap.add_argument("--preview", action="store_true", help="cheap check render: one facing, low samples, no deaths")
     a = ap.parse_args()
     out = os.path.abspath(a.out)
     os.makedirs(out, exist_ok=True)
     env = dict(os.environ, ART_WORK=os.path.abspath(a.work or os.path.join(out, "_work")))
-    cmd = [sys.executable, os.path.join(HERE, "build_infantry.py"), a.id, "--deaths", "--boost", "pilot", "--walk-frames", "8",
-           "--samples", str(a.samples), "--style", STYLE[a.variant] + ",contrast=1.15,flash", "--house-lift", "0.15", "--out", out]
+    samples = a.samples if a.samples is not None else (6 if a.preview else 24)
+    flash = "" if a.id in NO_FLASH else ",flash"
+    cmd = [sys.executable, os.path.join(HERE, "build_infantry.py"), a.id, "--boost", "pilot", "--walk-frames", "8",
+           "--samples", str(samples), "--style", STYLE[a.variant] + ",contrast=1.15" + flash, "--house-lift", "0.15", "--out", out]
+    if not a.preview:
+        cmd.append("--deaths")
+    else:
+        cmd += ["--frames"] + [str(i) for i in PREVIEW_FRAMES]
     if a.post_only:
         cmd.append("--post-only")
     t0 = time.time()

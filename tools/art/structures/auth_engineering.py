@@ -25,7 +25,7 @@ ORIGIN = (0, 24)
 DOCK = (0, 0)
 CAP_MATERIAL = "concrete2"
 HOUSE2_MID = True
-STATES = [("idle", 4, 5), ("damaged", 4, 5), ("build", 8, 5)]
+STATES = [("idle", 8, 2), ("damaged", 8, 2), ("build", 8, 5)]     # 8-frame loops at tpf 2 (0.4 s a frame)
 MATERIALS = dict(L.MATERIALS)
 MATERIALS["steel2"] = ("#979EA3", dict(rough=0.4, metal=0.5))
 SOOT_SKIN = L.SOOT_SKIN
@@ -34,7 +34,7 @@ PRIMER_SKIN["steel2"] = "primer"
 
 HALL = (-3.0, 3.0, 0.3, 2.9)
 H = 1.7
-RAM = [0.0, 0.25, 0.5, 0.25]
+RAM = [0.0, 0.25, 0.5, 0.25]     # (kept for reference; the 8-frame ram uses a sine below)
 
 
 def finished(S, i, dmg, mode):
@@ -68,6 +68,13 @@ def finished(S, i, dmg, mode):
         S.bb(f"wf{k}", wx - 0.28, wx + 0.28, yw - 0.06, yw + 0.04, 0.55, 1.0, "dark", 0.0)
         pulse = idle and not dmg and (k + i) % 2 == 0
         S.bb(f"win{k}", wx - 0.22, wx + 0.22, yw - 0.1, yw - 0.06, 0.6, 0.95, "amber" if (pulse or (idle and not dmg and k % 2)) else "amber_dim", 0.0, nocast=True)
+    if not dmg:      # detail: rivet row on the band, a downpipe, a roof ventilator hood with a louvre
+        for k in range(12):
+            S.cyl(f"erv{k}", 0.03, 0.04, (x0 + 0.15 + k * 0.5, yw - 0.12, 1.25), "steel", verts=6, nocast=True)
+        S.bb("edown", x1 - 0.12, x1 - 0.04, yw - 0.02, yw + 0.06, 0.2, H + 0.1, "steel2", 0.0, nocast=True)
+        S.bb("ehood", -0.4, 0.2, y1 - 0.8, y1 - 0.2, H + 0.18, H + 0.45, "steel2", 0.02)
+        for k in range(3):
+            S.bb(f"ehl{k}", -0.35, 0.15, y1 - 0.82, y1 - 0.78, H + 0.22 + 0.07 * k, H + 0.27 + 0.07 * k, "dark", 0.0, nocast=True)
     S.bb("doorf", -0.7, 0.2, yw - 0.1, yw + 0.04, 0.14, 1.12, "dark", 0.0)
     S.bb("door", -0.6, 0.1, yw - 0.14, yw - 0.1, 0.2, 1.06, "steel", 0.02)
     if not dmg:
@@ -95,7 +102,7 @@ def finished(S, i, dmg, mode):
         for sx in (bx0 + 0.1, bx1 - 0.3):
             S.bb("col", sx, sx + 0.2, cy - 0.15, cy + 0.15, 0.5, 2.3, "steel", 0.0)
         S.bb("xbar", bx0 + 0.1, bx1 - 0.1, cy - 0.15, cy + 0.15, 2.3, 2.5, "steel2", 0.02)
-        ram = RAM[i % 4] if idle else 0.0
+        ram = 0.25 + 0.25 * math.sin(2 * math.pi * i / 8) if idle else 0.0     # test ram strokes up and down once per loop
         S.cyl("ram", 0.12, 1.0 - ram, (cx, cy, 2.3 - (1.0 - ram) / 2), "steel", verts=10)
         S.cyl("ramc", 0.2, 0.4, (cx, cy, 2.3 - 0.2 + 0.0), "hull2", verts=12) if False else None
         S.bb("ramh", cx - 0.2, cx + 0.2, cy - 0.2, cy + 0.2, 1.3 - ram + 0.0, 1.45 - ram, "steel2", 0.02)
@@ -106,7 +113,7 @@ def finished(S, i, dmg, mode):
     mx, my = 2.8, -2.95
     S.bb("pole", mx - 0.05, mx + 0.05, my - 0.05, my + 0.05, 0.14, 2.6 if not dmg else 1.4, "steel", 0.0)
     if not dmg:
-        a = math.radians(i * 40 if idle else 0)
+        a = math.radians(i * 45 if idle else 0)      # vane turns one full circle over the 8-frame loop
         S.bb("vane", mx - 0.4 * abs(math.cos(a)) - 0.05, mx + 0.4 * abs(math.cos(a)) + 0.05, my - 0.03, my + 0.03, 2.6, 2.66, "white", 0.0, nocast=True)
         S.bb("flag", mx + 0.05, mx + 0.6, my - 0.02, my + 0.02, 2.0, 2.4, "house", 0.0, nocast=True)
     if dmg:

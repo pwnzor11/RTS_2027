@@ -128,9 +128,10 @@ public sealed class TheaterTests
                     r += baked.Rgba[o]; g += baked.Rgba[o + 1]; bl += baked.Rgba[o + 2]; n++;
                 }
 
-            Assert.InRange(Math.Abs(r / n - mini.R), 0, 22);
-            Assert.InRange(Math.Abs(g / n - mini.G), 0, 22);
-            Assert.InRange(Math.Abs(bl / n - mini.B), 0, 22);
+            // S43: detail-pass features (snow, pebbles, drifts) shift a cell's mean a little, so 26 (was 22).
+            Assert.InRange(Math.Abs(r / n - mini.R), 0, 26);
+            Assert.InRange(Math.Abs(g / n - mini.G), 0, 26);
+            Assert.InRange(Math.Abs(bl / n - mini.B), 0, 26);
         }
     }
 

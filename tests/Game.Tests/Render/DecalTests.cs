@@ -133,7 +133,8 @@ public sealed class DecalTests
     public void DecalsOnlyOnTheirOwnLandTypes()
     {
         MapData map = Generated(Biome.RustBelt);
-        TerrainPalette p = TerrainPalette.ForMap(map);
+        // S43 (D-316): with the detail pass on, frost cracks are dropped; check the rule on the plain look (level 0).
+        TerrainPalette p = Rts.Game.Tests.TerrainDetailTests.PlainCopy("data/theaters/rustbelt.toml");
         // Only the frost-crack rule lists water, so a water cell far from land can only hold pale blue pixels.
         DecalRule frost = p.Decor.Decals.Single(d => d.Name == "frost crack");
         DecorBake.Result r = DecorBake.Bake(map, p, MapHasher.Compute(map));

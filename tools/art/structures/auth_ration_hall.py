@@ -26,7 +26,7 @@ ORIGIN = (0, 40)
 DOCK = (1, 2)
 CAP_MATERIAL = "concrete2"
 HOUSE2_MID = True
-STATES = [("idle", 4, 5), ("damaged", 4, 5), ("build", 8, 5)]
+STATES = [("idle", 8, 2), ("damaged", 8, 2), ("build", 8, 5)]     # 8-frame loops at tpf 2 (0.4 s a frame)
 MATERIALS = dict(L.MATERIALS)
 MATERIALS.update({
     "brick": ("#8E5A44", dict(rough=0.95)),
@@ -142,7 +142,7 @@ def finished(S, i, dmg, mode):
             S.bb("dpanel", 0.7, 1.0, yf - 0.1, yf - 0.04, 0.2, 0.8, "house", 0.0)
         else:
             S.bb("dpanel", 0.7 * sx - (0.0 if sx > 0 else 0.4), 0.7 * sx + (0.4 if sx > 0 else 0.0), yf - 0.1, yf - 0.04, 0.2, 1.05, "house", 0.0)
-    lamp_on = idle and not dmg and (i % 2 == 0)
+    lamp_on = idle and not dmg and (i % 4 < 2)
     S.cyl("doorlamp", 0.1, 0.12, (0, yf - 0.2, 1.3), "amber" if lamp_on else "amber_dim", verts=8, nocast=True)
     S.bb("sign", -0.55, 0.55, yf - 0.14, yf - 0.08, 1.17, 1.28, "white", 0.0, nocast=True)
     for k in range(5):
@@ -177,13 +177,13 @@ def finished(S, i, dmg, mode):
     S.bb("queuestrip", -0.42, -0.38, -3.1, -0.65, 0.14, 0.16, "yellow", 0.0, nocast=True)
     if not dmg:
         for k in range(6):
-            yy = -0.95 - 0.5 * k + (0.125 * i if idle else 0.0)
+            yy = -0.95 - 0.5 * k + (0.0625 * i if idle else 0.0)     # the queue shuffles half a place over the loop
             if yy > -0.62:
                 continue
             citizen(S, k, -1.0 + (0.05 if k % 2 else -0.05), yy, "coat" if k % 3 else "coat2")
     else:
         S.bb("fallen", -1.2, -0.8, -2.0, -1.7, 0.14, 0.26, "coat", 0.05, rot=(0, 0, 20))
-        S.bb("papers", -1.6, -0.5, -1.4, -1.0, 0.14, 0.16, "white", 0.0, nocast=True, rot=(0, 0, 15))
+        S.bb("papers", -1.6 + 0.12 * math.sin(2 * math.pi * i / 8), -0.5, -1.4, -1.0, 0.14, 0.16, "white", 0.0, nocast=True, rot=(0, 0, 15))     # loose sheets stir in the wind
     # ---- east side: ration sacks and a chalk board
     sacks(S, 1.5, -2.7, 3, 2, 3 if not dmg else 2, dmg)
     S.bb("boardp", 2.75, 2.85, -2.9, -2.8, 0.14, 1.1, "timber", 0.0)

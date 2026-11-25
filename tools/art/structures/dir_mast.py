@@ -4,7 +4,7 @@ The read is a tall, slim LATTICE MAST standing on a concrete collar at the north
 a rotating radar bar antenna on a pole at the very top (spins in the idle loop), a ring of loudspeaker horns on a platform two thirds
 up, a hanging magenta banner on the south face and a blinking ember lamp.  A low umber bunker with a ramp mouth under a small hood
 (magenta band, blast doors folded back, ember glow) sits south-west, with an ash stack behind it, bone / oxide hazard bar on the edge.
-Idle loop: the antenna turns, lamp blinks, furnace slits flicker, ash puffs.  Damage is structural only (D-069): the mast has snapped
+Idle loop (8 frames): the radar antenna turns (a 180-degree loop), the lamp blinks, furnace slits flicker.  No smoke is baked.  Damage is structural only (D-069): the mast has snapped
 at the platform (the top section lies on the pad with the antenna), the hood end has fallen, the stack is snapped.
 Contract: see auth_refinery.py.  Units: 3.4 per cell, x east, y NORTH, z up, footprint centred on (0, 0): x, y in [-3.4, 3.4].
 """
@@ -26,7 +26,7 @@ DOCK = (0, 2)
 CAP_MATERIAL = D.CAP_MATERIAL
 HOUSE2_MID = True
 PALETTE = D.PALETTE
-STATES = [("idle", 4, 5), ("damaged", 4, 5), ("build", 8, 5)]
+STATES = [("idle", 8, 2), ("damaged", 8, 2), ("build", 8, 5)]     # idle/damaged: 8-frame loops at tpf 2 (S43 fan)
 MATERIALS = D.MATERIALS
 SOOT_SKIN = D.SOOT_SKIN
 PRIMER_SKIN = D.PRIMER_SKIN
@@ -108,10 +108,10 @@ def mast(S, i, dmg):
     S.bb("banner", MX - 0.4, MX + 0.4, by - 0.05, by, 3.8, 6.3, "house", 0.0)
     S.bb("bannertrimT", MX - 0.4, MX + 0.4, by - 0.07, by - 0.05, 5.8, 6.3, "oxide", 0.0)
     S.bb("bannertrimB", MX - 0.4, MX + 0.4, by - 0.07, by - 0.05, 3.8, 4.1, "bone", 0.0)
-    # radar bar antenna: pole, hub, spinning reflector (45 deg per frame; looks the same every 180)
+    # radar bar antenna: pole, hub, spinning reflector (22.5 deg per frame; a 180 degree turn closes the 8-frame loop)
     S.cyl("apole", 0.07, 0.9, (MX, MY, TOP_Z + 0.45), "steel", verts=8)
     S.bb("aplat", MX - 0.3, MX + 0.3, MY - 0.3, MY + 0.3, TOP_Z, TOP_Z + 0.14, "hull2", 0.02)
-    ang = i * 45.0 + 20
+    ang = i * 22.5 + 20
     YS = S.YS
     az = TOP_Z + 1.15
     S.box("dishA", (2.6, 0.2, 1.0), (MX, MY * YS, az), "bone", 0.02, rot=(0, 0, ang), stretch=False)
@@ -152,8 +152,10 @@ def finished(S, i, dmg, mode):
     sx, sy = STACK
     S.bb("furn", sx - 0.7, sx + 0.7, sy - 0.6, sy + 0.6, 0.14, 1.0, "concrete2", 0.04)
     S.bb("furnroof", sx - 0.8, sx + 0.8, sy - 0.7, sy + 0.7, 1.0, 1.12, "roof", 0.04)
-    D.furnace_slits(S, sx - 0.4, sy - 0.7, 0.3, 0.65, 2, i + 1, (idle or mode == "build") and not dmg, step=0.45, w=0.25)
-    D.chimney(S, sx, sy, 1.12, 2.5 if dmg else 3.3, dmg, idle or mode == "build", i, rise=1.3, lean_len=1.1)
+    D.furnace_slits(S, sx - 0.4, sy - 0.7, 0.3, 0.65, 2, i + 1, (idle or mode == "build") and not dmg, step=0.45, w=0.25, period=4)
+    if dmg:
+        S.bb("dfurn", sx - 0.4, sx - 0.15, sy - 0.7, sy - 0.6, 0.3, 0.65, "redglow" if i % 4 < 2 else "oxide2", 0.0, nocast=True)
+    D.chimney(S, sx, sy, 1.12, 2.5 if dmg else 3.3, dmg, False, i, rise=1.3, lean_len=1.1)
     D.ash_drift(S, ((1.0, -2.2, 1.0), (-2.9, 2.6, 0.6)))
     if dmg:
         L.R.scorch(S, "scH", -1.8, -1.9, 1.6, 1.3, 0.5)

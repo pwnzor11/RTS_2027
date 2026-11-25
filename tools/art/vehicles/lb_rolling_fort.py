@@ -10,17 +10,21 @@ House paint: hull flank panels, the turret side plates and roof panel.
 import math, os, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import lb_common as L
+import mot_track as MT
 
 ID = "lb_rolling_fort"
 TITLE = "Left Behind Rolling Fort"
 CANVAS = 240
 TARGET = (0.0, 0.0, 1.5)
-STATES = [("idle", 16, 1, 1)]
+STATES = [("idle", 16, 1, 1), ("move", 16, 4, 1)]
+# "move": 4 frames per facing, track links one pitch per 4 frames, road-wheel bolts roll (auth_tank.py). Idle = move frame 0.
+# both tracks: mean pitch of the mismatched pair (each track keeps its own link count, so its own pitch)
+STEP_PX = {"move": round((MT.lb_loop(-2.7, 2.7, h=1.0).step_px() + MT.lb_loop(-2.4, 3.2, h=1.0).step_px()) / 2, 2)}
 LAYERS = ["body", "turret"]
 PIVOT = (0.0, 0.2, 2.25)
 MOUNT = dict(deck_z=2.1, r_lip=1.25, r_well=0.0, r_shadow=1.5, soft_r=1.35, lip="rust2", well="dark")
 PALETTE = L.PALETTE
-MATERIALS = L.MATERIALS
+MATERIALS = dict(L.MATERIALS, link=MT.LINK)
 
 
 def build(S, state, k, n):
@@ -28,6 +32,9 @@ def build(S, state, k, n):
     S.begin("body")
     L.tracks(S, -1.7, -2.7, 2.7, "L", "rust", n=6, w=1.0, h=1.0)
     L.tracks(S, 1.7, -2.4, 3.2, "R", "hull2", n=6, w=1.0, h=1.0)
+    if state in ("idle", "move"):
+        MT.lb_track_move(S, "L", -1.7, -2.7, 2.7, 6, k, w=1.0, h=1.0)
+        MT.lb_track_move(S, "R", 1.7, -2.4, 3.2, 6, k, w=1.0, h=1.0)
     box("hull", (3.3, 5.3, 0.9), (0, 0.1, 1.55), "hull", 0.1)
     box("glacis", (3.3, 1.0, 0.8), (0, 2.9, 1.45), "ash2", 0.12, rot=(-14, 0, 0))
     box("deck", (3.3, 3.8, 0.12), (0, -0.3, 2.06), "ash", 0.03)

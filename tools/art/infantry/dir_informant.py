@@ -10,6 +10,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import common as C
 import auth_rifleman as AR
+import boost
 
 SCALE = 1.25                  # D-185: figure 1.25 x, frame 48 x 48, house shoulder boards / back panel
 ID = "dir_informant"
@@ -58,6 +59,9 @@ def build(S, p):
     from mathutils import Matrix
     import rig as R
     import dir_parts as P
+    B = boost.params()                                   # S43 pilot boost
+    H, LB, SB = B["house"], B["limb"], B["stance"]
+    pp = dict(p, feet=tuple((f[0] * SB, f[1], f[2]) for f in p["feet"]))   # wider stance for the legs helper
     U = R.tr(0, p["dy"], 0.62 + p["bob"]) @ R.rz(p["twist"]) @ R.rx(-p["lean"]) @ R.rz(p["roll"])
     pel = (0, p["dy"], 0.62 + p["bob"])
 
@@ -75,32 +79,39 @@ def build(S, p):
     S.box((0.11, 0.10, 0.025), (-0.10, 0.0, 0.41), "hl", U, rot=(0, 10, 0), bevel=0)      # lighter shoulder highlight                      # coat front seam
     S.box((0.065, 0.05, 0.15), (-0.06, 0.15, 0.27), "coat3", U, rot=(0, 0, 22), bevel=0)   # lapels
     S.box((0.065, 0.05, 0.15), (0.06, 0.15, 0.27), "coat3", U, rot=(0, 0, -22), bevel=0)
-    S.box((0.07, 0.03, 0.07), (0.09, 0.185, 0.29), "house", U, bevel=0)                  # lapel badge (house colour)
+    S.box((0.07 * (1 + 0.3 * (H - 1)), 0.03, 0.07 * H), (0.09, 0.185, 0.29), "house", U, bevel=0)                  # lapel badge (house colour)
     S.box((0.22, 0.07, 0.07), (0, -0.04, 0.385), "coat3", U, bevel=0.01)                  # raised collar, back
     S.cyl(0.165, 0.06, (0, 0.0, 0.37), "coat3", "Z", U, verts=8, r2=0.12)                  # shoulder yoke
-    for sx in (-1, 1):                                                                 # D-185 small house shoulder boards
-        S.box((0.10, 0.15, 0.035), (sx * 0.15, 0.0, 0.405), "house", U, rot=(0, sx * -8, 0), bevel=0)
-    S.box((0.19, 0.025, 0.14), (0, -0.226, 0.26), "house", U, bevel=0)                 # D-185 house panel on the back of the coat
-    # head: pale narrow face, dark eye shadow under the brim, wide-brimmed hat with a house band
+    for sx in (-1, 1):                                                                 # D-185 small house shoulder boards, S43 larger
+        S.box((0.10 * (1 + 0.5 * (H - 1)), 0.15 * (1 + 0.3 * (H - 1)), 0.035 * (1 + 0.6 * (H - 1))), (sx * (0.15 + 0.02 * (H - 1)), 0.0, 0.405), "house", U, rot=(0, sx * -8, 0), bevel=0)
+    S.box((0.19 * (1 + 0.15 * (H - 1)), 0.025, 0.14 * H), (0, -0.226, 0.26), "house", U, bevel=0)                 # D-185 house panel on the back of the coat
+    # head: pale narrow face, dark eye shadow under the brim, wide-brimmed hat with a house band (S43: scaled about the head centre)
+    h = B["head"]
+    HC = (0.0, 0.03, 0.52)
+
+    def hp(loc):
+        return tuple(HC[i] + (loc[i] - HC[i]) * h for i in range(3))
     S.box((0.07, 0.07, 0.06), (0, 0.01, 0.44), "face", U)
-    S.box((0.115, 0.10, 0.10), (0, 0.03, 0.515), "face", U, bevel=0.02)
-    S.box((0.12, 0.04, 0.03), (0, 0.075, 0.545), "dark", U, bevel=0)
-    S.cyl(0.235, 0.02, (0, 0.02, 0.60), "hat", "Z", U, verts=12)                          # brim
-    S.cyl(0.13, 0.12, (0, 0.02, 0.665), "hat", "Z", U, verts=10, r2=0.12)                  # crown
-    S.cyl(0.138, 0.10, (0, 0.02, 0.655), "house", "Z", U, verts=10)                        # hat band
-    # pistol only in the fire frames
-    GM = (U if p["gun_space"] == "u" else Matrix.Identity(4)) @ R.tr(*p["gun"][0]) @ R.rz(p["gun"][1]) @ R.rx(p["gun"][2])
+    S.box((0.115 * h, 0.10 * h, 0.10 * h), hp((0, 0.03, 0.515)), "face", U, bevel=0.02)
+    S.box((0.12 * h, 0.04 * h, 0.03 * h), hp((0, 0.075, 0.545)), "dark", U, bevel=0)
+    S.cyl(0.235 * h, 0.02 * h, hp((0, 0.02, 0.60)), "hat", "Z", U, verts=12)                  # brim
+    S.cyl(0.13 * h, 0.12 * h, hp((0, 0.02, 0.665)), "hat", "Z", U, verts=10, r2=0.12 * h)      # crown
+    S.cyl(0.138 * h, 0.10 * h, hp((0, 0.02, 0.655)), "house", "Z", U, verts=10)              # hat band (thin ring: S43 keeps it a band, not a cap)
+    # pistol only in the fire frames (S43: longer and thicker by B["gun"] / B["gunw"]; GM carries the scale)
+    GM0 = (U if p["gun_space"] == "u" else Matrix.Identity(4)) @ R.tr(*p["gun"][0]) @ R.rz(p["gun"][1]) @ R.rx(p["gun"][2])
+    GM = GM0 @ Matrix.Diagonal((B["gunw"], B["gun"], B["gunw"], 1.0))
     if p["pistol"]:
         S.box((0.045, 0.14, 0.07), (0, 0.04, 0.0), "steel", GM)
         S.box((0.04, 0.05, 0.09), (0, -0.04, -0.06), "dark", GM, rot=(10, 0, 0))
         S.cyl(0.018, 0.08, (0, 0.14, 0.01), "steel", "Y", GM, verts=6)
         if p["flash"]:
-            S.cyl(0.06, 0.20, (0, 0.28, 0.01), "flash", "Y", GM, verts=8, r2=0.0)
-            S.sphere((0.08, 0.08, 0.08), (0, 0.19, 0.01), "flash", GM, seg=8)
-    P.arms(S, p, U, up, GM, SHOULDER, ((0, -0.03, -0.03), (0, 0.0, -0.03)), ("coat", "coat2"), thick=(0.075, 0.065), band=0,
+            fl, flw = B["flash"] / B["gun"], B["flash"] / B["gunw"]
+            S.cyl(0.06 * flw, 0.20 * fl, (0, 0.28, 0.01), "flash", "Y", GM, verts=8, r2=0.0)
+            S.sphere((0.08 * flw, 0.08 * fl, 0.08 * flw), (0, 0.19, 0.01), "flash", GM, seg=8)
+    P.arms(S, p, U, up, GM, SHOULDER, ((0, -0.03, -0.03), (0, 0.0, -0.03)), ("coat", "coat2"), thick=(0.075 * LB, 0.065 * LB), band=0,
            cuff_mat="coat3", hand_mat="face", hand_size=0.06, cuff_len=0.2)
     # legs: slim trousers and shoes under the coat hem
-    P.legs(S, p, pel, spread=0.08, thick=(0.08, 0.07))
+    P.legs(S, pp, pel, spread=0.08 * SB, thick=(0.08 * LB, 0.07 * LB))
     if p["spread"]:
         S.cyl(0.36, 0.03, (0.0, p["dy"] + 0.12, 0.03), "coat2", "Z", None, verts=8)
         S.cyl(0.25, 0.035, (0.05, p["dy"] + 0.12, 0.05), "coat", "Z", None, verts=8)

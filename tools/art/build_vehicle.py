@@ -395,7 +395,7 @@ def render(vid, mod, samples, states, facing_sel, preview, layer="body"):
                         o.data.materials.clear()
                         for m in orig[o]:
                             o.data.materials.append(m)
-                    sc.cycles.samples = 12 if preview else samples
+                    sc.cycles.samples = min(samples, 12) if preview else samples   # preview: at most 12 (fan-out previews pass --samples 6-8)
                     render_to(os.path.join(out, f"{'prev' if preview else 'col'}_{idx:02d}.png"))
                     if preview:
                         continue

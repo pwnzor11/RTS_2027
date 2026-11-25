@@ -20,6 +20,9 @@ backpack with bedroll and filter canister, 1960s battle rifle (wood stock).  Hou
 a ridge stripe over the helmet, a panel on the back of the pack (all material "house", rendered magenta).
 """
 import math
+import os, sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import boost
 
 SCALE = 1.25                  # D-185: figure 1.25 x, frame 48 x 48, house pads / helmet band / pack panel
 ID = "auth_rocketeer"
@@ -105,6 +108,8 @@ def pose(state, step, n):
 def build(S, p):
     from mathutils import Matrix      # Blender-side imports stay lazy so the manifest data loads without bpy
     import rig as R
+    B = boost.params()                                   # S43 pilot boost
+    H = B["house"]
     U = R.tr(0, p["dy"], 0.62 + p["bob"]) @ R.rz(p["twist"]) @ R.rx(-p["lean"])
     pel = (0, p["dy"], 0.62 + p["bob"])
 
@@ -118,11 +123,11 @@ def build(S, p):
     S.box((0.12, 0.05, 0.13), (0.1, 0.14, 0.2), "rust", U)                           # chest pouches
     S.box((0.12, 0.05, 0.13), (-0.1, 0.14, 0.2), "rust", U)
     S.box((0.42, 0.28, 0.06), (0, -0.02, 0.43), "cloth", U, bevel=0.03)             # ash mantle over the shoulders
-    for sx in (-1, 1):                                                                  # D-185 house shoulder pads
-        S.box((0.09, 0.22, 0.12), (sx * 0.255, 0.0, 0.43), "house", U, bevel=0)
+    for sx in (-1, 1):                                                                  # D-185 house shoulder pads, S43 larger
+        S.box((0.09 * (1 + 0.5 * (H - 1)), 0.22 * (1 + 0.3 * (H - 1)), 0.12 * H), (sx * (0.255 + 0.02 * (H - 1)), 0.0, 0.43), "house", U, bevel=0)
         # ---------------- backpack: bedroll, filter canister, house panel on the back
     S.box((0.30, 0.17, 0.36), (0, -0.26, 0.24), "pack", U, bevel=0.02)
-    S.box((0.26, 0.03, 0.24), (0, -0.355, 0.27), "house", U, bevel=0)
+    S.box((0.26 * (1 + 0.15 * (H - 1)), 0.03, 0.24 * H), (0, -0.355, 0.27 + 0.02 * (H - 1)), "house", U, bevel=0)
     S.box((0.28, 0.12, 0.17), (0, -0.37, 0.06), "hull2", U, bevel=0.02)                 # rocket satchel
     S.box((0.29, 0.13, 0.03), (0, -0.37, 0.12), "rust", U)
     for sx in (-0.07, 0.07):                                                              # two rocket noses sticking up
@@ -131,19 +136,31 @@ def build(S, p):
     S.cyl(0.07, 0.30, (-0.21, -0.25, 0.16), "steel", "Z", U, verts=10)
     S.cyl(0.075, 0.04, (-0.21, -0.25, 0.30), "dark", "Z", U, verts=10)
     # ---------------- head: helmet + ridge stripe, visor, goggles, respirator
-    hc = (0, 0.0, 0.54)
+    # head (S43: scaled about the head centre by B["head"])
+    h = B["head"]
+    HC = (0.0, 0.05, 0.50)
+
+    def hb(size, loc, mat, **kw):
+        return S.box(tuple(x * h for x in size), tuple(HC[i] + (loc[i] - HC[i]) * h for i in range(3)), mat, U, **kw)
+
+    def hs(r, loc, mat):
+        return S.sphere(tuple(x * h for x in r), tuple(HC[i] + (loc[i] - HC[i]) * h for i in range(3)), mat, U)
+
+    def hc_(r, ln, loc, mat, axis, verts):
+        return S.cyl(r * h, ln * h, tuple(HC[i] + (loc[i] - HC[i]) * h for i in range(3)), mat, axis, U, verts=verts)
     S.box((0.10, 0.10, 0.07), (0, 0, 0.46), "dark", U)                               # neck
-    S.box((0.20, 0.07, 0.05), (0, 0.0, 0.625), "house", U, bevel=0)                       # D-185 house band over the helmet crown
-    S.sphere((0.17, 0.18, 0.14), (0, 0, 0.56), "helm", U)                                     # helmet
-    S.sphere((0.055, 0.19, 0.152), (0, 0, 0.56), "house", U)                                   # ridge stripe over the crown
-    S.box((0.19, 0.12, 0.12), (0, 0.075, 0.47), "skin", U, bevel=0.03)               # sealed face hood
-    S.box((0.30, 0.12, 0.035), (0, 0.10, 0.545), "dark", U, bevel=0.01)               # helmet peak
-    S.box((0.085, 0.04, 0.06), (0.058, 0.15, 0.50), "lens", U, bevel=0)             # goggles
-    S.box((0.085, 0.04, 0.06), (-0.058, 0.15, 0.50), "lens", U, bevel=0)
-    S.cyl(0.05, 0.10, (0, 0.17, 0.43), "dark", "Y", U, verts=10)                    # respirator snout
-    S.cyl(0.035, 0.07, (0, 0.24, 0.425), "dark", "Y", U, verts=8)
-    # ---------------- rocket tube (gun coords: y forward along the tube)
-    GM = (U if p["gun_space"] == "u" else Matrix.Identity(4)) @ R.tr(*p["gun"][0]) @ R.rz(p["gun"][1]) @ R.rx(p["gun"][2])
+    hb((0.20, 0.07, 0.05 * H), (0, 0.0, 0.625), "house", bevel=0)                         # D-185 house band over the helmet crown
+    hs((0.17, 0.18, 0.14), (0, 0, 0.56), "helm")                                             # helmet
+    hs((0.055 * H, 0.19, 0.152), (0, 0, 0.56), "house")                                      # ridge stripe over the crown
+    hb((0.19, 0.12, 0.12), (0, 0.075, 0.47), "skin", bevel=0.03)                     # sealed face hood
+    hb((0.30, 0.12, 0.035), (0, 0.10, 0.545), "dark", bevel=0.01)                     # helmet peak
+    hb((0.085, 0.04, 0.06), (0.058, 0.15, 0.50), "lens", bevel=0)                   # goggles
+    hb((0.085, 0.04, 0.06), (-0.058, 0.15, 0.50), "lens", bevel=0)
+    hc_(0.05, 0.10, (0, 0.17, 0.43), "dark", "Y", 10)                              # respirator snout
+    hc_(0.035, 0.07, (0, 0.24, 0.425), "dark", "Y", 8)
+    # ---------------- rocket tube (gun coords: y forward along the tube; S43: longer and thicker by B["gun"] / B["gunw"])
+    GM0 = (U if p["gun_space"] == "u" else Matrix.Identity(4)) @ R.tr(*p["gun"][0]) @ R.rz(p["gun"][1]) @ R.rx(p["gun"][2])
+    GM = GM0 @ Matrix.Diagonal((B["gunw"], B["gun"], B["gunw"], 1.0))
     S.cyl(0.075, 0.85, (0, 0.05, 0), "tube", "Y", GM, verts=10)                      # tube
     S.cyl(0.075, 0.16, (0, -0.44, 0), "hull2", "Y", GM, verts=10, r2=0.125)          # flared rear (r2 end points back)
     S.cyl(0.082, 0.04, (0, 0.20, 0), "band", "Y", GM, verts=10)                      # pale marking bands
@@ -155,12 +172,13 @@ def build(S, p):
     S.box((0.03, 0.40, 0.025), (0, 0.09, 0.19), "steel", GM)                         # frame rail
     S.box((0.05, 0.05, 0.12), (0, -0.04, -0.12), "dark", GM)                         # trigger grip
     S.box((0.05, 0.05, 0.10), (0, 0.22, -0.11), "dark", GM)                          # front grip
-    if p["flash"]:      # D-072: smaller, warm flame; a 1-2 px hot core; a short grey-brown backblast puff
-        S.cyl(0.0, 0.42, (0, 0.98, 0), "flash", "Y", GM, verts=8, r2=0.17)           # launch flame ahead of the nose
-        S.sphere((0.10, 0.10, 0.10), (0, 0.86, 0), "flash", GM, seg=8)
-        S.sphere((0.05, 0.05, 0.05), (0, 0.84, 0), "hot", GM, seg=8)              # hot core (small)
-        S.sphere((0.13, 0.20, 0.13), (0, -0.64, 0), "puff", GM, seg=8)               # backblast puff behind the tube
-        S.sphere((0.09, 0.11, 0.09), (0, -0.82, 0.02), "puff", GM, seg=8)
+    if p["flash"]:      # D-072: smaller, warm flame; a 1-2 px hot core; S43: sizes follow B["flash"]; backblast is a torn faceted cone (D-316, no sphere)
+        fl, flw = B["flash"] / B["gun"], B["flash"] / B["gunw"]
+        S.cyl(0.0, 0.42 * fl, (0, 0.98, 0), "flash", "Y", GM, verts=8, r2=0.17 * flw)  # launch flame ahead of the nose
+        S.sphere((0.10 * flw, 0.10 * fl, 0.10 * flw), (0, 0.86, 0), "flash", GM, seg=8)
+        S.sphere((0.05 * flw, 0.05 * fl, 0.05 * flw), (0, 0.84, 0), "hot", GM, seg=8)   # hot core (small)
+        S.cyl(0.0, 0.30 * fl, (0, -0.66, 0), "puff", "Y", GM, verts=6, r2=0.13 * flw)  # backblast cone
+        S.cyl(0.0, 0.16 * fl, (0, -0.86, 0.02), "puff", "Y", GM, verts=5, r2=0.07 * flw)  # stepped tail
 
     # ---------------- arms: shoulder -> elbow -> wrist; house band on the upper arm
     for side, hand_spec in ((-1, p["hands"][0]), (1, p["hands"][1])):
@@ -175,15 +193,15 @@ def build(S, p):
             tgt = R.Vector(up(hand_spec))
         pole = U.to_3x3() @ R.Vector((side * 1.2, -0.3, -0.6))
         elbow, wrist = R.ik2(sh, tgt, L_UPPER, L_FORE, pole)
-        S.limb(sh, elbow, 0.10, "hull")
-        S.limb(sh, sh.lerp(elbow, 0.55), 0.135, "house", bevel=0.0)
-        S.limb(elbow, wrist, 0.085, "hull2")
+        S.limb(sh, elbow, 0.10 * B["limb"], "hull")
+        S.limb(sh, sh.lerp(elbow, 0.55 + 0.1 * (H - 1)), 0.135 * B["limb"] * (1 + 0.2 * (H - 1)), "house", bevel=0.0)
+        S.limb(elbow, wrist, 0.085 * B["limb"], "hull2")
         S.box((0.08, 0.09, 0.08), tuple(wrist), "dark", None, bevel=0.01)
     # ---------------- legs: hip -> knee -> ankle, boots
     for side, ft in ((-1, p["feet"][0]), (1, p["feet"][1])):
-        hip = R.Vector((side * 0.115, pel[1], pel[2] - 0.04))
-        ank = R.Vector(ft)
+        hip = R.Vector((side * 0.115 * B["stance"], pel[1], pel[2] - 0.04))
+        ank = R.Vector((ft[0] * B["stance"], ft[1], ft[2]))
         knee, ank = R.ik2(hip, ank, L_THIGH, L_SHIN, R.Vector((0, 1, 0)))
-        S.limb(hip, knee, 0.13, "pants")
-        S.limb(knee, ank, 0.11, "pants")
+        S.limb(hip, knee, 0.13 * B["limb"], "pants")
+        S.limb(knee, ank, 0.11 * B["limb"], "pants")
         S.box((0.13, 0.27, 0.10), (ank.x, ank.y + 0.04, ank.z - 0.035), "dark", None, bevel=0.015)

@@ -48,7 +48,7 @@ def link_pose(s):
 
 def build(S, state, k, n):
     box, cyl = S.box, S.cyl
-    move = state == "move"
+    move = state in ("idle", "move")   # idle = move frame 0 detail, so the wheels do not pop when stopping
     for s, side in ((-1, "L"), (1, "R")):
         x = s * 1.07
         box("track" + side, (0.62, 2.7, 0.7), (x, 0, 0.4), "track", 0.12)

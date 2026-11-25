@@ -26,7 +26,7 @@ DOCK = (0, 2)
 CAP_MATERIAL = D.CAP_MATERIAL
 HOUSE2_MID = True
 PALETTE = D.PALETTE
-STATES = [("idle", 4, 5), ("damaged", 4, 5), ("build", 8, 5)]
+STATES = [("idle", 8, 2), ("damaged", 8, 2), ("build", 8, 5)]     # idle/damaged: 8-frame loops at tpf 2 (S43 fan)
 MATERIALS = D.MATERIALS
 SOOT_SKIN = D.SOOT_SKIN
 PRIMER_SKIN = D.PRIMER_SKIN
@@ -62,7 +62,7 @@ def finished(S, i, dmg, mode):
         S.bb(f"plank{k}", x0, x1, YF - 0.08, YF - 0.04, zz, zz + 0.2, "timber", 0.0, nocast=True)
     for k, sx in enumerate(SLITS):
         S.bb(f"slit{k}", sx - 0.28, sx + 0.28, YF - 0.12, YF - 0.04, 0.7, 1.05, "dark", 0.0, nocast=True)
-        g = "redglow" if (lit and (k + i) % 3 != 0) else "oxide2"
+        g = "redglow" if (lit and (k + i) % 4 != 0) else "oxide2"
         S.bb(f"glow{k}", sx - 0.2, sx + 0.2, YF - 0.13, YF - 0.12, 0.74, 0.92, g, 0.0, nocast=True)
     # west flank panel beside the hood: bone number board
     D.flank(S, "L", -3.0, TR[0] - 0.4, YF, z1=1.2, stripes=3)
@@ -88,10 +88,7 @@ def finished(S, i, dmg, mode):
     S.bb("hatch", -1.9, -1.0, 1.0, 1.8, ROOF_Z + 0.62, ROOF_Z + 0.7, "hull2", 0.0)
     S.cyl("peri", 0.14, 0.9, (0.6, 1.8, ROOF_Z + 0.95 + 0.45), "steel", verts=8)
     S.bb("perihd", 0.4, 0.8, 1.6, 2.0, ROOF_Z + 1.9, ROOF_Z + 2.15, "hull2", 0.02)
-    S.bb("perilens", 0.45, 0.75, 1.55, 1.6, ROOF_Z + 1.95, ROOF_Z + 2.1, "redglow" if lit else "oxide2", 0.0, nocast=True)
-    if lit:
-        ph = (i / 4) % 1
-        S.sphere("vpuff", 0.1 + 0.2 * math.sin(math.pi * ph), (0.6 + ph * 0.6, 1.8, ROOF_Z + 2.4 + ph * 0.7), "smoke2")
+    S.bb("perilens", 0.45, 0.75, 1.55, 1.6, ROOF_Z + 1.95, ROOF_Z + 2.1, "redglow" if (lit and i % 4 < 2) else "oxide2", 0.0, nocast=True)
     px_, py_ = 2.7, 2.2
     S.cyl("pole", 0.06, 2.3, (px_, py_, ROOF_Z + 0.95 + 1.15), "steel", verts=6)
     if dmg:
@@ -103,6 +100,7 @@ def finished(S, i, dmg, mode):
     if dmg:
         S.box("slab", (1.7, 1.0, 0.3), (2.3, 0.2 * S.YS, ROOF_Z - 0.1), "roof_s", 0.02, rot=(0, 14, 16), stretch=False)
         S.bb("split", 1.4, 1.9, YF - 0.09, YF - 0.05, 0.3, 1.3, "char", 0.0, nocast=True)
+        S.bb("splitglow", 1.45, 1.85, YF - 0.1, YF - 0.06, 0.35, 0.5, "redglow" if i % 4 < 2 else "oxide2", 0.0, nocast=True)
         for k, (x, y, w, h) in enumerate(((1.8, -1.4, 0.4, 0.3), (2.9, -1.1, 0.35, 0.26), (1.4, -1.0, 0.3, 0.25))):
             S.box(f"rub{k}", (w, w * 0.8, h), (x, y * S.YS, 0.14 + h / 2), "concrete_s", 0.0, rot=(0, 0, 33 * k), stretch=False)
         for k, x in enumerate((1.3, 1.6)):

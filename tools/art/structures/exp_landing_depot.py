@@ -24,7 +24,7 @@ DOCK = (1, 3)
 CAP_MATERIAL = "pad2"
 PALETTE = K.PALETTE
 MATERIALS = K.MATERIALS
-STATES = [("idle", 4, 5), ("damaged", 4, 5), ("build", 8, 5)]
+STATES = [("idle", 8, 2), ("damaged", 8, 2), ("build", 8, 5)]     # session 43: 8-frame loops at tpf 2 (owner choice)
 FX = [
     K.fx(FOOTPRINT, ORIGIN, "damaged", "fire_large", 3.4, 2.1, 1.7, 0),      # torn bow
     K.fx(FOOTPRINT, ORIGIN, "damaged", "fire_small", -2.4, 2.2, 2.4, 4),     # deck stack
@@ -70,7 +70,7 @@ def g_super(S, dmg, i):
         S.sphere("bubble", 0.36, (-1.3, 2.25, 3.4), "glass", nocast=False, squash=0.8)
         K.post(S, "radmast", -2.5, 2.5, 3.3, 4.3, 0.1, "chrome2")
         S.sphere("radome", 0.34, (-2.5, 2.5, 4.55), "white", nocast=False)
-        a = math.radians(i * 45)
+        a = math.radians(i * 45)      # radar bar: one full turn per 8-frame loop
         S.box("radbar", (1.0, 0.1, 0.1), (-2.5 + 0.0, 2.5 * S.YS, 4.0), "chrome", 0.0, rot=(0, 0, math.degrees(a)), stretch=False, nocast=True)
     else:
         S.bb("bridge", -2.2, -0.4, 1.7, 2.8, 2.8, 3.0, "white2", 0.1)
@@ -80,8 +80,6 @@ def g_super(S, dmg, i):
     S.cyl("funband", 0.53, 0.14, (-1.2, 2.5, 2.4), "copper", verts=20)
     S.cyl("funhouse", 0.53, 0.3, (-1.2, 2.5, top - 0.35), "house", verts=20)
     S.cyl("funcap", 0.46, 0.06, (-1.2, 2.5, top + 0.02), "dark", verts=16)
-    if not dmg:
-        K.puffs(S, "fun", -1.2, 2.5, top + 0.2, i)
 
 
 def g_annex(S, dmg, i):
@@ -114,7 +112,7 @@ def g_extras(S, dmg, i):
     else:
         K.beam(S, "jib", (cx, cy, top), (cx + 2.8, cy, top + 0.3), 0.18, "copper")
         K.beam(S, "cw", (cx, cy, top), (cx - 0.6, cy, top - 0.1), 0.34, "navy")
-        sw = 0.18 * math.sin(i * math.pi / 2)
+        sw = 0.18 * math.sin(i * math.pi / 4)     # hook: one full swing cycle per loop
         K.beam(S, "cable", (cx + 2.6, cy, top + 0.28), (cx + 2.6 + sw, cy, 2.0), 0.04, "dark", nocast=True)
         S.bb("hook", cx + 2.5 + sw, cx + 2.7 + sw, cy - 0.1, cy + 0.1, 1.8, 2.0, "orange", 0.0)
     K.flag(S, "flag", 0.9, -4.1, 4.6 if not dmg else 3.4, i, dmg=dmg)
@@ -130,6 +128,8 @@ def site(S):
 def dmg_extra(S, i):
     S.bb("scorch1", 2.6, 3.8, 0.5, 0.52, 0.9, 1.4, "char", 0.0, nocast=True)
     S.bb("scorch2", -2.5, -1.2, -0.4, 0.2, 0.12, 0.14, "char", 0.0, nocast=True)
+    if i in (1, 5):         # torn bridge wiring sparks
+        S.sphere("lspark", 0.08, (-1.0, 2.2, 3.0), "spark")
 
 
 def build(S, state, i, n):

@@ -23,7 +23,7 @@ DOCK = (0, 1)
 CAP_MATERIAL = "dust"
 PALETTE = K.PALETTE
 MATERIALS = K.MATERIALS
-STATES = [("idle", 4, 5), ("damaged", 4, 5), ("build", 8, 5)]
+STATES = [("idle", 8, 2), ("damaged", 8, 2), ("build", 8, 5)]  # S43: 8-frame loops at tpf 2 (owner choice)
 FX = [
     K.fx(FOOTPRINT, ORIGIN, "damaged", "fire_small", 0.0, 0.2, 2.0, 0),
     K.fx(FOOTPRINT, ORIGIN, "damaged", "smoke_plume", 0.0, 0.2, 2.3, 3),
@@ -71,7 +71,7 @@ def g_net(S, dmg, i):
             continue
         K.post(S, "pole", px_, py_, 0.1, NZ + 0.1, 0.12, "wood")
         S.bb(f"polecap{k}", px_ - 0.1, px_ + 0.1, py_ - 0.1, py_ + 0.1, NZ + 0.1, NZ + 0.2, "hazard" if k == 0 else "rust2", 0.0)
-    sag = 0.12 * math.sin(i * math.pi / 2)
+    sag = 0.12 * math.sin(i * math.pi / 4)
     n = 5
     for k in range(n):
         t = k / (n - 1)
@@ -86,7 +86,7 @@ def g_net(S, dmg, i):
     for k, (x, y, m) in enumerate(((-0.6, -0.4, "canvas2"), (0.5, 0.6, "house"), (0.7, -0.7, "rust"), (-0.8, 0.8, "teal"))):
         if dmg and k >= 2:
             continue
-        S.bb(f"patch{k}", x - 0.3, x + 0.3, y - 0.3, y + 0.3, NZ - 0.12 - 0.05 * math.sin(i + k), NZ - 0.07 - 0.05 * math.sin(i + k), m if not dmg else m + "_s" if m != "house" and m != "rust" else m, 0.0, nocast=True)
+        S.bb(f"patch{k}", x - 0.3, x + 0.3, y - 0.3, y + 0.3, NZ - 0.12 - 0.05 * math.sin((i + k) * math.pi / 4), NZ - 0.07 - 0.05 * math.sin((i + k) * math.pi / 4), m if not dmg else m + "_s" if m != "house" and m != "rust" else m, 0.0, nocast=True)
     S.sphere("lamp", 0.1, (-1.2, -1.1, 1.3), "lamp" if (i % 2 == 0 and not dmg) else "lamp_off", nocast=True)
     K.post(S, "lampp", -1.2, -1.1, 0.1, 1.2, 0.07, "wood")
 

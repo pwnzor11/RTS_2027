@@ -18,14 +18,14 @@ name = "idle"
 facings = 1
 frames = 8
 first = 0
-ticks_per_frame = 1
+ticks_per_frame = 2
 
 [[state]]
 name = "damaged"
 facings = 1
 frames = 8
 first = 8
-ticks_per_frame = 1
+ticks_per_frame = 2
 
 [[state]]
 name = "build"

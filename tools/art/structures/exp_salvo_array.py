@@ -26,7 +26,7 @@ DOCK = (1, 3)
 CAP_MATERIAL = "pad2"
 PALETTE = K.PALETTE
 MATERIALS = K.MATERIALS
-STATES = [("idle", 8, 6), ("damaged", 4, 5), ("build", 8, 5)]
+STATES = [("idle", 8, 2), ("damaged", 8, 2), ("build", 8, 5)]     # session 43: 8-frame loops at tpf 2 (owner choice; idle was 8 at tpf 6)
 FX = [
     K.fx(FOOTPRINT, ORIGIN, "damaged", "fire_large", -1.0, 1.2, 2.2, 0),
     K.fx(FOOTPRINT, ORIGIN, "damaged", "fire_small", 3.4, -3.0, 1.8, 4),
@@ -116,6 +116,8 @@ def site(S):
 def dmg_extra(S, i):
     P.scorch(S, "sc1", -1.5, 1.5, 0.2, 1.0, 0.7)
     P.scorch(S, "sc2", 2.0, 3.6, -3.2, -2.0, 0.12)
+    if i in (1, 5):         # broken rail spark
+        S.sphere("rbsp", 0.08, (COLS[1] + 0.8, ROWS[0] + 0.3, 1.85), "spark")
 
 
 def build(S, state, i, n):

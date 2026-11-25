@@ -5,6 +5,8 @@ using Rts.Sim.Rules;
 
 namespace Rts.Game.Render;
 
+using DetailKit = TerrainPalette.DetailKit;
+
 /// <summary>
 /// The S43 terrain detail pass (<c>[detail] level = 1</c> in a palette): multi-octave tone noise instead of 8-texel blotches, per-land-type
 /// features (pebbles, dead grass, hairline cracks, oil stains, ash drifts, wave crests, cliff strata), soft noise-warped blends between land
@@ -20,11 +22,13 @@ public static class TerrainDetail
 
     private static uint H(int a, int b, uint salt) => TerrainBake.Hash3((uint)a, (uint)b, salt);
 
+    private static readonly TerrainPalette.Rgb WetSand = new(128, 116, 92), SnowWhite = new(228, 234, 242), Ember = new(122, 54, 34);
+
     /// <summary>Smooth value noise 0..1023 on a lattice <paramref name="px"/> by <paramref name="py"/> texels (smoothstep blended).</summary>
     public static int Vn(int x, int y, int px, int py, uint salt)
     {
         int gx = x / px, gy = y / py;
-        int fx = x % px * 256 / px, fy = y % py * 256 / py;
+        int fx = (x - gx * px) * 256 / px, fy = (y - gy * py) * 256 / py;   // x - gx*px is x % px, one division fewer
         int wx = fx * fx * (768 - 2 * fx) >> 16, wy = fy * fy * (768 - 2 * fy) >> 16;
         int v00 = (int)(H(gx, gy, salt) & 1023u), v10 = (int)(H(gx + 1, gy, salt) & 1023u);
         int v01 = (int)(H(gx, gy + 1, salt) & 1023u), v11 = (int)(H(gx + 1, gy + 1, salt) & 1023u);
@@ -56,10 +60,13 @@ public static class TerrainDetail
                 col = Water(palette, land, sh, tx, ty, s, k, salt);
                 break;
             case LandType.Cliff:
-                col = Cliff(sh, tx, ty, s, k, salt);
+                col = Cliff(sh, tx, ty, s, k, salt, palette.Style.Kit == DetailKit.Mountains);
                 break;
             case LandType.Ash:
-                col = AshGround(sh, tx, ty, s, k, salt);
+                col = AshGround(sh, tx, ty, s, k, salt, palette.Style.Kit == DetailKit.Ash);
+                break;
+            case LandType.Coast:
+                col = Beach(sh, tx, ty, s, k, salt);
                 break;
             default:
                 {
@@ -77,19 +84,66 @@ public static class TerrainDetail
                     int lift = Math.Clamp(e * bump / 40, -140, 140);
                     col = lift >= 0 ? TerrainBake.Mix(col, White, lift) : TerrainBake.Mix(col, Black, -lift);
 
-                    if (features) col = Features(palette.Style.Detail >= 2, land, sh, col, tx, ty, cx, cy, sx, sy, s, k, salt);
+                    if (land == LandType.Rock && palette.Style.Kit == DetailKit.Mountains) col = Strata(sh, col, tx, ty, s, salt);
+                    if (palette.Style.Kit == DetailKit.Mountains && (land == LandType.Rock || land == LandType.Clear)) col = Snow(col, tx, ty, s, k, salt, land == LandType.Rock);
+                    if (features) col = Features(palette.Style.Detail >= 2, palette.Style.Kit, land, sh, col, tx, ty, cx, cy, sx, sy, s, k, salt);
                     break;
                 }
         }
 
-        if (features && land == LandType.Ash) col = AshFeatures(sh, col, tx, ty, cx, cy, sx, sy, s, k);
+        if (features && land == LandType.Ash) col = AshFeatures(sh, col, tx, ty, cx, cy, sx, sy, s, k, palette.Style.Kit);
         return col;
     }
 
-    private static TerrainPalette.Rgb Features(bool calm, LandType land, TerrainPalette.LandShades sh, TerrainPalette.Rgb col, int tx, int ty, int cx, int cy, int sx, int sy, int s, int k, uint salt)
+    /// <summary>Beach (coast land): damp sand with wind and wave ripples, thin lines across the slope warped by slow noise so they curve, on about half the ground.</summary>
+    private static TerrainPalette.Rgb Beach(TerrainPalette.LandShades sh, int tx, int ty, int s, int k, uint salt)
+    {
+        int n = Fbm(tx, ty, s, salt);
+        TerrainPalette.Rgb col = Toward(sh, Math.Clamp((n - 512) * 110 / 100, -512, 512));
+        int period = Math.Max(3, s / 3);
+        int warp = (Vn(tx, ty, s * 3, s * 3, salt + 1) - 512) * period / 1024;
+        int row = ((ty + warp) % period + period) % period;
+        if (Vn(tx, ty, s * 4, s * 4, salt + 2) > 470)
+        {
+            if (row == 0) col = TerrainBake.Mix(col, sh.Dark, 300);      // trough
+            else if (row == 1) col = TerrainBake.Mix(col, sh.Light, 260); // lit crest
+        }
+
+        uint g = H(tx / k, ty / k, 2);
+        if (g % 6u == 0) col = TerrainBake.Mix(col, (g >> 8 & 1u) != 0 ? sh.Light : sh.Dark, 260);
+        return col;
+    }
+
+    /// <summary>Mountain rock: heavy horizontal strata, a dark joint line with a lit ledge just above it, on a slightly warped course.</summary>
+    private static TerrainPalette.Rgb Strata(TerrainPalette.LandShades sh, TerrainPalette.Rgb col, int tx, int ty, int s, uint salt)
+    {
+        int period = Math.Max(4, s / 2);
+        int warp = (Vn(tx, ty, s * 3, s * 3, salt + 10) - 512) * (s / 4) / 512;
+        int row = ((ty + warp) % period + period) % period;
+        if (row == 0) return TerrainBake.Mix(col, Black, 420);
+        if (row == 1) return TerrainBake.Mix(col, sh.Light, 260);
+        return col;
+    }
+
+    /// <summary>Snow patches (mountains kit): broad drifts that thin into a dithered rim, laid over rock and open ground.</summary>
+    private static TerrainPalette.Rgb Snow(TerrainPalette.Rgb col, int tx, int ty, int s, int k, uint salt, bool rock)
+    {
+        // Snow favours high, rocky ground: the threshold is lower on rock than on open ground (about half the old coverage overall).
+        int m = Fbm(tx, ty, s, salt + 12) + (int)(H(tx / k, ty / k, 13u) % 80u) - 40;
+        if (m < (rock ? 690 : 760)) return col;
+        return TerrainBake.Mix(col, SnowWhite, m >= 700 ? 700 : 450);
+    }
+
+    private static TerrainPalette.Rgb Features(bool calm, DetailKit kit, LandType land, TerrainPalette.LandShades sh, TerrainPalette.Rgb col, int tx, int ty, int cx, int cy, int sx, int sy, int s, int k, uint salt)
     {
         // Pebbles and rubble: a lit north-west edge, a body, a hard one-texel shadow to the south-east.
-        int chance = land switch { LandType.Clear => 200, LandType.Rough => 420, LandType.Rock => 160, LandType.Road => 50, _ => 0 };
+        // Mountain scree: some cells carry a heavy field of angular stones (per cell, so a cell's stones never flicker across its texels).
+        int chance = land switch
+        {
+            LandType.Clear => 200, LandType.Rough => 420, LandType.Road => 50,
+            LandType.Rock => kit == DetailKit.Mountains ? (H(cx, cy, 33u) % 1000u < 500u ? 650 : 140) : 160,
+            _ => 0,
+        };
         if (calm) chance /= 2;
         int count = land == LandType.Rough ? 4 : 3;
         for (int i = 0; i < count && chance > 0; i++)
@@ -127,16 +181,16 @@ public static class TerrainDetail
             }
         }
 
-        // Hairline cracks: thin ridges of a low-frequency noise, only inside a mask so they come in patches.
-        int cp = Math.Max(6, s * 5 / 4);
+        // Hairline cracks (toned down in S43): short, thin, faint ridges of a low-frequency noise; rarer, and only inside a mask so they come in patches.
+        int cp = Math.Max(5, s * 3 / 4);
         if (!calm && (land != LandType.Rough || sx % 3 != 0))
         {
             int mask = Vn(tx, ty, s * 3, s * 3, salt + 5);
-            int maskMin = land is LandType.Road ? 640 : land == LandType.Rock ? 520 : 700;
+            int maskMin = land is LandType.Road ? 740 : land == LandType.Rock ? 680 : 760;
             if (mask > maskMin)
             {
                 int ridge = Math.Abs(Vn(tx, ty, cp, cp, salt + 6) - 512);
-                if (ridge < 440 / cp) col = TerrainBake.Mix(col, Black, land == LandType.Rock ? 380 : 250);
+                if (ridge < 260 / cp) col = TerrainBake.Mix(col, Black, land == LandType.Rock ? 200 : 120);
             }
         }
 
@@ -160,12 +214,12 @@ public static class TerrainDetail
         return col;
     }
 
-    private static TerrainPalette.Rgb AshGround(TerrainPalette.LandShades sh, int tx, int ty, int s, int k, uint salt)
+    private static TerrainPalette.Rgb AshGround(TerrainPalette.LandShades sh, int tx, int ty, int s, int k, uint salt, bool drifts)
     {
-        // Wind-combed drifts: long horizontal streaks over a soft base, with thin lighter crest lines.
-        int n = Fbm(tx, ty, s, salt);
-        int streak = Vn(tx, ty, s * 4, Math.Max(2, s * 3 / 8), salt + 7);
-        int t = (n - 512) * 220 / 100 + (streak - 512) * 150 / 100;
+        // Wind-combed drifts: long horizontal streaks over a soft base, with thin lighter crest lines. The ash kit makes the drifts bigger.
+        int n = Fbm(tx, ty, drifts ? s * 2 : s, salt);
+        int streak = drifts ? Vn(tx, ty, s * 7, Math.Max(3, s / 2), salt + 7) : Vn(tx, ty, s * 4, Math.Max(2, s * 3 / 8), salt + 7);
+        int t = drifts ? (n - 512) * 300 / 100 + (streak - 512) * 200 / 100 : (n - 512) * 220 / 100 + (streak - 512) * 150 / 100;
         TerrainPalette.Rgb col = Toward(sh, Math.Clamp(t, -512, 512));
         int py = Math.Max(3, s / 2);
         int crest = Math.Abs(Vn(tx, ty, s * 3, py, salt + 8) - 512);
@@ -175,11 +229,12 @@ public static class TerrainDetail
         return col;
     }
 
-    private static TerrainPalette.Rgb AshFeatures(TerrainPalette.LandShades sh, TerrainPalette.Rgb col, int tx, int ty, int cx, int cy, int sx, int sy, int s, int k)
+    private static TerrainPalette.Rgb AshFeatures(TerrainPalette.LandShades sh, TerrainPalette.Rgb col, int tx, int ty, int cx, int cy, int sx, int sy, int s, int k, DetailKit kit)
     {
         uint g = H(tx / k, ty / k, 77u) % 400u;
         if (g == 0) return TerrainBake.Mix(sh.Dark, Black, 550);                       // cinder
         if (g == 1) return TerrainBake.Mix(sh.Light, White, 230);                      // pale ash flake
+        if (kit == DetailKit.Ash && (g == 2 || g == 3)) return TerrainBake.Mix(sh.Dark, Ember, 480);   // ember-glow cinder
         uint h = H(cx, cy, 78u);
         if (h % 1000u < 150u)   // a charred twig: short dark diagonal with a lit twin
         {
@@ -192,7 +247,7 @@ public static class TerrainDetail
         return col;
     }
 
-    private static TerrainPalette.Rgb Cliff(TerrainPalette.LandShades sh, int tx, int ty, int s, int k, uint salt)
+    private static TerrainPalette.Rgb Cliff(TerrainPalette.LandShades sh, int tx, int ty, int s, int k, uint salt, bool bold)
     {
         // Vertical striations over horizontal strata; a warm grey comes through the near-black face.
         TerrainPalette.Rgb warm = TerrainBake.Mix(sh.Light, new TerrainPalette.Rgb(78, 70, 58), 550);
@@ -200,7 +255,8 @@ public static class TerrainDetail
         int strata = Vn(tx, ty, s * 3, Math.Max(2, s / 3), salt + 1);
         int t = (v - 380) * 420 / 640;
         TerrainPalette.Rgb col = TerrainBake.Mix(sh.Base, warm, Math.Clamp(t, 0, 520));
-        if (Math.Abs(strata - 512) < 46) col = TerrainBake.Mix(col, Black, 500);
+        if (Math.Abs(strata - 512) < (bold ? 80 : 46)) col = TerrainBake.Mix(col, Black, bold ? 620 : 500);
+        else if (bold && Math.Abs(strata - 512) < 110) col = TerrainBake.Mix(col, sh.Light, 180);   // a lit ledge above each joint
         uint g = H(tx / k, ty / k, 2);
         if (g % 7u == 0) col = TerrainBake.Mix(col, warm, 420);
         return col;
@@ -244,7 +300,10 @@ public static class TerrainDetail
         int reach = s / 2;
         if (sx >= reach && sx < s - reach && sy >= reach && sy < s - reach) return col;
 
-        int warpN = Vn(tx, ty, Math.Max(3, s * 5 / 8), Math.Max(3, s * 5 / 8), 90u) - 512;
+        // The warp noise and each neighbour's ground are only computed when a neighbour is close enough to matter (same output, less work).
+        int warpN = int.MinValue, nDone = 0;
+        Span<int> doneLand = stackalloc int[8];
+        Span<TerrainPalette.Rgb> doneCol = stackalloc TerrainPalette.Rgb[8];
         for (int oy = -1; oy <= 1; oy++)
             for (int ox = -1; ox <= 1; ox++)
             {
@@ -258,6 +317,7 @@ public static class TerrainDetail
                 bool road = land == LandType.Road || nl == LandType.Road;
                 bool water = land is LandType.Water or LandType.Shallow;
                 int bw = (road ? s / 4 : water ? s / 2 : s * 3 / 8) * 16;
+                if (warpN == int.MinValue) warpN = Vn(tx, ty, Math.Max(3, s * 5 / 8), Math.Max(3, s * 5 / 8), 90u) - 512;
                 d16 += warpN * bw / 1700;
                 if (d16 >= bw) continue;
                 int wgt = (road ? 360 : 500) * (bw - Math.Max(0, d16)) / bw;
@@ -265,7 +325,16 @@ public static class TerrainDetail
                 // Rough-edged dither: a few texels flip a notch either way.
                 uint j = H(tx, ty, 91u);
                 if (j % 5u == 0) wgt = wgt * ((j >> 8 & 1u) != 0 ? 3 : 1) / 2;
-                col = TerrainBake.Mix(col, Ground(palette, nl, tx, ty, false), Math.Min(wgt, 560));
+                int hit = -1;
+                for (int i = 0; i < nDone; i++) if (doneLand[i] == (int)nl) { hit = i; break; }
+                if (hit < 0)
+                {
+                    hit = nDone++;
+                    doneLand[hit] = (int)nl;
+                    doneCol[hit] = Ground(palette, nl, tx, ty, false);
+                }
+
+                col = TerrainBake.Mix(col, doneCol[hit], Math.Min(wgt, 560));
             }
 
         return col;
@@ -303,9 +372,13 @@ public static class TerrainDetail
         else if (land is LandType.Water or LandType.Shallow && st.Shore is { } foam)
         {
             int d = Dist(nW, dW, nE, dE, nN, dN, nS, dS, n => n >= 0 && n != (int)LandType.Water && n != (int)LandType.Shallow);
-            int wob = (Vn(tx, ty, Math.Max(3, s / 2), Math.Max(3, s / 2), 96u) - 512) * 2 * k / 1023;   // -k..k
+            // Tidal foam (glass coast kit): the line scallops on a finer wobble, and a lace of receding foam lies just outside it.
+            bool tide = st.Kit == DetailKit.Coast;
+            int wp = tide ? Math.Max(2, s / 4) : Math.Max(3, s / 2);
+            int wob = (Vn(tx, ty, wp, wp, 96u) - 512) * 2 * k / 1023;   // -k..k
             int band = st.ShoreTexels * k + wob;
             if (d < band) col = TerrainBake.Mix(col, foam, 820 * (band - d) / Math.Max(1, band));
+            else if (tide && d < band + 2 * k && Vn(tx, ty, s, Math.Max(2, s / 2), 99u) > 600) col = TerrainBake.Mix(col, foam, 300);   // receding tide lace
             else if (d < band + 2 * k && jit % 5u == 0) col = TerrainBake.Mix(col, foam, 380);   // spray flecks
         }
         else if (land == LandType.Cliff && st.CliffTop is { } top)
@@ -334,10 +407,18 @@ public static class TerrainDetail
 
         if (land is not (LandType.Water or LandType.Shallow or LandType.Cliff) && st.Shore is not null)
         {
-            // Wet bank: ground right beside water is darker and a little blue.
+            // Wet bank: ground right beside water is darker and a little blue; on a coast beach (coast kit) it is a wider band of wet sand.
+            bool sand = land == LandType.Coast && st.Kit == DetailKit.Coast;
             int d = Dist(nW, dW, nE, dE, nN, dN, nS, dS, n => n == (int)LandType.Water || n == (int)LandType.Shallow);
-            int wet = 3 * k + (Vn(tx, ty, Math.Max(3, s / 2), Math.Max(3, s / 2), 98u) - 512) * k / 512;
-            if (d < wet) col = TerrainBake.Mix(col, new TerrainPalette.Rgb(44, 48, 56), 300 * (wet - d) / wet);
+            if (d < (sand ? 6 : 4) * k)   // the band is never wider than this, so the wobble is only needed this close (same output)
+            {
+                int wet = (sand ? 5 : 3) * k + (Vn(tx, ty, Math.Max(3, s / 2), Math.Max(3, s / 2), 98u) - 512) * k / 512;
+                if (sand)
+                {
+                    if (d < wet) col = TerrainBake.Mix(col, WetSand, 420 * (wet - d) / wet);
+                }
+                else if (d < wet) col = TerrainBake.Mix(col, new TerrainPalette.Rgb(44, 48, 56), 300 * (wet - d) / wet);
+            }
         }
 
         return col;
