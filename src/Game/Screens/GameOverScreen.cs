@@ -91,7 +91,8 @@ public sealed class GameOverScreen : IScreen
         _mouse = input.MousePosition;
         if (input.ConsumePressed(Keys.Escape))
         {
-            GameFlow.QuitToMenu(_s);
+            // U-04: Esc asks first, as Pause > Quit to menu does (a stray Esc must not drop the player out of the result screen)
+            _s.Screens.Push(new ConfirmScreen(_s, ConfirmScreen.QuitTitle, ConfirmScreen.QuitText, ConfirmScreen.QuitYes, () => GameFlow.QuitToMenu(_s)));
             return;
         }
 
