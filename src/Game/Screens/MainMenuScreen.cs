@@ -4,9 +4,11 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Rts.Data;
+using Rts.Game.Campaign;
 using Rts.Game.Input;
 using Rts.Game.Menu;
 using Rts.Game.Update;
+using Rts.Scripting;
 
 namespace Rts.Game.Screens;
 
@@ -28,6 +30,7 @@ public sealed class MainMenuScreen : IScreen
     private float _sinceRefresh;
     private float _seconds;
     private bool _hadSave;
+    private readonly IReadOnlyList<string> _campaignNotices;   // U-08: what the campaign progress loader had to skip, read once when the menu opens
 
     /// <summary>Creates the menu. <paramref name="saves"/> overrides where saves are looked for (tests); null = the default folder.</summary>
     public MainMenuScreen(GameServices services, SaveCatalog? saves = null)
@@ -35,6 +38,7 @@ public sealed class MainMenuScreen : IScreen
         _s = services;
         _saves = saves ?? new SaveCatalog(SaveCatalog.DefaultRoot);
         _hadSave = _saves.Newest() is not null;
+        _campaignNotices = CampaignNotices();
         _lobby = new LobbyMenuController(Entries(_hadSave));
         _plain = new MenuPanel("RTS_2027", _lobby.Entries.Select(e => new MenuItem(
             () => e.Enabled || e.Tooltip is null ? e.Label : $"{e.Label}   ({e.Tooltip})",
@@ -42,6 +46,22 @@ public sealed class MainMenuScreen : IScreen
     }
 
     private static IReadOnlyList<MainMenuEntry> Entries(bool hasSave) => MainMenuModel.Build(hasSave);
+
+    /// <summary>
+    /// U-08 (GAMESYS-04): the warnings from the campaign progress files that exist beside the settings (a skipped bad entry, or a file that
+    /// was set aside). Empty when every file loads cleanly.
+    /// </summary>
+    public static IReadOnlyList<string> CampaignNotices()
+    {
+        var notices = new List<string>();
+        foreach (string faction in MissionLoader.Factions)
+        {
+            if (!File.Exists(CampaignProgress.DefaultPath(faction))) continue;
+            notices.AddRange(CampaignProgress.LoadWithWarnings(faction).Warnings);
+        }
+
+        return notices;
+    }
 
     /// <inheritdoc />
     public bool BlocksUpdateBelow => true;
@@ -107,6 +127,8 @@ public sealed class MainMenuScreen : IScreen
             _plain.Draw(sb, _s.Pixel, vp, _s.UiScale, _mouse);
             if (_s.Updates.Found is { } plainUpdate)
                 Ui.BitmapFont.Draw(sb, _s.Pixel, UpdateCheck.NoticeText(plainUpdate), new Vector2(8, 8), new Color(0xE8, 0xA8, 0x28), _s.UiScale);
+            for (int i = 0; i < _campaignNotices.Count; i++)   // U-08
+                Ui.BitmapFont.Draw(sb, _s.Pixel, _campaignNotices[i], new Vector2(8, 32 + 24 * i), new Color(0xE8, 0xA8, 0x28), _s.UiScale);
             return;
         }
 
@@ -121,6 +143,18 @@ public sealed class MainMenuScreen : IScreen
             _ops.Add(DrawOp.Text(UpdateCheck.NoticeText(update), _lobby.Layout.TitleX + 5 * unit, LobbyMenuView.FooterTop(unit, vp.Height) - line - 2 * unit,
                 unit, new Rgba(0xE8, 0xA8, 0x28)));
         }
+
+        if (_campaignNotices.Count > 0)
+        {
+            // U-08: one amber line per warning, stacked above the update line.
+            Ui.UiUnit unit = _lobby.Layout.Scale;
+            int line = Ui.BitmapFont.LineHeight(unit, Ui.Fonts.FontWeight.Regular);
+            float baseY = LobbyMenuView.FooterTop(unit, vp.Height) - line - 2 * unit;
+            for (int i = 0; i < _campaignNotices.Count; i++)
+                _ops.Add(DrawOp.Text(_campaignNotices[i], _lobby.Layout.TitleX + 5 * unit, baseY - (_campaignNotices.Count - i) * line,
+                    unit, new Rgba(0xE8, 0xA8, 0x28)));
+        }
+
         background.DrawOps(sb, _ops, vp);
     }
 
