@@ -2,7 +2,7 @@
 
 Usage:  python3 tools/art/build_vehicle.py <id> [--samples 24] [--states idle harvest] [--facings 0 4 ...]
         [--render-only | --post-only] [--preview]
-Wrap renders in:  flock /home/claude/wt/blender.lock python3 tools/art/build_vehicle.py <id>
+Wrap renders in:  flock $BLENDER_LOCK python3 tools/art/build_vehicle.py <id>
 <id> names a module in tools/art/vehicles/<id>.py (contract in the docstring of vehicles/auth_jeep.py).
 
 Same pipeline as the approved v2 tank (arm B, D-039/D-043, 40 deg camera D-064): ortho camera, sun upper-left, 4x render

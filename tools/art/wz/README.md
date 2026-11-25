@@ -3,7 +3,7 @@
 Warzone 2100 source and data are GPL-2.0-or-later (its COPYING.README), compatible with our GPL-3.0-or-later; the name "Warzone 2100" may be
 credited. Exceptions (COPYING.NONGPL of the data and of the texpages repo): `page-17-droid-weapons.png` and `page-6/30-features-rockies.png`
 are CC BY SA 3.0 (not compatible with GPL-3.0), the wheel propulsion `.pie` files are CC BY SA 3.0 too. Do not use those. Check every texture page
-against that list before use. Both Warzone clones are read-only reference (`/home/claude/ref/wz2100`, `/home/claude/ref/wz2100-texpages`; override
+against that list before use. Both Warzone clones are read-only reference (default `../ref/wz2100` and `../ref/wz2100-texpages` beside the repo folder; override
 with `WZ_COMPONENTS`, `WZ_STRUCTS`, `WZ_TEXPAGES`); nothing from them is copied into the repo, only the sprites rendered from them.
 
 Files
@@ -17,7 +17,7 @@ Files
 Candidates (modules, rendered by the normal pipelines, written beside the originals under their own ids)
 - `python3 tools/art/build_vehicle.py auth_tank_wz`  (module `tools/art/vehicles/auth_tank_wz.py`; hull + turret layers)
 - `python3 tools/art/build_structure.py auth_factory_wz`  (module `tools/art/structures/auth_factory_wz.py`; idle frame only)
-Wrap renders in `flock /home/claude/wt/blender.lock`. The pipeline files gained one helper each: `S.mesh()` (adds a ready-made mesh plus an optional
+Wrap renders in `flock -o $BLENDER_LOCK` (`BLENDER_LOCK` is the one lock file that all worktrees share). The pipeline files gained one helper each: `S.mesh()` (adds a ready-made mesh plus an optional
 per-object mask material); nothing else in them changed.
 
 Findings: the Warzone body/structure pages carry very little team-colour mask (page-14: ~0.8 % of texels, none on the Cobra body), so house

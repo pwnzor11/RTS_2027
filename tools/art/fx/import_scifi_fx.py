@@ -270,7 +270,7 @@ def main():
 
     forks = lightning_fork_sheet(os.path.join(sfx, "lightning"))
     write_sheet("lightning_fork", forks, 2, False, (24, 24), note.replace("sci-fi-effects", "sci-fi-effects lightning (every 2nd frame)") + " Forked green arc (not wired).")
-    kdir = os.environ.get("RTS_KENNEY_PARTICLES", "/home/claude/ref/kenney-particles") + "/addons/kenney_particle_pack"
+    kdir = os.environ.get("RTS_KENNEY_PARTICLES", os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../../../ref/kenney-particles")) + "/addons/kenney_particle_pack"
     if ns.kenney_smoke:   # tried and rejected for the shipped sheet (ragged, thinner than the procedural plume); kept for comparison
         write_sheet("smoke_plume", smoke_plume(kdir), 3, True, (16, 63), "Kenney Particle Pack 1.1 (CC0) smoke puffs, regraded to the smoke ramp.")
 

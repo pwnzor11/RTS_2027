@@ -15,7 +15,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, ".."))
 import common as C
 
-TEXPAGES = os.environ.get("WZ_TEXPAGES", "/home/claude/ref/wz2100-texpages")
+TEXPAGES = os.environ.get("WZ_TEXPAGES", os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../../../ref/wz2100-texpages"))
 OUT = os.path.join(C.WORK, "wz")
 
 # kind -> (dark, mid, light) ramp stops and a contrast gain applied around the page's own median

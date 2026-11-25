@@ -5,7 +5,7 @@ Usage (repo root, with bpy installed, i.e. the .venv-art of D-196):
     python tools/booklet/render_portraits.py --ids auth_rifleman,lb_scavenger
     options: --samples 64  --force  --out data/portraits  --contact <png>  --no-denoise  --threads N  --accent #RRGGBB
 On the owner's laptop use tools/art/render_s24_portraits.ps1.  On the shared cloud box wrap the call in
-`flock -o /home/claude/wt/blender.lock ...` (the script does not lock by itself).
+`flock -o $BLENDER_LOCK ...` (the script does not lock by itself).
 
 Contract (read by code package s24-card): data/portraits/<id>.png, 96 x 96, RGBA, transparent background; infantry = head and
 shoulders facing the camera, vehicles and buildings = the whole model, square crop, 3/4 view (the south-west quarter of the booklet heroes); the house

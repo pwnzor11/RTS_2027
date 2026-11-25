@@ -6,7 +6,7 @@ Usage:  python3 tools/art/build_infantry.py <id> [--samples 24] [--frames 0 5 ..
 own rows and lists them in the manifest; without it the output is byte-identical to before.  --out writes the sheet and manifest
 to DIR instead of data/sprites/infantry (the work files get a "_deaths" suffix with --deaths).
 <id> names a module in tools/art/infantry/<id>.py (contract in the docstring of auth_rifleman.py).
-Wrap renders in `flock /home/claude/wt/blender.lock` yourself (one Blender render at a time, wave rule); the script does not lock.
+Wrap renders in `flock $BLENDER_LOCK` yourself (one Blender render at a time, wave rule); the script does not lock.
 
 Pipeline = tank arm B (D-039/D-043): ortho camera at 40 deg (D-064), sun upper-left, 4x render, box downscale, fixed
 32-colour palette incl. the 8 exact magenta house shades, 1 px outline, dithered hard shadow, alpha always 0 or 255.
@@ -34,7 +34,7 @@ PX = C.UNIT_PX        # D-275: sheet pixels per map cell (80 = the drawn size); 
 ELEV = 40.0
 SS = 4
 COLS = 6
-LOCK = "/home/claude/wt/blender.lock"
+LOCK = os.environ.get("BLENDER_LOCK", os.path.join(HERE, "..", "..", "scratch", "blender.lock"))
 
 
 def geometry(scale):
@@ -388,7 +388,7 @@ def main():
     if a.walk_frames and a.walk_frames != 6:      # keep the walk speed: ticks_per_frame scales with the frame count (6 x 3 = 18 ticks a cycle)
         mod.STATES = [(n, nf, k, max(1, round(18 / a.walk_frames)) if n == "walk" else t) for n, nf, k, t in mod.STATES]
     if not a.post_only:
-        # No self-locking: callers wrap renders in `flock /home/claude/wt/blender.lock …` (wave rule). A self re-exec under
+        # No self-locking: callers wrap renders in `flock $BLENDER_LOCK …` (wave rule). A self re-exec under
         # the same lock deadlocks when the caller already holds it (flock is not re-entrant across processes).
         render(a.id, mod, a.samples, set(a.frames) if a.frames else None)
     if not a.render_only:

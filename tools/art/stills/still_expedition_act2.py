@@ -1,6 +1,6 @@
 """Act-2 opener still for the Expedition (exp_02 The Supply Line): golden hour on the Glass Coast north shore.
 
-Usage:  flock -o /home/claude/wt/blender.lock python3 tools/art/stills/still_expedition_act2.py
+Usage:  flock -o $BLENDER_LOCK python3 tools/art/stills/still_expedition_act2.py
         (STILL_PREVIEW=1 for a 640x360 look).  Writes data/images/stills/still_expedition_act2.png.
 Scene: the advance party is ashore; the Anchorage pier is going up on the shallows while the first convoy of tenders
 and escorts sails in from a hazy fleet on the horizon.  Low gold sun over the sea, glass spires on the dunes,

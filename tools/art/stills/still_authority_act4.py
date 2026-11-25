@@ -1,6 +1,6 @@
 """Act-4 opener still for the Authority campaign (auth_04 The Sunrise Device): the river crossing under ashfall.
 
-Usage:  flock -o /home/claude/wt/blender.lock python3 tools/art/stills/still_authority_act4.py
+Usage:  flock -o $BLENDER_LOCK python3 tools/art/stills/still_authority_act4.py
 Env: STILL_PREVIEW=1 (640x360, 24 samples).  Writes data/images/stills/still_authority_act4.png.
 Ash Reckoning, night and ashfall: low camera on the north bank among the Authority column, a pontoon bridge over the
 black river, and the Directorate's Sunrise Device glowing on the far bank under a burning sky.  No text.

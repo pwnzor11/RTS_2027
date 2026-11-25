@@ -1,6 +1,6 @@
 """Act-3 opener still for the Left Behind campaign (lb_03 Hatch Field): blue hour on the Glass Coast, camp lit, hatch field glowing.
 
-Usage:  flock -o /home/claude/wt/blender.lock python3 tools/art/stills/still_lb_act3.py     (STILL_PREVIEW=1 for 640x360)
+Usage:  flock -o $BLENDER_LOCK python3 tools/art/stills/still_lb_act3.py     (STILL_PREVIEW=1 for 640x360)
 Writes data/images/stills/still_left_behind_act3.png.  Original scene, no text in the image.
 Scene: from a dune crest, the Drift's camp (lit rigs, harpoon wagons lined up) in the glass-strewn dunes; across the sand the
 Directorate hatch field: three open hatches throwing green light, a reactor vent, pillboxes, a loudspeaker mast; sea at the horizon.

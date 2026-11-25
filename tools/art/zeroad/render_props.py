@@ -1,7 +1,7 @@
 """Render 0 A.D. prop meshes (CC-BY-SA 3.0, Wildfire Games / 0 A.D. contributors) as 64-px game sprites with OUR camera and sun.
 
 Usage (always inside the shared Blender lock):
-  flock -o /home/claude/wt/blender.lock python3 tools/art/zeroad/render_props.py render [--samples 24] [--only name,...] [--preview]
+  flock -o $BLENDER_LOCK python3 tools/art/zeroad/render_props.py render [--samples 24] [--only name,...] [--preview]
   python3 tools/art/zeroad/render_props.py post [--only ...]          # pixel post: biome grade, outline, dithered hard shadow, atlas + manifest
 
 Pipeline: dae_loader.py (Blender 5 has no Collada importer) -> bpy mesh + 0 A.D. texture -> ortho camera at 40 deg elevation, the tank sun
@@ -14,7 +14,7 @@ import argparse, json, math, os, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, "..", "..", ".."))
-ZA = os.environ.get("ZEROAD_ROOT", "/home/claude/ref/zeroad")
+ZA = os.environ.get("ZEROAD_ROOT", os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../../../ref/zeroad"))
 ART = os.path.join(ZA, "binaries/data/mods/public/art")
 SCRATCH = os.environ.get("ART_SCRATCH", "/tmp/claude-0/art-0ad")
 RAW = os.path.join(SCRATCH, "raw")

@@ -6,7 +6,7 @@ tools/art/zeroad/render_props.py and tools/art/structpost.py). Frame 64 px, orig
 All geometry is built here from primitives: no imported meshes, no third-party art.
 
 Usage (render inside the shared Blender lock; the render is theater-neutral, the theater grade happens in `post`):
-  flock /home/claude/wt/blender.lock python3 tools/art/props/build_props.py render [--kind WreckHulk|all] [--samples 48]
+  flock $BLENDER_LOCK python3 tools/art/props/build_props.py render [--kind WreckHulk|all] [--samples 48]
   python3 tools/art/props/build_props.py atlas      # grade + pack: data/sprites/props/blender/<theater>.png + props.toml (also copied to scratch out/)
   python3 tools/art/props/build_props.py sheets     # contact sheets per theater into scratch/sheets/
 Wrecks and pylons never use a live-unit palette: rust, charcoal, bare steel, faded paint only as small patches (lead review, session 29).

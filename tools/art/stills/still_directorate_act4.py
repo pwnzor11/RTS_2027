@@ -1,6 +1,6 @@
 """Act-4 opener still for the Directorate campaign (dir_04 The Sunrise): clear night on the Ash Reckoning.
 
-Usage:  flock -o /home/claude/wt/blender.lock python3 tools/art/stills/still_directorate_act4.py
+Usage:  flock -o $BLENDER_LOCK python3 tools/art/stills/still_directorate_act4.py
 Low view from behind the keep: conscripts stand to along the river bank in the ash, red-lit vents and the Annex headframe around
 the chamber where the Sunrise charges, a shaft of red-white light rising from it into a star-filled sky; far south across the
 river the Authority base lies under searchlight beams.  Moon and stars, no text in the image.

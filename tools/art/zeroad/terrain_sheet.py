@@ -1,10 +1,11 @@
 """Comparison sheet of 0 A.D. terrain textures (CC-BY-SA 3.0) downsampled to our texel scale (16 texels per cell, 4 px per texel at zoom 1).
 No game data is produced: this only makes a review sheet. Usage: python3 -I tools/art/zeroad/terrain_sheet.py <out.png>"""
+import os
 import sys
 import numpy as np
 from PIL import Image, ImageDraw
 
-T = "/home/claude/ref/zeroad/binaries/data/mods/public/art/textures/terrain/types/"
+T = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../../../ref/zeroad/binaries/data/mods/public/art/textures/terrain/types/")
 CANDS = [("dirt_cracked_b.dds", "cracked dirt"), ("desert_dirt_cracks.dds", "cracked earth"), ("dirt_hard.dds", "hard dirt"),
          ("temp_dirt_gravel_b.png", "gravel"), ("dirt_burned.dds", "burned dirt"), ("desert_lakebed_dry.dds", "dry lakebed"),
          ("steppe_dirt_rocks_a.dds", "dirt + rocks"), ("dirt_rugged.dds", "rugged dirt")]

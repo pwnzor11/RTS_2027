@@ -7,7 +7,7 @@ Usage (repo root, with bpy installed, i.e. the .venv-art of D-196):
     options: --samples 128  --long-side 1600  --force  --out art/booklet  --contact art/booklet/contact_<date>.png
              --no-denoise  --threads N (0 = all cores, the default)
 On the owner's laptop use tools/booklet/render_heroes.ps1, which wraps this.  On the shared cloud box wrap the call in
-`flock -o /home/claude/wt/blender.lock ...` (the script does not lock by itself).
+`flock -o $BLENDER_LOCK ...` (the script does not lock by itself).
 
 How it works (additive: no existing sprite script is edited).  Each id's model is built by the SAME code that builds its game
 sprite: build_vehicle.render / build_infantry.render / build_structure.render, and the tank's own script for auth_tank

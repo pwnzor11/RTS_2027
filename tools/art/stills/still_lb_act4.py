@@ -1,6 +1,6 @@
 """Act-4 opener still for the Left Behind campaign (lb_04 The Banner): winter on the Ash Reckoning, the Expedition's beachhead on the south shore.
 
-Usage:  flock -o /home/claude/wt/blender.lock python3 tools/art/stills/still_lb_act4.py     (STILL_PREVIEW=1 for 640x360)
+Usage:  flock -o $BLENDER_LOCK python3 tools/art/stills/still_lb_act4.py     (STILL_PREVIEW=1 for 640x360)
 Writes data/images/stills/still_left_behind_act4.png.  Original scene, no text in the image.
 Scene: from the Drift's camp, the war-captain's banner snaps over the foreground; Rolling Fort, harpoon wagons and autogyros hold the ash
 plain; a counter-landing of marines crosses the flats; far off the Expedition beachhead with guns, pile houses, depot and ships on a cold sea.
