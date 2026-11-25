@@ -115,3 +115,23 @@ heading = "Artwork"
 name = "Act stills"
 credit = "Rendered in Blender from scenes written in code with Claude. Style chosen by the project owner."
 match = ["data/images/stills"]
+
+[[section.entry]]
+name = "This project"
+credit = "Vehicle, building and infantry sprites: procedural Blender renders, AI-assisted authoring."
+match = ["data/sprites/vehicles/", "data/sprites/buildings/", "data/sprites/infantry/"]
+
+[[section.entry]]
+name = "This project"
+credit = "Unit portraits and faction UI skins: procedural renders, AI-assisted authoring."
+match = ["data/portraits/", "data/ui/skins/"]
+
+[[section.entry]]
+name = "This project"
+credit = "Smoke plume and spark effect sheets: procedural pixel art, AI-assisted authoring."
+match = ["data/sprites/fx/smoke_plume.png"]
+
+[[section.entry]]
+name = "This project"
+credit = "Field Manual hero renders and the art pilot (repository only): procedural Blender renders, AI-assisted authoring."
+match = ["art/booklet/", "art/pilot/"]
