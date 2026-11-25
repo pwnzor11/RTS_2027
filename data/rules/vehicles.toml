@@ -639,7 +639,6 @@ turret_turn_rate = 0
 crusher = false
 cost = 250  # (tune)
 prerequisites = ["exp_hover_yard"]
-# TODO M7-14: "reveals ash richness" is a view/UI feature, no rules field
 
 [exp_glide_tank]   # fast hover medium tank, guided cannon (pilot unit for art, M7-11)
 faction = "expedition"
