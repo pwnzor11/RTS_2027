@@ -222,6 +222,7 @@ public sealed class RtsGame : Microsoft.Xna.Framework.Game
     {
         _screens.Clear(); // every screen gets its Exit; a running game saves its replay
         SaveWindowSize();
+        if (_services?.Audio is IDisposable audio) audio.Dispose();   // V-06: releases the music track at shutdown
         base.OnExiting(sender, args);
     }
 }

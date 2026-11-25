@@ -11,12 +11,17 @@ namespace Rts.Game.Audio;
 /// <see cref="SoundDef.MaxVoices"/> copies of one sound play at once (<see cref="VoiceLimiter"/>). Music is an OGG from data/music through
 /// MediaPlayer. If the audio device fails at any point the backend goes silent instead of throwing.
 /// </summary>
-public sealed class MonoGameAudio : IAudio
+public sealed class MonoGameAudio : IAudio, IDisposable
 {
+    /// <summary>V-06: how many decoded voice clips stay in memory (least recently played are dropped).</summary>
+    public const int VoiceCacheSize = 32;
+
     private readonly SoundBank _bank;
     private readonly string _audioDir;
     private readonly MusicLibrary _music;
     private readonly VoiceLimiter _voices = new();
+    private readonly BoundedCache<string, SoundEffect?> _voiceClips = new(VoiceCacheSize);   // V-06: decoded once, then reused
+    private readonly VoiceSlots _voiceSlots = new();                                       // V-06: at most two voice lines at once
     private readonly Dictionary<string, SoundEffect?> _effects = new(StringComparer.Ordinal);
     private readonly List<SoundEffectInstance> _active = new();
     private readonly Stopwatch _clock = Stopwatch.StartNew();
@@ -227,24 +232,14 @@ public sealed class MonoGameAudio : IAudio
         if (!HasVoice(relativePath)) return;
         try
         {
-            using FileStream stream = File.OpenRead(Path.Combine(_audioDir, relativePath));
-            SoundEffect effect;
-            int sampleRate = 0;
-            if (relativePath.EndsWith(".ogg", StringComparison.OrdinalIgnoreCase))
+            // V-06: the clip is decoded on first use and kept (a clip that will not decode is kept as null, so it is not retried).
+            SoundEffect? effect = _voiceClips.GetOrAdd(relativePath, LoadVoice);
+            if (effect is null) return;
+            if (!_voiceSlots.TryTake(_clock.ElapsedMilliseconds, (int)effect.Duration.TotalMilliseconds))
             {
-                // Voice lines are OGG (MissionLocale); FromStream reads WAV only, so decode with NVorbis first.
-                if (!VoiceDecoder.TryDecode(stream, relativePath, out byte[] pcm, out int rate, out int channels))
-                {
-                    Console.Error.WriteLine($"audio: cannot play voice {relativePath}: only mono or stereo OGG is supported");
-                    return;
-                }
-
-                sampleRate = rate;
-                effect = new SoundEffect(pcm, rate, channels == 1 ? AudioChannels.Mono : AudioChannels.Stereo);
-            }
-            else
-            {
-                effect = SoundEffect.FromStream(stream);
+                if (_voiceReported.Add("dropped:" + relativePath))
+                    Console.Error.WriteLine($"audio: voice {relativePath} not played, {VoiceSlots.DefaultMax} voice lines are already playing (the text still shows)");
+                return;
             }
 
             SoundEffectInstance voice = effect.CreateInstance();
@@ -252,13 +247,67 @@ public sealed class MonoGameAudio : IAudio
             voice.Play();
             _active.Add(voice);
             if (_voiceReported.Add("played:" + relativePath))
-                Console.Error.WriteLine($"audio: voice {relativePath} {sampleRate} Hz {(int)effect.Duration.TotalMilliseconds} ms (volume {voice.Volume:0.##}, state {voice.State})");
+                Console.Error.WriteLine($"audio: voice {relativePath} {(int)effect.Duration.TotalMilliseconds} ms (volume {voice.Volume:0.##}, state {voice.State})");
         }
         catch (Exception e) when (e is IOException or InvalidOperationException or ArgumentException or NotSupportedException or InvalidDataException)
         {
             // A voice file the backend cannot decode (including a corrupt OGG) is text-only, not a broken audio device.
             Console.Error.WriteLine($"audio: cannot play voice {relativePath}: {e.Message}");
         }
+    }
+
+    // V-06: decodes one voice file. Returns null (after a log line) when the file cannot be read or decoded.
+    private SoundEffect? LoadVoice(string relativePath)
+    {
+        try
+        {
+            using FileStream stream = File.OpenRead(Path.Combine(_audioDir, relativePath));
+            if (!relativePath.EndsWith(".ogg", StringComparison.OrdinalIgnoreCase)) return SoundEffect.FromStream(stream);
+
+            // Voice lines are OGG (MissionLocale); FromStream reads WAV only, so decode with NVorbis first.
+            if (!VoiceDecoder.TryDecode(stream, relativePath, out byte[] pcm, out int rate, out int channels))
+            {
+                Console.Error.WriteLine($"audio: cannot play voice {relativePath}: only mono or stereo OGG is supported");
+                return null;
+            }
+
+            return new SoundEffect(pcm, rate, channels == 1 ? AudioChannels.Mono : AudioChannels.Stereo);
+        }
+        catch (Exception e) when (e is IOException or InvalidOperationException or ArgumentException or NotSupportedException or InvalidDataException)
+        {
+            Console.Error.WriteLine($"audio: cannot play voice {relativePath}: {e.Message}");
+            return null;
+        }
+    }
+
+    /// <summary>V-06: releases the music track and the sound instances still playing. Called once at shutdown; never throws.</summary>
+    public void Dispose()
+    {
+        try
+        {
+            if (!_broken) MediaPlayer.Stop();
+        }
+        catch (Exception e) when (e is NoAudioHardwareException or InvalidOperationException)
+        {
+            // the device went away; nothing left to stop
+        }
+
+        foreach (AmbienceVoice v in _ambience.ToList()) v.Stop();
+        foreach (SoundEffectInstance instance in _active)
+        {
+            try
+            {
+                instance.Dispose();
+            }
+            catch (Exception e) when (e is InvalidOperationException or ObjectDisposedException)
+            {
+                // already gone
+            }
+        }
+
+        _active.Clear();
+        _song?.Dispose();
+        _song = null;
     }
 
     /// <inheritdoc />
@@ -272,10 +321,13 @@ public sealed class MonoGameAudio : IAudio
         if (path is null) return;
         try
         {
-            _song = Song.FromUri(id, new Uri(path, UriKind.RelativeOrAbsolute));
+            Song next = Song.FromUri(id, new Uri(path, UriKind.RelativeOrAbsolute));
             MediaPlayer.IsRepeating = loop;
             ApplyMusicVolume();
-            MediaPlayer.Play(_song);
+            MediaPlayer.Play(next);
+            Song? previous = _song;   // V-06: the track this one replaces is released (it is no longer playing)
+            _song = next;
+            previous?.Dispose();
         }
         catch (Exception e) when (e is NoAudioHardwareException or InvalidOperationException or IOException or NotSupportedException)
         {
