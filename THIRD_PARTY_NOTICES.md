@@ -23,7 +23,9 @@ coverlet and Microsoft.CodeAnalysis.
 
 ## Art assets in `data/` (third-party)
 
-Used under GPL-3.0-or-later (the project licence); where a pack is dual-licensed we chose the GPL-3.0 option. Full list with file names in `docs/CREDITS.md`.
+Used under GPL-3.0-or-later (the project licence); where a pack is dual-licensed we chose the GPL-3.0 option. The one
+exception is the 0 A.D. set in `data/sprites/props/zeroad/`, which is CC BY-SA 3.0 and is described in its own section
+at the end of this file (OPEN, owner decision). Full list with file names in `docs/CREDITS.md`.
 
 | Assets | Author credit | Licences offered by the author | Licence used | Upstream |
 |---|---|---|---|---|
@@ -31,6 +33,7 @@ Used under GPL-3.0-or-later (the project licence); where a pack is dual-licensed
 | `data/sprites/fx/fire_small`, `fire_large` (derived from "LPC flames") | Sharm (Lanea Zimmerman) as graphic artist; submitted by William.Thompsonj | CC-BY 3.0, GPL-3.0 or GPL-2.0 | GPL-3.0 | https://opengameart.org/ (LPC flames) |
 | `data/sprites/props/lpc_props.png` (derived from the Liberated Pixel Cup `terrain_atlas.png`) | Lanea Zimmerman (Sharm), Casper Nilsson, Daniel Eddeland, Johann Charlot, Skyler Robert Colladay, Stephen Challener (Redshrike), Charles Sanchez (CharlesGabriel), Manuel Riecke (MrBeast), Daniel Armstrong (HughSpectrum); list in `data/licences/LPC_Attribution.txt` | CC-BY-SA 3.0 or GPL-3.0 (Charlot's items: LGPL-3.0 or later) | GPL-3.0 | https://opengameart.org/ (Liberated Pixel Cup) |
 | `data/sprites/fx/puffs_dust.png`, `puffs_smoke.png` (derived from Kenney's Smoke particle pack) | Kenney (www.kenney.nl) | CC0 | CC0 | https://kenney.nl/assets/smoke-particles |
+| `data/sprites/props/zeroad/` (`ashplains.png`, `glasscoast.png`, `mountains.png`, `rustbelt.png`, `props.toml`; renders of 0 A.D. art) | 0 A.D. (Wildfire Games and the 0 A.D. contributors) | CC BY-SA 3.0 | CC BY-SA 3.0 (not GPL; see the 0 A.D. section below) | https://play0ad.com/ |
 
 The GPL-3.0 text is `LICENSE`. The authors' notes are in `data/licences/`.
 
@@ -267,6 +270,17 @@ permission under GPL v3 section 7 in `LICENSE` covers combining RTS_2027 with Mo
 The MonoGame source is at https://github.com/MonoGame/MonoGame .
 
 ## 0 A.D. art (Creative Commons Attribution-ShareAlike 3.0)
+
+**OPEN: owner decision needed — CC BY-SA 3.0 assets ship although D-033 excludes the licence.** D-188 (owner decision,
+session 15) allowed these renders as separately licensed data files for Boulder, Rubble and Snag; D-033 (status
+"assumed — confirm") still excludes CC BY-SA 3.0 and has not been amended. See `docs/LICENSING.md`, section
+"CC BY-SA 3.0 material that ships".
+
+Files shipped in the Windows build: `data/sprites/props/zeroad/ashplains.png`, `glasscoast.png`, `mountains.png`,
+`rustbelt.png` (one atlas per theater), `props.toml` (kinds Boulder, Rubble, Snag) and `LICENSE.txt` (folder notice).
+Licence: Creative Commons Attribution-ShareAlike 3.0 Unported, https://creativecommons.org/licenses/by-sa/3.0/ ; legal
+code in `data/licences/CC-BY-SA-3.0.txt`; notice for these files in `data/licences/CC-BY-SA-3.0_0AD_NOTICE.txt`.
+Attribution: "Wildfire Games / 0 A.D. contributors".
 
 The map prop sprites in `data/sprites/props/zeroad/` are renders of 0 A.D. meshes and textures, recoloured per theater. Source:
 0 A.D. (c) Wildfire Games and the 0 A.D. contributors, https://play0ad.com/ , art licensed CC BY-SA 3.0
