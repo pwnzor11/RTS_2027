@@ -3,6 +3,7 @@
 using Rts.Sim.Core;
 using Rts.Sim.Production;
 using Rts.Sim.Rules;
+using Rts.Sim.Shipments;
 
 namespace Rts.Sim;
 
@@ -102,11 +103,23 @@ public sealed partial class Simulation
             if (!_buildings.Slots.IsIndexAlive(i) || _rigs.PackTicksLeft[i] != 0) continue;   // a packing rig stops counting at once
             byte p = _buildings.Player[i];
             if (p >= n) continue;
-            _supplyCap[p] += rules.Buildings[_buildings.TypeIndex[i]].SupplyProvided;
+            BuildingType bt = rules.Buildings[_buildings.TypeIndex[i]];
+            _supplyCap[p] += bt.SupplyUnstocked >= 0 && !StoreStocked((byte)p) ? bt.SupplyUnstocked : bt.SupplyProvided;
         }
         for (int p = 0; p < n; p++) _supplyCap[p] = Math.Min(_supplyCap[p], sr.Ceiling);
         _supplyStamp = Tick;
         _supplyDirty = false;
+    }
+
+    /// <summary>
+    /// M-10: an Expedition store is stocked when a shipment docked within the last <c>stock_intervals</c> shipment intervals (design 13 §2.3).
+    /// Always stocked while shipments are off, so games without them cap exactly as before.
+    /// </summary>
+    private bool StoreStocked(byte player)
+    {
+        ShipmentRules sh = RulesOf(player).Shipments;
+        if (!sh.Enabled || sh.TenderType.Length == 0) return true;
+        return Tick - _shipments.LastArrivalTick[player] <= (long)SupplyRulesOf.StockIntervals * sh.IntervalTicks;
     }
 
     /// <summary>Supply of every unit waiting in the player's three unit queues (the front item included).</summary>

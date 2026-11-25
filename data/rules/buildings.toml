@@ -979,7 +979,6 @@ prerequisites = ["exp_landing_depot"]
 provides = []
 supply_provided = 10  # (tune) stocked: a shipment arrived in the last stock_intervals
 supply_unstocked = 5  # (tune)
-# TODO M7-06: the stocked test (last shipment arrival within stock_intervals) is read from the shipments state by SUP-3/M7-06 code
 
 [exp_billet]   # infantry production
 faction = "expedition"
