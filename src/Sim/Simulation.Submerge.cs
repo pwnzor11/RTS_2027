@@ -62,7 +62,7 @@ public sealed partial class Simulation
             case WeaponTargets.Both: return !sub;
             case WeaponTargets.Air: return air;
             case WeaponTargets.Naval: return !sub && IsNavalShip(kind, i);
-            case WeaponTargets.Submerged: return sub;
+            case WeaponTargets.Submerged: return IsSubmergedShip(kind, i);   // S44 (M-26, SIMCOMBAT-05): a just-fired (revealed) sub is still a depth-charge target
             case WeaponTargets.NavalAndSubmerged: return sub || IsNavalShip(kind, i);
             default: return !air && !sub;
         }

@@ -145,13 +145,7 @@ public sealed partial class Simulation
             {
                 if (!store.Slots.IsIndexAlive(i) || !IsStealthType(kind, i)) { if (still[i] != 0 && store.Slots.IsIndexAlive(i)) still[i] = 0; continue; }
                 bool moved = _useTickPos && i < start.Length && store.Position[i] != start[i];
-                bool fired = false;
-                int weapon = WeaponOf(kind, i);
-                if (weapon >= 0)
-                {
-                    int rof = RulesOf(store.Player[i]).Weapons[weapon].RateOfFire;
-                    fired = _combat.At(kind, i).ReloadTicks >= Math.Max(1, rof);   // Fire set the reload this tick
-                }
+                bool fired = _firedThisTick[k].Length > i && _firedThisTick[k][i];   // S44 (M-26, SIMCOMBAT-06): Fire marked it, whatever the reload became
                 if (moved || fired) still[i] = 0;
                 else if (still[i] < delay) still[i]++;
             }

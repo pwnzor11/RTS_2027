@@ -743,7 +743,7 @@ turret_turn_rate = 0
 crusher = false
 cost = 300  # (tune)
 prerequisites = ["exp_quay"]
-# TODO M7-05: a second (gun) weapon slot for the Launch does not exist; only the depth charge is wired
+secondary_weapon = "exp_launch_gun"   # S44 (M-04): deck gun beside the depth charge (ASSUMED numbers, see weapons.toml)
 
 [exp_landing_craft]   # transport, beachable
 faction = "expedition"
@@ -798,7 +798,8 @@ crusher = false
 cost = 900  # (tune)
 prerequisites = ["exp_shipyard"]
 sonar_radius = 6  # (tune) detects submerged vessels (M7-05 machinery)
-# TODO M7-05: depth charge and AA secondary weapons (design 07 §5) need a second weapon slot
+secondary_weapon = "exp_launch_charge"   # S44 (M-04): depth charge (same entry as the Patrol Launch)
+tertiary_weapon = "exp_destroyer_aa"     # S44 (M-04): anti-air mount
 
 [exp_missile_sub]   # Missile Submarine, dive toggle via Deploy
 faction = "expedition"

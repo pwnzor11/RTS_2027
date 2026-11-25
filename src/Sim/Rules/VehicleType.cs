@@ -8,6 +8,14 @@ public sealed record VehicleType(string Id, Locomotion Locomotion, int Speed, in
     ArmorClass Armor, int Sight, int PrimaryWeapon, bool HasTurret, int TurretTurnRate, bool Crusher, int Cost,
     IReadOnlyList<string> Prerequisites)
 {
+    /// <summary>S44 (M-04): second weapon slot, an index into SimRules.Weapons or -1 (TOML <c>secondary_weapon</c>). It reloads on its own
+    /// cooldown, needs no aiming and picks its own target, independent of <see cref="PrimaryWeapon"/>.</summary>
+    public int SecondaryWeapon { get; init; } = -1;
+
+    /// <summary>S44 (M-04): third weapon slot, same rules as <see cref="SecondaryWeapon"/> (TOML <c>tertiary_weapon</c>; the Destroyer carries a
+    /// depth charge and an anti-air mount besides its gun).</summary>
+    public int TertiaryWeapon { get; init; } = -1;
+
     /// <summary>Credits a harvester carries (0 = not a harvester).</summary>
     public int HarvestCapacity { get; init; }
 

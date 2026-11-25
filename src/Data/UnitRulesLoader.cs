@@ -32,6 +32,8 @@ internal static class UnitRulesLoader
         "draw_scale_permille", "deep_only", "submerges", "sonar_radius", "aircraft_slots", "sortie_ticks", "ammo", "rearm_ticks", "unload_ticks",
         // schema v8 (M7-04b)
         "vehicle_slots",
+        // S44 (M-04)
+        "secondary_weapon", "tertiary_weapon",
     ];
 
     private static readonly string[] InfantryKeys =
@@ -136,6 +138,9 @@ internal static class UnitRulesLoader
         int? rearmTicks = f.OptInt("rearm_ticks", 0, 1_000_000, 0);
         int? unloadTicks = f.OptInt("unload_ticks", 0, 1_000_000, 0);
         int? vehicleSlots = f.OptInt("vehicle_slots", 0, 16, 0);
+        int? secondaryWeapon = f.OptIndex("secondary_weapon", WeaponIds(weapons), "weapon");   // S44 (M-04)
+        int? tertiaryWeapon = f.OptIndex("tertiary_weapon", WeaponIds(weapons), "weapon");
+        if (secondaryWeapon is null || tertiaryWeapon is null) return null;
         if (drawScale is null || deepOnly is null || submerges is null || sonar is null || aircraftSlots is null || sortieTicks is null
             || unloadTicks is null || vehicleSlots is null || ammo is null || rearmTicks is null) return null;
         if (veteran is null || supply is null) return null;
@@ -198,6 +203,8 @@ internal static class UnitRulesLoader
             RearmTicks = rearmTicks.Value,
             UnloadTicks = unloadTicks.Value,
             VehicleSlots = vehicleSlots.Value,
+            SecondaryWeapon = secondaryWeapon.Value,
+            TertiaryWeapon = tertiaryWeapon.Value,
         };
     }
 

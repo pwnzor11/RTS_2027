@@ -15,6 +15,8 @@ namespace Rts.Sim.Combat;
 public struct CombatEntry
 {
     public int ReloadTicks;
+    /// <summary>S44 (M-04): reload countdown of the second and third weapon slots (0 = ready; always 0 for a unit without them).</summary>
+    public int Reload2, Reload3;
     public byte TurretFacing;
     public bool TurretInit;
     public ActorRef AttackTarget;
@@ -27,7 +29,7 @@ public struct CombatEntry
 
     /// <summary>True when every field is at its default (such entries are written as one byte).</summary>
     public readonly bool IsDefault =>
-        ReloadTicks == 0 && TurretFacing == 0 && !TurretInit && AttackTarget.Id.IsNone && AttackTarget.Kind == 0
+        ReloadTicks == 0 && Reload2 == 0 && Reload3 == 0 && TurretFacing == 0 && !TurretInit && AttackTarget.Id.IsNone && AttackTarget.Kind == 0
         && GuardPoint == default && !GuardPending && ChaseCell == default && RetargetTick == 0 && ScanTick == 0
         && Generation == 0;
 }
