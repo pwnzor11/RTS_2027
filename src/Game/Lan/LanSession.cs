@@ -544,6 +544,8 @@ public sealed class LanSession : IDisposable
 
     // ---- desync (M9-10) ----
 
+    private readonly Rts.Net.Diagnostics.DesyncReportFolders _desyncReports = new();
+
     private void OnDesync()
     {
         int tick;
@@ -563,6 +565,7 @@ public sealed class LanSession : IDisposable
             tick = d.Tick;
         }
         DesyncTick = tick;
+        if (!_desyncReports.IsFirstReport(tick)) return;   // one report per desync tick (NETLLM-10)
         IReadOnlyList<(string Part, ulong Hash)>? own = _subHashes.TryGetValue(tick, out var subs) ? subs : null;
         string text = LanDesyncReport.SubHashText(tick, own, other, otherName);
         DesyncReportFolder = LanDesyncReport.Write(_options.DesyncRoot, DateTime.Now, _recording?.FilePath, TryCaptureSave(), text);
