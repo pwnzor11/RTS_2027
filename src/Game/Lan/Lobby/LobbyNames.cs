@@ -4,18 +4,20 @@ using System.Text;
 
 namespace Rts.Game.Lan.Lobby;
 
-/// <summary>Player name rules for the LAN lobby (M9-05): the default is the Windows user name, names are short and plain, and no two in a lobby are alike.</summary>
+/// <summary>Player name rules for the LAN lobby (M9-05): names are short and plain, and no two in a lobby are alike. S45 N-04: the default is
+/// "Player", never the Windows user name (the name is broadcast in discovery replies).</summary>
 public static class LobbyNames
 {
     /// <summary>The name used when nothing usable is set.</summary>
     public const string Fallback = "Player";
 
-    /// <summary>The name to use for <paramref name="setting"/> (the PlayerName setting): itself when it is usable, else the Windows user name, else "Player".</summary>
+    /// <summary>The name to use for <paramref name="setting"/> (the PlayerName setting): itself when it is usable, else <paramref name="userName"/>
+    /// when a caller passes one explicitly, else "Player". S45 N-04: never falls back to <see cref="Environment.UserName"/>.</summary>
     public static string Resolve(string? setting, string? userName = null)
     {
         string name = Clean(setting);
         if (name.Length > 0) return name;
-        name = Clean(userName ?? Environment.UserName);
+        name = Clean(userName);
         return name.Length > 0 ? name : Fallback;
     }
 
