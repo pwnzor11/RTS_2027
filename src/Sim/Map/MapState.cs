@@ -125,6 +125,7 @@ public sealed class MapState : ISimStatePart
         if (loco != Locomotion.Air && OverlayKinds.BlocksGround(o)
             && !(loco == Pathing.MoveClass.TrackedCrusher && OverlayKinds.IsCrushable(o))) return 0;   // M12-04: walls and blocking props; M12-16: a heavy crusher drives into a Tree or Snag
         if (loco == Pathing.MoveClass.NavalDeep) return _land[Idx(c)] == LandType.Shallow ? 0 : table.SpeedPercent(_land[Idx(c)], Locomotion.Naval);   // M7-03: large ships
+        if (loco == Pathing.MoveClass.Swimmer) return Math.Max(table.SpeedPercent(_land[Idx(c)], Locomotion.Foot), table.SpeedPercent(_land[Idx(c)], Locomotion.Naval));   // S44 M-02: a swimmer walks and swims
         return table.SpeedPercent(_land[Idx(c)], Pathing.MoveClass.Table(loco));
     }
 

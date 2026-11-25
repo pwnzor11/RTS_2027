@@ -42,7 +42,7 @@ internal static class UnitRulesLoader
         // schema v3 (M3-01)
         "faction", "tunnel_size", "aura_radius", "aura_rof_permille", "aura_speed_permille", "aura_targets",
         "rad_resist_permille", "irradiated", "stealth", "death_weapon", "jam_radius", "seismic_radius",
-        "engineer",
+        "engineer", "swims",   // S44 M-02: swims
         // schema v4 (M4-01)
         "tier", "can_garrison",
         // schema v5 (M6-02)
@@ -222,6 +222,7 @@ internal static class UnitRulesLoader
         int? buildTime = f.OptInt("build_time", 0, int.MaxValue, 0);
         MobileV3? v3 = ParseMobileV3(f, weapons, refs, TunnelSize.S);
         bool? engineer = f.OptBool("engineer", false);
+        bool? swims = f.OptBool("swims", false);   // S44 M-02
         int? tier = f.OptInt("tier", 1, RulesLoader.MaxTier, 1);
         bool? canGarrison = engineer is null ? null : f.OptBool("can_garrison", !engineer.Value);   // engineers stay out unless set
         int? salvageRate = f.OptInt("salvage_rate", 0, 10_000, 0);   // M6-02
@@ -236,7 +237,7 @@ internal static class UnitRulesLoader
         if (veteran is null || supply is null) return null;
         if (salvageRate is null || raider is null || raiderOneUse is null || ashDelay is null || ashThreshold is null || auraRepair is null)
             return null;
-        if (v3 is null || engineer is null || tier is null || canGarrison is null) return null;
+        if (v3 is null || engineer is null || swims is null || tier is null || canGarrison is null) return null;
         if (buildTime is null || speed is null || maxHealth is null || armor is null || sight is null || weapon is null
             || cost is null || prerequisites is null)
         {
@@ -260,6 +261,7 @@ internal static class UnitRulesLoader
             JamRadius = v3.JamRadius,
             SeismicRadius = v3.SeismicRadius,
             Engineer = engineer.Value,
+            Swims = swims.Value,
             Tier = tier.Value,
             CanGarrison = canGarrison.Value,
             SalvageRate = salvageRate.Value,

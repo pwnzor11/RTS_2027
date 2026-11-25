@@ -24,7 +24,14 @@ public sealed partial class Simulation
 
     /// <summary>True while a submarine is dived and has not fired in the last <see cref="SubRevealTicks"/>: the state in which it is
     /// hidden, untargetable by ordinary weapons, spared by splash and uses submerged armour.</summary>
-    internal bool IsHiddenSub(ActorKind kind, int i) => kind == ActorKind.Vehicle && _naval.Submerged[i] && _naval.RevealLeft[i] == 0;
+    internal bool IsHiddenSub(ActorKind kind, int i) =>
+        kind == ActorKind.Vehicle ? _naval.Submerged[i] && _naval.RevealLeft[i] == 0 : kind == ActorKind.Infantry && IsHiddenSwimmer(i);
+
+    /// <summary>S44 M-02: true for a live infantry swimmer (<c>swims</c>) standing in deep Water. It counts as a dived submarine: hidden from enemies unless a
+    /// sonar covers its cell, untargetable by ordinary weapons (only a <c>Submerged</c> weapon hits it). In Shallow or on land it is an ordinary soldier.
+    /// Assumed — confirm: unlike a sub it is not revealed by firing, and it has no surfaced timer.</summary>
+    internal bool IsHiddenSwimmer(int i) =>
+        RulesOf(_infantry.Player[i]).Infantry[_infantry.TypeIndex[i]].Swims && _map.LandAt(_infantry.SlotCell[i]) == LandType.Water;
 
     /// <summary>True if a ship or building of the viewer's team with a sonar radius covers <paramref name="cell"/> (Chebyshev, like the Seismograph).</summary>
     internal bool IsSonarRevealed(byte viewer, CellCoord cell)

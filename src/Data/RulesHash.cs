@@ -356,6 +356,7 @@ public static class RulesHash
         {
             w.Write(x.SalvageRate); w.Write(x.Raider); w.Write(x.RaiderOneUse); w.Write(x.AshStealthDelayTicks);
             w.Write(x.AshStealthThreshold); w.Write(x.AuraRepairPermille);
+            if (x.Swims) w.Write(true);   // S44 M-02: written only for a swimmer, so rules without one hash exactly as before
         }
         foreach (BuildingType x in sim.Buildings) { w.Write(x.PacksInto); w.Write(x.PackTicks); }
         foreach (UpgradeType u in sim.Upgrades)

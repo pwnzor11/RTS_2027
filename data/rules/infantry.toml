@@ -270,7 +270,7 @@ sight = 4  # (tune)
 primary_weapon = "exp_diver_charge"
 cost = 250  # (tune)
 prerequisites = ["exp_billet"]
-# TODO M7-05: swimming in deep water (foot units cannot enter Water today) and the sonar-picket counter
+swims = true   # S44 M-02: walks and swims Water and Shallow (speed from the terrain table: the better of the foot and naval columns); hidden like a dived sub in deep Water, revealed by sonar
 
 [exp_pathfinder]   # spotter and long-range rifle, stealthy
 faction = "expedition"
