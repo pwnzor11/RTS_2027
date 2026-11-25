@@ -25,7 +25,7 @@
 "lb2.radio.warn" = "Garrison trucks are on the rail line. Finish the posts now or lose the road."
 
 # Objective and timer labels (the HUD shows the locale text when a label is a key)
-"lb2.obj.gate" = "Raise a Garage Rig and a Lookout, then train slingers"
+"lb2.obj.gate" = "Raise a Garage Rig and a Lookout"
 "lb2.obj.posts" = "Destroy the three Authority road posts"
 "lb2.obj.hold" = "Break the Authority reprisal column"
 "lb2.obj.stash" = "Find the Authority stash in the north corner"

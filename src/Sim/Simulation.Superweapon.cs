@@ -43,10 +43,17 @@ public sealed partial class Simulation
     /// <summary>Blackout ticks laid on every cell in the blast when the warhead sets none. ASSUMED (M3-13).</summary>
     internal const int SuperweaponBlackoutTicks = 600;
 
+    // S45 C-05: superweapons fired during this Step (cleared at the start of every Step). A host hint like _fx: never hashed or saved.
+    private readonly List<SuperweaponShot> _superweaponShots = new();
+
+    /// <summary>The superweapon shots accepted during the last Step, in command order (valid until the next Step). Read-only; not state.</summary>
+    public IReadOnlyList<SuperweaponShot> SuperweaponShots => _superweaponShots;
+
     /// <summary>Special: Subject = own superweapon building, Cell = target.</summary>
     private void ApplySpecial(Command c)
     {
         if (!CanFireSuperweapon(c.Player, c.Subject, c.Cell)) return;
+        _superweaponShots.Add(new SuperweaponShot(c.Player, new ActorRef(ActorKind.Building, c.Subject), c.Cell));   // S45 C-05: read by the mission host this tick
         int b = c.Subject.Index;
         BuildingType bt = BuildingTypeAt(b);
         LeptonCoord impact = CellCentre(c.Cell);

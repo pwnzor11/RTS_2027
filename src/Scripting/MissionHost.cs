@@ -205,7 +205,9 @@ public sealed partial class MissionHost : ISimExtension
         for (int i = 0; i < count && !_halted; i++)
         {
             TriggerRecord t = _triggers[i];
-            if (t.Done || !ShouldFire(t, sim, tick)) continue;
+            if (t.Done) continue;
+            if (t.Kind == TriggerKind.SuperweaponFired) { FireSuperweaponShots(t, sim); continue; }   // S45 C-05: repeating, once per shot
+            if (!ShouldFire(t, sim, tick)) continue;
             if (t.Kind == TriggerKind.Every) t.Next = tick + Math.Max(1, t.A);
             else t.Done = true;
             Invoke(t.Fn, _script.Globals.Get(t.Fn));
@@ -253,7 +255,21 @@ public sealed partial class MissionHost : ISimExtension
         };
     }
 
-    private void Invoke(string name, DynValue fn)
+    /// <summary>S45 C-05: calls the trigger's function once for each superweapon shot of its player accepted by the sim this tick, in command order.</summary>
+    private void FireSuperweaponShots(TriggerRecord t, Simulation sim)
+    {
+        IReadOnlyList<SuperweaponShot> shots = sim.SuperweaponShots;
+        for (int n = 0; n < shots.Count && !_halted; n++)
+        {
+            SuperweaponShot shot = shots[n];
+            if (shot.Player != t.A) continue;
+            string tag = "";
+            for (int k = 0; k < _tags.Count; k++) if (_tags[k].Value == shot.Building) { tag = _tags[k].Key; break; }
+            Invoke(t.Fn, _script.Globals.Get(t.Fn), DynValue.NewNumber(shot.Player), DynValue.NewString(tag), CellTable(shot.Cell));
+        }
+    }
+
+    private void Invoke(string name, DynValue fn, params DynValue[] args)
     {
         _callbackDepth++;
         _callbacksThisTick++;
@@ -261,7 +277,7 @@ public sealed partial class MissionHost : ISimExtension
         try
         {
             if (fn.Type != DataType.Function) throw new ScriptRuntimeException("callback '" + name + "' is not a global function");
-            _script.Call(fn);
+            _script.Call(fn, args);
         }
         catch (InterpreterException e) { AddError(name + ": " + (e.DecoratedMessage ?? e.Message)); }
         catch (Exception e) when (e is not OutOfMemoryException) { AddError(name + ": " + e.Message); }

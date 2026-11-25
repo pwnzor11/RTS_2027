@@ -178,6 +178,7 @@ public class HashCoverageTests
         ["Simulation._supplyDirty"] = "SUP-1 invalidation flag for the supply cache; only decides whether to recompute",
         ["Simulation._useTickPos"] = "true only between RunMissions and the end of RunCombat; false when a hash or save is taken",
         ["Simulation._killers"] = "this tick's lethal-hit warheads for the renderer (M10-14b): cleared with _fx at the start of every Step, only read to fill FxEvent.Warhead; derived output, not state",
+        ["Simulation._superweaponShots"] = "S45 C-05: the superweapon shots accepted this tick, for the mission host: cleared with _fx at the start of every Step and only read after it; derived output, not state",
         ["Simulation._fx"] = "this tick's effects events for the renderer (M2-19): cleared at the start of every Step and only read after it; derived output, not state",
         // SlotArray (inside every store)
         ["SlotArray._count"] = "number of set bits in _used: derived, and rebuilt by SetAlive when the used bits are read back",
