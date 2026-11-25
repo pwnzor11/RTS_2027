@@ -336,7 +336,7 @@ Source: docs/reviews/2026-11-07_owner_campaign_feedback.md. Audit: docs/reviews/
 - [~] M16-03 Mechanics wave 2: M-10..M-18, M-20, M-22, M-25, M-26 (s44: built); then the 512-game re-measure (D-305 gate, D-317) — see docs/balance/s44_balance.md
 - [x] M16-04 Correctness wave (s44 did M-21, M-23, M-24, A-02): s45 done M-27, M-30, M-31 (2 of 4 comments), C-05, C-06 (park-only Rig; KeepAlive later), C-07, C-10, U-01..U-04, U-07..U-10, U-14, V-06, N-01..N-05, T-01..T-03, T-05..T-07 (T-04 waits for D-321, T-08 closed s44); U-06 waits for Q-91
 - [x] M16-05 Art wave (s45): V-03 Expedition + Left Behind infantry (11 sheets), C-01 18 ending slides, V-04 (tread marks, debris, effect budget, glow, cloud shadows, water shimmer, road pieces; all toggles), V-05 FX anchors in vehicle manifests
-- [ ] M16-07 Balance re-tune after the mechanics wave (s45: bisect finds the Left Behind upgrades merge and the A-02 AI merge; B-08 damage_taken_permille attribute) — see docs/balance/s45_balance.md
+- [~] M16-07 Balance re-tune after the mechanics wave (s45: cause found, the Repair Hover list fix landed (D-325); B-08 attribute; 512-game r45 + sweep sw45 ran at hand-off; Q-93) — see docs/balance/s45_balance.md
 - [ ] M16-06 Later sessions: M-28 spatial index, C-02 campaign expansion, C-03 choice points, C-04 co-op, A-06 layout 2, A-08/A-09 LLM, U-12/U-13, B-01..B-03
 
 ## M9 · LAN multiplayer (was M5)

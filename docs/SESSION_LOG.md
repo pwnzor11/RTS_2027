@@ -809,3 +809,20 @@ Campaign sweep 45/45 meet D-222.
 attempts to kill them, and to cancel a stray scheduled "noop" message it had created, were refused by the permission check and not worked
 around. The T-04 LFS patterns were reverted (D-321). A build pod deadlocked behind series pods twice (fixed by pausing the series).
 **Next session should:** see HANDOFF (owner balance calls Q-89/Q-90, then re-tune and re-measure, then the correctness wave).
+
+## Session 45 · 2026-11-25 (correctness wave; art wave; the Expedition drop traced to the Repair Hover list)
+**Outcome:** owner took every recommendation and asked for all four parts (D-324). Correctness wave (6 helpers: fmt, ui, sys, net Sonnet/Haiku,
+cmp, hyg): save integrity + end marker (SaveVersion 16), graphs saved with games, chat in replays (replay 16), U-01..U-04, U-07, U-08, U-10, U-14,
+V-06, N-02..N-05 (+ lobby name default "Player"), C-05 superweapon-fired event + lb_04 bonus, C-06 park-only Rig, C-07, C-10, M-30, M-31 (half),
+T-01..T-03, T-05..T-07. Art wave: V-03 Expedition + Left Behind infantry (11 sheets on the cluster), C-01 18 ending slides (cluster), V-04 seven
+effects with toggles, V-05 vehicle FX anchors. Windows CI now runs on integ-* pushes; green after three post-merge test fixes.
+**Balance:** paired 128-game screens (every variant v main on the same seeds) and a finer bisect: Scrap Plate, Patchwork, Salvage Rights, Diver
+swimming and M-22 are not causes; the Repair Hover's `aura_targets` (M-11) had dropped the Canister Skiff and Supply Tender: added back (+3..+13
+per Expedition row, D-325). The recommended Scrap Plate softening makes the Left Behind stronger, so Scrap Plate stays. Focus fire off: mixed.
+The 512-game table (r45) and campaign sweep (sw45) were running on the cluster at hand-off.
+**Decisions:** D-324..D-327. **Questions:** Q-91 (laptop preset), Q-92 (lb_02 voiced line), Q-93 (balance after the fix).
+**Helpers:** 11 packages (Sonnet 7, Haiku 3, 1 fix round each for cmp); ~9 000 cluster games (a45, m45, c45, d-, e45, f45), 11 infantry + 18 slide renders.
+**Problems / notes:** branch deletes refused by the session's GitHub access; a mistaken per-faction `focus_fire` variant failed its loader check
+(tier overrides cannot set it) and was replaced by the global ff0; x86 slots filled by renders kept a test pod and two builds Pending (builds paused
+the waiting series; the cluster test was dropped in favour of GitHub CI).
+**Next session should:** read r45 and sw45 first (HANDOFF), then Q-93.

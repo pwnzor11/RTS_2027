@@ -1,38 +1,45 @@
-# Handoff: Session 45 — balance re-tune after the mechanics wave (Expedition), then the correctness wave (docs/BACKLOG.md)
-Last commit: `docs: Session 44 handoff` on `integ-s44` (PR to main, merged by the lead). Laptop folder: `git checkout main; git pull` before building
-(it was still on session 39 when s44 started).
-Where things stand: session 44 landed the held s43 economy/AI fixes (D-318) and built every M16 mechanic the owner approved (D-317..D-320:
-sea mines, Diver swimming, Drydock production/repair, second and third weapon slots, harpoon tether, grapple breach, Left Behind upgrade
-effects, Provision Store stock, hover harvester on Shallow, beach-only deploy, beacon delivery, naval gunfire, sub dive time + torpedo, survey
-overlay, the rule fixes, AI key/repair fixes, C&C control habits, refinery name, campaign tiers). Save/replay format 15. The 512-game re-measure
-FAILED the D-305 gate: the Expedition fell 8-37 points in every row (docs/balance/s44_balance.md). One cause (the AI naval plan) is switched off
-(D-323); with it off the table is still out of the gate (pooled Authority v Expedition 69.7, Left Behind v Expedition 66.3, Authority v Directorate 33.6; 4 rows outside 25-75). The campaign sweep meets every D-222 target (45/45). Decisions up to D-323. OPEN_QUESTIONS: Q-89, Q-90 (below).
+# Handoff: Session 46 — read the r45 table and sw45 sweep, then the balance calls (Q-93)
+Last commit: `docs: Session 45 handoff` on `integ-s45` (PR to main, merged by the lead once Windows CI is green). Laptop folder: `git checkout main; git pull`
+before building (it was still on the session 42 merge when s45 started).
+Where things stand: session 45 finished the correctness wave and the art wave (D-326, D-327) and traced the Expedition drop: the Repair Hover's
+`aura_targets` (S44 M-11) had dropped the Canister Skiff and Supply Tender; both are back (D-325, +3..+13 per Expedition row on paired screens).
+Scrap Plate, Patchwork, Salvage Rights, Diver swimming and M-22 are not causes; the recommended Scrap Plate softening strengthens the Left Behind,
+so Scrap Plate stays. Save format 16, replay format 16. Decisions up to D-327. OPEN_QUESTIONS: Q-91, Q-92, Q-93.
 
-## Start here (session 45; shown to the user as the plan; nothing starts until they say go)
-1. **Owner balance calls first (Q-89, Q-90):** the s44 bisect found two more causes of the Expedition drop besides the naval plan:
-   the Left Behind upgrades merge (Scrap Plate Light -> Heavy armour, D-322) and the A-02/rule-fix merge for the Authority (most likely M-22,
-   Flak sparing Authority aircraft). Options per item: keep / soften (e.g. Scrap Plate as a damage-taken percent, Patchwork x2) / revert.
-   Then screen variants (128 games, fresh seed chunks) and decide on 512 games; re-run the campaign sweep (D-222) after any change.
-2. **Authority v Directorate pooled 33.6 %** (s42 40.6, bal43 36.5): the held D-311 items cost ~4 points (D-318); tune with the Expedition pass.
-3. **Correctness wave (no outcome change):** BACKLOG M-27, M-30, M-31, C-05..C-07, C-10, U-01..U-04, U-06..U-10, U-14, V-06, N-01..N-05, T-01..T-08.
-4. **Art wave (cluster):** V-03 Expedition + Left Behind infantry, C-01 ending slides, V-04/V-05.
-5. Owner items still waiting: M9-15 two-PC LAN test; M7-14 Expedition play-test (now with the new naval mechanics); M10-27 voice log; the s43
-   art in a skirmish; the auth_01 voice line still says "Refinery"; D-321 LFS migration (needs its own decision); confirm D-322 values;
-   delete merged branches (list below).
+## Start here (session 46; shown to the user as the plan; nothing starts until they say go)
+1. **Read the cluster results first:** `r45` (512-game D-305 table, 24 rows x 32 chunks, seeds 1-256, commit 8d4b009) and `sw45` (D-222 campaign
+   sweep, 135 pieces) in `/work/out/`; tally with `python3 /work/in/s41/tally41.py /work/out/r45 0 31` and the sweep lines like s44 (sw44.lines).
+   If r45 is still running, wait for it (kjob status) before planning numbers. Write the table into docs/balance/s45_balance.md.
+2. **Q-93 balance calls:** estimate before r45: pooled Authority v Expedition ~64 and Authority v Directorate 33.6 still out of 40-60. Levers:
+   unit numbers screened with paired controls (variant and main on the same seed chunks, `claude/rts/s45/var45.sh` + `pair45.py`), decided on 512.
+3. **Q-91** (laptop cameo preset: modifier-aware bindings) and **Q-92** (lb_02 voiced line) if the owner answers.
+4. Later work (BACKLOG M16-06): C-06 `Player.KeepAlive` (sim hook), M-28 spatial index, campaign expansion, U-12/U-13, B-01..B-03; owner items below.
 
 ## Half-finished work
-- Balance: D-305 gate not met (above). Probe branch `probe-s44-nom16`, `probe-s44-noa03` (never merge).
-- AI naval plan: levers kept in data (naval_min_tier 0 = off); AiNavalUseTests switch it on at tier 3.
-- Pathing does not plan through a closed enemy wall for a Grapple breach (re-issue the move once it opens); the Skyhook 2-vehicle airlift TODO.
-- Cluster: /work/out/f44 (24 rows, 5cd0c80), g44 (12 Expedition rows, d01a89c), sw44 (campaign sweep, 45/45 meet D-222), p44 / q44 / m16b /
-  a03b / bis0..7 (probes). Laptop k3s-cluster folder `claude/rts/s44/`: t-integ1.sh (suite by REF), f44.sh, g44.sh, sw44.sh, bld*.sh, CSVs.
-- Branches to delete after the PR merges: integ-s44, bal-s43, bal-s43-noaa, bal-s43-aioff, probe-s44-*, wp/s44-* (local worktrees only), and the
-  older integ-s40..s43.
+- Balance: D-305 gate not yet re-measured after the fix (r45 above). Probe branch `probe-s45-m22` (never merge).
+- `damage_taken_permille` (B-08) is in code but unused by data (D-325).
+- C-06 KeepAlive not built (needs a per-tick host mask checked in UpdateDefeat/UpdateNoRebuildDefeat). U-06 waits for Q-91.
+- Cluster (k3s-cluster `claude/rts/s45/`): var45.sh (variant runner: list "tag biome FA TA FB TB OFF", patches in /work/in/s45/patch), pair45.py
+  (paired table), bld_*.sh, inf45.sh / end45.sh (art renders), r45.sh, sw45.sh. Outputs /work/out/{a45,m45,c45,d-c9fa6d,d-8c03e3,e45,f45,r45,sw45}.
 
 ## Waiting on the user
-- Q-89, Q-90; D-322 confirmations; M9-15; M7-14; M10-27; branch deletes; D-321.
+- Q-91, Q-92, Q-93; confirm D-326 / D-327 values; review the ending slides and the new effects in a skirmish; M9-15 two-PC LAN test; M7-14 Expedition
+  play-test; M10-27 voice log; auth_01 voice line still says "Refinery"; D-321 LFS migration.
+- **Delete merged branches** (the session's GitHub access cannot): integ-s40..s45, bal-s43, bal-s43-noaa, bal-s43-aioff, probe-s44-noa03/noai/nolb/nom16,
+  probe-s45-m22, art-s43, qol-s43, docs-s43-b00, wp/a43-*, wp/art-*.
 
 ## How to run this session
+- Session 45 lessons:
+  - **Pair every variant with main on the same seed chunks.** Unpaired fresh-seed screens misled this session (Scrap Plate looked neutral, M-22
+    looked neutral): give each variant block its own OFF and run a `main` control on the same OFF (c45 pattern), then `pair45.py`.
+  - Bisect inside a merge by building its member commits (two extra builds settled the Diver v Left Behind upgrades question in ~40 min).
+  - Per-faction tier tables cannot set `focus_fire` (loader refuses it); use the global tier table.
+  - Windows CI runs on `integ-*` pushes now (T-03): use it instead of a cluster full-suite pod when x86 slots are full of renders.
+  - x86-only art jobs (bpy) and builds compete for huntsman/prince (queen is cordoned): pause waiting series (parallelism 0) until builds start;
+    series scripts can wait longer for a binary (`seq 360`).
+  - Fetch cluster outputs: `kubectl cp <toolbox pod>:/work/... /tmp/x` on snowwhite, then `rts/s43/rget.py /tmp/x <local>` (touch the local file
+    first), then device_stage_files. /work is not mounted on snowwhite.
+  - The cloud box can install dotnet 10 (dot.net install script into ~/.dotnet) and `pip install bpy` for previews.
 - Session 44 lessons:
   - Orphan `VBCSCompiler` servers inherit a `flock` file descriptor and hold the lock forever: use `flock -o <lock>` plus
     `--disable-build-servers`, `DOTNET_CLI_USE_MSBUILD_SERVER=0`, `UseSharedCompilation=false` (docs/process/s44_wave_rules.md). With that, 12

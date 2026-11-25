@@ -714,3 +714,22 @@ Pull main first (your folder was on eda0f0e3, two sessions behind), then rebuild
 - **Text:** the Authority refinery is "Ashfall Refinery" in the tutorial, tips and How to Play (the auth_01 voice line still says "Refinery").
 - **Campaign:** lb_03 tier 5 is now the hardest tier; the enemy AI in auth_02, auth_03, dir_01..dir_04 and exp_02 follows the difficulty tier.
 - **Numbers to confirm:** D-322 (the values chosen for the new mechanics); the session 44 balance re-measure result (docs/balance/s44_balance.md).
+
+## Session 45 (2026-11-25)
+- **Saves (M-27, U-09):** play a skirmish past 30 s, save, quit, load, reach game over: the graphs still start at the beginning. A save cut short or
+  edited by hand is refused with a message instead of half-loading.
+- **Replays (N-01):** record a LAN match with a few chat lines, watch the replay: the lines appear at the bottom left at their time.
+- **Controls (U-01, U-02, U-04):** rebind Deploy in Controls, select a Command Ship: the button reads "Dive (<your key>)". Press C with only harvesters
+  selected: "No army units to select" and the selection stays. Ctrl+3 on a group: "Group 3 set (5 units)". Esc on Game Over asks before quitting.
+- **Window and menu (U-07, U-08, U-14):** resize the window, quit, relaunch: same size; Settings > Window size lists only sizes that fit your monitor.
+  A bad value in campaign_<faction>.toml (e.g. difficulty 9) shows an amber notice and keeps the rest of the campaign.
+- **LAN (N-02..N-05):** start a lobby, press Start, try to join from a second PC: "The game has already started." at once. With no player name set,
+  the lobby shows "Player", not your Windows name.
+- **Campaign (C-05, C-07, C-10):** lb_04: fire the Second Drift anywhere: "Bonus: fire the Second Drift" ticks (winning does not need it). dir_04: the
+  charged Sunrise on the Ash Ridge command post still wins. lb_02 objective reads "Raise a Garage Rig and a Lookout" (the radio line still says slingers, Q-92).
+- **Art (V-03, C-01):** Expedition and Left Behind infantry look like the s43 Authority/Directorate pass (bigger heads, visible weapons, house colours).
+  Finish a campaign (or open the ending screen): each slide has a picture.
+- **Effects (V-04, V-05):** drive a tank over clear ground: fading tread marks. Kill a tank: debris chunks and an orange glow. Clouds drift over the map;
+  water shimmers; road ends are rounded. Each has a toggle in Settings (Tread marks, Debris chunks, Effect budget, Additive glow, Cloud shadows,
+  Water shimmer, Road junctions). Fire an Authority Tank or Howitzer in several directions: the muzzle spark sits at the barrel end.
+- **Balance (D-325):** the Repair Hover heals Canister Skiffs and Supply Tenders again. Numbers to confirm: D-326, D-327; the r45 table (Q-93).

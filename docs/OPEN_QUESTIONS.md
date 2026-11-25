@@ -4,14 +4,19 @@ Context and trade-offs for every question are in `docs/research/00_SYNTHESIS.md`
 file cited after each question. Recommendations are the lead's, from the research.
 
 ## Open
-- 🔴 **Q-89 (s44) Scrap Plate after the re-measure.** The Left Behind upgrades merge (Scrap Plate: Light vehicles, Rotors and Kites become Heavy
-  armour, D-322) moved rust Left Behind v Expedition 49 -> 75 % and Left Behind v the others by 6-8 points. Options: **soften it to a
-  damage-taken percent (e.g. -20 %) and screen (recommended)** / keep / back to the s43 +20 % health. Also confirm Patchwork (+6 cells, heal x4).
-- 🔴 **Q-90 (s44) Authority v Expedition and Authority v Directorate.** The A-02/rule-fix merge moved rust Authority v Expedition 73 -> 81 %
-  (most likely M-22: Flak no longer hurts Authority aircraft); Authority v Directorate pooled is 33.6 %. Options: **isolate M-22 and focus fire
-  in a probe, then tune Authority/Expedition numbers on 512 games (recommended)** / accept for now.
+- 🟡 **Q-91 (s45) Laptop cameo hotkeys (U-06).** Every letter, digit (control groups) and F-key is bound, and bindings are bare keys only, so no
+  conflict-free laptop preset exists. Options: **make bindings modifier-aware (e.g. Alt+1..9 for cameos) (recommended)** / a reduced preset on
+  punctuation keys / leave numpad only.
+- ⚪ **Q-92 (s45) lb_02 slingers line.** The objective text now says "Raise a Garage Rig and a Lookout" (what the script checks); the voiced radio
+  line `lb2.radio.start` and briefing.md still say "train slingers". Options: **change the briefing text and re-voice the line with Piper (recommended)** /
+  keep both as flavour.
+- 🔴 **Q-93 (s45) Balance after the Repair Hover fix.** The 512-game table r45 and campaign sweep sw45 ran on the cluster at hand-off (estimate:
+  pooled Authority v Expedition ~64 and Authority v Directorate 33.6 still out of 40-60). Scrap Plate, Patchwork, Salvage Rights and M-22 are not
+  the causes (D-325). Options for what is left: **tune Authority v Expedition and Authority v Directorate with unit numbers screened against paired
+  controls, decided on 512 games (recommended)** / try tier-3 focus fire off (mixed, small) / accept the table and close the gate for now.
 
 ## Answered
+- Q-89, Q-90 · 2026-11-25 · Owner (s45): take the recommendations → D-324; screened → D-325 (Scrap Plate stays, the Repair Hover list fix lands, M-22 no effect).
 - Q-88 · 2026-11-24 · Owner (s43): (a) finish line met; freeze balance numbers → D-310.
 - Q-87 · 2026-11-23 · Owner: (c) judge the six pairings over the map pool now, the 24 per-map rows later once map-specific causes are fixed → D-305.
 - Q-73 · 2026-11-21 · Owner (s39): par = the bot's tier-3 median win x 2.5 (the s37 table), none on timer missions → D-289.
