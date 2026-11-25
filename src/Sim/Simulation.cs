@@ -260,7 +260,9 @@ public sealed partial class Simulation
         RunAshStepOff();   // S19 M13-12: idle soldiers walk off ash fields (Move orders resolved by RunMovement this tick)
         RunMissions();
         RunMovement();
+        RunMines();        // S44 M-01: Simulation.Mines.cs — mine triggers after movement
         RunTunnels();      // M3: Simulation.Tunnels.cs — queues, transit, surfacing (before combat: underground units are untargetable)
+        RunTethers();      // S44 M-05/M-06: Simulation.Tether.cs — tether slow and breach timers (before effects and combat)
         RunEffects();      // M3: Simulation.Effects.cs — auras, stealth timers, superweapon charge (before combat reads them)
         RunStorms();       // M6-07: Simulation.Storm.cs — The Second Drift (before combat)
         RunSalvos();       // M7-12: Simulation.Superweapon.cs — Salvo Array missiles landing
@@ -268,6 +270,7 @@ public sealed partial class Simulation
         RunEconomy();
         RunSalvage();      // M6-04: Simulation.Salvage.cs — wreck decay
         RunProduction();
+        RunDrydocks();     // S44 M-03/M-12: Simulation.Drydock.cs — drydock repair, transport bay repair
         RunRigs();         // M6-03: Simulation.Rigs.cs — pack/unpack timers
         RunGround();       // M3: Simulation.Ground.cs — radiation decay/damage, Blackout decay, hardening recompute (before cleanup)
         RunAiBookkeeping();
