@@ -330,11 +330,11 @@ Source: docs/reviews/2026-11-07_owner_campaign_feedback.md. Audit: docs/reviews/
 - [x] M15-12 Smoke without bubbles (D-316): volumetric plume and puffs, no baked sphere smoke, noise-broken decals, half the Mountains snow
 
 ## M16 · The backlog (s43 sweep, docs/BACKLOG.md; owner: "fundamental parts of gameplay and unit mechanics")
-- [ ] M16-00 B-00: land or bisect D-311 items 5-11 (bal-s43) after the aioff43 / integ43 probes
-- [ ] M16-01 Owner decision batch: mechanics under the D-310 freeze; build-or-drop per mechanic; M-19, U-05, U-11, C-08/09, A-03, O-04, O-06
-- [ ] M16-02 Mechanics wave: s18 "built later" M-01 mines, M-02 diver swimming, M-03 Drydock production/repair, M-04 second weapon slot, M-05 harpoon tether, M-06 grapple breach, M-07..M-09 upgrade effects
-- [ ] M16-03 Mechanics wave 2: M-10..M-18, M-20, M-22, M-25, M-26; then the 512-game re-measure (D-305 gate)
-- [ ] M16-04 Correctness wave: M-21, M-23, M-24, M-27, M-30, M-31, C-05..C-07, C-10, A-02, U-01..U-04, U-06..U-10, U-14, V-06, N-01..N-05, T-01..T-08
+- [x] M16-00 B-00: land or bisect D-311 items 5-11 (bal-s43) after the aioff43 / integ43 probes (s44: landed, D-318)
+- [x] M16-01 Owner decision batch (s44: D-317..D-320, all recommendations taken): mechanics under the D-310 freeze; build-or-drop per mechanic; M-19, U-05, U-11, C-08/09, A-03, O-04, O-06
+- [x] M16-02 Mechanics wave (s44 wave 1): s18 "built later" M-01 mines, M-02 diver swimming, M-03 Drydock production/repair, M-04 second weapon slot, M-05 harpoon tether, M-06 grapple breach, M-07..M-09 upgrade effects
+- [~] M16-03 Mechanics wave 2: M-10..M-18, M-20, M-22, M-25, M-26 (s44: built); then the 512-game re-measure (D-305 gate, D-317) — see docs/balance/s44_balance.md
+- [ ] M16-04 Correctness wave (s44 did M-21, M-23, M-24, A-02): M-27, M-30, M-31, C-05..C-07, C-10, A-02, U-01..U-04, U-06..U-10, U-14, V-06, N-01..N-05, T-01..T-08
 - [ ] M16-05 Art wave: V-03 Expedition + Left Behind infantry, C-01 18 ending slides, V-04/V-05
 - [ ] M16-06 Later sessions: M-28 spatial index, C-02 campaign expansion, C-03 choice points, C-04 co-op, A-06 layout 2, A-08/A-09 LLM, U-12/U-13, B-01..B-03
 

@@ -684,3 +684,31 @@ Pull main first (your folder was on eda0f0e3, two sessions behind), then rebuild
 - **Tutorial:** the train step says the Infantry tab; the loading tip says bookmarks are F6/F7/F8/F12 (F5 is Quicksave).
 - **Balance numbers to confirm:** none in this build: D-311 items 5-11 (including Second Drift storm cap 31 / no_build_threshold 24) are held on `bal-s43`, BACKLOG B-00.
 
+
+## Session 44 (2026-11-24/25)
+- **Back up first?** No. Old development saves and replays (format 14) are refused ("Unsupported save version 14; this build reads version 15"); nothing else is rewritten.
+- **Laptop:** `git checkout main; git pull`, rebuild (the laptop folder was still on session 39 at the start of s44).
+- **Sea mines (M-01):** Expedition skirmish, build a Minelayer, select it: the button reads "Lay mine (D) 6 left"; press D. A green diamond marks the
+  mine; an enemy ship sailing over it takes about 250 damage and the mine is gone. Enemy mines show red only inside your sonar.
+- **Diver (M-02):** a Combat Diver walks into deep water and swims; enemies cannot see it until it comes within a Sonar Picket's or sonar ship's range.
+- **Drydock (M-03, M-12):** the Cruiser and Carrier sail out of the Drydock; a damaged ship parked beside it slowly heals and costs credits; a wounded
+  Marine inside a Landing Craft heals while aboard. Tooltip: "Builds the Cruiser and Carrier and slowly repairs friendly ships beside it."
+- **Second weapon slots (M-04):** a Destroyer near an enemy jet, an enemy ship and a dived sub inside its sonar hits all three; L shows 3 range rings and
+  the Archive lists Weapon / Weapon 2 / Weapon 3. A Patrol Launch also fires a deck gun.
+- **Harpoon and Grapple (M-05, M-06):** a Harpoon Wagon hit halves the target's speed for about 3 s. With Grapple Hooks, a Hook Runner next to an enemy
+  wall opens it for your side for about 5 s (re-issue the move order once it opens).
+- **Left Behind upgrades (M-07..M-09, M-11):** Salvage Rights: wrecks pay 1.5x; Scrap Plate: Rotors and Kites take less damage (Heavy armour);
+  Patchwork: a Tinker repairs from 9 cells, faster; Tinker and Mender auras no longer heal aircraft or allies.
+- **Expedition economy (M-10, M-13, M-16):** a Provision Store gives +10 supply while tenders arrive, +5 about 90 s after the last tender docks
+  (exp_04: build an Anchorage); the Skimmer harvests on Shallow; the Command Ship deploys on a beach or a shore next to shallows, not deep inland.
+- **Naval gunfire and subs (M-17, M-18):** Ctrl+right-click a cell your units can see with a Destroyer or Cruiser: it shells the cell; an unseen cell is
+  refused. The Missile Sub takes 3 s to dive (still visible meanwhile) and fires torpedoes at ships.
+- **Beacon delivery (M-15):** select a Skyhook, Landing Craft, Pioneer or Combat Diver: "Drop beacon", then click a land cell outside the build zone.
+- **Survey Hover (M-14):** select one next to an ash field: the field cells tint by richness.
+- **Rule fixes:** Flak no longer damages your own aircraft (M-22); Lead Lining visibly reduces ashfall damage (M-25); the `irradiated` tag is gone (M-20).
+- **AI:** tier 3+ Expedition AI builds a Drydock, a Cruiser or Carrier and one Minelayer; its damaged ships go to the Drydock. AI repair no longer flips
+  on and off under fire (A-03). A broken `data/ai/difficulty.toml` now shows an error naming the file and key instead of playing with defaults.
+- **Controls (U-05):** select a Barracks, Ctrl+1; press 1 to select it again (twice centres). Shift+right-click an enemy building queues an attack.
+- **Text:** the Authority refinery is "Ashfall Refinery" in the tutorial, tips and How to Play (the auth_01 voice line still says "Refinery").
+- **Campaign:** lb_03 tier 5 is now the hardest tier; the enemy AI in auth_02, auth_03, dir_01..dir_04 and exp_02 follows the difficulty tier.
+- **Numbers to confirm:** D-322 (the values chosen for the new mechanics); the session 44 balance re-measure result (docs/balance/s44_balance.md).
