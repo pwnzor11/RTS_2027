@@ -43,6 +43,10 @@ public sealed record VehicleType(string Id, Locomotion Locomotion, int Speed, in
     /// <summary>Type ids (or <c>class:vehicle</c>/<c>class:infantry</c>) the aura affects; empty = none.</summary>
     public IReadOnlyList<string> AuraTargets { get; init; } = Array.Empty<string>();
 
+    /// <summary>S45 Q-89: damage this vehicle takes from every hit, per mille, after the armour table and before veterancy (1000 = full).
+    /// Only upgrade effects change it (Scrap Plate).</summary>
+    public int DamageTakenPermille { get; init; } = 1000;
+
     /// <summary>Radiation resistance per mille: damage is scaled by (1000 - this)/1000; 1000 = immune, 0 = full damage.</summary>
     public int RadResistPermille { get; init; }
 
