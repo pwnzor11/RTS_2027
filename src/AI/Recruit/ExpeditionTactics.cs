@@ -635,6 +635,7 @@ internal sealed class ExpeditionTactics : IFactionTactics
             if (s.Idle && Cheb(s.Cell, hw) > 6) MoveShip(k, sink, s, hw);
 
         SubHunt(k, sink);
+        LayMines(k, sink, hw);   // S44 M-01
         Debug = $"fleet {k.Fleet.Count} pool {_pool.Count} group {_group.Count} escort {_escort.Count} hurt {_hurt.Count} withdraw {_withdraw} strike {_strikeSet}/{_probe} strikes {Strikes} withdrawals {Withdrawals}";
         if (_withdraw || _group.Count < StrikeMin)
         {
@@ -981,6 +982,35 @@ internal sealed class ExpeditionTactics : IFactionTactics
     }
 
     /// <summary>The sea cell nearest to <paramref name="from"/> (rings outward, rows then columns) in sea <paramref name="region"/> (0: any sea).</summary>
+    /// <summary>Offsets from the home sea cell where a minelayer lays its mines, one per mine aboard (a few cells off the yard, spread out).</summary>
+    private static readonly (int Dx, int Dy)[] MineOffsets = { (4, 0), (0, 4), (-4, 0), (0, -4), (4, 4), (-4, -4), (4, -4), (-4, 4) };
+
+    /// <summary>S44 M-01: an idle own minelayer with mines aboard sails to the next spot near the yard and lays one there (Deploy with a cell);
+    /// an empty one goes home, where the sim restocks it beside the naval yard. Only runs when the side owns a minelayer.</summary>
+    private void LayMines(RecruitKnowledge k, ICommandSink sink, CellCoord homeSea)
+    {
+        PlayerView v = k.View;
+        foreach (ViewActor u in k.Utility)
+        {
+            VehicleType vt = k.Rules.Vehicles[u.TypeIndex];
+            if (vt.MineCapacity <= 0 || !u.Idle) continue;
+            int stock = v.MineStock(u.Id);
+            if (stock <= 0)
+            {
+                if (Cheb(u.Cell, homeSea) > 3) MoveShip(k, sink, u, homeSea);
+                continue;
+            }
+            (int dx, int dy) = MineOffsets[(vt.MineCapacity - stock) % MineOffsets.Length];
+            CellCoord? spot = NearestSea(v, new CellCoord(homeSea.X + dx, homeSea.Y + dy), _homeRegion, 3, false);
+            if (spot is not CellCoord to) continue;
+            MineOrders++;
+            sink.Issue(CommandKind.Deploy, u.Id, ActorKind.Vehicle, to, default, 1);
+        }
+    }
+
+    /// <summary>Lay-mine orders given to minelayers.</summary>
+    public int MineOrders { get; private set; }
+
     private static CellCoord? NearestSea(PlayerView v, CellCoord from, int region, int maxRadius, bool deep)
     {
         for (int r = 0; r <= maxRadius; r++)

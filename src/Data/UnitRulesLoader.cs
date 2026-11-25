@@ -32,6 +32,8 @@ internal static class UnitRulesLoader
         "draw_scale_permille", "deep_only", "submerges", "sonar_radius", "aircraft_slots", "sortie_ticks", "ammo", "rearm_ticks", "unload_ticks",
         // schema v8 (M7-04b)
         "vehicle_slots",
+        // S44 M-01
+        "mine_capacity", "mine_lay_ticks", "mine_damage", "mine_warhead", "mine_trigger_radius", "mine_sweep_radius", "mine_sweep_ticks", "mine_restock_ticks",
     ];
 
     private static readonly string[] InfantryKeys =
@@ -136,6 +138,20 @@ internal static class UnitRulesLoader
         int? rearmTicks = f.OptInt("rearm_ticks", 0, 1_000_000, 0);
         int? unloadTicks = f.OptInt("unload_ticks", 0, 1_000_000, 0);
         int? vehicleSlots = f.OptInt("vehicle_slots", 0, 16, 0);
+        int? mineCapacity = f.OptInt("mine_capacity", 0, 255, 0);   // S44 M-01
+        int? mineLayTicks = f.OptInt("mine_lay_ticks", 0, 1_000_000, 0);
+        int? mineDamage = f.OptInt("mine_damage", 0, 1_000_000, 0);
+        string mineWarhead = f.Has("mine_warhead") ? f.Str("mine_warhead") ?? "" : "";
+        int? mineTrigger = f.OptInt("mine_trigger_radius", 0, 8, 0);
+        int? mineSweep = f.OptInt("mine_sweep_radius", 0, SimConstants.MaxMapCells, 0);
+        int? mineSweepTicks = f.OptInt("mine_sweep_ticks", 0, 1_000_000, 0);
+        int? mineRestock = f.OptInt("mine_restock_ticks", 0, 1_000_000, 0);
+        if (mineCapacity is null || mineLayTicks is null || mineDamage is null || mineTrigger is null || mineSweep is null
+            || mineSweepTicks is null || mineRestock is null) return null;
+        if (mineCapacity.Value > 0 && (mineDamage.Value == 0 || mineWarhead.Length == 0))
+        { f.Problem("mine_capacity", "a minelayer needs mine_damage > 0 and a mine_warhead"); return null; }
+        if (mineSweep.Value > 0 && mineSweepTicks.Value == 0) { f.Problem("mine_sweep_ticks", "a sweeper (mine_sweep_radius > 0) needs mine_sweep_ticks > 0"); return null; }
+        if (mineCapacity.Value > 0 && locomotion is { } locoM && locoM != Locomotion.Naval) { f.Problem("mine_capacity", "only a naval vehicle can lay sea mines"); return null; }
         if (drawScale is null || deepOnly is null || submerges is null || sonar is null || aircraftSlots is null || sortieTicks is null
             || unloadTicks is null || vehicleSlots is null || ammo is null || rearmTicks is null) return null;
         if (veteran is null || supply is null) return null;
@@ -198,6 +214,14 @@ internal static class UnitRulesLoader
             RearmTicks = rearmTicks.Value,
             UnloadTicks = unloadTicks.Value,
             VehicleSlots = vehicleSlots.Value,
+            MineCapacity = mineCapacity.Value,
+            MineLayTicks = mineLayTicks.Value,
+            MineDamage = mineDamage.Value,
+            MineWarhead = mineWarhead,
+            MineTriggerRadius = mineTrigger.Value,
+            MineSweepRadius = mineSweep.Value,
+            MineSweepTicks = mineSweepTicks.Value,
+            MineRestockTicks = mineRestock.Value,
         };
     }
 

@@ -130,6 +130,9 @@ public static class RulesLoader
             vehicleEntries.Concat(infantryEntries).Concat(buildingEntries).Concat(upgradeEntries).Select(e => e.Id), StringComparer.Ordinal);
         var provides = new HashSet<string>(buildingEntries.SelectMany(ProvidesOf), StringComparer.Ordinal);
         refs.Validate(typeIds, provides, problems);
+        foreach (VehicleType mv in vehicles)   // S44 M-01: a minelayer's mine_warhead must name a warhead
+            if (mv.MineCapacity > 0 && !warheads.Any(w => string.Equals(w.Id, mv.MineWarhead, StringComparison.Ordinal)))
+                problems.Add(new RulesProblem(VehiclesFile, mv.Id + ".mine_warhead", $"unknown warhead '{mv.MineWarhead}'"));
         // Schema v4 (M4-01): effect targets/attributes, upgrade effect ids, tier provides names.
         var tables = new SimRulesTables(vehicles, infantry, buildings, weapons, warheads);
         EffectRulesLoader.ValidateTargets(effects, tables, provides, problems);

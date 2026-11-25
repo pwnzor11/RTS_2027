@@ -125,6 +125,30 @@ public sealed record VehicleType(string Id, Locomotion Locomotion, int Speed, in
     /// <summary>Radius in cells in which this ship detects submerged vessels (TOML <c>sonar_radius</c>, 0 = none).</summary>
     public int SonarRadius { get; init; }
 
+    /// <summary>Minelayer: mines carried (TOML <c>mine_capacity</c>, 0 = cannot lay mines; S44 M-01). A Deploy order lays one on a sea cell.</summary>
+    public int MineCapacity { get; init; }
+
+    /// <summary>Minelayer: ticks between two mines (TOML <c>mine_lay_ticks</c>; S44 M-01).</summary>
+    public int MineLayTicks { get; init; }
+
+    /// <summary>Minelayer: base damage of one mine (TOML <c>mine_damage</c>); the warhead's armour table scales it (S44 M-01).</summary>
+    public int MineDamage { get; init; }
+
+    /// <summary>Minelayer: id of the warhead a mine detonates with (TOML <c>mine_warhead</c>; S44 M-01).</summary>
+    public string MineWarhead { get; init; } = "";
+
+    /// <summary>Minelayer: a mine goes off when an enemy ship comes within this many cells (Chebyshev; TOML <c>mine_trigger_radius</c>, default 0 = same cell).</summary>
+    public int MineTriggerRadius { get; init; }
+
+    /// <summary>Minelayer: radius in cells in which it clears enemy mines (TOML <c>mine_sweep_radius</c>, 0 = does not sweep; S44 M-01).</summary>
+    public int MineSweepRadius { get; init; }
+
+    /// <summary>Minelayer: ticks between two sweeps (TOML <c>mine_sweep_ticks</c>; S44 M-01).</summary>
+    public int MineSweepTicks { get; init; }
+
+    /// <summary>Minelayer: ticks to restock one mine next to an own naval building (TOML <c>mine_restock_ticks</c>; S44 M-01).</summary>
+    public int MineRestockTicks { get; init; }
+
     /// <summary>Carrier hangar: aircraft it can hold (TOML <c>aircraft_slots</c>, 0 = none).</summary>
     public int AircraftSlots { get; init; }
 

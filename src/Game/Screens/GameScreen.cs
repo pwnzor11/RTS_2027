@@ -58,6 +58,8 @@ public sealed class GameScreen : IScreen, IFocusPausable
     private readonly RectRegion _packRegion = new(Rectangle.Empty);
     private bool _diveShown;                  // M7-14: Dive/Surface button for a selected own submarine
     private bool _diveSubmerged;
+    private bool _diveMines;                  // S44 M-01: the same button lays a mine for a selected minelayer
+    private int _diveMineStock;
     private readonly RectRegion _diveRegion = new(Rectangle.Empty);
     private readonly RectRegion _idleHarvesterRegion = new(Rectangle.Empty);   // M13-15: idle harvester / idle factory buttons
     private readonly RectRegion _idleFactoryRegion = new(Rectangle.Empty);
@@ -662,6 +664,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
         _feedback.Draw(sb, _s.Pixel, _camera);
         DrawPings(sb, snapshot, true);   // A43-QOL-09
         DrawPackProgress(sb, snapshot);
+        DrawMines(sb);   // S44 M-01
         DrawUnpackGhost(sb);
         _sidebar?.DrawMapOverlay(sb, _s.Pixel, _camera, snapshot, _s.Scene);
         _mission?.Guidance.DrawWorld(sb, _s.Pixel, _camera, MapViewport().Bounds, _s.UiScale);   // M11-05
@@ -1362,7 +1365,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
     private Rectangle DiveButtonRect()
     {
         var scale = _s.UiScale;
-        int w = Math.Max(BitmapFont.Measure(DiveOffer.Caption(false), scale), BitmapFont.Measure(DiveOffer.Caption(true), scale)) + 16;
+        int w = Math.Max(Math.Max(BitmapFont.Measure(DiveOffer.Caption(false), scale), BitmapFont.Measure(DiveOffer.Caption(true), scale)), BitmapFont.Measure(DiveOffer.MineCaption(99), scale)) + 16;
         int h = Hud.HeightOf(1, scale) + 6;
         Viewport map = MapViewport();
         return new Rectangle(map.Width - w - 8, map.Height - 3 * h - 16, w, h);   // stacked above the pack button
@@ -1372,6 +1375,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
     private void UpdateDiveButton()
     {
         _diveShown = false;
+        _diveMines = false;
         if (_sim is null || !_skirmishMode)
         {
             _diveRegion.Bounds = Rectangle.Empty;
@@ -1382,8 +1386,16 @@ public sealed class GameScreen : IScreen, IFocusPausable
         _sim.Sim.ViewFor(Me).CopyOwn(own, includeBuildings: false);
         foreach (UnitKey key in _selection.Units)
         {
-            if (!_sim.TryGetTypeIndex(key, out int type) || !M3Orders.IsDiver(_sim.Rules, key.Kind, type)) continue;
+            if (!_sim.TryGetTypeIndex(key, out int type)) continue;
+            if (M3Orders.IsMinelayer(_sim.Rules, key.Kind, type) && !_diveShown)   // S44 M-01
+            {
+                _diveShown = true; _diveMines = true; _diveSubmerged = false;
+                _diveMineStock = _sim.Sim.MineStockOf(key.Id);
+                continue;
+            }
+            if (!M3Orders.IsDiver(_sim.Rules, key.Kind, type)) continue;
             _diveShown = true;
+            _diveMines = false;
             _diveSubmerged = false;
             foreach (ViewActor a in own) if (a.Kind == ActorKind.Vehicle && a.Id == key.Id) { _diveSubmerged = a.Submerged; break; }
             break;
@@ -1398,8 +1410,26 @@ public sealed class GameScreen : IScreen, IFocusPausable
     private void IssueDive()
     {
         foreach (UnitKey key in _selection.Units.ToList())
-            if (_sim!.TryGetTypeIndex(key, out int type) && M3Orders.IsDiver(_sim.Rules, key.Kind, type) && _sim.TryGetPosition(key, out LeptonCoord at))
+            if (_sim!.TryGetTypeIndex(key, out int type) && (M3Orders.IsDiver(_sim.Rules, key.Kind, type) || M3Orders.IsMinelayer(_sim.Rules, key.Kind, type)) && _sim.TryGetPosition(key, out LeptonCoord at))
                 _sim.Order(CommandKind.Deploy, key, at.ToCell());
+    }
+
+    // S44 M-01: own and allied mines, and enemy mines a sonar covers, as small diamonds (own green, enemy red).
+    private void DrawMines(SpriteBatch sb)
+    {
+        if (_sim is null || !_skirmishMode) return;
+        Rts.Sim.Mines.MineState m = _sim.Sim.Mines;
+        byte me = Me;
+        for (int slot = 1; slot < m.Live.Length; slot++)
+        {
+            if (!m.Live[slot] || !_sim.Sim.MineVisibleTo(me, slot)) continue;
+            Rts.Sim.Core.Relation rel = _sim.Sim.RelationOf(me, m.Owner[slot]);
+            bool friendly = rel is Rts.Sim.Core.Relation.Self or Rts.Sim.Core.Relation.Ally;
+            float cx = (m.CellX[slot] + 0.5f) * Camera.CellPx, cy = (m.CellY[slot] + 0.5f) * Camera.CellPx;
+            Color c = friendly ? new Color(80, 220, 120) : new Color(240, 70, 60);
+            Shapes.Fill(sb, _s.Pixel, _camera.ScreenRect(cx - 5, cy - 5, cx + 5, cy + 5), c);
+            Shapes.Outline(sb, _s.Pixel, _camera.ScreenRect(cx - 5, cy - 5, cx + 5, cy + 5), Color.Black);
+        }
     }
 
     private void DrawDiveButton(SpriteBatch sb)
@@ -1408,7 +1438,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
         Rectangle r = DiveButtonRect();
         Shapes.Fill(sb, _s.Pixel, r, new Color(0, 0, 0, 190));
         Shapes.Outline(sb, _s.Pixel, r, Color.White, 2);
-        BitmapFont.Draw(sb, _s.Pixel, DiveOffer.Caption(_diveSubmerged), new Vector2(r.X + 8, r.Y + 4), new Color(0xFF, 0xE0, 0x80), _s.UiScale);
+        BitmapFont.Draw(sb, _s.Pixel, _diveMines ? DiveOffer.MineCaption(_diveMineStock) : DiveOffer.Caption(_diveSubmerged), new Vector2(r.X + 8, r.Y + 4), new Color(0xFF, 0xE0, 0x80), _s.UiScale);
     }
 
     // ---- Pack / unpack a Mother Rig (M6-09) ------------------------------------------------------------

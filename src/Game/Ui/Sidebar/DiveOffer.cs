@@ -7,4 +7,7 @@ public static class DiveOffer
 {
     /// <summary>"Dive (D)" for a surfaced ship, "Surface (D)" for a dived one.</summary>
     public static string Caption(bool submerged) => UiText.Get(submerged ? UiText.SurfaceCaption : UiText.DiveCaption);
+
+    /// <summary>S44 M-01: caption of the same button for a selected minelayer: "Lay mine (D) 3 left".</summary>
+    public static string MineCaption(int stock) => UiText.Get(UiText.MineCaption).Replace("{stock}", stock.ToString(System.Globalization.CultureInfo.InvariantCulture));
 }

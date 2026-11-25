@@ -110,6 +110,7 @@ public sealed partial class Simulation
         if (!_units.Slots.IsAlive(c.Subject) || _units.Player[c.Subject.Index] != c.Player) return;
         Rules.VehicleType vt = RulesOf(c.Player).Vehicles[_units.TypeIndex[c.Subject.Index]];
         if (vt.Submerges) { ApplySubmerge(c); return; }   // M7-05
+        if (vt.MineCapacity > 0) { ApplyLayMine(c); return; }   // S44 M-01: Simulation.Mines.cs
         if (vt.Passengers > 0 || vt.VehicleSlots > 0)   // M7-04b: vehicle_slots
         {
             if (IsLandingTransport(vt)) ApplyLandingDeploy(c, vt);   // D-205 (SIM-RULES-06): timed unload, never all at once
@@ -125,7 +126,7 @@ public sealed partial class Simulation
     {
         _tunnels.ClearMobile(kind, i);
         _effects.ClearMobile(kind, i);
-        if (kind == ActorKind.Vehicle) _rigs.ClearVehicle(i);   // M6-02
+        if (kind == ActorKind.Vehicle) { _rigs.ClearVehicle(i); _mines.ClearVehicle(i); }   // M6-02; S44 M-01
         _veterancy.ClearMobile(kind, i);                        // VET-1
         if (kind == ActorKind.Vehicle) { _naval.ClearVehicle(i); _naval.AmmoLeft[i] = RulesOf(_units.Player[i]).Vehicles[_units.TypeIndex[i]].Ammo; }   // M7-02, D-156: starts full
         SupplyChanged();                                        // SUP-1
@@ -144,7 +145,7 @@ public sealed partial class Simulation
     {
         _tunnels.ClearMobile(kind, i);
         _effects.ClearMobile(kind, i);
-        if (kind == ActorKind.Vehicle) _rigs.ClearVehicle(i);   // M6-02
+        if (kind == ActorKind.Vehicle) { _rigs.ClearVehicle(i); _mines.ClearVehicle(i); }   // M6-02; S44 M-01
         _veterancy.ClearMobile(kind, i);                        // VET-1
         if (kind == ActorKind.Vehicle) _naval.ClearVehicle(i);   // M7-02
         SupplyChanged();                                        // SUP-1
