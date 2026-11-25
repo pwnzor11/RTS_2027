@@ -11,7 +11,7 @@ text = "Low power slows production. Build another Power Plant before you queue m
 text = "Ashfall is the only resource. Refineries turn it into credits, and credits pay for everything else."
 
 [[tip]]
-text = "Build a Refinery and a Scraper drives out to the nearest ashfall field on its own."
+text = "Build an Ashfall Refinery and a Scraper drives out to the nearest ashfall field on its own."
 
 [[tip]]
 text = "More Scrapers mean faster income, but ash fields run thin. Pitchblende pits are rare and rich."

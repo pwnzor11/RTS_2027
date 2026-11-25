@@ -71,8 +71,8 @@ public static class HowToPlayContent
         }),
         new GuidePage("Harvesting ashfall", GuideArt.Harvesting, new[]
         {
-            "Build a Refinery. A Scraper comes with it and drives out to the nearest ashfall field on its own.",
-            "The Scraper scoops ash, carries it back to a Refinery or Silo and unloads; credits rise as it does.",
+            "Build an Ashfall Refinery. A Scraper comes with it and drives out to the nearest ashfall field on its own.",
+            "The Scraper scoops ash, carries it back to an Ashfall Refinery or Silo and unloads; credits rise as it does.",
             "More Scrapers mean faster income, but ash fields run thin. Pitchblende pits are rare and rich.",
             "Ash harms unprotected infantry: keep them out of the thick of it, or inside vehicles.",
             "Guard your Scrapers. The enemy hunts them first.",
