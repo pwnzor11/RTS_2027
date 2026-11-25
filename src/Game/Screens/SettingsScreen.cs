@@ -62,6 +62,8 @@ public sealed class SettingsScreen : IScreen
                 new MenuButton("Toggle", ToggleTreadMarks)),   // S45 V-04
             new MenuItem(() => $"Debris chunks: {(_s.Settings.DebrisChunks ? "On" : "Off")}", ToggleDebrisChunks, _ => ToggleDebrisChunks(),
                 new MenuButton("Toggle", ToggleDebrisChunks)),   // S45 V-04
+            new MenuItem(() => $"Effect budget: {(_s.Settings.EffectBudget ? "On" : "Off")}", ToggleEffectBudget, _ => ToggleEffectBudget(),
+                new MenuButton("Toggle", ToggleEffectBudget)),   // S45 V-04
             new MenuItem(() => "Alerts", () => _s.Screens.Push(new AlertsSettingsScreen(_s, _path))),   // QOL-12
             new MenuItem(() => $"Order lines: {(_s.Settings.ShowOrderLines ? "On" : "Off")}", ToggleOrderLines, _ => ToggleOrderLines(),
                 new MenuButton("Toggle", ToggleOrderLines)),   // QOL-10
@@ -188,6 +190,8 @@ public sealed class SettingsScreen : IScreen
     private void ToggleTreadMarks() => _s.Settings = _s.Settings with { TreadMarks = !_s.Settings.TreadMarks };   // S45 V-04
 
     private void ToggleDebrisChunks() => _s.Settings = _s.Settings with { DebrisChunks = !_s.Settings.DebrisChunks };   // S45 V-04
+
+    private void ToggleEffectBudget() => _s.Settings = _s.Settings with { EffectBudget = !_s.Settings.EffectBudget };   // S45 V-04
 
     private void ToggleScreenShake() => _s.Settings = _s.Settings with { ScreenShake = !_s.Settings.ScreenShake };
 

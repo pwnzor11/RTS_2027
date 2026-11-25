@@ -48,6 +48,9 @@ public sealed class SceneRenderer : IDisposable
     /// <summary>S45 V-04: vehicle and building deaths throw small debris chunks (the "Debris chunks" setting); the game screen sets it each frame.</summary>
     public bool DebrisEnabled { get; set; } = true;
 
+    /// <summary>S45 V-04: one budget for explosions, debris and smoke; when full, the least important (far off screen, small) start last or not at all (the "Effect budget" setting).</summary>
+    public bool FxBudgetEnabled { get; set; } = true;
+
     private readonly Stopwatch _clock = Stopwatch.StartNew();   // presentation time only: weather drift and shake decay, never the sim
     private double _lastSeconds;
     private readonly JuiceShake _shake = new();
@@ -302,30 +305,82 @@ public sealed class SceneRenderer : IDisposable
         if (snapshot.Tick != _fxTick)
         {
             _fxTick = snapshot.Tick;
-            if (_library is not null && snapshot.FxEvents is { Count: > 0 } events)
-            {
-                foreach (FxEvent e in events)
-                {
-                    Vector2 centre = Camera.WorldFromLepton(e.Pos);
-                    foreach (ExplosionSpot s in ExplosionPlan.For(e))
-                        _fx.Spawn(s.Kind, centre + new Vector2(s.DxCells, s.DyCells) * Camera.CellPx, snapshot.Tick, s.Scale);
-                }
-            }
-
-            ThrowDebris(frame);   // S45 V-04
+            StartEffects(frame, camera);
         }
 
         if (_library is not null) _fx.Draw(batch, _library, camera, snapshot.Tick);
         if (DebrisEnabled && _debris.Count > 0) DebrisPainter.Draw(batch, pixel, _debris, camera, _viewport, snapshot.Tick);
     }
 
-    // S45 V-04: once per sim tick, a few chunks for every vehicle or building that just died (walls and soldiers throw none).
-    private void ThrowDebris(SceneFrame frame)
+    /// <summary>One effect waiting for the budget (S45 V-04): an explosion sprite or a death's debris chunks.</summary>
+    private readonly record struct PendingFx(FxCandidate Candidate, string? Kind, Vector2 At, float Scale, DebrisChunk[]? Chunks);
+
+    private readonly List<PendingFx> _pending = new();
+    private readonly List<FxCandidate> _candidates = new();
+    private readonly List<LeptonCoord> _selectedPrev = new();   // where the selected units stood a tick ago, so their deaths are never dropped
+
+    // Once per sim tick: the events and deaths of the snapshot become explosions and debris, exactly once however many frames show it. With the
+    // budget on, FxBudget decides which of them start (S45 V-04); with it off, all of them do, as before.
+    private void StartEffects(SceneFrame frame, Camera camera)
+    {
+        SimSnapshot snapshot = frame.Snapshot;
+        _pending.Clear();
+        if (snapshot.FxEvents is { Count: > 0 } events)
+        {
+            Rectangle view = _viewport.Bounds;
+            float cellPx = Camera.CellPx * camera.Zoom;
+            foreach (FxEvent e in events)
+            {
+                bool guarded = e.Kind == FxKind.Superweapon   // the event does not name its owner, so every superweapon blast is kept
+                    || (e.Kind == FxKind.UnitDestroyed && FxBudget.NearAny(e.Pos, _selectedPrev, DeathWatcher.UnitMatchLeptons));
+                Vector2 centre = Camera.WorldFromLepton(e.Pos);
+                int off = FxBudget.OffScreenCells(view, camera.ScreenFromWorld(centre), cellPx);
+                foreach (ExplosionSpot s in ExplosionPlan.For(e))
+                {
+                    var cand = new FxCandidate(e.Kind == FxKind.Superweapon ? FxClass.Superweapon : FxClass.Explosion, FxBudget.SizeClassOfScale(s.Scale), off, guarded);
+                    _pending.Add(new PendingFx(cand, s.Kind, centre + new Vector2(s.DxCells, s.DyCells) * Camera.CellPx, s.Scale, null));
+                }
+            }
+        }
+
+        CollectDebris(frame, camera);   // S45 V-04
+        if (_pending.Count > 0)
+        {
+            bool[] keep;
+            if (FxBudgetEnabled)
+            {
+                _candidates.Clear();
+                foreach (PendingFx p in _pending) _candidates.Add(p.Candidate);
+                keep = FxBudget.Admit(_candidates, _fx.ActiveCount + _debris.Count + _look.Puffs.Items.Count);
+            }
+            else
+            {
+                keep = new bool[_pending.Count];
+                Array.Fill(keep, true);
+            }
+
+            for (int i = 0; i < _pending.Count; i++)
+            {
+                if (!keep[i]) continue;
+                PendingFx p = _pending[i];
+                if (p.Kind is not null) { if (_library is not null) _fx.Spawn(p.Kind, p.At, snapshot.Tick, p.Scale); }
+                else foreach (DebrisChunk c in p.Chunks!) _debris.Add(c);
+            }
+        }
+
+        _selectedPrev.Clear();
+        foreach (RenderUnit u in frame.Units)
+            if (frame.Selection.Contains(UnitKey.Of(u.View))) _selectedPrev.Add(u.View.Position);
+    }
+
+    // S45 V-04: a few chunks for every vehicle or building that just died (walls and soldiers throw none), queued behind the explosions.
+    private void CollectDebris(SceneFrame frame, Camera camera)
     {
         SimSnapshot snapshot = frame.Snapshot;
         _debris.Prune(snapshot.Tick);
         if (!DebrisEnabled || frame.Rules is not { } rules) return;
         _debrisDeaths.Observe(snapshot, _deathScratch, rules);
+        Rectangle view = _viewport.Bounds;
         foreach (DeathRecord d in _deathScratch)
         {
             int faction;
@@ -344,7 +399,8 @@ public sealed class SceneRenderer : IDisposable
 
             Vector2 at = Camera.WorldFromLepton(d.Pos);
             DebrisPlan.For(at.X, at.Y, Math.Max(d.Width, d.Height), building, faction, snapshot.Tick, _chunkScratch);
-            foreach (DebrisChunk c in _chunkScratch) _debris.Add(c);
+            int off = FxBudget.OffScreenCells(view, camera.ScreenFromWorld(at), Camera.CellPx * camera.Zoom);
+            _pending.Add(new PendingFx(new FxCandidate(FxClass.Debris, building ? 1 : 0, off), null, at, 1f, _chunkScratch.ToArray()));
         }
     }
 
@@ -368,6 +424,7 @@ public sealed class SceneRenderer : IDisposable
         _memory.Reset();
         _treads.Clear();
         _debris.Clear();
+        _selectedPrev.Clear();
         _treadMarker.Reset();
         _water.Reset();
         _hits.Reset();
