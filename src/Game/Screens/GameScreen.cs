@@ -675,6 +675,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
         _s.Scene.TreadMarksEnabled = _s.Settings.TreadMarks;   // S45 V-04
         _s.Scene.DebrisEnabled = _s.Settings.DebrisChunks;   // S45 V-04
         _s.Scene.FxBudgetEnabled = _s.Settings.EffectBudget;   // S45 V-04
+        _s.Scene.GlowEnabled = _s.Settings.AdditiveGlow;   // S45 V-04
         _s.Scene.Draw(sb, _s.Pixel, frame, _camera, _s.Viewport);
         DrawPausedPlan(sb);   // A43-QOL-08
         DrawSelectedBuilding(sb, snapshot);

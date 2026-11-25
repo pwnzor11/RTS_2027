@@ -47,6 +47,7 @@ namespace Rts.Game;
 /// <param name="TreadMarks">S45 V-04 (design 18): tracked and wheeled vehicles leave fading track marks on soft ground (view only). Default true; files without the key get true.</param>
 /// <param name="DebrisChunks">S45 V-04 (design 18): vehicle and building deaths throw a few small debris chunks (view only). Default true; files without the key get true.</param>
 /// <param name="EffectBudget">S45 V-04 (design 18): one budget caps explosions, debris and smoke; when it is full the far-off-screen and small ones are dropped first, never a superweapon or the death of a selected unit (view only). Default true; files without the key get true.</param>
+/// <param name="AdditiveGlow">S45 V-04 (design 18): a soft additive glow under explosion cores, muzzle flashes and fires (view only; flashes also obey <c>ReduceFlashes</c>). Default true; files without the key get true.</param>
 /// <param name="PlayerName">M9 LAN player name; empty = the Windows user name (design 20 §8 item 4).</param>
 /// <param name="LanGamePort">M9 LAN game port (UDP), 1024..65535. Default <see cref="Rts.Net.NetProtocol.DefaultGamePort"/>.</param>
 /// <param name="LanDiscoveryPort">M9 LAN discovery port (UDP), 1024..65535. Default <see cref="Rts.Net.NetProtocol.DefaultDiscoveryPort"/>.</param>
@@ -88,7 +89,8 @@ public sealed record Settings(
     bool ShowOrderLines = true,
     bool TreadMarks = true,
     bool DebrisChunks = true,
-    bool EffectBudget = true)
+    bool EffectBudget = true,
+    bool AdditiveGlow = true)
 {
     /// <summary>The <c>UiSkin</c> value for faction skins.</summary>
     public const string UiSkinFaction = "faction";
@@ -221,7 +223,8 @@ public sealed record Settings(
             root.TryGetValue("show_order_lines", out object? sol) && sol is bool solb ? solb : d.ShowOrderLines,
             root.TryGetValue("tread_marks", out object? tm) && tm is bool tmb ? tmb : d.TreadMarks,
             root.TryGetValue("debris_chunks", out object? dc) && dc is bool dcb ? dcb : d.DebrisChunks,
-            root.TryGetValue("effect_budget", out object? eb) && eb is bool ebb ? ebb : d.EffectBudget);
+            root.TryGetValue("effect_budget", out object? eb) && eb is bool ebb ? ebb : d.EffectBudget,
+            root.TryGetValue("additive_glow", out object? ag) && ag is bool agb ? agb : d.AdditiveGlow);
     }
 
     /// <summary>The settings as TOML text.</summary>
@@ -282,6 +285,8 @@ public sealed record Settings(
         sb.AppendLine(FormattableString.Invariant($"debris_chunks = {(DebrisChunks ? "true" : "false")}"));
         sb.AppendLine("# Effect budget: caps explosions, debris and smoke in big fights, dropping far-off and small ones first.");
         sb.AppendLine(FormattableString.Invariant($"effect_budget = {(EffectBudget ? "true" : "false")}"));
+        sb.AppendLine("# Additive glow under explosions, muzzle flashes and fires (flashes also follow reduce_flashes).");
+        sb.AppendLine(FormattableString.Invariant($"additive_glow = {(AdditiveGlow ? "true" : "false")}"));
         sb.AppendLine("# Pan the camera to a new mission objective's target (M11-05)");
         sb.AppendLine(FormattableString.Invariant($"camera_cue_on_new_objective = {(CameraCueOnNewObjective ? "true" : "false")}"));
         IReadOnlyList<(string Id, int Volume)> alerts = Alerts.Overrides();

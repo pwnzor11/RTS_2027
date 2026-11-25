@@ -51,6 +51,9 @@ public sealed class SceneRenderer : IDisposable
     /// <summary>S45 V-04: one budget for explosions, debris and smoke; when full, the least important (far off screen, small) start last or not at all (the "Effect budget" setting).</summary>
     public bool FxBudgetEnabled { get; set; } = true;
 
+    /// <summary>S45 V-04: additive glow under explosion cores, muzzle flashes and fires (the "Additive glow" setting); the game screen sets it each frame. Flashes also obey <see cref="ReduceFlashes"/>.</summary>
+    public bool GlowEnabled { get; set; } = true;
+
     private readonly Stopwatch _clock = Stopwatch.StartNew();   // presentation time only: weather drift and shake decay, never the sim
     private double _lastSeconds;
     private readonly JuiceShake _shake = new();
@@ -69,6 +72,11 @@ public sealed class SceneRenderer : IDisposable
     private readonly DeathWatcher _debrisDeaths = new();
     private readonly List<DeathRecord> _deathScratch = new();
     private readonly List<DebrisChunk> _chunkScratch = new();
+    private readonly GlowField _glow = new();   // S45 V-04
+    private readonly GlowPass _glowPass = new();
+    private readonly List<GlowSource> _glowScratch = new();
+    private int _glowPrevProjectiles;
+    private int _glowTick = int.MinValue;
     private readonly FxLook _look = new();   // D-184: damage tiers, remains, dust, mood tint
     private MapData? _moodMap;
     private MoodGrade _mood = MoodGrade.None;
@@ -224,6 +232,7 @@ public sealed class SceneRenderer : IDisposable
         DrawEffects(batch, pixel, frame, camera);
 
         ProjectileRenderer.Draw(batch, pixel, frame.Projectiles, camera);
+        if (GlowEnabled) DrawGlow(batch, pixel.GraphicsDevice, frame, camera);   // S45 V-04: additive, under the blackout and the fog
         GroundOverlay.DrawBlackout(batch, pixel, snapshot, camera, viewport);
         if (frame.Sim is not null)   // M6-09: ash storms over the sprites, under the fog
         {
@@ -325,6 +334,7 @@ public sealed class SceneRenderer : IDisposable
     {
         SimSnapshot snapshot = frame.Snapshot;
         _pending.Clear();
+        ObserveMuzzleGlow(frame, camera);
         if (snapshot.FxEvents is { Count: > 0 } events)
         {
             Rectangle view = _viewport.Bounds;
@@ -363,7 +373,11 @@ public sealed class SceneRenderer : IDisposable
             {
                 if (!keep[i]) continue;
                 PendingFx p = _pending[i];
-                if (p.Kind is not null) { if (_library is not null) _fx.Spawn(p.Kind, p.At, snapshot.Tick, p.Scale); }
+                if (p.Kind is not null)
+                {
+                    if (_library is not null) _fx.Spawn(p.Kind, p.At, snapshot.Tick, p.Scale);
+                    AddExplosionGlow(p, snapshot.Tick);
+                }
                 else foreach (DebrisChunk c in p.Chunks!) _debris.Add(c);
             }
         }
@@ -371,6 +385,77 @@ public sealed class SceneRenderer : IDisposable
         _selectedPrev.Clear();
         foreach (RenderUnit u in frame.Units)
             if (frame.Selection.Contains(UnitKey.Of(u.View))) _selectedPrev.Add(u.View.Position);
+    }
+
+    // S45 V-04: the core of a kept explosion lights up briefly (a superweapon blast is bigger and whiter).
+    private void AddExplosionGlow(PendingFx p, int tick)
+    {
+        if (!GlowEnabled || ReduceFlashes || p.Kind is null) return;
+        bool big = p.Candidate.Class == FxClass.Superweapon;
+        float radius = (p.Kind == "explosion_large" ? GlowModel.LargeExplosionRadius : GlowModel.SmallExplosionRadius) * p.Scale * (big ? 3f : 1f);
+        _glow.Add(new GlowFlash(new GlowSource(p.At.X, p.At.Y - 8, radius, big ? 0xFFE0A0u : GlowModel.ExplosionRgb, big ? 1f : 0.85f), tick, GlowModel.ExplosionLife));
+    }
+
+    // S45 V-04: a short flash at each new shell, found the same way as the muzzle sparks (the list of shells grew) but kept apart from them.
+    private void ObserveMuzzleGlow(SceneFrame frame, Camera camera)
+    {
+        SimSnapshot snapshot = frame.Snapshot;
+        _glow.Prune(snapshot.Tick);
+        bool forward = snapshot.Tick > _glowTick && _glowTick != int.MinValue;
+        _glowTick = snapshot.Tick;
+        int count = frame.Projectiles.Count, landed = 0;
+        if (snapshot.FxEvents is { Count: > 0 } events)
+            foreach (FxEvent e in events) if (e.Kind == FxKind.Detonation) landed++;
+        int shots = forward ? JuiceMuzzle.NewShots(_glowPrevProjectiles, count, landed) : 0;
+        _glowPrevProjectiles = count;
+        if (!GlowEnabled || ReduceFlashes) return;
+        for (int i = 0; i < shots; i++)
+        {
+            Vector2 at = Camera.WorldFromLepton(frame.Projectiles[count - 1 - i]);
+            if (!InView(at, camera, _viewport)) continue;
+            _glow.Add(new GlowFlash(new GlowSource(at.X, at.Y - 6, GlowModel.MuzzleRadius, GlowModel.MuzzleRgb, 0.7f), snapshot.Tick, GlowModel.MuzzleLife));
+        }
+    }
+
+    // S45 V-04: every frame, the live flashes plus a flickering glow on each burning vehicle and building in view; the strongest MaxSources are drawn.
+    private void DrawGlow(SpriteBatch batch, GraphicsDevice device, SceneFrame frame, Camera camera)
+    {
+        SimSnapshot snapshot = frame.Snapshot;
+        _glowScratch.Clear();
+        _glow.Collect(snapshot.Tick, _glowScratch);
+        if (frame.Rules is { } rules)
+        {
+            Rectangle view = _viewport.Bounds;
+            view.Inflate(160, 160);
+            foreach (RenderUnit u in frame.Units)
+            {
+                UnitView v = u.View;
+                if (v.Kind != UnitKind.Vehicle || v.Underground || (uint)v.TypeIndex >= (uint)rules.Vehicles.Count) continue;
+                if (DamageTiers.For(v.Health, rules.Vehicles[v.TypeIndex].MaxHealth) != DamageTier.Fire) continue;
+                if (!view.Contains(camera.ScreenFromWorld(u.World).ToPoint())) continue;
+                float k = GlowModel.Flicker((uint)v.Id.Index, snapshot.Tick, ReduceFlashes);
+                _glowScratch.Add(new GlowSource(u.World.X, u.World.Y - 14, GlowModel.BurnRadius * (0.9f + 0.2f * k), GlowModel.FireRgb, 0.55f * k));
+            }
+
+            foreach (BuildingView b in snapshot.Buildings)
+            {
+                if (b.Ghost || (uint)b.TypeIndex >= (uint)rules.Buildings.Count) continue;
+                BuildingType bt = rules.Buildings[b.TypeIndex];
+                if (bt.Wall || DamageTiers.For(b.Health, bt.MaxHealth) != DamageTier.Fire) continue;
+                var centre = new Vector2((b.Cell.X + b.FootprintW / 2f) * Camera.CellPx, (b.Cell.Y + b.FootprintH / 2f) * Camera.CellPx - 14);
+                if (!view.Contains(camera.ScreenFromWorld(centre).ToPoint())) continue;
+                float k = GlowModel.Flicker((uint)b.Id.Index, snapshot.Tick, ReduceFlashes);
+                _glowScratch.Add(new GlowSource(centre.X, centre.Y, GlowModel.BurnRadius * Math.Max(b.FootprintW, b.FootprintH) * 0.8f * (0.9f + 0.2f * k), GlowModel.FireRgb, 0.5f * k));
+            }
+        }
+
+        if (_glowScratch.Count > GlowModel.MaxSources)
+        {
+            _glowScratch.Sort((a, b2) => b2.Intensity.CompareTo(a.Intensity));
+            _glowScratch.RemoveRange(GlowModel.MaxSources, _glowScratch.Count - GlowModel.MaxSources);
+        }
+
+        _glowPass.Draw(batch, device, _glowScratch, camera, _viewport);
     }
 
     // S45 V-04: a few chunks for every vehicle or building that just died (walls and soldiers throw none), queued behind the explosions.
@@ -425,6 +510,9 @@ public sealed class SceneRenderer : IDisposable
         _treads.Clear();
         _debris.Clear();
         _selectedPrev.Clear();
+        _glow.Clear();
+        _glowPrevProjectiles = 0;
+        _glowTick = int.MinValue;
         _treadMarker.Reset();
         _water.Reset();
         _hits.Reset();
@@ -441,6 +529,7 @@ public sealed class SceneRenderer : IDisposable
         if (_disposed) return;
         _disposed = true;
         _painter.Dispose();
+        _glowPass.Dispose();
         _look.Dispose();
     }
 
