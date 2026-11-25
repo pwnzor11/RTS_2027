@@ -45,6 +45,7 @@ namespace Rts.Game;
 /// <param name="TutorialOffered">QOL-13 (D-313): the first-run "play the tutorial?" offer has been shown (and answered); it is never shown again. Default false.</param>
 /// <param name="AlertVolumes">QOL-12 (D-313): volume (0 = mute) of each alert category; null = every category at 100. Stored in an <c>[alerts]</c> table.</param>
 /// <param name="TreadMarks">S45 V-04 (design 18): tracked and wheeled vehicles leave fading track marks on soft ground (view only). Default true; files without the key get true.</param>
+/// <param name="DebrisChunks">S45 V-04 (design 18): vehicle and building deaths throw a few small debris chunks (view only). Default true; files without the key get true.</param>
 /// <param name="PlayerName">M9 LAN player name; empty = the Windows user name (design 20 §8 item 4).</param>
 /// <param name="LanGamePort">M9 LAN game port (UDP), 1024..65535. Default <see cref="Rts.Net.NetProtocol.DefaultGamePort"/>.</param>
 /// <param name="LanDiscoveryPort">M9 LAN discovery port (UDP), 1024..65535. Default <see cref="Rts.Net.NetProtocol.DefaultDiscoveryPort"/>.</param>
@@ -84,7 +85,8 @@ public sealed record Settings(
     bool TutorialOffered = false,
     Ui.Alerts.AlertMix? AlertVolumes = null,
     bool ShowOrderLines = true,
-    bool TreadMarks = true)
+    bool TreadMarks = true,
+    bool DebrisChunks = true)
 {
     /// <summary>The <c>UiSkin</c> value for faction skins.</summary>
     public const string UiSkinFaction = "faction";
@@ -215,7 +217,8 @@ public sealed record Settings(
             root.TryGetValue("tutorial_offered", out object? to) && to is bool tob ? tob : d.TutorialOffered,
             ParseAlerts(root),
             root.TryGetValue("show_order_lines", out object? sol) && sol is bool solb ? solb : d.ShowOrderLines,
-            root.TryGetValue("tread_marks", out object? tm) && tm is bool tmb ? tmb : d.TreadMarks);
+            root.TryGetValue("tread_marks", out object? tm) && tm is bool tmb ? tmb : d.TreadMarks,
+            root.TryGetValue("debris_chunks", out object? dc) && dc is bool dcb ? dcb : d.DebrisChunks);
     }
 
     /// <summary>The settings as TOML text.</summary>
@@ -271,8 +274,9 @@ public sealed record Settings(
         sb.AppendLine(FormattableString.Invariant($"ui_skin = {Quote(UseFactionSkin ? UiSkinFaction : UiSkinClassic)}"));
         sb.AppendLine("# Thin lines from selected units to their attack target or move destination (view only).");
         sb.AppendLine(FormattableString.Invariant($"show_order_lines = {(ShowOrderLines ? "true" : "false")}"));
-        sb.AppendLine("# Battle effects (view only, S45 V-04): tread marks on soft ground.");
+        sb.AppendLine("# Battle effects (view only, S45 V-04): tread marks on soft ground, debris chunks from deaths.");
         sb.AppendLine(FormattableString.Invariant($"tread_marks = {(TreadMarks ? "true" : "false")}"));
+        sb.AppendLine(FormattableString.Invariant($"debris_chunks = {(DebrisChunks ? "true" : "false")}"));
         sb.AppendLine("# Pan the camera to a new mission objective's target (M11-05)");
         sb.AppendLine(FormattableString.Invariant($"camera_cue_on_new_objective = {(CameraCueOnNewObjective ? "true" : "false")}"));
         IReadOnlyList<(string Id, int Volume)> alerts = Alerts.Overrides();

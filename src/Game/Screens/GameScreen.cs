@@ -673,6 +673,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
         _s.Scene.ShakeEnabled = _s.Settings.ScreenShake;   // M10-14
         _s.Scene.ReduceFlashes = _s.Settings.ReduceFlashes;   // QOL-20
         _s.Scene.TreadMarksEnabled = _s.Settings.TreadMarks;   // S45 V-04
+        _s.Scene.DebrisEnabled = _s.Settings.DebrisChunks;   // S45 V-04
         _s.Scene.Draw(sb, _s.Pixel, frame, _camera, _s.Viewport);
         DrawPausedPlan(sb);   // A43-QOL-08
         DrawSelectedBuilding(sb, snapshot);

@@ -45,6 +45,9 @@ public sealed class SceneRenderer : IDisposable
     /// <summary>S45 V-04: tracked and wheeled vehicles leave fading track marks on soft ground (the "Tread marks" setting); the game screen sets it each frame.</summary>
     public bool TreadMarksEnabled { get; set; } = true;
 
+    /// <summary>S45 V-04: vehicle and building deaths throw small debris chunks (the "Debris chunks" setting); the game screen sets it each frame.</summary>
+    public bool DebrisEnabled { get; set; } = true;
+
     private readonly Stopwatch _clock = Stopwatch.StartNew();   // presentation time only: weather drift and shake decay, never the sim
     private double _lastSeconds;
     private readonly JuiceShake _shake = new();
@@ -59,6 +62,10 @@ public sealed class SceneRenderer : IDisposable
     private readonly FxPlayer _fx = new();
     private readonly TreadMarkPool _treads = new();   // S45 V-04
     private readonly TreadMarker _treadMarker = new();
+    private readonly DebrisField _debris = new();   // S45 V-04
+    private readonly DeathWatcher _debrisDeaths = new();
+    private readonly List<DeathRecord> _deathScratch = new();
+    private readonly List<DebrisChunk> _chunkScratch = new();
     private readonly FxLook _look = new();   // D-184: damage tiers, remains, dust, mood tint
     private MapData? _moodMap;
     private MoodGrade _mood = MoodGrade.None;
@@ -211,7 +218,7 @@ public sealed class SceneRenderer : IDisposable
         DrawSprites(batch, pixel, frame, camera);
         _look.DrawOverSprites(batch, _library, _sprites, frame, _memory, camera, viewport);   // D-184: damage smoke and fire
         GarrisonOverlay.Draw(batch, snapshot, camera);
-        DrawEffects(batch, snapshot, camera);
+        DrawEffects(batch, pixel, frame, camera);
 
         ProjectileRenderer.Draw(batch, pixel, frame.Projectiles, camera);
         GroundOverlay.DrawBlackout(batch, pixel, snapshot, camera, viewport);
@@ -289,13 +296,13 @@ public sealed class SceneRenderer : IDisposable
 
     // Explosions (M2-19): the sim's per-tick events of a snapshot are turned into one-shot effects exactly once,
     // however many frames show that snapshot; the player then animates them until they finish.
-    private void DrawEffects(SpriteBatch batch, SimSnapshot snapshot, Camera camera)
+    private void DrawEffects(SpriteBatch batch, Texture2D pixel, SceneFrame frame, Camera camera)
     {
-        if (_library is null) return;
+        SimSnapshot snapshot = frame.Snapshot;
         if (snapshot.Tick != _fxTick)
         {
             _fxTick = snapshot.Tick;
-            if (snapshot.FxEvents is { Count: > 0 } events)
+            if (_library is not null && snapshot.FxEvents is { Count: > 0 } events)
             {
                 foreach (FxEvent e in events)
                 {
@@ -304,8 +311,41 @@ public sealed class SceneRenderer : IDisposable
                         _fx.Spawn(s.Kind, centre + new Vector2(s.DxCells, s.DyCells) * Camera.CellPx, snapshot.Tick, s.Scale);
                 }
             }
+
+            ThrowDebris(frame);   // S45 V-04
         }
-        _fx.Draw(batch, _library, camera, snapshot.Tick);
+
+        if (_library is not null) _fx.Draw(batch, _library, camera, snapshot.Tick);
+        if (DebrisEnabled && _debris.Count > 0) DebrisPainter.Draw(batch, pixel, _debris, camera, _viewport, snapshot.Tick);
+    }
+
+    // S45 V-04: once per sim tick, a few chunks for every vehicle or building that just died (walls and soldiers throw none).
+    private void ThrowDebris(SceneFrame frame)
+    {
+        SimSnapshot snapshot = frame.Snapshot;
+        _debris.Prune(snapshot.Tick);
+        if (!DebrisEnabled || frame.Rules is not { } rules) return;
+        _debrisDeaths.Observe(snapshot, _deathScratch, rules);
+        foreach (DeathRecord d in _deathScratch)
+        {
+            int faction;
+            bool building = d.Kind == RemainKind.BuildingRubble;
+            if (building)
+            {
+                if ((uint)d.TypeIndex >= (uint)rules.Buildings.Count || rules.Buildings[d.TypeIndex].Wall) continue;
+                faction = (int)rules.Buildings[d.TypeIndex].Faction;
+            }
+            else if (d.Kind == RemainKind.VehicleWreck)
+            {
+                if ((uint)d.TypeIndex >= (uint)rules.Vehicles.Count) continue;
+                faction = (int)rules.Vehicles[d.TypeIndex].Faction;
+            }
+            else continue;
+
+            Vector2 at = Camera.WorldFromLepton(d.Pos);
+            DebrisPlan.For(at.X, at.Y, Math.Max(d.Width, d.Height), building, faction, snapshot.Tick, _chunkScratch);
+            foreach (DebrisChunk c in _chunkScratch) _debris.Add(c);
+        }
     }
 
     /// <summary>
@@ -327,6 +367,7 @@ public sealed class SceneRenderer : IDisposable
     {
         _memory.Reset();
         _treads.Clear();
+        _debris.Clear();
         _treadMarker.Reset();
         _water.Reset();
         _hits.Reset();
