@@ -60,6 +60,8 @@ public sealed class SettingsScreen : IScreen
                 new MenuButton("Toggle", ToggleCloudShadows)),   // M16-V-04
             new MenuItem(() => $"Water shimmer: {(_s.Settings.WaterShimmer ? "On" : "Off")}", ToggleWaterShimmer, _ => ToggleWaterShimmer(),
                 new MenuButton("Toggle", ToggleWaterShimmer)),   // M16-V-04
+            new MenuItem(() => $"Road junctions: {(_s.Settings.RoadPieces ? "On" : "Off")}", ToggleRoadPieces, _ => ToggleRoadPieces(),
+                new MenuButton("Toggle", ToggleRoadPieces)),   // M16-V-04
             new MenuItem(() => $"Reduce flashes: {(_s.Settings.ReduceFlashes ? "On" : "Off")}", ToggleReduceFlashes, _ => ToggleReduceFlashes(),
                 new MenuButton("Toggle", ToggleReduceFlashes)),   // QOL-20
             new MenuItem(() => "Alerts", () => _s.Screens.Push(new AlertsSettingsScreen(_s, _path))),   // QOL-12
@@ -186,6 +188,8 @@ public sealed class SettingsScreen : IScreen
     private void ToggleCloudShadows() => _s.Settings = _s.Settings with { CloudShadows = !_s.Settings.CloudShadows };   // M16-V-04
 
     private void ToggleWaterShimmer() => _s.Settings = _s.Settings with { WaterShimmer = !_s.Settings.WaterShimmer };   // M16-V-04
+
+    private void ToggleRoadPieces() => _s.Settings = _s.Settings with { RoadPieces = !_s.Settings.RoadPieces };   // M16-V-04
 
     private void ToggleReduceFlashes() => _s.Settings = _s.Settings with { ReduceFlashes = !_s.Settings.ReduceFlashes };
 

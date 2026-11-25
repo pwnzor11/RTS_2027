@@ -42,6 +42,9 @@ public sealed class SceneRenderer : IDisposable
     /// <summary>M16-V-04: draw the sweeping sparkle band on visible water (the "Water shimmer" setting); the game screen sets it each frame.</summary>
     public bool WaterShimmerEnabled { get; set; } = true;
 
+    /// <summary>M16-V-04: draw road junction flares and rounded dead ends (the "Road junctions" setting); the game screen sets it each frame.</summary>
+    public bool RoadPiecesEnabled { get; set; } = true;
+
     /// <summary>M10-14: shake the world view on big blasts (the "Screen shake" setting); the game screen sets it each frame.</summary>
     public bool ShakeEnabled { get; set; } = true;
 
@@ -69,6 +72,7 @@ public sealed class SceneRenderer : IDisposable
     private readonly WallTiler _walls = new();
     private readonly List<DrawItem> _items = new();
     private readonly ThemedTerrainLook _terrain = new();
+    private readonly RoadPieceLayer _roads = new();   // M16-V-04: junction flares and rounded dead ends
     private readonly CloudShadowLayer _clouds = new();   // M16-V-04: soft shadows drifting over the world
     private readonly WaterShimmerLayer _shimmer = new();   // M16-V-04: sparkle band over visible water
     private readonly WaterOverlay _water = new();   // M10-13: animated water, shore foam, ship wakes
@@ -167,6 +171,7 @@ public sealed class SceneRenderer : IDisposable
         if (map is not null)
         {
             _terrain.Draw(batch, pixel, map, camera, frame.Sim?.Map, snapshot.Tick);
+            if (RoadPiecesEnabled) _roads.Draw(batch, pixel, map, camera, viewport);   // M16-V-04: over the bake, under the decals
             _decor.Draw(batch, pixel, map, camera, viewport);
         }
         else

@@ -43,6 +43,7 @@ namespace Rts.Game;
 /// <param name="UiSkin">S24: "faction" (default) draws the sidebar and card with the local faction's skin art where it exists; "classic" always draws the procedural look.</param>
 /// <param name="CloudShadows">M16-V-04: slow soft cloud shadows drifting over the map (view only). Default true; files without the key get true.</param>
 /// <param name="WaterShimmer">M16-V-04: a slow band of sparkles sweeping over visible water (view only). Default true; files without the key get true.</param>
+/// <param name="RoadPieces">M16-V-04: junction flares and rounded dead ends drawn over roads (view only). Default true; files without the key get true.</param>
 /// <param name="ReduceFlashes">QOL-20 (D-313): no white hit flash, promotion flash or muzzle sparks (view only; separate from <c>ScreenShake</c>). Default false.</param>
 /// <param name="TutorialOffered">QOL-13 (D-313): the first-run "play the tutorial?" offer has been shown (and answered); it is never shown again. Default false.</param>
 /// <param name="AlertVolumes">QOL-12 (D-313): volume (0 = mute) of each alert category; null = every category at 100. Stored in an <c>[alerts]</c> table.</param>
@@ -86,7 +87,8 @@ public sealed record Settings(
     Ui.Alerts.AlertMix? AlertVolumes = null,
     bool ShowOrderLines = true,
     bool CloudShadows = true,
-    bool WaterShimmer = true)
+    bool WaterShimmer = true,
+    bool RoadPieces = true)
 {
     /// <summary>The <c>UiSkin</c> value for faction skins.</summary>
     public const string UiSkinFaction = "faction";
@@ -218,7 +220,8 @@ public sealed record Settings(
             ParseAlerts(root),
             root.TryGetValue("show_order_lines", out object? sol) && sol is bool solb ? solb : d.ShowOrderLines,
             root.TryGetValue("cloud_shadows", out object? clq) && clq is bool clqb ? clqb : d.CloudShadows,
-            root.TryGetValue("water_shimmer", out object? waq) && waq is bool waqb ? waqb : d.WaterShimmer);
+            root.TryGetValue("water_shimmer", out object? waq) && waq is bool waqb ? waqb : d.WaterShimmer,
+            root.TryGetValue("road_pieces", out object? roq) && roq is bool roqb ? roqb : d.RoadPieces);
     }
 
     /// <summary>The settings as TOML text.</summary>
@@ -274,6 +277,8 @@ public sealed record Settings(
         sb.AppendLine(FormattableString.Invariant($"ui_skin = {Quote(UseFactionSkin ? UiSkinFaction : UiSkinClassic)}"));
         sb.AppendLine("# Thin lines from selected units to their attack target or move destination (view only).");
         sb.AppendLine(FormattableString.Invariant($"show_order_lines = {(ShowOrderLines ? "true" : "false")}"));
+        sb.AppendLine("# Road pieces: flared junctions and rounded dead ends over roads (view only).");
+        sb.AppendLine(FormattableString.Invariant($"road_pieces = {(RoadPieces ? "true" : "false")}"));
         sb.AppendLine("# Water shimmer: a slow band of sparkles over visible water (view only).");
         sb.AppendLine(FormattableString.Invariant($"water_shimmer = {(WaterShimmer ? "true" : "false")}"));
         sb.AppendLine("# Cloud shadows: soft shadows drifting over the map (view only).");

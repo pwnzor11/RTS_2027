@@ -672,6 +672,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
         _s.Scene.WeatherEnabled = _s.Settings.Weather;   // M10-12
         _s.Scene.ShakeEnabled = _s.Settings.ScreenShake;   // M10-14
         _s.Scene.ReduceFlashes = _s.Settings.ReduceFlashes;   // QOL-20
+        _s.Scene.RoadPiecesEnabled = _s.Settings.RoadPieces;   // M16-V-04
         _s.Scene.WaterShimmerEnabled = _s.Settings.WaterShimmer;   // M16-V-04
         _s.Scene.CloudShadowsEnabled = _s.Settings.CloudShadows;   // M16-V-04
         _s.Scene.Draw(sb, _s.Pixel, frame, _camera, _s.Viewport);
