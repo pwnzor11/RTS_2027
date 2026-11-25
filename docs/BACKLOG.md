@@ -16,6 +16,7 @@ The s43 audit ids (e.g. SIMECON-07) are kept in each row so the audit README §5
   alone: no effect. Probes `aioff43` (bal-s43 with all AiFixes off) and `integ43` (integ-s43, neither branch) were running on the cluster at
   hand-off (k3s-cluster `claude/rts/s43/`, out `/work/out/<job>`; tally `/work/in/s41/tally41.py /work/out/<job> 0 31`). Read them first: they
   say whether the economy fixes, the AI fixes or earlier merges moved the pairing. Then land what passes; bisect the rest.
+  **Result:** integ-s43 40.5 % (unchanged from s42), economy only 38.5 %, economy + AI 36.5 % — see HANDOFF step 1 for the bisect plan.
 - **Freeze:** D-310 froze balance numbers. Most mechanics below change how matches play (mines, diver, depth charge, tether, breach, armour
   upgrades). Ask the owner for one decision that allows mechanic work under the freeze, with a full 512-game re-measure at the end of the
   mechanics wave (the D-305 finish line as the gate), instead of asking per item.
