@@ -53,4 +53,37 @@ Pooled (f44): Authority v Directorate 33.6 (OUT), Authority v Expedition 75.0 (O
 - Step 3 is fixed (D-323: naval plan off). Steps 1-2 are owner balance calls (next session): the values are D-322 "assumed — confirm".
 
 ## g44 (naval plan off) — the final table
-FINAL_TABLE_PLACEHOLDER
+| row | s43 bal43 | f44 (naval on) | final (naval off) |
+|---|---|---|---|
+| ash plains authority v directorate | 21.5 | 16.5 | 16.5 (OUT) |
+| ash plains authority v expedition | 44.1 | 71.3 | 59.4 |
+| ash plains authority v left behind | 36.2 | 34.6 | 34.6 |
+| ash plains directorate v expedition | 55.1 | 63.5 | 61.4 |
+| ash plains directorate v left behind | 47.5 | 52.7 | 52.7 |
+| ash plains left behind v expedition | 31.3 | 68.5 | 56.2 |
+| glass coast authority v directorate | 51.1 | 50.0 | 50.0 |
+| glass coast authority v expedition | 55.7 | 67.5 | 66.5 |
+| glass coast authority v left behind | 60.1 | 51.8 | 51.8 |
+| glass coast directorate v expedition | 28.0 | 35.6 | 35.6 |
+| glass coast directorate v left behind | 46.5 | 47.7 | 47.7 |
+| glass coast left behind v expedition | 44.3 | 69.6 | 67.8 |
+| mountains authority v directorate | 28.1 | 29.2 | 29.2 |
+| mountains authority v expedition | 55.1 | 71.4 | 69.9 |
+| mountains authority v left behind | 46.8 | 46.0 | 46.0 |
+| mountains directorate v expedition | 47.7 | 56.8 | 48.6 |
+| mountains directorate v left behind | 52.1 | 53.5 | 53.5 |
+| mountains left behind v expedition | 48.0 | 68.6 | 65.7 |
+| rust belt authority v directorate | 45.1 | 44.4 | 44.4 |
+| rust belt authority v expedition | 73.0 | 89.3 | 82.9 (OUT) |
+| rust belt authority v left behind | 72.6 | 66.6 | 66.6 |
+| rust belt directorate v expedition | 71.7 | 87.1 | 81.4 (OUT) |
+| rust belt directorate v left behind | 29.7 | 27.8 | 27.8 |
+| rust belt left behind v expedition | 54.8 | 84.8 | 75.6 (OUT) |
+
+Pooled (final, wins over all four biomes): authority v directorate 33.6 (OUT), authority v expedition 69.7 (OUT), authority v left behind 50.2,
+directorate v expedition 56.1, directorate v left behind 44.8, left behind v expedition 66.3 (OUT). Rows outside 25-75: 4.
+**Gate D-305: not met.** Turning the naval plan off won back 0-12 points per Expedition row (rust 6-9, ash 2-15, mountains 1-8, glass 0-2).
+
+## Campaign sweep (sw44, D-222; 45 cases x 12 runs, f44 build)
+All 45 cases meet their targets (tier 1 >= 10/12, tier 3 >= 8/12, tier 5 >= 3/12). Changed v s42: auth_01 t5 10 -> 9, auth_02 t5 9 -> 7, dir_01 t5
+6 -> 9, dir_02 t5 5 -> 6, exp_03 t5 3 -> 10.

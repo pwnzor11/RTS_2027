@@ -790,3 +790,22 @@ yet in k3s-cluster-code). Full-suite pods need a whole free node (6 GB): lower s
 work; all resumed from their worktrees. The first audit accounting counted ids that matched session-18 commits; corrected by script at wrap-up.
 **Next session should:** see HANDOFF (start with B-00, then the decision batch, then the mechanics wave).
 
+
+## Session 44 · 2026-11-24/25 (held s43 fixes landed; the M16 mechanics wave; re-measure fails on the Expedition)
+**Outcome:** session 43 confirmed on main (PR #125). B-00: probes showed the held D-311 items each cost ~2 points of Authority v Directorate;
+landed under the owner's D-317 (D-318). Owner took every recommendation in the decision batch ("full send", D-319/D-320). Built in two helper
+waves (17 packages, Sonnet for sim/AI/UI, Haiku for text/campaign/game errors): M-01 sea mines, M-02 Diver swimming, M-03 Drydock production
+and repair, M-04 second/third weapon slots, M-05 harpoon tether, M-06 grapple breach, M-07..M-09 Left Behind upgrade effects, M-10 Provision
+Store stock, M-11 aura targets, M-12 bay repair, M-13 (already worked; test), M-14 survey overlay, M-15 beacon delivery, M-16 beach-only deploy,
+M-17 naval gunfire with a spotter, M-18 sub dive time + torpedo, M-20..M-26 rule fixes, A-02/A-03 AI fixes, U-05 control habits, U-11, C-08,
+C-09, O-04, O-05, weapon-slot UI, difficulty errors surfaced in the game, Expedition AI naval use. Save/replay format 15.
+**Balance:** the 512-game re-measure failed D-305 (Expedition -8..-37 per row). Probes ruled out M-10, M-16, A-03 and focus fire; a bisect over
+the merges found three steps (Left Behind upgrades, the A-02/rule-fix merge, the AI naval plan). The naval plan is off (D-323); final table:
+pooled Authority v Expedition 69.7, Left Behind v Expedition 66.3, Authority v Directorate 33.6, 4 rows out (docs/balance/s44_balance.md).
+Campaign sweep 45/45 meet D-222.
+**Decisions:** D-317..D-323. Assumed, confirm: D-322 (values for the new mechanics). **Questions:** Q-89 (Scrap Plate), Q-90 (Authority).
+**Helpers:** 17 packages + 3 fix rounds; ~25 000 cluster games (f44 12 288, g44 6 144, probes and bisect ~6 000) and a 540-run campaign sweep.
+**Problems / notes:** orphan compiler servers held the shared build lock for ~1 h (fixed with `flock -o` and build servers off); a helper's
+attempts to kill them, and to cancel a stray scheduled "noop" message it had created, were refused by the permission check and not worked
+around. The T-04 LFS patterns were reverted (D-321). A build pod deadlocked behind series pods twice (fixed by pausing the series).
+**Next session should:** see HANDOFF (owner balance calls Q-89/Q-90, then re-tune and re-measure, then the correctness wave).

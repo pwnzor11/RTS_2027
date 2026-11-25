@@ -6,7 +6,7 @@ sea mines, Diver swimming, Drydock production/repair, second and third weapon sl
 effects, Provision Store stock, hover harvester on Shallow, beach-only deploy, beacon delivery, naval gunfire, sub dive time + torpedo, survey
 overlay, the rule fixes, AI key/repair fixes, C&C control habits, refinery name, campaign tiers). Save/replay format 15. The 512-game re-measure
 FAILED the D-305 gate: the Expedition fell 8-37 points in every row (docs/balance/s44_balance.md). One cause (the AI naval plan) is switched off
-(D-323); RESULT_LINE_PLACEHOLDER Decisions up to D-323. OPEN_QUESTIONS: Q-89, Q-90 (below).
+(D-323); with it off the table is still out of the gate (pooled Authority v Expedition 69.7, Left Behind v Expedition 66.3, Authority v Directorate 33.6; 4 rows outside 25-75). The campaign sweep meets every D-222 target (45/45). Decisions up to D-323. OPEN_QUESTIONS: Q-89, Q-90 (below).
 
 ## Start here (session 45; shown to the user as the plan; nothing starts until they say go)
 1. **Owner balance calls first (Q-89, Q-90):** the s44 bisect found two more causes of the Expedition drop besides the naval plan:
