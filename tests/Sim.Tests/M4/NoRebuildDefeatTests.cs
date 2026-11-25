@@ -264,7 +264,7 @@ public sealed class NoRebuildDefeatTests
         var rw = new ReplayWriter(ms, sim, "t", Array.Empty<(string, string)>());
         rw.Finish();
         ReplayData d = ReplayReader.Read(new MemoryStream(ms.ToArray()));
-        Assert.Equal(14, d.Version);
+        Assert.Equal(15, d.Version);
         Assert.True(d.Header.NoRebuildDefeat);
         // a format-12 replay is the same bytes without the flags byte: build one by hand
         byte[] b = ms.ToArray();

@@ -2327,3 +2327,49 @@ and frost crack decals dropped where detail is on. Renders run on the k3s cluste
 torn edges, west drift; no baked sphere smoke on any building, vehicle or infantry sheet; round soft map decals (snow, soot, oil, ash, salt)
 become noise-broken shapes; Mountains snow about half. **Why:** owner: "a lot of the smoke effects still look like bubbles". **Status:** owner decision
 
+
+### D-317 · 2026-11-24 · Session 44: mechanic work allowed under the D-310 freeze, one 512-game re-measure at the end
+**Decision:** the BACKLOG mechanics (M16) may change how matches play while balance numbers stay frozen; ONE 512-game table (24 rows, seeds
+1-256, the D-305 finish line) runs at the end of the mechanics wave and decides any re-tuning. **Why:** owner: "we are making a lot of changes
+here so that sounds prudent". **Alternatives:** keep the freeze and park the mechanics; per-item measurement. **Status:** owner decision
+
+### D-318 · 2026-11-24 · Session 44: land the held D-311 items 5-11 (B-00)
+**Decision:** merge `bal-s43` (economy items + AI fixes) into integ-s44. The probes showed integ43 (neither branch) at 40.8 % pooled Authority v
+Directorate (s42 40.6 %), aioff43 (economy items only) 38.3 %, bal43 (both) 36.5 %, noaa43 identical to bal43 (Directorate anti-air: no effect):
+each half costs ~2 points. Under D-317 the drop is judged in the end-of-wave re-measure, not before. **Status:** lead, under the owner's D-317
+
+### D-319 · 2026-11-24 · Session 44: build every s18 "built later" mechanic and the M16 owner items (all lead recommendations accepted)
+**Decision:** build M-01 sea mines, M-02 Diver swimming, M-03 Drydock production/repair, M-04 second (and third) weapon slot, M-05 Harpoon tether,
+M-06 Grapple breach, M-07 Salvage Rights value, M-08 Scrap Plate armour, M-09 Patchwork range, M-10 Provision Store stock (+10/+5), M-12 bay repair,
+M-13 hover harvester on Shallow, M-15 beacon delivery. M-11 repair auras honour aura_targets; M-19 keep the Left Behind Yard free-Gleaner loop (C&C
+refineries have the same loop); M-20 drop the `irradiated` tag; M-22 Flak spares its own aircraft; M-25 ash resist scales; A-02 wire or remove inert
+AI keys, a malformed difficulty.toml is reported; A-03 AI repair stays on until done; U-05 structure control groups, Shift+number adds,
+Shift+right-click on an enemy queues an attack; U-11 "Ashfall Refinery" everywhere; C-08 lb_03 tier 5 harder than tier 4; C-09 mission AI follows
+difficulty in every AI mission; O-09 telegram briefings, plain objectives and field notes; A-06 park layout 2 (code kept, off).
+**Why:** owner: "I am officially accepting all your recommendations ... full send". **Status:** owner decision
+
+### D-320 · 2026-11-24 · Session 44: confirmations and housekeeping
+**Decision:** O-06 confirm the s43 assumptions (Second Drift no_build_threshold 24, edge reinforcements, QoL key defaults, QOL-16 drag move,
+QOL-03 Alt+drag); B-07 confirm D-290..D-294, D-304, D-306..D-309; T-08/A-04 close the open `[~]` balance rows under D-310; B-06 Q-70 superseded;
+O-05 generated SFX are CC0; O-04 CC BY-SA 3.0 is allowed for art assets only, kept as separate credited files (supersedes D-033 for art; D-188's
+0 A.D. props stay). **Status:** owner decision
+
+### D-321 · 2026-11-24 · Session 44: T-04 LFS patterns not applied
+**Decision:** no new .gitattributes LFS patterns. Blanket `*.pdf`/`*.ogg`/skins/portraits patterns matched 305 tracked non-LFS files (voice,
+skins, portraits, manual PDFs), left every checkout dirty, and skins are kept out of LFS so the cloud can push them (s28-s29). A per-folder
+migration needs its own decision (no history rewrite, D-320/T-04). **Supersedes:** the T-04 part of the owner's batch, which assumed new files only.
+**Status:** lead (reported to the owner)
+
+### D-322 · 2026-11-24 · Session 44: values chosen for the new mechanics (assumed — confirm)
+**Decision:** where the design docs gave no number, the packages chose these data values (all in data/rules or data/ai):
+mines 6 per Minelayer, 30 ticks per mine, 250 damage (exp_sea_mine vs ships), same-cell trigger, automatic sweep radius 3 every 60 ticks, restock 1
+per 90 ticks within 2 cells of an own naval building, subs immune; Destroyer = gun + depth charge (exp_launch_charge) + AA (exp_destroyer_aa, Carrier
+AA numbers) in a third slot `tertiary_weapon`, Patrol Launch + deck gun (exp_launch_gun, Marine rifle numbers), extra mounts fire on the move and
+scan every 5 ticks; Diver swims at the Naval terrain speed, hidden only in deep Water, firing does not reveal it; Drydock repairs 5 permille per 10
+ticks within 2 cells at the global repair cost, landing craft and Skyhook bay repair 5 permille per 10 ticks; tether 60 ticks at half speed (no
+leash); breach 100 ticks, cooldown 400, Hook Runner soldiers only; Salvage Rights wrecks pay x1.5 (design); Patchwork +6 cells and heal x4; Scrap
+Plate turns Light vehicles, Rotors and Kites to Heavy armour (already-Heavy keep +20 % health); ash damage proportional to (1000 - resist);
+naval gunfire needs a seen cell (Destroyer/Cruiser guns); Missile Sub dives in 60 ticks and carries a torpedo (140 damage, 7 cells, 5 s); beacon
+delivery: vehicles drop in reach, infantry build in 200 ticks, 100 credits at placement; Expedition AI from tier 3: one Drydock, +1 Cruiser
++1 Carrier, one Minelayer, ships under 50 % go to the Drydock; lb_03 tier 5 ColumnDelay 3600, riflemen 9; tut_01 briefing stays plain prose.
+**Status:** assumed — confirm (USER_CHECKS session 44)
