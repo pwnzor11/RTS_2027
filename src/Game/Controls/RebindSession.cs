@@ -26,6 +26,9 @@ public sealed class RebindSession
     /// <summary>The current phase.</summary>
     public Phase State { get; private set; }
 
+    /// <summary>QOL-20 (D-313): true when the key being listened for is the action's second key (it has no swap; Delete clears it).</summary>
+    public bool IsSecond { get; private set; }
+
     /// <summary>The action being rebound (meaningful unless Idle).</summary>
     public GameAction Action { get; private set; }
 
@@ -39,9 +42,10 @@ public sealed class RebindSession
     public string Message { get; private set; } = "";
 
     /// <summary>Starts listening for a new key for <paramref name="action"/>.</summary>
-    public void Begin(GameAction action)
+    public void Begin(GameAction action, bool second = false)
     {
         Action = action;
+        IsSecond = second;
         State = Phase.Listening;
         Message = "";
     }
@@ -64,6 +68,32 @@ public sealed class RebindSession
         {
             Cancel();
             return null;
+        }
+
+        if (IsSecond)   // QOL-20: the second key of the action; no swaps, Delete clears it
+        {
+            if (key == Keys.Delete)
+            {
+                KeyBindings cleared = current.WithAlt(Action, Keys.None);
+                Cancel();
+                return cleared;
+            }
+
+            if (!KeyBindings.IsBindable(key) || key == current.Get(Action))
+            {
+                Message = $"{KeyNames.Of(key)} cannot be used as the second key. Press another key, Delete to clear it, or Esc to cancel.";
+                return null;
+            }
+
+            if (current.ConflictOf(Action, key) is { } taken)
+            {
+                Message = $"{KeyNames.Of(key)} is already used by \"{GameKeys.InfoOf(taken).Description}\". Press another key, or Esc to cancel.";
+                return null;
+            }
+
+            KeyBindings second = current.WithAlt(Action, key);
+            Cancel();
+            return second;
         }
 
         if (!KeyBindings.IsBindable(key))

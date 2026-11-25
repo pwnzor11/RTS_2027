@@ -5,16 +5,24 @@ Coast ocean 3), measured the finish line on 512 games per row and left stuck rec
 (40.6-58.6), ladders are in order, the campaign meets D-222; Ash Plains Authority v Directorate 23.6 % and Rust Belt Authority v Left Behind 75.1 % are
 1.4 and 0.1 points outside 25-75 %, within one standard error of the edge -> Q-88. docs/balance/s42_balance.md. Decisions up to D-309. Open questions: Q-88.
 
-## CHECKPOINT (session 43 in progress, 2026-11-24) — read this first if the session ended early
-- Branch integ-s43 (PR mode). Merged so far: D-310 freeze docs, art pilots ter/inf/bld/mot, text fixes (wp/a43-text). Audit wave1 findings:
-  docs/reviews/2026-11-24_s43_audit/wave1/. Owner decisions so far: docs/reviews/2026-11-24_s43_audit/decisions_scratch.md (D-311..D-315, to be
-  written into DECISIONS.md at wrap-up).
-- Unmerged branches (pushed to origin as wp/*): a43-net, a43-sys, a43-simA (cluster tests running), a43-simB and a43-data (cluster failures sent
-  back to helpers), a43-ai (AI-01 unproven; needs cluster suite + balance re-measure of the 24-row table before landing, D-311 9-11).
-  QoL wave (wp/a43-q1..q4, ui, perf) based on local branch qolbase = integ-s43 + a43-sys. Art fan-outs wp/fan-* (code only; renders run on the cluster).
-  Smoke pass pilot wp/art-smoke (owner: smoke looks like bubbles; volumetric re-render pending approval).
-- Container lesson: 2 CPUs / 7 GB — never run dotnet tests in parallel helpers; run full suites on the cluster with
-  k3s-cluster claude/rts/s43/test43.sh (REF=<sha>, --arch any --cpu 3 --mem 6Gi, sdk image; trx results in $OUT/trx).
+## CHECKPOINT (session 43 in progress, 2026-11-24 evening) — read this first if the session ended early
+Branches (all pushed): integ-s43 = PR branch (D-310 freeze; D-311..D-316 written; merged and cluster-green: art pilots, text fixes, a43-net,
+a43-simA, a43-data; last full run 819a2fd green on all 7 projects).
+- bal-s43 = integ-s43 + a43-simB + a43-ai (D-311 items 5-11). Cluster: full suite t43-bal2 (8ea64f7) and the finish-line re-measure job
+  bal43 (24 rows x seeds 1-256 = 768 indices, tag main, /work/out/bal43, list /work/in/s38/bal43/list.txt; script k3s-cluster
+  claude/rts/s43/bal43.sh, Tools built for 328a4d4d). Compare with the s42 table (claude/rts/s42/tab42.csv, piv.py/fin42.py): land
+  simB+ai only if all six pairings stay inside 40-60 % pooled and the ladders stay in order (D-305); else switch items off in src/AI/AiFixes.cs.
+- qol-s43 = qolbase + q1..q4 + ui + perf + QoL integration fixes + integ-s43 (15e9984). Cluster: t43-qol2. Then merge into integ-s43.
+- art-s43 = integ-s43 + fan-out code (bld A-D, mot A/B, inf A, smoke v2, terrain all biomes). Renders: cluster job a43art (102 pieces,
+  list /work/in/s43/full.txt, script claude/rts/s43/art43.sh, out /work/out/a43art/res/<area>-<id>/). When done: run
+  claude/rts/s43/collect_art.sh in the toolbox pod -> /work/out/a43art/sheets.tar; unpack into data/sprites/{buildings,vehicles,infantry}/
+  on art-s43, make a contact sheet for the owner, run the full suite, then merge into integ-s43.
+- Not done: Expedition/Left Behind infantry fan-out (11 units; helper stopped by a usage-policy safeguard; work uncommitted in
+  /home/claude/wt/infB of the cloud session only) — infantry for those factions keep today's sheets.
+- Assumed, confirm with owner: Second Drift no_build_threshold 24; campaign edge reinforcements now fight in the open (auth_02 tier 5 test bot +4 tanks);
+  QOL-16 line-drag move is on by drag (not a setting); QOL-03 fighters-first box select is Alt+drag; key defaults: Z select type map-wide,
+  F select combat vehicles, PageDown infantry, OemComma centre, PageUp cycle production, Insert auto type groups, / place last, ; repair all,
+  Delete sell marked, F11 hide HUD, ' cameo Archive entry.
 
 ## Start here (shown to the user as the plan; nothing starts until they say go)
 1. Laptop: `git checkout main; git pull`, rebuild. Owner: answer Q-88 (recommended (a): call the finish line met, freeze balance numbers per D-298);

@@ -47,7 +47,7 @@ public class MissionHeaderTests
     }
 
     [Fact]
-    public void Version7Replay_StillLoadsAndPlays()
+    public void Version7Replay_IsRefusedCleanly()
     {
         var setup = ScriptedGame.Setup();
         byte[] v8 = Record(setup, 200, null);
@@ -62,22 +62,18 @@ public class MissionHeaderTests
         byte[] v7 = v8.Take(missionByte - 1).Concat(v8.Skip(missionByte + 1)).ToArray();
         v7[4] = 7;
 
-        var data = ReplayReader.Read(new MemoryStream(v7));
-        Assert.Equal(7, data.Version);
-        Assert.Null(data.Mission);
-        Assert.Equal(200, data.FinalTick);
-        var result = ReplayPlayer.Run(new MemoryStream(v7), setup);
-        Assert.Equal(-1, result.FirstMismatchTick);
-        Assert.Equal(200, result.TicksRun);
+        // A43 SIMCORE-02: formats before 14 cannot reproduce their recorded hashes any more, so they are refused up front.
+        var ex = Assert.Throws<InvalidDataException>(() => ReplayReader.Read(new MemoryStream(v7)));
+        Assert.Contains("version 7", ex.Message);
     }
 
     [Fact]
     public void FutureVersion_IsRejected()
     {
         byte[] bytes = Record(ScriptedGame.Setup(), 32, null);
-        bytes[4] = 14;   // M4-01 took 9, M6-02 took 10, VET-1 took 11, M7-02 took 12, M4-17 13
+        bytes[4] = 15;   // M4-01 took 9, M6-02 took 10, VET-1 took 11, M7-02 took 12, M4-17 13
         var ex = Assert.Throws<InvalidDataException>(() => ReplayReader.Read(new MemoryStream(bytes)));
-        Assert.Contains("version 14", ex.Message);
+        Assert.Contains("version 15", ex.Message);
     }
 
     [Fact]

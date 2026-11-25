@@ -15,7 +15,7 @@ namespace Rts.Game.Lan.Lobby;
 public static class LobbyCodec
 {
     /// <summary>Blob format version.</summary>
-    public const byte Version = 1;
+    public const byte Version = 2;   // QOL-07 (D-313): 2 adds the match rules (superweapon limit, reveal map) after the command delay
 
     /// <summary>Longest map file name, in UTF-8 bytes.</summary>
     public const int MaxFileBytes = 120;
@@ -61,6 +61,19 @@ public static class LobbyCodec
         return new LobbyMap(file, hash, null);
     }
 
+    internal static void WriteRules(BlobWriter w, MatchRules rules)
+    {
+        w.U8(rules.SuperweaponLimit < 0 ? 255 : rules.SuperweaponLimit);
+        w.Bool(rules.RevealMap);
+    }
+
+    internal static MatchRules ReadRules(BlobReader r)
+    {
+        int limit = r.U8();
+        if (limit != 255 && limit > Rts.Sim.Core.SimSetup.MaxSuperweaponLimit) throw new InvalidDataException("Bad superweapon limit.");
+        return new MatchRules(limit == 255 ? Rts.Sim.Core.SimSetup.NoSuperweaponLimit : limit, r.Bool());
+    }
+
     internal static void WriteSlot(BlobWriter w, SkirmishSlot s)
     {
         w.U8((int)s.Kind); w.U8((int)s.Faction); w.U8(s.AiTier); w.U8(s.Colour); w.U8(s.Team);
@@ -90,6 +103,7 @@ public static class LobbyCodec
         w.Str(data.HostName, LobbyData.MaxNameBytes);
         WriteMap(w, data.Map);
         w.U8(data.CommandDelay);
+        WriteRules(w, data.Rules);
         w.U8(data.Slots.Count);
         foreach (LobbySlotState s in data.Slots)
         {
@@ -111,6 +125,7 @@ public static class LobbyCodec
         LobbyMap map = ReadMap(r);
         int delay = r.U8();
         if (!NetProtocol.DelayChoices.Contains(delay)) throw new InvalidDataException("Bad command delay.");
+        MatchRules rules = ReadRules(r);
         int n = r.U8();
         if (n < SkirmishSettings.MinPlayers || n > SkirmishSettings.MaxSlots) throw new InvalidDataException("Bad slot count.");
         var slots = new List<LobbySlotState>(n);
@@ -136,6 +151,6 @@ public static class LobbyCodec
         }
 
         r.End();
-        return new LobbyData(host, map, slots, spectators, delay);
+        return new LobbyData(host, map, slots, spectators, delay) { Rules = rules };
     }
 }

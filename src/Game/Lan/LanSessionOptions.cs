@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
+using Rts.Game.Menu;
+
 namespace Rts.Game.Lan;
 
 /// <summary>Where a <see cref="LanSession"/> writes and what it may use (M9-07). The game passes the defaults; tests pass a temp folder.</summary>
@@ -9,7 +11,7 @@ namespace Rts.Game.Lan;
 public sealed record LanSessionOptions(Settings? AppSettings, string? ReplayPath, string DesyncRoot)
 {
     /// <summary>Where a LAN match records its replay: the replays folder, named so the replay list shows it as a LAN game.</summary>
-    public const string DefaultReplayPath = "replays/lan_last.rpl";
+    public static string DefaultReplayPath => Path.Combine(ReplayCatalog.DefaultFolder, "lan_last.rpl");
 
     /// <summary>The options the game uses.</summary>
     public static LanSessionOptions ForGame(Settings appSettings) => new(appSettings, DefaultReplayPath, LanDesyncReport.DefaultRoot);

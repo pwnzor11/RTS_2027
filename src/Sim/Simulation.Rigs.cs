@@ -70,7 +70,7 @@ public sealed partial class Simulation
     {
         BuildingType bt = RulesOf(player).Buildings[type];
         int w = bt.FootprintW, h = bt.FootprintH, x0 = topLeft.X, y0 = topLeft.Y;
-        if (x0 < 0 || y0 < 0 || x0 + w > Setup.Map.Width || y0 + h > Setup.Map.Height) return false;
+        if (x0 < 0 || y0 < 0 || (long)x0 + w > Setup.Map.Width || (long)y0 + h > Setup.Map.Height) return false;
         TerrainTable table = RulesOf(player).Terrain;
         for (int y = y0; y < y0 + h; y++)
             for (int x = x0; x < x0 + w; x++)

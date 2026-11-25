@@ -425,7 +425,7 @@ public sealed partial class MissionHost
             if (t.Type != DataType.String) throw Err("type list entries must be strings");
             int depth = k / 3, along = k % 3 - 1;
             var cell = new CellCoord(Math.Clamp(edge.X + ix * depth + ax * along, 0, w - 1), Math.Clamp(edge.Y + iy * depth + ay * along, 0, h - 1));
-            string tag = SpawnActor(sim, t.String, player, cell, null);
+            string tag = SpawnActor(sim, t.String, player, EdgeSpawnCell(t.String, cell, edge), null);
             TryTag(tag, out ActorRef r);
             if (r.Kind != ActorKind.Building) sim.AssignAttackMove(r, dest);
             tags.Set(k + 1, DynValue.NewString(tag));

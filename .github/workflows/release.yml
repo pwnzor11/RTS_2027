@@ -24,8 +24,14 @@ jobs:
         with:
           global-json-file: global.json
 
+      - name: Test
+        run: dotnet test RTS_2027.slnx -c Release
+
       - name: Publish
-        run: dotnet publish src/Game -c Release -r win-x64 --self-contained -o publish/Game
+        shell: pwsh
+        run: |
+          $ver = "${{ github.ref_name }}".TrimStart('v')
+          dotnet publish src/Game -c Release -r win-x64 --self-contained -p:Version=$ver -o publish/Game
 
       - name: Smoke test
         shell: pwsh

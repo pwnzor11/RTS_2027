@@ -108,7 +108,7 @@ public sealed partial class Simulation
         _paths.AshPathPenalty = setup.Rules.Radiation.AshPathPenalty;   // S19 M13-12: soldiers skirt ash fields
         _paths.CrushPathPenalty = setup.Rules.Props.CrushPathPenalty;   // M12-16: a crusher pays this much to go through a Tree or Snag cell
         _vision = new VisionState(setup.Map.Width, setup.Map.Height, setup.PlayerCount,
-            Math.Max(setup.Limits.Vehicles, setup.Limits.Infantry));
+            Math.Max(setup.Limits.Vehicles, setup.Limits.Infantry)) { RevealAll = setup.RevealMap };   // QOL-07 (D-313)
         // Parts after vision come from the partial files in canonical order: combat (M1-09) first.
         var extra = CombatParts();
         // M1.5: "players" is appended after the combat parts (append-only order).
@@ -476,7 +476,7 @@ public sealed partial class Simulation
         BuildingType bt = Setup.Rules.Buildings[buildingType];
         int w = bt.FootprintW, h = bt.FootprintH;
         int x0 = topLeft.X, y0 = topLeft.Y;
-        if (x0 < 0 || y0 < 0 || x0 + w > Setup.Map.Width || y0 + h > Setup.Map.Height) return PlacementResult.OutOfMap;
+        if (x0 < 0 || y0 < 0 || (long)x0 + w > Setup.Map.Width || (long)y0 + h > Setup.Map.Height) return PlacementResult.OutOfMap;   // long: a hostile huge cell must not wrap (A43 SIMCORE-01)
         TerrainTable table = Setup.Rules.Terrain;
         PlacementResult m7 = CheckBeachheadAndWater(player, bt, x0, y0, table);   // M7-07: terrain per cell (water buildings) and the beachhead zone
         if (m7 != PlacementResult.Ok) return m7;
@@ -832,6 +832,8 @@ public sealed partial class Simulation
                 {
                     Occupants = bt.Garrison > 0 ? OccupantsIn(_buildings.Slots.IdOf(i)) : 0,   // M4: listed only when known (own/allied or visible now)
                     GateOpen = bt.Gate && IsGateOpenNow(i, viewer),   // M3-21
+                    Repairing = _production.RepairGen[i] != 0 && _production.RepairGen[i] == _buildings.Slots.GenerationOf(i) + 1
+                        && (viewer < 0 || IsFriendly((byte)viewer, _buildings.Player[i])),   // GAMEUI-06: read only
                 });
             }
         FxEvent[] fx = FxFor(viewer);

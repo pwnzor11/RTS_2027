@@ -217,6 +217,39 @@ public sealed class OrderController
     }
 
     /// <summary>
+    /// A43-QOL-16: the end of a right-button drag. The selected units spread evenly along the line between the two screen points, each with
+    /// an ordinary per-unit Move (or attack-move when <paramref name="attackMove"/>, or a queued waypoint when <paramref name="queue"/>), so the
+    /// sim sees nothing new. Returns false (and orders nothing) when fewer than two units are selected or the drag is shorter than
+    /// <see cref="LineFormation.MinLineCells"/> cells; the caller then keeps the plain right-click it already gave.
+    /// </summary>
+    public bool LineMove(Point from, Point to, Camera camera, bool queue = false, bool attackMove = false)
+    {
+        if (_selection.Count < 2) return false;
+        CellCoord a = ClampToMap(Camera.CellAt(camera.WorldFromScreen(from)));
+        CellCoord b = ClampToMap(Camera.CellAt(camera.WorldFromScreen(to)));
+        if (!LineFormation.IsLine(a, b)) return false;
+
+        var units = new List<(UnitKey Unit, LeptonCoord At)>();
+        foreach (UnitKey unit in _selection.Units.ToList())
+            if (_source.TryGetPosition(unit, out LeptonCoord at)) units.Add((unit, at));
+        if (units.Count < 2) return false;
+
+        foreach ((UnitKey unit, CellCoord cell) in LineFormation.Assign(units, a, b))
+        {
+            if (queue) _source.OrderQueued(unit, cell, attackMove);
+            else _source.Order(attackMove ? CommandKind.AttackMove : CommandKind.Move, unit, cell);
+        }
+
+        OrderMarkKind mark = attackMove ? OrderMarkKind.Attack : OrderMarkKind.Move;
+        Feedback?.Add(Camera.CentreOf(a), mark);
+        Feedback?.Add(Camera.CentreOf(b), mark);
+        return true;
+    }
+
+    private CellCoord ClampToMap(CellCoord c) =>
+        new(Math.Clamp(c.X, 0, _source.Map.Width - 1), Math.Clamp(c.Y, 0, _source.Map.Height - 1));
+
+    /// <summary>
     /// S18 GAMEUI-05: a right-click on the minimap. Honours an armed attack-move (the selection attack-moves there and the arming ends)
     /// or an armed deploy cell, otherwise moves; the ring appears on the map cell.
     /// </summary>

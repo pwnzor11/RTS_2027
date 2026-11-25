@@ -12,6 +12,15 @@ public static class UnitInterpolator
     [ThreadStatic]
     private static Dictionary<UnitKey, UnitView>? Before;   // scratch map, one per thread
 
+    // What Before currently holds: the previous snapshot's unit list, or null when it is empty. The map only depends on that list,
+    // not on alpha, so it is refilled when the previous snapshot changes (once per tick), not once per frame.
+    [ThreadStatic]
+    private static IReadOnlyList<UnitView>? _filledFrom;
+    [ThreadStatic]
+    private static int _filledCount;
+    [ThreadStatic]
+    private static bool _filledValid;
+
     /// <summary>
     /// Fills <paramref name="output"/> with every unit of <paramref name="current"/> at its position between
     /// <paramref name="previous"/> and <paramref name="current"/>. Units are matched by kind and id; a unit with no
@@ -22,14 +31,24 @@ public static class UnitInterpolator
     {
         output.Clear();
         Dictionary<UnitKey, UnitView> before = Before ??= new Dictionary<UnitKey, UnitView>();   // reused: no dictionary per frame
-        before.Clear();
-        if (!ReferenceEquals(current, previous))
+        IReadOnlyList<UnitView>? source = ReferenceEquals(current, previous) ? null : previous.Units;
+        if (!_filledValid || !ReferenceEquals(source, _filledFrom) || (source?.Count ?? 0) != _filledCount)
         {
-            foreach (UnitView unit in previous.Units) before[UnitKey.Of(unit)] = unit;
+            before.Clear();
+            if (source is not null)
+            {
+                for (int i = 0; i < source.Count; i++) before[UnitKey.Of(source[i])] = source[i];
+            }
+
+            _filledFrom = source;
+            _filledCount = source?.Count ?? 0;
+            _filledValid = true;
         }
 
-        foreach (UnitView unit in current.Units)
+        IReadOnlyList<UnitView> units = current.Units;
+        for (int i = 0; i < units.Count; i++)
         {
+            UnitView unit = units[i];
             Vector2 now = Camera.WorldFromLepton(unit.Position);
             Vector2 at = now;
             if (before.TryGetValue(UnitKey.Of(unit), out UnitView old))

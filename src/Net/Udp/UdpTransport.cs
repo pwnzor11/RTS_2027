@@ -121,7 +121,7 @@ public sealed class UdpTransport : INetTransport
         foreach (Peer p in _peers.ToArray())
         {
             if (!_peers.Contains(p)) continue;
-            if (p.Channel.Faulted) { Drop(p, "protocol violation"); continue; }
+            if (p.Channel.Faulted) { DropWithBye(p, "protocol violation"); continue; }
             if (p.Closing)
             {
                 if (p.CloseDeadline == 0) p.CloseDeadline = nowMicroseconds + ClosingGraceMicros;
@@ -129,7 +129,7 @@ public sealed class UdpTransport : INetTransport
             }
             else if (nowMicroseconds - p.Channel.LastReceivedMicros > _timeoutMicros)
             {
-                Drop(p, "timeout");
+                DropWithBye(p, "timeout");
                 continue;
             }
             Flush(p, nowMicroseconds);
@@ -266,7 +266,7 @@ public sealed class UdpTransport : INetTransport
         {
             NetMessage message;
             try { message = NetCodec.Decode(bytes); }
-            catch (InvalidDataException) { Drop(peer, "malformed message"); return; }
+            catch (InvalidDataException) { DropWithBye(peer, "malformed message"); return; }
             if (peer.Pending)
             {
                 if (message is NetMessage.Hello && !peer.HelloSurfaced)
@@ -287,6 +287,19 @@ public sealed class UdpTransport : INetTransport
             if (message is NetMessage.Reject r) Drop(peer, "rejected: " + r.Reason);
             else if (message is NetMessage.Bye b) Drop(peer, "bye: " + b.Reason);
         }
+    }
+
+    /// <summary>Drops a peer for a reason of the host's own (silence, a protocol violation, a bad message) and, on the host, first sends
+    /// the peer one best-effort Bye so it learns it was dropped instead of freezing on a connection nobody serves (NETLLM-06).</summary>
+    private void DropWithBye(Peer peer, string reason)
+    {
+        if (_isHost && peer.Connected && !peer.Closing)
+        {
+            peer.Channel.QueueReliable(NetCodec.Encode(new NetMessage.Bye(reason)));
+            Flush(peer, _lastNow);
+        }
+
+        Drop(peer, reason);
     }
 
     private void Drop(Peer peer, string reason)

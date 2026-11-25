@@ -153,4 +153,26 @@ public enum GameAction
     StanceDefensive,
     /// <summary>M13-15: set the selected units' stance to hold fire (fire only at what they are ordered to attack).</summary>
     StanceHoldFire,
+    /// <summary>QOL-02: select every own unit of the first selected unit's type, map-wide (Shift adds).</summary>
+    SelectTypeMapWide,
+    /// <summary>QOL-11: select every own combat vehicle, map-wide (Shift adds). Harvesters and builders are left out.</summary>
+    SelectVehicles,
+    /// <summary>QOL-11: select every own combat infantry, map-wide (Shift adds). Engineers are left out.</summary>
+    SelectInfantry,
+    /// <summary>QOL-05: centre the view on the centre of the selection.</summary>
+    CentreOnSelection,
+    /// <summary>QOL-05: select and centre the next own production building (cycles through all of them).</summary>
+    CycleProductionBuilding,
+    /// <summary>QOL-17: toggle control groups that select every unit of their members' types (off by default).</summary>
+    AutoTypeGroups,
+    /// <summary>A43-QOL-14: place the structure or defence placed last once more (placement mode when one is finished, else queue one).</summary>
+    PlaceLast,
+    /// <summary>A43-QOL-15: switch repair on for every damaged own building (one ordinary Repair command each).</summary>
+    RepairAll,
+    /// <summary>A43-QOL-15: sell the marked buildings (Shift + click marks more than one); press twice within two seconds to confirm.</summary>
+    SellMarked,
+    /// <summary>QOL-18: hide or show the HUD panels, the selection card, the sidebar, the minimap and the map buttons (for screenshots).</summary>
+    HideHud,
+    /// <summary>QOL-19: while a sidebar cameo is hovered, open its Archive entry.</summary>
+    CameoArchive,
 }

@@ -29,6 +29,12 @@ public sealed record SetupHeader(
     /// Written together with <see cref="Handicap"/>.</summary>
     public IReadOnlyList<int>? StartingCash { get; init; }
 
+    /// <summary>QOL-07 (D-313): the superweapon limit per player (-1 = none, the default). Written after the slot options only when set (flag bit 3).</summary>
+    public int SuperweaponLimit { get; init; } = SimSetup.NoSuperweaponLimit;
+
+    /// <summary>QOL-07 (D-313): the reveal-map rule (flag bit 2). Default off.</summary>
+    public bool RevealMap { get; init; }
+
     private const int MaxLimit = 1 << 20;
     private const int MaxStartingCash = 100_000_000;
 
@@ -41,6 +47,7 @@ public sealed record SetupHeader(
         {
             Factions = s.Factions, NoRebuildDefeat = s.NoRebuildDefeat,
             Handicap = s.HasSlotOptions ? s.Handicap : null, StartingCash = s.HasSlotOptions ? s.StartingCash : null,
+            SuperweaponLimit = s.SuperweaponLimit, RevealMap = s.RevealMap,
         };
     }
 
@@ -72,13 +79,16 @@ public sealed record SetupHeader(
             for (int i = 0; i < Factions.Count; i++) w.Write((byte)Factions[i]);
         }
         bool options = HasSlotOptions;
-        w.Write((byte)((NoRebuildDefeat ? 1 : 0) | (options ? 2 : 0)));   // M4-17, format 13; bit 1 = slot options follow (S19, M13-15)
-        if (!options) return;
-        for (int p = 0; p < PlayerCount; p++)
-        {
-            w.Write((byte)HandicapOf(p));
-            w.Write(StartingCashOf(p));
-        }
+        bool limit = SuperweaponLimit != SimSetup.NoSuperweaponLimit;
+        // M4-17, format 13; bit 1 = slot options follow (S19, M13-15); QOL-07 (D-313): bit 2 = reveal map, bit 3 = a superweapon limit byte follows the slot options
+        w.Write((byte)((NoRebuildDefeat ? 1 : 0) | (options ? 2 : 0) | (RevealMap ? 4 : 0) | (limit ? 8 : 0)));
+        if (options)
+            for (int p = 0; p < PlayerCount; p++)
+            {
+                w.Write((byte)HandicapOf(p));
+                w.Write(StartingCashOf(p));
+            }
+        if (limit) w.Write((byte)SuperweaponLimit);
     }
 
     private int HandicapOf(int p) => Handicap != null && p < Handicap.Count ? Handicap[p] : SimSetup.DefaultHandicap;
@@ -139,10 +149,12 @@ public sealed record SetupHeader(
             else if (hasFactions != 0) throw new InvalidDataException($"Bad factions flag {hasFactions}.");
             bool noRebuild = false;
             int[]? handicap = null, startingCash = null;
+            bool revealMap = false;
+            int swLimit = SimSetup.NoSuperweaponLimit;
             if (hasRuleFlags)   // M4-17: replays older than format 13 have no flags byte
             {
                 byte flags = r.ReadByte();
-                if (flags > 3) throw new InvalidDataException($"Bad rule flags {flags}.");
+                if (flags > 15) throw new InvalidDataException($"Bad rule flags {flags}.");
                 noRebuild = (flags & 1) != 0;
                 if ((flags & 2) != 0)   // S19 (M13-15): per-player handicap and starting credits
                 {
@@ -156,6 +168,12 @@ public sealed record SetupHeader(
                         if (startingCash[p] < -1 || startingCash[p] > MaxStartingCash) throw new InvalidDataException($"Bad starting credits {startingCash[p]}.");
                     }
                 }
+                revealMap = (flags & 4) != 0;
+                if ((flags & 8) != 0)
+                {
+                    swLimit = r.ReadByte();
+                    if (swLimit > SimSetup.MaxSuperweaponLimit) throw new InvalidDataException($"Bad superweapon limit {swLimit}.");
+                }
             }
             return new SetupHeader(build, seed, players, teams, limits, allowDebug, rulesHash, mapHash, w, h, mapName, files)
             {
@@ -163,6 +181,8 @@ public sealed record SetupHeader(
                 NoRebuildDefeat = noRebuild,
                 Handicap = handicap,
                 StartingCash = startingCash,
+                SuperweaponLimit = swLimit,
+                RevealMap = revealMap,
             };
         }
         catch (EndOfStreamException)
@@ -196,6 +216,10 @@ public sealed record SetupHeader(
             throw new InvalidDataException($"{what} AllowDebug={AllowDebug} does not match setup AllowDebug={setup.AllowDebug}.");
         if (NoRebuildDefeat != setup.NoRebuildDefeat)
             throw new InvalidDataException($"{what} NoRebuildDefeat={NoRebuildDefeat} does not match the setup NoRebuildDefeat={setup.NoRebuildDefeat}.");
+        if (SuperweaponLimit != setup.SuperweaponLimit)
+            throw new InvalidDataException($"{what} superweapon limit {SuperweaponLimit} does not match the setup ({setup.SuperweaponLimit}).");
+        if (RevealMap != setup.RevealMap)
+            throw new InvalidDataException($"{what} reveal-map rule ({RevealMap}) does not match the setup ({setup.RevealMap}).");
         for (int p = 0; p < PlayerCount; p++)
         {
             if (HandicapOf(p) != setup.HandicapOf((byte)p))
@@ -223,7 +247,7 @@ public sealed record SetupHeader(
         return new SimSetup(Seed, map, PlayerCount, rules, rulesHash)
         {
             Teams = Teams, Limits = Limits, AllowDebug = AllowDebug, Factions = Factions, NoRebuildDefeat = NoRebuildDefeat,
-            Handicap = Handicap, StartingCash = StartingCash,
+            Handicap = Handicap, StartingCash = StartingCash, SuperweaponLimit = SuperweaponLimit, RevealMap = RevealMap,
         };
     }
 

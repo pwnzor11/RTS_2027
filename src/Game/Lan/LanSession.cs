@@ -235,6 +235,12 @@ public sealed class LanSession : IDisposable
         else if (!HostGone) _client!.RequestResume();
     }
 
+    /// <summary>A43-QOL-09: raised when a teammate's (or the local player's own) ping arrives: the sender's player slot and the cell.</summary>
+    public event Action<int, CellCoord>? PingReceived;
+
+    /// <summary>A43-QOL-09: pings a cell for the sender's team. It comes back through <see cref="PingReceived"/> when the host relays it.</summary>
+    public void SendPing(CellCoord cell) => SendChat(true, LanPing.Encode(cell));
+
     /// <summary>Sends a chat line to everyone or to the sender's team. It shows when the host relays it back.</summary>
     public void SendChat(bool team, string text)
     {
@@ -486,6 +492,13 @@ public sealed class LanSession : IDisposable
     // package; chat lines are shown only.
     private void AddChat(NetMessage.Chat chat)
     {
+        if (LanPing.IsPing(chat.Text))
+        {
+            // A43-QOL-09: a ping is a chat-like team message, never a chat line and never a sim command
+            if (LanPing.TryDecode(chat.Text, out CellCoord at)) PingReceived?.Invoke(PlayerOfPeer(chat.FromPeer), at);
+            return;
+        }
+
         AddLine(new LanChatLine(chat.FromPeer, PlayerOfPeer(chat.FromPeer), PeerName(chat.FromPeer), chat.Text, chat.Audience == 1, _now));
     }
 

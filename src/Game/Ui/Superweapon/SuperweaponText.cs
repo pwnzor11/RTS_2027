@@ -11,7 +11,18 @@ public static class SuperweaponText
     /// <summary>Short HUD message shown for a few seconds when a superweapon finishes charging. Argument 0 = the button caption.</summary>
     public const string ReadyKey = "hud.superweapon.ready";
 
+    /// <summary>A43 GAMEUI-03: shown when a targeted click is refused because the cell is outside the entrance range.</summary>
+    public const string OutOfRangeKey = "hud.superweapon.out_of_range";
+
+    /// <summary>A43 GAMEUI-03: shown when a targeted click is refused for another reason the sim gives.</summary>
+    public const string CannotFireKey = "hud.superweapon.cannot_fire";
+
     /// <summary>Placeholder text for a key, with the caption (for example "SUNRISE") filled in. Unknown keys return the key.</summary>
-    public static string Placeholder(string key, string caption) =>
-        key == ReadyKey ? $"{caption} READY - click it, then pick a target" : key;
+    public static string Placeholder(string key, string caption) => key switch
+    {
+        ReadyKey => $"{caption} READY - click it, then pick a target",
+        OutOfRangeKey => "Out of range",
+        CannotFireKey => "Invalid target",
+        _ => key,
+    };
 }

@@ -23,6 +23,7 @@ public sealed class GameServices
         _settings = settings;
         Ui.UiScale.TextFactor = Ui.UiScale.FactorOf(settings.TextSize);
         Controls.GameKeys.Active = settings.Bindings;
+        Ui.Alerts.AlertMix.Active = settings.Alerts;   // QOL-12
         Screens = screens;
         Quit = quit;
     }
@@ -54,6 +55,7 @@ public sealed class GameServices
             _settings = value;
             Ui.UiScale.TextFactor = Ui.UiScale.FactorOf(value.TextSize);   // the Text size setting reaches every font at once
             Controls.GameKeys.Active = value.Bindings;   // game input reads its keys through the bindings in force
+            Ui.Alerts.AlertMix.Active = value.Alerts;   // QOL-12: the alert volumes in force
         }
     }
 

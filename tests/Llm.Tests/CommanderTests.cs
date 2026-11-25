@@ -53,8 +53,8 @@ public class CommanderTests
             Sim.SpawnInfantry(1, SummaryRig.Infantry("dir_conscript"), new CellCoord(50, 50));
         }
 
-        public Commander Make(IChatProvider? p, int cap = 0, bool chatOn = true) =>
-            new(0, p, new CommanderPersona("t", "Authority", "Brig. Test", "You are gruff."), "Authority", cap, chatOn, Chat);
+        public Commander Make(IChatProvider? p, int cap = 0, bool chatOn = true, int timeoutSeconds = 0) =>
+            new(0, p, new CommanderPersona("t", "Authority", "Brig. Test", "You are gruff."), "Authority", cap, chatOn, Chat, timeoutSeconds);
 
         /// <summary>Steps the sim to <paramref name="tick"/>, polling every tick; waits for fake calls so replies land on the next poll.</summary>
         public async Task RunTo(Commander c, int tick)
@@ -116,6 +116,37 @@ public class CommanderTests
         Assert.Empty(rig.Lines());                           // a stale reply's say is dropped too
         await manual.WaitForCount(2);
         Assert.Equal(2, manual.Count);                       // the next decision started right away
+    }
+
+    [Fact]
+    public async Task ASlowReplyInsideTheConfiguredTimeoutIsKept()
+    {
+        // A43-NETLLM-04: timeout_seconds 120 = 2400 ticks; a reply 900 ticks after its request (past 600) still applies.
+        var rig = new Rig();
+        var manual = new ManualProvider();
+        rig.WaitForCalls = false;
+        using Commander c = rig.Make(manual, timeoutSeconds: 120);
+        await rig.RunTo(c, 1500);
+        await manual.WaitForCount(1);
+        manual.Calls[0].SetResult(new ChatResult(true, Allin, null, 0, 0));
+        await c.LastCall!.WaitAsync(TimeSpan.FromSeconds(10));
+        await rig.RunTo(c, 1501);
+        Assert.Single(rig.Issued);                           // requested at 600, now 1501 (901 old): kept
+    }
+
+    [Fact]
+    public async Task AReplyPastTheConfiguredTimeoutIsStillDropped()
+    {
+        var rig = new Rig();
+        var manual = new ManualProvider();
+        rig.WaitForCalls = false;
+        using Commander c = rig.Make(manual, timeoutSeconds: 40);   // 800 ticks
+        await rig.RunTo(c, 1500);
+        await manual.WaitForCount(1);
+        manual.Calls[0].SetResult(new ChatResult(true, Allin, null, 0, 0));
+        await c.LastCall!.WaitAsync(TimeSpan.FromSeconds(10));
+        await rig.RunTo(c, 1501);
+        Assert.Empty(rig.Issued);                            // 901 > 800
     }
 
     [Fact]

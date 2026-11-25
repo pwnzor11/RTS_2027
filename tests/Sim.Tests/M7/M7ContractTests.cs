@@ -314,9 +314,9 @@ public sealed class M7ContractTests
     [Fact]
     public void Formats_AndPartOrder_ArePinned()
     {
-        Assert.Equal(13, SimWriter.SaveVersion);
-        Assert.Equal(13, ReplayWriter.Version);
-        Assert.Equal(7, ReplayWriter.OldestReadableVersion);
+        Assert.Equal(14, SimWriter.SaveVersion);
+        Assert.Equal(14, ReplayWriter.Version);
+        Assert.Equal(14, ReplayWriter.OldestReadableVersion);
         var sim = ScriptedGame.NewSim(ScriptedGame.Setup());
         string[] names = sim.StateParts.Select(p => p.Name).ToArray();
         Assert.Equal(new[] { "salvage", "veterancy", "shipments", "beachhead", "naval", "commander_orders", "props" }, names[^7..]);
@@ -371,7 +371,7 @@ public sealed class M7ContractTests
     }
 
     [Fact]
-    public void Format11Save_IsRejectedAndFormat11ReplayStillReads()
+    public void Format11Save_AndFormat11Replay_AreRejected()
     {
         var setup = ScriptedGame.Setup();
         var ms = new MemoryStream(); ScriptedGame.NewSim(setup).Save(ms);
@@ -384,9 +384,9 @@ public sealed class M7ContractTests
         var rep = new MemoryStream();
         new ReplayWriter(rep, sim, "b", Array.Empty<(string, string)>()).Finish();
         byte[] r = rep.ToArray();
-        Assert.Equal(13, ReplayReader.Read(new MemoryStream(r)).Version);
+        Assert.Equal(14, ReplayReader.Read(new MemoryStream(r)).Version);
         r[ReplayWriter.Magic.Length] = 11;   // the version byte follows the magic
-        Assert.Equal(11, ReplayReader.Read(new MemoryStream(r)).Version);
+        Assert.Throws<InvalidDataException>(() => ReplayReader.Read(new MemoryStream(r)));   // A43 SIMCORE-02
     }
 
     [Fact]

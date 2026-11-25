@@ -130,7 +130,33 @@ public sealed partial class Simulation
         if (_production.QueueCount[lane] >= _production.MaxQueue || _production.QueueCount[lane] >= Setup.Rules.Economy.MaxQueue)
             return Core.QueueBlockReason.QueueFull;
         if (SupplyBlocksEnqueue(player, category, typeIndex)) return Core.QueueBlockReason.SupplyCap;   // SUP-1
+        if (SuperweaponLimitBlocks(player, category, typeIndex)) return Core.QueueBlockReason.SuperweaponLimit;   // QOL-07 (D-313)
         return Core.QueueBlockReason.None;
+    }
+
+    /// <summary>QOL-07 (D-313): true when the setup limits superweapons, the type is a superweapon structure and the player already owns or has queued
+    /// (or finished and waiting) as many as the limit allows. Always false with no limit (the default).</summary>
+    private bool SuperweaponLimitBlocks(byte player, ProductionCategory category, int typeIndex)
+    {
+        int limit = Setup.SuperweaponLimit;
+        if (limit < 0 || (category != ProductionCategory.Structure && category != ProductionCategory.Defence)) return false;
+        IReadOnlyList<BuildingType> types = RulesOf(player).Buildings;
+        if (typeIndex < 0 || typeIndex >= types.Count || types[typeIndex].Superweapon.Length == 0) return false;
+        int n = 0;
+        for (int i = 1; i < _buildings.Capacity; i++)
+            if (_buildings.Slots.IsIndexAlive(i) && _buildings.Player[i] == player && BuildingTypeAt(i).Superweapon.Length > 0) n++;
+        for (int c = (int)ProductionCategory.Structure; c <= (int)ProductionCategory.Defence; c++)
+        {
+            int lane = ProductionState.Lane(player, (ProductionCategory)c);
+            int ready = _production.Ready[lane];
+            if (ready >= 0 && ready < types.Count && types[ready].Superweapon.Length > 0) n++;
+            for (int k = 0; k < _production.QueueCount[lane]; k++)
+            {
+                int q = _production.QueueType[lane * _production.MaxQueue + k];
+                if (q >= 0 && q < types.Count && types[q].Superweapon.Length > 0) n++;
+            }
+        }
+        return n >= limit;
     }
 
     /// <summary>
@@ -205,7 +231,7 @@ public sealed partial class Simulation
 
     private void ApplyPlace(Command c)
     {
-        if (_players.IsNeutral(c.Player) || c.Arg < 0 || c.Arg >= BuildingTypeCount) return;
+        if (_players.IsNeutral(c.Player) || c.Arg < 0 || c.Arg >= BuildingTypeCount || !InMap(c.Cell)) return;   // A43 SIMCORE-01: a cell outside the map is never a placement
         BuildingType bt = Setup.Rules.Buildings[c.Arg];
         int lane = ProductionState.Lane(c.Player, bt.Category);
         EntityId id;

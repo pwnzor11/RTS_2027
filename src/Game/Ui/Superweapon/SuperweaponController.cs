@@ -69,6 +69,17 @@ public sealed class SuperweaponController
         }
     }
 
+    /// <summary>A43 GAMEUI-03: entrance range in cells of the armed superweapon (0 when none is armed or it needs no entrance).</summary>
+    public int ArmedRange
+    {
+        get
+        {
+            if (!Targeting.IsArmed) return 0;
+            foreach (SuperweaponButton b in _buttons) if (b.Building == Targeting.Armed) return b.Range;
+            return 0;
+        }
+    }
+
     /// <summary>A click on button <paramref name="index"/>. A ready one arms targeting (again disarms); other states do nothing.</summary>
     public void ClickButton(int index)
     {
