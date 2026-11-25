@@ -1,7 +1,7 @@
 """Build a vehicle procedurally in Blender (bpy), render every frame and facing, then pixel-post-process it.
 
 Usage:  python3 tools/art/build_vehicle.py <id> [--samples 24] [--states idle harvest] [--facings 0 4 ...]
-        [--render-only | --post-only] [--preview]
+        [--render-only | --post-only] [--preview] [--anchors-only]
 Wrap renders in:  flock $BLENDER_LOCK python3 tools/art/build_vehicle.py <id>
 <id> names a module in tools/art/vehicles/<id>.py (contract in the docstring of vehicles/auth_jeep.py).
 
@@ -104,7 +104,7 @@ def origin_px(mod):
 
 
 # ----------------------------------------------------------------------------------------------- Blender side
-def render(vid, mod, samples, states, facing_sel, preview, layer="body"):
+def render(vid, mod, samples, states, facing_sel, preview, layer="body", anchors=False):
     import bpy
     from mathutils import Vector
 
@@ -357,6 +357,17 @@ def render(vid, mod, samples, states, facing_sel, preview, layer="body"):
             return True
         return (o["grp"] == "turret") if layer == "turret" else (o["grp"] != "turret")
 
+    if anchors:      # --anchors-only: build the first frame of the first state, no render; the caller reads the parts
+        name, _first, _facings, frames, _t = layout(mod)[0]
+        mod.build(S, name, 0, frames)
+        bpy.context.view_layer.update()
+        from bpy_extras.object_utils import world_to_camera_view
+
+        def proj(x, y, z):
+            """Frame pixel (float, x right, y down) of a world point, through the render camera (same ortho camera, canvas and scale)."""
+            v = world_to_camera_view(sc, co, Vector((x, y, z)))
+            return v.x * cv, (1.0 - v.y) * cv
+        return objs, proj
     out = work_dir(vid, layer)
     os.makedirs(out, exist_ok=True)
     wbg = w.node_tree.nodes["Background"].inputs[1]
@@ -434,8 +445,192 @@ def render(vid, mod, samples, states, facing_sel, preview, layer="body"):
     print(f"TOTAL_RENDER_SECONDS {time.time() - t0:.1f}")
 
 
+# ----------------------------------------------------------------------------------------------- FX anchors (V-05)
+ANCHOR_MARK = "# FX anchors (BACKLOG V-05)"
+RULES_VEHICLES = os.path.join(C.ROOT, "data", "rules", "vehicles.toml")
+
+# Barrel-tip parts for vehicles whose module has no part named "muzzle*": id -> stems of the part names (trailing -1/1/L/R/digits are
+# ignored) whose farthest-forward end is the tip.  "turret" parts are looked up in the turret group, the others in the body group.
+# An id listed in GUESSED has no barrel at all (spray boom, sower nozzles, rocket pods): the tip is the forward end of the named parts.
+TIP_PARTS = {
+    "auth_bulwark": ["barrel"], "auth_howitzer": ["barrel", "brake"], "auth_decon_truck": ["nozzle"],
+    "dir_rocket_truck": ["tip"], "lb_harpoon_wagon": ["mouth"], "lb_organ": ["mouth"], "lb_rolling_fort": ["mouth"],
+    "exp_glide_tank": ["mouth"], "exp_canister_skiff": ["mouth"], "exp_sparker": ["mis"], "exp_barrage_lander": ["tube"],
+    "exp_destroyer": ["gmouth"], "exp_cruiser": ["gmouth"], "exp_carrier": ["gmouth"],
+    "auth_jeep": ["mgbarrel"], "auth_tank": ["gun"], "auth_interceptor": ["gun"], "lb_buggy": ["gunbarrel"], "lb_rotor": ["gunbarrel"],
+    "exp_jet": ["rocketnose"], "auth_foam_truck": ["noz"], "dir_ash_sower": ["nozzle"],
+}
+CENTRE = {"auth_foam_truck", "dir_ash_sower"}   # downward spray nozzles: the centre of the nozzles, not a forward end
+GUESSED = {"auth_decon_truck", "dir_rocket_truck", "exp_sparker", "exp_barrage_lander", "exp_jet", "auth_foam_truck", "dir_ash_sower"}
+NO_MUZZLE = {   # armed in the rules but nothing leaves a barrel: bombs drop from the hull, the sub's missiles fire from a hatch, depth charges are rolled
+    "auth_bomber": "bomb run", "exp_bomber": "bomb run", "dir_dirigible": "bomb drop", "dir_great_dirigible": "bomb drop",
+    "lb_kite": "bomb drop", "lb_dust_sail": "dust drop", "exp_launch": "depth charge", "exp_missile_sub": "hatch launch",
+}
+
+
+def _stem(name):
+    import re
+    return re.sub(r"(-?\d+|[LR])$", "", name)
+
+
+def _rules_vehicle(vid):
+    import tomllib
+    with open(RULES_VEHICLES, "rb") as f:
+        return tomllib.load(f).get(vid, {})
+
+
+def _tip(o):
+    """Forward end of a part, world units: centre of its far cap (principal axis, signed toward +Y)."""
+    import numpy as np
+    m = o.matrix_world
+    pts = np.array([tuple(m @ v.co) for v in o.data.vertices])
+    c = pts.mean(axis=0)
+    u, sv, vt = np.linalg.svd(pts - c, full_matrices=False)
+    ax = vt[0]
+    if ax[1] < 0:
+        ax = -ax
+    if sv[0] < 1.5 * sv[1] + 1e-9:      # not elongated (a plate, a ball, a ring): the plain forward-most point
+        ax = np.array([0.0, 1.0, 0.0])
+    pr = (pts - c) @ ax
+    ext = pr.max() - pr.min()
+    sel = pts[pr >= pr.max() - max(0.02, 0.04 * ext)]
+    return tuple(sel.mean(axis=0)), tuple(pts[pts[:, 1].argmax()])
+
+
+def find_muzzle(vid, mod, objs):
+    """(group, point, source) of the muzzle at facing 0 in world units, or None.  source: named | barrel | guess."""
+    parts = [o for o in objs if o["kind"] == "part"]
+    named = [o for o in parts if o.name.startswith("muzzle")]
+    stems = None if named else TIP_PARTS.get(vid)
+    sel = named or [o for o in parts if stems and _stem(o.name) in stems]
+    if not sel:
+        return None
+    if vid in CENTRE:
+        import numpy as np
+        allp = np.array([tuple(o.matrix_world @ v.co) for o in sel for v in o.data.vertices])
+        pt = tuple(float(c) for c in allp.mean(axis=0))
+    else:      # per stem the centre of its tips (twin guns, rocket pods), then the stem that reaches farthest forward (barrel vs brake)
+        by = {}
+        for o in sel:
+            by.setdefault(_stem(o.name), []).append(_tip(o)[0])
+        cs = [tuple(sum(t[i] for t in ts) / len(ts) for i in range(3)) for ts in by.values()]
+        pt = max(cs, key=lambda c: c[1])
+    grp = "turret" if all(o["grp"] == "turret" for o in sel) else "body"
+    return grp, pt, ("named" if named else "guess" if vid in GUESSED else "barrel"), sorted({o.name for o in sel})
+
+
+def find_dust(objs):
+    """Rear ground contact centre at facing 0: x = 0, y = rear end of the parts that touch the ground (z < 0.4), z = 0."""
+    import numpy as np
+    ys = []
+    for o in objs:
+        if o["kind"] != "part" or o["grp"] == "turret":
+            continue
+        pts = np.array([tuple(o.matrix_world @ v.co) for v in o.data.vertices])
+        if pts[:, 2].min() < 0.4:
+            ys.append(pts[:, 1].min())
+    return (0.0, min(ys), 0.0) if ys else None
+
+
+def anchors_only(vid, mod):
+    """Build the model (no render) and return {sheet name: toml text of its [anchors] block}; prints what it used."""
+    objs, proj = render(vid, mod, 1, None, None, False, "body", anchors=True)
+    facings = layout(mod)[0][2]
+    ox, oy = origin_px(mod)
+    rules = _rules_vehicle(vid)
+    out, info = {}, []
+
+    def rot(p, f, c=(0.0, 0.0)):
+        th = math.radians(360.0 / facings * f)
+        x, y = p[0] - c[0], p[1] - c[1]
+        return x * math.cos(th) + y * math.sin(th), -x * math.sin(th) + y * math.cos(th)
+
+    def table(points):
+        return "[" + ", ".join(f"[{dx}, {dy}]" for dx, dy in points) + "]"
+
+    body, turret = [], []
+    if rules.get("locomotion") in ("wheeled", "tracked"):
+        d = find_dust(objs)
+        if d:
+            pts = []
+            for f in range(facings):
+                x, y = rot(d, f)
+                px_, py_ = proj(x, y, 0.0)
+                pts.append((round(px_ - ox), round(py_ - oy)))
+            body.append(("dust", pts, "rear ground contact centre (y = %.2f, world units)" % d[1]))
+            info.append(f"dust y={d[1]:.2f}")
+    if rules.get("primary_weapon") and vid not in NO_MUZZLE:
+        m = find_muzzle(vid, mod, objs)
+        if m is None:
+            info.append("MUZZLE NOT FOUND")
+        else:
+            grp, p, src, names = m
+            if grp == "turret" and "turret" in layers_of(mod):
+                piv = mod.PIVOT
+                p0 = proj(piv[0], piv[1], 0.0)
+                pts = []
+                for f in range(facings):
+                    x, y = rot(p, f, (piv[0], piv[1]))
+                    q = proj(piv[0] + x, piv[1] + y, p[2])
+                    pts.append((round(q[0] - p0[0]), round(q[1] - p0[1])))
+                turret.append(("muzzle", pts, f"{src}: {','.join(names)} (relative to the turret origin, index = turret facing)"))
+            else:
+                pts = []
+                for f in range(facings):
+                    x, y = rot(p, f)
+                    q = proj(x, y, p[2])
+                    pts.append((round(q[0] - ox), round(q[1] - oy)))
+                body.append(("muzzle", pts, f"{src}: {','.join(names)}"))
+            info.append(f"muzzle {src} {grp} {','.join(names)} at {tuple(round(float(v), 2) for v in p)}")
+    elif rules.get("primary_weapon"):
+        info.append("muzzle skipped: " + NO_MUZZLE.get(vid, "?"))
+
+    def block(rows):
+        lines = [ANCHOR_MARK + ", written by `build_vehicle.py <id> --anchors-only` (builds the model, renders nothing, leaves the sheet alone).",
+                 "# [dx, dy] in sheet pixels from this sheet's origin pixel (x right, y down; scale like origin_x, i.e. by 64 / px_per_cell), one per",
+                 "# facing of the first state (index = facing, 0 = north, clockwise), taken through the same camera as the sheet.",
+                 "# muzzle: where a shot leaves the barrel tip. On a <id>_turret sheet it is relative to the turret origin (the ground point under the",
+                 "# pivot, add the pivot offset of the hull facing) and the index is the TURRET facing; on a body sheet it is a fixed gun, index = hull facing.",
+                 "# dust: where the ground contact ends at the back (centre of the rear of the tracks or wheels); body sheet only.",
+                 "# Absent table or key = the renderer's default offsets."]
+        lines += [f"# {k} source: {note}" for k, _p, note in rows]
+        lines += ["[anchors]"] + [f"{k} = {table(p)}" for k, p, _n in rows]
+        return "\n".join(lines) + "\n"
+
+    if "turret" in layers_of(mod):
+        if body:
+            out[vid] = block(body)
+        if turret:
+            out[vid + "_turret"] = block(turret)
+    else:
+        if body or turret:
+            out[vid] = block(body + turret)
+    print(vid, "|", "; ".join(info))
+    return out
+
+
+def strip_anchors(text):
+    i = text.find(ANCHOR_MARK)
+    return text if i < 0 else text[:i].rstrip("\n") + "\n"
+
+
+def write_anchor_files(vid, mod, outdir):
+    for name, blk in anchors_only(vid, mod).items():
+        path = os.path.join(outdir, f"{name}.sprite.toml")
+        if not os.path.exists(path):
+            print("SKIP no manifest", path)
+            continue
+        text = strip_anchors(open(path).read())
+        open(path, "w").write(text + "\n" + blk)
+
+
 # ----------------------------------------------------------------------------------------------- post
 def write_toml(path, mod, sheet_name, layer="body"):
+    kept = ""
+    if os.path.exists(path):      # a re-render keeps the [anchors] block (regenerate it with --anchors-only after a model change)
+        old = open(path).read()
+        if ANCHOR_MARK in old:
+            kept = "\n" + old[old.find(ANCHOR_MARK):]
     ox, oy = origin_px(mod)
     cv = canvas_px(mod)
     lines = [
@@ -479,7 +674,7 @@ def write_toml(path, mod, sheet_name, layer="body"):
         step = getattr(mod, "STEP_PX", {}).get(name)   # optional: ground travel (sheet px) of one animation frame, for the renderer
         lines += ["[[state]]", f'name = "{name}"', f"facings = {facings}", f"frames = {frames}", f"first = {first}",
                   f"ticks_per_frame = {ticks}"] + ([f"step_px = {step}"] if step else []) + [""]
-    open(path, "w").write("\n".join(lines))
+    open(path, "w").write("\n".join(lines) + kept)
 
 
 def shadow_only(wd, f, cv, pal):
@@ -663,12 +858,16 @@ def main():
     ap.add_argument("--preview", action="store_true", help="colour-only half-res frames to work/veh_<id>/prev_XX.png")
     ap.add_argument("--layers", nargs="*", default=None, help="only these layers (default: the module's LAYERS, else body)")
     ap.add_argument("--out", default=None, help="output folder for <id>.png / <id>.sprite.toml (default: data/sprites/vehicles)")
+    ap.add_argument("--anchors-only", action="store_true", help="V-05: build the model without rendering and write [anchors] (muzzle, dust) into the existing manifests")
     ap.add_argument("--px-cell", type=int, default=C.UNIT_PX, help="sheet pixels per map cell (D-275: 80 for units; 64 = the old size)")
     a = ap.parse_args()
     global PX, OUT_DIR
     PX = a.px_cell
     OUT_DIR = a.out
     mod = load_module(a.id)
+    if a.anchors_only:
+        write_anchor_files(a.id, mod, OUT_DIR or os.path.join(C.ROOT, "data", "sprites", "vehicles"))
+        return
     for layer in (a.layers or layers_of(mod)):
         if not a.post_only:
             render(a.id, mod, a.samples, a.states, a.facings, a.preview, layer)

@@ -280,9 +280,37 @@ public sealed class SceneRenderer : IDisposable
         {
             Vector2 at = Camera.WorldFromLepton(frame.Projectiles[count - 1 - i]);
             if (!InView(at, camera, viewport)) continue;
+            at = MuzzleSpot(frame, snapshot, at);   // V-05: the barrel tip of the vehicle that fired, when its manifest has anchors
             if (!ReduceFlashes) _fx.Spawn("sparks", at, snapshot.Tick, 1.1f);   // QOL-20: no muzzle sparks
             _look.Puffs.Add(new Puff(at.X, at.Y - 6, snapshot.Tick, 14, 0x8F8B86, 130, 0.4f, 9, Smoke: true));
         }
+    }
+
+    // V-05: a new shell starts at its shooter's ground point (give or take one tick of flight), so the nearest vehicle within a few pixels fired it.
+    // When that vehicle's manifest has muzzle anchors the flash is moved to its barrel tip; otherwise (or with no vehicle near) it stays where it was.
+    private const float MuzzleSearchPx = 20f;
+
+    private Vector2 MuzzleSpot(SceneFrame frame, SimSnapshot snapshot, Vector2 at)
+    {
+        if (frame.Rules is null) return at;
+        IReadOnlyList<UnitView> units = snapshot.Units;
+        int best = -1;
+        float bestSq = MuzzleSearchPx * MuzzleSearchPx;
+        for (int i = 0; i < units.Count; i++)
+        {
+            UnitView u = units[i];
+            if (u.Kind != UnitKind.Vehicle || u.Underground || u.Carried) continue;
+            float d = Vector2.DistanceSquared(Camera.WorldFromLepton(u.Position), at);
+            if (d > bestSq) continue;
+            bestSq = d;
+            best = i;
+        }
+        if (best < 0) return at;
+        UnitView shooter = units[best];
+        ResolvedSprite sprite = _sprites.ForUnit(frame.Rules, shooter);
+        float scale = UnitRenderer.DrawScale(frame.Rules, shooter, sprite.Manifest) * SpriteLayout.UnitDrawScale;
+        Vector2? offset = AnchorOffsets.Muzzle(sprite.Manifest, sprite.TurretSheet?.Manifest, shooter.Facing, UnitVisuals.TurretFacing(shooter), scale);
+        return offset is { } o ? Camera.WorldFromLepton(shooter.Position) + o : at;
     }
 
     // A world point within one half-view of the screen, so off-screen blasts neither shake the view nor spawn flashes.

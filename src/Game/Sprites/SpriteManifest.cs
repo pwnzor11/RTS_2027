@@ -24,11 +24,12 @@ public sealed class SpriteManifest
     private static readonly string[] TopKeys =
     {
         "file", "frame_w", "frame_h", "origin_x", "origin_y", "house", "state", "fx", "shadow_dx", "shadow_dy",
-        "layer", "pivot_x", "pivot_y", "pivot_z", "altitude", "figure_scale_permille", "px_per_cell",
+        "layer", "pivot_x", "pivot_y", "pivot_z", "altitude", "figure_scale_permille", "px_per_cell", "anchors",
     };
     private static readonly string[] PivotKeys = { "pivot_x", "pivot_y", "pivot_z" };
     private static readonly string[] Layers = { "body", "turret", "shadow" };
     private static readonly string[] StateKeys = { "name", "facings", "frames", "first", "ticks_per_frame", "loop", "step_px" };
+    private static readonly string[] AnchorKeys = { "muzzle", "dust" };
     private static readonly string[] FxKeys = { "state", "kind", "x", "y", "phase" };
 
     private SpriteManifest(string id, string sourcePath, string sheetFile, int frameW, int frameH, int originX, int originY,
@@ -79,6 +80,12 @@ public sealed class SpriteManifest
     /// code does not use it.
     /// </summary>
     public double Altitude { get; }
+
+    /// <summary>
+    /// V-05: muzzle and dust points per facing from the optional <c>[anchors]</c> table, or null when the manifest has none (the renderer then
+    /// uses its default offsets). See <see cref="SpriteAnchors"/>.
+    /// </summary>
+    public SpriteAnchors? Anchors { get; private init; }
 
     /// <summary>D-184: how much larger than the original art the figure was rendered, in per mille (1000 = original; optional key <c>figure_scale_permille</c>). The renderer's "Larger infantry" step is skipped for sprites already rendered larger.</summary>
     public int FigureScalePermille { get; private init; } = 1000;
@@ -193,7 +200,39 @@ public sealed class SpriteManifest
         {
             FigureScalePermille = root.ContainsKey("figure_scale_permille") ? Positive(root, "figure_scale_permille", sourcePath) : 1000,
             PxPerCell = root.ContainsKey("px_per_cell") ? Positive(root, "px_per_cell", sourcePath) : WorldPxPerCell,
+            Anchors = ReadAnchors(root, states, sourcePath),
         };
+    }
+
+    private static SpriteAnchors? ReadAnchors(TomlTable root, IReadOnlyList<SpriteState> states, string sourcePath)
+    {
+        if (!root.TryGetValue("anchors", out object? raw)) return null;
+        if (raw is not TomlTable table) throw new InvalidDataException($"{sourcePath}: [anchors] must be a table");
+        RejectUnknown(table, AnchorKeys, sourcePath, "[anchors]");
+        int facings = states[0].Facings;
+        return new SpriteAnchors(ReadPoints(table, "muzzle", facings, sourcePath), ReadPoints(table, "dust", facings, sourcePath));
+    }
+
+    // key = [[dx, dy], ...] with exactly one point per facing of the first state; absent key = empty list.
+    private static (int, int)[] ReadPoints(TomlTable table, string key, int facings, string sourcePath)
+    {
+        if (!table.TryGetValue(key, out object? raw)) return Array.Empty<(int, int)>();
+        if (raw is not TomlArray list) throw new InvalidDataException($"{sourcePath}: [anchors] {key} must be a list of [dx, dy] pairs");
+        if (list.Count != facings)
+        {
+            throw new InvalidDataException($"{sourcePath}: [anchors] {key} needs one point per facing ({facings}), found {list.Count}");
+        }
+        var points = new (int, int)[list.Count];
+        for (int i = 0; i < list.Count; i++)
+        {
+            if (list[i] is not TomlArray pair || pair.Count != 2 || pair[0] is not long dx || pair[1] is not long dy
+                || Math.Abs(dx) > 4096 || Math.Abs(dy) > 4096)
+            {
+                throw new InvalidDataException($"{sourcePath}: [anchors] {key} entry {i} must be [dx, dy], whole pixels within 4096");
+            }
+            points[i] = ((int)dx, (int)dy);
+        }
+        return points;
     }
 
     private static string ReadLayer(TomlTable root, string sourcePath)
