@@ -77,7 +77,14 @@ public sealed partial class MissionHost
             {
                 int p = PlayerArg(a, 0);
                 CellCoord edge = EdgeCellArg(a, 1);
-                return DynValue.NewString(ReinforceRig(p, edge, CellArg(a, 2)));
+                bool parkOnly = false;   // S45 C-06: optional 4th argument true = park only, never auto-deploys
+                if (!Absent(a, 3))
+                {
+                    if (a[3].Type != DataType.Boolean) throw Err("argument 4 (parkOnly) must be a boolean, got " + a[3].Type.ToLuaTypeString());
+                    parkOnly = a[3].Boolean;
+                }
+
+                return DynValue.NewString(ReinforceRig(p, edge, CellArg(a, 2), parkOnly));
             }));
 
         NewApiTable(s, "Actor",
@@ -420,7 +427,7 @@ public sealed partial class MissionHost
 
     // ---- Reinforce.Rig ----
 
-    private string ReinforceRig(int player, CellCoord edge, CellCoord dest)
+    private string ReinforceRig(int player, CellCoord edge, CellCoord dest, bool parkOnly = false)
     {
         Simulation sim = _sim!;
         SimRules rules = sim.Setup.Rules;
@@ -439,7 +446,8 @@ public sealed partial class MissionHost
         string tag = SpawnNear(player, rules.Vehicles[rig].Id, edge, FreeCellRing);
         ActorRef r = RefOf(tag);
         // Drives to dest and unpacks there when the footprint is a legal site now; otherwise it just parks packed beside dest.
-        if (!sim.ScriptUnpackRig(r.Id, dest)) sim.AssignMission(r, MissionKind.Move, dest);
+        // S45 C-06: parkOnly never unpacks: the rig drives to dest and waits packed for the player to deploy it.
+        if (parkOnly || !sim.ScriptUnpackRig(r.Id, dest)) sim.AssignMission(r, MissionKind.Move, dest);
         return tag;
     }
 

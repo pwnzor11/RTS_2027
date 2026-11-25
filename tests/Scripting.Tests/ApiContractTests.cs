@@ -36,6 +36,7 @@ public sealed class ApiContractTests
         ("Reinforce.Delayed", "50, 0, {'auth_rifleman'}, {x=0, y=20}, {x=20, y=20}", "0, 0, {'auth_rifleman'}, {x=0, y=20}, {x=20, y=20}"),
         ("Reinforce.Naval", "0, {'exp_landing_craft'}, {x=0, y=20}, {x=20, y=20}", "0, {}, {x=0, y=20}, {x=20, y=20}"),
         ("Reinforce.Rig", "0, {x=0, y=20}, {x=20, y=20}", "0, {x=5, y=20}, {x=20, y=20}"),
+        ("Reinforce.Rig", "0, {x=0, y=20}, {x=20, y=20}, true", "0, {x=0, y=20}, {x=20, y=20}, 'yes'"),
         ("Actor.CreateGroup", "{'auth_rifleman'}, 0, {x=30, y=30}, {formation='line', rank=1}", "{'auth_rifleman'}, 0, {x=30, y=30}, {formation='blob'}"),
         ("Actor.CreateGroup", "{'auth_rifleman'}, 0, {x=30, y=30}", "{'auth_rifleman'}, 0, {x=30, y=30}, {rank=9}"),
         ("Dialogue.Say", "'strand', 'strand_neutral', 'm1.line1'", "'strand', 'strand_neutral', 'has space'"),

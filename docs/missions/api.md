@@ -64,7 +64,7 @@ Hidden objectives (`AddHidden`) are saved in the version-2 tail; the difficulty 
 | `Reinforce.Transport(player, {types}, edgeCell, destCell)` | as Edge; arrives by a transport | list of tags | edge cell on the map edge | implemented |
 | `Reinforce.Delayed(ticks, player, {types}, edgeCell, destCell)` | ticks 1..1e9, then as Edge | nil | as Edge | implemented |
 | `Reinforce.Naval(player, {types}, edgeCell, destCell)` | Expedition ships arrive from the sea edge | list of tags | edge cell on the map edge | implemented |
-| `Reinforce.Rig(player, edgeCell, destCell)` | Left Behind rig arrives and may deploy | tag | edge cell on the map edge | implemented |
+| `Reinforce.Rig(player, edgeCell, destCell[, parkOnly])` | Left Behind rig arrives and may deploy; with `parkOnly = true` it only parks | tag | edge cell on the map edge; `parkOnly` (if given) must be a boolean | implemented (parkOnly: S45 C-06) |
 | `Actor.CreateGroup({types}, player, cell[, opts])` | opts `{formation="line"\|"column"\|"box"\|"scatter", rank=0..3, tagPrefix="x"}` | list of tags | opts keys validated | implemented |
 
 Behaviour (M8-04). Every spawn uses the pilot path (`Simulation.SpawnVehicle` / `SpawnInfantry`) plus the scripting orders the pilot uses; the
@@ -88,7 +88,8 @@ is free the call is a script error and the units spawned before it stay.
   such types; air and burrowing types are rejected.
 - `Reinforce.Rig`: spawns the faction's packed rig (the packed rig of the Left Behind start kit) on the edge. If `destCell` is a legal unpack
   site now it drives there and unpacks (a normal Pack order, so the unpack timer and site rules apply); otherwise it only moves to `destCell`
-  and stays packed for the script to deal with. Returns the rig's tag.
+  and stays packed for the script to deal with. With the optional fourth argument `parkOnly = true` it never unpacks: it drives to `destCell` and waits
+  packed there for the player to deploy it (S45 C-06). Returns the rig's tag.
 - `Actor.CreateGroup`: formations around `cell`: `line` along x, `column` along y (each alternating right/left or down/up of the centre), `box`
   a square filling row by row, `scatter` a random offset of -3..3 per axis from the script's own generator (`Random.Next`'s stream, so it is
   saved and replays). `box` is the default. `rank` raises every member's veterancy to that level (0..3) the way kills would (it needs
