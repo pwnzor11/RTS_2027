@@ -883,7 +883,6 @@ draw_scale_permille = 2400  # (tune) D-124
 deep_only = true
 aircraft_slots = 4  # design 07 §5
 sortie_ticks = 200  # (tune)
-# TODO M7-09: which aircraft fit the hangar, build-in-hangar and return/repair missions
 
 [exp_command_ship]   # start unit, Deploy ashore turns it into the Landing Depot. Not meant to be built: gated behind the Drydock at a prohibitive cost
 faction = "expedition"
