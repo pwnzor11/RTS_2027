@@ -22,7 +22,7 @@ def extra(S, U, up, R):
     S.cyl(0.27, 0.40, (0, -0.02, -0.04), "ashA", "Z", U, verts=8, r2=0.21)           # outer veil over the skirt
     S.cyl(0.275, 0.06, (0, -0.02, -0.22), "bone", "Z", U, verts=8)                    # ragged bone-pale hem
     S.box((0.18, 0.03, 0.14), (0.0, -0.215, 0.16), "ashB", U, rot=(8, 0, 0), bevel=0)  # back flap
-    S.limb(up((-0.13, 0.05, 0.62)), up((0.13, 0.05, 0.62)), 0.04, "house", d=0.03, bevel=0)   # house band on the hood
+    S.limb(up(LP.hp((-0.13, 0.05, 0.62))), up(LP.hp((0.13, 0.05, 0.62))), LP.hs(0.04), "house", d=LP.hs(0.03), bevel=0)   # house band on the hood
 
 
 def pack(S, U, R):
@@ -37,8 +37,7 @@ def weapon(S, GM, p, R):
         S.cyl(0.03, 0.04, (0, y, 0.01), "wrapA", "Y", GM, verts=6)                    # canvas wraps
     S.cyl(0.03, 0.16, (0, 0.05, 0.06), "dark", "Y", GM, verts=6)                      # scope
     if p["flash"]:
-        S.cyl(0.07, 0.24, (0, 1.06, 0.01), "flash", "Y", GM, verts=8, r2=0.0)
-        S.sphere((0.09, 0.09, 0.09), (0, 0.94, 0.01), "flash", GM, seg=8)
+        LP.flash_fx(S, GM, 0.80, (0.07, 0.24, 1.06), (0.09, 0.94), z=0.01)
 
 
 SPEC = dict(house_boost=True, panel=((0.14,0.03,0.10),(0.0,-0.235,0.17)), shoulder=(0.16, 0.02, 0.36), grips=((0, -0.12, -0.05), (0, 0.24, -0.04)), bulk=0.9,

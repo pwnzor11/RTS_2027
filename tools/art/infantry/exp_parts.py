@@ -11,6 +11,7 @@ sys.path.insert(0, os.path.dirname(HERE))
 import common as C
 import auth_rifleman as AR
 import lb_parts as LP
+import boost
 
 CANVAS, ORIGIN, STATES, DIE_FACING = AR.CANVAS, AR.ORIGIN, AR.STATES, AR.DIE_FACING
 L_UPPER, L_FORE, L_THIGH, L_SHIN = AR.L_UPPER, AR.L_FORE, AR.L_THIGH, AR.L_SHIN
@@ -39,6 +40,16 @@ MATERIALS = {
 EMIT_STRENGTH = {"lens": 2.2, "flash": 8.0}
 
 make_pose = LP.make_pose
+flash_fx = LP.flash_fx
+HEAD_C = (0.0, 0.05, 0.54)      # S45: the head's scaling centre (helmet / face plate / visor)
+
+
+def hp(loc):
+    """S45 boost: a head part's position scaled about the head centre (identity when RTS_INF_BOOST is unset)."""
+    return LP.hp(loc, HEAD_C)
+
+
+hs = LP.hs
 
 
 def build_figure(S, p, spec):
@@ -48,6 +59,8 @@ def build_figure(S, p, spec):
     import rig as R
     import dir_parts as P
     b = spec.get("bulk", 1.0)
+    B = boost.params()
+    Hh, h = B["house"], B["head"]
     U = R.tr(0, p["dy"], 0.62 + p["bob"]) @ R.rz(p["twist"]) @ R.rx(-p["lean"]) @ R.rz(p["roll"])
     pel = (0, p["dy"], 0.62 + p["bob"])
 
@@ -66,34 +79,39 @@ def build_figure(S, p, spec):
         S.box((0.10, 0.05, 0.11), (sx * 0.12 * b, 0.145 * b, 0.12), "white2", U, bevel=0.01)    # chest pouches
         S.box((0.11, 0.07, 0.08), (sx * 0.14 * b, 0.1, -0.06), "white2", U, bevel=0.01)         # hip pouches
         if spec.get("house_boost"):      # D-184: a real shoulder pad in the house ramp (wider, deeper, taller than the flash)
-            S.box((0.10, 0.22 * b, 0.13), (sx * (0.23 * b + 0.03), 0.0, 0.405), "house", U, bevel=0)
+            S.box((0.10 * (1 + 0.5 * (Hh - 1)), 0.22 * b * (1 + 0.3 * (Hh - 1)), 0.13 * (1 + 0.6 * (Hh - 1))), (sx * (0.23 * b + 0.03 * Hh), 0.0, 0.405), "house", U, bevel=0)
         else:
-            S.box((0.065, 0.14 * b, 0.10), (sx * (0.23 * b + 0.015), 0.0, 0.40), "house", U, bevel=0)   # team colour shoulder flash
+            S.box((0.065 * (1 + 0.5 * (Hh - 1)), 0.14 * b * (1 + 0.3 * (Hh - 1)), 0.10 * (1 + 0.6 * (Hh - 1))), (sx * (0.23 * b + 0.015 * Hh), 0.0, 0.40), "house", U, bevel=0)   # team colour shoulder flash
         S.box((0.07, 0.15 * b, 0.025), (sx * (0.23 * b + 0.015), 0.0, 0.455), "white", U, bevel=0)
     # ---- head: neck, face plate, chrome helmet with orange visor stripe
     S.box((0.10, 0.10, 0.07), (0, 0, 0.46), "dark", U)
-    S.box((0.19, 0.13, 0.12), (0, 0.065, 0.47), spec.get("mask", "chrome3"), U, bevel=0.03)      # sealed face plate
-    S.sphere((0.17, 0.18, 0.14), (0, 0, 0.565), spec.get("helm", "chrome"), U)                    # helmet shell
-    S.box((0.25, 0.14, 0.03), (0, 0.075, 0.585), spec.get("helm", "chrome"), U, bevel=0.01)       # brim
-    S.box((0.19, 0.05, 0.06), (0, 0.145, 0.525), "glass", U, bevel=0.01)                        # visor glass
-    S.box((0.21, 0.05, 0.028), (0, 0.15, 0.568), "orange", U, bevel=0)                          # orange visor stripe
-    S.box((0.04, 0.17, 0.02), (0, 0.0, 0.70), "copper", U, bevel=0)                              # helmet ridge trim
+    S.box(hs((0.19, 0.13, 0.12)), hp((0, 0.065, 0.47)), spec.get("mask", "chrome3"), U, bevel=0.03)      # sealed face plate
+    S.sphere(hs((0.17, 0.18, 0.14)), hp((0, 0, 0.565)), spec.get("helm", "chrome"), U)                    # helmet shell
+    S.box(hs((0.25, 0.14, 0.03)), hp((0, 0.075, 0.585)), spec.get("helm", "chrome"), U, bevel=0.01)       # brim
+    S.box(hs((0.19, 0.05, 0.06)), hp((0, 0.145, 0.525)), "glass", U, bevel=0.01)                        # visor glass
+    S.box(hs((0.21, 0.05, 0.028)), hp((0, 0.15, 0.568)), "orange", U, bevel=0)                          # orange visor stripe
+    S.box(hs((0.04, 0.17, 0.02)), hp((0, 0.0, 0.70)), "copper", U, bevel=0)                              # helmet ridge trim
     if spec.get("house_boost"):          # D-184: house-ramp band over the helmet crown, seen from every side
-        S.box((0.20, 0.07, 0.05), (0, 0.0, 0.625), "house", U, bevel=0)
+        S.box((0.20 * h, 0.07 * h * Hh, 0.05 * h * (1 + 0.6 * (Hh - 1))), hp((0, 0.0, 0.625)), "house", U, bevel=0)
     # ---- back load and extras
     if spec.get("pack"):
         spec["pack"](S, U, R)
     if spec.get("extra"):
         spec["extra"](S, U, up, R, p)
     # ---- held item
-    GM = (U if p["gun_space"] == "u" else Matrix.Identity(4)) @ R.tr(*p["gun"][0]) @ R.rz(p["gun"][1]) @ R.rx(p["gun"][2])
+    GM0 = (U if p["gun_space"] == "u" else Matrix.Identity(4)) @ R.tr(*p["gun"][0]) @ R.rz(p["gun"][1]) @ R.rx(p["gun"][2])
+    GM = GM0 @ Matrix.Diagonal((B["gunw"], B["gun"], B["gunw"], 1.0))                  # S45 weapon scale (hands follow the grips below)
     spec["weapon"](S, GM, p, R)
     # ---- arms and legs (shared two-bone IK builders)
     su, sf, gl = spec.get("sleeves", ("navy", "navy2", "white2"))
-    P.arms(S, p, U, up, GM, spec["shoulder"], spec["grips"], (su, sf), thick=(0.085 * b, 0.072 * b), band=0.0,
+    gs = (B["gunw"], B["gun"], B["gunw"])
+    grips = tuple(tuple(a * k for a, k in zip(g, gs)) for g in spec["grips"])
+    lb_ = B["limb"]
+    P.arms(S, p, U, up, GM0, spec["shoulder"], grips, (su, sf), thick=(0.085 * b * lb_, 0.072 * b * lb_), band=0.0,
            cuff_mat=gl, hand_mat="dark", hand_size=0.07 * b, cuff_len=0.22)
     lm, lsp, lth = spec.get("legs", ("navy2", 0.095 * b, (0.095 * b, 0.08 * b)))
-    P.legs(S, p, pel, spread=lsp, thick=lth, mat=lm, boot=spec.get("boot", "dark"))
+    pf = dict(p, feet=tuple((f[0] * B["stance"],) + tuple(f[1:]) for f in p["feet"]))      # S45 wider stance
+    P.legs(S, pf, pel, spread=lsp * B["stance"], thick=(lth[0] * lb_, lth[1] * lb_), mat=lm, boot=spec.get("boot", "dark"))
     if p["spread"]:
         S.cyl(0.40 * b, 0.03, (0.0, p["dy"] + 0.12, 0.03), hm_, "Z", None, verts=8)
         S.cyl(0.28 * b, 0.035, (0.05, p["dy"] + 0.12, 0.05), tm, "Z", None, verts=8)

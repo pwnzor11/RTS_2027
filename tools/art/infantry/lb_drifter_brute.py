@@ -38,8 +38,7 @@ def weapon(S, GM, p, R):
     S.cyl(0.075, 0.03, (0.05, 0.30, 0.09), "rope", "Y", GM, verts=8)
     S.cyl(0.02, 0.28, (0.0, 0.40, 0.07), "dark", "Y", GM, verts=5)                     # hose
     if p["flash"]:
-        S.cyl(0.10, 0.36, (0, 0.92, 0), "flash", "Y", GM, verts=8, r2=0.0)
-        S.sphere((0.11, 0.11, 0.11), (0, 0.78, 0), "flash", GM, seg=8)
+        LP.flash_fx(S, GM, 0.74, (0.10, 0.36, 0.92), (0.11, 0.78), z=0.0)
 
 
 SPEC = dict(house_boost=True, panel=((0.22,0.03,0.16),(0.0,-0.375,0.22)), shoulder=(0.27, 0.02, 0.37), grips=((0, -0.04, 0.0), (0, 0.16, 0.0)), bulk=1.3, tin_len=0.13,
