@@ -23,12 +23,10 @@ public sealed class MissionAiHooks : IMissionAiHooks
         _tiers = tiers;
     }
 
-    /// <summary>Loads data/ai/difficulty.toml beside <paramref name="rulesDir"/>; an unreadable file gives no tiers.</summary>
-    public static IReadOnlyList<DifficultyProfile> LoadTiers(string rulesDir)
-    {
-        try { return DifficultyLoader.Load(DifficultyLoader.PathBesideRules(rulesDir)); }
-        catch (RulesException) { return Array.Empty<DifficultyProfile>(); }
-    }
+    /// <summary>Loads data/ai/difficulty.toml beside <paramref name="rulesDir"/>.</summary>
+    /// <exception cref="RulesException">The file is missing or invalid (the message names the file and key).</exception>
+    public static IReadOnlyList<DifficultyProfile> LoadTiers(string rulesDir) =>
+        DifficultyLoader.Load(DifficultyLoader.PathBesideRules(rulesDir));
 
     /// <inheritdoc />
     public AiHooks Read(byte player)

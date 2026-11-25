@@ -61,16 +61,10 @@ public static class SpectatorSetup
         return host;
     }
 
+    /// <exception cref="RulesException">data/ai/difficulty.toml is missing or invalid (the message names the file and key).</exception>
     private static DifficultyProfile LoadProfile(string rulesDir, int tier)
     {
-        try
-        {
-            IReadOnlyList<DifficultyProfile> all = DifficultyLoader.Load(DifficultyLoader.PathBesideRules(rulesDir));
-            return all[Math.Clamp(tier, 1, all.Count) - 1];
-        }
-        catch (RulesException)
-        {
-            return DifficultyProfile.Default;
-        }
+        IReadOnlyList<DifficultyProfile> all = DifficultyLoader.Load(DifficultyLoader.PathBesideRules(rulesDir));
+        return all[Math.Clamp(tier, 1, all.Count) - 1];
     }
 }
