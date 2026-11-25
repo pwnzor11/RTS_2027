@@ -607,7 +607,6 @@ cost = 500  # (tune)
 prerequisites = ["exp_dredge_works"]
 harvest_capacity = 5  # (tune) a quarter of a Scraper (20); fast, so the round trip is short
 supply = 1  # (tune) harvesters cost 1 supply (design 13 §2.1)
-# TODO M7-04: harvesting ash in shallow water needs the sim to let a hover harvester work Shallow cells (not data)
 
 [exp_hoverlander]   # amphibious APC
 faction = "expedition"
@@ -894,7 +893,6 @@ buildable = false
 draw_scale_permille = 1800  # (tune) D-124
 deploys_into = "exp_landing_depot"
 supply = 0  # (tune) the base amount comes from the depot (design 13 §2.4)
-# TODO M7-04: Deploy only on a landing-coast cell (shore cell next to shallow water); not enforced by data
 
 # Aircraft: built at exp_flight_deck (tier 2), so the T1 scout of the design (Gyro) is tier 2 here.
 [exp_gyro]   # rotary scout and designator
