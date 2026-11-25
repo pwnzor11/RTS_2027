@@ -39,9 +39,6 @@ public sealed record MainMenuEntry(MenuAction Action, string Label, bool Enabled
 /// <summary>The main menu's item list and which items are available. Pure, so the order and states are unit-tested.</summary>
 public static class MainMenuModel
 {
-    /// <summary>Tooltip of the features that are not built yet.</summary>
-    public const string ComingLater = "Coming in a later update";
-
     /// <summary>Tooltip of Continue when there is no save to resume.</summary>
     public const string NoSaves = "No saved game to continue";
 

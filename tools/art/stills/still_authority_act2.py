@@ -1,6 +1,6 @@
 """Act-2 opener still for the Authority campaign (auth_02 The Junction): dawn, Rust Belt road junction.
 
-Usage:  flock -o /home/claude/wt/blender.lock python3 tools/art/stills/still_authority_act2.py [game|poster|mix|both|all]
+Usage:  flock -o $BLENDER_LOCK python3 tools/art/stills/still_authority_act2.py [game|poster|mix|both|all]
 Writes scratch/stills/authority_act2_{A_game,B_poster,C_mix}.png (1280x720).
 "both" = game+poster; "all" = game+poster+mix.  Original scene, no text in the image.
 Build the scene twice (once per style) from the same code, so camera and layout are identical.

@@ -31,7 +31,7 @@ STATES = [("idle", 1, 5)]
 FX = []
 MATERIALS = dict(_fact.MATERIALS)
 
-STRUCTS = os.environ.get("WZ_STRUCTS", "/home/claude/ref/wz2100/data/base/structs/")
+STRUCTS = os.environ.get("WZ_STRUCTS", os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../../../ref/wz2100/data/base/structs/"))
 SC = float(os.environ.get("WZ_FACT_SC", "0.026"))   # world units per Warzone unit (342 wide -> 8.9 of the 10.2 footprint)
 ZS = 0.82                                           # height squash so the 150-high model fits the 224 px frame (2 cells of headroom budget)
 ROT = float(os.environ.get("WZ_FACT_ROT", "180"))

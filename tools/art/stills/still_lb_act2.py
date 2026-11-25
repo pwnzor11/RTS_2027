@@ -1,6 +1,6 @@
 """Act-2 opener still for the Left Behind campaign (lb_02 Road Posts): golden late afternoon, Rust Belt, the camp is down.
 
-Usage:  flock -o /home/claude/wt/blender.lock python3 tools/art/stills/still_lb_act2.py     (STILL_PREVIEW=1 for 640x360)
+Usage:  flock -o $BLENDER_LOCK python3 tools/art/stills/still_lb_act2.py     (STILL_PREVIEW=1 for 640x360)
 Writes data/images/stills/still_left_behind_act2.png.  Original scene, no text in the image.
 Scene: Calloway-Ross's Kettle rig and the bus rigs parked on a ruined road, a campfire and buggy in front; far up the road an
 Authority road post with its power plant burning.  Low gold sun front-left, blue-teal sky, rim-lit steam and smoke.

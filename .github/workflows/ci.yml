@@ -2,9 +2,8 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, 'integ-*']
   pull_request:
-    branches: [main]
 
 permissions:
   contents: read
@@ -80,6 +79,7 @@ jobs:
     name: Publish Windows game
     runs-on: windows-latest
     needs: build-test
+    if: github.ref == 'refs/heads/main' || github.event_name == 'pull_request'   # s45 T-03: integ-* pushes run build-test only
     timeout-minutes: 30
     permissions:
       contents: write   # S23: the nightly pre-release

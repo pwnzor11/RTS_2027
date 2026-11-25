@@ -1,6 +1,6 @@
 """Act-3 opener still for the Expedition (exp_03 The Fleet Reaches the Coast): stormy day over the Glass Coast cove.
 
-Usage:  flock -o /home/claude/wt/blender.lock python3 tools/art/stills/still_expedition_act3.py
+Usage:  flock -o $BLENDER_LOCK python3 tools/art/stills/still_expedition_act3.py
         (STILL_PREVIEW=1 for a 640x360 look).  Writes data/images/stills/still_expedition_act3.png.
 Scene: from the advance party's headland (Flight Deck, SAM Mounts) the carrier group stands into the cove under a
 broken storm sky; jets climb on contrails, whitecaps on a dark teal sea, glass spires on the far headland.
