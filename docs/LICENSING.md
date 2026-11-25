@@ -52,12 +52,10 @@ licence texts and the list of native files are in `THIRD_PARTY_NOTICES.md`. Per-
 
 ### CC BY-SA 3.0 material that ships
 
-**OPEN: owner decision needed — CC BY-SA 3.0 assets ship although D-033 excludes the licence.**
-D-033 (status "assumed — confirm") lists CC BY-SA 3.0 as excluded. The 0 A.D. prop renders below are CC BY-SA 3.0 and
-are in the Windows build. D-188 (owner decision, session 15) allowed them as separately licensed data files; no
-decision says D-188 supersedes D-033, and D-033 has not been amended. The owner needs to decide whether D-188 is the
-exception (and to record that as a new decision) or whether the files must go. Until then this section is the only
-record of the exception. The audit (REPO-03) also notes that CC BY-SA 3.0 is not one-way compatible with GPL-3.0
+**DECIDED (owner, 2026-11-24): CC BY-SA 3.0 is allowed for art assets only (e.g. the 0 A.D. props), kept as separate, credited files; supersedes D-033 for art.**
+The 0 A.D. prop renders below are CC BY-SA 3.0 and ship in the Windows build as separately licensed, credited data files
+(D-188). D-033 (status "assumed — confirm") still excludes CC BY-SA 3.0 for everything that is not art; the D-entry that
+records this exception is written by the lead. The audit (REPO-03) also notes that CC BY-SA 3.0 is not one-way compatible with GPL-3.0
 (only CC BY-SA 4.0 is), which is why these files are kept apart from the GPL code and never merged into GPL-only sheets.
 
 | Shipped files | Author and attribution | Licence and link | Licence text in the repo | Decision |
