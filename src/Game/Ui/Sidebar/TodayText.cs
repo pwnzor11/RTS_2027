@@ -12,7 +12,7 @@ public static class TodayText
     private static readonly Dictionary<string, string> Cameos = new(StringComparer.Ordinal)
     {
         ["exp_minelayer"] = "Unarmed sea hull. It cannot lay mines yet.",
-        ["exp_diver"] = "Plants charges on ships and quays from the shore. It cannot swim yet.",
+        ["exp_diver"] = "Plants charges on ships and quays. Swims in deep water, hidden from all but sonar.",
         ["exp_drydock"] = "Unlocks the Cruiser and Carrier. It does not build or repair ships itself yet.",
         ["exp_destroyer"] = "Gun warship that detects submarines, with depth charges and an anti-air mount.",
         ["lb_harpoon_wagon"] = "Anti-armour harpoon gun. It does not tether or slow targets yet.",
