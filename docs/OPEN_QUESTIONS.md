@@ -4,6 +4,12 @@ Context and trade-offs for every question are in `docs/research/00_SYNTHESIS.md`
 file cited after each question. Recommendations are the lead's, from the research.
 
 ## Open
+- 🔴 **Q-89 (s44) Scrap Plate after the re-measure.** The Left Behind upgrades merge (Scrap Plate: Light vehicles, Rotors and Kites become Heavy
+  armour, D-322) moved rust Left Behind v Expedition 49 -> 75 % and Left Behind v the others by 6-8 points. Options: **soften it to a
+  damage-taken percent (e.g. -20 %) and screen (recommended)** / keep / back to the s43 +20 % health. Also confirm Patchwork (+6 cells, heal x4).
+- 🔴 **Q-90 (s44) Authority v Expedition and Authority v Directorate.** The A-02/rule-fix merge moved rust Authority v Expedition 73 -> 81 %
+  (most likely M-22: Flak no longer hurts Authority aircraft); Authority v Directorate pooled is 33.6 %. Options: **isolate M-22 and focus fire
+  in a probe, then tune Authority/Expedition numbers on 512 games (recommended)** / accept for now.
 
 ## Answered
 - Q-88 · 2026-11-24 · Owner (s43): (a) finish line met; freeze balance numbers → D-310.

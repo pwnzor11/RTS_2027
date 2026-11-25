@@ -2373,3 +2373,11 @@ naval gunfire needs a seen cell (Destroyer/Cruiser guns); Missile Sub dives in 6
 delivery: vehicles drop in reach, infantry build in 200 ticks, 100 credits at placement; Expedition AI from tier 3: one Drydock, +1 Cruiser
 +1 Carrier, one Minelayer, ships under 50 % go to the Drydock; lb_03 tier 5 ColumnDelay 3600, riflemen 9; tut_01 briefing stays plain prose.
 **Status:** assumed — confirm (USER_CHECKS session 44)
+
+### D-323 · 2026-11-25 · Session 44: re-measure result; Expedition AI naval plan off
+**Decision:** the end-of-wave 512-game table (D-317; docs/balance/s44_balance.md) failed the D-305 gate: every Expedition row lost 8-37 points.
+A bisect over the integ-s44 merges found three steps; the third, the Expedition AI naval plan (Drydock, heavy ships, Minelayer from tier 3,
+an assumed value of D-322), cost ~9 points per row and is switched off (`naval_min_tier = 0`; the levers stay in data, tests switch them on).
+The other two (Left Behind upgrades, the A-02/rule-fix merge for the Authority) are owner balance calls: Q-89, Q-90. Nothing else is re-tuned
+this session. **Why:** the naval plan was the lead's own assumed value and a clear regression; balance numbers stay frozen (D-310/D-317) until
+the owner decides. **Status:** lead (reported to the owner)
