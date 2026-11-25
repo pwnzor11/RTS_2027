@@ -184,12 +184,7 @@ def ground(S, dmg, i):
     S.box("sign", (1.0, 0.08, 0.6), (-4.2, -3.0 * S.YS, 0.5), "plaster", 0.0, rot=(0, 0, -12), stretch=False)
     S.cyl("stump", 0.22, 0.9, (4.3, -2.4, Z0 + 0.45), "brick2", verts=8)
     S.bb("stumpb", 4.15, 4.45, -2.5, -2.3, Z0 + 0.9, Z0 + 1.4, "burnt", 0.0)
-    # smouldering heap: faint wisp (idle only)
-    if not dmg:
-        for q in range(3):
-            ph = ((i / 4) + q / 3) % 1
-            r = 0.1 + 0.28 * math.sin(math.pi * ph) ** 0.7
-            S.sphere(f"wisp{q}", r, (-0.2 + ph * 0.7, 1.2, Z0 + 1.2 + ph * 1.3), "smoke2", squash=0.85)
+    # S43: the smouldering heap's smoke wisp is not baked (owner call: no round smoke); detail only
 
 
 FX = [

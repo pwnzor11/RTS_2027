@@ -23,7 +23,7 @@ DOCK = (0, 0)
 CAP_MATERIAL = "pad2"
 PALETTE = K.PALETTE
 MATERIALS = K.MATERIALS
-STATES = [("idle", 4, 5), ("damaged", 4, 5), ("build", 8, 5)]
+STATES = [("idle", 8, 2), ("damaged", 8, 2), ("build", 8, 5)]     # session 43: 8-frame loops at tpf 2 (owner choice)
 FX = [
     K.fx(FOOTPRINT, ORIGIN, "damaged", "fire_large", -0.8, 0.6, 2.4, 0),
     K.fx(FOOTPRINT, ORIGIN, "damaged", "smoke_plume", -0.8, 0.6, 2.8, 0),
@@ -63,8 +63,6 @@ def g_stack(S, dmg, i):
     S.cyl("stackband", 0.53, 0.16, (-1.9, 0.0, 2.7), "copper", verts=20)
     S.cyl("stackhouse", 0.53, 0.28, (-1.9, 0.0, top - 0.4), "house", verts=20)
     S.cyl("stackcap", 0.55, 0.08, (-1.9, 0.0, top), "orange", verts=20)
-    if not dmg:
-        K.puffs(S, "st", -1.9, 0.0, top + 0.2, i, drift=0.6)
     P.ladder(S, -1.9, -0.55, 0.7, top - 0.4)
 
 
@@ -106,6 +104,8 @@ def site(S):
 def dmg_extra(S, i):
     S.bb("scorch1", -2.0, -0.4, -0.4, 0.4, 2.3, 2.32, "char", 0.0, nocast=True)
     S.bb("scorch2", 0.6, 2.6, 0.4, 1.4, 0.1, 0.12, "char", 0.0, nocast=True)
+    if i in (2, 6):         # bent pylon arm arcs
+        S.sphere("parc", 0.1, (2.5, 1.5, 3.0), "spark")
 
 
 def build(S, state, i, n):

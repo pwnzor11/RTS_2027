@@ -36,6 +36,28 @@ public sealed class DrawOrder : IComparer<DrawItem>
     /// <summary>The shared instance.</summary>
     public static readonly DrawOrder Instance = new();
 
+    private static readonly Comparison<DrawItem> Cached = Order;
+
+    /// <summary>
+    /// Sorts <paramref name="items"/> in draw order without allocating: <c>List.Sort(IComparer)</c> builds a delegate over the comparer's
+    /// interface method on every call, which is garbage every frame; this uses one delegate made once.
+    /// </summary>
+    public static void Sort(List<DrawItem> items)
+    {
+        if (items.Count > 1) System.Runtime.InteropServices.CollectionsMarshal.AsSpan(items).Sort(Cached);
+    }
+
+    private static int Order(DrawItem a, DrawItem b)
+    {
+        int c = a.SortY.CompareTo(b.SortY);
+        if (c != 0) return c;
+        c = a.SortX.CompareTo(b.SortX);
+        if (c != 0) return c;
+        c = ((byte)a.Kind).CompareTo((byte)b.Kind);   // not Enum.CompareTo(object): that boxes on every tie
+        if (c != 0) return c;
+        return a.Index.CompareTo(b.Index);
+    }
+
     /// <inheritdoc />
     public int Compare(DrawItem a, DrawItem b)
     {
@@ -43,7 +65,7 @@ public sealed class DrawOrder : IComparer<DrawItem>
         if (c != 0) return c;
         c = a.SortX.CompareTo(b.SortX);
         if (c != 0) return c;
-        c = a.Kind.CompareTo(b.Kind);
+        c = ((byte)a.Kind).CompareTo((byte)b.Kind);   // not Enum.CompareTo(object): that boxes on every tie
         if (c != 0) return c;
         return a.Index.CompareTo(b.Index);
     }

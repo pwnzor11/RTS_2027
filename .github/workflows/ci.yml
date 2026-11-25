@@ -48,7 +48,7 @@ jobs:
         run: dotnet run --project src/Game -c Release --no-build -- --mission-check auth_01 6000
 
       - name: Verify the sandbox replay
-        run: dotnet run --project src/Tools -c Release --no-build -- replay verify replays/sandbox_last.rpl --map data/maps/test_32.map.toml
+        run: dotnet run --project src/Tools -c Release --no-build -- replay verify "$env:APPDATA/RTS_2027/replays/sandbox_last.rpl" --map data/maps/test_32.map.toml
 
       - name: Headless match and replay verify
         run: |

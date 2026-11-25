@@ -95,6 +95,23 @@ public sealed class LockstepHardeningTests
         Assert.Equal(0, rig.Host.HashMismatches);
     }
 
+    [Theory]
+    [InlineData(int.MaxValue)]
+    [InlineData(1_000_000)]
+    public void A_hostile_progress_value_is_clamped_and_cannot_wedge_or_hide_lag(int hostile)
+    {
+        var rig = new Rig(1);
+        rig.Host.SetSlot(1, 1);
+        rig.Run(500_000);
+        rig.Transports[0].Send(LockstepHost.HostPeer, new NetMessage.Progress(hostile), reliable: false);
+        rig.Run(500_000);
+        Assert.InRange(rig.Host.ProgressOf(1), 0, rig.Host.SealedThrough + 1);
+        int before = rig.Host.Tick;
+        rig.Run(1_000_000);
+        Assert.True(rig.Host.Tick > before);
+        Assert.Empty(rig.Host.WaitingFor);
+    }
+
     [Fact]
     public void The_scheduler_spills_a_crowded_tick_into_later_ones_and_bounds_what_waits()
     {

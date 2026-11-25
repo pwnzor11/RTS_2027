@@ -41,8 +41,10 @@ public static class GarrisonOverlay
     public static void Draw(SpriteBatch batch, SimSnapshot snapshot, Camera camera, SimRules? rules)
     {
         Texture2D pixel = Pixel(batch.GraphicsDevice);
-        foreach (BuildingView b in snapshot.Buildings)
+        IReadOnlyList<BuildingView> lstB = snapshot.Buildings;
+        for (int iBIx = 0; iBIx < lstB.Count; iBIx++)
         {
+            BuildingView b = lstB[iBIx];
             if (b.Ghost) continue;
             int capacity = rules is null ? 0 : GarrisonOrders.CapacityOf(rules, b.TypeIndex);
             if (capacity <= 0 && b.Occupants <= 0) continue;

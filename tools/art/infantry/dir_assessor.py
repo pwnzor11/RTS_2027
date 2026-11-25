@@ -13,6 +13,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import common as C
 import auth_rifleman as AR
 import dir_conscript as DC
+import boost
 
 SCALE = 1.25                  # D-185: figure 1.25 x, frame 48 x 48
 ID = "dir_assessor"
@@ -49,6 +50,9 @@ def build(S, p):
     from mathutils import Matrix
     import rig as R
     import dir_parts as P
+    B = boost.params()                                   # S43 pilot boost
+    H, LB, SB = B["house"], B["limb"], B["stance"]
+    pp = dict(p, feet=tuple((f[0] * SB, f[1], f[2]) for f in p["feet"]))   # wider stance for the legs helper
     U = R.tr(0, p["dy"], 0.62 + p["bob"]) @ R.rz(p["twist"]) @ R.rx(-p["lean"]) @ R.rz(p["roll"])
     pel = (0, p["dy"], 0.62 + p["bob"])
 
@@ -63,25 +67,38 @@ def build(S, p):
     S.box((0.05, 0.04, 0.10), (0.16, 0.14, 0.0), "hood", U, bevel=0)                  # stamp hanging at the hip
     S.box((0.07, 0.05, 0.03), (0.16, 0.14, -0.07), "red", U, bevel=0)
     S.cyl(0.215, 0.07, (0, 0.0, 0.345), "hood", "Z", U, verts=8, r2=0.17)             # shoulder cape
-    for sx in (-1, 1):
-        S.box((0.13, 0.17, 0.04), (sx * 0.19, 0.0, 0.395), "house", U, rot=(0, sx * -8, 0), bevel=0)
+    for sx in (-1, 1):                                                                 # D-185 house shoulder boards, S43 larger
+        S.box((0.13 * (1 + 0.5 * (H - 1)), 0.17 * (1 + 0.3 * (H - 1)), 0.04 * (1 + 0.6 * (H - 1))), (sx * (0.19 + 0.02 * (H - 1)), 0.0, 0.395), "house", U, rot=(0, sx * -8, 0), bevel=0)
     # satchel of rolled forms on the back, house panel on its flap
     S.box((0.30, 0.12, 0.26), (0, -0.27, 0.12), "coat", U, bevel=0.02)
-    S.box((0.24, 0.025, 0.20), (0, -0.335, 0.15), "house", U, bevel=0)
+    S.box((0.24 * (1 + 0.15 * (H - 1)), 0.025, 0.20 * H), (0, -0.335, 0.15), "house", U, bevel=0)
     for sx in (-0.08, 0.08):
         S.cyl(0.04, 0.30, (sx, -0.26, 0.31), "bone", "Z", U, verts=8)
-    # head: bone ruff, pale face with brass spectacles, flat peaked cap with a house band
+    # head: bone ruff, pale face with brass spectacles, flat peaked cap with a house band (S43: scaled about the head centre by B["head"])
+    h = B["head"]
+    HC = (0.0, 0.10, 0.55)
+
+    def hb(size, loc, mat, **kw):
+        return S.box(tuple(x * h for x in size), tuple(HC[i] + (loc[i] - HC[i]) * h for i in range(3)), mat, U, **kw)
+
+    def hs(r, loc, mat):
+        return S.sphere(tuple(x * h for x in r), tuple(HC[i] + (loc[i] - HC[i]) * h for i in range(3)), mat, U)
+
+    def hc_(r, ln, loc, mat, axis, verts):
+        return S.cyl(r * h, ln * h, tuple(HC[i] + (loc[i] - HC[i]) * h for i in range(3)), mat, axis, U, verts=verts)
     S.box((0.08, 0.09, 0.07), (0, 0.06, 0.44), "dark", U)
-    S.cyl(0.14, 0.07, (0, 0.06, 0.40), "bone", "Z", U, verts=8)                       # ruff collar
-    S.sphere((0.14, 0.15, 0.125), (0, 0.10, 0.555), "bone", U)                         # head (pale)
-    S.box((0.27, 0.22, 0.05), (0, 0.10, 0.66), "hood", U, bevel=0.01)                 # flat cap crown
-    S.box((0.28, 0.20, 0.035), (0, 0.10, 0.62), "house", U, bevel=0)                  # house band
-    S.box((0.25, 0.09, 0.025), (0, 0.25, 0.60), "dark", U, rot=(-10, 0, 0), bevel=0)  # cap peak
+    hc_(0.14, 0.07, (0, 0.06, 0.40), "bone", "Z", 8)                                  # ruff collar
+    hs((0.14, 0.15, 0.125), (0, 0.10, 0.555), "bone")                                  # head (pale)
+    hb((0.27, 0.22, 0.05), (0, 0.10, 0.66), "hood", bevel=0.01)                        # flat cap crown
+    hb((0.28, 0.20, 0.035 * H), (0, 0.10, 0.62), "house", bevel=0)                    # house band
+    hb((0.25, 0.09, 0.025), (0, 0.25, 0.60), "dark", rot=(-10, 0, 0), bevel=0)        # cap peak
     for sx in (-1, 1):
-        S.box((0.075, 0.04, 0.07), (sx * 0.06, 0.25, 0.52), "lens", U, bevel=0)       # spectacles
-    S.box((0.19, 0.03, 0.03), (0, 0.25, 0.52), "dark", U, bevel=0)
-    # ledger (gun coords: x width, y height, z thickness; held tilted so the cover faces the front)
-    GM = (U if p["gun_space"] == "u" else Matrix.Identity(4)) @ R.tr(*p["gun"][0]) @ R.rz(p["gun"][1]) @ R.rx(p["gun"][2])
+        hb((0.075, 0.04, 0.07), (sx * 0.06, 0.25, 0.52), "lens", bevel=0)             # spectacles
+    hb((0.19, 0.03, 0.03), (0, 0.25, 0.52), "dark", bevel=0)
+    # ledger (gun coords: x width, y height, z thickness; held tilted so the cover faces the front; S43: B["gun"] / B["gunw"] scale,
+    # the grips below are in unscaled ledger coords and follow through GM)
+    GM0 = (U if p["gun_space"] == "u" else Matrix.Identity(4)) @ R.tr(*p["gun"][0]) @ R.rz(p["gun"][1]) @ R.rx(p["gun"][2])
+    GM = GM0 @ Matrix.Diagonal((B["gunw"], B["gun"], B["gunw"], 1.0))
     S.box((0.38, 0.30, 0.05), (0, 0, 0), "red", GM, bevel=0.01)                        # cover
     S.box((0.33, 0.25, 0.04), (0, 0.0, -0.045), "bone", GM, bevel=0)                    # page block underneath
     S.box((0.04, 0.30, 0.06), (-0.18, 0, 0), "dark", GM, bevel=0)                       # dark spine
@@ -90,8 +107,8 @@ def build(S, p):
     if p["flash"]:
         S.cyl(0.05, 0.14, (0.10, 0.10, 0.12), "red", "Z", GM, verts=8)                  # stamp pressed on the page
         S.cyl(0.04, 0.07, (0.10, 0.10, 0.22), "bone", "Z", GM, verts=8)
-    P.arms(S, p, U, up, GM, SHOULDER, (GRIP_R, GRIP_L), ("coat2", "coat3"))
-    P.legs(S, p, pel, thick=(0.10, 0.085))
+    P.arms(S, p, U, up, GM, SHOULDER, (GRIP_R, GRIP_L), ("coat2", "coat3"), thick=(0.085 * LB, 0.072 * LB), band=0.12 * LB * (1 + 0.2 * (H - 1)))
+    P.legs(S, pp, pel, spread=0.095 * SB, thick=(0.10 * LB, 0.085 * LB))
     if p["spread"]:
         S.cyl(0.40, 0.03, (0.0, p["dy"] + 0.12, 0.03), "coat2", "Z", None, verts=8)
         S.cyl(0.28, 0.035, (0.05, p["dy"] + 0.12, 0.05), "coat3", "Z", None, verts=8)

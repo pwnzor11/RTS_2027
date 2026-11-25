@@ -25,7 +25,7 @@ ORIGIN = (0, 24)
 DOCK = (0, 0)
 CAP_MATERIAL = "concrete2"
 HOUSE2_MID = True        # D-072: roof house2 panels pinned to mid ramp shades (structpost)
-STATES = [("idle", 4, 5), ("damaged", 4, 5), ("build", 8, 5)]
+STATES = [("idle", 8, 2), ("damaged", 8, 2), ("build", 8, 5)]     # 8-frame loops at tpf 2 (0.4 s a frame)
 MATERIALS = L.MATERIALS
 SOOT_SKIN = L.SOOT_SKIN
 PRIMER_SKIN = L.PRIMER_SKIN
@@ -118,13 +118,16 @@ def finished(S, i, dmg, mode):
         S.box("gpost", (0.32, 0.16, 2.5), (gx - 0.4, gy * YS, 1.2), "dark", 0.02, rot=(0, 24, 0), stretch=False)
         S.box("gscale", (0.16, 0.04, 2.2), (gx - 0.4 - 0.0, (gy - 0.1) * YS, 1.2), "gauge", 0.0, rot=(0, 24, 0), stretch=False, nocast=True)
         S.bb("glamp", gx - 1.35, gx - 1.1, gy - 0.1, gy + 0.1, 0.14, 0.34, "dark", 0.0)
+        if i in (3, 7):                          # the gauge head sparks on two frames of the loop
+            L.spark(S, gx - 0.4, gy, 2.4, i, 3)
     else:
         S.bb("gpost", gx - 0.17, gx + 0.17, gy - 0.09, gy + 0.09, 0.14, 2.65, "dark", 0.02)
         S.bb("gscale", gx - 0.08, gx + 0.08, gy - 0.12, gy - 0.09, 0.5, 2.4, "gauge", 0.0)
-        S.bb("glevel", gx - 0.06, gx + 0.06, gy - 0.13, gy - 0.12, 0.5, 1.5, "yellow", 0.0)
+        top = 1.5 + 0.35 * math.sin(2 * math.pi * i / 8) if idle else 1.5     # ash level rises and falls over the loop
+        S.bb("glevel", gx - 0.06, gx + 0.06, gy - 0.13, gy - 0.12, 0.5, top, "yellow", 0.0)
         for k in range(6):
             S.bb(f"gtick{k}", gx - 0.14, gx + 0.14, gy - 0.13, gy - 0.12, 0.6 + k * 0.35, 0.64 + k * 0.35, "white", 0.0, nocast=True)
-        on = idle and i % 2 == 0
+        on = idle and i % 4 < 2
         S.bb("glamp", gx - 0.12, gx + 0.12, gy - 0.12, gy + 0.12, 2.65, 2.9, "amber" if on else "amber_dim", 0.02)
     S.bb("gbase", gx - 0.3, gx + 0.3, gy - 0.25, gy + 0.25, 0.14, 0.4, "concrete2", 0.03)
     # ---- damage: spilled ash, cracks, scorch

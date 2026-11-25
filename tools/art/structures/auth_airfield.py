@@ -25,7 +25,7 @@ CANVAS = (192, 224)
 ORIGIN = (0, 32)
 DOCK = (1, 3)           # exit: the cell just below the middle of the footprint
 CAP_MATERIAL = "concrete2"
-STATES = [("idle", 4, 5), ("damaged", 4, 5), ("build", 8, 5), ("active", 4, 3)]
+STATES = [("idle", 8, 2), ("damaged", 8, 2), ("build", 8, 5), ("active", 4, 3)]     # idle/damaged: 8-frame loops at tpf 2
 
 # hangar block (north-west), control hut (north-east), runway (south)
 HX0, HX1 = -4.7, -0.1
@@ -194,6 +194,8 @@ def hut(S, dmg, active, i):
         post(S, "cabp", cx - 0.8, cy - 0.5, 1.8, 2.4, 0.1, "girder")
         post(S, "cabp", cx + 0.6, cy + 0.3, 1.8, 2.1, 0.1, "girder")
         scorch(S, "scHut", cx + 0.1, cy - 0.97, 1.0, 1.6, 1.0)
+        if i in (1, 5):                          # a live cable arcs at the broken cab on two frames of the loop
+            spark(S, cx + 0.3, cy - 0.95, 2.3, i, 4)
         S.bb("hutrubble", cx - 1.2, cx + 0.6, cy - 1.6, cy - 1.1, 0.14, 0.4, "concrete_s", 0.2)
         beam(S, "hutsnap", (cx + 0.9, cy - 0.2, 1.8), (cx + 1.5, cy - 1.2, 0.3), 0.12, "girder")
         return
@@ -207,10 +209,10 @@ def hut(S, dmg, active, i):
     post(S, "bstub", cx + 0.7, cy + 0.55, 2.72, 3.1, 0.1, "steel")
     beacon_on = active or (i % 2 == 0)
     S.cyl("bhead", 0.2, 0.24, (cx + 0.7, cy + 0.55, 3.2), "beacon" if beacon_on else "dark", verts=10, nocast=True)
-    a = i * math.pi / 2
+    a = i * math.pi / 4          # radar sweep: one full turn over the 8-frame loop
     S.bb("bsweep", cx + 0.7 + 0.28 * math.cos(a) - 0.08, cx + 0.7 + 0.28 * math.cos(a) + 0.08, cy + 0.55 - 0.08, cy + 0.55 + 0.08, 3.15, 3.25, "lamp" if beacon_on else "dark", 0.0, nocast=True)
     post(S, "radm", cx - 0.6, cy + 0.2, 2.72, 3.0, 0.1, "steel")
-    ang = (i * 25) % 360
+    ang = (i * 45) % 360        # the dish turns once per loop
     S.box("dish", (0.9, 0.08, 0.5), (cx - 0.6, cy * S.YS + 0.2, 3.15), "steel2", 0.0, rot=(0, 0, ang), stretch=False)
     # hut ladder + rain pipe
     S.bb("pipe", cx + 1.0, cx + 1.1, cy - 0.97, cy - 0.9, 0.14, 1.6, "steel", 0.0)
@@ -222,7 +224,7 @@ def mast_and_extras(S, dmg, active, i):
     post(S, "mast", mx, my, 0.14, top, 0.12, "steel")
     S.cyl("mastbase", 0.22, 0.2, (mx, my, 0.24), "concrete2", verts=10)
     if not dmg:
-        sway = math.sin(i * math.pi / 2) * 0.12
+        sway = math.sin(i * math.pi / 4) * 0.12
         # windsock: orange/white tapered segments blown toward the west
         for k in range(4):
             r = 0.2 - 0.035 * k
@@ -230,7 +232,8 @@ def mast_and_extras(S, dmg, active, i):
         S.cyl("sockring", 0.22, 0.04, (mx - 0.1, my, 2.32), "steel", axis="X", verts=10, nocast=True)
     else:
         beam(S, "mastsnap", (mx, my, 1.0), (mx - 0.9, my - 0.5, 0.3), 0.1, "steel")
-        S.bb("sockrag", mx - 1.1, mx - 0.7, my - 0.7, my - 0.4, 0.14, 0.18, "orange", 0.0, nocast=True)
+        flap = math.sin(i * math.pi / 4)          # the torn sock flaps in the wind
+        S.bb("sockrag", mx - 1.1 + 0.15 * flap, mx - 0.7 + 0.15 * flap, my - 0.7, my - 0.4, 0.14, 0.18, "orange", 0.0, nocast=True)
     # fuel bowser on the apron and a tug
     S.cyl("tank", 0.3, 1.5, (3.9, -1.4, 0.5), "steel", axis="X", verts=14)
     S.bb("tankcr", 3.1, 4.7, -1.55, -1.25, 0.14, 0.24, "concrete2", 0.02)

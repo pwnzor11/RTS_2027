@@ -23,7 +23,7 @@ public sealed class KeyBindingsTests
     public void Conflict_is_found_for_a_key_another_action_uses()
     {
         Assert.Equal(GameAction.Stop, KeyBindings.Default.ConflictOf(GameAction.AttackMove, Keys.S));
-        Assert.Null(KeyBindings.Default.ConflictOf(GameAction.AttackMove, Keys.F));
+        Assert.Null(KeyBindings.Default.ConflictOf(GameAction.AttackMove, Keys.V));
         Assert.Null(KeyBindings.Default.ConflictOf(GameAction.AttackMove, Keys.A));   // its own key is not a conflict
     }
 
@@ -62,8 +62,8 @@ public sealed class KeyBindingsTests
     {
         var s = new RebindSession();
         s.Begin(GameAction.Stop);
-        KeyBindings? b = s.Press(KeyBindings.Default, Keys.F);
-        Assert.Equal(Keys.F, b!.Get(GameAction.Stop));
+        KeyBindings? b = s.Press(KeyBindings.Default, Keys.V);
+        Assert.Equal(Keys.V, b!.Get(GameAction.Stop));
         Assert.Equal(RebindSession.Phase.Idle, s.State);
     }
 
@@ -120,13 +120,13 @@ public sealed class KeyBindingsTests
     [Fact]
     public void Bindings_survive_a_save_and_load()
     {
-        Settings s = Settings.Default.WithBindings(KeyBindings.Default.TrySwap(GameAction.AttackMove, Keys.S)!.With(GameAction.Pack, Keys.F11));
+        Settings s = Settings.Default.WithBindings(KeyBindings.Default.TrySwap(GameAction.AttackMove, Keys.S)!.With(GameAction.Pack, Keys.OemOpenBrackets));
         string toml = s.ToToml();
         Assert.Contains("[keys]", toml);
         Settings back = Settings.Parse(toml);
         Assert.Equal(Keys.S, back.Bindings.Get(GameAction.AttackMove));
         Assert.Equal(Keys.A, back.Bindings.Get(GameAction.Stop));
-        Assert.Equal(Keys.F11, back.Bindings.Get(GameAction.Pack));
+        Assert.Equal(Keys.OemOpenBrackets, back.Bindings.Get(GameAction.Pack));
         Assert.Equal(s, back);
     }
 
@@ -142,8 +142,8 @@ public sealed class KeyBindingsTests
     [Fact]
     public void Unknown_ids_bad_key_names_and_reserved_keys_in_the_file_are_ignored()
     {
-        Settings s = Settings.Parse("[keys]\nstop = \"F\"\nnot_an_action = \"G\"\nguard = \"NoSuchKey\"\nscatter = \"Escape\"\npack = 5\n");
-        Assert.Equal(Keys.F, s.Bindings.Get(GameAction.Stop));
+        Settings s = Settings.Parse("[keys]\nstop = \"V\"\nnot_an_action = \"G\"\nguard = \"NoSuchKey\"\nscatter = \"Escape\"\npack = 5\n");
+        Assert.Equal(Keys.V, s.Bindings.Get(GameAction.Stop));
         Assert.Equal(Keys.G, s.Bindings.Get(GameAction.Guard));
         Assert.Equal(Keys.X, s.Bindings.Get(GameAction.Scatter));
         Assert.Equal(Keys.K, s.Bindings.Get(GameAction.Pack));
@@ -152,11 +152,11 @@ public sealed class KeyBindingsTests
     [Fact]
     public void A_file_with_clashing_keys_falls_back_to_defaults_for_the_clash()
     {
-        Settings s = Settings.Parse("[keys]\nstop = \"G\"\nattack_move = \"F\"\n");   // Stop now clashes with Guard's default
+        Settings s = Settings.Parse("[keys]\nstop = \"G\"\nattack_move = \"V\"\n");   // Stop now clashes with Guard's default
         Assert.Empty(s.Bindings.Conflicts());
         Assert.Equal(Keys.S, s.Bindings.Get(GameAction.Stop));
         Assert.Equal(Keys.G, s.Bindings.Get(GameAction.Guard));
-        Assert.Equal(Keys.F, s.Bindings.Get(GameAction.AttackMove));
+        Assert.Equal(Keys.V, s.Bindings.Get(GameAction.AttackMove));
     }
 
     [Fact]

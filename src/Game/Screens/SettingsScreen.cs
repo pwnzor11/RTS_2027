@@ -5,8 +5,10 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Rts.Game.Input;
 using Rts.Game.Menu;
+using Rts.Data;
 using Rts.Game.Saves;
 using Rts.Game.Ui;
+using Rts.Game.Update;
 
 namespace Rts.Game.Screens;
 
@@ -54,6 +56,11 @@ public sealed class SettingsScreen : IScreen
                 new MenuButton("Toggle", ToggleWeather)),   // M10-12
             new MenuItem(() => $"Screen shake: {(_s.Settings.ScreenShake ? "On" : "Off")}", ToggleScreenShake, _ => ToggleScreenShake(),
                 new MenuButton("Toggle", ToggleScreenShake)),   // M10-14
+            new MenuItem(() => $"Reduce flashes: {(_s.Settings.ReduceFlashes ? "On" : "Off")}", ToggleReduceFlashes, _ => ToggleReduceFlashes(),
+                new MenuButton("Toggle", ToggleReduceFlashes)),   // QOL-20
+            new MenuItem(() => "Alerts", () => _s.Screens.Push(new AlertsSettingsScreen(_s, _path))),   // QOL-12
+            new MenuItem(() => $"Order lines: {(_s.Settings.ShowOrderLines ? "On" : "Off")}", ToggleOrderLines, _ => ToggleOrderLines(),
+                new MenuButton("Toggle", ToggleOrderLines)),   // QOL-10
             new MenuItem(() => SkinLine(_s.Settings), ToggleUiSkin, _ => ToggleUiSkin(),
                 new MenuButton("Toggle", ToggleUiSkin)),   // M10-15 (s27)
             Volume("Master volume", s => s.MasterVolume, (s, v) => s with { MasterVolume = v }),
@@ -65,7 +72,8 @@ public sealed class SettingsScreen : IScreen
             new MenuItem(() => $"Camera cue on new objective: {(_s.Settings.CameraCueOnNewObjective ? "On" : "Off")}", ToggleCameraCue, _ => ToggleCameraCue(),
                 new MenuButton("Toggle", ToggleCameraCue)),   // M11-05
             new MenuItem(() => $"Check for updates at start: {(_s.Settings.CheckForUpdates ? "On" : "Off")}", ToggleCheckForUpdates, _ => ToggleCheckForUpdates(),
-                new MenuButton("Toggle", ToggleCheckForUpdates)),   // M10-23
+                new MenuButton("Toggle", ToggleCheckForUpdates), new MenuButton("Check now", CheckForUpdatesNow)),   // M10-23, A43 GAMESYS-02
+            new MenuItem(() => UpdateCheck.StatusText(_s.Updates.Status, _s.Updates.Found, BuildInfo.Version)) { Info = true },   // A43 GAMESYS-02: the result of "Check now"
             new MenuItem(() => Rts.Game.Ui.Llm.LlmUiText.SectionRow, () => _s.Screens.Push(new Rts.Game.Ui.Llm.LlmSettingsScreen(_s, _path))),
             new MenuItem(() => "About", () => _s.Screens.Push(new AboutScreen(_s))),
             new MenuItem(() => "Credits", () => _s.Screens.Push(new CreditsScreen(_s))),   // M10-20
@@ -143,6 +151,9 @@ public sealed class SettingsScreen : IScreen
     private void ToggleCheckForUpdates() =>
         _s.Settings = _s.Settings with { CheckForUpdates = !_s.Settings.CheckForUpdates };
 
+    // A43 GAMESYS-02 (D-312): one check on request, whatever the start-up setting says; the result shows on the row below.
+    private void CheckForUpdatesNow() => _s.Updates.CheckNow(BuildInfo.Version);
+
     private void StepAutosave(int d) =>
         _s.Settings = _s.Settings with { AutosaveMinutes = Autosave.StepMinutes(_s.Settings.AutosaveMinutes, d) };
 
@@ -158,7 +169,11 @@ public sealed class SettingsScreen : IScreen
 
     private void ToggleWeather() => _s.Settings = _s.Settings with { Weather = !_s.Settings.Weather };
 
+    private void ToggleReduceFlashes() => _s.Settings = _s.Settings with { ReduceFlashes = !_s.Settings.ReduceFlashes };
+
     private void ToggleScreenShake() => _s.Settings = _s.Settings with { ScreenShake = !_s.Settings.ScreenShake };
+
+    private void ToggleOrderLines() => _s.Settings = _s.Settings with { ShowOrderLines = !_s.Settings.ShowOrderLines };   // QOL-10
 
     /// <summary>M10-15 (s27): the settings line for <see cref="Settings.UiSkin"/>; the skin is chosen when a match starts.</summary>
     public static string SkinLine(Settings s) => $"Interface skin: {(s.UseFactionSkin ? "Faction art" : "Classic")}";

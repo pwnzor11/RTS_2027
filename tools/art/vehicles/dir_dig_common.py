@@ -75,7 +75,4 @@ def dive_post(S, k, halfx, halfy, y0=0.0):
     for i, (x, y, r) in enumerate(spoil):
         rr = r * (0.6 + 0.2 * (k % 4))
         S.sphere(f"spoil{i}", rr, (x * halfx / 1.6, y0 + y * halfy / 1.8, rr * 0.45), "earth" if i % 2 else "earth2", scale=(1, 1, 0.6))
-    t = (k % 4) / 3.0
-    for i, (x, y) in enumerate(((-0.85, 0.7), (0.9, 0.45), (-0.5, -0.8), (0.6, -0.65), (0.0, 0.95))):
-        r = (0.16 + 0.26 * t) * (1.0 - 0.1 * i)
-        S.sphere(f"dust{i}", r, (x * halfx / 1.6, y0 + y * halfy / 1.9, 0.2 + 0.45 * t + 0.06 * i), "dust", nocast=True)
+    # S43 smoke pass: the baked dust spheres are dropped; dust puffs come from the game's PuffField (PuffArt sheets)

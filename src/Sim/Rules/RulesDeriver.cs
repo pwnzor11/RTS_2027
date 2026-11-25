@@ -194,6 +194,7 @@ public static class RulesDeriver
         "cost" => x with { Cost = Op(e, x.Cost) },
         "ticks_per_point" => x with { TicksPerPoint = Op(e, x.TicksPerPoint, 1) },
         "superweapon_charge_ticks" => x with { SuperweaponChargeTicks = Op(e, x.SuperweaponChargeTicks, x.Superweapon.Length > 0 ? 1 : 0) },
+        "sonar_radius" => x.SonarRadius > 0 ? x with { SonarRadius = Op(e, x.SonarRadius, 1, Rts.Sim.Core.SimConstants.MaxMapCells) } : x,   // A43-ROSTER-LE-01: never turns sonar on
         _ => x,
     };
 

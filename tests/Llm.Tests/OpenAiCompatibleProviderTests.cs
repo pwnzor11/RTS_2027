@@ -37,6 +37,15 @@ public class OpenAiCompatibleProviderTests
     }
 
     [Fact]
+    public async Task An_oversized_reply_body_is_refused_not_buffered()
+    {
+        string huge = "{\"choices\":[{\"message\":{\"content\":\"" + new string('x', 200_000) + "\"}}]}";
+        var r = await new OpenAiCompatibleProvider(Cfg("https://example.test"), Key, StubHandler.Json(huge)).CompleteAsync(Req, CancellationToken.None);
+        Assert.False(r.Ok);
+        Assert.Equal("bad response", r.Error);
+    }
+
+    [Fact]
     public async Task Official_api_sends_max_completion_tokens_with_headroom()
     {
         var h = StubHandler.Json(Ok);

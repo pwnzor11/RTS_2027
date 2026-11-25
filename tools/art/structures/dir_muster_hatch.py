@@ -4,7 +4,7 @@ The read is a LOW, WIDE DRILL HALL: a long umber bunker with a narrow stair mout
 stencilled wall panels (a bone number board and a magenta house panel).  On the roof a big double steel HATCH stands folded open over
 a glowing pit (hazard-striped leaves), a loudspeaker pair on a pole and a short ash stack at the back.  Bone drill lines on the pad,
 bone / oxide hazard bar along the south edge.
-Idle loop: pit glow flickers, ash puffs.  Damage is structural only (D-069): hood end fallen, one hatch leaf buckled, stack snapped.
+Idle loop (8 frames): pit glow flickers.  No stack smoke is baked.  Damage is structural only (D-069): hood end fallen, one hatch leaf buckled, stack snapped.
 Contract: see auth_refinery.py.  Units: 3.4 per cell, x east, y NORTH, z up, footprint x, y in [-3.4, 3.4].
 """
 import os
@@ -23,7 +23,7 @@ ORIGIN = (0, 76)
 DOCK = (1, 2)           # conscripts exit just below the mouth
 CAP_MATERIAL = D.CAP_MATERIAL
 PALETTE = D.PALETTE
-STATES = [("idle", 4, 5), ("damaged", 4, 5), ("build", 8, 5)]
+STATES = [("idle", 8, 2), ("damaged", 8, 2), ("build", 8, 5)]     # idle/damaged: 8-frame loops at tpf 2 (S43 fan)
 MATERIALS = D.MATERIALS
 SOOT_SKIN = D.SOOT_SKIN
 PRIMER_SKIN = D.PRIMER_SKIN
@@ -47,7 +47,7 @@ def hatch_leaves(S, i, dmg, lit):
     x0, x1 = 0.3, 2.0
     S.bb("pitrim", x0 - 0.1, x1 + 0.1, 0.1, 2.4, ZR, ZR + 0.12, "concrete2", 0.03)
     S.bb("pit", x0, x1, 0.2, 2.3, ZR + 0.1, ZR + 0.13, "dark", 0.0)
-    g = "redglow" if lit and i % 2 == 0 else ("oxide" if lit else "oxide2")
+    g = "redglow" if (lit and i % 2 == 0) or (dmg and i % 4 < 2) else ("oxide" if lit else "oxide2")
     S.bb("glowpit", x0 + 0.2, x1 - 0.2, 0.6, 1.9, ZR + 0.13, ZR + 0.16, g, 0.0, nocast=True)
     # south leaf folded up and back toward us, north leaf folded up and back
     D.tilted(S, "leafS", x0, x1, 0.1, ZR + 0.12, -0.5, ZR + 1.0, 0.12, "hull2", 0.02)
@@ -88,7 +88,7 @@ def finished(S, i, dmg, mode):
     hatch_leaves(S, i, dmg, lit)
     D.loudspeaker(S, -1.7, 0.3, ZR, dmg, height=1.7)
     D.roof_vents(S, ZR, ((-0.5, 2.3, 0.6),))
-    D.chimney(S, STK[0], STK[1], ZR, STK_TOP - (0.5 if dmg else 0.0), dmg, lit, i, rise=1.0, lean_len=1.0)
+    D.chimney(S, STK[0], STK[1], ZR, STK_TOP - (0.5 if dmg else 0.0), dmg, False, i, rise=1.0, lean_len=1.0)
     D.ash_drift(S, ((2.7, -2.3, 0.8), (-2.9, -2.0, 0.6)))
     if dmg:
         L.R.scorch(S, "scH", 0.0, -2.2, 1.6, 1.0, 0.5)

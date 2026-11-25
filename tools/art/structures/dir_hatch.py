@@ -4,7 +4,8 @@ A squat reinforced umber concrete collar block with a narrow stair mouth under a
 magenta house panel, and on the roof an open four-post bar cage over the pit, lid and wheel valve (no lift car, D-117), and a short vent pipe.  Hazard bar on the south edge.
 This module also holds the shared BASE (pad, collar block, hazard bar, hood, flanks, house panel) that dir_bore_head reuses with a
 taller collar, a wider mouth and a bigger head, so the Bore Head reads as the upgrade of the Hatch.
-Idle loop: ember glow flickers, vent puffs.  Damage is structural only (D-069): hood end fallen, cage bent.
+Idle loop (8 frames): the cage's carrier wheel turns (a 180-degree loop) and the ember glow flickers.
+No vent smoke is baked (the separate smoke pass adds it).  Damaged: the floor ember flickers.  Damage is structural only (D-069): hood end fallen, cage bent.
 Contract: see auth_refinery.py.  Units: 3.4 per cell, x east, y NORTH, z up, footprint x, y in [-1.7, 1.7].
 """
 import os
@@ -23,7 +24,7 @@ ORIGIN = (0, 40)
 DOCK = (0, 0)
 CAP_MATERIAL = D.CAP_MATERIAL
 PALETTE = D.PALETTE
-STATES = [("idle", 4, 5), ("damaged", 4, 5), ("build", 8, 5)]
+STATES = [("idle", 8, 2), ("damaged", 8, 2), ("build", 8, 5)]     # idle/damaged: 8-frame loops at tpf 2 (S43 fan)
 MATERIALS = D.MATERIALS
 SOOT_SKIN = D.SOOT_SKIN
 PRIMER_SKIN = D.PRIMER_SKIN
@@ -113,7 +114,7 @@ def finished(S, i, dmg, mode):
         S.skin.update(D.SOOT_SKIN)
     zr = base(S, dmg, 1.0, (-0.5, 0.5), -1.1, -0.2, 3, 0.85, 0.85, 0.4)
     cage(S, i, dmg, mode, zr)
-    S.bb("glowfloor2", -0.3, 0.3, YD - 0.16, YD - 0.1, -0.12, -0.05, "redglow" if lit and i % 2 == 0 else "oxide2", 0.0, nocast=True)
+    S.bb("glowfloor2", -0.3, 0.3, YD - 0.16, YD - 0.1, -0.12, -0.05, "redglow" if ((lit and i % 2 == 0) or (dmg and i % 4 < 2)) else "oxide2", 0.0, nocast=True)
     if dmg:
         L.R.scorch(S, "scH", 0.0, -1.0, 1.0, 0.7, 0.5)
 

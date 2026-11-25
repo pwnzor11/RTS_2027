@@ -10,5 +10,8 @@ namespace Rts.Game.Controls;
 public sealed record ControlRow(string Group, string Description, GameAction? Action, string FixedLabel = "")
 {
     /// <summary>The input as shown to the player under <paramref name="bindings"/>.</summary>
-    public string LabelFor(KeyBindings bindings) => Action is { } a ? KeyNames.Of(bindings.Get(a)) : FixedLabel;
+    public string LabelFor(KeyBindings bindings) =>
+        Action is not { } a ? FixedLabel
+        : bindings.GetAlt(a) == Microsoft.Xna.Framework.Input.Keys.None ? KeyNames.Of(bindings.Get(a))
+        : KeyNames.Of(bindings.Get(a)) + " / " + KeyNames.Of(bindings.GetAlt(a));   // QOL-20: the second key
 }

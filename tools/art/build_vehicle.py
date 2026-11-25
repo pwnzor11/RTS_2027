@@ -41,6 +41,7 @@ ELEV = 40.0
 SS = 4
 COLS = 4
 PX = C.UNIT_PX   # D-275: sheet pixels per map cell; set by --px-cell
+OUT_DIR = None   # --out: write the sheet + manifest here instead of data/sprites/vehicles (fan-out and scratch runs)
 
 
 def n_frames(mod):
@@ -394,7 +395,7 @@ def render(vid, mod, samples, states, facing_sel, preview, layer="body"):
                         o.data.materials.clear()
                         for m in orig[o]:
                             o.data.materials.append(m)
-                    sc.cycles.samples = 12 if preview else samples
+                    sc.cycles.samples = min(samples, 12) if preview else samples   # preview: at most 12 (fan-out previews pass --samples 6-8)
                     render_to(os.path.join(out, f"{'prev' if preview else 'col'}_{idx:02d}.png"))
                     if preview:
                         continue
@@ -475,8 +476,9 @@ def write_toml(path, mod, sheet_name, layer="body"):
         "ramp = [" + ", ".join('"#%02X%02X%02X"' % c for c in C.HOUSE) + "]", "",
     ]
     for name, first, facings, frames, ticks in layout(mod):
+        step = getattr(mod, "STEP_PX", {}).get(name)   # optional: ground travel (sheet px) of one animation frame, for the renderer
         lines += ["[[state]]", f'name = "{name}"', f"facings = {facings}", f"frames = {frames}", f"first = {first}",
-                  f"ticks_per_frame = {ticks}", ""]
+                  f"ticks_per_frame = {ticks}"] + ([f"step_px = {step}"] if step else []) + [""]
     open(path, "w").write("\n".join(lines))
 
 
@@ -640,7 +642,7 @@ def post(vid, mod, layer="body"):
         if a[0, :, 3].any() or a[-1, :, 3].any() or a[:, 0, 3].any() or a[:, -1, 3].any():
             print(f"WARNING {layer} frame {f}: art touches the canvas edge (cropped?)")
     sheet = C.pack_sheet(frames, C.sheet_cols(len(frames)), cv, cv)   # D-276: roughly square
-    outdir = os.path.join(C.ROOT, "data", "sprites", "vehicles") if layer != "baked" else os.path.join(C.PILOT, "baked")   # reference only, not a game asset
+    outdir = OUT_DIR or (os.path.join(C.ROOT, "data", "sprites", "vehicles") if layer != "baked" else os.path.join(C.PILOT, "baked"))   # baked: reference only, not a game asset
     os.makedirs(outdir, exist_ok=True)
     name = vid if layer == "body" else f"{vid}_{layer}"
     sheet.save(os.path.join(outdir, f"{name}.png"))
@@ -660,10 +662,12 @@ def main():
     ap.add_argument("--post-only", action="store_true")
     ap.add_argument("--preview", action="store_true", help="colour-only half-res frames to work/veh_<id>/prev_XX.png")
     ap.add_argument("--layers", nargs="*", default=None, help="only these layers (default: the module's LAYERS, else body)")
+    ap.add_argument("--out", default=None, help="output folder for <id>.png / <id>.sprite.toml (default: data/sprites/vehicles)")
     ap.add_argument("--px-cell", type=int, default=C.UNIT_PX, help="sheet pixels per map cell (D-275: 80 for units; 64 = the old size)")
     a = ap.parse_args()
-    global PX
+    global PX, OUT_DIR
     PX = a.px_cell
+    OUT_DIR = a.out
     mod = load_module(a.id)
     for layer in (a.layers or layers_of(mod)):
         if not a.post_only:

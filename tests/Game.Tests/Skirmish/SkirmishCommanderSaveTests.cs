@@ -47,7 +47,7 @@ public sealed class SkirmishCommanderSaveTests
     [Fact]
     public void Current_header_version_is_eight()
     {
-        Assert.Equal(9, GameSaveHeader.CurrentVersion);   // M12-13b added the stamps byte (version 9); M7-14 added the ocean byte, M12-05 the generator layout byte, D-205 the control groups, S19 D-205 the slot options (version 8); version 4 is still read
+        Assert.Equal(10, GameSaveHeader.CurrentVersion);   // QOL-07 (D-313) added the match rules (version 10); M12-13b added the stamps byte (version 9); M7-14 added the ocean byte, M12-05 the generator layout byte, D-205 the control groups, S19 D-205 the slot options (version 8); version 4 is still read
     }
 
     [Fact]
@@ -55,7 +55,7 @@ public sealed class SkirmishCommanderSaveTests
     {
         SkirmishSettings s = FourSlot();
         GameSaveHeader back = Read(Bytes(WithSettings(s)), GameSaveHeader.CurrentVersion);
-        Assert.Equal(9, back.Version);
+        Assert.Equal(10, back.Version);
         Assert.Equal(s, back.Skirmish);
         Assert.False(back.Skirmish!.Slots[0].Commander);
         Assert.True(back.Skirmish.Slots[1].Commander);

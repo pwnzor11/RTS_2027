@@ -94,7 +94,9 @@ public sealed class TheaterTests
     [InlineData("ash_plains")]
     public void ShippedPaletteIsVariantCAndRustBeltAliasesAgree(string file)
     {
-        string Body(string path) => string.Join("\n", File.ReadAllText(RepoFile(path)).Replace("\r\n", "\n").Split('\n').Skip(2));
+        // S43: the shipped file may add a [detail] table (the terrain detail pass); everything else is still variant C.
+        string Body(string path) => System.Text.RegularExpressions.Regex.Replace(
+            string.Join("\n", File.ReadAllText(RepoFile(path)).Replace("\r\n", "\n").Split('\n').Skip(2)), @"\[detail\]\n(?:[^\n]*\n)*?level = \d\n\n", "");
         Assert.Equal(Body($"data/theaters/variants/c/{file}.toml"), Body($"data/theaters/{file}.toml"));
 
         Assert.Same(TerrainPalette.Load("rustbelt"), TerrainPalette.Load("rust_belt"));
@@ -126,9 +128,10 @@ public sealed class TheaterTests
                     r += baked.Rgba[o]; g += baked.Rgba[o + 1]; bl += baked.Rgba[o + 2]; n++;
                 }
 
-            Assert.InRange(Math.Abs(r / n - mini.R), 0, 22);
-            Assert.InRange(Math.Abs(g / n - mini.G), 0, 22);
-            Assert.InRange(Math.Abs(bl / n - mini.B), 0, 22);
+            // S43: detail-pass features (snow, pebbles, drifts) shift a cell's mean a little, so 26 (was 22).
+            Assert.InRange(Math.Abs(r / n - mini.R), 0, 26);
+            Assert.InRange(Math.Abs(g / n - mini.G), 0, 26);
+            Assert.InRange(Math.Abs(bl / n - mini.B), 0, 26);
         }
     }
 

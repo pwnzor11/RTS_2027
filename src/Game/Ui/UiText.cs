@@ -126,6 +126,12 @@ public static class UiText
     /// <summary>M13-15: card button and toast name of the hold-fire stance.</summary>
     public const string StanceHoldFire = "ui.stance.hold_fire";
 
+    /// <summary>QOL-17: toast when the auto type-groups toggle changes. Placeholder: <c>{state}</c> (on / off).</summary>
+    public const string AutoTypeGroupsToast = "ui.groups.auto_toast";
+
+    /// <summary>QOL-05: toast when the production-building key finds none.</summary>
+    public const string NoProductionBuilding = "ui.production.none";
+
     /// <summary>M13-15: skirmish setup, caption of the button that cycles a slot's handicap (50, 75, 100 percent of production speed and income).</summary>
     public const string OptHandicapButton = "ui.setup.handicap";
 
@@ -179,6 +185,8 @@ public static class UiText
         [StanceAggressive] = "Aggro",
         [StanceDefensive] = "Defend",
         [StanceHoldFire] = "Hold",
+        [AutoTypeGroupsToast] = "Control groups by type {state}",
+        [NoProductionBuilding] = "No production building",
         [OptHandicapButton] = "HC",
         [OptCreditsButton] = "Cash",
         [OptStartButton] = "Army",

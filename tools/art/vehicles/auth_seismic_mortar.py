@@ -7,19 +7,30 @@ Layers: body (hull + whole-vehicle shadow) + turret (mount and tube).  House pai
 """
 import math
 
+import os, sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import mot_track as MT
+
 ID = "auth_seismic_mortar"
 TITLE = "Authority seismic mortar"
 CANVAS = 128
 TARGET = (0.0, 0.0, 1.4)
-STATES = [("idle", 16, 1, 1)]
+STATES = [("idle", 16, 1, 1), ("move", 16, 4, 1)]
+# "move": 4 frames per facing, track links one pitch per 4 frames, road-wheel bolts roll (auth_tank.py). Idle = move frame 0.
+LOOP = MT.Loop(yc=-0.05, h=1.55, r=0.43, zc=0.44)    # idlers at y 1.5 / -1.6, idler radius 0.42
+STEP_PX = {"move": LOOP.step_px()}
 LAYERS = ["body", "turret"]
 PIVOT = (0.0, -0.2, 1.55)     # = top of the mount collar
 MOUNT = dict(deck_z=1.4, r_lip=0.72, r_well=0.0, r_shadow=0.85, shadow_z=1.5, soft_r=0.8, lip="hull2")
 
 
+MATERIALS = {"link": MT.LINK}
+
+
 def build(S, state, k, n):
     box, cyl, sph = S.box, S.cyl, S.sphere
     S.begin("body")
+    move = state in ("idle", "move")
     # ---- tracks
     for s, side in ((-1, "L"), (1, "R")):
         x = s * 1.1
@@ -30,6 +41,10 @@ def build(S, state, k, n):
             y = -1.35 + i * 0.54
             cyl(f"wh{side}{i}", 0.28, 0.1, (x + s * 0.34, y, 0.4), "steel", "X", 14)
             cyl(f"hb{side}{i}", 0.1, 0.08, (x + s * 0.4, y, 0.4), "rust", "X", 8)
+            if move:
+                MT.bolts(S, f"bolt{side}{i}", x + s * 0.39, y, 0.4, 0.28, k)
+        if move:
+            MT.links(S, f"link{side}", x, LOOP, 0.62, k)
         box("skirt" + side, (0.08, 3.2, 0.32), (x + s * 0.36, -0.05, 0.88), "hull2", 0.03)
     # ---- hull
     box("hull", (2.0, 3.3, 0.6), (0, -0.05, 0.95), "hull", 0.1)

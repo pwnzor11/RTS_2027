@@ -33,7 +33,7 @@ ORIGIN = (0, 56)
 DOCK = (1, 3)
 CAP_MATERIAL = "concrete2"
 HOUSE2_MID = True        # D-072: roof house2 panels pinned to mid ramp shades (structpost)
-STATES = [("idle", 4, 5), ("damaged", 4, 5), ("build", 8, 5)]
+STATES = [("idle", 8, 2), ("damaged", 8, 2), ("build", 8, 5)]     # 8-frame loops at tpf 2 (0.4 s a frame)
 
 MATERIALS = dict(R.MATERIALS)
 MATERIALS.update({
@@ -276,7 +276,7 @@ WALL_H = 3.5
 ROOF_T = 0.22
 Z_ROOF = WALL_H + ROOF_T
 GANTRY_Y = -3.0
-SWAY = [0.0, 0.4, 0.0, -0.4]
+SWAY = [round(0.4 * math.sin(2 * math.pi * k / 8), 4) for k in range(8)]     # hook sway, one swing per 8-frame loop
 
 
 def finished(S, i, dmg, mode):
@@ -378,7 +378,7 @@ def finished(S, i, dmg, mode):
             z += 1.3
         S.bb("dish", mx - 0.5, mx + 0.5, my - 0.08, my + 0.08, Z_ROOF + 1.3, Z_ROOF + 1.8, "white", 0.03)
         S.bb("mastbase", mx - 0.4, mx + 0.4, my - 0.4, my + 0.4, Z_ROOF, Z_ROOF + 0.3, "concrete2", 0.04)
-        lit = idle and i in (0, 1)
+        lit = idle and i % 4 < 2
         S.bb("mastlamp", mx - 0.12, mx + 0.12, my - 0.12, my + 0.12, Z_ROOF + 2.0, Z_ROOF + 2.25, "red" if lit else "dark", 0.0)
     # ---- command flag area: pole on the east pad strip, big house flag
     S.cyl("pole", 0.06, 4.4, (4.65, -0.2, 2.35), "steel", verts=8)
@@ -400,7 +400,7 @@ def finished(S, i, dmg, mode):
     if dmg:     # the bridge beam has slumped: west end still on its leg, east end resting on the stump / bay floor
         beam(S, "gbeam", (-4.3, GANTRY_Y, 3.45), (4.0, GANTRY_Y - 0.25, 1.4), 0.34, "yellow")
         beam(S, "gbeam2", (-4.3, GANTRY_Y - 0.3, 3.45), (4.0, GANTRY_Y - 0.5, 1.45), 0.12, "steel")
-        sw = SWAY[i % 4] * 0.4 if idle else 0.0
+        sw = SWAY[i % 8] * 0.4 if idle else 0.0
         beam(S, "gcable", (0.0, GANTRY_Y, 2.5), (1.6 + sw, -3.6, 0.3), 0.04, "dark")
         S.bb("ghook", 1.45 + sw, 1.75 + sw, -3.75, -3.45, 0.14, 0.42, "dark", 0.0)
     else:
@@ -408,7 +408,7 @@ def finished(S, i, dmg, mode):
         S.bb("gbeamd", -4.5, 4.5, gy0 - 0.03, gy0, 3.35, 3.5, "dark", 0.0, nocast=True)
         tx = 0.7
         S.bb("trolley", tx - 0.45, tx + 0.45, GANTRY_Y - 0.28, GANTRY_Y + 0.28, 3.58, 3.88, "steel", 0.03)
-        hx_ = tx + SWAY[i % 4] if idle else tx
+        hx_ = tx + SWAY[i % 8] if idle else tx
         beam(S, "cable", (tx, GANTRY_Y, 3.58), (hx_, GANTRY_Y, 2.3), 0.04, "dark")
         S.bb("hook", hx_ - 0.13, hx_ + 0.13, GANTRY_Y - 0.13, GANTRY_Y + 0.13, 2.1, 2.34, "dark", 0.0)
         S.bb("load", hx_ - 0.75, hx_ + 0.75, GANTRY_Y - 0.06, GANTRY_Y + 0.06, 1.15, 2.1, "panel", 0.02)

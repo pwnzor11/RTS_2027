@@ -137,6 +137,25 @@ public class UdpTransportTests
     }
 
     [Fact]
+    public void AHostSideTimeoutTellsTheDroppedClient()
+    {
+        using var host = UdpTransport.Host(0, 300, IPAddress.Loopback);
+        using var client = Join(host, "Zed");
+        int pending = 0;
+        Assert.True(Pump(() => host.TryReceive(out pending, out _), host, client));
+        Assert.True(host.Accept(pending, 1));
+        host.Send(1, new NetMessage.Welcome(1));
+        Assert.True(Pump(() => client.LocalPeer == 1, host, client));
+        while (host.TryGetEvent(out _)) { }
+        while (client.TryGetEvent(out _)) { }
+
+        // The client stalls (laptop sleep): only the host polls, so it drops the silent peer.
+        Assert.True(Pump(() => host.TryGetEvent(out PeerEvent ev) && ev is { Peer: 1, Connected: false, Reason: "timeout" }, host));
+        // When the client wakes up it must be told, not left on a frozen screen (NETLLM-06).
+        Assert.True(Pump(() => client.TryGetEvent(out PeerEvent ev) && ev is { Peer: 0, Connected: false }, host, client));
+    }
+
+    [Fact]
     public void GarbageDatagramsDoNotCreatePeersOrThrow()
     {
         using var host = UdpTransport.Host(0, 5_000, IPAddress.Loopback);

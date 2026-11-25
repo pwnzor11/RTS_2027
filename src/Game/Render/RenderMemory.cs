@@ -23,15 +23,22 @@ public sealed class RenderMemory
     private Dictionary<EntityId, int> _built = new();
     private Dictionary<UnitKey, LeptonCoord> _positions = new();
     private HashSet<UnitKey> _moving = new();
+    private Dictionary<UnitKey, long> _travel = new();
+    // Spare collections: each tick the new state is built in these and swapped in, so the observer allocates nothing once warm.
+    private Dictionary<EntityId, int> _builtSpare = new();
+    private Dictionary<UnitKey, LeptonCoord> _positionsSpare = new();
+    private HashSet<UnitKey> _movingSpare = new();
+    private Dictionary<UnitKey, long> _travelSpare = new();
 
     /// <summary>Forgets everything: the next snapshot is treated as the first of a new game, so its buildings count as already built.</summary>
     public void Reset()
     {
         _started = false;
         _tick = 0;
-        _built = new Dictionary<EntityId, int>();
-        _positions = new Dictionary<UnitKey, LeptonCoord>();
-        _moving = new HashSet<UnitKey>();
+        _built.Clear();
+        _positions.Clear();
+        _moving.Clear();
+        _travel.Clear();
     }
 
     /// <summary>Records a snapshot. Does nothing when it has the same tick as the last one recorded.</summary>
@@ -42,26 +49,47 @@ public sealed class RenderMemory
         if (_started && snapshot.Tick == _tick) return;
         if (_started && snapshot.Tick < _tick) Reset();   // S18 GAMEREND-01: time ran backwards, so this is a new game
 
-        var built = new Dictionary<EntityId, int>();
-        foreach (BuildingView building in snapshot.Buildings)
+        Dictionary<EntityId, int> built = _builtSpare;
+        built.Clear();
+        IReadOnlyList<BuildingView> lstBuilding = snapshot.Buildings;
+        for (int iBuildingIx = 0; iBuildingIx < lstBuilding.Count; iBuildingIx++)
         {
+            BuildingView building = lstBuilding[iBuildingIx];
             // Ghosts are remembered too, so an enemy building that drops back under fog does not rebuild on screen.
             if (_built.TryGetValue(building.Id, out int first)) built[building.Id] = first;
             else built[building.Id] = _started ? snapshot.Tick : Settled;
         }
 
-        var positions = new Dictionary<UnitKey, LeptonCoord>();
-        var moving = new HashSet<UnitKey>();
-        foreach (UnitView unit in snapshot.Units)
+        Dictionary<UnitKey, LeptonCoord> positions = _positionsSpare;
+        HashSet<UnitKey> moving = _movingSpare;
+        Dictionary<UnitKey, long> travel = _travelSpare;
+        positions.Clear();
+        moving.Clear();
+        travel.Clear();
+        IReadOnlyList<UnitView> lstUnit = snapshot.Units;
+        for (int iUnitIx = 0; iUnitIx < lstUnit.Count; iUnitIx++)
         {
+            UnitView unit = lstUnit[iUnitIx];
             UnitKey key = UnitKey.Of(unit);
             positions[key] = unit.Position;
-            if (_positions.TryGetValue(key, out LeptonCoord before) && before != unit.Position) moving.Add(key);
+            _travel.TryGetValue(key, out long walked);
+            if (_positions.TryGetValue(key, out LeptonCoord before) && before != unit.Position)
+            {
+                moving.Add(key);
+                long dx = unit.Position.X - before.X, dy = unit.Position.Y - before.Y;
+                walked += (long)Math.Round(Math.Sqrt((double)(dx * dx + dy * dy)));   // look only: float is fine outside src/Sim
+            }
+            travel[key] = walked;
         }
 
+        _builtSpare = _built;
+        _positionsSpare = _positions;
+        _movingSpare = _moving;
+        _travelSpare = _travel;
         _built = built;
         _positions = positions;
         _moving = moving;
+        _travel = travel;
         _tick = snapshot.Tick;
         _started = true;
     }
@@ -75,4 +103,9 @@ public sealed class RenderMemory
     /// <summary>Whether the unit's position changed since the previous snapshot.</summary>
     /// <param name="key">Unit key.</param>
     public bool IsMoving(UnitKey key) => _moving.Contains(key);
+
+    /// <summary>Total distance in leptons the unit has moved since the renderer first saw it (a teleport counts as a long step; only the
+    /// frame phase of the <c>move</c> animation depends on it). 0 for an unknown unit.</summary>
+    /// <param name="key">Unit key.</param>
+    public long Travel(UnitKey key) => _travel.TryGetValue(key, out long t) ? t : 0;
 }

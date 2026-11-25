@@ -4,7 +4,7 @@ The read is a SUNK ROUND EMPLACEMENT: a low umber concrete collar with bone / ox
 around a dark pit, and in the middle a squat pedestal carrying a cradle with four rockets tilted steeply up and slightly north
 (bone body, oxide warhead rings, a glowing ember at each tail).  A magenta house plate on the pedestal, an ember vent stub and an
 ammunition crate on the pad.  Static (fixed mount, per the rules: no turret given); only the tail embers and a lamp animate.
-Idle loop: tail embers flicker, the lamp blinks.  Damage is structural only (D-069): the cradle has slumped over, two rockets
+Idle loop (8 frames): tail embers flicker, the lamp blinks.  Damaged: the pad vent ember flickers.  Damage is structural only (D-069): the cradle has slumped over, two rockets
 are gone / snapped, sandbags burst and scattered, a scorch on the pit wall; fire / smoke are FX anchors.
 Contract: see auth_refinery.py.  Units: 3.4 per cell, x east, y NORTH, z up, footprint centred on (0, 0): x, y in [-1.7, 1.7].
 """
@@ -27,7 +27,7 @@ DOCK = (0, 1)
 CAP_MATERIAL = D.CAP_MATERIAL
 HOUSE2_MID = True
 PALETTE = D.PALETTE
-STATES = [("idle", 4, 5), ("damaged", 4, 5), ("build", 8, 5)]
+STATES = [("idle", 8, 2), ("damaged", 8, 2), ("build", 8, 5)]     # idle/damaged: 8-frame loops at tpf 2 (S43 fan)
 MATERIALS = DD.MATERIALS
 SOOT_SKIN = DD.SOOT_SKIN
 PRIMER_SKIN = DD.PRIMER_SKIN
@@ -60,7 +60,7 @@ def rack(S, i, dmg, idle):
         p3(S, f"rkb{k}", (0.2, 0.12, 0.2), base, (rx, 0.55, ru), "oxide", pitch, th, 0.0, nocast=True)
         p3(S, f"rkn{k}", (0.17, 0.3, 0.17), base, (rx, 1.52, ru), "oxide", pitch, th, 0.05)
         p3(S, f"rkt{k}", (0.1, 0.1, 0.1), base, (rx, 1.7, ru), "dark", pitch, th, 0.0, nocast=True)
-        on = idle and ((k + i) % 3 != 0) and not dmg
+        on = idle and ((k + i) % 4 != 0) and not dmg
         p3(S, f"glow{k}", (0.15, 0.1, 0.15), base, (rx, 0.0, ru), "redglow" if on else "oxide2", pitch, th, 0.0, nocast=True)
     if dmg:
         S.box("rkfall", (0.2, 1.1, 0.2), (0.95, -1.0 * S.YS, 0.35), "bone", 0.03, rot=(0, 0, 40), stretch=False)
@@ -90,7 +90,7 @@ def finished(S, i, dmg, mode):
     # ember vent stub and crate in the pad corners
     S.cyl("vstub", 0.16, 0.3, (1.3, -1.15, 0.29), "hull2", verts=10)
     S.cyl("vstubh", 0.22, 0.06, (1.3, -1.15, 0.45), "steel", verts=10)
-    S.cyl("glowv", 0.12, 0.04, (1.3, -1.15, 0.49), "oxide2" if dmg else "redglow", verts=8, nocast=True)
+    S.cyl("glowv", 0.12, 0.04, (1.3, -1.15, 0.49), ("redglow" if i % 4 < 2 else "oxide2") if dmg else "redglow", verts=8, nocast=True)
     S.bb("crate", -1.62, -1.2, -1.5, -1.12, 0.14, 0.45, "crate", 0.03)
     S.bb("crateb", -1.6, -1.22, -1.52, -1.5, 0.28, 0.36, "oxide", 0.0, nocast=True)
     S.bb("lampp", 1.4 - 0.04, 1.4 + 0.04, 1.3 - 0.04, 1.3 + 0.04, 0.14, 0.7, "steel", 0.0)

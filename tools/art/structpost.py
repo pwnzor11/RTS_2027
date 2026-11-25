@@ -61,7 +61,7 @@ def load_layers(wd, f, cal):
     return dict(rgb=c[..., :3], a=a, house=house, idx=idx, shadow=sh, rad=rad & ~house)
 
 
-def frame_b(wd, f, cal, w, h, pal=None, shadow=True, depth=None):
+def frame_b(wd, f, cal, w, h, pal=None, shadow=True, depth=None, style=None):
     pal = C.PAL if pal is None else pal
     L = load_layers(wd, f, cal)
     base, A, hfrac, hidx, sh = C.downscale_layers(L, h)   # k = (h*SS)//h = SS
@@ -76,6 +76,8 @@ def frame_b(wd, f, cal, w, h, pal=None, shadow=True, depth=None):
     solid = A >= 0.5
     if depth:
         base, hidx, sh = depth_pass(base, hidx, sh, solid, depth)
+    if style:        # S43 infantry readability pass (see infantry_style); default None leaves every other caller untouched
+        base, hidx = infantry_style(base, hidx, hfrac, solid, style)
     out = np.zeros((h, w, 4), dtype=np.uint8)
     ys, xs = np.nonzero(solid)
     q = P.quantise(base[ys, xs], pal)
@@ -99,7 +101,79 @@ def frame_b(wd, f, cal, w, h, pal=None, shadow=True, depth=None):
     if shadow:
         shadowm = (~solid) & (~edge) & ((sh > 0.55) | ((sh > 0.25) & chk))
         out[shadowm] = (*pal[1], 255)
+    if style and style.get("flash") is not None:
+        stamp_flash(out, L, h, w, k, pal, style["flash"])
     return Image.fromarray(out, "RGBA")
+
+
+def _nb(a, dy, dx, fill):
+    """out[y, x] = a[y + dy, x + dx], outside = fill."""
+    h, w = a.shape[:2]
+    o = np.full_like(a, fill)
+    ys0, ys1 = max(0, -dy), min(h, h - dy)
+    xs0, xs1 = max(0, -dx), min(w, w - dx)
+    o[ys0:ys1, xs0:xs1] = a[ys0 + dy:ys1 + dy, xs0 + dx:xs1 + dx]
+    return o
+
+
+def infantry_style(base, hidx, hfrac, solid, st):
+    """S43 infantry options (all inside design 18 sec. 7: the sun stays upper-left, alpha stays 0/255).
+    st["contrast"]  stretch of the body colours around mid grey (default 1.12 is already in frame_b; this is applied on top)
+    st["keyline"]   dark 1 px line on the non-house pixels that touch a house pixel (the panels stop melting into the coat)
+    st["rim"]       1 px lit rim on the upper-left edge of the silhouette (house pixels step up one ramp shade)"""
+    base = base.copy()
+    hidx = hidx.copy()
+    hp = solid & (hfrac >= 0.5)
+    if st.get("contrast"):
+        base = np.clip((base - 128) * st["contrast"] + 128, 0, 255)
+    if st.get("rim"):
+        lit = solid & (~_nb(solid, -1, 0, False) | ~_nb(solid, 0, -1, False))
+        base[lit & ~hp] = np.clip(base[lit & ~hp] * 1.35 + 26, 0, 255)
+        hidx = np.where(lit & hp, np.minimum(hidx + 1, 7), hidx)
+    if st.get("keyline"):
+        near = np.zeros_like(solid)
+        for dy, dx in ((-1, 0), (1, 0), (0, -1), (0, 1)):
+            near |= _nb(hp, dy, dx, False)
+        kl = near & solid & ~hp
+        base[kl] = base[kl] * 0.42
+    return base, hidx
+
+
+def stamp_flash(out, L, h, w, k, pal, mode):
+    """Muzzle flash pixel cluster: finds the rendered flash (bright emissive yellow) in the 4x colour layer, then draws a hard-edged
+    star (white core, pale-yellow body, gold tips) around its centre.  The colours are the nearest palette entries."""
+    rgb, a = L["rgb"], L["a"]
+    fm = (rgb[..., 0] > 240) & (rgb[..., 1] > 225) & (a > 0.8)
+    from scipy import ndimage
+    lab, nl = ndimage.label(fm)
+    if nl == 0:
+        return
+    big = 1 + int(np.argmax(ndimage.sum(fm, lab, range(1, nl + 1))))       # the flash is the biggest bright blob (goggle lenses are small)
+    ys, xs = np.nonzero(lab == big)
+    if len(ys) < 6:
+        return
+    cy, cx = int(round(ys.mean() / k)), int(round(xs.mean() / k))
+    want = [(255, 255, 240), (255, 214, 90), (214, 120, 36)]
+    ok = [c for c in pal if tuple(c) not in C.RAD_SET]          # the radiation greens must never show up in a muzzle flash
+    pa = np.array(ok, dtype=float)
+    col = [tuple(ok[int(((pa - np.array(c)) ** 2).sum(axis=1).argmin())]) for c in want]
+    core, body, tip = col
+    rays = [(1, 0, 5), (-1, 0, 5), (0, 1, 4), (0, -1, 4), (1, 1, 3), (-1, -1, 3), (1, -1, 3), (-1, 1, 3)]
+    def put(y, x, c):
+        if 0 <= y < h and 0 <= x < w:
+            out[y, x] = (*c, 255)
+    for y, x in zip(ys // k, xs // k):
+        put(int(y), int(x), body)
+    for dx, dy, ln in rays:
+        ln += 2 if dx * dy == 0 else 1          # reach out past the rendered blob
+        for i in range(1, ln + 1):
+            put(cy + dy * i, cx + dx * i, body if i < ln else tip)
+            if i <= 2 and dx * dy == 0:                 # thicken the four main rays near the core
+                put(cy + dy * i + dx, cx + dx * i + dy, body)
+                put(cy + dy * i - dx, cx + dx * i - dy, body)
+    for dy in (-1, 0, 1):
+        for dx in (-1, 0, 1):
+            put(cy + dy, cx + dx, core if abs(dx) + abs(dy) < 2 else body)
 
 
 def depth_pass(base, hidx, sh, solid, ground_y):

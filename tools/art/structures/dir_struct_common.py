@@ -201,8 +201,9 @@ def ash_drift(S, specs):
         S.bb(f"ash{k}", ax_ - aw / 2, ax_ + aw / 2, ay_ - 0.3, ay_ + 0.3, 0.14, 0.17, "smoke", 0.0, nocast=True)
 
 
-def furnace_slits(S, x0, y, z0, z1, n, i, lit_on, step=0.55, w=0.3):
-    """Row of small ember slits in a wall facing south; they flicker with the frame index."""
+def furnace_slits(S, x0, y, z0, z1, n, i, lit_on, step=0.55, w=0.3, period=3):
+    """Row of small ember slits in a wall facing south; they flicker with the frame index.  period 4 (or 2) divides the 8-frame idle
+    loop evenly; the default 3 keeps the approved helpers' output unchanged."""
     for k in range(n):
-        lit = lit_on and ((k + i) % 3 != 0)
+        lit = lit_on and ((k + i) % period != 0)
         S.bb(f"glow{k}", x0 + k * step, x0 + k * step + w, y, y + 0.1, z0, z1, "redglow" if lit else "oxide2", 0.0, nocast=True)

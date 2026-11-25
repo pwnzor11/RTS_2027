@@ -37,9 +37,17 @@ public sealed class PlayerStore : ISimStatePart
             HandicapPercent[p] = h;
             if (h != SimSetup.DefaultHandicap) _hasHandicap = true;
         }
+        if (setup.SuperweaponLimit < SimSetup.NoSuperweaponLimit || setup.SuperweaponLimit > SimSetup.MaxSuperweaponLimit)
+            throw new ArgumentException($"Superweapon limit must be {SimSetup.NoSuperweaponLimit} to {SimSetup.MaxSuperweaponLimit}.", nameof(setup));
+        _superweaponLimit = setup.SuperweaponLimit; _revealMap = setup.RevealMap;
     }
 
     private readonly bool _hasHandicap;
+    // QOL-07 (D-313): the match rules (from the setup; constant). Written only when one is off its default, so other games keep their bytes.
+    private readonly int _superweaponLimit;
+    private readonly bool _revealMap;
+
+    private bool HasMatchRules => _revealMap || _superweaponLimit != SimSetup.NoSuperweaponLimit;
 
     public string Name => "players";
     public int Count { get; }
@@ -73,6 +81,7 @@ public sealed class PlayerStore : ISimStatePart
         }
         for (int p = 0; p < Count; p++) { w.Write((byte)Faction[p]); w.Write(Upgrades[p]); }   // M3-01, appended
         if (_hasHandicap) for (int p = 0; p < Count; p++) w.Write(HandicapPercent[p]);   // S19 (M13-15): only when on, so other games keep their bytes
+        if (HasMatchRules) { w.Write(_superweaponLimit); w.Write(_revealMap); }   // QOL-07 (D-313): only when set, so other games keep their bytes
     }
 
     public void Read(BinaryReader r)
@@ -94,5 +103,6 @@ public sealed class PlayerStore : ISimStatePart
         if (_hasHandicap)
             for (int p = 0; p < Count; p++)
                 if (r.ReadInt32() != HandicapPercent[p]) throw new InvalidDataException("players handicap mismatch.");
+        if (HasMatchRules && (r.ReadInt32() != _superweaponLimit || r.ReadBoolean() != _revealMap)) throw new InvalidDataException("players match rules mismatch.");
     }
 }

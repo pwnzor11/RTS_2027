@@ -23,7 +23,7 @@ DOCK = (1, 2)
 CAP_MATERIAL = "pad2"
 PALETTE = K.PALETTE
 MATERIALS = K.MATERIALS
-STATES = [("idle", 4, 5), ("damaged", 4, 5), ("build", 8, 5)]
+STATES = [("idle", 8, 2), ("damaged", 8, 2), ("build", 8, 5)]     # session 43: 8-frame loops at tpf 2 (owner choice)
 FX = [
     K.fx(FOOTPRINT, ORIGIN, "damaged", "fire_large", -1.2, 0.8, 1.9, 0),
     K.fx(FOOTPRINT, ORIGIN, "damaged", "smoke_plume", -1.2, 0.8, 2.2, 0),
@@ -78,7 +78,7 @@ def g_gantry(S, dmg, i):
         S.bb("skirtfall", cx + 0.8, cx + 1.8, -0.4, 0.3, 0.12, 0.5, "rubber", 0.1) if False else None
     else:
         K.beam(S, "gb", (cx - 1.0, 1.2, 3.0), (cx + 1.0, 1.2, 3.0), 0.16, "copper")
-        sw = 0.2 * math.sin(i * math.pi / 2)
+        sw = 0.2 * math.sin(i * math.pi / 4)     # gantry hook: one full swing cycle per 8-frame loop
         K.beam(S, "cab", (cx + sw * 0.2, 1.2, 2.95), (cx + sw, 1.2, 1.8), 0.04, "dark", nocast=True)
         S.cyl("skirtring", 0.45, 0.3, (cx + sw, 1.2, 1.55), "dark", verts=16)
         S.cyl("skirtband", 0.47, 0.06, (cx + sw, 1.2, 1.45), "ash", verts=16)
@@ -97,6 +97,8 @@ def site(S):
 def dmg_extra(S, i):
     S.bb("scorch1", -3.0, -1.0, 0.4, 1.8, 2.15, 2.17, "char", 0.0, nocast=True)
     S.bb("scorch2", 2.6, 4.4, -1.4, 0.0, 0.12, 0.14, "char", 0.0, nocast=True)
+    if i in (2, 6):         # fallen gantry arm sparks
+        S.sphere("gspark", 0.08, (3.6, 0.5, 0.7), "spark")
 
 
 def build(S, state, i, n):

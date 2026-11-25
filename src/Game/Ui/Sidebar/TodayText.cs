@@ -13,7 +13,7 @@ public static class TodayText
     {
         ["exp_minelayer"] = "Unarmed sea hull. It cannot lay mines yet.",
         ["exp_diver"] = "Plants charges on ships and quays from the shore. It cannot swim yet.",
-        ["exp_drydock"] = "Unlocks the Cruiser, Carrier and Command Ship. It does not build or repair ships itself yet.",
+        ["exp_drydock"] = "Unlocks the Cruiser and Carrier. It does not build or repair ships itself yet.",
         ["exp_destroyer"] = "Gun warship that detects submarines. It has no depth charge yet.",
         ["lb_harpoon_wagon"] = "Anti-armour harpoon gun. It does not tether or slow targets yet.",
     };
@@ -25,7 +25,7 @@ public static class TodayText
         ["lb_up_quick_pack"] = new[] { "Rigs pack 40% faster." },
         ["lb_up_grapple"] = new[] { "Hook Runners plunder x1.5, up to the 1000 credit limit.", "They cannot breach walls yet." },
         ["lb_up_salvage_rights"] = new[] { "Salvage crews drain a wreck 1.5x faster.", "The wreck's value is unchanged." },
-        ["exp_up_sonar_nets"] = new[] { "Pickets see 2 cells further." },
+        ["exp_up_sonar_nets"] = new[] { "Pickets see and listen 2 cells further." },
     };
 
     /// <summary>The one-line tooltip text for a unit or building that has an entry here, else null (use the Archive subtitle).</summary>

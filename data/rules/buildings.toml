@@ -892,7 +892,7 @@ superweapon_entrance_range = 0  # session 9: Left Behind has no entrance buildin
 # M7-08: Expedition structures (docs/design/07_expedition.md §4-5, 13_supply_cap §2.3, 11_m7_plan §2.3, D-087, D-124, D-140).
 # The faction is NOT playable yet. Every number is (tune), assumed -- confirm (docs/balance/m7_08_expedition_data.md).
 # Tier gates: exp_plotting_room provides exp_tier2 (needs the Hover Yard), exp_core_hall provides exp_tier3 (needs the Plotting Room).
-# Water buildings (quay, anchorage, shipyard, drydock) carry a row-major footprint `water` mask (1 = water cell) so they straddle the shore.
+# Water buildings (quay, anchorage, shipyard, drydock) are placed with every footprint cell on water and the footprint touching land (Beachhead.cs), so they straddle the shore.
 # Dropped on purpose (landlocked rule, 11 §2.5): exp_airhead. Beachhead sources: depot 10, quay and shipyard 8, beacon 6 cells.
 # TODO M7-04: ships are produced from the shared "vehicle" lane (hover yard, quay, shipyard); see the note at the top of the Expedition block in vehicles.toml.
 
@@ -1011,7 +1011,7 @@ prerequisites = ["exp_dredge_works"]
 provides = []
 produces = "vehicle"
 
-[exp_quay]   # small naval yard: patrol launches and landing craft; straddles the shoreline (row 0 land, row 1 water)
+[exp_quay]   # small naval yard: patrol launches and landing craft; straddles the shoreline (placed on water, touching land)
 faction = "expedition"
 tier = 1
 footprint_w = 3
@@ -1094,7 +1094,7 @@ prerequisites = ["exp_hover_yard"]
 provides = ["exp_tier2"]
 researches = true
 
-[exp_shipyard]   # warships; straddles the shoreline (bottom row water)
+[exp_shipyard]   # warships; straddles the shoreline
 faction = "expedition"
 tier = 2
 footprint_w = 3
@@ -1191,7 +1191,7 @@ prerequisites = ["exp_plotting_room"]
 provides = ["exp_tier3"]
 researches = true
 
-[exp_drydock]   # heavy ships and repairs; straddles the shoreline (bottom row water)
+[exp_drydock]   # heavy ships and repairs; straddles the shoreline
 faction = "expedition"
 tier = 3
 footprint_w = 4

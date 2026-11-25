@@ -1,0 +1,10 @@
+# s43 decisions (owner answers, 2026-11-24) — to go into DECISIONS.md at wrap-up
+- D-310 Q-88 (a): finish line met; balance frozen. (already written)
+- D-311 Owner: take all audit recommendations for items 1-19 (s43 audit README §2): sim fixes (tunnel double surface, stuck-underground resurface at entrance, garrison/dived spared from radiation + superweapon, capture resets charge, production pauses without prereq, Second Drift storm non-lethal + no-build wired, Bore not a base, refused order keeps queue), AI (economy-stall rebuild, mop-up decoupled from respond_to_attacks, Directorate AntiAirId) with a cluster re-measure before landing, Sonar Nets extends sonar range, campaign edge reinforcements use safe spawn, campaign tech lists (auth_04 aircraft, Cistern, Tank Farm), LLM stale window follows timeout, Authority aircraft text (not speed), all stale text fixed to match data, superweapon button label + range, Repairing line.
+- D-312 Owner: update check off by default + "Check now" button (supersedes D-214's default).
+- D-313 Owner: build all 20 main QoL items from the s43 QoL list this session (opt-in ones stay opt-in).
+- D-314 Owner: sim spatial index later in its own session; render perf now.
+- Art pass: owner picked all four areas (buildings detail+idle anim, unit motion frames, infantry readability, terrain); pilots first.
+- D-315 Owner approved art pilots (s43): buildings = auth_power pilot look, 8-frame idle loop at ticks_per_frame 2 (0.4 s/frame, calmer); all 74 buildings get the detail pass and per-building idle animation in batches. Motion = 4-frame move state with distance stepping (step_px) for all 24 tracked/wheeled vehicles; idle re-rendered with move-frame-0 detail (no pop). Infantry = variant C (keyline + rim light), pilot boost values, 64 px frames, 8 walk frames, flash star, for all 22. Terrain = [detail] level 1 "rich" with cracks toned down; drop decor road/frost crack decals; then glass_coast, mountains, ash_plains.
+- Assumed (confirm): Second Drift no_build_threshold 24 (helper pick; storm cap 31 < damage_threshold 32).
+- Assumed (confirm): campaign edge reinforcements keep block depth (only occupancy fixed).

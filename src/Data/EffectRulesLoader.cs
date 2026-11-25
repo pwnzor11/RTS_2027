@@ -85,7 +85,7 @@ internal static class EffectRulesLoader
         "vet_threshold_permille", "harvest_capacity"];
 
     /// <summary>Attributes an effect may change on a building type.</summary>
-    public static readonly string[] BuildingAttrs = ["max_health", "sight", "power", "cost", "ticks_per_point", "superweapon_charge_ticks"];
+    public static readonly string[] BuildingAttrs = ["max_health", "sight", "power", "cost", "ticks_per_point", "superweapon_charge_ticks", "sonar_radius"];
 
     /// <summary>Target of a player-level effect (the upgrade's owner), simfu-3.</summary>
     public const string PlayerTarget = "class:player";

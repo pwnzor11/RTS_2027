@@ -14,6 +14,9 @@ public sealed record CardButton(CardButtonKind Kind, GameAction Action, string L
     /// <summary>True when the button shows a state that is on (the stance every selected unit shares, M13-15): drawn as an active button.</summary>
     public bool Active { get; init; }
 
+    /// <summary>False when the button cannot act for the current selection (Attack with no armed unit, GAMEUI-05): drawn disabled, clicks ignored.</summary>
+    public bool Enabled { get; init; } = true;
+
     /// <summary>The text drawn on the button: the label and the key.</summary>
     public string Text => KeyText.Length == 0 ? Label : Label + " " + KeyText;
 }

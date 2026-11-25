@@ -82,7 +82,7 @@ public sealed partial class Simulation
             {
                 if (!store.Slots.IsIndexAlive(i) || store.Health[i] <= 0) continue;
                 // ASSUMED (M3-05): underground actors (tunnel, burrowed, passenger) take no radiation damage; buildings take none.
-                if (IsUnderground(kind, i)) continue;
+                if (IsUnderground(kind, i) || ActorLayers.IsCarried(_tunnels.LayerOf(kind, i))) continue;   // D-311: garrisons are shielded too
                 int level = _ground.RadiationAt(store.Position[i].ToCell());
                 if (level < rr.DamageThreshold) continue;
                 SimRules r = RulesOf(store.Player[i]);

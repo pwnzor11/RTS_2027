@@ -532,6 +532,13 @@ attr = "sight"
 value = 1300
 
 [[effect]]
+id = "exp_fx_sonar_nets_picket_sonar"
+op = "mul"
+target = "exp_picket"
+attr = "sonar_radius"
+value = 1300
+
+[[effect]]
 id = "exp_fx_veteran_drill_marine"
 op = "mul"
 target = "exp_marine"

@@ -27,7 +27,7 @@ ORIGIN = (0, 64)
 DOCK = (1, 3)
 CAP_MATERIAL = "concrete2"
 HOUSE2_MID = True
-STATES = [("idle", 4, 5), ("damaged", 4, 5), ("build", 8, 5), ("active", 4, 3)]
+STATES = [("idle", 8, 2), ("damaged", 8, 2), ("build", 8, 5), ("active", 4, 3)]     # idle/damaged: 8-frame loops at tpf 2
 MATERIALS = dict(L.MATERIALS)
 MATERIALS.update({
     "steel2": ("#979EA3", dict(rough=0.4, metal=0.5)),
@@ -74,7 +74,7 @@ def finished(S, i, dmg, mode):
         S.bb(f"wf{k}", wx - 0.28, wx + 0.28, yf - 0.05, yf + 0.04, 0.85, 1.4, "dark", 0.0)
         if dmg and k in (4, 5):
             continue
-        lit = act or (idle and (k + i) % 3 != 0)
+        lit = act or (idle and (k + i) % 4 != 0)
         S.bb(f"win{k}", wx - 0.22, wx + 0.22, yf - 0.09, yf - 0.05, 0.9, 1.35, "amber" if lit else "amber_dim", 0.0, nocast=True)
     # door: heavy steel door, house panels, canopy
     dx = -1.0
@@ -121,7 +121,7 @@ def finished(S, i, dmg, mode):
     if not dmg:
         S.cyl("dishbase", 0.28, 0.4, (dxx, dyy, zr + 0.2), "concrete2", verts=10)
         S.cyl("dishmast", 0.1, 0.5, (dxx, dyy, zr + 0.6), "steel", verts=8)
-        ang = (i * 40 if not act else i * 90) % 360
+        ang = (i * 45 if not act else i * 90) % 360     # idle: the dish turns once per 8-frame loop; active keeps its 4-frame spin
         S.box("dishb", (1.5, 0.12, 1.0), (dxx, dyy * YS, zr + 1.05), "steel2", 0.02, rot=(-18, 0, ang), stretch=False)
         a = math.radians(ang)
         S.box("dishrim", (1.4, 0.08, 0.14), (dxx, dyy * YS, zr + 1.6), "white", 0.0, rot=(-18, 0, ang), stretch=False, nocast=True)
@@ -136,7 +136,7 @@ def finished(S, i, dmg, mode):
     px, py = 2.0, -0.1
     S.cyl("radbase", 0.2, 0.5, (px, py, UH + 0.45), "steel", verts=8)
     if not dmg:
-        ang = (i * 55) % 360 if idle else 0
+        ang = (i * 45) % 360 if idle else 0
         S.box("paddle", (0.7, 0.08, 0.45), (px, py * YS, UH + 0.95), "steel2", 0.0, rot=(0, 0, ang), stretch=False)
         S.box("paddlehouse", (0.3, 0.09, 0.2), (px, py * YS, UH + 0.95), "house", 0.0, rot=(0, 0, ang), stretch=False, nocast=True)
     # ---- lattice mast, north-east corner
@@ -155,7 +155,7 @@ def finished(S, i, dmg, mode):
         S.bb("xarm", mx - 0.9, mx + 0.9, my - 0.05, my + 0.05, MAST_H - 1.2, MAST_H - 1.1, "steel", 0.0)
         S.bb("xarm2", mx - 0.6, mx + 0.6, my - 0.05, my + 0.05, MAST_H - 2.3, MAST_H - 2.2, "steel", 0.0)
         S.bb("mastband", mx - 0.2, mx + 0.2, my - 0.2, my - 0.14, 3.0, 3.6, "house", 0.0, nocast=True)
-        on = (i % 2 == 0) if mode == "idle" else (i % 2 == 0 or i == 1)
+        on = (i % 4 < 2) if mode == "idle" else (i % 2 == 0 or i == 1)
         S.cyl("beacon", 0.16, 0.22, (mx, my, MAST_H + 0.12), "beacon" if on else "dark", verts=10, nocast=True)
         # guy wires to the roof
         L.beam(S, "guy", (mx, my, MAST_H - 1.0), (BX1 - 0.2, BY1 - 0.2, UH + 0.2), 0.03, "cable", nocast=True)
@@ -166,6 +166,8 @@ def finished(S, i, dmg, mode):
     else:
         L.beam(S, "mastsnap", (mx, my, 2.6), (mx - 1.6, my - 1.6, 0.4), 0.1, "steel")
         L.beam(S, "mastsnap2", (mx + 0.1, my, 2.6), (mx + 1.0, my - 1.8, 0.5), 0.07, "steel")
+        if i in (2, 6):                          # the snapped head arcs on two frames of the loop
+            L.spark(S, mx - 0.2, my, 2.6, i, 5)
     # ---- generator shed, drums, cable runs, sentry post
     S.bb("shed", 2.9, 4.5, -2.9, -1.5, 0.14, 1.2, "panel", 0.03)
     S.bb("shedroof", 2.8, 4.6, -3.0, -1.4, 1.2, 1.32, "roof", 0.03)

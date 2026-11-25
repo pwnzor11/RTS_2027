@@ -8,7 +8,7 @@ id = "exp_marine"
 category = "Unit"
 faction = "expedition"
 title = "Marine"
-subtitle = "Amphibious infantry"
+subtitle = "Landing infantry"
 field_note = "LANDING SECTION 1 // WADE, SECURE, HOLD THE BEACH. KEEP THE RADIO DRY. TELEX ENDS."
 body = '''
 A volunteer from the ports, issued a sealed rebreather, a gas-operated rifle and one of the few helmets that fits. The
@@ -22,11 +22,11 @@ id = "exp_pathfinder"
 category = "Unit"
 faction = "expedition"
 title = "Pathfinder"
-subtitle = "Spotter and designator"
+subtitle = "Shore spotter"
 field_note = "SPOTTER 3 // LASE THE TARGET, CALL THE FALL OF SHOT, THEN MOVE. TELEX ENDS."
 body = '''
 A Hydrographic Office surveyor trained to read a shoreline from a mile off. With a stabilised range finder and a
-shoulder radio, a Pathfinder turns an ordinary hillside into a firing table for the guns offshore.
+shoulder radio, a Pathfinder turns an ordinary hillside into a lookout post for the fleet.
 '''
 unlock = "campaign:exp_01" # M8-13 (tune)
 
@@ -228,9 +228,9 @@ category = "Unit"
 faction = "expedition"
 title = "Survey Hover"
 subtitle = "Fast reconnaissance craft"
-field_note = "SURVEY 4 // FIND THE RICH ASH, DRAW THE LINE, COME BACK. DO NOT STOP TO ADMIRE THE VIEW. TELEX ENDS."
+field_note = "SURVEY 4 // FIND THE GROUND, DRAW THE LINE, COME BACK. DO NOT STOP TO ADMIRE THE VIEW. TELEX ENDS."
 body = '''
-A light hover with a mast of sensors, a chart table and a crew of two who are never sure which of them is the navigator. It skims over ash fields and measures how thick the grey lies beneath the surface. Its readings decide where the skimmers go. The Survey Hover is cheap and quick, and it is the first thing to die when anything goes wrong.
+A light hover with a mast of sensors, a chart table and a crew of two who are never sure which of them is the navigator. It skims over ash fields and charts the ground it crosses. Its charts go back to the fleet. The Survey Hover is cheap and quick, and it is the first thing to die when anything goes wrong.
 '''
 unlock = "open"
 
@@ -242,7 +242,7 @@ title = "Patrol Launch"
 subtitle = "Light scout boat"
 field_note = "LAUNCH 6 // FAST, CHEAP, NOSY. SEE EVERYTHING, SURVIVE SOME OF IT. TELEX ENDS."
 body = '''
-A small diesel boat with a twin machine gun, a searchlight and a radio that works when it feels like it. Patrol Launches are the eyes of the fleet at the edge of the shallows. Their crews are young, quick and rude to the officers who sent them. They are fragile, but there are always more in the yard, and the Admiral prefers that to losing a destroyer.
+A small diesel boat with a searchlight, a rack of charges for hunting submarines and a radio that works when it feels like it. Patrol Launches are the eyes of the fleet at the edge of the shallows. Their crews are young, quick and rude to the officers who sent them. They are fragile, but there are always more in the yard, and the Admiral prefers that to losing a destroyer.
 '''
 unlock = "open"
 
@@ -289,10 +289,10 @@ id = "exp_gyro"
 category = "Unit"
 faction = "expedition"
 title = "Gyro Scout"
-subtitle = "Rotary spotter"
-field_note = "GYRO 1 // FLY LOW, MARK THE TARGET, GO HOME. THE LAMP WILL BE SEEN. TELEX ENDS."
+subtitle = "Rotary scout"
+field_note = "GYRO 1 // FLY LOW, LOOK HARD, GO HOME. THE LAMP WILL BE SEEN. TELEX ENDS."
 body = '''
-A small rotary aircraft with a bubble canopy, a designator lamp and a pilot who talks to it like a dog. The Gyro Scout is the fleet's eyes in the air, marking targets for the guns on the water and the Pathfinders in the dunes. It cannot survive a fighter that finds it, so its pilots learn to hug the coastline and wait for the cloud.
+A small rotary aircraft with a bubble canopy, a signal lamp and a pilot who talks to it like a dog. The Gyro Scout is the fleet's eyes in the air, reporting what it sees to the fleet and the Pathfinders in the dunes. It cannot survive a fighter that finds it, so its pilots learn to hug the coastline and wait for the cloud.
 '''
 unlock = "open"
 
@@ -302,9 +302,9 @@ category = "Unit"
 faction = "expedition"
 title = "Skyhook"
 subtitle = "VTOL troop transport"
-field_note = "SKYHOOK 6 // SIX SOULS OR TWO LIGHT VEHICLES. HOOK UP AND DROP THEM WHERE THE SHORE IS NOT. TELEX ENDS."
+field_note = "SKYHOOK 6 // SIX SOULS. HOOK UP AND DROP THEM WHERE THE SHORE IS NOT. TELEX ENDS."
 body = '''
-A squat vertical-lift transport with a cargo cradle slung beneath its belly and room for six infantry or two light vehicles. Crews call it the Hook, and they swear it has pulled men out of worse places than any landing craft ever reached. It is loud, slow to climb and vulnerable to anything that carries a gun, but when a beach is too hot to land on, the Skyhook still gets through.
+A squat vertical-lift transport with a cargo cradle slung beneath its belly and room for six infantry. Crews call it the Hook, and they swear it has pulled men out of worse places than any landing craft ever reached. It is loud, slow to climb and vulnerable to anything that carries a gun, but when a beach is too hot to land on, the Skyhook still gets through.
 '''
 unlock = "campaign:exp_03" # M8-13 (tune)
 

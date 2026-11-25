@@ -1,8 +1,9 @@
 """Authority Power Plant: a compact atomic plant (2x2 cells). Original design, no franchise references.
 
-Squat containment dome (house band), control annex with glowing amber tube windows, a tapered cooling stack that puffs,
-and a fenced transformer yard with insulators.  Idle loop: the windows pulse along the row, the transformers spark,
-the stack puffs.  Damage is structural only (D-069): cracked dome with a breach, snapped stack, a toppled transformer,
+Squat containment dome (house band), control annex with glowing amber tube windows, a tapered cooling stack,
+and a fenced transformer yard with insulators.  Session 43 art pass: panel seams, rivets, pipe runs, vents, rails, a stack
+catwalk, ground clutter, and an 8-frame idle loop (spinning cooling-fan turbine, pulsing reactor glow band, blinking beacons,
+window chase, transformer arcs).  Smoke is not baked: a separate smoke pass adds it.  Damaged frames share the same loop.  Damage is structural only (D-069): cracked dome with a breach, snapped stack, a toppled transformer,
 caved annex roof, dark windows; fire / smoke are FX anchors.
 Contract: see auth_refinery.py; build-site helpers come from auth_conyard.py.
 Units: 3.4 per cell, x east, y NORTH, z up, footprint centred on (0, 0): x, y in [-3.4, 3.4].
@@ -25,8 +26,16 @@ ORIGIN = (0, 48)
 DOCK = (0, 0)           # no dock (not a refinery)
 CAP_MATERIAL = "concrete2"
 HOUSE2_MID = True        # D-072: roof house2 panels pinned to mid ramp shades (structpost)
-STATES = [("idle", 4, 5), ("damaged", 4, 5), ("build", 8, 5)]
-MATERIALS = L.MATERIALS
+# 8-frame idle/damaged loops at tpf 2 (the renderer runs building idle loops 4x slower than ticks_per_frame, SpriteStates.BuildingIdleSlowdown,
+# so tpf 2 = 8 ticks = 0.4 s per frame, a 3.2 s loop).
+STATES = [("idle", 8, 2), ("damaged", 8, 2), ("build", 8, 5)]
+MATERIALS = dict(L.MATERIALS)
+MATERIALS.update({       # reactor-glow pulse levels, dim to bright (the fixed palette snaps these to yellows / rust)
+    "glow0": ("#4A2E12", dict(rough=0.5)),
+    "glow1": ("#8A5A22", dict(rough=0.4, emit="#8A5A22")),
+    "glow2": ("#FFB43A", dict(rough=0.3, emit="#E8A030")),
+    "glow3": ("#FFE9A0", dict(rough=0.3, emit="#FFE9A0")),
+})
 SOOT_SKIN = L.SOOT_SKIN
 PRIMER_SKIN = L.PRIMER_SKIN
 
@@ -56,6 +65,60 @@ def transformer(S, name, x, y, dmg=False, spark=False):
             S.bb("sparkcore", x + ix - 0.1, x + ix + 0.1, y - 0.1, y + 0.1, 1.76, 1.96, "spark", 0.0, nocast=True)
             S.bb("sparkarm", x + ix + 0.12, x + ix + 0.34, y - 0.04, y + 0.04, 1.86, 1.92, "spark", 0.0, nocast=True)
             S.bb("sparkarm", x + ix - 0.3, x + ix - 0.1, y - 0.04, y + 0.04, 1.78, 1.84, "spark", 0.0, nocast=True)
+
+
+def fan(S, name, cx, cy, z, r, i, spin, step=30.0):
+    """Three-blade rotor at (cx, cy) game-ground units, hub height z.  Blade k sits at angle i*step + 120k; 120-degree symmetry
+    means step 30 gives a clean 4-pose forward spin (less than half the symmetry period, so no wagon-wheel reversal)."""
+    YS = S.YS
+    S.cyl(f"{name}hub", r * 0.24, 0.1, (cx, cy, z), "steel", verts=10, nocast=True)
+    a0 = i * step if spin else 20.0
+    for k in range(3):
+        a = a0 + 120.0 * k
+        ar = math.radians(a)
+        m = r * 0.56
+        S.box(f"{name}blade{k}", (r * 0.9, r * 0.42, 0.035), (cx + m * math.cos(ar), cy * YS + m * math.sin(ar), z + 0.02 + 0.012 * k),
+              "white", 0.0, rot=(0, 0, a), stretch=False, nocast=True)
+
+
+def cooling_fan(S, x, y, i, dmg, idle):
+    """Ground-standing ducted cooling-fan unit: plinth, shroud, grille rim, spinning rotor, stencil, cable run."""
+    S.bb("cfplinth", x - 0.75, x + 0.75, y - 0.62, y + 0.62, 0.14, 0.26, "concrete2", 0.02)
+    S.cyl("cfshroud", 0.56, 0.34, (x, y, 0.43), "hull2", verts=20)
+    S.cyl("cfrim", 0.62, 0.07, (x, y, 0.62), "steel", verts=20)
+    S.cyl("cfwell", 0.52, 0.04, (x, y, 0.6), "dark", verts=20, nocast=True)
+    fan(S, "cf", x, y, 0.66, 0.5, i, idle)
+    S.bb("cfbarX", x - 0.6, x + 0.6, y - 0.025 * S.YS, y + 0.025 * S.YS, 0.74, 0.77, "steel", 0.0, nocast=True)
+    for dx_ in (-0.5, 0.5):
+        S.cyl("cfbolt", 0.05, 0.1, (x + dx_ * 1.12, y - 0.38, 0.32), "steel", verts=6, nocast=True)
+    S.bb("cfstripe", x - 0.3, x + 0.3, y - 0.52, y - 0.5, 0.17, 0.23, "yellow", 0.0, nocast=True)
+    S.bb("cfbox", x + 0.85, x + 1.2, y - 0.2, y + 0.2, 0.14, 0.62, "hull", 0.02)       # motor control box
+    S.bb("cfboxlt", x + 0.91, x + 0.99, y - 0.22, y - 0.2, 0.42, 0.5, "amber" if (idle and not dmg and i % 4 < 2) else "amber_dim", 0.0, nocast=True)
+    S.bb("cfcable", x + 0.05, x + 0.1, y - 0.95, y - 0.5, 0.14, 0.2, "dark", 0.0, nocast=True)
+
+
+def rail_arc(S, cx, cy, r, z0, z1, a0, a1, n, tag):
+    """Railing on a circle (game units): posts plus a top and mid rail made of short straight boxes (a0..a1 in degrees)."""
+    YS = S.YS
+    pts = []
+    for k in range(n + 1):
+        a = math.radians(a0 + (a1 - a0) * k / n)
+        pts.append((cx + r * math.cos(a), cy * YS + r * math.sin(a)))
+    for (px, py) in pts:
+        S.box(f"{tag}post", (0.05, 0.05, z1 - z0), (px, py, (z0 + z1) / 2), "steel", 0.0, stretch=False, nocast=True)
+    for (ax, ay), (bx, by) in zip(pts[:-1], pts[1:]):
+        ln = math.hypot(bx - ax, by - ay)
+        yaw = math.degrees(math.atan2(by - ay, bx - ax))
+        for zz in (z1 - 0.03, (z0 + z1) / 2):
+            S.box(f"{tag}rail", (ln + 0.02, 0.035, 0.035), ((ax + bx) / 2, (ay + by) / 2, zz), "steel", 0.0, rot=(0, 0, yaw), stretch=False, nocast=True)
+
+
+def rail_line(S, x0, x1, y, z0, z1, n, tag):
+    for k in range(n + 1):
+        x = x0 + (x1 - x0) * k / n
+        S.bb(f"{tag}post", x - 0.025, x + 0.025, y - 0.025, y + 0.025, z0, z1, "steel", 0.0, nocast=True)
+    S.bb(f"{tag}rail", x0, x1, y - 0.02, y + 0.02, z1 - 0.05, z1 - 0.01, "steel", 0.0, nocast=True)
+    S.bb(f"{tag}rail", x0, x1, y - 0.02, y + 0.02, (z0 + z1) / 2, (z0 + z1) / 2 + 0.04, "steel", 0.0, nocast=True)
 
 
 def finished(S, i, dmg, mode):
@@ -96,12 +159,32 @@ def finished(S, i, dmg, mode):
         if dmg:
             m = "amber_dim" if k in (1, 3) else "glass"
         elif idle:
-            m = "amber" if (k + i) % 4 in (0, 1) else "amber_dim"
+            m = "amber" if ((i - 1.6 * k) % 8) < 3.6 else "amber_dim"
         else:
             m = "amber"
         S.bb(f"awin{k}", x, x + 0.4, yw - 0.1, yw - 0.04, 1.02, 1.62, m, 0.0)
     S.bb("apanel", ax0 + 0.2, ax1 - 0.2, yw - 0.12, yw - 0.06, 0.45, 0.85, "house", 0.0)
     S.bb("adoor", ax1 - 0.05, ax1 + 0.0, ay0 + 0.1, ay0 + 0.7, 0.14, 0.9, "dark", 0.0)
+    # panel seams / pilasters / cornice / conduit / meters (never over the house plate)
+    for xx in (ax0 + 0.02, ax1 - 0.2):
+        S.bb("apil", xx, xx + 0.18, yw - 0.08, yw + 0.02, 0.4, ANNEX_H, "concrete2", 0.0)
+    S.bb("acornice", ax0 - 0.04, ax1 + 0.04, yw - 0.1, yw, ANNEX_H - 0.16, ANNEX_H - 0.02, "concrete2", 0.0)
+    S.bb("aseam", ax0 + 0.2, ax1 - 0.2, yw - 0.07, yw - 0.04, 0.88, 0.92, "crack", 0.0, nocast=True)
+    for k in range(1, 6):
+        S.bb(f"aseamv{k}", ax0 + 0.2 + k * 0.5, ax0 + 0.23 + k * 0.5, yw - 0.07, yw - 0.04, 0.4, 0.45, "crack", 0.0, nocast=True)
+    S.cyl("aconduit", 0.045, ax1 - ax0 - 0.5, ((ax0 + ax1) / 2, yw - 0.14, 0.38), "pipeblue", axis="X", verts=8, nocast=True)
+    for k in range(5):
+        S.bb(f"aclamp{k}", ax0 + 0.5 + k * 0.62, ax0 + 0.56 + k * 0.62, yw - 0.18, yw - 0.1, 0.34, 0.43, "steel", 0.0, nocast=True)
+    S.bb("agauge", ax1 - 0.62, ax1 - 0.3, yw - 0.1, yw - 0.06, 1.74, 1.88, "gauge", 0.0, nocast=True)
+    S.bb("agaugeN", ax1 - 0.52, ax1 - 0.48, yw - 0.12, yw - 0.1, 1.76, 1.86, "dark", 0.0, nocast=True)
+    if not dmg:
+        rail_line(S, ax0 - 0.1, ax1 + 0.1, ay0 - 0.1, ANNEX_H + 0.38, ANNEX_H + 0.62, 12, "arail")
+        for k, vx in enumerate((ax0 + 0.2, ax0 + 0.8, ax1 - 0.4)):
+            S.bb(f"avent{k}", vx, vx + 0.34, ay1 - 0.12, ay1 + 0.04, ANNEX_H + 0.2, ANNEX_H + 0.46, "hull2", 0.01)
+            for q in range(3):
+                S.bb(f"aventl{k}{q}", vx + 0.04, vx + 0.3, ay1 - 0.14, ay1 - 0.11, ANNEX_H + 0.25 + q * 0.07, ANNEX_H + 0.28 + q * 0.07, "dark", 0.0, nocast=True)
+    else:
+        rail_line(S, -1.2, ax1 + 0.1, ay0 - 0.1, ANNEX_H + 0.38, ANNEX_H + 0.6, 4, "arail")
     for k in range(4):
         S.bb(f"sten{k}", ax0 + 0.4 + k * 0.4, ax0 + 0.58 + k * 0.4, yw - 0.1, yw - 0.06, 0.2, 0.36, "white", 0.0, nocast=True)
     # ---- containment dome: plinth, drum with house band, dome, cap
@@ -111,8 +194,22 @@ def finished(S, i, dmg, mode):
     S.cyl("hring", DOME_R + 0.06, 0.08, (dx, dy, 1.0 + 0.4), "steel", verts=28)
     S.sphere("dome", DOME_R + 0.02, (dx, dy, 1.44), "hull", nocast=False, squash=0.78)
     S.cyl("dcap", 0.3, 0.25, (dx, dy, 2.42), "steel", verts=12)
-    lit = idle and i in (0, 1)
+    lit = idle and i % 4 < 2
     S.cyl("dlamp", 0.1, 0.14, (dx, dy, 2.62), "lamp" if (lit and not dmg) else "dark", verts=8)
+    # reactor glow band between the house band and the ring: pulses over the 8-frame loop (dim and ragged when damaged)
+    lvl = round(1.5 + 1.5 * math.sin(2 * math.pi * i / 8)) if idle else 1
+    if dmg:
+        lvl = (0, 1, 0, 2, 0, 1, 1, 0)[i % 8] if idle else 0
+    S.cyl("dglow", 1.1, 0.1, (dx, dy, 2.08), f"glow{lvl}", verts=28, nocast=True)
+    S.cyl("dglow2", 0.62, 0.08, (dx, dy, 2.36), f"glow{lvl}", verts=20, nocast=True)
+    # shell seams (thin dark strips) and rivet rows on the south half of the drum; stay clear of the house band (z 0.59..1.01)
+    for k in range(13):
+        a = math.radians(195 + k * 12.5)
+        if k % 2 == 0:
+            S.box(f"dseam{k}", (0.05, 0.05, 0.3), (dx + (DOME_R + 0.01) * math.cos(a), (dy * YS + (DOME_R + 0.01) * math.sin(a)), 1.2),
+                  "crack", 0.0, rot=(0, 0, math.degrees(a) - 90), stretch=False, nocast=True)
+        S.cyl(f"drivet{k}", 0.04, 0.05, (dx + (DOME_R + 0.05) * math.cos(a), dy + (DOME_R + 0.05) * math.sin(a) / YS, 1.12), "steel", verts=6, nocast=True)
+        S.cyl(f"drivetb{k}", 0.04, 0.05, (dx + (DOME_R + 0.03) * math.cos(a), dy + (DOME_R + 0.03) * math.sin(a) / YS, 0.5), "steel", verts=6, nocast=True)
     if dmg:
         # impact breach on the south-east shoulder: dark hole ringed by torn shell, a chunk lying below
         S.bb("breach", dx + 0.2, dx + 1.0, dy - 1.0, dy - 0.7, 1.15, 1.75, "dark", 0.0, nocast=True)
@@ -143,11 +240,14 @@ def finished(S, i, dmg, mode):
             S.cyl(f"sband{zz}", rr + 0.05, 0.12, (sx, sy, zz), "rust", verts=20)
         S.cyl("slip", 0.66, 0.14, (sx, sy, 3.5), "concrete2", verts=20)
         S.cyl("sdark", 0.5, 0.06, (sx, sy, 3.57), "dark", verts=16)
-        if idle:
-            for k in range(2):
-                ph = ((i / 4) + k / 2) % 1
-                r = 0.1 + 0.34 * math.sin(math.pi * ph) ** 0.7
-                S.sphere(f"puff{k}", r, (sx + ph * 0.45, sy, 3.75 + ph * 1.2 + r * 0.3), "smoke", squash=0.85)
+        # service catwalk with railing around the upper stack, rivet studs on the bands
+        S.cyl("scat", 0.86, 0.06, (sx, sy, 2.75), "steel", verts=20)
+        rail_arc(S, sx, sy, 0.86, 2.78, 3.2, 175, 365, 12, "srail")
+        for k in range(10):
+            a = math.radians(190 + k * 17)
+            for zz, rr in ((0.7, 0.8), (1.5, 0.74), (2.3, 0.68)):
+                S.cyl(f"sstud{k}", 0.035, 0.05, (sx + (rr + 0.07) * math.cos(a), sy + (rr + 0.07) * math.sin(a) / S.YS, zz), "steel", verts=6, nocast=True)
+        S.cyl("sbeacon", 0.09, 0.14, (sx - 0.5, sy - 0.28, 3.68), "red" if (idle and i % 4 >= 2) else "dark", verts=8, nocast=True)
     S.bb("sladder", sx - 0.86, sx - 0.8, sy - 0.12, sy + 0.12, 0.14, 1.8 if not dmg else 1.2, "dark", 0.0, nocast=True)
     S.bb("sbase", sx - 1.0, sx + 1.0, sy - 1.0, sy + 1.0, 0.14, 0.3, "concrete2", 0.03)
     # ---- pipes dome -> stack, dome -> annex
@@ -155,6 +255,29 @@ def finished(S, i, dmg, mode):
     for k, xx in enumerate((-0.05, 1.1)):
         S.cyl(f"fl{k}", 0.22, 0.1, (xx, dy, 1.0), "rust", axis="X", verts=12)
     S.cyl("pipeV", 0.15, 0.9, (-0.05 + 0.0, dy, 0.6), "steel", verts=10)
+    for k, xx in enumerate((0.1, 0.55, 1.0)):
+        S.bb(f"pbrk{k}", xx - 0.04, xx + 0.04, dy - 0.04, dy + 0.04, 0.14, 0.86, "steel", 0.0, nocast=True)
+    S.cyl("pvalve", 0.2, 0.12, (0.55, dy, 1.2), "rust", verts=10, nocast=True)
+    S.cyl("pwheel", 0.14, 0.04, (0.55, dy, 1.3), "steel", verts=10, nocast=True)
+    S.cyl("pipeN", 0.09, 1.5, (0.2, 0.55, 0.7), "pipeblue", axis="X", verts=8)
+    S.cyl("pipeN2", 0.09, 1.0, (-0.1, 0.1, 0.45), "steel", verts=8)
+    # ---- ground: spinning cooling fan unit, cable runs, clutter at the footprint edge
+    cooling_fan(S, -0.95, -2.0, i, dmg, idle)
+    S.bb("cableA", -3.0, -1.7, -2.33, -2.28, 0.14, 0.18, "dark", 0.0, nocast=True)
+    S.bb("cableB", -1.55, -0.4, -2.33, -2.28, 0.14, 0.18, "dark", 0.0, nocast=True)
+    S.cyl("reel", 0.34, 0.22, (-2.45, -2.05, 0.46), "timber", axis="X", verts=14)
+    S.cyl("reelc", 0.08, 0.3, (-2.45, -2.05, 0.46), "steel", axis="X", verts=8, nocast=True)
+    S.cyl("drumA", 0.24, 0.55, (-2.15, -2.8, 0.42), "rust", verts=12)
+    S.cyl("drumB", 0.24, 0.55, (-1.65, -2.55, 0.42), "steel", verts=12)
+    S.cyl("drumBh", 0.25, 0.05, (-1.65, -2.55, 0.62), "yellow", verts=12, nocast=True)
+    S.bb("jbox", 0.1, 0.45, -1.7, -1.35, 0.14, 0.55, "hull", 0.02)
+    S.bb("jboxl", 0.14, 0.2, -1.72, -1.7, 0.4, 0.48, "amber" if (idle and not dmg and i % 4 < 2) else "amber_dim", 0.0, nocast=True)
+    for k in range(6):
+        S.cyl(f"bol{k}", 0.065, 0.46, (3.18, 0.35 + k * 0.45, 0.37), "yellow", verts=6)
+    for k in range(4):
+        S.cyl(f"bolw{k}", 0.065, 0.46, (-3.2, -0.95 - k * 0.45, 0.37), "yellow", verts=6)
+    for k in range(3):
+        S.bb(f"curb{k}", 2.95 - k * 0.0, 3.3, 2.0 + k * 0.4 - 0.01, 2.0 + k * 0.4 + 0.01, 0.14, 0.17, "crack", 0.0, nocast=True)
     # ---- transformer yard: fence, two transformers, busbar
     fx0, fx1, fy0, fy1 = 0.7, 3.2, -3.05, -0.3
     for xx in (fx0, 1.5, 2.3, fx1):
@@ -170,7 +293,7 @@ def finished(S, i, dmg, mode):
         for z0 in (0.55, 0.9):
             S.bb("frail", fx0, fx1, fy0 - 0.02, fy0 + 0.02, z0, z0 + 0.04, "steel", 0.0, nocast=True)
         S.bb("frailE", fx1 - 0.02, fx1 + 0.02, fy0, fy1, 0.9, 0.94, "steel", 0.0, nocast=True)
-    transformer(S, "trA", 1.55, -1.3, dmg=dmg, spark=idle and i in (1, 3) and not dmg)
+    transformer(S, "trA", 1.55, -1.3, dmg=dmg, spark=idle and i in (1, 2, 5) and not dmg)
     if dmg:
         # second transformer knocked over onto its side, insulators snapped off
         S.box("trB", (1.0, 0.8, 0.8), (2.55, -2.0 * YS, 0.62), "hull2", 0.04, rot=(0, 0, 22), stretch=False)
@@ -178,13 +301,14 @@ def finished(S, i, dmg, mode):
         for k in range(3):
             S.cyl(f"insF{k}", 0.08, 0.5, (2.9 + 0.1 * k, -2.5 - 0.3 * k, 0.28), "white", axis="X", verts=8)
     else:
-        transformer(S, "trB", 2.55, -1.3, spark=idle and i in (0, 2))
+        transformer(S, "trB", 2.55, -1.3, spark=idle and i in (0, 4, 5))
     if not dmg:
         L.beam(S, "bus", (1.55, -1.3, 1.62), (2.55, -1.3, 1.62), 0.05, "dark", nocast=True)
     # ---- side details: lamp mast, stencils
     S.cyl("lmast", 0.05, 2.2, (-3.0, -1.7, 1.2), "steel", verts=8)
     S.bb("lhead", -3.12, -2.88, -1.76, -1.64, 2.25, 2.4, "dark", 0.0)
     S.bb("lamp", -3.1, -2.9, -1.78, -1.76, 2.27, 2.38, "lamp" if (not dmg and idle) else "dark", 0.0, nocast=True)
+    S.cyl("beacon", 0.1, 0.12, (-3.0, -1.7, 2.5), "red" if (idle and i % 4 < 2) else "dark", verts=8, nocast=True)
     if dmg:
         R.scorch(S, "scA", -1.5, yw - 0.16, 1.1, 1.5, 0.6)
         R.scorch(S, "scB", 1.3, -1.1, 0.23, 1.6, 1.2, 0.03, plane="T")
@@ -231,7 +355,7 @@ SPEC = dict(
     pad=(-3.3, 3.3, -3.3, 3.3), env=(-3.1, 3.1, -1.0, 3.0), H=2.0, boxes=[(-3.0, 0.3, -0.9, 0.5)], rings=[(DOME[0], DOME[1], DOME_R), (STACK[0], STACK[1], 0.85)],
     clips=(1.0, 1.9), scaf=[(-2.9, -1.6, -2.1, -1.4), (-1.0, 0.2, -2.1, -1.4)],
     derrick=(3.0, 0.4, 4.0, (0.3, 1.3, 4.4)), sparks=[(-2.0, -0.9, 1.9), (0.3, 0.5, 1.9), (-1.4, 2.8, 2.0)],
-    hide=("sten", "sparkcore", "sparkarm", "dlamp", "lamp"), clutter=_clutter, left=_left)
+    hide=("sten", "sparkcore", "sparkarm", "dlamp", "lamp", "beacon", "sbeacon", "dglow", "cfblade", "cfhub"), clutter=_clutter, left=_left)
 
 
 def build(S, state, i, n):

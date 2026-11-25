@@ -38,8 +38,12 @@ namespace Rts.Game;
 /// <param name="LargerInfantry">D-184 pilot: draw infantry (sprites, selection brackets, health bars) 1.25 times larger than today. Render only. Default true for the pilot screenshots; files without the key get true.</param>
 /// <param name="Weather">M10 design 21 §4: view-only weather particles per biome. Default true; files without the key get true.</param>
 /// <param name="ScreenShake">M10 design 21 §4: light screen shake on big blasts. Default true.</param>
-/// <param name="CheckForUpdates">M10 design 21 §5: check GitHub Releases once at start and show "new version available". Default true.</param>
+/// <param name="CheckForUpdates">M10 design 21 §5: check GitHub Releases once at start and show "new version available". Default false (A43 GAMESYS-02, D-312: no network call until the player turns it on or presses "Check now"); files that store a value keep it.</param>
+/// <param name="ShowOrderLines">QOL-10: thin lines from each selected unit to its attack target (red) or move destination (green). Default true.</param>
 /// <param name="UiSkin">S24: "faction" (default) draws the sidebar and card with the local faction's skin art where it exists; "classic" always draws the procedural look.</param>
+/// <param name="ReduceFlashes">QOL-20 (D-313): no white hit flash, promotion flash or muzzle sparks (view only; separate from <c>ScreenShake</c>). Default false.</param>
+/// <param name="TutorialOffered">QOL-13 (D-313): the first-run "play the tutorial?" offer has been shown (and answered); it is never shown again. Default false.</param>
+/// <param name="AlertVolumes">QOL-12 (D-313): volume (0 = mute) of each alert category; null = every category at 100. Stored in an <c>[alerts]</c> table.</param>
 /// <param name="PlayerName">M9 LAN player name; empty = the Windows user name (design 20 §8 item 4).</param>
 /// <param name="LanGamePort">M9 LAN game port (UDP), 1024..65535. Default <see cref="Rts.Net.NetProtocol.DefaultGamePort"/>.</param>
 /// <param name="LanDiscoveryPort">M9 LAN discovery port (UDP), 1024..65535. Default <see cref="Rts.Net.NetProtocol.DefaultDiscoveryPort"/>.</param>
@@ -69,12 +73,16 @@ public sealed record Settings(
     int GameSpeedPercent = Rts.Game.Host.GameSpeed.Normal,
     bool Weather = true,
     bool ScreenShake = true,
-    bool CheckForUpdates = true,
+    bool CheckForUpdates = false,
     string PlayerName = "",
     int LanGamePort = Rts.Net.NetProtocol.DefaultGamePort,
     int LanDiscoveryPort = Rts.Net.NetProtocol.DefaultDiscoveryPort,
     int AmbienceVolume = 100,
-    string UiSkin = Settings.UiSkinFaction)
+    string UiSkin = Settings.UiSkinFaction,
+    bool ReduceFlashes = false,
+    bool TutorialOffered = false,
+    Ui.Alerts.AlertMix? AlertVolumes = null,
+    bool ShowOrderLines = true)
 {
     /// <summary>The <c>UiSkin</c> value for faction skins.</summary>
     public const string UiSkinFaction = "faction";
@@ -200,7 +208,11 @@ public sealed record Settings(
             Int(root, "lan_game_port", d.LanGamePort, 1024, 65535),
             Int(root, "lan_discovery_port", d.LanDiscoveryPort, 1024, 65535),
             Int(root, "ambience_volume", d.AmbienceVolume, 0, 100),
-            root.TryGetValue("ui_skin", out object? us) && us is string uss && uss.Trim().ToLowerInvariant() == UiSkinClassic ? UiSkinClassic : UiSkinFaction);
+            root.TryGetValue("ui_skin", out object? us) && us is string uss && uss.Trim().ToLowerInvariant() == UiSkinClassic ? UiSkinClassic : UiSkinFaction,
+            root.TryGetValue("reduce_flashes", out object? rf) && rf is bool rfb ? rfb : d.ReduceFlashes,
+            root.TryGetValue("tutorial_offered", out object? to) && to is bool tob ? tob : d.TutorialOffered,
+            ParseAlerts(root),
+            root.TryGetValue("show_order_lines", out object? sol) && sol is bool solb ? solb : d.ShowOrderLines);
     }
 
     /// <summary>The settings as TOML text.</summary>
@@ -242,6 +254,10 @@ public sealed record Settings(
         sb.AppendLine("# Weather particles and screen shake on big blasts (view only).");
         sb.AppendLine(FormattableString.Invariant($"weather = {(Weather ? "true" : "false")}"));
         sb.AppendLine(FormattableString.Invariant($"screen_shake = {(ScreenShake ? "true" : "false")}"));
+        sb.AppendLine("# Reduce flashes: no white hit flash, promotion flash or muzzle sparks (separate from screen shake).");
+        sb.AppendLine(FormattableString.Invariant($"reduce_flashes = {(ReduceFlashes ? "true" : "false")}"));
+        sb.AppendLine("# The first-run offer to play the tutorial has been shown.");
+        sb.AppendLine(FormattableString.Invariant($"tutorial_offered = {(TutorialOffered ? "true" : "false")}"));
         sb.AppendLine("# Check GitHub Releases once at start for a newer version (nothing is downloaded).");
         sb.AppendLine(FormattableString.Invariant($"check_for_updates = {(CheckForUpdates ? "true" : "false")}"));
         sb.AppendLine("# LAN: player name (empty = Windows user name) and UDP ports.");
@@ -250,8 +266,19 @@ public sealed record Settings(
         sb.AppendLine(FormattableString.Invariant($"lan_discovery_port = {Math.Clamp(LanDiscoveryPort, 1024, 65535)}"));
         sb.AppendLine("# UI skin: faction (art of your faction where it exists) | classic (always the plain look)");
         sb.AppendLine(FormattableString.Invariant($"ui_skin = {Quote(UseFactionSkin ? UiSkinFaction : UiSkinClassic)}"));
+        sb.AppendLine("# Thin lines from selected units to their attack target or move destination (view only).");
+        sb.AppendLine(FormattableString.Invariant($"show_order_lines = {(ShowOrderLines ? "true" : "false")}"));
         sb.AppendLine("# Pan the camera to a new mission objective's target (M11-05)");
         sb.AppendLine(FormattableString.Invariant($"camera_cue_on_new_objective = {(CameraCueOnNewObjective ? "true" : "false")}"));
+        IReadOnlyList<(string Id, int Volume)> alerts = Alerts.Overrides();
+        if (alerts.Count > 0)
+        {
+            sb.AppendLine();
+            sb.AppendLine("# Alert volume per category in percent (0 = muted). Only changed categories are listed.");
+            sb.AppendLine("[alerts]");
+            foreach ((string id, int volume) in alerts) sb.AppendLine(FormattableString.Invariant($"{id} = {volume}"));
+        }
+
         IReadOnlyList<(string Id, string Key)> rebound = Bindings.Overrides();
         if (rebound.Count > 0)
         {
@@ -261,7 +288,32 @@ public sealed record Settings(
             foreach ((string id, string key) in rebound) sb.AppendLine(FormattableString.Invariant($"{id} = {Quote(key)}"));
         }
 
+        IReadOnlyList<(string Id, string Key)> second = Bindings.AltOverrides();   // QOL-20
+        if (second.Count > 0)
+        {
+            sb.AppendLine();
+            sb.AppendLine("# Second keys: action = key name. The action works with either key; delete a line to remove its second key.");
+            sb.AppendLine("[keys_alt]");
+            foreach ((string id, string key) in second) sb.AppendLine(FormattableString.Invariant($"{id} = {Quote(key)}"));
+        }
+
         return sb.ToString();
+    }
+
+    /// <summary>The alert volumes in force (every category at 100 when none were changed).</summary>
+    public Ui.Alerts.AlertMix Alerts => AlertVolumes ?? Ui.Alerts.AlertMix.Default;
+
+    /// <summary>These settings with <paramref name="mix"/> (stored as null when it is the default, so equal settings compare equal).</summary>
+    public Settings WithAlerts(Ui.Alerts.AlertMix mix) => this with { AlertVolumes = mix.IsDefault ? null : mix };
+
+    private static Ui.Alerts.AlertMix? ParseAlerts(TomlTable root)
+    {
+        if (!root.TryGetValue("alerts", out object? raw) || raw is not TomlTable table) return null;
+        var saved = new List<(string, long)>();
+        foreach (KeyValuePair<string, object> entry in table)
+            if (entry.Value is long v) saved.Add((entry.Key, v));
+        Ui.Alerts.AlertMix mix = Ui.Alerts.AlertMix.FromPairs(saved);
+        return mix.IsDefault ? null : mix;
     }
 
     /// <summary>The key bindings in force (the defaults when none were changed).</summary>
@@ -272,14 +324,20 @@ public sealed record Settings(
 
     private static KeyBindings? ParseKeys(TomlTable root)
     {
-        if (!root.TryGetValue("keys", out object? raw) || raw is not TomlTable table) return null;
         var saved = new List<(string, string)>();
-        foreach (KeyValuePair<string, object> entry in table)
+        if (root.TryGetValue("keys", out object? raw) && raw is TomlTable table)
         {
-            if (entry.Value is string name) saved.Add((entry.Key, name));
+            foreach (KeyValuePair<string, object> entry in table)
+            {
+                if (entry.Value is string name) saved.Add((entry.Key, name));
+            }
         }
 
-        KeyBindings parsed = KeyBindings.FromOverrides(saved);
+        var savedAlt = new List<(string, string)>();   // QOL-20: the second keys
+        if (root.TryGetValue("keys_alt", out object? rawAlt) && rawAlt is TomlTable altTable)
+            foreach (KeyValuePair<string, object> entry in altTable)
+                if (entry.Value is string name) savedAlt.Add((entry.Key, name));
+        KeyBindings parsed = KeyBindings.FromOverrides(saved, savedAlt);
         return parsed.IsAllDefault ? null : parsed;
     }
 

@@ -300,7 +300,7 @@ Every faction now has four missions and an ending. Play each campaign start to f
 
 ## Session 14 · UI overhaul, act-break stills, mission tiers, defeat rule (M11, M8-14, M8-15, M4-17)
 Pull first: `git pull --ff-only origin main` (git-lfs is installed on the PC now). Settings are kept; new options get defaults.
-- **Camera:** mouse at any screen edge scrolls; hold Shift for double speed; Home centres on your base; Ctrl+F5..F8 stores a view, F5..F8 recalls it.
+- **Camera:** mouse at any screen edge scrolls; hold Shift for double speed; Home centres on your base; Ctrl+F6, F7, F8 or F12 stores a view, the same keys recall it.
 - **Clean HUD:** no tick/hash/fps line and no key hints on screen. Settings > Controls > "Show diagnostics" brings the line back.
 - **Controls page:** F1 or `?` in a game (in the sandbox F1 is the console, so use `?`), or Pause > Settings > Controls. Opaque panel, scrollbar, Back inside the panel. Click a key and press
   a new one; a taken key offers Enter to swap / Esc to cancel; "Reset all keys to defaults". Quit and restart: rebinds are kept.
@@ -665,3 +665,22 @@ Pull main first (your folder was on eda0f0e3, two sessions behind), then rebuild
 - **Unchanged:** Ash Plains and Rust Belt maps, every unit's cost/health/damage, the campaign (sweep identical to session 41), and
   `[movement] stuck_recovery = 0` (D-309).
 - **Balance numbers to confirm:** D-306 (your answer), D-307, D-308, D-309; and Q-88 (how to treat the two rows just outside the band).
+
+## Session 43 (2026-11-24/25)
+- **Back up first?** No: old development saves and replays (format 13) are refused with "Unsupported ... version" (save/replay format 14); nothing else is rewritten.
+- **Art:** start a skirmish: buildings have idle motion (Power Plant fan, beacons, window chase); tanks and jeeps roll their tracks/wheels when moving and
+  stop cleanly; Authority/Directorate infantry are bigger and easier to read; smoke columns are soft and wispy (no bubbles); Rust Belt/Glass Coast/Mountains/
+  Ash Plains ground has pebbles, drifts and soft blends; snow and soot patches are irregular, not round.
+- **Update check (D-312):** Settings shows the update toggle off on a fresh install; "Check now" shows "Up to date: version ... is the latest release."
+  or "Could not reach GitHub. Try again later."
+- **QoL keys (defaults, rebindable):** Z select that unit type map-wide; F all combat vehicles; PageDown all combat infantry; comma centre on selection;
+  PageUp cycle production buildings; Insert auto type groups; ] place last structure (Shift+drag lays a row of walls); ; repair all damaged;
+  Shift+click marks a building and Delete sells marked ("Sell N? Press again"); F11 hide HUD; ' open a hovered cameo's Archive entry;
+  Alt+click ping; right-drag spreads the selection along a line. Skirmish setup is remembered ("Reset setup" row).
+- **Skirmish rules (opt-in):** setup rows "Superweapons: unlimited / none / N each" and "Map: fog of war / revealed"; defaults play exactly as before.
+- **Superweapon:** while targeting, the legal area is shaded; an out-of-range click says "Out of range".
+- **HUD:** "Income +N/min   Harvesters W/T" in skirmish; match clock; hover any unit for name/owner/health; Settings "Order lines: On/Off".
+- **Repair:** a building under repair shows "Repairing" on its card.
+- **Tutorial:** the train step says the Infantry tab; the loading tip says bookmarks are F6/F7/F8/F12 (F5 is Quicksave).
+- **Balance numbers to confirm:** none in this build: D-311 items 5-11 (including Second Drift storm cap 31 / no_build_threshold 24) are held on `bal-s43`, BACKLOG B-00.
+

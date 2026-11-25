@@ -4,14 +4,14 @@ namespace Rts.Game.Lan;
 
 /// <summary>
 /// A stable 64-bit hash over every data file the simulation or the mission scripts read (M9-13, design 20 §6): rules, AI tiers, map
-/// generator tables, maps, missions (toml and lua), campaigns and terrain themes. Audio, images, sprites, fonts and archive text are not
+/// generator tables, maps, missions (toml and lua), campaigns, terrain themes and map stamps. Audio, images, sprites, fonts and archive text are not
 /// included. Files are taken in ordinal path order and line endings are normalised, so the same data gives the same hash on every
 /// install, and two installs with different gameplay data refuse each other at join time.
 /// </summary>
 public static class ContentHash
 {
     /// <summary>Sub-folders of the data folder that count, and the file extensions read in them.</summary>
-    private static readonly string[] Folders = { "rules", "ai", "mapgen", "maps", "missions", "campaigns", "theaters" };
+    private static readonly string[] Folders = { "rules", "ai", "mapgen", "maps", "missions", "campaigns", "theaters", "stamps" };
 
     private static readonly string[] Extensions = { ".toml", ".lua" };
 

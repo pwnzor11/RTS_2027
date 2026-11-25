@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
+using Rts.Game.Screens;
 using Rts.Net;
 
 namespace Rts.Game.Lan.Lobby;
@@ -15,6 +16,9 @@ namespace Rts.Game.Lan.Lobby;
 /// <param name="CommandDelay">2, 3 or 4 ticks (Q-M9-c).</param>
 public sealed record LobbyData(string HostName, LobbyMap Map, IReadOnlyList<LobbySlotState> Slots, IReadOnlyList<LobbySpectator> Spectators, int CommandDelay)
 {
+    /// <summary>QOL-07 (D-313): the match rules the host chose (superweapon limit, reveal map); the default is today's game.</summary>
+    public MatchRules Rules { get; init; } = MatchRules.Default;
+
     /// <summary>Longest display name, in UTF-8 bytes.</summary>
     public const int MaxNameBytes = 24;
 
@@ -33,7 +37,7 @@ public sealed record LobbyData(string HostName, LobbyMap Map, IReadOnlyList<Lobb
 
     /// <summary>Value equality that compares the lists element by element.</summary>
     public bool Equals(LobbyData? other) =>
-        other is not null && HostName == other.HostName && Map == other.Map && CommandDelay == other.CommandDelay
+        other is not null && HostName == other.HostName && Map == other.Map && CommandDelay == other.CommandDelay && Rules == other.Rules
         && Slots.SequenceEqual(other.Slots) && Spectators.SequenceEqual(other.Spectators);
 
     /// <inheritdoc />

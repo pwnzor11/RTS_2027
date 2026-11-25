@@ -28,7 +28,6 @@ public sealed class LobbyHost
     private readonly Func<ulong> _seedSource;
     private readonly List<string> _lines = new();
     private LobbyData _data;
-    private int _nextPeer = 1;
     private int _nextTransfer;
     private bool _started;
 
@@ -136,6 +135,13 @@ public sealed class LobbyHost
         return _data.OpenSlots == 0 ? "The lobby is full." : null;
     }
 
+    private int LowestFreePeerId()
+    {
+        int id = 1;
+        while (_data.Slots.Any(s => s.IsTaken && s.Peer == id) || _data.Spectators.Any(s => s.Peer == id)) id++;
+        return id;
+    }
+
     private void HandleHello(int from, NetMessage.Hello hello)
     {
         string? reason = Handshake(hello);
@@ -149,10 +155,10 @@ public sealed class LobbyHost
         int id = from;
         if (from < 0)
         {
-            id = _nextPeer++;
+            // The lowest id nobody in the lobby holds; ids are reused so the 1000 cap of the codecs cannot be reached by joining and leaving (NETLLM-03).
+            id = LowestFreePeerId();
             if (_udp is null || !_udp.Accept(from, id)) return;
         }
-        else _nextPeer = Math.Max(_nextPeer, from + 1);
 
         var taken = _data.Slots.Where(s => s.IsTaken).Select(s => s.Name).Concat(_data.Spectators.Select(s => s.Name)).ToList();
         string name = LobbyNames.Unique(LobbyNames.Resolve(hello.PlayerName, LobbyNames.Fallback), taken);
@@ -345,6 +351,15 @@ public sealed class LobbyHost
         _data = _data with { Slots = slots };
     }
 
+    /// <summary>QOL-07 (D-313): sets the match rules (superweapon limit, reveal map). Un-readies every guest, as a map change does, so nobody starts on rules they did not see.</summary>
+    public void SetRules(MatchRules rules)
+    {
+        if (_started || !rules.IsValid || rules == _data.Rules) return;
+        _data = _data with { Rules = rules };
+        foreach (int i in Enumerable.Range(0, _data.Slots.Count)) if (_data.Slots[i].IsTaken && _data.Slots[i].Peer != 0) UnreadyForMap(i);
+        Changed();
+    }
+
     /// <summary>Sets the command delay (2, 3 or 4 ticks).</summary>
     public void SetDelay(int ticks)
     {
@@ -381,7 +396,7 @@ public sealed class LobbyHost
         MapChoice? choice = map.Resolve(_userMapsDir, _downloadedDir);
         if (choice is null) { why = "The chosen map file is missing."; return null; }
         ulong seed = map.Generated?.Seed ?? _seedSource();
-        var check = new SkirmishSettings(choice, slots, seed);
+        var check = new SkirmishSettings(choice, slots, seed) { Rules = _data.Rules };
         IReadOnlyList<string> problems = check.Validate(SkirmishSettings.MaxSlots);
         if (problems.Count > 0) { why = problems[0]; return null; }
 
@@ -390,7 +405,7 @@ public sealed class LobbyHost
         for (int i = 0; i < _data.Slots.Count; i++)
             if (_data.Slots[i].IsTaken) { peerSlots[_data.Slots[i].Peer] = i; names[_data.Slots[i].Peer] = _data.Slots[i].Name; }
         foreach (LobbySpectator sp in _data.Spectators) names[sp.Peer] = sp.Name;
-        return new SetupData(map, slots, seed, peerSlots, _data.Spectators.Select(s => s.Peer).ToList(), names, _data.CommandDelay);
+        return new SetupData(map, slots, seed, peerSlots, _data.Spectators.Select(s => s.Peer).ToList(), names, _data.CommandDelay) { Rules = _data.Rules };
     }
 
     /// <summary>True when <see cref="Start"/> would work; <paramref name="why"/> says what is missing otherwise.</summary>

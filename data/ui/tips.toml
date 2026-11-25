@@ -74,7 +74,7 @@ text = "Late in the game a superweapon can be built. It charges for a long time,
 text = "Click or drag the minimap to jump the view. Home centres on your base."
 
 [[tip]]
-text = "Ctrl+F5 to F8 store a view, and F5 to F8 jump back to it."
+text = "Ctrl+F6, F7, F8 or F12 store a view, and the same key jumps back to it."
 
 [[tip]]
 text = "Space pauses the game. F1 lists every key."

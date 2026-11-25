@@ -56,6 +56,8 @@ public sealed class DamageTierTracker
 {
     private Dictionary<EntityId, DamageTier> _buildings = new();
     private Dictionary<UnitKey, DamageTier> _units = new();
+    private Dictionary<EntityId, DamageTier> _buildingsSpare = new();   // built into each tick, then swapped in: no allocation once warm
+    private Dictionary<UnitKey, DamageTier> _unitsSpare = new();
     private int _tick = int.MinValue;
 
     /// <summary>Records <paramref name="snapshot"/> and fills <paramref name="changes"/> (cleared first) with the tier increases since the last tick.</summary>
@@ -68,7 +70,8 @@ public sealed class DamageTierTracker
         bool silent = snapshot.Tick < _tick || _tick == int.MinValue;   // first sight, or the game was reloaded or restarted
         _tick = snapshot.Tick;
 
-        var buildings = new Dictionary<EntityId, DamageTier>();
+        Dictionary<EntityId, DamageTier> buildings = _buildingsSpare;
+        buildings.Clear();
         for (int i = 0; i < snapshot.Buildings.Count; i++)
         {
             BuildingView b = snapshot.Buildings[i];
@@ -78,7 +81,8 @@ public sealed class DamageTierTracker
             if (!silent && _buildings.TryGetValue(b.Id, out DamageTier before) && now > before) changes.Add(new TierChange(true, i, before, now));
         }
 
-        var units = new Dictionary<UnitKey, DamageTier>();
+        Dictionary<UnitKey, DamageTier> units = _unitsSpare;
+        units.Clear();
         for (int i = 0; i < snapshot.Units.Count; i++)
         {
             UnitView u = snapshot.Units[i];
@@ -89,6 +93,8 @@ public sealed class DamageTierTracker
             if (!silent && _units.TryGetValue(key, out DamageTier before) && now > before) changes.Add(new TierChange(false, i, before, now));
         }
 
+        _buildingsSpare = _buildings;
+        _unitsSpare = _units;
         _buildings = buildings;
         _units = units;
     }

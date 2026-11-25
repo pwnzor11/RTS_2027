@@ -13,6 +13,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import common as C
 import auth_rifleman as AR
+import boost
 
 SCALE = 1.25                  # D-185: figure 1.25 x, frame 48 x 48, house shoulder boards / back panel
 ID = "dir_conscript"
@@ -72,6 +73,8 @@ def pose(state, step, n):
 def build(S, p):
     from mathutils import Matrix
     import rig as R
+    B = boost.params()
+    Hh = B["house"]
     U = R.tr(0, p["dy"], 0.62 + p["bob"]) @ R.rz(p["twist"]) @ R.rx(-p["lean"]) @ R.rz(p["roll"])
     pel = (0, p["dy"], 0.62 + p["bob"])
 
@@ -89,34 +92,41 @@ def build(S, p):
     S.box((0.17, 0.02, 0.07), (0, -0.215, 0.15), "bone", U, rot=(6, 0, 0), bevel=0)  # bone stencil bar on the back
     S.box((0.17, 0.02, 0.035), (0, -0.222, 0.06), "red", U, rot=(6, 0, 0), bevel=0)
     for sx in (-1, 1):                                                                 # D-185 house shoulder boards
-        S.box((0.13, 0.17, 0.04), (sx * 0.19, 0.0, 0.395), "house", U, rot=(0, sx * -8, 0), bevel=0)
-    S.box((0.22, 0.025, 0.17), (0, -0.228, 0.27), "house", U, bevel=0)               # D-185 house panel on the back of the coat
+        S.box((0.13 * (1 + 0.5 * (Hh - 1)), 0.17 * (1 + 0.3 * (Hh - 1)), 0.04 * (1 + 0.6 * (Hh - 1))), (sx * (0.19 + 0.02 * (Hh - 1)), 0.0, 0.395), "house", U, rot=(0, sx * -8, 0), bevel=0)
+    S.box((0.22 * (1 + 0.15 * (Hh - 1)), 0.025, 0.17 * Hh), (0, -0.228, 0.27), "house", U, bevel=0)               # D-185 house panel on the back of the coat
     # ---------------- sash (house colour) across the chest, shoulder to opposite hip
-    S.limb(up((-0.09, 0.19, 0.32)), up((0.13, 0.225, -0.10)), 0.10, "house", d=0.04, bevel=0)
-    S.limb(up((-0.17, 0.02, 0.32)), up((-0.09, 0.19, 0.32)), 0.09, "house", d=0.04, bevel=0)
-    # ---------------- head: far forward of the shoulders (stoop), pointed hood, bone respirator plate, dark filter dot
+    S.limb(up((-0.09, 0.19, 0.32)), up((0.13, 0.225, -0.10)), 0.10 * Hh, "house", d=0.04, bevel=0)
+    S.limb(up((-0.17, 0.02, 0.32)), up((-0.09, 0.19, 0.32)), 0.09 * Hh, "house", d=0.04, bevel=0)
+    # ---------------- head: far forward of the shoulders (stoop), pointed hood, bone respirator plate, dark filter dot (S43: B["head"])
+    h = B["head"]
+    HC = (0.0, 0.12, 0.52)
+
+    def hp(loc):
+        return tuple(HC[i] + (loc[i] - HC[i]) * h for i in range(3))
     S.box((0.08, 0.09, 0.07), (0, 0.07, 0.44), "dark", U)                             # neck
-    S.sphere((0.13, 0.14, 0.135), (0, 0.10, 0.565), "hood", U)                          # hood
-    S.box((0.10, 0.22, 0.09), (0, 0.04, 0.69), "hood", U, rot=(-40, 0, 0), bevel=0.02)  # pointed peak, swept back
-    S.box((0.20, 0.09, 0.20), (0, 0.255, 0.49), "bone", U, bevel=0.03)              # bone respirator / face plate
+    S.sphere((0.13 * h, 0.14 * h, 0.135 * h), hp((0, 0.10, 0.565)), "hood", U)          # hood
+    S.box((0.10 * h, 0.22 * h, 0.09 * h), hp((0, 0.04, 0.69)), "hood", U, rot=(-40, 0, 0), bevel=0.02)  # pointed peak, swept back
+    S.box((0.20 * h, 0.09 * h, 0.20 * h), hp((0, 0.255, 0.49)), "bone", U, bevel=0.03)  # bone respirator / face plate
     for sx in (-1, 1):
-        S.box((0.06, 0.03, 0.04), (sx * 0.05, 0.30, 0.545), "dark", U, bevel=0)     # eye slits
-    S.cyl(0.05, 0.06, (0, 0.31, 0.46), "dark", "Y", U, verts=10)                      # filter dot
+        S.box((0.06 * h, 0.03 * h, 0.04 * h), hp((sx * 0.05, 0.30, 0.545)), "dark", U, bevel=0)     # eye slits
+    S.cyl(0.05 * h, 0.06 * h, hp((0, 0.31, 0.46)), "dark", "Y", U, verts=10)           # filter dot
     # ---------------- cheap bolt rifle: long thin barrel, plain wood stock, bolt knob, no magazine
-    GM = (U if p["gun_space"] == "u" else Matrix.Identity(4)) @ R.tr(*p["gun"][0]) @ R.rz(p["gun"][1]) @ R.rx(p["gun"][2])
+    GM0 = (U if p["gun_space"] == "u" else Matrix.Identity(4)) @ R.tr(*p["gun"][0]) @ R.rz(p["gun"][1]) @ R.rx(p["gun"][2])
+    GM = GM0 @ Matrix.Diagonal((B["gunw"], B["gun"], B["gunw"], 1.0))            # S43 weapon scale
     S.box((0.05, 0.30, 0.09), (0, -0.26, -0.01), "wood", GM, rot=(-6, 0, 0))
     S.box((0.05, 0.22, 0.075), (0, 0.0, 0), "wood", GM)
     S.cyl(0.02, 0.42, (0, 0.32, 0.01), "steel", "Y", GM, verts=6)
     S.box((0.035, 0.05, 0.035), (0.045, -0.02, 0.035), "dark", GM)
     S.box((0.02, 0.04, 0.03), (0, 0.50, 0.045), "dark", GM)
     if p["flash"]:
-        S.cyl(0.07, 0.24, (0, 0.76, 0.01), "flash", "Y", GM, verts=8, r2=0.0)
-        S.sphere((0.09, 0.09, 0.09), (0, 0.64, 0.01), "flash", GM, seg=8)
+        fl, flw = B["flash"] / B["gun"], B["flash"] / B["gunw"]
+        S.cyl(0.07 * flw, 0.24 * fl, (0, 0.50 + 0.26 * fl, 0.01), "flash", "Y", GM, verts=8, r2=0.0)
+        S.sphere((0.09 * flw, 0.09 * fl, 0.09 * flw), (0, 0.50 + 0.14 * fl, 0.01), "flash", GM, seg=8)
     # ---------------- arms: coat sleeves, house armband on the upper arm, bone cuff
     for side, hand_spec in ((-1, p["hands"][0]), (1, p["hands"][1])):
         sh = R.Vector(up((side * SHOULDER[0], SHOULDER[1], SHOULDER[2])))
         if hand_spec == "gun":
-            tgt = R.Vector(tuple(GM @ R.Vector(GRIP_R if side > 0 else GRIP_L)))
+            tgt = R.Vector(tuple(GM0 @ (R.Vector(tuple(a * b for a, b in zip(GRIP_R if side > 0 else GRIP_L, (B["gunw"], B["gun"], B["gunw"])))))))
         elif hand_spec[0] == "w":
             tgt = R.Vector(hand_spec[1])
         elif hand_spec[0] == "u":
@@ -125,18 +135,18 @@ def build(S, p):
             tgt = R.Vector(up(hand_spec))
         pole = U.to_3x3() @ R.Vector((side * 1.2, -0.3, -0.6))
         elbow, wrist = R.ik2(sh, tgt, L_UPPER, L_FORE, pole)
-        S.limb(sh, elbow, 0.085, "coat2")
-        S.limb(sh.lerp(elbow, 0.3), sh.lerp(elbow, 0.75), 0.12, "house", bevel=0.0)
-        S.limb(elbow, wrist, 0.072, "coat3")
+        S.limb(sh, elbow, 0.085 * B["limb"], "coat2")
+        S.limb(sh.lerp(elbow, 0.3), sh.lerp(elbow, 0.75), 0.12 * B["limb"] * (1 + 0.25 * (Hh - 1)), "house", bevel=0.0)
+        S.limb(elbow, wrist, 0.072 * B["limb"], "coat3")
         S.limb(elbow.lerp(wrist, 0.72), wrist, 0.082, "bone", d=0.082, bevel=0)
         S.box((0.07, 0.08, 0.07), tuple(wrist), "dark", None, bevel=0.01)
     # ---------------- legs: thin dark trousers below the knee-length coat, tall boots
     for side, ft in ((-1, p["feet"][0]), (1, p["feet"][1])):
-        hip = R.Vector((side * 0.095, pel[1], pel[2] - 0.04))
-        ank = R.Vector(ft)
+        hip = R.Vector((side * 0.095 * B["stance"], pel[1], pel[2] - 0.04))
+        ank = R.Vector((ft[0] * B["stance"], ft[1], ft[2]))
         knee, ank = R.ik2(hip, ank, L_THIGH, L_SHIN, R.Vector((0, 1, 0)))
-        S.limb(hip, knee, 0.095, "pants")
-        S.limb(knee, ank, 0.08, "pants")
+        S.limb(hip, knee, 0.095 * B["limb"], "pants")
+        S.limb(knee, ank, 0.08 * B["limb"], "pants")
         S.box((0.105, 0.25, 0.10), (ank.x, ank.y + 0.035, ank.z - 0.035), "dark", None, bevel=0.015)
     # ---------------- fallen body: the coat lies spread on the ground around the pelvis
     if p["spread"]:

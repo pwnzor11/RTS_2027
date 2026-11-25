@@ -27,6 +27,7 @@ public static class BlockReasonText
         QueueBlockReason.SupplyCap => string.IsNullOrEmpty(supplyBuilding)
             ? UiText.Get(UiText.SupplyCapReachedPlain)
             : UiText.Format(UiText.SupplyCapReached, "supplyBuilding", supplyBuilding),
+        QueueBlockReason.SuperweaponLimit => "Superweapon limit reached",
         _ => "Not available",
     };
 }

@@ -24,6 +24,41 @@ public class AiDriverTests
         }
     }
 
+    private sealed class Thrower : IAiPlayer
+    {
+        public int Calls;
+        public string Id => "thrower";
+        public void Start(AiContext ctx) { }
+        public void Think(PlayerView view, ICommandSink sink)
+        {
+            Calls++;
+            sink.Issue(CommandKind.Move, new EntityId(1, 1), ActorKind.Infantry, new CellCoord(1, 1));
+            throw new InvalidOperationException("unit mix names unknown type");
+        }
+    }
+
+    [Fact]
+    public void AnAiThatThrowsGoesIdleAndOtherAisKeepPlaying()
+    {
+        var sim = TestWorld.FlatSim();
+        var bad = new Thrower();
+        var good = new Recorder();
+        var driver = new AiDriver(1);
+        driver.Add(0, bad, Profile(1, 1));
+        driver.Add(1, good, Profile(1, 1));
+        var cmds = new List<Command>();
+        for (int t = 0; t < 3; t++)
+        {
+            driver.Collect(sim, cmds);
+            sim.Step(Array.Empty<Command>());
+        }
+
+        Assert.Equal(1, bad.Calls);
+        Assert.Equal(3, good.ThinkTicks.Count);
+        Assert.All(cmds, c => Assert.Equal(1, c.Player));   // nothing half-issued by the failed Think was kept
+        Assert.Equal(6, cmds.Count);
+    }
+
     private static DifficultyProfile Profile(int interval, int delay) =>
         DifficultyProfile.Default with { DecisionIntervalTicks = interval, CommandDelayTicks = delay };
 

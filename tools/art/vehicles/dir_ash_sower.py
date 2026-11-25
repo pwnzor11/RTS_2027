@@ -8,12 +8,17 @@ House paint: both hopper side panels, the cab roof stripe and the spray-bar end 
 import os, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import dir_common as D
+import os, sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import mot_track as MT
 
 ID = "dir_ash_sower"
 TITLE = "Directorate Ash Sower (radiation-laying sprayer)"
 CANVAS = 144
 TARGET = (0.0, -0.1, 0.9)
-STATES = [("idle", 16, 1, 1)]
+STATES = [("idle", 16, 1, 1), ("move", 16, 4, 1)]
+# "move": 4 frames per facing. Wheeled, as auth_jeep.py: hub bars turn 45 deg per frame (one cycle = 180 deg), the body bobs on its springs.
+STEP_PX = {"move": MT.step_wheel_px(0.43)}
 PALETTE = D.PALETTE
 MATERIALS = D.MATERIALS
 
@@ -22,15 +27,20 @@ def build(S, state, k, n):
     box, cyl, cone = S.box, S.cyl, S.cone
     X = 0.92
     axles = (1.15, -0.95)
+    move = state in ("idle", "move")
     for s, side in ((-1, "L"), (1, "R")):
         for i, y in enumerate(axles):
             cyl(f"tyre{side}{i}", 0.43, 0.34, (s * X, y, 0.43), "track", "X", 16)
             cyl(f"hub{side}{i}", 0.22, 0.37, (s * X, y, 0.43), "steel", "X", 10)
             cyl(f"nut{side}{i}", 0.07, 0.4, (s * X, y, 0.43), "dark", "X", 6)
+            if move:      # hub bar on the outer face, rolling forward (+y), as auth_jeep.py
+                MT.hub_bar(S, f"bar{side}{i}", s * (X + 0.195), y, 0.43, 0.43, k)
         box(f"guard{side}F", (0.46, 0.95, 0.06), (s * X, 1.15, 0.92), "hull2", 0.02)
         box(f"guard{side}R", (0.46, 0.95, 0.06), (s * X, -0.95, 0.92), "hull2", 0.02)
     for i, y in enumerate(axles):
         box(f"axle{i}", (1.8, 0.12, 0.12), (0, y, 0.43), "dark", 0)
+    if move:
+        S.set_pose(dz=-MT.BOB[k])     # the sprung body (cab, hopper, spray bar) rides up and down, as the jeep
     box("frame", (1.5, 4.3, 0.22), (0, -0.2, 0.72), "hull2", 0.03)
     # ---- cab: shielded, bone with oxide bands, lead-apron plate over the windscreen
     box("cab", (1.5, 1.05, 0.95), (0, 1.35, 1.3), "bone", 0.08)

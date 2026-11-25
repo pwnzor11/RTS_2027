@@ -116,6 +116,17 @@ public sealed class AudioDirectorTests
         Assert.Equal(MusicState.Menu, d.MusicState);
     }
 
+    [Fact]
+    public void NewGameDoesNotInheritBattleMusicFromTheLastMatch()
+    {
+        // GAMESYS-01: a fight late in one game must not keep a new game (tick restarts near 0) on the battle track.
+        (AudioDirector d, _) = Make();
+        d.Process(Explosion(3000, 5));
+        Assert.Equal(MusicState.Battle, d.MusicState);
+        d.Process(Frame(Snap(1), Snap(2)));   // new game, tick back at 2
+        Assert.Equal(MusicState.Tension, d.MusicState);
+    }
+
     private static string MusicDir(params string[] names)
     {
         string dir = Path.Combine(Path.GetTempPath(), "rts2027_music_" + Guid.NewGuid().ToString("N"));

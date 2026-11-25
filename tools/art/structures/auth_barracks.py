@@ -25,7 +25,7 @@ CANVAS = (128, 160)
 ORIGIN = (0, 32)
 DOCK = (1, 2)           # exit cell: just below the footprint's middle (x middle of 2 cells = boundary; 1 = east of it)
 CAP_MATERIAL = "concrete2"
-STATES = [("idle", 4, 5), ("damaged", 4, 5), ("build", 8, 5)]
+STATES = [("idle", 8, 2), ("damaged", 8, 2), ("build", 8, 5)]     # 8-frame loops at tpf 2 (0.4 s a frame)
 MATERIALS = L.MATERIALS
 SOOT_SKIN = L.SOOT_SKIN
 PRIMER_SKIN = L.PRIMER_SKIN
@@ -99,6 +99,12 @@ def finished(S, i, dmg, mode):
             S.bb("panel", -1.45 if sx < 0 else 0.72, -0.72 if sx < 0 else 1.45, yf - 0.1, yf - 0.02, 0.2, 1.5, "house", 0.0)
     S.bb("lintel", -0.7, 0.7, yf - 0.14, yf - 0.02, 1.3, 1.55, "concrete2", 0.03)
     S.bb("lintelbar", -0.6, 0.6, yf - 0.16, yf - 0.14, 1.4, 1.46, "yellow", 0.0, nocast=True)
+    if not dmg:      # detail: door guard lamp blinks over the loop, door handle, panel rivets, ridge rivets
+        S.cyl("dlamp", 0.07, 0.1, (0.0, yf - 0.2, 1.62), "amber" if (idle and i % 4 < 2) else "amber_dim", verts=8, nocast=True)
+        S.bb("dhandle", 0.36, 0.48, yf - 0.16, yf - 0.12, 0.7, 0.76, "steel", 0.0, nocast=True)
+        for sx in (-1, 1):
+            for k in range(4):
+                S.cyl(f"prv{sx}{k}", 0.03, 0.04, (sx * (0.85 + 0.2 * k), yf - 0.12, 1.45), "steel", verts=6, nocast=True)
     # ---- decontamination shower arch and mat
     ya = -1.65
     for sx in (-1, 1):
@@ -132,7 +138,7 @@ def finished(S, i, dmg, mode):
     else:
         S.cyl("pole", 0.06, 4.1, (px, py, 2.2), "steel", verts=8)
         S.cyl("poleball", 0.1, 0.2, (px, py, 4.35), "yellow", verts=8)
-        ph = (i if idle else 0) * math.pi / 2
+        ph = (i if idle else 0) * math.pi / 4      # one wave crest travels the flag per 8-frame loop
         for k in range(5):
             dz = 0.13 * math.sin(ph + k * 1.1) * (k + 1) / 3
             S.bb("flagseg", px - 1.45 + (4 - k) * 0.29, px - 1.45 + (5 - k) * 0.29 - 0.0, py - 0.04, py + 0.04, 3.1 + dz, 3.95 + dz - 0.04 * k, "house", 0.0)

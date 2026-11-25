@@ -765,3 +765,28 @@ sweep identical to s41 (45/45). Cloud full suite: 0 failed after one rig fix. do
 nodes (a `whisper` app also runs there), so the suite ran in the cloud; lowering a running job's parallelism kills its running pods (lost pieces rerun);
 over-committed parallelism slowed the cluster to ~3.5 pieces a minute; 64-game map screens swung up to 24 points on the same build (seed sets).
 **Next session should:** see HANDOFF.
+
+## Session 43 · 2026-11-24/25 (finish line met; adversarial audit; 20 QoL; art pass on the cluster; smoke without bubbles; backlog sweep)
+**Goal:** owner: Q-88 done; adversarial audit first, then the dedicated art pass with the cluster.
+**Done:** D-310 (Q-88 (a): balance frozen). Audit: 15 Sonnet reviewers, 135 findings (docs/reviews/2026-11-24_s43_audit). Fixed on integ-s43 (71):
+LAN hardening, placement bounds, save/replay v14, AI fault isolation, tunnel surfacing, stuck-underground reroute, garrison/dived spared from
+radiation and superweapons, capture resets charge, Sonar Nets range, campaign spawns/tech lists, commander stale window, all stale text (manual
+rebuilt), superweapon button/range, Repairing line, update check off by default (D-312), 20 QoL items (D-313), render allocations/culling (D-314),
+licence docs. Art (D-315): four pilots approved, fan-out code, 102 cluster renders (67 buildings: 63 with 8-frame idle, 2 turret sheets and 2 ruins detail only; 24 vehicles with a move
+state, 11 Authority/Directorate infantry), terrain detail on all four biomes. Smoke (D-316): volumetric plume and torn puffs, no baked sphere
+smoke, noise-broken decals, half the Mountains snow. Held: D-311 items 5-11 on `bal-s43` (512-game gate failed on Authority v Directorate,
+36.5 % pooled v 40.6 %; DirectorateAntiAir alone had no effect; probes running). Backlog sweep: 108 parked items over 43 sessions,
+docs/BACKLOG.md; ROADMAP M16.
+**Decisions:** D-310..D-316. Assumed, confirm: Second Drift no_build_threshold 24 (held branch), edge reinforcements spawn on free cells (auth_02
+tier 5 harder), QoL key defaults, QOL-16 drag move always on, QOL-03 Alt+drag. **Questions:** none open in OPEN_QUESTIONS; the owner decision
+batch is BACKLOG §0/§1 (M16-01).
+**Helpers:** ~45 (15 audit Sonnet, fix and QoL Sonnet/Haiku, 9 art fan-out Haiku, smoke, terrain, licence, sweep). One Haiku helper (Expedition/
+Left Behind infantry art) was stopped by a usage-policy safeguard; its work is not committed (BACKLOG V-03). About 13 000 cluster games
+(bal43 12 288 + probes) and 102 Blender renders on the x86 nodes.
+**Problems / notes:** the cloud box has 2 CPUs / 7 GB: parallel helpers starved on dotnet builds (runs killed at 30 min) -> helpers stopped
+running tests and every full suite ran on the cluster (test43.sh, trx results). The laptop bridge link drops large SSH/SFTP packets: kjob.py
+cl_put now falls back to chunked base64 exec, and rts/s43/rget.py downloads in 256 KB pieces (both in the laptop k3s-cluster folder only, not
+yet in k3s-cluster-code). Full-suite pods need a whole free node (6 GB): lower series parallelism first. A server restart stopped 9 helpers mid-
+work; all resumed from their worktrees. The first audit accounting counted ids that matched session-18 commits; corrected by script at wrap-up.
+**Next session should:** see HANDOFF (start with B-00, then the decision batch, then the mechanics wave).
+

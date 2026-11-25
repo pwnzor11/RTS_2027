@@ -26,7 +26,7 @@ DOCK = (1, 3)
 CAP_MATERIAL = "dust"
 PALETTE = K.PALETTE
 MATERIALS = K.MATERIALS
-STATES = [("idle", 8, 6), ("damaged", 4, 5), ("build", 8, 5)]
+STATES = [("idle", 8, 2), ("damaged", 8, 2), ("build", 8, 5)]     # S43: 8-frame loops at tpf 2 (owner choice)
 TX, TY = 0.4, 1.0          # tower centre
 TOP = 6.6
 FX = [
@@ -112,7 +112,8 @@ def g_fan(S, dmg, i):
             a = math.radians(k * 120 + 20)
             S.box(f"bl{k}", (0.5, 0.06, 1.4), (TX + 1.5 + 0.7 * math.sin(a), (TY - 0.8) * S.YS, 5.3 + 0.7 * math.cos(a)), "canvas2_s", 0.0, rot=(0, math.degrees(a), 0), stretch=False)
         S.box("sailrip", (1.4, 0.06, 2.0), (3.6, 2.0 * S.YS, 2.2), "canvas_s", 0.0, rot=(0, 18, 0), stretch=False)
-        K.flag(S, "flag", -4.6, -0.6, 3.6, i, w=1.5, h=1.0, dmg=True)
+        S.box("sailrip2", (0.9, 0.05, 1.2), (3.9, 2.0 * S.YS, 2.6), "canvas2_s", 0.0, rot=(0, 10 + 6 * math.sin(i * math.pi / 4), 0), stretch=False, nocast=True)
+        K.flag(S, "flag", -4.6, -0.6, 3.6, i / 2.0, w=1.5, h=1.0, dmg=True)
         return
     hz = TOP + 0.8
     hy = TY - 1.0
@@ -126,20 +127,20 @@ def g_fan(S, dmg, i):
         S.box(f"blade{b}", (0.6, 0.07, L), (cx, (hy - 0.2) * S.YS, cz), ("canvas", "canvas2", "teal")[b % 3], 0.0, rot=(0, math.degrees(a), 0), stretch=False)
         tx, tz = TX + math.sin(a) * L * 0.97, hz + math.cos(a) * L * 0.97
         S.box(f"bladetip{b}", (0.62, 0.08, 0.2), (tx, (hy - 0.2) * S.YS, tz), "rust" if b % 2 == 0 else "hazard", 0.0, rot=(0, math.degrees(a), 0), stretch=False, nocast=True)
-    S.sphere("charge", 0.18, (TX, hy - 0.7, hz), "lamp" if i % 4 < 2 else "lamp_off", nocast=True)
+    S.sphere("charge", 0.18, (TX, hy - 0.7, hz), "lamp" if i % 4 < 2 else "lamp_off", nocast=True)  # 4-frame pulse, twice per loop
     K.beam(S, "guy1", (TX, TY, 5.4), (TX + 3.6, TY - 3.0, 0.1), 0.04, "rope", nocast=True)
     K.beam(S, "guy2", (TX, TY, 5.4), (TX - 3.2, TY - 3.2, 0.1), 0.04, "rope", nocast=True)
     # two sails on tilted masts east of the tower, billowing
     for k, (sx, sy, h) in enumerate(((3.4, 1.6, 3.4), (2.6, -0.8, 2.8))):
         K.beam(S, f"smast{k}", (sx, sy, 0.1), (sx + 0.3, sy - 0.2, h + 0.8), 0.12, "wood")
         bill = 0.18 * math.sin((i + k * 3) * math.pi / 4)
-        S.box(f"sail{k}", (1.3 + bill, 0.07, h * 0.8), (sx + 0.7 + bill / 2, (sy - 0.25) * S.YS, h * 0.5 + 0.5), "canvas" if k == 0 else "canvas2", 0.0, rot=(0, 6 * math.sin(i + k), 0), stretch=False)
+        S.box(f"sail{k}", (1.3 + bill, 0.07, h * 0.8), (sx + 0.7 + bill / 2, (sy - 0.25) * S.YS, h * 0.5 + 0.5), "canvas" if k == 0 else "canvas2", 0.0, rot=(0, 6 * math.sin((i + k) * math.pi / 4), 0), stretch=False)
     S.bb("sailhouse", 3.7, 4.5, 1.34, 1.38, 2.2, 3.0, "house", 0.0, nocast=True)
-    K.flag(S, "flag", -4.6, -0.6, 6.2, i, w=1.9, h=1.3)
-    # ash swirling round the foot (4 puffs, 90 deg cycle over 8 frames)
+    K.flag(S, "flag", -4.6, -0.6, 6.2, i / 2.0, w=1.9, h=1.3)
+    # ground grit kicked up round the foot: flat chips on the ring (no round puffs, S43 owner call)
     for q in range(4):
         a = math.radians(q * 90 + i * 11.25)
-        S.sphere(f"ash{q}", 0.34, (TX + 2.7 * math.cos(a), TY + 2.4 * math.sin(a), 0.5 + 0.12 * q), "smoke2" if q % 2 else "smoke", squash=0.7)
+        S.box(f"grit{q}", (0.22, 0.12, 0.05), (TX + 2.7 * math.cos(a), (TY + 2.4 * math.sin(a)) * S.YS, 0.08), "ash2", 0.0, rot=(0, 0, math.degrees(a)), stretch=False, nocast=True)
 
 
 GROUPS = [g_pad, g_bus, g_ring, g_tower, g_fan]

@@ -146,7 +146,7 @@ cost = 800  # (tune)
 build_time = 150  # (tune)
 prerequisites = []
 tier = 3
-salvage_permille = 1500  # (tune) wreck value x1.5
+salvage_permille = 1500  # (tune) salvage drain speed x1.5
 
 [lb_up_patchwork]
 faction = "left_behind"
@@ -159,14 +159,13 @@ repairs_vehicles_at_range = true
 # M7-08: Expedition upgrades (design 07 §5), researched at exp_plotting_room (tier 2) and exp_core_hall (tier 3). Costs and effects are (tune),
 # assumed -- confirm. Tier provides are appended by tier sugar.
 
-[exp_up_sonar_nets]   # Sonar Nets: picket reach +30 % (sight stands in for sonar)
+[exp_up_sonar_nets]   # Sonar Nets: picket reach +30 % (sight and sonar radius)
 faction = "expedition"
 cost = 800  # (tune)
 build_time = 100  # (tune)
 prerequisites = []
 tier = 2
-effects = ["exp_fx_sonar_nets_picket"]
-# TODO M7-05: picket sonar radius +, submarines revealed to the team
+effects = ["exp_fx_sonar_nets_picket", "exp_fx_sonar_nets_picket_sonar"]
 
 [exp_up_hardened_hulls]   # Hardened Hulls: ships +15 % health
 faction = "expedition"

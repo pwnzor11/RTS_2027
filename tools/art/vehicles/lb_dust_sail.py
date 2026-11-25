@@ -8,13 +8,19 @@ House paint: the sail emblem, the pennant at the masthead, the hull flank panels
 """
 import os, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import math
 import lb_common as L
+import mot_roll as M
 
 ID = "lb_dust_sail"
 TITLE = "Left Behind Dust Sail"
 CANVAS = 224
 TARGET = (0.0, 0.0, 2.0)
-STATES = [("idle", 16, 1, 1)]
+# move: 4 frames per facing.  Wheels roll (hub bars) and the body bobs, as the wheeled vehicles; the main sail also flutters:
+# it yaws about the mast by 0 / +3 / 0 / -3 deg, so the free edge sways about 4 px.  idle = move frame 0 (no pop on stop).
+STATES = [("idle", 16, 1, 1), ("move", 16, 4, 1)]
+STEP_PX = M.roll_step(0.5)
+MAST_Y = 0.9
 PALETTE = L.PALETTE
 MATERIALS = L.MATERIALS
 
@@ -23,9 +29,14 @@ def build(S, state, k, n):
     box, cyl = S.box, S.cyl
     S.begin("body")
     L.wheel(S, "FL", -1.15, 1.2, 0.55, 0.42, "rust")
+    M.hub_bar(S, "FL", -1, -1.15, 1.2, 0.55, 0.42, k)
     L.wheel(S, "FR", 1.15, 1.2, 0.5, 0.42, "ash")
+    M.hub_bar(S, "FR", 1, 1.15, 1.2, 0.5, 0.42, k)
     L.wheel(S, "T", 0.0, -1.9, 0.4, 0.3, "hazard")
+    M.hub_bar(S, "TL", -1, 0.0, -1.9, 0.4, 0.3, k)     # steering wheel at the tail: a bar on each face
+    M.hub_bar(S, "TR", 1, 0.0, -1.9, 0.4, 0.3, k)
     box("axleF", (2.3, 0.12, 0.12), (0, 1.2, 0.55), "dark", 0)
+    M.sprung(S, k)
     box("hullplank", (1.5, 4.4, 0.25), (0, 0.0, 0.85), "wood", 0.04)
     box("hull", (1.3, 3.4, 0.55), (0, 0.4, 1.2), "hull", 0.07)
     box("bow", (1.1, 0.9, 0.5), (0, 2.4, 1.1), "rust", 0.1)
@@ -47,14 +58,23 @@ def build(S, state, k, n):
     # mast, boom, sails
     cyl("mast", 0.1, 5.4, (0, 0.9, 4.0), "wood", "Z", 8, rot=(-4, 0, 0))
     cyl("masthead", 0.14, 0.12, (0, 0.7, 6.7), "rust2", "Z", 8)
-    cyl("boom", 0.07, 3.2, (0, -0.6, 2.4), "wood", "Y", 6)
+    # sail rig (boom, main sail and its panels) yaws about the mast by FLUTTER[k]; the jib, stays and mast stay put
+    flutter = (0.0, 3.0, 0.0, -3.0)[k]
+    a = math.radians(flutter)
+
+    def sp(y, z):
+        """Location of a sail-rig part at (y, z) after the yaw about the vertical mast axis through (0, MAST_Y)."""
+        dy = y - MAST_Y
+        return (-dy * math.sin(a), MAST_Y + dy * math.cos(a), z)
+
+    cyl("boom", 0.07, 3.2, sp(-0.6, 2.4), "wood", "Y", 6, rot=(90, 0, flutter))
     # main sail: big sheet in the keel plane, raked
-    box("sail", (0.05, 3.0, 3.8), (0, -0.7, 4.5), "canvas", 0.0, rot=(-2, 0, 0))
-    box("sail2", (0.06, 1.2, 1.4), (0, -1.5, 3.4), "canvas2", 0.0)
-    box("sailemblem", (0.08, 1.3, 1.1), (0, -0.4, 4.8), "house", 0.0)
-    box("sailpatch", (0.07, 0.8, 0.8), (0, -1.5, 5.6), "rust", 0.0)
-    box("sailseam", (0.07, 3.0, 0.07), (0, -0.7, 4.0), "rope", 0.0)
-    box("sailseam2", (0.07, 3.0, 0.07), (0, -0.7, 5.2), "rope", 0.0)
+    box("sail", (0.05, 3.0, 3.8), sp(-0.7, 4.5), "canvas", 0.0, rot=(-2, 0, flutter))
+    box("sail2", (0.06, 1.2, 1.4), sp(-1.5, 3.4), "canvas2", 0.0, rot=(0, 0, flutter))
+    box("sailemblem", (0.08, 1.3, 1.1), sp(-0.4, 4.8), "house", 0.0, rot=(0, 0, flutter))
+    box("sailpatch", (0.07, 0.8, 0.8), sp(-1.5, 5.6), "rust", 0.0, rot=(0, 0, flutter))
+    box("sailseam", (0.07, 3.0, 0.07), sp(-0.7, 4.0), "rope", 0.0, rot=(0, 0, flutter))
+    box("sailseam2", (0.07, 3.0, 0.07), sp(-0.7, 5.2), "rope", 0.0, rot=(0, 0, flutter))
     box("jib", (0.04, 1.6, 2.4), (0, 1.9, 3.3), "canvas2", 0.0, rot=(0, 0, 0))
     cyl("jibstay", 0.03, 3.6, (0, 1.9, 2.9), "rope", "Z", 5, rot=(-25, 0, 0))
     box("pennant", (0.04, 0.9, 0.35), (0, -0.2, 6.55), "house", 0.0)

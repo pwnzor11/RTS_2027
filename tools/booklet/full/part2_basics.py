@@ -346,6 +346,35 @@ def p11():
 <div class="fieldnote">Save before you attack a base you have not scouted.</div>""", 'Saving and Loading')
 
 
+FACTION_NAMES = {'authority': 'Authority', 'directorate': 'Directorate', 'left_behind': 'Left Behind', 'expedition': 'Expedition'}
+
+
+def _override_change(k, v):
+    """One per-faction override key as a short phrase for the Difficulty Tiers table (None = not shown)."""
+    if k == 'respond_to_attacks': return 'respond_to_attacks' if v else 'no respond_to_attacks'
+    if k == 'attack_threshold': return f'attacks at army {v}'
+    if k == 'army_cap': return f'army cap {v}'
+    if k == 'army_cap_until_tick': return f'cap until minute {v / TICKS / 60:g}'
+    if k == 'harvester_target': return f'{v} harvesters'
+    if k == 'attack_ratio_pct': return f'attack ratio {v} %'
+    if k == 'expansion_tick': return f'expands from minute {v / TICKS / 60:g}' if v else 'never expands'
+    if k == 'retreat_health_pct': return f'retreats below {v} % health'
+    if k == 'unit_reserve': return f'keeps {v} credits in hand'
+    return None
+
+
+def override_rows():
+    """Rows (faction, tier, changes) for the per-faction tier tables in data/ai/difficulty.toml [faction.<id>.tierN]."""
+    rows = []
+    for fid, name in FACTION_NAMES.items():
+        for n in range(1, 6):
+            ov = DIFF.get('faction', {}).get(fid, {}).get(f'tier{n}')
+            if not ov: continue
+            parts = [c for k, v in ov.items() if (c := _override_change(k, v))]
+            if parts: rows.append((name, str(n), E('; '.join(parts))))
+    return rows
+
+
 def p12():
     order = ['recruit', 'regular', 'veteran', 'elite', 'commissar']
     gloss = {'repair': 'repairs damaged structures', 'replace_harvesters': 'rebuilds lost harvesters', 'respond_to_attacks': 'sends idle units to a structure under attack',
@@ -361,11 +390,14 @@ def p12():
         if t['build_repertoire']: new.insert(0, f"builds a fixed list of {len(t['build_repertoire'])} structures")
         if t['expansion_tick']: new.append(f"expands from minute {t['expansion_tick'] // TICKS // 60:g}")
         rows.append((n.title(), f"{t['tier']}", f"{t['decision_interval_ticks'] / TICKS:g} s", f"{t['attack_threshold']}", E('; '.join(new) or 'basic play only')))
+    over = override_rows()
+    over_html = ('<p>Some factions set their own numbers for single tiers. The table below lists them. Every other tier uses the table above.</p>'
+                 + table(['Faction', 'Tier', 'Changes'], over)) if over else ''
     return pg(f"""<div class="kicker">Rules</div><h1 style="font-size:20pt">Difficulty Tiers</h1><div class="bar"></div>
 <p>Each AI slot has one of five tiers. Higher tiers think faster and use more of the game. Tier 2, Regular, is the default.</p>
 {table(['Tier', 'No.|', 'Thinks every|', 'Attacks at army|', 'Adds'], rows)}
 <p>Each tier also keeps everything the tier below it has. The Adds column lists what is new. "Attacks at army" is the army size at which the AI first sends a wave.</p>
-<div class="fieldnote">A slot marked Cmdr is led by an LLM commander; press {K('Talk')} to talk to one when it is in the game.</div>""",
+{over_html}<div class="fieldnote">A slot marked Cmdr is led by an LLM commander; press {K('Talk')} to talk to one when it is in the game.</div>""",
               'Difficulty Tiers')
 
 
