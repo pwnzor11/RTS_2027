@@ -36,6 +36,9 @@ public sealed class SceneRenderer : IDisposable
     /// <summary>M10-12: draw weather particles for the map's biome (the "Weather" setting); the game screen sets it each frame.</summary>
     public bool WeatherEnabled { get; set; } = true;
 
+    /// <summary>M16-V-04: draw drifting cloud shadows over the world (the "Cloud shadows" setting); the game screen sets it each frame.</summary>
+    public bool CloudShadowsEnabled { get; set; } = true;
+
     /// <summary>M10-14: shake the world view on big blasts (the "Screen shake" setting); the game screen sets it each frame.</summary>
     public bool ShakeEnabled { get; set; } = true;
 
@@ -63,6 +66,7 @@ public sealed class SceneRenderer : IDisposable
     private readonly WallTiler _walls = new();
     private readonly List<DrawItem> _items = new();
     private readonly ThemedTerrainLook _terrain = new();
+    private readonly CloudShadowLayer _clouds = new();   // M16-V-04: soft shadows drifting over the world
     private readonly WaterOverlay _water = new();   // M10-13: animated water, shore foam, ship wakes
     private readonly DecorLayer _decor = new();   // M12: decals and land-linked sprites on the terrain
     private readonly List<WreckView> _wreckViews = new();      // M6-09: wreck and storm layers
@@ -214,6 +218,8 @@ public sealed class SceneRenderer : IDisposable
             WreckStormOverlay.DrawStorms(batch, pixel, _storms, camera);
         }
 
+        if (CloudShadowsEnabled && map is not null && CloudShadows.Active(_mood, _weather))   // M16-V-04: over terrain and units, under the fog and the HUD
+            _clouds.Draw(batch, map.Width, map.Height, snapshot.Tick, _weather, camera, viewport);
         FogRenderer.Draw(batch, pixel, snapshot, camera, viewport);
         FxLook.DrawMood(batch, pixel, _mood, viewport.Bounds);   // D-184: world colour grade (the HUD draws after the scene)
         if (WeatherEnabled && _weather != WeatherKind.None)   // M10-12: above the units, under the overlays and the HUD
@@ -331,6 +337,7 @@ public sealed class SceneRenderer : IDisposable
         _disposed = true;
         _painter.Dispose();
         _look.Dispose();
+        _clouds.Dispose();
     }
 
     // M12-04: blocking props in view join the y-sorted pass, so a unit south of a tree is drawn over it and one north of it under it.
