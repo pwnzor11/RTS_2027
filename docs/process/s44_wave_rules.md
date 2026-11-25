@@ -10,9 +10,11 @@ ONE 512-game re-measure runs at the end of the wave (lead). So: build the mechan
 - `cd` into your worktree in EVERY Bash call (the shell does not keep the directory).
 
 ## Building and testing (the box has 2 CPUs / 7 GB, shared by ~12 helpers)
-- EVERY dotnet command goes through the shared lock and a time limit, e.g.
-  `cd /home/claude/wt/<id> && flock /tmp/rts-dotnet.lock timeout 580 dotnet test tests/Sim.Tests -v q --filter "FullyQualifiedName~S44" 2>&1 | tail -30`
-- Env: `export DOTNET_CLI_TELEMETRY_OPTOUT=1 DOTNET_NOLOGO=1 DOTNET_CLI_HOME=/tmp/dn-<id>`.
+- EVERY dotnet command goes through the shared lock (`flock -o /tmp/rts-dn2.lock`: `-o` stops build servers inheriting the lock) with build
+  servers off and a time limit, e.g.
+  `cd /home/claude/wt/<id> && flock -o /tmp/rts-dn2.lock timeout 580 dotnet test tests/Sim.Tests -v q --filter "FullyQualifiedName~S44" 2>&1 | tail -30`
+- Env: `export DOTNET_CLI_TELEMETRY_OPTOUT=1 DOTNET_NOLOGO=1 DOTNET_CLI_HOME=/tmp/dn-<id> DOTNET_CLI_USE_MSBUILD_SERVER=0 UseSharedCompilation=false`
+  and add `--disable-build-servers` to every dotnet build/test. The old `/tmp/rts-dotnet.lock` is retired (held by orphan compiler servers).
 - Run only scoped tests while working (your new test class, plus the area tests your brief names). Build with `-m:1`.
 - Before committing, run ONCE: your test project filtered to your area + `Determinism` + `Golden` + `Rules`, e.g.
   `--filter "FullyQualifiedName~S44|FullyQualifiedName~Determinism|FullyQualifiedName~Golden|FullyQualifiedName~Rules"`.
