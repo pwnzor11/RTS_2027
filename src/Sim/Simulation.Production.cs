@@ -404,6 +404,7 @@ public sealed partial class Simulation
             s.Ticks[lane]++;
         }
         if (s.Ticks[lane] < total) return;
+        if (s.Spent[lane] > cost) { Refund(player, s.Spent[lane] - cost); s.Spent[lane] = cost; }   // M-23 (SIMECON-06): the cost fell mid-build; give the difference back once
         if (!CompleteItem(player, category, type)) { s.Stalled[lane] = true; return; }   // no free exit cell: retry next tick
         PopQueue(lane, 0);
         if (!IsUnitCategory(category)) s.Ready[lane] = type;
