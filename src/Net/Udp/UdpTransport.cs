@@ -24,6 +24,9 @@ public sealed class UdpTransport : INetTransport
     private const int MaxPacketsPerPeerPerPoll = 16;
     private const long ClosingGraceMicros = 2_000_000;
 
+    /// <summary>A pending peer that has not been accepted or rejected within this long (no handshake progress) is dropped (NETLLM-07).</summary>
+    public const int DefaultPendingTimeoutMs = 10_000;
+
     private sealed class Peer
     {
         public int Id;
@@ -31,11 +34,13 @@ public sealed class UdpTransport : INetTransport
         public ReliableChannel Channel = null!;
         public bool Pending, Connected, HelloSurfaced, Closing, Started;
         public long CloseDeadline;
+        public long CreatedMicros;
     }
 
     private readonly Socket _socket;
     private readonly bool _isHost;
     private readonly long _timeoutMicros;
+    private readonly long _pendingTimeoutMicros;
     private readonly List<Peer> _peers = new();
     private readonly List<int> _connected = new();
     private readonly Queue<(int From, NetMessage Message)> _inbox = new();
@@ -46,8 +51,9 @@ public sealed class UdpTransport : INetTransport
     private long _lastNow;
     private bool _clockStarted, _disposed;
 
-    private UdpTransport(Socket socket, bool isHost, int timeoutMs)
+    private UdpTransport(Socket socket, bool isHost, int timeoutMs, int pendingTimeoutMs = DefaultPendingTimeoutMs)
     {
+        _pendingTimeoutMicros = (long)pendingTimeoutMs * 1000;
         _socket = socket;
         _isHost = isHost;
         _timeoutMicros = (long)timeoutMs * 1000;
@@ -63,13 +69,13 @@ public sealed class UdpTransport : INetTransport
     /// <summary>The bound local endpoint (use it to learn an ephemeral port chosen with port 0).</summary>
     public IPEndPoint LocalEndPoint => (IPEndPoint)_socket.LocalEndPoint!;
 
-    /// <summary>Opens a host on <paramref name="port"/> (0 = any free port). <paramref name="timeoutMs"/> is the silence limit.</summary>
-    public static UdpTransport Host(int port, int timeoutMs = NetProtocol.TimeoutMs, IPAddress? bindAddress = null)
+    /// <summary>Opens a host on <paramref name="port"/> (0 = any free port). <paramref name="timeoutMs"/> is the silence limit; <paramref name="pendingTimeoutMs"/> how long a peer may stay pending (not accepted or rejected).</summary>
+    public static UdpTransport Host(int port, int timeoutMs = NetProtocol.TimeoutMs, IPAddress? bindAddress = null, int pendingTimeoutMs = DefaultPendingTimeoutMs)
     {
         var socket = NewSocket(AddressFamily.InterNetwork);
         try { socket.Bind(new IPEndPoint(bindAddress ?? IPAddress.Any, port)); }
         catch { socket.Dispose(); throw; }
-        return new UdpTransport(socket, true, timeoutMs);
+        return new UdpTransport(socket, true, timeoutMs, pendingTimeoutMs);
     }
 
     /// <summary>Starts connecting to a host; <paramref name="hello"/> is sent as the first reliable message.</summary>
@@ -113,6 +119,7 @@ public sealed class UdpTransport : INetTransport
             foreach (Peer p in _peers)
             {
                 p.Channel.Rebase(nowMicroseconds);
+                if (p.Pending) p.CreatedMicros = nowMicroseconds;
                 if (p.CloseDeadline != 0) p.CloseDeadline = nowMicroseconds + ClosingGraceMicros;
             }
         }
@@ -122,6 +129,7 @@ public sealed class UdpTransport : INetTransport
         {
             if (!_peers.Contains(p)) continue;
             if (p.Channel.Faulted) { DropWithBye(p, "protocol violation"); continue; }
+            if (p.Pending && !p.Closing && nowMicroseconds - p.CreatedMicros > _pendingTimeoutMicros) { Drop(p, "handshake timeout"); continue; }
             if (p.Closing)
             {
                 if (p.CloseDeadline == 0) p.CloseDeadline = nowMicroseconds + ClosingGraceMicros;
@@ -250,7 +258,8 @@ public sealed class UdpTransport : INetTransport
             if (peer == null)
             {
                 if (!_isHost || _peers.Count(x => x.Pending) >= MaxPending) continue;
-                var fresh = new Peer { Id = _nextPendingId--, EndPoint = ep, Channel = new ReliableChannel(now), Pending = true, Started = true };
+                if (_peers.Exists(x => x.Pending && x.EndPoint.Address.Equals(ep.Address))) continue;   // one pending slot per source address (NETLLM-07)
+                var fresh = new Peer { Id = _nextPendingId--, EndPoint = ep, Channel = new ReliableChannel(now), Pending = true, Started = true, CreatedMicros = now };
                 if (!fresh.Channel.OnPacket(now, _recvBuf.AsSpan(0, n))) continue;
                 _peers.Add(fresh);
                 peer = fresh;
