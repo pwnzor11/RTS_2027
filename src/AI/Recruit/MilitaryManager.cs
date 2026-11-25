@@ -865,12 +865,16 @@ internal sealed class MilitaryManager
         CellCoord goalB = goal;
         if (_prong && _phase == Phase.Assault) goalB = SecondGoal(k, knownEnemyBuildings, goal) ?? goal;
         // VET-6: below the defence response, an assaulting wave concentrates on a visible rank-3 enemy
-        if (_phase == Phase.Assault && attacked is null && AnyRank3(k))
+        // s44 (A-02): with the focus_fire flag (any faction) a wave unit also attacks the weakest visible enemy unit inside its own gun range
+        bool rank3 = AnyRank3(k);
+        if (_phase == Phase.Assault && attacked is null && (rank3 || Options.FocusFire))
             foreach (ViewActor a in k.Army)
             {
                 if (a.Underground || !_roster.Contains(Key(a))) continue;
-                if (PickFocus(k.Visible, a.Cell, k.Rules) is ViewActor f && a.Target != f.Id)
-                    sink.Issue(CommandKind.Attack, a.Id, a.Kind, default, f.Ref);
+                ViewActor? f = rank3 ? PickFocus(k.Visible, a.Cell, k.Rules) : null;
+                if (f is null && Options.FocusFire) f = PickWeakestInRange(k.Visible, k.Rules, a, k.View.WeaponRange(a.Kind, a.TypeIndex));
+                if (f is ViewActor ft && a.Target != ft.Id)
+                    sink.Issue(CommandKind.Attack, a.Id, a.Kind, default, ft.Ref);
             }
         List<CellCoord>? parties = _phase == Phase.Assault && siegeTarget is null && knownEnemyBuildings.Count == 0 && Sweeping && !_prong && !_hookWaveActive && HookAttack is null
             ? SweepParties(k, tick, RosterAlive(k)) : null;   // S22: a big wave splits up to look in several places at once
@@ -1272,6 +1276,24 @@ internal sealed class MilitaryManager
             long dx = e.Cell.X - from.X, dy = e.Cell.Y - from.Y, d = dx * dx + dy * dy;
             if (d >= best) continue;
             best = d; pick = e;
+        }
+        return pick;
+    }
+
+    /// <summary>s44 (A-02) focus_fire: the lowest-health visible enemy mobile unit (not aircraft) that <paramref name="a"/>'s gun already reaches; ties go to the lower slot.</summary>
+    internal static ViewActor? PickWeakestInRange(IReadOnlyList<ViewActor> visible, Rts.Sim.Rules.SimRules rules, ViewActor a, int range)
+    {
+        if (range <= 0) return null;
+        long reach2 = (long)range * range;
+        ViewActor? pick = null;
+        foreach (ViewActor e in visible)
+        {
+            if (e.Relation != Relation.Enemy || !e.IsMobile || e.Ghost) continue;
+            if (e.Kind == ActorKind.Vehicle && rules.Vehicles[e.TypeIndex].Locomotion == Locomotion.Air) continue;
+            long dx = e.Position.X - a.Position.X, dy = e.Position.Y - a.Position.Y;
+            if (dx * dx + dy * dy > reach2) continue;
+            if (pick is ViewActor p && (e.Health > p.Health || (e.Health == p.Health && e.Id.Index >= p.Id.Index))) continue;
+            pick = e;
         }
         return pick;
     }

@@ -104,6 +104,9 @@ public sealed record DifficultyProfile(
     /// <summary>s41 (M13-45) <c>wave_search</c>: a wave in assault that knows no enemy sweeps the map sector by sector instead of ending (false = off).</summary>
     public bool WaveSearch { get; init; }
 
+    /// <summary>s44 (A-02) <c>supply_margin</c> 0..100: free supply the build order keeps before it adds a power / supply structure (0 = the built-in table 4, 5, 8, 10, 12 by tier). Higher = builds earlier.</summary>
+    public int SupplyMargin { get; init; }
+
     // S15 lbknob: per-faction versions of this tier (index = Faction enum value), from the [faction.<id>.tier<N>] tables; null = the shared profile.
     private DifficultyProfile?[] _byFaction = new DifficultyProfile?[5];
 
