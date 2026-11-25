@@ -42,6 +42,9 @@ public sealed class SceneRenderer : IDisposable
     /// <summary>QOL-20 (D-313): the "Reduce flashes" setting: no white hit flash on units, no promotion flash, no muzzle sparks. View only; separate from <see cref="ShakeEnabled"/>.</summary>
     public bool ReduceFlashes { get; set; }
 
+    /// <summary>S45 V-04: tracked and wheeled vehicles leave fading track marks on soft ground (the "Tread marks" setting); the game screen sets it each frame.</summary>
+    public bool TreadMarksEnabled { get; set; } = true;
+
     private readonly Stopwatch _clock = Stopwatch.StartNew();   // presentation time only: weather drift and shake decay, never the sim
     private double _lastSeconds;
     private readonly JuiceShake _shake = new();
@@ -54,6 +57,8 @@ public sealed class SceneRenderer : IDisposable
     private readonly SpriteResolver _sprites;
     private readonly SpriteLibrary? _library;
     private readonly FxPlayer _fx = new();
+    private readonly TreadMarkPool _treads = new();   // S45 V-04
+    private readonly TreadMarker _treadMarker = new();
     private readonly FxLook _look = new();   // D-184: damage tiers, remains, dust, mood tint
     private MapData? _moodMap;
     private MoodGrade _mood = MoodGrade.None;
@@ -195,6 +200,12 @@ public sealed class SceneRenderer : IDisposable
             WreckStormOverlay.DrawWrecks(batch, pixel, _wrecks, camera);
         }
 
+        if (TreadMarksEnabled)   // S45 V-04: track marks on the ground, under remains and units
+        {
+            _treadMarker.Observe(snapshot, frame.Rules, _treads);
+            TreadMarker.Draw(batch, pixel, _treads, camera, viewport, snapshot.Tick);
+        }
+
         _look.DrawGround(batch, pixel, camera, viewport, snapshot.Tick, _wrecks);   // D-184: remains and dust, on the ground
         _look.DrawDying(batch, _sprites, _painter, frame.Rules, camera, viewport, snapshot.Tick);   // M10-14b: soldiers playing their death state
         DrawSprites(batch, pixel, frame, camera);
@@ -315,6 +326,8 @@ public sealed class SceneRenderer : IDisposable
     public void Reset()
     {
         _memory.Reset();
+        _treads.Clear();
+        _treadMarker.Reset();
         _water.Reset();
         _hits.Reset();
         _shake.Clear();

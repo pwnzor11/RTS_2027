@@ -58,6 +58,8 @@ public sealed class SettingsScreen : IScreen
                 new MenuButton("Toggle", ToggleScreenShake)),   // M10-14
             new MenuItem(() => $"Reduce flashes: {(_s.Settings.ReduceFlashes ? "On" : "Off")}", ToggleReduceFlashes, _ => ToggleReduceFlashes(),
                 new MenuButton("Toggle", ToggleReduceFlashes)),   // QOL-20
+            new MenuItem(() => $"Tread marks: {(_s.Settings.TreadMarks ? "On" : "Off")}", ToggleTreadMarks, _ => ToggleTreadMarks(),
+                new MenuButton("Toggle", ToggleTreadMarks)),   // S45 V-04
             new MenuItem(() => "Alerts", () => _s.Screens.Push(new AlertsSettingsScreen(_s, _path))),   // QOL-12
             new MenuItem(() => $"Order lines: {(_s.Settings.ShowOrderLines ? "On" : "Off")}", ToggleOrderLines, _ => ToggleOrderLines(),
                 new MenuButton("Toggle", ToggleOrderLines)),   // QOL-10
@@ -180,6 +182,8 @@ public sealed class SettingsScreen : IScreen
     private void ToggleWeather() => _s.Settings = _s.Settings with { Weather = !_s.Settings.Weather };
 
     private void ToggleReduceFlashes() => _s.Settings = _s.Settings with { ReduceFlashes = !_s.Settings.ReduceFlashes };
+
+    private void ToggleTreadMarks() => _s.Settings = _s.Settings with { TreadMarks = !_s.Settings.TreadMarks };   // S45 V-04
 
     private void ToggleScreenShake() => _s.Settings = _s.Settings with { ScreenShake = !_s.Settings.ScreenShake };
 
