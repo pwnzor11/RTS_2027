@@ -17,6 +17,15 @@ namespace AI.Tests.S44;
 public sealed class AiNavalUseTests
 {
     private static SimRules Rules => TestWorld.Rules.Sim;
+
+    /// <summary>D-323: the shipped data turns the naval plan off; these tests switch it on at tier 3 (the value it was built and tuned with).</summary>
+    private static DifficultyProfile Tier(int i)
+    {
+        DifficultyProfile p = TestWorld.Tiers[i];
+        FactionTuning[] t = (FactionTuning[])(p.FactionKeys.Tuning ?? new FactionTuning[4]).Clone();
+        t[3] = (t[3] ?? FactionTuning.Default) with { NavalMinTier = 3 };
+        return p with { FactionKeys = p.FactionKeys with { Tuning = t } };
+    }
     private static int Veh(string id) => SimRules.IndexOf(Rules.Vehicles, id, v => v.Id);
     private static int Bld(string id) => SimRules.IndexOf(Rules.Buildings, id, v => v.Id);
 
@@ -49,12 +58,12 @@ public sealed class AiNavalUseTests
     // ---- data -----------------------------------------------------------------------------------------
 
     [Fact]
-    public void TheShippedData_EnablesTheNavalLevers_FromTierThreeOnly()
+    public void TheShippedData_KeepsTheNavalPlanOff_D323()
     {
         foreach (DifficultyProfile p in TestWorld.Tiers)
         {
             FactionTuning t = p.FactionKeys.TuningOf((int)Faction.Expedition);
-            Assert.Equal(3, t.NavalMinTier);   // one per-faction table; the tier gate is the key itself
+            Assert.Equal(0, t.NavalMinTier);   // D-323: shipped off after the s44 re-measure; the levers below stay tuned for when it is on
             Assert.True(t.NavalMinelayers <= 1 && t.NavalCruisers <= 2 && t.NavalCarriers <= 1);
         }
         Assert.Equal(FactionTuning.Default.NavalMinTier, FactionAiKeys.Default.TuningOf((int)Faction.Authority).NavalMinTier);
@@ -78,17 +87,17 @@ public sealed class AiNavalUseTests
     [Fact]
     public void BuildOrder_PicksOneDrydock_AtTierThree_OnceAShipyardStandsAndItIsBuildable()
     {
-        Assert.Equal(1, DrydockSteps(TestWorld.Tiers[2], shipyard: true, buildable: true));
-        Assert.Equal(1, DrydockSteps(TestWorld.Tiers[4], shipyard: true, buildable: true));
+        Assert.Equal(1, DrydockSteps(Tier(2), shipyard: true, buildable: true));
+        Assert.Equal(1, DrydockSteps(Tier(4), shipyard: true, buildable: true));
     }
 
     [Fact]
     public void BuildOrder_NoDrydock_BelowTierThree_WithoutAShipyard_OrWhenLocked()
     {
-        Assert.Equal(0, DrydockSteps(TestWorld.Tiers[0], true, true));
-        Assert.Equal(0, DrydockSteps(TestWorld.Tiers[1], true, true));
-        Assert.Equal(0, DrydockSteps(TestWorld.Tiers[2], false, true));
-        Assert.Equal(0, DrydockSteps(TestWorld.Tiers[2], true, false));
+        Assert.Equal(0, DrydockSteps(Tier(0), true, true));
+        Assert.Equal(0, DrydockSteps(Tier(1), true, true));
+        Assert.Equal(0, DrydockSteps(Tier(2), false, true));
+        Assert.Equal(0, DrydockSteps(Tier(2), true, false));
     }
 
     // ---- fleet bag: heavy ships and the Minelayer cap -------------------------------------------------
@@ -115,7 +124,7 @@ public sealed class AiNavalUseTests
     [Fact]
     public void FleetBag_BuildsAtMostOneMinelayer_AtTierThree()
     {
-        DifficultyProfile p = TestWorld.Tiers[2];
+        DifficultyProfile p = Tier(2);
         Assert.Equal(Veh("exp_minelayer"), Wanted(p, ownMinelayers: 0));
         Assert.NotEqual(Veh("exp_minelayer"), Wanted(p, ownMinelayers: 1));
     }
@@ -123,18 +132,18 @@ public sealed class AiNavalUseTests
     [Fact]
     public void FleetBag_NoMinelayer_BelowTierThree_OrWhenNotBuildable()
     {
-        Assert.NotEqual(Veh("exp_minelayer"), Wanted(TestWorld.Tiers[1], 0));
-        Assert.NotEqual(Veh("exp_minelayer"), Wanted(TestWorld.Tiers[0], 0));
-        Assert.NotEqual(Veh("exp_minelayer"), Wanted(TestWorld.Tiers[2], 0, layerBuildable: false));
+        Assert.NotEqual(Veh("exp_minelayer"), Wanted(Tier(1), 0));
+        Assert.NotEqual(Veh("exp_minelayer"), Wanted(Tier(0), 0));
+        Assert.NotEqual(Veh("exp_minelayer"), Wanted(Tier(2), 0, layerBuildable: false));
     }
 
     [Fact]
     public void FleetBag_AddsAHeavyShip_AtTierThree_ButNotAtTierTwo()
     {
-        int heavy3 = Wanted(TestWorld.Tiers[2], ownMinelayers: 1);
+        int heavy3 = Wanted(Tier(2), ownMinelayers: 1);
         Assert.True(heavy3 == Veh("exp_carrier") || heavy3 == Veh("exp_cruiser"), "a Carrier or Cruiser once the Drydock makes them buildable");
-        Assert.Equal(Veh("exp_destroyer"), Wanted(TestWorld.Tiers[2], 1, heavyBuildable: false));   // no Drydock: the old destroyer
-        Assert.Equal(Veh("exp_destroyer"), Wanted(TestWorld.Tiers[1], 1));   // tier 2: the old bag (plan wants no heavy ships)
+        Assert.Equal(Veh("exp_destroyer"), Wanted(Tier(2), 1, heavyBuildable: false));   // no Drydock: the old destroyer
+        Assert.Equal(Veh("exp_destroyer"), Wanted(Tier(1), 1));   // tier 2: the old bag (plan wants no heavy ships)
     }
 
     // ---- a damaged ship returns to the Drydock ---------------------------------------------------------
@@ -173,7 +182,7 @@ public sealed class AiNavalUseTests
     [Fact]
     public void ADamagedIdleShip_SailsToTheDrydock_AtTierThree()
     {
-        var moves = Fleet(TestWorld.Tiers[2], 45);   // above the old 40 % floor, below naval_return_pct
+        var moves = Fleet(Tier(2), 45);   // above the old 40 % floor, below naval_return_pct
         Assert.NotEmpty(moves);
         CellCoord c = moves[0].Cell;
         Assert.InRange(c.X, 9, 14);   // next to the 4x3 Drydock at (10,8)
@@ -183,12 +192,12 @@ public sealed class AiNavalUseTests
     [Fact]
     public void ADamagedShip_AboveTheOldFloor_StaysPut_AtTierTwo()
     {
-        foreach (var m in Fleet(TestWorld.Tiers[1], 45)) Assert.False(m.Cell.X <= 14 && m.Cell.Y is >= 7 and <= 11, "tier 2: no repair trip (the old floor is 40 %)");
+        foreach (var m in Fleet(Tier(1), 45)) Assert.False(m.Cell.X <= 14 && m.Cell.Y is >= 7 and <= 11, "tier 2: no repair trip (the old floor is 40 %)");
     }
 
     [Fact]
     public void AHealthyShip_IsNotSentToTheDrydock()
     {
-        foreach (var m in Fleet(TestWorld.Tiers[2], 100)) Assert.False(m.Cell.X <= 14 && m.Cell.Y is >= 7 and <= 11, "no repair trip at full health");
+        foreach (var m in Fleet(Tier(2), 100)) Assert.False(m.Cell.X <= 14 && m.Cell.Y is >= 7 and <= 11, "no repair trip at full health");
     }
 }
