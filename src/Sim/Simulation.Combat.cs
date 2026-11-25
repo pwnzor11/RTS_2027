@@ -34,6 +34,9 @@ public sealed partial class Simulation
     private ProjectileStore _projectiles = null!;
 
     // Hits queued by Hurt during a tick and applied together by ApplyPendingDamage; empty between ticks (not state).
+    // S44 (M-26): which mobile slots fired during this tick's RunMissions (index 0 = vehicle, 1 = infantry). Scratch, cleared every tick, not state.
+    private bool[][] _firedThisTick = { Array.Empty<bool>(), Array.Empty<bool>() };
+
     private PendingHit[] _pendingDamage = new PendingHit[256];
     private int _pendingCount;
 
@@ -236,15 +239,22 @@ public sealed partial class Simulation
 
     /// <summary>Fire the weapon if its reload is over. Instant weapons apply damage now; others spawn a projectile
     /// aimed at <paramref name="targetPoint"/>. Returns true if a shot was fired.</summary>
-    internal bool Fire(ActorKind kind, int i, int weapon, ActorRef target, LeptonCoord targetPoint)
+    internal bool Fire(ActorKind kind, int i, int weapon, ActorRef target, LeptonCoord targetPoint) =>
+        FireSlot(kind, i, weapon, target, targetPoint, 0);
+
+    /// <summary>S44 (M-04): <see cref="Fire"/> for weapon slot 0 (primary, reload in ReloadTicks), 1 (secondary, Reload2) or 2 (tertiary,
+    /// Reload3). Only the primary slot uses ammo and the one-use rule; every slot breaks stealth and reveals a dived sub.</summary>
+    internal bool FireSlot(ActorKind kind, int i, int weapon, ActorRef target, LeptonCoord targetPoint, int slot)
     {
+        if (kind != ActorKind.Building && HealthAt(kind, i) <= 0) return false;   // S44 (M-26, SIMCOMBAT-04): a 0-HP actor awaiting cleanup does not shoot
         ActorLayer layer = _tunnels.LayerOf(kind, i);   // M3-03: diving and underground units cannot fire
         if (layer == ActorLayer.Diving || ActorLayers.IsUnderground(layer)) return false;
         ref CombatEntry e = ref _combat.At(kind, i);
-        if (e.ReloadTicks > 0) return false;
+        ref int reload = ref (slot == 0 ? ref e.ReloadTicks : ref (slot == 1 ? ref e.Reload2 : ref e.Reload3));
+        if (reload > 0) return false;
         byte owner = PlayerAt(kind, i);
         WeaponType w = RulesOf(owner).Weapons[weapon];
-        bool ammoBound = kind == ActorKind.Vehicle && RulesOf(owner).Vehicles[_units.TypeIndex[i]].Ammo > 0;   // D-156
+        bool ammoBound = slot == 0 && kind == ActorKind.Vehicle && RulesOf(owner).Vehicles[_units.TypeIndex[i]].Ammo > 0;   // D-156
         if (ammoBound && _naval.AmmoLeft[i] <= 0) return false;
         if (kind != ActorKind.Building && IsUnderground(kind, i)) return false;                       // M3-05: underground cannot fire
         if (!target.Id.IsNone && target.Kind <= ActorKind.Building && !WeaponCanTarget(w, target.Kind, target.Id.Index)) return false;   // M3-05: air vs ground
@@ -260,13 +270,14 @@ public sealed partial class Simulation
             _projectiles.Spawn(PositionAt(kind, i), target, targetPoint, w.ProjectileSpeed, damage, w.Warhead, owner, weapon, shooter);
         }
         if (ammoBound) _naval.AmmoLeft[i]--;   // D-156: one round per shot
-        e.ReloadTicks = w.RateOfFire < 1 ? 1 : w.RateOfFire;
-        if (kind != ActorKind.Building) e.ReloadTicks = Math.Max(1, (int)((long)e.ReloadTicks * _effects.RofPermille(kind, i) / 1000));   // M3-06: aura rate of fire
-        if (rank > 0) e.ReloadTicks = Math.Max(1, ScaleByRank(VetRules.ReloadPermille, rank, e.ReloadTicks));   // VET-3: faster reload
+        reload = w.RateOfFire < 1 ? 1 : w.RateOfFire;
+        if (kind != ActorKind.Building) reload = Math.Max(1, (int)((long)reload * _effects.RofPermille(kind, i) / 1000));   // M3-06: aura rate of fire
+        if (rank > 0) reload = Math.Max(1, ScaleByRank(VetRules.ReloadPermille, rank, reload));   // VET-3: faster reload
         if (!shooter.Id.IsNone) MarkCombat(kind, i);   // VET-3: self-heal waits after a shot
+        if (kind != ActorKind.Building) _firedThisTick[(int)kind][i] = true;   // S44 (M-26, SIMCOMBAT-06): RunStealth reads this, not the reload value
         if (kind == ActorKind.Vehicle) { _effects.VehicleStill[i] = 0; if (_naval.Submerged[i]) _naval.RevealLeft[i] = SubRevealTicks; }   // D-205 (SIM-RULES-04): firing always breaks stealth, whatever the reload; (LE-05): a dived sub that fires is seen
         else if (kind == ActorKind.Infantry) _effects.InfantryStill[i] = 0;
-        if (kind == ActorKind.Vehicle && RulesOf(owner).Vehicles[_units.TypeIndex[i]].OneUse) RemoveMobileQuietly(kind, i);   // D-205 (LE-14): the Kite is spent by its bomb
+        if (slot == 0 && kind == ActorKind.Vehicle && RulesOf(owner).Vehicles[_units.TypeIndex[i]].OneUse) RemoveMobileQuietly(kind, i);   // D-205 (LE-14): the Kite is spent by its bomb
         return true;
     }
 
@@ -485,6 +496,8 @@ public sealed partial class Simulation
             {
                 ref CombatEntry e = ref _combat.At(kind, i);
                 if (e.ReloadTicks > 0) e.ReloadTicks--;
+                if (e.Reload2 > 0) e.Reload2--;   // S44 (M-04)
+                if (e.Reload3 > 0) e.Reload3--;
             }
         }
         RunBuildingCombat();

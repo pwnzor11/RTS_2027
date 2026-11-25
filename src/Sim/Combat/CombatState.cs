@@ -12,6 +12,8 @@ namespace Rts.Sim.Combat;
 /// S19 (M13-15): flag 2 = the entry fields as for 1, then the slot's orders data (stance byte, waypoint count, attack-move mask, eight
 /// waypoint cells). Vehicles and infantry only. A slot with default stance and an empty queue writes flag 0 or 1 exactly as before, so
 /// games that use neither keep their bytes and hashes.
+/// S44 (M-04): flag bit 4 = the entry also has the second and third weapon reloads (two Int32), written right after the entry fields
+/// and before any orders data (so the flag is 1, 2, 5 or 6). An entry with both at 0 never sets the bit.
 /// </summary>
 public sealed class CombatState : ISimStatePart
 {
@@ -129,12 +131,14 @@ public sealed class CombatState : ISimStatePart
                 ref CombatEntry e = ref arr[i];
                 bool orders = HasOrders(k, i);
                 if (e.IsDefault && !orders) { w.Write((byte)0); continue; }
-                w.Write(orders ? (byte)2 : (byte)1);
+                bool extra = e.Reload2 != 0 || e.Reload3 != 0;
+                w.Write((byte)((orders ? 2 : 1) | (extra ? 4 : 0)));
                 w.Write(e.ReloadTicks); w.Write(e.TurretFacing); w.Write(e.TurretInit);
                 w.Write((byte)e.AttackTarget.Kind); w.Write(e.AttackTarget.Id.Index); w.Write(e.AttackTarget.Id.Generation);
                 w.Write(e.GuardPoint.X); w.Write(e.GuardPoint.Y); w.Write(e.GuardPending);
                 w.Write(e.ChaseCell.X); w.Write(e.ChaseCell.Y);
                 w.Write(e.RetargetTick); w.Write(e.ScanTick); w.Write(e.Generation);
+                if (extra) { w.Write(e.Reload2); w.Write(e.Reload3); }
                 if (!orders) continue;
                 w.Write(_stance[k][i]); w.Write(_wpCount[k][i]); w.Write(_wpAttack[k][i]);
                 int cap = _stance[k].Length;
@@ -155,7 +159,9 @@ public sealed class CombatState : ISimStatePart
                 ResetOrders((ActorKind)k, i);
                 byte flag = r.ReadByte();
                 if (flag == 0) { arr[i] = default; continue; }
-                if (flag > 2 || (flag == 2 && k >= 2)) throw new InvalidDataException("combat entry flag out of range.");
+                bool extra = (flag & 4) != 0;
+                flag = (byte)(flag & 3);
+                if (flag == 0 || flag > 2 || (flag == 2 && k >= 2)) throw new InvalidDataException("combat entry flag out of range.");
                 var e = new CombatEntry
                 {
                     ReloadTicks = r.ReadInt32(), TurretFacing = r.ReadByte(), TurretInit = r.ReadBoolean(),
@@ -166,6 +172,7 @@ public sealed class CombatState : ISimStatePart
                 e.GuardPending = r.ReadBoolean();
                 e.ChaseCell = new CellCoord(r.ReadInt32(), r.ReadInt32());
                 e.RetargetTick = r.ReadInt32(); e.ScanTick = r.ReadInt32(); e.Generation = r.ReadUInt16();
+                if (extra) { e.Reload2 = r.ReadInt32(); e.Reload3 = r.ReadInt32(); }
                 arr[i] = e;
                 if (flag != 2) continue;
                 byte stance = r.ReadByte();

@@ -168,6 +168,7 @@ public class HashCoverageTests
         ["Simulation._emittersDirty"] = "invalidation flag for _emitters (M3-INT)",
         ["Simulation.UseEmitterCache"] = "test switch for the _emitters speed-up; results do not depend on it (M3-INT)",
         ["Simulation._pendingCount"] = "fill level of _pendingDamage; always 0 between ticks",
+        ["Simulation._firedThisTick"] = "S44 M-26: which mobile slots fired this tick; cleared at the start of every RunMissions, read by RunStealth in the same tick",
         ["Simulation._tickPosVeh"] = "start-of-tick vehicle positions for combat decisions, rewritten at the start of every RunMissions",
         ["Simulation._tickPosInf"] = "start-of-tick infantry positions for combat decisions, rewritten at the start of every RunMissions",
         ["Simulation._supplyUsed"] = "SUP-1 per-player supply in use: a pure function of the units/infantry parts, rewritten by EnsureSupply (tick-stamped scratch cache)",

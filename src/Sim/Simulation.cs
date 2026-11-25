@@ -658,8 +658,10 @@ public sealed partial class Simulation
         // Safe point: promote queued missions, then run handlers. Handlers only queue new missions, so a
         // mission assigned during a handler takes effect on the next tick.
         SnapshotTickPositions();   // D-065: combat decisions use start-of-tick positions
+        ResetFiredThisTick();      // S44 (M-26)
         RunMissions(_units, ActorKind.Vehicle);
         RunMissions(_infantry, ActorKind.Infantry);
+        RunSecondaryWeapons();     // S44 (M-04): Simulation.WeaponSlots.cs
     }
 
     private void RunMissions(MobileStore store, ActorKind kind)
@@ -672,6 +674,7 @@ public sealed partial class Simulation
         for (int i = 1; i < store.Capacity; i++)
         {
             if (!store.Slots.IsIndexAlive(i) || store.Mission[i] == MissionKind.None || store.WakeTick[i] > Tick) continue;
+            if (store.Health[i] <= 0) continue;   // S44 (M-26, SIMCOMBAT-04): a 0-HP actor left by cleanup does nothing until it is removed
             store.WakeTick[i] = Tick + MissionHandlers.Handle(this, store, kind, i);
         }
     }

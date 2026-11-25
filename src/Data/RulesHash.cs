@@ -131,6 +131,7 @@ public static class RulesHash
                 WriteStrings(w, v.Prerequisites);
                 w.Write(v.HarvestCapacity);
                 w.Write(v.BuildTime);
+                if (v.SecondaryWeapon >= 0 || v.TertiaryWeapon >= 0) { w.Write(v.SecondaryWeapon); w.Write(v.TertiaryWeapon); }   // S44 (M-04): absent = unchanged bytes
             }
 
             w.Write(sim.Infantry.Count);
