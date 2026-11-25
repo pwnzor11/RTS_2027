@@ -64,8 +64,21 @@ public sealed record CampaignProgress(
         return sb.ToString();
     }
 
-    /// <summary>Parses file text. Throws <see cref="InvalidDataException"/> for bad TOML, a newer version, or wrong-typed or out-of-range values.</summary>
+    /// <summary>Parses file text strictly. Throws <see cref="InvalidDataException"/> for bad TOML, a newer version, or wrong-typed or out-of-range values.</summary>
     public static CampaignProgress Parse(string text)
+    {
+        var warnings = new List<string>();
+        CampaignProgress p = ParseTolerant(text, warnings);
+        if (warnings.Count > 0) throw new InvalidDataException("campaign progress: " + warnings[0]);
+        return p;
+    }
+
+    /// <summary>
+    /// U-08 (GAMESYS-04): parses file text and keeps every valid entry. A bad completed or tech id, a bad difficulty entry or a list or table of
+    /// the wrong type is skipped and described in <paramref name="warnings"/>. Structural faults (bad TOML, a missing or newer version, a
+    /// missing faction) still throw <see cref="InvalidDataException"/>.
+    /// </summary>
+    internal static CampaignProgress ParseTolerant(string text, List<string> warnings)
     {
         TomlTable root;
         try { root = TomlSerializer.Deserialize<TomlTable>(text) ?? new TomlTable(); }
@@ -75,16 +88,22 @@ public sealed record CampaignProgress(
         if (!root.TryGetValue("faction", out object? f) || f is not string { Length: > 0 } faction) throw new InvalidDataException("campaign progress: missing faction");
 
         var completed = new List<string>();
-        foreach (string id in Strings(root, "completed")) if (!completed.Contains(id)) completed.Add(id);
-        var tech = new SortedSet<string>(Strings(root, "techSet"), StringComparer.Ordinal);
+        foreach (string id in Strings(root, "completed", faction, warnings)) if (!completed.Contains(id)) completed.Add(id);
+        var tech = new SortedSet<string>(Strings(root, "techSet", faction, warnings), StringComparer.Ordinal);
         var diff = new SortedDictionary<string, int>(StringComparer.Ordinal);
         if (root.TryGetValue("difficulty", out object? d))
         {
-            if (d is not TomlTable dt) throw new InvalidDataException("campaign progress: difficulty must be a table");
-            foreach (var kv in dt)
+            if (d is not TomlTable dt)
             {
-                if (kv.Value is not long tier || tier < 1 || tier > 5) throw new InvalidDataException($"campaign progress: difficulty '{kv.Key}' must be 1..5");
-                diff[kv.Key] = (int)tier;
+                warnings.Add($"{faction}: difficulty is not a table, so it was skipped");
+            }
+            else
+            {
+                foreach (var kv in dt)
+                {
+                    if (kv.Value is long tier && tier >= 1 && tier <= 5) diff[kv.Key] = (int)tier;
+                    else warnings.Add($"{faction}: difficulty '{kv.Key}' must be 1..5, so that entry was skipped");
+                }
             }
         }
 
@@ -96,26 +115,51 @@ public sealed record CampaignProgress(
     /// exists but cannot be parsed (bad TOML, a newer version, bad values, another faction) is first renamed to <c>&lt;file&gt;.bad</c>, so the
     /// next save does not destroy it.
     /// </summary>
-    public static CampaignProgress Load(string faction, string? path = null)
+    public static CampaignProgress Load(string faction, string? path = null) => LoadWithWarnings(faction, path).Progress;
+
+    /// <summary>
+    /// U-08 (GAMESYS-04): loads the file like <see cref="Load"/>, but keeps every valid entry when only some entries are bad. A skipped
+    /// entry is logged and returned in <c>Warnings</c> for the menu to show; a file that cannot be read at all (structural fault, or another
+    /// faction) is set aside as <c>.bad</c> and gives an empty record, with a warning saying so. Never throws.
+    /// </summary>
+    public static (CampaignProgress Progress, IReadOnlyList<string> Warnings) LoadWithWarnings(string faction, string? path = null)
     {
         string file = path ?? DefaultPath(faction);
+        var warnings = new List<string>();
         try
         {
-            if (!File.Exists(file)) return New(faction);
-            CampaignProgress p = Parse(File.ReadAllText(file));
-            if (p.Faction == faction) return p;
-            KeepAsBad(file);
-            return New(faction);
-        }
-        catch (InvalidDataException)
-        {
-            KeepAsBad(file);
-            return New(faction);
+            if (!File.Exists(file)) return (New(faction), warnings);
+            CampaignProgress p;
+            try
+            {
+                p = ParseTolerant(File.ReadAllText(file), warnings);
+            }
+            catch (InvalidDataException e)
+            {
+                return SetAside(faction, file, e.Message);
+            }
+
+            if (p.Faction != faction) return SetAside(faction, file, "it is for another faction");
+            foreach (string w in warnings) Console.Error.WriteLine("campaign: " + w);
+            return (p, warnings);
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException or System.Security.SecurityException)
         {
-            return New(faction);
+            return (New(faction), warnings);
         }
+    }
+
+    private static (CampaignProgress Progress, IReadOnlyList<string> Warnings) SetAside(string faction, string file, string reason)
+    {
+        KeepAsBad(file);
+        return (New(faction), new List<string> { Describe(faction, file, reason) });
+    }
+
+    private static string Describe(string faction, string file, string reason)
+    {
+        string text = $"campaign progress for {faction} could not be read ({reason}); it was kept as {Path.GetFileName(file)}.bad and the campaign starts over";
+        Console.Error.WriteLine("campaign: " + text);
+        return text;
     }
 
     /// <summary>S18 GS-05: renames an unreadable profile file to <c>&lt;file&gt;.bad</c> (replacing an older one); never throws.</summary>
@@ -144,15 +188,24 @@ public sealed record CampaignProgress(
         }
     }
 
-    private static IEnumerable<string> Strings(TomlTable root, string key)
+    // U-08: the valid ids of a list; a list of the wrong type gives none, and each bad item is skipped with a warning.
+    private static List<string> Strings(TomlTable root, string key, string faction, List<string> warnings)
     {
-        if (!root.TryGetValue(key, out object? raw)) yield break;
-        if (raw is not TomlArray a) throw new InvalidDataException($"campaign progress: {key} must be a list");
+        var ids = new List<string>();
+        if (!root.TryGetValue(key, out object? raw)) return ids;
+        if (raw is not TomlArray a)
+        {
+            warnings.Add($"{faction}: {key} is not a list, so it was skipped");
+            return ids;
+        }
+
         foreach (object? item in a)
         {
-            if (item is not string { Length: > 0 } s) throw new InvalidDataException($"campaign progress: {key} must hold ids");
-            yield return s;
+            if (item is string { Length: > 0 } s) ids.Add(s);
+            else warnings.Add($"{faction}: a {key} entry is not an id, so it was skipped");
         }
+
+        return ids;
     }
 
     private static string List(IEnumerable<string> ids) => "[" + string.Join(", ", ids.Select(Quote)) + "]";
