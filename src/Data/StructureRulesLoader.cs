@@ -32,6 +32,8 @@ internal static class StructureRulesLoader
         "shipment_dock",
         // simfu-4
         "sonar_radius",
+        // S44 M-03
+        "heavy_yard", "ship_repair_permille", "ship_repair_radius",
     ];
 
     /// <summary>Most soldiers a building may hold (schema v4).</summary>
@@ -102,7 +104,11 @@ internal static class StructureRulesLoader
         int? beachheadRadius = f.OptInt("beachhead_radius", 0, SimConstants.MaxMapCells, 0);
         bool? shipmentDock = f.OptBool("shipment_dock", false);   // M7-06
         int? sonarRadius = f.OptInt("sonar_radius", 0, SimConstants.MaxMapCells, 0);   // simfu-4
-        if (sonarRadius is null) return null;
+        bool? heavyYard = f.OptBool("heavy_yard", false);   // S44 M-03
+        int? shipRepair = f.OptInt("ship_repair_permille", 0, 1000, 0);
+        int? shipRepairRadius = f.OptInt("ship_repair_radius", 0, SimConstants.MaxMapCells, 2);
+        if (sonarRadius is null || heavyYard is null || shipRepair is null || shipRepairRadius is null) return null;
+        if (heavyYard.Value && produces != "vehicle") { f.Problem("heavy_yard", "a heavy yard needs produces = \"vehicle\""); return null; }
         if (waterBuilding is null || beachheadSource is null || beachheadRadius is null || shipmentDock is null) return null;
         if (shipmentDock.Value && !waterBuilding.Value) { f.Problem("shipment_dock", "a shipment dock needs water_building = true"); return null; }
         bool[] waterMask = Array.Empty<bool>();
@@ -227,6 +233,9 @@ internal static class StructureRulesLoader
             BeachheadRadius = beachheadRadius.Value,
             ShipmentDock = shipmentDock.Value,
             SonarRadius = sonarRadius.Value,
+            HeavyYard = heavyYard.Value,
+            ShipRepairPermille = shipRepair.Value,
+            ShipRepairRadius = shipRepairRadius.Value,
         };
         return exit is null ? building : building with { Exit = new CellCoord(exit[0], exit[1]) };
     }

@@ -124,6 +124,13 @@ public sealed record VehicleType(string Id, Locomotion Locomotion, int Speed, in
     /// <summary>Large ship: cannot enter <see cref="LandType.Shallow"/> (TOML <c>deep_only</c>, naval only).</summary>
     public bool DeepOnly { get; init; }
 
+    /// <summary>M-03: id of the one building type that produces this ship (TOML <c>built_at</c>, default "" = the ordinary vehicle factories).</summary>
+    public string BuiltAt { get; init; } = "";
+
+    /// <summary>M-12: passengers carried inside this vehicle (a landing craft or Skyhook) heal this many permille of their max HP per 10 ticks
+    /// (TOML <c>bay_repair</c>, default 0 = none).</summary>
+    public int BayRepairPermille { get; init; }
+
     /// <summary>Submarine: can dive out of sight (TOML <c>submerges</c>, naval only).</summary>
     public bool Submerges { get; init; }
 

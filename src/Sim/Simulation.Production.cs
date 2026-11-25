@@ -78,9 +78,17 @@ public sealed partial class Simulation
     {
         int n = 0;
         for (int i = 1; i < _buildings.Capacity; i++)
-            if (_buildings.Slots.IsIndexAlive(i) && _buildings.Player[i] == player && BuildingTypeAt(i).Produces == category
+            if (_buildings.Slots.IsIndexAlive(i) && _buildings.Player[i] == player && IsGeneralFactory(i, category)
                 && _rigs.PackTicksLeft[i] == 0) n++;   // M6-03: a packing rig does not produce
         return n;
+    }
+
+    /// <summary>S44 M-03: building slot <paramref name="i"/> produces the category for ordinary units (a Drydock is a heavy yard: it builds only
+    /// the ships naming it, so it is neither counted nor chosen as a general factory).</summary>
+    private bool IsGeneralFactory(int i, ProductionCategory category)
+    {
+        BuildingType bt = BuildingTypeAt(i);
+        return bt.Produces == category && !bt.HeavyYard;
     }
 
     /// <summary>The factory units of a category leave from: the chosen primary if alive, else the lowest-slot factory. None if no factory.</summary>
@@ -88,9 +96,9 @@ public sealed partial class Simulation
     {
         EntityId chosen = _production.Primary[ProductionState.Lane(player, category)];
         if (!chosen.IsNone && _buildings.Slots.IsAlive(chosen) && _buildings.Player[chosen.Index] == player
-            && BuildingTypeAt(chosen.Index).Produces == category && _rigs.PackTicksLeft[chosen.Index] == 0) return chosen;   // M6-03
+            && IsGeneralFactory(chosen.Index, category) && _rigs.PackTicksLeft[chosen.Index] == 0) return chosen;   // M6-03
         for (int i = 1; i < _buildings.Capacity; i++)
-            if (_buildings.Slots.IsIndexAlive(i) && _buildings.Player[i] == player && BuildingTypeAt(i).Produces == category
+            if (_buildings.Slots.IsIndexAlive(i) && _buildings.Player[i] == player && IsGeneralFactory(i, category)
                 && _rigs.PackTicksLeft[i] == 0)   // M6-03
                 return _buildings.Slots.IdOf(i);
         return EntityId.None;
@@ -311,7 +319,7 @@ public sealed partial class Simulation
         ProductionCategory? produces = BuildingTypeAt(c.Subject.Index).Produces;
         if (produces == null) return;
         int lane = ProductionState.Lane(c.Player, produces.Value);
-        _production.Primary[lane] = c.Subject;
+        if (!BuildingTypeAt(c.Subject.Index).HeavyYard) _production.Primary[lane] = c.Subject;   // S44 M-03: a heavy yard sets the lane rally only
         _production.RallySet[lane] = true;
         _production.Rally[lane] = c.Cell;
     }
@@ -414,7 +422,9 @@ public sealed partial class Simulation
     private bool CompleteItem(byte player, ProductionCategory category, int type)
     {
         if (!IsUnitCategory(category)) return true;
-        EntityId factory = category == ProductionCategory.Vehicle && IsNavalVehicle(player, type)
+        EntityId factory = category == ProductionCategory.Vehicle && RulesOf(player).Vehicles[type].BuiltAt.Length > 0
+            ? HeavyYardOf(player, type)   // S44 M-03: a heavy ship leaves only from its named yard
+            : category == ProductionCategory.Vehicle && IsNavalVehicle(player, type)
             ? ShipFactoryOf(player, type) : PrimaryFactoryOf(player, category);
         if (factory.IsNone) return false;
         BuildingType fbt = BuildingTypeAt(factory.Index);
@@ -442,8 +452,21 @@ public sealed partial class Simulation
         EntityId primary = PrimaryFactoryOf(player, ProductionCategory.Vehicle);
         if (!primary.IsNone && FactoryReaches(primary.Index, cls)) return primary;
         for (int i = 1; i < _buildings.Capacity; i++)
-            if (_buildings.Slots.IsIndexAlive(i) && _buildings.Player[i] == player && BuildingTypeAt(i).Produces == ProductionCategory.Vehicle
+            if (_buildings.Slots.IsIndexAlive(i) && _buildings.Player[i] == player && IsGeneralFactory(i, ProductionCategory.Vehicle)
                 && _rigs.PackTicksLeft[i] == 0 && FactoryReaches(i, cls))
+                return _buildings.Slots.IdOf(i);
+        return EntityId.None;
+    }
+
+    /// <summary>S44 M-03: the lowest-slot alive, unpacked building of the player whose id is the ship's <c>built_at</c> and whose exit or footprint
+    /// reaches the ship's move class. None when there is none (the finished ship waits).</summary>
+    private EntityId HeavyYardOf(byte player, int type)
+    {
+        VehicleType vt = RulesOf(player).Vehicles[type];
+        Locomotion cls = MoveClass.Of(vt);
+        for (int i = 1; i < _buildings.Capacity; i++)
+            if (_buildings.Slots.IsIndexAlive(i) && _buildings.Player[i] == player && _buildings.Health[i] > 0 && _rigs.PackTicksLeft[i] == 0
+                && string.Equals(BuildingTypeAt(i).Id, vt.BuiltAt, StringComparison.Ordinal) && FactoryReaches(i, cls))
                 return _buildings.Slots.IdOf(i);
         return EntityId.None;
     }

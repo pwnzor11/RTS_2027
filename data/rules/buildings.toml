@@ -1203,6 +1203,10 @@ cost = 2000  # (tune)
 power = -50  # (tune)
 prerequisites = ["exp_shipyard"]
 provides = []
+produces = "vehicle"   # S44 M-03: builds only the ships that name it (built_at); not a general vehicle factory
+heavy_yard = true
+ship_repair_permille = 5   # (assumed) S44 M-03: permille of max HP per 10 ticks for friendly ships near it, at the economy repair cost
+ship_repair_radius = 2   # (assumed) cells beyond the footprint
 water_building = true
 
 [exp_salvo_array]   # Salvo Array superweapon (cruise-missile barrage)

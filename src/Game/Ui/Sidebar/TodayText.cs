@@ -13,7 +13,7 @@ public static class TodayText
     {
         ["exp_minelayer"] = "Lays up to 6 sea mines (D). Sweeps enemy mines within 3 cells. Restocks beside a naval yard.",
         ["exp_diver"] = "Plants charges on ships and quays. Swims in deep water, hidden from all but sonar.",
-        ["exp_drydock"] = "Unlocks the Cruiser and Carrier. It does not build or repair ships itself yet.",
+        ["exp_drydock"] = "Builds the Cruiser and Carrier and slowly repairs friendly ships beside it.",
         ["exp_destroyer"] = "Gun warship that detects submarines, with depth charges and an anti-air mount.",
         ["lb_harpoon_wagon"] = "Anti-armour harpoon gun. A hit tethers the target at half speed for 3 seconds.",
     };
