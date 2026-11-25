@@ -38,8 +38,8 @@ public sealed class VeterancyContractTests
         Assert.Equal(12, RulesHash.FormatVersion);
         var sim = ScriptedGame.NewSim(ScriptedGame.Setup());
         string[] names = sim.StateParts.Select(p => p.Name).ToArray();
-        Assert.Equal(new[] { "rigs", "salvage", "veterancy", "shipments", "beachhead", "naval", "commander_orders", "props", "mines" }, names[^9..]);
-        Assert.Same(sim.Veterancy, sim.StateParts[^7]);
+        Assert.Equal(new[] { "rigs", "salvage", "veterancy", "shipments", "beachhead", "naval", "commander_orders", "props", "mines", "beacon_orders" }, names[^10..]);
+        Assert.Same(sim.Veterancy, sim.StateParts[^8]);
     }
 
     [Fact]

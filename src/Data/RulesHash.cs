@@ -319,6 +319,7 @@ public static class RulesHash
                 w.Write(x.MineCapacity); w.Write(x.MineLayTicks); w.Write(x.MineDamage); w.Write(x.MineWarhead); w.Write(x.MineTriggerRadius);
                 w.Write(x.MineSweepRadius); w.Write(x.MineSweepTicks); w.Write(x.MineRestockTicks);
             }
+            if (x.BeaconDrop.Length > 0) { w.Write(true); WriteString(w, x.BeaconDrop); }   // S44 M-15: only a beacon carrier, so other hashes keep
             if (x.BuiltAt.Length > 0 || x.BayRepairPermille > 0) { w.Write((byte)0xD4); w.Write(x.BuiltAt); w.Write(x.BayRepairPermille); }   // S44 M-03/M-12: only types that set either
         }
         foreach (BuildingType x in sim.Buildings)
@@ -375,6 +376,7 @@ public static class RulesHash
             w.Write(x.SalvageRate); w.Write(x.Raider); w.Write(x.RaiderOneUse); w.Write(x.AshStealthDelayTicks);
             w.Write(x.AshStealthThreshold); w.Write(x.AuraRepairPermille);
             if (x.Swims) w.Write(true);   // S44 M-02: written only for a swimmer, so rules without one hash exactly as before
+            if (x.BeaconBuild.Length > 0) { w.Write(true); WriteString(w, x.BeaconBuild); }   // S44 M-15
         }
         foreach (BuildingType x in sim.Buildings) { w.Write(x.PacksInto); w.Write(x.PackTicks); }
         foreach (UpgradeType u in sim.Upgrades)

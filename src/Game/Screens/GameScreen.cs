@@ -61,6 +61,10 @@ public sealed class GameScreen : IScreen, IFocusPausable
     private bool _diveMines;                  // S44 M-01: the same button lays a mine for a selected minelayer
     private int _diveMineStock;
     private readonly RectRegion _diveRegion = new(Rectangle.Empty);
+    private bool _beaconShown;                // S44 M-15: "Drop beacon" button for a selected landing craft, Skyhook, Pioneer or Combat Diver
+    private bool _beaconArmed;                // ... clicked: the next map click is the target cell
+    private UnitKey _beaconActor;
+    private readonly RectRegion _beaconRegion = new(Rectangle.Empty);
     private readonly RectRegion _idleHarvesterRegion = new(Rectangle.Empty);   // M13-15: idle harvester / idle factory buttons
     private readonly RectRegion _idleFactoryRegion = new(Rectangle.Empty);
     private UnpackPlacement? _unpack;         // M6-09: the unpack footprint follows the cursor
@@ -431,6 +435,12 @@ public sealed class GameScreen : IScreen, IFocusPausable
             IssueDive();
             input.ConsumeLeft();
         }
+        UpdateBeaconButton();
+        if (_beaconShown && input.LeftPressed && _beaconRegion.HitTest(input.MousePosition))
+        {
+            _beaconArmed = !_beaconArmed;
+            input.ConsumeLeft();
+        }
         if (_superweapon.Buttons.Count > 0 && input.LeftPressed) ClickSuperweaponButton(input);
         if (input.LeftPressed && _idleHarvesterRegion.HitTest(input.MousePosition)) { JumpToIdleHarvester(); input.ConsumeLeft(); }   // M13-15
         else if (input.LeftPressed && _idleFactoryRegion.HitTest(input.MousePosition)) { JumpToIdleFactory(); input.ConsumeLeft(); }
@@ -447,6 +457,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
             input.ConsumeMouseOver(_upgradeRegion);
             input.ConsumeMouseOver(_packRegion);
             input.ConsumeMouseOver(_diveRegion);
+            input.ConsumeMouseOver(_beaconRegion);
             input.ConsumeMouseOver(_idleHarvesterRegion);
             input.ConsumeMouseOver(_idleFactoryRegion);
             input.ConsumeMouseOver(_hudRegion);
@@ -486,6 +497,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
         if (_sidebar is { Mode: not SidebarMode.None } && input.ConsumePressed(Keys.Escape)) _sidebar.CancelMode();
         if (_superweapon.IsArmed && input.ConsumePressed(Keys.Escape)) _superweapon.Cancel();   // Esc leaves targeting first
         if (_unpack is not null && input.ConsumePressed(Keys.Escape)) _unpack = null;            // M6-09: ... and unpack placement
+        if (_beaconArmed && input.ConsumePressed(Keys.Escape)) _beaconArmed = false;             // S44 M-15: ... and beacon targeting
 
         if (_orders is not null && _orders.AnyArmed && input.ConsumePressed(Keys.Escape)) _orders.CancelArmed();   // F6: Esc leaves an armed order first
 
@@ -498,6 +510,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
 
         _sidebar?.Update(input, _camera, _s.Viewport.Width, _s.Viewport.Height, _s.UiFactor);
         HandlePackKeyAndPlacement(input);   // M6-09: K, and the unpack footprint on the map
+        HandleBeaconTarget(input);          // S44 M-15: the map click after "Drop beacon"
         HandleBulkKeys(input, typing || chatTyping);   // A43-QOL-15: repair all, sell marked
         UpdatePausedOrders();   // A43-QOL-08
 
@@ -683,6 +696,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
             DrawUpgradeButton(sb);
             DrawPackButton(sb);
             DrawDiveButton(sb);
+            DrawBeaconButton(sb);
             DrawIdleButtons(sb);
         }
         DrawSpectator(sb);
@@ -706,7 +720,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
         _card.SellArmed = _sellConfirm.IsArmed(_selectedBuilding, _nowMs);   // D-205
         if (!_card.Visible || !input.LeftPressed || _dragStart is not null) return;
         // GAMEUI-01: the corner map buttons are drawn over the card at large UI scales, so they get the click where they overlap.
-        Rectangle[] over = { _upgradeRegion.Bounds, _packRegion.Bounds, _diveRegion.Bounds, _idleHarvesterRegion.Bounds, _idleFactoryRegion.Bounds };
+        Rectangle[] over = { _upgradeRegion.Bounds, _packRegion.Bounds, _diveRegion.Bounds, _beaconRegion.Bounds, _idleHarvesterRegion.Bounds, _idleFactoryRegion.Bounds };
         Rts.Game.Ui.Card.CardAction action = _card.Click(input.MousePosition, input.IsDown(Keys.LeftShift) || input.IsDown(Keys.RightShift), over);
         if (!action.Consumed) return;
         input.ConsumeLeft();
@@ -769,7 +783,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
 
         CursorKind kind = CursorKind.Select;
         bool overUi = _console is { IsOpen: true } || _card is { Visible: true } && _card.HitTest(_mouse) || _hudRegion.HitTest(_mouse)
-            || _swRegion.HitTest(_mouse) || _upgradeRegion.HitTest(_mouse) || _packRegion.HitTest(_mouse) || _diveRegion.HitTest(_mouse)
+            || _swRegion.HitTest(_mouse) || _upgradeRegion.HitTest(_mouse) || _packRegion.HitTest(_mouse) || _diveRegion.HitTest(_mouse) || _beaconRegion.HitTest(_mouse)
             || _specRegion.HitTest(_mouse);
         if (!overUi && !_spectatorMode && _orders is not null && _sim is not null)
         {
@@ -1431,6 +1445,57 @@ public sealed class GameScreen : IScreen, IFocusPausable
             Shapes.Fill(sb, _s.Pixel, _camera.ScreenRect(cx - 5, cy - 5, cx + 5, cy + 5), c);
             Shapes.Outline(sb, _s.Pixel, _camera.ScreenRect(cx - 5, cy - 5, cx + 5, cy + 5), Color.Black);
         }
+    }
+
+    // ---- Drop a Landing Beacon (S44 M-15) ---------------------------------------------------------------------
+
+    private Rectangle BeaconButtonRect()
+    {
+        var scale = _s.UiScale;
+        int w = Math.Max(BitmapFont.Measure(DiveOffer.BeaconCaption(false), scale), BitmapFont.Measure(DiveOffer.BeaconCaption(true), scale)) + 16;
+        int h = Hud.HeightOf(1, scale) + 6;
+        Viewport map = MapViewport();
+        return new Rectangle(map.Width - w - 8, map.Height - 4 * h - 20, w, h);   // stacked above the dive button
+    }
+
+    // The button follows the selection: the first selected own unit whose type names a beacon (beacon_drop / beacon_build).
+    private void UpdateBeaconButton()
+    {
+        _beaconShown = false;
+        if (_sim is null || !_skirmishMode)
+        {
+            _beaconRegion.Bounds = Rectangle.Empty;
+            _beaconArmed = false;
+            return;
+        }
+
+        foreach (UnitKey key in _selection.Units)
+            if (_sim.TryGetTypeIndex(key, out int type) && M3Orders.CarriesBeacon(_sim.Rules, key.Kind, type)) { _beaconShown = true; _beaconActor = key; break; }
+        if (!_beaconShown) _beaconArmed = false;
+        _beaconRegion.Bounds = _beaconShown ? BeaconButtonRect() : Rectangle.Empty;
+    }
+
+    // Armed: a left click on the map sends the beacon order to every selected unit that can build one (the first pays; a refused one is dropped
+    // by the sim), a right click leaves.
+    private void HandleBeaconTarget(InputFrame input)
+    {
+        if (!_beaconArmed || _sim is null) return;
+        if (!MapViewport().Bounds.Contains(input.MousePosition) || _beaconRegion.HitTest(input.MousePosition)) return;
+        if (input.RightPressed) { _beaconArmed = false; input.ConsumeRight(); return; }
+        if (!input.LeftPressed) return;
+        CellCoord cell = Camera.CellAt(_camera.WorldFromScreen(input.MousePosition));
+        _sim.Order(CommandKind.DropBeacon, _beaconActor, cell);
+        _beaconArmed = false;
+        input.ConsumeLeft();   // never also select or box-drag
+    }
+
+    private void DrawBeaconButton(SpriteBatch sb)
+    {
+        if (!_beaconShown) return;
+        Rectangle r = BeaconButtonRect();
+        Shapes.Fill(sb, _s.Pixel, r, new Color(0, 0, 0, 190));
+        Shapes.Outline(sb, _s.Pixel, r, _beaconArmed ? Color.Red : Color.White, 2);
+        BitmapFont.Draw(sb, _s.Pixel, DiveOffer.BeaconCaption(_beaconArmed), new Vector2(r.X + 8, r.Y + 4), new Color(0xFF, 0xE0, 0x80), _s.UiScale);
     }
 
     private void DrawDiveButton(SpriteBatch sb)
@@ -2262,7 +2327,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
         {
             Rectangle mapView = _sidebar?.Layout.MapView ?? new Rectangle(0, 0, _s.Viewport.Width, _s.Viewport.Height);
             Rectangle banner = _mission is null ? Rectangle.Empty : new Rectangle(_mission.ObjectivesRegion.Bounds.X, _mission.ObjectivesRegion.Bounds.Y, _mission.ObjectivesRegion.Bounds.Width, _mission.ObjectivesRegion.Bounds.Height + 48);
-            _alerts.DrawStack(sb, _s.Pixel, mapView, scale, snapshot.Tick, new[] { banner, _hudRegion.Bounds, _swRegion.Bounds, _upgradeRegion.Bounds, _packRegion.Bounds, _diveRegion.Bounds, _idleHarvesterRegion.Bounds, _idleFactoryRegion.Bounds, _specRegion.Bounds });
+            _alerts.DrawStack(sb, _s.Pixel, mapView, scale, snapshot.Tick, new[] { banner, _hudRegion.Bounds, _swRegion.Bounds, _upgradeRegion.Bounds, _packRegion.Bounds, _diveRegion.Bounds, _beaconRegion.Bounds, _idleHarvesterRegion.Bounds, _idleFactoryRegion.Bounds, _specRegion.Bounds });
         }
     }
 }

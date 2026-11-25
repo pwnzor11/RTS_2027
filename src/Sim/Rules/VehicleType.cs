@@ -161,6 +161,10 @@ public sealed record VehicleType(string Id, Locomotion Locomotion, int Speed, in
     /// <summary>Minelayer: ticks to restock one mine next to an own naval building (TOML <c>mine_restock_ticks</c>; S44 M-01).</summary>
     public int MineRestockTicks { get; init; }
 
+    /// <summary>Transport: id of the building (a beachhead source such as <c>exp_beacon</c>) it can drop on a soft land cell next to it (TOML
+    /// <c>beacon_drop</c>, "" = none; S44 M-15). The player pays the building's cost at the drop.</summary>
+    public string BeaconDrop { get; init; } = "";
+
     /// <summary>Carrier hangar: aircraft it can hold (TOML <c>aircraft_slots</c>, 0 = none).</summary>
     public int AircraftSlots { get; init; }
 

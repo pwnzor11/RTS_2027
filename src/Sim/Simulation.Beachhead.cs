@@ -97,7 +97,7 @@ public sealed partial class Simulation
             }
         // D-156 (1): a water building without a mask is an all-water floating dock and must touch the shore.
         if (bt.WaterBuilding && !mask && !FootprintTouchesLand(x0, y0, w, h)) return PlacementResult.Blocked;
-        if (!IsExpedition(player) || player >= _beachhead.Zone.Length) return PlacementResult.Ok;
+        if (_beaconIgnoresZone || !IsExpedition(player) || player >= _beachhead.Zone.Length) return PlacementResult.Ok;   // S44 M-15: a delivered beacon extends the zone, so it is exempt
         // Bootstrap: a player with no building yet (the setup-phase depot) has no zone to be inside.
         if (!OwnsAnyBuilding(player)) return PlacementResult.Ok;
         int mw = Setup.Map.Width;

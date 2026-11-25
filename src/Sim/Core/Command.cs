@@ -39,6 +39,11 @@ public enum CommandKind : byte
     /// Cell = the order's cell, Arg = <see cref="CommanderOrderCodec.Pack"/> (kind, slot, amount), Arg2 = the due tick (0 = at once).
     /// Stored in the "commander_orders" state part and read by the tiered AI; the sim itself never acts on it. Sent by the LLM commander only.</summary>
     CommanderOrder = 28,
+    /// <summary>S44 M-15: put a Landing Beacon on a soft land cell. Subject = a vehicle (a landing craft or Skyhook with beacon_drop) or a soldier
+    /// (a Pioneer or Combat Diver with beacon_build), Arg low byte = its <see cref="ActorKind"/>, Cell = the target cell. The actor closes to
+    /// within 1 cell, then a vehicle drops the beacon at once and a soldier builds it over the building's build time. Refused for water, a
+    /// building or occupied cell, a player who cannot pay, or an actor without the ability. See Simulation.BeaconDelivery.cs.</summary>
+    DropBeacon = 29,
 }
 
 /// <summary>

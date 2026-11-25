@@ -36,6 +36,7 @@ internal static class UnitRulesLoader
         "secondary_weapon", "tertiary_weapon",
         // S44 M-01
         "mine_capacity", "mine_lay_ticks", "mine_damage", "mine_warhead", "mine_trigger_radius", "mine_sweep_radius", "mine_sweep_ticks", "mine_restock_ticks",
+        "beacon_drop",   // S44 M-15
     ];
 
     private static readonly string[] InfantryKeys =
@@ -45,6 +46,7 @@ internal static class UnitRulesLoader
         "faction", "tunnel_size", "aura_radius", "aura_rof_permille", "aura_speed_permille", "aura_targets",
         "rad_resist_permille", "stealth", "death_weapon", "jam_radius", "seismic_radius",
         "engineer", "swims",   // S44 M-02: swims (M-20 removed "irradiated")
+        "beacon_build",   // S44 M-15
         // schema v4 (M4-01)
         "tier", "can_garrison",
         // schema v5 (M6-02)
@@ -145,6 +147,7 @@ internal static class UnitRulesLoader
         int? secondaryWeapon = f.OptIndex("secondary_weapon", WeaponIds(weapons), "weapon");   // S44 (M-04)
         int? tertiaryWeapon = f.OptIndex("tertiary_weapon", WeaponIds(weapons), "weapon");
         if (secondaryWeapon is null || tertiaryWeapon is null) return null;
+        string beaconDrop = f.Has("beacon_drop") ? f.Str("beacon_drop") ?? "" : "";   // S44 M-15
         int? mineCapacity = f.OptInt("mine_capacity", 0, 255, 0);   // S44 M-01
         int? mineLayTicks = f.OptInt("mine_lay_ticks", 0, 1_000_000, 0);
         int? mineDamage = f.OptInt("mine_damage", 0, 1_000_000, 0);
@@ -232,6 +235,7 @@ internal static class UnitRulesLoader
             MineSweepRadius = mineSweep.Value,
             MineSweepTicks = mineSweepTicks.Value,
             MineRestockTicks = mineRestock.Value,
+            BeaconDrop = beaconDrop,
         };
     }
 
@@ -250,6 +254,7 @@ internal static class UnitRulesLoader
         MobileV3? v3 = ParseMobileV3(f, weapons, refs, TunnelSize.S);
         bool? engineer = f.OptBool("engineer", false);
         bool? swims = f.OptBool("swims", false);   // S44 M-02
+        string beaconBuild = f.Has("beacon_build") ? f.Str("beacon_build") ?? "" : "";   // S44 M-15
         int? tier = f.OptInt("tier", 1, RulesLoader.MaxTier, 1);
         bool? canGarrison = engineer is null ? null : f.OptBool("can_garrison", !engineer.Value);   // engineers stay out unless set
         int? salvageRate = f.OptInt("salvage_rate", 0, 10_000, 0);   // M6-02
@@ -288,6 +293,7 @@ internal static class UnitRulesLoader
             SeismicRadius = v3.SeismicRadius,
             Engineer = engineer.Value,
             Swims = swims.Value,
+            BeaconBuild = beaconBuild,
             Tier = tier.Value,
             CanGarrison = canGarrison.Value,
             SalvageRate = salvageRate.Value,

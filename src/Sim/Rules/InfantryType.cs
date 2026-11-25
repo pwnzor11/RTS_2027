@@ -48,6 +48,10 @@ public sealed record InfantryType(string Id, int Speed, int MaxHealth, ArmorClas
     /// submarine and revealed by sonar (<see cref="Rts.Sim.Simulation"/> IsHiddenSub).</summary>
     public bool Swims { get; init; }
 
+    /// <summary>Id of the beachhead-source building this soldier can build on a soft land cell it stands next to (TOML <c>beacon_build</c>,
+    /// "" = none; S44 M-15). Takes the building's build time, costs its cost.</summary>
+    public string BeaconBuild { get; init; } = "";
+
     /// <summary>Engineer: Enter on an enemy building below half health captures it, on a friendly one repairs it (M3-06).</summary>
     public bool Engineer { get; init; }
 

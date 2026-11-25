@@ -210,7 +210,7 @@ public sealed class MinesTests
         a.Step(new[] { Lay(a, la) });
         b.Step(Array.Empty<Command>());
         Assert.NotEqual(a.ComputeStateHash(), b.ComputeStateHash());
-        Assert.Equal("mines", a.StateParts[^1].Name);
+        Assert.Equal("mines", a.StateParts[^2].Name);   // S44 M-15 appended "beacon_orders" after it
         _ = lb;
     }
 

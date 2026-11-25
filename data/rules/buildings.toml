@@ -1061,7 +1061,7 @@ provides = []
 build_time = 200  # (tune) 10 s
 beachhead_source = true
 beachhead_radius = 6  # (tune) design 11 §2.3
-# TODO M7-04: delivery by landing craft or Skyhook to any soft land cell is not in data; placed from the structure queue
+# S44 M-15: also delivered by landing craft / Skyhook (beacon_drop) and built by Pioneer / Combat Diver (beacon_build), anywhere on soft land; the structure queue still works
 
 [exp_pillbox]   # Seawall Emplacement: cheap turret
 faction = "expedition"

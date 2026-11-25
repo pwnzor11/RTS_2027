@@ -9,6 +9,7 @@ using Rts.Sim.Shipments;
 using Rts.Sim.Beachhead;
 using Rts.Sim.Naval;
 using Rts.Sim.Mines;
+using Rts.Sim.BeaconDelivery;
 using Rts.Sim.Salvage;
 using Rts.Sim.Economy;
 using Rts.Sim.Effects;
@@ -54,6 +55,7 @@ public sealed partial class Simulation
     private readonly CommanderOrderState _commanderOrders;   // S24 M5-12
     private readonly PropState _props;   // M12-16 (D-264)
     private readonly MineState _mines;   // S44 M-01
+    private readonly BeaconOrderState _beaconOrders;   // S44 M-15
     private readonly Pathing.RegionCache _regions;   // M7-03: derived region labels (cache)
     private readonly List<SetupEntry> _setupLog = new();
     private bool _inStep;
@@ -104,6 +106,7 @@ public sealed partial class Simulation
         _commanderOrders = new CommanderOrderState(setup);   // S24 M5-12
         _props = new PropState(setup.Map, setup.Rules.Props);   // M12-16: health of the destructible props
         _mines = new MineState(setup);   // S44 M-01
+        _beaconOrders = new BeaconOrderState(setup);   // S44 M-15
         _map = new MapState(setup.Map);
         _paths = new PathService(_map, setup.Rules.Terrain);
         _regions = new Pathing.RegionCache(_map, setup.Rules.Terrain);   // M7-03
@@ -118,7 +121,7 @@ public sealed partial class Simulation
         int extensionCount = setup.Extensions?.Count ?? 0;   // M2-15: extension parts come last (append-only order)
         // M3-01: "tunnels", "ground", "effects" follow "production"; extension parts stay last.
         // M4-01: "garrison", "stats" follow "effects". M5-01: "directive" follows "stats". M6-02: "rigs", "salvage" follow "directive". VET-1: "veterancy" follows "salvage". M7-02: "shipments", "beachhead", "naval" follow "veterancy". S24 M5-12: "commander_orders" follows "naval".
-        const int builtInAfterCombat = 18;   // players, economy, production, tunnels, ground, effects, garrison, stats, directive, rigs, salvage, veterancy, shipments, beachhead, naval, commander_orders, props (M12-16), mines (S44 M-01)
+        const int builtInAfterCombat = 19;   // players, economy, production, tunnels, ground, effects, garrison, stats, directive, rigs, salvage, veterancy, shipments, beachhead, naval, commander_orders, props (M12-16), mines (S44 M-01), beacon_orders (S44 M-15)
         _parts = new ISimStatePart[6 + extra.Length + builtInAfterCombat + extensionCount];
         _parts[0] = _map; _parts[1] = _units; _parts[2] = _infantry; _parts[3] = _buildings; _parts[4] = _paths; _parts[5] = _vision;
         for (int e = 0; e < extra.Length; e++) _parts[6 + e] = extra[e];
@@ -140,7 +143,8 @@ public sealed partial class Simulation
         _parts[21 + extra.Length] = _commanderOrders;
         _parts[22 + extra.Length] = _props;
         _parts[23 + extra.Length] = _mines;   // S44 M-01
-        for (int e = 0; e < extensionCount; e++) _parts[24 + extra.Length + e] = setup.Extensions![e].State;
+        _parts[24 + extra.Length] = _beaconOrders;   // S44 M-15
+        for (int e = 0; e < extensionCount; e++) _parts[25 + extra.Length + e] = setup.Extensions![e].State;
         MapHash = MapHasher.Compute(setup.Map);
         for (int e = 0; e < extensionCount; e++) setup.Extensions![e].OnSetup(this);   // after everything exists; also runs before a Load
     }
@@ -265,6 +269,7 @@ public sealed partial class Simulation
         RunMissions();
         RunMovement();
         RunMines();        // S44 M-01: Simulation.Mines.cs — mine triggers after movement
+        RunBeaconDelivery();   // S44 M-15: Simulation.BeaconDelivery.cs — beacon drop and build orders (after movement)
         RunTunnels();      // M3: Simulation.Tunnels.cs — queues, transit, surfacing (before combat: underground units are untargetable)
         RunTethers();      // S44 M-05/M-06: Simulation.Tether.cs — tether slow and breach timers (before effects and combat)
         RunEffects();      // M3: Simulation.Effects.cs — auras, stealth timers, superweapon charge (before combat reads them)
@@ -379,6 +384,7 @@ public sealed partial class Simulation
             case CommandKind.Unload: ApplyUnloadCommand(c); break;   // M4: Simulation.Garrison.cs (M4-03)
             case CommandKind.Directive: ApplyDirective(c); break;    // M5-01: Simulation.M5.cs
             case CommandKind.CommanderOrder: ApplyCommanderOrder(c); break;   // S24 M5-12: Simulation.M5.cs
+            case CommandKind.DropBeacon: ApplyDropBeacon(c); break;   // S44 M-15: Simulation.BeaconDelivery.cs
             case CommandKind.Pack: ApplyPack(c); break;             // M6-03: Simulation.Rigs.cs
             case CommandKind.Debug:
                 if (Setup.AllowDebug) ApplyDebug(c);

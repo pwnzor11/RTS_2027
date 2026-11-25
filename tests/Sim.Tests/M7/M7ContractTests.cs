@@ -36,7 +36,7 @@ public sealed class M7ContractTests
         Assert.Equal(RuleCounts.ArmorClasses, Enum.GetValues<ArmorClass>().Length);
         Assert.Equal((3, 4, 5), ((int)WeaponTargets.Naval, (int)WeaponTargets.Submerged, (int)WeaponTargets.NavalAndSubmerged));
         Assert.Equal((19, 20, 21, 22), ((int)MissionKind.Unload, (int)MissionKind.Submerge, (int)MissionKind.Sortie, (int)MissionKind.ConvoySail));
-        Assert.Equal(29, Enum.GetValues<Rts.Sim.Core.CommandKind>().Length);   // M7 adds no CommandKind; M11-10i added Hold = 25; S19 AttackGround = 26; S19 QueueOrder = 27; S24 CommanderOrder = 28
+        Assert.Equal(30, Enum.GetValues<Rts.Sim.Core.CommandKind>().Length);   // S44 M-15: DropBeacon = 29;   // M7 adds no CommandKind; M11-10i added Hold = 25; S19 AttackGround = 26; S19 QueueOrder = 27; S24 CommanderOrder = 28
     }
 
     [Fact]
@@ -319,10 +319,10 @@ public sealed class M7ContractTests
         Assert.Equal(14, ReplayWriter.OldestReadableVersion);
         var sim = ScriptedGame.NewSim(ScriptedGame.Setup());
         string[] names = sim.StateParts.Select(p => p.Name).ToArray();
-        Assert.Equal(new[] { "salvage", "veterancy", "shipments", "beachhead", "naval", "commander_orders", "props", "mines" }, names[^8..]);   // S44 M-01: "mines" appended
-        Assert.Same(sim.Shipments, sim.StateParts[^6]);
-        Assert.Same(sim.Beachhead, sim.StateParts[^5]);
-        Assert.Same(sim.Naval, sim.StateParts[^4]);
+        Assert.Equal(new[] { "salvage", "veterancy", "shipments", "beachhead", "naval", "commander_orders", "props", "mines", "beacon_orders" }, names[^9..]);   // S44 M-01: "mines" appended, M-15 "beacon_orders"
+        Assert.Same(sim.Shipments, sim.StateParts[^7]);
+        Assert.Same(sim.Beachhead, sim.StateParts[^6]);
+        Assert.Same(sim.Naval, sim.StateParts[^5]);
     }
 
     [Fact]

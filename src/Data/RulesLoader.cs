@@ -133,6 +133,12 @@ public static class RulesLoader
         foreach (VehicleType mv in vehicles)   // S44 M-01: a minelayer's mine_warhead must name a warhead
             if (mv.MineCapacity > 0 && !warheads.Any(w => string.Equals(w.Id, mv.MineWarhead, StringComparison.Ordinal)))
                 problems.Add(new RulesProblem(VehiclesFile, mv.Id + ".mine_warhead", $"unknown warhead '{mv.MineWarhead}'"));
+        foreach (VehicleType bv in vehicles)   // S44 M-15: beacon_drop / beacon_build must name a beachhead-source building
+            if (bv.BeaconDrop.Length > 0 && !buildings.Any(b => b.BeachheadSource && string.Equals(b.Id, bv.BeaconDrop, StringComparison.Ordinal)))
+                problems.Add(new RulesProblem(VehiclesFile, bv.Id + ".beacon_drop", $"'{bv.BeaconDrop}' is not a beachhead-source building"));
+        foreach (InfantryType bi in infantry)
+            if (bi.BeaconBuild.Length > 0 && !buildings.Any(b => b.BeachheadSource && string.Equals(b.Id, bi.BeaconBuild, StringComparison.Ordinal)))
+                problems.Add(new RulesProblem(InfantryFile, bi.Id + ".beacon_build", $"'{bi.BeaconBuild}' is not a beachhead-source building"));
         // Schema v4 (M4-01): effect targets/attributes, upgrade effect ids, tier provides names.
         var tables = new SimRulesTables(vehicles, infantry, buildings, weapons, warheads);
         EffectRulesLoader.ValidateTargets(effects, tables, provides, problems);
