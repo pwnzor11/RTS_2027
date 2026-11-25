@@ -177,9 +177,7 @@ public sealed record CampaignProgress(
             string file = path ?? DefaultPath(Faction);
             string? dir = Path.GetDirectoryName(file);
             if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
-            string tmp = file + ".tmp";
-            File.WriteAllText(tmp, ToToml());
-            File.Move(tmp, file, overwrite: true);
+            AtomicFile.WriteAllText(file, ToToml());   // U-10: flushed to disk, then renamed over the old file
             return true;
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException)

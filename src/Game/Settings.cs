@@ -386,9 +386,7 @@ public sealed record Settings(
             string file = path ?? DefaultPath;
             string? dir = Path.GetDirectoryName(file);
             if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
-            string tmp = file + ".tmp";   // S18 GS-05: a crash mid-write no longer truncates the settings
-            File.WriteAllText(tmp, ToToml());
-            File.Move(tmp, file, overwrite: true);
+            AtomicFile.WriteAllText(file, ToToml());   // S18 GS-05 (a crash mid-write no longer truncates the settings); U-10 flushes to disk first
             return true;
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException)
