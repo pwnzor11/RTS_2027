@@ -675,6 +675,10 @@ public sealed class GameScreen : IScreen, IFocusPausable
         _s.Scene.RoadPiecesEnabled = _s.Settings.RoadPieces;   // M16-V-04
         _s.Scene.WaterShimmerEnabled = _s.Settings.WaterShimmer;   // M16-V-04
         _s.Scene.CloudShadowsEnabled = _s.Settings.CloudShadows;   // M16-V-04
+        _s.Scene.TreadMarksEnabled = _s.Settings.TreadMarks;   // S45 V-04
+        _s.Scene.DebrisEnabled = _s.Settings.DebrisChunks;   // S45 V-04
+        _s.Scene.FxBudgetEnabled = _s.Settings.EffectBudget;   // S45 V-04
+        _s.Scene.GlowEnabled = _s.Settings.AdditiveGlow;   // S45 V-04
         _s.Scene.Draw(sb, _s.Pixel, frame, _camera, _s.Viewport);
         DrawPausedPlan(sb);   // A43-QOL-08
         DrawSelectedBuilding(sb, snapshot);

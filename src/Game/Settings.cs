@@ -47,6 +47,10 @@ namespace Rts.Game;
 /// <param name="ReduceFlashes">QOL-20 (D-313): no white hit flash, promotion flash or muzzle sparks (view only; separate from <c>ScreenShake</c>). Default false.</param>
 /// <param name="TutorialOffered">QOL-13 (D-313): the first-run "play the tutorial?" offer has been shown (and answered); it is never shown again. Default false.</param>
 /// <param name="AlertVolumes">QOL-12 (D-313): volume (0 = mute) of each alert category; null = every category at 100. Stored in an <c>[alerts]</c> table.</param>
+/// <param name="TreadMarks">S45 V-04 (design 18): tracked and wheeled vehicles leave fading track marks on soft ground (view only). Default true; files without the key get true.</param>
+/// <param name="DebrisChunks">S45 V-04 (design 18): vehicle and building deaths throw a few small debris chunks (view only). Default true; files without the key get true.</param>
+/// <param name="EffectBudget">S45 V-04 (design 18): one budget caps explosions, debris and smoke; when it is full the far-off-screen and small ones are dropped first, never a superweapon or the death of a selected unit (view only). Default true; files without the key get true.</param>
+/// <param name="AdditiveGlow">S45 V-04 (design 18): a soft additive glow under explosion cores, muzzle flashes and fires (view only; flashes also obey <c>ReduceFlashes</c>). Default true; files without the key get true.</param>
 /// <param name="PlayerName">M9 LAN player name; empty = the Windows user name (design 20 §8 item 4).</param>
 /// <param name="LanGamePort">M9 LAN game port (UDP), 1024..65535. Default <see cref="Rts.Net.NetProtocol.DefaultGamePort"/>.</param>
 /// <param name="LanDiscoveryPort">M9 LAN discovery port (UDP), 1024..65535. Default <see cref="Rts.Net.NetProtocol.DefaultDiscoveryPort"/>.</param>
@@ -88,7 +92,11 @@ public sealed record Settings(
     bool ShowOrderLines = true,
     bool CloudShadows = true,
     bool WaterShimmer = true,
-    bool RoadPieces = true)
+    bool RoadPieces = true,
+    bool TreadMarks = true,
+    bool DebrisChunks = true,
+    bool EffectBudget = true,
+    bool AdditiveGlow = true)
 {
     /// <summary>The <c>UiSkin</c> value for faction skins.</summary>
     public const string UiSkinFaction = "faction";
@@ -221,7 +229,11 @@ public sealed record Settings(
             root.TryGetValue("show_order_lines", out object? sol) && sol is bool solb ? solb : d.ShowOrderLines,
             root.TryGetValue("cloud_shadows", out object? clq) && clq is bool clqb ? clqb : d.CloudShadows,
             root.TryGetValue("water_shimmer", out object? waq) && waq is bool waqb ? waqb : d.WaterShimmer,
-            root.TryGetValue("road_pieces", out object? roq) && roq is bool roqb ? roqb : d.RoadPieces);
+            root.TryGetValue("road_pieces", out object? roq) && roq is bool roqb ? roqb : d.RoadPieces,
+            root.TryGetValue("tread_marks", out object? tm) && tm is bool tmb ? tmb : d.TreadMarks,
+            root.TryGetValue("debris_chunks", out object? dc) && dc is bool dcb ? dcb : d.DebrisChunks,
+            root.TryGetValue("effect_budget", out object? eb) && eb is bool ebb ? ebb : d.EffectBudget,
+            root.TryGetValue("additive_glow", out object? ag) && ag is bool agb ? agb : d.AdditiveGlow);
     }
 
     /// <summary>The settings as TOML text.</summary>
@@ -282,7 +294,14 @@ public sealed record Settings(
         sb.AppendLine("# Water shimmer: a slow band of sparkles over visible water (view only).");
         sb.AppendLine(FormattableString.Invariant($"water_shimmer = {(WaterShimmer ? "true" : "false")}"));
         sb.AppendLine("# Cloud shadows: soft shadows drifting over the map (view only).");
-        sb.AppendLine(FormattableString.Invariant($"cloud_shadows = {(CloudShadows ? "true" : "false")}"));
+        sb.AppendLine(FormattableString.Invariant($"cloud_shadows = {(CloudShadows ? "true" : "false")}"),
+        sb.AppendLine("# Battle effects (view only, S45 V-04): tread marks on soft ground, debris chunks from deaths.");
+        sb.AppendLine(FormattableString.Invariant($"tread_marks = {(TreadMarks ? "true" : "false")}"));
+        sb.AppendLine(FormattableString.Invariant($"debris_chunks = {(DebrisChunks ? "true" : "false")}"));
+        sb.AppendLine("# Effect budget: caps explosions, debris and smoke in big fights, dropping far-off and small ones first.");
+        sb.AppendLine(FormattableString.Invariant($"effect_budget = {(EffectBudget ? "true" : "false")}"));
+        sb.AppendLine("# Additive glow under explosions, muzzle flashes and fires (flashes also follow reduce_flashes).");
+        sb.AppendLine(FormattableString.Invariant($"additive_glow = {(AdditiveGlow ? "true" : "false")}"));
         sb.AppendLine("# Pan the camera to a new mission objective's target (M11-05)");
         sb.AppendLine(FormattableString.Invariant($"camera_cue_on_new_objective = {(CameraCueOnNewObjective ? "true" : "false")}"));
         IReadOnlyList<(string Id, int Volume)> alerts = Alerts.Overrides();
