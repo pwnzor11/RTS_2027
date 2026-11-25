@@ -379,12 +379,23 @@ public sealed partial class Simulation
         return true;
     }
 
-    /// <summary>M-16: true when at least one footprint cell is a landing-coast cell (terrain <c>[landing]</c>).</summary>
+    /// <summary>M-16: true when the footprint holds a landing-coast cell (terrain <c>[landing]</c>) or a cell next to Shallow water
+    /// (design 07 §2.1: "a shore cell adjacent to shallow water").</summary>
     private bool FootprintHasLanding(CellCoord topLeft, BuildingType bt, byte owner)
     {
+        TerrainTable terrain = RulesOf(owner).Terrain;
         for (int y = topLeft.Y; y < topLeft.Y + bt.FootprintH; y++)
             for (int x = topLeft.X; x < topLeft.X + bt.FootprintW; x++)
-                if (InMap(new CellCoord(x, y)) && RulesOf(owner).Terrain.Landing(_map.LandAt(new CellCoord(x, y)))) return true;
+            {
+                if (!InMap(new CellCoord(x, y))) continue;
+                if (terrain.Landing(_map.LandAt(new CellCoord(x, y)))) return true;
+                for (int dy = -1; dy <= 1; dy++)
+                    for (int dx = -1; dx <= 1; dx++)
+                    {
+                        var n = new CellCoord(x + dx, y + dy);
+                        if (InMap(n) && _map.LandAt(n) == LandType.Shallow) return true;
+                    }
+            }
         return false;
     }
 
