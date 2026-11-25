@@ -153,7 +153,7 @@ function OtherShot() state.other = state.other + 1 end
     }
 
     [Fact]
-    public void Dir04_command_post_razed_without_the_shot_loses_even_when_charged()
+    public void Dir04_command_post_razed_by_other_means_after_the_charge_still_wins()
     {
         MissionSession m = MissionSession.Create(TestData.DataDir, "dir_04");
         var bot = new MissionBot(m);
@@ -163,7 +163,8 @@ function OtherShot() state.other = state.other + 1 end
         bot.Idle(60);
         Kill(m, "auth_engineering", 1);
         bot.Idle(5);
-        Assert.Equal(MissionOutcome.Lost, m.Host.Outcome);
+        Assert.Equal("false", TestAccess.StateValue(m.Host, "shot"));
+        Assert.Equal(MissionOutcome.Won, m.Host.Outcome);
     }
 
     [Fact]

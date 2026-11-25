@@ -128,15 +128,15 @@ function Charged()
   Camera.Focus("zone_device", 160)
 end
 
--- The Device's shot (S45 C-05: the sim's superweapon-fired event; the shot used to be inferred from the command post dying).
+-- The Device's shot (S45 C-05: the sim's superweapon-fired event). Detection only: state.shot records it; the win rule below does not depend on it.
 function SunriseShot()
   state.shot = true
 end
 
--- Only the Device's shot razes the Authority command post for the win; losing it any other way (before the shot) loses the mission (S19 MIS-09).
+-- Once charged, the command post falling wins (old rule, kept for the D-222 sweep); razing it before the charge loses the mission (S19 MIS-09).
 function SunriseFired()
   if state.done then return end
-  if not (state.charged and state.shot) then
+  if not state.charged then
     -- The command post fell to anything but the Device: the order cannot be carried out, a loss (owner pick, S19 MIS-09).
     state.done = true
     Objective.Fail("fire")
