@@ -108,10 +108,10 @@ public sealed class WaveCommitTests
             observe: (s, a, b, pa, pb) => waves = ((RecruitAi)a).Waves + ((RecruitAi)b).Waves);
         Assert.True(waves >= 1);   // the game really sent waves
         // A43 (D-311) re-pin: 4844 / 6724706220407738216 -> 3344 / 8381130536209904247 (approved SIMECON/SIMCORE behaviour changes move this pinned game)
-        // s44 A-02 re-pin (focus_fire now also drives the Recruit AI wave at tier 3): 3344 / 0 / 8381130536209904247 -> 3804 / 1 / 17843251954667786593
+        // s44 A-02 re-pin (focus_fire now also drives the Recruit AI wave at tier 3): 3344 / 0 / 8381130536209904247 -> 3804 / 1 / 17843251954667786593; S44 merge (new state parts and part versions move the hash only): -> 4154896936043175216
         Assert.Equal(3804, r.EndTick);
         Assert.Equal(1, r.Winner);
-        Assert.Equal(17843251954667786593UL, r.FinalHash);
+        Assert.Equal(4154896936043175216UL, r.FinalHash);
     }
 
     // (b) reinforce on: a unit idle at the rally when the call-up falls due joins the roster
