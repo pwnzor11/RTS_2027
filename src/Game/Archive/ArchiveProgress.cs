@@ -45,7 +45,6 @@ public sealed class ArchiveProgress
     /// <summary>
     /// Records that a campaign mission was completed. Returns true if it was new.
     /// </summary>
-    // TODO (M3-17): M4 wires this to the campaign (call it when a mission is won, then Save()).
     public bool MarkCampaignMission(string missionId) => Add(_missions, missionId);
 
     /// <summary>Whether an entry is readable under this progress.</summary>
