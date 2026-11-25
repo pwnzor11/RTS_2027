@@ -461,6 +461,7 @@ min_range = 0
 rate_of_fire = 30  # (tune)
 projectile_speed = 80
 warhead = "exp_naval_shell"
+needs_spotter = true  # S44 M-17: fires at a ground cell only while the team sees it (design 07 §2.5)
 
 [exp_sub_missile]   # Missile Submarine: guided strike on ships and land
 damage = 110  # (tune)
@@ -477,6 +478,7 @@ min_range = 768  # (tune)
 rate_of_fire = 70  # (tune)
 projectile_speed = 80
 warhead = "exp_naval_shell_he"
+needs_spotter = true  # S44 M-17: shore bombardment of a cell seen by a Pathfinder, Gyro or the ship itself (design 07 §6.4)
 
 [exp_carrier_aa]   # Carrier: close anti-air
 damage = 20  # (tune)

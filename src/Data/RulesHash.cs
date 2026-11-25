@@ -223,7 +223,7 @@ public static class RulesHash
         w.Write(sim.StartKits.Count);
         foreach (FactionStartKit k in sim.StartKits) { WriteString(w, k.Conyard); WriteStrings(w, k.Units); }
 
-        foreach (WeaponType x in sim.Weapons) w.Write((byte)x.Targets);
+        foreach (WeaponType x in sim.Weapons) { w.Write((byte)x.Targets); if (x.NeedsSpotter) w.Write((byte)0xD5); }   // S44 M-17: only spotter weapons, so other hashes keep
         foreach (WarheadType x in sim.Warheads)
         {
             w.Write(x.Contaminate); w.Write(x.Decontaminate); w.Write(x.BlackoutTicks);

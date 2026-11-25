@@ -20,7 +20,9 @@ internal static class WeaponRulesLoader
          // schema v8 (M7-12)
          "salvo_missiles", "salvo_ticks", "salvo_radius", "salvo_damage", "salvo_warn_ticks", "salvo_splash"];
     private static readonly string[] WeaponKeys =
-        ["damage", "range", "min_range", "rate_of_fire", "projectile_speed", "warhead", "targets"];
+        ["damage", "range", "min_range", "rate_of_fire", "projectile_speed", "warhead", "targets",
+         // S44 (M-17)
+         "needs_spotter"];
 
     /// <summary>The armour classes that existed before M7-02 (unarmored..fortified); a shorter <c>versus</c> list of at least this length is padded.</summary>
     private const int LegacyArmorClasses = 5;
@@ -111,6 +113,8 @@ internal static class WeaponRulesLoader
         string? warhead = f.Str("warhead");
         WeaponTargets? targets = f.OptChoice("targets", RulesEnums.ParseWeaponTargets, RulesEnums.WeaponTargetKeys, WeaponTargets.Ground);
         if (targets is null) return null;
+        bool? needsSpotter = f.OptBool("needs_spotter", false);   // S44 M-17
+        if (needsSpotter is null) return null;
         if (damage is null || range is null || minRange is null || rateOfFire is null || projectileSpeed is null
             || warhead is null)
         {
@@ -128,6 +132,6 @@ internal static class WeaponRulesLoader
             return null;
         }
         return new WeaponType(f.Id, damage.Value, range.Value, minRange.Value, rateOfFire.Value,
-            projectileSpeed.Value, warheadIndex) { Targets = targets.Value };
+            projectileSpeed.Value, warheadIndex) { Targets = targets.Value, NeedsSpotter = needsSpotter.Value };
     }
 }
