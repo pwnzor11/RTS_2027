@@ -122,7 +122,7 @@ public static class GameKeys
         new(GameAction.CentreOnSelection, "centre_on_selection", Camera, "Centre the view on the selection", Keys.OemComma),
         new(GameAction.CycleProductionBuilding, "cycle_production", Selection, "Jump to the next production building (selects and centres it)", Keys.PageUp),
         new(GameAction.AutoTypeGroups, "auto_type_groups", Selection, "Control groups select every unit of their types (toggle)", Keys.Insert),
-        new(GameAction.PlaceLast, "place_last", System, "Place the last structure again (Shift + drag lays a row)", Keys.OemQuestion),
+        new(GameAction.PlaceLast, "place_last", System, "Place the last structure again (Shift + drag lays a row)", Keys.OemCloseBrackets),
         new(GameAction.RepairAll, "repair_all", System, "Repair every damaged building", Keys.OemSemicolon),
         new(GameAction.SellMarked, "sell_marked", System, "Sell the marked buildings (Shift + click marks; press twice)", Keys.Delete),
         new(GameAction.HideHud, "hide_hud", System, "Hide or show the HUD (panels, cards, sidebar, minimap; for screenshots)", Keys.F11),

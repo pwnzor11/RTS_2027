@@ -23,7 +23,7 @@ isolated instead of crashing the match (AI-07). Battle music no longer carries i
 0 A.D. renders and the AI-assisted art (REPO-03/04; an OPEN note asks the owner to reconcile D-033 with D-188).
 
 ## 4. Balance re-measure for the economy and AI fixes (D-311 items 5-11: SIMECON-01..04, SIMCORE-03, AI-01, AI-02, ROSTER-AD-06)
-Built and test-green on branch `bal-s43` (= integ-s43 + wp/a43-simB + wp/a43-ai) but NOT on integ-s43: the 512-game finish-line table
+Built and test-green on branch `bal-s43` (= integ-s43 at 819a2fd + wp/a43-simB + wp/a43-ai) but NOT on integ-s43: the 512-game finish-line table
 (k3s-cluster `claude/rts/s43/bal43.csv`) failed on one pairing: Authority v Directorate pooled 36.5 % (s42 final 40.6 %; rust 45.1, glass 51.1,
 mountains 28.1, ash 21.5); the other five pairings pass. Switching DirectorateAntiAir off changed nothing (game for game). Probes aioff43
 (AI fixes off) and integ43 (no simB/AI) were running at hand-off; see docs/BACKLOG.md B-00.

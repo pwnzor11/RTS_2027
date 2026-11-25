@@ -1,6 +1,6 @@
 # BACKLOG — everything promised, parked or reworded and not done (built in session 43, 2026-11-25)
 
-**Why this exists.** The owner asked (s43) for every leftover, not only the session-43 audit's 45 LOW items: "these are not small issues,
+**Why this exists.** The owner asked (s43) for every leftover, not only the session-43 audit's 53 open items (all LOW): "these are not small issues,
 some of them are fundamental parts of gameplay and unit mechanics." A read-only sweep of all 43 sessions (SESSION_LOG + archive, HANDOFF,
 DECISIONS, OPEN_QUESTIONS, ROADMAP, design/*, the s18 and s43 audits, balance/*, USER_CHECKS, code TODO/PENDING/Skip, data TODO comments)
 found 108 items. Each row was checked against the code; ids here (M-, C-, A-, U-, V-, N-, T-, B-, O-) are the work ids for ROADMAP M16.
@@ -25,7 +25,7 @@ The s43 audit ids (e.g. SIMECON-07) are kept in each row so the audit README §5
    (M-01..M-09, M-12, M-13, M-15); M-19 yard loop; M-20/M-22/M-25 intent; U-05 C&C habits; U-11 refinery name; C-08/C-09 campaign tiers;
    A-03 repair flip; O-04 licences; O-06 s43 assumptions; A-06 layout 2 finish-or-drop; C-02..C-04 campaign scope (later sessions).
 2. **Mechanics wave (big; Sonnet/Opus helpers, sim + data + art + text per mechanic):** the s18 build-later list M-01..M-09, then M-10..M-18,
-   M-20, M-22, M-25, M-26. Each mechanic: sim rule + data + AI use + tooltip/Archive text (remove the "cannot ... yet" lines in TodayText.cs) +
+   M-20, M-22, M-25, M-26. Each mechanic: sim rule + data + AI use + tooltip/Archive text (remove the "cannot ... yet" lines in src/Game/Ui/Sidebar/TodayText.cs) +
    art if needed + tests + campaign check. Re-measure balance at the end (gate D-305).
 3. **Correctness wave (Haiku/Sonnet, no outcome change):** M-21, M-23, M-24, M-27, M-30, M-31, C-05..C-07, C-10, A-02, U-01..U-04, U-06..U-10,
    U-14, V-06, N-01..N-05, T-01..T-08.
@@ -101,8 +101,8 @@ The s43 audit ids (e.g. SIMECON-07) are kept in each row so the audit README §5
 ## 4. UI / UX (14 rows)
 | id | what | where parked | evidence still not done | size | owner? |
 |---|---|---|---|---|---|
-| U-01 | Hotkey letters hard-coded in captions "Dive (D)", "Surface (D)", "PACK RIG (K)" (GAMEUI-09) | s43 README says fixed | UiText.cs:153-154 still literal | S | no |
-| U-02 | Silent selection actions: `C` with no army clears selection, Ctrl+n gives no message (GAMEUI-11) | s43 README says fixed | no A43-GAMEUI-11 commit | S | no |
+| U-01 | Hotkey letters hard-coded in captions "Dive (D)", "Surface (D)", "PACK RIG (K)" (GAMEUI-09) | s43 audit: open | UiText.cs:153-154 still literal | S | no |
+| U-02 | Silent selection actions: `C` with no army clears selection, Ctrl+n gives no message (GAMEUI-11) | s43 audit: open | no A43-GAMEUI-11 commit | S | no |
 | U-03 | Save/autosave failure toast unwrapped, raw exception text (GAMEUI-08) | s43 not changed | | S | no |
 | U-04 | Esc on Game Over exits to menu with no confirm (GAMEUI-10) | s43 not changed | | S | no |
 | U-05 | C&C/StarCraft habit gaps: no structure control groups, Shift+number semantics, Shift+right-click on enemy replaces queue (GAMEUI-12) | s43 not changed | | M | yes |
@@ -114,7 +114,7 @@ The s43 audit ids (e.g. SIMECON-07) are kept in each row so the audit README §5
 | U-11 | Authority refinery called "Ashfall Refinery" in Archive/manual/README, "Refinery" in tutorial and tips (TEXT-08) | s43 not changed | | S | yes (name) |
 | U-12 | In-game tech-tree viewer; drill missions with medals | s18 README §3 top-12 #12 | no TechTree or Drill code in src/Game | M | yes |
 | U-13 | About 70 of about 100 s18 QoL candidates unbuilt (only top-12 and the s43 20 are done) | wave1/qol-cnc.md, qol-modern.md | D-313 built 20; rest unscreened | L | yes (pick) |
-| U-14 | GAMESYS-05 menu polls `SaveCatalog.Newest()` every 2 s and opens every save header; per-frame allocation half was fixed | s43 README says fixed | only FOLLOWUP-11/12 commits | S | no |
+| U-14 | GAMESYS-05 menu polls `SaveCatalog.Newest()` every 2 s and opens every save header; per-frame allocation half was fixed | s43 audit: open | only FOLLOWUP-11/12 commits | S | no |
 
 ## 5. Audio / voice / art (8 rows)
 | id | what | where parked | evidence still not done | size | owner? |
@@ -140,7 +140,7 @@ The s43 audit ids (e.g. SIMECON-07) are kept in each row so the audit README §5
 ## 7. Tools / CI / repo (10 rows)
 | id | what | where parked | evidence still not done | size | owner? |
 |---|---|---|---|---|---|
-| T-01 | `UnknownSourcesAreReported` still `[Fact(Skip=...)]` though PROVENANCE has 0 unknown (REPO-05, README says fixed) | s43 | AudioProvenanceTests.cs:120 | S | no |
+| T-01 | `UnknownSourcesAreReported` still `[Fact(Skip=...)]` though PROVENANCE has 0 unknown (REPO-05, open) | s43 | AudioProvenanceTests.cs:120 | S | no |
 | T-02 | Skip census: 4 `[ProbeFact]` env-gated tests; tests that cannot fail (REPO-06) | s43 not changed | | S | no |
 | T-03 | CI runs only on push/PR to main; branch pushes and bot PRs get no run (REPO-07); HANDOFF s38 "no Windows CI since Nov 12" never explained | s43 not changed | ci.yml triggers | S | no |
 | T-04 | Large binaries not in LFS: Field Manual PDF 38.6 MB, voice ogg, skins, portraits (REPO-08) | s43 not changed | .gitattributes | S | yes (history rewrite) |
@@ -155,7 +155,7 @@ The s43 audit ids (e.g. SIMECON-07) are kept in each row so the audit README §5
 | id | what | where parked | evidence still not done | size | owner? |
 |---|---|---|---|---|---|
 | B-01 | 24-row 35-65 % goal "stays as later work" | D-310 | Ash Auth v Dir 23.6 %, Rust Auth v LB 75.1 % (docs/balance/s42_balance.md) | L | yes (new decision to unfreeze) |
-| B-02 | Per-map causes: Auth v Dir Ash 13 %, Dir v LB Rust 20 %, Dir v Exp Glass 18 % (s39 numbers) | M13-37, Q-87 (c) "24 per-map rows later" | ROADMAP:375 "Still open" | L | yes |
+| B-02 | Per-map causes: Auth v Dir Ash 13 %, Dir v LB Rust 20 %, Dir v Exp Glass 18 % (s39 numbers) | M13-37, Q-87 (c) "24 per-map rows later" | ROADMAP M13-37 "Still open" | L | yes |
 | B-03 | Late-game draws 15.4 % (Glass Coast ore exhaustion), income freezes | M13-23, M13-40 | s38 "no change" | M | yes |
 | B-04 | M7-14 acceptance: Expedition AI never wins at tier 1 v Authority; §6 bullet 1 | ROADMAP M7-14 `[ ]` | s38 note | M | yes |
 | B-05 | Authority tier 5 v 1 at 72-76 % (90 % target dropped D-298) | M4-16 `[~]` | closed by decision, row still open | S | no |
@@ -173,7 +173,7 @@ The s43 audit ids (e.g. SIMECON-07) are kept in each row so the audit README §5
 | O-05 | Confirm SFX CC0 assumption | CREDITS.md:34 | assumed | S | yes |
 | O-06 | Confirm s43 assumptions: Second Drift 24, edge reinforcements keep block depth, QoL key defaults (Z, F, PageDown, comma, Insert, F11 ...), QOL-16 drag move, QOL-03 Alt+drag | HANDOFF checkpoint | assumed | S | yes |
 | O-07 | Land or switch off D-311 items 5-11 after bal43 | HANDOFF | waiting on cluster result | S | yes |
-| O-08 | Approve art pass contact sheets (66 buildings, 24 vehicles, 11 infantry, terrain) | D-315 | merged, not reviewed | S | yes |
+| O-08 | Approve art pass contact sheets (67 buildings, 24 vehicles, 11 infantry, terrain) | D-315 | merged, not reviewed | S | yes |
 | O-09 | Pick briefing style (telegram vs plain) | D-284 | open | S | yes |
 | O-10 | Hand-set par times per mission (D-289 alternative) | D-240 | deferred to play | S | yes |
 | O-11 | Delete branches integ-s40/41/42 | HANDOFF | open | S | yes |

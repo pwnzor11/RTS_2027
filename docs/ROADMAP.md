@@ -325,7 +325,7 @@ Source: docs/reviews/2026-11-07_owner_campaign_feedback.md. Audit: docs/reviews/
 - [x] M15-06 Text matches data; Field Manual and quick reference rebuilt (D-311)
 - [x] M15-07 20 QoL items (D-313) + superweapon button/range + Repairing line + update check off by default (D-312)
 - [x] M15-08 Render allocations and culling (D-314); [ ] M15-09 sim spatial index (later, own session)
-- [x] M15-10 Art pass (D-315): 66 buildings detail + 8-frame idle, 24 vehicles move state, 11 Authority/Directorate infantry variant C, terrain detail on four biomes
+- [x] M15-10 Art pass (D-315): 67 buildings (63 with detail + 8-frame idle, 2 turret-facing sheets and 2 ruins detail only), 24 vehicles move state, 11 Authority/Directorate infantry variant C, terrain detail on four biomes
 - [ ] M15-11 Expedition + Left Behind infantry fan-out (11 units; helper stopped by a safeguard; pilot method in tools/art/infantry/boost.py)
 - [x] M15-12 Smoke without bubbles (D-316): volumetric plume and puffs, no baked sphere smoke, noise-broken decals, half the Mountains snow
 

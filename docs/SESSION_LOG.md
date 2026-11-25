@@ -772,7 +772,7 @@ over-committed parallelism slowed the cluster to ~3.5 pieces a minute; 64-game m
 LAN hardening, placement bounds, save/replay v14, AI fault isolation, tunnel surfacing, stuck-underground reroute, garrison/dived spared from
 radiation and superweapons, capture resets charge, Sonar Nets range, campaign spawns/tech lists, commander stale window, all stale text (manual
 rebuilt), superweapon button/range, Repairing line, update check off by default (D-312), 20 QoL items (D-313), render allocations/culling (D-314),
-licence docs. Art (D-315): four pilots approved, fan-out code, 102 cluster renders (66 buildings with 8-frame idle, 24 vehicles with a move
+licence docs. Art (D-315): four pilots approved, fan-out code, 102 cluster renders (67 buildings: 63 with 8-frame idle, 2 turret sheets and 2 ruins detail only; 24 vehicles with a move
 state, 11 Authority/Directorate infantry), terrain detail on all four biomes. Smoke (D-316): volumetric plume and torn puffs, no baked sphere
 smoke, noise-broken decals, half the Mountains snow. Held: D-311 items 5-11 on `bal-s43` (512-game gate failed on Authority v Directorate,
 36.5 % pooled v 40.6 %; DirectorateAntiAir alone had no effect; probes running). Backlog sweep: 108 parked items over 43 sessions,
