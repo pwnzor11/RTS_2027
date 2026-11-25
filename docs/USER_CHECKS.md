@@ -682,5 +682,5 @@ Pull main first (your folder was on eda0f0e3, two sessions behind), then rebuild
 - **HUD:** "Income +N/min   Harvesters W/T" in skirmish; match clock; hover any unit for name/owner/health; Settings "Order lines: On/Off".
 - **Repair:** a building under repair shows "Repairing" on its card.
 - **Tutorial:** the train step says the Infantry tab; the loading tip says bookmarks are F6/F7/F8/F12 (F5 is Quicksave).
-- **Balance numbers to confirm:** D-311 (Second Drift storm cap 31, no_build_threshold 24 — assumed), BAL_CONFIRM.
+- **Balance numbers to confirm:** D-311 (Second Drift storm cap 31, no_build_threshold 24 — assumed). Items 5-11 of D-311 (production pause, storm, Bore, queue, AI) are NOT in this build (held, BACKLOG B-00).
 
