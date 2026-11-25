@@ -123,9 +123,7 @@ public sealed class ArchiveProgress
             string file = path ?? DefaultPath;
             string? dir = Path.GetDirectoryName(file);
             if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
-            string tmp = file + ".tmp";   // S18 GS-05: write through a temporary file, as CampaignProgress does
-            File.WriteAllText(tmp, ToToml());
-            File.Move(tmp, file, overwrite: true);
+            AtomicFile.WriteAllText(file, ToToml());   // U-10: flushed before the rename
             Dirty = false;
             return true;
         }

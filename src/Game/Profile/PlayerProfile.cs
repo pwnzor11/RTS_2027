@@ -217,9 +217,7 @@ public sealed class PlayerProfile
             string file = path ?? DefaultPath;
             string? dir = Path.GetDirectoryName(file);
             if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
-            string tmp = file + ".tmp";
-            File.WriteAllText(tmp, ToToml());
-            File.Move(tmp, file, overwrite: true);
+            AtomicFile.WriteAllText(file, ToToml());   // U-10: flushed before the rename
             return true;
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException)

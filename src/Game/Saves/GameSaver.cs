@@ -40,7 +40,10 @@ public static class GameSaver
         try
         {
             using (var file = new FileStream(temp, FileMode.Create, FileAccess.Write, FileShare.None))
+                {
                 GameSaveFile.Write(file, Capture(template, host, controlGroups), host.Sim, RulesBundle.ReadDirectory(rulesDir), timeline);
+                file.Flush(flushToDisk: true);   // U-10: on the disk before the rename
+            }
             File.Move(temp, path, overwrite: true);
         }
         finally
