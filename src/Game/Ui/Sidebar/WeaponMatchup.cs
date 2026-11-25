@@ -68,7 +68,22 @@ public static class WeaponMatchup
     public static List<string> Lines(SimRules rules, ProductionCategory category, int typeIndex)
     {
         var lines = new List<string>();
-        int weapon = WeaponOf(rules, category, typeIndex);
+        if (category is ProductionCategory.Vehicle or ProductionCategory.Aircraft && WeaponSlots.OfVehicle(rules, typeIndex) is { Count: > 1 } slots)
+        {
+            // S44 (M-04): one block per slot, each led by the weapon's name and what it hits
+            foreach (int slot in slots)
+            {
+                string name = CameoNames.Display(rules.Weapons[slot].Id) + " (" + WeaponSlots.TargetsText(rules.Weapons[slot].Targets) + "): ";
+                foreach (string line in LinesOf(rules, slot)) lines.Add(name + line);
+            }
+            return lines;
+        }
+        return LinesOf(rules, WeaponOf(rules, category, typeIndex));
+    }
+
+    private static List<string> LinesOf(SimRules rules, int weapon)
+    {
+        var lines = new List<string>();
         (IReadOnlyList<ArmorClass> strong, IReadOnlyList<ArmorClass> weak) = Classes(rules, weapon);
         if (strong.Count == 0 && weak.Count == 0) return lines;
         IReadOnlyList<int> versus = rules.Warheads[rules.Weapons[weapon].Warhead].VersusPercent;
