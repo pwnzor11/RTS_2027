@@ -4,12 +4,10 @@ Context and trade-offs for every question are in `docs/research/00_SYNTHESIS.md`
 file cited after each question. Recommendations are the lead's, from the research.
 
 ## Open
-- 🔴 **Q-93 (s45) Balance after the Repair Hover fix.** The 512-game table r45 and campaign sweep sw45 ran on the cluster at hand-off (estimate:
-  pooled Authority v Expedition ~64 and Authority v Directorate 33.6 still out of 40-60). Scrap Plate, Patchwork, Salvage Rights and M-22 are not
-  the causes (D-325). Options for what is left: **tune Authority v Expedition and Authority v Directorate with unit numbers screened against paired
-  controls, decided on 512 games (recommended)** / try tier-3 focus fire off (mixed, small) / accept the table and close the gate for now.
+(none)
 
 ## Answered
+- Q-93 · 2026-11-26 · Owner (s46): tune with unit numbers on paired screens, decide on 512 games → D-330 (gate met; numbers assumed — confirm).
 - Q-91, Q-92 · 2026-11-25 · Owner (s46): take the recommendations → D-328 (Alt-modifier bindings, Laptop keys preset), D-329 (lb_02 line re-voiced).
 - Q-89, Q-90 · 2026-11-25 · Owner (s45): take the recommendations → D-324; screened → D-325 (Scrap Plate stays, the Repair Hover list fix lands, M-22 no effect).
 - Q-88 · 2026-11-24 · Owner (s43): (a) finish line met; freeze balance numbers → D-310.

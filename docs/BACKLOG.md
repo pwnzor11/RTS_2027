@@ -21,6 +21,11 @@ needs a sim hook, later), C-07, C-10, U-01..U-04, U-07..U-10, U-14, V-03, V-04, 
 TODO and ComingLater removed; SuperweaponManager PENDING and ExitNotImplemented kept, still used). New: B-08 `damage_taken_permille` attribute;
 the Repair Hover list fix (D-325). Waiting: U-06 (Q-91), T-04 (D-321), balance gate (Q-93).
 
+## Status after session 46 (2026-11-26)
+Done on integ-s46 (D-328..D-330): U-06 (Alt-modifier bindings, Laptop keys preset), C-07 voiced line (lb2.radio.start re-voiced), the balance gate
+after the mechanics wave (D-330: D-305 met on 512 games, campaign sweep 45/45; dir_02 tier 5 retuned). Still open: everything else below; the Field
+Manual PDF needs a rebuild for the new Marine and Glide Tank costs; T-04 (D-321); C-06 KeepAlive hook; owner tests O-01..O-03, O-08, O-10.
+
 ## 0. Before any of it: the balance gate and the freeze
 - **B-00 (first, small):** D-311 items 5-11 (production pause on a lost prerequisite, non-lethal Second Drift storm + no_build_threshold,
   Bore not a base, refused order keeps the queue, AI rebuild while broke, mop-up without respond_to_attacks, Directorate anti-air) live on

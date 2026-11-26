@@ -826,3 +826,18 @@ The 512-game table (r45) and campaign sweep (sw45) were running on the cluster a
 (tier overrides cannot set it) and was replaced by the global ff0; x86 slots filled by renders kept a test pod and two builds Pending (builds paused
 the waiting series; the cluster test was dropped in favour of GitHub CI).
 **Next session should:** read r45 and sw45 first (HANDOFF), then Q-93.
+
+## Session 46 · 2026-11-25/26 (r45 read; balance gate met with Q-93 unit numbers; laptop keys; lb_02 line)
+**Outcome:** owner took every recommendation (Q-91..Q-93). r45 (512 games after the Repair Hover fix): pooled Authority v Expedition 64.6 and Authority
+v Directorate 33.6 still out; sw45 45/45. Q-93: eight one-key screens and five combinations, every variant paired with r45 on the same seeds; the
+landed set (D-330) is Authority infantry ash resist 400, Rifle 9, Marine 130, Glide Tank 900, Directorate rockets v Light 78. Decide on 512 games:
+all six pairings inside 40-60 (Authority v Directorate 41.8, Authority v Expedition 56.4), all 24 rows inside 25-75: **D-305 gate met**. Campaign
+sweep 45/45 after a dir_02 tier-5 retune (10/5 -> 8/4 riflemen). U-06 Alt-modifier bindings and a Laptop keys preset (D-328); lb_02 radio line
+rewritten and re-voiced with Kokoro (D-329).
+**Decisions:** D-328..D-330. **Questions:** none open.
+**Helpers:** one Sonnet package (s46-keys, no fix round). about 31 000 cluster games (v1, v2, v3 part, v4, v5 part, v6 part, v7, k4a/k4b part, k7a/b/c; 16 per piece),
+two campaign sweeps plus two dir_02 sweeps.
+**Problems / notes:** the laptop dropped off the bridge for ~20 min (cluster jobs carried on); huntsman went NotReady mid-run (stuck pods
+force-deleted); build pods stayed Pending behind series pods until series parallelism was lowered; the auto-mode check refused `kjob.py prune`
+(deleting named jobs of this session was allowed). The Field Manual PDF still shows the old costs.
+**Next session should:** HANDOFF "Start here".

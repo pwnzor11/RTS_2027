@@ -1,40 +1,45 @@
-# Handoff: Session 46 — read the r45 table and sw45 sweep, then the balance calls (Q-93)
-> **Session 46 checkpoint (in progress, 2026-11-26 UTC):** Q-91 (D-328) and Q-92 (D-329) done on `integ-s46` (Windows CI green at 5af7dc5);
-> r45/sw45 written into docs/balance/s45_balance.md (pooled Authority v Expedition 64.6, Authority v Directorate 33.6: gate not met; sweep 45/45).
-> Q-93 screens in docs/balance/s46_balance.md (v1, v2 read; v4 running on the cluster: `/work/out/v4`, read with `python3 /work/in/s46/pair46.py v4`).
-> Not landed yet: integ-s46 waits for the Q-93 numbers (512-game decide + sweep) before its PR. If this session ended here: read v4, pick the
-> best combination, run it on all 32 chunks (paired with r45) plus a sweep, then land.
+# Handoff: Session 47 — the owner's confirmations, then the bigger M16-06 items
+Last commit: `docs: Session 46 handoff` on `integ-s46` (PR to main, merged by the lead once Windows CI is green). Laptop folder: `git checkout main; git pull`.
+Where things stand: session 46 met the D-305 balance gate after the mechanics wave: Q-93 unit numbers (D-330, assumed — confirm), 512 games per row,
+all six pairings inside 40-60 and all 24 rows inside 25-75; campaign sweep 45/45 after a dir_02 tier-5 retune. Also U-06 Alt-modifier key bindings and
+a Laptop keys preset (D-328) and the lb_02 radio line re-voiced (D-329). Save format 16, replay format 16. Decisions up to D-330. OPEN_QUESTIONS: none.
 
-Last commit: `docs: Session 45 handoff` on `integ-s45` (PR to main, merged by the lead once Windows CI is green). Laptop folder: `git checkout main; git pull`
-before building (it was still on the session 42 merge when s45 started).
-Where things stand: session 45 finished the correctness wave and the art wave (D-326, D-327) and traced the Expedition drop: the Repair Hover's
-`aura_targets` (S44 M-11) had dropped the Canister Skiff and Supply Tender; both are back (D-325, +3..+13 per Expedition row on paired screens).
-Scrap Plate, Patchwork, Salvage Rights, Diver swimming and M-22 are not causes; the recommended Scrap Plate softening strengthens the Left Behind,
-so Scrap Plate stays. Save format 16, replay format 16. Decisions up to D-327. OPEN_QUESTIONS: Q-91, Q-92, Q-93.
-
-## Start here (session 46; shown to the user as the plan; nothing starts until they say go)
-1. **Read the cluster results first:** `r45` (512-game D-305 table, 24 rows x 32 chunks, seeds 1-256, commit 8d4b009) and `sw45` (D-222 campaign
-   sweep, 135 pieces) in `/work/out/`; tally with `python3 /work/in/s41/tally41.py /work/out/r45 0 31` and the sweep lines like s44 (sw44.lines).
-   If r45 is still running, wait for it (kjob status) before planning numbers. Write the table into docs/balance/s45_balance.md.
-2. **Q-93 balance calls:** estimate before r45: pooled Authority v Expedition ~64 and Authority v Directorate 33.6 still out of 40-60. Levers:
-   unit numbers screened with paired controls (variant and main on the same seed chunks, `claude/rts/s45/var45.sh` + `pair45.py`), decided on 512.
-3. **Q-91** (laptop cameo preset: modifier-aware bindings) and **Q-92** (lb_02 voiced line) if the owner answers.
-4. Later work (BACKLOG M16-06): C-06 `Player.KeepAlive` (sim hook), M-28 spatial index, campaign expansion, U-12/U-13, B-01..B-03; owner items below.
+## Start here (session 47; shown to the user as the plan; nothing starts until they say go)
+1. **Owner confirmations** (one question batch): D-322, D-326, D-327 (s44/s45 values), D-330 (the s46 numbers and the dir_02 retune); play-checks in
+   USER_CHECKS sessions 44-46. Anything rejected goes back through a paired screen (the s46 method below) before it changes.
+2. **Field Manual rebuild** (tools/booklet): the stat tables are built from data and still show the old Marine (150) and Glide Tank (960) costs.
+3. **Bigger items (BACKLOG M16-06, pick with the owner):** C-06 `Player.KeepAlive` (sim hook), M-28 spatial index, C-02 campaign expansion,
+   U-12 tech-tree viewer / drills, U-13 QoL, B-01..B-03 per-map balance (24-row 35-65 % goal), A-06 layout 2, A-08/A-09 LLM directives.
 
 ## Half-finished work
-- Balance: D-305 gate not yet re-measured after the fix (r45 above). Probe branch `probe-s45-m22` (never merge).
-- `damage_taken_permille` (B-08) is in code but unused by data (D-325).
-- C-06 KeepAlive not built (needs a per-tick host mask checked in UpdateDefeat/UpdateNoRebuildDefeat). U-06 waits for Q-91.
-- Cluster (k3s-cluster `claude/rts/s45/`): var45.sh (variant runner: list "tag biome FA TA FB TB OFF", patches in /work/in/s45/patch), pair45.py
-  (paired table), bld_*.sh, inf45.sh / end45.sh (art renders), r45.sh, sw45.sh. Outputs /work/out/{a45,m45,c45,d-c9fa6d,d-8c03e3,e45,f45,r45,sw45}.
+- Nothing half-built on integ-s46. `damage_taken_permille` (B-08) is still unused by data. C-06 KeepAlive not built.
+- Cluster scripts for s46 are in the laptop k3s-cluster folder `claude/rts/s46/` (var46.sh runner, setkey.py patches, pair46.py paired table v r45,
+  final46.py the 512-game table, bld_*.sh builds, sw46b.sh / swd3.sh sweeps); inputs in `/work/in/s46/`, outputs `/work/out/{v1..v7,k4a,k4b,k7a,k7b,k7c,sw46b,swd2,swd3}`.
 
 ## Waiting on the user
-- Q-91, Q-92, Q-93; confirm D-326 / D-327 values; review the ending slides and the new effects in a skirmish; M9-15 two-PC LAN test; M7-14 Expedition
-  play-test; M10-27 voice log; auth_01 voice line still says "Refinery"; D-321 LFS migration.
-- **Delete merged branches** (the session's GitHub access cannot): integ-s40..s45, bal-s43, bal-s43-noaa, bal-s43-aioff, probe-s44-noa03/noai/nolb/nom16,
-  probe-s45-m22, art-s43, qol-s43, docs-s43-b00, wp/a43-*, wp/art-*.
+- Confirm D-322, D-326, D-327, D-330; review the ending slides and new effects in a skirmish; try the Laptop keys preset; M9-15 two-PC LAN test;
+  M7-14 Expedition play-test; M10-27 voice log; auth_01 voice line still says "Refinery"; D-321 LFS migration.
+- **Delete branches** (the session's GitHub access cannot): integ-s46, bal-s46, wp/s46-keys (plus any of the s40-s45 list still there).
+- huntsman (x86 node) went NotReady during s46: check it (power, k3s agent) before the next cluster-heavy session.
 
 ## How to run this session
+- Session 46 lessons:
+  - **r45 is a ready-made paired control:** a data variant on build 8d4b009 run on any chunk 0-31 pairs with r45's file for that row and chunk
+    (pair46.py), so no separate control runs are needed. After a new main build, run one 512-game main table first and use it the same way.
+  - Screen one key per variant on the rows it can touch, then combine; decide on all 32 chunks. Screen winners do shrink on fresh seed blocks
+    (Rifle 9: +3.2 on seeds 1-64, +2.4 on 65-128), and effects add up only roughly (c4 differed from the sum of its parts by several points).
+  - Cheap levers that help one faction everywhere drag a third pairing (Glide 900 pulled Directorate v Expedition down 4-9); fix it with a lever on
+    the other side aimed at the armour class the third pairing fields (Directorate rockets v Light), not by shrinking the first lever.
+  - Cliffs: Directorate rockets v Light 75 -> 85 moved two pairings by ~20 points; 78 was right. Delver cost 800 -> 880 made the Directorate much
+    stronger (the AI buys other units): a cost rise is not always a nerf.
+  - Tier-5 campaign cases whose enemy is the buffed unit fall first (dir_02's reserves are all Riflemen): sweep, then retune that mission's tier-5 sizes.
+  - Data that ships with tests: a unit used as a test's "unprotected" fixture (the Rifleman in the ashfall tests) breaks when its stats change;
+    run the whole suite on the candidate before the decide finishes.
+  - Builds stay Pending behind series pods: lower the series' parallelism (kp.py pattern in the laptop's $HOME), or submit with `--arch any --cpu 1`.
+    A NotReady node leaves pods Terminating forever: force-delete them (`kubectl delete pod --force --grace-period=0`) so their indexes rerun.
+  - The auto-mode check refuses `kjob.py prune`; `kjob.py delete <job>` for this session's own jobs is fine.
+  - Kokoro voice lines in the cloud: Python 3.13 cannot build spaCy; `uv venv -p 3.12` + `uv pip install kokoro soundfile imageio-ffmpeg`, run
+    kokoro_batch.py with VIRTUAL_ENV set (it downloads en_core_web_sm through uv). Move the old .ogg aside to make only that line.
 - Session 45 lessons:
   - **Pair every variant with main on the same seed chunks.** Unpaired fresh-seed screens misled this session (Scrap Plate looked neutral, M-22
     looked neutral): give each variant block its own OFF and run a `main` control on the same OFF (c45 pattern), then `pair45.py`.

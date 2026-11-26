@@ -2427,3 +2427,13 @@ load unchanged. The Controls page gets "Laptop keys: sidebar cameos on Alt + 1-9
 lookout first, then cut the posts out one at a time."; the briefing puts "FIRST RAISE A GARAGE RIG AND A LOOKOUT." in its own sentence. The line was
 re-voiced with the tool and voice the leader already uses (Kokoro am_onyx, tools/voice/kokoro_batch.py), not Piper, so the voice matches his other
 lines. **Why:** the objective checks the Garage Rig and Lookout; the old line asked the player to train slingers. **Alternatives:** keep both as flavour.
+
+### D-330 · 2026-11-26 · Session 46: Q-93 balance numbers after the Repair Hover fix (assumed — confirm)
+**Decision:** owner took the recommendation (tune with unit numbers on paired screens, decide on 512 games). Landed: Authority infantry (Rifleman,
+Rocketeer, Marksman, Engineer) `rad_resist_permille` 0 -> 400; `auth_rifle` damage 8 -> 9; `exp_marine` cost 150 -> 130; `exp_glide_tank` cost
+960 -> 900 (its cost before D-280); `dir_rocket` versus Light 75 -> 78; dir_02 tier 5 reserve 10 -> 8 and second reserve 5 -> 4 riflemen.
+**Why:** 512 games per row (seeds 1-256, paired with r45): pooled Authority v Directorate 33.6 -> 41.8, Authority v Expedition 64.6 ->
+56.4, all six pairings inside 40-60; all 24 rows inside 25-75 (edges ash Authority v Directorate 25.4, rust Directorate v Expedition 74.3): the D-305 gate is met. Campaign sweep: 45/45 meet D-222 (dir_02 tier 5 6/12 after its retune; it fell to
+2/12 with the new numbers). docs/balance/s46_balance.md. **Alternatives:** tier-3 focus fire off (Q-93 b); Rifle 10 (Authority v Left Behind +14);
+Conscript 90 (Directorate v Left Behind -9); Delver 880 (Directorate much stronger, an AI effect); Directorate rockets v Light 85 (+20 for the
+Directorate, a cliff). **Status:** assumed — confirm (USER_CHECKS session 46)

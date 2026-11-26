@@ -733,3 +733,14 @@ Pull main first (your folder was on eda0f0e3, two sessions behind), then rebuild
   water shimmers; road ends are rounded. Each has a toggle in Settings (Tread marks, Debris chunks, Effect budget, Additive glow, Cloud shadows,
   Water shimmer, Road junctions). Fire an Authority Tank or Howitzer in several directions: the muzzle spark sits at the barrel end.
 - **Balance (D-325):** the Repair Hover heals Canister Skiffs and Supply Tenders again. Numbers to confirm: D-326, D-327; the r45 table (Q-93).
+
+## Session 46 (2026-11-26)
+- **Laptop keys (U-06, D-328):** Settings > Controls: pick "Laptop keys: sidebar cameos on Alt + 1-9, 0, -, =". In a skirmish the first sidebar
+  cameo's hint reads "Alt+1"; Alt+1 builds it and Alt+Shift+1 queues five. Plain 1 still selects control group 1 (and does nothing while Alt is held).
+  "Reset all keys to defaults" puts the numpad cameo keys back. Rebinding a key while holding Alt binds Alt + that key.
+- **lb_02 (C-07, D-329):** start lb_02: Calloway-Ross says "Raise a garage and a lookout first, then cut the posts out one at a time." The briefing
+  says "FIRST RAISE A GARAGE RIG AND A LOOKOUT."
+- **Balance (D-330, numbers assumed — confirm):** Authority soldiers lose health more slowly on ash fields (ash resist 400; before, none). Authority
+  Rifleman damage 9 (was 8); Marine costs 130 (was 150); Glide Tank costs 900 (was 960); Directorate Rocket Trucks and Rocket Nests do a little more
+  to light vehicles (78 % of full damage, was 75 %). dir_02 at the hardest tier sends slightly smaller rifle reserves. Table: docs/balance/s46_balance.md.
+- **Not updated yet:** the Field Manual PDF still lists the old Marine and Glide Tank costs.
