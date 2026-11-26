@@ -66,10 +66,10 @@ function PostDown()
     Dialogue.Say(SPEAKER, SPEAKER, "d2.radio.post1")
     Trigger.AfterDelay(200, ReserveWave)
   end
-  -- tiers 4-5: a second reserve answers the second post, out of the same road
+  -- tiers 4-5: a second reserve answers the second post, out of the same road (s46 D-330: tier 5 five -> four riflemen)
   if state.postsDown == 2 and Mission.Difficulty() >= 4 and not state.done then
     local types = {}
-    for i = 1, (Mission.Difficulty() >= 5 and 5 or 3) do types[i] = "auth_rifleman" end
+    for i = 1, (Mission.Difficulty() >= 5 and 4 or 3) do types[i] = "auth_rifleman" end
     types[#types + 1] = "auth_jeep"
     Reinforce.Edge(1, types, { x = 63, y = 22 + Random.Next(6) }, Map.Center("site"))
     Media.MessageKey("d2.reserve2")
@@ -127,7 +127,7 @@ end
 
 -- The reserve answers the first fallen post. Rifles by tier; a jeep from tier 4.
 function ReserveSize()
-  local sizes = { 1, 2, 3, 5, 9 }   -- s46 (D-330): tier 5 10 -> 9 after the Q-93 Rifle 9 + ash resist (sweep 2/12)
+  local sizes = { 1, 2, 3, 5, 8 }   -- s46 (D-330): tier 5 10 -> 8 after the Q-93 Rifle 9 + ash resist (sweep 2/12 at 10, 1/12 at 9)
   return sizes[Mission.Difficulty()]
 end
 
