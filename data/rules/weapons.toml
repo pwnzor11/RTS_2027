@@ -4,7 +4,7 @@
 # Schema v3 (M3, optional): targets ("ground"|"air"|"both", default "ground").
 
 [auth_rifle]
-damage = 8
+damage = 9  # (tune) s46 Q-93 (D-330): 8 -> 9, assumed — confirm
 range = 768
 min_range = 0
 rate_of_fire = 15
