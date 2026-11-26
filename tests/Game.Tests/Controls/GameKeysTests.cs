@@ -100,7 +100,7 @@ public sealed class GameKeysTests
     public void Controls_page_lists_every_group_setting_and_row()
     {
         var items = ControlsScreen.Items();
-        Assert.Equal(3 + 1 + GameKeys.Groups.Count + GameKeys.Rows.Count, items.Count);
+        Assert.Equal(3 + 1 + 1 + GameKeys.Groups.Count + GameKeys.Rows.Count, items.Count);
         foreach (string g in GameKeys.Groups) Assert.Contains(items, i => i.Heading == g);
         Assert.Equal(GameKeys.Infos.Count, items.Count(i => i.Kind == ControlsScreen.ItemKind.Binding));
     }

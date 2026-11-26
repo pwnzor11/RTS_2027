@@ -1,6 +1,6 @@
 # Left Behind 02 "Road Posts" locale. Speaker: Jessup Calloway-Ross (leader_lb_calloway_ross); cameo: Brigadier Wrenfield (leader_auth_wrenfield) heard on the Authority net.
 "lb2.start" = "The camp is down. Raise a Garage Rig and a Lookout, then take the road posts."
-"lb2.radio.start" = "Commander, Calloway-Ross. Three posts on the roads. Build a garage and a lookout, train slingers, and cut them out one at a time."
+"lb2.radio.start" = "Commander, Calloway-Ross. Three posts on the roads. Raise a garage and a lookout first, then cut the posts out one at a time."
 "lb2.gate" = "Garage Rig and Lookout up. Slingers can be trained."
 "lb2.radio.gate" = "Garage and lookout. Now the Muster Rig can teach slingers. Make a handful."
 "lb2.radio.hint" = "Each turret runs off its own Power Plant, a good way back from the gun. Kill the plant and the turret goes dark."

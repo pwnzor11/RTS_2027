@@ -34,8 +34,8 @@ public sealed class AshfallHazardTests
     public void UnprotectedSoldier_OnAshfall_LosesTwoHpPerInterval_AndBareGroundIsSafe()
     {
         var w = Field30();
-        EntityId onField = w.Inf(0, "auth_rifleman", Field.X, Field.Y);
-        EntityId onGround = w.Inf(0, "auth_rifleman", 40, 40);
+        EntityId onField = w.Inf(0, "exp_marine", Field.X, Field.Y);
+        EntityId onGround = w.Inf(0, "exp_marine", 40, 40);
         int max = w.InfHp(onField);
         w.Run(30 * 5);
         Assert.Equal(max - 2 * 5, w.InfHp(onField));
@@ -46,7 +46,7 @@ public sealed class AshfallHazardTests
     public void Pitchblende_IsTheSameResource_SoItHurtsToo()
     {
         var w = Field30(OverlayKind.Pitchblende);
-        EntityId s = w.Inf(0, "auth_rifleman", Field.X, Field.Y);
+        EntityId s = w.Inf(0, "exp_marine", Field.X, Field.Y);
         int max = w.InfHp(s);
         w.Run(60);
         Assert.True(w.InfHp(s) < max);
@@ -56,7 +56,7 @@ public sealed class AshfallHazardTests
     public void RadResistance_ReducesTheDamage_AndVehiclesAreUnaffected()
     {
         var w = Field30();
-        EntityId plain = w.Inf(0, "auth_rifleman", Field.X, Field.Y);
+        EntityId plain = w.Inf(0, "exp_marine", Field.X, Field.Y);
         EntityId resistant = w.Inf(1, "dir_conscript", Field.X, Field.Y, 1);
         EntityId tank = w.Veh(0, "auth_decon_truck", Field.X + 1, Field.Y);
         int rp = w.Rules.Infantry![w.I("dir_conscript")].RadResistPermille;

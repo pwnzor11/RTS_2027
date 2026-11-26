@@ -116,10 +116,10 @@ public sealed class RuleFixesTests
         var field = new CellCoord(30, 30);
         for (int y = 26; y <= 34; y++)
             for (int x = 26; x <= 34; x++) w.Sim.Map.SetOverlay(new CellCoord(x, y), OverlayKind.Ashfall, 100);
-        EntityId plain = w.Inf(0, "auth_rifleman", field.X, field.Y);
+        EntityId plain = w.Inf(0, "exp_marine", field.X, field.Y);
         EntityId res600 = w.Inf(1, "dir_conscript", field.X, field.Y, 1);
         w.Run(30 * 10);
-        int lostPlain = w.Rules.Infantry![w.I("auth_rifleman")].MaxHealth - w.InfHp(plain);
+        int lostPlain = w.Rules.Infantry![w.I("exp_marine")].MaxHealth - w.InfHp(plain);
         int lost600 = w.Rules.Infantry![w.I("dir_conscript")].MaxHealth - w.InfHp(res600);
         Assert.Equal(20, lostPlain);           // 10 hits x 2
         Assert.Equal(8, lost600);              // 20 x 400/1000: proportional, not a flat 1 per hit (which would be 10)

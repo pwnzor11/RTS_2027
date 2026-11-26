@@ -4,6 +4,7 @@
 # Schema v3 (M3, all optional): as vehicles (tunnel_size defaults to "S") but no passengers/deploys_into; plus engineer.
 
 [auth_rifleman]
+rad_resist_permille = 400  # (tune) s46 Q-93 (D-330): ash resistance 0 -> 400 (Authority weakest on Ash Plains), assumed — confirm
 tier = 1
 speed = 12
 max_health = 50
@@ -14,6 +15,7 @@ cost = 100
 prerequisites = ["auth_barracks"]
 
 [auth_rocketeer]
+rad_resist_permille = 400  # (tune) s46 Q-93 (D-330): ash resistance 0 -> 400 (Authority weakest on Ash Plains), assumed — confirm
 tier = 1
 speed = 10
 max_health = 60
@@ -99,6 +101,7 @@ aura_targets = ["dir_conscript", "dir_ashthrower", "dir_sapper", "dir_volunteer"
 # Numbers marked ASSUMED (M4-07) copy the nearest existing type. Engineers have no weapon and do not garrison by default.
 
 [auth_engineer]   # Authority engineer (design 08 §4)
+rad_resist_permille = 400  # (tune) s46 Q-93 (D-330): ash resistance 0 -> 400 (Authority weakest on Ash Plains), assumed — confirm
 tier = 1
 speed = 12  # ASSUMED (M4-07)
 max_health = 50  # ASSUMED (M4-07)
@@ -110,6 +113,7 @@ prerequisites = ["auth_barracks"]
 engineer = true
 
 [auth_marksman]   # long-range anti-infantry, strong in garrisons (design 08 §4)
+rad_resist_permille = 400  # (tune) s46 Q-93 (D-330): ash resistance 0 -> 400 (Authority weakest on Ash Plains), assumed — confirm
 tier = 2
 speed = 10  # D-205 (FAD-14): 12 -> 10, trades speed for reach
 max_health = 50  # ASSUMED (M4-07)
@@ -244,7 +248,7 @@ max_health = 70  # (tune)
 armor = "unarmored"
 sight = 5  # (tune)
 primary_weapon = "exp_marine_rifle"
-cost = 150  # (tune)
+cost = 130  # (tune) s46 Q-93 (D-330): 150 -> 130, assumed — confirm
 prerequisites = ["exp_billet"]
 
 [exp_pioneer]   # engineer: capture and repair

@@ -2414,3 +2414,26 @@ stills). (3) V-04: tread marks, debris chunks, an effect budget (40 new / 260 al
 cloud shadows, water shimmer and road junction/end-cap pieces, each a Settings toggle, default on; values marked ASSUMED in code. (4) V-05: FX
 anchors (muzzle per facing, dust) in the vehicle sprite manifests, read by the game with the old offsets as fallback. **Status:** assumed —
 confirm (the owner reviews the ending slides and the effects in a skirmish)
+
+### D-328 · 2026-11-25 · Session 46: Alt-modifier key bindings and a Laptop keys preset (Q-91, U-06)
+**Decision:** owner took the recommendation: a binding is a key plus an optional Alt (`KeyChord`); Shift and Ctrl keep their fixed meanings and are
+ignored when matching. A bare binding does not fire while Alt is held, and an Alt binding fires only with Alt held. Settings store `Alt+D1`; old files
+load unchanged. The Controls page gets "Laptop keys: sidebar cameos on Alt + 1-9, 0, -, =", which sets cameo slots 1-12 to Alt+1..9, Alt+0, Alt+-, Alt+=
+(numpad keys replaced). Factory defaults are unchanged. **Why:** every letter, digit and F-key was taken, so no laptop preset could exist with bare keys.
+**Alternatives:** a reduced preset on punctuation keys; numpad only.
+
+### D-329 · 2026-11-25 · Session 46: lb_02 opening line names the Garage Rig and Lookout first (Q-92, C-07)
+**Decision:** owner took the recommendation. `lb2.radio.start` now reads "Commander, Calloway-Ross. Three posts on the roads. Raise a garage and a
+lookout first, then cut the posts out one at a time."; the briefing puts "FIRST RAISE A GARAGE RIG AND A LOOKOUT." in its own sentence. The line was
+re-voiced with the tool and voice the leader already uses (Kokoro am_onyx, tools/voice/kokoro_batch.py), not Piper, so the voice matches his other
+lines. **Why:** the objective checks the Garage Rig and Lookout; the old line asked the player to train slingers. **Alternatives:** keep both as flavour.
+
+### D-330 · 2026-11-26 · Session 46: Q-93 balance numbers after the Repair Hover fix (assumed — confirm)
+**Decision:** owner took the recommendation (tune with unit numbers on paired screens, decide on 512 games). Landed: Authority infantry (Rifleman,
+Rocketeer, Marksman, Engineer) `rad_resist_permille` 0 -> 400; `auth_rifle` damage 8 -> 9; `exp_marine` cost 150 -> 130; `exp_glide_tank` cost
+960 -> 900 (its cost before D-280); `dir_rocket` versus Light 75 -> 78; dir_02 tier 5 reserve 10 -> 8 and second reserve 5 -> 4 riflemen.
+**Why:** 512 games per row (seeds 1-256, paired with r45): pooled Authority v Directorate 33.6 -> 41.8, Authority v Expedition 64.6 ->
+56.4, all six pairings inside 40-60; all 24 rows inside 25-75 (edges ash Authority v Directorate 25.4, rust Directorate v Expedition 74.3): the D-305 gate is met. Campaign sweep: 45/45 meet D-222 (dir_02 tier 5 6/12 after its retune; it fell to
+2/12 with the new numbers). docs/balance/s46_balance.md. **Alternatives:** tier-3 focus fire off (Q-93 b); Rifle 10 (Authority v Left Behind +14);
+Conscript 90 (Directorate v Left Behind -9); Delver 880 (Directorate much stronger, an AI effect); Directorate rockets v Light 85 (+20 for the
+Directorate, a cliff). **Status:** assumed — confirm (USER_CHECKS session 46)
