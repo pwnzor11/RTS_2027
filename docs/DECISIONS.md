@@ -2414,3 +2414,16 @@ stills). (3) V-04: tread marks, debris chunks, an effect budget (40 new / 260 al
 cloud shadows, water shimmer and road junction/end-cap pieces, each a Settings toggle, default on; values marked ASSUMED in code. (4) V-05: FX
 anchors (muzzle per facing, dust) in the vehicle sprite manifests, read by the game with the old offsets as fallback. **Status:** assumed —
 confirm (the owner reviews the ending slides and the effects in a skirmish)
+
+### D-328 · 2026-11-25 · Session 46: Alt-modifier key bindings and a Laptop keys preset (Q-91, U-06)
+**Decision:** owner took the recommendation: a binding is a key plus an optional Alt (`KeyChord`); Shift and Ctrl keep their fixed meanings and are
+ignored when matching. A bare binding does not fire while Alt is held, and an Alt binding fires only with Alt held. Settings store `Alt+D1`; old files
+load unchanged. The Controls page gets "Laptop keys: sidebar cameos on Alt + 1-9, 0, -, =", which sets cameo slots 1-12 to Alt+1..9, Alt+0, Alt+-, Alt+=
+(numpad keys replaced). Factory defaults are unchanged. **Why:** every letter, digit and F-key was taken, so no laptop preset could exist with bare keys.
+**Alternatives:** a reduced preset on punctuation keys; numpad only.
+
+### D-329 · 2026-11-25 · Session 46: lb_02 opening line names the Garage Rig and Lookout first (Q-92, C-07)
+**Decision:** owner took the recommendation. `lb2.radio.start` now reads "Commander, Calloway-Ross. Three posts on the roads. Raise a garage and a
+lookout first, then cut the posts out one at a time."; the briefing puts "FIRST RAISE A GARAGE RIG AND A LOOKOUT." in its own sentence. The line was
+re-voiced with the tool and voice the leader already uses (Kokoro am_onyx, tools/voice/kokoro_batch.py), not Piper, so the voice matches his other
+lines. **Why:** the objective checks the Garage Rig and Lookout; the old line asked the player to train slingers. **Alternatives:** keep both as flavour.
