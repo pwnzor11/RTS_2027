@@ -127,7 +127,7 @@ end
 
 -- The reserve answers the first fallen post. Rifles by tier; a jeep from tier 4.
 function ReserveSize()
-  local sizes = { 1, 2, 3, 5, 10 }
+  local sizes = { 1, 2, 3, 5, 9 }   -- s46 (D-330): tier 5 10 -> 9 after the Q-93 Rifle 9 + ash resist (sweep 2/12)
   return sizes[Mission.Difficulty()]
 end
 
