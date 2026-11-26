@@ -27,7 +27,7 @@ a Laptop keys preset (D-328) and the lb_02 radio line re-voiced (D-329). Save fo
   - **r45 is a ready-made paired control:** a data variant on build 8d4b009 run on any chunk 0-31 pairs with r45's file for that row and chunk
     (pair46.py), so no separate control runs are needed. After a new main build, run one 512-game main table first and use it the same way.
   - Screen one key per variant on the rows it can touch, then combine; decide on all 32 chunks. Screen winners do shrink on fresh seed blocks
-    (Rifle 9: +3.2 on seeds 1-64, +2.4 on 65-128), and effects add up only roughly (c4 differed from the sum of its parts by several points).
+    (Authority v Directorate: Rifle 9 alone +3.2 on seeds 1-64; Marine 130 + Rifle 9 +2.4 on seeds 65-128), and effects add up only roughly (c4 differed from the sum of its parts by several points).
   - Cheap levers that help one faction everywhere drag a third pairing (Glide 900 pulled Directorate v Expedition down 4-9); fix it with a lever on
     the other side aimed at the armour class the third pairing fields (Directorate rockets v Light), not by shrinking the first lever.
   - Cliffs: Directorate rockets v Light 75 -> 85 moved two pairings by ~20 points; 78 was right. Delver cost 800 -> 880 made the Directorate much

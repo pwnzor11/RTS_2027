@@ -829,7 +829,7 @@ the waiting series; the cluster test was dropped in favour of GitHub CI).
 
 ## Session 46 · 2026-11-25/26 (r45 read; balance gate met with Q-93 unit numbers; laptop keys; lb_02 line)
 **Outcome:** owner took every recommendation (Q-91..Q-93). r45 (512 games after the Repair Hover fix): pooled Authority v Expedition 64.6 and Authority
-v Directorate 33.6 still out; sw45 45/45. Q-93: eight one-key screens and five combinations, every variant paired with r45 on the same seeds; the
+v Directorate 33.6 still out; sw45 45/45. Q-93: eleven one-key screens and seven combinations, every variant paired with r45 on the same seeds; the
 landed set (D-330) is Authority infantry ash resist 400, Rifle 9, Marine 130, Glide Tank 900, Directorate rockets v Light 78. Decide on 512 games:
 all six pairings inside 40-60 (Authority v Directorate 41.8, Authority v Expedition 56.4), all 24 rows inside 25-75: **D-305 gate met**. Campaign
 sweep 45/45 after a dir_02 tier-5 retune (10/5 -> 8/4 riflemen). U-06 Alt-modifier bindings and a Laptop keys preset (D-328); lb_02 radio line
