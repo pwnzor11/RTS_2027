@@ -47,5 +47,5 @@ public static class CameoHotkeys
     }
 
     /// <summary>The short name of the key bound to position <paramref name="index"/> ("Num 7").</summary>
-    public static string KeyName(int index) => KeyNames.Of(GameKeys.Active.Get(Actions[index]));
+    public static string KeyName(int index) => KeyNames.Of(GameKeys.Active.GetChord(Actions[index]));
 }

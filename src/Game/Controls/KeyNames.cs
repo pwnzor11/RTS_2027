@@ -7,6 +7,9 @@ namespace Rts.Game.Controls;
 /// <summary>Player-facing names for keyboard keys.</summary>
 public static class KeyNames
 {
+    /// <summary>M16 U-06: the chord as shown on screen, for example <c>Alt+1</c> or <c>Num 7</c>.</summary>
+    public static string Of(KeyChord chord) => chord.Alt ? "Alt+" + Of(chord.Key) : Of(chord.Key);
+
     /// <summary>The key as shown on screen, for example <c>.</c> for OemPeriod and <c>1</c> for D1.</summary>
     public static string Of(Keys key) => key switch
     {
