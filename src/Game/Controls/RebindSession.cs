@@ -33,7 +33,10 @@ public sealed class RebindSession
     public GameAction Action { get; private set; }
 
     /// <summary>The key waiting to be confirmed (Conflict phase).</summary>
-    public Keys PendingKey { get; private set; }
+    public Keys PendingKey => PendingChord.Key;
+
+    /// <summary>M16 U-06: the key with its Alt flag waiting to be confirmed (Conflict phase).</summary>
+    public KeyChord PendingChord { get; private set; }
 
     /// <summary>The action that has <see cref="PendingKey"/> now (Conflict phase).</summary>
     public GameAction ConflictWith { get; private set; }
@@ -59,9 +62,10 @@ public sealed class RebindSession
 
     /// <summary>
     /// Handles the key the player pressed while Listening. Returns the new bindings when the key was free and is now bound, otherwise
-    /// null (refused, or a conflict is now waiting for <see cref="Swap"/> / <see cref="Cancel"/>).
+    /// null (refused, or a conflict is now waiting for <see cref="Swap"/> / <see cref="Cancel"/>). <paramref name="alt"/> (M16 U-06): Alt was held
+    /// with the key, so the binding becomes Alt + key. A lone Alt key is not bindable.
     /// </summary>
-    public KeyBindings? Press(KeyBindings current, Keys key)
+    public KeyBindings? Press(KeyBindings current, Keys key, bool alt = false)
     {
         if (State != Phase.Listening) return null;
         if (key == Keys.Escape)
@@ -70,48 +74,50 @@ public sealed class RebindSession
             return null;
         }
 
+        var chord = new KeyChord(key, alt);
+        string name = KeyNames.Of(chord);
         if (IsSecond)   // QOL-20: the second key of the action; no swaps, Delete clears it
         {
-            if (key == Keys.Delete)
+            if (key == Keys.Delete && !alt)
             {
                 KeyBindings cleared = current.WithAlt(Action, Keys.None);
                 Cancel();
                 return cleared;
             }
 
-            if (!KeyBindings.IsBindable(key) || key == current.Get(Action))
+            if (!KeyBindings.IsBindable(key) || chord == current.GetChord(Action))
             {
-                Message = $"{KeyNames.Of(key)} cannot be used as the second key. Press another key, Delete to clear it, or Esc to cancel.";
+                Message = $"{name} cannot be used as the second key. Press another key, Delete to clear it, or Esc to cancel.";
                 return null;
             }
 
-            if (current.ConflictOf(Action, key) is { } taken)
+            if (current.ConflictOf(Action, chord) is { } taken)
             {
-                Message = $"{KeyNames.Of(key)} is already used by \"{GameKeys.InfoOf(taken).Description}\". Press another key, or Esc to cancel.";
+                Message = $"{name} is already used by \"{GameKeys.InfoOf(taken).Description}\". Press another key, or Esc to cancel.";
                 return null;
             }
 
-            KeyBindings second = current.WithAlt(Action, key);
+            KeyBindings second = current.WithAlt(Action, chord);
             Cancel();
             return second;
         }
 
         if (!KeyBindings.IsBindable(key))
         {
-            Message = $"{KeyNames.Of(key)} cannot be used here. Press another key, or Esc to cancel.";
+            Message = $"{name} cannot be used here. Press another key, or Esc to cancel.";
             return null;
         }
 
-        if (current.ConflictOf(Action, key) is { } other)
+        if (current.ConflictOf(Action, chord) is { } other)
         {
-            PendingKey = key;
+            PendingChord = chord;
             ConflictWith = other;
             State = Phase.Conflict;
-            Message = $"{KeyNames.Of(key)} is already used by \"{GameKeys.InfoOf(other).Description}\". Enter: swap the two keys.  Esc: cancel.";
+            Message = $"{name} is already used by \"{GameKeys.InfoOf(other).Description}\". Enter: swap the two keys.  Esc: cancel.";
             return null;
         }
 
-        KeyBindings result = current.With(Action, key);
+        KeyBindings result = current.With(Action, chord);
         Cancel();
         return result;
     }
@@ -120,7 +126,7 @@ public sealed class RebindSession
     public KeyBindings? Swap(KeyBindings current)
     {
         if (State != Phase.Conflict) return null;
-        KeyBindings? result = current.TrySwap(Action, PendingKey);
+        KeyBindings? result = current.TrySwap(Action, PendingChord);
         if (result is null)
         {
             Message = "That swap would clash with another key. Esc: cancel.";

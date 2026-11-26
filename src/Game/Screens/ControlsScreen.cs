@@ -29,6 +29,9 @@ public sealed class ControlsScreen : IScreen
         /// <summary>The "Reset to defaults" line.</summary>
         Reset,
 
+        /// <summary>M16 U-06: the "Laptop keys" preset line (sidebar cameos on Alt + digits).</summary>
+        Laptop,
+
         /// <summary>A group heading.</summary>
         Heading,
 
@@ -47,7 +50,7 @@ public sealed class ControlsScreen : IScreen
     public sealed record Item(ItemKind Kind, int Index = 0, ControlRow? Row = null, string Heading = "")
     {
         /// <summary>True for the lines the cursor can rest on.</summary>
-        public bool Selectable => Kind is ItemKind.Setting or ItemKind.Reset or ItemKind.Binding;
+        public bool Selectable => Kind is ItemKind.Setting or ItemKind.Reset or ItemKind.Laptop or ItemKind.Binding;
     }
 
     private const int SpeedStep = 100;
@@ -99,6 +102,12 @@ public sealed class ControlsScreen : IScreen
 
     /// <summary>The settings after "Reset to defaults": every key back to its factory binding (other settings are not touched).</summary>
     public static Settings ResetKeys(Settings settings) => settings.WithBindings(KeyBindings.Default);
+
+    /// <summary>M16 U-06 (Q-91): the text of the Laptop keys preset line.</summary>
+    public const string LaptopText = "Laptop keys: sidebar cameos on Alt + 1-9, 0, -, =";
+
+    /// <summary>M16 U-06 (Q-91): the settings after choosing "Laptop keys": the factory bindings with the cameos on Alt + digits (other settings are not touched).</summary>
+    public static Settings ApplyLaptopKeys(Settings settings) => settings.WithBindings(KeyBindings.Laptop);
 
     /// <summary>All lines of the page in order: the settings, Reset, then a heading and the rows of each group.</summary>
     public static IReadOnlyList<Item> Items() => AllItems;
@@ -189,8 +198,9 @@ public sealed class ControlsScreen : IScreen
 
         foreach (Keys key in input.Keyboard.GetPressedKeys())
         {
+            if (key is Keys.LeftAlt or Keys.RightAlt) continue;   // M16 U-06: Alt alone is only the modifier; wait for the key pressed with it
             if (!input.Pressed(key)) continue;
-            if (_rebind.Press(_s.Settings.Bindings, key) is { } changed) Commit(changed);
+            if (_rebind.Press(_s.Settings.Bindings, key, input.IsAltDown()) is { } changed) Commit(changed);
             return;
         }
     }
@@ -227,6 +237,10 @@ public sealed class ControlsScreen : IScreen
                 break;
             case ItemKind.Reset:
                 _s.Settings = ResetKeys(_s.Settings);
+                MenuSounds.Play(_s.Audio, MenuSounds.Move);
+                break;
+            case ItemKind.Laptop:
+                _s.Settings = ApplyLaptopKeys(_s.Settings);
                 MenuSounds.Play(_s.Audio, MenuSounds.Move);
                 break;
             case ItemKind.Binding when direction > 0 && item.Row?.Action is { } action:
@@ -270,6 +284,9 @@ public sealed class ControlsScreen : IScreen
                     break;
                 case ItemKind.Reset:
                     BitmapFont.Draw(sb, _s.Pixel, "Reset all keys to defaults", at + new Vector2(2 * scale, 0), bindings.IsAllDefault ? HintColour : KeyColour, scale);
+                    break;
+                case ItemKind.Laptop:
+                    BitmapFont.Draw(sb, _s.Pixel, LaptopText, at + new Vector2(2 * scale, 0), bindings.Equals(KeyBindings.Laptop) ? HintColour : KeyColour, scale);
                     break;
                 case ItemKind.Heading:
                     BitmapFont.Draw(sb, _s.Pixel, item.Heading, at, TitleColour, scale, FontWeight.Bold);
@@ -318,7 +335,7 @@ public sealed class ControlsScreen : IScreen
     private void DrawRow(SpriteBatch sb, ControlRow row, KeyBindings bindings, Vector2 at, int keyCol, UiUnit scale)
     {
         bool editing = _rebind.State != RebindSession.Phase.Idle && row.Action == _rebind.Action;
-        string label = editing ? (_rebind.State == RebindSession.Phase.Conflict ? KeyNames.Of(_rebind.PendingKey) + " ?" : "press a key") : row.LabelFor(bindings);
+        string label = editing ? (_rebind.State == RebindSession.Phase.Conflict ? KeyNames.Of(_rebind.PendingChord) + " ?" : "press a key") : row.LabelFor(bindings);
         Color colour = editing ? WarnColour : row.Action is { } a && !bindings.IsDefault(a) ? ChangedColour : KeyColour;
         BitmapFont.Draw(sb, _s.Pixel, label, at + new Vector2(2 * scale, 0), colour, scale);
         BitmapFont.Draw(sb, _s.Pixel, row.Description, at + new Vector2(keyCol, 0), TextColour, scale);
@@ -329,6 +346,7 @@ public sealed class ControlsScreen : IScreen
         var items = new List<Item>();
         for (int i = 0; i < SettingCount; i++) items.Add(new Item(ItemKind.Setting, i));
         items.Add(new Item(ItemKind.Reset));
+        items.Add(new Item(ItemKind.Laptop));
         foreach (string group in GameKeys.Groups)
         {
             items.Add(new Item(ItemKind.Heading, Heading: group));

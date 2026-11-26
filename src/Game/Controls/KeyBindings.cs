@@ -11,29 +11,55 @@ namespace Rts.Game.Controls;
 /// </summary>
 public sealed class KeyBindings : IEquatable<KeyBindings>
 {
-    private readonly Keys[] _keys;   // indexed by (int)GameAction
-    private readonly Keys[] _alt;    // QOL-20 (D-313): the second key of each action, Keys.None when it has none
+    private readonly KeyChord[] _keys;   // indexed by (int)GameAction
+    private readonly KeyChord[] _alt;    // QOL-20 (D-313): the second key of each action, KeyChord.None when it has none
 
     /// <summary>The factory bindings.</summary>
     public static KeyBindings Default { get; } = new(DefaultKeys());
 
-    private KeyBindings(Keys[] keys, Keys[]? alt = null)
+    /// <summary>
+    /// M16 U-06 (Q-91): the "Laptop keys" preset: the factory bindings with the twelve sidebar cameos on Alt + 1-9, 0, -, = (no numpad needed).
+    /// The numpad defaults are replaced (the second keys stay empty).
+    /// </summary>
+    public static KeyBindings Laptop { get; } = BuildLaptop();
+
+    private KeyBindings(KeyChord[] keys, KeyChord[]? alt = null)
     {
         _keys = keys;
-        _alt = alt ?? new Keys[keys.Length];
+        _alt = alt ?? new KeyChord[keys.Length];
     }
 
-    /// <summary>The key bound to <paramref name="action"/>.</summary>
-    public Keys Get(GameAction action) => _keys[(int)action];
+    private static KeyBindings BuildLaptop()
+    {
+        Keys[] cameoKeys =
+        {
+            Keys.D1, Keys.D2, Keys.D3, Keys.D4, Keys.D5, Keys.D6, Keys.D7, Keys.D8, Keys.D9, Keys.D0, Keys.OemMinus, Keys.OemPlus,
+        };
+        KeyBindings result = Default;
+        for (int i = 0; i < cameoKeys.Length; i++) result = result.With(GameAction.CameoSlot1 + i, new KeyChord(cameoKeys[i], true));
+        return result;
+    }
 
-    /// <summary>QOL-20 (D-313): the second key of <paramref name="action"/>, or <see cref="Keys.None"/> when it has none (the default). Either key does the action.</summary>
-    public Keys GetAlt(GameAction action) => _alt[(int)action];
+    /// <summary>The key part of the binding of <paramref name="action"/> (see <see cref="GetChord"/> for the Alt flag).</summary>
+    public Keys Get(GameAction action) => _keys[(int)action].Key;
 
-    /// <summary>True when <paramref name="key"/> is one of the two keys of <paramref name="action"/>.</summary>
-    public bool Uses(GameAction action, Keys key) => key != Keys.None && (_keys[(int)action] == key || _alt[(int)action] == key);
+    /// <summary>QOL-20 (D-313): the key part of the second binding of <paramref name="action"/>, or <see cref="Keys.None"/> when it has none (the default). Either binding does the action.</summary>
+    public Keys GetAlt(GameAction action) => _alt[(int)action].Key;
+
+    /// <summary>M16 U-06: the binding of <paramref name="action"/> with its Alt flag.</summary>
+    public KeyChord GetChord(GameAction action) => _keys[(int)action];
+
+    /// <summary>M16 U-06: the second binding of <paramref name="action"/> with its Alt flag (<see cref="KeyChord.None"/> when it has none).</summary>
+    public KeyChord GetAltChord(GameAction action) => _alt[(int)action];
+
+    /// <summary>True when the bare <paramref name="key"/> is one of the two bindings of <paramref name="action"/>.</summary>
+    public bool Uses(GameAction action, Keys key) => Uses(action, KeyChord.Of(key));
+
+    /// <summary>True when <paramref name="chord"/> is one of the two bindings of <paramref name="action"/>.</summary>
+    public bool Uses(GameAction action, KeyChord chord) => !chord.IsNone && (_keys[(int)action] == chord || _alt[(int)action] == chord);
 
     /// <summary>True when <paramref name="action"/> still has its factory key.</summary>
-    public bool IsDefault(GameAction action) => _keys[(int)action] == GameKeys.InfoOf(action).Default;
+    public bool IsDefault(GameAction action) => _keys[(int)action] == KeyChord.Of(GameKeys.InfoOf(action).Default);
 
     /// <summary>True when every action has its factory key.</summary>
     public bool IsAllDefault => this.Equals(Default);
@@ -48,7 +74,10 @@ public sealed class KeyBindings : IEquatable<KeyBindings>
         && Enum.IsDefined(key);
 
     /// <summary>The other action that already uses <paramref name="key"/> in an overlapping context, or null when the key is free for <paramref name="action"/>.</summary>
-    public GameAction? ConflictOf(GameAction action, Keys key)
+    public GameAction? ConflictOf(GameAction action, Keys key) => ConflictOf(action, KeyChord.Of(key));
+
+    /// <summary>As <see cref="ConflictOf(GameAction, Keys)"/> for a whole chord: Alt + 1 and 1 do not clash.</summary>
+    public GameAction? ConflictOf(GameAction action, KeyChord key)
     {
         KeyContext mine = GameKeys.InfoOf(action).Context;
         foreach (ActionInfo info in GameKeys.Infos)
@@ -61,10 +90,13 @@ public sealed class KeyBindings : IEquatable<KeyBindings>
     }
 
     /// <summary>These bindings with <paramref name="action"/> set to <paramref name="key"/>, with no conflict check (use <see cref="ConflictOf"/> first).</summary>
-    public KeyBindings With(GameAction action, Keys key)
+    public KeyBindings With(GameAction action, Keys key) => With(action, KeyChord.Of(key));
+
+    /// <summary>As <see cref="With(GameAction, Keys)"/> for a whole chord.</summary>
+    public KeyBindings With(GameAction action, KeyChord key)
     {
         if (_keys[(int)action] == key) return this;
-        var copy = (Keys[])_keys.Clone();
+        var copy = (KeyChord[])_keys.Clone();
         copy[(int)action] = key;
         return new KeyBindings(copy, _alt);
     }
@@ -73,10 +105,13 @@ public sealed class KeyBindings : IEquatable<KeyBindings>
     /// QOL-20 (D-313): these bindings with <paramref name="key"/> as the second key of <paramref name="action"/> (<see cref="Keys.None"/> clears it), with
     /// no conflict check (use <see cref="ConflictOf"/> first). A key equal to the action's own first key changes nothing.
     /// </summary>
-    public KeyBindings WithAlt(GameAction action, Keys key)
+    public KeyBindings WithAlt(GameAction action, Keys key) => WithAlt(action, KeyChord.Of(key));
+
+    /// <summary>As <see cref="WithAlt(GameAction, Keys)"/> for a whole chord.</summary>
+    public KeyBindings WithAlt(GameAction action, KeyChord key)
     {
-        if (_alt[(int)action] == key || (key != Keys.None && _keys[(int)action] == key)) return this;
-        var copy = (Keys[])_alt.Clone();
+        if (_alt[(int)action] == key || (!key.IsNone && _keys[(int)action] == key)) return this;
+        var copy = (KeyChord[])_alt.Clone();
         copy[(int)action] = key;
         return new KeyBindings(_keys, copy);
     }
@@ -85,12 +120,15 @@ public sealed class KeyBindings : IEquatable<KeyBindings>
     /// Binds <paramref name="key"/> to <paramref name="action"/>; when another action had it, that action gets the key <paramref name="action"/>
     /// had (a swap). Null when the key is not bindable or the swap would itself clash with a third action.
     /// </summary>
-    public KeyBindings? TrySwap(GameAction action, Keys key)
+    public KeyBindings? TrySwap(GameAction action, Keys key) => TrySwap(action, KeyChord.Of(key));
+
+    /// <summary>As <see cref="TrySwap(GameAction, Keys)"/> for a whole chord.</summary>
+    public KeyBindings? TrySwap(GameAction action, KeyChord key)
     {
-        if (!IsBindable(key)) return null;
+        if (!IsBindable(key.Key)) return null;
         GameAction? other = ConflictOf(action, key);
         if (other is not { } o) return With(action, key);
-        KeyBindings result = With(action, key).With(o, Get(action));
+        KeyBindings result = With(action, key).With(o, GetChord(action));
         return result.Conflicts().Count == 0 ? result : null;
     }
 
@@ -112,14 +150,14 @@ public sealed class KeyBindings : IEquatable<KeyBindings>
 
     // True when actions i and j have a key in common (the second keys count; None never does).
     private bool Shares(int i, int j) =>
-        _keys[i] == _keys[j] || (_alt[i] != Keys.None && (_alt[i] == _keys[j] || _alt[i] == _alt[j])) || (_alt[j] != Keys.None && _alt[j] == _keys[i]);
+        _keys[i] == _keys[j] || (!_alt[i].IsNone && (_alt[i] == _keys[j] || _alt[i] == _alt[j])) || (!_alt[j].IsNone && _alt[j] == _keys[i]);
 
     /// <summary>QOL-20 (D-313): the second keys that are set, as (settings id, key name) pairs in action order.</summary>
     public IReadOnlyList<(string Id, string Key)> AltOverrides()
     {
         var list = new List<(string, string)>();
         foreach (ActionInfo info in GameKeys.Infos)
-            if (_alt[(int)info.Action] != Keys.None) list.Add((info.Id, _alt[(int)info.Action].ToString()));
+            if (!_alt[(int)info.Action].IsNone) list.Add((info.Id, _alt[(int)info.Action].ToSetting()));
         return list;
     }
 
@@ -129,7 +167,7 @@ public sealed class KeyBindings : IEquatable<KeyBindings>
         var list = new List<(string, string)>();
         foreach (ActionInfo info in GameKeys.Infos)
         {
-            if (!IsDefault(info.Action)) list.Add((info.Id, Get(info.Action).ToString()));
+            if (!IsDefault(info.Action)) list.Add((info.Id, GetChord(info.Action).ToSetting()));
         }
 
         return list;
@@ -144,19 +182,19 @@ public sealed class KeyBindings : IEquatable<KeyBindings>
     /// <summary>As <see cref="FromOverrides(IEnumerable{ValueTuple{string, string}})"/>, with the saved second keys (QOL-20); a second key that is unknown, unbindable or equal to its action's first key is ignored.</summary>
     public static KeyBindings FromOverrides(IEnumerable<(string Id, string Key)> saved, IEnumerable<(string Id, string Key)> savedAlt)
     {
-        Keys[] keys = DefaultKeys();
+        KeyChord[] keys = DefaultKeys();
         foreach ((string id, string name) in saved)
         {
             ActionInfo? info = GameKeys.Infos.FirstOrDefault(i => i.Id == id);
-            if (info is null || !Enum.TryParse(name, ignoreCase: true, out Keys key) || !IsBindable(key)) continue;
+            if (info is null || !KeyChord.TryParse(name, out KeyChord key) || !IsBindable(key.Key)) continue;
             keys[(int)info.Action] = key;
         }
 
-        var alts = new Keys[keys.Length];
+        var alts = new KeyChord[keys.Length];
         foreach ((string id, string name) in savedAlt)
         {
             ActionInfo? info = GameKeys.Infos.FirstOrDefault(i => i.Id == id);
-            if (info is null || !Enum.TryParse(name, ignoreCase: true, out Keys key) || !IsBindable(key) || keys[(int)info.Action] == key) continue;
+            if (info is null || !KeyChord.TryParse(name, out KeyChord key) || !IsBindable(key.Key) || keys[(int)info.Action] == key) continue;
             alts[(int)info.Action] = key;
         }
 
@@ -165,7 +203,7 @@ public sealed class KeyBindings : IEquatable<KeyBindings>
         {
             foreach ((GameAction a, GameAction b) in clashes)
             {
-                result = result.With(a, GameKeys.InfoOf(a).Default).With(b, GameKeys.InfoOf(b).Default).WithAlt(a, Keys.None).WithAlt(b, Keys.None);
+                result = result.With(a, GameKeys.InfoOf(a).Default).With(b, GameKeys.InfoOf(b).Default).WithAlt(a, KeyChord.None).WithAlt(b, KeyChord.None);
             }
         }
 
@@ -182,17 +220,17 @@ public sealed class KeyBindings : IEquatable<KeyBindings>
     public override int GetHashCode()
     {
         var h = new HashCode();
-        foreach (Keys k in _keys) h.Add((int)k);
-        foreach (Keys k in _alt) h.Add((int)k);
+        foreach (KeyChord k in _keys) h.Add(k);
+        foreach (KeyChord k in _alt) h.Add(k);
         return h.ToHashCode();
     }
 
     private static bool Overlaps(KeyContext a, KeyContext b) => a == KeyContext.Both || b == KeyContext.Both || a == b;
 
-    private static Keys[] DefaultKeys()
+    private static KeyChord[] DefaultKeys()
     {
-        var keys = new Keys[Enum.GetValues<GameAction>().Length];
-        foreach (ActionInfo info in GameKeys.Infos) keys[(int)info.Action] = info.Default;
+        var keys = new KeyChord[Enum.GetValues<GameAction>().Length];
+        foreach (ActionInfo info in GameKeys.Infos) keys[(int)info.Action] = KeyChord.Of(info.Default);
         return keys;
     }
 }
