@@ -1,4 +1,10 @@
 # Handoff: Session 46 — read the r45 table and sw45 sweep, then the balance calls (Q-93)
+> **Session 46 checkpoint (in progress, 2026-11-26 UTC):** Q-91 (D-328) and Q-92 (D-329) done on `integ-s46` (Windows CI green at 5af7dc5);
+> r45/sw45 written into docs/balance/s45_balance.md (pooled Authority v Expedition 64.6, Authority v Directorate 33.6: gate not met; sweep 45/45).
+> Q-93 screens in docs/balance/s46_balance.md (v1, v2 read; v4 running on the cluster: `/work/out/v4`, read with `python3 /work/in/s46/pair46.py v4`).
+> Not landed yet: integ-s46 waits for the Q-93 numbers (512-game decide + sweep) before its PR. If this session ended here: read v4, pick the
+> best combination, run it on all 32 chunks (paired with r45) plus a sweep, then land.
+
 Last commit: `docs: Session 45 handoff` on `integ-s45` (PR to main, merged by the lead once Windows CI is green). Laptop folder: `git checkout main; git pull`
 before building (it was still on the session 42 merge when s45 started).
 Where things stand: session 45 finished the correctness wave and the art wave (D-326, D-327) and traced the Expedition drop: the Repair Hover's
