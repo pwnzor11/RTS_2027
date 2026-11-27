@@ -31,12 +31,12 @@ end
 
 function WaveTwo()
   Media.MessageKey("dh.wave2")
-  Wave({ "auth_rifleman", "auth_rifleman", "auth_rifleman", "auth_rifleman", "auth_rifleman", "auth_rifleman", "auth_jeep" })
+  Wave({ "auth_rifleman", "auth_rifleman", "auth_rifleman", "auth_rifleman", "auth_rifleman", "auth_rifleman", "auth_rifleman", "auth_rifleman", "auth_jeep" })
 end
 
 function WaveThree()
   Media.MessageKey("dh.wave3")
-  Wave({ "auth_rifleman", "auth_rifleman", "auth_rifleman", "auth_rifleman", "auth_rifleman", "auth_rifleman", "auth_rifleman", "auth_rifleman", "auth_jeep", "auth_jeep" })
+  Wave({ "auth_rifleman", "auth_rifleman", "auth_rifleman", "auth_rifleman", "auth_rifleman", "auth_rifleman", "auth_rifleman", "auth_rifleman", "auth_rifleman", "auth_rifleman", "auth_rifleman", "auth_rifleman", "auth_jeep", "auth_tank" })
 end
 
 function Poll()

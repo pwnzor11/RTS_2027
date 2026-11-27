@@ -17,9 +17,9 @@ faction = "authority"
 [drill]
 order = 3
 metric = "seconds"
-gold = 90
-silver = 120
-bronze = 170
+gold = 95
+silver = 130
+bronze = 190
 keep_gold = 5
 keep_silver = 4
 keep_bronze = 3
@@ -106,4 +106,4 @@ cell = [27, 4]
 [[actors]]
 type = "auth_rifleman"
 player = 1
-cell = [28, 4]
+cell = [28, 3]

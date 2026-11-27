@@ -16,20 +16,20 @@ faction = "authority"
 [drill]
 order = 2
 metric = "lost"
-gold = 1
-silver = 3
-bronze = 6
+gold = 4
+silver = 6
+bronze = 9
 
 [starts_with]
-tech = []
+tech = ["auth_turret", "auth_rifleman"]
 
 [[players]]
 slot = 0
 name = "Authority"
 role = "human"
 team = 0
-cash = 0
-tech = []
+cash = 2400
+tech = ["auth_turret", "auth_rifleman"]
 
 [[players]]
 slot = 1
@@ -49,6 +49,21 @@ rect = [23, 17, 23, 19]
 # The raiders arrive here, outside the gate.
 [zones.spawn]
 rect = [27, 16, 30, 20]
+
+[[actors]]
+type = "auth_conyard"
+player = 0
+cell = [15, 13]
+
+[[actors]]
+type = "auth_barracks"
+player = 0
+cell = [14, 20]
+
+[[actors]]
+type = "auth_power"
+player = 0
+cell = [11, 17]
 
 [[actors]]
 type = "auth_power"

@@ -76,13 +76,32 @@ public sealed class S47DrillTests
     }
 
     [Fact]
-    public void Hold_the_line_win_path_reaches_a_medal()
+    public void Hold_the_line_passive_defence_ends_at_bronze_or_fails()
     {
         MissionSession m = MissionSession.Create(TestData.DataDir, "drill_hold");
         var bot = new MissionBot(m);
-        bot.RunUntil(() => m.Host.Outcome != MissionOutcome.None, 20000, 20);   // the fixed force holds on its own
+        bot.RunUntil(() => m.Host.Outcome != MissionOutcome.None, 20000, 20);
+        _out.WriteLine("passive: " + Alive(m) + " " + DrillScoring.Measure(m.Sim, 0));
+        if (m.Host.Outcome == MissionOutcome.Won)
+            Assert.True(DrillScoring.Medal(m.Def.Drill!, DrillScoring.Measure(m.Sim, 0)) <= DrillMedal.Bronze);
+        else
+            Assert.Equal(MissionOutcome.Lost, m.Host.Outcome);
+    }
+
+    [Fact]
+    public void Hold_the_line_active_defence_reaches_gold()
+    {
+        MissionSession m = MissionSession.Create(TestData.DataDir, "drill_hold");
+        var bot = new MissionBot(m);
+        // Active play: spend the cash on four turrets at the gate, then riflemen from the barracks.
+        CellCoord[] spots = { new(21, 14), new(21, 22), new(20, 15), new(20, 21), new(19, 14), new(19, 22), new(22, 15), new(22, 21) };
+        for (int k = 0; k < 4; k++) Assert.True(bot.BuildAndPlace("auth_turret", spots), bot.Diagnostics());
+        for (int k = 0; k < 8; k++) bot.Train("auth_rifleman");
+        bot.RunUntil(() => m.Host.Outcome != MissionOutcome.None, 20000, 20);
+        _out.WriteLine($"active: tick {m.Sim.Tick} units lost {m.Sim.StatsOf(0).UnitsLost} structs lost {m.Sim.StatsOf(0).StructuresLost} turrets {bot.Count("auth_turret")} rifles {bot.Count("auth_rifleman")} cash {bot.Cash}");
         Assert.True(m.Host.Outcome == MissionOutcome.Won, bot.Diagnostics() + " " + Alive(m));
         Finish(m, "drill_hold");
+        Assert.Equal(DrillMedal.Gold, DrillScoring.Medal(m.Def.Drill!, DrillScoring.Measure(m.Sim, 0)));
     }
 
     [Fact]
