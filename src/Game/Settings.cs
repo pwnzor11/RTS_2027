@@ -99,7 +99,8 @@ public sealed record Settings(
     bool AdditiveGlow = true,
     bool SidebarFollowsSelection = true,
     bool BoxSelectFightersFirst = true,
-    bool MuteInBackground = false)
+    bool MuteInBackground = false,
+    bool VSync = true)
 {
     /// <summary>The <c>UiSkin</c> value for faction skins.</summary>
     public const string UiSkinFaction = "faction";
@@ -239,7 +240,8 @@ public sealed record Settings(
             root.TryGetValue("additive_glow", out object? ag) && ag is bool agb ? agb : d.AdditiveGlow,
             root.TryGetValue("sidebar_follows_selection", out object? sf) && sf is bool sfb ? sfb : d.SidebarFollowsSelection,
             root.TryGetValue("box_select_fighters_first", out object? bf) && bf is bool bfb ? bfb : d.BoxSelectFightersFirst,
-            root.TryGetValue("mute_in_background", out object? mb) && mb is bool mbb ? mbb : d.MuteInBackground);
+            root.TryGetValue("mute_in_background", out object? mb) && mb is bool mbb ? mbb : d.MuteInBackground,
+            root.TryGetValue("vsync", out object? vs) && vs is bool vsb ? vsb : d.VSync);
     }
 
     /// <summary>The settings as TOML text.</summary>
@@ -314,6 +316,8 @@ public sealed record Settings(
         sb.AppendLine(FormattableString.Invariant($"box_select_fighters_first = {(BoxSelectFightersFirst ? "true" : "false")}"));
         sb.AppendLine("# Mute all sound while the window is in the background (saved volumes are not changed).");
         sb.AppendLine(FormattableString.Invariant($"mute_in_background = {(MuteInBackground ? "true" : "false")}"));
+        sb.AppendLine("# Wait for the monitor refresh when drawing (off can tear the picture).");
+        sb.AppendLine(FormattableString.Invariant($"vsync = {(VSync ? "true" : "false")}"));
         sb.AppendLine("# Pan the camera to a new mission objective's target (M11-05)");
         sb.AppendLine(FormattableString.Invariant($"camera_cue_on_new_objective = {(CameraCueOnNewObjective ? "true" : "false")}"));
         IReadOnlyList<(string Id, int Volume)> alerts = Alerts.Overrides();

@@ -60,7 +60,7 @@ public sealed class RtsGame : Microsoft.Xna.Framework.Game
         {
             PreferredBackBufferWidth = _settings.WindowWidth,
             PreferredBackBufferHeight = _settings.WindowHeight,
-            SynchronizeWithVerticalRetrace = true,
+            SynchronizeWithVerticalRetrace = _settings.VSync,   // S47 cnc#41
             HardwareModeSwitch = DisplayPlan.HardwareModeSwitch,   // S18 GAMEREND-07: borderless, not a real mode switch
         };
         ApplyDisplayPlan(_settings);
@@ -194,6 +194,12 @@ public sealed class RtsGame : Microsoft.Xna.Framework.Game
         {
             _mutedInBackground = mutedNow;
             AudioSettings.Apply(_services.Audio, _services.Settings, mutedNow);
+        }
+
+        if (_services.Settings.VSync != _graphics.SynchronizeWithVerticalRetrace)   // S47 cnc#41: Settings > Play options > VSync, at once
+        {
+            _graphics.SynchronizeWithVerticalRetrace = _services.Settings.VSync;
+            _graphics.ApplyChanges();
         }
 
         _focusPause.Update(IsActive, _screens);   // S19: a single-player game pauses while the window is in the background

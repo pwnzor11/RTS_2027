@@ -594,9 +594,9 @@ public sealed class SkirmishSetupScreen : IScreen
 
     private void RollFactions()
     {
-        IReadOnlyList<SkirmishSlot> rolled = RandomFactions(_slots, n => Random.Shared.Next(n));
+        IReadOnlyList<SkirmishSlot> rolled = RandomFactions(_slots, n => Random.Shared.Next(n));   // front-end choice: the UI random source is fine here
         for (int i = 0; i < _slots.Count; i++) _slots[i] = rolled[i];
-    }      // front-end choice: the UI random source is fine here
+    }
 
     /// <summary>
     /// S47 cnc#49: the slots with a random playable faction in every slot that is not closed. <paramref name="next"/> returns a number in
