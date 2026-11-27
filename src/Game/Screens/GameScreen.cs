@@ -340,6 +340,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
     {
         if (_lan is not null) _lan.SourceReplaced += OnLanSourceReplaced;   // M9-10
         if (_lan is not null) _lan.PingReceived += OnPingReceived;           // A43-QOL-09
+        _camera.SetZoomPercent(_s.Settings.StartZoomPercent);   // S47 cnc#42: Settings > Play options > Start zoom
         _s.Scene.Reset();   // S18 GAMEREND-01: the shared renderer must not remember the previous game's buildings
         if (_spectatorMode && _sim is not null)
         {
@@ -1088,7 +1089,9 @@ public sealed class GameScreen : IScreen, IFocusPausable
                 Vector2 b = _camera.WorldFromScreen(mouse);
                 bool addBox = ShiftHeld(input);   // M11-10c: Shift+box adds to the selection
                 Vector2 lo = Vector2.Min(a, b), hi = Vector2.Max(a, b);
-                IEnumerable<UnitKey> boxed = input.IsAltDown()   // QOL-03: Alt+box takes the fighters only, when any are in the box
+                // QOL-03 / S47 cnc#8: a box takes the fighters only, when any are in it (harvesters and builders stay out of a battle selection);
+                // Settings > Play options > Box select favours fighters sets the default, Alt+box does the other one.
+                IEnumerable<UnitKey> boxed = Selection.BoxTakesFightersOnly(_s.Settings.BoxSelectFightersFirst, input.IsAltDown())
                     ? Selection.InsideFightersFirst(_renderUnits, lo, hi, Me, IsFighter)
                     : Selection.Inside(_renderUnits, lo, hi, Me);
                 _selection.Apply(boxed, addBox);
@@ -1129,6 +1132,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
                     _selection.Clear();
                     _clickTap.Reset();
                     SelectBuildingAt(Camera.CellAt(_camera.WorldFromScreen(mouse)));
+                    if (!_selectedBuilding.IsNone && _buildingTap.Tap(_selectedBuilding, _nowMs)) MarkSameTypeOnScreen();   // S47 cnc#7: double-click a building = all of its type on screen
                 }
             }
 
@@ -1148,6 +1152,8 @@ public sealed class GameScreen : IScreen, IFocusPausable
             if (_sim is not null && !_selectedBuilding.IsNone && _selectedBuildingProduces && _sim.Map.Contains(cell))
             {
                 _sim.Host.Issue(SidebarCommands.Rally(Me, _selectedBuilding, cell));
+                foreach (EntityId id in _marked)   // S47: the marked buildings of the same type take the same rally point
+                    if (id != _selectedBuilding && RallyTypeMatches(id)) _sim.Host.Issue(SidebarCommands.Rally(Me, id, cell));
             }
             else
             {
@@ -1703,8 +1709,19 @@ public sealed class GameScreen : IScreen, IFocusPausable
             _selectedBuilding = b.Id;
             _selectedBuildingProduces = _sim.Rules.Buildings[b.TypeIndex].Produces is not null;
             _selectedBuildingType = b.TypeIndex;
+            FollowTabOf(b.TypeIndex);
             return;
         }
+    }
+
+    // S47 U-13 (cnc#25): selecting a production building opens the sidebar tab it feeds (Settings > Play options > Sidebar follows selection).
+    private void FollowTabOf(int buildingType)
+    {
+        if (!_s.Settings.SidebarFollowsSelection || _sim is null || _sidebar is null) return;
+        if (buildingType < 0 || buildingType >= _sim.Rules.Buildings.Count) return;
+        if (TabFollow.TabFor(_sim.Rules.Buildings[buildingType].Produces) is not { } tab) return;
+        if (tab == SidebarTab.Aircraft && !_sidebar.HasAircraftTab) return;
+        _sidebar.SelectTab(tab);
     }
 
     private void ClearBuildingSelection()
@@ -1849,6 +1866,26 @@ public sealed class GameScreen : IScreen, IFocusPausable
     }
 
     // QOL-15: Shift + click on an own building marks (or unmarks) it for the sell key.
+    private readonly TapTracker<EntityId> _buildingTap = new();
+
+    private bool RallyTypeMatches(EntityId id)
+    {
+        foreach (BuildingView b in _source.Current.Buildings)
+            if (b.Id == id) return !b.Ghost && b.Player == Me && b.TypeIndex == _selectedBuildingType;
+        return false;
+    }
+
+    // S47 cnc#7 for buildings: a double-click on an own building marks every other own building of the same type that is on screen
+    // (the marks are the ones Shift + click makes: sell key, structure groups and, now, the rally point).
+    private void MarkSameTypeOnScreen()
+    {
+        if (_sim is null || !_skirmishMode || _spectatorMode || _selectedBuildingType < 0) return;
+        Viewport map = MapViewport();
+        Vector2 topLeft = _camera.WorldFromScreen(new Point(0, 0));
+        Vector2 bottomRight = _camera.WorldFromScreen(new Point(map.Width, map.Height));
+        foreach (EntityId id in BuildingMarks.SameTypeOnScreen(_source.Current.Buildings, Me, _selectedBuildingType, _selectedBuilding, topLeft, bottomRight)) _marked.Add(id);
+    }
+
     private void ToggleMark(CellCoord cell)
     {
         if (_sim is null || !_skirmishMode || _spectatorMode) return;
@@ -1956,6 +1993,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
         if (input.ConsumePressed(GameAction.SelectVehicles)) SelectMapWide(Selection.Army(_renderUnits, Me, v => v.Kind == UnitKind.Vehicle && IsFighter(v)).ToList(), input);   // QOL-11
         if (input.ConsumePressed(GameAction.SelectInfantry)) SelectMapWide(Selection.Army(_renderUnits, Me, v => v.Kind == UnitKind.Infantry && IsFighter(v)).ToList(), input);   // QOL-11
         if (input.ConsumePressed(GameAction.CycleProductionBuilding)) CycleProduction();   // QOL-05
+        if (input.ConsumePressed(GameAction.CycleSubtype) && _selection.Count > 1) CycleSubtype();   // S47 cnc#9
         if (input.ConsumePressed(GameAction.AutoTypeGroups))   // QOL-17
         {
             _groups.AutoByType = !_groups.AutoByType;
@@ -2016,6 +2054,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
         _selectedBuilding = f.Id;
         _selectedBuildingProduces = _sim.Rules.Buildings[f.TypeIndex].Produces is not null;
         _selectedBuildingType = f.TypeIndex;
+        FollowTabOf(f.TypeIndex);
         foreach (EntityId id in ids) if (id != f.Id) _marked.Add(id);
         Audio.AudioBootstrap.Director?.Notify(Audio.AudioEventKind.UnitSelect);
         if (twice) CentreOnSelection();
@@ -2047,7 +2086,8 @@ public sealed class GameScreen : IScreen, IFocusPausable
     }
 
     private Rts.Game.Ui.Alerts.AlertController? _alertsBacking;   // M11-10d
-    private Rts.Game.Ui.Alerts.AlertController _alerts => _alertsBacking ??= new Rts.Game.Ui.Alerts.AlertController(u => u.Kind == UnitKind.Vehicle && _sim is not null && _sim.Rules.Vehicles[u.TypeIndex].HarvestCapacity > 0);
+    private Rts.Game.Ui.Alerts.AlertController _alerts => _alertsBacking ??= new Rts.Game.Ui.Alerts.AlertController(u => u.Kind == UnitKind.Vehicle && _sim is not null && _sim.Rules.Vehicles[u.TypeIndex].HarvestCapacity > 0,
+        p => _sim is not null && _sim.Sim.RelationOf(Me, p) == Rts.Sim.Core.Relation.Enemy);   // S47 cnc#33
     private readonly Vector2?[] _bookmarks = new Vector2?[4];   // M11-02: camera bookmarks F6, F7, F8, F12 (Ctrl+key stores, key recalls)
 
     // Home centres on the player's base; Ctrl+F6, F7, F8, F12 store the view centre, the same keys recall it.
@@ -2056,6 +2096,8 @@ public sealed class GameScreen : IScreen, IFocusPausable
         if (_sim is null) return;
         if (input.ConsumePressed(GameAction.CentreBase)) CentreCameraOnOwnBase();
         if (input.ConsumePressed(GameAction.CentreOnSelection)) CentreOnSelection();   // QOL-05
+        if (input.ConsumePressed(GameAction.ZoomIn)) ZoomByKey(1);    // S47 cnc#3: the wheel's job for a touchpad, about the middle of the map view
+        if (input.ConsumePressed(GameAction.ZoomOut)) ZoomByKey(-1);
         if (input.ConsumePressed(GameAction.LastAlert) && _alerts.JumpTarget(_source.Current.Tick) is { } alertAt) CentreCameraOn(alertAt);   // M11-10d
         bool ctrl = input.IsDown(Keys.LeftControl) || input.IsDown(Keys.RightControl);
         GameAction[] keys = { GameAction.Bookmark1, GameAction.Bookmark2, GameAction.Bookmark3, GameAction.Bookmark4 };
@@ -2069,6 +2111,24 @@ public sealed class GameScreen : IScreen, IFocusPausable
     }
 
     // QOL-05: the centre of the selected units, or of the selected building when no unit is selected.
+    private readonly SubtypeCycle _subtypes = new();
+
+    private void CycleSubtype()
+    {
+        var types = new Dictionary<UnitKey, (UnitKind, int)>();
+        foreach (RenderUnit u in _renderUnits) types[UnitKey.Of(u.View)] = (u.View.Kind, u.View.TypeIndex);
+        IReadOnlyList<UnitKey>? next = _subtypes.Next(_selection.Units, k => types.TryGetValue(k, out (UnitKind, int) t) ? t : null);
+        if (next is null) return;
+        _selection.Replace(next);
+        Audio.AudioBootstrap.Director?.Notify(Audio.AudioEventKind.UnitSelect);
+    }
+
+    private void ZoomByKey(int steps)
+    {
+        Rectangle view = _sidebar?.Layout.MapView ?? new Rectangle(0, 0, _s.Viewport.Width, _s.Viewport.Height);
+        _camera.ZoomBy(steps, view.Center);
+    }
+
     private void CentreOnSelection()
     {
         if (_sim is null) return;
@@ -2086,6 +2146,8 @@ public sealed class GameScreen : IScreen, IFocusPausable
         }
     }
 
+    private int _lastBase = -1;
+
     private void CentreCameraOnOwnBase()
     {
         if (_sim is null) return;
@@ -2096,6 +2158,18 @@ public sealed class GameScreen : IScreen, IFocusPausable
             centre = new Vector2((b.Cell.X + b.FootprintW / 2f) * Camera.CellPx, (b.Cell.Y + b.FootprintH / 2f) * Camera.CellPx);
             break;
         }
+
+        // S47 cnc#2: with more than one Construction Yard, Home steps from base to base.
+        var yards = new List<Vector2>();
+        int yardType = _sim.Rules.ResolveStartKit(_sim.Sim.Setup.FactionOf(Me)).Conyard;
+        if (yardType >= 0)
+            foreach (BuildingView b in _source.Current.Buildings)
+                if (b.Player == Me && !b.Ghost && b.TypeIndex == yardType)
+                    yards.Add(new Vector2((b.Cell.X + b.FootprintW / 2f) * Camera.CellPx, (b.Cell.Y + b.FootprintH / 2f) * Camera.CellPx));
+        Rectangle view = _sidebar?.Layout.MapView ?? new Rectangle(0, 0, _s.Viewport.Width, _s.Viewport.Height);
+        int at = BaseCycle.Next(yards, _camera.WorldFromScreen(view.Center), _lastBase);
+        _lastBase = at;
+        if (at >= 0) centre = yards[at];
 
         centre ??= Camera.CentreOf(_sim.Map.StartPositions[Me]);
         CentreCameraOn(centre.Value);

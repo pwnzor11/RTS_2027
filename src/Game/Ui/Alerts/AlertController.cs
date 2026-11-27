@@ -28,8 +28,8 @@ public sealed class AlertController
     private PlayerHud? _previousHud;
     private int _lastTick = -1;
 
-    /// <summary>Creates the controller. <paramref name="isHarvester"/> tells whether a unit is a harvester.</summary>
-    public AlertController(Func<UnitView, bool>? isHarvester = null) => _deriver = new AlertDeriver(isHarvester);
+    /// <summary>Creates the controller. <paramref name="isHarvester"/> tells whether a unit is a harvester; <paramref name="isEnemy"/> whether a player is hostile (null: no "Enemy spotted").</summary>
+    public AlertController(Func<UnitView, bool>? isHarvester = null, Func<byte, bool>? isEnemy = null) => _deriver = new AlertDeriver(isHarvester, isEnemy);
 
     /// <summary>The state (exposed for tests).</summary>
     public AlertLog Log { get; } = new();

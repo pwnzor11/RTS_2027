@@ -74,6 +74,20 @@ public static class RangeOverlay
         if (r.MinRange > 0) Shapes.Circle(batch, pixel, centre, LeptonsToScreen(r.MinRange, camera), MinRangeColour, LinePx, Segments);
     }
 
+    /// <summary>
+    /// S47 cnc#28: the range circles of the building type you are about to place, centred on the ghost footprint whose top-left cell is
+    /// (<paramref name="cellX"/>, <paramref name="cellY"/>). Draws nothing for a type without a weapon.
+    /// </summary>
+    public static void DrawPlacement(SpriteBatch batch, Texture2D pixel, Camera camera, SimRules rules, int typeIndex, int cellX, int cellY)
+    {
+        if (typeIndex < 0 || typeIndex >= rules.Buildings.Count) return;
+        BuildingType bt = rules.Buildings[typeIndex];
+        if (BuildingRange(rules, typeIndex) is not { } r) return;
+        Vector2 centre = camera.ScreenFromWorld(new Vector2((cellX + bt.FootprintW / 2f) * Camera.CellPx, (cellY + bt.FootprintH / 2f) * Camera.CellPx));
+        Shapes.Circle(batch, pixel, centre, LeptonsToScreen(r.Range, camera), RangeColour, LinePx, Segments);
+        if (r.MinRange > 0) Shapes.Circle(batch, pixel, centre, LeptonsToScreen(r.MinRange, camera), MinRangeColour, LinePx, Segments);
+    }
+
     private static float LeptonsToScreen(int leptons, Camera camera) =>
         leptons * Camera.CellPx / (float)SimConstants.LeptonsPerCell * camera.Zoom;
 

@@ -134,6 +134,9 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
     /// <summary>The selected tab.</summary>
     public SidebarTab Tab => _tab;
 
+    /// <summary>True while the Aircraft tab is shown (the player can build aircraft).</summary>
+    public bool HasAircraftTab => _hasAircraft;
+
     /// <summary>The layout computed by the last <see cref="Update"/>.</summary>
     public SidebarLayout Layout => _layout;
 
@@ -247,6 +250,7 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
             float left = _ghostTopLeft.X * Camera.CellPx, top = _ghostTopLeft.Y * Camera.CellPx;
             Rectangle r = camera.ScreenRect(left, top, left + bt.FootprintW * Camera.CellPx, top + bt.FootprintH * Camera.CellPx);
             DrawBuildRadius(batch, pixel, camera);   // M11-10f
+            RangeOverlay.DrawPlacement(batch, pixel, camera, _source.Rules, _placementType, _ghostTopLeft.X, _ghostTopLeft.Y);   // S47 cnc#28: how far the defence you place will shoot
             scene?.DrawBuildingGhost(batch, pixel, _source.Rules, _placementType, _ghostTopLeft, camera, snapshot.Tick, _player);
             Color c = _ghostValid ? GoodGreen : BadRed;
             for (int gy = 0; gy < bt.FootprintH; gy++)
