@@ -256,6 +256,9 @@ public sealed class Selection
         return fighters.Count > 0 ? fighters : all;
     }
 
+    /// <summary>S47 cnc#8: whether a box select takes the fighters only: the setting, turned the other way round while Alt is held.</summary>
+    public static bool BoxTakesFightersOnly(bool setting, bool altHeld) => setting != altHeld;
+
     /// <summary>
     /// True for a unit that fights: it has a primary weapon and is not a harvester, a deployable builder (MCV type), a salvager or an engineer.
     /// </summary>

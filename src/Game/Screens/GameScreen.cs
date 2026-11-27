@@ -1088,7 +1088,9 @@ public sealed class GameScreen : IScreen, IFocusPausable
                 Vector2 b = _camera.WorldFromScreen(mouse);
                 bool addBox = ShiftHeld(input);   // M11-10c: Shift+box adds to the selection
                 Vector2 lo = Vector2.Min(a, b), hi = Vector2.Max(a, b);
-                IEnumerable<UnitKey> boxed = input.IsAltDown()   // QOL-03: Alt+box takes the fighters only, when any are in the box
+                // QOL-03 / S47 cnc#8: a box takes the fighters only, when any are in it (harvesters and builders stay out of a battle selection);
+                // Settings > Play options > Box select favours fighters sets the default, Alt+box does the other one.
+                IEnumerable<UnitKey> boxed = Selection.BoxTakesFightersOnly(_s.Settings.BoxSelectFightersFirst, input.IsAltDown())
                     ? Selection.InsideFightersFirst(_renderUnits, lo, hi, Me, IsFighter)
                     : Selection.Inside(_renderUnits, lo, hi, Me);
                 _selection.Apply(boxed, addBox);
