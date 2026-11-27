@@ -14,6 +14,7 @@ public sealed class SlotArray
     private readonly ulong[] _used;
     private readonly ushort[] _generation;
     private int _count;
+    private int _allocSerial;
 
     public SlotArray(int capacity)
     {
@@ -28,6 +29,9 @@ public sealed class SlotArray
 
     /// <summary>Number of alive entities.</summary>
     public int Count => _count;
+
+    /// <summary>Counts every allocation or restore-to-alive (M-28: derived data, never saved or hashed). A spatial index built at serial S is complete while the serial is still S.</summary>
+    internal int AllocSerial => _allocSerial;
 
     /// <summary>Allocate the lowest free index; throws when full. Simulation code uses <see cref="TryAllocate"/>.</summary>
     internal EntityId Allocate()
@@ -50,6 +54,7 @@ public sealed class SlotArray
             if (g == 0) g = 1;
             _generation[idx] = g;
             _count++;
+            _allocSerial++;
             id = new EntityId((ushort)idx, g);
             return true;
         }
@@ -89,7 +94,7 @@ public sealed class SlotArray
         bool was = IsIndexAlive(index);
         _generation[index] = generation;
         ulong bit = 1UL << (index & 63);
-        if (alive && !was) { _used[index >> 6] |= bit; _count++; }
+        if (alive && !was) { _used[index >> 6] |= bit; _count++; _allocSerial++; }
         else if (!alive && was) { _used[index >> 6] &= ~bit; _count--; }
     }
 }
