@@ -35,7 +35,8 @@ internal sealed partial class ProceduralBuilder
         _y0 = Math.Clamp(sum - _sa, Math.Max(_hh + 11, n * 19 / 100), Math.Max(y0Max, Math.Max(_hh + 11, n * 19 / 100)));
         _ye = _y0 + _rng.Next(-3, 4);
         int mr = _rng.Next(12);
-        _mode = _skin == SkinMountains ? (mr < 7 ? 2 : 1) : mr < 8 ? 0 : mr < 10 ? 2 : 1;   // 0 soft shell, 2 walled main with two gates (east and south), 1 walled main with one east ramp
+        Layout2Fields shell = BiomeCatalog.Layout2FieldsFor(_b.Key);   // twelfths: soft shell, then two gates, the rest one ramp (defaults 8/2/2; Mountains 0/7/5)
+        _mode = mr < shell.ShellSoft ? 0 : mr < shell.ShellSoft + shell.ShellGates2 ? 2 : 1;   // 0 soft shell, 2 walled main with two gates (east and south), 1 walled main with one east ramp
         _wL1 = _rng.Next(6, 9); _wL2 = _rng.Next(13, 17); _bridgeW = _rng.Next(3, 6);
         _gapE = _rng.Next(4, 7); _gapS = _rng.Next(4, 7);
         _gx2 = _sa + _rng.Next(-3, 7);

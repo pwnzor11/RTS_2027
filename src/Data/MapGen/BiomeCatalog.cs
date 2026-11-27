@@ -20,7 +20,7 @@ public static class BiomeCatalog
     [
         "theater", "base_land", "symmetry_2p", "symmetry_4p", "water_permille", "shallow_permille", "rock_permille", "rough_permille",
         "rock_style", "cliff_plateaus", "rivers", "river_width", "river_wander_permille", "ford_spacing", "road_grid", "ocean_width",
-        "ash_fields_per_start", "pitch_fields_per_start", "contested_fields", "extra_fields", "field_density_min", "field_density_max", "ruins", "decor", "start_row_shift",
+        "ash_fields_per_start", "pitch_fields_per_start", "contested_fields", "extra_fields", "field_density_min", "field_density_max", "ruins", "decor", "start_row_shift", "layout2",
     ];
 
     private static readonly string[] DecorKeys =
@@ -46,14 +46,21 @@ public static class BiomeCatalog
     /// <summary>The located parameters of <paramref name="biome"/>.</summary>
     public static BiomeParams For(Biome biome) => Default[(int)biome];
 
-    /// <summary>Layout 2 field placement of a biome (v6, Q-69; see <see cref="Layout2Fields"/>), tuned by the income probe of docs/balance/s16_layout2.md.</summary>
-    public static Layout2Fields Layout2FieldsFor(string biomeKey) => biomeKey switch
+    /// <summary>
+    /// Layout 2 field placement and shell mix of a biome (v6, Q-69; see <see cref="Layout2Fields"/>), tuned by the income probe of docs/balance/s16_layout2.md.
+    /// The built-in defaults can be overridden per key by an optional <c>[biome.&lt;key&gt;.layout2]</c> table of biomes.toml (S47, A-06); absent = the defaults.
+    /// </summary>
+    public static Layout2Fields Layout2FieldsFor(string biomeKey)
     {
-        "rust_belt" => new Layout2Fields(7, 2, 2, 100, 40),
-        "mountains" => new Layout2Fields(7, 2, 2, 100, 40),
-        "ash_plains" => new Layout2Fields(7, 2, 2, 100, 40),
-        _ => new Layout2Fields(7, 2, 2, 100, 40),   // glass_coast
-    };
+        foreach (BiomeParams b in Default)
+            if (b.Key == biomeKey && b.Layout2 is { } o) return o;
+        return Layout2Defaults(biomeKey);
+    }
+
+    /// <summary>The built-in layout 2 values of a biome (what layout 2 used before the toml keys existed).</summary>
+    public static Layout2Fields Layout2Defaults(string biomeKey) => biomeKey == "mountains"
+        ? new Layout2Fields(7, 2, 2, 100, 40, 0, 7)
+        : new Layout2Fields(7, 2, 2, 100, 40, 8, 2);   // rust_belt, ash_plains, glass_coast
 
     /// <summary>The first <c>data/mapgen/biomes.toml</c> found walking up from <paramref name="startDirectory"/>, or null.</summary>
     public static string? FindFile(string startDirectory)
@@ -162,6 +169,31 @@ public static class BiomeCatalog
             ymin, ymax, Int("dead_target_permille", 0, 1000), Kinds("kinds"), Kinds("yard_kinds"));
     }
 
+    private static readonly string[] Layout2Keys = ["main_dist", "main_bands", "main_share", "main_cells_pct", "natural_pct", "shell_soft", "shell_gates2"];
+
+    /// <summary>Optional <c>[biome.&lt;key&gt;.layout2]</c> table: each key absent keeps the built-in default; null when the table is absent.</summary>
+    private static Layout2Fields? ParseLayout2(string key, TomlTable biome, string prefix, string file, List<RulesProblem> problems)
+    {
+        if (!biome.TryGetValue("layout2", out object? lv)) return null;
+        if (lv is not TomlTable t) { problems.Add(new RulesProblem(file, prefix + "layout2", "must be a table")); return null; }
+        string pre = prefix + "layout2.";
+        foreach (var kv in t)
+            if (Array.IndexOf(Layout2Keys, kv.Key) < 0) problems.Add(new RulesProblem(file, pre + kv.Key, "unknown key"));
+        Layout2Fields d = Layout2Defaults(key);
+        int Int(string k, int def, int min, int max)
+        {
+            if (!t.TryGetValue(k, out object? v)) return def;
+            if (v is long l && l >= min && l <= max) return (int)l;
+            problems.Add(new RulesProblem(file, pre + k, $"must be an integer {min}..{max}"));
+            return def;
+        }
+        int soft = Int("shell_soft", d.ShellSoft, 0, 12), gates2 = Int("shell_gates2", d.ShellGates2, 0, 12);
+        if (soft + gates2 > 12) problems.Add(new RulesProblem(file, pre + "shell_soft", "shell_soft + shell_gates2 must not exceed 12"));
+        if (key == "mountains" && soft > 0) problems.Add(new RulesProblem(file, pre + "shell_soft", "mountains mains are always walled: shell_soft must be 0"));
+        return new Layout2Fields(Int("main_dist", d.MainDist, 1, 20), Int("main_bands", d.MainBands, 1, 2), Int("main_share", d.MainShare, 1, 16),
+            Int("main_cells_pct", d.MainCellsPct, 20, 200), Int("natural_pct", d.NaturalPct, 0, 100), soft, gates2);
+    }
+
     private static BiomeParams? ParseOne(string key, TomlTable t, string file, List<RulesProblem> problems)
     {
         string prefix = "biome." + key + ".";
@@ -221,7 +253,7 @@ public static class BiomeCatalog
             Int("water_permille", 0, 300), Int("shallow_permille", 0, 300), Int("rock_permille", 0, 300), Int("rough_permille", 0, 400),
             style, Int("cliff_plateaus", 0, 6), Int("rivers", 0, 2), Int("river_width", 1, 4), Int("river_wander_permille", 0, 1000),
             Int("ford_spacing", 8, 64), roadGrid, Int("ocean_width", 0, 16), ash, pitch, Int("contested_fields", 0, 8),
-            Int("extra_fields", 0, 16), dMin, dMax, Int("ruins", 0, 4), ParseDecor(t, prefix, file, problems), OptionalInt("start_row_shift", 0, 24));
+            Int("extra_fields", 0, 16), dMin, dMax, Int("ruins", 0, 4), ParseDecor(t, prefix, file, problems), OptionalInt("start_row_shift", 0, 24), ParseLayout2(key, t, prefix, file, problems));
         return problems.Count > before ? null : p;
     }
 }
