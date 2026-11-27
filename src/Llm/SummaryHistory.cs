@@ -25,7 +25,8 @@ public sealed class SummaryHistory
     /// army that vanished; <see cref="EnemyLost"/> is the value of enemy army that was in view at the previous observation and is
     /// neither in view nor seen again now ("seen gone": it may have died or moved out of sight). <see cref="LostGround"/> is true
     /// when one of our structures vanished or our army loss outweighed the enemy seen gone. Derived from the view only.</summary>
-    public readonly record struct FightInterval(int FromTick, int ToTick, int OwnLost, int EnemyLost, bool LostGround);
+    public readonly record struct FightInterval(int FromTick, int ToTick, int OwnLost, int EnemyLost, bool LostGround,
+        IReadOnlyList<(ActorKind Kind, int Type, int Count)>? LostUnits = null);   // S47 (M16-A-08): own army units lost in the interval by type, ordered
 
     private readonly SortedDictionary<long, (ActorKind Kind, int Type)> _prevOwn = new();
     private readonly SortedDictionary<long, int> _prevBuildingHealth = new();
@@ -34,6 +35,7 @@ public sealed class SummaryHistory
     private readonly SortedDictionary<long, int> _prevEnemyArmy = new();
     private readonly List<(DirectiveDraft Draft, int Tick)> _directives = new();
     private readonly List<FightInterval> _fights = new();
+    private readonly SortedDictionary<int, OrderTrack> _orderTracks = new();   // S47: per slot, the memory behind the order status
     private bool _observed;
 
     /// <summary>Tick of the previous <see cref="Observe"/>, or -1 before the first one.</summary>
@@ -51,6 +53,10 @@ public sealed class SummaryHistory
 
     /// <summary>The last intervals (oldest first), at most <see cref="MaxFights"/>, each from one <see cref="Observe"/> to the next.</summary>
     public IReadOnlyList<FightInterval> Fights => _fights;
+
+    /// <summary>S47 (M16-A-08): the state of each standing order after the latest <see cref="Observe"/>, by slot (empty slots are left out).
+    /// Estimated from the view alone (own army position and value, tier, cash); the sim does not report "done" or "failed".</summary>
+    public IReadOnlyList<OrderStatus> Orders { get; private set; } = Array.Empty<OrderStatus>();
 
     /// <summary>The last directives issued (oldest first), at most <see cref="MaxDirectives"/>.</summary>
     public IReadOnlyList<(DirectiveDraft Draft, int Tick)> Directives => _directives;
@@ -125,15 +131,18 @@ public sealed class SummaryHistory
         {
             int ownLost = 0, enemyGone = 0;
             bool buildingLost = false;
+            var lostUnits = new SortedDictionary<(int, int), int>();
             foreach (KeyValuePair<long, (ActorKind Kind, int Type)> p in _prevOwn)
                 if (!cur.ContainsKey(p.Key))
                 {
                     ownLost += ArmyCost(view.Rules, p.Value.Kind, p.Value.Type);
                     if (p.Value.Kind == ActorKind.Building) buildingLost = true;
+                    else { (int, int) uk = ((int)p.Value.Kind, p.Value.Type); lostUnits[uk] = lostUnits.GetValueOrDefault(uk) + 1; }
                 }
             foreach (KeyValuePair<long, int> p in _prevEnemyArmy)
                 if (!enemyArmy.ContainsKey(p.Key)) enemyGone += p.Value;
-            _fights.Add(new FightInterval(PreviousTick, view.Tick, ownLost, enemyGone, buildingLost || ownLost > enemyGone));
+            _fights.Add(new FightInterval(PreviousTick, view.Tick, ownLost, enemyGone, buildingLost || ownLost > enemyGone,
+                lostUnits.Select(u => ((ActorKind)u.Key.Item1, u.Key.Item2, u.Value)).ToList()));
             while (_fights.Count > MaxFights) _fights.RemoveAt(0);
         }
         _prevEnemyArmy.Clear();
@@ -151,6 +160,7 @@ public sealed class SummaryHistory
         foreach (var p in nowLive) _prevVisibleEnemyBuildings[p.Key] = p.Value;
         PreviousTick = view.Tick;
         _observed = true;
+        Orders = OrderTracker.Update(view, own, _orderTracks);
     }
 
     private static int ArmyCost(SimRules rules, ActorKind kind, int type) => kind switch

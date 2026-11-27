@@ -32,6 +32,7 @@ public sealed class Commander : IDirectiveSource, ICommanderChannel, IDisposable
     private readonly int _staleTicks;
     private readonly CommanderChatLog _chat;
     private readonly SummaryHistory _history = new();
+    private readonly CounterHold _counter = new();   // S47 (M16-A-08): counter-building window
     private readonly CancellationTokenSource _cts = new();
     private readonly object _gate = new();
     private readonly List<string> _heard = new();
@@ -124,6 +125,9 @@ public sealed class Commander : IDirectiveSource, ICommanderChannel, IDisposable
         lock (_gate) { result = _done; _done = null; }
         if (result is not null) issued = Handle(result, view, out packedArg, out focusCell);
 
+        if (!issued && _history.Directives.Count > 0 && _counter.Expire(_history.Directives[^1].Draft, tick) is { } back)
+            issued = Issue(back, tick, out packedArg, out focusCell);   // S47: the counter window ended; production goes back to auto
+
         if (_provider is not null && tick >= _nextCallTick) TryStart(view);
         return issued;
     }
@@ -149,6 +153,11 @@ public sealed class Commander : IDirectiveSource, ICommanderChannel, IDisposable
         _orders.AddRange(reply.OrderList);
         if (reply.Directive is not { } d) return false;
 
+        return Issue(_counter.Apply(d, tick), tick, out packedArg, out focusCell);
+    }
+
+    private bool Issue(DirectiveDraft d, int tick, out int packedArg, out CellCoord focusCell)
+    {
         _history.RecordDirective(d, tick);
         packedArg = DirectiveCodec.PackStrong(DirectiveCodec.Pack(d.Posture, d.Focus, d.TargetPlayer, d.Mix, d.Expand), d.StrongMix);
         focusCell = d.FocusX < 0 || d.FocusY < 0 ? Directive.NoCell : new CellCoord(d.FocusX, d.FocusY);

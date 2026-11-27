@@ -58,8 +58,10 @@ public static class BattlefieldSummary
         sections.Add(Others(view, rules, visible, known, history));
         string naval = NavalThreat(view, rules, visible);
         if (naval.Length > 0) sections.Add(naval);
-        string fights = Fights(history);
+        string fights = Fights(history, rules);
         if (fights.Length > 0) sections.Add(fights);
+        string orders = Orders(history);
+        if (orders.Length > 0) sections.Add(orders);
         sections.Add(Events(view, rules, history));
         if (!string.IsNullOrWhiteSpace(playerChat))
             sections.Add("PLAYER CHAT (to you): \"" + Clean(playerChat!, MaxChatChars) + "\"");
@@ -222,16 +224,48 @@ public static class BattlefieldSummary
 
     /// <summary>S24 (M5-12): "RECENT FIGHTS" for the last intervals: army value lost on each side and whether we held or lost ground.
     /// Empty before the second observation. The enemy figure is army seen gone, not confirmed kills.</summary>
-    private static string Fights(SummaryHistory h)
+    private static string Fights(SummaryHistory h, SimRules rules)
     {
         if (h.Fights.Count == 0) return "";
         var sb = new StringBuilder("RECENT FIGHTS (army value; enemy = seen gone, not confirmed kills):");
         foreach (SummaryHistory.FightInterval f in h.Fights)
             sb.Append("\n- ").Append(Clock(f.FromTick)).Append('-').Append(Clock(f.ToTick))
-              .Append(": you lost ").Append(f.OwnLost).Append("cr, enemy seen gone ").Append(f.EnemyLost).Append("cr; ")
-              .Append(f.LostGround ? "lost ground" : "held ground");
+              .Append(": you lost ").Append(f.OwnLost).Append("cr").Append(LostUnits(rules, f)).Append(", enemy seen gone ").Append(f.EnemyLost).Append("cr")
+              .Append(f.OwnLost != 0 || f.EnemyLost != 0 ? ", net " + (f.EnemyLost - f.OwnLost >= 0 ? "+" : "") + (f.EnemyLost - f.OwnLost) + "cr" : "")
+              .Append("; ").Append(f.LostGround ? "lost ground" : "held ground");
         return sb.ToString();
     }
+
+    /// <summary>S47 (M16-A-08): " (3xauth_tank, 2xdir_conscript)" for the units lost in a fight interval, "" when none.</summary>
+    private static string LostUnits(SimRules rules, SummaryHistory.FightInterval f)
+    {
+        if (f.LostUnits is null || f.LostUnits.Count == 0) return "";
+        var sb = new StringBuilder(" (");
+        for (int i = 0; i < f.LostUnits.Count; i++)
+            sb.Append(i > 0 ? ", " : "").Append(f.LostUnits[i].Count).Append('x').Append(TypeName(rules, f.LostUnits[i].Kind, f.LostUnits[i].Type));
+        return sb.Append(')').ToString();
+    }
+
+    /// <summary>S47 (M16-A-08): "YOUR ORDERS" with where each standing order stands (pending, waiting, marching, active, done, failed).
+    /// Empty when no order is set, so a game without orders reads exactly as before.</summary>
+    private static string Orders(SummaryHistory h)
+    {
+        if (h.Orders.Count == 0) return "";
+        var sb = new StringBuilder("YOUR ORDERS (status is estimated from what you see; re-issue a failed one or clear it):");
+        foreach (OrderStatus o in h.Orders)
+        {
+            sb.Append("\n- slot ").Append(o.Slot).Append(' ').Append(OrderWord(o.Kind));
+            if (o.Cell.X >= 0) sb.Append(" cell ").Append(o.Cell.X).Append(',').Append(o.Cell.Y);
+            sb.Append(": ").Append(o.State.ToString().ToUpperInvariant()).Append(" - ").Append(o.Detail);
+        }
+        return sb.ToString();
+    }
+
+    private static string OrderWord(CommanderOrderKind k) => k switch
+    {
+        CommanderOrderKind.AttackAt => "attack", CommanderOrderKind.HoldCell => "hold", CommanderOrderKind.Raid => "raid",
+        CommanderOrderKind.ExpandTo => "expand", CommanderOrderKind.TechTo => "tech", _ => "reserve",
+    };
 
     private static string Events(PlayerView view, SimRules rules, SummaryHistory h)
     {

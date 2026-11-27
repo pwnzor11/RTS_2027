@@ -26,7 +26,7 @@ public static class CommanderMatchCommand
     private const string Usage =
         "usage: ai commander --a <aiId>[:<tier>] --b <aiId>[:<tier>] --provider openai|anthropic [--model <name>] [--seed 1] [--ticks 30000] [--size 64] [--out ./commander_run]\n" +
         "       the key is read from OPENAI_API_KEY (openai) or ANTHROPIC_API_KEY (anthropic), never from a flag. --model defaults to the provider's default model.\n" +
-        "       ai commander --random-directives --a <aiId>[:<tier>] --b <aiId>[:<tier>] [--seed 1] [--random-only posture,focus,...] ...   (S24: seeded random directives and orders, no model, no key; S36: --random-only keeps only the listed fields, the rest plain, same random stream)";
+        "       ai commander --random-directives --a <aiId>[:<tier>] --b <aiId>[:<tier>] [--seed 1] [--random-counters] [--random-only posture,focus,...] ...   (S24: seeded random directives and orders, no model, no key; S36: --random-only keeps only the listed fields, the rest plain, same random stream)";
 
     private static readonly string[] Options = ["a", "b", "provider", "model", "seed", "ticks", "size", "out", "swap", "random-only"];
     private const int DefaultTier = 2;
@@ -47,7 +47,9 @@ public static class CommanderMatchCommand
     {
         // S24 (M5-12): a bare switch, so it is taken out before the --name value parser sees it
         bool randomMode = args.Contains("--random-directives", StringComparer.Ordinal);
-        args = args.Where(a => a != "--random-directives").ToArray();
+        bool randomCounters = args.Contains("--random-counters", StringComparer.Ordinal);   // S47 (M16-A-08): also random counter-building holds
+        args = args.Where(a => a != "--random-directives" && a != "--random-counters").ToArray();
+        if (randomCounters && !randomMode) return UsageError("--random-counters needs --random-directives");
         if (!MatchSetup.TryParse(args, Options, out var flags, out var positional, out string? error) || positional.Count > 0)
             return UsageError(error ?? $"unexpected argument '{positional[0]}'");
         if (!flags.TryGetValue("a", out string? aArg) || !flags.TryGetValue("b", out string? bArg)) return UsageError("--a and --b are required");
@@ -113,7 +115,7 @@ public static class CommanderMatchCommand
         RandomFields keep = RandomFields.All;
         if (flags.TryGetValue("random-only", out string? onlyArg) && (!randomMode || !RandomFieldsOf.TryParse(onlyArg, out keep)))
             return UsageError("--random-only needs --random-directives and a comma list of posture, focus, mix, strong, expand, cell, directive, orders, clear, attack, hold, raid, expandto, tech, reserve, all, none");
-        RandomCommanderSource? random = randomMode ? new RandomCommanderSource((ulong)seed, size) { Keep = keep } : null;
+        RandomCommanderSource? random = randomMode ? new RandomCommanderSource((ulong)seed, size) { Keep = keep, Counters = randomCounters } : null;
 
         // Side A is the commander's slot 0 with its persona and faction name, as the game gives a commander slot.
         const string faction = "Authority";
@@ -236,7 +238,7 @@ public static class CommanderMatchCommand
         md.AppendLine($"- Side A (LLM commander {speaker}): {p.A.Label}");
         md.AppendLine($"- Side B (standard AI): {p.B.Label}");
         md.AppendLine($"- Provider: {p.Provider}, model: {p.Model}");
-        if (p.Random) md.AppendLine($"- Mode: --random-directives (seeded random directives and orders, same call schedule; no model calls); fields kept: {random!.Keep}");
+        if (p.Random) md.AppendLine($"- Mode: --random-directives (seeded random directives and orders, same call schedule; no model calls); fields kept: {random!.Keep}; counter holds: {(random.Counters ? "on (--random-counters)" : "off")}");
         md.AppendLine($"- Seed {p.Seed}, map {p.Size} cells, tick limit {p.Ticks}, starts {(p.Swap ? "swapped (commander at start 1)" : "normal (commander at start 0)")}");
         md.AppendLine($"- Winner: {winnerText}");
         md.AppendLine($"- Ended at tick {sim.Tick} ({sim.Tick / 20} s of game time)");

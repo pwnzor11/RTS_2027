@@ -16,6 +16,8 @@ public static class ReplyParser
     private const int MaxCell = 4095;
     private const int MaxOrders = 4;
     private const int MaxMinute = 600;
+    /// <summary>S47 (M16-A-08): longest counter-building hold the model may ask for, in game minutes.</summary>
+    public const int MaxCounterMinutes = 10;
     private const int MinTechTier = 2, MaxTechTier = 5;
 
     private static readonly string[] Postures = { "turtle", "balanced", "aggressive", "allin" };
@@ -113,7 +115,11 @@ public static class ReplyParser
             fx = (short)x;
             fy = (short)y;
         }
-        return new DirectiveDraft(posture, focus, target, mix, expand, fx, fy, ReadBool(d, "strong_mix"));
+        // S47 (M16-A-08): counter_minutes only means something for a counter mix; anything else is dropped, a number is clamped to 0..10
+        long cm = 0;
+        if (CounterHold.IsCounter(mix) && Loose(d, "counter_minutes", out cm)) cm = Math.Clamp(cm, 0, MaxCounterMinutes);
+        else cm = 0;
+        return new DirectiveDraft(posture, focus, target, mix, expand, fx, fy, ReadBool(d, "strong_mix") || cm > 0, (byte)cm);
     }
 
     private static bool ReadBool(JsonElement d, string name)
