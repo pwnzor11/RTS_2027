@@ -33,4 +33,6 @@ public enum AlertKind
     ProductionBlocked,
     /// <summary>M13-15: a harvester has been idle for a while.</summary>
     HarvesterIdle,
+    /// <summary>S47 cnc#33: an enemy unit came into view near one of your buildings.</summary>
+    EnemySpotted,
 }

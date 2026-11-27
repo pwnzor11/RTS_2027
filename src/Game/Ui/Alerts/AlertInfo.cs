@@ -36,6 +36,7 @@ public static class AlertInfo
         AlertKind.ProductionIdle => UiText.Get(UiText.AlertProductionIdle),
         AlertKind.ProductionBlocked => UiText.Get(UiText.AlertProductionBlocked),
         AlertKind.HarvesterIdle => UiText.Get(UiText.AlertHarvesterIdle),
+        AlertKind.EnemySpotted => "Enemy spotted",
         _ => kind.ToString(),
     };
 
@@ -43,7 +44,7 @@ public static class AlertInfo
     public static AlertTone Tone(AlertKind kind) => kind switch
     {
         AlertKind.BaseUnderAttack or AlertKind.UnitUnderAttack or AlertKind.HarvesterUnderAttack or AlertKind.BuildingLost or AlertKind.UnitLost => AlertTone.Danger,
-        AlertKind.LowPower or AlertKind.ProductionIdle or AlertKind.ProductionBlocked or AlertKind.HarvesterIdle => AlertTone.Warning,
+        AlertKind.LowPower or AlertKind.ProductionIdle or AlertKind.ProductionBlocked or AlertKind.HarvesterIdle or AlertKind.EnemySpotted => AlertTone.Warning,
         _ => AlertTone.Good,
     };
 
@@ -76,6 +77,7 @@ public static class AlertInfo
         AlertKind.LowPower => 30 * TicksPerSecond,
         AlertKind.ProductionIdle or AlertKind.ProductionBlocked or AlertKind.HarvesterIdle => 30 * TicksPerSecond,   // M13-15: a nag, not a siren
         AlertKind.SuperweaponReady or AlertKind.SuperweaponLaunched => 10 * TicksPerSecond,
+        AlertKind.EnemySpotted => 15 * TicksPerSecond,   // S47: one line per area, not one per scout
         _ => 2 * TicksPerSecond,
     };
 }

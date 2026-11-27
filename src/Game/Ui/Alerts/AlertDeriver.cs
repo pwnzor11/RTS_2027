@@ -13,10 +13,21 @@ namespace Rts.Game.Ui.Alerts;
 /// </summary>
 public sealed class AlertDeriver
 {
-    private readonly Func<UnitView, bool> _isHarvester;
+    /// <summary>S47 cnc#33: an enemy has to come into view within this many cells of one of your buildings to raise "Enemy spotted".</summary>
+    public const int SpotRadiusCells = 20;
 
-    /// <summary>Creates the deriver. <paramref name="isHarvester"/> tells whether a unit is a harvester (null = none is).</summary>
-    public AlertDeriver(Func<UnitView, bool>? isHarvester = null) => _isHarvester = isHarvester ?? (_ => false);
+    private readonly Func<UnitView, bool> _isHarvester;
+    private readonly Func<byte, bool> _isEnemy;
+
+    /// <summary>
+    /// Creates the deriver. <paramref name="isHarvester"/> tells whether a unit is a harvester (null = none is); <paramref name="isEnemy"/> tells
+    /// whether a player is hostile to the local player (null = none is, so no "Enemy spotted" alerts).
+    /// </summary>
+    public AlertDeriver(Func<UnitView, bool>? isHarvester = null, Func<byte, bool>? isEnemy = null)
+    {
+        _isHarvester = isHarvester ?? (_ => false);
+        _isEnemy = isEnemy ?? (_ => false);
+    }
 
     /// <summary>Appends the alerts for <paramref name="f"/> to <paramref name="alerts"/>; <paramref name="audio"/> are the sound events derived from the same frame.</summary>
     public void Derive(AudioFrame f, IReadOnlyList<AudioEvent> audio, List<GameAlert> alerts)
@@ -87,6 +98,15 @@ public sealed class AlertDeriver
             }
         }
 
+        // S47 cnc#33: an enemy unit that was not in view last step and now is, close to one of your buildings (one alert per step).
+        foreach (UnitView u in cur.Units)
+        {
+            if (u.Player == me || u.Underground || prevUnits.ContainsKey(u.Id) || !_isEnemy(u.Player)) continue;
+            if (!NearOwnBuilding(cur, me, u.Position)) continue;
+            alerts.Add(new GameAlert(AlertKind.EnemySpotted, tick, u.Position));
+            break;
+        }
+
         // Superweapons: charged this step, or fired this step.
         foreach (SuperweaponView s in cur.Superweapons)
         {
@@ -109,6 +129,19 @@ public sealed class AlertDeriver
                 break;
             }
         }
+    }
+
+    private static bool NearOwnBuilding(SimSnapshot s, byte me, LeptonCoord p)
+    {
+        long r = (long)SpotRadiusCells * SimConstants.LeptonsPerCell;
+        foreach (BuildingView b in s.Buildings)
+        {
+            if (b.Player != me || b.Ghost) continue;
+            LeptonCoord c = Centre(b);
+            if (Math.Abs(c.X - p.X) <= r && Math.Abs(c.Y - p.Y) <= r) return true;
+        }
+
+        return false;
     }
 
     private static LeptonCoord? BuildingPos(SimSnapshot s, EntityId id)
