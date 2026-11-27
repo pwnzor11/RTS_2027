@@ -23,6 +23,14 @@ public static class ProfileRecorder
         return MedalRules.NewNames(before, win, parSeconds);
     }
 
+    /// <summary>S47 U-12: merges a won drill run into the profile (atomic write, tolerant of a missing or old file) and returns the stored record.</summary>
+    public static DrillRecord RecordDrill(string path, string drillId, Rts.Scripting.DrillRun run, Rts.Scripting.DrillMedal medal)
+    {
+        PlayerProfile profile = PlayerProfile.Load(path).WithDrill(drillId, new DrillRecord((int)medal, run.Seconds, run.Lost));
+        profile.Save(path);
+        return profile.Drills.TryGetValue(drillId, out DrillRecord r) ? r : default;
+    }
+
     /// <summary>Records a finished skirmish against the AI.</summary>
     public static void RecordSkirmish(string path, Faction faction, int aiTier, bool won, int ticks, int armyValue) =>
         PlayerProfile.Load(path).WithSkirmish(faction, aiTier, won, ticks / Rts.Sim.Core.SimConstants.TicksPerSecond, armyValue).Save(path);

@@ -1,0 +1,55 @@
+# Drill: Build order (S47 U-12). One skill: Power, Refinery, War Factory, second Scraper, as fast as you can. Medal by time.
+# Map: test_32. Base in the north-west corner beside the pitchblende patch; the enemy only owns a far-away power plant.
+
+[mission]
+schema = 2
+title = "Drill: Build order"
+map = "test_32.map.toml"
+script = "mission.lua"
+briefing = "briefing.md"
+locale = "locale.toml"
+seed = 2027
+act = 1
+faction = "authority"
+
+# Medal limits (data, not code). Time in seconds, lower is better. Assumed values, confirm after a playtest.
+[drill]
+order = 1
+metric = "seconds"
+gold = 120
+silver = 165
+bronze = 240
+
+[starts_with]
+tech = ["auth_power", "auth_refinery", "auth_factory", "auth_scraper"]
+
+[[players]]
+slot = 0
+name = "Authority"
+role = "human"
+team = 0
+cash = 5200
+tech = ["auth_power", "auth_refinery", "auth_factory", "auth_scraper"]
+
+[[players]]
+slot = 1
+name = "Practice opposition"
+role = "ai"
+team = 1
+cash = 0
+
+[zones.patch]
+rect = [8, 5, 9, 6]
+
+[[actors]]
+type = "auth_conyard"
+player = 0
+cell = [3, 3]
+tag = "yard"
+
+# Keeps the opposition alive; nothing else is there.
+[[actors]]
+type = "auth_power"
+player = 1
+cell = [28, 28]
+tag = "anchor"

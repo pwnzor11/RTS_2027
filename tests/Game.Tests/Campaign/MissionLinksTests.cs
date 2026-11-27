@@ -24,7 +24,7 @@ public sealed class MissionLinksTests
             foreach (string folder in Directory.GetDirectories(Path.Combine(DataDir, "missions")))
             {
                 MissionDef def = MissionLoader.Load(folder);
-                if (def.Faction.Length == 0 || def.Id == "tut_01") continue;
+                if (def.Faction.Length == 0 || def.Id == "tut_01" || def.Drill is not null) continue;   // S47 U-12: drills are not in a campaign
                 var ids = svc.Campaign(def.Faction).Missions.Select(m => m.Id).ToList();
                 Assert.Contains(def.Id, ids);
                 foreach (string next in def.Next) Assert.Contains(next, ids);

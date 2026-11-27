@@ -14,7 +14,7 @@ public sealed class MainMenuModelTests
         IReadOnlyList<MainMenuEntry> entries = MainMenuModel.Build(hasSave: false);
 
         Assert.Equal(
-            new[] { "Continue", "Campaign", "Skirmish", "LAN Game", "Map Editor", "Replays", "Archive", "Profile", "How to Play", "Settings", "Quit" },
+            new[] { "Continue", "Campaign", "Drills", "Skirmish", "LAN Game", "Map Editor", "Replays", "Archive", "Profile", "How to Play", "Settings", "Quit" },
             entries.Select(e => e.Label));
         Assert.DoesNotContain(entries, e => e.Label.Contains("Sandbox", StringComparison.OrdinalIgnoreCase));
     }
@@ -91,6 +91,7 @@ public sealed class MainMenuModelTests
         Assert.Equal(MenuAction.Campaign, go.Action);
         Assert.Equal(MenuSounds.Select, go.SoundId);
 
+        lobby.Update(Press(Keys.Down), 1280, 720, 2);   // Drills (S47 U-12)
         lobby.Update(Press(Keys.Down), 1280, 720, 2);   // Skirmish
         lobby.Update(Press(Keys.Down), 1280, 720, 2);   // LAN Game
         Assert.Equal(MenuAction.LanGame, lobby.Entries[lobby.Selected].Action);
