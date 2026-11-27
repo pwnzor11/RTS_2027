@@ -1,0 +1,31 @@
+# Authority 07 "The Defector" locale. Speakers: Brigadier Wrenfield (leader_auth_wrenfield), Administrator Pell by teletype (leader_auth_pell),
+# Lieutenant Dray (leader_auth_dray), Thrall on the enemy net (leader_dir_thrall).
+# Voice lines are text only for now: there is no [voice] table, so no audio is looked up and a missing file can never error.
+"a7.start" = "Meet the defector at the Shaft Four spoil heaps, then bring him home alive."
+"a7.radio.pell" = "Teletype, Administrator Pell. A man who walks out of the ground unarmed deserves to arrive. Please see that he does."
+"a7.radio.start" = "Wrenfield. One man, one lamp, a lot of ash between us. Get to him before their shift changes."
+"a7.found" = "Lieutenant Dray is with the column. Take him home."
+"a7.radio.dray" = "Dray. Lieutenant, Shaft Four engineering. I am unarmed. I would prefer not to cross the ash on foot."
+"a7.radio.log" = "I hid the log in the culvert by the south-west bridge. If they find it first, they will know what I told you."
+"a7.radio.found" = "That is our man. Put him in the carrier and keep the lid shut. They will miss him within the half hour."
+"a7.alert" = "Shaft Four has missed its engineer. The Directorate is moving."
+"a7.radio.thrall" = "Shaft Four. One of ours has walked into the light. Bring him back. Gently, if possible."
+"a7.radio.alert" = "Their net is loud. The short bridge is closing hard. Use the long road if you have to."
+"a7.hunt1" = "Directorate hunters on the east road."
+"a7.radio.hunt1" = "Hunters out of the east. They are following the carrier. Do not stop for them."
+"a7.hunt2" = "Directorate hunters from the south."
+"a7.radio.hunt2" = "More from the south. Get him home, Commander, or get him behind something."
+"a7.log" = "The reactor log is recovered from the culvert."
+"a7.radio.thanks" = "Dray. You found it. Then they cannot say I told you nothing."
+"a7.win" = "Lieutenant Dray is across."
+"a7.radio.win" = "He is across. Get him a coat and a cup of something. Then we talk about tunnels."
+"a7.missed" = "The shift has changed. The defector has gone back down."
+"a7.lost.dray" = "Lieutenant Dray is dead. A dead defector is only a rumour."
+"a7.lost.column" = "The column is lost. Nobody is left to bring him home."
+
+# Objective and timer labels
+"a7.obj.reach" = "Meet the defector at the spoil heaps"
+"a7.obj.bring" = "Bring Lieutenant Dray back to the post alive"
+"a7.obj.log" = "Recover Dray's reactor log from the culvert"
+"a7.timer.rendezvous" = "Rendezvous"
+"a7.timer.alert" = "Shaft Four misses him"

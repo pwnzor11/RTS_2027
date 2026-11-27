@@ -1,7 +1,7 @@
 -- Expedition 04: The Fuel (schema 2, M8-12, the finale). Voice on the radio: Commissioner Strand (leader_exp_strand); cameos Fleet Admiral Aldersey, Dr. Roque and the Directorate's Voice (Larkin).
 -- Rules of this sandbox: integers only, callbacks are TOP-LEVEL named functions, script data lives in the global `state`.
 -- Flow: a Dredge Works on the ash field (the fuel) -> three Directorate columns march out of the redoubt gate (and the built-in AI is sent at the beachhead) ->
--- break the redoubt: its Shaft and its Sunrise Device. The reserve bunker in the far corner keeps the Directorate alive so only this script ends the mission.
+-- break the redoubt: its Shaft and its Sunrise Device. Player.KeepAlive keeps the Directorate alive (S47; it replaced a hidden reserve in the far corner) so only this script ends the mission.
 -- Enemy pressure scales by unit count only (D-061) plus the AI tier. Phases: ashore, done.
 
 local SPEAKER = "leader_exp_strand"
@@ -32,6 +32,7 @@ function OnInit()
   -- The redoubt's own AI plays at the chosen tier and stays home until the fuel is taken, then marches on the beachhead.
   AI.SetTier(1, Mission.Difficulty())
   AI.Defend(1, "redoubt")
+  Player.KeepAlive(1, true)   -- S47 C-06: the Directorate stays in the game after its last building (this replaced a hidden reserve vent), so only this script ends the mission
 
   -- The redoubt's Device is a story prop here: the script has no Sunrise moment, so keep its real charge from ever completing (S19 MIS-10).
   Actor.DelayCharge("device", 1000000000)
