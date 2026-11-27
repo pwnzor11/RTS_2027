@@ -26,6 +26,7 @@ public sealed class PlayerStore : ISimStatePart
         PowerOut = new int[Count];
         PowerUse = new int[Count];
         Defeated = new bool[Count];
+        KeepAlive = new bool[Count];
         Faction = new Faction[Count];
         Upgrades = new ulong[Count];
         HandicapPercent = new int[Count];
@@ -57,6 +58,11 @@ public sealed class PlayerStore : ISimStatePart
     public readonly int[] PowerOut;
     public readonly int[] PowerUse;
     public readonly bool[] Defeated;
+    /// <summary>
+    /// S47 C-06: mission hook (Lua Player.KeepAlive). While true the player is never marked Defeated by the no-buildings rule (UpdateDefeat) or the
+    /// no-rebuild rule. Default false. Saved and hashed in bit 1 of the Defeated byte, so a game that never sets it keeps its old bytes.
+    /// </summary>
+    public readonly bool[] KeepAlive;
     /// <summary>Faction per player (from the setup; constant).</summary>
     public readonly Faction[] Faction;
     /// <summary>Upgrade mask per player: bit i = SimRules.Upgrades[i] researched.</summary>
@@ -77,7 +83,7 @@ public sealed class PlayerStore : ISimStatePart
         for (int p = 0; p < Count; p++)
         {
             w.Write(Team[p]); w.Write(Cash[p]); w.Write(Stored[p]);
-            w.Write(PowerOut[p]); w.Write(PowerUse[p]); w.Write(Defeated[p]);
+            w.Write(PowerOut[p]); w.Write(PowerUse[p]); w.Write((byte)((Defeated[p] ? 1 : 0) | (KeepAlive[p] ? 2 : 0)));   // S47 C-06: bit 1 = KeepAlive
         }
         for (int p = 0; p < Count; p++) { w.Write((byte)Faction[p]); w.Write(Upgrades[p]); }   // M3-01, appended
         if (_hasHandicap) for (int p = 0; p < Count; p++) w.Write(HandicapPercent[p]);   // S19 (M13-15): only when on, so other games keep their bytes
@@ -93,7 +99,10 @@ public sealed class PlayerStore : ISimStatePart
             byte team = r.ReadByte();
             if (team != Team[p]) throw new InvalidDataException("players team mismatch.");
             Cash[p] = r.ReadInt32(); Stored[p] = r.ReadInt32();
-            PowerOut[p] = r.ReadInt32(); PowerUse[p] = r.ReadInt32(); Defeated[p] = r.ReadBoolean();
+            PowerOut[p] = r.ReadInt32(); PowerUse[p] = r.ReadInt32();
+            byte flags = r.ReadByte();
+            if (flags > 3) throw new InvalidDataException("players flags.");
+            Defeated[p] = (flags & 1) != 0; KeepAlive[p] = (flags & 2) != 0;
         }
         for (int p = 0; p < Count; p++)
         {

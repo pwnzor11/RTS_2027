@@ -52,6 +52,8 @@ public sealed class ApiContractTests
         ("AI.Wave", "1, 'w1', 'z'", "1, 'w 1', 'z'"),
         ("AI.Clear", "1", "0"),
         ("Player.Funds", "0", "99"),
+        ("Player.KeepAlive", "1, true", "99, true"),
+        ("Player.IsKeptAlive", "1", "99"),
         ("Actor.Charged", "'t1'", "'nope'"),
         ("Actor.DelayCharge", "'sw', 500", "'t1', 500"),
         ("Actor.CountPacked", "0, 'lb_mother_rig'", "0, 'lb_mother_rig_packed'"),
