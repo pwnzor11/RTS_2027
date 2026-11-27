@@ -9,6 +9,8 @@ public enum MenuAction
     Continue,
     /// <summary>Campaign (New / Load).</summary>
     Campaign,
+    /// <summary>S47 U-12: the drill missions with medals.</summary>
+    Drills,
     /// <summary>Skirmish (New / Load).</summary>
     Skirmish,
     /// <summary>LAN game: the browser, host and join (M9).</summary>
@@ -47,6 +49,7 @@ public static class MainMenuModel
     {
         new MainMenuEntry(MenuAction.Continue, "Continue", hasSave, hasSave ? null : NoSaves),
         new MainMenuEntry(MenuAction.Campaign, "Campaign", true),
+        new MainMenuEntry(MenuAction.Drills, "Drills", true),
         new MainMenuEntry(MenuAction.Skirmish, "Skirmish", true),
         new MainMenuEntry(MenuAction.LanGame, "LAN Game", true),
         new MainMenuEntry(MenuAction.MapEditor, "Map Editor", true),

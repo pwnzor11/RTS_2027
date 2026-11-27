@@ -164,6 +164,7 @@ public sealed class MainMenuScreen : IScreen
         {
             case MenuAction.Continue: Continue(); break;
             case MenuAction.Campaign: _s.Screens.Push(new CampaignScreen(_s)); break;
+            case MenuAction.Drills: _s.Screens.Push(new DrillsScreen(_s)); break;
             case MenuAction.Skirmish: _s.Screens.Push(new ModeScreen(_s, SaveKind.Skirmish)); break;
             case MenuAction.LanGame: _s.Screens.Push(new LanBrowserScreen(_s)); break;
             case MenuAction.MapEditor: _s.Screens.Push(new Editor.MapEditorScreen(_s, path => _s.Screens.Push(new SkirmishSetupScreen(_s, new MapChoice(path, null))))); break;
