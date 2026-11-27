@@ -175,4 +175,6 @@ public enum GameAction
     HideHud,
     /// <summary>QOL-19: while a sidebar cameo is hovered, open its Archive entry.</summary>
     CameoArchive,
+    /// <summary>U-12: open or close the tech-tree viewer.</summary>
+    TechTree,
 }

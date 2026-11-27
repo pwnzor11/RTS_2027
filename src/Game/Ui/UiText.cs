@@ -162,6 +162,81 @@ public static class UiText
     /// <summary>M13-15: skirmish setup, hint under the panel while an options row is highlighted.</summary>
     public const string OptHint = "ui.setup.options_hint";
 
+    /// <summary>Pause-menu entry and Archive entry that open the tech-tree viewer.</summary>
+    public const string TechTreeMenu = "ui.techtree.menu";
+
+    /// <summary>Title of the tech-tree overlay. Placeholder: <c>{faction}</c>.</summary>
+    public const string TechTreeTitle = "ui.techtree.title";
+
+    /// <summary>Key line of the tech-tree overlay. Placeholder: <c>{key}</c> (the Tech tree key).</summary>
+    public const string TechTreeHint = "ui.techtree.hint";
+
+    /// <summary>U-12: status word, a structure you own or an upgrade you have researched.</summary>
+    public const string TechTreeBuilt = "ui.techtree.built";
+
+    /// <summary>U-12: status word, you can queue it now.</summary>
+    public const string TechTreeAvailable = "ui.techtree.available";
+
+    /// <summary>U-12: status word, a prerequisite is missing.</summary>
+    public const string TechTreeLocked = "ui.techtree.locked";
+
+    /// <summary>U-12: status word, the mission does not allow it.</summary>
+    public const string TechTreeMissionLocked = "ui.techtree.mission_locked";
+
+    /// <summary>U-12: tooltip line. Placeholder: <c>{cost}</c> (credits).</summary>
+    public const string TechTreeCost = "ui.techtree.cost";
+
+    /// <summary>U-12: tooltip line. Placeholder: <c>{time}</c> (seconds, such as 12s).</summary>
+    public const string TechTreeTime = "ui.techtree.time";
+
+    /// <summary>U-12: tooltip line. Placeholder: <c>{list}</c> (names, comma separated; one of each group is enough).</summary>
+    public const string TechTreeNeeds = "ui.techtree.needs";
+
+    /// <summary>U-12: tooltip line for a node without prerequisites.</summary>
+    public const string TechTreeNeedsNothing = "ui.techtree.needs_nothing";
+
+    /// <summary>U-12: tooltip line. Placeholder: <c>{list}</c> (names, comma separated).</summary>
+    public const string TechTreeUnlocks = "ui.techtree.unlocks";
+
+    /// <summary>U-12: tooltip line for a node that nothing needs.</summary>
+    public const string TechTreeUnlocksNothing = "ui.techtree.unlocks_nothing";
+
+    /// <summary>U-12: tooltip kind.</summary>
+    public const string TechTreeKindStructure = "ui.techtree.kind.structure";
+
+    /// <summary>U-12: tooltip kind.</summary>
+    public const string TechTreeKindDefence = "ui.techtree.kind.defence";
+
+    /// <summary>U-12: tooltip kind.</summary>
+    public const string TechTreeKindInfantry = "ui.techtree.kind.infantry";
+
+    /// <summary>U-12: tooltip kind.</summary>
+    public const string TechTreeKindVehicle = "ui.techtree.kind.vehicle";
+
+    /// <summary>U-12: tooltip kind.</summary>
+    public const string TechTreeKindAircraft = "ui.techtree.kind.aircraft";
+
+    /// <summary>U-12: tooltip kind.</summary>
+    public const string TechTreeKindUpgrade = "ui.techtree.kind.upgrade";
+
+    /// <summary>U-12: tooltip line naming the tech tier. Placeholder: <c>{tier}</c>.</summary>
+    public const string TechTreeColumn = "ui.techtree.column";
+
+    /// <summary>U-12: shown when a faction has no buildable types.</summary>
+    public const string TechTreeEmpty = "ui.techtree.empty";
+
+    /// <summary>U-12: faction name in the tech-tree title.</summary>
+    public const string FactionAuthority = "ui.techtree.faction.authority";
+
+    /// <summary>U-12: faction name in the tech-tree title.</summary>
+    public const string FactionDirectorate = "ui.techtree.faction.directorate";
+
+    /// <summary>U-12: faction name in the tech-tree title.</summary>
+    public const string FactionLeftBehind = "ui.techtree.faction.left_behind";
+
+    /// <summary>U-12: faction name in the tech-tree title.</summary>
+    public const string FactionExpedition = "ui.techtree.faction.expedition";
+
     private static readonly Dictionary<string, string> English = new(StringComparer.Ordinal)
     {
         [SupplyLabel] = "Supply",
@@ -215,6 +290,31 @@ public static class UiText
         [OptCreditsButton] = "Cash",
         [OptStartButton] = "Army",
         [OptHint] = "(HC handicap, Cash start credits, Army start units)",
+        [TechTreeMenu] = "Tech tree",
+        [TechTreeTitle] = "TECH TREE - {faction}",
+        [TechTreeHint] = "Wheel / arrows: scroll   Hover: details   {key} or Esc: close",
+        [TechTreeBuilt] = "Built",
+        [TechTreeAvailable] = "Available",
+        [TechTreeLocked] = "Locked",
+        [TechTreeMissionLocked] = "Locked in this mission",
+        [TechTreeCost] = "Cost: {cost}",
+        [TechTreeTime] = "Build time: {time}",
+        [TechTreeNeeds] = "Needs: {list}",
+        [TechTreeNeedsNothing] = "Needs: nothing",
+        [TechTreeUnlocks] = "Unlocks: {list}",
+        [TechTreeUnlocksNothing] = "Unlocks: nothing",
+        [TechTreeKindStructure] = "Structure",
+        [TechTreeKindDefence] = "Defence",
+        [TechTreeKindInfantry] = "Infantry",
+        [TechTreeKindVehicle] = "Vehicle",
+        [TechTreeKindAircraft] = "Aircraft",
+        [TechTreeKindUpgrade] = "Upgrade",
+        [TechTreeColumn] = "Tier {tier}",
+        [TechTreeEmpty] = "No tech tree for this faction.",
+        [FactionAuthority] = "Authority",
+        [FactionDirectorate] = "Directorate",
+        [FactionLeftBehind] = "Left Behind",
+        [FactionExpedition] = "Expedition",
     };
 
     /// <summary>The English text of a key, or the key itself when it is unknown.</summary>

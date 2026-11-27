@@ -141,8 +141,24 @@ public sealed class GameScreen : IScreen, IFocusPausable
     /// <remarks>Only a single-player game the player is playing (skirmish vs AI, or a campaign mission) and has not paused with P. A LAN match never pauses on focus loss (M9).</remarks>
     public IScreen? CreateFocusPause() =>
         _lan is null && _sim is { Paused: false } && !_spectatorMode && (_skirmishMode || _mission is not null)
-            ? new PauseScreen(_s, _restart, SaveTarget())
+            ? new PauseScreen(_s, _restart, SaveTarget(), MakeTechTree)
             : null;
+
+    /// <summary>U-12: the tech-tree viewer for the local player's faction (statuses read live from the sim; a mission's tech gating shows as locked), or null with no sim.</summary>
+    private IScreen? MakeTechTree()
+    {
+        if (_sim is null) return null;
+        SimSnapshotSource src = _sim;
+        byte me = Me;
+        var model = Rts.Game.TechTree.TechTreeModel.Build(src.Rules, src.Sim.HudFor(me).Faction);
+        var owned = new HashSet<int>();
+        return new TechTreeScreen(_s, model, () =>
+        {
+            owned.Clear();
+            foreach (BuildingView b in src.Current.Buildings) if (b.Player == me && !b.Ghost && b.Health > 0) owned.Add(b.TypeIndex);
+            return model.StatusFor(src.Sim.HudFor(me), owned, me, src.Sim.UnlockFilter);
+        });
+    }
 
     /// <summary>The skirmish choices this game was started with, or null for the plain sandbox and demo.</summary>
     public SkirmishSettings? Skirmish { get; }
@@ -506,7 +522,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
         if (input.ConsumePressed(Keys.Escape))
         {
             // M9: the LAN menu opens over the running match (no pause, save or restart there)
-            _s.Screens.Push(_lan is null ? new PauseScreen(_s, _restart, SaveTarget()) : new LanCover(new LanMenuScreen(_s)));
+            _s.Screens.Push(_lan is null ? new PauseScreen(_s, _restart, SaveTarget(), MakeTechTree) : new LanCover(new LanMenuScreen(_s)));
             return;
         }
 
@@ -553,6 +569,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
         if (!(typing || chatTyping) && input.ConsumePressed(GameAction.HideHud)) _hudHidden = !_hudHidden;   // QOL-18
         if (!(typing || chatTyping) && _sidebar?.HoveredArchiveId is { } archiveId && input.ConsumePressed(GameAction.CameoArchive))
             _s.Screens.Push(new ArchiveScreen(_s, archiveId));   // QOL-19
+        if (!(typing || chatTyping) && input.ConsumePressed(GameAction.TechTree) && MakeTechTree() is { } techTree) _s.Screens.Push(techTree);   // U-12
         HandleSaveKeys(input, typing || chatTyping);   // D-205: F5 quicksave, F9 quickload
         TickAutosave();                                // D-205
         TickStartCue();                                // D-205
