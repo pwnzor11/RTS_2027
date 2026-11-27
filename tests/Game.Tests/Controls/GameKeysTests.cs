@@ -14,6 +14,7 @@ public sealed class GameKeysTests
     private static readonly string[] InputSources =
     {
         "src/Game/Screens/GameScreen.cs",
+        "src/Game/RtsGame.cs",   // S47: the screenshot and full-screen keys are read here, before any screen
         "src/Game/Ui/Sidebar/SidebarPanel.cs",
         "src/Game/Controls/OrderController.cs",
         "src/Game/Ui/Spectator/SpectatorController.cs",
