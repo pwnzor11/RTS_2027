@@ -125,6 +125,7 @@ public static class GameKeys
         new(GameAction.ZoomIn, "zoom_in", Camera, "Zoom in (about the middle of the view)", Keys.OemPipe),
         new(GameAction.ZoomOut, "zoom_out", Camera, "Zoom out (about the middle of the view)", Keys.OemOpenBrackets),
         new(GameAction.CycleSubtype, "cycle_subtype", Selection, "Cycle the unit types of a mixed selection (Deploy, Pack and stances then act on one type)", Keys.OemTilde),
+        new(GameAction.Screenshot, "screenshot", System, "Save a screenshot (PNG in RTS_2027/screenshots in your application-data folder)", Keys.PrintScreen, KeyContext.Both),
         new(GameAction.PlaceLast, "place_last", System, "Place the last structure again (Shift + drag lays a row)", Keys.OemCloseBrackets),
         new(GameAction.RepairAll, "repair_all", System, "Repair every damaged building", Keys.OemSemicolon),
         new(GameAction.SellMarked, "sell_marked", System, "Sell the marked buildings (Shift + click marks; press twice)", Keys.Delete),
@@ -204,7 +205,7 @@ public static class GameKeys
             A(GameAction.DebugStep), A(GameAction.DebugSpectator),
             A(GameAction.SpecView), A(GameAction.SpecSpeed1), A(GameAction.SpecSpeed2), A(GameAction.SpecSpeed4), A(GameAction.SpecSpeed8),
             A(GameAction.SpecDetail),
-            A(GameAction.ObjJump), A(GameAction.ObjCycle), A(GameAction.ObjList), A(GameAction.DecorToggle), A(GameAction.HideHud), A(GameAction.CameoArchive),
+            A(GameAction.ObjJump), A(GameAction.ObjCycle), A(GameAction.ObjList), A(GameAction.DecorToggle), A(GameAction.HideHud), A(GameAction.Screenshot), A(GameAction.CameoArchive),
         };
     }
 }

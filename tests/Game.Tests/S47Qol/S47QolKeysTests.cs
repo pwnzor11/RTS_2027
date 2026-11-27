@@ -12,6 +12,7 @@ public sealed class S47QolKeysTests
     [InlineData(GameAction.ZoomIn, Keys.OemPipe)]
     [InlineData(GameAction.ZoomOut, Keys.OemOpenBrackets)]
     [InlineData(GameAction.CycleSubtype, Keys.OemTilde)]
+    [InlineData(GameAction.Screenshot, Keys.PrintScreen)]
     public void A_new_action_has_its_default_key_and_is_listed(GameAction action, Keys key)
     {
         Assert.Equal(key, GameKeys.InfoOf(action).Default);
