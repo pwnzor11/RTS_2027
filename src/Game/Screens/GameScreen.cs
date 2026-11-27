@@ -1132,6 +1132,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
                     _selection.Clear();
                     _clickTap.Reset();
                     SelectBuildingAt(Camera.CellAt(_camera.WorldFromScreen(mouse)));
+                    if (!_selectedBuilding.IsNone && _buildingTap.Tap(_selectedBuilding, _nowMs)) MarkSameTypeOnScreen();   // S47 cnc#7: double-click a building = all of its type on screen
                 }
             }
 
@@ -1151,6 +1152,8 @@ public sealed class GameScreen : IScreen, IFocusPausable
             if (_sim is not null && !_selectedBuilding.IsNone && _selectedBuildingProduces && _sim.Map.Contains(cell))
             {
                 _sim.Host.Issue(SidebarCommands.Rally(Me, _selectedBuilding, cell));
+                foreach (EntityId id in _marked)   // S47: the marked buildings of the same type take the same rally point
+                    if (id != _selectedBuilding && RallyTypeMatches(id)) _sim.Host.Issue(SidebarCommands.Rally(Me, id, cell));
             }
             else
             {
@@ -1863,6 +1866,26 @@ public sealed class GameScreen : IScreen, IFocusPausable
     }
 
     // QOL-15: Shift + click on an own building marks (or unmarks) it for the sell key.
+    private readonly TapTracker<EntityId> _buildingTap = new();
+
+    private bool RallyTypeMatches(EntityId id)
+    {
+        foreach (BuildingView b in _source.Current.Buildings)
+            if (b.Id == id) return !b.Ghost && b.Player == Me && b.TypeIndex == _selectedBuildingType;
+        return false;
+    }
+
+    // S47 cnc#7 for buildings: a double-click on an own building marks every other own building of the same type that is on screen
+    // (the marks are the ones Shift + click makes: sell key, structure groups and, now, the rally point).
+    private void MarkSameTypeOnScreen()
+    {
+        if (_sim is null || !_skirmishMode || _spectatorMode || _selectedBuildingType < 0) return;
+        Viewport map = MapViewport();
+        Vector2 topLeft = _camera.WorldFromScreen(new Point(0, 0));
+        Vector2 bottomRight = _camera.WorldFromScreen(new Point(map.Width, map.Height));
+        foreach (EntityId id in BuildingMarks.SameTypeOnScreen(_source.Current.Buildings, Me, _selectedBuildingType, _selectedBuilding, topLeft, bottomRight)) _marked.Add(id);
+    }
+
     private void ToggleMark(CellCoord cell)
     {
         if (_sim is null || !_skirmishMode || _spectatorMode) return;
