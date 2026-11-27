@@ -169,10 +169,3 @@ cell = [44, 24]
 type = "auth_jeep"
 player = 1
 cell = [41, 29]
-
-# The reserve: a relay post in the far north-east corner the script never sends anyone to. It keeps the team alive until the script wins.
-[[actors]]
-type = "auth_power"
-player = 1
-cell = [70, 13]
-tag = "reserve"

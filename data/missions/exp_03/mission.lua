@@ -1,7 +1,7 @@
 -- Expedition 03: The Fleet Reaches the Coast (schema 2, M8-12). Voice on the radio: Commissioner Strand (leader_exp_strand); cameos Fleet Admiral Aldersey, Air Marshal Kell and the Directorate's Voice (Larkin).
 -- Rules of this sandbox: integers only, callbacks are TOP-LEVEL named functions, script data lives in the global `state`.
 -- Flow: raise a Flight Deck and a SAM Mount -> the carrier group arrives by sea and anchors in the cove -> hold against two fronts (an Authority column from the north,
--- a Directorate column from the south dunes) and an Authority air raid. Enemy pressure scales by unit count only (D-061). Two far reserve posts keep the enemy teams alive.
+-- a Directorate column from the south dunes) and an Authority air raid. Enemy pressure scales by unit count only (D-061). Player.KeepAlive keeps both enemy teams alive.
 -- Phases: wait (before the carrier group), cove (carrier anchored), done.
 
 local SPEAKER = "leader_exp_strand"
@@ -11,6 +11,9 @@ local AIR_EDGE = { x = 0, y = 30 }
 local HOLD = { x = 17, y = 45 }
 
 function OnInit()
+  -- S47 C-06: both enemy players stay in the game after their last building (this replaced two hidden far reserve posts), so only this script ends the mission
+  Player.KeepAlive(1, true)
+  Player.KeepAlive(2, true)
   state.phase = "wait"
   state.arrived = false
   state.deck = false

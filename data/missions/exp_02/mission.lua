@@ -1,7 +1,7 @@
 -- Expedition 02: The Supply Line (schema 2, M8-12). Voice on the radio: Commissioner Strand (leader_exp_strand); cameos Dr. Roque and Brigadier Wrenfield.
 -- Rules of this sandbox: integers only, callbacks are TOP-LEVEL named functions, script data lives in the global `state`.
 -- Flow: raise the Anchorage on the north shore -> two convoys sail in -> hold the landing against three Authority columns -> break the garrison on the coast road.
--- The Authority reserve (a relay post in the far corner) keeps the enemy team alive so only this script ends the mission. Enemy pressure scales by unit count only (D-061).
+-- Player.KeepAlive keeps the enemy team alive (S47; it replaced a hidden relay post in the far corner) so only this script ends the mission. Enemy pressure scales by unit count only (D-061).
 
 local SPEAKER = "leader_exp_strand"
 local SEA_EDGE = { x = 13, y = 0 }
@@ -31,6 +31,7 @@ function OnInit()
   -- The garrison stays home; the response comes from the script (unit count by tier, D-061).
   AI.SetTier(1, Mission.Difficulty())
   AI.Defend(1, "garrison")
+  Player.KeepAlive(1, true)   -- S47 C-06: the Authority team stays in the game after its last building, so only this script ends the mission
   GarrisonExtras()
 
   Mission.Timer("col1", 1200, WaveOne, "e2.timer.col1")
