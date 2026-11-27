@@ -12,6 +12,7 @@ namespace Rts.Data.MapGen;
 /// <see cref="StartRowShift"/> (M13-33, optional, 0 = off, mirror_x only): the two starts sit this many cells above the middle row. The sim turns a
 /// refinery dock 180 degrees for a building in the south half (M4-16) while the AI places its lanes by the unturned dock, so a base that straddles the
 /// middle row gets a dock facing its own conyard; the shift keeps the base in the north half.
+/// <see cref="Layout2"/> (S47 A-06, optional <c>[biome.&lt;key&gt;.layout2]</c> table): overrides of the layout-2 defaults; null = the built-in defaults of <see cref="BiomeCatalog.Layout2FieldsFor"/>.
 /// </summary>
 public sealed record BiomeParams(
     string Key,
@@ -39,4 +40,5 @@ public sealed record BiomeParams(
     int FieldDensityMax,
     int Ruins,
     DecorParams Decor,
-    int StartRowShift = 0);
+    int StartRowShift = 0,
+    Layout2Fields? Layout2 = null);
