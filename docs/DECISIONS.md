@@ -2437,3 +2437,45 @@ Rocketeer, Marksman, Engineer) `rad_resist_permille` 0 -> 400; `auth_rifle` dama
 2/12 with the new numbers). docs/balance/s46_balance.md. **Alternatives:** tier-3 focus fire off (Q-93 b); Rifle 10 (Authority v Left Behind +14);
 Conscript 90 (Directorate v Left Behind -9); Delver 880 (Directorate much stronger, an AI effect); Directorate rockets v Light 85 (+20 for the
 Directorate, a cliff). **Status:** assumed — confirm (USER_CHECKS session 46)
+
+### D-331 · 2026-11-26 · Session 47: s44-s46 values confirmed
+**Decision:** owner confirmed D-322, D-326, D-327 and D-330 as landed. **Why:** owner, s47 opening batch. **Alternatives:** review one by one.
+**Status:** confirmed (the USER_CHECKS s44-s46 play-checks stay for the owner's next play).
+
+### D-332 · 2026-11-26 · Session 47: build all of M16-06 now
+**Decision:** owner: "do it all" — C-06, M-28, C-02, U-12, U-13, B-01..B-03, A-06, A-08/A-09 this session; heavy work goes to the cluster.
+**Why:** owner. **Alternatives:** pick one or two items (the briefing's recommendation was C-06 + a C-02 design round).
+
+### D-333 · 2026-11-26 · Session 47: campaign expansion is outline first, one pilot
+**Decision:** C-02 is designed as a full outline with story beats for owner review (docs/design/22_campaign_expansion.md), and ONE pilot mission
+is built this session (auth_07 "The Defector"). **Why:** owner (recommended option). **Alternatives:** 2 per faction now; design only.
+
+### D-334 · 2026-11-26 · Session 47: per-map balance unfrozen
+**Decision:** D-310's freeze is lifted for B-01..B-03. Rules as in s46: paired screens, decide on 512 games, campaign sweep stays 45/45 (D-222);
+map levers (data/mapgen) first, unit numbers only if needed; the six pairings stay inside 40-60; goal all 24 rows inside 35-65.
+**Why:** owner (recommended option). **Alternatives:** map data only; keep the freeze.
+
+### D-335 · 2026-11-26 · Session 47: layout 2 is finished, stays opt-in
+**Decision:** A-06: tune map layout 2 toward the same gate (pairings 40-60, rows 25-75 then 35-65); it stays a lobby option, layout 1 stays default.
+**Why:** owner (recommended option). **Alternatives:** finish and make it the default; drop it.
+
+### D-336 · 2026-11-26 · Session 47: QoL pick by the lead
+**Decision:** U-13: the lead picks about 15 QoL items (classic C&C habits first), owner reviews them in play
+(docs/reviews/2026-11-26_s47_qol_pick.md). **Why:** owner (recommended option). **Alternatives:** show the list first; build them all.
+
+### D-337 · 2026-11-26 · Session 47: campaign outline answers Q1-Q4
+**Decision:** 12 missions per faction, all required (no cut line); the four campaigns run in parallel (no mirrored shared battles; story echoes
+only); Lt. Dray defects in act 2 (Authority play position 5, the pilot auth_07); unlocks from new missions carry into the later built missions,
+followed by a campaign re-sweep and tier retunes. Outline Q5-Q9 and the Wrenfield lore conflict stay open (OPEN_QUESTIONS Q-94..Q-99).
+**Why:** owner. **Alternatives:** 12 with a cut line or 10; mirrored pairs or hard flags; Dray in act 3/4; no carry-over or a re-spread climb.
+
+### D-338 · 2026-11-26 · Session 47: wave 1 choices (assumed — confirm)
+**Decision:** (1) Player.KeepAlive is stored in bit 1 of the players part's Defeated byte (no new part; SaveVersion stays 16); exp_02, exp_03,
+exp_04 drop their hidden reserve buildings for Player.KeepAlive (those were power plants / a reactor vent; re-swept). (2) M-28: the spatial index
+covers AcquireTarget only (start-of-tick snapshot); splash and sonar/stealth/blackout/aura scans keep the full walk (they read live positions);
+no hash moved. (3) Keys: zoom out `[`, zoom in `\`, cycle selected types backquote, screenshot PrintScreen, full screen Alt+Enter, tech tree `/`.
+(4) Drill medal limits: build order 120/165/240 s; hold the line lost ≤4/6/9; raid 95/130/190 s keeping 5/4/3 of 6. (5) auth_07: spec numbers
+as written, campaign order auth_01, auth_02, auth_07, auth_03, auth_04, par placeholder until the sweep. (6) LLM: counter_minutes 0-10;
+order status near = 5 cells, failed = army under 40 % of launch value or no arrival in 5 min; the random control gives 3 of 4 counter calls a
+1-10 min hold. (7) Layout 2: optional [biome.<key>.layout2] keys (defaults = today; no hash moved).
+**Why:** helper choices where no doc gave a value. **Status:** assumed — confirm.

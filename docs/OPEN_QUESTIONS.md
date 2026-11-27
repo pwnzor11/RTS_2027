@@ -4,7 +4,12 @@ Context and trade-offs for every question are in `docs/research/00_SYNTHESIS.md`
 file cited after each question. Recommendations are the lead's, from the research.
 
 ## Open
-(none)
+- ⚪ Q-94 · Campaign outline Q5: upgrades are not mission-gated today (CanResearch ignores UnlockFilter). (a) leave it, (b) **gate them all as mission rewards (small code package)**, (c) gate tier 3 only. docs/design/22_campaign_expansion.md §1.
+- ⚪ Q-95 · Outline Q6: maps for the 32 new missions. (a) reuse the 3 hand maps, (b) **add 3 new frozen-and-edited maps (rustbelt_mill, tern_point, annex_foothills)**, (c) one map per mission.
+- ⚪ Q-96 · Outline Q7: C-03 choice points. (a) none, (b) **reserve slots at missions 6 and 10 per faction, written as dilemmas**, (c) build one now.
+- ⚪ Q-97 · Outline Q8: when the Left Behind and Expedition campaigns open. (a) **keep the current ids (no data change)**, (b) move to the new act ends, (c) open all.
+- ⚪ Q-98 · Outline Q9: leader Archive secrets as story beats. (a) open, (b) **hinted on screen, the Archive entry confirms**, (c) Archive only.
+- ⚪ Q-99 · Lore: Wrenfield is "Hester / her brother" in docs/lore/leaders.md but "his brother" in left_behind.md. Which is right?
 
 ## Answered
 - Q-93 · 2026-11-26 · Owner (s46): tune with unit numbers on paired screens, decide on 512 games → D-330 (gate met; numbers assumed — confirm).
