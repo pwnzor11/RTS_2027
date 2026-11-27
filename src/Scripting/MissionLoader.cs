@@ -89,7 +89,24 @@ public static class MissionLoader
             Locale = schema >= 2 && m.ContainsKey("locale") ? LoadLocale(folder, Str(m, "locale")) : MissionLocale.Empty,
             StartsWith = schema >= 2 ? TechList(root, "starts_with") : System.Array.Empty<string>(),
             UnlocksOnWin = schema >= 2 ? TechList(root, "unlocks_on_win") : System.Array.Empty<string>(),
+            Drill = root.ContainsKey("drill") ? ParseDrill(schema, Table(root, "drill")) : null,
         };
+    }
+
+    /// <summary>S47 U-12: <c>[drill]</c> = order, metric ("seconds" or "lost"), gold / silver / bronze limits and the optional keep_* minimums.</summary>
+    private static DrillDef ParseDrill(int schema, TomlTable d)
+    {
+        if (schema < 2) throw new InvalidDataException("[drill] needs schema = 2 in [mission]");
+        string metric = d.ContainsKey("metric") ? Str(d, "metric") : "seconds";
+        if (metric is not ("seconds" or "lost")) throw new InvalidDataException($"[drill] metric must be \"seconds\" or \"lost\", got '{metric}'");
+        int min = metric == "seconds" ? 1 : 0;
+        int gold = IntIn(d, "gold", min, 36000), silver = IntIn(d, "silver", min, 36000), bronze = IntIn(d, "bronze", min, 36000);
+        if (gold > silver || silver > bronze) throw new InvalidDataException("[drill] limits must satisfy gold <= silver <= bronze");
+        int kg = d.ContainsKey("keep_gold") ? IntIn(d, "keep_gold", 0, 1000) : 0;
+        int ks = d.ContainsKey("keep_silver") ? IntIn(d, "keep_silver", 0, 1000) : 0;
+        int kb = d.ContainsKey("keep_bronze") ? IntIn(d, "keep_bronze", 0, 1000) : 0;
+        if (kg < ks || ks < kb) throw new InvalidDataException("[drill] keep minimums must satisfy keep_gold >= keep_silver >= keep_bronze");
+        return new DrillDef(d.ContainsKey("order") ? IntIn(d, "order", 1, 99) : 99, metric, gold, silver, bronze, kg, ks, kb);
     }
 
     /// <summary>The highest mission schema this build reads.</summary>

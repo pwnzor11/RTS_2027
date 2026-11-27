@@ -1,0 +1,99 @@
+# Drill: Hold the line (S47 U-12). One skill: hold a chokepoint with a fixed force against three scripted waves. Medal by units and structures lost.
+# Map: test_32. The walled yard in the middle has a gate on its east side (cells 23, 17-19). Your force stands just inside it.
+
+[mission]
+schema = 2
+title = "Drill: Hold the line"
+map = "test_32.map.toml"
+script = "mission.lua"
+briefing = "briefing.md"
+locale = "locale.toml"
+seed = 2027
+act = 1
+faction = "authority"
+
+# Medal limits (data, not code). Own units plus structures lost, lower is better. Assumed values, confirm after a playtest.
+[drill]
+order = 2
+metric = "lost"
+gold = 1
+silver = 3
+bronze = 6
+
+[starts_with]
+tech = []
+
+[[players]]
+slot = 0
+name = "Authority"
+role = "human"
+team = 0
+cash = 0
+tech = []
+
+[[players]]
+slot = 1
+name = "Raiders"
+role = "ai"
+team = 1
+cash = 0
+
+# Your force stands here.
+[zones.line]
+rect = [18, 15, 22, 21]
+
+# The east gate.
+[zones.gate]
+rect = [23, 17, 23, 19]
+
+# The raiders arrive here, outside the gate.
+[zones.spawn]
+rect = [27, 16, 30, 20]
+
+[[actors]]
+type = "auth_power"
+player = 0
+cell = [17, 18]
+tag = "plant"
+
+[[actors]]
+type = "auth_turret"
+player = 0
+cell = [21, 15]
+
+[[actors]]
+type = "auth_rifleman"
+player = 0
+cell = [20, 16]
+
+[[actors]]
+type = "auth_rifleman"
+player = 0
+cell = [20, 17]
+
+[[actors]]
+type = "auth_rifleman"
+player = 0
+cell = [20, 19]
+
+[[actors]]
+type = "auth_rifleman"
+player = 0
+cell = [20, 20]
+
+[[actors]]
+type = "auth_rifleman"
+player = 0
+cell = [19, 18]
+
+[[actors]]
+type = "auth_tank"
+player = 0
+cell = [21, 17]
+
+# Keeps the raiders' team alive between waves; nothing else is there.
+[[actors]]
+type = "auth_power"
+player = 1
+cell = [28, 28]
+tag = "anchor"

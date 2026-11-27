@@ -1,0 +1,8 @@
+# Drill: Build order text by key.
+"db.obj.refinery" = "Build an Ashfall Refinery"
+"db.obj.scrapers" = "Have 2 Scrapers"
+"db.obj.factory" = "Build a War Factory"
+"db.start" = "Go. Power, Refinery, War Factory, then a second Scraper."
+"db.done" = "Build order complete."
+
+[voice]

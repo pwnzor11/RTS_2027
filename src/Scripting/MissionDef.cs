@@ -86,6 +86,9 @@ public sealed class MissionDef
     /// <summary>The par time in seconds (<c>par_seconds</c> in [mission], 60..36000, D-289), or 0 = no par (the timer missions and the tutorial).</summary>
     public int ParSeconds { get; init; }
 
+    /// <summary>S47 U-12: the drill's medal thresholds (<c>[drill]</c> in mission.toml), or null for an ordinary mission. Needs schema 2.</summary>
+    public DrillDef? Drill { get; init; }
+
     /// <summary>The mission's folder (<c>data/missions/&lt;id&gt;</c>) as loaded; empty for a hand-made definition. S19 MIS-12 uses it to find the data folder's Archive.</summary>
     public string Folder { get; init; } = "";
 

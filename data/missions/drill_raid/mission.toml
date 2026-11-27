@@ -1,0 +1,109 @@
+# Drill: Raid (S47 U-12). One skill: wreck a small enemy depot with a small squad before the alarm. Medal by time and units kept.
+# Map: test_32. Your squad starts in the north, west of the depot; the depot (two power plants, a silo, a turret, two riflemen) is in the north-east.
+
+[mission]
+schema = 2
+title = "Drill: Raid"
+map = "test_32.map.toml"
+script = "mission.lua"
+briefing = "briefing.md"
+locale = "locale.toml"
+seed = 2027
+act = 1
+faction = "authority"
+
+# Medal limits (data, not code). Time in seconds (lower is better); keep_* is how many of your 6 units must survive.
+# Assumed values, confirm after a playtest.
+[drill]
+order = 3
+metric = "seconds"
+gold = 90
+silver = 120
+bronze = 170
+keep_gold = 5
+keep_silver = 4
+keep_bronze = 3
+
+[starts_with]
+tech = []
+
+[[players]]
+slot = 0
+name = "Authority"
+role = "human"
+team = 0
+cash = 0
+tech = []
+
+[[players]]
+slot = 1
+name = "Depot guard"
+role = "ai"
+team = 1
+cash = 0
+
+[zones.depot]
+rect = [24, 0, 30, 7]
+
+[[actors]]
+type = "auth_jeep"
+player = 0
+cell = [17, 3]
+
+[[actors]]
+type = "auth_jeep"
+player = 0
+cell = [18, 3]
+
+[[actors]]
+type = "auth_rifleman"
+player = 0
+cell = [16, 5]
+
+[[actors]]
+type = "auth_rifleman"
+player = 0
+cell = [17, 5]
+
+[[actors]]
+type = "auth_rifleman"
+player = 0
+cell = [18, 5]
+
+[[actors]]
+type = "auth_rifleman"
+player = 0
+cell = [19, 5]
+
+[[actors]]
+type = "auth_power"
+player = 1
+cell = [25, 1]
+tag = "t1"
+
+[[actors]]
+type = "auth_silo"
+player = 1
+cell = [28, 1]
+tag = "t2"
+
+[[actors]]
+type = "auth_power"
+player = 1
+cell = [25, 5]
+tag = "t3"
+
+[[actors]]
+type = "auth_turret"
+player = 1
+cell = [29, 5]
+
+[[actors]]
+type = "auth_rifleman"
+player = 1
+cell = [27, 4]
+
+[[actors]]
+type = "auth_rifleman"
+player = 1
+cell = [28, 4]

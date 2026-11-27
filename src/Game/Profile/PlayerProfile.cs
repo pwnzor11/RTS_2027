@@ -24,10 +24,12 @@ public sealed class PlayerProfile
     private readonly SortedDictionary<string, MissionRecord> _missions;
     private readonly SortedDictionary<Faction, SkirmishTally> _factions;
     private readonly SortedDictionary<int, SkirmishTally> _tiers;
+    private readonly SortedDictionary<string, DrillRecord> _drills;
 
     private PlayerProfile(SortedDictionary<string, MissionRecord> missions, SortedDictionary<Faction, SkirmishTally> factions,
-        SortedDictionary<int, SkirmishTally> tiers, int fastestWinSeconds, int biggestArmy)
+        SortedDictionary<int, SkirmishTally> tiers, int fastestWinSeconds, int biggestArmy, SortedDictionary<string, DrillRecord> drills)
     {
+        _drills = drills;
         _missions = missions;
         _factions = factions;
         _tiers = tiers;
@@ -36,10 +38,13 @@ public sealed class PlayerProfile
     }
 
     /// <summary>An empty profile.</summary>
-    public static PlayerProfile Empty => new(new(StringComparer.Ordinal), new(), new(), 0, 0);
+    public static PlayerProfile Empty => new(new(StringComparer.Ordinal), new(), new(), 0, 0, new(StringComparer.Ordinal));
 
     /// <summary>Campaign mission records by mission id.</summary>
     public IReadOnlyDictionary<string, MissionRecord> Missions => _missions;
+
+    /// <summary>S47 U-12: drill records by mission id (best medal, best time). Empty in a profile written before drills existed.</summary>
+    public IReadOnlyDictionary<string, DrillRecord> Drills => _drills;
 
     /// <summary>Skirmish wins and losses by the player's faction.</summary>
     public IReadOnlyDictionary<Faction, SkirmishTally> ByFaction => _factions;
@@ -62,7 +67,16 @@ public sealed class PlayerProfile
         if (!ValidKey(missionId)) return this;
         var missions = new SortedDictionary<string, MissionRecord>(_missions, StringComparer.Ordinal);
         missions[missionId] = missions.TryGetValue(missionId, out MissionRecord old) ? old.Merge(record) : record;
-        return new PlayerProfile(missions, _factions, _tiers, FastestWinSeconds, BiggestArmy);
+        return new PlayerProfile(missions, _factions, _tiers, FastestWinSeconds, BiggestArmy, _drills);
+    }
+
+    /// <summary>S47 U-12: a copy with a won drill run merged into drill <paramref name="drillId"/> (the best medal, time and loss are kept).</summary>
+    public PlayerProfile WithDrill(string drillId, DrillRecord record)
+    {
+        if (!ValidKey(drillId)) return this;
+        var drills = new SortedDictionary<string, DrillRecord>(_drills, StringComparer.Ordinal);
+        drills[drillId] = drills.TryGetValue(drillId, out DrillRecord old) ? old.Merge(record) : record;
+        return new PlayerProfile(_missions, _factions, _tiers, FastestWinSeconds, BiggestArmy, drills);
     }
 
     /// <summary>A copy with one finished skirmish against the AI added.</summary>
@@ -80,7 +94,7 @@ public sealed class PlayerProfile
         tiers[tier] = (tiers.TryGetValue(tier, out SkirmishTally t) ? t : default).Add(won);
         int fastest = FastestWinSeconds;
         if (won && seconds > 0 && (fastest == 0 || seconds < fastest)) fastest = Math.Min(seconds, MaxCount);
-        return new PlayerProfile(_missions, factions, tiers, fastest, Math.Max(BiggestArmy, Math.Clamp(armyValue, 0, MaxCount)));
+        return new PlayerProfile(_missions, factions, tiers, fastest, Math.Max(BiggestArmy, Math.Clamp(armyValue, 0, MaxCount)), _drills);
     }
 
     /// <summary>Loads <paramref name="path"/> (default path when null); never throws.</summary>
@@ -166,7 +180,17 @@ public sealed class PlayerProfile
             biggest = Int(st, "biggest_army", 0, 0, MaxCount);
         }
 
-        return new PlayerProfile(missions, factions, tiers, fastest, biggest);
+        var drills = new SortedDictionary<string, DrillRecord>(StringComparer.Ordinal);
+        if (root.TryGetValue("drills", out object? dr) && dr is TomlTable dt)
+        {
+            foreach (KeyValuePair<string, object> e in dt)
+            {
+                if (!ValidKey(e.Key) || e.Value is not TomlTable t) continue;
+                drills[e.Key] = new DrillRecord(Int(t, "medal", 0, 0, 3), Int(t, "best_seconds", 0, 0, MaxCount), Int(t, "best_lost", -1, -1, MaxCount));
+            }
+        }
+
+        return new PlayerProfile(missions, factions, tiers, fastest, biggest, drills);
     }
 
     private static SkirmishTally Tally(TomlTable t) => new(Int(t, "wins", 0, 0, MaxCount), Int(t, "losses", 0, 0, MaxCount));
@@ -204,6 +228,15 @@ public sealed class PlayerProfile
             sb.AppendLine(FormattableString.Invariant($"completed = {(r.Completed ? "true" : "false")}"));
             sb.AppendLine(FormattableString.Invariant($"no_losses = {(r.NoLosses ? "true" : "false")}"));
             sb.AppendLine(FormattableString.Invariant($"best_seconds = {r.BestSeconds}"));
+        }
+
+        foreach ((string id, DrillRecord r) in _drills)
+        {
+            sb.AppendLine();
+            sb.AppendLine(FormattableString.Invariant($"[drills.{id}]"));
+            sb.AppendLine(FormattableString.Invariant($"medal = {r.Medal}"));
+            sb.AppendLine(FormattableString.Invariant($"best_seconds = {r.BestSeconds}"));
+            sb.AppendLine(FormattableString.Invariant($"best_lost = {r.BestLost}"));
         }
 
         return sb.ToString();
