@@ -2479,3 +2479,12 @@ as written, campaign order auth_01, auth_02, auth_07, auth_03, auth_04, par plac
 order status near = 5 cells, failed = army under 40 % of launch value or no arrival in 5 min; the random control gives 3 of 4 counter calls a
 1-10 min hold. (7) Layout 2: optional [biome.<key>.layout2] keys (defaults = today; no hash moved).
 **Why:** helper choices where no doc gave a value. **Status:** assumed — confirm.
+
+### D-339 · 2026-11-27 · Session 47: per-map balance candidate f1 (pending its 512-game decide)
+**Decision:** candidate for B-01: Authority infantry (Rifleman, Rocketeer, Marksman, Engineer) `rad_resist_permille` 400 -> 600 (Ash Plains
+Authority v Directorate); Rust Belt `rivers` 1 -> 0 and `ocean_width` 0 -> 2 (an Expedition sea edge; Rust Belt's four out-of-band rows).
+Lives on branch `bal-s47` with the re-pinned map hashes and WaveCommit game; NOT on main until the decide (job f1, 512 games) and the campaign
+sweep (sw47b) pass. Glass Coast Directorate v Expedition (30 %) has no fix yet. **Why:** paired screens s1b-s5 (docs/balance/s47_balance.md):
+r19 put all six Rust Belt rows inside 44-58 on 128 games; a15 lifted ash Authority v Directorate by +11.5. **Alternatives:** map-only Ash
+changes (rough, rock: no effect); Glass ocean 0 (Expedition too weak); Directorate rockets v ships (no effect). **Status:** pending decide;
+assumed — confirm if landed.

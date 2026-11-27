@@ -1,28 +1,49 @@
-# Handoff: Session 47 — the owner's confirmations, then the bigger M16-06 items
-Last commit: `docs: Session 46 handoff` on `integ-s46` (PR to main, merged by the lead once Windows CI is green). Laptop folder: `git checkout main; git pull`.
-Where things stand: session 46 met the D-305 balance gate after the mechanics wave: Q-93 unit numbers (D-330, assumed — confirm), 512 games per row,
-all six pairings inside 40-60 and all 24 rows inside 25-75; campaign sweep 45/45 after a dir_02 tier-5 retune. Also U-06 Alt-modifier key bindings and
-a Laptop keys preset (D-328) and the lb_02 radio line re-voiced (D-329). Save format 16, replay format 16. Decisions up to D-330. OPEN_QUESTIONS: none.
+# Handoff: Session 48 — read the f1 decide, land or re-screen per-map balance; layout 2 baseline; then campaign wave 1
+Last commit: `docs: Session 47 handoff` on `integ-s47` (PR to main, merged by the lead once Windows CI is green). Balance candidate on branch `bal-s47` (not merged). Laptop folder: `git checkout main; git pull`.
+Where things stand: session 47 built every M16-06 item's first slice (D-331..D-338): Player.KeepAlive, the AcquireTarget spatial index, a tech-tree
+viewer and drills, 15 QoL items, LLM counter holds, the campaign outline with the pilot auth_07, layout-2 keys. Per-map balance candidate f1
+(D-339) is on `bal-s47`; its decide (job f1, 15 rows x 512 games) and campaign sweep (sw47b) were running at hand-off. Save format 16, replay
+format 16. Decisions up to D-339. OPEN_QUESTIONS: Q-94..Q-99 (all ⚪).
 
-## Start here (session 47; shown to the user as the plan; nothing starts until they say go)
-1. **Owner confirmations** (one question batch): D-322, D-326, D-327 (s44/s45 values), D-330 (the s46 numbers and the dir_02 retune); play-checks in
-   USER_CHECKS sessions 44-46. Anything rejected goes back through a paired screen (the s46 method below) before it changes.
-2. **Field Manual rebuild** (tools/booklet): the stat tables are built from data and still show the old Marine (150) and Glide Tank (960) costs.
-3. **Bigger items (BACKLOG M16-06, pick with the owner):** C-06 `Player.KeepAlive` (sim hook), M-28 spatial index, C-02 campaign expansion,
-   U-12 tech-tree viewer / drills, U-13 QoL, B-01..B-03 per-map balance (24-row 35-65 % goal), A-06 layout 2, A-08/A-09 LLM directives.
+## Start here (session 48; shown to the user as the plan; nothing starts until they say go)
+1. **Read f1 and sw47b** (docs/balance/s47_balance.md "Candidate f1"): write final47.py from s46 final46.py (f1 rows replace the c7 rows for the
+   12 Authority rows and 3 other Rust Belt rows). Land `bal-s47` (PR) only if six pairings 40-60, all rows 25-75, sw47b meets D-222; then
+   USER_CHECKS + Field Manual rebuild (ash resist shows on Authority infantry pages). Otherwise re-screen the failing piece (s47 method).
+2. **Glass Coast Directorate v Expedition (30 %)** and **Mountains Authority v Directorate (35 %)**: new levers (s47 findings: map keys move the
+   Expedition everywhere; try Directorate anti-hover or Glass-specific shallow/dune keys).
+3. **Layout 2 R0 baseline** on the landed data (docs/balance/s47_layout2_plan.md series: 24 rows x 128 games), then the S1/I1 variants.
+4. **Campaign wave 1 (C-12)**: owner answers Q-94..Q-99 first; then build the next missions per docs/design/22 §5 (Sonnet helpers, one mission each,
+   the auth_07 package as the template), re-sweep after each wave (D-337 carry-over).
+5. Smaller: M-28b live-position index (splash, scans), T-11 booklet key list, T-12 flaky net tests, the drill_hold and auth_07 play-check results.
 
 ## Half-finished work
-- Nothing half-built on integ-s46. `damage_taken_permille` (B-08) is still unused by data. C-06 KeepAlive not built.
-- Cluster scripts for s46 are in the laptop k3s-cluster folder `claude/rts/s46/` (var46.sh runner, setkey.py patches, pair46.py paired table v r45,
-  final46.py the 512-game table, bld_*.sh builds, sw46b.sh / swd3.sh sweeps); inputs in `/work/in/s46/`, outputs `/work/out/{v1..v7,k4a,k4b,k7a,k7b,k7c,sw46b,swd2,swd3}`.
+- `bal-s47` (ea92bc5 + re-pin commit): candidate f1, tests green locally (Sim/Scripting/Net/AI/Llm/Tools/Game). Not merged.
+- Cluster jobs at hand-off: f1 (480 pieces, `k3s-cluster/claude/rts/s47/f1.sh`, out `/work/out/f1`), sw47b (144 pieces, out `/work/out/sw47b`).
+  l2r0 was deleted (re-run on landed data). Screen outputs `/work/out/{s1b,s2,s2loc,s3,s4,s5}`; table docs/balance/s47_screens.txt.
+- auth_07 `next = "auth_08"` points at a mission that does not exist yet (MissionLinksTests accepts it until auth_08 is written).
 
 ## Waiting on the user
-- Confirm D-322, D-326, D-327, D-330; review the ending slides and new effects in a skirmish; try the Laptop keys preset; M9-15 two-PC LAN test;
-  M7-14 Expedition play-test; M10-27 voice log; auth_01 voice line still says "Refinery"; D-321 LFS migration.
-- **Delete branches** (the session's GitHub access cannot): integ-s46, bal-s46, wp/s46-keys (plus any of the s40-s45 list still there).
-- huntsman (x86 node) went NotReady during s46: check it (power, k3s agent) before the next cluster-heavy session.
+- Power-cycle **huntsman** (SSH times out; NotReady since s46). queen stays cordoned for Tdarr until you say.
+- Play-checks: USER_CHECKS sessions 44-47 (drills, tech tree `/`, QoL keys, auth_07, Field Manual pages); answer Q-94..Q-99 (campaign outline
+  Q5-Q9 and the Wrenfield lore conflict); confirm D-338 (wave-1 choices) and, once landed, D-339.
+- Earlier: M9-15 two-PC LAN test; M7-14 Expedition play-test; M10-27 voice log; auth_01 voice line says "Refinery"; D-321 LFS migration.
+- **Delete branches** (the session's GitHub access cannot): integ-s46, bal-s46, wp/s46-keys, integ-s47 (after merge), and any s40-s45 leftovers.
 
 ## How to run this session
+- Session 47 lessons:
+  - **biomes.toml is read beside the binaries** (BiomeCatalog walks up from AppContext.BaseDirectory). A map variant must get its own bin folder
+    with its own `data/mapgen` (s47 runner `s1b.sh` pattern: copy the bin's files, symlink every data folder except mapgen); rules data still comes
+    from the working directory. Check a new kind of variant moves something before a long screen.
+  - `ocean_width` 1, 2 and 3 are the same map at size 96; ocean edges exist only when an Expedition side plays, so an ocean width changes only
+    that faction's rows (a clean per-faction map lever).
+  - The cloud box plays ~9 Pi slots' worth (2 cores, ~140 s per 8-seed piece): build the same commit there (`dotnet build src/Tools -c Release`,
+    24 s) and run a share of a screen with the same patch (`/home/claude/loc/mk.py`, `run1.sh`); upload md files through the laptop
+    (device_commit_files into k3s-cluster, then `kjob.py put`) and pair on the toolbox.
+  - A running variant job can be shortened by truncating its `/work/in/s47/<set>/list.txt` (indices past the end exit at once).
+  - Builds: with the Pis full of series pods a `--cpu 2` build never schedules; submit builds with `--cpu 800m --mem 2Gi` (dopey took it) or
+    set the series parallelism to 0 until the build starts. Lowering parallelism kills running pods (they rerun).
+  - Key defaults: nearly every plain key is taken (QoL helper's audit); `/` was the last free one. A test (S47TechTree) checks for clashes.
+  - Windows CI Net.Tests UDP/discovery tests can fail on a docs-only push and pass on rerun (`gh run rerun <id> --failed`).
 - Session 46 lessons:
   - **r45 is a ready-made paired control:** a data variant on build 8d4b009 run on any chunk 0-31 pairs with r45's file for that row and chunk
     (pair46.py), so no separate control runs are needed. After a new main build, run one 512-game main table first and use it the same way.

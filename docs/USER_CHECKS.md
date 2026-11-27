@@ -799,4 +799,4 @@ Pull main first (your folder was on eda0f0e3, two sessions behind), then rebuild
   `Tools ai commander --random-directives ... --random-counters`.
 - **Not built, design only:** the LLM-chosen build plan (A-09, docs/design/23_llm_build_plan.md) and the map layout 2 keys
   (`[biome.<key>.layout2]`, A-06; defaults equal today, nothing changes for the player).
-- Balance and layout 2: see the lead's section
+- Balance: candidate D-339 (Authority infantry ash resist 600; Rust Belt ocean edge, no river) is on branch `bal-s47`, waiting for its 512-game decide; nothing to play-check on main yet. Layout 2: unchanged in play (new data keys only).

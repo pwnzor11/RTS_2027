@@ -841,3 +841,21 @@ two campaign sweeps plus two dir_02 sweeps.
 force-deleted); build pods stayed Pending behind series pods until series parallelism was lowered; the auto-mode check refused `kjob.py prune`
 (deleting named jobs of this session was allowed). The Field Manual PDF still shows the old costs.
 **Next session should:** HANDOFF "Start here".
+
+## Session 47 · 2026-11-26/27 (all of M16-06 started: KeepAlive, spatial index, tech tree, drills, 15 QoL, LLM holds, campaign outline + pilot; per-map balance candidate)
+**Outcome:** owner confirmed D-322/D-326/D-327/D-330 (D-331) and asked for every M16-06 item with heavy work on the cluster (D-332..D-336).
+Landed on integ-s47: C-06 Player.KeepAlive (exp_02/03/04 drop their hidden reserve buildings); M-28 spatial index for AcquireTarget (~30 %
+faster in a crowded fight, no hash moved; splash and scans left for M-28b); U-12 tech-tree viewer (`/`, pause menu) and three drills with
+medals (Main menu -> Drills); U-13 15 QoL items (docs/reviews/2026-11-26_s47_qol_pick.md); A-08 counter holds, YOUR ORDERS status, fight
+detail, a random-counter control (most A-08 already existed from s24); A-09 design doc; C-02 outline docs/design/22_campaign_expansion.md with
+the owner's Q1-Q4 answers (D-337) and the pilot auth_07 "The Defector" (par 300 s); A-06 layout-2 data keys and plan; Field Manual rebuilt.
+Campaign sweep sw47a: 48 cases all meet D-222. Per-map balance: screens s1b-s5 found candidate f1 (D-339: Authority infantry ash resist 600;
+Rust Belt ocean edge, no river) on branch `bal-s47`; its 512-game decide (f1) and sweep (sw47b) were still running at hand-off.
+**Decisions:** D-331..D-339. **Questions:** Q-94..Q-99 (campaign outline Q5-Q9, Wrenfield lore).
+**Helpers:** 11 packages (Sonnet x9 incl. the pilot and docs, Opus x1 campaign outline, Haiku x1 booklet); fix rounds: drills (drill_hold too
+easy), campaign outline (owner answers). About 9 000 cluster games plus ~1 500 on the cloud box; two campaign sweeps.
+**Problems / notes:** huntsman NotReady all session (SSH times out: powered off or off the network); queen cordoned for the owner's Tdarr job;
+prince mostly busy with whisper, so the cluster ran on the Pis (~1 piece/min). The first screen measured nothing (biomes.toml is read beside
+the binaries). A 2-CPU build sat Pending behind series pods (deadlock again); an 800m build worked. Windows CI Net.Tests UDP/discovery tests
+failed twice on docs-only pushes and passed on rerun (T-12).
+**Next session should:** HANDOFF "Start here".
