@@ -20,7 +20,7 @@ Left Behind 71.0, Directorate v Expedition 74.3, Directorate v Left Behind 30.2.
 ## Findings
 - **Rust Belt:** ocean edge (r11) pulls Directorate v Expedition from ~77 to ~46 and lifts Directorate v Left Behind (+11) but leaves Authority v
   Left Behind at ~76. Ocean edge + no river (r19): Authority v Directorate 44.7, Authority v Expedition 58.0, Authority v Left Behind 53.6,
-  Directorate v Expedition 49.3, Directorate v Left Behind 49.3, Left Behind v Expedition 49.2 (96-128 games each): all six inside 35-65.
+  Directorate v Expedition 49.3, Directorate v Left Behind 49.3, Left Behind v Expedition 49.2 (raw r19 win rate from the cloud-box files; that row had no paired c7 chunks, c7 512-game row 59.1) (96-128 games each): all six inside 35-65.
   Most single map keys moved Directorate v Left Behind down (roads, contested fields, shallows, rough).
 - **Ash Plains:** no map key fixed Authority v Directorate (rough 60/80, rock 25 neutral or worse; base_land clear had no effect).
   Authority infantry ash resist 400 -> 600 (a15): Authority v Directorate +11.5 (est 36.9), other rows within noise.
